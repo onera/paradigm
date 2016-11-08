@@ -1,9 +1,11 @@
 
 if (PDM_ENABLE_LONG_G_NUM)
    set(PYX_NPY_G_NUM NPY.int64_t)
+   set(PDM_G_NUM_NPY_INT NPY.NPY_INT64)
    set(PYX_G_NUM long)
 else ()
    set(PYX_NPY_G_NUM NPY.int32_t)
+   set(PDM_G_NUM_NPY_INT NPY.NPY_INT32)
    set(PYX_G_NUM int)
 endif ()
 

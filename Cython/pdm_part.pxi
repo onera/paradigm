@@ -401,7 +401,7 @@ cdef class Part:
             dim = <NPY.npy_intp> dims['nCell']
             npCellLNToGN = NPY.PyArray_SimpleNewFromData(1,
                                                         &dim,
-                                                        NPY.NPY_INT32,
+                                                        PDM_G_NUM_NPY_INT,
                                                         <void *> cellLNToGN)
 
         # \param [out]  faceTag            Face tag (size = nFace)
@@ -451,7 +451,7 @@ cdef class Part:
             dim = <NPY.npy_intp> dims['nFace']
             npFaceLNToGN   = NPY.PyArray_SimpleNewFromData(1,
                                                           &dim,
-                                                          NPY.NPY_INT32,
+                                                          PDM_G_NUM_NPY_INT,
                                                           <void *> faceLNToGN)
 
         # \param [out]  facePartBound      Partitioning boundary faces
@@ -511,7 +511,7 @@ cdef class Part:
             dim = <NPY.npy_intp> dims['nVertex']
             npVertexLNToGN  = NPY.PyArray_SimpleNewFromData(1,
                                                            &dim,
-                                                           NPY.NPY_INT32,
+                                                           PDM_G_NUM_NPY_INT,
                                                            <void *> vertexLNToGN)
 
         # \param [out]  faceGroupIdx       face group index (size = nFaceGroup + 1)
@@ -541,7 +541,7 @@ cdef class Part:
             dim = <NPY.npy_intp> dims['sFaceGroup']
             npFaceGroupLNToGN = NPY.PyArray_SimpleNewFromData(1,
                                                              &dim,
-                                                             NPY.NPY_INT32,
+                                                             PDM_G_NUM_NPY_INT,
                                                              <void *> faceGroupLNToGN)
 
         return {'npCellTag'                  : npCellTag,

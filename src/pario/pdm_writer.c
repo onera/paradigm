@@ -4022,12 +4022,12 @@ PDM_g_num_t   *numabs
   
   for (int i = 0; i < n_cell; i++) {
     PDM_writer_elt_geom_t cell_type = _type_cell_3D(cell_face_nb[i],
-                                            cell_face + cell_face_idx[i] - 1,
-                                            face_som_idx,
-                                            face_som_nb,
-                                            face_som,
-                                            cell_som_tria,
-                                            cell_som_quad);
+                                                    cell_face + cell_face_idx[i] - 1,
+                                                    face_som_idx,
+                                                    face_som_nb,
+                                                    face_som,
+                                                    cell_som_tria,
+                                                    cell_som_quad);
     switch(cell_type) {
     case PDM_writer_TETRA4 :
       n_tetra += 1;
@@ -4352,12 +4352,12 @@ PDM_g_num_t   *numabs
 
       if (som_elts[0] > 0)
         PDM_writer_geom_bloc_std_set(id_cs,
-                             id_geom,
-                             id_bloc_tetra4,
-                             ipart,
-                             n_tetra_part,
-                             connec_tetra,
-                             numabs_tetra);
+                                     id_geom,
+                                     id_bloc_tetra4,
+                                     ipart,
+                                     n_tetra_part,
+                                     connec_tetra,
+                                     numabs_tetra);
 
       if (som_elts[1] > 0)
         PDM_writer_geom_bloc_std_set(id_cs,
