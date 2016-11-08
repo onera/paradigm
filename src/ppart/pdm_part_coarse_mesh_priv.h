@@ -65,6 +65,13 @@ typedef struct  {
   int nTPart;       /*!< Total number of partitions */
   int nFaceGroup;   /*!< Number of boundaries */
   
+  int have_cellTag;
+  int have_faceTag;
+  int have_vtxTag;
+  int have_cellWeight;
+  int have_faceWeight;
+  int have_faceGroup;
+
   //TIMER
   
   PDM_timer_t *timer;             /*!< Timer */ 
@@ -149,6 +156,12 @@ void
  * \param [in]   nPart             Number of partitions
  * \param [in]   nTPart            Total number of partitions
  * \param [in]   nFaceGroup        Number of boundaries
+ * \param [in]   have_cellTag      Presence d'un tableau de tags pour les cellules
+ * \param [in]   have_faceTag      Presence d'un tableau de tags pour les faces
+ * \param [in]   have_vtxTag       Presence d'un tableau de tags pour les sommets
+ * \param [in]   have_cellWeight   Presence d'un tableau de poids pour les cellules
+ * \param [in]   have_faceWeight   Presence d'un tableau de poids pour les faces
+ * \param [in]   have_faceGroup    Presence des tableaux de groupes de faces
  */
 
 static inline _coarse_mesh_t * 
@@ -158,7 +171,14 @@ _coarse_mesh_create
  const int           method,
  const int           nPart,
  const int           nTPart,
- const int           nFaceGroup
+ const int           nFaceGroup,
+ const int           have_cellTag,
+ const int           have_faceTag,
+ const int           have_vtxTag,
+ const int           have_cellWeight,
+ const int           have_faceWeight,
+ const int           have_faceGroup
+
  )
 {     
    _coarse_mesh_t *cm = (_coarse_mesh_t *) malloc(sizeof(_coarse_mesh_t));
@@ -168,7 +188,14 @@ _coarse_mesh_create
    
    cm->method = method;
    cm->nTPart = nTPart;
-   cm->nFaceGroup = nFaceGroup;  
+   cm->nFaceGroup = nFaceGroup;
+
+   cm->have_cellTag = have_cellTag;
+   cm->have_faceTag = have_faceTag;
+   cm->have_vtxTag = have_vtxTag;
+   cm->have_cellWeight = have_cellWeight;
+   cm->have_faceWeight = have_faceWeight;
+   cm->have_faceGroup = have_faceGroup;
    
    cm->part_ini = malloc(sizeof(_part_t *) * nPart); //On déclare un tableau de partitions
    
