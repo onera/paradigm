@@ -32,13 +32,18 @@ extern "C" {
  * Description des sommets d'une partition
  *----------------------------------------------------------------------------*/
 
-typedef struct PDM_writer_som_t{
+typedef struct PDM_writer_som_t PDM_writer_som_t;
 
-  PDM_l_num_t           n_som;  /* Nombre de sommets de la partition courante */
+struct PDM_writer_som_t {
+
+  PDM_writer_som_t         *parent;   /* sommets parents */
+  PDM_l_num_t          n_som;  /* Nombre de sommets de la partition courante */
+  double           *coords;  /* Coordonnees des sommets de la partition courante allouee dans le cas d'une
+                                definition a partir d'une geometrie parente */
   const double    *_coords;  /* Coordonnees des sommets de la partition courante (mapping memoire) */
   const PDM_g_num_t *_numabs;  /* Numerotation absolue des sommets de la partition courante (mapping memoire) */
-
-} PDM_writer_som_t;
+  const int       *_numparent; /* Numerotation dans la geometrie parente (mapping memoire) */
+};
 
 /*----------------------------------------------------------------------------
  * Description d'un bloc geometrique
@@ -211,7 +216,7 @@ struct _PDM_writer_geom_t {
                                              des polyedres/polygones compris) */
   PDM_g_num_t           n_elt_abs;          /* Nombre absolu d'elements */
   int                 n_part;             /* Nombre de partitions */
-  PDM_writer_som_t           *som;                /* Description des sommmets de chaque partition */
+  PDM_writer_som_t           **som;                /* Description des sommmets de chaque partition */
   PDM_l_num_t           *n_cell;             /* Nombre de blocs d'elements standard */
   PDM_l_num_t            n_blocs_std;        /* Nombre de blocs d'elements standard */
   PDM_l_num_t            l_blocs_std;        /* Taille du tableau de blocs d'elements standard */

@@ -111,6 +111,39 @@ static const int n_intern_fmt = 1;
 
 /*----------------------------------------------------------------------------
  *
+ * Som free
+ *
+ * parameters:
+ *   a           <-- Premiere valeur
+ *   b           <-- Seconde valeur                    
+ *
+ * return:
+ *   max(a, b)
+ *
+ *----------------------------------------------------------------------------*/
+
+static inline PDM_writer_som_t *
+_som_free
+(
+ PDM_writer_som_t *som
+)
+{
+  if (som->parent != NULL) {
+    som->parent =_som_free (som->parent);
+  }
+
+  if (som->coords != NULL) {
+    free (som->coords);
+    som->coords = NULL;
+  }
+
+  free (som);
+  
+  return NULL;
+}
+
+/*----------------------------------------------------------------------------
+ *
  * Fonction max
  *
  * parameters:
@@ -1487,7 +1520,7 @@ PDM_writer_geom_t *geom
          *              une bibliotheque geometrique. La fonction est donc reecrite 
          */
 
-        _centre_face(geom->som[j]._coords,
+        _centre_face(geom->som[j]->_coords,
                      _bloc_poly2d->n_elt[j],
                      _bloc_poly2d->_connec_idx[j],
                      _bloc_poly2d->_connec[j],
@@ -3175,14 +3208,19 @@ const int               n_part
 
   geom->n_part = n_part;
 
-  geom->som = (PDM_writer_som_t  *) malloc(n_part * sizeof(PDM_writer_som_t));     /* Nombre de sommets */
+  geom->som = (PDM_writer_som_t  **) malloc(n_part * sizeof(PDM_writer_som_t *));     /* Nombre de sommets */
   geom->n_cell = (PDM_l_num_t  *) malloc(n_part * sizeof(PDM_l_num_t));     /* Nombre de sommets */
 
   for (int i = 0; i < n_part; i++) {
     geom->n_cell[i] = 0;
-    geom->som[i].n_som = 0;
-    geom->som[i]._coords = NULL;
-    geom->som[i]._numabs = NULL;
+    geom->som[i] = (PDM_writer_som_t *) malloc (sizeof(PDM_writer_som_t));
+    PDM_writer_som_t *_som = geom->som[i];
+    _som->parent        = NULL;
+    _som->n_som         = 0;
+    _som->coords        = NULL;
+    _som->_coords       = NULL;
+    _som->_numabs        = NULL;
+    _som->_numparent = NULL;
   }
 
   geom->prepa_blocs = NULL;
@@ -3253,7 +3291,7 @@ const PDM_g_num_t *numabs
     abort();
   } 
   
-  PDM_writer_som_t *som = &(geom->som[id_part]);
+  PDM_writer_som_t *som = geom->som[id_part];
 
   if ((som->_coords != NULL) ||
       (som->_numabs != NULL)) {
@@ -3268,6 +3306,110 @@ const PDM_g_num_t *numabs
   som->_numabs = numabs;
 }
 
+
+
+
+/*----------------------------------------------------------------------------
+ * Definition des coordonnees des sommets de la partition courante a partir
+ *          
+ *
+ * parameters :
+ *   id_cs           <-- Identificateur de l'objet cs
+ *   id_geom         <-- Identificateur de l'objet geometrique
+ *   id_part         <-- Indice de partition
+ *   n_som           <-- Nombre de sommets de la partition
+ *   n_som_parent    <-- Nombre de sommets parent
+ *   numabs          <-- Numerotation absolue des sommets (size = n_som)    
+ *   num_parent      <-- Numerotation des sommets dans la numerotation parente (size = n_som)    
+ *   coords_parent   <-- Coordonnes des sommets parents (size = 3 * n_som_parent)            
+ *   numabs_parent   <-- Numerotation absolue des sommets parents (size = n_som_parent)    
+ *
+ *----------------------------------------------------------------------------*/
+
+void
+PROCF (pdm_writer_geom_coord_from_parent_set, PDM_WRITER_GEOM_COORD_FROM_PARENT_SET)
+(
+int             *id_cs,
+int             *id_geom,  
+int             *id_part, 
+int             *n_som,  
+int             *n_som_parent,  
+PDM_g_num_t     *numabs,
+int             *num_parent,
+PDM_real_t      *coords_parent,  
+PDM_g_num_t     *numabs_parent
+)
+{
+  PDM_writer_geom_coord_from_parent_set (*id_cs,
+                                 *id_geom,  
+                                 *id_part, 
+                                 *n_som,  
+                                 *n_som_parent,  
+                                 numabs,
+                                 num_parent,
+                                 coords_parent,
+                                 numabs_parent);
+}
+
+void
+PDM_writer_geom_coord_from_parent_set
+(
+const int        id_cs,
+const int        id_geom,  
+const int        id_part, 
+const int        n_som,  
+const int        n_som_parent,  
+const PDM_g_num_t *numabs,
+const int       *num_parent,
+const PDM_real_t *coords_parent,  
+const PDM_g_num_t *numabs_parent
+)
+{
+
+  /* Acces aux sommets de la partition */
+
+  PDM_writer_t *cs = _PDM_writer_get(id_cs);
+
+  PDM_writer_geom_t *geom = _geom_get(cs, id_geom);
+
+  if (geom->n_part == 0) {
+    fprintf(stderr, "Erreur PDM_writer_geom_coord_from_parent_set : Le nombre de partitions n'a pas ete defini\n");
+    abort();
+  } 
+  
+  PDM_writer_som_t *som = geom->som[id_part];
+  
+  if ((som->_coords != NULL) ||
+      (som->_numabs != NULL)) {
+    fprintf(stderr, "Erreur PDM_writer_geom_coord_from_parent_set : Les sommets de la partition ont deja ete definis\n");
+    abort();
+  }
+
+  /* Mapping memoire et allocation */
+
+  som->parent     = (PDM_writer_som_t *) malloc (sizeof (PDM_writer_som_t));
+  PDM_writer_som_t *_parent = som->parent;
+  _parent->parent = NULL;
+  _parent->n_som = n_som_parent;
+  _parent->coords = NULL;
+  _parent->_coords = coords_parent ;
+  _parent->_numabs = numabs_parent;
+  _parent->_numparent = NULL;
+  
+  som->n_som      = n_som;
+  som->coords     = malloc (sizeof(double) * 3 * n_som);
+  som->_coords    = som->coords;
+  som->_numabs    = numabs;
+  som->_numparent = num_parent;
+
+  for (int i = 0; i < n_som; i++) {
+    int i_parent = num_parent[i] - 1;
+    for (int j = 0; j < 3; j++) {
+      som->coords[3*i+j] = _parent->_coords[3*i_parent+j];
+    }
+  }
+
+}
 
 /*----------------------------------------------------------------------------
  * Ajout d'un bloc d'elements d'un type donne
@@ -4233,7 +4375,7 @@ PDM_g_num_t   *numabs
         
         switch(cell_type) {
         case PDM_writer_TETRA4 :
-          _connec_tetra(&(geom->som[ipart]),
+          _connec_tetra(geom->som[ipart],
                         cell_som_tria,
                         connec_tetra_courant);
           *numabs_tetra_courant = numabs_courant[i];
@@ -4242,7 +4384,7 @@ PDM_g_num_t   *numabs
           num_cell_parent_to_local_courant[i] = idx_tetra++;
           break;
         case PDM_writer_HEXA8 :
-          _connec_hexa(&(geom->som[ipart]),
+          _connec_hexa(geom->som[ipart],
                        cell_som_quad,
                        connec_hexa_courant);
           *numabs_hexa_courant = numabs_courant[i];
@@ -4251,7 +4393,7 @@ PDM_g_num_t   *numabs
           num_cell_parent_to_local_courant[i] = idx_hexa++;
           break;
         case PDM_writer_PRISM6 :
-          _connec_prism(&(geom->som[ipart]),
+          _connec_prism(geom->som[ipart],
                         cell_som_tria,
                         cell_som_quad,
                         connec_prism_courant);
@@ -4261,7 +4403,7 @@ PDM_g_num_t   *numabs
           num_cell_parent_to_local_courant[i] = idx_prism++;
           break;
         case PDM_writer_PYRAMID5 :
-          _connec_pyramid(&(geom->som[ipart]),
+          _connec_pyramid(geom->som[ipart],
                           cell_som_tria,
                           cell_som_quad,
                           connec_pyramid_courant);
@@ -4673,13 +4815,13 @@ PDM_g_num_t   *numabs
 
       /* Construction de la connectivit� sommet-> arrete */
 
-      PDM_l_num_t *connec_som_are = (PDM_l_num_t *) malloc(sizeof(PDM_l_num_t) * 2 * geom->som[ipart].n_som);
+      PDM_l_num_t *connec_som_are = (PDM_l_num_t *) malloc(sizeof(PDM_l_num_t) * 2 * geom->som[ipart]->n_som);
 
       PDM_l_num_t idx_tria   = 0;
       PDM_l_num_t idx_quad   = n_tria;
       PDM_l_num_t idx_poly2d = idx_quad + n_quad;
 
-      for (int j = 0; j < 2 * geom->som[ipart].n_som; j++) {
+      for (int j = 0; j < 2 * geom->som[ipart]->n_som; j++) {
         connec_som_are[j] = -1;
       }
 
@@ -5214,7 +5356,7 @@ int           *id_geom
 ) 
 {
   PDM_writer_geom_free(*id_cs,
-              *id_geom); 
+                       *id_geom); 
 
 }
 
@@ -5235,6 +5377,10 @@ const int      id_geom
   /* Lib�ration des sommets */
   
   if (geom->som != NULL) {
+    for (int i = 0; i < geom->n_part; i++) {
+      geom->som[i] = _som_free (geom->som[i]);
+    }
+
     free(geom->som);
     geom->som = NULL;
   }
@@ -5617,8 +5763,8 @@ const PDM_real_t *val
     }
   }
   else {
-    val_geom[id_part] = (double *) malloc(sizeof(double) * var->dim * geom->som[id_part].n_som);
-    for (int i = 0; i < geom->som[id_part].n_som * var->dim; i++) {
+    val_geom[id_part] = (double *) malloc(sizeof(double) * var->dim * geom->som[id_part]->n_som);
+    for (int i = 0; i < geom->som[id_part]->n_som * var->dim; i++) {
       val_geom[id_part][i] = val[i];
     }
   }

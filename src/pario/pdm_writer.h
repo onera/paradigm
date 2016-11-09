@@ -366,6 +366,51 @@ const PDM_real_t *coords,
 const PDM_g_num_t *numabs
 );
 
+/*----------------------------------------------------------------------------
+ * Definition des coordonnees des sommets de la partition courante a partir
+ *          
+ *
+ * parameters :
+ *   id_cs           <-- Identificateur de l'objet cs
+ *   id_geom         <-- Identificateur de l'objet geometrique
+ *   id_part         <-- Indice de partition
+ *   n_som           <-- Nombre de sommets de la partition
+ *   n_som_parent    <-- Nombre de sommets parent
+ *   numabs          <-- Numerotation absolue des sommets (size = n_som)    
+ *   num_parent      <-- Numerotation des sommets dans la numerotation parente (size = n_som)    
+ *   coords_parent   <-- Coordonnes des sommets parents (size = 3 * n_som_parent)            
+ *   numabs_parent   <-- Numerotation absolue des sommets parents (size = n_som_parent)    
+ *
+ *----------------------------------------------------------------------------*/
+
+void
+PROCF (pdm_writer_geom_coord_from_parent_set, PDM_WRITER_GEOM_COORD_FROM_PARENT_SET)
+(
+int             *id_cs,
+int             *id_geom,  
+int             *id_part, 
+int             *n_som,  
+int             *n_som_parent,  
+PDM_g_num_t       *numabs,
+int             *num_parent,
+PDM_real_t       *coords_parent,  
+PDM_g_num_t       *numabs_parent
+);
+
+void
+PDM_writer_geom_coord_from_parent_set
+(
+const int        id_cs,
+const int        id_geom,  
+const int        id_part, 
+const int        n_som,  
+const int        n_som_parent,  
+const PDM_g_num_t *numabs,
+const int       *num_parent,
+const PDM_real_t *coords_parent,  
+const PDM_g_num_t *numabs_parent
+);
+
 
 /*----------------------------------------------------------------------------
  * Ajout d'un bloc d'elements d'un type donne

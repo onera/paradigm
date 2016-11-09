@@ -932,7 +932,7 @@ PDM_writer_ensight_geom_write
 
   int n_som_proc = 0;
   for (int ipart = 0; ipart < geom->n_part; ipart++) {
-    n_som_proc += geom->som[ipart].n_som;
+    n_som_proc += geom->som[ipart]->n_som;
   }
 
   /* Concatenation des coordonnees et ecriture */
@@ -950,11 +950,11 @@ PDM_writer_ensight_geom_write
       s_ecr_n_val = PDM_writer_OFF;
     n_som_proc = 0;
     for (int ipart = 0; ipart < geom->n_part; ipart++) {
-      for (int i = 0; i < geom->som[ipart].n_som; i++) {
-        coord_tmp[n_som_proc+i] = (float) geom->som[ipart]._coords[3*i+idim];
-        numabs_tmp[n_som_proc+i] = (PDM_g_num_t) geom->som[ipart]._numabs[i];
+      for (int i = 0; i < geom->som[ipart]->n_som; i++) {
+        coord_tmp[n_som_proc+i] = (float) geom->som[ipart]->_coords[3*i+idim];
+        numabs_tmp[n_som_proc+i] = (PDM_g_num_t) geom->som[ipart]->_numabs[i];
       }
-      n_som_proc += geom->som[ipart].n_som;
+      n_som_proc += geom->som[ipart]->n_som;
     }
 
     PDM_l_num_t n_comp = 1;
@@ -1049,7 +1049,7 @@ PDM_writer_ensight_geom_write
         numabs_tmp[n_elt_proc] = (PDM_g_num_t) bloc_std->numabs_int[i][j];
         for (int k = 0; k < n_comp; k++) {
           int isom = bloc_std->_connec[i][j * n_comp + k] - 1;
-          int32_t isom_g = (int32_t) geom->som[i]._numabs[isom];
+          int32_t isom_g = (int32_t) geom->som[i]->_numabs[isom];
           connec_tmp[n_elt_proc * n_comp + k] = isom_g;
         }
         n_elt_proc += 1;
@@ -1124,7 +1124,7 @@ PDM_writer_ensight_geom_write
                                                 bloc_poly2d->_connec_idx[i][j]);
         for (int k = bloc_poly2d->_connec_idx[i][j]; k < bloc_poly2d->_connec_idx[i][j+1]; k++) {
           int isom = bloc_poly2d->_connec[i][k] - 1;
-          int32_t isom_g = (int32_t) geom->som[i]._numabs[isom];
+          int32_t isom_g = (int32_t) geom->som[i]->_numabs[isom];
           connec_tmp[l_connec++] = isom_g;
         }
         n_elt_proc += 1;
@@ -1294,7 +1294,7 @@ PDM_writer_ensight_geom_write
           int ifac = bloc_poly3d->_cellfac[i][j] - 1;
           for (int j2 = bloc_poly3d->_facsom_idx[i][ifac]; j2 < bloc_poly3d->_facsom_idx[i][ifac+1]; j2++) {
             int isom = bloc_poly3d->_facsom[i][j2] - 1;
-            buff_int32[l_connec] =  (int32_t) geom->som[i]._numabs[isom];
+            buff_int32[l_connec] =  (int32_t) geom->som[i]->_numabs[isom];
             l_connec += 1;
           }
         }
@@ -1436,7 +1436,7 @@ PDM_writer_ensight_var_write
 
        int n_som_proc = 0;
         for (int i = 0; i < geom->n_part; i++) {
-          n_som_proc += geom->som[i].n_som;
+          n_som_proc += geom->som[i]->n_som;
         }
 
         float *buff = (float *) malloc(sizeof(float) * n_som_proc);
@@ -1444,8 +1444,8 @@ PDM_writer_ensight_var_write
 
         n_som_proc = 0;
         for (int i = 0; i < geom->n_part; i++) {
-          for (int j = 0; j < geom->som[i].n_som; j++) {
-            numabs[n_som_proc++] = (PDM_g_num_t) geom->som[i]._numabs[j];
+          for (int j = 0; j < geom->som[i]->n_som; j++) {
+            numabs[n_som_proc++] = (PDM_g_num_t) geom->som[i]->_numabs[j];
           }
         }
 
@@ -1460,7 +1460,7 @@ PDM_writer_ensight_var_write
  
 
           for (int i = 0; i < geom->n_part; i++) {
-            for (int j = 0; j < geom->som[i].n_som; j++) {
+            for (int j = 0; j < geom->som[i]->n_som; j++) {
               buff[n_som_proc++] = (float) var->_val[igeom][i][j*var->dim + comp_a_ecrire];
             }
           }
