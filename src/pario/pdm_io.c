@@ -3929,9 +3929,12 @@ void PDM_io_close
 
   }
 
-  else
+  else {
     err_code = 1;
-      
+  }
+    
+  PDM_MPI_Barrier (fichier->comm);
+  
   if (err_code){
     fprintf(stderr,"Erreur PDM_io_close : unite '%d' non valide\n", unite);
     abort();
