@@ -12,6 +12,7 @@
 
 #include "pdm_writer.h"
 #include "pdm.h"
+#include "pdm_mpi.h"
 
 /*=============================================================================
  * Macro definitions
