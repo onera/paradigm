@@ -18,7 +18,7 @@ cdef extern from "pdm_part.h":
     # ------------------------------------------------------------------
     # MPI_Comm      comm,
     void PDM_part_create(int                  *ppartId,
-                      void                 *comm,
+                      PDM_MPI_Comm             comm,
                       PDM_part_split_t      split_method,
                       PDM_part_renum_cell_t renum_cell_method,
                       int                   nPart,
@@ -239,28 +239,28 @@ cdef class Part:
         # LOG.info(' '*4 + " ---> LibPart.PDM_part_create " )
         # -> Create PPART
         PDM_part_create(&_id,
-                     &c_comm,
-                     split_method,
-                     renum_cell_method,
-                     nPart,
-                     dNCell,
-                     dNFace,
-                     dNVtx,
-                     nFaceGroup,
-                     dCellFaceIdx_data,
-                     dCellFace_data,
-                     dCellTag_data,
-                     dCellWeight_data,
-                     have_dCellPart,    # -> Add this Attention !
-                     dCellPart_data,
-                     dFaceCell_data,
-                     <int *>          dFaceVtxIdx.data,
-                     <PDM_g_num_t *> dFaceVtx.data,
-                     dFaceTag_data,
-                     <double *>       dVtxCoord.data,
-                     dVtxTag_data,
-                     dFaceGroupIdx_data,
-                     dFaceGroupFace_data)
+                        c_comm,
+                        split_method,
+                        renum_cell_method,
+                        nPart,
+                        dNCell,
+                        dNFace,
+                        dNVtx,
+                        nFaceGroup,
+                        dCellFaceIdx_data,
+                        dCellFace_data,
+                        dCellTag_data,
+                        dCellWeight_data,
+                        have_dCellPart,    # -> Add this Attention !
+                        dCellPart_data,
+                        dFaceCell_data,
+                        <int *>          dFaceVtxIdx.data,
+                        <PDM_g_num_t *> dFaceVtx.data,
+                        dFaceTag_data,
+                        <double *>       dVtxCoord.data,
+                        dVtxTag_data,
+                        dFaceGroupIdx_data,
+                        dFaceGroupFace_data)
 
         # LOG.info(' '*4 + " ---> LibPart.PDM_part_create End " )
         # > Save id for extract
