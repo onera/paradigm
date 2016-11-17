@@ -7,6 +7,7 @@
 
 #include "pdm_part_priv.h"
 #include "pdm_timer.h"
+#include "pdm_mpi.h"
 
 #ifndef PDM_PART_COARSE_MESH_PRIV_H
 #define	PDM_PART_COARSE_MESH_PRIV_H
@@ -103,7 +104,7 @@ typedef struct  {
   
   /* Communicator */
   
-  MPI_Comm  comm;   /*!< Communicator */
+  PDM_MPI_Comm  comm;   /*!< Communicator */
     
   _part_t        **part_ini;               /*!< Partition: fine mesh                            */
   
@@ -167,7 +168,7 @@ void
 static inline _coarse_mesh_t * 
 _coarse_mesh_create
 (
- const void         *pt_comm,        
+ const PDM_MPI_Comm  comm,        
  const int           method,
  const int           nPart,
  const int           nTPart,
@@ -184,7 +185,7 @@ _coarse_mesh_create
    _coarse_mesh_t *cm = (_coarse_mesh_t *) malloc(sizeof(_coarse_mesh_t));
 
    cm->nPart = nPart;
-   cm->comm = *((MPI_Comm *) pt_comm); 
+   cm->comm = comm; 
    
    cm->method = method;
    cm->nTPart = nTPart;

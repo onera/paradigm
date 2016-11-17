@@ -2,6 +2,8 @@
 #include <mpi.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <assert.h>
+#include <unistd.h>
 
 #include "pdm.h"
 #include "pdm_priv.h"
@@ -12,21 +14,17 @@
 #include "pdm_timer.h"
 
 #ifdef PDM_HAVE_PARMETIS
-#include <parmetis.h>
 #include <metis.h>
 #endif
 #ifdef PDM_HAVE_PTSCOTCH
-#include <ptscotch.h>
+#include <scotch.h>
 #endif
 
 #include "pdm_part.h"
-#include <mpi.h>
+#include "pdm_mpi.h"
 
 #include "pdm_part_to_block.h"
 #include "pdm_block_to_part.h"
-
-#include <assert.h>
-#include <unistd.h>
 
 /*=============================================================================
  * Macro definitions
@@ -1419,19 +1417,16 @@ _build_vtx
 )
 {
     //If no vertex has been removed, nothing to do!
-    if (nVtx == nVtxChecked)
-    {
+    if (nVtx == nVtxChecked) {
         return;
     }
     
     int idx_write = 0;    
     
     //Loop over fineVtxToCoarseVtx, i = index of a vertex number (vertex number - 1)
-    for (int i = 0; i < nVtx; i++)
-    {
+    for (int i = 0; i < nVtx; i++) {
         //We store each vertex that has not been removed
-        if (fineVtxToCoarseVtx[i] != -1)
-        {
+        if (fineVtxToCoarseVtx[i] != -1) {
             double coord1 = (*vtx)[3 * i    ];
             double coord2 = (*vtx)[3 * i + 1];
             double coord3 = (*vtx)[3 * i + 2];
@@ -1447,14 +1442,11 @@ _build_vtx
     
     assert(3 * nVtxChecked == idx_write);
     
-    if(0 == 1)
-    {
+    if(0 == 1) {
         printf("Contenu final de vtx\n");
-        for (int i = 0; i < 3 * nVtxChecked; i++)
-        {        
+        for (int i = 0; i < 3 * nVtxChecked; i++) {        
             printf(" %.1f ", (*vtx)[i]);
-            if (i % 3 == 2)
-            {
+            if (i % 3 == 2) {
                 printf("|");
             }
         }
@@ -1485,25 +1477,21 @@ _build_coarseCellTag
  int          **coarseCellTag
 )
 {
-    if (cellTag == NULL)
-    {
+    if (cellTag == NULL) {
         return;
     }
     
     *coarseCellTag = (int *) malloc(nCoarseCellChecked * sizeof(int));
     
     //Loop over coarseCellCellIdx, i = index of coarse cell
-    for (int i = 0; i < nCoarseCellChecked; i++)
-    {
+    for (int i = 0; i < nCoarseCellChecked; i++) {
         //This should be the tag of all the fine cells of the coarse cell j
         int tag = cellTag[coarseCellCell[coarseCellCellIdx[i]] - 1];
         
         //Loop over coarseCellCell, j = coarse cell number
-        for (int j = coarseCellCellIdx[i]; j < coarseCellCellIdx[i + 1]; j++)
-        {
+        for (int j = coarseCellCellIdx[i]; j < coarseCellCellIdx[i + 1]; j++) {
             //If any fine cell does not have the same tag as the previous one, the cellTag array is incorrect
-            if (cellTag[coarseCellCell[j] - 1] != tag)
-            {
+            if (cellTag[coarseCellCell[j] - 1] != tag) {
                 printf("Incorrect cellTag array provided!\n");
                 printf("Please check the fine cell %d\n", j + 1);
                 printf("A default tag of 0 will be written in the coarse cell %d\n", i + 1);
@@ -1515,11 +1503,9 @@ _build_coarseCellTag
         (*coarseCellTag)[i] = tag;        
     }
     
-    if(0 == 1)
-    {
+    if(0 == 1) {
         printf("Affichage de (*coarseCellTag)\n");
-        for (int i = 0; i < nCoarseCellChecked; i++)
-        {
+        for (int i = 0; i < nCoarseCellChecked; i++) {
             printf(" %d ", (*coarseCellTag)[i]);
         }
         printf("\n");
@@ -1545,24 +1531,20 @@ _build_faceTag
  int          **faceTag
 )
 {
-    if(*faceTag == NULL)
-    {
+    if(*faceTag == NULL) {
         return;
     }
         
     //Loop over coarseFaceToFineFace, i = number of a face after refinement
-    for (int i = 0; i < nFaceChecked; i++)
-    {
+    for (int i = 0; i < nFaceChecked; i++) {
         (*faceTag)[i] = (*faceTag)[coarseFaceToFineFace[i] - 1];
     }
     
     (*faceTag) = realloc((*faceTag), nFaceChecked * sizeof(int));
     
-    if(0 == 1)
-    {
+    if(0 == 1) {
         printf("Contenu de (*faceTag)\n");
-        for (int i = 0; i < nFaceChecked; i++)
-        {
+        for (int i = 0; i < nFaceChecked; i++) {
             printf(" %d ", (*faceTag)[i]);
         }
         printf("\n");
@@ -1588,24 +1570,20 @@ _build_vtxTag
  int          **vtxTag
 )
 {    
-    if(*vtxTag == NULL)
-    {
+    if(*vtxTag == NULL) {
         return;
     }
     
     //Loop over coarseFaceToFineFace, i = number of a face after refinement
-    for (int i = 0; i < nVtxChecked; i++)
-    {
+    for (int i = 0; i < nVtxChecked; i++) {
         (*vtxTag)[i] = (*vtxTag)[coarseVtxToFineVtx[i] - 1];
     }
     
     (*vtxTag) = realloc((*vtxTag), nVtxChecked * sizeof(int));
     
-    if(0 == 1)
-    {
+    if(0 == 1) {
         printf("Contenu de (*vtxTag)\n");
-        for (int i = 0; i < nVtxChecked; i++)
-        {
+        for (int i = 0; i < nVtxChecked; i++) {
             printf(" %d ", (*vtxTag)[i]);
         }
         printf("\n");
@@ -2177,7 +2155,7 @@ _build_coarseCellLNToGN
   //Global numbering of the cells
   PDM_g_num_t beg_NumAbs;
   
-  MPI_Scan(&nCellProc, &beg_NumAbs, 1, PDM__MPI_G_NUM, MPI_SUM, cm->comm);
+  PDM_MPI_Scan(&nCellProc, &beg_NumAbs, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, cm->comm);
   
   //Index to position the local cells
   beg_NumAbs -= nCellProc;
@@ -2225,70 +2203,57 @@ _coarse_mesh_t * cm
     int **faceLNToGNPart = (int **) malloc(cm->nPart * sizeof(int *));
     int *nFacePart = (int *) malloc(cm->nPart * sizeof(int));
     
-    for (int i = 0; i < cm->nPart; i++)
-    {
+    for (int i = 0; i < cm->nPart; i++) {
         faceLNToGNPart[i] = cm->part_ini[i]->faceLNToGN;
         nFacePart[i] = cm->part_ini[i]->nFace;
     }
     
-    if(0 == 1)
-    {
+    if(0 == 1) {
         printf("Contenu de faceLNToGNPart\n");
-        for (int i = 0; i < cm->nPart; i++)
-        {
+        for (int i = 0; i < cm->nPart; i++) {
             printf(" %d ", *(faceLNToGNPart[i]));
         }
         printf("\n");
 
         printf("Contenu de nFacePart\n");
-        for (int i = 0; i < cm->nPart; i++)
-        {
+        for (int i = 0; i < cm->nPart; i++) {
             printf(" %d ", nFacePart[i]);
         }
         printf("\n");
     }
-    
-    MPI_Comm mpi_comm = cm->comm;
-        
+            
     PDM_part_to_block_t *ptb = PDM_part_to_block_create (PDM_writer_BLOCK_DISTRIB_ALL_PROC,
                                                        PDM_writer_POST_CLEANUP,
                                                        1.,
                                                        (PDM_g_num_t **) faceLNToGNPart,
                                                        nFacePart,
                                                        cm->nPart,
-                                                       mpi_comm);    
+                                                       cm->comm);    
 
     int **faceLNToGNTag = (int **) malloc(cm->nPart * sizeof(int *));
     
     int idx_write = 0;
     
-    for (int i = 0; i < cm->nPart; i++)
-    {
-        idx_write = 0;
-        faceLNToGNTag[i] = (int *) malloc(cm->part_ini[i]->nFace * sizeof(int));
+    for (int i = 0; i < cm->nPart; i++) {
+      idx_write = 0;
+      faceLNToGNTag[i] = (int *) malloc(cm->part_ini[i]->nFace * sizeof(int));
         //Loop over coarseFaceToFineFace, i = index of coarseFaceToFineFace (from 0 to cm->part_res[iPart]->part->nFace)
-        for (int j = 0; j < cm->part_res[i]->part->nFace; j++)
-        {
+        for (int j = 0; j < cm->part_res[i]->part->nFace; j++) {
             //If the vertex studied is the same as in coarseFaceToFineFace, it is to be stored
-            if ((idx_write + 1) == cm->part_res[i]->coarseFaceToFineFace[j])
-            {
+            if ((idx_write + 1) == cm->part_res[i]->coarseFaceToFineFace[j]) {
                 faceLNToGNTag[i][idx_write++] = 0;
             }
-            else
-            {
+            else {
                 faceLNToGNTag[i][idx_write++] = -1;
                 j--;
             }
         }
     }
 
-    if(0 == 1)
-    {
+    if(0 == 1) {
         printf("Contenu de faceLNToGNTag\n");    
-        for (int i = 0; i < cm->nPart; i++)
-        {
-            for (int j = 0; j < cm->part_res[i]->part->nFace; j++)
-            {
+        for (int i = 0; i < cm->nPart; i++) {
+            for (int j = 0; j < cm->part_res[i]->part->nFace; j++) {
                 printf(" %d ", faceLNToGNTag[i][j]);
             }
         }
@@ -2312,11 +2277,9 @@ _coarse_mesh_t * cm
     PDM_g_num_t nFaceProc = 0;
     
     int size_block = PDM_part_to_block_n_elt_block_get(ptb);
-    for (int i = 0; i < size_block; i++)
-    {
+    for (int i = 0; i < size_block; i++) {
         //If the face has not been removed
-        if(b_tIntersects[i] == 0)
-        {
+        if(b_tIntersects[i] == 0) {
             nFaceProc++;
         }        
     }    
@@ -2324,7 +2287,7 @@ _coarse_mesh_t * cm
     //Global numbering of the faces
     PDM_g_num_t beg_NumAbs;
     
-    MPI_Scan(&nFaceProc, &beg_NumAbs, 1, PDM__MPI_G_NUM, MPI_SUM, cm->comm);
+    PDM_MPI_Scan(&nFaceProc, &beg_NumAbs, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, cm->comm);
     
     //Index to position the local vertices
     beg_NumAbs -= nFaceProc;
@@ -2333,16 +2296,13 @@ _coarse_mesh_t * cm
       
     //Loop over the partition numbers, i = partition number
     
-    for (int i = 0; i < size_block; i++)
-    {
+    for (int i = 0; i < size_block; i++) {
         //If the vertex has not been removed
-        if(b_tIntersects[i] == 0)
-        {
+        if(b_tIntersects[i] == 0) {
             b_tIntersects[i] = beg_NumAbs + (idx_write++) + 1;
 
         }
-        else
-        {
+        else {
             b_tIntersects[i] = -1;
         }        
     }    
@@ -2353,12 +2313,11 @@ _coarse_mesh_t * cm
                                                          (PDM_g_num_t **) faceLNToGNPart,
                                                          nFacePart,
                                                          cm->nPart,
-                                                         mpi_comm);
+                                                         cm->comm);
 
     PDM_g_num_t  **faceLNToGNFine = (PDM_g_num_t **) malloc(cm->nPart * sizeof(PDM_g_num_t *));
 
-    for (int i = 0; i < cm->nPart; i++)
-    {        
+    for (int i = 0; i < cm->nPart; i++) {        
         faceLNToGNFine[i] = (PDM_g_num_t *) malloc(cm->part_ini[i]->nFace * sizeof(PDM_g_num_t));        
     }
     
@@ -2372,22 +2331,18 @@ _coarse_mesh_t * cm
                             &part_stride,
                             (void **) faceLNToGNFine);
     
-    if(0 == 1)
-    {
+    if(0 == 1) {
         printf("\nContenu de faceLNToGNFine\n");
-        for (int i = 0; i < cm->nPart; i++)
-        {        
+        for (int i = 0; i < cm->nPart; i++) {        
             //Loop over the partition faces, j = face number
-            for (int j = 0; j < cm->part_ini[i]->nFace; j++)
-            {
+            for (int j = 0; j < cm->part_ini[i]->nFace; j++) {
                 printf(" %d ", faceLNToGNFine[i][j]);
             }
         }
         printf("\n");
     }
     
-    for (int i = 0; i < cm->nPart; i++)
-    {
+    for (int i = 0; i < cm->nPart; i++) {
         _part_t *cmp = cm->part_res[i]->part;
         int nFace = cm->part_res[i]->part->nFace;
         cmp->faceLNToGN = (PDM_g_num_t *) malloc(nFace * sizeof(PDM_g_num_t));
@@ -2397,14 +2352,11 @@ _coarse_mesh_t * cm
         }
     }
         
-    if(0 == 1)
-    {
+    if(0 == 1) {
         printf("\nContenu de faceLNToGN de la structure\n");
-        for (int i = 0; i < cm->nPart; i++)
-        {        
+        for (int i = 0; i < cm->nPart; i++) {        
             //Loop over the partition vertices, j = vertex number
-            for (int j = 0; j < cm->part_res[i]->part->nFace; j++)
-            {
+            for (int j = 0; j < cm->part_res[i]->part->nFace; j++) {
                 printf(" %d ", cm->part_res[i]->part->faceLNToGN[j]);
             }
         }
@@ -2414,14 +2366,12 @@ _coarse_mesh_t * cm
     free(faceLNToGNPart);
     free(nFacePart);
     
-    for (int i = 0; i < cm->nPart; i++)
-    {
+    for (int i = 0; i < cm->nPart; i++) {
        free(faceLNToGNTag[i]);
     }
     free(faceLNToGNTag);
     
-    for (int i = 0; i < cm->nPart; i++)
-    {
+    for (int i = 0; i < cm->nPart; i++) {
        free(faceLNToGNFine[i]);
     }
     free(faceLNToGNFine);
@@ -2451,72 +2401,59 @@ _coarse_mesh_t * cm
     int **vtxLNToGNPart = (int **) malloc(cm->nPart * sizeof(int *));
     int *nVtxPart = (int *) malloc(cm->nPart * sizeof(int));
     
-    for (int i = 0; i < cm->nPart; i++)
-    {
+    for (int i = 0; i < cm->nPart; i++) {
         vtxLNToGNPart[i] = cm->part_ini[i]->vtxLNToGN;
         nVtxPart[i] = cm->part_ini[i]->nVtx;
     }
     
-    if(0 == 1)
-    {
+    if(0 == 1) {
         printf("Contenu de vtxLNToGNPart\n");
-        for (int i = 0; i < cm->nPart; i++)
-        {
+        for (int i = 0; i < cm->nPart; i++) {
             printf(" %d ", *(vtxLNToGNPart[i]));
         }
         printf("\n");
 
         printf("Contenu de nVtxPart\n");
-        for (int i = 0; i < cm->nPart; i++)
-        {
+        for (int i = 0; i < cm->nPart; i++) {
             printf(" %d ", nVtxPart[i]);
         }
         printf("\n");
     }
-    
-    MPI_Comm mpi_comm = cm->comm;
-        
+            
     PDM_part_to_block_t *ptb = PDM_part_to_block_create (PDM_writer_BLOCK_DISTRIB_ALL_PROC,
                                                        PDM_writer_POST_CLEANUP,
                                                        1.,
                                                        (PDM_g_num_t **) vtxLNToGNPart,
                                                        nVtxPart,
                                                        cm->nPart,
-                                                       mpi_comm);    
+                                                       cm->comm);    
 
     int **vtxLNToGNTag = (int **) malloc(cm->nPart * sizeof(int *));
     
     int idx_write = 0;
     
-    for (int i = 0; i < cm->nPart; i++)
-    {
+    for (int i = 0; i < cm->nPart; i++) {
         int nFineVtx = cm->part_ini[i]->nVtx;
         int nCoarseVtx = cm->part_res[i]->part->nVtx;
         idx_write = 0;
         vtxLNToGNTag[i] = (int *) malloc(nFineVtx * sizeof(int));
         //Loop over coarseFaceToFineFace, i = index of coarseVtxToFineVtx (from 0 to cm->part_res[iPart]->part->nVtx)
-        for (int j = 0; j < nCoarseVtx; j++)
-        {
+        for (int j = 0; j < nCoarseVtx; j++) {
             //If the vertex studied is the same as in coarseVtxToFineVtx, it is to be stored
-            if ((idx_write + 1) == cm->part_res[i]->coarseVtxToFineVtx[j])
-            {
+            if ((idx_write + 1) == cm->part_res[i]->coarseVtxToFineVtx[j]) {
                 vtxLNToGNTag[i][idx_write++] = 0;
             }
-            else
-            {
+            else {
                 vtxLNToGNTag[i][idx_write++] = -1;
                 j--;
             }
         }
     }
 
-    if(0 == 1)
-    {
+    if (0 == 1) {
         printf("Contenu de vtxLNToGNTag\n");    
-        for (int i = 0; i < cm->nPart; i++)
-        {
-            for (int j = 0; j < cm->part_res[i]->part->nVtx; j++)
-            {
+        for (int i = 0; i < cm->nPart; i++) {
+            for (int j = 0; j < cm->part_res[i]->part->nVtx; j++) {
                 printf(" %d ", vtxLNToGNTag[i][j]);
             }
         }
@@ -2540,11 +2477,9 @@ _coarse_mesh_t * cm
     PDM_g_num_t nVtxProc = 0;
     
     int size_block = PDM_part_to_block_n_elt_block_get(ptb);
-    for (int i = 0; i < size_block; i++)
-    {
+    for (int i = 0; i < size_block; i++) {
         //If the vertex has not been removed
-        if(b_tIntersects[i] == 0)
-        {
+        if(b_tIntersects[i] == 0) {
             nVtxProc++;
         }
         
@@ -2554,7 +2489,7 @@ _coarse_mesh_t * cm
     //Global numbering of the vertices
     PDM_g_num_t beg_NumAbs;
     
-    MPI_Scan(&nVtxProc, &beg_NumAbs, 1, PDM__MPI_G_NUM, MPI_SUM, cm->comm);
+    PDM_MPI_Scan(&nVtxProc, &beg_NumAbs, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, cm->comm);
     
     //Index to position the local vertices
     beg_NumAbs -= nVtxProc;
@@ -2562,16 +2497,13 @@ _coarse_mesh_t * cm
     idx_write = 0;
       
     //Loop over the partition numbers, i = partition number    
-    for (int i = 0; i < size_block; i++)
-    {
+    for (int i = 0; i < size_block; i++) {
         //If the vertex has not been removed
-        if(b_tIntersects[i] == 0)
-        {
+        if (b_tIntersects[i] == 0) {
             b_tIntersects[i] = beg_NumAbs + (idx_write++) + 1;
 
         }
-        else
-        {
+        else {
             b_tIntersects[i] = -1;
         }           
         
@@ -2583,12 +2515,11 @@ _coarse_mesh_t * cm
                                                          (PDM_g_num_t **) vtxLNToGNPart,
                                                          nVtxPart,
                                                          cm->nPart,
-                                                         mpi_comm);
+                                                         cm->comm);
 
     PDM_g_num_t  **vtxLNToGNFine = (PDM_g_num_t **) malloc(cm->nPart * sizeof(PDM_g_num_t *));
 
-    for (int i = 0; i < cm->nPart; i++)
-    {        
+    for (int i = 0; i < cm->nPart; i++) {        
         vtxLNToGNFine[i] = (PDM_g_num_t *) malloc(cm->part_ini[i]->nVtx * sizeof(PDM_g_num_t));        
     }
     
@@ -2602,39 +2533,31 @@ _coarse_mesh_t * cm
                             &part_stride,
                             (void **) vtxLNToGNFine);
     
-    if(0 == 1)
-    {
+    if(0 == 1) {
         printf("\nContenu de vtxLNToGNFine\n");
-        for (int i = 0; i < cm->nPart; i++)
-        {        
+        for (int i = 0; i < cm->nPart; i++) {        
             //Loop over the partition vertices, j = vertex number
-            for (int j = 0; j < cm->part_ini[i]->nVtx; j++)
-            {
+            for (int j = 0; j < cm->part_ini[i]->nVtx; j++) {
                 printf(" %d ", vtxLNToGNFine[i][j]);
             }
         }
         printf("\n");
     }
     
-    for (int i = 0; i < cm->nPart; i++)
-    {
+    for (int i = 0; i < cm->nPart; i++) {
         _part_t *cmp = cm->part_res[i]->part;
         int nVtx = cm->part_res[i]->part->nVtx;
         cmp->vtxLNToGN = (PDM_g_num_t *) malloc(nVtx * sizeof(PDM_g_num_t));
-        for (int j = 0; j < nVtx; j++)
-        {            
+        for (int j = 0; j < nVtx; j++) {            
             cmp->vtxLNToGN[j] = (PDM_g_num_t) vtxLNToGNFine[i][cm->part_res[i]->coarseVtxToFineVtx[j] - 1];
         }
     }
         
-    if(0 == 1)
-    {
+    if(0 == 1) {
         printf("\nContenu de vtxLNToGN de la structure\n");
-        for (int i = 0; i < cm->nPart; i++)
-        {        
+        for (int i = 0; i < cm->nPart; i++) {        
             //Loop over the partition vertices, j = vertex number
-            for (int j = 0; j < cm->part_res[i]->part->nVtx; j++)
-            {
+            for (int j = 0; j < cm->part_res[i]->part->nVtx; j++) {
                 printf(" %d ", cm->part_res[i]->part->vtxLNToGN[j]);
             }
         }
@@ -2644,14 +2567,12 @@ _coarse_mesh_t * cm
     free(vtxLNToGNPart);
     free(nVtxPart);
     
-    for (int i = 0; i < cm->nPart; i++)
-    {
+    for (int i = 0; i < cm->nPart; i++) {
        free(vtxLNToGNTag[i]);
     }
     free(vtxLNToGNTag);
     
-    for (int i = 0; i < cm->nPart; i++)
-    {
+    for (int i = 0; i < cm->nPart; i++) {
        free(vtxLNToGNFine[i]);
     }
     free(vtxLNToGNFine);
@@ -2777,11 +2698,9 @@ _coarse_mesh_t * cm
       }
       printf("\n");
     }
-    
-    MPI_Comm mpi_comm = cm->comm;
-    
+        
     int rank;
-    MPI_Comm_rank(mpi_comm, &rank);
+    PDM_MPI_Comm_rank(cm->comm, &rank);
 
     PDM_part_to_block_t *ptb = PDM_part_to_block_create (PDM_writer_BLOCK_DISTRIB_ALL_PROC,
                                                          PDM_writer_POST_CLEANUP,
@@ -2789,7 +2708,7 @@ _coarse_mesh_t * cm
                                                          (PDM_g_num_t **) faceGroupLNToGNPart,
                                                          nFaceGroupPart,
                                                          cm->nPart,
-                                                         mpi_comm);    
+                                                         cm->comm);    
 
     int *b_tIntersects = NULL;
     int *b_strideOne = NULL;
@@ -2844,7 +2763,7 @@ _coarse_mesh_t * cm
     //Global numbering of the vertices
     PDM_g_num_t beg_NumAbs;
 
-    MPI_Scan(&nFaceGroupProc, &beg_NumAbs, 1, PDM__MPI_G_NUM, MPI_SUM, cm->comm);
+    PDM_MPI_Scan(&nFaceGroupProc, &beg_NumAbs, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, cm->comm);
 
     //Index to position the local vertices
     beg_NumAbs -= nFaceGroupProc;
@@ -2874,7 +2793,7 @@ _coarse_mesh_t * cm
                                                          (PDM_g_num_t **) faceGroupLNToGNPart,
                                                          nFaceGroupPart,
                                                          cm->nPart,
-                                                         mpi_comm);
+                                                         cm->comm);
 
     PDM_g_num_t  **faceGroupLNToGNFine = (PDM_g_num_t **) malloc(cm->nPart * sizeof(PDM_g_num_t *));
 
@@ -2972,9 +2891,7 @@ _coarse_mesh_t * cm
 {
   //Number of processors
   int nProc;
-  MPI_Comm_size(cm->comm, &nProc);
-  
-  MPI_Comm mpi_comm = cm->comm;
+  PDM_MPI_Comm_size(cm->comm, &nProc);
   
   //Loop over the partitions of part_ini and part_res
   for (int iPart = 0; iPart < cm->nPart; iPart++) {
@@ -3136,17 +3053,17 @@ _coarse_mesh_t * cm
     sendIdx[i] *= 3;
   }
   
-  MPI_Alltoall (sendN, 1, PDM__MPI_G_NUM, 
-                recvN, 1, PDM__MPI_G_NUM, 
-                mpi_comm);
+  PDM_MPI_Alltoall (sendN, 1, PDM__PDM_MPI_G_NUM, 
+                recvN, 1, PDM__PDM_MPI_G_NUM, 
+                cm->comm);
   recvIdx[0] = 0;
     
   for (int i = 1; i < nProc; i++)  {
     recvIdx[i] = recvIdx[i - 1] + recvN[i - 1];
   }
 
-  MPI_Alltoallv(sendBuff, sendN, sendIdx, PDM__MPI_G_NUM,
-                recvBuff, recvN, recvIdx, PDM__MPI_G_NUM, mpi_comm);
+  PDM_MPI_Alltoallv(sendBuff, sendN, sendIdx, PDM__PDM_MPI_G_NUM,
+                recvBuff, recvN, recvIdx, PDM__PDM_MPI_G_NUM, cm->comm);
   
   //Loop over the partitions
   for (int iPart = 0; iPart < cm->nPart; iPart++) {
@@ -3647,7 +3564,7 @@ void
 PDM_part_coarse_mesh_create
 (
  int                *cmId,
- const void         *pt_comm,
+ PDM_MPI_Comm        comm, 
  const int           method,
  const int           nPart,
  const int           nTPart,
@@ -3669,7 +3586,7 @@ PDM_part_coarse_mesh_create
   _coarse_mesh_t *cm  = NULL;
   for (int i = 0; i < _l_cm; i++) {
     if (_cm[i] == NULL) {
-      _cm[i] = _coarse_mesh_create (pt_comm,
+      _cm[i] = _coarse_mesh_create (comm,
                                     method,
                                     nPart,
                                     nTPart,
@@ -3694,7 +3611,7 @@ PDM_part_coarse_mesh_create
     for (int i = l_cm_old; i < _l_cm; i++)
       _cm[i] = NULL;
 
-    _cm[l_cm_old] = _coarse_mesh_create (pt_comm,
+    _cm[l_cm_old] = _coarse_mesh_create (comm,
                                          method,
                                          nPart,
                                          nTPart,
@@ -3714,7 +3631,7 @@ void
 PROCF (pdm_part_coarse_mesh_create, PDM_PART_COARSE_MESH_CREATE)
 (
  int                *cmId,
- const void         *pt_comm,        
+ PDM_MPI_Fint       *fcomm,        
  const int          *method,
  const int          *nPart, 
  const int          *nTPart, 
@@ -3727,18 +3644,21 @@ PROCF (pdm_part_coarse_mesh_create, PDM_PART_COARSE_MESH_CREATE)
  const int          *have_faceGroup
 )
 {
-    PDM_part_coarse_mesh_create (cmId,
-                                 pt_comm,
-                                 *method,
-                                 *nPart,
-                                 *nTPart,
-                                 *nFaceGroup,
-                                 *have_cellTag,
-                                 *have_faceTag,
-                                 *have_vtxTag,
-                                 *have_cellWeight,
-                                 *have_faceWeight,
-                                 *have_faceGroup);
+  
+  MPI_Comm comm = PDM_MPI_Comm_f2c (*fcomm);
+  
+  PDM_part_coarse_mesh_create (cmId,
+                               comm,
+                               *method,
+                               *nPart,
+                               *nTPart,
+                               *nFaceGroup,
+                               *have_cellTag,
+                               *have_faceTag,
+                               *have_vtxTag,
+                               *have_cellWeight,
+                               *have_faceWeight,
+                               *have_faceGroup);
 }
 
 /**
@@ -4080,7 +4000,7 @@ PDM_part_coarse_mesh_part_dim_get
   _coarse_part_t *part_res = NULL;   
   
   int numProcs;
-  MPI_Comm_size(cm->comm, &numProcs);
+  PDM_MPI_Comm_size(cm->comm, &numProcs);
 
   if (iPart < cm->nPart) {        
     part_res = cm->part_res[iPart]; 
@@ -4293,7 +4213,7 @@ PROCF (pdm_part_coarse_mesh_part_get, PDM_PART_COARSE_MESH_PART_GET)
   _coarse_mesh_t * cm = _get_from_id (*cmId); 
   
   int numProcs;
-  MPI_Comm_size(cm->comm, &numProcs);
+  PDM_MPI_Comm_size(cm->comm, &numProcs);
   
   _coarse_part_t *part_res = NULL;   
     

@@ -181,25 +181,25 @@ int main(int argc, char *argv[])
   MPI_Comm     comm = MPI_COMM_WORLD;
 
   PDM_part_dcube_init(&id,
-                   (void *) &comm,
-                   nVtxSeg, 
-                   length);
+                      comm,
+                      nVtxSeg, 
+                      length);
 
   PDM_part_dcube_dim_get(id,
-                      &nFaceGroup,
-                      &dNCell,
-                      &dNFace,
-                      &dNVtx,
-                      &dFaceVtxL,
-                      &dFaceGroupL);
+                         &nFaceGroup,
+                         &dNCell,
+                         &dNFace,
+                         &dNVtx,
+                         &dFaceVtxL,
+                         &dFaceGroupL);
 
   PDM_part_dcube_data_get(id,
-                       &dFaceCell,
-                       &dFaceVtxIdx, 
-                       &dFaceVtx,
-                       &dVtxCoord,
-                       &dFaceGroupIdx,
-                       &dFaceGroup); 
+                          &dFaceCell,
+                          &dFaceVtxIdx, 
+                          &dFaceVtx,
+                          &dVtxCoord,
+                          &dFaceGroupIdx,
+                          &dFaceGroup); 
 
   if (0 == 1) {
 
@@ -252,28 +252,28 @@ int main(int argc, char *argv[])
   int *dCellPart = (int *) malloc(dNCell*sizeof(int));
 
   PDM_part_create(&ppartId,
-               (void *) &comm,
-               method,
-               PDM_PART_RENUM_CELL_NONE,
-               nPart,
-               dNCell,
-               dNFace,
-               dNVtx,
-               nFaceGroup,
-               NULL,
-               NULL,
-               NULL,
-               NULL,
-               have_dCellPart,
-               dCellPart,
-               dFaceCell,
-               dFaceVtxIdx,
-               dFaceVtx,
-               NULL,
-               dVtxCoord,
-               NULL,
-               dFaceGroupIdx,
-               dFaceGroup);
+                  comm,
+                  method,
+                  PDM_PART_RENUM_CELL_NONE,
+                  nPart,
+                  dNCell,
+                  dNFace,
+                  dNVtx,
+                  nFaceGroup,
+                  NULL,
+                  NULL,
+                  NULL,
+                  NULL,
+                  have_dCellPart,
+                  dCellPart,
+                  dFaceCell,
+                  dFaceVtxIdx,
+                  dFaceVtx,
+                  NULL,
+                  dVtxCoord,
+                  NULL,
+                  dFaceGroupIdx,
+                  dFaceGroup);
 
   double  *elapsed = NULL;
   double  *cpu = NULL;

@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include "pdm.h"
+#include "pdm_mpi.h"
 
 /*=============================================================================
  * Macro definitions
@@ -123,7 +124,7 @@ void
 PDM_part_create
 (
  int                *ppartId,
- const void         *pt_comm,
+ const PDM_MPI_Comm  comm,
  const PDM_part_split_t split_method,
  const PDM_part_renum_cell_t renum_cell_method,
  const int           nPart,
@@ -151,7 +152,7 @@ void
 PROCF (pdm_part_create, PDM_PART_CREATE)
 (
  int                *ppartId,
- const void         *pt_comm,
+ const PDM_MPI_Fint *fcomm,
  const int          *split_method,
  const int          *renum_cell_method,
  const int          *nPart,

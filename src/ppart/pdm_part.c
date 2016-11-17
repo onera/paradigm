@@ -22,6 +22,8 @@
 #include "pdm_part.h"
 #include "pdm_part_priv.h"
 #include "pdm_timer.h"
+#include "pdm_mpi.h"
+#include "pdm_mpi_ext_dependencies.h"
 
 #include "pdm_part_geom.h"
 #include "pdm_part_renum.h"
@@ -31,10 +33,10 @@
  *----------------------------------------------------------------------------*/
 
 #ifdef PDM_HAVE_PARMETIS
-#include <parmetis.h>
+#include <metis.h>
 #endif
 #ifdef PDM_HAVE_PTSCOTCH
-#include <ptscotch.h>
+#include <scotch.h>
 #endif
 
 #ifdef __cplusplus
@@ -383,22 +385,22 @@ _alltoall
  void        **recvBuff,
  int          *recvBuffN,
  int          *recvBuffIdx,
- MPI_Datatype  MPIDataType,
+ PDM_MPI_Datatype  MPIDataType,
  size_t        MPIDataTypeSize,
- MPI_Comm      comm
+ PDM_MPI_Comm      comm
 )
 {
   int nRank = 0;
-  MPI_Comm_size(comm, &nRank);
+  PDM_MPI_Comm_size(comm, &nRank);
 
   /* Get number data to receive from each process */
 
-  MPI_Alltoall(sendBuffN, 
+  PDM_MPI_Alltoall(sendBuffN, 
                1, 
-               MPI_INT, 
+               PDM_MPI_INT, 
                recvBuffN, 
                1, 
-               MPI_INT, 
+               PDM_MPI_INT, 
                comm);
 
   recvBuffIdx[0] = 0;
@@ -410,7 +412,7 @@ _alltoall
 
   /* Receive data from each process */
 
-  MPI_Alltoallv(sendBuff, 
+  PDM_MPI_Alltoallv(sendBuff, 
                 sendBuffN, 
                 sendBuffIdx, 
                 MPIDataType, 
@@ -439,8 +441,8 @@ _dual_graph_from_face_cell
   int myRank;
   int nRank;
 
-  MPI_Comm_rank(ppart->comm, &myRank);
-  MPI_Comm_size(ppart->comm, &nRank);
+  PDM_MPI_Comm_rank(ppart->comm, &myRank);
+  PDM_MPI_Comm_size(ppart->comm, &nRank);
 
   /*
    * cellToSendN allocation
@@ -516,12 +518,12 @@ _dual_graph_from_face_cell
 
   int *cellToRecvN = (int *) malloc(nRank * sizeof(int));
   
-  MPI_Alltoall(cellToSendN,
+  PDM_MPI_Alltoall(cellToSendN,
                1, 
-               MPI_INT, 
+               PDM_MPI_INT, 
                cellToRecvN,
                1, 
-               MPI_INT,
+               PDM_MPI_INT,
                ppart->comm);
 
   int *cellToRecvIdx = (int *) malloc((nRank+1) * sizeof(int));
@@ -533,14 +535,14 @@ _dual_graph_from_face_cell
 
   PDM_g_num_t *cellToRecv = (PDM_g_num_t *) malloc(cellToRecvIdx[nRank]*sizeof(PDM_g_num_t));
 
-  MPI_Alltoallv(cellToSend,
+  PDM_MPI_Alltoallv(cellToSend,
                 cellToSendN,
                 cellToSendIdx, 
-                PDM__MPI_G_NUM, 
+                PDM__PDM_MPI_G_NUM, 
                 cellToRecv,
                 cellToRecvN,
                 cellToRecvIdx,
-                PDM__MPI_G_NUM, 
+                PDM__PDM_MPI_G_NUM, 
                 ppart->comm);
 
   int nRecvPair = cellToRecvIdx[nRank]/nData;
@@ -733,8 +735,8 @@ _dual_graph_from_cell_face
   int myRank;
   int nRank;
 
-  MPI_Comm_rank(ppart->comm, &myRank);
-  MPI_Comm_size(ppart->comm, &nRank);
+  PDM_MPI_Comm_rank(ppart->comm, &myRank);
+  PDM_MPI_Comm_size(ppart->comm, &nRank);
 
   /*
    * cellToSendN allocation
@@ -798,12 +800,12 @@ _dual_graph_from_cell_face
 
   int *faceToRecvN = (int *) malloc(nRank * sizeof(int));
   
-  MPI_Alltoall(faceToSendN,
+  PDM_MPI_Alltoall(faceToSendN,
                1, 
-               MPI_INT, 
+               PDM_MPI_INT, 
                faceToRecvN,
                1, 
-               MPI_INT,
+               PDM_MPI_INT,
                ppart->comm);
 
   int *faceToRecvIdx = (int *) malloc((nRank+1) * sizeof(int));
@@ -816,14 +818,14 @@ _dual_graph_from_cell_face
   PDM_g_num_t *faceToRecv = 
     (PDM_g_num_t *) malloc(faceToRecvIdx[nRank]*sizeof(PDM_g_num_t));
 
-  MPI_Alltoallv(faceToSend,
+  PDM_MPI_Alltoallv(faceToSend,
                 faceToSendN,
                 faceToSendIdx, 
-                PDM__MPI_G_NUM, 
+                PDM__PDM_MPI_G_NUM, 
                 faceToRecv,
                 faceToRecvN,
                 faceToRecvIdx,
-                PDM__MPI_G_NUM, 
+                PDM__PDM_MPI_G_NUM, 
                 ppart->comm);
 
   int nRecvFace = faceToRecvIdx[nRank]/nData;
@@ -901,14 +903,14 @@ _dual_graph_from_cell_face
 
   free(faceToRecv);
 
-  MPI_Alltoallv(cellToSend,
+  PDM_MPI_Alltoallv(cellToSend,
                 cellToSendN,
                 cellToSendIdx, 
-                PDM__MPI_G_NUM, 
+                PDM__PDM_MPI_G_NUM, 
                 cellToRecv,
                 cellToRecvN,
                 cellToRecvIdx,
-                PDM__MPI_G_NUM, 
+                PDM__PDM_MPI_G_NUM, 
                 ppart->comm);
 
   int nRecvPair = cellToRecvIdx[nRank]/nData;
@@ -1019,8 +1021,8 @@ _split
   int myRank;
   int nRank;
 
-  MPI_Comm_rank(ppart->comm, &myRank);
-  MPI_Comm_size(ppart->comm, &nRank);
+  PDM_MPI_Comm_rank(ppart->comm, &myRank);
+  PDM_MPI_Comm_size(ppart->comm, &nRank);
 
   for (int i = 0; i < ppart->dNCell; i++) {
     cellPart[i] = 0;
@@ -1080,7 +1082,7 @@ _split
         }
       }
 
-      ParMETIS_V3_PartKway((idx_t*) _dCellProc,
+      PDM_ParMETIS_V3_PartKway((idx_t*) _dCellProc,
                            (idx_t*) ppart->dDualGraphIdx,
                            (idx_t*) ppart->dDualGraph,
                            vwgt,       /* vwgt   : poids des cellules*/
@@ -1094,7 +1096,7 @@ _split
                            options,
                            &edgecut,
                            (idx_t*) cellPart,
-                           &ppart->comm);
+                           ppart->comm);
       
       free(ubvec);
       free(tpwgts);
@@ -1117,7 +1119,7 @@ _split
     {
 #ifdef PDM_HAVE_PTSCOTCH
 
-      SCOTCH_Dgraph grafptr;
+      PDM_SCOTCH_Dgraph grafptr = PDM_SCOTCH_DgraphAlloc();
       SCOTCH_Strat straptr;
       int ierr = 0;
       
@@ -1128,7 +1130,7 @@ _split
         exit(1);
       }
 
-      ierr = SCOTCH_dgraphInit (&grafptr,ppart->comm);
+      ierr = PDM_SCOTCH_dgraphInit (grafptr,ppart->comm);
       if (ierr) {
         printf("PPART error : Error in PT-Scotch graph initialization\n");
         exit(1);
@@ -1151,7 +1153,7 @@ _split
 
       SCOTCH_Num *edloloctab = NULL ; /* Poids des arcs du graphe */
 
-      ierr = SCOTCH_dgraphBuild(&grafptr , /* Pointeur vers le graph */
+      ierr = PDM_SCOTCH_dgraphBuild(grafptr , /* Pointeur vers le graph */
                                 0, /* Indice de depart des tableaux, 0 en C */
                                 _nCell, /* Nombre de points du graph */
                                 _nCell,
@@ -1174,7 +1176,7 @@ _split
 
       if (0 == 1) {
 
-        ierr = SCOTCH_dgraphCheck (&grafptr);
+        ierr = PDM_SCOTCH_dgraphCheck (grafptr);
       }
 
       if (ierr) {
@@ -1188,15 +1190,17 @@ _split
 
       const SCOTCH_Num _nPart = (SCOTCH_Num) ppart->tNPart;
 
-      ierr = SCOTCH_dgraphPart(&grafptr,
+      ierr = PDM_SCOTCH_dgraphPart(grafptr,
                                _nPart, /* Nombre de partitions demande */
                                &straptr,
                                (SCOTCH_Num *) cellPart    /* parts[i] donne le numero */
                                );                      /*   de partition de l'element i */
       
       SCOTCH_stratExit(&straptr);
-      SCOTCH_dgraphExit(&grafptr);
-
+      PDM_SCOTCH_dgraphExit(grafptr);
+      
+      PDM_SCOTCH_DgraphFree(grafptr);
+      
       if (ppart->_dCellWeight != NULL) {
         if (sizeof(veloloctab) != sizeof(ppart->_dCellWeight)) {
           free(veloloctab);
@@ -1260,8 +1264,8 @@ _distrib_cell
   int myRank;
   int nRank;
   
-  MPI_Comm_rank(ppart->comm, &myRank);
-  MPI_Comm_size(ppart->comm, &nRank);
+  PDM_MPI_Comm_rank(ppart->comm, &myRank);
+  PDM_MPI_Comm_size(ppart->comm, &nRank);
   
   /* 
    *  For each cell faceToSend contains :
@@ -1348,7 +1352,7 @@ _distrib_cell
             (void **) &faceToRecv,
             faceToRecvN,
             faceToRecvIdx,
-            PDM__MPI_G_NUM,
+            PDM__PDM_MPI_G_NUM,
             sizeof(PDM_g_num_t),
             ppart->comm);
 
@@ -1544,8 +1548,8 @@ _distrib_face
   int myRank;
   int nRank;
   
-  MPI_Comm_rank(ppart->comm, &myRank);
-  MPI_Comm_size(ppart->comm, &nRank);
+  PDM_MPI_Comm_rank(ppart->comm, &myRank);
+  PDM_MPI_Comm_size(ppart->comm, &nRank);
 
   const int nData     = 1;
   int       nDataFace = 2; 
@@ -1616,7 +1620,7 @@ _distrib_face
               (void **) &requestedFace,
               requestedFaceN,
               requestedFaceIdx,
-              PDM__MPI_G_NUM,
+              PDM__PDM_MPI_G_NUM,
               sizeof(PDM_g_num_t),
               ppart->comm);
 
@@ -1696,7 +1700,7 @@ _distrib_face
               (void **) &rFaceInfo,
               rFaceInfoN,
               rFaceInfoIdx,
-              PDM__MPI_G_NUM,
+              PDM__PDM_MPI_G_NUM,
               sizeof(PDM_g_num_t),
               ppart->comm);
 
@@ -1856,8 +1860,8 @@ _distrib_vtx
   int myRank;
   int nRank;
   
-  MPI_Comm_rank(ppart->comm, &myRank);
-  MPI_Comm_size(ppart->comm, &nRank);
+  PDM_MPI_Comm_rank(ppart->comm, &myRank);
+  PDM_MPI_Comm_size(ppart->comm, &nRank);
 
   int          *vtxToSendIdx = (int *) malloc((nRank + 1) * sizeof(int));
   int          *vtxToSendN   = (int *) malloc(nRank * sizeof(int));
@@ -1922,7 +1926,7 @@ _distrib_vtx
               (void **) &requestedVtx,
               requestedVtxN,
               requestedVtxIdx,
-              PDM__MPI_G_NUM,
+              PDM__PDM_MPI_G_NUM,
               sizeof(PDM_g_num_t),
               ppart->comm);
 
@@ -1996,8 +2000,8 @@ _distrib_vtx
               (void **) &rVtxInfo,
               rVtxInfoN,
               rVtxInfoIdx,
-              MPI_UNSIGNED_CHAR,
-              sizeof(MPI_UNSIGNED_CHAR),
+              PDM_MPI_UNSIGNED_CHAR,
+              sizeof(PDM_MPI_UNSIGNED_CHAR),
               ppart->comm);
 
     if (sVtxInfo != NULL)
@@ -2115,8 +2119,8 @@ _search_part_bound_face
   int myRank;
   int nRank;
   
-  MPI_Comm_rank(ppart->comm, &myRank);
-  MPI_Comm_size(ppart->comm, &nRank);
+  PDM_MPI_Comm_rank(ppart->comm, &myRank);
+  PDM_MPI_Comm_size(ppart->comm, &nRank);
 
   int          *faceToSendIdx = (int *) malloc((nRank + 1) * sizeof(int));
   int          *faceToSendN   = (int *) malloc(nRank * sizeof(int));
@@ -2199,7 +2203,7 @@ _search_part_bound_face
               (void **) &requestedFace,
               requestedFaceN,
               requestedFaceIdx,
-              PDM__MPI_G_NUM,
+              PDM__PDM_MPI_G_NUM,
               sizeof(PDM_g_num_t),
               ppart->comm);
 
@@ -2294,8 +2298,8 @@ _search_part_bound_face
             (void **) &requestedFaceInt,
             requestedFaceN,
             requestedFaceIdx,
-            MPI_INT,
-            sizeof(MPI_INT),
+            PDM_MPI_INT,
+            sizeof(PDM_MPI_INT),
             ppart->comm);
   
   free(faceToSendInt);
@@ -2503,8 +2507,8 @@ _distrib_face_groups
   int myRank;
   int nRank;
     
-  MPI_Comm_rank(ppart->comm, &myRank);
-  MPI_Comm_size(ppart->comm, &nRank);
+  PDM_MPI_Comm_rank(ppart->comm, &myRank);
+  PDM_MPI_Comm_size(ppart->comm, &nRank);
 
   int          *faceToSendIdx = (int *) malloc((nRank + 1) * sizeof(int));
   int          *faceToSendN   = (int *) malloc(nRank * sizeof(int));
@@ -2525,12 +2529,12 @@ _distrib_face_groups
     PDM_g_num_t nFaceGroup = ppart->_dFaceGroupIdx[igroup+1] 
                            - ppart->_dFaceGroupIdx[igroup];
 
-    MPI_Allgather(&nFaceGroup,
+    PDM_MPI_Allgather(&nFaceGroup,
                   1,
-                  PDM__MPI_G_NUM, 
+                  PDM__PDM_MPI_G_NUM, 
                   (void *) (&dFaceGroupProc[1]), 
                   1, 
-                  PDM__MPI_G_NUM, 
+                  PDM__PDM_MPI_G_NUM, 
                   ppart->comm);
 
     dFaceGroupProc[0] = 0;
@@ -2585,7 +2589,7 @@ _distrib_face_groups
               (void **) &requestedFace,
               requestedFaceN,
               requestedFaceIdx,
-              PDM__MPI_G_NUM,
+              PDM__PDM_MPI_G_NUM,
               sizeof(PDM_g_num_t),
               ppart->comm);
 
@@ -2667,7 +2671,7 @@ _distrib_face_groups
                 (void **) &requestedFace2,
                 requestedFaceN,
                 requestedFaceIdx,
-                PDM__MPI_G_NUM,
+                PDM__PDM_MPI_G_NUM,
                 sizeof(PDM_g_num_t),
                 ppart->comm);
       
@@ -2730,7 +2734,7 @@ _distrib_face_groups
                 (void **) &rFaceInfo,
                 rFaceInfoN,
                 rFaceInfoIdx,
-                PDM__MPI_G_NUM,
+                PDM__PDM_MPI_G_NUM,
                 sizeof(PDM_g_num_t),
                 ppart->comm);
 
@@ -2969,7 +2973,7 @@ void
 PDM_part_create
 (
  int                *ppartId,
- const void         *pt_comm,
+ const PDM_MPI_Comm  comm,
  const PDM_part_split_t split_method,
  const PDM_part_renum_cell_t renum_cell_method,
  const int           nPart,
@@ -2995,11 +2999,9 @@ PDM_part_create
 {
   int myRank;
   int nRank;
-
-  MPI_Comm comm = *((MPI_Comm *) pt_comm);
   
-  MPI_Comm_rank(comm, &myRank);
-  MPI_Comm_size(comm, &nRank);
+  PDM_MPI_Comm_rank(comm, &myRank);
+  PDM_MPI_Comm_size(comm, &nRank);
 
   /*
    * Search a ppart free id
@@ -3067,12 +3069,12 @@ PDM_part_create
 
   ppart->dCellProc = (PDM_g_num_t *) malloc((nRank+1) * sizeof(PDM_g_num_t));
   PDM_g_num_t _dNCell = (PDM_g_num_t) dNCell;
-  MPI_Allgather((void *) &_dNCell,
+  PDM_MPI_Allgather((void *) &_dNCell,
                 1,
-                PDM__MPI_G_NUM, 
+                PDM__PDM_MPI_G_NUM, 
                 (void *) (&ppart->dCellProc[1]), 
                 1, 
-                PDM__MPI_G_NUM, 
+                PDM__PDM_MPI_G_NUM, 
                 comm);
 
   ppart->dCellProc[0] = 1;
@@ -3099,12 +3101,12 @@ PDM_part_create
   ppart->dFaceProc = (PDM_g_num_t *) malloc((nRank+1) * sizeof(PDM_g_num_t));
   int *dNFaceProc = (int *) malloc((nRank) * sizeof(int));
 
-  MPI_Allgather((void *) &dNFace,
+  PDM_MPI_Allgather((void *) &dNFace,
                 1,
-                MPI_INT, 
+                PDM_MPI_INT, 
                 (void *) dNFaceProc, 
                 1, 
-                MPI_INT, 
+                PDM_MPI_INT, 
                 comm);
   ppart->dFaceProc[0] = 1;
   for (int i = 1; i < nRank+1; i++) {
@@ -3121,12 +3123,12 @@ PDM_part_create
   ppart->dVtxProc = (PDM_g_num_t *) malloc((nRank+1) * sizeof(PDM_g_num_t));
   int *dNVtxProc = (int *) malloc((nRank) * sizeof(int));
 
-  MPI_Allgather((void *) &dNVtx,
+  PDM_MPI_Allgather((void *) &dNVtx,
                 1,
-                MPI_INT, 
+                PDM_MPI_INT, 
                 (void *) dNVtxProc, 
                 1, 
-                MPI_INT, 
+                PDM_MPI_INT, 
                 comm);
   ppart->dVtxProc[0] = 1;
   for (int i = 1; i < nRank+1; i++) {
@@ -3152,12 +3154,12 @@ PDM_part_create
   ppart->mNPart = -1;
 
   ppart->dPartProc = (int *) malloc((nRank + 1) * sizeof(int));
-  MPI_Allgather((void *) &nPart,
+  PDM_MPI_Allgather((void *) &nPart,
                 1,
-                MPI_INT, 
+                PDM_MPI_INT, 
                 (void *) (&ppart->dPartProc[1]), 
                 1, 
-                MPI_INT, 
+                PDM_MPI_INT, 
                 comm);
 
   ppart->dPartProc[0] = 0;
@@ -3349,7 +3351,7 @@ void
 PROCF (pdm_part_create, PDM_PART_CREATE)
 (
  int                *ppartId,
- const void         *pt_comm,
+ const PDM_MPI_Fint *fcomm,
  const int          *split_method,
  const int          *renum_cell_method,
  const int          *nPart,
@@ -3380,8 +3382,7 @@ PROCF (pdm_part_create, PDM_PART_CREATE)
 )
 {
   
-  MPI_Fint comm = *((MPI_Fint *) pt_comm);
-  const MPI_Comm c_comm    = MPI_Comm_f2c(comm);
+  const PDM_MPI_Comm c_comm    = PDM_MPI_Comm_f2c (*fcomm);
   const int *_dCellFaceIdx = dCellFaceIdx;
   const PDM_g_num_t *_dCellFace = dCellFace;
   const int *_dCellTag           = dCellTag;
@@ -3410,7 +3411,7 @@ PROCF (pdm_part_create, PDM_PART_CREATE)
     _dFaceCell = NULL;
 
   PDM_part_create(ppartId,
-               (void *) &c_comm,
+                  c_comm,
                *split_method,
                *renum_cell_method,
                *nPart,
@@ -3471,7 +3472,7 @@ const   int            ipart,
 {
   _PDM_part_t *ppart = _get_from_id(ppartId);
   int numProcs;
-  MPI_Comm_size(ppart->comm, &numProcs);
+  PDM_MPI_Comm_size(ppart->comm, &numProcs);
 
   _part_t *meshPart = NULL;
   if (ipart < ppart->nPart)
@@ -3642,7 +3643,7 @@ PROCF (pdm_part_part_val_get, PDM_PART_PART_VAL_GET)
 {
   _PDM_part_t *ppart = _get_from_id(*ppartId);
   int numProcs;
-  MPI_Comm_size(ppart->comm, &numProcs);
+  PDM_MPI_Comm_size(ppart->comm, &numProcs);
 
   _part_t *meshPart = NULL;
   if (*ipart < ppart->nPart)
@@ -3894,7 +3895,7 @@ const int       ppartId,
 {
   _PDM_part_t *ppart = _get_from_id(ppartId);
   int numProcs;
-  MPI_Comm_size(ppart->comm, &numProcs);
+  PDM_MPI_Comm_size(ppart->comm, &numProcs);
 
   int *n_loc = (int *) malloc(ppart->nPart * sizeof(int));
   int *n_tot = (int *) malloc(ppart->dPartProc[numProcs] * sizeof(int));
@@ -3923,22 +3924,22 @@ const int       ppartId,
     nPartProc[i] = ppart->dPartProc[i+1] - ppart->dPartProc[i];
   }
 
-  MPI_Allgatherv((void *) n_loc, 
+  PDM_MPI_Allgatherv((void *) n_loc, 
                  ppart->nPart, 
-                 MPI_INT,
+                 PDM_MPI_INT,
                  (void *) n_tot, 
                  nPartProc, 
                  ppart->dPartProc, 
-                 MPI_INT,
+                 PDM_MPI_INT,
                  ppart->comm);
 
-  MPI_Allgatherv((void *) s_loc, 
+  PDM_MPI_Allgatherv((void *) s_loc, 
                  ppart->nPart, 
-                 MPI_INT,
+                 PDM_MPI_INT,
                  (void *) s_tot, 
                  nPartProc, 
                  ppart->dPartProc, 
-                 MPI_INT,
+                 PDM_MPI_INT,
                  ppart->comm);
 
   _quickSort_int(s_tot, 0, ppart->dPartProc[numProcs]-1);

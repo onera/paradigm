@@ -5,13 +5,12 @@
  * Hilbert space-filling curve construction for coordinates.
  *============================================================================*/
 
-#include "mpi.h"
-
 /*----------------------------------------------------------------------------
  *  Local headers
  *----------------------------------------------------------------------------*/
 
 #include "pdm.h"
+#include "pdm_mpi.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -68,7 +67,7 @@ PDM_hilbert_get_coord_extents_par(int           dim,
                                   size_t        n_coords,
                                   const double  coords[],
                                   double        g_extents[],
-                                  MPI_Comm      comm);
+                                  PDM_MPI_Comm      comm);
 void
 PDM_hilbert_get_coord_extents_seq(int      dim,
                               size_t       n_coords,
@@ -184,7 +183,7 @@ PDM_hilbert_build_rank_index(int                       dim,
                              const int                 weight[],
                              const int                 order[],
                              PDM_hilbert_code_t        rank_index[],
-                             MPI_Comm                  comm);
+                             PDM_MPI_Comm                  comm);
 
 /*----------------------------------------------------------------------------*/
 

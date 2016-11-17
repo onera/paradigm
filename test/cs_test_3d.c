@@ -184,12 +184,11 @@ int main(int argc, char *argv[])
    */
 
   int          id;
-  void *mpi_comm = PDM_MPI_2_mpi_comm(PDM_MPI_COMM_WORLD);
 
   PDM_part_dcube_init(&id,
-                   mpi_comm,
-                   nVtxSeg, 
-                   length);
+                      PDM_MPI_COMM_WORLD,
+                      nVtxSeg, 
+                      length);
 
   PDM_part_dcube_dim_get(id,
                       &nFaceGroup,
@@ -219,28 +218,28 @@ int main(int argc, char *argv[])
   int *dCellPart = (int *) malloc(dNCell*sizeof(int));
 
   PDM_part_create(&ppartId,
-               mpi_comm,
-               method,
-               PDM_PART_RENUM_CELL_NONE,
-               nPart,
-               dNCell,
-               dNFace,
-               dNVtx,
-               nFaceGroup,
-               NULL,
-               NULL,
-               NULL,
-               NULL,
-               have_dCellPart,
-               dCellPart,
-               dFaceCell,
-               dFaceVtxIdx,
-               dFaceVtx,
-               NULL,
-               dVtxCoord,
-               NULL,
-               dFaceGroupIdx,
-               dFaceGroup);
+                  PDM_MPI_COMM_WORLD,
+                  method,
+                  PDM_PART_RENUM_CELL_NONE,
+                  nPart,
+                  dNCell,
+                  dNFace,
+                  dNVtx,
+                  nFaceGroup,
+                  NULL,
+                  NULL,
+                  NULL,
+                  NULL,
+                  have_dCellPart,
+                  dCellPart,
+                  dFaceCell,
+                  dFaceVtxIdx,
+                  dFaceVtx,
+                  NULL,
+                  dVtxCoord,
+                  NULL,
+                  dFaceGroupIdx,
+                  dFaceGroup);
 
   free(dCellPart);
 
@@ -250,10 +249,10 @@ int main(int argc, char *argv[])
   double  *cpu_sys = NULL;
 
   PDM_part_time_get(ppartId,
-                 &elapsed,
-                 &cpu,
-                 &cpu_user,
-                 &cpu_sys);
+                    &elapsed,
+                    &cpu,
+                    &cpu_user,
+                    &cpu_sys);
 
   printf("[%i]   - elapsed total                    : %12.5e\n", myRank, elapsed[0]);
   printf("[%i]   - elapsed building graph           : %12.5e\n", myRank, elapsed[1]);

@@ -472,7 +472,7 @@ _hilbert_encode_3d_others(const double  coord[3], const unsigned * _idata3d, con
 static void
 _local_to_global_extents(int         dim,
                          double  extents[],
-                         MPI_Comm    comm)
+                         PDM_MPI_Comm    comm)
 {
   int i;
   double  l_min[3], l_max[3];
@@ -482,8 +482,8 @@ _local_to_global_extents(int         dim,
     l_max[i] = extents[i + dim];
   }
 
-  MPI_Allreduce(l_min, extents, dim, PDM__MPI_REAL, MPI_MIN, comm);
-  MPI_Allreduce(l_max, extents + dim, dim, PDM__MPI_REAL, MPI_MAX, comm);
+  PDM_MPI_Allreduce(l_min, extents, dim, PDM__PDM_MPI_REAL, PDM_MPI_MIN, comm);
+  PDM_MPI_Allreduce(l_max, extents + dim, dim, PDM__PDM_MPI_REAL, PDM_MPI_MAX, comm);
 }
 
 
@@ -605,7 +605,7 @@ _define_rank_distrib(int                       dim,
                      const PDM_hilbert_code_t  sampling[],
                      double                    cfreq[],
                      PDM_g_num_t                 g_distrib[],
-                     MPI_Comm                  comm)
+                     PDM_MPI_Comm                  comm)
 {
   int  id, rank_id;
   PDM_hilbert_code_t  sample_code;
@@ -652,7 +652,7 @@ _define_rank_distrib(int                       dim,
 
   /* Define the global distribution */
 
-  MPI_Allreduce(l_distrib, g_distrib, n_samples, PDM__MPI_G_NUM, MPI_SUM, comm);
+  PDM_MPI_Allreduce(l_distrib, g_distrib, n_samples, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, comm);
 
   free(l_distrib);
 
@@ -837,7 +837,7 @@ _bucket_sampling(int                       dim,
                  const int           weight[],
                  const int           order[],
                  PDM_hilbert_code_t       *sampling[],
-                 MPI_Comm                  comm)
+                 PDM_MPI_Comm                  comm)
 {
   int  i, n_iters;
   int   j;
@@ -856,7 +856,7 @@ _bucket_sampling(int                       dim,
   for (j = 0; j < n_codes; j++)
     lsum_weight += weight[j];
 
-  MPI_Allreduce(&lsum_weight, &gsum_weight, 1, PDM__MPI_G_NUM, MPI_SUM, comm);
+  PDM_MPI_Allreduce(&lsum_weight, &gsum_weight, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, comm);
 
   optim = (double)gsum_weight / (double)n_ranks;
 
@@ -992,14 +992,14 @@ PDM_hilbert_get_coord_extents_par(int               dim,
                               size_t            n_coords,
                               const double  coords[],
                               double        g_extents[],
-                              MPI_Comm          comm)
+                              PDM_MPI_Comm          comm)
 {
   PDM_hilbert_get_coord_extents_seq(dim,
                                     n_coords,
                                     coords,
                                     g_extents);
 
-  if (comm != MPI_COMM_NULL)
+  if (comm != PDM_MPI_COMM_NULL)
     _local_to_global_extents(dim, g_extents, comm);
 }
 
@@ -1323,7 +1323,7 @@ PDM_hilbert_build_rank_index(int                       dim,
                              const int                 weight[],
                              const int                 order[],
                              PDM_hilbert_code_t        rank_index[],
-                             MPI_Comm                  comm)
+                             PDM_MPI_Comm                  comm)
 {
   int  i, id, rank_id, n_samples;
   double  best_fit;

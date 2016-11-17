@@ -36,7 +36,7 @@ void
 PDM_part_dcube_init 
 (
  int                *id,
- const void         *pt_comm,
+ PDM_MPI_Comm        comm,
  const PDM_g_num_t  nVtxSeg, 
  const double        length
  );
@@ -45,8 +45,8 @@ void
 PROCF (pdm_part_dcube_init, PDM_PART_DCUBE_INIT)  
 (
  int                *id,
- const void         *pt_comm, 
- const PDM_g_num_t *nVtxSeg, 
+ const PDM_MPI_Fint *comm,
+ const PDM_g_num_t  *nVtxSeg, 
  const double       *length
 );
 

@@ -1,12 +1,11 @@
 #ifndef __PDM_PART_PRIV_H__
 #define __PDM_PART_PRIV_H__
 
-#include <mpi.h>
-
 #include "pdm.h"
 #include "pdm_priv.h"
 #include "pdm_timer.h"
 #include "pdm_part.h"
+#include "pdm_mpi.h"
 
 /*============================================================================
  * Type definitions
@@ -206,7 +205,7 @@ typedef struct _PDM_part_t {
 
   /* Communicator */
 
-  MPI_Comm      comm;               /*!< Communicator */
+  PDM_MPI_Comm      comm;               /*!< Communicator */
 
   /* Partitions */
 

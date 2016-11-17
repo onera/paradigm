@@ -50,7 +50,7 @@ void
 PDM_part_coarse_mesh_create
 (
  int                *cmId,
- const void         *pt_comm,        
+ PDM_MPI_Comm        comm,        
  const int           method,
  const int           nPart, 
  const int           nTPart,
@@ -67,7 +67,7 @@ void
 PROCF (pdm_part_coarse_mesh_create, PDM_PART_COARSE_MESH_CREATE)
 (
  int                *cmId,
- const void         *pt_comm,        
+ PDM_MPI_Fint       *fcomm,        
  const int          *method,
  const int          *nPart, 
  const int          *nTPart, 

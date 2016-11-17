@@ -3,10 +3,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
-#include <mpi.h>
 
 #include "pdm_part.h"
 #include "pdm_part_dcube.h"
+#include "pdm_mpi.h"
 
 
 /*============================================================================
@@ -22,7 +22,7 @@
  */
 
 typedef struct  {
-  MPI_Comm       comm;          /*!< MPI communicator                          */
+  PDM_MPI_Comm       comm;          /*!< MPI communicator                          */
   PDM_g_num_t   nVtxSeg;       /*!< Number of vertices in segments            */
   double         length;        /*!< Segment length                            */
   int            nFaceGroup;    /*!< Number of faces groups                    */
@@ -95,7 +95,7 @@ void
 PDM_part_dcube_init 
 (
  int                *id,
- const void         *pt_comm, 
+ PDM_MPI_Comm        comm, 
  const PDM_g_num_t  nVtxSeg, 
  const double        length
 )
@@ -103,11 +103,9 @@ PDM_part_dcube_init
 
   int nRank;
   int myRank;
-  
-  MPI_Comm comm = *((MPI_Comm *) pt_comm);
 
-  MPI_Comm_size(comm, &nRank);
-  MPI_Comm_rank(comm, &myRank);
+  PDM_MPI_Comm_size(comm, &nRank);
+  PDM_MPI_Comm_rank(comm, &myRank);
   
   /*
    * Search a dcube free id
@@ -660,20 +658,20 @@ void
 PROCF (pdm_part_dcube_init, PDM_PART_DCUBE_INIT)  
 (
  int                *id,
- const void         *pt_comm,
- const PDM_g_num_t *nVtxSeg, 
+ const PDM_MPI_Fint *comm,
+ const PDM_g_num_t  *nVtxSeg, 
  const double       *length
 )
 {
 
-  MPI_Fint comm = *((MPI_Fint *) pt_comm);
+  PDM_MPI_Fint comm1 = *((PDM_MPI_Fint *) comm);
 
-  MPI_Comm c_comm = MPI_Comm_f2c(comm);
+  PDM_MPI_Comm c_comm = PDM_MPI_Comm_f2c(comm1);
 
   PDM_part_dcube_init(id,
-                   (void *) &c_comm,
-                   *nVtxSeg, 
-                   *length);
+                      c_comm,
+                      *nVtxSeg, 
+                      *length);
 }
 
 
