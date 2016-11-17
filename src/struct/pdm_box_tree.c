@@ -41,6 +41,7 @@
  *----------------------------------------------------------------------------*/
 
 #include "pdm_priv.h"
+#include "pdm_mpi.h"
 #include "pdm_box_priv.h"
 
 /*----------------------------------------------------------------------------
@@ -131,7 +132,7 @@ struct _PDM_box_tree_t {
 
   int     n_build_loops;             /* Number of loops required to build */
 
-  MPI_Comm          comm;            /* Associated MPI communicator */
+  PDM_MPI_Comm          comm;            /* Associated MPI communicator */
 
   const PDM_box_set_t  *boxes;       /* Associated boxes */
 };
@@ -927,10 +928,10 @@ _recurse_tree_build(PDM_box_tree_t       *bt,
   _Bool retval = false;
 
   int  n_ranks = 1;
-  MPI_Comm comm = boxes->comm;
+  PDM_MPI_Comm comm = boxes->comm;
 
-  if (comm != MPI_COMM_NULL)
-    MPI_Comm_size(comm, &n_ranks);
+  if (comm != PDM_MPI_COMM_NULL)
+    PDM_MPI_Comm_size(comm, &n_ranks);
 
   bt->n_build_loops += 1;
 
@@ -955,7 +956,7 @@ _recurse_tree_build(PDM_box_tree_t       *bt,
 
   if (n_ranks > 1 && build_type == PDM_BOX_TREE_SYNC_LEVEL) {
     int global_state;
-    MPI_Allreduce(&state, &global_state, 1, MPI_INT, MPI_MIN, comm);
+    PDM_MPI_Allreduce(&state, &global_state, 1, PDM_MPI_INT, PDM_MPI_MIN, comm);
     state = global_state; /* Stop if all ranks require it */
   }
 
@@ -983,7 +984,7 @@ _recurse_tree_build(PDM_box_tree_t       *bt,
 
   if (n_ranks > 1 && build_type == PDM_BOX_TREE_SYNC_LEVEL) {
     int global_state;
-    MPI_Allreduce(&state, &global_state, 1, MPI_INT, MPI_MAX, comm);
+    PDM_MPI_Allreduce(&state, &global_state, 1, PDM_MPI_INT, PDM_MPI_MAX, comm);
     state = global_state; /* Stop as as soon as any rank requires it */
   }
 
@@ -2388,7 +2389,7 @@ PDM_box_tree_create(int    max_level,
   bt->threshold = threshold;
   bt->max_box_ratio = max_box_ratio;
 
-  bt->comm = MPI_COMM_NULL;
+  bt->comm = PDM_MPI_COMM_NULL;
 
   /* Set stats */
 
@@ -2960,12 +2961,12 @@ PDM_box_tree_get_stats(const PDM_box_tree_t  *bt,
 
   /* In parallel mode, synchronize values */
 
-  if (bt->comm != MPI_COMM_NULL) {
+  if (bt->comm != PDM_MPI_COMM_NULL) {
 
     int n_ranks;
     PDM_g_num_t s_l_sum[14], s_g_sum[14];
 
-    MPI_Comm_size(bt->comm, &n_ranks);
+    PDM_MPI_Comm_size(bt->comm, &n_ranks);
 
     if (n_ranks > 1) { /* Should always be the case, bat play it safe) */
 
@@ -2979,12 +2980,12 @@ PDM_box_tree_get_stats(const PDM_box_tree_t  *bt,
         s_l_sum[i+7] = s_mean[i]%n_ranks;
       }
 
-      MPI_Allreduce(s_l_sum, s_g_sum, 14, PDM__MPI_G_NUM, MPI_SUM, bt->comm);
+      PDM_MPI_Allreduce(s_l_sum, s_g_sum, 14, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, bt->comm);
 
       s_mean[0] = s.min_linked_boxes;
-      MPI_Allreduce(s_mean, s_min, 7, PDM__MPI_G_NUM, MPI_MIN, bt->comm);
+      PDM_MPI_Allreduce(s_mean, s_min, 7, PDM__PDM_MPI_G_NUM, PDM_MPI_MIN, bt->comm);
       s_mean[0] = s.max_linked_boxes;
-      MPI_Allreduce(s_mean, s_max, 7, PDM__MPI_G_NUM, MPI_MAX, bt->comm);
+      PDM_MPI_Allreduce(s_mean, s_max, 7, PDM__PDM_MPI_G_NUM, PDM_MPI_MAX, bt->comm);
 
       /* Specific handling for linked boxes, so as to ensure correct
          total using large integers even if we do not know the
@@ -3090,7 +3091,7 @@ PDM_box_tree_dump_statistics(const PDM_box_tree_t  *bt)
   g_min_linked_boxes = s.min_linked_boxes;
   g_max_linked_boxes = s.max_linked_boxes;
 
-  if (bt->comm != MPI_COMM_NULL) {
+  if (bt->comm != PDM_MPI_COMM_NULL) {
 
     PDM_g_num_t l_min[1], g_min[1];
     PDM_g_num_t l_max[2], g_max[2];
@@ -3104,9 +3105,9 @@ PDM_box_tree_dump_statistics(const PDM_box_tree_t  *bt)
     l_max[0] = s.max_level_reached;
     l_max[1] = g_max_linked_boxes;
 
-    MPI_Allreduce(l_sum, g_sum, 3, PDM__MPI_G_NUM, MPI_SUM, bt->comm);
-    MPI_Allreduce(l_min, g_min, 1, PDM__MPI_G_NUM, MPI_MIN, bt->comm);
-    MPI_Allreduce(l_max, g_max, 2, PDM__MPI_G_NUM, MPI_MAX, bt->comm);
+    PDM_MPI_Allreduce(l_sum, g_sum, 3, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, bt->comm);
+    PDM_MPI_Allreduce(l_min, g_min, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_MIN, bt->comm);
+    PDM_MPI_Allreduce(l_max, g_max, 2, PDM__PDM_MPI_G_NUM, PDM_MPI_MAX, bt->comm);
 
     n_g_leaves = l_sum[0];
     n_g_spill_leaves = l_sum[1];

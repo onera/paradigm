@@ -107,7 +107,7 @@ static const int _1d_children[2][1] = {{0},   /* child 1 */
 static void
 _local_to_global_extents(int         dim,
                          double  extents[],
-                         MPI_Comm    comm)
+                         PDM_MPI_Comm    comm)
 {
   int i;
   double  l_min[3], l_max[3];
@@ -117,8 +117,8 @@ _local_to_global_extents(int         dim,
     l_max[i] = extents[i + dim];
   }
 
-  MPI_Allreduce(l_min, extents, dim, MPI_DOUBLE, MPI_MIN, comm);
-  MPI_Allreduce(l_max, extents + dim, dim, MPI_DOUBLE, MPI_MAX, comm);
+  PDM_MPI_Allreduce(l_min, extents, dim, PDM_MPI_DOUBLE, PDM_MPI_MIN, comm);
+  PDM_MPI_Allreduce(l_max, extents + dim, dim, PDM_MPI_DOUBLE, PDM_MPI_MAX, comm);
 }
 
 /*----------------------------------------------------------------------------
@@ -466,7 +466,7 @@ _define_rank_distrib(int                      dim,
                      const double             sampling[],
                      double                   cfreq[],
                      PDM_g_num_t                g_distrib[],
-                     MPI_Comm                 comm)
+                     PDM_MPI_Comm                 comm)
 {
   int  id, rank_id;
   PDM_morton_code_t  sample_code;
@@ -516,7 +516,7 @@ _define_rank_distrib(int                      dim,
 
   /* Define the global distribution */
 
-  MPI_Allreduce(l_distrib, g_distrib, n_samples, PDM__MPI_G_NUM, MPI_SUM,
+  PDM_MPI_Allreduce(l_distrib, g_distrib, n_samples, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM,
                 comm);
 
   free(l_distrib);
@@ -704,7 +704,7 @@ _bucket_sampling(int                      dim,
                  const int          weight[],
                  const int          order[],
                  double                  *sampling[],
-                 MPI_Comm                 comm)
+                 PDM_MPI_Comm                 comm)
 {
   int  i, n_iters;
   int   j;
@@ -725,7 +725,7 @@ _bucket_sampling(int                      dim,
   for (j = 0; j < n_codes; j++)
     lsum_weight += weight[j];
 
-  MPI_Allreduce(&lsum_weight, &gsum_weight, 1,  PDM__MPI_G_NUM, MPI_SUM, comm);
+  PDM_MPI_Allreduce(&lsum_weight, &gsum_weight, 1,  PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, comm);
 
   optim = (double)gsum_weight / (double)n_ranks;
 
@@ -837,7 +837,7 @@ PDM_morton_get_coord_extents(int               dim,
                              size_t            n_coords,
                              const double  coords[],
                              double        g_extents[],
-                             MPI_Comm          comm)
+                             PDM_MPI_Comm          comm)
 {
   size_t  i, j;
 
@@ -857,7 +857,7 @@ PDM_morton_get_coord_extents(int               dim,
     }
   }
 
-  if (comm != MPI_COMM_NULL)
+  if (comm != PDM_MPI_COMM_NULL)
     _local_to_global_extents(dim, g_extents, comm);
 
 }
@@ -878,7 +878,7 @@ PDM_morton_get_global_extents(int               dim,
                               size_t            n_extents,
                               const double  extents[],
                               double        g_extents[],
-                              MPI_Comm          comm)
+                              PDM_MPI_Comm          comm)
 {
   size_t  i, j;
 
@@ -898,7 +898,7 @@ PDM_morton_get_global_extents(int               dim,
     }
   }
 
-  if (comm != MPI_COMM_NULL)
+  if (comm != PDM_MPI_COMM_NULL)
     _local_to_global_extents(dim, g_extents, comm);
 
 }
@@ -1374,7 +1374,7 @@ PDM_morton_build_rank_index(int                      dim,
                             const int          weight[],
                             const int          order[],
                             PDM_morton_code_t        rank_index[],
-                            MPI_Comm                 comm)
+                            PDM_MPI_Comm                 comm)
 {
   int  i, id, rank_id, n_ranks, n_samples;
   double  best_fit;
@@ -1385,7 +1385,7 @@ PDM_morton_build_rank_index(int                      dim,
 
   /* Allocations and Initialization */
 
-  MPI_Comm_size(comm, &n_ranks);
+  PDM_MPI_Comm_size(comm, &n_ranks);
 
   n_samples = sampling_factor * n_ranks;
 

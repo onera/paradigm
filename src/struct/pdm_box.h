@@ -34,6 +34,7 @@
  *----------------------------------------------------------------------------*/
 
 #include "pdm.h"
+#include "pdm_mpi.h"
 #include "pdm_morton.h"
 
 /*----------------------------------------------------------------------------*/
@@ -91,7 +92,7 @@ PDM_box_set_create(int                dim,
                    const int          n_part_orig,
                    const int         *n_boxes_orig,
                    const int         *origin,
-                   MPI_Comm           comm);
+                   PDM_MPI_Comm           comm);
 
 /*----------------------------------------------------------------------------
  * Destroy a PDM_box_set_t structure.
@@ -310,7 +311,7 @@ PDM_box_distrib_t *
 PDM_box_distrib_create(int  n_boxes,
                        PDM_g_num_t  n_g_boxes,
                        int        max_level,
-                       MPI_Comm   comm);
+                       PDM_MPI_Comm   comm);
 
 /*----------------------------------------------------------------------------
  * Destroy a PDM_box_distrib_t structure.
@@ -343,7 +344,7 @@ PDM_box_distrib_clean(PDM_box_distrib_t  *distrib);
 
 void
 PDM_box_distrib_dump_statistics(const PDM_box_distrib_t  *distrib,
-                                MPI_Comm                  comm);
+                                PDM_MPI_Comm                  comm);
 
 /*----------------------------------------------------------------------------*/
 

@@ -97,7 +97,7 @@ struct _PDM_box_set_t {
   double      gmin[3];        /* Global minima of the coordinates */
   double      gmax[3];        /* Global maxima of the coordinates */
 
-  MPI_Comm    comm;           /* Associated MPI communicator */
+  PDM_MPI_Comm    comm;           /* Associated MPI communicator */
 
 };
 

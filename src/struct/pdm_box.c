@@ -34,7 +34,6 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
-#include <mpi.h>
 
 /*----------------------------------------------------------------------------
  *  Local headers
@@ -45,6 +44,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "pdm.h"
+#include "pdm_mpi.h"
 #include "pdm_priv.h"
 #include "pdm_box.h"
 #include "pdm_box_priv.h"
@@ -92,7 +92,7 @@ _get_distrib_statistics(const PDM_box_distrib_t  *distrib,
                         int                 n_quantile_boxes[],
                         double                   *imbalance,
                         int                      *n_ranks,
-                        MPI_Comm                  comm)
+                        PDM_MPI_Comm                  comm)
 {
   int   i, j, k, step, delta, _n_rank_boxes;
 
@@ -124,8 +124,8 @@ _get_distrib_statistics(const PDM_box_distrib_t  *distrib,
     gmin = _min;
     gmax = _max;
 
-    MPI_Allreduce(&_min, &gmin, 1, MPI_INT, MPI_MIN, comm);
-    MPI_Allreduce(&_max, &gmax, 1, MPI_INT, MPI_MAX, comm);
+    PDM_MPI_Allreduce(&_min, &gmin, 1, PDM_MPI_INT, PDM_MPI_MIN, comm);
+    PDM_MPI_Allreduce(&_max, &gmax, 1, PDM_MPI_INT, PDM_MPI_MAX, comm);
 
     /* Build a histogram for the distribution of boxes */
 
@@ -211,7 +211,7 @@ PDM_box_set_create(int                dim,
                    const int          n_part_orig,
                    const int         *n_boxes_orig,
                    const int         *origin,
-                   MPI_Comm           comm)
+                   PDM_MPI_Comm           comm)
 {
   int j, k;
   int   i;
@@ -229,14 +229,14 @@ PDM_box_set_create(int                dim,
     g_max[j] = g_extents[j+dim];
   }
 
-  if (comm != MPI_COMM_NULL) {
+  if (comm != PDM_MPI_COMM_NULL) {
 
     PDM_g_num_t  box_max = 0;
 
     for (i = 0; i < n_boxes; i++)
       box_max = PDM_MAX(box_max, box_gnum[i]);
 
-    MPI_Allreduce(&box_max, &n_g_boxes, 1, PDM__MPI_G_NUM, MPI_MAX, comm);
+    PDM_MPI_Allreduce(&box_max, &n_g_boxes, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_MAX, comm);
 
   }
 
@@ -282,11 +282,11 @@ PDM_box_set_create(int                dim,
       }
     }
 
-    if (comm != MPI_COMM_NULL) {
+    if (comm != PDM_MPI_COMM_NULL) {
       int l_proj[3];
       for (j = 0; j < dim; j++)
         l_proj[j] = proj[j];
-      MPI_Allreduce(l_proj, proj, dim, MPI_INT, MPI_MIN, comm);
+      PDM_MPI_Allreduce(l_proj, proj, dim, PDM_MPI_INT, PDM_MPI_MIN, comm);
     }
 
     boxes->dim = 0;
@@ -541,7 +541,7 @@ PDM_box_set_build_morton_index(const PDM_box_set_t  *boxes,
 
   /* Compute a Morton index on ranks and return the associated fit */
 
-  if (boxes->comm != MPI_COMM_NULL)
+  if (boxes->comm != PDM_MPI_COMM_NULL)
     distrib->fit = PDM_morton_build_rank_index(boxes->dim,
                                                distrib->max_level,
                                                n_leaves,
@@ -602,8 +602,8 @@ PDM_box_set_redistribute(const PDM_box_distrib_t  *distrib,
 
   /* Exchange number of boxes to send to each process */
 
-  MPI_Alltoall(send_count, 1, MPI_INT,
-               recv_count, 1, MPI_INT, boxes->comm);
+  PDM_MPI_Alltoall(send_count, 1, PDM_MPI_INT,
+               recv_count, 1, PDM_MPI_INT, boxes->comm);
 
   for (i = 0; i < distrib->n_ranks; i++)
     send_shift[i] = distrib->index[i];
@@ -660,8 +660,8 @@ PDM_box_set_redistribute(const PDM_box_distrib_t  *distrib,
 
   /* Exchange boxes between processes */
 
-  MPI_Alltoallv(send_g_num, send_count, send_shift, PDM__MPI_G_NUM,
-                boxes->g_num, recv_count, recv_shift, PDM__MPI_G_NUM,
+  PDM_MPI_Alltoallv(send_g_num, send_count, send_shift, PDM__PDM_MPI_G_NUM,
+                boxes->g_num, recv_count, recv_shift, PDM__PDM_MPI_G_NUM,
                 boxes->comm);
 
   for (rank_id = 0; rank_id < distrib->n_ranks; rank_id++) {
@@ -671,8 +671,8 @@ PDM_box_set_redistribute(const PDM_box_distrib_t  *distrib,
     recv_shift[rank_id] *= stride;
   }
 
-  MPI_Alltoallv(send_extents, send_count, send_shift, MPI_DOUBLE,
-                boxes->extents, recv_count, recv_shift, MPI_DOUBLE,
+  PDM_MPI_Alltoallv(send_extents, send_count, send_shift, PDM_MPI_DOUBLE,
+                boxes->extents, recv_count, recv_shift, PDM_MPI_DOUBLE,
                 boxes->comm);
 
   for (rank_id = 0; rank_id < distrib->n_ranks; rank_id++) {
@@ -682,8 +682,8 @@ PDM_box_set_redistribute(const PDM_box_distrib_t  *distrib,
     recv_shift[rank_id] = recv_shift[rank_id]/stride * stride_origin;
   }
 
-  MPI_Alltoallv(send_origin, send_count, send_shift, MPI_INT,
-                boxes->origin, recv_count, recv_shift, MPI_INT,
+  PDM_MPI_Alltoallv(send_origin, send_count, send_shift, PDM_MPI_INT,
+                boxes->origin, recv_count, recv_shift, PDM_MPI_INT,
                 boxes->comm);
 
   /* Free buffers */
@@ -862,7 +862,7 @@ PDM_box_set_recv_data_from_origin_distrib
   int n_boxes = boxes->n_boxes;
   int *origin = boxes->origin;
 
-  int s_comm = MPI_Comm_rank (boxes->comm, &s_comm);
+  int s_comm = PDM_MPI_Comm_rank (boxes->comm, &s_comm);
 
   int *curr_count = (int *) malloc (sizeof(int) * s_comm);
   for (int i = 0; i < s_comm; i++) {
@@ -874,8 +874,8 @@ PDM_box_set_recv_data_from_origin_distrib
   }
 
   int *orig_count = (int *) malloc (sizeof(int) * s_comm);
-  MPI_Alltoall(curr_count, 1, MPI_INT,
-               orig_count, 1, MPI_INT, boxes->comm);
+  PDM_MPI_Alltoall(curr_count, 1, PDM_MPI_INT,
+               orig_count, 1, PDM_MPI_INT, boxes->comm);
   
   int *curr_shift = (int *) malloc (sizeof(int) * (s_comm + 1));
   int *orig_shift = (int *) malloc (sizeof(int) * (s_comm + 1));
@@ -921,8 +921,8 @@ PDM_box_set_recv_data_from_origin_distrib
     curr_count[iProc] += 2;
   }
 
-  MPI_Alltoallv(curr_loc, curr_count, curr_shift, MPI_INT,
-                orig_loc, orig_count, orig_shift, MPI_INT,
+  PDM_MPI_Alltoallv(curr_loc, curr_count, curr_shift, PDM_MPI_INT,
+                orig_loc, orig_count, orig_shift, PDM_MPI_INT,
                 boxes->comm);
   
   free (curr_loc);
@@ -955,8 +955,8 @@ PDM_box_set_recv_data_from_origin_distrib
       orig_stride[i] = origin_distrib_stride[iPart][iElt];
     }
     
-    MPI_Alltoallv(orig_stride, orig_count, orig_shift, MPI_INT,
-                  curr_stride, curr_count, curr_shift, MPI_INT,
+    PDM_MPI_Alltoallv(orig_stride, orig_count, orig_shift, PDM_MPI_INT,
+                  curr_stride, curr_count, curr_shift, PDM_MPI_INT,
                   boxes->comm);
 
     if (alloc_distrib_stride) {
@@ -1052,8 +1052,8 @@ PDM_box_set_recv_data_from_origin_distrib
     }
     free (_origin_distrib_idx);
 
-    MPI_Alltoallv(orig_data, orig_count, orig_shift, MPI_UNSIGNED_CHAR,
-                  curr_data, curr_count, curr_shift, MPI_UNSIGNED_CHAR,
+    PDM_MPI_Alltoallv(orig_data, orig_count, orig_shift, PDM_MPI_UNSIGNED_CHAR,
+                  curr_data, curr_count, curr_shift, PDM_MPI_UNSIGNED_CHAR,
                   boxes->comm);
     
     unsigned char *_current_distrib_data = (unsigned char *) malloc (sizeof(unsigned char) 
@@ -1131,8 +1131,8 @@ PDM_box_set_recv_data_from_origin_distrib
       }
     }
     
-    MPI_Alltoallv(orig_data, orig_count, orig_shift, MPI_UNSIGNED_CHAR,
-                  curr_data, curr_count, curr_shift, MPI_UNSIGNED_CHAR,
+    PDM_MPI_Alltoallv(orig_data, orig_count, orig_shift, PDM_MPI_UNSIGNED_CHAR,
+                  curr_data, curr_count, curr_shift, PDM_MPI_UNSIGNED_CHAR,
                   boxes->comm);
     
     unsigned char *_current_distrib_data = (unsigned char *) malloc (sizeof(unsigned char) 
@@ -1209,7 +1209,7 @@ PDM_box_set_send_data_to_origin_distrib
   int n_boxes = boxes->n_boxes;
   int *origin = boxes->origin;
 
-  int s_comm = MPI_Comm_rank (boxes->comm, &s_comm);
+  int s_comm = PDM_MPI_Comm_rank (boxes->comm, &s_comm);
 
   int *curr_count = (int *) malloc (sizeof(int) * s_comm);
   for (int i = 0; i < s_comm; i++) {
@@ -1221,8 +1221,8 @@ PDM_box_set_send_data_to_origin_distrib
   }
 
   int *orig_count = (int *) malloc (sizeof(int) * s_comm);
-  MPI_Alltoall(curr_count, 1, MPI_INT,
-               orig_count, 1, MPI_INT, boxes->comm);
+  PDM_MPI_Alltoall(curr_count, 1, PDM_MPI_INT,
+               orig_count, 1, PDM_MPI_INT, boxes->comm);
   
   int *curr_shift = (int *) malloc (sizeof(int) * (s_comm + 1));
   int *orig_shift = (int *) malloc (sizeof(int) * (s_comm + 1));
@@ -1265,8 +1265,8 @@ PDM_box_set_send_data_to_origin_distrib
     curr_count[iProc] += 2;
   }
 
-  MPI_Alltoallv(curr_loc, curr_count, curr_shift, MPI_INT,
-                orig_loc, orig_count, orig_shift, MPI_INT,
+  PDM_MPI_Alltoallv(curr_loc, curr_count, curr_shift, PDM_MPI_INT,
+                orig_loc, orig_count, orig_shift, PDM_MPI_INT,
                 boxes->comm);
   
   free (curr_loc);
@@ -1306,8 +1306,8 @@ PDM_box_set_send_data_to_origin_distrib
       curr_count[iProc] += 1;
     }
 
-    MPI_Alltoallv(curr_stride, curr_count, curr_shift, MPI_INT,
-                  orig_stride, orig_count, orig_shift, MPI_INT,
+    PDM_MPI_Alltoallv(curr_stride, curr_count, curr_shift, PDM_MPI_INT,
+                  orig_stride, orig_count, orig_shift, PDM_MPI_INT,
                   boxes->comm);
     
     for (int i = 0; i < orig_shift[s_comm]; i++) {
@@ -1398,8 +1398,8 @@ PDM_box_set_send_data_to_origin_distrib
 
     free (current_distrib_idx);
 
-    MPI_Alltoallv(curr_data, curr_count, curr_shift, MPI_UNSIGNED_CHAR,
-                  orig_data, orig_count, orig_shift, MPI_UNSIGNED_CHAR,
+    PDM_MPI_Alltoallv(curr_data, curr_count, curr_shift, PDM_MPI_UNSIGNED_CHAR,
+                  orig_data, orig_count, orig_shift, PDM_MPI_UNSIGNED_CHAR,
                   boxes->comm);
 
     int **_origin_distrib_idx = (int **) malloc (sizeof(int) * boxes->n_part_orig);
@@ -1483,8 +1483,8 @@ PDM_box_set_send_data_to_origin_distrib
       curr_count[iProc] += s_block;
     }
 
-    MPI_Alltoallv(curr_data, curr_count, curr_shift, MPI_UNSIGNED_CHAR,
-                  orig_data, orig_count, orig_shift, MPI_UNSIGNED_CHAR,
+    PDM_MPI_Alltoallv(curr_data, curr_count, curr_shift, PDM_MPI_UNSIGNED_CHAR,
+                  orig_data, orig_count, orig_shift, PDM_MPI_UNSIGNED_CHAR,
                   boxes->comm);
     
 
@@ -1547,7 +1547,7 @@ PDM_box_distrib_t *
 PDM_box_distrib_create(int  n_boxes,
                        PDM_g_num_t  n_g_boxes,
                        int        max_level,
-                       MPI_Comm   comm)
+                       PDM_MPI_Comm   comm)
 {
   int  i, n_ranks, gmax_level;
 
@@ -1560,7 +1560,7 @@ PDM_box_distrib_create(int  n_boxes,
 
   /* Parallel parameters */
 
-  MPI_Comm_size(comm, &n_ranks);
+  PDM_MPI_Comm_size(comm, &n_ranks);
 
   new_distrib->n_ranks = n_ranks;
 
@@ -1570,7 +1570,7 @@ PDM_box_distrib_create(int  n_boxes,
 
   new_distrib->morton_index = (PDM_morton_code_t *) malloc((n_ranks + 1) * sizeof(PDM_morton_code_t));
 
-  MPI_Allreduce(&max_level, &gmax_level, 1, MPI_INT, MPI_MAX, comm);
+  PDM_MPI_Allreduce(&max_level, &gmax_level, 1, PDM_MPI_INT, PDM_MPI_MAX, comm);
 
   new_distrib->max_level = gmax_level;
   new_distrib->fit = 999.0;
@@ -1677,7 +1677,7 @@ PDM_box_distrib_clean(PDM_box_distrib_t  *distrib)
 
 void
 PDM_box_distrib_dump_statistics(const PDM_box_distrib_t  *distrib,
-                                MPI_Comm                   comm)
+                                PDM_MPI_Comm                   comm)
 {
   int  i;
 

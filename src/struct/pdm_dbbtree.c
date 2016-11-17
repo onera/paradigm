@@ -7,7 +7,6 @@
 #include <assert.h>
 #include <math.h>
 #include <float.h>
-#include <mpi.h>
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
@@ -16,8 +15,7 @@
 #include "pdm_mpi.h"
 #include "pdm.h"
 #include "pdm_morton.h"
-//#include "pdm_overlay.h"
-//#include "pdm_overlay_priv.h"
+#include "pdm_mpi.h"
 #include "pdm_box.h"
 #include "pdm_sort.h"
 #include "pdm_box_priv.h"
@@ -150,8 +148,6 @@ _PDM_dbbtree_t      *dbbt
                                                       dbbt->maxBoxesLeafCoarse,
                                                       dbbt->maxBoxRatioCoarse);
 
-  MPI_Comm _mpiComm = *((MPI_Comm *) PDM_MPI_2_mpi_comm (dbbt->comm));
-
   /* Build a tree and associate boxes */
 
   PDM_box_tree_set_boxes (coarse_tree,
@@ -184,7 +180,7 @@ _PDM_dbbtree_t      *dbbt
   PDM_box_tree_destroy (&coarse_tree);
 
   if (1 == 0) {
-    PDM_box_distrib_dump_statistics (distrib, _mpiComm);
+    PDM_box_distrib_dump_statistics (distrib, dbbt->comm);
   }
 
   /* Define a new distribution of boxes according to the Morton
@@ -361,8 +357,6 @@ const PDM_g_num_t **gNum
    * Redistribute boxes of mesh A
    */ 
 
-  MPI_Comm _mpiComm = *((MPI_Comm *) PDM_MPI_2_mpi_comm (_dbbt->comm));
-
   _dbbt->boxes = PDM_box_set_create(3,
                                     0,  // No normalization to preserve initial extents
                                     0,  // No projection to preserve initial extents
@@ -372,7 +366,7 @@ const PDM_g_num_t **gNum
                                     nPart,
                                     nElts,
                                     _initLocation,
-                                    _mpiComm);
+                                    _dbbt->comm);
 
   free (_boxGnum);
   free (_extents);
@@ -467,7 +461,7 @@ const PDM_g_num_t **gNum
                                           1,
                                           &nUsedRank,
                                           initLocationProc,
-                                          _mpiComm);
+                                          _dbbt->comm);
   
     _dbbt->btShared = PDM_box_tree_create (_dbbt->maxTreeDepthShared,
                                            _dbbt->maxBoxesLeafShared,
@@ -611,8 +605,6 @@ int              *box_l_num[]
     printf ("\n");
   }
 
-  MPI_Comm _mpiComm = *((MPI_Comm *) PDM_MPI_2_mpi_comm (_dbbt->comm));
-
   PDM_box_set_t  *boxes = PDM_box_set_create (3,
                                               0,  // No normalization to preserve initial extents
                                               0,  // No projection to preserve initial extents
@@ -622,7 +614,7 @@ int              *box_l_num[]
                                               nPart,
                                               nElts,
                                               _initLocation,
-                                              _mpiComm);
+                                              _dbbt->comm);
 
   free (_boxGnum);
   free (_extents);

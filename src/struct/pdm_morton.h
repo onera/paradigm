@@ -33,13 +33,13 @@
  *----------------------------------------------------------------------------*/
 
 #include <stdio.h>
-#include <mpi.h>
 
 /*----------------------------------------------------------------------------
  * Local headers
  *----------------------------------------------------------------------------*/
 
 #include "pdm.h"
+#include "pdm_mpi.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -91,7 +91,7 @@ PDM_morton_get_coord_extents(int               dim,
                              size_t            n_coords,
                              const double      coords[],
                              double             g_extents[],
-                             MPI_Comm          comm);
+                             PDM_MPI_Comm          comm);
 
 /*----------------------------------------------------------------------------
  * Determine the global extents associated with a set of local extents
@@ -109,7 +109,7 @@ PDM_morton_get_global_extents(int               dim,
                               size_t            n_extents,
                               const double  extents[],
                               double        g_extents[],
-                              MPI_Comm          comm);
+                              PDM_MPI_Comm          comm);
 
 /*----------------------------------------------------------------------------
  * Build a Morton code according to the level in an octree grid and its
@@ -307,7 +307,7 @@ PDM_morton_build_rank_index(int                      dim,
                             const int          weight[],
                             const int          order[],
                             PDM_morton_code_t        rank_index[],
-                            MPI_Comm                 comm);
+                            PDM_MPI_Comm                 comm);
 
 /*----------------------------------------------------------------------------
  * Dump a Morton to standard output or to a file.
