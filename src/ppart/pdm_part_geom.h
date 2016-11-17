@@ -5,14 +5,13 @@
  * Mesh partitioning with geometric methods (SFC)
  *============================================================================*/
 
-#include "mpi.h"
-
 /*----------------------------------------------------------------------------
  *  Local headers
  *----------------------------------------------------------------------------*/
 
 #include "pdm.h"
 #include "pdm_part.h"
+#include "pdm_mpi.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -73,7 +72,7 @@ PDM_part_geom
 (
  PDM_part_geom_t     method,
  const int           nPart,       
- const MPI_Comm      comm,       
+ const PDM_MPI_Comm      comm,       
  const int           dNCell,
  const int          *dCellFaceIdx,
  const PDM_g_num_t *dCellFace,

@@ -1,11 +1,11 @@
 #include <math.h>
-#include <mpi.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
 #include <unistd.h>
 
 #include "pdm.h"
+#include "pdm_mpi.h"
 #include "pdm_priv.h"
 #include "pdm_config.h"
 #include "pdm_part_coarse_mesh.h"
@@ -3645,7 +3645,7 @@ PROCF (pdm_part_coarse_mesh_create, PDM_PART_COARSE_MESH_CREATE)
 )
 {
   
-  MPI_Comm comm = PDM_MPI_Comm_f2c (*fcomm);
+  PDM_MPI_Comm comm = PDM_MPI_Comm_f2c (*fcomm);
   
   PDM_part_coarse_mesh_create (cmId,
                                comm,

@@ -54,9 +54,6 @@ _remove_duplicate_pdm_part_long_t
 )
 {
   
-  int myRank;
-  MPI_Comm_rank(MPI_COMM_WORLD, &myRank);
-
   PDM_g_num_t * oldArray = (PDM_g_num_t * ) malloc( (*size) * sizeof(PDM_g_num_t));
 
   for(int i = 0; i < *size; ++i ){
@@ -210,24 +207,24 @@ _alltoall
  void        **recvBuff,
  int          *recvBuffN,
  int          *recvBuffIdx,
- MPI_Datatype  MPIDataType,
+ PDM_MPI_Datatype  MPIDataType,
  size_t        MPIDataTypeSize,
- MPI_Comm      comm
+ PDM_MPI_Comm      comm
 )
 {
   int nRank = 0;
-  int MPI_rank;
-  MPI_Comm_size(comm, &nRank);
-  MPI_Comm_rank(comm, &MPI_rank);
+  int PDM_MPI_rank;
+  PDM_MPI_Comm_size(comm, &nRank);
+  PDM_MPI_Comm_rank(comm, &PDM_MPI_rank);
 
   /* Get number data to receive from each process */
 
-  MPI_Alltoall(sendBuffN, 
+  PDM_MPI_Alltoall(sendBuffN, 
                1, 
-               MPI_INT, 
+               PDM_MPI_INT, 
                recvBuffN, 
                1, 
-               MPI_INT, 
+               PDM_MPI_INT, 
                comm);
 
   recvBuffIdx[0] = 0;
@@ -239,7 +236,7 @@ _alltoall
 
   /* Receive data from each process */
 
-  MPI_Alltoallv(sendBuff, 
+  PDM_MPI_Alltoallv(sendBuff, 
                 sendBuffN, 
                 sendBuffIdx, 
                 MPIDataType, 
@@ -273,7 +270,7 @@ _alltoall
 static void
 _distrib_face
 (
-const MPI_Comm     comm,
+const PDM_MPI_Comm     comm,
 const PDM_g_num_t dNCell,
 const int          *dCellFaceIdx,
 const PDM_g_num_t *dCellFace,
@@ -289,8 +286,8 @@ int                *sizeFaceVtxIdx
   int myRank;
   int nRank;
   
-  MPI_Comm_rank(comm, &myRank);
-  MPI_Comm_size(comm, &nRank);
+  PDM_MPI_Comm_rank(comm, &myRank);
+  PDM_MPI_Comm_size(comm, &nRank);
   
   const int nData     = 1;
   int       nDataFace = 2;
@@ -337,7 +334,7 @@ int                *sizeFaceVtxIdx
 	      (void **) &requestedFace,
 	      requestedFaceN,
 	      requestedFaceIdx,
-	      PDM__MPI_G_NUM,
+	      PDM__PDM_MPI_G_NUM,
 	      sizeof(PDM_g_num_t),
 	      comm);
   
@@ -404,7 +401,7 @@ int                *sizeFaceVtxIdx
             (void **) &rFaceInfo,
             rFaceInfoN,
             rFaceInfoIdx,
-            PDM__MPI_G_NUM,
+            PDM__PDM_MPI_G_NUM,
             sizeof(PDM_g_num_t),
             comm);
 
@@ -471,7 +468,7 @@ int                *sizeFaceVtxIdx
 static void
 _distrib_vtx
 (
-const MPI_Comm      comm,       
+const PDM_MPI_Comm      comm,       
 const double       *dVtxCoord,        
 const PDM_g_num_t *dVtxProc,
 const int           sizeFaceVtx,
@@ -486,8 +483,8 @@ double             *newVtx
   int myRank;
   int nRank;
   
-  MPI_Comm_rank(comm, &myRank);
-  MPI_Comm_size(comm, &nRank);
+  PDM_MPI_Comm_rank(comm, &myRank);
+  PDM_MPI_Comm_size(comm, &nRank);
 
   int  *vtxToSendIdx = (int *) calloc((nRank + 1) , sizeof(int));
   int  *vtxToSendN   = (int *) calloc(nRank , sizeof(int));
@@ -526,7 +523,7 @@ double             *newVtx
             (void **) &requestedVtx,
             requestedVtxN,
             requestedVtxIdx,
-            PDM__MPI_G_NUM,
+            PDM__PDM_MPI_G_NUM,
             sizeof(PDM_g_num_t),
             comm);
   free(vtxToSend);
@@ -584,8 +581,8 @@ double             *newVtx
 	    (void **) &rVtxInfo,
 	    rVtxInfoN,
 	    rVtxInfoIdx,
-	    MPI_UNSIGNED_CHAR,
-	    sizeof(MPI_UNSIGNED_CHAR),
+	    PDM_MPI_UNSIGNED_CHAR,
+	    sizeof(PDM_MPI_UNSIGNED_CHAR),
 	    comm);
 
   if (sVtxInfo != NULL)
@@ -642,7 +639,7 @@ double             *newVtx
 
 static void
 _compute_cellCenter
-(const MPI_Comm      comm,       
+(const PDM_MPI_Comm      comm,       
  const int           dNCell,
  const int          *dCellFaceIdx,
  const PDM_g_num_t *dCellFace,
@@ -658,8 +655,8 @@ _compute_cellCenter
   int myRank;
   int nRank;
   
-  MPI_Comm_rank(comm, &myRank);
-  MPI_Comm_size(comm, &nRank);
+  PDM_MPI_Comm_rank(comm, &myRank);
+  PDM_MPI_Comm_size(comm, &nRank);
   
   PDM_g_num_t *faceVtxGNum;
   
@@ -866,7 +863,7 @@ PDM_part_geom
 (
  PDM_part_geom_t     method,
  const int           nPart,       
- const MPI_Comm      comm,       
+ const PDM_MPI_Comm      comm,       
  const int           dNCell,
  const int          *dCellFaceIdx,
  const PDM_g_num_t *dCellFace,
@@ -935,7 +932,7 @@ PDM_part_geom
   free(tmp_hilbertCodes);
       
   int nRank;
-  MPI_Comm_size (comm, &nRank);
+  PDM_MPI_Comm_size (comm, &nRank);
   
   PDM_hilbert_code_t *hilbertCodesIdx = (PDM_hilbert_code_t *) malloc ((nRank+1)*nPart * sizeof(PDM_hilbert_code_t));   
       
@@ -952,7 +949,7 @@ PDM_part_geom
   }
   
   int nTPart;
-  MPI_Allreduce (&nPart, &nTPart, 1, MPI_INT, MPI_SUM, comm);
+  PDM_MPI_Allreduce ((void *) &nPart, &nTPart, 1, PDM_MPI_INT, PDM_MPI_SUM, comm);
   
   PDM_hilbert_build_rank_index (dim,
                                 nTPart,

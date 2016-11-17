@@ -8,7 +8,6 @@
  *----------------------------------------------------------------------------*/
 
 #include <math.h>
-#include <mpi.h>
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -17,6 +16,7 @@
  *----------------------------------------------------------------------------*/
 
 #include "pdm.h"
+#include "pdm_mpi.h"
 #include "pdm_config.h"
 #include "pdm_priv.h"
 #include "pdm_part.h"

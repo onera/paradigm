@@ -8,21 +8,21 @@
  *----------------------------------------------------------------------------*/
 
 #include <math.h>
-#include <mpi.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
 #include <time.h>
 
 #include "pdm.h"
+#include "pdm_mpi.h"
 #include "pdm_priv.h"
 #include "pdm_config.h"
 
 #ifdef PDM_HAVE_PARMETIS
-#include <parmetis.h>
+#include <metis.h>
 #endif
 #ifdef PDM_HAVE_PTSCOTCH
-#include <ptscotch.h>
+#include <scotch.h>
 #endif
 
 /*----------------------------------------------------------------------------
@@ -257,8 +257,6 @@ int       *connectivityIdx,
 int       *connectivities
 )
 {
-  int MPI_rank;
-  MPI_Comm_rank(MPI_COMM_WORLD, &MPI_rank);
   
   int *oldConnectivities = (int *) malloc (connectivityIdx[nElt] * sizeof(int));
   
