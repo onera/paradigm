@@ -101,6 +101,14 @@ cdef extern from "pdm_part.h":
                         int      *bound_part_faces_sum)
 
 # ------------------------------------------------------------------
+
+cdef extern from "pdm_mpi.h":
+
+    PDM_MPI_Comm PDM_MPI_mpi_2_pdm_mpi_comm (void *mpi_comm)
+
+# ------------------------------------------------------------------
+
+
 cdef class Part:
     """
        Ppart
@@ -239,7 +247,7 @@ cdef class Part:
         # LOG.info(' '*4 + " ---> LibPart.PDM_part_create " )
         # -> Create PPART
         PDM_part_create(&_id,
-                        c_comm,
+                        PDM_MPI_mpi_2_pdm_mpi_comm (<void *> &c_comm),
                         split_method,
                         renum_cell_method,
                         nPart,
