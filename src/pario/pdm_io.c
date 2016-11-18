@@ -2339,7 +2339,7 @@ void PDM_io_lec_par_bloc
                         n_donnees_blocs_actifs, 1, PDM_MPI_INT, 
                         fichier->comm);
 
-          int max_n_donnees_blocs_actif;
+          int max_n_donnees_blocs_actif = 0;
           for (int i = 0; i < fichier->n_rangs; i++)
             max_n_donnees_blocs_actif = PDM_IO_MAX(max_n_donnees_blocs_actif,
                                                      n_donnees_blocs_actifs[i]);
@@ -3750,7 +3750,7 @@ void PDM_io_ecr_par_bloc
                         n_donnees_blocs_actifs, 1, PDM_MPI_INT, 
                         fichier->comm);
 
-          int max_n_donnees_blocs_actif;
+          int max_n_donnees_blocs_actif = 0;
           for (int i = 0; i < fichier->n_rangs; i++)
             max_n_donnees_blocs_actif = PDM_IO_MAX(max_n_donnees_blocs_actif,
                                                      n_donnees_blocs_actifs[i]);

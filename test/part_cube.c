@@ -1,5 +1,4 @@
 #include <math.h>
-#include <mpi.h>
 #include <sys/time.h>
 #include <time.h>
 #include <sys/resource.h>
@@ -9,6 +8,7 @@
 #include <string.h>
 
 #include "pdm.h"
+#include "pdm_mpi.h"
 #include "pdm_part.h"
 #include "pdm_part_dcube.h"
 
@@ -156,9 +156,9 @@ int main(int argc, char *argv[])
   int myRank;
   int numProcs;
   
-  MPI_Init(&argc, &argv);
-  MPI_Comm_rank(MPI_COMM_WORLD, &myRank);
-  MPI_Comm_size(MPI_COMM_WORLD, &numProcs);
+  PDM_MPI_Init(&argc, &argv);
+  PDM_MPI_Comm_rank(PDM_MPI_COMM_WORLD, &myRank);
+  PDM_MPI_Comm_size(PDM_MPI_COMM_WORLD, &numProcs);
 
   int           dNCell;
   int           dNFace;
@@ -178,7 +178,7 @@ int main(int argc, char *argv[])
    */
 
   int          id;
-  MPI_Comm     comm = MPI_COMM_WORLD;
+  PDM_MPI_Comm     comm = PDM_MPI_COMM_WORLD;
 
   PDM_part_dcube_init(&id,
                       comm,
@@ -504,7 +504,7 @@ int main(int argc, char *argv[])
   PDM_part_dcube_free(id);
 
 
-  MPI_Finalize();
+  PDM_MPI_Finalize();
   
   return 0;
 }
