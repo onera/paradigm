@@ -13,9 +13,14 @@ endif()
 unset(LINK_LIBRARIES)
 
 if (PDM_ENABLE_STATIC)
- list(APPEND LINK_LIBRARIES pdm_static ${COMMON_LIBRARIES})
+ list(APPEND LINK_LIBRARIES
+      pdm_static
+      pdm_mpi_static
+      ${COMMON_LIBRARIES})
 else ()
- list(APPEND LINK_LIBRARIES pdm_shared ${COMMON_LIBRARIES})
+ list(APPEND LINK_LIBRARIES
+      pdm_shared
+      pdm_mpi_shared ${COMMON_LIBRARIES})
 endif()
 
 get_target_property(PDM_INC pdm INCLUDE_DIRECTORIES)                          

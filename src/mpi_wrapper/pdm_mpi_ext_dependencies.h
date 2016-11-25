@@ -43,21 +43,62 @@ extern "C" {
 int 
 PDM_ParMETIS_V3_PartKway 
 (
-idx_t *vtxdist, 
-idx_t *xadj, 
-idx_t *adjncy, 
-idx_t *vwgt, 
-idx_t *adjwgt, 
-idx_t *wgtflag, 
-idx_t *numflag, 
-idx_t *ncon, 
-idx_t *nparts, 
-real_t *tpwgts, 
-real_t *ubvec, 
-idx_t *options, 
-idx_t *edgecut, 
-idx_t *part, 
+PDM_g_num_t *vtxdist, 
+PDM_g_num_t *xadj, 
+PDM_g_num_t *adjncy, 
+int *vwgt, 
+int *adjwgt, 
+int *wgtflag, 
+int *numflag, 
+int *ncon, 
+int *nparts, 
+double *tpwgts, 
+double *ubvec, 
+int options[5], 
+int *edgecut, 
+int *part, 
 PDM_MPI_Comm comm
+);
+
+
+int 
+PDM_METIS_PartGraphRecursive
+(
+int *nvtxs, 
+int *ncon, 
+int *xadj, 
+int *adjncy, 
+int *vwgt, 
+int *adjwgt, 
+int *nparts, 
+double *tpwgts, 
+double *ubvec, 
+int options[5], 
+int *edgecut, 
+int *part
+);
+
+int 
+PDM_METIS_PartGraphKway
+(
+int *nvtxs, 
+int *ncon, 
+int *xadj, 
+int *adjncy, 
+int *vwgt, 
+int *adjwgt, 
+int *nparts, 
+double *tpwgts, 
+double *ubvec, 
+int options[5], 
+int *edgecut, 
+int *part
+);
+
+int
+PDM_METIS_SetDefaultOptions
+(
+int *options
 );
 
 #endif
@@ -65,6 +106,8 @@ PDM_MPI_Comm comm
 #ifdef PDM_HAVE_PTSCOTCH
 
 typedef void* PDM_SCOTCH_Dgraph;
+typedef void* PDM_SCOTCH_Graph;
+typedef void* PDM_SCOTCH_Strat;
 
 int  
 PDM_SCOTCH_dgraphInit   
@@ -74,48 +117,80 @@ PDM_MPI_Comm comm
 );
 
 int  
+PDM_SCOTCH_graphInit   
+(
+PDM_SCOTCH_Graph 
+);
+
+int  
 PDM_SCOTCH_dgraphBuild  
 (
 PDM_SCOTCH_Dgraph, 
-const SCOTCH_Num, 
-const SCOTCH_Num, 
-const SCOTCH_Num, 
-SCOTCH_Num * const, 
-SCOTCH_Num * const,
-SCOTCH_Num * const, 
-SCOTCH_Num * const, 
-const SCOTCH_Num, 
-const SCOTCH_Num, 
-SCOTCH_Num * const, 
-SCOTCH_Num * const, 
-SCOTCH_Num * const
+const int  baseval, 
+const PDM_g_num_t vertlocnbr, 
+const PDM_g_num_t vertlocmax, 
+PDM_g_num_t * const vertloctab, 
+PDM_g_num_t * const vendloctab,
+int * const veloloctab, // Poids cellules */
+PDM_g_num_t * const vlblloctab, 
+const PDM_g_num_t edgelocnbr, 
+const PDM_g_num_t edgelocsiz, 
+PDM_g_num_t * const edgeloctab, 
+int  * const edloloctab // Poids faces */
 );
 
 int  
 PDM_SCOTCH_dgraphCheck  
 (
-const PDM_SCOTCH_Dgraph
+const PDM_SCOTCH_Dgraph graph
+);
+
+int  
+PDM_SCOTCH_graphCheck  
+(
+const PDM_SCOTCH_Graph graph
 );
 
 int  
 PDM_SCOTCH_dgraphPart   
 (
-PDM_SCOTCH_Dgraph, 
-const SCOTCH_Num, 
-SCOTCH_Strat * const, 
-SCOTCH_Num * const
+PDM_SCOTCH_Dgraph graph, 
+const int nPart, 
+PDM_SCOTCH_Strat stratptr,
+int *part
+);
+
+int  
+PDM_SCOTCH_graphPart   
+(
+PDM_SCOTCH_Graph graph, 
+const int nPart, 
+PDM_SCOTCH_Strat stratptr,
+int *part
 );
 
 void 
 PDM_SCOTCH_stratExit    
 (
-SCOTCH_Strat
+PDM_SCOTCH_Strat
 );
 
 void 
 PDM_SCOTCH_dgraphExit   
 (
 PDM_SCOTCH_Dgraph
+);
+
+void 
+PDM_SCOTCH_graphExit   
+(
+PDM_SCOTCH_Graph graphptr
+);
+    
+void 
+PDM_SCOTCH_stratExit   
+(
+PDM_SCOTCH_Strat stratptr
 );
 
 PDM_SCOTCH_Dgraph 
@@ -129,6 +204,31 @@ PDM_SCOTCH_DgraphFree
 (
 PDM_SCOTCH_Dgraph graphptr
 );
+
+PDM_SCOTCH_Graph 
+PDM_SCOTCH_GraphAlloc
+(
+void
+);
+
+PDM_SCOTCH_Graph 
+PDM_SCOTCH_GraphFree
+(
+PDM_SCOTCH_Graph graph
+);
+
+PDM_SCOTCH_Strat 
+PDM_SCOTCH_StratAlloc
+(
+void
+);
+
+PDM_SCOTCH_Strat 
+PDM_SCOTCH_StratFree
+(
+PDM_SCOTCH_Strat strat
+);
+
 
 #endif
 

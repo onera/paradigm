@@ -27,18 +27,15 @@ cython_add_module (Pypdm
 
 get_target_property(PDM_INC pdm INCLUDE_DIRECTORIES)                          
 target_include_directories(Pypdm PUBLIC ${PDM_INC})
-target_link_libraries(Pypdm pdm_shared)
 
 set(SETUP_PY    "${CMAKE_CURRENT_BINARY_DIR}/setup.py")
 set(DEPS        "${CMAKE_CURRENT_SOURCE_DIR}/Pypdm/__init__.py")
 set(OUTPUT      "${CMAKE_CURRENT_BINARY_DIR}timestamp")
 
-
 add_custom_command(OUTPUT ${OUTPUT}
                        COMMAND ${PYTHON_EXECUTABLE} ${SETUP_PY} --quiet build
                        COMMAND ${CMAKE_COMMAND} -E touch ${OUTPUT}
                        DEPENDS ${DEPS})
-
 
 set (SITE_PACKAGES_PDM "${CMAKE_PDM_INSTALL_PYTHON_DIR}/lib/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/site-packages/Pypdm")
 

@@ -1,19 +1,19 @@
-# Liste de tous les sources
-# -------------------------
 
-if (MPI_C_COMPILER)
-  set(CMAKE_C_COMPILER ${MPI_C_COMPILER})
-endif() 
+add_subdirectory(mpi_wrapper)
 
-if (MPI_Fortran_COMPILER)
-  set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
-endif(MPI_Fortran_COMPILER) 
 
 # Liste de tous les sources
 # -------------------------
 
 file(GLOB_RECURSE SOURCES 
-     *.[ch]) 
+     mesh/*.[ch]
+     pario/*.[ch]
+     ppart/*.[ch]
+     struct/*.[ch]
+     util/*.[ch]
+     mpi_wrapper/pdm_mpi_node_first_rank.[hc]
+     pdm.h 
+     pdm_priv.h) 
 
 file(GLOB_RECURSE SOURCESF 
      *.[fF] 
@@ -67,7 +67,6 @@ list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/pario/pdm_io.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/pario/pdm_io_tab.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/pario/pdm_writer.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/mpi_wrapper/pdm_mpi_node_first_rank.h")
-list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/mpi_wrapper/pdm_mpi.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/ppart/pdm_partf.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/ppart/pdm_part.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/util/pdm_timer.h")
@@ -84,19 +83,6 @@ if (PDM_ENABLE_STATIC_Fortran_INTERFACE OR PDM_ENABLE_SHARED_Fortran_INTERFACE)
   list(APPEND LIST_HEADERF "${CMAKE_CURRENT_BINARY_DIR}/mod_pdm_writer.mod")
 
 endif ()
-
-# Flags pour MPI
-# --------------
-
-if ((NOT MPI_C_COMPILER) AND MPI_C_COMPILE_FLAGS)
-   set_target_properties(pdm PROPERTIES
-                              COMPILE_FLAGS ${MPI_C_COMPILE_FLAGS})
-endif()
-
-if ((NOT MPI_Fortran_COMPILER) AND MPI_Fortran_COMPILE_FLAGS)
-    set_target_properties(pdmf PROPERTIES
-                               COMPILE_FLAGS ${MPI_Fortran_COMPILE_FLAGS})
-endif()
 
 # Options du link
 # ---------------
@@ -118,7 +104,7 @@ if (PDM_ENABLE_SHARED)
   add_library(pdm_shared SHARED  $<TARGET_OBJECTS:pdm>)
   set_target_properties(pdm_shared PROPERTIES OUTPUT_NAME "pdm")
   set_target_properties(pdm_shared PROPERTIES VERSION ${PDM_VERSION})
-  target_link_libraries(pdm_shared ${LINK_LIBRARIES})
+  target_link_libraries(pdm_shared ${LINK_LIBRARIES} pdm_mpi_shared)
   set_target_properties(pdm_shared PROPERTIES
                             PUBLIC_HEADER "${LIST_HEADER}")
 
@@ -133,10 +119,10 @@ if (PDM_ENABLE_STATIC)
   set_target_properties(pdm_static PROPERTIES OUTPUT_NAME "pdm")
   set_target_properties(pdm_static PROPERTIES VERSION ${PDM_VERSION})
 
-  target_link_libraries(pdm_static ${LINK_LIBRARIES})
+  target_link_libraries(pdm_static ${LINK_LIBRARIES} pdm_mpi_static)
   set_target_properties(pdm_static PROPERTIES
                              PUBLIC_HEADER "${LIST_HEADER}")
-  get_target_property(PDM_INC pdm INCLUDE_DIRECTORIES)                          
+  get_target_property(PDM_INC pdm INCLUDE_DIRECTORIES)
   target_include_directories(pdm_static PUBLIC ${PDM_INC})
 
 endif()
@@ -150,7 +136,7 @@ if (PDM_ENABLE_SHARED_Fortran_INTERFACE)
   set_target_properties(pdmf_shared PROPERTIES
                             PUBLIC_HEADER "${LIST_HEADERF}")
 
-  get_target_property(PDM_INC pdmf INCLUDE_DIRECTORIES)                          
+  get_target_property(PDM_INC pdmf INCLUDE_DIRECTORIES)
   target_include_directories(pdmf_shared PUBLIC ${PDM_INC})
 
 endif()
@@ -165,7 +151,7 @@ if (PDM_ENABLE_STATIC_Fortran_INTERFACE)
   set_target_properties(pdmf_static PROPERTIES
                              PUBLIC_HEADER "${LIST_HEADERF}")
 
-get_target_property(PDM_INC pdmf INCLUDE_DIRECTORIES)                          
+  get_target_property(PDM_INC pdmf INCLUDE_DIRECTORIES)
   target_include_directories(pdmf_static PUBLIC ${PDM_INC})
 
 endif()

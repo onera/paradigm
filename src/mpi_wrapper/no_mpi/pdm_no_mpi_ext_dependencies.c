@@ -2,7 +2,6 @@
  *  System headers
  *----------------------------------------------------------------------------*/
 
-#include <mpi.h>
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -15,16 +14,6 @@
 #include "pdm_mpi.h"
 #include "pdm_mpi_ext_dependencies.h"
 
-/*----------------------------------------------------------------------------
- *  Optional headers
- *----------------------------------------------------------------------------*/
-
-#ifdef PDM_HAVE_PARMETIS
-#include <parmetis.h>
-#endif
-#ifdef PDM_HAVE_PTSCOTCH
-#include <ptscotch.h>
-#endif
 
 /*=============================================================================
  * Macro definitions
@@ -75,12 +64,25 @@ idx_t *edgecut,
 idx_t *part, 
 PDM_MPI_Comm comm)
 {
-  MPI_Comm mpi_comm = *((MPI_Comm *) PDM_MPI_2_mpi_comm (comm));
-  
-  return ParMETIS_V3_PartKway (vtxdist, xadj, adjncy, vwgt, 
-	                                 adjwgt, wgtflag, numflag, ncon, nparts, 
-	                                 tpwgts, ubvec, options, edgecut, part, 
-	                                 &mpi_comm);
+  vtxdist; 
+  xadj; 
+  adjncy; 
+  vwgt; 
+  adjwgt; 
+  wgtflag; 
+  numflag; 
+  ncon; 
+  nparts; 
+  tpwgts; 
+  ubvec; 
+  options; 
+  edgecut; 
+  part; 
+  comm;
+
+  fprintf(stderr,"PDM_ParMETIS_V3_PartKway : Unavailable function with pdm_no_mpi library\n" );
+  abort();
+  return 0;
 }
 
 #endif
@@ -91,10 +93,14 @@ int
 PDM_SCOTCH_dgraphInit   
 (
 PDM_SCOTCH_Dgraph graphptr,
-MPI_Comm          proccomm)             /* Communicator to be used for all communications */
+PDM_MPI_Comm          proccomm)             /* Communicator to be used for all communications */
 {
-  MPI_Comm mpi_comm = *((MPI_Comm *) PDM_MPI_2_mpi_comm (proccomm));
-  return SCOTCH_dgraphInit ((SCOTCH_Dgraph *) graphptr, mpi_comm);
+  graphptr;
+  proccomm;
+  
+  fprintf(stderr,"PDM_SCOTCH_dgraphInit : Unavailable function with pdm_no_mpi library\n" );
+  abort();
+  return 0;
 }
 
 
@@ -116,19 +122,23 @@ SCOTCH_Num * const edgegsttab,
 SCOTCH_Num * const edloloctab
 )
 {
-  return SCOTCH_dgraphBuild  ((SCOTCH_Dgraph *) graphptr,
-                              baseval, 
-                              vertlocnbr, 
-                              vertlocmax, 
-                              vertloctab, 
-                              vendloctab,
-                              veloloctab, 
-                              vlblloctab, 
-                              edgelocnbr, 
-                              edgelocsiz, 
-                              edgeloctab, 
-                              edgegsttab, 
-                              edloloctab);
+  graphptr; 
+  baseval; 
+  vertlocnbr; 
+  vertlocmax; 
+  vertloctab; 
+  vendloctab;
+  veloloctab; 
+  vlblloctab; 
+  edgelocnbr; 
+  edgelocsiz; 
+  edgeloctab; 
+  edgegsttab; 
+  edloloctab;
+
+  fprintf(stderr,"PDM_SCOTCH_dgraphBuild : Unavailable function with pdm_no_mpi library\n" );
+  abort();
+  return 0;
 }
 
 
@@ -138,7 +148,11 @@ PDM_SCOTCH_dgraphCheck
 const PDM_SCOTCH_Dgraph graphptr 
 )
 {
-  return SCOTCH_dgraphCheck ((SCOTCH_Dgraph *) graphptr);
+  graphptr;
+  
+  fprintf(stderr,"PDM_SCOTCH_dgraphCheck : Unavailable function with pdm_no_mpi library\n" );
+  abort();
+  return 0;
 }
 
 
@@ -151,10 +165,14 @@ SCOTCH_Strat * const stratptr,
 SCOTCH_Num * const termlocatab
 )
 {
-  return SCOTCH_dgraphPart ((SCOTCH_Dgraph *) graphptr,
-                             partnbr,
-                             stratptr,
-                             termlocatab);
+  graphptr; 
+  partnbr; 
+  stratptr; 
+  termlocatab;
+
+  fprintf(stderr,"PDM_SCOTCH_dgraphPart : Unavailable function with pdm_no_mpi library\n" );
+  abort();
+  return 0;
 }
     
 void 
@@ -163,7 +181,10 @@ PDM_SCOTCH_dgraphExit
 PDM_SCOTCH_Dgraph graphptr
 )
 {
- SCOTCH_dgraphExit ((SCOTCH_Dgraph *) graphptr);
+  graphptr;
+  
+  fprintf(stderr,"PDM_SCOTCH_dgraphExit : Unavailable function with pdm_no_mpi library\n" );
+  abort();
 }
 
 
@@ -173,7 +194,9 @@ PDM_SCOTCH_DgraphAlloc
 void
 )
 {
-  return malloc (sizeof(SCOTCH_Dgraph));
+  fprintf(stderr,"PDM_SCOTCH_DgraphAlloc : Unavailable function with pdm_no_mpi library\n" );
+  abort();
+  return (PDM_SCOTCH_Dgraph) 0;
 }
 
 
@@ -183,8 +206,11 @@ PDM_SCOTCH_DgraphFree
 PDM_SCOTCH_Dgraph graph
 )
 {
-  free (graph);
-  return NULL;
+  graph;
+  
+  fprintf(stderr,"PDM_SCOTCH_DgraphFree : Unavailable function with pdm_no_mpi library\n" );
+  abort();
+  return (PDM_SCOTCH_Dgraph) 0;
 }
 
 #endif
@@ -194,3 +220,4 @@ PDM_SCOTCH_Dgraph graph
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
+
