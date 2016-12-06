@@ -114,7 +114,7 @@ PDM_part_to_block_create
  PDM_g_num_t                  **gnum_elt,
  int                         *n_elt,
  int                          n_part,
- PDM_MPI_Comm                     comm
+ PDM_MPI_Comm                  comm
 );
 
 

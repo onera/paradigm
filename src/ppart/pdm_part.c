@@ -32,13 +32,6 @@
  *  Optional headers
  *----------------------------------------------------------------------------*/
 
-#ifdef PDM_HAVE_PARMETIS
-#include <metis.h>
-#endif
-#ifdef PDM_HAVE_PTSCOTCH
-#include <scotch.h>
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #if 0
@@ -1032,80 +1025,55 @@ _split
   case PDM_PART_SPLIT_PARMETIS:
     {
 #ifdef PDM_HAVE_PARMETIS
-      printf("parmetis\n");
-      if (sizeof(idx_t) != sizeof(PDM_g_num_t)) {
-        printf("PPART error : Inconsistant between ppart integer size and ParMETIS integer size : %i %i\n", 
-               (int)sizeof(PDM_g_num_t), (int)sizeof(idx_t));
-        printf("              Reinstall ParMETIS or PPART with good options\n");
-        exit(1);
-      }
 
       /*
        * Define metis properties
        */
 
-      idx_t wgtflag    = 0;
-      idx_t numflag    = 0;        /* C or Fortran numbering (C = 0) */
-      idx_t options[3] = {0,1,15}; /* Options */
-      idx_t edgecut;
-      idx_t ncon       = 1;
+      int wgtflag    = 0;
+      int numflag    = 0;        /* C or Fortran numbering (C = 0) */
+      int edgecut;
+      int ncon       = 1;
       
-      real_t *ubvec = (real_t *) malloc(ncon * sizeof(real_t));
-      for (int i = 0; i < ncon; i++)
+      double *ubvec = (double *) malloc(ncon * sizeof(double));
+      for (int i = 0; i < ncon; i++) {
         ubvec[i] = 1.05;
+      }
 
-      idx_t _nPart = (idx_t) ppart->tNPart;
+      double *tpwgts = (double *) malloc(ncon * ppart->tNPart * sizeof(double));
 
-      real_t *tpwgts = (real_t *) malloc(ncon * _nPart * sizeof(real_t));
-
-      for (int i = 0; i < ncon * _nPart; i++)
-        tpwgts[i] = (float) (1./_nPart);
+      for (int i = 0; i < ncon * ppart->tNPart; i++) {
+        tpwgts[i] = (double) (1./ppart->tNPart);
+      }
 
       /*
        * Call metis
        */
 
-      idx_t *_dCellProc = (idx_t*) malloc((nRank+1) * sizeof(idx_t));
+      int *_dCellProc = (int *) malloc((nRank+1) * sizeof(int));
 
-      for (int i = 0; i < nRank + 1; i++) 
+      for (int i = 0; i < nRank + 1; i++) {
         _dCellProc[i] = ppart->dCellProc[i] - 1;
-
-      idx_t *vwgt = NULL;
-      if (ppart->_dCellWeight != NULL) {
-        if (sizeof(vwgt) == sizeof(ppart->_dCellWeight)) {
-          vwgt = (idx_t *) ppart->_dCellWeight;
-        }
-        else {
-          vwgt = (idx_t *) malloc(ppart->dNCell * sizeof(idx_t));
-          for (int i = 0; i < ppart->dNCell; i++)
-            vwgt[i] = ppart->_dCellWeight[i];
-        }
       }
 
-      PDM_ParMETIS_V3_PartKway((idx_t*) _dCellProc,
-                           (idx_t*) ppart->dDualGraphIdx,
-                           (idx_t*) ppart->dDualGraph,
-                           vwgt,       /* vwgt   : poids des cellules*/
-                           NULL,       /* adjwgt : poids des faces*/
-                           &wgtflag,
-                           &numflag,
-                           &ncon,
-                           &_nPart,
-                           tpwgts,
-                           ubvec,
-                           options,
-                           &edgecut,
-                           (idx_t*) cellPart,
-                           ppart->comm);
+      PDM_ParMETIS_V3_PartKway (_dCellProc,
+                                ppart->dDualGraphIdx,
+                                ppart->dDualGraph,
+                                (int *) ppart->_dCellWeight,
+                                NULL,
+                                &wgtflag, 
+                                &numflag, 
+                                &ncon, 
+                                &ppart->tNPart, 
+                                tpwgts, 
+                                ubvec, 
+                                &edgecut, 
+                                cellPart,
+                                ppart->comm);
       
       free(ubvec);
       free(tpwgts);
       free(_dCellProc);
-      if (ppart->_dCellWeight != NULL) {
-        if (sizeof(vwgt) != sizeof(ppart->_dCellWeight)) {
-          free(vwgt);
-        }
-      }
 
 #else
       if(myRank == 0) {
@@ -1118,94 +1086,18 @@ _split
   case PDM_PART_SPLIT_PTSCOTCH:
     {
 #ifdef PDM_HAVE_PTSCOTCH
+      int check = 0;
+      int *edgeWeight = NULL;
 
-      PDM_SCOTCH_Dgraph grafptr = PDM_SCOTCH_DgraphAlloc();
-      SCOTCH_Strat straptr;
-      int ierr = 0;
-      
-      if (sizeof(SCOTCH_Num) != sizeof(PDM_g_num_t)) {
-        printf("PPART error : Inconsistant between ppart integer size and"//
-                              " PT-scotch integer size\n");
-        printf("              Reinstall PT-Scotch or PPART with good options\n");
-        exit(1);
-      }
-
-      ierr = PDM_SCOTCH_dgraphInit (grafptr,ppart->comm);
-      if (ierr) {
-        printf("PPART error : Error in PT-Scotch graph initialization\n");
-        exit(1);
-      }
-    
-      const SCOTCH_Num _nCell = (SCOTCH_Num) ppart->dNCell;
-
-      SCOTCH_Num *veloloctab = NULL ; /* Poids des sommets du graphe */
-      if (ppart->_dCellWeight != NULL) {
-        if (sizeof(veloloctab) == sizeof(ppart->_dCellWeight)) {
-          veloloctab = (SCOTCH_Num *) ppart->_dCellWeight;
-        }
-        else {
-          veloloctab = (SCOTCH_Num *) malloc(ppart->dNCell * sizeof(SCOTCH_Num));
-          for (int i = 0; i < _nCell; i++)
-            veloloctab[i] = ppart->_dCellWeight[i];
-        }
-      }
-      SCOTCH_Num *vlblloctab = NULL ; /* Labels des sommets du graphe */
-
-      SCOTCH_Num *edloloctab = NULL ; /* Poids des arcs du graphe */
-
-      ierr = PDM_SCOTCH_dgraphBuild(grafptr , /* Pointeur vers le graph */
-                                0, /* Indice de depart des tableaux, 0 en C */
-                                _nCell, /* Nombre de points du graph */
-                                _nCell,
-                                ppart->dDualGraphIdx,
-                                ppart->dDualGraphIdx + 1,
-                                veloloctab,
-                                vlblloctab,
-                                ppart->dDualGraphIdx[ppart->dNCell], /* Nombre d'arcs du graph */
-                                ppart->dDualGraphIdx[ppart->dNCell],
-                                ppart->dDualGraph,
-                                NULL,
-                                edloloctab);
-
-      if (ierr) {
-        printf("PPART error : Error in SCOTCH_dgraphBuild\n");
-        exit(1);
-      }
-    
-      /* Checks graph */
-
-      if (0 == 1) {
-
-        ierr = PDM_SCOTCH_dgraphCheck (grafptr);
-      }
-
-      if (ierr) {
-        printf("PPART error : Error in PT-Scotch graph check\n");
-        exit(1);
-      }
-    
-      /* Partitioning strategy : */
-    
-      SCOTCH_stratInit(&straptr);
-
-      const SCOTCH_Num _nPart = (SCOTCH_Num) ppart->tNPart;
-
-      ierr = PDM_SCOTCH_dgraphPart(grafptr,
-                               _nPart, /* Nombre de partitions demande */
-                               &straptr,
-                               (SCOTCH_Num *) cellPart    /* parts[i] donne le numero */
-                               );                      /*   de partition de l'element i */
-      
-      SCOTCH_stratExit(&straptr);
-      PDM_SCOTCH_dgraphExit(grafptr);
-      
-      PDM_SCOTCH_DgraphFree(grafptr);
-      
-      if (ppart->_dCellWeight != NULL) {
-        if (sizeof(veloloctab) != sizeof(ppart->_dCellWeight)) {
-          free(veloloctab);
-        }
-      }
+      PDM_SCOTCH_dpart (ppart->dNCell,
+                        ppart->dDualGraphIdx,
+                        ppart->dDualGraph,
+                        ppart->_dCellWeight,
+                        edgeWeight,
+                        check,        
+                        ppart->comm,
+                        ppart->tNPart,  
+                        cellPart);
 
 #else
       if(myRank == 0) {

@@ -14,7 +14,6 @@
 #include "pdm_mpi.h"
 #include "pdm_mpi_ext_dependencies.h"
 
-
 /*=============================================================================
  * Macro definitions
  *============================================================================*/
@@ -48,21 +47,21 @@ extern "C" {
 int 
 PDM_ParMETIS_V3_PartKway 
 (
-idx_t *vtxdist, 
-idx_t *xadj, 
-idx_t *adjncy, 
-idx_t *vwgt, 
-idx_t *adjwgt, 
-idx_t *wgtflag, 
-idx_t *numflag, 
-idx_t *ncon, 
-idx_t *nparts, 
-real_t *tpwgts, 
-real_t *ubvec, 
-idx_t *options, 
-idx_t *edgecut, 
-idx_t *part, 
-PDM_MPI_Comm comm)
+const PDM_g_num_t *vtxdist, 
+const PDM_g_num_t *xadj, 
+const PDM_g_num_t *adjncy, 
+const int *vwgt, 
+const int *adjwgt, 
+const int *wgtflag, 
+const int *numflag, 
+const int *ncon, 
+const int *nparts, 
+const double *tpwgts, 
+const double *ubvec, 
+const int *edgecut, 
+int *part, 
+const PDM_MPI_Comm comm
+)
 {
   vtxdist; 
   xadj; 
@@ -75,7 +74,6 @@ PDM_MPI_Comm comm)
   nparts; 
   tpwgts; 
   ubvec; 
-  options; 
   edgecut; 
   part; 
   comm;
@@ -85,133 +83,39 @@ PDM_MPI_Comm comm)
   return 0;
 }
 
+
 #endif
     
 #ifdef PDM_HAVE_PTSCOTCH
 
-int  
-PDM_SCOTCH_dgraphInit   
-(
-PDM_SCOTCH_Dgraph graphptr,
-PDM_MPI_Comm          proccomm)             /* Communicator to be used for all communications */
-{
-  graphptr;
-  proccomm;
-  
-  fprintf(stderr,"PDM_SCOTCH_dgraphInit : Unavailable function with pdm_no_mpi library\n" );
-  abort();
-  return 0;
-}
-
-
-int  
-PDM_SCOTCH_dgraphBuild  
-(
-PDM_SCOTCH_Dgraph graphptr, 
-const SCOTCH_Num baseval, 
-const SCOTCH_Num vertlocnbr, 
-const SCOTCH_Num vertlocmax, 
-SCOTCH_Num * const vertloctab, 
-SCOTCH_Num * const vendloctab,
-SCOTCH_Num * const veloloctab, 
-SCOTCH_Num * const vlblloctab, 
-const SCOTCH_Num edgelocnbr, 
-const SCOTCH_Num edgelocsiz, 
-SCOTCH_Num * const edgeloctab, 
-SCOTCH_Num * const edgegsttab, 
-SCOTCH_Num * const edloloctab
-)
-{
-  graphptr; 
-  baseval; 
-  vertlocnbr; 
-  vertlocmax; 
-  vertloctab; 
-  vendloctab;
-  veloloctab; 
-  vlblloctab; 
-  edgelocnbr; 
-  edgelocsiz; 
-  edgeloctab; 
-  edgegsttab; 
-  edloloctab;
-
-  fprintf(stderr,"PDM_SCOTCH_dgraphBuild : Unavailable function with pdm_no_mpi library\n" );
-  abort();
-  return 0;
-}
-
-
-int  
-PDM_SCOTCH_dgraphCheck  
-(
-const PDM_SCOTCH_Dgraph graphptr 
-)
-{
-  graphptr;
-  
-  fprintf(stderr,"PDM_SCOTCH_dgraphCheck : Unavailable function with pdm_no_mpi library\n" );
-  abort();
-  return 0;
-}
-
-
-int  
-PDM_SCOTCH_dgraphPart   
-(
-PDM_SCOTCH_Dgraph graphptr, 
-const SCOTCH_Num partnbr, 
-SCOTCH_Strat * const stratptr, 
-SCOTCH_Num * const termlocatab
-)
-{
-  graphptr; 
-  partnbr; 
-  stratptr; 
-  termlocatab;
-
-  fprintf(stderr,"PDM_SCOTCH_dgraphPart : Unavailable function with pdm_no_mpi library\n" );
-  abort();
-  return 0;
-}
-    
-void 
-PDM_SCOTCH_dgraphExit   
-(
-PDM_SCOTCH_Dgraph graphptr
-)
-{
-  graphptr;
-  
-  fprintf(stderr,"PDM_SCOTCH_dgraphExit : Unavailable function with pdm_no_mpi library\n" );
-  abort();
-}
-
-
-PDM_SCOTCH_Dgraph 
-PDM_SCOTCH_DgraphAlloc
-(
 void
-)
-{
-  fprintf(stderr,"PDM_SCOTCH_DgraphAlloc : Unavailable function with pdm_no_mpi library\n" );
-  abort();
-  return (PDM_SCOTCH_Dgraph) 0;
-}
-
-
-PDM_SCOTCH_Dgraph 
-PDM_SCOTCH_DgraphFree
+PDM_SCOTCH_dpart   
 (
-PDM_SCOTCH_Dgraph graph
+const PDM_g_num_t dNCell,
+const PDM_g_num_t *dDualGraphIdx,
+const PDM_g_num_t *dDualGraph,        
+const int *cellWeight,
+const int *edgeWeight,
+const int check,        
+const PDM_MPI_Comm comm,
+const int nPart,        
+int *part
 )
 {
-  graph;
-  
-  fprintf(stderr,"PDM_SCOTCH_DgraphFree : Unavailable function with pdm_no_mpi library\n" );
+  dNCell;
+  dDualGraphIdx;
+  dDualGraph;        
+  cellWeight;
+  edgeWeight;
+  check;        
+  comm;
+  nPart;        
+  part;
+
+  fprintf(stderr,"PDM_SCOTCH_dpart : Unavailable function with pdm_no_mpi library\n" );
   abort();
-  return (PDM_SCOTCH_Dgraph) 0;
 }
+
 
 #endif
 

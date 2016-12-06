@@ -11,6 +11,7 @@ file(GLOB_RECURSE SOURCES
      ppart/*.[ch]
      struct/*.[ch]
      util/*.[ch]
+     ext_wrapper/*.[ch]
      mpi_wrapper/pdm_mpi_node_first_rank.[hc]
      pdm.h 
      pdm_priv.h) 
@@ -32,6 +33,7 @@ target_include_directories(pdm
                            PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/pario
                            PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/ppart
                            PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/mpi_wrapper
+                           PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/ext_wrapper
                            PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/mesh
                            PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/struct
                            PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/util)
@@ -45,6 +47,7 @@ target_include_directories(pdmf
                            PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/pario
                            PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/ppart
                            PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/mpi_wrapper
+                           PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/ext_wrapper
                            PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/mesh
                            PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/struct
                            PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/util)

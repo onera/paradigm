@@ -61,21 +61,20 @@ extern "C" {
 int 
 PDM_ParMETIS_V3_PartKway 
 (
-PDM_g_num_t *vtxdist, 
-PDM_g_num_t *xadj, 
-PDM_g_num_t *adjncy, 
-int *vwgt, 
-int *adjwgt, 
-int *wgtflag, 
-int *numflag, 
-int *ncon, 
-int *nparts, 
-double *tpwgts, 
-double *ubvec, 
-int options[5], 
-int *edgecut, 
+const PDM_g_num_t *vtxdist, 
+const PDM_g_num_t *xadj, 
+const PDM_g_num_t *adjncy, 
+const int *vwgt, 
+const int *adjwgt, 
+const int *wgtflag, 
+const int *numflag, 
+const int *ncon, 
+const int *nparts, 
+const double *tpwgts, 
+const double *ubvec, 
+const int *edgecut, 
 int *part, 
-PDM_MPI_Comm comm
+const PDM_MPI_Comm comm
 )
 {
   MPI_Comm mpi_comm = *((MPI_Comm *) PDM_MPI_2_mpi_comm (comm));
@@ -93,19 +92,28 @@ PDM_MPI_Comm comm
   idx_t _ncon = *ncon;; 
   idx_t _nparts = *nparts; 
 
-  idx_t _options[5] = {options[0],
-                       options[1], 
-                       options[2], 
-                       options[3], 
-                       options[4]};
+  idx_t options[METIS_NOPTIONS]; /* Options */
+  METIS_SetDefaultOptions(options);
+
+  options[METIS_OPTION_NUMBERING] = 0; //C numbering = 0 (Fortran = 1)
+  options[METIS_OPTION_MINCONN] = 1; //Minimize the maximum connectivity
+  options[METIS_OPTION_CONTIG] = 1; //Force contiguous partitions
+  //The graph should be compressed by combining together vertices that have identical adjacency lists.
+  options[METIS_OPTION_COMPRESS] = 1; 
+
+
+  //METIS provide the METIS SetDefaultOptions routine to set the options to their default values. 
+  //After that, the application can just modify the options that is interested in modifying.
+  //options[METIS_OPTION_NSEPS] = 10;
+  //options[METIS_OPTION_UFACTOR] = 100;
   
-  idx_t _edgecut = edgecut;
+  idx_t _edgecut = (idx_t) *edgecut;
   
 	real_t *_tpwgts; 
   real_t *_ubvec;  
   for (int i = 0; i < *ncon; i++) {
-    _tpwgts[i] = tpwgts[i]; 
-    _ubvec[i] = ubvec[i];         
+    _tpwgts[i] = (real_t) tpwgts[i]; 
+    _ubvec[i] = (real_t) ubvec[i];         
   }
   
   idx_t *__vtxdist, *_vtxdist;
@@ -196,7 +204,7 @@ PDM_MPI_Comm comm
                                          &_nparts, 
 	                                       _tpwgts, 
                                          _ubvec, 
-                                         _options, 
+                                         options, 
                                          &_edgecut,
                                         _part, 
 	                                      &mpi_comm);
@@ -235,379 +243,54 @@ PDM_MPI_Comm comm
   
 }
 
-int PDM_METIS_PartGraphRecursive
-(
-int *nvtxs, 
-int *ncon, 
-int *xadj, 
-int *adjncy, 
-int *vwgt, 
-int *adjwgt, 
-int *nparts, 
-double *tpwgts, 
-double *ubvec, 
-int options[5], 
-int *edgecut, 
-int *part
-)
-{
-
-  idx_t _nvtxs = *nvtxs;
-
-  idx_t _ncon = *ncon;
-  
-  int nEdge = xadj[_nvtxs];
-  
-  idx_t _nparts = *nparts; 
-
-  idx_t _options[5] = {options[0],
-                       options[1], 
-                       options[2],
-                       options[3],
-                       options[4]};
-  
-  idx_t _edgecut = edgecut;
-  
-	real_t *_tpwgts; 
-  real_t *_ubvec;  
-  for (int i = 0; i < *ncon; i++) {
-    _tpwgts[i] = tpwgts[i]; 
-    _ubvec[i] = ubvec[i];         
-  }
-
-  int *_vsize = NULL;
-
-  idx_t *__xadj, *_xadj;
-  idx_t *__adjncy, *_adjncy;
-  idx_t *__vwgt, *_vwgt; 
-	idx_t *__adjwgt, *_adjwgt; 
-  idx_t *__part, *_part; 
-
-  if (sizeof(int) == sizeof(idx_t)) {
-    _vwgt     = (idx_t *) vwgt;
-    _adjwgt   = (idx_t *) adjwgt;
-    _part     = (idx_t *) part;
-    _xadj     = (idx_t *) xadj;
-    _adjncy   = (idx_t *) adjncy;
-
-    __vwgt    = NULL;
-    __adjwgt  = NULL;
-    __part    = NULL;
-    __xadj    = NULL;
-    __adjncy  = NULL;
-  }
-
-  else {
-    __xadj    = (idx_t *) malloc (sizeof(idx_t) * (_nvtxs + 1));
-    __adjncy  = (idx_t *) malloc (sizeof(idx_t) * nEdge);
-    _xadj    = __xadj;
-    _adjncy  = __adjncy;
-      
-    for (int i = 0; i < _nvtxs + 1; i++) {
-      __xadj[i] = xadj[i]; 
-    }
-
-    for (int i = 0; i < nEdge; i++) {
-      __adjncy[i] =  adjncy[i]; 
-    }
-
-    if (vwgt != NULL) { 
-      __vwgt = (idx_t *) malloc (sizeof(idx_t) * _nvtxs);
-      for (int i = 0; i < _nvtxs; i++) {
-        __vwgt[i] = vwgt[i]; 
-      }      
-    }
-    else {
-      __vwgt = NULL;
-    }
-    
-    if (adjwgt != NULL) { 
-      __adjwgt = (idx_t *) malloc (sizeof(idx_t) * nEdge);
-      for (int i = 0; i < nEdge; i++) {
-        __adjwgt[i] = adjwgt[i]; 
-      }      
-    }
-    else {
-      __adjwgt = NULL;
-    }
-
-    __part = (idx_t *) malloc (sizeof(idx_t) * _nvtxs);
-
-    _vwgt   = __vwgt;
-    _adjwgt = __adjwgt;
-    _part   = __part;
-
-  }
-
-  int rval = (int) METIS_PartGraphRecursive (&_nvtxs, 
-                                             &_ncon, 
-                                              _xadj, 
-                                              _adjncy, 
-                                              _vwgt, 
-                                              _vsize, 
-                                              _adjwgt, 
-                                              &_nparts, 
-                                              _tpwgts, 
-                                              _ubvec, 
-                                              _options, 
-                                              &_edgecut, 
-                                              &_part);
-
-    if (sizeof(int) != sizeof(idx_t)) {
-    for (int i = 0; i < _nvtxs; i++) {
-      part[i] = _part[i]; 
-    }      
-  }
-  
-  if (__xadj != NULL) {
-    free (__xadj);
-  }
-
-  if (__adjncy != NULL) {
-    free (__adjncy);
-  }
-
-  if (__part != NULL) {
-    free (__part);
-  }
-
-  if (__vwgt != NULL) {
-    free (__vwgt);
-  }
-
-  if (__adjwgt != NULL) {
-    free (__adjwgt);
-  }
-
-  return rval;
-}
-
-
-int 
-PDM_METIS_PartGraphKway
-(
-int *nvtxs, 
-int *ncon, 
-int *xadj, 
-int *adjncy, 
-int *vwgt, 
-int *adjwgt, 
-int *nparts, 
-double *tpwgts, 
-double *ubvec, 
-int options[5], 
-int *edgecut, 
-int *part
-)
-{
-
-  idx_t _nvtxs = *nvtxs;
-
-  idx_t _ncon = *ncon;
-  
-  int nEdge = xadj[_nvtxs];
-  
-  idx_t _nparts = *nparts; 
-
-  idx_t _options[5] = {options[0],
-                       options[1], 
-                       options[2],
-                       options[3],
-                       options[4]};
-  
-  idx_t _edgecut = edgecut;
-  
-	real_t *_tpwgts; 
-  real_t *_ubvec;  
-  for (int i = 0; i < *ncon; i++) {
-    _tpwgts[i] = tpwgts[i]; 
-    _ubvec[i] = ubvec[i];         
-  }
-
-  int *_vsize = NULL;
-
-  idx_t *__xadj, *_xadj;
-  idx_t *__adjncy, *_adjncy;
-  idx_t *__vwgt, *_vwgt; 
-	idx_t *__adjwgt, *_adjwgt; 
-  idx_t *__part, *_part; 
-
-  if (sizeof(int) == sizeof(idx_t)) {
-    _vwgt     = (idx_t *) vwgt;
-    _adjwgt   = (idx_t *) adjwgt;
-    _part     = (idx_t *) part;
-    _xadj     = (idx_t *) xadj;
-    _adjncy   = (idx_t *) adjncy;
-
-    __vwgt    = NULL;
-    __adjwgt  = NULL;
-    __part    = NULL;
-    __xadj    = NULL;
-    __adjncy  = NULL;
-  }
-
-  else {
-    __xadj    = (idx_t *) malloc (sizeof(idx_t) * (_nvtxs + 1));
-    __adjncy  = (idx_t *) malloc (sizeof(idx_t) * nEdge);
-    _xadj    = __xadj;
-    _adjncy  = __adjncy;
-      
-    for (int i = 0; i < _nvtxs + 1; i++) {
-      __xadj[i] = xadj[i]; 
-    }
-
-    for (int i = 0; i < nEdge; i++) {
-      __adjncy[i] =  adjncy[i]; 
-    }
-
-    if (vwgt != NULL) { 
-      __vwgt = (idx_t *) malloc (sizeof(idx_t) * _nvtxs);
-      for (int i = 0; i < _nvtxs; i++) {
-        __vwgt[i] = vwgt[i]; 
-      }      
-    }
-    else {
-      __vwgt = NULL;
-    }
-    
-    if (adjwgt != NULL) { 
-      __adjwgt = (idx_t *) malloc (sizeof(idx_t) * nEdge);
-      for (int i = 0; i < nEdge; i++) {
-        __adjwgt[i] = adjwgt[i]; 
-      }      
-    }
-    else {
-      __adjwgt = NULL;
-    }
-
-    __part = (idx_t *) malloc (sizeof(idx_t) * _nvtxs);
-
-    _vwgt   = __vwgt;
-    _adjwgt = __adjwgt;
-    _part   = __part;
-
-  }
-
-  int rval = (int) METIS_PartGraphKway (&_nvtxs, 
-                                        &_ncon, 
-                                         _xadj, 
-                                         _adjncy, 
-                                         _vwgt, 
-                                         _vsize, 
-                                         _adjwgt, 
-                                        &_nparts, 
-                                         _tpwgts, 
-                                         _ubvec, 
-                                         _options, 
-                                        &_edgecut, 
-                                        &_part);
-
-  if (__part != NULL) {
-    for (int i = 0; i < _nvtxs; i++) {
-      part[i] = __part[i]; 
-    }
-    free (__part);
-  }
-  
-  if (__xadj != NULL) {
-    free (__xadj);
-  }
-
-  if (__adjncy != NULL) {
-    free (__adjncy);
-  }
-
-  if (__part != NULL) {
-    free (__part);
-  }
-
-  if (__vwgt != NULL) {
-    free (__vwgt);
-  }
-
-  if (__adjwgt != NULL) {
-    free (__adjwgt);
-  }
-
-  return rval;
-}
-
-
-int
-PDM_METIS_SetDefaultOptions
-(
-int *options
-)
-{
-  idx_t _options[METIS_NOPTIONS]; /* Options */
-  int rval = (int) METIS_SetDefaultOptions(_options);
-  
-  for (int i = 0; i < METIS_NOPTIONS; i++) {
-    options[i] = _options[i];
-  }
-  
-  return rval;
-}
-
 #endif
     
 #ifdef PDM_HAVE_PTSCOTCH
 
-int  
-PDM_SCOTCH_dgraphInit   
+void  
+PDM_SCOTCH_dpart 
 (
-PDM_SCOTCH_Dgraph graphptr,
-PDM_MPI_Comm          proccomm)             /* Communicator to be used for all communications */
-{
-  MPI_Comm mpi_comm = *((MPI_Comm *) PDM_MPI_2_mpi_comm (proccomm));
-  return SCOTCH_dgraphInit ((SCOTCH_Dgraph *) graphptr, mpi_comm);
-}
-
-
-int  
-PDM_SCOTCH_graphInit   
-(
-PDM_SCOTCH_Graph graphptr
+const PDM_g_num_t dNCell,
+const PDM_g_num_t *dDualGraphIdx,
+const PDM_g_num_t *dDualGraph,        
+const int *cellWeight,
+const int *edgeWeight,
+const int check,        
+const PDM_MPI_Comm comm,
+const int  nPart,        
+int *part
 )
 {
-  return SCOTCH_dgraphInit ((SCOTCH_Graph *) graphptr);
-}
+  SCOTCH_Dgraph graph;
+  SCOTCH_Strat strat;
+  int ierr = 0;
 
+  MPI_Comm mpi_comm = *((MPI_Comm *) PDM_MPI_2_mpi_comm (comm));
 
-int  
-PDM_SCOTCH_dgraphBuild  
-(
-PDM_SCOTCH_Dgraph graphptr, 
-const int  baseval, 
-const PDM_g_num_t vertlocnbr, 
-const PDM_g_num_t vertlocmax, 
-PDM_g_num_t * const vertloctab, 
-PDM_g_num_t * const vendloctab,
-int * const veloloctab, // Poids cellules */
-const PDM_g_num_t edgelocnbr, 
-const PDM_g_num_t edgelocsiz, 
-PDM_g_num_t * const edgeloctab, 
-int  * const edloloctab // Poids faces */
-)
-{
-  
-  SCOTCH_Num _baseval = (SCOTCH_Num) baseval; 
-  SCOTCH_Num _vertlocnbr = (SCOTCH_Num) vertlocnbr;
-  SCOTCH_Num _vertlocmax = (SCOTCH_Num) vertlocmax; 
+  ierr = SCOTCH_dgraphInit (&graph, mpi_comm);
+  if (ierr) {
+    fprintf (stderr,"PPART error : Error in PT-Scotch graph initialization\n");
+    exit(1);
+  }
+    
+  SCOTCH_Num _baseval = 0; 
+  SCOTCH_Num _vertlocnbr = (SCOTCH_Num) dNCell;
+  SCOTCH_Num _vertlocmax = (SCOTCH_Num) dNCell; 
   SCOTCH_Num *_vertloctab, *__vertloctab; 
   SCOTCH_Num *_vendloctab, *__vendloctab; 
   SCOTCH_Num *_veloloctab, *__veloloctab; 
   SCOTCH_Num *_vlblloctab = NULL; 
-  SCOTCH_Num _edgelocnbr = (SCOTCH_Num) edgelocnbr;
-  SCOTCH_Num _edgelocsiz = (SCOTCH_Num) edgelocsiz;
+  SCOTCH_Num _edgelocnbr = (SCOTCH_Num) dDualGraphIdx[dNCell];
+  SCOTCH_Num _edgelocsiz = (SCOTCH_Num) dDualGraphIdx[dNCell];
   SCOTCH_Num *_edgeloctab, *__edgeloctab; 
   SCOTCH_Num *_edgegsttab = NULL; 
   SCOTCH_Num *_edloloctab, *__edloloctab;
+  SCOTCH_Num *_part, *__part;
   
   if (sizeof(PDM_g_num_t) == sizeof(SCOTCH_Num)) {
-    _vertloctab = vertloctab;
-    _vendloctab = vendloctab;
-    _edgeloctab = edgeloctab;
+    _vertloctab = (SCOTCH_Num *) dDualGraphIdx;
+    _vendloctab = (SCOTCH_Num *) dDualGraphIdx + 1;
+    _edgeloctab = (SCOTCH_Num *) dDualGraph;
     
     __vertloctab = NULL;
     __vendloctab = NULL;
@@ -615,20 +298,16 @@ int  * const edloloctab // Poids faces */
   }
   
   else {
-    __vertloctab = (SCOTCH_Num *) malloc (sizeof(SCOTCH_Num) * vertlocnbr);
-    __vendloctab = (SCOTCH_Num *) malloc (sizeof(SCOTCH_Num) * vertlocnbr);
-    __edgeloctab  = (SCOTCH_Num *) malloc (sizeof(SCOTCH_Num) * edgelocsiz);
+    __vertloctab = (SCOTCH_Num *) malloc (sizeof(SCOTCH_Num) * (_vertlocnbr + 1));
+    __vendloctab = __vertloctab + 1; 
+    __edgeloctab  = (SCOTCH_Num *) malloc (sizeof(SCOTCH_Num) * _edgelocsiz);
 
-    for (int i = 0; i < vertlocnbr; i++) {
-      __vertloctab[i] = vertloctab[i]; 
-    }
-      
-    for (int i = 0; i < vertlocnbr; i++) {
-      __vendloctab[i] = vendloctab[i]; 
+    for (int i = 0; i < _vertlocnbr + 1; i++) {
+      __vertloctab[i] = dDualGraphIdx[i]; 
     }
 
-    for (int i = 0; i < edgelocsiz; i++) {
-      __edgeloctab[i] = edgeloctab[i]; 
+    for (int i = 0; i < _edgelocsiz; i++) {
+      __edgeloctab[i] = dDualGraph[i]; 
     }
 
     _vertloctab = __vertloctab;
@@ -637,37 +316,39 @@ int  * const edloloctab // Poids faces */
 
   }
 
-
   if (sizeof(int) == sizeof(SCOTCH_Num)) {
     
-    _veloloctab = veloloctab; 
-    _edloloctab = edloloctab;
+    _veloloctab = (SCOTCH_Num *) cellWeight; 
+    _edloloctab = (SCOTCH_Num *) edgeWeight;
+    _part = part;
     
     __veloloctab = NULL; 
     __edloloctab = NULL;
+    __part = NULL;
     
   }
   
   else {
           
-    __veloloctab = (SCOTCH_Num *) malloc (sizeof(SCOTCH_Num) * vertlocnbr);
-    __edloloctab = (SCOTCH_Num *) malloc (sizeof(SCOTCH_Num) * edgelocsiz);
+    __veloloctab = (SCOTCH_Num *) malloc (sizeof(SCOTCH_Num) * _vertlocnbr);
+    __part       = (SCOTCH_Num *) malloc (sizeof(SCOTCH_Num) * _vertlocnbr);
+    __edloloctab = (SCOTCH_Num *) malloc (sizeof(SCOTCH_Num) * _edgelocsiz);
       
-    for (int i = 0; i < vertlocnbr; i++) {
-      __veloloctab[i] = veloloctab[i]; 
+    for (int i = 0; i < _vertlocnbr; i++) {
+      __veloloctab[i] = cellWeight[i]; 
     }
 
-    for (int i = 0; i < edgelocsiz; i++) {
-      __edloloctab[i] = _edloloctab[i]; 
+    for (int i = 0; i < _edgelocsiz; i++) {
+      __edloloctab[i] = edgeWeight[i]; 
     }
 
     _veloloctab = __veloloctab; 
     _edloloctab = __edloloctab;
+    _part = __part;
     
   }
-    
-    
-  return SCOTCH_dgraphBuild  ((SCOTCH_Dgraph *) graphptr,
+
+  ierr = SCOTCH_dgraphBuild  (&graph,
                               _baseval, 
                               _vertlocnbr, 
                               _vertlocmax, 
@@ -680,214 +361,65 @@ int  * const edloloctab // Poids faces */
                               _edgeloctab, 
                               _edgegsttab, 
                               _edloloctab);
-}
 
-int 
-SCOTCH_dgraphBuild  (
-SCOTCH_Dgraph * const,
-        const SCOTCH_Num, 
-        const SCOTCH_Num, 
-        const SCOTCH_Num, 
-        SCOTCH_Num * const, 
-        SCOTCH_Num * const, 
-        SCOTCH_Num * const, 
-        SCOTCH_Num * const, 
-        const SCOTCH_Num, 
-        const SCOTCH_Num, 
-        SCOTCH_Num * const, 
-        SCOTCH_Num * const, 
-        SCOTCH_Num * const);
-
-
-int  
-PDM_SCOTCH_dgraphCheck  
-(
-const PDM_SCOTCH_Dgraph graphptr 
-)
-{
-  return SCOTCH_dgraphCheck ((SCOTCH_Dgraph *) graphptr);
-}
-
-
-int  
-PDM_SCOTCH_graphCheck  
-(
-const PDM_SCOTCH_Graph graphptr 
-)
-{
-  return SCOTCH_graphCheck ((SCOTCH_Graph *) graphptr);
-}
-
-
-int  
-PDM_SCOTCH_dgraphPart   
-(
-PDM_SCOTCH_Dgraph graph, 
-const int nPart,
-const int nVert,
-PDM_SCOTCH_Strat stratptr,
-int *part
-)
-{
-
-  SCOTCH_Num _nPart = nPart;
-  SCOTCH_Num *_part, *__part;
-  
-  if (sizeof(SCOTCH_Num) == sizeof(int)) {
-    _part = part;
-    __part = NULL;
-  }
-  
-  else {
-    __part = (SCOTCH_Num *) malloc (sizeof(SCOTCH_Num) * nPart);
-    _part = __part;
+  if (ierr) {
+    fprintf(stderr, "PPART error : Error in SCOTCH_dgraphBuild\n");
+    exit(1);
   }
 
-  int rval = (int) SCOTCH_dgraphPart ((SCOTCH_Dgraph *) graph,
-                                     _nPart,
-                                     stratptr,
-                                     _part);
-  
+  /* Checks graph */
+
+  if (check) {
+
+    ierr = SCOTCH_dgraphCheck (&graph);
+  }
+
+  if (ierr) {
+    fprintf(stderr, "PPART error : Error in PT-Scotch graph check\n");
+    exit(1);
+  }
+
+  /* Partitioning strategy : */
+
+  SCOTCH_stratInit(&strat);
+
+  const SCOTCH_Num _nPart = (SCOTCH_Num) nPart;
+
+  ierr = SCOTCH_dgraphPart(&graph,
+                               _nPart, /* Nombre de partitions demande */
+                               &strat,
+                               _part);    /* parts[i] donne le numero */
+
+  SCOTCH_stratExit(&strat);
+  SCOTCH_dgraphExit(&graph);
+
   if (__part != NULL) {
-    for (int i = 0; i < nPart; i++) {
-      part[i] = __part[i];
+    for (int i = 0; i < _vertlocnbr; i++) {
+      part[i] = __part[i]; 
     }
     free (__part);
   }
-  
-  return rval;
-  
-}
 
-
-int  
-PDM_SCOTCH_graphPart   
-(
-PDM_SCOTCH_Graph graph, 
-const int nPart,
-const int nVert,
-PDM_SCOTCH_Strat stratptr,
-int *part
-)
-{
-
-  SCOTCH_Num _nPart = nPart;
-  SCOTCH_Num *_part, *__part;
-  
-  if (sizeof(SCOTCH_Num) == sizeof(int)) {
-    _part = part;
-    __part = NULL;
+  if (__vertloctab != NULL) {
+    free (__vertloctab);
   }
   
-  else {
-    __part = (SCOTCH_Num *) malloc (sizeof(SCOTCH_Num) * nPart);
-    _part = __part;
-  }
-
-  int rval = (int) SCOTCH_graphPart ((SCOTCH_Graph *) graph,
-                                     _nPart,
-                                     stratptr,
-                                     _part);
-  
-  if (__part != NULL) {
-    for (int i = 0; i < nPart; i++) {
-      part[i] = __part[i];
-    }
-    free (__part);
+  if (__vendloctab != NULL) {
+    free (__vendloctab);
   }
   
-  return rval;
+  if (__edgeloctab != NULL) {
+    free (__edgeloctab);
+  }
+
+  if (__veloloctab != NULL) {
+    free (__veloloctab);
+  }
   
-}
-
-
-void 
-PDM_SCOTCH_dgraphExit   
-(
-PDM_SCOTCH_Dgraph graphptr
-)
-{
- SCOTCH_dgraphExit ((SCOTCH_Dgraph *) graphptr);
-}
-    
-void 
-PDM_SCOTCH_graphExit   
-(
-PDM_SCOTCH_Graph graphptr
-)
-{
- SCOTCH_graphExit ((SCOTCH_Graph *) graphptr);
-}
-    
-void 
-PDM_SCOTCH_stratExit   
-(
-PDM_SCOTCH_Strat stratptr
-)
-{
- SCOTCH_graphExit ((SCOTCH_Strat *) stratptr);
-}
-
-
-PDM_SCOTCH_Dgraph 
-PDM_SCOTCH_DgraphAlloc
-(
-void
-)
-{
-  return malloc (sizeof(SCOTCH_Dgraph));
-}
-
-
-PDM_SCOTCH_Dgraph 
-PDM_SCOTCH_DgraphFree
-(
-PDM_SCOTCH_Dgraph graph
-)
-{
-  free (graph);
-  return NULL;
-}
-
-PDM_SCOTCH_Graph 
-PDM_SCOTCH_GraphAlloc
-(
-void
-)
-{
-  return malloc (sizeof(SCOTCH_Graph));
-}
-
-
-PDM_SCOTCH_Graph 
-PDM_SCOTCH_GraphFree
-(
-PDM_SCOTCH_Graph graph
-)
-{
-  free (graph);
-  return NULL;
-}
-
-
-PDM_SCOTCH_Strat 
-PDM_SCOTCH_StratAlloc
-(
-void
-)
-{
-  return malloc (sizeof(SCOTCH_Strat));
-}
-
-
-PDM_SCOTCH_Strat 
-PDM_SCOTCH_StratFree
-(
-PDM_SCOTCH_Strat strat
-)
-{
-  free (strat);
-  return NULL;
+  if (__edloloctab != NULL) {
+    free (__edloloctab);
+  }
+  
 }
 
 #endif

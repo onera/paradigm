@@ -13,18 +13,13 @@
 #include "pdm_part_priv.h"
 #include "pdm_timer.h"
 
-#ifdef PDM_HAVE_PARMETIS
-#include <metis.h>
-#endif
-#ifdef PDM_HAVE_PTSCOTCH
-#include <scotch.h>
-#endif
-
 #include "pdm_part.h"
 #include "pdm_mpi.h"
 
 #include "pdm_part_to_block.h"
 #include "pdm_block_to_part.h"
+
+#include "pdm_ext_wrapper.h"
 
 /*=============================================================================
  * Macro definitions
@@ -365,210 +360,111 @@ _split
   case 1:
     {
 #ifdef PDM_HAVE_PARMETIS
-      if (sizeof(idx_t) != sizeof(PDM_g_num_t)) {
-        printf("PART error : Inconsistant between part integer size and METIS integer size : %i %i\n", 
-               (int)sizeof(PDM_g_num_t), (int)sizeof(idx_t));
-        printf("              Reinstall METIS or PART with good options\n");
-        exit(1);
-      }
       //            Define Metis properties
           
       //          int flag_weights = 0; //0 = False -> weights are unused
+
       int flag_weights = 1; //0 = False -> weights are unused
           
-      idx_t ncon = 1; //The number of balancing constraints
+      int ncon = 1; //The number of balancing constraints
             
-      idx_t *vwgt = cellWeight; //Weights of the vertices of the graph (NULL if unused)
-      //          idx_t *vwgt = NULL; //Weights of the vertices of the graph (NULL if unused)
-      //          idx_t vwgt[8] = {3,3,1,1,1,1,1,1};
-      //          idx_t vwgt[8] = {7,1,1,1,1,1,1,1};
-      //          idx_t vwgt[8] = {2,2,1,1,2,2,1,1};
-      //idx_t vwgt[8] = {2,1,2,1,2,1,2,1};
-      //          if (flag_weights != 0) //If weights are used
-      //          {
-      //            idx_t *vwgt = (idx_t *) malloc(part_ini->nCell * sizeof(idx_t));            
-      //          }
-          
-      idx_t *vsize = NULL;
-          
-      idx_t *adjwgt = faceWeight; //Weights of the edges of the graph (NULL if unused)
-
-      nPart = (idx_t) nPart;
+      int *vwgt = cellWeight; //Weights of the vertices of the graph (NULL if unused)
                     
-      if (flag_weights != 0) //If weights are used
-        {
-          real_t *tpwgts = (real_t *) malloc(ncon * nPart * sizeof(real_t));
-          
-          for (int i = 0; i < ncon * nPart; i++){
-            tpwgts[i] = (float) (1./nPart);
-          }
+      int *adjwgt = faceWeight; //Weights of the edges of the graph (NULL if unused)
+
+      if (flag_weights != 0) {
+        double *tpwgts = (double *) malloc(ncon * nPart * sizeof(double));
+        for (int i = 0; i < ncon * nPart; i++){
+          tpwgts[i] = (double) (1./nPart);
         }
+      }
           
-      real_t *tpwgts = NULL;
+      double *tpwgts = NULL;
           
-      if (flag_weights != 0) //If weights are used
-        {
-          real_t *ubvec = (real_t *) malloc(ncon * sizeof(real_t));
-          for (int i = 0; i < ncon; i++){
-            ubvec[i] = 1.05;
-          }
+      if (flag_weights != 0) {
+        double *ubvec = (double *) malloc(ncon * sizeof(double));
+        for (int i = 0; i < ncon; i++) {
+          ubvec[i] = 1.05;
         }
+      }
           
-      real_t *ubvec = NULL;
+      double *ubvec = NULL;
           
       //TO ADD: USE OF ADJWGT IN AN IF STATEMENT                
         
-          
-      idx_t options[METIS_NOPTIONS]; /* Options */
-      METIS_SetDefaultOptions(options);
-          
-      options[METIS_OPTION_NUMBERING] = 0; //C numbering = 0 (Fortran = 1)
-      options[METIS_OPTION_MINCONN] = 1; //Minimize the maximum connectivity
-      options[METIS_OPTION_CONTIG] = 1; //Force contiguous partitions
-      //The graph should be compressed by combining together vertices that have identical adjacency lists.
-      options[METIS_OPTION_COMPRESS] = 1; 
-
-
-      //METIS provide the METIS SetDefaultOptions routine to set the options to their default values. 
-      //After that, the application can just modify the options that is interested in modifying.
-      //options[METIS_OPTION_NSEPS] = 10;
-      //options[METIS_OPTION_UFACTOR] = 100;
-
       //This value is solely a memory space to be filled by METIS
-      idx_t edgecut;
+
+      int edgecut;
           
-      if (nPart < 8){             
+      if (nPart < 8) {             
               
-        METIS_PartGraphRecursive(&(part_ini->nCell),
-                                 &ncon,
-                                 (idx_t *)cellCellIdx,
-                                 (idx_t *)cellCell,
-                                 vwgt,
-                                 vsize,
-                                 adjwgt,
-                                 &nPart,
-                                 tpwgts,
-                                 ubvec,                                       
-                                 options,
+        PDM_METIS_PartGraphRecursive (&(part_ini->nCell),
+                                      &ncon, 
+                                      cellCellIdx,
+                                      cellCell,
+                                      vwgt, 
+                                      adjwgt, 
+                                      &nPart, 
+                                      tpwgts, 
+                                      ubvec, 
+                                      &edgecut,
+                                      *cellPart);
+      }
+          
+      else {
+              
+        PDM_METIS_PartGraphKway (&(part_ini->nCell),
+                                 &ncon, 
+                                 cellCellIdx,
+                                 cellCell,
+                                 vwgt, 
+                                 adjwgt, 
+                                 &nPart, 
+                                 tpwgts, 
+                                 ubvec, 
                                  &edgecut,
-                                 (idx_t *) (*cellPart)) ;
+                                 *cellPart);
       }
           
-      else{
-              
-        METIS_PartGraphKway(&(part_ini->nCell),
-                            &ncon,
-                            (idx_t *)cellCellIdx,
-                            (idx_t *)cellCell,
-                            vwgt,
-                            vsize,
-                            adjwgt,
-                            &nPart,
-                            tpwgts,
-                            ubvec,                                       
-                            options,
-                            &edgecut,
-                            (idx_t *) (*cellPart)) ;
-      }
-          
-      if(0 == 1)
-        {
-          printf("\n Contenu de cellPart : \n");            
-          for(int i = 0; i < part_ini->nCell; i++) {
-            printf(" %d ", (*cellPart)[i]);
-          }
-          printf("\n");
+      if (0 == 1) {
+        printf("\n Contenu de cellPart : \n");            
+        for (int i = 0; i < part_ini->nCell; i++) {
+          printf(" %d ", (*cellPart)[i]);
         }
+        printf("\n");
+      }
         
-      if (flag_weights != 0) //If weights are used
-        {
+      if (flag_weights != 0) {
           free(ubvec);
           free(tpwgts);
           free(adjwgt);
-        }          
+      }          
 
 #else
-          
+      printf("PDM_part error : METIS unavailable\n");
+      exit(1);
+                
 #endif
       break;
     }                
   case 2:
     {
 #ifdef PDM_HAVE_PTSCOTCH
-            
-      //            Define Scotch properties
-      SCOTCH_Graph grafptr;
-      SCOTCH_Strat straptr;   //partitioning strategy
-      int ierr = 0;
-          
-      if (sizeof(SCOTCH_Num) != sizeof(PDM_g_num_t)) {
-        printf("PART error : Inconsistant between part integer size and"//
-               " Scotch integer size\n");
-        printf("              Reinstall Scotch or PART with good options\n");
-        exit(1);
-      }
-          
-      ierr = SCOTCH_graphInit (&grafptr);
-      if(ierr){
-        printf("PART error : Error in PT-Scotch graph initialization\n");
-        exit(1);
-      }
-          
-      SCOTCH_Num *velotab = cellWeight; //Array of the weights of the vertices of the graph
-      //          SCOTCH_Num velotab[8] = {3,3,1,1,1,1,1,1};
-      //          SCOTCH_Num velotab[8] = {7,1,1,1,1,1,1,1};
-      //          SCOTCH_Num velotab[8] = {1,1,4,4,1,1,4,4};
-          
-      SCOTCH_Num *vlbltab = NULL ; //Array of the labels of the vertices of the graph
-          
-      SCOTCH_Num *edlotab = faceWeight; //Array of the weights of the arcs of the graph           
-          
-      ierr = SCOTCH_graphBuild(&grafptr, //pointer on the initialized graph
-                               0, //C or Fortran numbering (C = 0)
-                               part_ini->nCell,//number of graph vertices
-                               cellCellIdx, //cellCellIdx is a double pointer
-                               cellCellIdx + 1, //adjacency end index array
-                               velotab,
-                               vlbltab,
-                               cellCellIdx[part_ini->nCell], //number of arcs for the graph
-                               cellCell, //Dual graph
-                               edlotab);
-      if (ierr) {
-        printf("PART error : Error in SCOTCH_graphBuild\n");
-        exit(1);
-      }
-          
-          
-      //Checks the Scotch graph
-      ierr = SCOTCH_graphCheck (&grafptr);
-      if (ierr) {
-        printf("PART error : Error in Scotch graph check\n");
-        exit(1);
-      }
-          
-      //Partitioning strategy
-      SCOTCH_stratInit (&straptr);
-          
-      nPart = (SCOTCH_Num) nPart;
-          
-      ierr = SCOTCH_graphPart (&grafptr,
-                               nPart, //nombre de partitions
-                               &straptr,
-                               (SCOTCH_Num *) (*cellPart));
-          
-      if (0 == 1) {
-          printf("\n Contenu de cellPart : \n");
-          for(int i = 0; i < part_ini->nCell; i++) {
-            printf(" %d ", (*cellPart)[i]);
-          }
-          printf("\n");
-        }
-          
-      //Methods to free allocated arrays
-      SCOTCH_stratExit (&straptr);
-      SCOTCH_graphExit (&grafptr);          
+
+      int check = 0;
+      
+      PDM_SCOTCH_part (part_ini->nCell,
+                       cellCellIdx,
+                       cellCell,        
+                       cellWeight,
+                       faceWeight,
+                       check,        
+                       nPart,        
+                       *cellPart);
           
 #else
+      printf("PDM_part error : Scotch unavailable\n");
+      exit(1);
 #endif
           
       break;
