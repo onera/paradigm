@@ -18,13 +18,6 @@
 #include "pdm_priv.h"
 #include "pdm_config.h"
 
-#ifdef PDM_HAVE_PARMETIS
-#include <metis.h>
-#endif
-#ifdef PDM_HAVE_PTSCOTCH
-#include <scotch.h>
-#endif
-
 /*----------------------------------------------------------------------------
  *  Local headers
  *----------------------------------------------------------------------------*/
