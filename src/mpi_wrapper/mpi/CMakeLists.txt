@@ -20,21 +20,16 @@ file(GLOB_RECURSE SOURCES
      ../../pdm_priv.h) 
 
 
+add_library(pdm_mpi OBJECT ${SOURCES})
+
+
 # Flags pour MPI
 # --------------
 
 if ((NOT MPI_C_COMPILER) AND MPI_C_COMPILE_FLAGS)
-   set_target_properties(pdm PROPERTIES
+   set_target_properties(pdm_mpi PROPERTIES
                               COMPILE_FLAGS ${MPI_C_COMPILE_FLAGS})
 endif()
-
-if ((NOT MPI_Fortran_COMPILER) AND MPI_Fortran_COMPILE_FLAGS)
-    set_target_properties(pdmf PROPERTIES
-                               COMPILE_FLAGS ${MPI_Fortran_COMPILE_FLAGS})
-endif()
-
-add_library(pdm_mpi OBJECT ${SOURCES})
-
 
 target_include_directories(pdm_mpi
                            INTERFACE ${CMAKE_CURRENT_BINARY_DIR}

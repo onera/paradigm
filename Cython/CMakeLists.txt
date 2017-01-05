@@ -1,4 +1,12 @@
 
+if (MPI_C_COMPILER)
+  set(CMAKE_C_COMPILER ${MPI_C_COMPILER})
+endif() 
+
+if (MPI_Fortran_COMPILER)
+  set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
+endif(MPI_Fortran_COMPILER) 
+
 if (PDM_ENABLE_LONG_G_NUM)
    set(PYX_NPY_G_NUM NPY.int64_t)
    set(PDM_G_NUM_NPY_INT NPY.NPY_INT64)
@@ -27,6 +35,11 @@ cython_add_module (Pypdm
 
 get_target_property(PDM_INC pdm INCLUDE_DIRECTORIES)                          
 target_include_directories(Pypdm PUBLIC ${PDM_INC})
+
+if ((NOT MPI_C_COMPILER) AND MPI_C_COMPILE_FLAGS)
+   set_target_properties(Pypdm PROPERTIES
+                              COMPILE_FLAGS ${MPI_C_COMPILE_FLAGS})
+endif()
 
 set(SETUP_PY    "${CMAKE_CURRENT_BINARY_DIR}/setup.py")
 set(DEPS        "${CMAKE_CURRENT_SOURCE_DIR}/Pypdm/__init__.py")
