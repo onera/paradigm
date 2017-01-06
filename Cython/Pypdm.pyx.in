@@ -29,7 +29,7 @@ NPY.import_array()
 ctypedef @PYX_NPY_G_NUM@ npy_pdm_gnum_t
 ctypedef @PYX_G_NUM@ PDM_g_num_t
 
-ctypedef int PDM_MPI_Comm;
+ctypedef int PDM_MPI_Comm
 
 ctypedef enum PDM_g_num_npy_t:
   PDM_G_NUM_NPY_INT = @PDM_G_NUM_NPY_INT@ 
