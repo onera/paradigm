@@ -27,6 +27,8 @@ enable_language(Fortran)
 enable_language(C)
 enable_language(CXX)
 
+enable_testing ()
+
 #------------------------------------------------------------------------------
 # User option Definition
 #------------------------------------------------------------------------------

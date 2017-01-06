@@ -57,6 +57,11 @@ target_link_libraries(part_cube ${LINK_LIBRARIES})
 install(TARGETS part_cube
         RUNTIME DESTINATION bin)
 
+add_test (cs_test_3d ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${MPIEXEC_MAX_NUMPROCS}
+   ${MPIEXEC_PREFLAGS}
+   part_cube
+   ${MPIEXEC_POSTFLAGS})
+
 message(STATUS "Add test part_cube - Succes")
 
 # Test 3D (plusieurs sous-domaines par proc)
@@ -91,3 +96,9 @@ target_link_libraries(cs_test_3d ${LINK_LIBRARIES})
 install(TARGETS cs_test_3d
         RUNTIME DESTINATION bin)
 
+# Command to launch by CTest.
+
+add_test (cs_test_3d ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${MPIEXEC_MAX_NUMPROCS}
+   ${MPIEXEC_PREFLAGS}
+   cs_test_3d
+   ${MPIEXEC_POSTFLAGS})
