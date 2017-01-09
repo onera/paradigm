@@ -69,7 +69,7 @@ int *part
 )
 {
   idx_t options[METIS_NOPTIONS]; /* Options */
-  PDM_METIS_SetDefaultOptions(options);
+  METIS_SetDefaultOptions(options);
 
   options[METIS_OPTION_NUMBERING] = 0; //C numbering = 0 (Fortran = 1)
   options[METIS_OPTION_MINCONN] = 1; //Minimize the maximum connectivity
@@ -225,7 +225,7 @@ int *part
 )
 {
   idx_t options[METIS_NOPTIONS]; /* Options */
-  PDM_METIS_SetDefaultOptions(options);
+  METIS_SetDefaultOptions(options);
 
   options[METIS_OPTION_NUMBERING] = 0; //C numbering = 0 (Fortran = 1)
   options[METIS_OPTION_MINCONN] = 1; //Minimize the maximum connectivity

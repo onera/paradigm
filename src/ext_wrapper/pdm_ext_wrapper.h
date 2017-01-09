@@ -62,12 +62,6 @@ int *edgecut,
 int *part
 );
 
-int
-PDM_METIS_SetDefaultOptions
-(
-int *options
-);
-
 #endif
 
 #ifdef PDM_HAVE_PTSCOTCH

@@ -36,6 +36,20 @@ cython_add_module (Pypdm
 get_target_property(PDM_INC pdm INCLUDE_DIRECTORIES)                          
 target_include_directories(Pypdm PUBLIC ${PDM_INC})
 
+unset(LINK_LIBRARIES)
+list(APPEND LINK_LIBRARIES ${COMMON_LIBRARIES})
+if (${PARMETIS_FOUND})
+  list(APPEND LINK_LIBRARIES ${PARMETIS_LIBRARIES})
+  list(APPEND LINK_LIBRARIES ${METIS_LIBRARIES})
+endif ()
+if (${PTSCOTCH_FOUND})
+  list(APPEND LINK_LIBRARIES ${PTSCOTCH_LIBRARIES})
+  list(APPEND LINK_LIBRARIES ${SCOTCH_LIBRARIES})
+endif ()
+
+
+target_link_libraries(Pypdm ${LINK_LIBRARIES} pdm_mpi_shared)
+
 if ((NOT MPI_C_COMPILER) AND MPI_C_COMPILE_FLAGS)
    set_target_properties(Pypdm PROPERTIES
                               COMPILE_FLAGS ${MPI_C_COMPILE_FLAGS})
