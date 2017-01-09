@@ -161,7 +161,6 @@ if (PDM_ENABLE_STATIC_Fortran_INTERFACE)
 
 endif()
 
-
 # Spécification de l'installation
 # -------------------------------
 
