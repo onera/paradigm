@@ -57,9 +57,9 @@ target_link_libraries(part_cube ${LINK_LIBRARIES})
 install(TARGETS part_cube
         RUNTIME DESTINATION bin)
 
-add_test (cs_test_3d ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${MPIEXEC_MAX_NUMPROCS}
+add_test (part_cube ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${MPIEXEC_MAX_NUMPROCS}
    ${MPIEXEC_PREFLAGS}
-   part_cube
+   ${CMAKE_CURRENT_BINARY_DIR}/part_cube
    ${MPIEXEC_POSTFLAGS})
 
 message(STATUS "Add test part_cube - Succes")
@@ -100,5 +100,5 @@ install(TARGETS cs_test_3d
 
 add_test (cs_test_3d ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${MPIEXEC_MAX_NUMPROCS}
    ${MPIEXEC_PREFLAGS}
-   cs_test_3d
+   ${CMAKE_CURRENT_BINARY_DIR}/cs_test_3d
    ${MPIEXEC_POSTFLAGS})
