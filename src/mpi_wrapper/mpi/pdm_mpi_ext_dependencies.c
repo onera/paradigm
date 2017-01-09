@@ -109,11 +109,30 @@ const PDM_MPI_Comm comm
   
   idx_t _edgecut = (idx_t) *edgecut;
   
-	real_t *_tpwgts; 
-  real_t *_ubvec;  
-  for (int i = 0; i < *ncon; i++) {
-    _tpwgts[i] = (real_t) tpwgts[i]; 
-    _ubvec[i] = (real_t) ubvec[i];         
+	real_t *_tpwgts, *__tpwgts; 
+  real_t *_ubvec, *__ubvec;  
+
+  __tpwgts = NULL;
+  __ubvec = NULL;
+
+  if (sizeof (double) == sizeof(real_t)) {
+    _tpwgts = (real_t *) tpwgts;
+    _ubvec = (real_t *) ubvec;
+  }
+
+  else { 
+
+    __tpwgts = malloc (sizeof(real_t) * _ncon);
+    __ubvec = malloc (sizeof(real_t) * _ncon);
+
+    _tpwgts = __tpwgts;
+    _ubvec = __ubvec;
+
+    for (int i = 0; i < *ncon; i++) {
+      __tpwgts[i] = (real_t) tpwgts[i]; 
+      __ubvec[i] = (real_t) ubvec[i];         
+    }
+    
   }
   
   idx_t *__vtxdist, *_vtxdist;
@@ -239,6 +258,15 @@ const PDM_MPI_Comm comm
     free (__adjwgt);
   }
 
+  if (__tpwgts != NULL) {
+    free (__tpwgts);
+  }
+  
+  if (__ubvec != NULL) {
+    free (__ubvec);    
+  }
+  
+  
   return rval;
   
 }
