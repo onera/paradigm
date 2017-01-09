@@ -1,5 +1,5 @@
-#ifndef __CREE_MAIL_POLY_H__
-#define __CREE_MAIL_POLY_H__
+#ifndef __PDM_POLY_SURF_GEN_H__
+#define __PDM_POLY_SURF_GEN_H__
 /*
   This file is part of the CWIPI library. 
 
@@ -41,7 +41,7 @@ extern "C" {
 #endif
 #endif /* __cplusplus */
 
-void creeMaillagePolygone2D
+void PDM_poly_surf_gen
 (
 PDM_MPI_Comm     localComm,
 double       xmin,

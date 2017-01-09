@@ -5,7 +5,7 @@
 #include <assert.h>
 
 #include "pdm_part.h"
-#include "pdm_part_dcube.h"
+#include "pdm_dcube_gen.h"
 #include "pdm_mpi.h"
 
 
@@ -92,7 +92,7 @@ _get_from_id
  */
 
 void
-PDM_part_dcube_init 
+PDM_dcube_gen_init 
 (
  int                *id,
  PDM_MPI_Comm        comm, 
@@ -655,7 +655,7 @@ PDM_part_dcube_init
 }
 
 void
-PROCF (pdm_part_dcube_init, PDM_PART_DCUBE_INIT)  
+PROCF (pdm_dcube_gen_init, PDM_DCUBE_GEN_INIT)  
 (
  int                *id,
  const PDM_MPI_Fint *comm,
@@ -668,7 +668,7 @@ PROCF (pdm_part_dcube_init, PDM_PART_DCUBE_INIT)
 
   PDM_MPI_Comm c_comm = PDM_MPI_Comm_f2c(comm1);
 
-  PDM_part_dcube_init(id,
+  PDM_dcube_gen_init (id,
                       c_comm,
                       *nVtxSeg, 
                       *length);
@@ -690,7 +690,7 @@ PROCF (pdm_part_dcube_init, PDM_PART_DCUBE_INIT)
  */
 
 void
-PDM_part_dcube_dim_get 
+PDM_dcube_gen_dim_get 
 (
  int                id,
  int                *nFaceGroup,
@@ -713,7 +713,7 @@ PDM_part_dcube_dim_get
 
 
 void
-PROCF(pdm_part_dcube_dim_get, PDM_PART_DCUBE_DIM_GET) 
+PROCF(pdm_dcube_gen_dim_get, PDM_DCUBE_GEN_DIM_GET)
 (
  int                *id,
  int                *nFaceGroup,
@@ -724,13 +724,13 @@ PROCF(pdm_part_dcube_dim_get, PDM_PART_DCUBE_DIM_GET)
  int                *dFacegroupL
 )
 {
-  PDM_part_dcube_dim_get(*id,
-                      nFaceGroup,
-                      dNCell,
-                      dNFace,
-                      dNVtx,
-                      dFaceVtxL,
-                      dFacegroupL);
+  PDM_dcube_gen_dim_get (*id,
+                         nFaceGroup,
+                         dNCell,
+                         dNFace,
+                         dNVtx,
+                         dFaceVtxL,
+                         dFacegroupL);
 
 }
 
@@ -749,7 +749,7 @@ PROCF(pdm_part_dcube_dim_get, PDM_PART_DCUBE_DIM_GET)
  */
 
 void
-PDM_part_dcube_data_get 
+PDM_dcube_gen_data_get 
 (
  int                 id,
  PDM_g_num_t      **dFaceCell,
@@ -772,7 +772,7 @@ PDM_part_dcube_data_get
 
 
 void 
-PROCF (pdm_part_dcube_data_get, PDM_PART_DCUBE_DATA_GET)  
+PROCF (pdm_dcube_gen_data_get, PDM_DCUBE_GEN_DATA_GET)
 (
  int               *id,
  PDM_g_num_t      *dFaceCell,
@@ -814,7 +814,7 @@ PROCF (pdm_part_dcube_data_get, PDM_PART_DCUBE_DATA_GET)
  */
 
 void
-PDM_part_dcube_free
+PDM_dcube_gen_free
 (
  int id
  )
@@ -855,10 +855,10 @@ PDM_part_dcube_free
  
 
 void 
-PROCF (pdm_part_dcube_free, PDM_PART_DCUBE_FREE)
+PROCF (pdm_dcube_gen_free, PDM_DCUBE_GEN_FREE)
 (
  int *id
  )
 {
-  PDM_part_dcube_free(*id);
+  PDM_dcube_gen_free (*id);
 } 

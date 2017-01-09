@@ -1,5 +1,5 @@
-#ifndef __PDM_PART_DCUBE_H__
-#define __PDM_PART_DCUBE_H__
+#ifndef __PDM_DCUBE_GEN_H__
+#define __PDM_DCUBE_GEN_H__
 
 
 #include "pdm.h"
@@ -33,7 +33,7 @@ extern "C" {
  */
 
 void
-PDM_part_dcube_init 
+PDM_dcube_gen_init 
 (
  int                *id,
  PDM_MPI_Comm        comm,
@@ -42,7 +42,7 @@ PDM_part_dcube_init
  );
 
 void
-PROCF (pdm_part_dcube_init, PDM_PART_DCUBE_INIT)  
+PROCF (pdm_dcube_gen_init, PDM_DCUBE_GEN_INIT)
 (
  int                *id,
  const PDM_MPI_Fint *comm,
@@ -66,7 +66,7 @@ PROCF (pdm_part_dcube_init, PDM_PART_DCUBE_INIT)
  */
 
 void
-PDM_part_dcube_dim_get 
+PDM_dcube_gen_dim_get 
 (
  int                id,
  int                *nFaceGroup,
@@ -79,7 +79,7 @@ PDM_part_dcube_dim_get
 
 
 void
-PROCF(pdm_part_dcube_dim_get, PDM_PART_DCUBE_DIM_GET) 
+PROCF(pdm_dcube_gen_dim_get, PDM_DCUBE_GEN_DIM_GET) 
 (
  int                *id,
  int                *nFaceGroup,
@@ -106,7 +106,7 @@ PROCF(pdm_part_dcube_dim_get, PDM_PART_DCUBE_DIM_GET)
  */
 
 void
-PDM_part_dcube_data_get 
+PDM_dcube_gen_data_get 
 (
  int                 id,
  PDM_g_num_t      **dFaceCell,
@@ -119,7 +119,7 @@ PDM_part_dcube_data_get
 
 
 void 
-PROCF (pdm_part_dcube_data_get, PDM_PART_DCUBE_DATA_GET)  
+PROCF (pdm_dcube_gen_data_get, PDM_DCUBE_GEN_DATA_GET)
 (
  int               *id,
  PDM_g_num_t      *dFaceCell,
@@ -140,15 +140,15 @@ PROCF (pdm_part_dcube_data_get, PDM_PART_DCUBE_DATA_GET)
  */
 
 void
-PDM_part_dcube_free
+PDM_dcube_gen_free
 (
- int             id
+ int  id
  ); 
 
 void 
-PROCF (pdm_part_dcube_free, PDM_PART_DCUBE_FREE)
+PROCF (pdm_dcube_gen_free, PDM_DCUBE_GEN_FREE)
 (
- int            *id
+ int  *id
  );
 
 #ifdef __cplusplus

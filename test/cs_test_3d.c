@@ -12,7 +12,7 @@
 
 #include "pdm.h"
 #include "pdm_part.h"
-#include "pdm_part_dcube.h"
+#include "pdm_dcube_gen.h"
 
 #include "pdm_writer.h"
 
@@ -185,12 +185,12 @@ int main(int argc, char *argv[])
 
   int          id;
 
-  PDM_part_dcube_init(&id,
+  PDM_dcube_gen_init(&id,
                       PDM_MPI_COMM_WORLD,
                       nVtxSeg, 
                       length);
 
-  PDM_part_dcube_dim_get(id,
+  PDM_dcube_gen_dim_get(id,
                       &nFaceGroup,
                       &dNCell,
                       &dNFace,
@@ -198,7 +198,7 @@ int main(int argc, char *argv[])
                       &dFaceVtxL,
                       &dFaceGroupL);
 
-  PDM_part_dcube_data_get(id,
+  PDM_dcube_gen_data_get(id,
                        &dFaceCell,
                        &dFaceVtxIdx, 
                        &dFaceVtx,
@@ -823,7 +823,7 @@ int main(int argc, char *argv[])
 
   PDM_part_free(ppartId);
 
-  PDM_part_dcube_free(id);
+  PDM_dcube_gen_free(id);
 
   free(connec);
 

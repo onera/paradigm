@@ -23,7 +23,7 @@
 #include <assert.h>
 #include <math.h>
 
-#include "creeMaillagePolygone2D.h"
+#include "pdm_poly_surf_gen.h"
 #include "pdm_config.h"
 #include "pdm.h"
 #include "pdm_mpi.h"
@@ -49,7 +49,7 @@ static double random01()
   return resultat;
 }
 
-void creeMaillagePolygone2D
+void PDM_poly_surf_gen
 (
 PDM_MPI_Comm     localComm,
 double       xmin,

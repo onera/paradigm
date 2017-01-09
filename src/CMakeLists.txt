@@ -7,6 +7,7 @@ add_subdirectory(mpi_wrapper)
 
 file(GLOB_RECURSE SOURCES 
      mesh/*.[ch]
+     meshgen/*.[ch]
      pario/*.[ch]
      ppart/*.[ch]
      struct/*.[ch]
@@ -35,6 +36,7 @@ target_include_directories(pdm
                            PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/mpi_wrapper
                            PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/ext_wrapper
                            PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/mesh
+                           PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/meshgen
                            PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/struct
                            PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/util)
 
@@ -49,6 +51,7 @@ target_include_directories(pdmf
                            PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/mpi_wrapper
                            PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/ext_wrapper
                            PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/mesh
+                           PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/meshgen
                            PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/struct
                            PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/util)
 
@@ -73,7 +76,7 @@ list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/util/pdm_mpi_node_first_ran
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/ppart/pdm_partf.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/ppart/pdm_part.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/util/pdm_timer.h")
-list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/ppart/pdm_part_dcube.h")
+list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/meshgen/pdm_dcube_gen.h")
 list(APPEND LIST_HEADER "${CMAKE_BINARY_DIR}/pdm_config.h")
 
 if (PDM_ENABLE_STATIC_Fortran_INTERFACE OR PDM_ENABLE_SHARED_Fortran_INTERFACE)
