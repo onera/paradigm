@@ -15,6 +15,7 @@ import numpy     as NPY
 
 # Import Section (Cython) :
 # ------------------------
+from    libc.stdlib cimport malloc, free
 from    cpython.ref cimport PyObject, Py_INCREF, Py_DECREF, Py_XDECREF
 cimport cython
 cimport numpy       as      NPY
@@ -26,17 +27,45 @@ from    mpi4py      cimport MPI
 
 NPY.import_array()
 
+# PDM Specific type :
+# -----------------
+
 ctypedef @PYX_NPY_G_NUM@ npy_pdm_gnum_t
 ctypedef @PYX_G_NUM@ PDM_g_num_t
+ctypedef @PYX_L_NUM@ PDM_l_num_t
 
 ctypedef int PDM_MPI_Comm
 
 ctypedef enum PDM_g_num_npy_t:
-  PDM_G_NUM_NPY_INT = @PDM_G_NUM_NPY_INT@ 
+  PDM_G_NUM_NPY_INT = @PDM_G_NUM_NPY_INT@
+
+
+# -----------------------------------------------------------------
+cdef extern from "pdm.h":
+    ctypedef enum PDM_stride_t:
+        pass
+
+cdef extern from "pdm_mpi.h":
+    ctypedef int PDM_MPI_Comm
+    PDM_MPI_Comm PDM_MPI_mpi_2_pdm_mpi_comm(void *pt_comm)
+# -----------------------------------------------------------------
 
 # PDM_part :
 # ----------
-
 include "pdm_part.pxi"
 
+# PDM_part_coarse :
+# ----------
+include "pdm_part_coarse.pxi"
+
+# PDM_part_to_block :
+# ------------------
+include "pdm_part_to_block.pxi"
+
+# PDM_part_to_block :
+# ------------------
+include "pdm_block_to_part.pxi"
+
+
 # TODO: PDM_writer, ...
+

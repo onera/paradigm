@@ -110,10 +110,10 @@ PDM_part_to_block_create
 (
  PDM_part_to_block_distrib_t   t_distrib,
  PDM_part_to_block_post_t      t_post,
- float                        partActiveNode,
- PDM_g_num_t                  **gnum_elt,
- int                         *n_elt,
- int                          n_part,
+ float                         partActiveNode,
+ PDM_g_num_t                 **gnum_elt,
+ int                          *n_elt,
+ int                           n_part,
  PDM_MPI_Comm                  comm
 );
 
@@ -221,14 +221,14 @@ PDM_part_to_block_block_gnum_get
 int 
 PDM_part_to_block_exch
 (
- PDM_part_to_block_t *ptb,
- size_t              s_data,
- PDM_writer_part_stride_t    t_stride,
- int                 cst_stride,
- int               **part_stride,
- void              **part_data,
- int               **block_stride,
- void              **block_data
+ PDM_part_to_block_t       *ptb,
+ size_t                     s_data,
+ PDM_writer_part_stride_t   t_stride,
+ int                        cst_stride,
+ int                      **part_stride,
+ void                     **part_data,
+ int                      **block_stride,
+ void                     **block_data
 );
 
 

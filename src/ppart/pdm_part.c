@@ -72,7 +72,7 @@ extern "C" {
  *============================================================================*/
 
 static _PDM_part_t **_pparts   = NULL;
-static int       _l_pparts = 10;
+static int         _l_pparts   = 10;
 
 /*============================================================================
  * Private function definitions
@@ -372,15 +372,15 @@ _get_from_id
 static void 
 _alltoall
 (
- void         *sendBuff,
- int          *sendBuffN,
- int          *sendBuffIdx,
- void        **recvBuff,
- int          *recvBuffN,
- int          *recvBuffIdx,
- PDM_MPI_Datatype  MPIDataType,
- size_t        MPIDataTypeSize,
- PDM_MPI_Comm      comm
+ void              *sendBuff,
+ int               *sendBuffN,
+ int               *sendBuffIdx,
+ void             **recvBuff,
+ int               *recvBuffN,
+ int               *recvBuffIdx,
+ PDM_MPI_Datatype   MPIDataType,
+ size_t             MPIDataTypeSize,
+ PDM_MPI_Comm       comm
 )
 {
   int nRank = 0;
@@ -389,12 +389,12 @@ _alltoall
   /* Get number data to receive from each process */
 
   PDM_MPI_Alltoall(sendBuffN, 
-               1, 
-               PDM_MPI_INT, 
-               recvBuffN, 
-               1, 
-               PDM_MPI_INT, 
-               comm);
+                   1, 
+                   PDM_MPI_INT, 
+                   recvBuffN, 
+                   1, 
+                   PDM_MPI_INT, 
+                   comm);
 
   recvBuffIdx[0] = 0;
   for(int i = 0; i < nRank; i++) {
@@ -406,14 +406,14 @@ _alltoall
   /* Receive data from each process */
 
   PDM_MPI_Alltoallv(sendBuff, 
-                sendBuffN, 
-                sendBuffIdx, 
-                MPIDataType, 
-                *recvBuff, 
-                recvBuffN, 
-                recvBuffIdx,
-                MPIDataType, 
-                comm);
+                    sendBuffN, 
+                    sendBuffIdx, 
+                    MPIDataType, 
+                    *recvBuff, 
+                    recvBuffN, 
+                    recvBuffIdx,
+                    MPIDataType, 
+                    comm);
 
 }
 
@@ -512,12 +512,12 @@ _dual_graph_from_face_cell
   int *cellToRecvN = (int *) malloc(nRank * sizeof(int));
   
   PDM_MPI_Alltoall(cellToSendN,
-               1, 
-               PDM_MPI_INT, 
-               cellToRecvN,
-               1, 
-               PDM_MPI_INT,
-               ppart->comm);
+                   1, 
+                   PDM_MPI_INT, 
+                   cellToRecvN,
+                   1, 
+                   PDM_MPI_INT,
+                   ppart->comm);
 
   int *cellToRecvIdx = (int *) malloc((nRank+1) * sizeof(int));
 
@@ -529,14 +529,14 @@ _dual_graph_from_face_cell
   PDM_g_num_t *cellToRecv = (PDM_g_num_t *) malloc(cellToRecvIdx[nRank]*sizeof(PDM_g_num_t));
 
   PDM_MPI_Alltoallv(cellToSend,
-                cellToSendN,
-                cellToSendIdx, 
-                PDM__PDM_MPI_G_NUM, 
-                cellToRecv,
-                cellToRecvN,
-                cellToRecvIdx,
-                PDM__PDM_MPI_G_NUM, 
-                ppart->comm);
+                    cellToSendN,
+                    cellToSendIdx, 
+                    PDM__PDM_MPI_G_NUM, 
+                    cellToRecv,
+                    cellToRecvN,
+                    cellToRecvIdx,
+                    PDM__PDM_MPI_G_NUM, 
+                    ppart->comm);
 
   int nRecvPair = cellToRecvIdx[nRank]/nData;
 
@@ -579,8 +579,8 @@ _dual_graph_from_face_cell
   }
 
   for (int i = 0; i < nRecvPair; i++) {
-    PDM_g_num_t gElt1 = cellToRecv[nData*i  ];                         // Get global numbering
-    PDM_g_num_t gElt2 = cellToRecv[nData*i+1];                         // Get global numbering
+    PDM_g_num_t  gElt1 = cellToRecv[nData*i  ];                         // Get global numbering
+    PDM_g_num_t  gElt2 = cellToRecv[nData*i+1];                         // Get global numbering
     int          lElt1 = (int) (gElt1 - ppart->dCellProc[myRank]);      // Switch to local numbering
 
     if (gElt2 > -1) {
@@ -794,12 +794,12 @@ _dual_graph_from_cell_face
   int *faceToRecvN = (int *) malloc(nRank * sizeof(int));
   
   PDM_MPI_Alltoall(faceToSendN,
-               1, 
-               PDM_MPI_INT, 
-               faceToRecvN,
-               1, 
-               PDM_MPI_INT,
-               ppart->comm);
+                   1, 
+                   PDM_MPI_INT, 
+                   faceToRecvN,
+                   1, 
+                   PDM_MPI_INT,
+                   ppart->comm);
 
   int *faceToRecvIdx = (int *) malloc((nRank+1) * sizeof(int));
 
@@ -812,14 +812,14 @@ _dual_graph_from_cell_face
     (PDM_g_num_t *) malloc(faceToRecvIdx[nRank]*sizeof(PDM_g_num_t));
 
   PDM_MPI_Alltoallv(faceToSend,
-                faceToSendN,
-                faceToSendIdx, 
-                PDM__PDM_MPI_G_NUM, 
-                faceToRecv,
-                faceToRecvN,
-                faceToRecvIdx,
-                PDM__PDM_MPI_G_NUM, 
-                ppart->comm);
+                    faceToSendN,
+                    faceToSendIdx, 
+                    PDM__PDM_MPI_G_NUM, 
+                    faceToRecv,
+                    faceToRecvN,
+                    faceToRecvIdx,
+                    PDM__PDM_MPI_G_NUM, 
+                    ppart->comm);
 
   int nRecvFace = faceToRecvIdx[nRank]/nData;
 
@@ -833,9 +833,9 @@ _dual_graph_from_cell_face
   PDM_g_num_t *cellToSend = 
     (PDM_g_num_t *) malloc(faceToRecvIdx[nRank]*sizeof(PDM_g_num_t));
 
-  int          *cellToRecvIdx = faceToSendIdx;
+  int         *cellToRecvIdx = faceToSendIdx;
   PDM_g_num_t *cellToRecv    = faceToSend;
-  int          *cellToRecvN   = faceToSendN;
+  int         *cellToRecvN   = faceToSendN;
 
   /*
    * Buid ppart->dFaceCell
@@ -855,8 +855,8 @@ _dual_graph_from_cell_face
     }
 
     for (int i = 0; i < nRecvFace; i++) {
-      PDM_g_num_t gFace = faceToRecv[nData*i  ];                    // Get global numbering
-      PDM_g_num_t gCell = faceToRecv[nData*i+1];                    // Get global numbering
+      PDM_g_num_t  gFace = faceToRecv[nData*i  ];                    // Get global numbering
+      PDM_g_num_t  gCell = faceToRecv[nData*i+1];                    // Get global numbering
       int          lFace = (int) (gFace - ppart->dFaceProc[myRank]); // Switch to local numbering
 
       if (ppart->dFaceCell[2*lFace] == -1)
@@ -876,8 +876,8 @@ _dual_graph_from_cell_face
    */
 
   for (int i = 0; i < nRecvFace; i++) {
-    PDM_g_num_t gFace  = faceToRecv[nData*i  ];                    // Get global numbering
-    PDM_g_num_t gCell1 = faceToRecv[nData*i+1];                    // Get global numbering
+    PDM_g_num_t  gFace  = faceToRecv[nData*i  ];                    // Get global numbering
+    PDM_g_num_t  gCell1 = faceToRecv[nData*i+1];                    // Get global numbering
     int          lFace  = (int) (gFace - ppart->dFaceProc[myRank]); // Switch to local numbering
     PDM_g_num_t gCell2;
 
@@ -897,14 +897,14 @@ _dual_graph_from_cell_face
   free(faceToRecv);
 
   PDM_MPI_Alltoallv(cellToSend,
-                cellToSendN,
-                cellToSendIdx, 
-                PDM__PDM_MPI_G_NUM, 
-                cellToRecv,
-                cellToRecvN,
-                cellToRecvIdx,
-                PDM__PDM_MPI_G_NUM, 
-                ppart->comm);
+                    cellToSendN,
+                    cellToSendIdx, 
+                    PDM__PDM_MPI_G_NUM, 
+                    cellToRecv,
+                    cellToRecvN,
+                    cellToRecvIdx,
+                    PDM__PDM_MPI_G_NUM, 
+                    ppart->comm);
 
   int nRecvPair = cellToRecvIdx[nRank]/nData;
 
@@ -913,7 +913,7 @@ _dual_graph_from_cell_face
    */
 
   ppart->dDualGraphIdx = (PDM_g_num_t *) malloc((1+ppart->dNCell) * sizeof(PDM_g_num_t));
-  int *nNeighbour   = (int *) malloc(ppart->dNCell * sizeof(int));
+  int *nNeighbour      = (int *) malloc(ppart->dNCell * sizeof(int));
 
   for (int i = 0; i < ppart->dNCell; i++) {
     nNeighbour[i] = 0;
@@ -933,9 +933,9 @@ _dual_graph_from_cell_face
    */
 
   for (int i = 0; i < nRecvPair; i++) {
-    PDM_g_num_t  gCel1  = cellToRecv[nData*i];                      // global numbering
+    PDM_g_num_t   gCel1  = cellToRecv[nData*i];                      // global numbering
     int           lCel1  = (int) (gCel1 - ppart->dCellProc[myRank]); // local numbering
-    PDM_g_num_t  gCel2  = cellToRecv[nData*i+1];                    // global numbering
+    PDM_g_num_t   gCel2  = cellToRecv[nData*i+1];                    // global numbering
     
     /*
      * Search if cel2 is already stored (To optimize for polyhedra (lot of neighbours) ?)
@@ -1656,9 +1656,9 @@ _distrib_face
       /* Sort faceLNToGN */
 
       _quickSort_pdm_part_long_t(meshPart->vtxLNToGN,                       /* Array to sort */
-                              0,                                         /* First face */
-                              meshPart->faceVtxIdx[meshPart->nFace] - 1, /* Latest face */
-                              initialIdx); 
+                                 0,                                         /* First face */
+                                 meshPart->faceVtxIdx[meshPart->nFace] - 1, /* Latest face */
+                                 initialIdx); 
 
       /* Remove duplicate Vertex and build local face vertex connectivity*/
     
@@ -2105,7 +2105,7 @@ _search_part_bound_face
 
     int idx = 0;
     for(int i = 0; i < nFace; i++) {
-      PDM_g_num_t gFace     = requestedFace[idx++];
+      PDM_g_num_t  gFace     = requestedFace[idx++];
       int          lFace     = (int) (gFace - ppart->dFaceProc[myRank]);
       int          lFaceRank = requestedFace[idx++];
       int          faceRank  = requestedFace[idx++];
@@ -2422,12 +2422,12 @@ _distrib_face_groups
                            - ppart->_dFaceGroupIdx[igroup];
 
     PDM_MPI_Allgather(&nFaceGroup,
-                  1,
-                  PDM__PDM_MPI_G_NUM, 
-                  (void *) (&dFaceGroupProc[1]), 
-                  1, 
-                  PDM__PDM_MPI_G_NUM, 
-                  ppart->comm);
+                      1,
+                      PDM__PDM_MPI_G_NUM, 
+                      (void *) (&dFaceGroupProc[1]), 
+                      1, 
+                      PDM__PDM_MPI_G_NUM, 
+                      ppart->comm);
 
     dFaceGroupProc[0] = 0;
     for (int i = 1; i < nRank+1; i++) {
@@ -2864,29 +2864,30 @@ _part_free
 void 
 PDM_part_create
 (
- int                *ppartId,
- const PDM_MPI_Comm  comm,
- const PDM_part_split_t split_method,
- const PDM_part_renum_cell_t renum_cell_method,
- const int           nPart,
- const int           dNCell,
- const int           dNFace,
- const int           dNVtx,
- const int           nFaceGroup,
- const int          *dCellFaceIdx,
- const PDM_g_num_t *dCellFace,
- const int          *dCellTag,
- const int          *dCellWeight,
- const int           have_dCellPart,
-       int          *dCellPart,
- const PDM_g_num_t *dFaceCell,
- const int          *dFaceVtxIdx,
- const PDM_g_num_t *dFaceVtx,
- const int          *dFaceTag,
- const double       *dVtxCoord,
- const int          *dVtxTag,
- const int          *dFaceGroupIdx,
- const PDM_g_num_t *dFaceGroup
+ int                         *ppartId,
+ const PDM_MPI_Comm           comm,
+ const PDM_part_split_t       split_method,
+ const PDM_part_renum_cell_t  renum_cell_method,
+ const PDM_part_renum_face_t  renum_face_method,
+ const int                    nPart,
+ const int                    dNCell,
+ const int                    dNFace,
+ const int                    dNVtx,
+ const int                    nFaceGroup,
+ const int                   *dCellFaceIdx,
+ const PDM_g_num_t           *dCellFace,
+ const int                   *dCellTag,
+ const int                   *dCellWeight,
+ const int                    have_dCellPart,
+       int                   *dCellPart,
+ const PDM_g_num_t           *dFaceCell,
+ const int                   *dFaceVtxIdx,
+ const PDM_g_num_t           *dFaceVtx,
+ const int                   *dFaceTag,
+ const double                *dVtxCoord,
+ const int                   *dVtxTag,
+ const int                   *dFaceGroupIdx,
+ const PDM_g_num_t           *dFaceGroup
 )
 {
   int myRank;
@@ -2962,12 +2963,12 @@ PDM_part_create
   ppart->dCellProc = (PDM_g_num_t *) malloc((nRank+1) * sizeof(PDM_g_num_t));
   PDM_g_num_t _dNCell = (PDM_g_num_t) dNCell;
   PDM_MPI_Allgather((void *) &_dNCell,
-                1,
-                PDM__PDM_MPI_G_NUM, 
-                (void *) (&ppart->dCellProc[1]), 
-                1, 
-                PDM__PDM_MPI_G_NUM, 
-                comm);
+                    1,
+                    PDM__PDM_MPI_G_NUM, 
+                    (void *) (&ppart->dCellProc[1]), 
+                    1, 
+                    PDM__PDM_MPI_G_NUM, 
+                    comm);
 
   ppart->dCellProc[0] = 1;
 
@@ -3016,12 +3017,12 @@ PDM_part_create
   int *dNVtxProc = (int *) malloc((nRank) * sizeof(int));
 
   PDM_MPI_Allgather((void *) &dNVtx,
-                1,
-                PDM_MPI_INT, 
-                (void *) dNVtxProc, 
-                1, 
-                PDM_MPI_INT, 
-                comm);
+                    1,
+                    PDM_MPI_INT, 
+                    (void *) dNVtxProc, 
+                    1, 
+                    PDM_MPI_INT, 
+                    comm);
   ppart->dVtxProc[0] = 1;
   for (int i = 1; i < nRank+1; i++) {
     ppart->dVtxProc[i] = dNVtxProc[i-1] + ppart->dVtxProc[i-1];
@@ -3047,12 +3048,12 @@ PDM_part_create
 
   ppart->dPartProc = (int *) malloc((nRank + 1) * sizeof(int));
   PDM_MPI_Allgather((void *) &nPart,
-                1,
-                PDM_MPI_INT, 
-                (void *) (&ppart->dPartProc[1]), 
-                1, 
-                PDM_MPI_INT, 
-                comm);
+                    1,
+                    PDM_MPI_INT, 
+                    (void *) (&ppart->dPartProc[1]), 
+                    1, 
+                    PDM_MPI_INT, 
+                    comm);
 
   ppart->dPartProc[0] = 0;
   for (int i = 1; i < nRank+1; i++) {
@@ -3085,6 +3086,7 @@ PDM_part_create
   ppart->split_method = split_method;
 
   ppart->renum_cell_method = renum_cell_method;
+  ppart->renum_face_method = renum_face_method;
 
   ppart->dPartBound = NULL;
 
@@ -3205,7 +3207,8 @@ PDM_part_create
    * Face renumbering
    */
 
-  PDM_part_renum_face (ppart, PDM_PART_RENUM_FACE_NONE); 
+  // PDM_part_renum_face (ppart, PDM_PART_RENUM_FACE_NONE); 
+  PDM_part_renum_face (ppart, (PDM_part_renum_face_t) renum_face_method); 
 
   /*
    * Look for partitioning boundary faces
@@ -3246,6 +3249,7 @@ PROCF (pdm_part_create, PDM_PART_CREATE)
  const PDM_MPI_Fint *fcomm,
  const int          *split_method,
  const int          *renum_cell_method,
+ const int          *renum_face_method,
  const int          *nPart,
  const int          *dNCell,
  const int          *dNFace,
@@ -3253,7 +3257,7 @@ PROCF (pdm_part_create, PDM_PART_CREATE)
  const int          *nFaceGroup,
  const int          *have_dCellFace,
  const int          *dCellFaceIdx,
- const PDM_g_num_t *dCellFace,
+ const PDM_g_num_t  *dCellFace,
  const int          *have_dCellTag,
  const int          *dCellTag,
  const int          *have_dCellWeight,
@@ -3261,16 +3265,16 @@ PROCF (pdm_part_create, PDM_PART_CREATE)
  const int          *have_dCellPart,
        int          *dCellPart,
  const int          *have_dFaceCell,
- const PDM_g_num_t *dFaceCell,
+ const PDM_g_num_t  *dFaceCell,
  const int          *dFaceVtxIdx,
- const PDM_g_num_t *dFaceVtx,
+ const PDM_g_num_t  *dFaceVtx,
  const int          *have_dFaceTag,
  const int          *dFaceTag,
  const double       *dVtxCoord,
  const int          *have_dVtxTag,
  const int          *dVtxTag,
  const int          *dFaceGroupIdx,
- const PDM_g_num_t *dFaceGroup
+ const PDM_g_num_t  *dFaceGroup
 )
 {
   
@@ -3304,27 +3308,28 @@ PROCF (pdm_part_create, PDM_PART_CREATE)
 
   PDM_part_create(ppartId,
                   c_comm,
-               *split_method,
-               *renum_cell_method,
-               *nPart,
-               *dNCell,
-               *dNFace,
-               *dNVtx,
-               *nFaceGroup,
-               _dCellFaceIdx,
-               _dCellFace,
-               _dCellTag,
-               _dCellWeight,
-               *have_dCellPart,
-               _dCellPart,
-               _dFaceCell,
-               dFaceVtxIdx,
-               dFaceVtx,
-               _dFaceTag,
-               dVtxCoord,
-               _dVtxTag,
-               dFaceGroupIdx,
-               dFaceGroup);
+                  *split_method,
+                  *renum_cell_method,
+                  *renum_face_method,
+                  *nPart,
+                  *dNCell,
+                  *dNFace,
+                  *dNVtx,
+                  *nFaceGroup,
+                  _dCellFaceIdx,
+                  _dCellFace,
+                  _dCellTag,
+                  _dCellWeight,
+                  *have_dCellPart,
+                  _dCellPart,
+                  _dFaceCell,
+                  dFaceVtxIdx,
+                  dFaceVtx,
+                  _dFaceTag,
+                  dVtxCoord,
+                  _dVtxTag,
+                  dFaceGroupIdx,
+                  dFaceGroup);
 }
 
 /**
@@ -3349,17 +3354,17 @@ PROCF (pdm_part_create, PDM_PART_CREATE)
 void 
 PDM_part_part_dim_get
 (
-const   int            ppartId,
-const   int            ipart,
- int           *nCell,
- int           *nFace,
- int           *nFacePartBound,
- int           *nVtx,
- int           *nProc,
- int           *nTPart,
- int           *sCellFace,
- int           *sFaceVtx,
- int           *sFaceGroup
+const   int  ppartId,
+const   int  ipart,
+ int        *nCell,
+ int        *nFace,
+ int        *nFacePartBound,
+ int        *nVtx,
+ int        *nProc,
+ int        *nTPart,
+ int        *sCellFace,
+ int        *sFaceVtx,
+ int        *sFaceGroup
 )
 {
   _PDM_part_t *ppart = _get_from_id(ppartId);
@@ -3405,17 +3410,17 @@ PROCF (pdm_part_part_dim_get, PDM_PART_PART_DIM_GET)
 )
 {
   PDM_part_part_dim_get(*ppartId,
-                     *ipart,
-                     nCell,
-                     nFace,
-                     nFacePartBound,
-                     nVtx,
-                     nProc,
-                     nTPart,
-                     sCellFace,
-                     sFaceVtx,
-                     sFaceGroup
-                     );
+                        *ipart,
+                        nCell,
+                        nFace,
+                        nFacePartBound,
+                        nVtx,
+                        nProc,
+                        nTPart,
+                        sCellFace,
+                        sFaceVtx,
+                        sFaceGroup
+                        );
 }
 
 /**
@@ -3454,26 +3459,26 @@ PROCF (pdm_part_part_dim_get, PDM_PART_PART_DIM_GET)
 
 void PDM_part_part_val_get
 (
-const  int            ppartId,
-const  int            ipart,
+const  int      ppartId,
+const  int      ipart,
  int          **cellTag,
  int          **cellFaceIdx,
  int          **cellFace,
- PDM_g_num_t **cellLNToGN,
+ PDM_g_num_t  **cellLNToGN,
  int          **faceTag,
  int          **faceCell,
  int          **faceVtxIdx,
  int          **faceVtx,
- PDM_g_num_t **faceLNToGN,
+ PDM_g_num_t  **faceLNToGN,
  int          **facePartBoundProcIdx,
  int          **facePartBoundPartIdx,
  int          **facePartBound,
  int          **vtxTag,
  double       **vtx,
- PDM_g_num_t **vtxLNToGN,
+ PDM_g_num_t  **vtxLNToGN,
  int          **faceGroupIdx,
  int          **faceGroup,
- PDM_g_num_t **faceGroupLNToGN
+ PDM_g_num_t  **faceGroupLNToGN
 )
 {
   _PDM_part_t *ppart = _get_from_id(ppartId);
@@ -3487,24 +3492,24 @@ const  int            ipart,
     exit(1);
   }
 
-  *cellTag         = meshPart->cellTag;
-  *cellFaceIdx     = meshPart->cellFaceIdx;
-  *cellFace        = meshPart->cellFace;
-  *cellLNToGN      = meshPart->cellLNToGN;
-  *faceTag         = meshPart->faceTag;
-  *faceCell        = meshPart->faceCell;
-  *faceVtxIdx      = meshPart->faceVtxIdx;
-  *faceVtx         = meshPart->faceVtx;
-  *faceLNToGN      = meshPart->faceLNToGN;
-  *facePartBoundProcIdx= meshPart->facePartBoundProcIdx;
-  *facePartBoundPartIdx= meshPart->facePartBoundPartIdx;
-  *facePartBound   = meshPart->facePartBound;
-  *vtxTag          = meshPart->vtxTag;
-  *vtx             = meshPart->vtx;
-  *vtxLNToGN       = meshPart->vtxLNToGN;
-  *faceGroupIdx    = meshPart->faceGroupIdx;
-  *faceGroup       = meshPart->faceGroup;
-  *faceGroupLNToGN = meshPart->faceGroupLNToGN;
+  *cellTag              = meshPart->cellTag;
+  *cellFaceIdx          = meshPart->cellFaceIdx;
+  *cellFace             = meshPart->cellFace;
+  *cellLNToGN           = meshPart->cellLNToGN;
+  *faceTag              = meshPart->faceTag;
+  *faceCell             = meshPart->faceCell;
+  *faceVtxIdx           = meshPart->faceVtxIdx;
+  *faceVtx              = meshPart->faceVtx;
+  *faceLNToGN           = meshPart->faceLNToGN;
+  *facePartBoundProcIdx = meshPart->facePartBoundProcIdx;
+  *facePartBoundPartIdx = meshPart->facePartBoundPartIdx;
+  *facePartBound        = meshPart->facePartBound;
+  *vtxTag               = meshPart->vtxTag;
+  *vtx                  = meshPart->vtx;
+  *vtxLNToGN            = meshPart->vtxLNToGN;
+  *faceGroupIdx         = meshPart->faceGroupIdx;
+  *faceGroup            = meshPart->faceGroup;
+  *faceGroupLNToGN      = meshPart->faceGroupLNToGN;
 }
 
 
@@ -3516,21 +3521,21 @@ PROCF (pdm_part_part_val_get, PDM_PART_PART_VAL_GET)
  int           *cellTag,
  int           *cellFaceIdx,
  int           *cellFace,
- PDM_g_num_t  *cellLNToGN,
+ PDM_g_num_t   *cellLNToGN,
  int           *faceTag,
  int           *faceCell,
  int           *faceVtxIdx,
  int           *faceVtx,
- PDM_g_num_t  *faceLNToGN,
+ PDM_g_num_t   *faceLNToGN,
  int           *facePartBoundProcIdx,
  int           *facePartBoundPartIdx,
  int           *facePartBound,
  int           *vtxTag,
  double        *vtx,
- PDM_g_num_t  *vtxLNToGN,
+ PDM_g_num_t   *vtxLNToGN,
  int           *faceGroupIdx,
  int           *faceGroup,
- PDM_g_num_t  *faceGroupLNToGN
+ PDM_g_num_t   *faceGroupLNToGN
 )
 {
   _PDM_part_t *ppart = _get_from_id(*ppartId);
@@ -3817,22 +3822,22 @@ const int       ppartId,
   }
 
   PDM_MPI_Allgatherv((void *) n_loc, 
-                 ppart->nPart, 
-                 PDM_MPI_INT,
-                 (void *) n_tot, 
-                 nPartProc, 
-                 ppart->dPartProc, 
-                 PDM_MPI_INT,
-                 ppart->comm);
+                     ppart->nPart, 
+                     PDM_MPI_INT,
+                     (void *) n_tot, 
+                     nPartProc, 
+                     ppart->dPartProc, 
+                     PDM_MPI_INT,
+                     ppart->comm);
 
   PDM_MPI_Allgatherv((void *) s_loc, 
-                 ppart->nPart, 
-                 PDM_MPI_INT,
-                 (void *) s_tot, 
-                 nPartProc, 
-                 ppart->dPartProc, 
-                 PDM_MPI_INT,
-                 ppart->comm);
+                     ppart->nPart, 
+                     PDM_MPI_INT,
+                     (void *) s_tot, 
+                     nPartProc, 
+                     ppart->dPartProc, 
+                     PDM_MPI_INT,
+                     ppart->comm);
 
   _quickSort_int(s_tot, 0, ppart->dPartProc[numProcs]-1);
   _quickSort_int(n_tot, 0, ppart->dPartProc[numProcs]-1);

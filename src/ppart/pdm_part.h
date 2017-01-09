@@ -35,7 +35,7 @@ extern "C" {
 typedef enum {
   PDM_PART_SPLIT_PARMETIS = 1,
   PDM_PART_SPLIT_PTSCOTCH = 2,
-  PDM_PART_SPLIT_HILBERT = 3
+  PDM_PART_SPLIT_HILBERT  = 3
 } PDM_part_split_t;
 
 
@@ -46,8 +46,9 @@ typedef enum {
  */
 
 typedef enum {
-  PDM_PART_RENUM_FACE_RANDOM = 1,
-  PDM_PART_RENUM_FACE_NONE = 2
+  PDM_PART_RENUM_FACE_RANDOM        = 1,
+  PDM_PART_RENUM_FACE_NONE          = 2,
+  PDM_PART_RENUM_FACE_LEXICOGRAPHIC = 3
 } PDM_part_renum_face_t;
 
 
@@ -59,8 +60,9 @@ typedef enum {
 
 typedef enum {
   PDM_PART_RENUM_CELL_HILBERT = 1,
-  PDM_PART_RENUM_CELL_RANDOM = 2,
-  PDM_PART_RENUM_CELL_NONE = 3
+  PDM_PART_RENUM_CELL_RANDOM  = 2,
+  PDM_PART_RENUM_CELL_NONE    = 3,
+  PDM_PART_RENUM_CELL_CUTHILL = 4
 } PDM_part_renum_cell_t;
 
 
@@ -123,29 +125,30 @@ typedef enum {
 void 
 PDM_part_create
 (
- int                *ppartId,
- const PDM_MPI_Comm  comm,
- const PDM_part_split_t split_method,
- const PDM_part_renum_cell_t renum_cell_method,
- const int           nPart,
- const int           dNCell,
- const int           dNFace,
- const int           dNVtx,
- const int           nFaceGroup,
- const int          *dCellFaceIdx,
- const PDM_g_num_t *dCellFace,
- const int          *dCellTag,
- const int          *dCellWeight,
- const int           have_dCellPart,
-       int          *dCellPart,
- const PDM_g_num_t *dFaceCell,
- const int          *dFaceVtxIdx,
- const PDM_g_num_t *dFaceVtx,
- const int          *dFaceTag,
- const double       *dVtxCoord,
- const int          *dVtxTag,
- const int          *dFaceGroupIdx,
- const PDM_g_num_t *dFaceGroup
+ int                         *ppartId,
+ const PDM_MPI_Comm           comm,
+ const PDM_part_split_t       split_method,
+ const PDM_part_renum_cell_t  renum_cell_method,
+ const PDM_part_renum_face_t  renum_face_method,
+ const int                    nPart,
+ const int                    dNCell,
+ const int                    dNFace,
+ const int                    dNVtx,
+ const int                    nFaceGroup,
+ const int                   *dCellFaceIdx,
+ const PDM_g_num_t           *dCellFace,
+ const int                   *dCellTag,
+ const int                   *dCellWeight,
+ const int                    have_dCellPart,
+       int                   *dCellPart,
+ const PDM_g_num_t           *dFaceCell,
+ const int                   *dFaceVtxIdx,
+ const PDM_g_num_t           *dFaceVtx,
+ const int                   *dFaceTag,
+ const double                *dVtxCoord,
+ const int                   *dVtxTag,
+ const int                   *dFaceGroupIdx,
+ const PDM_g_num_t           *dFaceGroup
  );
 
 void
@@ -155,6 +158,7 @@ PROCF (pdm_part_create, PDM_PART_CREATE)
  const PDM_MPI_Fint *fcomm,
  const int          *split_method,
  const int          *renum_cell_method,
+ const int          *renum_face_method,
  const int          *nPart,
  const int          *dNCell,
  const int          *dNFace,
@@ -162,7 +166,7 @@ PROCF (pdm_part_create, PDM_PART_CREATE)
  const int          *nFaceGroup,
  const int          *have_dCellFace,
  const int          *dCellFaceIdx,
- const PDM_g_num_t *dCellFace,
+ const PDM_g_num_t  *dCellFace,
  const int          *have_dCellTag,
  const int          *dCellTag,
  const int          *have_dCellWeight,
@@ -170,16 +174,16 @@ PROCF (pdm_part_create, PDM_PART_CREATE)
  const int          *have_dCellPart,
        int          *dCellPart,
  const int          *have_dFaceCell,
- const PDM_g_num_t *dFaceCell,
+ const PDM_g_num_t  *dFaceCell,
  const int          *dFaceVtxIdx,
- const PDM_g_num_t *dFaceVtx,
+ const PDM_g_num_t  *dFaceVtx,
  const int          *have_dFaceTag,
  const int          *dFaceTag,
  const double       *dVtxCoord,
  const int          *have_dVtxTag,
  const int          *dVtxTag,
  const int          *dFaceGroupIdx,
- const PDM_g_num_t *dFaceGroup
+ const PDM_g_num_t  *dFaceGroup
 );
 
 /**
@@ -237,37 +241,37 @@ PROCF (pdm_part_part_dim_get, PDM_PART_PART_DIM_GET)
  *
  * \brief Return a mesh partition
  * 
- * \param [in]   ppartId            ppart identifier
- * \param [in]   ipart              Current partition
- * \param [out]  cellTag            Cell tag (size = nCell)
- * \param [out]  cellFaceIdx        Cell to face connectivity index (size = nCell + 1, numbering : 0 to n-1)
- * \param [out]  cellFace           Cell to face connectivity (size = cellFaceIdx[nCell] = lCellFace
- *                                                             numbering : 1 to n)
- * \param [out]  cellLNToGN         Cell local numbering to global numbering (size = nCell, numbering : 1 to n)
- * \param [out]  faceTag            Face tag (size = nFace)
- * \param [out]  faceCell           Face to cell connectivity  (size = 2 * nFace, numbering : 1 to n)
- * \param [out]  faceVtxIdx         Face to Vertex connectivity index (size = nFace + 1, numbering : 0 to n-1)
- * \param [out]  faceVtx            Face to Vertex connectivity (size = faceVertexIdx[nFace], numbering : 1 to n)
- * \param [out]  faceLNToGN         Face local numbering to global numbering (size = nFace, numbering : 1 to n)
+ * \param [in]   ppartId               ppart identifier
+ * \param [in]   ipart                 Current partition
+ * \param [out]  cellTag               Cell tag (size = nCell)
+ * \param [out]  cellFaceIdx           Cell to face connectivity index (size = nCell + 1, numbering : 0 to n-1)
+ * \param [out]  cellFace              Cell to face connectivity (size = cellFaceIdx[nCell] = lCellFace
+ *                                                                numbering : 1 to n)
+ * \param [out]  cellLNToGN            Cell local numbering to global numbering (size = nCell, numbering : 1 to n)
+ * \param [out]  faceTag               Face tag (size = nFace)
+ * \param [out]  faceCell              Face to cell connectivity  (size = 2 * nFace, numbering : 1 to n)
+ * \param [out]  faceVtxIdx            Face to Vertex connectivity index (size = nFace + 1, numbering : 0 to n-1)
+ * \param [out]  faceVtx               Face to Vertex connectivity (size = faceVertexIdx[nFace], numbering : 1 to n)
+ * \param [out]  faceLNToGN            Face local numbering to global numbering (size = nFace, numbering : 1 to n)
  * \param [out]  facePartBoundProcIdx  Partitioning boundary faces block distribution from processus (size = nProc + 1)
  * \param [out]  facePartBoundPartIdx  Partitioning boundary faces block distribution from partition (size = nTPart + 1)
- * \param [out]  facePartBound      Partitioning boundary faces (size = 4 * nFacePartBound)
- *                                       sorted by processus, sorted by partition in each processus, and
- *                                       sorted by absolute face number in each partition
- *                                   For each face :
- *                                        - Face local number (numbering : 1 to n)
- *                                        - Connected process (numbering : 0 to n-1)
- *                                        - Connected Partition 
- *                                          on the connected process (numbering :1 to n)
- *                                        - Connected face local number 
- *                                          in the connected partition (numbering :1 to n)
- * \param [out]  vtxTag             Vertex tag (size = nVertex)
- * \param [out]  vtx                Vertex coordinates (size = 3 * nVertex)
- * \param [out]  vtxLNToGN          Vertex local numbering to global numbering (size = nVtx, numbering : 1 to n)
- * \param [out]  faceGroupIdx       Face group index (size = nFaceGroup + 1, numbering : 1 to n-1)
- * \param [out]  faceGroup          faces for each group (size = faceGroupIdx[nFaceGroup] = lFaceGroup, numbering : 1 to n)
- * \param [out]  faceGroupLNToGN    Faces global numbering for each group 
- *                                  (size = faceGroupIdx[nFaceGroup] = lFaceGroup, numbering : 1 to n)
+ * \param [out]  facePartBound         Partitioning boundary faces (size = 4 * nFacePartBound)
+ *                                          sorted by processus, sorted by partition in each processus, and
+ *                                          sorted by absolute face number in each partition
+ *                                      For each face :
+ *                                           - Face local number (numbering : 1 to n)
+ *                                           - Connected process (numbering : 0 to n-1)
+ *                                           - Connected Partition 
+ *                                             on the connected process (numbering :1 to n)
+ *                                           - Connected face local number 
+ *                                             in the connected partition (numbering :1 to n)
+ * \param [out]  vtxTag                Vertex tag (size = nVertex)
+ * \param [out]  vtx                   Vertex coordinates (size = 3 * nVertex)
+ * \param [out]  vtxLNToGN             Vertex local numbering to global numbering (size = nVtx, numbering : 1 to n)
+ * \param [out]  faceGroupIdx          Face group index (size = nFaceGroup + 1, numbering : 1 to n-1)
+ * \param [out]  faceGroup             faces for each group (size = faceGroupIdx[nFaceGroup] = lFaceGroup, numbering : 1 to n)
+ * \param [out]  faceGroupLNToGN       Faces global numbering for each group 
+ *                                     (size = faceGroupIdx[nFaceGroup] = lFaceGroup, numbering : 1 to n)
  *
  */
 
@@ -278,21 +282,21 @@ const int            ipart,
       int          **cellTag,
       int          **cellFaceIdx,
       int          **cellFace,
-      PDM_g_num_t **cellLNToGN,
+      PDM_g_num_t  **cellLNToGN,
       int          **faceTag,
       int          **faceCell,
       int          **faceVtxIdx,
       int          **faceVtx,
-      PDM_g_num_t **faceLNToGN,
+      PDM_g_num_t  **faceLNToGN,
       int          **facePartBoundProcIdx,
       int          **facePartBoundPartIdx,
       int          **facePartBound,
       int          **vtxTag,
       double       **vtx,
-      PDM_g_num_t **vtxLNToGN,
+      PDM_g_num_t  **vtxLNToGN,
       int          **faceGroupIdx,
       int          **faceGroup,
-      PDM_g_num_t **faceGroupLNToGN
+      PDM_g_num_t  **faceGroupLNToGN
 );
 
 void 
@@ -303,21 +307,21 @@ PROCF (pdm_part_part_val_get, PDM_PART_PART_VAL_GET)
  int           *cellTag,
  int           *cellFaceIdx,
  int           *cellFace,
- PDM_g_num_t  *cellLNToGN,
+ PDM_g_num_t   *cellLNToGN,
  int           *faceTag,
  int           *faceCell,
  int           *faceVtxIdx,
  int           *faceVtx,
- PDM_g_num_t  *faceLNToGN,
+ PDM_g_num_t   *faceLNToGN,
  int           *facePartBoundProcIdx,
  int           *facePartBoundPartIdx,
  int           *facePartBound,
  int           *vtxTag,
  double        *vtx,
- PDM_g_num_t  *vtxLNToGN,
+ PDM_g_num_t   *vtxLNToGN,
  int           *faceGroupIdx,
  int           *faceGroup,
- PDM_g_num_t  *faceGroupLNToGN
+ PDM_g_num_t   *faceGroupLNToGN
 );
 
 /**
@@ -332,13 +336,13 @@ void
 PDM_part_free
 (
 const  int                ppartId
- );
+);
 
 void 
 PROCF (pdm_part_free, PDM_PART_FREE)
 (
  int                *ppartId
- );
+);
 
 /**
  *
@@ -360,7 +364,7 @@ const int       ppartId,
       double  **cpu,
       double  **cpu_user,
       double  **cpu_sys
- );
+);
 
 
 void 
@@ -371,7 +375,7 @@ PROCF (pdm_part_time_get, PDM_PART_TIME_GET)
  double   *cpu,
  double   *cpu_user,
  double   *cpu_sys
- );
+);
 
 
 /**

@@ -55,11 +55,11 @@ _usage(int exit_code)
  * \param [inout]   n_part   Number of partitions par process
  * \param [inout]   post     Ensight outputs status
  * \param [inout]   method   Partitioner (1 ParMETIS, 2 Pt-Scotch)
- * 
+ *
  */
 
 static void
-_read_args(int            argc,   
+_read_args(int            argc,
            char         **argv,
            PDM_g_num_t  *nVtxSeg,
            double        *length,
@@ -125,21 +125,21 @@ _read_args(int            argc,
 int main(int argc, char *argv[])
 {
 
-  /* 
-   *  Set default values 
+  /*
+   *  Set default values
    */
-  
+
   PDM_g_num_t  nVtxSeg = 10;
   double        length  = 1.;
   int           nPart   = 1;
   int           post    = 0;
   int           method  = 2;
 
-  /* 
-   *  Read args 
+  /*
+   *  Read args
    */
 
-  _read_args(argc,   
+  _read_args(argc,
              argv,
              &nVtxSeg,
              &length,
@@ -147,15 +147,15 @@ int main(int argc, char *argv[])
              &post,
              &method);
 
-  /* 
+  /*
    *  Init
    */
 
-  struct timeval t_elaps_debut;  
-    
+  struct timeval t_elaps_debut;
+
   int myRank;
   int numProcs;
-  
+
   PDM_MPI_Init(&argc, &argv);
   PDM_MPI_Comm_rank(PDM_MPI_COMM_WORLD, &myRank);
   PDM_MPI_Comm_size(PDM_MPI_COMM_WORLD, &numProcs);
@@ -172,8 +172,8 @@ int main(int argc, char *argv[])
   PDM_g_num_t *dFaceGroup = NULL;
   int           dFaceVtxL;
   int           dFaceGroupL;
-  
-  /* 
+
+  /*
    *  Create distributed cube
    */
 
@@ -182,7 +182,7 @@ int main(int argc, char *argv[])
 
   PDM_part_dcube_init(&id,
                       comm,
-                      nVtxSeg, 
+                      nVtxSeg,
                       length);
 
   PDM_part_dcube_dim_get(id,
@@ -195,24 +195,24 @@ int main(int argc, char *argv[])
 
   PDM_part_dcube_data_get(id,
                           &dFaceCell,
-                          &dFaceVtxIdx, 
+                          &dFaceVtxIdx,
                           &dFaceVtx,
                           &dVtxCoord,
                           &dFaceGroupIdx,
-                          &dFaceGroup); 
+                          &dFaceGroup);
 
   if (0 == 1) {
 
     printf("[%i] nFaceGroup    : %i\n", myRank, nFaceGroup);
     printf("[%i] dNCell        : %i\n", myRank, dNCell);
     printf("[%i] dNFace        : %i\n", myRank, dNFace);
-    printf("[%i] dNVtx         : %i\n", myRank, dNVtx); 
-    
+    printf("[%i] dNVtx         : %i\n", myRank, dNVtx);
+
     printf("[%i] dFaceCell     : ", myRank);
     for (int i = 0; i < 2 * dNFace; i++)
       printf(" "PDM_FMT_L_NUM, dFaceCell[i]);
     printf("\n");
-    
+
     printf("[%i] dFaceVtxIdx   : ", myRank);
     for (int i = 0; i < dNFace + 1; i++)
       printf(" %i", dFaceVtxIdx[i]);
@@ -227,23 +227,23 @@ int main(int argc, char *argv[])
     for (int i = 0; i < 3*dNVtx; i++)
       printf(" %12.5e", dVtxCoord[i]);
     printf("\n");
-    
+
     printf("[%i] dFaceGroupIdx : ", myRank);
     for (int i = 0; i < nFaceGroup + 1; i++)
       printf(" %i", dFaceGroupIdx[i]);
     printf("\n");
-    
+
     printf("[%i] dFaceGroup    : ", myRank);
     for (int i = 0; i < dFaceGroupIdx[nFaceGroup]; i++)
       printf(" "PDM_FMT_L_NUM, dFaceGroup[i]);
     printf("\n");
-    
+
   }
   int ppartId = 0;
 
   gettimeofday(&t_elaps_debut, NULL);
 
-  /* 
+  /*
    *  Create mesh partitions
    */
 
@@ -255,6 +255,7 @@ int main(int argc, char *argv[])
                   comm,
                   method,
                   PDM_PART_RENUM_CELL_NONE,
+                  PDM_PART_RENUM_FACE_NONE,
                   nPart,
                   dNCell,
                   dNFace,
@@ -306,13 +307,13 @@ int main(int argc, char *argv[])
   printf("[%i]   - cpu_sys splitting graph          : %12.5e\n", myRank, cpu_sys[2]);
   printf("[%i]   - cpu_sys building mesh partitions : %12.5e\n", myRank, cpu_sys[3]);
 
-  struct timeval t_elaps_fin; 
+  struct timeval t_elaps_fin;
   gettimeofday(&t_elaps_fin, NULL);
 
-  long tranche_elapsed = (t_elaps_fin.tv_usec + 1000000 * t_elaps_fin.tv_sec) - 
-                         (t_elaps_debut.tv_usec + 1000000 * 
+  long tranche_elapsed = (t_elaps_fin.tv_usec + 1000000 * t_elaps_fin.tv_sec) -
+                         (t_elaps_debut.tv_usec + 1000000 *
                           t_elaps_debut.tv_sec);
-  long tranche_elapsed_max = tranche_elapsed; 
+  long tranche_elapsed_max = tranche_elapsed;
   double t_elapsed = (double) tranche_elapsed_max/1000000.;
 
   printf("[%i]   - TEMPS DANS PART_CUBE  : %12.5e\n", myRank,  t_elapsed);
@@ -381,14 +382,14 @@ int main(int argc, char *argv[])
                          &faceGroupIdx,
                          &faceGroup,
                          &faceGroupLNToGN);
-    
+
 
       printf("[%i] nFaceGroup     : %i\n", myRank, nFaceGroup);
       printf("[%i] nCell          : %i\n", myRank, nCell);
       printf("[%i] nFace          : %i\n", myRank, nFace);
-      printf("[%i] nVtx           : %i\n", myRank, nVtx); 
+      printf("[%i] nVtx           : %i\n", myRank, nVtx);
       printf("[%i] nFacePartBound : %i\n", myRank, nFacePartBound);
-      
+
       printf("[%i] cellFace     : ", myRank);
       for (int i = 0; i < nCell; i++) {
         for (int j = cellFaceIdx[i]; j < cellFaceIdx[i+1]; j++) {
@@ -396,19 +397,19 @@ int main(int argc, char *argv[])
         }
         printf("\n");
       }
-    
+
       printf("\n");
-      
+
       printf("[%i]  cellLNToGN    : ", myRank);
       for (int i = 0; i < nCell; i++)
         printf(" "PDM_FMT_L_NUM, cellLNToGN[i]);
       printf("\n");
-      
+
       printf("[%i] faceCell     : ", myRank);
       for (int i = 0; i < 2 * nFace; i++)
         printf(" %i", faceCell[i]);
       printf("\n");
-      
+
       printf("[%i] faceVtx      : ", myRank);
       for (int i = 0; i < nFace; i++) {
         for (int j = faceVtxIdx[i]; j < faceVtxIdx[i+1]; j++) {
@@ -416,22 +417,22 @@ int main(int argc, char *argv[])
         }
         printf("\n");
       }
-    
+
       printf("[%i]  faceLNToGN    : ", myRank);
       for (int i = 0; i < nFace; i++)
         printf(" "PDM_FMT_L_NUM, faceLNToGN[i]);
       printf("\n");
-      
+
       printf("[%i] vtx           : ", myRank);
       for (int i = 0; i < 3 * nVtx; i++)
         printf(" %12.5e", vtx[i]);
       printf("\n");
-    
+
       printf("[%i] vtxLNToGN     : ", myRank);
       for (int i = 0; i <  nVtx; i++)
         printf(" "PDM_FMT_L_NUM, vtxLNToGN[i]);
       printf("\n");
-      
+
       printf("[%i] faceGroupIdx : ", myRank);
       for (int i = 0; i < nFaceGroup + 1; i++)
         printf(" %i", faceGroupIdx[i]);
@@ -454,49 +455,49 @@ int main(int argc, char *argv[])
       }
     }
   }
-  
+
   /* Calculs statistiques */
 
-  int    cells_average; 
-  int    cells_median; 
-  double cells_std_deviation; 
+  int    cells_average;
+  int    cells_median;
+  double cells_std_deviation;
   int    cells_min;
   int    cells_max;
-  int    bound_part_faces_average; 
-  int    bound_part_faces_median; 
-  double bound_part_faces_std_deviation; 
+  int    bound_part_faces_average;
+  int    bound_part_faces_median;
+  double bound_part_faces_std_deviation;
   int    bound_part_faces_min;
   int    bound_part_faces_max;
   int    bound_part_faces_sum;
 
   PDM_part_stat_get(ppartId,
-                 &cells_average, 
-                 &cells_median, 
-                 &cells_std_deviation, 
-                 &cells_min, 
+                 &cells_average,
+                 &cells_median,
+                 &cells_std_deviation,
+                 &cells_min,
                  &cells_max,
-                 &bound_part_faces_average, 
-                 &bound_part_faces_median, 
-                 &bound_part_faces_std_deviation, 
-                 &bound_part_faces_min, 
+                 &bound_part_faces_average,
+                 &bound_part_faces_median,
+                 &bound_part_faces_std_deviation,
+                 &bound_part_faces_min,
                  &bound_part_faces_max,
                  &bound_part_faces_sum);
-  
+
   if (myRank == 0) {
     printf("Statistics :\n");
     printf("  - Number of cells :\n");
-    printf("       * average            : %i\n", cells_average);   
-    printf("       * median             : %i\n", cells_median);   
-    printf("       * standard deviation : %12.5e\n", cells_std_deviation);   
-    printf("       * min                : %i\n", cells_min);   
-    printf("       * max                : %i\n", cells_max);   
+    printf("       * average            : %i\n", cells_average);
+    printf("       * median             : %i\n", cells_median);
+    printf("       * standard deviation : %12.5e\n", cells_std_deviation);
+    printf("       * min                : %i\n", cells_min);
+    printf("       * max                : %i\n", cells_max);
     printf("  - Number of faces exchanging with another partition :\n");
-    printf("       * average            : %i\n", bound_part_faces_average);   
-    printf("       * median             : %i\n", bound_part_faces_median);   
-    printf("       * standard deviation : %12.5e\n", bound_part_faces_std_deviation);   
-    printf("       * min                : %i\n", bound_part_faces_min);   
-    printf("       * max                : %i\n", bound_part_faces_max);   
-    printf("       * total              : %i\n", bound_part_faces_sum);   
+    printf("       * average            : %i\n", bound_part_faces_average);
+    printf("       * median             : %i\n", bound_part_faces_median);
+    printf("       * standard deviation : %12.5e\n", bound_part_faces_std_deviation);
+    printf("       * min                : %i\n", bound_part_faces_min);
+    printf("       * max                : %i\n", bound_part_faces_max);
+    printf("       * total              : %i\n", bound_part_faces_sum);
   }
 
   PDM_part_free(ppartId);
@@ -505,6 +506,6 @@ int main(int argc, char *argv[])
 
 
   PDM_MPI_Finalize();
-  
+
   return 0;
 }

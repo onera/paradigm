@@ -91,6 +91,126 @@ const int nElt,
   PDM_sort_int (tmpArray, order, nElt);
 }
 
+/** 
+ * This function is part of Code_Saturne, a general-purpose CFD tool.
+ *  Copyright (C) 1998-2014 EDF S.A.
+ *
+ * \brief Descend binary tree for the lexicographical ordering of a strided array
+ *
+ * \param [in]     number pointer to numbers of entities that should be ordered.
+ * \param [in]            (if NULL, a default 1 to n numbering is considered)
+ * \param [in]     stride stride of array (number of values to compare)
+ * \param [in]     level  level of the binary tree to descend
+ * \param [in]     nb_ent number of entities in the binary tree to descend
+ * \param [in,out] order  ordering array
+ */
+
+inline static void
+_order_lnum_descend_tree_s
+(
+const int    number[],
+size_t       stride,
+size_t       level,
+const size_t nb_ent,
+int          order[]
+)
+{
+  size_t i_save, i1, i2, j, lv_cur;
+
+  i_save = (size_t)(order[level]);
+
+  while (level <= (nb_ent/2)) {
+
+    lv_cur = (2*level) + 1;
+
+    if (lv_cur < nb_ent - 1) {
+
+      i1 = (size_t)(order[lv_cur+1]);
+      i2 = (size_t)(order[lv_cur]);
+
+      for (j = 0; j < stride; j++) {
+        if (number[i1*stride + j] != number[i2*stride + j])
+          break;
+      }
+
+      if (j < stride) {
+        if (number[i1*stride + j] > number[i2*stride + j])
+          lv_cur++;
+      }
+
+    }
+
+    if (lv_cur >= nb_ent) break;
+
+    i1 = i_save;
+    i2 = (size_t)(order[lv_cur]);
+
+    for (j = 0; j < stride; j++) {
+      if (number[i1*stride + j] != number[i2*stride + j])
+        break;
+    }
+
+    if (j == stride) break;
+    if (number[i1*stride + j] >= number[i2*stride + j]) break;
+
+    order[level] = order[lv_cur];
+    level = lv_cur;
+
+  }
+
+  order[level] = i_save;
+}
+
+/** 
+ * This function is part of Code_Saturne, a general-purpose CFD tool.
+ *  Copyright (C) 1998-2014 EDF S.A.
+ *
+ * \brief Order a strided array of global numbers lexicographically.
+ *
+ * \param [in]     number array of entity numbers (if NULL, a default 1 to n numbering is considered)
+ * \param [in]     stride stride of array (number of values to compare)
+ * \param [in,out] order  pre-allocated ordering table
+ * \param [in]     nb_ent number of entities considered
+ */
+
+static void
+_order_lnum_s
+(
+const int    number[],
+size_t       stride,
+int          order[],
+const size_t nb_ent
+)
+{
+  size_t i;
+  int o_save;
+
+  /* Initialize ordering array */
+
+  for (i = 0 ; i < nb_ent ; i++)
+    order[i] = i;
+
+  if (nb_ent < 2)
+    return;
+
+  /* Create binary tree */
+
+  i = (nb_ent / 2) ;
+  do {
+    i--;
+    _order_lnum_descend_tree_s(number, stride, i, nb_ent, order);
+  } while (i > 0);
+
+  /* Sort binary tree */
+
+  for (i = nb_ent - 1 ; i > 0 ; i--) {
+    o_save   = order[0];
+    order[0] = order[i];
+    order[i] = o_save;
+    _order_lnum_descend_tree_s(number, stride, 0, i, order);
+  }
+}
+
 /**
  * \brief Renumber face to cell connectivity 
  * 
@@ -144,10 +264,10 @@ const int *cellFace,
 static void 
 _order_array 
 (
-const int    sizeArray,
-const size_t elt_size,        
-const int   *newToOldOrder,
-void        *array
+const int     sizeArray,
+const size_t  elt_size,        
+const int    *newToOldOrder,
+void         *array
 )
 {
   unsigned char *oldArray = (unsigned char *) malloc (sizeArray * elt_size);
@@ -181,8 +301,8 @@ void        *array
 static void 
 _order_faceCell 
 (
-int           nFace,
-int          *newToOldOrder,
+int          nFace,
+int         *newToOldOrder,
 PDM_g_num_t *faceCell 
 )
 {
@@ -212,9 +332,9 @@ PDM_g_num_t *faceCell
 static void 
 _renum_array 
 (
-const int    sizeArray,
-const int   *olToNewOrder,
-int         *array
+const int  sizeArray,
+const int *olToNewOrder,
+int       *array
 )
 {
   int *oldArray = (int *) malloc (sizeof(int) * sizeArray);
@@ -314,23 +434,88 @@ double  *cellCenter
     double *volume = (double *) malloc (part->nCell * sizeof(double));
     int isDegenerated;  
 
-    PDM_geom_elem_polyhedra_properties (isOriented,
-                                        part->nCell,
-                                        part->nFace,
-                                        part->faceVtxIdx,
-                                        part->faceVtx,
-                                        part->cellFaceIdx,
-                                        part->cellFace,
-                                        part->nVtx,
-                                        part->vtx,
-                                        volume,
-                                        cellCenter,
-                                        NULL,
-                                        &isDegenerated);
-    free (volume);
-  }
+    if(1 == 0){
+      PDM_geom_elem_polyhedra_properties (isOriented,
+                                          part->nCell,
+                                          part->nFace,
+                                          part->faceVtxIdx,
+                                          part->faceVtx,
+                                          part->cellFaceIdx,
+                                          part->cellFace,
+                                          part->nVtx,
+                                          part->vtx,
+                                          volume,
+                                          cellCenter,
+                                          NULL,
+                                          &isDegenerated);
+    }
+    else /*Trash patch */
+    {
+      /* Allocate */
+      double *cellWeight = (double *) malloc (part->nCell * sizeof(double));
+      
+      /* Nulliffy cellCenterArray */
+      for(int iCell = 0; iCell < part->nCell; iCell++) {
+        cellCenter[3*iCell  ] = 0.;
+        cellCenter[3*iCell+1] = 0.;
+        cellCenter[3*iCell+2] = 0.;
+        cellWeight[iCell]     = 0.;
+      }
+      
+      /* Compute */
+      for(int iCell = 0; iCell < part->nCell; iCell++) {
+        
+        /* Cellule composé de nFace */
+        int aFac = part->cellFaceIdx[iCell];
+        int nFac = part->cellFaceIdx[iCell+1] - aFac;
   
-  else {
+        for(int iFac = 0; iFac < nFac; iFac++) {
+          
+          /* Face composé de nVtx */
+          int lFac = abs(part->cellFace[aFac + iFac]) - 1;
+  
+          int aVtx = part->faceVtxIdx[lFac];
+          int nVtx = part->faceVtxIdx[lFac+1] - aVtx;
+          
+          for(int iVtx = 0; iVtx < nVtx; iVtx++) {
+  
+            /* Face composé de nVtx */
+            int lVtx = part->faceVtx[aVtx + iVtx] - 1;
+
+            /* Add to current cell and stack weight */
+            cellCenter[3*iCell  ] += part->vtx[3*lVtx  ];
+            cellCenter[3*iCell+1] += part->vtx[3*lVtx+1];
+            cellCenter[3*iCell+2] += part->vtx[3*lVtx+2];
+  
+            cellWeight[iCell] += 1.;
+          }
+        }
+      }   
+  
+      /* Nulliffy cellCenterArray */
+      for(int iCell = 0; iCell < part->nCell; iCell++) {
+        cellCenter[3*iCell  ] = cellCenter[3*iCell  ]/cellWeight[iCell];
+        cellCenter[3*iCell+1] = cellCenter[3*iCell+1]/cellWeight[iCell];
+        cellCenter[3*iCell+2] = cellCenter[3*iCell+2]/cellWeight[iCell];
+      }
+  
+      /* Verbose */
+      if(0 == 1){
+        for(int iCell = 0; iCell < part->nCell; iCell++) {
+          printf("cellCenter (X,Y,Z) : %f - %f - %f \n", cellCenter[3*iCell  ], cellCenter[3*iCell+1], cellCenter[3*iCell+2]);
+          printf("cellWeight         : %f  \n", cellWeight[iCell  ]);
+        }
+      }
+
+      /* Free */
+      free(cellWeight);
+
+    }
+
+    /* Free */
+    free (volume);
+  }  
+  else {   /* isPoly3D */
     double *surfaceVector = (double * ) malloc( sizeof(double) * 3 * part->nCell); 
     int isDegenerated;  
     
@@ -553,6 +738,51 @@ _PDM_part_t* ppart
   }
 }
 
+/**
+ *
+ * \brief Perform a cells renumbering reverse CutHill Mac-Kee
+ *
+ * \param [in,out]  ppart    Current PPART structure
+ *
+ */
+
+static void
+_renum_cells_cuthill
+(
+_PDM_part_t* ppart
+)
+{
+  int dualBandWidth;
+
+  /** Loop over all part of the current process **/
+  for(int ipart = 0; ipart < ppart->nPart; ++ipart) 
+  {
+    /** Get current part id **/
+    _part_t *part = ppart->meshParts[ipart];
+    const int nCell = part->nCell;
+    
+    /** Allocate reoerdering/permutation array **/
+    int *order = (int *) malloc (sizeof(int) * nCell);
+
+    /** Verbose bandwidth **/
+    // dualBandWidth = PDM_checkbandwidth(part);
+    // printf("Bandwidth of graph before reordering : %d \n", dualBandWidth);
+
+    /** Compute reordering **/
+    PDM_generate_cuthill(part, order);
+  
+    /** Apply renumbering **/
+    _renum_cells(part, order);
+
+    /** Verbose bandwidth **/
+    // dualBandWidth = PDM_checkbandwidth(part);
+    // printf("Bandwidth of graph after reordering : %d \n", dualBandWidth);
+
+    /** Free memory **/
+    free(order);
+  }
+}
+
 
 /**
  *
@@ -611,6 +841,57 @@ _PDM_part_t* ppart
   }
 }
 
+/**
+ *
+ * \brief Perform a face random renumbering
+ *
+ * \param [in,out]  ppart    Current PPART structure
+ *
+ */
+
+static void
+_renum_faces_lexicographic
+(
+_PDM_part_t* ppart
+)
+{
+  for(int ipart = 0; ipart < ppart->nPart; ++ipart) 
+  {
+    _part_t *part = ppart->meshParts[ipart];
+    const int nFace = part->nFace;
+
+    int *order = (int *) malloc (sizeof(int) * nFace);
+
+    /** Build a pre-array face cell ordered */
+    int *faceCellTmp = (int *) malloc(2*nFace * sizeof(int)); 
+
+    for(int i = 0; i < nFace; i++)
+    {
+       int iL = part->faceCell[2*i  ];
+       int iR = part->faceCell[2*i+1];
+       if(iL < iR )
+       {
+          faceCellTmp[2*i  ] = iR;
+          faceCellTmp[2*i+1] = iL;
+       }
+       else
+       {
+          faceCellTmp[2*i  ] = iL;
+          faceCellTmp[2*i+1] = iR;
+       }
+    }
+  
+    /** Reorder lexicographicly the array */
+    _order_lnum_s (faceCellTmp, 2, order, nFace);
+
+    /** Update face array with the new array **/
+    _renum_faces (part, order);
+
+    /** Free memory **/
+    free (order);
+    free (faceCellTmp);
+  }
+}
 
 /*=============================================================================
  * Public function definitions
@@ -630,18 +911,21 @@ _PDM_part_t* ppart
 void 
 PDM_part_renum_cell
 (
- _PDM_part_t              *ppart,
+ _PDM_part_t           *ppart,
  PDM_part_renum_cell_t  method                 
 )
 {
   switch (method) {
-  case PDM_PART_RENUM_CELL_HILBERT :
-    _renum_cells_hilbert(ppart); 
+  case PDM_PART_RENUM_CELL_NONE :
     break;
   case PDM_PART_RENUM_CELL_RANDOM :
     _renum_cells_random(ppart); 
     break;
-  case PDM_PART_RENUM_CELL_NONE :
+  case PDM_PART_RENUM_CELL_HILBERT :
+    _renum_cells_hilbert(ppart); 
+    break;
+  case PDM_PART_RENUM_CELL_CUTHILL :
+    _renum_cells_cuthill(ppart); 
     break;
   default:
     fprintf (stderr, "PDM_part_renum Error : unavailable face renumbering method\n");
@@ -669,10 +953,13 @@ PDM_part_renum_face
 )
 {
   switch (method) {
+    case PDM_PART_RENUM_FACE_NONE :
+      break;
     case PDM_PART_RENUM_FACE_RANDOM :
       _renum_faces_random (ppart); 
       break;
-    case PDM_PART_RENUM_FACE_NONE :
+    case PDM_PART_RENUM_FACE_LEXICOGRAPHIC :
+      _renum_faces_lexicographic(ppart);
       break;
     default:
       fprintf (stderr, "PDM_part_renum Error : unavailable face renumbering method\n");
