@@ -3,102 +3,105 @@ cdef extern from "pdm_part.h":
     ctypedef enum PDM_part_split_t:
         PDM_PART_SPLIT_PARMETIS = 1
         PDM_PART_SPLIT_PTSCOTCH = 2
-        PDM_PART_SPLIT_HILBERT = 3
+        PDM_PART_SPLIT_HILBERT  = 3
 
     ctypedef enum PDM_part_renum_face_t:
-        PDM_PART_RENUM_FACE_RANDOM = 1
-        PDM_PART_RENUM_FACE_NONE = 2
+        PDM_PART_RENUM_FACE_RANDOM        = 1
+        PDM_PART_RENUM_FACE_NONE          = 2
+        PDM_PART_RENUM_FACE_LEXICOGRAPHIC = 3
 
     ctypedef enum PDM_part_renum_cell_t: 
         PDM_PART_RENUM_CELL_HILBERT = 1
-        PDM_PART_RENUM_CELL_RANDOM = 2
-        PDM_PART_RENUM_CELL_NONE = 3
+        PDM_PART_RENUM_CELL_RANDOM  = 2
+        PDM_PART_RENUM_CELL_NONE    = 3
+        PDM_PART_RENUM_CELL_CUTHILL = 4
 
     # -> PPART bases functions
     # ------------------------------------------------------------------
     # MPI_Comm      comm,
     void PDM_part_create(int                  *ppartId,
-                      PDM_MPI_Comm             comm,
-                      PDM_part_split_t      split_method,
-                      PDM_part_renum_cell_t renum_cell_method,
-                      int                   nPart,
-                      int                   dNCell,
-                      int                   dNFace,
-                      int                   dNVtx,
-                      int                   nFaceGroup,
-                      int                  *dCellFaceIdx,
-                      PDM_g_num_t          *dCellFace,
-                      int                  *dCellTag,
-                      int                  *dCellWeight,
-                      int                   have_dCellPart,
-                      int                  *dCellPart,
-                      PDM_g_num_t          *dFaceCell,
-                      int                  *dFaceVtxIdx,
-                      PDM_g_num_t          *dFaceVtx,
-                      int                  *dFaceTag,
-                      double               *dVtxCoord,
-                      int                  *dVtxTag,
-                      int                  *dFaceGroupIdx,
-                      PDM_g_num_t          *dFaceGroup)
+                         PDM_MPI_Comm          comm,
+                         PDM_part_split_t      split_method,
+                         PDM_part_renum_cell_t renum_cell_method,
+                         PDM_part_renum_face_t renum_face_method,
+                         int                   nPart,
+                         int                   dNCell,
+                         int                   dNFace,
+                         int                   dNVtx,
+                         int                   nFaceGroup,
+                         int                  *dCellFaceIdx,
+                         PDM_g_num_t          *dCellFace,
+                         int                  *dCellTag,
+                         int                  *dCellWeight,
+                         int                   have_dCellPart,
+                         int                  *dCellPart,
+                         PDM_g_num_t          *dFaceCell,
+                         int                  *dFaceVtxIdx,
+                         PDM_g_num_t          *dFaceVtx,
+                         int                  *dFaceTag,
+                         double               *dVtxCoord,
+                         int                  *dVtxTag,
+                         int                  *dFaceGroupIdx,
+                         PDM_g_num_t          *dFaceGroup)
 
     # ------------------------------------------------------------------
     void PDM_part_part_dim_get(int    ppartId,
-                            int    ipart,
-                            int   *nCell,
-                            int   *nFace,
-                            int   *nFacePartBound,
-                            int   *nVtx,
-                            int   *nProc,
-                            int   *nTPart,
-                            int   *sCellFace,
-                            int   *sFaceVtx,
-                            int   *sFaceGroup)
+                               int    ipart,
+                               int   *nCell,
+                               int   *nFace,
+                               int   *nFacePartBound,
+                               int   *nVtx,
+                               int   *nProc,
+                               int   *nTPart,
+                               int   *sCellFace,
+                               int   *sFaceVtx,
+                               int   *sFaceGroup)
 
     # ------------------------------------------------------------------
     void PDM_part_part_val_get(int            ppartId,
-                            int            ipart,
-                            int          **cellTag,
-                            int          **cellFaceIdx,
-                            int          **cellFace,
-                            PDM_g_num_t **cellLNToGN,
-                            int          **faceTag,
-                            int          **faceCell,
-                            int          **faceVtxIdx,
-                            int          **faceVtx,
-                            PDM_g_num_t **faceLNToGN,
-                            int          **facePartBoundProcIdx,
-                            int          **facePartBoundPartIdx,
-                            int          **facePartBound,
-                            int          **vtxTag,
-                            double       **vtx,
-                            PDM_g_num_t **vtxLNToGN,
-                            int          **faceGroupIdx,
-                            int          **faceGroup,
-                            PDM_g_num_t **faceGroupLNToGN)
+                               int            ipart,
+                               int          **cellTag,
+                               int          **cellFaceIdx,
+                               int          **cellFace,
+                               PDM_g_num_t **cellLNToGN,
+                               int          **faceTag,
+                               int          **faceCell,
+                               int          **faceVtxIdx,
+                               int          **faceVtx,
+                               PDM_g_num_t **faceLNToGN,
+                               int          **facePartBoundProcIdx,
+                               int          **facePartBoundPartIdx,
+                               int          **facePartBound,
+                               int          **vtxTag,
+                               double       **vtx,
+                               PDM_g_num_t **vtxLNToGN,
+                               int          **faceGroupIdx,
+                               int          **faceGroup,
+                               PDM_g_num_t **faceGroupLNToGN)
 
     # ------------------------------------------------------------------
     void PDM_part_free(int ppartId)
 
     # ------------------------------------------------------------------
     void PDM_part_time_get(int ppartId,
-                        double  **elapsed,
-                        double  **cpu,
-                        double  **cpu_user,
-                        double  **cpu_sys)
+                           double  **elapsed,
+                           double  **cpu,
+                           double  **cpu_user,
+                           double  **cpu_sys)
 
     # ------------------------------------------------------------------
     void PDM_part_stat_get(int       ppartId,
-                        int      *cells_average,
-                        int      *cells_median,
-                        double   *cells_std_deviation,
-                        int      *cells_min,
-                        int      *cells_max,
-                        int      *bound_part_faces_average,
-                        int      *bound_part_faces_median,
-                        double   *bound_part_faces_std_deviation,
-                        int      *bound_part_faces_min,
-                        int      *bound_part_faces_max,
-                        int      *bound_part_faces_sum)
+                           int      *cells_average,
+                           int      *cells_median,
+                           double   *cells_std_deviation,
+                           int      *cells_min,
+                           int      *cells_max,
+                           int      *bound_part_faces_average,
+                           int      *bound_part_faces_median,
+                           double   *bound_part_faces_std_deviation,
+                           int      *bound_part_faces_min,
+                           int      *bound_part_faces_max,
+                           int      *bound_part_faces_sum)
 
 # ------------------------------------------------------------------
 
@@ -121,25 +124,26 @@ cdef class Part:
                  MPI.Comm comm,
                  PDM_part_split_t split_method,
                  PDM_part_renum_cell_t renum_cell_method,
+                 PDM_part_renum_face_t renum_face_method,
                  int nPart,
                  int dNCell,
                  int dNFace,
                  int dNVtx,
                  int have_dCellPart,
                  int nFaceGroup,
-                 NPY.ndarray[NPY.int32_t ,    mode='c', ndim=1] dCellFaceIdx,
-                 NPY.ndarray[npy_pdm_gnum_t , mode='c', ndim=1] dCellFace,
-                 NPY.ndarray[NPY.int32_t ,    mode='c', ndim=1] dCellTag,
-                 NPY.ndarray[NPY.int32_t ,    mode='c', ndim=1] dCellWeight,
-                 NPY.ndarray[NPY.int32_t ,    mode='c', ndim=1] dCellPart,
-                 NPY.ndarray[npy_pdm_gnum_t , mode='c', ndim=1] dFaceCell,
-                 NPY.ndarray[NPY.int32_t ,    mode='c', ndim=1] dFaceVtxIdx not None,
-                 NPY.ndarray[npy_pdm_gnum_t , mode='c', ndim=1] dFaceVtx not None,
-                 NPY.ndarray[NPY.int32_t ,    mode='c', ndim=1] dFaceTag,
-                 NPY.ndarray[NPY.double_t,    mode='c', ndim=1] dVtxCoord not None,
-                 NPY.ndarray[NPY.int32_t ,    mode='c', ndim=1] dVtxTag,
-                 NPY.ndarray[NPY.int32_t ,    mode='c', ndim=1] dFaceGroupIdx,
-                 NPY.ndarray[npy_pdm_gnum_t , mode='c', ndim=1] dFaceGroupFace
+                 NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] dCellFaceIdx,
+                 NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] dCellFace,
+                 NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] dCellTag,
+                 NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] dCellWeight,
+                 NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] dCellPart,
+                 NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] dFaceCell,
+                 NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] dFaceVtxIdx not None,
+                 NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] dFaceVtx    not None,
+                 NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] dFaceTag,
+                 NPY.ndarray[NPY.double_t  , mode='c', ndim=1] dVtxCoord   not None,
+                 NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] dVtxTag,
+                 NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] dFaceGroupIdx,
+                 NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] dFaceGroupFace
                  ):
 
         """
@@ -250,6 +254,7 @@ cdef class Part:
                         PDM_MPI_mpi_2_pdm_mpi_comm (<void *> &c_comm),
                         split_method,
                         renum_cell_method,
+                        renum_face_method,
                         nPart,
                         dNCell,
                         dNFace,
@@ -263,7 +268,7 @@ cdef class Part:
                         dCellPart_data,
                         dFaceCell_data,
                         <int *>          dFaceVtxIdx.data,
-                        <PDM_g_num_t *> dFaceVtx.data,
+                        <PDM_g_num_t *>  dFaceVtx.data,
                         dFaceTag_data,
                         <double *>       dVtxCoord.data,
                         dVtxTag_data,
@@ -285,7 +290,8 @@ cdef class Part:
         """
            Get partition dimensions
         """
-
+        # ************************************************************************
+        # > Declaration
         cdef int nCell
         cdef int nProc
         cdef int nTPart
@@ -295,79 +301,82 @@ cdef class Part:
         cdef int sCellFace
         cdef int sFaceVertex
         cdef int sFaceGroup
+        # ************************************************************************
 
         PDM_part_part_dim_get(self.id,
-                           ipart,
-                           &nCell,
-                           &nFace,
-                           &nFacePartBound,
-                           &nVertex,
-                           &nProc,
-                           &nTPart,
-                           &sCellFace,
-                           &sFaceVertex,
-                           &sFaceGroup)
+                              ipart,
+                              &nCell,
+                              &nFace,
+                              &nFacePartBound,
+                              &nVertex,
+                              &nProc,
+                              &nTPart,
+                              &sCellFace,
+                              &sFaceVertex,
+                              &sFaceGroup)
 
-        return {'nCell':nCell,
-                'ipart':ipart,
-                'nFace':nFace,
-                'nTPart':nTPart,
-                'nProc':nProc,
-                'nFacePartBound':nFacePartBound,
-                'nVertex':nVertex,
-                'sCellFace':sCellFace,
-                'sFaceVertex':sFaceVertex,
-                'sFaceGroup':sFaceGroup}
+        return {'nCell'          :nCell,
+                'ipart'          :ipart,
+                'nFace'          :nFace,
+                'nTPart'         :nTPart,
+                'nProc'          :nProc,
+                'nFacePartBound' :nFacePartBound,
+                'nVertex'        :nVertex,
+                'sCellFace'      :sCellFace,
+                'sFaceVertex'    :sFaceVertex,
+                'sFaceGroup'     :sFaceGroup}
 
     # ------------------------------------------------------------------
     def part_val_get(self, int ipart):
         """
            Get partition dimensions
         """
-
+        # ************************************************************************
+        # > Declaration
         cdef int          *cellTag,
         cdef int          *cellFaceIdx,
         cdef int          *cellFace,
-        cdef PDM_g_num_t *cellLNToGN,
+        cdef PDM_g_num_t  *cellLNToGN,
         cdef int          *faceTag,
         cdef int          *faceCell,
         cdef int          *faceVertexIdx,
         cdef int          *faceVertex,
-        cdef PDM_g_num_t *faceLNToGN,
+        cdef PDM_g_num_t  *faceLNToGN,
         cdef int          *facePartBound,
         cdef int          *facePartBoundProcIdx,
         cdef int          *facePartBoundPartIdx,
         cdef int          *vertexTag,
         cdef double       *vertex,
-        cdef PDM_g_num_t *vertexLNToGN,
+        cdef PDM_g_num_t  *vertexLNToGN,
         cdef int          *faceGroupIdx,
         cdef int          *faceGroup,
-        cdef PDM_g_num_t *faceGroupLNToGN
+        cdef PDM_g_num_t  *faceGroupLNToGN
+        # ************************************************************************
 
         # dims = self.part_dim_get(self.id, ipart)
         dims = self.part_dim_get(ipart)
 
         # -> Call PPART to get info
         PDM_part_part_val_get(self.id,
-                           ipart,
-                           &cellTag,
-                           &cellFaceIdx,
-                           &cellFace,
-                           &cellLNToGN,
-                           &faceTag,
-                           &faceCell,
-                           &faceVertexIdx,
-                           &faceVertex,
-                           &faceLNToGN,
-                           &facePartBoundProcIdx,
-                           &facePartBoundPartIdx,
-                           &facePartBound,
-                           &vertexTag,
-                           &vertex,
-                           &vertexLNToGN,
-                           &faceGroupIdx,
-                           &faceGroup,
-                           &faceGroupLNToGN)
+                              ipart,
+                              &cellTag,
+                              &cellFaceIdx,
+                              &cellFace,
+                              &cellLNToGN,
+                              &faceTag,
+                              &faceCell,
+                              &faceVertexIdx,
+                              &faceVertex,
+                              &faceLNToGN,
+                              &facePartBoundProcIdx,
+                              &facePartBoundPartIdx,
+                              &facePartBound,
+                              &vertexTag,
+                              &vertex,
+                              &vertexLNToGN,
+                              &faceGroupIdx,
+                              &faceGroup,
+                              &faceGroupLNToGN)
         # -> Begin
         cdef NPY.npy_intp dim
 
@@ -577,32 +586,35 @@ cdef class Part:
         """
         Get times
         """
+        # ************************************************************************
+        # > Declaration
         cdef double *elapsed
         cdef double *cpu
         cdef double *cpu_user
         cdef double *cpu_sys
+        # ************************************************************************
 
         PDM_part_time_get(self.id, &elapsed, &cpu, &cpu_user, &cpu_sys)
 
-        d_elapsed={'total'              : elapsed[0],
-                   'building graph'     : elapsed[1],
-                   'splitting graph'    : elapsed[2],
-                   'building partitions': elapsed[3]}
+        d_elapsed = {'total'              : elapsed[0],
+                     'building graph'     : elapsed[1],
+                     'splitting graph'    : elapsed[2],
+                     'building partitions': elapsed[3]}
 
-        d_cpu     ={'total'             : cpu[0],
-                   'building graph'     : cpu[1],
-                   'splitting graph'    : cpu[2],
-                   'building partitions': cpu[3]}
+        d_cpu     = {'total'              : cpu[0],
+                     'building graph'     : cpu[1],
+                     'splitting graph'    : cpu[2],
+                     'building partitions': cpu[3]}
 
-        d_cpu_user={'total'             : cpu_user[0],
-                   'building graph'     : cpu_user[1],
-                   'splitting graph'    : cpu_user[2],
-                   'building partitions': cpu_user[3]}
+        d_cpu_user = {'total'              : cpu_user[0],
+                      'building graph'     : cpu_user[1],
+                      'splitting graph'    : cpu_user[2],
+                      'building partitions': cpu_user[3]}
 
-        d_cpu_sys ={'total'             : cpu_sys[0],
-                   'building graph'     : cpu_sys[1],
-                   'splitting graph'    : cpu_sys[2],
-                   'building partitions': cpu_sys[3]}
+        d_cpu_sys = {'total'              : cpu_sys[0],
+                     'building graph'     : cpu_sys[1],
+                     'splitting graph'    : cpu_sys[2],
+                     'building partitions': cpu_sys[3]}
 
         return {'elapsed' : d_elapsed, 'cpu' : d_cpu, 'cpu_user' : d_cpu_user,  'cpu_sys' : d_cpu_sys}
 
@@ -612,7 +624,8 @@ cdef class Part:
         """
         Get statistics
         """
-
+        # ************************************************************************
+        # > Declaration
         cdef int      cells_average,
         cdef int      cells_median,
         cdef double   cells_std_deviation,
@@ -624,19 +637,20 @@ cdef class Part:
         cdef int      bound_part_faces_min,
         cdef int      bound_part_faces_max,
         cdef int      bound_part_faces_sum
+        # ************************************************************************
 
         PDM_part_stat_get(self.id,
-                       &cells_average,
-                       &cells_median,
-                       &cells_std_deviation,
-                       &cells_min,
-                       &cells_max,
-                       &bound_part_faces_average,
-                       &bound_part_faces_median,
-                       &bound_part_faces_std_deviation,
-                       &bound_part_faces_min,
-                       &bound_part_faces_max,
-                       &bound_part_faces_sum)
+                          &cells_average,
+                          &cells_median,
+                          &cells_std_deviation,
+                          &cells_min,
+                          &cells_max,
+                          &bound_part_faces_average,
+                          &bound_part_faces_median,
+                          &bound_part_faces_std_deviation,
+                          &bound_part_faces_min,
+                          &bound_part_faces_max,
+                          &bound_part_faces_sum)
 
         return {'cells_average'                  : cells_average,
                 'cells_median'                   : cells_median,
