@@ -1683,7 +1683,7 @@ PDM_writer_geom_t *geom
 
       /* Calcul des centres faces */
 
-      //TODO : A finir
+      //TODO : Supprimer le decoupage en tetra
 
       /* const int n_face_elem = _bloc_poly3d->_cellfac_idx[i+1] - _bloc_poly3d->_cellfac_idx[i]; */
 
