@@ -274,16 +274,15 @@ _dual_graph_firstrank
  * \brief Compute Bandwidth of a graph 
  *
  * \param [in,out]  node_num            The number of nodes.
- * \param [in,out]  adj_num[NODE_NUM+1] The number of adjacency entries
  * \param [in,out]  adj_row[ADJ_NUM]    Information about row I is stored in entries ADJ_ROW(I) through ADJ_ROW(I+1)-1 of ADJ
  * \param [in,out]  adj                 The adjacency structure. For each row, it contains the column indices of the nonzero entries.
  * \param [out]     ADJ_BANDWIDTH,      The bandwidth of the adjacency matrix.
  */
-int 
-adj_bandwidth
+
+static int 
+_adj_bandwidth
 ( 
 int node_num, 
-int adj_num, 
 int adj_row[], 
 int adj[] 
 )
@@ -292,7 +291,7 @@ int adj[]
   int band_lo;
   int i,j,col;
   int value;
-
+  
   band_lo = 0;
   band_hi = 0;
 
@@ -318,18 +317,16 @@ int adj[]
  *
  */
 
-void 
-level_set 
+static void 
+_level_set 
 ( 
 int  root, 
-int  adj_num, 
 int  adj_row[], 
 int  adj[], 
 int  mask[],
 int *level_num, 
 int  level_row[], 
-int  level[], 
-int  node_num 
+int  level[] 
 )
 {
   int i;
@@ -407,18 +404,17 @@ int  node_num
  * \brief ROOT_FIND finds a pseudo-peripheral node.
  *
  */
-void 
-root_find
+
+static void 
+_root_find
 ( 
 int *root,
-int adj_num,
 int adj_row[],
 int adj[],
 int mask[],
 int *level_num,
 int level_row[],
-int level[],
-int node_num 
+int level[]
 )
 {
   int iccsze;
@@ -435,8 +431,8 @@ int node_num
  
   /** Determine the level structure rooted at ROOT. **/
  
-  level_set ( *root, adj_num, adj_row, adj, mask, level_num,
-              level_row, level, node_num );
+  _level_set ( *root, adj_row, adj, mask, level_num,
+              level_row, level);
 
     /** Count the number of nodes in this level structure. **/
   iccsze = level_row[*level_num] - 1;
@@ -497,8 +493,8 @@ int node_num
  
    /** Generate the rooted level structure associated with this node. **/
  
-    level_set( *root, adj_num, adj_row, adj, mask, &level_num2,
-                level_row, level, node_num );
+   _level_set( *root, adj_row, adj, mask, &level_num2,
+                level_row, level);
 
    /** If the number of levels did not increase, accept the new ROOT. **/
 
@@ -529,8 +525,9 @@ int node_num
    \param [in,out] int A(N), the array to be reversed.
  *
  */
-void 
-i4vec_reverse
+
+static void 
+_i4vec_reverse
 ( 
 int n, 
 int a[] 
@@ -554,18 +551,17 @@ int a[]
  * \brief TODOUX
  *
  */
-void 
-degree 
+
+static void 
+_degree 
 ( 
 int root, 
-int adj_num, 
 int adj_row[], 
 int adj[], 
 int mask[],
 int deg[], 
 int *iccsze, 
-int ls[], 
-int node_num 
+int ls[] 
 )
 {
   int i;
@@ -656,11 +652,11 @@ int node_num
  * \param [in,out]  adj                 The adjacency structure. For each row, it contains the column indices of the nonzero entries.
  * \param [out]     perm                The RCM ordering
  */
-void
-rcm 
+
+static void
+_rcm 
 ( 
 int root, 
-int adj_num, 
 int adj_row[], 
 int adj[], 
 int mask[],
@@ -710,7 +706,7 @@ int node_num
 
   /** Find the degrees of the nodes in the component specified by MASK and ROOT. **/
 
-  degree ( root, adj_num, adj_row, adj, mask, deg, iccsze, perm, node_num );
+  _degree ( root, adj_row, adj, mask, deg, iccsze, perm);
 
   /** If the connected component size is less than 1, something is wrong. **/
 
@@ -807,11 +803,13 @@ int node_num
       }
     }
   }
- /* 
+ 
+  /* 
   *   We now have the Cuthill-McKee ordering.  
   *   Reverse it to get the Reverse Cuthill-McKee ordering.
   */
-  i4vec_reverse ( *iccsze, perm );
+
+  _i4vec_reverse ( *iccsze, perm );
 
   /**  Free memory. **/
   free(deg);// delete [] deg;
@@ -830,11 +828,11 @@ int node_num
  * \param [in,out]  adj                 The adjacency structure. For each row, it contains the column indices of the nonzero entries.
  * \param [out]     perm                The RCM ordering
  */
-void 
+
+static void 
 _genrcm 
 ( 
 int node_num, 
-int adj_num, 
 int adj_row[], 
 int adj[], 
 int perm[] 
@@ -869,13 +867,13 @@ int perm[]
        *  Find a pseudo-peripheral node ROOT.  The level structure found by
        *   ROOT_FIND is stored starting at PERM(NUM).
        */
-      root_find(&root, adj_num, adj_row, adj, mask, &level_num,
-                level_row, perm+num-1, node_num );
+      _root_find(&root, adj_row, adj, mask, &level_num,
+                level_row, perm+num-1);
       
       /*
        *   RCM orders the component using ROOT as the starting node.
        */
-      rcm(root, adj_num, adj_row, adj, mask, perm+num-1, &iccsze, node_num );
+      _rcm(root, adj_row, adj, mask, perm+num-1, &iccsze, node_num );
 
       num = num + iccsze;
 
@@ -907,8 +905,9 @@ int perm[]
  *
  * \param [in]  part ppart structure
  */
+
 int 
-PDM_checkbandwidth
+PDM_cuthill_checkbandwidth
 (
  _part_t           *ppart
 )
@@ -930,7 +929,7 @@ PDM_checkbandwidth
     dualGraph[i] = dualGraph[i]+1;
   } 
 
-  int dualBandWidth = adj_bandwidth(ppart->nCell, dualGraphIdx[ppart->nCell], dualGraphIdx, dualGraph);
+  int dualBandWidth = _adj_bandwidth(dualGraphIdx[ppart->nCell], dualGraphIdx, dualGraph);
 
   /** Free memory **/
   free(dualGraphIdx);
@@ -945,8 +944,9 @@ PDM_checkbandwidth
  *
  * \param [in]  part ppart structure
  */
+
 void 
-PDM_generate_cuthill
+PDM_cuthill_generate
 (
  _part_t           *ppart,
  int               *perm
@@ -972,7 +972,7 @@ PDM_generate_cuthill
   }
 
   /** Apply rcm to current Graph **/
-  _genrcm(ppart->nCell, dualGraphIdx[ppart->nCell], dualGraphIdx, dualGraph, perm);
+  _genrcm(dualGraphIdx[ppart->nCell], dualGraphIdx, dualGraph, perm);
 
   /** Offset Permutation array **/
   for (int i = 0; i < ppart->nCell; i++)

@@ -1528,16 +1528,16 @@ const PDM_data_t         tData,
     unsigned char *sendPtr = (unsigned char *) graph_bound->sendBuffer;
     sendPtr +=  graph_bound->sendEltIdx[iProc] * sizeExchType * nComp;
 
-    int sendCount =
+    int sendCount = (int) (
       (graph_bound->sendEltIdx[iProc+1] - graph_bound->sendEltIdx[iProc])
-      * sizeExchType * nComp;
+      * (int) sizeExchType * nComp);
 
     unsigned char *recvPtr = (unsigned char *) graph_bound->recvBuffer;
     recvPtr += graph_bound->ghostEltIdx[iProc] * sizeExchType * nComp;
     
-    int recvCount =
+    int recvCount = (int) (
       (graph_bound->ghostEltIdx[iProc+1] - graph_bound->ghostEltIdx[iProc])
-      * sizeExchType * nComp;
+      * (int) sizeExchType * nComp);
 
     PDM_MPI_Irecv((void *) recvPtr,
               recvCount,
@@ -1568,10 +1568,10 @@ const PDM_data_t         tData,
   
   int sendLocCount =
     (graph_bound->sendEltIdx[myRank+1] - graph_bound->sendEltIdx[myRank])
-    * sizeExchType * nComp;
+    * (int) sizeExchType * nComp;
   int recvLocCount =
     (graph_bound->ghostEltIdx[myRank+1] - graph_bound->ghostEltIdx[myRank])
-    * sizeExchType * nComp;
+    * (int) sizeExchType * nComp;
 
   assert (sendLocCount == recvLocCount); 
   

@@ -31,6 +31,7 @@
 #include "pdm_hilbert.h"
 #include "pdm_geom_elem.h"
 #include "pdm_sort.h"
+#include "pdm_cuthill.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -158,7 +159,7 @@ int          order[]
 
   }
 
-  order[level] = i_save;
+  order[level] = (int) i_save;
 }
 
 /** 
@@ -188,7 +189,7 @@ const size_t nb_ent
   /* Initialize ordering array */
 
   for (i = 0 ; i < nb_ent ; i++)
-    order[i] = i;
+    order[i] = (int) i;
 
   if (nb_ent < 2)
     return;
@@ -752,7 +753,6 @@ _renum_cells_cuthill
 _PDM_part_t* ppart
 )
 {
-  int dualBandWidth;
 
   /** Loop over all part of the current process **/
   for(int ipart = 0; ipart < ppart->nPart; ++ipart) 
@@ -769,7 +769,7 @@ _PDM_part_t* ppart
     // printf("Bandwidth of graph before reordering : %d \n", dualBandWidth);
 
     /** Compute reordering **/
-    PDM_generate_cuthill(part, order);
+    PDM_cuthill_generate(part, order);
   
     /** Apply renumbering **/
     _renum_cells(part, order);

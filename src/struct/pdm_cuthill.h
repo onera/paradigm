@@ -55,7 +55,7 @@ typedef enum {
  *---------------------------------------------------------------------------*/
 
 void 
-PDM_generate_cuthill
+PDM_cuthill_generate
 (
  _part_t           *ppart,
  int               *perm
@@ -68,7 +68,7 @@ PDM_generate_cuthill
  *   part       --> Mesh Partition 
  *---------------------------------------------------------------------------*/
 int 
-PDM_checkbandwidth
+PDM_cuthill_checkbandwidth
 (
  _part_t           *ppart
 );

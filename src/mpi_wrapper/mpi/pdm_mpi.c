@@ -1094,16 +1094,18 @@ int PDM_MPI_File_get_view(PDM_MPI_File fh, PDM_MPI_Offset *disp,
 
   MPI_Datatype mpi_etype;
   MPI_Datatype mpi_filetype;
+  MPI_Offset _disp = (MPI_Offset) *disp;
 
   int code = MPI_File_get_view(_pdm_mpi_2_mpi_file(fh), 
-                               (MPI_Offset *) disp, 
+                               &_disp, 
                                &mpi_etype,
                                &mpi_filetype,
                                datarep);
 
   *etype    = _mpi_2_pdm_mpi_datatype(mpi_etype);
   *filetype = _mpi_2_pdm_mpi_datatype(mpi_filetype);
-
+  *disp     = (PDM_MPI_Offset) _disp;
+  
   return _mpi_2_pdm_mpi_err(code);
 }
 
@@ -1518,13 +1520,20 @@ int PDM_MPI_Type_create_hindexed (int count,
                               PDM_MPI_Datatype *newtype)
 {
   MPI_Datatype mpi_newtype;
+  MPI_Aint *_array_of_displacements = malloc (sizeof(MPI_Aint) * count);
+  
+  for (int i = 0; i < count; i++) {
+    _array_of_displacements[i] = array_of_displacements[i];
+  }
+  
   int code = MPI_Type_create_hindexed(count, 
                                array_of_blocklengths,
-                               (const MPI_Aint *) array_of_displacements,
+                               _array_of_displacements,
                                _pdm_mpi_2_mpi_datatype(oldtype), 
                                &mpi_newtype);
 
   *newtype = _mpi_2_pdm_mpi_datatype(mpi_newtype);
+  free (_array_of_displacements);
   return _mpi_2_pdm_mpi_err(code);
 
 }

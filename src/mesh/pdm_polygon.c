@@ -308,7 +308,7 @@ PDM_polygon_parameterize
   
   if ( ((*l10)= PDM_DOT_PRODUCT(p10,p10)) == 0.0
     || ((*l20)= PDM_DOT_PRODUCT(p20,p20)) == 0.0 ) {
-    return 0;
+    return PDM_FALSE;
   }
 
   /* 
