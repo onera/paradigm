@@ -541,7 +541,7 @@ double             *newVtx
 
 	for (int i = 0; i < nRank; i++) {
 		for (int k = requestedVtxIdx[i]; k < requestedVtxIdx[i+1]; k += nData) {
-			sVtxInfoIdx[i+1] += nDataVtx * sizeof(int) + 3 * sizeof(double);
+			sVtxInfoIdx[i+1] += nDataVtx * (int) sizeof(int) + 3 * (int) sizeof(double);
 		}
 	} 
 
@@ -965,9 +965,10 @@ PDM_part_geom
   /** Remplissage de cellParts -> en fct des codes Hilbert **/
   
   for(int i = 0; i < dNCell; ++i) {
-    dCellPart [i] = PDM_hilbert_quantile_search(nTPart, 
+    size_t quantile = PDM_hilbert_quantile_search(nTPart, 
                                                 hilbertCodes[i], 
                                                 hilbertCodesIdx);
+    dCellPart [i] = (int) quantile;
  
   }  
     

@@ -575,7 +575,7 @@ PDM_part_to_block_exch
 (
  PDM_part_to_block_t *ptb,
  size_t              s_data,
- PDM_writer_part_stride_t    t_stride,
+ PDM_stride_t       t_stride,
  int                 cst_stride,
  int               **part_stride,
  void              **part_data,
