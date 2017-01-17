@@ -163,7 +163,11 @@ _ecr_string(PDM_writer_t           *cs,
                             1,
                             PDM_IO_T_CHAR,
                             "%c");
-    PDM_io_ecriture_globale(f_unit_geom, sizeof(char), strlen(buf), buf);
+    size_t s_buf =  strlen(buf);
+    PDM_io_ecriture_globale(f_unit_geom, 
+                            (PDM_l_num_t) sizeof(char), 
+                            (PDM_l_num_t) s_buf, 
+                            buf);
   }
 
   else if (cs->fmt_fic == PDM_WRITER_FMT_BIN) {

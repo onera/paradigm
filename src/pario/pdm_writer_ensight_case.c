@@ -151,13 +151,11 @@ _add_var(PDM_writer_ensight_case_t       *const this_case,
          const PDM_writer_var_loc_t             location)
 {
   char line[1024], description[50];
-  int i, l;
-  int prefix_len;
-  int base_len;
+  int i;
 
   PDM_writer_ensight_case_var_t  *var;
 
-  l = strlen(name);
+  size_t l = strlen(name);
 
   this_case->n_vars += 1;
   var = (PDM_writer_ensight_case_var_t *) malloc (sizeof(PDM_writer_ensight_case_var_t));
@@ -266,9 +264,10 @@ _add_var(PDM_writer_ensight_case_t       *const this_case,
 
   /* Create (current) file name. */
 
-  prefix_len =   strlen(this_case->file_name_prefix)
+  size_t prefix_len =   strlen(this_case->file_name_prefix)
                - this_case->dir_name_length + 1;
-  base_len = strlen(name);
+  
+  size_t base_len = strlen(name);
 
   var->file_name_base = (char *) malloc (
              (  this_case->dir_name_length + prefix_len
@@ -276,10 +275,10 @@ _add_var(PDM_writer_ensight_case_t       *const this_case,
   sprintf(var->file_name_base, "%s.", this_case->file_name_prefix);
 
   strcat(var->file_name_base, name);
-  for (i = this_case->dir_name_length + prefix_len ;
-       i < this_case->dir_name_length + prefix_len + base_len ;
-       i++) {
-    switch (var->file_name_base[i]) {
+  for (size_t i1 = this_case->dir_name_length + prefix_len ;
+       i1 < this_case->dir_name_length + prefix_len + base_len ;
+       i1++) {
+    switch (var->file_name_base[i1]) {
     case '@':
     case ' ':
     case '\t':
@@ -289,9 +288,9 @@ _add_var(PDM_writer_ensight_case_t       *const this_case,
     case '^':
     case '$':
     case '/':
-      var->file_name_base[i] = '_';
+      var->file_name_base[i1] = '_';
     default:
-      var->file_name_base[i] = (char) tolower(var->file_name_base[i]);
+      var->file_name_base[i1] = (char) tolower(var->file_name_base[i1]);
     }
   }
 
@@ -383,7 +382,7 @@ const char                   *const dir_prefix,
 const PDM_writer_topologie_t                time_dependency
 )
 {
-  int  i, name_len, prefix_len;
+  size_t  i, name_len, prefix_len;
 
   PDM_writer_ensight_case_t   *this_case = NULL;
 
@@ -408,7 +407,7 @@ const PDM_writer_topologie_t                time_dependency
   else
     prefix_len = 0;
 
-  this_case->dir_name_length = prefix_len;
+  this_case->dir_name_length = (int) prefix_len;
 
   this_case->case_file_name = (char *) malloc((prefix_len + name_len + 6) * sizeof(char));
   if (dir_prefix != NULL) {

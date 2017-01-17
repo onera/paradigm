@@ -1846,7 +1846,7 @@ _distrib_vtx
 
     for (int i = 0; i < nRank; i++) {
       for (int k = requestedVtxIdx[i]; k < requestedVtxIdx[i+1]; k += nData) {
-        sVtxInfoIdx[i+1] += nDataVtx * sizeof(int) + 3 * sizeof(double);
+        sVtxInfoIdx[i+1] += nDataVtx * (int) sizeof(int) + 3 * (int) sizeof(double);
       }
     } 
 
@@ -3308,9 +3308,9 @@ PROCF (pdm_part_create, PDM_PART_CREATE)
 
   PDM_part_create(ppartId,
                   c_comm,
-                  *split_method,
-                  *renum_cell_method,
-                  *renum_face_method,
+                  (PDM_part_split_t) *split_method,
+                  (PDM_part_renum_cell_t) *renum_cell_method,
+                  (PDM_part_renum_face_t) *renum_face_method,
                   *nPart,
                   *dNCell,
                   *dNFace,
