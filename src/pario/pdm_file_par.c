@@ -179,6 +179,8 @@ PDM_file_par_lecture_globale
   PDM_MPI_Aint disps[1];
   int lengths[1];
 
+  int _taille_donnee = (int) taille_donnee;
+
   /* Lecture */
 
   switch(PDM_file_par->acces) {
@@ -187,7 +189,7 @@ PDM_file_par_lecture_globale
     errcode = PDM_MPI_File_read_at_all(PDM_file_par->fichier,
                                    PDM_file_par->offset,
                                    donnees,
-                                   taille_donnee * n_donnees,
+                                   _taille_donnee * n_donnees,
                                    PDM_MPI_BYTE,
                                    &n_octet_lus);
 /*     PDM_MPI_Get_count(&status, PDM_MPI_BYTE, &n_octet_lus); */
@@ -195,7 +197,7 @@ PDM_file_par_lecture_globale
     break;
 
   case FICHIER_PAR_ACCES_IP :
-    lengths[0] = taille_donnee * n_donnees;
+    lengths[0] = (int) (_taille_donnee * n_donnees);
     disps[0] = 0;
     PDM_MPI_Type_create_hindexed(1, lengths, disps, PDM_MPI_BYTE, &fichier_type);
     PDM_MPI_Type_commit(&fichier_type);
@@ -206,7 +208,7 @@ PDM_file_par_lecture_globale
                       "native"); 
     errcode = PDM_MPI_File_read_all(PDM_file_par->fichier,
                                 donnees,
-                                taille_donnee * n_donnees,
+                                _taille_donnee * n_donnees,
                                 PDM_MPI_BYTE,
                                 &n_octet_lus);
 
@@ -232,8 +234,9 @@ PDM_file_par_lecture_globale
   /* Mise à jour de l'offset */
   
   PDM_file_par->offset += n_octet_lus;
+  int _n_donnees_lues = (int) n_donnees_lues;
   
-  return n_donnees_lues;
+  return _n_donnees_lues;
 }
 
 /*----------------------------------------------------------------------------
@@ -266,7 +269,8 @@ PDM_file_par_ecriture_globale
   PDM_MPI_Datatype fichier_type;
   PDM_MPI_Aint disps[1];
   int lengths[1];
-
+  int _taille_donnee = (int) taille_donnee;
+  
   switch(PDM_file_par->acces) {
 
   case FICHIER_PAR_ACCES_EO :
@@ -274,7 +278,7 @@ PDM_file_par_ecriture_globale
       sorties[0] = PDM_MPI_File_write_at(PDM_file_par->fichier,
                                      PDM_file_par->offset,
                                      donnees,
-                                     taille_donnee * n_donnees,
+                                     _taille_donnee * n_donnees,
                                      PDM_MPI_BYTE,
                                      &(sorties[1]) );
 /*       PDM_MPI_Get_count(&status, PDM_MPI_BYTE, &(sorties[1])); */
@@ -283,7 +287,7 @@ PDM_file_par_ecriture_globale
     break;
 
   case FICHIER_PAR_ACCES_IP :
-    lengths[0] = taille_donnee * n_donnees;
+    lengths[0] = _taille_donnee * n_donnees;
     disps[0] = 0;
     PDM_MPI_Type_create_hindexed(1, lengths, disps, PDM_MPI_BYTE, &fichier_type);
     PDM_MPI_Type_commit(&fichier_type);
@@ -295,7 +299,7 @@ PDM_file_par_ecriture_globale
     if (PDM_file_par->rang == 0) {
       sorties[0] = PDM_MPI_File_write(PDM_file_par->fichier,
                                   donnees,
-                                  taille_donnee * n_donnees,
+                                  _taille_donnee * n_donnees,
                                   PDM_MPI_BYTE,
                                    &(sorties[1]));
 /*       PDM_MPI_Get_count(&status, PDM_MPI_BYTE, &(sorties[1])); */
@@ -316,12 +320,12 @@ PDM_file_par_ecriture_globale
   if (sorties[0] != PDM_MPI_SUCCESS)
     _pdm_mpi_io_error_message(PDM_file_par->nom, sorties[0]);
 
-  n_donnees_ecrites = sorties[1] / taille_donnee;
+  n_donnees_ecrites = sorties[1] / _taille_donnee;
 
   /* Mise à jour de l'offset */
 
   PDM_file_par->offset += sorties[1];
-  
+
   return n_donnees_ecrites;
 
 }
@@ -352,11 +356,12 @@ PDM_file_par_lecture_parallele
 {
   int n_donnees_lues = 0;
   int errcode = PDM_MPI_SUCCESS;
+  int _taille_donnee = (int) taille_donnee;
   
-  int n_octet = (int) (n_donnees_bloc * taille_donnee); /* Passage en int 
+  int n_octet = (int) (n_donnees_bloc * _taille_donnee); /* Passage en int 
                                                            pour appel MPI */
 
-  long debut_bloc_octet = debut_bloc * taille_donnee; 
+  long debut_bloc_octet = debut_bloc * _taille_donnee; 
 
   long n_octet_total = debut_bloc_octet + n_octet;
 
@@ -418,7 +423,7 @@ PDM_file_par_lecture_parallele
 
 /*   PDM_MPI_Get_count(&status, PDM_MPI_BYTE, &n_octet_lus); */
 
-  n_donnees_lues = n_octet_lus / taille_donnee;
+  n_donnees_lues = n_octet_lus / _taille_donnee;
 
   /* Mise à jour de l'offset */
 
@@ -459,10 +464,11 @@ PDM_file_par_ecriture_parallele
 {
   int  n_donnees_ecrites = 0;
   int errcode = PDM_MPI_SUCCESS;
+  int _taille_donnee = (int) taille_donnee;
 
-  int n_octet = (int) (n_donnees_bloc * taille_donnee); /* Passage en int 
+  int n_octet = (int) (n_donnees_bloc * _taille_donnee); /* Passage en int 
                                                            pour appel MPI */
-  long debut_bloc_octet = debut_bloc * taille_donnee; 
+  long debut_bloc_octet = debut_bloc * _taille_donnee; 
 
   long n_octet_total = debut_bloc_octet + n_octet;
 
@@ -524,7 +530,7 @@ PDM_file_par_ecriture_parallele
   
 /*   PDM_MPI_Get_count(&status, PDM_MPI_BYTE, &n_octet_ecrits); */
   
-  n_donnees_ecrites = n_octet_ecrits / taille_donnee;
+  n_donnees_ecrites = n_octet_ecrits / _taille_donnee;
   
   /* Mise à jour de l'offset */
 
