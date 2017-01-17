@@ -828,15 +828,16 @@ void PDM_io_open
                 " en mode sequentiel le format d'ecriture limite a 1 milliard de fichier\n");
         abort();
       }
-      int taille = strlen(nom) + ncharint + 1;
+
+      size_t l_nom = strlen(nom);
+      int taille = (int) l_nom + ncharint + 1;
       nouveau_fichier->nom = (char *) malloc(taille + 1);
       sprintf(format,"%cs.%c%1.1d.%1.1dd", '%','%', ncharint, ncharint);
       sprintf(nouveau_fichier->nom, format, nom, nouveau_fichier->rang+1);
     }
     else {
-      int l_nom = 0;
-      l_nom = strlen(nom);
-      nouveau_fichier->nom = (char *) malloc(l_nom + 1 + 2);
+      size_t l_nom = strlen(nom);
+      nouveau_fichier->nom = (char *) malloc((int) l_nom + 1 + 2);
       strcpy(nouveau_fichier->nom, nom);
       strcpy(nouveau_fichier->nom + strlen(nom), ".0");
     }
@@ -1143,6 +1144,7 @@ void PDM_io_ecriture_globale
     PDM_timer_resume(timer_fichier);
     
     /* Ecriture globale - ecriture native */
+
     
     if (fichier->fmt_t == PDM_IO_FMT_TXT) {
         
@@ -1161,7 +1163,10 @@ void PDM_io_ecriture_globale
           sprintf(s_tmp, fichier->fmt, *((int *) t_buffer));
           break;
         case PDM_IO_T_LONG :
+#pragma warning(push)
+#pragma warning(disable:2312)
           sprintf(s_tmp, fichier->fmt, *((long *) t_buffer));
+#pragma warning(pop)
           break;
         case PDM_IO_T_DOUBLE :
           sprintf(s_tmp, fichier->fmt, *((double *) t_buffer));
@@ -2661,7 +2666,10 @@ void PDM_io_ecr_par_entrelacee
                 sprintf(s_tmp, fichier->fmt, *((int *) t_buffer));
                 break;
               case PDM_IO_T_LONG :
+#pragma warning(push)
+#pragma warning(disable:2312)
                 sprintf(s_tmp, fichier->fmt, *((long *) t_buffer));
+#pragma warning(pop)
                 break;
               case PDM_IO_T_DOUBLE :
                 sprintf(s_tmp, fichier->fmt, *((double *) t_buffer));
@@ -2686,7 +2694,10 @@ void PDM_io_ecr_par_entrelacee
                 sprintf(s_tmp, fichier->fmt, *((int *) t_buffer));
                 break;
               case PDM_IO_T_LONG :
+#pragma warning(push)
+#pragma warning(disable:2312)
                 sprintf(s_tmp, fichier->fmt, *((long *) t_buffer));
+#pragma warning(pop)
                 break;
               case PDM_IO_T_DOUBLE :
                 sprintf(s_tmp, fichier->fmt, *((double *) t_buffer));
@@ -3206,7 +3217,10 @@ void PDM_io_ecr_par_entrelacee
                 sprintf(s_tmp, fichier->fmt, *((int *) t_buffer));
                 break;
               case PDM_IO_T_LONG :
+#pragma warning(push)
+#pragma warning(disable:2312)
                 sprintf(s_tmp, fichier->fmt, *((long *) t_buffer));
+#pragma warning(pop)
                 break;
               case PDM_IO_T_DOUBLE :
                 sprintf(s_tmp, fichier->fmt, *((double *) t_buffer));
@@ -3276,7 +3290,10 @@ void PDM_io_ecr_par_entrelacee
                 sprintf(s_tmp, fichier->fmt, *((int *) t_buffer));
                 break;
               case PDM_IO_T_LONG :
+#pragma warning(push)
+#pragma warning(disable:2312)
                 sprintf(s_tmp, fichier->fmt, *((long *) t_buffer));
+#pragma warning(pop)
                 break;
               case PDM_IO_T_DOUBLE :
                 sprintf(s_tmp, fichier->fmt, *((double *) t_buffer));
@@ -4524,7 +4541,8 @@ const char* path
   char *tmp_path = (char *) malloc((strlen(path) + 1)*sizeof(char));
   strcpy(tmp_path, path);
   int idx = 0;
-  int l_path = strlen(path);
+  size_t _l_path = strlen(path);
+  int l_path = (int) _l_path;
   int err = 0;
 
   if ((l_path > 1) && tmp_path[l_path-1] == '/')

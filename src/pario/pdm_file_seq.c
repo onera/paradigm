@@ -133,8 +133,9 @@ int PDM_file_seq_write(PDM_file_seq_t *fichier,
     exit(EXIT_FAILURE);
   }
 
-  int n_donnees_ecrites = (int) fwrite(donnees, taille_donnee, 
+  size_t _n_donnees_ecrites = fwrite(donnees, taille_donnee, 
                                        n_donnees, fichier->fichier);
+  int n_donnees_ecrites = (int) _n_donnees_ecrites;
   /* if (ferror (fichier->fichier)) */
   /*   printf ("Error Writing to myfile.txt\n"); */
 
@@ -170,8 +171,10 @@ int PDM_file_seq_read(PDM_file_seq_t *fichier,
     exit(EXIT_FAILURE);
   }
 
-  int n_donnees_lues = (int) fread(donnees, taille_donnee, 
+  size_t _n_donnees_lues = fread(donnees, taille_donnee, 
                                    n_donnees, fichier->fichier);
+  int n_donnees_lues = (int) _n_donnees_lues;
+  
   return n_donnees_lues;
 
 }
