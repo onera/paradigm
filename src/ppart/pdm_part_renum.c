@@ -83,7 +83,8 @@ const int nElt,
 {
   int *tmpArray = (int *) malloc (sizeof(int) * nElt);
   
-  srand(time(NULL));
+  time_t _seed = time(NULL);
+  srand(( unsigned int) _seed);
   for (int i = 0; i < nElt; i++) {
     tmpArray[i] = rand()%nElt;
     order[i] = i;

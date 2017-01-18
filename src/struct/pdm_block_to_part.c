@@ -283,7 +283,7 @@ PDM_block_to_part_exch
         n_sendBuffer[i] += sendStride[k];
       }
             
-      n_sendBuffer[i] *= s_data;
+      n_sendBuffer[i] *= (int) s_data;
             
       if (i > 0) {
         i_sendBuffer[i] = i_sendBuffer[i-1] + n_sendBuffer[i-1];
@@ -301,7 +301,7 @@ PDM_block_to_part_exch
         n_recvBuffer[i] += recvStride[k];
       }
             
-      n_recvBuffer[i] *= s_data;
+      n_recvBuffer[i] *= (int) s_data;
             
       if (i > 0) {
         i_recvBuffer[i] = i_recvBuffer[i-1] + n_recvBuffer[i-1];
@@ -332,9 +332,9 @@ PDM_block_to_part_exch
     
     int idx1 = 0;
     for (int i = 0; i < s_distributed_data; i++) {
-      int ind = sendStride_idx[_btp->distributed_data[i]] * s_data;
+      int ind = sendStride_idx[_btp->distributed_data[i]] * (int) s_data;
       int s_block_unit = (sendStride_idx[_btp->distributed_data[i+1]] 
-                        - sendStride_idx[_btp->distributed_data[i]]) * s_data;
+                        - sendStride_idx[_btp->distributed_data[i]]) * (int) s_data;
       unsigned char *_block_data_deb = _block_data + ind;  
       for (int k = 0; k < s_block_unit; k++) {
         sendBuffer[idx1++] = _block_data_deb[k];
@@ -345,15 +345,15 @@ PDM_block_to_part_exch
   else if (t_stride == PDM_STRIDE_CST) {
   
     int cst_stride = *block_stride;
-    int s_block_unit = cst_stride * s_data;
+    int s_block_unit = cst_stride * (int) s_data;
     
     for (int i = 0; i < _btp->s_comm; i++) {
       
-      i_sendBuffer[i] = _btp->distributed_data_idx[i] * cst_stride * s_data;
-      i_recvBuffer[i] = _btp->requested_data_idx[i] * cst_stride * s_data;
+      i_sendBuffer[i] = _btp->distributed_data_idx[i] * cst_stride * (int) s_data;
+      i_recvBuffer[i] = _btp->requested_data_idx[i] * cst_stride * (int) s_data;
 
-      n_sendBuffer[i] = _btp->distributed_data_n[i] * cst_stride * s_data;
-      n_recvBuffer[i] = _btp->requested_data_n[i] * cst_stride * s_data;
+      n_sendBuffer[i] = _btp->distributed_data_n[i] * cst_stride * (int) s_data;
+      n_recvBuffer[i] = _btp->requested_data_n[i] * cst_stride * (int) s_data;
  
     }
 
@@ -366,7 +366,7 @@ PDM_block_to_part_exch
     int idx1 = 0;
     for (int i = 0; i < s_distributed_data; i++) {
       int ind = _btp->distributed_data[i];
-      unsigned char *_block_data_deb = _block_data + ind * cst_stride * s_data;  
+      unsigned char *_block_data_deb = _block_data + ind * cst_stride * (int) s_data;  
       for (int k = 0; k < s_block_unit; k++) {
         sendBuffer[idx1++] = _block_data_deb[k];
       }
@@ -425,10 +425,10 @@ PDM_block_to_part_exch
 
       for (int j = 0; j < _btp->n_elt[i]; j++) {
 
-        int idx1  = part_idx[i][j] * s_data;
-        int n_elt = part_stride[i][j] * s_data;
+        int idx1  = part_idx[i][j] * (int) s_data;
+        int n_elt = part_stride[i][j] * (int) s_data;
 
-        int idx2 = recv_idx[_btp->ind[i][j]] * s_data;
+        int idx2 = recv_idx[_btp->ind[i][j]] * (int) s_data;
 
         for (int k = 0; k < n_elt; k++) {
            _part_data[i][idx1+k] = recvBuffer[idx2+k];
@@ -448,7 +448,7 @@ PDM_block_to_part_exch
   else if (t_stride == PDM_STRIDE_CST) {
 
     const int cst_stride = *block_stride;
-    const int s_block_unit = cst_stride * s_data;
+    const int s_block_unit = cst_stride * (int) s_data;
 
     for (int i = 0; i < _btp->n_part; i++) {
 

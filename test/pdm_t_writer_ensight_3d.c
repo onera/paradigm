@@ -139,7 +139,7 @@ int main(int argc, char *argv[])
   double        length  = 1.;
   int           nPart   = 1;
   int           post    = 0;
-  int           method  = PDM_PART_SPLIT_PARMETIS;
+  PDM_part_split_t method  = PDM_PART_SPLIT_PARMETIS;
 
   /*
    *  Read args
@@ -151,7 +151,7 @@ int main(int argc, char *argv[])
              &length,
              &nPart,
              &post,
-             &method);
+             (int *) &method);
 
   /*
    *  Init
@@ -282,7 +282,10 @@ int main(int argc, char *argv[])
                          (t_elaps_debut.tv_usec + 1000000 *
                           t_elaps_debut.tv_sec);
   long tranche_elapsed_max = tranche_elapsed;
+#pragma warning(push)
+#pragma warning(disable:2259)
   double t_elapsed = (double) tranche_elapsed_max/1000000.;
+#pragma warning(pop)  
 
   printf("[%i]   - TEMPS DANS PART_CUBE  : %12.5e\n", myRank,  t_elapsed);
 

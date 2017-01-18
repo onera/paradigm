@@ -34,7 +34,8 @@ extern "C" {
  */
 
 typedef enum {
-
+    
+  PDM_LINE_INTERSECT_UNDEF   = -1,  /*!< No intersection */               
   PDM_LINE_INTERSECT_NO      = 0,  /*!< No intersection */               
   PDM_LINE_INTERSECT_YES     = 1,  /*!< Intersection */               
   PDM_LINE_INTERSECT_ON_LINE = 2,  /*!< On line  */

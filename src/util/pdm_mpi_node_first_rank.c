@@ -139,7 +139,7 @@ PDM_MPI_Comm comm
      Si c'est le cas, les processus de ces 2 noeuds sont 
      regroupés dans un même communicateur */
 
-  int nSend = hostnameLength;
+  int nSend = (int) hostnameLength;
 
   PDM_MPI_Allreduce((void *) &hostnameLength, (void *) &nSend, 1, 
                 PDM_MPI_INT, PDM_MPI_MAX, nodeComm); 

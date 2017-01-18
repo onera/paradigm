@@ -1808,7 +1808,7 @@ _build_rank_to_box_index(const PDM_box_tree_t  *bt,
 
     if (node->n_boxes > 0) {
 
-      int  id = PDM_morton_binary_search(size,
+      int  id = PDM_morton_binary_search((int) size,
                                          node->morton_code,
                                          search_index);
       int  rank = id_rank[id];
@@ -1865,7 +1865,7 @@ _build_rank_to_box_list(const PDM_box_tree_t  *bt,
 
     if (node->n_boxes > 0) {
 
-      int  id = PDM_morton_binary_search(size,
+      int  id = PDM_morton_binary_search((int) size,
                                          node->morton_code,
                                          search_index);
       int  rank = id_rank[id];
@@ -2976,8 +2976,8 @@ PDM_box_tree_get_stats(const PDM_box_tree_t  *bt,
       s_l_sum[0] = s.n_linked_boxes/n_ranks;
       s_l_sum[7] = s.n_linked_boxes%n_ranks;
       for (i = 1; i < 7; i++) {
-        s_l_sum[i] = s_mean[i]/n_ranks;
-        s_l_sum[i+7] = s_mean[i]%n_ranks;
+        s_l_sum[i] = ((PDM_g_num_t) s_mean[i])/n_ranks;
+        s_l_sum[i+7] = ((PDM_g_num_t) s_mean[i])%n_ranks;
       }
 
       PDM_MPI_Allreduce(s_l_sum, s_g_sum, 14, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, bt->comm);
@@ -3012,45 +3012,45 @@ PDM_box_tree_get_stats(const PDM_box_tree_t  *bt,
   /* Set values already in stats */
 
   if (depth != NULL) {
-    depth[0] = s_mean[1];
-    depth[1] = s_min[1];
-    depth[2] = s_max[1];
+    depth[0] = (int) s_mean[1];
+    depth[1] = (int) s_min[1];
+    depth[2] = (int) s_max[1];
   }
 
   if (n_leaves != NULL) {
-    n_leaves[0] = s_mean[2];
-    n_leaves[1] = s_min[2];
-    n_leaves[2] = s_max[2];
+    n_leaves[0] = (int) s_mean[2];
+    n_leaves[1] = (int) s_min[2];
+    n_leaves[2] = (int) s_max[2];
   }
 
   if (n_boxes != NULL) {
-    n_boxes[0] = s_mean[3];
-    n_boxes[1] = s_min[3];
-    n_boxes[2] = s_max[3];
+    n_boxes[0] = (int) s_mean[3];
+    n_boxes[1] = (int) s_min[3];
+    n_boxes[2] = (int) s_max[3];
   }
 
   if (n_threshold_leaves != NULL) {
-    n_threshold_leaves[0] = s_mean[4];
-    n_threshold_leaves[1] = s_min[4];
-    n_threshold_leaves[2] = s_max[4];
+    n_threshold_leaves[0] = (int) s_mean[4];
+    n_threshold_leaves[1] = (int) s_min[4];
+    n_threshold_leaves[2] = (int) s_max[4];
   }
 
   if (n_leaf_boxes != NULL) {
-    n_leaf_boxes[0] = s_mean[0];
-    n_leaf_boxes[1] = s_min[0];
-    n_leaf_boxes[2] = s_max[0];
+    n_leaf_boxes[0] = (int) s_mean[0];
+    n_leaf_boxes[1] = (int) s_min[0];
+    n_leaf_boxes[2] = (int) s_max[0];
   }
 
   if (mem_used != NULL) {
-    mem_used[0] = s_mean[5];
-    mem_used[1] = s_min[5];
-    mem_used[2] = s_max[5];
+    mem_used[0] = (int) s_mean[5];
+    mem_used[1] = (int) s_min[5];
+    mem_used[2] = (int) s_max[5];
   }
 
   if (mem_allocated != NULL) {
-    mem_allocated[0] = s_mean[6];
-    mem_allocated[1] = s_min[6];
-    mem_allocated[2] = s_max[6];
+    mem_allocated[0] = (int) s_mean[6];
+    mem_allocated[1] = (int) s_min[6];
+    mem_allocated[2] = (int) s_max[6];
   }
 
   return dim;

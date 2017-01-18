@@ -168,9 +168,13 @@ void PDM_timer_hang_on(PDM_timer_t *timer)
   long tranche_elapsed = (t_elaps_fin.tv_usec + 1000000 * t_elaps_fin.tv_sec) - 
                          (timer->t_elaps_debut.tv_usec + 1000000 * 
                           timer->t_elaps_debut.tv_sec);
-  long tranche_elapsed_max = tranche_elapsed; 
-  timer->t_elapsed += (double) tranche_elapsed_max/1000000.;
 
+#pragma warning(push)
+#pragma warning(disable:2259)
+  double tranche_elapsed_max = (double) tranche_elapsed; 
+  timer->t_elapsed += tranche_elapsed_max/1000000.;
+#pragma warning(pop)
+  
 #if defined (PDM_HAVE_GETRUSAGE)
  {
    struct rusage  usage;

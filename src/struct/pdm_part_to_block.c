@@ -643,7 +643,7 @@ PDM_part_to_block_exch
       for (int k = iBeg; k < iEnd; k++)
         n_sendBuffer[i] += sendStride[k];
             
-      n_sendBuffer[i] *= s_data;
+      n_sendBuffer[i] *= (int) s_data;
             
       if (i > 0) {
         i_sendBuffer[i] = i_sendBuffer[i-1] + n_sendBuffer[i-1];
@@ -659,7 +659,7 @@ PDM_part_to_block_exch
       for (int k = iBeg; k < iEnd; k++)
         n_recvBuffer[i] += recvStride[k];
             
-      n_recvBuffer[i] *= s_data;
+      n_recvBuffer[i] *= (int) s_data;
             
       if (i > 0)
         i_recvBuffer[i] = i_recvBuffer[i-1] + n_recvBuffer[i-1];
@@ -676,11 +676,11 @@ PDM_part_to_block_exch
   
     for (int i = 0; i < _ptb->s_comm; i++) {
           
-      i_sendBuffer[i] = _ptb->i_sendData[i] * cst_stride * s_data;
-      i_recvBuffer[i] = _ptb->i_recvData[i] * cst_stride * s_data;
+      i_sendBuffer[i] = _ptb->i_sendData[i] * cst_stride * (int) s_data;
+      i_recvBuffer[i] = _ptb->i_recvData[i] * cst_stride * (int) s_data;
 
-      n_sendBuffer[i] = _ptb->n_sendData[i] * cst_stride * s_data;
-      n_recvBuffer[i] = _ptb->n_recvData[i] * cst_stride * s_data;
+      n_sendBuffer[i] = _ptb->n_sendData[i] * cst_stride * (int) s_data;
+      n_recvBuffer[i] = _ptb->n_recvData[i] * cst_stride * (int) s_data;
 
     }
   }
@@ -710,7 +710,7 @@ PDM_part_to_block_exch
 
       i_part[0] = 0;
       for (int j = 1; j < _ptb->n_elt[i] + 1; j++)
-        i_part[j] = i_part[j-1] + (part_stride[i][j-1] * s_data);
+        i_part[j] = i_part[j-1] + (part_stride[i][j-1] * (int) s_data);
     }
 
     for (int j = 0; j < _ptb->n_elt[i]; j++) {
@@ -719,8 +719,8 @@ PDM_part_to_block_exch
       int i_part_elt;
 
       if (t_stride == PDM_writer_STRIDE_CST) {
-        s_octet_elt = cst_stride * s_data;
-        i_part_elt  = cst_stride * s_data * j;
+        s_octet_elt = cst_stride * (int) s_data;
+        i_part_elt  = cst_stride * (int) s_data * j;
       }
 
       else if (t_stride == PDM_writer_STRIDE_VAR) {
@@ -759,7 +759,7 @@ PDM_part_to_block_exch
   *block_stride = NULL;
   int *i_recvStride = NULL;
   int *i_block_stride = NULL;
-  int s_block_data = (sizeof(unsigned char) * s_recvBuffer) / s_data;
+  int s_block_data = ((int) sizeof(unsigned char) * s_recvBuffer) / (int) s_data;
 
   if (t_stride == PDM_writer_STRIDE_VAR) {
     int *_block_stride = malloc(sizeof(int) * _ptb->tn_recvData);
@@ -783,8 +783,8 @@ PDM_part_to_block_exch
     }
     
     for (int i = 0; i < _ptb->tn_recvData; i++) {
-      i_recvStride[i+1]   *= s_data;
-      i_block_stride[i+1] *= s_data;
+      i_recvStride[i+1]   *= (int) s_data;
+      i_block_stride[i+1] *= (int) s_data;
     }
 
     /*
@@ -841,7 +841,7 @@ PDM_part_to_block_exch
         _block_stride = realloc (_block_stride, sizeof(int) * _ptb->n_eltBlock);
 
         *block_stride = _block_stride;
-        s_block_data = idx2 / s_data;
+        s_block_data = idx2 / (int) s_data;
       }
 
     }
@@ -857,7 +857,7 @@ PDM_part_to_block_exch
      */
 
     for (int i = 0; i < _ptb->tn_recvData; i++) {
-      int n_octet = cst_stride * s_data;
+      int n_octet = cst_stride * (int) s_data;
       int old = _ptb->order[i];
       int idOld = old * n_octet;
 
@@ -877,14 +877,14 @@ PDM_part_to_block_exch
       assert (_ptb->t_post != PDM_writer_POST_MERGE);
 
       for (int i = 1; i < _ptb->tn_recvData; i++) {
-        int n_octet = cst_stride * s_data;
+        int n_octet = cst_stride * (int) s_data;
         if (i == 1) {
           idx2 = n_octet;
         }
         if (_ptb->block_gnum[idx1] != _ptb->sorted_recvGnum[i]) {
           idx1 += 1;
           if (_ptb->t_post == PDM_writer_POST_CLEANUP) {
-            int idx3 = i * cst_stride * s_data;
+            int idx3 = i * cst_stride * (int) s_data;
             for (int k = 0; k < n_octet; k++) {
               _block_data[idx2++] = _block_data[idx3++];
             }
@@ -895,7 +895,7 @@ PDM_part_to_block_exch
       if (_ptb->t_post == PDM_writer_POST_CLEANUP) {
         _block_data = realloc (_block_data, sizeof(unsigned char) * idx2);
         *block_data = _block_data;
-        s_block_data = idx2 / s_data;
+        s_block_data = idx2 / (int) s_data;
       }
     }
   }
