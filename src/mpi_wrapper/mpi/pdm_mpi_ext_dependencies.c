@@ -431,11 +431,7 @@ int *part
   if (__vertloctab != NULL) {
     free (__vertloctab);
   }
-  
-  if (__vendloctab != NULL) {
-    free (__vendloctab);
-  }
-  
+    
   if (__edgeloctab != NULL) {
     free (__edgeloctab);
   }

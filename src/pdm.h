@@ -20,7 +20,7 @@
 #define ARGF_SUPP_CHAINE , ...
 #endif
 
-#if PDM_LONG_G_NUM
+#ifdef PDM_LONG_G_NUM
 #define PDM_FMT_G_NUM "%ld"
 #else
 #define PDM_FMT_G_NUM "%d"

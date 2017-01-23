@@ -524,7 +524,7 @@ const int                nPart,
     printf ("gnumofferedelt : ");
     for (int i = 0; i < lComm; i++) {
       for (int j = offeredEltsRankIdx[i]; j < offeredEltsRankIdx[i+1]; j++) {
-        printf (" %d ", gNumOfferedEltsSend[j]);
+        printf (" "PDM_FMT_G_NUM" ", gNumOfferedEltsSend[j]);
       }
       printf (" §§ ");
     }
@@ -629,7 +629,7 @@ const int                nPart,
         k++;
         printf (" $$ ");
       }
-      printf (" %d", gNumOfferedEltsRecv[i] -1);
+      printf (" "PDM_FMT_G_NUM, gNumOfferedEltsRecv[i] -1);
     }  
     printf ("\n");
   }
@@ -642,7 +642,9 @@ const int                nPart,
    * 
    */
 
-  int nKeys = (int) (PDM_part_bound_n_total_offer_elt_get (graph_bound->partBound[0]) / lComm);
+  PDM_g_num_t _nKeys = PDM_part_bound_n_total_offer_elt_get (graph_bound->partBound[0]) / lComm;
+  
+  int nKeys = (int) (_nKeys);
 
   int *hashTableIdx = (int *) malloc (sizeof(int) * (nKeys+1));
   for (int i = 0; i < nKeys+1; i++) {
@@ -650,8 +652,8 @@ const int                nPart,
   }  
 
   for (int i = 0; i < graph_bound->nGhostElt; i++) {
-    PDM_g_num_t gNum = gNumOfferedEltsRecv[i];
-    int key =  gNum % nKeys;
+    PDM_g_num_t _key = gNumOfferedEltsRecv[i] % nKeys;
+    int key = (int) (_key);
     hashTableIdx[key+1]++;
   }  
 
@@ -661,8 +663,8 @@ const int                nPart,
     const PDM_g_num_t *localOfferEltLnToGn =
       PDM_part_bound_local_offer_elt_ln_to_gn_get (_partBound);
     for (int j = 0; j < nLocalOfferElt; j++) {
-      PDM_g_num_t gNum = localOfferEltLnToGn[j];
-      int key =  gNum % nKeys;
+      PDM_g_num_t _key = localOfferEltLnToGn[j] % nKeys;
+      int key =  (int) _key;
       hashTableIdx[key+1]++;
     }
   }
@@ -686,7 +688,8 @@ const int                nPart,
 
   for (int i = 0; i < graph_bound->nGhostElt; i++) {
     PDM_g_num_t gNum = gNumOfferedEltsRecv[i];
-    int key =  gNum % nKeys;
+    PDM_g_num_t _key = gNum % nKeys;
+    int key = (int) _key;
     int idx = hashTableIdx[key] + hashTableN[key]++;  
     hashTableGnum[idx] = gNum;
     hashTableDataLoc[idx] = -1;
@@ -700,7 +703,8 @@ const int                nPart,
       PDM_part_bound_local_offer_elt_ln_to_gn_get (_partBound);
     for (int j = 0; j < nLocalOfferElt; j++) {
       PDM_g_num_t gNum = localOfferEltLnToGn[j];
-      int key =  gNum % nKeys;
+      PDM_g_num_t _key = gNum % nKeys;
+      int key = (int) _key;
       int idx = hashTableIdx[key] + hashTableN[key]++;  
       hashTableGnum[idx] = gNum;
       hashTableDataLoc[idx] = i;
@@ -952,7 +956,7 @@ const int                nPart,
         PDM_part_bound_local_offer_elt_ln_to_gn_get (_partBound);
       for (int j = 0; j < nLocalOfferElt; j++) {
         PDM_g_num_t gNum = localOfferEltLnToGn[j];
-        printf (" %d %d %d,", i, j, gNum);
+        printf (" %d %d " PDM_FMT_G_NUM",", i, j, gNum);
       }
     }
     printf ("\n");

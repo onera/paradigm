@@ -1148,7 +1148,7 @@ _split
 static void
 _distrib_cell
 (
- _PDM_part_t      *ppart,
+ _PDM_part_t  *ppart,
  PDM_g_num_t  *cellPart
 )
 {
@@ -1183,7 +1183,8 @@ _distrib_cell
     nData += 1;
 
   for (int i = 0; i < ppart->dNCell; i++) {
-    int rankToSend = ppart->gPartTolProcPart[2*cellPart[i]];
+    int _part = (int) cellPart[i];
+    int rankToSend = ppart->gPartTolProcPart[2*_part];
     int nbfac      = ppart->_dCellFaceIdx[i+1] - ppart->_dCellFaceIdx[i];
     faceToSendIdx[rankToSend+1]  += nData + nbfac; /* Num cell,
                                                       Partition locale
@@ -1206,11 +1207,10 @@ _distrib_cell
   /* 2nde boucle pour remplir le tableau a envoyer via alltoallv */
 
   for (int i = 0; i < ppart->dNCell; i++) {
-
-    int rankToSend = ppart->gPartTolProcPart[2*cellPart[i]    ];
-    int lPart      = ppart->gPartTolProcPart[2*cellPart[i] + 1];
+    int _part = (int) cellPart[i];
+    int rankToSend = ppart->gPartTolProcPart[2*_part    ];
+    int lPart      = ppart->gPartTolProcPart[2*_part + 1];
     int nbfac      = ppart->_dCellFaceIdx[i+1] - ppart->_dCellFaceIdx[i];
-
 
     int place = faceToSendIdx[rankToSend] + faceToSendN[rankToSend];
 
