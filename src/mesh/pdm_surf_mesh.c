@@ -219,8 +219,8 @@ PDM_surf_mesh_build_edges_gn_and_edge_part_bound
           (part->edgeFace[2*j + 1] == -1)) {
         int vtx1 = part->edgeVtx[2*j];
         int vtx2 = part->edgeVtx[2*j + 1];
-        int keyEdge =
-          (int) ((part->vtxLnToGn[vtx1-1] + part->vtxLnToGn[vtx2-1]) % keyMax);
+        PDM_g_num_t _keyEdge = (part->vtxLnToGn[vtx1-1] + part->vtxLnToGn[vtx2-1]) % keyMax;
+        int keyEdge = (int) _keyEdge;
         hashTableIdx[keyEdge+1] += 2;
       }
       else
@@ -247,8 +247,9 @@ PDM_surf_mesh_build_edges_gn_and_edge_part_bound
           (part->edgeFace[2*j + 1] == -1)) {
         int vtx1 = part->edgeVtx[2*j];
         int vtx2 = part->edgeVtx[2*j + 1];
-        int keyEdge =
-          (int) ((part->vtxLnToGn[vtx1-1] + part->vtxLnToGn[vtx2-1]) % keyMax);
+        PDM_g_num_t _keyEdge =
+           (part->vtxLnToGn[vtx1-1] + part->vtxLnToGn[vtx2-1]) % keyMax;
+        int keyEdge = (int) _keyEdge;
         hashTable[hashTableIdx[keyEdge] + (nHashTable[keyEdge]++)] = i;
         hashTable[hashTableIdx[keyEdge] + (nHashTable[keyEdge]++)] = j;
         nEdgeBoundPart[i] += 1;

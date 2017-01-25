@@ -122,17 +122,20 @@ const PDM_MPI_Comm comm
 
   else { 
 
-    __tpwgts = malloc (sizeof(real_t) * _ncon);
+    __tpwgts = malloc (sizeof(real_t) * _ncon * _nparts);
     __ubvec = malloc (sizeof(real_t) * _ncon);
 
     _tpwgts = __tpwgts;
     _ubvec = __ubvec;
 
-    for (int i = 0; i < *ncon; i++) {
+    for (int i = 0; i < _ncon * _nparts; i++) {
       __tpwgts[i] = (real_t) tpwgts[i]; 
-      __ubvec[i] = (real_t) ubvec[i];         
     }
     
+    for (int i = 0; i < _ncon; i++) {
+      __ubvec[i] = (real_t) ubvec[i];         
+    }
+
   }
   
   idx_t *__vtxdist, *_vtxdist;
@@ -140,9 +143,12 @@ const PDM_MPI_Comm comm
   idx_t *__adjncy, *_adjncy;
 
   if (sizeof(PDM_g_num_t) == sizeof(idx_t)) {
+#pragma warning(push)
+#pragma warning(disable:3189)
     _vtxdist = (idx_t *) vtxdist;
     _xadj    = (idx_t *) xadj;
     _adjncy  = (idx_t *) adjncy;
+#pragma warning(pop)
     __vtxdist = NULL;
     __xadj    = NULL;
     __adjncy  = NULL;
@@ -157,15 +163,15 @@ const PDM_MPI_Comm comm
     _adjncy  = __adjncy;
     
     for (int i = 0; i < iSize + 1; i++) {
-      __vtxdist[i] = vtxdist[i]; 
+      __vtxdist[i] = (idx_t) vtxdist[i]; 
     }
       
     for (int i = 0; i < nNode + 1; i++) {
-      __xadj[i] = xadj[i]; 
+      __xadj[i] = (idx_t) xadj[i]; 
     }
 
     for (int i = 0; i < nEdge; i++) {
-      __adjncy[i] =  adjncy[i]; 
+      __adjncy[i] =  (idx_t) adjncy[i]; 
     }
   }
 
@@ -316,9 +322,12 @@ int *part
   SCOTCH_Num *_part, *__part;
   
   if (sizeof(PDM_g_num_t) == sizeof(SCOTCH_Num)) {
+#pragma warning(push)
+#pragma warning(disable:3189)
     _vertloctab = (SCOTCH_Num *) dDualGraphIdx;
     _vendloctab = (SCOTCH_Num *) dDualGraphIdx + 1;
     _edgeloctab = (SCOTCH_Num *) dDualGraph;
+#pragma warning(pop)
     
     __vertloctab = NULL;
     __vendloctab = NULL;
@@ -331,11 +340,11 @@ int *part
     __edgeloctab  = (SCOTCH_Num *) malloc (sizeof(SCOTCH_Num) * _edgelocsiz);
 
     for (int i = 0; i < _vertlocnbr + 1; i++) {
-      __vertloctab[i] = dDualGraphIdx[i]; 
+      __vertloctab[i] = (SCOTCH_Num) dDualGraphIdx[i]; 
     }
 
     for (int i = 0; i < _edgelocsiz; i++) {
-      __edgeloctab[i] = dDualGraph[i]; 
+      __edgeloctab[i] = (SCOTCH_Num) dDualGraph[i]; 
     }
 
     _vertloctab = __vertloctab;

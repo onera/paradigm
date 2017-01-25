@@ -1050,7 +1050,7 @@ _split
        * Call metis
        */
 
-      int *_dCellProc = (int *) malloc((nRank+1) * sizeof(int));
+      PDM_g_num_t *_dCellProc = (int *) malloc((nRank+1) * sizeof(PDM_g_num_t));
 
       for (int i = 0; i < nRank + 1; i++) {
         _dCellProc[i] = ppart->dCellProc[i] - 1;

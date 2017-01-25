@@ -28,7 +28,7 @@
 #include "pdm_timer.h"
 #include "pdm.h"
 #include "pdm_priv.h"
-#include "pdm_mpi_node_first_rank.h"
+#include "pdm_mpi_node_first_rank.h" 
 #include "pdm_fortran_to_c_string.h"
 
 /*----------------------------------------------------------------------------*/
@@ -380,9 +380,12 @@ static void _n_donnees_rang
 
   /* Determination des données traitées par chaque rang */
   
-  int n_donnees_rang = (int) (n_donnees_total / fichier->n_rangs_actifs);
-  int reste = (int) (n_donnees_total % fichier->n_rangs_actifs);
-                     
+  PDM_g_num_t _n_donnees_rang = n_donnees_total / fichier->n_rangs_actifs;
+  int n_donnees_rang = (int) _n_donnees_rang;
+
+  PDM_g_num_t _reste = n_donnees_total % fichier->n_rangs_actifs;
+  int reste = (int) _reste;                    
+  
   *n_donnees_rang_max = n_donnees_rang;
   *n_donnees_rang_min = n_donnees_rang;
   
@@ -492,15 +495,16 @@ static void _calcul_parametres_distribution_bloc
     irang++;
   
   int irang_max = irang;
-  
-  n_donnees_a_envoyer[irang_min] = 
-    PDM_IO_MIN(n_donnees_traitees_rangs[irang_min + 1] + 1 - n_absolue_min, n_donnees);
+
+  PDM_g_num_t _n_donnees_a_envoyer_proc = PDM_IO_MIN(n_donnees_traitees_rangs[irang_min + 1] + 1 - n_absolue_min, n_donnees);   
+  n_donnees_a_envoyer[irang_min] = (int) _n_donnees_a_envoyer_proc; 
   
   int n_donnees_non_traitees = n_donnees - n_donnees_a_envoyer[irang_min];
   for (int i = irang_min + 1; i < irang_max + 1; i++) {
-    n_donnees_a_envoyer[i] = 
-      PDM_IO_MIN(n_donnees_traitees_rangs[i + 1] - n_donnees_traitees_rangs[i], 
+    _n_donnees_a_envoyer_proc = PDM_IO_MIN(n_donnees_traitees_rangs[i + 1] - n_donnees_traitees_rangs[i], 
                    n_donnees_non_traitees);
+
+    n_donnees_a_envoyer[i] = (int) _n_donnees_a_envoyer_proc; 
     n_donnees_non_traitees += - n_donnees_a_envoyer[i];
   }
   
@@ -522,18 +526,21 @@ static void _calcul_parametres_distribution_bloc
     
     irang_max = irang;
     
-    n_donnees_a_recevoir[irang_min] = 
-      PDM_IO_MIN(n_absolue_bloc_rangs[irang_min+1] - n_absolue_min, 
+    PDM_g_num_t _n_donnees_a_recevoir = PDM_IO_MIN(n_absolue_bloc_rangs[irang_min+1] - n_absolue_min, 
                    n_absolue_bloc_rangs[irang_min+1] - 
                    n_absolue_bloc_rangs[irang_min]);
+ 
+    n_donnees_a_recevoir[irang_min] = (int) _n_donnees_a_recevoir; 
     
-    n_donnees_non_traitees = n_absolue_max - n_absolue_min - 
+     PDM_g_num_t _n_donnees_non_traitees = n_absolue_max - n_absolue_min - 
       n_donnees_a_recevoir[irang_min] + 1;
+     
+     n_donnees_non_traitees = (int) _n_donnees_non_traitees;
     
     for (int i = irang_min + 1; i < irang_max + 1; i++) {
-      n_donnees_a_recevoir[i] = 
-        PDM_IO_MIN(n_absolue_bloc_rangs[i + 1] - n_absolue_bloc_rangs[i], 
+      _n_donnees_a_recevoir = PDM_IO_MIN(n_absolue_bloc_rangs[i + 1] - n_absolue_bloc_rangs[i], 
                      n_donnees_non_traitees);
+      n_donnees_a_recevoir[i] = (int) _n_donnees_a_recevoir;  
       n_donnees_non_traitees += - n_donnees_a_recevoir[i];
     }
     
@@ -1366,7 +1373,8 @@ void PDM_io_lec_par_entrelacee
           index[i] = index[i] + index[i-1];
         }
 
-        _n_donnees_buff = index[n_donnees] / taille_donnee;
+        PDM_g_num_t __n_donnees_buff = index[n_donnees] / taille_donnee;
+        _n_donnees_buff = (int) __n_donnees_buff;
 
         buffer = (unsigned char*) malloc(sizeof(unsigned char) * 
                                          index[n_donnees]);
@@ -1374,7 +1382,8 @@ void PDM_io_lec_par_entrelacee
       }
 
       else if (t_n_composantes == PDM_IO_N_COMPOSANTE_CONSTANT) {
-        _n_donnees_buff =  _id_max * n_composantes[0];
+        PDM_g_num_t __n_donnees_buff =  _id_max * n_composantes[0];
+        _n_donnees_buff = (int) __n_donnees_buff;
         n_octet = taille_donnee * n_composantes[0];
         buffer = (unsigned char*) malloc(sizeof(unsigned char) * 
                                          taille_donnee *
@@ -1480,8 +1489,9 @@ void PDM_io_lec_par_entrelacee
 
       /* Allocation du buffer si le rang est actif */
         
-      int _n_donnees_rang = (int) (n_donnees_rangs[fichier->rang + 1] - 
-                                   n_donnees_rangs[fichier->rang]);
+      PDM_g_num_t __n_donnees_rang = (n_donnees_rangs[fichier->rang + 1] - 
+                                      n_donnees_rangs[fichier->rang]); 
+      int _n_donnees_rang = (int) __n_donnees_rang;
       
       /*---------------------------------------
        *  Envoi/Reception des numeros absolus 
@@ -1510,11 +1520,12 @@ void PDM_io_lec_par_entrelacee
         PDM_g_num_t n_absolu = indirection[i] - 1;
         int irang_actif = fichier->n_rangs_actifs - 1;  
 
-	if (n_donnees_rang_min > 0) { 
-	    irang_actif = PDM_IO_MIN((int) (n_absolu / 
-			      (PDM_g_num_t) n_donnees_rang_min), 
-			 fichier->n_rangs_actifs - 1) ;
-	}
+      	if (n_donnees_rang_min > 0) {
+          PDM_g_num_t _irang_actif = n_absolu / (PDM_g_num_t) n_donnees_rang_min;
+          int __irang_actif = (int) _irang_actif;
+          irang_actif = PDM_IO_MIN(__irang_actif, 
+			                             fichier->n_rangs_actifs - 1);
+	      }
           
         /* Ajustement suivant la numerotation absolue */
           
@@ -1638,8 +1649,9 @@ void PDM_io_lec_par_entrelacee
           tag[i] = 0;
 
         for (int i = 0; i < l_n_composantes_recues; i++) {
-          const int num_abs = num_absolue_recues[i] - 1 - 
-            n_donnees_rangs[fichier->rang];
+          PDM_g_num_t _num_abs = num_absolue_recues[i] - 1 - 
+                                (PDM_g_num_t) n_donnees_rangs[fichier->rang];
+          const int num_abs = (int) _num_abs;
           if (tag[num_abs] == 0) {
             n_donnees_bloc += n_composantes_recues[i];
             tag[num_abs] = 1;
@@ -1649,18 +1661,23 @@ void PDM_io_lec_par_entrelacee
         free(tag);
 
         PDM_MPI_Allgather(&n_donnees_bloc, 1, PDM_MPI_INT, 
-                      n_donnees_blocs, 1, PDM_MPI_INT, 
-                      fichier->comm);
+                           n_donnees_blocs, 1, PDM_MPI_INT, 
+                           fichier->comm);
 
       }
 
       else if (t_n_composantes == PDM_IO_N_COMPOSANTE_CONSTANT) {
         int _n_composantes = *n_composantes;
-        for (int i = 0; i < fichier->n_rangs; i++)
-          n_donnees_blocs[i] = _n_composantes * (n_donnees_rangs[i + 1] - 
-                                                 n_donnees_rangs[i]);
-        n_donnees_bloc = _n_composantes * (n_donnees_rangs[fichier->rang + 1]-
-                                           n_donnees_rangs[fichier->rang]);
+        for (int i = 0; i < fichier->n_rangs; i++) {
+          PDM_g_num_t _n_donnees_rangs = n_donnees_rangs[i + 1] - n_donnees_rangs[i];
+          n_donnees_blocs[i] = _n_composantes * (int) _n_donnees_rangs;
+        }
+        
+        PDM_g_num_t _n_donnees_rangs1 = n_donnees_rangs[fichier->rang + 1]-
+                                        n_donnees_rangs[fichier->rang];
+        
+        n_donnees_bloc = _n_composantes * (int) (_n_donnees_rangs1);
+        
       }
       
       PDM_timer_hang_on(timer_distribution);
@@ -1779,6 +1796,8 @@ void PDM_io_lec_par_entrelacee
       /* Ordonnancement du buffer pour envoi alltoall */
         
       unsigned char *buffer_ordonne = NULL;
+      
+      
       int n_donnees_rang = (int) (n_donnees_rangs[fichier->rang + 1] - 
                                   n_donnees_rangs[fichier->rang]);
 

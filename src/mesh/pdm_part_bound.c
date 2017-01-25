@@ -728,7 +728,7 @@ PDM_part_bound_dump
                                       k,
                                       &lNum,
                                       &gNum);
-        printf("        - %d %d (lNum gNum)\n", lNum, gNum);
+        printf("        - %d "PDM_FMT_G_NUM" (lNum gNum)\n", lNum, gNum);
         
       }
     }
