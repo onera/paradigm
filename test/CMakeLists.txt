@@ -102,3 +102,42 @@ add_test (pdm_t_writer_ensight_3d ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${MPIEXEC_M
    ${MPIEXEC_PREFLAGS}
    ${CMAKE_CURRENT_BINARY_DIR}/pdm_t_writer_ensight_3d
    ${MPIEXEC_POSTFLAGS})
+
+# Test Coarse mesh surf
+# ------------------------------------------
+
+unset(SOURCES)
+file(GLOB_RECURSE SOURCES 
+     pdm_t_plane_agglo.c)
+
+add_executable(pdm_t_plane_agglo ${SOURCES})
+
+if ((NOT MPI_C_COMPILER) AND MPI_C_COMPILE_FLAGS)
+  set_target_properties(pdm_t_plane_agglo
+    PROPERTIES
+    COMPILE_FLAGS ${MPI_C_COMPILE_FLAGS})
+endif()
+
+if ((NOT MPI_Fortran_COMPILER) AND MPI_C_COMPILE_FLAGS)
+  set_target_properties(pdm_t_plane_agglo
+    PROPERTIES
+    COMPILE_FLAGS ${MPI_Fortran_COMPILE_FLAGS})
+endif()
+
+target_include_directories(pdm_t_plane_agglo PRIVATE ${CMAKE_SOURCE_DIR}
+                                      PRIVATE ${CMAKE_BINARY_DIR}
+                                      PRIVATE ${CMAKE_CURRENT_SOURCE_DIR/../src/msg}
+                                      PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+
+target_include_directories(pdm_t_plane_agglo PRIVATE ${PDM_INC})
+target_link_libraries(pdm_t_plane_agglo ${LINK_LIBRARIES})
+
+install(TARGETS pdm_t_plane_agglo
+        RUNTIME DESTINATION bin)
+
+# Command to launch by CTest.
+
+add_test (pdm_t_plane_agglo ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${MPIEXEC_MAX_NUMPROCS}
+   ${MPIEXEC_PREFLAGS}
+   ${CMAKE_CURRENT_BINARY_DIR}/pdm_t_plane_agglo
+   ${MPIEXEC_POSTFLAGS})

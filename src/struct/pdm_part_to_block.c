@@ -397,7 +397,7 @@ PDM_part_to_block_create
  PDM_MPI_Comm                     comm
 )
 {
-
+  
   _cs_part_to_block_t *ptb = 
     (_cs_part_to_block_t *) malloc (sizeof(_cs_part_to_block_t));
 

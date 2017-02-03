@@ -3018,6 +3018,7 @@ const int   id_cs
         free (fmt_tab[i]);
       }
       free (fmt_tab);
+      fmt_tab = NULL;
     }
   }
   

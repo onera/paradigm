@@ -1507,25 +1507,24 @@ _build_faceGroup
  int          **faceGroupIdx,
  int          **coarseFaceGroupToFineFaceGroup
 )
-{    
+{ 
+  
   if(*faceGroup == NULL || *faceGroupIdx == NULL || nFaceGroup == 0) {
     return;
   }
+  
   *coarseFaceGroupToFineFaceGroup = malloc((*faceGroupIdx)[nFaceGroup] * sizeof(int));
     
   //Renumbering of partGroup from the fine numbering to the coarse one
   //Loop over faceGroup, i = face number
-  for (int i = 0; i < (*faceGroupIdx)[nFaceGroup]; i++) {
-      (*faceGroup)[i] = fineFaceToCoarseFace[(*faceGroup)[i] - 1];
-  }
+//  for (int i = 0; i < (*faceGroupIdx)[nFaceGroup]; i++) {
+//      (*faceGroup)[i] = fineFaceToCoarseFace[(*faceGroup)[i] - 1];
+//  }
     
   if (0 == 1) {
     printf("Content of faceGroup after renumbering: |");
     for (int i = 0; i < (*faceGroupIdx)[nFaceGroup]; i++) {
       printf(" %d ", (*faceGroup)[i]);
-      if (i % (*faceGroupIdx)[1] == (*faceGroupIdx)[1] - 1) {
-        printf("|");
-      }
     }
     printf("\n");
   }
@@ -1705,6 +1704,8 @@ _coarse_grid_create
   part_ini->vtxLNToGN = (int *) vtxLNToGN;
   part_ini->vtxTag = (int *) vtxTag;    
 
+  printf("faceGroupIdx %d\n",faceGroupIdx[nFaceGroup] );
+  
   cm->timer = PDM_timer_create();
   for (int i = 0; i < 18; i++) {
     cm->times_elapsed[i] = 0.;
@@ -1847,6 +1848,10 @@ _coarse_grid_create
     part_res->part->faceGroupIdx = malloc((nFaceGroup + 1) * sizeof(int));
     for (int i = 0; i < (nFaceGroup + 1); i++) {
       part_res->part->faceGroupIdx[i] = part_ini->faceGroupIdx[i];
+    }
+    part_res->part->faceGroup = malloc(part_res->part->faceGroupIdx[nFaceGroup] * sizeof(int));
+    for (int i = 0; i < part_ini->faceGroupIdx[nFaceGroup]; i++) {
+      part_res->part->faceGroup[i] = fineFaceToCoarseFace[part_ini->faceGroup[i] - 1]; 
     }
   }
   
@@ -2107,15 +2112,12 @@ _coarse_mesh_t * cm
     if(0 == 1) {
         printf("Contenu de faceLNToGNPart\n");
         for (int i = 0; i < cm->nPart; i++) {
-            printf(" %d ", *(faceLNToGNPart[i]));
-        }
+          for (int j = 0; j < nFacePart[i]; j++) {
+             printf(" %d ", faceLNToGNPart[i][j]);
+          }
         printf("\n");
+        }
 
-        printf("Contenu de nFacePart\n");
-        for (int i = 0; i < cm->nPart; i++) {
-            printf(" %d ", nFacePart[i]);
-        }
-        printf("\n");
     }
             
     PDM_part_to_block_t *ptb = PDM_part_to_block_create (PDM_writer_BLOCK_DISTRIB_ALL_PROC,
@@ -2134,16 +2136,16 @@ _coarse_mesh_t * cm
       idx_write = 0;
       faceLNToGNTag[i] = (int *) malloc(cm->part_ini[i]->nFace * sizeof(int));
         //Loop over coarseFaceToFineFace, i = index of coarseFaceToFineFace (from 0 to cm->part_res[iPart]->part->nFace)
-        for (int j = 0; j < cm->part_res[i]->part->nFace; j++) {
+
+      for (int j = 0; j < cm->part_ini[i]->nFace; j++) {
+        faceLNToGNTag[i][j] = -1;
+      }
+
+      for (int j = 0; j < cm->part_res[i]->part->nFace; j++) {
             //If the vertex studied is the same as in coarseFaceToFineFace, it is to be stored
-            if ((idx_write + 1) == cm->part_res[i]->coarseFaceToFineFace[j]) {
-                faceLNToGNTag[i][idx_write++] = 0;
-            }
-            else {
-                faceLNToGNTag[i][idx_write++] = -1;
-                j--;
-            }
-        }
+       int k =  cm->part_res[i]->coarseFaceToFineFace[j] - 1;
+       faceLNToGNTag[i][k] = 0;
+      }
     }
 
     if(0 == 1) {
@@ -2334,15 +2336,14 @@ _coarse_mesh_t * cm
         idx_write = 0;
         vtxLNToGNTag[i] = (int *) malloc(nFineVtx * sizeof(int));
         //Loop over coarseFaceToFineFace, i = index of coarseVtxToFineVtx (from 0 to cm->part_res[iPart]->part->nVtx)
+        for (int j = 0; j < nFineVtx; j++) {
+          vtxLNToGNTag[i][j] = -1;
+        }
+         
         for (int j = 0; j < nCoarseVtx; j++) {
             //If the vertex studied is the same as in coarseVtxToFineVtx, it is to be stored
-            if ((idx_write + 1) == cm->part_res[i]->coarseVtxToFineVtx[j]) {
-                vtxLNToGNTag[i][idx_write++] = 0;
-            }
-            else {
-                vtxLNToGNTag[i][idx_write++] = -1;
-                j--;
-            }
+          int k = cm->part_res[i]->coarseVtxToFineVtx[j] - 1;
+          vtxLNToGNTag[i][k] = 0;
         }
     }
 
@@ -2511,16 +2512,14 @@ _coarse_mesh_t * cm
     idx_write = 0;
     faceLNToGNTag[i] = (int *) malloc(cm->part_ini[i]->nFace * sizeof(int));
     int nFace = cm->part_res[i]->part->nFace;
+    for (int j = 0; j < cm->part_ini[i]->nFace; j++) {
+      faceLNToGNTag[i][j] = -1;
+    }
     //Loop over coarseFaceToFineFace, i = index of coarseFaceToFineFace (from 0 to cm->part_res[iPart]->part->nFace)
     for (int j = 0; j < nFace; j++) {
       //If the face studied is the same as in coarseFaceToFineFace, it is to be stored
-      if ((idx_write + 1) == cm->part_res[i]->coarseFaceToFineFace[j]) {
-        faceLNToGNTag[i][idx_write++] = 0;
-      }
-      else {
-        faceLNToGNTag[i][idx_write++] = -1;
-        j--;
-      }
+      int k =  cm->part_res[i]->coarseFaceToFineFace[j] - 1;
+      faceLNToGNTag[i][k] = 0;
     }
   }
 
@@ -2726,7 +2725,8 @@ _coarse_mesh_t * cm
       _part_t *cmp = cm->part_res[i]->part;int nFacePerGroupCoarse = cmp->faceGroupIdx[iGroup + 1] - cmp->faceGroupIdx[iGroup];
       for (int j = 0; j < nFacePerGroupCoarse; j++) {
         int idxConcatenation = cmp->faceGroupIdx[iGroup];
-        cmp->faceGroupLNToGN[idxConcatenation + j] = faceGroupLNToGNFine[i][cm->part_res[i]->coarseFaceGroupToFineFaceGroup[idxConcatenation + j] - 1];
+        cmp->faceGroupLNToGN[idxConcatenation + j] = 
+                faceGroupLNToGNFine[i][cm->part_res[i]->coarseFaceGroupToFineFaceGroup[idxConcatenation + j] - 1];
       }
     }
         
