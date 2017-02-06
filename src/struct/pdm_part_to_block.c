@@ -586,7 +586,7 @@ PDM_part_to_block_exch
   _cs_part_to_block_t *_ptb = (_cs_part_to_block_t *) ptb;
 
   if ((_ptb->t_post == PDM_writer_POST_MERGE) && 
-      (t_stride ==  PDM_writer_STRIDE_CST)) {
+      (t_stride ==  PDM_STRIDE_CST)) {
     fprintf (stderr,"PDM_part_to_block_exch : PDM_writer_STRIDE_CST is not compatible PDM_writer_POST_MERGE post\n");
     abort ();
   }
@@ -601,7 +601,7 @@ PDM_part_to_block_exch
    */
 
   int *recvStride = NULL;
-  if (t_stride == PDM_writer_STRIDE_VAR) {
+  if (t_stride == PDM_STRIDE_VAR) {
     
     for (int i = 0; i < _ptb->s_comm; i++) {
       n_sendBuffer[i] = 0;
@@ -672,7 +672,7 @@ PDM_part_to_block_exch
           
   }
       
-  else if (t_stride == PDM_writer_STRIDE_CST) {
+  else if (t_stride == PDM_STRIDE_CST) {
   
     for (int i = 0; i < _ptb->s_comm; i++) {
           
@@ -681,8 +681,9 @@ PDM_part_to_block_exch
 
       n_sendBuffer[i] = _ptb->n_sendData[i] * cst_stride * (int) s_data;
       n_recvBuffer[i] = _ptb->n_recvData[i] * cst_stride * (int) s_data;
-
+      
     }
+    fflush(stdout);
   }
 
   int s_sendBuffer = i_sendBuffer[_ptb->s_comm - 1] + n_sendBuffer[_ptb->s_comm -1];
@@ -705,7 +706,7 @@ PDM_part_to_block_exch
   for (int i = 0; i < _ptb->n_part; i++) {
 
     int *i_part = NULL;
-    if (t_stride == PDM_writer_STRIDE_VAR) {
+    if (t_stride == PDM_STRIDE_VAR) {
       i_part = (int *) malloc (sizeof(int) * (_ptb->n_elt[i] + 1));
 
       i_part[0] = 0;
@@ -718,12 +719,12 @@ PDM_part_to_block_exch
       int s_octet_elt; 
       int i_part_elt;
 
-      if (t_stride == PDM_writer_STRIDE_CST) {
+      if (t_stride == PDM_STRIDE_CST) {
         s_octet_elt = cst_stride * (int) s_data;
         i_part_elt  = cst_stride * (int) s_data * j;
       }
 
-      else if (t_stride == PDM_writer_STRIDE_VAR) {
+      else if (t_stride == PDM_STRIDE_VAR) {
         s_octet_elt = i_part[j+1] - i_part[j]; 
         i_part_elt  = i_part[j];
       }
@@ -761,7 +762,7 @@ PDM_part_to_block_exch
   int *i_block_stride = NULL;
   int s_block_data = ((int) sizeof(unsigned char) * s_recvBuffer) / (int) s_data;
 
-  if (t_stride == PDM_writer_STRIDE_VAR) {
+  if (t_stride == PDM_STRIDE_VAR) {
     int *_block_stride = malloc(sizeof(int) * _ptb->tn_recvData);
     *block_stride = _block_stride;
     for (int i = 0; i < _ptb->tn_recvData; i++) {
@@ -812,6 +813,10 @@ PDM_part_to_block_exch
       int idx1 = 0;
       int idx2 = 0;
     
+      if (_ptb->tn_recvData == 1) {
+        idx2 = i_block_stride[1];
+      }
+      
       for (int i = 1; i < _ptb->tn_recvData; i++) {
         if (i == 1) {
           idx2 = i_block_stride[1];
@@ -842,6 +847,7 @@ PDM_part_to_block_exch
 
         *block_stride = _block_stride;
         s_block_data = idx2 / (int) s_data;
+
       }
 
     }
@@ -875,6 +881,10 @@ PDM_part_to_block_exch
       int idx1 = 0;
 
       assert (_ptb->t_post != PDM_writer_POST_MERGE);
+          
+      if (_ptb->tn_recvData == 1) {
+        idx2 =  cst_stride * (int) s_data;
+      }
 
       for (int i = 1; i < _ptb->tn_recvData; i++) {
         int n_octet = cst_stride * (int) s_data;
@@ -897,6 +907,7 @@ PDM_part_to_block_exch
         *block_data = _block_data;
         s_block_data = idx2 / (int) s_data;
       }
+
     }
   }
 

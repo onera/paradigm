@@ -49,7 +49,7 @@ int exit_code
      "  -n_part <level>  Number of partitions par process.\n\n"
      "  -parmetis        Call ParMETIS.\n\n"
      "  -pt-scocth       Call PT-Scotch.\n\n"
-     "  -nc     <level>  Number of coarse per partition\n\n"
+     "  -cr     <level>  Coarse rate\n\n"
      "  -h               This message.\n\n");
      
 
@@ -79,7 +79,7 @@ _read_args
  PDM_g_num_t  *nVtxSeg,
  double        *length,
  int           *n_part,
- int           *nc,
+ double         *cr,
  int           *post,
  int           *method,
  int           *haveRandom
@@ -118,12 +118,12 @@ _read_args
         *n_part = atoi (argv[i]);
       }
     }
-    else if (strcmp (argv[i], "-nc") == 0) {
+    else if (strcmp (argv[i], "-cr") == 0) {
       i++;
       if (i >= argc)
         _usage (EXIT_FAILURE);
       else {
-        *nc = atoi (argv[i]);
+        *cr = atof (argv[i]);
       }
     }
     else if (strcmp (argv[i], "-no_random") == 0) {
@@ -481,7 +481,6 @@ _export_ini_mesh
                               pdm_mpi_comm,
                               PDM_IO_ACCES_MPI_SIMPLE,
                               1.);
-  printf("tototo 1 : %d\n", id_cs);
 
   /*
    * Creation des variables
@@ -865,8 +864,6 @@ _export_coarse_mesh
                               pdm_mpi_comm,
                               PDM_IO_ACCES_MPI_SIMPLE,
                               1.);
-
-  printf("tototo : %d\n", id_cs);
   
   /*
    * Creation des variables
@@ -1246,7 +1243,7 @@ char *argv[]
   PDM_g_num_t   nVtxSeg = 4;
   double        length  = 1.;
   int           nPart   = 1;
-  int           nc   = 1;
+  double         cr   = 0.5;
   int           post    = 0;
   PDM_part_split_t method  = PDM_PART_SPLIT_PTSCOTCH;
   int           haveRandom = 1;
@@ -1262,7 +1259,7 @@ char *argv[]
               &nVtxSeg,
               &length,
               &nPart,
-              &nc,
+              &cr,
               &post,
               (int *) &method,
               &haveRandom);
@@ -1365,8 +1362,6 @@ char *argv[]
     int          *edgeGroupIdx;
     int          *edgeGroup;
     PDM_g_num_t *edgeGroupLNToGN;
-
-    printf ("nEdge 1 %d\n", nEdge);
     
     PDM_part_part_val_get (id_ppart,
                            ipart,
@@ -1389,16 +1384,9 @@ char *argv[]
                            &edgeGroup,
                            &edgeGroupLNToGN);
     
-    printf ("sEdgeGroup : %d", edgeGroupIdx[nEdgeGroup]);
-    for (int i = 0; i < sEdgeGroup; i++) {
-      printf(" %d", edgeGroup[i]);
-    }
-    printf ("\n");
-
-    //int nCoarseCell = PDM_MAX (nFace / 10, 1);
-    
-    printf("nc : %d\n", nc);
-    
+    int _nc = (int) ((1. - cr) * nFace);
+    int nc = PDM_MAX (_nc, 1); 
+        
     PDM_part_coarse_mesh_input (cmId,
                                 ipart,
                                 nc,
