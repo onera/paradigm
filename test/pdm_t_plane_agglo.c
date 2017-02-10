@@ -1387,13 +1387,14 @@ char *argv[]
     int _nc = (int) ((1. - cr) * nFace);
     int nc = PDM_MAX (_nc, 1); 
         
+    int _nEdgeGroup = 0;
     PDM_part_coarse_mesh_input (cmId,
                                 ipart,
                                 nc,
                                 nFace,
                                 nEdge,
                                 nVtx,
-                                nEdgeGroup,
+                                _nEdgeGroup,
                                 nEdgePartBound,
                                 faceEdgeIdx,
                                 faceEdge,
@@ -1409,9 +1410,9 @@ char *argv[]
                                 vtx,
                                 vtxTag,
                                 vtxLNToGN,       
-                                edgeGroupIdx,
-                                edgeGroup,
-                                edgeGroupLNToGN,
+                                NULL,
+                                NULL,
+                                NULL,
                                 edgePartBoundProcIdx,       
                                 edgePartBoundPartIdx,
                                 edgePartBound);

@@ -2649,7 +2649,7 @@ _coarse_mesh_t * cm
       printf("\n");
     }
         
-    int size_block2 = PDM_part_to_block_exch (ptb,
+    PDM_part_to_block_exch (ptb,
                             sizeof(int),
                             PDM_STRIDE_CST,
                             1,
