@@ -2099,7 +2099,7 @@ PDM_l_num_t connec_hexa_courant[]
   /* Permutation circulaire eventuelle de la face sup */
 
   int id1 = -1;
-  int k1;
+  int k1 = -1;
   for (int k = 0; k < 4; k++) {
     for (int j = 0; j < 4; j++) {
       if (face_contact[j] == connec_hexa_courant[k]) {
@@ -2112,9 +2112,31 @@ PDM_l_num_t connec_hexa_courant[]
     }
   }
 
+  if (k1 == -1) {
+    printf("Error connect_hexa : %d %d %d %d %d %d %d %d\n",
+           connec_hexa_courant[0],
+           connec_hexa_courant[1],
+           connec_hexa_courant[2],
+           connec_hexa_courant[3],
+           connec_hexa_courant[4],
+           connec_hexa_courant[5],
+           connec_hexa_courant[6],
+           connec_hexa_courant[7]);
+    int k10 = 0;
+    for (int i10 = 0; i10 < 4; i10++) {
+      printf("   face %d : %d %d %d %d\n", i10+1, cell_som_quad[4*i10],  
+                                                  cell_som_quad[4*i10+1],
+                                                  cell_som_quad[4*i10+2],
+                                                  cell_som_quad[4*i10+3]);
+    }
+    abort();
+    
+  }
+    
   int id2 = (id1 + 1) % 4;
   int k2 = (k1 + 1) % 4;
   int k3 = (k1 + 3) % 4;
+  
   if ((face_contact[id2] == connec_hexa_courant[k2]) ||
       (face_contact[id2] == connec_hexa_courant[k3]))
     id2 = (id1 + 3) % 4;

@@ -911,7 +911,7 @@ _build_faceCoarseCell
    * Loop over faceCellTemp which is to be compressed. i = face number    
    */
 
-  int idx = 0;;
+  int idx = 0;
   for (int i = 0; i < nFace; i++) {
     int iCell1 = faceCellTemp[2 * i    ];
     int iCell2 = faceCellTemp[2 * i + 1];        
@@ -919,11 +919,7 @@ _build_faceCoarseCell
     /* 
      * If a face is surrounded by the same coarse cell, it is not stored
      */
-
-    if(iCell1 == iCell2) {
-      (*nFaceChecked)--;
-    }
-    else {
+    if (iCell1 != iCell2) {
       (*faceCoarseCell)[2 * idx]     = iCell1;
       (*faceCoarseCell)[2 * idx + 1] = iCell2; 
             
@@ -932,6 +928,7 @@ _build_faceCoarseCell
     }
   }
         
+  (*nFaceChecked) = idx;
   /* 
    * realloc of the correct size
    */
@@ -1160,6 +1157,7 @@ _build_faceVtx
  int          **coarseVtxToFineVtx
 )
 {    
+  printf("_build_faceVtx\n");
   int idx_write_faceVtx = 0;
     
   (*faceVtxIdx)[0] = 0;
@@ -1171,32 +1169,40 @@ _build_faceVtx
   
   for (int i = 0; i < nFace; i++) {
     //Loop over the old faceVtx, j = vertex number
-    for (int j = (*faceVtxIdx)[i]; j < (*faceVtxIdx)[i + 1]; j++) {            
-      //If the face studied has been removed, I skip it
-      if (fineFaceToCoarseFace[i] == - 1) {
-        break;
-      }
-          
-      else {
+    if (fineFaceToCoarseFace[i] != - 1) {
+
+      for (int j = (*faceVtxIdx)[i]; j < (*faceVtxIdx)[i + 1]; j++) {            
+        //If the face studied has been removed, I skip it
         int vtx = (*faceVtx)[j];                
         (*faceVtx)[idx_write_faceVtx++] = vtx; 
       }
-    }
         
-    (*faceVtxIdx)[idx_write_faceVtxIdx] = (*faceVtxIdx)[i + 1] - (*faceVtxIdx)[i] + (*faceVtxIdx)[idx_write_faceVtxIdx - 1];
-    idx_write_faceVtxIdx++;    
+      (*faceVtxIdx)[idx_write_faceVtxIdx] = (*faceVtxIdx)[i + 1] - (*faceVtxIdx)[i] + (*faceVtxIdx)[idx_write_faceVtxIdx - 1];
+      idx_write_faceVtxIdx++;    
+    }
   }
-    
-  if (0 == 1) {
-    printf("Valeur de (*faceVtxIdx)[nFaceChecked] : %d \n", (*faceVtxIdx)[nFaceChecked]);
-    (*faceVtxIdx) = realloc((*faceVtxIdx), (nFaceChecked + 1) * sizeof(int));
-    (*faceVtx) = realloc((*faceVtx), (*faceVtxIdx)[nFaceChecked] * sizeof(int));   
 
-    printf("\nContent of faceVtx after removing: |");
-    for (int i = 0; i < (*faceVtxIdx)[nFaceChecked]; i++) {
-      printf(" %d ", (*faceVtx)[i]);
-      if (i % (*faceVtxIdx)[1] == (*faceVtxIdx)[1] - 1) {
-        printf("|");
+  printf("titi %d %d %d %d\n",idx_write_faceVtxIdx,nFaceChecked, nFace, cpt);
+  
+  *faceVtxIdx = realloc((*faceVtxIdx), (nFaceChecked + 1) * sizeof(int));
+  *faceVtx = realloc((*faceVtx), (*faceVtxIdx)[nFaceChecked] * sizeof(int));     
+  
+  if (1 == 1) {
+    printf("Valeur de (*faceVtxIdx)[nFaceChecked] : %d \n", (*faceVtxIdx)[nFaceChecked]);
+
+    for (int i = 0; i < nFaceChecked; i++) {
+      for (int j = (*faceVtxIdx)[i]; j < (*faceVtxIdx)[i + 1]; j++) {            
+        //If the face studied has been removed, I skip it
+        int vtx = (*faceVtx)[j];                
+        // A supprimer
+        for (int j1 = (*faceVtxIdx)[i]; j1 < (*faceVtxIdx)[i + 1]; j1++) {            
+          //If the face studied has been removed, I skip it
+          int vtx1 = (*faceVtx)[j1];                
+          if (j != j1 && vtx == vtx1) {
+            printf("Error multiple vertex in a face\n");
+            abort();
+          }
+        }
       }
     }
     printf("\n");
