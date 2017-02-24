@@ -678,8 +678,7 @@ _adapt_Connectedness
    */
 
   int nCoarseCellWanted = (*nCoarseCellChecked);
-
-  
+ 
   if (0 == 1) {
     printf("Valeur finale de (*nCoarseCellChecked) : %d %d\n", (*nCoarseCellChecked), nCell);
 
@@ -1157,7 +1156,6 @@ _build_faceVtx
  int          **coarseVtxToFineVtx
 )
 {    
-  printf("_build_faceVtx\n");
   int idx_write_faceVtx = 0;
     
   (*faceVtxIdx)[0] = 0;
@@ -1181,13 +1179,11 @@ _build_faceVtx
       idx_write_faceVtxIdx++;    
     }
   }
-
-  printf("titi %d %d %d %d\n",idx_write_faceVtxIdx,nFaceChecked, nFace, cpt);
   
   *faceVtxIdx = realloc((*faceVtxIdx), (nFaceChecked + 1) * sizeof(int));
   *faceVtx = realloc((*faceVtx), (*faceVtxIdx)[nFaceChecked] * sizeof(int));     
   
-  if (1 == 1) {
+  if (0 == 1) {
     printf("Valeur de (*faceVtxIdx)[nFaceChecked] : %d \n", (*faceVtxIdx)[nFaceChecked]);
 
     for (int i = 0; i < nFaceChecked; i++) {
@@ -1521,7 +1517,6 @@ static void
 _build_faceGroup
 (
  int            nFaceGroup,       
- int           *fineFaceToCoarseFace,
  int          **faceGroup, 
  int          **faceGroupIdx,
  int          **coarseFaceGroupToFineFaceGroup
@@ -1877,7 +1872,6 @@ _coarse_grid_create
   }
   
   _build_faceGroup(nFaceGroup,
-                   fineFaceToCoarseFace,
                    &(part_res->part->faceGroup),
                    &(part_res->part->faceGroupIdx),
                    &(part_res->coarseFaceGroupToFineFaceGroup));
