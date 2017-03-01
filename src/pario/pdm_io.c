@@ -1170,10 +1170,14 @@ void PDM_io_ecriture_globale
           sprintf(s_tmp, fichier->fmt, *((int *) t_buffer));
           break;
         case PDM_IO_T_LONG :
+#ifdef __INTEL_COMPILER
 #pragma warning(push)
 #pragma warning(disable:2312)
+#endif
           sprintf(s_tmp, fichier->fmt, *((long *) t_buffer));
+#ifdef __INTEL_COMPILER
 #pragma warning(pop)
+#endif
           break;
         case PDM_IO_T_DOUBLE :
           sprintf(s_tmp, fichier->fmt, *((double *) t_buffer));
@@ -2685,10 +2689,14 @@ void PDM_io_ecr_par_entrelacee
                 sprintf(s_tmp, fichier->fmt, *((int *) t_buffer));
                 break;
               case PDM_IO_T_LONG :
+#ifdef __INTEL_COMPILER
 #pragma warning(push)
 #pragma warning(disable:2312)
+#endif
                 sprintf(s_tmp, fichier->fmt, *((long *) t_buffer));
+#ifdef __INTEL_COMPILER
 #pragma warning(pop)
+#endif
                 break;
               case PDM_IO_T_DOUBLE :
                 sprintf(s_tmp, fichier->fmt, *((double *) t_buffer));
@@ -2713,10 +2721,14 @@ void PDM_io_ecr_par_entrelacee
                 sprintf(s_tmp, fichier->fmt, *((int *) t_buffer));
                 break;
               case PDM_IO_T_LONG :
+#ifdef __INTEL_COMPILER
 #pragma warning(push)
 #pragma warning(disable:2312)
+#endif
                 sprintf(s_tmp, fichier->fmt, *((long *) t_buffer));
+#ifdef __INTEL_COMPILER
 #pragma warning(pop)
+#endif
                 break;
               case PDM_IO_T_DOUBLE :
                 sprintf(s_tmp, fichier->fmt, *((double *) t_buffer));
@@ -3236,10 +3248,14 @@ void PDM_io_ecr_par_entrelacee
                 sprintf(s_tmp, fichier->fmt, *((int *) t_buffer));
                 break;
               case PDM_IO_T_LONG :
+#ifdef __INTEL_COMPILER
 #pragma warning(push)
 #pragma warning(disable:2312)
+#endif
                 sprintf(s_tmp, fichier->fmt, *((long *) t_buffer));
+#ifdef __INTEL_COMPILER
 #pragma warning(pop)
+#endif
                 break;
               case PDM_IO_T_DOUBLE :
                 sprintf(s_tmp, fichier->fmt, *((double *) t_buffer));
@@ -3309,10 +3325,14 @@ void PDM_io_ecr_par_entrelacee
                 sprintf(s_tmp, fichier->fmt, *((int *) t_buffer));
                 break;
               case PDM_IO_T_LONG :
+#ifdef __INTEL_COMPILER
 #pragma warning(push)
 #pragma warning(disable:2312)
+#endif
                 sprintf(s_tmp, fichier->fmt, *((long *) t_buffer));
+#ifdef __INTEL_COMPILER
 #pragma warning(pop)
+#endif
                 break;
               case PDM_IO_T_DOUBLE :
                 sprintf(s_tmp, fichier->fmt, *((double *) t_buffer));

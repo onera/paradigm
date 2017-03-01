@@ -2122,7 +2122,7 @@ PDM_l_num_t connec_hexa_courant[]
            connec_hexa_courant[5],
            connec_hexa_courant[6],
            connec_hexa_courant[7]);
-    int k10 = 0;
+
     for (int i10 = 0; i10 < 4; i10++) {
       printf("   face %d : %d %d %d %d\n", i10+1, cell_som_quad[4*i10],  
                                                   cell_som_quad[4*i10+1],

@@ -143,12 +143,16 @@ const PDM_MPI_Comm comm
   idx_t *__adjncy, *_adjncy;
 
   if (sizeof(PDM_g_num_t) == sizeof(idx_t)) {
+#ifdef __INTEL_COMPILER
 #pragma warning(push)
 #pragma warning(disable:3189)
+#endif
     _vtxdist = (idx_t *) vtxdist;
     _xadj    = (idx_t *) xadj;
     _adjncy  = (idx_t *) adjncy;
+#ifdef __INTEL_COMPILER
 #pragma warning(pop)
+#endif
     __vtxdist = NULL;
     __xadj    = NULL;
     __adjncy  = NULL;
@@ -322,13 +326,16 @@ int *part
   SCOTCH_Num *_part, *__part;
   
   if (sizeof(PDM_g_num_t) == sizeof(SCOTCH_Num)) {
+#ifdef __INTEL_COMPILER
 #pragma warning(push)
 #pragma warning(disable:3189)
+#endif
     _vertloctab = (SCOTCH_Num *) dDualGraphIdx;
     _vendloctab = (SCOTCH_Num *) dDualGraphIdx + 1;
     _edgeloctab = (SCOTCH_Num *) dDualGraph;
+#ifdef __INTEL_COMPILER
 #pragma warning(pop)
-    
+#endif    
     __vertloctab = NULL;
     __vendloctab = NULL;
     __edgeloctab = NULL;

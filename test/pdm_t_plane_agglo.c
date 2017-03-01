@@ -250,10 +250,14 @@ PDM_part_split_t           method,
     (t_elaps_debut.tv_usec + 1000000 *
      t_elaps_debut.tv_sec);
   long tranche_elapsed_max = tranche_elapsed;
+#ifdef __INTEL_COMPILER
 #pragma warning(push)
 #pragma warning(disable:2259)
+#endif
   double t_elapsed = (double) tranche_elapsed_max/1000000.;
+#ifdef __INTEL_COMPILER
 #pragma warning(pop)
+#endif
   if (myRank == 0)
     printf("[%d] Temps dans creeMaillagePolygone2D %d : %12.5e\n",
            myRank, imesh, t_elapsed);
