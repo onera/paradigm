@@ -3613,7 +3613,7 @@ PDM_part_coarse_mesh_input
  const int           nCell,
  const int           nFace,
  const int           nVtx,
- const int           nFaceGroup,
+ const int           nFaceGroup, //FIXME: Argument a eliminer : Information deja donnee
  const int           nFacePartBound,
  const int          *cellFaceIdx,
  const int          *cellFace,
