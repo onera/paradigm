@@ -4429,6 +4429,23 @@ const PDM_l_num_t unite
  *
  *----------------------------------------------------------------------------*/
 
+ void PROCF (pdm_io_swap_endian, PDM_IO_SWAP_ENDIAN) 
+ (
+  const int     *taille_donnee,
+  const int     *n_donnees, 
+  const void    *donnees, 
+  void          *resultats 
+)
+{
+  size_t _taille_donnee = (size_t) *taille_donnee; 
+  size_t _n_donnees = (size_t) *n_donnees; 
+   
+  PDM_io_swap_endian (_taille_donnee,
+                      _n_donnees,
+                      donnees,
+                      resultats);   
+}
+
 void PDM_io_swap_endian(const size_t   taille_donnee,
                         const size_t   n_donnees,
                         const void    *donnees,

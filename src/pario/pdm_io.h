@@ -634,19 +634,22 @@ const PDM_l_num_t unite
  *
  *----------------------------------------------------------------------------*/
 
-/*TODO : pdm_io_swap_endian Fortran interface */
 
-/* void PROCF (pdm_io_swap_endian, PDM_IO_SWAP_ENDIAN) */
-/* (const size_t   taille_donnee, */
-/*                         const size_t   n_donnees, */
-/*                         const void    *donnees, */
-/*                         void          *resultats */
-/*      ); */
+ void PROCF (pdm_io_swap_endian, PDM_IO_SWAP_ENDIAN) 
+ (
+  const int    *taille_donnee,
+  const int    *n_donnees, 
+  const void   *donnees, 
+  void         *resultats 
+);
 
-void PDM_io_swap_endian(const size_t   taille_donnee,
-                        const size_t   n_donnees,
-                        const void    *donnees,
-                        void          *resultats);
+void PDM_io_swap_endian
+(
+const size_t   taille_donnee,
+const size_t   n_donnees,
+const void    *donnees,
+void          *resultats
+);
 
 
 /*----------------------------------------------------------------------------
