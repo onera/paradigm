@@ -972,7 +972,7 @@ PDM_cuthill_generate
   }
 
   /** Apply rcm to current Graph **/
-  _genrcm(dualGraphIdx[ppart->nCell], dualGraphIdx, dualGraph, perm);
+  _genrcm(ppart->nCell, dualGraphIdx, dualGraph, perm);
 
   /** Offset Permutation array **/
   for (int i = 0; i < ppart->nCell; i++)
