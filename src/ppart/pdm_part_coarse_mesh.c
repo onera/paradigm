@@ -1327,42 +1327,42 @@ _build_vtx
  double       **vtx 
 )
 {
-    //If no vertex has been removed, nothing to do!
-    if (nVtx == nVtxChecked) {
-        return;
+  //If no vertex has been removed, nothing to do!
+  if (nVtx == nVtxChecked) {
+      return;
+  }
+
+  int idx_write = 0;    
+
+  //Loop over fineVtxToCoarseVtx, i = index of a vertex number (vertex number - 1)
+  for (int i = 0; i < nVtx; i++) {
+    //We store each vertex that has not been removed
+    if (fineVtxToCoarseVtx[i] != -1) {
+      double coord1 = (*vtx)[3 * i    ];
+      double coord2 = (*vtx)[3 * i + 1];
+      double coord3 = (*vtx)[3 * i + 2];
+
+      (*vtx)[idx_write++] = coord1;
+      (*vtx)[idx_write++] = coord2;
+      (*vtx)[idx_write++] = coord3;
     }
-    
-    int idx_write = 0;    
-    
-    //Loop over fineVtxToCoarseVtx, i = index of a vertex number (vertex number - 1)
-    for (int i = 0; i < nVtx; i++) {
-        //We store each vertex that has not been removed
-        if (fineVtxToCoarseVtx[i] != -1) {
-            double coord1 = (*vtx)[3 * i    ];
-            double coord2 = (*vtx)[3 * i + 1];
-            double coord3 = (*vtx)[3 * i + 2];
-            
-            (*vtx)[idx_write++] = coord1;
-            (*vtx)[idx_write++] = coord2;
-            (*vtx)[idx_write++] = coord3;
-        }
+  }
+
+  //Reallocation of vtx at the suitable size
+  *vtx = realloc((*vtx), 3 * nVtxChecked * sizeof(double));
+
+  assert(3 * nVtxChecked == idx_write);
+
+  if(0 == 1) {
+    printf("Contenu final de vtx\n");
+    for (int i = 0; i < 3 * nVtxChecked; i++) {        
+      printf(" %.1f ", (*vtx)[i]);
+      if (i % 3 == 2) {
+          printf("|");
+      }
     }
-    
-    //Reallocation of vtx at the suitable size
-    *vtx = realloc((*vtx), 3 * nVtxChecked * sizeof(double));
-    
-    assert(3 * nVtxChecked == idx_write);
-    
-    if(0 == 1) {
-        printf("Contenu final de vtx\n");
-        for (int i = 0; i < 3 * nVtxChecked; i++) {        
-            printf(" %.1f ", (*vtx)[i]);
-            if (i % 3 == 2) {
-                printf("|");
-            }
-        }
-        printf("\n");
-    }
+    printf("\n");
+  }
 }
 
 /**
@@ -1388,39 +1388,39 @@ _build_coarseCellTag
  int          **coarseCellTag
 )
 {
-    if (cellTag == NULL) {
-        return;
+  if (cellTag == NULL) {
+      return;
+  }
+
+  *coarseCellTag = (int *) malloc(nCoarseCellChecked * sizeof(int));
+
+  //Loop over coarseCellCellIdx, i = index of coarse cell
+  for (int i = 0; i < nCoarseCellChecked; i++) {
+    //This should be the tag of all the fine cells of the coarse cell j
+    int tag = cellTag[coarseCellCell[coarseCellCellIdx[i]] - 1];
+
+    //Loop over coarseCellCell, j = coarse cell number
+    for (int j = coarseCellCellIdx[i]; j < coarseCellCellIdx[i + 1]; j++) {
+      //If any fine cell does not have the same tag as the previous one, the cellTag array is incorrect
+      if (cellTag[coarseCellCell[j] - 1] != tag) {
+        printf("Incorrect cellTag array provided!\n");
+        printf("Please check the fine cell %d\n", j + 1);
+        printf("A default tag of 0 will be written in the coarse cell %d\n", i + 1);
+        tag = 0;
+        break;
+      }
+      tag = cellTag[coarseCellCell[j] - 1];
     }
-    
-    *coarseCellTag = (int *) malloc(nCoarseCellChecked * sizeof(int));
-    
-    //Loop over coarseCellCellIdx, i = index of coarse cell
+    (*coarseCellTag)[i] = tag;        
+  }
+
+  if(0 == 1) {
+    printf("Affichage de (*coarseCellTag)\n");
     for (int i = 0; i < nCoarseCellChecked; i++) {
-        //This should be the tag of all the fine cells of the coarse cell j
-        int tag = cellTag[coarseCellCell[coarseCellCellIdx[i]] - 1];
-        
-        //Loop over coarseCellCell, j = coarse cell number
-        for (int j = coarseCellCellIdx[i]; j < coarseCellCellIdx[i + 1]; j++) {
-            //If any fine cell does not have the same tag as the previous one, the cellTag array is incorrect
-            if (cellTag[coarseCellCell[j] - 1] != tag) {
-                printf("Incorrect cellTag array provided!\n");
-                printf("Please check the fine cell %d\n", j + 1);
-                printf("A default tag of 0 will be written in the coarse cell %d\n", i + 1);
-                tag = 0;
-                break;
-            }
-            tag = cellTag[coarseCellCell[j] - 1];
-        }
-        (*coarseCellTag)[i] = tag;        
+      printf(" %d ", (*coarseCellTag)[i]);
     }
-    
-    if(0 == 1) {
-        printf("Affichage de (*coarseCellTag)\n");
-        for (int i = 0; i < nCoarseCellChecked; i++) {
-            printf(" %d ", (*coarseCellTag)[i]);
-        }
-        printf("\n");
-    }
+    printf("\n");
+  }
 }
 
 /**
@@ -1442,24 +1442,24 @@ _build_faceTag
  int          **faceTag
 )
 {
-    if(*faceTag == NULL) {
-        return;
-    }
-        
-    //Loop over coarseFaceToFineFace, i = number of a face after refinement
+  if(*faceTag == NULL) {
+    return;
+  }
+
+  //Loop over coarseFaceToFineFace, i = number of a face after refinement
+  for (int i = 0; i < nFaceChecked; i++) {
+    (*faceTag)[i] = (*faceTag)[coarseFaceToFineFace[i] - 1];
+  }
+
+  (*faceTag) = realloc((*faceTag), nFaceChecked * sizeof(int));
+
+  if(0 == 1) {
+    printf("Contenu de (*faceTag)\n");
     for (int i = 0; i < nFaceChecked; i++) {
-        (*faceTag)[i] = (*faceTag)[coarseFaceToFineFace[i] - 1];
+        printf(" %d ", (*faceTag)[i]);
     }
-    
-    (*faceTag) = realloc((*faceTag), nFaceChecked * sizeof(int));
-    
-    if(0 == 1) {
-        printf("Contenu de (*faceTag)\n");
-        for (int i = 0; i < nFaceChecked; i++) {
-            printf(" %d ", (*faceTag)[i]);
-        }
-        printf("\n");
-    }    
+    printf("\n");
+  }    
 }
 
 /**
@@ -1481,24 +1481,24 @@ _build_vtxTag
  int          **vtxTag
 )
 {    
-    if(*vtxTag == NULL) {
-        return;
-    }
-    
-    //Loop over coarseFaceToFineFace, i = number of a face after refinement
+  if(*vtxTag == NULL) {
+    return;
+  }
+
+  //Loop over coarseFaceToFineFace, i = number of a face after refinement
+  for (int i = 0; i < nVtxChecked; i++) {
+    (*vtxTag)[i] = (*vtxTag)[coarseVtxToFineVtx[i] - 1];
+  }
+
+  (*vtxTag) = realloc((*vtxTag), nVtxChecked * sizeof(int));
+
+  if(0 == 1) {
+    printf("Contenu de (*vtxTag)\n");
     for (int i = 0; i < nVtxChecked; i++) {
-        (*vtxTag)[i] = (*vtxTag)[coarseVtxToFineVtx[i] - 1];
+      printf(" %d ", (*vtxTag)[i]);
     }
-    
-    (*vtxTag) = realloc((*vtxTag), nVtxChecked * sizeof(int));
-    
-    if(0 == 1) {
-        printf("Contenu de (*vtxTag)\n");
-        for (int i = 0; i < nVtxChecked; i++) {
-            printf(" %d ", (*vtxTag)[i]);
-        }
-        printf("\n");
-    }    
+    printf("\n");
+  }    
 }
 
 /**
@@ -1792,21 +1792,7 @@ _coarse_grid_create
   int *cellCoarseCell = NULL; 
   
   part_res->part->nCell = nCoarseCellWanted;
-  
-//  //These lines are used for testing a wrong partitioning (nCoarseCell must be set to 3 in cs_test_3d.c))
-//  int partCellTest[8] = {0, 4, 2, 3, 5, 1, 6, 7};
-//  int cellPartTest[8] = {0, 2, 1, 1, 0, 1, 2, 2};      
-//    _adapt_Connectedness(&(part_res->part->nCell),
-//                       part_ini->nCell,
-//                       cellPartTest,
-//                       (int **) &cellCoarseCell,
-//                       dualGraph,
-//                       dualGraphIdx, 
-//                       partCellTest, 
-//                       partCellIdx,
-//                       (int **) &(part_res->coarseCellCell),
-//                       (int **) &(part_res->coarseCellCellIdx));
-  
+    
   _adapt_Connectedness(&(part_res->part->nCell),
                        part_ini->nCell,
                        cellPart,
@@ -1893,7 +1879,7 @@ _coarse_grid_create
                                       &(part_res->part->cellFaceIdx),
                                       &(part_res->part->cellFace));
    
-   PDM_timer_hang_on(cm->timer);
+  PDM_timer_hang_on(cm->timer);
   cm->times_elapsed[itime] = PDM_timer_elapsed(cm->timer);
   cm->times_cpu[itime]     = PDM_timer_cpu(cm->timer);
   cm->times_cpu_u[itime]   = PDM_timer_cpu_user(cm->timer);
@@ -1907,15 +1893,13 @@ _coarse_grid_create
   part_res->part->nVtx = part_ini->nVtx;
   
   part_res->part->faceVtxIdx = malloc((part_ini->nFace + 1) * sizeof(int));
-  for (int i = 0; i < (part_ini->nFace + 1); i++)
-  {
-      part_res->part->faceVtxIdx[i] = part_ini->faceVtxIdx[i];
+  for (int i = 0; i < (part_ini->nFace + 1); i++) {
+    part_res->part->faceVtxIdx[i] = part_ini->faceVtxIdx[i];
   }
   
   part_res->part->faceVtx = malloc(part_res->part->faceVtxIdx[part_ini->nFace] * sizeof(int));
-  for (int i = 0; i < part_res->part->faceVtxIdx[part_ini->nFace]; i++)
-  {
-      part_res->part->faceVtx[i] = part_ini->faceVtx[i];
+  for (int i = 0; i < part_res->part->faceVtxIdx[part_ini->nFace]; i++) {
+    part_res->part->faceVtx[i] = part_ini->faceVtx[i];
   }
     
   int *fineVtxToCoarseVtx = NULL;
@@ -1943,9 +1927,8 @@ _coarse_grid_create
   PDM_timer_resume(cm->timer);
   
   part_res->part->vtx = malloc(3 * part_ini->nVtx * sizeof(double));
-  for (int i = 0; i < 3 * part_ini->nVtx; i++)
-  {
-      part_res->part->vtx[i] = part_ini->vtx[i];
+  for (int i = 0; i < 3 * part_ini->nVtx; i++) {
+    part_res->part->vtx[i] = part_ini->vtx[i];
   }
   
   _build_vtx(part_ini->nVtx, 
@@ -1979,17 +1962,14 @@ _coarse_grid_create
   
   PDM_timer_resume(cm->timer);
   
-  if (part_ini->faceTag != NULL)
-  {
-      part_res->part->faceTag = malloc(part_ini->nFace * sizeof(int));
-      for (int i = 0; i < part_ini->nFace; i++)
-      {
-        part_res->part->faceTag[i] = part_ini->faceTag[i];
-      }
+  if (part_ini->faceTag != NULL) {
+    part_res->part->faceTag = malloc(part_ini->nFace * sizeof(int));
+    for (int i = 0; i < part_ini->nFace; i++) {
+      part_res->part->faceTag[i] = part_ini->faceTag[i];
+    }
   }
-  else
-  {
-      part_res->part->faceTag = NULL;
+  else {
+    part_res->part->faceTag = NULL;
   }
   
   _build_faceTag(part_res->part->nFace, 
@@ -2004,19 +1984,15 @@ _coarse_grid_create
   itime += 1;
   
   PDM_timer_resume(cm->timer);
-    if (part_ini->vtxTag != NULL)
-    {
-        part_res->part->vtxTag = malloc(part_ini->nVtx * sizeof(int));
-        for (int i = 0; i < part_ini->nVtx; i++)
-        {
-          part_res->part->vtxTag[i] = part_ini->vtxTag[i];
-        }
+  if (part_ini->vtxTag != NULL) {
+    part_res->part->vtxTag = malloc(part_ini->nVtx * sizeof(int));
+    for (int i = 0; i < part_ini->nVtx; i++) {
+      part_res->part->vtxTag[i] = part_ini->vtxTag[i];
     }
-    else
-    {
-        part_res->part->vtxTag = NULL;
-    }
-  
+  }
+  else {
+    part_res->part->vtxTag = NULL;
+  }  
   
   _build_vtxTag(part_res->part->nVtx,
                 part_res->coarseVtxToFineVtx, 
@@ -2110,185 +2086,184 @@ _build_faceLNToGN
 _coarse_mesh_t * cm
 )
 {
-    int **faceLNToGNPart = (int **) malloc(cm->nPart * sizeof(int *));
-    int *nFacePart = (int *) malloc(cm->nPart * sizeof(int));
-    
+  int **faceLNToGNPart = (int **) malloc(cm->nPart * sizeof(int *));
+  int *nFacePart = (int *) malloc(cm->nPart * sizeof(int));
+
+  for (int i = 0; i < cm->nPart; i++) {
+    faceLNToGNPart[i] = cm->part_ini[i]->faceLNToGN;
+    nFacePart[i] = cm->part_ini[i]->nFace;
+  }
+
+  if(0 == 1) {
+    printf("Contenu de faceLNToGNPart\n");
     for (int i = 0; i < cm->nPart; i++) {
-        faceLNToGNPart[i] = cm->part_ini[i]->faceLNToGN;
-        nFacePart[i] = cm->part_ini[i]->nFace;
+      for (int j = 0; j < nFacePart[i]; j++) {
+         printf(" %d ", faceLNToGNPart[i][j]);
+      }
+    printf("\n");
     }
-    
-    if(0 == 1) {
-        printf("Contenu de faceLNToGNPart\n");
-        for (int i = 0; i < cm->nPart; i++) {
-          for (int j = 0; j < nFacePart[i]; j++) {
-             printf(" %d ", faceLNToGNPart[i][j]);
-          }
-        printf("\n");
-        }
+
+  }
+
+  PDM_part_to_block_t *ptb = PDM_part_to_block_create (PDM_writer_BLOCK_DISTRIB_ALL_PROC,
+                                                     PDM_writer_POST_CLEANUP,
+                                                     1.,
+                                                     (PDM_g_num_t **) faceLNToGNPart,
+                                                     nFacePart,
+                                                     cm->nPart,
+                                                     cm->comm);    
+
+  int **faceLNToGNTag = (int **) malloc(cm->nPart * sizeof(int *));
+
+  int idx_write = 0;
+
+  for (int i = 0; i < cm->nPart; i++) {
+    idx_write = 0;
+    faceLNToGNTag[i] = (int *) malloc(cm->part_ini[i]->nFace * sizeof(int));
+      //Loop over coarseFaceToFineFace, i = index of coarseFaceToFineFace (from 0 to cm->part_res[iPart]->part->nFace)
+
+    for (int j = 0; j < cm->part_ini[i]->nFace; j++) {
+      faceLNToGNTag[i][j] = -1;
+    }
+
+    for (int j = 0; j < cm->part_res[i]->part->nFace; j++) {
+          //If the vertex studied is the same as in coarseFaceToFineFace, it is to be stored
+     int k =  cm->part_res[i]->coarseFaceToFineFace[j] - 1;
+     faceLNToGNTag[i][k] = 0;
+    }
+  }
+
+  if(0 == 1) {
+    printf("Contenu de faceLNToGNTag\n");    
+    for (int i = 0; i < cm->nPart; i++) {
+      for (int j = 0; j < cm->part_res[i]->part->nFace; j++) {
+          printf(" %d ", faceLNToGNTag[i][j]);
+      }
+    }
+    printf("\n");
+  }
+
+  int *b_tIntersects = NULL;
+  int *b_strideOne = NULL;
+  int *part_stride = NULL;
+
+  PDM_part_to_block_exch (ptb,
+                            sizeof(int),
+                            PDM_STRIDE_CST,
+                            1,
+                            &part_stride,
+                            (void **) faceLNToGNTag,                                   
+                            &b_strideOne,
+                            (void **) &b_tIntersects);
+
+  //Calculation of the number of faces on the processor
+  PDM_g_num_t nFaceProc = 0;
+
+  int size_block = PDM_part_to_block_n_elt_block_get(ptb);
+  for (int i = 0; i < size_block; i++) {
+    //If the face has not been removed
+     if(b_tIntersects[i] == 0) {
+         nFaceProc++;
+     }        
+  }    
+
+  //Global numbering of the faces
+  PDM_g_num_t beg_NumAbs;
+
+  PDM_MPI_Scan(&nFaceProc, &beg_NumAbs, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, cm->comm);
+
+  //Index to position the local vertices
+  beg_NumAbs -= nFaceProc;
+
+  idx_write = 0;
+
+  //Loop over the partition numbers, i = partition number
+
+  for (int i = 0; i < size_block; i++) {
+    //If the vertex has not been removed
+    if(b_tIntersects[i] == 0) {
+        b_tIntersects[i] = beg_NumAbs + (idx_write++) + 1;
 
     }
-            
-    PDM_part_to_block_t *ptb = PDM_part_to_block_create (PDM_writer_BLOCK_DISTRIB_ALL_PROC,
-                                                       PDM_writer_POST_CLEANUP,
-                                                       1.,
+    else {
+        b_tIntersects[i] = -1;
+    }        
+  }    
+
+  PDM_g_num_t *blockDistribIdx = PDM_part_to_block_distrib_index_get (ptb); 
+
+  PDM_block_to_part_t *btp = PDM_block_to_part_create (blockDistribIdx,
                                                        (PDM_g_num_t **) faceLNToGNPart,
                                                        nFacePart,
                                                        cm->nPart,
-                                                       cm->comm);    
+                                                       cm->comm);
 
-    int **faceLNToGNTag = (int **) malloc(cm->nPart * sizeof(int *));
-    
-    int idx_write = 0;
-    
-    for (int i = 0; i < cm->nPart; i++) {
-      idx_write = 0;
-      faceLNToGNTag[i] = (int *) malloc(cm->part_ini[i]->nFace * sizeof(int));
-        //Loop over coarseFaceToFineFace, i = index of coarseFaceToFineFace (from 0 to cm->part_res[iPart]->part->nFace)
+  PDM_g_num_t  **faceLNToGNFine = (PDM_g_num_t **) malloc(cm->nPart * sizeof(PDM_g_num_t *));
 
-      for (int j = 0; j < cm->part_ini[i]->nFace; j++) {
-        faceLNToGNTag[i][j] = -1;
-      }
+  for (int i = 0; i < cm->nPart; i++) {        
+    faceLNToGNFine[i] = (PDM_g_num_t *) malloc(cm->part_ini[i]->nFace * sizeof(PDM_g_num_t));        
+  }
 
-      for (int j = 0; j < cm->part_res[i]->part->nFace; j++) {
-            //If the vertex studied is the same as in coarseFaceToFineFace, it is to be stored
-       int k =  cm->part_res[i]->coarseFaceToFineFace[j] - 1;
-       faceLNToGNTag[i][k] = 0;
-      }
-    }
+  int strideOne = 1;
 
-    if(0 == 1) {
-        printf("Contenu de faceLNToGNTag\n");    
-        for (int i = 0; i < cm->nPart; i++) {
-            for (int j = 0; j < cm->part_res[i]->part->nFace; j++) {
-                printf(" %d ", faceLNToGNTag[i][j]);
-            }
-        }
-        printf("\n");
-    }
-    
-    int *b_tIntersects = NULL;
-    int *b_strideOne = NULL;
-    int *part_stride = NULL;
-    
-    PDM_part_to_block_exch (ptb,
-                              sizeof(int),
-                              PDM_STRIDE_CST,
-                              1,
-                              &part_stride,
-                              (void **) faceLNToGNTag,                                   
-                              &b_strideOne,
-                              (void **) &b_tIntersects);
-   
-    //Calculation of the number of faces on the processor
-    PDM_g_num_t nFaceProc = 0;
-    
-    int size_block = PDM_part_to_block_n_elt_block_get(ptb);
-    for (int i = 0; i < size_block; i++) {
-        //If the face has not been removed
-        if(b_tIntersects[i] == 0) {
-            nFaceProc++;
-        }        
-    }    
-    
-    //Global numbering of the faces
-    PDM_g_num_t beg_NumAbs;
-    
-    PDM_MPI_Scan(&nFaceProc, &beg_NumAbs, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, cm->comm);
-    
-    //Index to position the local vertices
-    beg_NumAbs -= nFaceProc;
-    
-    idx_write = 0;
-      
-    //Loop over the partition numbers, i = partition number
-    
-    for (int i = 0; i < size_block; i++) {
-        //If the vertex has not been removed
-        if(b_tIntersects[i] == 0) {
-            b_tIntersects[i] = beg_NumAbs + (idx_write++) + 1;
+  PDM_block_to_part_exch (btp,
+                          sizeof(int),
+                          PDM_STRIDE_CST,
+                          &strideOne, 
+                          (void *) b_tIntersects,
+                          &part_stride,
+                          (void **) faceLNToGNFine);
 
-        }
-        else {
-            b_tIntersects[i] = -1;
-        }        
-    }    
-    
-    PDM_g_num_t *blockDistribIdx = PDM_part_to_block_distrib_index_get (ptb); 
-  
-    PDM_block_to_part_t *btp = PDM_block_to_part_create (blockDistribIdx,
-                                                         (PDM_g_num_t **) faceLNToGNPart,
-                                                         nFacePart,
-                                                         cm->nPart,
-                                                         cm->comm);
-
-    PDM_g_num_t  **faceLNToGNFine = (PDM_g_num_t **) malloc(cm->nPart * sizeof(PDM_g_num_t *));
-
+  if(0 == 1) {
+    printf("\nContenu de faceLNToGNFine\n");
     for (int i = 0; i < cm->nPart; i++) {        
-        faceLNToGNFine[i] = (PDM_g_num_t *) malloc(cm->part_ini[i]->nFace * sizeof(PDM_g_num_t));        
+      //Loop over the partition faces, j = face number
+      for (int j = 0; j < cm->part_ini[i]->nFace; j++) {
+        printf(" %d ", faceLNToGNFine[i][j]);
+      }
     }
-    
-    int strideOne = 1;
-    
-    PDM_block_to_part_exch (btp,
-                            sizeof(int),
-                            PDM_STRIDE_CST,
-                            &strideOne, 
-                            (void *) b_tIntersects,
-                            &part_stride,
-                            (void **) faceLNToGNFine);
-    
-    if(0 == 1) {
-        printf("\nContenu de faceLNToGNFine\n");
-        for (int i = 0; i < cm->nPart; i++) {        
-            //Loop over the partition faces, j = face number
-            for (int j = 0; j < cm->part_ini[i]->nFace; j++) {
-                printf(" %d ", faceLNToGNFine[i][j]);
-            }
-        }
-        printf("\n");
-    }
-    
-    for (int i = 0; i < cm->nPart; i++) {
-        _part_t *cmp = cm->part_res[i]->part;
-        int nFace = cm->part_res[i]->part->nFace;
-        cmp->faceLNToGN = (PDM_g_num_t *) malloc(nFace * sizeof(PDM_g_num_t));
-        for (int j = 0; j < nFace; j++)
-        {            
-            cmp->faceLNToGN[j] = (PDM_g_num_t) faceLNToGNFine[i][cm->part_res[i]->coarseFaceToFineFace[j] - 1];
-        }
-    }
-        
-    if(0 == 1) {
-        printf("\nContenu de faceLNToGN de la structure\n");
-        for (int i = 0; i < cm->nPart; i++) {        
-            //Loop over the partition vertices, j = vertex number
-            for (int j = 0; j < cm->part_res[i]->part->nFace; j++) {
-                printf(" %d ", cm->part_res[i]->part->faceLNToGN[j]);
-            }
-        }
-        printf("\n");
-    }
+    printf("\n");
+  }
 
-    free(faceLNToGNPart);
-    free(nFacePart);
-    
-    for (int i = 0; i < cm->nPart; i++) {
-       free(faceLNToGNTag[i]);
+  for (int i = 0; i < cm->nPart; i++) {
+    _part_t *cmp = cm->part_res[i]->part;
+    int nFace = cm->part_res[i]->part->nFace;
+    cmp->faceLNToGN = (PDM_g_num_t *) malloc(nFace * sizeof(PDM_g_num_t));
+    for (int j = 0; j < nFace; j++) {            
+      cmp->faceLNToGN[j] = (PDM_g_num_t) faceLNToGNFine[i][cm->part_res[i]->coarseFaceToFineFace[j] - 1];
     }
-    free(faceLNToGNTag);
-    
-    for (int i = 0; i < cm->nPart; i++) {
-       free(faceLNToGNFine[i]);
+  }
+
+  if(0 == 1) {
+    printf("\nContenu de faceLNToGN de la structure\n");
+    for (int i = 0; i < cm->nPart; i++) {        
+      //Loop over the partition vertices, j = vertex number
+      for (int j = 0; j < cm->part_res[i]->part->nFace; j++) {
+        printf(" %d ", cm->part_res[i]->part->faceLNToGN[j]);
+      }
     }
-    free(faceLNToGNFine);
-    
-    free (b_strideOne);
-    free (part_stride);
-    free (b_tIntersects);
-    
-    PDM_part_to_block_free(ptb);
-    PDM_block_to_part_free(btp);    
+    printf("\n");
+  }
+
+  free(faceLNToGNPart);
+  free(nFacePart);
+
+  for (int i = 0; i < cm->nPart; i++) {
+    free(faceLNToGNTag[i]);
+  }
+  free(faceLNToGNTag);
+
+  for (int i = 0; i < cm->nPart; i++) {
+    free(faceLNToGNFine[i]);
+  }
+  free(faceLNToGNFine);
+
+  free (b_strideOne);
+  free (part_stride);
+  free (b_tIntersects);
+
+  PDM_part_to_block_free(ptb);
+  PDM_block_to_part_free(btp);    
 }
 
 /**
@@ -2305,190 +2280,186 @@ _build_vtxLNToGN
 _coarse_mesh_t * cm
 )
 {    
-    int **vtxLNToGNPart = (int **) malloc(cm->nPart * sizeof(int *));
-    int *nVtxPart = (int *) malloc(cm->nPart * sizeof(int));
-    
-    for (int i = 0; i < cm->nPart; i++) {
-        vtxLNToGNPart[i] = cm->part_ini[i]->vtxLNToGN;
-        nVtxPart[i] = cm->part_ini[i]->nVtx;
-    }
-    
-    if(0 == 1) {
-        printf("Contenu de vtxLNToGNPart\n");
-        for (int i = 0; i < cm->nPart; i++) {
-            printf(" %d ", *(vtxLNToGNPart[i]));
-        }
-        printf("\n");
+  int **vtxLNToGNPart = (int **) malloc(cm->nPart * sizeof(int *));
+  int *nVtxPart = (int *) malloc(cm->nPart * sizeof(int));
 
-        printf("Contenu de nVtxPart\n");
-        for (int i = 0; i < cm->nPart; i++) {
-            printf(" %d ", nVtxPart[i]);
-        }
-        printf("\n");
+  for (int i = 0; i < cm->nPart; i++) {
+    vtxLNToGNPart[i] = cm->part_ini[i]->vtxLNToGN;
+    nVtxPart[i] = cm->part_ini[i]->nVtx;
+  }
+
+  if(0 == 1) {
+    printf("Contenu de vtxLNToGNPart\n");
+    for (int i = 0; i < cm->nPart; i++) {
+      printf(" %d ", *(vtxLNToGNPart[i]));
     }
-            
-    PDM_part_to_block_t *ptb = PDM_part_to_block_create (PDM_writer_BLOCK_DISTRIB_ALL_PROC,
-                                                       PDM_writer_POST_CLEANUP,
-                                                       1.,
+    printf("\n");
+
+    printf("Contenu de nVtxPart\n");
+    for (int i = 0; i < cm->nPart; i++) {
+      printf(" %d ", nVtxPart[i]);
+    }
+    printf("\n");
+  }
+
+  PDM_part_to_block_t *ptb = PDM_part_to_block_create (PDM_writer_BLOCK_DISTRIB_ALL_PROC,
+                                                     PDM_writer_POST_CLEANUP,
+                                                     1.,
+                                                     (PDM_g_num_t **) vtxLNToGNPart,
+                                                     nVtxPart,
+                                                     cm->nPart,
+                                                     cm->comm);    
+
+  int **vtxLNToGNTag = (int **) malloc(cm->nPart * sizeof(int *));
+
+  int idx_write = 0;
+
+  for (int i = 0; i < cm->nPart; i++) {
+    int nFineVtx = cm->part_ini[i]->nVtx;
+    int nCoarseVtx = cm->part_res[i]->part->nVtx;
+    idx_write = 0;
+    vtxLNToGNTag[i] = (int *) malloc(nFineVtx * sizeof(int));
+    //Loop over coarseFaceToFineFace, i = index of coarseVtxToFineVtx (from 0 to cm->part_res[iPart]->part->nVtx)
+    for (int j = 0; j < nFineVtx; j++) {
+      vtxLNToGNTag[i][j] = -1;
+    }
+
+    for (int j = 0; j < nCoarseVtx; j++) {
+        //If the vertex studied is the same as in coarseVtxToFineVtx, it is to be stored
+      int k = cm->part_res[i]->coarseVtxToFineVtx[j] - 1;
+      vtxLNToGNTag[i][k] = 0;
+    }
+  }
+
+  if (0 == 1) {
+    printf("Contenu de vtxLNToGNTag\n");    
+    for (int i = 0; i < cm->nPart; i++) {
+      for (int j = 0; j < cm->part_res[i]->part->nVtx; j++) {
+        printf(" %d ", vtxLNToGNTag[i][j]);
+      }
+    }
+    printf("\n");
+  }
+
+  int *b_tIntersects = NULL;
+  int *b_strideOne = NULL;
+  int *part_stride = NULL;
+
+  PDM_part_to_block_exch (ptb,
+                            sizeof(int),
+                            PDM_STRIDE_CST,
+                            1,
+                            &part_stride,
+                            (void **) vtxLNToGNTag,                                               
+                            &b_strideOne,
+                            (void **) &b_tIntersects);
+
+  //Calculation of the number of vertices on the processor
+  PDM_g_num_t nVtxProc = 0;
+
+  int size_block = PDM_part_to_block_n_elt_block_get(ptb);
+  for (int i = 0; i < size_block; i++) {
+    //If the vertex has not been removed
+    if(b_tIntersects[i] == 0) {
+      nVtxProc++;
+    }
+  }
+
+  //Global numbering of the vertices
+  PDM_g_num_t beg_NumAbs;
+
+  PDM_MPI_Scan(&nVtxProc, &beg_NumAbs, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, cm->comm);
+
+  //Index to position the local vertices
+  beg_NumAbs -= nVtxProc;
+
+  idx_write = 0;
+
+  //Loop over the partition numbers, i = partition number    
+  for (int i = 0; i < size_block; i++) {
+    //If the vertex has not been removed
+    if (b_tIntersects[i] == 0) {
+      b_tIntersects[i] = beg_NumAbs + (idx_write++) + 1;
+    }
+    else {
+      b_tIntersects[i] = -1;
+    }           
+  }
+
+  PDM_g_num_t *blockDistribIdx = PDM_part_to_block_distrib_index_get (ptb); 
+
+  PDM_block_to_part_t *btp = PDM_block_to_part_create (blockDistribIdx,
                                                        (PDM_g_num_t **) vtxLNToGNPart,
                                                        nVtxPart,
                                                        cm->nPart,
-                                                       cm->comm);    
+                                                       cm->comm);
 
-    int **vtxLNToGNTag = (int **) malloc(cm->nPart * sizeof(int *));
-    
-    int idx_write = 0;
-    
-    for (int i = 0; i < cm->nPart; i++) {
-        int nFineVtx = cm->part_ini[i]->nVtx;
-        int nCoarseVtx = cm->part_res[i]->part->nVtx;
-        idx_write = 0;
-        vtxLNToGNTag[i] = (int *) malloc(nFineVtx * sizeof(int));
-        //Loop over coarseFaceToFineFace, i = index of coarseVtxToFineVtx (from 0 to cm->part_res[iPart]->part->nVtx)
-        for (int j = 0; j < nFineVtx; j++) {
-          vtxLNToGNTag[i][j] = -1;
-        }
-         
-        for (int j = 0; j < nCoarseVtx; j++) {
-            //If the vertex studied is the same as in coarseVtxToFineVtx, it is to be stored
-          int k = cm->part_res[i]->coarseVtxToFineVtx[j] - 1;
-          vtxLNToGNTag[i][k] = 0;
-        }
-    }
+  PDM_g_num_t  **vtxLNToGNFine = (PDM_g_num_t **) malloc(cm->nPart * sizeof(PDM_g_num_t *));
 
-    if (0 == 1) {
-        printf("Contenu de vtxLNToGNTag\n");    
-        for (int i = 0; i < cm->nPart; i++) {
-            for (int j = 0; j < cm->part_res[i]->part->nVtx; j++) {
-                printf(" %d ", vtxLNToGNTag[i][j]);
-            }
-        }
-        printf("\n");
-    }
-    
-    int *b_tIntersects = NULL;
-    int *b_strideOne = NULL;
-    int *part_stride = NULL;
-    
-    PDM_part_to_block_exch (ptb,
-                              sizeof(int),
-                              PDM_STRIDE_CST,
-                              1,
-                              &part_stride,
-                              (void **) vtxLNToGNTag,                                               
-                              &b_strideOne,
-                              (void **) &b_tIntersects);
-     
-    //Calculation of the number of vertices on the processor
-    PDM_g_num_t nVtxProc = 0;
-    
-    int size_block = PDM_part_to_block_n_elt_block_get(ptb);
-    for (int i = 0; i < size_block; i++) {
-        //If the vertex has not been removed
-        if(b_tIntersects[i] == 0) {
-            nVtxProc++;
-        }
-        
-    }
-    
-       
-    //Global numbering of the vertices
-    PDM_g_num_t beg_NumAbs;
-    
-    PDM_MPI_Scan(&nVtxProc, &beg_NumAbs, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, cm->comm);
-    
-    //Index to position the local vertices
-    beg_NumAbs -= nVtxProc;
-    
-    idx_write = 0;
-      
-    //Loop over the partition numbers, i = partition number    
-    for (int i = 0; i < size_block; i++) {
-        //If the vertex has not been removed
-        if (b_tIntersects[i] == 0) {
-            b_tIntersects[i] = beg_NumAbs + (idx_write++) + 1;
+  for (int i = 0; i < cm->nPart; i++) {        
+    vtxLNToGNFine[i] = (PDM_g_num_t *) malloc(cm->part_ini[i]->nVtx * sizeof(PDM_g_num_t));        
+  }
 
-        }
-        else {
-            b_tIntersects[i] = -1;
-        }           
-        
-    }
-    
-    PDM_g_num_t *blockDistribIdx = PDM_part_to_block_distrib_index_get (ptb); 
-  
-    PDM_block_to_part_t *btp = PDM_block_to_part_create (blockDistribIdx,
-                                                         (PDM_g_num_t **) vtxLNToGNPart,
-                                                         nVtxPart,
-                                                         cm->nPart,
-                                                         cm->comm);
+  int strideOne = 1;
 
-    PDM_g_num_t  **vtxLNToGNFine = (PDM_g_num_t **) malloc(cm->nPart * sizeof(PDM_g_num_t *));
+  PDM_block_to_part_exch (btp,
+                          sizeof(int),
+                          PDM_STRIDE_CST,
+                          &strideOne, 
+                          (void *) b_tIntersects,
+                          &part_stride,
+                          (void **) vtxLNToGNFine);
 
+  if(0 == 1) {
+    printf("\nContenu de vtxLNToGNFine\n");
     for (int i = 0; i < cm->nPart; i++) {        
-        vtxLNToGNFine[i] = (PDM_g_num_t *) malloc(cm->part_ini[i]->nVtx * sizeof(PDM_g_num_t));        
+      //Loop over the partition vertices, j = vertex number
+      for (int j = 0; j < cm->part_ini[i]->nVtx; j++) {
+        printf(" %d ", vtxLNToGNFine[i][j]);
+      }
     }
-    
-    int strideOne = 1;
-    
-    PDM_block_to_part_exch (btp,
-                            sizeof(int),
-                            PDM_STRIDE_CST,
-                            &strideOne, 
-                            (void *) b_tIntersects,
-                            &part_stride,
-                            (void **) vtxLNToGNFine);
-    
-    if(0 == 1) {
-        printf("\nContenu de vtxLNToGNFine\n");
-        for (int i = 0; i < cm->nPart; i++) {        
-            //Loop over the partition vertices, j = vertex number
-            for (int j = 0; j < cm->part_ini[i]->nVtx; j++) {
-                printf(" %d ", vtxLNToGNFine[i][j]);
-            }
-        }
-        printf("\n");
+    printf("\n");
+  }
+
+  for (int i = 0; i < cm->nPart; i++) {
+    _part_t *cmp = cm->part_res[i]->part;
+    int nVtx = cm->part_res[i]->part->nVtx;
+    cmp->vtxLNToGN = (PDM_g_num_t *) malloc(nVtx * sizeof(PDM_g_num_t));
+    for (int j = 0; j < nVtx; j++) {            
+      cmp->vtxLNToGN[j] = (PDM_g_num_t) vtxLNToGNFine[i][cm->part_res[i]->coarseVtxToFineVtx[j] - 1];
     }
-    
-    for (int i = 0; i < cm->nPart; i++) {
-        _part_t *cmp = cm->part_res[i]->part;
-        int nVtx = cm->part_res[i]->part->nVtx;
-        cmp->vtxLNToGN = (PDM_g_num_t *) malloc(nVtx * sizeof(PDM_g_num_t));
-        for (int j = 0; j < nVtx; j++) {            
-            cmp->vtxLNToGN[j] = (PDM_g_num_t) vtxLNToGNFine[i][cm->part_res[i]->coarseVtxToFineVtx[j] - 1];
-        }
+  }
+
+  if(0 == 1) {
+    printf("\nContenu de vtxLNToGN de la structure\n");
+    for (int i = 0; i < cm->nPart; i++) {        
+      //Loop over the partition vertices, j = vertex number
+      for (int j = 0; j < cm->part_res[i]->part->nVtx; j++) {
+        printf(" %d ", cm->part_res[i]->part->vtxLNToGN[j]);
+      }
     }
-        
-    if(0 == 1) {
-        printf("\nContenu de vtxLNToGN de la structure\n");
-        for (int i = 0; i < cm->nPart; i++) {        
-            //Loop over the partition vertices, j = vertex number
-            for (int j = 0; j < cm->part_res[i]->part->nVtx; j++) {
-                printf(" %d ", cm->part_res[i]->part->vtxLNToGN[j]);
-            }
-        }
-        printf("\n");
-    }
-    
-    free(vtxLNToGNPart);
-    free(nVtxPart);
-    
-    for (int i = 0; i < cm->nPart; i++) {
-       free(vtxLNToGNTag[i]);
-    }
-    free(vtxLNToGNTag);
-    
-    for (int i = 0; i < cm->nPart; i++) {
-       free(vtxLNToGNFine[i]);
-    }
-    free(vtxLNToGNFine);
-    
-    free (b_strideOne);
-    free (part_stride);
-    free (b_tIntersects);
-    
-    PDM_part_to_block_free(ptb);
-    PDM_block_to_part_free(btp);
+    printf("\n");
+  }
+
+  free(vtxLNToGNPart);
+  free(nVtxPart);
+
+  for (int i = 0; i < cm->nPart; i++) {
+    free(vtxLNToGNTag[i]);
+  }
+  free(vtxLNToGNTag);
+
+  for (int i = 0; i < cm->nPart; i++) {
+    free(vtxLNToGNFine[i]);
+  }
+  free(vtxLNToGNFine);
+
+  free (b_strideOne);
+  free (part_stride);
+  free (b_tIntersects);
+
+  PDM_part_to_block_free(ptb);
+  PDM_block_to_part_free(btp);
 }
 
 /**
