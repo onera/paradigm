@@ -2672,8 +2672,9 @@ _type_cell_3D
   PDM_l_num_t  n_trias = 0;
   PDM_l_num_t  n_quads = 0;
 
-  if (n_face_cell > 6)
+  if (n_face_cell > 6) {
     return PDM_writer_POLY_3D;
+  }
 
   for (int i = 0; i < n_face_cell; i++) {
 
@@ -2714,8 +2715,8 @@ _type_cell_3D
     for (int i = 0; i < n_face_cell; i++) {
 
       const int face_id = cell_face[i] - 1;
-      const int ideb = face_som_idx[face_id];
-      const int n_som_face = face_som_idx[face_id+1] - ideb;
+      const int ideb = face_som_idx[face_id] - 1;
+      const int n_som_face = face_som_idx[face_id+1] - ideb - 1;
  
       if (n_som_face == 3) {
         for (int j = 0; j < 3; j++) {
@@ -2734,14 +2735,15 @@ _type_cell_3D
           cell_type = PDM_writer_POLY_3D;
           break;
         }
-        if (cell_type == PDM_writer_POLY_3D)
-          break;
       }
+      if (cell_type == PDM_writer_POLY_3D)
+        break;
     }
   }
 
-  else 
+  else {
     cell_type = PDM_writer_POLY_3D;
+  }
 
   return cell_type;
 
@@ -4449,8 +4451,8 @@ PDM_g_num_t   *numabs
             num_cell_parent_to_local_courant[i] = idx_poly3d++;
             break;
           }
-	default :
-	  break;
+        default :
+          break;
         }
       }
         
@@ -4508,8 +4510,8 @@ PDM_g_num_t   *numabs
               }
               break;
             }
-	  default:
-	    break;
+         default:
+            break;
           }
         }
         free(tag_face_poly3d);
