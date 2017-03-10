@@ -28,6 +28,11 @@
 #include "pdm_priv.h"
 #include "pdm_fortran_to_c_string.h"
 
+// validation gnum
+#include "pdm_gnum.h"
+//fin validation gnum
+
+
 /*----------------------------------------------------------------------------*/
 
 #ifdef __cplusplus
@@ -5324,11 +5329,38 @@ const int            id_geom
 
   PDM_writer_geom_t *geom = _geom_get(cs, id_geom);
 
-  //TODDO  faire un retour si g�om�trie n'est pas dependante du temps
+  //TODO  faire un retour si g�om�trie n'est pas dependante du temps
   //       et si on n'est pas au premier incr�ment
   /* Mise a jour du nombre total d'�l�ments */
 
-  PDM_g_num_t n_elt_abs = geom->n_elt_abs;
+   PDM_g_num_t n_elt_abs = geom->n_elt_abs;
+  
+  // validation gnum
+//  int id = PDM_gnum_create (3, geom->n_part, geom->pdm_mpi_comm);
+//  printf("1\n");
+//
+//  for (int i = 0; i < geom->n_part; i++) {
+//    
+//    PDM_gnum_set_from_coords (id, i, geom->som[i]->n_som, geom->som[i]->_coords);
+//
+//  }
+//  
+//  printf("2\n");
+//  PDM_gnum_compute (id);
+//    printf("3\n");
+//
+//  for (int i = 0; i < geom->n_part; i++) {
+//    
+//    geom->som[i]->_numabs = PDM_gnum_get (id, i);
+//    printf ("pp %ld\n", PDM_gnum_get (id, i));
+//    
+//  }
+//    printf("4\n");
+//
+//  PDM_gnum_free (id, 1);
+//    printf("5\n");
+
+  // fin validation gnum
 
   PDM_MPI_Allreduce(&n_elt_abs, &geom->n_elt_abs, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_MAX, geom->pdm_mpi_comm);
 

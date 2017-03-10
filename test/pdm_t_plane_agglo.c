@@ -469,7 +469,7 @@ _export_ini_mesh
 
   PDM_MPI_Comm_rank (PDM_MPI_COMM_WORLD, &myRank);
   PDM_MPI_Comm_size (PDM_MPI_COMM_WORLD, &numProcs);
-
+  
   /*
    *  Export Mesh to Ensight
    */
@@ -657,14 +657,14 @@ _export_ini_mesh
 
   PDM_writer_geom_write(id_cs,
               id_geom);
-
+  
   for (int ipart = 0; ipart < nPart; ipart++) {
     free (edgeVtxIdx1[ipart]);
     free (edgeVtxNB1[ipart]);
     free (faceEdgeIdx1[ipart]);
     free (faceEdgeNB1[ipart]);
   }
-
+  
   free (edgeVtxIdx1);
   free (edgeVtxNB1);
   free (faceEdgeIdx1);
@@ -1250,7 +1250,7 @@ char *argv[]
   double         cr   = 0.5;
   int           post    = 0;
   PDM_part_split_t method  = PDM_PART_SPLIT_PTSCOTCH;
-  int           haveRandom = 1;
+  int           haveRandom = 0;
   int           myRank;
   int           numProcs;
   

@@ -493,7 +493,7 @@ PDM_gnum_compute
   const int level = sizeof(PDM_morton_int_t)*8 - 1;
   
   int n_ranks;
-  PDM_MPI_Comm_rank (comm, &n_ranks);
+  PDM_MPI_Comm_size (comm, &n_ranks);
   
   int n_entities = 0;
   
@@ -501,11 +501,11 @@ PDM_gnum_compute
     n_entities += _gnum->n_elts[ipart];
   }
 
-  double *coords = malloc (sizeof(double) * 3 * n_entities);
+  double *coords = malloc (sizeof(double) * _gnum->dim * n_entities);
   int k = 0;
   
   for (int ipart = 0; ipart < _gnum->n_part; ipart++) {
-    for (int j = 0; j < 3 * _gnum->n_elts[ipart]; j++) {
+    for (int j = 0; j < _gnum->dim * _gnum->n_elts[ipart]; j++) {
       coords[k++] = _gnum->coords[ipart][j];
     }
   }
@@ -693,7 +693,8 @@ PDM_gnum_compute
     k = 0;
     PDM_g_num_t _max_loc = -1;
     for (int ipart = 0; ipart < _gnum->n_part; ipart++) {
-      for (int j1 = 0; j1 < 3 * _gnum->n_elts[ipart]; j1++) {
+      _gnum->g_nums[ipart] = malloc (sizeof(PDM_g_num_t) * _gnum->n_elts[ipart]);
+      for (int j1 = 0; j1 < _gnum->n_elts[ipart]; j1++) {
         rank_id = c_rank[k++];
         shift = send_shift[rank_id] + send_count[rank_id];
         _gnum->g_nums[ipart][j1] = part_global_num[shift];
@@ -738,7 +739,8 @@ PDM_gnum_compute
     
     k = 0;
     for (int ipart = 0; ipart < _gnum->n_part; ipart++) {
-      for (int j1 = 0; j1 < 3 * _gnum->n_elts[ipart]; j1++) {
+      _gnum->g_nums[ipart] = malloc (sizeof(PDM_g_num_t) * _gnum->n_elts[ipart]);
+      for (int j1 = 0; j1 <  _gnum->n_elts[ipart]; j1++) {
         _gnum->g_nums[ipart][j1] = tmp_gnum[k++];
       }  
     }
@@ -782,7 +784,7 @@ PDM_gnum_get
 )
 {
   _pdm_gnum_t *_gnum = _get_from_id (id);
-  
+
   return _gnum->g_nums[i_part];
 }
 
