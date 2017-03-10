@@ -410,24 +410,29 @@ PDM_surf_mesh_build_edges_gn_and_edge_part_bound
    * inter partition boundary edges (inter processus)
    */
 
-  PDM_g_num_t *nKeyProcs = (int *) malloc(sizeof(int) * (lComm + 1)); 
+  PDM_g_num_t *nKeyProcs = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * (lComm + 1)); 
 
   nKeyProcs[0] = 1;
   PDM_g_num_t gKeyMax = 2 * mesh->nGVtx;
 
-  int nKeyProc = (int) (gKeyMax / lComm);
+  PDM_g_num_t _nKeyProc = gKeyMax / lComm;
+  int nKeyProc = (int) _nKeyProc;
 
   for (int i = 0; i < lComm; i++)
     nKeyProcs[i+1] = nKeyProc;
 
-  for (int i = 0; i < (int)(gKeyMax % lComm); i++)
+  
+  PDM_g_num_t _rest = gKeyMax % lComm;
+  int rest = (int ) _rest;
+  for (int i = 0; i < rest; i++)
     nKeyProcs[i+1] += 1;
 
   for (int i = 1; i < lComm + 1; i++)
     nKeyProcs[i] = nKeyProcs[i] + nKeyProcs[i-1];
   
-  nKeyProc = nKeyProcs[myRank+1] - nKeyProcs[myRank];
-
+  _nKeyProc = nKeyProcs[myRank+1] - nKeyProcs[myRank];
+  nKeyProc = (int) _nKeyProc;
+  
   int lDHashTableIdx  = nKeyProc + 1;
   int *dHashTableIdx  = (int *) malloc(sizeof(int) * lDHashTableIdx);
   int *dNHashTable    = (int *) malloc(sizeof(int) * nKeyProc);
@@ -549,9 +554,10 @@ PDM_surf_mesh_build_edges_gn_and_edge_part_bound
     (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * nDatadHashTable * nRecvKey);
 
   for (int i = 0; i < nRecvKey; i++) {
-    PDM_g_num_t key   =       edgeToRecv[i*nDataToSend    ];
+    PDM_g_num_t _keyLoc = edgeToRecv[i*nDataToSend] - nKeyProcs[myRank];
+
     
-    int keyLoc       = (int) (key - nKeyProcs[myRank]);
+    int keyLoc       = (int) (_keyLoc);
     dHashTableIdx[keyLoc+1] += nDatadHashTable; 
   }
 
@@ -563,10 +569,10 @@ PDM_surf_mesh_build_edges_gn_and_edge_part_bound
   int cptEdgeToRecv = 0; 
   for (int i = 0; i < lComm; i++) {
     for (int j = edgeToRecvIdx[i]; j <  edgeToRecvIdx[i+1]; j += nDataToSend) {
-      PDM_g_num_t key   =       edgeToRecv[i*nDataToSend    ];
+      PDM_g_num_t _keyLoc   = edgeToRecv[i*nDataToSend] - nKeyProcs[myRank];
       cptEdgeToRecv++;
 
-      int keyLoc       = (int) (key - nKeyProcs[myRank]);
+      int keyLoc       = (int) _keyLoc;
       dHashTable[dHashTableIdx[keyLoc]+(dNHashTable[keyLoc]++)] =
         cptEdgeToRecv - 1; 
       dHashTable[dHashTableIdx[keyLoc]+(dNHashTable[keyLoc]++)] = i;
@@ -655,7 +661,7 @@ PDM_surf_mesh_build_edges_gn_and_edge_part_bound
     int idx          = dHashTableIdx[i];
     int nEdgeSameSum = (dHashTableIdx[i+1] - idx);
     for (int j = idx; j < idx + nEdgeSameSum; j+=2) {
-      int iEdge = dHashTable[j];
+      int iEdge = (int) dHashTable[j];
       if (iEdge != -1) {
         gNBoundPartEdge[iEdge] = ++gNCurrent;
       }
@@ -781,7 +787,7 @@ PDM_surf_mesh_build_edges_gn_and_edge_part_bound
       printf("gnum edge [%d] : ", i);
       PDM_surf_part_t *part = mesh->part[i];
       for (int j = 0; j < part->nEdge; j++) {
-        printf(" %d",  part->edgeLnToGn[j]);
+        printf(" "PDM_FMT_G_NUM,  part->edgeLnToGn[j]);
       }
       printf("\n");
     }
@@ -834,12 +840,15 @@ PDM_surf_mesh_t *mesh
   nKeyProcs[0] = 1;
   PDM_g_num_t gKeyMax = mesh->nGVtx + 1;
 
-  int nKeyProc = (int) (gKeyMax / lComm);
+  PDM_g_num_t _nKeyProc = gKeyMax / lComm;
+  int nKeyProc = (int) _nKeyProc;
 
   for (int i = 0; i < lComm; i++)
     nKeyProcs[i+1] = nKeyProc;
 
-  for (int i = 0; i < (int)(gKeyMax % lComm); i++)
+  PDM_g_num_t _rest = gKeyMax % lComm;
+  int rest = (int) _rest;
+  for (int i = 0; i < rest; i++)
     nKeyProcs[i+1] += 1;
 
   for (int i = 1; i < lComm + 1; i++)
@@ -885,14 +894,16 @@ PDM_surf_mesh_t *mesh
         int vtx1 = part->edgeVtx[2*j] - 1;
         int vtx2 = part->edgeVtx[2*j + 1] -1;
         if (tagVtx[vtx1] == 0) {
-          int keyVtx = (int) (part->vtxLnToGn[vtx1] % gKeyMax);
+          PDM_g_num_t _keyVtx = part->vtxLnToGn[vtx1] % gKeyMax;
+          int keyVtx = (int) _keyVtx;
           vtxToSendN[PDM_binary_search_gap_int (keyVtx, nKeyProcs, lComm + 1)] +=
             nDataToSend;
           tagVtx[vtx1] = 1;
         }
         
         if (tagVtx[vtx2] == 0) {
-          int keyVtx = (int) (part->vtxLnToGn[vtx2] % gKeyMax);
+          PDM_g_num_t _keyVtx = part->vtxLnToGn[vtx2] % gKeyMax;
+          int keyVtx = (int) _keyVtx;
           vtxToSendN[PDM_binary_search_gap_int (keyVtx, nKeyProcs, lComm + 1)] +=
             nDataToSend;
           tagVtx[vtx2] = 1;
@@ -927,7 +938,8 @@ PDM_surf_mesh_t *mesh
         int vtx2 = part->edgeVtx[2*j + 1] -1;
         
         if (tagVtx[vtx1] == 0) {
-          int keyVtx = (int) (part->vtxLnToGn[vtx1] % gKeyMax);
+          PDM_g_num_t _keyVtx = part->vtxLnToGn[vtx1] % gKeyMax;
+          int keyVtx = (int) _keyVtx;
           int irank  = PDM_binary_search_gap_int (keyVtx, nKeyProcs, lComm + 1);
           int idx    = vtxToSendIdx[irank] + vtxToSendN[irank];
 
@@ -940,7 +952,8 @@ PDM_surf_mesh_t *mesh
         }
         
         if (tagVtx[vtx2] == 0) {
-          int keyVtx = (int) (part->vtxLnToGn[vtx2] % gKeyMax);
+          PDM_g_num_t _keyVtx = part->vtxLnToGn[vtx2] % gKeyMax;
+          int keyVtx = (int) _keyVtx;
           int irank  = PDM_binary_search_gap_int (keyVtx, nKeyProcs, lComm + 1);
           int idx    = vtxToSendIdx[irank] + vtxToSendN[irank];
 
@@ -1009,9 +1022,9 @@ PDM_surf_mesh_t *mesh
     (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * nDatadHashTable * nVtxProc);
 
   for (int i = 0; i < nVtxProc; i++) {
-    PDM_g_num_t key   =       vtxToRecv[i*nDataToSend    ];
+    PDM_g_num_t key = vtxToRecv[i*nDataToSend] - nKeyProcs[myRank];
 
-    int keyLoc       = (int) (key - nKeyProcs[myRank]);
+    int keyLoc       = (int) key;
     dHashTableIdx[keyLoc+1] += nDatadHashTable; 
   }
 
@@ -1023,10 +1036,10 @@ PDM_surf_mesh_t *mesh
   int cptVtxToRecv = 0; 
   for (int i = 0; i < lComm; i++) {
     for (int j = vtxToRecvIdx[i]; j < vtxToRecvIdx[i+1]; j += nDataToSend) {
-      PDM_g_num_t key   =       vtxToRecv[nDataToSend*cptVtxToRecv];
+      PDM_g_num_t key = vtxToRecv[nDataToSend*cptVtxToRecv] - nKeyProcs[myRank];
       cptVtxToRecv++;
       
-      int keyLoc       = (int) (key - nKeyProcs[myRank]);
+      int keyLoc       = (int) key;
       dHashTable[dHashTableIdx[keyLoc]+(dNHashTable[keyLoc]++)] =
         cptVtxToRecv - 1; 
       dHashTable[dHashTableIdx[keyLoc]+(dNHashTable[keyLoc]++)] = i;

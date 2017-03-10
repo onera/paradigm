@@ -210,7 +210,7 @@ int main(int argc, char *argv[])
 
     printf("[%i] dFaceCell     : ", myRank);
     for (int i = 0; i < 2 * dNFace; i++)
-      printf(" "PDM_FMT_L_NUM, dFaceCell[i]);
+      printf(" "PDM_FMT_G_NUM, dFaceCell[i]);
     printf("\n");
 
     printf("[%i] dFaceVtxIdx   : ", myRank);
@@ -220,7 +220,7 @@ int main(int argc, char *argv[])
 
     printf("[%i] dFaceVtx      : ", myRank);
     for (int i = 0; i < dFaceVtxIdx[dNFace]; i++)
-      printf(" "PDM_FMT_L_NUM, dFaceVtx[i]);
+      printf(" "PDM_FMT_G_NUM, dFaceVtx[i]);
     printf("\n");
 
     printf("[%i] dVtxCoord     : ", myRank);
@@ -235,7 +235,7 @@ int main(int argc, char *argv[])
 
     printf("[%i] dFaceGroup    : ", myRank);
     for (int i = 0; i < dFaceGroupIdx[nFaceGroup]; i++)
-      printf(" "PDM_FMT_L_NUM, dFaceGroup[i]);
+      printf(" "PDM_FMT_G_NUM, dFaceGroup[i]);
     printf("\n");
 
   }
@@ -405,7 +405,7 @@ int main(int argc, char *argv[])
 
       printf("[%i]  cellLNToGN    : ", myRank);
       for (int i = 0; i < nCell; i++)
-        printf(" "PDM_FMT_L_NUM, cellLNToGN[i]);
+        printf(" "PDM_FMT_G_NUM, cellLNToGN[i]);
       printf("\n");
 
       printf("[%i] faceCell     : ", myRank);
@@ -423,7 +423,7 @@ int main(int argc, char *argv[])
 
       printf("[%i]  faceLNToGN    : ", myRank);
       for (int i = 0; i < nFace; i++)
-        printf(" "PDM_FMT_L_NUM, faceLNToGN[i]);
+        printf(" "PDM_FMT_G_NUM, faceLNToGN[i]);
       printf("\n");
 
       printf("[%i] vtx           : ", myRank);
@@ -433,7 +433,7 @@ int main(int argc, char *argv[])
 
       printf("[%i] vtxLNToGN     : ", myRank);
       for (int i = 0; i <  nVtx; i++)
-        printf(" "PDM_FMT_L_NUM, vtxLNToGN[i]);
+        printf(" "PDM_FMT_G_NUM, vtxLNToGN[i]);
       printf("\n");
 
       printf("[%i] faceGroupIdx : ", myRank);
@@ -452,7 +452,7 @@ int main(int argc, char *argv[])
       printf("[%i] faceGroupLNToGN   : ", myRank);
       for (int i = 0; i < nFaceGroup; i++) {
         for (int j = faceGroupIdx[i]; j < faceGroupIdx[i+1]; j++) {
-          printf(" "PDM_FMT_L_NUM, faceGroupLNToGN[j]);
+          printf(" "PDM_FMT_G_NUM, faceGroupLNToGN[j]);
         }
         printf("\n");
       }
