@@ -164,7 +164,8 @@ PDM_g_num_t **dEdgeGroup
   for (int i = 0; i < nRank; i++)
     dNEdgeLim13Rank[i+1] = (PDM_g_num_t) (nx1 - 1) / nRank;
 
-  int reste =  (int) ((nx1 - 1) % nRank);
+  PDM_g_num_t _reste = (nx1 - 1) % nRank;
+  int reste =  (int) _reste;
 
   for (int i = 0; i < nRank; i++) {
     if (i < reste) {
@@ -184,7 +185,8 @@ PDM_g_num_t **dEdgeGroup
   for (int i = 0; i < nRank; i++)
     dNEdgeLim24Rank[i+1] = (PDM_g_num_t) (ny1 - 1) / nRank;
 
-  reste =  (int) ((ny1 - 1) % nRank);
+  _reste = (ny1 - 1) % nRank;
+  reste =  (int) (_reste);
 
   for (int i = 0; i < nRank; i++) {
     if (i < reste) {
@@ -200,10 +202,10 @@ PDM_g_num_t **dEdgeGroup
 
   *dEdgeGroup = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * (2*dNEdgeLim13 + 2*dNEdgeLim24));
 
-  (*dEdgeGroupIdx)[1] = dNEdgeLim13;
-  (*dEdgeGroupIdx)[2] = dNEdgeLim24;
-  (*dEdgeGroupIdx)[3] = dNEdgeLim13;
-  (*dEdgeGroupIdx)[4] = dNEdgeLim24;
+  (*dEdgeGroupIdx)[1] = (int) dNEdgeLim13;
+  (*dEdgeGroupIdx)[2] = (int) dNEdgeLim24;
+  (*dEdgeGroupIdx)[3] = (int) dNEdgeLim13;
+  (*dEdgeGroupIdx)[4] = (int) dNEdgeLim24;
 
   for (int i= 0; i < 4; i++)
     (*dEdgeGroupIdx)[i+1] = (*dEdgeGroupIdx)[i] + (*dEdgeGroupIdx)[i+1];
@@ -218,7 +220,8 @@ PDM_g_num_t **dEdgeGroup
   for (int i = 0; i < nRank; i++)
     dNVtxRank[i+1] = (PDM_g_num_t) dNVtxTotal / nRank;
 
-  reste =  (int) (dNVtxTotal % nRank);
+  _reste = dNVtxTotal % nRank;
+  reste =  (int) (_reste);
   
   for (int i = 0; i < nRank; i++) {
     if (i < reste) {
@@ -226,7 +229,7 @@ PDM_g_num_t **dEdgeGroup
     }
   }
   
-  *dNVtx = dNVtxRank[localRank + 1];
+  *dNVtx = (int) dNVtxRank[localRank + 1];
   
   for (int i = 0; i < nRank; i++) {
     dNVtxRank[i+1] = dNVtxRank[i+1] + dNVtxRank[i];
@@ -278,7 +281,9 @@ PDM_g_num_t **dEdgeGroup
   dNFaceRank[0] = 0;
   for (int i = 0; i < nRank; i++)
     dNFaceRank[i+1] = dNFaceTotal / nRank ;
-  reste =  (int) (dNFaceTotal % nRank) ;
+
+  _reste = dNFaceTotal % nRank;
+  reste =  (int) _reste ;
   for (int i = 0; i < nRank; i++) {
     if (i < reste) {
       dNFaceRank[i+1] += 1;
@@ -288,15 +293,17 @@ PDM_g_num_t **dEdgeGroup
   dNEdgeRank[0] = 0;
   for (int i = 0; i < nRank; i++)
     dNEdgeRank[i+1] = dNEdgeTotal / nRank ;
-  reste =  dNEdgeTotal % nRank ;
+  
+  _reste = dNEdgeTotal % nRank;
+  reste =  (int) _reste;
   for (int i = 0; i < nRank; i++) {
     if (i < reste) {
       dNEdgeRank[i+1] += 1;
     }
   }
   
-  *dNFace = dNFaceRank[localRank+1];
-  *dNEdge = dNEdgeRank[localRank+1];
+  *dNFace = (int) dNFaceRank[localRank+1];
+  *dNEdge = (int) dNEdgeRank[localRank+1];
   
   for (int i = 0; i < nRank; i++) {
     dNFaceRank[i+1] = dNFaceRank[i+1] + dNFaceRank[i];
@@ -329,7 +336,8 @@ PDM_g_num_t **dEdgeGroup
     if (cpt % 3 == 1 || cpt % 3 == 2) {
       for (PDM_g_num_t ix = 0; ix < nx1/2; ix++) {
         if ((dNVtxRank[localRank] <= dNVtxTmp) && (dNVtxRank[localRank+1] > dNVtxTmp)) {
-          int localIdx = (int) (dNVtxTmp - dNVtxRank[localRank]);
+          PDM_g_num_t _localIdx = dNVtxTmp - dNVtxRank[localRank];
+          int localIdx = (int) _localIdx;
           (*dVtxCoord)[3*localIdx]   = xmin + ix * (1+sqrt(2)) * cote1;
           (*dVtxCoord)[3*localIdx+1] = ycourant;
           (*dVtxCoord)[3*localIdx+2] = 0.;
@@ -340,7 +348,8 @@ PDM_g_num_t **dEdgeGroup
     else if ((cpt % 3) == 0) {
       if ((cpt == (cptMax-1)) || (cpt == 0)) {
         if ((dNVtxRank[localRank] <= dNVtxTmp) && (dNVtxRank[localRank+1] > dNVtxTmp)) {
-          int localIdx = (int) (dNVtxTmp - dNVtxRank[localRank]);
+          PDM_g_num_t _localIdx = dNVtxTmp - dNVtxRank[localRank];
+          int localIdx = (int) _localIdx;
           (*dVtxCoord)[3*localIdx]   = xmin;
           (*dVtxCoord)[3*localIdx+1] = ycourant;
           (*dVtxCoord)[3*localIdx+2] = 0.;
@@ -349,7 +358,8 @@ PDM_g_num_t **dEdgeGroup
       }
       
       if ((dNVtxRank[localRank] <= dNVtxTmp) && (dNVtxRank[localRank+1] > dNVtxTmp)) {
-        int localIdx = (int) (dNVtxTmp - dNVtxRank[localRank]);
+        PDM_g_num_t _localIdx = dNVtxTmp - dNVtxRank[localRank];
+        int localIdx = (int) _localIdx;
         (*dVtxCoord)[3*localIdx]   = xmin + cote1/sqrt(2);
         (*dVtxCoord)[3*localIdx+1] = ycourant;
         (*dVtxCoord)[3*localIdx+2] = 0.;
@@ -361,7 +371,8 @@ PDM_g_num_t **dEdgeGroup
       PDM_g_num_t nx11 = (nx1-2)/2;
       for (PDM_g_num_t ix = 0; ix < nx11; ix++) {
         if ((dNVtxRank[localRank] <= dNVtxTmp) && (dNVtxRank[localRank+1] > dNVtxTmp)) {
-          int localIdx = (int) (dNVtxTmp - dNVtxRank[localRank]);
+          PDM_g_num_t _localIdx = dNVtxTmp - dNVtxRank[localRank];
+          int localIdx = (int) _localIdx;
           (*dVtxCoord)[3*localIdx] = xbase + (ix+1) * cote1 + ix * cote1*sqrt(2);
           (*dVtxCoord)[3*localIdx+1] = ycourant;
           (*dVtxCoord)[3*localIdx+2] = 0.;
@@ -369,7 +380,8 @@ PDM_g_num_t **dEdgeGroup
         dNVtxTmp++;
         if (ix < (nx11 - 1)) {
           if ((dNVtxRank[localRank] <= dNVtxTmp) && (dNVtxRank[localRank+1] > dNVtxTmp)) {
-            int localIdx = (int) (dNVtxTmp - dNVtxRank[localRank]);
+            PDM_g_num_t _localIdx = dNVtxTmp - dNVtxRank[localRank];
+            int localIdx = (int) _localIdx;
             (*dVtxCoord)[3*localIdx] = xbase + (ix+1) * cote1 + (ix+1) * cote1*sqrt(2);
             (*dVtxCoord)[3*localIdx+1] = ycourant;
             (*dVtxCoord)[3*localIdx+2] = 0.;
@@ -380,7 +392,8 @@ PDM_g_num_t **dEdgeGroup
       
       if ((cpt == (cptMax-1)) || (cpt == 0)) {
         if ((dNVtxRank[localRank] <= dNVtxTmp) && (dNVtxRank[localRank+1] > dNVtxTmp)) {
-          int localIdx = (int) (dNVtxTmp - dNVtxRank[localRank]);
+          PDM_g_num_t _localIdx = dNVtxTmp - dNVtxRank[localRank];
+          int localIdx = (int) _localIdx;
           (*dVtxCoord)[3*localIdx]   = xmax;
           (*dVtxCoord)[3*localIdx+1] = ycourant;
           (*dVtxCoord)[3*localIdx+2] = 0.;
@@ -691,7 +704,7 @@ PDM_g_num_t **dEdgeGroup
         n7 = iy*(2*nx1-2) + 1 + 2*nx1 + 2*ix + 1;
       n8 = n7 + 1;
 
-      int connecPoly[8];
+      PDM_g_num_t connecPoly[8];
       connecPoly[0]      = n1;
       connecPoly[1]      = n2;
       connecPoly[2]      = n4;

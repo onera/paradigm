@@ -832,7 +832,8 @@ _calcul_numabs_bloc
     
     for (int k = ideb; k < ifin; k++) {
       
-      const int idx = (int) (recvBuffNumabs[k] - d_elt_proc[i_proc]);
+      PDM_g_num_t _idx = recvBuffNumabs[k] - d_elt_proc[i_proc];
+      const int idx = (int) _idx;
       assert((idx < l_numabs_tmp) && (idx >= 0));
 
       numabs_tmp[idx] = 1; /* On marque les elements */
@@ -861,7 +862,8 @@ _calcul_numabs_bloc
     
     for (int k = ideb; k < ifin; k++) {
       
-      const int idx = (int) (recvBuffNumabs[k] - d_elt_proc[i_proc]);
+      PDM_g_num_t _idx = recvBuffNumabs[k] - d_elt_proc[i_proc];
+      const int idx = (int) _idx;
       
       recvBuffNumabs[cpt_elt_proc] = numabs_tmp[idx];
       
@@ -951,7 +953,8 @@ PDM_writer_geom_t *geom
     d_elt_proc[j+1] += d_elt_proc[j] ;
   }
 
-  PDM_g_num_t l_numabs_tmp = d_elt_proc[i_proc+1] - d_elt_proc[i_proc];
+  PDM_g_num_t _l_numabs_tmp = d_elt_proc[i_proc+1] - d_elt_proc[i_proc];
+  int l_numabs_tmp = (int) _l_numabs_tmp;
   PDM_g_num_t *numabs_tmp = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * l_numabs_tmp);
 
   /* Allocation des tableaux pour echanges MPI */
@@ -1218,7 +1221,8 @@ _calcul_numabs_split_poly2d
       
       for (int k = ideb; k < ifin; k++) {
       
-        const int idx = (int) (recvBuffNumabs[k*n_donnee_buff] - d_elt_proc[i_proc]);
+        PDM_g_num_t _idx = recvBuffNumabs[k*n_donnee_buff] - d_elt_proc[i_proc];
+        const int idx = (int) _idx;
       
         numabs_poly_tmp[idx] = 1; /* Numerotation absolue du polygone */
         numabs_tri_tmp[idx] = recvBuffNumabs[k*n_donnee_buff + 1];  /* Initialisation au nb de triangles */
@@ -1294,7 +1298,8 @@ _calcul_numabs_split_poly2d
       
       for (int k = ideb; k < ifin; k++) {
         
-        const int idx = (int) (recvBuffNumabs[k] - d_elt_proc[i_proc]);
+        PDM_g_num_t _idx = recvBuffNumabs[k] - d_elt_proc[i_proc];
+        const int idx = (int) _idx;
         
         recvBuffNumabs[n_donnee_buff * cpt_elt_proc    ] = numabs_poly_tmp[idx];
         recvBuffNumabs[n_donnee_buff * cpt_elt_proc + 1] = numabs_tri_tmp[idx];

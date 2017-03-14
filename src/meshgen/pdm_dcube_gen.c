@@ -155,8 +155,14 @@ PDM_dcube_gen_init
   PDM_g_num_t nFaceFace = nFaceSeg * nFaceSeg;
   PDM_g_num_t nVtxFace  = nVtxSeg * nVtxSeg;
   PDM_g_num_t nFaceLim  = 6 * nFaceFace;
-  double       step      = length / ((double) nFaceSeg);
-  
+#ifdef __INTEL_COMPILER
+#pragma warning(push)
+#pragma warning(disable:2259)
+#endif
+  double step = length / (double) nFaceSeg;
+#ifdef __INTEL_COMPILER
+#pragma warning(pop)
+#endif  
   PDM_g_num_t *distribVtx     = (PDM_g_num_t *) malloc((nRank + 1) * sizeof(PDM_g_num_t));
   PDM_g_num_t *distribFace    = (PDM_g_num_t *) malloc((nRank + 1) * sizeof(PDM_g_num_t));
   PDM_g_num_t *distribCell    = (PDM_g_num_t *) malloc((nRank + 1) * sizeof(PDM_g_num_t));
@@ -206,10 +212,14 @@ PDM_dcube_gen_init
   }
 
   dcube->nFaceGroup = 6;
-  dcube->dNCell       = (int) (distribCell[myRank+1]    - distribCell[myRank]); 
-  dcube->dNFace       = (int) (distribFace[myRank+1]    - distribFace[myRank]);
-  dcube->dNVtx        = (int) (distribVtx[myRank+1]     - distribVtx[myRank]);
-  int dNFaceLim = (int) (distribFaceLim[myRank+1] - distribFaceLim[myRank]);
+  PDM_g_num_t _dNCell = distribCell[myRank+1] - distribCell[myRank];
+  dcube->dNCell       = (int) _dNCell;
+  PDM_g_num_t _dNFace = distribFace[myRank+1]    - distribFace[myRank];
+  dcube->dNFace       = (int) _dNFace;
+  PDM_g_num_t _dNVtx  = distribVtx[myRank+1]     - distribVtx[myRank];
+  dcube->dNVtx        = (int) _dNVtx;
+  PDM_g_num_t _dNFaceLim = distribFaceLim[myRank+1] - distribFaceLim[myRank];
+  int dNFaceLim = (int) _dNFaceLim;
 
   dcube->dFaceCell     = (PDM_g_num_t *) malloc(2*(dcube->dNFace) * sizeof(PDM_g_num_t *));
   dcube->dFaceVtxIdx   = (int *)          malloc((dcube->dNFace + 1) * sizeof(int *));

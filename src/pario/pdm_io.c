@@ -1801,9 +1801,10 @@ void PDM_io_lec_par_entrelacee
         
       unsigned char *buffer_ordonne = NULL;
       
-      
-      int n_donnees_rang = (int) (n_donnees_rangs[fichier->rang + 1] - 
-                                  n_donnees_rangs[fichier->rang]);
+      PDM_g_num_t _n_donnees_rang1 = n_donnees_rangs[fichier->rang + 1] - 
+                                    n_donnees_rangs[fichier->rang];
+
+      int n_donnees_rang = (int) _n_donnees_rang1;
 
       buffer_ordonne = (unsigned char*) malloc(sizeof(unsigned char) * 
                                                taille_donnee * 
@@ -1820,10 +1821,9 @@ void PDM_io_lec_par_entrelacee
                                                  (n_donnees_rang + 1));
           
         for (int i = 0; i < l_num_absolue_recues; i++) {
-          int idx = 
-            num_absolue_recues[i] - 1 - n_donnees_rangs[fichier->rang];
-          n_composantes_ordonnees[idx+1] = n_composantes_recues[i] * 
-            taille_donnee;
+          PDM_g_num_t _idx = num_absolue_recues[i] - 1 - n_donnees_rangs[fichier->rang];
+          int idx = (int) _idx;
+          n_composantes_ordonnees[idx+1] = n_composantes_recues[i] * taille_donnee;
         }
           
         n_composantes_ordonnees[0] = 0;
@@ -1836,11 +1836,12 @@ void PDM_io_lec_par_entrelacee
           
         int k1 = 0;
         for (int i = 0; i < l_num_absolue_recues; i++) {
-          const int num_loc = 
-            num_absolue_recues[i] - 1 - n_donnees_rangs[fichier->rang];
+          const PDM_g_num_t _num_loc = num_absolue_recues[i] - 1 - n_donnees_rangs[fichier->rang]; 
+          const int num_loc = (int) _num_loc;
+            
           const int idx = n_composantes_ordonnees[num_loc];
           const int _n_composantes = n_composantes_ordonnees[num_loc+1] - 
-            n_composantes_ordonnees[num_loc];
+                                     n_composantes_ordonnees[num_loc];
             
           for (int k = 0; k < _n_composantes; k++) {
             buffer_ordonne[k1] = buffer[idx + k];
@@ -1933,8 +1934,9 @@ void PDM_io_lec_par_entrelacee
         const int _n_octet_composantes = *n_composantes * taille_donnee;
           
         for (int i = 0; i < l_num_absolue_recues; i++) {
-          const int idx = 
+          const PDM_g_num_t _idx = 
             num_absolue_recues[i] - 1 - n_donnees_rangs[fichier->rang];
+          const int idx = (int) _idx;
           for (int k = 0; k < _n_octet_composantes; k++)
             buffer_ordonne[i * _n_octet_composantes + k] = 
               buffer[idx * _n_octet_composantes + k];
@@ -2620,7 +2622,8 @@ void PDM_io_ecr_par_entrelacee
           index[i] = index[i] + index[i-1];
         }
         
-        _n_donnees = index[n_donnees] / taille_donnee;
+        PDM_g_num_t __n_donnees = index[n_donnees] / taille_donnee;
+        _n_donnees = (int) __n_donnees;
         
         buffer = (unsigned char*) malloc(sizeof(unsigned char) * 
                                          index[n_donnees]);
@@ -2646,7 +2649,7 @@ void PDM_io_ecr_par_entrelacee
       }
       
       else if (t_n_composantes == PDM_IO_N_COMPOSANTE_CONSTANT) {
-        _n_donnees = _id_max * n_composantes[0];
+        _n_donnees = (int) _id_max * n_composantes[0];
         int n_octet = taille_donnee * n_composantes[0];
         buffer = (unsigned char*) malloc(sizeof(unsigned char) * 
                                          taille_donnee *
@@ -2670,7 +2673,7 @@ void PDM_io_ecr_par_entrelacee
           }
         }
         else {
-          l_string_donnee = (n_composantes[0] * fichier->n_char_fmt + 1) * _id_max; /* +1 pour '\n' */
+          l_string_donnee = (n_composantes[0] * fichier->n_char_fmt + 1) * (int) _id_max; /* +1 pour '\n' */
         }
         l_string_donnee += 1; /* +1 pour '\0' en fin de chaine */
         
@@ -2860,11 +2863,11 @@ void PDM_io_ecr_par_entrelacee
         PDM_g_num_t n_absolu = indirection[i] - 1;
         int irang_actif = fichier->n_rangs_actifs - 1;
 
-	if (n_donnees_rang_min > 0) { 
-	  irang_actif = PDM_IO_MIN((int) (n_absolu / 
-                                     (PDM_g_num_t) n_donnees_rang_min), 
-				     fichier->n_rangs_actifs - 1) ;
-	}
+      	if (n_donnees_rang_min > 0) {
+          PDM_g_num_t step = n_absolu / n_donnees_rang_min;
+          irang_actif = PDM_IO_MIN((int) step, 
+				                            fichier->n_rangs_actifs - 1) ;
+        }
         
         /* Ajustement */
    
@@ -3187,10 +3190,11 @@ void PDM_io_ecr_par_entrelacee
 
       if (t_n_composantes == PDM_IO_N_COMPOSANTE_VARIABLE) {
 
-        const int _n_donnees_rang = 
-          (int) (n_donnees_rangs[fichier->rang + 1] - 
+        const PDM_g_num_t __n_donnees_rang = 
+                (n_donnees_rangs[fichier->rang + 1] - 
                  n_donnees_rangs[fichier->rang]);
 
+        const int _n_donnees_rang = (int) __n_donnees_rang;
         int *tag = malloc(sizeof(int) * _n_donnees_rang);
         for (int i = 0; i < _n_donnees_rang; i++) 
           tag[i] = 0;
@@ -3206,9 +3210,10 @@ void PDM_io_ecr_par_entrelacee
           index_buffer[i] = 0;
 
         for (int i = 0; i < _n_quantites; i++) {
-          const int num_abs = num_absolue_recues[i] - 1 - 
+          const PDM_g_num_t _num_abs = num_absolue_recues[i] - 1 - 
             n_donnees_rangs[fichier->rang];
           
+          const int num_abs = (int) _num_abs;
           index_buffer[num_abs + 1] = n_composantes_recues[i] * taille_donnee;
         }
         
@@ -3219,9 +3224,10 @@ void PDM_io_ecr_par_entrelacee
         int k1 = 0;
 
         for (int i = 0; i < _n_quantites; i++) {
-          const int num_abs = num_absolue_recues[i] - 1 - 
-            n_donnees_rangs[fichier->rang];
+          const PDM_g_num_t _num_abs = num_absolue_recues[i] - 1 - 
+                                       n_donnees_rangs[fichier->rang];
 
+          const int num_abs = (int) _num_abs;
           if (tag[num_abs] == 0) {
             n_donnees_bloc += n_composantes_recues[i];
             tag[num_abs] = 1;
@@ -3289,10 +3295,11 @@ void PDM_io_ecr_par_entrelacee
 
       else if (t_n_composantes == PDM_IO_N_COMPOSANTE_CONSTANT) {
         const int _n_octet_composantes = n_composantes[0] * taille_donnee;
-        const int _n_donnees_rang = 
-          (int) (n_donnees_rangs[fichier->rang + 1] - 
+        const PDM_g_num_t __n_donnees_rang = 
+                 (n_donnees_rangs[fichier->rang + 1] - 
                  n_donnees_rangs[fichier->rang]);
 
+        const int _n_donnees_rang = (int) __n_donnees_rang;
         int *tag = malloc(sizeof(int) * _n_donnees_rang);
         for (int i = 0; i < _n_donnees_rang; i++) 
           tag[i] = 0;
@@ -3300,8 +3307,9 @@ void PDM_io_ecr_par_entrelacee
         n_donnees_bloc = 0;
 
         for (int i = 0; i < _n_quantites; i++) {
-          const int num_abs = num_absolue_recues[i] - 1 - 
-            n_donnees_rangs[fichier->rang]  ;
+          const PDM_g_num_t _num_abs = num_absolue_recues[i] - 1 - 
+                                      n_donnees_rangs[fichier->rang];
+          const int num_abs = (int) _num_abs;
           if (tag[num_abs] == 0) {
             n_donnees_bloc += n_composantes[0];
             tag[num_abs] = 1;
