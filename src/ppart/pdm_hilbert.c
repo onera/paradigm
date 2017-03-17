@@ -505,7 +505,7 @@ _descend_hilbert_heap(PDM_g_num_t           parent,
                       int                 *order)
 {
   int   tmp;
-  int   child = 2 * parent + 1;
+  PDM_g_num_t   child = 2 * parent + 1;
 
   while (child < n_codes) {
 
@@ -659,8 +659,18 @@ _define_rank_distrib(int                       dim,
   /* Define the cumulative frequency related to g_distribution */
 
   cfreq[0] = 0.;
-  for (id = 0; id < n_samples; id++)
-    cfreq[id+1] = cfreq[id] + (double)g_distrib[id]/(double)gsum_weight;
+  for (id = 0; id < n_samples; id++) {
+#ifdef __INTEL_COMPILER
+#pragma warning(push)
+#pragma warning(disable:2259)
+#endif  
+    double _g_distrib  = (double)g_distrib[id];
+    double _gsum_weight = (double)gsum_weight;
+#ifdef __INTEL_COMPILER
+#pragma warning(pop)
+#endif
+    cfreq[id+1] = cfreq[id] + _g_distrib/_gsum_weight;
+  }
   cfreq[n_samples] = 1.0;
 
 #if 0 && defined(DEBUG) && !defined(DEBUG) /* For debugging purpose only */
@@ -858,7 +868,16 @@ _bucket_sampling(int                       dim,
 
   PDM_MPI_Allreduce(&lsum_weight, &gsum_weight, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, comm);
 
-  optim = (double)gsum_weight / (double)n_ranks;
+#ifdef __INTEL_COMPILER
+#pragma warning(push)
+#pragma warning(disable:2259)
+#endif
+  double _gsum_weight = (double)gsum_weight; 
+  double _n_ranks = (double)n_ranks;
+  optim = _gsum_weight / _n_ranks;
+#ifdef __INTEL_COMPILER
+#pragma warning(pop)
+#endif
 
   /* Define a naive sampling (uniform distribution) */
 

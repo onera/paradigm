@@ -1701,22 +1701,22 @@ _coarse_grid_create
   part_ini->nFacePartBound = nFacePartBound;
   part_ini->cellFaceIdx = (int *) cellFaceIdx;
   part_ini->cellFace = (int *) cellFace;
-  part_ini->cellLNToGN = (int *) cellLNToGN;
+  part_ini->cellLNToGN = (PDM_g_num_t *) cellLNToGN;
   part_ini->cellTag = (int *) cellTag;
   part_ini->faceCell = (int *) faceCell;
   part_ini->faceVtxIdx = (int *) faceVtxIdx; 
   part_ini->faceVtx = (int *) faceVtx;
-  part_ini->faceLNToGN = (int *) faceLNToGN;
+  part_ini->faceLNToGN = (PDM_g_num_t *) faceLNToGN;
   part_ini->faceTag = (int *) faceTag;
   part_ini->facePartBoundProcIdx = (int *) facePartBoundProcIdx;
   part_ini->facePartBoundPartIdx = (int *) facePartBoundPartIdx;
   part_ini->facePartBound = (int *) facePartBound;
   part_ini->faceGroupIdx = (int *) faceGroupIdx;
   part_ini->faceGroup = (int *) faceGroup;
-  part_ini->faceGroupLNToGN = (int *) faceGroupLNToGN;
+  part_ini->faceGroupLNToGN = (PDM_g_num_t *) faceGroupLNToGN;
   part_ini->vtx = (double *) vtxCoord;
-  part_ini->vtxLNToGN = (int *) vtxLNToGN;
-  part_ini->vtxTag = (int *) vtxTag;    
+  part_ini->vtxLNToGN = (PDM_g_num_t *) vtxLNToGN;
+  part_ini->vtxTag = vtxTag;    
   
   cm->timer = PDM_timer_create();
   for (int i = 0; i < 18; i++) {

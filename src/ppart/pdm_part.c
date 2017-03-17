@@ -100,7 +100,9 @@ _quickSort_pdm_part_long_t
 {
   if (l < r) {
     int j = r+1;
-    PDM_g_num_t t, v; 
+    
+    PDM_g_num_t t;
+    int v; 
     PDM_g_num_t pivot = a[l];
     int i = l; 
 
@@ -581,7 +583,8 @@ _dual_graph_from_face_cell
   for (int i = 0; i < nRecvPair; i++) {
     PDM_g_num_t  gElt1 = cellToRecv[nData*i  ];                         // Get global numbering
     PDM_g_num_t  gElt2 = cellToRecv[nData*i+1];                         // Get global numbering
-    int          lElt1 = (int) (gElt1 - ppart->dCellProc[myRank]);      // Switch to local numbering
+    PDM_g_num_t  _lElt1 = gElt1 - ppart->dCellProc[myRank];
+    int          lElt1 = (int) _lElt1;      // Switch to local numbering
 
     if (gElt2 > -1) {
       nNeighbour[lElt1] += 1;
@@ -635,7 +638,8 @@ _dual_graph_from_face_cell
 
   for (int i = 0; i < nRecvPair; i++) {
     PDM_g_num_t  gCel1  = cellToRecv[nData*i];                      // global numbering
-    int           lCel1  = (int) (gCel1 - ppart->dCellProc[myRank]); // local numbering
+    PDM_g_num_t  _lCel1 = gCel1 - ppart->dCellProc[myRank];
+    int           lCel1  = (int) _lCel1; // local numbering
     PDM_g_num_t  gCel2  = cellToRecv[nData*i+1];                    // global numbering
     PDM_g_num_t  gFace2 = cellToRecv[nData*i+2];                    // global numbering
     
@@ -650,7 +654,7 @@ _dual_graph_from_face_cell
 
     if (gCel2 > -1) {
 
-      int k;
+      PDM_g_num_t k;
       for (k = ppart->dDualGraphIdx[lCel1]; k < ppart->dDualGraphIdx[lCel1] + nNeighbour[lCel1]; k++) {
         if (ppart->dDualGraph[k] == gCel2 - 1)
           break;
@@ -857,7 +861,8 @@ _dual_graph_from_cell_face
     for (int i = 0; i < nRecvFace; i++) {
       PDM_g_num_t  gFace = faceToRecv[nData*i  ];                    // Get global numbering
       PDM_g_num_t  gCell = faceToRecv[nData*i+1];                    // Get global numbering
-      int          lFace = (int) (gFace - ppart->dFaceProc[myRank]); // Switch to local numbering
+      PDM_g_num_t  _lFace = gFace - ppart->dFaceProc[myRank]; 
+      int          lFace = (int) _lFace; // Switch to local numbering
 
       if (ppart->dFaceCell[2*lFace] == -1)
         ppart->dFaceCell[2*lFace] = gCell;
@@ -878,7 +883,8 @@ _dual_graph_from_cell_face
   for (int i = 0; i < nRecvFace; i++) {
     PDM_g_num_t  gFace  = faceToRecv[nData*i  ];                    // Get global numbering
     PDM_g_num_t  gCell1 = faceToRecv[nData*i+1];                    // Get global numbering
-    int          lFace  = (int) (gFace - ppart->dFaceProc[myRank]); // Switch to local numbering
+    PDM_g_num_t _lFace = gFace - ppart->dFaceProc[myRank]; // Switch to local numbering
+    int          lFace = (int) _lFace;
     PDM_g_num_t gCell2;
 
     if (ppart->dFaceCell[2*lFace] == gCell1)
@@ -886,7 +892,11 @@ _dual_graph_from_cell_face
     else if (ppart->dFaceCell[2*lFace + 1] == gCell1)
       gCell2 =  ppart->dFaceCell[2*lFace];
     else {
-      printf("PPART internal error : Problem in dual grah building %i %i %i\n", ppart->dFaceCell[2*lFace ], ppart->dFaceCell[2*lFace + 1], gCell1 );
+      printf("PPART internal error : Problem in dual grah building "
+              PDM_FMT_G_NUM" "
+              PDM_FMT_G_NUM" "
+              PDM_FMT_G_NUM" \n",
+             ppart->dFaceCell[2*lFace ], ppart->dFaceCell[2*lFace + 1], gCell1);
       exit(1);
     }
     
@@ -933,9 +943,10 @@ _dual_graph_from_cell_face
    */
 
   for (int i = 0; i < nRecvPair; i++) {
-    PDM_g_num_t   gCel1  = cellToRecv[nData*i];                      // global numbering
-    int           lCel1  = (int) (gCel1 - ppart->dCellProc[myRank]); // local numbering
-    PDM_g_num_t   gCel2  = cellToRecv[nData*i+1];                    // global numbering
+    PDM_g_num_t   gCel1  = cellToRecv[nData*i];              // global numbering
+    PDM_g_num_t  _lCel1  = gCel1 - ppart->dCellProc[myRank]; // local numbering
+    int           lCel1  = (int) (_lCel1);
+    PDM_g_num_t   gCel2  = cellToRecv[nData*i+1];            // global numbering
     
     /*
      * Search if cel2 is already stored (To optimize for polyhedra (lot of neighbours) ?)
@@ -1007,8 +1018,8 @@ _dual_graph_from_cell_face
 static void 
 _split
 (
- _PDM_part_t         *ppart,
- PDM_g_num_t    *cellPart
+ _PDM_part_t  *ppart,
+ int          *cellPart
 )
 {
   int myRank;
@@ -1050,7 +1061,7 @@ _split
        * Call metis
        */
 
-      PDM_g_num_t *_dCellProc = (int *) malloc((nRank+1) * sizeof(PDM_g_num_t));
+      PDM_g_num_t *_dCellProc = (PDM_g_num_t *) malloc((nRank+1) * sizeof(PDM_g_num_t));
 
       for (int i = 0; i < nRank + 1; i++) {
         _dCellProc[i] = ppart->dCellProc[i] - 1;
@@ -1149,7 +1160,7 @@ static void
 _distrib_cell
 (
  _PDM_part_t  *ppart,
- PDM_g_num_t  *cellPart
+ int          *cellPart
 )
 {
   
@@ -1542,7 +1553,8 @@ _distrib_face
     for (int i = 0; i < nRank; i++) {
       for (int k = requestedFaceIdx[i]; k < requestedFaceIdx[i+1]; k+=nData) {
         PDM_g_num_t gFace     = requestedFace[k];
-        int          lFace     = (int) (gFace - ppart->dFaceProc[myRank]);
+        PDM_g_num_t _lFace    = gFace - ppart->dFaceProc[myRank];
+        int          lFace     = (int) _lFace;
         int          nbVtxFace = (int) (ppart->_dFaceVtxIdx[lFace+1] 
                                       - ppart->_dFaceVtxIdx[lFace]);
         sFaceInfoIdx[i+1] += nDataFace + nbVtxFace;
@@ -1559,7 +1571,8 @@ _distrib_face
     for (int i = 0; i < nRank; i++) {
       for (int k = requestedFaceIdx[i]; k < requestedFaceIdx[i+1]; k+=nData) {
         PDM_g_num_t gFace     = requestedFace[k];
-        int          lFace     = (int) (gFace - ppart->dFaceProc[myRank]);
+        PDM_g_num_t _lFace    = gFace - ppart->dFaceProc[myRank];
+        int          lFace    = (int) _lFace;
         int          nbVtxFace = (int) (ppart->_dFaceVtxIdx[lFace+1] 
                                       - ppart->_dFaceVtxIdx[lFace]);
 
@@ -1610,9 +1623,9 @@ _distrib_face
       int k = 0;
       for (int i = 0; i < meshPart->nFace; i++) {
         if (ppart->_dFaceTag != NULL)
-          meshPart->faceTag[allToallNToLN[i]] = rFaceInfo[k++];
+          meshPart->faceTag[allToallNToLN[i]] = (int) rFaceInfo[k++];
 
-        int nVtx = rFaceInfo[k++];
+        int nVtx = (int) rFaceInfo[k++];
         meshPart->faceVtxIdx[allToallNToLN[i]+1] = nVtx;
 
         k += nVtx;
@@ -1630,7 +1643,7 @@ _distrib_face
         if (ppart->_dFaceTag != NULL)
           k += 1;
 
-        int nVtx = rFaceInfo[k++];
+        int nVtx = (int) rFaceInfo[k++];
         int idx = meshPart->faceVtxIdx[allToallNToLN[i]];
         for (int j = 0; j < nVtx; j++)
           meshPart->gFaceVtx[idx + j] = rFaceInfo[k++];
@@ -1860,7 +1873,8 @@ _distrib_vtx
     for (int i = 0; i < nRank; i++) {
       for (int k = requestedVtxIdx[i]; k < requestedVtxIdx[i+1]; k+=nData) {
         PDM_g_num_t gVtx     = requestedVtx[k];
-        int          lVtx     = (int) (gVtx - ppart->dVtxProc[myRank]);
+        PDM_g_num_t _lVtx     = gVtx - ppart->dVtxProc[myRank];
+        int          lVtx     = (int) _lVtx;
 
         int idx = sVtxInfoIdx[i] + sVtxInfoN[i]; 
 
@@ -2106,10 +2120,11 @@ _search_part_bound_face
     int idx = 0;
     for(int i = 0; i < nFace; i++) {
       PDM_g_num_t  gFace     = requestedFace[idx++];
-      int          lFace     = (int) (gFace - ppart->dFaceProc[myRank]);
-      int          lFaceRank = requestedFace[idx++];
-      int          faceRank  = requestedFace[idx++];
-      int          partition = requestedFace[idx++];
+      PDM_g_num_t  _lFace    = gFace - ppart->dFaceProc[myRank];
+      int          lFace     = (int) _lFace;
+      int          lFaceRank = (int) requestedFace[idx++];
+      int          faceRank  = (int) requestedFace[idx++];
+      int          partition = (int) requestedFace[idx++];
 
       int idx2 = 0;
       if (ppart->dPartBound[nDataPB * lFace] != -1)
@@ -2267,6 +2282,21 @@ _search_part_bound_face
     _part_t *meshPart  = ppart->meshParts[i];
 
     int *work_array  = (int *) malloc(meshPart->nFacePartBound * sizeof(int));
+    PDM_g_num_t *work_array2;
+    if (sizeof(PDM_g_num_t) == sizeof(int)) {
+#ifdef __INTEL_COMPILER
+#pragma warning(push)
+#pragma warning(disable:2312)
+#endif      
+      work_array2 = work_array;
+#ifdef __INTEL_COMPILER
+#pragma warning(pop)
+#endif
+    }
+    else {
+      work_array2  = (PDM_g_num_t *) malloc(meshPart->nFacePartBound * sizeof(PDM_g_num_t));
+    }
+    
     int *ind         = (int *) malloc(meshPart->nFacePartBound * sizeof(int));
     int *copyFacePartBound = (int *) malloc(nDataFacePartBound * meshPart->nFacePartBound * sizeof(int));
 
@@ -2329,14 +2359,14 @@ _search_part_bound_face
     for (int j = 0; j < meshPart->nFacePartBound; j++) {
       ind[j] = k;
       k += 1;
-      work_array[j] =   meshPart->faceLNToGN[meshPart->facePartBound[nDataFacePartBound * j] - 1];
+      work_array2[j] =   meshPart->faceLNToGN[meshPart->facePartBound[nDataFacePartBound * j] - 1];
     }
 
     for (int j = 0; j < ppart->tNPart; j++) {
-      _quickSort_int2(work_array,
-                      meshPart->facePartBoundPartIdx[j],
-                      meshPart->facePartBoundPartIdx[j+1]-1,
-                      ind);
+      _quickSort_pdm_part_long_t (work_array2,
+                                  meshPart->facePartBoundPartIdx[j],
+                                  meshPart->facePartBoundPartIdx[j+1]-1,
+                                  ind);
     }
 
     for (int j = 0; j <  meshPart->nFacePartBound; j++) {
@@ -2346,6 +2376,9 @@ _search_part_bound_face
       meshPart->facePartBound[nDataFacePartBound * j + 3] = copyFacePartBound[nDataFacePartBound * ind[j] + 3];
     }
 
+    if (sizeof(PDM_g_num_t) != sizeof(int)) {
+      free (work_array2);
+    }
     free(work_array);
     free(ind);
     free(copyFacePartBound);
@@ -2492,7 +2525,8 @@ _distrib_face_groups
     for (int i = 0; i < requestedFaceIdx[nRank]/nDataG; i++) {
       PDM_g_num_t iFace      = requestedFace[idx++];
       PDM_g_num_t gFaceGroup = requestedFace[idx++];
-      int          lFace = (int) (gFaceGroup - ppart->dFaceProc[myRank]);
+      PDM_g_num_t _lFace = gFaceGroup - ppart->dFaceProc[myRank];
+      int          lFace = (int) _lFace;
       dFaceGroup[lFace] = (PDM_g_num_t) iFace;
     }
 
@@ -2604,7 +2638,8 @@ _distrib_face_groups
       for (int i = 0; i < nRank; i++) {
         for (int k = requestedFaceIdx[i]; k < requestedFaceIdx[i+1]; k+=nData) {
           PDM_g_num_t gFace     = requestedFace2[k];
-          int          lFace     = (int) (gFace - ppart->dFaceProc[myRank]);
+          PDM_g_num_t _lFace    = gFace - ppart->dFaceProc[myRank];
+          int          lFace     = (int) _lFace;
           
           idx = sFaceInfoIdx[i] + sFaceInfoN[i]; 
           
@@ -3117,10 +3152,10 @@ PDM_part_create
 
   PDM_timer_resume(ppart->timer);
 
-  PDM_g_num_t *cellPart;
+  int *cellPart;
 
   if (have_dCellPart == 0) {
-    cellPart = (PDM_g_num_t *) malloc(dNCell * sizeof(PDM_g_num_t));
+    cellPart = (int *) malloc(dNCell * sizeof(int));
     _split(ppart,
            cellPart);
     for (int i = 0; i < dNCell; i++) {
@@ -3129,21 +3164,13 @@ PDM_part_create
   }
   
   else {
-    if (sizeof (int) == sizeof (PDM_g_num_t)) {
-      cellPart = (PDM_g_num_t *) ppart->_dCellPart;
-    }
-    else {
-      cellPart = (PDM_g_num_t *) malloc(dNCell * sizeof(PDM_g_num_t));
-      for (int i = 0; i < dNCell; i++) {
-        cellPart[i] = ppart->_dCellPart[i];
-      }
-    }
+    cellPart = (int *) ppart->_dCellPart;
   }
     
   if (1 == 0) {
     printf("cellPart : ");
     for (int i = 0; i <dNCell; i++)
-      printf(" "PDM_FMT_G_NUM, cellPart[i]);
+      printf(" %d", cellPart[i]);
     printf("\n");
   }
   

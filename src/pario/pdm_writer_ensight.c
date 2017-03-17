@@ -495,10 +495,16 @@ _calcul_numabs_face_poly3d
                                              d_elt_proc,
                                              n_procs+1);
 
+#ifdef __INTEL_COMPILER
+#pragma warning(push)
+#pragma warning(disable:2312)
+#endif
       PDM_g_num_t *currentDataLong = 
         (PDM_g_num_t *) (currentData + sendBuffIdx[i_elt_proc] + sendBuffN[i_elt_proc]);
       *currentDataLong = bloc_poly3d->numabs_int[j][k];
-
+#ifdef __INTEL_COMPILER
+#pragma warning(pop)
+#endif
       int *currentDataInt = 
         (int *) (currentData + sendBuffIdx[i_elt_proc] + sendBuffN[i_elt_proc] + sizeof(PDM_g_num_t));
       *currentDataInt = bloc_poly3d->_cellfac_idx[j][k+1] - bloc_poly3d->_cellfac_idx[j][k];
@@ -528,10 +534,18 @@ _calcul_numabs_face_poly3d
   face_abs[0] = 0;
   int current_octet = 0;
   for (int i = 0; i < n_elt_recv; i++) {
+#ifdef __INTEL_COMPILER
+#pragma warning(push)
+#pragma warning(disable:2312)
+#endif
     PDM_g_num_t *recvBuffDataLong = (PDM_g_num_t *) (recvBuffData + current_octet);
+#ifdef __INTEL_COMPILER
+#pragma warning(pop)
+#endif
     int       *recvBuffDataInt = (int *) (recvBuffData + current_octet + sizeof(PDM_g_num_t));
     PDM_g_num_t  gCel  = *recvBuffDataLong;
-    int        lCel  = (int) (gCel - d_elt_proc[i_proc]); // local numbering
+    PDM_g_num_t _lCel  = gCel - d_elt_proc[i_proc]; // local numbering
+    int          lCel  = (int) _lCel; // local numbering
     face_abs[lCel+1] = (PDM_g_num_t) *recvBuffDataInt;
     n_face_proc     += face_abs[lCel+1];
     current_octet += n_octet_exch;
@@ -574,10 +588,18 @@ _calcul_numabs_face_poly3d
 
   current_octet = 0;
   for (int i = 0; i < n_elt_recv; i++) {
+#ifdef __INTEL_COMPILER
+#pragma warning(push)
+#pragma warning(disable:2312)
+#endif
     PDM_g_num_t *recvBuffDataLong = (PDM_g_num_t *) (recvBuffData + current_octet);
+#ifdef __INTEL_COMPILER
+#pragma warning(pop)
+#endif
     int       *recvBuffDataInt = (int *) (recvBuffData + current_octet + sizeof(PDM_g_num_t));
     PDM_g_num_t  gCel  = *recvBuffDataLong;
-    int        lCel  = (int) (gCel - d_elt_proc[i_proc]); // local numbering
+    PDM_g_num_t _lCel = gCel - d_elt_proc[i_proc];
+    int        lCel  = (int) _lCel; // local numbering
     *recvBuffDataLong = face_abs[lCel];
     *recvBuffDataInt = -1; /* Pas d'info dans la deuxieme partie du buffer */
     current_octet += n_octet_exch;
@@ -608,9 +630,15 @@ _calcul_numabs_face_poly3d
                                                         d_elt_proc,
                                                         n_procs+1);
 
+#ifdef __INTEL_COMPILER
+#pragma warning(push)
+#pragma warning(disable:2312)
+#endif
       PDM_g_num_t *currentDataLong = 
         (PDM_g_num_t *) (currentData + sendBuffIdx[i_elt_proc] + sendBuffN[i_elt_proc]);
-
+#ifdef __INTEL_COMPILER
+#pragma warning(pop)
+#endif
       numabs_face[j][k] = (PDM_g_num_t) *currentDataLong;
       sendBuffN[i_elt_proc] += n_octet_exch;
     }

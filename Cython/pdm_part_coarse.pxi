@@ -230,15 +230,17 @@ cdef class CoarseMesh:
         # > Declaration
         # > Cell entity 
         cdef int             *CellFaceIdx_data
-        cdef PDM_g_num_t     *CellFace_data     
+        cdef int             *CellFace_data     
         cdef int             *CellTag_data
         cdef int             *CellWeight_data
         cdef int             *FaceWeight_data
-        cdef int             *CellLNToGN_data
+        cdef PDM_g_num_t     *CellLNToGN_data
         # > Face entity
-        cdef PDM_g_num_t     *FaceCell_data
+        cdef int             *FaceCell_data
         cdef int             *FaceTag_data
-        cdef int             *FaceLNToGN_data
+        cdef PDM_g_num_t     *FaceLNToGN_data
+        cdef int             *FaceVtxIdx_data
+        cdef int             *FaceVtx_data
         # > Vertices entity
         cdef double          *VtxCoord_data
         cdef PDM_g_num_t     *VtxLNToGN_data
@@ -254,7 +256,7 @@ cdef class CoarseMesh:
 
         # :::::::::::::::::::::::::::::::::::::::::::::::::::::
         CellFaceIdx_data = <int *>         CellFaceIdx.data
-        CellFace_data    = <PDM_g_num_t *> CellFace.data
+        CellFace_data    = <int *>         CellFace.data
         CellLNToGN_data  = <PDM_g_num_t *> CellLNToGN.data
 
         # \param [in]   CellTag       Cell tag (size : nCell) or NULL
@@ -270,9 +272,9 @@ cdef class CoarseMesh:
             CellWeight_data = <int *> CellWeight.data
 
         # :::::::::::::::::::::::::::::::::::::::::::::::::::::
-        FaceCell_data   = <PDM_g_num_t *> FaceCell.data
+        FaceCell_data   = <int *>         FaceCell.data
         FaceLNToGN_data = <PDM_g_num_t *> FaceLNToGN.data
-        FaceVtx_data    = <PDM_g_num_t *> FaceVtx.data
+        FaceVtx_data    = <int *>         FaceVtx.data
         FaceVtxIdx_data = <int *>         FaceVtxIdx.data
 
         # \param [in]   FaceTag       Distributed face tag

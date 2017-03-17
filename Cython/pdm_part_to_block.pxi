@@ -113,7 +113,7 @@ cdef class PartToBlock:
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
         # > Allocate
         self.LNToGN   = <PDM_g_num_t **> malloc(sizeof(PDM_g_num_t *) * self.partN )
-        self.NbElmts  = <PDM_g_num_t * > malloc(sizeof(PDM_g_num_t  ) * self.partN )
+        self.NbElmts  = <int * > malloc(sizeof(int  ) * self.partN )
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
