@@ -1701,23 +1701,31 @@ _coarse_grid_create
   part_ini->nFacePartBound = nFacePartBound;
   part_ini->cellFaceIdx = (int *) cellFaceIdx;
   part_ini->cellFace = (int *) cellFace;
-  part_ini->cellLNToGN = (PDM_g_num_t *) cellLNToGN;
   part_ini->cellTag = (int *) cellTag;
   part_ini->faceCell = (int *) faceCell;
   part_ini->faceVtxIdx = (int *) faceVtxIdx; 
   part_ini->faceVtx = (int *) faceVtx;
-  part_ini->faceLNToGN = (PDM_g_num_t *) faceLNToGN;
   part_ini->faceTag = (int *) faceTag;
   part_ini->facePartBoundProcIdx = (int *) facePartBoundProcIdx;
   part_ini->facePartBoundPartIdx = (int *) facePartBoundPartIdx;
   part_ini->facePartBound = (int *) facePartBound;
   part_ini->faceGroupIdx = (int *) faceGroupIdx;
   part_ini->faceGroup = (int *) faceGroup;
-  part_ini->faceGroupLNToGN = (PDM_g_num_t *) faceGroupLNToGN;
   part_ini->vtx = (double *) vtxCoord;
-  part_ini->vtxLNToGN = (PDM_g_num_t *) vtxLNToGN;
-  part_ini->vtxTag = vtxTag;    
+  part_ini->vtxTag = (int *) vtxTag;    
   
+#ifdef __INTEL_COMPILER
+#pragma warning(push)
+#pragma warning(disable:2312)
+#endif
+  part_ini->cellLNToGN = (PDM_g_num_t *) cellLNToGN;
+  part_ini->faceLNToGN = (PDM_g_num_t *) faceLNToGN;
+  part_ini->faceGroupLNToGN = (PDM_g_num_t *) faceGroupLNToGN;
+  part_ini->vtxLNToGN = (PDM_g_num_t *) vtxLNToGN;
+#ifdef __INTEL_COMPILER
+#pragma warning(pop)
+#endif
+
   cm->timer = PDM_timer_create();
   for (int i = 0; i < 18; i++) {
     cm->times_elapsed[i] = 0.;
@@ -2065,7 +2073,7 @@ _build_coarseCellLNToGN
     for (int iPart = 0; iPart < cm->nPart; iPart++) {
       printf("\nContenu de cm->part_res[%d]->part->cellLNToGN\n", iPart);
       for (int j = 0; j < cm->part_res[iPart]->part->nCell; j++) {
-        printf(" %d ", cm->part_res[iPart]->part->cellLNToGN[j]);
+        printf(" "PDM_FMT_G_NUM" ", cm->part_res[iPart]->part->cellLNToGN[j]);
       }
       printf("\n\n");   
     }
@@ -2086,7 +2094,7 @@ _build_faceLNToGN
 _coarse_mesh_t * cm
 )
 {
-  int **faceLNToGNPart = (int **) malloc(cm->nPart * sizeof(int *));
+  PDM_g_num_t **faceLNToGNPart = (PDM_g_num_t **) malloc(cm->nPart * sizeof(PDM_g_num_t *));
   int *nFacePart = (int *) malloc(cm->nPart * sizeof(int));
 
   for (int i = 0; i < cm->nPart; i++) {
@@ -2098,7 +2106,7 @@ _coarse_mesh_t * cm
     printf("Contenu de faceLNToGNPart\n");
     for (int i = 0; i < cm->nPart; i++) {
       for (int j = 0; j < nFacePart[i]; j++) {
-         printf(" %d ", faceLNToGNPart[i][j]);
+         printf(" "PDM_FMT_G_NUM" ", faceLNToGNPart[i][j]);
       }
     printf("\n");
     }
@@ -2113,13 +2121,13 @@ _coarse_mesh_t * cm
                                                      cm->nPart,
                                                      cm->comm);    
 
-  int **faceLNToGNTag = (int **) malloc(cm->nPart * sizeof(int *));
+  PDM_g_num_t **faceLNToGNTag = (PDM_g_num_t **) malloc(cm->nPart * sizeof(PDM_g_num_t *));
 
   int idx_write = 0;
 
   for (int i = 0; i < cm->nPart; i++) {
     idx_write = 0;
-    faceLNToGNTag[i] = (int *) malloc(cm->part_ini[i]->nFace * sizeof(int));
+    faceLNToGNTag[i] = (PDM_g_num_t *) malloc(cm->part_ini[i]->nFace * sizeof(PDM_g_num_t));
       //Loop over coarseFaceToFineFace, i = index of coarseFaceToFineFace (from 0 to cm->part_res[iPart]->part->nFace)
 
     for (int j = 0; j < cm->part_ini[i]->nFace; j++) {
@@ -2137,18 +2145,18 @@ _coarse_mesh_t * cm
     printf("Contenu de faceLNToGNTag\n");    
     for (int i = 0; i < cm->nPart; i++) {
       for (int j = 0; j < cm->part_res[i]->part->nFace; j++) {
-          printf(" %d ", faceLNToGNTag[i][j]);
+          printf(" "PDM_FMT_G_NUM" ", faceLNToGNTag[i][j]);
       }
     }
     printf("\n");
   }
 
-  int *b_tIntersects = NULL;
+  PDM_g_num_t *b_tIntersects = NULL;
   int *b_strideOne = NULL;
   int *part_stride = NULL;
 
   PDM_part_to_block_exch (ptb,
-                            sizeof(int),
+                            sizeof(PDM_g_num_t),
                             PDM_STRIDE_CST,
                             1,
                             &part_stride,
@@ -2207,7 +2215,7 @@ _coarse_mesh_t * cm
   int strideOne = 1;
 
   PDM_block_to_part_exch (btp,
-                          sizeof(int),
+                          sizeof(PDM_g_num_t),
                           PDM_STRIDE_CST,
                           &strideOne, 
                           (void *) b_tIntersects,
@@ -2219,7 +2227,7 @@ _coarse_mesh_t * cm
     for (int i = 0; i < cm->nPart; i++) {        
       //Loop over the partition faces, j = face number
       for (int j = 0; j < cm->part_ini[i]->nFace; j++) {
-        printf(" %d ", faceLNToGNFine[i][j]);
+        printf(" "PDM_FMT_G_NUM" ", faceLNToGNFine[i][j]);
       }
     }
     printf("\n");
@@ -2239,7 +2247,7 @@ _coarse_mesh_t * cm
     for (int i = 0; i < cm->nPart; i++) {        
       //Loop over the partition vertices, j = vertex number
       for (int j = 0; j < cm->part_res[i]->part->nFace; j++) {
-        printf(" %d ", cm->part_res[i]->part->faceLNToGN[j]);
+        printf(" "PDM_FMT_G_NUM" ", cm->part_res[i]->part->faceLNToGN[j]);
       }
     }
     printf("\n");
@@ -2280,7 +2288,7 @@ _build_vtxLNToGN
 _coarse_mesh_t * cm
 )
 {    
-  int **vtxLNToGNPart = (int **) malloc(cm->nPart * sizeof(int *));
+  PDM_g_num_t **vtxLNToGNPart = (PDM_g_num_t **) malloc(cm->nPart * sizeof(PDM_g_num_t *));
   int *nVtxPart = (int *) malloc(cm->nPart * sizeof(int));
 
   for (int i = 0; i < cm->nPart; i++) {
@@ -2291,7 +2299,7 @@ _coarse_mesh_t * cm
   if(0 == 1) {
     printf("Contenu de vtxLNToGNPart\n");
     for (int i = 0; i < cm->nPart; i++) {
-      printf(" %d ", *(vtxLNToGNPart[i]));
+      printf(" "PDM_FMT_G_NUM" ", *(vtxLNToGNPart[i]));
     }
     printf("\n");
 
@@ -2341,12 +2349,12 @@ _coarse_mesh_t * cm
     printf("\n");
   }
 
-  int *b_tIntersects = NULL;
+  PDM_g_num_t *b_tIntersects = NULL;
   int *b_strideOne = NULL;
   int *part_stride = NULL;
 
   PDM_part_to_block_exch (ptb,
-                            sizeof(int),
+                            sizeof(PDM_g_num_t),
                             PDM_STRIDE_CST,
                             1,
                             &part_stride,
@@ -2403,7 +2411,7 @@ _coarse_mesh_t * cm
   int strideOne = 1;
 
   PDM_block_to_part_exch (btp,
-                          sizeof(int),
+                          sizeof(PDM_g_num_t),
                           PDM_STRIDE_CST,
                           &strideOne, 
                           (void *) b_tIntersects,
@@ -2415,7 +2423,7 @@ _coarse_mesh_t * cm
     for (int i = 0; i < cm->nPart; i++) {        
       //Loop over the partition vertices, j = vertex number
       for (int j = 0; j < cm->part_ini[i]->nVtx; j++) {
-        printf(" %d ", vtxLNToGNFine[i][j]);
+        printf(" "PDM_FMT_G_NUM" ", vtxLNToGNFine[i][j]);
       }
     }
     printf("\n");
@@ -2435,7 +2443,7 @@ _coarse_mesh_t * cm
     for (int i = 0; i < cm->nPart; i++) {        
       //Loop over the partition vertices, j = vertex number
       for (int j = 0; j < cm->part_res[i]->part->nVtx; j++) {
-        printf(" %d ", cm->part_res[i]->part->vtxLNToGN[j]);
+        printf(" "PDM_FMT_G_NUM" ", cm->part_res[i]->part->vtxLNToGN[j]);
       }
     }
     printf("\n");
@@ -2555,7 +2563,7 @@ _coarse_mesh_t * cm
     
   for(int iGroup = 0; iGroup < cm->nFaceGroup; iGroup++) {
     
-    int **faceGroupLNToGNPart = (int **) malloc(cm->nPart * sizeof(int *));
+    PDM_g_num_t **faceGroupLNToGNPart = (PDM_g_num_t **) malloc(cm->nPart * sizeof(PDM_g_num_t *));
     int *nFaceGroupPart = (int *) malloc(cm->nPart * sizeof(int));
     
     for (int i = 0; i < cm->nPart; i++) {
@@ -2569,7 +2577,7 @@ _coarse_mesh_t * cm
       for (int i = 0; i < cm->nPart; i++) {
         int nFaceCurrentGroup = cm->part_ini[i]->faceGroupIdx[iGroup+1] - cm->part_ini[i]->faceGroupIdx[iGroup];
         for (int j = 0; j < nFaceCurrentGroup; j++)
-           printf(" %d ", faceGroupLNToGNPart[i][j]);
+          printf(" "PDM_FMT_G_NUM" ", faceGroupLNToGNPart[i][j]);
         printf("\n");
       }
 
@@ -2591,16 +2599,16 @@ _coarse_mesh_t * cm
                                                          cm->nPart,
                                                          cm->comm);    
 
-    int *b_tIntersects = NULL;
+    PDM_g_num_t *b_tIntersects = NULL;
     int *b_strideOne = NULL;
     int *part_stride = NULL;
     
-    int **faceGroupLNToGNTagGroup = (int **) malloc(cm->nPart * sizeof(int *));
+    PDM_g_num_t **faceGroupLNToGNTagGroup = (PDM_g_num_t **) malloc(cm->nPart * sizeof(PDM_g_num_t *));
 
     for (int i = 0; i < cm->nPart; i++) {
       _part_t *cmp = cm->part_res[i]->part;
       int nFacePerGroup = cmp->faceGroupIdx[iGroup + 1] - cmp->faceGroupIdx[iGroup];
-      faceGroupLNToGNTagGroup[i] = (int *) malloc(nFacePerGroup * sizeof(int));
+      faceGroupLNToGNTagGroup[i] = (PDM_g_num_t *) malloc(nFacePerGroup * sizeof(PDM_g_num_t));
       
       idx_write = 0;
       //Copy of the sub-array faceGroupLNToGN for each group
@@ -2621,7 +2629,7 @@ _coarse_mesh_t * cm
     }
         
     PDM_part_to_block_exch (ptb,
-                            sizeof(int),
+                            sizeof(PDM_g_num_t),
                             PDM_STRIDE_CST,
                             1,
                             &part_stride,
@@ -2702,7 +2710,7 @@ _coarse_mesh_t * cm
         //Loop over the partition vertices, j = vertex number
         int nFacePerGroup = cmp->faceGroupIdx[iGroup + 1] - cmp->faceGroupIdx[iGroup];
         for (int j = 0; j < nFacePerGroup; j++) {
-          printf(" %d ", faceGroupLNToGNFine[i][j]);
+          printf(" "PDM_FMT_G_NUM" ", faceGroupLNToGNFine[i][j]);
         }
       }
       printf("\n");  
@@ -2750,7 +2758,7 @@ _coarse_mesh_t * cm
       _part_t *cmp = cm->part_res[i]->part;
       //Loop over the partition vertices, j = vertex number
       for (int j = 0; j < cmp->faceGroupIdx[cm->nFaceGroup]; j++) {
-        printf(" %d ", cmp->faceGroupLNToGN[j]);
+        printf(" "PDM_FMT_G_NUM" ", cmp->faceGroupLNToGN[j]);
       }
     }
     printf("\n"); 
@@ -2964,9 +2972,9 @@ _coarse_mesh_t * cm
         
   //Loop over recvBuff
   for (int i = 0; i < (recvIdx[nProc - 1] + recvN[nProc - 1]) / 3; i++) {
-    int iPartLoc       = recvBuff[3 * i    ];
-    int iFacLocFine    = recvBuff[3 * i + 1];
-    int iFacDistCoarse = recvBuff[3 * i + 2];
+    int iPartLoc       = (int) recvBuff[3 * i    ];
+    int iFacLocFine    = (int) recvBuff[3 * i + 1];
+    int iFacDistCoarse = (int) recvBuff[3 * i + 2];
     
     int posFacePartBoundCoarse = iFaceLocToIPartBound[iPartLoc - 1][iFacLocFine - 1];
     
@@ -3048,7 +3056,7 @@ _part_display
   if (part->gCellFace != NULL) {
     printf("\nContent of gCellFace\n");    
     for(int i = 0; i < part->cellFaceIdx[part->nCell]; i++) {
-      printf(" %d ", part->gCellFace[i]);
+      printf(" "PDM_FMT_G_NUM" ", part->gCellFace[i]);
     }
     printf("\n");
   }
@@ -3067,7 +3075,7 @@ _part_display
   if (part->cellLNToGN != NULL) {
     printf("\nContent of cellLNToGN\n");    
     for(int i = 0; i < part->nCell; i++) {
-      printf(" %d ", part->cellLNToGN[i]);
+      printf(" "PDM_FMT_G_NUM" ", part->cellLNToGN[i]);
     }
     printf("\n");
   }
@@ -3102,7 +3110,7 @@ _part_display
   if (part->gFaceVtx != NULL) {
     printf("\nContent of gFaceVtx\n");    
     for(int i = 0; i < part->faceVtxIdx[part->nFace]; i++) {
-      printf(" %d ", part->gFaceVtx[i]);
+      printf(" "PDM_FMT_G_NUM" ", part->gFaceVtx[i]);
     }
     printf("\n");
   }    
@@ -3121,7 +3129,7 @@ _part_display
   if (part->faceLNToGN != NULL) {
     printf("\nContent of faceLNToGN\n");    
     for(int i = 0; i < part->nFace; i++) {
-      printf(" %d ", part->faceLNToGN[i]);
+      printf(" "PDM_FMT_G_NUM" ", part->faceLNToGN[i]);
     }
     printf("\n");
   }    
@@ -3177,7 +3185,7 @@ _part_display
   if (part->faceGroupLNToGN != NULL) {
     printf("\nContent of faceGroupLNToGN\n");    
     for(int i = 0; i < part->faceGroupIdx[nFaceGroup]; i++) {
-      printf(" %d ", part->faceGroupLNToGN[i]);
+      printf(" "PDM_FMT_G_NUM" ", part->faceGroupLNToGN[i]);
     }
     printf("\n");
   }
@@ -3196,7 +3204,7 @@ _part_display
   if (part->vtxLNToGN != NULL) {
     printf("\nContent of vtxLNToGN\n");    
     for(int i = 0; i < part->nVtx; i++) {
-      printf(" %d ", part->vtxLNToGN[i]);
+      printf(" "PDM_FMT_G_NUM" ", part->vtxLNToGN[i]);
     }
     printf("\n");
   }
@@ -3602,7 +3610,7 @@ PDM_part_coarse_mesh_input
  const PDM_g_num_t *vtxLNToGN,       
  const int          *faceGroupIdx,
  const int          *faceGroup,
- const int          *faceGroupLNToGN,
+ const PDM_g_num_t  *faceGroupLNToGN,
  const int          *facePartBoundProcIdx,       
  const int          *facePartBoundPartIdx,
  const int          *facePartBound               
@@ -3687,7 +3695,14 @@ PROCF (pdm_part_coarse_mesh_input, PDM_PART_COARSE_MESH_INPUT)
   int *_faceWeight = (int *) faceWeight;
   int *_faceGroupIdx = (int *) faceGroupIdx;
   int *_faceGroup = (int *) faceGroup;
+#ifdef __INTEL_COMPILER
+#pragma warning(push)
+#pragma warning(disable:2312)
+#endif
   PDM_g_num_t *_faceGroupLNToGN = (PDM_g_num_t *) faceGroupLNToGN;
+#ifdef __INTEL_COMPILER
+#pragma warning(pop)
+#endif
   
   if (*have_cellTag == 0) {
     _cellTag = NULL;

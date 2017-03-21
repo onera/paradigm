@@ -198,9 +198,12 @@ _distrib_data
                  PDM__PDM_MPI_G_NUM, 
                  PDM_MPI_MAX, 
                  ptb->comm);
+
+  PDM_g_num_t _n_rankData = _id_max_max / ptb->n_activeRanks;
+  PDM_g_num_t _rest = _id_max_max % ptb->n_activeRanks;
   
-  int n_rankData = (int) (_id_max_max / ptb->n_activeRanks);
-  int rest       = (int) (_id_max_max % ptb->n_activeRanks);
+  int n_rankData = (int) (_n_rankData);
+  int rest       = (int) (_rest);
                      
   ptb->s_blockMax = n_rankData;
   ptb->s_blockMin = n_rankData;

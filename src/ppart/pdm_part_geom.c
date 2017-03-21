@@ -143,7 +143,7 @@ int          *initialIdx
   }
 
   int k = 0;
-  int elem = oldOrderArray[0];
+  PDM_g_num_t elem = oldOrderArray[0];
   for (int i = 1; i < size; ++i) {
     if (elem != oldOrderArray[i]) {
       k++;
@@ -302,11 +302,11 @@ int                *sizeFaceVtxIdx
   
   int * allToallNToLN = (int *) malloc(size_dCellFace * sizeof(int));
 
-  const int *cellFace = dCellFace;
+  const PDM_g_num_t *cellFace = dCellFace;
   
   for(int iFace = 0; iFace < size_dCellFace; iFace ++) {
     int irank = PDM_binary_search_gap_long(cellFace[iFace], dFaceProc, nRank);
-    faceToSendIdx[irank+1] += nData;
+    faceToSendIdx[irank+1] += nData; 
   }
   
   for (int i = 0; i < nRank; i++) {
@@ -356,11 +356,12 @@ int                *sizeFaceVtxIdx
     for (int k = requestedFaceIdx[i]; k < requestedFaceIdx[i+1]; k+=nData) {
       
       PDM_g_num_t gFace     = requestedFace[k];
-      
-      int          lFace     = ((int) (gFace - dFaceProc[myRank]));
+
+      PDM_g_num_t _lFace = gFace - dFaceProc[myRank];      
+      int          lFace = (int) _lFace;
       
       int          nbVtxFace = (int) (dFaceVtxIdx[lFace+1] 
-				                     - dFaceVtxIdx[lFace]);
+		        		                    - dFaceVtxIdx[lFace]);
       sFaceInfoIdx[i+1] += nDataFace + nbVtxFace;
     }
   }
@@ -374,7 +375,8 @@ int                *sizeFaceVtxIdx
   for (int i = 0; i < nRank; i++) {
     for (int k = requestedFaceIdx[i]; k < requestedFaceIdx[i+1]; k+=nData) {
       PDM_g_num_t gFace     = requestedFace[k];
-      int          lFace     = ((int) (gFace - dFaceProc[myRank]));
+      PDM_g_num_t _lFace = gFace - dFaceProc[myRank];
+      int          lFace     = (int) _lFace;
       int          nbVtxFace = (int) (dFaceVtxIdx[lFace+1] 
                              - dFaceVtxIdx[lFace]);
       int idx = sFaceInfoIdx[i] + sFaceInfoN[i]; 
@@ -428,7 +430,7 @@ int                *sizeFaceVtxIdx
   k = 0;
   for (int i = 0; i < (*sizeFaceVtxIdx) -1 ; i++) {
    
-    int nVtx = rFaceInfo[k++];
+    int nVtx = (int) rFaceInfo[k++];
     int idx = faceVtxIdx[allToallNToLN[i]];
 
     for (int j = 0; j < nVtx; j++) {
@@ -555,7 +557,8 @@ double             *newVtx
   for (int i = 0; i < nRank; i++) {
     for (int k = requestedVtxIdx[i]; k < requestedVtxIdx[i+1]; k+=nData) {
       PDM_g_num_t gVtx     = requestedVtx[k];
-      int          lVtx     = (int) (gVtx - dVtxProc[myRank]);
+      PDM_g_num_t _lVtx    = gVtx - dVtxProc[myRank];
+      int          lVtx    = (int) _lVtx;
 
       int idx = sVtxInfoIdx[i] + sVtxInfoN[i]; 
   
@@ -696,7 +699,7 @@ _compute_cellCenter
     initialIdx [i] = i;
   }
     
-  PDM_sort_int (faceVtxGNum, initialIdx, sizeTmpFaceVtx);
+  PDM_sort_long (faceVtxGNum, initialIdx, sizeTmpFaceVtx);
   
   /*
    * Sort coordinates

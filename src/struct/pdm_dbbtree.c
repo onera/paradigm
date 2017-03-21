@@ -577,7 +577,7 @@ int              *box_l_num[]
     
     printf ("_boxGnum :");
     for (int i = 0; i < nEltsProc; i++) {
-      printf (" %d", _boxGnum[i]);
+      printf (" "PDM_FMT_G_NUM, _boxGnum[i]);
     }
     printf ("\n");
     

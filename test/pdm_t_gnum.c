@@ -217,7 +217,7 @@ PDM_part_split_t           method,
   const PDM_g_num_t *_numabs = PDM_gnum_get (id, 0);
     
   for (int j = 0; j < dNVtx; j++) {
-    printf ("%d %12.5e %12.5e %12.5e\n", _numabs[j], dVtxCoord[3*j], 
+    printf (PDM_FMT_G_NUM" %12.5e %12.5e %12.5e\n", _numabs[j], dVtxCoord[3*j], 
                                                      dVtxCoord[3*j+1], 
                                                      dVtxCoord[3*j+2]);
   }

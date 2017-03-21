@@ -138,7 +138,8 @@ PDM_block_to_part_create
 
       btp->ind[i][j] = idx;
       
-      requested_data[idx] = _gnum_elt[j] - 1 - blockDistribIdx[ind];
+      PDM_g_num_t _requested_data = _gnum_elt[j] - 1 - blockDistribIdx[ind];
+      requested_data[idx] = (int) _requested_data;
 
     }
   }

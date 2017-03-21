@@ -305,10 +305,11 @@ _order_faceCell
 (
 int          nFace,
 int         *newToOldOrder,
-PDM_g_num_t *faceCell 
+int         *faceCell 
 )
 {
-  int *oldFaceCell = (int*) malloc (nFace * 2 * sizeof(int));
+  int *oldFaceCell = 
+          (int *) malloc (nFace * 2 * sizeof(int));
   for(int i = 0; i < nFace * 2; ++i) {
     oldFaceCell [i] = faceCell [i];
   }

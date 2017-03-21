@@ -240,12 +240,12 @@ _a_gt_b(PDM_morton_code_t  code_a,
  *----------------------------------------------------------------------------*/
 
 static void
-_descend_morton_heap(PDM_g_num_t          parent,
-                     int          n_codes,
+_descend_morton_heap(PDM_g_num_t        parent,
+                     int                n_codes,
                      PDM_morton_code_t  morton_codes[])
 {
   PDM_morton_code_t  tmp;
-  int   child = 2 * parent + 1;
+  PDM_g_num_t child = 2 * parent + 1;
 
   while (child < n_codes) {
 
@@ -363,8 +363,8 @@ _descend_morton_heap_with_order(PDM_g_num_t                 parent,
                                 const PDM_morton_code_t   morton_codes[],
                                 int                *order)
 {
-  int   tmp;
-  int   child = 2 * parent + 1;
+  int          tmp;
+  PDM_g_num_t  child = 2 * parent + 1;
 
   while (child < n_codes) {
 
@@ -458,7 +458,7 @@ _evaluate_distribution(int          n_ranges,
 static void
 _define_rank_distrib(int                      dim,
                      int                      n_ranks,
-                     PDM_g_num_t                gmax_level,
+                     int                      gmax_level,
                      PDM_g_num_t                gsum_weight,
                      int                n_codes,
                      const PDM_morton_code_t  morton_codes[],
@@ -525,9 +525,16 @@ _define_rank_distrib(int                      dim,
   /* Define the cumulative frequency related to g_distribution */
 
   cfreq[0] = 0.;
+#ifdef __INTEL_COMPILER
+#pragma warning(push)
+#pragma warning(disable:2259)
+#endif
   for (id = 0; id < n_samples; id++)
     cfreq[id+1] = cfreq[id] + (double)g_distrib[id]/(double)gsum_weight;
   cfreq[n_samples] = 1.0;
+#ifdef __INTEL_COMPILER
+#pragma warning(pop)
+#endif
 
 #if 0 && defined(DEBUG) && !defined(DEBUG) /* For debugging purpose only */
 
@@ -699,7 +706,7 @@ _update_sampling(int      dim,
 static double
 _bucket_sampling(int                      dim,
                  int                      n_ranks,
-                 PDM_g_num_t                gmax_level,
+                 int                     gmax_level,
                  int                n_codes,
                  const PDM_morton_code_t  morton_codes[],
                  const int          weight[],
@@ -728,7 +735,14 @@ _bucket_sampling(int                      dim,
 
   PDM_MPI_Allreduce(&lsum_weight, &gsum_weight, 1,  PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, comm);
 
+#ifdef __INTEL_COMPILER
+#pragma warning(push)
+#pragma warning(disable:2259)
+#endif
   optim = (double)gsum_weight / (double)n_ranks;
+#ifdef __INTEL_COMPILER
+#pragma warning(pop)
+#endif
 
   /* Define a naive sampling (uniform distribution) */
 
@@ -1370,7 +1384,7 @@ PDM_morton_quantile_search(size_t              n_quantiles,
 double
 PDM_morton_build_rank_index(int                      dim,
                             int                      gmax_level,
-                            PDM_g_num_t                n_codes,
+                            PDM_l_num_t                n_codes,
                             const PDM_morton_code_t  code[],
                             const int          weight[],
                             const int          order[],
@@ -1451,7 +1465,14 @@ PDM_morton_dump(int                dim,
   double  coord[3];
 
   const PDM_g_num_t   n = 1 << code.L;
+#ifdef __INTEL_COMPILER
+#pragma warning(push)
+#pragma warning(disable:2259)
+#endif
   const double  stride = 1/(double)n;
+#ifdef __INTEL_COMPILER
+#pragma warning(pop)
+#endif
 
   for (i = 0; i < dim; i++)
     coord[i] = stride * code.X[i];

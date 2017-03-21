@@ -3113,15 +3113,26 @@ PDM_box_tree_dump_statistics(const PDM_box_tree_t  *bt)
     n_g_spill_leaves = l_sum[1];
     n_g_linked_boxes = l_sum[2];
 
-    g_min_linked_boxes = g_min[0];
-    g_max_level_reached = g_max[0];
-    g_max_linked_boxes = g_max[1];
+    g_min_linked_boxes = (int) g_min[0];
+    g_max_level_reached = (int) g_max[0];
+    g_max_linked_boxes = (int) g_max[1];
   }
 
   /* Redefine final statistics */
 
-  mean_linked_boxes = (double)n_g_linked_boxes / (double)n_g_leaves;
-  box_ratio = (double)n_g_linked_boxes / (double)n_g_boxes;
+#ifdef __INTEL_COMPILER
+#pragma warning(push)
+#pragma warning(disable:2259)
+#endif
+  double _n_g_linked_boxes = (double) n_g_linked_boxes;
+  double _n_g_leaves = (double) n_g_leaves;
+  double _n_g_boxes = (double) n_g_boxes; 
+#ifdef __INTEL_COMPILER
+#pragma warning(pop)
+#endif
+  
+  mean_linked_boxes = _n_g_linked_boxes / _n_g_leaves;
+  box_ratio = _n_g_linked_boxes / _n_g_boxes;
 
   /* Define axis subdivisions */
 

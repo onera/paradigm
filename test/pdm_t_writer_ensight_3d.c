@@ -426,7 +426,7 @@ int main(int argc, char *argv[])
 
     for (int i = 0; i < nFaceGroup; i++) {
        for (int j = faceGroupIdx[i]; j < faceGroupIdx[i+1]; j++) {
-         printf (" %d", faceGroupLNToGN[j]);
+         printf (" "PDM_FMT_G_NUM, faceGroupLNToGN[j]);
        }
        printf ("\n");
     }
@@ -452,7 +452,7 @@ int main(int argc, char *argv[])
                       ipart,
                       nVtx,
                       vtx,
-                      (PDM_g_num_t *) vtxLNToGN);
+                      vtxLNToGN);
 
     /* Construction de la connectivite pour sortie graphique */
 
@@ -673,7 +673,7 @@ int main(int argc, char *argv[])
                          ipart,
                          nCell,
                          connec[ipart],
-                         (PDM_g_num_t *) cellLNToGN);
+                         cellLNToGN);
   }
 
   free(debPartProcs);
