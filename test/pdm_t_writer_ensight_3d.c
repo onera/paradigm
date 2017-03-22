@@ -424,13 +424,7 @@ int main(int argc, char *argv[])
                        &faceGroup,
                        &faceGroupLNToGN);
 
-    for (int i = 0; i < nFaceGroup; i++) {
-       for (int j = faceGroupIdx[i]; j < faceGroupIdx[i+1]; j++) {
-         printf (" "PDM_FMT_G_NUM, faceGroupLNToGN[j]);
-       }
-       printf ("\n");
-    }
-
+    
     val_num_part[ipart] = (PDM_real_t *) malloc(sizeof(PDM_real_t) * nCell);
     val_coo_x[ipart]    = (PDM_real_t *) malloc(sizeof(PDM_real_t) * nVtx);
     val_coo_xyz[ipart]  = (PDM_real_t *) malloc(sizeof(PDM_real_t) * 3 * nVtx);

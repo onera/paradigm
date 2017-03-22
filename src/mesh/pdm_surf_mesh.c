@@ -383,7 +383,8 @@ PDM_surf_mesh_build_edges_gn_and_edge_part_bound
   nIntEdgeProcs[0] = 0;
   PDM_g_num_t *_nIntEdgeProcs = nIntEdgeProcs + 1;
 
-  PDM_MPI_Allgather((void *) &nIntEdgeProc, 1, PDM_MPI_INT, 
+  PDM_g_num_t _nIntEdgeProc = (PDM_g_num_t) nIntEdgeProc;
+  PDM_MPI_Allgather((void *) &_nIntEdgeProc, 1, PDM__PDM_MPI_G_NUM, 
                 (void *) _nIntEdgeProcs, 1, PDM__PDM_MPI_G_NUM, mesh->comm);
 
   int nEdgeWithoutNG = 0;

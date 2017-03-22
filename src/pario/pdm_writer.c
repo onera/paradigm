@@ -774,9 +774,11 @@ _calcul_numabs_bloc
 
   /* Transmission des numeros absolus  */
   
-  PDM_g_num_t *sendBuffNumabs = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * n_elt_loc_total);
-  PDM_g_num_t *recvBuffNumabs = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * (recvBuffIdx[n_procs - 1] + 
-                                                                         recvBuffN[n_procs - 1]));
+  PDM_g_num_t *sendBuffNumabs = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * 
+                                                       n_elt_loc_total);
+  PDM_g_num_t *recvBuffNumabs = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * 
+                                                      (recvBuffIdx[n_procs - 1] + 
+                                                       recvBuffN[n_procs - 1]));
                                                           
   for (int j = 0; j < n_procs; j++) {
     sendBuffN[j] = 0;
@@ -804,11 +806,12 @@ _calcul_numabs_bloc
   
   /* Echange du nombre d'elements stockes sur chaque processus */
 
-  const int n_elt_stocke = recvBuffIdx[n_procs - 1] + recvBuffN[n_procs - 1];
+  const PDM_g_num_t n_elt_stocke = 
+    (PDM_g_num_t) (recvBuffIdx[n_procs - 1] + recvBuffN[n_procs - 1]);
 
   PDM_MPI_Allgather((void *) &n_elt_stocke, 
                 1,
-                PDM_MPI_INT, 
+                PDM__PDM_MPI_G_NUM,
                 (void *) (n_elt_stocke_procs + 1), 
                 1,
                 PDM__PDM_MPI_G_NUM,
@@ -1212,7 +1215,7 @@ _calcul_numabs_split_poly2d
       numabs_tri_tmp[j] = 0;
     }
 
-    int n_elt_stocke[3] = {0, 0, 0};
+    PDM_g_num_t n_elt_stocke[3] = {0, 0, 0};
     
     for (int j = 0; j < n_procs; j++) {
       
@@ -1240,7 +1243,7 @@ _calcul_numabs_split_poly2d
     
     PDM_MPI_Allgather((void *) &n_elt_stocke, 
                   3,
-                  PDM_MPI_INT, 
+                  PDM__PDM_MPI_G_NUM,
                   (void *) (n_elt_stocke_procs + 1), 
                   3,
                   PDM__PDM_MPI_G_NUM,
@@ -3879,6 +3882,8 @@ const int            n_elt,
   }
  
   /* Mapping */
+  
+  //FIXME: Pourquoi geom->n_cell[id_part] += -bloc->n_elt[id_part]; et geom->n_cell[id_part] += n_elt
   geom->n_cell[id_part] += -bloc->n_elt[id_part]; 
   geom->n_cell[id_part] += n_elt;
   bloc->n_elt[id_part] = n_elt;
@@ -3887,7 +3892,7 @@ const int            n_elt,
   
   for (int i = 0; i < n_elt; i++)
     geom->n_elt_abs = _lmax(geom->n_elt_abs, numabs[i]);
-
+  
 }
 
 
@@ -5328,7 +5333,7 @@ const int            id_geom
 ) 
 {
 
-  /* Acces a l'objet de geometrie courant */
+    /* Acces a l'objet de geometrie courant */
 
   PDM_writer_t *cs = _PDM_writer_get(id_cs);
 

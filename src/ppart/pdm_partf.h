@@ -4,17 +4,14 @@
   integer, parameter :: PDM_part_SPLIT_PTSCOTCH = 2
   integer, parameter :: PDM_part_SPLIT_HILBERT = 3
 
-  integer, parameter :: PDM_part_RENUM_FACE_METIS = 1
-  integer, parameter :: PDM_part_RENUM_FACE_SCOTCH = 2
-  integer, parameter :: PDM_part_RENUM_FACE_HILBERT = 3
-  integer, parameter :: PDM_part_RENUM_FACE_CUTHILL = 4
-  integer, parameter :: PDM_part_RENUM_FACE_NONE = 5
+  integer, parameter :: PDM_PART_RENUM_FACE_RANDOM        = 1
+  integer, parameter :: PDM_PART_RENUM_FACE_NONE          = 2
+  integer, parameter :: PDM_PART_RENUM_FACE_LEXICOGRAPHIC = 3
 
-  integer, parameter :: PDM_part_RENUM_CELL_METIS = 1
-  integer, parameter :: PDM_part_RENUM_CELL_SCOTCH = 2
-  integer, parameter :: PDM_part_RENUM_CELL_HILBERT = 3
+  integer, parameter :: PDM_part_RENUM_CELL_HILBERT = 1
+  integer, parameter :: PDM_part_RENUM_CELL_RANDOM = 2
+  integer, parameter :: PDM_part_RENUM_CELL_NONE = 3
   integer, parameter :: PDM_part_RENUM_CELL_CUTHILL = 4
-  integer, parameter :: PDM_part_RENUM_CELL_NONE = 5
           
 interface
 

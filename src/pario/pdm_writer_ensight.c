@@ -1101,9 +1101,9 @@ PDM_writer_ensight_geom_write
 
     free(numabs_tmp);
     free(connec_tmp);
-
+    
   }
-
+ 
   /* Ecriture des blocs polygones */
 
   for (int ibloc = 0; ibloc < geom->n_blocs_poly2d; ibloc++) {
@@ -1195,7 +1195,7 @@ PDM_writer_ensight_geom_write
                        n_elt_proc,
                        numabs_tmp,
                        connec_tmp);
-
+    
     free(numabs_tmp);
     free(connec_tmp);
     free(n_comp_tmp);
