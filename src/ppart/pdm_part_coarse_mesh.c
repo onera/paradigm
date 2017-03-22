@@ -2318,7 +2318,7 @@ _coarse_mesh_t * cm
                                                      cm->nPart,
                                                      cm->comm);    
 
-  PDM_g_num_t **vtxLNToGNTag = (int **) malloc(cm->nPart * sizeof(int *));
+  PDM_g_num_t **vtxLNToGNTag = (PDM_g_num_t **) malloc(cm->nPart * sizeof(PDM_g_num_t *));
 
   int idx_write = 0;
 

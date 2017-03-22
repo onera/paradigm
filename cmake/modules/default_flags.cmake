@@ -33,7 +33,7 @@ elseif (CMAKE_Fortran_COMPILER_ID STREQUAL "Intel")
 
   include(CheckCCompilerFlag)
 
-  set (CMAKE_Fortran_FLAGS_DEBUG          "-O0 -g -check all -check nopointer -ftrapuv -traceback")
+  set (CMAKE_Fortran_FLAGS_DEBUG          "-O0 -g -check all -check nopointer -traceback")
   set (CMAKE_Fortran_FLAGS_PROFILING      "${CMAKE_Fortran_FLAGS_RELEASE} -pg")
   set (CMAKE_Fortran_FLAGS_RELWITHDEBINFO "${CMAKE_Fortran_FLAGS_RELEASE} -g")
   set (CMAKE_Fortran_FLAGS_MINSIZEREL     "-O2 -g")
@@ -158,7 +158,7 @@ elseif (CMAKE_C_COMPILER_ID STREQUAL "Intel")
 
   set (CMAKE_C_FLAGS_RELEASE "-O3")
 
-  set (CMAKE_C_FLAGS_DEBUG           "-g -O0 -traceback -w2 -Wp64 -ftrapuv")
+  set (CMAKE_C_FLAGS_DEBUG           "-g -O0 -traceback -w2 -Wp64")
   set (CMAKE_C_FLAGS_PROFILING       "${CMAKE_C_FLAGS_RELEASE} -p")
   set (CMAKE_C_FLAGS_RELWITHDEBINFO  "${CMAKE_C_FLAGS_RELEASE} -g")
   set (CMAKE_C_FLAGS_MINSIZEREL      "-O2 -g")
@@ -262,7 +262,7 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
 
   set (CMAKE_CXX_FLAGS_RELEASE "-O3")
 
-  set (CMAKE_CXX_FLAGS_DEBUG           "-g -O0 -traceback -w2 -Wp64 -ftrapuv")
+  set (CMAKE_CXX_FLAGS_DEBUG           "-g -O0 -traceback -w2 -Wp64")
   set (CMAKE_CXX_FLAGS_PROFILING       "${CMAKE_CXX_FLAGS_RELEASE} -p")
   set (CMAKE_CXX_FLAGS_RELWITHDEBINFO  "${CMAKE_CXX_FLAGS_RELEASE} -g")
   set (CMAKE_CXX_FLAGS_MINSIZEREL      "-O2 -g")

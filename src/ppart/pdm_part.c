@@ -2288,7 +2288,7 @@ _search_part_bound_face
 #pragma warning(push)
 #pragma warning(disable:2312)
 #endif      
-      work_array2 = work_array;
+      work_array2 = (PDM_g_num_t *) work_array;
 #ifdef __INTEL_COMPILER
 #pragma warning(pop)
 #endif
