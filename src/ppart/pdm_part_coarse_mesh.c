@@ -2318,7 +2318,7 @@ _coarse_mesh_t * cm
                                                      cm->nPart,
                                                      cm->comm);    
 
-  int **vtxLNToGNTag = (int **) malloc(cm->nPart * sizeof(int *));
+  PDM_g_num_t **vtxLNToGNTag = (int **) malloc(cm->nPart * sizeof(int *));
 
   int idx_write = 0;
 
@@ -2326,7 +2326,7 @@ _coarse_mesh_t * cm
     int nFineVtx = cm->part_ini[i]->nVtx;
     int nCoarseVtx = cm->part_res[i]->part->nVtx;
     idx_write = 0;
-    vtxLNToGNTag[i] = (int *) malloc(nFineVtx * sizeof(int));
+    vtxLNToGNTag[i] = (PDM_g_num_t *) malloc(nFineVtx * sizeof(PDM_g_num_t));
     //Loop over coarseFaceToFineFace, i = index of coarseVtxToFineVtx (from 0 to cm->part_res[iPart]->part->nVtx)
     for (int j = 0; j < nFineVtx; j++) {
       vtxLNToGNTag[i][j] = -1;
@@ -2343,7 +2343,7 @@ _coarse_mesh_t * cm
     printf("Contenu de vtxLNToGNTag\n");    
     for (int i = 0; i < cm->nPart; i++) {
       for (int j = 0; j < cm->part_res[i]->part->nVtx; j++) {
-        printf(" %d ", vtxLNToGNTag[i][j]);
+        printf(" "PDM_FMT_G_NUM, vtxLNToGNTag[i][j]);
       }
     }
     printf("\n");
@@ -2944,8 +2944,8 @@ _coarse_mesh_t * cm
     sendIdx[i] *= 3;
   }
   
-  PDM_MPI_Alltoall (sendN, 1, PDM__PDM_MPI_G_NUM, 
-                recvN, 1, PDM__PDM_MPI_G_NUM, 
+  PDM_MPI_Alltoall (sendN, 1, PDM_MPI_INT, 
+                recvN, 1, PDM_MPI_INT, 
                 cm->comm);
   recvIdx[0] = 0;
     
