@@ -65,6 +65,7 @@ struct _PDM_io_fichier_t {
 
   PDM_MPI_Comm            comm;               /* Communicateur lie 
                                              a cette structure */
+  PDM_MPI_Comm            scomm;           /* Sub-communicator reduced to active ranks */
   int                 rang;               /* Rang MSG */
   int                 n_rangs;            /* Nombre de rangs MSG  */
 
@@ -85,7 +86,9 @@ struct _PDM_io_fichier_t {
   
   double      prop_noeuds_actifs;         /* Proportion de noeuds actifs */
   int                 n_rangs_actifs;     /* Nombre de rangs actifs */
-  int                *rangs_actifs;       /* Rangs actifs */
+  int                 n_rangs_inactifs;     /* Number of inactive ranks */
+  int                *rangs_actifs;       /* Active ranks */
+  int                *rangs_inactifs;       /* Inactive ranks */
   int                *tag_rangs_actifs;   /* Tag des rangs actifs */
   int                 rang_actif;         /* Indique si rang courant est actif */
 
@@ -255,8 +258,10 @@ PDM_io_fichier_t  *fichier
                                  paralleles */
       fichier->n_rangs_actifs = 1; /* Nombre de processus actifs 
                                     pour les acces paralleles */
+      fichier->n_rangs_inactifs = 0;
   
       fichier->rangs_actifs = (int *) malloc(sizeof(int) * fichier->n_rangs_actifs);
+      fichier->rangs_inactifs = NULL;
       fichier->rangs_actifs[0] = 0;
     }    
  
@@ -268,7 +273,9 @@ PDM_io_fichier_t  *fichier
       fichier->n_rangs_actifs = 0; /* Nombre de processus actifs 
 				      pour les acces paralleles */
   
+      fichier->n_rangs_inactifs = fichier->n_rangs;
       fichier->rangs_actifs = NULL;
+      fichier->rangs_inactifs = NULL;
 
       /* Repartition sur les procs 0 de chaque noeud */
       /* On peut ameliorer le principe en ne prenant qu'un noeud sur 2, 4, 8, 16 */
@@ -276,16 +283,16 @@ PDM_io_fichier_t  *fichier
       /* Determination du rang dans le noeud (si prop_noeud negatifs tous les coeurs sont actifs)*/
 
       if (fichier->prop_noeuds_actifs <= 0) {
-	fichier->rang_actif = 1;
-	tout_rang_actif = 1;
+      	fichier->rang_actif = 1;
+      	tout_rang_actif = 1;
       }
       else {
 
-	/* Determination des rangs 0 des noeuds */
+      /* Determination des rangs 0 des noeuds */
 
-	int rang_noeud = PDM_io_mpi_node_rank(fichier->comm);
-	if (rang_noeud == 0)
-	  fichier->rang_actif = 1;
+        int rang_noeud = PDM_io_mpi_node_rank(fichier->comm);
+        if (rang_noeud == 0)
+          fichier->rang_actif = 1;
       }
 
       fichier->tag_rangs_actifs = (int *) malloc(sizeof(int) * fichier->n_rangs);
@@ -296,59 +303,76 @@ PDM_io_fichier_t  *fichier
     
       fichier->n_rangs_actifs = 0;
       for (int i = 0; i < fichier->n_rangs; i++) {
-	if (fichier->tag_rangs_actifs[i] == 1) {
-	  fichier->n_rangs_actifs += 1;
-	}
+        if (fichier->tag_rangs_actifs[i] == 1) {
+          fichier->n_rangs_actifs += 1;
+        }
       }
 
       /* Prise en compte de la proportion de noeuds actifs */
 
       if ((tout_rang_actif == 0) && (fichier->prop_noeuds_actifs < 1.)) {
-	int n_rang_actif_pondere =  (int) (fichier->n_rangs_actifs * fichier->prop_noeuds_actifs);
-	n_rang_actif_pondere = PDM_IO_MAX(n_rang_actif_pondere, 1);
-	int pas = fichier->n_rangs_actifs / n_rang_actif_pondere;
-	pas = PDM_IO_MAX(pas, 1); 
+        int n_rang_actif_pondere =  (int) (fichier->n_rangs_actifs * fichier->prop_noeuds_actifs);
+        n_rang_actif_pondere = PDM_IO_MAX(n_rang_actif_pondere, 1);
+        int pas = fichier->n_rangs_actifs / n_rang_actif_pondere;
+        pas = PDM_IO_MAX(pas, 1); 
       
-	int cpt = 0;
-	fichier->n_rangs_actifs = 0;
-	for (int i = 0; i < fichier->n_rangs; i++) {
-	  if (fichier->tag_rangs_actifs[i] == 1) {
-	    if (fichier->n_rangs_actifs < n_rang_actif_pondere) {
-	      if (cpt != 0) {
-		fichier->tag_rangs_actifs[i] = 0;
-	      }
-	      else {
-		fichier->n_rangs_actifs += 1;
-	      }
-	      cpt = (cpt + 1) % pas;
-	    }
-	    else {
-	      fichier->tag_rangs_actifs[i] = 0;
-	    }
-	  }
-	}
+        int cpt = 0;
+        fichier->n_rangs_actifs = 0;
+        for (int i = 0; i < fichier->n_rangs; i++) {
+          if (fichier->tag_rangs_actifs[i] == 1) {
+            if (fichier->n_rangs_actifs < n_rang_actif_pondere) {
+              if (cpt != 0) {
+                fichier->tag_rangs_actifs[i] = 0;
+              }
+              else {
+                fichier->n_rangs_actifs += 1;
+              }
+              cpt = (cpt + 1) % pas;
+            }
+            else {
+              fichier->tag_rangs_actifs[i] = 0;
+            }
+          }
+        }
+        if (fichier->tag_rangs_actifs[fichier->rang] == 0) {
+          fichier->rang_actif = 0;
+        }
       }
   
       /* Determination des rangs actifs */
 
       fichier->rangs_actifs = (int *) malloc(sizeof(int) * fichier->n_rangs_actifs);
+      fichier->n_rangs_inactifs = fichier->n_rangs - fichier->n_rangs_actifs;
+      fichier->rangs_inactifs = (int *) malloc(sizeof(int) * fichier->n_rangs_inactifs);
+
       fichier->n_rangs_actifs = 0;
+      fichier->n_rangs_inactifs = 0;
+
       for (int i = 0; i < fichier->n_rangs; i++) {
-	if (fichier->tag_rangs_actifs[i] == 1) {
-	  fichier->rangs_actifs[fichier->n_rangs_actifs++] = i;
-	}
+        if (fichier->tag_rangs_actifs[i] == 1) {
+          fichier->rangs_actifs[fichier->n_rangs_actifs++] = i;
+        }
+        else {
+          fichier->rangs_inactifs[fichier->n_rangs_inactifs++] = i;
+        }
       }
 
       /* Affichage */
 
       if (0 == 1) {
-	if (fichier->rang == 0) {
-	  printf("rangs actifs : ");
-	  for(int i = 0; i < fichier->n_rangs_actifs; i++)
-	    printf("%i ", fichier->rangs_actifs[i]);
-	  printf("\n");
-	}
+        if (fichier->rang == 0) {
+          printf("rangs actifs : ");
+          for(int i = 0; i < fichier->n_rangs_actifs; i++)
+            printf(" %d", fichier->rangs_actifs[i]);
+          printf("\n");
+        }
       }
+      
+      PDM_MPI_Comm_split (fichier->comm,
+                         fichier->rang_actif,
+                         fichier->rang,
+                         &(fichier->scomm));
+
     }
   }
 }
@@ -809,7 +833,9 @@ void PDM_io_open
   nouveau_fichier->fmt        = NULL;
   nouveau_fichier->n_char_fmt = -1;
   nouveau_fichier->n_rangs_actifs = 0;     /* Nombre de rangs actifs */
+  nouveau_fichier->n_rangs_inactifs = 0;     /* Nombre de rangs actifs */
   nouveau_fichier->rangs_actifs = NULL;       /* Rangs actifs */
+  nouveau_fichier->rangs_inactifs = NULL;       /* Rangs actifs */
   nouveau_fichier->tag_rangs_actifs = NULL;   /* Tag des rangs actifs */
   nouveau_fichier->rang_actif = 1;         /* Indique si rang courant est actif */  
 
@@ -948,10 +974,13 @@ void PDM_io_open
     } 
     else {
       nouveau_fichier->PDM_file_seq = NULL;
-      nouveau_fichier->PDM_file_par = PDM_file_par_open(nouveau_fichier->nom,
-                                                        _acces_par,
-                                                        _mode_par,
-                                                        comm);
+      nouveau_fichier->PDM_file_par = NULL;
+      if (nouveau_fichier->rang_actif) {
+        nouveau_fichier->PDM_file_par = PDM_file_par_open(nouveau_fichier->nom,
+                                                          _acces_par,
+                                                          _mode_par,
+                                                          nouveau_fichier->scomm);
+      }
     } 
     break;
 
@@ -1052,21 +1081,25 @@ void PDM_io_lecture_globale
     /* Lecture */
     
     n_donnees_lues = 0;
-    if (fichier->PDM_file_seq != NULL)
+    if (fichier->PDM_file_seq != NULL) {
       n_donnees_lues = PDM_file_seq_read(fichier->PDM_file_seq,
                                         taille_donnee,
                                           n_donnees,
                                         (void *) donnees);
-    else if (fichier->PDM_file_par != NULL)
-      n_donnees_lues = PDM_file_par_lecture_globale(fichier->PDM_file_par,
-                                                   taille_donnee,
-                                                   n_donnees,
-                                                   (void *) donnees);
+    }
+    else if (fichier->PDM_file_par != NULL) {
+      if (fichier->rang_actif) {
+        n_donnees_lues = PDM_file_par_lecture_globale(fichier->PDM_file_par,
+                                                      taille_donnee,
+                                                      n_donnees,
+                                                      (void *) donnees);
+      }
+    }
     
     /* Communication des valeurs autres processus si necessaire */
 
-    if ((fichier->acces == PDM_IO_ACCES_MPI_SIMPLE) &&
-        fichier->n_rangs > 1) {
+    if (((fichier->acces == PDM_IO_ACCES_MPI_SIMPLE) &&
+         fichier->n_rangs > 1) || (fichier->n_rangs_inactifs > 0)) {
       PDM_MPI_Bcast(&n_donnees_lues, 1, PDM_MPI_INT, 0, fichier->comm);
       PDM_MPI_Bcast(donnees, n_donnees_lues * taille_donnee,
                 PDM_MPI_BYTE, 0, fichier->comm);
@@ -1204,15 +1237,19 @@ void PDM_io_ecriture_globale
 
       }
       else if (fichier->PDM_file_par != NULL) {
-        n_donnees_ecrites = PDM_file_par_ecriture_globale(fichier->PDM_file_par,
+        if (fichier->rang_actif) { 
+          n_donnees_ecrites = PDM_file_par_ecriture_globale(fichier->PDM_file_par,
                                                          sizeof(char),
                                                          l_string_donnee - 1,
                                                          (void *) string_donnee);
-      }
 
-      if (fichier->acces == PDM_IO_ACCES_MPI_SIMPLE)
+        }
+      }
+      
+      if ((fichier->acces == PDM_IO_ACCES_MPI_SIMPLE) || (fichier->n_rangs_inactifs > 0)) { 
         PDM_MPI_Bcast(&n_donnees_ecrites, 1, PDM_MPI_INT, 0, fichier->comm);
-    
+      }
+      
       /* Traitement de l'erreur de lecture */
     
       if (n_donnees_ecrites !=  l_string_donnee - 1) {
@@ -1231,14 +1268,17 @@ void PDM_io_ecriture_globale
                                               (void *) donnees);
       }
       else if (fichier->PDM_file_par != NULL) {
-        n_donnees_ecrites = PDM_file_par_ecriture_globale(fichier->PDM_file_par,
-                                                         taille_donnee,
-                                                         n_donnees,
-                                                         (void *) donnees);
+        if (fichier->rang_actif) {
+          n_donnees_ecrites = PDM_file_par_ecriture_globale(fichier->PDM_file_par,
+                                                            taille_donnee,
+                                                            n_donnees,
+                                                            (void *) donnees);
+        }
       }
-      if (fichier->acces == PDM_IO_ACCES_MPI_SIMPLE)
+      if ((fichier->acces == PDM_IO_ACCES_MPI_SIMPLE) || (fichier->n_rangs_inactifs > 0)) {
         PDM_MPI_Bcast(&n_donnees_ecrites, 1, PDM_MPI_INT, 0, fichier->comm);
-    
+      }
+      
       /* Traitement de l'erreur de lecture */
     
       if (n_donnees_ecrites != n_donnees) {
@@ -1708,17 +1748,19 @@ void PDM_io_lec_par_entrelacee
           for (int i = 0; i < fichier->rang; i++)
             debut_bloc += n_donnees_blocs[i];
             
-          int n_donnees_lues = 
-            PDM_file_par_lecture_parallele(fichier->PDM_file_par,
-                                          taille_donnee,
-                                          n_donnees_bloc,
-                                          buffer,
-                                          debut_bloc);
+          if (fichier->rang_actif) {
+            int n_donnees_lues = 
+              PDM_file_par_lecture_parallele(fichier->PDM_file_par,
+                                             taille_donnee,
+                                             n_donnees_bloc,
+                                             buffer,
+                                             debut_bloc);
             
-          if (n_donnees_lues != n_donnees_bloc) {
-            fprintf(stderr,"Erreur PDM_io_lec_par_entrelacee :"
-                    " Erreur de lecture du fichier '%s' \n", fichier->nom);
-            abort();
+            if (n_donnees_lues != n_donnees_bloc) {
+              fprintf(stderr,"Erreur PDM_io_lec_par_entrelacee :"
+                      " Erreur de lecture du fichier '%s' \n", fichier->nom);
+              abort();
+            }
           }
           break;
         }
@@ -2349,11 +2391,13 @@ void PDM_io_lec_par_bloc
           
       case PDM_IO_ACCES_MPIIO_EO:
       case PDM_IO_ACCES_MPIIO_IP:
-        PDM_file_par_lecture_parallele(fichier->PDM_file_par,
-                                      taille_donnee,
-                                      n_donnees_bloc_actif,
-                                      buffer,
-                                      debut_bloc_actif);
+        if (fichier->rang_actif) {
+          PDM_file_par_lecture_parallele(fichier->PDM_file_par,
+                                         taille_donnee,
+                                         n_donnees_bloc_actif,
+                                         buffer,
+                                         debut_bloc_actif);
+        }
         break;
           
         /* Lecture sequentielle des blocs puis envoi 
@@ -2761,10 +2805,12 @@ void PDM_io_ecr_par_entrelacee
                                                  (void *) string_donnee);
         }
         else if (fichier->PDM_file_par != NULL) {
-          n_donnees_ecrites = PDM_file_par_ecriture_globale(fichier->PDM_file_par,
-                                                            sizeof(char),
-                                                            l_string_donnee - 1,
-                                                            (void *) string_donnee);
+          if (fichier->rang_actif) {
+            n_donnees_ecrites = PDM_file_par_ecriture_globale(fichier->PDM_file_par,
+                                                              sizeof(char),
+                                                              l_string_donnee - 1,
+                                                             (void *) string_donnee);
+          }
         }
 
         free(string_donnee);
@@ -2773,9 +2819,10 @@ void PDM_io_ecr_par_entrelacee
           free(n_composante_trie);
         }
 
-        if (fichier->acces == PDM_IO_ACCES_MPI_SIMPLE)
+        if ((fichier->acces == PDM_IO_ACCES_MPI_SIMPLE) || (fichier->n_rangs_inactifs > 0)) {
           PDM_MPI_Bcast(&n_donnees_ecrites, 1, PDM_MPI_INT, 0, fichier->comm);
-
+        }
+        
         if (n_donnees_ecrites != l_string_donnee - 1) {
           fprintf(stderr,"Erreur PDM_io_ecriture_globale :"
                   " Erreur d'ecriture dans le fichier '%s' \n", fichier->nom);
@@ -3395,11 +3442,13 @@ void PDM_io_ecr_par_entrelacee
           for (int i = 0; i < fichier->rang; i++) 
             debut_bloc += n_donnees_blocs[i]; 
 
-          PDM_file_par_ecriture_parallele(fichier->PDM_file_par,
-                                          _taille_donnee,
-                                          n_donnees_bloc,
-                                          buffer,
-                                          debut_bloc);
+          if (fichier->rang_actif) {
+            PDM_file_par_ecriture_parallele(fichier->PDM_file_par,
+                                            _taille_donnee,
+                                            n_donnees_bloc,
+                                            buffer,
+                                            debut_bloc);
+          }
           break;
         }
           
@@ -3794,12 +3843,14 @@ void PDM_io_ecr_par_bloc
           
       case PDM_IO_ACCES_MPIIO_EO:
       case PDM_IO_ACCES_MPIIO_IP:
+        if (fichier->rang_actif) {
           
-        PDM_file_par_ecriture_parallele(fichier->PDM_file_par,
-                                       taille_donnee,
-                                       n_donnees_bloc_actif,
-                                       buffer,
-                                       debut_bloc_actif);
+          PDM_file_par_ecriture_parallele(fichier->PDM_file_par,
+                                          taille_donnee,
+                                          n_donnees_bloc_actif,
+                                          buffer,
+                                          debut_bloc_actif);
+        }
         break;
           
         /* Ecriture sequentielle des blocs provenant des rangs actifs */
@@ -4048,6 +4099,11 @@ void PDM_io_detruit
     if (fichier->rangs_actifs != NULL) {
       free(fichier->rangs_actifs);
       fichier->rangs_actifs = NULL;
+    }
+
+    if (fichier->rangs_inactifs != NULL) {
+      free(fichier->rangs_inactifs);
+      fichier->rangs_inactifs = NULL;
     }
 
     if (fichier->tag_rangs_actifs != NULL) {
