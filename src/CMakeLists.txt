@@ -29,6 +29,7 @@ target_include_directories(pdm
                            INTERFACE ${CMAKE_CURRENT_BINARY_DIR}
                            PRIVATE   ${CMAKE_CURRENT_BINARY_DIR}
                            PRIVATE  ${CMAKE_BINARY_DIR}
+                           PRIVATE  ${PDM_BINARY_DIR}
                            PUBLIC  ${CMAKE_SOURCE_DIR}
                            PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}
                            PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/pario
@@ -44,6 +45,7 @@ target_include_directories(pdmf
                            INTERFACE ${CMAKE_CURRENT_BINARY_DIR}
                            PRIVATE   ${CMAKE_CURRENT_BINARY_DIR}
                            PRIVATE   ${CMAKE_BINARY_DIR}
+                           PRIVATE  ${PDM_BINARY_DIR}
                            PUBLIC    ${CMAKE_SOURCE_DIR}
                            PUBLIC    ${CMAKE_CURRENT_SOURCE_DIR}
                            PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/pario
@@ -78,7 +80,7 @@ list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/util/pdm_mpi_node_first_ran
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/ppart/pdm_part.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/util/pdm_timer.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/meshgen/pdm_dcube_gen.h")
-list(APPEND LIST_HEADER "${CMAKE_BINARY_DIR}/pdm_config.h")
+list(APPEND LIST_HEADER "${PDM_BINARY_DIR}/pdm_config.h")
 
 if (PDM_ENABLE_STATIC_Fortran_INTERFACE OR PDM_ENABLE_SHARED_Fortran_INTERFACE)
 
@@ -86,7 +88,7 @@ if (PDM_ENABLE_STATIC_Fortran_INTERFACE OR PDM_ENABLE_SHARED_Fortran_INTERFACE)
   list(APPEND LIST_HEADERF "${CMAKE_CURRENT_SOURCE_DIR}/pario/mod_pdm_io.F90")
   list(APPEND LIST_HEADERF "${CMAKE_CURRENT_SOURCE_DIR}/pario/mod_pdm_writer.F90")
   list(APPEND LIST_HEADERF "${CMAKE_CURRENT_SOURCE_DIR}/ppart/pdm_partf.h")
-  list(APPEND LIST_HEADERF "${CMAKE_BINARY_DIR}/pdm_config_f.h")
+  list(APPEND LIST_HEADERF "${PDM_BINARY_DIR}/pdm_configf.h")
   list(APPEND LIST_HEADERF "${CMAKE_CURRENT_BINARY_DIR}/mod_pdm_io.mod")
   list(APPEND LIST_HEADERF "${CMAKE_CURRENT_BINARY_DIR}/mod_pdm_writer.mod")
 
@@ -97,12 +99,6 @@ endif ()
 
 unset(LINK_LIBRARIES)
 list(APPEND LINK_LIBRARIES ${COMMON_LIBRARIES})
-#if (${PARMETIS_FOUND})
-#  list(APPEND LINK_LIBRARIES ${METIS_LIBRARIES})
-#endif ()
-#if (${PTSCOTCH_FOUND})
-#  list(APPEND LINK_LIBRARIES ${SCOTCH_LIBRARIES})
-#endif ()
 
 message(STATUS "Add library pdm - Succes")
 
