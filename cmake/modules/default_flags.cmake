@@ -8,7 +8,7 @@
 # Fortran default flags
 #------------------------------------------------------------------------------
 
-if (NOT CMAKE_Fortran_FLAGS)
+if (NOT PASS_DEFAULT_FLAGS)
 
 if (CMAKE_Fortran_COMPILER_ID STREQUAL "GNU")
 
@@ -132,14 +132,10 @@ set (FORTRAN_LIBRARIES_FLAG "${FORTRAN_LIBRARIES_FLAG}" CACHE STRING "Fortran li
 
 mark_as_advanced (CMAKE_Fortran_FLAGS_PROFILING FORTRAN_LIBRARIES FORTRAN_LIBRARIES_FLAG)
 
-endif()
-
 
 #------------------------------------------------------------------------------
 # C Default Flags
 #------------------------------------------------------------------------------
-
-if (NOT CMAKE_C_FLAGS)
 
 if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
 
@@ -232,15 +228,10 @@ set (CMAKE_C_FLAGS_MINSIZEREL      "${CMAKE_C_FLAGS_MINSIZEREL}" CACHE STRING "F
 
 mark_as_advanced (CMAKE_C_FLAGS_PROFILING)
 
-endif()
-
 
 #------------------------------------------------------------------------------
 # C++ Default Flags
 #------------------------------------------------------------------------------
-
-
-if (NOT CMAKE_CXX_FLAGS)
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 
@@ -346,7 +337,6 @@ else ()
   set (CXX_LIBRARIES             )
   set (CXX_LIBRARIES_FLAG        )
 
-endif ()
 
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}" CACHE STRING "Flags used by the compiler during all build types." FORCE)
 set (CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}" CACHE STRING "Flags used by the compiler during release builds." FORCE)
@@ -361,3 +351,9 @@ set (CXX_LIBRARIES_FLAG "${CXX_LIBRARIES_FLAG}" CACHE STRING "C++ flags" FORCE)
 mark_as_advanced (CMAKE_CXX_FLAGS_PROFILING CXX_LIBRARIES CXX_LIBRARIES_FLAG)
 
 endif()
+endif()
+
+if (NOT PASS_DEFAULT_FLAGS)
+  set (PASS_DEFAULT_FLAGS 1 CACHE STRING "")
+endif ()
+
