@@ -4,6 +4,8 @@
 #
 #------------------------------------------------------------------------------
 
+cmake_host_system_information(RESULT HOSTNAME QUERY HOSTNAME)
+
 #------------------------------------------------------------------------------
 # Fortran default flags
 #------------------------------------------------------------------------------
@@ -57,8 +59,9 @@ elseif (CMAKE_Fortran_COMPILER_ID MATCHES "XL")
   set (CMAKE_Fortran_FLAGS_MINSIZEREL      "-O3")
   
   set(FORTRAN_LIBRARIES xl xlf90_r xlsmp xlopt ${FORTRAN_LIBRARIES})
-  #cmake_host_system_information(RESULT HOSTNAME QUERY HOSTNAME)
-  link_directories(/opt/ibmcmp/xlsmp/3.1/lib64 /opt/ibmcmp/vacpp/12.1/lib64 /opt/ibmcmp/xlf/14.1/lib64)
+  if (${HOSTNAME} STREQUAL "tanit")
+    link_directories(/opt/ibmcmp/xlsmp/3.1/lib64 /opt/ibmcmp/vacpp/12.1/lib64 /opt/ibmcmp/xlf/14.1/lib64)
+  endif()   
 
 elseif (CMAKE_Fortran_COMPILER_ID STREQUAL "PGI")
 
@@ -283,7 +286,9 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "XL")
   set (CMAKE_CXX_FLAGS_MINSIZEREL      "-O2")
 
   set(CXX_LIBRARIES stdc++ ibmc++ ${CXX_LIBRARIES})
-  link_directories(/opt/ibm/xlC/13.1.0/lib64)
+  if (${HOSTNAME} STREQUAL "tanit")
+    link_directories(/opt/ibm/xlC/13.1.0/lib64)
+  endif()
 
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "PGI")
 
