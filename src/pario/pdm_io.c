@@ -4708,10 +4708,10 @@ const char* path
  *----------------------------------------------------------------------------*/
 
 void PROCF (PDM_io_n_donnees_get, PDM_IO_N_DONNEES_GET)
-(const pdm_l_num_s  *unite,
+(const pdm_l_num_t  *unite,
  const int             *t_n_composantes,         
- const pdm_l_num_s  *n_composantes,         
- const pdm_l_num_s  *n_donnees,
+ const pdm_l_num_t  *n_composantes,         
+ const pdm_l_num_t  *n_donnees,
  const pdm_g_num_s *indirection,
        pdm_g_num_s *t_n_donnees
 )
@@ -4732,15 +4732,15 @@ void PROCF (PDM_io_n_donnees_get, PDM_IO_N_DONNEES_GET)
 
 pdm_g_num_s
 PDM_io_n_donnees_get
-(const pdm_l_num_s           unite,
+(const pdm_l_num_t           unite,
  const pdm_io_n_composantes_t t_n_composantes,
- const pdm_l_num_s          *n_composantes,         
- const pdm_l_num_s           n_donnees,
- const pdm_g_num_s         *indirection
+ const pdm_l_num_t          *n_composantes,         
+ const pdm_l_num_t           n_donnees,
+ const pdm_g_num_t         *indirection
 )
 {
  
-  pdm_g_num_s t_n_donnees = 0;
+  pdm_g_num_t t_n_donnees = 0;
   
   int err_code = 0;
   PDM_io_fichier_t *fichier = PDM_io_get_fichier(unite);
@@ -4776,7 +4776,7 @@ PDM_io_n_donnees_get
       
       PDM_timer_hang_on(timer_distribution);
 
-      t_n_donnees = (pdm_g_num_s) _n_donnees;
+      t_n_donnees = (pdm_g_num_t) _n_donnees;
 
     }
 
@@ -4790,13 +4790,13 @@ PDM_io_n_donnees_get
        *  chaque rang 
        *----------------------------------------------------------*/
         
-      pdm_g_num_s *n_donnees_rangs = (pdm_g_num_s *) malloc(sizeof(pdm_g_num_s) * (fichier->n_rangs + 1));
+      pdm_g_num_t *n_donnees_rangs = (pdm_g_num_t *) malloc(sizeof(pdm_g_num_t) * (fichier->n_rangs + 1));
         
       int  n_donnees_rang_min = 0;
       int  n_donnees_rang_max = 0;
         
-      pdm_g_num_s _id_max = 0;
-      pdm_g_num_s _id_max_max = 0;
+      pdm_g_num_t _id_max = 0;
+      pdm_g_num_t _id_max_max = 0;
 
       for (int i = 0; i < n_donnees; i++) {
         _id_max = PDM_IO_MAX(_id_max, indirection[i]);
@@ -4839,12 +4839,12 @@ PDM_io_n_donnees_get
           
           /* Recherche du processus le plus probable */
         
-          pdm_g_num_s n_absolu = indirection[i] - 1;
+          pdm_g_num_t n_absolu = indirection[i] - 1;
           int irang_actif = fichier->n_rangs_actifs - 1;
 
           if (n_donnees_rang_min > 0) { 
             irang_actif = PDM_IO_MIN((int) (n_absolu / 
-                                              (pdm_g_num_s) n_donnees_rang_min), 
+                                              (pdm_g_num_t) n_donnees_rang_min), 
                                        fichier->n_rangs_actifs - 1) ;
           }
         
@@ -4878,8 +4878,8 @@ PDM_io_n_donnees_get
           i_donnees_a_recevoir[i] = i_donnees_a_recevoir[i-1] + 
             n_donnees_a_recevoir[i-1];
       
-        pdm_g_num_s *num_absolue_envoyee = 
-          (pdm_g_num_s *) malloc(sizeof(pdm_g_num_s) * 
+        pdm_g_num_t *num_absolue_envoyee = 
+          (pdm_g_num_t *) malloc(sizeof(pdm_g_num_t) * 
                                      (i_donnees_a_envoyer[fichier->n_rangs - 1] + 
                                       n_donnees_a_envoyer[fichier->n_rangs - 1]));
  
@@ -4898,8 +4898,8 @@ PDM_io_n_donnees_get
         int _n_quantites = i_donnees_a_recevoir[fichier->n_rangs - 1] +
           n_donnees_a_recevoir[fichier->n_rangs - 1];
 
-        pdm_g_num_s *num_absolue_recues = 
-          (pdm_g_num_s *) malloc(sizeof(pdm_g_num_s) * _n_quantites);
+        pdm_g_num_t *num_absolue_recues = 
+          (pdm_g_num_t *) malloc(sizeof(pdm_g_num_t) * _n_quantites);
 
         PDM_MPI_Alltoallv(num_absolue_envoyee, 
                       n_donnees_a_envoyer,
@@ -4974,7 +4974,7 @@ PDM_io_n_donnees_get
           n_comp_bloc[j] = n_composantes_recues[i];
         }
 
-        pdm_g_num_s sum_n_comp = 0;
+        pdm_g_num_t sum_n_comp = 0;
         for (int i = 0; i < l_bloc; i++) {
           sum_n_comp += n_comp_bloc[i];
         }
