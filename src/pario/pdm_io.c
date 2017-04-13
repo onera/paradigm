@@ -4723,7 +4723,7 @@ void PROCF (PDM_io_n_donnees_get, PDM_IO_N_DONNEES_GET)
   else if (*t_n_composantes == 1) 
     _t_n_composantes = PDM_IO_N_COMPOSANTE_VARIABLE;
 
-  *t_n_donnees = Cedre_io_n_donnees_get (*unite,
+  *t_n_donnees = PDM_io_n_donnees_get (*unite,
                                          _t_n_composantes,
                                          n_composantes,
                                          *n_donnees,
@@ -4733,7 +4733,7 @@ void PROCF (PDM_io_n_donnees_get, PDM_IO_N_DONNEES_GET)
 PDM_g_num_t
 PDM_io_n_donnees_get
 (const PDM_l_num_t           unite,
- const pdm_io_n_composantes_t t_n_composantes,
+ const PDM_io_n_composantes_t t_n_composantes,
  const PDM_l_num_t          *n_composantes,         
  const PDM_l_num_t           n_donnees,
  const PDM_g_num_t         *indirection
