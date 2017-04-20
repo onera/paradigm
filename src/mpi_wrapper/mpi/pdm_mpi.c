@@ -1680,7 +1680,7 @@ int PDM_MPI_Reduce(void *sendbuf, void *recvbuf, int count,
 		   PDM_MPI_Datatype datatype, PDM_MPI_Op op,
 		   int root, PDM_MPI_Comm comm) 
 {
-  int code = MPI_Allreduce(sendbuf, recvbuf, count,
+  int code = MPI_Reduce(sendbuf, recvbuf, count,
                            _pdm_mpi_2_mpi_datatype(datatype), 
                            mpi_op[op], root,
                            _pdm_mpi_2_mpi_comm(comm));
