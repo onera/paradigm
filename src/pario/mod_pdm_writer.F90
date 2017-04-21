@@ -129,7 +129,7 @@ contains
     implicit none
     ! Arguments
 
-    character (len = *),          intent(in)    :: fmt
+    integer,		          intent(in)    :: fmt
     integer (kind = pdm_l_num_s), intent(in)    :: fmt_fic
     integer (kind = pdm_l_num_s), intent(in)    :: topologie
     integer (kind = pdm_l_num_s), intent(in)    :: st_reprise
