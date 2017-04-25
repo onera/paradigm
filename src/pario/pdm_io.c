@@ -2640,10 +2640,12 @@ void PDM_io_ecr_par_entrelacee
         
         if (fichier->fmt_t == PDM_IO_FMT_TXT) {
           n_composante_trie =  (int*) malloc(sizeof(int) * _id_max);
-        }
-        for (int i = 0; i < _id_max; i++){
-          n_composante_trie[i] = 0;
-        }
+
+	  for (int i = 0; i < _id_max; i++){
+	    n_composante_trie[i] = 0;
+	  }
+	}
+
         int k = 0;
         for (int i = 0; i < n_donnees; i++){
           if (fichier->fmt_t == PDM_IO_FMT_TXT) {
