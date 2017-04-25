@@ -885,6 +885,21 @@ void PDM_io_open
   nouveau_fichier->comm = comm;
   nouveau_fichier->prop_noeuds_actifs = prop_noeuds_actifs;
 
+  /* Test d'existence du fichier en lecture */
+
+  if (mode == PDM_IO_MODE_LECTURE) {
+    FILE *testf2 = fopen (nouveau_fichier->nom, "r");
+    if (testf2 == NULL) {
+      *ierr = 1;
+      free (nouveau_fichier->nom);
+      free (nouveau_fichier);
+      return;
+    }
+    else {
+      fclose (testf2);
+    }
+  }
+
   _rangs_actifs(nouveau_fichier);
  
   /* Ouverture du fichier en parallele ou sequentiel suivant la situation.
