@@ -6209,35 +6209,6 @@ const int    id_var
  */
 
 void
-PROCF (pdm_writer_fmt_add, PDM_WRITER_FMT_ADD)
-(
- char                  *name,          
- PDM_writer_fct_t      *create_fct,     
- PDM_writer_fct_t      *free_fct,       
- PDM_writer_fct_t      *beg_step_fct,   
- PDM_writer_fct_t      *end_step_fct,   
- PDM_writer_geom_fct_t *geom_create_fct,
- PDM_writer_geom_fct_t *geom_write_fct, 
- PDM_writer_geom_fct_t *geom_free_fct,  
- PDM_writer_var_fct_t  *var_create_fct, 
- PDM_writer_var_fct_t  *var_write_fct,  
- PDM_writer_var_fct_t  *var_free_fct
- )
-{
-  PDM_writer_fmt_add (const char name,
-		      const PDM_writer_fct_t      *create_fct,
-		      const PDM_writer_fct_t      *free_fct,  
-		      const PDM_writer_fct_t      *beg_step_fct,
-		      const PDM_writer_fct_t      *end_step_fct,
-		      const PDM_writer_geom_fct_t *geom_create_fct,
-		      const PDM_writer_geom_fct_t *geom_write_fct, 
-		      const PDM_writer_geom_fct_t *geom_free_fct, 
-		      const PDM_writer_var_fct_t  *var_create_fct,
-		      const PDM_writer_var_fct_t  *var_write_fct, 
-		      const PDM_writer_var_fct_t  *var_free_fct);
-}
-
-void
 PDM_writer_fmt_add
 (
  const char                  *name,           /*!< Name                                                     */
@@ -6293,12 +6264,6 @@ PDM_writer_fmt_add
  *
  */
 
-void
-PROCF (pdm_writer_fmt_free PDM_WRITER_FMT_FREE)
-  ()
-{
-  PDM_writer_fmt_free();
-}
 
 void
 PDM_writer_fmt_free
