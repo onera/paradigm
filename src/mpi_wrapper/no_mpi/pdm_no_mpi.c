@@ -739,6 +739,29 @@ int PDM_MPI_Reduce(void *sendbuf, void *recvbuf, int count,
   return 1;
 }
 
+
+/*----------------------------------------------------------------------------
+ * PDM_MPI_Reduce (wrapping de la fonction MPI_Reduce)
+ *
+ *----------------------------------------------------------------------------*/
+
+int PDM_MPI_Reduce(void *sendbuf, void *recvbuf, int count, 
+		   PDM_MPI_Datatype datatype, PDM_MPI_Op op,
+		   int root, PDM_MPI_Comm comm) 
+{
+  sendbuf;
+  recvbuf;
+  count;
+  datatype;
+  op;
+  root;
+  comm;
+
+  fprintf(stderr, "PDM_MPI_Reduce : Unavailable function with pdm_no_mpi library\n" );
+  abort();
+  return 1;
+}
+
 /*----------------------------------------------------------------------------
  * PDM_MPI_Allreduce (wrapping de la fonction MPI_Allreduce)
  *
