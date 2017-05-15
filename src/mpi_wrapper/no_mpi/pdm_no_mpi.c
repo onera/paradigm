@@ -921,7 +921,7 @@ int PDM_MPI_Comm_split(PDM_MPI_Comm comm, int color, int key, PDM_MPI_Comm *newc
   comm;
   color;
   key;
-  *newcomm = MSG_COMM_NULL;
+  *newcomm = PDM_MPI_COMM_NULL;
   return 0;
 }
 
