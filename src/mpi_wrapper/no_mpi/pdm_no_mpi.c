@@ -918,11 +918,8 @@ int PDM_MPI_Comm_split(PDM_MPI_Comm comm, int color, int key, PDM_MPI_Comm *newc
   comm;
   color;
   key;
-  newcomm;
-  
-  fprintf(stderr, "PDM_MPI_Comm_split : Unavailable function with pdm_no_mpi library\n" );
-  abort();
-  return 1;
+  *newcomm = MSG_COMM_NULL;
+  return 0;
 }
 
 #ifdef __cplusplus
