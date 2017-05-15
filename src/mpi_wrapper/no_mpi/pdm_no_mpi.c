@@ -868,9 +868,8 @@ int PDM_MPI_Error_string(int errorcode, char *string, int *resultlen)
 int PDM_MPI_Comm_rank(PDM_MPI_Comm comm, int *rank)
 {
   comm;
-  rank;
-  
-  return 0;
+  *rank=0; 
+  return 1;
 }
 
 /*----------------------------------------------------------------------------
@@ -881,8 +880,7 @@ int PDM_MPI_Comm_rank(PDM_MPI_Comm comm, int *rank)
 int PDM_MPI_Comm_size(PDM_MPI_Comm comm, int *size)
 {
   comm;
-  size;
-  
+  *size=1;  
   return 1;
 }
 
