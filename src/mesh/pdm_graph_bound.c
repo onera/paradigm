@@ -1456,7 +1456,7 @@ const PDM_data_t         tData,
 )
 {
   if (graph_bound->sendBuffer != NULL) {
-    fprintf(stderr, "Error _graph_bound_exch_data_init :"
+    PDM_error(__FILE__, __LINE__, 0, "Error _graph_bound_exch_data_init :"
     "exchange already initialized\n");
     abort();
   }
@@ -1521,7 +1521,7 @@ const PDM_data_t         tData,
   }
     
   default : {
-    fprintf(stderr, "Error PDM_graph_bound_exch_data_init :"
+    PDM_error(__FILE__, __LINE__, 0, "Error PDM_graph_bound_exch_data_init :"
                     "this data type is not taking into account\n");
     abort();
   }
@@ -1604,7 +1604,7 @@ PDM_graph_bound_t *graph_bound
 )
 {
   if (graph_bound->sendBuffer == NULL) {
-    fprintf(stderr, "Error _graph_bound_exch_data_wait :"
+    PDM_error(__FILE__, __LINE__, 0, "Error _graph_bound_exch_data_wait :"
     "Exchange not initialized\n");
     abort();
   }
@@ -1675,7 +1675,7 @@ PDM_graph_bound_t *graph_bound
   }
     
   default : {
-    fprintf(stderr, "Error PDM_graph_bound_exch_data_wait :"
+    PDM_error(__FILE__, __LINE__, 0, "Error PDM_graph_bound_exch_data_wait :"
     "this data type is not taking into account\n");
     abort();
   }
@@ -1759,7 +1759,7 @@ PDM_graph_bound_n_ghost_elt_get
 {
 
   if (part < 0 || part >= graph_bound->nPart) { 
-    fprintf(stderr, "Error PDM_graph_bound_n_ghost_elt_get : "
+    PDM_error(__FILE__, __LINE__, 0, "Error PDM_graph_bound_n_ghost_elt_get : "
             "part number '%d' is not available\n", part);
     abort();
   }
@@ -1791,7 +1791,7 @@ PDM_graph_bound_ghost_elt_n_touch_elt_get
 {
 
   if (part < 0 || part >= graph_bound->nPart) { 
-    fprintf(stderr, "Error PDM_graph_bound_ghost_elt_n_touch_elt_get : "
+    PDM_error(__FILE__, __LINE__, 0, "Error PDM_graph_bound_ghost_elt_n_touch_elt_get : "
             "part number '%d' is not available\n", part);
     abort();
   }
@@ -1800,7 +1800,7 @@ PDM_graph_bound_ghost_elt_n_touch_elt_get
   int *ghostEltPartIdx = graph_bound->ghostEltPartIdx[part];
   
   if (ghostElt < 0 || ghostElt >= nGhostElt) { 
-    fprintf(stderr, "Error PDM_graph_bound_ghost_elt_n_touch_elt_get : "
+    PDM_error(__FILE__, __LINE__, 0, "Error PDM_graph_bound_ghost_elt_n_touch_elt_get : "
             "ghost element number '%d' is not available\n", part);
     abort();
   }
@@ -1832,7 +1832,7 @@ PDM_graph_bound_ghost_elt_touch_elt_get
 {
 
   if (part < 0 || part >= graph_bound->nPart) { 
-    fprintf(stderr, "Error PDM_graph_bound_ghost_elt_touch_elt_get : "
+    PDM_error(__FILE__, __LINE__, 0, "Error PDM_graph_bound_ghost_elt_touch_elt_get : "
             "part number '%d' is not available\n", part);
     abort();
   }
@@ -1842,7 +1842,7 @@ PDM_graph_bound_ghost_elt_touch_elt_get
   int *ghostEltPartElt = graph_bound->ghostEltPartElt[part];
   
   if (ghostElt < 0 || ghostElt >= nGhostElt) { 
-    fprintf(stderr, "Error PDM_graph_bound_ghost_elt_n_touch_elt_get : "
+    PDM_error(__FILE__, __LINE__, 0, "Error PDM_graph_bound_ghost_elt_n_touch_elt_get : "
             "ghost element number '%d' is not available\n", part);
     abort();
   }
@@ -1873,7 +1873,7 @@ PDM_graph_bound_n_send_elt_get
 {
 
   if (iProc < 0 || iProc >= graph_bound->lComm) { 
-    fprintf(stderr, "Error PDM_graph_bound_n_send_elt_get : "
+    PDM_error(__FILE__, __LINE__, 0, "Error PDM_graph_bound_n_send_elt_get : "
             "iProc number '%d' is not available\n", iProc);
     abort();
   }
@@ -1903,7 +1903,7 @@ PDM_graph_bound_send_elt_get
 {
 
   if (iProc < 0 || iProc >= graph_bound->lComm) { 
-    fprintf(stderr, "Error PDM_graph_bound_send_elt_get : "
+    PDM_error(__FILE__, __LINE__, 0, "Error PDM_graph_bound_send_elt_get : "
             "iProc number '%d' is not available\n", iProc);
     abort();
   }
@@ -1933,7 +1933,7 @@ PDM_graph_bound_send_part_elt_get
 {
 
   if (iProc < 0 || iProc >= graph_bound->lComm) { 
-    fprintf(stderr, "Error PDM_graph_bound_send_elt_get : "
+    PDM_error(__FILE__, __LINE__, 0, "Error PDM_graph_bound_send_elt_get : "
             "iProc number '%d' is not available\n", iProc);
     abort();
   }

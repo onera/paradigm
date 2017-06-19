@@ -932,7 +932,7 @@ PDM_part_renum_cell
     _renum_cells_cuthill(ppart); 
     break;
   default:
-    fprintf (stderr, "PDM_part_renum Error : unavailable face renumbering method\n");
+    PDM_error(__FILE__, __LINE__, 0, "PDM_part_renum Error : unavailable face renumbering method\n");
     exit (1);    
   }
 }
@@ -966,7 +966,7 @@ PDM_part_renum_face
       _renum_faces_lexicographic(ppart);
       break;
     default:
-      fprintf (stderr, "PDM_part_renum Error : unavailable face renumbering method\n");
+      PDM_error(__FILE__, __LINE__, 0, "PDM_part_renum Error : unavailable face renumbering method\n");
       exit (1);    
   }
 }

@@ -1067,7 +1067,7 @@ PDM_writer_ensight_geom_write
       break;
       
     default :
-      fprintf(stderr, "Error PDM_writer_ensight_geom_ecr : Type d'element inconnu\n");
+      PDM_error(__FILE__, __LINE__, 0, "Error PDM_writer_ensight_geom_ecr : Type d'element inconnu\n");
       abort();
 
     }
@@ -1185,7 +1185,7 @@ PDM_writer_ensight_geom_write
       n_comp_tmp2 = (PDM_l_num_t *) n_comp_tmp;
     }
     else {
-      fprintf(stderr, "Error PDM_writer_ensight_geom_ecr : sizeof(int32_t) != sizeof(PDM_l_num_t)\n");
+      PDM_error(__FILE__, __LINE__, 0, "Error PDM_writer_ensight_geom_ecr : sizeof(int32_t) != sizeof(PDM_l_num_t)\n");
       abort();
     }
 
@@ -1730,7 +1730,7 @@ PDM_writer_ensight_var_write
 
         /* Ecriture des valeurs aux particules */
 
-        fprintf(stderr, "Error PDM_writer_ensight_var_ecr    : Ecriture des variables aux particules indisponible\n");
+        PDM_error(__FILE__, __LINE__, 0, "Error PDM_writer_ensight_var_ecr    : Ecriture des variables aux particules indisponible\n");
         abort();
 
       }

@@ -433,7 +433,7 @@ static MPI_Comm _pdm_mpi_2_mpi_comm(PDM_MPI_Comm pdm_mpi_comm)
     if (pdm_mpi_comm < l_mpi_comm)
       return *(mpi_comm[pdm_mpi_comm]);
     else {
-      fprintf(stderr,"_pdm_mpi_2_mpi_comm :"
+      PDM_error(__FILE__, __LINE__, 0,"_pdm_mpi_2_mpi_comm :"
             " pdm_mpi_comm '%d' non valide\n", pdm_mpi_comm);
       abort();
     }
@@ -525,7 +525,7 @@ static MPI_Request _pdm_mpi_2_mpi_request(PDM_MPI_Request pdm_mpi_request)
     if (pdm_mpi_request < l_mpi_request)
       return *(mpi_request[pdm_mpi_request]);
     else {
-      fprintf(stderr,"_pdm_mpi_2_mpi_request :"
+      PDM_error(__FILE__, __LINE__, 0,"_pdm_mpi_2_mpi_request :"
             " pdm_mpi_request '%d' non valide\n", pdm_mpi_request);
       abort();
     }
@@ -613,7 +613,7 @@ static MPI_Datatype _pdm_mpi_2_mpi_datatype(PDM_MPI_Datatype pdm_mpi_datatype)
     if (pdm_mpi_datatype < l_mpi_datatype)
       return *(mpi_datatype[pdm_mpi_datatype]);
     else {
-      fprintf(stderr,"_pdm_mpi_2_mpi_datatype :"
+      PDM_error(__FILE__, __LINE__, 0,"_pdm_mpi_2_mpi_datatype :"
             " pdm_mpi_datatype '%d' non valide\n", pdm_mpi_datatype);
       abort();
     }
@@ -789,7 +789,7 @@ static MPI_File _pdm_mpi_2_mpi_file(PDM_MPI_File pdm_mpi_file)
     if (pdm_mpi_file < l_mpi_file)
       return *(mpi_file[pdm_mpi_file]);
     else {
-      fprintf(stderr,"_pdm_mpi_2_mpi_file :"
+      PDM_error(__FILE__, __LINE__, 0,"_pdm_mpi_2_mpi_file :"
               " pdm_mpi_file '%d' non valide\n", pdm_mpi_file);
       abort();
     }
@@ -888,7 +888,7 @@ void *PDM_MPI_2_mpi_comm(PDM_MPI_Comm pdm_mpi_comm)
     if (pdm_mpi_comm < l_mpi_comm)
       return (void *) mpi_comm[pdm_mpi_comm];
     else {
-      fprintf(stderr,"_pdm_mpi_2_mpi_comm :"
+      PDM_error(__FILE__, __LINE__, 0,"_pdm_mpi_2_mpi_comm :"
             " pdm_mpi_comm '%d' non valide\n", pdm_mpi_comm);
       abort();
     }
@@ -992,7 +992,7 @@ int PDM_MPI_File_open(PDM_MPI_Comm comm, char *filename, int amode, PDM_MPI_File
     
     MPI_Error_string(code, buffer, &buffer_len);
     
-    fprintf(stderr, "%s\n", buffer);
+    PDM_error(__FILE__, __LINE__, 0, "%s\n", buffer);
     
     abort();
   }
@@ -1020,7 +1020,7 @@ int PDM_MPI_File_close(PDM_MPI_File *fh)
     
     MPI_Error_string(code, buffer, &buffer_len);
     
-    fprintf(stderr, "%s\n", buffer);
+    PDM_error(__FILE__, __LINE__, 0, "%s\n", buffer);
     
     abort();
   }
@@ -1138,7 +1138,7 @@ int PDM_MPI_File_read_at(PDM_MPI_File fh, PDM_MPI_Offset offset, void *buf,
     
     MPI_Error_string(code, buffer, &buffer_len);
   
-    fprintf(stderr, "%s\n", buffer);
+    PDM_error(__FILE__, __LINE__, 0, "%s\n", buffer);
     
     abort();
   }
@@ -1172,7 +1172,7 @@ int PDM_MPI_File_read_at_all(PDM_MPI_File fh, PDM_MPI_Offset offset, void *buf,
     
     MPI_Error_string(code, buffer, &buffer_len);
   
-    fprintf(stderr, "%s\n", buffer);
+    PDM_error(__FILE__, __LINE__, 0, "%s\n", buffer);
     
     abort();
   }
@@ -1207,7 +1207,7 @@ int PDM_MPI_File_write_at(PDM_MPI_File fh, PDM_MPI_Offset offset, void *buf,
     
     MPI_Error_string(code, buffer, &buffer_len);
   
-    fprintf(stderr, "%s\n", buffer);
+    PDM_error(__FILE__, __LINE__, 0, "%s\n", buffer);
     
     abort();
   }
@@ -1241,7 +1241,7 @@ int PDM_MPI_File_write_at_all(PDM_MPI_File fh, PDM_MPI_Offset offset, void *buf,
     
     MPI_Error_string(code, buffer, &buffer_len);
   
-    fprintf(stderr, "%s\n", buffer);
+    PDM_error(__FILE__, __LINE__, 0, "%s\n", buffer);
     
     abort();
   }
@@ -1274,7 +1274,7 @@ int PDM_MPI_File_read(PDM_MPI_File fh, void *buf, int count,
     
     MPI_Error_string(code, buffer, &buffer_len);
   
-    fprintf(stderr, "%s\n", buffer);
+    PDM_error(__FILE__, __LINE__, 0, "%s\n", buffer);
     
     abort();
   }
@@ -1306,7 +1306,7 @@ int PDM_MPI_File_read_all(PDM_MPI_File fh, void *buf, int count,
     
     MPI_Error_string(code, buffer, &buffer_len);
   
-    fprintf(stderr, "%s\n", buffer);
+    PDM_error(__FILE__, __LINE__, 0, "%s\n", buffer);
     
     abort();
   }
@@ -1338,7 +1338,7 @@ int PDM_MPI_File_write(PDM_MPI_File fh, void *buf, int count,
     
     MPI_Error_string(code, buffer, &buffer_len);
   
-    fprintf(stderr, "%s\n", buffer);
+    PDM_error(__FILE__, __LINE__, 0, "%s\n", buffer);
     
     abort();
   }
@@ -1372,7 +1372,7 @@ int PDM_MPI_File_write_all(PDM_MPI_File fh, void *buf, int count,
     
     MPI_Error_string(code, buffer, &buffer_len);
   
-    fprintf(stderr, "%s\n", buffer);
+    PDM_error(__FILE__, __LINE__, 0, "%s\n", buffer);
     
     abort();
   }

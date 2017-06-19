@@ -1122,7 +1122,7 @@ _split
     }
   case PDM_PART_SPLIT_HILBERT:
     {
-      fprintf(stderr, "PPART error : Error in PT-Scotch graph check\n");
+      PDM_error(__FILE__, __LINE__, 0, "PPART error : Error in PT-Scotch graph check\n");
       exit(1);
 
       PDM_part_geom (PDM_PART_GEOM_HILBERT,

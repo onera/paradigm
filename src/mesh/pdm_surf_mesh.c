@@ -1578,14 +1578,14 @@ PDM_surf_mesh_t *mesh
     const int nTotalEdge = part->nTotalEdge;
     
     if (part->vtxEdgeIdx == NULL) {
-      fprintf(stderr,
+      PDM_error(__FILE__, __LINE__, 0,
               "Error _compute_carLgthVtx_mesh :"
               " Edges are not computed\n");
       abort();
     }
     
     if (part->carLgthVtx != NULL){
-      fprintf(stderr,
+      PDM_error(__FILE__, __LINE__, 0,
               "Error _compute_carLgthVtx_mesh :"
               " Caracteristic length already computed\n");
       abort();
@@ -1716,7 +1716,7 @@ PDM_surf_mesh_face_normal_get
   int nPart = mesh->nPart;
 
   if ((iPart < 0) || (iPart > nPart)) {
-    fprintf(stderr, "Error _part_face_normal_get : undefined part\n");
+    PDM_error(__FILE__, __LINE__, 0, "Error _part_face_normal_get : undefined part\n");
     abort();
   }
   PDM_surf_part_t *part = mesh->part[iPart];

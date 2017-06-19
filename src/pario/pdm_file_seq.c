@@ -93,13 +93,13 @@ PDM_file_seq_t *PDM_file_seq_open(const char *nom,
     fichier->fichier = fopen(nom, "a");
     break;
   default:
-    fprintf(stderr, "Erreur PDM_file_seq_open :\n"
+    PDM_error(__FILE__, __LINE__, 0, "Erreur PDM_file_seq_open :\n"
                     "Mode de fichier inconnu\n");
     exit(EXIT_FAILURE);
   }
   
   if (fichier->fichier == NULL) {
-    fprintf(stderr, "Erreur PDM_file_seq_open :\n"
+    PDM_error(__FILE__, __LINE__, 0, "Erreur PDM_file_seq_open :\n"
             "Erreur à l'ouverture du fichier %s\n", nom); 
     exit(EXIT_FAILURE);
   }
@@ -128,7 +128,7 @@ int PDM_file_seq_write(PDM_file_seq_t *fichier,
 {
   
   if (fichier->mode == FICHIER_SEQ_MODE_LECTURE) {
-    fprintf(stderr,"Erreur PDM_file_seq_open :\n"
+    PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_file_seq_open :\n"
                     "Ecriture interdite pour le fichier %s "
                     "ouvert en mode lecture\n",
                     fichier->nom);
@@ -166,7 +166,7 @@ int PDM_file_seq_read(PDM_file_seq_t *fichier,
 
   if (fichier->mode == FICHIER_SEQ_MODE_ECRITURE || 
       fichier->mode == FICHIER_SEQ_MODE_AJOUT) {
-    fprintf(stderr,"Erreur PDM_file_seq_open :\n"
+    PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_file_seq_open :\n"
                    "Lecture interdite pour le fichier %s "
                    "ouvert en mode ecriture/ajout\n",
                    fichier->nom);

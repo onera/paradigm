@@ -374,7 +374,7 @@ PDM_surf_part_t *part
     else if (part->edgeFace[ifac2] == -1)
       part->edgeFace[ifac2] = edgeFaceUncompress[i] + 1;
     else {
-      fprintf(stderr, "Error _build_edges_part : Error in edgeFace computing\n");
+      PDM_error(__FILE__, __LINE__, 0, "Error _build_edges_part : Error in edgeFace computing\n");
       abort();
     }
   }

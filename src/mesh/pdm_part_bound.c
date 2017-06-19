@@ -516,7 +516,7 @@ PDM_part_bound_distant_elt_set
     nConnectedElt = _part_bound->nConnectedElt[iBoundElt];
 
   if (iConnectedElt >= nConnectedElt) {
-    fprintf(stderr, "Error part_bound_distant_elt_set :"
+    PDM_error(__FILE__, __LINE__, 0, "Error part_bound_distant_elt_set :"
 	    "Error in edgeFace computing\n");
     abort();
   }
@@ -569,7 +569,7 @@ PDM_part_bound_distant_elt_get
     nConnectedElt = _part_bound->nConnectedElt[iBoundElt];
   
   if (iConnectedElt >= nConnectedElt) {
-    fprintf(stderr, "Error part_bound_distant_elt_get :"
+    PDM_error(__FILE__, __LINE__, 0, "Error part_bound_distant_elt_get :"
 	    "iConnectedElt > nConnectedElt\n");
     abort();
   }
@@ -604,7 +604,7 @@ PDM_part_bound_adjust_size
 {
   _part_bound_t *_part_bound = (_part_bound_t *) part_bound;
   if (nEltPartBound > _part_bound->nEltPartBound) {
-    fprintf(stderr, "Error _part_bound_adjust_size : Error this function" 
+    PDM_error(__FILE__, __LINE__, 0, "Error _part_bound_adjust_size : Error this function" 
                     "can't increase the size of part_bound structure\n");
     abort();
   }
