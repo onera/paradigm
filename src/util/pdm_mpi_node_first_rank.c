@@ -22,6 +22,8 @@
 
 #include "pdm_mpi.h"
 #include "pdm_mpi_node_first_rank.h"
+#include "pdm_printf.h"
+#include "pdm_error.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -253,7 +255,7 @@ PDM_MPI_Comm comm
     int commSize;
     PDM_MPI_Comm_size(comm, &commSize);
     if (commRank == 0)
-      printf("Part of ranks for parallel IO : %d/%d\n", nbIORank, commSize);
+      PDM_printf("Part of ranks for parallel IO : %d/%d\n", nbIORank, commSize);
 
   }
 

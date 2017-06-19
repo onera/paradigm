@@ -14,6 +14,8 @@
 #include "pdm_mpi.h"
 #include "pdm_mpi_ext_dependencies.h"
 #include "pdm_ext_wrapper.h"
+#include "pdm_printf.h"
+#include "pdm_error.h"
 
 #ifdef PDM_HAVE_PARMETIS
 #include <metis.h>
@@ -390,7 +392,7 @@ int *part
 
   ierr = SCOTCH_graphInit (&grafptr);
   if(ierr){
-    printf("PART error : Error in PT-Scotch graph initialization\n");
+    PDM_printf("PART error : Error in PT-Scotch graph initialization\n");
     exit(1);
   }
 

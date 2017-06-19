@@ -20,6 +20,8 @@
 #include "pdm_writer_ensight_case.h"
 #include "pdm_io.h"
 #include "pdm.h"
+#include "pdm_printf.h"
+#include "pdm_error.h"
 
 /*=============================================================================
  * Definitions des macro
@@ -680,8 +682,8 @@ _geom_close(PDM_writer_t *cs)
     PDM_io_get_timer_total(PDM_writer_ensight->f_unit_geom, &t_cpu, &t_elapsed);
     const char * nom_fichier = PDM_io_get_nom_fichier(PDM_writer_ensight->f_unit_geom);
     if (rank == 0) {
-      printf("Temps elapsed d'ecriture du fichier '%s' : %12.5e s\n", nom_fichier, t_elapsed);
-      printf("Temps cpu d'ecriture du fichier '%s' : %12.5e s\n", nom_fichier, t_cpu);
+      PDM_printf("Temps elapsed d'ecriture du fichier '%s' : %12.5e s\n", nom_fichier, t_elapsed);
+      PDM_printf("Temps cpu d'ecriture du fichier '%s' : %12.5e s\n", nom_fichier, t_cpu);
     }
     PDM_io_detruit(PDM_writer_ensight->f_unit_geom);
   }
@@ -706,8 +708,8 @@ _var_close(PDM_writer_var_ensight_t *var, const int rank)
     PDM_io_get_timer_total(var->f_unit, &t_cpu, &t_elapsed);
     const char * nom_fichier = PDM_io_get_nom_fichier(var->f_unit);
     if (rank == 0) {
-      printf("Temps elapsed d'ecriture du fichier '%s' : %12.5e s\n", nom_fichier, t_elapsed);
-      printf("Temps cpu d'ecriture du fichier '%s' : %12.5e s\n", nom_fichier, t_cpu);
+      PDM_printf("Temps elapsed d'ecriture du fichier '%s' : %12.5e s\n", nom_fichier, t_elapsed);
+      PDM_printf("Temps cpu d'ecriture du fichier '%s' : %12.5e s\n", nom_fichier, t_cpu);
     }
     PDM_io_detruit(var->f_unit);
     var->f_unit = -1;

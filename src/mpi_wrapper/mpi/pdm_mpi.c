@@ -16,6 +16,8 @@
  *----------------------------------------------------------------------------*/
 
 #include "pdm_mpi.h"
+#include "pdm_printf.h"
+#include "pdm_error.h"
 
 #include <mpi.h>
 
@@ -954,14 +956,14 @@ int PDM_MPI_File_open(PDM_MPI_Comm comm, char *filename, int amode, PDM_MPI_File
         strcpy(name, pch);
         pch = strtok (str2, ":");
         if (pch == NULL) {
-          printf ("Error PDM_MPI_File_open : No value for hint \"%s\"."
+          PDM_printf ("Error PDM_MPI_File_open : No value for hint \"%s\"."
                   " Check \"PDM_IO_HINTS\" environment variable\n", name);
           exit(1);
         }
         else {
           strcpy(value, pch);
           MPI_Info_set (hints_mpi, name, value);
-          printf ("MPI/IO hint \"%s\" = \"%s\"\n", name, value);
+          PDM_printf ("MPI/IO hint \"%s\" = \"%s\"\n", name, value);
         }
       }
     } while (pch != NULL);

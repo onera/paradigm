@@ -17,6 +17,8 @@
 
 #include "pdm_writer.h"
 #include "pdm_writer_ensight_case.h"
+#include "pdm_printf.h"
+#include "pdm_error.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -313,7 +315,7 @@ _add_var(PDM_writer_ensight_case_t       *const this_case,
   /* Finally, associate variable entry in case file */
 
   if (strlen(var->case_line) > 1024) {
-    printf ("Line of the EnSight case file \"%s\"\n"
+    PDM_printf ("Line of the EnSight case file \"%s\"\n"
             "for variable \"%s\",\n"
             "exceeds 1024 characters, so this file must be edited and variable\n"
             "descriptions or referenced files renamed so as to be readable.\n",

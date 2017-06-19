@@ -28,6 +28,8 @@
 #include "pdm_priv.h"
 #include "pdm_fortran_to_c_string.h"
 #include "pdm_remove_blank.h"
+#include "pdm_printf.h"
+#include "pdm_error.h"
 
 // validation gnum
 #include "pdm_gnum.h"
@@ -687,14 +689,14 @@ const int    *connec,
   }
 
   if (1 == 1) {
-    printf("centres : ");
+    PDM_printf("centres : ");
     for (int i = 0; i < ipoint; i++) {
-      printf("%12.5e %12.5e %12.5e\n", 
+      PDM_printf("%12.5e %12.5e %12.5e\n", 
              centre_face[3*i  ],
              centre_face[3*i+1],
              centre_face[3*i+2]);
     }
-    printf("\n");
+    PDM_printf("\n");
   }
 }
 
@@ -2134,7 +2136,7 @@ PDM_l_num_t connec_hexa_courant[]
   }
 
   if (k1 == -1) {
-    printf("Error connect_hexa : %d %d %d %d %d %d %d %d\n",
+    PDM_printf("Error connect_hexa : %d %d %d %d %d %d %d %d\n",
            connec_hexa_courant[0],
            connec_hexa_courant[1],
            connec_hexa_courant[2],
@@ -2145,7 +2147,7 @@ PDM_l_num_t connec_hexa_courant[]
            connec_hexa_courant[7]);
 
     for (int i10 = 0; i10 < 4; i10++) {
-      printf("   face %d : %d %d %d %d\n", i10+1, cell_som_quad[4*i10],  
+      PDM_printf("   face %d : %d %d %d %d\n", i10+1, cell_som_quad[4*i10],  
                                                   cell_som_quad[4*i10+1],
                                                   cell_som_quad[4*i10+2],
                                                   cell_som_quad[4*i10+3]);
@@ -5484,7 +5486,7 @@ const int            id_geom
   
   // validation gnum
 //  int id = PDM_gnum_create (3, geom->n_part, geom->pdm_mpi_comm);
-//  printf("1\n");
+//  PDM_printf("1\n");
 //
 //  for (int i = 0; i < geom->n_part; i++) {
 //    
@@ -5492,20 +5494,20 @@ const int            id_geom
 //
 //  }
 //  
-//  printf("2\n");
+//  PDM_printf("2\n");
 //  PDM_gnum_compute (id);
-//    printf("3\n");
+//    PDM_printf("3\n");
 //
 //  for (int i = 0; i < geom->n_part; i++) {
 //    
 //    geom->som[i]->_numabs = PDM_gnum_get (id, i);
-//    printf ("pp %ld\n", PDM_gnum_get (id, i));
+//    PDM_printf ("pp %ld\n", PDM_gnum_get (id, i));
 //    
 //  }
-//    printf("4\n");
+//    PDM_printf("4\n");
 //
 //  PDM_gnum_free (id, 1);
-//    printf("5\n");
+//    PDM_printf("5\n");
 
   // fin validation gnum
 

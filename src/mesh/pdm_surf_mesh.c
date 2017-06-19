@@ -20,6 +20,8 @@
 #include "pdm_binary_search.h"
 #include "pdm_priv.h"
 #include "pdm_mpi.h"
+#include "pdm_printf.h"
+#include "pdm_error.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -785,12 +787,12 @@ PDM_surf_mesh_build_edges_gn_and_edge_part_bound
 
   if (1 == 0) {
     for (int i = 0; i < nPart; i++) {
-      printf("gnum edge [%d] : ", i);
+      PDM_printf("gnum edge [%d] : ", i);
       PDM_surf_part_t *part = mesh->part[i];
       for (int j = 0; j < part->nEdge; j++) {
-        printf(" "PDM_FMT_G_NUM,  part->edgeLnToGn[j]);
+        PDM_printf(" "PDM_FMT_G_NUM,  part->edgeLnToGn[j]);
       }
-      printf("\n");
+      PDM_printf("\n");
     }
   }
 
@@ -1659,13 +1661,13 @@ PDM_surf_mesh_t *mesh
     }
 
     if (1 == 0) {
-      printf ("part->carLgthVtx %d : ", i);
+      PDM_printf ("part->carLgthVtx %d : ", i);
       
       for (int j = 0; j < nVtx; j++) {
-        printf (" %12.5e", part->carLgthVtx[j]);
+        PDM_printf (" %12.5e", part->carLgthVtx[j]);
       }
 
-      printf ("\n");
+      PDM_printf ("\n");
     }
 
   }

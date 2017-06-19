@@ -15,6 +15,8 @@
  *----------------------------------------------------------------------------*/
 
 #include "pdm_file_seq.h"
+#include "pdm_printf.h"
+#include "pdm_error.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -137,7 +139,7 @@ int PDM_file_seq_write(PDM_file_seq_t *fichier,
                                        n_donnees, fichier->fichier);
   int n_donnees_ecrites = (int) _n_donnees_ecrites;
   /* if (ferror (fichier->fichier)) */
-  /*   printf ("Error Writing to myfile.txt\n"); */
+  /*   PDM_printf ("Error Writing to myfile.txt\n"); */
 
   return n_donnees_ecrites;
 

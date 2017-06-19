@@ -20,6 +20,8 @@
 #include "pdm_priv.h"
 #include "pdm_binary_search.h"
 #include "pdm_sort.h"
+#include "pdm_printf.h"
+#include "pdm_error.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -153,10 +155,10 @@ _active_ranks
     /* Dump */
 
     if (0 == 1) {
-      printf("active ranks : ");
+      PDM_printf("active ranks : ");
       for(int i = 0; i < ptb->n_activeRanks; i++)
-        printf("%i ", ptb->activeRanks[i]);
-      printf("\n");
+        PDM_printf("%i ", ptb->activeRanks[i]);
+      PDM_printf("\n");
     }
   }
 }
@@ -233,10 +235,10 @@ _distrib_data
 
   if (0 == 1) {
     if (ptb->myRank == 0) {
-      printf("dataDistribIndex : ");
+      PDM_printf("dataDistribIndex : ");
       for(int i = 0; i < ptb->s_comm + 1; i++)
-        printf(PDM_FMT_G_NUM" ", ptb->dataDistribIndex[i]);
-      printf("\n");
+        PDM_printf(PDM_FMT_G_NUM" ", ptb->dataDistribIndex[i]);
+      PDM_printf("\n");
     }
   }
 

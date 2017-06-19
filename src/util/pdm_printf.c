@@ -1,5 +1,5 @@
 /*============================================================================
- * Base user-definable printf() wrapper or replacement.
+ * Base user-definable PDM_printf() wrapper or replacement.
  *============================================================================*/
 
 /*
@@ -57,14 +57,14 @@ extern "C" {
  * Local type definitions
  *-----------------------------------------------------------------------------*/
 
-/* Associated typedef documentation (for pdm_printf.h) */
+/* Associated typedef documentation (for PDM_printf.h) */
 
 /*!
  * \typedef PDM_printf_proxy_t
  *
- * \brief Function pointer for printf() type functions.
+ * \brief Function pointer for PDM_printf() type functions.
  *
- * \param [in] format       format string, as printf() and family.
+ * \param [in] format       format string, as PDM_printf() and family.
  * \param [in, out] arg_ptr pointer to variable argument list based on format
  *                          string.
  */
@@ -119,12 +119,12 @@ _PDM_printf_flush_proxy_default(void)
  *============================================================================*/
 
 /*!
- * \brief Replacement for printf() with modifiable behavior.
+ * \brief Replacement for PDM_printf() with modifiable behavior.
  *
  * This function calls vprintf() by default, or a function with similar
  * arguments indicated by PDM_printf_proxy_set().
  *
- * \param [in] format format string, as printf() and family.
+ * \param [in] format format string, as PDM_printf() and family.
  * \param [in] ...    variable arguments based on format string.
  *
  * \return number of characters printed, not counting the trailing '\\0'

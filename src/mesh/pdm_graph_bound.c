@@ -16,6 +16,8 @@
 #include "pdm_graph_bound_priv.h"
 #include "pdm_part_bound.h"
 #include "pdm_part_bound_priv.h"
+#include "pdm_printf.h"
+#include "pdm_error.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -521,14 +523,14 @@ const int                nPart,
   }
 
   if (0 == 1) {
-    printf ("gnumofferedelt : ");
+    PDM_printf ("gnumofferedelt : ");
     for (int i = 0; i < lComm; i++) {
       for (int j = offeredEltsRankIdx[i]; j < offeredEltsRankIdx[i+1]; j++) {
-        printf (" "PDM_FMT_G_NUM" ", gNumOfferedEltsSend[j]);
+        PDM_printf (" "PDM_FMT_G_NUM" ", gNumOfferedEltsSend[j]);
       }
-      printf (" §§ ");
+      PDM_printf (" §§ ");
     }
-    printf ("\n");
+    PDM_printf ("\n");
   }
   
   free (nOfferedEltProc);
@@ -622,16 +624,16 @@ const int                nPart,
   free (gNumOfferedEltsSend);
 
   if (0 == 1) {
-    printf ("gNumOfferedEltsRecv : ");
+    PDM_printf ("gNumOfferedEltsRecv : ");
     int k = 0;
     for (int i = 0; i < graph_bound->nGhostElt; i++) {
       if (i == graph_bound->ghostEltIdx[k]) {
         k++;
-        printf (" $$ ");
+        PDM_printf (" $$ ");
       }
-      printf (" "PDM_FMT_G_NUM, gNumOfferedEltsRecv[i] -1);
+      PDM_printf (" "PDM_FMT_G_NUM, gNumOfferedEltsRecv[i] -1);
     }  
-    printf ("\n");
+    PDM_printf ("\n");
   }
 
   /*
@@ -930,24 +932,24 @@ const int                nPart,
   
   if (0 == 1) {
   
-    printf ("tagghostelt : ");
+    PDM_printf ("tagghostelt : ");
     int k = 0;
     for (int i = 0; i < graph_bound->nGhostElt; i++) {
       if (i == graph_bound->ghostEltIdx[k]) {
         k++;
-        printf (" $$ ");
+        PDM_printf (" $$ ");
       }
-      printf (" %d", tagGhostElt[i]);
+      PDM_printf (" %d", tagGhostElt[i]);
     }  
-    printf ("\n");
+    PDM_printf ("\n");
     
-    printf ("newLocalGhost : ");
+    PDM_printf ("newLocalGhost : ");
     for (int i = 0; i < nNewLocalGhost; i++) {
-      printf (" %d %d,", newLocalGhost[2*i], newLocalGhost[2*i+1]);
+      PDM_printf (" %d %d,", newLocalGhost[2*i], newLocalGhost[2*i+1]);
     }  
-    printf ("\n");
+    PDM_printf ("\n");
     
-    printf ("localgnum : ");
+    PDM_printf ("localgnum : ");
 
     for (int i = 0; i < nPart; i++) {
       PDM_part_bound_t *_partBound = graph_bound->partBound[i];
@@ -956,28 +958,28 @@ const int                nPart,
         PDM_part_bound_local_offer_elt_ln_to_gn_get (_partBound);
       for (int j = 0; j < nLocalOfferElt; j++) {
         PDM_g_num_t gNum = localOfferEltLnToGn[j];
-        printf (" %d %d " PDM_FMT_G_NUM",", i, j, gNum);
+        PDM_printf (" %d %d " PDM_FMT_G_NUM",", i, j, gNum);
       }
     }
-    printf ("\n");
+    PDM_printf ("\n");
  
-    printf("ghostEltEltPart     :");
+    PDM_printf("ghostEltEltPart     :");
     for (int i = 0; i < graph_bound->nGhostElt; i++) {
       for (int j = ghostEltEltIdx[i]; j < ghostEltEltIdx[i+1]; j++) {
-        printf(" %d", ghostEltEltPart[j]);
+        PDM_printf(" %d", ghostEltEltPart[j]);
       }
-      printf(" $$ ");
+      PDM_printf(" $$ ");
     }
-    printf("\n");
+    PDM_printf("\n");
 
-    printf("ghostEltElt     :");
+    PDM_printf("ghostEltElt     :");
     for (int i = 0; i < graph_bound->nGhostElt; i++) {
       for (int j = ghostEltEltIdx[i]; j < ghostEltEltIdx[i+1]; j++) {
-        printf(" %d", ghostEltElt[j]);
+        PDM_printf(" %d", ghostEltElt[j]);
       }
-      printf(" $$ ");
+      PDM_printf(" $$ ");
     }
-    printf("\n");
+    PDM_printf("\n");
   }
 
   /*
@@ -1090,16 +1092,16 @@ const int                nPart,
 
   if (0 == 1) {
   
-    printf ("oldToNewGhost : ");
+    PDM_printf ("oldToNewGhost : ");
     int k = 0;
     for (int i = 0; i < graph_bound->nGhostElt; i++) {
       if (i == graph_bound->ghostEltIdx[k]) {
         k++;
-        printf (" $$ ");
+        PDM_printf (" $$ ");
       }
-      printf (" %d", oldToNewGhost[i]);
+      PDM_printf (" %d", oldToNewGhost[i]);
     }  
-    printf ("\n");
+    PDM_printf ("\n");
   }
   
   int *oldGhostEltIdx = graph_bound->ghostEltIdx;
@@ -1331,23 +1333,23 @@ const int                nPart,
 
   if (1 == 0) {
   
-    printf("ghostEltEltPart     :");
+    PDM_printf("ghostEltEltPart     :");
     for (int i = 0; i < graph_bound->nGhostElt; i++) {
       for (int j = ghostEltEltIdx[i]; j < ghostEltEltIdx[i+1]; j++) {
-        printf(" %d", ghostEltEltPart[j]);
+        PDM_printf(" %d", ghostEltEltPart[j]);
       }
-      printf(" $$ ");
+      PDM_printf(" $$ ");
     }
-    printf("\n");
+    PDM_printf("\n");
 
-    printf("ghostEltElt     :");
+    PDM_printf("ghostEltElt     :");
     for (int i = 0; i < graph_bound->nGhostElt; i++) {
       for (int j = ghostEltEltIdx[i]; j < ghostEltEltIdx[i+1]; j++) {
-        printf(" %d", ghostEltElt[j]);
+        PDM_printf(" %d", ghostEltElt[j]);
       }
-      printf(" $$ ");
+      PDM_printf(" $$ ");
     }
-    printf("\n");
+    PDM_printf("\n");
   }
 
   graph_bound->nGhostEltPart = (int *) malloc (nPart * sizeof(int));
@@ -1956,50 +1958,50 @@ PDM_graph_bound_dump
 )
 {
 
-  printf ("PDM_graph_bound :\n");
-  printf ("  - Data location to send to the other processus\n");
-  printf ("    - nSendElt %d\n",  graph_bound->nSendElt);
+  PDM_printf ("PDM_graph_bound :\n");
+  PDM_printf ("  - Data location to send to the other processus\n");
+  PDM_printf ("    - nSendElt %d\n",  graph_bound->nSendElt);
 
   for (int i = 0; i < graph_bound->lComm; i++) {
   
-    printf ("    -  Element partitions for processus %d :", i);
+    PDM_printf ("    -  Element partitions for processus %d :", i);
 
     for (int j = graph_bound->sendEltIdx[i]; j < graph_bound->sendEltIdx[i+1]; j++) {
-      printf (" %d", graph_bound->sendEltPart[j]);
+      PDM_printf (" %d", graph_bound->sendEltPart[j]);
     }
-    printf ("\n");
-    printf ("    -  Local element number in their partitions for processus %d :", i);
+    PDM_printf ("\n");
+    PDM_printf ("    -  Local element number in their partitions for processus %d :", i);
 
     for (int j = graph_bound->sendEltIdx[i]; j < graph_bound->sendEltIdx[i+1]; j++) {
-      printf (" %d", graph_bound->sendElt[j]);
+      PDM_printf (" %d", graph_bound->sendElt[j]);
     }
-    printf ("\n");
+    PDM_printf ("\n");
 
   }
 
-  printf ("  - Data location received from the other processus\n");
+  PDM_printf ("  - Data location received from the other processus\n");
   
   for (int i = 0; i < graph_bound->lComm; i++) {
-    printf ("    - Number element received from processus %d : %d\n",
+    PDM_printf ("    - Number element received from processus %d : %d\n",
             i, graph_bound->ghostEltIdx[i+1] - graph_bound->ghostEltIdx[i]);
   }
   
-  printf ("    -  Received element per part\n");
+  PDM_printf ("    -  Received element per part\n");
 
   for (int i = 0; i < graph_bound->nPart; i++) {
   
-    printf ("      -  Part %d\n", i);
+    PDM_printf ("      -  Part %d\n", i);
 
     for (int j = 0; j < graph_bound->nGhostEltPart[i]; j++) {
 
-      printf ("        -  Local Connected elements to ghost element %d :", j);
+      PDM_printf ("        -  Local Connected elements to ghost element %d :", j);
 
       for (int k = graph_bound->ghostEltPartIdx[i][j]; k < graph_bound->ghostEltPartIdx[i][j+1]; k++) {
-        printf (" %d", graph_bound->ghostEltPartElt[i][k]);
+        PDM_printf (" %d", graph_bound->ghostEltPartElt[i][k]);
       }
-      printf ("\n");
+      PDM_printf ("\n");
       
-      printf ("        -  Indirection partition ghost element to processus ghost element : %d\n", graph_bound->ghostEltPart2GhostElt[i][j]);
+      PDM_printf ("        -  Indirection partition ghost element to processus ghost element : %d\n", graph_bound->ghostEltPart2GhostElt[i][j]);
     }
   }
 }

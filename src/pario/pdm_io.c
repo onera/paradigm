@@ -30,6 +30,8 @@
 #include "pdm_priv.h"
 #include "pdm_mpi_node_first_rank.h" 
 #include "pdm_fortran_to_c_string.h"
+#include "pdm_printf.h"
+#include "pdm_error.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -149,12 +151,12 @@ const char* path
       struct stat buf;
 
       if (stat(path, &buf) != 0) {
-        printf("  Fichier ou repertoire existant "
+        PDM_printf("  Fichier ou repertoire existant "
                "et son statut n'est pas valable\n");
         abort();
       }
       else if (S_ISDIR(buf.st_mode) != 1) {
-        printf("  Fichier existant et ce n'est pas un repertoire\n");
+        PDM_printf("  Fichier existant et ce n'est pas un repertoire\n");
         abort();
       }
       else
@@ -164,7 +166,7 @@ const char* path
 
     }
     else {
-      printf("  Fichier existant et ce n'est pas un repertoire\n");
+      PDM_printf("  Fichier existant et ce n'est pas un repertoire\n");
       abort();
     }
 
@@ -307,10 +309,10 @@ PDM_io_fichier_t  *fichier
 
       if (0 == 1) {
         if (fichier->rang == 0) {
-          printf("rangs actifs : ");
+          PDM_printf("rangs actifs : ");
           for(int i = 0; i < fichier->n_rangs_actifs; i++)
-            printf(" %d", fichier->rangs_actifs[i]);
-          printf("\n");
+            PDM_printf(" %d", fichier->rangs_actifs[i]);
+          PDM_printf("\n");
         }
       }
       
@@ -380,10 +382,10 @@ static void _n_donnees_rang
 
   if (0 == 1) {
     if (fichier->rang == 0) {
-      printf("n_donnees_rangs : ");
+      PDM_printf("n_donnees_rangs : ");
       for(int i = 0; i < fichier->n_rangs + 1; i++)
-        printf(PDM_FMT_G_NUM" ",n_donnees_rangs[i]);
-      printf("\n");
+        PDM_printf(PDM_FMT_G_NUM" ",n_donnees_rangs[i]);
+      PDM_printf("\n");
     }
   }
 }
@@ -918,7 +920,7 @@ void PDM_io_open
           abort();
         }
         else {
-          printf("PDM_io_open : backup du fichier %s avant reecriture\n", nouveau_fichier->nom);
+          PDM_printf("PDM_io_open : backup du fichier %s avant reecriture\n", nouveau_fichier->nom);
         }
         free(fichier_backup);
       }
@@ -2250,24 +2252,24 @@ void PDM_io_lec_par_bloc
         free(n_donnees_blocs_actifs);
 
         if (0 == 1) {
-          printf("distribution lec: %i ", fichier->rang);
-          printf("/");
+          PDM_printf("distribution lec: %i ", fichier->rang);
+          PDM_printf("/");
           for (int i = 0; i <  fichier->n_rangs; i++)
-            printf(" %i ",
+            PDM_printf(" %i ",
                    n_donnees_a_envoyer[i]);
-          printf("/");
+          PDM_printf("/");
           for (int i = 0; i <  fichier->n_rangs; i++)
-            printf(" %i ",
+            PDM_printf(" %i ",
                    i_donnees_a_envoyer[i]);
-          printf("/");
+          PDM_printf("/");
           for (int i = 0; i <  fichier->n_rangs; i++)
-            printf(" %i ",
+            PDM_printf(" %i ",
                    n_donnees_a_recevoir[i]);
-          printf("/");
+          PDM_printf("/");
           for (int i = 0; i <  fichier->n_rangs; i++)
-            printf(" %i ",
+            PDM_printf(" %i ",
                    i_donnees_a_recevoir[i]);
-          printf("\n");
+          PDM_printf("\n");
         }
 
         /*------------------------------------------------------------
@@ -3704,24 +3706,24 @@ void PDM_io_ecr_par_bloc
                          i_donnees_a_recevoir[fichier->n_rangs-1])); 
 
         if (0 == 1) {
-          printf("distribution ecr: %i ", fichier->rang);
-          printf("/");
+          PDM_printf("distribution ecr: %i ", fichier->rang);
+          PDM_printf("/");
           for (int i = 0; i <  fichier->n_rangs; i++)
-            printf(" %i ",
+            PDM_printf(" %i ",
                    n_donnees_a_envoyer[i]);
-          printf("/");
+          PDM_printf("/");
           for (int i = 0; i <  fichier->n_rangs; i++)
-            printf(" %i ",
+            PDM_printf(" %i ",
                    i_donnees_a_envoyer[i]);
-          printf("/");
+          PDM_printf("/");
           for (int i = 0; i <  fichier->n_rangs; i++)
-            printf(" %i ",
+            PDM_printf(" %i ",
                    n_donnees_a_recevoir[i]);
-          printf("/");
+          PDM_printf("/");
           for (int i = 0; i <  fichier->n_rangs; i++)
-            printf(" %i ",
+            PDM_printf(" %i ",
                    i_donnees_a_recevoir[i]);
-          printf("\n");
+          PDM_printf("\n");
           abort();
         }
 
@@ -4285,30 +4287,30 @@ void PDM_io_dump
   PDM_io_fichier_t *fichier = PDM_io_get_fichier(unite);
 
   if (fichier != NULL) {
-    printf("Propriete du fichier d'unite '%i'\n", unite);
-    printf("   - nom                           : %s\n", fichier->nom);
-    printf("   - mode                          : ");
+    PDM_printf("Propriete du fichier d'unite '%i'\n", unite);
+    PDM_printf("   - nom                           : %s\n", fichier->nom);
+    PDM_printf("   - mode                          : ");
     if (fichier->mode == PDM_IO_MODE_LECTURE)
-      printf("PDM_io_mode_lecture\n");
+      PDM_printf("PDM_io_mode_lecture\n");
     else if (fichier->mode == PDM_IO_MODE_ECRITURE)
-      printf("PDM_io_mode_ecriture\n");
+      PDM_printf("PDM_io_mode_ecriture\n");
     else if (fichier->mode == PDM_IO_MODE_AJOUT)
-      printf("PDM_io_mode_ajout\n");
-    printf("   - acces                         : ");
+      PDM_printf("PDM_io_mode_ajout\n");
+    PDM_printf("   - acces                         : ");
     if (fichier->acces == PDM_IO_ACCES_MPIIO_EO)
-      printf("PDM_io_acces_mpiio_eo\n");
+      PDM_printf("PDM_io_acces_mpiio_eo\n");
     else if (fichier->acces == PDM_IO_ACCES_MPIIO_IP)
-      printf("PDM_io_acces_mpiio_ip\n");
+      PDM_printf("PDM_io_acces_mpiio_ip\n");
     else if (fichier->acces == PDM_IO_ACCES_MPI_SIMPLE)
-      printf("PDM_io_acces_mpi_simple\n");
+      PDM_printf("PDM_io_acces_mpi_simple\n");
     else if (fichier->acces == PDM_IO_ACCES_SEQ)
-      printf("PDM_io_acces_seq\n");
+      PDM_printf("PDM_io_acces_seq\n");
     
-    printf("   - swap_endian                   : ");
+    PDM_printf("   - swap_endian                   : ");
     if (fichier->swap_endian == 1)
-      printf("actif\n");
+      PDM_printf("actif\n");
     else if (fichier->swap_endian == 0)
-      printf("inactif\n");
+      PDM_printf("inactif\n");
   }
   else 
     err_code = 1;

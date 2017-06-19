@@ -71,7 +71,7 @@ extern "C" {
  *                            called.
  * \param [in] sys_error_code error code if error in system or libc call,
  *                            0 otherwise.
- * \param [in] format         format string, as printf() and family.
+ * \param [in] format         format string, as PDM_printf() and family.
  * \param [in, out] arg_ptr   pointer to variable argument list based on format
  *                            string.
  *
@@ -114,7 +114,7 @@ extern "C" {
  *   file_name:      <-- name of source file from which error handler called.
  *   line_num:       <-- line of source file from which error handler called.
  *   sys_error_code: <-- error code if error in system or libc call, 0 otherwise.
- *   format:         <-- format string, as printf() and family.
+ *   format:         <-- format string, as PDM_printf() and family.
  *   arg_ptr:        <-> variable argument list based on format string.
  */
 
@@ -145,7 +145,7 @@ static PDM_error_handler_t  *_PDM_error_handler = (_PDM_error_handler_default);
  *   file_name:      <-- name of source file from which error handler called.
  *   line_num:       <-- line of source file from which error handler called.
  *   sys_error_code: <-- error code if error in system or libc call, 0 otherwise.
- *   format:         <-- format string, as printf() and family.
+ *   format:         <-- format string, as PDM_printf() and family.
  *   arg_ptr:        <-> variable argument list based on format string.
  */
 
@@ -191,7 +191,7 @@ _PDM_error_handler_default(const char     *const file_name,
  *                            called.
  * \param [in] sys_error_code error code if error in system or libc call,
  *                            0 otherwise.
- * \param [in] format         format string, as printf() and family.
+ * \param [in] format         format string, as PDM_printf() and family.
  * \param [in] ...            variable arguments based on format string.
  */
 
