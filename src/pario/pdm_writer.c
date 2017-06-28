@@ -31,11 +31,6 @@
 #include "pdm_printf.h"
 #include "pdm_error.h"
 
-// validation gnum
-#include "pdm_gnum.h"
-//fin validation gnum
-
-
 /*----------------------------------------------------------------------------*/
 
 #ifdef __cplusplus
@@ -5484,33 +5479,6 @@ const int            id_geom
 
    PDM_g_num_t n_elt_abs = geom->n_elt_abs;
   
-  // validation gnum
-//  int id = PDM_gnum_create (3, geom->n_part, geom->pdm_mpi_comm);
-//  PDM_printf("1\n");
-//
-//  for (int i = 0; i < geom->n_part; i++) {
-//    
-//    PDM_gnum_set_from_coords (id, i, geom->som[i]->n_som, geom->som[i]->_coords);
-//
-//  }
-//  
-//  PDM_printf("2\n");
-//  PDM_gnum_compute (id);
-//    PDM_printf("3\n");
-//
-//  for (int i = 0; i < geom->n_part; i++) {
-//    
-//    geom->som[i]->_numabs = PDM_gnum_get (id, i);
-//    PDM_printf ("pp %ld\n", PDM_gnum_get (id, i));
-//    
-//  }
-//    PDM_printf("4\n");
-//
-//  PDM_gnum_free (id, 1);
-//    PDM_printf("5\n");
-
-  // fin validation gnum
-
   PDM_MPI_Allreduce(&n_elt_abs, &geom->n_elt_abs, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_MAX, geom->pdm_mpi_comm);
 
   /* D�termination de la num�rotation absolue interne des elements 

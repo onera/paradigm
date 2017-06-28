@@ -160,7 +160,7 @@ typedef struct PDM_Mesh_nodal_geom_prepa_blocks_t {
 /**
  * \struct  _PDM_Mesh_nodal_t
  *
- * \brief   Nodam mesh description
+ * \brief   Nodal mesh description
  *
  */
 
@@ -181,11 +181,10 @@ struct _PDM_Mesh_nodal_t {
   PDM_l_num_t                         n_blocks_poly3d;         /*!< Number of polyhedra blocks */
   PDM_l_num_t                         l_blocks_poly3d;         /*!< Size of polyhedra blocks arra */
   PDM_Mesh_nodal_block_poly3d_t     **blocks_poly3d;           /*!< Polyehdra blocks */
-  PDM_Mesh_nodal_t                   *_cs;                     /*!< Parent mesh */
   PDM_MPI_Comm                        pdm_mpi_comm;            /*!< MPI communicator */
   PDM_Mesh_nodal_geom_prepa_blocks_t *prepa_blocks;            /*!< Preparation blocks */
-  PDM_l_num_t                       **num_cell_parent_to_local;/*!< local numbering to initial local numbering
-                                                                 imposed by the sorting by blocks */
+  PDM_l_num_t                       **num_cell_parent_to_local;/*!< Local numbering to initial local numbering
+                                                                    imposed by the sorting by blocks */
 };
 
 #ifdef __cplusplus
