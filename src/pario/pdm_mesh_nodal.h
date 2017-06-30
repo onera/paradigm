@@ -237,8 +237,8 @@ int
 PDM_Mesh_nodal_block_add 
 (
 PDM_Mesh_nodal_t            *mesh,
-PDM_writer_statut_t          st_free_data,  
-const PDM_writer_elt_geom_t  t_elt
+PDM_bool_t                   st_free_data,  
+const PDM_Mesh_nodal_elt_t  t_elt
 ); 
 
 

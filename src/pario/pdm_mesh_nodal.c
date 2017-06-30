@@ -13,8 +13,8 @@
 
 #include "pdm.h"
 #include "pdm_mpi.h"
-#include "pdm_mesh.h"
-#include "pdm_mesh_priv.h"
+#include "pdm_mesh_nodal.h"
+#include "pdm_mesh_nodal_priv.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
 
@@ -251,8 +251,8 @@ int
 PDM_Mesh_nodal_block_add 
 (
 PDM_Mesh_nodal_t            *mesh,
-PDM_writer_statut_t          st_free_data,  
-const PDM_writer_elt_geom_t  t_elt
+PDM_bool_t                   st_free_data,  
+const PDM_Mesh_nodal_elt_t   t_elt
 ) 
 {
 }
@@ -658,4 +658,3 @@ PDM_l_num_t      *ind_num
 }
 #endif /* __cplusplus */
 
-#endif /* __PDM_MESH_NODAL_H__ */

@@ -33,11 +33,11 @@ extern "C" {
  *
  */
 
-typedef struct PDM_Mesh_nodal_som_t PDM_Mesh_nodal_som_t;
+typedef struct PDM_Mesh_nodal_vtx_t PDM_Mesh_nodal_vtx_t;
 
-struct PDM_Mesh_nodal_som_t {
+struct PDM_Mesh_nodal_vtx_t {
 
-  PDM_Mesh_nodal_som_t *parent;  /*!< Parent vertices if they are extraxted from an other mesh partition */
+  PDM_Mesh_nodal_vtx_t *parent;  /*!< Parent vertices if they are extraxted from an other mesh partition */
   PDM_l_num_t           n_vtx;   /*!< Number of vertices */
   double               *coords;  /*!< Coordinates (Locally allocated) */
   const double        *_coords;  /*!< Coordinates (Mapping) */
@@ -53,12 +53,11 @@ struct PDM_Mesh_nodal_som_t {
 
 typedef struct PDM_Mesh_nodal_block_std_t {
 
-  PDM_Mesh_nodal_elt_geom_t  t_elt;         /*!< Element type */
-  PDM_Mesh_nodal_statut_t    st_free_data;  /*!< Release of memory during the destruction of the object or not */
+  PDM_Mesh_nodal_elt_t       t_elt;         /*!< Element type */
+  PDM_bool_t                 st_free_data;  /*!< Release of memory during the destruction of the object or not */
   PDM_l_num_t                n_part;        /*!< Number of partitions */
   PDM_l_num_t               *n_elt;         /*!< Number elements */
   PDM_l_num_t              **_connec;       /*!< Connectivity (Memory mapping) */
-  PDM_g_num_t              **_numabs;       /*!< Absolute numbering (Memory mapping) */
   PDM_l_num_t              **_num_part;     /*!< Initial numbering int the partition (Memory mapping) */
   PDM_g_num_t              **_numabs;       /*!< Global numbering (Memory mapping) */
   PDM_g_num_t              **numabs_int;    /*!< Global numbering inside each block */
@@ -74,7 +73,7 @@ typedef struct PDM_Mesh_nodal_block_std_t {
 
 typedef struct PDM_Mesh_nodal_block_poly2d_t {
 
-  PDM_Mesh_nodal_statut_t  st_free_data;  /*!< Release of memory during the destruction of the object or not */
+  PDM_bool_t               st_free_data;  /*!< Release of memory during the destruction of the object or not */
   PDM_l_num_t              n_part;        /*!< Number of partitions */
   PDM_l_num_t             *n_elt;         /*!< Number of elements of each partition */
   PDM_l_num_t            **_connec_idx;   /*!< Index of elements connectivity of each partition (Memory mapping) */
@@ -94,7 +93,7 @@ typedef struct PDM_Mesh_nodal_block_poly2d_t {
 
 typedef struct PDM_Mesh_nodal_block_poly3d_t{
 
-  PDM_Mesh_nodal_statut_t st_free_data; /*!< Release of memory during the destruction of the object or not */
+  PDM_bool_t              st_free_data; /*!< Release of memory during the destruction of the object or not */
   PDM_l_num_t             n_part;       /*!< Number of partitions */
   PDM_l_num_t            *n_elt;        /*!< Number of elements of each partition */
   PDM_l_num_t            *n_face;       /*!< Number of face of each polyhedron of each partition */
