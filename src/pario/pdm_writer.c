@@ -30,6 +30,7 @@
 #include "pdm_remove_blank.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
+#include "pdm_handles.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -68,37 +69,13 @@ typedef enum {
  * Stockage des objets cs
  *----------------------------------------------------------------------------*/
 
-static PDM_writer_t **cs_tab = NULL; 
-
-/*----------------------------------------------------------------------------
- * Taille du tableau cs
- *----------------------------------------------------------------------------*/
-
-static int l_cs_tab = 0;
-
-/*----------------------------------------------------------------------------
- * Nombre d'objets cs stockes dans cs_tab
- *----------------------------------------------------------------------------*/
-
-static int n_cs_tab = 0;
+static PDM_Handles_t *cs_tab = NULL; 
 
 /*----------------------------------------------------------------------------
  * Stockage des objets cs
  *----------------------------------------------------------------------------*/
 
-static PDM_writer_fmt_t **fmt_tab = NULL; 
-
-/*----------------------------------------------------------------------------
- * Taille du tableau cs
- *----------------------------------------------------------------------------*/
-
-static int l_fmt_tab = 0;
-
-/*----------------------------------------------------------------------------
- * Nombre d'objets cs stockes dans cs_tab
- *----------------------------------------------------------------------------*/
-
-static int n_fmt_tab = 0;
+static PDM_Handles_t *fmt_tab = NULL; 
 
 /*----------------------------------------------------------------------------
  * Nombre d'objets cs stockes dans cs_tab
@@ -254,41 +231,6 @@ _norme
 {
   return sqrt(a[0] * a[0] + a[1] * a[1] + a[2] * a[2]);
 }
-
-/*----------------------------------------------------------------------------
- * Retourne un pointeur un objet CS a partir de son identificateur
- *
- * parameters :
- *   id_cs           <-- Identificateur  
- *
- * return :
- *                   --> Objet CS  
- *
- *----------------------------------------------------------------------------*/
-
-static PDM_writer_t *
-_PDM_writer_get
-(
-const int  id_cs
-)
-{
-  PDM_writer_t *cs = NULL;
-
-  if (id_cs >= l_cs_tab) {
-    PDM_error(__FILE__, __LINE__, 0, "Erreur PDM_writer_get : Identificateur de l'objet CS trop grand\n");
-    abort();
-  }
-
-  cs = cs_tab[id_cs];
-
-  if (cs == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "Erreur PDM_writer_get : Identificateur de l'objet CS non defini\n");
-    abort();
-  }
-
-  return cs;
-}
-
 
 /*----------------------------------------------------------------------------
  * Retourne un pointeur un objet geom a partir de son identificateur
@@ -2851,26 +2793,24 @@ _load_intern_fmt (void)
     return;
   }
 
-  n_fmt_tab = n_intern_fmt;
-  l_fmt_tab = 2*n_fmt_tab;
-  
-  fmt_tab = malloc (sizeof(PDM_writer_fmt_t *) * l_fmt_tab);
+  fmt_tab = PDM_Handles_create (2 * n_intern_fmt);
 
   /* Ensight */
 
-  fmt_tab[0] = malloc (sizeof(PDM_writer_fmt_t));
-  fmt_tab[0]->name = "Ensight";
-  fmt_tab[0]->create_fct       = PDM_writer_ensight_create;
-  fmt_tab[0]->free_fct         = PDM_writer_ensight_free;
-  fmt_tab[0]->beg_step_fct     = PDM_writer_ensight_step_beg;
-  fmt_tab[0]->end_step_fct     = PDM_writer_ensight_step_end;
-  fmt_tab[0]->geom_create_fct  = PDM_writer_ensight_geom_create;
-  fmt_tab[0]->geom_write_fct   = PDM_writer_ensight_geom_write;
-  fmt_tab[0]->geom_free_fct    = PDM_writer_ensight_geom_free;
-  fmt_tab[0]->var_create_fct   = PDM_writer_ensight_var_create;
-  fmt_tab[0]->var_write_fct    = PDM_writer_ensight_var_write;
-  fmt_tab[0]->var_free_fct     = PDM_writer_ensight_var_free;
-  
+  PDM_writer_fmt_t *fmt = malloc (sizeof(PDM_writer_fmt_t));
+  fmt->name = "Ensight";
+  fmt->create_fct       = PDM_writer_ensight_create;
+  fmt->free_fct         = PDM_writer_ensight_free;
+  fmt->beg_step_fct     = PDM_writer_ensight_step_beg;
+  fmt->end_step_fct     = PDM_writer_ensight_step_end;
+  fmt->geom_create_fct  = PDM_writer_ensight_geom_create;
+  fmt->geom_write_fct   = PDM_writer_ensight_geom_write;
+  fmt->geom_free_fct    = PDM_writer_ensight_geom_free;
+  fmt->var_create_fct   = PDM_writer_ensight_var_create;
+  fmt->var_write_fct    = PDM_writer_ensight_var_write;
+  fmt->var_free_fct     = PDM_writer_ensight_var_free;
+
+  PDM_Handles_store (fmt_tab, fmt);
 }
 
 /*============================================================================
@@ -2982,8 +2922,12 @@ const char          *options
   /* Look for fmt */
 
   int fmt_id = -1;
+
+  int n_fmt_tab = PDM_Handles_n_get (fmt_tab);
+  
   for (int i = 0; i < n_fmt_tab; i++) {
-    if (!strcmp(fmt, fmt_tab[i]->name)) {
+    PDM_writer_fmt_t *fmt_ptr = (PDM_writer_fmt_t *) PDM_Handles_get (fmt_tab, i);
+    if (!strcmp(fmt, fmt_ptr->name)) {
       fmt_id = i;
       break;
     }
@@ -2999,36 +2943,18 @@ const char          *options
   PDM_io_mkdir(rep_sortie);
 
   if (cs_tab == NULL) {
-    l_cs_tab = 4;
-    cs_tab = (PDM_writer_t **) malloc(l_cs_tab * sizeof(PDM_writer_t *));
-    for (int i = 0; i < l_cs_tab; i++) 
-      cs_tab[i] = NULL;
+    cs_tab = PDM_Handles_create (4);
   } 
-
-  if (l_cs_tab <= n_cs_tab) {
-    int p_l_cs_tab = l_cs_tab;
-    l_cs_tab = 2 * l_cs_tab;
-    cs_tab = (PDM_writer_t**) realloc((void*) cs_tab, l_cs_tab * sizeof(PDM_writer_t *));
-
-    for (int i = p_l_cs_tab; i < l_cs_tab; i++) 
-      cs_tab[i] = NULL;
-  }
 
   /* Creation du r�pertoire de sortie si non cr�� */
 
   mkdir(rep_sortie, 0775); 
 
-  /* Recherche de la premiere place libre pour stocker le bloc */
-
-  int id_cs = 0;
-  while (cs_tab[id_cs] != NULL) 
-    id_cs++;
-
   /* Allocation de la structure PDM_writer_t */
 
   PDM_writer_t *cs = (PDM_writer_t *) malloc(sizeof(PDM_writer_t));
 
-  n_cs_tab += 1;
+  int id_cs = PDM_Handles_store (cs_tab, (void *) cs);
 
   /* Initialisation de la structure PDM_writer_t */
 
@@ -3067,13 +2993,13 @@ const char          *options
   cs->l_name_map = 0;
   cs->n_name_map = 0;
   cs->name_map   = NULL;
- 
-  cs_tab[id_cs] = cs;
 
   /* Appel de la fonction complementaire propre au format */
+
+  PDM_writer_fmt_t * fmt_ptr = (PDM_writer_fmt_t *) PDM_Handles_get (fmt_tab, cs->fmt_id);
   
-  if (fmt_tab[cs->fmt_id]->create_fct != NULL) {
-    (fmt_tab[cs->fmt_id]->create_fct) (cs);
+  if (fmt_ptr->create_fct != NULL) {
+    (fmt_ptr->create_fct) (cs);
   }
 
   return id_cs;
@@ -3107,12 +3033,18 @@ const int   id_cs
 
   /* Recherche de l'objet cs courant */
 
-  PDM_writer_t *cs = _PDM_writer_get(id_cs);
+  PDM_writer_t *cs = (PDM_writer_t *) PDM_Handles_get(cs_tab, id_cs);
+
+  if (cs == NULL) {
+    return;
+  }
 
   /* Appel de la fonction complementaire propre au format */
 
-  if (fmt_tab[cs->fmt_id]->free_fct != NULL) {
-    (fmt_tab[cs->fmt_id]->free_fct) (cs);
+  PDM_writer_fmt_t * fmt_ptr = (PDM_writer_fmt_t *) PDM_Handles_get (fmt_tab, cs->fmt_id);
+ 
+  if (fmt_ptr->free_fct != NULL) {
+    (fmt_ptr->free_fct) (cs);
   }
 
   /* Liberation des diff�rents �l�m�nts de la structure */
@@ -3176,18 +3108,20 @@ const int   id_cs
 
   free(cs);
 
-  cs_tab[id_cs] = NULL;
-  n_cs_tab -= 1;
+  PDM_Handles_handle_free (cs_tab, id_cs, PDM_FALSE);
+  
+  int n_cs = PDM_Handles_n_get (cs_tab);
 
-  if (n_cs_tab == 0) {
-    free(cs_tab);
-    cs_tab = NULL;
+  if (n_cs == 0) {
+    cs_tab = PDM_Handles_free (cs_tab);
+    int n_fmt_tab = PDM_Handles_n_get (fmt_tab);
+    const int *fmt_index = PDM_Handles_idx_get(fmt_tab);
     if (n_intern_fmt == n_fmt_tab) {
       for (int i = 0; i < n_fmt_tab; i++) {
-        free (fmt_tab[i]);
+        int idx = fmt_index[i];
+        PDM_Handles_handle_free (fmt_tab, idx, PDM_TRUE);
       }
-      free (fmt_tab);
-      fmt_tab = NULL;
+      fmt_tab = PDM_Handles_free (fmt_tab);
     }
   }
   
@@ -3223,13 +3157,19 @@ const double   physical_time
 {
   /* Recherche de l'objet cs courant */
 
-  PDM_writer_t *cs = _PDM_writer_get(id_cs);
+  PDM_writer_t *cs = (PDM_writer_t *) PDM_Handles_get (cs_tab, id_cs);
+  if (cs == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
+  }
+
   cs->physical_time = physical_time;
 
   /* Appel de la fonction complementaire propre au format */
   
-  if (fmt_tab[cs->fmt_id]->beg_step_fct != NULL) {
-    (fmt_tab[cs->fmt_id]->beg_step_fct) (cs);
+  PDM_writer_fmt_t * fmt_ptr = (PDM_writer_fmt_t *) PDM_Handles_get (fmt_tab, cs->fmt_id);
+
+  if (fmt_ptr->beg_step_fct != NULL) {
+    (fmt_ptr->beg_step_fct) (cs);
   }
 
 }
@@ -3259,12 +3199,17 @@ const int     id_cs
 {
   /* Recherche de l'objet cs courant */
 
-  PDM_writer_t *cs = _PDM_writer_get(id_cs);
+  PDM_writer_t *cs = (PDM_writer_t *) PDM_Handles_get (cs_tab, id_cs);
+  if (cs == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
+  }
 
   /* Appel de la fonction complementaire propre au format */
+
+  PDM_writer_fmt_t * fmt_ptr = (PDM_writer_fmt_t *) PDM_Handles_get (fmt_tab, cs->fmt_id);
   
-  if (fmt_tab[cs->fmt_id]->end_step_fct != NULL) {
-    (fmt_tab[cs->fmt_id]->end_step_fct) (cs);
+  if (fmt_ptr->end_step_fct != NULL) {
+    (fmt_ptr->end_step_fct) (cs);
   }
 
 }
@@ -3334,7 +3279,10 @@ const int               n_part
 
   /* Recherche de l'objet cs courant */
 
-  PDM_writer_t *cs = _PDM_writer_get(id_cs);
+  PDM_writer_t *cs = (PDM_writer_t *) PDM_Handles_get (cs_tab, id_cs);
+  if (cs == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
+  }
 
   /* Mise a jour du tableau de stockage */
 
@@ -3399,9 +3347,11 @@ const int               n_part
   geom->num_cell_parent_to_local = NULL;
 
   /* Appel de la fonction complementaire propre au format */
-    
-  if (fmt_tab[cs->fmt_id]->geom_create_fct != NULL) {
-    (fmt_tab[cs->fmt_id]->geom_create_fct) (geom);
+
+  PDM_writer_fmt_t * fmt_ptr = (PDM_writer_fmt_t *) PDM_Handles_get (fmt_tab, cs->fmt_id);
+
+  if (fmt_ptr->geom_create_fct != NULL) {
+    (fmt_ptr->geom_create_fct) (geom);
   }
 
   return id_geom;
@@ -3454,7 +3404,10 @@ const PDM_g_num_t *numabs
 
   /* Acces aux sommets de la partition */
 
-  PDM_writer_t *cs = _PDM_writer_get(id_cs);
+  PDM_writer_t *cs = (PDM_writer_t *) PDM_Handles_get (cs_tab, id_cs);
+  if (cs == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
+  }
 
   PDM_writer_geom_t *geom = _geom_get(cs, id_geom);
 
@@ -3540,7 +3493,10 @@ const PDM_g_num_t *numabs_parent
 
   /* Acces aux sommets de la partition */
 
-  PDM_writer_t *cs = _PDM_writer_get(id_cs);
+  PDM_writer_t *cs = (PDM_writer_t *) PDM_Handles_get (cs_tab, id_cs);
+  if (cs == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
+  }
 
   PDM_writer_geom_t *geom = _geom_get(cs, id_geom);
 
@@ -3623,7 +3579,10 @@ const PDM_writer_elt_geom_t  t_elt
 {
   /* Acces a l'objet de geometrie courant */
 
-  PDM_writer_t *cs = _PDM_writer_get(id_cs);
+  PDM_writer_t *cs = (PDM_writer_t *) PDM_Handles_get (cs_tab, id_cs);
+  if (cs == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
+  }
 
   PDM_writer_geom_t *geom = _geom_get(cs, id_geom);
 
@@ -4003,8 +3962,10 @@ const int            n_elt,
 {
   /* Acces a l'objet de geometrie courant */
 
-
-  PDM_writer_t *cs = _PDM_writer_get(id_cs);
+  PDM_writer_t *cs = (PDM_writer_t *) PDM_Handles_get (cs_tab, id_cs);
+  if (cs == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
+  }
 
   PDM_writer_geom_t *geom = _geom_get(cs, id_geom);
   
@@ -4082,8 +4043,10 @@ const PDM_l_num_t       n_elt,
 {
   /* Acces a l'objet de geometrie courant */
 
-
-  PDM_writer_t *cs = _PDM_writer_get(id_cs);
+  PDM_writer_t *cs = (PDM_writer_t *) PDM_Handles_get (cs_tab, id_cs);
+  if (cs == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
+  }
 
   PDM_writer_geom_t *geom = _geom_get(cs, id_geom);
   
@@ -4173,8 +4136,10 @@ const PDM_l_num_t   n_face,
 {
   /* Acces a l'objet de geometrie courant */
 
-
-  PDM_writer_t *cs = _PDM_writer_get(id_cs);
+  PDM_writer_t *cs = (PDM_writer_t *) PDM_Handles_get (cs_tab, id_cs);
+  if (cs == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
+  }
 
   PDM_writer_geom_t *geom = _geom_get(cs, id_geom);
   
@@ -4273,7 +4238,10 @@ PDM_g_num_t   *numabs
 {
   /* Acces a l'objet de geometrie courant */
 
-  PDM_writer_t *cs = _PDM_writer_get(id_cs);
+  PDM_writer_t *cs = (PDM_writer_t *) PDM_Handles_get (cs_tab, id_cs);
+  if (cs == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
+  }
   
   PDM_writer_geom_t *geom = _geom_get(cs, id_geom);
   int n_part = 0;
@@ -4809,7 +4777,10 @@ PDM_g_num_t   *numabs
 {
   /* Acces a l'objet de geometrie courant */
 
-  PDM_writer_t *cs = _PDM_writer_get(id_cs);
+  PDM_writer_t *cs = (PDM_writer_t *) PDM_Handles_get (cs_tab, id_cs);
+  if (cs == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
+  }
 
   PDM_writer_geom_t *geom = _geom_get(cs, id_geom);
   int n_part = 0;
@@ -5187,7 +5158,10 @@ PDM_g_num_t   *numabs
 {
   /* Acces a l'objet de geometrie courant */
 
-  PDM_writer_t *cs = _PDM_writer_get(id_cs);
+  PDM_writer_t *cs = (PDM_writer_t *) PDM_Handles_get (cs_tab, id_cs);
+  if (cs == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
+  }
 
   PDM_writer_geom_t *geom = _geom_get(cs, id_geom);
   int n_part = 0;
@@ -5469,7 +5443,10 @@ const int            id_geom
 
     /* Acces a l'objet de geometrie courant */
 
-  PDM_writer_t *cs = _PDM_writer_get(id_cs);
+  PDM_writer_t *cs = (PDM_writer_t *) PDM_Handles_get (cs_tab, id_cs);
+  if (cs == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
+  }
 
   PDM_writer_geom_t *geom = _geom_get(cs, id_geom);
 
@@ -5503,9 +5480,11 @@ const int            id_geom
   /* Ecriture au format */
 
   /* Appel de la fonction complementaire propre au format */
-    
-  if (fmt_tab[cs->fmt_id]->geom_write_fct != NULL) {
-    (fmt_tab[cs->fmt_id]->geom_write_fct) (geom);
+
+  PDM_writer_fmt_t * fmt_ptr = (PDM_writer_fmt_t *) PDM_Handles_get (fmt_tab, cs->fmt_id);
+
+  if (fmt_ptr->geom_write_fct != NULL) {
+    (fmt_ptr->geom_write_fct) (geom);
   }
 
 }
@@ -5544,7 +5523,10 @@ const int      id_geom
   PDM_writer_geom_data_free(id_cs,
                    id_geom);
 
-  PDM_writer_t *cs = _PDM_writer_get(id_cs);
+  PDM_writer_t *cs = (PDM_writer_t *) PDM_Handles_get (cs_tab, id_cs);
+  if (cs == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
+  }
   
   PDM_writer_geom_t *geom = _geom_get(cs, id_geom);
 
@@ -5617,9 +5599,11 @@ const int      id_geom
   /* Lib�ration sp�cifique au format */
 
   /* Appel de la fonction complementaire propre au format */
-    
-  if (fmt_tab[cs->fmt_id]->geom_free_fct != NULL) {
-    (fmt_tab[cs->fmt_id]->geom_free_fct) (geom);
+  
+  PDM_writer_fmt_t * fmt_ptr = (PDM_writer_fmt_t *) PDM_Handles_get (fmt_tab, cs->fmt_id);
+  
+  if (fmt_ptr->geom_free_fct != NULL) {
+    (fmt_ptr->geom_free_fct) (geom);
   }
 
   free(geom);
@@ -5665,7 +5649,10 @@ const int      id_geom
 {
   /* Acces a l'objet de geometrie courant */
 
-  PDM_writer_t *cs = _PDM_writer_get(id_cs);
+  PDM_writer_t *cs = (PDM_writer_t *) PDM_Handles_get (cs_tab, id_cs);
+  if (cs == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
+  }
 
   PDM_writer_geom_t *geom = _geom_get(cs, id_geom);
   
@@ -5740,7 +5727,10 @@ const char *private_name
 {
   /* Recherche de l'objet cs courant */
 
-  PDM_writer_t *cs = _PDM_writer_get(id_cs);
+  PDM_writer_t *cs = (PDM_writer_t *) PDM_Handles_get (cs_tab, id_cs);
+  if (cs == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
+  }
 
   /* Mise a jour du tableau de stockage */
 
@@ -5831,7 +5821,10 @@ const char        *nom_var
 {
   /* Recherche de l'objet cs courant */
 
-  PDM_writer_t *cs = _PDM_writer_get (id_cs);
+  PDM_writer_t *cs = (PDM_writer_t *) PDM_Handles_get (cs_tab, id_cs);
+  if (cs == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
+  }
 
   /* Mise a jour du tableau de stockage */
 
@@ -5887,8 +5880,10 @@ const char        *nom_var
 
   /* Appel de la fonction complementaire propre au format */
 
-  if (fmt_tab[cs->fmt_id]->var_create_fct != NULL) {
-    (fmt_tab[cs->fmt_id]->var_create_fct) (var);
+  PDM_writer_fmt_t * fmt_ptr = (PDM_writer_fmt_t *) PDM_Handles_get (fmt_tab, cs->fmt_id);
+  
+  if (fmt_ptr->var_create_fct != NULL) {
+    (fmt_ptr->var_create_fct) (var);
   }
 
   return id_var;
@@ -5928,14 +5923,19 @@ const int        id_var
 
   /* Acces a l'objet de geometrie courant */
 
-  PDM_writer_t *cs = _PDM_writer_get(id_cs);
+  PDM_writer_t *cs = (PDM_writer_t *) PDM_Handles_get (cs_tab, id_cs);
+  if (cs == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
+  }
 
   PDM_writer_var_t *var = _var_get(cs, id_var);
 
   /* Ecriture au format */
 
-  if (fmt_tab[cs->fmt_id]->var_write_fct != NULL) {
-    (fmt_tab[cs->fmt_id]->var_write_fct) (var);
+  PDM_writer_fmt_t * fmt_ptr = (PDM_writer_fmt_t *) PDM_Handles_get (fmt_tab, cs->fmt_id);
+
+  if (fmt_ptr->var_write_fct != NULL) {
+    (fmt_ptr->var_write_fct) (var);
   }
   
 }
@@ -5984,8 +5984,10 @@ const PDM_real_t *val
 
   /* Acces a l'objet de geometrie courant */
 
-
-  PDM_writer_t *cs = _PDM_writer_get(id_cs);
+  PDM_writer_t *cs = (PDM_writer_t *) PDM_Handles_get (cs_tab, id_cs);
+  if (cs == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
+  }
 
   PDM_writer_var_t *var = _var_get(cs, id_var);
 
@@ -6072,7 +6074,10 @@ const int    id_var
 {
   /* Acces a l'objet de geometrie courant */
 
-  PDM_writer_t *cs = _PDM_writer_get (id_cs);
+  PDM_writer_t *cs = (PDM_writer_t *) PDM_Handles_get (cs_tab, id_cs);
+  if (cs == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
+  }
 
   PDM_writer_var_t *var = _var_get(cs, id_var);
 
@@ -6119,7 +6124,11 @@ const int    id_cs,
 const int    id_var
 )
 {
-  PDM_writer_t *cs = _PDM_writer_get (id_cs);
+
+  PDM_writer_t *cs = (PDM_writer_t *) PDM_Handles_get (cs_tab, id_cs);
+  if (cs == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
+  }
 
   if (cs->var_tab != NULL) {
 
@@ -6142,9 +6151,10 @@ const int    id_var
 
     /* Lib�ration sp�cifique au format */
 
+    PDM_writer_fmt_t * fmt_ptr = (PDM_writer_fmt_t *) PDM_Handles_get (fmt_tab, cs->fmt_id);
 
-    if (fmt_tab[cs->fmt_id]->var_free_fct != NULL) {
-      (fmt_tab[cs->fmt_id]->var_free_fct) (var);
+    if (fmt_ptr->var_free_fct != NULL) {
+      (fmt_ptr->var_free_fct) (var);
     }
 
     free(cs->var_tab[id_var]);
@@ -6195,10 +6205,6 @@ PDM_writer_fmt_add
 )
 {
   _load_intern_fmt();
-  if (n_fmt_tab >= l_fmt_tab) {
-    l_fmt_tab *= 2;
-    fmt_tab = realloc (fmt_tab, sizeof(PDM_writer_fmt_t *) * l_fmt_tab);
-  }
 
   if (geom_write_fct == NULL) {
     PDM_error(__FILE__, __LINE__, 0, "Error PDM_writer_fmt_add : Undefined geom write function\n");
@@ -6210,21 +6216,21 @@ PDM_writer_fmt_add
     abort ();
   }
   
-  fmt_tab[n_fmt_tab] = malloc (sizeof(PDM_writer_fmt_t));
+  PDM_writer_fmt_t *fmt_ptr = malloc (sizeof(PDM_writer_fmt_t));
   
-  fmt_tab[n_fmt_tab]->name            = name;
-  fmt_tab[n_fmt_tab]->create_fct      = create_fct;
-  fmt_tab[n_fmt_tab]->free_fct        = free_fct;
-  fmt_tab[n_fmt_tab]->beg_step_fct    = beg_step_fct;
-  fmt_tab[n_fmt_tab]->end_step_fct    = end_step_fct;
-  fmt_tab[n_fmt_tab]->geom_create_fct = geom_create_fct;
-  fmt_tab[n_fmt_tab]->geom_write_fct  = geom_write_fct;
-  fmt_tab[n_fmt_tab]->geom_free_fct   = geom_free_fct;
-  fmt_tab[n_fmt_tab]->var_create_fct  = var_create_fct;
-  fmt_tab[n_fmt_tab]->var_write_fct   = var_write_fct; 
-  fmt_tab[n_fmt_tab]->var_free_fct    = var_free_fct;
-
-  n_fmt_tab += 1;
+  PDM_Handles_store  (fmt_tab, fmt_ptr);
+  
+  fmt_ptr->name            = name;
+  fmt_ptr->create_fct      = create_fct;
+  fmt_ptr->free_fct        = free_fct;
+  fmt_ptr->beg_step_fct    = beg_step_fct;
+  fmt_ptr->end_step_fct    = end_step_fct;
+  fmt_ptr->geom_create_fct = geom_create_fct;
+  fmt_ptr->geom_write_fct  = geom_write_fct;
+  fmt_ptr->geom_free_fct   = geom_free_fct;
+  fmt_ptr->var_create_fct  = var_create_fct;
+  fmt_ptr->var_write_fct   = var_write_fct; 
+  fmt_ptr->var_free_fct    = var_free_fct;
 
 }
 
@@ -6242,17 +6248,15 @@ PDM_writer_fmt_free
 {
   if (fmt_tab != NULL) {
 
-    for (int i = 0; i < l_fmt_tab; i++) {
-      if (fmt_tab != NULL) {
-        free (fmt_tab[i]);
-      }
+    const int *index =  PDM_Handles_idx_get (fmt_tab);
+    const int n_fmt = PDM_Handles_n_get (fmt_tab);
+    
+    for (int i = 0; i < n_fmt; i++) {
+      int idx = index[i];
+      PDM_Handles_handle_free (fmt_tab, idx, PDM_TRUE);
     }
 
-    l_fmt_tab = 0;
-    n_fmt_tab = 0;
-
-    free (fmt_tab);
-    fmt_tab = NULL;
+    fmt_tab = PDM_Handles_free (fmt_tab);
     
   }
 }

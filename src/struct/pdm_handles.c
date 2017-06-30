@@ -56,6 +56,8 @@ extern "C" {
 
 struct _PDM_Handles_t {
 
+  int *idx;            /*!< list of Index */
+  int *idx_inv;        /*!< Index -> indice (1 to n_handles) */ 
   const void **array;  /*!< Storage array */
   int s_array;   /*!< Size of array */
   int n_handles; /*!< Number of stored handles */
@@ -95,6 +97,14 @@ PDM_Handles_create
   new->s_array = init_size;
   new->n_handles = 0;
   new->array = malloc(sizeof(void*) * init_size);
+  new->idx = malloc(sizeof(int) * init_size);
+  new->idx_inv = malloc(sizeof(int) * init_size);
+
+  for (int i = 0; i < new->s_array; i++) {
+    new->array[i] = NULL;
+    new->idx[i] = -1;
+    new->idx_inv[i] = -1;
+  }
   
   return new;
 }
@@ -115,6 +125,7 @@ PDM_Handles_free
 )
 {
   free (handles->array);
+  free (handles->idx);
   free (handles);
   return NULL;
 }
@@ -138,10 +149,14 @@ PDM_Handles_store
   if (handles->n_handles >= handles->s_array) {
     int p_s_array = handles->s_array;
     handles->s_array *= 2;
-    handles->array = realloc(handles->array, sizeof(void*) * handles->s_array);
+    handles->array   = realloc(handles->array, sizeof(void*) * handles->s_array);
+    handles->idx     = realloc(handles->idx, sizeof(int) * handles->s_array);
+    handles->idx_inv = realloc(handles->idx_inv, sizeof(int) * handles->s_array);
 
     for (int i = p_s_array; i < handles->s_array; i++) {
       handles->array[i] = NULL;
+      handles->idx[i] = -1;
+      handles->idx_inv[i] = -1;
     }
   }
 
@@ -150,6 +165,10 @@ PDM_Handles_store
     idx++;
 
   handles->array[idx] = handle_ptr;
+  handles->idx[handles->n_handles] = idx;
+  handles->idx_inv[idx] = handles->n_handles;
+
+  handles->n_handles += 1;
 
   return idx;
 }
@@ -180,10 +199,29 @@ PDM_Handles_get
 
 
 /**
- * \brief Free a handle
+ * \brief Get handles index
  *
  * \param [in] handles  Current handles storage
+ *
+ * \return  Handles index
+ */
+
+const int *
+PDM_Handles_idx_get 
+(
+ PDM_Handles_t *handles
+ )
+{
+  return handles->idx;
+}
+
+
+/**
+ * \brief Free a handle
+ *
+ * \param [in] handles      Current handles storage
  * \param [in] handle_idx   Handle index
+ * \param [in] st_free_data Free data or not
  *
  * \return  Handle pointer
  */
@@ -192,15 +230,32 @@ void
 PDM_Handles_handle_free 
 (
  PDM_Handles_t *handles,
-  const int handle_idx
+ const int handle_idx,
+ const PDM_bool_t st_free_data
 )
 {
   if (handle_idx >= handles->s_array) {
     PDM_error (__FILE__, __LINE__, 0, "PDM_Handle : Bad identifier\n");
   }
 
+  if (st_free_data) {
+    if (handles->array[handle_idx] != NULL) {
+      free ((void *) handles->array[handle_idx]);
+    }
+  }
+  
   handles->array[handle_idx] = NULL;
+
+  int ind = handles->idx_inv[handle_idx];
+
+  for (int i = ind + 1; i < handles->n_handles; i++) {
+    handles->idx[i-1] = handles->idx[i];
+  }
+  
+  handles->idx[handle_idx] = -1;
+  
   handles->n_handles += -1;
+
 }
 
 

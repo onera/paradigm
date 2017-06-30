@@ -126,10 +126,26 @@ PDM_Handles_get
 
 
 /**
- * \brief Free a handle
+ * \brief Get handles index
  *
  * \param [in] handles  Current handles storage
+ *
+ * \return  Handles index
+ */
+
+const int *
+PDM_Handles_idx_get 
+(
+ PDM_Handles_t *handles
+ );
+
+
+/**
+ * \brief Free a handle
+ *
+ * \param [in] handles      Current handles storage
  * \param [in] handle_idx   Handle index
+ * \param [in] st_free_data Free data or not
  *
  * \return  Handle pointer
  */
@@ -138,8 +154,9 @@ void
 PDM_Handles_handle_free 
 (
  PDM_Handles_t *handles,
-  const int handle_idx
-);
+ const int handle_idx,
+ const PDM_bool_t st_free_data
+ );
 
 
 /**
