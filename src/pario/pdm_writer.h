@@ -431,7 +431,7 @@ const PDM_g_num_t *numabs_parent
  *   t_elt           <-- Type d'element
  *
  * return :
- *                   --> Identificateur du bloc
+ *   id_bloc         --> Identificateur du bloc
  *
  *----------------------------------------------------------------------------*/
 
@@ -445,7 +445,7 @@ int   *t_elt,
 int   *id_bloc  
 ); 
 
-int 
+int
 PDM_writer_geom_bloc_add 
 (
 const int            id_cs,

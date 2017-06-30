@@ -2,8 +2,7 @@
 #define __PDM_GNUM_H__
 
 /*
-  This file is part of the ParaDiGM library, intended to provide
-  finite volume mesh and associated fields I/O and manipulation services.
+  This file is part of the ParaDiGM library.
 
   Copyright (C) 2017       ONERA
 
@@ -50,9 +49,10 @@ extern "C" {
  * Structure defining an I/O numbering scheme
  *----------------------------------------------------------------------------*/
 
-/*
-  Pointer to an I/O numbering scheme structure. The structure
-  itself is private, and is defined in pdm_gnum.c
+/**
+  \brief Pointer to an I/O numbering scheme structure. 
+
+  The structure itself is private, and is defined in pdm_gnum.c
 */
 
 typedef struct _pdm_gnum_t pdm_gnum_t;
