@@ -45,10 +45,10 @@ extern "C" {
 
 typedef enum {
 
-  PDM_writer_GEOM_CONNEC_BLOCS,    
-  PDM_writer_GEOM_CONNEC_3D_DESCENDANTE,
-  PDM_writer_GEOM_CONNEC_2D_DESCENDANTE,
-  PDM_writer_GEOM_CONNEC_2D_NODALE,
+  PDM_WRITER_GEOM_CONNEC_BLOCS,    
+  PDM_WRITER_GEOM_CONNEC_3D_DESCENDANTE,
+  PDM_WRITER_GEOM_CONNEC_2D_DESCENDANTE,
+  PDM_WRITER_GEOM_CONNEC_2D_NODALE,
 
 } PDM_writer_geom_connec_t;
 
@@ -58,8 +58,8 @@ typedef enum {
 
 typedef enum {
 
-  PDM_writer_OFF,    
-  PDM_writer_ON
+  PDM_WRITER_OFF,    
+  PDM_WRITER_ON
 
 } PDM_writer_statut_t;
 
@@ -69,9 +69,9 @@ typedef enum {
 
 typedef enum {
 
-  PDM_writer_TOPO_CONSTANTE ,     
-  PDM_writer_TOPO_DEFORMABLE,     
-  PDM_writer_TOPO_VARIABLE     
+  PDM_WRITER_TOPO_CONSTANTE ,     
+  PDM_WRITER_TOPO_DEFORMABLE,     
+  PDM_WRITER_TOPO_VARIABLE     
 
 } PDM_writer_topologie_t;
 
@@ -81,16 +81,16 @@ typedef enum {
 
 typedef enum {
 
-  PDM_writer_POINT,     
-  PDM_writer_BAR2,     
-  PDM_writer_TRIA3,     
-  PDM_writer_QUAD4,     
-  PDM_writer_POLY_2D,     
-  PDM_writer_TETRA4,     
-  PDM_writer_PYRAMID5,     
-  PDM_writer_PRISM6,     
-  PDM_writer_HEXA8,     
-  PDM_writer_POLY_3D     
+  PDM_WRITER_POINT,     
+  PDM_WRITER_BAR2,     
+  PDM_WRITER_TRIA3,     
+  PDM_WRITER_QUAD4,     
+  PDM_WRITER_POLY_2D,     
+  PDM_WRITER_TETRA4,     
+  PDM_WRITER_PYRAMID5,     
+  PDM_WRITER_PRISM6,     
+  PDM_WRITER_HEXA8,     
+  PDM_WRITER_POLY_3D     
 
 } PDM_writer_elt_geom_t;
 

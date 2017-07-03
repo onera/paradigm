@@ -55,9 +55,9 @@ extern "C" {
 
 typedef enum {
 
-  PDM_writer_DEB_ID_BLOC_STD    = 0,    
-  PDM_writer_DEB_ID_BLOC_POLY2D = 1000000,
-  PDM_writer_DEB_ID_BLOC_POLY3D = 2000000
+  PDM_WRITER_DEB_ID_BLOC_STD    = 0,    
+  PDM_WRITER_DEB_ID_BLOC_POLY2D = 1000000,
+  PDM_WRITER_DEB_ID_BLOC_POLY3D = 2000000
 
 } PDM_writer_deb_id_bloc_t;
 
@@ -362,7 +362,7 @@ _bloc_poly2d_get
 {
   PDM_writer_bloc_poly2d_t *bloc = NULL;
 
-  int _id_bloc = id_bloc - PDM_writer_DEB_ID_BLOC_POLY2D;
+  int _id_bloc = id_bloc - PDM_WRITER_DEB_ID_BLOC_POLY2D;
 
   if (_id_bloc >= geom->l_blocs_poly2d) {
     PDM_error(__FILE__, __LINE__, 0, "Erreur _bloc_poly2d_get : Identificateur de bloc standard trop grand\n");
@@ -401,7 +401,7 @@ _bloc_poly3d_get
 {
   PDM_writer_bloc_poly3d_t *bloc = NULL;
 
-  int _id_bloc = id_bloc - PDM_writer_DEB_ID_BLOC_POLY3D;
+  int _id_bloc = id_bloc - PDM_WRITER_DEB_ID_BLOC_POLY3D;
 
   if (_id_bloc >= geom->l_blocs_poly3d) {
     PDM_error(__FILE__, __LINE__, 0, "Erreur _bloc_poly3d_get : Identificateur de bloc standard trop grand\n");
@@ -435,8 +435,8 @@ PDM_writer_geom_t *geom
 {
   geom->nom_geom= NULL;
 
-  geom->st_decoup_poly2d = PDM_writer_OFF;
-  geom->st_decoup_poly3d = PDM_writer_OFF;
+  geom->st_decoup_poly2d = PDM_WRITER_OFF;
+  geom->st_decoup_poly3d = PDM_WRITER_OFF;
 
   geom->n_som_abs = 0;          /* Nombre absolu de sommets */
   geom->n_som_abs_total = 0;    /* Nombre absolu de sommets 
@@ -478,7 +478,7 @@ PDM_writer_var_t *var
 )
 {
    var->nom_var    = NULL;          /* Nom de la geometrie */
-  var->st_dep_tps = PDM_writer_OFF;        /* Variable en temps */
+  var->st_dep_tps = PDM_WRITER_OFF;        /* Variable en temps */
   var->dim        = PDM_WRITER_VAR_CSTE;   /* Dimension de la variable */
   var->loc        = PDM_WRITER_VAR_SOMMETS;/* Dimension de la variable */
   var->_val       = NULL;          /* Valeurs de la variable */          
@@ -937,7 +937,7 @@ PDM_writer_geom_t *geom
 
   for (int i = 0; i < geom->n_blocs_poly2d; i++) {
     PDM_writer_bloc_poly2d_t *_bloc_poly2d = geom->blocs_poly2d[i];
-    if (_bloc_poly2d->st_decoup_poly2d == PDM_writer_OFF) {
+    if (_bloc_poly2d->st_decoup_poly2d == PDM_WRITER_OFF) {
       _calcul_numabs_bloc(geom->pdm_mpi_comm,
                           n_procs,
                           i_proc,
@@ -963,7 +963,7 @@ PDM_writer_geom_t *geom
 
   for (int i = 0; i < geom->n_blocs_poly3d; i++) {
     PDM_writer_bloc_poly3d_t *_bloc_poly3d = geom->blocs_poly3d[i];
-    if (_bloc_poly3d->st_decoup_poly3d == PDM_writer_OFF) {
+    if (_bloc_poly3d->st_decoup_poly3d == PDM_WRITER_OFF) {
       _calcul_numabs_bloc(geom->pdm_mpi_comm,
                           n_procs,
                           i_proc,
@@ -1376,7 +1376,7 @@ PDM_writer_geom_t *geom
   for (int i = 0; i < geom->n_blocs_poly2d; i++) {
     PDM_writer_bloc_poly2d_t *_bloc_poly2d = geom->blocs_poly2d[i];
     
-    if (_bloc_poly2d->st_decoup_poly2d == PDM_writer_ON) {
+    if (_bloc_poly2d->st_decoup_poly2d == PDM_WRITER_ON) {
       
       /* Allocation des structures des sommets supplementaires */
       
@@ -1404,7 +1404,7 @@ PDM_writer_geom_t *geom
       }
       PDM_writer_bloc_std_t  *_bloc_tri = _bloc_poly2d->bloc_tri;
       
-      _bloc_tri->t_elt   = PDM_writer_TRIA3;
+      _bloc_tri->t_elt   = PDM_WRITER_TRIA3;
       _bloc_tri->n_part  = _bloc_poly2d->n_part;
       _bloc_tri->n_elt   = (PDM_l_num_t *) malloc(sizeof(PDM_l_num_t) * _bloc_tri->n_part);
       _bloc_tri->_connec = NULL; /* pas de mapping memoire on met a nul */
@@ -1429,7 +1429,7 @@ PDM_writer_geom_t *geom
       }
       PDM_writer_bloc_std_t  *_bloc_quad = _bloc_poly2d->bloc_quad;
       
-      _bloc_quad->t_elt   = PDM_writer_TRIA3;
+      _bloc_quad->t_elt   = PDM_WRITER_TRIA3;
       _bloc_quad->n_part  = _bloc_poly2d->n_part;
       _bloc_quad->n_elt   = (PDM_l_num_t *) malloc(sizeof(PDM_l_num_t) * _bloc_quad->n_part);
       _bloc_quad->_connec = NULL; /* pas de mapping memoire on met a nul */
@@ -1575,7 +1575,7 @@ PDM_writer_geom_t *geom
   for (int i = 0; i < geom->n_blocs_poly3d; i++) {
     PDM_writer_bloc_poly3d_t *_bloc_poly3d = geom->blocs_poly3d[i];
     
-    if (_bloc_poly3d->st_decoup_poly3d == PDM_writer_ON) {
+    if (_bloc_poly3d->st_decoup_poly3d == PDM_WRITER_ON) {
        
       /* Allocation des structures des sommets supplementaires */
       
@@ -1603,7 +1603,7 @@ PDM_writer_geom_t *geom
       }
       PDM_writer_bloc_std_t  *_bloc_tetra = _bloc_poly3d->bloc_tetra;
 
-      _bloc_tetra->t_elt   = PDM_writer_TETRA4;
+      _bloc_tetra->t_elt   = PDM_WRITER_TETRA4;
       _bloc_tetra->n_part  = _bloc_poly3d->n_part;
       _bloc_tetra->n_elt   = (PDM_l_num_t *) malloc(sizeof(PDM_l_num_t) * _bloc_tetra->n_part);
       _bloc_tetra->_connec = NULL; /* pas de mapping memoire on met a nul */
@@ -1627,7 +1627,7 @@ PDM_writer_geom_t *geom
       }
       PDM_writer_bloc_std_t  *_bloc_pyra = _bloc_poly3d->bloc_pyra;
 
-      _bloc_pyra->t_elt   = PDM_writer_PYRAMID5;
+      _bloc_pyra->t_elt   = PDM_WRITER_PYRAMID5;
       _bloc_pyra->n_part  = _bloc_poly3d->n_part;
       _bloc_pyra->n_elt   = (PDM_l_num_t *) malloc(sizeof(PDM_l_num_t) * _bloc_pyra->n_part);
       _bloc_pyra->_connec = NULL; /* pas de mapping memoire on met a nul */
@@ -2139,7 +2139,7 @@ PDM_writer_bloc_std_t *_bloc_std
 )
 {
   if (_bloc_std->_connec != NULL) {
-    if (_bloc_std->st_free_data == PDM_writer_ON) {
+    if (_bloc_std->st_free_data == PDM_WRITER_ON) {
       for (int i = 0; i < _bloc_std->n_part; i++) {
         if (_bloc_std->_connec[i] != NULL)
           free(_bloc_std->_connec[i]);
@@ -2151,7 +2151,7 @@ PDM_writer_bloc_std_t *_bloc_std
   }
   
   if (_bloc_std->_numabs != NULL) {
-    if (_bloc_std->st_free_data == PDM_writer_ON) {
+    if (_bloc_std->st_free_data == PDM_WRITER_ON) {
       for (int i = 0; i < _bloc_std->n_part; i++) {
         if (_bloc_std->_numabs[i] != NULL)
           free(_bloc_std->_numabs[i]);
@@ -2163,7 +2163,7 @@ PDM_writer_bloc_std_t *_bloc_std
   }
   
   if (_bloc_std->_num_part != NULL) {
-    if (_bloc_std->st_free_data == PDM_writer_ON) {
+    if (_bloc_std->st_free_data == PDM_WRITER_ON) {
       for (int i = 0; i < _bloc_std->n_part; i++) {
         if (_bloc_std->_num_part[i] != NULL)
           free(_bloc_std->_num_part[i]);
@@ -2298,7 +2298,7 @@ PDM_writer_bloc_poly2d_t *_bloc_poly2d
 {
 
   if (_bloc_poly2d->_connec_idx != NULL) {
-    if (_bloc_poly2d->st_free_data == PDM_writer_ON) {
+    if (_bloc_poly2d->st_free_data == PDM_WRITER_ON) {
       for (int i = 0; i < _bloc_poly2d->n_part; i++) {
         if (_bloc_poly2d->_connec_idx[i] != NULL)
           free(_bloc_poly2d->_connec_idx[i]);
@@ -2310,7 +2310,7 @@ PDM_writer_bloc_poly2d_t *_bloc_poly2d
   }
 
   if (_bloc_poly2d->_connec != NULL) {
-    if (_bloc_poly2d->st_free_data == PDM_writer_ON) {
+    if (_bloc_poly2d->st_free_data == PDM_WRITER_ON) {
       for (int i = 0; i < _bloc_poly2d->n_part; i++) {
         if (_bloc_poly2d->_connec[i] != NULL)
           free(_bloc_poly2d->_connec[i]);
@@ -2322,7 +2322,7 @@ PDM_writer_bloc_poly2d_t *_bloc_poly2d
   }
   
   if (_bloc_poly2d->_num_part != NULL) {
-    if (_bloc_poly2d->st_free_data == PDM_writer_ON) {
+    if (_bloc_poly2d->st_free_data == PDM_WRITER_ON) {
       for (int i = 0; i < _bloc_poly2d->n_part; i++) {
         if (_bloc_poly2d->_num_part[i] != NULL)
           free(_bloc_poly2d->_num_part[i]);
@@ -2334,7 +2334,7 @@ PDM_writer_bloc_poly2d_t *_bloc_poly2d
   }
   
   if (_bloc_poly2d->_numabs != NULL) {
-    if (_bloc_poly2d->st_free_data == PDM_writer_ON) {
+    if (_bloc_poly2d->st_free_data == PDM_WRITER_ON) {
       for (int i = 0; i < _bloc_poly2d->n_part; i++) {
         if (_bloc_poly2d->_numabs[i] != NULL)
           free(_bloc_poly2d->_numabs[i]);
@@ -2446,7 +2446,7 @@ PDM_writer_bloc_poly3d_t *_bloc_poly3d
 {
   
   if (_bloc_poly3d->_facsom_idx != NULL) {
-    if (_bloc_poly3d->st_free_data == PDM_writer_ON) {
+    if (_bloc_poly3d->st_free_data == PDM_WRITER_ON) {
       for (int i = 0; i < _bloc_poly3d->n_part; i++) {
         if (_bloc_poly3d->_facsom_idx[i] != NULL)
           free(_bloc_poly3d->_facsom_idx[i]);
@@ -2458,7 +2458,7 @@ PDM_writer_bloc_poly3d_t *_bloc_poly3d
   }
   
   if (_bloc_poly3d->_facsom != NULL) {
-    if (_bloc_poly3d->st_free_data == PDM_writer_ON) {
+    if (_bloc_poly3d->st_free_data == PDM_WRITER_ON) {
       for (int i = 0; i < _bloc_poly3d->n_part; i++) {
         if (_bloc_poly3d->_facsom[i] != NULL)
           free(_bloc_poly3d->_facsom[i]);
@@ -2470,7 +2470,7 @@ PDM_writer_bloc_poly3d_t *_bloc_poly3d
   }
   
   if (_bloc_poly3d->_cellfac_idx != NULL) {
-    if (_bloc_poly3d->st_free_data == PDM_writer_ON) {
+    if (_bloc_poly3d->st_free_data == PDM_WRITER_ON) {
       for (int i = 0; i < _bloc_poly3d->n_part; i++) {
         if (_bloc_poly3d->_cellfac_idx[i] != NULL)
           free(_bloc_poly3d->_cellfac_idx[i]);
@@ -2482,7 +2482,7 @@ PDM_writer_bloc_poly3d_t *_bloc_poly3d
   }
   
   if (_bloc_poly3d->_cellfac != NULL) {
-    if (_bloc_poly3d->st_free_data == PDM_writer_ON) {
+    if (_bloc_poly3d->st_free_data == PDM_WRITER_ON) {
       for (int i = 0; i < _bloc_poly3d->n_part; i++) {
         if (_bloc_poly3d->_cellfac[i] != NULL)
           free(_bloc_poly3d->_cellfac[i]);
@@ -2494,7 +2494,7 @@ PDM_writer_bloc_poly3d_t *_bloc_poly3d
   }
   
   /* if (_bloc_poly3d->_num_part != NULL) { */
-  /*   if (_bloc_poly3d->st_free_data == PDM_writer_ON) { */
+  /*   if (_bloc_poly3d->st_free_data == PDM_WRITER_ON) { */
   /*     for (int i = 0; i < _bloc_poly3d->n_part; i++) { */
   /*       if (_bloc_poly3d->_num_part[i] != NULL) */
   /*         free(_bloc_poly3d->_num_part[i]); */
@@ -2506,7 +2506,7 @@ PDM_writer_bloc_poly3d_t *_bloc_poly3d
   /* } */
   
   if (_bloc_poly3d->_numabs != NULL) {
-    if (_bloc_poly3d->st_free_data == PDM_writer_ON) {
+    if (_bloc_poly3d->st_free_data == PDM_WRITER_ON) {
       for (int i = 0; i < _bloc_poly3d->n_part; i++) {
         if (_bloc_poly3d->_numabs[i] != NULL)
           free(_bloc_poly3d->_numabs[i]);
@@ -2633,7 +2633,7 @@ _type_cell_3D
   PDM_l_num_t  n_quads = 0;
 
   if (n_face_cell > 6) {
-    return PDM_writer_POLY_3D;
+    return PDM_WRITER_POLY_3D;
   }
 
   for (int i = 0; i < n_face_cell; i++) {
@@ -2657,18 +2657,18 @@ _type_cell_3D
       n_quads += 1;
     }
     else 
-      return PDM_writer_POLY_3D;
+      return PDM_WRITER_POLY_3D;
 
   }
       
   PDM_writer_elt_geom_t cell_type;
 
   if ((n_quads == 0) && (n_trias == 4))
-    cell_type = PDM_writer_TETRA4;
+    cell_type = PDM_WRITER_TETRA4;
   else if (n_quads == 6)
-    cell_type = PDM_writer_HEXA8;
+    cell_type = PDM_WRITER_HEXA8;
   else if ((n_quads == 1) && (n_trias == 4))
-    cell_type = PDM_writer_PYRAMID5;
+    cell_type = PDM_WRITER_PYRAMID5;
   else if ((n_quads == 3) && (n_trias == 2)) {
     int trias[6];
     n_trias = 0;
@@ -2688,21 +2688,21 @@ _type_cell_3D
         break;
     }
 
-    cell_type = PDM_writer_PRISM6;
+    cell_type = PDM_WRITER_PRISM6;
     for (int i = 0; i < 3; i++) {
       for (int j = 0; j < 3; j++) {
         if (trias[i] == trias[3+j]) {
-          cell_type = PDM_writer_POLY_3D;
+          cell_type = PDM_WRITER_POLY_3D;
           break;
         }
       }
-      if (cell_type == PDM_writer_POLY_3D)
+      if (cell_type == PDM_WRITER_POLY_3D)
         break;
     }
   }
 
   else {
-    cell_type = PDM_writer_POLY_3D;
+    cell_type = PDM_WRITER_POLY_3D;
   }
 
   return cell_type;
@@ -3592,14 +3592,14 @@ const PDM_writer_elt_geom_t  t_elt
 
   switch (t_elt) {
 
-  case PDM_writer_POINT    :    
-  case PDM_writer_BAR2     :   
-  case PDM_writer_TRIA3    :    
-  case PDM_writer_QUAD4    :    
-  case PDM_writer_TETRA4   :     
-  case PDM_writer_PYRAMID5 :     
-  case PDM_writer_PRISM6   :     
-  case PDM_writer_HEXA8    : 
+  case PDM_WRITER_POINT    :    
+  case PDM_WRITER_BAR2     :   
+  case PDM_WRITER_TRIA3    :    
+  case PDM_WRITER_QUAD4    :    
+  case PDM_WRITER_TETRA4   :     
+  case PDM_WRITER_PYRAMID5 :     
+  case PDM_WRITER_PRISM6   :     
+  case PDM_WRITER_HEXA8    : 
     {
       /* Mise a jour du tableau de stockage */
 
@@ -3653,17 +3653,17 @@ const PDM_writer_elt_geom_t  t_elt
         bloc_std->numabs_int[i]= NULL;
       }
       
-      id_bloc += PDM_writer_DEB_ID_BLOC_STD;
-      if (id_bloc >= PDM_writer_DEB_ID_BLOC_POLY2D) {
-        PDM_error(__FILE__, __LINE__, 0, "Erreur PDM_writer_geom_bloc_add : Le nombre de blocs d'elements standard doit etre inferieur a %d\n", 
-               PDM_writer_DEB_ID_BLOC_POLY2D);
+      id_bloc += PDM_WRITER_DEB_ID_BLOC_STD;
+      if (id_bloc >= PDM_WRITER_DEB_ID_BLOC_POLY2D) {
+        PDM_error(__FILE__, __LINE__, 0, "Erreur PDM_WRITER_geom_bloc_add : Le nombre de blocs d'elements standard doit etre inferieur a %d\n", 
+               PDM_WRITER_DEB_ID_BLOC_POLY2D);
         abort();
       }
     }
     
     break;
 
-  case PDM_writer_POLY_2D  :    
+  case PDM_WRITER_POLY_2D  :    
     {
       /* Mise a jour du tableau de stockage */
 
@@ -3720,7 +3720,7 @@ const PDM_writer_elt_geom_t  t_elt
         bloc_poly2d->numabs_int[i] = NULL;
       }
 
-      if (bloc_poly2d->st_decoup_poly2d == PDM_writer_ON) {
+      if (bloc_poly2d->st_decoup_poly2d == PDM_WRITER_ON) {
         bloc_poly2d->tri_idx  = (PDM_l_num_t **) malloc(sizeof(PDM_l_num_t *) * bloc_poly2d->n_part);
         bloc_poly2d->bloc_tri = NULL;
         bloc_poly2d->quad_idx  = (PDM_l_num_t **) malloc(sizeof(PDM_l_num_t *) * bloc_poly2d->n_part);
@@ -3739,18 +3739,18 @@ const PDM_writer_elt_geom_t  t_elt
         bloc_poly2d->som_sup   = NULL;
       }
 
-      id_bloc += PDM_writer_DEB_ID_BLOC_POLY2D;
-      if (id_bloc >= PDM_writer_DEB_ID_BLOC_POLY3D) {
+      id_bloc += PDM_WRITER_DEB_ID_BLOC_POLY2D;
+      if (id_bloc >= PDM_WRITER_DEB_ID_BLOC_POLY3D) {
         PDM_error(__FILE__, __LINE__, 0, "Erreur PDM_writer_geom_bloc_add :"
                " Le nombre de blocs d'elements poly2d doit etre inferieur a %d\n",
-               PDM_writer_DEB_ID_BLOC_POLY3D - PDM_writer_DEB_ID_BLOC_POLY2D);
+               PDM_WRITER_DEB_ID_BLOC_POLY3D - PDM_WRITER_DEB_ID_BLOC_POLY2D);
         abort();
       }
     }
 
     break;
 
-  case PDM_writer_POLY_3D  :     
+  case PDM_WRITER_POLY_3D  :     
     {
       /* Mise a jour du tableau de stockage */
 
@@ -3811,7 +3811,7 @@ const PDM_writer_elt_geom_t  t_elt
         bloc_poly3d->numabs_int[i]   = NULL;
       }
 
-      if (bloc_poly3d->st_decoup_poly3d == PDM_writer_ON) {
+      if (bloc_poly3d->st_decoup_poly3d == PDM_WRITER_ON) {
         bloc_poly3d->tetra_idx  = (PDM_l_num_t **) malloc(sizeof(PDM_l_num_t *) * bloc_poly3d->n_part);
         bloc_poly3d->bloc_tetra = NULL;
         bloc_poly3d->pyra_idx  = (PDM_l_num_t **) malloc(sizeof(PDM_l_num_t *) * bloc_poly3d->n_part);
@@ -3829,7 +3829,7 @@ const PDM_writer_elt_geom_t  t_elt
         bloc_poly3d->bloc_pyra = NULL;
         bloc_poly3d->som_sup    = NULL;
       }
-      id_bloc += PDM_writer_DEB_ID_BLOC_POLY3D;
+      id_bloc += PDM_WRITER_DEB_ID_BLOC_POLY3D;
     }
 
     break;
@@ -3848,15 +3848,15 @@ const PDM_writer_elt_geom_t  t_elt
 /*----------------------------------------------------------------------------
  * Definition d'un bloc standard d'elements 
  *
- *  - PDM_writer_POINT :
+ *  - PDM_WRITER_POINT :
  *
  *   1 x            
  *
- *  - PDM_writer_BAR2 :
+ *  - PDM_WRITER_BAR2 :
  *
  *   1 x-------x 2
  *
- *  - PDM_writer_TRIA3 :   
+ *  - PDM_WRITER_TRIA3 :   
  *
  *   1 x-------x 3
  *      \     /
@@ -3864,14 +3864,14 @@ const PDM_writer_elt_geom_t  t_elt
  *        \ /
  *         x 2
  *
- *  - PDM_writer_QUAD4 :          
+ *  - PDM_WRITER_QUAD4 :          
  *
  *      4 x-------x 3
  *       /       /
  *      /       /
  *   1 x-------x2
  *
- *   - PDM_writer_TETRA4 :    
+ *   - PDM_WRITER_TETRA4 :    
  *
  *         x 4
  *        /|\
@@ -3883,7 +3883,7 @@ const PDM_writer_elt_geom_t  t_elt
  *        \|/
  *         x 2
  *
- *   - PDM_writer_PYRAMID5 :
+ *   - PDM_WRITER_PYRAMID5 :
  *
  *          5 x
  *           /|\
@@ -3894,7 +3894,7 @@ const PDM_writer_elt_geom_t  t_elt
  *      //    | /
  *   1 x-------x 2
  *
- *  - PDM_writer_PRSIM6 :
+ *  - PDM_WRITER_PRSIM6 :
  *
  *   4 x-------x 6
  *     |\     /|
@@ -3905,7 +3905,7 @@ const PDM_writer_elt_geom_t  t_elt
  *        \|/
  *         x 2
  *
- *  - PDM_writer_HEXA8 :   
+ *  - PDM_WRITER_HEXA8 :   
  *
  *      8 x-------x 7
  *       /|      /|
@@ -4313,19 +4313,19 @@ PDM_g_num_t   *numabs
                                                     cell_som_tria,
                                                     cell_som_quad);
     switch(cell_type) {
-    case PDM_writer_TETRA4 :
+    case PDM_WRITER_TETRA4 :
       n_tetra += 1;
       break;
-    case PDM_writer_PYRAMID5 :
+    case PDM_WRITER_PYRAMID5 :
       n_pyramid += 1;
       break;
-    case PDM_writer_PRISM6 :
+    case PDM_WRITER_PRISM6 :
       n_prism += 1;
       break;
-    case PDM_writer_HEXA8 :
+    case PDM_WRITER_HEXA8 :
       n_hexa += 1;
       break;
-    case PDM_writer_POLY_3D :
+    case PDM_WRITER_POLY_3D :
       n_poly3d += 1;
       break;
     default :
@@ -4385,32 +4385,32 @@ PDM_g_num_t   *numabs
     if (som_elts[0] > 0)
       id_bloc_tetra4 = PDM_writer_geom_bloc_add(id_cs,
                                         id_geom,
-                                        PDM_writer_ON,
-                                        PDM_writer_TETRA4);
+                                        PDM_WRITER_ON,
+                                        PDM_WRITER_TETRA4);
 
     if (som_elts[1] > 0)
       id_bloc_hexa8 = PDM_writer_geom_bloc_add(id_cs,
                                        id_geom,
-                                       PDM_writer_ON,
-                                       PDM_writer_HEXA8);
+                                       PDM_WRITER_ON,
+                                       PDM_WRITER_HEXA8);
     
     if (som_elts[2] > 0)
       id_bloc_prism6 = PDM_writer_geom_bloc_add(id_cs,
                                         id_geom,
-                                        PDM_writer_ON,
-                                        PDM_writer_PRISM6);
+                                        PDM_WRITER_ON,
+                                        PDM_WRITER_PRISM6);
 
     if (som_elts[3] > 0)
       id_bloc_pyramid5 = PDM_writer_geom_bloc_add(id_cs,
                                           id_geom,
-                                          PDM_writer_ON,
-                                          PDM_writer_PYRAMID5);
+                                          PDM_WRITER_ON,
+                                          PDM_WRITER_PYRAMID5);
 
     if (som_elts[4] > 0)
       id_bloc_poly_3d = PDM_writer_geom_bloc_add(id_cs,
                                          id_geom,
-                                         PDM_writer_ON,
-                                         PDM_writer_POLY_3D);
+                                         PDM_WRITER_ON,
+                                         PDM_WRITER_POLY_3D);
                                                    
     /* Determination de la connectivite de chaque element */
     
@@ -4516,7 +4516,7 @@ PDM_g_num_t   *numabs
                                                 cell_som_quad);
         
         switch(cell_type) {
-        case PDM_writer_TETRA4 :
+        case PDM_WRITER_TETRA4 :
           _connec_tetra(geom->som[ipart],
                         cell_som_tria,
                         connec_tetra_courant);
@@ -4525,7 +4525,7 @@ PDM_g_num_t   *numabs
           connec_tetra_courant += 4;
           num_cell_parent_to_local_courant[i] = idx_tetra++;
           break;
-        case PDM_writer_HEXA8 :
+        case PDM_WRITER_HEXA8 :
           _connec_hexa(geom->som[ipart],
                        cell_som_quad,
                        connec_hexa_courant);
@@ -4534,7 +4534,7 @@ PDM_g_num_t   *numabs
           connec_hexa_courant += 8;
           num_cell_parent_to_local_courant[i] = idx_hexa++;
           break;
-        case PDM_writer_PRISM6 :
+        case PDM_WRITER_PRISM6 :
           _connec_prism(geom->som[ipart],
                         cell_som_tria,
                         cell_som_quad,
@@ -4544,7 +4544,7 @@ PDM_g_num_t   *numabs
           connec_prism_courant += 6;
           num_cell_parent_to_local_courant[i] = idx_prism++;
           break;
-        case PDM_writer_PYRAMID5 :
+        case PDM_WRITER_PYRAMID5 :
           _connec_pyramid(geom->som[ipart],
                           cell_som_tria,
                           cell_som_quad,
@@ -4554,7 +4554,7 @@ PDM_g_num_t   *numabs
           connec_pyramid_courant += 5;
           num_cell_parent_to_local_courant[i] = idx_pyramid++;
           break;
-        case PDM_writer_POLY_3D : 
+        case PDM_WRITER_POLY_3D : 
           {
             PDM_l_num_t *cell_face_cell = cell_face_courant + cell_face_idx_courant[i] - 1;
             for (int j = 0; j < cell_face_nb_courant[i]; j++) {
@@ -4619,7 +4619,7 @@ PDM_g_num_t   *numabs
         
           switch(cell_type) {
             
-          case PDM_writer_POLY_3D : 
+          case PDM_WRITER_POLY_3D : 
             {
               PDM_l_num_t *cell_face_cell = cell_face_courant + cell_face_idx_courant[i] - 1;
               for (int j = 0; j < cell_face_nb_courant[i]; j++) {
@@ -4891,20 +4891,20 @@ PDM_g_num_t   *numabs
     if (som_elts[0] > 0)
       id_bloc_tria3 = PDM_writer_geom_bloc_add(id_cs,
                                        id_geom,
-                                       PDM_writer_ON,
-                                       PDM_writer_TRIA3);
+                                       PDM_WRITER_ON,
+                                       PDM_WRITER_TRIA3);
 
     if (som_elts[1] > 0)
       id_bloc_quad4 = PDM_writer_geom_bloc_add(id_cs,
                                        id_geom,
-                                       PDM_writer_ON,
-                                       PDM_writer_QUAD4);
+                                       PDM_WRITER_ON,
+                                       PDM_WRITER_QUAD4);
     
     if (som_elts[2] > 0)
       id_bloc_poly_2d = PDM_writer_geom_bloc_add(id_cs,
                                          id_geom,
-                                         PDM_writer_ON,
-                                         PDM_writer_POLY_2D);
+                                         PDM_WRITER_ON,
+                                         PDM_WRITER_POLY_2D);
 
     /* Determination de la connectivite de chaque element */
 
@@ -5264,20 +5264,20 @@ PDM_g_num_t   *numabs
     if (som_elts[0] > 0)
       id_bloc_tria3 = PDM_writer_geom_bloc_add(id_cs,
                                        id_geom,
-                                       PDM_writer_ON,
-                                       PDM_writer_TRIA3);
+                                       PDM_WRITER_ON,
+                                       PDM_WRITER_TRIA3);
 
     if (som_elts[1] > 0)
       id_bloc_quad4 = PDM_writer_geom_bloc_add(id_cs,
                                        id_geom,
-                                       PDM_writer_ON,
-                                       PDM_writer_QUAD4);
+                                       PDM_WRITER_ON,
+                                       PDM_WRITER_QUAD4);
     
     if (som_elts[2] > 0)
       id_bloc_poly_2d = PDM_writer_geom_bloc_add(id_cs,
                                          id_geom,
-                                         PDM_writer_ON,
-                                         PDM_writer_POLY_2D);
+                                         PDM_WRITER_ON,
+                                         PDM_WRITER_POLY_2D);
 
     /* Determination de la connectivite de chaque element */
 

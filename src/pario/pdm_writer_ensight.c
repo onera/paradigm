@@ -222,7 +222,7 @@ _ecr_entrelace_float(PDM_writer_t                           *cs,
                      const float                    *valeurs)
 {
 
-  if (s_ecr_n_valeur == PDM_writer_ON) {
+  if (s_ecr_n_valeur == PDM_WRITER_ON) {
 
     PDM_g_num_t n_val_abs_loc = 0;
     PDM_g_num_t n_val_abs     = 0;
@@ -281,7 +281,7 @@ _ecr_entrelace_int(PDM_writer_t                           *cs,
                    const PDM_g_num_t          *indirection,
                    const int32_t                  *valeurs)
 {
-  if (s_ecr_n_valeur == PDM_writer_ON) {
+  if (s_ecr_n_valeur == PDM_WRITER_ON) {
 
     PDM_g_num_t n_val_abs_loc = 0;
     PDM_g_num_t n_val_abs     = 0;
@@ -979,9 +979,9 @@ PDM_writer_ensight_geom_write
   PDM_writer_statut_t s_ecr_n_val;
   for (int idim = 0; idim < 3; idim++) {
     if (idim == 0)
-      s_ecr_n_val = PDM_writer_ON;
+      s_ecr_n_val = PDM_WRITER_ON;
     else
-      s_ecr_n_val = PDM_writer_OFF;
+      s_ecr_n_val = PDM_WRITER_OFF;
     n_som_proc = 0;
     for (int ipart = 0; ipart < geom->n_part; ipart++) {
       for (int i = 0; i < geom->som[ipart]->n_som; i++) {
@@ -1041,28 +1041,28 @@ PDM_writer_ensight_geom_write
     int n_comp = 0;
     switch (t_elt) {
       
-    case PDM_writer_POINT    :
+    case PDM_WRITER_POINT    :
       n_comp = 1;
       break;
-    case PDM_writer_BAR2     :
+    case PDM_WRITER_BAR2     :
       n_comp = 2;
       break;
-    case PDM_writer_TRIA3    :
+    case PDM_WRITER_TRIA3    :
       n_comp = 3;
       break;
-    case PDM_writer_QUAD4    :
+    case PDM_WRITER_QUAD4    :
       n_comp = 4;
       break;
-    case PDM_writer_TETRA4   :
+    case PDM_WRITER_TETRA4   :
       n_comp = 4;
       break;
-    case PDM_writer_PYRAMID5 :
+    case PDM_WRITER_PYRAMID5 :
       n_comp = 5;
       break;
-    case PDM_writer_PRISM6   :
+    case PDM_WRITER_PRISM6   :
       n_comp = 6;
       break;
-    case PDM_writer_HEXA8    :
+    case PDM_WRITER_HEXA8    :
       n_comp = 8;
       break;
       
@@ -1093,7 +1093,7 @@ PDM_writer_ensight_geom_write
     /* Ecriture */
 
     _ecr_entrelace_int(_cs,
-                       PDM_writer_ON,
+                       PDM_WRITER_ON,
                        f_unit_geom,
                        PDM_IO_N_COMPOSANTE_CONSTANT,
                        &n_comp,
@@ -1170,7 +1170,7 @@ PDM_writer_ensight_geom_write
     int n_comp_cste = 1;
 
     _ecr_entrelace_int(_cs,
-                       PDM_writer_OFF,
+                       PDM_WRITER_OFF,
                        f_unit_geom,
                        PDM_IO_N_COMPOSANTE_CONSTANT,
                        &n_comp_cste,
@@ -1190,7 +1190,7 @@ PDM_writer_ensight_geom_write
     }
 
     _ecr_entrelace_int(_cs,
-                       PDM_writer_OFF,
+                       PDM_WRITER_OFF,
                        f_unit_geom,
                        PDM_IO_N_COMPOSANTE_VARIABLE,
                        n_comp_tmp2,
@@ -1262,7 +1262,7 @@ PDM_writer_ensight_geom_write
     }
     
     _ecr_entrelace_int(_cs,
-                       PDM_writer_OFF,
+                       PDM_WRITER_OFF,
                        f_unit_geom,
                        PDM_IO_N_COMPOSANTE_CONSTANT,
                        &n_comp_cste,
@@ -1306,7 +1306,7 @@ PDM_writer_ensight_geom_write
 
 
     _ecr_entrelace_int(_cs,
-                       PDM_writer_OFF,
+                       PDM_WRITER_OFF,
                        f_unit_geom,
                        PDM_IO_N_COMPOSANTE_CONSTANT,
                        &n_comp_cste,
@@ -1336,7 +1336,7 @@ PDM_writer_ensight_geom_write
     }
 
     _ecr_entrelace_int(_cs,
-                       PDM_writer_OFF,
+                       PDM_WRITER_OFF,
                        f_unit_geom,
                        PDM_IO_N_COMPOSANTE_VARIABLE,
                        n_comp_tmp,
@@ -1429,7 +1429,7 @@ PDM_writer_ensight_var_write
   
   char buff_entete[81];
 
-  if (var->st_dep_tps == PDM_writer_ON) {
+  if (var->st_dep_tps == PDM_WRITER_ON) {
     for (int i = 0; i < 81; i++)
       buff_entete[i] = ' ';
     snprintf(buff_entete, 80, "%s (time values: %d, %g)",
@@ -1483,9 +1483,9 @@ PDM_writer_ensight_var_write
           }
         }
 
-        PDM_writer_statut_t s_ecr_n_val = PDM_writer_OFF ;
+        PDM_writer_statut_t s_ecr_n_val = PDM_WRITER_OFF ;
         for (int k = 0; k < var->dim; k++) {
-          s_ecr_n_val = PDM_writer_OFF;
+          s_ecr_n_val = PDM_WRITER_OFF;
           n_som_proc = 0;
           int comp_a_ecrire;
           comp_a_ecrire = k;
@@ -1586,7 +1586,7 @@ PDM_writer_ensight_var_write
             }
 
             /* Ecriture des valeurs */
-            PDM_writer_statut_t s_ecr_n_val = PDM_writer_OFF;
+            PDM_writer_statut_t s_ecr_n_val = PDM_WRITER_OFF;
             for (int k = 0; k < var->dim; k++) {
               n_val_buff = 0;
               int comp_a_ecrire;
@@ -1638,7 +1638,7 @@ PDM_writer_ensight_var_write
 
             /* Ecriture des valeurs */
   
-            PDM_writer_statut_t s_ecr_n_val = PDM_writer_OFF;
+            PDM_writer_statut_t s_ecr_n_val = PDM_WRITER_OFF;
             for (int k = 0; k < var->dim; k++) {
               n_val_buff = 0;
               int comp_a_ecrire;
@@ -1690,7 +1690,7 @@ PDM_writer_ensight_var_write
 
             /* Ecriture des valeurs */
   
-            PDM_writer_statut_t s_ecr_n_val = PDM_writer_OFF;
+            PDM_writer_statut_t s_ecr_n_val = PDM_WRITER_OFF;
             for (int k = 0; k < var->dim; k++) {
               n_val_buff = 0;
               int comp_a_ecrire;
