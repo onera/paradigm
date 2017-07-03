@@ -303,122 +303,6 @@ _var_get
   return var;
 }
 
-
-/*----------------------------------------------------------------------------
- * Retourne un pointeur un objet bloc_std a partir de son identificateur
- *
- * parameters :
- *   geom            <-- Geometrie associee
- *   id_bloc         <-- Identificateur  
- *
- * return :
- *                   --> Objet CS  
- *
- *----------------------------------------------------------------------------*/
-
-static PDM_writer_bloc_std_t *
-_bloc_std_get
-(
- const PDM_writer_geom_t *geom,
- const int        id_bloc
-)
-{
-  PDM_writer_bloc_std_t *bloc = NULL;
-
-  if (id_bloc >= geom->l_blocs_std) {
-    PDM_error(__FILE__, __LINE__, 0, "Erreur _bloc_get : Identificateur de bloc standard trop grand\n");
-    abort();
-  }
- 
-  bloc = geom->blocs_std[id_bloc];
-
-  if (bloc == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "Erreur _bloc_get : Identificateur de bloc standard incorrect\n");
-    abort();
-  }
-
-  return bloc;
-}
-
-
-/*----------------------------------------------------------------------------
- * Retourne un pointeur un objet bloc_poly2d a partir de son identificateur
- *
- * parameters :
- *   geom            <-- Geometrie associee
- *   id_bloc         <-- Identificateur  
- *
- * return :
- *                   --> Objet CS  
- *
- *----------------------------------------------------------------------------*/
-
-static PDM_writer_bloc_poly2d_t *
-_bloc_poly2d_get
-(
- const PDM_writer_geom_t *geom,
- const int        id_bloc
-)
-{
-  PDM_writer_bloc_poly2d_t *bloc = NULL;
-
-  int _id_bloc = id_bloc - PDM_WRITER_DEB_ID_BLOC_POLY2D;
-
-  if (_id_bloc >= geom->l_blocs_poly2d) {
-    PDM_error(__FILE__, __LINE__, 0, "Erreur _bloc_poly2d_get : Identificateur de bloc standard trop grand\n");
-    abort();
-  }
- 
-  bloc = geom->blocs_poly2d[_id_bloc];
-
-  if (bloc == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "Erreur _bloc_poly2d_get : Identificateur de bloc standard incorrect\n");
-    abort();
-  }
-
-  return bloc;
-}
-
-
-/*----------------------------------------------------------------------------
- * Retourne un pointeur un objet bloc_poly3d a partir de son identificateur
- *
- * parameters :
- *   geom            <-- Geometrie associee
- *   id_bloc         <-- Identificateur  
- *
- * return :
- *                   --> Objet CS  
- *
- *----------------------------------------------------------------------------*/
-
-static PDM_writer_bloc_poly3d_t *
-_bloc_poly3d_get
-(
- const PDM_writer_geom_t *geom,
- const int        id_bloc
-)
-{
-  PDM_writer_bloc_poly3d_t *bloc = NULL;
-
-  int _id_bloc = id_bloc - PDM_WRITER_DEB_ID_BLOC_POLY3D;
-
-  if (_id_bloc >= geom->l_blocs_poly3d) {
-    PDM_error(__FILE__, __LINE__, 0, "Erreur _bloc_poly3d_get : Identificateur de bloc standard trop grand\n");
-    abort();
-  }
- 
-  bloc = geom->blocs_poly3d[_id_bloc];
-
-  if (bloc == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "Erreur _bloc_poly3d_get : Identificateur de bloc standard incorrect\n");
-    abort();
-  }
-
-  return bloc;
-}
-
-
 /*----------------------------------------------------------------------------
  * Retourne un pointeur un objet CS a partir de son identificateur
  *
@@ -447,14 +331,8 @@ PDM_writer_geom_t *geom
 
   geom->som            = NULL;  /* Description des sommets de chaque partition */
 
-  geom->n_blocs_std    = 0;     /* Nb de blocs d'elements standards */                     
-  geom->l_blocs_std    = 0;     /* Taille du tableau des blocs d'elements standards */
   geom->blocs_std      = NULL;  /* Blocs d'elements standards de chaque partition */
-  geom->n_blocs_poly2d = 0;     /* Nb de blocs de polygones */                              
-  geom->l_blocs_poly2d = 0;     /* Taille du tableau des blocs de polygones */          
   geom->blocs_poly2d   = NULL;  /* Blocs de polygones de chaque partition */          
-  geom->n_blocs_poly3d = 0;     /* Nb de blocs de polyedres */                              
-  geom->l_blocs_poly3d = 0;     /* Taille du tableau des blocs de polyedres */
   geom->blocs_poly3d   = NULL;  /* Blocs de polyedres de chaque partition */          
 
   geom->geom_fmt       = NULL;
@@ -912,8 +790,17 @@ PDM_writer_geom_t *geom
 
   /* Boucle sur les blocs standard */
 
-  for (int i = 0; i < geom->n_blocs_std; i++) {
-    PDM_writer_bloc_std_t *_bloc_std = geom->blocs_std[i];
+  int n_blocs_std = 0;
+  const int *list_ind = NULL;
+  
+  if (geom->blocs_std != NULL) {  
+    n_blocs_std = PDM_Handles_n_get (geom->blocs_std);
+    list_ind = PDM_Handles_idx_get (geom->blocs_std);  
+  }
+  
+  for (int i = 0; i < n_blocs_std; i++) {
+    const PDM_writer_bloc_std_t *_bloc_std = 
+      (const PDM_writer_bloc_std_t *) PDM_Handles_get (geom->blocs_std, list_ind[i]);
     _calcul_numabs_bloc(geom->pdm_mpi_comm,
                         n_procs,
                         i_proc,
@@ -935,8 +822,15 @@ PDM_writer_geom_t *geom
      en triangle. Dans le cas contraire la numerotation absolue
      est calculee lors du decoupage */
 
-  for (int i = 0; i < geom->n_blocs_poly2d; i++) {
-    PDM_writer_bloc_poly2d_t *_bloc_poly2d = geom->blocs_poly2d[i];
+  int n_blocs_poly2d = 0;
+  if (geom->blocs_poly2d != NULL) {  
+    n_blocs_poly2d = PDM_Handles_n_get (geom->blocs_poly2d);
+    list_ind = PDM_Handles_idx_get (geom->blocs_poly2d);
+  }
+  
+  for (int ibloc = 0; ibloc < n_blocs_poly2d; ibloc++) {
+    const PDM_writer_bloc_poly2d_t *_bloc_poly2d = 
+    (const PDM_writer_bloc_poly2d_t *) PDM_Handles_get (geom->blocs_poly2d, list_ind[ibloc]);
     if (_bloc_poly2d->st_decoup_poly2d == PDM_WRITER_OFF) {
       _calcul_numabs_bloc(geom->pdm_mpi_comm,
                           n_procs,
@@ -961,8 +855,16 @@ PDM_writer_geom_t *geom
      en triangle. Dans le cas contraire la numerotation absolue
      est calculee lors du decoupage */
 
-  for (int i = 0; i < geom->n_blocs_poly3d; i++) {
-    PDM_writer_bloc_poly3d_t *_bloc_poly3d = geom->blocs_poly3d[i];
+  int n_blocs_poly3d = 0;
+  if (geom->blocs_poly3d != NULL) {  
+    n_blocs_poly3d = PDM_Handles_n_get (geom->blocs_poly3d);
+    list_ind = PDM_Handles_idx_get (geom->blocs_poly3d);
+  }
+
+  for (int ibloc = 0; ibloc < n_blocs_poly3d; ibloc++) {
+    const PDM_writer_bloc_poly3d_t *_bloc_poly3d = 
+    (const PDM_writer_bloc_poly3d_t *) PDM_Handles_get (geom->blocs_poly3d, list_ind[ibloc]);
+
     if (_bloc_poly3d->st_decoup_poly3d == PDM_WRITER_OFF) {
       _calcul_numabs_bloc(geom->pdm_mpi_comm,
                           n_procs,
@@ -1062,10 +964,12 @@ _calcul_numabs_split_poly2d
   int *recvBuffN   = (int *) malloc(sizeof(int) * n_procs);
   int *recvBuffIdx = (int *) malloc(sizeof(int) * n_procs);
 
+  int n_blocs_poly2d = PDM_Handles_n_get (geom->blocs_poly2d);
+  const int *list_ind = PDM_Handles_idx_get (geom->blocs_poly2d);
 
-  for (int i = 0; i < geom->n_blocs_poly2d; i++) {
-    
-    PDM_writer_bloc_poly2d_t *_bloc_poly2d = geom->blocs_poly2d[i];
+  for (int ibloc = 0; ibloc < n_blocs_poly2d; ibloc++) {
+    const PDM_writer_bloc_poly2d_t *_bloc_poly2d = 
+    (const PDM_writer_bloc_poly2d_t *) PDM_Handles_get (geom->blocs_poly2d, list_ind[ibloc]);
 
     /* Calcul du nombre total de vrais polygones du bloc */
 
@@ -1373,8 +1277,12 @@ PDM_writer_geom_t *geom
 
   /* Boucle sur les blocs de polygones */
 
-  for (int i = 0; i < geom->n_blocs_poly2d; i++) {
-    PDM_writer_bloc_poly2d_t *_bloc_poly2d = geom->blocs_poly2d[i];
+  int n_blocs_poly2d = PDM_Handles_n_get (geom->blocs_poly2d);
+  const int *list_ind = PDM_Handles_idx_get (geom->blocs_poly2d);
+
+  for (int ibloc = 0; ibloc < n_blocs_poly2d; ibloc++) {
+    PDM_writer_bloc_poly2d_t *_bloc_poly2d = 
+            (PDM_writer_bloc_poly2d_t *) PDM_Handles_get (geom->blocs_poly2d, list_ind[ibloc]);
     
     if (_bloc_poly2d->st_decoup_poly2d == PDM_WRITER_ON) {
       
@@ -1572,8 +1480,12 @@ PDM_writer_geom_t *geom
 {
   /* Boucle sur les blocs de polygones */
 
-  for (int i = 0; i < geom->n_blocs_poly3d; i++) {
-    PDM_writer_bloc_poly3d_t *_bloc_poly3d = geom->blocs_poly3d[i];
+  int n_blocs_poly3d = PDM_Handles_n_get (geom->blocs_poly3d);
+  const int *list_ind = PDM_Handles_idx_get (geom->blocs_poly3d);
+
+  for (int ibloc = 0; ibloc < n_blocs_poly3d; ibloc++) {
+    PDM_writer_bloc_poly3d_t *_bloc_poly3d = 
+            (PDM_writer_bloc_poly3d_t *) PDM_Handles_get (geom->blocs_poly3d, list_ind[ibloc]);
     
     if (_bloc_poly3d->st_decoup_poly3d == PDM_WRITER_ON) {
        
@@ -3111,8 +3023,9 @@ const int   id_cs
   PDM_Handles_handle_free (cs_tab, id_cs, PDM_FALSE);
   
   int n_cs = PDM_Handles_n_get (cs_tab);
-
+  
   if (n_cs == 0) {
+  
     cs_tab = PDM_Handles_free (cs_tab);
     int n_fmt_tab = PDM_Handles_n_get (fmt_tab);
     const int *fmt_index = PDM_Handles_idx_get(fmt_tab);
@@ -3604,34 +3517,14 @@ const PDM_writer_elt_geom_t  t_elt
       /* Mise a jour du tableau de stockage */
 
       if (geom->blocs_std == NULL) {
-        geom->l_blocs_std = 4;
-        geom->blocs_std = (PDM_writer_bloc_std_t **) malloc(geom->l_blocs_std * sizeof(PDM_writer_bloc_std_t *));
-        for (int i = 0; i < geom->l_blocs_std; i++) 
-          geom->blocs_std[i] = NULL;
+        geom->blocs_std = PDM_Handles_create (4);
       } 
-      
-      if (geom->l_blocs_std <= geom->n_blocs_std) {
-        int p_l_blocs_std = geom->l_blocs_std;
-        geom->l_blocs_std = 2 * geom->l_blocs_std;
-        geom->blocs_std = (PDM_writer_bloc_std_t **) realloc((void*) geom->blocs_std, geom->l_blocs_std *
-                                                     sizeof(PDM_writer_bloc_std_t*));
-        
-        for (int i = p_l_blocs_std; i < geom->l_blocs_std; i++) 
-          geom->blocs_std[i] = NULL;
-      }
-      
-      /* Recherche de la premiere place libre pour stocker le bloc */
-      
-      
-      while (geom->blocs_std[id_bloc] != NULL) 
-        id_bloc++;
       
       /* Allocation du bloc */
       
       PDM_writer_bloc_std_t *bloc_std = (PDM_writer_bloc_std_t *) malloc(sizeof(PDM_writer_bloc_std_t));
-      geom->n_blocs_std += 1;
-      
-      geom->blocs_std[id_bloc] = bloc_std;
+
+      id_bloc = PDM_Handles_store (geom->blocs_std, bloc_std);
 
       /* Intialisation du bloc */
 
@@ -3668,36 +3561,16 @@ const PDM_writer_elt_geom_t  t_elt
       /* Mise a jour du tableau de stockage */
 
       if (geom->blocs_poly2d == NULL) {
-        geom->l_blocs_poly2d = 4;
-        geom->blocs_poly2d = (PDM_writer_bloc_poly2d_t **) malloc(geom->l_blocs_poly2d * 
-                                                          sizeof(PDM_writer_bloc_poly2d_t *));
-        for (int i = 0; i < geom->l_blocs_poly2d; i++) 
-          geom->blocs_poly2d[i] = NULL;
-      } 
-      
-      if (geom->l_blocs_poly2d <= geom->n_blocs_poly2d) {
-        int p_l_blocs_poly2d = geom->l_blocs_poly2d;
-        geom->l_blocs_poly2d = 2 * geom->l_blocs_poly2d;
-        geom->blocs_poly2d = (PDM_writer_bloc_poly2d_t **) realloc((void*) geom->blocs_poly2d,
-                                                           geom->l_blocs_poly2d * 
-                                                           sizeof(PDM_writer_bloc_poly2d_t*));
-        
-        for (int i = p_l_blocs_poly2d; i < geom->l_blocs_poly2d; i++) 
-          geom->blocs_poly2d[i] = NULL;
+        geom->blocs_poly2d = PDM_Handles_create (4);
       }
-      
-      /* Recherche de la premiere place libre pour stocker le bloc */
-      
-      while (geom->blocs_poly2d[id_bloc] != NULL) 
-        id_bloc++;
       
       /* Allocation du bloc */
       
-      PDM_writer_bloc_poly2d_t *bloc_poly2d = (PDM_writer_bloc_poly2d_t *) malloc(sizeof(PDM_writer_bloc_poly2d_t));
-      geom->n_blocs_poly2d += 1;
-      
-      geom->blocs_poly2d[id_bloc] = bloc_poly2d;
+      PDM_writer_bloc_poly2d_t *bloc_poly2d =
+              (PDM_writer_bloc_poly2d_t *) malloc(sizeof(PDM_writer_bloc_poly2d_t));
 
+      id_bloc = PDM_Handles_store (geom->blocs_poly2d, bloc_poly2d);
+      
       /* Intialisation du bloc */
 
       bloc_poly2d->st_decoup_poly2d  = geom->st_decoup_poly2d;
@@ -3755,35 +3628,15 @@ const PDM_writer_elt_geom_t  t_elt
       /* Mise a jour du tableau de stockage */
 
       if (geom->blocs_poly3d == NULL) {
-        geom->l_blocs_poly3d = 4;
-        geom->blocs_poly3d = (PDM_writer_bloc_poly3d_t **) malloc(geom->l_blocs_poly3d * 
-                                                          sizeof(PDM_writer_bloc_poly3d_t *));
-        for (int i = 0; i < geom->l_blocs_poly3d; i++) 
-          geom->blocs_poly3d[i] = NULL;
-      } 
-      
-      if (geom->l_blocs_poly3d <= geom->n_blocs_poly3d) {
-        int p_l_blocs_poly3d = geom->l_blocs_poly3d;
-        geom->l_blocs_poly3d = 2 * geom->l_blocs_poly3d;
-        geom->blocs_poly3d = (PDM_writer_bloc_poly3d_t **) realloc((void*) geom->blocs_poly3d, 
-                                                           geom->l_blocs_poly3d * 
-                                                           sizeof(PDM_writer_bloc_poly3d_t*));
-        
-        for (int i = p_l_blocs_poly3d; i < geom->l_blocs_poly3d; i++) 
-          geom->blocs_poly3d[i] = NULL;
+        geom->blocs_poly3d = PDM_Handles_create (4);
       }
-      
-      /* Recherche de la premiere place libre pour stocker le bloc */
-      
-      while (geom->blocs_poly3d[id_bloc] != NULL) 
-        id_bloc++;
       
       /* Allocation du bloc */
       
-      PDM_writer_bloc_poly3d_t *bloc_poly3d = (PDM_writer_bloc_poly3d_t *) malloc(sizeof(PDM_writer_bloc_poly3d_t));
-      geom->n_blocs_poly3d += 1;
-      
-      geom->blocs_poly3d[id_bloc] = bloc_poly3d;
+      PDM_writer_bloc_poly3d_t *bloc_poly3d =
+              (PDM_writer_bloc_poly3d_t *) malloc(sizeof(PDM_writer_bloc_poly3d_t));
+
+      id_bloc = PDM_Handles_store (geom->blocs_poly3d, bloc_poly3d);
 
       /* Intialisation du bloc */
 
@@ -3968,12 +3821,18 @@ const int            n_elt,
   }
 
   PDM_writer_geom_t *geom = _geom_get(cs, id_geom);
+ 
+  int _id_bloc = id_bloc - PDM_WRITER_DEB_ID_BLOC_STD;
   
-  PDM_writer_bloc_std_t *bloc = _bloc_std_get(geom, id_bloc);
+  const PDM_writer_bloc_std_t *bloc = (const PDM_writer_bloc_std_t *) 
+     PDM_Handles_get (geom->blocs_std, _id_bloc);
+  
+  if (bloc == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
+  }
   
   if (id_part >= bloc->n_part) {
     PDM_error(__FILE__, __LINE__, 0, "Erreur PDM_writer_geom_bloc_std_set : Numero de partition trop grand\n");
-    abort();
   }
  
   /* Mapping */
@@ -4050,8 +3909,15 @@ const PDM_l_num_t       n_elt,
 
   PDM_writer_geom_t *geom = _geom_get(cs, id_geom);
   
-  PDM_writer_bloc_poly2d_t *bloc = _bloc_poly2d_get(geom, id_bloc);
+  int _id_bloc = id_bloc - PDM_WRITER_DEB_ID_BLOC_POLY2D;
   
+  PDM_writer_bloc_poly2d_t *bloc = 
+          (PDM_writer_bloc_poly2d_t *) PDM_Handles_get (geom->blocs_poly2d, _id_bloc);
+  
+  if (bloc == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad poly2d block identifier\n");
+  }
+
   if (id_part >= bloc->n_part) {
     PDM_error(__FILE__, __LINE__, 0, "Erreur PDM_writer_geom_bloc_poly2d_set : Numero de partition trop grand\n");
     abort();
@@ -4142,8 +4008,15 @@ const PDM_l_num_t   n_face,
   }
 
   PDM_writer_geom_t *geom = _geom_get(cs, id_geom);
+
+  int _id_bloc = id_bloc - PDM_WRITER_DEB_ID_BLOC_POLY3D;
   
-  PDM_writer_bloc_poly3d_t *bloc = _bloc_poly3d_get(geom, id_bloc);
+  PDM_writer_bloc_poly3d_t *bloc = 
+          (PDM_writer_bloc_poly3d_t *) PDM_Handles_get (geom->blocs_poly3d, _id_bloc);
+  
+  if (bloc == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad poly3d block identifier\n");
+  }
   
   if (id_part >= bloc->n_part) {
     PDM_error(__FILE__, __LINE__, 0, "Erreur PDM_writer_geom_bloc_poly3d_set : Numero de partition trop grand\n");
@@ -4844,7 +4717,7 @@ PDM_g_num_t   *numabs
       l_connec_poly2d += cell_face_nb[i]; 
     }
   }
-
+  
   geom->prepa_blocs->n_tria_proc           += n_tria;
   geom->prepa_blocs->n_quad_proc           += n_quad;
   geom->prepa_blocs->n_poly2d_proc         += n_poly2d;
@@ -5543,42 +5416,51 @@ const int      id_geom
 
   /* Boucle sur les blocs standard */
 
-  for (int i = 0; i < geom->n_blocs_std; i++) {
-    PDM_writer_bloc_std_t *_bloc_std = geom->blocs_std[i];
-    _bloc_std_free(_bloc_std);
-  }
-
   if (geom->blocs_std != NULL) {
-    free(geom->blocs_std);
-    geom->blocs_std = NULL;
+    const int n_blocs_std = PDM_Handles_n_get (geom->blocs_std);
+    const int *list_ind = PDM_Handles_idx_get (geom->blocs_std);
+
+    for (int i = 0; i < n_blocs_std; i++) {
+      PDM_writer_bloc_std_t *_bloc_std = 
+              (PDM_writer_bloc_std_t *) PDM_Handles_get (geom->blocs_std, list_ind[i]);
+      _bloc_std_free(_bloc_std);
+      PDM_Handles_handle_free (geom->blocs_std, list_ind[i], PDM_FALSE);
+    }
+
+    geom->blocs_std = PDM_Handles_free (geom->blocs_std); 
   }
-  geom->n_blocs_std = 0;
 
   /* Boucle sur les blocs de polygones */ 
 
-  for (int i = 0; i < geom->n_blocs_poly2d; i++) {
-    PDM_writer_bloc_poly2d_t *_bloc_poly2d = geom->blocs_poly2d[i];
-    _bloc_poly2d_free(_bloc_poly2d);
-  }
-
   if (geom->blocs_poly2d != NULL) {
-    free(geom->blocs_poly2d);
-    geom->blocs_poly2d = NULL;
+    const int n_blocs_poly2d = PDM_Handles_n_get (geom->blocs_poly2d);
+    const int *list_ind = PDM_Handles_idx_get (geom->blocs_poly2d);
+
+    for (int i = 0; i < n_blocs_poly2d; i++) {
+      PDM_writer_bloc_poly2d_t *_bloc_poly2d = 
+              (PDM_writer_bloc_poly2d_t *) PDM_Handles_get (geom->blocs_poly2d, list_ind[i]);
+      _bloc_poly2d_free(_bloc_poly2d);
+      PDM_Handles_handle_free (geom->blocs_poly2d, list_ind[i], PDM_FALSE);
+    }
+
+    geom->blocs_poly2d = PDM_Handles_free (geom->blocs_poly2d); 
   }
-  geom->n_blocs_poly2d  = 0;
 
   /* Boucle sur les blocs de polyedres */ 
 
-  for (int i = 0; i < geom->n_blocs_poly3d; i++) {
-    PDM_writer_bloc_poly3d_t *_bloc_poly3d = geom->blocs_poly3d[i];
-    _bloc_poly3d_free(_bloc_poly3d);
-  }
-
   if (geom->blocs_poly3d != NULL) {
-    free(geom->blocs_poly3d);
-    geom->blocs_poly3d = NULL;
+    const int n_blocs_poly3d = PDM_Handles_n_get (geom->blocs_poly3d);
+    const int *list_ind = PDM_Handles_idx_get (geom->blocs_poly3d);
+
+    for (int i = 0; i < n_blocs_poly3d; i++) {
+      PDM_writer_bloc_poly3d_t *_bloc_poly3d = 
+              (PDM_writer_bloc_poly3d_t *) PDM_Handles_get (geom->blocs_poly3d, list_ind[i]);
+      _bloc_poly3d_free(_bloc_poly3d);
+      PDM_Handles_handle_free (geom->blocs_poly3d, list_ind[i], PDM_FALSE);
+    }
+
+    geom->blocs_poly3d = PDM_Handles_free (geom->blocs_poly3d); 
   }
-  geom->n_blocs_poly3d = 0;
 
   /* Lib�ration de la structure */ 
 
@@ -5658,25 +5540,41 @@ const int      id_geom
   
   /* Boucle sur les blocs standard */
 
-  for (int i = 0; i < geom->n_blocs_std; i++) {
-    PDM_writer_bloc_std_t *_bloc_std = geom->blocs_std[i];
-    _bloc_std_free_partial(_bloc_std);
+  if (geom->blocs_std != NULL) {
+    const int n_blocs_std = PDM_Handles_n_get (geom->blocs_std);
+    const int *list_ind = PDM_Handles_idx_get (geom->blocs_std);
+
+    for (int i = 0; i < n_blocs_std; i++) {
+      PDM_writer_bloc_std_t *_bloc_std = (PDM_writer_bloc_std_t *) PDM_Handles_get (geom->blocs_std, list_ind[i]);
+      _bloc_std_free_partial(_bloc_std);
+    }
   }
 
   /* Boucle sur les blocs de polygones */ 
 
-  for (int i = 0; i < geom->n_blocs_poly2d; i++) {
-    PDM_writer_bloc_poly2d_t *_bloc_poly2d = geom->blocs_poly2d[i];
-    _bloc_poly2d_free_partial(_bloc_poly2d);
-  }
+  if (geom->blocs_poly2d != NULL) {
+    const int n_blocs_poly2d = PDM_Handles_n_get (geom->blocs_poly2d);
+    const int *list_ind = PDM_Handles_idx_get (geom->blocs_poly2d);
 
+    for (int i = 0; i < n_blocs_poly2d; i++) {
+      PDM_writer_bloc_poly2d_t *_bloc_poly2d = (PDM_writer_bloc_poly2d_t *) PDM_Handles_get (geom->blocs_poly2d, list_ind[i]);
+      _bloc_poly2d_free_partial(_bloc_poly2d);
+    }
+  }
+  
   /* Boucle sur les blocs de polyedres */ 
 
-  for (int i = 0; i < geom->n_blocs_poly3d; i++) {
-    PDM_writer_bloc_poly3d_t *_bloc_poly3d = geom->blocs_poly3d[i];
-    _bloc_poly3d_free_partial(_bloc_poly3d);
+  if (geom->blocs_poly3d != NULL) {
+    const int n_blocs_poly3d = PDM_Handles_n_get (geom->blocs_poly3d);
+    const int *list_ind = PDM_Handles_idx_get (geom->blocs_poly3d);
+
+    for (int i = 0; i < n_blocs_poly3d; i++) {
+      PDM_writer_bloc_poly3d_t *_bloc_poly3d = (PDM_writer_bloc_poly3d_t *) PDM_Handles_get (geom->blocs_poly3d, list_ind[i]);
+      _bloc_poly3d_free_partial(_bloc_poly3d);
+    }
   }
 }
+
 /*----------------------------------------------------------------------------
  * Mapping des noms de variable                                                     
  *

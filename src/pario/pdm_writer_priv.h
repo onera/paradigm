@@ -12,6 +12,7 @@
 #include "pdm_mpi.h"
 #include "pdm_writer.h"
 #include "pdm_io.h"
+#include "pdm_handles.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -218,15 +219,9 @@ struct _PDM_writer_geom_t {
   int                 n_part;             /* Nombre de partitions */
   PDM_writer_som_t           **som;                /* Description des sommmets de chaque partition */
   PDM_l_num_t           *n_cell;             /* Nombre de blocs d'elements standard */
-  PDM_l_num_t            n_blocs_std;        /* Nombre de blocs d'elements standard */
-  PDM_l_num_t            l_blocs_std;        /* Taille du tableau de blocs d'elements standard */
-  PDM_writer_bloc_std_t     **blocs_std;          /* Blocs d'elements standard */
-  PDM_l_num_t            n_blocs_poly2d;     /* Nombre de blocs de polygones */
-  PDM_l_num_t            l_blocs_poly2d;     /* Taille du tableau de blocs de polygones */  
-  PDM_writer_bloc_poly2d_t  **blocs_poly2d;       /* Blocs de polygones */
-  PDM_l_num_t            n_blocs_poly3d;     /* Nombre de blocs de polyedres */
-  PDM_l_num_t            l_blocs_poly3d;     /* Taille du tableau de polyedres */
-  PDM_writer_bloc_poly3d_t  **blocs_poly3d;       /* Blocs de polyedres */
+  PDM_Handles_t        *blocs_std;          /* Blocs d'elements standard */
+  PDM_Handles_t        *blocs_poly2d;       /* Blocs de polygones */
+  PDM_Handles_t       *blocs_poly3d;       /* Blocs de polyedres */
   void               *geom_fmt;           /* Description propre au format fmt */
   PDM_writer_t        *_cs;                /* Pointeur sur la structure cs parente */
   PDM_MPI_Comm            pdm_mpi_comm;           /* Communicateur MPI */

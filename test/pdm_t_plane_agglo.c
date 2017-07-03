@@ -1429,9 +1429,9 @@ char *argv[]
   
   PDM_part_coarse_mesh_compute ( cmId);
 
-  _export_coarse_mesh (PDM_MPI_COMM_WORLD,
-                       cmId,
-                       nPart);
+//  _export_coarse_mesh (PDM_MPI_COMM_WORLD,
+//                       cmId,
+//                       nPart);
 
 /*
  *  Free meshes

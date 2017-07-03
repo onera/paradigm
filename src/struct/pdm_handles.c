@@ -126,6 +126,7 @@ PDM_Handles_free
 {
   free (handles->array);
   free (handles->idx);
+  free (handles->idx_inv);
   free (handles);
   return NULL;
 }

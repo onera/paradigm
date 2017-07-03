@@ -22,6 +22,7 @@
 #include "pdm.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
+#include "pdm_handles.h"
 
 /*=============================================================================
  * Definitions des macro
@@ -1008,9 +1009,17 @@ PDM_writer_ensight_geom_write
 
   /* Ecriture des blocs standard */
 
-  for (int ibloc = 0; ibloc < geom->n_blocs_std; ibloc++) {
+  int n_blocs_std = 0;
+  const int *list_ind = NULL;
 
-    PDM_writer_bloc_std_t *bloc_std = geom->blocs_std[ibloc];
+  if (geom->blocs_std != NULL) {  
+    n_blocs_std = PDM_Handles_n_get (geom->blocs_std);
+    list_ind = PDM_Handles_idx_get (geom->blocs_std);
+  }
+  
+  for (int ibloc = 0; ibloc < n_blocs_std; ibloc++) {
+    const PDM_writer_bloc_std_t *bloc_std = 
+    (const PDM_writer_bloc_std_t *) PDM_Handles_get (geom->blocs_std, list_ind[ibloc]);
     PDM_writer_elt_geom_t t_elt = bloc_std->t_elt;
 
     /* Type de bloc */
@@ -1108,9 +1117,15 @@ PDM_writer_ensight_geom_write
  
   /* Ecriture des blocs polygones */
 
-  for (int ibloc = 0; ibloc < geom->n_blocs_poly2d; ibloc++) {
+  int n_blocs_poly2d = 0;
+  if (geom->blocs_poly2d != NULL) {  
+    n_blocs_poly2d = PDM_Handles_n_get (geom->blocs_poly2d);
+    list_ind = PDM_Handles_idx_get (geom->blocs_poly2d);
+  }
 
-   PDM_writer_bloc_poly2d_t *bloc_poly2d = geom->blocs_poly2d[ibloc];
+  for (int ibloc = 0; ibloc < n_blocs_poly2d; ibloc++) {
+    const PDM_writer_bloc_poly2d_t *bloc_poly2d =
+    (const PDM_writer_bloc_poly2d_t *) PDM_Handles_get (geom->blocs_poly2d, list_ind[ibloc]);
 
     /* Type de bloc */
 
@@ -1206,9 +1221,16 @@ PDM_writer_ensight_geom_write
 
   /* Ecriture des blocs polyedres */
 
-  for (int ibloc = 0; ibloc < geom->n_blocs_poly3d; ibloc++) {
 
-    PDM_writer_bloc_poly3d_t *bloc_poly3d = geom->blocs_poly3d[ibloc];
+  int n_blocs_poly3d = 0;
+  if (geom->blocs_poly3d != NULL) {  
+    n_blocs_poly3d = PDM_Handles_n_get (geom->blocs_poly3d);
+    list_ind = PDM_Handles_idx_get (geom->blocs_poly3d);
+  }
+
+  for (int ibloc = 0; ibloc < n_blocs_poly3d; ibloc++) {
+    PDM_writer_bloc_poly3d_t *bloc_poly3d = 
+    (PDM_writer_bloc_poly3d_t *) PDM_Handles_get (geom->blocs_poly3d, list_ind[ibloc]);
 
     /* Type de bloc */
 
@@ -1522,8 +1544,17 @@ PDM_writer_ensight_var_write
 
         int n_elt_max_bloc = 0;
 
-        for (int ibloc = 0; ibloc < geom->l_blocs_std; ibloc++) {
-          PDM_writer_bloc_std_t *bloc_std = geom->blocs_std[ibloc];
+        int n_blocs_std = 0;
+        const int *list_ind = NULL;
+
+        if (geom->blocs_std != NULL) {  
+          n_blocs_std = PDM_Handles_n_get (geom->blocs_std);
+          list_ind = PDM_Handles_idx_get (geom->blocs_std);
+        }
+
+        for (int ibloc = 0; ibloc < n_blocs_std; ibloc++) {
+          const PDM_writer_bloc_std_t *bloc_std = 
+          (const PDM_writer_bloc_std_t *) PDM_Handles_get (geom->blocs_std, list_ind[ibloc]);
           if (bloc_std != NULL) {
             int n_elt_bloc = 0;
             for (int i = 0; i < geom->n_part; i++) {
@@ -1533,8 +1564,15 @@ PDM_writer_ensight_var_write
           }
         }
 
-        for (int ibloc = 0; ibloc < geom->l_blocs_poly2d; ibloc++) {
-          PDM_writer_bloc_poly2d_t *bloc_poly2d = geom->blocs_poly2d[ibloc];
+        int n_blocs_poly2d = 0;
+        if (geom->blocs_poly2d != NULL) {  
+          n_blocs_poly2d = PDM_Handles_n_get (geom->blocs_poly2d);
+          list_ind = PDM_Handles_idx_get (geom->blocs_poly2d);
+        }
+
+        for (int ibloc = 0; ibloc < n_blocs_poly2d; ibloc++) {
+          const PDM_writer_bloc_poly2d_t *bloc_poly2d = 
+          (const PDM_writer_bloc_poly2d_t *) PDM_Handles_get (geom->blocs_poly2d, list_ind[ibloc]);
           if (bloc_poly2d != NULL) {
             int n_elt_bloc = 0;
             for (int i = 0; i < geom->n_part; i++) {
@@ -1544,8 +1582,17 @@ PDM_writer_ensight_var_write
           }
         }
 
-        for (int ibloc = 0; ibloc < geom->l_blocs_poly3d; ibloc++) {
-          PDM_writer_bloc_poly3d_t *bloc_poly3d = geom->blocs_poly3d[ibloc];
+
+        int n_blocs_poly3d = 0;
+        if (geom->blocs_poly3d != NULL) {  
+          n_blocs_poly3d = PDM_Handles_n_get (geom->blocs_poly3d);
+          list_ind = PDM_Handles_idx_get (geom->blocs_poly3d);
+        }
+
+        for (int ibloc = 0; ibloc < n_blocs_poly3d; ibloc++) {
+          const PDM_writer_bloc_poly3d_t *bloc_poly3d = 
+          (const PDM_writer_bloc_poly3d_t *) PDM_Handles_get (geom->blocs_poly3d, list_ind[ibloc]);
+
           if (bloc_poly3d != NULL) {
             int n_elt_bloc = 0;
             for (int i = 0; i < geom->n_part; i++) {
@@ -1564,8 +1611,18 @@ PDM_writer_ensight_var_write
         for (int i = 0; i < geom->n_part; i++) {
           ideb[i] = 0;
         }
-        for (int ibloc = 0; ibloc < geom->l_blocs_std; ibloc++) {
-          PDM_writer_bloc_std_t *bloc_std = geom->blocs_std[ibloc];
+
+
+        n_blocs_std = 0;
+
+        if (geom->blocs_std != NULL) {  
+          n_blocs_std = PDM_Handles_n_get (geom->blocs_std);
+          list_ind = PDM_Handles_idx_get (geom->blocs_std);
+        }
+
+        for (int ibloc = 0; ibloc < n_blocs_std; ibloc++) {
+          const PDM_writer_bloc_std_t *bloc_std = 
+          (const PDM_writer_bloc_std_t *) PDM_Handles_get (geom->blocs_std, list_ind[ibloc]);
 
           if (bloc_std != NULL) {
             PDM_writer_elt_geom_t t_elt = bloc_std->t_elt;
@@ -1616,8 +1673,15 @@ PDM_writer_ensight_var_write
 
         /* Boucle sur les blocs polygones */
 
-        for (int ibloc = 0; ibloc < geom->l_blocs_poly2d; ibloc++) {
-          PDM_writer_bloc_poly2d_t *bloc_poly2d = geom->blocs_poly2d[ibloc];
+        n_blocs_poly2d = 0;
+        if (geom->blocs_poly2d != NULL) {  
+          n_blocs_poly2d = PDM_Handles_n_get (geom->blocs_poly2d);
+          list_ind = PDM_Handles_idx_get (geom->blocs_poly2d);
+        }
+
+        for (int ibloc = 0; ibloc < n_blocs_poly2d; ibloc++) {
+          const PDM_writer_bloc_poly2d_t *bloc_poly2d = 
+          (const PDM_writer_bloc_poly2d_t *) PDM_Handles_get (geom->blocs_poly2d, list_ind[ibloc]);
 
           if (bloc_poly2d != NULL) {
 
@@ -1668,8 +1732,15 @@ PDM_writer_ensight_var_write
 
         /* Boucle sur les blocs polyedres */
 
-        for (int ibloc = 0; ibloc < geom->l_blocs_poly3d; ibloc++) {
-          PDM_writer_bloc_poly3d_t *bloc_poly3d = geom->blocs_poly3d[ibloc];
+        n_blocs_poly3d = 0;
+        if (geom->blocs_poly3d != NULL) {  
+          n_blocs_poly3d = PDM_Handles_n_get (geom->blocs_poly3d);
+          list_ind = PDM_Handles_idx_get (geom->blocs_poly3d);
+        }
+
+        for (int ibloc = 0; ibloc < n_blocs_poly3d; ibloc++) {
+          const PDM_writer_bloc_poly3d_t *bloc_poly3d = 
+          (const PDM_writer_bloc_poly3d_t *) PDM_Handles_get (geom->blocs_poly3d, list_ind[ibloc]);
 
           if (bloc_poly3d != NULL) {
 
