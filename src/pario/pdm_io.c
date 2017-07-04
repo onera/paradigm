@@ -32,6 +32,7 @@
 #include "pdm_fortran_to_c_string.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
+#include "pdm_handles.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -104,19 +105,19 @@ struct _PDM_io_fichier_t {
  * Stockage des objets PDM_io_fichiers
  *----------------------------------------------------------------------------*/
 
-static PDM_io_fichier_t **PDM_io_fichiers = NULL; 
+static PDM_Handles_t *PDM_io_fichiers = NULL; 
 
 /*----------------------------------------------------------------------------
  * Taille du tableau PDM_io_fichiers
  *----------------------------------------------------------------------------*/
 
-static PDM_l_num_t l_PDM_io_fichiers = 0;
+//static PDM_l_num_t l_PDM_io_fichiers = 0;
 
 /*----------------------------------------------------------------------------
  * Nombre de fichiers sotckÃ©s dans PDM_io_fichiers
  *----------------------------------------------------------------------------*/
 
-static PDM_l_num_t n_PDM_io_fichiers = 0;
+//static PDM_l_num_t n_PDM_io_fichiers = 0;
 
 /*----------------------------------------------------------------------------
  * tag pour Echanges MPI
@@ -614,12 +615,7 @@ static void _calcul_parametres_distribution_bloc
 PDM_io_fichier_t *PDM_io_get_fichier
 (const PDM_l_num_t  unite)
 {
-  PDM_io_fichier_t *fichier = NULL;
-
-  if (unite < l_PDM_io_fichiers)
-    fichier = PDM_io_fichiers[unite];
-
-  return fichier;
+  return (PDM_io_fichier_t *) PDM_Handles_get (PDM_io_fichiers, unite);
 }
 
 
@@ -638,7 +634,8 @@ const char* PDM_io_get_nom_fichier
 (const PDM_l_num_t unite)
 {
   char *nom = NULL;
-  PDM_io_fichier_t *fichier = PDM_io_get_fichier(unite);
+  PDM_io_fichier_t *fichier = 
+          (PDM_io_fichier_t *) PDM_Handles_get (PDM_io_fichiers, unite);  
   if (fichier != NULL)
     nom = fichier->nom;
   return nom;
@@ -734,37 +731,13 @@ void PDM_io_open
   *ierr = 0;
 
   if (PDM_io_fichiers == NULL) {
-    l_PDM_io_fichiers = 4;
-    PDM_io_fichiers = (PDM_io_fichier_t**) malloc(l_PDM_io_fichiers * 
-                                                  sizeof(PDM_io_fichier_t*));
-    for (PDM_l_num_t i = 0; i < l_PDM_io_fichiers; i++) 
-      PDM_io_fichiers[i] = NULL;
+    PDM_io_fichiers = PDM_Handles_create (4);
   } 
-
-  if (l_PDM_io_fichiers <= n_PDM_io_fichiers) {
-    PDM_l_num_t p_l_PDM_io_fichiers = l_PDM_io_fichiers;
-    l_PDM_io_fichiers = 2 * l_PDM_io_fichiers;
-    PDM_io_fichiers = (PDM_io_fichier_t**) realloc((void*) PDM_io_fichiers,
-                                                   l_PDM_io_fichiers * 
-                                                   sizeof(PDM_io_fichier_t*));
-    for (PDM_l_num_t i = p_l_PDM_io_fichiers; i < l_PDM_io_fichiers; i++) 
-      PDM_io_fichiers[i] = NULL;
-    
-  }
-
-  /* Recherche de la premiere place libre pour stocker le fichier */
-
-  int i = 0;
-  while (PDM_io_fichiers[i] != NULL) 
-    i++;
-  *unite = i;
 
   /* Initialisation de la structure PDM_io_fichier_t */
 
   PDM_io_fichier_t *nouveau_fichier = 
     (PDM_io_fichier_t*) malloc(sizeof(PDM_io_fichier_t));
-
-  n_PDM_io_fichiers += 1;
 
   /* Initialisation des timer */
 
@@ -982,7 +955,8 @@ void PDM_io_open
     
   /* Stockage du fichier cree */
 
-  PDM_io_fichiers[*unite] = nouveau_fichier;
+
+  *unite = PDM_Handles_store (PDM_io_fichiers, nouveau_fichier);
 
   PDM_timer_hang_on(nouveau_fichier->timer_total);
 
@@ -4183,11 +4157,12 @@ void PDM_io_detruit
 
     free(fichier);
 
-    PDM_io_fichiers[unite] = NULL;
-    n_PDM_io_fichiers -= 1;
-    if (n_PDM_io_fichiers == 0) {
-      free(PDM_io_fichiers);
-      PDM_io_fichiers = NULL;
+    PDM_Handles_handle_free (PDM_io_fichiers, unite, PDM_FALSE);
+    
+    int n_file = PDM_Handles_n_get (PDM_io_fichiers);  
+    
+    if (n_file == 0) {
+      PDM_io_fichiers = PDM_Handles_free (PDM_io_fichiers); 
     }
   }
 
