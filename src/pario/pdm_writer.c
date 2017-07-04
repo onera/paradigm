@@ -232,42 +232,6 @@ _norme
   return sqrt(a[0] * a[0] + a[1] * a[1] + a[2] * a[2]);
 }
 
-
-/*----------------------------------------------------------------------------
- * Retourne un pointeur un objet var a partir de son identificateur
- *
- * parameters :
- *   id_gom          <-- Identificateur  
- *
- * return :
- *                   --> Objet CS  
- *
- *----------------------------------------------------------------------------*/
-
-static PDM_writer_var_t *
-_var_get
-(
- const PDM_writer_t *cs,
- const int   id_var
-)
-{
-  PDM_writer_var_t *var = NULL;
-
-  if (id_var >= cs->l_var_tab) {
-    PDM_error(__FILE__, __LINE__, 0, "Erreur _var_get : Identificateur de variable trop grand\n");
-    abort();
-  }
- 
-  var = cs->var_tab[id_var];
-
-  if (var == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "Erreur _var_get : Identificateur de variable incorrect\n");
-    abort();
-  }
-
-  return var;
-}
-
 /*----------------------------------------------------------------------------
  * Retourne un pointeur un objet CS a partir de son identificateur
  *
@@ -2859,8 +2823,6 @@ const char          *options
   cs->sortie_fmt  = NULL;      /* Pointeur sur l'objet sortie de format fmt */    
 
   cs->var_tab     = NULL;      /* Tableau des variables */
-  cs->l_var_tab   = 0;         /* Taille du tableau des variables */
-  cs->n_var_tab   = 0;         /* Nombre de variables dans le tableau des variables */
   cs->geom_tab    = NULL;      /* Tableau des geometries */
   cs->physical_time = 0;       /* Temps physique de simulation */
   cs->acces       = acces;
@@ -2929,10 +2891,15 @@ const int   id_cs
 
   /* Liberation des variables */
 
-  for (int i = 0; i < cs->l_var_tab; i++) {
-    if (cs->var_tab[i] != NULL) {
-      PDM_writer_var_free(id_cs, i);
+  if (cs->var_tab != NULL) {
+    int n_var_tab = PDM_Handles_n_get (cs->var_tab);
+    const int *var_index = PDM_Handles_idx_get(cs->var_tab);
+
+    for (int i = 0; i < n_var_tab; i++) {
+      PDM_writer_var_free(id_cs, var_index[i]);
     }
+
+    cs->var_tab = PDM_Handles_free (cs->var_tab);
   }
   
   if (cs->options != NULL) {
@@ -2946,12 +2913,6 @@ const int   id_cs
     }
     free (cs->options);
   }
-
-  if (cs->var_tab != NULL) {
-    free(cs->var_tab);
-    cs->var_tab = NULL;
-  }
-  cs->l_var_tab = 0;
 
 
   /* Liberation de la g�om�trie */
@@ -5729,34 +5690,13 @@ const char        *nom_var
   /* Mise a jour du tableau de stockage */
 
   if (cs->var_tab == NULL) {
-    cs->l_var_tab = 4;
-    cs->var_tab = (PDM_writer_var_t **) malloc(cs->l_var_tab * sizeof(PDM_writer_var_t *));
-    for (int i = 0; i < cs->l_var_tab; i++) 
-      cs->var_tab[i] = NULL;
+    cs->var_tab = PDM_Handles_create(4);
   } 
-  
-  if (cs->l_var_tab <= cs->n_var_tab) {
-    int p_l_var_tab = cs->l_var_tab;
-    cs->l_var_tab = 2 * cs->l_var_tab;
-    cs->var_tab = (PDM_writer_var_t**) realloc((void*) cs->var_tab, cs->l_var_tab * sizeof(PDM_writer_var_t *));
-    
-    for (int i = p_l_var_tab; i < cs->l_var_tab; i++) 
-      cs->var_tab[i] = NULL;
-  }
-
-  /* Recherche de la premiere place libre pour stocker le bloc */
-
-  int id_var = 0;
-  while (cs->var_tab[id_var] != NULL) 
-    id_var++;
 
   /* Allocation de la structure PDM_writer_var_t */
 
   PDM_writer_var_t *var = (PDM_writer_var_t *) malloc(sizeof(PDM_writer_var_t));
-
-  cs->n_var_tab += 1;
-
-  cs->var_tab[id_var] = var;
+  int id_var = PDM_Handles_store (cs->var_tab, var);
 
   /* Initialisation de la structure PDM_writer_var_t */
 
@@ -5828,7 +5768,11 @@ const int        id_var
     PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
   }
 
-  PDM_writer_var_t *var = _var_get(cs, id_var);
+  PDM_writer_var_t *var = (PDM_writer_var_t *) PDM_Handles_get (cs->var_tab, id_var);
+  
+  if (var == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad var identifier\n");
+  }
 
   /* Ecriture au format */
 
@@ -5889,7 +5833,11 @@ const PDM_real_t *val
     PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
   }
 
-  PDM_writer_var_t *var = _var_get(cs, id_var);
+  PDM_writer_var_t *var = (PDM_writer_var_t *) PDM_Handles_get (cs->var_tab, id_var);
+  
+  if (var == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad var identifier\n");
+  }
 
   PDM_writer_geom_t *geom = (PDM_writer_geom_t *) PDM_Handles_get (cs->geom_tab, id_geom);
 
@@ -5991,7 +5939,11 @@ const int    id_var
     PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
   }
 
-  PDM_writer_var_t *var = _var_get(cs, id_var);
+  PDM_writer_var_t *var = (PDM_writer_var_t *) PDM_Handles_get (cs->var_tab, id_var);
+  
+  if (var == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad var identifier\n");
+  }
   
   if (var->_val != NULL) {
 
@@ -6059,39 +6011,40 @@ const int    id_var
 
     /* Acces a l'objet de geometrie courant */
 
-    PDM_writer_var_t *var = _var_get (cs, id_var);
-
-    free(var->nom_var);
+    PDM_writer_var_t *var = (PDM_writer_var_t *) PDM_Handles_get (cs->var_tab, id_var);
     
-    const int *ind = PDM_Handles_idx_get (cs->geom_tab);
-    const int n_ind = PDM_Handles_n_get (cs->geom_tab);
+    if (var != NULL) {
 
-    for (int i = 0; i < n_ind; i++) {
-      int idx = ind[i];
-      if (var->_val[idx] != NULL)
-        free(var->_val[idx]);
-      var->_val[idx] = NULL;
-    }
-    
-    free(var->_val);
-    var->_val = NULL;
+      free(var->nom_var);
 
-    /* Lib�ration sp�cifique au format */
+      const int *ind = PDM_Handles_idx_get (cs->geom_tab);
+      const int n_ind = PDM_Handles_n_get (cs->geom_tab);
 
-    PDM_writer_fmt_t * fmt_ptr = (PDM_writer_fmt_t *) PDM_Handles_get (fmt_tab, cs->fmt_id);
+      for (int i = 0; i < n_ind; i++) {
+        int idx = ind[i];
+        if (var->_val[idx] != NULL)
+          free(var->_val[idx]);
+        var->_val[idx] = NULL;
+      }
 
-    if (fmt_ptr->var_free_fct != NULL) {
-      (fmt_ptr->var_free_fct) (var);
-    }
+      free(var->_val);
+      var->_val = NULL;
 
-    free(cs->var_tab[id_var]);
-    cs->var_tab[id_var] = NULL;
-    cs->n_var_tab -= 1;
+      /* Lib�ration sp�cifique au format */
 
-    if (cs->n_var_tab == 0) {
-      free(cs->var_tab);
-      cs->var_tab = NULL;
-      cs->l_var_tab = 0;
+      PDM_writer_fmt_t * fmt_ptr = (PDM_writer_fmt_t *) PDM_Handles_get (fmt_tab, cs->fmt_id);
+
+      if (fmt_ptr->var_free_fct != NULL) {
+        (fmt_ptr->var_free_fct) (var);
+      }
+      
+      free (var);
+      PDM_Handles_handle_free (cs->var_tab, id_var, PDM_FALSE);
+
+      int n_var = PDM_Handles_n_get (cs->var_tab);
+      if (n_var == 0) {
+        cs->var_tab = PDM_Handles_free (cs->var_tab);
+      }
     }
   }
 }

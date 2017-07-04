@@ -732,11 +732,16 @@ _vars_close(PDM_writer_t *cs)
   PDM_MPI_Comm_rank(cs->pdm_mpi_comm,
                 &rank);
 
-  for (int i = 0; i < cs->l_var_tab; i++) {
-    if (cs->var_tab[i] != NULL) {
-      PDM_writer_var_t *var = cs->var_tab[i];
-      PDM_writer_var_ensight_t *_var_ensight = (PDM_writer_var_ensight_t *) var->var_fmt;
-      _var_close(_var_ensight, rank);
+  if (cs->var_tab != NULL) {
+    const int n_ind = PDM_Handles_n_get (cs->var_tab);
+    const int *ind = PDM_Handles_idx_get (cs->var_tab);
+  
+    for (int i = 0; i < n_ind; i++) {
+      PDM_writer_var_t *var = (PDM_writer_var_t * ) PDM_Handles_get (cs->var_tab, ind[i]);
+      if (var != NULL) {
+        PDM_writer_var_ensight_t *_var_ensight = (PDM_writer_var_ensight_t *) var->var_fmt;
+        _var_close(_var_ensight, rank);
+      }
     }
   }
 }
@@ -789,8 +794,8 @@ PDM_writer_ensight_free
 PDM_writer_t *cs
 )
 {
-  _geom_close(cs);
   _vars_close(cs);
+  _geom_close(cs);
   PDM_writer_ensight_t *PDM_writer_ensight = (PDM_writer_ensight_t *) cs->sortie_fmt;
   PDM_writer_ensight_case_lib(PDM_writer_ensight->ensight_case);
   free(cs->sortie_fmt);

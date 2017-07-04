@@ -244,16 +244,15 @@ PDM_Handles_handle_free
       free ((void *) handles->array[handle_idx]);
     }
   }
-  
+
   handles->array[handle_idx] = NULL;
 
   int ind = handles->idx_inv[handle_idx];
 
   for (int i = ind + 1; i < handles->n_handles; i++) {
     handles->idx[i-1] = handles->idx[i];
+    handles->idx_inv[handles->idx[i-1]] = i-1;
   }
-  
-  handles->idx[handle_idx] = -1;
   
   handles->n_handles += -1;
 

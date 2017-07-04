@@ -287,9 +287,7 @@ struct _PDM_writer_t {
   char          *nom_sortie; /* Nom de la sortie */
   PDM_MPI_Comm       pdm_mpi_comm;   /* Communicateur MPI */
   void          *sortie_fmt; /* Description propre au format */    
-  PDM_writer_var_t     **var_tab;    /* Tableau des variables */
-  int            l_var_tab;  /* Taille du tableau des variables */
-  int            n_var_tab;  /* Nombre de variables dans le tableau des variables */
+  PDM_Handles_t     *var_tab;    /* Tableau des variables */
   PDM_Handles_t    *geom_tab;   /* Tableau des geometries */
   double         physical_time; /* Temps physique de la simulation */
   PDM_io_acces_t acces;    /* Type d'acces au fichier (MPIIIO,...) */
