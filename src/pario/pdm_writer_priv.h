@@ -292,9 +292,7 @@ struct _PDM_writer_t {
   double         physical_time; /* Temps physique de la simulation */
   PDM_io_acces_t acces;    /* Type d'acces au fichier (MPIIIO,...) */
   double         prop_noeuds_actifs; /* Proportion des noeuds actifs */
-  int            l_name_map;  /* Taille du tableau name_map */
-  int            n_name_map;  /* Nombre de valeurs mappee */
-  PDM_writer_name_map_t  **name_map;   /* Stockage du mapping des noms */
+  PDM_Handles_t  *name_map;   /* Stockage du mapping des noms */
   int            n_options; /* Nombre d'options */
   PDM_writer_option_t    *options; /* Options complementaire */
  };

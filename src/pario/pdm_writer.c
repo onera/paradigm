@@ -2827,8 +2827,6 @@ const char          *options
   cs->physical_time = 0;       /* Temps physique de simulation */
   cs->acces       = acces;
   cs->prop_noeuds_actifs = prop_noeuds_actifs;
-  cs->l_name_map = 0;
-  cs->n_name_map = 0;
   cs->name_map   = NULL;
 
   /* Appel de la fonction complementaire propre au format */
@@ -2929,14 +2927,22 @@ const int   id_cs
   }
 
   if (cs->name_map != NULL) {
-    for (int i = 0; i < cs->l_name_map; i++) {
-      if (cs->name_map[i] != NULL) {
-        free (cs->name_map[i]->public_name);
-        free (cs->name_map[i]->private_name);
-        free (cs->name_map[i]);
+    int n_map_tab = PDM_Handles_n_get (cs->name_map);
+    const int *map_index = PDM_Handles_idx_get(cs->name_map);
+
+    for (int i = 0; i < n_map_tab; i++) {
+      PDM_writer_name_map_t *map = (PDM_writer_name_map_t *) 
+              PDM_Handles_get (cs->name_map, map_index[i]);
+      if (map != NULL) {
+        free (map->public_name);
+        free (map->private_name);
+        free (map);
       }
+      PDM_Handles_handle_free (cs->name_map, map_index[i], PDM_FALSE);
     }
-    free (cs->name_map);
+    
+    cs->name_map = PDM_Handles_free (cs->name_map);
+
   }
  
   /* Liberation de la structure */
@@ -5596,30 +5602,12 @@ const char *private_name
   /* Mise a jour du tableau de stockage */
 
   if (cs->name_map == NULL) {
-    cs->l_name_map = 3;
-    cs->name_map = (PDM_writer_name_map_t **) malloc(cs->l_name_map * sizeof(PDM_writer_name_map_t *));
-    for (int i = 0; i < cs->l_name_map; i++) 
-      cs->name_map[i] = NULL;
-  } 
-  
-  if (cs->l_name_map <= cs->n_name_map) {
-    int p_l_name_map = cs->l_name_map;
-    cs->l_name_map = 2 * cs->l_name_map;
-    cs->name_map = (PDM_writer_name_map_t**) realloc((void*) cs->name_map,
-                                             cs->l_name_map * sizeof(PDM_writer_name_map_t *));
-    
-    for (int i = p_l_name_map; i < cs->l_name_map; i++) 
-      cs->name_map[i] = NULL;
+    cs->name_map = PDM_Handles_create(3);
   }
-
-  int id_map = 0;
-  while (cs->name_map[id_map] != NULL) 
-    id_map++;
-
-  PDM_writer_name_map_t * name_map = (PDM_writer_name_map_t *) malloc (sizeof(PDM_writer_name_map_t));  
-
-  cs->n_name_map += 1;
-  cs->name_map[id_map] = name_map;
+        
+  PDM_writer_name_map_t *name_map = (PDM_writer_name_map_t *) malloc (sizeof(PDM_writer_name_map_t));  
+    
+  PDM_Handles_store (cs->name_map, name_map);
 
   name_map->public_name = malloc ((strlen(public_name) + 1) * sizeof(char)); 
   name_map->private_name = malloc ((strlen(private_name) + 1) * sizeof(char)); 
@@ -5712,12 +5700,19 @@ const char        *nom_var
   var->_cs        = cs;
   var->private_name = NULL;
 
-  for (int i = 0; i < cs->n_name_map; i++) {
-    if (!strcmp(nom_var, cs->name_map[i]->public_name)) {
-      var->private_name = cs->name_map[i]->private_name;
+  if (cs->name_map != NULL) {
+    const int n_map = PDM_Handles_n_get (cs->name_map);
+    const int *ind = PDM_Handles_idx_get (cs->name_map);
+
+    for (int i = 0; i < n_map; i++) {
+      PDM_writer_name_map_t *map = (PDM_writer_name_map_t *) 
+              PDM_Handles_get (cs->name_map, ind[i]);
+      if (!strcmp(nom_var, map->public_name)) {
+        var->private_name = map->private_name;
+      }
     }
   }
-
+  
   /* Appel de la fonction complementaire propre au format */
 
   PDM_writer_fmt_t * fmt_ptr = (PDM_writer_fmt_t *) PDM_Handles_get (fmt_tab, cs->fmt_id);
