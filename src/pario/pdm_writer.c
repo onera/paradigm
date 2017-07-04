@@ -232,41 +232,6 @@ _norme
   return sqrt(a[0] * a[0] + a[1] * a[1] + a[2] * a[2]);
 }
 
-/*----------------------------------------------------------------------------
- * Retourne un pointeur un objet geom a partir de son identificateur
- *
- * parameters :
- *   id_gom          <-- Identificateur  
- *
- * return :
- *                   --> Objet CS  
- *
- *----------------------------------------------------------------------------*/
-
-static PDM_writer_geom_t *
-_geom_get
-(
- const PDM_writer_t *cs,
- const int   id_geom
-)
-{
-  PDM_writer_geom_t *geom = NULL;
-
-  if (id_geom >= cs->l_geom_tab) {
-    PDM_error(__FILE__, __LINE__, 0, "Erreur _geom_get : Identificateur de geometrie trop grand\n");
-    abort();
-  }
- 
-  geom = cs->geom_tab[id_geom];
-
-  if (geom == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "Erreur _geom_get : Identificateur de geometrie incorrect\n");
-    abort();
-  }
-
-  return geom;
-}
-
 
 /*----------------------------------------------------------------------------
  * Retourne un pointeur un objet var a partir de son identificateur
@@ -2897,8 +2862,6 @@ const char          *options
   cs->l_var_tab   = 0;         /* Taille du tableau des variables */
   cs->n_var_tab   = 0;         /* Nombre de variables dans le tableau des variables */
   cs->geom_tab    = NULL;      /* Tableau des geometries */
-  cs->l_geom_tab  = 0;         /* Taille du tableau des geometries */
-  cs->n_geom_tab  = 0;         /* Nombre de geometries dans le tableau des geoemtries */
   cs->physical_time = 0;       /* Temps physique de simulation */
   cs->acces       = acces;
   cs->prop_noeuds_actifs = prop_noeuds_actifs;
@@ -2993,17 +2956,16 @@ const int   id_cs
 
   /* Liberation de la g�om�trie */
 
-  for (int i = 0; i < cs->l_geom_tab; i++) {
-    if (cs->geom_tab[i] != NULL) {
-      PDM_writer_geom_free(id_cs, i);
-    }
-  }
-
   if (cs->geom_tab != NULL) {
-    free(cs->geom_tab);
-    cs->geom_tab = NULL;
+    int n_geom_tab = PDM_Handles_n_get (cs->geom_tab);
+    const int *geom_index = PDM_Handles_idx_get(cs->geom_tab);
+
+    for (int i = 0; i < n_geom_tab; i++) {
+      PDM_writer_geom_free(id_cs, geom_index[i]);
+    }
+
+    cs->geom_tab = PDM_Handles_free (cs->geom_tab);
   }
-  cs->l_geom_tab = 0;
 
   if (cs->name_map != NULL) {
     for (int i = 0; i < cs->l_name_map; i++) {
@@ -3200,34 +3162,14 @@ const int               n_part
   /* Mise a jour du tableau de stockage */
 
   if (cs->geom_tab == NULL) {
-    cs->l_geom_tab = 4;
-    cs->geom_tab = (PDM_writer_geom_t **) malloc(cs->l_geom_tab * sizeof(PDM_writer_geom_t *));
-    for (int i = 0; i < cs->l_geom_tab; i++) 
-      cs->geom_tab[i] = NULL;
+    cs->geom_tab = PDM_Handles_create (4);
   } 
   
-  if (cs->l_geom_tab <= cs->n_geom_tab) {
-    int p_l_geom_tab = cs->l_geom_tab;
-    cs->l_geom_tab = 2 * cs->l_geom_tab;
-    cs->geom_tab = (PDM_writer_geom_t**) realloc((void*) cs->geom_tab, cs->l_geom_tab * sizeof(PDM_writer_geom_t *));
-    
-    for (int i = p_l_geom_tab; i < cs->l_geom_tab; i++) 
-      cs->geom_tab[i] = NULL;
-  }
-
-  /* Recherche de la premiere place libre pour stocker le bloc */
-
-  int id_geom = 0;
-  while (cs->geom_tab[id_geom] != NULL) 
-    id_geom++;
-
   /* Allocation de la structure PDM_writer_geom_t */
 
   PDM_writer_geom_t *geom = (PDM_writer_geom_t *) malloc(sizeof(PDM_writer_geom_t));
 
-  cs->n_geom_tab += 1;
-
-  cs->geom_tab[id_geom] = geom;
+  int id_geom = PDM_Handles_store (cs->geom_tab, geom);
 
   /* Initialisation de la structure PDM_writer_geom_t */
 
@@ -3322,7 +3264,12 @@ const PDM_g_num_t *numabs
     PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
   }
 
-  PDM_writer_geom_t *geom = _geom_get(cs, id_geom);
+  PDM_writer_geom_t *geom = (PDM_writer_geom_t *) PDM_Handles_get (cs->geom_tab, id_geom);
+
+  if (geom == NULL) {
+    PDM_error(__FILE__, __LINE__, 0, "Bad geom identifier\n");
+    abort();
+  }
 
   if (geom->n_part == 0) {
     PDM_error(__FILE__, __LINE__, 0, "Erreur PDM_writer_geom_coord_set : Le nombre de partitions n'a pas ete defini\n");
@@ -3411,7 +3358,12 @@ const PDM_g_num_t *numabs_parent
     PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
   }
 
-  PDM_writer_geom_t *geom = _geom_get(cs, id_geom);
+  PDM_writer_geom_t *geom = (PDM_writer_geom_t *)  PDM_Handles_get (cs->geom_tab, id_geom);
+
+  if (geom == NULL) {
+    PDM_error(__FILE__, __LINE__, 0, "Bad geom identifier\n");
+    abort();
+  }
 
   if (geom->n_part == 0) {
     PDM_error(__FILE__, __LINE__, 0, "Erreur PDM_writer_geom_coord_from_parent_set : Le nombre de partitions n'a pas ete defini\n");
@@ -3497,7 +3449,12 @@ const PDM_writer_elt_geom_t  t_elt
     PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
   }
 
-  PDM_writer_geom_t *geom = _geom_get(cs, id_geom);
+  PDM_writer_geom_t *geom = (PDM_writer_geom_t *) PDM_Handles_get (cs->geom_tab, id_geom);
+
+  if (geom == NULL) {
+    PDM_error(__FILE__, __LINE__, 0, "Bad geom identifier\n");
+    abort();
+  }
 
   /* Creation du bloc */
 
@@ -3820,7 +3777,12 @@ const int            n_elt,
     PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
   }
 
-  PDM_writer_geom_t *geom = _geom_get(cs, id_geom);
+  PDM_writer_geom_t *geom = (PDM_writer_geom_t *) PDM_Handles_get (cs->geom_tab, id_geom);
+
+  if (geom == NULL) {
+    PDM_error(__FILE__, __LINE__, 0, "Bad geom identifier\n");
+    abort();
+  }
  
   int _id_bloc = id_bloc - PDM_WRITER_DEB_ID_BLOC_STD;
   
@@ -3907,7 +3869,12 @@ const PDM_l_num_t       n_elt,
     PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
   }
 
-  PDM_writer_geom_t *geom = _geom_get(cs, id_geom);
+  PDM_writer_geom_t *geom = (PDM_writer_geom_t *) PDM_Handles_get (cs->geom_tab, id_geom);
+
+  if (geom == NULL) {
+    PDM_error(__FILE__, __LINE__, 0, "Bad geom identifier\n");
+    abort();
+  }
   
   int _id_bloc = id_bloc - PDM_WRITER_DEB_ID_BLOC_POLY2D;
   
@@ -4007,7 +3974,12 @@ const PDM_l_num_t   n_face,
     PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
   }
 
-  PDM_writer_geom_t *geom = _geom_get(cs, id_geom);
+  PDM_writer_geom_t *geom = (PDM_writer_geom_t *) PDM_Handles_get (cs->geom_tab, id_geom);
+
+  if (geom == NULL) {
+    PDM_error(__FILE__, __LINE__, 0, "Bad geom identifier\n");
+    abort();
+  }
 
   int _id_bloc = id_bloc - PDM_WRITER_DEB_ID_BLOC_POLY3D;
   
@@ -4116,7 +4088,13 @@ PDM_g_num_t   *numabs
     PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
   }
   
-  PDM_writer_geom_t *geom = _geom_get(cs, id_geom);
+  PDM_writer_geom_t *geom = (PDM_writer_geom_t *) PDM_Handles_get (cs->geom_tab, id_geom);
+
+  if (geom == NULL) {
+    PDM_error(__FILE__, __LINE__, 0, "Bad geom identifier\n");
+    abort();
+  }
+
   int n_part = 0;
 
   if (geom->num_cell_parent_to_local == NULL) {
@@ -4655,7 +4633,12 @@ PDM_g_num_t   *numabs
     PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
   }
 
-  PDM_writer_geom_t *geom = _geom_get(cs, id_geom);
+  PDM_writer_geom_t *geom = (PDM_writer_geom_t *) PDM_Handles_get (cs->geom_tab, id_geom);
+
+  if (geom == NULL) {
+    PDM_error(__FILE__, __LINE__, 0, "Bad geom identifier\n");
+    abort();
+  }
   int n_part = 0;
 
   if (geom->num_cell_parent_to_local == NULL) {
@@ -5036,7 +5019,12 @@ PDM_g_num_t   *numabs
     PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
   }
 
-  PDM_writer_geom_t *geom = _geom_get(cs, id_geom);
+  PDM_writer_geom_t *geom = (PDM_writer_geom_t *) PDM_Handles_get (cs->geom_tab, id_geom);
+
+  if (geom == NULL) {
+    PDM_error(__FILE__, __LINE__, 0, "Bad geom identifier\n");
+    abort();
+  }
   int n_part = 0;
 
   if (geom->num_cell_parent_to_local == NULL) {
@@ -5321,7 +5309,12 @@ const int            id_geom
     PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
   }
 
-  PDM_writer_geom_t *geom = _geom_get(cs, id_geom);
+  PDM_writer_geom_t *geom = (PDM_writer_geom_t *) PDM_Handles_get (cs->geom_tab, id_geom);
+
+  if (geom == NULL) {
+    PDM_error(__FILE__, __LINE__, 0, "Bad geom identifier\n");
+    abort();
+  }
 
   //TODO  faire un retour si g�om�trie n'est pas dependante du temps
   //       et si on n'est pas au premier incr�ment
@@ -5401,7 +5394,12 @@ const int      id_geom
     PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
   }
   
-  PDM_writer_geom_t *geom = _geom_get(cs, id_geom);
+  PDM_writer_geom_t *geom = (PDM_writer_geom_t *) PDM_Handles_get (cs->geom_tab, id_geom);
+
+  if (geom == NULL) {
+    PDM_error(__FILE__, __LINE__, 0, "Bad geom identifier\n");
+    abort();
+  }
 
   /* Lib�ration des sommets */
   
@@ -5490,13 +5488,12 @@ const int      id_geom
 
   free(geom);
 
-  cs->geom_tab[id_geom] = NULL;
-  cs->n_geom_tab -= 1;
+  PDM_Handles_handle_free (cs->geom_tab, id_geom, PDM_FALSE);
+  
+  int n_geom_tab = PDM_Handles_n_get (cs->geom_tab); 
 
-  if (cs->n_geom_tab == 0) {
-    free(cs->geom_tab);
-    cs->geom_tab = NULL;
-    cs->l_geom_tab = 0;
+  if (n_geom_tab == 0) {
+    cs->geom_tab = PDM_Handles_free (cs->geom_tab);
   }
 }
 
@@ -5536,7 +5533,12 @@ const int      id_geom
     PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
   }
 
-  PDM_writer_geom_t *geom = _geom_get(cs, id_geom);
+  PDM_writer_geom_t *geom = (PDM_writer_geom_t *) PDM_Handles_get (cs->geom_tab, id_geom);
+
+  if (geom == NULL) {
+    PDM_error(__FILE__, __LINE__, 0, "Bad geom identifier\n");
+    abort();
+  }
   
   /* Boucle sur les blocs standard */
 
@@ -5889,17 +5891,29 @@ const PDM_real_t *val
 
   PDM_writer_var_t *var = _var_get(cs, id_var);
 
-  PDM_writer_geom_t *geom = _geom_get(cs, id_geom);
+  PDM_writer_geom_t *geom = (PDM_writer_geom_t *) PDM_Handles_get (cs->geom_tab, id_geom);
 
-
-
-  if (var->_val == NULL) {
-    var->_val = (double ***) malloc(sizeof(double **) * cs->l_geom_tab);
-    for (int i = 0; i < cs->l_geom_tab; i++)
-      var->_val[i] = NULL;
+  if (geom == NULL) {
+    PDM_error(__FILE__, __LINE__, 0, "Bad geom identifier\n");
+    abort();
   }
 
-  if (cs->l_geom_tab <= id_geom) {
+  const int *ind = PDM_Handles_idx_get (cs->geom_tab);
+  const int n_ind = PDM_Handles_n_get (cs->geom_tab);
+
+  int ind_max = 0;
+  for (int i = 0; i < n_ind; i++) {
+    ind_max = PDM_MAX (ind_max, ind[i]);
+  }
+
+  if (var->_val == NULL) {
+    var->_val = (double ***) malloc(sizeof(double **) * (ind_max + 1));
+    for (int i = 0; i < (ind_max + 1); i++) {
+      var->_val[i] = NULL;
+    }
+  }
+  
+  if (ind_max < id_geom) {
     PDM_error(__FILE__, __LINE__, 0, "Erreur cs_var_set    : Indice de geometrie incorrect\n");
     abort();
   }
@@ -5978,15 +5992,26 @@ const int    id_var
   }
 
   PDM_writer_var_t *var = _var_get(cs, id_var);
-
+  
   if (var->_val != NULL) {
-    for (int i = 0; i < cs->l_geom_tab; i++) {
-      PDM_writer_geom_t    *geom = cs->geom_tab[i];
-      if ((geom != NULL) && (var->_val[i] != NULL)) {
+
+    const int *ind = PDM_Handles_idx_get (cs->geom_tab);
+    const int n_ind = PDM_Handles_n_get (cs->geom_tab);
+
+    for (int i = 0; i < n_ind; i++) {
+      int idx = ind[i];
+      PDM_writer_geom_t *geom = (PDM_writer_geom_t *) PDM_Handles_get (cs->geom_tab, idx);
+
+      if (geom == NULL) {
+        PDM_error(__FILE__, __LINE__, 0, "Bad geom identifier\n");
+        abort();
+      }
+
+      if ((geom != NULL) && (var->_val[idx] != NULL)) {
         for (int j = 0; j < geom->n_part; j++) {
-          if (var->_val[i][j] != NULL)
-            free(var->_val[i][j]);
-          var->_val[i][j] = NULL;
+          if (var->_val[idx][j] != NULL)
+            free(var->_val[idx][j]);
+          var->_val[idx][j] = NULL;
         }
       }
     }
@@ -6030,20 +6055,24 @@ const int    id_var
 
   if (cs->var_tab != NULL) {
 
-    PDM_writer_var_data_free(id_cs,
-                    id_var);
+    PDM_writer_var_data_free(id_cs, id_var);
 
     /* Acces a l'objet de geometrie courant */
 
     PDM_writer_var_t *var = _var_get (cs, id_var);
 
     free(var->nom_var);
+    
+    const int *ind = PDM_Handles_idx_get (cs->geom_tab);
+    const int n_ind = PDM_Handles_n_get (cs->geom_tab);
 
-    for (int i = 0; i < cs->l_geom_tab; i++) {
-      if (var->_val[i] != NULL)
-        free(var->_val[i]);
-      var->_val[i] = NULL;
+    for (int i = 0; i < n_ind; i++) {
+      int idx = ind[i];
+      if (var->_val[idx] != NULL)
+        free(var->_val[idx]);
+      var->_val[idx] = NULL;
     }
+    
     free(var->_val);
     var->_val = NULL;
 

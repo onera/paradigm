@@ -859,7 +859,7 @@ PDM_writer_geom_t *geom
 {
   geom->geom_fmt = malloc(sizeof(PDM_writer_geom_ensight_t));
   PDM_writer_geom_ensight_t *_geom_ensight = (PDM_writer_geom_ensight_t *) geom->geom_fmt;
-  _geom_ensight->num_part = geom->_cs->n_geom_tab;
+  _geom_ensight->num_part = PDM_Handles_n_get (geom->_cs->geom_tab);
 }
 
 
@@ -1469,9 +1469,13 @@ PDM_writer_ensight_var_write
 
   /* Boucle sur les géométries */
 
-  for (int igeom = 0; igeom < cs->l_geom_tab; igeom++) {
+  const int *ind = PDM_Handles_idx_get (cs->geom_tab);
+  const int n_ind = PDM_Handles_n_get (cs->geom_tab);
 
-    PDM_writer_geom_t *geom = cs->geom_tab[igeom];
+  for (int i1 = 0; i1 < n_ind; i1++) {
+    int igeom = ind[i1];
+
+    PDM_writer_geom_t *geom = (PDM_writer_geom_t *) PDM_Handles_get (cs->geom_tab, igeom);
 
     if ((geom != NULL) && (var->_val[igeom] != NULL)) {
       PDM_writer_geom_ensight_t *_geom_ensight = (PDM_writer_geom_ensight_t *) geom->geom_fmt;

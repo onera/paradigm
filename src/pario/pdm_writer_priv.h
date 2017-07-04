@@ -290,9 +290,7 @@ struct _PDM_writer_t {
   PDM_writer_var_t     **var_tab;    /* Tableau des variables */
   int            l_var_tab;  /* Taille du tableau des variables */
   int            n_var_tab;  /* Nombre de variables dans le tableau des variables */
-  PDM_writer_geom_t    **geom_tab;   /* Tableau des geometries */
-  int            l_geom_tab; /* Taille du tableau des geometries */
-  int            n_geom_tab; /* Nombre de geometries dans le tableau des geoemtries */
+  PDM_Handles_t    *geom_tab;   /* Tableau des geometries */
   double         physical_time; /* Temps physique de la simulation */
   PDM_io_acces_t acces;    /* Type d'acces au fichier (MPIIIO,...) */
   double         prop_noeuds_actifs; /* Proportion des noeuds actifs */
