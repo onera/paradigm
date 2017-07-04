@@ -988,6 +988,118 @@ void PDM_io_open
 
 }
 
+
+/*----------------------------------------------------------------------------
+ * pdm_io_seek sets the file position indicator
+ *
+ * parameters :
+ *   unite           <-- Unite du fichier
+ *   offset          <-- Adresse
+ *   seek            <-- Type d'origine
+ *  
+ *----------------------------------------------------------------------------*/
+
+void PROCF (pdm_io_seek, PDM_IO_SEEK)
+(
+const PDM_l_num_t   *unite,
+const PDM_g_num_t   *offset,
+const PDM_io_seek_t *seek 
+)
+{
+  PDM_io_seek (*unite, *offset, *seek);
+}
+
+void PDM_io_seek
+(
+const PDM_l_num_t   unite,
+const PDM_g_num_t   offset,
+const PDM_io_seek_t seek 
+)
+{
+  int err_code = 0;
+  PDM_io_fichier_t *fichier = PDM_io_get_fichier(unite);
+
+  if (fichier != NULL) {
+    if (fichier->PDM_file_seq != NULL) {
+      long _offset = (long) offset;
+      PDM_file_seq_seek (fichier->PDM_file_seq,
+                         _offset,
+                         (PDM_file_seq_seek_t) seek);
+    }
+    else if (fichier->PDM_file_par != NULL) {
+      PDM_MPI_Offset _offset = (PDM_MPI_Offset) offset;
+      PDM_file_par_seek (fichier->PDM_file_par,
+                         _offset,
+                        (PDM_file_par_seek_t) seek);
+    }
+    
+  }
+
+  else {
+    err_code = 1;
+  }
+  
+  if (err_code){
+    PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_tell :"
+            " unite '%d' non valide\n", unite);
+    abort();
+  }
+}
+
+
+/*----------------------------------------------------------------------------
+ * pdm_io_tell returns the current file position
+ *
+ * parameters :
+ *   unite           <-- Unite du fichier
+ *   offset          --> Adresse
+ *  
+ *----------------------------------------------------------------------------*/
+
+void PROCF (pdm_io_tell, PDM_IO_TELL)
+(
+const PDM_l_num_t    *unite,
+      PDM_g_num_t    *offset
+)
+{
+  PDM_g_num_t  _offset = PDM_io_tell (*unite);
+  *offset = _offset;
+}
+
+PDM_g_num_t
+PDM_io_tell
+(
+const PDM_l_num_t     unite
+)
+{
+  PDM_g_num_t offset;
+  int err_code = 0;
+  PDM_io_fichier_t *fichier = PDM_io_get_fichier(unite);
+
+  if (fichier != NULL) {
+    if (fichier->PDM_file_seq != NULL) {
+      offset = (PDM_g_num_t) PDM_file_seq_tell (fichier->PDM_file_seq);
+    }
+    else if (fichier->PDM_file_par != NULL) {
+      offset = (PDM_g_num_t) PDM_file_par_tell (fichier->PDM_file_par);      
+    }
+    
+  }
+
+  else {
+    err_code = 1;
+  }
+  
+  if (err_code){
+    PDM_error(__FILE__, __LINE__, 0,"Erreur PDM_io_tell :"
+            " unite '%d' non valide\n", unite);
+    abort();
+  }
+    
+  return offset;
+
+}
+
 /*----------------------------------------------------------------------------
  * Lecture globale : Le processus maitre accede seul au fichier et redistribue
  * l'information a l'ensemble des processus du communicateur
