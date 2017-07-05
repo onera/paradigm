@@ -75,8 +75,6 @@ extern "C" {
  *============================================================================*/
 
 static PDM_Handles_t *_pparts   = NULL;
-//static _PDM_part_t **_pparts   = NULL;
-//static int         _l_pparts   = 10;
 
 /*============================================================================
  * Private function definitions
@@ -3640,6 +3638,8 @@ PDM_part_free
   if (ppart->meshParts != NULL)
     free(ppart->meshParts);
   ppart->meshParts = NULL;
+  
+  free (ppart);
 
   PDM_Handles_handle_free (_pparts, ppartId, PDM_FALSE);
 
