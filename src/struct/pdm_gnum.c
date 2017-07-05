@@ -55,6 +55,7 @@
 #include "pdm_morton.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
+#include "pdm_handles.h"
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
@@ -101,8 +102,7 @@ typedef struct  {
  * Global variable
  *============================================================================*/
 
-static _pdm_gnum_t **_gnums   = NULL;
-static int         _l_gnums   = 10;
+static PDM_Handles_t *_gnums   = NULL;
 
 /*=============================================================================
  * Private function definitions
@@ -122,17 +122,14 @@ _get_from_id
  int  id
 )
 {
-  if (id >= _l_gnums) {
-    PDM_printf("PDM_gnum error : Bad identifier\n");
-    exit(1);
-  }
+  
+  _pdm_gnum_t *gnum = (_pdm_gnum_t *) PDM_Handles_get (_gnums, id);
     
-  if (_gnums[id] == NULL) {
-    PDM_printf("PDM_gnum error : Bad identifier\n");
-    exit(1);
+  if (gnum == NULL) {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_gnum error : Bad identifier\n");
   }
 
-  return _gnums[id];
+  return gnum;
 }
 
 
@@ -329,42 +326,17 @@ PDM_gnum_create
  const PDM_MPI_Comm comm
 )
 {
-  int id;
   
   /*
    * Search a ppart free id
    */
 
   if (_gnums == NULL) {
-    _gnums = (_pdm_gnum_t **) malloc(_l_gnums * sizeof(_pdm_gnum_t *));
-    for (int i = 0; i < _l_gnums; i++)
-      _gnums[i] = NULL;
+    _gnums = PDM_Handles_create (4);
   }
 
-  _pdm_gnum_t * ppart = NULL;
-  for (int i = 0; i < _l_gnums; i++) {
-    if (_gnums[i] == NULL) {
-      _gnums[i] = (_pdm_gnum_t *) malloc(sizeof(_pdm_gnum_t));
-      ppart = _gnums[i];
-      id = i;
-      break;
-    }
-  }
-
-  if (ppart == NULL) {
-    int l_gnums_old = _l_gnums;
-    _l_gnums = 2 * _l_gnums;
-
-    _gnums = (_pdm_gnum_t **) realloc(_gnums, _l_gnums * sizeof(_pdm_gnum_t *));
-    for (int i = l_gnums_old; i < _l_gnums; i++)
-      _gnums[i] = NULL;
-
-    _gnums[l_gnums_old] = (_pdm_gnum_t *) malloc(sizeof(_pdm_gnum_t));
-    ppart = _gnums[l_gnums_old];
-    id = l_gnums_old;
-  }
-
-  _pdm_gnum_t *_gnum = _gnums[id];
+  _pdm_gnum_t *_gnum = (_pdm_gnum_t *) malloc(sizeof(_pdm_gnum_t));
+  int id = PDM_Handles_store (_gnums, _gnum);
 
   _gnum->n_part    = n_part;
   _gnum->dim       = dim;  
@@ -830,20 +802,14 @@ PDM_gnum_free
   }
   
   free (_gnum->g_nums);
+  free (_gnum);
   
-  free(_gnums[id]);
-  _gnums[id] = NULL;
+  PDM_Handles_handle_free (_gnums, id, PDM_FALSE);
 
-  int toDel = 1;
-  for (int i = 0; i < _l_gnums; i++) { 
-    if (_gnums[i] != NULL) {
-      toDel = 0;
-      break;
-    }
-  }
-  if (toDel) {
-    free(_gnums);
-    _gnums = NULL;
+  const int n_gnum = PDM_Handles_n_get (_gnums);
+  
+  if (n_gnum == 0) {
+    _gnums = PDM_Handles_free (_gnums);
   }
 
 }
