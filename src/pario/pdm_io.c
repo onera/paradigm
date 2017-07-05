@@ -1283,8 +1283,10 @@ void PDM_io_ecriture_globale
         }
       }
       
-      if ((fichier->acces == PDM_IO_ACCES_MPI_SIMPLE) || (fichier->n_rangs_inactifs > 0)) { 
-        PDM_MPI_Bcast(&n_donnees_ecrites, 1, PDM_MPI_INT, 0, fichier->comm);
+      if (fichier->acces != PDM_IO_ACCES_SEQ) {
+        if ((fichier->acces == PDM_IO_ACCES_MPI_SIMPLE) || (fichier->n_rangs_inactifs > 0)) { 
+          PDM_MPI_Bcast(&n_donnees_ecrites, 1, PDM_MPI_INT, 0, fichier->comm);
+        }
       }
       
       /* Traitement de l'erreur de lecture */
@@ -1312,10 +1314,13 @@ void PDM_io_ecriture_globale
                                                             (void *) donnees);
         }
       }
-      if ((fichier->acces == PDM_IO_ACCES_MPI_SIMPLE) || (fichier->n_rangs_inactifs > 0)) {
-        PDM_MPI_Bcast(&n_donnees_ecrites, 1, PDM_MPI_INT, 0, fichier->comm);
-      }
       
+      if (fichier->acces != PDM_IO_ACCES_SEQ) {
+        if ((fichier->acces == PDM_IO_ACCES_MPI_SIMPLE) || (fichier->n_rangs_inactifs > 0)) {
+          PDM_MPI_Bcast(&n_donnees_ecrites, 1, PDM_MPI_INT, 0, fichier->comm);
+        }
+      }
+        
       /* Traitement de l'erreur de lecture */
     
       if (n_donnees_ecrites != n_donnees) {
@@ -2851,8 +2856,10 @@ void PDM_io_ecr_par_entrelacee
           free(n_composante_trie);
         }
 
-        if ((fichier->acces == PDM_IO_ACCES_MPI_SIMPLE) || (fichier->n_rangs_inactifs > 0)) {
-          PDM_MPI_Bcast(&n_donnees_ecrites, 1, PDM_MPI_INT, 0, fichier->comm);
+        if (fichier->acces != PDM_IO_ACCES_SEQ) {
+          if ((fichier->acces == PDM_IO_ACCES_MPI_SIMPLE) || (fichier->n_rangs_inactifs > 0)) {
+            PDM_MPI_Bcast(&n_donnees_ecrites, 1, PDM_MPI_INT, 0, fichier->comm);
+          }
         }
         
         if (n_donnees_ecrites != l_string_donnee - 1) {
