@@ -2893,8 +2893,10 @@ const int   id_cs
     int n_var_tab = PDM_Handles_n_get (cs->var_tab);
     const int *var_index = PDM_Handles_idx_get(cs->var_tab);
 
-    for (int i = 0; i < n_var_tab; i++) {
-      PDM_writer_var_free(id_cs, var_index[i]);
+    while (n_var_tab > 0) {
+      PDM_writer_var_free (id_cs, var_index[0]);
+      if (cs->var_tab == NULL) break;
+      n_var_tab = PDM_Handles_n_get (cs->var_tab);
     }
 
     cs->var_tab = PDM_Handles_free (cs->var_tab);
@@ -2919,26 +2921,30 @@ const int   id_cs
     int n_geom_tab = PDM_Handles_n_get (cs->geom_tab);
     const int *geom_index = PDM_Handles_idx_get(cs->geom_tab);
 
-    for (int i = 0; i < n_geom_tab; i++) {
-      PDM_writer_geom_free(id_cs, geom_index[i]);
+    while (n_geom_tab > 0) {
+      PDM_writer_geom_free(id_cs, geom_index[0]);
+      if (cs->geom_tab == NULL) break;
+      n_geom_tab = PDM_Handles_n_get (cs->geom_tab);
     }
 
     cs->geom_tab = PDM_Handles_free (cs->geom_tab);
   }
 
   if (cs->name_map != NULL) {
+
     int n_map_tab = PDM_Handles_n_get (cs->name_map);
     const int *map_index = PDM_Handles_idx_get(cs->name_map);
 
-    for (int i = 0; i < n_map_tab; i++) {
+    while (n_map_tab > 0) {
       PDM_writer_name_map_t *map = (PDM_writer_name_map_t *) 
-              PDM_Handles_get (cs->name_map, map_index[i]);
+              PDM_Handles_get (cs->name_map, map_index[0]);
       if (map != NULL) {
         free (map->public_name);
         free (map->private_name);
         free (map);
       }
-      PDM_Handles_handle_free (cs->name_map, map_index[i], PDM_FALSE);
+      PDM_Handles_handle_free (cs->name_map, map_index[0], PDM_FALSE);
+      n_map_tab = PDM_Handles_n_get (cs->name_map);
     }
     
     cs->name_map = PDM_Handles_free (cs->name_map);
@@ -2959,9 +2965,10 @@ const int   id_cs
     int n_fmt_tab = PDM_Handles_n_get (fmt_tab);
     const int *fmt_index = PDM_Handles_idx_get(fmt_tab);
     if (n_intern_fmt == n_fmt_tab) {
-      for (int i = 0; i < n_fmt_tab; i++) {
-        int idx = fmt_index[i];
+      while (n_fmt_tab > 0) {
+        int idx = fmt_index[0];
         PDM_Handles_handle_free (fmt_tab, idx, PDM_TRUE);
+        n_fmt_tab = PDM_Handles_n_get (fmt_tab);
       }
       fmt_tab = PDM_Handles_free (fmt_tab);
     }
@@ -5363,104 +5370,105 @@ const int      id_geom
   
   PDM_writer_geom_t *geom = (PDM_writer_geom_t *) PDM_Handles_get (cs->geom_tab, id_geom);
 
-  if (geom == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "Bad geom identifier\n");
-    abort();
-  }
+  if (geom != NULL) {
 
-  /* Lib�ration des sommets */
+    /* Lib�ration des sommets */
   
-  if (geom->som != NULL) {
-    for (int i = 0; i < geom->n_part; i++) {
-      geom->som[i] = _som_free (geom->som[i]);
+    if (geom->som != NULL) {
+      for (int i = 0; i < geom->n_part; i++) {
+        geom->som[i] = _som_free (geom->som[i]);
+      }
+
+      free(geom->som);
+      geom->som = NULL;
     }
 
-    free(geom->som);
-    geom->som = NULL;
-  }
+    /* Boucle sur les blocs standard */
 
-  /* Boucle sur les blocs standard */
+    if (geom->blocs_std != NULL) {
+      int n_blocs_std = PDM_Handles_n_get (geom->blocs_std);
+      const int *list_ind = PDM_Handles_idx_get (geom->blocs_std);
 
-  if (geom->blocs_std != NULL) {
-    const int n_blocs_std = PDM_Handles_n_get (geom->blocs_std);
-    const int *list_ind = PDM_Handles_idx_get (geom->blocs_std);
+      while (n_blocs_std > 0) {
+        PDM_writer_bloc_std_t *_bloc_std = 
+          (PDM_writer_bloc_std_t *) PDM_Handles_get (geom->blocs_std, list_ind[0]);
+        _bloc_std_free(_bloc_std);
+        PDM_Handles_handle_free (geom->blocs_std, list_ind[0], PDM_FALSE);
+        n_blocs_std = PDM_Handles_n_get (geom->blocs_std);
+      }
 
-    for (int i = 0; i < n_blocs_std; i++) {
-      PDM_writer_bloc_std_t *_bloc_std = 
-              (PDM_writer_bloc_std_t *) PDM_Handles_get (geom->blocs_std, list_ind[i]);
-      _bloc_std_free(_bloc_std);
-      PDM_Handles_handle_free (geom->blocs_std, list_ind[i], PDM_FALSE);
+      geom->blocs_std = PDM_Handles_free (geom->blocs_std); 
     }
 
-    geom->blocs_std = PDM_Handles_free (geom->blocs_std); 
-  }
+    /* Boucle sur les blocs de polygones */ 
 
-  /* Boucle sur les blocs de polygones */ 
+    if (geom->blocs_poly2d != NULL) {
+      int n_blocs_poly2d = PDM_Handles_n_get (geom->blocs_poly2d);
+      const int *list_ind = PDM_Handles_idx_get (geom->blocs_poly2d);
 
-  if (geom->blocs_poly2d != NULL) {
-    const int n_blocs_poly2d = PDM_Handles_n_get (geom->blocs_poly2d);
-    const int *list_ind = PDM_Handles_idx_get (geom->blocs_poly2d);
+      while (n_blocs_poly2d > 0) {
+        PDM_writer_bloc_poly2d_t *_bloc_poly2d = 
+          (PDM_writer_bloc_poly2d_t *) PDM_Handles_get (geom->blocs_poly2d, list_ind[0]);
+        _bloc_poly2d_free(_bloc_poly2d);
+        PDM_Handles_handle_free (geom->blocs_poly2d, list_ind[0], PDM_FALSE);
+        n_blocs_poly2d = PDM_Handles_n_get (geom->blocs_poly2d);
+      }
 
-    for (int i = 0; i < n_blocs_poly2d; i++) {
-      PDM_writer_bloc_poly2d_t *_bloc_poly2d = 
-              (PDM_writer_bloc_poly2d_t *) PDM_Handles_get (geom->blocs_poly2d, list_ind[i]);
-      _bloc_poly2d_free(_bloc_poly2d);
-      PDM_Handles_handle_free (geom->blocs_poly2d, list_ind[i], PDM_FALSE);
+      geom->blocs_poly2d = PDM_Handles_free (geom->blocs_poly2d); 
     }
 
-    geom->blocs_poly2d = PDM_Handles_free (geom->blocs_poly2d); 
-  }
+    /* Boucle sur les blocs de polyedres */ 
 
-  /* Boucle sur les blocs de polyedres */ 
+    if (geom->blocs_poly3d != NULL) {
+      int n_blocs_poly3d = PDM_Handles_n_get (geom->blocs_poly3d);
+      const int *list_ind = PDM_Handles_idx_get (geom->blocs_poly3d);
 
-  if (geom->blocs_poly3d != NULL) {
-    const int n_blocs_poly3d = PDM_Handles_n_get (geom->blocs_poly3d);
-    const int *list_ind = PDM_Handles_idx_get (geom->blocs_poly3d);
+      while (n_blocs_poly3d > 0) {
+        PDM_writer_bloc_poly3d_t *_bloc_poly3d = 
+          (PDM_writer_bloc_poly3d_t *) PDM_Handles_get (geom->blocs_poly3d, list_ind[0]);
+        _bloc_poly3d_free(_bloc_poly3d);
+        PDM_Handles_handle_free (geom->blocs_poly3d, list_ind[0], PDM_FALSE);
+        n_blocs_poly3d = PDM_Handles_n_get (geom->blocs_poly3d);
+      }
 
-    for (int i = 0; i < n_blocs_poly3d; i++) {
-      PDM_writer_bloc_poly3d_t *_bloc_poly3d = 
-              (PDM_writer_bloc_poly3d_t *) PDM_Handles_get (geom->blocs_poly3d, list_ind[i]);
-      _bloc_poly3d_free(_bloc_poly3d);
-      PDM_Handles_handle_free (geom->blocs_poly3d, list_ind[i], PDM_FALSE);
+      geom->blocs_poly3d = PDM_Handles_free (geom->blocs_poly3d); 
     }
 
-    geom->blocs_poly3d = PDM_Handles_free (geom->blocs_poly3d); 
-  }
+    /* Lib�ration de la structure */ 
 
-  /* Lib�ration de la structure */ 
-
-  if (geom->num_cell_parent_to_local != NULL) {
-    for (int ipart = 0; ipart < geom->n_part; ipart++) {
-      if (geom->num_cell_parent_to_local[ipart] != NULL)
-        free(geom->num_cell_parent_to_local[ipart]);
+    if (geom->num_cell_parent_to_local != NULL) {
+      for (int ipart = 0; ipart < geom->n_part; ipart++) {
+        if (geom->num_cell_parent_to_local[ipart] != NULL)
+          free(geom->num_cell_parent_to_local[ipart]);
+      }
+      free(geom->num_cell_parent_to_local);
+      geom->num_cell_parent_to_local = NULL;
     }
-    free(geom->num_cell_parent_to_local);
-    geom->num_cell_parent_to_local = NULL;
-  }
 
-  free(geom->n_cell);
-  geom->n_cell = NULL;
+    free(geom->n_cell);
+    geom->n_cell = NULL;
 
-  free(geom->nom_geom);
+    free(geom->nom_geom);
 
-  /* Lib�ration sp�cifique au format */
+    /* Lib�ration sp�cifique au format */
 
-  /* Appel de la fonction complementaire propre au format */
+    /* Appel de la fonction complementaire propre au format */
   
-  PDM_writer_fmt_t * fmt_ptr = (PDM_writer_fmt_t *) PDM_Handles_get (fmt_tab, cs->fmt_id);
+    PDM_writer_fmt_t * fmt_ptr = (PDM_writer_fmt_t *) PDM_Handles_get (fmt_tab, cs->fmt_id);
   
-  if (fmt_ptr->geom_free_fct != NULL) {
-    (fmt_ptr->geom_free_fct) (geom);
-  }
+    if (fmt_ptr->geom_free_fct != NULL) {
+      (fmt_ptr->geom_free_fct) (geom);
+    }
 
-  free(geom);
+    free(geom);
 
-  PDM_Handles_handle_free (cs->geom_tab, id_geom, PDM_FALSE);
+    PDM_Handles_handle_free (cs->geom_tab, id_geom, PDM_FALSE);
   
-  int n_geom_tab = PDM_Handles_n_get (cs->geom_tab); 
+    int n_geom_tab = PDM_Handles_n_get (cs->geom_tab); 
 
-  if (n_geom_tab == 0) {
-    cs->geom_tab = PDM_Handles_free (cs->geom_tab);
+    if (n_geom_tab == 0) {
+      cs->geom_tab = PDM_Handles_free (cs->geom_tab);
+    }
   }
 }
 
@@ -5502,44 +5510,42 @@ const int      id_geom
 
   PDM_writer_geom_t *geom = (PDM_writer_geom_t *) PDM_Handles_get (cs->geom_tab, id_geom);
 
-  if (geom == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "Bad geom identifier\n");
-    abort();
-  }
+  if (geom != NULL) {
   
-  /* Boucle sur les blocs standard */
+    /* Boucle sur les blocs standard */
 
-  if (geom->blocs_std != NULL) {
-    const int n_blocs_std = PDM_Handles_n_get (geom->blocs_std);
-    const int *list_ind = PDM_Handles_idx_get (geom->blocs_std);
+    if (geom->blocs_std != NULL) {
+      const int n_blocs_std = PDM_Handles_n_get (geom->blocs_std);
+      const int *list_ind = PDM_Handles_idx_get (geom->blocs_std);
 
-    for (int i = 0; i < n_blocs_std; i++) {
-      PDM_writer_bloc_std_t *_bloc_std = (PDM_writer_bloc_std_t *) PDM_Handles_get (geom->blocs_std, list_ind[i]);
-      _bloc_std_free_partial(_bloc_std);
+      for (int i = 0; i < n_blocs_std; i++) {
+        PDM_writer_bloc_std_t *_bloc_std = (PDM_writer_bloc_std_t *) PDM_Handles_get (geom->blocs_std, list_ind[i]);
+        _bloc_std_free_partial(_bloc_std);
+      }
     }
-  }
 
-  /* Boucle sur les blocs de polygones */ 
+    /* Boucle sur les blocs de polygones */ 
 
-  if (geom->blocs_poly2d != NULL) {
-    const int n_blocs_poly2d = PDM_Handles_n_get (geom->blocs_poly2d);
-    const int *list_ind = PDM_Handles_idx_get (geom->blocs_poly2d);
+    if (geom->blocs_poly2d != NULL) {
+      const int n_blocs_poly2d = PDM_Handles_n_get (geom->blocs_poly2d);
+      const int *list_ind = PDM_Handles_idx_get (geom->blocs_poly2d);
 
-    for (int i = 0; i < n_blocs_poly2d; i++) {
-      PDM_writer_bloc_poly2d_t *_bloc_poly2d = (PDM_writer_bloc_poly2d_t *) PDM_Handles_get (geom->blocs_poly2d, list_ind[i]);
-      _bloc_poly2d_free_partial(_bloc_poly2d);
+      for (int i = 0; i < n_blocs_poly2d; i++) {
+        PDM_writer_bloc_poly2d_t *_bloc_poly2d = (PDM_writer_bloc_poly2d_t *) PDM_Handles_get (geom->blocs_poly2d, list_ind[i]);
+        _bloc_poly2d_free_partial(_bloc_poly2d);
+      }
     }
-  }
   
-  /* Boucle sur les blocs de polyedres */ 
+    /* Boucle sur les blocs de polyedres */ 
 
-  if (geom->blocs_poly3d != NULL) {
-    const int n_blocs_poly3d = PDM_Handles_n_get (geom->blocs_poly3d);
-    const int *list_ind = PDM_Handles_idx_get (geom->blocs_poly3d);
+    if (geom->blocs_poly3d != NULL) {
+      const int n_blocs_poly3d = PDM_Handles_n_get (geom->blocs_poly3d);
+      const int *list_ind = PDM_Handles_idx_get (geom->blocs_poly3d);
 
-    for (int i = 0; i < n_blocs_poly3d; i++) {
-      PDM_writer_bloc_poly3d_t *_bloc_poly3d = (PDM_writer_bloc_poly3d_t *) PDM_Handles_get (geom->blocs_poly3d, list_ind[i]);
-      _bloc_poly3d_free_partial(_bloc_poly3d);
+      for (int i = 0; i < n_blocs_poly3d; i++) {
+        PDM_writer_bloc_poly3d_t *_bloc_poly3d = (PDM_writer_bloc_poly3d_t *) PDM_Handles_get (geom->blocs_poly3d, list_ind[i]);
+        _bloc_poly3d_free_partial(_bloc_poly3d);
+      }
     }
   }
 }
@@ -5936,29 +5942,28 @@ const int    id_var
 
   PDM_writer_var_t *var = (PDM_writer_var_t *) PDM_Handles_get (cs->var_tab, id_var);
   
-  if (var == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad var identifier\n");
-  }
+  if (var != NULL) {
   
-  if (var->_val != NULL) {
+    if (var->_val != NULL) {
 
-    const int *ind = PDM_Handles_idx_get (cs->geom_tab);
-    const int n_ind = PDM_Handles_n_get (cs->geom_tab);
+      const int *ind = PDM_Handles_idx_get (cs->geom_tab);
+      const int n_ind = PDM_Handles_n_get (cs->geom_tab);
 
-    for (int i = 0; i < n_ind; i++) {
-      int idx = ind[i];
-      PDM_writer_geom_t *geom = (PDM_writer_geom_t *) PDM_Handles_get (cs->geom_tab, idx);
+      for (int i = 0; i < n_ind; i++) {
+        int idx = ind[i];
+        PDM_writer_geom_t *geom = (PDM_writer_geom_t *) PDM_Handles_get (cs->geom_tab, idx);
 
-      if (geom == NULL) {
-        PDM_error(__FILE__, __LINE__, 0, "Bad geom identifier\n");
-        abort();
-      }
+        if (geom == NULL) {
+          PDM_error(__FILE__, __LINE__, 0, "Bad geom identifier\n");
+          abort();
+        }
 
-      if ((geom != NULL) && (var->_val[idx] != NULL)) {
-        for (int j = 0; j < geom->n_part; j++) {
-          if (var->_val[idx][j] != NULL)
-            free(var->_val[idx][j]);
-          var->_val[idx][j] = NULL;
+        if ((geom != NULL) && (var->_val[idx] != NULL)) {
+          for (int j = 0; j < geom->n_part; j++) {
+            if (var->_val[idx][j] != NULL)
+              free(var->_val[idx][j]);
+            var->_val[idx][j] = NULL;
+          }
         }
       }
     }
@@ -6124,11 +6129,12 @@ PDM_writer_fmt_free
   if (fmt_tab != NULL) {
 
     const int *index =  PDM_Handles_idx_get (fmt_tab);
-    const int n_fmt = PDM_Handles_n_get (fmt_tab);
+    int n_fmt = PDM_Handles_n_get (fmt_tab);
     
-    for (int i = 0; i < n_fmt; i++) {
-      int idx = index[i];
+    while (n_fmt > 0) {
+      int idx = index[0];
       PDM_Handles_handle_free (fmt_tab, idx, PDM_TRUE);
+      n_fmt = PDM_Handles_n_get (fmt_tab);
     }
 
     fmt_tab = PDM_Handles_free (fmt_tab);
