@@ -124,10 +124,12 @@ PDM_Handles_free
  PDM_Handles_t *handles
 )
 {
-  free (handles->array);
-  free (handles->idx);
-  free (handles->idx_inv);
-  free (handles);
+  if (handles != NULL) {
+    free (handles->array);
+    free (handles->idx);
+    free (handles->idx_inv);
+    free (handles);
+  }
   return NULL;
 }
 
