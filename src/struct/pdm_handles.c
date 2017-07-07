@@ -213,7 +213,7 @@ const int *
 PDM_Handles_idx_get 
 (
  PDM_Handles_t *handles
- )
+)
 {
   return handles->idx;
 }
