@@ -4757,7 +4757,7 @@ void PROCF (pdm_io_n_donnees_get, PDM_IO_N_DONNEES_GET)
        PDM_g_num_t *t_n_donnees
 )
 {
-  PDM_io_n_composantes_t _t_n_composantes;
+  PDM_io_n_composantes_t _t_n_composantes = PDM_IO_N_COMPOSANTE_CONSTANT;
 
   if (*t_n_composantes == 0) 
     _t_n_composantes = PDM_IO_N_COMPOSANTE_CONSTANT;

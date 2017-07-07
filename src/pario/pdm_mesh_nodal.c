@@ -69,6 +69,7 @@ PDM_Mesh_nodal_create
 const int     n_part
 )
 {
+ return NULL;
 }
 
 
@@ -87,6 +88,7 @@ PDM_Mesh_nodal_partial_free
  PDM_Mesh_nodal_t *mesh
 )
 {
+	return NULL;
 }
 
 
@@ -105,6 +107,7 @@ PDM_Mesh_nodal_free
  PDM_Mesh_nodal_t *mesh
 )
 {
+	return NULL;
 }
 
 
@@ -148,6 +151,7 @@ PDM_Mesh_nodal_n_vertices_get
  PDM_Mesh_nodal_t  *mesh
 )
 {
+  return 0; 
 }
 
 
@@ -166,6 +170,7 @@ PDM_Mesh_nodal_vertices_get
  PDM_Mesh_nodal_t  *mesh
 )
 {
+  return NULL;
 }
 
 
@@ -214,6 +219,7 @@ PDM_Mesh_n_blocks_get
  PDM_Mesh_nodal_t  *mesh
 )
 {
+ return 0;
 }
 
 
@@ -234,6 +240,7 @@ PDM_Mesh_block_type_get
  const int            id_bloc     
 )
 {
+ return 0;
 }
 
 
@@ -255,6 +262,7 @@ PDM_bool_t                   st_free_data,
 const PDM_Mesh_nodal_elt_t   t_elt
 ) 
 {
+ return 0;
 }
 
 
