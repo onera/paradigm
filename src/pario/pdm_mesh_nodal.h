@@ -63,53 +63,50 @@ typedef struct _PDM_Mesh_nodal_t PDM_Mesh_nodal_t;
  *
  * \param [in]   n_part   Number of partition on the current process
  *
- * \return      A new mesh nodal structure
+ * \return       new mesh nodal handle
  *
  */
 
-PDM_Mesh_nodal_t *
+int 
 PDM_Mesh_nodal_create
 (
 const int     n_part
-);  
-
+);
 
 /**
- * \brief Free partially a nodal mesh structure. Only the global numbering remain allocated 
+ * \brief Free partially a nodal mesh structure
  *
- * \param [in]  mesh   Nodal mesh
+ * \param [in]  idx   Nodal mesh handle
  *
  * \return      NULL
  *
  */
 
-PDM_Mesh_nodal_t *
+void
 PDM_Mesh_nodal_partial_free
 (
- PDM_Mesh_nodal_t *mesh
+const int idx
 );
-
 
 /**
  * \brief Free a nodal mesh structure
  *
- * \param [in]  mesh   Nodal mesh
+ * \param [in]  idx   Nodal mesh handle
  *
  * \return      NULL
  *
  */
 
-PDM_Mesh_nodal_t *
+void
 PDM_Mesh_nodal_free
 (
- PDM_Mesh_nodal_t *mesh
+const int idx
 );
 
-
 /**
- * \brief Define vertices partition
+ * \brief Define partition vertices
  *
- * \param [in]  mesh      Nodal mesh
+ * \param [in]  idx   Nodal mesh handle
  * \param [in]  id_part   Partition identifier
  * \param [in]  n_vtx     Number of vertices
  * \param [in]  coords    Interlaced coordinates (size = 3 * \ref n_vtx)
@@ -117,13 +114,23 @@ PDM_Mesh_nodal_free
  *
  */
 
-
 void
 PDM_Mesh_nodal_coord_set
 (
- PDM_Mesh_nodal_t  *mesh,
+ const int          idx,
  const int          id_part, 
  const int          n_vtx,  
+ const PDM_real_t  *coords,  
+ const PDM_g_num_t *numabs
+);
+
+
+void
+PROCF (pdm_mesh_nodal_coord_set, PDM_MESH_NODAL_COORD_SET)
+(
+ const int         *idx,
+ const int         *id_part, 
+ const int         *n_vtx,  
  const PDM_real_t  *coords,  
  const PDM_g_num_t *numabs
 );

@@ -115,13 +115,13 @@ typedef struct PDM_Mesh_nodal_block_poly3d_t{
 
 
 /**
- * \struct  PDM_Mesh_nodal_geom_prepa_blocks_t
+ * \struct  PDM_Mesh_nodal_prepa_blocks_t
  *
  * \brief   Used to build blocks from cell to face face to edge connectivity
  *
  */
 
-typedef struct PDM_Mesh_nodal_geom_prepa_blocks_t {
+typedef struct PDM_Mesh_nodal_prepa_blocks_t {
 
   PDM_l_num_t  n_tria_proc;       /*!< Number of triangles per proc */
   PDM_l_num_t  n_quad_proc;       /*!< Number of quadrangles per proc */
@@ -154,7 +154,7 @@ typedef struct PDM_Mesh_nodal_geom_prepa_blocks_t {
   PDM_l_num_t  **cell_face;       /*!< Cell face connectivity */  
   PDM_g_num_t  **numabs;          /*!< Global numbering per cell per partition */ 
 
-} PDM_Mesh_nodal_geom_prepa_blocks_t;
+} PDM_Mesh_nodal_prepa_blocks_t;
 
 
 /**
@@ -164,9 +164,8 @@ typedef struct PDM_Mesh_nodal_geom_prepa_blocks_t {
  *
  */
 
-struct _PDM_Mesh_nodal_geom_t {
+struct _PDM_Mesh_nodal_t {
 
-  char                               *nom_geom;                 /*!< Geometry name */
   PDM_g_num_t                         n_som_abs;                /*!< Global number of vertices */
   PDM_g_num_t                         n_elt_abs;                /*!< Global number of elements */
   int                                 n_part;                   /*!< Number of partitions */
@@ -176,7 +175,7 @@ struct _PDM_Mesh_nodal_geom_t {
   PDM_Handles_t                       *blocks_poly2d;           /*!< Polygon blocks */
   PDM_Handles_t                       *blocks_poly3d;           /*!< Polyhedron blocks */
   PDM_MPI_Comm                         pdm_mpi_comm;            /*!< MPI Communicator */
-  PDM_Mesh_nodal_geom_prepa_blocks_t  *prepa_blocks;            /*!< Blocks preparation */
+  PDM_Mesh_nodal_prepa_blocks_t  *prepa_blocks;            /*!< Blocks preparation */
   PDM_l_num_t                        **num_cell_parent_to_local;/*!< Initial local numbering to local numbering
                                                                  *   imposed by blocks */
 } ;
