@@ -126,6 +126,36 @@ PROCF (pdm_gnum_set_from_coords, PDM_GNUM_SET_FROM_COORDS)
 
 /**
  *
+ * \brief Set Parent global numbering
+ *
+ * \param [in]   id           Identifier
+ * \param [in]   i_part       Current partition
+ * \param [in]   n_elts       Number of elements
+ * \param [in]   parent_gnum  Parent global numbering (size = \ref n_elts)
+ *
+ */
+
+void
+PDM_gnum_set_from_parents
+(
+ const int id,
+ const int i_part,
+ const int n_elts,
+ const PDM_g_num_t *parent_gnum
+);
+
+void
+PROCF (pdm_gnum_set_from_parents, PDM_GNUM_SET_FROM_PARENTS)
+(
+ const int *id,
+ const int *i_part,
+ const int *n_elts,
+ const PDM_g_num_t *parent_gnum
+);
+
+
+/**
+ *
  * \brief Compute
  *
  * \param [in]   id           Identifier
