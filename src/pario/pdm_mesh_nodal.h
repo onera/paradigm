@@ -339,6 +339,7 @@ const PDM_Mesh_nodal_elt_t   t_elt
  * \param [in]  n_elt          Number of elements
  * \param [in]  connect        Connectivity
  * \param [in]  numabs         Global numbering
+ * \param [in]  parent_num     Parent numbering or NULL
  *
  */
 
@@ -350,7 +351,8 @@ const int            id_block,
 const int            id_part, 
 const int            n_elt,    
       PDM_l_num_t   *connec,   
-      PDM_g_num_t   *numabs
+      PDM_g_num_t   *numabs,
+      PDM_l_num_t   *parent_num   
 ); 
 
 
@@ -457,6 +459,7 @@ const int            id_part,
  * \param [in]  connect_idx    Connectivity index (size = \ref n_elt + 1)
  * \param [in]  connect        Connectivity (size = \ref connect_idx[\ref n_elt])
  * \param [in]  numabs         Global numbering
+ * \param [in]  parent_num     Parent numbering or NULL
  *
  */
  
@@ -469,7 +472,8 @@ const int            id_part,
 const PDM_l_num_t    n_elt,    
       PDM_l_num_t   *connec_idx,   
       PDM_l_num_t   *connec,
-      PDM_g_num_t   *numabs
+      PDM_g_num_t   *numabs,
+      PDM_l_num_t   *parent_num
 ); 
 
 
@@ -512,6 +516,7 @@ PDM_Mesh_nodal_block_poly2d_get
  * \param [in]  cellfac_idx    Index of cell face connectivity
  * \param [in]  cellfac        Cell face connectivity
  * \param [in]  numabs         Global numbering
+ * \param [in]  parent_num     Parent numbering or NULL
  *
  */
 
@@ -527,7 +532,8 @@ const PDM_l_num_t    n_face,
       PDM_l_num_t   *facvtx,
       PDM_l_num_t   *cellfac_idx,   
       PDM_l_num_t   *cellfac,
-      PDM_g_num_t   *numabs
+      PDM_g_num_t   *numabs,
+      PDM_l_num_t   *parent_num
 ); 
 
 
