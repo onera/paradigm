@@ -434,6 +434,8 @@ const int            n_elt,
  * \param [out]  n_elt          Number of elements
  * \param [out]  connect        Connectivity
  * \param [out]  numabs         Global numbering
+ * \param [out] numabs_block   Global numbering in the block or NULL (if not computed)
+ * \param [out] parent_num     Parent numbering or NULL
  *
  */
 
@@ -445,7 +447,9 @@ const int            id_block,
 const int            id_part, 
       int           *n_elt,    
       PDM_l_num_t  **connec,   
-      PDM_g_num_t  **numabs
+      PDM_g_num_t  **numabs,
+      PDM_g_num_t  **numabs_block,
+      PDM_l_num_t  **parent_num
 ); 
 
 
@@ -486,7 +490,9 @@ const PDM_l_num_t    n_elt,
  * \param [out] n_elt          Number of elements
  * \param [out] connect_idx    Connectivity index (size = \ref n_elt + 1)
  * \param [out] connect        Connectivity (size = \ref connect_idx[\ref n_elt])
- * \param [out] numabs         Global numbering
+ * \param [out] numabs         Global numbering in the mesh
+ * \param [out] numabs_block   Global numbering in the block or NULL (if not computed)
+ * \param [out] parent_num     Parent numbering or NULL
  *
  */
  
@@ -499,7 +505,9 @@ PDM_Mesh_nodal_block_poly2d_get
        PDM_l_num_t  *n_elt,    
        PDM_l_num_t  **connec_idx,   
        PDM_l_num_t  **connec,
-       PDM_g_num_t  **numabs
+       PDM_g_num_t  **numabs,
+       PDM_g_num_t  **numabs_block,
+       PDM_l_num_t  **parent_num
 ); 
 
 
@@ -550,6 +558,8 @@ const PDM_l_num_t    n_face,
  * \param [out]  cellfac_idx    Index of cell face connectivity
  * \param [out]  cellfac        Cell face connectivity
  * \param [out]  numabs         Global numbering
+ * \param [out] numabs_block   Global numbering in the block or NULL (if not computed)
+ * \param [out] parent_num     Parent numbering or NULL
  *
  */
 
@@ -565,7 +575,9 @@ const int            id_part,
       PDM_l_num_t  **facvtx,
       PDM_l_num_t  **cellfac_idx,   
       PDM_l_num_t  **cellfac,
-      PDM_g_num_t  **numabs
+      PDM_g_num_t  **numabs,
+      PDM_g_num_t  **numabs_block,
+      PDM_l_num_t  **parent_num
 ); 
 
 /**
@@ -671,6 +683,22 @@ PDM_l_num_t      *face_vtx_idx,
 PDM_l_num_t      *face_vtx_nb,
 PDM_l_num_t      *face_vtx,
 PDM_g_num_t      *numabs
+); 
+
+
+/**
+ * \brief  Compute a global numbering in a block
+ *
+ * \param [in]  idx            Nodal mesh handle
+ * \param [in]  id_block       Block identifier
+ *
+ */
+
+void
+PDM_Mesh_nodal_g_num_in_block_compute
+(
+const int         idx,
+const int         id_block 
 ); 
 
 

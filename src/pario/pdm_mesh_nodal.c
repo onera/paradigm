@@ -19,6 +19,7 @@
 #include "pdm_mesh_nodal_priv.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
+#include "pdm_gnum.h"
 
 /*----------------------------------------------------------------------------
  *  Optional headers
@@ -1657,14 +1658,14 @@ const PDM_Mesh_nodal_elt_t   t_elt
       block_std->_connec    = (PDM_l_num_t **) malloc(sizeof(PDM_l_num_t *) * block_std->n_part);
       block_std->_num_part  = (PDM_l_num_t **) malloc(sizeof(PDM_l_num_t *) * block_std->n_part);
       block_std->_numabs    = (PDM_g_num_t **) malloc(sizeof(PDM_g_num_t *) * block_std->n_part);
-      block_std->numabs_int = (PDM_g_num_t **) malloc(sizeof(PDM_g_num_t *) * block_std->n_part);
+      block_std->numabs_int = NULL;
+      block_std->_parent_num = NULL;
 
       for (int i = 0; i < block_std->n_part; i++) {
         block_std->n_elt[i]     = 0;
         block_std->_connec[i]   = NULL;
         block_std->_num_part[i] = NULL;
         block_std->_numabs[i]   = NULL;
-        block_std->numabs_int[i]= NULL;
       }
       
       id_block += PDM_BLOCK_ID_BLOCK_STD;
@@ -1702,7 +1703,8 @@ const PDM_Mesh_nodal_elt_t   t_elt
       block_poly2d->_connec     = (PDM_l_num_t **) malloc(sizeof(PDM_l_num_t *) * block_poly2d->n_part);
       block_poly2d->_num_part   = (PDM_l_num_t **) malloc(sizeof(PDM_l_num_t *) * block_poly2d->n_part);
       block_poly2d->_numabs     = (PDM_g_num_t **) malloc(sizeof(PDM_g_num_t *) * block_poly2d->n_part);
-      block_poly2d->numabs_int = (PDM_g_num_t **) malloc(sizeof(PDM_g_num_t *) * block_poly2d->n_part);
+      block_poly2d->numabs_int = NULL;
+      block_poly2d->_parent_num = NULL;
 
       for (int i = 0; i < block_poly2d->n_part; i++) {
         block_poly2d->n_elt[i]     = 0;
@@ -1710,7 +1712,6 @@ const PDM_Mesh_nodal_elt_t   t_elt
         block_poly2d->_connec[i]     = NULL;
         block_poly2d->_num_part[i]= NULL;
         block_poly2d->_numabs[i]     = NULL;
-        block_poly2d->numabs_int[i] = NULL;
       }
 
       id_block += PDM_BLOCK_ID_BLOCK_POLY3D;
@@ -1749,7 +1750,8 @@ const PDM_Mesh_nodal_elt_t   t_elt
       block_poly3d->_cellfac_idx = (PDM_l_num_t **)  malloc(sizeof(PDM_l_num_t *) * block_poly3d->n_part);
       block_poly3d->_cellfac     = (PDM_l_num_t **)  malloc(sizeof(PDM_l_num_t *) * block_poly3d->n_part);
       block_poly3d->_numabs      = (PDM_g_num_t **) malloc(sizeof(PDM_g_num_t *) * block_poly3d->n_part);
-      block_poly3d->numabs_int   = (PDM_g_num_t **) malloc(sizeof(PDM_g_num_t *) * block_poly3d->n_part);
+      block_poly3d->numabs_int = NULL;
+      block_poly3d->_parent_num = NULL;
 
       for (int i = 0; i < block_poly3d->n_part; i++) {
         block_poly3d->n_elt[i]        = 0;
@@ -1759,7 +1761,6 @@ const PDM_Mesh_nodal_elt_t   t_elt
         block_poly3d->_cellfac_idx[i] = NULL;
         block_poly3d->_cellfac[i]     = NULL;
         block_poly3d->_numabs[i]      = NULL;
-        block_poly3d->numabs_int[i]   = NULL;
       }
 
       id_block += PDM_BLOCK_ID_BLOCK_POLY3D;
@@ -1989,7 +1990,9 @@ const int            n_elt,
  * \param [out]  n_elt          Number of elements
  * \param [out]  connect        Connectivity
  * \param [out]  numabs         Global numbering
- *
+ * \param [out] numabs_block   Global numbering in the block or NULL (if not computed)
+ * \param [out] parent_num     Parent numbering or NULL
+*
  */
 
 void
@@ -2000,7 +2003,9 @@ const int            id_block,
 const int            id_part, 
       int           *n_elt,    
       PDM_l_num_t  **connec,   
-      PDM_g_num_t  **numabs
+      PDM_g_num_t  **numabs,
+      PDM_g_num_t  **numabs_block,
+      PDM_l_num_t  **parent_num
 )
 {
   PDM_Mesh_nodal_t *mesh = (PDM_Mesh_nodal_t *) PDM_Handles_get (mesh_handles, idx);
@@ -2025,6 +2030,16 @@ const int            id_part,
   *n_elt  = block->n_elt[id_part];
   *connec = block->_connec[id_part];
   *numabs = block->_numabs[id_part];
+  *parent_num   = NULL;
+  *numabs_block = NULL;
+  
+  if (block->_parent_num != NULL) {
+    *parent_num = block->_parent_num[id_part];
+  }
+  
+  if (block->numabs_int != NULL) {
+    *numabs_block = block->numabs_int[id_part];
+  }
 }
 
 
@@ -2108,6 +2123,8 @@ const PDM_l_num_t    n_elt,
  * \param [out] connect_idx    Connectivity index (size = \ref n_elt + 1)
  * \param [out] connect        Connectivity (size = \ref connect_idx[\ref n_elt])
  * \param [out] numabs         Global numbering
+ * \param [out] numabs_block   Global numbering in the block or NULL (if not computed)
+ * \param [out] parent_num     Parent numbering or NULL
  *
  */
  
@@ -2120,7 +2137,10 @@ PDM_Mesh_nodal_block_poly2d_get
        PDM_l_num_t  *n_elt,    
        PDM_l_num_t  **connec_idx,   
        PDM_l_num_t  **connec,
-       PDM_g_num_t  **numabs
+       PDM_g_num_t  **numabs,
+       PDM_g_num_t  **numabs_block,
+       PDM_l_num_t  **parent_num
+
 )
 {
   PDM_Mesh_nodal_t *mesh = (PDM_Mesh_nodal_t *) PDM_Handles_get (mesh_handles, idx);
@@ -2146,7 +2166,17 @@ PDM_Mesh_nodal_block_poly2d_get
   *connec_idx = block->_connec_idx[id_part];
   *connec     = block->_connec[id_part];
   *numabs     = block->_numabs[id_part];
+  *parent_num   = NULL;
+  *numabs_block = NULL;
   
+  if (block->_parent_num != NULL) {
+    *parent_num = block->_parent_num[id_part];
+  }
+  
+  if (block->numabs_int != NULL) {
+    *numabs_block = block->numabs_int[id_part];
+  }
+ 
 }
 
 
@@ -2255,7 +2285,9 @@ const int            id_part,
       PDM_l_num_t  **facvtx,
       PDM_l_num_t  **cellfac_idx,   
       PDM_l_num_t  **cellfac,
-      PDM_g_num_t  **numabs
+      PDM_g_num_t  **numabs,
+      PDM_g_num_t  **numabs_block,
+      PDM_l_num_t  **parent_num
 )
 {
   PDM_Mesh_nodal_t *mesh = (PDM_Mesh_nodal_t *) PDM_Handles_get (mesh_handles, idx);
@@ -2284,7 +2316,17 @@ const int            id_part,
   *cellfac_idx = block->_cellfac_idx[id_part];
   *cellfac     = block->_cellfac[id_part];
   *numabs      = block->_numabs[id_part];
+  *parent_num   = NULL;
+  *numabs_block = NULL;
   
+  if (block->_parent_num != NULL) {
+    *parent_num = block->_parent_num[id_part];
+  }
+  
+  if (block->numabs_int != NULL) {
+    *numabs_block = block->numabs_int[id_part];
+  }
+
 }
 
 
@@ -3478,9 +3520,71 @@ PDM_g_num_t      *numabs
       mesh->prepa_blocks = NULL;
     }
   }
-
 }
 
+
+/**
+ * \brief  Compute a global numbering in a block
+ *
+ * \param [in]  idx            Nodal mesh handle
+ * \param [in]  id_block       Block identifier
+ *
+ */
+
+void
+PDM_Mesh_nodal_g_num_in_block_compute
+(
+const int         idx,
+const int         id_block 
+)
+{
+//  PDM_Mesh_nodal_t *mesh = (PDM_Mesh_nodal_t *) PDM_Handles_get (mesh_handles, idx);
+//  
+//  if (mesh == NULL) {
+//    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");  
+//  }
+//  
+//  PDM_g_num_t *numabs_int = NULL;
+//  PDM_g_num_t *parents = NULL;
+//  
+//  if (id_block >= PDM_BLOCK_ID_BLOCK_POLY3D) {
+//  
+//    int _id_block = id_block - PDM_BLOCK_ID_BLOCK_POLY2D;
+//  
+//    PDM_Mesh_nodal_block_poly3d_t *block = 
+//            (PDM_Mesh_nodal_block_poly3d_t *) PDM_Handles_get (mesh->blocks_poly3d, _id_block);
+//
+//    if (block == NULL) {
+//      PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
+//    }    
+//
+//    if (block->numabs_int == NULL) {
+//
+//      block->numabs_int = (PDM_g_num_t **) malloc (sizeof(PDM_g_num_t *) * mesh->n_part);
+//
+//    }
+//    else {
+//      return;
+//    }
+//  }
+//    
+//    int id_gnum = PDM_gnum_create (3, mesh->n_part, mesh->pdm_mpi_comm);
+//
+//    for (int i = 0; i < mesh->n_part; i++) {
+//      PDM_gnum_set_from_parents (id_gnum, i, block->n_elt[i], block->_numabs[i]);
+//    }
+//
+//    PDM_gnum_compute (id_gnum);
+//
+//    for (int i = 0; i < mesh->n_part; i++) {
+//      block->numabs_int[i] = (PDM_g_num_t *) PDM_gnum_get (id_gnum, i);
+//    }
+//
+//    PDM_gnum_free (id_gnum, PDM_TRUE);
+//
+//  }
+//
+}
 
 
 #ifdef __cplusplus
