@@ -56,14 +56,14 @@ MODULE mod_pdm_mesh_nodal
     integer, intent(in) :: idx
     
     interface
-      subroutine pdm_mesh_nodal_partial_free_c (n_part) &
+      subroutine pdm_mesh_nodal_partial_free_c (idx) &
         bind(c, name='PDM_Mesh_nodal_partial_free')
 
         use iso_c_binding
 
         implicit none
 
-        integer(c_int), intent (in), value :: n_part
+        integer(c_int), intent (in), value :: idx
       end subroutine pdm_mesh_nodal_partial_free_c
     end interface
     
@@ -85,14 +85,14 @@ MODULE mod_pdm_mesh_nodal
     integer, intent(in), value :: idx
     
     interface
-      subroutine pdm_mesh_nodal_free_c (n_part) & 
+      subroutine pdm_mesh_nodal_free_c (idx) & 
         bind(c, name='PDM_Mesh_nodal_free')
         
         use iso_c_binding
 
         implicit none
 
-        integer(c_int), intent (in) :: n_part
+        integer(c_int), intent (in), value :: idx
       end subroutine pdm_mesh_nodal_free_c
     end interface
     
@@ -126,6 +126,7 @@ MODULE mod_pdm_mesh_nodal
         bind(c, name='PDM_Mesh_nodal_coord_set')
 
         use iso_c_binding
+        use mod_pdm
 
         implicit none
 
@@ -133,18 +134,12 @@ MODULE mod_pdm_mesh_nodal
         integer, intent(in), value   :: id_part
         integer, intent(in), value   :: n_vtx
 
-        type(c_ptr)                  :: coords
-        type(c_ptr)                  :: numabs
+        real (c_double)         :: coords(*)
+        integer (pdm_g_num_s)   :: numabs(*)
       end subroutine pdm_mesh_nodal_coord_set_c
     end interface
     
-    type(c_ptr) :: coords_c
-    type(c_ptr) :: numabs_c
-    
-    coords_c = c_loc (coords)
-    numabs_c = c_loc (numabs)
-    
-    call  pdm_mesh_nodal_coord_set_c(idx, id_part, n_vtx, coords_c, numabs_c)
+    call  pdm_mesh_nodal_coord_set_c(idx, id_part, n_vtx, coords, numabs)
 
   end subroutine  
   

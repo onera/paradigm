@@ -125,21 +125,11 @@ PDM_Mesh_nodal_coord_set
 );
 
 
-void
-PROCF (pdm_mesh_nodal_coord_set, PDM_MESH_NODAL_COORD_SET)
-(
- const int         *idx,
- const int         *id_part, 
- const int         *n_vtx,  
- const PDM_real_t  *coords,  
- const PDM_g_num_t *numabs
-);
-
-
 /**
  * \brief  Return number of vertices
  *
- * \param [in]  mesh           Nodal mesh
+ * \param [in]  idx       Nodal mesh handle
+ * \param [in]  id_part   Partition identifier
  *
  * \return  Number of vertices
  *
@@ -148,23 +138,44 @@ PROCF (pdm_mesh_nodal_coord_set, PDM_MESH_NODAL_COORD_SET)
 int
 PDM_Mesh_nodal_n_vertices_get
 (
- PDM_Mesh_nodal_t  *mesh
+ const int          idx,
+ const int          id_part 
 );
 
 
 /**
  * \brief  Return coordinates of vertices
  *
- * \param [in]  mesh           Nodal mesh
+ * \param [in]  idx       Nodal mesh handle
+ * \param [in]  id_part   Partition identifier
  *
  * \return  Coordinates of vertices
  *
  */
 
-double *
+const double *
 PDM_Mesh_nodal_vertices_get
 (
- PDM_Mesh_nodal_t  *mesh
+ const int          idx,
+ const int          id_part 
+);
+
+
+/**
+ * \brief  Return global numbering of vertices
+ *
+ * \param [in]  idx       Nodal mesh handle
+ * \param [in]  id_part   Partition identifier
+ *
+ * \return  Global numbering of vertices
+ *
+ */
+
+const PDM_g_num_t *
+PDM_Mesh_nodal_vertices_g_num_get
+(
+ const int          idx,
+ const int          id_part 
 );
 
 
@@ -185,7 +196,7 @@ PDM_Mesh_nodal_vertices_get
 void
 PDM_Mesh_nodal_coord_from_parent_set
 (
- PDM_Mesh_nodal_t  *mesh,
+ const int          idx,
  const int          id_part, 
  const int          n_vtx,  
  const int          n_vtx_parent,  
@@ -199,7 +210,7 @@ PDM_Mesh_nodal_coord_from_parent_set
 /**
  * \brief  Return number of blocks
  *
- * \param [in]  mesh           Nodal mesh
+ * \param [in]  idx            Nodal mesh handle
  *
  * \return  Number of blocks
  *
@@ -208,44 +219,46 @@ PDM_Mesh_nodal_coord_from_parent_set
 int
 PDM_Mesh_n_blocks_get
 (
- PDM_Mesh_nodal_t  *mesh
+const int   idx
 );
 
 
 /**
  * \brief  Return type of block
  *
- * \param [in]  mesh       Nodal mesh
+ * \param [in]  idx        Nodal mesh handle
  * \param [in]  id_block   Block identifier
  *
  * \return  Type of block
  *
  */
 
-int
+PDM_Mesh_nodal_elt_t
 PDM_Mesh_block_type_get
 (
- PDM_Mesh_nodal_t     *mesh,
- const int            id_bloc     
+const int   idx,
+const int   id_block     
 );
 
 
 /**
  * \brief  Add a new block to the current mesh
  *
- * \param [in]  mesh           Nodal mesh
+ * \param [in]  idx            Nodal mesh handle
+ * \param [in]  st_free_data   Status of Release of the memory 
+ *                             when the block is destroyed
  * \param [in]  id_block       Block identifier
  *
- * \return      
+ * \return Block identifier     
  *
  */
 
 int 
 PDM_Mesh_nodal_block_add 
 (
-PDM_Mesh_nodal_t            *mesh,
+const int                    idx,
 PDM_bool_t                   st_free_data,  
-const PDM_Mesh_nodal_elt_t  t_elt
+const PDM_Mesh_nodal_elt_t   t_elt
 ); 
 
 
@@ -320,7 +333,7 @@ const PDM_Mesh_nodal_elt_t  t_elt
  *     |/      |/
  *   1 x-------x 2
  *
- * \param [in]  mesh           Nodal mesh
+ * \param [in]  idx            Nodal mesh handle
  * \param [in]  id_block       Block identifier
  * \param [in]  id_part        Partition identifier
  * \param [in]  n_elt          Number of elements
@@ -332,7 +345,7 @@ const PDM_Mesh_nodal_elt_t  t_elt
 void
 PDM_Mesh_nodal_block_std_set 
 (
-PDM_Mesh_nodal_t    *mesh,
+const int          idx,
 const int            id_block,     
 const int            id_part, 
 const int            n_elt,    
@@ -413,7 +426,7 @@ const int            n_elt,
  *     |/      |/
  *   1 x-------x 2
  *
- * \param [in]  mesh           Nodal mesh
+ * \param [in]  idx            Nodal mesh handle
  * \param [in]  id_block       Block identifier
  * \param [in]  id_part        Partition identifier
  * \param [out]  n_elt          Number of elements
@@ -424,11 +437,11 @@ const int            n_elt,
 
 void
 PDM_Mesh_nodal_block_std_get 
-(
-PDM_Mesh_nodal_t    *mesh,
+(   
+const int            idx,
 const int            id_block,     
 const int            id_part, 
-const int           *n_elt,    
+      int           *n_elt,    
       PDM_l_num_t  **connec,   
       PDM_g_num_t  **numabs
 ); 
@@ -437,7 +450,7 @@ const int           *n_elt,
 /**
  * \brief Define a polygon block
  *
- * \param [in]  mesh           Nodal mesh
+ * \param [in]  idx            Nodal mesh handle
  * \param [in]  id_block       Block identifier
  * \param [in]  id_part        Partition identifier
  * \param [in]  n_elt          Number of elements
@@ -450,7 +463,7 @@ const int           *n_elt,
 void
 PDM_Mesh_nodal_block_poly2d_set 
 (
-PDM_Mesh_nodal_t    *mesh,
+const int            idx,
 const int            id_block, 
 const int            id_part, 
 const PDM_l_num_t    n_elt,    
@@ -463,7 +476,7 @@ const PDM_l_num_t    n_elt,
 /**
  * \brief Return a polygon block description
  *
- * \param [in]  mesh           Nodal mesh
+ * \param [in]  idx            Nodal mesh handle
  * \param [in]  id_block       Block identifier
  * \param [in]  id_part        Partition identifier
  * \param [out] n_elt          Number of elements
@@ -476,20 +489,20 @@ const PDM_l_num_t    n_elt,
 void
 PDM_Mesh_nodal_block_poly2d_get 
 (
-PDM_Mesh_nodal_t    *mesh,
-const int            id_block, 
-const int            id_part, 
-const PDM_l_num_t   *n_elt,    
-      PDM_l_num_t  **connec_idx,   
-      PDM_l_num_t  **connec,
-      PDM_g_num_t  **numabs
+ const int          idx,
+ const int          id_block, 
+ const int          id_part, 
+       PDM_l_num_t  *n_elt,    
+       PDM_l_num_t  **connec_idx,   
+       PDM_l_num_t  **connec,
+       PDM_g_num_t  **numabs
 ); 
 
 
 /**
  * \brief Define a polyhedra block
  *
- * \param [in]  mesh           Nodal mesh
+ * \param [in]  idx            Nodal mesh handle
  * \param [in]  id_block       Block identifier
  * \param [in]  id_part        Partition identifier
  * \param [in]  n_elt          Number of polyhedra
@@ -505,7 +518,7 @@ const PDM_l_num_t   *n_elt,
 void
 PDM_Mesh_nodal_block_poly3d_set 
 (
-PDM_Mesh_nodal_t    *mesh,
+const int            idx,
 const int            id_block, 
 const int            id_part, 
 const PDM_l_num_t    n_elt,    
@@ -519,13 +532,44 @@ const PDM_l_num_t    n_face,
 
 
 /**
+ * \brief Define a polyhedra block
+ *
+ * \param [in]  idx            Nodal mesh handle
+ * \param [in]  id_block       Block identifier
+ * \param [in]  id_part        Partition identifier
+ * \param [out]  n_elt          Number of polyhedra
+ * \param [out]  n_face         Number of faces used to describe polyhedra
+ * \param [out]  facvtx_idx     Index of face vertex connectivity
+ * \param [out]  facvtx         Face vertex connectivity
+ * \param [out]  cellfac_idx    Index of cell face connectivity
+ * \param [out]  cellfac        Cell face connectivity
+ * \param [out]  numabs         Global numbering
+ *
+ */
+
+void
+PDM_Mesh_nodal_block_poly3d_get 
+(
+const int            idx,
+const int            id_block, 
+const int            id_part, 
+      PDM_l_num_t   *n_elt,    
+      PDM_l_num_t   *n_face,   
+      PDM_l_num_t  **facvtx_idx,   
+      PDM_l_num_t  **facvtx,
+      PDM_l_num_t  **cellfac_idx,   
+      PDM_l_num_t  **cellfac,
+      PDM_g_num_t  **numabs
+); 
+
+/**
  * \brief  Add some 3D cells from cell face conectivity.
  *
  * For each cell, this function searchs the type of the cell (tetrahedra, hexahedra, ...)
  * and stores it in the corresponding block. \ref ind_num gives the indirection 
  * between old and new numbering.
  *
- * \param [in]  mesh           Nodal mesh
+ * \param [in]  idx            Nodal mesh handle
  * \param [in]  id_part        Partition identifier
  * \param [in]  n_elt          Number of polyhedra
  * \param [in]  n_face         Number of faces used to describe polyhedra
@@ -536,14 +580,13 @@ const PDM_l_num_t    n_face,
  * \param [in]  cell_face_nb   Number of faces for each cell
  * \param [in]  cell_face      Cell face connectivity
  * \param [in]  numabs         Global numbering
- * \param [out] ind_num        old numbering to new numbering
  *
  */
 
 void
 PDM_Mesh_nodal_geom_cell3d_cellface_add
 (
-PDM_Mesh_nodal_t *mesh,
+const int         idx,
 const int         id_part, 
 const int         n_elt,
 const int         n_face,
@@ -553,8 +596,7 @@ PDM_l_num_t      *face_vtx,
 PDM_l_num_t      *cell_face_idx,
 PDM_l_num_t      *cell_face_nb,
 PDM_l_num_t      *cell_face,
-PDM_g_num_t      *numabs,
-PDM_l_num_t      *ind_num
+PDM_g_num_t      *numabs
 ); 
 
 
@@ -565,7 +607,7 @@ PDM_l_num_t      *ind_num
  * and stores it in the corresponding block. \ref ind_num gives the indirection 
  * between old and new numbering.
  *
- * \param [in]  mesh           Nodal mesh
+ * \param [in]  idx            Nodal mesh handle
  * \param [in]  id_part        Partition identifier
  * \param [in]  n_elt          Number of polyhedra
  * \param [in]  n_edge         Number of edges used to describe polyhedra
@@ -576,14 +618,13 @@ PDM_l_num_t      *ind_num
  * \param [in]  cell_edge_nb   Number of edges for each cell
  * \param [in]  cell_edge      Cell edge connectivity
  * \param [in]  numabs         Global numbering
- * \param [out] ind_num        old numbering to new numbering
  *
  */
 
 void
 PDM_Mesh_nodal_geom_cell2d_celledge_add
 (
-PDM_Mesh_nodal_t  *mesh,
+const int          idx,
 const int          id_part, 
 const int          n_elt,
 const int          n_edge,
@@ -593,8 +634,7 @@ PDM_l_num_t       *edge_vtx,
 PDM_l_num_t       *cell_edge_idx,
 PDM_l_num_t       *cell_edge_nb,
 PDM_l_num_t       *cell_edge,
-PDM_g_num_t       *numabs,
-PDM_l_num_t       *ind_num
+PDM_g_num_t       *numabs
 ); 
 
 
@@ -605,28 +645,26 @@ PDM_l_num_t       *ind_num
  * and stores it in the corresponding block. \ref ind_num gives the indirection 
  * between old and new numbering.
  *
- * \param [in]  mesh           Nodal mesh
+ * \param [in]  idx            Nodal mesh handle
  * \param [in]  id_part        Partition identifier
  * \param [in]  n_face         Number of polygon
  * \param [in]  face_vtx_idx   Index of edge vertex connectivity
  * \param [in]  face_vtx_nb    Number of vertices for each edge
  * \param [in]  face_vtx       Edge vertex connectivity
  * \param [in]  numabs         Global numbering
- * \param [out] ind_num        old numbering to new numbering
  *
  */
 
 void
-PDM_Mesh_nodal_geom_faces_facesom_add
+PDM_Mesh_nodal_geom_faces_facevtx_add
 (
-PDM_Mesh_nodal_t *mesh,
+const int         idx,
 const int         id_part, 
 const int         n_face,
 PDM_l_num_t      *face_vtx_idx,
 PDM_l_num_t      *face_vtx_nb,
 PDM_l_num_t      *face_vtx,
-PDM_g_num_t      *numabs,
-PDM_l_num_t      *ind_num
+PDM_g_num_t      *numabs
 ); 
 
 

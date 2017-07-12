@@ -124,53 +124,6 @@ _som_free
 
 /*----------------------------------------------------------------------------
  *
- * Fonction max
- *
- * parameters:
- *   a           <-- Premiere valeur
- *   b           <-- Seconde valeur                    
- *
- * return:
- *   max(a, b)
- *
- *----------------------------------------------------------------------------*/
-
-static inline PDM_g_num_t
-_lmax
-(
- PDM_g_num_t a,
- PDM_g_num_t b
-)
-{
-  return ((a) > (b) ? (a) : (b));
-}
-
-/*----------------------------------------------------------------------------
- *
- * Fonction max
- *
- * parameters:
- *   a           <-- Premiere valeur
- *   b           <-- Seconde valeur                    
- *
- * return:
- *   max(a, b)
- *
- *----------------------------------------------------------------------------*/
-
-static inline double
-_dmax
-(
- double a,
- double b
-)
-{
-  return ((a) > (b) ? (a) : (b));
-}
-
-
-/*----------------------------------------------------------------------------
- *
  * Produit vectoriel
  *
  * parameters:
@@ -407,7 +360,7 @@ const int    *connec,
       
         }
 
-        double denom_aire_poly = 1. / _dmax(fabs(aire_poly), geom_eps_min);
+        double denom_aire_poly = 1. / PDM_MAX(fabs(aire_poly), geom_eps_min);
         
         for (int k = 0; k < 3; k++) {
           deplacement[k] = 2./3. * denom_aire_poly * deplacement[k];
@@ -3229,7 +3182,6 @@ const PDM_real_t *coords,
 const PDM_g_num_t *numabs
 )
 {
-  
 
   /* Acces aux sommets de la partition */
 
@@ -3336,12 +3288,10 @@ const PDM_g_num_t *numabs_parent
 
   if (geom == NULL) {
     PDM_error(__FILE__, __LINE__, 0, "Bad geom identifier\n");
-    abort();
   }
 
   if (geom->n_part == 0) {
     PDM_error(__FILE__, __LINE__, 0, "Erreur PDM_writer_geom_coord_from_parent_set : Le nombre de partitions n'a pas ete defini\n");
-    abort();
   } 
   
   PDM_writer_som_t *som = geom->som[id_part];
@@ -3349,7 +3299,6 @@ const PDM_g_num_t *numabs_parent
   if ((som->_coords != NULL) ||
       (som->_numabs != NULL)) {
     PDM_error(__FILE__, __LINE__, 0, "Erreur PDM_writer_geom_coord_from_parent_set : Les sommets de la partition ont deja ete definis\n");
-    abort();
   }
 
   /* Mapping memoire et allocation */
@@ -3781,7 +3730,7 @@ const int            n_elt,
   bloc->_numabs[id_part] = numabs;
   
   for (int i = 0; i < n_elt; i++)
-    geom->n_elt_abs = _lmax(geom->n_elt_abs, numabs[i]);
+    geom->n_elt_abs = PDM_MAX(geom->n_elt_abs, numabs[i]);
   
 }
 
@@ -3874,7 +3823,7 @@ const PDM_l_num_t       n_elt,
   bloc->_numabs[id_part]     = numabs;
 
   for (int i = 0; i < n_elt; i++)
-    geom->n_elt_abs = _lmax(geom->n_elt_abs, numabs[i]);
+    geom->n_elt_abs = PDM_MAX(geom->n_elt_abs, numabs[i]);
 }
  
 
@@ -3982,7 +3931,7 @@ const PDM_l_num_t   n_face,
   bloc->_numabs[id_part]      = numabs;
 
   for (int i = 0; i < n_elt; i++)
-    geom->n_elt_abs = _lmax(geom->n_elt_abs, numabs[i]);
+    geom->n_elt_abs = PDM_MAX(geom->n_elt_abs, numabs[i]);
 }
 
 
