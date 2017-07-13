@@ -1132,6 +1132,33 @@ const int     n_part
   return PDM_Handles_store (mesh_handles, mesh);
 }
 
+
+/**
+ * \brief  Return number of partitions
+ *
+ * \param [in]  idx            Nodal mesh handle
+ *
+ * \return  Number of partitions
+ *
+ */
+
+int
+PDM_Mesh_n_part_get
+(
+const int   idx
+)
+{
+  PDM_Mesh_nodal_t * mesh = (PDM_Mesh_nodal_t *) PDM_Handles_get (mesh_handles, idx);
+  
+  if (mesh == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
+  }
+
+  return mesh->n_part;
+
+}
+
+
 /**
  * \brief Free partially a nodal mesh structure
  *
@@ -2254,7 +2281,6 @@ const PDM_l_num_t    n_face,
   }
   
 }
-
 
 
 /**
@@ -3622,6 +3648,38 @@ const int         id_block
 
   PDM_gnum_free (id_gnum, PDM_TRUE);
 
+}
+
+
+/**
+ * \brief  Return parent cell number to local number
+ *
+ * \param [in]  idx       Nodal mesh handle
+ * \param [in]  id_part   Partition identifier
+ *
+ * \return  Parent cell number to local number
+ * 
+ */
+
+int *
+PDM_Mesh_nodal_num_cell_parent_to_local_get
+(
+const int  idx,
+const int  id_part 
+)
+{
+  PDM_Mesh_nodal_t *mesh = (PDM_Mesh_nodal_t *) PDM_Handles_get (mesh_handles, idx);
+  
+  if (mesh == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");  
+  }
+
+  if (id_part >= mesh->n_part) {
+    PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
+  }
+
+  mesh->num_cell_parent_to_local[id_part];
+  
 }
 
 

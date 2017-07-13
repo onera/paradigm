@@ -224,6 +224,22 @@ const int   idx
 
 
 /**
+ * \brief  Return number of partitions
+ *
+ * \param [in]  idx            Nodal mesh handle
+ *
+ * \return  Number of partitions
+ *
+ */
+
+int
+PDM_Mesh_n_part_get
+(
+const int   idx
+);
+
+
+/**
  * \brief  Return type of block
  *
  * \param [in]  idx        Nodal mesh handle
@@ -699,6 +715,24 @@ PDM_Mesh_nodal_g_num_in_block_compute
 (
 const int         idx,
 const int         id_block 
+); 
+
+
+/**
+ * \brief  Return parent cell number to local number
+ *
+ * \param [in]  idx       Nodal mesh handle
+ * \param [in]  id_part   Partition identifier
+ *
+ * \return  Parent cell number to local number
+ * 
+ */
+
+int *
+PDM_Mesh_nodal_num_cell_parent_to_local_get
+(
+const int  idx,
+const int  id_part 
 ); 
 
 
