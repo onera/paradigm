@@ -181,6 +181,8 @@ struct _PDM_Mesh_nodal_t {
   PDM_Mesh_nodal_prepa_blocks_t  *prepa_blocks;            /*!< Blocks preparation */
   PDM_l_num_t                        **num_cell_parent_to_local;/*!< Initial local numbering to local numbering
                                                                  *   imposed by blocks */
+  int                                 *blocks_id;               /*!< Blocks identifier */
+  int                                  n_blocks;                /*!< Total number of blocks */
 } ;
 
 #ifdef __cplusplus

@@ -42,7 +42,7 @@ struct _PDM_writer_geom_t {
   void                     *geom_fmt;           /* Description propre au format fmt */
   PDM_writer_t             *_cs;                /* Pointeur sur la structure cs parente */
   PDM_MPI_Comm              pdm_mpi_comm;       /* Communicateur MPI */
-  const int                 idx_mesh;           /* Mesh handle */
+  int                      idx_mesh;           /* Mesh handle */
 
 };
 

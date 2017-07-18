@@ -73,6 +73,7 @@ static PDM_Handles_t *mesh_handles = NULL;
  *============================================================================*/
 
 
+
 /**
  * 
  * \brief Free vtx structure
@@ -117,7 +118,8 @@ static void
 _mesh_init
 (
 PDM_Mesh_nodal_t *mesh,
-const int        n_part
+const int        n_part,
+const PDM_MPI_Comm comm        
 )
 {
 
@@ -139,9 +141,71 @@ const int        n_part
   mesh->blocks_poly2d            = NULL;            
   mesh->blocks_poly3d            = NULL;           
 
-  mesh->pdm_mpi_comm             = PDM_MPI_COMM_NULL;
+  mesh->pdm_mpi_comm             = comm;
   mesh->prepa_blocks             = NULL;
   mesh->num_cell_parent_to_local = NULL;
+  mesh->blocks_id                = NULL;
+  mesh->n_blocks                 = 0;
+
+}
+
+/**
+ * 
+ * \brief Update blocks identifier list
+ *
+ * \param [inout]  mesh        Mesh
+ */
+
+static void   
+_update_blocks_id
+(
+PDM_Mesh_nodal_t *mesh
+)
+{
+  int n_blocks = 0;
+  
+  if (mesh->blocks_std != NULL) {
+    n_blocks += PDM_Handles_n_get (mesh->blocks_std);
+  }
+    
+  if (mesh->blocks_poly2d != NULL) {
+    n_blocks += PDM_Handles_n_get (mesh->blocks_poly2d);
+  }
+
+  if (mesh->blocks_poly3d != NULL) {
+    n_blocks += PDM_Handles_n_get (mesh->blocks_poly3d);
+  }
+  
+  if (mesh->n_blocks < n_blocks) {
+    mesh->blocks_id = (int *) malloc(sizeof(int) * n_blocks);
+  }
+  
+  int k = 0;
+  if (mesh->blocks_std != NULL) {
+    const int *id1 = PDM_Handles_idx_get (mesh->blocks_std);
+    int n = PDM_Handles_n_get (mesh->blocks_std);
+    for (int i = 0; i < n; i++) {
+      mesh->blocks_id[k++] = id1[i] + PDM_BLOCK_ID_BLOCK_STD;
+    }
+  }
+    
+  if (mesh->blocks_poly2d != NULL) {
+    const int *id1 = PDM_Handles_idx_get (mesh->blocks_poly2d);
+    int n = PDM_Handles_n_get (mesh->blocks_poly2d);
+    for (int i = 0; i < n; i++) {
+      mesh->blocks_id[k++] = id1[i] + PDM_BLOCK_ID_BLOCK_POLY2D;
+    }
+  }
+  
+  if (mesh->blocks_std != NULL) {
+    const int *id1 = PDM_Handles_idx_get (mesh->blocks_poly3d);
+    int n = PDM_Handles_n_get (mesh->blocks_poly3d);
+    for (int i = 0; i < n; i++) {
+      mesh->blocks_id[k++] = id1[i] + PDM_BLOCK_ID_BLOCK_POLY3D;
+    }
+  }
+  
+  mesh->n_blocks = n_blocks;  
 
 }
 
@@ -1114,6 +1178,7 @@ _type_cell_3D
  * \brief Create a Mesh nodal structure
  *
  * \param [in]   n_part   Number of partition on the current process
+ * \param [in]   comm     MPI communicator
  *
  * \return       New mesh nodal handle
  *
@@ -1122,12 +1187,13 @@ _type_cell_3D
 int 
 PDM_Mesh_nodal_create
 (
-const int     n_part
+const int     n_part,
+const PDM_MPI_Comm comm        
 )
 {
   PDM_Mesh_nodal_t *mesh = (PDM_Mesh_nodal_t *) malloc (sizeof(PDM_Mesh_nodal_t));
   
-  _mesh_init (mesh, n_part);
+  _mesh_init (mesh, n_part, comm);
   
   return PDM_Handles_store (mesh_handles, mesh);
 }
@@ -1143,7 +1209,7 @@ const int     n_part
  */
 
 int
-PDM_Mesh_n_part_get
+PDM_Mesh_nodal_n_part_get
 (
 const int   idx
 )
@@ -1312,6 +1378,10 @@ const int idx
 
     free(mesh->n_cell);
     mesh->n_cell = NULL;
+    
+    if (mesh->blocks_id != NULL) {
+      free (mesh->blocks_id);
+    }
 
     free(mesh);
 
@@ -1549,7 +1619,7 @@ PDM_Mesh_nodal_coord_from_parent_set
  */
 
 int
-PDM_Mesh_n_blocks_get
+PDM_Mesh_nodal_n_blocks_get
 (
  const int   idx
 )
@@ -1560,11 +1630,35 @@ PDM_Mesh_n_blocks_get
     PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");  
   }
 
-  int n_blocks = PDM_Handles_n_get (mesh->blocks_std)
-               + PDM_Handles_n_get (mesh->blocks_poly2d)
-               + PDM_Handles_n_get (mesh->blocks_poly3d);
   
-  return n_blocks;
+  return mesh->n_blocks;
+
+}
+
+
+
+/**
+ * \brief  Return blocks identifier
+ *
+ * \param [in]  idx            Nodal mesh handle
+ *
+ * \return  Blocks identifier
+ *
+ */
+
+int *
+PDM_Mesh_nodal_blocks_id_get
+(
+const int   idx
+)
+{
+  PDM_Mesh_nodal_t * mesh = (PDM_Mesh_nodal_t *) PDM_Handles_get (mesh_handles, idx);
+
+  if (mesh == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");  
+  }
+  
+  return mesh->blocks_id;
 
 }
 
@@ -1580,7 +1674,7 @@ PDM_Mesh_n_blocks_get
  */
 
 PDM_Mesh_nodal_elt_t
-PDM_Mesh_block_type_get
+PDM_Mesh_nodal_block_type_get
 (
  const int   idx,
  const int   id_block     
@@ -1741,7 +1835,7 @@ const PDM_Mesh_nodal_elt_t   t_elt
         block_poly2d->_numabs[i]     = NULL;
       }
 
-      id_block += PDM_BLOCK_ID_BLOCK_POLY3D;
+      id_block += PDM_BLOCK_ID_BLOCK_POLY2D;
       if (id_block >= PDM_BLOCK_ID_BLOCK_POLY3D) {
         PDM_error(__FILE__, __LINE__, 0, "The number of polygon blocks must be less than %d\n",
                PDM_BLOCK_ID_BLOCK_POLY3D - PDM_BLOCK_ID_BLOCK_POLY2D);
@@ -1801,6 +1895,7 @@ const PDM_Mesh_nodal_elt_t   t_elt
 
   }
 
+  _update_blocks_id (mesh);
   return id_block ;
   
 }
@@ -2028,11 +2123,7 @@ PDM_Mesh_nodal_block_std_get
 const int            idx,
 const int            id_block,     
 const int            id_part, 
-      int           *n_elt,    
-      PDM_l_num_t  **connec,   
-      PDM_g_num_t  **numabs,
-      PDM_g_num_t  **numabs_block,
-      PDM_l_num_t  **parent_num
+      PDM_l_num_t  **connec   
 )
 {
   PDM_Mesh_nodal_t *mesh = (PDM_Mesh_nodal_t *) PDM_Handles_get (mesh_handles, idx);
@@ -2054,19 +2145,360 @@ const int            id_part,
     PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
   }
 
-  *n_elt  = block->n_elt[id_part];
   *connec = block->_connec[id_part];
-  *numabs = block->_numabs[id_part];
-  *parent_num   = NULL;
-  *numabs_block = NULL;
+}
+
+
+/**
+ * \brief Get number of block elements
+ *
+ * \param [in]  idx            Nodal mesh handle
+ * \param [in]  id_block       Block identifier
+ * \param [in]  id_part        Partition identifier
+ *
+ * \return      Number of elements
+ *  
+ */
+
+int
+PDM_Mesh_nodal_block_n_elt_get 
+(   
+const int            idx,
+const int            id_block,     
+const int            id_part 
+)
+{
+  PDM_Mesh_nodal_t *mesh = (PDM_Mesh_nodal_t *) PDM_Handles_get (mesh_handles, idx);
   
-  if (block->_parent_num != NULL) {
-    *parent_num = block->_parent_num[id_part];
+  if (mesh == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");  
+  }
+
+  int _id_block;
+  
+  if (id_block >= PDM_BLOCK_ID_BLOCK_POLY3D) {
+  
+    _id_block = id_block - PDM_BLOCK_ID_BLOCK_POLY3D;
+  
+    const PDM_Mesh_nodal_block_poly3d_t *block = (const PDM_Mesh_nodal_block_poly3d_t *) 
+     PDM_Handles_get (mesh->blocks_poly3d, _id_block);
+  
+    if (block == NULL) {
+      PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
+    }
+  
+    if (id_part >= block->n_part) {
+      PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
+    }
+    
+    return block->n_elt[id_part];
   }
   
-  if (block->numabs_int != NULL) {
-    *numabs_block = block->numabs_int[id_part];
+  else if (id_block >= PDM_BLOCK_ID_BLOCK_POLY2D) {
+  
+    _id_block = id_block - PDM_BLOCK_ID_BLOCK_POLY2D;
+  
+    const PDM_Mesh_nodal_block_poly2d_t *block = (const PDM_Mesh_nodal_block_poly2d_t *) 
+     PDM_Handles_get (mesh->blocks_poly2d, _id_block);
+  
+    if (block == NULL) {
+      PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
+    }
+  
+    if (id_part >= block->n_part) {
+      PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
+    }
+
+    return block->n_elt[id_part];
   }
+  
+  else {
+  
+    _id_block = id_block - PDM_BLOCK_ID_BLOCK_STD;
+  
+    const PDM_Mesh_nodal_block_std_t *block = (const PDM_Mesh_nodal_block_std_t *) 
+     PDM_Handles_get (mesh->blocks_std, _id_block);
+  
+    if (block == NULL) {
+      PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
+    }
+  
+    if (id_part >= block->n_part) {
+      PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
+    }
+
+    return block->n_elt[id_part];
+  }
+  
+}
+
+
+/**
+ * \brief Get global numbering of block elements
+ *
+ * \param [in]  idx            Nodal mesh handle
+ * \param [in]  id_block       Block identifier
+ * \param [in]  id_part        Partition identifier
+ *
+ * \return      Return global numbering of block elements
+ *  
+ */
+
+PDM_g_num_t *
+PDM_Mesh_nodal_block_g_num_get 
+(   
+const int            idx,
+const int            id_block,     
+const int            id_part 
+)
+{
+  PDM_Mesh_nodal_t *mesh = (PDM_Mesh_nodal_t *) PDM_Handles_get (mesh_handles, idx);
+  
+  if (mesh == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");  
+  }
+
+  int _id_block;
+  
+  if (id_block >= PDM_BLOCK_ID_BLOCK_POLY3D) {
+  
+    _id_block = id_block - PDM_BLOCK_ID_BLOCK_POLY3D;
+  
+    const PDM_Mesh_nodal_block_poly3d_t *block = (const PDM_Mesh_nodal_block_poly3d_t *) 
+     PDM_Handles_get (mesh->blocks_poly3d, _id_block);
+  
+    if (block == NULL) {
+      PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
+    }
+  
+    if (id_part >= block->n_part) {
+      PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
+    }
+    
+    return block->_numabs[id_part];
+  }
+  
+  else if (id_block >= PDM_BLOCK_ID_BLOCK_POLY2D) {
+  
+    _id_block = id_block - PDM_BLOCK_ID_BLOCK_POLY2D;
+  
+    const PDM_Mesh_nodal_block_poly2d_t *block = (const PDM_Mesh_nodal_block_poly2d_t *) 
+     PDM_Handles_get (mesh->blocks_poly2d, _id_block);
+  
+    if (block == NULL) {
+      PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
+    }
+  
+    if (id_part >= block->n_part) {
+      PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
+    }
+
+    return block->_numabs[id_part];
+  }
+  
+  else {
+  
+    _id_block = id_block - PDM_BLOCK_ID_BLOCK_STD;
+  
+    const PDM_Mesh_nodal_block_std_t *block = (const PDM_Mesh_nodal_block_std_t *) 
+     PDM_Handles_get (mesh->blocks_std, _id_block);
+  
+    if (block == NULL) {
+      PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
+    }
+  
+    if (id_part >= block->n_part) {
+      PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
+    }
+
+    return block->_numabs[id_part];
+  }
+}
+
+
+/**
+ * \brief Get global inside numbering of block elements
+ *
+ * \param [in]  idx            Nodal mesh handle
+ * \param [in]  id_block       Block identifier
+ * \param [in]  id_part        Partition identifier
+ *
+ * \return      Return global inside numbering of block elements
+ *  
+ */
+
+PDM_g_num_t *
+PDM_Mesh_nodal_block_inside_g_num_get 
+(   
+const int            idx,
+const int            id_block,     
+const int            id_part 
+) 
+{
+  PDM_Mesh_nodal_t *mesh = (PDM_Mesh_nodal_t *) PDM_Handles_get (mesh_handles, idx);
+  
+  if (mesh == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");  
+  }
+
+  int _id_block;
+  
+  PDM_g_num_t *_numabs_int = NULL;
+  
+  if (id_block >= PDM_BLOCK_ID_BLOCK_POLY3D) {
+  
+    _id_block = id_block - PDM_BLOCK_ID_BLOCK_POLY3D;
+  
+    const PDM_Mesh_nodal_block_poly3d_t *block = (const PDM_Mesh_nodal_block_poly3d_t *) 
+     PDM_Handles_get (mesh->blocks_poly3d, _id_block);
+  
+    if (block == NULL) {
+      PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
+    }
+  
+    if (id_part >= block->n_part) {
+      PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
+    }
+    
+    if (block->numabs_int != NULL) {      
+      _numabs_int = block->numabs_int[id_part];
+    }
+  }
+  
+  else if (id_block >= PDM_BLOCK_ID_BLOCK_POLY2D) {
+  
+    _id_block = id_block - PDM_BLOCK_ID_BLOCK_POLY2D;
+  
+    const PDM_Mesh_nodal_block_poly2d_t *block = (const PDM_Mesh_nodal_block_poly2d_t *) 
+     PDM_Handles_get (mesh->blocks_poly2d, _id_block);
+  
+    if (block == NULL) {
+      PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
+    }
+  
+    if (id_part >= block->n_part) {
+      PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
+    }
+
+    if (block->numabs_int != NULL) {      
+      _numabs_int = block->numabs_int[id_part];
+    }
+  }
+  
+  else {
+  
+    _id_block = id_block - PDM_BLOCK_ID_BLOCK_STD;
+  
+    const PDM_Mesh_nodal_block_std_t *block = (const PDM_Mesh_nodal_block_std_t *) 
+     PDM_Handles_get (mesh->blocks_std, _id_block);
+  
+    if (block == NULL) {
+      PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
+    }
+  
+    if (id_part >= block->n_part) {
+      PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
+    }
+
+    if (block->numabs_int != NULL) {      
+      _numabs_int = block->numabs_int[id_part];
+    }
+  }
+  
+  return _numabs_int;
+}
+
+
+/**
+ * \brief Get parent numbering of block elements
+ *
+ * \param [in]  idx            Nodal mesh handle
+ * \param [in]  id_block       Block identifier
+ * \param [in]  id_part        Partition identifier
+ *
+ * \return      Return parent numbering of block elements
+ *  
+ */
+
+int *
+PDM_Mesh_nodal_block_parent_num_get 
+(   
+const int            idx,
+const int            id_block,     
+const int            id_part 
+)
+{
+  PDM_Mesh_nodal_t *mesh = (PDM_Mesh_nodal_t *) PDM_Handles_get (mesh_handles, idx);
+  
+  if (mesh == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");  
+  }
+
+  int _id_block;
+  
+  int *_parent_num = NULL;
+
+  if (id_block >= PDM_BLOCK_ID_BLOCK_POLY3D) {
+  
+    _id_block = id_block - PDM_BLOCK_ID_BLOCK_POLY3D;
+  
+    const PDM_Mesh_nodal_block_poly3d_t *block = (const PDM_Mesh_nodal_block_poly3d_t *) 
+     PDM_Handles_get (mesh->blocks_poly3d, _id_block);
+  
+    if (block == NULL) {
+      PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
+    }
+  
+    if (id_part >= block->n_part) {
+      PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
+    }
+    
+    if (block->_parent_num != NULL) {
+      _parent_num = block->_parent_num[id_part];
+    }
+  }
+  
+  else if (id_block >= PDM_BLOCK_ID_BLOCK_POLY2D) {
+  
+    _id_block = id_block - PDM_BLOCK_ID_BLOCK_POLY2D;
+  
+    const PDM_Mesh_nodal_block_poly2d_t *block = (const PDM_Mesh_nodal_block_poly2d_t *) 
+     PDM_Handles_get (mesh->blocks_poly2d, _id_block);
+  
+    if (block == NULL) {
+      PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
+    }
+  
+    if (id_part >= block->n_part) {
+      PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
+    }
+
+    if (block->_parent_num != NULL) {
+      _parent_num = block->_parent_num[id_part];
+    }
+  }
+  
+  else {
+  
+    _id_block = id_block - PDM_BLOCK_ID_BLOCK_STD;
+  
+    const PDM_Mesh_nodal_block_std_t *block = (const PDM_Mesh_nodal_block_std_t *) 
+     PDM_Handles_get (mesh->blocks_std, _id_block);
+  
+    if (block == NULL) {
+      PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
+    }
+  
+    if (id_part >= block->n_part) {
+      PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
+    }
+
+    if (block->_parent_num != NULL) {
+      _parent_num = block->_parent_num[id_part];
+    }
+  }
+  
+  return _parent_num;
 }
 
 
@@ -2146,12 +2578,8 @@ const PDM_l_num_t    n_elt,
  * \param [in]  idx            Nodal mesh handle
  * \param [in]  id_block       Block identifier
  * \param [in]  id_part        Partition identifier
- * \param [out] n_elt          Number of elements
  * \param [out] connect_idx    Connectivity index (size = \ref n_elt + 1)
  * \param [out] connect        Connectivity (size = \ref connect_idx[\ref n_elt])
- * \param [out] numabs         Global numbering
- * \param [out] numabs_block   Global numbering in the block or NULL (if not computed)
- * \param [out] parent_num     Parent numbering or NULL
  *
  */
  
@@ -2161,13 +2589,8 @@ PDM_Mesh_nodal_block_poly2d_get
  const int          idx,
  const int          id_block, 
  const int          id_part, 
-       PDM_l_num_t  *n_elt,    
        PDM_l_num_t  **connec_idx,   
-       PDM_l_num_t  **connec,
-       PDM_g_num_t  **numabs,
-       PDM_g_num_t  **numabs_block,
-       PDM_l_num_t  **parent_num
-
+       PDM_l_num_t  **connec
 )
 {
   PDM_Mesh_nodal_t *mesh = (PDM_Mesh_nodal_t *) PDM_Handles_get (mesh_handles, idx);
@@ -2189,20 +2612,8 @@ PDM_Mesh_nodal_block_poly2d_get
     PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
   }
 
-  *n_elt      = block->n_elt[id_part];
   *connec_idx = block->_connec_idx[id_part];
   *connec     = block->_connec[id_part];
-  *numabs     = block->_numabs[id_part];
-  *parent_num   = NULL;
-  *numabs_block = NULL;
-  
-  if (block->_parent_num != NULL) {
-    *parent_num = block->_parent_num[id_part];
-  }
-  
-  if (block->numabs_int != NULL) {
-    *numabs_block = block->numabs_int[id_part];
-  }
  
 }
 
@@ -2289,13 +2700,11 @@ const PDM_l_num_t    n_face,
  * \param [in]  idx            Nodal mesh handle
  * \param [in]  id_block       Block identifier
  * \param [in]  id_part        Partition identifier
- * \param [out]  n_elt          Number of polyhedra
  * \param [out]  n_face         Number of faces used to describe polyhedra
  * \param [out]  facvtx_idx     Index of face vertex connectivity
  * \param [out]  facvtx         Face vertex connectivity
  * \param [out]  cellfac_idx    Index of cell face connectivity
  * \param [out]  cellfac        Cell face connectivity
- * \param [out]  numabs         Global numbering
  *
  */
 
@@ -2305,15 +2714,11 @@ PDM_Mesh_nodal_block_poly3d_get
 const int            idx,
 const int            id_block, 
 const int            id_part, 
-      PDM_l_num_t   *n_elt,    
       PDM_l_num_t   *n_face,   
       PDM_l_num_t  **facvtx_idx,   
       PDM_l_num_t  **facvtx,
       PDM_l_num_t  **cellfac_idx,   
-      PDM_l_num_t  **cellfac,
-      PDM_g_num_t  **numabs,
-      PDM_g_num_t  **numabs_block,
-      PDM_l_num_t  **parent_num
+      PDM_l_num_t  **cellfac
 )
 {
   PDM_Mesh_nodal_t *mesh = (PDM_Mesh_nodal_t *) PDM_Handles_get (mesh_handles, idx);
@@ -2335,23 +2740,11 @@ const int            id_part,
     PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
   }
 
-  *n_elt      = block->n_elt[id_part];
   *n_face     = block->n_face[id_part];
   *facvtx_idx  = block->_facvtx_idx[id_part];
   *facvtx      = block->_facvtx[id_part];
   *cellfac_idx = block->_cellfac_idx[id_part];
   *cellfac     = block->_cellfac[id_part];
-  *numabs      = block->_numabs[id_part];
-  *parent_num   = NULL;
-  *numabs_block = NULL;
-  
-  if (block->_parent_num != NULL) {
-    *parent_num = block->_parent_num[id_part];
-  }
-  
-  if (block->numabs_int != NULL) {
-    *numabs_block = block->numabs_int[id_part];
-  }
 
 }
 
@@ -2379,7 +2772,7 @@ const int            id_part,
  */
 
 void
-PDM_Mesh_nodal_geom_cell3d_cellface_add
+PDM_Mesh_nodal_cell3d_cellface_add
 (
 const int         idx,
 const int         id_part, 
@@ -2902,7 +3295,7 @@ PDM_g_num_t      *numabs
  */
 
 void
-PDM_Mesh_nodal_geom_cell2d_celledge_add
+PDM_Mesh_nodal_cell2d_celledge_add
 (
 const int          idx,
 const int          id_part, 
@@ -3270,7 +3663,7 @@ PDM_g_num_t       *numabs
  */
 
 void
-PDM_Mesh_nodal_geom_faces_facevtx_add
+PDM_Mesh_nodal_faces_facevtx_add
 (
 const int         idx,
 const int         id_part, 
@@ -3678,10 +4071,44 @@ const int  id_part
     PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
   }
 
-  mesh->num_cell_parent_to_local[id_part];
+  if (mesh->num_cell_parent_to_local != NULL)
+    return mesh->num_cell_parent_to_local[id_part];
+  else 
+    return NULL;
   
 }
 
+
+/**
+ * \brief  Return number elements of a partition
+ *
+ * \param [in]  idx       Nodal mesh handle
+ * \param [in]  id_part   Partition identifier
+ *
+ * \return  Return number elements of a partition
+ * 
+ */
+
+int
+PDM_Mesh_nodal_n_cell_get
+(
+const int  idx,
+const int  id_part 
+)
+{
+  PDM_Mesh_nodal_t *mesh = (PDM_Mesh_nodal_t *) PDM_Handles_get (mesh_handles, idx);
+  
+  if (mesh == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");  
+  }
+
+  if (id_part >= mesh->n_part) {
+    PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
+  }
+
+  return mesh->n_cell[id_part];
+
+}
 
 #ifdef __cplusplus
 }

@@ -62,15 +62,17 @@ typedef struct _PDM_Mesh_nodal_t PDM_Mesh_nodal_t;
  * \brief Create a Mesh nodal structure
  *
  * \param [in]   n_part   Number of partition on the current process
+ * \param [in]   comm     MPI communicator
  *
- * \return       new mesh nodal handle
+ * \return       New mesh nodal handle
  *
  */
 
 int 
 PDM_Mesh_nodal_create
 (
-const int     n_part
+const int     n_part,
+const PDM_MPI_Comm comm        
 );
 
 /**
@@ -217,7 +219,23 @@ PDM_Mesh_nodal_coord_from_parent_set
  */
 
 int
-PDM_Mesh_n_blocks_get
+PDM_Mesh_nodal_n_blocks_get
+(
+const int   idx
+);
+
+
+/**
+ * \brief  Return blocks identifier
+ *
+ * \param [in]  idx            Nodal mesh handle
+ *
+ * \return  Blocks identifier
+ *
+ */
+
+int *
+PDM_Mesh_nodal_blocks_id_get
 (
 const int   idx
 );
@@ -233,7 +251,7 @@ const int   idx
  */
 
 int
-PDM_Mesh_n_part_get
+PDM_Mesh_nodal_n_part_get
 (
 const int   idx
 );
@@ -250,7 +268,7 @@ const int   idx
  */
 
 PDM_Mesh_nodal_elt_t
-PDM_Mesh_block_type_get
+PDM_Mesh_nodal_block_type_get
 (
 const int   idx,
 const int   id_block     
@@ -372,7 +390,6 @@ const int            n_elt,
 ); 
 
 
-
 /**
  * \brief Return standard block description
  *
@@ -447,11 +464,7 @@ const int            n_elt,
  * \param [in]  idx            Nodal mesh handle
  * \param [in]  id_block       Block identifier
  * \param [in]  id_part        Partition identifier
- * \param [out]  n_elt          Number of elements
  * \param [out]  connect        Connectivity
- * \param [out]  numabs         Global numbering
- * \param [out] numabs_block   Global numbering in the block or NULL (if not computed)
- * \param [out] parent_num     Parent numbering or NULL
  *
  */
 
@@ -461,11 +474,87 @@ PDM_Mesh_nodal_block_std_get
 const int            idx,
 const int            id_block,     
 const int            id_part, 
-      int           *n_elt,    
-      PDM_l_num_t  **connec,   
-      PDM_g_num_t  **numabs,
-      PDM_g_num_t  **numabs_block,
-      PDM_l_num_t  **parent_num
+      PDM_l_num_t  **connec   
+); 
+
+
+/**
+ * \brief Get number of block elements
+ *
+ * \param [in]  idx            Nodal mesh handle
+ * \param [in]  id_block       Block identifier
+ * \param [in]  id_part        Partition identifier
+ *
+ * \return      Number of elements
+ *  
+ */
+
+int
+PDM_Mesh_nodal_block_n_elt_get 
+(   
+const int            idx,
+const int            id_block,     
+const int            id_part 
+); 
+
+
+/**
+ * \brief Get global numbering of block elements
+ *
+ * \param [in]  idx            Nodal mesh handle
+ * \param [in]  id_block       Block identifier
+ * \param [in]  id_part        Partition identifier
+ *
+ * \return      Return global numbering of block elements
+ *  
+ */
+
+PDM_g_num_t *
+PDM_Mesh_nodal_block_g_num_get 
+(   
+const int            idx,
+const int            id_block,     
+const int            id_part 
+); 
+
+
+/**
+ * \brief Get global inside numbering of block elements
+ *
+ * \param [in]  idx            Nodal mesh handle
+ * \param [in]  id_block       Block identifier
+ * \param [in]  id_part        Partition identifier
+ *
+ * \return      Return global inside numbering of block elements
+ *  
+ */
+
+PDM_g_num_t *
+PDM_Mesh_nodal_block_inside_g_num_get 
+(   
+const int            idx,
+const int            id_block,     
+const int            id_part 
+); 
+
+
+/**
+ * \brief Get parent numbering of block elements
+ *
+ * \param [in]  idx            Nodal mesh handle
+ * \param [in]  id_block       Block identifier
+ * \param [in]  id_part        Partition identifier
+ *
+ * \return      Return parent numbering of block elements
+ *  
+ */
+
+int *
+PDM_Mesh_nodal_block_parent_num_get 
+(   
+const int            idx,
+const int            id_block,     
+const int            id_part 
 ); 
 
 
@@ -518,12 +607,8 @@ PDM_Mesh_nodal_block_poly2d_get
  const int          idx,
  const int          id_block, 
  const int          id_part, 
-       PDM_l_num_t  *n_elt,    
        PDM_l_num_t  **connec_idx,   
-       PDM_l_num_t  **connec,
-       PDM_g_num_t  **numabs,
-       PDM_g_num_t  **numabs_block,
-       PDM_l_num_t  **parent_num
+       PDM_l_num_t  **connec
 ); 
 
 
@@ -585,15 +670,11 @@ PDM_Mesh_nodal_block_poly3d_get
 const int            idx,
 const int            id_block, 
 const int            id_part, 
-      PDM_l_num_t   *n_elt,    
       PDM_l_num_t   *n_face,   
       PDM_l_num_t  **facvtx_idx,   
       PDM_l_num_t  **facvtx,
       PDM_l_num_t  **cellfac_idx,   
-      PDM_l_num_t  **cellfac,
-      PDM_g_num_t  **numabs,
-      PDM_g_num_t  **numabs_block,
-      PDM_l_num_t  **parent_num
+      PDM_l_num_t  **cellfac
 ); 
 
 /**
@@ -618,7 +699,7 @@ const int            id_part,
  */
 
 void
-PDM_Mesh_nodal_geom_cell3d_cellface_add
+PDM_Mesh_nodal_cell3d_cellface_add
 (
 const int         idx,
 const int         id_part, 
@@ -656,7 +737,7 @@ PDM_g_num_t      *numabs
  */
 
 void
-PDM_Mesh_nodal_geom_cell2d_celledge_add
+PDM_Mesh_nodal_cell2d_celledge_add
 (
 const int          idx,
 const int          id_part, 
@@ -690,7 +771,7 @@ PDM_g_num_t       *numabs
  */
 
 void
-PDM_Mesh_nodal_geom_faces_facevtx_add
+PDM_Mesh_nodal_faces_facevtx_add
 (
 const int         idx,
 const int         id_part, 
@@ -730,6 +811,24 @@ const int         id_block
 
 int *
 PDM_Mesh_nodal_num_cell_parent_to_local_get
+(
+const int  idx,
+const int  id_part 
+); 
+
+
+/**
+ * \brief  Return number elements of a partition
+ *
+ * \param [in]  idx       Nodal mesh handle
+ * \param [in]  id_part   Partition identifier
+ *
+ * \return  Return number elements of a partition
+ * 
+ */
+
+int
+PDM_Mesh_nodal_n_cell_get
 (
 const int  idx,
 const int  id_part 
