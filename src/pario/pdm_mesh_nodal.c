@@ -1471,7 +1471,7 @@ PDM_Mesh_nodal_n_vertices_get
   }
   
   if (id_part >= mesh->n_part) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad part identifier\n");  
+    PDM_error (__FILE__, __LINE__, 0, "Bad part identifier %d %d\n", id_part, mesh->n_part);  
   } 
   
   PDM_Mesh_nodal_vtx_t *vtx = mesh->vtx[id_part];
@@ -4068,6 +4068,57 @@ const int         id_block
   }
 
   PDM_gnum_compute (id_gnum);
+
+  printf ("PDM_gnum_compute\n");
+  
+  if (id_block >= PDM_BLOCK_ID_BLOCK_POLY3D) {
+    int _id_block = id_block - PDM_BLOCK_ID_BLOCK_POLY3D;
+  
+    PDM_Mesh_nodal_block_poly3d_t *block = 
+            (PDM_Mesh_nodal_block_poly3d_t *) PDM_Handles_get (mesh->blocks_poly3d, _id_block);
+    
+    for (int i = 0; i < mesh->n_part; i++) {
+      block->numabs_int[i] = (PDM_g_num_t *) PDM_gnum_get (id_gnum, i);
+      printf("numabs_int %d  : ",block->n_elt[i] );
+      for (int j = 0; j < block->n_elt[i]; j++) {
+        printf(" %ld",block->numabs_int[i][j]);
+      }
+      printf("\n");
+    }
+  }
+
+  else if (id_block >= PDM_BLOCK_ID_BLOCK_POLY2D) {
+    int _id_block = id_block - PDM_BLOCK_ID_BLOCK_POLY2D;
+  
+    PDM_Mesh_nodal_block_poly2d_t *block = 
+            (PDM_Mesh_nodal_block_poly2d_t *) PDM_Handles_get (mesh->blocks_poly2d, _id_block);
+
+    for (int i = 0; i < mesh->n_part; i++) {
+      block->numabs_int[i] = (PDM_g_num_t *) PDM_gnum_get (id_gnum, i);
+      printf("numabs_int %d : ",block->n_elt[i]);
+      for (int j = 0; j < block->n_elt[i]; j++) {
+        printf(" %ld",block->numabs_int[i][j]);
+      }
+      printf("\n");
+    }
+  }
+  
+  else {
+
+    int _id_block = id_block;
+  
+    PDM_Mesh_nodal_block_std_t *block = 
+            (PDM_Mesh_nodal_block_std_t *) PDM_Handles_get (mesh->blocks_std, _id_block);
+
+    for (int i = 0; i < mesh->n_part; i++) {
+      block->numabs_int[i] = (PDM_g_num_t *) PDM_gnum_get (id_gnum, i);
+      printf("numabs_int  %d : ",block->n_elt[i]);
+      for (int j = 0; j < block->n_elt[i]; j++) {
+        printf(" %ld",block->numabs_int[i][j]);
+      }
+      printf("\n");
+    }
+  }
 
   PDM_gnum_free (id_gnum, PDM_TRUE);
 

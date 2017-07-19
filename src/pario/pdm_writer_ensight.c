@@ -1041,7 +1041,7 @@ PDM_writer_ensight_geom_write
       s_ecr_n_val = PDM_WRITER_OFF;
     n_som_proc = 0;
     
-    for (int ipart = 0; n_part; ipart++) {
+    for (int ipart = 0; ipart < n_part; ipart++) {
 
       const int n_vtx = PDM_Mesh_nodal_n_vertices_get (geom->idx_mesh, ipart);
       const double *vtx = PDM_Mesh_nodal_vertices_get (geom->idx_mesh, ipart);

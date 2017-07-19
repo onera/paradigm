@@ -57,6 +57,7 @@
 #include "pdm_error.h"
 #include "pdm_handles.h"
 #include "pdm_binary_search.h"
+#include "pdm_mpi.h"
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
@@ -646,15 +647,24 @@ _gnum_from_parent_compute
   /* Calcul du nombre total d'elements du bloc */
 
   PDM_l_num_t n_elt_loc_total = 0;
-  PDM_g_num_t max_parent = -1;
+  PDM_g_num_t l_max_parent = -1;
   
+  printf("parent : "); 
   for (int j = 0; j < _gnum->n_part; j++) {
     n_elt_loc_total += _gnum->n_elts[j];
-    for (int k = 0; k < _gnum->n_elts[j]; k++) {    
-      max_parent = PDM_MAX (max_parent, _gnum->parent[j][k]);
+    for (int k = 0; k < _gnum->n_elts[j]; k++) {
+        printf(" %ld", _gnum->parent[j][k]); 
+
+      l_max_parent = PDM_MAX (l_max_parent, _gnum->parent[j][k]);
     }
   }
+  printf("\n"); 
 
+  PDM_g_num_t max_parent = 0;
+  PDM_MPI_Allreduce (&l_max_parent, &max_parent, 1, 
+                     PDM__PDM_MPI_G_NUM, PDM_MPI_MAX, _gnum->comm);
+  
+  
   /* Comptage du nombre d'elements a envoyer a chaque processus */
   
   for (int j = 0; j < n_procs; j++) {
@@ -664,7 +674,9 @@ _gnum_from_parent_compute
     recvBuffIdx[j] = 0;
   }
 
-  PDM_g_num_t *d_elt_proc = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * (n_procs + 1));
+  PDM_g_num_t *d_elt_proc = 
+          (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * (n_procs + 1));
+  
 
   PDM_g_num_t div_entiere = max_parent / n_procs;
   PDM_g_num_t div_reste = max_parent % n_procs;
@@ -672,11 +684,22 @@ _gnum_from_parent_compute
   d_elt_proc[0] = 1;
   for (int i = 0; i < n_procs; i++) {
     d_elt_proc[i+1] =  div_entiere;
-    if (i < div_reste)
+    if (i < div_reste) {
       d_elt_proc[i+1] += 1;
+    }
   }
 
-  
+  for (int i = 0; i < n_procs; i++) {
+    d_elt_proc[i+1] += d_elt_proc[i]; 
+  }
+    
+  printf("max_parent : %ld\n", max_parent);
+  printf("d_elt_proc : \n");
+  for (int i = 0; i < n_procs + 1; i++) {
+    printf(" %ld",  d_elt_proc[i]);
+  }
+  printf("\n");
+          
   for (int j = 0; j < _gnum->n_part; j++) {
     for (int k = 0; k < _gnum->n_elts[j]; k++) {
       const int i_elt_proc = PDM_binary_search_gap_long (_gnum->parent[j][k],
@@ -777,6 +800,15 @@ _gnum_from_parent_compute
       
       PDM_g_num_t _idx = recvBuffNumabs[k] - d_elt_proc[i_proc];
       const int idx = (int) _idx;
+      if (!((idx < l_numabs_tmp) && (idx >= 0))) {
+        printf ("idx : %d %ld\n", idx, recvBuffNumabs[k]);
+          printf("d_elt_proc : \n");
+  for (int i = 0; i < n_procs + 1; i++) {
+    printf(" %ld",  d_elt_proc[i]);
+  }
+  printf("\n");
+
+      }
       assert((idx < l_numabs_tmp) && (idx >= 0));
 
       numabs_tmp[idx] = 1; /* On marque les elements */
@@ -844,6 +876,8 @@ _gnum_from_parent_compute
 
   /* Liberation memoire */
 
+  free(sendBuffIdx);
+  free(sendBuffN);  
   free(sendBuffNumabs);
   free(recvBuffNumabs);
   
