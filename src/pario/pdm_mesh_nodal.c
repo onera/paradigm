@@ -197,7 +197,7 @@ PDM_Mesh_nodal_t *mesh
     }
   }
   
-  if (mesh->blocks_std != NULL) {
+  if (mesh->blocks_poly3d != NULL) {
     const int *id1 = PDM_Handles_idx_get (mesh->blocks_poly3d);
     int n = PDM_Handles_n_get (mesh->blocks_poly3d);
     for (int i = 0; i < n; i++) {
@@ -1195,6 +1195,10 @@ const PDM_MPI_Comm comm
   
   _mesh_init (mesh, n_part, comm);
   
+  if (mesh_handles == NULL) {
+    mesh_handles = PDM_Handles_create (4);
+  }
+  
   return PDM_Handles_store (mesh_handles, mesh);
 }
 
@@ -1423,7 +1427,7 @@ PDM_Mesh_nodal_coord_set
     PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");  
   }
   
-  if (id_part <= mesh->n_part) {
+  if (id_part >= mesh->n_part) {
     PDM_error (__FILE__, __LINE__, 0, "Bad part identifier\n");  
   } 
   
@@ -1466,7 +1470,7 @@ PDM_Mesh_nodal_n_vertices_get
     PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");  
   }
   
-  if (id_part <= mesh->n_part) {
+  if (id_part >= mesh->n_part) {
     PDM_error (__FILE__, __LINE__, 0, "Bad part identifier\n");  
   } 
   
@@ -1498,7 +1502,7 @@ PDM_Mesh_nodal_vertices_get
     PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");  
   }
   
-  if (id_part <= mesh->n_part) {
+  if (id_part >= mesh->n_part) {
     PDM_error (__FILE__, __LINE__, 0, "Bad part identifier\n");  
   } 
   
@@ -1531,7 +1535,7 @@ PDM_Mesh_nodal_vertices_g_num_get
     PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");  
   }
   
-  if (id_part <= mesh->n_part) {
+  if (id_part >= mesh->n_part) {
     PDM_error (__FILE__, __LINE__, 0, "Bad part identifier\n");  
   } 
   
@@ -1574,7 +1578,7 @@ PDM_Mesh_nodal_coord_from_parent_set
     PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");  
   }
   
-  if (id_part <= mesh->n_part) {
+  if (id_part >= mesh->n_part) {
     PDM_error (__FILE__, __LINE__, 0, "Bad part identifier\n");  
   } 
 
@@ -3029,6 +3033,12 @@ PDM_g_num_t      *numabs
         num_parent_poly3d = (PDM_l_num_t *) malloc(sizeof(PDM_l_num_t) * n_poly3d_part);
       }
 
+      PDM_l_num_t *num_parent_tetra_courant = num_parent_tetra;
+      PDM_l_num_t *num_parent_hexa_courant = num_parent_hexa;
+      PDM_l_num_t *num_parent_prism_courant = num_parent_prism;
+      PDM_l_num_t *num_parent_pyramid_courant = num_parent_pyramid;
+      PDM_l_num_t *num_parent_poly3d_courant = num_parent_poly3d;
+
       PDM_l_num_t *connec_tetra_courant = connec_tetra;
       PDM_l_num_t *connec_hexa_courant = connec_hexa;
       PDM_l_num_t *connec_prism_courant = connec_prism;
@@ -3082,7 +3092,8 @@ PDM_g_num_t      *numabs
           *numabs_tetra_courant = numabs_courant[i];
           numabs_tetra_courant += 1;
           connec_tetra_courant += 4;
-          num_parent_tetra[idx_tetra] = i;
+          *num_parent_tetra_courant = i;
+          num_parent_tetra_courant += 1;
           num_cell_parent_to_local_courant[i] = idx_tetra++;
           break;
         case PDM_MESH_NODAL_HEXA8 :
@@ -3092,7 +3103,8 @@ PDM_g_num_t      *numabs
           *numabs_hexa_courant = numabs_courant[i];
           numabs_hexa_courant += 1;
           connec_hexa_courant += 8;
-          num_parent_tetra[idx_hexa] = i;
+          *num_parent_hexa_courant = i;
+          num_parent_hexa_courant += 1;
           num_cell_parent_to_local_courant[i] = idx_hexa++;
           break;
         case PDM_MESH_NODAL_PRISM6 :
@@ -3103,7 +3115,8 @@ PDM_g_num_t      *numabs
           *numabs_prism_courant = numabs_courant[i];
           numabs_prism_courant += 1;
           connec_prism_courant += 6;
-          num_parent_prism[idx_prism] = i;          
+          *num_parent_prism_courant = i;
+          num_parent_prism_courant += 1;          
           num_cell_parent_to_local_courant[i] = idx_prism++;
           break;
         case PDM_MESH_NODAL_PYRAMID5 :
@@ -3114,7 +3127,8 @@ PDM_g_num_t      *numabs
           *numabs_pyramid_courant = numabs_courant[i];
           numabs_pyramid_courant += 1;
           connec_pyramid_courant += 5;
-          num_parent_prism[idx_pyramid] = i;          
+          *num_parent_pyramid_courant = i;
+          num_parent_pyramid_courant += 1;
           num_cell_parent_to_local_courant[i] = idx_pyramid++;
           break;
         case PDM_MESH_NODAL_POLY_3D : 
@@ -3128,7 +3142,8 @@ PDM_g_num_t      *numabs
             l_cellfac_poly += cell_face_nb_courant[i];
             cellfac_poly_idx[n_poly3d_part+1] = l_cellfac_poly;
             n_poly3d_part += 1;
-            num_parent_poly3d[idx_poly3d] = i;          
+            *num_parent_poly3d_courant = i;
+            num_parent_poly3d_courant += 1;
             num_cell_parent_to_local_courant[i] = idx_poly3d++;
             break;
           }
@@ -3498,6 +3513,10 @@ PDM_g_num_t       *numabs
       PDM_g_num_t *numabs_tria_courant = numabs_tria;
       PDM_g_num_t *numabs_quad_courant = numabs_quad;
       PDM_g_num_t *numabs_poly2d_courant = numabs_poly2d;
+      
+      PDM_l_num_t *num_parent_tria_courant = num_parent_tria; 
+      PDM_l_num_t *num_parent_quad_courant = num_parent_quad; 
+      PDM_l_num_t *num_parent_poly2d_courant = num_parent_poly2d; 
 
       /* Construction de la connectivit� sommet-> arrete */
 
@@ -3536,7 +3555,8 @@ PDM_g_num_t       *numabs
 
         PDM_l_num_t *connec_courant;
         if (n_face_cell == 3) {
-          num_parent_tria[idx_tria] = i;
+          *num_parent_tria_courant = i;
+          num_parent_tria_courant += 1;
           num_cell_parent_to_local_courant[i] = idx_tria++;
           *numabs_tria_courant = numabs_courant[i];
           numabs_tria_courant += 1;
@@ -3544,7 +3564,8 @@ PDM_g_num_t       *numabs
           connec_tria_courant += n_face_cell;
         }
         else if (n_face_cell == 4) {
-          num_parent_quad[idx_quad] = i;
+          *num_parent_quad_courant = i;
+          num_parent_quad_courant += 1;
           num_cell_parent_to_local_courant[i] = idx_quad++;;
           *numabs_quad_courant = numabs_courant[i];
           numabs_quad_courant += 1;
@@ -3552,7 +3573,8 @@ PDM_g_num_t       *numabs
           connec_quad_courant += n_face_cell;
         }
         else {
-          num_parent_poly2d[idx_poly2d] = i;
+          *num_parent_poly2d_courant = i;
+          num_parent_poly2d_courant += 1;
           num_cell_parent_to_local_courant[i] = idx_poly2d++;
           *numabs_poly2d_courant = numabs_courant[i];
           numabs_poly2d_courant += 1;
@@ -3594,6 +3616,7 @@ PDM_g_num_t       *numabs
           connec_som_are[2*(connec_courant[j] -1) + 1] = - 1;
         }
       }
+      
       free(connec_som_are);
 
       if (som_elts[0] > 0)
@@ -3850,6 +3873,10 @@ PDM_g_num_t      *numabs
       PDM_l_num_t *connec_poly2d_idx_courant = connec_poly2d_idx + 1;
       PDM_l_num_t *connec_poly2d_courant = connec_poly2d;
 
+      PDM_l_num_t *num_parent_tria_courant = num_parent_tria;
+      PDM_l_num_t *num_parent_quad_courant = num_parent_quad;
+      PDM_l_num_t *num_parent_poly2d_courant = num_parent_poly2d;
+
       PDM_g_num_t *numabs_tria_courant = numabs_tria;
       PDM_g_num_t *numabs_quad_courant = numabs_quad;
       PDM_g_num_t *numabs_poly2d_courant = numabs_poly2d;
@@ -3864,7 +3891,8 @@ PDM_g_num_t      *numabs
         PDM_l_num_t *connec_courant;
 
         if (n_som_face == 3) {
-          num_parent_tria[idx_tria] = i;
+          *num_parent_tria_courant = i;
+          num_parent_tria_courant += 1;
           num_cell_parent_to_local_courant[i] = idx_tria++;
           *numabs_tria_courant = numabs_courant[i];
           numabs_tria_courant += 1;
@@ -3872,7 +3900,8 @@ PDM_g_num_t      *numabs
           connec_tria_courant += n_som_face;
         }
         else if (n_som_face == 4) {
-          num_parent_quad[idx_quad] = i;
+          *num_parent_quad_courant = i;
+          num_parent_quad_courant += 1;
           num_cell_parent_to_local_courant[i] = idx_quad++;;
           *numabs_quad_courant = numabs_courant[i];
           numabs_quad_courant += 1;
@@ -3880,7 +3909,8 @@ PDM_g_num_t      *numabs
           connec_quad_courant += n_som_face;
         }
         else {
-          num_parent_poly2d[idx_poly2d] = i;
+          *num_parent_poly2d_courant = i;
+          num_parent_poly2d_courant += 1;
           num_cell_parent_to_local_courant[i] = idx_poly2d++;
           *numabs_poly2d_courant = numabs_courant[i];
           numabs_poly2d_courant += 1;

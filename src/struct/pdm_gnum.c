@@ -896,7 +896,6 @@ PDM_gnum_create
   
   for (int i = 0; i < n_part; i++) {
     _gnum->g_nums[i] = NULL;
-    _gnum->coords[i] = NULL;
   }
 
   return id;
@@ -945,7 +944,7 @@ PDM_gnum_set_from_coords
 {
   _pdm_gnum_t *_gnum = _get_from_id (id);
   
-  if (_gnum->coords != NULL) {
+  if (_gnum->coords == NULL) {
     _gnum->coords = (double **) malloc (sizeof(double * ) * _gnum->n_part);
     for (int i = 0; i < _gnum->n_part; i++) {
       _gnum->coords[i_part] = NULL;
@@ -993,7 +992,7 @@ PDM_gnum_set_from_parents
 {
   _pdm_gnum_t *_gnum = _get_from_id (id);
   
-  if (_gnum->parent != NULL) {
+  if (_gnum->parent == NULL) {
     _gnum->parent = (PDM_g_num_t **) malloc (sizeof(PDM_g_num_t * ) * _gnum->n_part);
     for (int i = 0; i < _gnum->n_part; i++) {
       _gnum->parent[i_part] = NULL;
@@ -1148,6 +1147,8 @@ PDM_gnum_free
   }
   
   free (_gnum->g_nums);
+  free (_gnum->n_elts);
+  
   free (_gnum);
   
   PDM_Handles_handle_free (_gnums, id, PDM_FALSE);
