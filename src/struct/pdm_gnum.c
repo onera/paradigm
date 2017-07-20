@@ -878,8 +878,13 @@ _gnum_from_parent_compute
 
   free(sendBuffIdx);
   free(sendBuffN);  
+  free(recvBuffIdx);
+  free(recvBuffN);  
   free(sendBuffNumabs);
   free(recvBuffNumabs);
+  free(d_elt_proc);
+  free(numabs_tmp);
+  free(n_elt_stocke_procs);
   
 }
   

@@ -91,17 +91,21 @@ _vtx_free
  PDM_Mesh_nodal_vtx_t *vtx
 )
 {
-  if (vtx->parent != NULL) {
-    vtx->parent =_vtx_free (vtx->parent);
-  }
-
-  if (vtx->coords != NULL) {
-    free (vtx->coords);
-    vtx->coords = NULL;
-  }
-
-  free (vtx);
   
+  printf ("_vtx_free\n");
+  
+  if (vtx != NULL) {
+    if (vtx->parent != NULL) {
+      vtx->parent =_vtx_free (vtx->parent);
+    }
+
+    if (vtx->coords != NULL) {
+      free (vtx->coords);
+      vtx->coords = NULL;
+    }
+
+    free (vtx);
+  }
   return NULL;
 }
 
@@ -128,14 +132,17 @@ const PDM_MPI_Comm comm
   mesh->n_part                   = n_part;             
 
   mesh->vtx                      = malloc(n_part * sizeof(PDM_Mesh_nodal_vtx_t *));
+  mesh->n_cell                   = malloc(n_part * sizeof(int));  
   for (int i = 0; i < n_part; i++) {
     mesh->vtx[i] = malloc(sizeof(PDM_Mesh_nodal_vtx_t));
     mesh->vtx[i]->_coords = NULL;
     mesh->vtx[i]->_numabs = NULL;
+    mesh->vtx[i]->_numparent = NULL;
     mesh->vtx[i]->n_vtx   = 0;
+    mesh->vtx[i]->parent = NULL;
+    mesh->vtx[i]->coords = NULL;
+    mesh->n_cell[i] = 0;
   }
-  
-  mesh->n_cell                   = malloc(n_part * sizeof(int));  
 
   mesh->blocks_std               = NULL;  
   mesh->blocks_poly2d            = NULL;            
@@ -177,7 +184,7 @@ PDM_Mesh_nodal_t *mesh
   }
   
   if (mesh->n_blocks < n_blocks) {
-    mesh->blocks_id = (int *) malloc(sizeof(int) * n_blocks);
+    mesh->blocks_id = (int *) realloc(mesh->blocks_id, sizeof(int) * n_blocks);
   }
   
   int k = 0;
@@ -225,6 +232,12 @@ _block_std_free_partial
 PDM_Mesh_nodal_block_std_t *_block_std
 )
 {
+  printf("_block_std_free_partial\n");
+
+  if (_block_std == NULL) {
+    return;
+  }
+  
   if (_block_std->_connec != NULL) {
     if (_block_std->st_free_data == PDM_TRUE) {
       for (int i = 0; i < _block_std->n_part; i++) {
@@ -281,6 +294,12 @@ _block_std_free
 PDM_Mesh_nodal_block_std_t *_block_std
 )
 {
+  printf("_block_std_free\n");
+
+  if (_block_std == NULL) {
+    return NULL;
+  }
+
   _block_std_free_partial(_block_std);
 
   if (_block_std->n_elt != NULL) {
@@ -1266,9 +1285,9 @@ const int idx
     const int *list_ind = PDM_Handles_idx_get (mesh->blocks_poly2d);
 
     for (int i = 0; i < n_blocks_poly2d; i++) {
-      PDM_Mesh_nodal_block_std_t *_block_std = 
-              (PDM_Mesh_nodal_block_std_t *) PDM_Handles_get (mesh->blocks_poly2d, list_ind[i]);
-      _block_std_free_partial(_block_std);
+      PDM_Mesh_nodal_block_poly2d_t *_block_poly2d = 
+              (PDM_Mesh_nodal_block_poly2d_t *) PDM_Handles_get (mesh->blocks_poly2d, list_ind[i]);
+      _block_poly2d_free_partial(_block_poly2d);
     }
   }
 	
@@ -1277,9 +1296,9 @@ const int idx
     const int *list_ind = PDM_Handles_idx_get (mesh->blocks_poly3d);
 
     for (int i = 0; i < n_blocks_poly3d; i++) {
-      PDM_Mesh_nodal_block_std_t *_block_std = 
-              (PDM_Mesh_nodal_block_std_t *) PDM_Handles_get (mesh->blocks_poly3d, list_ind[i]);
-      _block_std_free_partial(_block_std);
+      PDM_Mesh_nodal_block_poly3d_t *_block_poly3d = 
+              (PDM_Mesh_nodal_block_poly3d_t *) PDM_Handles_get (mesh->blocks_poly3d, list_ind[i]);
+      _block_poly3d_free_partial(_block_poly3d);
     }
   }
 }
@@ -1307,6 +1326,12 @@ const int idx
   
   if (mesh != NULL) {
 
+    if (mesh->blocks_id != NULL) {
+      free (mesh->blocks_id);
+    }
+    
+    mesh->blocks_id = NULL;
+    
     /* Free vertices */
   
     if (mesh->vtx != NULL) {
@@ -2279,7 +2304,7 @@ const int            id_part
       PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
     }
     
-    return block->_numabs[id_part];
+    return block->numabs_int[id_part];
   }
   
   else if (id_block >= PDM_BLOCK_ID_BLOCK_POLY2D) {
@@ -2297,7 +2322,7 @@ const int            id_part
       PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
     }
 
-    return block->_numabs[id_part];
+    return block->numabs_int[id_part];
   }
   
   else {
@@ -2315,7 +2340,7 @@ const int            id_part
       PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
     }
 
-    return block->_numabs[id_part];
+    return block->numabs_int[id_part];
   }
 }
 

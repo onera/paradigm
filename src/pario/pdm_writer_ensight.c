@@ -964,6 +964,8 @@ PDM_writer_ensight_geom_write
 
   /* Premier passage : Ouverture du fichier + Ecriture entête */
 
+  printf("\n\nEcriture %s geom\n", geom->nom_geom);
+  
   if (f_unit_geom < 0) {
 
     const char* geom_file_name = PDM_writer_ensight_case_geo_file_name_get(PDM_writer_ensight->ensight_case);
@@ -1026,6 +1028,9 @@ PDM_writer_ensight_geom_write
     n_som_proc += n_vtx;
   }
 
+
+  printf("n_som_proc %d\n", n_som_proc);
+
   /* Concatenation des coordonnees et ecriture */
 
   _ecr_string(_cs, f_unit_geom, "coordinates");
@@ -1074,12 +1079,18 @@ PDM_writer_ensight_geom_write
 
   const int n_blocks = PDM_Mesh_nodal_n_blocks_get (geom->idx_mesh);
   const int *blocks_id = PDM_Mesh_nodal_blocks_id_get (geom->idx_mesh);
+  
+  printf("Nb blocs %d\n", n_blocks);
 
+  
   for (int ibloc = 0; ibloc < n_blocks; ibloc++) {
+
 
     PDM_writer_elt_geom_t t_elt = 
             (PDM_writer_elt_geom_t) PDM_Mesh_nodal_block_type_get (geom->idx_mesh, blocks_id[ibloc]);
     
+    printf("bloc %d %d %d\n", ibloc, blocks_id[ibloc], t_elt);
+
     /* Type de bloc */
 
     _ecr_string(_cs,
@@ -1178,6 +1189,18 @@ PDM_writer_ensight_geom_write
 
       /* Ecriture */
 
+      printf("numabs_tmp %d : \n", n_elt_proc);
+      for (int j = 0; j < n_elt_proc; j++) {
+        printf(" %ld", numabs_tmp[j]);
+      }
+      printf("\n");
+      
+      printf("connec_tmp %d : \n", n_comp * n_elt_proc);
+      for (int j = 0; j < n_comp * n_elt_proc; j++) {
+        printf(" %d", connec_tmp[j]);
+      }
+      printf("\n");
+      
       _ecr_entrelace_int(_cs,
                          PDM_WRITER_ON,
                          f_unit_geom,
