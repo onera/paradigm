@@ -2049,9 +2049,6 @@ const PDM_real_t *val
   int n_cell = PDM_Mesh_nodal_n_cell_get (geom->idx_mesh, id_part);
   int *num_cell_parent_to_local = PDM_Mesh_nodal_num_cell_parent_to_local_get (geom->idx_mesh, id_part); 
   int n_som = PDM_Mesh_nodal_n_vertices_get(geom->idx_mesh, id_part);
-
-  printf("var ecr : %d\n", n_cell);
-  printf("var ecr : %d\n", var->dim);
   
   if (var->loc == PDM_WRITER_VAR_ELEMENTS) {
     val_geom[id_part] = (double *) malloc(sizeof(double) * var->dim * n_cell);

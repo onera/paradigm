@@ -649,16 +649,12 @@ _gnum_from_parent_compute
   PDM_l_num_t n_elt_loc_total = 0;
   PDM_g_num_t l_max_parent = -1;
   
-  printf("parent : "); 
   for (int j = 0; j < _gnum->n_part; j++) {
     n_elt_loc_total += _gnum->n_elts[j];
     for (int k = 0; k < _gnum->n_elts[j]; k++) {
-        printf(" %ld", _gnum->parent[j][k]); 
-
       l_max_parent = PDM_MAX (l_max_parent, _gnum->parent[j][k]);
     }
   }
-  printf("\n"); 
 
   PDM_g_num_t max_parent = 0;
   PDM_MPI_Allreduce (&l_max_parent, &max_parent, 1, 
@@ -692,13 +688,6 @@ _gnum_from_parent_compute
   for (int i = 0; i < n_procs; i++) {
     d_elt_proc[i+1] += d_elt_proc[i]; 
   }
-    
-  printf("max_parent : %ld\n", max_parent);
-  printf("d_elt_proc : \n");
-  for (int i = 0; i < n_procs + 1; i++) {
-    printf(" %ld",  d_elt_proc[i]);
-  }
-  printf("\n");
           
   for (int j = 0; j < _gnum->n_part; j++) {
     for (int k = 0; k < _gnum->n_elts[j]; k++) {
@@ -800,15 +789,6 @@ _gnum_from_parent_compute
       
       PDM_g_num_t _idx = recvBuffNumabs[k] - d_elt_proc[i_proc];
       const int idx = (int) _idx;
-      if (!((idx < l_numabs_tmp) && (idx >= 0))) {
-        printf ("idx : %d %ld\n", idx, recvBuffNumabs[k]);
-          printf("d_elt_proc : \n");
-  for (int i = 0; i < n_procs + 1; i++) {
-    printf(" %ld",  d_elt_proc[i]);
-  }
-  printf("\n");
-
-      }
       assert((idx < l_numabs_tmp) && (idx >= 0));
 
       numabs_tmp[idx] = 1; /* On marque les elements */

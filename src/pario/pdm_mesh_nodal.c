@@ -92,8 +92,6 @@ _vtx_free
 )
 {
   
-  printf ("_vtx_free\n");
-  
   if (vtx != NULL) {
     if (vtx->parent != NULL) {
       vtx->parent =_vtx_free (vtx->parent);
@@ -232,7 +230,6 @@ _block_std_free_partial
 PDM_Mesh_nodal_block_std_t *_block_std
 )
 {
-  printf("_block_std_free_partial\n");
 
   if (_block_std == NULL) {
     return;
@@ -294,7 +291,6 @@ _block_std_free
 PDM_Mesh_nodal_block_std_t *_block_std
 )
 {
-  printf("_block_std_free\n");
 
   if (_block_std == NULL) {
     return NULL;
@@ -4093,8 +4089,6 @@ const int         id_block
   }
 
   PDM_gnum_compute (id_gnum);
-
-  printf ("PDM_gnum_compute\n");
   
   if (id_block >= PDM_BLOCK_ID_BLOCK_POLY3D) {
     int _id_block = id_block - PDM_BLOCK_ID_BLOCK_POLY3D;
@@ -4104,11 +4098,6 @@ const int         id_block
     
     for (int i = 0; i < mesh->n_part; i++) {
       block->numabs_int[i] = (PDM_g_num_t *) PDM_gnum_get (id_gnum, i);
-      printf("numabs_int %d  : ",block->n_elt[i] );
-      for (int j = 0; j < block->n_elt[i]; j++) {
-        printf(" %ld",block->numabs_int[i][j]);
-      }
-      printf("\n");
     }
   }
 
@@ -4120,11 +4109,6 @@ const int         id_block
 
     for (int i = 0; i < mesh->n_part; i++) {
       block->numabs_int[i] = (PDM_g_num_t *) PDM_gnum_get (id_gnum, i);
-      printf("numabs_int %d : ",block->n_elt[i]);
-      for (int j = 0; j < block->n_elt[i]; j++) {
-        printf(" %ld",block->numabs_int[i][j]);
-      }
-      printf("\n");
     }
   }
   
@@ -4137,11 +4121,6 @@ const int         id_block
 
     for (int i = 0; i < mesh->n_part; i++) {
       block->numabs_int[i] = (PDM_g_num_t *) PDM_gnum_get (id_gnum, i);
-      printf("numabs_int  %d : ",block->n_elt[i]);
-      for (int j = 0; j < block->n_elt[i]; j++) {
-        printf(" %ld",block->numabs_int[i][j]);
-      }
-      printf("\n");
     }
   }
 
