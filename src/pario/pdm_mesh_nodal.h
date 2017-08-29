@@ -185,6 +185,21 @@ PDM_Mesh_nodal_vertices_g_num_get
  * \brief Extract vertices from parent vertices
  *
  * \param [in]  mesh           Nodal mesh
+ *
+ * \return true if the vertices are defined from parents
+ */
+
+int
+PDM_Mesh_nodal_is_set_coord_from_parent
+(
+ const int          idx
+ );
+
+
+/**
+ * \brief Extract vertices from parent vertices
+ *
+ * \param [in]  mesh           Nodal mesh
  * \param [in]  id_part        Partition identifier
  * \param [in]  n_vtx          Number of vertices
  * \param [in]  n_vtx_parent   Number of parent vertices

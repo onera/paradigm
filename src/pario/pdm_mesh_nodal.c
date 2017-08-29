@@ -151,7 +151,7 @@ const PDM_MPI_Comm comm
   mesh->num_cell_parent_to_local = NULL;
   mesh->blocks_id                = NULL;
   mesh->n_blocks                 = 0;
-
+  mesh->is_vtx_def_from_parent   = 0;
 }
 
 /**
@@ -1570,6 +1570,30 @@ PDM_Mesh_nodal_vertices_g_num_get
  * \brief Extract vertices from parent vertices
  *
  * \param [in]  mesh           Nodal mesh
+ *
+ * \return true if the vertices are defined from parents
+ */
+
+int
+PDM_Mesh_nodal_is_set_coord_from_parent
+(
+ const int          idx
+)
+{
+  PDM_Mesh_nodal_t * mesh = (PDM_Mesh_nodal_t *) PDM_Handles_get (mesh_handles, idx);
+  
+  if (mesh == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");  
+  }
+
+  return mesh->is_vtx_def_from_parent;
+
+}
+
+/**
+ * \brief Extract vertices from parent vertices
+ *
+ * \param [in]  mesh           Nodal mesh
  * \param [in]  id_part        Partition identifier
  * \param [in]  n_vtx          Number of vertices
  * \param [in]  n_vtx_parent   Number of parent vertices
@@ -1631,6 +1655,8 @@ PDM_Mesh_nodal_coord_from_parent_set
       vtx->coords[3*i+j] = _parent->_coords[3*i_parent+j];
     }
   }
+  mesh->is_vtx_def_from_parent   = 1;
+
 }
 
 
