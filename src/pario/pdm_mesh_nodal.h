@@ -164,6 +164,23 @@ PDM_Mesh_nodal_vertices_get
 
 
 /**
+ * \brief  Return parent num of vertices
+ *
+ * \param [in]  mesh           Nodal mesh
+ *
+ * \return  Parent of vertices
+ *
+ */
+
+const int *
+PDM_Mesh_nodal_vertices_parent_get
+(
+ const int          idx,
+ const int          id_part 
+ );
+
+
+/**
  * \brief  Return global numbering of vertices
  *
  * \param [in]  idx       Nodal mesh handle

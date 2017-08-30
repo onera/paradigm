@@ -1502,6 +1502,38 @@ PDM_Mesh_nodal_n_vertices_get
 
 
 /**
+ * \brief  Return parent num of vertices
+ *
+ * \param [in]  mesh           Nodal mesh
+ *
+ * \return  Parent of vertices
+ *
+ */
+
+const int *
+PDM_Mesh_nodal_vertices_parent_get
+(
+ const int          idx,
+ const int          id_part 
+)
+{
+  PDM_Mesh_nodal_t * mesh = (PDM_Mesh_nodal_t *) PDM_Handles_get (mesh_handles, idx);
+  
+  if (mesh == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");  
+  }
+  
+  if (id_part >= mesh->n_part) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad part identifier\n");  
+  } 
+  
+  PDM_Mesh_nodal_vtx_t *vtx = mesh->vtx[id_part];
+
+  return vtx->_numparent;
+}
+
+
+/**
  * \brief  Return coordinates of vertices
  *
  * \param [in]  mesh           Nodal mesh
