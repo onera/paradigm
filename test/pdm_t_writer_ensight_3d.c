@@ -11,6 +11,7 @@
 #include <pdm_mpi.h>
 
 #include "pdm.h"
+#include "pdm_priv.h"
 #include "pdm_part.h"
 #include "pdm_dcube_gen.h"
 
@@ -469,7 +470,7 @@ int main(int argc, char *argv[])
 
       /* On tag les sommets de la premi�re face + calcul du centre et de la normale */
 
-      int ifac1 = cellFace[cellFaceIdx[i]] - 1;
+      int ifac1 = PDM_ABS (cellFace[cellFaceIdx[i]]) - 1;
       double c_1[3];
       int ifac_oppose = -1;
       double c_oppose[3];
@@ -525,7 +526,7 @@ int main(int argc, char *argv[])
       /* Recherche de la face oppos�e et de la face en contact de la premi�re arrete */
 
       for (int k = cellFaceIdx[i] + 1; k < cellFaceIdx[i+1]; k++) {
-        int ifac = cellFace[k] - 1;
+        int ifac = PDM_ABS (cellFace[k]) - 1;
         int cpt1 = 0;
         int cpt2 = 0;
         for (int k1 = faceVtxIdx[ifac]; k1 < faceVtxIdx[ifac+1]; k1++) {

@@ -238,17 +238,23 @@ const int *cellFace,
 {
 
   for (int i = 0; i < 2 * nFace; i++) {
-    faceCell[i] = -1;
+    faceCell[i] = 0;
   }
 
   for (int i = 0; i < nCell; ++i) {
     for (int j = cellFaceIdx[i]; j < cellFaceIdx[i+1]; j++) {
-      int idx = 2 * (cellFace[j]-1);
-      if (faceCell[idx] == -1) { 
+      int idx = 2 * (PDM_ABS(cellFace[j])-1);
+      if (faceCell[idx] == 0) { 
         faceCell[idx] = i + 1;
+        if (cellFace[j] < 0) {
+          faceCell[idx] = -faceCell[idx];
+        }
       }
       else { 
         faceCell[idx + 1] = i + 1;
+        if (cellFace[j] < 0) {
+          faceCell[idx+1] = -faceCell[idx+1];
+        }
       }
     }
   }
@@ -477,7 +483,7 @@ double  *cellCenter
         for(int iFac = 0; iFac < nFac; iFac++) {
           
           /* Face composé de nVtx */
-          int lFac = abs(part->cellFace[aFac + iFac]) - 1;
+          int lFac = PDM_ABS(part->cellFace[aFac + iFac]) - 1;
   
           int aVtx = part->faceVtxIdx[lFac];
           int nVtx = part->faceVtxIdx[lFac+1] - aVtx;
@@ -530,14 +536,14 @@ double  *cellCenter
     
     int idx = 0;    
     for (int icell = 0; icell < part->nCell; icell++) {
-      int faceCurr = part->cellFace[part->cellFaceIdx[icell]] - 1;
+      int faceCurr = PDM_ABS(part->cellFace[part->cellFaceIdx[icell]]) - 1;
       int deb  = part->faceVtx[part->faceVtxIdx[faceCurr]];
       int next = part->faceVtx[part->faceVtxIdx[faceCurr]+1];
       connectivity[idx++] = deb;
       connectivity[idx++] = next;
       while (next != deb) {
         for (int j = part->cellFaceIdx[icell]; j < part->cellFaceIdx[icell+1]; ++j) {
-          int face = part->cellFace[j] - 1;
+          int face = PDM_ABS(part->cellFace[j]) - 1;
           if (faceCurr != face) {
             int s1 = part->faceVtx[part->faceVtxIdx[face]  ];
             int s2 = part->faceVtx[part->faceVtxIdx[face]+1];
@@ -871,8 +877,8 @@ _PDM_part_t* ppart
 
     for(int i = 0; i < nFace; i++)
     {
-       int iL = part->faceCell[2*i  ];
-       int iR = part->faceCell[2*i+1];
+       int iL = PDM_ABS (part->faceCell[2*i  ]);
+       int iR = PDM_ABS (part->faceCell[2*i+1]);
        if(iL < iR )
        {
           faceCellTmp[2*i  ] = iR;

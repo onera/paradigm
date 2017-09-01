@@ -246,7 +246,7 @@ PDM_part_split_t           method,
     PDM_printf("[%d] Temps dans creeMaillagePolygone2D %d : %12.5e\n",
            myRank, imesh, t_elapsed);
 
-  if (0 == 1) {
+  if (1 == 1) {
 
     PDM_printf ("edgegroup : ");
     for (int i = 0; i < *nEdgeGroup; i++) {
@@ -278,8 +278,8 @@ PDM_part_split_t           method,
 
     PDM_printf ("dedgeface : ");
     for (int i = 0; i < dNEdge; i++) {
-      PDM_printf (" "PDM_FMT_G_NUM, dEdgeVtx[2*i]);
-      PDM_printf (" "PDM_FMT_G_NUM, dEdgeVtx[2*i+1]);
+      PDM_printf (" "PDM_FMT_G_NUM, dEdgeFace[2*i]);
+      PDM_printf (" "PDM_FMT_G_NUM, dEdgeFace[2*i+1]);
       PDM_printf ("\n");
     }
   }

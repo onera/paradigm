@@ -352,9 +352,12 @@ int *part
       __vertloctab[i] = (SCOTCH_Num) dDualGraphIdx[i]; 
     }
 
+    printf("dDualGraph %d :", _edgelocsiz);
     for (int i = 0; i < _edgelocsiz; i++) {
+      printf(" %ld", dDualGraph[i]);
       __edgeloctab[i] = (SCOTCH_Num) dDualGraph[i]; 
     }
+    printf("\n");
 
     _vertloctab = __vertloctab;
     _vendloctab = __vendloctab;

@@ -11,6 +11,8 @@
  *  Local headers
  *----------------------------------------------------------------------------*/
 
+#include "pdm.h"
+#include "pdm_priv.h"
 #include "pdm_part_geom.h"
 #include "pdm_hilbert.h"
 #include "pdm_sort.h"
@@ -305,7 +307,7 @@ int                *sizeFaceVtxIdx
   const PDM_g_num_t *cellFace = dCellFace;
   
   for(int iFace = 0; iFace < size_dCellFace; iFace ++) {
-    int irank = PDM_binary_search_gap_long(cellFace[iFace], dFaceProc, nRank);
+    int irank = PDM_binary_search_gap_long(PDM_ABS (cellFace[iFace]), dFaceProc, nRank);
     faceToSendIdx[irank+1] += nData; 
   }
   
@@ -318,11 +320,11 @@ int                *sizeFaceVtxIdx
   PDM_g_num_t * faceToSend = (PDM_g_num_t *) malloc(  sizeFaceToSend * sizeof(PDM_g_num_t));
   
   for(int iFace = 0; iFace < size_dCellFace; iFace ++) {
-    int irank = PDM_binary_search_gap_long (cellFace[iFace], dFaceProc, nRank);
+    int irank = PDM_binary_search_gap_long (PDM_ABS (cellFace[iFace]), dFaceProc, nRank);
     int idx = faceToSendIdx[irank] + faceToSendN[irank];
   
     allToallNToLN[idx/nData] = iFace;
-    faceToSend[idx++]   = cellFace[iFace];        // Face global numbering 
+    faceToSend[idx++]   = PDM_ABS (cellFace[iFace]);        // Face global numbering 
     faceToSendN[irank] += nData;
   }
   

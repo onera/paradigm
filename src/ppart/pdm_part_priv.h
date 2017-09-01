@@ -130,7 +130,7 @@ typedef struct _PDM_part_t {
   const PDM_g_num_t *_dFaceCell;    /*!< Face-cell connectivity of distributed
                                        faces (size = 2 * dNFace, shared array)
                                        if iface is a boundary face, 
-                                       _dFaceCell[2*iface + 1] = -1           */
+                                       _dFaceCell[2*iface + 1] = 0           */
   const int          *_dFaceVtxIdx;  /*!< Face-vertex connectivity index of 
                                        distributed faces (size = dNFace + 1,
                                        shared array)                          */
@@ -144,7 +144,7 @@ typedef struct _PDM_part_t {
   PDM_g_num_t       *dFaceCell;    /*!< Face-cell connectivity of distributed
                                        faces (size = 2 * dNFace,) computed
                                        if iface is a boundary face, 
-                                       _dFaceCell[2*iface + 1] = -1           */
+                                       _dFaceCell[2*iface + 1] = 0           */
   /* Vertex definitions */
 
   const double       *_dVtxCoord;    /*!< Coordinates of ditributed vertices 

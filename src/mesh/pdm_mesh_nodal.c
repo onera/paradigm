@@ -1109,7 +1109,7 @@ _type_cell_3D
 
   for (int i = 0; i < n_face_cell; i++) {
 
-    const int face_id = cell_face[i] - 1;
+    const int face_id = PDM_ABS(cell_face[i]) - 1;
     const int n_som_face = face_vtx_nb[face_id];
     PDM_l_num_t idx = face_vtx_idx[face_id] - 1;
  
@@ -1145,7 +1145,7 @@ _type_cell_3D
     n_trias = 0;
     for (int i = 0; i < n_face_cell; i++) {
 
-      const int face_id = cell_face[i] - 1;
+      const int face_id = PDM_ABS(cell_face[i]) - 1;
       const int ideb = face_vtx_idx[face_id] - 1;
       const int n_som_face = face_vtx_idx[face_id+1] - ideb - 1;
  
@@ -3613,7 +3613,7 @@ PDM_g_num_t       *numabs
         PDM_l_num_t ifin = ideb + n_face_cell;
  
         for (int j = ideb; j < ifin; j++) {
-          PDM_l_num_t ifac = cell_face_courant[j] - 1;
+          PDM_l_num_t ifac = PDM_ABS(cell_face_courant[j]) - 1;
           PDM_l_num_t isom1 = face_som_courant[2*ifac] - 1;
           PDM_l_num_t isom2 = face_som_courant[2*ifac+1] - 1;
 
@@ -3662,7 +3662,7 @@ PDM_g_num_t       *numabs
         /* Remplissage de la connectivite */
         
         PDM_l_num_t idx_som = 0;
-        PDM_l_num_t face_courant = cell_face_courant[ideb] - 1;
+        PDM_l_num_t face_courant = PDM_ABS(cell_face_courant[ideb]) - 1;
         PDM_l_num_t isom1 = face_som_courant[2*face_courant] - 1;
         PDM_l_num_t isom_suiv = face_som_courant[2*face_courant + 1] - 1;
         connec_courant[idx_som++] = isom1 + 1;

@@ -255,14 +255,14 @@ static int
     PDM_printf("PPART error : Element not in initial distributed array "
            PDM_FMT_G_NUM" "PDM_FMT_G_NUM" "PDM_FMT_G_NUM"\n", 
            elt, array[id1], array[id2]);
-    exit(1);
+    abort();
   } 
 
   if (elt < array[id1]) {
     PDM_printf("PPART error : Element not in initial distributed array "
            PDM_FMT_G_NUM" "PDM_FMT_G_NUM" "PDM_FMT_G_NUM"\n",
            elt, array[id1], array[id2]);
-    exit(1);
+    abort();
   } 
 
   if (id2 == id1 + 1) {
@@ -414,13 +414,13 @@ _dual_graph_from_face_cell
   }
 
   for (int i = 0; i < ppart->dNFace; i++) {
-    PDM_g_num_t iCell1 = ppart->_dFaceCell[2*i    ];
-    PDM_g_num_t iCell2 = ppart->_dFaceCell[2*i + 1];
+    PDM_g_num_t iCell1 = PDM_ABS (ppart->_dFaceCell[2*i    ]);
+    PDM_g_num_t iCell2 = PDM_ABS (ppart->_dFaceCell[2*i + 1]);
 
     int irank1 = _search_rank(iCell1, ppart->dCellProc, 0, nRank);      
     cellToSendN[irank1] += nData;
 
-    if (iCell2 > -1) {
+    if (iCell2 > 0) {
       int irank2 = _search_rank(iCell2, ppart->dCellProc, 0, nRank);
       cellToSendN[irank2] += nData;
     }
@@ -445,8 +445,8 @@ _dual_graph_from_face_cell
    */
 
   for (int i = 0; i < ppart->dNFace ; i++) {
-    PDM_g_num_t iCell1 = ppart->_dFaceCell[2*i    ];
-    PDM_g_num_t iCell2 = ppart->_dFaceCell[2*i + 1];
+    PDM_g_num_t iCell1 = PDM_ABS (ppart->_dFaceCell[2*i    ]);
+    PDM_g_num_t iCell2 = PDM_ABS (ppart->_dFaceCell[2*i + 1]);
     int irank1 = _search_rank(iCell1, ppart->dCellProc, 0, nRank);
 
     int idx1             = cellToSendIdx[irank1] + cellToSendN[irank1];
@@ -455,7 +455,7 @@ _dual_graph_from_face_cell
     cellToSend[idx1+2]   = ppart->dFaceProc[myRank] + i;
     cellToSendN[irank1] += nData;
 
-    if (iCell2 > -1) {
+    if (iCell2 > 0) {
       int irank2 = _search_rank(iCell2, ppart->dCellProc, 0, nRank);
       int idx2             = cellToSendIdx[irank2] + cellToSendN[irank2];
       cellToSend[idx2  ]   = iCell2;
@@ -544,7 +544,7 @@ _dual_graph_from_face_cell
     PDM_g_num_t  _lElt1 = gElt1 - ppart->dCellProc[myRank];
     int          lElt1 = (int) _lElt1;      // Switch to local numbering
 
-    if (gElt2 > -1) {
+    if (gElt2 > 0) {
       nNeighbour[lElt1] += 1;
     }
     if (!have_dCellFace) {
@@ -610,7 +610,7 @@ _dual_graph_from_face_cell
      * Search if cel2 is already stored (To optimize for polyhedra (lot of neighbours) ?)
      */
 
-    if (gCel2 > -1) {
+    if (gCel2 > 0) {
 
       PDM_g_num_t k;
       for (k = ppart->dDualGraphIdx[lCel1]; k < ppart->dDualGraphIdx[lCel1] + nNeighbour[lCel1]; k++) {
@@ -711,7 +711,7 @@ _dual_graph_from_cell_face
 
   for (int i = 0; i < ppart->dNCell; i++) {
     for (int j = ppart->_dCellFaceIdx[i]; j < ppart->_dCellFaceIdx[i+1]; j++) {
-      PDM_g_num_t iFace = ppart->_dCellFace[j];
+      PDM_g_num_t iFace = PDM_ABS(ppart->_dCellFace[j]);
 
       int irank = _search_rank(iFace, ppart->dFaceProc, 0, nRank);      
       faceToSendN[irank] += nData;
@@ -739,7 +739,7 @@ _dual_graph_from_cell_face
 
   for (int i = 0; i < ppart->dNCell; i++) {
     for (int j = ppart->_dCellFaceIdx[i]; j < ppart->_dCellFaceIdx[i+1]; j++) {
-      PDM_g_num_t iFace = ppart->_dCellFace[j];
+      PDM_g_num_t iFace = PDM_ABS (ppart->_dCellFace[j]);
 
       int irank = _search_rank(iFace, ppart->dFaceProc, 0, nRank);      
       int idx   = faceToSendIdx[irank] + faceToSendN[irank];
@@ -813,7 +813,7 @@ _dual_graph_from_cell_face
     ppart->dFaceCell = 
       (PDM_g_num_t *)  malloc((2*ppart->dNFace) * sizeof(PDM_g_num_t));
     for (int i = 0; i < 2*ppart->dNFace; i++) {
-      ppart->dFaceCell[i] = -1;
+      ppart->dFaceCell[i] = 0;
     }
 
     for (int i = 0; i < nRecvFace; i++) {
@@ -822,9 +822,9 @@ _dual_graph_from_cell_face
       PDM_g_num_t  _lFace = gFace - ppart->dFaceProc[myRank]; 
       int          lFace = (int) _lFace; // Switch to local numbering
 
-      if (ppart->dFaceCell[2*lFace] == -1)
+      if (ppart->dFaceCell[2*lFace] == 0)
         ppart->dFaceCell[2*lFace] = gCell;
-      else if (ppart->dFaceCell[2*lFace + 1] == -1)
+      else if (ppart->dFaceCell[2*lFace + 1] == 0)
         ppart->dFaceCell[2*lFace + 1] = gCell;
       else {
         PDM_printf("PPART internal error : Face already defined in ppart->dFaceCell connectivity\n");
@@ -846,9 +846,9 @@ _dual_graph_from_cell_face
     PDM_g_num_t gCell2;
 
     if (ppart->dFaceCell[2*lFace] == gCell1)
-      gCell2 = ppart->dFaceCell[2*lFace + 1];
+      gCell2 = PDM_ABS (ppart->dFaceCell[2*lFace + 1]);
     else if (ppart->dFaceCell[2*lFace + 1] == gCell1)
-      gCell2 =  ppart->dFaceCell[2*lFace];
+      gCell2 = PDM_ABS (ppart->dFaceCell[2*lFace]);
     else {
       PDM_printf("PPART internal error : Problem in dual grah building "
               PDM_FMT_G_NUM" "
@@ -910,7 +910,7 @@ _dual_graph_from_cell_face
      * Search if cel2 is already stored (To optimize for polyhedra (lot of neighbours) ?)
      */
 
-    if (gCel2 > -1) {
+    if (gCel2 > 0) {
 
       int k;
       for (k = ppart->_dCellFaceIdx[lCel1]; 
@@ -1193,7 +1193,7 @@ _distrib_cell
     faceToSendN[rankToSend] += 1;
 
     for (int j = ppart->_dCellFaceIdx[i]; j < ppart->_dCellFaceIdx[i+1]; j++) {
-      faceToSend[place++] = ppart->_dCellFace[j];   /* Numero global de ses faces */
+      faceToSend[place++] = PDM_ABS(ppart->_dCellFace[j]);   /* Numero global de ses faces */
       faceToSendN[rankToSend] += 1;
     }
 
@@ -1941,12 +1941,12 @@ _build_faceCell
     meshPart->faceCell = (int *) malloc(2*meshPart->nFace * sizeof(int));
 
     for (int i = 0; i < 2 * meshPart->nFace; i++)
-      meshPart->faceCell[i] = -1;
+      meshPart->faceCell[i] = 0;
   
     for (int i = 0; i < meshPart->nCell; i++) {
       for (int j = meshPart->cellFaceIdx[i]; j < meshPart->cellFaceIdx[i+1]; j++) {
-        int idx = 2 * (meshPart->cellFace[j]-1);
-        if (meshPart->faceCell[idx] == -1) 
+        int idx = 2 * (PDM_ABS(meshPart->cellFace[j])-1);
+        if (meshPart->faceCell[idx] == 0) 
           meshPart->faceCell[idx] = i + 1;
         else 
           meshPart->faceCell[idx + 1] = i + 1;
@@ -2026,8 +2026,8 @@ _search_part_bound_face
       int nBoundFace = 0;
 
       for (int i = 0; i < meshPart->nFace; i++) {
-        int icell2 = meshPart->faceCell[2*i + 1];
-        if (icell2 == -1) {
+        int icell2 = PDM_ABS (meshPart->faceCell[2*i + 1]);
+        if (icell2 == 0) {
           PDM_g_num_t iFace = meshPart->faceLNToGN[i];
           int irank = _search_rank(iFace, ppart->dFaceProc, 0, nRank);
           faceToSendIdx[irank+1] += nData;
@@ -2043,8 +2043,8 @@ _search_part_bound_face
 
       for (int i = 0; i < meshPart->nFace; i++) {
 
-        int icell2 = meshPart->faceCell[2*i + 1];
-        if (icell2 == -1) {
+        int icell2 = PDM_ABS (meshPart->faceCell[2*i + 1]);
+        if (icell2 == 0) {
           PDM_g_num_t gFace = meshPart->faceLNToGN[i];
           int irank = _search_rank(gFace, ppart->dFaceProc, 0, nRank);
 

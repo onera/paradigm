@@ -182,17 +182,17 @@ _dual_graph_from_face_cell
   }
         
   for (int i = 0; i < part_ini->nFace; i++) {
-    int iCell1 = part_ini->faceCell[2*i    ] - 1;
-    int iCell2 = part_ini->faceCell[2*i + 1] - 1;
+    int iCell1 = PDM_ABS (part_ini->faceCell[2*i    ]);
+    int iCell2 = PDM_ABS (part_ini->faceCell[2*i + 1]);
     //Only the non-boundary faces are stored
-    if (iCell2 > -1) {
-      int idx1 = cellCellIdx[iCell1] + cellCellN[iCell1];
-      cellCell[idx1] = iCell2 + 1;
-      cellCellN[iCell1] += 1;
+    if (iCell2 > 0) {
+      int idx1 = cellCellIdx[iCell1-1] + cellCellN[iCell1-1];
+      cellCell[idx1] = iCell2;
+      cellCellN[iCell1-1] += 1;
             
-      int idx2 = cellCellIdx[iCell2] + cellCellN[iCell2];
-      cellCell[idx2] = iCell1 + 1;
-      cellCellN[iCell2] += 1;
+      int idx2 = cellCellIdx[iCell2-1] + cellCellN[iCell2-1];
+      cellCell[idx2] = iCell1;
+      cellCellN[iCell2-1] += 1;
     }
   }
     
@@ -872,7 +872,7 @@ _build_faceCoarseCell
   }
     
   for (int i = 0; i < 2 * nFace; i++) {
-    faceCellTemp[i] = -1;
+    faceCellTemp[i] = 0;
   }
     
   /*
@@ -887,8 +887,8 @@ _build_faceCoarseCell
      * If we have a "real" neighboring cell, we store its coarse cell
      */
     
-    if (faceCell[i] != -1) {
-      faceCellTemp[i] = cellCoarseCell[faceCell[i] - 1];
+    if (faceCell[i] != 0) {
+      faceCellTemp[i] = cellCoarseCell[PDM_ABS (faceCell[i]) - 1];
     }
   }
     
@@ -911,8 +911,8 @@ _build_faceCoarseCell
 
   int idx = 0;
   for (int i = 0; i < nFace; i++) {
-    int iCell1 = faceCellTemp[2 * i    ];
-    int iCell2 = faceCellTemp[2 * i + 1];        
+    int iCell1 = PDM_ABS (faceCellTemp[2 * i    ]);
+    int iCell2 = PDM_ABS (faceCellTemp[2 * i + 1]);        
         
     /* 
      * If a face is surrounded by the same coarse cell, it is not stored
@@ -1039,7 +1039,7 @@ _coarseCellFace_from_faceCoarseCell
      * A non-boarder cell touches two coarse cells
      */
 
-    if(coarseCell2 != -1) {
+    if(coarseCell2 != 0) {
       cptFacesPerCoarseCell[coarseCell2 - 1]++;
     }
   }
@@ -1088,7 +1088,7 @@ _coarseCellFace_from_faceCoarseCell
      * If the face is not on the boarder, we store it
      */
 
-    if (coarseCell2 != -1) {
+    if (coarseCell2 != 0) {
       idx2 = (*coarseCellFaceIdx)[coarseCell2 - 1] + cptFacesPerCoarseCell[coarseCell2 - 1];          
     }
         
