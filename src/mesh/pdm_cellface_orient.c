@@ -17,6 +17,7 @@
 #include "pdm_mpi.h"
 #include "pdm_geom_elem.h"
 #include "pdm_cellface_orient.h"
+#include "pdm_hash_tab.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -37,6 +38,12 @@ extern "C" {
  * Type definitions
  *============================================================================*/
 
+enum {
+  NOT_DEFINE,
+  IN_STACK,        
+  UNCHANGED_CYCLE,
+  CHANGED_CYCLE,
+};
 
 /**
  * \struct ????
@@ -93,6 +100,17 @@ const int     *faceVtxIdx,
 const int     *faceVtx
 )
 {
+
+ if (nCell == 0) {
+   return;
+ }
+  
+ /* 
+  * Orient the first cell. As the oriented volume is positive, the face noramals
+  * are outside of the element 
+  * 
+  */
+ 
   int     isOriented = 0;
   int     nPolyhedra = 1;
   double  volume[3];
@@ -111,6 +129,78 @@ const int     *faceVtx
                                       center,
                                       NULL,
                                       NULL);  
+ /* 
+  * Other cells are oriented from the faces of the first cell
+  */
+  
+  int *internFaceCell = malloc (sizeof(int)* 2 * nFace);
+    
+  for (int i = 0; i < 2 * nFace; i++) {
+    internFaceCell[i] = 0;
+  }
+
+  for (int i = cellFaceIdx[0]; i < cellFaceIdx[1]; i++) {
+    int Face = cellFace[i];
+    
+    if (Face > 0) {
+      internFaceCell[2 * (Face - 1) + 1] = 1;
+    }
+    else {
+      internFaceCell[2 * (PDM_ABS (Face) - 1)] = 1;
+    }
+  }
+  
+  int keyMax = 2 * nVtx;
+  
+  int nKeyPoly = 0;
+  int sKeyPoly = 10;
+ 
+  int maxNPolyFace = -1;
+
+  PDM_hash_tab_t *hashOrient = PDM_hash_tab_create (PDM_HASH_TAB_KEY_INT, &keyMax);
+
+  int *keyPoly = (int *) malloc (sizeof(int) * sKeyPoly);
+ 
+  for (int ipoly = 0; ipoly < nPolyhedra; ipoly++) {
+    const int polyIdx   = cellFaceIdx[ipoly];
+    const int nPolyFace = cellFaceIdx[ipoly + 1] - polyIdx;
+    maxNPolyFace = PDM_MAX (maxNPolyFace, nPolyFace);
+  }
+
+  int *stack = (int *) malloc (sizeof(int) * maxNPolyFace);
+  int *tagFace = (int *) malloc (sizeof(int) * maxNPolyFace);
+
+  for (int ipoly = 0; ipoly < nPolyhedra; ipoly++) {
+
+    const int polyIdx   = cellFaceIdx[ipoly];
+    const int nPolyFace = cellFaceIdx[ipoly + 1] - polyIdx;
+
+    /*
+     * Intialize cell center to the barycenter
+     */
+
+    nKeyPoly = 0;
+    
+    /* Search polyhedra vertices */
+
+    int nPolyhedraVertices = 0;
+    
+    for (int iface = 0; iface < nPolyFace; iface++) {
+      tagFace[iface] = NOT_DEFINE; 
+    }
+
+  }
+  /* Continuer ici*/
+  
+  
+  PDM_hash_tab_free(hashOrient);
+  
+  free (stack);
+  free (tagFace);
+  free (internFaceCell);
+  
+  
+
 }
 
 #ifdef	__cplusplus
