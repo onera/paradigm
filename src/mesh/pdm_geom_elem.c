@@ -1493,6 +1493,7 @@ PDM_geom_elem_polyhedra_properties
     
     stack = (int *) malloc (sizeof(int) * maxNPolyFace);
     tagFace = (int *) malloc (sizeof(int) * maxNPolyFace);
+    printf("maxNPolyFace : %d\n", maxNPolyFace);
     
   }
   
@@ -1564,13 +1565,14 @@ PDM_geom_elem_polyhedra_properties
 
     if (!isOriented) {
       int nStack = -1;
-      stack[nStack++] = 0;
-      tagFace[nStack] = IN_STACK;
+      stack[++nStack] = 0;
+      tagFace[0] = IN_STACK;
       
       while (nStack >= 0) {
 
         int iFace = stack[nStack--]; 
-
+        printf ("traitement dans la pile : %d %d\n", iFace, nPolyFace);
+      
         const int face          = abs(cellToFaceConnectivity[polyIdx + iFace]) - 1;
         const int faceIdx       = faceConnectivityIdx[face];
         const int nFaceVertices = faceConnectivityIdx[face+1] - faceIdx;
@@ -1603,17 +1605,20 @@ PDM_geom_elem_polyhedra_properties
           for (int j = 0; j < nData; j++) {
             if (data[j] != NULL) {
               int *_edge = data[j];
+              printf ("boucles edge : %d %d %d\n", _edge[0], _edge[1], _edge[2]);
               int isInverseEdge = (vertex == _edge[1]) && (vertexNext == _edge[0]);
               int isSameEdge    = (vertex == _edge[0]) && (vertexNext == _edge[1]);
               int isSameFace    = iFace == _edge[2];
+              
+              int neighbour = _edge[2];
               
               if (!isSameFace) {
                 if (isSameEdge || isInverseEdge) {
                   
                   if (tagFace[iFace] < UNCHANGED_CYCLE) { 
                   
-                    if (tagFace[_edge[2]] >= UNCHANGED_CYCLE) {
-                      if (tagFace[_edge[2]] == UNCHANGED_CYCLE) {
+                    if (tagFace[neighbour] >= UNCHANGED_CYCLE) {
+                      if (tagFace[neighbour] == UNCHANGED_CYCLE) {
                         if (isSameEdge) {
                           tagFace[iFace] = CHANGED_CYCLE;
                         }
@@ -1638,9 +1643,10 @@ PDM_geom_elem_polyhedra_properties
                     }
                   }
         
-                  if (tagFace[_edge[2]] == NOT_DEFINE) {
-                    stack[nStack++] = _edge[2];
-                    tagFace[_edge[2]] = IN_STACK;
+                  else if (tagFace[neighbour] == NOT_DEFINE) {
+                    printf ("Ajout dans la pile : %d %d\n", _edge[2], nPolyFace);
+                    stack[++nStack] = neighbour;
+                    tagFace[neighbour] = IN_STACK;
                   }
                   
                   break;
@@ -1845,6 +1851,7 @@ PDM_geom_elem_polyhedra_properties
     
   if (!isOriented) {
     free (keyPoly);
+    printf (" free (tagFace)\n");
     free (tagFace);
     free (stack);
     PDM_hash_tab_free (hashOrient);
