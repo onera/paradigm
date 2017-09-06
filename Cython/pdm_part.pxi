@@ -172,70 +172,70 @@ cdef class Part:
 
         # ~> \param [in]   dCellFaceIdx   Distributed cell face connectivity index or NULL
         cdef int * dCellFaceIdx_data
-        if (dCellFaceIdx == None):
+        if (dCellFaceIdx is None):
             dCellFaceIdx_data = NULL
         else:
             dCellFaceIdx_data = <int *> dCellFaceIdx.data
 
         # ~> \param [in]   dCellFace      Distributed cell face connectivity or NULL
         cdef PDM_g_num_t * dCellFace_data = NULL
-        if (dCellFace == None):
+        if (dCellFace is None):
            dCellFace_data = NULL
         else:
             dCellFace_data = <PDM_g_num_t *> dCellFace.data
 
         # \param [in]   dCellTag       Cell tag (size : nCell) or NULL
         cdef int *dCellTag_data
-        if (dCellTag == None):
+        if (dCellTag is None):
             dCellTag_data = NULL
         else:
             dCellTag_data = <int *> dCellTag.data
 
         # \param [in]   dCellWeight    Cell weight (size : nCell) or NULL
         cdef int *dCellWeight_data
-        if (dCellWeight == None):
+        if (dCellWeight is None):
             dCellWeight_data = NULL
         else:
             dCellWeight_data = <int *> dCellWeight.data
 
         # \param [in]   dCellPart      Distributed cell partitioning
         cdef int *dCellPart_data
-        if (dCellPart == None):
+        if (dCellPart is None):
             dCellPart_data = NULL
         else:
             dCellPart_data = <int *> dCellPart.data
 
         # \param [in]   dFaceCell      Distributed face cell connectivity or NULL
         cdef PDM_g_num_t * dFaceCell_data
-        if (dFaceCell == None):
+        if (dFaceCell is None):
             dFaceCell_data = NULL
         else:
             dFaceCell_data = <PDM_g_num_t *> dFaceCell.data
 
         # \param [in]   dFaceTag       Distributed face tag
         cdef int *dFaceTag_data
-        if (dFaceTag == None):
+        if (dFaceTag is None):
             dFaceTag_data = NULL
         else:
             dFaceTag_data = <int *> dFaceTag.data
 
         # \param [in]   dVtxCoord      Distributed vertex coordinates
         cdef int *dVtxTag_data
-        if (dVtxTag == None):
+        if (dVtxTag is None):
             dVtxTag_data = NULL
         else:
             dVtxTag_data = <int *> dVtxTag.data
 
         # \param [in]   dFaceGroupIdx  Index of distributed faces list of each group
         cdef int *dFaceGroupIdx_data
-        if (dFaceGroupIdx == None):
+        if (dFaceGroupIdx is None):
             dFaceGroupIdx_data = NULL
         else:
             dFaceGroupIdx_data = <int *> dFaceGroupIdx.data
 
         # \param [in]   dFaceGroup     distributed faces list of each group
         cdef PDM_g_num_t * dFaceGroupFace_data
-        if (dFaceGroupFace == None):
+        if (dFaceGroupFace is None):
             dFaceGroupFace_data = NULL
         else:
             dFaceGroupFace_data = <PDM_g_num_t *> dFaceGroupFace.data
