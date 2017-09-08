@@ -268,6 +268,8 @@ const int     *faceVtx
   while (nStackCell >= 0) {
     int iCell = stackCell[nStackCell--] - 1;
     
+    printf("--- icell : %d\n", iCell);
+    
     if (tagCell[iCell] == CELL_COMPLETED) {
       continue;
     }
@@ -286,6 +288,9 @@ const int     *faceVtx
       const int faceIdx       = faceVtxIdx[face];
       const int nFaceVertices = faceVtxIdx[face+1] - faceIdx;
 
+      printf ("orientedFaceCell %d : %d %d\n", face, orientedFaceCell[2*face],
+              orientedFaceCell[2*face+1]);
+      
       if (orientedFaceCell[2*face] != 0) {
         assert (orientedFaceCell[2*face] != iCell + 1);
         assert (orientedFaceCell[2*face+1] != iCell + 1);
@@ -293,6 +298,7 @@ const int     *faceVtx
         tagFace[iface] = FACE_CHANGED_CYCLE;
         orientedFaceCell[2*face+1] = iCell + 1;
         fistProcessedFace = iface;        
+        printf("pass 1\n");
       }
       else if (orientedFaceCell[2*face + 1] != 0) {
         assert (orientedFaceCell[2*face] != iCell + 1);
@@ -301,6 +307,7 @@ const int     *faceVtx
         tagFace[iface] = FACE_UNCHANGED_CYCLE;        
         orientedFaceCell[2*face] = iCell + 1;        
         fistProcessedFace = iface;        
+        printf("pass 2\n");
       }        
 
       for (int ivert = 0; ivert < nFaceVertices; ivert++) {
@@ -419,14 +426,16 @@ const int     *faceVtx
             int isInverseEdge = (vertex == _edge[1]) && (vertexNext == _edge[0]);
             int isSameEdge    = (vertex == _edge[0]) && (vertexNext == _edge[1]);
             int isSameFace    = iFace == _edge[2];
-
+            
+            int neighbour = _edge[2];
+            
             if (!isSameFace) {
               if (isSameEdge || isInverseEdge) {
 
                 if (tagFace[iFace] < FACE_UNCHANGED_CYCLE) { 
 
-                  if (tagFace[_edge[2]] >= FACE_UNCHANGED_CYCLE) {
-                    if (tagFace[_edge[2]] == FACE_UNCHANGED_CYCLE) {
+                  if (tagFace[neighbour] >= FACE_UNCHANGED_CYCLE) {
+                    if (tagFace[neighbour] == FACE_UNCHANGED_CYCLE) {
                       if (isSameEdge) {
                         tagFace[iFace] = FACE_CHANGED_CYCLE;
                       }
@@ -451,9 +460,9 @@ const int     *faceVtx
                   }
                 }
 
-                if (tagFace[_edge[2]] == FACE_UNPROCESSED) {
-                  stackFace[++nStackFace] = _edge[2];
-                  tagFace[_edge[2]] = FACE_IN_STACK;
+                if (tagFace[neighbour] == FACE_UNPROCESSED) {
+                  stackFace[++nStackFace] = neighbour;
+                  tagFace[neighbour] = FACE_IN_STACK;
                 }
 
                 break;
