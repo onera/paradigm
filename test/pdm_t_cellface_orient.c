@@ -224,8 +224,8 @@ int main(int argc, char *argv[])
   PDM_part_create(&ppartId,
                   PDM_MPI_COMM_WORLD,
                   method,
-                  PDM_PART_RENUM_CELL_NONE,
-                  PDM_PART_RENUM_FACE_NONE,
+                  PDM_PART_RENUM_CELL_CUTHILL,
+                  PDM_PART_RENUM_FACE_LEXICOGRAPHIC,
                   nPart,
                   dNCell,
                   dNFace,
@@ -441,6 +441,44 @@ int main(int argc, char *argv[])
                          faceCell,
                          faceVtxIdx,
                          faceVtx);
+    
+//    for (int i = 0; i < nCell; i++) {
+//      for (int j = cellFaceIdx[i]; j < cellFaceIdx[i+1]; j++) {
+//        for (int k = faceVtxIdx[cellFace[j]]; k < faceVtxIdx[cellFace[j+1]]; k++) {
+//          faceVtx[k] = - faceVtx[k];
+//        }
+//      }
+//      for (int j = cellFaceIdx[i]; j < cellFaceIdx[i+1]; j++) {
+//        for (int k = faceVtxIdx[cellFace[j]]; k < faceVtxIdx[cellFace[j+1]]; k++) {
+//          faceVtx[k] = - faceVtx[k];
+//        }
+//      }
+//      for (int j = cellFaceIdx[i]; j < cellFaceIdx[i+1]; j++) {
+//        for (int k = faceVtxIdx[cellFace[j]]; k < faceVtxIdx[cellFace[j+1]]; k++) {
+//          faceVtx[k] = - faceVtx[k];
+//        }
+//      }
+//    }
+    
+    if (0 == 1) {
+    
+      for (int i = 0; i < nCell; i++) {
+        printf("cell %d :", i+1);
+        for (int j = cellFaceIdx[i]; j < cellFaceIdx[i+1]; j++) {
+          printf(" %d", cellFace[j]);
+        }
+        printf("\n");
+      }
+
+      for (int i = 0; i < nFace; i++) {
+        printf("face %d :", i+1);
+        for (int j = faceVtxIdx[i]; j < faceVtxIdx[i+1]; j++) {
+          printf(" %d", faceVtx[j]);
+        }
+        printf("\n");
+      }
+
+    }
     
     val_num_part[ipart] = (PDM_real_t *) malloc(sizeof(PDM_real_t) * nCell);
     val_coo_x[ipart]    = (PDM_real_t *) malloc(sizeof(PDM_real_t) * nVtx);

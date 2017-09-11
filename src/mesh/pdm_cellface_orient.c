@@ -124,24 +124,27 @@ const int     *faceVtx
   }
   else {
     _faceCell = malloc (sizeof(int)* 2 * nFace);
-  }
   
-  for (int i = 0; i < 2 * nFace; i++) {
-    _faceCell[i] = 0;
-  }
-  
-  for (int i = 0; i < nCell; i++) {
-    for (int j = cellFaceIdx[i]; j < cellFaceIdx[i+1]; j++) {
-      int face = PDM_ABS (cellFace[j]);
-      int iFace = 2 * (face - 1);
-      if (faceCell[iFace] == 0) {
-        faceCell[iFace] = i + 1;
-      }
-      else {
-        faceCell[iFace+1] = i + 1;
+    for (int i = 0; i < 2 * nFace; i++) {
+      _faceCell[i] = 0;
+    }
+
+    for (int i = 0; i < nCell; i++) {
+      for (int j = cellFaceIdx[i]; j < cellFaceIdx[i+1]; j++) {
+        int face = PDM_ABS (cellFace[j]);
+        int iFace = 2 * (face - 1);
+        if (_faceCell[iFace] == 0) {
+          _faceCell[iFace] = i + 1;
+        }
+        else {
+          _faceCell[iFace+1] = i + 1;
+        }
       }
     }
   }
+
+
+
   
  /* 
   * Orient the first cell. 
@@ -212,10 +215,6 @@ const int     *faceVtx
   int sKeyPoly = 10;
  
   int maxNPolyFace = -1;
-
-  PDM_hash_tab_t *hashOrient = PDM_hash_tab_create (PDM_HASH_TAB_KEY_INT, &keyMax);
-
-  int *keyPoly = (int *) malloc (sizeof(int) * sKeyPoly);
  
   for (int ipoly = 0; ipoly < nPolyhedra; ipoly++) {
     const int polyIdx   = cellFaceIdx[ipoly];
@@ -227,7 +226,6 @@ const int     *faceVtx
 
   int nStackCell = -1;
   int *stackCell = (int *) malloc (sizeof(int) * nCell);
-  
   int *tagFace = (int *) malloc (sizeof(int) * maxNPolyFace);
   int *tagCell = (int *) malloc (sizeof(int) * nCell);
   
@@ -265,11 +263,16 @@ const int     *faceVtx
 
   /* Orientation process */
 
+  int cpt = 0;
   while (nStackCell >= 0) {
+    
+//    printf("nStackCell : %d %d\n", nStackCell, ++cpt);
+//    fflush(stdout);
+    
+    PDM_hash_tab_t *hashOrient = PDM_hash_tab_create (PDM_HASH_TAB_KEY_INT, &keyMax);
+
     int iCell = stackCell[nStackCell--] - 1;
-    
-    printf("--- icell : %d\n", iCell);
-    
+        
     if (tagCell[iCell] == CELL_COMPLETED) {
       continue;
     }
@@ -287,9 +290,6 @@ const int     *faceVtx
       const int face          = PDM_ABS (cellFace[polyIdx + iface]) - 1;
       const int faceIdx       = faceVtxIdx[face];
       const int nFaceVertices = faceVtxIdx[face+1] - faceIdx;
-
-      printf ("orientedFaceCell %d : %d %d\n", face, orientedFaceCell[2*face],
-              orientedFaceCell[2*face+1]);
       
       if (orientedFaceCell[2*face] != 0) {
         assert (orientedFaceCell[2*face] != iCell + 1);
@@ -298,7 +298,6 @@ const int     *faceVtx
         tagFace[iface] = FACE_CHANGED_CYCLE;
         orientedFaceCell[2*face+1] = iCell + 1;
         fistProcessedFace = iface;        
-        printf("pass 1\n");
       }
       else if (orientedFaceCell[2*face + 1] != 0) {
         assert (orientedFaceCell[2*face] != iCell + 1);
@@ -307,7 +306,6 @@ const int     *faceVtx
         tagFace[iface] = FACE_UNCHANGED_CYCLE;        
         orientedFaceCell[2*face] = iCell + 1;        
         fistProcessedFace = iface;        
-        printf("pass 2\n");
       }        
 
       for (int ivert = 0; ivert < nFaceVertices; ivert++) {
@@ -316,13 +314,6 @@ const int     *faceVtx
         const int inext = (ivert + 1) % nFaceVertices;
         const int vertexNext = faceVtx[faceIdx + inext] - 1;
         const int key = vertex + vertexNext;
-
-        if (nKeyPoly >= sKeyPoly) {
-          sKeyPoly *= 2; 
-          keyPoly = (int *) realloc (keyPoly, sizeof(int) * sKeyPoly);
-        }
-
-        keyPoly[nKeyPoly++] = key;
 
         int *edge = malloc (sizeof(int)*3);
         edge[0] = vertex;
@@ -339,7 +330,7 @@ const int     *faceVtx
     // TODO
     int nStackFace = -1;    
     
-    /* Look a neighbour of this face */
+    /* Look for a neighbour of this face */
     if (fistProcessedFace != -1) {
       const int face          = PDM_ABS (cellFace[polyIdx + fistProcessedFace]) - 1;
       const int faceIdx       = faceVtxIdx[face];
@@ -364,8 +355,9 @@ const int     *faceVtx
 
             if (!isSameFace) {
               if (isSameEdge || isInverseEdge) {
-                stackFace[++nStackFace] = ivert;
-                tagFace[nStackFace] = FACE_IN_STACK;
+                stackFace[++nStackFace] =  _edge[2];
+                tagFace[ _edge[2]] = FACE_IN_STACK;
+                
                 break;
               }
             }
@@ -438,17 +430,21 @@ const int     *faceVtx
                     if (tagFace[neighbour] == FACE_UNCHANGED_CYCLE) {
                       if (isSameEdge) {
                         tagFace[iFace] = FACE_CHANGED_CYCLE;
+                        orientedFaceCell[2*face+1] = iCell+1;
                       }
                       else  {
                         tagFace[iFace] = FACE_UNCHANGED_CYCLE;
+                        orientedFaceCell[2*face] = iCell+1;
                       }
                     }
                     else {
                       if (isSameEdge) {
                         tagFace[iFace] = FACE_UNCHANGED_CYCLE;
+                        orientedFaceCell[2*face] = iCell+1;
                       }
                       else  {
                         tagFace[iFace] = FACE_CHANGED_CYCLE;
+                        orientedFaceCell[2*face+1] = iCell+1;
                       }                      
                     }                    
 
@@ -474,7 +470,7 @@ const int     *faceVtx
       }
       
       if (tagFace[iFace] == FACE_IN_STACK) {
-        printf ("Error reorient : no neighbour processed face found");
+        printf ("Error reorient : no neighbour processed face found\n");
         abort();        
       }
     }
@@ -491,18 +487,26 @@ const int     *faceVtx
       const int face          = PDM_ABS (cellFace[polyIdx + iface]) - 1;
 
       int nextCell = -1;
-      if (faceCell[2 * face] == (iCell + 1)) {
-        nextCell = faceCell[2 * face + 1] - 1;
+      if (_faceCell[2 * face] == (iCell + 1)) {
+        if (_faceCell[2 * face + 1] != 0) {
+          nextCell = _faceCell[2 * face + 1] - 1;
+        }
       }
       else {
-        nextCell = faceCell[2 * face] - 1;
+        nextCell = _faceCell[2 * face] - 1;
       }
-
-      if (tagCell[nextCell] == CELL_UNPROCESSED) {
-        stackCell[++nStackCell] = nextCell + 1;
-        tagCell[nextCell] = CELL_IN_STACK;
+      
+      if (nextCell != -1) {
+        if (tagCell[nextCell] == CELL_UNPROCESSED) {
+          stackCell[++nStackCell] = nextCell + 1;
+          tagCell[nextCell] = CELL_IN_STACK;
+        }
       }
+      
+      
     }
+    
+    PDM_hash_tab_free(hashOrient);
     
     tagCell[iCell] = CELL_COMPLETED;
 
@@ -534,11 +538,11 @@ const int     *faceVtx
       }
     }
   }
-
-  PDM_hash_tab_free(hashOrient);
   
   free (stackFace);
   free (tagFace);
+  free (stackCell);
+  free (tagCell);
   free (orientedFaceCell);
   if (faceCell == NULL) {
     free (_faceCell);
