@@ -1828,19 +1828,7 @@ PDM_geom_elem_polyhedra_properties
     }
 
     if (!isOriented) {
-      for (int i = 0; i < nKeyPoly; i++) {
-        int key = keyPoly[i];
-
-        int nData = PDM_hash_tab_n_data_get (hashOrient, &key);
-        int **data = (int **) PDM_hash_tab_data_get (hashOrient, &key);
-
-        for (int j = 0; j < nData; j++) {
-          if (data[j] != NULL) {
-            free (data[j]);
-          }
-        }
-        PDM_hash_tab_data_free (hashOrient, &key);
-      }
+      PDM_hash_tab_purge (hashOrient, PDM_TRUE);
     }
 
   }

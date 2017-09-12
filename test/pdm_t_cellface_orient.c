@@ -224,8 +224,8 @@ int main(int argc, char *argv[])
   PDM_part_create(&ppartId,
                   PDM_MPI_COMM_WORLD,
                   method,
-                  PDM_PART_RENUM_CELL_CUTHILL,
-                  PDM_PART_RENUM_FACE_LEXICOGRAPHIC,
+                  PDM_PART_RENUM_CELL_NONE,
+                  PDM_PART_RENUM_FACE_NONE,
                   nPart,
                   dNCell,
                   dNFace,
@@ -442,23 +442,6 @@ int main(int argc, char *argv[])
                          faceVtxIdx,
                          faceVtx);
     
-//    for (int i = 0; i < nCell; i++) {
-//      for (int j = cellFaceIdx[i]; j < cellFaceIdx[i+1]; j++) {
-//        for (int k = faceVtxIdx[cellFace[j]]; k < faceVtxIdx[cellFace[j+1]]; k++) {
-//          faceVtx[k] = - faceVtx[k];
-//        }
-//      }
-//      for (int j = cellFaceIdx[i]; j < cellFaceIdx[i+1]; j++) {
-//        for (int k = faceVtxIdx[cellFace[j]]; k < faceVtxIdx[cellFace[j+1]]; k++) {
-//          faceVtx[k] = - faceVtx[k];
-//        }
-//      }
-//      for (int j = cellFaceIdx[i]; j < cellFaceIdx[i+1]; j++) {
-//        for (int k = faceVtxIdx[cellFace[j]]; k < faceVtxIdx[cellFace[j+1]]; k++) {
-//          faceVtx[k] = - faceVtx[k];
-//        }
-//      }
-//    }
     
     if (0 == 1) {
     
