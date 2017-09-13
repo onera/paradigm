@@ -205,6 +205,8 @@ const int     *faceVtx
   */
  
   int fistCellComp = 0;
+  int fistCellCompPre = -1;
+
   while (fistCellComp != -1) {
   
     int     isOriented = 0;
@@ -323,6 +325,9 @@ const int     *faceVtx
       }
 
       if  (fistProcessedFace == -1) { //New component
+        if (fistCellCompPre == -1) {
+          fistCellCompPre = fistCellComp;
+        }
         fistCellComp = iCell;
         continue;
       }
@@ -352,11 +357,10 @@ const int     *faceVtx
         }
       }
 
-
-      // TODO
       int nStackFace = -1;    
 
       /* Look for a neighbour of this face */
+
       if (fistProcessedFace != -1) {
         const int face          = PDM_ABS (cellFace[polyIdx + fistProcessedFace]) - 1;
         const int faceIdx       = faceVtxIdx[face];
@@ -529,6 +533,25 @@ const int     *faceVtx
 
       tagCell[iCell] = CELL_COMPLETED;
 
+    }
+
+    int icheck;
+    
+    if (fistCellCompPre != 1) {
+      icheck = fistCellCompPre;
+    }
+    else {
+      icheck = fistCellComp;
+    }
+    
+    fistCellComp = -1;
+    fistCellCompPre = -1;
+    
+    for (int k = icheck; k < nCell; k++) {
+      if (tagCell[k] == CELL_UNPROCESSED) {
+        fistCellComp = k;
+        break;
+      }
     }
   }
   
