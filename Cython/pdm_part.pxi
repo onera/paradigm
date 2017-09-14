@@ -24,6 +24,10 @@ cdef extern from "pdm_part.h":
                          PDM_part_split_t      split_method,
                          PDM_part_renum_cell_t renum_cell_method,
                          PDM_part_renum_face_t renum_face_method,
+                         int                   nPropertyCell,
+                         int                   *renum_properties_cell,
+                         int                   nPropertyFace,
+                         int                   *renum_properties_face,
                          int                   nPart,
                          int                   dNCell,
                          int                   dNFace,
@@ -78,6 +82,12 @@ cdef extern from "pdm_part.h":
                                int          **faceGroupIdx,
                                int          **faceGroup,
                                PDM_g_num_t **faceGroupLNToGN)
+    
+    # ------------------------------------------------------------------
+    void PDM_part_part_color_get(int            ppartId,
+                                 int            ipart,
+                                 int          **cellColor,
+                                 int          **faceColor)
 
     # ------------------------------------------------------------------
     void PDM_part_free(int ppartId)
@@ -125,6 +135,10 @@ cdef class Part:
                  PDM_part_split_t split_method,
                  PDM_part_renum_cell_t renum_cell_method,
                  PDM_part_renum_face_t renum_face_method,
+                 int                   nPropertyCell,
+                 NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] renum_properties_cell,
+                 int                   nPropertyFace,
+                 NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] renum_properties_face,
                  int nPart,
                  int dNCell,
                  int dNFace,
@@ -176,6 +190,20 @@ cdef class Part:
             dCellFaceIdx_data = NULL
         else:
             dCellFaceIdx_data = <int *> dCellFaceIdx.data
+            
+        # ~> \param [in]   renum_properties_cell
+        cdef int * renum_properties_cell_data
+        if (renum_properties_cell is None):
+            renum_properties_cell_data = NULL
+        else:
+            renum_properties_cell_data = <int *> renum_properties_cell.data
+            
+        # ~> \param [in] renum_properties_face
+        cdef int * renum_properties_face_data
+        if (renum_properties_face is None):
+            renum_properties_face_data = NULL
+        else:
+            renum_properties_face_data = <int *> renum_properties_face.data
 
         # ~> \param [in]   dCellFace      Distributed cell face connectivity or NULL
         cdef PDM_g_num_t * dCellFace_data = NULL
@@ -255,6 +283,10 @@ cdef class Part:
                         split_method,
                         renum_cell_method,
                         renum_face_method,
+                        nPropertyCell,
+                        renum_properties_cell_data,
+                        nPropertyFace,
+                        renum_properties_face_data,
                         nPart,
                         dNCell,
                         dNFace,
@@ -580,6 +612,49 @@ cdef class Part:
                 'npFaceGroup'                : npFaceGroup,
                 'npFaceGroupLNToGN'          : npFaceGroupLNToGN}
 
+    # ------------------------------------------------------------------
+    def part_color_get(self, int ipart):
+        """
+           Get partition dimensions
+        """
+        # ************************************************************************
+        # > Declaration
+        cdef int          *cellColor,
+        cdef int          *faceColor
+        # ************************************************************************
+
+        # dims = self.part_dim_get(self.id, ipart)
+        dims = self.part_dim_get(ipart)
+
+        # -> Call PPART to get info
+        PDM_part_part_color_get(self.id,
+                                ipart,
+                                &cellColor,
+                                &faceColor)
+        # -> Begin
+        cdef NPY.npy_intp dim
+
+        # \param [out]  cellColor            Cell tag (size = nCell)
+        if (cellColor == NULL) :
+            npCellColor = None
+        else :
+            dim = <NPY.npy_intp> dims['nCell']
+            npCellColor = NPY.PyArray_SimpleNewFromData(1,
+                                                        &dim,
+                                                        NPY.NPY_INT32,
+                                                        <void *> cellColor)
+        # \param [out]  faceColor            Cell tag (size = nCell)
+        if (faceColor == NULL) :
+            npFaceColor = None
+        else :
+            dim = <NPY.npy_intp> dims['nFace']
+            npFaceColor = NPY.PyArray_SimpleNewFromData(1,
+                                                        &dim,
+                                                        NPY.NPY_INT32,
+                                                        <void *> faceColor)
+            
+        return {'npCellColor'   : npCellColor,
+                'npFaceColor'   : npFaceColor}
 
     # ------------------------------------------------------------------
     def part_time_get(self):

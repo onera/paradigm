@@ -2822,6 +2822,10 @@ _part_free
  * \param [in]   comm           Communicator
  * \param [in]   split_method   Split method
  * \param [in]   renum_cell_method Cell renumbering method
+ * \param [in]   renum_face_method Cell renumbering method
+ * \param [in]   renum_properties_cell  For cache blocking [ nCellPerCacheWanted, isAsynchrone, isVectorisation ] \ref PDM_renum_cacheblocking 
+ * \param [in]   renum_face_method Cell renumbering method
+ * \param [in]   renum_properties_face  NOT USE
  * \param [in]   nPart          Number of partition to build on this process
  * \param [in]   dNCell         Number of distributed cells
  * \param [in]   dNFace         Number of distributed faces
@@ -2862,6 +2866,10 @@ PDM_part_create
  const PDM_part_split_t       split_method,
  const PDM_part_renum_cell_t  renum_cell_method,
  const PDM_part_renum_face_t  renum_face_method,
+ const int                    nPropertyCell,
+ const int*                   renum_properties_cell,
+ const int                    nPropertyFace,
+ const int*                   renum_properties_face,
  const int                    nPart,
  const int                    dNCell,
  const int                    dNFace,
@@ -2931,6 +2939,12 @@ PDM_part_create
   ppart->dCellFaceIdx  = NULL;
   ppart->dCellFace     = NULL;
   ppart->dFaceCell     = NULL;
+  
+  /* Set up for renumbering */
+  ppart->nPropertyCell          = nPropertyCell;
+  ppart->renum_properties_cell  = renum_properties_cell;
+  ppart->nPropertyFace          = nPropertyFace;
+  ppart->renum_properties_face  = renum_properties_face;
 
   ppart->dCellProc = (PDM_g_num_t *) malloc((nRank+1) * sizeof(PDM_g_num_t));
   PDM_g_num_t _dNCell = (PDM_g_num_t) dNCell;
@@ -3159,14 +3173,13 @@ PDM_part_create
    * Cell renumbering
    */
 
-  PDM_part_renum_cell (ppart, (PDM_part_renum_cell_t) renum_cell_method); 
+  PDM_part_renum_cell (ppart); 
     
   /*
    * Face renumbering
    */
 
-  // PDM_part_renum_face (ppart, PDM_PART_RENUM_FACE_NONE); 
-  PDM_part_renum_face (ppart, (PDM_part_renum_face_t) renum_face_method); 
+  PDM_part_renum_face (ppart); 
 
   /*
    * Look for partitioning boundary faces
@@ -3208,6 +3221,10 @@ PROCF (pdm_part_create, PDM_PART_CREATE)
  const int          *split_method,
  const int          *renum_cell_method,
  const int          *renum_face_method,
+ const int          *nPropertyCell,
+ const int          *renum_properties_cell,
+ const int          *nPropertyFace,
+ const int          *renum_properties_face,
  const int          *nPart,
  const int          *dNCell,
  const int          *dNFace,
@@ -3269,6 +3286,10 @@ PROCF (pdm_part_create, PDM_PART_CREATE)
                   (PDM_part_split_t) *split_method,
                   (PDM_part_renum_cell_t) *renum_cell_method,
                   (PDM_part_renum_face_t) *renum_face_method,
+                  *nPropertyCell,
+                   renum_properties_cell,
+                  *nPropertyFace,
+                   renum_properties_face,
                   *nPart,
                   *dNCell,
                   *dNFace,
@@ -3565,6 +3586,75 @@ PROCF (pdm_part_part_val_get, PDM_PART_PART_VAL_GET)
   }
 }
 
+/**
+ *
+ * \brief Return a mesh partition
+ * 
+ * \param [in]   ppartId            ppart identifier
+ * \param [in]   ipart              Current partition
+ * \param [out]  cellColor          Cell tag (size = nCell)
+ * \param [out]  faceColor          Face tag (size = nFace)
+
+ */
+
+void PDM_part_part_color_get
+(
+const  int      ppartId,
+const  int      ipart,
+ int          **cellColor,
+ int          **faceColor
+)
+{
+  _PDM_part_t *ppart = _get_from_id(ppartId);
+
+  _part_t *meshPart = NULL;
+  if (ipart < ppart->nPart)
+    meshPart  = ppart->meshParts[ipart];
+  
+  if (meshPart == NULL) {
+    PDM_printf("PDM_part_part_val_get error : unknown partition\n");
+    exit(1);
+  }
+
+  *cellColor = meshPart->cellColor;
+  *faceColor = meshPart->faceColor;
+}
+
+void 
+PROCF (pdm_part_part_color_get, PDM_PART_PART_COLOR_GET)
+(
+ int           *ppartId,
+ int           *ipart,
+ int           *cellColor,
+ int           *faceColor
+)
+{
+  _PDM_part_t *ppart = _get_from_id(*ppartId);
+  int numProcs;
+  PDM_MPI_Comm_size(ppart->comm, &numProcs);
+
+  _part_t *meshPart = NULL;
+  if (*ipart < ppart->nPart)
+    meshPart  = ppart->meshParts[*ipart];
+  
+  if (meshPart == NULL) {
+    PDM_printf("PDM_part_part_val_get error : unknown partition\n");
+    exit(1);
+  }
+
+  if (meshPart->cellColor != NULL){
+    for (int i = 0; i < meshPart->nCell; i++){
+        cellColor[i]    = meshPart->cellColor[i];
+    }
+  }
+  
+  if (meshPart->faceColor != NULL){
+    for (int i = 0; i < meshPart->nFace; i++){
+        faceColor[i]    = meshPart->faceColor[i];
+    }
+  }
+  
+}
 
 /**
  *
