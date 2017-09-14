@@ -525,8 +525,6 @@ const int     *faceVtx
             tagCell[nextCell] = CELL_IN_STACK;
           }
         }
-
-
       }
 
       PDM_hash_tab_purge(hashOrient, PDM_FALSE);
