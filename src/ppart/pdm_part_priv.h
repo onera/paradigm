@@ -13,6 +13,36 @@
 
 
 /**
+ * \struct _subpartlayout_t
+ * \brief  Partition object
+ * 
+ * _subpartlayout_t define a mesh partition layouts base on sudomaine
+ *
+ */
+
+typedef struct  _subpartlayout_t {
+  
+  int           nSdom;                  /*!< Number of subDomain                     */
+  int           nFaceInt;               /*!< Number of Interior face                 */
+  int           nFaceExt;               /*!< Number of Exterior face                 */
+  
+  /* Idx array of displacement */
+  int*          cellTileIdx;           /*!< Cell Tile Index     (Size = nSdom + 1)   */
+  int*          faceTileIdx;           /*!< Face Tile Index     (Size = nSdom + 1)   */
+  int*          faceBndTileIdx;        /*!< Face Bnd Tile Index (Size = nSdom + 1)   */
+  
+  /* Idx array of displacement */
+  int*          maskTileIdx;           /*!< Mask Tile Index   (Size = nSdom + 1)     */
+  int*          cellVectTileIdx;       /*!< Cell Tile Index   (Size = nSdom + 1)     */
+  int*          maskTileN;             /*!< Mask Tile number  (Size = nSdom + 1)     */
+  int*          cellVectTileN;         /*!< Cell Tile number  (Size = nSdom + 1)     */
+  int*          maskTile;              /*!< Mask Tile number                         */
+  
+  
+} _subpartlayout_t;
+
+
+/**
  * \struct _part_t
  * \brief  Partition object
  * 
@@ -85,6 +115,8 @@ typedef struct  _part_t {
                                             (size = nCel)                           */
   int          *faceColor;             /*!< Face color - For cache blocking            
                                             (size = nFac)                           */
+  
+  _subpartlayout_t *subpartlayout;    /*!< Layouts of subdomain                     */
 
 } _part_t;
 

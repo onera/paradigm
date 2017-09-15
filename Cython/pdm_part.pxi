@@ -635,7 +635,7 @@ cdef class Part:
         cdef NPY.npy_intp dim
 
         # \param [out]  cellColor            Cell tag (size = nCell)
-        if (cellColor == NULL) :
+        if (cellColor == NULL):
             npCellColor = None
         else :
             dim = <NPY.npy_intp> dims['nCell']
@@ -643,8 +643,8 @@ cdef class Part:
                                                         &dim,
                                                         NPY.NPY_INT32,
                                                         <void *> cellColor)
-        # \param [out]  faceColor            Cell tag (size = nCell)
-        if (faceColor == NULL) :
+        # \param [out]  faceColor            Cell tag (size = nFace)
+        if (faceColor == NULL):
             npFaceColor = None
         else :
             dim = <NPY.npy_intp> dims['nFace']
@@ -652,7 +652,6 @@ cdef class Part:
                                                         &dim,
                                                         NPY.NPY_INT32,
                                                         <void *> faceColor)
-            
         return {'npCellColor'   : npCellColor,
                 'npFaceColor'   : npFaceColor}
 
