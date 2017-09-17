@@ -220,20 +220,12 @@ int main(int argc, char *argv[])
   int have_dCellPart = 0;
 
   int *dCellPart = (int *) malloc(dNCell*sizeof(int));
-  int *renum_properties_cell = NULL;
-  int *renum_properties_face = NULL;
-  int nPropertyCell = 0;
-  int nPropertyFace = 0;
 
   PDM_part_create(&ppartId,
                   PDM_MPI_COMM_WORLD,
                   method,
                   PDM_PART_RENUM_CELL_NONE,
                   PDM_PART_RENUM_FACE_NONE,
-                  nPropertyCell,
-                  renum_properties_cell,
-                  nPropertyFace,
-                  renum_properties_face,
                   nPart,
                   dNCell,
                   dNFace,

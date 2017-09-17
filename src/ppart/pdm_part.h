@@ -59,12 +59,10 @@ typedef enum {
  */
 
 typedef enum {
-  PDM_PART_RENUM_CELL_HILBERT             = 1,
-  PDM_PART_RENUM_CELL_RANDOM              = 2,
-  PDM_PART_RENUM_CELL_NONE                = 3,
-  PDM_PART_RENUM_CELL_CUTHILL             = 4, 
-  PDM_PART_RENUM_CELL_CACHEBLOCKING_SYNC  = 5,  /** Caution faces are also reorder **/
-  PDM_PART_RENUM_CELL_CACHEBLOCKING_ASYNC = 6   /** Caution faces are also reorder **/
+  PDM_PART_RENUM_CELL_HILBERT = 1,
+  PDM_PART_RENUM_CELL_RANDOM  = 2,
+  PDM_PART_RENUM_CELL_NONE    = 3,
+  PDM_PART_RENUM_CELL_CUTHILL = 4
 } PDM_part_renum_cell_t;
 
 
@@ -132,10 +130,6 @@ PDM_part_create
  const PDM_part_split_t       split_method,
  const PDM_part_renum_cell_t  renum_cell_method,
  const PDM_part_renum_face_t  renum_face_method,
- const int                    nPropertyCell,
- const int*                   renum_properties_cell,
- const int                    nPropertyFace,
- const int*                   renum_properties_face,
  const int                    nPart,
  const int                    dNCell,
  const int                    dNFace,
@@ -165,10 +159,6 @@ PROCF (pdm_part_create, PDM_PART_CREATE)
  const int          *split_method,
  const int          *renum_cell_method,
  const int          *renum_face_method,
- const int          *nPropertyCell,
- const int          *renum_properties_cell,
- const int          *nPropertyFace,
- const int          *renum_properties_face,
  const int          *nPart,
  const int          *dNCell,
  const int          *dNFace,
@@ -332,33 +322,6 @@ PROCF (pdm_part_part_val_get, PDM_PART_PART_VAL_GET)
  int           *faceGroupIdx,
  int           *faceGroup,
  PDM_g_num_t   *faceGroupLNToGN
-);
-
-/**
- *
- * \brief Return a mesh partition
- * 
- * \param [in]   ppartId               ppart identifier
- * \param [in]   ipart                 Current partition
- * \param [out]  cellColor             Cell Color (size = nCell)
- * \param [out]  faceColor             Face Color (size = nFace)
- */
-
-void PDM_part_part_color_get
-(
-const int            ppartId,
-const int            ipart,
-      int          **cellColor,
-      int          **faceColor
-);
-
-void 
-PROCF (pdm_part_part_color_get, PDM_PART_PART_COLOR_GET)
-(
- int           *ppartId,
- int           *ipart,
- int           *cellColor,
- int           *faceColor
 );
 
 /**

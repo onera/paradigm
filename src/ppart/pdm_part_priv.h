@@ -80,11 +80,6 @@ typedef struct  _part_t {
                                       (size = nVtx)                           */
   int          *vtxTag;             /*!< Tag vertex            
                                       (size = nVtx)                           */
-  
-  int          *cellColor;             /*!< Cell color - For cache blocking            
-                                            (size = nCel)                           */
-  int          *faceColor;             /*!< Face color - For cache blocking            
-                                            (size = nFac)                           */
 
 } _part_t;
 
@@ -219,12 +214,6 @@ typedef struct _PDM_part_t {
   PDM_part_renum_face_t renum_face_method;   /*!< Renumbering face method */
 
   PDM_part_renum_cell_t renum_cell_method;   /*!< Renumbering cell method */
-  
-  int  nPropertyCell;                         /*!< Size of cells properties      */
-  int  nPropertyFace;                         /*!< Size of faces properties      */
-  const int* renum_properties_cell;           /*!< Renumbering cells properties  */
-  const int* renum_properties_face;           /*!< Renumbering faces properties  */
-  
 
   int          nPart;               /*!< Number of partitions to define
                                       on this process */
@@ -281,8 +270,6 @@ void
   part->vtx = NULL;
   part->vtxLNToGN = NULL;
   part->vtxTag = NULL;
-  part->cellColor = NULL;
-  part->faceColor = NULL;
   return part;
 }
 

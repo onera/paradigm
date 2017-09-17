@@ -30,15 +30,10 @@
 #include "pdm_part_renum.h"
 #include "pdm_hilbert.h"
 #include "pdm_geom_elem.h"
-#include "pdm_part_graph.h"
 #include "pdm_sort.h"
-#include "pdm_order.h"
 #include "pdm_cuthill.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
-
-// TODO -> IF DEF
-#include "pdm_renum_cacheblocking.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -100,6 +95,126 @@ const int nElt,
   PDM_sort_int (tmpArray, order, nElt);
 }
 
+/** 
+ * This function is part of Code_Saturne, a general-purpose CFD tool.
+ *  Copyright (C) 1998-2014 EDF S.A.
+ *
+ * \brief Descend binary tree for the lexicographical ordering of a strided array
+ *
+ * \param [in]     number pointer to numbers of entities that should be ordered.
+ * \param [in]            (if NULL, a default 1 to n numbering is considered)
+ * \param [in]     stride stride of array (number of values to compare)
+ * \param [in]     level  level of the binary tree to descend
+ * \param [in]     nb_ent number of entities in the binary tree to descend
+ * \param [in,out] order  ordering array
+ */
+
+inline static void
+_order_lnum_descend_tree_s
+(
+const int    number[],
+size_t       stride,
+size_t       level,
+const size_t nb_ent,
+int          order[]
+)
+{
+  size_t i_save, i1, i2, j, lv_cur;
+
+  i_save = (size_t)(order[level]);
+
+  while (level <= (nb_ent/2)) {
+
+    lv_cur = (2*level) + 1;
+
+    if (lv_cur < nb_ent - 1) {
+
+      i1 = (size_t)(order[lv_cur+1]);
+      i2 = (size_t)(order[lv_cur]);
+
+      for (j = 0; j < stride; j++) {
+        if (number[i1*stride + j] != number[i2*stride + j])
+          break;
+      }
+
+      if (j < stride) {
+        if (number[i1*stride + j] > number[i2*stride + j])
+          lv_cur++;
+      }
+
+    }
+
+    if (lv_cur >= nb_ent) break;
+
+    i1 = i_save;
+    i2 = (size_t)(order[lv_cur]);
+
+    for (j = 0; j < stride; j++) {
+      if (number[i1*stride + j] != number[i2*stride + j])
+        break;
+    }
+
+    if (j == stride) break;
+    if (number[i1*stride + j] >= number[i2*stride + j]) break;
+
+    order[level] = order[lv_cur];
+    level = lv_cur;
+
+  }
+
+  order[level] = (int) i_save;
+}
+
+/** 
+ * This function is part of Code_Saturne, a general-purpose CFD tool.
+ *  Copyright (C) 1998-2014 EDF S.A.
+ *
+ * \brief Order a strided array of global numbers lexicographically.
+ *
+ * \param [in]     number array of entity numbers (if NULL, a default 1 to n numbering is considered)
+ * \param [in]     stride stride of array (number of values to compare)
+ * \param [in,out] order  pre-allocated ordering table
+ * \param [in]     nb_ent number of entities considered
+ */
+
+static void
+_order_lnum_s
+(
+const int    number[],
+size_t       stride,
+int          order[],
+const size_t nb_ent
+)
+{
+  size_t i;
+  int o_save;
+
+  /* Initialize ordering array */
+
+  for (i = 0 ; i < nb_ent ; i++)
+    order[i] = (int) i;
+
+  if (nb_ent < 2)
+    return;
+
+  /* Create binary tree */
+
+  i = (nb_ent / 2) ;
+  do {
+    i--;
+    _order_lnum_descend_tree_s(number, stride, i, nb_ent, order);
+  } while (i > 0);
+
+  /* Sort binary tree */
+
+  for (i = nb_ent - 1 ; i > 0 ; i--) {
+    o_save   = order[0];
+    order[0] = order[i];
+    order[i] = o_save;
+    _order_lnum_descend_tree_s(number, stride, 0, i, order);
+  }
+}
+
 /**
  * \brief Renumber face to cell connectivity 
  * 
@@ -145,6 +260,44 @@ const int *cellFace,
   }
  
 }
+
+
+/**
+ * \brief Order an array
+ * 
+ * \param [in]      sizeArray       Number of elements
+ * \param [in]      newToOldOrder        New order (size = \ref nElt
+ * \param [in, out] Array         	Array to renumber
+ *
+ */
+
+static void 
+_order_array 
+(
+const int     sizeArray,
+const size_t  elt_size,        
+const int    *newToOldOrder,
+void         *array
+)
+{
+  unsigned char *oldArray = (unsigned char *) malloc (sizeArray * elt_size);
+  unsigned char *_array = (unsigned char *) array;
+  
+  for (int i = 0; i < sizeArray; ++i) {
+    for (int j = 0; j < elt_size; ++j) {
+      oldArray[elt_size * i + j] = _array[elt_size * i + j];
+    }
+  }
+  
+  for (int i = 0; i < sizeArray; ++i) {
+    for (int j = 0; j < elt_size; ++j) {
+      _array[elt_size * i + j] = oldArray[elt_size * newToOldOrder[i] +j];
+    }
+  }
+  
+  free(oldArray);
+}
+
 
 /**
  * \brief Order faceCell array
@@ -431,6 +584,116 @@ double  *cellCenter
 
 }
 
+
+/**
+ *
+ * \brief Perform cells renumbering from a new order
+ *
+ * \param [in,out]  part        Current partition
+ * \param [in]      newToOldOrder    NewOrder
+ *
+ */
+
+static void 
+_renum_cells
+(
+ _part_t *part, 
+ int     *newToOldOrder
+)
+{
+  /*
+   * Cell Renumbering
+   */
+   
+  _renum_connectivities (part->nCell,
+                         newToOldOrder,
+                         part->cellFaceIdx, 
+                         part->cellFace); 
+  
+  if (part->cellTag != NULL) {
+    _order_array (part->nCell,
+                  sizeof(int),
+                  newToOldOrder,
+                  part->cellTag);
+  }
+   
+  _order_array (part->nCell,
+                sizeof(PDM_g_num_t),
+                newToOldOrder,
+                part->cellLNToGN); 
+   
+  _renum_faceCell (part->nCell,
+                   part->nFace,
+                   part->cellFaceIdx, 
+                   part->cellFace, 
+                   part->faceCell); 
+   
+}
+
+
+/**
+ *
+ * \brief Perform faces renumbering from a new order
+ *
+ * \param [in,out]  part        Current partition
+ * \param [in]      newToOldOrder    NewOrder
+ *
+ */
+
+static void 
+_renum_faces
+(
+_part_t *part, 
+int     *newToOldOrder
+)
+{
+  
+  /** Renum FaceVtx / FaceVtxIdx **/
+
+  _renum_connectivities (part->nFace, 
+                         newToOldOrder, 
+                         part->faceVtxIdx, 
+                         part->faceVtx);
+
+  /** CellFace **/
+  
+   int *oldToNewOrder = (int *) malloc (part->nFace * sizeof(int));
+  
+   for(int i = 0; i < part->nFace; i++) {
+    oldToNewOrder[newToOldOrder[i]] = i;
+   }
+ 
+  _renum_array (part->cellFaceIdx[part->nCell], 
+                oldToNewOrder,
+                part->cellFace);
+  
+  free (oldToNewOrder);
+    
+    /** FaceTag **/
+
+  if (part->faceTag != NULL) {
+    _order_array (part->nFace,
+                  sizeof(int),
+                  newToOldOrder,
+                  part->faceTag); 
+  }
+    
+   /** FaceLNToGN **/
+
+  _order_array (part->nFace,
+                sizeof(PDM_g_num_t),
+                newToOldOrder,
+                part->faceLNToGN); // OK
+    
+    /** FaceCell Face **/
+  
+  _order_faceCell (part->nFace, 
+                   newToOldOrder,
+                   part->faceCell);  
+
+}
+
+
 /**
  *
  * \brief Perform a cells renumbering from a Hilbert curve
@@ -478,7 +741,7 @@ _PDM_part_t* ppart
       
     PDM_sort_double (hilbertCodes, newToOldOrder, part->nCell);
 	  
-    PDM_part_reorder_cell(part, newToOldOrder);
+    _renum_cells (part, newToOldOrder);
           
     free (hilbertCodes);
     free (newToOldOrder);
@@ -519,7 +782,7 @@ _PDM_part_t* ppart
     PDM_cuthill_generate(part, order);
   
     /** Apply renumbering **/
-    PDM_part_reorder_cell(part, order);
+    _renum_cells(part, order);
 
     /** Verbose bandwidth **/
     // dualBandWidth = PDM_checkbandwidth(part);
@@ -530,52 +793,6 @@ _PDM_part_t* ppart
   }
 }
 
-
-/**
- *
- * \brief Perform a cells renumbering with cache blocking
- *
- * \param [in,out]  ppart    Current PPART structure
- *
- */
-
-static void
-_renum_cells_cacheblocking
-(
-_PDM_part_t* ppart
-)
-{
-  int methodcell = ppart->renum_cell_method;
-  int methodface = ppart->renum_face_method;
-  
-  if(ppart->nPropertyCell != 3)
-  {
-    PDM_error(__FILE__, __LINE__, 0, "_renum_cells_cacheblocking Error : You need to specifie [ nCellPerCacheWanted, isAsynchrone, isVectorisation ] in  renum_properties_cell \n");
-  }
-  
-  int nCellPerCacheWanted = ppart->renum_properties_cell[0];
-  int isAsynchrone        = ppart->renum_properties_cell[1];
-  int isVectorisation     = ppart->renum_properties_cell[2];
-  
-  if(methodface != PDM_PART_RENUM_FACE_NONE)
-  {
-   PDM_error(__FILE__, __LINE__, 0, "_renum_cells_cacheblocking Error : face numbering for cacheblocking need to be set to PDM_PART_RENUM_FACE_NONE \n");
-  }
-  
-  /* Loop over all part of the current process */
-  for(int ipart = 0; ipart < ppart->nPart; ++ipart) 
-  {
-    /* Get current part id */
-    _part_t *part = ppart->meshParts[ipart];
-    
-    PDM_renum_cacheblocking(part, 
-                            ppart->split_method, 
-                            nCellPerCacheWanted, 
-                            isAsynchrone, 
-                            isVectorisation);
-    
-  }
-}
 
 /**
  *
@@ -599,7 +816,7 @@ _PDM_part_t* ppart
     
     _random_order (nCell, order);
     
-    PDM_part_reorder_cell(part, order);
+    _renum_cells (part, order);
       
     free (order);
   }
@@ -628,7 +845,7 @@ _PDM_part_t* ppart
     
     _random_order (nFace, order);
     
-    PDM_part_reorder_face(part, order);
+    _renum_faces (part, order);
       
     free (order);
   }
@@ -675,10 +892,10 @@ _PDM_part_t* ppart
     }
   
     /** Reorder lexicographicly the array */
-    PDM_order_lnum_s (faceCellTmp, 2, order, nFace);
+    _order_lnum_s (faceCellTmp, 2, order, nFace);
 
     /** Update face array with the new array **/
-    PDM_part_reorder_face(part, order);
+    _renum_faces (part, order);
 
     /** Free memory **/
     free (order);
@@ -704,12 +921,10 @@ _PDM_part_t* ppart
 void 
 PDM_part_renum_cell
 (
- _PDM_part_t           *ppart               
+ _PDM_part_t           *ppart,
+ PDM_part_renum_cell_t  method                 
 )
 {
-  
-  int method = ppart->renum_cell_method;
-  
   switch (method) {
   case PDM_PART_RENUM_CELL_NONE :
     break;
@@ -721,14 +936,10 @@ PDM_part_renum_cell
     break;
   case PDM_PART_RENUM_CELL_CUTHILL :
     _renum_cells_cuthill(ppart); 
-  case PDM_PART_RENUM_CELL_CACHEBLOCKING_SYNC :
-    _renum_cells_cacheblocking(ppart); 
-    break;
-  case PDM_PART_RENUM_CELL_CACHEBLOCKING_ASYNC :
-    _renum_cells_cacheblocking(ppart); 
     break;
   default:
     PDM_error(__FILE__, __LINE__, 0, "PDM_part_renum Error : unavailable face renumbering method\n");
+    exit (1);    
   }
 }
 
@@ -747,10 +958,10 @@ PDM_part_renum_cell
 void 
 PDM_part_renum_face
 (
- _PDM_part_t           *ppart                
+ _PDM_part_t           *ppart,
+ PDM_part_renum_face_t  method                 
 )
 {
-  int method = ppart->renum_face_method;
   switch (method) {
     case PDM_PART_RENUM_FACE_NONE :
       break;
@@ -762,128 +973,10 @@ PDM_part_renum_face
       break;
     default:
       PDM_error(__FILE__, __LINE__, 0, "PDM_part_renum Error : unavailable face renumbering method\n");
+      exit (1);    
   }
 }
 
-/**
- *
- * \brief Perform cells renumbering from a new order
- *
- * \param [in,out]  part        Current partition
- * \param [in]      newToOldOrder    NewOrder
- *
- */
-void 
-PDM_part_reorder_cell
-(
- _part_t *part, 
- int     *newToOldOrder
-)
-{
-  /*
-   * Cell Renumbering
-   */
-   
-  _renum_connectivities (part->nCell,
-                         newToOldOrder,
-                         part->cellFaceIdx, 
-                         part->cellFace); 
-  
-  if (part->cellTag != NULL) {
-    PDM_order_array (part->nCell,
-                     sizeof(int),
-                     newToOldOrder,
-                     part->cellTag);
-  }
-  
-  if (part->cellColor != NULL) {
-    PDM_order_array (part->nCell,
-                     sizeof(int),
-                     newToOldOrder,
-                     part->cellColor);
-  }
-   
-  PDM_order_array (part->nCell,
-                   sizeof(PDM_g_num_t),
-                   newToOldOrder,
-                   part->cellLNToGN); 
-   
-  _renum_faceCell (part->nCell,
-                   part->nFace,
-                   part->cellFaceIdx, 
-                   part->cellFace, 
-                   part->faceCell); 
-   
-}
-
-
-/**
- *
- * \brief Perform faces renumbering from a new order
- *
- * \param [in,out]  part        Current partition
- * \param [in]      newToOldOrder    NewOrder
- *
- */
-void 
-PDM_part_reorder_face
-(
-_part_t *part, 
-int     *newToOldOrder
-)
-{
-  
-  /** Renum FaceVtx / FaceVtxIdx **/
-
-  _renum_connectivities (part->nFace, 
-                         newToOldOrder, 
-                         part->faceVtxIdx, 
-                         part->faceVtx);
-
-  /** CellFace **/
-  
-   int *oldToNewOrder = (int *) malloc (part->nFace * sizeof(int));
-  
-   for(int i = 0; i < part->nFace; i++) {
-    oldToNewOrder[newToOldOrder[i]] = i;
-   }
- 
-  _renum_array (part->cellFaceIdx[part->nCell], 
-                oldToNewOrder,
-                part->cellFace);
-  
-  free (oldToNewOrder);
-    
-  /** FaceTag **/
-  if (part->faceTag != NULL) {
-    PDM_order_array (part->nFace,
-                     sizeof(int),
-                     newToOldOrder,
-                     part->faceTag); 
-  }
-  
-  /** FaceColor **/
-  if (part->faceColor != NULL) {
-    PDM_order_array (part->nFace,
-                     sizeof(int),
-                     newToOldOrder,
-                     part->faceColor); 
-  }
-    
-   /** FaceLNToGN **/
-
-  PDM_order_array (part->nFace,
-                   sizeof(PDM_g_num_t),
-                   newToOldOrder,
-                   part->faceLNToGN); // OK
-    
-  /** FaceCell Face **/
-  
-  _order_faceCell (part->nFace, 
-                   newToOldOrder,
-                   part->faceCell);  
-
-}
 
 #ifdef __cplusplus
 }
