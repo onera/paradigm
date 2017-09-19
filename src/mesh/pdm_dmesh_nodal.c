@@ -15,8 +15,8 @@
 #include "pdm.h"
 #include "pdm_priv.h"
 #include "pdm_mpi.h"
-#include "pdm_mesh_nodal.h"
-#include "pdm_mesh_nodal_priv.h"
+#include "pdm_dmesh_nodal.h"
+#include "pdm_dmesh_nodal_priv.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
 #include "pdm_gnum.h"
@@ -46,7 +46,7 @@ extern "C" {
 
 typedef enum {
 
-  PDM_BLOCK_ID_BLOCK_STD    = 0,    
+  PDM_BLOCK_ID_BLOCK_STD    = 0,     
   PDM_BLOCK_ID_BLOCK_POLY2D = 1000000,
   PDM_BLOCK_ID_BLOCK_POLY3D = 2000000
 
@@ -80,29 +80,29 @@ static PDM_Handles_t *mesh_handles = NULL;
  * 
  */
 
-static 
-PDM_Mesh_nodal_vtx_t *
-_vtx_free
-(
- PDM_Mesh_nodal_vtx_t *vtx
-)
-{
-  
-  if (vtx != NULL) {
-    if (vtx->parent != NULL) {
-      vtx->parent =_vtx_free (vtx->parent);
-    }
-
-    if (vtx->coords != NULL) {
-      free (vtx->coords);
-      vtx->coords = NULL;
-    }
-
-    free (vtx);
-  }
-  return NULL;
-}
-
+//static 
+//PDM_Mesh_nodal_vtx_t *
+//_vtx_free
+//(
+// PDM_Mesh_nodal_vtx_t *vtx
+//)
+//{
+//  
+//  if (vtx != NULL) {
+//    if (vtx->parent != NULL) {
+//      vtx->parent =_vtx_free (vtx->parent);
+//    }
+//
+//    if (vtx->coords != NULL) {
+//      free (vtx->coords);
+//      vtx->coords = NULL;
+//    }
+//
+//    free (vtx);
+//  }
+//  return NULL;
+//}
+//
 
 /**
  * 
@@ -112,43 +112,43 @@ _vtx_free
  * \param [in]     n_part      Number of partitions
  */
 
-static void   
-_mesh_init
-(
-PDM_Mesh_nodal_t *mesh,
-const int        n_part,
-const PDM_MPI_Comm comm        
-)
-{
-
-  mesh->n_som_abs                = 0;          
-  mesh->n_elt_abs                = 0;          
-  mesh->n_part                   = n_part;             
-
-  mesh->vtx                      = malloc(n_part * sizeof(PDM_Mesh_nodal_vtx_t *));
-  mesh->n_cell                   = malloc(n_part * sizeof(int));  
-  for (int i = 0; i < n_part; i++) {
-    mesh->vtx[i] = malloc(sizeof(PDM_Mesh_nodal_vtx_t));
-    mesh->vtx[i]->_coords = NULL;
-    mesh->vtx[i]->_numabs = NULL;
-    mesh->vtx[i]->_numparent = NULL;
-    mesh->vtx[i]->n_vtx   = 0;
-    mesh->vtx[i]->parent = NULL;
-    mesh->vtx[i]->coords = NULL;
-    mesh->n_cell[i] = 0;
-  }
-
-  mesh->blocks_std               = NULL;  
-  mesh->blocks_poly2d            = NULL;            
-  mesh->blocks_poly3d            = NULL;           
-
-  mesh->pdm_mpi_comm             = comm;
-  mesh->prepa_blocks             = NULL;
-  mesh->num_cell_parent_to_local = NULL;
-  mesh->blocks_id                = NULL;
-  mesh->n_blocks                 = 0;
-  mesh->is_vtx_def_from_parent   = 0;
-}
+//static void   
+//_mesh_init
+//(
+//PDM_Mesh_nodal_t *mesh,
+//const int        n_part,
+//const PDM_MPI_Comm comm        
+//)
+//{
+//
+//  mesh->n_som_abs                = 0;          
+//  mesh->n_elt_abs                = 0;          
+//  mesh->n_part                   = n_part;             
+//
+//  mesh->vtx                      = malloc(n_part * sizeof(PDM_Mesh_nodal_vtx_t *));
+//  mesh->n_cell                   = malloc(n_part * sizeof(int));  
+//  for (int i = 0; i < n_part; i++) {
+//    mesh->vtx[i] = malloc(sizeof(PDM_Mesh_nodal_vtx_t));
+//    mesh->vtx[i]->_coords = NULL;
+//    mesh->vtx[i]->_numabs = NULL;
+//    mesh->vtx[i]->_numparent = NULL;
+//    mesh->vtx[i]->n_vtx   = 0;
+//    mesh->vtx[i]->parent = NULL;
+//    mesh->vtx[i]->coords = NULL;
+//    mesh->n_cell[i] = 0;
+//  }
+//
+//  mesh->blocks_std               = NULL;  
+//  mesh->blocks_poly2d            = NULL;            
+//  mesh->blocks_poly3d            = NULL;           
+//
+//  mesh->pdm_mpi_comm             = comm;
+//  mesh->prepa_blocks             = NULL;
+//  mesh->num_cell_parent_to_local = NULL;
+//  mesh->blocks_id                = NULL;
+//  mesh->n_blocks                 = 0;
+//  mesh->is_vtx_def_from_parent   = 0;
+//}
 
 /**
  * 
@@ -157,58 +157,58 @@ const PDM_MPI_Comm comm
  * \param [inout]  mesh        Mesh
  */
 
-static void   
-_update_blocks_id
-(
-PDM_Mesh_nodal_t *mesh
-)
-{
-  int n_blocks = 0;
-  
-  if (mesh->blocks_std != NULL) {
-    n_blocks += PDM_Handles_n_get (mesh->blocks_std);
-  }
-    
-  if (mesh->blocks_poly2d != NULL) {
-    n_blocks += PDM_Handles_n_get (mesh->blocks_poly2d);
-  }
-
-  if (mesh->blocks_poly3d != NULL) {
-    n_blocks += PDM_Handles_n_get (mesh->blocks_poly3d);
-  }
-  
-  if (mesh->n_blocks < n_blocks) {
-    mesh->blocks_id = (int *) realloc(mesh->blocks_id, sizeof(int) * n_blocks);
-  }
-  
-  int k = 0;
-  if (mesh->blocks_std != NULL) {
-    const int *id1 = PDM_Handles_idx_get (mesh->blocks_std);
-    int n = PDM_Handles_n_get (mesh->blocks_std);
-    for (int i = 0; i < n; i++) {
-      mesh->blocks_id[k++] = id1[i] + PDM_BLOCK_ID_BLOCK_STD;
-    }
-  }
-    
-  if (mesh->blocks_poly2d != NULL) {
-    const int *id1 = PDM_Handles_idx_get (mesh->blocks_poly2d);
-    int n = PDM_Handles_n_get (mesh->blocks_poly2d);
-    for (int i = 0; i < n; i++) {
-      mesh->blocks_id[k++] = id1[i] + PDM_BLOCK_ID_BLOCK_POLY2D;
-    }
-  }
-  
-  if (mesh->blocks_poly3d != NULL) {
-    const int *id1 = PDM_Handles_idx_get (mesh->blocks_poly3d);
-    int n = PDM_Handles_n_get (mesh->blocks_poly3d);
-    for (int i = 0; i < n; i++) {
-      mesh->blocks_id[k++] = id1[i] + PDM_BLOCK_ID_BLOCK_POLY3D;
-    }
-  }
-  
-  mesh->n_blocks = n_blocks;  
-
-}
+//static void   
+//_update_blocks_id
+//(
+//PDM_Mesh_nodal_t *mesh
+//)
+//{
+//  int n_blocks = 0;
+//  
+//  if (mesh->blocks_std != NULL) {
+//    n_blocks += PDM_Handles_n_get (mesh->blocks_std);
+//  }
+//    
+//  if (mesh->blocks_poly2d != NULL) {
+//    n_blocks += PDM_Handles_n_get (mesh->blocks_poly2d);
+//  }
+//
+//  if (mesh->blocks_poly3d != NULL) {
+//    n_blocks += PDM_Handles_n_get (mesh->blocks_poly3d);
+//  }
+//  
+//  if (mesh->n_blocks < n_blocks) {
+//    mesh->blocks_id = (int *) realloc(mesh->blocks_id, sizeof(int) * n_blocks);
+//  }
+//  
+//  int k = 0;
+//  if (mesh->blocks_std != NULL) {
+//    const int *id1 = PDM_Handles_idx_get (mesh->blocks_std);
+//    int n = PDM_Handles_n_get (mesh->blocks_std);
+//    for (int i = 0; i < n; i++) {
+//      mesh->blocks_id[k++] = id1[i] + PDM_BLOCK_ID_BLOCK_STD;
+//    }
+//  }
+//    
+//  if (mesh->blocks_poly2d != NULL) {
+//    const int *id1 = PDM_Handles_idx_get (mesh->blocks_poly2d);
+//    int n = PDM_Handles_n_get (mesh->blocks_poly2d);
+//    for (int i = 0; i < n; i++) {
+//      mesh->blocks_id[k++] = id1[i] + PDM_BLOCK_ID_BLOCK_POLY2D;
+//    }
+//  }
+//  
+//  if (mesh->blocks_poly3d != NULL) {
+//    const int *id1 = PDM_Handles_idx_get (mesh->blocks_poly3d);
+//    int n = PDM_Handles_n_get (mesh->blocks_poly3d);
+//    for (int i = 0; i < n; i++) {
+//      mesh->blocks_id[k++] = id1[i] + PDM_BLOCK_ID_BLOCK_POLY3D;
+//    }
+//  }
+//  
+//  mesh->n_blocks = n_blocks;  
+//
+//}
 
 
 /**
@@ -219,55 +219,55 @@ PDM_Mesh_nodal_t *mesh
  *  
  */
 
-static
-void
-_block_std_free_partial
-(
-PDM_Mesh_nodal_block_std_t *_block_std
-)
-{
-
-  if (_block_std == NULL) {
-    return;
-  }
-  
-  if (_block_std->_connec != NULL) {
-    if (_block_std->st_free_data == PDM_TRUE) {
-      for (int i = 0; i < _block_std->n_part; i++) {
-        if (_block_std->_connec[i] != NULL)
-          free(_block_std->_connec[i]);
-        _block_std->_connec[i] = NULL;
-      }
-    }
-    free(_block_std->_connec);
-    _block_std->_connec = NULL;
-  }
-  
-  if (_block_std->_numabs != NULL) {
-    if (_block_std->st_free_data == PDM_TRUE) {
-      for (int i = 0; i < _block_std->n_part; i++) {
-        if (_block_std->_numabs[i] != NULL)
-          free(_block_std->_numabs[i]);
-        _block_std->_numabs[i] = NULL;
-      }
-    }
-    free(_block_std->_numabs);
-    _block_std->_numabs = NULL;
-  }
-  
-  if (_block_std->_num_part != NULL) {
-    if (_block_std->st_free_data == PDM_TRUE) {
-      for (int i = 0; i < _block_std->n_part; i++) {
-        if (_block_std->_num_part[i] != NULL)
-          free(_block_std->_num_part[i]);
-        _block_std->_num_part[i] = NULL;
-      }
-    }
-    free(_block_std->_num_part);
-    _block_std->_num_part = NULL;
-  }
-
-}
+//static
+//void
+//_block_std_free_partial
+//(
+//PDM_Mesh_nodal_block_std_t *_block_std
+//)
+//{
+//
+//  if (_block_std == NULL) {
+//    return;
+//  }
+//  
+//  if (_block_std->_connec != NULL) {
+//    if (_block_std->st_free_data == PDM_TRUE) {
+//      for (int i = 0; i < _block_std->n_part; i++) {
+//        if (_block_std->_connec[i] != NULL)
+//          free(_block_std->_connec[i]);
+//        _block_std->_connec[i] = NULL;
+//      }
+//    }
+//    free(_block_std->_connec);
+//    _block_std->_connec = NULL;
+//  }
+//  
+//  if (_block_std->_numabs != NULL) {
+//    if (_block_std->st_free_data == PDM_TRUE) {
+//      for (int i = 0; i < _block_std->n_part; i++) {
+//        if (_block_std->_numabs[i] != NULL)
+//          free(_block_std->_numabs[i]);
+//        _block_std->_numabs[i] = NULL;
+//      }
+//    }
+//    free(_block_std->_numabs);
+//    _block_std->_numabs = NULL;
+//  }
+//  
+//  if (_block_std->_num_part != NULL) {
+//    if (_block_std->st_free_data == PDM_TRUE) {
+//      for (int i = 0; i < _block_std->n_part; i++) {
+//        if (_block_std->_num_part[i] != NULL)
+//          free(_block_std->_num_part[i]);
+//        _block_std->_num_part[i] = NULL;
+//      }
+//    }
+//    free(_block_std->_num_part);
+//    _block_std->_num_part = NULL;
+//  }
+//
+//}
 
 
 /**
@@ -280,50 +280,50 @@ PDM_Mesh_nodal_block_std_t *_block_std
  *   
  */
 
-static
-PDM_Mesh_nodal_block_std_t *
-_block_std_free
-(
-PDM_Mesh_nodal_block_std_t *_block_std
-)
-{
-
-  if (_block_std == NULL) {
-    return NULL;
-  }
-
-  _block_std_free_partial(_block_std);
-
-  if (_block_std->n_elt != NULL) {
-    free(_block_std->n_elt);
-    _block_std->n_elt = NULL;
-  }
-
-  if (_block_std->numabs_int != NULL) {
-    for (int j = 0; j < _block_std->n_part; j++) {
-      if (_block_std->numabs_int[j] != NULL) {
-        free(_block_std->numabs_int[j]);
-      }
-    }
-    free(_block_std->numabs_int);
-    _block_std->numabs_int = NULL;
-  }
-
-  if (_block_std->_parent_num != NULL) {
-    if (_block_std->st_free_data == PDM_TRUE) {
-      for (int i = 0; i < _block_std->n_part; i++) {
-        if (_block_std->_parent_num[i] != NULL)
-          free(_block_std->_parent_num[i]);
-        _block_std->_parent_num[i] = NULL;
-      }
-    }
-    free(_block_std->_parent_num);
-    _block_std->_parent_num = NULL;
-  }
-
-  free(_block_std);
-  return NULL;
-}
+//static
+//PDM_Mesh_nodal_block_std_t *
+//_block_std_free
+//(
+//PDM_Mesh_nodal_block_std_t *_block_std
+//)
+//{
+//
+//  if (_block_std == NULL) {
+//    return NULL;
+//  }
+//
+//  _block_std_free_partial(_block_std);
+//
+//  if (_block_std->n_elt != NULL) {
+//    free(_block_std->n_elt);
+//    _block_std->n_elt = NULL;
+//  }
+//
+//  if (_block_std->numabs_int != NULL) {
+//    for (int j = 0; j < _block_std->n_part; j++) {
+//      if (_block_std->numabs_int[j] != NULL) {
+//        free(_block_std->numabs_int[j]);
+//      }
+//    }
+//    free(_block_std->numabs_int);
+//    _block_std->numabs_int = NULL;
+//  }
+//
+//  if (_block_std->_parent_num != NULL) {
+//    if (_block_std->st_free_data == PDM_TRUE) {
+//      for (int i = 0; i < _block_std->n_part; i++) {
+//        if (_block_std->_parent_num[i] != NULL)
+//          free(_block_std->_parent_num[i]);
+//        _block_std->_parent_num[i] = NULL;
+//      }
+//    }
+//    free(_block_std->_parent_num);
+//    _block_std->_parent_num = NULL;
+//  }
+//
+//  free(_block_std);
+//  return NULL;
+//}
 
 
 /**
@@ -334,63 +334,63 @@ PDM_Mesh_nodal_block_std_t *_block_std
  *   
  */
 
-static
-void
-_block_poly2d_free_partial
-(
-PDM_Mesh_nodal_block_poly2d_t *_block_poly2d
-)
-{
-
-  if (_block_poly2d->_connec_idx != NULL) {
-    if (_block_poly2d->st_free_data == PDM_TRUE) {
-      for (int i = 0; i < _block_poly2d->n_part; i++) {
-        if (_block_poly2d->_connec_idx[i] != NULL)
-          free(_block_poly2d->_connec_idx[i]);
-        _block_poly2d->_connec_idx[i] = NULL;
-      }
-    }
-    free(_block_poly2d->_connec_idx);
-    _block_poly2d->_connec_idx = NULL;
-  }
-
-  if (_block_poly2d->_connec != NULL) {
-    if (_block_poly2d->st_free_data == PDM_TRUE) {
-      for (int i = 0; i < _block_poly2d->n_part; i++) {
-        if (_block_poly2d->_connec[i] != NULL)
-          free(_block_poly2d->_connec[i]);
-        _block_poly2d->_connec[i] = NULL;
-      }
-    }
-    free(_block_poly2d->_connec);
-    _block_poly2d->_connec = NULL;
-  }
-  
-  if (_block_poly2d->_num_part != NULL) {
-    if (_block_poly2d->st_free_data == PDM_TRUE) {
-      for (int i = 0; i < _block_poly2d->n_part; i++) {
-        if (_block_poly2d->_num_part[i] != NULL)
-          free(_block_poly2d->_num_part[i]);
-        _block_poly2d->_num_part[i] = NULL;
-      }
-    }
-    free(_block_poly2d->_num_part);
-    _block_poly2d->_num_part = NULL;
-  }
-  
-  if (_block_poly2d->_numabs != NULL) {
-    if (_block_poly2d->st_free_data == PDM_TRUE) {
-      for (int i = 0; i < _block_poly2d->n_part; i++) {
-        if (_block_poly2d->_numabs[i] != NULL)
-          free(_block_poly2d->_numabs[i]);
-        _block_poly2d->_numabs[i] = NULL;
-      }
-    }
-    free(_block_poly2d->_numabs);
-    _block_poly2d->_numabs = NULL;
-  }
-
-}
+//static
+//void
+//_block_poly2d_free_partial
+//(
+//PDM_Mesh_nodal_block_poly2d_t *_block_poly2d
+//)
+//{
+//
+//  if (_block_poly2d->_connec_idx != NULL) {
+//    if (_block_poly2d->st_free_data == PDM_TRUE) {
+//      for (int i = 0; i < _block_poly2d->n_part; i++) {
+//        if (_block_poly2d->_connec_idx[i] != NULL)
+//          free(_block_poly2d->_connec_idx[i]);
+//        _block_poly2d->_connec_idx[i] = NULL;
+//      }
+//    }
+//    free(_block_poly2d->_connec_idx);
+//    _block_poly2d->_connec_idx = NULL;
+//  }
+//
+//  if (_block_poly2d->_connec != NULL) {
+//    if (_block_poly2d->st_free_data == PDM_TRUE) {
+//      for (int i = 0; i < _block_poly2d->n_part; i++) {
+//        if (_block_poly2d->_connec[i] != NULL)
+//          free(_block_poly2d->_connec[i]);
+//        _block_poly2d->_connec[i] = NULL;
+//      }
+//    }
+//    free(_block_poly2d->_connec);
+//    _block_poly2d->_connec = NULL;
+//  }
+//  
+//  if (_block_poly2d->_num_part != NULL) {
+//    if (_block_poly2d->st_free_data == PDM_TRUE) {
+//      for (int i = 0; i < _block_poly2d->n_part; i++) {
+//        if (_block_poly2d->_num_part[i] != NULL)
+//          free(_block_poly2d->_num_part[i]);
+//        _block_poly2d->_num_part[i] = NULL;
+//      }
+//    }
+//    free(_block_poly2d->_num_part);
+//    _block_poly2d->_num_part = NULL;
+//  }
+//  
+//  if (_block_poly2d->_numabs != NULL) {
+//    if (_block_poly2d->st_free_data == PDM_TRUE) {
+//      for (int i = 0; i < _block_poly2d->n_part; i++) {
+//        if (_block_poly2d->_numabs[i] != NULL)
+//          free(_block_poly2d->_numabs[i]);
+//        _block_poly2d->_numabs[i] = NULL;
+//      }
+//    }
+//    free(_block_poly2d->_numabs);
+//    _block_poly2d->_numabs = NULL;
+//  }
+//
+//}
 
 
 /**
@@ -403,46 +403,46 @@ PDM_Mesh_nodal_block_poly2d_t *_block_poly2d
  *   
  */
 
-static
-PDM_Mesh_nodal_block_poly2d_t *
-_block_poly2d_free
-(
-PDM_Mesh_nodal_block_poly2d_t *_block_poly2d
-)
-{
-  _block_poly2d_free_partial(_block_poly2d);
-  
-  if (_block_poly2d->n_elt != NULL) {
-    free(_block_poly2d->n_elt);
-    _block_poly2d->n_elt = NULL;
-  }
-
-  if (_block_poly2d->numabs_int != NULL) {
-    for (int j = 0; j < _block_poly2d->n_part; j++) {
-      if (_block_poly2d->numabs_int[j] != NULL) {
-        free(_block_poly2d->numabs_int[j]);
-      }
-    }
-    free(_block_poly2d->numabs_int);
-    _block_poly2d->numabs_int = NULL;
-  }
-
-  if (_block_poly2d->_parent_num != NULL) {
-    if (_block_poly2d->st_free_data == PDM_TRUE) {
-      for (int i = 0; i < _block_poly2d->n_part; i++) {
-        if (_block_poly2d->_parent_num[i] != NULL)
-          free(_block_poly2d->_parent_num[i]);
-        _block_poly2d->_parent_num[i] = NULL;
-      }
-    }
-    free(_block_poly2d->_parent_num);
-    _block_poly2d->_parent_num = NULL;
-  }
-  
-  free(_block_poly2d);
-
-  return NULL;
-}
+//static
+//PDM_Mesh_nodal_block_poly2d_t *
+//_block_poly2d_free
+//(
+//PDM_Mesh_nodal_block_poly2d_t *_block_poly2d
+//)
+//{
+//  _block_poly2d_free_partial(_block_poly2d);
+//  
+//  if (_block_poly2d->n_elt != NULL) {
+//    free(_block_poly2d->n_elt);
+//    _block_poly2d->n_elt = NULL;
+//  }
+//
+//  if (_block_poly2d->numabs_int != NULL) {
+//    for (int j = 0; j < _block_poly2d->n_part; j++) {
+//      if (_block_poly2d->numabs_int[j] != NULL) {
+//        free(_block_poly2d->numabs_int[j]);
+//      }
+//    }
+//    free(_block_poly2d->numabs_int);
+//    _block_poly2d->numabs_int = NULL;
+//  }
+//
+//  if (_block_poly2d->_parent_num != NULL) {
+//    if (_block_poly2d->st_free_data == PDM_TRUE) {
+//      for (int i = 0; i < _block_poly2d->n_part; i++) {
+//        if (_block_poly2d->_parent_num[i] != NULL)
+//          free(_block_poly2d->_parent_num[i]);
+//        _block_poly2d->_parent_num[i] = NULL;
+//      }
+//    }
+//    free(_block_poly2d->_parent_num);
+//    _block_poly2d->_parent_num = NULL;
+//  }
+//  
+//  free(_block_poly2d);
+//
+//  return NULL;
+//}
 
 
 /**
@@ -453,74 +453,74 @@ PDM_Mesh_nodal_block_poly2d_t *_block_poly2d
  *   
  */
 
-static
-void
-_block_poly3d_free_partial
-(
-PDM_Mesh_nodal_block_poly3d_t *_block_poly3d
-)
-{
-  
-  if (_block_poly3d->_facvtx_idx != NULL) {
-    if (_block_poly3d->st_free_data == PDM_TRUE) {
-      for (int i = 0; i < _block_poly3d->n_part; i++) {
-        if (_block_poly3d->_facvtx_idx[i] != NULL)
-          free(_block_poly3d->_facvtx_idx[i]);
-        _block_poly3d->_facvtx_idx[i] = NULL;
-      }
-    }
-    free(_block_poly3d->_facvtx_idx);
-    _block_poly3d->_facvtx_idx = NULL;
-  }
-  
-  if (_block_poly3d->_facvtx != NULL) {
-    if (_block_poly3d->st_free_data == PDM_TRUE) {
-      for (int i = 0; i < _block_poly3d->n_part; i++) {
-        if (_block_poly3d->_facvtx[i] != NULL)
-          free(_block_poly3d->_facvtx[i]);
-        _block_poly3d->_facvtx[i] = NULL;
-      }
-    }
-    free(_block_poly3d->_facvtx);
-    _block_poly3d->_facvtx = NULL;
-  }
-  
-  if (_block_poly3d->_cellfac_idx != NULL) {
-    if (_block_poly3d->st_free_data == PDM_TRUE) {
-      for (int i = 0; i < _block_poly3d->n_part; i++) {
-        if (_block_poly3d->_cellfac_idx[i] != NULL)
-          free(_block_poly3d->_cellfac_idx[i]);
-        _block_poly3d->_cellfac_idx[i] = NULL;
-      }
-    }
-    free(_block_poly3d->_cellfac_idx);
-    _block_poly3d->_cellfac_idx = NULL;
-  }
-  
-  if (_block_poly3d->_cellfac != NULL) {
-    if (_block_poly3d->st_free_data == PDM_TRUE) {
-      for (int i = 0; i < _block_poly3d->n_part; i++) {
-        if (_block_poly3d->_cellfac[i] != NULL)
-          free(_block_poly3d->_cellfac[i]);
-        _block_poly3d->_cellfac[i] = NULL;
-      }
-    }
-    free(_block_poly3d->_cellfac);
-    _block_poly3d->_cellfac = NULL;
-  }
-  
-  if (_block_poly3d->_numabs != NULL) {
-    if (_block_poly3d->st_free_data == PDM_TRUE) {
-      for (int i = 0; i < _block_poly3d->n_part; i++) {
-        if (_block_poly3d->_numabs[i] != NULL)
-          free(_block_poly3d->_numabs[i]);
-        _block_poly3d->_numabs[i] = NULL;
-      }
-    }
-    free(_block_poly3d->_numabs);
-    _block_poly3d->_numabs = NULL;
-  }
-}
+//static
+//void
+//_block_poly3d_free_partial
+//(
+//PDM_Mesh_nodal_block_poly3d_t *_block_poly3d
+//)
+//{
+//  
+//  if (_block_poly3d->_facvtx_idx != NULL) {
+//    if (_block_poly3d->st_free_data == PDM_TRUE) {
+//      for (int i = 0; i < _block_poly3d->n_part; i++) {
+//        if (_block_poly3d->_facvtx_idx[i] != NULL)
+//          free(_block_poly3d->_facvtx_idx[i]);
+//        _block_poly3d->_facvtx_idx[i] = NULL;
+//      }
+//    }
+//    free(_block_poly3d->_facvtx_idx);
+//    _block_poly3d->_facvtx_idx = NULL;
+//  }
+//  
+//  if (_block_poly3d->_facvtx != NULL) {
+//    if (_block_poly3d->st_free_data == PDM_TRUE) {
+//      for (int i = 0; i < _block_poly3d->n_part; i++) {
+//        if (_block_poly3d->_facvtx[i] != NULL)
+//          free(_block_poly3d->_facvtx[i]);
+//        _block_poly3d->_facvtx[i] = NULL;
+//      }
+//    }
+//    free(_block_poly3d->_facvtx);
+//    _block_poly3d->_facvtx = NULL;
+//  }
+//  
+//  if (_block_poly3d->_cellfac_idx != NULL) {
+//    if (_block_poly3d->st_free_data == PDM_TRUE) {
+//      for (int i = 0; i < _block_poly3d->n_part; i++) {
+//        if (_block_poly3d->_cellfac_idx[i] != NULL)
+//          free(_block_poly3d->_cellfac_idx[i]);
+//        _block_poly3d->_cellfac_idx[i] = NULL;
+//      }
+//    }
+//    free(_block_poly3d->_cellfac_idx);
+//    _block_poly3d->_cellfac_idx = NULL;
+//  }
+//  
+//  if (_block_poly3d->_cellfac != NULL) {
+//    if (_block_poly3d->st_free_data == PDM_TRUE) {
+//      for (int i = 0; i < _block_poly3d->n_part; i++) {
+//        if (_block_poly3d->_cellfac[i] != NULL)
+//          free(_block_poly3d->_cellfac[i]);
+//        _block_poly3d->_cellfac[i] = NULL;
+//      }
+//    }
+//    free(_block_poly3d->_cellfac);
+//    _block_poly3d->_cellfac = NULL;
+//  }
+//  
+//  if (_block_poly3d->_numabs != NULL) {
+//    if (_block_poly3d->st_free_data == PDM_TRUE) {
+//      for (int i = 0; i < _block_poly3d->n_part; i++) {
+//        if (_block_poly3d->_numabs[i] != NULL)
+//          free(_block_poly3d->_numabs[i]);
+//        _block_poly3d->_numabs[i] = NULL;
+//      }
+//    }
+//    free(_block_poly3d->_numabs);
+//    _block_poly3d->_numabs = NULL;
+//  }
+//}
 
 
 /**
@@ -533,50 +533,50 @@ PDM_Mesh_nodal_block_poly3d_t *_block_poly3d
  *   
  */
 
-static
-PDM_Mesh_nodal_block_poly3d_t *
-_block_poly3d_free
-(
-PDM_Mesh_nodal_block_poly3d_t *_block_poly3d
-)
-{
-  _block_poly3d_free_partial(_block_poly3d);
-
-  if (_block_poly3d->n_elt != NULL) {
-    free(_block_poly3d->n_elt);
-    _block_poly3d->n_elt = NULL;
-  }
-
-  if (_block_poly3d->n_face!= NULL) {
-    free(_block_poly3d->n_face);
-    _block_poly3d->n_face= NULL;
-  }
-
-  if (_block_poly3d->numabs_int != NULL) {
-    for (int j = 0; j < _block_poly3d->n_part; j++) {
-      if (_block_poly3d->numabs_int[j] != NULL) {
-        free(_block_poly3d->numabs_int[j]);
-      }
-    }
-    free(_block_poly3d->numabs_int);
-    _block_poly3d->numabs_int = NULL;
-  }
-
-  if (_block_poly3d->_parent_num != NULL) {
-    if (_block_poly3d->st_free_data == PDM_TRUE) {
-      for (int i = 0; i < _block_poly3d->n_part; i++) {
-        if (_block_poly3d->_parent_num[i] != NULL)
-          free(_block_poly3d->_parent_num[i]);
-        _block_poly3d->_parent_num[i] = NULL;
-      }
-    }
-    free(_block_poly3d->_parent_num);
-    _block_poly3d->_parent_num = NULL;
-  }
-
-  free(_block_poly3d);
-  return NULL;
-}
+//static
+//PDM_Mesh_nodal_block_poly3d_t *
+//_block_poly3d_free
+//(
+//PDM_Mesh_nodal_block_poly3d_t *_block_poly3d
+//)
+//{
+//  _block_poly3d_free_partial(_block_poly3d);
+//
+//  if (_block_poly3d->n_elt != NULL) {
+//    free(_block_poly3d->n_elt);
+//    _block_poly3d->n_elt = NULL;
+//  }
+//
+//  if (_block_poly3d->n_face!= NULL) {
+//    free(_block_poly3d->n_face);
+//    _block_poly3d->n_face= NULL;
+//  }
+//
+//  if (_block_poly3d->numabs_int != NULL) {
+//    for (int j = 0; j < _block_poly3d->n_part; j++) {
+//      if (_block_poly3d->numabs_int[j] != NULL) {
+//        free(_block_poly3d->numabs_int[j]);
+//      }
+//    }
+//    free(_block_poly3d->numabs_int);
+//    _block_poly3d->numabs_int = NULL;
+//  }
+//
+//  if (_block_poly3d->_parent_num != NULL) {
+//    if (_block_poly3d->st_free_data == PDM_TRUE) {
+//      for (int i = 0; i < _block_poly3d->n_part; i++) {
+//        if (_block_poly3d->_parent_num[i] != NULL)
+//          free(_block_poly3d->_parent_num[i]);
+//        _block_poly3d->_parent_num[i] = NULL;
+//      }
+//    }
+//    free(_block_poly3d->_parent_num);
+//    _block_poly3d->_parent_num = NULL;
+//  }
+//
+//  free(_block_poly3d);
+//  return NULL;
+//}
 
 
 /**
@@ -589,18 +589,18 @@ PDM_Mesh_nodal_block_poly3d_t *_block_poly3d
  *   
  */
 
-static inline void
-_p_cross
-(
- const double a[3],
- const double b[3],
-       double c[3]
-)
-{
-  c[0] = a[1] * b[2] - b[1] * a[2];
-  c[1] = b[0] * a[2] - a[0] * b[2];
-  c[2] = a[0] * b[1] - b[0] * a[1];
-}
+//static inline void
+//_p_cross
+//(
+// const double a[3],
+// const double b[3],
+//       double c[3]
+//)
+//{
+//  c[0] = a[1] * b[2] - b[1] * a[2];
+//  c[1] = b[0] * a[2] - a[0] * b[2];
+//  c[2] = a[0] * b[1] - b[0] * a[1];
+//}
 
 
 /**
@@ -614,15 +614,15 @@ _p_cross
  *   
  */
 
-static inline double
-_p_dot 
-(
- const double a[3], 
- const double b[3] 
-)
-{
-  return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
-}
+//static inline double
+//_p_dot 
+//(
+// const double a[3], 
+// const double b[3] 
+//)
+//{
+//  return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+//}
 
 
 /**
@@ -635,49 +635,49 @@ _p_dot
  *
  */
 
-static void
-_connec_tetra
-(
-PDM_Mesh_nodal_vtx_t *vtx,
-PDM_l_num_t *tria_vtx,
-PDM_l_num_t tetra_vtx[]
-)
-{
-
-  /* Initialization */
-
-  tetra_vtx[0] = tria_vtx[0];
-  tetra_vtx[1] = tria_vtx[1];
-  tetra_vtx[2] = tria_vtx[2];
-
-  for (int i = 3; i < 11; i++) {
-    if ((tria_vtx[i] != tetra_vtx[0]) &&
-        (tria_vtx[i] != tetra_vtx[1]) &&
-        (tria_vtx[i] != tetra_vtx[2]))
-      tetra_vtx[3] = tria_vtx[i];
-  } 
-
-  /* Orientation */
-
-  const PDM_real_t *_coords = vtx->_coords;
-  double v1[3];
-  double v2[3];
-  double n[3];
-
-  for (int i = 0; i < 3; i++) {
-    v1[i] = _coords[3*(tria_vtx[1] - 1) + i] - _coords[3*(tria_vtx[0] - 1) + i];
-    v2[i] = _coords[3*(tria_vtx[2] - 1) + i] - _coords[3*(tria_vtx[0] - 1) + i];
-  }
-
-  _p_cross(v1, v2, n);
-  double orient = _p_dot(v1, n);
-
-  if (orient < 0) {
-    tetra_vtx[0] = tria_vtx[2];
-    tetra_vtx[1] = tria_vtx[1];
-    tetra_vtx[2] = tria_vtx[0];
-  }
-}
+//static void
+//_connec_tetra
+//(
+//PDM_Mesh_nodal_vtx_t *vtx,
+//PDM_l_num_t *tria_vtx,
+//PDM_l_num_t tetra_vtx[]
+//)
+//{
+//
+//  /* Initialization */
+//
+//  tetra_vtx[0] = tria_vtx[0];
+//  tetra_vtx[1] = tria_vtx[1];
+//  tetra_vtx[2] = tria_vtx[2];
+//
+//  for (int i = 3; i < 11; i++) {
+//    if ((tria_vtx[i] != tetra_vtx[0]) &&
+//        (tria_vtx[i] != tetra_vtx[1]) &&
+//        (tria_vtx[i] != tetra_vtx[2]))
+//      tetra_vtx[3] = tria_vtx[i];
+//  } 
+//
+//  /* Orientation */
+//
+//  const PDM_real_t *_coords = vtx->_coords;
+//  double v1[3];
+//  double v2[3];
+//  double n[3];
+//
+//  for (int i = 0; i < 3; i++) {
+//    v1[i] = _coords[3*(tria_vtx[1] - 1) + i] - _coords[3*(tria_vtx[0] - 1) + i];
+//    v2[i] = _coords[3*(tria_vtx[2] - 1) + i] - _coords[3*(tria_vtx[0] - 1) + i];
+//  }
+//
+//  _p_cross(v1, v2, n);
+//  double orient = _p_dot(v1, n);
+//
+//  if (orient < 0) {
+//    tetra_vtx[0] = tria_vtx[2];
+//    tetra_vtx[1] = tria_vtx[1];
+//    tetra_vtx[2] = tria_vtx[0];
+//  }
+//}
 
 
 /**
@@ -691,107 +691,107 @@ PDM_l_num_t tetra_vtx[]
  *
  */
 
-static void
-_connec_prism
-(
-PDM_Mesh_nodal_vtx_t *vtx,
-PDM_l_num_t *tria_vtx,
-PDM_l_num_t *quad_vtx,
-PDM_l_num_t prism_vtx[]
-)
-{
-
-  /* Initialisation */
-
-  for (int i = 0; i < 6; i++)
-    prism_vtx[i] = tria_vtx[i];
-
-  /* Orientation des faces */
-
-  const PDM_real_t *_coords = vtx->_coords;
-
-  double c[6];
-  double n[6];
-
-  for (int i = 0; i < 2; i++) {
-    for (int k = 0; k < 3; k++)
-      c[3*i+k] = 0.;
-    for (int j = 0; j < 3; j++) {
-      int isom = prism_vtx[3*i+j] - 1;
-      for (int k = 0; k < 3; k++)
-        c[3*i+k] += _coords[3*isom+k];
-    }
-    for (int k = 0; k < 3; k++)
-      c[3*i+k] *= 1.0/3.0;
-    
-    for (int k = 0; k < 3; k++)
-      n[3*i+k] = 0.;
-    
-    double v1[3];
-    double v2[3];
-    int isom3 = prism_vtx[3*i+2] - 1 ;
-    int isom2 = prism_vtx[3*i+1] - 1;
-    int isom1 = prism_vtx[3*i] - 1;
-
-    for (int k = 0; k < 3; k++) {
-      v1[k] = _coords[3*isom2+k] - _coords[3*isom1+k]; 
-      v2[k] = _coords[3*isom3+k] - _coords[3*isom1+k];
-    } 
-    _p_cross(v1, v2, n + 3*i);
-  }
-
-  double cc[3];
-  for (int k = 0; k < 3; k++)
-    cc[k] = c[3+k] - c[k];
-
-  double orientation = _p_dot(cc, n);
-  double orientation2 = _p_dot(cc, n+3);
-
-  if (orientation < 0) {
-    int tmp = prism_vtx[1];
-    prism_vtx[1] = prism_vtx[2];
-    prism_vtx[2] = tmp;
-  } 
-
-  if (orientation2 < 0) {
-    int tmp = prism_vtx[4];
-    prism_vtx[4] = prism_vtx[5];
-    prism_vtx[5] = tmp;
-  } 
-
-  /* Permutation circulaire */
-
-  int id1 = -1;
-  for (int j = 0; j < 12; j++) {
-    if (quad_vtx[j] == prism_vtx[0]) {
-      id1 = j;
-      break;
-    }
-  }
-
-  int id2 = (id1 / 4) * 4 + (id1 + 1) % 4;
-  if ((quad_vtx[id2] == prism_vtx[1]) ||
-      (quad_vtx[id2] == prism_vtx[2]))
-    id2 =  (id1 / 4) * 4 + (id1 + 3) % 4;
-
-  int id_deb;
-  for (int j = 0; j < 3; j++) {
-    if (quad_vtx[id2] == prism_vtx[3+j]) {
-      id_deb = j;
-      break;
-    }
-  }
-
-  int tmp[3];
-  for (int j = 0; j < 3; j++)
-    tmp[j] = prism_vtx[3+j];
-
-  for (int j = 0; j < 3; j++) {
-    int idx = (id_deb + j) % 3;
-    prism_vtx[3+j] = tmp[idx];
-  }
-
-}
+//static void
+//_connec_prism
+//(
+//PDM_Mesh_nodal_vtx_t *vtx,
+//PDM_l_num_t *tria_vtx,
+//PDM_l_num_t *quad_vtx,
+//PDM_l_num_t prism_vtx[]
+//)
+//{
+//
+//  /* Initialisation */
+//
+//  for (int i = 0; i < 6; i++)
+//    prism_vtx[i] = tria_vtx[i];
+//
+//  /* Orientation des faces */
+//
+//  const PDM_real_t *_coords = vtx->_coords;
+//
+//  double c[6];
+//  double n[6];
+//
+//  for (int i = 0; i < 2; i++) {
+//    for (int k = 0; k < 3; k++)
+//      c[3*i+k] = 0.;
+//    for (int j = 0; j < 3; j++) {
+//      int isom = prism_vtx[3*i+j] - 1;
+//      for (int k = 0; k < 3; k++)
+//        c[3*i+k] += _coords[3*isom+k];
+//    }
+//    for (int k = 0; k < 3; k++)
+//      c[3*i+k] *= 1.0/3.0;
+//    
+//    for (int k = 0; k < 3; k++)
+//      n[3*i+k] = 0.;
+//    
+//    double v1[3];
+//    double v2[3];
+//    int isom3 = prism_vtx[3*i+2] - 1 ;
+//    int isom2 = prism_vtx[3*i+1] - 1;
+//    int isom1 = prism_vtx[3*i] - 1;
+//
+//    for (int k = 0; k < 3; k++) {
+//      v1[k] = _coords[3*isom2+k] - _coords[3*isom1+k]; 
+//      v2[k] = _coords[3*isom3+k] - _coords[3*isom1+k];
+//    } 
+//    _p_cross(v1, v2, n + 3*i);
+//  }
+//
+//  double cc[3];
+//  for (int k = 0; k < 3; k++)
+//    cc[k] = c[3+k] - c[k];
+//
+//  double orientation = _p_dot(cc, n);
+//  double orientation2 = _p_dot(cc, n+3);
+//
+//  if (orientation < 0) {
+//    int tmp = prism_vtx[1];
+//    prism_vtx[1] = prism_vtx[2];
+//    prism_vtx[2] = tmp;
+//  } 
+//
+//  if (orientation2 < 0) {
+//    int tmp = prism_vtx[4];
+//    prism_vtx[4] = prism_vtx[5];
+//    prism_vtx[5] = tmp;
+//  } 
+//
+//  /* Permutation circulaire */
+//
+//  int id1 = -1;
+//  for (int j = 0; j < 12; j++) {
+//    if (quad_vtx[j] == prism_vtx[0]) {
+//      id1 = j;
+//      break;
+//    }
+//  }
+//
+//  int id2 = (id1 / 4) * 4 + (id1 + 1) % 4;
+//  if ((quad_vtx[id2] == prism_vtx[1]) ||
+//      (quad_vtx[id2] == prism_vtx[2]))
+//    id2 =  (id1 / 4) * 4 + (id1 + 3) % 4;
+//
+//  int id_deb;
+//  for (int j = 0; j < 3; j++) {
+//    if (quad_vtx[id2] == prism_vtx[3+j]) {
+//      id_deb = j;
+//      break;
+//    }
+//  }
+//
+//  int tmp[3];
+//  for (int j = 0; j < 3; j++)
+//    tmp[j] = prism_vtx[3+j];
+//
+//  for (int j = 0; j < 3; j++) {
+//    int idx = (id_deb + j) % 3;
+//    prism_vtx[3+j] = tmp[idx];
+//  }
+//
+//}
 
 
 /**
@@ -805,87 +805,87 @@ PDM_l_num_t prism_vtx[]
  *
  */
 
-static void
-_connec_pyramid
-(
-PDM_Mesh_nodal_vtx_t *vtx,
-PDM_l_num_t *tria_vtx,
-PDM_l_num_t *quad_vtx,
-PDM_l_num_t pyramid_vtx[]
-)
-{
-
-  /* Initialisation */
-
-  pyramid_vtx[0] = quad_vtx[0];
-  pyramid_vtx[1] = quad_vtx[1];
-  pyramid_vtx[2] = quad_vtx[2];
-  pyramid_vtx[3] = quad_vtx[3];
-
-  for (int i = 0; i < 9; i++) {
-    if ((tria_vtx[i] != pyramid_vtx[0]) &&
-        (tria_vtx[i] != pyramid_vtx[1]) &&
-        (tria_vtx[i] != pyramid_vtx[2]) &&
-        (tria_vtx[i] != pyramid_vtx[3])) {
-      pyramid_vtx[4] = tria_vtx[i];
-      break;
-    }
-  }
-
-  /* Orientation */
-
-  const PDM_real_t *_coords = vtx->_coords;
-
-  double c[3];
-  double n[3];
-
-  for (int k = 0; k < 3; k++)
-    c[k] = 0.;
-  for (int j = 0; j < 4; j++) {
-    int isom = pyramid_vtx[j] - 1;
-    for (int k = 0; k < 3; k++)
-      c[k] += _coords[3*isom+k];
-  }
-  for (int k = 0; k < 3; k++)
-    c[k] *= 0.25;
-    
-  for (int k = 0; k < 3; k++)
-    n[k] = 0.;
-    
-  for (int j = 0; j < 4; j++) {
-    int isom = pyramid_vtx[j] - 1;
-    int suiv = (j+1) % 4;
-    int isom_suiv = pyramid_vtx[suiv] - 1;
-
-    double v1[3];
-    double v2[3];
-    for (int k = 0; k < 3; k++) {
-      v1[k] = _coords[3*isom+k] -  c[k]; 
-      v2[k] = _coords[3*isom_suiv+k] -  c[k]; 
-    } 
-      
-    _p_cross(v1, v2, n);
-
-  }
-
-  double cc[3];
-  for (int k = 0; k < 3; k++)
-    cc[k] = _coords[3*(pyramid_vtx[3] - 1) + k] - c[k];
-
-  /* Inversion eventuelle des sens de rotation des faces*/
-
-  double orientation = _p_dot(cc, n);
-  
-  if (orientation < 0) {
-    int tmp = pyramid_vtx[0];
-    pyramid_vtx[0] = pyramid_vtx[3];
-    pyramid_vtx[3] = tmp;
-    tmp = pyramid_vtx[1];
-    pyramid_vtx[1] = pyramid_vtx[2];
-    pyramid_vtx[2] = tmp;
-  } 
-
-}
+//static void
+//_connec_pyramid
+//(
+//PDM_Mesh_nodal_vtx_t *vtx,
+//PDM_l_num_t *tria_vtx,
+//PDM_l_num_t *quad_vtx,
+//PDM_l_num_t pyramid_vtx[]
+//)
+//{
+//
+//  /* Initialisation */
+//
+//  pyramid_vtx[0] = quad_vtx[0];
+//  pyramid_vtx[1] = quad_vtx[1];
+//  pyramid_vtx[2] = quad_vtx[2];
+//  pyramid_vtx[3] = quad_vtx[3];
+//
+//  for (int i = 0; i < 9; i++) {
+//    if ((tria_vtx[i] != pyramid_vtx[0]) &&
+//        (tria_vtx[i] != pyramid_vtx[1]) &&
+//        (tria_vtx[i] != pyramid_vtx[2]) &&
+//        (tria_vtx[i] != pyramid_vtx[3])) {
+//      pyramid_vtx[4] = tria_vtx[i];
+//      break;
+//    }
+//  }
+//
+//  /* Orientation */
+//
+//  const PDM_real_t *_coords = vtx->_coords;
+//
+//  double c[3];
+//  double n[3];
+//
+//  for (int k = 0; k < 3; k++)
+//    c[k] = 0.;
+//  for (int j = 0; j < 4; j++) {
+//    int isom = pyramid_vtx[j] - 1;
+//    for (int k = 0; k < 3; k++)
+//      c[k] += _coords[3*isom+k];
+//  }
+//  for (int k = 0; k < 3; k++)
+//    c[k] *= 0.25;
+//    
+//  for (int k = 0; k < 3; k++)
+//    n[k] = 0.;
+//    
+//  for (int j = 0; j < 4; j++) {
+//    int isom = pyramid_vtx[j] - 1;
+//    int suiv = (j+1) % 4;
+//    int isom_suiv = pyramid_vtx[suiv] - 1;
+//
+//    double v1[3];
+//    double v2[3];
+//    for (int k = 0; k < 3; k++) {
+//      v1[k] = _coords[3*isom+k] -  c[k]; 
+//      v2[k] = _coords[3*isom_suiv+k] -  c[k]; 
+//    } 
+//      
+//    _p_cross(v1, v2, n);
+//
+//  }
+//
+//  double cc[3];
+//  for (int k = 0; k < 3; k++)
+//    cc[k] = _coords[3*(pyramid_vtx[3] - 1) + k] - c[k];
+//
+//  /* Inversion eventuelle des sens de rotation des faces*/
+//
+//  double orientation = _p_dot(cc, n);
+//  
+//  if (orientation < 0) {
+//    int tmp = pyramid_vtx[0];
+//    pyramid_vtx[0] = pyramid_vtx[3];
+//    pyramid_vtx[3] = tmp;
+//    tmp = pyramid_vtx[1];
+//    pyramid_vtx[1] = pyramid_vtx[2];
+//    pyramid_vtx[2] = tmp;
+//  } 
+//
+//}
 
 
 /**
@@ -898,179 +898,179 @@ PDM_l_num_t pyramid_vtx[]
  *
  */
 
-static void
-_connec_hexa
-(
-PDM_Mesh_nodal_vtx_t *vtx,
-PDM_l_num_t *quad_vtx,
-PDM_l_num_t hexa_vtx[]
-)
-{
-
-  /* Initialization */
-
-  hexa_vtx[0] = quad_vtx[0];
-  hexa_vtx[1] = quad_vtx[1];
-  hexa_vtx[2] = quad_vtx[2];
-  hexa_vtx[3] = quad_vtx[3];
-
-  PDM_l_num_t face_contact[4];
-
-  for (int i = 1; i < 6; i++) {
-    int cpt = 0;
-    for (int j = 0; j < 4; j++) {
-      PDM_l_num_t som_courant = quad_vtx[4*i+j];
-      if ((som_courant != hexa_vtx[0]) &&
-          (som_courant != hexa_vtx[1]) &&
-          (som_courant != hexa_vtx[2]) &&
-          (som_courant != hexa_vtx[3]))
-        cpt += 1;
-    }
-    if (cpt == 4) {
-      hexa_vtx[4] = quad_vtx[4*i];
-      hexa_vtx[5] = quad_vtx[4*i+1];
-      hexa_vtx[6] = quad_vtx[4*i+2];
-      hexa_vtx[7] = quad_vtx[4*i+3];
-    }
-    if (cpt == 2) {
-      face_contact[0] = quad_vtx[4*i];
-      face_contact[1] = quad_vtx[4*i+1];
-      face_contact[2] = quad_vtx[4*i+2];
-      face_contact[3] = quad_vtx[4*i+3];
-    }
-  } 
-
-  /* Calcul des centres et normales de la base et de la face opposee */
-
-  const PDM_real_t *_coords = vtx->_coords;
-
-  double c[6];
-  double n[6];
-
-  for (int i = 0; i < 2; i++) {
-    for (int k = 0; k < 3; k++)
-      c[3*i+k] = 0.;
-    for (int j = 0; j < 4; j++) {
-      int isom = hexa_vtx[4*i+j] - 1;
-      for (int k = 0; k < 3; k++)
-        c[3*i+k] += _coords[3*isom+k];
-    }
-    for (int k = 0; k < 3; k++)
-      c[3*i+k] *= 0.25;
-    
-    for (int k = 0; k < 3; k++)
-      n[3*i+k] = 0.;
-    
-    for (int j = 0; j < 4; j++) {
-      int isom = hexa_vtx[4*i+j] - 1;
-      int suiv = (j+1) % 4;
-      int isom_suiv = hexa_vtx[4*i+suiv] - 1;
-
-      double v1[3];
-      double v2[3];
-      for (int k = 0; k < 3; k++) {
-        v1[k] = _coords[3*isom+k] -  c[3*i+k]; 
-        v2[k] = _coords[3*isom_suiv+k] -  c[3*i+k]; 
-      } 
-      
-      _p_cross(v1, v2, n + 3*i);
-
-    }
-
-  }
-  
-  double cc[3];
-  for (int k = 0; k < 3; k++)
-    cc[k] = c[3+k] - c[k];
-
-  /* Inversion eventuelle des sens de rotation des faces*/
-
-  double orientation = _p_dot(cc, n);
-  double orientation2 = _p_dot(cc, n+3);
-
-  if (orientation < 0) {
-    int tmp = hexa_vtx[0];
-    hexa_vtx[0] = hexa_vtx[3];
-    hexa_vtx[3] = tmp;
-    tmp = hexa_vtx[1];
-    hexa_vtx[1] = hexa_vtx[2];
-    hexa_vtx[2] = tmp;
-  } 
-
-  if (orientation2 < 0) {
-    int tmp = hexa_vtx[4];
-    hexa_vtx[4] = hexa_vtx[7];
-    hexa_vtx[7] = tmp;
-    tmp = hexa_vtx[5];
-    hexa_vtx[5] = hexa_vtx[6];
-    hexa_vtx[6] = tmp;
-  } 
-
-  /* Permutation circulaire eventuelle de la face sup */
-
-  int id1 = -1;
-  int k1 = -1;
-  for (int k = 0; k < 4; k++) {
-    for (int j = 0; j < 4; j++) {
-      if (face_contact[j] == hexa_vtx[k]) {
-        id1 = j;
-        k1 = k;
-        break;
-      }
-      if (id1 != -1)
-        break;
-    }
-  }
-
-  if (k1 == -1) {
-    PDM_printf("Error connect_hexa : %d %d %d %d %d %d %d %d\n",
-           hexa_vtx[0],
-           hexa_vtx[1],
-           hexa_vtx[2],
-           hexa_vtx[3],
-           hexa_vtx[4],
-           hexa_vtx[5],
-           hexa_vtx[6],
-           hexa_vtx[7]);
-
-    for (int i10 = 0; i10 < 4; i10++) {
-      PDM_printf("   face %d : %d %d %d %d\n", i10+1, quad_vtx[4*i10],  
-                                                  quad_vtx[4*i10+1],
-                                                  quad_vtx[4*i10+2],
-                                                  quad_vtx[4*i10+3]);
-    }
-    abort();
-    
-  }
-    
-  int id2 = (id1 + 1) % 4;
-  int k2 = (k1 + 1) % 4;
-  int k3 = (k1 + 3) % 4;
-  
-  if ((face_contact[id2] == hexa_vtx[k2]) ||
-      (face_contact[id2] == hexa_vtx[k3]))
-    id2 = (id1 + 3) % 4;
-
-  int id_deb;
-  for (int j = 0; j < 4; j++) {
-    if (face_contact[id2] == hexa_vtx[4+j]) {
-      id_deb = (j - k1);
-      if (id_deb < 0) 
-        id_deb += 4;
-      id_deb = id_deb % 4;
-      break;
-    }
-  }
-
-  int tmp[4];
-  for (int j = 0; j < 4; j++)
-    tmp[j] = hexa_vtx[4+j];
-
-  for (int j = 0; j < 4; j++) {
-    int idx = (id_deb + j) % 4;
-    hexa_vtx[4+j] = tmp[idx];
-  }
-}
+//static void
+//_connec_hexa
+//(
+//PDM_Mesh_nodal_vtx_t *vtx,
+//PDM_l_num_t *quad_vtx,
+//PDM_l_num_t hexa_vtx[]
+//)
+//{
+//
+//  /* Initialization */
+//
+//  hexa_vtx[0] = quad_vtx[0];
+//  hexa_vtx[1] = quad_vtx[1];
+//  hexa_vtx[2] = quad_vtx[2];
+//  hexa_vtx[3] = quad_vtx[3];
+//
+//  PDM_l_num_t face_contact[4];
+//
+//  for (int i = 1; i < 6; i++) {
+//    int cpt = 0;
+//    for (int j = 0; j < 4; j++) {
+//      PDM_l_num_t som_courant = quad_vtx[4*i+j];
+//      if ((som_courant != hexa_vtx[0]) &&
+//          (som_courant != hexa_vtx[1]) &&
+//          (som_courant != hexa_vtx[2]) &&
+//          (som_courant != hexa_vtx[3]))
+//        cpt += 1;
+//    }
+//    if (cpt == 4) {
+//      hexa_vtx[4] = quad_vtx[4*i];
+//      hexa_vtx[5] = quad_vtx[4*i+1];
+//      hexa_vtx[6] = quad_vtx[4*i+2];
+//      hexa_vtx[7] = quad_vtx[4*i+3];
+//    }
+//    if (cpt == 2) {
+//      face_contact[0] = quad_vtx[4*i];
+//      face_contact[1] = quad_vtx[4*i+1];
+//      face_contact[2] = quad_vtx[4*i+2];
+//      face_contact[3] = quad_vtx[4*i+3];
+//    }
+//  } 
+//
+//  /* Calcul des centres et normales de la base et de la face opposee */
+//
+//  const PDM_real_t *_coords = vtx->_coords;
+//
+//  double c[6];
+//  double n[6];
+//
+//  for (int i = 0; i < 2; i++) {
+//    for (int k = 0; k < 3; k++)
+//      c[3*i+k] = 0.;
+//    for (int j = 0; j < 4; j++) {
+//      int isom = hexa_vtx[4*i+j] - 1;
+//      for (int k = 0; k < 3; k++)
+//        c[3*i+k] += _coords[3*isom+k];
+//    }
+//    for (int k = 0; k < 3; k++)
+//      c[3*i+k] *= 0.25;
+//    
+//    for (int k = 0; k < 3; k++)
+//      n[3*i+k] = 0.;
+//    
+//    for (int j = 0; j < 4; j++) {
+//      int isom = hexa_vtx[4*i+j] - 1;
+//      int suiv = (j+1) % 4;
+//      int isom_suiv = hexa_vtx[4*i+suiv] - 1;
+//
+//      double v1[3];
+//      double v2[3];
+//      for (int k = 0; k < 3; k++) {
+//        v1[k] = _coords[3*isom+k] -  c[3*i+k]; 
+//        v2[k] = _coords[3*isom_suiv+k] -  c[3*i+k]; 
+//      } 
+//      
+//      _p_cross(v1, v2, n + 3*i);
+//
+//    }
+//
+//  }
+//  
+//  double cc[3];
+//  for (int k = 0; k < 3; k++)
+//    cc[k] = c[3+k] - c[k];
+//
+//  /* Inversion eventuelle des sens de rotation des faces*/
+//
+//  double orientation = _p_dot(cc, n);
+//  double orientation2 = _p_dot(cc, n+3);
+//
+//  if (orientation < 0) {
+//    int tmp = hexa_vtx[0];
+//    hexa_vtx[0] = hexa_vtx[3];
+//    hexa_vtx[3] = tmp;
+//    tmp = hexa_vtx[1];
+//    hexa_vtx[1] = hexa_vtx[2];
+//    hexa_vtx[2] = tmp;
+//  } 
+//
+//  if (orientation2 < 0) {
+//    int tmp = hexa_vtx[4];
+//    hexa_vtx[4] = hexa_vtx[7];
+//    hexa_vtx[7] = tmp;
+//    tmp = hexa_vtx[5];
+//    hexa_vtx[5] = hexa_vtx[6];
+//    hexa_vtx[6] = tmp;
+//  } 
+//
+//  /* Permutation circulaire eventuelle de la face sup */
+//
+//  int id1 = -1;
+//  int k1 = -1;
+//  for (int k = 0; k < 4; k++) {
+//    for (int j = 0; j < 4; j++) {
+//      if (face_contact[j] == hexa_vtx[k]) {
+//        id1 = j;
+//        k1 = k;
+//        break;
+//      }
+//      if (id1 != -1)
+//        break;
+//    }
+//  }
+//
+//  if (k1 == -1) {
+//    PDM_printf("Error connect_hexa : %d %d %d %d %d %d %d %d\n",
+//           hexa_vtx[0],
+//           hexa_vtx[1],
+//           hexa_vtx[2],
+//           hexa_vtx[3],
+//           hexa_vtx[4],
+//           hexa_vtx[5],
+//           hexa_vtx[6],
+//           hexa_vtx[7]);
+//
+//    for (int i10 = 0; i10 < 4; i10++) {
+//      PDM_printf("   face %d : %d %d %d %d\n", i10+1, quad_vtx[4*i10],  
+//                                                  quad_vtx[4*i10+1],
+//                                                  quad_vtx[4*i10+2],
+//                                                  quad_vtx[4*i10+3]);
+//    }
+//    abort();
+//    
+//  }
+//    
+//  int id2 = (id1 + 1) % 4;
+//  int k2 = (k1 + 1) % 4;
+//  int k3 = (k1 + 3) % 4;
+//  
+//  if ((face_contact[id2] == hexa_vtx[k2]) ||
+//      (face_contact[id2] == hexa_vtx[k3]))
+//    id2 = (id1 + 3) % 4;
+//
+//  int id_deb;
+//  for (int j = 0; j < 4; j++) {
+//    if (face_contact[id2] == hexa_vtx[4+j]) {
+//      id_deb = (j - k1);
+//      if (id_deb < 0) 
+//        id_deb += 4;
+//      id_deb = id_deb % 4;
+//      break;
+//    }
+//  }
+//
+//  int tmp[4];
+//  for (int j = 0; j < 4; j++)
+//    tmp[j] = hexa_vtx[4+j];
+//
+//  for (int j = 0; j < 4; j++) {
+//    int idx = (id_deb + j) % 4;
+//    hexa_vtx[4+j] = tmp[idx];
+//  }
+//}
 
 
 /** 
@@ -1195,23 +1195,23 @@ _type_cell_3D
  *
  */
 
-int 
-PDM_Mesh_nodal_create
-(
-const int     n_part,
-const PDM_MPI_Comm comm        
-)
-{
-  PDM_Mesh_nodal_t *mesh = (PDM_Mesh_nodal_t *) malloc (sizeof(PDM_Mesh_nodal_t));
-  
-  _mesh_init (mesh, n_part, comm);
-  
-  if (mesh_handles == NULL) {
-    mesh_handles = PDM_Handles_create (4);
-  }
-  
-  return PDM_Handles_store (mesh_handles, mesh);
-}
+//int 
+//PDM_Mesh_nodal_create
+//(
+//const int     n_part,
+//const PDM_MPI_Comm comm        
+//)
+//{
+//  PDM_Mesh_nodal_t *mesh = (PDM_Mesh_nodal_t *) malloc (sizeof(PDM_Mesh_nodal_t));
+//  
+//  _mesh_init (mesh, n_part, comm);
+//  
+//  if (mesh_handles == NULL) {
+//    mesh_handles = PDM_Handles_create (4);
+//  }
+//  
+//  return PDM_Handles_store (mesh_handles, mesh);
+//}
 
 
 /**
@@ -1223,21 +1223,21 @@ const PDM_MPI_Comm comm
  *
  */
 
-int
-PDM_Mesh_nodal_n_part_get
-(
-const int   idx
-)
-{
-  PDM_Mesh_nodal_t * mesh = (PDM_Mesh_nodal_t *) PDM_Handles_get (mesh_handles, idx);
-  
-  if (mesh == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
-  }
-
-  return mesh->n_part;
-
-}
+//int
+//PDM_Mesh_nodal_n_part_get
+//(
+//const int   idx
+//)
+//{
+//  PDM_Mesh_nodal_t * mesh = (PDM_Mesh_nodal_t *) PDM_Handles_get (mesh_handles, idx);
+//  
+//  if (mesh == NULL) {
+//    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
+//  }
+//
+//  return mesh->n_part;
+//
+//}
 
 
 /**
@@ -1249,51 +1249,51 @@ const int   idx
  *
  */
 
-void
-PDM_Mesh_nodal_partial_free
-(
-const int idx
-)
-{
-  PDM_Mesh_nodal_t * mesh = (PDM_Mesh_nodal_t *) PDM_Handles_get (mesh_handles, idx);
-  
-  if (mesh == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
-  }
-	
-  if (mesh->blocks_std != NULL) {
-    const int n_blocks_std = PDM_Handles_n_get (mesh->blocks_std);
-    const int *list_ind = PDM_Handles_idx_get (mesh->blocks_std);
-
-    for (int i = 0; i < n_blocks_std; i++) {
-      PDM_Mesh_nodal_block_std_t *_block_std = 
-              (PDM_Mesh_nodal_block_std_t *) PDM_Handles_get (mesh->blocks_std, list_ind[i]);
-      _block_std_free_partial(_block_std);
-    }
-  }
-	
-  if (mesh->blocks_poly2d != NULL) {
-    const int n_blocks_poly2d = PDM_Handles_n_get (mesh->blocks_poly2d);
-    const int *list_ind = PDM_Handles_idx_get (mesh->blocks_poly2d);
-
-    for (int i = 0; i < n_blocks_poly2d; i++) {
-      PDM_Mesh_nodal_block_poly2d_t *_block_poly2d = 
-              (PDM_Mesh_nodal_block_poly2d_t *) PDM_Handles_get (mesh->blocks_poly2d, list_ind[i]);
-      _block_poly2d_free_partial(_block_poly2d);
-    }
-  }
-	
-  if (mesh->blocks_poly3d != NULL) {
-    const int n_blocks_poly3d = PDM_Handles_n_get (mesh->blocks_poly3d);
-    const int *list_ind = PDM_Handles_idx_get (mesh->blocks_poly3d);
-
-    for (int i = 0; i < n_blocks_poly3d; i++) {
-      PDM_Mesh_nodal_block_poly3d_t *_block_poly3d = 
-              (PDM_Mesh_nodal_block_poly3d_t *) PDM_Handles_get (mesh->blocks_poly3d, list_ind[i]);
-      _block_poly3d_free_partial(_block_poly3d);
-    }
-  }
-}
+//void
+//PDM_Mesh_nodal_partial_free
+//(
+//const int idx
+//)
+//{
+//  PDM_Mesh_nodal_t * mesh = (PDM_Mesh_nodal_t *) PDM_Handles_get (mesh_handles, idx);
+//  
+//  if (mesh == NULL) {
+//    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
+//  }
+//	
+//  if (mesh->blocks_std != NULL) {
+//    const int n_blocks_std = PDM_Handles_n_get (mesh->blocks_std);
+//    const int *list_ind = PDM_Handles_idx_get (mesh->blocks_std);
+//
+//    for (int i = 0; i < n_blocks_std; i++) {
+//      PDM_Mesh_nodal_block_std_t *_block_std = 
+//              (PDM_Mesh_nodal_block_std_t *) PDM_Handles_get (mesh->blocks_std, list_ind[i]);
+//      _block_std_free_partial(_block_std);
+//    }
+//  }
+//	
+//  if (mesh->blocks_poly2d != NULL) {
+//    const int n_blocks_poly2d = PDM_Handles_n_get (mesh->blocks_poly2d);
+//    const int *list_ind = PDM_Handles_idx_get (mesh->blocks_poly2d);
+//
+//    for (int i = 0; i < n_blocks_poly2d; i++) {
+//      PDM_Mesh_nodal_block_poly2d_t *_block_poly2d = 
+//              (PDM_Mesh_nodal_block_poly2d_t *) PDM_Handles_get (mesh->blocks_poly2d, list_ind[i]);
+//      _block_poly2d_free_partial(_block_poly2d);
+//    }
+//  }
+//	
+//  if (mesh->blocks_poly3d != NULL) {
+//    const int n_blocks_poly3d = PDM_Handles_n_get (mesh->blocks_poly3d);
+//    const int *list_ind = PDM_Handles_idx_get (mesh->blocks_poly3d);
+//
+//    for (int i = 0; i < n_blocks_poly3d; i++) {
+//      PDM_Mesh_nodal_block_poly3d_t *_block_poly3d = 
+//              (PDM_Mesh_nodal_block_poly3d_t *) PDM_Handles_get (mesh->blocks_poly3d, list_ind[i]);
+//      _block_poly3d_free_partial(_block_poly3d);
+//    }
+//  }
+//}
 
 
 /**
@@ -1305,116 +1305,116 @@ const int idx
  *
  */
 
-void
-PDM_Mesh_nodal_free
-(
-const int idx
-)
-{
-  
-  PDM_Mesh_nodal_partial_free (idx);
-  
-  PDM_Mesh_nodal_t * mesh = (PDM_Mesh_nodal_t *) PDM_Handles_get (mesh_handles, idx);
-  
-  if (mesh != NULL) {
-
-    if (mesh->blocks_id != NULL) {
-      free (mesh->blocks_id);
-    }
-    
-    mesh->blocks_id = NULL;
-    
-    /* Free vertices */
-  
-    if (mesh->vtx != NULL) {
-      for (int i = 0; i < mesh->n_part; i++) {
-        mesh->vtx[i] = _vtx_free (mesh->vtx[i]);
-      }
-
-      free(mesh->vtx);
-      mesh->vtx = NULL;
-    }
-
-    /* free standard blocks */
-
-    if (mesh->blocks_std != NULL) {
-      int n_blocks_std = PDM_Handles_n_get (mesh->blocks_std);
-      const int *list_ind = PDM_Handles_idx_get (mesh->blocks_std);
-
-      while (n_blocks_std > 0) {
-        PDM_Mesh_nodal_block_std_t *_bloc_std = 
-          (PDM_Mesh_nodal_block_std_t *) PDM_Handles_get (mesh->blocks_std, list_ind[0]);
-        _block_std_free(_bloc_std);
-        PDM_Handles_handle_free (mesh->blocks_std, list_ind[0], PDM_FALSE);
-        n_blocks_std = PDM_Handles_n_get (mesh->blocks_std);
-      }
-
-      mesh->blocks_std = PDM_Handles_free (mesh->blocks_std); 
-    }
-
-    /* Free polygon blocks */ 
-
-    if (mesh->blocks_poly2d != NULL) {
-      int n_blocks_poly2d = PDM_Handles_n_get (mesh->blocks_poly2d);
-      const int *list_ind = PDM_Handles_idx_get (mesh->blocks_poly2d);
-
-      while (n_blocks_poly2d > 0) {
-        PDM_Mesh_nodal_block_poly2d_t *_bloc_poly2d = 
-          (PDM_Mesh_nodal_block_poly2d_t *) PDM_Handles_get (mesh->blocks_poly2d, list_ind[0]);
-        _block_poly2d_free(_bloc_poly2d);
-        PDM_Handles_handle_free (mesh->blocks_poly2d, list_ind[0], PDM_FALSE);
-        n_blocks_poly2d = PDM_Handles_n_get (mesh->blocks_poly2d);
-      }
-
-      mesh->blocks_poly2d = PDM_Handles_free (mesh->blocks_poly2d); 
-    }
-
-    /* Free polyhedron blocks */ 
-
-    if (mesh->blocks_poly3d != NULL) {
-      int n_blocks_poly3d = PDM_Handles_n_get (mesh->blocks_poly3d);
-      const int *list_ind = PDM_Handles_idx_get (mesh->blocks_poly3d);
-
-      while (n_blocks_poly3d > 0) {
-        PDM_Mesh_nodal_block_poly3d_t *_bloc_poly3d = 
-          (PDM_Mesh_nodal_block_poly3d_t *) PDM_Handles_get (mesh->blocks_poly3d, list_ind[0]);
-        _block_poly3d_free(_bloc_poly3d);
-        PDM_Handles_handle_free (mesh->blocks_poly3d, list_ind[0], PDM_FALSE);
-        n_blocks_poly3d = PDM_Handles_n_get (mesh->blocks_poly3d);
-      }
-
-      mesh->blocks_poly3d = PDM_Handles_free (mesh->blocks_poly3d); 
-    }
-
-    /* Free structure */ 
-
-    if (mesh->num_cell_parent_to_local != NULL) {
-      for (int ipart = 0; ipart < mesh->n_part; ipart++) {
-        if (mesh->num_cell_parent_to_local[ipart] != NULL)
-          free(mesh->num_cell_parent_to_local[ipart]);
-      }
-      free(mesh->num_cell_parent_to_local);
-      mesh->num_cell_parent_to_local = NULL;
-    }
-
-    free(mesh->n_cell);
-    mesh->n_cell = NULL;
-    
-    if (mesh->blocks_id != NULL) {
-      free (mesh->blocks_id);
-    }
-
-    free(mesh);
-
-    PDM_Handles_handle_free (mesh_handles, idx, PDM_FALSE);
-  
-    int n_mesh_array = PDM_Handles_n_get (mesh_handles); 
-
-    if (n_mesh_array == 0) {
-      mesh_handles = PDM_Handles_free (mesh_handles);
-    }
-  }
-}
+//void
+//PDM_Mesh_nodal_free
+//(
+//const int idx
+//)
+//{
+//  
+//  PDM_Mesh_nodal_partial_free (idx);
+//  
+//  PDM_Mesh_nodal_t * mesh = (PDM_Mesh_nodal_t *) PDM_Handles_get (mesh_handles, idx);
+//  
+//  if (mesh != NULL) {
+//
+//    if (mesh->blocks_id != NULL) {
+//      free (mesh->blocks_id);
+//    }
+//    
+//    mesh->blocks_id = NULL;
+//    
+//    /* Free vertices */
+//  
+//    if (mesh->vtx != NULL) {
+//      for (int i = 0; i < mesh->n_part; i++) {
+//        mesh->vtx[i] = _vtx_free (mesh->vtx[i]);
+//      }
+//
+//      free(mesh->vtx);
+//      mesh->vtx = NULL;
+//    }
+//
+//    /* free standard blocks */
+//
+//    if (mesh->blocks_std != NULL) {
+//      int n_blocks_std = PDM_Handles_n_get (mesh->blocks_std);
+//      const int *list_ind = PDM_Handles_idx_get (mesh->blocks_std);
+//
+//      while (n_blocks_std > 0) {
+//        PDM_Mesh_nodal_block_std_t *_bloc_std = 
+//          (PDM_Mesh_nodal_block_std_t *) PDM_Handles_get (mesh->blocks_std, list_ind[0]);
+//        _block_std_free(_bloc_std);
+//        PDM_Handles_handle_free (mesh->blocks_std, list_ind[0], PDM_FALSE);
+//        n_blocks_std = PDM_Handles_n_get (mesh->blocks_std);
+//      }
+//
+//      mesh->blocks_std = PDM_Handles_free (mesh->blocks_std); 
+//    }
+//
+//    /* Free polygon blocks */ 
+//
+//    if (mesh->blocks_poly2d != NULL) {
+//      int n_blocks_poly2d = PDM_Handles_n_get (mesh->blocks_poly2d);
+//      const int *list_ind = PDM_Handles_idx_get (mesh->blocks_poly2d);
+//
+//      while (n_blocks_poly2d > 0) {
+//        PDM_Mesh_nodal_block_poly2d_t *_bloc_poly2d = 
+//          (PDM_Mesh_nodal_block_poly2d_t *) PDM_Handles_get (mesh->blocks_poly2d, list_ind[0]);
+//        _block_poly2d_free(_bloc_poly2d);
+//        PDM_Handles_handle_free (mesh->blocks_poly2d, list_ind[0], PDM_FALSE);
+//        n_blocks_poly2d = PDM_Handles_n_get (mesh->blocks_poly2d);
+//      }
+//
+//      mesh->blocks_poly2d = PDM_Handles_free (mesh->blocks_poly2d); 
+//    }
+//
+//    /* Free polyhedron blocks */ 
+//
+//    if (mesh->blocks_poly3d != NULL) {
+//      int n_blocks_poly3d = PDM_Handles_n_get (mesh->blocks_poly3d);
+//      const int *list_ind = PDM_Handles_idx_get (mesh->blocks_poly3d);
+//
+//      while (n_blocks_poly3d > 0) {
+//        PDM_Mesh_nodal_block_poly3d_t *_bloc_poly3d = 
+//          (PDM_Mesh_nodal_block_poly3d_t *) PDM_Handles_get (mesh->blocks_poly3d, list_ind[0]);
+//        _block_poly3d_free(_bloc_poly3d);
+//        PDM_Handles_handle_free (mesh->blocks_poly3d, list_ind[0], PDM_FALSE);
+//        n_blocks_poly3d = PDM_Handles_n_get (mesh->blocks_poly3d);
+//      }
+//
+//      mesh->blocks_poly3d = PDM_Handles_free (mesh->blocks_poly3d); 
+//    }
+//
+//    /* Free structure */ 
+//
+//    if (mesh->num_cell_parent_to_local != NULL) {
+//      for (int ipart = 0; ipart < mesh->n_part; ipart++) {
+//        if (mesh->num_cell_parent_to_local[ipart] != NULL)
+//          free(mesh->num_cell_parent_to_local[ipart]);
+//      }
+//      free(mesh->num_cell_parent_to_local);
+//      mesh->num_cell_parent_to_local = NULL;
+//    }
+//
+//    free(mesh->n_cell);
+//    mesh->n_cell = NULL;
+//    
+//    if (mesh->blocks_id != NULL) {
+//      free (mesh->blocks_id);
+//    }
+//
+//    free(mesh);
+//
+//    PDM_Handles_handle_free (mesh_handles, idx, PDM_FALSE);
+//  
+//    int n_mesh_array = PDM_Handles_n_get (mesh_handles); 
+//
+//    if (n_mesh_array == 0) {
+//      mesh_handles = PDM_Handles_free (mesh_handles);
+//    }
+//  }
+//}
 
 
 /**
@@ -1428,40 +1428,40 @@ const int idx
  *
  */
 
-void
-PDM_Mesh_nodal_coord_set
-(
- const int          idx,
- const int          id_part, 
- const int          n_vtx,  
- const PDM_real_t  *coords,  
- const PDM_g_num_t *numabs
-)
-{
-  PDM_Mesh_nodal_t * mesh = (PDM_Mesh_nodal_t *) PDM_Handles_get (mesh_handles, idx);
-  
-  if (mesh == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");  
-  }
-  
-  if (id_part >= mesh->n_part) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad part identifier\n");  
-  } 
-  
-  PDM_Mesh_nodal_vtx_t *vtx = mesh->vtx[id_part];
-
-  if ((vtx->_coords != NULL) ||
-      (vtx->_numabs != NULL)) {
-    PDM_error(__FILE__, __LINE__, 0, "these partition vertices are already defined\n");
-  }
-
-  /* Mapping memoire */
-
-  vtx->n_vtx   = n_vtx;
-  vtx->_coords = coords;
-  vtx->_numabs = numabs;
-
-}
+//void
+//PDM_Mesh_nodal_coord_set
+//(
+// const int          idx,
+// const int          id_part, 
+// const int          n_vtx,  
+// const PDM_real_t  *coords,  
+// const PDM_g_num_t *numabs
+//)
+//{
+//  PDM_Mesh_nodal_t * mesh = (PDM_Mesh_nodal_t *) PDM_Handles_get (mesh_handles, idx);
+//  
+//  if (mesh == NULL) {
+//    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");  
+//  }
+//  
+//  if (id_part >= mesh->n_part) {
+//    PDM_error (__FILE__, __LINE__, 0, "Bad part identifier\n");  
+//  } 
+//  
+//  PDM_Mesh_nodal_vtx_t *vtx = mesh->vtx[id_part];
+//
+//  if ((vtx->_coords != NULL) ||
+//      (vtx->_numabs != NULL)) {
+//    PDM_error(__FILE__, __LINE__, 0, "these partition vertices are already defined\n");
+//  }
+//
+//  /* Mapping memoire */
+//
+//  vtx->n_vtx   = n_vtx;
+//  vtx->_coords = coords;
+//  vtx->_numabs = numabs;
+//
+//}
 
 
 /**
@@ -1474,27 +1474,27 @@ PDM_Mesh_nodal_coord_set
  *
  */
 
-int
-PDM_Mesh_nodal_n_vertices_get
-(
- const int          idx,
- const int          id_part 
-)
-{
-  PDM_Mesh_nodal_t * mesh = (PDM_Mesh_nodal_t *) PDM_Handles_get (mesh_handles, idx);
-  
-  if (mesh == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");  
-  }
-  
-  if (id_part >= mesh->n_part) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad part identifier %d %d\n", id_part, mesh->n_part);  
-  } 
-  
-  PDM_Mesh_nodal_vtx_t *vtx = mesh->vtx[id_part];
-
-  return vtx->n_vtx;
-}
+//int
+//PDM_Mesh_nodal_n_vertices_get
+//(
+// const int          idx,
+// const int          id_part 
+//)
+//{
+//  PDM_Mesh_nodal_t * mesh = (PDM_Mesh_nodal_t *) PDM_Handles_get (mesh_handles, idx);
+//  
+//  if (mesh == NULL) {
+//    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");  
+//  }
+//  
+//  if (id_part >= mesh->n_part) {
+//    PDM_error (__FILE__, __LINE__, 0, "Bad part identifier %d %d\n", id_part, mesh->n_part);  
+//  } 
+//  
+//  PDM_Mesh_nodal_vtx_t *vtx = mesh->vtx[id_part];
+//
+//  return vtx->n_vtx;
+//}
 
 
 /**
@@ -1506,27 +1506,27 @@ PDM_Mesh_nodal_n_vertices_get
  *
  */
 
-const int *
-PDM_Mesh_nodal_vertices_parent_get
-(
- const int          idx,
- const int          id_part 
-)
-{
-  PDM_Mesh_nodal_t * mesh = (PDM_Mesh_nodal_t *) PDM_Handles_get (mesh_handles, idx);
-  
-  if (mesh == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");  
-  }
-  
-  if (id_part >= mesh->n_part) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad part identifier\n");  
-  } 
-  
-  PDM_Mesh_nodal_vtx_t *vtx = mesh->vtx[id_part];
-
-  return vtx->_numparent;
-}
+//const int *
+//PDM_Mesh_nodal_vertices_parent_get
+//(
+// const int          idx,
+// const int          id_part 
+//)
+//{
+//  PDM_Mesh_nodal_t * mesh = (PDM_Mesh_nodal_t *) PDM_Handles_get (mesh_handles, idx);
+//  
+//  if (mesh == NULL) {
+//    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");  
+//  }
+//  
+//  if (id_part >= mesh->n_part) {
+//    PDM_error (__FILE__, __LINE__, 0, "Bad part identifier\n");  
+//  } 
+//  
+//  PDM_Mesh_nodal_vtx_t *vtx = mesh->vtx[id_part];
+//
+//  return vtx->_numparent;
+//}
 
 
 /**
@@ -1538,27 +1538,27 @@ PDM_Mesh_nodal_vertices_parent_get
  *
  */
 
-const double *
-PDM_Mesh_nodal_vertices_get
-(
- const int          idx,
- const int          id_part 
-)
-{
-  PDM_Mesh_nodal_t * mesh = (PDM_Mesh_nodal_t *) PDM_Handles_get (mesh_handles, idx);
-  
-  if (mesh == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");  
-  }
-  
-  if (id_part >= mesh->n_part) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad part identifier\n");  
-  } 
-  
-  PDM_Mesh_nodal_vtx_t *vtx = mesh->vtx[id_part];
-
-  return vtx->_coords;
-}
+//const double *
+//PDM_Mesh_nodal_vertices_get
+//(
+// const int          idx,
+// const int          id_part 
+//)
+//{
+//  PDM_Mesh_nodal_t * mesh = (PDM_Mesh_nodal_t *) PDM_Handles_get (mesh_handles, idx);
+//  
+//  if (mesh == NULL) {
+//    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");  
+//  }
+//  
+//  if (id_part >= mesh->n_part) {
+//    PDM_error (__FILE__, __LINE__, 0, "Bad part identifier\n");  
+//  } 
+//  
+//  PDM_Mesh_nodal_vtx_t *vtx = mesh->vtx[id_part];
+//
+//  return vtx->_coords;
+//}
 
 
 /**
@@ -1571,27 +1571,27 @@ PDM_Mesh_nodal_vertices_get
  *
  */
 
-const PDM_g_num_t *
-PDM_Mesh_nodal_vertices_g_num_get
-(
- const int          idx,
- const int          id_part 
-)
-{
-  PDM_Mesh_nodal_t * mesh = (PDM_Mesh_nodal_t *) PDM_Handles_get (mesh_handles, idx);
-  
-  if (mesh == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");  
-  }
-  
-  if (id_part >= mesh->n_part) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad part identifier\n");  
-  } 
-  
-  PDM_Mesh_nodal_vtx_t *vtx = mesh->vtx[id_part];
-
-  return vtx->_numabs;
-}
+//const PDM_g_num_t *
+//PDM_Mesh_nodal_vertices_g_num_get
+//(
+// const int          idx,
+// const int          id_part 
+//)
+//{
+//  PDM_Mesh_nodal_t * mesh = (PDM_Mesh_nodal_t *) PDM_Handles_get (mesh_handles, idx);
+//  
+//  if (mesh == NULL) {
+//    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");  
+//  }
+//  
+//  if (id_part >= mesh->n_part) {
+//    PDM_error (__FILE__, __LINE__, 0, "Bad part identifier\n");  
+//  } 
+//  
+//  PDM_Mesh_nodal_vtx_t *vtx = mesh->vtx[id_part];
+//
+//  return vtx->_numabs;
+//}
 
 
 /**
@@ -1602,21 +1602,21 @@ PDM_Mesh_nodal_vertices_g_num_get
  * \return true if the vertices are defined from parents
  */
 
-int
-PDM_Mesh_nodal_is_set_coord_from_parent
-(
- const int          idx
-)
-{
-  PDM_Mesh_nodal_t * mesh = (PDM_Mesh_nodal_t *) PDM_Handles_get (mesh_handles, idx);
-  
-  if (mesh == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");  
-  }
-
-  return mesh->is_vtx_def_from_parent;
-
-}
+//int
+//PDM_Mesh_nodal_is_set_coord_from_parent
+//(
+// const int          idx
+//)
+//{
+//  PDM_Mesh_nodal_t * mesh = (PDM_Mesh_nodal_t *) PDM_Handles_get (mesh_handles, idx);
+//  
+//  if (mesh == NULL) {
+//    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");  
+//  }
+//
+//  return mesh->is_vtx_def_from_parent;
+//
+//}
 
 /**
  * \brief Extract vertices from parent vertices
