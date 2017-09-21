@@ -38,22 +38,22 @@ extern "C" {
 
 typedef struct PDM_DMesh_nodal_vtx_t PDM_DMesh_nodal_vtx_t;
 
-struct PDM_Mesh_nodal_vtx_t {
+struct PDM_DMesh_nodal_vtx_t {
   int          n_proc;  /*!< Number of proceses */ 
   PDM_l_num_t  n_vtx;   /*!< Number of vertices */
-  double      *_coords;  /*!< Coordinates 
+  const PDM_real_t *_coords;  /*!< Coordinates 
                           * (Memory mapping) (size = 3 * \ref n_vtx) */
   PDM_g_num_t *distrib;  /*!< Distribution on the processes 
                           * (size = \ref n_proc + 1) */  
 };
 
 /**
- * \struct PDM_Mesh_nodal_block_std_t
- * \brief  Standard geometric block 
+ * \struct PDM_Mesh_nodal_section_std_t
+ * \brief  Standard geometric section 
  *
  */
 
-typedef struct PDM_DMesh_nodal_block_std_t {
+typedef struct PDM_DMesh_nodal_section_std_t {
 
   int                     n_proc;  /*!< Number of proceses */ 
   PDM_Mesh_nodal_elt_t    t_elt;   /*!< Element type */
@@ -62,16 +62,16 @@ typedef struct PDM_DMesh_nodal_block_std_t {
                                     *   (size = Number of vertices per element * \ref n_elt)  */
   PDM_g_num_t            *distrib; /*!< Distribution on the processes (size = \ref n_proc + 1) */  
   
-} PDM_DMesh_nodal_block_std_t;
+} PDM_DMesh_nodal_section_std_t;
 
 
 /**
- * \struct PDM_Mesh_nodal_block_poly2d_t
- * \brief  Polygon geometric block 
+ * \struct PDM_Mesh_nodal_section_poly2d_t
+ * \brief  Polygon geometric section 
  *
  */
 
-typedef struct PDM_DMesh_nodal_block_poly2d_t {
+typedef struct PDM_DMesh_nodal_section_poly2d_t {
 
   int          n_proc;        /*!< Number of proceses */ 
   PDM_l_num_t  n_elt;         /*!< Number of elements of each partition */
@@ -81,16 +81,16 @@ typedef struct PDM_DMesh_nodal_block_poly2d_t {
                                * (Memory mapping) (size = \ref connec_idx[\ref n_elt]) */
   PDM_g_num_t  *distrib;      /*!< Distribution on the processes (size = \ref n_proc + 1) */  
 
-} PDM_DMesh_nodal_block_poly2d_t;
+} PDM_DMesh_nodal_section_poly2d_t;
 
 
 /**
- * \struct PDM_Mesh_nodal_block_poly3d_t
- * \brief  Polyhedron geometric block 
+ * \struct PDM_Mesh_nodal_section_poly3d_t
+ * \brief  Polyhedron geometric section 
  *
  */
 
-typedef struct PDM_DMesh_nodal_block_poly3d_t{
+typedef struct PDM_DMesh_nodal_section_poly3d_t{
 
   int          n_proc;       /*!< Number of proceses */ 
   PDM_l_num_t  n_elt;        /*!< Number of elements */
@@ -107,27 +107,36 @@ typedef struct PDM_DMesh_nodal_block_poly3d_t{
                                * (Memory mapping) (Size = \ref _cellfac[\ref n_cell]) */
   PDM_g_num_t  *distrib;      /*!< Distribution on the processes (size = \ref n_proc + 1) */  
 
-} PDM_DMesh_nodal_block_poly3d_t;
+} PDM_DMesh_nodal_section_poly3d_t;
 
 
 /**
- * \struct  PDM_Mesh_nodal_geom_prepa_blocks_t
+ * \struct  PDM_Mesh_nodal_geom_prepa_sections_t
  *
- * \brief   Used to build blocks from cell to face face to edge connectivity
+ * \brief   Used to build sections from cell to face face to edge connectivity
  *
  */
 
-struct _PDM_Mesh_nodal_t {
+struct _PDM_DMesh_nodal_t {
 
   PDM_g_num_t                         n_som_abs;                /*!< Global number of vertices */
-  PDM_g_num_t                         n_elt_abs;                /*!< Global number of elements */
+  PDM_g_num_t                         n_cell_abs;                /*!< Global number of elements */
+  PDM_g_num_t                          *n_face_abs;               
   PDM_DMesh_nodal_vtx_t               *vtx;                    /*!< Description des sommmets de chaque partition */
-  PDM_Handles_t                       *blocks_std;              /*!< Standard blocks */
-  PDM_Handles_t                       *blocks_poly2d;           /*!< Polygon blocks */
-  PDM_Handles_t                       *blocks_poly3d;           /*!< Polyhedron blocks */
+  PDM_Handles_t                       *sections_std;              /*!< Standard sections */
+  PDM_Handles_t                       *sections_poly2d;           /*!< Polygon sections */
+  PDM_Handles_t                       *sections_poly3d;           /*!< Polyhedron sections */
   PDM_MPI_Comm                         pdm_mpi_comm;            /*!< MPI Communicator */
-  int                                 *blocks_id;               /*!< Blocks identifier */
-  int                                  n_blocks;                /*!< Total number of blocks */
+  int                                 *sections_id;               /*!< Blocks identifier */
+  int                                  n_sections;                /*!< Total number of sections */
+
+  PDM_l_num_t                           n_dcell;                /*!< Local number of cell in current block */
+  PDM_l_num_t                          *dcell_face_idx;         /*!< Index of the cell to face connectivity
+                                                                 * (size = \ref n_dcell) */  
+  PDM_g_num_t                          *dcell_face;             /*!< Cell to face connectivity 
+                                                                 * (size = \ref dcell_face_idx[\ref n_dcell] */
+  PDM_g_num_t                          *cell_distrib;           /*!< Distribution of cells (size = number of processes + 1) */
+  
 } ;
 
 #ifdef __cplusplus
