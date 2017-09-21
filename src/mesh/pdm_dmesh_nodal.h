@@ -74,29 +74,6 @@ PDM_DMesh_nodal_create
 const PDM_MPI_Comm comm        
 );
 
-/**
- * \brief Free partially a nodal mesh structure
- *
- * \param [in]  hdl   Distributed nodal mesh handle
- *
- * \return      NULL
- *
- */
-
-void
-PDM_DMesh_nodal_partial_free
-(
-const int hdl
-);
-
-/**
- * \brief Free a nodal mesh structure
- *
- * \param [in]  hdl   Distributed nodal mesh handle
- *
- * \return      NULL
- *
- */
 
 void
 PDM_DMesh_nodal_free
@@ -433,7 +410,6 @@ const int          n_elt,
  *
  * \param [in]  hdl            Distributed nodal mesh handle
  * \param [in]  id_section       Block identifier
- * \param [in]  id_part        Partition identifier
  *
  * \return  connect           Connectivity
  *
@@ -452,7 +428,6 @@ const int            id_section
  *
  * \param [in]  hdl            Distributed nodal mesh handle
  * \param [in]  id_section       Block identifier
- * \param [in]  id_part        Partition identifier
  *
  * \return      Number of elements
  *  
@@ -462,8 +437,7 @@ int
 PDM_DMesh_nodal_section_n_elt_get 
 (   
 const int            hdl,
-const int            id_section,     
-const int            id_part 
+const int            id_section     
 ); 
 
 
@@ -528,13 +502,12 @@ PDM_DMesh_nodal_section_poly3d_set
 (
 const int            hdl,
 const int            id_section, 
-const int            id_part, 
 const PDM_l_num_t    n_elt,    
 const PDM_l_num_t    n_face,   
       PDM_l_num_t   *facvtx_idx,   
       PDM_g_num_t   *facvtx,
       PDM_l_num_t   *cellfac_idx,   
-      PDM_g_num_t   *cellfac,
+      PDM_g_num_t   *cellfac
 ); 
 
 
@@ -625,7 +598,7 @@ void
 PDM_DMesh_nodal_cell_face_get
 (
 const int   hdl,
-      int   **cell_face_idx  
+      int   **cell_face_idx,  
 PDM_g_num_t **cell_face  
 ); 
 
@@ -643,7 +616,7 @@ void
 PDM_DMesh_nodal_face_vtx_get
 (
 const int     hdl,
-      int   **dface_vtx_idx  
+      int   **dface_vtx_idx,  
 PDM_g_num_t **dface_vtx  
 ); 
 
