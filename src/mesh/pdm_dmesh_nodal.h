@@ -100,20 +100,6 @@ PDM_DMesh_nodal_coord_set
 
 
 /**
- * \brief  Compute mesh distribution
- *
- * \param [in]  hdl  Distributed nodal mesh handle
- *
- */
-
-void
-PDM_DMesh_nodal_distrib_compute
-(
- const int          hdl
-);
-
-
-/**
  * \brief  Return vertices distribution
  * 
  * \param [in]  hdl  Distributed nodal mesh handle
@@ -122,7 +108,7 @@ PDM_DMesh_nodal_distrib_compute
  * 
  */
 
-PDM_g_num_t *
+const PDM_g_num_t *
 PDM_DMesh_nodal_distrib_vtx_get
 (
  const int          hdl
@@ -139,7 +125,7 @@ PDM_DMesh_nodal_distrib_vtx_get
  * 
  */
 
-PDM_g_num_t *
+const PDM_g_num_t *
 PDM_DMesh_nodal_distrib_section_get
 (
  const int   hdl,
@@ -531,14 +517,14 @@ const int            hdl,
 const int            id_section, 
       PDM_l_num_t   *n_face,   
       PDM_l_num_t  **facvtx_idx,   
-      PDM_l_num_t  **facvtx,
+      PDM_g_num_t  **facvtx,
       PDM_l_num_t  **cellfac_idx,   
-      PDM_l_num_t  **cellfac
+      PDM_g_num_t  **cellfac
 ); 
 
 
 /**
- * \brief  Return total number of elements of a aistributed mesh
+ * \brief  Return total number of elements of a distributed mesh
  *
  * \param [in]  hdl       Distributed nodal mesh handle
  *
@@ -586,15 +572,31 @@ const int  hdl
 
 
 /**
+ * \brief  Compute cell->face connectivity
+ *
+ * \param [in]   hdl              Distributed nodal mesh handle
+ * 
+ */
+
+void
+PDM_DMesh_nodal_cell_face_compute
+(
+const int   hdl
+); 
+
+
+/**
  * \brief  Return cell->face connectivity
  *
  * \param [in]   hdl              Distributed nodal mesh handle
  * \param [out]  dcell_face_idx   Index of distributed cell->face connectivity
  * \param [out]  dcell_face       Distributed cell->face connectivity
- * 
+ *
+ * \return     Number of cells on the current process
+ *  
  */
 
-void
+int
 PDM_DMesh_nodal_cell_face_get
 (
 const int   hdl,
@@ -604,21 +606,23 @@ PDM_g_num_t **cell_face
 
 
 /**
- * \brief  Return face->vyx connectivity
+ * \brief  Return face \rightarrow vertex connectivity
  *
- * \param [in]   hdl             Distributed nodal mesh handle
- * \param [out]  dface_vtx_idx   Index of distributed face->vtx connectivity
- * \param [out]  dface_vtx       Distributed nodal face->vtx connectivity
- * 
+ * \param [in]   hdl              Distributed nodal mesh handle
+ * \param [out]  dcell_face_idx   Index of distributed cell->face connectivity
+ * \param [out]  dcell_face       Distributed cell->face connectivity
+ *
+ * \return     Number of faces on the current process
+ *  
  */
 
-void
+int
 PDM_DMesh_nodal_face_vtx_get
 (
-const int     hdl,
+const int   hdl,
       int   **dface_vtx_idx,  
 PDM_g_num_t **dface_vtx  
-); 
+);
 
 
 /**
@@ -630,7 +634,7 @@ PDM_g_num_t **dface_vtx
  * 
  */
 
-PDM_g_num_t *
+const PDM_g_num_t *
 PDM_DMesh_nodal_distrib_cell_get
 (
  const int  hdl
@@ -646,7 +650,7 @@ PDM_DMesh_nodal_distrib_cell_get
  * 
  */
 
-PDM_g_num_t *
+const PDM_g_num_t *
 PDM_DMesh_nodal_distrib_face_get
 (
  const int hdl
