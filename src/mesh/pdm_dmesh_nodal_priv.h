@@ -39,7 +39,6 @@ extern "C" {
 typedef struct PDM_DMesh_nodal_vtx_t PDM_DMesh_nodal_vtx_t;
 
 struct PDM_DMesh_nodal_vtx_t {
-  int          n_proc;  /*!< Number of proceses */ 
   PDM_l_num_t  n_vtx;   /*!< Number of vertices */
   const PDM_real_t *_coords;  /*!< Coordinates 
                           * (Memory mapping) (size = 3 * \ref n_vtx) */
@@ -55,7 +54,6 @@ struct PDM_DMesh_nodal_vtx_t {
 
 typedef struct PDM_DMesh_nodal_section_std_t {
 
-  int                     n_proc;  /*!< Number of proceses */ 
   PDM_Mesh_nodal_elt_t    t_elt;   /*!< Element type */
   PDM_l_num_t             n_elt;   /*!< Number elements */
   PDM_g_num_t            *_connec; /*!< Connectivity (Memory mapping) 
@@ -73,7 +71,6 @@ typedef struct PDM_DMesh_nodal_section_std_t {
 
 typedef struct PDM_DMesh_nodal_section_poly2d_t {
 
-  int          n_proc;        /*!< Number of proceses */ 
   PDM_l_num_t  n_elt;         /*!< Number of elements of each partition */
   PDM_l_num_t  *_connec_idx;  /*!< Index of elements connectivity 
                                *  (Memory mapping) (size = \ref n_elt + 1) */
@@ -92,7 +89,6 @@ typedef struct PDM_DMesh_nodal_section_poly2d_t {
 
 typedef struct PDM_DMesh_nodal_section_poly3d_t{
 
-  int          n_proc;       /*!< Number of proceses */ 
   PDM_l_num_t  n_elt;        /*!< Number of elements */
   PDM_l_num_t  n_face;       /*!< Number of faces */
   PDM_l_num_t  *_facvtx_idx; /*!< Index of faces connectivity 
@@ -119,23 +115,30 @@ typedef struct PDM_DMesh_nodal_section_poly3d_t{
 
 struct _PDM_DMesh_nodal_t {
 
-  PDM_g_num_t                         n_som_abs;                /*!< Global number of vertices */
-  PDM_g_num_t                         n_cell_abs;                /*!< Global number of elements */
-  PDM_g_num_t                          *n_face_abs;               
-  PDM_DMesh_nodal_vtx_t               *vtx;                    /*!< Description des sommmets de chaque partition */
-  PDM_Handles_t                       *sections_std;              /*!< Standard sections */
-  PDM_Handles_t                       *sections_poly2d;           /*!< Polygon sections */
-  PDM_Handles_t                       *sections_poly3d;           /*!< Polyhedron sections */
-  PDM_MPI_Comm                         pdm_mpi_comm;            /*!< MPI Communicator */
-  int                                 *sections_id;               /*!< Blocks identifier */
-  int                                  n_sections;                /*!< Total number of sections */
+  PDM_g_num_t           n_som_abs;        /*!< Global number of vertices */
+  PDM_g_num_t           n_cell_abs;       /*!< Global number of elements */
+  PDM_g_num_t           *n_face_abs;               
+  PDM_DMesh_nodal_vtx_t *vtx;             /*!< Description des sommmets de chaque partition */
+  PDM_Handles_t         *sections_std;    /*!< Standard sections */
+  PDM_Handles_t         *sections_poly2d; /*!< Polygon sections */
+  PDM_Handles_t         *sections_poly3d; /*!< Polyhedron sections */
+  PDM_MPI_Comm           pdm_mpi_comm;    /*!< MPI Communicator */
+  int                    n_proc;          /*!< Number of processes */
+  int                   *sections_id;     /*!< Blocks identifier */
+  int                    n_sections;      /*!< Total number of sections */
 
-  PDM_l_num_t                           n_dcell;                /*!< Local number of cell in current block */
-  PDM_l_num_t                          *dcell_face_idx;         /*!< Index of the cell to face connectivity
-                                                                 * (size = \ref n_dcell) */  
-  PDM_g_num_t                          *dcell_face;             /*!< Cell to face connectivity 
-                                                                 * (size = \ref dcell_face_idx[\ref n_dcell] */
-  PDM_g_num_t                          *cell_distrib;           /*!< Distribution of cells (size = number of processes + 1) */
+  PDM_l_num_t            n_dcell;         /*!< Local number of cells in the local block */
+  PDM_l_num_t           *dcell_face_idx;  /*!< Index of the cell to face connectivity
+                                           * (size = \ref n_dcell) */  
+  PDM_g_num_t           *dcell_face;      /*!< Cell to face connectivity 
+                                           * (size = \ref dcell_face_idx[\ref n_dcell] */
+  PDM_g_num_t           *cell_distrib;    /*!< Distribution of cells (size = number of processes + 1) */
+  PDM_l_num_t            n_dface;         /*!< Local number of faces in the local block */
+  PDM_l_num_t           *dface_vtx_idx;   /*!< Index of the cell to face connectivity
+                                           * (size = \ref n_dcell) */  
+  PDM_g_num_t           *dface_vtx;       /*!< Cell to face connectivity 
+                                           * (size = \ref dcell_face_idx[\ref n_dcell] */
+  PDM_g_num_t           *face_distrib;    /*!< Distribution of cells (size = number of processes + 1) */
   
 } ;
 
