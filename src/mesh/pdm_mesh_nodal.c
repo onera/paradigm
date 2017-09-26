@@ -3901,6 +3901,7 @@ PDM_g_num_t      *numabs
 
     for (int ipart = 0; ipart < mesh->n_part; ipart++) {
 
+      PDM_l_num_t n_face_courant = mesh->prepa_blocks->n_face[ipart];
       PDM_l_num_t *num_cell_parent_to_local_courant = mesh->num_cell_parent_to_local[ipart];
       PDM_l_num_t *face_som_idx_courant = mesh->prepa_blocks->face_vtx_idx[ipart];
       PDM_l_num_t *face_som_nb_courant = mesh->prepa_blocks->face_vtx_nb[ipart];
@@ -3960,7 +3961,7 @@ PDM_g_num_t      *numabs
       PDM_l_num_t idx_quad   = n_tria;
       PDM_l_num_t idx_poly2d = idx_quad + n_quad;
 
-      for (int i = 0; i < n_face; i++) {
+      for (int i = 0; i < n_face_courant; i++) {
         PDM_l_num_t n_som_face = face_som_nb_courant[i];
         PDM_l_num_t idx_som_face = face_som_idx_courant[i] - 1;
         PDM_l_num_t *connec_courant;
