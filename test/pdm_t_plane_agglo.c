@@ -436,6 +436,7 @@ PDM_part_split_t           method,
     int sFaceEdge;
     int sEdgeVtx;
     int sEdgeGroup;
+    int nEdgeGroup2;
     
     PDM_part_part_dim_get (ppartId,
                            ipart,
@@ -447,7 +448,8 @@ PDM_part_split_t           method,
                            nTPart,
                            &sFaceEdge,
                            &sEdgeVtx,
-                           &sEdgeGroup);
+                           &sEdgeGroup,
+                           &nEdgeGroup2);
     
   }
   
@@ -575,6 +577,7 @@ _export_ini_mesh
     int sFaceEdge;
     int sEdgeVtx;
     int sEdgeGroup;
+    int nEdgeGroup2;
 
     PDM_part_part_dim_get (ppartId,
                         ipart,
@@ -586,7 +589,8 @@ _export_ini_mesh
                         &nTPart,
                         &sFaceEdge,
                         &sEdgeVtx,
-                        &sEdgeGroup);
+                        &sEdgeGroup,
+                        &nEdgeGroup2);
 
     int          *faceTag;
     int          *faceEdgeIdx;
@@ -703,6 +707,7 @@ _export_ini_mesh
     int sFaceEdge;
     int sEdgeVtx;
     int sEdgeGroup;
+    int nEdgeGroup2;
 
     PDM_part_part_dim_get (ppartId,
                         ipart,
@@ -714,7 +719,8 @@ _export_ini_mesh
                         &nTPart,
                         &sFaceEdge,
                         &sEdgeVtx,
-                        &sEdgeGroup);
+                        &sEdgeGroup,
+                        &nEdgeGroup2);
 
     int          *faceTag;
     int          *faceEdgeIdx;
@@ -1102,6 +1108,7 @@ _export_coarse_mesh
     int sFaceEdge;
     int sEdgeVtx;
     int sEdgeGroup;
+    int nEdgeGroup2;
 
     PDM_part_part_dim_get (cmId,
                         ipart,
@@ -1113,7 +1120,8 @@ _export_coarse_mesh
                         &nTPart,
                         &sFaceEdge,
                         &sEdgeVtx,
-                        &sEdgeGroup);
+                        &sEdgeGroup,
+                        &nEdgeGroup2);
 
     int          *faceTag;
     int          *faceEdgeIdx;
@@ -1347,6 +1355,7 @@ char *argv[]
     int sFaceEdge;
     int sEdgeVtx;
     int sEdgeGroup;
+    int nEdgeGroup2;
     
     PDM_part_part_dim_get (id_ppart,
                            ipart,
@@ -1358,7 +1367,8 @@ char *argv[]
                            &nTPart1,
                            &sFaceEdge,
                            &sEdgeVtx,
-                           &sEdgeGroup);
+                           &sEdgeGroup,
+                           &nEdgeGroup2);
 
     int          *faceTag;
     int          *faceEdgeIdx;

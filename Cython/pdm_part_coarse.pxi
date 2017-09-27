@@ -1,7 +1,7 @@
 
 # cdef extern from "pdm_part_priv.h":
 #     ctypedef struct _part_t:
-#        int           nVtx              
+#        int           nVertex              
 #        int           nCell             
 #        int           nFace             
 #        int           nFacePartBound    
@@ -51,25 +51,25 @@ cdef extern from "pdm_part_coarse_mesh.h":
 
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     # > Wrapping of function 
-    void PDM_part_coarse_mesh_create(int   *cmId,
-                                     void  *pt_comm,        
-                                     int    method,
-                                     int    nPart, 
-                                     int    nTPart,
-                                     int    nFaceGroup, 
-                                     int    have_cellTag,
-                                     int    have_faceTag,
-                                     int    have_vtxTag,
-                                     int    have_cellWeight,
-                                     int    have_faceWeight,
-                                     int    have_faceGroup)
+    void PDM_part_coarse_mesh_create(int           *cmId,
+                                     PDM_MPI_Comm  comm,
+                                     int           method,
+                                     int           nPart, 
+                                     int           nTPart,
+                                     int           nFaceGroup, 
+                                     int           have_cellTag,
+                                     int           have_faceTag,
+                                     int           have_vtxTag,
+                                     int           have_cellWeight,
+                                     int           have_faceWeight,
+                                     int           have_faceGroup)
 
     void PDM_part_coarse_mesh_input(int           cmId,
                                     int           iPart,
                                     int           nCoarseCell,
                                     int           nCell,
                                     int           nFace,
-                                    int           nVtx,
+                                    int           nVertex,
                                     int           nFaceGroup,
                                     int           nFacePartBound,
                                     int          *cellFaceIdx,
@@ -100,7 +100,7 @@ cdef extern from "pdm_part_coarse_mesh.h":
                                            int *nCell,
                                            int *nFace,
                                            int *nFacePartBound,
-                                           int *nVtx,
+                                           int *nVertex,
                                            int *nProc,
                                            int *nTPart,
                                            int *nFaceGroup,
@@ -155,7 +155,7 @@ cdef class CoarseMesh:
     cdef int _cmId
     cdef int _nFaceGroup
     # ------------------------------------------------------------------
-    def __cinit__(self,
+    def __init__(self,
                   MPI.Comm comm,
                   int      method, 
                   int      nPart, 
@@ -181,7 +181,7 @@ cdef class CoarseMesh:
 
       # > Create 
       PDM_part_coarse_mesh_create(&self._cmId, 
-                                  &c_comm, 
+                                  PDM_MPI_mpi_2_pdm_mpi_comm (<void *> &c_comm), 
                                   method, 
                                   nPart, 
                                   nTPart, 
@@ -199,7 +199,7 @@ cdef class CoarseMesh:
                        int      nCoarseCell,
                        int      nCell,
                        int      nFace,
-                       int      nVtx,
+                       int      nVertex,
                        int      nFaceGroup,
                        int      nFacePartBound,
                        NPY.ndarray[NPY.int32_t    , mode='c', ndim=1] CellFaceIdx not None,
@@ -313,7 +313,7 @@ cdef class CoarseMesh:
                                    nCoarseCell, 
                                    nCell, 
                                    nFace, 
-                                   nVtx, 
+                                   nVertex, 
                                    nFaceGroup, 
                                    nFacePartBound,
                                    CellFaceIdx_data,
@@ -349,7 +349,8 @@ cdef class CoarseMesh:
         """
            Free memory in PTJ Lib and structure
         """
-        PDM_part_coarse_mesh_free(self.cmId)
+        print '__dealloc__ PDM_part_coarse_mesh_free'
+        PDM_part_coarse_mesh_free(self._cmId)
 
     # ------------------------------------------------------------------
     def part_coarse_dim_get(self, int ipart):
@@ -361,7 +362,7 @@ cdef class CoarseMesh:
         cdef int nCell,
         cdef int nFace,
         cdef int nFacePartBound,
-        cdef int nVtx,
+        cdef int nVertex,
         cdef int nProc,
         cdef int nTPart,
         cdef int nFaceGroup,
@@ -376,7 +377,7 @@ cdef class CoarseMesh:
                                           &nCell,
                                           &nFace,
                                           &nFacePartBound,
-                                          &nVtx,
+                                          &nVertex,
                                           &nProc,
                                           &nTPart,
                                           &nFaceGroup,
@@ -390,7 +391,7 @@ cdef class CoarseMesh:
                 'nCell'                : nCell,
                 'nFace'                : nFace,
                 'nFacePartBound'       : nFacePartBound,
-                'nVtx'                 : nVtx,
+                'nVertex'                 : nVertex,
                 'nProc'                : nProc,
                 'nTPart'               : nTPart,
                 'nFaceGroup'           : nFaceGroup,
@@ -519,7 +520,7 @@ cdef class CoarseMesh:
         if (cellInitCell == NULL) :
           npCellInitCell = None
         else :
-          dim = <NPY.npy_intp> (dims['nCell'] + 1)
+          dim = <NPY.npy_intp> dims['sCoarseCellToFineCel'] 
           npCellInitCell = NPY.PyArray_SimpleNewFromData(1,
                                                          &dim,
                                                          NPY.NPY_INT32,
@@ -559,7 +560,7 @@ cdef class CoarseMesh:
         if (faceVtx == NULL) :
           npFaceVertex = None
         else :
-          dim = <NPY.npy_intp> dims['sFaceVertex']
+          dim = <NPY.npy_intp> dims['sFaceVtx']
           npFaceVertex  = NPY.PyArray_SimpleNewFromData(1,
                                                        &dim,
                                                        NPY.NPY_INT32,
@@ -578,7 +579,8 @@ cdef class CoarseMesh:
         if (faceInitFace == NULL) :
           npFaceInitFace = None
         else:
-          dim = <NPY.npy_intp> dims['nCoarseFace']
+          # dim = <NPY.npy_intp> dims['nCoarseFace']
+          dim = <NPY.npy_intp> dims['nFace']
           npFaceInitFace   = NPY.PyArray_SimpleNewFromData(1,
                                                            &dim,
                                                            NPY.NPY_INT32,
@@ -645,8 +647,7 @@ cdef class CoarseMesh:
                                                             PDM_G_NUM_NPY_INT,
                                                             <void *> faceGroupLNToGN)
         # :::::::::::::::::::::::::::::::::::::::::::::::::::::
-
-        # \param [out]  vtxTag             Vertex tag (size = nVtx)
+        # \param [out]  vtxTag             Vertex tag (size = nVertex)
         if (vtxTag == NULL) :
           npVertexTag = None
         else :
@@ -655,8 +656,7 @@ cdef class CoarseMesh:
                                                        &dim,
                                                        NPY.NPY_INT32,
                                                        <void *> vtxTag)
-
-        # \param [out]  vtx                Vertex coordinates (size = 3 * nVtx)
+        # \param [out]  vtx                Vertex coordinates (size = 3 * nVertex)
         if (vtxCoord == NULL) :
           npVertex = None
         else :
@@ -666,7 +666,7 @@ cdef class CoarseMesh:
                                                    NPY.NPY_DOUBLE,
                                                    <void *> vtxCoord)
 
-        # \param [out]  vtxLNToGN          Vertex local numbering to global numbering (size = nVtx)
+        # \param [out]  vtxLNToGN          Vertex local numbering to global numbering (size = nVertex)
         if (vtxLNToGN == NULL) :
           npVertexLNToGN = None
         else :

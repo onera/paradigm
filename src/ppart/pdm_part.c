@@ -3349,6 +3349,7 @@ PROCF (pdm_part_create_cf, PDM_PART_CREATE_CF)
  * \param [out]  sFaceVtx           Size of face-vertex connectivity
  * \param [out]  sFacePartBound     Size of facePartBound array
  * \param [out]  sFaceGroup         Size of faceGroup array 
+ * \param [out]  nFaceGroup         Number of boundary
  *
  */
 
@@ -3365,7 +3366,8 @@ const   int  ipart,
  int        *nTPart,
  int        *sCellFace,
  int        *sFaceVtx,
- int        *sFaceGroup
+ int        *sFaceGroup,
+ int        *nFaceGroup
 )
 {
   _PDM_part_t *ppart = _get_from_id(ppartId);
@@ -3392,6 +3394,7 @@ const   int  ipart,
   *sFaceGroup      = 0;
   if (ppart->nFaceGroup > 0)
     *sFaceGroup    = meshPart->faceGroupIdx[ppart->nFaceGroup];
+    *nFaceGroup    = ppart->nFaceGroup;
 }
 
 void 
@@ -3407,7 +3410,8 @@ PROCF (pdm_part_part_dim_get, PDM_PART_PART_DIM_GET)
  int           *nTPart,
  int           *sCellFace,
  int           *sFaceVtx,
- int           *sFaceGroup
+ int           *sFaceGroup,
+ int           *nFaceGroup
 )
 {
   PDM_part_part_dim_get(*ppartId,
@@ -3420,7 +3424,8 @@ PROCF (pdm_part_part_dim_get, PDM_PART_PART_DIM_GET)
                         nTPart,
                         sCellFace,
                         sFaceVtx,
-                        sFaceGroup
+                        sFaceGroup,
+                        nFaceGroup
                         );
 }
 

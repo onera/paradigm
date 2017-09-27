@@ -59,7 +59,8 @@ cdef extern from "pdm_part.h":
                                int   *nTPart,
                                int   *sCellFace,
                                int   *sFaceVtx,
-                               int   *sFaceGroup)
+                               int   *sFaceGroup,
+                               int   *nFaceGroup)
 
     # ------------------------------------------------------------------
     void PDM_part_part_val_get(int            ppartId,
@@ -333,6 +334,7 @@ cdef class Part:
         cdef int sCellFace
         cdef int sFaceVertex
         cdef int sFaceGroup
+        cdef int nFaceGroup
         # ************************************************************************
 
         PDM_part_part_dim_get(self.id,
@@ -345,7 +347,8 @@ cdef class Part:
                               &nTPart,
                               &sCellFace,
                               &sFaceVertex,
-                              &sFaceGroup)
+                              &sFaceGroup, 
+                              &nFaceGroup)
 
         return {'nCell'          :nCell,
                 'ipart'          :ipart,
@@ -356,7 +359,8 @@ cdef class Part:
                 'nVertex'        :nVertex,
                 'sCellFace'      :sCellFace,
                 'sFaceVertex'    :sFaceVertex,
-                'sFaceGroup'     :sFaceGroup}
+                'sFaceGroup'     :sFaceGroup,
+                'nFaceGroup'     :nFaceGroup}
 
     # ------------------------------------------------------------------
     def part_val_get(self, int ipart):

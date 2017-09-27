@@ -24,7 +24,6 @@ from    mpi4py      cimport MPI
 
 # MANDATORY :
 # ---------
-
 NPY.import_array()
 
 # PDM Specific type :

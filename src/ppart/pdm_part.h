@@ -238,7 +238,8 @@ const  int    ipart,
        int   *nTPart,
        int   *sCellFace,
        int   *sFaceVtx,
-       int   *sFaceGroup
+       int   *sFaceGroup,
+       int   *nFaceGroup
 );
 
 void 
@@ -254,7 +255,8 @@ PROCF (pdm_part_part_dim_get, PDM_PART_PART_DIM_GET)
  int           *nTPart,
  int           *sCellFace,
  int           *sFaceVtx,
- int           *sFaceGroup
+ int           *sFaceGroup,
+ int           *nFaceGroup
 );
 
 /**

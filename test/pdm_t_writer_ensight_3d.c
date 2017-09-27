@@ -384,6 +384,7 @@ int main(int argc, char *argv[])
     int sCellFace;
     int sFaceVtx;
     int sFaceGroup;
+    int nEdgeGroup2;
 
     PDM_part_part_dim_get(ppartId,
                        ipart,
@@ -395,7 +396,8 @@ int main(int argc, char *argv[])
                        &nTPart,
                        &sCellFace,
                        &sFaceVtx,
-                       &sFaceGroup);
+                       &sFaceGroup,
+                       &nEdgeGroup2);
 
     int          *cellTag;
     int          *cellFaceIdx;

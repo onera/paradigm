@@ -418,6 +418,7 @@ PDM_part_split_t           method,
     int sFaceEdge;
     int sEdgeVtx;
     int sEdgeGroup;
+    int nEdgeGroup2;
     
     PDM_part_part_dim_get (ppartId,
                            ipart,
@@ -429,7 +430,8 @@ PDM_part_split_t           method,
                            nTPart,
                            &sFaceEdge,
                            &sEdgeVtx,
-                           &sEdgeGroup);
+                           &sEdgeGroup,
+                           &nEdgeGroup2);
     
   }
   
