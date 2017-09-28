@@ -2115,8 +2115,6 @@ PDM_DMesh_nodal_distrib_face_get
   
 }
 
-        
-
 
 #ifdef __cplusplus
 }

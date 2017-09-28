@@ -765,8 +765,7 @@ _PDM_part_t* ppart
 {
 
   /** Loop over all part of the current process **/
-  for(int ipart = 0; ipart < ppart->nPart; ++ipart) 
-  {
+  for(int ipart = 0; ipart < ppart->nPart; ++ipart) {
     /** Get current part id **/
     _part_t *part = ppart->meshParts[ipart];
     const int nCell = part->nCell;
@@ -865,8 +864,7 @@ _renum_faces_lexicographic
 _PDM_part_t* ppart
 )
 {
-  for(int ipart = 0; ipart < ppart->nPart; ++ipart) 
-  {
+  for(int ipart = 0; ipart < ppart->nPart; ++ipart) {
     _part_t *part = ppart->meshParts[ipart];
     const int nFace = part->nFace;
 
@@ -875,8 +873,7 @@ _PDM_part_t* ppart
     /** Build a pre-array face cell ordered */
     int *faceCellTmp = (int *) malloc(2*nFace * sizeof(int)); 
 
-    for(int i = 0; i < nFace; i++)
-    {
+    for(int i = 0; i < nFace; i++) {
        int iL = PDM_ABS (part->faceCell[2*i  ]);
        int iR = PDM_ABS (part->faceCell[2*i+1]);
        if(iL < iR )
