@@ -585,6 +585,15 @@ cdef class CoarseMesh:
                                                            &dim,
                                                            NPY.NPY_INT32,
                                                            <void *> faceInitFace)
+        if (faceGroupInitFaceGroup == NULL) :
+          npfaceGroupInitFaceGroup = None
+        else:
+          # dim = <NPY.npy_intp> dims['nCoarseFace']
+          dim = <NPY.npy_intp> dims['sFaceGroup']
+          npfaceGroupInitFaceGroup   = NPY.PyArray_SimpleNewFromData(1,
+                                                                     &dim,
+                                                                     NPY.NPY_INT32,
+                                                                     <void *> faceGroupInitFaceGroup)
 
         # :::::::::::::::::::::::::::::::::::::::::::::::::::::
         # \param [out]  facePartBound      Partitioning boundary faces
@@ -696,4 +705,6 @@ cdef class CoarseMesh:
                 'npVertexLNToGN'             : npVertexLNToGN,
                 'npFaceGroupIdx'             : npFaceGroupIdx,
                 'npFaceGroup'                : npFaceGroup,
-                'npFaceGroupLNToGN'          : npFaceGroupLNToGN}
+                'npfaceGroupInitFaceGroup'   : npfaceGroupInitFaceGroup,
+                'npFaceGroupLNToGN'          : npFaceGroupLNToGN, 
+                'npFaceInitFace'             : npFaceInitFace}

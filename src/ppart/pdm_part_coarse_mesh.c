@@ -4206,7 +4206,7 @@ PDM_part_coarse_mesh_free
   cm->part_ini = NULL;
   cm->part_res = NULL;
   
-  // PDM_timer_free(cm->timer);
+  PDM_timer_free(cm->timer);
   cm->timer = NULL;
 
   free(cm);
