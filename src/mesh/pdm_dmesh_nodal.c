@@ -394,7 +394,7 @@ _section_size_elt_faces_get
     _s_elt_face_vtx += section->_facvtx[section->_facvtx_idx[section->n_face]];
   }
 
-  *s_elt_face_cell = 2 * _s_elt_face_vtx_idx;
+  *s_elt_face_cell =  _s_elt_face_vtx_idx;
   *s_elt_face_vtx_idx = _s_elt_face_vtx_idx + 1;
   *s_elt_face_vtx = _s_elt_face_vtx + 1;
   
@@ -416,7 +416,7 @@ _section_size_elt_faces_get
  */
 
 static void
-_section_elt_faces_get
+_section_elt_faces_add
 (
       PDM_DMesh_nodal_t *mesh,
 const int                id_section,
@@ -428,11 +428,10 @@ const int                id_section,
 )
 {
   int _n_face_current = *n_face_current;
-  int _n_elt_current = *n_elt_current;
   
   int         *_current_elt_face_vtx_idx = elt_face_vtx_idx + _n_face_current;
   PDM_g_num_t *_current_elt_face_vtx     = elt_face_vtx + elt_face_vtx_idx[_n_face_current];        
-  PDM_g_num_t *_current_elt_face_cell    = elt_face_cell + 2 * _n_face_current;        
+  PDM_g_num_t *_current_elt_face_cell    = elt_face_cell +_n_face_current;        
   
   if (id_section < PDM_BLOCK_ID_BLOCK_POLY2D) {
   
@@ -455,8 +454,7 @@ const int                id_section,
           for (int iface = 0; iface < n_face_elt; iface++) {
             _current_elt_face_vtx_idx[ielt * n_face_elt + iface + 1] = 
               _current_elt_face_vtx_idx[ielt * n_face_elt + iface] + 3;
-            _current_elt_face_cell[2*(ielt * n_face_elt + iface)    ] = *n_elt_current + ielt + 1;
-            _current_elt_face_cell[2*(ielt * n_face_elt + iface) + 1] = 0;
+            _current_elt_face_cell[ielt * n_face_elt + iface    ] = *n_elt_current + ielt + 1;
           }
 
           _current_elt_face_vtx[n_sum_vtx_face * ielt + 0] = section->_connec[n_sum_vtx_elt * ielt    ];
@@ -470,7 +468,7 @@ const int                id_section,
         }
         
         *n_elt_current += section->n_elt;
-
+        *n_face_current += section->n_elt * n_face_elt;
       }
       break;
 
@@ -484,8 +482,7 @@ const int                id_section,
           for (int iface = 0; iface < n_face_elt; iface++) {
             _current_elt_face_vtx_idx[ielt * n_face_elt + iface + 1] = 
               _current_elt_face_vtx_idx[ielt * n_face_elt + iface] + 3;
-            _current_elt_face_cell[2*(ielt * n_face_elt + iface)    ] = *n_elt_current + ielt + 1;
-            _current_elt_face_cell[2*(ielt * n_face_elt + iface) + 1] = 0;
+            _current_elt_face_cell[ielt * n_face_elt + iface    ] = *n_elt_current + ielt + 1;
           }
 
           _current_elt_face_vtx[n_sum_vtx_face * ielt + 0]  = section->_connec[n_sum_vtx_elt * ielt    ];
@@ -504,10 +501,12 @@ const int                id_section,
           _current_elt_face_vtx[n_sum_vtx_face * ielt + 10] = section->_connec[n_sum_vtx_elt * ielt + 3];
           _current_elt_face_vtx[n_sum_vtx_face * ielt + 11] = section->_connec[n_sum_vtx_elt * ielt + 2];
 
-          *n_elt_current += section->n_elt;
-
         }
-      }
+ 
+        *n_elt_current += section->n_elt;
+        *n_face_current += section->n_elt * n_face_elt;
+
+    }
       break;
     case PDM_MESH_NODAL_QUAD4: 
       {
@@ -519,8 +518,7 @@ const int                id_section,
           for (int iface = 0; iface < n_face_elt; iface++) {
             _current_elt_face_vtx_idx[ielt * n_face_elt + iface + 1] = 
               _current_elt_face_vtx_idx[ielt * n_face_elt + iface] + 3;
-            _current_elt_face_cell[2*(ielt * n_face_elt + iface)    ] = *n_elt_current + ielt + 1;
-            _current_elt_face_cell[2*(ielt * n_face_elt + iface) + 1] = 0;
+            _current_elt_face_cell[ielt * n_face_elt + iface    ] = *n_elt_current + ielt + 1;
           }
 
           _current_elt_face_vtx[n_sum_vtx_face * ielt + 0] = section->_connec[n_sum_vtx_elt * ielt    ];
@@ -533,7 +531,8 @@ const int                id_section,
           _current_elt_face_vtx[n_sum_vtx_face * ielt + 5] = section->_connec[n_sum_vtx_elt * ielt + 3];
         }
         
-        *n_elt_current += section->n_elt;
+        *n_elt_current  += section->n_elt;
+        *n_face_current += section->n_elt * n_face_elt;
 
       }
       break;
@@ -548,8 +547,7 @@ const int                id_section,
           for (int iface = 0; iface < n_face_elt; iface++) {
             _current_elt_face_vtx_idx[ielt * n_face_elt + iface + 1] = 
               _current_elt_face_vtx_idx[ielt * n_face_elt + iface] + 4;
-            _current_elt_face_cell[2*(ielt * n_face_elt + iface)    ] = *n_elt_current + ielt + 1;
-            _current_elt_face_cell[2*(ielt * n_face_elt + iface) + 1] = 0;
+            _current_elt_face_cell[ielt * n_face_elt + iface    ] = *n_elt_current + ielt + 1;
           }
 
           _current_elt_face_vtx[n_sum_vtx_face * ielt + 0]  = section->_connec[n_sum_vtx_elt * ielt + 3];
@@ -583,7 +581,8 @@ const int                id_section,
           _current_elt_face_vtx[n_sum_vtx_face * ielt + 23] = section->_connec[n_sum_vtx_elt * ielt + 0];
         }
         
-        *n_elt_current += section->n_elt;
+        *n_elt_current  += section->n_elt;
+        *n_face_current += section->n_elt * n_face_elt;
         
       }
       break;
@@ -599,8 +598,7 @@ const int                id_section,
         for (int ielt = 0; ielt < section->n_elt; ielt++) {
 
           for (int iface = 0; iface < n_face_elt; iface++) {
-            _current_elt_face_cell[2*(ielt * n_face_elt + iface)    ] = *n_elt_current + ielt + 1;
-            _current_elt_face_cell[2*(ielt * n_face_elt + iface) + 1] = 0;
+            _current_elt_face_cell[ielt * n_face_elt + iface    ] = *n_elt_current + ielt + 1;
           }
 
           _current_elt_face_vtx_idx[ielt * n_face_elt + 1]  = elt_face_vtx_idx[ielt * n_face_elt    ] + 4;
@@ -631,7 +629,10 @@ const int                id_section,
           _current_elt_face_vtx[n_sum_vtx_face * ielt + 15] = section->_connec[n_sum_vtx_elt * ielt    ];
 
         }
-        *n_elt_current += section->n_elt;
+
+        *n_elt_current  += section->n_elt;
+        *n_face_current += section->n_elt * n_face_elt;
+
       }
       break;
     
@@ -644,8 +645,7 @@ const int                id_section,
         for (int ielt = 0; ielt < section->n_elt; ielt++) {
 
           for (int iface = 0; iface < n_face_elt; iface++) {
-            _current_elt_face_cell[2*(ielt * n_face_elt + iface)    ] = *n_elt_current + ielt + 1;
-            _current_elt_face_cell[2*(ielt * n_face_elt + iface) + 1] = 0;
+            _current_elt_face_cell[ielt * n_face_elt + iface    ] = *n_elt_current + ielt + 1;
           }
 
           _current_elt_face_vtx_idx[ielt * n_face_elt + 1]  = elt_face_vtx_idx[ielt * n_face_elt    ] + 3;
@@ -678,7 +678,9 @@ const int                id_section,
           _current_elt_face_vtx[n_sum_vtx_face * ielt + 17] = section->_connec[n_sum_vtx_elt * ielt    ];
 
         }
-        *n_elt_current += section->n_elt;
+
+        *n_elt_current  += section->n_elt;
+        *n_face_current += section->n_elt * n_face_elt;
     
       }
       break;
@@ -691,39 +693,41 @@ const int                id_section,
     PDM_DMesh_nodal_section_poly2d_t *section = 
             (PDM_DMesh_nodal_section_poly2d_t *) PDM_Handles_get (mesh->sections_poly2d, _id);
     
+    if (section == NULL) {
+      PDM_error (__FILE__, __LINE__, 0, "Bad section identifier\n");  
+    }
+
     int idx = 0;
-    elt_face_vtx_idx[0] = 0;
 
     for (int ielt = 0; ielt < section->n_elt; ielt++) {
       int n_face_elt = section->_connec_idx[section->n_elt];
+      *n_face_current += n_face_elt;
       int idx2 = section->_connec_idx[ielt];
       for (int iface = 0; iface < n_face_elt; iface++) {
-        elt_face_vtx_idx[idx + 1] = elt_face_vtx_idx[idx] + 2;
+        _current_elt_face_vtx_idx[idx + 1]  = _current_elt_face_vtx_idx[idx] + 2;
         int inext = (iface + 1) % n_face_elt;
-        elt_face_vtx[2 * idx    ] = section->_connec[idx2 + iface];
-        elt_face_vtx[2 * idx + 1] = section->_connec[idx2 + inext];
-        elt_face_cell[idx] = *n_elt_current + ielt + 1;
+        _current_elt_face_vtx[2 * idx    ]  = section->_connec[idx2 + iface];
+        _current_elt_face_vtx[2 * idx + 1]  = section->_connec[idx2 + inext];
+        _current_elt_face_cell[idx   ]  = *n_elt_current + ielt + 1;
+        idx += 1;
       }
     }
     
     *n_elt_current += section->n_elt;
     
-    if (section == NULL) {
-      PDM_error (__FILE__, __LINE__, 0, "Bad section identifier\n");  
-    }
-    
   }
   
   else {
     
-    int _id = id_section - PDM_BLOCK_ID_BLOCK_POLY3D;
-    PDM_DMesh_nodal_section_poly3d_t *section = 
-            (PDM_DMesh_nodal_section_poly3d_t *) PDM_Handles_get (mesh->sections_poly3d, _id);
-
-    if (section == NULL) {
-      PDM_error (__FILE__, __LINE__, 0, "Bad section identifier\n");  
-    }
-
+    PDM_error (__FILE__, __LINE__, 0, "PDM_BLOCK_ID_BLOCK_POLY3D : Not implemented yet\n");  
+ 
+    //TODO: Compliqué car il faut faire des échanges Block_to_part pour recuperer les
+    // definitions des faces
+    // Il faut redupliquer les faces et les stocker comme pour les autres types de
+    // section
+    // Attention : Dans le cas d'un maillage avec une seule section poly3d, il ne faut
+    // rien faire.et ne pas passer dans cette fonction
+    
   }
   
 }  
