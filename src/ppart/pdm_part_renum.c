@@ -502,8 +502,7 @@ _PDM_part_t* ppart
 {
 
   /** Loop over all part of the current process **/
-  for(int ipart = 0; ipart < ppart->nPart; ++ipart) 
-  {
+  for(int ipart = 0; ipart < ppart->nPart; ++ipart) {
     /** Get current part id **/
     _part_t *part = ppart->meshParts[ipart];
     const int nCell = part->nCell;
@@ -548,8 +547,7 @@ _PDM_part_t* ppart
   int methodcell = ppart->renum_cell_method;
   int methodface = ppart->renum_face_method;
   
-  if(ppart->nPropertyCell != 3)
-  {
+  if(ppart->nPropertyCell != 3) {
     PDM_error(__FILE__, __LINE__, 0, "_renum_cells_cacheblocking Error : You need to specifie [ nCellPerCacheWanted, isAsynchrone, isVectorisation ] in  renum_properties_cell \n");
   }
   
@@ -557,14 +555,12 @@ _PDM_part_t* ppart
   int isAsynchrone        = ppart->renum_properties_cell[1];
   int isVectorisation     = ppart->renum_properties_cell[2];
   
-  if(methodface != PDM_PART_RENUM_FACE_NONE)
-  {
+  if(methodface != PDM_PART_RENUM_FACE_NONE) {
    PDM_error(__FILE__, __LINE__, 0, "_renum_cells_cacheblocking Error : face numbering for cacheblocking need to be set to PDM_PART_RENUM_FACE_NONE \n");
   }
   
   /* Loop over all part of the current process */
-  for(int ipart = 0; ipart < ppart->nPart; ++ipart) 
-  {
+  for(int ipart = 0; ipart < ppart->nPart; ++ipart) {
     /* Get current part id */
     _part_t *part = ppart->meshParts[ipart];
     
@@ -648,8 +644,7 @@ _renum_faces_lexicographic
 _PDM_part_t* ppart
 )
 {
-  for(int ipart = 0; ipart < ppart->nPart; ++ipart) 
-  {
+  for(int ipart = 0; ipart < ppart->nPart; ++ipart) {
     _part_t *part = ppart->meshParts[ipart];
     const int nFace = part->nFace;
 
@@ -658,8 +653,7 @@ _PDM_part_t* ppart
     /** Build a pre-array face cell ordered */
     int *faceCellTmp = (int *) malloc(2*nFace * sizeof(int)); 
 
-    for(int i = 0; i < nFace; i++)
-    {
+    for(int i = 0; i < nFace; i++) {
        int iL = PDM_ABS (part->faceCell[2*i  ]);
        int iR = PDM_ABS (part->faceCell[2*i+1]);
        if(iL < iR )
