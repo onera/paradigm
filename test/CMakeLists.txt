@@ -19,14 +19,26 @@ if (NOT MPI_C_COMPILER)
 endif ()
 
 if (PDM_ENABLE_STATIC)
+ if (PDM_IN_PDMA) 
+  list(APPEND LINK_LIBRARIES
+       pdma_static) 
+ endif()
  list(APPEND LINK_LIBRARIES
       pdm_static
       pdm_mpi_static
       ${COMMON_LIBRARIES})
+ if (PDM_IN_PDMA) 
+  list(APPEND LINK_LIBRARIES
+       pdma_static) 
+ endif()
 else ()
  list(APPEND LINK_LIBRARIES
       pdm_shared
       pdm_mpi_shared ${COMMON_LIBRARIES})
+ if (PDM_IN_PDMA) 
+  list(APPEND LINK_LIBRARIES
+       pdma_shared) 
+ endif()
 endif()
 
 get_target_property(PDM_INC pdm INCLUDE_DIRECTORIES)                          

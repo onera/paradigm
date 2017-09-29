@@ -498,7 +498,7 @@ const int     *faceVtx
         }
       }
 
-      /* Add neighbour cell in the stack */
+      /* Add cell neighbours in the stack */
 
       for (int iface = 0; iface < nPolyFace; iface++) {
 

@@ -792,7 +792,6 @@ _PDM_part_t* ppart
   }
 }
 
-
 /**
  *
  * \brief Perform a cells renumbering from a Hilbert curve
