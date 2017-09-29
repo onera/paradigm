@@ -84,5 +84,9 @@ include "pdm_part_to_block.pxi"
 # ------------------
 include "pdm_block_to_part.pxi"
 
+# PDM_cellface_orient :
+# --------------------
+include "pdm_cellface_orient.pxi" 
+
 # TODO: PDM_writer, ...
 

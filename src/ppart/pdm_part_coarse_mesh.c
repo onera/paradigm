@@ -1526,7 +1526,6 @@ _build_faceGroup
   if(*faceGroup == NULL || *faceGroupIdx == NULL || nFaceGroup == 0) {
     return;
   }
-  printf("nFaceGroup : %i \n", nFaceGroup);
   *coarseFaceGroupToFineFaceGroup = malloc((*faceGroupIdx)[nFaceGroup] * sizeof(int));
     
   //Renumbering of partGroup from the fine numbering to the coarse one
@@ -1691,7 +1690,6 @@ _coarse_grid_create
   _part_t * part_ini = cm->part_ini[iPart];
   _coarse_part_t *part_res = cm->part_res[iPart];
 
-  printf("'Hello 1 '\n");
   const int *_cellWeight = cellWeight;
 
   const int *_faceWeight = faceWeight;
@@ -1739,7 +1737,6 @@ _coarse_grid_create
    
   int *dualGraphIdx = NULL;
   int *dualGraph    = NULL;  
-  printf("'Hello 1 '\n");
   
   PDM_compute_graph_from_face_cell(part_ini,
                                    (int **) &dualGraphIdx,
