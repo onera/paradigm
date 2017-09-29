@@ -37,8 +37,9 @@
 #include "pdm_printf.h"
 #include "pdm_error.h"
 
-// TODO -> IF DEF
+#ifdef PDM_IN_PDMA
 #include "pdm_renum_cacheblocking.h"
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -529,7 +530,7 @@ _PDM_part_t* ppart
   }
 }
 
-
+#ifdef PDM_IN_PDMA
 /**
  *
  * \brief Perform a cells renumbering with cache blocking
@@ -544,7 +545,6 @@ _renum_cells_cacheblocking
 _PDM_part_t* ppart
 )
 {
-  int methodcell = ppart->renum_cell_method;
   int methodface = ppart->renum_face_method;
   
   if(ppart->nPropertyCell != 3) {
@@ -572,6 +572,7 @@ _PDM_part_t* ppart
     
   }
 }
+#endif
 
 /**
  *
@@ -714,13 +715,15 @@ PDM_part_renum_cell
     _renum_cells_hilbert(ppart); 
     break;
   case PDM_PART_RENUM_CELL_CUTHILL :
-    _renum_cells_cuthill(ppart); 
+    _renum_cells_cuthill(ppart);
+#ifdef PDM_IN_PDMA    
   case PDM_PART_RENUM_CELL_CACHEBLOCKING_SYNC :
     _renum_cells_cacheblocking(ppart); 
     break;
   case PDM_PART_RENUM_CELL_CACHEBLOCKING_ASYNC :
     _renum_cells_cacheblocking(ppart); 
     break;
+#endif
   default:
     PDM_error(__FILE__, __LINE__, 0, "PDM_part_renum Error : unavailable face renumbering method\n");
   }

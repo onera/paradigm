@@ -44,6 +44,11 @@ target_include_directories(pdm
                            PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/meshgen
                            PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/struct
                            PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/util)
+if (PDM_IN_PDMA)
+  target_include_directories(pdm
+                             PUBLIC ${PDMA_SOURCE_DIR}/plugins/renum
+                             PUBLIC ${PDMA_SOURCE_DIR}/src/overlay)
+endif()
 
 if (PDM_ENABLE_STATIC_Fortran_INTERFACE OR PDM_ENABLE_SHARED_Fortran_INTERFACE)
   target_include_directories(pdmf
@@ -62,6 +67,11 @@ if (PDM_ENABLE_STATIC_Fortran_INTERFACE OR PDM_ENABLE_SHARED_Fortran_INTERFACE)
                            PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/meshgen
                            PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/struct
                            PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/util)
+    if (PDM_IN_PDMA)
+      target_include_directories(pdmf
+                                 PUBLIC ${PDMA_SOURCE_DIR}/plugins/renum
+                                 PUBLIC ${PDMA_SOURCE_DIR}/src/overlay)
+    endif()
 endif()
 
 if (PTSCOTCH_FOUND)
@@ -136,6 +146,9 @@ if (PDM_ENABLE_SHARED)
   set_target_properties(pdm_shared PROPERTIES OUTPUT_NAME "pdm")
   set_target_properties(pdm_shared PROPERTIES VERSION ${PDM_VERSION})
   target_link_libraries(pdm_shared ${LINK_LIBRARIES} pdm_io_shared pdm_mpi_shared)
+  if (PDM_IN_PDMA)
+    target_link_libraries(pdm_shared pdmp_shared)
+  endif ()
   set_target_properties(pdm_shared PROPERTIES
                             PUBLIC_HEADER "${LIST_HEADER}")
 
@@ -151,6 +164,9 @@ if (PDM_ENABLE_STATIC)
   set_target_properties(pdm_static PROPERTIES VERSION ${PDM_VERSION})
 
   target_link_libraries(pdm_static ${LINK_LIBRARIES} pdm_io_static pdm_mpi_static)
+  if (PDM_IN_PDMA)
+    target_link_libraries(pdm_static pdmp_static)
+  endif ()
   set_target_properties(pdm_static PROPERTIES
                              PUBLIC_HEADER "${LIST_HEADER}")
   get_target_property(PDM_INC pdm INCLUDE_DIRECTORIES)
