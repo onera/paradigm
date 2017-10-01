@@ -349,7 +349,6 @@ cdef class CoarseMesh:
         """
            Free memory in PTJ Lib and structure
         """
-        print '__dealloc__ PDM_part_coarse_mesh_free'
         PDM_part_coarse_mesh_free(self._cmId)
 
     # ------------------------------------------------------------------
