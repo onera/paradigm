@@ -32,6 +32,61 @@ extern "C" {
 
 /**
  *
+ * \brief Add a new method for cell renumbering 
+ *
+ * \param [in]      name           Mesh entity to renumber
+ * \param [in]      renum_fct      Renumbering function
+ *
+ */
+
+void 
+PDM_part_renum_cell_add
+(
+ const char                 *name,     /*!< Name          */ 
+ const PDM_part_renum_fct_t  renum_fct /*!< Customize \ref PDM_part_renum_cell function for the format */             
+);        
+
+/**
+ *
+ * \brief Add a new method for face renumbering 
+ *
+ * \param [in]      name           Mesh entity to renumber
+ * \param [in]      renum_fct      Renumbering function
+ *
+ */
+
+void 
+PDM_part_renum_face_add
+(
+ const char                 *name,     /*!< Name          */ 
+ const PDM_part_renum_fct_t  renum_fct /*!< Customize \ref PDM_part_renum_face function for the format */             
+);        
+
+/**
+ *
+ * \brief Purge renumbering methods 
+ *
+ */
+
+void 
+PDM_part_renum_purge
+(
+);        
+
+/**
+ *
+ * \brief Purge renumbering methods 
+ *
+ */
+
+void 
+PDM_part_load_local_methods
+(
+);        
+
+  
+/**
+ *
  * \brief Perform mesh entities renumbering
  *
  * \param [in,out]  ppart       ppart structure
