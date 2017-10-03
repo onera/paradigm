@@ -190,8 +190,9 @@ int main(int argc, char *argv[])
 
   PDM_dcube_gen_init(&id,
                       PDM_MPI_COMM_WORLD,
-                      nVtxSeg,
-                      length);
+		      nVtxSeg,
+		      length,
+		      0.);
 
   PDM_dcube_gen_dim_get(id,
                       &nFaceGroup,
