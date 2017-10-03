@@ -25,6 +25,14 @@ extern "C" {
  * Macro and type definitions
  *============================================================================*/
 
+/**
+ * \struct PDM_part_renum_fct_t
+ *
+ * \brief  Function pointer used to define a renumbering method 
+ *
+ */
+
+typedef void (*PDM_part_renum_fct_t) (_PDM_part_t  *ppart);  
 
 /*============================================================================
  * Public function definitions
@@ -75,22 +83,20 @@ PDM_part_renum_purge
 
 /**
  *
- * \brief Purge renumbering methods 
+ * \brief Load local renumbering methods 
  *
  */
 
 void 
-PDM_part_load_local_methods
+PDM_part_renum_load_local
 (
 );        
 
   
 /**
  *
- * \brief Perform mesh entities renumbering
+ * \brief Perform cell renumbering
  *
- * \param [in,out]  ppart       ppart structure
- * \param [in]      entity      Mesh entity to renumber
  * \param [in]      method      Renumbering method
  *
  */
@@ -98,17 +104,14 @@ PDM_part_load_local_methods
 void 
 PDM_part_renum_cell
 (
- _PDM_part_t           *ppart,
- PDM_part_renum_cell_t method                 
+const char *method
 );        
 
 
 /**
  *
- * \brief Perform mesh entities renumbering
+ * \brief Perform face renumbering
  *
- * \param [in,out]  ppart       ppart structure
- * \param [in]      entity      Mesh entity to renumber
  * \param [in]      method      Renumbering method
  *
  */
@@ -116,8 +119,7 @@ PDM_part_renum_cell
 void 
 PDM_part_renum_face
 (
- _PDM_part_t              *ppart,
- PDM_part_renum_face_t  method                 
+const char *method
 );        
 
 
