@@ -1799,14 +1799,12 @@ PDM_writer_ensight_var_write
                                    numabs,
                                    buff);
             }
-            
-            
-            for (int i = 0; i < n_part; i++) {
+          }
+          for (int i = 0; i < n_part; i++) {
 
-              ideb[i] += PDM_Mesh_nodal_block_n_elt_get (geom->idx_mesh,    
-                                                    blocks_id[iblock],     
-                                                    i); 
-            }
+            ideb[i] += PDM_Mesh_nodal_block_n_elt_get (geom->idx_mesh,    
+                                                  blocks_id[iblock],     
+                                                  i); 
           }
         }          
 
