@@ -709,6 +709,123 @@ _PDM_part_t* ppart
  * Public function definitions
  *============================================================================*/
 
+/**
+ *
+ * \brief Purge renumbering methods 
+ *
+ */
+
+void 
+PDM_part_renum_purge
+(
+)        
+{
+  PDM_error (__FILE__, __LINE__, "Not implemented yet\n");
+}
+
+
+/**
+ *
+ * \brief Get names of cell renumbering methods 
+ * 
+ * \return Number of methods
+ *
+ */
+
+int 
+PDM_part_renum_cell_method_name_get
+(
+)        
+{
+  PDM_error (__FILE__, __LINE__, "Not implemented yet\n");
+}
+
+/**
+ *
+ * \brief Get names of cell renumbering methods 
+ * 
+ * \return Number of methods
+ */
+
+int 
+PDM_part_renum_face_method_name_get
+(
+)        
+{
+  PDM_error (__FILE__, __LINE__, "Not implemented yet\n");
+}
+
+
+/**
+ *
+ * \brief Get names of cell renumbering methods 
+ * 
+ * \return Number of methods
+ *
+ */
+
+int 
+PDM_part_renum_cell_method_name_get
+(
+)        
+{
+  PDM_error (__FILE__, __LINE__, "Not implemented yet\n");
+}
+
+/**
+ *
+ * \brief Get names of cell renumbering methods 
+ * 
+ * \return Number of methods
+ */
+
+int 
+PDM_part_renum_face_method_name_get
+(
+)        
+{
+  PDM_error (__FILE__, __LINE__, "Not implemented yet\n");
+}
+
+
+/**
+ *
+ * \brief Add a new method for cell renumbering 
+ *
+ * \param [in]      name           Mesh entity to renumber
+ * \param [in]      renum_fct      Renumbering function
+ *
+ */
+
+int 
+PDM_part_renum_cell_add
+(
+ const char                 *name,     /*!< Name          */ 
+ const PDM_part_renum_fct_t  renum_fct /*!< Customize \ref PDM_part_renum_cell function for the format */             
+)
+{
+  PDM_error (__FILE__, __LINE__, "Not implemented yet\n");
+}
+
+/**
+ *
+ * \brief Add a new method for face renumbering 
+ *
+ * \param [in]      name           Mesh entity to renumber
+ * \param [in]      renum_fct      Renumbering function
+ *
+ */
+
+void 
+PDM_part_renum_face_add
+(
+ const char                 *name,     /*!< Name          */ 
+ const PDM_part_renum_fct_t  renum_fct /*!< Customize \ref PDM_part_renum_face function for the format */             
+)
+{
+  PDM_error (__FILE__, __LINE__, "Not implemented yet\n");
+}
+
 
 /**
  *
@@ -748,7 +865,7 @@ PDM_part_renum_load_local
  *
  * \brief Perform cell renumbering
  *
- * \param [in]      method      Renumbering method
+ * \param [in,out]  part       part structure
  *
  */
 
@@ -788,9 +905,7 @@ PDM_part_renum_cell
  *
  * \brief Perform mesh entities renumbering
  *
- * \param [in,out]  ppart       ppart structure
- * \param [in]      entity      Mesh entity to renumber
- * \param [in]      method      Renumbering method
+ * \param [in,out]  part       part structure
  *
  */
 

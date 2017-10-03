@@ -97,29 +97,29 @@ PDM_part_renum_load_local
  *
  * \brief Perform cell renumbering
  *
- * \param [in]      method      Renumbering method
+ * \param [in,out]  part       part structure
  *
  */
 
 void 
 PDM_part_renum_cell
 (
-const char *method
-);        
+ _PDM_part_t   *ppart                
+);       
 
 
 /**
  *
  * \brief Perform face renumbering
  *
- * \param [in]      method      Renumbering method
+ * \param [in,out]  part       part structure
  *
  */
 
 void 
 PDM_part_renum_face
 (
-const char *method
+  _PDM_part_t   *ppart                
 );        
 
 /**
