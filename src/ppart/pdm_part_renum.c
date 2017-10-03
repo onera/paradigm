@@ -62,11 +62,34 @@ extern "C" {
  * Type definitions
  *============================================================================*/
 
+/**
+ * \struct PDM_writer_fmt_t
+ * \brief  Writer format
+ *
+ */
+
+typedef struct _renum_method_t {
+
+  const char            *name; /*!< Name of method */
+  PDM_part_renum_fct_t   fct;  /*!< Renumbering function */
+
+} _renum_method_t;
 
 /*============================================================================
  * Global variable
  *============================================================================*/
 
+/**
+ * Storage of face renumbering methods   
+ */
+
+static PDM_Handles_t *face_methods = NULL; 
+
+/**
+ * Storage of cell renumbering methods   
+ */
+
+static PDM_Handles_t *cell_methods = NULL; 
 
 /*============================================================================
  * Private function definitions
@@ -681,6 +704,7 @@ _PDM_part_t* ppart
   }
 }
 
+
 /*=============================================================================
  * Public function definitions
  *============================================================================*/
@@ -688,10 +712,42 @@ _PDM_part_t* ppart
 
 /**
  *
- * \brief Perform mesh entities renumbering
+ * \brief Load local renumbering methods 
  *
- * \param [in,out]  ppart       ppart structure
- * \param [in]      entity      Mesh entity to renumber
+ */
+
+void 
+PDM_part_renum_load_local
+(
+)
+{
+  if (cell_methods == NULL)  {
+    PDM_part_renum_cell_add ("PDM_PART_RENUM_CELL_NONE", 
+                             NULL);
+    PDM_part_renum_cell_add ("PDM_PART_RENUM_CELL_RANDOM", 
+                             _renum_cells_random);
+    PDM_part_renum_cell_add ("PDM_PART_RENUM_CELL_HILBERT",
+                             _renum_cells_hilbert);
+    PDM_part_renum_cell_add ("PDM_PART_RENUM_CELL_CUTHILL",
+                             _renum_cells_cuthill);
+  }
+
+  if (face_methods == NULL)  {
+    PDM_part_renum_cell_add ("PDM_PART_RENUM_FACE_NONE", 
+                             NULL);
+    PDM_part_renum_cell_add ("PDM_PART_RENUM_CELL_RANDOM", 
+                             _renum_faces_random);
+    PDM_part_renum_cell_add ("PDM_PART_RENUM_CELL_LEXICOGRAPHIC",
+                             _renum_faces_lexicographic);
+  }
+  
+}
+
+  
+/**
+ *
+ * \brief Perform cell renumbering
+ *
  * \param [in]      method      Renumbering method
  *
  */
@@ -699,35 +755,32 @@ _PDM_part_t* ppart
 void 
 PDM_part_renum_cell
 (
- _PDM_part_t           *ppart               
-)
+  _PDM_part_t   *ppart                
+)        
 {
   
-  int method = ppart->renum_cell_method;
-  
-  switch (method) {
-  case PDM_PART_RENUM_CELL_NONE :
-    break;
-  case PDM_PART_RENUM_CELL_RANDOM :
-    _renum_cells_random(ppart); 
-    break;
-  case PDM_PART_RENUM_CELL_HILBERT :
-    _renum_cells_hilbert(ppart); 
-    break;
-  case PDM_PART_RENUM_CELL_CUTHILL :
-    _renum_cells_cuthill(ppart);
-#ifdef PDM_IN_PDMA    
-  case PDM_PART_RENUM_CELL_CACHEBLOCKING_SYNC :
-    _renum_cells_cacheblocking(ppart); 
-    break;
-  case PDM_PART_RENUM_CELL_CACHEBLOCKING_ASYNC :
-    _renum_cells_cacheblocking(ppart); 
-    break;
-#endif
-  default:
-    PDM_error(__FILE__, __LINE__, 0, "PDM_part_renum Error : unavailable face renumbering method\n");
+  if (cell_methods == NULL)  {
+    PDM_part_renum_load_local ();
   }
+  
+  PDM_part_renum_fct_t fct =
+          (PDM_part_renum_fct_t) PDM_Handles_get (cell_methods, 
+                                                  ppart->renum_cell_method);
+  
+  if (fct != NULL) {
+    (fct) (ppart);
+  }
+  
 }
+
+
+//  case PDM_PART_RENUM_CELL_CACHEBLOCKING_SYNC :
+//    _renum_cells_cacheblocking(ppart); 
+//    break;
+//  case PDM_PART_RENUM_CELL_CACHEBLOCKING_ASYNC :
+//    _renum_cells_cacheblocking(ppart); 
+//    break;
+//}
 
 
 
@@ -747,18 +800,17 @@ PDM_part_renum_face
  _PDM_part_t           *ppart                
 )
 {
-  int method = ppart->renum_face_method;
-  switch (method) {
-    case PDM_PART_RENUM_FACE_NONE :
-      break;
-    case PDM_PART_RENUM_FACE_RANDOM :
-      _renum_faces_random (ppart); 
-      break;
-    case PDM_PART_RENUM_FACE_LEXICOGRAPHIC :
-      _renum_faces_lexicographic(ppart);
-      break;
-    default:
-      PDM_error(__FILE__, __LINE__, 0, "PDM_part_renum Error : unavailable face renumbering method\n");
+  
+  if (cell_methods == NULL)  {
+    PDM_part_renum_load_local ();
+  }
+  
+  PDM_part_renum_fct_t fct =
+          (PDM_part_renum_fct_t) PDM_Handles_get (cell_methods, 
+                                                  ppart->renum_face_method);
+  
+  if (fct != NULL) {
+    (fct) (ppart);
   }
 }
 

@@ -216,9 +216,9 @@ typedef struct _PDM_part_t {
 
   PDM_part_split_t split_method;             /*!< Partitioning method */
 
-  PDM_part_renum_face_t renum_face_method;   /*!< Renumbering face method */
+  int renum_face_method;   /*!< Renumbering face method */
 
-  PDM_part_renum_cell_t renum_cell_method;   /*!< Renumbering cell method */
+  int renum_cell_method;   /*!< Renumbering cell method */
   
   int  nPropertyCell;                         /*!< Size of cells properties      */
   int  nPropertyFace;                         /*!< Size of faces properties      */
