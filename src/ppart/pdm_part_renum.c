@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include <time.h>
+#include <string.h>
 
 #include "pdm.h"
 #include "pdm_mpi.h"
@@ -29,6 +30,7 @@
 #include "pdm_part_geom.h"
 #include "pdm_part_renum.h"
 #include "pdm_hilbert.h"
+#include "pdm_handles.h"
 #include "pdm_geom_elem.h"
 #include "pdm_part_graph.h"
 #include "pdm_sort.h"
@@ -70,7 +72,7 @@ extern "C" {
 
 typedef struct _renum_method_t {
 
-  const char            *name; /*!< Name of method */
+  char                  *name; /*!< Name of method */
   PDM_part_renum_fct_t   fct;  /*!< Renumbering function */
 
 } _renum_method_t;
@@ -553,49 +555,6 @@ _PDM_part_t* ppart
   }
 }
 
-#ifdef PDM_IN_PDMA
-/**
- *
- * \brief Perform a cells renumbering with cache blocking
- *
- * \param [in,out]  ppart    Current PPART structure
- *
- */
-
-static void
-_renum_cells_cacheblocking
-(
-_PDM_part_t* ppart
-)
-{
-  int methodface = ppart->renum_face_method;
-  
-  if(ppart->nPropertyCell != 3) {
-    PDM_error(__FILE__, __LINE__, 0, "_renum_cells_cacheblocking Error : You need to specifie [ nCellPerCacheWanted, isAsynchrone, isVectorisation ] in  renum_properties_cell \n");
-  }
-  
-  int nCellPerCacheWanted = ppart->renum_properties_cell[0];
-  int isAsynchrone        = ppart->renum_properties_cell[1];
-  int isVectorisation     = ppart->renum_properties_cell[2];
-  
-  if(methodface != PDM_PART_RENUM_FACE_NONE) {
-   PDM_error(__FILE__, __LINE__, 0, "_renum_cells_cacheblocking Error : face numbering for cacheblocking need to be set to PDM_PART_RENUM_FACE_NONE \n");
-  }
-  
-  /* Loop over all part of the current process */
-  for(int ipart = 0; ipart < ppart->nPart; ++ipart) {
-    /* Get current part id */
-    _part_t *part = ppart->meshParts[ipart];
-    
-    PDM_renum_cacheblocking(part, 
-                            ppart->split_method, 
-                            nCellPerCacheWanted, 
-                            isAsynchrone, 
-                            isVectorisation);
-    
-  }
-}
-#endif
 
 /**
  *
@@ -718,73 +677,107 @@ _PDM_part_t* ppart
 void 
 PDM_part_renum_purge
 (
+ void
 )        
 {
-  PDM_error (__FILE__, __LINE__, "Not implemented yet\n");
+  if (face_methods != NULL) {
+
+    const int *index =  PDM_Handles_idx_get (face_methods);
+    int n_methods = PDM_Handles_n_get (face_methods);
+    
+    while (n_methods > 0) {
+      int idx = index[0];
+      _renum_method_t *method_ptr = 
+              (_renum_method_t *) PDM_Handles_get (face_methods, idx);
+      free (method_ptr->name);
+      PDM_Handles_handle_free (face_methods, idx, PDM_TRUE);
+      n_methods = PDM_Handles_n_get (face_methods);
+    }
+
+    face_methods = PDM_Handles_free (face_methods);
+    
+  }
+
+  if (cell_methods != NULL) {
+
+    const int *index =  PDM_Handles_idx_get (cell_methods);
+    int n_methods = PDM_Handles_n_get (cell_methods);
+    
+    while (n_methods > 0) {
+      int idx = index[0];
+      _renum_method_t *method_ptr = 
+              (_renum_method_t *) PDM_Handles_get (cell_methods, idx);
+      free (method_ptr->name);
+      PDM_Handles_handle_free (cell_methods, idx, PDM_TRUE);
+      n_methods = PDM_Handles_n_get (cell_methods);
+    }
+
+    cell_methods = PDM_Handles_free (cell_methods);
+    
+  }
 }
 
 
 /**
  *
- * \brief Get names of cell renumbering methods 
+ * \brief Get index of a renumbering cell method
  * 
- * \return Number of methods
- *
+ * \return Index (-1 if not found)
  */
 
 int 
-PDM_part_renum_cell_method_name_get
+PDM_part_renum_cell_method_idx_get
 (
+char *name
 )        
 {
-  PDM_error (__FILE__, __LINE__, "Not implemented yet\n");
+  int idx = -1;
+  
+  if (cell_methods != NULL) {
+    int n_methods = PDM_Handles_n_get (cell_methods);
+    const int *index =  PDM_Handles_idx_get (cell_methods);
+
+    for (int i = 0; i < n_methods; i++) {
+      _renum_method_t *method_ptr = 
+              (_renum_method_t *) PDM_Handles_get (cell_methods, index[i]);
+      if (!strcmp(method_ptr->name, name)) {
+        idx = index[i];
+        break;
+      }      
+    }
+  }
+  return idx;
+
 }
 
 /**
  *
- * \brief Get names of cell renumbering methods 
+ * \brief Get index of a renumbering face method
  * 
- * \return Number of methods
+ * \return Index (-1 if not found)
  */
 
 int 
-PDM_part_renum_face_method_name_get
+PDM_part_renum_face_method_idx_get
 (
+char *name
 )        
 {
-  PDM_error (__FILE__, __LINE__, "Not implemented yet\n");
-}
+  int idx = -1;
+  if (face_methods != NULL) {
+    int n_methods = PDM_Handles_n_get (face_methods);
+    const int *index =  PDM_Handles_idx_get (face_methods);
 
-
-/**
- *
- * \brief Get names of cell renumbering methods 
- * 
- * \return Number of methods
- *
- */
-
-int 
-PDM_part_renum_cell_method_name_get
-(
-)        
-{
-  PDM_error (__FILE__, __LINE__, "Not implemented yet\n");
-}
-
-/**
- *
- * \brief Get names of cell renumbering methods 
- * 
- * \return Number of methods
- */
-
-int 
-PDM_part_renum_face_method_name_get
-(
-)        
-{
-  PDM_error (__FILE__, __LINE__, "Not implemented yet\n");
+    for (int i = 0; i < n_methods; i++) {
+      _renum_method_t *method_ptr = 
+              (_renum_method_t *) PDM_Handles_get (face_methods, index[i]);
+      if (!strcmp(method_ptr->name, name)) {
+        idx = index[i];
+        break;
+      }      
+    }
+  }
+  return idx;
 }
 
 
@@ -804,7 +797,16 @@ PDM_part_renum_cell_add
  const PDM_part_renum_fct_t  renum_fct /*!< Customize \ref PDM_part_renum_cell function for the format */             
 )
 {
-  PDM_error (__FILE__, __LINE__, "Not implemented yet\n");
+  _renum_method_t *method_ptr = malloc (sizeof(_renum_method_t));
+  
+  int idx = PDM_Handles_store  (cell_methods, method_ptr);
+
+  method_ptr->name = malloc (sizeof(char) * (strlen(name) + 1));
+  strcpy (method_ptr->name, name);
+  
+  method_ptr->fct = renum_fct;
+
+  return idx;
 }
 
 /**
@@ -816,14 +818,23 @@ PDM_part_renum_cell_add
  *
  */
 
-void 
+int 
 PDM_part_renum_face_add
 (
  const char                 *name,     /*!< Name          */ 
  const PDM_part_renum_fct_t  renum_fct /*!< Customize \ref PDM_part_renum_face function for the format */             
 )
 {
-  PDM_error (__FILE__, __LINE__, "Not implemented yet\n");
+  _renum_method_t *method_ptr = malloc (sizeof(_renum_method_t));
+  
+  int idx = PDM_Handles_store  (face_methods, method_ptr);
+
+  method_ptr->name = malloc (sizeof(char) * (strlen(name) + 1));
+  strcpy (method_ptr->name, name);
+  
+  method_ptr->fct = renum_fct;
+
+  return idx;
 }
 
 
@@ -836,6 +847,7 @@ PDM_part_renum_face_add
 void 
 PDM_part_renum_load_local
 (
+void
 )
 {
   if (cell_methods == NULL)  {
@@ -850,11 +862,11 @@ PDM_part_renum_load_local
   }
 
   if (face_methods == NULL)  {
-    PDM_part_renum_cell_add ("PDM_PART_RENUM_FACE_NONE", 
+    PDM_part_renum_face_add ("PDM_PART_RENUM_FACE_NONE", 
                              NULL);
-    PDM_part_renum_cell_add ("PDM_PART_RENUM_CELL_RANDOM", 
+    PDM_part_renum_face_add ("PDM_PART_RENUM_CELL_RANDOM", 
                              _renum_faces_random);
-    PDM_part_renum_cell_add ("PDM_PART_RENUM_CELL_LEXICOGRAPHIC",
+    PDM_part_renum_face_add ("PDM_PART_RENUM_CELL_LEXICOGRAPHIC",
                              _renum_faces_lexicographic);
   }
   

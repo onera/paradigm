@@ -122,7 +122,7 @@ struct _PDM_writer_t {
 
 typedef struct PDM_writer_fmt_t {
 
-  const char           *name;            /*!< Name                                                     */
+  char                       *name;            /*!< Name                                                     */
   PDM_writer_fct_t      create_fct;      /*!< Customize \ref PDM_writer_create function for the format */
   PDM_writer_fct_t      free_fct;        /*!< Customize \ref PDM_writer_free function for the format   */
   PDM_writer_fct_t      beg_step_fct;    /*!< Customize \ref PDM_writer_beg_step function for the format   */
