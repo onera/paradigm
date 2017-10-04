@@ -2272,7 +2272,9 @@ PDM_writer_fmt_add
   
   PDM_Handles_store  (fmt_tab, fmt_ptr);
   
-  fmt_ptr->name            = name;
+  fmt_ptr->name            = malloc(sizeof(char) * (strlen(name) + 1));
+  strcpy (fmt_ptr->name, name);
+
   fmt_ptr->create_fct      = create_fct;
   fmt_ptr->free_fct        = free_fct;
   fmt_ptr->beg_step_fct    = beg_step_fct;
@@ -2305,6 +2307,8 @@ PDM_writer_fmt_free
     
     while (n_fmt > 0) {
       int idx = index[0];
+      PDM_writer_fmt_t *fmt_ptr = (PDM_writer_fmt_t *) PDM_Handles_get (fmt_tab, idx);
+      free (fmt_ptr->name);
       PDM_Handles_handle_free (fmt_tab, idx, PDM_TRUE);
       n_fmt = PDM_Handles_n_get (fmt_tab);
     }

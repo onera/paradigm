@@ -47,7 +47,7 @@ typedef void (*PDM_part_renum_fct_t) (_PDM_part_t  *ppart);
  *
  */
 
-void 
+int 
 PDM_part_renum_cell_add
 (
  const char                 *name,     /*!< Name          */ 
@@ -63,11 +63,69 @@ PDM_part_renum_cell_add
  *
  */
 
-void 
+int 
 PDM_part_renum_face_add
 (
  const char                 *name,     /*!< Name          */ 
  const PDM_part_renum_fct_t  renum_fct /*!< Customize \ref PDM_part_renum_face function for the format */             
+);        
+
+
+
+/**
+ *
+ * \brief Get index of a renumbering cell method
+ * 
+ * \return Index (-1 if not found)
+ */
+
+int 
+PDM_part_renum_cell_method_idx_get
+(
+char *name
+);
+
+
+/**
+ *
+ * \brief Get index of a renumbering face method
+ * 
+ * \return Index (-1 if not found)
+ */
+
+int 
+PDM_part_renum_face_method_idx_get
+(
+char *name
+);        
+
+
+
+/**
+ *
+ * \brief Get names of cell renumbering methods 
+ * 
+ * \return Number of methods
+ *
+ */
+
+int 
+PDM_part_renum_cell_method_names_get
+(
+void
+);        
+
+/**
+ *
+ * \brief Get names of cell renumbering methods 
+ * 
+ * \return Number of methods
+ */
+
+int 
+PDM_part_renum_face_method_names_get
+(
+void
 );        
 
 /**
@@ -79,6 +137,7 @@ PDM_part_renum_face_add
 void 
 PDM_part_renum_purge
 (
+void
 );        
 
 /**
@@ -90,6 +149,7 @@ PDM_part_renum_purge
 void 
 PDM_part_renum_load_local
 (
+void
 );        
 
   
