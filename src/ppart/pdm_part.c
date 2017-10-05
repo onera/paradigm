@@ -3063,10 +3063,20 @@ PDM_part_create
 
   ppart->split_method = split_method;
 
-  ppart->renum_cell_method = 
-          PDM_part_renum_cell_method_idx_get(renum_cell_method);
-  ppart->renum_face_method = 
-          PDM_part_renum_cell_method_idx_get(renum_face_method);
+  int _method = PDM_part_renum_cell_method_idx_get(renum_cell_method);
+  
+  if (_method == -1) {
+    PDM_error (__FILE__, __LINE__, 0, "'%s' is an unknown renumbering cell method\n", renum_cell_method);
+  }
+  
+  ppart->renum_cell_method = _method;
+  
+  _method = PDM_part_renum_face_method_idx_get(renum_face_method);
+  
+  if (_method == -1) {
+    PDM_error (__FILE__, __LINE__, 0, "'%s' is an unknown renumbering face method\n", renum_cell_method);
+  }
+  ppart->renum_face_method = _method;
 
   ppart->dPartBound = NULL;
 
