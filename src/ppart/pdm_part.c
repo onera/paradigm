@@ -27,9 +27,11 @@
 
 #include "pdm_part_geom.h"
 #include "pdm_part_renum.h"
+#include "pdm_fortran_to_c_string.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
 #include "pdm_handles.h"
+
 
 /*----------------------------------------------------------------------------
  *  Optional headers
@@ -2860,8 +2862,12 @@ PDM_part_create
  int                         *ppartId,
  const PDM_MPI_Comm           comm,
  const PDM_part_split_t       split_method,
- const PDM_part_renum_cell_t  renum_cell_method,
- const PDM_part_renum_face_t  renum_face_method,
+ const char                  *renum_cell_method,
+ const char                  *renum_face_method,
+ const int                    nPropertyCell,
+ const int*                   renum_properties_cell,
+ const int                    nPropertyFace,
+ const int*                   renum_properties_face,
  const int                    nPart,
  const int                    dNCell,
  const int                    dNFace,
@@ -3057,8 +3063,10 @@ PDM_part_create
 
   ppart->split_method = split_method;
 
-  ppart->renum_cell_method = renum_cell_method;
-  ppart->renum_face_method = renum_face_method;
+  ppart->renum_cell_method = 
+          PDM_part_renum_cell_method_idx_get(renum_cell_method);
+  ppart->renum_face_method = 
+          PDM_part_renum_cell_method_idx_get(renum_face_method);
 
   ppart->dPartBound = NULL;
 
@@ -3201,13 +3209,19 @@ PDM_part_create
 
 
 void
-PROCF (pdm_part_create, PDM_PART_CREATE)
+PROCF (pdm_part_create_cf, PDM_PART_CREATE_CF)
 (
  int                *ppartId,
  const PDM_MPI_Fint *fcomm,
  const int          *split_method,
- const int          *renum_cell_method,
- const int          *renum_face_method,
+ const char         *renum_cell_method,
+ const int          *l_renum_cell_method,
+ const char         *renum_face_method,
+ const int          *l_renum_face_method,
+ const int          *nPropertyCell,
+ const int          *renum_properties_cell,
+ const int          *nPropertyFace,
+ const int          *renum_properties_face,
  const int          *nPart,
  const int          *dNCell,
  const int          *dNFace,
@@ -3264,11 +3278,21 @@ PROCF (pdm_part_create, PDM_PART_CREATE)
   if (*have_dFaceCell == 0)
     _dFaceCell = NULL;
 
+  char *_renum_cell_method = 
+      PDM_fortran_to_c_string(renum_cell_method, *l_renum_cell_method); 
+
+  char *_renum_face_method = 
+      PDM_fortran_to_c_string(renum_face_method, *l_renum_face_method); 
+  
   PDM_part_create(ppartId,
                   c_comm,
                   (PDM_part_split_t) *split_method,
-                  (PDM_part_renum_cell_t) *renum_cell_method,
-                  (PDM_part_renum_face_t) *renum_face_method,
+                  _renum_cell_method,
+                  _renum_face_method,
+                  *nPropertyCell,
+                   renum_properties_cell,
+                  *nPropertyFace,
+                   renum_properties_face,
                   *nPart,
                   *dNCell,
                   *dNFace,

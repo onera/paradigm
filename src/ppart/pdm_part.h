@@ -62,7 +62,11 @@ typedef enum {
  * \param [out]  ppartId        ppart identifier
  * \param [in]   pt_comm        MPI Comminicator
  * \param [in]   split_method   Split method
- * \param [in]   renum_face_method Face renumbering method
+ * \param [in]   renum_cell_method Cell renumbering method
+ * \param [in]   renum_face_method Cell renumbering method
+ * \param [in]   renum_properties_cell  For cache blocking [ nCellPerCacheWanted, isAsynchrone, isVectorisation ] \ref PDM_renum_cacheblocking 
+ * \param [in]   renum_face_method Cell renumbering method
+ * \param [in]   renum_properties_face  NOT USE
  * \param [in]   nPart          Number of partition to build on this process
  * \param [in]   dNCell         Number of distributed cells
  * \param [in]   dNFace         Number of distributed faces
@@ -101,8 +105,12 @@ PDM_part_create
  int                         *ppartId,
  const PDM_MPI_Comm           comm,
  const PDM_part_split_t       split_method,
- const PDM_part_renum_cell_t  renum_cell_method,
- const PDM_part_renum_face_t  renum_face_method,
+ const char                  *renum_cell_method,
+ const char                  *renum_face_method,
+ const int                    nPropertyCell,
+ const int                   *renum_properties_cell,
+ const int                    nPropertyFace,
+ const int                   *renum_properties_face,
  const int                    nPart,
  const int                    dNCell,
  const int                    dNFace,
@@ -125,13 +133,19 @@ PDM_part_create
  );
 
 void
-PROCF (pdm_part_create, PDM_PART_CREATE)
+PROCF (pdm_part_create_cf, PDM_PART_CREATE_CF)
 (
  int                *ppartId,
  const PDM_MPI_Fint *fcomm,
  const int          *split_method,
- const int          *renum_cell_method,
- const int          *renum_face_method,
+ const char         *renum_cell_method,
+ const int          *l_renum_cell_method, 
+ const char         *renum_face_method,
+ const int          *l_renum_face_method, 
+ const int          *nPropertyCell,
+ const int          *renum_properties_cell,
+ const int          *nPropertyFace,
+ const int          *renum_properties_face,
  const int          *nPart,
  const int          *dNCell,
  const int          *dNFace,
