@@ -731,6 +731,9 @@ PDM_part_renum_cell_method_idx_get
 char *name
 )        
 {
+  if (cell_methods == NULL) {
+    PDM_part_renum_load_local();
+  }
   int idx = -1;
   
   if (cell_methods != NULL) {
@@ -763,19 +766,20 @@ PDM_part_renum_face_method_idx_get
 char *name
 )        
 {
+  if (face_methods == NULL) {
+    PDM_part_renum_load_local();
+  }
   int idx = -1;
-  if (face_methods != NULL) {
-    int n_methods = PDM_Handles_n_get (face_methods);
-    const int *index =  PDM_Handles_idx_get (face_methods);
+  int n_methods = PDM_Handles_n_get (face_methods);
+  const int *index =  PDM_Handles_idx_get (face_methods);
 
-    for (int i = 0; i < n_methods; i++) {
-      _renum_method_t *method_ptr = 
-              (_renum_method_t *) PDM_Handles_get (face_methods, index[i]);
-      if (!strcmp(method_ptr->name, name)) {
-        idx = index[i];
-        break;
-      }      
-    }
+  for (int i = 0; i < n_methods; i++) {
+    _renum_method_t *method_ptr = 
+            (_renum_method_t *) PDM_Handles_get (face_methods, index[i]);
+    if (!strcmp(method_ptr->name, name)) {
+      idx = index[i];
+      break;
+    }      
   }
   return idx;
 }

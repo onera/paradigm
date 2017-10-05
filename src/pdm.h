@@ -127,6 +127,24 @@ typedef enum {
 } PDM_mesh_entities_t;
 
 
+/*=============================================================================
+ * Public function prototypes 
+ *============================================================================*/
+
+
+/**
+ * \brief Finalize PDM
+ * 
+ * This function frees all allocated global variables 
+ * 
+ */
+
+void 
+PDM_Finalize
+(
+void
+);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
