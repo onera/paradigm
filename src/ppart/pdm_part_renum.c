@@ -1021,17 +1021,30 @@ PDM_part_renum_cell
 )        
 {
   
+  printf("1\n");
+  fflush(stdout);
+  
   if (cell_methods == NULL)  {
     PDM_part_renum_load_local ();
   }
+
+  printf("2\n");
+  fflush(stdout);
   
-  PDM_part_renum_fct_t fct =
-          (PDM_part_renum_fct_t) PDM_Handles_get (cell_methods, 
-                                                  ppart->renum_cell_method);
+  const _renum_method_t *method_ptr = (const _renum_method_t *) 
+                                    PDM_Handles_get (cell_methods, ppart->renum_cell_method);
+  
+  PDM_part_renum_fct_t fct = method_ptr->fct;
+
+  printf("3\n");
+  fflush(stdout);
   
   if (fct != NULL) {
     (fct) (ppart);
   }
+
+  printf("4\n");
+  fflush(stdout);
   
 }
 
@@ -1061,13 +1074,14 @@ PDM_part_renum_face
 )
 {
   
-  if (cell_methods == NULL)  {
+  if (face_methods == NULL)  {
     PDM_part_renum_load_local ();
   }
   
-  PDM_part_renum_fct_t fct =
-          (PDM_part_renum_fct_t) PDM_Handles_get (cell_methods, 
-                                                  ppart->renum_face_method);
+  const _renum_method_t *method_ptr = (const _renum_method_t *) 
+                                      PDM_Handles_get (face_methods, ppart->renum_face_method);
+  
+  PDM_part_renum_fct_t fct = method_ptr->fct;
   
   if (fct != NULL) {
     (fct) (ppart);
