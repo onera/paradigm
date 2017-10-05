@@ -39,10 +39,6 @@
 #include "pdm_printf.h"
 #include "pdm_error.h"
 
-#ifdef PDM_IN_PDMA
-#include "pdm_renum_cacheblocking.h"
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #if 0
