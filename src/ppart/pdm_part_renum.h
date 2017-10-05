@@ -71,10 +71,11 @@ PDM_part_renum_face_add
 );        
 
 
-
 /**
  *
  * \brief Get index of a renumbering cell method
+ * 
+ * \param [in]  name   Name of the method
  * 
  * \return Index (-1 if not found)
  */
@@ -82,7 +83,7 @@ PDM_part_renum_face_add
 int 
 PDM_part_renum_cell_method_idx_get
 (
-char *name
+const char *name
 );
 
 
@@ -90,43 +91,81 @@ char *name
  *
  * \brief Get index of a renumbering face method
  * 
+ * \param [in]  name   Name of the method
+ * 
  * \return Index (-1 if not found)
  */
 
 int 
 PDM_part_renum_face_method_idx_get
 (
-char *name
+const char *name
 );        
-
 
 
 /**
  *
- * \brief Get names of cell renumbering methods 
+ * \brief Get name of the cell renumbering method 
  * 
- * \return Number of methods
+ * \param [in]  idx     Index of the method
+ * 
+ * \return Name of the method
  *
  */
 
-int 
-PDM_part_renum_cell_method_names_get
+const char * 
+PDM_part_renum_cell_method_name_get
 (
-void
+const int idx
 );        
+
 
 /**
  *
- * \brief Get names of cell renumbering methods 
+ * \brief Get name of the face renumbering method 
  * 
- * \return Number of methods
+ * \param [in]  idx     Index of the method
+ * 
+ * \return Name of the method
+ *
  */
 
-int 
-PDM_part_renum_face_method_names_get
+const char * 
+PDM_part_renum_face_method_name_get
 (
-void
+const int idx
 );        
+
+
+/**
+ *
+ * \brief Get the number of renumbering face methods 
+ * 
+ * \return Name of the method
+ *
+ */
+
+int  
+PDM_part_n_renum_cell_method_get
+(
+void 
+);        
+
+
+/**
+ *
+ * \brief Get the number of renumbering face methods 
+ * 
+ * \return Name of the method
+ *
+ */
+
+int  
+PDM_part_n_renum_face_method_get
+(
+void 
+);        
+
 
 /**
  *
