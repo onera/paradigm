@@ -29,6 +29,12 @@ list (APPEND include_dirs ${Mpi4Py_INCLUDE_DIR})
 list (APPEND include_dirs ${NumPy_INCLUDE_DIR})
 list (APPEND include_dirs ${CMAKE_CURRENT_BINARY_DIR})
 list (APPEND include_dirs ${CMAKE_BINARY_DIR})
+if (PDM_IN_PDMA)
+  list (APPEND include_dirs ${PDMA_SOURCE_DIR}/src/overlay)
+  list (APPEND include_dirs ${PDMA_SOURCE_DIR}/src/plugins)
+else ()
+  set(COMMENT_NOT_PDMA \#)
+endif()
 
 include(UseCython)
 cython_add_module (Pypdm 
@@ -49,7 +55,9 @@ if (${PTSCOTCH_FOUND})
   list(APPEND LINK_LIBRARIES ${PTSCOTCH_LIBRARIES})
   list(APPEND LINK_LIBRARIES ${SCOTCH_LIBRARIES})
 endif ()
-
+if (PDM_IN_PDMA)
+  list(APPEND LINK_LIBRARIES pdma_shared)  
+endif()
 
 target_link_libraries(Pypdm ${LINK_LIBRARIES} pdm_mpi_shared)
 
