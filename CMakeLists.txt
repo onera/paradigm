@@ -21,9 +21,12 @@ project(PDM VERSION ${PDM_DEF_VERSION} LANGUAGES C CXX Fortran)
 
 if (NOT (PDM_IN_PDMA))
    set(PDM_VERSION "${PDM_VERSION_MAJOR}.${PDM_VERSION_MINOR}.${PDM_VERSION_PATCH}")
+   set(PDM_IN_PDMA_BOOL 0)
 endif()
 
 enable_testing ()
+
+
 
 #------------------------------------------------------------------------------
 # User option Definition

@@ -16,23 +16,6 @@
 #include "pdm_part_renum.h"
 
 
-
-/**
- * \brief Finalize PDM
- * 
- * This function frees all allocated global variables 
- * 
- */
-
-void 
-PDM_Finalize
-(
-void
-)
-{
- PDM_part_renum_purge();
-}
-
 #ifdef __cplusplus
 extern "C" {
 #if 0
@@ -64,6 +47,29 @@ extern "C" {
 /*=============================================================================
  * Public function definitions
  *============================================================================*/
+
+
+/**
+ * \brief Finalize PDM
+ * 
+ * This function frees all allocated global variables 
+ * 
+ */
+
+void 
+PDM_Finalize
+(
+void
+)
+{
+ 
+ /**
+  *  Free global array inside part_renum 
+  */ 
+  
+ PDM_part_renum_purge();
+
+}
 
 
 #ifdef __cplusplus

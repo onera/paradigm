@@ -1282,30 +1282,18 @@ PDM_part_renum_cell
 )        
 {
   
-  printf("1\n");
-  fflush(stdout);
-  
   if (cell_methods == NULL)  {
     PDM_part_renum_load_local ();
   }
-
-  printf("2\n");
-  fflush(stdout);
   
   const _renum_method_t *method_ptr = (const _renum_method_t *) 
                                     PDM_Handles_get (cell_methods, ppart->renum_cell_method);
   
   PDM_part_renum_fct_t fct = method_ptr->fct;
-
-  printf("3\n");
-  fflush(stdout);
   
   if (fct != NULL) {
     (fct) (ppart);
   }
-
-  printf("4\n");
-  fflush(stdout);
   
 }
 
