@@ -37,10 +37,17 @@ else ()
 endif()
 
 include(UseCython)
+if (PDM_IN_PDMA)
+cython_add_module (Pypdm 
+                   PYX_SOURCES "${CMAKE_CURRENT_BINARY_DIR}/Pypdm.pyx"
+                   OTHER_SOURCES $<TARGET_OBJECTS:pdm> $<TARGET_OBJECTS:pdma>
+                   INCLUDE_DIRECTORIES ${include_dirs})
+else ()
 cython_add_module (Pypdm 
                    PYX_SOURCES "${CMAKE_CURRENT_BINARY_DIR}/Pypdm.pyx"
                    OTHER_SOURCES $<TARGET_OBJECTS:pdm>
                    INCLUDE_DIRECTORIES ${include_dirs})
+endif()
 
 get_target_property(PDM_INC pdm INCLUDE_DIRECTORIES)                          
 target_include_directories(Pypdm PUBLIC ${PDM_INC})
