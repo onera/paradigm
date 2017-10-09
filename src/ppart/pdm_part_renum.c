@@ -925,7 +925,6 @@ PDM_part_renum_cell_add
 
   method_ptr->name = malloc (sizeof(char) * (strlen(name) + 1));
   strcpy (method_ptr->name, name);
-  
   method_ptr->fct = renum_fct;
 
   return idx;
@@ -993,9 +992,9 @@ void
 
     PDM_part_renum_face_add ("PDM_PART_RENUM_FACE_NONE", 
                              NULL);
-    PDM_part_renum_face_add ("PDM_PART_RENUM_CELL_RANDOM", 
+    PDM_part_renum_face_add ("PDM_PART_RENUM_FACE_RANDOM", 
                              _renum_faces_random);
-    PDM_part_renum_face_add ("PDM_PART_RENUM_CELL_LEXICOGRAPHIC",
+    PDM_part_renum_face_add ("PDM_PART_RENUM_FACE_LEXICOGRAPHIC",
                              _renum_faces_lexicographic);
   }
   

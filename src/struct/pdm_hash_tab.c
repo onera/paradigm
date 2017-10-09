@@ -151,14 +151,14 @@ void           *data
     _ht->data[_key] = realloc (_ht->data[_key], sizeof(void *) *
                                                 _ht->mDataKey[_key]);
   }
-    
-  if (_ht->n_key_info >= _ht->l_key_info) {
-    _ht->l_key_info *= 2;
-    _ht->key_info = realloc(_ht->key_info, sizeof(PDM_g_num_t) *  _ht->l_key_info);
-  }
 
   if (_ht->nDataKey[_key] == 0) {
+    if (_ht->n_key_info >= _ht->l_key_info) {
+      _ht->l_key_info *= 2;
+      _ht->key_info = realloc(_ht->key_info, sizeof(PDM_g_num_t) *  _ht->l_key_info);
+    }
     _ht->key_info[_ht->n_key_info] = _key;
+    _ht->n_key_info += 1;
   }
   
   _ht->data[_key][_ht->nDataKey[_key]++] = data;
@@ -349,6 +349,7 @@ PDM_bool_t remove_data
     _nDataKey[_key] = 0;
   }
 
+  _ht->n_key_info = 0;
 }
 
 
