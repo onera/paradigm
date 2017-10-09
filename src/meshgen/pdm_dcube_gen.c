@@ -28,7 +28,7 @@ typedef struct  {
   PDM_MPI_Comm       comm;          /*!< MPI communicator                          */
   PDM_g_num_t   nVtxSeg;       /*!< Number of vertices in segments            */
   double         length;        /*!< Segment length                            */
-  double         zero;          /*!< Coordinates of the origin point           */
+  double         zero;          /*!< Coordinates of the origin                 */
   int            nFaceGroup;    /*!< Number of faces groups                    */
   int            dNCell;        /*!< Number of cells stored in this process    */
   int            dNFace;        /*!< Number of faces stored in this process    */
