@@ -15,6 +15,7 @@
 #include "pdm_config.h"
 #include "pdm_part.h"
 #include "pdm_part_coarse_mesh.h"
+#include "pdm_cellface_orient.h"
 
 #include "pdm_writer.h"
 #include "pdm_part_to_block.h"
@@ -1028,6 +1029,17 @@ _export_coarse_mesh
                                   &edgePartBoundProcIdx,
                                   &edgePartBoundPartIdx,
                                   &edgePartBound);
+    
+        PDM_cellface_orient (nFace,
+                         nEdge,
+                         nVtx,
+                         vtx,        
+                         faceEdgeIdx,
+                         faceEdge,
+                         edgeFace,
+                         edgeVtxIdx,
+                         edgeVtx);
+
 
     edgeVtxIdx1[ipart]  = (PDM_l_num_t *) malloc (sizeof(PDM_l_num_t) * nEdge);
     edgeVtxNB1[ipart]   = (PDM_l_num_t *) malloc (sizeof(PDM_l_num_t) * nEdge);
