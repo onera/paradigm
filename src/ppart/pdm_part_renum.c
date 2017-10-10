@@ -1184,6 +1184,10 @@ PDM_part_renum_cell_add
  const PDM_part_renum_fct_t  renum_fct /*!< Customize \ref PDM_part_renum_cell function for the format */             
 )
 {
+  if (cell_methods == NULL) {
+    PDM_part_renum_load_local ();
+  }
+
   _renum_method_t *method_ptr = malloc (sizeof(_renum_method_t));
   
   int idx = PDM_Handles_store  (cell_methods, method_ptr);
@@ -1211,6 +1215,10 @@ PDM_part_renum_face_add
  const PDM_part_renum_fct_t  renum_fct /*!< Customize \ref PDM_part_renum_face function for the format */             
 )
 {
+  if (face_methods == NULL) {
+    PDM_part_renum_load_local ();
+  }
+
   _renum_method_t *method_ptr = malloc (sizeof(_renum_method_t));
   
   int idx = PDM_Handles_store  (face_methods, method_ptr);
