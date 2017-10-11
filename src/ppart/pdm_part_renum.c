@@ -925,6 +925,8 @@ PDM_part_renum_cell_add
 
   _renum_method_t *method_ptr = malloc (sizeof(_renum_method_t));
   
+  printf("-----> %s\n", name);
+  
   int idx = PDM_Handles_store  (cell_methods, method_ptr);
 
   method_ptr->name = malloc (sizeof(char) * (strlen(name) + 1));
@@ -979,6 +981,7 @@ PDM_part_renum_load_local
 void
 )
 {
+  printf("PDM_part_renum_load_local \n");
   if (cell_methods == NULL)  {
     
     const int n_default_methods = 4;

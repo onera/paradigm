@@ -132,7 +132,7 @@ cdef class Part:
     cdef int id
     cdef int _nFaceGroup
     # ------------------------------------------------------------------
-    def __init__(self,
+    def __cinit__(self,
                  MPI.Comm comm,
                  PDM_part_split_t split_method,
                  char                 *renum_cell_method,
@@ -176,6 +176,7 @@ cdef class Part:
 
 
         """
+        print '*'*1000
 
         # ~> Communicator Mpi
         cdef MPI.MPI_Comm c_comm = comm.ob_mpi
@@ -279,6 +280,8 @@ cdef class Part:
         # LOG.info(' '*4 + " --->  dFaceGroupFace.data : {0} ".format(dFaceGroupFace.__array_interface__['data'][0]) )
         # LOG.info(' '*4 + " --->  dFaceGroupIdx.data  : {0} ".format(dFaceGroupIdx.__array_interface__['data'][0]) )
         # LOG.info(' '*4 + " ---> LibPart.PDM_part_create " )
+        print 'renum_cell_method : ', renum_cell_method
+        print 'renum_face_method : ', renum_face_method
         # -> Create PPART
         PDM_part_create(&_id,
                         PDM_MPI_mpi_2_pdm_mpi_comm (<void *> &c_comm),

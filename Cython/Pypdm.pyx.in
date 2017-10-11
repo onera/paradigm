@@ -26,8 +26,6 @@ from    mpi4py      cimport MPI
 # ---------
 NPY.import_array()
 
-
-
 # PDM Specific type :
 # -----------------
 
@@ -91,6 +89,11 @@ include "pdm_cellface_orient.pxi"
 # PDM_dmesh_nodal :
 # ----------------
 include "pdm_dmesh_nodal.pxi" 
+
+
+
+
+
 
 # TODO: PDM_writer, ...
 
