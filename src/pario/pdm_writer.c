@@ -820,6 +820,14 @@ const PDM_g_num_t *numabs
   }
 
   PDM_Mesh_nodal_coord_set (geom->idx_mesh, id_part, n_som, coords, numabs);
+  
+  if (1 == 1) {
+    printf("nvtx : %d\n", n_som);
+    for (int i = 0; i < n_som; i++) {
+      printf ("%d %ld : %12.5e %12.5e %12.5e\n", i+1, numabs[i], 
+              coords[3*i], coords[3*i+1], coords[3*i+2]);
+    }
+  }
 
 }
 
@@ -1354,6 +1362,25 @@ PDM_g_num_t   *numabs
                                       cell_face_nb, 
                                       cell_face, 
                                       numabs);
+  if (1 == 1) {
+    printf("ncell : %d\n", n_cell);
+    for (int i = 0; i < n_cell; i++) {
+      printf ("%d %ld : \n", i+1, numabs[i]); 
+      for (int j = cell_face_idx[i]; j < cell_face_idx[i+1]; j++) {
+        printf (" %d", cell_face[j]);
+      }
+      printf ("\n");
+    }
+    printf("nface : %d\n", n_face);
+    for (int i = 0; i < n_face; i++) {
+      printf ("%d: \n", i+1); 
+      for (int j = face_som_idx[i]; j < face_som_idx[i+1]; j++) {
+        printf (" %d", face_som[j]);
+      }
+      printf ("\n");
+    }
+  }
+
 
 } 
 
