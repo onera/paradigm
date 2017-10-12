@@ -185,7 +185,7 @@ int main(int argc, char *argv[])
   PDM_dcube_gen_init(&id,
                       comm,
                       nVtxSeg,
-                      length
+                      length,
 		      0.);
 
   PDM_dcube_gen_dim_get(id,
@@ -253,6 +253,10 @@ int main(int argc, char *argv[])
   int have_dCellPart = 0;
 
   int *dCellPart = (int *) malloc(dNCell*sizeof(int));
+  int *renum_properties_cell = NULL;
+  int *renum_properties_face = NULL;
+  int nPropertyCell = 0;
+  int nPropertyFace = 0;
 
   PDM_part_create(&ppartId,
                   comm,

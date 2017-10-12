@@ -82,6 +82,12 @@ cdef extern from "pdm_part.h":
                                int          **faceGroupIdx,
                                int          **faceGroup,
                                PDM_g_num_t **faceGroupLNToGN)
+    
+    # ------------------------------------------------------------------
+    void PDM_part_part_color_get(int            ppartId,
+                                 int            ipart,
+                                 int          **cellColor,
+                                 int          **faceColor)
 
     # ------------------------------------------------------------------
     void PDM_part_free(int ppartId)
@@ -180,70 +186,84 @@ cdef class Part:
 
         # ~> \param [in]   dCellFaceIdx   Distributed cell face connectivity index or NULL
         cdef int * dCellFaceIdx_data
-        if (dCellFaceIdx == None):
+        if (dCellFaceIdx is None):
             dCellFaceIdx_data = NULL
         else:
             dCellFaceIdx_data = <int *> dCellFaceIdx.data
+            
+        # ~> \param [in]   renum_properties_cell
+        cdef int * renum_properties_cell_data
+        if (renum_properties_cell is None):
+            renum_properties_cell_data = NULL
+        else:
+            renum_properties_cell_data = <int *> renum_properties_cell.data
+            
+        # ~> \param [in] renum_properties_face
+        cdef int * renum_properties_face_data
+        if (renum_properties_face is None):
+            renum_properties_face_data = NULL
+        else:
+            renum_properties_face_data = <int *> renum_properties_face.data
 
         # ~> \param [in]   dCellFace      Distributed cell face connectivity or NULL
         cdef PDM_g_num_t * dCellFace_data = NULL
-        if (dCellFace == None):
+        if (dCellFace is None):
            dCellFace_data = NULL
         else:
             dCellFace_data = <PDM_g_num_t *> dCellFace.data
 
         # \param [in]   dCellTag       Cell tag (size : nCell) or NULL
         cdef int *dCellTag_data
-        if (dCellTag == None):
+        if (dCellTag is None):
             dCellTag_data = NULL
         else:
             dCellTag_data = <int *> dCellTag.data
 
         # \param [in]   dCellWeight    Cell weight (size : nCell) or NULL
         cdef int *dCellWeight_data
-        if (dCellWeight == None):
+        if (dCellWeight is None):
             dCellWeight_data = NULL
         else:
             dCellWeight_data = <int *> dCellWeight.data
 
         # \param [in]   dCellPart      Distributed cell partitioning
         cdef int *dCellPart_data
-        if (dCellPart == None):
+        if (dCellPart is None):
             dCellPart_data = NULL
         else:
             dCellPart_data = <int *> dCellPart.data
 
         # \param [in]   dFaceCell      Distributed face cell connectivity or NULL
         cdef PDM_g_num_t * dFaceCell_data
-        if (dFaceCell == None):
+        if (dFaceCell is None):
             dFaceCell_data = NULL
         else:
             dFaceCell_data = <PDM_g_num_t *> dFaceCell.data
 
         # \param [in]   dFaceTag       Distributed face tag
         cdef int *dFaceTag_data
-        if (dFaceTag == None):
+        if (dFaceTag is None):
             dFaceTag_data = NULL
         else:
             dFaceTag_data = <int *> dFaceTag.data
 
         # \param [in]   dVtxCoord      Distributed vertex coordinates
         cdef int *dVtxTag_data
-        if (dVtxTag == None):
+        if (dVtxTag is None):
             dVtxTag_data = NULL
         else:
             dVtxTag_data = <int *> dVtxTag.data
 
         # \param [in]   dFaceGroupIdx  Index of distributed faces list of each group
         cdef int *dFaceGroupIdx_data
-        if (dFaceGroupIdx == None):
+        if (dFaceGroupIdx is None):
             dFaceGroupIdx_data = NULL
         else:
             dFaceGroupIdx_data = <int *> dFaceGroupIdx.data
 
         # \param [in]   dFaceGroup     distributed faces list of each group
         cdef PDM_g_num_t * dFaceGroupFace_data
-        if (dFaceGroupFace == None):
+        if (dFaceGroupFace is None):
             dFaceGroupFace_data = NULL
         else:
             dFaceGroupFace_data = <PDM_g_num_t *> dFaceGroupFace.data
@@ -263,6 +283,10 @@ cdef class Part:
                         split_method,
                         renum_cell_method,
                         renum_face_method,
+                        nPropertyCell,
+                        renum_properties_cell_data,
+                        nPropertyFace,
+                        renum_properties_face_data,
                         nPart,
                         dNCell,
                         dNFace,
@@ -588,6 +612,49 @@ cdef class Part:
                 'npFaceGroup'                : npFaceGroup,
                 'npFaceGroupLNToGN'          : npFaceGroupLNToGN}
 
+    # ------------------------------------------------------------------
+    def part_color_get(self, int ipart):
+        """
+           Get partition dimensions
+        """
+        # ************************************************************************
+        # > Declaration
+        cdef int          *cellColor,
+        cdef int          *faceColor
+        # ************************************************************************
+
+        # dims = self.part_dim_get(self.id, ipart)
+        dims = self.part_dim_get(ipart)
+
+        # -> Call PPART to get info
+        PDM_part_part_color_get(self.id,
+                                ipart,
+                                &cellColor,
+                                &faceColor)
+        # -> Begin
+        cdef NPY.npy_intp dim
+
+        # \param [out]  cellColor            Cell tag (size = nCell)
+        if (cellColor == NULL) :
+            npCellColor = None
+        else :
+            dim = <NPY.npy_intp> dims['nCell']
+            npCellColor = NPY.PyArray_SimpleNewFromData(1,
+                                                        &dim,
+                                                        NPY.NPY_INT32,
+                                                        <void *> cellColor)
+        # \param [out]  faceColor            Cell tag (size = nCell)
+        if (faceColor == NULL) :
+            npFaceColor = None
+        else :
+            dim = <NPY.npy_intp> dims['nFace']
+            npFaceColor = NPY.PyArray_SimpleNewFromData(1,
+                                                        &dim,
+                                                        NPY.NPY_INT32,
+                                                        <void *> faceColor)
+            
+        return {'npCellColor'   : npCellColor,
+                'npFaceColor'   : npFaceColor}
 
     # ------------------------------------------------------------------
     def part_time_get(self):

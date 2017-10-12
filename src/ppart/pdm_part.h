@@ -313,6 +313,33 @@ PROCF (pdm_part_part_val_get, PDM_PART_PART_VAL_GET)
 
 /**
  *
+ * \brief Return a mesh partition
+ * 
+ * \param [in]   ppartId               ppart identifier
+ * \param [in]   ipart                 Current partition
+ * \param [out]  cellColor             Cell Color (size = nCell)
+ * \param [out]  faceColor             Face Color (size = nFace)
+ */
+
+void PDM_part_part_color_get
+(
+const int            ppartId,
+const int            ipart,
+      int          **cellColor,
+      int          **faceColor
+);
+
+void 
+PROCF (pdm_part_part_color_get, PDM_PART_PART_COLOR_GET)
+(
+ int           *ppartId,
+ int           *ipart,
+ int           *cellColor,
+ int           *faceColor
+);
+
+/**
+ *
  * \brief Free ppart
  *
  * \param [in]   ppartId        ppart identifier

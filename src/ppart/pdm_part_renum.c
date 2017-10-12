@@ -1326,8 +1326,7 @@ PDM_part_renum_cell
 void 
 PDM_part_renum_face
 (
- _PDM_part_t           *ppart,
- PDM_part_renum_face_t  method                 
+ _PDM_part_t           *ppart               
 )
 {
   if (face_methods == NULL)  {

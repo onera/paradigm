@@ -221,6 +221,10 @@ int main(int argc, char *argv[])
 
   int *dCellPart = (int *) malloc(dNCell*sizeof(int));
 //                  "PDM_PART_RENUM_CELL_CUTHILL",
+  int *renum_properties_cell = NULL;
+  int *renum_properties_face = NULL;
+  int nPropertyCell = 0;
+  int nPropertyFace = 0;
 
   PDM_part_create(&ppartId,
                   PDM_MPI_COMM_WORLD,
@@ -441,6 +445,24 @@ int main(int argc, char *argv[])
       printf(" %d", cellFaceNb[ipart][i]);
     }
     printf("\n");
+
+    printf("cellface : \n");
+    for (int i = 0; i < nCell; i++) {
+      for (int j = cellFaceIdx[i]; j < cellFaceIdx[i+1]; j++) {
+        printf(" %d", cellFace[j]);
+      }
+    printf("\n");
+    }
+      
+    printf("facevtx : \n");
+    for (int i = 0; i < nFace; i++) {
+      for (int j = faceVtxIdx[i]; j < faceVtxIdx[i+1]; j++) {
+        printf(" %d", faceVtx[j]);
+      }
+    printf("\n");
+    }
+
+
     for (int i = 0; i < nFace; i++) {
       faceVtxNb[ipart][i] = faceVtxIdx[i+1] - faceVtxIdx[i]; 
       printf(" %d", faceVtxNb[ipart][i]);
