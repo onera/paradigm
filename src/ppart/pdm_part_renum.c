@@ -1050,7 +1050,6 @@ const char *name
 }
 
 
-
 /**
  *
  * \brief Get name of the cell renumbering method 
@@ -1084,42 +1083,6 @@ const int idx
 
   return method_ptr->name;
 }
-
-
-/**
- *
- * \brief Get name of the face renumbering method 
- * 
- * \param [in]  idx     Index of the method
- * 
- * \return Name of the method (NULL otherwise)
- *
- */
-
-const char * 
-PDM_part_renum_face_method_name_get
-(
-const int idx
-)
-{
-  if (face_methods == NULL) {
-    PDM_part_renum_load_local();
-  }
-
-  int n_methods = PDM_Handles_n_get (face_methods);
-
-  if (idx >= n_methods) {
-    return NULL;
-  }
-
-  const int *index =  PDM_Handles_idx_get (face_methods);
-
-  _renum_method_t *method_ptr = 
-            (_renum_method_t *) PDM_Handles_get (face_methods, index[idx]);
-
-  return method_ptr->name;
-}
-
 
 
 /**
@@ -1305,14 +1268,39 @@ PDM_part_renum_cell
 }
 
 
-//  case PDM_PART_RENUM_CELL_CACHEBLOCKING_SYNC :
-//    _renum_cells_cacheblocking(ppart); 
-//    break;
-//  case PDM_PART_RENUM_CELL_CACHEBLOCKING_ASYNC :
-//    _renum_cells_cacheblocking(ppart); 
-//    break;
-//}
+/**
+ *
+ * \brief Get name of the face renumbering method 
+ * 
+ * \param [in]  idx     Index of the method
+ * 
+ * \return Name of the method (NULL otherwise)
+ *
+ */
 
+const char * 
+PDM_part_renum_face_method_name_get
+(
+const int idx
+)
+{
+  if (face_methods == NULL) {
+    PDM_part_renum_load_local();
+  }
+
+  int n_methods = PDM_Handles_n_get (face_methods);
+
+  if (idx >= n_methods) {
+    return NULL;
+  }
+
+  const int *index =  PDM_Handles_idx_get (face_methods);
+
+  _renum_method_t *method_ptr = 
+            (_renum_method_t *) PDM_Handles_get (face_methods, index[idx]);
+
+  return method_ptr->name;
+}
 
 
 /**
