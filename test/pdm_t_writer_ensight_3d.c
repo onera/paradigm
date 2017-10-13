@@ -596,6 +596,8 @@ int main(int argc, char *argv[])
   }
   free(val_coo_x);
   free(val_coo_xyz);
+  free(cellFaceNb);
+  free(faceVtxNb);
   free(nsom_part);
 
   PDM_writer_var_free(id_cs,
