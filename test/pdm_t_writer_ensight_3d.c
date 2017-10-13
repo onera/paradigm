@@ -442,32 +442,11 @@ int main(int argc, char *argv[])
     
     for (int i = 0; i < nCell; i++) {
       cellFaceNb[ipart][i] = cellFaceIdx[i+1] - cellFaceIdx[i]; 
-      printf(" %d", cellFaceNb[ipart][i]);
     }
-    printf("\n");
-
-    printf("cellface : \n");
-    for (int i = 0; i < nCell; i++) {
-      for (int j = cellFaceIdx[i]; j < cellFaceIdx[i+1]; j++) {
-        printf(" %d", cellFace[j]);
-      }
-    printf("\n");
-    }
-      
-    printf("facevtx : \n");
-    for (int i = 0; i < nFace; i++) {
-      for (int j = faceVtxIdx[i]; j < faceVtxIdx[i+1]; j++) {
-        printf(" %d", faceVtx[j]);
-      }
-    printf("\n");
-    }
-
 
     for (int i = 0; i < nFace; i++) {
       faceVtxNb[ipart][i] = faceVtxIdx[i+1] - faceVtxIdx[i]; 
-      printf(" %d", faceVtxNb[ipart][i]);
     }
-    printf("\n");
 
     val_num_part[ipart] = (PDM_real_t *) malloc(sizeof(PDM_real_t) * nCell);
     val_coo_x[ipart]    = (PDM_real_t *) malloc(sizeof(PDM_real_t) * nVtx);

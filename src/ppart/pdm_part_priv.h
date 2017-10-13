@@ -1,6 +1,8 @@
 #ifndef __PDM_PART_PRIV_H__
 #define __PDM_PART_PRIV_H__
 
+#include <stdlib.h>
+
 #include "pdm.h"
 #include "pdm_priv.h"
 #include "pdm_timer.h"

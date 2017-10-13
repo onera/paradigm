@@ -1113,11 +1113,9 @@ _type_cell_3D
     return PDM_MESH_NODAL_POLY_3D;
   }
 
-  printf("typecell\n");
   for (int i = 0; i < n_face_cell; i++) {
 
     const int face_id = PDM_ABS(cell_face[i]) - 1;
-    printf(" %d", cell_face[i]);
     const int n_som_face = face_vtx_nb[face_id];
     PDM_l_num_t idx = face_vtx_idx[face_id] - adjust;
  
@@ -1139,7 +1137,6 @@ _type_cell_3D
       return PDM_MESH_NODAL_POLY_3D;
 
   }
-    printf("\n");
     
   PDM_Mesh_nodal_elt_t cell_type;
 
@@ -2950,7 +2947,7 @@ PDM_g_num_t      *numabs
   PDM_l_num_t n_pyramid = 0;
   PDM_l_num_t n_poly3d  = 0;
   
-  
+  if (1 == 0) {
     printf("cellface 2: \n");
     for (int i = 0; i < n_cell; i++) {
       for (int j = cell_face_idx[i]; j < cell_face_idx[i+1]; j++) {
@@ -2966,7 +2963,7 @@ PDM_g_num_t      *numabs
       }
     printf("\n");
     }
-
+  }
     
   for (int i = 0; i < n_cell; i++) {
     

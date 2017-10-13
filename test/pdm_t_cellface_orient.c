@@ -19,6 +19,7 @@
 #include "pdm_writer.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
+#include "src/plugins/pdm_plugin.h"
 
 /*============================================================================
  * Type definitions
@@ -230,10 +231,11 @@ int main(int argc, char *argv[])
 
 //                  "PDM_PART_RENUM_CELL_NONE",
 //                  "PDM_PART_RENUM_FACE_NONE",
+  
   PDM_part_create(&ppartId,
                   PDM_MPI_COMM_WORLD,
                   method,
-                  "PDM_PART_RENUM_CELL_NONE",
+                  "PDM_PART_RENUM_CELL_CUTHILL",
                   "PDM_PART_RENUM_FACE_LEXICOGRAPHIC",
                   nPropertyCell,
                   renum_properties_cell,
@@ -453,7 +455,14 @@ int main(int argc, char *argv[])
                          faceCell,
                          faceVtxIdx,
                          faceVtx);
-    
+
+    for (int i = 0; i < nCell; i++) {
+      cellFaceNb[ipart][i] = cellFaceIdx[i+1] - cellFaceIdx[i]; 
+    }
+
+    for (int i = 0; i < nFace; i++) {
+      faceVtxNb[ipart][i] = faceVtxIdx[i+1] - faceVtxIdx[i]; 
+    }
     
     if (0 == 1) {
     

@@ -821,7 +821,7 @@ const PDM_g_num_t *numabs
 
   PDM_Mesh_nodal_coord_set (geom->idx_mesh, id_part, n_som, coords, numabs);
   
-  if (1 == 1) {
+  if (0 == 1) {
     printf("nvtx : %d\n", n_som);
     for (int i = 0; i < n_som; i++) {
       printf ("%d %ld : %12.5e %12.5e %12.5e\n", i+1, numabs[i], 
@@ -1362,7 +1362,7 @@ PDM_g_num_t   *numabs
                                       cell_face_nb, 
                                       cell_face, 
                                       numabs);
-  if (1 == 1) {
+  if (0 == 1) {
     printf("ncell : %d\n", n_cell);
     for (int i = 0; i < n_cell; i++) {
       printf ("%d %ld : \n", i+1, numabs[i]); 
