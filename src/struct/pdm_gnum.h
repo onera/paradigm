@@ -45,18 +45,6 @@ extern "C" {
  * Type definitions
  *============================================================================*/
 
-/*----------------------------------------------------------------------------
- * Structure defining an I/O numbering scheme
- *----------------------------------------------------------------------------*/
-
-/**
-  \brief Pointer to an I/O numbering scheme structure. 
-
-  The structure itself is private, and is defined in pdm_gnum.c
-*/
-
-typedef struct _pdm_gnum_t pdm_gnum_t;
-
 /*=============================================================================
  * Static global variables
  *============================================================================*/
