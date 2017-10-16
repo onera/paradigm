@@ -14,15 +14,15 @@
 #include <time.h>
 #include <string.h>
 
-#include "pdm.h"
-#include "pdm_mpi.h"
-#include "pdm_priv.h"
-#include "pdm_config.h"
 
 /*----------------------------------------------------------------------------
  *  Local headers
  *----------------------------------------------------------------------------*/
 
+#include "pdm.h"
+#include "pdm_mpi.h"
+#include "pdm_priv.h"
+#include "pdm_config.h"
 #include "pdm_part.h"
 #include "pdm_part_priv.h"
 #include "pdm_timer.h"
@@ -36,6 +36,7 @@
 #include "pdm_cuthill.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
+#include "pdm_order.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -1331,6 +1332,126 @@ PDM_part_renum_face
   }
 }
 
+
+/**
+ *
+ * \brief Perform cells renumbering from a new order
+ *
+ * \param [in,out]  part        Current partition
+ * \param [in]      newToOldOrder    NewOrder
+ *
+ */
+void 
+PDM_part_reorder_cell
+(
+ _part_t *part, 
+ int     *newToOldOrder
+)
+{
+  /*
+   * Cell Renumbering
+   */
+   
+  _renum_connectivities (part->nCell,
+                         newToOldOrder,
+                         part->cellFaceIdx, 
+                         part->cellFace); 
+  
+  if (part->cellTag != NULL) {
+    PDM_order_array (part->nCell,
+                     sizeof(int),
+                     newToOldOrder,
+                     part->cellTag);
+  }
+  
+  if (part->cellColor != NULL) {
+    PDM_order_array (part->nCell,
+                     sizeof(int),
+                     newToOldOrder,
+                     part->cellColor);
+  }
+   
+  PDM_order_array (part->nCell,
+                   sizeof(PDM_g_num_t),
+                   newToOldOrder,
+                   part->cellLNToGN); 
+   
+  _renum_faceCell (part->nCell,
+                   part->nFace,
+                   part->cellFaceIdx, 
+                   part->cellFace, 
+                   part->faceCell); 
+   
+}
+
+
+/**
+ *
+ * \brief Perform faces renumbering from a new order
+ *
+ * \param [in,out]  part        Current partition
+ * \param [in]      newToOldOrder    NewOrder
+ *
+ */
+void 
+PDM_part_reorder_face
+(
+_part_t *part, 
+int     *newToOldOrder
+)
+{
+  
+  /** Renum FaceVtx / FaceVtxIdx **/
+
+  _renum_connectivities (part->nFace, 
+                         newToOldOrder, 
+                         part->faceVtxIdx, 
+                         part->faceVtx);
+
+  /** CellFace **/
+  
+   int *oldToNewOrder = (int *) malloc (part->nFace * sizeof(int));
+  
+   for(int i = 0; i < part->nFace; i++) {
+    oldToNewOrder[newToOldOrder[i]] = i;
+   }
+ 
+  _renum_array (part->cellFaceIdx[part->nCell], 
+                oldToNewOrder,
+                part->cellFace);
+  
+  free (oldToNewOrder);
+    
+  /** FaceTag **/
+  if (part->faceTag != NULL) {
+    PDM_order_array (part->nFace,
+                     sizeof(int),
+                     newToOldOrder,
+                     part->faceTag); 
+  }
+  
+  /** FaceColor **/
+  if (part->faceColor != NULL) {
+    PDM_order_array (part->nFace,
+                     sizeof(int),
+                     newToOldOrder,
+                     part->faceColor); 
+  }
+    
+   /** FaceLNToGN **/
+
+  PDM_order_array (part->nFace,
+                   sizeof(PDM_g_num_t),
+                   newToOldOrder,
+                   part->faceLNToGN); // OK
+    
+  /** FaceCell Face **/
+  
+  _order_faceCell (part->nFace, 
+                   newToOldOrder,
+                   part->faceCell);  
+
+}
 
 #ifdef __cplusplus
 }

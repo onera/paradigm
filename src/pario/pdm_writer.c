@@ -824,7 +824,7 @@ const PDM_g_num_t *numabs
   if (0 == 1) {
     printf("nvtx : %d\n", n_som);
     for (int i = 0; i < n_som; i++) {
-      printf ("%d %ld : %12.5e %12.5e %12.5e\n", i+1, numabs[i], 
+      printf ("%d "PDM_FMT_G_NUM" : %12.5e %12.5e %12.5e\n", i+1, numabs[i], 
               coords[3*i], coords[3*i+1], coords[3*i+2]);
     }
   }
@@ -1365,7 +1365,7 @@ PDM_g_num_t   *numabs
   if (0 == 1) {
     printf("ncell : %d\n", n_cell);
     for (int i = 0; i < n_cell; i++) {
-      printf ("%d %ld : \n", i+1, numabs[i]); 
+      printf ("%d "PDM_FMT_G_NUM" : \n", i+1, numabs[i]); 
       for (int j = cell_face_idx[i]; j < cell_face_idx[i+1]; j++) {
         printf (" %d", cell_face[j]);
       }

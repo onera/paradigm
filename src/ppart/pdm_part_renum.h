@@ -267,6 +267,43 @@ PDM_part_renum_face
 );        
 
 
+/**
+ *
+ * \brief Perform cells renumbering from a new order 
+ *        Actualise all cells array according to the new numbering 
+ *        Connectivities/cellTag/cellColor/cellLNToGN
+ *
+ * \param [in,out]  part        Current partition
+ * \param [in]      newToOldOrder    NewOrder
+ *
+ */
+
+void 
+PDM_part_reorder_cell
+(
+ _part_t *part, 
+ int     *newToOldOrder               
+);        
+
+
+/**
+ *
+ * \brief Perform faces renumbering from a new order 
+ *        Actualise all cells array according to the new numbering 
+ *        Connectivities/faceTag/faceColor/faceLNToGN
+ *
+ * \param [in,out]  part        Current partition
+ * \param [in]      newToOldOrder    NewOrder
+ *
+ */
+
+void 
+PDM_part_reorder_face
+(
+ _part_t *part, 
+ int     *newToOldOrder               
+);        
+
 #ifdef	__cplusplus
 }
 #endif
