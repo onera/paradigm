@@ -67,7 +67,6 @@ cdef extern from "pdm_mpi.h":
 
 # PDM_part :
 # ----------
-
 include "pdm_part.pxi"
 
 # PDM_part_coarse :
@@ -89,6 +88,17 @@ include "pdm_cellface_orient.pxi"
 # PDM_dmesh_nodal :
 # ----------------
 include "pdm_dmesh_nodal.pxi" 
+
+
+
+
+
+
+
+
+
+
+
 
 
 

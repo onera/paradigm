@@ -535,6 +535,7 @@ _PDM_part_t* ppart
     /** Verbose bandwidth **/
     // dualBandWidth = PDM_checkbandwidth(part);
     // PDM_printf("Bandwidth of graph before reordering : %d \n", dualBandWidth);
+    // PDM_printf("Bandwidth of graph before reordering \n");
 
     /** Compute reordering **/
     PDM_cuthill_generate(part, order);

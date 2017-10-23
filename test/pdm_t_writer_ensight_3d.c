@@ -227,7 +227,7 @@ int main(int argc, char *argv[])
   PDM_part_create(&ppartId,
                   PDM_MPI_COMM_WORLD,
                   method,
-                  "PDM_PART_RENUM_CELL_NONE",
+                  "PDM_PART_RENUM_CELL_CUTHILL",
                   "PDM_PART_RENUM_FACE_NONE",
                   nPropertyCell,
                   renum_properties_cell,

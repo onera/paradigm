@@ -280,8 +280,8 @@ cdef class Part:
         # LOG.info(' '*4 + " --->  dFaceGroupFace.data : {0} ".format(dFaceGroupFace.__array_interface__['data'][0]) )
         # LOG.info(' '*4 + " --->  dFaceGroupIdx.data  : {0} ".format(dFaceGroupIdx.__array_interface__['data'][0]) )
         # LOG.info(' '*4 + " ---> LibPart.PDM_part_create " )
-        print 'renum_cell_method : ', renum_cell_method
-        print 'renum_face_method : ', renum_face_method
+        # print 'renum_cell_method : ', renum_cell_method
+        # print 'renum_face_method : ', renum_face_method
         # -> Create PPART
         PDM_part_create(&_id,
                         PDM_MPI_mpi_2_pdm_mpi_comm (<void *> &c_comm),
