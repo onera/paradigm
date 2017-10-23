@@ -2736,7 +2736,7 @@ const PDM_l_num_t    n_face,
     PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");  
   }
   
-  int _id_block = id_block - PDM_BLOCK_ID_BLOCK_POLY2D;
+  int _id_block = id_block - PDM_BLOCK_ID_BLOCK_POLY3D;
   
   PDM_Mesh_nodal_block_poly3d_t *block = 
           (PDM_Mesh_nodal_block_poly3d_t *) PDM_Handles_get (mesh->blocks_poly3d, _id_block);
@@ -2806,7 +2806,7 @@ const int            id_part,
     PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");  
   }
   
-  int _id_block = id_block - PDM_BLOCK_ID_BLOCK_POLY2D;
+  int _id_block = id_block - PDM_BLOCK_ID_BLOCK_POLY3D;
   
   PDM_Mesh_nodal_block_poly3d_t *block = 
           (PDM_Mesh_nodal_block_poly3d_t *) PDM_Handles_get (mesh->blocks_poly3d, _id_block);
