@@ -14,15 +14,15 @@
 #include <time.h>
 #include <string.h>
 
-#include "pdm.h"
-#include "pdm_mpi.h"
-#include "pdm_priv.h"
-#include "pdm_config.h"
 
 /*----------------------------------------------------------------------------
  *  Local headers
  *----------------------------------------------------------------------------*/
 
+#include "pdm.h"
+#include "pdm_mpi.h"
+#include "pdm_priv.h"
+#include "pdm_config.h"
 #include "pdm_part.h"
 #include "pdm_part_priv.h"
 #include "pdm_timer.h"
@@ -32,12 +32,11 @@
 #include "pdm_hilbert.h"
 #include "pdm_handles.h"
 #include "pdm_geom_elem.h"
-#include "pdm_part_graph.h"
 #include "pdm_sort.h"
-#include "pdm_order.h"
 #include "pdm_cuthill.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
+#include "pdm_order.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -122,6 +121,126 @@ const int nElt,
   PDM_sort_int (tmpArray, order, nElt);
 }
 
+/** 
+ * This function is part of Code_Saturne, a general-purpose CFD tool.
+ *  Copyright (C) 1998-2014 EDF S.A.
+ *
+ * \brief Descend binary tree for the lexicographical ordering of a strided array
+ *
+ * \param [in]     number pointer to numbers of entities that should be ordered.
+ * \param [in]            (if NULL, a default 1 to n numbering is considered)
+ * \param [in]     stride stride of array (number of values to compare)
+ * \param [in]     level  level of the binary tree to descend
+ * \param [in]     nb_ent number of entities in the binary tree to descend
+ * \param [in,out] order  ordering array
+ */
+
+inline static void
+_order_lnum_descend_tree_s
+(
+const int    number[],
+size_t       stride,
+size_t       level,
+const size_t nb_ent,
+int          order[]
+)
+{
+  size_t i_save, i1, i2, j, lv_cur;
+
+  i_save = (size_t)(order[level]);
+
+  while (level <= (nb_ent/2)) {
+
+    lv_cur = (2*level) + 1;
+
+    if (lv_cur < nb_ent - 1) {
+
+      i1 = (size_t)(order[lv_cur+1]);
+      i2 = (size_t)(order[lv_cur]);
+
+      for (j = 0; j < stride; j++) {
+        if (number[i1*stride + j] != number[i2*stride + j])
+          break;
+      }
+
+      if (j < stride) {
+        if (number[i1*stride + j] > number[i2*stride + j])
+          lv_cur++;
+      }
+
+    }
+
+    if (lv_cur >= nb_ent) break;
+
+    i1 = i_save;
+    i2 = (size_t)(order[lv_cur]);
+
+    for (j = 0; j < stride; j++) {
+      if (number[i1*stride + j] != number[i2*stride + j])
+        break;
+    }
+
+    if (j == stride) break;
+    if (number[i1*stride + j] >= number[i2*stride + j]) break;
+
+    order[level] = order[lv_cur];
+    level = lv_cur;
+
+  }
+
+  order[level] = (int) i_save;
+}
+
+/** 
+ * This function is part of Code_Saturne, a general-purpose CFD tool.
+ *  Copyright (C) 1998-2014 EDF S.A.
+ *
+ * \brief Order a strided array of global numbers lexicographically.
+ *
+ * \param [in]     number array of entity numbers (if NULL, a default 1 to n numbering is considered)
+ * \param [in]     stride stride of array (number of values to compare)
+ * \param [in,out] order  pre-allocated ordering table
+ * \param [in]     nb_ent number of entities considered
+ */
+
+static void
+_order_lnum_s
+(
+const int    number[],
+size_t       stride,
+int          order[],
+const size_t nb_ent
+)
+{
+  size_t i;
+  int o_save;
+
+  /* Initialize ordering array */
+
+  for (i = 0 ; i < nb_ent ; i++)
+    order[i] = (int) i;
+
+  if (nb_ent < 2)
+    return;
+
+  /* Create binary tree */
+
+  i = (nb_ent / 2) ;
+  do {
+    i--;
+    _order_lnum_descend_tree_s(number, stride, i, nb_ent, order);
+  } while (i > 0);
+
+  /* Sort binary tree */
+
+  for (i = nb_ent - 1 ; i > 0 ; i--) {
+    o_save   = order[0];
+    order[0] = order[i];
+    order[i] = o_save;
+    _order_lnum_descend_tree_s(number, stride, 0, i, order);
+  }
+}
+
 /**
  * \brief Renumber face to cell connectivity 
  * 
@@ -167,6 +286,44 @@ const int *cellFace,
   }
  
 }
+
+
+/**
+ * \brief Order an array
+ * 
+ * \param [in]      sizeArray       Number of elements
+ * \param [in]      newToOldOrder        New order (size = \ref nElt
+ * \param [in, out] Array         	Array to renumber
+ *
+ */
+
+static void 
+_order_array 
+(
+const int     sizeArray,
+const size_t  elt_size,        
+const int    *newToOldOrder,
+void         *array
+)
+{
+  unsigned char *oldArray = (unsigned char *) malloc (sizeArray * elt_size);
+  unsigned char *_array = (unsigned char *) array;
+  
+  for (int i = 0; i < sizeArray; ++i) {
+    for (int j = 0; j < elt_size; ++j) {
+      oldArray[elt_size * i + j] = _array[elt_size * i + j];
+    }
+  }
+  
+  for (int i = 0; i < sizeArray; ++i) {
+    for (int j = 0; j < elt_size; ++j) {
+      _array[elt_size * i + j] = oldArray[elt_size * newToOldOrder[i] +j];
+    }
+  }
+  
+  free(oldArray);
+}
+
 
 /**
  * \brief Order faceCell array
@@ -453,6 +610,116 @@ double  *cellCenter
 
 }
 
+
+/**
+ *
+ * \brief Perform cells renumbering from a new order
+ *
+ * \param [in,out]  part        Current partition
+ * \param [in]      newToOldOrder    NewOrder
+ *
+ */
+
+static void 
+_renum_cells
+(
+ _part_t *part, 
+ int     *newToOldOrder
+)
+{
+  /*
+   * Cell Renumbering
+   */
+   
+  _renum_connectivities (part->nCell,
+                         newToOldOrder,
+                         part->cellFaceIdx, 
+                         part->cellFace); 
+  
+  if (part->cellTag != NULL) {
+    _order_array (part->nCell,
+                  sizeof(int),
+                  newToOldOrder,
+                  part->cellTag);
+  }
+   
+  _order_array (part->nCell,
+                sizeof(PDM_g_num_t),
+                newToOldOrder,
+                part->cellLNToGN); 
+   
+  _renum_faceCell (part->nCell,
+                   part->nFace,
+                   part->cellFaceIdx, 
+                   part->cellFace, 
+                   part->faceCell); 
+   
+}
+
+
+/**
+ *
+ * \brief Perform faces renumbering from a new order
+ *
+ * \param [in,out]  part        Current partition
+ * \param [in]      newToOldOrder    NewOrder
+ *
+ */
+
+static void 
+_renum_faces
+(
+_part_t *part, 
+int     *newToOldOrder
+)
+{
+  
+  /** Renum FaceVtx / FaceVtxIdx **/
+
+  _renum_connectivities (part->nFace, 
+                         newToOldOrder, 
+                         part->faceVtxIdx, 
+                         part->faceVtx);
+
+  /** CellFace **/
+  
+   int *oldToNewOrder = (int *) malloc (part->nFace * sizeof(int));
+  
+   for(int i = 0; i < part->nFace; i++) {
+    oldToNewOrder[newToOldOrder[i]] = i;
+   }
+ 
+  _renum_array (part->cellFaceIdx[part->nCell], 
+                oldToNewOrder,
+                part->cellFace);
+  
+  free (oldToNewOrder);
+    
+    /** FaceTag **/
+
+  if (part->faceTag != NULL) {
+    _order_array (part->nFace,
+                  sizeof(int),
+                  newToOldOrder,
+                  part->faceTag); 
+  }
+    
+   /** FaceLNToGN **/
+
+  _order_array (part->nFace,
+                sizeof(PDM_g_num_t),
+                newToOldOrder,
+                part->faceLNToGN); // OK
+    
+    /** FaceCell Face **/
+  
+  _order_faceCell (part->nFace, 
+                   newToOldOrder,
+                   part->faceCell);  
+
+}
+
+
 /**
  *
  * \brief Perform a cells renumbering from a Hilbert curve
@@ -500,7 +767,7 @@ _PDM_part_t* ppart
       
     PDM_sort_double (hilbertCodes, newToOldOrder, part->nCell);
 	  
-    PDM_part_reorder_cell(part, newToOldOrder);
+    _renum_cells (part, newToOldOrder);
           
     free (hilbertCodes);
     free (newToOldOrder);
@@ -541,7 +808,7 @@ _PDM_part_t* ppart
     PDM_cuthill_generate(part, order);
   
     /** Apply renumbering **/
-    PDM_part_reorder_cell(part, order);
+    _renum_cells(part, order);
 
     /** Verbose bandwidth **/
     // dualBandWidth = PDM_checkbandwidth(part);
@@ -551,7 +818,6 @@ _PDM_part_t* ppart
     free(order);
   }
 }
-
 
 /**
  *
@@ -575,7 +841,7 @@ _PDM_part_t* ppart
     
     _random_order (nCell, order);
     
-    PDM_part_reorder_cell(part, order);
+    _renum_cells (part, order);
       
     free (order);
   }
@@ -604,7 +870,7 @@ _PDM_part_t* ppart
     
     _random_order (nFace, order);
     
-    PDM_part_reorder_face(part, order);
+    _renum_faces (part, order);
       
     free (order);
   }
@@ -649,10 +915,10 @@ _PDM_part_t* ppart
     }
   
     /** Reorder lexicographicly the array */
-    PDM_order_lnum_s (faceCellTmp, 2, order, nFace);
+    _order_lnum_s (faceCellTmp, 2, order, nFace);
 
     /** Update face array with the new array **/
-    PDM_part_reorder_face(part, order);
+    _renum_faces (part, order);
 
     /** Free memory **/
     free (order);
@@ -786,7 +1052,6 @@ const char *name
 }
 
 
-
 /**
  *
  * \brief Get name of the cell renumbering method 
@@ -820,42 +1085,6 @@ const int idx
 
   return method_ptr->name;
 }
-
-
-/**
- *
- * \brief Get name of the face renumbering method 
- * 
- * \param [in]  idx     Index of the method
- * 
- * \return Name of the method (NULL otherwise)
- *
- */
-
-const char * 
-PDM_part_renum_face_method_name_get
-(
-const int idx
-)
-{
-  if (face_methods == NULL) {
-    PDM_part_renum_load_local();
-  }
-
-  int n_methods = PDM_Handles_n_get (face_methods);
-
-  if (idx >= n_methods) {
-    return NULL;
-  }
-
-  const int *index =  PDM_Handles_idx_get (face_methods);
-
-  _renum_method_t *method_ptr = 
-            (_renum_method_t *) PDM_Handles_get (face_methods, index[idx]);
-
-  return method_ptr->name;
-}
-
 
 
 /**
@@ -1044,14 +1273,39 @@ PDM_part_renum_cell
 }
 
 
-//  case PDM_PART_RENUM_CELL_CACHEBLOCKING_SYNC :
-//    _renum_cells_cacheblocking(ppart); 
-//    break;
-//  case PDM_PART_RENUM_CELL_CACHEBLOCKING_ASYNC :
-//    _renum_cells_cacheblocking(ppart); 
-//    break;
-//}
+/**
+ *
+ * \brief Get name of the face renumbering method 
+ * 
+ * \param [in]  idx     Index of the method
+ * 
+ * \return Name of the method (NULL otherwise)
+ *
+ */
 
+const char * 
+PDM_part_renum_face_method_name_get
+(
+const int idx
+)
+{
+  if (face_methods == NULL) {
+    PDM_part_renum_load_local();
+  }
+
+  int n_methods = PDM_Handles_n_get (face_methods);
+
+  if (idx >= n_methods) {
+    return NULL;
+  }
+
+  const int *index =  PDM_Handles_idx_get (face_methods);
+
+  _renum_method_t *method_ptr = 
+            (_renum_method_t *) PDM_Handles_get (face_methods, index[idx]);
+
+  return method_ptr->name;
+}
 
 
 /**
@@ -1065,10 +1319,9 @@ PDM_part_renum_cell
 void 
 PDM_part_renum_face
 (
- _PDM_part_t           *ppart                
+ _PDM_part_t           *ppart               
 )
 {
-  
   if (face_methods == NULL)  {
     PDM_part_renum_load_local ();
   }
@@ -1082,6 +1335,7 @@ PDM_part_renum_face
     (fct) (ppart);
   }
 }
+
 
 /**
  *

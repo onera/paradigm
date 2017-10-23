@@ -39,39 +39,6 @@ typedef enum {
 } PDM_part_split_t;
 
 
-/**
- * \enum PDM_part_renum_face_t
- * \brief Renum face method 
- *
- */
-
-typedef enum {
-  PDM_PART_RENUM_FACE_RANDOM        = 1,
-  PDM_PART_RENUM_FACE_NONE          = 2,
-  PDM_PART_RENUM_FACE_LEXICOGRAPHIC = 3
-} PDM_part_renum_face_t;
-
-
-/**
- * \enum PDM_part_renum_cell_t
- * \brief Renum cell method 
- *
- */
-
-typedef enum {
-  PDM_PART_RENUM_CELL_HILBERT             = 1,
-  PDM_PART_RENUM_CELL_RANDOM              = 2,
-  PDM_PART_RENUM_CELL_NONE                = 3,
-#ifdef PDM_IN_PDMA    
-  PDM_PART_RENUM_CELL_CUTHILL             = 4, 
-  PDM_PART_RENUM_CELL_CACHEBLOCKING_SYNC  = 5,  /** Caution faces are also reorder **/
-  PDM_PART_RENUM_CELL_CACHEBLOCKING_ASYNC = 6   /** Caution faces are also reorder **/
-#else
-  PDM_PART_RENUM_CELL_CUTHILL             = 4     
-#endif
-} PDM_part_renum_cell_t;
-
-
 /*=============================================================================
  * Static global variables
  *============================================================================*/

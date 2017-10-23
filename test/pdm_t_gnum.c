@@ -303,10 +303,11 @@ PDM_part_split_t           method,
    */
 
   int ppartId;
-  int *renum_properties_cell = NULL;
-  int *renum_properties_face = NULL;
+
   int nPropertyCell = 0;
+  int *renum_properties_cell = NULL;
   int nPropertyFace = 0;
+  int *renum_properties_face = NULL;
 
   PDM_part_create (&ppartId,
                    pdm_mpi_comm,

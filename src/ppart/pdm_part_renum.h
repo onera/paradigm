@@ -169,6 +169,51 @@ void
 
 /**
  *
+ * \brief Get name of the face renumbering method 
+ * 
+ * \param [in]  idx     Index of the method
+ * 
+ * \return Name of the method
+ *
+ */
+
+const char * 
+PDM_part_renum_face_method_name_get
+(
+const int idx
+);        
+
+
+/**
+ *
+ * \brief Get the number of renumbering face methods 
+ * 
+ */
+
+int  
+PDM_part_n_renum_cell_method_get
+(
+void 
+);        
+
+
+/**
+ *
+ * \brief Get the number of renumbering face methods 
+ * 
+ * \return Name of the method
+ *
+ */
+
+int  
+PDM_part_n_renum_face_method_get
+(
+void 
+);        
+
+
+/**
+ *
  * \brief Purge renumbering methods 
  *
  */
@@ -220,6 +265,7 @@ PDM_part_renum_face
 (
   _PDM_part_t   *ppart                
 );        
+
 
 /**
  *

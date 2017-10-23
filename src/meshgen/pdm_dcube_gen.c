@@ -28,6 +28,7 @@ typedef struct  {
   PDM_MPI_Comm       comm;          /*!< MPI communicator                          */
   PDM_g_num_t   nVtxSeg;       /*!< Number of vertices in segments            */
   double         length;        /*!< Segment length                            */
+  double         zero;          /*!< Coordinates of the origin                 */
   int            nFaceGroup;    /*!< Number of faces groups                    */
   int            dNCell;        /*!< Number of cells stored in this process    */
   int            dNFace;        /*!< Number of faces stored in this process    */
@@ -85,6 +86,7 @@ _get_from_id
  * \param [in]   comm           Communicator
  * \param [in]   nVtxSeg        Number of vertices in segments
  * \param [in]   length         Segment length
+ * \param [in]   zero           Coordinates of the origin 
  *
  */
 
@@ -94,7 +96,8 @@ PDM_dcube_gen_init
  int                *id,
  PDM_MPI_Comm        comm, 
  const PDM_g_num_t  nVtxSeg, 
- const double        length
+ const double        length,
+ const double        zero
 )
 {
 
@@ -122,7 +125,8 @@ PDM_dcube_gen_init
 
   dcube->comm    = comm;
   dcube->nVtxSeg = nVtxSeg;
-  dcube->length  = length; 
+  dcube->length  = length;
+  dcube->zero    = zero;
 
   PDM_g_num_t nVtx      = nVtxSeg * nVtxSeg * nVtxSeg;
   PDM_g_num_t nFaceSeg  = nVtxSeg - 1;
@@ -237,9 +241,9 @@ PDM_dcube_gen_init
       if ((k == bVtxZ) && (j == bVtxY))
         _bVtxX = bVtxX; 
       for(PDM_g_num_t i = _bVtxX; i < nVtxSeg; i++) {
-        _dVtxCoord[3 * iVtx    ] = i * step; 
-        _dVtxCoord[3 * iVtx + 1] = j * step;
-        _dVtxCoord[3 * iVtx + 2] = k * step;
+        _dVtxCoord[3 * iVtx    ] = i * step + zero; 
+        _dVtxCoord[3 * iVtx + 1] = j * step + zero;
+        _dVtxCoord[3 * iVtx + 2] = k * step + zero;
         cpt += 1;
         iVtx += 1;
         if (cpt == dcube->dNVtx)
@@ -440,23 +444,34 @@ PDM_dcube_gen_init
     //
     // Faces zmin 
 
+    if (cpt == 0)
+      firstGroup = 1;
+    
+    cpt1 = cpt;
+
     bFace = 0;
 
+    cpt3 = 0;
     for(PDM_g_num_t j = 0; j < nFaceSeg; j++) {
       for(PDM_g_num_t i = 0; i < nFaceSeg; i++) {
-        _dFaceGroup[cpt] = bFace + j * nFaceSeg + i + 1;
-        cpt += 1;
-        if (cpt == dNFaceLim)
-          break;
+        cpt3 += 1;
+        if (!firstGroup || (firstGroup && ((cpt3 - 1)  >= rSerie))) {
+          _dFaceGroup[cpt] = bFace + j * nFaceSeg + i + 1;
+          cpt += 1;
+	  if (cpt == dNFaceLim)
+	    break;
+	}
       }
       if (cpt == dNFaceLim)
         break;
     }
     
-    _dFaceGroupIdx[1] = cpt;
+    _dFaceGroupIdx[1] = cpt - cpt1;
 
     if (cpt == dNFaceLim)
       break;
+
+    firstGroup = 0;
 
   case 1 :
 
@@ -646,7 +661,8 @@ PROCF (pdm_dcube_gen_init, PDM_DCUBE_GEN_INIT)
  int                *id,
  const PDM_MPI_Fint *comm,
  const PDM_g_num_t  *nVtxSeg, 
- const double       *length
+ const double       *length,
+ const double       *zero
 )
 {
 
@@ -657,7 +673,8 @@ PROCF (pdm_dcube_gen_init, PDM_DCUBE_GEN_INIT)
   PDM_dcube_gen_init (id,
                       c_comm,
                       *nVtxSeg, 
-                      *length);
+                      *length,
+		      *zero);
 }
 
 

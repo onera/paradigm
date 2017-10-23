@@ -260,13 +260,13 @@ cdef class CoarseMesh:
         CellLNToGN_data  = <PDM_g_num_t *> CellLNToGN.data
 
         # \param [in]   CellTag       Cell tag (size : nCell) or NULL
-        if (CellTag is None):
+        if (CellTag == None):
             CellTag_data = NULL
         else:
             CellTag_data = <int *> CellTag.data
 
         # \param [in]   CellWeight    Cell weight (size : nCell) or NULL
-        if (CellWeight is None):
+        if (CellWeight == None):
             CellWeight_data = NULL
         else:
             CellWeight_data = <int *> CellWeight.data
@@ -278,13 +278,13 @@ cdef class CoarseMesh:
         FaceVtxIdx_data = <int *>         FaceVtxIdx.data
 
         # \param [in]   FaceTag       Distributed face tag
-        if (FaceTag is None):
+        if (FaceTag == None):
           FaceTag_data = NULL
         else:
           FaceTag_data = <int *> FaceTag.data
 
         # \param [in]   faceWeight    Face weight (size : nFace) or NULL
-        if (FaceWeight is None):
+        if (FaceWeight == None):
             FaceWeight_data = NULL
         else:
             FaceWeight_data = <int *> FaceWeight.data
@@ -293,7 +293,7 @@ cdef class CoarseMesh:
         VtxCoord_data  = <double *>      VtxCoord.data
         VtxLNToGN_data = <PDM_g_num_t *> VtxLNToGN.data
 
-        if (VtxTag is None):
+        if (VtxTag == None):
           VtxTag_data = NULL
         else:
           VtxTag_data = <int *> VtxTag.data
