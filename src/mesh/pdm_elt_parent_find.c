@@ -80,5 +80,3 @@ PDM_elt_parent_find
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-
-#endif /* __PDM_ELT_PARENT_FIND_H__ */
