@@ -1507,7 +1507,7 @@ PDM_writer_ensight_geom_write
         for (int k = 0; k < n_elt; k++) {
           for (int j = cellfac_idx[k]; j < cellfac_idx[k+1]; j++) {
             int ifac = cellfac[j] - 1;
-            for (int j2 = facvtx_idx[ifac]; j2 < facvtx[ifac+1]; j2++) {
+            for (int j2 = facvtx_idx[ifac]; j2 < facvtx_idx[ifac+1]; j2++) {
               int isom = facvtx[j2] - 1;
               buff_int32[l_connec] =  (int32_t) g_num_vtx[isom];
               l_connec += 1;
