@@ -48,7 +48,7 @@
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
-#include "pdm_global_point_mean.h"
+#include "pdm_global_mean.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -77,8 +77,9 @@ typedef struct  {
   PDM_g_num_t **g_nums;           /*!< Global numbering of elements */ 
   PDM_part_to_block_t *ptb;       /*!< Part to block structure */
   PDM_block_to_part_t *btp;       /*!< Block to part structure */
+  int           stride;           /*!< Field stride */
   double      **local_field;      /*!< Local field */
-  double      **local_weight;      /*!< Weight */
+  double      **local_weight;     /*!< Weight */
   double      **global_mean_field;/*!< Global mean field */
   
 } _pdm_global_point_mean_t;
@@ -136,7 +137,7 @@ _get_from_id
  */
 
 int
-PDM_global_point_mean_create
+PDM_global_mean_create
 (
  const int n_part,
  const PDM_MPI_Comm comm
@@ -178,7 +179,7 @@ PROCF (pdm_global_point_mean_create, PDM_GLOBAL_POINT_MEAN_CREATE)
 {
   const PDM_MPI_Comm c_comm = PDM_MPI_Comm_f2c (*fcomm);
 
-  *id = PDM_global_point_mean_create (*n_part, c_comm);
+  *id = PDM_global_mean_create (*n_part, c_comm);
 }
 
 
@@ -194,7 +195,7 @@ PROCF (pdm_global_point_mean_create, PDM_GLOBAL_POINT_MEAN_CREATE)
  */
 
 void
-PDM_global_point_mean_set
+PDM_global_mean_set
 (
  const int          id,
  const int          i_part,
@@ -204,13 +205,13 @@ PDM_global_point_mean_set
 {
   _pdm_global_point_mean_t *_gpm = _get_from_id (id);
   
-  _gpm->g_nums[i_part] = NULL;
-  _gpm->n_elts[i_part]  = 0;
+  _gpm->g_nums[i_part] = numabs;
+  _gpm->n_elts[i_part] = n_point;
   
 }
 
 void
-PROCF (pdm_global_point_mean_set, PDM_GLOBAL_POINT_MEAN_SET)
+PROCF (pdm_global_mean_set, PDM_GLOBAL_MEAN_SET)
 (
  const int         *id,
  const int         *i_part,
@@ -218,7 +219,7 @@ PROCF (pdm_global_point_mean_set, PDM_GLOBAL_POINT_MEAN_SET)
  const PDM_g_num_t *numabs
 )
 {
-  PDM_global_point_mean_set (*id, *i_part, *n_point, numabs);
+  PDM_global_mean_set (*id, *i_part, *n_point, numabs);
 }
 
 
@@ -232,7 +233,7 @@ PROCF (pdm_global_point_mean_set, PDM_GLOBAL_POINT_MEAN_SET)
  */
 
 int
-PDM_global_point_mean_free
+PDM_global_mean_free
 (
  const int          id
 )
@@ -252,16 +253,27 @@ PDM_global_point_mean_free
   free (_gpm->local_field);
   free (_gpm->local_weight);
   free (_gpm->global_mean_field);
+  
+  free (_gpm);
+  
+  PDM_Handles_handle_free (_gpms, id, PDM_FALSE);
+  
+  const int n_gpm = PDM_Handles_n_get (_gpms);
+  
+  if (n_gpm == 0) {
+    _gpms = PDM_Handles_free (_gpms);
+  }
+
 
 }
 
 void
-PROCF (pdm_global_point_mean_free, PDM_GLOBAL_POINT_MEAN_FREE)
+PROCF (pdm_global_mean_free, PDM_GLOBAL_MEAN_FREE)
 (
  const int         *id
 )
 {
-  PDM_global_point_mean_free (*id);
+  PDM_global_mean_free (*id);
 }
 
 
@@ -279,7 +291,7 @@ PROCF (pdm_global_point_mean_free, PDM_GLOBAL_POINT_MEAN_FREE)
  */
 
 void
-PDM_global_point_mean_field_set
+PDM_global_mean_field_set
 (
  const int          id,
  const int          i_part,
@@ -289,10 +301,17 @@ PDM_global_point_mean_field_set
  double            *global_mean_field_ptr
 )
 {
+  _pdm_global_point_mean_t *_gpm = _get_from_id (id);
+
+  _gpm->local_field[i_part]       = local_field;
+  _gpm->local_weight[i_part]      = local_weight;
+  _gpm->global_mean_field[i_part] = global_mean_field_ptr;
+  _gpm->stride = stride;
+  
 }
 
 void
-PROCF (pdm_global_point_mean_field_set, PDM_GLOBAL_POINT_MEAN_FIELD_SET)
+PROCF (pdm_global_mean_field_set, PDM_GLOBAL_MEAN_FIELD_SET)
 (
  const int         *id,
  const int         *i_part,
@@ -302,7 +321,7 @@ PROCF (pdm_global_point_mean_field_set, PDM_GLOBAL_POINT_MEAN_FIELD_SET)
  double            *global_mean_field_ptr
 )
 {
-  PDM_global_point_mean_field_set (*id, *i_part, *stride, 
+  PDM_global_mean_field_set (*id, *i_part, *stride, 
                                    local_field, local_weight, global_mean_field_ptr);
 }
 
@@ -316,19 +335,81 @@ PROCF (pdm_global_point_mean_field_set, PDM_GLOBAL_POINT_MEAN_FIELD_SET)
  */
 
 void
-PDM_global_point_mean_field_compute
+PDM_global_mean_field_compute
 (
  const int          id
 )
 {
+  _pdm_global_point_mean_t *_gpm = _get_from_id (id);
+
+  if (_gpm->ptb == NULL) {
+    _gpm->ptb = PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                          PDM_PART_TO_BLOCK_POST_MERGE,
+                                          1.,
+                                          _gpm->g_nums,
+                                          _gpm->n_elts,
+                                          _gpm->n_part,
+                                          _gpm->comm);
+  }
+  
+  if (_gpm->btp == NULL) {
+    PDM_g_num_t *distrib = PDM_part_to_block_distrib_index_get (_gpm->btp); 
+    _gpm->btp = PDM_block_to_part_create (distrib,
+                                          _gpm->g_nums,
+                                          _gpm->n_elts,
+                                          _gpm->n_part,
+                                          _gpm->comm);
+  }
+  
+  double *block_field = NULL;
+  double *block_weight = NULL;
+  int *
+  
+  
+  PDM_part_to_block_exch
+(
+ PDM_part_to_block_t       *ptb,
+ size_t                     s_data,
+ PDM_stride_t               t_stride,
+ int                        cst_stride,
+ int                      **part_stride,
+ void                     **part_data,
+ int                      **block_stride,
+ void                     **block_data
+)
+          
+          PDM_block_to_part_exch
+(
+ PDM_block_to_part_t *btp,
+ size_t               s_data,
+ PDM_stride_t         t_stride,
+ int                 *block_stride,
+ void                *block_data,
+ int                **part_stride,
+ void               **part_data
+);
+
+  
+  
+  PDM_part_to_block_create
+  
+  
+  
+  
+  
+  free (block_field);
+  if (block_weight != NULL) {
+    free (block_weight);
+  }
 }
 
 void
-PROCF (pdm_global_point_mean_field_compute, PDM_GLOBAL_POINT_MEAN_FIELD_COMPUTE)
+PROCF (pdm_global_mean_field_compute, PDM_GLOBAL_MEAN_FIELD_COMPUTE)
 (
  const int         *id
 )
 {
+  PDM_global_mean_field_compute (*id);
 }
 
 
@@ -344,7 +425,7 @@ PROCF (pdm_global_point_mean_field_compute, PDM_GLOBAL_POINT_MEAN_FIELD_COMPUTE)
  */
 
 void
-PDM_global_point_mean_field_get
+PDM_global_mean_field_get
 (
  const int          id,
  const int          i_part,
@@ -354,7 +435,7 @@ PDM_global_point_mean_field_get
 }
 
 void
-PROCF (pdm_global_point_mean_field_get, PDM_GLOBAL_POINT_MEAN_FIELD_GET)
+PROCF (pdm_global_mean_field_get, PDM_GLOBAL_MEAN_FIELD_GET)
 (
  const int         *id,
  const int         *i_part,

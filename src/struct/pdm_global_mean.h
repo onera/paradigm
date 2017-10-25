@@ -71,7 +71,7 @@ extern "C" {
  */
 
 int
-PDM_global_point_mean_create
+PDM_global_mean_create
 (
  const int n_part,
  const PDM_MPI_Comm comm
@@ -98,7 +98,7 @@ PROCF (pdm_global_point_mean_create, PDM_GLOBAL_POINT_MEAN_CREATE)
  */
 
 void
-PDM_global_point_mean_set
+PDM_global_mean_set
 (
  const int          id,
  const int          i_part,
@@ -126,7 +126,7 @@ PROCF (pdm_global_point_mean_set, PDM_GLOBAL_POINT_MEAN_SET)
  */
 
 int
-PDM_global_point_mean_free
+PDM_global_mean_free
 (
  const int          id
 );
@@ -152,7 +152,7 @@ PROCF (pdm_global_point_mean_free, PDM_GLOBAL_POINT_MEAN_FREE)
  */
 
 void
-PDM_global_point_mean_field_set
+PDM_global_mean_field_set
 (
  const int          id,
  const int          i_part,
@@ -183,7 +183,7 @@ PROCF (pdm_global_point_mean_field_set, PDM_GLOBAL_POINT_MEAN_FIELD_SET)
  */
 
 void
-PDM_global_point_mean_field_compute
+PDM_global_mean_field_compute
 (
  const int          id
 );

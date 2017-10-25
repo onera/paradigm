@@ -2434,8 +2434,8 @@ const int   hdl
   /* 
    * Create PartToBlock Structure 
    */
-  PDM_part_to_block_t *ptb = PDM_part_to_block_create(PDM_writer_BLOCK_DISTRIB_ALL_PROC,
-                                                      PDM_writer_POST_MERGE,
+  PDM_part_to_block_t *ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                      PDM_PART_TO_BLOCK_POST_MERGE,
                                                       1.,
                                                       &LNToGN,
                                                       &nFace,
@@ -2450,7 +2450,7 @@ const int   hdl
     
   int dataSize = PDM_part_to_block_exch(          ptb,
                                                   sizeof(PDM_g_num_t),
-                                                  PDM_writer_STRIDE_VAR,
+                                                  PDM_PART_TO_BLOCK_STRIDE_VAR,
                                                   -1,
                                                   &part_stri,
                                         (void **) &part_data,                                               
@@ -2638,8 +2638,8 @@ const int   hdl
   
     
   int nFac2 = 2*mesh->dNFace;
-  PDM_part_to_block_t *ptb2 = PDM_part_to_block_create(PDM_writer_BLOCK_DISTRIB_ALL_PROC,
-                                                       PDM_writer_POST_MERGE,
+  PDM_part_to_block_t *ptb2 = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                       PDM_PART_TO_BLOCK_POST_MERGE,
                                                        1.,
                                                        &mesh->_dFaceCell,
                                                        &nFac2,
@@ -2658,7 +2658,7 @@ const int   hdl
     
   int dataSize2 = PDM_part_to_block_exch(          ptb2,
                                                    sizeof(PDM_g_num_t),
-                                                   PDM_writer_STRIDE_VAR,
+                                                   PDM_PART_TO_BLOCK_STRIDE_VAR,
                                                    -1,
                                                    &part_stri2,
                                          (void **) &LNToGNElem,                                                        

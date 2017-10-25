@@ -2111,8 +2111,8 @@ _coarse_mesh_t * cm
 
   }
 
-  PDM_part_to_block_t *ptb = PDM_part_to_block_create (PDM_writer_BLOCK_DISTRIB_ALL_PROC,
-                                                     PDM_writer_POST_CLEANUP,
+  PDM_part_to_block_t *ptb = PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                     PDM_PART_TO_BLOCk_POST_CLEANUP,
                                                      1.,
                                                      (PDM_g_num_t **) faceLNToGNPart,
                                                      nFacePart,
@@ -2308,8 +2308,8 @@ _coarse_mesh_t * cm
     PDM_printf("\n");
   }
 
-  PDM_part_to_block_t *ptb = PDM_part_to_block_create (PDM_writer_BLOCK_DISTRIB_ALL_PROC,
-                                                     PDM_writer_POST_CLEANUP,
+  PDM_part_to_block_t *ptb = PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                     PDM_PART_TO_BLOCk_POST_CLEANUP,
                                                      1.,
                                                      (PDM_g_num_t **) vtxLNToGNPart,
                                                      nVtxPart,
@@ -2589,8 +2589,8 @@ _coarse_mesh_t * cm
     int rank;
     PDM_MPI_Comm_rank(cm->comm, &rank);
 
-    PDM_part_to_block_t *ptb = PDM_part_to_block_create (PDM_writer_BLOCK_DISTRIB_ALL_PROC,
-                                                         PDM_writer_POST_CLEANUP,
+    PDM_part_to_block_t *ptb = PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                         PDM_PART_TO_BLOCk_POST_CLEANUP,
                                                          1.,
                                                          (PDM_g_num_t **) faceGroupLNToGNPart,
                                                          nFaceGroupPart,
