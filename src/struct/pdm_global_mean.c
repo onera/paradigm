@@ -417,15 +417,14 @@ PDM_global_mean_field_compute
                            (void **) &block_weight); 
   }
 
-  // Remplisage du tableau moyenne
+  //TODO: Remplisage du tableau moyenne
   
   double *s_weight = NULL;
   if (block_weight != NULL) {
     
   }
   
-  // Renvoi du resultat
-  
+  //TODO: Renvoi du resultat
   
   free (block_field);
   if (block_weight != NULL) {
