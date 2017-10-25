@@ -357,7 +357,7 @@ _make_absolute_face_numbering(PDM_DMesh_nodal_t* mesh)
   }
 
   if (1 == 1) {
-    printf("beg_NumAbs::Face : %d \n", beg_NumAbs);
+    printf("beg_NumAbs::Face : "PDM_FMT_G_NUM" \n", beg_NumAbs);
     printf("mesh->face_distrib : "PDM_FMT_G_NUM,  mesh->face_distrib[0]);
     for (int i = 1; i < mesh->n_proc+1; i++) {
       printf(" "PDM_FMT_G_NUM, mesh->face_distrib[i]);
@@ -1360,7 +1360,7 @@ const int   hdl
  */
 
 PDM_Mesh_nodal_elt_t
-PDM_Mesh_nodal_section_type_get
+PDM_DMesh_nodal_section_type_get
 (
 const int   hdl,
 const int   id_section     
@@ -1418,7 +1418,7 @@ const int   id_section
  */
 
 int 
-PDM_Mesh_nodal_section_add 
+PDM_DMesh_nodal_section_add 
 (
 const int                    hdl,
 const PDM_Mesh_nodal_elt_t   t_elt
@@ -1627,7 +1627,7 @@ const PDM_Mesh_nodal_elt_t   t_elt
  */
 
 void
-PDM_Mesh_nodal_section_std_set 
+PDM_DMesh_nodal_section_std_set 
 (
 const int          hdl,
 const int          id_section,     
@@ -2267,7 +2267,7 @@ const int   hdl
       
       PDM_printf(" DitribElmt ... \n ");
       for(int iProc=0; iProc < mesh->n_proc + 1; iProc++)
-        PDM_printf("%i ", sectionStd->distrib[iProc]);
+        PDM_printf(PDM_FMT_G_NUM, sectionStd->distrib[iProc]);
       PDM_printf("\n");
     }
     
