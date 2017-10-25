@@ -77,7 +77,9 @@ typedef struct  {
   PDM_g_num_t **g_nums;           /*!< Global numbering of elements */ 
   PDM_part_to_block_t *ptb;       /*!< Part to block structure */
   PDM_block_to_part_t *btp;       /*!< Block to part structure */
-  int           stride;           /*!< Field stride */
+  int           stride;           /*!< Current Field stride */
+  int         **strides;          /*!< Strides array storage
+                                   *   (In ptb strides are variable) */
   double      **local_field;      /*!< Local field */
   double      **local_weight;     /*!< Weight */
   double      **global_mean_field;/*!< Global mean field */
@@ -155,22 +157,30 @@ PDM_global_mean_create
   _gpm->comm   = comm;
   _gpm->g_nums = (PDM_g_num_t **) malloc (sizeof(PDM_g_num_t * ) * n_part); 
   _gpm->n_elts = (int *) malloc (sizeof(int) * n_part);
+  _gpm->strides= (int **) malloc (sizeof(int *) * n_part);
   _gpm->ptb    = NULL;
   _gpm->btp    = NULL;
   
   for (int i = 0; i < n_part; i++) {
     _gpm->g_nums[i] = NULL;
+    _gpm->strides[i] = NULL;
   }
   
   _gpm->local_field = (double **) malloc (sizeof(double * ) * n_part); 
   _gpm->local_weight = (double **) malloc (sizeof(double * ) * n_part); 
   _gpm->global_mean_field = (double **) malloc (sizeof(double * ) * n_part);
   
+  for (int i = 0; i < n_part; i++) {
+    _gpm->local_field[i] = NULL;
+    _gpm->local_weight[i] = NULL;
+    _gpm->global_mean_field[i] = NULL;
+  }
+
   return id;
 }
 
 void
-PROCF (pdm_global_point_mean_create, PDM_GLOBAL_POINT_MEAN_CREATE)
+PROCF (pdm_global_mean_create, PDM_GLOBAL_MEAN_CREATE)
 (
  const int *n_part,
  const PDM_MPI_Fint *fcomm,
@@ -205,8 +215,9 @@ PDM_global_mean_set
 {
   _pdm_global_point_mean_t *_gpm = _get_from_id (id);
   
-  _gpm->g_nums[i_part] = numabs;
+  _gpm->g_nums[i_part] = (PDM_g_num_t *) numabs;
   _gpm->n_elts[i_part] = n_point;
+  _gpm->strides[i_part] = malloc (sizeof(int) * n_point);
   
 }
 
@@ -232,7 +243,7 @@ PROCF (pdm_global_mean_set, PDM_GLOBAL_MEAN_SET)
  * \return     Identifier    
  */
 
-int
+void
 PDM_global_mean_free
 (
  const int          id
@@ -253,7 +264,13 @@ PDM_global_mean_free
   free (_gpm->local_field);
   free (_gpm->local_weight);
   free (_gpm->global_mean_field);
-  
+
+  for (int i = 0; i < _gpm->n_part; i++) {
+    if (_gpm->strides[i] != NULL) {
+      free (_gpm->strides[i]);
+    }
+  }
+  free (_gpm->strides);
   free (_gpm);
   
   PDM_Handles_handle_free (_gpms, id, PDM_FALSE);
@@ -263,7 +280,6 @@ PDM_global_mean_free
   if (n_gpm == 0) {
     _gpms = PDM_Handles_free (_gpms);
   }
-
 
 }
 
@@ -303,9 +319,9 @@ PDM_global_mean_field_set
 {
   _pdm_global_point_mean_t *_gpm = _get_from_id (id);
 
-  _gpm->local_field[i_part]       = local_field;
-  _gpm->local_weight[i_part]      = local_weight;
-  _gpm->global_mean_field[i_part] = global_mean_field_ptr;
+  _gpm->local_field[i_part]       = (double *) local_field;
+  _gpm->local_weight[i_part]      = (double *) local_weight;
+  _gpm->global_mean_field[i_part] = (double *) global_mean_field_ptr;
   _gpm->stride = stride;
   
 }
@@ -353,7 +369,7 @@ PDM_global_mean_field_compute
   }
   
   if (_gpm->btp == NULL) {
-    PDM_g_num_t *distrib = PDM_part_to_block_distrib_index_get (_gpm->btp); 
+    PDM_g_num_t *distrib = PDM_part_to_block_distrib_index_get (_gpm->ptb); 
     _gpm->btp = PDM_block_to_part_create (distrib,
                                           _gpm->g_nums,
                                           _gpm->n_elts,
@@ -361,46 +377,76 @@ PDM_global_mean_field_compute
                                           _gpm->comm);
   }
   
+  int    *block_stride = NULL;
   double *block_field = NULL;
   double *block_weight = NULL;
-  int *
   
+  for (int i = 0; i < _gpm->n_part; i++) {
+    for (int j = 0; j < _gpm->n_elts[i]; j++) {
+      _gpm->strides[i][j] = _gpm->stride;
+    }
+  }
   
-  PDM_part_to_block_exch
-(
- PDM_part_to_block_t       *ptb,
- size_t                     s_data,
- PDM_stride_t               t_stride,
- int                        cst_stride,
- int                      **part_stride,
- void                     **part_data,
- int                      **block_stride,
- void                     **block_data
-)
-          
-          PDM_block_to_part_exch
-(
- PDM_block_to_part_t *btp,
- size_t               s_data,
- PDM_stride_t         t_stride,
- int                 *block_stride,
- void                *block_data,
- int                **part_stride,
- void               **part_data
-);
+  PDM_part_to_block_exch (_gpm->ptb,
+                          sizeof(double),
+                          PDM_STRIDE_VAR,
+                          1,
+                         _gpm->strides,
+                         (void **) _gpm->local_field, 
+                                   &block_stride,
+                         (void **) &block_field); 
 
+  int **_stride_w = NULL;
+  if (_gpm->local_weight[0] != NULL) {
   
+    _stride_w = malloc (sizeof(int) * _gpm->n_part);
+    for (int i = 0; i < _gpm->n_part; i++) {
+      _stride_w[i] = malloc (sizeof(double) * _gpm->n_elts[i]);
+      for (int j = 0; j < _gpm->n_elts[i]; j++) {
+        _stride_w[i][j] = 1;
+      }
+    }
+    
+    PDM_part_to_block_exch (_gpm->ptb,
+                            sizeof(double),
+                            PDM_STRIDE_VAR,
+                            1,
+                            _stride_w,
+                           (void **) _gpm->local_weight, 
+                                     &block_stride,
+                           (void **) &block_weight); 
+  }
+
+  // Remplisage du tableau moyenne
   
-  PDM_part_to_block_create
+  double *s_weight = NULL;
+  if (block_weight != NULL) {
+    
+  }
   
-  
-  
+  // Renvoi du resultat
   
   
   free (block_field);
   if (block_weight != NULL) {
     free (block_weight);
   }
+    
+  for (int i = 0; i < _gpm->n_part; i++) {
+    _gpm->local_field[i] = NULL;
+    _gpm->local_weight[i] = NULL;
+    _gpm->global_mean_field[i] = NULL;
+    
+  }
+  
+  if (_stride_w != NULL) {
+    for (int i = 0; i < _gpm->n_part; i++) {
+      free (_stride_w[i]);
+    }
+    free (_stride_w);
+    _stride_w = NULL;
+  }
+  
 }
 
 void
@@ -413,36 +459,48 @@ PROCF (pdm_global_mean_field_compute, PDM_GLOBAL_MEAN_FIELD_COMPUTE)
 }
 
 
-
-/**
- *
- * \brief Set local field and it associated weight    
- *
- * \param [in]   id                 Identifier
- * \param [in]   i_part             Current partition
- * \param [in]   global_mean_field  Global point mean field
- *
- */
-
-void
-PDM_global_mean_field_get
-(
- const int          id,
- const int          i_part,
- const double      *global_mean_field
-)
-{
-}
-
-void
-PROCF (pdm_global_mean_field_get, PDM_GLOBAL_MEAN_FIELD_GET)
-(
- const int         *id,
- const int         *i_part,
- const double      *global_mean_field
-)
-{
-}
+////
+////
+////
+/////**
+//// *
+//// * \brief Set local field and it associated weight    
+//// *
+//// * \param [in]   id                 Identifier
+//// * \param [in]   i_part             Current partition
+//// * \param [in]   global_mean_field  Global point mean field
+//// *
+//// */
+////
+////void
+////PDM_global_mean_field_get
+////(
+//// const int          id,
+//// const int          i_part,
+//// const double      *global_mean_field
+////)
+////{
+////
+////
+////
+////    
+////  for (int i = 0; i < _gpm->n_part; i++) {
+////    _gpm->local_field[i] = NULL;
+////    _gpm->local_weight[i] = NULL;
+////    _gpm->global_mean_field[i] = NULL;
+////  }
+////
+////}
+//
+//void
+//PROCF (pdm_global_mean_field_get, PDM_GLOBAL_MEAN_FIELD_GET)
+//(
+// const int         *id,
+// const int         *i_part,
+// const double      *global_mean_field
+//)
+//{
+//}
 
 
 /*----------------------------------------------------------------------------*/

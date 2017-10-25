@@ -78,7 +78,7 @@ PDM_global_mean_create
 );
 
 void
-PROCF (pdm_global_point_mean_create, PDM_GLOBAL_POINT_MEAN_CREATE)
+PROCF (pdm_global_mean_create, PDM_GLOBAL_MEAN_CREATE)
 (
  const int *n_part,
  const PDM_MPI_Fint *fcomm,
@@ -107,7 +107,7 @@ PDM_global_mean_set
 );
 
 void
-PROCF (pdm_global_point_mean_set, PDM_GLOBAL_POINT_MEAN_SET)
+PROCF (pdm_global_mean_set, PDM_GLOBAL_MEAN_SET)
 (
  const int         *id,
  const int         *i_part,
@@ -125,14 +125,14 @@ PROCF (pdm_global_point_mean_set, PDM_GLOBAL_POINT_MEAN_SET)
  * \return     Identifier    
  */
 
-int
+void
 PDM_global_mean_free
 (
  const int          id
 );
 
 void
-PROCF (pdm_global_point_mean_free, PDM_GLOBAL_POINT_MEAN_FREE)
+PROCF (pdm_global_mean_free, PDM_GLOBAL_MEAN_FREE)
 (
  const int         *id
 );
@@ -163,7 +163,7 @@ PDM_global_mean_field_set
 );
 
 void
-PROCF (pdm_global_point_mean_field_set, PDM_GLOBAL_POINT_MEAN_FIELD_SET)
+PROCF (pdm_global_mean_field_set, PDM_GLOBAL_MEAN_FIELD_SET)
 (
  const int         *id,
  const int         *i_part,
@@ -189,7 +189,7 @@ PDM_global_mean_field_compute
 );
 
 void
-PROCF (pdm_global_point_mean_field_compute, PDM_GLOBAL_POINT_MEAN_FIELD_COMPUTE)
+PROCF (pdm_global_mean_field_compute, PDM_GLOBAL_MEAN_FIELD_COMPUTE)
 (
  const int         *id
 );
