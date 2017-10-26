@@ -26,15 +26,15 @@ def PyPDM_cellface_orient(nCell, nFace, nVtx,
   """
   Wrapping of PDM_cellface_orient
   """
-  print '*'*100
-  print 'nCell : ', nCell
-  print 'nFace : ', nFace
-  print 'nVtx  : ', nVtx
-  print 'VtxCoord  : ', VtxCoord
-  print 'cellFaceIdx  : ', cellFaceIdx
-  print 'cellFace  : ', cellFace
-  print 'faceVtxIdx  : ', faceVtxIdx
-  print 'faceVtx  : ', faceVtx
+  # print '*'*100
+  # print 'nCell : ', nCell
+  # print 'nFace : ', nFace
+  # print 'nVtx  : ', nVtx
+  # print 'VtxCoord  : ', VtxCoord
+  # print 'cellFaceIdx  : ', cellFaceIdx
+  # print 'cellFace  : ', cellFace
+  # print 'faceVtxIdx  : ', faceVtxIdx
+  # print 'faceVtx  : ', faceVtx
   PDM_cellface_orient(nCell, 
                       nFace, 
                       nVtx, 
@@ -43,6 +43,6 @@ def PyPDM_cellface_orient(nCell, nFace, nVtx,
                       <int *>    &cellFace[0], 
                       <int *>    &faceCell[0], 
                       <int *>    &faceVtxIdx[0], 
-                      <int *>    &faceVtx[0], )
+                      <int *>    &faceVtx[0])
   
   
