@@ -377,9 +377,10 @@ PDM_global_mean_field_compute
                                           _gpm->comm);
   }
   
-  int    *block_stride = NULL;
-  double *block_field = NULL;
-  double *block_weight = NULL;
+  int    *block_field_stride  = NULL;
+  double *block_field         = NULL;
+  int    *block_weight_stride = NULL;
+  double *block_weight        = NULL;
   
   for (int i = 0; i < _gpm->n_part; i++) {
     for (int j = 0; j < _gpm->n_elts[i]; j++) {
@@ -393,7 +394,7 @@ PDM_global_mean_field_compute
                           1,
                          _gpm->strides,
                          (void **) _gpm->local_field, 
-                                   &block_stride,
+                                   &block_field_stride,
                          (void **) &block_field); 
 
   int **_stride_w = NULL;
@@ -406,21 +407,37 @@ PDM_global_mean_field_compute
         _stride_w[i][j] = 1;
       }
     }
-    
+
     PDM_part_to_block_exch (_gpm->ptb,
                             sizeof(double),
                             PDM_STRIDE_VAR,
                             1,
                             _stride_w,
                            (void **) _gpm->local_weight, 
-                                     &block_stride,
+                                     &block_weight_stride,
                            (void **) &block_weight); 
   }
 
   //TODO: Remplisage du tableau moyenne
   
+  int n_elt_block = PDM_part_to_block_n_elt_block_get(_gpm->ptb);
+  
   double *s_weight = NULL;
   if (block_weight != NULL) {
+    s_weight = malloc (sizeof(double) * n_elt_block);
+    for (int i = 0; i < n_elt_block; i++) {
+      s_weight[i] = 0.;
+    }
+    for (int i = 0; i < n_elt_block; i++) {
+      for (int j = block_weight_stride[i]; j < block_weight_stride[i+1]; j++) {
+        for (int k = 0; k < _gpm->stride; k++) {
+          double val = block_field[j*_gpm->stride + k];
+          block_field[j*_gpm->stride + k] = 0;
+          block_field[i*_gpm->stride + k] += val;  
+        }
+        s_weight[i] += block_weight[j];
+      }
+    }
     
   }
   
