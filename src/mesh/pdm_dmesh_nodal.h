@@ -654,7 +654,7 @@ const int   hdl
  */
 
 PDM_Mesh_nodal_elt_t
-PDM_Mesh_nodal_section_type_get
+PDM_DMesh_nodal_section_type_get
 (
 const int   hdl,
 const int   id_section     
@@ -674,7 +674,7 @@ const int   id_section
  */
 
 int 
-PDM_Mesh_nodal_section_add 
+PDM_DMesh_nodal_section_add 
 (
 const int                    hdl,
 const PDM_Mesh_nodal_elt_t   t_elt
@@ -760,7 +760,7 @@ const PDM_Mesh_nodal_elt_t   t_elt
  */
 
 void
-PDM_Mesh_nodal_section_std_set 
+PDM_DMesh_nodal_section_std_set 
 (
 const int          hdl,
 const int          id_section,     
