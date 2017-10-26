@@ -81,6 +81,7 @@ typedef struct  {
   int         **strides;          /*!< Strides array storage
                                    *   (In ptb strides are variable) */
   double      **local_field;      /*!< Local field */
+  double       *s_weight;         /*!< Sume of weights */
   double      **local_weight;     /*!< Weight */
   double      **global_mean_field;/*!< Global mean field */
   
@@ -160,6 +161,8 @@ PDM_global_mean_create
   _gpm->strides= (int **) malloc (sizeof(int *) * n_part);
   _gpm->ptb    = NULL;
   _gpm->btp    = NULL;
+  
+  _gpm->s_weight = NULL;
   
   for (int i = 0; i < n_part; i++) {
     _gpm->g_nums[i] = NULL;
@@ -270,7 +273,16 @@ PDM_global_mean_free
       free (_gpm->strides[i]);
     }
   }
-  free (_gpm->strides);
+  
+  if (_gpm->strides != NULL) {
+    free (_gpm->strides);
+  }
+  
+  if (_gpm->s_weight != NULL) {
+    free (_gpm->s_weight);
+  }
+  
+  
   free (_gpm);
   
   PDM_Handles_handle_free (_gpms, id, PDM_FALSE);
@@ -366,6 +378,11 @@ PDM_global_mean_field_compute
                                           _gpm->n_elts,
                                           _gpm->n_part,
                                           _gpm->comm);
+  
+    int n_elt_block = PDM_part_to_block_n_elt_block_get(_gpm->ptb);
+
+    _gpm->s_weight = malloc (sizeof(double) * n_elt_block);
+    
   }
   
   if (_gpm->btp == NULL) {
@@ -419,29 +436,46 @@ PDM_global_mean_field_compute
   }
 
   //TODO: Remplisage du tableau moyenne
-  
+
   int n_elt_block = PDM_part_to_block_n_elt_block_get(_gpm->ptb);
   
-  double *s_weight = NULL;
-  if (block_weight != NULL) {
-    s_weight = malloc (sizeof(double) * n_elt_block);
-    for (int i = 0; i < n_elt_block; i++) {
-      s_weight[i] = 0.;
-    }
-    for (int i = 0; i < n_elt_block; i++) {
-      for (int j = block_weight_stride[i]; j < block_weight_stride[i+1]; j++) {
-        for (int k = 0; k < _gpm->stride; k++) {
-          double val = block_field[j*_gpm->stride + k];
-          block_field[j*_gpm->stride + k] = 0;
-          block_field[i*_gpm->stride + k] += val;  
-        }
-        s_weight[i] += block_weight[j];
+  for (int i = 0; i < n_elt_block; i++) {
+    _gpm->s_weight[i] = 0.;
+  }
+  for (int i = 0; i < n_elt_block; i++) {
+    for (int j = block_weight_stride[i]; j < block_weight_stride[i+1]; j++) {
+      double weight = 1.;
+      if (block_weight != NULL) {
+        weight = block_weight[j];
+      }
+      _gpm->s_weight[i] += weight;
+      for (int k = 0; k < _gpm->stride; k++) {
+        double val = block_field[j*_gpm->stride + k];
+        block_field[j*_gpm->stride + k] = 0;
+        block_field[i*_gpm->stride + k] += weight * val;  
       }
     }
-    
+  }
+
+  for (int i = 0; i < _gpm->stride * n_elt_block; i++) {
+    if (PDM_ABS(_gpm->s_weight[i]) < 1e-15) {
+      PDM_error (__FILE__, __LINE__, 0, "Sum of weights < 1e-15\n");
+    }
+    for (int k = 0; k < _gpm->stride; k++) {
+       block_weight[_gpm->stride * i + k] = 
+               block_weight[_gpm->stride * i + k] / _gpm->s_weight[i]; 
+    }
   }
   
   //TODO: Renvoi du resultat
+  
+  PDM_block_to_part_exch (_gpm->btp,
+                          sizeof(double),
+                          PDM_STRIDE_CST,
+                          &_gpm->stride,
+                          block_field,
+                          NULL,
+                          (void **) _gpm->global_mean_field);
   
   free (block_field);
   if (block_weight != NULL) {

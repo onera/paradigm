@@ -11,7 +11,7 @@ cdef extern from "pdm_part_to_block.h":
     ctypedef enum PDM_part_to_block_post_t:
         pass
 
-    ctypedef enum PDM_writer_part_stride_t:
+    ctypedef enum PDM_part_to_block_stride_t:
         pass
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
@@ -37,7 +37,7 @@ cdef extern from "pdm_part_to_block.h":
 
     int PDM_part_to_block_exch(PDM_part_to_block_t       *ptb,
                                size_t                     s_data,
-                               PDM_writer_part_stride_t   t_stride,
+                               PDM_part_to_block_stride_t t_stride,
                                int                        cst_stride,
                                int                      **part_stride,
                                void                     **part_data,
@@ -69,13 +69,13 @@ cdef class PartToBlock:
 
     cdef PDM_part_to_block_distrib_t t_distrib
     cdef PDM_part_to_block_post_t    t_post
-    cdef PDM_writer_part_stride_t    t_stride
+    cdef PDM_part_to_block_stride_t    t_stride
     # ************************************************************************
     # ------------------------------------------------------------------------
     def __cinit__(self, MPI.Comm comm, list pLNToGN, int partN,
                         PDM_part_to_block_distrib_t t_distrib = <PDM_part_to_block_distrib_t> (0),
                         PDM_part_to_block_post_t    t_post    = <PDM_part_to_block_post_t   > (0),
-                        PDM_writer_part_stride_t    t_stride  = <PDM_writer_part_stride_t   > (0),
+                        PDM_part_to_block_stride_t    t_stride  = <PDM_part_to_block_stride_t   > (0),
                         float partActiveNode = 1.):
         """
         TODOUX
