@@ -2109,6 +2109,9 @@ const int            n_elt,
   if (parent_num != NULL) {
     if (block->_parent_num == NULL) {
       block->_parent_num = malloc (sizeof(PDM_l_num_t *) * block->n_part);
+      for (int i = 0; i < block->n_part; i++) {
+        block->_parent_num[i] = NULL;
+      }
     }
     block->_parent_num[id_part] = parent_num;
   }
@@ -2649,6 +2652,9 @@ const PDM_l_num_t    n_elt,
   if (parent_num != NULL) {
     if (block->_parent_num == NULL) {
       block->_parent_num = malloc (sizeof(PDM_l_num_t *) * block->n_part);
+      for (int i = 0; i < block->n_part; i++) {
+        block->_parent_num[i] = NULL;
+      }
     }
     block->_parent_num[id_part] = parent_num;
   }
@@ -2772,6 +2778,9 @@ const PDM_l_num_t    n_face,
   if (parent_num != NULL) {
     if (block->_parent_num == NULL) {
       block->_parent_num = malloc (sizeof(PDM_l_num_t *) * block->n_part);
+      for (int i = 0; i < block->n_part; i++) {
+        block->_parent_num[i] = NULL;
+      }
     }
     block->_parent_num[id_part] = parent_num;
   }
@@ -4129,6 +4138,9 @@ const int         id_block
 
     if (block->numabs_int == NULL) {
       block->numabs_int = (PDM_g_num_t **) malloc (sizeof(PDM_g_num_t *) * mesh->n_part);
+      for (int i = 0; i < block->n_part; i++) {
+        block->numabs_int[i] = NULL;
+      }
     }
     else {
       return;
@@ -4153,6 +4165,9 @@ const int         id_block
 
     if (block->numabs_int == NULL) {
       block->numabs_int = (PDM_g_num_t **) malloc (sizeof(PDM_g_num_t *) * mesh->n_part);
+      for (int i = 0; i < block->n_part; i++) {
+        block->numabs_int[i] = NULL;
+      }
     }
     else {
       return;
@@ -4177,6 +4192,9 @@ const int         id_block
 
     if (block->numabs_int == NULL) {
       block->numabs_int = (PDM_g_num_t **) malloc (sizeof(PDM_g_num_t *) * mesh->n_part);
+      for (int i = 0; i < block->n_part; i++) {
+        block->numabs_int[i] = NULL;
+      }
     }
     else {
       return;
