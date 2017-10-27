@@ -1269,7 +1269,15 @@ char *argv[]
   int           nPart   = 1;
   double         cr   = 0.5;
   int           post    = 0;
+#ifdef PDM_HAVE_PARMETIS  
+  PDM_part_split_t method  = PDM_PART_SPLIT_PARMETIS;
+#else
+#ifdef PDM_HAVE_PTSCOTCH  
   PDM_part_split_t method  = PDM_PART_SPLIT_PTSCOTCH;
+#endif
+#endif  
+  
+  
   int           haveRandom = 0;
   int           myRank;
   int           numProcs;

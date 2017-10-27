@@ -462,7 +462,13 @@ char *argv[]
   PDM_g_num_t   nVtxSeg = 4;
   double        length  = 1.;
   int           nPart   = 1;
+#ifdef PDM_HAVE_PARMETIS  
+  PDM_part_split_t method  = PDM_PART_SPLIT_PARMETIS;
+#else
+#ifdef PDM_HAVE_PTSCOTCH  
   PDM_part_split_t method  = PDM_PART_SPLIT_PTSCOTCH;
+#endif
+#endif  
   int           haveRandom = 0;
 
   int           myRank;

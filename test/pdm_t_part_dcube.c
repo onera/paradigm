@@ -8,6 +8,7 @@
 #include <string.h>
 
 #include "pdm.h"
+#include "pdm_config.h"
 #include "pdm_mpi.h"
 #include "pdm_part.h"
 #include "pdm_dcube_gen.h"
@@ -135,7 +136,13 @@ int main(int argc, char *argv[])
   double             length  = 1.;
   int                nPart   = 1;
   int                post    = 0;
-  PDM_part_split_t   method  = PDM_PART_SPLIT_PTSCOTCH;
+#ifdef PDM_HAVE_PARMETIS  
+  PDM_part_split_t method  = PDM_PART_SPLIT_PARMETIS;
+#else
+#ifdef PDM_HAVE_PTSCOTCH  
+  PDM_part_split_t method  = PDM_PART_SPLIT_PTSCOTCH;
+#endif
+#endif  
 
   /*
    *  Read args
