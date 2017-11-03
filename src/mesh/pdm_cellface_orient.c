@@ -250,6 +250,8 @@ const int     *faceVtx
     * The orientation of the first cell is taking into account
     * 
     */
+    
+    tagCell[fistCellComp] = CELL_COMPLETED;
 
     for (int i = cellFaceIdx[fistCellComp]; i < cellFaceIdx[fistCellComp+1]; i++) {
       int Face = cellFace[i];
@@ -273,7 +275,9 @@ const int     *faceVtx
 
     for (int i = cellFaceIdx[fistCellComp]; i < cellFaceIdx[fistCellComp+1]; i++) {
       int iFace = 2 * (PDM_ABS (cellFace[i]) - 1);
-      if (_faceCell[iFace] == 1) {
+      
+      // if (_faceCell[iFace] == 1) {
+      if (_faceCell[iFace] == fistCellComp+1) {
         if (_faceCell[iFace + 1] > 0) {
           int cell = PDM_ABS (_faceCell[iFace + 1]);
           if (tagCell[cell - 1] == CELL_UNPROCESSED) {
@@ -329,24 +333,25 @@ const int     *faceVtx
       
 
       
+      // printf("nPolyFace : %d / iCell : %d \n", nPolyFace, iCell+1);
       for (int iface = 0; iface < nPolyFace; iface++) {
 
         tagFace[iface] = FACE_UNPROCESSED;
 
-        const int face          = PDM_ABS (cellFace[polyIdx + iface]) - 1;
+        const int face          = PDM_ABS (cellFace[polyIdx + iface]) - 1;        
 
         if (orientedFaceCell[2*face] != 0) {
-          assert (orientedFaceCell[2*face] != iCell + 1);
+          assert (orientedFaceCell[2*face  ] != iCell + 1);
           assert (orientedFaceCell[2*face+1] != iCell + 1);
-          assert (orientedFaceCell[2*face+1] == 0);
+          assert (orientedFaceCell[2*face+1] == 0        );
           tagFace[iface] = FACE_CHANGED_CYCLE;
           orientedFaceCell[2*face+1] = iCell + 1;
           processedFace[nProcessedFace++] = iface;
         }
         else if (orientedFaceCell[2*face + 1] != 0) {
-          assert (orientedFaceCell[2*face] != iCell + 1);
+          assert (orientedFaceCell[2*face  ] != iCell + 1);
           assert (orientedFaceCell[2*face+1] != iCell + 1);
-          assert (orientedFaceCell[2*face] == 0);        
+          assert (orientedFaceCell[2*face  ] == 0        );        
           tagFace[iface] = FACE_UNCHANGED_CYCLE;        
           orientedFaceCell[2*face] = iCell + 1;        
           processedFace[nProcessedFace++] = iface;
@@ -376,7 +381,7 @@ const int     *faceVtx
           edge[2] = iface;
 
           nEdges += 1;
-
+            
           PDM_hash_tab_data_add (hashOrient, (void *) &key, edge);
 
         }
