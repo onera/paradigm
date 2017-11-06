@@ -31,11 +31,11 @@ cdef extern from "pdm_dmesh_nodal.h":
     int                  PDM_DMesh_nodal_n_vtx_get(int handle)
     int                  PDM_DMesh_nodal_n_sections_get(int handle)
     int*                 PDM_DMesh_nodal_sections_id_get(int handle)
-    PDM_Mesh_nodal_elt_t PDM_Mesh_nodal_section_type_get(int handle, int id_section)
+    PDM_Mesh_nodal_elt_t PDM_DMesh_nodal_section_type_get(int handle, int id_section)
     double*              PDM_DMesh_nodal_vtx_get(int handle)
     
-    int                  PDM_Mesh_nodal_section_add(int handle, PDM_Mesh_nodal_elt_t t_elt)
-    void                 PDM_Mesh_nodal_section_std_set(int          handle, 
+    int                  PDM_DMesh_nodal_section_add(int handle, PDM_Mesh_nodal_elt_t t_elt)
+    void                 PDM_DMesh_nodal_section_std_set(int          handle, 
                                                         int          id_section,
                                                         int          n_elmts, 
                                                         PDM_g_num_t* connec)
@@ -130,8 +130,8 @@ cdef class DistributedMeshNodal:
 
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
         for iElmt, Connect in enumerate(ElmtList):
-          id_section = PDM_Mesh_nodal_section_add(self.idmesh, <PDM_Mesh_nodal_elt_t> ElmtsTyp[iElmt])
-          PDM_Mesh_nodal_section_std_set(self.idmesh, id_section, nElemts[iElmt], <PDM_g_num_t *> Connect.data)
+          id_section = PDM_DMesh_nodal_section_add(self.idmesh, <PDM_Mesh_nodal_elt_t> ElmtsTyp[iElmt])
+          PDM_DMesh_nodal_section_std_set(self.idmesh, id_section, nElemts[iElmt], <PDM_g_num_t *> Connect.data)
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
     # ------------------------------------------------------------------------
