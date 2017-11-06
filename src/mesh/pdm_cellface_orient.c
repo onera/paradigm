@@ -331,9 +331,6 @@ const int     *faceVtx
 
       nProcessedFace = 0;
       
-
-      
-      // printf("nPolyFace : %d / iCell : %d \n", nPolyFace, iCell+1);
       for (int iface = 0; iface < nPolyFace; iface++) {
 
         tagFace[iface] = FACE_UNPROCESSED;
@@ -417,7 +414,7 @@ const int     *faceVtx
               if (!isSameFace) {
                 if (isSameEdge || isInverseEdge) {
                   if (tagFace[ _edge[2]] == FACE_UNPROCESSED) {
-                    stackFace[++nStackFace] =  _edge[2];
+                    stackFace[++nStackFace] = _edge[2];
                     tagFace[ _edge[2]] = FACE_IN_STACK;
                   }
                   break;
@@ -508,7 +505,6 @@ const int     *faceVtx
                           orientedFaceCell[2*face+1] = iCell+1;
                         }                      
                       }                    
-
                     }
                   }
 
