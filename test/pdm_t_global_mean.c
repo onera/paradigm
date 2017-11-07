@@ -15,6 +15,7 @@
 #include "pdm_printf.h"
 #include "pdm_error.h"
 #include "pdm_global_mean.h"
+#include "pdm_priv.h"
 
 /*============================================================================
  * Type definitions
@@ -345,6 +346,171 @@ int main(int argc, char *argv[])
 #endif
 
   PDM_printf("[%i]   - TEMPS DANS PART_CUBE  : %12.5e\n", myRank,  t_elapsed);
+  
+  PDM_g_num_t **cellVtxGN = malloc (sizeof(PDM_g_num_t *) * nPart);
+  
+  for (int ipart = 0; ipart < nPart; ipart++) {
+
+    int nCell;
+    int nFace;
+    int nFacePartBound;
+    int nVtx;
+    int nProc;
+    int nTPart;
+    int sCellFace;
+    int sFaceVtx;
+    int sFaceGroup;
+    int nFaceGroup2;
+
+    PDM_part_part_dim_get(ppartId,
+                       ipart,
+                       &nCell,
+                       &nFace,
+                       &nFacePartBound,
+                       &nVtx,
+                       &nProc,
+                       &nTPart,
+                       &sCellFace,
+                       &sFaceVtx,
+                       &sFaceGroup,
+                       &nFaceGroup2);
+
+    int          *cellTag;
+    int          *cellFaceIdx;
+    int          *cellFace;
+    PDM_g_num_t *cellLNToGN;
+    int          *faceTag;
+    int          *faceCell;
+    int          *faceVtxIdx;
+    int          *faceVtx;
+    PDM_g_num_t *faceLNToGN;
+    int          *facePartBoundProcIdx;
+    int          *facePartBoundPartIdx;
+    int          *facePartBound;
+    int          *vtxTag;
+    double       *vtx;
+    PDM_g_num_t *vtxLNToGN;
+    int          *faceGroupIdx;
+    int          *faceGroup;
+    PDM_g_num_t *faceGroupLNToGN;
+
+    PDM_part_part_val_get(ppartId,
+                       ipart,
+                       &cellTag,
+                       &cellFaceIdx,
+                       &cellFace,
+                       &cellLNToGN,
+                       &faceTag,
+                       &faceCell,
+                       &faceVtxIdx,
+                       &faceVtx,
+                       &faceLNToGN,
+                       &facePartBoundProcIdx,
+                       &facePartBoundPartIdx,
+                       &facePartBound,
+                       &vtxTag,
+                       &vtx,
+                       &vtxLNToGN,
+                       &faceGroupIdx,
+                       &faceGroup,
+                       &faceGroupLNToGN);
+
+    int nCellVtx = 0;
+    for (int i = 0; i < nCell; i++) {      
+      for (int j = cellFaceIdx[i]; j < cellFaceIdx[i+1]; j++) {
+        int face = cellFace[j] - 1;
+        nCellVtx += faceVtxIdx[face+1] - faceVtxIdx[face];         
+      }    
+    }
+  
+    cellVtxGN[ipart] = malloc (sizeof(PDM_g_num_t) * nCellVtx);
+
+  }
+  
+  for (int ipart = 0; ipart < nPart; ipart++) {
+
+    int nCell;
+    int nFace;
+    int nFacePartBound;
+    int nVtx;
+    int nProc;
+    int nTPart;
+    int sCellFace;
+    int sFaceVtx;
+    int sFaceGroup;
+    int nFaceGroup2;
+
+    PDM_part_part_dim_get(ppartId,
+                       ipart,
+                       &nCell,
+                       &nFace,
+                       &nFacePartBound,
+                       &nVtx,
+                       &nProc,
+                       &nTPart,
+                       &sCellFace,
+                       &sFaceVtx,
+                       &sFaceGroup,
+                       &nFaceGroup2);
+
+    int          *cellTag;
+    int          *cellFaceIdx;
+    int          *cellFace;
+    PDM_g_num_t *cellLNToGN;
+    int          *faceTag;
+    int          *faceCell;
+    int          *faceVtxIdx;
+    int          *faceVtx;
+    PDM_g_num_t *faceLNToGN;
+    int          *facePartBoundProcIdx;
+    int          *facePartBoundPartIdx;
+    int          *facePartBound;
+    int          *vtxTag;
+    double       *vtx;
+    PDM_g_num_t *vtxLNToGN;
+    int          *faceGroupIdx;
+    int          *faceGroup;
+    PDM_g_num_t *faceGroupLNToGN;
+
+    PDM_part_part_val_get(ppartId,
+                       ipart,
+                       &cellTag,
+                       &cellFaceIdx,
+                       &cellFace,
+                       &cellLNToGN,
+                       &faceTag,
+                       &faceCell,
+                       &faceVtxIdx,
+                       &faceVtx,
+                       &faceLNToGN,
+                       &facePartBoundProcIdx,
+                       &facePartBoundPartIdx,
+                       &facePartBound,
+                       &vtxTag,
+                       &vtx,
+                       &vtxLNToGN,
+                       &faceGroupIdx,
+                       &faceGroup,
+                       &faceGroupLNToGN);
+
+    int nCellVtx = 0;
+    for (int i = 0; i < nCell; i++) {      
+      for (int j = cellFaceIdx[i]; j < cellFaceIdx[i+1]; j++) {
+        int face = cellFace[j] - 1;
+        for (int k = faceVtxIdx[face]; k < faceVtxIdx[face+1]; k++) {
+          int iVtx = faceVtx[k] - 1;
+          cellVtxGN[ipart][nCellVtx++] = vtxLNToGN[iVtx];
+        }
+      }    
+    }
+    
+    PDM_global_mean_set (gmid, ipart, nCellVtx, cellVtxGN[ipart]);
+
+  }
+
+  double **local_field = malloc (sizeof(double *) * nPart); 
+  double **local_weight = malloc (sizeof(double *) * nPart); 
+  double **global_mean_field_ptr = malloc (sizeof(double *) * nPart); 
 
   for (int ipart = 0; ipart < nPart; ipart++) {
 
@@ -412,69 +578,141 @@ int main(int argc, char *argv[])
                        &faceGroup,
                        &faceGroupLNToGN);
 
-    PDM_global_mean_set (gmid, ipart, nVtx, vtxLNToGN);
-
-
+    int nCellVtx = 0;
+    for (int i = 0; i < nCell; i++) {      
+      for (int j = cellFaceIdx[i]; j < cellFaceIdx[i+1]; j++) {
+        int face = cellFace[j] - 1;
+        nCellVtx += faceVtxIdx[face+1] - faceVtxIdx[face];         
+      }    
+    }
+    printf ("nCellVtx : %d\n", nCellVtx);
     
+    local_field[ipart] = malloc (sizeof(double) * nCellVtx * 3); 
+    local_weight[ipart] = malloc (sizeof(double) * nCellVtx); 
+    global_mean_field_ptr[ipart] = malloc (sizeof(double) * nCellVtx * 3); 
+    
+    nCellVtx = 0;
+    for (int i = 0; i < nCell; i++) {      
+      for (int j = cellFaceIdx[i]; j < cellFaceIdx[i+1]; j++) {
+        int face = cellFace[j] - 1;
+        for (int k = faceVtxIdx[face]; k < faceVtxIdx[face+1]; k++) {
+          int iVtx = faceVtx[k] - 1;
+          for (int l = 0; l < 3; l++) {
+            local_field[ipart][3*nCellVtx + l] = vtx[3*iVtx+l];
+            global_mean_field_ptr[ipart][3*nCellVtx + l] = 0;
+          }
+          local_weight[ipart][nCellVtx] = 1.;
+          nCellVtx += 1;
+        }
+      }    
+    }
+    
+    PDM_global_mean_field_set (gmid, ipart, 3, 
+                               local_field[ipart], 
+                               local_weight[ipart], 
+                               global_mean_field_ptr[ipart]);
 
   }
-//    PDM_global_mean_field_set (gmid, ipart, 3, vtx, NULL, 
-//const int          id,
-//const int          i_part,
-//const int          stride, 
-//const double      *local_field,
-//const double      *local_weight,
-//double            *global_mean_field_ptr
-//)
 
-  /* Calculs statistiques */
+  PDM_global_mean_field_compute (gmid);
+  
+  for (int ipart = 0; ipart < nPart; ipart++) {
 
-  int    cells_average;
-  int    cells_median;
-  double cells_std_deviation;
-  int    cells_min;
-  int    cells_max;
-  int    bound_part_faces_average;
-  int    bound_part_faces_median;
-  double bound_part_faces_std_deviation;
-  int    bound_part_faces_min;
-  int    bound_part_faces_max;
-  int    bound_part_faces_sum;
+    int nCell;
+    int nFace;
+    int nFacePartBound;
+    int nVtx;
+    int nProc;
+    int nTPart;
+    int sCellFace;
+    int sFaceVtx;
+    int sFaceGroup;
+    int nFaceGroup2;
 
-  PDM_part_stat_get(ppartId,
-                 &cells_average,
-                 &cells_median,
-                 &cells_std_deviation,
-                 &cells_min,
-                 &cells_max,
-                 &bound_part_faces_average,
-                 &bound_part_faces_median,
-                 &bound_part_faces_std_deviation,
-                 &bound_part_faces_min,
-                 &bound_part_faces_max,
-                 &bound_part_faces_sum);
+    PDM_part_part_dim_get(ppartId,
+                       ipart,
+                       &nCell,
+                       &nFace,
+                       &nFacePartBound,
+                       &nVtx,
+                       &nProc,
+                       &nTPart,
+                       &sCellFace,
+                       &sFaceVtx,
+                       &sFaceGroup,
+                       &nFaceGroup2);
 
-  if (myRank == 0) {
-    PDM_printf("Statistics :\n");
-    PDM_printf("  - Number of cells :\n");
-    PDM_printf("       * average            : %i\n", cells_average);
-    PDM_printf("       * median             : %i\n", cells_median);
-    PDM_printf("       * standard deviation : %12.5e\n", cells_std_deviation);
-    PDM_printf("       * min                : %i\n", cells_min);
-    PDM_printf("       * max                : %i\n", cells_max);
-    PDM_printf("  - Number of faces exchanging with another partition :\n");
-    PDM_printf("       * average            : %i\n", bound_part_faces_average);
-    PDM_printf("       * median             : %i\n", bound_part_faces_median);
-    PDM_printf("       * standard deviation : %12.5e\n", bound_part_faces_std_deviation);
-    PDM_printf("       * min                : %i\n", bound_part_faces_min);
-    PDM_printf("       * max                : %i\n", bound_part_faces_max);
-    PDM_printf("       * total              : %i\n", bound_part_faces_sum);
+    int          *cellTag;
+    int          *cellFaceIdx;
+    int          *cellFace;
+    PDM_g_num_t *cellLNToGN;
+    int          *faceTag;
+    int          *faceCell;
+    int          *faceVtxIdx;
+    int          *faceVtx;
+    PDM_g_num_t *faceLNToGN;
+    int          *facePartBoundProcIdx;
+    int          *facePartBoundPartIdx;
+    int          *facePartBound;
+    int          *vtxTag;
+    double       *vtx;
+    PDM_g_num_t *vtxLNToGN;
+    int          *faceGroupIdx;
+    int          *faceGroup;
+    PDM_g_num_t *faceGroupLNToGN;
+
+    PDM_part_part_val_get(ppartId,
+                       ipart,
+                       &cellTag,
+                       &cellFaceIdx,
+                       &cellFace,
+                       &cellLNToGN,
+                       &faceTag,
+                       &faceCell,
+                       &faceVtxIdx,
+                       &faceVtx,
+                       &faceLNToGN,
+                       &facePartBoundProcIdx,
+                       &facePartBoundPartIdx,
+                       &facePartBound,
+                       &vtxTag,
+                       &vtx,
+                       &vtxLNToGN,
+                       &faceGroupIdx,
+                       &faceGroup,
+                       &faceGroupLNToGN);
+
+    int nCellVtx = 0;
+    for (int i = 0; i < nCell; i++) {      
+      for (int j = cellFaceIdx[i]; j < cellFaceIdx[i+1]; j++) {
+        int face = cellFace[j] - 1;
+        nCellVtx += faceVtxIdx[face+1] - faceVtxIdx[face];         
+      }    
+    }
+
+    for (int i = 0; i < 3 * nCellVtx; i++) {
+      if (PDM_ABS (local_field[ipart][i] - global_mean_field_ptr[ipart][i]) > 1e-5) {
+        PDM_error (__FILE__, __LINE__, 0, "Error in global mean\n");
+        abort();
+      }     
+    }
+    
+    free (local_field[ipart]);
+    free (local_weight[ipart]);
+    free (global_mean_field_ptr[ipart]);
+    free (cellVtxGN[ipart]);
   }
-
+  
+  free (local_field);
+  free (local_weight);
+  free (global_mean_field_ptr);
+  free (cellVtxGN);
+  
   PDM_part_free(ppartId);
+  
+  PDM_global_mean_free (gmid);
 
   PDM_dcube_gen_free(id);
-
 
   PDM_MPI_Finalize();
 
