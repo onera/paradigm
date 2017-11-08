@@ -585,7 +585,6 @@ int main(int argc, char *argv[])
         nCellVtx += faceVtxIdx[face+1] - faceVtxIdx[face];         
       }    
     }
-    printf ("nCellVtx : %d\n", nCellVtx);
     
     local_field[ipart] = malloc (sizeof(double) * nCellVtx * 3); 
     local_weight[ipart] = malloc (sizeof(double) * nCellVtx); 
