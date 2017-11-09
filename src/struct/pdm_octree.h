@@ -153,6 +153,23 @@ PDM_octree_build
  const int          id
 );
 
+
+/**
+ *
+ * \brief Processes extents  
+ *
+ * \param [in]   id                 Identifier 
+ * \param [in]   i_proc             Process
+ *
+ */
+
+double *
+PDM_octree_processes_extents_get
+(
+ const int          id,
+ const int          i_proc
+);
+
 //void
 //PROCF (pdm_octree_build, PDM_OCTREE_BUILD)
 //(
