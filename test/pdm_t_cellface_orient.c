@@ -193,6 +193,8 @@ int main(int argc, char *argv[])
                       PDM_MPI_COMM_WORLD,
                       nVtxSeg,
 		      length,
+		      0., 
+		      0.,
 		      0.);
 
   PDM_dcube_gen_dim_get(id,
