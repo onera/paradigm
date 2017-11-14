@@ -58,6 +58,7 @@ extern "C" {
 typedef struct  {
 
   int  ancestor_id; /*!< Ids of ancestor in octree array */
+  PDM_octree_child_t  location_in_ancestor; /*!< Location in ancestor */
   int  depth;       /*!< Depth in the tree */
   int  children_id[8]; /*!< Ids of children in octree array */
   int  idx[9];         /*!< Start index of point list for each octant */
@@ -75,6 +76,7 @@ typedef struct  {
 
 typedef struct  {
 
+  double  extents[6];            /*!< Extents of current process */ 
   double *extents_proc;          /*!< Extents of processes */
   int    depth_max;              /*!< Maximum depth of the three */
   PDM_MPI_Comm comm;             /*!< MPI communicator */
@@ -83,8 +85,9 @@ typedef struct  {
   int   n_nodes;                 /*!< Current number of nodes in octree */
   int   n_nodes_max;             /*!< Maximum number of nodes in octree */
   int   *n_points;               /*!< Number of points in each cloud */
+  int   t_n_points;              /*!< total number of points */
   int   n_point_clouds;          /*!< Number of point cloud */
-  double **point_clouds;         /*!< points cloud */
+  const double **point_clouds;         /*!< points cloud */
   int *point_ids;                /*!< Id's of points in it cloud sorted by octree
                                       (size: n_points + 1) */
   int *point_icloud;             /*!< Cloud's of points sorted by octree
@@ -130,20 +133,22 @@ _get_from_id
  * 
  * \brief Build a local octree's leaves.
  *
- * \param[in]  ancestor_id    Ancestor identifier
- * \param[in]  depth          Depth in the tree
- * \param[in]  extents        Extents associated with node:
- *                            x_min, y_min, z_min, x_max, y_max, z_max (size: 6)
- * \param[in]  point_coords   point coordinates
- * \param[in]  point_ids_tmp  temporary point indexes
- * \param[in]  pos_tmp        temporary point position in octree
- * \param[inout]  octree      current octree structure
- * \param[inout]  point_range start and past-the end index in point_idx
- *                            for current node (size: 2)
+ * \param[in]  ancestor_id          Ancestor identifier
+ * \param[in]  location_in_ancestor Location in ancestor
+ * \param[in]  depth                Depth in the tree
+ * \param[in]  extents              Extents associated with node:
+ *                                  x_min, y_min, z_min, x_max, y_max, z_max (size: 6)
+ * \param[in]  point_coords         Point coordinates
+ * \param[in]  point_ids_tmp        Temporary point indexes
+ * \param[in]  pos_tmp              Temporary point position in octree
+ * \param[inout]  octree            Current octree structure
+ * \param[inout]  point_range       Start and past-the end index in point_idx
+ *                                  for current node (size: 2)
  */
 
 static void
 _build_octree_leaves(const int       ancestor_id,
+                     const PDM_octree_child_t location_in_ancestor,
                      const int       depth,
                      const double    extents[], 
                      const double   **point_coords,
@@ -182,8 +187,9 @@ _build_octree_leaves(const int       ancestor_id,
   if (depth < octree->depth_max) {
     /* Extents center */
 
-    for (j = 0; j < 3; j++)
+    for (j = 0; j < 3; j++) {
       mid[j]= (extents[j] + extents[j + 3]) * 0.5;
+    }
 
     for (j = 0; j < 8; j++) {
       count[j] = 0;
@@ -205,11 +211,13 @@ _build_octree_leaves(const int       ancestor_id,
     /* Build index */
 
     idx[0] = 0;
-    for (j = 0; j < 8; j++)
+    for (j = 0; j < 8; j++) {
       idx[j+1] = idx[j] + count[j];
+    }
 
-    for (j = 0; j < 8; j++)
+    for (j = 0; j < 8; j++) {
       count[j] = 0;
+    }
 
     for (i = point_range[0], j = 0; i < point_range[1]; i++) {
 
@@ -225,7 +233,6 @@ _build_octree_leaves(const int       ancestor_id,
 
     /* Check if this subdivision is static
        and check coordinates to find multi point */
-
 
     for (i = point_range[0], j = 0; i < point_range[1]; i++, j++) {
       octree->point_icloud[i] = point_icloud_tmp[j];
@@ -280,6 +287,7 @@ _build_octree_leaves(const int       ancestor_id,
         octree->n_nodes = tmp_size;
 
         _build_octree_leaves(_n_nodes,
+                             i, 
                              depth+1,
                              sub_extents,
                              point_coords,
@@ -294,7 +302,6 @@ _build_octree_leaves(const int       ancestor_id,
   }
 
   /* Finalize node */
-
   
   _node = octree->nodes + _n_nodes;
 
@@ -314,22 +321,7 @@ _build_octree_leaves(const int       ancestor_id,
   _node->depth = depth;
   
   _node->n_points = _n_points;
-}
-
-/**
- * 
- * \brief Build an octree
- * 
- * \param[in]  octree    Current octree
- * .
- */
-
-static void
-_build_octree
-(
-_octree_t *octree
-)
-{
+  _node->location_in_ancestor = location_in_ancestor;
 }
 
 /**
@@ -392,6 +384,91 @@ _point_extents(const int     dim,
   }
 }
 
+
+/**
+ * 
+ * \brief Build an octree
+ * 
+ * \param[in]  octree    Current octree
+ * .
+ */
+
+static void
+_build_octree
+(
+_octree_t *octree
+)
+{
+  int point_range[2];
+
+  /* Initialization */
+
+  octree->n_nodes = 0;
+  octree->n_nodes_max = 0;
+  octree->nodes = NULL;
+
+  for (int i = 0; i < octree->n_point_clouds; i++) { 
+    octree->t_n_points += octree->n_points[i];
+  };
+
+  octree->point_ids = malloc (sizeof(int) * octree->t_n_points);
+  octree->point_icloud = malloc (sizeof(int) * octree->t_n_points);
+  
+  int cpt = 0;
+  for (int i = 0; i < octree->n_point_clouds; i++) { 
+
+    int n_points = octree->n_points[i];
+    double extents[6];
+    
+    if (n_points > 0) {
+
+      _point_extents(3,
+                     n_points,
+                     NULL,
+                     octree->point_clouds[i],
+                     extents);
+
+      for (i = 0; i < 3; i++) {
+        octree->extents[i] = PDM_MIN (extents[i], octree->extents[i]);   
+        extents[i + 3]   = PDM_MAX (extents[i + 3], octree->extents[i + 3]);
+      }
+      
+      for (int j = 0; j < n_points; j++) {
+        octree->point_ids[cpt] = cpt;
+      }
+    }
+  }
+
+  int n_proc;
+  PDM_MPI_Comm_size (octree->comm, &n_proc);
+  
+  octree->extents_proc = malloc (sizeof(double)* n_proc * 6);
+  
+  PDM_MPI_Allgather (octree->extents, 6, PDM_MPI_DOUBLE,
+                     octree->extents_proc, 6, PDM_MPI_DOUBLE,
+                     octree->comm);
+
+  point_range[0] = 0;
+  point_range[1] = octree->t_n_points;
+
+  int *point_ids_tmp = malloc (sizeof(int) * octree->t_n_points);
+  int *point_icloud_tmp = malloc (sizeof(int) * octree->t_n_points);
+
+  _build_octree_leaves(-1,
+                       0,
+                       -1,
+                       octree->extents,
+                       (const double **) octree->point_clouds,
+                       point_icloud_tmp,
+                       point_ids_tmp,
+                       octree,
+                       point_range);
+ 
+  free (point_ids_tmp);
+  free (point_icloud_tmp); 
+
+}
+
 /*=============================================================================
  * Public function definitions
  *============================================================================*/
@@ -448,7 +525,12 @@ PDM_octree_create
   octree->point_icloud = NULL;
   octree->point_ids = NULL;
   octree->nodes = NULL;
-  
+  octree->t_n_points = 0;
+  for (int i = 0; i < 3; i++) {
+    octree->extents[i]     =  HUGE_VAL;
+    octree->extents[i + 3] = -HUGE_VAL;
+  }
+
   return id;
 }
 
@@ -519,8 +601,8 @@ PDM_octree_point_cloud_set
 {
   _octree_t *octree = _get_from_id (id);
   
-  octree->n_points[i] = n_points;
-  octree->point_clouds[i] = coords;    
+  octree->n_points[i_point_cloud] = n_points;
+  octree->point_clouds[i_point_cloud] = coords;    
 }
 
 //void
@@ -548,73 +630,8 @@ PDM_octree_build
 )
 {
   _octree_t *octree = _get_from_id (id);
-  
-  int n_proc = 0;
-  PDM_MPI_Comm_size (comm, &n_proc);
-  octree->extents_proc = malloc (sizeof(double) * (n_proc + 1));
 
-//  size_t i;
-//  int point_range[2];
-//  _octree_t _octree;
-//
-//  int *point_ids_tmp = NULL;
-//
-//
-//  // To compute
-//  
-//  double extents[6];
-//
-//  for (i = 0; i < dim; i++) {
-//    extents[i]       =  HUGE_VAL;
-//    extents[i + dim] = -HUGE_VAL;
-//  }
-//
-//  double extents_tmp[6];
-//  
-//  for (int i = 0; i < n_point_cloud; i++) {
-//    _point_extents(dim,
-//                   n_points,
-//                   const int     point_index[],
-//                   const double  point_coords[],
-//                   double        extents[])
-//  }
-//  
-//  PDM_MPI_Allgather ()
-//  /* Initialization */
-//
-//  point_range[0] = 0;
-//  point_range[1] = n_points;
-//
-//  _octree->n_t_points = n_points;
-//  _octree->n_nodes = 0;
-//  _octree->n_nodes_max = 0;
-//  _octree->nodes = NULL;
-//  _octree->point_ids = NULL;
-//
-//  if (n_points > 0) {
-//
-//    _point_extents(3,
-//                   n_points,
-//                   NULL,
-//                   point_coords,
-//                   _octree.extents);
-//
-//    _octree.point_ids = malloc(sizeof(int)) * _octree->n_points);
-//
-//    for (i = 0; i < _octree->n_points; i++)
-//      _octree->point_ids[i] = i;
-//
-//    BFTC_MALLOC(point_ids_tmp, n_points, int);
-//
-//    _build_octree_leaves(_octree->extents,
-//                         point_coords,
-//                         point_ids_tmp,
-//                         &_octree,
-//                         point_range);
-//
-//    BFTC_FREE(point_ids_tmp);
-//
-//  }
+  _build_octree (octree);
 
 }
 
@@ -630,7 +647,7 @@ PDM_octree_build
  *
  * \param [in]   id                 Identifier 
  *
- * \return     Root node identifier    
+ * \return     Root node identifier (-1 if octree is not built)   
  * 
  */
 
@@ -640,6 +657,14 @@ PDM_octree_root_node_id_get
  const int          id
 )
 {
+  _octree_t *octree = _get_from_id (id);
+
+  if (octree->nodes == NULL) {
+    return -1;
+  }
+  else {
+    return 0;
+  }
 }
 
 //void
@@ -668,6 +693,11 @@ PDM_octree_ancestor_node_id_get
  const int          node_id
 )
 {
+  _octree_t *octree = _get_from_id (id);
+
+  assert (node_id < octree->n_nodes);
+  
+  return octree->nodes[node_id].ancestor_id;
 }
 
 //void
@@ -690,13 +720,18 @@ PDM_octree_ancestor_node_id_get
  * 
  */
 
-double *
+const double *
 PDM_octree_node_extents_get
 (
  const int          id,
  const int          node_id
 )
 {
+  _octree_t *octree = _get_from_id (id);
+
+  assert (node_id < octree->n_nodes);
+
+  return octree->nodes[node_id].extents;  
 }
 
 
@@ -720,6 +755,11 @@ PDM_octree_children_get
  const PDM_octree_child_t child
 )
 {
+  _octree_t *octree = _get_from_id (id);
+
+  assert (node_id < octree->n_nodes);
+
+  return octree->nodes[node_id].children_id[child];
 }
 
 
@@ -742,7 +782,9 @@ PDM_octree_neighbor_get
  const int                node_id,
  const PDM_octree_child_t child
 )
-{
+{  
+  //TODO: PDM_octree_neighbor_get
+  return -1;
 }
 
 /**

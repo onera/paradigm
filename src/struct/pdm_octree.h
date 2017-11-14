@@ -163,7 +163,7 @@ PDM_octree_build
  *
  */
 
-double *
+const double *
 PDM_octree_processes_extents_get
 (
  const int          id,
@@ -238,7 +238,7 @@ PDM_octree_ancestor_node_id_get
  * 
  */
 
-double *
+const double *
 PDM_octree_node_extents_get
 (
  const int          id,
