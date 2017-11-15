@@ -287,7 +287,7 @@ _build_octree_leaves(const int       ancestor_id,
         octree->n_nodes = tmp_size;
 
         _build_octree_leaves(_n_nodes,
-                             i, 
+                             (PDM_octree_child_t) i, 
                              depth+1,
                              sub_extents,
                              point_coords,
@@ -455,7 +455,7 @@ _octree_t *octree
   int *point_icloud_tmp = malloc (sizeof(int) * octree->t_n_points);
 
   _build_octree_leaves(-1,
-                       0,
+                       (PDM_octree_child_t) 0,
                        -1,
                        octree->extents,
                        (const double **) octree->point_clouds,
@@ -771,19 +771,47 @@ PDM_octree_children_get
  * \param [in]   node_id            Node identifier 
  * \param [in]   direction          Neighbor direction 
  *
- * \return     Neighbor node id    
+ * \return     Neighbor node id (-1 if no neighbor)    
  * 
  */
 
 int
 PDM_octree_neighbor_get
 (
- const int                id,
- const int                node_id,
- const PDM_octree_child_t child
+ const int                    id,
+ const int                    node_id,
+ const PDM_octree_direction_t direction
 )
 {  
+  _octree_t *octree = _get_from_id (id);
+
+  assert (node_id < octree->n_nodes);
+  
   //TODO: PDM_octree_neighbor_get
+  
+  _octant_t *octant = &(octree->nodes[node_id]);
+  int common_ancestor = octant->ancestor_id;
+  
+  int isSameDiretion = 1;
+  while (isSameDiretion) {
+    switch (direction) {
+    case PDM_NADIR:
+    case PDM_ZENITH:
+      isSameDiretion = octant->location_in_ancestor%2  == direction;
+      break;
+    case PDM_WEST:
+    case PDM_EAST:
+      isSameDiretion = ((octant->location_in_ancestor%4 < 2) + 2) == direction;
+      break;
+    case PDM_NORTH:
+    case PDM_SOUTH:
+      isSameDiretion = ((octant->location_in_ancestor < 4) + 4) == direction;
+      break;
+    }
+  }
+  
+ 
+  
   return -1;
 }
 
@@ -805,6 +833,11 @@ PDM_octree_n_points_get
  const int                node_id
 )
 {
+  _octree_t *octree = _get_from_id (id);
+
+  assert (node_id < octree->n_nodes);
+  
+  return octree->nodes[node_id].idx[8] - octree->nodes[node_id].idx[0];
 }
 
 
@@ -821,7 +854,7 @@ PDM_octree_n_points_get
  *
  */
 
-int
+void
 PDM_octree_points_get
 (
  const int                id,
@@ -830,6 +863,13 @@ PDM_octree_points_get
  int                    **point_indexes 
 )
 {
+  _octree_t *octree = _get_from_id (id);
+
+  assert (node_id < octree->n_nodes);
+  
+  *point_clouds_id = octree->point_icloud + octree->nodes[node_id].idx[0];
+  
+  *point_indexes = octree->point_ids + octree->nodes[node_id].idx[0];
 }
 
 
@@ -851,4 +891,18 @@ PDM_octree_leaf_is
  const int                node_id
 )
 {
+  _octree_t *octree = _get_from_id (id);
+
+  assert (node_id < octree->n_nodes);
+  
+  int _isLeaf = (octree->nodes[node_id].children_id[0] == -1) &&
+                (octree->nodes[node_id].children_id[1] == -1) &&
+                (octree->nodes[node_id].children_id[2] == -1) &&
+                (octree->nodes[node_id].children_id[3] == -1) &&
+                (octree->nodes[node_id].children_id[4] == -1) &&
+                (octree->nodes[node_id].children_id[5] == -1) &&
+                (octree->nodes[node_id].children_id[6] == -1) &&
+                (octree->nodes[node_id].children_id[7] == -1);
+  
+  return _isLeaf;
 }

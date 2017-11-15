@@ -39,6 +39,21 @@ extern "C" {
  */
 
 typedef enum {
+  PDM_NADIR,   
+  PDM_ZENITH,
+  PDM_WEST,
+  PDM_EAST,  
+  PDM_NORTH,   
+  PDM_SOUTH,   
+} PDM_octree_direction_t;
+
+/**
+ * \enum PDM_octree_child_t
+ * \brief Names of 8 children of a node 
+ *
+ */
+
+typedef enum {
   PDM_NORTH_WEST_NADIR,   
   PDM_NORTH_WEST_ZENITH,   
   PDM_NORTH_EAST_NADIR,   
@@ -282,9 +297,9 @@ PDM_octree_children_get
 int
 PDM_octree_neighbor_get
 (
- const int                id,
- const int                node_id,
- const PDM_octree_child_t child
+ const int                    id,
+ const int                    node_id,
+ const PDM_octree_direction_t direction
 );
 
 /**
@@ -319,7 +334,7 @@ PDM_octree_n_points_get
  *
  */
 
-int
+void
 PDM_octree_points_get
 (
  const int                id,
