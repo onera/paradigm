@@ -428,15 +428,21 @@ _octree_t *octree
                      octree->point_clouds[i],
                      extents);
 
-      for (i = 0; i < 3; i++) {
-        octree->extents[i] = PDM_MIN (extents[i], octree->extents[i]);   
-        extents[i + 3]   = PDM_MAX (extents[i + 3], octree->extents[i + 3]);
+      for (int i1 = 0; i1 < 3; i1++) {
+        octree->extents[i1] = PDM_MIN (extents[i1], octree->extents[i1]);   
+        octree->extents[i1 + 3]   = PDM_MAX (extents[i1 + 3], octree->extents[i1 + 3]);
       }
       
       for (int j = 0; j < n_points; j++) {
         octree->point_ids[cpt] = cpt;
       }
     }
+  }
+
+  for (int i = 0; i < 3; i++) {
+    double delta = octree->tolerance * (octree->extents[i + 3] - octree->extents[i]); 
+    octree->extents[i] += -delta;   
+    octree->extents[i + 3] += delta;;
   }
 
   int n_proc;
@@ -787,13 +793,13 @@ PDM_octree_neighbor_get
 
   assert (node_id < octree->n_nodes);
   
-  //TODO: PDM_octree_neighbor_get
+  int neighbor_id = -1; 
   
   _octant_t *octant = &(octree->nodes[node_id]);
-  int common_ancestor = octant->ancestor_id;
   
   int isSameDiretion = 1;
-  while (isSameDiretion) {
+  while (isSameDiretion && (octant->ancestor_id != 0)) {
+    
     switch (direction) {
     case PDM_NADIR:
     case PDM_ZENITH:
@@ -808,11 +814,25 @@ PDM_octree_neighbor_get
       isSameDiretion = ((octant->location_in_ancestor < 4) + 4) == direction;
       break;
     }
+    
+   octant = &(octree->nodes[octant->ancestor_id]);
   }
   
- 
+  if (octant->ancestor_id != 0) {
+    if (direction < 2) {
+      neighbor_id = (octant->location_in_ancestor/2) * 2 + 
+                    (octant->location_in_ancestor + 1)%2;
+    }
+    if (direction < 4) {
+      neighbor_id = (octant->location_in_ancestor/4) * 4 + 
+                    (octant->location_in_ancestor + 2)%4;
+    }
+    else {
+      neighbor_id = (octant->location_in_ancestor + 4)%8;      
+    }
+  }
   
-  return -1;
+  return neighbor_id;
 }
 
 /**
