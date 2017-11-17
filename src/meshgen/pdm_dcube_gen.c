@@ -28,7 +28,9 @@ typedef struct  {
   PDM_MPI_Comm       comm;          /*!< MPI communicator                          */
   PDM_g_num_t   nVtxSeg;       /*!< Number of vertices in segments            */
   double         length;        /*!< Segment length                            */
-  double         zero;          /*!< Coordinates of the origin                 */
+  double         zero_x;          /*!< Coordinates of the origin                 */
+  double         zero_y;          /*!< Coordinates of the origin                 */
+  double         zero_z;          /*!< Coordinates of the origin                 */
   int            nFaceGroup;    /*!< Number of faces groups                    */
   int            dNCell;        /*!< Number of cells stored in this process    */
   int            dNFace;        /*!< Number of faces stored in this process    */
@@ -86,7 +88,9 @@ _get_from_id
  * \param [in]   comm           Communicator
  * \param [in]   nVtxSeg        Number of vertices in segments
  * \param [in]   length         Segment length
- * \param [in]   zero           Coordinates of the origin 
+ * \param [in]   zero_x         Coordinates of the origin 
+ * \param [in]   zero_y         Coordinates of the origin 
+ * \param [in]   zero_z         Coordinates of the origin 
  *
  */
 
@@ -97,7 +101,9 @@ PDM_dcube_gen_init
  PDM_MPI_Comm        comm, 
  const PDM_g_num_t  nVtxSeg, 
  const double        length,
- const double        zero
+ const double        zero_x,
+ const double        zero_y,
+ const double        zero_z
 )
 {
 
@@ -126,7 +132,9 @@ PDM_dcube_gen_init
   dcube->comm    = comm;
   dcube->nVtxSeg = nVtxSeg;
   dcube->length  = length;
-  dcube->zero    = zero;
+  dcube->zero_x  = zero_x;
+  dcube->zero_y  = zero_y;
+  dcube->zero_z  = zero_z;
 
   PDM_g_num_t nVtx      = nVtxSeg * nVtxSeg * nVtxSeg;
   PDM_g_num_t nFaceSeg  = nVtxSeg - 1;
@@ -241,9 +249,9 @@ PDM_dcube_gen_init
       if ((k == bVtxZ) && (j == bVtxY))
         _bVtxX = bVtxX; 
       for(PDM_g_num_t i = _bVtxX; i < nVtxSeg; i++) {
-        _dVtxCoord[3 * iVtx    ] = i * step + zero; 
-        _dVtxCoord[3 * iVtx + 1] = j * step + zero;
-        _dVtxCoord[3 * iVtx + 2] = k * step + zero;
+        _dVtxCoord[3 * iVtx    ] = i * step + zero_x; 
+        _dVtxCoord[3 * iVtx + 1] = j * step + zero_y;
+        _dVtxCoord[3 * iVtx + 2] = k * step + zero_z;
         cpt += 1;
         iVtx += 1;
         if (cpt == dcube->dNVtx)
@@ -662,7 +670,9 @@ PROCF (pdm_dcube_gen_init, PDM_DCUBE_GEN_INIT)
  const PDM_MPI_Fint *comm,
  const PDM_g_num_t  *nVtxSeg, 
  const double       *length,
- const double       *zero
+ const double       *zero_x,
+ const double       *zero_y,
+ const double       *zero_z
 )
 {
 
@@ -674,7 +684,9 @@ PROCF (pdm_dcube_gen_init, PDM_DCUBE_GEN_INIT)
                       c_comm,
                       *nVtxSeg, 
                       *length,
-		      *zero);
+		      *zero_x,
+		      *zero_y,
+		      *zero_z);
 }
 
 

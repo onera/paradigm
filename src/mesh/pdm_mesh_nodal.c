@@ -1153,6 +1153,7 @@ _type_cell_3D
 
       const int face_id = PDM_ABS(cell_face[i]) - 1;
       const int ideb = face_vtx_idx[face_id] - adjust;
+
       const int n_som_face = face_vtx_nb[face_id];
  
       if (n_som_face == 3) {

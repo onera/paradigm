@@ -193,7 +193,9 @@ int main(int argc, char *argv[])
                       comm,
                       nVtxSeg,
                       length,
-		      0.);
+            		      0.,
+		                  0.,
+		                  0.);
 
   PDM_dcube_gen_dim_get(id,
                          &nFaceGroup,
