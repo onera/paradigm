@@ -8,7 +8,6 @@
 #include <math.h>
 #include <string.h>
 #include <stdlib.h>
-#include <stdbool.h>
 
 /*----------------------------------------------------------------------------
  *  Local headers
@@ -575,6 +574,17 @@ PDM_octree_free
   octree->point_icloud = NULL;
   octree->point_ids = NULL;
   octree->nodes = NULL;
+  
+  free (octree);
+  
+  PDM_Handles_handle_free (_octrees, id, PDM_FALSE);
+
+  const int n_octrees = PDM_Handles_n_get (_octrees);
+  
+  if (n_octrees == 0) {
+    _octrees = PDM_Handles_free (_octrees);
+  }
+
 }
 
 //void

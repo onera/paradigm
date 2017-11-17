@@ -612,7 +612,6 @@ _gnum_from_coords_compute
 }
 
 
-
 /**
  *
  * \brief Compute from coords
@@ -656,7 +655,6 @@ _gnum_from_parent_compute
   PDM_g_num_t max_parent = 0;
   PDM_MPI_Allreduce (&l_max_parent, &max_parent, 1, 
                      PDM__PDM_MPI_G_NUM, PDM_MPI_MAX, _gnum->comm);
-  
   
   /* Comptage du nombre d'elements a envoyer a chaque processus */
   
