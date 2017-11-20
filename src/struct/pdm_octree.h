@@ -91,6 +91,25 @@ PDM_octree_create
  const PDM_MPI_Comm comm
 );
 
+
+/**
+ *
+ * \brief Create an octree structure from a sequential octree   
+ *
+ * \param [in]   octree_seq_id      Sequential octree identifier
+ * \param [in]   comm               MPI communicator
+ *
+ * \return     Identifier    
+ */
+
+int
+PDM_octree_from_octree_seq_create
+(
+const int octree_seq_id,
+const PDM_MPI_Comm comm
+);
+
+
 //void
 //PROCF (pdm_octree_create, PDM_OCTREE_CREATE)
 //(
@@ -181,8 +200,7 @@ PDM_octree_build
 const double *
 PDM_octree_processes_extents_get
 (
- const int          id,
- const int          i_proc
+ const int          id
 );
 
 //void

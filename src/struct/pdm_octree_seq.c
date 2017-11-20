@@ -628,7 +628,9 @@ PDM_octree_seq_build
 {
   _octree_seq_t *octree = _get_from_id (id);
 
-  _build_octree (octree);
+  if (octree->nodes != NULL) {
+    _build_octree (octree);
+  }
 
 }
 

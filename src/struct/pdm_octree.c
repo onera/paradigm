@@ -128,67 +128,6 @@ _get_from_id
 
   return octree;
 }
- 
-/**
- * 
- * \brief   Compute extents of a point set
- *
- *  \param [in] dim         Space dimension of points to locate_3d
- *  \param [in] n_points    Number of points to locate
- *  \param [in] point_index optional indirection array to point_coords
- *                          (1 to n_points numbering)
- *  \param [in] point_coords <-- coordinates of points to locate
- *                    (dimension: dim * n_points)
- *   extents      --> extents associated with mesh:
- *                    x_min, y_min, ..., x_max, y_max, ... (size: 2*dim)
- *
- */
-
-static void
-_point_extents(const int     dim,
-               const int     n_points,
-               const int     point_index[],
-               const double  point_coords[],
-               double        extents[])
-{
-  int i;
-  int j, coord_idx;
-
-  /* initialize extents in case mesh is empty or dim < 3 */
-  for (i = 0; i < dim; i++) {
-    extents[i]       =  HUGE_VAL;
-    extents[i + dim] = -HUGE_VAL;
-  }
-
-  /* Compute extents */
-
-  if (point_index != NULL) {
-
-    for (j = 0; j < n_points; j++) {
-      coord_idx = point_index[j] - 1;
-      for (i = 0; i < dim; i++) {
-        if (extents[i]       > point_coords[(coord_idx * dim) + i])
-          extents[i]       = point_coords[(coord_idx * dim) + i];
-        if (extents[i + dim] < point_coords[(coord_idx * dim) + i])
-          extents[i + dim] = point_coords[(coord_idx * dim) + i];
-      }
-      
-    }
-  }
-
-  else {
-
-    for (coord_idx = 0; coord_idx < n_points; coord_idx++) {
-      for (i = 0; i < dim; i++) {
-        if (extents[i]       > point_coords[(coord_idx * dim) + i])
-          extents[i]       = point_coords[(coord_idx * dim) + i];
-        if (extents[i + dim] < point_coords[(coord_idx * dim) + i])
-          extents[i + dim] = point_coords[(coord_idx * dim) + i];
-      }
-    }
-  }
-}
-
 
 /*=============================================================================
  * Public function definitions
@@ -232,6 +171,42 @@ PDM_octree_create
   octree->extents_proc = NULL;
   
   return id;
+}
+
+
+
+/**
+ *
+ * \brief Create an octree structure from a sequential octree   
+ *
+ * \param [in]   octree_seq_id      Sequential octree identifier
+ * \param [in]   comm               MPI communicator
+ *
+ * \return     Identifier    
+ */
+
+int
+PDM_octree_from_octree_seq_create
+(
+const int octree_seq_id,
+const PDM_MPI_Comm comm
+)
+{
+  if (_octrees == NULL) {
+    _octrees = PDM_Handles_create (4);
+  }
+
+  _octree_t *octree = (_octree_t *) malloc(sizeof(_octree_t));
+
+  int id = PDM_Handles_store (_octrees, octree);
+
+  octree->octree_seq_id = octree_seq_id;
+
+  octree->comm = comm;
+  
+  octree->extents_proc = NULL;
+  
+  return id;  
 }
 
 
@@ -612,8 +587,7 @@ PDM_octree_extents_get
 const double *
 PDM_octree_processes_extents_get
 (
- const int          id,
- const int          i_proc
+ const int          id
 )
 {
   _octree_t *octree = _get_from_id (id);

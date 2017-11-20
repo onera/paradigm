@@ -133,7 +133,6 @@ PDM_octree_seq_free
  * 
  */
 
-
 void
 PDM_octree_seq_point_cloud_set
 (

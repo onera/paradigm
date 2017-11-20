@@ -20,6 +20,7 @@
 #include "pdm_handles.h"
 #include "pdm_mpi.h"
 #include "pdm_octree.h"
+#include "pdm_octree_seq.h"
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
@@ -56,6 +57,9 @@ typedef struct  {
   PDM_MPI_Comm comm;             /*!< MPI communicator */
   double tolerance;              /*!< Relative geometric tolerance */
   int   n_point_clouds;          /*!< Number of point cloud */
+  int  depth_max;                /*!< Maximum depth of internal octrees */
+  int  points_in_leaf_max;       /*!< Maximum number of point in a leaf 
+                                  *   of internal octrees */
   int   *n_points;               /*!< Number of points in each cloud */
   const double **point_clouds;   /*!< points cloud */
   const double **char_length;    /*!< Characteristic length of points (optionnal) */
@@ -96,6 +100,142 @@ _get_from_id
   }
 
   return ppm;
+}
+
+
+/**
+ *
+ * \brief Search a point 
+ *
+ * \param [in]   ppartId        ppart identifier
+ *
+ */
+
+static int
+_intersect_extents 
+(
+double *first_extents,
+double *second_extents
+)
+{
+  int intersect = 0;
+  
+  for (int i = 0; i < 3; i++) {
+    if ((first_extents[3*i] >= second_extents[3*i]) &&
+        (first_extents[3*i] <= second_extents[3*i+3])) {
+      intersect = 1;
+      break;
+    }
+    else if ((first_extents[3*i+3] >= second_extents[3*i]) &&
+            (first_extents[3*i+3] <= second_extents[3*i+3])) {
+      intersect = 1;
+      break;
+    }
+    else if ((first_extents[3*i] <= second_extents[3*i]) &&
+             (first_extents[3*i+3] >= second_extents[3*i+3])) {
+      intersect = 1;
+      break;
+    }
+  }
+  
+  return intersect;
+}
+
+
+/**
+ *
+ * \brief Search a point 
+ *
+ * \param [in]   ppartId        ppart identifier
+ *
+ */
+
+static void
+_search_couple 
+(
+int **local_couple, 
+int  *n_couple, 
+int  *s_couple,
+const int  point_cloud, 
+const int  point_idx, 
+double *point_coords,
+double *point_box,
+const int search_cloud,
+const int associated_octree_id,        
+const int associated_octree_node_id,
+const double *associated_coords,
+const double *associated_char_length        
+)
+{
+  const double default_eps = 1e-12;
+  
+  int node_id = associated_octree_node_id;
+  int octree_id = associated_octree_id;
+  double *coords = associated_coords;
+  double *char_length = associated_char_length;        
+  
+  if (PDM_octree_seq_leaf_is (octree_id, node_id)) {
+    if (*n_couple >= *s_couple) {
+      if (*s_couple == 0) {
+        *s_couple = 4;
+      }
+      else {
+        *s_couple *= 2;
+      }
+      *local_couple = realloc(*local_couple, sizeof(int) * (*s_couple));
+    }
+    
+    int *points_clouds_id;
+    int *point_indexes;
+    int n_candidates = PDM_octree_seq_n_points_get (octree_id, node_id);
+    PDM_octree_seq_points_get (octree_id, node_id, &points_clouds_id, &point_indexes);
+    
+    //TODO : To be continued !!!!!!!!!!
+    
+    if (point_box == NULL || char_length == NULL) {
+      
+      
+    }
+    else  {
+      
+    }
+    
+  }
+  
+  else {
+    for (int i = 0; i < 8; i++) {
+      const int node_child = 
+            PDM_octree_seq_children_get (octree_id, node_id,
+                                         (PDM_octree_seq_child_t) i);
+      if (node_child != -1) {
+        if (point_box != NULL) {
+          if (_intersect_extents (PDM_octree_node_extents_get (octree_id, node_child),
+                                  point_box)) {
+
+            _search_couple (local_couple, n_couple, s_couple, point_cloud, 
+                            point_idx, point_coords, point_box, search_cloud,
+                            node_child, octree_id, coords, char_length);
+          }
+        }
+        else {
+          double _extents[6] = {point_coords[0] - default_eps,
+                                point_coords[1] - default_eps,
+                                point_coords[2] - default_eps,
+                                point_coords[0] + default_eps,
+                                point_coords[1] + default_eps,
+                                point_coords[2] + default_eps};
+          
+          if (_intersect_extents (PDM_octree_node_extents_get (octree_id, node_child),
+                                  _extents)) {
+
+            _search_couple (local_couple, n_couple, s_couple, point_cloud, 
+                            point_idx, point_coords, point_box, search_cloud,
+                            node_child, octree_id, coords, char_length);
+          }
+        }
+      }
+    }    
+  }  
 }
 
 
@@ -147,12 +287,11 @@ PDM_points_merge_create
     ppm->candidates_desc[i] = NULL;
   }
 
-  const int depth_max = 1000;
-  const int points_in_leaf_max = 4;
+  ppm->depth_max = 1000;
+  ppm->points_in_leaf_max = 4;
   
-  
-  ppm->octree_id = PDM_octree_create (n_point_cloud, depth_max, 
-                                      points_in_leaf_max, tolerance, comm);
+  ppm->octree_id = PDM_octree_create (n_point_cloud, ppm->depth_max, 
+                                      ppm->points_in_leaf_max, tolerance, comm);
   
   return id;
   
@@ -256,9 +395,31 @@ PDM_points_merge_process
 
   PDM_octree_build (ppm->octree_id);
   
+  int *local_couple = NULL;
+  int n_local_couple = 0;
+  int s_local_couple = 0;
+  
   // Fusion locale entre les partitions
   
-  
+  for (int i = 0; i < ppm->n_point_clouds; i++) {
+    const int octree_seq_id = PDM_octree_seq_create (ppm->n_point_clouds, 
+                                                     ppm->depth_max, 
+                                                     ppm->points_in_leaf_max, 
+                                                     ppm->tolerance);
+    
+    PDM_octree_seq_build (octree_seq_id);
+
+    for (int j = 0; j < ppm->n_point_clouds; j++) {
+      if (i < j) {
+        for (int k = 0; k < ppm->n_points[j]; k++) {
+          _search_couple (local_couple, n_couple, s_couple,
+                          j, k, i, ppm->point_clouds + 3 * k);
+        }        
+      }
+    }  
+
+    PDM_octree_seq_free (octree_seq_id);
+  }
   
 
   // Envoi des points + char length en option sur les autres procs (test bounding box)
