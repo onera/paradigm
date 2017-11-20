@@ -363,6 +363,22 @@ PDM_octree_leaf_is
 );
 
 
+/**
+ *
+ * \brief Get extents  
+ *
+ * \param [in]   id                 Identifier 
+ *
+ * \return     Extents    
+ * 
+ */
+
+double *
+PDM_octree_extents_get
+(
+ const int          id
+);
+
 #ifdef	__cplusplus
 }
 #endif

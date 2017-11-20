@@ -575,3 +575,48 @@ PDM_octree_leaf_is
 
   return PDM_octree_seq_leaf_is (octree->octree_seq_id, node_id);
 }
+
+
+/**
+ *
+ * \brief Get extents  
+ *
+ * \param [in]   id                 Identifier 
+ *
+ * \return     Extents    
+ * 
+ */
+
+double *
+PDM_octree_extents_get
+(
+ const int          id
+)
+{
+  _octree_t *octree = _get_from_id (id);
+  
+  return PDM_octree_seq_extents_get (octree->octree_seq_id);
+
+}
+
+
+/**
+ *
+ * \brief Processes extents  
+ *
+ * \param [in]   id                 Identifier 
+ * \param [in]   i_proc             Process
+ *
+ */
+
+const double *
+PDM_octree_processes_extents_get
+(
+ const int          id,
+ const int          i_proc
+)
+{
+  _octree_t *octree = _get_from_id (id);
+
+  return octree->extents_proc;
+}
