@@ -231,7 +231,7 @@ PDM_points_merge_cloud_set
   
   ppm->char_length[i_point_cloud] = char_length;
   ppm->point_clouds[i_point_cloud] = coords;
-  ppm->n_point_clouds[i_point_cloud] = n_points;
+  ppm->n_points[i_point_cloud] = n_points;
   
   PDM_octree_point_cloud_set (ppm->octree_id, i_point_cloud, n_points, coords);
   
@@ -293,4 +293,8 @@ PDM_points_merge_candidates_get
  const int    **candidates_desc 
 ) 
 {
+  _point_merge_t *ppm = _get_from_id (id);
+
+  PDM_octree_build (ppm->octree_id);
+
 }
