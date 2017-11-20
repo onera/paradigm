@@ -255,8 +255,23 @@ PDM_points_merge_process
   _point_merge_t *ppm = _get_from_id (id);
 
   PDM_octree_build (ppm->octree_id);
+  
+  // Fusion locale entre les partitions
+  
+  
+  
 
   // Envoi des points + char length en option sur les autres procs (test bounding box)
+  
+//  const double *extents_proc = PDM_octree_processes_extents_get (ppm->octree_id);
+//  const int **tmp_store
+//  
+//  for (int i_cloud = 0; i_cloud < ppm->n_point_clouds; i_cloud++) {
+//    int n_points = ppm->n_points[i_cloud]; 
+//    for (int i = 0; i < n_points; i++) {
+//    
+//    }
+//  }
   
   // Récupération des points distants
   
