@@ -39,12 +39,12 @@ extern "C" {
  */
 
 typedef enum {
-  PDM_NADIR,   
-  PDM_ZENITH,
-  PDM_WEST,
-  PDM_EAST,  
-  PDM_NORTH,   
-  PDM_SOUTH,   
+  PDM_OCTREE_SEQ_NADIR,   
+  PDM_OCTREE_SEQ_ZENITH,
+  PDM_OCTREE_SEQ_WEST,
+  PDM_OCTREE_SEQ_EAST,  
+  PDM_OCTREE_SEQ_NORTH,   
+  PDM_OCTREE_SEQ_SOUTH,   
 } PDM_octree_seq_direction_t;
 
 /**
@@ -54,14 +54,14 @@ typedef enum {
  */
 
 typedef enum {
-  PDM_NORTH_WEST_NADIR,   
-  PDM_NORTH_WEST_ZENITH,   
-  PDM_NORTH_EAST_NADIR,   
-  PDM_NORTH_EAST_ZENITH,   
-  PDM_SOUTH_WEST_NADIR,   
-  PDM_SOUTH_WEST_ZENITH,   
-  PDM_SOUTH_EAST_NADIR,   
-  PDM_SOUTH_EAST_ZENITH,   
+  PDM_OCTREE_SEQ_NORTH_WEST_NADIR,   
+  PDM_OCTREE_SEQ_NORTH_WEST_ZENITH,   
+  PDM_OCTREE_SEQ_NORTH_EAST_NADIR,   
+  PDM_OCTREE_SEQ_NORTH_EAST_ZENITH,   
+  PDM_OCTREE_SEQ_SOUTH_WEST_NADIR,   
+  PDM_OCTREE_SEQ_SOUTH_WEST_ZENITH,   
+  PDM_OCTREE_SEQ_SOUTH_EAST_NADIR,   
+  PDM_OCTREE_SEQ_SOUTH_EAST_ZENITH,   
 } PDM_octree_seq_child_t;
 
 /*============================================================================
@@ -185,6 +185,23 @@ PDM_octree_seq_build
 
 int
 PDM_octree_seq_root_node_id_get
+(
+ const int          id
+);
+
+
+/**
+ *
+ * \brief Get extents  
+ *
+ * \param [in]   id                 Identifier 
+ *
+ * \return     Extents    
+ * 
+ */
+
+double *
+PDM_octree_seq_extents_get
 (
  const int          id
 );

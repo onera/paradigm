@@ -655,13 +655,34 @@ PDM_octree_seq_root_node_id_get
 )
 {
   _octree_seq_t *octree = _get_from_id (id);
-
+  
   if (octree->nodes == NULL) {
     return -1;
   }
   else {
     return 0;
   }
+}
+
+/**
+ *
+ * \brief Get extents  
+ *
+ * \param [in]   id                 Identifier 
+ *
+ * \return     Extents    
+ * 
+ */
+
+double *
+PDM_octree_seq_extents_get
+(
+ const int          id
+)
+{
+  _octree_seq_t *octree = _get_from_id (id);
+
+  return octree->extents;
 }
 
 //void
@@ -792,16 +813,16 @@ PDM_octree_seq_neighbor_get
   while (isSameDiretion && (octant->ancestor_id != 0)) {
     
     switch (direction) {
-    case PDM_NADIR:
-    case PDM_ZENITH:
+    case PDM_OCTREE_SEQ_NADIR:
+    case PDM_OCTREE_SEQ_ZENITH:
       isSameDiretion = octant->location_in_ancestor%2  == direction;
       break;
-    case PDM_WEST:
-    case PDM_EAST:
+    case PDM_OCTREE_SEQ_WEST:
+    case PDM_OCTREE_SEQ_EAST:
       isSameDiretion = ((octant->location_in_ancestor%4 < 2) + 2) == direction;
       break;
-    case PDM_NORTH:
-    case PDM_SOUTH:
+    case PDM_OCTREE_SEQ_NORTH:
+    case PDM_OCTREE_SEQ_SOUTH:
       isSameDiretion = ((octant->location_in_ancestor < 4) + 4) == direction;
       break;
     }
