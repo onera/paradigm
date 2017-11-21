@@ -61,6 +61,7 @@ typedef struct  {
   int  points_in_leaf_max;       /*!< Maximum number of point in a leaf 
                                   *   of internal octrees */
   int   *n_points;               /*!< Number of points in each cloud */
+  int  max_n_points;             /*!< Maximum number of points in each cloud */
   const double **point_clouds;   /*!< points cloud */
   const double **char_length;    /*!< Characteristic length of points (optionnal) */
   int   octree_id;               /*!< Octree identifier */
@@ -114,8 +115,8 @@ _get_from_id
 static int
 _intersect_extents 
 (
-double *first_extents,
-double *second_extents
+const double *first_extents,
+const double *second_extents
 )
 {
   int intersect = 0;
@@ -158,45 +159,75 @@ int  *n_couple,
 int  *s_couple,
 const int  point_cloud, 
 const int  point_idx, 
-double *point_coords,
-double *point_box,
+const double *point_coords,
+const double *point_box,
 const int search_cloud,
 const int associated_octree_id,        
 const int associated_octree_node_id,
 const double *associated_coords,
-const double *associated_char_length        
+const double *associated_char_length,
+const double tolerance        
 )
 {
   const double default_eps = 1e-12;
   
   int node_id = associated_octree_node_id;
   int octree_id = associated_octree_id;
-  double *coords = associated_coords;
-  double *char_length = associated_char_length;        
+  const double *coords = associated_coords;
+  const double *char_length = associated_char_length;        
   
   if (PDM_octree_seq_leaf_is (octree_id, node_id)) {
-    if (*n_couple >= *s_couple) {
-      if (*s_couple == 0) {
-        *s_couple = 4;
-      }
-      else {
-        *s_couple *= 2;
-      }
-      *local_couple = realloc(*local_couple, sizeof(int) * (*s_couple));
-    }
     
     int *points_clouds_id;
     int *point_indexes;
     int n_candidates = PDM_octree_seq_n_points_get (octree_id, node_id);
-    PDM_octree_seq_points_get (octree_id, node_id, &points_clouds_id, &point_indexes);
+    PDM_octree_seq_points_get (octree_id, node_id, 
+                               &points_clouds_id, &point_indexes);
     
-    //TODO : To be continued !!!!!!!!!!
-    
-    if (point_box == NULL || char_length == NULL) {
-      
+    if (point_box == NULL) {
+      for (int i = 0; i < n_candidates; i++) {
+        const double *coords_candidate = associated_coords + 3 * point_indexes[i];
+        double char_length_candidate = associated_char_length[point_indexes[i]];
+        double dist2 = (coords_candidate[0] - point_coords[0]) * 
+                       (coords_candidate[0] - point_coords[0]) +
+                       (coords_candidate[1] - point_coords[1]) * 
+                       (coords_candidate[1] - point_coords[1]) +
+                       (coords_candidate[2] - point_coords[2]) * 
+                       (coords_candidate[2] - point_coords[2]);
+        double tol1 = char_length_candidate * tolerance * 
+                      char_length_candidate * tolerance;
+        
+        double tol2 = (point_box[0] - point_coords[0]) * (point_box[0] - point_coords[0]) * 
+                      tolerance * tolerance;
+        
+        double tol = PDM_MIN (tol1, tol2);
+        
+        if (dist2 <= tol) {
+          if (*n_couple >= *s_couple) {
+            if (*s_couple == 0) {
+              *s_couple = 4;
+            }
+            else {
+              *s_couple *= 2;
+            }
+            *local_couple = realloc(*local_couple, sizeof(int) * (*s_couple) * 4);
+          }
+          
+          int _n_couple = *n_couple;
+          int *_local_couple = *local_couple;
+          _local_couple[4*_n_couple]   = point_cloud;
+          _local_couple[4*_n_couple+1] = point_idx;
+          _local_couple[4*_n_couple+2] = search_cloud;
+          _local_couple[4*_n_couple+3] = point_indexes[i];
+          
+        }
+                       
+      }
       
     }
     else  {
+      
+      //TODO: To be continued !!!!!
       
     }
     
@@ -214,7 +245,7 @@ const double *associated_char_length
 
             _search_couple (local_couple, n_couple, s_couple, point_cloud, 
                             point_idx, point_coords, point_box, search_cloud,
-                            node_child, octree_id, coords, char_length);
+                            node_child, octree_id, coords, char_length, tolerance);
           }
         }
         else {
@@ -230,7 +261,7 @@ const double *associated_char_length
 
             _search_couple (local_couple, n_couple, s_couple, point_cloud, 
                             point_idx, point_coords, point_box, search_cloud,
-                            node_child, octree_id, coords, char_length);
+                            node_child, octree_id, coords, char_length, tolerance);
           }
         }
       }
@@ -399,21 +430,56 @@ PDM_points_merge_process
   int n_local_couple = 0;
   int s_local_couple = 0;
   
-  // Fusion locale entre les partitions
+  /*
+   * Local fusion
+   */
   
+  double *point_box = NULL;
+  double _point_box[6];
+  
+  if (ppm->char_length != NULL) {
+    point_box = _point_box;
+  }
+  
+  ppm->max_n_points = 0;
   for (int i = 0; i < ppm->n_point_clouds; i++) {
-    const int octree_seq_id = PDM_octree_seq_create (ppm->n_point_clouds, 
+    ppm->max_n_points = PDM_MAX (ppm->max_n_points, ppm->n_points[i]);
+  }  
+  for (int i = 0; i < ppm->n_point_clouds; i++) {
+    const int octree_seq_id = PDM_octree_seq_create (1, 
                                                      ppm->depth_max, 
                                                      ppm->points_in_leaf_max, 
                                                      ppm->tolerance);
     
     PDM_octree_seq_build (octree_seq_id);
+    
+    const int root_id = PDM_octree_seq_root_node_id_get (octree_seq_id);
+    
+    const double *_char_length = NULL;
+    if (ppm->char_length != NULL) {
+      _char_length = ppm->char_length[i];
+    }
 
     for (int j = 0; j < ppm->n_point_clouds; j++) {
       if (i < j) {
         for (int k = 0; k < ppm->n_points[j]; k++) {
-          _search_couple (local_couple, n_couple, s_couple,
-                          j, k, i, ppm->point_clouds + 3 * k);
+          const double *_coord = ppm->point_clouds[j] + 3 * k;
+          if (_point_box != NULL) {
+            double char_length_point = ppm->char_length[j][k];
+            double tolerance = ppm->tolerance;
+            point_box[0] = _coord[0] - tolerance * char_length_point;
+            point_box[1] = _coord[1] - tolerance * char_length_point;       
+            point_box[2] = _coord[2] - tolerance * char_length_point;       
+            point_box[3] = _coord[0] + tolerance * char_length_point;
+            point_box[4] = _coord[1] + tolerance * char_length_point;       
+            point_box[5] = _coord[2] + tolerance * char_length_point;
+          }
+
+          _search_couple (&local_couple, &n_local_couple, &s_local_couple,
+                          j, k, _coord, point_box, i, octree_seq_id,
+                          root_id, ppm->point_clouds[i], _char_length,
+                          ppm->tolerance);
+     
         }        
       }
     }  
