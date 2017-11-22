@@ -76,6 +76,8 @@ typedef struct  {
 
 static PDM_Handles_t *_ppms   = NULL;
 
+static const double _default_eps = 1e-9;
+
 /*=============================================================================
  * Private function definitions
  *============================================================================*/
@@ -168,9 +170,7 @@ const double *associated_coords,
 const double *associated_char_length,
 const double tolerance        
 )
-{
-  const double default_eps = 1e-9;
-  
+{  
   int node_id = associated_octree_node_id;
   int octree_id = associated_octree_id;
   const double *coords = associated_coords;
@@ -213,8 +213,8 @@ const double tolerance
                 (coords_candidate[1] - point_coords[1]) +
                 (coords_candidate[2] - point_coords[2]) * 
                 (coords_candidate[2] - point_coords[2]);
-        tol = default_eps * tolerance *
-                     default_eps * tolerance;
+        tol = _default_eps * tolerance *
+              _default_eps * tolerance;
       }
 
       if (dist2 <= tol) {
@@ -255,12 +255,12 @@ const double tolerance
           }
         }
         else {
-          double _extents[6] = {point_coords[0] - default_eps,
-                                point_coords[1] - default_eps,
-                                point_coords[2] - default_eps,
-                                point_coords[0] + default_eps,
-                                point_coords[1] + default_eps,
-                                point_coords[2] + default_eps};
+          double _extents[6] = {point_coords[0] - _default_eps,
+                                point_coords[1] - _default_eps,
+                                point_coords[2] - _default_eps,
+                                point_coords[0] + _default_eps,
+                                point_coords[1] + _default_eps,
+                                point_coords[2] + _default_eps};
           
           if (_intersect_extents (PDM_octree_node_extents_get (octree_id, node_child),
                                   _extents)) {
@@ -428,9 +428,14 @@ PDM_points_merge_process
  const int          id
 )
 {
+  
+ 
   _point_merge_t *ppm = _get_from_id (id);
 
   PDM_octree_build (ppm->octree_id);
+  
+  int n_proc;
+  PDM_MPI_Comm_size(ppm->comm , &n_proc);
   
   int *local_couple = NULL;
   int n_local_couple = 0;
@@ -469,7 +474,7 @@ PDM_points_merge_process
     for (int j = i + 1; j < ppm->n_point_clouds; j++) {
       for (int k = 0; k < ppm->n_points[j]; k++) {
         const double *_coord = ppm->point_clouds[j] + 3 * k;
-        if (_point_box != NULL) {
+        if (point_box != NULL) {
           double char_length_point = ppm->char_length[j][k];
           double tolerance = ppm->tolerance;
           point_box[0] = _coord[0] - tolerance * char_length_point;
@@ -500,18 +505,112 @@ PDM_points_merge_process
    */
 
   const double *extents_proc = PDM_octree_processes_extents_get (ppm->octree_id);
-  const int **tmp_store;
+
+  int s_tmp_store = sizeof(int) * ppm->max_n_points;
+  int n_tmp_store = 0;
+
+  int *tmp_store = malloc (sizeof(int) * s_tmp_store * 3);
   
   for (int i_cloud = 0; i_cloud < ppm->n_point_clouds; i_cloud++) {
     int n_points = ppm->n_points[i_cloud]; 
+    const double *_coord = ppm->point_clouds[i_cloud]; 
     for (int i = 0; i < n_points; i++) {
-    
+      const double *__coord = _coord + 3 * i; 
+      double box[8];
+      
+      if (ppm->char_length != NULL) {
+        box[0] = __coord[0] - ppm->char_length[i_cloud][i] * ppm->tolerance;
+        box[1] = __coord[1] - ppm->char_length[i_cloud][i] * ppm->tolerance;
+        box[2] = __coord[2] - ppm->char_length[i_cloud][i] * ppm->tolerance;
+        box[3] = __coord[0] + ppm->char_length[i_cloud][i] * ppm->tolerance;
+        box[4] = __coord[1] + ppm->char_length[i_cloud][i] * ppm->tolerance;
+        box[5] = __coord[2] + ppm->char_length[i_cloud][i] * ppm->tolerance;
+      }
+      else {
+        box[0] = __coord[0] - ppm->char_length[i_cloud][i] * ppm->tolerance;
+        box[1] = __coord[1] - ppm->char_length[i_cloud][i] * ppm->tolerance;
+        box[2] = __coord[2] - ppm->char_length[i_cloud][i] * ppm->tolerance;
+        box[3] = __coord[0] + ppm->char_length[i_cloud][i] * ppm->tolerance;
+        box[4] = __coord[1] + ppm->char_length[i_cloud][i] * ppm->tolerance;
+        box[5] = __coord[2] + ppm->char_length[i_cloud][i] * ppm->tolerance;
+      }
+
+      for (int k = 0; k < n_proc ; k++) {
+        const double *_extents_proc = extents_proc + 6;
+      
+        if (_intersect_extents(box, _extents_proc)) {
+          if (n_tmp_store >= s_tmp_store) {
+            s_tmp_store *= 2;
+            tmp_store = realloc (tmp_store, sizeof(int) * s_tmp_store * 3);
+          }
+          tmp_store[3*n_tmp_store]   = k;
+          tmp_store[3*n_tmp_store+1] = i_cloud;
+          tmp_store[3*n_tmp_store+2] = i;
+          n_tmp_store += 1;
+        }
+      }
     }
   }
   
+  int *val_send_n = malloc(sizeof(int)*n_proc);
+  
+  for (int i = 0; i < n_proc; i++) {
+    val_send_n[i] = 0;
+  }
+  
+  for (int i = 0; i < n_tmp_store; i++) {
+    val_send_n[tmp_store[3*n_tmp_store]]++;
+  }
+
+  int *val_recv_n = malloc (sizeof(int)*n_proc);
+  PDM_MPI_Alltoall (val_send_n, 1, PDM_MPI_INT, val_recv_n, 1, PDM_MPI_INT, ppm->comm);
+  
   // Envoi des points + char length en option sur les autres procs (test bounding box)
+
+  int *val_send_idx = malloc (sizeof(int)*n_proc);
+  int *val_recv_idx = malloc (sizeof(int)*n_proc);
+
+  int _stride = 3 * 8 + 4 + 4; /* Coords + icloud + ipoint */
+  if (ppm->char_length != NULL) {
+    _stride += 8; /* char_length */
+  }
+  
+  for (int i = 0; i < n_proc; i++) {
+    val_send_n[i] *= _stride;
+  }
+
+  val_send_idx[0] = 0;
+  for (int i = 1; i < n_proc; i++) {
+    val_send_idx[i] = val_send_idx[i-1] + val_send_idx[i];
+    val_recv_idx[i] = val_recv_idx[i-1] + val_recv_idx[i];
+  }
+
+  unsigned char *val_send = 
+        malloc (sizeof(unsigned char) * (val_send_idx[n_proc-1] + val_send_n[n_proc-1]));
+  unsigned char *val_recv = 
+        malloc (sizeof(unsigned char) * (val_recv_idx[n_proc-1] + val_recv_n[n_proc-1]));
+  
+  //TODO: Rempli val_send
+  
+  size_t idx = 0;
+  unsigned char *_tmp_val_send;
+  for (int i = 0; i < n_tmp_store; i++) {
+    int iproc   = tmp_store[3*n_tmp_store];
+    int i_cloud = tmp_store[3*n_tmp_store+1];
+    int i_point = tmp_store[3*n_tmp_store+2];
+
+    double *_coord = (double *) ppm->point_clouds[i_cloud] + 3 * i_point;
+
+    if (ppm->char_length != NULL) {
+      double _char_length = ppm->char_length[i_cloud][i_point];      
+    }
+
+  }
   
   
+  PDM_MPI_Alltoallv(val_send, val_send_n, val_send_idx, PDM_MPI_UNSIGNED_CHAR,
+                    val_recv, val_recv_n, val_recv_idx, PDM_MPI_UNSIGNED_CHAR,
+                    ppm->comm);
   
   /*
    * Build candidates_idx and candidates_desc arrays
@@ -519,8 +618,7 @@ PDM_points_merge_process
    * 
    */
   
-  
-}
+ }
 
 
 /**
