@@ -592,22 +592,37 @@ PDM_points_merge_process
   
   //TODO: Rempli val_send
   
-  size_t idx = 0;
-  unsigned char *_tmp_val_send;
+  unsigned char *_tmp_val_send = val_send;
   for (int i = 0; i < n_tmp_store; i++) {
+    size_t idx = 0;
     int iproc   = tmp_store[3*n_tmp_store];
     int i_cloud = tmp_store[3*n_tmp_store+1];
     int i_point = tmp_store[3*n_tmp_store+2];
 
     double *_coord = (double *) ppm->point_clouds[i_cloud] + 3 * i_point;
+    double *_tmp_val_double = (double *) (_tmp_val_send + val_send_idx[iproc]);
+    
+    _tmp_val_double[0] = _coord[0]; 
+    _tmp_val_double[1] = _coord[1]; 
+    _tmp_val_double[2] = _coord[2]; 
 
+    idx += 24;
+    
     if (ppm->char_length != NULL) {
-      double _char_length = ppm->char_length[i_cloud][i_point];      
+      double _char_length = ppm->char_length[i_cloud][i_point];
+      _tmp_val_double[3] = _char_length;       
+      idx += 32;
     }
+    
+    int *_tmp_val_int = (int *) (_tmp_val_send + idx);
 
+    _tmp_val_int[0] = i_cloud; 
+    _tmp_val_int[1] = i_point;
+
+    val_send_idx[iproc] += idx + 4 + 4;
+    
   }
-  
-  
+    
   PDM_MPI_Alltoallv(val_send, val_send_n, val_send_idx, PDM_MPI_UNSIGNED_CHAR,
                     val_recv, val_recv_n, val_recv_idx, PDM_MPI_UNSIGNED_CHAR,
                     ppm->comm);
