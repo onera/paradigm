@@ -147,14 +147,14 @@ const double *second_extents
 
 /**
  *
- * \brief Search a point 
+ * \brief Search a point in local partitions 
  *
  * \param [in]   ppartId        ppart identifier
  *
  */
 
 static void
-_search_couple 
+_search_local_couple 
 (
 int **local_couple, 
 int  *n_couple, 
@@ -249,7 +249,7 @@ const double tolerance
           if (_intersect_extents (PDM_octree_node_extents_get (octree_id, node_child),
                                   point_box)) {
 
-            _search_couple (local_couple, n_couple, s_couple, point_cloud, 
+            _search_local_couple (local_couple, n_couple, s_couple, point_cloud, 
                             point_idx, point_coords, point_box, search_cloud,
                             node_child, octree_id, coords, char_length, tolerance);
           }
@@ -265,7 +265,7 @@ const double tolerance
           if (_intersect_extents (PDM_octree_node_extents_get (octree_id, node_child),
                                   _extents)) {
 
-            _search_couple (local_couple, n_couple, s_couple, point_cloud, 
+            _search_local_couple (local_couple, n_couple, s_couple, point_cloud, 
                             point_idx, point_coords, point_box, search_cloud,
                             node_child, octree_id, coords, char_length, tolerance);
           }
@@ -273,6 +273,36 @@ const double tolerance
       }
     }    
   }  
+}
+
+
+/**
+ *
+ * \brief Search a point in distant partitions 
+ *
+ * \param [in]   ppartId        ppart identifier
+ *
+ */
+
+static void
+_search_distant_couple 
+(
+int          **distant_couple, 
+int           *n_couple, 
+int           *s_couple,
+const int      point_proc, 
+const int      point_cloud, 
+const int      point_idx, 
+const double  *point_coords,
+const double  *point_box,
+const int      associated_octree_id,        
+const int      associated_octree_node_id,
+const double **associated_coords,
+const double **associated_char_length,
+const double   tolerance        
+)
+{
+  
 }
 
 
@@ -485,7 +515,7 @@ PDM_points_merge_process
           point_box[5] = _coord[2] + tolerance * char_length_point;
         }
 
-        _search_couple (&local_couple, &n_local_couple, &s_local_couple,
+        _search_local_couple (&local_couple, &n_local_couple, &s_local_couple,
                         j, k, _coord, point_box, i, octree_seq_id,
                         root_id, ppm->point_clouds[i], _char_length,
                         ppm->tolerance);
@@ -590,8 +620,6 @@ PDM_points_merge_process
   unsigned char *val_recv = 
         malloc (sizeof(unsigned char) * (val_recv_idx[n_proc-1] + val_recv_n[n_proc-1]));
   
-  //TODO: Rempli val_send
-  
   unsigned char *_tmp_val_send = val_send;
   for (int i = 0; i < n_tmp_store; i++) {
     size_t idx = 0;
@@ -632,8 +660,74 @@ PDM_points_merge_process
    * from distant_couples and local_couples arrays
    * 
    */
+
+  int *distant_couple  = NULL;
+  int n_distant_couple = 0;
+  int s_distant_couple = 0;
   
- }
+  double distant_coord[3];
+  double point_box[6];
+  
+  unsigned char *_tmp_recv = val_recv;
+  for (int i = 0; i < n_proc; i++) {
+    int _deb = val_recv_idx[i] / _stride;
+    int _end = _deb + val_recv_n[i] / _stride;
+  
+    for (int j = _deb; j < _end; j++) {
+      double distant_coord[0] = (double) _tmp_recv[0];
+      _tmp_recv += 8;
+      double distant_coord[1] = (double) _tmp_recv[0];
+      _tmp_recv += 8;
+      double distant_coord[2] = (double) _tmp_recv[0];
+      _tmp_recv += 8;
+      double _char_length = -1;
+      if (ppm->char_length != NULL) {
+        _char_length  = (double) _tmp_recv[0];
+        _tmp_recv += 8;       
+        point_box[0] = 1;
+        point_box[1] = 1;
+        point_box[2] = 1;
+        point_box[3] = 1;
+        point_box[4] = 1;
+        point_box[5] = 1;
+      }
+      else {
+        point_box[0] = 1;
+        point_box[1] = 1;
+        point_box[2] = 1;
+        point_box[3] = 1;
+        point_box[4] = 1;
+        point_box[5] = 1;
+      }
+      int distant_cloud  = _tmp_recv[0];
+      _tmp_recv += 4;
+      int distant_point = _tmp_recv[0];
+      _tmp_recv += 4;
+
+      _search_distant_couple (&distant_couple, 
+                              &n_distant_couple, 
+                              &s_distant_couple,
+                              i,
+                              distant_cloud, 
+                              distant_point,
+                              distant_coord,
+                              point_box,
+                              associated_octree_id,        
+                              associated_octree_node_id,
+                              associated_coords,
+                              associated_char_length,
+                               tolerance);      
+
+
+
+
+
+
+
+    }
+  }
+  
+}
 
 
 /**
