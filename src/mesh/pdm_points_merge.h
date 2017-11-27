@@ -126,8 +126,8 @@ PDM_points_merge_candidates_get
 (
  const int      id,
  const int      i_point_cloud,
- const int    **candidates_idx, 
- const int    **candidates_desc 
+       int    **candidates_idx, 
+       int    **candidates_desc 
 );
 
 
