@@ -867,6 +867,23 @@ const int  id_part
 ); 
 
 
+/**
+ * \brief  Return parent  absolute number
+ *
+ * \param [in]  mesh           Nodal mesh
+ *
+ * \return  Parent of vertices
+ *
+ */
+
+const PDM_g_num_t *
+PDM_Mesh_nodal_vertices_g_num_parent_get
+(
+ const int          idx,
+ const int          id_part 
+);
+
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

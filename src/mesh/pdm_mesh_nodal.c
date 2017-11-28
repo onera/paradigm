@@ -4271,6 +4271,42 @@ const int  id_part
 
 }
 
+
+/**
+ * \brief  Return parent  absolute number
+ *
+ * \param [in]  mesh           Nodal mesh
+ *
+ * \return  Parent of vertices
+ *
+ */
+
+const PDM_g_num_t *
+PDM_Mesh_nodal_vertices_g_num_parent_get
+(
+ const int          idx,
+ const int          id_part 
+)
+{
+  PDM_Mesh_nodal_t * mesh = (PDM_Mesh_nodal_t *) PDM_Handles_get (mesh_handles, idx);
+  
+  if (mesh == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");  
+  }
+  
+  if (id_part >= mesh->n_part) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad part identifier\n");  
+  } 
+  
+  PDM_Mesh_nodal_vtx_t *vtx = mesh->vtx[id_part];
+
+  assert(vtx->parent != NULL);
+  
+  return vtx->parent->_numabs;
+}
+
+
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
