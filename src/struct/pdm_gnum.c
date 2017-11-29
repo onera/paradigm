@@ -89,11 +89,14 @@ typedef struct  {
 
   int          n_part;      /*!< Number of partitions */
   int          dim;         /*!< Spatial dimension */
+  PDM_bool_t   merge;       /*!< Merge double point status */
+  double       tolerance;   /*!< Geometric tolerance */
   PDM_MPI_Comm comm;        /*!< MPI communicator */
   PDM_g_num_t  n_g_elt;     /*!< Global number of elements */
   int          *n_elts;     /*!< Number of elements in partitions */
   PDM_g_num_t **g_nums;     /*!< Global numbering of elements */ 
   double      **coords;     /*!< Coordinates of elements */
+  double      **char_length;/*!< Characteristic length */
   PDM_g_num_t **parent;     /*!< Global n */ 
 
 } _pdm_gnum_t;
@@ -172,8 +175,8 @@ _reorder_coords_lexicographic
 int                dim,
 size_t             start_id,
 size_t             end_id,
-const double  coords[],
-PDM_l_num_t         order[]
+const double       coords[],
+PDM_l_num_t        order[]
 )
 {
   size_t  i;
@@ -869,10 +872,12 @@ _gnum_from_parent_compute
 
 /**
  *
- * \brief Build a global numbering 
+ * \brief Build a global numbering structure
  *
  * \param [in]   dim          Spatial dimension 
  * \param [in]   n_part       Number of local partitions 
+ * \param [in]   merge        Merge double points or not
+ * \param [in]   tolerance    Geometric tolerance (used if merge double points is activated)
  * \param [in]   comm         PDM_MPI communicator
  *
  * \return     Identifier    
@@ -881,8 +886,10 @@ _gnum_from_parent_compute
 int
 PDM_gnum_create
 (
- const int dim,
- const int n_part,
+ const int          dim,
+ const int          n_part,
+ const PDM_bool_t   merge,
+ const double       tolerance,       
  const PDM_MPI_Comm comm
 )
 {
@@ -899,14 +906,16 @@ PDM_gnum_create
   int id = PDM_Handles_store (_gnums, _gnum);
 
   _gnum->n_part    = n_part;
-  _gnum->dim       = dim;  
+  _gnum->dim       = dim;
+  _gnum->merge     = merge;
+  _gnum->tolerance = tolerance;
   _gnum->comm      = comm;
   _gnum->n_g_elt   = -1;
   _gnum->g_nums = (PDM_g_num_t **) malloc (sizeof(PDM_g_num_t * ) * n_part); 
   _gnum->coords = NULL;
+  _gnum->char_length = NULL;
   _gnum->parent = NULL;
-  _gnum->n_elts = (int *) malloc (sizeof(int) * n_part);
-  
+  _gnum->n_elts = (int *) malloc (sizeof(int) * n_part);  
   
   for (int i = 0; i < n_part; i++) {
     _gnum->g_nums[i] = NULL;
@@ -919,15 +928,17 @@ PDM_gnum_create
 void
 PROCF (pdm_gnum_create, PDM_GNUM_CREATE)
 (
- const int *dim,
- const int *n_part,
+ const int          *dim,
+ const int          *n_part,
+ const int          *merge,
+ const double       *tolerance,       
  const PDM_MPI_Fint *fcomm,
-       int *id
+       int          *id
 )
 {
   const PDM_MPI_Comm c_comm = PDM_MPI_Comm_f2c (*fcomm);
 
-  *id = PDM_gnum_create (*dim, *n_part, c_comm);
+  *id = PDM_gnum_create (*dim, *n_part, (PDM_bool_t) *merge, *tolerance, c_comm);
 }
 
 
@@ -944,6 +955,8 @@ PROCF (pdm_gnum_create, PDM_GNUM_CREATE)
  * \param [in]   i_part       Current partition
  * \param [in]   n_elts       Number of elements
  * \param [in]   coords       Coordinates (size = 3 * \ref n_elts)
+ * \param [in]   char_length  Characteristic length (or NULL)
+ *                            (used if merge double points is activated)
  *
  */
 
@@ -953,7 +966,8 @@ PDM_gnum_set_from_coords
  const int id,
  const int i_part,
  const int n_elts,
- const double *coords
+ const double *coords,
+ const double *char_length
 )
 {
   _pdm_gnum_t *_gnum = _get_from_id (id);
@@ -965,22 +979,32 @@ PDM_gnum_set_from_coords
     }
   }
 
-  _gnum->coords[i_part] = (double *) coords;
-  _gnum->n_elts[i_part] = n_elts;
-  _gnum->g_nums[i_part] = NULL;
+  if (_gnum->merge && _gnum->char_length == NULL) {
+    _gnum->char_length = (double **) malloc (sizeof(double * ) * _gnum->n_part);
+    for (int i = 0; i < _gnum->n_part; i++) {
+      _gnum->char_length[i_part] = NULL;
+    }
+  }
+  _gnum->coords[i_part]      = (double *) coords;
+  if (_gnum->merge) {
+    _gnum->char_length[i_part] = (double *) char_length;  
+  }
+  _gnum->n_elts[i_part]      = n_elts;
+  _gnum->g_nums[i_part]      = NULL;
  
 }     
 
 void
 PROCF (pdm_gnum_set_from_coords, PDM_GNUM_SET_FROM_COORDS)
 (
- const int *id,
- const int *i_part,
- const int *n_elts,
- const double *coords
+ const int    *id,
+ const int    *i_part,
+ const int    *n_elts,
+ const double *coords,
+ const double *char_length
 )
 {
-  PDM_gnum_set_from_coords (*id, *i_part, *n_elts, coords);
+  PDM_gnum_set_from_coords (*id, *i_part, *n_elts, coords, char_length);
 }
 
 
@@ -1130,6 +1154,10 @@ PDM_gnum_free
     free (_gnum->coords);
   }
   
+  if (_gnum->char_length != NULL) {
+    free (_gnum->char_length);
+  }
+
   if (_gnum->parent != NULL) {
     free (_gnum->parent);
   }

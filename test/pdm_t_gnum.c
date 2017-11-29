@@ -209,10 +209,10 @@ PDM_part_split_t           method,
                      &dEdgeGroup);
   
   // validation
-  int id = PDM_gnum_create (3, 1, pdm_mpi_comm);
+  int id = PDM_gnum_create (3, 1, PDM_FALSE, 1e-3, pdm_mpi_comm);
 // fin validation
        
-  PDM_gnum_set_from_coords (id, 0, dNVtx, dVtxCoord);
+  PDM_gnum_set_from_coords (id, 0, dNVtx, dVtxCoord, NULL);
   
   PDM_gnum_compute (id);
 

@@ -4124,7 +4124,7 @@ const int         id_block
     PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");  
   }
     
-  int id_gnum = PDM_gnum_create (3, mesh->n_part, mesh->pdm_mpi_comm);
+  int id_gnum = PDM_gnum_create (3, mesh->n_part, PDM_FALSE, 1e-3, mesh->pdm_mpi_comm);
 
   if (id_block >= PDM_BLOCK_ID_BLOCK_POLY3D) {
   
