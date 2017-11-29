@@ -58,6 +58,7 @@
 #include "pdm_handles.h"
 #include "pdm_binary_search.h"
 #include "pdm_mpi.h"
+#include "pdm_points_merge.h"
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
@@ -97,6 +98,7 @@ typedef struct  {
   PDM_g_num_t **g_nums;     /*!< Global numbering of elements */ 
   double      **coords;     /*!< Coordinates of elements */
   double      **char_length;/*!< Characteristic length */
+  int         **index;      /*!< Index : used if merge is activated */
   PDM_g_num_t **parent;     /*!< Global n */ 
 
 } _pdm_gnum_t;
@@ -341,7 +343,6 @@ _gnum_from_coords_compute
  _pdm_gnum_t *_gnum 
 )
 {
-  size_t  i;
   double extents[6];
   PDM_l_num_t  *order = NULL;
   PDM_morton_code_t *m_code = NULL;
@@ -352,19 +353,83 @@ _gnum_from_coords_compute
   
   int n_ranks;
   PDM_MPI_Comm_size (comm, &n_ranks);
+
+  /* Merge double points */
+  
+  int id_pm = 0; 
   
   int n_entities = 0;
-  
-  for (int ipart = 0; ipart < _gnum->n_part; ipart++) {
-    n_entities += _gnum->n_elts[ipart];
-  }
 
-  double *coords = malloc (sizeof(double) * _gnum->dim * n_entities);
-  int k = 0;
+  int iproc;
+  PDM_MPI_Comm_rank (comm, &iproc);
+
+  if (_gnum->merge) {
+    
+    _gnum->index = malloc (sizeof(int *) * _gnum->n_part);
   
-  for (int ipart = 0; ipart < _gnum->n_part; ipart++) {
-    for (int j = 0; j < _gnum->dim * _gnum->n_elts[ipart]; j++) {
-      coords[k++] = _gnum->coords[ipart][j];
+    id_pm = PDM_points_merge_create (_gnum->n_part, _gnum->tolerance, _gnum->comm);
+
+    for (int ipart = 0; ipart < _gnum->n_part; ipart++) {
+      _gnum->index[ipart] = malloc (sizeof(int) * _gnum->n_elts[ipart]);
+      PDM_points_merge_cloud_set (id_pm, ipart, _gnum->n_elts[ipart], 
+                                  _gnum->coords[ipart], _gnum->char_length[ipart]);
+      for (int i = 0; i < _gnum->n_elts[ipart]; i++) {
+        _gnum->index[ipart][i] = 0;
+      }
+    }
+    
+    PDM_points_merge_process (id_pm);
+
+    for (int ipart = 0; ipart < _gnum->n_part; ipart++) {
+
+      int *candidates_idx;
+      int *candidates_desc;
+      
+      PDM_points_merge_candidates_get (id_pm, ipart, &candidates_idx, &candidates_desc);
+
+      for (int i = 0; i < _gnum->n_elts[ipart]; i++) {
+        for (int j = candidates_idx[i]; j < candidates_idx[i]; j++) {
+          int idx = 3*j;
+          int distant_proc = candidates_desc[3*idx    ];
+          int distant_part = candidates_desc[3*idx + 1];
+
+          if ((distant_proc < iproc) || ((distant_proc == iproc) && (distant_part < ipart))) {
+            _gnum->index[ipart][i] = -1;
+          }
+        }
+        if (_gnum->index[ipart][i] == 0) {
+          _gnum->index[ipart][i] = n_entities;
+          n_entities++;
+        }
+      }
+    }
+  }
+  else {
+    for (int ipart = 0; ipart < _gnum->n_part; ipart++) {
+      n_entities += _gnum->n_elts[ipart];
+    }
+  }
+  
+  double *coords = malloc (sizeof(double) * _gnum->dim * n_entities);
+  
+  if (_gnum->merge) {
+    for (int ipart = 0; ipart < _gnum->n_part; ipart++) {
+      for (int i = 0; i <  _gnum->n_elts[ipart]; i++) {
+        if (_gnum->index[ipart][i] != -1) {
+          for (int k = 0; k < _gnum->dim; k++) {
+            coords[_gnum->dim * _gnum->index[ipart][i] + k] =
+                                                        _gnum->coords[ipart][i];
+          }
+        }
+      }
+    }
+  }
+  else {
+    int k = 0;
+    for (int ipart = 0; ipart < _gnum->n_part; ipart++) {
+      for (int j = 0; j < _gnum->dim * _gnum->n_elts[ipart]; j++) {
+        coords[k++] = _gnum->coords[ipart][j];
+      }
     }
   }
   
@@ -398,7 +463,7 @@ _gnum_from_coords_compute
     weight = malloc (n_entities * sizeof(PDM_l_num_t));
     morton_index = malloc ((n_ranks + 1) * sizeof(PDM_morton_code_t));
 
-    for (i = 0; i < n_entities; i++)
+    for (int i = 0; i < n_entities; i++)
       weight[i] = 1;
 
     PDM_morton_build_rank_index(_gnum->dim,
@@ -414,13 +479,12 @@ _gnum_from_coords_compute
     free(weight);
     c_rank = malloc (n_entities * sizeof(int));
 
-    for (i = 0; i < n_entities; i++) {
+    for (int i = 0; i < n_entities; i++) {
       size_t _c_rank = PDM_morton_quantile_search((size_t) n_ranks,
                                                    m_code[i],
                                                    morton_index);
       c_rank[i] = (int) _c_rank; 
     }
-      
 
     free(morton_index);
     free(m_code);
@@ -436,7 +500,7 @@ _gnum_from_coords_compute
     for (rank_id = 0; rank_id < n_ranks; rank_id++)
       send_count[rank_id] = 0;
 
-    for (i = 0; i < n_entities; i++)
+    for (int i = 0; i < n_entities; i++)
       send_count[c_rank[i]] += _gnum->dim;
 
     /* Exchange number of coords to send to each process */
@@ -457,7 +521,7 @@ _gnum_from_coords_compute
     for (rank_id = 0; rank_id < n_ranks; rank_id++)
       send_count[rank_id] = 0;
 
-    for (i = 0; i < n_entities; i++) {
+    for (int i = 0; i < n_entities; i++) {
       rank_id = c_rank[i];
       shift = send_shift[rank_id] + send_count[rank_id];
       for (j = 0; j < _gnum->dim; j++)
@@ -508,7 +572,7 @@ _gnum_from_coords_compute
     free(recv_coords);
     block_global_num = malloc(n_block_ents * sizeof(PDM_g_num_t));
 
-    for (i = 0; i < n_block_ents; i++)
+    for (int i = 0; i < n_block_ents; i++)
       block_global_num[order[i]] = (PDM_g_num_t) i + 1;
 
     free(order);
@@ -525,7 +589,7 @@ _gnum_from_coords_compute
                  PDM_MPI_SUM, comm);
     global_num_shift -= current_global_num;
 
-    for (i = 0; i < n_block_ents; i++)
+    for (int i = 0; i < n_block_ents; i++)
       block_global_num[i] += global_num_shift;
 
     /* Return global order to all processors */
@@ -548,17 +612,57 @@ _gnum_from_coords_compute
     for (rank_id = 0; rank_id < n_ranks; rank_id++)
       send_count[rank_id] = 0;
 
-    k = 0;
     PDM_g_num_t _max_loc = -1;
-    for (int ipart = 0; ipart < _gnum->n_part; ipart++) {
-      _gnum->g_nums[ipart] = malloc (sizeof(PDM_g_num_t) * _gnum->n_elts[ipart]);
-      for (int j1 = 0; j1 < _gnum->n_elts[ipart]; j1++) {
-        rank_id = c_rank[k++];
-        shift = send_shift[rank_id] + send_count[rank_id];
-        _gnum->g_nums[ipart][j1] = part_global_num[shift];
-        _max_loc = PDM_MAX (_max_loc, part_global_num[shift]);
-        send_count[rank_id] += 1;
-      }  
+
+    if (_gnum->merge) {
+      for (int ipart = 0; ipart < _gnum->n_part; ipart++) {
+
+        //Continuer ici
+        // compter le nb de donnees a envoyer
+        // envoyer les 3 valeurs ipart, ipoint, gnum
+        
+        
+        // Mettre a jour localement
+        
+        // Receptionner et mettre a jour les points double
+
+
+//        int *candidates_idx;
+//        int *candidates_desc;
+//
+//        PDM_points_merge_candidates_get (id_pm, ipart, &candidates_idx, &candidates_desc);
+//
+//        for (int i = 0; i < _gnum->n_elts[ipart]; i++) {
+//          for (int j = candidates_idx[i]; j < candidates_idx[i]; j++) {
+//            int idx = 3*j;
+//            int distant_proc = candidates_desc[3*idx    ];
+//            int distant_part = candidates_desc[3*idx + 1];
+//
+//            if ((distant_proc < iproc) || ((distant_proc == iproc) && (distant_part < ipart))) {
+//              _gnum->index[ipart][i] = -1;
+//              break;
+//            }
+//            else {
+//              _gnum->index[ipart][i] = n_entities;
+//              n_entities++;
+//            }
+//          }
+//        }
+//      }
+    }
+
+    else {
+      int k = 0;
+      for (int ipart = 0; ipart < _gnum->n_part; ipart++) {
+        _gnum->g_nums[ipart] = malloc (sizeof(PDM_g_num_t) * _gnum->n_elts[ipart]);
+        for (int j1 = 0; j1 < _gnum->n_elts[ipart]; j1++) {
+          rank_id = c_rank[k++];
+          shift = send_shift[rank_id] + send_count[rank_id];
+          _gnum->g_nums[ipart][j1] = part_global_num[shift];
+          _max_loc = PDM_MAX (_max_loc, part_global_num[shift]);
+          send_count[rank_id] += 1;
+        }  
+      }
     }
     
     /* Free memory */
@@ -591,11 +695,15 @@ _gnum_from_coords_compute
     free(m_code);
     
     PDM_g_num_t *tmp_gnum = malloc (sizeof(PDM_g_num_t) * n_entities);
+
+    if (_gnum->merge) {
+      assert(0);
+    }
     
-    for (i = 0; i < n_entities; i++)
+    for (int i = 0; i < n_entities; i++)
       tmp_gnum[order[i]] = (PDM_g_num_t) i+1;
     
-    k = 0;
+    int k = 0;
     for (int ipart = 0; ipart < _gnum->n_part; ipart++) {
       _gnum->g_nums[ipart] = malloc (sizeof(PDM_g_num_t) * _gnum->n_elts[ipart]);
       for (int j1 = 0; j1 <  _gnum->n_elts[ipart]; j1++) {
@@ -610,6 +718,10 @@ _gnum_from_coords_compute
 
   }
 
+  if (_gnum->merge) {
+    PDM_points_merge_free (id_pm);
+  }
+  
   free (coords);
 
 }
@@ -905,17 +1017,18 @@ PDM_gnum_create
   _pdm_gnum_t *_gnum = (_pdm_gnum_t *) malloc(sizeof(_pdm_gnum_t));
   int id = PDM_Handles_store (_gnums, _gnum);
 
-  _gnum->n_part    = n_part;
-  _gnum->dim       = dim;
-  _gnum->merge     = merge;
-  _gnum->tolerance = tolerance;
-  _gnum->comm      = comm;
-  _gnum->n_g_elt   = -1;
-  _gnum->g_nums = (PDM_g_num_t **) malloc (sizeof(PDM_g_num_t * ) * n_part); 
-  _gnum->coords = NULL;
+  _gnum->n_part      = n_part;
+  _gnum->dim         = dim;
+  _gnum->merge       = merge;
+  _gnum->tolerance   = tolerance;
+  _gnum->comm        = comm;
+  _gnum->n_g_elt     = -1;
+  _gnum->g_nums      = (PDM_g_num_t **) malloc (sizeof(PDM_g_num_t * ) * n_part); 
+  _gnum->coords      = NULL;
   _gnum->char_length = NULL;
-  _gnum->parent = NULL;
-  _gnum->n_elts = (int *) malloc (sizeof(int) * n_part);  
+  _gnum->parent      = NULL;
+  _gnum->n_elts      = (int *) malloc (sizeof(int) * n_part);  
+  _gnum->index       = NULL;
   
   for (int i = 0; i < n_part; i++) {
     _gnum->g_nums[i] = NULL;
