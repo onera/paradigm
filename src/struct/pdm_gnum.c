@@ -648,7 +648,7 @@ _gnum_from_coords_compute
 //            }
 //          }
 //        }
-//      }
+      }
     }
 
     else {
