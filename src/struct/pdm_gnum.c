@@ -392,6 +392,7 @@ _gnum_from_coords_compute
           int idx = 3*j;
           int distant_proc = candidates_desc[3*idx    ];
           int distant_part = candidates_desc[3*idx + 1];
+//          int distant_pt = candidates_desc[3*idx + 2];
 
           if ((distant_proc < iproc) || ((distant_proc == iproc) && (distant_part < ipart))) {
             _gnum->index[ipart][i] = -1;
@@ -447,7 +448,8 @@ _gnum_from_coords_compute
   if (n_ranks > 1) {
 
     int rank_id;
-    PDM_l_num_t j, shift;
+//    PDM_l_num_t j; 
+    PDM_l_num_t shift;
 
     size_t n_block_ents = 0;
     PDM_g_num_t current_global_num = 0, global_num_shift = 0;
@@ -524,7 +526,7 @@ _gnum_from_coords_compute
     for (int i = 0; i < n_entities; i++) {
       rank_id = c_rank[i];
       shift = send_shift[rank_id] + send_count[rank_id];
-      for (j = 0; j < _gnum->dim; j++)
+      for (int j = 0; j < _gnum->dim; j++)
         send_coords[shift + j] = coords[i*_gnum->dim + j];
       send_count[rank_id] += _gnum->dim;
     }
@@ -609,46 +611,149 @@ _gnum_from_coords_compute
                       part_global_num, send_count, send_shift, PDM__PDM_MPI_G_NUM,
                       comm);
 
-    for (rank_id = 0; rank_id < n_ranks; rank_id++)
+    for (rank_id = 0; rank_id < n_ranks; rank_id++) {
       send_count[rank_id] = 0;
+    }
 
     PDM_g_num_t _max_loc = -1;
 
     if (_gnum->merge) {
+      
+      /*
+       * Define local points
+       */
+
+      int k = 0;
       for (int ipart = 0; ipart < _gnum->n_part; ipart++) {
-
-        //Continuer ici
-        // compter le nb de donnees a envoyer
-        // envoyer les 3 valeurs ipart, ipoint, gnum
-        
-        
-        // Mettre a jour localement
-        
-        // Receptionner et mettre a jour les points double
-
-
-//        int *candidates_idx;
-//        int *candidates_desc;
-//
-//        PDM_points_merge_candidates_get (id_pm, ipart, &candidates_idx, &candidates_desc);
-//
-//        for (int i = 0; i < _gnum->n_elts[ipart]; i++) {
-//          for (int j = candidates_idx[i]; j < candidates_idx[i]; j++) {
-//            int idx = 3*j;
-//            int distant_proc = candidates_desc[3*idx    ];
-//            int distant_part = candidates_desc[3*idx + 1];
-//
-//            if ((distant_proc < iproc) || ((distant_proc == iproc) && (distant_part < ipart))) {
-//              _gnum->index[ipart][i] = -1;
-//              break;
-//            }
-//            else {
-//              _gnum->index[ipart][i] = n_entities;
-//              n_entities++;
-//            }
-//          }
-//        }
+        _gnum->g_nums[ipart] = malloc (sizeof(PDM_g_num_t) * _gnum->n_elts[ipart]);
+        for (int j1 = 0; j1 < _gnum->n_elts[ipart]; j1++) {
+          _gnum->g_nums[ipart][j1] = -1;
+        }
+        for (int j1 = 0; j1 < _gnum->n_elts[ipart]; j1++) {
+          if (_gnum->index[ipart][j1] != -1) {
+            rank_id = c_rank[k++];
+            shift = send_shift[rank_id] + send_count[rank_id];
+            _gnum->g_nums[ipart][j1] = part_global_num[shift];
+            _max_loc = PDM_MAX (_max_loc, part_global_num[shift]);
+            send_count[rank_id] += 1;
+          }
+        }  
       }
+
+      int *send_count2 = malloc (n_ranks * sizeof (int));
+      int *recv_count2 = malloc (n_ranks * sizeof (int));
+      int *send_shift2 = malloc ((n_ranks + 1) * sizeof (int));
+      int *recv_shift2 = malloc ((n_ranks + 1) * sizeof (int));
+
+      /*
+       * Count number of values to send 
+       */ 
+
+      for (int ipart = 0; ipart < _gnum->n_part; ipart++) {
+        
+        int *candidates_idx;
+        int *candidates_desc;
+
+        for (rank_id = 0; rank_id < n_ranks; rank_id++) {
+          send_count2[rank_id] = 0;
+          send_shift2[rank_id] = 0;
+          recv_shift2[n_ranks] = 0;
+        }
+        
+        send_shift2[n_ranks] = 0;
+        recv_shift2[n_ranks] = 0;
+        
+        PDM_points_merge_candidates_get (id_pm, ipart, &candidates_idx, &candidates_desc);
+
+        for (int i = 0; i < _gnum->n_elts[ipart]; i++) {
+          for (int j = candidates_idx[i]; j < candidates_idx[i]; j++) {
+            int idx = 3*j;
+            int distant_proc = candidates_desc[3*idx    ];
+            int distant_part = candidates_desc[3*idx + 1];
+            int distant_pt   = candidates_desc[3*idx + 2];
+            if (iproc < distant_proc) {
+              send_count2[distant_proc] += 1;
+              assert (_gnum->g_nums[ipart][i] != -1);
+            }              
+            else if ((iproc == distant_proc) && (ipart <= distant_part)) {              
+              assert (_gnum->g_nums[ipart][i] != -1);
+              _gnum->g_nums[distant_part][distant_pt] = _gnum->g_nums[ipart][i]; 
+            }
+          }
+        }
+      }
+
+      PDM_MPI_Alltoall (send_count2, 1, PDM_MPI_INT, 
+                        recv_count2, 1, PDM_MPI_INT, comm);
+
+      for (rank_id = 0; rank_id < n_ranks; rank_id++) {
+        send_shift2[rank_id + 1] = send_shift2[rank_id] + 3 * send_count2[rank_id];
+        send_count2[rank_id] = 0;
+
+        recv_count2[rank_id] *= 3;
+        recv_shift2[rank_id + 1] = recv_shift2[rank_id] + recv_count2[rank_id];
+      }  
+
+      /*
+       * Send values
+       */ 
+      
+      PDM_g_num_t *send_buff = (PDM_g_num_t *) 
+              malloc (sizeof(PDM_g_num_t)*send_shift2[n_ranks]);
+      PDM_g_num_t *recv_buff = (PDM_g_num_t *) 
+              malloc (sizeof(PDM_g_num_t)*recv_shift2[n_ranks]);
+
+      for (int ipart = 0; ipart < _gnum->n_part; ipart++) {
+        
+        int *candidates_idx;
+        int *candidates_desc;
+
+        for (int i = 0; i < _gnum->n_elts[ipart]; i++) {
+          for (int j = candidates_idx[i]; j < candidates_idx[i]; j++) {
+            int idx = 3*j;
+            int distant_proc = candidates_desc[3*idx    ];
+            int distant_part = candidates_desc[3*idx + 1];
+            int distant_pt   = candidates_desc[3*idx + 2];
+
+            if (iproc < distant_proc) { 
+              int idx2 = send_shift[distant_proc] + send_count2[distant_proc];
+              send_buff[idx2]     = distant_part;
+              send_buff[idx2 + 1] = distant_pt;
+              send_buff[idx2 + 2] = _gnum->g_nums[ipart][i];;
+
+              send_count2[distant_proc] += 3;
+            }
+          }
+        }
+      }
+
+      /* 
+       * Send : distant_part, distant_pt, gnum
+       */      
+      
+      PDM_MPI_Alltoallv(send_buff, recv_count2, recv_shift2, PDM__PDM_MPI_G_NUM,
+                        recv_buff, send_count2, send_shift2, PDM__PDM_MPI_G_NUM,
+                        comm);
+
+      /* 
+       * update gnum
+       */      
+        
+      k = 0;
+      while (k < 2 * send_shift2[n_ranks]) {
+        int ipart        = (int) recv_buff[k++];
+        int ipt          = (int) recv_buff[k++];
+        PDM_g_num_t gnum =       recv_buff[k++];
+         _gnum->g_nums[ipart][ipt] = gnum;
+      }
+    
+      free (send_buff);
+      free (recv_buff);
+      free (send_count2);
+      free (recv_count2);
+      free (send_shift2);
+      free (recv_shift2);    
+    
     }
 
     else {
