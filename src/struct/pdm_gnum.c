@@ -801,19 +801,55 @@ _gnum_from_coords_compute
     
     PDM_g_num_t *tmp_gnum = malloc (sizeof(PDM_g_num_t) * n_entities);
 
+    for (int i = 0; i < n_entities; i++) {
+      tmp_gnum[order[i]] = (PDM_g_num_t) i+1;
+    }
+
     if (_gnum->merge) {
-      assert(0);
+      
+      //TODO: A tester !!!!!!!!!
+      
+      int k = 0;
+      for (int ipart = 0; ipart < _gnum->n_part; ipart++) {
+        _gnum->g_nums[ipart] = malloc (sizeof(PDM_g_num_t) * _gnum->n_elts[ipart]);
+        for (int j1 = 0; j1 < _gnum->n_elts[ipart]; j1++) {
+          _gnum->g_nums[ipart][j1] = -1;
+        }
+        for (int j1 = 0; j1 < _gnum->n_elts[ipart]; j1++) {
+          if (_gnum->index[ipart][j1] != -1) {
+            _gnum->g_nums[ipart][j1] = tmp_gnum[k++];
+          }
+        }
+
+        int *candidates_idx;
+        int *candidates_desc;
+        PDM_points_merge_candidates_get (id_pm, ipart, &candidates_idx, &candidates_desc);
+
+        for (int i = 0; i < _gnum->n_elts[ipart]; i++) {
+          for (int j = candidates_idx[i]; j < candidates_idx[i]; j++) {
+            int idx = 3*j;
+            int distant_proc = candidates_desc[3*idx    ];
+            int distant_part = candidates_desc[3*idx + 1];
+            int distant_pt   = candidates_desc[3*idx + 2];
+            if ((iproc == distant_proc) && (ipart <= distant_part)) {              
+              assert (_gnum->g_nums[ipart][i] != -1);
+              _gnum->g_nums[distant_part][distant_pt] = _gnum->g_nums[ipart][i]; 
+            }
+          }
+        }
+        
+      }
     }
     
-    for (int i = 0; i < n_entities; i++)
-      tmp_gnum[order[i]] = (PDM_g_num_t) i+1;
-    
-    int k = 0;
-    for (int ipart = 0; ipart < _gnum->n_part; ipart++) {
-      _gnum->g_nums[ipart] = malloc (sizeof(PDM_g_num_t) * _gnum->n_elts[ipart]);
-      for (int j1 = 0; j1 <  _gnum->n_elts[ipart]; j1++) {
-        _gnum->g_nums[ipart][j1] = tmp_gnum[k++];
-      }  
+    else {
+
+      int k = 0;
+      for (int ipart = 0; ipart < _gnum->n_part; ipart++) {
+        _gnum->g_nums[ipart] = malloc (sizeof(PDM_g_num_t) * _gnum->n_elts[ipart]);
+        for (int j1 = 0; j1 <  _gnum->n_elts[ipart]; j1++) {
+          _gnum->g_nums[ipart][j1] = tmp_gnum[k++];
+        }  
+      }
     }
 
     free(order);

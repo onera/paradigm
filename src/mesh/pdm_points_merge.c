@@ -176,6 +176,8 @@ const double tolerance
   const double *coords = associated_coords;
   const double *char_length = associated_char_length;        
   
+  printf ("search local couple\n");
+  
   if (PDM_octree_seq_leaf_is (octree_id, node_id)) {
     
     int *points_clouds_id;
@@ -307,8 +309,13 @@ const double   tolerance
   int node_id = associated_octree_node_id;
   int octree_id = associated_octree_id;
   
+  assert(node_id != -1);
+  
+  printf("tutu : %d\n", node_id);
+  
   if (PDM_octree_leaf_is (octree_id, node_id)) {
     
+    printf("tutu : leaf\n");
     int *points_clouds_id;
     int *point_indexes;
     int n_candidates = PDM_octree_n_points_get (octree_id, node_id);
@@ -378,6 +385,7 @@ const double   tolerance
   }
   
   else {
+    printf("tutu : node\n");
     for (int i = 0; i < 8; i++) {
       const int node_child = 
             PDM_octree_children_get (octree_id, node_id,
@@ -391,7 +399,7 @@ const double   tolerance
                                     distant_couple, n_couple, s_couple, 
                                     point_proc, point_cloud, point_idx, 
                                     point_coords, point_box, associated_octree_id,
-                                    associated_octree_node_id,
+                                    node_child,
                                     associated_coords,
                                     associated_char_length,
                                     tolerance);
@@ -413,7 +421,7 @@ const double   tolerance
                                     distant_couple, n_couple, s_couple, 
                                     point_proc, point_cloud, point_idx, 
                                     point_coords, point_box, associated_octree_id,
-                                    associated_octree_node_id,
+                                    node_child,
                                     associated_coords,
                                     associated_char_length,
                                     tolerance);
@@ -578,6 +586,7 @@ PDM_points_merge_process
  
   _point_merge_t *ppm = _get_from_id (id);
 
+  printf("PDM_points_merge_process\n");
   PDM_octree_build (ppm->octree_id);
   
   int n_proc;
@@ -639,6 +648,7 @@ PDM_points_merge_process
       }        
     }  
 
+    printf("1\n");
     PDM_octree_seq_free (octree_seq_id);
   }
   
@@ -661,7 +671,7 @@ PDM_points_merge_process
     const double *_coord = ppm->point_clouds[i_cloud]; 
     for (int i = 0; i < n_points; i++) {
       const double *__coord = _coord + 3 * i; 
-      double box[8];
+      double box[6];
       
       if (ppm->char_length != NULL) {
         box[0] = __coord[0] - ppm->char_length[i_cloud][i] * ppm->tolerance;
@@ -672,16 +682,16 @@ PDM_points_merge_process
         box[5] = __coord[2] + ppm->char_length[i_cloud][i] * ppm->tolerance;
       }
       else {
-        box[0] = __coord[0] - ppm->char_length[i_cloud][i] * ppm->tolerance;
-        box[1] = __coord[1] - ppm->char_length[i_cloud][i] * ppm->tolerance;
-        box[2] = __coord[2] - ppm->char_length[i_cloud][i] * ppm->tolerance;
-        box[3] = __coord[0] + ppm->char_length[i_cloud][i] * ppm->tolerance;
-        box[4] = __coord[1] + ppm->char_length[i_cloud][i] * ppm->tolerance;
-        box[5] = __coord[2] + ppm->char_length[i_cloud][i] * ppm->tolerance;
+        box[0] = __coord[0] - _default_eps;
+        box[1] = __coord[1] - _default_eps;
+        box[2] = __coord[2] - _default_eps;
+        box[3] = __coord[0] + _default_eps;
+        box[4] = __coord[1] + _default_eps;
+        box[5] = __coord[2] + _default_eps;
       }
 
       for (int k = 0; k < n_proc ; k++) {
-        const double *_extents_proc = extents_proc + 6;
+        const double *_extents_proc = extents_proc + k * 6;
       
         if (_intersect_extents(box, _extents_proc)) {
           if (n_tmp_store >= s_tmp_store) {
@@ -704,7 +714,7 @@ PDM_points_merge_process
   }
   
   for (int i = 0; i < n_tmp_store; i++) {
-    val_send_n[tmp_store[3*n_tmp_store]]++;
+    val_send_n[tmp_store[3*i]]++;
   }
 
   int *val_recv_n = malloc (sizeof(int)*n_proc);
@@ -712,8 +722,8 @@ PDM_points_merge_process
   
   // Envoi des points + char length en option sur les autres procs (test bounding box)
 
-  int *val_send_idx = malloc (sizeof(int)*n_proc);
-  int *val_recv_idx = malloc (sizeof(int)*n_proc);
+  int *val_send_idx = malloc (sizeof(int)*(n_proc+1));
+  int *val_recv_idx = malloc (sizeof(int)*(n_proc+1));
 
   int _stride = 3 * 8 + 4 + 4; /* Coords + icloud + ipoint */
   if (ppm->char_length != NULL) {
@@ -722,47 +732,48 @@ PDM_points_merge_process
   
   for (int i = 0; i < n_proc; i++) {
     val_send_n[i] *= _stride;
+    val_recv_n[i] *= _stride;
   }
 
   val_send_idx[0] = 0;
-  for (int i = 1; i < n_proc; i++) {
-    val_send_idx[i] = val_send_idx[i-1] + val_send_idx[i];
-    val_recv_idx[i] = val_recv_idx[i-1] + val_recv_idx[i];
+  val_recv_idx[0] = 0;
+  for (int i = 0; i < n_proc; i++) {
+    val_send_idx[i+1] = val_send_idx[i] + val_send_n[i];
+    val_recv_idx[i+1] = val_recv_idx[i] + val_recv_n[i];
+    val_send_n[i] = 0;
   }
 
   unsigned char *val_send = 
-        malloc (sizeof(unsigned char) * (val_send_idx[n_proc-1] + val_send_n[n_proc-1]));
+        malloc (sizeof(unsigned char) * val_send_idx[n_proc]);
   unsigned char *val_recv = 
-        malloc (sizeof(unsigned char) * (val_recv_idx[n_proc-1] + val_recv_n[n_proc-1]));
+        malloc (sizeof(unsigned char) * val_recv_idx[n_proc]);
   
-  unsigned char *_tmp_val_send = val_send;
   for (int i = 0; i < n_tmp_store; i++) {
-    size_t idx = 0;
-    int iproc   = tmp_store[3*n_tmp_store];
-    int i_cloud = tmp_store[3*n_tmp_store+1];
-    int i_point = tmp_store[3*n_tmp_store+2];
-
+    int iproc   = tmp_store[3*i];
+    int i_cloud = tmp_store[3*i+1];
+    int i_point = tmp_store[3*i+2];
+    
     double *_coord = (double *) ppm->point_clouds[i_cloud] + 3 * i_point;
-    double *_tmp_val_double = (double *) (_tmp_val_send + val_send_idx[iproc]);
+    double *_tmp_val_double = (double *) (val_send + val_send_idx[iproc] + val_send_n[iproc]);
     
     _tmp_val_double[0] = _coord[0]; 
     _tmp_val_double[1] = _coord[1]; 
     _tmp_val_double[2] = _coord[2]; 
 
-    idx += 24;
+    val_send_n[iproc] += 24;
     
     if (ppm->char_length != NULL) {
       double _char_length = ppm->char_length[i_cloud][i_point];
       _tmp_val_double[3] = _char_length;       
-      idx += 32;
+      val_send_n[iproc] += 8;
     }
     
-    int *_tmp_val_int = (int *) (_tmp_val_send + idx);
+    int *_tmp_val_int = (int *) (val_send + val_send_idx[iproc] + val_send_n[iproc]);
 
     _tmp_val_int[0] = i_cloud; 
     _tmp_val_int[1] = i_point;
 
-    val_send_idx[iproc] += idx + 4 + 4;
+    val_send_n[iproc] += 8;
     
   }
   
