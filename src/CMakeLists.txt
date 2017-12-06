@@ -11,6 +11,7 @@ file(GLOB_RECURSE SOURCES
      meshgen/*.[ch]
      pario/*.[ch]
      ppart/*.[ch]
+     ppart/*.cxx
      struct/*.[ch]
      util/*.[ch]
      ext_wrapper/*.[ch]

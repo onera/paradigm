@@ -8,6 +8,7 @@
 #include "pdm_mpi.h"
 #include "pdm_priv.h"
 #include "pdm_config.h"
+#include "pdm_geom_elem.h"
 #include "pdm_part_coarse_mesh.h"
 #include "pdm_part_coarse_mesh_priv.h"
 #include "pdm_part_priv.h"
@@ -465,6 +466,153 @@ _split
       PDM_printf("PDM_part error : Scotch unavailable\n");
       exit(1);
 #endif
+          
+      break;
+    }      
+  case 3:
+    {
+      
+      /** Build up volume of all cells of Fine partition **/
+      int    isOriented = 0;
+      double volume[part_ini->nCell];
+      double centercell[3*part_ini->nCell];
+      
+      PDM_geom_elem_polyhedra_properties (isOriented,
+                                          part_ini->nCell,
+                                          part_ini->nFace,
+                                          part_ini->faceVtxIdx,
+                                          part_ini->faceVtx,   
+                                          part_ini->cellFaceIdx,
+                                          part_ini->cellFace,
+                                          part_ini->nVtx,
+                                          part_ini->vtx,
+                                          volume,
+                                          centercell,
+                                          NULL,
+                                          NULL);        
+      
+      /** Build up Area of all faces of Fine partition **/
+      double surfaceArea[part_ini->nFace];
+      double surfaceVector[3*part_ini->nFace];
+      double surfaceCenter[3*part_ini->nFace];
+      PDM_geom_elem_polygon_properties (part_ini->nFace,   
+                                        part_ini->faceVtxIdx, 
+                                        part_ini->faceVtx, 
+                                        part_ini->vtx,
+                                        surfaceVector,
+                                        surfaceCenter,
+                                        NULL,
+                                        NULL);
+      
+      for (int iface = 0; iface < part_ini->nFace; iface++) {
+        surfaceArea[iface] = sqrt(  surfaceVector[3*iface  ]*surfaceVector[3*iface  ] 
+                                  + surfaceVector[3*iface+1]*surfaceVector[3*iface+1] 
+                                  + surfaceVector[3*iface+2]*surfaceVector[3*iface+2] );
+      }
+      
+      
+      
+      /* For now we directly use NL interfaces */
+      
+      /* ---------------------------------------- */
+      /* 1) Create adjacency with current cell */
+      int *cellCellTmpIdx  = malloc(( part_ini->nCell + 1                           )* sizeof(int));
+      int *cellCellTmp     = malloc(( cellCellIdx[part_ini->nCell] + part_ini->nCell)* sizeof(int));
+      
+      cellCellTmpIdx[0] = 0;
+      for (int icell = 0; icell < part_ini->nCell; icell++){
+        int beg = cellCellIdx[icell  ];
+        int end = cellCellIdx[icell+1];
+        
+        int nbc = end-beg;
+        
+        /* Add One slot for current cell */
+        cellCellTmpIdx[icell+1] = cellCellTmpIdx[icell]+nbc+1;
+        
+        
+        int beg2 = cellCellTmpIdx[icell  ];
+        int end2 = cellCellTmpIdx[icell+1];
+        
+        int nbc2 = end2-beg2;
+
+        PDM_printf("Check 1 : %i / %i \n ",nbc,  nbc2);      
+        
+        cellCellTmp[beg2] = icell;
+        int cpt = 0;
+        for (int icell2 = beg2; icell2 < end2; icell2++){
+          cellCellTmp[icell2] = cellCell[beg+cpt++];
+        }
+         
+      }
+      /* ---------------------------------------- */
+      
+      PDM_printf("Check 2 : %i / %i \n ",cellCellIdx[part_ini->nCell],  cellCellTmpIdx[part_ini->nCell]);     
+      /* ---------------------------------------- */
+      /* 2) Fill up adjMatrix Area */
+      double *CellCellArea  = malloc(( cellCellTmpIdx[part_ini->nCell] )* sizeof(double));
+      
+      
+      // for (int icell = 0; icell < part_ini->nCell; icell++){
+      //   int beg = part_ini->cellFaceIdx[icell  ];
+      //   int end = part_ini->cellFaceIdx[icell+1];
+      // }
+      
+      // for (int iface = 0; iface < part_ini->nFace; iface++){
+      //   int iCell1 = part_ini->faceCell[2*iface  ]
+      //   int iCell2 = part_ini->faceCell[2*iface+1]
+      // }
+      
+      
+      
+      
+      /* ---------------------------------------- */
+      
+      
+      
+      // agglomerateOneLevel(part_ini->nCell,
+
+      //                    int *adjMatrix_row_ptr,
+      //                    int *adjMatrix_col_ind,
+      //                    double *adjMatrix_areaValues,
+      //                    double *volumes,
+
+      //                    int *arrayOfFineAnisotropicCompliantCells,
+
+      //                    int *isOnFineBnd,
+      //                    int *array_isOnValley,
+      //                    int *array_isOnRidge,
+      //                    int *array_isOnCorner,
+
+      //                    int isFirstAgglomeration,
+      //                    int isAnisotropic,
+
+      //                    int *fineCellToCoarseCell,
+
+      //                    int *agglomerationLines_Idx,
+      //                    int *agglomerationLines,
+
+      //                    int dimension = 3,
+      //                    int goalCard = -1,
+      //                    int minCard = -1,
+      //                    int maxCard = -3,
+      //                    int checks = 0,
+      //                    int verbose = 0);
+      
+      /* Free array */
+      free(cellCellTmpIdx);
+      free(cellCellTmp);
+      free(CellCellArea);
+      
+      int check = 0;
+      
+      // PDM_SCOTCH_part (part_ini->nCell,
+      //                  cellCellIdx,
+      //                  cellCell,        
+      //                  cellWeight,
+      //                  faceWeight,
+      //                  check,        
+      //                  nPart,        
+      //                  *cellPart);
           
       break;
     }

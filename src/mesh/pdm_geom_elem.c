@@ -1681,7 +1681,7 @@ PDM_geom_elem_polyhedra_properties
         polyCenter[i] += coords[3*vertex + i];
     }
 
-    free (polyhedraVertices);
+    // free (polyhedraVertices);
     
     for (int i = 0; i < 3; i++)
       polyCenter[i] /= nPolyhedraVertices;
@@ -1833,6 +1833,8 @@ PDM_geom_elem_polyhedra_properties
     }
 
   }
+  
+  free (polyhedraVertices);
     
   if (!isOriented) {
     free (keyPoly);
