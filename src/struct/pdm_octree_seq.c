@@ -154,7 +154,6 @@ _build_octree_seq_leaves(const int       ancestor_id,
                      int             point_range[2])
 {
   int i, j, k, _n_nodes, _n_points, tmp_size;
-  printf("_build_octree_seq_leaves\n");
 
   int count[8], idx[9], octant_id[8];
   double mid[3], sub_extents[6];
@@ -252,7 +251,6 @@ _build_octree_seq_leaves(const int       ancestor_id,
         tmp_size++;
 
         octant_id[i] = tmp_size;
-        printf("octant : %d\n", tmp_size);
 
         if (i < 4) {
           sub_extents[0] = extents[0];
@@ -315,12 +313,12 @@ _build_octree_seq_leaves(const int       ancestor_id,
     _node->extents[i] = extents[i];
   }
     
-  printf ("child %ld %d : ", octree, _n_nodes);
+//  printf ("child %ld %d : ", octree, _n_nodes);
   for (i = 0; i < 8; i++) {
     _node->children_id[i] = octant_id[i];
-    printf (" %d",_node->children_id[i]);
+//    printf (" %d",_node->children_id[i]);
   }
-  printf ("\n");
+//  printf ("\n");
 
   _node->ancestor_id = ancestor_id;
   _node->depth = depth;
@@ -405,8 +403,6 @@ _octree_seq_t *octree
 )
 {
   int point_range[2];
-    printf("_build_octree\n");
-
 
   /* Initialization */
 
@@ -563,8 +559,6 @@ PDM_octree_seq_free
 )
 {
   _octree_seq_t *octree = _get_from_id (id);
-  
-    printf ("PDM_octree_seq_free\n");
 
   free (octree->n_points);
   free (octree->point_clouds);
@@ -644,7 +638,6 @@ PDM_octree_seq_build
 )
 {
   _octree_seq_t *octree = _get_from_id (id);
-  printf("PDM_octree_seq_build\n");
 
   if (octree->nodes == NULL) {
     _build_octree (octree);
@@ -767,7 +760,6 @@ PDM_octree_seq_node_extents_get
 {
   _octree_seq_t *octree = _get_from_id (id);
 
-    printf ("PDM_octree_seq_node_extents_get : %d %d\n", node_id, octree->n_nodes);
   assert (node_id < octree->n_nodes);
 
   return octree->nodes[node_id].extents;  
@@ -946,8 +938,6 @@ PDM_octree_seq_leaf_is
 {
   _octree_seq_t *octree = _get_from_id (id);
 
-  printf ("toto :%d %d %d\n", octree->nodes[node_id].ancestor_id, node_id, octree->n_nodes);
-  fflush(stdout);
   assert (node_id < octree->n_nodes);
   
   

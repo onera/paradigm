@@ -124,18 +124,18 @@ const double *second_extents
   int intersect = 0;
   
   for (int i = 0; i < 3; i++) {
-    if ((first_extents[3*i] >= second_extents[3*i]) &&
-        (first_extents[3*i] <= second_extents[3*i+3])) {
+    if ((first_extents[i] >= second_extents[i]) &&
+        (first_extents[i] <= second_extents[i+3])) {
       intersect = 1;
       break;
     }
-    else if ((first_extents[3*i+3] >= second_extents[3*i]) &&
-            (first_extents[3*i+3] <= second_extents[3*i+3])) {
+    else if ((first_extents[i+3] >= second_extents[i]) &&
+            (first_extents[i+3] <= second_extents[i+3])) {
       intersect = 1;
       break;
     }
-    else if ((first_extents[3*i] <= second_extents[3*i]) &&
-             (first_extents[3*i+3] >= second_extents[3*i+3])) {
+    else if ((first_extents[i] <= second_extents[i]) &&
+             (first_extents[i+3] >= second_extents[i+3])) {
       intersect = 1;
       break;
     }
@@ -175,8 +175,6 @@ const double tolerance
   int octree_id = associated_octree_id;
   const double *coords = associated_coords;
   const double *char_length = associated_char_length;        
-  
-  printf ("search local couple\n");
   
   if (PDM_octree_seq_leaf_is (octree_id, node_id)) {
     
@@ -311,11 +309,8 @@ const double   tolerance
   
   assert(node_id != -1);
   
-  printf("tutu : %d\n", node_id);
-  
   if (PDM_octree_leaf_is (octree_id, node_id)) {
-    
-    printf("tutu : leaf\n");
+
     int *points_clouds_id;
     int *point_indexes;
     int n_candidates = PDM_octree_n_points_get (octree_id, node_id);
@@ -344,6 +339,12 @@ const double   tolerance
                       tolerance * tolerance;
 
         tol = PDM_MIN (tol1, tol2);
+      if (dist2 <= tol) {
+        printf("dist2 tol : %12.5e %12.5e\n", dist2, tol);
+        printf("%12.5e %12.5e\n", coords_candidate[0], point_coords[0]);
+        printf("%12.5e %12.5e\n", coords_candidate[1], point_coords[1]);
+        printf("%12.5e %12.5e\n", coords_candidate[2], point_coords[2]);
+      }
       }
       else {
         const double *coords_candidate = 
@@ -356,8 +357,15 @@ const double   tolerance
                 (coords_candidate[2] - point_coords[2]);
         tol = _default_eps * tolerance *
               _default_eps * tolerance;
+      if (dist2 <= tol) {
+        printf("dist2 tol : %12.5e %12.5e\n", dist2, tol);
+        printf("%12.5e %12.5e\n", coords_candidate[0], point_coords[0]);
+        printf("%12.5e %12.5e\n", coords_candidate[1], point_coords[1]);
+        printf("%12.5e %12.5e\n", coords_candidate[2], point_coords[2]);
+      }
       }
 
+      
       if (dist2 <= tol) {
         if (*n_couple >= *s_couple) {
           if (*s_couple == 0) {
@@ -385,7 +393,6 @@ const double   tolerance
   }
   
   else {
-    printf("tutu : node\n");
     for (int i = 0; i < 8; i++) {
       const int node_child = 
             PDM_octree_children_get (octree_id, node_id,
@@ -586,12 +593,14 @@ PDM_points_merge_process
  
   _point_merge_t *ppm = _get_from_id (id);
 
-  printf("PDM_points_merge_process\n");
   PDM_octree_build (ppm->octree_id);
   
   int n_proc;
   PDM_MPI_Comm_size(ppm->comm , &n_proc);
   
+  int i_proc;
+  PDM_MPI_Comm_rank(ppm->comm , &i_proc);
+
   int *local_couple = NULL;
   int n_local_couple = 0;
   int s_local_couple = 0;
@@ -648,7 +657,6 @@ PDM_points_merge_process
       }        
     }  
 
-    printf("1\n");
     PDM_octree_seq_free (octree_seq_id);
   }
   
@@ -690,18 +698,23 @@ PDM_points_merge_process
         box[5] = __coord[2] + _default_eps;
       }
 
-      for (int k = 0; k < n_proc ; k++) {
-        const double *_extents_proc = extents_proc + k * 6;
+      printf("%d %d - %12.5e %12.5e %12.5e %12.5e %12.5e %12.5e :\n",
+             i_cloud, i, box[0], box[1], box[2], box[3], box[4], box[5]);
       
-        if (_intersect_extents(box, _extents_proc)) {
-          if (n_tmp_store >= s_tmp_store) {
-            s_tmp_store *= 2;
-            tmp_store = realloc (tmp_store, sizeof(int) * s_tmp_store * 3);
+      for (int k = 0; k < n_proc ; k++) {
+        if (k != i_proc) {
+          const double *_extents_proc = extents_proc + k * 6;
+
+          if (_intersect_extents(box, _extents_proc)) {
+            if (n_tmp_store >= s_tmp_store) {
+              s_tmp_store *= 2;
+              tmp_store = realloc (tmp_store, sizeof(int) * s_tmp_store * 3);
+            }
+            tmp_store[3*n_tmp_store]   = k;
+            tmp_store[3*n_tmp_store+1] = i_cloud;
+            tmp_store[3*n_tmp_store+2] = i;
+            n_tmp_store += 1;
           }
-          tmp_store[3*n_tmp_store]   = k;
-          tmp_store[3*n_tmp_store+1] = i_cloud;
-          tmp_store[3*n_tmp_store+2] = i;
-          n_tmp_store += 1;
         }
       }
     }
@@ -891,6 +904,8 @@ PDM_points_merge_process
     }
   }
   
+  printf ("n_local_couple n_distant_couple :%d %d\n", n_local_couple, n_distant_couple);
+  
   for (int i = 0; i < n_local_couple; i++) {
     int first_cloud  = local_couple[4*i    ];
     int first_index  = local_couple[4*i + 1];
@@ -1021,7 +1036,19 @@ PDM_points_merge_candidates_get
   assert(ppm->candidates_idx != NULL);
   assert(ppm->candidates_desc != NULL);
   
-  *candidates_idx = ppm->candidates_idx[i_point_cloud];
+  *candidates_idx  = ppm->candidates_idx[i_point_cloud];
   *candidates_desc = ppm->candidates_desc[i_point_cloud];
+  printf("candidates : \n");
+  for (int i = 0; i < ppm->n_points[i_point_cloud]; i++) {
+    printf("-- %d %d :\n", ppm->candidates_idx[i_point_cloud][i], ppm->candidates_idx[i_point_cloud][i+1]);
+    for (int j = ppm->candidates_idx[i_point_cloud][i]; 
+             j <  ppm->candidates_idx[i_point_cloud][i+1]; j++) {
+      printf("%d %d : %d %d %d\n", i_point_cloud, i, 
+             ppm->candidates_desc[i_point_cloud][3*j],
+             ppm->candidates_desc[i_point_cloud][3*j + 1],
+             ppm->candidates_desc[i_point_cloud][3*j + 2]);
+    
+    }
+  }
   
 }

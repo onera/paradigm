@@ -380,6 +380,8 @@ _gnum_from_coords_compute
     
     PDM_points_merge_process (id_pm);
 
+          printf("******* _gnum_from_coords_compute\n");
+
     for (int ipart = 0; ipart < _gnum->n_part; ipart++) {
 
       int *candidates_idx;
@@ -419,7 +421,7 @@ _gnum_from_coords_compute
         if (_gnum->index[ipart][i] != -1) {
           for (int k = 0; k < _gnum->dim; k++) {
             coords[_gnum->dim * _gnum->index[ipart][i] + k] =
-                                                        _gnum->coords[ipart][i];
+            _gnum->coords[ipart][_gnum->dim * i + k];
           }
         }
       }
@@ -617,6 +619,8 @@ _gnum_from_coords_compute
 
     PDM_g_num_t _max_loc = -1;
 
+    printf("************ toto\n");
+
     if (_gnum->merge) {
       
       /*
@@ -649,6 +653,8 @@ _gnum_from_coords_compute
        * Count number of values to send 
        */ 
 
+      printf("Send values n\n");
+      
       for (int ipart = 0; ipart < _gnum->n_part; ipart++) {
         
         int *candidates_idx;
@@ -697,7 +703,9 @@ _gnum_from_coords_compute
       /*
        * Send values
        */ 
-      
+
+      printf("Send values \n");
+
       PDM_g_num_t *send_buff = (PDM_g_num_t *) 
               malloc (sizeof(PDM_g_num_t)*send_shift2[n_ranks]);
       PDM_g_num_t *recv_buff = (PDM_g_num_t *) 
@@ -708,6 +716,8 @@ _gnum_from_coords_compute
         int *candidates_idx;
         int *candidates_desc;
 
+        PDM_points_merge_candidates_get (id_pm, ipart, &candidates_idx, &candidates_desc);
+        
         for (int i = 0; i < _gnum->n_elts[ipart]; i++) {
           for (int j = candidates_idx[i]; j < candidates_idx[i]; j++) {
             int idx = 3*j;
@@ -809,6 +819,13 @@ _gnum_from_coords_compute
       
       //TODO: A tester !!!!!!!!!
       
+      n_entities;
+      
+      
+      
+      // Continuer ici !!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      
+      
       int k = 0;
       for (int ipart = 0; ipart < _gnum->n_part; ipart++) {
         _gnum->g_nums[ipart] = malloc (sizeof(PDM_g_num_t) * _gnum->n_elts[ipart]);
@@ -816,11 +833,15 @@ _gnum_from_coords_compute
           _gnum->g_nums[ipart][j1] = -1;
         }
         for (int j1 = 0; j1 < _gnum->n_elts[ipart]; j1++) {
+          printf ("index : %d %d\n", j1, _gnum->index[ipart][j1]);
           if (_gnum->index[ipart][j1] != -1) {
             _gnum->g_nums[ipart][j1] = tmp_gnum[k++];
           }
         }
+      }
+      printf("1 proc\n");
 
+      for (int ipart = 0; ipart < _gnum->n_part; ipart++) {
         int *candidates_idx;
         int *candidates_desc;
         PDM_points_merge_candidates_get (id_pm, ipart, &candidates_idx, &candidates_desc);

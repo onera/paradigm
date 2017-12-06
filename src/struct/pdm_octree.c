@@ -237,8 +237,6 @@ PDM_octree_free
 {
   _octree_t *octree = _get_from_id (id);
 
-    printf ("PDM_octree_free\n");
-  
   free (octree->extents_proc);
   
   PDM_octree_seq_free (octree->octree_seq_id);
@@ -315,8 +313,6 @@ PDM_octree_build
 )
 {
   _octree_t *octree = _get_from_id (id);
-  
-  printf("PDM_octree_build\n");
 
   PDM_octree_seq_build (octree->octree_seq_id);
 
