@@ -184,11 +184,12 @@ const double tolerance
     PDM_octree_seq_points_get (octree_id, node_id, 
                                &points_clouds_id, &point_indexes);
     
+
     for (int i = 0; i < n_candidates; i++) {
       double dist2;
       double tol;
 
-      if (point_box == NULL) {
+      if (point_box != NULL) {
         const double *coords_candidate = associated_coords + 3 * point_indexes[i];
         double char_length_candidate = associated_char_length[point_indexes[i]];
         dist2 = (coords_candidate[0] - point_coords[0]) * 
@@ -200,10 +201,10 @@ const double tolerance
         double tol1 = char_length_candidate * tolerance * 
                       char_length_candidate * tolerance;
 
-        double tol2 = (point_box[0] - point_coords[0]) * (point_box[0] - point_coords[0]) * 
-                      tolerance * tolerance;
-
+        double tol2 = (point_box[0] - point_coords[0]) * (point_box[0] - point_coords[0]);
+        
         tol = PDM_MIN (tol1, tol2);
+
       }
       else {
         const double *coords_candidate = associated_coords + 3 * point_indexes[i];
@@ -235,6 +236,9 @@ const double tolerance
         _local_couple[4*_n_couple+2] = point_cloud;
         _local_couple[4*_n_couple+3] = point_idx;
         *n_couple += 1;
+        printf("****merge**** : %d %d %d %d %d\n", 
+               *n_couple, search_cloud, point_indexes[i],
+               point_cloud, point_idx);
 
       }
     }
@@ -252,7 +256,7 @@ const double tolerance
 
             _search_local_couple (local_couple, n_couple, s_couple, point_cloud, 
                             point_idx, point_coords, point_box, search_cloud,
-                            node_child, octree_id, coords, char_length, tolerance);
+                            octree_id, node_child, coords, char_length, tolerance);
           }
         }
         else {
@@ -268,7 +272,7 @@ const double tolerance
 
             _search_local_couple (local_couple, n_couple, s_couple, point_cloud, 
                             point_idx, point_coords, point_box, search_cloud,
-                            node_child, octree_id, coords, char_length, tolerance);
+                            octree_id, node_child, coords, char_length, tolerance);
           }
         }
       }
@@ -321,7 +325,7 @@ const double   tolerance
       double dist2;
       double tol;
 
-      if (point_box == NULL) {
+      if (point_box != NULL) {
         const double *coords_candidate = 
                       associated_coords[points_clouds_id[i]] + 3 * point_indexes[i];
         const double char_length_candidate = 
@@ -335,8 +339,7 @@ const double   tolerance
         double tol1 = char_length_candidate * tolerance * 
                       char_length_candidate * tolerance;
 
-        double tol2 = (point_box[0] - point_coords[0]) * (point_box[0] - point_coords[0]) * 
-                      tolerance * tolerance;
+        double tol2 = (point_box[0] - point_coords[0]) * (point_box[0] - point_coords[0]);
 
         tol = PDM_MIN (tol1, tol2);
       if (dist2 <= tol) {
@@ -625,11 +628,14 @@ PDM_points_merge_process
                                                      ppm->depth_max, 
                                                      ppm->points_in_leaf_max, 
                                                      ppm->tolerance);
+ 
+    PDM_octree_seq_point_cloud_set (octree_seq_id, 0, 
+                                    ppm->n_points[i], ppm->point_clouds[i]);
     
     PDM_octree_seq_build (octree_seq_id);
     
     const int root_id = PDM_octree_seq_root_node_id_get (octree_seq_id);
-    
+
     const double *_char_length = NULL;
     if (ppm->char_length != NULL) {
       _char_length = ppm->char_length[i];
@@ -656,8 +662,9 @@ PDM_points_merge_process
 
       }        
     }  
-
+ 
     PDM_octree_seq_free (octree_seq_id);
+    
   }
   
   /*
@@ -960,7 +967,7 @@ PDM_points_merge_process
     
     ppm->candidates_desc[first_cloud][3*idx]     = iproc;
     ppm->candidates_desc[first_cloud][3*idx + 1] = second_cloud;
-    ppm->candidates_desc[first_cloud][3*idx + 1] = second_index;
+    ppm->candidates_desc[first_cloud][3*idx + 2] = second_index;
 
     candidates_n[first_cloud][first_index]++;
     
@@ -969,7 +976,7 @@ PDM_points_merge_process
     
     ppm->candidates_desc[second_cloud][3*idx]     = iproc;
     ppm->candidates_desc[second_cloud][3*idx + 1] = first_cloud;
-    ppm->candidates_desc[second_cloud][3*idx + 1] = first_index;
+    ppm->candidates_desc[second_cloud][3*idx + 2] = first_index;
 
     candidates_n[second_cloud][second_index]++;
 
@@ -987,7 +994,7 @@ PDM_points_merge_process
 
     ppm->candidates_desc[local_cloud][3*idx]     = point_proc;
     ppm->candidates_desc[local_cloud][3*idx + 1] = point_cloud;
-    ppm->candidates_desc[local_cloud][3*idx + 1] = point_idx;
+    ppm->candidates_desc[local_cloud][3*idx + 2] = point_idx;
 
     candidates_n[local_cloud][local_index]++;
 
@@ -1038,17 +1045,20 @@ PDM_points_merge_candidates_get
   
   *candidates_idx  = ppm->candidates_idx[i_point_cloud];
   *candidates_desc = ppm->candidates_desc[i_point_cloud];
-  printf("candidates : \n");
-  for (int i = 0; i < ppm->n_points[i_point_cloud]; i++) {
-    printf("-- %d %d :\n", ppm->candidates_idx[i_point_cloud][i], ppm->candidates_idx[i_point_cloud][i+1]);
-    for (int j = ppm->candidates_idx[i_point_cloud][i]; 
-             j <  ppm->candidates_idx[i_point_cloud][i+1]; j++) {
-      printf("%d %d : %d %d %d\n", i_point_cloud, i, 
-             ppm->candidates_desc[i_point_cloud][3*j],
-             ppm->candidates_desc[i_point_cloud][3*j + 1],
-             ppm->candidates_desc[i_point_cloud][3*j + 2]);
-    
+
+  if (1 == 1) {
+    printf("candidates : \n");
+    for (int i = 0; i < ppm->n_points[i_point_cloud]; i++) {
+      printf("-- %d %d :", i_point_cloud, i);
+      for (int j = ppm->candidates_idx[i_point_cloud][i]; 
+               j <  ppm->candidates_idx[i_point_cloud][i+1]; j++) {
+
+        printf(" %d", ppm->candidates_desc[i_point_cloud][3*j]);
+        printf(" %d", ppm->candidates_desc[i_point_cloud][3*j+1]);
+        printf(" %d", ppm->candidates_desc[i_point_cloud][3*j+2]);
+        printf(" ,");
+      }
+    printf("\n");
     }
-  }
-  
+  } 
 }

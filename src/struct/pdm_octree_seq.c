@@ -59,6 +59,7 @@ typedef struct  {
   PDM_octree_seq_child_t  location_in_ancestor; /*!< Location in ancestor */
   int  depth;       /*!< Depth in the tree */
   int  children_id[8]; /*!< Ids of children in octree array */
+  int  range[2];       /*!< Ids of children in octree array */
   int  idx[9];         /*!< Start index of point list for each octant */
   int  n_points;       /*!< Number of points in octant*/
   double extents[6];   /*!< Extents of the node */
@@ -180,17 +181,18 @@ _build_octree_seq_leaves(const int       ancestor_id,
 
   _n_points = point_range[1] - point_range[0];
 
-  if (depth < octree->depth_max) {
+  for (j = 0; j < 8; j++) {
+    count[j] = 0;
+    octant_id[j] = -1;
+  }
+
+  if (depth < octree->depth_max && _n_points > octree->points_in_leaf_max) {
     /* Extents center */
 
     for (j = 0; j < 3; j++) {
       mid[j]= (extents[j] + extents[j + 3]) * 0.5;
     }
 
-    for (j = 0; j < 8; j++) {
-      count[j] = 0;
-      octant_id[j] = -1;
-    }
 
     /* Count points in each octant */
 
@@ -244,9 +246,14 @@ _build_octree_seq_leaves(const int       ancestor_id,
 
     /* Build leaves recursively */
 
+//        printf ("extents : %12.5e  %12.5e %12.5e %12.5e %12.5e %12.5e\n", 
+//                extents[0], extents[1], extents[2], 
+//                extents[3], extents[4], extents[5]); 
+    
+    
     for (i = 0; i < 8; i++) {
-
-      if (count[i] > octree->points_in_leaf_max) {
+      
+      if ((idx[i+1] - idx[i]) > 0) {
 
         tmp_size++;
 
@@ -286,6 +293,10 @@ _build_octree_seq_leaves(const int       ancestor_id,
 
         octree->n_nodes = tmp_size;
 
+  //      printf ("sub_extents : %12.5e  %12.5e %12.5e %12.5e %12.5e %12.5e\n", 
+  //              sub_extents[0], sub_extents[1], sub_extents[2], 
+  //              sub_extents[3], sub_extents[4], sub_extents[5]); 
+
         _build_octree_seq_leaves(_n_nodes,
                              (PDM_octree_seq_child_t) i, 
                              depth+1,
@@ -298,12 +309,17 @@ _build_octree_seq_leaves(const int       ancestor_id,
 
         tmp_size = octree->n_nodes;
       }
-    }
-  }
 
+    }
+
+  }
   /* Finalize node */
   
+  
   _node = octree->nodes + _n_nodes;
+  
+  _node->range[0] = point_range[0];
+  _node->range[1] = point_range[1];
 
   for (i = 0; i < 9; i++) {
     _node->idx[i] = idx[i];
@@ -314,17 +330,27 @@ _build_octree_seq_leaves(const int       ancestor_id,
   }
     
 //  printf ("child %ld %d : ", octree, _n_nodes);
+//  int isLeaf = 0;
+
   for (i = 0; i < 8; i++) {
     _node->children_id[i] = octant_id[i];
+//    isLeaf +=octant_id[i];
 //    printf (" %d",_node->children_id[i]);
   }
 //  printf ("\n");
 
+  
   _node->ancestor_id = ancestor_id;
   _node->depth = depth;
   
   _node->n_points = _n_points;
   _node->location_in_ancestor = location_in_ancestor;
+//  if (isLeaf == -8) {
+//    printf ("-- %ld node leaf %d %d %d %d %d\n", octree, _n_nodes, _node->range[0], _node->range[1], _node->depth, _node->ancestor_id);
+//  }
+//  else {
+//    printf ("-- %ld node %d %d %d %d %d\n", octree, _n_nodes, _node->range[0], _node->range[1], _node->depth, _node->ancestor_id);    
+//  }
 }
 
 /**
@@ -437,7 +463,7 @@ _octree_seq_t *octree
       }
       
       for (int j = 0; j < n_points; j++) {
-        octree->point_ids[cpt] = cpt;
+        octree->point_ids[cpt] = j;
         octree->point_icloud[cpt] = i;
         cpt +=1;
       }
@@ -558,6 +584,7 @@ PDM_octree_seq_free
  const int          id
 )
 {
+  printf("PDM_octree_seq_free : %d\n", id);
   _octree_seq_t *octree = _get_from_id (id);
 
   free (octree->n_points);
@@ -882,7 +909,8 @@ PDM_octree_seq_n_points_get
 
   assert (node_id < octree->n_nodes);
   
-  return octree->nodes[node_id].idx[8] - octree->nodes[node_id].idx[0];
+  return octree->nodes[node_id].range[1] - octree->nodes[node_id].range[0];
+  
 }
 
 
@@ -912,9 +940,9 @@ PDM_octree_seq_points_get
 
   assert (node_id < octree->n_nodes);
   
-  *point_clouds_id = octree->point_icloud + octree->nodes[node_id].idx[0];
+  *point_clouds_id = octree->point_icloud + octree->nodes[node_id].range[0];
   
-  *point_indexes = octree->point_ids + octree->nodes[node_id].idx[0];
+  *point_indexes = octree->point_ids + octree->nodes[node_id].range[0];
 }
 
 
