@@ -11,6 +11,7 @@
 #include "pdm_geom_elem.h"
 #include "pdm_part_coarse_mesh.h"
 #include "pdm_part_coarse_mesh_priv.h"
+#include "pdm_isotropic_agglomerator.h"
 #include "pdm_part_priv.h"
 #include "pdm_timer.h"
 
@@ -563,47 +564,100 @@ _split
       // }
       
       
+      /* ---------------------------------------- */
+      /* Parameters */
+      int *sizes = malloc(( 12  )* sizeof(int));
       
+      sizes[0 ] = part_ini->nCell;
+      sizes[1 ] = cellCellTmpIdx[part_ini->nCell];
+      sizes[2 ] = -1;
+      sizes[3 ] = -1;
+      sizes[4 ] = 0;
+      sizes[5 ] = 0;
+      sizes[6 ] = 0;
+      sizes[7 ] = part_ini->nCell;
+      sizes[8 ] = 0;
+      sizes[9 ] = 0;
+      sizes[10] = 2*part_ini->nFace;
+      sizes[11] =   part_ini->nFace;
+      
+      int *arrayOfFineAnisotropicCompliantCells = malloc((part_ini->nCell)* sizeof(int));
+      for (int icell = 0; icell < part_ini->nCell; icell++){
+        arrayOfFineAnisotropicCompliantCells[icell] = 1;
+      }
+      
+      for (int i = 0; i < part_ini->nCell; i++){
+        (*cellPart)[i] = -1;    
+      }
+            
+      int *isOnFineBnd = malloc(( part_ini->nCell  )* sizeof(int));
+      
+      for (int icell = 0; icell<part_ini->nCell; icell++)
+      {
+        isOnFineBnd[icell] = 0;
+      }
+      
+      for (int iFace = 0; iFace<part_ini->nFace; iFace++)
+      {
+        if(part_ini->faceCell[2*iFace+1] == 0){  
+          if(isOnFineBnd[part_ini->faceCell[2*iFace]- 1] < 3){
+             isOnFineBnd[part_ini->faceCell[2*iFace]-1] += 1;
+           }
+         }
+       }
+ 
       
       /* ---------------------------------------- */
+       
+      int isFirstAgglomeration_int = 1;
+      int isAnisotropic_int        = 1;
+      int dimension                = 3;
+      int goalCard                 = 8;
+      int minCard                  = 4;
+      int maxCard                  = 12;
+      int checks_int               = 1;
+      int verbose_int              = 1;
+      int *agglomerationLines_Idx = malloc(( part_ini->nCell  )* sizeof(int));
+      int *agglomerationLines     = malloc(( part_ini->nCell  )* sizeof(int));
       
-      
-      
-      // agglomerateOneLevel(part_ini->nCell,
-
-      //                    int *adjMatrix_row_ptr,
-      //                    int *adjMatrix_col_ind,
-      //                    double *adjMatrix_areaValues,
-      //                    double *volumes,
-
-      //                    int *arrayOfFineAnisotropicCompliantCells,
-
-      //                    int *isOnFineBnd,
-      //                    int *array_isOnValley,
-      //                    int *array_isOnRidge,
-      //                    int *array_isOnCorner,
-
-      //                    int isFirstAgglomeration,
-      //                    int isAnisotropic,
-
-      //                    int *fineCellToCoarseCell,
-
-      //                    int *agglomerationLines_Idx,
-      //                    int *agglomerationLines,
-
-      //                    int dimension = 3,
-      //                    int goalCard = -1,
-      //                    int minCard = -1,
-      //                    int maxCard = -3,
-      //                    int checks = 0,
-      //                    int verbose = 0);
+      /* ---------------------------------------- */
+      agglomerateOneLevel_v_Paradigma(sizes,
+                                      cellCellTmpIdx,
+                                      cellCellTmp,
+                                      volume,
+                                      arrayOfFineAnisotropicCompliantCells,
+                                      isOnFineBnd,
+                                      part_ini->faceCell,
+                                      surfaceArea,
+                                      isFirstAgglomeration_int,
+                                      isAnisotropic_int,
+                                      *cellPart,
+                                      agglomerationLines_Idx,
+                                      agglomerationLines,
+                                      dimension,
+                                      goalCard,
+                                      minCard,
+                                      maxCard,
+                                      checks_int,
+                                      verbose_int);
+      // hellohell(maxCard);
       
       /* Free array */
       free(cellCellTmpIdx);
       free(cellCellTmp);
       free(CellCellArea);
+      free(sizes);
+      free(arrayOfFineAnisotropicCompliantCells);
+      free(isOnFineBnd);
+      free(agglomerationLines_Idx);
+      free(agglomerationLines);
       
       int check = 0;
+      PDM_printf("\nContent of cellFaceIdx\n");    
+      for(int i = 0; i < part_ini->nCell ; i++) {
+        PDM_printf(" %d ", (*cellPart)[i]);
+      }
+      PDM_printf("\n");
       
       // PDM_SCOTCH_part (part_ini->nCell,
       //                  cellCellIdx,

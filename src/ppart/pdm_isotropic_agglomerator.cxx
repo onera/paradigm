@@ -1,12 +1,14 @@
 /* 
- * File:   pdm_isotropic_agglomerator.cxx
+ * File:   pdm_anisotropic_agglomerator.cxx
  * Author: Nicolas Lantos
  *
  * Created on November 18, 2017, 1:24 PM
  */
 
-#include "pdm_isotropic_agglomerator.h"
+
 #include "pdm_anisotropic_agglomerator.h"
+#include "pdm_isotropic_agglomerator.h"
+#include "pdm_isotropic_agglomerator_priv.h"
 
 #include <unordered_map>
 #include <unordered_set>
@@ -18,13 +20,13 @@
 
 // For enabling asserts
 #ifdef NDEBUG
-#define NDEBUG_DISABLED
-#undef NDEBUG
+# define NDEBUG_DISABLED
+# undef NDEBUG
 #endif
 #include <cassert>
 
 #ifdef NDEBUG_DISABLED
-#define NDEBUG        // re-enable NDEBUG if it was originally enabled
+# define NDEBUG        // re-enable NDEBUG if it was originally enabled
 #endif
 
 #include <stdexcept>
@@ -33,8 +35,51 @@
 
 using namespace std;
 
-void agglomerateOneLevel(int *sizes,
+/**
+ *
+ * \brief Main function of the agglomerator: agglomerate fine cells to generate a coarse cell mesh
+ *
+ * \param [inout]   sizes               Scalar informations about table length.
+ *                                      sizes[0] is the number of fine cells
+ *                                      sizes[1] is the number of non-null coefficient in the matrix (number of inner faces + 1 value per cell on boundaries
+ *                                      sizes[2] [out] is the number of coarse cell created (indCoarseCell)
+ *                                      sizes[3] [out] is a counter of agglomerated fine cell. At the end, it should be equal to the number of fine
+ *                                                        cells.
+ *                                      sizes[4] [in] is the number of fine cells on "valley" of the computational domain (but not on ridge nor
+ *                                                    corner).
+ *                                      sizes[5] [in] is the number of fine cells on rigde of the computational domain.
+ *                                      sizes[6] [in] is the number of fine cells on corners of the computational domain.
+ *                                      sizes[7] [in] is the number of fine cells compliant to anisotropic agglomeration, i.e. prisms or hexaedra.
+ *                                      sizes[8] [inout] is the number of agglomeration lines: null at first level
+ *                                      sizes[9] [inout] is the number of a fine cells in agglomeration lines.
+ *
+ * \param [in]      adjMatrix_row_ptr (size : sizes[0]+1) first part of the sparse matrix of the dual mesh
+ * \param [in]      adjMatrix_col_ind (size : sizes[1]) second part of the sparse matrix of the dual mesh
+ * \param [in]      adjMatrix_areaValues (size : sizes[1]) weights of the dual mesh (i.e. area of the surface between two adjacent cells.)
+ * \param [in]      volumes (size : sizes[0]) volume of each fine cells.
+ * \param [in]      arrayOfFineAnisotropicCompliantCells (size : sizes[7]) indices of compliant anisotropic cells (prisms or hexaedra)
+ *
+ * \param [in]      isOnFineBnd_l (size : sizes[0]) array describing the localization of the fine cell in the computational domain (0: inner cell,
+ *  1: on a face, 2: on a ridge, 3: on a corner
+ * \param [in]      array_isOnValley (size : sizes[4]) indices of cells localized on a face of the computational domain.
+ * \param [in]      array_isOnRidge (size : sizes[5]) indices of cells localized on a ridge of the computational domain.
+ * \param [in]      array_isOnCorner (size : sizes[6]) indices of cells localized on a ridge of the computational domain.
 
+ * \param [in]      isFirstAgglomeration_int (boolean like) is it the first agglomeration?
+ * \param [in]      isAnisotropic_int (boolean like) is it an anisotropic agglomeration (True) or an isotropic (False)?
+
+ * \param [in]      fineCellToCoarseCell (size : sizes[0]) for each fine cell we have the index of the coarse cell which it beints.
+
+ * \param [in]      dimension geometric dimension of the computational domain typically 3.
+ * \param [in]      goalCard goal cardinal of the coarse cells
+ * \param [in]      minCard minimum cardinal of the coarse cells
+ * \param [in]      maxCard maximum cardinal of the coarse cells
+ * \param [in]      checks_int (boolean like) add assert in the agglomeration to check the connectedness of coarse cells
+ * \param [in]      verbose_int (boolean like) add output to the output stream.
+ *
+ */
+
+void agglomerateOneLevel(int *sizes,
                          int *adjMatrix_row_ptr,
                          int *adjMatrix_col_ind,
                          double *adjMatrix_areaValues,
@@ -61,16 +106,7 @@ void agglomerateOneLevel(int *sizes,
                          int maxCard,
                          int checks_int,
                          int verbose_int) {
-    //"""
-    // Main function of the agglomerator.
-    // It agglomerates one MG level.
-    //:param isAnisotropic:  [boolean], do we want an anisotropic agglomeration (True) or an isotropic (False)?
-    //:param goalCard: [int] goal cardinal of the coarse cells
-    //:param minCard: [int] minimum cardinal of the coarse cells
-    //:param maxCard: [int] maximum cardinal of the coarse cells
-    //:param checks: [boolean]
-    //:param verbose: [boolean]
-    //"""
+
     bool checks = checks_int==1;
     bool verbose = verbose_int==1;
 
@@ -158,7 +194,13 @@ void agglomerateOneLevel(int *sizes,
     {
         isFineCellAgglomerated[i] = false;
     }
-
+    cout<<"\n adjMatrix_areaValues"<<endl;
+    cout<<"[";
+    for (int i=0; i<adjMatrix_areaValues_size; i++)
+    {
+        cout<<adjMatrix_areaValues[i]<<", ";
+    }
+    cout<<"]"<<endl;
 
 
     // TODO On pourrait ne l'allouer qu'une seule fois!
@@ -171,20 +213,18 @@ void agglomerateOneLevel(int *sizes,
     int* fineAgglomerationLines_for_visu_array_Idx= NULL;
     int* fineAgglomerationLines_for_visu_array = NULL;
 
-//    int* arrayOfCoarseAnisotropicCompliantCells = NULL;
     int numberOfAnisotropicLinesPOne_size = 0;
-    //  isAnisotropicLines value is true: otherwise no computation of anisotropic lines at level >1!
+
+    //  isAnisotropicLines value is true: otherwise no computation of anisotropic agglomeration at level >1!
     bool isAnisotropicLines = true;
     if(isAnisotropic) {
         if (isFirstAgglomeration) {
+
             numberOfAnisotropicLinesPOne_size = agglomerationLines_Idx_size;
             agglomerationLines_size = agglomerationLines_size;
 
-            //cout << "Call of computeAnisotropicLine" << endl;
             isAnisotropicLines = computeAnisotropicLine(sizes,
-
                                                         adjMatrix_row_ptr, adjMatrix_col_ind, adjMatrix_areaValues,
-
                                                         arrayOfFineAnisotropicCompliantCells,
                                                         agglomerationLines_Idx,
                                                         agglomerationLines,
@@ -207,23 +247,14 @@ void agglomerateOneLevel(int *sizes,
 //            int arrayOfCoarseAnisotropicCompliantCells_size = agglomerationLines_size; //np.shape(arrayOfFineAnisotropicCompliantCells)[0]
 //            arrayOfCoarseAnisotropicCompliantCells = np.zeros((arrayOfCoarseAnisotropicCompliantCells_size,), dtype = int)
             agglomerationLines_Idx_size = sizes[8];
-            /*cout<<"sizes[0]= "<<sizes[0]<<endl;
-            cout<<"sizes[1]= "<<sizes[1]<<endl;
-            cout<<"sizes[2]= "<<sizes[2]<<endl;
-            cout<<"sizes[3]= "<<sizes[3]<<endl;
-            cout<<"sizes[4]= "<<sizes[4]<<endl;
-            cout<<"sizes[5]= "<<sizes[5]<<endl;
-            cout<<"sizes[6]= "<<sizes[6]<<endl;
-            cout<<"sizes[7]= "<<sizes[7]<<endl;
-            cout<<"sizes[8]= "<<sizes[8]<<endl;
-            cout<<"sizes[9]= "<<sizes[9]<<endl;*/
 
             int sizes_aniso[5] = {agglomerationLines_Idx_size, numberOfFineCells, numberOfFineAgglomeratedCells, indCoarseCell, -1};
 
             agglomerate_Anisotropic_One_Level_without_list_lines(sizes_aniso,
                                                                  agglomerationLines_Idx,
                                                                  agglomerationLines,
-                                                                 fineCellToCoarseCell, isFineCellAgglomerated, arrayOfFineAnisotropicCompliantCells);//arrayOfCoarseAnisotropicCompliantCells);
+                                                                 fineCellToCoarseCell, isFineCellAgglomerated,
+                                                                 arrayOfFineAnisotropicCompliantCells);
 //            cout<<"End of agglomerate_Anisotropic_One_Level_without_list_lines"<<endl;
 //            agglomerationLines_Idx_size = sizes_aniso[0];
 //            numberOfFineCells = sizes_aniso[1];
@@ -249,7 +280,6 @@ void agglomerateOneLevel(int *sizes,
             sizes[8] = sizes_aniso[0];
             sizes[9] = agglomerationLines_Idx[sizes[8]-1];
 
-
 //            if (agglomerationLines_Idx_size>0){
 //
 //            agglomerationLines_Idx.resize((agglomerationLines_Idx_size,), refcheck = False)
@@ -263,17 +293,6 @@ void agglomerateOneLevel(int *sizes,
         }
     }
 
-//    int sizes_iso[4] = {numberOfFineCells, adjMatrix_row_ptr_size, indCoarseCell, numberOfFineAgglomeratedCells};
-//    cout<<"sizes[0]= "<<sizes[0]<<endl;
-//    cout<<"sizes[1]= "<<sizes[1]<<endl;
-//    cout<<"sizes[2]= "<<sizes[2]<<endl;
-//    cout<<"sizes[3]= "<<sizes[3]<<endl;
-//    cout<<"sizes[4]= "<<sizes[4]<<endl;
-//    cout<<"sizes[5]= "<<sizes[5]<<endl;
-//    cout<<"sizes[6]= "<<sizes[6]<<endl;
-//    cout<<"sizes[7]= "<<sizes[7]<<endl;
-//    cout<<"sizes[8]= "<<sizes[8]<<endl;
-//    cout<<"sizes[9]= "<<sizes[9]<<endl;
     int* isOnFineBnd=new int[numberOfFineCells];
     for(int iL =0; iL<numberOfFineCells;iL++) {
         isOnFineBnd[iL] = isOnFineBnd_l[iL];
@@ -297,27 +316,346 @@ void agglomerateOneLevel(int *sizes,
                                         thresholdCard,
                                         checks,
                                         verbose);
-    // Rmk: sizes[2] ==indCoarseCell
-//    int numberOfFineAgglomeratedCells = sizes[3];
-//    int isOnValley_size = sizes[4];
-//    int isOnRidge_size = sizes[5];
-//    int isOnCorner_size = sizes[6];
-//    int arrayOfFineAnisotropicCompliantCells_size = sizes[7];
-//    int agglomerationLines_Idx_size = sizes[8];
-//    int agglomerationLines_size = sizes[9];
 
-//    sizes[2] = sizes_iso[2];  //indCoarseCell
-//    sizes[3] = sizes_iso[3];  //numberOfFineAgglomeratedCells
-//    sizes[7] = arrayOfFineAnisotropicCompliantCells_size;
-//    sizes[8] = arrayOfFineAnisotropicCompliantCells_size;
-//    sizes[9] = arrayOfFineAnisotropicCompliantCells_size;
-//    return indCoarseCell, fineAgglomerationLines_for_visu_array_Idx, fineAgglomerationLines_for_visu_array, agglomerationLines_Idx, \
-//           agglomerationLines,  \
-//           arrayOfCoarseAnisotropicCompliantCells
     delete[] isFineCellAgglomerated;
 }
 
-////Main function
+
+// void hellohell(int aaa)
+// {
+//    printf("aaaaaa \n");
+// }
+
+
+void agglomerateOneLevel_v_Paradigma(int *sizes,
+                                     int *adjMatrix_row_ptr,
+                                     int *adjMatrix_col_ind,
+                                     double *volumes,
+
+                                     int *arrayOfFineAnisotropicCompliantCells,
+                                     int *isOnFineBnd_l,
+                                     int * faceCell,
+
+                                     double *Face_area,
+
+                                     int isFirstAgglomeration_int,
+                                     int isAnisotropic_int,
+
+                                     int *fineCellToCoarseCell,
+
+                                     int *agglomerationLines_Idx,
+                                     int *agglomerationLines,
+
+                                     int dimension,
+                                     int goalCard,
+                                     int minCard,
+                                     int maxCard,
+                                     int checks_int,
+                                     int verbose_int) 
+{
+    cout<<"Call of agglomerateOneLevel_v_Paradigma"<<endl;
+    bool checks = checks_int==1;
+    bool verbose = verbose_int==1;
+
+    int numberOfFineCells = sizes[0];
+    int adjMatrix_row_ptr_size = numberOfFineCells + 1;
+    int adjMatrix_col_ind_size = sizes[1];
+    int adjMatrix_areaValues_size = sizes[1];
+
+    // Rmk: sizes[2] ==indCoarseCell
+    int numberOfFineAgglomeratedCells = sizes[3];
+    int isOnValley_size = sizes[4];
+    int isOnRidge_size = sizes[5];
+    int isOnCorner_size = sizes[6];
+    int arrayOfFineAnisotropicCompliantCells_size = sizes[7];
+    int agglomerationLines_Idx_size = sizes[8];
+    int agglomerationLines_size = sizes[9];
+
+    int faceCell_size = sizes[10];
+    int numberOfFace = sizes[10]/2;
+    int Face_area_size = sizes[11];
+
+    bool isFirstAgglomeration = isFirstAgglomeration_int == 1;
+    bool isAnisotropic = isAnisotropic_int == 1;
+
+
+    // Initialization of isOnValley, isOnRidge, isOnCorner;
+    // ATTENTION, we work on sets!
+    unordered_set<int> isOnValley, isOnRidge, isOnCorner;
+    for (int iFC=0; iFC<numberOfFineCells; iFC++)
+    {
+        switch(isOnFineBnd_l[iFC]) {
+            case 1 :
+                isOnValley.insert(iFC);
+                break;
+            case 2 :
+                isOnRidge.insert(iFC);
+                break;
+            case 3 :
+                isOnCorner.insert(iFC);
+                break;
+        }
+    }
+//    cout<<"\t isOnValley, isOnRidge, isOnCorner are created"<<endl;
+    // Creation of adjMatrix_area_values
+    double* adjMatrix_areaValues = new double[adjMatrix_areaValues_size];
+//    cout<<"\t Creation of adjMatrix_areaValues of size "<< adjMatrix_areaValues_size<<endl;
+    for(int i = 0; i<adjMatrix_areaValues_size; i++)
+    {
+        adjMatrix_areaValues[i]=0.0;
+    }
+//    cout<<"Initialization at 0"<<endl;
+
+
+    for(int iFace = 0; iFace<numberOfFace; iFace++)
+    {
+
+        int iCell = faceCell[2*iFace]-1;
+        int jCell = faceCell[2*iFace+1]-1;
+//        cout<<"\t\t iFace "<<iFace<<" ("<<iCell<<", "<<jCell<<")" <<endl;
+        int ind = adjMatrix_row_ptr[iCell];
+        int ind_p_one = adjMatrix_row_ptr[iCell + 1];
+        if(jCell==-1)
+        {
+            jCell = iCell;
+        }
+        for(int iN = ind; iN<ind_p_one; iN++)
+        {
+            int indNeighborCell = adjMatrix_col_ind[iN];
+            if(indNeighborCell==jCell)
+            {
+                adjMatrix_areaValues[iN] += Face_area[iFace];
+                break;
+            }
+        }
+        // symetrique part
+        if (iCell!=jCell){
+            int tmp= iCell;
+            iCell = jCell;
+            jCell = tmp;
+
+            ind = adjMatrix_row_ptr[iCell];
+            ind_p_one = adjMatrix_row_ptr[iCell + 1];
+            if(jCell==-1)
+            {
+                jCell = iCell;
+            }
+            for(int iN = ind; iN<ind_p_one; iN++)
+            {
+                int indNeighborCell = adjMatrix_col_ind[iN];
+                if(indNeighborCell==jCell)
+                {
+                    adjMatrix_areaValues[iN] += Face_area[iFace];
+                    break;
+                }
+            }
+        }
+
+    }
+    cout<<"\t adjMatrix_areaValues is created"<<endl;
+    cout<<"[";
+    for (int i=0; i<adjMatrix_areaValues_size; i++)
+    {
+        cout<<adjMatrix_areaValues[i]<<", ";
+    }
+    cout<<"]"<<endl;
+    int numberOfFineAnisotropicCompliantCells = arrayOfFineAnisotropicCompliantCells_size;
+
+    // Definition of minCard
+    if (minCard == -1) {
+        if (dimension == 2) {
+            minCard = 3;
+        } else {
+            minCard = 6;
+        }
+    }
+
+    // Definition of maxCard
+    if (maxCard == -1) {
+        if (dimension == 2) {
+            maxCard = 5;
+        } else {
+            maxCard = 10;
+        }
+    }
+
+    // Definition of goalCard
+    if (goalCard == -1) {
+        if (dimension == 2) {
+            goalCard = 4;
+        } else {
+            goalCard = 8;
+        }
+    }
+
+    // Definition of thresholdCard
+    int thresholdCard;
+    if (dimension == 2) {
+        thresholdCard = 2;
+    } else {
+        thresholdCard = 3;
+    }
+
+    // Keep track of agglomerated fine cell
+    int indCoarseCell = 0;
+    numberOfFineAgglomeratedCells = 0;  // number of fine (already) agglomerated cells
+    bool* isFineCellAgglomerated = new bool[numberOfFineCells];
+    for(int i =0; i<numberOfFineCells; i++)
+    {
+        isFineCellAgglomerated[i] = false;
+    }
+
+    // TODO On pourrait ne l'allouer qu'une seule fois!
+    // fineAgglomerationLines = None
+    // fineAgglomerationLines_for_visu = None
+
+    //fineAgglomerationLines_array_Idx = None
+    //fineAgglomerationLines_array = None
+
+    int* fineAgglomerationLines_for_visu_array_Idx= NULL;
+    int* fineAgglomerationLines_for_visu_array = NULL;
+
+    int numberOfAnisotropicLinesPOne_size = 0;
+
+    //  isAnisotropicLines value is true: otherwise no computation of anisotropic agglomeration at level >1!
+    bool isAnisotropicLines = true;
+    if(isAnisotropic) {
+        if (isFirstAgglomeration) {
+
+            numberOfAnisotropicLinesPOne_size = agglomerationLines_Idx_size;
+            agglomerationLines_size = agglomerationLines_size;
+
+            isAnisotropicLines = computeAnisotropicLine(sizes,
+                                                        adjMatrix_row_ptr, adjMatrix_col_ind, adjMatrix_areaValues,
+                                                        arrayOfFineAnisotropicCompliantCells,
+                                                        agglomerationLines_Idx,
+                                                        agglomerationLines,
+                                                        verbose);
+
+            numberOfAnisotropicLinesPOne_size = sizes[8]; // number of agglomeration lines +1
+            agglomerationLines_size = sizes[9];
+
+//          Pas de resize, c'est pas possible avec un tableau
+//            agglomerationLines_Idx.resize((numberOfAnisotropicLinesPOne_size,), refcheck = False)
+//            agglomerationLines.resize((agglomerationLines_size,), refcheck = False)
+
+            // For Visu only:
+//            fineAgglomerationLines_for_visu_array_Idx = np.copy(agglomerationLines_Idx);
+//            fineAgglomerationLines_for_visu_array = np.copy(agglomerationLines);
+        }
+        if (isAnisotropicLines) {
+
+            //cout<< "agglomerationLines_size "<< agglomerationLines_size<<endl;
+//            int arrayOfCoarseAnisotropicCompliantCells_size = agglomerationLines_size; //np.shape(arrayOfFineAnisotropicCompliantCells)[0]
+//            arrayOfCoarseAnisotropicCompliantCells = np.zeros((arrayOfCoarseAnisotropicCompliantCells_size,), dtype = int)
+            agglomerationLines_Idx_size = sizes[8];
+
+            int sizes_aniso[5] = {agglomerationLines_Idx_size, numberOfFineCells, numberOfFineAgglomeratedCells, indCoarseCell, -1};
+
+            agglomerate_Anisotropic_One_Level_without_list_lines(sizes_aniso,
+                                                                 agglomerationLines_Idx,
+                                                                 agglomerationLines,
+                                                                 fineCellToCoarseCell, isFineCellAgglomerated,
+                                                                 arrayOfFineAnisotropicCompliantCells);
+//            cout<<"End of agglomerate_Anisotropic_One_Level_without_list_lines"<<endl;
+//            agglomerationLines_Idx_size = sizes_aniso[0];
+//            numberOfFineCells = sizes_aniso[1];
+//            numberOfFineAgglomeratedCells = sizes_aniso[2];
+//            indCoarseCell = sizes_aniso[3];
+//            int arrayOfCoarseAnisotropicCompliantCells_size = sizes_aniso[4];
+//            int numberOfFineCells = sizes[0];
+//            int adjMatrix_row_ptr_size = numberOfFineCells + 1;
+//            int adjMatrix_col_ind_size = sizes[1];
+//            int adjMatrix_areaValues_size = sizes[1];
+//
+//            // Rmk: sizes[2] ==indCoarseCell
+//            int numberOfFineAgglomeratedCells = sizes[3];
+//            int isOnValley_size = sizes[4];
+//            int isOnRidge_size = sizes[5];
+//            int isOnCorner_size = sizes[6];
+//            int arrayOfFineAnisotropicCompliantCells_size = sizes[7];
+//            int agglomerationLines_Idx_size = sizes[8];
+//            int agglomerationLines_size = sizes[9];
+            sizes[2] = sizes_aniso[3];
+            sizes[3] = sizes_aniso[2];
+            sizes[7] = sizes_aniso[4];
+            sizes[8] = sizes_aniso[0];
+            sizes[9] = agglomerationLines_Idx[sizes[8]-1];
+
+//            if (agglomerationLines_Idx_size>0){
+//
+//            agglomerationLines_Idx.resize((agglomerationLines_Idx_size,), refcheck = False)
+//            agglomerationLines.resize((agglomerationLines_Idx[agglomerationLines_Idx_size - 1],), refcheck = False)
+
+//            if
+//                arrayOfCoarseAnisotropicCompliantCells
+//                        is
+//                not None:
+//            arrayOfCoarseAnisotropicCompliantCells.resize((arrayOfCoarseAnisotropicCompliantCells_size,), refcheck = False)
+        }
+    }
+
+    int* isOnFineBnd=new int[numberOfFineCells];
+    for(int iL =0; iL<numberOfFineCells;iL++) {
+        isOnFineBnd[iL] = isOnFineBnd_l[iL];
+    }
+    agglomerate_Isotropic_One_Level_v_2(sizes,
+                                        adjMatrix_row_ptr,
+                                        adjMatrix_col_ind,
+                                        adjMatrix_areaValues,
+                                        volumes,
+                                        fineCellToCoarseCell,
+                                        isFineCellAgglomerated,
+
+                                        isOnValley,
+                                        isOnRidge,
+                                        isOnCorner,
+                                        isOnFineBnd,
+
+                                        minCard,
+                                        goalCard,
+                                        maxCard,
+                                        thresholdCard,
+                                        checks,
+                                        verbose);
+    delete[] adjMatrix_areaValues;
+    delete[] isFineCellAgglomerated;
+}
+
+/**
+ *
+ * \brief Main function of the isotropic agglomerator: agglomerate isotropic fine cells to generate a coarse cell mesh
+ *
+ * \param [inout]   sizes               Scalar informations about table length.
+ *                                      sizes[0] is the number of fine cells
+ *                                      sizes[1] is the number of non-null coefficient in the matrix (number of inner faces + 1 value per cell on boundaries
+ *                                      sizes[2] [out] is the number of coarse cell created (indCoarseCell)
+ *                                      sizes[3] [out] is a counter of agglomerated fine cell. At the end, it should be equal to the number of fine
+ *                                                        cells.
+ *                                      sizes[4] [in] is the number of fine cells on "valley" of the computational domain (but not on ridge nor
+ *                                                    corner).
+ *                                      sizes[5] [in] is the number of fine cells on rigde of the computational domain.
+ *                                      sizes[6] [in] is the number of fine cells on corners of the computational domain.
+ *                                      sizes[7] [in] is the number of fine cells compliant to anisotropic agglomeration, i.e. prisms or hexaedra.
+ *                                      sizes[8] [inout] is the number of agglomeration lines: null at first level
+ *                                      sizes[9] [inout] is the number of a fine cells in agglomeration lines.
+ *
+ * \param [in]      adjMatrix_row_ptr (size : sizes[0]+1) first part of the sparse matrix of the dual mesh
+ * \param [in]      adjMatrix_col_ind (size : sizes[1]) second part of the sparse matrix of the dual mesh
+ * \param [in]      adjMatrix_areaValues (size : sizes[1]) weights of the dual mesh (i.e. area of the surface between two adjacent cells.)
+ * \param [in]      volumes (size : sizes[0]) volume of each fine cells.
+ * \param [in]      arrayOfFineAnisotropicCompliantCells (size : sizes[7]) indices of compliant anisotropic cells (prisms or hexaedra)
+ * \param [in]      isFirstAgglomeration_int (boolean like) is it the first agglomeration?
+ * \param [in]      isAnisotropic_int (boolean like) is it an anisotropic agglomeration (True) or an isotropic (False)?
+ * \param [in]      dimension geometric dimension of the computational domain typically 3.
+ * \param [in]      goalCard goal cardinal of the coarse cells
+ * \param [in]      minCard minimum cardinal of the coarse cells
+ * \param [in]      maxCard maximum cardinal of the coarse cells
+ * \param [in]      checks_int (boolean like) add assert in the agglomeration to check the connectedness of coarse cells
+ * \param [in]      verbose_int (boolean like) add output to the output stream.
+ *
+ */
+
 void agglomerate_Isotropic_One_Level_v_2(int *sizes,
 
                                         int *matrixAdj_CRS_row_ptr,
