@@ -411,6 +411,14 @@ _point_extents(const int     dim,
       }
     }
   }
+  
+  printf("_point_extents : \n");
+  
+  for (i = 0; i < dim; i++) {
+    printf ("%12.5e %12.5e\n", extents[i], extents[i+dim]);
+  }
+  
+  
 }
 
 

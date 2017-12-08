@@ -391,7 +391,7 @@ _gnum_from_coords_compute
       
       for (int i = 0; i < _gnum->n_elts[ipart]; i++) {
         for (int j = candidates_idx[i]; j < candidates_idx[i+1]; j++) {
-          int idx = 3*j;
+          int idx = j;
           int distant_proc = candidates_desc[3*idx    ];
           int distant_part = candidates_desc[3*idx + 1];
 //          int distant_pt = candidates_desc[3*idx + 2];
@@ -677,7 +677,7 @@ _gnum_from_coords_compute
 
         for (int i = 0; i < _gnum->n_elts[ipart]; i++) {
           for (int j = candidates_idx[i]; j < candidates_idx[i+1]; j++) {
-            int idx = 3*j;
+            int idx = j;
             int distant_proc = candidates_desc[3*idx    ];
             int distant_part = candidates_desc[3*idx + 1];
             int distant_pt   = candidates_desc[3*idx + 2];
@@ -724,7 +724,7 @@ _gnum_from_coords_compute
         
         for (int i = 0; i < _gnum->n_elts[ipart]; i++) {
           for (int j = candidates_idx[i]; j < candidates_idx[i+1]; j++) {
-            int idx = 3*j;
+            int idx = j;
             int distant_proc = candidates_desc[3*idx    ];
             int distant_part = candidates_desc[3*idx + 1];
             int distant_pt   = candidates_desc[3*idx + 2];
@@ -848,7 +848,7 @@ _gnum_from_coords_compute
 
         for (int i = 0; i < _gnum->n_elts[ipart]; i++) {
           for (int j = candidates_idx[i]; j < candidates_idx[i+1]; j++) {
-            int idx = 3*j;
+            int idx = j;
             int distant_proc = candidates_desc[3*idx    ];
             int distant_part = candidates_desc[3*idx + 1];
             int distant_pt   = candidates_desc[3*idx + 2];
@@ -902,8 +902,7 @@ _gnum_from_parent_compute
 (
  _pdm_gnum_t *_gnum 
 )
-{
-  
+{ 
   int n_procs = 0;
   PDM_MPI_Comm_size(_gnum->comm, &n_procs);
   

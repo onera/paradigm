@@ -315,8 +315,16 @@ PDM_octree_build
   _octree_t *octree = _get_from_id (id);
 
   PDM_octree_seq_build (octree->octree_seq_id);
-
+  
   double * extents = PDM_octree_seq_extents_get (octree->octree_seq_id); 
+ 
+          printf("%12.5e %12.5e %12.5e %12.5e %12.5e %12.5e\n", extents[0],
+                  extents[1],
+                  extents[2],
+                  extents[3],
+                  extents[4],
+                  extents[5]
+                 );
   
   int n_proc;
   PDM_MPI_Comm_size (octree->comm, &n_proc);
