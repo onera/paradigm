@@ -1191,6 +1191,128 @@ PROCF (pdm_gnum_free, PDM_GNUM_FREE)
 }
 
 
+/**
+ * \brief Check the face->vtx connectivity and fix the mesh if needed
+ * 
+ * If a vertex is not cited in the face->vtx connectivity, the function
+ * removes it from the mesh to ensure contiguity
+ * Used with epinette
+ *
+ * \param [in, out]nb_som      Number of vertices
+ * \param [in, out]face_som    Face->vtx connectivity
+ * \param [in, out]l_face_som  Size of face->vtx connectivity
+ * \param [in, out]coords      Vertices coordinates
+ *
+ */
+
+void PROCF (pdm_check_fix_mesh, PDM_CHECK_FIX_MESH)
+(PDM_g_num_t* nb_som,
+PDM_g_num_t* face_som,
+PDM_g_num_t* l_face_som,
+double* coords,
+int* nb_holes)
+{
+
+  PDM_check_fix_mesh(nb_som,
+		     face_som,
+		     l_face_som,
+		     coords,
+		     nb_holes);
+}
+
+
+void PDM_check_fix_mesh(PDM_g_num_t* nb_som,
+			PDM_g_num_t* face_som,
+			PDM_g_num_t* l_face_som,
+			double* coords,
+			int* nb_holes) {
+
+  PDM_g_num_t nb_som_problem = 0 ; // (absolute) number of problematic vertex
+  PDM_g_num_t nb_som_last_problem = *nb_som ; // problematic vertex from the previous iteration
+  *nb_holes = 0 ;               // total number of holes in the mesh
+  
+  do {
+
+    nb_som_problem = PDM_check_mesh // Find the number of a problematic vertex 
+                     (nb_som,
+                      l_face_som,
+		      face_som,
+		      nb_som_last_problem) ;
+
+    if (nb_som_problem != 0) {
+      PDM_fix_mesh                // if found, fix it
+	(nb_som_problem,
+	 nb_som,
+	 coords,
+	 l_face_som,
+	 face_som) ;
+
+      (*nb_holes)++ ;
+      nb_som_last_problem = nb_som_problem ;
+    }
+    
+  } while (nb_som_problem != 0) ;
+
+			      
+}
+
+PDM_g_num_t PDM_check_mesh(PDM_g_num_t* nb_som,
+			PDM_g_num_t* l_face_som,
+			PDM_g_num_t* face_som,
+			PDM_g_num_t nb_som_last_problem) {
+
+  // Déclarations
+  PDM_g_num_t *check_som = NULL;
+  PDM_g_num_t index_courant ;
+  PDM_g_num_t nb_som_problem = 0 ;
+
+  // Allocation
+  check_som = (PDM_g_num_t*) calloc((*nb_som +1), sizeof(PDM_g_num_t));
+
+  // check_som à 1 pour tous les sommets cités dans la connectivité face->som
+  for (PDM_g_num_t i=1; i < *l_face_som; i++) {
+    index_courant = face_som[i] ;
+    check_som[index_courant] = 1 ;
+  }
+
+  // si check_som est 0 quelquepart, c'est qu'il y a un trou dans la connectivité
+  for (PDM_g_num_t i=nb_som_last_problem; i > 0; i--) {
+    if (check_som[i] == 0) {
+      nb_som_problem = i ;
+      break ;
+    }
+  }
+
+  free(check_som) ;
+
+  return nb_som_problem ;
+}
+
+void PDM_fix_mesh(PDM_g_num_t nb_som_problem,
+		  PDM_g_num_t* nb_som,
+		  double* coords,
+		  PDM_g_num_t* l_face_som,
+		  PDM_g_num_t* face_som) {
+
+  PDM_g_num_t index_courant ;
+
+  // Coordonnees
+  for (PDM_g_num_t i=nb_som_problem; i < *nb_som; i++) {
+    coords[3*(i-1)] = coords[3*(i-1)+3] ; //x(n-1) <- x(n) 
+    coords[3*(i-1)+1] = coords[3*(i-1)+1+3] ; //y(n-1) <- y(n)
+    coords[3*(i-1)+2] = coords[3*(i-1)+2+3] ; //z(n-1) <- z(n)
+  }
+
+  // Connectivité faces->sommets
+  for (PDM_g_num_t i=1; i < *l_face_som; i++) {
+    index_courant = face_som[i] ;
+    if (index_courant > nb_som_problem) {
+      face_som[i] = index_courant - 1 ;
+    }
+  }
+}
+
+
 /*----------------------------------------------------------------------------*/
 
 #ifdef __cplusplus

@@ -226,6 +226,46 @@ PROCF (pdm_gnum_free, PDM_GNUM_FREE)
  const int *partial
 );
 
+/**
+ * \brief Check the face->vtx connectivity and fix the mesh if needed
+ * 
+ * If a vertex is not cited in the face->vtx connectivity, the function
+ * removes it from the mesh to ensure contiguity
+ *
+ * * \param [in, out]nb_som      Number of vertices
+ * * \param [in, out]face_som    Face->vtx connectivity
+ * \param [in, out]l_face_som  Size of face->vtx connectivity
+ * \param [in, out]coords      Vertices coordinates
+ *
+ */
+
+void PROCF (pdm_check_fix_mesh, PDM_CHECK_FIX_MESH)
+(PDM_g_num_t* nb_som,
+PDM_g_num_t* face_som,
+PDM_g_num_t* l_face_som,
+double* coords,
+int* nb_holes);
+
+void PDM_check_fix_mesh
+(PDM_g_num_t* nb_som,
+PDM_g_num_t* face_som,
+PDM_g_num_t* l_face_som,
+double* coords,
+int* nb_holes);
+
+PDM_g_num_t PDM_check_mesh
+(PDM_g_num_t* nb_som,
+PDM_g_num_t* l_face_som,
+PDM_g_num_t* face_som,
+PDM_g_num_t nb_som_last_problem);
+
+void PDM_fix_mesh
+(PDM_g_num_t nb_som_problem,
+PDM_g_num_t* nb_som,
+double* coords,
+PDM_g_num_t* l_face_som,
+PDM_g_num_t* face_som);
+
 /*----------------------------------------------------------------------------*/
 
 #ifdef __cplusplus
