@@ -494,6 +494,14 @@ PDM_part_split_t           method,
                        &faceGroupIdx,
                        &faceGroup,
                        &faceGroupLNToGN);
+
+    
+    printf("vtxs : \n");
+    for (int i = 0; i< nVtx; i++) {
+      
+      printf("%ld : %12.5e %12.5e %12.5e\n", vtxLNToGN[i], vtx[3*i], vtx[3*i+1], vtx[3*i+2]);
+    }
+    
     
     vtxLNToGNs[ipart] = vtxLNToGN;
 

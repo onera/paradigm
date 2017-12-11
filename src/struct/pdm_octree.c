@@ -318,13 +318,6 @@ PDM_octree_build
   
   double * extents = PDM_octree_seq_extents_get (octree->octree_seq_id); 
  
-          printf("%12.5e %12.5e %12.5e %12.5e %12.5e %12.5e\n", extents[0],
-                  extents[1],
-                  extents[2],
-                  extents[3],
-                  extents[4],
-                  extents[5]
-                 );
   
   int n_proc;
   PDM_MPI_Comm_size (octree->comm, &n_proc);
@@ -334,6 +327,19 @@ PDM_octree_build
   PDM_MPI_Allgather (extents, 6, PDM_MPI_DOUBLE,
                      octree->extents_proc, 6, PDM_MPI_DOUBLE,
                      octree->comm);
+
+  
+  double *_extents = extents;
+  for (int i = 0; i < n_proc; i++) {
+    printf("%12.5e %12.5e %12.5e %12.5e %12.5e %12.5e\n", _extents[0],
+                    _extents[1],
+                    _extents[2],
+                    _extents[3],
+                    _extents[4],
+                    _extents[5]);
+    double *_extents = extents + 6;
+  }
+
   
 }
 
