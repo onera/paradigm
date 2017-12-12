@@ -666,12 +666,12 @@ _gnum_from_coords_compute
 
         for (rank_id = 0; rank_id < n_ranks; rank_id++) {
           send_count2[rank_id] = 0;
-          send_shift2[rank_id] = 0;
-          recv_shift2[n_ranks] = 0;
         }
         
-        send_shift2[n_ranks] = 0;
-        recv_shift2[n_ranks] = 0;
+        for (rank_id = 0; rank_id < n_ranks + 1; rank_id++) {
+          send_shift2[rank_id] = 0;
+          recv_shift2[rank_id] = 0;
+        }
         
         PDM_points_merge_candidates_get (id_pm, ipart, &candidates_idx, &candidates_desc);
 
@@ -723,6 +723,8 @@ _gnum_from_coords_compute
         PDM_points_merge_candidates_get (id_pm, ipart, &candidates_idx, &candidates_desc);
         
         for (int i = 0; i < _gnum->n_elts[ipart]; i++) {
+          printf("i %d:\n", i);
+          fflush(stdout);
           for (int j = candidates_idx[i]; j < candidates_idx[i+1]; j++) {
             int idx = j;
             int distant_proc = candidates_desc[3*idx    ];
@@ -739,6 +741,8 @@ _gnum_from_coords_compute
             }
           }
         }
+          printf("pass\n");
+          fflush(stdout);
       }
 
       /* 
@@ -749,18 +753,25 @@ _gnum_from_coords_compute
                         recv_buff, send_count2, send_shift2, PDM__PDM_MPI_G_NUM,
                         comm);
 
+          printf("pass 1 %d \n", 3 * recv_shift2[n_ranks] );
+          fflush(stdout);
       /* 
        * update gnum
        */      
         
       k = 0;
-      while (k < 2 * send_shift2[n_ranks]) {
+      while (k < 3 * recv_shift2[n_ranks]) {
         int ipart        = (int) recv_buff[k++];
         int ipt          = (int) recv_buff[k++];
         PDM_g_num_t gnum =       recv_buff[k++];
+        printf("%d %d %ld\n", ipart, ipt, gnum);
+        fflush(stdout);
          _gnum->g_nums[ipart][ipt] = gnum;
       }
     
+          printf("pass 2\n");
+          fflush(stdout);
+
       free (send_buff);
       free (recv_buff);
       free (send_count2);
@@ -768,6 +779,9 @@ _gnum_from_coords_compute
       free (send_shift2);
       free (recv_shift2);    
     
+                printf("pass 3\n");
+          fflush(stdout);
+
     }
 
     else {

@@ -136,6 +136,7 @@ const double *second_extents
              (first_extents[i+3] >= second_extents[i+3])) {
       intersect += 1;
     }
+//    printf("intersect %d : %d\n", i, intersect);  
   }
   
   return (intersect == 3);
@@ -306,9 +307,7 @@ const double   tolerance
 )
 {
   
-//  exit(1);
-  
-  printf("_search_distant_couple 0 %d %d\n", n_fusion_from_proc[0], n_fusion_from_proc[1]);
+  printf("_search_distant_couple 0 - %d %d\n", n_fusion_from_proc[0], n_fusion_from_proc[1]);
   
   int node_id = associated_octree_node_id;
   int octree_id = associated_octree_id;
@@ -411,7 +410,8 @@ const double   tolerance
             _search_distant_couple (n_fusion_from_proc,
                                     distant_couple, n_couple, s_couple, 
                                     point_proc, point_cloud, point_idx, 
-                                    point_coords, point_box, associated_octree_id,
+                                    point_coords, point_box, 
+                                    associated_octree_id,
                                     node_child,
                                     associated_coords,
                                     associated_char_length,
@@ -433,7 +433,8 @@ const double   tolerance
             _search_distant_couple (n_fusion_from_proc,
                                     distant_couple, n_couple, s_couple, 
                                     point_proc, point_cloud, point_idx, 
-                                    point_coords, point_box, associated_octree_id,
+                                    point_coords, point_box, 
+                                    associated_octree_id,
                                     node_child,
                                     associated_coords,
                                     associated_char_length,
@@ -443,7 +444,7 @@ const double   tolerance
       }
     }    
   }
-    printf("_search_distant_couple 1 %d %d\n", n_fusion_from_proc[0], n_fusion_from_proc[1]);
+    printf("_search_distant_couple 1 - %d %d\n", n_fusion_from_proc[0], n_fusion_from_proc[1]);
   
 }
 
@@ -685,9 +686,20 @@ PDM_points_merge_process
   int n_tmp_store = 0;
 
   int *tmp_store = malloc (sizeof(int) * s_tmp_store * 3);
-  
-  printf("Distant fusion\n");
-  
+
+//  printf ("Extents proc \n");
+//  for (int k = 0; k < n_proc ; k++) {
+//    const double *_extents_proc = extents_proc + k * 6;
+//    printf("%d %12.5e %12.5e %12.5e %12.5e %12.5e %12.5e\n",k, _extents_proc[0],
+//            _extents_proc[1],
+//            _extents_proc[2],
+//            _extents_proc[3],
+//            _extents_proc[4],
+//            _extents_proc[5]
+//           );
+//  }
+
+  printf("selection \n");
   for (int i_cloud = 0; i_cloud < ppm->n_point_clouds; i_cloud++) {
     int n_points = ppm->n_points[i_cloud]; 
     printf("Distant fusion %d : \n", n_points);
@@ -713,7 +725,7 @@ PDM_points_merge_process
         box[5] = __coord[2] + _default_eps;
       }
 
-//      printf("%d %d - %12.5e %12.5e %12.5e %12.5e %12.5e %12.5e :\n",
+//     printf("%d %d - %12.5e %12.5e %12.5e %12.5e %12.5e %12.5e :\n",
 //             i_cloud, i, box[0], box[1], box[2], box[3], box[4], box[5]);
       
       for (int k = 0; k < n_proc ; k++) {
@@ -737,7 +749,7 @@ PDM_points_merge_process
             tmp_store[3*n_tmp_store+1] = i_cloud;
             tmp_store[3*n_tmp_store+2] = i;
             n_tmp_store += 1;
-//            printf ("%d irpoc points %d %d %d %d\n", i_proc, n_tmp_store, k, i_cloud, i);
+            printf(" %12.5e %12.5e %12.5e\n", __coord[0], __coord[1], __coord[2]);
           }
         }
       }
@@ -764,7 +776,6 @@ PDM_points_merge_process
   }
   printf("\n");
   
-  //exit(1);
   // Envoi des points + char length en option sur les autres procs (test bounding box)
 
   int *val_send_idx = malloc (sizeof(int)*(n_proc+1));
@@ -793,6 +804,7 @@ PDM_points_merge_process
   unsigned char *val_recv = 
         malloc (sizeof(unsigned char) * val_recv_idx[n_proc]);
   
+  printf("envoi :");
   for (int i = 0; i < n_tmp_store; i++) {
     int iproc   = tmp_store[3*i];
     int i_cloud = tmp_store[3*i+1];
@@ -805,6 +817,8 @@ PDM_points_merge_process
     _tmp_val_double[1] = _coord[1]; 
     _tmp_val_double[2] = _coord[2]; 
 
+    printf("%12.5e %12.5e %12.5e\n", _coord[0], _coord[1], _coord[2]);
+    
     val_send_n[iproc] += 24;
     
     if (ppm->char_length != NULL) {
@@ -823,7 +837,10 @@ PDM_points_merge_process
   }
   
   free (tmp_store);
-    
+
+  printf("alltoallv : %d %d %d %d , %d %d %d %d\n", val_send_n[0], val_send_n[1], val_send_idx[0], val_send_idx[1]
+                                                  , val_recv_n[0], val_recv_n[1], val_recv_idx[0], val_recv_idx[1]);
+
   PDM_MPI_Alltoallv(val_send, val_send_n, val_send_idx, PDM_MPI_UNSIGNED_CHAR,
                     val_recv, val_recv_n, val_recv_idx, PDM_MPI_UNSIGNED_CHAR,
                     ppm->comm);
@@ -844,17 +861,20 @@ PDM_points_merge_process
   double distant_coord[3];
   
   unsigned char *_tmp_recv = val_recv;
+  printf("reception : \n");
+  
   for (int i = 0; i < n_proc; i++) {
     int _deb = val_recv_idx[i] / _stride;
     int _end = _deb + val_recv_n[i] / _stride;
   
     for (int j = _deb; j < _end; j++) {
-      distant_coord[0] = (double) _tmp_recv[0];
+      distant_coord[0] = *((double *) _tmp_recv);
       _tmp_recv += 8;
-      distant_coord[1] = (double) _tmp_recv[0];
+      distant_coord[1] = *((double *) _tmp_recv);
       _tmp_recv += 8;
-      distant_coord[2] = (double) _tmp_recv[0];
+      distant_coord[2] = *((double *) _tmp_recv);
       _tmp_recv += 8;
+      printf (" %12.5e %12.5e %12.5e\n",distant_coord[0],distant_coord[1],distant_coord[2]); 
       double _char_length = -1;
       if (ppm->char_length != NULL) {
         _char_length  = (double) _tmp_recv[0];
@@ -905,10 +925,9 @@ PDM_points_merge_process
   PDM_MPI_Alltoall (n_fusion_from_proc, 1, PDM_MPI_INT, 
                     n_fusion_with_proc, 1, PDM_MPI_INT, 
                     ppm->comm);
-  printf ("fusion : \n");
+
   for (int i = 0; i < n_proc; i++) {
-    printf ("%d : %d %d\n",i_proc, n_fusion_with_proc[i], n_fusion_from_proc[i]);
-//    assert (n_fusion_with_proc[i] == n_fusion_from_proc[i]);
+    assert (n_fusion_with_proc[i] == n_fusion_from_proc[i]);
   }
   
   free (n_fusion_from_proc);
@@ -1070,7 +1089,7 @@ PDM_points_merge_candidates_get
   *candidates_idx  = ppm->candidates_idx[i_point_cloud];
   *candidates_desc = ppm->candidates_desc[i_point_cloud];
 
-  if (0 == 1) {
+  if (1 == 1) {
     printf("candidates : \n");
     for (int i = 0; i < ppm->n_points[i_point_cloud]; i++) {
       printf("-- %d %d :", i_point_cloud, i);

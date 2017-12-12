@@ -99,6 +99,8 @@ typedef struct  {
 
 static PDM_Handles_t *_octrees   = NULL;
 
+static const double _eps_default = 1.e-25;
+
 /*=============================================================================
  * Private function definitions
  *============================================================================*/
@@ -467,7 +469,7 @@ _octree_seq_t *octree
 
       for (int i1 = 0; i1 < 3; i1++) {
         octree->extents[i1] = PDM_MIN (extents[i1], octree->extents[i1]);   
-        octree->extents[i1 + 3]   = PDM_MAX (extents[i1 + 3], octree->extents[i1 + 3]);
+        octree->extents[i1 + 3] = PDM_MAX (extents[i1 + 3], octree->extents[i1 + 3]);
       }
       
       for (int j = 0; j < n_points; j++) {
@@ -479,7 +481,8 @@ _octree_seq_t *octree
   }
 
   for (int i = 0; i < 3; i++) {
-    double delta = octree->tolerance * (octree->extents[i + 3] - octree->extents[i]); 
+    double delta = PDM_MAX (octree->tolerance * (octree->extents[i + 3] - octree->extents[i]), 
+                            _eps_default); 
     octree->extents[i] += -delta;   
     octree->extents[i + 3] += delta;;
   }
