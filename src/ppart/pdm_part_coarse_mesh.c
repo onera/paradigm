@@ -550,7 +550,7 @@ _split
       {
         if (isOnFineBnd[icell]>0)
         {
-          countOnBndCells =countOnBndCells+1;
+          countOnBndCells = countOnBndCells+1;
         }
       }
       PDM_printf("countOnBndCells : %i \n ",countOnBndCells); 
@@ -1843,7 +1843,7 @@ _build_faceGroup
 
 /**
  *
- * \brief Build a coarse grid
+ * \brief SetUp data array fo r coarse mesh
  *
  * \param [out] cgId              Coarse grid identifier
  * 
@@ -1888,7 +1888,7 @@ _build_faceGroup
  */
 
 static void 
-_coarse_grid_create
+_coarse_grid_mesh_input
 ( 
  _coarse_mesh_t     *cm,
  const int           iPart,       
@@ -1903,18 +1903,18 @@ _coarse_grid_create
  const int          *cellTag,
  const int          *cellWeight,
  const int          *faceWeight,
- const PDM_g_num_t *cellLNToGN,
+ const PDM_g_num_t  *cellLNToGN,
  const int          *faceCell,
  const int          *faceVtxIdx,
  const int          *faceVtx,
  const int          *faceTag,
- const PDM_g_num_t *faceLNToGN,
+ const PDM_g_num_t  *faceLNToGN,
  const double       *vtxCoord,
  const int          *vtxTag,
- const PDM_g_num_t *vtxLNToGN,
+ const PDM_g_num_t  *vtxLNToGN,
  const int          *faceGroupIdx,
  const int          *faceGroup,
- const PDM_g_num_t *faceGroupLNToGN,
+ const PDM_g_num_t  *faceGroupLNToGN,
  const int          *facePartBoundProcIdx,       
  const int          *facePartBoundPartIdx,
  const int          *facePartBound      
@@ -1923,13 +1923,16 @@ _coarse_grid_create
   _part_t * part_ini = cm->part_ini[iPart];
   _coarse_part_t *part_res = cm->part_res[iPart];
 
-  const int *_cellWeight = cellWeight;
-
-  const int *_faceWeight = faceWeight;
+  // const int *_cellWeight = cellWeight;
+  // const int *_faceWeight = faceWeight;
+  
+  part_ini->cellWeight = cellWeight;
+  part_ini->faceWeight = faceWeight;
   
   part_ini->nVtx = nVtx;
   part_ini->nCell = nCell;
   part_ini->nFace = nFace;
+  part_ini->nFaceGroup = nFaceGroup;
   part_ini->nFacePartBound = nFacePartBound;
   part_ini->cellFaceIdx = (int *) cellFaceIdx;
   part_ini->cellFace = (int *) cellFace;
@@ -1957,6 +1960,89 @@ _coarse_grid_create
 #ifdef __INTEL_COMPILER
 #pragma warning(pop)
 #endif
+  
+  part_res->nCoarseCellWanted = nCoarseCellWanted;
+  
+}
+
+
+
+/**
+ *
+ * \brief Add isotropic array to current coarse mesh
+ * 
+ * \param [in]   cmId                      Coarse mesh identifier
+ * \param [in]   iPart                     Current partition
+ * 
+ * \param [in]  agglomerationLines
+ * \param [in]  agglomerationLinesIdx
+ * \param [in]  isOnFineBnd            
+ *
+ */
+
+void 
+PDM_part_coarse_mesh_part_set_anisotropic_info
+(
+ const int     cmId,
+ const int     iPart,       
+ const int    *agglomerationLinesInit,
+ const int    *agglomerationLinesInitIdx,
+ const int    *isOnFineBndInit       
+)
+{
+  _coarse_mesh_t * cm = _get_from_id (cmId);  
+  
+  // _part_t * part_ini = cm->part_ini[iPart];
+  _coarse_part_t *part_res = cm->part_res[iPart];
+  
+  part_res->agglomerationLinesInit    = (int *) agglomerationLinesInit;
+  part_res->agglomerationLinesInitIdx = (int *) agglomerationLinesInitIdx;
+  part_res->isOnFineBndInit           = (int *) isOnFineBndInit;  
+  
+}
+
+void
+PROCF (PDM_part_coarse_mesh_part_get_anisotropic_info, PDM_PART_COARSE_MESH_PART_SET_ANISOTROPIC_INFO)
+(
+ int          *cmId,
+ int          *iPart,       
+ int          *agglomerationLinesInit,
+ int          *agglomerationLinesInitIdx,
+ int          *isOnFineBndInit
+)
+{
+  // a  voire avec Eric pb here
+  PDM_part_coarse_mesh_part_set_anisotropic_info(*cmId, 
+                                                 *iPart, 
+                                                 agglomerationLinesInit, 
+                                                 agglomerationLinesInitIdx, 
+                                                 isOnFineBndInit);
+  
+}
+
+
+
+/**
+ *
+ * \brief Build a coarse grid prealably setUp with _coarse_grid_mesh_input
+ *
+ * \param [out] cgId              Coarse grid identifier
+ * 
+ * \param [in]  iPart              Partition identifier
+ * \param [in]  nCoarseCellWanted  Number of cells in the coarse grid wanted by the user
+ */
+
+static void 
+_coarse_grid_compute
+( 
+ _coarse_mesh_t     *cm,
+ const int           iPart
+)
+{
+
+  _part_t * part_ini = cm->part_ini[iPart];
+  _coarse_part_t *part_res = cm->part_res[iPart];
+
 
   cm->timer = PDM_timer_create();
   for (int i = 0; i < 18; i++) {
@@ -1993,13 +2079,13 @@ _coarse_grid_create
   int nCoarseCellComputed;
   
   _split(cm->method,
-         nCoarseCellWanted,
+         part_res->nCoarseCellWanted,
          &nCoarseCellComputed,
          part_ini,
          dualGraphIdx, 
          dualGraph, 
-         (int *) _cellWeight,
-         (int *) _faceWeight,
+         (int *) part_ini->cellWeight,
+         (int *) part_ini->faceWeight,
          (int **) &cellPart);
   
   PDM_timer_hang_on(cm->timer);
@@ -2093,18 +2179,18 @@ _coarse_grid_create
   part_res->part->faceGroup = NULL;
   part_res->part->faceGroupLNToGN = NULL;
 
-  if (nFaceGroup > 0) {
-    part_res->part->faceGroupIdx = malloc((nFaceGroup + 1) * sizeof(int));
-    for (int i = 0; i < (nFaceGroup + 1); i++) {
+  if (part_ini->nFaceGroup > 0) {
+    part_res->part->faceGroupIdx = malloc((part_ini->nFaceGroup + 1) * sizeof(int));
+    for (int i = 0; i < (part_ini->nFaceGroup + 1); i++) {
       part_res->part->faceGroupIdx[i] = part_ini->faceGroupIdx[i];
     }
-    part_res->part->faceGroup = malloc(part_res->part->faceGroupIdx[nFaceGroup] * sizeof(int));
-    for (int i = 0; i < part_ini->faceGroupIdx[nFaceGroup]; i++) {
+    part_res->part->faceGroup = malloc(part_res->part->faceGroupIdx[part_ini->nFaceGroup] * sizeof(int));
+    for (int i = 0; i < part_ini->faceGroupIdx[part_ini->nFaceGroup]; i++) {
       part_res->part->faceGroup[i] = fineFaceToCoarseFace[part_ini->faceGroup[i] - 1]; 
     }
   }
   
-  _build_faceGroup(nFaceGroup,
+  _build_faceGroup(part_ini->nFaceGroup,
                    &(part_res->part->faceGroup),
                    &(part_res->part->faceGroupIdx),
                    &(part_res->coarseFaceGroupToFineFaceGroup));
@@ -3760,6 +3846,44 @@ PROCF (pdm_part_coarse_mesh_create, PDM_PART_COARSE_MESH_CREATE)
                                *have_faceGroup);
 }
 
+
+/**
+ *
+ * \brief Add option for anisotropic mesh agglomeration
+ *
+ * \param [out]  cmId              Coarse mesh identifier
+ * \param [in]   anisotropicOption 
+ */
+    
+
+void 
+PDM_part_coarse_mesh_add_option_anisotropic
+(
+ int        cmId,
+ const int* anisotropicOption
+)
+{
+  _coarse_mesh_t * cm = _get_from_id (cmId);  
+  
+  cm->anisotropicOption = anisotropicOption;
+  
+  PDM_printf("PDM_part_coarse_mesh_add_option_anisotropic \n "); 
+  PDM_printf("PDM_part_coarse_mesh_add_option_anisotropic[0] : % i\n ", cm->anisotropicOption[0]); 
+  PDM_printf("PDM_part_coarse_mesh_add_option_anisotropic[1] : % i\n ", cm->anisotropicOption[1]); 
+}
+
+
+void
+PROCF (PDM_part_coarse_mesh_add_option_anisotropic, PDM_PART_COARSE_MESH_ADD_OPTION_ANISOTROPIC)
+(
+ int        *cmId,
+ const int  *anisotropicOption
+)
+{
+  PDM_part_coarse_mesh_add_option_anisotropic(*cmId, 
+                                              anisotropicOption);
+}
+
 /**
  *
  * \brief Build a coarse mesh
@@ -3796,7 +3920,7 @@ PDM_part_coarse_mesh_input
 (
  int                 cmId,
  int                 iPart,
- const int           nCoarseCell,
+ const int           nCoarseCellWanted,
  const int           nCell,
  const int           nFace,
  const int           nVtx,
@@ -3807,15 +3931,15 @@ PDM_part_coarse_mesh_input
  const int          *cellTag,
  const int          *cellWeight,
  const int          *faceWeight,
- const PDM_g_num_t *cellLNToGN,       
+ const PDM_g_num_t  *cellLNToGN,       
  const int          *faceCell,
  const int          *faceVtxIdx,
  const int          *faceVtx,
  const int          *faceTag,       
- const PDM_g_num_t *faceLNToGN,       
+ const PDM_g_num_t  *faceLNToGN,       
  const double       *vtxCoord,
  const int          *vtxTag,
- const PDM_g_num_t *vtxLNToGN,       
+ const PDM_g_num_t  *vtxLNToGN,       
  const int          *faceGroupIdx,
  const int          *faceGroup,
  const PDM_g_num_t  *faceGroupLNToGN,
@@ -3826,34 +3950,34 @@ PDM_part_coarse_mesh_input
 {   
   _coarse_mesh_t * cm = _get_from_id (cmId);  
     
-   _coarse_grid_create (cm,
-                        iPart,
-                        nCoarseCell,
-                        nCell,
-                        nFace,
-                        nVtx,
-                        nFaceGroup,
-                        nFacePartBound,
-                        cellFaceIdx,
-                        cellFace,
-                        cellTag,
-                        cellWeight,
-                        faceWeight,
-                        cellLNToGN,
-                        faceCell,
-                        faceVtxIdx,
-                        faceVtx,
-                        faceTag,
-                        faceLNToGN,
-                        vtxCoord,
-                        vtxTag,
-                        vtxLNToGN,
-                        faceGroupIdx,
-                        faceGroup,
-                        faceGroupLNToGN,
-                        facePartBoundProcIdx,
-                        facePartBoundPartIdx,
-                        facePartBound);   
+  _coarse_grid_mesh_input (cm,
+                           iPart,
+                           nCoarseCellWanted,
+                           nCell,
+                           nFace,
+                           nVtx,
+                           nFaceGroup,
+                           nFacePartBound,
+                           cellFaceIdx,
+                           cellFace,
+                           cellTag,
+                           cellWeight,
+                           faceWeight,
+                           cellLNToGN,
+                           faceCell,
+                           faceVtxIdx,
+                           faceVtx,
+                           faceTag,
+                           faceLNToGN,
+                           vtxCoord,
+                           vtxTag,
+                           vtxLNToGN,
+                           faceGroupIdx,
+                           faceGroup,
+                           faceGroupLNToGN,
+                           facePartBoundProcIdx,
+                           facePartBoundPartIdx,
+                           facePartBound);   
 }
 
 void 
@@ -3861,7 +3985,7 @@ PROCF (pdm_part_coarse_mesh_input, PDM_PART_COARSE_MESH_INPUT)
 (
  int                *cmId,
  int                *iPart,
- const int          *nCoarseCell,
+ const int          *nCoarseCellWanted,
  const int          *nCell,
  const int          *nFace,
  const int          *nVtx,
@@ -3940,7 +4064,7 @@ PROCF (pdm_part_coarse_mesh_input, PDM_PART_COARSE_MESH_INPUT)
 
   PDM_part_coarse_mesh_input(*cmId,
                              *iPart,
-                             *nCoarseCell,
+                             *nCoarseCellWanted,
                              *nCell,
                              *nFace,
                              *nVtx,
@@ -3983,6 +4107,17 @@ int cmId
 {    
   _coarse_mesh_t * cm = _get_from_id (cmId);
   
+  /* First step : Manage independently coarse grid generation */
+  
+   for (int iPart = 0; iPart < cm->nPart; iPart++) {
+    _part_t * part_ini = cm->part_ini[iPart];
+    _coarse_part_t *part_res = cm->part_res[iPart];
+    
+    _coarse_grid_compute(cm, iPart);
+    
+  }
+  
+  /* Second step : Manage MPI */
   int itime = 13;
   
   //    PDM_part_coarse_mesh_display(cmId); 
@@ -4413,6 +4548,90 @@ PROCF (pdm_part_coarse_mesh_part_get, PDM_PART_COARSE_MESH_PART_GET)
     facePartBoundPartIdx[i] = part_res->part->facePartBoundPartIdx[i];
   
 }
+
+
+/**
+ *
+ * \brief Return a mesh partition
+ * 
+ * \param [in]   cmId                      Coarse mesh identifier
+ * \param [in]   iPart                     Current partition
+ * 
+ * \param [out]  agglomerationLines
+ * \param [out]  agglomerationLinesIdx
+ * \param [out]  isOnFineBnd            
+ *
+ */
+
+void 
+PDM_part_coarse_mesh_part_get_anisotropic_info
+(
+ const int    cmId,
+ const int    iPart,       
+ int          **agglomerationLines,
+ int          **agglomerationLinesIdx,
+ int          **isOnFineBnd       
+)
+{
+  PDM_printf("PDM_part_coarse_mesh_part_get_anisotropic_info : \n ");
+  
+  _coarse_mesh_t * cm = _get_from_id (cmId); 
+  
+  _coarse_part_t *part_res = NULL;   
+  
+  if (iPart < cm->nPart) {        
+    part_res = cm->part_res[iPart]; 
+  }
+  
+  if (part_res == NULL) {
+    PDM_printf("PDM_part_coarse_mesh_part_get error : unknown partition\n");
+    exit(1);
+  }
+  
+  *agglomerationLines    = part_res->agglomerationLines;
+  *agglomerationLinesIdx = part_res->agglomerationLinesIdx;
+  *isOnFineBnd           = part_res->isOnFineBnd;
+  
+}
+
+void
+PROCF (pdm_part_coarse_mesh_part_get_anisotropic_info, PDM_PART_COARSE_MESH_PART_GET_ANISOTROPIC_INFO)
+(
+ int          *cmId,
+ int          *iPart,       
+ int          *agglomerationLines,
+ int          *agglomerationLinesIdx,
+ int          *isOnFineBnd
+)
+{
+  _coarse_mesh_t * cm = _get_from_id (*cmId); 
+  
+  int numProcs;
+  PDM_MPI_Comm_size(cm->comm, &numProcs);
+  
+  _coarse_part_t *part_res = NULL;   
+    
+  if (*iPart < cm->nPart) {        
+    part_res = cm->part_res[*iPart]; 
+  }
+  
+  if (part_res == NULL) {
+    PDM_printf("PDM_part_coarse_mesh_part_get error : unknown partition\n");
+    exit(1);
+  }
+    
+  for (int i = 0; i < part_res->part->nCell + 1; i++)
+    agglomerationLinesIdx[i] = part_res->agglomerationLinesIdx[i];
+
+  for (int i = 0; i < part_res->agglomerationLinesIdx[part_res->part->nCell]; i++)
+    agglomerationLines[i] = part_res->agglomerationLines[i];
+  
+  for (int i = 0; i < part_res->part->nFace; i++)
+    isOnFineBnd[i] = part_res->isOnFineBnd[i];
+  
+}
+
+
 
 /**
  *

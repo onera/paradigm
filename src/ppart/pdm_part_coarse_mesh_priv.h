@@ -34,6 +34,11 @@ typedef struct  {
   
   _part_t      *part;        //Coarse mesh
   
+  int           nCoarseCellWanted;    /*!< Number Cell wanted for agglomeration     */ 
+  
+  // int *cellWeight;    /*!< Integer weight for graoh partitionning  */ 
+  // int *faceWeight;    /*!< Number Cell wanted for agglomeration     */ 
+  
   int *coarseCellCellIdx;    //Array of indexes of the connected partitions (size : nCoarseCell + 1)
   
   int *coarseCellCell;       //Partitioning array (size : coarseCellCellIdx[nCoarseCell]) 
@@ -44,6 +49,17 @@ typedef struct  {
 
   int *coarseVtxToFineVtx;   //Coarse vertex - fine vertex connectivity (size = nCoarseVtx)
 
+  /* Array specific to anisotropic agglomeration */
+  int *agglomerationLines;      
+  int *agglomerationLinesIdx;   
+  int *isOnFineBnd;  
+  
+  /* Array specific to anisotropic agglomeration if Initialise from a finer grid */
+  int *agglomerationLinesInit;      
+  int *agglomerationLinesInitIdx;   
+  int *isOnFineBndInit;  
+  
+  
 } _coarse_part_t;
 
 
@@ -72,7 +88,9 @@ typedef struct  {
   int have_cellWeight;
   int have_faceWeight;
   int have_faceGroup;
-
+  
+  int *anisotropicOption;   /* See nommage */
+  
   //TIMER
   
   PDM_timer_t *timer;             /*!< Timer */ 
@@ -143,6 +161,15 @@ void
 
   cp->coarseVtxToFineVtx = NULL;
   
+  /* Anisotropic part */
+  cp->agglomerationLines        = NULL;      
+  cp->agglomerationLinesIdx     = NULL;   
+  cp->isOnFineBnd               = NULL;
+    
+  cp->agglomerationLinesInit    = NULL;   
+  cp->agglomerationLinesInitIdx = NULL;
+  cp->isOnFineBndInit           = NULL;  
+  
   return cp;
   
 }
@@ -185,18 +212,19 @@ _coarse_mesh_create
    _coarse_mesh_t *cm = (_coarse_mesh_t *) malloc(sizeof(_coarse_mesh_t));
 
    cm->nPart = nPart;
-   cm->comm = comm; 
+   cm->comm  = comm; 
    
    cm->method = method;
    cm->nTPart = nTPart;
+   
    cm->nFaceGroup = nFaceGroup;
 
-   cm->have_cellTag = have_cellTag;
-   cm->have_faceTag = have_faceTag;
-   cm->have_vtxTag = have_vtxTag;
+   cm->have_cellTag    = have_cellTag;
+   cm->have_faceTag    = have_faceTag;
+   cm->have_vtxTag     = have_vtxTag;
    cm->have_cellWeight = have_cellWeight;
    cm->have_faceWeight = have_faceWeight;
-   cm->have_faceGroup = have_faceGroup;
+   cm->have_faceGroup  = have_faceGroup;
    
    cm->part_ini = malloc(sizeof(_part_t *) * nPart); //On déclare un tableau de partitions
    

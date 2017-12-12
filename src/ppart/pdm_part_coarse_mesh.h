@@ -80,6 +80,30 @@ PROCF (pdm_part_coarse_mesh_create, PDM_PART_COARSE_MESH_CREATE)
  const int          *have_faceGroup
  );
 
+
+/**
+ *
+ * \brief Add option for anisotropic mesh agglomeration
+ *
+ * \param [out]  cmId              Coarse mesh identifier
+ * \param [in]   anisotropicOption 
+ */
+    
+void 
+PDM_part_coarse_mesh_add_option_anisotropic
+(
+ int        cmId,
+ const int* anisotropicOption
+);
+
+void
+PROCF (pdm_part_coarse_mesh_add_option_anisotropic, PDM_PART_COARSE_MESH_ADD_OPTION_ANISOTROPIC)
+(
+ int        *cmId,
+ const int  *anisotropicOption
+ );
+
+
 /**
  *
  * \brief Build a coarse mesh
@@ -141,18 +165,18 @@ PDM_part_coarse_mesh_input
  const int          *cellTag,
  const int          *cellWeight,
  const int          *faceWeight,
- const PDM_g_num_t *cellLNToGN,       
+ const PDM_g_num_t  *cellLNToGN,       
  const int          *faceCell,
  const int          *faceVtxIdx,
  const int          *faceVtx,
  const int          *faceTag,       
- const PDM_g_num_t *faceLNToGN,       
+ const PDM_g_num_t  *faceLNToGN,       
  const double       *vtxCoord,
  const int          *vtxTag,
- const PDM_g_num_t *vtxLNToGN,       
+ const PDM_g_num_t  *vtxLNToGN,       
  const int          *faceGroupIdx,
  const int          *faceGroup,
- const PDM_g_num_t *faceGroupLNToGN,
+ const PDM_g_num_t  *faceGroupLNToGN,
  const int          *facePartBoundProcIdx,       
  const int          *facePartBoundPartIdx,
  const int          *facePartBound
@@ -196,6 +220,40 @@ PROCF (pdm_part_coarse_mesh_input, PDM_PART_COARSE_MESH_INPUT)
  const int          *facePartBoundPartIdx,
  const int          *facePartBound
 );
+ 
+/**
+ *
+ * \brief Add isotropic array to current coarse mesh 
+ * 
+ * \param [in]   cmId                      Coarse mesh identifier
+ * \param [in]   iPart                     Current partition
+ * 
+ * \param [out]  agglomerationLines
+ * \param [out]  agglomerationLinesIdx
+ * \param [out]  isOnFineBnd            
+ *
+ */
+
+void 
+PDM_part_coarse_mesh_part_set_anisotropic_info
+(
+ const int    cmId,
+ const int    iPart,       
+ const int    *agglomerationLinesInit,
+ const int    *agglomerationLinesInitIdx,
+ const int    *isOnFineBndInit       
+);
+
+void
+PROCF (PDM_part_coarse_mesh_part_set_anisotropic_info, PDM_PART_COARSE_MESH_PART_SET_ANISOTROPIC_INFO)
+(
+ const int          *cmId,
+ const int          *iPart,       
+ const int          *agglomerationLinesInit,
+ const int          *agglomerationLinesInitIdx,
+ const int          *isOnFineBndInit
+); 
+ 
  
 /**
  *
@@ -358,7 +416,7 @@ PROCF (pdm_part_coarse_mesh_part_get, PDM_PART_COARSE_MESH_PART_GET)
  int          *cellFaceIdx,
  int          *cellFace,
  int          *cellTag,
- PDM_g_num_t *cellLNToGN,
+ PDM_g_num_t  *cellLNToGN,
  int          *cellInitCellIdx,                  
  int          *cellInitCell,          
  int          *faceCell,
@@ -379,6 +437,40 @@ PROCF (pdm_part_coarse_mesh_part_get, PDM_PART_COARSE_MESH_PART_GET)
  int          *facePartBoundPartIdx,
  int          *facePartBound
 );
+
+/**
+ *
+ * \brief Return array specific to isotropic agglomeration
+ * 
+ * \param [in]   cmId                      Coarse mesh identifier
+ * \param [in]   iPart                     Current partition
+ * 
+ * \param [out]  agglomerationLines
+ * \param [out]  agglomerationLinesIdx
+ * \param [out]  isOnFineBnd            
+ *
+ */
+
+void 
+PDM_part_coarse_mesh_part_get_anisotropic_info
+(
+ const int    cmId,
+ const int    iPart,       
+ int          **agglomerationLines,
+ int          **agglomerationLinesIdx,
+ int          **isOnFineBnd       
+);
+
+void
+PROCF (PDM_part_coarse_mesh_part_get_anisotropic_info, PDM_PART_COARSE_MESH_PART_GET_ANISOTROPIC_INFO)
+(
+ int          *cmId,
+ int          *iPart,       
+ int          *agglomerationLines,
+ int          *agglomerationLinesIdx,
+ int          *isOnFineBnd
+);
+
 
 /**
  *
