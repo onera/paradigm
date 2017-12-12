@@ -356,7 +356,7 @@ _split
   for (int i = 0; i < part_ini->nCell; i++){
     (*cellPart)[i] = 0;    
   }
-    
+  //method = 2;  
   switch(method) {
   case 1:
     {
@@ -462,7 +462,13 @@ _split
                        check,        
                        nPart,        
                        *cellPart);
-          
+
+      PDM_printf("\nContent of cellPart\n");    
+      for(int i = 0; i < part_ini->nCell ; i++) {
+        PDM_printf(" %d ", (*cellPart)[i]);
+      }
+      PDM_printf("\n");   
+
 #else
       PDM_printf("PDM_part error : Scotch unavailable\n");
       exit(1);
@@ -516,41 +522,90 @@ _split
       /* For now we directly use NL interfaces */
       
       /* ---------------------------------------- */
-      /* 1) Create adjacency with current cell */
+      /* 1) Create isOnFineBnd array to describe for every cells if it is on boundary */
+      int *isOnFineBnd = malloc(( part_ini->nCell  )* sizeof(int));
+      
+      for (int icell = 0; icell<part_ini->nCell; icell++)
+      {
+        isOnFineBnd[icell] = 0;
+      }
+
+      
+      for (int iFace = 0; iFace<part_ini->nFace; iFace++)
+      {
+        if(part_ini->faceCell[2*iFace+1] == 0){  
+          if(isOnFineBnd[part_ini->faceCell[2*iFace]- 1] < 3){
+             isOnFineBnd[part_ini->faceCell[2*iFace]-1] += 1;
+           }
+         }
+       }
+      int countOnBndCells = 0;
+      for (int icell = 0; icell < part_ini->nCell; icell++)
+      {
+        if (isOnFineBnd[icell]>0)
+        {
+          countOnBndCells =countOnBndCells+1;
+        }
+      }
+      PDM_printf("countOnBndCells : %i \n ",countOnBndCells); 
+      /* ---------------------------------------- */
+      /* 2) Create adjacency with current cell iff on boundary */
       int *cellCellTmpIdx  = malloc(( part_ini->nCell + 1                           )* sizeof(int));
-      int *cellCellTmp     = malloc(( cellCellIdx[part_ini->nCell] + part_ini->nCell)* sizeof(int));
+      int *cellCellTmp     = malloc(( cellCellIdx[part_ini->nCell] + countOnBndCells)* sizeof(int));
       
       cellCellTmpIdx[0] = 0;
-      for (int icell = 0; icell < part_ini->nCell; icell++){
-        int beg = cellCellIdx[icell  ];
-        int end = cellCellIdx[icell+1];
+      for (int icell = 0; icell < part_ini->nCell; icell++)
+      {
         
-        int nbc = end-beg;
-        
-        /* Add One slot for current cell */
-        cellCellTmpIdx[icell+1] = cellCellTmpIdx[icell]+nbc+1;
-        
-        
-        int beg2 = cellCellTmpIdx[icell  ];
-        int end2 = cellCellTmpIdx[icell+1];
-        
-        int nbc2 = end2-beg2;
+        if(isOnFineBnd[icell] >0)
+        {
+          int beg = cellCellIdx[icell  ];
+          int end = cellCellIdx[icell+1];
+          
+          int nbc = end-beg;
+          
+          /* Add One slot for current cell */
+          cellCellTmpIdx[icell+1] = cellCellTmpIdx[icell]+nbc+1;
+          
+          
+          int beg2 = cellCellTmpIdx[icell  ];
+          int end2 = cellCellTmpIdx[icell+1];
+          
+          int nbc2 = end2-beg2;
 
-        PDM_printf("Check 1 : %i / %i \n ",nbc,  nbc2);      
-        
-        cellCellTmp[beg2] = icell;
-        int cpt = 0;
-        for (int icell2 = beg2; icell2 < end2; icell2++){
-          cellCellTmp[icell2] = cellCell[beg+cpt++];
+          //PDM_printf("Check 1 : %i / %i \n ",nbc,  nbc2);      
+
+          
+          cellCellTmp[beg2] = icell;
+          int cpt = 0;
+          for (int icell2 = beg2+1; icell2 < end2; icell2++){
+            cellCellTmp[icell2] = cellCell[beg+cpt++];
+          }
+        }else
+        {
+          int beg = cellCellIdx[icell  ];
+          int end = cellCellIdx[icell+1];
+          
+          int nbc = end-beg;
+          
+          /* Add One slot for current cell */
+          cellCellTmpIdx[icell+1] = cellCellTmpIdx[icell]+nbc;
+          
+          int beg2 = cellCellTmpIdx[icell  ];
+          int end2 = cellCellTmpIdx[icell+1];
+
+          int cpt = 0;
+          for (int icell2 = beg2; icell2 < end2; icell2++){
+            cellCellTmp[icell2] = cellCell[beg+cpt++];
+          }
         }
-         
       }
+
       /* ---------------------------------------- */
       
-      PDM_printf("Check 2 : %i / %i \n ",cellCellIdx[part_ini->nCell],  cellCellTmpIdx[part_ini->nCell]);     
+      //PDM_printf("Check 2 : %i / %i \n ",cellCellIdx[part_ini->nCell],  cellCellTmpIdx[part_ini->nCell]);     
       /* ---------------------------------------- */
-      /* 2) Fill up adjMatrix Area */
-      double *CellCellArea  = malloc(( cellCellTmpIdx[part_ini->nCell] )* sizeof(double));
+      /* 3) Fill up adjMatrix Area */
       
       
       // for (int icell = 0; icell < part_ini->nCell; icell++){
@@ -570,8 +625,8 @@ _split
       
       sizes[0 ] = part_ini->nCell;
       sizes[1 ] = cellCellTmpIdx[part_ini->nCell];
-      sizes[2 ] = -1;
-      sizes[3 ] = -1;
+      sizes[2 ] = 0;
+      sizes[3 ] = 0;
       sizes[4 ] = 0;
       sizes[5 ] = 0;
       sizes[6 ] = 0;
@@ -583,34 +638,20 @@ _split
       
       int *arrayOfFineAnisotropicCompliantCells = malloc((part_ini->nCell)* sizeof(int));
       for (int icell = 0; icell < part_ini->nCell; icell++){
-        arrayOfFineAnisotropicCompliantCells[icell] = 1;
+        arrayOfFineAnisotropicCompliantCells[icell] = icell;
       }
       
       for (int i = 0; i < part_ini->nCell; i++){
         (*cellPart)[i] = -1;    
       }
             
-      int *isOnFineBnd = malloc(( part_ini->nCell  )* sizeof(int));
-      
-      for (int icell = 0; icell<part_ini->nCell; icell++)
-      {
-        isOnFineBnd[icell] = 0;
-      }
-      
-      for (int iFace = 0; iFace<part_ini->nFace; iFace++)
-      {
-        if(part_ini->faceCell[2*iFace+1] == 0){  
-          if(isOnFineBnd[part_ini->faceCell[2*iFace]- 1] < 3){
-             isOnFineBnd[part_ini->faceCell[2*iFace]-1] += 1;
-           }
-         }
-       }
+     
  
       
       /* ---------------------------------------- */
        
       int isFirstAgglomeration_int = 1;
-      int isAnisotropic_int        = 1;
+      int isAnisotropic_int        = 0;
       int dimension                = 3;
       int goalCard                 = 8;
       int minCard                  = 4;
@@ -619,7 +660,14 @@ _split
       int verbose_int              = 1;
       int *agglomerationLines_Idx = malloc(( part_ini->nCell  )* sizeof(int));
       int *agglomerationLines     = malloc(( part_ini->nCell  )* sizeof(int));
-      
+
+      PDM_printf("\n\tSize of cellCellIdx");
+      PDM_printf(" %d ",cellCellIdx[part_ini->nCell]);
+        
+    //for(int i = 0; i < part_ini->nCell; i++) {
+      //PDM_printf(" %d ", cellCellN[i]);
+   // }
+    //PDM_printf("\n");
       /* ---------------------------------------- */
       agglomerateOneLevel_v_Paradigma(sizes,
                                       cellCellTmpIdx,
@@ -640,12 +688,18 @@ _split
                                       maxCard,
                                       checks_int,
                                       verbose_int);
+
       // hellohell(maxCard);
-      
+      PDM_printf("\n\tAfter agglomerateOneLevel_v_Paradigma");
+      //PDM_printf("\n\tNb Coarse cell %i", );
+//      PDM_printf(" cellPart");
+//      for (int i = 0; i < part_ini->nCell; i++){
+//        PDM_printf(" %i ", (*cellPart)[i]);    
+//      }
+
       /* Free array */
       free(cellCellTmpIdx);
       free(cellCellTmp);
-      free(CellCellArea);
       free(sizes);
       free(arrayOfFineAnisotropicCompliantCells);
       free(isOnFineBnd);
@@ -653,7 +707,7 @@ _split
       free(agglomerationLines);
       
       int check = 0;
-      PDM_printf("\nContent of cellFaceIdx\n");    
+      PDM_printf("\nContent of cellPart\n");    
       for(int i = 0; i < part_ini->nCell ; i++) {
         PDM_printf(" %d ", (*cellPart)[i]);
       }
