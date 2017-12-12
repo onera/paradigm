@@ -319,7 +319,9 @@ PDM_part_split_t           method,
   int *renum_properties_face = NULL;
 
   PDM_g_num_t *distrib = (PDM_g_num_t *) malloc((numProcs+1) * sizeof(PDM_g_num_t));
-  PDM_MPI_Allgather((void *) &dNVtx,
+  PDM_g_num_t _dNVtx = (PDM_g_num_t) dNVtx;
+
+  PDM_MPI_Allgather((void *) &_dNVtx,
                     1,
                     PDM__PDM_MPI_G_NUM,
                     (void *) &(distrib[1]),
@@ -334,6 +336,7 @@ PDM_part_split_t           method,
     distrib[i] +=  distrib[i-1];
   }
 
+  
   PDM_part_create (&ppartId,
                    pdm_mpi_comm,
                    method,
@@ -494,14 +497,6 @@ PDM_part_split_t           method,
                        &faceGroupIdx,
                        &faceGroup,
                        &faceGroupLNToGN);
-
-    
-    printf("vtxs %d : \n", nVtx);
-    for (int i = 0; i< nVtx; i++) {
-      
-      printf("%ld : %12.5e %12.5e %12.5e\n", vtxLNToGN[i], vtx[3*i], vtx[3*i+1], vtx[3*i+2]);
-    }
-    
     
     vtxLNToGNs[ipart] = vtxLNToGN;
 
@@ -531,12 +526,9 @@ PDM_part_split_t           method,
   
   PDM_g_num_t *numabs_init = malloc(sizeof(PDM_g_num_t) * dNVtx);
   
-  printf ("numabs_init :");
   for (int i = 0; i < dNVtx; i++) {
     numabs_init[i] = distrib[myRank] + 1 + i;
-    printf (" %ld", numabs_init[i]);
   }
-  printf ("\n");
   
   PDM_part_to_block_t *ptb1 = PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                       PDM_PART_TO_BLOCk_POST_CLEANUP, 1.,
@@ -627,7 +619,6 @@ PDM_part_split_t           method,
 
   int nElb2 =  PDM_part_to_block_n_elt_block_get (ptb2);
   
-  printf ("nElb1 == nElb2 : %d %d\n", nElb1, nElb2);
   assert (nElb1 == nElb2);
   
   PDM_g_num_t *block_numabs2;
@@ -652,16 +643,18 @@ PDM_part_split_t           method,
                           &block_stride,
                           (void **) &block_numabs);
   
+  for (int i = 0; i < nElb1; i++) {
+    printf("%ld %ld\n",block_numabs[i], block_numabs2[i] );
+    if (block_numabs[i] != block_numabs2[i]) {
+      printf("-- diff\n");
+      PDM_error (__FILE__, __LINE__, 0, "Error in the generated numbering\n");
+    }
+    
+  }
   
     
-  PDM_g_num_t *n1 = PDM_part_to_block_block_gnum_get (ptb1);
-  PDM_g_num_t *n2 = PDM_part_to_block_block_gnum_get (ptb2);
-
-
-  printf ("new and init num :\n");
-  for (int j = 0; j < nElb1; j++) {
-    printf ("%ld %ld : %ld %ld\n", n1[j], block_numabs2[j], n2[j], block_numabs[j]);
-  }
+//  PDM_g_num_t *n1 = PDM_part_to_block_block_gnum_get (ptb1);
+//  PDM_g_num_t *n2 = PDM_part_to_block_block_gnum_get (ptb2);
 
   free(_numabs);
   free(block_numabs);

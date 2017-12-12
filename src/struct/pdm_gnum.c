@@ -387,15 +387,12 @@ _gnum_from_coords_compute
       
       PDM_points_merge_candidates_get (id_pm, ipart, &candidates_idx, &candidates_desc);
       
-      printf("toto %d \n", _gnum->n_elts[ipart]);
-      
       for (int i = 0; i < _gnum->n_elts[ipart]; i++) {
         for (int j = candidates_idx[i]; j < candidates_idx[i+1]; j++) {
           int idx = j;
           int distant_proc = candidates_desc[3*idx    ];
           int distant_part = candidates_desc[3*idx + 1];
 //          int distant_pt = candidates_desc[3*idx + 2];
-          printf ("procs : %d %d %d %d\n", iproc, distant_proc, ipart, distant_part);
           
           if ((distant_proc < iproc) || ((distant_proc == iproc) && (distant_part < ipart))) {
             _gnum->index[ipart][i] = -1;
@@ -407,7 +404,6 @@ _gnum_from_coords_compute
         }
       }
     }
-    printf ("n_entities : %d\n", n_entities);
   }
   else {
     for (int ipart = 0; ipart < _gnum->n_part; ipart++) {
@@ -623,8 +619,6 @@ _gnum_from_coords_compute
 
     PDM_g_num_t _max_loc = -1;
 
-    printf("************ toto\n");
-
     if (_gnum->merge) {
       
       /*
@@ -656,22 +650,21 @@ _gnum_from_coords_compute
       /*
        * Count number of values to send 
        */ 
-
-      printf("Send values n\n");
       
+      for (rank_id = 0; rank_id < n_ranks; rank_id++) {
+        send_count2[rank_id] = 0;
+      }
+
+      for (rank_id = 0; rank_id < n_ranks + 1; rank_id++) {
+        send_shift2[rank_id] = 0;
+        recv_shift2[rank_id] = 0;
+      }
+
       for (int ipart = 0; ipart < _gnum->n_part; ipart++) {
         
         int *candidates_idx;
         int *candidates_desc;
 
-        for (rank_id = 0; rank_id < n_ranks; rank_id++) {
-          send_count2[rank_id] = 0;
-        }
-        
-        for (rank_id = 0; rank_id < n_ranks + 1; rank_id++) {
-          send_shift2[rank_id] = 0;
-          recv_shift2[rank_id] = 0;
-        }
         
         PDM_points_merge_candidates_get (id_pm, ipart, &candidates_idx, &candidates_desc);
 
@@ -683,10 +676,10 @@ _gnum_from_coords_compute
             int distant_pt   = candidates_desc[3*idx + 2];
             if (iproc < distant_proc) {
               send_count2[distant_proc] += 1;
-              assert (_gnum->g_nums[ipart][i] != -1);
+//              assert (_gnum->g_nums[ipart][i] != -1);
             }              
             else if ((iproc == distant_proc) && (ipart <= distant_part)) {              
-              assert (_gnum->g_nums[ipart][i] != -1);
+//              assert ((_gnum->g_nums[ipart][i] != -1) || (_gnum->g_nums[distant_part][distant_pt] == _gnum->g_nums[ipart][i]));
               _gnum->g_nums[distant_part][distant_pt] = _gnum->g_nums[ipart][i]; 
             }
           }
@@ -708,8 +701,6 @@ _gnum_from_coords_compute
        * Send values
        */ 
 
-      printf("Send values \n");
-
       PDM_g_num_t *send_buff = (PDM_g_num_t *) 
               malloc (sizeof(PDM_g_num_t)*send_shift2[n_ranks]);
       PDM_g_num_t *recv_buff = (PDM_g_num_t *) 
@@ -723,8 +714,6 @@ _gnum_from_coords_compute
         PDM_points_merge_candidates_get (id_pm, ipart, &candidates_idx, &candidates_desc);
         
         for (int i = 0; i < _gnum->n_elts[ipart]; i++) {
-          printf("i %d:\n", i);
-          fflush(stdout);
           for (int j = candidates_idx[i]; j < candidates_idx[i+1]; j++) {
             int idx = j;
             int distant_proc = candidates_desc[3*idx    ];
@@ -732,7 +721,7 @@ _gnum_from_coords_compute
             int distant_pt   = candidates_desc[3*idx + 2];
 
             if (iproc < distant_proc) { 
-              int idx2 = send_shift[distant_proc] + send_count2[distant_proc];
+              int idx2 = send_shift2[distant_proc] + send_count2[distant_proc];
               send_buff[idx2]     = distant_part;
               send_buff[idx2 + 1] = distant_pt;
               send_buff[idx2 + 2] = _gnum->g_nums[ipart][i];;
@@ -741,36 +730,27 @@ _gnum_from_coords_compute
             }
           }
         }
-          printf("pass\n");
-          fflush(stdout);
       }
 
       /* 
        * Send : distant_part, distant_pt, gnum
        */      
       
-      PDM_MPI_Alltoallv(send_buff, recv_count2, recv_shift2, PDM__PDM_MPI_G_NUM,
-                        recv_buff, send_count2, send_shift2, PDM__PDM_MPI_G_NUM,
+      PDM_MPI_Alltoallv(send_buff, send_count2, send_shift2, PDM__PDM_MPI_G_NUM,
+                        recv_buff, recv_count2, recv_shift2, PDM__PDM_MPI_G_NUM,
                         comm);
 
-          printf("pass 1 %d \n", 3 * recv_shift2[n_ranks] );
-          fflush(stdout);
       /* 
        * update gnum
        */      
         
       k = 0;
-      while (k < 3 * recv_shift2[n_ranks]) {
+      while (k < recv_shift2[n_ranks]) {
         int ipart        = (int) recv_buff[k++];
         int ipt          = (int) recv_buff[k++];
         PDM_g_num_t gnum =       recv_buff[k++];
-        printf("%d %d %ld\n", ipart, ipt, gnum);
-        fflush(stdout);
          _gnum->g_nums[ipart][ipt] = gnum;
       }
-    
-          printf("pass 2\n");
-          fflush(stdout);
 
       free (send_buff);
       free (recv_buff);
@@ -779,9 +759,6 @@ _gnum_from_coords_compute
       free (send_shift2);
       free (recv_shift2);    
     
-                printf("pass 3\n");
-          fflush(stdout);
-
     }
 
     else {
