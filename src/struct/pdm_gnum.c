@@ -893,7 +893,10 @@ _gnum_from_coords_compute
   }
 
   if (_gnum->merge) {
-    printf("toto\n");
+    for (int ipart = 0; ipart < _gnum->n_part; ipart++) {
+      free (_gnum->index[ipart]);
+    }
+    free(_gnum->index);
     PDM_points_merge_free (id_pm);
   }
   

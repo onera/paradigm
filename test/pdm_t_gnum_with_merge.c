@@ -651,17 +651,22 @@ PDM_part_split_t           method,
     }
     
   }
-  
     
 //  PDM_g_num_t *n1 = PDM_part_to_block_block_gnum_get (ptb1);
 //  PDM_g_num_t *n2 = PDM_part_to_block_block_gnum_get (ptb2);
-
+  
+  for (int ipart = 0; ipart < nPart; ipart++) {
+    free (char_length[ipart]);
+  }
+  free (char_length);
+  
   free(_numabs);
   free(block_numabs);
   free(block_numabs2);
   free(nVtxs);
   free(vtxLNToGNs);
   free(numabs_init);
+  free(distrib);
   
   PDM_gnum_free (id2, 0);
   

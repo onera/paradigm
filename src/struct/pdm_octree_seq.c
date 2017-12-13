@@ -438,6 +438,8 @@ _build_octree
 _octree_seq_t *octree
 )
 {
+  printf("_build_octree\n");
+  
   int point_range[2];
 
   /* Initialization */
@@ -535,6 +537,8 @@ PDM_octree_seq_create
  const double tolerance 
 )
 { 
+  printf("PDM_octree_seq_create\n");
+  
   if (_octrees == NULL) {
     _octrees = PDM_Handles_create (4);
   }
@@ -600,10 +604,9 @@ PDM_octree_seq_free
 
   free (octree->n_points);
   free (octree->point_clouds);
-  
-  octree->point_icloud = NULL;
-  octree->point_ids = NULL;
-  octree->nodes = NULL;
+  free (octree->point_ids);
+  free (octree->nodes);
+  free (octree->point_icloud); 
   
   free (octree);
   
@@ -676,6 +679,7 @@ PDM_octree_seq_build
 )
 {
   _octree_seq_t *octree = _get_from_id (id);
+  printf("PDM_octree_seq_build\n");
 
   if (octree->nodes == NULL) {
     _build_octree (octree);

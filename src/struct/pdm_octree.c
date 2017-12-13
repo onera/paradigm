@@ -156,6 +156,7 @@ PDM_octree_create
  const PDM_MPI_Comm comm
 )
 { 
+  printf("PDM_octree_create\n");
   if (_octrees == NULL) {
     _octrees = PDM_Handles_create (4);
   }
@@ -192,6 +193,7 @@ const int octree_seq_id,
 const PDM_MPI_Comm comm
 )
 {
+  printf("PDM_octree_from_octree_seq_create\n");
   if (_octrees == NULL) {
     _octrees = PDM_Handles_create (4);
   }
@@ -235,6 +237,7 @@ PDM_octree_free
  const int          id
 )
 {
+  printf("PDM_octree_free\n");
   _octree_t *octree = _get_from_id (id);
 
   free (octree->extents_proc);
@@ -312,6 +315,8 @@ PDM_octree_build
  const int          id
 )
 {
+  printf("PDM_octree_buil\n");
+  
   _octree_t *octree = _get_from_id (id);
 
   PDM_octree_seq_build (octree->octree_seq_id);
@@ -327,18 +332,6 @@ PDM_octree_build
   PDM_MPI_Allgather (extents, 6, PDM_MPI_DOUBLE,
                      octree->extents_proc, 6, PDM_MPI_DOUBLE,
                      octree->comm);
-
-  
-  double *_extents = extents;
-  for (int i = 0; i < n_proc; i++) {
-    printf("%12.5e %12.5e %12.5e %12.5e %12.5e %12.5e\n", _extents[0],
-                    _extents[1],
-                    _extents[2],
-                    _extents[3],
-                    _extents[4],
-                    _extents[5]);
-    double *_extents = extents + 6;
-  }
 
   
 }

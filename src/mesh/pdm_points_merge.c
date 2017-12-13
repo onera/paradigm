@@ -518,7 +518,7 @@ PDM_points_merge_free
 )
 {
   _point_merge_t *ppm = _get_from_id (id);
-
+  
   for (int i = 0; i < ppm->n_point_clouds; i++) {
     if (ppm->candidates_idx[i] != NULL) {
       free (ppm->candidates_idx[i]);
@@ -916,9 +916,6 @@ PDM_points_merge_process
    * 
    */
   
-  ppm->candidates_idx = malloc (sizeof(int *) * ppm->n_point_clouds);
-  ppm->candidates_desc = malloc (sizeof(int *) * ppm->n_point_clouds);
-  
   for (int i = 0; i < ppm->n_point_clouds; i++) {
     ppm->candidates_idx[i] = malloc(sizeof(int) * (ppm->n_points[i] + 1));
     ppm->candidates_desc[i] = NULL;
@@ -1066,7 +1063,7 @@ PDM_points_merge_candidates_get
   *candidates_idx  = ppm->candidates_idx[i_point_cloud];
   *candidates_desc = ppm->candidates_desc[i_point_cloud];
 
-  if (0 == 1) {
+  if (1 == 1) {
     printf("candidates : \n");
     for (int i = 0; i < ppm->n_points[i_point_cloud]; i++) {
       printf("-- %d %d :", i_point_cloud, i);
