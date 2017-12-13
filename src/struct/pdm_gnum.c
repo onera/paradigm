@@ -669,17 +669,28 @@ _gnum_from_coords_compute
         PDM_points_merge_candidates_get (id_pm, ipart, &candidates_idx, &candidates_desc);
 
         for (int i = 0; i < _gnum->n_elts[ipart]; i++) {
+          int update_proc = iproc;
+          
+          for (int j = candidates_idx[i]; j < candidates_idx[i+1]; j++) {
+            int idx = j;
+            int distant_proc = candidates_desc[3*idx    ];
+//            int distant_part = candidates_desc[3*idx + 1];
+//            int distant_pt   = candidates_desc[3*idx + 2];
+            update_proc = PDM_MIN(update_proc, distant_proc);
+          }
           for (int j = candidates_idx[i]; j < candidates_idx[i+1]; j++) {
             int idx = j;
             int distant_proc = candidates_desc[3*idx    ];
             int distant_part = candidates_desc[3*idx + 1];
             int distant_pt   = candidates_desc[3*idx + 2];
-            if (iproc < distant_proc) {
+            if ((update_proc == iproc) && (distant_proc != iproc)) {
               send_count2[distant_proc] += 1;
-//              assert (_gnum->g_nums[ipart][i] != -1);
+              assert (_gnum->g_nums[ipart][i] != -1);
             }              
-            else if ((iproc == distant_proc) && (ipart <= distant_part)) {              
-//              assert ((_gnum->g_nums[ipart][i] != -1) || (_gnum->g_nums[distant_part][distant_pt] == _gnum->g_nums[ipart][i]));
+            else if (  (update_proc == iproc)
+                    && (distant_proc == iproc)
+                    && (ipart <= distant_part)) {
+              assert (_gnum->g_nums[ipart][i] != -1);
               _gnum->g_nums[distant_part][distant_pt] = _gnum->g_nums[ipart][i]; 
             }
           }
@@ -714,13 +725,23 @@ _gnum_from_coords_compute
         PDM_points_merge_candidates_get (id_pm, ipart, &candidates_idx, &candidates_desc);
         
         for (int i = 0; i < _gnum->n_elts[ipart]; i++) {
+          int update_proc = iproc;
+          
+          for (int j = candidates_idx[i]; j < candidates_idx[i+1]; j++) {
+            int idx = j;
+            int distant_proc = candidates_desc[3*idx    ];
+//            int distant_part = candidates_desc[3*idx + 1];
+//            int distant_pt   = candidates_desc[3*idx + 2];
+            update_proc = PDM_MIN (update_proc, distant_proc);
+          }
+
           for (int j = candidates_idx[i]; j < candidates_idx[i+1]; j++) {
             int idx = j;
             int distant_proc = candidates_desc[3*idx    ];
             int distant_part = candidates_desc[3*idx + 1];
             int distant_pt   = candidates_desc[3*idx + 2];
 
-            if (iproc < distant_proc) { 
+            if ((iproc == update_proc) && (distant_proc != iproc)){ 
               int idx2 = send_shift2[distant_proc] + send_count2[distant_proc];
               send_buff[idx2]     = distant_part;
               send_buff[idx2 + 1] = distant_pt;
@@ -872,6 +893,7 @@ _gnum_from_coords_compute
   }
 
   if (_gnum->merge) {
+    printf("toto\n");
     PDM_points_merge_free (id_pm);
   }
   

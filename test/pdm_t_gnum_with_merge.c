@@ -229,11 +229,11 @@ PDM_part_split_t           method,
   const PDM_g_num_t *_numabs2 = PDM_gnum_get (id, 0);
     
   
-  for (int j = 0; j < dNVtx; j++) {
-    PDM_printf (PDM_FMT_G_NUM" %12.5e %12.5e %12.5e\n", _numabs2[j], dVtxCoord[3*j], 
-                                                     dVtxCoord[3*j+1], 
-                                                     dVtxCoord[3*j+2]);
-  }
+//  for (int j = 0; j < dNVtx; j++) {
+//    PDM_printf (PDM_FMT_G_NUM" %12.5e %12.5e %12.5e\n", _numabs2[j], dVtxCoord[3*j], 
+//                                                     dVtxCoord[3*j+1], 
+//                                                     dVtxCoord[3*j+2]);
+//  }
 
   struct timeval t_elaps_fin; 
 
@@ -644,9 +644,9 @@ PDM_part_split_t           method,
                           (void **) &block_numabs);
   
   for (int i = 0; i < nElb1; i++) {
-    printf("%ld %ld\n",block_numabs[i], block_numabs2[i] );
     if (block_numabs[i] != block_numabs2[i]) {
-      printf("-- diff\n");
+      PDM_printf("-- diff %d : "PDM_FMT_G_NUM" "PDM_FMT_G_NUM" \n", 
+             i, block_numabs2[i], block_numabs[i]);
       PDM_error (__FILE__, __LINE__, 0, "Error in the generated numbering\n");
     }
     
