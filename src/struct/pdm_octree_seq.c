@@ -201,10 +201,6 @@ _build_octree_seq_leaves(const int       ancestor_id,
     for (i = point_range[0]; i < point_range[1]; i++) {
 
       for (j = 0, k = 0; j < 3; j++) {
-//        printf ("octree->point_ids[i]*3 + j %d\n", octree->point_ids[i]*3 + j);
-//        printf ("octree->point_icloud[i] %d\n", octree->point_icloud[i]);
-//        printf ("point_coords[octree->point_icloud[i]][octree->point_ids[i]*3 + j] %12.5e\n",
-//                point_coords[octree->point_icloud[i]][octree->point_ids[i]*3 + j]);
         if (point_coords[octree->point_icloud[i]][octree->point_ids[i]*3 + j] > mid[j])
           k += octant_mask[j];
       }
@@ -247,11 +243,6 @@ _build_octree_seq_leaves(const int       ancestor_id,
       idx[i] = point_range[0] + idx[i];
 
     /* Build leaves recursively */
-
-//        printf ("extents : %12.5e  %12.5e %12.5e %12.5e %12.5e %12.5e\n", 
-//                extents[0], extents[1], extents[2], 
-//                extents[3], extents[4], extents[5]); 
-    
     
     for (i = 0; i < 8; i++) {
       
@@ -295,10 +286,6 @@ _build_octree_seq_leaves(const int       ancestor_id,
 
         octree->n_nodes = tmp_size;
 
-  //      printf ("sub_extents : %12.5e  %12.5e %12.5e %12.5e %12.5e %12.5e\n", 
-  //              sub_extents[0], sub_extents[1], sub_extents[2], 
-  //              sub_extents[3], sub_extents[4], sub_extents[5]); 
-
         _build_octree_seq_leaves(_n_nodes,
                              (PDM_octree_seq_child_t) i, 
                              depth+1,
@@ -330,29 +317,16 @@ _build_octree_seq_leaves(const int       ancestor_id,
   for (i = 0; i < 6; i++) {
     _node->extents[i] = extents[i];
   }
-    
-//  printf ("child %ld %d : ", octree, _n_nodes);
-//  int isLeaf = 0;
 
   for (i = 0; i < 8; i++) {
     _node->children_id[i] = octant_id[i];
-//    isLeaf +=octant_id[i];
-//    printf (" %d",_node->children_id[i]);
   }
-//  printf ("\n");
-
   
   _node->ancestor_id = ancestor_id;
   _node->depth = depth;
   
   _node->n_points = _n_points;
   _node->location_in_ancestor = location_in_ancestor;
-//  if (isLeaf == -8) {
-//    printf ("-- %ld node leaf %d %d %d %d %d\n", octree, _n_nodes, _node->range[0], _node->range[1], _node->depth, _node->ancestor_id);
-//  }
-//  else {
-//    printf ("-- %ld node %d %d %d %d %d\n", octree, _n_nodes, _node->range[0], _node->range[1], _node->depth, _node->ancestor_id);    
-//  }
 }
 
 /**
@@ -412,15 +386,7 @@ _point_extents(const int     dim,
           extents[i + dim] = point_coords[(coord_idx * dim) + i];
       }
     }
-  }
-  
-  printf("_point_extents : \n");
-  
-  for (i = 0; i < dim; i++) {
-    printf ("%12.5e %12.5e\n", extents[i], extents[i+dim]);
-  }
-  
-  
+  }  
 }
 
 
@@ -438,7 +404,6 @@ _build_octree
 _octree_seq_t *octree
 )
 {
-  printf("_build_octree\n");
   
   int point_range[2];
 
@@ -537,7 +502,6 @@ PDM_octree_seq_create
  const double tolerance 
 )
 { 
-  printf("PDM_octree_seq_create\n");
   
   if (_octrees == NULL) {
     _octrees = PDM_Handles_create (4);
@@ -599,7 +563,6 @@ PDM_octree_seq_free
  const int          id
 )
 {
-  printf("PDM_octree_seq_free : %d\n", id);
   _octree_seq_t *octree = _get_from_id (id);
 
   free (octree->n_points);
@@ -679,7 +642,6 @@ PDM_octree_seq_build
 )
 {
   _octree_seq_t *octree = _get_from_id (id);
-  printf("PDM_octree_seq_build\n");
 
   if (octree->nodes == NULL) {
     _build_octree (octree);

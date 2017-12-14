@@ -156,7 +156,6 @@ PDM_octree_create
  const PDM_MPI_Comm comm
 )
 { 
-  printf("PDM_octree_create\n");
   if (_octrees == NULL) {
     _octrees = PDM_Handles_create (4);
   }
@@ -193,7 +192,6 @@ const int octree_seq_id,
 const PDM_MPI_Comm comm
 )
 {
-  printf("PDM_octree_from_octree_seq_create\n");
   if (_octrees == NULL) {
     _octrees = PDM_Handles_create (4);
   }
@@ -237,7 +235,6 @@ PDM_octree_free
  const int          id
 )
 {
-  printf("PDM_octree_free\n");
   _octree_t *octree = _get_from_id (id);
 
   free (octree->extents_proc);
@@ -315,7 +312,6 @@ PDM_octree_build
  const int          id
 )
 {
-  printf("PDM_octree_buil\n");
   
   _octree_t *octree = _get_from_id (id);
 

@@ -22,6 +22,7 @@
 #include "pdm_poly_surf_gen.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
+#include "pdm_timer.h"
 
 
 /*============================================================================
@@ -518,7 +519,13 @@ PDM_part_split_t           method,
 
   }
 
+  PDM_timer_t *timer = PDM_timer_create();                                                                                  
+  PDM_timer_resume(timer);                                                                                     
   PDM_gnum_compute (id2);
+  PDM_timer_hang_on(timer);                                                                                    
+  printf("Compute gnum end %12.5es\n", PDM_timer_elapsed(timer));
+  fflush(stdout);
+  PDM_timer_free(timer);
 
   const PDM_g_num_t **_numabs = malloc (sizeof(PDM_g_num_t *) * nPart);
  

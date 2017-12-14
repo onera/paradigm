@@ -59,6 +59,7 @@
 #include "pdm_binary_search.h"
 #include "pdm_mpi.h"
 #include "pdm_points_merge.h"
+#include "pdm_timer.h"
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
@@ -378,7 +379,12 @@ _gnum_from_coords_compute
       }
     }
     
+//    PDM_timer_t *timer = PDM_timer_create();                                                                                  
+//    PDM_timer_resume(timer);                                                                                     
     PDM_points_merge_process (id_pm);
+//    PDM_timer_hang_on(timer);                                                                                    
+//    printf("Compute points merge %12.5es\n", PDM_timer_elapsed(timer));
+//    PDM_timer_free(timer);
 
     for (int ipart = 0; ipart < _gnum->n_part; ipart++) {
 

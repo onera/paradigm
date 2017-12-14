@@ -136,7 +136,6 @@ const double *second_extents
              (first_extents[i+3] >= second_extents[i+3])) {
       intersect += 1;
     }
-//    printf("intersect %d : %d\n", i, intersect);  
   }
   
   return (intersect == 3);
@@ -338,9 +337,12 @@ const double   tolerance
         double tol2 = (point_box[0] - point_coords[0]) * (point_box[0] - point_coords[0]);
 
         tol = PDM_MIN (tol1, tol2);
-        if (1 == 0) {
+        if (0 == 1) {
           if (dist2 <= tol) {
+            printf ("point local : %d\n", point_indexes[i]);
+            printf ("point distant : %d %d\n", point_proc, point_idx) ;
             printf("dist2 tol : %12.5e %12.5e\n", dist2, tol);
+            if (dist2 <= tol) printf("**** Fusion *****\n");
             printf("%12.5e %12.5e\n", coords_candidate[0], point_coords[0]);
             printf("%12.5e %12.5e\n", coords_candidate[1], point_coords[1]);
             printf("%12.5e %12.5e\n", coords_candidate[2], point_coords[2]);
@@ -717,20 +719,9 @@ PDM_points_merge_process
         box[4] = __coord[1] + _default_eps;
         box[5] = __coord[2] + _default_eps;
       }
-
-//     printf("%d %d - %12.5e %12.5e %12.5e %12.5e %12.5e %12.5e :\n",
-//             i_cloud, i, box[0], box[1], box[2], box[3], box[4], box[5]);
       
       for (int k = 0; k < n_proc ; k++) {
           const double *_extents_proc = extents_proc + k * 6;
-//          printf ("extents proc \n");
-//          printf("%d %12.5e %12.5e %12.5e %12.5e %12.5e %12.5e\n",k, _extents_proc[0],
-//                  _extents_proc[1],
-//                  _extents_proc[2],
-//                  _extents_proc[3],
-//                  _extents_proc[4],
-//                  _extents_proc[5]
-//                 );
         if (k != i_proc) {
 
           if (_intersect_extents(box, _extents_proc)) {
@@ -757,7 +748,7 @@ PDM_points_merge_process
   for (int i = 0; i < n_tmp_store; i++) {
     val_send_n[tmp_store[3*i]]++;
   }
-
+  
   int *val_recv_n = malloc (sizeof(int)*n_proc);
   PDM_MPI_Alltoall (val_send_n, 1, PDM_MPI_INT, val_recv_n, 1, PDM_MPI_INT, ppm->comm);
   
@@ -854,7 +845,7 @@ PDM_points_merge_process
       _tmp_recv += 8;
       double _char_length = -1;
       if (ppm->char_length != NULL) {
-        _char_length  = (double) _tmp_recv[0];
+        _char_length  = *((double *) _tmp_recv);
         _tmp_recv += 8;       
         point_box[0] = distant_coord[0] - _char_length * ppm->tolerance;
         point_box[1] = distant_coord[1] - _char_length * ppm->tolerance;
@@ -864,11 +855,11 @@ PDM_points_merge_process
         point_box[5] = distant_coord[2] + _char_length * ppm->tolerance;
       }
       
-      int distant_cloud = _tmp_recv[0];
+      int distant_cloud = *((int *) _tmp_recv);
       _tmp_recv += 4;
-      int distant_point = _tmp_recv[0];
+      int distant_point = *((int *) _tmp_recv);
       _tmp_recv += 4;
-
+      
       int root_id = PDM_octree_root_node_id_get (ppm->octree_id);
       
       _search_distant_couple (n_fusion_from_proc,
@@ -1063,19 +1054,20 @@ PDM_points_merge_candidates_get
   *candidates_idx  = ppm->candidates_idx[i_point_cloud];
   *candidates_desc = ppm->candidates_desc[i_point_cloud];
 
-  if (1 == 1) {
+  if (0 == 1) {
     printf("candidates : \n");
     for (int i = 0; i < ppm->n_points[i_point_cloud]; i++) {
-      printf("-- %d %d :", i_point_cloud, i);
+      if (ppm->candidates_idx[i_point_cloud][i+1] > ppm->candidates_idx[i_point_cloud][i]) {
+      printf("-- %d %d ", i_point_cloud, i);
       for (int j = ppm->candidates_idx[i_point_cloud][i]; 
                j <  ppm->candidates_idx[i_point_cloud][i+1]; j++) {
 
-        printf(" %d", ppm->candidates_desc[i_point_cloud][3*j]);
+        printf(" : %d", ppm->candidates_desc[i_point_cloud][3*j]);
         printf(" %d", ppm->candidates_desc[i_point_cloud][3*j+1]);
         printf(" %d", ppm->candidates_desc[i_point_cloud][3*j+2]);
-        printf(" ,");
       }
-    printf("\n");
+      printf("\n");
+      }
     }
   } 
 }
