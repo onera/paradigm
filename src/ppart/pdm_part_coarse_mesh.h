@@ -241,7 +241,8 @@ PDM_part_coarse_mesh_part_set_anisotropic_info
  const int    iPart,       
  const int    *agglomerationLinesInit,
  const int    *agglomerationLinesInitIdx,
- const int    *isOnFineBndInit       
+ const int      agglomerationLinesInitIdx_size,
+ const int    *isOnFineBndInit
 );
 
 void
@@ -251,6 +252,7 @@ PROCF (PDM_part_coarse_mesh_part_set_anisotropic_info, PDM_PART_COARSE_MESH_PART
  const int          *iPart,       
  const int          *agglomerationLinesInit,
  const int          *agglomerationLinesInitIdx,
+ const int          *agglomerationLinesInitIdx_size,  //TODO CHECK THIS!
  const int          *isOnFineBndInit
 ); 
  
@@ -458,6 +460,7 @@ PDM_part_coarse_mesh_part_get_anisotropic_info
  const int    iPart,       
  int          **agglomerationLines,
  int          **agglomerationLinesIdx,
+ int          *agglomerationLinesIdx_size,
  int          **isOnFineBnd       
 );
 
@@ -468,6 +471,7 @@ PROCF (PDM_part_coarse_mesh_part_get_anisotropic_info, PDM_PART_COARSE_MESH_PART
  int          *iPart,       
  int          *agglomerationLines,
  int          *agglomerationLinesIdx,
+ int          *agglomerationLinesIdx_size,
  int          *isOnFineBnd
 );
 

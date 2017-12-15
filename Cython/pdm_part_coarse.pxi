@@ -139,12 +139,14 @@ cdef extern from "pdm_part_coarse_mesh.h":
                                                         int   iPart,       
                                                         int  *agglomerationLines,
                                                         int  *agglomerationLinesIdx,
+                                                        int   agglomerationLinesIdx_size,
                                                         int  *isOnFineBnd)
-    
+   
     void PDM_part_coarse_mesh_part_get_anisotropic_info(int   cmId,
                                                         int   iPart,       
                                                         int **agglomerationLines,
                                                         int **agglomerationLinesIdx,
+                                                        int   *agglomerationLinesIdx_size,
                                                         int **isOnFineBnd)
     
     void PDM_part_coarse_mesh_add_option_anisotropic(int  cmId, 
@@ -386,6 +388,7 @@ cdef class CoarseMesh:
         # > Cell entity 
         cdef int             *agglomerationLinesInit_data
         cdef int             *agglomerationLinesInitIdx_data
+        cdef int             agglomerationLinesInitIdx_size 
         cdef int             *isOnFineBnd_data
         # ************************************************************************
         
@@ -397,22 +400,27 @@ cdef class CoarseMesh:
             
         # \param [in]  
         if (agglomerationLinesInitIdx == None):
-            agglomerationLinesInitIdx_data = NULL
+            agglomerationLinesInitIdx_data  = NULL
+            agglomerationLinesInitIdx_size  = 0
         else:
             agglomerationLinesInitIdx_data = <int *> agglomerationLinesInitIdx.data
+            agglomerationLinesInitIdx_size  = agglomerationLinesInitIdx.shape[0]
             
         # \param [in]  
         if (isOnFineBndInit == None):
             isOnFineBndInit_data = NULL
         else:
             isOnFineBndInit_data = <int *> isOnFineBndInit.data
-    
+            
+        print "\t\t\tset_mesh_input_anisotropic agglomerationLinesInitIdx_size=", agglomerationLinesInitIdx_size
+        
         # :::::::::::::::::::::::::::::::::::::::::::::::::::::
         # > Fill input mesh for anisotropic
         PDM_part_coarse_mesh_part_set_anisotropic_info(self._cmId,
                                                        iPart,       
                                                        agglomerationLinesInit_data,
                                                        agglomerationLinesInitIdx_data,
+                                                       agglomerationLinesInitIdx_size,
                                                        isOnFineBndInit_data)
         # :::::::::::::::::::::::::::::::::::::::::::::::::::::
         
@@ -797,6 +805,7 @@ cdef class CoarseMesh:
         # > Declaration
         cdef int          *agglomerationLines
         cdef int          *agglomerationLinesIdx
+        cdef int           agglomerationLinesIdx_size
         cdef int          *isOnFineBnd
         # > For numpy capsule
         cdef NPY.npy_intp dim
@@ -809,14 +818,15 @@ cdef class CoarseMesh:
                                                        ipart,       
                                                        &agglomerationLines,
                                                        &agglomerationLinesIdx,
+                                                       &agglomerationLinesIdx_size,
                                                        &isOnFineBnd)
-
+        print "\t\t\tPXI: \tpart_coarse_val_get_anisotropic: \tagglomerationLinesIdx_size", agglomerationLinesIdx_size
         # :::::::::::::::::::::::::::::::::::::::::::::::::::::
         # > Translate to numpy capsule (Tout est pas fait encore )
         if (agglomerationLines == NULL) :
           npAggloLines = None
         else :
-          dim = <NPY.npy_intp> dims['nCell']
+          dim = <NPY.npy_intp> agglomerationLinesIdx[agglomerationLinesIdx_size-1]
           npAggloLines = NPY.PyArray_SimpleNewFromData(1,
                                                        &dim,
                                                        NPY.NPY_INT32,
@@ -825,7 +835,7 @@ cdef class CoarseMesh:
         if (agglomerationLinesIdx == NULL) :
           npAggloLinesIdx = None
         else :
-          dim = <NPY.npy_intp> (dims['nCell'] + 1)
+          dim = <NPY.npy_intp> agglomerationLinesIdx_size
           npAggloLinesIdx = NPY.PyArray_SimpleNewFromData(1,
                                                           &dim,
                                                           NPY.NPY_INT32,
@@ -834,7 +844,7 @@ cdef class CoarseMesh:
         if (isOnFineBnd == NULL) :
           npIsOnFineBnd = None
         else :
-          dim = <NPY.npy_intp> dims['nFace']
+          dim = <NPY.npy_intp> dims['nCell']
           npIsOnFineBnd = NPY.PyArray_SimpleNewFromData(1,
                                                         &dim,
                                                         NPY.NPY_INT32,
@@ -844,4 +854,4 @@ cdef class CoarseMesh:
         return {'npAggloLines'    : npAggloLines,
                 'npAggloLinesIdx' : npAggloLinesIdx,
                 'npIsOnFineBnd'   : npIsOnFineBnd,
-               } 
+                } 

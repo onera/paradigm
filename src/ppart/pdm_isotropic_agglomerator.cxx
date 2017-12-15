@@ -354,7 +354,7 @@ void agglomerateOneLevel_v_Paradigma(int *sizes,
                                      int checks_int,
                                      int verbose_int) 
 {
-    cout<<"Call of agglomerateOneLevel_v_Paradigma NL Version"<<endl;
+    cout<<"\t\t\t\t\tCall of agglomerateOneLevel_v_Paradigma NL Version"<<endl;
     bool checks = checks_int==1;
     bool verbose = verbose_int==1;
 
@@ -380,7 +380,7 @@ void agglomerateOneLevel_v_Paradigma(int *sizes,
     bool isAnisotropic = isAnisotropic_int == 1;
 
     // Check inputs:
-    cout<<"\t sizes : ";
+    cout<<"\t\t\t\t\t sizes : ";
     cout<<"[";
     for (int i=0; i<12; i++)
     {
@@ -389,21 +389,21 @@ void agglomerateOneLevel_v_Paradigma(int *sizes,
     cout<<"]"<<endl;
 
 
-    cout<<"\t adjMatrix_row_ptr : ";
-    cout<<"[";
-    for (int i=0; i<adjMatrix_row_ptr_size; i++)
-    {
-        cout<<adjMatrix_row_ptr[i]<<", ";
-    }
-    cout<<"]"<<endl;
+    // cout<<"\t\t\t\t\tadjMatrix_row_ptr : ";
+    // cout<<"[";
+    // for (int i=0; i<adjMatrix_row_ptr_size; i++)
+    // {
+    //     cout<<adjMatrix_row_ptr[i]<<", ";
+    // }
+    // cout<<"]"<<endl;
 
-    cout<<"\t adjMatrix_col_ind : ";
-    cout<<"[";
-    for (int i=0; i<adjMatrix_col_ind_size; i++)
-    {
-        cout<<adjMatrix_col_ind[i]<<", ";
-    }
-    cout<<"]"<<endl;
+    // cout<<"\t adjMatrix_col_ind : ";
+    // cout<<"[";
+    // for (int i=0; i<adjMatrix_col_ind_size; i++)
+    // {
+    //     cout<<adjMatrix_col_ind[i]<<", ";
+    // }
+    // cout<<"]"<<endl;
 
 
     // Initialization of isOnValley, isOnRidge, isOnCorner;
@@ -423,19 +423,19 @@ void agglomerateOneLevel_v_Paradigma(int *sizes,
                 break;
         }
     }
-    cout<<"\t isOnValley, isOnRidge, isOnCorner are created"<<endl;
-    cout<< "\t isOnValley.size() "<<isOnValley.size()<<endl;
-    cout<< "\t isOnRidge.size() "<<isOnRidge.size()<<endl;
-    cout<< "\t isOnCorner.size() "<<isOnCorner.size()<<endl;
+    // cout<<"\t isOnValley, isOnRidge, isOnCorner are created"<<endl;
+    // cout<< "\t isOnValley.size() "<<isOnValley.size()<<endl;
+    // cout<< "\t isOnRidge.size() "<<isOnRidge.size()<<endl;
+    // cout<< "\t isOnCorner.size() "<<isOnCorner.size()<<endl;
 
     // Creation of adjMatrix_area_values
     double* adjMatrix_areaValues = new double[adjMatrix_areaValues_size];
-    cout<<"\t Creation of adjMatrix_areaValues of size "<< adjMatrix_areaValues_size<<endl;
+    // cout<<"\t Creation of adjMatrix_areaValues of size "<< adjMatrix_areaValues_size<<endl;
     for(int i = 0; i<adjMatrix_areaValues_size; i++)
     {
         adjMatrix_areaValues[i]=0.0;
     }
-    cout<<"Initialization at 0"<<endl;
+    // cout<<"Initialization at 0"<<endl;
 
 
     for(int iFace = 0; iFace<numberOfFace; iFace++)
@@ -554,7 +554,7 @@ void agglomerateOneLevel_v_Paradigma(int *sizes,
     bool isAnisotropicLines = true;
     if(isAnisotropic) {
         if (isFirstAgglomeration) {
-            cout<<"isAnisotropic and isFirstAgglomeration"<<endl;
+            cout<<"\t\t\t\t\tisAnisotropic and isFirstAgglomeration"<<endl;
             numberOfAnisotropicLinesPOne_size = agglomerationLines_Idx_size;
             agglomerationLines_size = agglomerationLines_size;
 
@@ -577,11 +577,16 @@ void agglomerateOneLevel_v_Paradigma(int *sizes,
 //            fineAgglomerationLines_for_visu_array = np.copy(agglomerationLines);
         }
         if (isAnisotropicLines) {
-            cout<<"isAnisotropic and isAnisotropicLines"<<endl;
+
+            cout<<"\t\t\t\t\tagglomerateOneLevel_v_Paradigma : "<<endl;
+            cout<<"\t\t\t\t\t\t isAnisotropic: True and isAnisotropicLines : True"<<endl;
             //cout<< "agglomerationLines_size "<< agglomerationLines_size<<endl;
 //            int arrayOfCoarseAnisotropicCompliantCells_size = agglomerationLines_size; //np.shape(arrayOfFineAnisotropicCompliantCells)[0]
 //            arrayOfCoarseAnisotropicCompliantCells = np.zeros((arrayOfCoarseAnisotropicCompliantCells_size,), dtype = int)
             agglomerationLines_Idx_size = sizes[8];
+
+            cout<<"\t\t\t\t\t agglomerationLines_Idx_size = "<<sizes[8]<<endl;
+
 
             int sizes_aniso[5] = {agglomerationLines_Idx_size, numberOfFineCells, numberOfFineAgglomeratedCells, indCoarseCell, -1};
 
@@ -632,7 +637,7 @@ void agglomerateOneLevel_v_Paradigma(int *sizes,
     for(int iL =0; iL<numberOfFineCells;iL++) {
         isOnFineBnd[iL] = isOnFineBnd_l[iL];
     }
-    cout<<"Call of agglomerate_Isotropic_One_Level_v_2"<<endl;
+    cout<<"\t\t\t\t\tCall of agglomerate_Isotropic_One_Level_v_2"<<endl;
     agglomerate_Isotropic_One_Level_v_2(sizes,
                                         adjMatrix_row_ptr,
                                         adjMatrix_col_ind,

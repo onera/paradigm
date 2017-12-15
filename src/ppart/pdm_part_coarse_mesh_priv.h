@@ -52,11 +52,13 @@ typedef struct  {
   /* Array specific to anisotropic agglomeration */
   int *agglomerationLines;      
   int *agglomerationLinesIdx;   
+  int   agglomerationLinesIdx_size;  
   int *isOnFineBnd;  
   
   /* Array specific to anisotropic agglomeration if Initialise from a finer grid */
   int *agglomerationLinesInit;      
   int *agglomerationLinesInitIdx;   
+  int   agglomerationLinesInitIdx_size;  
   int *isOnFineBndInit;  
   
   
