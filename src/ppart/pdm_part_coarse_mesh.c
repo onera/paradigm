@@ -341,33 +341,23 @@ _dual_graph_from_face_cell
 static void 
 _split
 (
-   _coarse_mesh_t     *cm,
-   const int           iPart,
-  //int         method,
-  // int         nPart,
-  int*        nCoarseCellComputed,
-  // _part_t    *part_ini,
-  int           *cellCellIdx,
-  int           *cellCell,
-  // int           *cellWeight,
-  // int           *faceWeight,
-  int          **cellPart)
-  // int           *anisotropicOption,
-  // int           *agglomerationLinesInit,
-  // int           *agglomerationLinesInitIdx,
-  // int           *isOnFineBndInit 
-//)
+_coarse_mesh_t *cm,
+const int       iPart,
+int            *nCoarseCellComputed,
+int            *cellCellIdx,
+int            *cellCell,
+int           **cellPart)
 {    
   PDM_printf("\n \t\t\t\tCall of  _split function \n");            
   // Replace arg of function:
-  _part_t * part_ini = cm->part_ini[iPart];
+  _part_t * part_ini       = cm->part_ini[iPart];
   _coarse_part_t *part_res = cm->part_res[iPart];
   
   int method = cm->method;
-  int         nPart = part_res->nCoarseCellWanted;
+  int nPart  = part_res->nCoarseCellWanted;
 
-  int           *cellWeight = (int *) part_ini->cellWeight;
-  int           *faceWeight = part_ini->faceWeight;
+  int *cellWeight = (int *) part_ini->cellWeight;
+  int *faceWeight = part_ini->faceWeight;
 
  
 
@@ -2219,20 +2209,12 @@ _coarse_grid_compute
 
 
   _split( cm, 
-              iPart,
-              // cm->method,
-              // part_res->nCoarseCellWanted,
+          iPart,
          &nCoarseCellComputed,
-         // part_ini,
          dualGraphIdx, 
          dualGraph, 
-         // (int *) part_ini->cellWeight,
-         // (int *) part_ini->faceWeight,
          (int **) &cellPart);
-         // anisotropicOption,
-         // agglomerationLinesInit, 
-         // agglomerationLinesInitIdx, 
-         // isOnFineBndInit);
+  
   PDM_printf("\n\t\t\t\t After _split(...),part_res->agglomerationLinesInitIdx_size: %i \n", part_res->agglomerationLinesInitIdx_size);  
   PDM_timer_hang_on(cm->timer);
   cm->times_elapsed[itime] = PDM_timer_elapsed(cm->timer);
@@ -3251,6 +3233,7 @@ _build_facePartBound
 _coarse_mesh_t * cm
 )
 {
+  PDM_printf("_build_facePartBound \n");
   //Number of processors
   int nProc;
   PDM_MPI_Comm_size(cm->comm, &nProc);
@@ -4738,13 +4721,23 @@ PDM_part_coarse_mesh_part_get_anisotropic_info
     exit(1);
   }
   
-  *agglomerationLines    = part_res->agglomerationLines;
-  *agglomerationLinesIdx = part_res->agglomerationLinesIdx;
-  (*agglomerationLinesIdx_size) = part_res->agglomerationLinesIdx_size;
-  *isOnFineBnd           = part_res->isOnFineBnd;
-  PDM_printf("\t\tpart_res->agglomerationLinesIdx: %i ,%i, %i, %i\n", part_res->agglomerationLinesIdx[0] , part_res->agglomerationLinesIdx[1], part_res->agglomerationLinesIdx[2], part_res->agglomerationLinesIdx[3]);
-  PDM_printf("\t\tpart_res->agglomerationLinesIdx_size: %i \n", part_res->agglomerationLinesIdx_size);
-  PDM_printf("\tEnd of PDM_part_coarse_mesh_part_get_anisotropic_info\n");
+  // Bruno : A comprendre ici pourquoi on a pas pointeur null initiliser normalement dans priv.h
+  if(cm->method == 3){
+     *agglomerationLines           = part_res->agglomerationLines;
+     *agglomerationLinesIdx        = part_res->agglomerationLinesIdx;
+     (*agglomerationLinesIdx_size) = part_res->agglomerationLinesIdx_size;
+     *isOnFineBnd                  = part_res->isOnFineBnd;
+     PDM_printf("\t\tpart_res->agglomerationLinesIdx: %i ,%i, %i, %i\n", part_res->agglomerationLinesIdx[0] , part_res->agglomerationLinesIdx[1], part_res->agglomerationLinesIdx[2], part_res->agglomerationLinesIdx[3]);
+     PDM_printf("\t\tpart_res->agglomerationLinesIdx_size: %i \n", part_res->agglomerationLinesIdx_size);
+     PDM_printf("\tEnd of PDM_part_coarse_mesh_part_get_anisotropic_info\n");
+   }
+   else
+   {
+     *agglomerationLines           = NULL;
+     *agglomerationLinesIdx        = NULL;
+     (*agglomerationLinesIdx_size) = NULL;
+     *isOnFineBnd                  = NULL;
+   }
 }
 
 void
