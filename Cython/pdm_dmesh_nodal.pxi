@@ -59,6 +59,27 @@ cdef extern from "pdm_dmesh_nodal.h":
     PDM_g_num_t* PDM_DMesh_nodal_distrib_face_get(int handle)
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
+cdef extern from "pdm_elt_parent_find.h":
+    # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    # > Wrapping of Ppart Structure     
+    void PDM_elt_parent_find_from_distrib(int          *elt_distrib,
+                                          int          *elt_def_idx,
+                                          PDM_g_num_t  *elt_def,
+                                          int          *elt_to_find_distrib,
+                                          int          *elt_to_find_def_idx,
+                                          PDM_g_num_t  *elt_to_find_def,
+                                          PDM_MPI_Comm  comm,     
+                                          PDM_g_num_t  *parent)
+    
+    void PDM_elt_parent_find(int           dnelt,
+                             int          *elt_def_idx,
+                             PDM_g_num_t  *elt_def,
+                             int           dnelt_to_find,
+                             int          *elt_to_find_def_idx,
+                             PDM_g_num_t  *elt_to_find_def,
+                             PDM_MPI_Comm  comm,     
+                             PDM_g_num_t  *parent)
+    # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 # ------------------------------------------------------------------
 cdef class DistributedMeshNodal:
@@ -141,8 +162,7 @@ cdef class DistributedMeshNodal:
         # ************************************************************************
         # > Declaration
         # ************************************************************************
-        PDM_DMesh_nodal_cell_face_compute(self.idmesh)
-        
+        PDM_DMesh_nodal_cell_face_compute(self.idmesh)      
         
     # ------------------------------------------------------------------------
     def getFaceCell(self):
@@ -260,3 +280,39 @@ cdef class DistributedMeshNodal:
       print 'PDM_DMesh_nodal_free'
       PDM_DMesh_nodal_free(self.idmesh)
 
+
+
+# ------------------------------------------------------------------------
+def ElementParentFind(int                                           dnelt,
+                      NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] elt_def_idx,
+                      NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] elt_def,
+                      int                                           dnelt_to_find,
+                      NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] elt_to_find_def_idx,
+                      NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] elt_to_find_def,
+                      MPI.Comm    comm,      
+                      NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] parent):
+                      
+                      
+                      
+    """
+    """
+    # ************************************************************************
+    # > Declaration
+    # ************************************************************************
+
+    # ::::::::::::::::::::::::::::::::::::::::::::::::::
+    # > Convert mpi4py -> PDM_MPI
+    cdef MPI.MPI_Comm c_comm = comm.ob_mpi
+    cdef PDM_MPI_Comm PDMC   = PDM_MPI_mpi_2_pdm_mpi_comm(<void *> &c_comm)
+    # ::::::::::::::::::::::::::::::::::::::::::::::::::
+    
+    # ::::::::::::::::::::::::::::::::::::::::::::::::::
+    PDM_elt_parent_find(dnelt,
+                        <int *>         elt_def_idx.data,
+                        <PDM_g_num_t *> elt_def.data,
+                        dnelt_to_find,
+                        <int *>         elt_to_find_def_idx.data,
+                        <PDM_g_num_t *> elt_to_find_def.data,
+                        PDMC,     
+                        <PDM_g_num_t *> parent.data)
+    # ::::::::::::::::::::::::::::::::::::::::::::::::::

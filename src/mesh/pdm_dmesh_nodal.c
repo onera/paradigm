@@ -126,8 +126,7 @@ const int  nFac,
       int  iAbsFace,  /* A passer ren reference ou a return */
       int *dFaceVtx,
       int *dFaceVtxIdx,
-      int *dFaceCell, 
-      int  nCell
+      int *dFaceCell
 )
 {
   if(0 == 1){
@@ -137,10 +136,33 @@ const int  nFac,
   /*
    * Special Case -> To removed when Boundary is OK
    */
-  if(nFac == 1){
-    printf("Something strange append for in find_pairs - Check mesh \n");
-    exit(1);
-  }
+  // if(nFac == 1){
+  //   // printf("Something strange append for in find_pairs - Check mesh ooo \n");
+    
+  //   /* Stokage en element externe */
+  //   int iFacIdx = dFaceVtxIdx[iAbsFace];
+    
+  //   int curFac = IdxFace[0];
+  //   int nVtx1  = data[curFac+2];
+    
+    
+  //   dFaceCell[2*iAbsFace  ] = data[curFac];
+  //   dFaceCell[2*iAbsFace+1] = 0;
+    
+  //   // printf("----------: %d - %d - %d\n", curFac, nVtx1, iFacIdx);
+ 
+    
+  //   for(int iVtx=0; iVtx < nVtx1; iVtx++){
+  //     dFaceVtx[iFacIdx+iVtx] = data[curFac+3+iVtx];
+  //   }
+    
+  //   /* Update index */
+  //   dFaceVtxIdx[iAbsFace+1] = dFaceVtxIdx[iAbsFace] + nVtx1;
+  //   iAbsFace++;
+    
+  //   return iAbsFace;
+  //   // exit(1);
+  // }
   
   /*
    * Make array of already treated face 
@@ -256,20 +278,22 @@ const int  nFac,
              *    Il faut que le parent element d'une boundary soit le droit ...
              */
             // if(data[curFac] == -1){
-            if(data[curFac] > nCell ){
-              dFaceCell[2*iAbsFace  ] = data[nexFac];
-              // dFaceCell[2*iAbsFace+1] = 0;//data[curFac];
-              dFaceCell[2*iAbsFace+1] = data[curFac];
+            // if(data[curFac] > nCell ){
+            //   dFaceCell[2*iAbsFace  ] = data[nexFac];
+            //   // dFaceCell[2*iAbsFace+1] = 0;//data[curFac];
+            //   dFaceCell[2*iAbsFace+1] = data[curFac];
   
-              /* 
-               * Fill FaceVtx connectivity array 
-               */
-              for(int iVtx=0; iVtx < nVtx1; iVtx++){
-                dFaceVtx[iFacIdx+iVtx] = data[nexFac+3+iVtx];
-              }
-            }
-            else 
-            {
+            //   /* 
+            //    * Fill FaceVtx connectivity array 
+            //    */
+            //   for(int iVtx=0; iVtx < nVtx1; iVtx++){
+            //     dFaceVtx[iFacIdx+iVtx] = data[nexFac+3+iVtx];
+            //   }
+            //   printf("Impossible case now \n");
+            //   exit(1);
+            // }
+            // else 
+            // {
               dFaceCell[2*iAbsFace  ] = data[curFac];
               dFaceCell[2*iAbsFace+1] = data[nexFac];
   
@@ -279,7 +303,7 @@ const int  nFac,
               for(int iVtx=0; iVtx < nVtx1; iVtx++){
                 dFaceVtx[iFacIdx+iVtx] = data[curFac+3+iVtx];
               }
-            }
+            // }
 
             /*
              * Stockage FaceVtx connectivity Index
@@ -309,11 +333,28 @@ const int  nFac,
 
     } /** End If alreadyTreat **/
 
-    /* TO REMOVE WHEN BOUNDARY OK **/
+    /* Boundary management **/
     if(AlreadyTreat[iPos] != 1){
-      printf("Something strange append for in find_pairs - Check mesh AlreadyTreat \n");
-      printf("iAbsFace : %d \n", iAbsFace);
-      exit(1);
+      
+      // printf("iAbsFace : %d \n", iAbsFace);
+      // printf("iPos : %d \n", iPos);
+      // printf("----------: %d - %d - %d\n", curFac, nVtx1, iFacIdx);
+
+      int iFacIdx = dFaceVtxIdx[iAbsFace];
+      int curFac  = IdxFace[iPos];
+      int nVtx1   = data[curFac+2];
+    
+      dFaceCell[2*iAbsFace  ] = data[curFac];
+      dFaceCell[2*iAbsFace+1] = 0;
+    
+      for(int iVtx=0; iVtx < nVtx1; iVtx++){
+        dFaceVtx[iFacIdx+iVtx] = data[curFac+3+iVtx];
+      }
+      
+      /* Update index */
+      dFaceVtxIdx[iAbsFace+1] = dFaceVtxIdx[iAbsFace] + nVtx1;
+      iAbsFace++;
+    
     }
 
   }
@@ -2364,14 +2405,15 @@ const int   hdl
         int iKey = compute_key(sectionStd->_connec, tabFacVtx[iFace], iOffSet, nVtxpFac[iFace]);
         
         /* Build the LNToGN */
+        // Attnetion ici c'est faux je pense !!!!
         if(nFace >= nFacApprox){
           nFacApprox = 2*nFacApprox;
           LNToGN    = (PDM_g_num_t *) realloc(LNToGN   , sizeof(PDM_g_num_t) * nFacApprox );
-          part_data = (int         *) realloc(part_data, sizeof(int) * nDataApprox );
+          part_stri = (int         *) realloc(part_stri, sizeof(int) * nFacApprox );
         }
         if(nData >= nDataApprox){
           nDataApprox = 2*nDataApprox;
-          part_stri = (int         *) realloc(part_stri, sizeof(int) * nDataApprox );
+          part_data = (int         *) realloc(part_data, sizeof(int) * nDataApprox );
         }
         
         LNToGN[nFace] = iKey;
@@ -2574,9 +2616,7 @@ const int   hdl
                            iAbsFace, 
                            mesh->_dFaceVtx,
                            mesh->_dFaceVtxIdx,
-                           mesh->_dFaceCell, 
-                           mesh->n_cell_abs
-                           );
+                           mesh->_dFaceCell);
 
     /*
      * Free 
@@ -2638,10 +2678,44 @@ const int   hdl
   
     
   int nFac2 = 2*mesh->dNFace;
+  
+  int* part_stri2 = (int *) malloc( sizeof(int) * 2 * mesh->dNFace );
+  
+  /* Prepare dFaceCell loc */
+  PDM_g_num_t* dFaceCellTmp = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) * 2 * mesh->dNFace );
+  
+  int nTmp = 0;
+  int idxG = 0;
+  for (int i = mesh->face_distrib[mesh->i_proc]; i < mesh->face_distrib[mesh->i_proc+1]; i++) {
+    int idx = (int) (i-mesh->face_distrib[mesh->i_proc]);
+    dFaceCellTmp[idxG] = mesh->_dFaceCell[2*idx];
+    LNToGNElem[idxG] = i+1;
+    part_stri2[idxG] = 1;
+    idxG++;
+    if(mesh->_dFaceCell[2*idx+1] != 0){
+      dFaceCellTmp[idxG] = mesh->_dFaceCell[2*idx+1];
+      LNToGNElem[idxG  ] = i+1;
+      part_stri2[idxG] = 1;
+      idxG++;
+    }
+    else
+    {
+      dFaceCellTmp[idxG] = mesh->_dFaceCell[2*idx];
+      LNToGNElem[idxG  ] = i+1;
+      part_stri2[idxG] = 0;
+      idxG++;
+    }
+  }
+  
+  nFac2 = idxG;
+  
+  
+  
   PDM_part_to_block_t *ptb2 = PDM_part_to_block_create(PDM_writer_BLOCK_DISTRIB_ALL_PROC,
                                                        PDM_writer_POST_MERGE,
                                                        1.,
-                                                       &mesh->_dFaceCell,
+                                                       &dFaceCellTmp,
+                                                       // &mesh->_dFaceCell,
                                                        &nFac2,
                                                        1,
                                                        mesh->pdm_mpi_comm); 
@@ -2650,11 +2724,11 @@ const int   hdl
   int *BlkData2 = NULL;
   
   /** Prepare part_stride for dFaceCell - 2 for all **/
-  int* part_stri2 = (int *) malloc( sizeof(int) * 2 * mesh->dNFace );
-  for(int i = 0; i < 2*mesh->dNFace ; i++){
-    part_stri2[i] = 1;
-    // part_stri2[i] = mesh->dNFace;
-  }
+  // for(int i = 0; i < 2*mesh->dNFace ; i++){
+  // for(int i = 0; i < idxG ; i++){
+  //   part_stri2[i] = 1;
+  //   // part_stri2[i] = mesh->dNFace;
+  // }
     
   int dataSize2 = PDM_part_to_block_exch(          ptb2,
                                                    sizeof(PDM_g_num_t),
@@ -2697,7 +2771,7 @@ const int   hdl
     
     // int nFacPerElmt = BlkStri2[i];
     int nFacPerElmt = mesh->dCellFaceIdx[i+1] - mesh->dCellFaceIdx[i];
-    printf("nFacPerElmt : %d\n", nFacPerElmt);
+    // printf("nFacPerElmt : %d\n", nFacPerElmt);
     for(int iFac = 0; iFac < nFacPerElmt; iFac++){
       mesh->dCellFace[mesh->dCellFaceIdx[i]+iFac] = BlkData2[mesh->dCellFaceIdx[i]+iFac];
     }
@@ -2706,11 +2780,11 @@ const int   hdl
   /* 
    * Mask all FaceCell with boundary 
    */
-  for(int i = 0; i < mesh->dNFace; i++) {
-     if(mesh->_dFaceCell[2*i+1] > mesh->n_cell_abs){
-        mesh->_dFaceCell[2*i+1] = 0;
-     }
-  }
+  // for(int i = 0; i < mesh->dNFace; i++) {
+  //    if(mesh->_dFaceCell[2*i+1] > mesh->n_cell_abs){
+  //       mesh->_dFaceCell[2*i+1] = 0;
+  //    }
+  // }
   
   /* Free */
   PDM_part_to_block_free(ptb );
@@ -2718,6 +2792,7 @@ const int   hdl
 
   free(LNToGN);
   free(LNToGNElem);
+  free(dFaceCellTmp);
   free(part_data);
   free(part_stri);
 
