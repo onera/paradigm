@@ -671,8 +671,8 @@ int           **cellPart)
       sizes[7 ] = part_ini->nCell;
       sizes[10] = 2*part_ini->nFace;
       sizes[11] =   part_ini->nFace;
-      
-      if (anisotropicOption[0]==1)
+
+      if ((anisotropicOption[0]==1) || (agglomerationLinesInitIdx_size ==0))
       { 
         sizes[8 ] = 0;
         sizes[9 ] =  0;
@@ -777,20 +777,30 @@ int           **cellPart)
       part_res->isOnFineBnd = isOnCoarseBnd;
 
       // then: AgglomerationLines
-      int   *agglomerationLinesIdx = malloc(( sizes[8]  )* sizeof(int));
-      int   *agglomerationLines = malloc(( sizes[9]  )* sizeof(int)); 
-      for (int iCC =0; iCC<sizes[8]; iCC++)
+      if( sizes[8]>0)
       {
-        agglomerationLinesIdx[iCC] = agglomerationLinesInitIdx[iCC];
-      }
-      for (int iCC =0; iCC<sizes[9]; iCC++)
-      {
-        agglomerationLines[iCC] = agglomerationLinesInit[iCC];
-      }
+          int   *agglomerationLinesIdx = malloc(( sizes[8]  )* sizeof(int));
+          int   *agglomerationLines = malloc(( sizes[9]  )* sizeof(int)); 
+          for (int iCC =0; iCC<sizes[8]; iCC++)
+          {
+            agglomerationLinesIdx[iCC] = agglomerationLinesInitIdx[iCC];
+          }
+          for (int iCC =0; iCC<sizes[9]; iCC++)
+          {
+            agglomerationLines[iCC] = agglomerationLinesInit[iCC];
+          }
 
-      part_res->agglomerationLinesIdx                 = agglomerationLinesIdx;
-      part_res->agglomerationLines                      = agglomerationLines;
-      part_res->agglomerationLinesIdx_size  = sizes[8]; 
+          part_res->agglomerationLinesIdx                 = agglomerationLinesIdx;
+          part_res->agglomerationLines                      = agglomerationLines;
+          part_res->agglomerationLinesIdx_size  = sizes[8]; 
+          PDM_printf("\n\t\t\t\tDans _split(...),part_res->agglomerationLinesInitIdx_size: %i \n", part_res->agglomerationLinesInitIdx_size);  
+      }else
+      {
+        part_res->agglomerationLinesIdx_size = 0;
+      }
+      
+      
+      
       PDM_printf("\n\t\t\t\tDans _split(...),part_res->agglomerationLinesInitIdx_size: %i \n", part_res->agglomerationLinesInitIdx_size);  
       /* Free array */
       free(cellCellTmpIdx);
@@ -4727,9 +4737,9 @@ PDM_part_coarse_mesh_part_get_anisotropic_info
      *agglomerationLinesIdx        = part_res->agglomerationLinesIdx;
      (*agglomerationLinesIdx_size) = part_res->agglomerationLinesIdx_size;
      *isOnFineBnd                  = part_res->isOnFineBnd;
-     PDM_printf("\t\tpart_res->agglomerationLinesIdx: %i ,%i, %i, %i\n", part_res->agglomerationLinesIdx[0] , part_res->agglomerationLinesIdx[1], part_res->agglomerationLinesIdx[2], part_res->agglomerationLinesIdx[3]);
-     PDM_printf("\t\tpart_res->agglomerationLinesIdx_size: %i \n", part_res->agglomerationLinesIdx_size);
-     PDM_printf("\tEnd of PDM_part_coarse_mesh_part_get_anisotropic_info\n");
+     // PDM_printf("\t\tpart_res->agglomerationLinesIdx: %i ,%i, %i, %i\n", part_res->agglomerationLinesIdx[0] , part_res->agglomerationLinesIdx[1], part_res->agglomerationLinesIdx[2], part_res->agglomerationLinesIdx[3]);
+     // PDM_printf("\t\tpart_res->agglomerationLinesIdx_size: %i \n", part_res->agglomerationLinesIdx_size);
+     // PDM_printf("\tEnd of PDM_part_coarse_mesh_part_get_anisotropic_info\n");
    }
    else
    {

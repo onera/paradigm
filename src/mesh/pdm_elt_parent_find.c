@@ -18,6 +18,7 @@
 #include "pdm_error.h"
 #include "pdm_elt_parent_find.h"
 #include "pdm_part_to_block.h"
+#include "pdm_block_to_block.h"
 #include "pdm_sort.h"
 
 #ifdef __cplusplus
@@ -801,6 +802,57 @@ PDM_elt_parent_find_from_distrib
     parent[i] = BlkData2[i];
   }
   
+  
+  PDM_g_num_t* FaceDistribNew = (PDM_g_num_t *) malloc((nRank+1) * sizeof(PDM_g_num_t));
+
+  
+  FaceDistribNew[0] = 0;
+  FaceDistribNew[1] = FaceDistrib[nRank];
+  for (int i = 2; i < nRank+1; i++) {
+    FaceDistribNew[i] = 0;
+  }
+  for (int i = 1; i < nRank+1; i++) {
+    FaceDistribNew[i] +=  FaceDistribNew[i-1];
+  }
+  
+  if (1 == 1) {
+    printf("FaceDistribNew : "PDM_FMT_G_NUM,  FaceDistribNew[0]);
+    for (int i = 1; i < nRank+1; i++) {
+      printf(" "PDM_FMT_G_NUM, FaceDistribNew[i]);
+    }
+    printf("\n");
+  }
+  
+  /* Tentative temporaire -> A passer en python */
+  PDM_block_to_block_t *btp = PDM_block_to_block_create(FaceDistrib, 
+                                                        FaceDistribNew, 
+                                                        comm);
+  
+  int cst_stri_ini = 1;
+  int cst_stri_end = 1;
+  
+  int *BlkStri3 = NULL;
+  int *BlkData3 = NULL;
+  
+  PDM_block_to_block_exch(btp, 
+                          sizeof(PDM_g_num_t), 
+                          PDM_STRIDE_CST,
+                          &cst_stri_ini,
+                          (void *) &parent, 
+                          &cst_stri_end,
+                          (void *) &BlkData3);
+  
+   
+  /* 
+   * Verbose 
+   */
+  // if(1 == 1){
+  //   // printf("[%d/%d] - ElmtTot : %d\n", myRank, nRank, dElmtTot);
+  //   for(int i = 0; i < dElmtTot; i++) {
+  //     printf("BlkData3[%d]    : %d \n", i, BlkData3[i]);
+  //     // printf("BlkStri2[%d] : %d \n", i, BlkStri2[i]);
+  //   }
+  // }
   
   /* Free */
   PDM_part_to_block_free(ptb );

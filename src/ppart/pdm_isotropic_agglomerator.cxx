@@ -952,7 +952,7 @@ void agglomerate_Isotropic_First_Step(int *sizes,
     }
 
     while(numberOfFineAgglomeratedCells < numberOfFineCells) {
-//        cout<<"===> numberOfFineAgglomeratedCells "<<numberOfFineAgglomeratedCells<<endl;
+       // cout<<"===> numberOfFineAgglomeratedCells "<<numberOfFineAgglomeratedCells<<endl;
         // 1) Choice of seed
         //////////////////////////////////////
         // no dict in or out
