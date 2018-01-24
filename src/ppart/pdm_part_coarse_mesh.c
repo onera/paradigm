@@ -346,7 +346,7 @@ const int       iPart,
 int            *nCoarseCellComputed,
 int            *cellCellIdx,
 int            *cellCell,
-int           **cellPart)
+int            **cellPart)
 {    
   PDM_printf("\n \t\t\t\tCall of  _split function \n");            
   // Replace arg of function:
@@ -411,6 +411,7 @@ int           **cellPart)
           
       if (nPart < 8) {             
               
+        PDM_printf("\n \t\t\t\t PDM_METIS_PartGraphRecursive\n");    
         PDM_METIS_PartGraphRecursive (&(part_ini->nCell),
                                       &ncon, 
                                       cellCellIdx,
@@ -426,6 +427,7 @@ int           **cellPart)
           
       else {
               
+        PDM_printf("\n \t\t\t\tPDM_METIS_PartGraphKway \n");      
         PDM_METIS_PartGraphKway (&(part_ini->nCell),
                                  &ncon, 
                                  cellCellIdx,
@@ -439,7 +441,7 @@ int           **cellPart)
                                  *cellPart);
       }
           
-      if (0 == 1) {
+      if (1 == 1) {
         PDM_printf("\n Contenu de cellPart : \n");            
         for (int i = 0; i < part_ini->nCell; i++) {
           PDM_printf(" %d ", (*cellPart)[i]);
@@ -479,11 +481,13 @@ int           **cellPart)
       
       (*nCoarseCellComputed) = nPart;
 
-      PDM_printf("\nContent of cellPart\n");    
-      for(int i = 0; i < part_ini->nCell ; i++) {
-        PDM_printf(" %d ", (*cellPart)[i]);
+      if (0 == 1) {
+        PDM_printf("\nContent of cellPart\n");    
+        for(int i = 0; i < part_ini->nCell ; i++) {
+          PDM_printf(" %d ", (*cellPart)[i]);
+        }
+        PDM_printf("\n");   
       }
-      PDM_printf("\n");   
 
 #else
       PDM_printf("PDM_part error : Scotch unavailable\n");

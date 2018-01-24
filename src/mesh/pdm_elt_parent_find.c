@@ -280,6 +280,58 @@ const int          nFac,
  * Public function prototypes 
  *============================================================================*/
 /**
+ * \brief Compute distribution from dNelmt
+ *
+ * \param [in]     elt_distrib          Distribution of elements on processes 
+ * \param [in]     dnelt                Number of element on current process
+ * \param [in]     comm                 MPI Communicator
+
+ */
+
+void
+PDM_compute_distrib
+(
+ const int           dnelt,
+       PDM_g_num_t  *elt_distrib,
+       int           offset, 
+ const PDM_MPI_Comm  comm  
+)
+{
+  int myRank;
+  int nRank;
+  
+  PDM_MPI_Comm_rank(comm, &myRank);
+  PDM_MPI_Comm_size(comm, &nRank);
+  
+  /* Compute distribution for element */
+    
+  // PDM_g_num_t* elt_distrib = (PDM_g_num_t *) malloc((nRank+1) * sizeof(PDM_g_num_t));
+  PDM_g_num_t  _dnelt      = (PDM_g_num_t) dnelt;
+    
+  PDM_MPI_Allgather((void *) &_dnelt,
+                    1,
+                    PDM__PDM_MPI_G_NUM, 
+                    (void *) (&elt_distrib[1]), 
+                    1, 
+                    PDM__PDM_MPI_G_NUM, 
+                    comm);
+
+  elt_distrib[0] = 1+offset;
+  for (int i = 1; i < nRank+1; i++) {
+    elt_distrib[i] +=  elt_distrib[i-1];
+  }
+  
+  /* Verbose */
+  if (1 == 0) {
+    PDM_printf("elt_distrib : "PDM_FMT_G_NUM,  elt_distrib[0]);
+    for (int i = 1; i < nRank+1; i++) {
+      PDM_printf(" "PDM_FMT_G_NUM, elt_distrib[i]);
+    }
+    PDM_printf("\n");
+  }
+}
+
+/**
  * \brief Find parent in a set of elements 
  *
  * \param [in]     elt_distrib          Distribution of elements on processes 
@@ -463,7 +515,7 @@ PDM_elt_parent_find_from_distrib
       printf("%d/%d : ", nFace, nFacApprox);
     }
     
-    part_data[nData++] = iElmt+elt_distrib[myRank]+1;
+    part_data[nData++] = iElmt+elt_distrib[myRank]; //+1;
     part_data[nData++] = 1;
     
     /* Setup nVtx */
@@ -824,7 +876,7 @@ PDM_elt_parent_find_from_distrib
   }
   
   /* Tentative temporaire -> A passer en python */
-  PDM_block_to_block_t *btp = PDM_block_to_block_create(FaceDistrib, 
+  PDM_block_to_block_t *btb = PDM_block_to_block_create(FaceDistrib, 
                                                         FaceDistribNew, 
                                                         comm);
   
@@ -834,20 +886,28 @@ PDM_elt_parent_find_from_distrib
   int *BlkStri3 = NULL;
   int *BlkData3 = NULL;
   
-  PDM_block_to_block_exch(btp, 
+  // PDM_block_to_block_exch(btp, 
+  //                         sizeof(PDM_g_num_t), 
+  //                         PDM_STRIDE_CST,
+  //                         &cst_stri_ini,
+  //                         (void *) &parent, 
+  //                         &cst_stri_end,
+  //                         (void *) &BlkData3);
+  
+  PDM_block_to_block_exch_int(btb, 
                           sizeof(PDM_g_num_t), 
                           PDM_STRIDE_CST,
                           &cst_stri_ini,
-                          (void *) &parent, 
+                          parent, 
                           &cst_stri_end,
-                          (void *) &BlkData3);
+                          (int **) &BlkData3);
   
    
   /* 
    * Verbose 
    */
   // if(1 == 1){
-  //   // printf("[%d/%d] - ElmtTot : %d\n", myRank, nRank, dElmtTot);
+  //   printf("[%d/%d] - ElmtTot : %d\n", myRank, nRank, dElmtTot);
   //   for(int i = 0; i < dElmtTot; i++) {
   //     printf("BlkData3[%d]    : %d \n", i, BlkData3[i]);
   //     // printf("BlkStri2[%d] : %d \n", i, BlkStri2[i]);
@@ -856,6 +916,7 @@ PDM_elt_parent_find_from_distrib
   
   /* Free */
   PDM_part_to_block_free(ptb );
+  PDM_block_to_block_free(btb );
   // PDM_part_to_block_free(ptb2); // Plante si je decommente - Pb parttoblock PDM_writer_POST_NOTHING !!!
   
   free(LNToGN);

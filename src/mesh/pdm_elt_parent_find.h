@@ -91,6 +91,15 @@ PDM_elt_parent_find
 );
 
 
+void
+PDM_compute_distrib
+(
+ const int           dnelt,
+       PDM_g_num_t  *elt_distrib,
+       int           offset, 
+ const PDM_MPI_Comm  comm     
+);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
