@@ -212,6 +212,8 @@ const int          nFac,
             int flagCur = data[curFac+1];
             int flagNex = data[nexFac+1];
             
+            assert(flagCur != flagNex);
+            
             if(flagCur == -1){
               // connect[data[curFac]] = data[nexFac];
               // connect[data[curFac]-offsetconnect] = data[nexFac];
@@ -260,9 +262,25 @@ const int          nFac,
     } /** End If alreadyTreat **/
 
     /* Boundary management **/
-    // if(AlreadyTreat[iPos] != 1){
-    //   printf("Alone face nothing to do \n");
-    // }
+    if(AlreadyTreat[iPos] != 1){
+      // printf("Alone face nothing to do \n");
+      
+      int curFac  = IdxFace[iPos ];
+      int flagCur = data[curFac+1];
+      int nVtx1   = data[curFac+2];
+      if(flagCur == -1){
+        printf("flagCur        : %d \n", flagCur);
+        printf("curFac         : %d \n", curFac);
+        printf("data[curFac];  : %d \n", data[curFac]);
+        
+        for(int iVtx=0; iVtx < nVtx1; iVtx++){
+          printf("iVtx[%d] : %d \n", iVtx, data[curFac+3+iVtx]);
+        }
+        
+      }
+      
+      assert(flagCur == 1);
+    }
 
   }
 
@@ -929,6 +947,26 @@ PDM_elt_parent_find_from_distrib
   free(FaceDistrib);
   free(connect);
   
+}
+
+
+void
+PDM_test
+(
+ const int           dnelt,
+ const int           flag
+)
+{
+  int* tmp = malloc(dnelt * sizeof(int));
+  
+  for(int i=0; i < dnelt; i++){
+    tmp[i] = -1;
+  }
+  
+  if(flag == 1)
+  {
+    free(tmp);
+  }
 }
 
 #ifdef __cplusplus

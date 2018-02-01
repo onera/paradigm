@@ -397,7 +397,7 @@ _make_absolute_face_numbering(PDM_DMesh_nodal_t* mesh)
     mesh->face_distrib[i] +=  mesh->face_distrib[i-1];
   }
 
-  if (1 == 1) {
+  if (0 == 1) {
     printf("beg_NumAbs::Face : "PDM_FMT_G_NUM" \n", beg_NumAbs);
     printf("mesh->face_distrib : "PDM_FMT_G_NUM,  mesh->face_distrib[0]);
     for (int i = 1; i < mesh->n_proc+1; i++) {
@@ -2763,7 +2763,7 @@ const int   hdl
     mesh->dCellFaceIdx[i+1] = mesh->dCellFaceIdx[i] + BlkStri2[i];
   }
   
-  printf("dElmtTot : %d\n", mesh->dCellFaceIdx[dElmtTot]);
+  // printf("dElmtTot : %d\n", mesh->dCellFaceIdx[dElmtTot]);
   
   mesh->dCellFace = (PDM_g_num_t *) malloc(mesh->dCellFaceIdx[dElmtTot] * sizeof(PDM_g_num_t * ));
    

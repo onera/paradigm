@@ -84,6 +84,8 @@ cdef extern from "pdm_elt_parent_find.h":
                              PDM_g_num_t  *elt_distrib,   
                              int           offset, 
                              PDM_MPI_Comm  comm)
+    void PDM_test(int           dnelt, 
+                  int         dnelt)
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 # ------------------------------------------------------------------
@@ -355,7 +357,7 @@ def ComputeDistributionFromDelmt(int         dnelt,
     """
     # ************************************************************************
     # > Declaration
-    cdef NPY.ndarray[npy_pdm_gnum_t, ndim=1, mode='fortran'] elt_distrib = NPY.empty( comm.Get_size() + 1, dtype=npy_pdm_gnum_dtype, order='C')
+    cdef NPY.ndarray[npy_pdm_gnum_t, ndim=1, mode='c'] elt_distrib = NPY.empty( comm.Get_size() + 1, dtype=npy_pdm_gnum_dtype, order='C')
     # ************************************************************************
 
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -372,3 +374,21 @@ def ComputeDistributionFromDelmt(int         dnelt,
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
     
     return elt_distrib
+
+# ------------------------------------------------------------------------
+def Test(int         dnelt,
+         int         flag): 
+    """
+    """
+    # ************************************************************************
+    # > Declaration
+    # ************************************************************************
+
+    # ::::::::::::::::::::::::::::::::::::::::::::::::::
+    # > Convert mpi4py -> PDM_MPI
+    # ::::::::::::::::::::::::::::::::::::::::::::::::::
+    
+    # ::::::::::::::::::::::::::::::::::::::::::::::::::
+    PDM_test(dnelt, flag)
+    # ::::::::::::::::::::::::::::::::::::::::::::::::::
+    

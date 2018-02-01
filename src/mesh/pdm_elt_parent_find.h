@@ -100,6 +100,14 @@ PDM_compute_distrib
  const PDM_MPI_Comm  comm     
 );
 
+
+void
+PDM_test
+(
+ const int           dnelt,
+ const int           flag
+);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

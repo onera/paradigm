@@ -146,12 +146,12 @@ cdef class BlockToBlock:
                                                <int **> &block_data_end)
           
           dim = <NPY.npy_intp> c_size
-          print "c_size : ", c_size
+          # print "c_size : ", c_size
           if(c_size == 0):
             dFieldEnd[field] = None
           else:
             dFieldEnd[field] = NPY.PyArray_SimpleNewFromData(1, &dim, dtype_data, <void *> block_data_end)
-            print dFieldEnd[field]
+            # print dFieldEnd[field]
           # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
     # ------------------------------------------------------------------

@@ -402,9 +402,9 @@ PDM_block_to_block_exch_int
       int SendRank = PDM_binary_search_gap_long (i,
                                                  _btb->blockDistribEndIdx,
                                                  _btb->nRank + 1);
-      int RecvRank = PDM_binary_search_gap_long (i,
-                                                 _btb->blockDistribEndIdx,
-                                                 _btb->nRank + 1);
+      // int RecvRank = PDM_binary_search_gap_long (i,
+      //                                            _btb->blockDistribEndIdx,
+      //                                            _btb->nRank + 1);
       
       n_sendBuffer[SendRank] += 1;
       // n_recvBuffer[RecvRank] += 1;
@@ -474,17 +474,17 @@ PDM_block_to_block_exch_int
     // }
     
   
-    for(int idxRank = 0; idxRank < _btb->nRank; idxRank++){
-      PDM_MPI_Barrier(_btb->comm);
-      if(idxRank == _btb->iRank){
-        for(int idxRank = 0; idxRank < _btb->nRank; idxRank++){
-          // printf("OO - i_sendBuffer[%d] = %d \n", idxRank, i_sendBuffer[idxRank]);
-          // printf("OO - i_recvBuffer[%d] = %d \n", idxRank, i_recvBuffer[idxRank]);
-          printf("OO - n_sendBuffer[%d] = %d \n", idxRank, n_sendBuffer[idxRank]);
-          printf("OO - n_recvBuffer[%d] = %d \n", idxRank, n_recvBuffer[idxRank]);
-        }
-      }
-    }
+    // for(int idxRank = 0; idxRank < _btb->nRank; idxRank++){
+    //   PDM_MPI_Barrier(_btb->comm);
+    //   if(idxRank == _btb->iRank){
+    //     for(int idxRank = 0; idxRank < _btb->nRank; idxRank++){
+    //       // printf("OO - i_sendBuffer[%d] = %d \n", idxRank, i_sendBuffer[idxRank]);
+    //       // printf("OO - i_recvBuffer[%d] = %d \n", idxRank, i_recvBuffer[idxRank]);
+    //       printf("OO - n_sendBuffer[%d] = %d \n", idxRank, n_sendBuffer[idxRank]);
+    //       printf("OO - n_recvBuffer[%d] = %d \n", idxRank, n_recvBuffer[idxRank]);
+    //     }
+    //   }
+    // }
     
     PDM_MPI_Barrier(_btb->comm);
     
@@ -522,22 +522,22 @@ PDM_block_to_block_exch_int
     
   }
   
-  for(int idxRank = 0; idxRank < _btb->nRank; idxRank++){
-    PDM_MPI_Barrier(_btb->comm);
-    if(idxRank == _btb->iRank){
-    PDM_printf("tmp : %d ", n_sendBuffer[_btb->iRank]);
-    // for(int i = 0; i < n_sendBuffer[_btb->iRank]; i++){
-    for(int i = 0; i < s_sendBuffer; i++){
-      PDM_printf("%i ", sendBuffer[i]);
-    }
-    PDM_printf("\n");
-    }
-  }
+  // for(int idxRank = 0; idxRank < _btb->nRank; idxRank++){
+  //   PDM_MPI_Barrier(_btb->comm);
+  //   if(idxRank == _btb->iRank){
+  //   PDM_printf("tmp : %d ", n_sendBuffer[_btb->iRank]);
+  //   // for(int i = 0; i < n_sendBuffer[_btb->iRank]; i++){
+  //   for(int i = 0; i < s_sendBuffer; i++){
+  //     PDM_printf("%i ", sendBuffer[i]);
+  //   }
+  //   PDM_printf("\n");
+  //   }
+  // }
 
   /*
    * Data exchange
    */
-  PDM_printf("[%d/%d] - PDM_MPI_Alltoallv %d \n ", _btb->iRank, _btb->nRank, n_sendBuffer[_btb->iRank]);
+  // PDM_printf("[%d/%d] - PDM_MPI_Alltoallv %d \n ", _btb->iRank, _btb->nRank, n_sendBuffer[_btb->iRank]);
   PDM_MPI_Barrier(_btb->comm);
   
   PDM_MPI_Alltoallv(sendBuffer,
@@ -549,23 +549,23 @@ PDM_block_to_block_exch_int
                     i_recvBuffer,
                     PDM_MPI_INT, 
                     _btb->comm);
-  PDM_printf("[%d/%d] -  PDM_MPI_Alltoallv end \n ",_btb->iRank, _btb->nRank);
+  // PDM_printf("[%d/%d] -  PDM_MPI_Alltoallv end \n ",_btb->iRank, _btb->nRank);
     
 
   // PDM_printf("s_recvBuffer : %d ", n_recvBuffer[_btb->iRank]);
   
-  for(int idxRank = 0; idxRank < _btb->nRank; idxRank++){
-    PDM_MPI_Barrier(_btb->comm);
-    if(idxRank == _btb->iRank){
-    PDM_printf("s_recvBuffer : %d ", s_recvBuffer);
-    // for(int i = 0; i < n_recvBuffer[_btb->iRank]; i++){
-    for(int i = 0; i < s_recvBuffer; i++){
-      PDM_printf("%i ", recvBuffer[i]);
-    }
-    PDM_printf("\n");    
-    PDM_MPI_Barrier(_btb->comm);
-    }
-  }
+  // for(int idxRank = 0; idxRank < _btb->nRank; idxRank++){
+  //   PDM_MPI_Barrier(_btb->comm);
+  //   if(idxRank == _btb->iRank){
+  //   PDM_printf("s_recvBuffer : %d ", s_recvBuffer);
+  //   // for(int i = 0; i < n_recvBuffer[_btb->iRank]; i++){
+  //   for(int i = 0; i < s_recvBuffer; i++){
+  //     PDM_printf("%i ", recvBuffer[i]);
+  //   }
+  //   PDM_printf("\n");    
+  //   PDM_MPI_Barrier(_btb->comm);
+  //   }
+  // }
     
 
   free(sendBuffer);
@@ -590,14 +590,14 @@ PDM_block_to_block_exch_int
     for(int i = 0; i < s_recvBuffer; i++){
       // *block_data_end[i] = recvBuffer[i];
       _block_data_end[i] = recvBuffer[i];
-      PDM_printf("oo %i ", _block_data_end[i]);
+      // PDM_printf("oo %i ", _block_data_end[i]);
     }
     *block_data_end = _block_data_end;
-    PDM_printf("\n");    
+    // PDM_printf("\n");    
   }
 
   free(recvBuffer);
-  PDM_printf("s_recvBuffer :  %i \n ", s_recvBuffer);
+  // PDM_printf("s_recvBuffer :  %i \n ", s_recvBuffer);
   return s_recvBuffer;
 }
 
