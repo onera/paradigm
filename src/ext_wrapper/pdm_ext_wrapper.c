@@ -96,12 +96,13 @@ int *part
   
   idx_t _edgecut = (idx_t) (*edgecut);
   
-	real_t *_tpwgts; 
-  real_t *_ubvec;  
-  for (int i = 0; i < *ncon; i++) {
-    _tpwgts[i] = (real_t) tpwgts[i]; 
-    _ubvec[i] = (real_t) ubvec[i];         
-  }
+  // TODO : Faire comme dans PDM_ParMETIS_V3_PartKway
+	real_t *_tpwgts = (real_t *) tpwgts; 
+  real_t *_ubvec  = (real_t *) ubvec;  
+  // for (int i = 0; i < *ncon; i++) {
+  //   _tpwgts[i] = (real_t) tpwgts[i]; 
+  //   _ubvec[i] = (real_t) ubvec[i];         
+  // }
 
   int *_vsize = NULL;
 
@@ -254,12 +255,14 @@ int *part
 
   idx_t _edgecut = (idx_t) *edgecut;
   
-	real_t *_tpwgts; 
-  real_t *_ubvec;  
-  for (int i = 0; i < *ncon; i++) {
-    _tpwgts[i] = (real_t) tpwgts[i]; 
-    _ubvec[i] = (real_t) ubvec[i];         
-  }
+	// real_t *_tpwgts; 
+ //  real_t *_ubvec;  
+  real_t *_tpwgts = (real_t *) tpwgts; 
+  real_t *_ubvec  = (real_t *) ubvec;  
+  // for (int i = 0; i < *ncon; i++) {
+  //   _tpwgts[i] = (real_t) tpwgts[i]; 
+  //   _ubvec[i] = (real_t) ubvec[i];         
+  // }
 
   int *_vsize = NULL;
 

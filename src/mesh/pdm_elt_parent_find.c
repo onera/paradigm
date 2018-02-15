@@ -234,13 +234,13 @@ const int          nFac,
             
             iAbsFace++;
                 
-            if(nFacApprox[0] <= iAbsFace ){
-                printf("Realloc :  %d - %d \n", nFacApprox[0], iAbsFace);
+            // if(nFacApprox[0] <= iAbsFace ){
+            //     printf("Realloc :  %d - %d \n", nFacApprox[0], iAbsFace);
                 
-                nFacApprox[0] *= 2;
-                // printf("Realloc :  %d - %d - %d \n", nFacApprox[0], nFacApprox2, iAbsFace);
-                connect   = (PDM_g_num_t *) realloc(connect,  sizeof(PDM_g_num_t) * nFacApprox[0] );
-            }
+            //     nFacApprox[0] *= 2;
+            //     // printf("Realloc :  %d - %d - %d \n", nFacApprox[0], nFacApprox2, iAbsFace);
+            //     connect   = (PDM_g_num_t *) realloc(connect,  sizeof(PDM_g_num_t) * nFacApprox[0] );
+            // }
             
             /* 
              * Flags the two faces as treated 
@@ -697,11 +697,11 @@ PDM_elt_parent_find_from_distrib
      *         -> Set the adress of the block data of current faces
      *         -> Make a surdim before and not realloc ...
      */
-    if(nFac > nFacLocApprox){
-        printf("Realloc IdxFace \n");
-        nFacLocApprox *= 2;
-        IdxFace      = (int *)         realloc( IdxFace     , sizeof(int *        ) * nFacLocApprox + 1);
-        connectLocal = (PDM_g_num_t *) realloc( connectLocal, sizeof(PDM_g_num_t *) * nFacLocApprox );
+    if(nFac >= nFacLocApprox){
+        printf("Realloc IdxFace -> nFac %d // nFacLocApprox : %d \n", nFac, nFacLocApprox);
+        nFacLocApprox = nFac; 
+        IdxFace       = (int *)         realloc( IdxFace     , sizeof(int *        ) * nFac + 1);
+        connectLocal  = (PDM_g_num_t *) realloc( connectLocal, sizeof(PDM_g_num_t *) * nFac    );
     }
     
     /** New **/
