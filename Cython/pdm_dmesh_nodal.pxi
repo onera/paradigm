@@ -59,6 +59,34 @@ cdef extern from "pdm_dmesh_nodal.h":
     PDM_g_num_t* PDM_DMesh_nodal_distrib_face_get(int handle)
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
+cdef extern from "pdm_elt_parent_find.h":
+    # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    # > Wrapping of Ppart Structure     
+    void PDM_elt_parent_find_from_distrib(PDM_g_num_t  *elt_distrib,
+                                          int          *elt_def_idx,
+                                          PDM_g_num_t  *elt_def,
+                                          PDM_g_num_t  *elt_to_find_distrib,
+                                          int          *elt_to_find_def_idx,
+                                          PDM_g_num_t  *elt_to_find_def,
+                                          PDM_MPI_Comm  comm,     
+                                          PDM_g_num_t  *parent)
+    
+    void PDM_elt_parent_find(int           dnelt,
+                             int          *elt_def_idx,
+                             PDM_g_num_t  *elt_def,
+                             int           dnelt_to_find,
+                             int          *elt_to_find_def_idx,
+                             PDM_g_num_t  *elt_to_find_def,
+                             PDM_MPI_Comm  comm,     
+                             PDM_g_num_t  *parent)
+    
+    void PDM_compute_distrib(int           dnelt, 
+                             PDM_g_num_t  *elt_distrib,   
+                             int           offset, 
+                             PDM_MPI_Comm  comm)
+    void PDM_test(int           dnelt, 
+                  int         dnelt)
+    # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 # ------------------------------------------------------------------
 cdef class DistributedMeshNodal:
@@ -85,6 +113,11 @@ cdef class DistributedMeshNodal:
         # # > Numpy array
         # cdef NPY.ndarray[npy_pdm_gnum_t, ndim=1, mode='fortran'] partLNToGN
         # ************************************************************************
+        
+        # ::::::::::::::::::::::::::::::::::::::::::::::::::
+        self.Rank = comm.Get_rank()
+        self.Size = comm.Get_size()
+        # ::::::::::::::::::::::::::::::::::::::::::::::::::
         
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
         # > Convert mpi4py -> PDM_MPI
@@ -141,8 +174,7 @@ cdef class DistributedMeshNodal:
         # ************************************************************************
         # > Declaration
         # ************************************************************************
-        PDM_DMesh_nodal_cell_face_compute(self.idmesh)
-        
+        PDM_DMesh_nodal_cell_face_compute(self.idmesh)      
         
     # ------------------------------------------------------------------------
     def getFaceCell(self):
@@ -246,6 +278,28 @@ cdef class DistributedMeshNodal:
         return {'sFace'         : nFace, 
                  'npdFaceVtxIdx' : npfaceVtxIdx,
                  'npdFaceVtx'    : npfaceVtx}
+                 
+    # ------------------------------------------------------------------------
+    def getDistribFace(self):
+        """
+        """
+        # ************************************************************************
+        # > Declaration
+        cdef PDM_g_num_t *faceDistrib
+        cdef NPY.npy_intp dim
+        # ************************************************************************
+        
+        # > Get array        
+        faceDistrib = PDM_DMesh_nodal_distrib_face_get(self.idmesh)
+        
+        # > Build numpy capsule
+        dim = <NPY.npy_intp> self.Rank + 1
+        npDistribFace = NPY.PyArray_SimpleNewFromData(1,
+                                                      &dim,
+                                                      PDM_G_NUM_NPY_INT,
+                                                      <void *> faceDistrib)
+        
+        return npDistribFace
 
     # ------------------------------------------------------------------------
     def __dealloc__(self):
@@ -260,3 +314,81 @@ cdef class DistributedMeshNodal:
       print 'PDM_DMesh_nodal_free'
       PDM_DMesh_nodal_free(self.idmesh)
 
+
+
+# ------------------------------------------------------------------------
+def ElementParentFind(int                                           dnelt,
+                      NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] elt_def_idx,
+                      NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] elt_def,
+                      int                                           dnelt_to_find,
+                      NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] elt_to_find_def_idx,
+                      NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] elt_to_find_def,
+                      MPI.Comm    comm,      
+                      NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] parent):
+    """
+    """
+    # ************************************************************************
+    # > Declaration
+    # ************************************************************************
+
+    # ::::::::::::::::::::::::::::::::::::::::::::::::::
+    # > Convert mpi4py -> PDM_MPI
+    cdef MPI.MPI_Comm c_comm = comm.ob_mpi
+    cdef PDM_MPI_Comm PDMC   = PDM_MPI_mpi_2_pdm_mpi_comm(<void *> &c_comm)
+    # ::::::::::::::::::::::::::::::::::::::::::::::::::
+    
+    # ::::::::::::::::::::::::::::::::::::::::::::::::::
+    PDM_elt_parent_find(dnelt,
+                        <int *>         elt_def_idx.data,
+                        <PDM_g_num_t *> elt_def.data,
+                        dnelt_to_find,
+                        <int *>         elt_to_find_def_idx.data,
+                        <PDM_g_num_t *> elt_to_find_def.data,
+                        PDMC,     
+                        <PDM_g_num_t *> parent.data)
+    # ::::::::::::::::::::::::::::::::::::::::::::::::::
+
+
+# ------------------------------------------------------------------------
+def ComputeDistributionFromDelmt(int         dnelt,
+                                 MPI.Comm    comm, 
+                                 int         offset=0): 
+    """
+    """
+    # ************************************************************************
+    # > Declaration
+    cdef NPY.ndarray[npy_pdm_gnum_t, ndim=1, mode='c'] elt_distrib = NPY.empty( comm.Get_size() + 1, dtype=npy_pdm_gnum_dtype, order='C')
+    # ************************************************************************
+
+    # ::::::::::::::::::::::::::::::::::::::::::::::::::
+    # > Convert mpi4py -> PDM_MPI
+    cdef MPI.MPI_Comm c_comm = comm.ob_mpi
+    cdef PDM_MPI_Comm PDMC   = PDM_MPI_mpi_2_pdm_mpi_comm(<void *> &c_comm)
+    # ::::::::::::::::::::::::::::::::::::::::::::::::::
+    
+    # ::::::::::::::::::::::::::::::::::::::::::::::::::
+    PDM_compute_distrib(dnelt,
+                        <PDM_g_num_t *> elt_distrib.data,
+                        offset,
+                        PDMC)
+    # ::::::::::::::::::::::::::::::::::::::::::::::::::
+    
+    return elt_distrib
+
+# ------------------------------------------------------------------------
+def Test(int         dnelt,
+         int         flag): 
+    """
+    """
+    # ************************************************************************
+    # > Declaration
+    # ************************************************************************
+
+    # ::::::::::::::::::::::::::::::::::::::::::::::::::
+    # > Convert mpi4py -> PDM_MPI
+    # ::::::::::::::::::::::::::::::::::::::::::::::::::
+    
+    # ::::::::::::::::::::::::::::::::::::::::::::::::::
+    PDM_test(dnelt, flag)
+    # ::::::::::::::::::::::::::::::::::::::::::::::::::
+    

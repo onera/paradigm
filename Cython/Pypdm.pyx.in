@@ -30,6 +30,7 @@ NPY.import_array()
 # -----------------
 
 ctypedef @PYX_NPY_G_NUM@ npy_pdm_gnum_t
+npy_pdm_gnum_dtype = @PYX_NPY_G_NUM_DTYPE@ 
 ctypedef @PYX_G_NUM@ PDM_g_num_t
 ctypedef @PYX_L_NUM@ PDM_l_num_t
 
@@ -81,6 +82,10 @@ include "pdm_part_to_block.pxi"
 # ------------------
 include "pdm_block_to_part.pxi"
 
+# PDM_block_to_block :
+# ------------------
+include "pdm_block_to_block.pxi"
+
 # PDM_cellface_orient :
 # --------------------
 include "pdm_cellface_orient.pxi" 
@@ -89,5 +94,17 @@ include "pdm_cellface_orient.pxi"
 # ----------------
 include "pdm_dmesh_nodal.pxi" 
 
+
+
+
+
+
+
+
+
+
+
 # TODO: PDM_writer, ...
+
+
 

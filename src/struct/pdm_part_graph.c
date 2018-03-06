@@ -162,7 +162,8 @@ PDM_split_graph
         }
       }
           
-      double *tpwgts = NULL;
+      // double *tpwgts = NULL;
+      double *tpwgts = (double *) malloc(ncon * nPart * sizeof(double));
           
       if (flag_weights != 0) {
         double *ubvec = (double *) malloc(ncon * sizeof(double));
@@ -171,7 +172,8 @@ PDM_split_graph
         }
       }
           
-      double *ubvec = NULL;
+      // double *ubvec = NULL;
+      double *ubvec = (double *) malloc(ncon * sizeof(double));
           
       //TO ADD: USE OF ADJWGT IN AN IF STATEMENT                
         

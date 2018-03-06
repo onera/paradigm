@@ -57,6 +57,7 @@ typedef struct  _part_t {
   int           nCell;              /*!< Number of cells                      */
   int           nFace;              /*!< Number of faces                      */
   int           nFacePartBound;     /*!< Number of partitioning boundary faces*/
+  int           nFaceGroup;         /*!< Number of boundary faces             */
 
   int          *cellFaceIdx;        /*!< Cell face connectivity index 
                                       (size = nCell + 1)                      */
@@ -112,6 +113,12 @@ typedef struct  _part_t {
                                       (size = nVtx)                           */
   int          *vtxTag;             /*!< Tag vertex            
                                       (size = nVtx)                           */
+  
+  
+  const int          *cellWeight;             /*!< Cell weight - For coarse mesh             
+                                            (size = nCel)                           */
+  const int          *faceWeight;             /*!< Face weight - For coarse mesh            
+                                            (size = nFac)                           */
   
   int          *cellColor;             /*!< Cell color - For cache blocking            
                                             (size = nCel)                           */

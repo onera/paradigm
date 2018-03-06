@@ -176,7 +176,6 @@ cdef class Part:
 
 
         """
-        print '*'*1000
 
         # ~> Communicator Mpi
         cdef MPI.MPI_Comm c_comm = comm.ob_mpi

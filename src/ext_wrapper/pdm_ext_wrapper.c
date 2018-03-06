@@ -80,6 +80,7 @@ int *part
   options[METIS_OPTION_COMPRESS] = 1; 
 
 
+  PDM_printf("\n \t\t\t\t PDM_METIS_PartGraphRecursive flag 1\n");   
   //METIS provide the METIS SetDefaultOptions routine to set the options to their default values. 
   //After that, the application can just modify the options that is interested in modifying.
   //options[METIS_OPTION_NSEPS] = 10;
@@ -95,12 +96,13 @@ int *part
   
   idx_t _edgecut = (idx_t) (*edgecut);
   
-	real_t *_tpwgts; 
-  real_t *_ubvec;  
-  for (int i = 0; i < *ncon; i++) {
-    _tpwgts[i] = (real_t) tpwgts[i]; 
-    _ubvec[i] = (real_t) ubvec[i];         
-  }
+  // TODO : Faire comme dans PDM_ParMETIS_V3_PartKway
+	real_t *_tpwgts = (real_t *) tpwgts; 
+  real_t *_ubvec  = (real_t *) ubvec;  
+  // for (int i = 0; i < *ncon; i++) {
+  //   _tpwgts[i] = (real_t) tpwgts[i]; 
+  //   _ubvec[i] = (real_t) ubvec[i];         
+  // }
 
   int *_vsize = NULL;
 
@@ -166,6 +168,7 @@ int *part
 
   }
 
+  PDM_printf("\n \t\t\t\t METIS_PartGraphRecursive \n");   
   int rval = (int) METIS_PartGraphRecursive (&_nvtxs, 
                                              &_ncon, 
                                               _xadj, 
@@ -179,6 +182,7 @@ int *part
                                               options, 
                                               &_edgecut, 
                                               _part);
+  PDM_printf("\n \t\t\t\t METIS_PartGraphRecursive end \n");  
 
     if (sizeof(int) != sizeof(idx_t)) {
     for (int i = 0; i < _nvtxs; i++) {
@@ -251,12 +255,14 @@ int *part
 
   idx_t _edgecut = (idx_t) *edgecut;
   
-	real_t *_tpwgts; 
-  real_t *_ubvec;  
-  for (int i = 0; i < *ncon; i++) {
-    _tpwgts[i] = (real_t) tpwgts[i]; 
-    _ubvec[i] = (real_t) ubvec[i];         
-  }
+	// real_t *_tpwgts; 
+ //  real_t *_ubvec;  
+  real_t *_tpwgts = (real_t *) tpwgts; 
+  real_t *_ubvec  = (real_t *) ubvec;  
+  // for (int i = 0; i < *ncon; i++) {
+  //   _tpwgts[i] = (real_t) tpwgts[i]; 
+  //   _ubvec[i] = (real_t) ubvec[i];         
+  // }
 
   int *_vsize = NULL;
 
