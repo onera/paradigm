@@ -1489,7 +1489,6 @@ PROCF (pdm_gnum_free, PDM_GNUM_FREE)
   PDM_gnum_free (*id, *partial);
 }
 
-
 /*----------------------------------------------------------------------------*/
 
 #ifdef __cplusplus
