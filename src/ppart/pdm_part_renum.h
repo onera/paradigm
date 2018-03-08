@@ -48,7 +48,7 @@ typedef void (*PDM_part_renum_fct_t) (_PDM_part_t  *ppart);
  */
 
 int 
-PDM_part_renum_cell_add
+PDM_part_renum_method_cell_add
 (
  const char                 *name,     /*!< Name          */ 
  const PDM_part_renum_fct_t  renum_fct /*!< Customize \ref PDM_part_renum_cell function for the format */             
@@ -64,7 +64,7 @@ PDM_part_renum_cell_add
  */
 
 int 
-PDM_part_renum_face_add
+PDM_part_renum_method_face_add
 (
  const char                 *name,     /*!< Name          */ 
  const PDM_part_renum_fct_t  renum_fct /*!< Customize \ref PDM_part_renum_face function for the format */             
@@ -81,7 +81,7 @@ PDM_part_renum_face_add
  */
 
 int 
-PDM_part_renum_cell_method_idx_get
+PDM_part_renum_method_cell_idx_get
 (
 const char *name
 );
@@ -97,7 +97,7 @@ const char *name
  */
 
 int 
-PDM_part_renum_face_method_idx_get
+PDM_part_renum_method_face_idx_get
 (
 const char *name
 );        
@@ -114,7 +114,7 @@ const char *name
  */
 
 const char * 
-PDM_part_renum_cell_method_name_get
+PDM_part_renum_method_cell_name_get
 (
 const int idx
 );        
@@ -131,7 +131,7 @@ const int idx
  */
 
 const char * 
-PDM_part_renum_face_method_name_get
+PDM_part_renum_method_face_name_get
 (
 const int idx
 );        
@@ -146,7 +146,7 @@ const int idx
  */
 
 int  
-PDM_part_n_renum_cell_method_get
+PDM_part_n_renum_method_cell_get
 (
 void 
 );        
@@ -161,7 +161,7 @@ void
  */
 
 int  
-PDM_part_n_renum_face_method_get
+PDM_part_n_renum_method_face_get
 (
 void 
 );        
@@ -178,7 +178,7 @@ void
  */
 
 const char * 
-PDM_part_renum_face_method_name_get
+PDM_part_renum_method_face_name_get
 (
 const int idx
 );        
@@ -191,7 +191,7 @@ const int idx
  */
 
 int  
-PDM_part_n_renum_cell_method_get
+PDM_part_n_renum_method_cell_get
 (
 void 
 );        
@@ -206,7 +206,7 @@ void
  */
 
 int  
-PDM_part_n_renum_face_method_get
+PDM_part_n_renum_method_face_get
 (
 void 
 );        
@@ -219,7 +219,7 @@ void
  */
 
 void 
-PDM_part_renum_purge
+PDM_part_renum_method_purge
 (
 void
 );        
@@ -231,7 +231,7 @@ void
  */
 
 void 
-PDM_part_renum_load_local
+PDM_part_renum_method_load_local
 (
 void
 );        

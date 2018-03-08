@@ -938,7 +938,7 @@ _PDM_part_t* ppart
  */
 
 void 
-PDM_part_renum_purge
+PDM_part_renum_method_purge
 (
  void
 )        
@@ -991,13 +991,13 @@ PDM_part_renum_purge
  */
 
 int 
-PDM_part_renum_cell_method_idx_get
+PDM_part_renum_method_cell_idx_get
 (
 const char *name
 )        
 {
   if (cell_methods == NULL) {
-    PDM_part_renum_load_local();
+    PDM_part_renum_method_load_local();
   }
   int idx = -1;
   
@@ -1028,13 +1028,13 @@ const char *name
  */
 
 int 
-PDM_part_renum_face_method_idx_get
+PDM_part_renum_method_face_idx_get
 (
 const char *name
 )        
 {
   if (face_methods == NULL) {
-    PDM_part_renum_load_local();
+    PDM_part_renum_method_load_local();
   }
   int idx = -1;
   int n_methods = PDM_Handles_n_get (face_methods);
@@ -1063,13 +1063,13 @@ const char *name
  */
 
 const char * 
-PDM_part_renum_cell_method_name_get
+PDM_part_renum_method_cell_name_get
 (
 const int idx
 )
 {
   if (cell_methods == NULL) {
-    PDM_part_renum_load_local();
+    PDM_part_renum_method_load_local();
   }
 
   int n_methods = PDM_Handles_n_get (cell_methods);
@@ -1096,13 +1096,13 @@ const int idx
  */
 
 int  
-PDM_part_n_renum_cell_method_get
+PDM_part_n_renum_method_cell_get
 (
 void 
 )
 {
   if (cell_methods == NULL) {
-    PDM_part_renum_load_local();
+    PDM_part_renum_method_load_local();
   }
   
   return PDM_Handles_n_get (cell_methods);
@@ -1120,13 +1120,13 @@ void
  */
 
 int  
-PDM_part_n_renum_face_method_get
+PDM_part_n_renum_method_face_get
 (
 void 
 )
 {
   if (face_methods == NULL) {
-    PDM_part_renum_load_local();
+    PDM_part_renum_method_load_local();
   }
 
   return PDM_Handles_n_get (face_methods);
@@ -1143,14 +1143,14 @@ void
  */
 
 int 
-PDM_part_renum_cell_add
+PDM_part_renum_method_cell_add
 (
  const char                 *name,     /*!< Name          */ 
  const PDM_part_renum_fct_t  renum_fct /*!< Customize \ref PDM_part_renum_cell function for the format */             
 )
 {
   if (cell_methods == NULL) {
-    PDM_part_renum_load_local ();
+    PDM_part_renum_method_load_local ();
   }
 
   _renum_method_t *method_ptr = malloc (sizeof(_renum_method_t));
@@ -1176,14 +1176,14 @@ PDM_part_renum_cell_add
  */
 
 int 
-PDM_part_renum_face_add
+PDM_part_renum_method_face_add
 (
  const char                 *name,     /*!< Name          */ 
  const PDM_part_renum_fct_t  renum_fct /*!< Customize \ref PDM_part_renum_face function for the format */             
 )
 {
   if (face_methods == NULL) {
-    PDM_part_renum_load_local ();
+    PDM_part_renum_method_load_local ();
   }
 
   _renum_method_t *method_ptr = malloc (sizeof(_renum_method_t));
@@ -1206,7 +1206,7 @@ PDM_part_renum_face_add
  */
 
 void 
-PDM_part_renum_load_local
+PDM_part_renum_method_load_local
 (
 void
 )
@@ -1217,13 +1217,13 @@ void
     const int n_default_methods = 4;
     cell_methods = PDM_Handles_create (n_default_methods);
     
-    PDM_part_renum_cell_add ("PDM_PART_RENUM_CELL_NONE", 
+    PDM_part_renum_method_cell_add ("PDM_PART_RENUM_CELL_NONE",
                              NULL);
-    PDM_part_renum_cell_add ("PDM_PART_RENUM_CELL_RANDOM", 
+    PDM_part_renum_method_cell_add ("PDM_PART_RENUM_CELL_RANDOM",
                              _renum_cells_random);
-    PDM_part_renum_cell_add ("PDM_PART_RENUM_CELL_HILBERT",
+    PDM_part_renum_method_cell_add ("PDM_PART_RENUM_CELL_HILBERT",
                              _renum_cells_hilbert);
-    PDM_part_renum_cell_add ("PDM_PART_RENUM_CELL_CUTHILL",
+    PDM_part_renum_method_cell_add ("PDM_PART_RENUM_CELL_CUTHILL",
                              _renum_cells_cuthill);
   }
 
@@ -1231,11 +1231,11 @@ void
     const int n_default_methods = 3;
     face_methods = PDM_Handles_create (n_default_methods);
 
-    PDM_part_renum_face_add ("PDM_PART_RENUM_FACE_NONE", 
+    PDM_part_renum_method_face_add ("PDM_PART_RENUM_FACE_NONE",
                              NULL);
-    PDM_part_renum_face_add ("PDM_PART_RENUM_FACE_RANDOM", 
+    PDM_part_renum_method_face_add ("PDM_PART_RENUM_FACE_RANDOM",
                              _renum_faces_random);
-    PDM_part_renum_face_add ("PDM_PART_RENUM_FACE_LEXICOGRAPHIC",
+    PDM_part_renum_method_face_add ("PDM_PART_RENUM_FACE_LEXICOGRAPHIC",
                              _renum_faces_lexicographic);
   }
   
@@ -1258,7 +1258,7 @@ PDM_part_renum_cell
 {
   
   if (cell_methods == NULL)  {
-    PDM_part_renum_load_local ();
+    PDM_part_renum_method_load_local ();
   }
   
   const _renum_method_t *method_ptr = (const _renum_method_t *) 
@@ -1284,13 +1284,13 @@ PDM_part_renum_cell
  */
 
 const char * 
-PDM_part_renum_face_method_name_get
+PDM_part_renum_method_face_name_get
 (
 const int idx
 )
 {
   if (face_methods == NULL) {
-    PDM_part_renum_load_local();
+    PDM_part_renum_method_load_local();
   }
 
   int n_methods = PDM_Handles_n_get (face_methods);
@@ -1323,7 +1323,7 @@ PDM_part_renum_face
 )
 {
   if (face_methods == NULL)  {
-    PDM_part_renum_load_local ();
+    PDM_part_renum_method_load_local ();
   }
   
   const _renum_method_t *method_ptr = (const _renum_method_t *) 
