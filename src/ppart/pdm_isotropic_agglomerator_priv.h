@@ -15,16 +15,16 @@
 #include <queue>
 using namespace std;
 
-#if !defined (__hpux) && !defined (_AIX) 
-#define PROCF(x, y) x##_
-#else
-#define PROCF(x, y) x
-#endif
+//#if !defined (__hpux) && !defined (_AIX)
+//#define PROCF(x, y) x##_
+//#else
+//#define PROCF(x, y) x
+//#endif
 
 
-#ifdef  __cplusplus
-extern "C" {
-#endif
+//#ifdef  __cplusplus
+//extern "C" {
+//#endif
   
 /*============================================================================
  * Types definition
@@ -377,8 +377,8 @@ void agglomerate_Isotropic_Second_Step_Correction(int numberOfInts, int *sizes,
                                                   bool checks,
                                                   bool verbose);
 
-#ifdef  __cplusplus
-}
-#endif
+//#ifdef  __cplusplus
+//}
+//#endif
 
-#endif __TEST_AGGLOMERATOR_ISOTROPIC_PRIV_H__
+#endif // __TEST_AGGLOMERATOR_ISOTROPIC_PRIV_H__

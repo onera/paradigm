@@ -80,7 +80,6 @@ int *part
   options[METIS_OPTION_COMPRESS] = 1; 
 
 
-  PDM_printf("\n \t\t\t\t PDM_METIS_PartGraphRecursive flag 1\n");   
   //METIS provide the METIS SetDefaultOptions routine to set the options to their default values. 
   //After that, the application can just modify the options that is interested in modifying.
   //options[METIS_OPTION_NSEPS] = 10;
@@ -95,21 +94,42 @@ int *part
   idx_t _nparts = *nparts; 
   
   idx_t _edgecut = (idx_t) (*edgecut);
-  
-  // TODO : Faire comme dans PDM_ParMETIS_V3_PartKway
-	real_t *_tpwgts = (real_t *) tpwgts; 
-  real_t *_ubvec  = (real_t *) ubvec;  
-  // for (int i = 0; i < *ncon; i++) {
-  //   _tpwgts[i] = (real_t) tpwgts[i]; 
-  //   _ubvec[i] = (real_t) ubvec[i];         
-  // }
 
+  real_t *_tpwgts, *__tpwgts; 
+  real_t *_ubvec, *__ubvec;  
+
+  __tpwgts = NULL;
+  __ubvec = NULL;
+  
+  if (sizeof (double) == sizeof(real_t)) {
+    _tpwgts = (real_t *) tpwgts;
+    _ubvec = (real_t *) ubvec;
+  }
+
+  else { 
+
+    __tpwgts = malloc (sizeof(real_t) * _ncon * _nparts);
+    __ubvec = malloc (sizeof(real_t) * _ncon);
+
+    _tpwgts = __tpwgts;
+    _ubvec = __ubvec;
+
+    for (int i = 0; i < _ncon * _nparts; i++) {
+      __tpwgts[i] = (real_t) tpwgts[i]; 
+    }
+    
+    for (int i = 0; i < _ncon; i++) {
+      __ubvec[i] = (real_t) ubvec[i];         
+    }
+
+  }
+  
   int *_vsize = NULL;
 
   idx_t *__xadj, *_xadj;
   idx_t *__adjncy, *_adjncy;
   idx_t *__vwgt, *_vwgt; 
-	idx_t *__adjwgt, *_adjwgt; 
+  idx_t *__adjwgt, *_adjwgt; 
   idx_t *__part, *_part; 
 
   if (sizeof(int) == sizeof(idx_t)) {
@@ -168,7 +188,6 @@ int *part
 
   }
 
-  PDM_printf("\n \t\t\t\t METIS_PartGraphRecursive \n");   
   int rval = (int) METIS_PartGraphRecursive (&_nvtxs, 
                                              &_ncon, 
                                               _xadj, 
@@ -182,7 +201,6 @@ int *part
                                               options, 
                                               &_edgecut, 
                                               _part);
-  PDM_printf("\n \t\t\t\t METIS_PartGraphRecursive end \n");  
 
     if (sizeof(int) != sizeof(idx_t)) {
     for (int i = 0; i < _nvtxs; i++) {
@@ -208,6 +226,14 @@ int *part
 
   if (__adjwgt != NULL) {
     free (__adjwgt);
+  }
+  
+  if (__tpwgts != NULL) {
+    free (__tpwgts);
+  }
+  
+  if (__ubvec != NULL) {
+    free (__ubvec);    
   }
 
   return rval;
@@ -254,22 +280,43 @@ int *part
   idx_t _nparts = *nparts; 
 
   idx_t _edgecut = (idx_t) *edgecut;
+
+
+  real_t *_tpwgts, *__tpwgts; 
+  real_t *_ubvec, *__ubvec;  
+
+  __tpwgts = NULL;
+  __ubvec = NULL;
   
-	// real_t *_tpwgts; 
- //  real_t *_ubvec;  
-  real_t *_tpwgts = (real_t *) tpwgts; 
-  real_t *_ubvec  = (real_t *) ubvec;  
-  // for (int i = 0; i < *ncon; i++) {
-  //   _tpwgts[i] = (real_t) tpwgts[i]; 
-  //   _ubvec[i] = (real_t) ubvec[i];         
-  // }
+  if (sizeof (double) == sizeof(real_t)) {
+    _tpwgts = (real_t *) tpwgts;
+    _ubvec = (real_t *) ubvec;
+  }
+
+  else { 
+
+    __tpwgts = malloc (sizeof(real_t) * _ncon * _nparts);
+    __ubvec = malloc (sizeof(real_t) * _ncon);
+
+    _tpwgts = __tpwgts;
+    _ubvec = __ubvec;
+
+    for (int i = 0; i < _ncon * _nparts; i++) {
+      __tpwgts[i] = (real_t) tpwgts[i]; 
+    }
+    
+    for (int i = 0; i < _ncon; i++) {
+      __ubvec[i] = (real_t) ubvec[i];         
+    }
+
+  }
 
   int *_vsize = NULL;
 
   idx_t *__xadj, *_xadj;
   idx_t *__adjncy, *_adjncy;
   idx_t *__vwgt, *_vwgt; 
-	idx_t *__adjwgt, *_adjwgt; 
+  idx_t *__adjwgt, *_adjwgt; 
   idx_t *__part, *_part; 
 
   if (sizeof(int) == sizeof(idx_t)) {
@@ -367,6 +414,15 @@ int *part
 
   if (__adjwgt != NULL) {
     free (__adjwgt);
+  }
+
+  
+  if (__tpwgts != NULL) {
+    free (__tpwgts);
+  }
+  
+  if (__ubvec != NULL) {
+    free (__ubvec);    
   }
 
   return rval;

@@ -112,4 +112,4 @@ void agglomerateOneLevel_v_Paradigma(int *sizes,
 }
 #endif
 
-#endif __TEST_AGGLOMERATOR_ISOTROPIC_H__
+#endif /*__TEST_AGGLOMERATOR_ISOTROPIC_H__ */

@@ -228,7 +228,7 @@ const int          nFac,
             }
             else
             {
-              printf("Something strange %d \n");
+              printf("Something strange\n");
               exit(2);
             }
             
@@ -518,7 +518,6 @@ PDM_elt_parent_find_from_distrib
   /** Initialisation of some data **/
   int nFace  = 0;
   int nData  = 0;
-  int offset = 0;
   
   /* Prepare hash table with current element */
   // for (PDM_g_num_t i = elt_distrib[myRank]; i < elt_distrib[myRank+1]; i++) {
@@ -598,8 +597,8 @@ PDM_elt_parent_find_from_distrib
   /* 
    * Create PartToBlock Structure 
    */
-  PDM_part_to_block_t *ptb = PDM_part_to_block_create(PDM_writer_BLOCK_DISTRIB_ALL_PROC,
-                                                      PDM_writer_POST_MERGE,
+  PDM_part_to_block_t *ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                      PDM_PART_TO_BLOCK_POST_MERGE,
                                                       1.,
                                                       &LNToGN,
                                                       &nFace,
@@ -612,14 +611,14 @@ PDM_elt_parent_find_from_distrib
   int *BlkStri = NULL;
   int *BlkData = NULL;
     
-  int dataSize = PDM_part_to_block_exch(          ptb,
-                                                  sizeof(PDM_g_num_t),
-                                                  PDM_writer_STRIDE_VAR,
-                                                  -1,
-                                                  &part_stri,
-                                        (void **) &part_data,                                               
-                                                  &BlkStri,
-                                        (void **) &BlkData);
+  PDM_part_to_block_exch(          ptb,
+                                   sizeof(PDM_g_num_t),
+                                   PDM_STRIDE_VAR,
+                                  -1,
+                                   &part_stri,
+                         (void **) &part_data,
+                                   &BlkStri,
+                         (void **) &BlkData);
 
   /*
    *  Get the size of the current process bloc
@@ -826,8 +825,8 @@ PDM_elt_parent_find_from_distrib
     LNToGNElem[idx] = i+1;
   }
   
-  PDM_part_to_block_t *ptb2 = PDM_part_to_block_create(PDM_writer_BLOCK_DISTRIB_ALL_PROC,
-                                                       PDM_writer_POST_NOTHING,
+  PDM_part_to_block_t *ptb2 = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                       PDM_PART_TO_BLOCK_POST_NOTHING,
                                                        1.,
                                                        &LNToGNElem,
                                                        &dNFace,
@@ -839,14 +838,14 @@ PDM_elt_parent_find_from_distrib
   int *BlkData2 = NULL;
   
   /** Exchange connect  **/    
-  int dataSize2 = PDM_part_to_block_exch(          ptb2,
-                                                   sizeof(PDM_g_num_t),
-                                                   PDM_writer_STRIDE_CST,
-                                                   1,
-                                                   NULL,
-                                         (void **) &connect,                                                        
-                                                   &BlkStri2,
-                                         (void **) &BlkData2);
+  PDM_part_to_block_exch(          ptb2,
+                                   sizeof(PDM_g_num_t),
+                                   PDM_STRIDE_CST,
+                                   1,
+                                   NULL,
+                         (void **) &connect,
+                                   &BlkStri2,
+                         (void **) &BlkData2);
   
   /*
    *  Get the size of the current process bloc
@@ -901,7 +900,6 @@ PDM_elt_parent_find_from_distrib
   int cst_stri_ini = 1;
   int cst_stri_end = 1;
   
-  int *BlkStri3 = NULL;
   int *BlkData3 = NULL;
   
   // PDM_block_to_block_exch(btp, 

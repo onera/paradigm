@@ -64,12 +64,12 @@ typedef enum {
  *
  */
 
-typedef enum {
-
-  PDM_PART_TO_BLOCK_STRIDE_CST = 0,  /*!< Constant stride element */
-  PDM_PART_TO_BLOCK_STRIDE_VAR = 1,  /*!< Variable stride element */               
-
-} PDM_part_to_block_stride_t;
+//typedef enum {
+//
+//  PDM_PART_TO_BLOCK_STRIDE_CST = 0,  /*!< Constant stride element */
+//  PDM_PART_TO_BLOCK_STRIDE_VAR = 1,  /*!< Variable stride element */               
+//
+//} PDM_part_to_block_stride_t;
 
 
 /**

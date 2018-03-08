@@ -11,6 +11,7 @@
 #include "pdm_block_to_block.h"
 #include "pdm_block_to_block_priv.h"
 #include "pdm_binary_search.h"
+#include "pdm_printf.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -188,7 +189,7 @@ PDM_block_to_block_exch
   
   int nRank1 = _btb->nRank - 1;
   
-  int s_distributed_data = _btb->blockDistribIniIdx[_btb->nRank];
+//  int s_distributed_data = _btb->blockDistribIniIdx[_btb->nRank];
 
   /*
    * Exchange Stride and build buffer properties
@@ -237,7 +238,8 @@ PDM_block_to_block_exch
     for (int i = _btb->blockDistribIniIdx[_btb->iRank]; i < _btb->blockDistribIniIdx[_btb->iRank+1]; i++) {
       int ind = i - _btb->blockDistribIniIdx[_btb->iRank];
       printf("ind : %d \n", ind);
-      unsigned char *_block_data_deb = block_data_ini + ind * cst_stride * (int) s_data;  
+      unsigned char *_block_data_ini = (unsigned char *) block_data_ini;
+      unsigned char *_block_data_deb = _block_data_ini + ind * cst_stride * (int) s_data;
       for (int k = 0; k < s_block_unit; k++) {
         sendBuffer[idx1++] = _block_data_deb[k];
       }
@@ -352,12 +354,12 @@ PDM_block_to_block_exch_int
   
   int s_sendBuffer = 0;
   int s_recvBuffer = 0;
-  int s_sendBufferdebug = 0;
-  int s_recvBufferdebug = 0;
+//  int s_sendBufferdebug = 0;
+//  int s_recvBufferdebug = 0;
   
-  int nRank1 = _btb->nRank - 1;
+//  int nRank1 = _btb->nRank - 1;
   
-  int s_distributed_data = _btb->blockDistribIniIdx[_btb->nRank];
+//  int s_distributed_data = _btb->blockDistribIniIdx[_btb->nRank];
 
   /*
    * Exchange Stride and build buffer properties
@@ -370,8 +372,8 @@ PDM_block_to_block_exch_int
   }    
   else if (t_stride == PDM_STRIDE_CST) {
   
-    int cst_stride = *block_stride_ini;
-    int s_block_unit = cst_stride * (int) s_data;
+//    int cst_stride = *block_stride_ini;
+//    int s_block_unit = cst_stride * (int) s_data;
     
     // for (int i = 0; i < _btb->nRank; i++) {
       

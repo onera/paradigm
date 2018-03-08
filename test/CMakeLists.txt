@@ -6,17 +6,15 @@ if (MPI_C_COMPILER)
     set(CMAKE_C_COMPILER ${MPI_C_COMPILER})
 endif() 
 
+if (MPI_CXX_COMPILER)
+  set(CMAKE_CXX_COMPILER ${MPI_CXX_COMPILER})
+endif()
+
 if (MPI_Fortran_COMPILER)
     set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
 endif() 
 
 unset(LINK_LIBRARIES)
-
-if (NOT MPI_C_COMPILER)
-  if (MPI_C_LIBRARIES)
-    list(APPEND LINK_LIBRARIES ${MPI_C_LIBRARIES})   
-  endif()
-endif ()
 
 if (PDM_ENABLE_STATIC)
  if (PDM_IN_PDMA) 

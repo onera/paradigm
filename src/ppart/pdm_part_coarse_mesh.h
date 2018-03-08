@@ -86,7 +86,7 @@ PROCF (pdm_part_coarse_mesh_create, PDM_PART_COARSE_MESH_CREATE)
  * \brief Add option for anisotropic mesh agglomeration
  *
  * \param [out]  cmId              Coarse mesh identifier
- * \param [in]   anisotropicOption 
+ * \param [in]   Option
  */
     
 void 
@@ -246,16 +246,15 @@ PDM_part_coarse_mesh_part_set_anisotropic_info
 );
 
 void
-PROCF (PDM_part_coarse_mesh_part_set_anisotropic_info, PDM_PART_COARSE_MESH_PART_SET_ANISOTROPIC_INFO)
+PROCF (pdm_part_coarse_mesh_part_set_anisotropic_info, PDM_PART_COARSE_MESH_PART_SET_ANISOTROPIC_INFO)
 (
- const int          *cmId,
- const int          *iPart,       
- const int          *agglomerationLinesInit,
- const int          *agglomerationLinesInitIdx,
- const int          *agglomerationLinesInitIdx_size,  //TODO CHECK THIS!
- const int          *isOnFineBndInit
-); 
- 
+ int          *cmId,
+ int          *iPart,
+ int          *agglomerationLinesInit,
+ int          *agglomerationLinesInitIdx,
+ int          *agglomerationLinesInitIdx_size,
+ int          *isOnFineBndInit
+);
  
 /**
  *
@@ -465,7 +464,7 @@ PDM_part_coarse_mesh_part_get_anisotropic_info
 );
 
 void
-PROCF (PDM_part_coarse_mesh_part_get_anisotropic_info, PDM_PART_COARSE_MESH_PART_GET_ANISOTROPIC_INFO)
+PROCF (pdm_part_coarse_mesh_part_get_anisotropic_info, PDM_PART_COARSE_MESH_PART_GET_ANISOTROPIC_INFO)
 (
  int          *cmId,
  int          *iPart,       

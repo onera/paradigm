@@ -854,7 +854,8 @@ _gnum_from_coords_compute
       
       k = 0;
       for (int i = 0; i < n_entities; i++) {
-        _gnum->g_nums[_entities[2*k]][_entities[2*k+1]] = tmp_gnum[k++];
+        _gnum->g_nums[_entities[2*k]][_entities[2*k+1]] = tmp_gnum[k];
+        k += 1;
       }
 
       free (_entities);

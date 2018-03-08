@@ -357,7 +357,7 @@ int            **cellPart)
   int nPart  = part_res->nCoarseCellWanted;
 
   int *cellWeight = (int *) part_ini->cellWeight;
-  int *faceWeight = part_ini->faceWeight;
+  int *faceWeight = (int *) part_ini->faceWeight;
 
  
 
@@ -2133,7 +2133,7 @@ PDM_part_coarse_mesh_part_set_anisotropic_info
 }
 
 void
-PROCF (PDM_part_coarse_mesh_part_set_anisotropic_info, PDM_PART_COARSE_MESH_PART_SET_ANISOTROPIC_INFO)
+PROCF (pdm_part_coarse_mesh_part_set_anisotropic_info, PDM_PART_COARSE_MESH_PART_SET_ANISOTROPIC_INFO)
 (
  int          *cmId,
  int          *iPart,       
@@ -4008,7 +4008,7 @@ PDM_part_coarse_mesh_add_option_anisotropic
 {
   _coarse_mesh_t * cm = _get_from_id (cmId);  
   
-  cm->anisotropicOption = anisotropicOption;
+  cm->anisotropicOption = (int *) anisotropicOption;
   
   PDM_printf("PDM_part_coarse_mesh_add_option_anisotropic \n "); 
   for (int i=0; i<8; i++)
@@ -4021,7 +4021,7 @@ PDM_part_coarse_mesh_add_option_anisotropic
 
 
 void
-PROCF (PDM_part_coarse_mesh_add_option_anisotropic, PDM_PART_COARSE_MESH_ADD_OPTION_ANISOTROPIC)
+PROCF (pdm_part_coarse_mesh_add_option_anisotropic, PDM_PART_COARSE_MESH_ADD_OPTION_ANISOTROPIC)
 (
  int        *cmId,
  const int  *anisotropicOption
@@ -4257,7 +4257,6 @@ PDM_part_coarse_mesh_compute
   /* First step : Manage independently coarse grid generation */
   
    for (int iPart = 0; iPart < cm->nPart; iPart++) {
-    _part_t * part_ini = cm->part_ini[iPart];
     _coarse_part_t *part_res = cm->part_res[iPart];
     
     _coarse_grid_compute(cm, iPart);
@@ -4749,7 +4748,7 @@ PDM_part_coarse_mesh_part_get_anisotropic_info
    {
      *agglomerationLines           = NULL;
      *agglomerationLinesIdx        = NULL;
-     (*agglomerationLinesIdx_size) = NULL;
+     (*agglomerationLinesIdx_size) = 0;
      *isOnFineBnd                  = NULL;
    }
 }

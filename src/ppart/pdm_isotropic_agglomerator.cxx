@@ -112,8 +112,8 @@ void agglomerateOneLevel(int *sizes,
     bool verbose = verbose_int==1;
 
     int numberOfFineCells = sizes[0];
-    int adjMatrix_row_ptr_size = numberOfFineCells + 1;
-    int adjMatrix_col_ind_size = sizes[1];
+//    int adjMatrix_row_ptr_size = numberOfFineCells + 1;
+//    int adjMatrix_col_ind_size = sizes[1];
     int adjMatrix_areaValues_size = sizes[1];
 
     // Rmk: sizes[2] ==indCoarseCell
@@ -121,7 +121,7 @@ void agglomerateOneLevel(int *sizes,
     int isOnValley_size = sizes[4];
     int isOnRidge_size = sizes[5];
     int isOnCorner_size = sizes[6];
-    int arrayOfFineAnisotropicCompliantCells_size = sizes[7];
+//    int arrayOfFineAnisotropicCompliantCells_size = sizes[7];
     int agglomerationLines_Idx_size = sizes[8];
     int agglomerationLines_size = sizes[9];
 
@@ -150,7 +150,7 @@ void agglomerateOneLevel(int *sizes,
 //    if(!isFirstAgglomeration) {//    if(arrayOfFineAnisotropicCompliantCells!= NULL) {
 //        numberOfFineAnisotropicCompliantCells = arrayOfFineAnisotropicCompliantCells_size;
 //    }
-    int numberOfFineAnisotropicCompliantCells = arrayOfFineAnisotropicCompliantCells_size;
+//    int numberOfFineAnisotropicCompliantCells = arrayOfFineAnisotropicCompliantCells_size;
 
     // Definition of minCard
     if (minCard == -1) {
@@ -211,8 +211,8 @@ void agglomerateOneLevel(int *sizes,
     //fineAgglomerationLines_array_Idx = None
     //fineAgglomerationLines_array = None
 
-    int* fineAgglomerationLines_for_visu_array_Idx= NULL;
-    int* fineAgglomerationLines_for_visu_array = NULL;
+//    int* fineAgglomerationLines_for_visu_array_Idx= NULL;
+//    int* fineAgglomerationLines_for_visu_array = NULL;
 
     int numberOfAnisotropicLinesPOne_size = 0;
 
@@ -222,7 +222,7 @@ void agglomerateOneLevel(int *sizes,
         if (isFirstAgglomeration) {
 
             numberOfAnisotropicLinesPOne_size = agglomerationLines_Idx_size;
-            agglomerationLines_size = agglomerationLines_size;
+// FIXME: Pourquoi valeur egale a elle meme ?            agglomerationLines_size = agglomerationLines_size;
 
             isAnisotropicLines = computeAnisotropicLine(sizes,
                                                         adjMatrix_row_ptr, adjMatrix_col_ind, adjMatrix_areaValues,
@@ -359,22 +359,22 @@ void agglomerateOneLevel_v_Paradigma(int *sizes,
     bool verbose = verbose_int==1;
 
     int numberOfFineCells = sizes[0];
-    int adjMatrix_row_ptr_size = numberOfFineCells + 1;
-    int adjMatrix_col_ind_size = sizes[1];
+//    int adjMatrix_row_ptr_size = numberOfFineCells + 1;
+//    int adjMatrix_col_ind_size = sizes[1];
     int adjMatrix_areaValues_size = sizes[1];
 
     // Rmk: sizes[2] ==indCoarseCell
     int numberOfFineAgglomeratedCells = sizes[3];
-    int isOnValley_size = sizes[4];
-    int isOnRidge_size = sizes[5];
-    int isOnCorner_size = sizes[6];
-    int arrayOfFineAnisotropicCompliantCells_size = sizes[7];
+//    int isOnValley_size = sizes[4];
+//    int isOnRidge_size = sizes[5];
+//    int isOnCorner_size = sizes[6];
+//    int arrayOfFineAnisotropicCompliantCells_size = sizes[7];
     int agglomerationLines_Idx_size = sizes[8];
     int agglomerationLines_size = sizes[9];
 
-    int faceCell_size = sizes[10];
+//    int faceCell_size = sizes[10];
     int numberOfFace = sizes[10]/2;
-    int Face_area_size = sizes[11];
+//    int Face_area_size = sizes[11];
 
     bool isFirstAgglomeration = isFirstAgglomeration_int == 1;
     bool isAnisotropic = isAnisotropic_int == 1;
@@ -492,7 +492,7 @@ void agglomerateOneLevel_v_Paradigma(int *sizes,
    // cout<<"]"<<endl;
 
 
-    int numberOfFineAnisotropicCompliantCells = arrayOfFineAnisotropicCompliantCells_size;
+//    int numberOfFineAnisotropicCompliantCells = arrayOfFineAnisotropicCompliantCells_size;
 
     // Definition of minCard
     if (minCard == -1) {
@@ -545,8 +545,8 @@ void agglomerateOneLevel_v_Paradigma(int *sizes,
     //fineAgglomerationLines_array_Idx = None
     //fineAgglomerationLines_array = None
 
-    int* fineAgglomerationLines_for_visu_array_Idx= NULL;
-    int* fineAgglomerationLines_for_visu_array = NULL;
+//    int* fineAgglomerationLines_for_visu_array_Idx= NULL;
+//    int* fineAgglomerationLines_for_visu_array = NULL;
 
     int numberOfAnisotropicLinesPOne_size = 0;
 
@@ -556,7 +556,7 @@ void agglomerateOneLevel_v_Paradigma(int *sizes,
         if (isFirstAgglomeration) {
             cout<<"\t\t\t\t\tisAnisotropic and isFirstAgglomeration"<<endl;
             numberOfAnisotropicLinesPOne_size = agglomerationLines_Idx_size;
-            agglomerationLines_size = agglomerationLines_size;
+// FIXME: assign value to itself !            agglomerationLines_size = agglomerationLines_size;
 
             isAnisotropicLines = computeAnisotropicLine(sizes,
                                                         adjMatrix_row_ptr, adjMatrix_col_ind, adjMatrix_areaValues,
@@ -724,12 +724,12 @@ void agglomerate_Isotropic_One_Level_v_2(int *sizes,
 //      :param volumes: np array of volume of every fine cell
 //      :return:
 
-    int numberOfFineCells = sizes[0];
-    int adjMatrix_row_ptr_size = numberOfFineCells + 1;
-    int adjMatrix_col_ind_size = sizes[1];
-    int adjMatrix_areaValues_size = sizes[1];
+//    int numberOfFineCells = sizes[0];
+//    int adjMatrix_row_ptr_size = numberOfFineCells + 1;
+//    int adjMatrix_col_ind_size = sizes[1];
+//    int adjMatrix_areaValues_size = sizes[1];
 
-    int numberOfFineAgglomeratedCells = sizes[3];
+//    int numberOfFineAgglomeratedCells = sizes[3];
 //    int isOnValley_size = sizes[4];
 //    int isOnRidge_size = sizes[5];
 //    int isOnCorner_size = sizes[6];
@@ -929,9 +929,9 @@ void agglomerate_Isotropic_First_Step(int *sizes,
 
     // The size 4 corresponds to 0 : interior, 1 : valey, 2 : ridge, 3 : corner
     int numberOfFineCells = sizes[0];
-    int adjMatrix_row_ptr_size = numberOfFineCells + 1;
-    int adjMatrix_col_ind_size = sizes[1];
-    int adjMatrix_areaValues_size = sizes[1];
+//    int adjMatrix_row_ptr_size = numberOfFineCells + 1;
+//    int adjMatrix_col_ind_size = sizes[1];
+//    int adjMatrix_areaValues_size = sizes[1];
     int indCoarseCell = sizes[2];
     int numberOfFineAgglomeratedCells = sizes[3];
     vector<queue<int>> listOfSeeds(4);
@@ -1019,8 +1019,8 @@ unordered_map<int, queue<int> *> findSeedViaFrontalMethod(int numberOfInts, int 
 //:param matrixAdj_CRS_col_ind:
 //:return:
 //"""
-    int numberOfFineCells = sizes[0];
-    int matrixAdj_CRS_col_ind_size = sizes[1];
+//    int numberOfFineCells = sizes[0];
+//    int matrixAdj_CRS_col_ind_size = sizes[1];
 
     int nbIteration = 5;
 
@@ -2488,7 +2488,7 @@ unordered_set<int> choice_Of_Agglomerated_Cells(int seed,
     int size_Current_Coarse_Cell = 1;  // contains the seed
     unordered_set<int> set_of_fine_cells_for_Current_Coarse_Cell({seed});
 
-    int nbFCellsToAdd = goalCard - size_Current_Coarse_Cell;
+//    int nbFCellsToAdd = goalCard - size_Current_Coarse_Cell;
     // print "len(dict_Neighbours_Of_Seed)", len(dict_Neighbours_Of_Seed), nbFCellsToAdd
     // assert len(dict_Neighbours_Of_Seed) >= nbFCellsToAdd
 
@@ -3070,7 +3070,7 @@ void makeSmallCellBigger(unordered_map<int, unordered_set<int>> &dict_Coarse_Ele
                     dict_Neighbours_Of_Seed[iKV.first] = iKV.second;
                 }
                 // print "dict_Neighbours_Of_Seed 1 ", dict_Neighbours_Of_Seed
-                int maxOrderOfNeighbourhood = iOrder;
+//                int maxOrderOfNeighbourhood = iOrder;
 
                 // We remove all fine cell already contained in the current coarse element
                 for (int iFC :dict_Coarse_Elem[iCoarseCell]) {
@@ -3717,7 +3717,7 @@ void agglomerate_Isotropic_Second_Step_Correction(int numberOfInts, int *sizes,
 
     int indCoarseCell = sizes[2];
     int numberOfFineAgglomeratedCells = sizes[3];
-    int numberOfFineCells = sizes[0];
+//    int numberOfFineCells = sizes[0];
     int nbIteration = 4;
     for(int  i =0; i<nbIteration; i++){
         if(verbose) {
@@ -3891,8 +3891,8 @@ void agglomerate_Isotropic_Second_Step_Correction(int numberOfInts, int *sizes,
         }
 
         vector<queue<int>> listOfSeeds(4);
-        for (int i = 0; i < 4; i++) {
-            listOfSeeds[i] = queue<int>();
+        for (int i1 = 0; i1 < 4; i1++) {
+            listOfSeeds[i1] = queue<int>();
         }
 
         agglomerate_Isotropic_Correction_SplitTooBigCoarseCellInTwo(6, sizes, listOfSeeds,
@@ -3940,7 +3940,7 @@ void agglomerate_Isotropic_Second_Step_Correction(int numberOfInts, int *sizes,
 
         // TODO Remove this return: useless
         // dict_Coarse_Elem, dict_Card_Coarse_Cells = \
-        dict_CoarseCells, dict_CardCoarseCells, indCoarseCell =
+        //dict_CoarseCells, dict_CardCoarseCells, indCoarseCell =
         remove_Too_Small_Cells_v2(thresholdCard, fineCellToCoarseCell,                                  indCoarseCell,                                  matrixAdj_CRS_row_ptr,
                                   matrixAdj_CRS_col_ind, matrixAdj_CRS_values, dict_CoarseCells,                                  dict_CardCoarseCells,                                  dict_DistribOfCardOfCoarseCells);
 

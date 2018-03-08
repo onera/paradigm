@@ -43,9 +43,9 @@ bool computeAnisotropicLine(int* sizes,
     // Rmk: fonction couteuse Il y a un tri d'un dictionnaire!
 
     int numberOfFineCells = sizes[0];
-    int adjMatrix_row_ptr_size = numberOfFineCells+1;
-    int adjMatrix_col_ind_size = sizes[1];
-    int adjMatrix_areaValues_size = sizes[1];
+//    int adjMatrix_row_ptr_size = numberOfFineCells+1;
+//    int adjMatrix_col_ind_size = sizes[1];
+//    int adjMatrix_areaValues_size = sizes[1];
 
     int numberOfFineAnisotropicCompliantCells = sizes[7];
     int numberOfAnisotropicLinesPOne_size = sizes[8];  // numberOfFineAnisotropicCompliantCells at the  beginning
@@ -242,8 +242,8 @@ bool computeAnisotropicLine(int* sizes,
                                 // assert cellAtTheLimitIsoAniso ==-1, "Problem cellAtTheLimitIsoAniso
                                 // is overwritten"
                                 bool isInDeque = false;
-                                for (int index: (*dQue)) {
-                                    if (indNeighborCell == index) {
+                                for (int index2: (*dQue)) {
+                                    if (indNeighborCell == index2) {
                                         isInDeque = true;
                                         break;
                                     }
@@ -362,8 +362,8 @@ bool computeAnisotropicLine(int* sizes,
                 agglomerationLines_Idx[iLines] = (*(*fLIt)).size()+numberOfFCellsInAgglomerationLines;
                 int jCount=0;
 
-                for (auto i :(*(*fLIt))){
-                    agglomerationLines[jCount + numberOfFCellsInAgglomerationLines]=i;
+                for (auto i2 :(*(*fLIt))){
+                    agglomerationLines[jCount + numberOfFCellsInAgglomerationLines]=i2;
                     jCount++;
                 }
                 numberOfFCellsInAgglomerationLines +=(*(*fLIt)).size();
