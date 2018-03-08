@@ -23,9 +23,6 @@
 
 #ifdef __cplusplus
 extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
 #endif /* __cplusplus */
 
 
@@ -297,57 +294,6 @@ const int          nFac,
 /*=============================================================================
  * Public function prototypes 
  *============================================================================*/
-/**
- * \brief Compute distribution from dNelmt
- *
- * \param [in]     elt_distrib          Distribution of elements on processes 
- * \param [in]     dnelt                Number of element on current process
- * \param [in]     comm                 MPI Communicator
-
- */
-
-void
-PDM_compute_distrib
-(
- const int           dnelt,
-       PDM_g_num_t  *elt_distrib,
-       int           offset, 
- const PDM_MPI_Comm  comm  
-)
-{
-  int myRank;
-  int nRank;
-  
-  PDM_MPI_Comm_rank(comm, &myRank);
-  PDM_MPI_Comm_size(comm, &nRank);
-  
-  /* Compute distribution for element */
-    
-  // PDM_g_num_t* elt_distrib = (PDM_g_num_t *) malloc((nRank+1) * sizeof(PDM_g_num_t));
-  PDM_g_num_t  _dnelt      = (PDM_g_num_t) dnelt;
-    
-  PDM_MPI_Allgather((void *) &_dnelt,
-                    1,
-                    PDM__PDM_MPI_G_NUM, 
-                    (void *) (&elt_distrib[1]), 
-                    1, 
-                    PDM__PDM_MPI_G_NUM, 
-                    comm);
-
-  elt_distrib[0] = 1+offset;
-  for (int i = 1; i < nRank+1; i++) {
-    elt_distrib[i] +=  elt_distrib[i-1];
-  }
-  
-  /* Verbose */
-  if (1 == 0) {
-    PDM_printf("elt_distrib : "PDM_FMT_G_NUM,  elt_distrib[0]);
-    for (int i = 1; i < nRank+1; i++) {
-      PDM_printf(" "PDM_FMT_G_NUM, elt_distrib[i]);
-    }
-    PDM_printf("\n");
-  }
-}
 
 /**
  * \brief Find parent in a set of elements 

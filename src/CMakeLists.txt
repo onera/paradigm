@@ -47,7 +47,7 @@ target_include_directories(pdm
                            PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/util)
 if (PDM_IN_PDMA)
   target_include_directories(pdm
-                             PUBLIC ${PDMA_SOURCE_DIR}/plugins/renum
+                             PUBLIC ${PDMA_SOURCE_DIR}/src/plugins/renum
                              PUBLIC ${PDMA_SOURCE_DIR}/src/overlay)
 endif()
 
@@ -70,7 +70,7 @@ if (PDM_ENABLE_STATIC_Fortran_INTERFACE OR PDM_ENABLE_SHARED_Fortran_INTERFACE)
                            PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/util)
     if (PDM_IN_PDMA)
       target_include_directories(pdmf
-                                 PUBLIC ${PDMA_SOURCE_DIR}/plugins/renum
+                                 PUBLIC ${PDMA_SOURCE_DIR}/src/plugins/renum
                                  PUBLIC ${PDMA_SOURCE_DIR}/src/overlay)
     endif()
 endif()

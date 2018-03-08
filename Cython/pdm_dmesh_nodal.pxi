@@ -80,13 +80,14 @@ cdef extern from "pdm_elt_parent_find.h":
                              PDM_MPI_Comm  comm,     
                              PDM_g_num_t  *parent)
     
-    void PDM_compute_distrib(int           dnelt, 
+cdef extern from "pdm_distrib.h":
+
+    void PDM_distrib_compute(int           dnelt, 
                              PDM_g_num_t  *elt_distrib,   
                              int           offset, 
                              PDM_MPI_Comm  comm)
-    void PDM_test(int           dnelt, 
-                  int         dnelt)
-    # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+# :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 # ------------------------------------------------------------------
 cdef class DistributedMeshNodal:
