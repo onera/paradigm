@@ -56,10 +56,6 @@ extern "C" {
  * Private function definitions
  *============================================================================*/
 
-/*============================================================================
- * Public function definitions
- *============================================================================*/
-
 /**
  *
  * \brief Quick sort
@@ -67,41 +63,45 @@ extern "C" {
  * \param [inout]   a     Array to sort
  * \param [in]      l     First element
  * \param [in]      r     Last  element
- * 
+ *
  */
 
-static void 
+static void
 _quickSort_int
-( 
- int a[], 
- int l, 
- int r 
+(
+ int a[],
+ int l,
+ int r
 )
 {
   if (l < r) {
     int j = r+1;
-    int t; 
+    int t;
     int pivot = a[l];
-    int i = l; 
+    int i = l;
 
     while(1) {
       do ++i; while (a[i] <= pivot && i < r);
       do --j; while (a[j] > pivot);
       if (i >= j) break;
 
-      t    = a[i]; 
-      a[i] = a[j]; 
+      t    = a[i];
+      a[i] = a[j];
       a[j] = t;
 
     }
-    t    = a[l]; 
-    a[l] = a[j]; 
+    t    = a[l];
+    a[l] = a[j];
     a[j] = t;
 
     _quickSort_int(a, l  , j-1);
     _quickSort_int(a, j+1,   r);
   }
 }
+
+/*============================================================================
+ * Public function definitions
+ *============================================================================*/
 
 /**
  *
@@ -121,7 +121,7 @@ _quickSort_int
  */
 
 void 
-PDM_split_graph
+PDM_part_graph_split
 (
  int         method,
  int         nPart,
@@ -273,7 +273,7 @@ PDM_split_graph
  * 
  */
 void 
-PDM_compute_graph_from_face_cell
+PDM_part_graph_compute_from_face_cell
 (
   _part_t        *part_ini,
   int           **cellCellIdxCompressed,

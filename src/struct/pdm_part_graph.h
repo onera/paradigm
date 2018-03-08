@@ -41,7 +41,7 @@ extern "C" {
  *---------------------------------------------------------------------------*/
 
 void 
-PDM_split_graph
+PDM_part_graph_split
 (
  int         method,
  int         nPart,
@@ -61,7 +61,7 @@ PDM_split_graph
  *---------------------------------------------------------------------------*/
 
 void 
-PDM_compute_graph_from_face_cell
+PDM_part_graph_compute_from_face_cell
 (
   _part_t        *part_ini,
   int           **cellCellIdxCompressed,

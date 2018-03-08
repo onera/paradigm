@@ -101,13 +101,6 @@ PDM_compute_distrib
 );
 
 
-void
-PDM_test
-(
- const int           dnelt,
- const int           flag
-);
-
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

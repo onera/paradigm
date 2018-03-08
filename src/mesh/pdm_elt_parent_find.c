@@ -948,25 +948,6 @@ PDM_elt_parent_find_from_distrib
 }
 
 
-void
-PDM_test
-(
- const int           dnelt,
- const int           flag
-)
-{
-  int* tmp = malloc(dnelt * sizeof(int));
-  
-  for(int i=0; i < dnelt; i++){
-    tmp[i] = -1;
-  }
-  
-  if(flag == 1)
-  {
-    free(tmp);
-  }
-}
-
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
