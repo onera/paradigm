@@ -20,8 +20,6 @@ extern "C" {
  * Type definitions
  *============================================================================*/
 
-    
-
 /**
  * \struct _coarse_part_t
  * \brief  Coarse partition object
@@ -48,6 +46,8 @@ typedef struct  {
   int *coarseFaceToFineFace; //Coarse face - fine face connectivity (size = nCoarseFace)
 
   int *coarseVtxToFineVtx;   //Coarse vertex - fine vertex connectivity (size = nCoarseVtx)
+
+  void *_specific_data;   /*!<   */
 
   /* Array specific to anisotropic agglomeration */
   int *agglomerationLines;      
@@ -130,8 +130,39 @@ typedef struct  {
   
   _coarse_part_t **part_res;               //Coarse mesh
   
+
+
 } _coarse_mesh_t;
     
+
+/**
+ * \struct PDM_part_renum_fct_t
+ *
+ * \brief  Function pointer used to define a coarse mesh method
+ *
+ */
+
+typedef void (*PDM_coarse_mesh_fct_t) (_coarse_mesh_t  *cm,
+                                       const int       ipart,
+                                       int             *nCoarseCellComputed,
+                                       int             *cellCellIdx,
+                                       int             *cellCell,
+                                       int             **cellPart)
+                                       ;
+
+/**
+ * \struct _coarse_mesh_method_t
+ * \brief coarse mesh method
+ *
+ */
+
+typedef struct _renum_method_t {
+
+  char                  *name; /*!< Name of method */
+  PDM_coarse_mesh_fct_t   fct;  /*!< Renumbering function */
+
+} _coarse_mesh_method_t;
+
 
 /*============================================================================
  * Private function definitions
@@ -241,6 +272,99 @@ _coarse_mesh_create
     
    return cm;
 }
+
+
+/*============================================================================
+ * Public function prototypes
+ *============================================================================*/
+
+/**
+ *
+ * \brief Add a new coarse mesh method
+ *
+ * \param [in]      name          Mesh entity to renumber
+ * \param [in]      fct           Function
+ *
+ */
+
+int
+PDM_coarse_mesh_method_add
+(
+ const char                 *name,     /*!< Name          */
+ PDM_coarse_mesh_fct_t       fct       /*!< Function      */
+);
+
+
+/**
+ *
+ * \brief Get index of a coarse mesh method from it's name
+ *
+ * \param [in]  name   Name of the method
+ *
+ * \return Index (-1 if not found)
+ */
+
+int
+PDM_coarse_mesh_method_idx_get
+(
+const char *name
+);
+
+
+/**
+ *
+ * \brief Get name of a coarse mesh method from it's index
+ *
+ * \param [in]  name   Name of the method
+ *
+ * \return Index (-1 if not found)
+ */
+
+int
+PDM_coarse_mesh_method_name_get
+(
+const int id
+);
+
+
+/**
+ *
+ * \brief Get the number of coarse mesh method
+ *
+ * \return Number of methods
+ *
+ */
+
+int
+PDM_coarse_mesh_method_face_n_get
+(
+void
+);
+
+/**
+ *
+ * \brief Purge coarse mesh methods catalog
+ *
+ */
+
+void
+PDM_coarse_mesh_method_purge
+(
+void
+);
+
+/**
+ *
+ * \brief Load local coarse mesh methods
+ *
+ */
+
+void
+PDM_coarse_mesh_method_load_local
+(
+void
+);
+
 
 #ifdef	__cplusplus
 }

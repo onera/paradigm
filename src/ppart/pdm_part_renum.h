@@ -156,7 +156,7 @@ void
  *
  * \brief Get the number of renumbering face methods 
  * 
- * \return Name of the method
+ * \return Number of methods
  *
  */
 

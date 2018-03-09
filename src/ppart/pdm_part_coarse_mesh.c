@@ -1,6 +1,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <assert.h>
 #include <unistd.h>
 
@@ -73,8 +74,186 @@ extern "C" {
 static PDM_Handles_t *_cm  = NULL;
 
 /*============================================================================
+ * Global variable
+ *============================================================================*/
+
+/**
+ * Storage of face renumbering methods
+ */
+
+static PDM_Handles_t *_coarse_mesh_methods = NULL;
+
+/*============================================================================
  * Private function definitions
  *============================================================================*/
+
+/**
+ *
+ * \brief Perform the coarse mesh from the SCOTCH graph method
+ *
+ * \param [in,out]  ppart    Current PPART structure
+ *
+ */
+
+static void
+_coarse_from_scotch
+(
+_coarse_mesh_t* cm,
+const int       iPart,
+int            *nCoarseCellComputed,
+int            *cellCellIdx,
+int            *cellCell,
+int            *cellPart
+)
+{
+#ifdef PDM_HAVE_PTSCOTCH
+
+      int check = 0;
+      int nPart  = cm->part_res[iPart]->nCoarseCellWanted;
+
+      PDM_SCOTCH_part (cm->part_ini[iPart]->nCell,
+                       cellCellIdx,
+                       cellCell,
+                       (int *) cm->part_ini[iPart]->cellWeight,
+                       (int *) cm->part_ini[iPart]->faceWeight,
+                       check,
+                       nPart,
+                       cellPart);
+
+      (*nCoarseCellComputed) = nPart;
+
+      if (0 == 1) {
+        PDM_printf("\nContent of cellPart\n");
+        for(int i = 0; i < cm->part_ini[iPart]->nCell ; i++) {
+          PDM_printf(" %d ", cellPart[i]);
+        }
+        PDM_printf("\n");
+      }
+
+#else
+      PDM_printf("PDM_part error : Scotch unavailable\n");
+      exit(1);
+#endif
+}
+
+
+/**
+ *
+ * \brief Perform the coarse mesh from the SCOTCH graph method
+ *
+ * \param [in,out]  ppart    Current PPART structure
+ *
+ */
+
+static void
+_coarse_from_metis
+(
+_coarse_mesh_t* cm,
+const int       iPart,
+int            *nCoarseCellComputed,
+int            *cellCellIdx,
+int            *cellCell,
+int            *cellPart
+)
+{
+#ifdef PDM_HAVE_PARMETIS
+      _part_t * part_ini       = cm->part_ini[iPart];
+      _coarse_part_t *part_res = cm->part_res[iPart];
+
+      int *cellWeight = (int *) part_ini->cellWeight;
+      int *faceWeight = (int *) part_ini->faceWeight;
+
+      int nPart  = part_res->nCoarseCellWanted;
+      //            Define Metis properties
+
+      //          int flag_weights = 0; //0 = False -> weights are unused
+
+      int flag_weights = 1; //0 = False -> weights are unused
+
+      int ncon = 1; //The number of balancing constraints
+
+      int *vwgt = cellWeight; //Weights of the vertices of the graph (NULL if unused)
+
+      int *adjwgt = faceWeight; //Weights of the edges of the graph (NULL if unused)
+
+      if (flag_weights != 0) {
+        double *tpwgts = (double *) malloc(ncon * nPart * sizeof(double));
+        for (int i = 0; i < ncon * nPart; i++){
+          tpwgts[i] = (double) (1./nPart);
+        }
+      }
+
+      double *tpwgts = NULL;
+
+      if (flag_weights != 0) {
+        double *ubvec = (double *) malloc(ncon * sizeof(double));
+        for (int i = 0; i < ncon; i++) {
+          ubvec[i] = 1.05;
+        }
+      }
+
+      double *ubvec = NULL;
+
+      //TO ADD: USE OF ADJWGT IN AN IF STATEMENT
+
+      //This value is solely a memory space to be filled by METIS
+
+      int edgecut;
+
+      if (nPart < 8) {
+
+        PDM_printf("\n \t\t\t\t PDM_METIS_PartGraphRecursive\n");
+        PDM_METIS_PartGraphRecursive (&(part_ini->nCell),
+                                      &ncon,
+                                      cellCellIdx,
+                                      cellCell,
+                                      vwgt,
+                                      adjwgt,
+                                      &nPart,
+                                      tpwgts,
+                                      ubvec,
+                                      &edgecut,
+                                      cellPart);
+      }
+
+      else {
+
+        PDM_printf("\n \t\t\t\tPDM_METIS_PartGraphKway \n");
+        PDM_METIS_PartGraphKway (&(part_ini->nCell),
+                                 &ncon,
+                                 cellCellIdx,
+                                 cellCell,
+                                 vwgt,
+                                 adjwgt,
+                                 &nPart,
+                                 tpwgts,
+                                 ubvec,
+                                 &edgecut,
+                                 cellPart);
+      }
+
+      if (1 == 0) {
+        PDM_printf("\n Contenu de cellPart : \n");
+        for (int i = 0; i < part_ini->nCell; i++) {
+          PDM_printf(" %d ", cellPart[i]);
+        }
+        PDM_printf("\n");
+      }
+
+      if (flag_weights != 0) {
+          free(ubvec);
+          free(tpwgts);
+          free(adjwgt);
+      }
+
+      (*nCoarseCellComputed) = nPart;
+
+#else
+      PDM_printf("PDM_part error : METIS unavailable\n");
+      exit(1);
+
+#endif
+}
 
 /**
  *
@@ -372,128 +551,22 @@ int            **cellPart)
   switch(method) {
   case 1:
     {
-#ifdef PDM_HAVE_PARMETIS
-      //            Define Metis properties
-          
-      //          int flag_weights = 0; //0 = False -> weights are unused
-
-      int flag_weights = 1; //0 = False -> weights are unused
-          
-      int ncon = 1; //The number of balancing constraints
-            
-      int *vwgt = cellWeight; //Weights of the vertices of the graph (NULL if unused)
-                    
-      int *adjwgt = faceWeight; //Weights of the edges of the graph (NULL if unused)
-
-      if (flag_weights != 0) {
-        double *tpwgts = (double *) malloc(ncon * nPart * sizeof(double));
-        for (int i = 0; i < ncon * nPart; i++){
-          tpwgts[i] = (double) (1./nPart);
-        }
-      }
-          
-      double *tpwgts = NULL;
-          
-      if (flag_weights != 0) {
-        double *ubvec = (double *) malloc(ncon * sizeof(double));
-        for (int i = 0; i < ncon; i++) {
-          ubvec[i] = 1.05;
-        }
-      }
-          
-      double *ubvec = NULL;
-          
-      //TO ADD: USE OF ADJWGT IN AN IF STATEMENT                
-        
-      //This value is solely a memory space to be filled by METIS
-
-      int edgecut;
-          
-      if (nPart < 8) {             
-              
-        PDM_printf("\n \t\t\t\t PDM_METIS_PartGraphRecursive\n");    
-        PDM_METIS_PartGraphRecursive (&(part_ini->nCell),
-                                      &ncon, 
-                                      cellCellIdx,
-                                      cellCell,
-                                      vwgt, 
-                                      adjwgt, 
-                                      &nPart, 
-                                      tpwgts, 
-                                      ubvec, 
-                                      &edgecut,
-                                      *cellPart);
-      }
-          
-      else {
-              
-        PDM_printf("\n \t\t\t\tPDM_METIS_PartGraphKway \n");      
-        PDM_METIS_PartGraphKway (&(part_ini->nCell),
-                                 &ncon, 
-                                 cellCellIdx,
-                                 cellCell,
-                                 vwgt, 
-                                 adjwgt, 
-                                 &nPart, 
-                                 tpwgts, 
-                                 ubvec, 
-                                 &edgecut,
-                                 *cellPart);
-      }
-          
-      if (1 == 1) {
-        PDM_printf("\n Contenu de cellPart : \n");            
-        for (int i = 0; i < part_ini->nCell; i++) {
-          PDM_printf(" %d ", (*cellPart)[i]);
-        }
-        PDM_printf("\n");
-      }
-        
-      if (flag_weights != 0) {
-          free(ubvec);
-          free(tpwgts);
-          free(adjwgt);
-      }          
-      
-      (*nCoarseCellComputed) = nPart;
-
-#else
-      PDM_printf("PDM_part error : METIS unavailable\n");
-      exit(1);
-                
-#endif
+      _coarse_from_metis (cm,
+                          iPart,
+                          nCoarseCellComputed,
+                          cellCellIdx,
+                          cellCell,
+                          *cellPart);
       break;
     }                
   case 2:
     {
-#ifdef PDM_HAVE_PTSCOTCH
-
-      int check = 0;
-      
-      PDM_SCOTCH_part (part_ini->nCell,
-                       cellCellIdx,
-                       cellCell,        
-                       cellWeight,
-                       faceWeight,
-                       check,        
-                       nPart,        
-                       *cellPart);
-      
-      (*nCoarseCellComputed) = nPart;
-
-      if (0 == 1) {
-        PDM_printf("\nContent of cellPart\n");    
-        for(int i = 0; i < part_ini->nCell ; i++) {
-          PDM_printf(" %d ", (*cellPart)[i]);
-        }
-        PDM_printf("\n");   
-      }
-
-#else
-      PDM_printf("PDM_part error : Scotch unavailable\n");
-      exit(1);
-#endif
-          
+      _coarse_from_scotch (cm,
+                          iPart,
+                          nCoarseCellComputed,
+                          cellCellIdx,
+                          cellCell,
+                          *cellPart);
       break;
     }      
   case 3:
@@ -4943,3 +5016,125 @@ PROCF (pdm_part_coarse_mesh_display, PDM_PART_COARSE_MESH_DISPLAY)
 {
   PDM_part_coarse_mesh_display (*cmId);
 }
+
+
+/**
+ *
+ * \brief Add a new coarse mesh method
+ *
+ * \param [in]      name          Mesh entity to renumber
+ * \param [in]      fct           Function
+ *
+ */
+
+int
+PDM_coarse_mesh_method_add
+(
+ const char                 *name,     /*!< Name          */
+ PDM_coarse_mesh_fct_t       fct       /*!< Function      */
+)
+{
+  if (_coarse_mesh_methods == NULL) {
+      PDM_coarse_mesh_method_load_local();
+  }
+
+  _coarse_mesh_method_t *method_ptr = malloc (sizeof(_coarse_mesh_method_t));
+
+  int idx = PDM_Handles_store  (_coarse_mesh_methods, method_ptr);
+
+  method_ptr->name = malloc (sizeof(char) * (strlen(name) + 1));
+  strcpy (method_ptr->name, name);
+
+  method_ptr->fct = fct;
+
+  return idx;
+}
+
+
+/**
+ *
+ * \brief Get index of a coarse mesh method from it's name
+ *
+ * \param [in]  name   Name of the method
+ *
+ * \return Index (-1 if not found)
+ */
+
+int
+PDM_coarse_mesh_method_idx_get
+(
+const char *name
+);
+
+
+/**
+ *
+ * \brief Get name of a coarse mesh method from it's index
+ *
+ * \param [in]  name   Name of the method
+ *
+ * \return Index (-1 if not found)
+ */
+
+int
+PDM_coarse_mesh_method_name_get
+(
+const int id
+)
+{
+
+}
+
+
+/**
+ *
+ * \brief Get the number of coarse mesh method
+ *
+ * \return Number of methods
+ *
+ */
+
+int
+PDM_coarse_mesh_method_face_n_get
+(
+void
+)
+{
+
+}
+
+/**
+ *
+ * \brief Purge coarse mesh methods catalog
+ *
+ */
+
+void
+PDM_coarse_mesh_method_purge
+(
+void
+)
+{
+
+}
+
+/**
+ *
+ * \brief Load local coarse mesh methods
+ *
+ */
+
+void
+PDM_coarse_mesh_method_load_local
+(
+void
+)
+{
+
+}
+
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
+

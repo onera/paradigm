@@ -60,8 +60,8 @@ extern "C" {
  *============================================================================*/
 
 /**
- * \struct PDM_writer_fmt_t
- * \brief  Writer format
+ * \struct _renum_method_t
+ * \brief Renumbering method
  *
  */
 
