@@ -52,7 +52,8 @@ interface
                                   nVtx, &
                                   sCellFace, &
                                   sFaceVtx, &
-                                  sFaceGroup)
+                                  sFaceGroup, &
+                                  nFaceGroup)
      use mod_pdm
 
      implicit none
@@ -68,6 +69,7 @@ interface
      integer :: sCellFace
      integer :: sFaceVtx
      integer :: sFaceGroup
+     integer :: nFaceGroup
 
    end subroutine pdm_part_part_dim_get
 
@@ -326,7 +328,7 @@ contains
  !                              or NULL
  !================================================================================
 
-   subroutine pdm_part_create_(ppartId, &
+   subroutine pdm_part_create(ppartId, &
                           pt_comm, &
                           split_method,  &
                           renum_cell_method, &
@@ -442,7 +444,6 @@ contains
                              dFaceGroupIdx, &
                              dFaceGroup)
 
-  end subroutine pdm_part_create_
-
+  end subroutine pdm_part_create
 
 end module mod_pdm_part
