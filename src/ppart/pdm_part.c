@@ -3331,6 +3331,10 @@ PROCF (pdm_part_create_cf, PDM_PART_CREATE_CF)
                   _dVtxTag,
                   dFaceGroupIdx,
                   dFaceGroup);
+
+  free (_renum_cell_method); 
+  free (_renum_face_method);
+  
 }
 
 /**
