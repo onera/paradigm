@@ -18,9 +18,24 @@ module mod_pdm_part
   interface pdm_part_create     ; module procedure  &
     pdm_part_create_
   end interface
-          
-interface
 
+  interface pdm_part_renum_method_cell_idx_get      ; module procedure  &
+    pdm_part_renum_method_cell_idx_get_
+  end interface 
+
+  interface pdm_part_renum_method_face_idx_get      ; module procedure  &
+    pdm_part_renum_method_face_idx_get_
+  end interface  
+
+  interface pdm_part_renum_method_cell_name_get      ; module procedure  &
+    pdm_part_renum_method_cell_name_get_
+  end interface  
+
+  interface pdm_part_renum_method_face_name_get      ; module procedure  &
+    pdm_part_renum_method_face_name_get_
+  end interface  
+  
+interface
 
  !==============================================================================
  !
@@ -274,12 +289,48 @@ interface
 
  end subroutine pdm_part_stat_get
 
+ 
+ !================================================================================
+ !
+ ! \brief Get the number of renumbering cell methods 
+ ! 
+ ! \param [out]    Number of methods
+ !
+ !================================================================================
+
+ subroutine pdm_part_n_renum_method_cell_get (n_method)
+   use mod_pdm
+   implicit none
+   integer      :: n_method
+
+ end subroutine pdm_part_n_renum_method_cell_get
+
+ 
+ 
+ !================================================================================
+ !
+ ! \brief Get the number of renumbering cell methods 
+ ! 
+ ! \param [out]    Number of methods
+ !
+ !================================================================================
+
+ subroutine pdm_part_n_renum_method_face_get (n_method)
+   use mod_pdm
+   implicit none
+   integer      :: n_method
+
+ end subroutine pdm_part_n_renum_method_face_get
+ 
 end interface
 
-private :: pdm_part_create_
+private :: pdm_part_create_ ,&
+           pdm_part_renum_method_cell_idx_get_ ,&
+           pdm_part_renum_method_face_idx_get_ ,&
+           pdm_part_renum_method_cell_name_get_ ,&
+           pdm_part_renum_method_face_name_get_
 
 contains 
-
 
  !================================================================================
  !
@@ -328,7 +379,7 @@ contains
  !                              or NULL
  !================================================================================
 
-   subroutine pdm_part_create(ppartId, &
+   subroutine pdm_part_create_(ppartId, &
                           pt_comm, &
                           split_method,  &
                           renum_cell_method, &
@@ -444,6 +495,116 @@ contains
                              dFaceGroupIdx, &
                              dFaceGroup)
 
-  end subroutine pdm_part_create
+  end subroutine pdm_part_create_
+
+ !================================================================================
+ !
+ ! \brief Get index of a renumbering face method
+ ! 
+ ! \param [in]       name   Name of the method
+ ! \param [in, out]  idx    Index of method -1 otherwise
+ ! 
+ !================================================================================
+
+  subroutine pdm_part_renum_method_face_idx_get_ (name, &
+                                                  idx)
+
+     use mod_pdm
+
+    implicit none
+
+    character (len=*) :: name
+    integer           :: idx
+    
+    integer           :: l_name
+    
+    l_name = len(name)
+
+    call pdm_part_renum_method_face_idx_get_cf (name, l_name, idx)
+
+  end subroutine pdm_part_renum_method_face_idx_get_
+
+
+ !================================================================================
+ !
+ ! \brief Get index of a renumbering cell method
+ ! 
+ ! \param [in]       name   Name of the method
+ ! \param [in, out]  idx    Index of method -1 otherwise
+ ! 
+ !================================================================================
+
+ subroutine pdm_part_renum_method_cell_idx_get_ (name, &
+                                                 idx)
+
+   use mod_pdm
+
+   implicit none
+
+   character (len=*) :: name
+   integer           :: idx
+   
+   integer           :: l_name
+
+   l_name = len(name)
+   
+   call pdm_part_renum_method_cell_idx_get_cf (name, l_name, idx)
+
+ end subroutine pdm_part_renum_method_cell_idx_get_
+
+ !================================================================================
+ !
+ ! \brief Get name of the face renumbering method 
+ ! 
+ ! \param [in]  idx     Index of the method
+ ! \param [in, out]     Name  of the method, '' otherwize
+ ! 
+ !================================================================================
+
+
+subroutine pdm_part_renum_method_face_name_get_ (idx, &
+                                                name)
+
+   use mod_pdm
+   implicit none
+
+   character (len = *) :: name
+   integer  :: idx
+
+   integer  :: l_name
+   l_name = len(name)
+
+   call pdm_part_renum_method_face_name_get_cf (name, l_name, idx)
+
+
+end subroutine pdm_part_renum_method_face_name_get_
+  
+
+ !================================================================================
+ !
+ ! \brief Get name of the face renumbering method 
+ ! 
+ ! \param [in]  idx     Index of the method
+ ! \param [in, out]     Name  of the method, '' otherwize
+ ! 
+ !================================================================================
+
+
+subroutine pdm_part_renum_method_cell_name_get_ (idx, &
+                                                name)
+
+   use mod_pdm
+   implicit none
+
+   character (len = *) :: name
+   integer  :: idx
+
+   integer  :: l_name
+   l_name = len(name)
+
+   call pdm_part_renum_method_cell_name_get_cf (name, l_name, idx)
+
+
+end subroutine pdm_part_renum_method_cell_name_get_
 
 end module mod_pdm_part

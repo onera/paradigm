@@ -990,6 +990,22 @@ PDM_part_renum_method_purge
  * \return Index (-1 if not found)
  */
 
+PROCF (pdm_part_renum_method_cell_idx_get_cf, PDM_PART_RENUM_METHOD_CELL_IDX_GET_CF)
+(
+ char *name,
+ int  *l_name,
+ int  *idx
+ )
+{
+  char *_name = PDM_fortran_to_c_string (name, *l_name); 
+
+  *idx = PDM_part_renum_method_cell_idx_get (_name);
+  
+  free (_name);
+
+}
+
+
 int 
 PDM_part_renum_method_cell_idx_get
 (
@@ -1027,6 +1043,21 @@ const char *name
  * \return Index (-1 if not found)
  */
 
+PROCF (pdm_part_renum_method_face_idx_get_cf, PDM_PART_RENUM_METHOD_FACE_IDX_GET_CF)
+(
+ char *name,
+ int  *l_name,
+ int  *idx
+ )
+{
+  char *_name = PDM_fortran_to_c_string (name, *l_name); 
+
+  *idx = PDM_part_renum_method_face_idx_get (_name);
+  
+  free (_name);
+
+}
+
 int 
 PDM_part_renum_method_face_idx_get
 (
@@ -1062,6 +1093,22 @@ const char *name
  *
  */
 
+PROCF (pdm_part_renum_method_cell_name_get_cf, PDM_PART_RENUM_METHOD_CELL_NAME_GET_CF)
+(
+ char *name,
+ int  *l_name,
+ int  *idx
+ )
+{
+  const char *_name = PDM_part_renum_method_cell_name_get (*idx);
+
+  const int _l_name = strlen(_name);
+
+  *l_name = PDM_MAX (_l_name, PDM_MAX_CHAR_LENGTH);
+
+  strncpy (name, _name, *l_name);
+}
+
 const char * 
 PDM_part_renum_method_cell_name_get
 (
@@ -1089,11 +1136,19 @@ const int idx
 
 /**
  *
- * \brief Get the number of renumbering face methods 
+ * \brief Get the number of renumbering cell methods 
  * 
- * \return Name of the method
+ * \return Number of methods
  *
  */
+
+PROCF (pdm_part_n_renum_method_cell_get, PDM_PART_N_RENUM_METHOD_CELL_GET)
+(
+ int  *n_method
+ )
+{
+  *n_method = PDM_part_n_renum_method_cell_get ();
+}
 
 int  
 PDM_part_n_renum_method_cell_get
@@ -1110,7 +1165,6 @@ void
 }
 
 
-
 /**
  *
  * \brief Get the number of renumbering face methods 
@@ -1118,6 +1172,14 @@ void
  * \return Name of the method
  *
  */
+
+PROCF (pdm_part_n_renum_method_face_get, PDM_PART_N_RENUM_METHOD_FACE_GET)
+(
+ int  *n_method
+ )
+{
+  *n_method = PDM_part_n_renum_method_face_get ();
+}
 
 int  
 PDM_part_n_renum_method_face_get
@@ -1282,6 +1344,23 @@ PDM_part_renum_cell
  * \return Name of the method (NULL otherwise)
  *
  */
+
+PROCF (pdm_part_renum_method_face_name_get_cf, PDM_PART_RENUM_METHOD_FACE_NAME_GET_CF)
+(
+ char *name,
+ int  *l_name,
+ int  *idx
+ )
+{
+  const char *_name = PDM_part_renum_method_face_name_get (*idx);
+
+  const int _l_name = strlen(_name);
+
+  *l_name = PDM_MAX (_l_name, PDM_MAX_CHAR_LENGTH);
+
+  strncpy (name, _name, *l_name);
+}
+
 
 const char * 
 PDM_part_renum_method_face_name_get
