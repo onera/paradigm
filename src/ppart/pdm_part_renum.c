@@ -21,6 +21,7 @@
 
 #include "pdm.h"
 #include "pdm_mpi.h"
+#include "pdm_fortran_to_c_string.h"
 #include "pdm_priv.h"
 #include "pdm_config.h"
 #include "pdm_part.h"
@@ -990,6 +991,7 @@ PDM_part_renum_method_purge
  * \return Index (-1 if not found)
  */
 
+void
 PROCF (pdm_part_renum_method_cell_idx_get_cf, PDM_PART_RENUM_METHOD_CELL_IDX_GET_CF)
 (
  char *name,
@@ -1043,6 +1045,7 @@ const char *name
  * \return Index (-1 if not found)
  */
 
+void
 PROCF (pdm_part_renum_method_face_idx_get_cf, PDM_PART_RENUM_METHOD_FACE_IDX_GET_CF)
 (
  char *name,
@@ -1093,6 +1096,7 @@ const char *name
  *
  */
 
+void
 PROCF (pdm_part_renum_method_cell_name_get_cf, PDM_PART_RENUM_METHOD_CELL_NAME_GET_CF)
 (
  char *name,
@@ -1142,6 +1146,7 @@ const int idx
  *
  */
 
+void
 PROCF (pdm_part_n_renum_method_cell_get, PDM_PART_N_RENUM_METHOD_CELL_GET)
 (
  int  *n_method
@@ -1173,6 +1178,7 @@ void
  *
  */
 
+void
 PROCF (pdm_part_n_renum_method_face_get, PDM_PART_N_RENUM_METHOD_FACE_GET)
 (
  int  *n_method
@@ -1345,6 +1351,7 @@ PDM_part_renum_cell
  *
  */
 
+void
 PROCF (pdm_part_renum_method_face_name_get_cf, PDM_PART_RENUM_METHOD_FACE_NAME_GET_CF)
 (
  char *name,

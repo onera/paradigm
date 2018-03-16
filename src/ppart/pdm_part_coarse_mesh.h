@@ -545,6 +545,32 @@ PROCF (pdm_part_coarse_mesh_display, PDM_PART_COARSE_MESH_DISPLAY)
 (
   int *cmId
 );
+
+
+/**
+ *
+ * \brief Get index of a coarse mesh method from it's name
+ *
+ * \param [in]  name   Name of the method
+ *
+ * \return Index (-1 if not found)
+ */
+
+void
+PROCF (pdm_coarse_mesh_method_idx_get_cf, PDM_COARSE_MESH_METHOD_IDX_GET_CF)
+(
+ char *name,
+ int  *l_name,
+ int  *idx
+ );
+
+int
+PDM_coarse_mesh_method_idx_get
+(
+const char *name
+ );
+
+
   
 #ifdef	__cplusplus
 }

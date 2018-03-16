@@ -96,6 +96,360 @@ static PDM_Handles_t *_coarse_mesh_methods = NULL;
  */
 
 static void
+_coarse_from_magma
+(
+_coarse_mesh_t* cm,
+const int       iPart,
+int            *nCoarseCellComputed,
+int            *cellCellIdx,
+int            *cellCell,
+int            *cellPart
+)
+{
+  _part_t * part_ini       = cm->part_ini[iPart];
+  _coarse_part_t *part_res = cm->part_res[iPart];
+
+   /** Allocate  **/
+  int    isOriented = 0;
+  double *volume     = (double *) malloc(  part_ini->nCell * sizeof(double));
+  double *centercell = (double *) malloc(3*part_ini->nCell * sizeof(double));
+      
+  double *surfaceArea   = (double *) malloc(  part_ini->nFace * sizeof(double));
+  double *surfaceVector = (double *) malloc(3*part_ini->nFace * sizeof(double));
+  double *surfaceCenter = (double *) malloc(3*part_ini->nFace * sizeof(double));
+      
+  /** Build up volume of all cells of Fine partition **/
+  PDM_geom_elem_polyhedra_properties (isOriented,
+                                      part_ini->nCell,
+                                      part_ini->nFace,
+                                      part_ini->faceVtxIdx,
+                                      part_ini->faceVtx,   
+                                      part_ini->cellFaceIdx,
+                                      part_ini->cellFace,
+                                      part_ini->nVtx,
+                                      part_ini->vtx,
+                                      volume,
+                                      centercell,
+                                      NULL,
+                                      NULL);        
+      
+  /** Build up Area of all faces of Fine partition **/
+  PDM_geom_elem_polygon_properties (part_ini->nFace,   
+                                    part_ini->faceVtxIdx, 
+                                    part_ini->faceVtx, 
+                                    part_ini->vtx,
+                                    surfaceVector,
+                                    surfaceCenter,
+                                    NULL,
+                                    NULL);
+      
+  /* Deduce surface area */
+  for (int iface = 0; iface < part_ini->nFace; iface++) {
+    surfaceArea[iface] = sqrt(  surfaceVector[3*iface  ]*surfaceVector[3*iface  ] 
+                                + surfaceVector[3*iface+1]*surfaceVector[3*iface+1] 
+                                + surfaceVector[3*iface+2]*surfaceVector[3*iface+2] );
+  }
+    
+      
+  int *  agglomerationLinesInit = part_res->agglomerationLinesInit;
+  int *  agglomerationLinesInitIdx = part_res->agglomerationLinesInitIdx;
+  int     agglomerationLinesInitIdx_size = part_res->agglomerationLinesInitIdx_size;
+  int   *isOnFineBndInit = part_res->isOnFineBndInit;
+  int   *anisotropicOption =    cm->anisotropicOption;
+
+  PDM_printf("\n\t\t\t\tAddress of agglomerationLinesInit %p\n", agglomerationLinesInit);
+  PDM_printf("\n\t\t\t\tAddress of agglomerationLinesInitIdx %p\n", agglomerationLinesInitIdx);
+  PDM_printf("\n\t\t\t\tAddress of isOnFineBndInit %p\n", isOnFineBndInit);
+  PDM_printf("\n\t\t\t\tAddress of anisotropicOption %p\n", anisotropicOption);
+
+  if (anisotropicOption[0]==1)
+    {  
+      // first agglomeration
+      // some array need to be allocated:
+      // part_res->isOnFineBndInit, part_res->agglomerationLinesInit and part_res->agglomerationLinesInitIdx are supposed to be NULL!
+      // 1) Create isOnFineBnd array to describe for every cells if it is on boundary 
+
+      isOnFineBndInit = malloc(( part_ini->nCell  )* sizeof(int));
+          
+      for (int icell = 0; icell<part_ini->nCell; icell++)
+        {
+          isOnFineBndInit[icell] = 0;
+        }
+
+      
+      for (int iFace = 0; iFace<part_ini->nFace; iFace++)
+        {
+          if(part_ini->faceCell[2*iFace+1] == 0){  
+            if(isOnFineBndInit[part_ini->faceCell[2*iFace]- 1] < 3){
+              isOnFineBndInit[part_ini->faceCell[2*iFace]-1] += 1;
+            }
+          }
+        }
+        
+      if (anisotropicOption[0]==1)
+        {
+          // Anisotropic agglomeration
+          // we need to allocated
+          PDM_printf("\n\t\t\t\tAnisotropic agglomeration\n"); 
+          agglomerationLinesInit = malloc(( part_ini->nCell  )* sizeof(int));
+          agglomerationLinesInitIdx = malloc(( part_ini->nCell  )* sizeof(int));
+          agglomerationLinesInitIdx_size = part_ini->nCell ;
+
+          for (int icell = 0; icell<part_ini->nCell; icell++)
+            {
+              agglomerationLinesInit[icell] = 0;
+              agglomerationLinesInitIdx[icell] = 0;
+            }
+        }   
+    }
+      
+  // Computation of countOnBndCells to know the number of cells (coarse or fine) that are on the boundary of the domain
+  int countOnBndCells = 0;
+  for (int icell = 0; icell < part_ini->nCell; icell++)
+    {
+      if (isOnFineBndInit[icell]>0)
+        {
+          countOnBndCells = countOnBndCells+1;
+        }
+    }
+
+  PDM_printf("\t\t\t\tcountOnBndCells : %i \n ",countOnBndCells); 
+
+  /* ---------------------------------------- */
+
+  /* 2) Create adjacency with current cell iff on boundary */
+  int *cellCellTmpIdx  = malloc(( part_ini->nCell + 1                           )* sizeof(int));
+  int *cellCellTmp     = malloc(( cellCellIdx[part_ini->nCell] + countOnBndCells)* sizeof(int));
+      
+  cellCellTmpIdx[0] = 0;
+  for (int icell = 0; icell < part_ini->nCell; icell++)
+    {
+        
+      if(isOnFineBndInit[icell] >0)
+        {
+          int beg = cellCellIdx[icell  ];
+          int end = cellCellIdx[icell+1];
+          
+          int nbc = end-beg;
+          
+          /* Add One slot for current cell */
+          cellCellTmpIdx[icell+1] = cellCellTmpIdx[icell]+nbc+1;
+          
+          
+          int beg2 = cellCellTmpIdx[icell  ];
+          int end2 = cellCellTmpIdx[icell+1];
+          // int nbc2 = end2-beg2;
+
+          cellCellTmp[beg2] = icell;
+          int cpt = 0;
+          for (int icell2 = beg2+1; icell2 < end2; icell2++){
+            cellCellTmp[icell2] = cellCell[beg+cpt++];
+          }
+        }else
+        {
+          int beg = cellCellIdx[icell  ];
+          int end = cellCellIdx[icell+1];
+          
+          int nbc = end-beg;
+          
+          /* Add One slot for current cell */
+          cellCellTmpIdx[icell+1] = cellCellTmpIdx[icell]+nbc;
+          
+          int beg2 = cellCellTmpIdx[icell  ];
+          int end2 = cellCellTmpIdx[icell+1];
+
+          int cpt = 0;
+          for (int icell2 = beg2; icell2 < end2; icell2++){
+            cellCellTmp[icell2] = cellCell[beg+cpt++];
+          }
+        }
+    }
+
+  //
+  PDM_printf("\t\t\t\t_split \n "); 
+  for (int i=0; i<8; i++)
+    {
+      PDM_printf("\t\t\t\t_split anisotropicOption[%i] : % i\n ", i, anisotropicOption[i]); 
+    }
+  /* ---------------------------------------- */
+  /* Parameters */
+  int *sizes = malloc(( 12  )* sizeof(int));
+      
+  sizes[0 ] = part_ini->nCell;
+  sizes[1 ] = cellCellTmpIdx[part_ini->nCell];
+  sizes[2 ] = 0;
+  sizes[3 ] = 0;
+  sizes[4 ] = 0;
+  sizes[5 ] = 0;
+  sizes[6 ] = 0;
+  sizes[7 ] = part_ini->nCell;
+  sizes[10] = 2*part_ini->nFace;
+  sizes[11] =   part_ini->nFace;
+
+  if ((anisotropicOption[0]==1) || (agglomerationLinesInitIdx_size ==0))
+    { 
+      sizes[8 ] = 0;
+      sizes[9 ] =  0;
+    }else
+    {
+      sizes[8 ] = agglomerationLinesInitIdx_size;
+      sizes[9 ] =  agglomerationLinesInitIdx[agglomerationLinesInitIdx_size] ;
+    }
+      
+
+  int *arrayOfFineAnisotropicCompliantCells = malloc((part_ini->nCell)* sizeof(int));
+  for (int icell = 0; icell < part_ini->nCell; icell++){
+    arrayOfFineAnisotropicCompliantCells[icell] = icell;
+  }
+      
+  for (int i = 0; i < part_ini->nCell; i++){
+    cellPart[i] = -1;    
+  }
+      
+  /* ---------------------------------------- */
+  //int isFirstAgglomeration_int = 1;
+  //int isAnisotropic_int        = 0;
+  /* int dimension                = 3;
+     int goalCard                 = 8;
+     int minCard                  = 4;
+     int maxCard                  = 12;
+     int checks_int               = 1;
+     int verbose_int              = 1;*/
+  //int *agglomerationLines_Idx  = malloc(( part_ini->nCell  )* sizeof(int));
+  //int *agglomerationLines      = malloc(( part_ini->nCell  )* sizeof(int));
+
+  PDM_printf("\n\t\t\t\tSize of cellCellIdx");
+  PDM_printf(" %d \n",cellCellIdx[part_ini->nCell]);
+      
+
+
+  PDM_printf("\t\t\t\tsizes Before: \n "); 
+  for (int i=8; i<10; i++)
+    {
+      PDM_printf("\t\t\t\tsizes[%i] : % i\n ", i, sizes[i]); 
+    }
+
+  // for(int i = 0; i < part_ini->nCell; i++) {
+  //   PDM_printf(" %d ", cellCellN[i]);
+  // }
+  // PDM_printf("\n");
+  /* ---------------------------------------- */
+  agglomerateOneLevel_v_Paradigma(sizes,
+                                  cellCellTmpIdx,
+                                  cellCellTmp,
+                                  volume,
+                                  arrayOfFineAnisotropicCompliantCells,
+                                  isOnFineBndInit,
+                                  part_ini->faceCell,
+                                  surfaceArea,
+                                  anisotropicOption[0], //isFirstAgglomeration_int,
+                                  anisotropicOption[1], //isAnisotropic_int,
+                                  cellPart,
+                                  agglomerationLinesInitIdx,
+                                  agglomerationLinesInit,
+                                  anisotropicOption[2], //dimension,
+                                  anisotropicOption[3], //goalCard,
+                                  anisotropicOption[4], //minCard,
+                                  anisotropicOption[5], // maxCard,
+                                  anisotropicOption[6], //checks_int,
+                                  anisotropicOption[7] );//verbose_int);
+                                      
+  PDM_printf("\t\t\t\tsizes After \n "); 
+  for (int i=8; i<10; i++)
+    {
+      PDM_printf("\t\t\t\tsizes[%i] : % i\n ", i, sizes[i]); 
+    }
+
+  // PDM_printf("\n\tAfter agglomerateOneLevel_v_Paradigma \n ");
+  // PDM_printf("\n\tNb Coarse cell %i", );
+  // PDM_printf(" cellPart");
+  // for (int i = 0; i < part_ini->nCell; i++){
+  //   PDM_printf(" %i ", (*cellPart)[i]);    
+  // }      
+
+  (*nCoarseCellComputed) = sizes[2];
+  PDM_printf("\t\t\t\tNbCoarse  : %i \n ",(*nCoarseCellComputed));
+      
+  // Update of  Magma data:
+  // first: isOnCoarseBnd!
+  // int   *isOnCoarseBnd = part_res->isOnFineBnd;  //useless
+  int   * isOnCoarseBnd = malloc(( (*nCoarseCellComputed)  )* sizeof(int));
+  for (int iCC = 0; iCC<(*nCoarseCellComputed); iCC++)
+    {
+      isOnCoarseBnd[iCC]=0;
+    }
+  int numberOfFineCell = sizes[0];
+  // We process every cell of level iLevel -1
+  for(int iFineCell=0; iFineCell<numberOfFineCell; iFineCell++)
+    {
+      short bndFC = (short) isOnFineBndInit[iFineCell];
+      int iCoarseCell =cellPart[iFineCell];
+      if (bndFC > isOnCoarseBnd[iCoarseCell]){
+        isOnCoarseBnd[iCoarseCell] = bndFC;
+      }
+    }
+  part_res->isOnFineBnd = isOnCoarseBnd;
+
+  // then: AgglomerationLines
+  if( sizes[8]>0)
+    {
+      int   *agglomerationLinesIdx = malloc(( sizes[8]  )* sizeof(int));
+      int   *agglomerationLines = malloc(( sizes[9]  )* sizeof(int)); 
+      for (int iCC =0; iCC<sizes[8]; iCC++)
+        {
+          agglomerationLinesIdx[iCC] = agglomerationLinesInitIdx[iCC];
+        }
+      for (int iCC =0; iCC<sizes[9]; iCC++)
+        {
+          agglomerationLines[iCC] = agglomerationLinesInit[iCC];
+        }
+
+      part_res->agglomerationLinesIdx                 = agglomerationLinesIdx;
+      part_res->agglomerationLines                      = agglomerationLines;
+      part_res->agglomerationLinesIdx_size  = sizes[8]; 
+      PDM_printf("\n\t\t\t\tDans _split(...),part_res->agglomerationLinesInitIdx_size: %i \n", part_res->agglomerationLinesInitIdx_size);  
+    }else
+    {
+      part_res->agglomerationLinesIdx_size = 0;
+    }
+      
+      
+      
+  PDM_printf("\n\t\t\t\tDans _split(...),part_res->agglomerationLinesInitIdx_size: %i \n", part_res->agglomerationLinesInitIdx_size);  
+  /* Free array */
+  free(cellCellTmpIdx);
+  free(cellCellTmp);
+  free(sizes);
+  free(arrayOfFineAnisotropicCompliantCells);
+      
+  free(isOnFineBndInit);
+  free(agglomerationLinesInit);
+  free(agglomerationLinesInitIdx);
+      
+  free(volume);      
+  free(centercell);  
+  free(surfaceArea); 
+  free(surfaceVector);
+  free(surfaceCenter);
+      
+  // PDM_printf("\n\t\t\t\tContent of cellPart\n");  
+  // PDM_printf("\t\t\t\t");  
+  // for(int i = 0; i < part_ini->nCell ; i++) {
+  //   PDM_printf("%d, ", (*cellPart)[i]);
+  // }
+  // PDM_printf("\n");
+
+}
+  
+/**
+ *
+ * \brief Perform the coarse mesh from the SCOTCH graph method
+ *
+ * \param [in,out]  ppart    Current PPART structure
+ *
+ */
+
+static void
 _coarse_from_scotch
 (
 _coarse_mesh_t* cm,
@@ -530,16 +884,10 @@ int            **cellPart)
   PDM_printf("\n \t\t\t\tCall of  _split function \n");            
   // Replace arg of function:
   _part_t * part_ini       = cm->part_ini[iPart];
-  _coarse_part_t *part_res = cm->part_res[iPart];
   
   int method = cm->method;
-  int nPart  = part_res->nCoarseCellWanted;
 
-  int *cellWeight = (int *) part_ini->cellWeight;
-  int *faceWeight = (int *) part_ini->faceWeight;
-
- 
-
+  
   // End replacement
 
   *cellPart = (int *) malloc(part_ini->nCell * sizeof(int));
@@ -571,337 +919,12 @@ int            **cellPart)
     }      
   case 3:
     {
-      PDM_printf("\n \t\t\t\t_split: Case 3 \n");            
-      /** Allocate  **/
-      int    isOriented = 0;
-      double *volume     = (double *) malloc(  part_ini->nCell * sizeof(double));
-      double *centercell = (double *) malloc(3*part_ini->nCell * sizeof(double));
-      
-      double *surfaceArea   = (double *) malloc(  part_ini->nFace * sizeof(double));
-      double *surfaceVector = (double *) malloc(3*part_ini->nFace * sizeof(double));
-      double *surfaceCenter = (double *) malloc(3*part_ini->nFace * sizeof(double));
-      
-      /** Build up volume of all cells of Fine partition **/
-      PDM_geom_elem_polyhedra_properties (isOriented,
-                                          part_ini->nCell,
-                                          part_ini->nFace,
-                                          part_ini->faceVtxIdx,
-                                          part_ini->faceVtx,   
-                                          part_ini->cellFaceIdx,
-                                          part_ini->cellFace,
-                                          part_ini->nVtx,
-                                          part_ini->vtx,
-                                          volume,
-                                          centercell,
-                                          NULL,
-                                          NULL);        
-      
-      /** Build up Area of all faces of Fine partition **/
-      PDM_geom_elem_polygon_properties (part_ini->nFace,   
-                                        part_ini->faceVtxIdx, 
-                                        part_ini->faceVtx, 
-                                        part_ini->vtx,
-                                        surfaceVector,
-                                        surfaceCenter,
-                                        NULL,
-                                        NULL);
-      
-      /* Deduce surface area */
-      for (int iface = 0; iface < part_ini->nFace; iface++) {
-        surfaceArea[iface] = sqrt(  surfaceVector[3*iface  ]*surfaceVector[3*iface  ] 
-                                  + surfaceVector[3*iface+1]*surfaceVector[3*iface+1] 
-                                  + surfaceVector[3*iface+2]*surfaceVector[3*iface+2] );
-      }
-    
-      
-      int *  agglomerationLinesInit = part_res->agglomerationLinesInit;
-      int *  agglomerationLinesInitIdx = part_res->agglomerationLinesInitIdx;
-      int     agglomerationLinesInitIdx_size = part_res->agglomerationLinesInitIdx_size;
-      int   *isOnFineBndInit = part_res->isOnFineBndInit;
-      int   *anisotropicOption =    cm->anisotropicOption;
-
-      PDM_printf("\n\t\t\t\tAddress of agglomerationLinesInit %p\n", agglomerationLinesInit);
-      PDM_printf("\n\t\t\t\tAddress of agglomerationLinesInitIdx %p\n", agglomerationLinesInitIdx);
-      PDM_printf("\n\t\t\t\tAddress of isOnFineBndInit %p\n", isOnFineBndInit);
-      PDM_printf("\n\t\t\t\tAddress of anisotropicOption %p\n", anisotropicOption);
-
-      if (anisotropicOption[0]==1)
-      {  
-          // first agglomeration
-          // some array need to be allocated:
-          // part_res->isOnFineBndInit, part_res->agglomerationLinesInit and part_res->agglomerationLinesInitIdx are supposed to be NULL!
-          // 1) Create isOnFineBnd array to describe for every cells if it is on boundary 
-
-          isOnFineBndInit = malloc(( part_ini->nCell  )* sizeof(int));
-          
-          for (int icell = 0; icell<part_ini->nCell; icell++)
-          {
-            isOnFineBndInit[icell] = 0;
-          }
-
-      
-          for (int iFace = 0; iFace<part_ini->nFace; iFace++)
-          {
-            if(part_ini->faceCell[2*iFace+1] == 0){  
-              if(isOnFineBndInit[part_ini->faceCell[2*iFace]- 1] < 3){
-                 isOnFineBndInit[part_ini->faceCell[2*iFace]-1] += 1;
-               }
-             }
-           }
-        
-          if (anisotropicOption[0]==1)
-          {
-              // Anisotropic agglomeration
-            // we need to allocated
-              PDM_printf("\n\t\t\t\tAnisotropic agglomeration\n"); 
-              agglomerationLinesInit = malloc(( part_ini->nCell  )* sizeof(int));
-              agglomerationLinesInitIdx = malloc(( part_ini->nCell  )* sizeof(int));
-              agglomerationLinesInitIdx_size = part_ini->nCell ;
-
-              for (int icell = 0; icell<part_ini->nCell; icell++)
-              {
-                agglomerationLinesInit[icell] = 0;
-                agglomerationLinesInitIdx[icell] = 0;
-              }
-          }   
-      }
-      
-      // Computation of countOnBndCells to know the number of cells (coarse or fine) that are on the boundary of the domain
-      int countOnBndCells = 0;
-        for (int icell = 0; icell < part_ini->nCell; icell++)
-        {
-          if (isOnFineBndInit[icell]>0)
-          {
-            countOnBndCells = countOnBndCells+1;
-          }
-        }
-
-        PDM_printf("\t\t\t\tcountOnBndCells : %i \n ",countOnBndCells); 
-
-      /* ---------------------------------------- */
-
-      /* 2) Create adjacency with current cell iff on boundary */
-      int *cellCellTmpIdx  = malloc(( part_ini->nCell + 1                           )* sizeof(int));
-      int *cellCellTmp     = malloc(( cellCellIdx[part_ini->nCell] + countOnBndCells)* sizeof(int));
-      
-      cellCellTmpIdx[0] = 0;
-      for (int icell = 0; icell < part_ini->nCell; icell++)
-      {
-        
-        if(isOnFineBndInit[icell] >0)
-        {
-          int beg = cellCellIdx[icell  ];
-          int end = cellCellIdx[icell+1];
-          
-          int nbc = end-beg;
-          
-          /* Add One slot for current cell */
-          cellCellTmpIdx[icell+1] = cellCellTmpIdx[icell]+nbc+1;
-          
-          
-          int beg2 = cellCellTmpIdx[icell  ];
-          int end2 = cellCellTmpIdx[icell+1];
-          // int nbc2 = end2-beg2;
-
-          cellCellTmp[beg2] = icell;
-          int cpt = 0;
-          for (int icell2 = beg2+1; icell2 < end2; icell2++){
-            cellCellTmp[icell2] = cellCell[beg+cpt++];
-          }
-        }else
-        {
-          int beg = cellCellIdx[icell  ];
-          int end = cellCellIdx[icell+1];
-          
-          int nbc = end-beg;
-          
-          /* Add One slot for current cell */
-          cellCellTmpIdx[icell+1] = cellCellTmpIdx[icell]+nbc;
-          
-          int beg2 = cellCellTmpIdx[icell  ];
-          int end2 = cellCellTmpIdx[icell+1];
-
-          int cpt = 0;
-          for (int icell2 = beg2; icell2 < end2; icell2++){
-            cellCellTmp[icell2] = cellCell[beg+cpt++];
-          }
-        }
-      }
-
-      //
-      PDM_printf("\t\t\t\t_split \n "); 
-      for (int i=0; i<8; i++)
-      {
-        PDM_printf("\t\t\t\t_split anisotropicOption[%i] : % i\n ", i, anisotropicOption[i]); 
-      }
-      /* ---------------------------------------- */
-      /* Parameters */
-      int *sizes = malloc(( 12  )* sizeof(int));
-      
-      sizes[0 ] = part_ini->nCell;
-      sizes[1 ] = cellCellTmpIdx[part_ini->nCell];
-      sizes[2 ] = 0;
-      sizes[3 ] = 0;
-      sizes[4 ] = 0;
-      sizes[5 ] = 0;
-      sizes[6 ] = 0;
-      sizes[7 ] = part_ini->nCell;
-      sizes[10] = 2*part_ini->nFace;
-      sizes[11] =   part_ini->nFace;
-
-      if ((anisotropicOption[0]==1) || (agglomerationLinesInitIdx_size ==0))
-      { 
-        sizes[8 ] = 0;
-        sizes[9 ] =  0;
-      }else
-      {
-        sizes[8 ] = agglomerationLinesInitIdx_size;
-        sizes[9 ] =  agglomerationLinesInitIdx[agglomerationLinesInitIdx_size] ;
-      }
-      
-
-      int *arrayOfFineAnisotropicCompliantCells = malloc((part_ini->nCell)* sizeof(int));
-      for (int icell = 0; icell < part_ini->nCell; icell++){
-        arrayOfFineAnisotropicCompliantCells[icell] = icell;
-      }
-      
-      for (int i = 0; i < part_ini->nCell; i++){
-        (*cellPart)[i] = -1;    
-      }
-      
-      /* ---------------------------------------- */
-      //int isFirstAgglomeration_int = 1;
-      //int isAnisotropic_int        = 0;
-     /* int dimension                = 3;
-      int goalCard                 = 8;
-      int minCard                  = 4;
-      int maxCard                  = 12;
-      int checks_int               = 1;
-      int verbose_int              = 1;*/
-      //int *agglomerationLines_Idx  = malloc(( part_ini->nCell  )* sizeof(int));
-      //int *agglomerationLines      = malloc(( part_ini->nCell  )* sizeof(int));
-
-      PDM_printf("\n\t\t\t\tSize of cellCellIdx");
-      PDM_printf(" %d \n",cellCellIdx[part_ini->nCell]);
-      
-
-
-      PDM_printf("\t\t\t\tsizes Before: \n "); 
-      for (int i=8; i<10; i++)
-      {
-        PDM_printf("\t\t\t\tsizes[%i] : % i\n ", i, sizes[i]); 
-      }
-
-      // for(int i = 0; i < part_ini->nCell; i++) {
-      //   PDM_printf(" %d ", cellCellN[i]);
-      // }
-      // PDM_printf("\n");
-      /* ---------------------------------------- */
-      agglomerateOneLevel_v_Paradigma(sizes,
-                                      cellCellTmpIdx,
-                                      cellCellTmp,
-                                      volume,
-                                      arrayOfFineAnisotropicCompliantCells,
-                                      isOnFineBndInit,
-                                      part_ini->faceCell,
-                                      surfaceArea,
-                                      anisotropicOption[0], //isFirstAgglomeration_int,
-                                      anisotropicOption[1], //isAnisotropic_int,
-                                      *cellPart,
-                                      agglomerationLinesInitIdx,
-                                      agglomerationLinesInit,
-                                      anisotropicOption[2], //dimension,
-                                      anisotropicOption[3], //goalCard,
-                                      anisotropicOption[4], //minCard,
-                                      anisotropicOption[5], // maxCard,
-                                      anisotropicOption[6], //checks_int,
-                                      anisotropicOption[7] );//verbose_int);
-                                      
-      PDM_printf("\t\t\t\tsizes After \n "); 
-      for (int i=8; i<10; i++)
-      {
-        PDM_printf("\t\t\t\tsizes[%i] : % i\n ", i, sizes[i]); 
-      }
-
-      // PDM_printf("\n\tAfter agglomerateOneLevel_v_Paradigma \n ");
-      // PDM_printf("\n\tNb Coarse cell %i", );
-      // PDM_printf(" cellPart");
-      // for (int i = 0; i < part_ini->nCell; i++){
-      //   PDM_printf(" %i ", (*cellPart)[i]);    
-      // }      
-
-      (*nCoarseCellComputed) = sizes[2];
-      PDM_printf("\t\t\t\tNbCoarse  : %i \n ",(*nCoarseCellComputed));
-      
-      // Update of  Magma data:
-      // first: isOnCoarseBnd!
-      // int   *isOnCoarseBnd = part_res->isOnFineBnd;  //useless
-      int   * isOnCoarseBnd = malloc(( (*nCoarseCellComputed)  )* sizeof(int));
-      for (int iCC = 0; iCC<(*nCoarseCellComputed); iCC++)
-      {
-        isOnCoarseBnd[iCC]=0;
-      }
-      int numberOfFineCell = sizes[0];
-      // We process every cell of level iLevel -1
-      for(int iFineCell=0; iFineCell<numberOfFineCell; iFineCell++)
-      {
-          short bndFC = isOnFineBndInit[iFineCell];
-          int iCoarseCell =(*cellPart)[iFineCell];
-          if (bndFC > isOnCoarseBnd[iCoarseCell]){
-             isOnCoarseBnd[iCoarseCell] = bndFC;
-          }
-      }
-      part_res->isOnFineBnd = isOnCoarseBnd;
-
-      // then: AgglomerationLines
-      if( sizes[8]>0)
-      {
-          int   *agglomerationLinesIdx = malloc(( sizes[8]  )* sizeof(int));
-          int   *agglomerationLines = malloc(( sizes[9]  )* sizeof(int)); 
-          for (int iCC =0; iCC<sizes[8]; iCC++)
-          {
-            agglomerationLinesIdx[iCC] = agglomerationLinesInitIdx[iCC];
-          }
-          for (int iCC =0; iCC<sizes[9]; iCC++)
-          {
-            agglomerationLines[iCC] = agglomerationLinesInit[iCC];
-          }
-
-          part_res->agglomerationLinesIdx                 = agglomerationLinesIdx;
-          part_res->agglomerationLines                      = agglomerationLines;
-          part_res->agglomerationLinesIdx_size  = sizes[8]; 
-          PDM_printf("\n\t\t\t\tDans _split(...),part_res->agglomerationLinesInitIdx_size: %i \n", part_res->agglomerationLinesInitIdx_size);  
-      }else
-      {
-        part_res->agglomerationLinesIdx_size = 0;
-      }
-      
-      
-      
-      PDM_printf("\n\t\t\t\tDans _split(...),part_res->agglomerationLinesInitIdx_size: %i \n", part_res->agglomerationLinesInitIdx_size);  
-      /* Free array */
-      free(cellCellTmpIdx);
-      free(cellCellTmp);
-      free(sizes);
-      free(arrayOfFineAnisotropicCompliantCells);
-      
-      free(isOnFineBndInit);
-      free(agglomerationLinesInit);
-      free(agglomerationLinesInitIdx);
-      
-      free(volume);      
-      free(centercell);  
-      free(surfaceArea); 
-      free(surfaceVector);
-      free(surfaceCenter);
-      
-      // PDM_printf("\n\t\t\t\tContent of cellPart\n");  
-      // PDM_printf("\t\t\t\t");  
-      // for(int i = 0; i < part_ini->nCell ; i++) {
-      //   PDM_printf("%d, ", (*cellPart)[i]);
-      // }
-      // PDM_printf("\n");
-          
+      _coarse_from_magma (cm,
+                          iPart,
+                          nCoarseCellComputed,
+                          cellCellIdx,
+                          cellCell,
+                          *cellPart);
       break;
     }
   default:
@@ -5060,11 +5083,29 @@ PDM_coarse_mesh_method_add
  * \return Index (-1 if not found)
  */
 
+void
+PROCF (pdm_coarse_mesh_method_idx_get_cf, PDM_COARSE_MESH_METHOD_IDX_GET_CF)
+(
+ char *name,
+ int  *l_name,
+ int  *idx
+ )
+{
+  char *_name = PDM_fortran_to_c_string (name, *l_name); 
+
+  *idx = PDM_coarse_mesh_method_idx_get (_name);
+  
+  free (_name);
+
+}
+
 int
 PDM_coarse_mesh_method_idx_get
 (
 const char *name
-);
+)
+{
+}
 
 
 /**
@@ -5076,13 +5117,13 @@ const char *name
  * \return Index (-1 if not found)
  */
 
-int
+char *
 PDM_coarse_mesh_method_name_get
 (
 const int id
 )
 {
-
+  return 0;
 }
 
 
@@ -5095,12 +5136,12 @@ const int id
  */
 
 int
-PDM_coarse_mesh_method_face_n_get
+PDM_coarse_mesh_method_n_get
 (
 void
 )
 {
-
+  return 0;
 }
 
 /**
