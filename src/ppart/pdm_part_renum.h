@@ -80,6 +80,14 @@ PDM_part_renum_method_face_add
  * \return Index (-1 if not found)
  */
 
+void
+PROCF (pdm_part_renum_method_cell_idx_get_cf, PDM_PART_RENUM_METHOD_CELL_IDX_GET_CF)
+(
+ char *name,
+ int  *l_name,
+ int  *idx
+ );
+
 int 
 PDM_part_renum_method_cell_idx_get
 (
@@ -95,6 +103,14 @@ const char *name
  * 
  * \return Index (-1 if not found)
  */
+
+void
+PROCF (pdm_part_renum_method_face_idx_get_cf, PDM_PART_RENUM_METHOD_FACE_IDX_GET_CF)
+(
+ char *name,
+ int  *l_name,
+ int  *idx
+ );  
 
 int 
 PDM_part_renum_method_face_idx_get
@@ -113,6 +129,14 @@ const char *name
  *
  */
 
+void
+PROCF (pdm_part_renum_method_cell_name_get_cf, PDM_PART_RENUM_METHOD_CELL_NAME_GET_CF)
+(
+ char *name,
+ int  *l_name,
+ int  *idx
+ );
+
 const char * 
 PDM_part_renum_method_cell_name_get
 (
@@ -129,6 +153,14 @@ const int idx
  * \return Name of the method
  *
  */
+
+void
+PROCF (pdm_part_renum_method_face_name_get_cf, PDM_PART_RENUM_METHOD_FACE_NAME_GET_CF)
+(
+ char *name,
+ int  *l_name,
+ int  *idx
+ );
 
 const char * 
 PDM_part_renum_method_face_name_get
@@ -304,6 +336,35 @@ PDM_part_reorder_face
  int     *newToOldOrder               
 );        
 
+
+/**
+ *
+ * \brief Get the number of renumbering cell methods 
+ * 
+ * \return Number of methods
+ *
+ */
+
+void
+PROCF (pdm_part_n_renum_method_cell_get, PDM_PART_N_RENUM_METHOD_CELL_GET)
+(
+ int  *n_method
+ );
+
+/**
+ *
+ * \brief Get the number of renumbering face methods 
+ * 
+ * \return Name of the method
+ *
+ */
+
+void
+PROCF (pdm_part_n_renum_method_face_get, PDM_PART_N_RENUM_METHOD_FACE_GET)
+(
+ int  *n_method
+ );
+  
 #ifdef	__cplusplus
 }
 #endif
