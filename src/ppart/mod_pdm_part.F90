@@ -233,10 +233,10 @@ interface
    implicit none
 
    integer           :: ppartId
-   double precision  :: elapsed
-   double precision  :: cpu
-   double precision  :: cpu_user
-   double precision  :: cpu_sys
+   double precision  :: elapsed(4)
+   double precision  :: cpu(4)
+   double precision  :: cpu_user(4)
+   double precision  :: cpu_sys(4)
 
  end subroutine pdm_part_time_get
 
