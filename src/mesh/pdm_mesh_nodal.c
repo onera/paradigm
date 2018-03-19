@@ -2883,8 +2883,10 @@ PDM_g_num_t      *numabs
 )
 {
   int adjust = 0;
-  if (cell_face_idx[0] == 1) {
-    adjust = 1;
+  if (n_cell > 0) { 
+    if (cell_face_idx[0] == 1) {
+      adjust = 1;
+    }
   }
   
   PDM_Mesh_nodal_t *mesh = (PDM_Mesh_nodal_t *) PDM_Handles_get (mesh_handles, idx);
@@ -3440,10 +3442,11 @@ PDM_l_num_t       *cell_edge,
 PDM_g_num_t       *numabs
 ) 
 {
-  
   int adjust = 0;
-  if (edge_vtx_idx[0] == 1) {
-    adjust = 1;
+  if (n_cell > 0) {
+    if (edge_vtx_idx[0] == 1) {
+      adjust = 1;
+    }
   }
 
   
@@ -3820,8 +3823,10 @@ PDM_g_num_t      *numabs
 )
 {
   int adjust = 0;
-  if (face_vtx_idx[0] == 1) {
-    adjust = 1;
+  if (n_face > 0) {
+    if (face_vtx_idx[0] == 1) {
+      adjust = 1;
+    }
   }
 
   PDM_Mesh_nodal_t *mesh = (PDM_Mesh_nodal_t *) PDM_Handles_get (mesh_handles, idx);
