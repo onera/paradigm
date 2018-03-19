@@ -83,29 +83,6 @@ PROCF (pdm_part_coarse_mesh_create, PDM_PART_COARSE_MESH_CREATE)
 
 /**
  *
- * \brief Add option for anisotropic mesh agglomeration
- *
- * \param [out]  cmId              Coarse mesh identifier
- * \param [in]   Option
- */
-    
-void 
-PDM_part_coarse_mesh_add_option_anisotropic
-(
- int        cmId,
- const int* anisotropicOption
-);
-
-void
-PROCF (pdm_part_coarse_mesh_add_option_anisotropic, PDM_PART_COARSE_MESH_ADD_OPTION_ANISOTROPIC)
-(
- int        *cmId,
- const int  *anisotropicOption
- );
-
-
-/**
- *
  * \brief Build a coarse mesh
  *
  * \param [in]  cmId               Coarse mesh identifier 
@@ -219,41 +196,6 @@ PROCF (pdm_part_coarse_mesh_input, PDM_PART_COARSE_MESH_INPUT)
  const int          *facePartBoundProcIdx,       
  const int          *facePartBoundPartIdx,
  const int          *facePartBound
-);
- 
-/**
- *
- * \brief Add isotropic array to current coarse mesh 
- * 
- * \param [in]   cmId                      Coarse mesh identifier
- * \param [in]   iPart                     Current partition
- * 
- * \param [out]  agglomerationLines
- * \param [out]  agglomerationLinesIdx
- * \param [out]  isOnFineBnd            
- *
- */
-
-void 
-PDM_part_coarse_mesh_part_set_anisotropic_info
-(
- const int    cmId,
- const int    iPart,       
- const int    *agglomerationLinesInit,
- const int    *agglomerationLinesInitIdx,
- const int      agglomerationLinesInitIdx_size,
- const int    *isOnFineBndInit
-);
-
-void
-PROCF (pdm_part_coarse_mesh_part_set_anisotropic_info, PDM_PART_COARSE_MESH_PART_SET_ANISOTROPIC_INFO)
-(
- int          *cmId,
- int          *iPart,
- int          *agglomerationLinesInit,
- int          *agglomerationLinesInitIdx,
- int          *agglomerationLinesInitIdx_size,
- int          *isOnFineBndInit
 );
  
 /**
@@ -441,42 +383,6 @@ PROCF (pdm_part_coarse_mesh_part_get, PDM_PART_COARSE_MESH_PART_GET)
 
 /**
  *
- * \brief Return array specific to isotropic agglomeration
- * 
- * \param [in]   cmId                      Coarse mesh identifier
- * \param [in]   iPart                     Current partition
- * 
- * \param [out]  agglomerationLines
- * \param [out]  agglomerationLinesIdx
- * \param [out]  isOnFineBnd            
- *
- */
-
-void 
-PDM_part_coarse_mesh_part_get_anisotropic_info
-(
- const int    cmId,
- const int    iPart,       
- int          **agglomerationLines,
- int          **agglomerationLinesIdx,
- int          *agglomerationLinesIdx_size,
- int          **isOnFineBnd       
-);
-
-void
-PROCF (pdm_part_coarse_mesh_part_get_anisotropic_info, PDM_PART_COARSE_MESH_PART_GET_ANISOTROPIC_INFO)
-(
- int          *cmId,
- int          *iPart,       
- int          *agglomerationLines,
- int          *agglomerationLinesIdx,
- int          *agglomerationLinesIdx_size,
- int          *isOnFineBnd
-);
-
-
-/**
- *
  * \brief Free coarse mesh
  *
  * \param [in]   cmId        Coarse mesh identifier
@@ -545,33 +451,8 @@ PROCF (pdm_part_coarse_mesh_display, PDM_PART_COARSE_MESH_DISPLAY)
 (
   int *cmId
 );
-
-
-/**
- *
- * \brief Get index of a coarse mesh method from it's name
- *
- * \param [in]  name   Name of the method
- *
- * \return Index (-1 if not found)
- */
-
-void
-PROCF (pdm_coarse_mesh_method_idx_get_cf, PDM_COARSE_MESH_METHOD_IDX_GET_CF)
-(
- char *name,
- int  *l_name,
- int  *idx
- );
-
-int
-PDM_coarse_mesh_method_idx_get
-(
-const char *name
- );
-
-
   
+
 #ifdef	__cplusplus
 }
 #endif

@@ -1,3 +1,6 @@
+#ifndef PDM_PART_COARSE_MESH_PRIV_H
+#define	PDM_PART_COARSE_MESH_PRIV_H
+
 /* 
  * File:   pdm_part_coarse_mesh_priv.h
  * Author: jmagnene
@@ -7,10 +10,8 @@
 
 #include "pdm_part_priv.h"
 #include "pdm_timer.h"
+#include "pdm_fortran_to_c_string.h"
 #include "pdm_mpi.h"
-
-#ifndef PDM_PART_COARSE_MESH_PRIV_H
-#define	PDM_PART_COARSE_MESH_PRIV_H
 
 #ifdef	__cplusplus
 extern "C" {
@@ -147,8 +148,7 @@ typedef void (*PDM_coarse_mesh_fct_t) (_coarse_mesh_t  *cm,
                                        int             *nCoarseCellComputed,
                                        int             *cellCellIdx,
                                        int             *cellCell,
-                                       int             **cellPart)
-                                       ;
+                                       int             *cellPart);
 
 /**
  * \struct _coarse_mesh_method_t
@@ -278,6 +278,8 @@ _coarse_mesh_create
  * Public function prototypes
  *============================================================================*/
 
+
+
 /**
  *
  * \brief Add a new coarse mesh method
@@ -292,9 +294,9 @@ PDM_coarse_mesh_method_add
 (
  const char                 *name,     /*!< Name          */
  PDM_coarse_mesh_fct_t       fct       /*!< Function      */
-);
+ );
 
-
+  
 /**
  *
  * \brief Get index of a coarse mesh method from it's name
@@ -304,11 +306,19 @@ PDM_coarse_mesh_method_add
  * \return Index (-1 if not found)
  */
 
+void
+PROCF (pdm_coarse_mesh_method_idx_get_cf, PDM_COARSE_MESH_METHOD_IDX_GET_CF)
+(
+ char *name,
+ int  *l_name,
+ int  *idx
+ );
+
 int
 PDM_coarse_mesh_method_idx_get
 (
 const char *name
-);
+ );
 
 
 /**
@@ -320,12 +330,20 @@ const char *name
  * \return Index (-1 if not found)
  */
 
-int
+void
+PROCF (pdm_coarse_mesh_method_name_get_cf, PDM_COARSE_MESH_METHOD_NAME_GET_CF)
+(
+ char *name,
+ int  *l_name,
+ int  *idx
+ );
+
+char *
 PDM_coarse_mesh_method_name_get
 (
 const int id
-);
-
+ );
+  
 
 /**
  *
@@ -335,11 +353,18 @@ const int id
  *
  */
 
+void
+PROCF (pdm_coarse_mesh_method_n_get, PDM_COARSE_MESH_METHOD_N_GET)
+(
+ int  *n_method
+ );
+  
 int
-PDM_coarse_mesh_method_face_n_get
+PDM_coarse_mesh_method_n_get
 (
 void
 );
+  
 
 /**
  *
@@ -351,7 +376,8 @@ void
 PDM_coarse_mesh_method_purge
 (
 void
-);
+ );
+
 
 /**
  *
@@ -363,7 +389,22 @@ void
 PDM_coarse_mesh_method_load_local
 (
 void
-);
+ );
+
+
+/**
+ *
+ * \brief Return coarse mesh object from its identifier
+ *
+ * \param [in]   cmId        Coarse mesh identifier
+ *
+ */
+
+_coarse_mesh_t *
+PDM_part_coarse_mesh_get_from_id
+(
+ int  cmId
+ );
 
 
 #ifdef	__cplusplus

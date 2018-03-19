@@ -149,7 +149,7 @@ const int idx
  * \brief Get name of the face renumbering method 
  * 
  * \param [in]  idx     Index of the method
- * 
+ *  
  * \return Name of the method
  *
  */
