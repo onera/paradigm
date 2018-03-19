@@ -2899,6 +2899,9 @@ PDM_part_create
   PDM_MPI_Comm_rank(comm, &myRank);
   PDM_MPI_Comm_size(comm, &nRank);
 
+
+  PDM_part_renum_method_load_local();
+
   /*
    * Search a ppart free id
    */

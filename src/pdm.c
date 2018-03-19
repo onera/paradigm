@@ -14,6 +14,7 @@
 #include "pdm.h"
 #include "pdm_part.h"
 #include "pdm_part_renum.h"
+#include "pdm_part_coarse_mesh.h"
 
 
 #ifdef __cplusplus
@@ -68,6 +69,7 @@ void
   */ 
   
  PDM_part_renum_purge();
+ PDM_coarse_mesh_method_purge();
 
 }
 
