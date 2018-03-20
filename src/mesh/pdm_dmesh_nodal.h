@@ -482,10 +482,11 @@ void _get_elmt_info
  * Compute Key from idx 
  *
  */
+
 static int 
-compute_key
+_compute_key
 (
-  int* conn,
+  PDM_g_num_t* conn,
   int* lidx,
   int  begin, 
   int  nVtx

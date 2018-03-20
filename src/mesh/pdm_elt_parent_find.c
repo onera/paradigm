@@ -2,6 +2,8 @@
  *  System headers
  *----------------------------------------------------------------------------*/
 
+//FIXME: pdm_elt_parent_find ne fonctionne pas en 64bit !!!!
+
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -322,6 +324,16 @@ PDM_elt_parent_find
        PDM_g_num_t  *parent
 )
 {
+  if (sizeof(int) != sizeof(PDM_g_num_t)) {
+
+    
+    printf("pdm_elt_parent_find : Erreur : Cette fontion ne fonctionne pas en 64bit\n");
+    exit(1);
+    
+  }
+
+  //FIXME: dNFace
+  
   int myRank;
   int nRank;
   
@@ -426,6 +438,13 @@ PDM_elt_parent_find_from_distrib
        PDM_g_num_t  *parent
 )
 {
+  if (sizeof(int) != sizeof(PDM_g_num_t)) {
+
+    
+    printf("pdm_elt_parent_find : Erreur : Cette fontion ne fonctionne pas en 64bit\n");
+    exit(1);
+    
+  }
   /* Question Eric :    */
   /* 1)  elt_to_find_distrib -> pas en gnum ???? */
   /* 2)  Distribution commence a 1 ou 0 ????, */
@@ -474,8 +493,8 @@ PDM_elt_parent_find_from_distrib
   for(PDM_g_num_t iElmt = 0 ; iElmt < dNElmts; iElmt++) {
     
     if(0 == 1){
-      printf("-----> iElmt : %d \n", iElmt);
-      printf("%d/%d : ", nFace, nFacApprox);
+      printf("-----> iElmt : "PDM_FMT_G_NUM" \n", iElmt);
+      printf("%d/"PDM_FMT_G_NUM" : ", nFace, nFacApprox);
     }
     
     part_data[nData++] = iElmt+elt_distrib[myRank]; //+1;
@@ -509,8 +528,8 @@ PDM_elt_parent_find_from_distrib
   for(PDM_g_num_t iElmt = 0 ; iElmt < dNElmtsToFind; iElmt++) {
     
     if(0 == 1){
-      printf("-----> iElmt : %d \n", iElmt);
-      printf("%d/%d : ", nFace, nFacApprox);
+      printf("-----> iElmt : "PDM_FMT_G_NUM" \n", iElmt);
+      printf("%d/"PDM_FMT_G_NUM" : ", nFace, nFacApprox);
     }
     
     
@@ -596,7 +615,7 @@ PDM_elt_parent_find_from_distrib
   
   /* Find parent in distributed hash table */
   
-  PDM_g_num_t dNFace = 0;
+  PDM_g_num_t dNFace = 0; //FIXME: Attention : dNFace doit probabement etre declare en entier puis caster en long
   
   int nFacLocApprox = 10;
   int         *IdxFace      = (int         *) malloc( sizeof(int         *) * nFacLocApprox + 1);
@@ -689,7 +708,7 @@ PDM_elt_parent_find_from_distrib
     
     
     if(dNFace + iAbsFace > nFacApprox){
-        printf("[%d/%d] - Realloc :  %d - %d \n", myRank, nRank, nFacApprox, dNFace + iAbsFace);
+        printf("[%d/%d] - Realloc :  "PDM_FMT_G_NUM" - "PDM_FMT_G_NUM" \n", myRank, nRank, nFacApprox, dNFace + iAbsFace);
         nFacApprox *= 2;
         connect   = (PDM_g_num_t *) realloc(connect,  sizeof(PDM_g_num_t) * nFacApprox );
     }
@@ -716,7 +735,7 @@ PDM_elt_parent_find_from_distrib
   /* Verbose */   
   if(0 == 1){
     // printf("dElmtTot : %d\n", dNFace);
-    printf("[%d/%d] - dNFace : %d / nFaceApprox : %d \n", myRank, nRank, dNFace, nFacApprox);
+    printf("[%d/%d] - dNFace : "PDM_FMT_G_NUM" / nFaceApprox : "PDM_FMT_G_NUM" \n", myRank, nRank, dNFace, nFacApprox);
     
     // for(int i = 0; i < dNFace; i++) {
     //   printf("connect[%d]    : %d \n", i, connect[i]);
@@ -770,12 +789,14 @@ PDM_elt_parent_find_from_distrib
     int idx = (int) (i-FaceDistrib[myRank]);
     LNToGNElem[idx] = i+1;
   }
+
+  int __dNFace = (int) dNFace;
   
   PDM_part_to_block_t *ptb2 = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                        PDM_PART_TO_BLOCK_POST_NOTHING,
                                                        1.,
                                                        &LNToGNElem,
-                                                       &dNFace,
+                                                       &__dNFace,
                                                        1,
                                                        comm); 
   
@@ -812,7 +833,8 @@ PDM_elt_parent_find_from_distrib
   
   
   /* Push result into parent array */
-  
+
+    
   for(int i = 0; i < dElmtTot; i++) {
     parent[i] = BlkData2[i];
   }
@@ -855,12 +877,23 @@ PDM_elt_parent_find_from_distrib
   //                         (void *) &parent, 
   //                         &cst_stri_end,
   //                         (void *) &BlkData3);
+
+  //FIXME: PDM_block_to_block_exch_int doit disparaitre. Un cast est temporairement fait pour passer la compil 
+  //    
+
+  if (sizeof(int) != sizeof(PDM_g_num_t)) {
+
+    
+    printf("pdm_elt_parent_find : Erreur : Cette fontion ne fonctionne pas en 64bit\n");
+    exit(1);
+    
+  }
   
   PDM_block_to_block_exch_int(btb, 
                           sizeof(PDM_g_num_t), 
                           PDM_STRIDE_CST,
                           &cst_stri_ini,
-                          parent, 
+                              (int *) parent, // cast pour compilation !!!
                           &cst_stri_end,
                           (int **) &BlkData3);
   

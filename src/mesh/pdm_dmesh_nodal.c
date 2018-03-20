@@ -124,9 +124,9 @@ const int *IdxFace,
 const int *data,
 const int  nFac,
       int  iAbsFace,  /* A passer ren reference ou a return */
-      int *dFaceVtx,
+      PDM_g_num_t *dFaceVtx,
       int *dFaceVtxIdx,
-      int *dFaceCell
+      PDM_g_num_t *dFaceCell
 )
 {
   if(0 == 1){
@@ -1104,6 +1104,14 @@ const PDM_MPI_Comm comm,
 )
 {
   PDM_DMesh_nodal_t *mesh = (PDM_DMesh_nodal_t *) malloc (sizeof(PDM_DMesh_nodal_t));
+
+   if (sizeof(int) != sizeof(PDM_g_num_t)) {
+
+    
+    printf("PDM_DMesh_nodal : Erreur : Cette fontion ne fonctionne pas en 64bit\n");
+    exit(1);
+    
+  }
   
   _mesh_init (mesh, comm, nVtx, nCel);
   
@@ -2283,6 +2291,8 @@ PDM_DMesh_nodal_cell_face_compute
 const int   hdl
 )
 {
+  
+
   PDM_printf("PDM_DMesh_nodal_cell_face_compute \n ");
   
   /* Get current structure to treat */
@@ -2403,7 +2413,7 @@ const int   hdl
       for(int iFace = 0; iFace < nFacPerElmt; iFace++){
         
         /* Compute the key */
-        int iKey = compute_key(sectionStd->_connec, tabFacVtx[iFace], iOffSet, nVtxpFac[iFace]);
+        int iKey = _compute_key(sectionStd->_connec, tabFacVtx[iFace], iOffSet, nVtxpFac[iFace]);
         
         /* Build the LNToGN */
         // Attnetion ici c'est faux je pense !!!!
@@ -2455,7 +2465,7 @@ const int   hdl
   /*
    * Re-Allocate Array
    */
-  LNToGN    = (int *) realloc((LNToGN   ), nFace * sizeof(int * ));
+  LNToGN    = (PDM_g_num_t *) realloc((LNToGN   ), nFace * sizeof(PDM_g_num_t * ));
   part_stri = (int *) realloc((part_stri), nFace * sizeof(int * ));
   part_data = (int *) realloc((part_data), nData * sizeof(int * ));
 
@@ -2530,7 +2540,7 @@ const int   hdl
    * Allocate Memory - FaceVtx - FaceCell 
    */
   mesh->_dFaceVtx     = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t *) * dataSize/2); /* Not stupid at all */
-  mesh->_dFaceVtxIdx  = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t *) * dataSize/2); /* Surdim as Hell */
+  mesh->_dFaceVtxIdx  = (int *) malloc( sizeof(int *) * dataSize/2); /* Surdim as Hell */
   mesh->_dFaceCell    = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t *) * dataSize/2); /* Surdim as Hell */
 
   /*
