@@ -86,6 +86,80 @@ static PDM_Handles_t *_coarse_mesh_methods = NULL;
  * Private function definitions
  *============================================================================*/
   
+
+    
+/**
+ *
+ * \brief Return an initialized coarse part object
+ * 
+ * \param [in]   pt_comm           Communicator
+ * \param [in]   method            Choice between (1 for ParMETIS or 2 for PT-Scotch)
+ * \param [in]   nPart             Number of partitions
+ * \param [in]   nTPart            Total number of partitions
+ * \param [in]   nFaceGroup        Number of boundaries
+ * \param [in]   have_cellTag      Presence d'un tableau de tags pour les cellules
+ * \param [in]   have_faceTag      Presence d'un tableau de tags pour les faces
+ * \param [in]   have_vtxTag       Presence d'un tableau de tags pour les sommets
+ * \param [in]   have_cellWeight   Presence d'un tableau de poids pour les cellules
+ * \param [in]   have_faceWeight   Presence d'un tableau de poids pour les faces
+ * \param [in]   have_faceGroup    Presence des tableaux de groupes de faces
+ */
+
+static _coarse_mesh_t * 
+_coarse_mesh_create
+(
+ const PDM_MPI_Comm  comm,        
+ const char         *method,
+ const int           nPart,
+ const int           nTPart,
+ const int           nFaceGroup,
+ const int           have_cellTag,
+ const int           have_faceTag,
+ const int           have_vtxTag,
+ const int           have_cellWeight,
+ const int           have_faceWeight,
+ const int           have_faceGroup
+
+ )
+{     
+   _coarse_mesh_t *cm = (_coarse_mesh_t *) malloc(sizeof(_coarse_mesh_t));
+
+   cm->nPart = nPart;
+   cm->comm  = comm; 
+   
+   int _method = PDM_coarse_mesh_method_idx_get(method);
+  
+   if (_method == -1) {
+     PDM_error (__FILE__, __LINE__, 0, "'%s' is an unknown coarse mesh method\n", method);
+   }
+   
+   cm->method = _method;
+
+   cm->nTPart = nTPart;
+   
+   cm->nFaceGroup = nFaceGroup;
+
+   cm->have_cellTag    = have_cellTag;
+   cm->have_faceTag    = have_faceTag;
+   cm->have_vtxTag     = have_vtxTag;
+   cm->have_cellWeight = have_cellWeight;
+   cm->have_faceWeight = have_faceWeight;
+   cm->have_faceGroup  = have_faceGroup;
+   
+   cm->part_ini = malloc(sizeof(_part_t *) * nPart); //On déclare un tableau de partitions
+   
+   cm->part_res = malloc(sizeof(_coarse_part_t *) * nPart);
+   
+   for (int i = 0; i < nPart; i++) {
+     cm->part_ini[i] = _part_create(); 
+     
+     cm->part_res[i] = _coarse_part_create();     
+     
+   }   
+    
+   return cm;
+}
+
 /**
  *
  * \brief Perform the coarse mesh from the SCOTCH graph method
@@ -526,42 +600,52 @@ int            *cellCellIdx,
 int            *cellCell,
 int            **cellPart)
 {    
-  PDM_printf("\n \t\t\t\tCall of  _split function \n");            
-  // Replace arg of function:
+
   _part_t * part_ini       = cm->part_ini[iPart];
   
   int method = cm->method;
-
-  
-  // End replacement
 
   *cellPart = (int *) malloc(part_ini->nCell * sizeof(int));
     
   for (int i = 0; i < part_ini->nCell; i++){
     (*cellPart)[i] = 0;    
   }
-  //method = 2;  
-  switch(method) {
-  case 1:
-    {
-      _coarse_from_metis (cm,
-                          iPart,
-                          nCoarseCellComputed,
-                          cellCellIdx,
-                          cellCell,
-                          *cellPart);
-      break;
-    }                
-  case 2:
-    {
-      _coarse_from_scotch (cm,
-                          iPart,
-                          nCoarseCellComputed,
-                          cellCellIdx,
-                          cellCell,
-                          *cellPart);
-      break;
-    }      
+  
+  const _coarse_mesh_method_t *method_ptr = (const _coarse_mesh_method_t *) 
+                                      PDM_Handles_get (_coarse_mesh_methods, method);
+  
+  PDM_coarse_mesh_fct_t fct = method_ptr->fct;
+  
+  if (fct != NULL) {
+    (fct) (cm,
+           iPart,
+           nCoarseCellComputed,
+           cellCellIdx,
+           cellCell,
+           *cellPart);
+  }
+
+  /* switch(method) { */
+  /* case 1: */
+  /*   { */
+  /*     _coarse_from_metis (cm, */
+  /*                         iPart, */
+  /*                         nCoarseCellComputed, */
+  /*                         cellCellIdx, */
+  /*                         cellCell, */
+  /*                         *cellPart); */
+  /*     break; */
+  /*   }                 */
+  /* case 2: */
+  /*   { */
+  /*     _coarse_from_scotch (cm, */
+  /*                         iPart, */
+  /*                         nCoarseCellComputed, */
+  /*                         cellCellIdx, */
+  /*                         cellCell, */
+  /*                         *cellPart); */
+  /*     break; */
+  /*   }       */
   /* case 3: */
   /*   { */
   /*     _coarse_from_magma (cm, */
@@ -572,10 +656,10 @@ int            **cellPart)
   /*                         *cellPart); */
   /*     break; */
   /*   } */
-  default:
-    PDM_printf("PART error : '%i' unknown partitioning method\n", method);
-    exit(1);        
-  }
+  /* default: */
+  /*   PDM_printf("PART error : '%i' unknown partitioning method\n", method); */
+  /*   exit(1);         */
+  /* } */
 }
 
 /**
@@ -3606,7 +3690,7 @@ PDM_part_coarse_mesh_create
 (
  int                *cmId,
  PDM_MPI_Comm        comm, 
- const int           method,
+ const char*         method,
  const int           nPart,
  const int           nTPart,
  const int           nFaceGroup,
@@ -3638,11 +3722,12 @@ PDM_part_coarse_mesh_create
 }
 
 void
-PROCF (pdm_part_coarse_mesh_create, PDM_PART_COARSE_MESH_CREATE)
+PROCF (pdm_part_coarse_mesh_create_cf, PDM_PART_COARSE_MESH_CREATE_CF)
 (
  int                *cmId,
  PDM_MPI_Fint       *fcomm,        
- const int          *method,
+ const char         *method,
+ const int          *l_method,
  const int          *nPart, 
  const int          *nTPart, 
  const int          *nFaceGroup,
@@ -3656,10 +3741,12 @@ PROCF (pdm_part_coarse_mesh_create, PDM_PART_COARSE_MESH_CREATE)
 {
   
   PDM_MPI_Comm comm = PDM_MPI_Comm_f2c (*fcomm);
+
+  char *_method = PDM_fortran_to_c_string (method, *l_method); 
   
   PDM_part_coarse_mesh_create (cmId,
                                comm,
-                               *method,
+                               _method,
                                *nPart,
                                *nTPart,
                                *nFaceGroup,
@@ -3669,6 +3756,9 @@ PROCF (pdm_part_coarse_mesh_create, PDM_PART_COARSE_MESH_CREATE)
                                *have_cellWeight,
                                *have_faceWeight,
                                *have_faceGroup);
+
+  free (_method);
+  
 }
 
 /**

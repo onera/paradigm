@@ -51,7 +51,7 @@ PDM_part_coarse_mesh_create
 (
  int                *cmId,
  PDM_MPI_Comm        comm,        
- const int           method,
+ const char*         method,
  const int           nPart, 
  const int           nTPart,
  const int           nFaceGroup,
@@ -64,11 +64,12 @@ PDM_part_coarse_mesh_create
 );
 
 void
-PROCF (pdm_part_coarse_mesh_create, PDM_PART_COARSE_MESH_CREATE)
+PROCF (pdm_part_coarse_mesh_create_cf, PDM_PART_COARSE_MESH_CREATE_CF)
 (
  int                *cmId,
  PDM_MPI_Fint       *fcomm,        
- const int          *method,
+ const char         *method,
+ const int          *l_method,
  const int          *nPart, 
  const int          *nTPart, 
  const int          *nFaceGroup,
