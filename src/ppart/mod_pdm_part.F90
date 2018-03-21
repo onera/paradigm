@@ -19,6 +19,10 @@ module mod_pdm_part
     pdm_part_create_
   end interface
 
+  interface pdm_part_coarse_mesh_create     ; module procedure  &
+    pdm_part_coarse_mesh_create_
+  end interface
+
   interface pdm_part_renum_method_cell_idx_get      ; module procedure  &
     pdm_part_renum_method_cell_idx_get_
   end interface 
@@ -325,6 +329,7 @@ interface
 end interface
 
 private :: pdm_part_create_ ,&
+           pdm_part_coarse_mesh_create_ ,&
            pdm_part_renum_method_cell_idx_get_ ,&
            pdm_part_renum_method_face_idx_get_ ,&
            pdm_part_renum_method_cell_name_get_ ,&
@@ -497,6 +502,79 @@ contains
 
   end subroutine pdm_part_create_
 
+
+ !================================================================================
+ !
+ ! \brief Return an initialized coarse mesh object
+ !
+ ! \param [out]  cmId              Coarse mesh identifier
+ ! 
+ ! \param [in]   pt_comm           Communicator
+ ! \param [in]   method            Choice between (1 for ParMETIS or 2 for PT-Scotch)
+ ! \param [in]   nPart             Number of partitions
+ ! \param [in]   nTPart            Total number of partitions
+ ! \param [in]   have_cellTag      Presence d'un tableau de tags pour les cellules
+ ! \param [in]   have_faceTag      Presence d'un tableau de tags pour les faces
+ ! \param [in]   have_vtxTag       Presence d'un tableau de tags pour les sommets
+ ! \param [in]   have_cellWeight   Presence d'un tableau de poids pour les cellules
+ ! \param [in]   have_faceWeight   Presence d'un tableau de poids pour les faces
+ ! \param [in]   have_faceGroup    Presence des tableaux de groupes de faces
+ !================================================================================
+
+    
+subroutine pdm_part_coarse_mesh_create_ (cmId, &
+                                        comm, &        
+                                        method, &
+                                        nPart, &
+                                        nTPart, &
+                                        nFaceGroup,&
+                                        have_cellTag,&
+                                        have_faceTag,&
+                                        have_vtxTag,&
+                                        have_cellWeight, &
+                                        have_faceWeight, &
+                                        have_faceGroup)
+
+    use mod_pdm
+
+    implicit none
+
+    integer                     ::  cmId
+    integer                     ::  comm
+    character (len=*)           ::  method
+    integer                     ::  nPart
+    integer                     ::  nTPart
+    integer                     ::  nFaceGroup
+    integer                     ::  have_cellTag
+    integer                     ::  have_faceTag
+    integer                     ::  have_vtxTag
+    integer                     ::  have_cellWeight
+    integer                     ::  have_faceWeight
+    integer                     ::  have_faceGroup
+
+    integer                     :: l_method
+    
+    l_method = len(method)
+  
+
+    call pdm_part_coarse_mesh_create_cf (cmId, &
+                                         comm, &        
+                                         method, &
+                                         l_method, &
+                                         nPart, &
+                                         nTPart, &
+                                         nFaceGroup,&
+                                         have_cellTag,&
+                                         have_faceTag,&
+                                         have_vtxTag,&
+                                         have_cellWeight, &
+                                         have_faceWeight, &
+                                         have_faceGroup)
+
+    
+ end subroutine pdm_part_coarse_mesh_create_
+
+  
  !================================================================================
  !
  ! \brief Get index of a renumbering face method
