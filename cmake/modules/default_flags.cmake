@@ -10,7 +10,7 @@ cmake_host_system_information(RESULT HOSTNAME QUERY HOSTNAME)
 # Fortran default flags
 #------------------------------------------------------------------------------
 
-if (NOT PASS_DEFAULT_FLAGS)
+#if (NOT PASS_DEFAULT_FLAGS)
 
 if (CMAKE_Fortran_COMPILER_ID STREQUAL "GNU")
 
@@ -280,7 +280,7 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
 
 elseif (CMAKE_CXX_COMPILER_ID MATCHES "XL")
 
-  set (CMAKE_CXX_FLAGS " ${CMAKE_CXX_FLAGS} -q64 -qlanglvl=extended0x -std=c++0x")
+  set (CMAKE_CXX_FLAGS " ${CMAKE_CXX_FLAGS} -q64 -qlanglvl=extended0x")
   set (CMAKE_CXX_FLAGS_RELEASE "-O3 -qhot")
   set (CMAKE_CXX_FLAGS_DEBUG "-g -qfullpath")
   set (CMAKE_CXX_FLAGS_PROFILING       "${CMAKE_CXX_FLAGS_RELEASE} -pg -qfullpath")
@@ -359,6 +359,6 @@ set (CXX_LIBRARIES_FLAG "${CXX_LIBRARIES_FLAG}" CACHE STRING "C++ flags" FORCE)
 
 set (PASS_DEFAULT_FLAGS 1 CACHE STRING "")
 mark_as_advanced (CMAKE_CXX_FLAGS_PROFILING CXX_LIBRARIES CXX_LIBRARIES_FLAG PASS_DEFAULT_FLAGS)
-endif()
+#endif()
 
 
