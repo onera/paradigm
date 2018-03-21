@@ -53,7 +53,7 @@ cdef extern from "pdm_part_coarse_mesh.h":
     # > Wrapping of function 
     void PDM_part_coarse_mesh_create(int           *cmId,
                                      PDM_MPI_Comm  comm,
-                                     int           method,
+                                     char          *method,
                                      int           nPart, 
                                      int           nTPart,
                                      int           nFaceGroup, 
@@ -172,9 +172,9 @@ cdef class CoarseMesh:
     cdef int _cmId
     cdef int _nFaceGroup
     # ------------------------------------------------------------------
-    def __init__(self,
+    def __cinit__(self,
                   MPI.Comm comm,
-                  int      method, 
+                  char    *method, 
                   int      nPart, 
                   int      nTPart,
                   int      nFaceGroup,
