@@ -149,6 +149,8 @@ _coarse_mesh_create
    cm->part_ini = malloc(sizeof(_part_t *) * nPart); //On déclare un tableau de partitions
    
    cm->part_res = malloc(sizeof(_coarse_part_t *) * nPart);
+
+   cm->specific_data = NULL;
    
    for (int i = 0; i < nPart; i++) {
      cm->part_ini[i] = _part_create(); 
@@ -1978,16 +1980,6 @@ _coarse_grid_compute
   
   int nCoarseCellComputed;
 
-  // ADD NL New args:
-  // int *  agglomerationLinesInit = part_res->agglomerationLinesInit;
-  // int *  agglomerationLinesInitIdx = part_res->agglomerationLinesInitIdx;
-  // int   *isOnFineBndInit = part_res->isOnFineBndInit;
-  // int   *anisotropicOption =    cm->anisotropicOption;
- /* int *  agglomerationLinesInit = part_res->agglomerationLinesInit;
-  int *  agglomerationLinesInitIdx = part_res->agglomerationLinesInitIdx;
-  int *  isOnFineBndInit = part_res->isOnFineBndInit;*/
-
-
   _split( cm, 
           iPart,
          &nCoarseCellComputed,
@@ -1995,7 +1987,6 @@ _coarse_grid_compute
          dualGraph, 
          (int **) &cellPart);
   
-  PDM_printf("\n\t\t\t\t After _split(...),part_res->agglomerationLinesInitIdx_size: %i \n", part_res->agglomerationLinesInitIdx_size);  
   PDM_timer_hang_on(cm->timer);
   cm->times_elapsed[itime] = PDM_timer_elapsed(cm->timer);
   cm->times_cpu[itime]     = PDM_timer_cpu(cm->timer);
@@ -3638,7 +3629,11 @@ _coarse_part_free
 )
 {
   _part_free(coarse_part->part);
-    
+
+  if (coarse_part->specific_data != NULL) {
+    free (coarse_part->specific_data);
+  }
+  
   if (coarse_part->coarseCellCell != NULL)
     free(coarse_part->coarseCellCell);
   coarse_part->coarseCellCell = NULL;    
@@ -3986,11 +3981,8 @@ PDM_part_coarse_mesh_compute
   
   /* First step : Manage independently coarse grid generation */
   
-   for (int iPart = 0; iPart < cm->nPart; iPart++) {
-    _coarse_part_t *part_res = cm->part_res[iPart];
-    
+  for (int iPart = 0; iPart < cm->nPart; iPart++) {
     _coarse_grid_compute(cm, iPart);
-    PDM_printf("\n\t\t\t After  _coarse_grid_compute(...),part_res->agglomerationLinesInitIdx_size: %i \n", part_res->agglomerationLinesInitIdx_size);  
   }
   
   /* Second step : Manage MPI */
@@ -4447,6 +4439,10 @@ PDM_part_coarse_mesh_free
     _coarse_part_free(cm->part_res[i]);
     cm->part_ini[i] = NULL;
     cm->part_res[i] = NULL;
+  }
+
+  if (cm->specific_data != NULL) {
+    free (cm->specific_data);
   }
   
   free(cm->part_ini);

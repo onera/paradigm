@@ -48,19 +48,19 @@ typedef struct  {
 
   int *coarseVtxToFineVtx;   //Coarse vertex - fine vertex connectivity (size = nCoarseVtx)
 
-  void *_specific_data;   /*!<   */
+  void *specific_data;   /*!< Specific data  */
 
   /* Array specific to anisotropic agglomeration */
-  int *agglomerationLines;      
-  int *agglomerationLinesIdx;   
-  int  agglomerationLinesIdx_size;  
-  int *isOnFineBnd;  
+  /* int *agglomerationLines;       */
+  /* int *agglomerationLinesIdx;    */
+  /* int  agglomerationLinesIdx_size;   */
+  /* int *isOnFineBnd;   */
   
-  /* Array specific to anisotropic agglomeration if Initialise from a finer grid */
-  int *agglomerationLinesInit;      
-  int *agglomerationLinesInitIdx;   
-  int  agglomerationLinesInitIdx_size;  
-  int *isOnFineBndInit;  
+  /* /\* Array specific to anisotropic agglomeration if Initialise from a finer grid *\/ */
+  /* int *agglomerationLinesInit;       */
+  /* int *agglomerationLinesInitIdx;    */
+  /* int  agglomerationLinesInitIdx_size;   */
+  /* int *isOnFineBndInit;   */
   
   
 } _coarse_part_t;
@@ -91,8 +91,9 @@ typedef struct  {
   int have_cellWeight;
   int have_faceWeight;
   int have_faceGroup;
-  
-  int *anisotropicOption;   /* See nommage */
+
+  void *specific_data;
+  //  int *anisotropicOption;   /* See nommage */
   
   //TIMER
   
@@ -193,15 +194,8 @@ void
   cp->coarseFaceToFineFace = NULL; 
 
   cp->coarseVtxToFineVtx = NULL;
-  
-  /* Anisotropic part */
-  cp->agglomerationLines        = NULL;      
-  cp->agglomerationLinesIdx     = NULL;   
-  cp->isOnFineBnd               = NULL;
-    
-  cp->agglomerationLinesInit    = NULL;   
-  cp->agglomerationLinesInitIdx = NULL;
-  cp->isOnFineBndInit           = NULL;  
+
+  cp->specific_data = NULL;
   
   return cp;
   
