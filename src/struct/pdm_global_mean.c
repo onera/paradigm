@@ -412,7 +412,8 @@ PDM_global_mean_field_compute
                             _stride_w,
                            (void **) _gpm->local_weight, 
                                      &block_weight_stride,
-                           (void **) &block_weight); 
+                           (void **) &block_weight);
+    free (block_weight_stride);
   }
 
   //TODO: Remplisage du tableau moyenne
