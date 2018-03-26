@@ -551,14 +551,14 @@ PDM_points_merge_free
 
 /**
  *
- * \brief Set a point cloud  
+ * \brief Set a point cloud
  *
- * \param [in]   id                 Identifier 
- * \param [in]   i_point_cloud      Number of point cloud 
- * \param [in]   n_points           Maximum depth
- * \param [in]   coords             Point coordinates 
- * \param [in]   char_length        Characteristic length (or NULL)
- * 
+ * \param [in]   id             Identifier
+ * \param [in]   i_point_cloud  Index of point cloud
+ * \param [in]   n_points       Number of points
+ * \param [in]   coords         Point coordinates
+ * \param [in]   char_length    Characteristic length (or NULL)
+ *
  */
 
 void
