@@ -55,8 +55,8 @@ typedef struct _PDM_dbbtree_t PDM_dbbtree_t;
 PDM_dbbtree_t *
 PDM_dbbtree_create
 (
- PDM_MPI_Comm          comm,
- int               dim
+ PDM_MPI_Comm  comm,
+ int           dim
  );
 
 
