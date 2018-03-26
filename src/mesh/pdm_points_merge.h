@@ -77,7 +77,8 @@ PDM_points_merge_free
  * \param [in]   i_point_cloud  Index of point cloud
  * \param [in]   n_points       Number of points
  * \param [in]   coords         Point coordinates
- * 
+ * \param [in]   char_length    Characteristic length (or NULL)
+ *
  */
 
 void
@@ -86,7 +87,8 @@ PDM_points_merge_cloud_set
  const int          id,
  const int          i_point_cloud,
  const int          n_points,
- const double      *coords
+ const double      *coords,
+ const double      *char_length
 );
 
 
