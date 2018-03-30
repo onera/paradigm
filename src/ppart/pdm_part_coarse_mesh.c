@@ -627,41 +627,6 @@ int            **cellPart)
            *cellPart);
   }
 
-  /* switch(method) { */
-  /* case 1: */
-  /*   { */
-  /*     _coarse_from_metis (cm, */
-  /*                         iPart, */
-  /*                         nCoarseCellComputed, */
-  /*                         cellCellIdx, */
-  /*                         cellCell, */
-  /*                         *cellPart); */
-  /*     break; */
-  /*   }                 */
-  /* case 2: */
-  /*   { */
-  /*     _coarse_from_scotch (cm, */
-  /*                         iPart, */
-  /*                         nCoarseCellComputed, */
-  /*                         cellCellIdx, */
-  /*                         cellCell, */
-  /*                         *cellPart); */
-  /*     break; */
-  /*   }       */
-  /* case 3: */
-  /*   { */
-  /*     _coarse_from_magma (cm, */
-  /*                         iPart, */
-  /*                         nCoarseCellComputed, */
-  /*                         cellCellIdx, */
-  /*                         cellCell, */
-  /*                         *cellPart); */
-  /*     break; */
-  /*   } */
-  /* default: */
-  /*   PDM_printf("PART error : '%i' unknown partitioning method\n", method); */
-  /*   exit(1);         */
-  /* } */
 }
 
 /**
