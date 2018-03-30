@@ -53,6 +53,7 @@ PDM_mesh_dist_create
  *
  * \param [in]   id              Identifier
  * \param [in]   i_point_cloud   Index of point cloud
+ * \param [in]   i_part          Index of partition
  * \param [in]   n_points        Number of points
  * \param [in]   coords          Point coordinates
  *
@@ -63,8 +64,73 @@ PDM_mesh_dist_cloud_set
 (
  const int          id,
  const int          i_point_cloud,
+ const int          i_part,
  const int          n_points,
  const double      *coords
+);
+
+
+/**
+ *
+ * \brief Set a point cloud with initial distance
+ *
+ * \param [in]   id              Identifier
+ * \param [in]   i_point_cloud   Index of point cloud
+ * \param [in]   i_part          Index of partition
+ * \param [in]   n_points        Number of points
+ * \param [in]   initial_dist    Initial distance  
+ * \param [in]   coords          Point coordinates
+ *
+ */
+
+void
+PDM_mesh_dist_cloud_with_initial_set
+(
+ const int          id,
+ const int          i_point_cloud,
+ const int          i_part,
+ const int          n_points,
+ const double      *initial_dist,
+ const double      *coords
+);
+
+
+/**
+ *
+ * \brief Set normal surface mesh
+ *
+ * \param [in]   id              Identifier
+ * \param [in]   i_part          Index of partition
+ * \param [in]   normal          Normal
+ *
+ */
+
+void
+PDM_mesh_dist_normal_set
+(
+ const int          id,
+ const int          i_part,
+ const double      *normal
+);
+
+  
+
+/**
+ *
+ * \brief Set normal surface mesh
+ *
+ * \param [in]   id              Identifier
+ * \param [in]   i_part          Index of partition
+ * \param [in]   normal          Normal
+ *
+ */
+
+void
+PDM_mesh_dist_center_set
+(
+ const int          id,
+ const int          i_part,
+ const double      *center
 );
 
 
@@ -89,6 +155,7 @@ PDM_mesh_dist_process
  *
  * \param [in]   id              Identifier
  * \param [in]   i_point_cloud   Current cloud
+ * \param [in]   i_part          Index of partition
  * \param [out]  dist            Distance
  * \param [out]  proj            Projected point coordinates
  * \param [out]  closest_part    Closest partition
