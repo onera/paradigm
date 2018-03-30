@@ -424,7 +424,11 @@ cdef class CoarseMesh:
         else:
             isOnFineBndInit_data = <int *> isOnFineBndInit.data
             
-        print "\t\t\tset_mesh_input_anisotropic agglomerationLinesInitIdx_size=", agglomerationLinesInitIdx_size
+        # > Verbose 
+        # print "isOnFineBndInit           = ", isOnFineBndInit
+        # print "agglomerationLinesInit    = ", agglomerationLinesInit
+        # print "agglomerationLinesInitIdx = ", agglomerationLinesInitIdx
+        # print "set_mesh_input_anisotropic agglomerationLinesInitIdx_size=", agglomerationLinesInitIdx_size
         
         # :::::::::::::::::::::::::::::::::::::::::::::::::::::
         # > Fill input mesh for anisotropic
@@ -843,7 +847,9 @@ cdef class CoarseMesh:
                                                        &agglomerationLinesIdx,
                                                        &agglomerationLinesIdx_size,
                                                        &isOnFineBnd)
-        print "\t\t\tPXI: \tpart_coarse_val_get_anisotropic: \tagglomerationLinesIdx_size", agglomerationLinesIdx_size
+        # Verbose 
+        # print "PDM_part_coarse_mesh_part_get_anisotropic_info : agglomerationLinesIdx_size : ", agglomerationLinesIdx_size
+        
         # :::::::::::::::::::::::::::::::::::::::::::::::::::::
         # > Translate to numpy capsule (Tout est pas fait encore )
         if (agglomerationLines == NULL) :

@@ -93,7 +93,6 @@ typedef struct  {
   int have_faceGroup;
 
   void *specific_data;
-  //  int *anisotropicOption;   /* See nommage */
   
   //TIMER
   
