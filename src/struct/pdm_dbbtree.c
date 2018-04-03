@@ -235,9 +235,9 @@ const int         dim
   _dbbt->maxBoxRatio          = 10.;
   _dbbt->maxBoxesLeaf         = 30;
 
-  _dbbt->maxTreeDepthShared   = 30;
+  _dbbt->maxTreeDepthShared   = 10;
   _dbbt->maxBoxRatioShared    = 6;
-  _dbbt->maxBoxesLeafShared   = 10;
+  _dbbt->maxBoxesLeafShared   = 1;
 
   _dbbt->maxTreeDepthCoarse   = 30;
   _dbbt->maxBoxRatioCoarse    =  6.;

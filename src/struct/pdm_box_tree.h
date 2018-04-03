@@ -255,6 +255,22 @@ PDM_box_tree_dump_statistics(const PDM_box_tree_t  *bt);
 void
 PDM_box_tree_dump(PDM_box_tree_t  *bt);
 
+/*----------------------------------------------------------------------------
+ * Get closest leaf
+ *
+ * parameters:
+ *   bt <-- pointer to box tree structure
+ *----------------------------------------------------------------------------*/
+
+void
+PDM_box_tree_closest_leaf_get
+(
+PDM_box_tree_t  *bt, 
+double           coords, 
+int             *n_boxes, 
+PDM_g_num_t     *box_g_num[]
+);
+
 /*----------------------------------------------------------------------------*/
 
 #ifdef __cplusplus
