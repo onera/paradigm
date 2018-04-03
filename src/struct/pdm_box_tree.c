@@ -147,6 +147,59 @@ struct _PDM_box_tree_t {
  * Private function definitions
  *============================================================================*/
 
+
+/*----------------------------------------------------------------------------
+ * Distance to a box.
+ *
+ * parameters:
+ *   extents <-- array of box extents
+ *   id_0    <-- id of first box
+ *   id_1    <-- id of second box
+ *
+ * returns:
+ *   true or false
+ *---------------------------------------------------------------------------*/
+
+inline double
+_boxes_dist2
+(
+const PDM_box_set_t   *boxes,
+int                    box_id,
+double                *coords
+)
+{
+
+  double dist2 = 0;
+  double *_extents = boxes->extents + box_id*boxes->dim*2;
+  
+  int _dim = boxes->dim;
+
+  int inbox = 0;
+  for (int i = 0; i < _dim; i++) {
+    if ((_extents[i] <= coords[i]) && (coords[i] <= _extents[_dim+i])) {
+      inbox += 1;
+    }  
+  }
+  
+  if (inbox == 0) {
+    return -1;    
+  }
+
+  for (int i = 0; i < _dim; i++) {
+    if (coords[i] > _extents[i+_dim]) {
+      dist2 += (coords[i] - _extents[_dim+i]) * (coords[i] - _extents[_dim+i]);
+    }
+    
+    else if (coords[i] < _extents[i]) {
+      dist2 += (coords[i] - _extents[i]) * (coords[i] - _extents[i]);      
+    }
+    
+  }
+  
+  return dist2;
+  
+}
+
 /*----------------------------------------------------------------------------
  * Get minimum coordinates for a given box.
  *
@@ -3256,6 +3309,34 @@ PDM_box_tree_dump(PDM_box_tree_t  *bt)
 
   _dump_node(bt, 0);
 }
+
+/*----------------------------------------------------------------------------
+ * Get closest leaf
+ *
+ * parameters:
+ *   bt           <-- pointer to box tree structure
+ *   n_boxes      --> Number of boxes in the closest leaf
+ *   box_g_num[]  --> Global number of boxes in the closest leaf
+ *----------------------------------------------------------------------------*/
+
+void
+PDM_box_tree_closest_leaf_get
+(
+PDM_box_tree_t  *bt, 
+double           coords, 
+int             *n_boxes, 
+PDM_g_num_t     *box_g_num[]
+)
+{
+ 
+  int curr_id;
+  
+  while (bt->)
+  
+  int _child_ids = bt-> child_ids
+}
+
+/*----------------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------------*/
 
