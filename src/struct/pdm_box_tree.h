@@ -256,19 +256,22 @@ void
 PDM_box_tree_dump(PDM_box_tree_t  *bt);
 
 /*----------------------------------------------------------------------------
- * Get closest leaf
+ * Get minimum of maximum distance of boxes
  *
  * parameters:
- *   bt <-- pointer to box tree structure
+ *   bt           <-- pointer to box tree structure
+ *   n_boxes      --> Number of boxes in the closest leaf
+ *   box_g_num[]  --> Global number of boxes in the closest leaf
  *----------------------------------------------------------------------------*/
 
 void
-PDM_box_tree_closest_leaf_get
+PDM_box_tree_min_dist_max_box
 (
-PDM_box_tree_t  *bt, 
-double           coords, 
-int             *n_boxes, 
-PDM_g_num_t     *box_g_num[]
+PDM_box_tree_t  *bt,
+const int        n_pts,        
+double          *pts,
+int             *box_id,
+double          *box_max_dist
 );
 
 /*----------------------------------------------------------------------------*/

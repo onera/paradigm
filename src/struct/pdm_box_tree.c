@@ -131,6 +131,11 @@ struct _PDM_box_tree_t {
                                         (size: 2^dim * n_max_nodes) */
   int        *box_ids;         /* List of associated box ids.
                                         size = stat.n_linked_boxes */
+ 
+  int        *stack;           /* Stack for look for closest leaves */
+  
+  int        *pos_stack;       /* Current position in the stack */
+  
 
   int     n_build_loops;             /* Number of loops required to build */
 
@@ -160,43 +165,41 @@ struct _PDM_box_tree_t {
  *   true or false
  *---------------------------------------------------------------------------*/
 
-inline double
-_boxes_dist2
+inline int
+_box_dist2
 (
-const PDM_box_set_t   *boxes,
-int                    box_id,
-double                *coords
+const int              dim,
+const double          *extents,
+double                *coords,
+double                *min_dist2,            
+double                *max_dist2            
 )
 {
 
-  double dist2 = 0;
-  double *_extents = boxes->extents + box_id*boxes->dim*2;
-  
-  int _dim = boxes->dim;
-
   int inbox = 0;
-  for (int i = 0; i < _dim; i++) {
-    if ((_extents[i] <= coords[i]) && (coords[i] <= _extents[_dim+i])) {
-      inbox += 1;
-    }  
-  }
-  
-  if (inbox == 0) {
-    return -1;    
-  }
+  *min_dist2 = 0.;
+  *max_dist2 = 0.;
 
-  for (int i = 0; i < _dim; i++) {
-    if (coords[i] > _extents[i+_dim]) {
-      dist2 += (coords[i] - _extents[_dim+i]) * (coords[i] - _extents[_dim+i]);
+  for (int i = 0; i < dim; i++) {
+    if (coords[i] > extents[i+dim]) {
+      *min_dist2 += (coords[i] - extents[dim+i]) * (coords[i] - extents[dim+i]);
+      *max_dist2 += (coords[i] - extents[i]) * (coords[i] - extents[i]);
     }
     
-    else if (coords[i] < _extents[i]) {
-      dist2 += (coords[i] - _extents[i]) * (coords[i] - _extents[i]);      
+    else if (coords[i] < extents[i]) {
+      *min_dist2 += (coords[i] - extents[i]) * (coords[i] - extents[i]);
+      *max_dist2 += (coords[i] - extents[dim+i]) * (coords[i] - extents[dim+i]);      
+    }
+
+    else {
+      inbox += 1;
+      *max_dist2 += PDM_MAX ((coords[i] - extents[i]) * (coords[i] - extents[i]),
+                             (coords[i] - extents[dim+i]) * (coords[i] - extents[dim+i]));
     }
     
   }
   
-  return dist2;
+  return inbox == dim;
   
 }
 
@@ -2467,6 +2470,9 @@ PDM_box_tree_create(int    max_level,
   bt->box_ids = NULL;
 
   bt->n_build_loops = 0;
+  
+  bt->stack = NULL;
+  bt->pos_stack = NULL;
 
   return bt;
 }
@@ -2488,6 +2494,13 @@ PDM_box_tree_destroy(PDM_box_tree_t  **bt)
     free(_bt->nodes);
     free(_bt->child_ids);
     free(_bt->box_ids);
+    
+    if (_bt->stack != NULL) {
+      free (_bt->stack);
+    }
+    if (_bt->pos_stack != NULL) {
+      free (_bt->pos_stack);      
+    }
 
     free(_bt);
     *bt = _bt;
@@ -3311,7 +3324,7 @@ PDM_box_tree_dump(PDM_box_tree_t  *bt)
 }
 
 /*----------------------------------------------------------------------------
- * Get closest leaf
+ * Get minimum of maximum distance of boxes
  *
  * parameters:
  *   bt           <-- pointer to box tree structure
@@ -3320,20 +3333,151 @@ PDM_box_tree_dump(PDM_box_tree_t  *bt)
  *----------------------------------------------------------------------------*/
 
 void
-PDM_box_tree_closest_leaf_get
+PDM_box_tree_min_dist_max_box
 (
-PDM_box_tree_t  *bt, 
-double           coords, 
-int             *n_boxes, 
-PDM_g_num_t     *box_g_num[]
+PDM_box_tree_t  *bt,
+const int        n_pts,        
+double          *pts,
+int             *box_id,
+double          *box_max_dist
 )
 {
- 
-  int curr_id;
   
-  while (bt->)
+  if (bt->stack != NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Error PDM_box_tree_closest_leaves_init : "
+            "call PDM_box_tree_closest_leaves_purge before call PDM_box_tree_closest_leaves_init again\n");
+  }
   
-  int _child_ids = bt-> child_ids
+  int s_pt_stack = ((bt->n_children - 1) * (bt->max_level - 1) + bt->n_children);
+  int sort_child[bt->n_children];
+  int dist_child[bt->n_children];
+  
+  int *stack = malloc ((sizeof(int)) * s_pt_stack);
+  int pos_stack = 0;
+  
+  int dim = bt->boxes->dim;
+
+  for (int i = 0; i < n_pts; i++) {
+
+    double *_pt = pts + 3 * n_pts;
+    
+    /* Init stack */
+
+    box_id[i] = -1;
+    box_max_dist[i] = HUGE_VAL;
+    
+    stack[pos_stack++] = 0; /* push root in th stack */
+    
+    while (pos_stack > 0) {
+      
+      int id_curr_node = stack[--pos_stack];
+
+      _node_t *curr_node = &(bt->nodes[id_curr_node]);
+      
+      double min_dist2;
+      double max_dist2;
+
+      _box_dist2 (dim,
+                  curr_node->extents,
+                  pt,
+                 &min_dist2,            
+                 &max_dist2);            
+
+      if (min_dist2 < max_dist[i]) {
+
+        if (!curr_node->is_leaf) {
+      
+          /* Sort children and store them into the stack */
+
+          const int *_child_ids = bt->child_ids + id_curr_node*bt->n_children;
+
+          for (int j = 0; j < bt->n_children; j++) {
+            int imin = 0;
+            int imax = j-1;
+
+            double child_min_dist2;
+            double child_max_dist2;
+
+            int child_id = _child_ids[j];;
+            _node_t *child_node = &(bt->nodes[child_id]);
+
+            _box_dist2 (dim,
+                        child_node->extents,
+                        pt,
+                       &child_min_dist2,            
+                       &child_max_dist2);            
+
+            while (imin < imax) {
+              int pivot = j / 2;
+
+              if (child_min_dist2 <= dist_child[imin]) {
+                imax = imin;
+              }
+
+              else if (child_min_dist2 >= dist_child[imax]) {
+                imin = imax;
+              }
+
+              else if (child_min_dist2 >= dist_child[pivot]) {
+                imin = pivot;
+              }
+
+              else {
+                imax = pivot;            
+              }
+
+            }
+
+            int k = j;
+            while (k > imin) {
+              sort_child[k] = sort_child[k-1]; 
+              dist_child[k] = dist_child[k-1];
+              k += -1;
+            }
+
+            sort_child[imin] = _child_ids[j];
+            dist_child[imin] = child_min_dist2;
+
+          }
+
+          for (int j = 0; j < bt->n_children; j++) {
+            int child_id = sort_child[bt->n_children - 1 - j];
+            _node_t *child_node = &(bt->nodes[child_id]);
+
+            if ((dist_child[j] < max_dist[i]) && (child_node->n_boxes > 0)) {
+              stack[pos_stack++] = child_id; /* push root in th stack */
+            }          
+          }
+        }
+
+        else {
+
+          for (int j = 0; j < current_node->n_boxes; j++) {
+
+            double box_min_dist2;
+            double box_max_dist2;
+
+            int   box_id = bt->box_ids[current_node->start_id + j];
+            double *extents =  bt->boxes->extents + box_id*dim*2;
+
+            _box_dist2 (dim,
+                        extents,
+                        pt,
+                       &box_min_dist2,            
+                       &box_max_dist2);            
+
+            if (box_max_dist2 < max_dist[i]) {
+              box_id[i] = box_id;
+              box_max_dist[i] = box_max_dist2;
+            }
+          }
+        }        
+      }
+    }
+  }
+
+  free (stack);
+
 }
 
 /*----------------------------------------------------------------------------*/
