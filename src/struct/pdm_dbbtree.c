@@ -454,6 +454,11 @@ const PDM_g_num_t **gNum
       initLocationProc[i] = 0;
     }
 
+    //TODO: Faire un PDM_box_set sequentiel ! Le comm split a u n 1 proc ici : pas terrible
+    
+    MPI_Comm rankComm;
+    int MPI_Comm_split(_dbbt->comm, myRank, 0, &rankComm);
+       
     _dbbt->rankBoxes = PDM_box_set_create(3,
                                           0,  // No normalization to preserve initial extents
                                           0,  // No projection to preserve initial extents
@@ -463,8 +468,8 @@ const PDM_g_num_t **gNum
                                           1,
                                           &nUsedRank,
                                           initLocationProc,
-                                          _dbbt->comm);
-  
+                                          rankComm); 
+      
     _dbbt->btShared = PDM_box_tree_create (_dbbt->maxTreeDepthShared,
                                            _dbbt->maxBoxesLeafShared,
                                            _dbbt->maxBoxRatioShared);
