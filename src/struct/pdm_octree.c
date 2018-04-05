@@ -123,10 +123,13 @@ typedef struct  {
                                 for coarse shared BBTree */
 
   PDM_box_set_t  *rankBoxes;  /*!< Rank Boxes */
-  PDM_box_tree_t *btShared;   /*!< Shared Boundary box tree */
+  int             nUsedRank;  /*!< Number of used ranks */
+  int            *usedRank;   /*!< used ranks */
 
+  PDM_box_tree_t *btShared;   /*!< Shared Boundary box tree */
   _box_tree_stats_t btsShared;/*!< Shared Boundary box tree statistic */
-//  int points_in_leaf_max;        /*!< Maximum number of points in a leaf */
+
+  //  int points_in_leaf_max;        /*!< Maximum number of points in a leaf */
 //  double tolerance;              /*!< Relative geometric tolerance */
 //  int   n_nodes;                 /*!< Current number of nodes in octree */
 //  int   n_nodes_max;             /*!< Maximum number of nodes in octree */
@@ -248,6 +251,8 @@ PDM_octree_create
   //octree->extents_proc = NULL;
   
   octree->rankBoxes = NULL;  /*!< Rank Boxes */
+  octree->usedRank = NULL;  /*!< Rank Boxes */
+  octree->nUsedRank = 0;  /*!< Rank Boxes */
   octree->btShared = NULL;   /*!< Shared Boundary box tree */
 
   _init_bt_statistics (&(octree->btsShared));
@@ -397,6 +402,9 @@ PDM_octree_build
   
   _octree_t *octree = _get_from_id (id);
   
+  const int nInfoLocation = 3;
+  const int sExtents = 3 * 2;
+
   int myRank;
   PDM_MPI_Comm_rank (octree->comm, &myRank);
   int lComm;
@@ -409,7 +417,7 @@ PDM_octree_build
   int n_proc;
   PDM_MPI_Comm_size (octree->comm, &n_proc);
   
-  double *extents_proc = malloc (sizeof(double)* n_proc * 6);
+  double *extents_proc = malloc (sizeof(double) * n_proc * 6);
   
   PDM_MPI_Allgather (extents, 6, PDM_MPI_DOUBLE,
                      extents_proc, 6, PDM_MPI_DOUBLE,
@@ -424,8 +432,68 @@ PDM_octree_build
                      n_pts_proc, 1, PDM_MPI_INT, 
                      octree->comm);
 
-  
-  
+  int nUsedRank = 0;
+  for (int i = 0; i < lComm; i++) {
+    if (n_pts_proc[i] > 0) {
+      nUsedRank += 1;
+    }
+  }
+
+  int *numProc = (int *) malloc (sizeof(int *) * nUsedRank);
+
+  octree->usedRank = numProc;
+  octree->nUsedRank = nUsedRank;
+
+  PDM_g_num_t *gNumProc = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * nUsedRank);
+
+  idx = 0;
+  for (int i = 0; i < lComm; i++) {
+    if (allNBoxes[i] > 0) {
+      gNumProc[idx] = idx;
+      numProc[idx] = i+1;
+      for (int j = 0; j < sExtents; j++) {
+        extents_proc[idx*sExtents + j] = extents_proc[i*sExtents + j];
+      }
+      idx += 1;
+    }
+  }
+
+  extents_proc = (double *) realloc (extents_proc,
+                                   sizeof(double) * sExtents * nUsedRank);
+
+  int *initLocationProc = (int *) malloc (sizeof(int) * 3 * nUsedRank);
+  for (int i = 0; i < 3 * nUsedRank; i++) {
+    initLocationProc[i] = 0;
+  }
+
+  PDM_MPI_Comm rankComm;
+  PDM_MPI_Comm_split(_dbbt->comm, myRank, 0, &rankComm);
+
+  _dbbt->rankBoxes = PDM_box_set_create(3,
+                                        0,  // No normalization to preserve initial extents
+                                        0,  // No projection to preserve initial extents
+                                        nUsedRank,
+                                        gNumProc,
+                                        allGExtents,
+                                        1,
+                                        &nUsedRank,
+                                        initLocationProc,
+                                        rankComm);
+
+  _dbbt->btShared = PDM_box_tree_create (_dbbt->maxTreeDepthShared,
+                                         _dbbt->maxBoxesLeafShared,
+                                         _dbbt->maxBoxRatioShared);
+
+  /* Build a tree and associate boxes */
+
+  PDM_box_tree_set_boxes (_dbbt->btShared,
+                          _dbbt->rankBoxes,
+                          PDM_BOX_TREE_ASYNC_LEVEL);
+
+  _update_bt_statistics(&(_dbbt->btsShared), _dbbt->btShared);
+
+  free (gNumProc);
+  free (initLocationProc);
   
   free (extents_proc);
   
@@ -677,22 +745,28 @@ PDM_octree_extents_get
 }
 
 
+
 /**
  *
- * \brief Processes extents  
+ * \brief Used processes extents
  *
- * \param [in]   id                 Identifier 
- * \param [in]   i_proc             Process
+ * \param [in]   id                 Identifier
+ * \param [out]  used_ranks         Used ranks
+ * \param [out]  extents            Used ranks extents
  *
+ * \return Number of used ranks
  */
 
-const double *
+const int
 PDM_octree_processes_extents_get
 (
- const int          id
+ const int          id,
+ int              *used_ranks[],
+ double           *extents[]
 )
 {
   _octree_t *octree = _get_from_id (id);
 
-  return octree->rankBoxes->extents;
+  *extents = octree->rankBoxes->extents;
+  *used_ranks = octree->
 }

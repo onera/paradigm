@@ -459,7 +459,7 @@ const PDM_g_num_t **gNum
       }
     }
 
-    allGExtents = (double *) realloc (allGExtents, sizeof(double) * sExtents * lComm);
+    allGExtents = (double *) realloc (allGExtents, sizeof(double) * sExtents * nUsedRank);
     
     int *initLocationProc = (int *) malloc (sizeof(int) * 3 * nUsedRank);
     for (int i = 0; i < 3 * nUsedRank; i++) {
@@ -651,7 +651,7 @@ int              *box_l_num[]
                                        box_l_num);
     
     int nUsedRank = PDM_box_set_get_size (_dbbt->rankBoxes);
-    const PDM_g_num_t *usedRanks = _dbbt->usedRank;
+    const int *usedRanks = _dbbt->usedRank;
     
     /*
      * Distribute boxes on intersection ranks

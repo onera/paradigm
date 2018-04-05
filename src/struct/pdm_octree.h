@@ -190,17 +190,21 @@ PDM_octree_build
 
 /**
  *
- * \brief Processes extents  
+ * \brief Used processes extents
  *
  * \param [in]   id                 Identifier 
- * \param [in]   i_proc             Process
+ * \param [out]  used_ranks         Used ranks
+ * \param [out]  extents            Used ranks extents
  *
+ * \return Number of used ranks
  */
 
-const double *
+const int
 PDM_octree_processes_extents_get
 (
- const int          id
+ const int          id,
+ int              *used_ranks[],
+ double           *extents[]
 );
 
 //void
