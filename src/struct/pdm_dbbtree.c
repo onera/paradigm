@@ -436,9 +436,12 @@ const PDM_g_num_t **gNum
 
 
     PDM_g_num_t *numProc = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * nUsedRank);
+    PDM_g_num_t *gNumProc = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * nUsedRank);
+
     idx = 0;
     for (int i = 0; i < lComm; i++) {
       if (allNBoxes[i] > 0) {
+        gNumProc[idx] = idx;
         numProc[idx] = i+1;
         for (int j = 0; j < sExtents; j++) {
           allGExtents[idx*sExtents + j] = allGExtents[i*sExtents + j];
@@ -454,16 +457,16 @@ const PDM_g_num_t **gNum
       initLocationProc[i] = 0;
     }
 
-    //TODO: Faire un PDM_box_set sequentiel ! Le comm split a u n 1 proc ici : pas terrible
+    //TODO: Faire un PDM_box_set et PDM_box_tree_create sequentiel ! Le comm split a u n 1 proc ici : pas terrible
     
-    MPI_Comm rankComm;
-    int MPI_Comm_split(_dbbt->comm, myRank, 0, &rankComm);
+    PDM_MPI_Comm rankComm;
+    PDM_MPI_Comm_split(_dbbt->comm, myRank, 0, &rankComm);
        
     _dbbt->rankBoxes = PDM_box_set_create(3,
                                           0,  // No normalization to preserve initial extents
                                           0,  // No projection to preserve initial extents
                                           nUsedRank,
-                                          numProc,
+                                          gNumProc,
                                           allGExtents,
                                           1,
                                           &nUsedRank,
@@ -484,6 +487,7 @@ const PDM_g_num_t **gNum
 
     free (allGExtents);
     free (numProc);
+    free (gNumProc);
     free (initLocationProc);
 
   }
