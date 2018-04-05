@@ -20,6 +20,9 @@
 #include "pdm_error.h"
 #include "pdm_handles.h"
 #include "pdm_mpi.h"
+#include "pdm_box.h"
+#include "pdm_box_tree.h"
+#include "pdm_box_priv.h"
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
@@ -48,6 +51,37 @@ extern "C" {
 /*============================================================================
  * Local structure definitions
  *============================================================================*/
+
+/*============================================================================
+ * Type definitions
+ *============================================================================*/
+
+/**
+ * \struct _box_tree_stats_t
+ * \brief  Statistic about bbtre
+ * 
+ *  _box_tree_stats_t defines statistics about bounding box tree
+ *
+ */
+
+typedef struct {
+
+  int         dim;                     /*!< Layout dimension */
+
+  /* The following fields have 3 global values:
+     mean on ranks, minimum on ranks, and maximum on ranks */
+
+  int         depth[3];                /*!< Tree depth */
+  int         n_leaves[3];             /*!< Number of leaves */
+  int         n_boxes[3];              /*!< Number of associated boxes */
+  int         n_threshold_leaves[3];   /*!< Number of leaves over threshold */
+  int         n_leaf_boxes[3];         /*!< Number of boxes per leaf */
+  size_t      mem_used[3];             /*!< Memory used */
+  size_t      mem_required[3];         /*!< Memory temporarily required */
+
+} _box_tree_stats_t;
+
+
 //
 ///**
 // * \struct _octant_t
@@ -77,9 +111,21 @@ extern "C" {
 typedef struct  {
   int    octree_seq_id;             /*!< Identifier of the associated octree seq */
 //  double  extents[6];            /*!< Extents of current process */ 
-  double *extents_proc;          /*!< Extents of processes */
+//  double *extents_proc;          /*!< Extents of processes */
 //  int    depth_max;              /*!< Maximum depth of the three */
   PDM_MPI_Comm comm;             /*!< MPI communicator */
+
+  int     maxBoxesLeafCoarse; /*!<  Max number of boxes in a leaf for coarse shared BBTree */
+
+  int     maxTreeDepthCoarse; /*!< Max tree depth for coarse shared BBTree */
+
+  float   maxBoxRatioCoarse;  /*!< Max ratio for local BBTree (nConnectedBoxe < ratio * nBoxes) 
+                                for coarse shared BBTree */
+
+  PDM_box_set_t  *rankBoxes;  /*!< Rank Boxes */
+  PDM_box_tree_t *btShared;   /*!< Shared Boundary box tree */
+
+  _box_tree_stats_t btsShared;/*!< Shared Boundary box tree statistic */
 //  int points_in_leaf_max;        /*!< Maximum number of points in a leaf */
 //  double tolerance;              /*!< Relative geometric tolerance */
 //  int   n_nodes;                 /*!< Current number of nodes in octree */
@@ -129,6 +175,37 @@ _get_from_id
   return octree;
 }
 
+
+/**
+ * \brief  Initialize box_tree statistics
+ *
+ * \param [inout]  bts  pointer to box tree statistics structure
+ *
+ */
+
+static void
+_init_bt_statistics
+(
+_box_tree_stats_t  *bts
+)
+{
+  size_t i;
+
+  assert(bts != NULL);
+
+  bts->dim = 0;
+
+  for (i = 0; i < 3; i++) {
+    bts->depth[i] = 0;
+    bts->n_leaves[i] = 0;
+    bts->n_boxes[i] = 0;
+    bts->n_threshold_leaves[i] = 0;
+    bts->n_leaf_boxes[i] = 0;
+    bts->mem_used[i] = 0;
+    bts->mem_required[i] = 0;
+  }
+}
+
 /*=============================================================================
  * Public function definitions
  *============================================================================*/
@@ -168,7 +245,12 @@ PDM_octree_create
                                                  points_in_leaf_max, tolerance);
   octree->comm = comm;
   
-  octree->extents_proc = NULL;
+  //octree->extents_proc = NULL;
+  
+  octree->rankBoxes = NULL;  /*!< Rank Boxes */
+  octree->btShared = NULL;   /*!< Shared Boundary box tree */
+
+  _init_bt_statistics (&(octree->btsShared));
   
   return id;
 }
@@ -204,7 +286,7 @@ const PDM_MPI_Comm comm
 
   octree->comm = comm;
   
-  octree->extents_proc = NULL;
+  //octree->extents_proc = NULL;
   
   return id;  
 }
@@ -237,7 +319,7 @@ PDM_octree_free
 {
   _octree_t *octree = _get_from_id (id);
 
-  free (octree->extents_proc);
+  //free (octree->extents_proc);
   
   PDM_octree_seq_free (octree->octree_seq_id);
   
@@ -314,21 +396,38 @@ PDM_octree_build
 {
   
   _octree_t *octree = _get_from_id (id);
-
+  
+  int myRank;
+  PDM_MPI_Comm_rank (octree->comm, &myRank);
+  int lComm;
+  PDM_MPI_Comm_size (octree->comm, &lComm);
+  
   PDM_octree_seq_build (octree->octree_seq_id);
   
   double * extents = PDM_octree_seq_extents_get (octree->octree_seq_id); 
- 
   
   int n_proc;
   PDM_MPI_Comm_size (octree->comm, &n_proc);
   
-  octree->extents_proc = malloc (sizeof(double)* n_proc * 6);
+  double *extents_proc = malloc (sizeof(double)* n_proc * 6);
   
   PDM_MPI_Allgather (extents, 6, PDM_MPI_DOUBLE,
-                     octree->extents_proc, 6, PDM_MPI_DOUBLE,
+                     extents_proc, 6, PDM_MPI_DOUBLE,
                      octree->comm);
 
+  int root_id = PDM_octree_seq_root_node_id_get (octree->octree_seq_id);
+
+  int n_pts = PDM_octree_seq_n_points_get(octree->octree_seq_id, root_id);
+  
+  int *n_pts_proc = (int *) malloc (sizeof(int) * lComm); 
+  PDM_MPI_Allgather (&n_pts, 1, PDM_MPI_INT, 
+                     n_pts_proc, 1, PDM_MPI_INT, 
+                     octree->comm);
+
+  
+  
+  
+  free (extents_proc);
   
 }
 
@@ -595,5 +694,5 @@ PDM_octree_processes_extents_get
 {
   _octree_t *octree = _get_from_id (id);
 
-  return octree->extents_proc;
+  return octree->rankBoxes->extents;
 }

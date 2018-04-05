@@ -237,7 +237,7 @@ const int         dim
 
   _dbbt->maxTreeDepthShared   = 10;
   _dbbt->maxBoxRatioShared    = 6;
-  _dbbt->maxBoxesLeafShared   = 1;
+  _dbbt->maxBoxesLeafShared   = 5;
 
   _dbbt->maxTreeDepthCoarse   = 30;
   _dbbt->maxBoxRatioCoarse    =  6.;
@@ -246,6 +246,9 @@ const int         dim
   _dbbt->rankBoxes            = NULL;
   _dbbt->btShared             = NULL;
 
+  _dbbt->nUsedRank            = 0;
+  _dbbt->usedRank             = NULL;
+    
   _dbbt->boxes                = NULL;
   _dbbt->btLoc                = NULL;
 
@@ -275,6 +278,8 @@ PDM_dbbtree_t     *dbbt
     
     PDM_box_set_destroy (&_dbbt->rankBoxes);
     PDM_box_set_destroy (&_dbbt->boxes);
+    
+    free (_dbbt->usedRank);
     
     PDM_box_tree_destroy (&_dbbt->btShared);
     PDM_box_tree_destroy (&_dbbt->btLoc);
@@ -435,9 +440,13 @@ const PDM_g_num_t **gNum
     PDM_printf ("\n");
 
 
-    PDM_g_num_t *numProc = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * nUsedRank);
+    int *numProc = (int *) malloc (sizeof(int *) * nUsedRank);
+    
+    _dbbt->usedRank = numProc;
+    _dbbt->nUsedRank = nUsedRank;
+    
     PDM_g_num_t *gNumProc = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * nUsedRank);
-
+    
     idx = 0;
     for (int i = 0; i < lComm; i++) {
       if (allNBoxes[i] > 0) {
@@ -486,7 +495,6 @@ const PDM_g_num_t **gNum
     _update_bt_statistics(&(_dbbt->btsShared), _dbbt->btShared);
 
     free (allGExtents);
-    free (numProc);
     free (gNumProc);
     free (initLocationProc);
 
@@ -643,7 +651,7 @@ int              *box_l_num[]
                                        box_l_num);
     
     int nUsedRank = PDM_box_set_get_size (_dbbt->rankBoxes);
-    const PDM_g_num_t *usedRanks = PDM_box_set_get_g_num (_dbbt->rankBoxes);
+    const PDM_g_num_t *usedRanks = _dbbt->usedRank;
     
     /*
      * Distribute boxes on intersection ranks
