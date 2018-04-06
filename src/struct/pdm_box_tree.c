@@ -3518,11 +3518,6 @@ double          *box_max_dist
 )
 {
   
-  if (bt->stack != NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Error PDM_box_tree_closest_leaves_init : "
-            "call PDM_box_tree_closest_leaves_purge before call PDM_box_tree_closest_leaves_init again\n");
-  }
-  
   int s_pt_stack = ((bt->n_children - 1) * (bt->max_level - 1) + bt->n_children);
   int sort_child[bt->n_children];
   double dist_child[bt->n_children];
