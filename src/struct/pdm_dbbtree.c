@@ -451,7 +451,7 @@ const PDM_g_num_t **gNum
     for (int i = 0; i < lComm; i++) {
       if (allNBoxes[i] > 0) {
         gNumProc[idx] = idx;
-        numProc[idx] = i+1;
+        numProc[idx] = i;
         for (int j = 0; j < sExtents; j++) {
           allGExtents[idx*sExtents + j] = allGExtents[i*sExtents + j];
         }
