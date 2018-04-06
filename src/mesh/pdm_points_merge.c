@@ -677,7 +677,10 @@ PDM_points_merge_process
    *   - Update distant table couple
    */
 
-  const double *extents_proc = PDM_octree_processes_extents_get (ppm->octree_id);
+  double *extents_proc;
+  int    *used_ranks;
+  
+  const int n_used_ranks = PDM_octree_processes_extents_get (ppm->octree_id, &used_ranks, &extents_proc);
 
   int s_tmp_store = sizeof(int) * ppm->max_n_points;
   int n_tmp_store = 0;
@@ -720,16 +723,17 @@ PDM_points_merge_process
         box[5] = __coord[2] + _default_eps;
       }
       
-      for (int k = 0; k < n_proc ; k++) {
-          const double *_extents_proc = extents_proc + k * 6;
-        if (k != i_proc) {
+      for (int k = 0; k < n_used_ranks ; k++) {
+        const int curr_rank  = used_ranks[k];
+        const double *_extents_proc = extents_proc + k * 6;
+        if (curr_rank != i_proc) {
 
           if (_intersect_extents(box, _extents_proc)) {
             if (n_tmp_store >= s_tmp_store) {
               s_tmp_store *= 2;
               tmp_store = realloc (tmp_store, sizeof(int) * s_tmp_store * 3);
             }
-            tmp_store[3*n_tmp_store]   = k;
+            tmp_store[3*n_tmp_store]   = curr_rank;
             tmp_store[3*n_tmp_store+1] = i_cloud;
             tmp_store[3*n_tmp_store+2] = i;
             n_tmp_store += 1;

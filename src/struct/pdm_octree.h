@@ -199,7 +199,7 @@ PDM_octree_build
  * \return Number of used ranks
  */
 
-const int
+int
 PDM_octree_processes_extents_get
 (
  const int          id,

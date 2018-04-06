@@ -115,11 +115,11 @@ typedef struct  {
 //  int    depth_max;              /*!< Maximum depth of the three */
   PDM_MPI_Comm comm;             /*!< MPI communicator */
 
-  int     maxBoxesLeafCoarse; /*!<  Max number of boxes in a leaf for coarse shared BBTree */
+  int     maxBoxesLeafShared; /*!<  Max number of boxes in a leaf for coarse shared BBTree */
 
-  int     maxTreeDepthCoarse; /*!< Max tree depth for coarse shared BBTree */
+  int     maxTreeDepthShared; /*!< Max tree depth for coarse shared BBTree */
 
-  float   maxBoxRatioCoarse;  /*!< Max ratio for local BBTree (nConnectedBoxe < ratio * nBoxes) 
+  float   maxBoxRatioShared;  /*!< Max ratio for local BBTree (nConnectedBoxe < ratio * nBoxes) 
                                 for coarse shared BBTree */
 
   PDM_box_set_t  *rankBoxes;  /*!< Rank Boxes */
@@ -207,6 +207,49 @@ _box_tree_stats_t  *bts
     bts->mem_used[i] = 0;
     bts->mem_required[i] = 0;
   }
+}
+
+
+/**
+ * \brief Update box-tree statistics.
+ *
+ * For most fields, we replace previous values with the current ones.
+ *
+ * For memory required, we are interested in the maximum values over time
+ * (i.e. algorthm steps); this is the case even for the minimal memory
+ * required, we is thus the time maximum of the rank minimum.
+ *
+ * \param [inout]   bts   Pointer to box tree statistics structure
+ * \param [inout]   bt    Pointer to box tree structure
+ *
+ */
+
+static void
+_update_bt_statistics
+(
+_box_tree_stats_t     *bts,
+const PDM_box_tree_t  *bt
+)
+{
+  int dim;
+  size_t i;
+  size_t mem_required[3];
+
+  assert(bts != NULL);
+
+  dim = PDM_box_tree_get_stats (bt,
+                                bts->depth,
+                                bts->n_leaves,
+                                bts->n_boxes,
+                                bts->n_threshold_leaves,
+                                bts->n_leaf_boxes,
+                                bts->mem_used,
+                                mem_required);
+
+  bts->dim = dim;
+
+  for (i = 0; i < 3; i++)
+    bts->mem_required[i] = PDM_MAX(bts->mem_required[i], mem_required[i]);
 }
 
 /*=============================================================================
@@ -446,9 +489,9 @@ PDM_octree_build
 
   PDM_g_num_t *gNumProc = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * nUsedRank);
 
-  idx = 0;
+  int idx = 0;
   for (int i = 0; i < lComm; i++) {
-    if (allNBoxes[i] > 0) {
+    if (n_pts_proc[i] > 0) {
       gNumProc[idx] = idx;
       numProc[idx] = i+1;
       for (int j = 0; j < sExtents; j++) {
@@ -461,36 +504,36 @@ PDM_octree_build
   extents_proc = (double *) realloc (extents_proc,
                                    sizeof(double) * sExtents * nUsedRank);
 
-  int *initLocationProc = (int *) malloc (sizeof(int) * 3 * nUsedRank);
-  for (int i = 0; i < 3 * nUsedRank; i++) {
+  int *initLocationProc = (int *) malloc (sizeof(int) * nInfoLocation * nUsedRank);
+  for (int i = 0; i < nInfoLocation * nUsedRank; i++) {
     initLocationProc[i] = 0;
   }
 
   PDM_MPI_Comm rankComm;
-  PDM_MPI_Comm_split(_dbbt->comm, myRank, 0, &rankComm);
+  PDM_MPI_Comm_split(octree->comm, myRank, 0, &rankComm);
 
-  _dbbt->rankBoxes = PDM_box_set_create(3,
+  octree->rankBoxes = PDM_box_set_create(3,
                                         0,  // No normalization to preserve initial extents
                                         0,  // No projection to preserve initial extents
                                         nUsedRank,
                                         gNumProc,
-                                        allGExtents,
+                                        extents_proc,
                                         1,
                                         &nUsedRank,
                                         initLocationProc,
                                         rankComm);
 
-  _dbbt->btShared = PDM_box_tree_create (_dbbt->maxTreeDepthShared,
-                                         _dbbt->maxBoxesLeafShared,
-                                         _dbbt->maxBoxRatioShared);
+  octree->btShared = PDM_box_tree_create (octree->maxTreeDepthShared,
+                                          octree->maxBoxesLeafShared,
+                                          octree->maxBoxRatioShared);
 
   /* Build a tree and associate boxes */
 
-  PDM_box_tree_set_boxes (_dbbt->btShared,
-                          _dbbt->rankBoxes,
+  PDM_box_tree_set_boxes (octree->btShared,
+                          octree->rankBoxes,
                           PDM_BOX_TREE_ASYNC_LEVEL);
 
-  _update_bt_statistics(&(_dbbt->btsShared), _dbbt->btShared);
+  _update_bt_statistics(&(octree->btsShared), octree->btShared);
 
   free (gNumProc);
   free (initLocationProc);
@@ -757,7 +800,7 @@ PDM_octree_extents_get
  * \return Number of used ranks
  */
 
-const int
+int
 PDM_octree_processes_extents_get
 (
  const int          id,
@@ -768,5 +811,8 @@ PDM_octree_processes_extents_get
   _octree_t *octree = _get_from_id (id);
 
   *extents = octree->rankBoxes->extents;
-  *used_ranks = octree->
+  *used_ranks = octree->usedRank;
+  
+  return octree->nUsedRank;          
+          
 }
