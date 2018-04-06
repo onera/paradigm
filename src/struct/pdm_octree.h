@@ -401,6 +401,30 @@ PDM_octree_extents_get
  const int          id
 );
 
+
+/**
+ *
+ * Get minimum of maximum distance of boxes
+ *
+ * parameters:
+ * \param [in]   id            Identifier 
+ * \param [in]   n_pts         Number of points 
+ * \param [in]   pts           Point Coordinates 
+ * \param [out]  box_id        Boxes identifier with minimum maximum distance 
+ * \param [out]  box_max_dist  minimum maximum distance
+ *
+ */
+
+void
+PDM_octree_min_dist_max_box
+(
+const int          id,
+const int        n_pts,        
+double          *pts,
+int             *box_id,
+double          *box_max_dist
+);
+
 #ifdef	__cplusplus
 }
 #endif
