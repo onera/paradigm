@@ -298,6 +298,10 @@ PDM_octree_create
   octree->nUsedRank = 0;  /*!< Rank Boxes */
   octree->btShared = NULL;   /*!< Shared Boundary box tree */
 
+  octree->maxTreeDepthShared = 10;
+  octree->maxBoxesLeafShared = 6;
+  octree->maxBoxRatioShared = 5;
+
   _init_bt_statistics (&(octree->btsShared));
   
   return id;
@@ -493,7 +497,7 @@ PDM_octree_build
   for (int i = 0; i < lComm; i++) {
     if (n_pts_proc[i] > 0) {
       gNumProc[idx] = idx;
-      numProc[idx] = i+1;
+      numProc[idx] = i;
       for (int j = 0; j < sExtents; j++) {
         extents_proc[idx*sExtents + j] = extents_proc[i*sExtents + j];
       }
@@ -786,7 +790,6 @@ PDM_octree_extents_get
   return PDM_octree_seq_extents_get (octree->octree_seq_id);
 
 }
-
 
 
 /**
