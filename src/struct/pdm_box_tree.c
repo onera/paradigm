@@ -155,17 +155,19 @@ struct _PDM_box_tree_t {
  *============================================================================*/
 
 
-/*----------------------------------------------------------------------------
- * Distance to a box.
+/**
  *
- * parameters:
- *   extents <-- array of box extents
- *   id_0    <-- id of first box
- *   id_1    <-- id of second box
+ * \brief Compute distance to a box
  *
- * returns:
- *   true or false
- *---------------------------------------------------------------------------*/
+ * \param [in]   dim        Dimension
+ * \param [in]   extents    Box extents
+ * \param [in]   coords     Point coords
+ * \param [out]  min_dist2  Square of minimum distance
+ * \param [out]  max_dist2  Sqaure of maximum distance
+ *
+ * \return 1 if point is in the box, 0 otherwise
+ *
+ */
 
 inline static int
 _box_dist2
