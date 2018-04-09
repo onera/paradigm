@@ -821,6 +821,160 @@ PDM_octree_processes_extents_get
 }
 
 
+/**
+ *
+ * Look for closest points stored inside an octree
+ *
+ * parameters:
+ * \param [in]   id                     Identifier
+ * \param [in]   n_pts                  Number of points
+ * \param [in]   pts                    Point Coordinates
+ * \param [out]  closest_octree_pt_id   Closest point in octree global number 
+ * \param [out]  closest_octree_pt_dist Closest point in octree distance
+ *  
+ */
+
+void
+PDM_octree_closest_point
+(
+const int    id,
+const int    n_pts,
+double      *pts,
+PDM_g_num_t *closest_octree_pt_g_num,
+double      *closest_octree_pt_dist2
+)
+{
+
+  _octree_t *octree = _get_from_id (id);
+ 
+  int myRank;
+  PDM_MPI_Comm_rank (octree->comm, &myRank);
+  int lComm;
+  PDM_MPI_Comm_size (octree->comm, &lComm);
+
+  /* Look for the closest process */
+
+  int *rank_id = (int *) malloc (sizeof(int) * n_pts);
+  double *rank_min_max_dist = (double *) malloc (sizeof(double) * n_pts);
+  
+  PDM_box_tree_min_dist_max_box (octree->btShared,
+                                 n_pts,        
+                                 pts,
+                                 rank_id,
+                                 rank_min_max_dist);
+  
+  /* Send points to closest processes */
+
+  int *n_send_pts = (int *) calloc (sizeof(int) * lComm, 0);
+  
+  for (int i = 0; i < n_pts; i++) {
+    n_send_pts[rank_id[i]]++;  
+  }
+  
+  int *n_recv_pts = (int *) calloc (sizeof(int), lComm);
+
+  PDM_MPI_Alltoall (n_send_pts, 1, PDM_MPI_INT, 
+                    n_recv_pts, 1, PDM_MPI_INT, 
+                    octree->comm);
+
+  int *i_send_pts = (int *) malloc (sizeof(int) * (lComm + 1));
+  i_send_pts[0] = 0;
+  
+  int *i_recv_pts = (int *) malloc (sizeof(int) * (lComm + 1));
+  i_recv_pts[0] = 0;
+
+  for (int i = 0; i < lComm; i++) {
+    i_send_pts[i+1] =  i_send_pts[i] + n_send_pts[i];
+    n_send_pts[i] = 0;
+    
+    i_recv_pts[i+1] =  i_recv_pts[i] + n_recv_pts[i];  
+  }
+
+  double *send_pts = malloc(sizeof(double) * 3 * i_send_pts[lComm]);
+  double *recv_pts = malloc(sizeof(double) * 3 * i_recv_pts[lComm]);
+  
+  for (int i = 0; i < n_pts; i++) {
+    int irank = rank_id[i];
+    int idx = 3*(i_send_pts[irank] + n_send_pts[irank]);
+    n_send_pts[irank] += 1;
+    
+    for (int j = 0; j < 3; j++) {
+      send_pts [idx + j] = pts[3*i+j];
+    }
+  }
+  
+  for (int i = 0; i < lComm; i++) {
+    n_send_pts[i] *= 3;
+    i_send_pts[i] *= 3;
+    n_recv_pts[i] *= 3;
+    i_recv_pts[i] *= 3;    
+  }
+  
+  PDM_MPI_Alltoallv (send_pts, n_send_pts, i_send_pts, PDM_MPI_DOUBLE,
+                     recv_pts, n_recv_pts, i_recv_pts, PDM_MPI_DOUBLE,
+                     lComm);  
+  
+  free (rank_min_max_dist);
+
+  for (int i = 0; i < lComm; i++) {
+    n_send_pts[i] *= 1/3;
+    i_send_pts[i] *= 1/3;
+    n_recv_pts[i] *= 1/3;
+    i_recv_pts[i] *= 1/3;    
+  }
+
+  /* Look for the closest point in closest processes */
+
+  int *closest_pt = (int *) malloc(sizeof(int) * 2 * i_recv_pts[lComm]);
+  double *closest_dist = (double *) malloc(sizeof(double) * i_recv_pts[lComm]);
+  
+  PDM_octree_seq_closest_point (octree->octree_seq_id, i_recv_pts[lComm],
+                                recv_pts, closest_pt, closest_dist);
+  
+  free (closest_pt);
+  free (recv_pts);
+  
+  /* Receive distance to closest points from closest processes  */
+
+  double *recv_dist = send_pts;
+  
+  PDM_MPI_Alltoallv (closest_dist, n_recv_pts, i_recv_pts, PDM_MPI_DOUBLE,
+                     recv_dist, n_send_pts, i_send_pts, PDM_MPI_DOUBLE,
+                     lComm);  
+  
+  free (closest_dist);
+  free (n_recv_pts);
+  free (i_recv_pts);
+  
+  double *maj_dist = (double *) malloc (sizeof(double) * n_pts);
+  
+  for (int i = 0; i < n_pts; i++) {
+    n_send_pts[i] = 0; 
+  }
+
+  for (int i = 0; i < n_pts; i++) {
+    int irank = rank_id[i];
+    int idx = i_send_pts[irank] + n_send_pts[irank];
+    n_send_pts[irank] += 1;
+    
+    maj_dist[i] = recv_dist[idx];
+  }
+  
+  free (n_send_pts);
+  free (i_send_pts);
+  free (recv_dist);
+  free (rank_id);
+
+  /* Send points to processes that distance are inferior to computed distance 
+     Be careful with number of processes ! Make several send ! */
+  
+  /* Synchro to find closest point (Part_to_block) */
+  
+  /* Send result (block_to_part) */
+  
+}
+
+
 #ifdef	__cplusplus
 }
 #endif

@@ -369,19 +369,19 @@ PDM_octree_seq_leaf_is
  * \param [in]   id                     Identifier
  * \param [in]   n_pts                  Number of points
  * \param [in]   pts                    Point Coordinates
- * \param [out]  closest_octree_pt_id   Closest point in octree index
+ * \param [out]  closest_octree_pt_id   Closest point in octree index (couple icloud, index)
  * \param [out]  closest_octree_pt_dist Closest point in octree distance
  *  
  */
 
 void
-PDM_octree_closest_point
+PDM_octree_seq_closest_point
 (
-const int          id,
-const int        n_pts,
-double          *pts,
-int             *closest_octree_pt_id,
-double          *closest_octree_pt_dist2
+const int    id,
+const int    n_pts,
+double      *pts,
+int         *closest_octree_pt_id,
+double      *closest_octree_pt_dist2
 );
 
 #ifdef	__cplusplus
