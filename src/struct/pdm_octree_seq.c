@@ -56,6 +56,7 @@ extern "C" {
 typedef struct  {
 
   int  ancestor_id; /*!< Ids of ancestor in octree array */
+  int  is_leaf; /*!< IS a leaf >*/
   PDM_octree_seq_child_t  location_in_ancestor; /*!< Location in ancestor */
   int  depth;       /*!< Depth in the tree */
   int  children_id[8]; /*!< Ids of children in octree array */
@@ -374,6 +375,16 @@ _build_octree_seq_leaves(const int       ancestor_id,
   for (i = 0; i < 8; i++) {
     _node->children_id[i] = octant_id[i];
   }
+  
+  _node->is_leaf = (_node->children_id[0] == -1) &&
+                (_node->children_id[1] == -1) &&
+                (_node->children_id[2] == -1) &&
+                (_node->children_id[3] == -1) &&
+                (_node->children_id[4] == -1) &&
+                (_node->children_id[5] == -1) &&
+                (_node->children_id[6] == -1) &&
+                (_node->children_id[7] == -1);
+
   
   _node->ancestor_id = ancestor_id;
   _node->depth = depth;
@@ -997,43 +1008,32 @@ PDM_octree_seq_leaf_is
   _octree_seq_t *octree = _get_from_id (id);
 
   assert (node_id < octree->n_nodes);
-  
-  
-  int _isLeaf = (octree->nodes[node_id].children_id[0] == -1) &&
-                (octree->nodes[node_id].children_id[1] == -1) &&
-                (octree->nodes[node_id].children_id[2] == -1) &&
-                (octree->nodes[node_id].children_id[3] == -1) &&
-                (octree->nodes[node_id].children_id[4] == -1) &&
-                (octree->nodes[node_id].children_id[5] == -1) &&
-                (octree->nodes[node_id].children_id[6] == -1) &&
-                (octree->nodes[node_id].children_id[7] == -1);
-  
-  return _isLeaf;
+    
+  return octree->nodes[node_id].is_leaf;
 }
-
 
 
 /**
  *
- * Get minimum of maximum distance of boxes
+ * Look for closest points stored inside an octree
  *
  * parameters:
- * \param [in]   id            Identifier
- * \param [in]   n_pts         Number of points
- * \param [in]   pts           Point Coordinates
- * \param [out]  box_id        Boxes identifier with minimum maximum distance
- * \param [out]  box_max_dist  minimum maximum distance
- *
+ * \param [in]   id                     Identifier
+ * \param [in]   n_pts                  Number of points
+ * \param [in]   pts                    Point Coordinates
+ * \param [out]  closest_octree_pt_id   Closest point in octree index
+ * \param [out]  closest_octree_pt_dist Closest point in octree distance
+ *  
  */
 
 void
-PDM_octree_min_dist_max_box
+PDM_octree_closest_point
 (
 const int          id,
 const int        n_pts,
 double          *pts,
-int             *box_id,
-double          *box_max_dist
+int             *closest_octree_pt_id,
+double          *closest_octree_pt_dist2
 )
 {
 
@@ -1052,12 +1052,13 @@ double          *box_max_dist
 
   for (int i = 0; i < n_pts; i++) {
 
-    const double *_pt = pts + 3 * n_pts;
+    const double *_pt = pts + dim * n_pts;
 
     /* Init stack */
 
-    box_id[i] = -1;
-    box_max_dist[i] = HUGE_VAL;
+    closest_octree_pt_id[2*i] = -1;
+    closest_octree_pt_id[2*i+1] = -1;
+    closest_octree_pt_dist2[i] = HUGE_VAL;
 
     stack[pos_stack++] = 0; /* push root in th stack */
 
@@ -1072,15 +1073,15 @@ double          *box_max_dist
       double min_dist2;
       double max_dist2;
 
-     int inbox =  _box_dist2 (dim,
+      int inbox =  _box_dist2 (dim,
                               extents,
                               _pt,
                               &min_dist2,
                               &max_dist2);
 
-      if ((min_dist2 <= box_max_dist[i]) || (inbox == 1)) {
+      if ((min_dist2 <= closest_octree_pt_dist2[i]) || (inbox == 1)) {
 
-        if (!curr_node->is_leaf) {
+        if (curr_node->is_leaf) {
 
           /* Sort children and store them into the stack */
 
@@ -1141,7 +1142,7 @@ double          *box_max_dist
             int child_id = sort_child[n_children - 1 - j];
             _octant_t *child_node = &(octree->nodes[child_id]);
 
-            if ((dist_child[j] < box_max_dist[i]) && (child_node->n_boxes > 0)) {
+            if ((dist_child[j] < closest_octree_pt_dist2[i]) && (child_node->n_points > 0)) {
               stack[pos_stack++] = child_id; /* push root in th stack */
             }
           }
@@ -1149,23 +1150,22 @@ double          *box_max_dist
 
         else {
 
-          for (int j = 0; j < curr_node->n_boxes; j++) {
+          int *point_clouds_id = octree->point_icloud + curr_node->range[0];
+          int *point_indexes = octree->point_ids + curr_node->range[0];
 
-            double box_min_dist2;
-            double box_max_dist2;
+          for (int j = 0; j < curr_node->n_points; j++) {
 
-            int   _box_id = bt->box_ids[curr_node->start_id + j];
-            const double *_box_extents =  bt->boxes->extents + _box_id*dim*2;
+            double point_dist2 = 0;
+            const double *_coords = octree->point_clouds[point_clouds_id[j]] + dim * point_indexes[j];
+            
+            for (int k = 0; k < dim; k++) {        
+              point_dist2 += (_coords[dim*i+k] - _pt[dim*i+k]) * (_coords[dim*i+k] - _pt[dim*i+k]);
+            }
 
-            _box_dist2 (dim,
-                        _box_extents,
-                        _pt,
-                       &box_min_dist2,
-                       &box_max_dist2);
-
-            if (box_max_dist2 < box_max_dist[i]) {
-              box_id[i] = _box_id;
-              box_max_dist[i] = box_max_dist2;
+            if (point_dist2 < closest_octree_pt_dist2[i]) {
+              closest_octree_pt_id[2*i] = point_clouds_id[j];
+              closest_octree_pt_id[2*i+1] = point_indexes[j];
+              closest_octree_pt_dist2[i] = point_dist2;
             }
           }
         }

@@ -363,25 +363,25 @@ PDM_octree_seq_leaf_is
 
 /**
  *
- * Get minimum of maximum distance of boxes
+ * Look for closest points stored inside an octree
  *
  * parameters:
- * \param [in]   id            Identifier
- * \param [in]   n_pts         Number of points
- * \param [in]   pts           Point Coordinates
- * \param [out]  box_id        Boxes identifier with minimum maximum distance
- * \param [out]  box_max_dist  minimum maximum distance
- *
+ * \param [in]   id                     Identifier
+ * \param [in]   n_pts                  Number of points
+ * \param [in]   pts                    Point Coordinates
+ * \param [out]  closest_octree_pt_id   Closest point in octree index
+ * \param [out]  closest_octree_pt_dist Closest point in octree distance
+ *  
  */
 
 void
-PDM_octree_min_dist_max_box
+PDM_octree_closest_point
 (
 const int          id,
 const int        n_pts,
 double          *pts,
-int             *box_id,
-double          *box_max_dist
+int             *closest_octree_pt_id,
+double          *closest_octree_pt_dist2
 );
 
 #ifdef	__cplusplus
