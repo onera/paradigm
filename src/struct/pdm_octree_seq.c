@@ -1027,7 +1027,7 @@ PDM_octree_seq_leaf_is
  */
 
 void
-PDM_octree_closest_point
+PDM_octree_seq_closest_point
 (
 const int          id,
 const int        n_pts,
