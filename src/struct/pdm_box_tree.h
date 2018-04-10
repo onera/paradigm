@@ -294,8 +294,8 @@ PDM_box_tree_closest_upper_bound_dist_boxes_get
 (
 PDM_box_tree_t  *bt,
 const int        n_pts,        
-double          *pts,
-double          *upper_bound_dist,
+double          pts[],
+double          upper_bound_dist[],
 int             *i_boxes[],  
 int             *boxes[]
 );
