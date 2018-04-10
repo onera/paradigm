@@ -154,7 +154,6 @@ struct _PDM_box_tree_t {
  * Private function definitions
  *============================================================================*/
 
-
 /**
  *
  * \brief Compute distance to a box
@@ -205,6 +204,100 @@ double                *max_dist2
   
   return inbox == dim;
   
+}
+
+/**
+ *
+ * \brief Add children nodes into stack
+ *
+ * \param [in]    bt            Box tree
+ * \param [in]    dim           Dimension
+ * \param [in]    id_curr_node  Identifier of current node
+ * \param [in]    upper_bound   Upper_bound criteria to store a child in stack
+ * \param [in]    pt            Distance to this point must be lesser van upper_bound
+ * \param [inout] pos_stack     Position in the stack
+ * \param [inout] stack         Stack
+ *
+ */
+
+static void          
+_push_child_in_stack 
+(
+PDM_box_tree_t *bt, 
+const int       dim,
+const int       id_curr_node,
+const double    upper_bound,
+const double    *pt,        
+int             *pos_stack, 
+int             stack[] 
+)
+{
+  int sort_child[bt->n_children];
+  double dist_child[bt->n_children];
+
+  /* Sort children and store them into the stack */
+
+  const int *_child_ids = bt->child_ids + id_curr_node*bt->n_children;
+
+  for (int j = 0; j < bt->n_children; j++) {
+    int imin = 0;
+    int imax = j-1;
+
+    double child_min_dist2;
+    double child_max_dist2;
+
+    int child_id = _child_ids[j];
+
+    const double *child_extents = bt->extents + dim * 2 * child_id;
+
+    _box_dist2 (dim,
+                child_extents,
+                pt,
+                &child_min_dist2,            
+                &child_max_dist2);            
+
+    while (imin < imax) {
+      int pivot = j / 2;
+
+      if (child_min_dist2 <= dist_child[imin]) {
+        imax = imin;
+      }
+
+      else if (child_min_dist2 >= dist_child[imax]) {
+        imin = imax;
+      }
+
+      else if (child_min_dist2 >= dist_child[pivot]) {
+        imin = pivot;
+      }
+
+      else {
+        imax = pivot;            
+      }
+
+    }
+
+    int k = j;
+    while (k > imin) {
+      sort_child[k] = sort_child[k-1]; 
+      dist_child[k] = dist_child[k-1];
+      k += -1;
+    }
+
+    sort_child[imin] = _child_ids[j];
+    dist_child[imin] = child_min_dist2;
+
+  }
+
+  for (int j = 0; j < bt->n_children; j++) {
+    int child_id = sort_child[bt->n_children - 1 - j];
+    _node_t *child_node = &(bt->nodes[child_id]);
+
+    if ((dist_child[j] < upper_bound) && (child_node->n_boxes > 0)) {
+      stack[(*pos_stack)++] = child_id; /* push root in th stack */
+    }          
+  }
+
 }
 
 /*----------------------------------------------------------------------------
@@ -3521,8 +3614,6 @@ double          *box_max_dist
 {
   
   int s_pt_stack = ((bt->n_children - 1) * (bt->max_level - 1) + bt->n_children);
-  int sort_child[bt->n_children];
-  double dist_child[bt->n_children];
   
   int *stack = malloc ((sizeof(int)) * s_pt_stack);
   int pos_stack = 0;
@@ -3538,6 +3629,7 @@ double          *box_max_dist
     box_id[i] = -1;
     box_max_dist[i] = HUGE_VAL;
     
+    pos_stack = 0;
     stack[pos_stack++] = 0; /* push root in th stack */
     
     while (pos_stack > 0) {
@@ -3551,7 +3643,7 @@ double          *box_max_dist
       double min_dist2;
       double max_dist2;
 
-     int inbox =  _box_dist2 (dim,
+      int inbox =  _box_dist2 (dim,
                               extents,
                               _pt,
                               &min_dist2,            
@@ -3561,68 +3653,10 @@ double          *box_max_dist
 
         if (!curr_node->is_leaf) {
       
-          /* Sort children and store them into the stack */
+          _push_child_in_stack (bt, dim, id_curr_node, 
+                                box_max_dist[i], 
+                                _pt, &pos_stack, stack);
 
-          const int *_child_ids = bt->child_ids + id_curr_node*bt->n_children;
-
-          for (int j = 0; j < bt->n_children; j++) {
-            int imin = 0;
-            int imax = j-1;
-
-            double child_min_dist2;
-            double child_max_dist2;
-
-            int child_id = _child_ids[j];
-            
-            const double *child_extents = bt->extents + dim * 2 * child_id;
-
-            _box_dist2 (dim,
-                        child_extents,
-                        _pt,
-                        &child_min_dist2,            
-                        &child_max_dist2);            
-
-            while (imin < imax) {
-              int pivot = j / 2;
-
-              if (child_min_dist2 <= dist_child[imin]) {
-                imax = imin;
-              }
-
-              else if (child_min_dist2 >= dist_child[imax]) {
-                imin = imax;
-              }
-
-              else if (child_min_dist2 >= dist_child[pivot]) {
-                imin = pivot;
-              }
-
-              else {
-                imax = pivot;            
-              }
-
-            }
-
-            int k = j;
-            while (k > imin) {
-              sort_child[k] = sort_child[k-1]; 
-              dist_child[k] = dist_child[k-1];
-              k += -1;
-            }
-
-            sort_child[imin] = _child_ids[j];
-            dist_child[imin] = child_min_dist2;
-
-          }
-
-          for (int j = 0; j < bt->n_children; j++) {
-            int child_id = sort_child[bt->n_children - 1 - j];
-            _node_t *child_node = &(bt->nodes[child_id]);
-
-            if ((dist_child[j] < box_max_dist[i]) && (child_node->n_boxes > 0)) {
-              stack[pos_stack++] = child_id; /* push root in th stack */
-            }          
-          }
         }
 
         else {
@@ -3646,7 +3680,8 @@ double          *box_max_dist
               box_max_dist[i] = box_max_dist2;
             }
           }
-        }        
+          
+        }  
       }
     }
   }
@@ -3673,12 +3708,108 @@ PDM_box_tree_closest_upper_bound_dist_boxes_get
 (
 PDM_box_tree_t  *bt,
 const int        n_pts,        
-double          *pts,
-double          *upper_bound_dist,
+double           pts[],
+double           upper_bound_dist[],
 int             *i_boxes[],  
 int             *boxes[]
 )
 {
+  
+  int s_pt_stack = ((bt->n_children - 1) * (bt->max_level - 1) + bt->n_children);
+  
+  *i_boxes = malloc (sizeof(int) * (n_pts + 1));
+  int *_i_boxes = *i_boxes;
+  
+  for (int i = 0; i < n_pts + 1; i++) {
+    _i_boxes[0] = 0;
+  }
+
+  int tmp_s_boxes = 4 * n_pts;
+  *boxes = malloc (sizeof(int) * tmp_s_boxes);
+  int *_boxes = *boxes;
+   
+  int *stack = malloc ((sizeof(int)) * s_pt_stack);
+  int pos_stack = 0;
+  
+  int dim = bt->boxes->dim;
+
+  int idx_box = 0;
+  for (int i = 0; i < n_pts; i++) {
+
+    const double *_pt = pts + 3 * n_pts;
+    
+    /* Init stack */
+    
+    pos_stack = 0;
+    stack[pos_stack++] = 0; /* push root in th stack */
+    
+    while (pos_stack > 0) {
+      
+      int id_curr_node = stack[--pos_stack];
+
+      const double *extents = bt->extents + dim * 2 * id_curr_node;
+      
+      _node_t *curr_node = &(bt->nodes[id_curr_node]);
+      
+      double min_dist2;
+      double max_dist2;
+
+      int inbox = _box_dist2 (dim,
+                              extents,
+                              _pt,
+                              &min_dist2,            
+                              &max_dist2);            
+
+      if ((min_dist2 <= upper_bound_dist[i]) || (inbox == 1)) {
+
+        if (!curr_node->is_leaf) {
+          
+          _push_child_in_stack (bt, dim, id_curr_node, 
+                                upper_bound_dist[i], 
+                                _pt, &pos_stack, stack);
+      
+        }
+
+        else {
+
+          for (int j = 0; j < curr_node->n_boxes; j++) {
+
+            double box_min_dist2;
+            double box_max_dist2;
+
+            int   _box_id = bt->box_ids[curr_node->start_id + j];
+            const double *_box_extents =  bt->boxes->extents + _box_id*dim*2;
+
+            _box_dist2 (dim,
+                        _box_extents,
+                        _pt,
+                       &box_min_dist2,            
+                       &box_max_dist2);            
+
+            if (box_max_dist2 < upper_bound_dist[i]) {
+              if (idx_box >= tmp_s_boxes) {
+                tmp_s_boxes *= 2;
+                *boxes = realloc (*boxes, sizeof(int) * tmp_s_boxes);
+                _boxes = *boxes;
+              }
+              _boxes[idx_box++] = _box_id;
+              _i_boxes[i+1]++;
+            }
+          }
+          
+        }  
+      }
+    }
+  }
+  
+  for (int i = 0; i < n_pts; i++) {
+    _i_boxes[i+1] += _i_boxes[i];
+  }
+  
+  *boxes = realloc (*boxes, sizeof(int) * _i_boxes[n_pts]);
+  
+  free (stack);
+  
 }
 
 /*----------------------------------------------------------------------------*/

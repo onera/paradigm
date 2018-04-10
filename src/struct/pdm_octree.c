@@ -943,10 +943,10 @@ double      *closest_octree_pt_dist2
                      lComm);  
   
   free (closest_dist);
-  free (n_recv_pts);
-  free (i_recv_pts);
+//  free (n_recv_pts);
+//  free (i_recv_pts);
   
-  double *maj_dist = (double *) malloc (sizeof(double) * n_pts);
+  double *upper_bound_dist = (double *) malloc (sizeof(double) * n_pts);
   
   for (int i = 0; i < n_pts; i++) {
     n_send_pts[i] = 0; 
@@ -957,20 +957,98 @@ double      *closest_octree_pt_dist2
     int idx = i_send_pts[irank] + n_send_pts[irank];
     n_send_pts[irank] += 1;
     
-    maj_dist[i] = recv_dist[idx];
+    upper_bound_dist[i] = recv_dist[idx];
   }
   
-  free (n_send_pts);
-  free (i_send_pts);
+//  free (n_send_pts);
+//  free (i_send_pts);
   free (recv_dist);
   free (rank_id);
 
   /* Send points to processes that distance are inferior to computed distance 
      Be careful with number of processes ! Make several send ! */
   
+  int *i_boxes = NULL;
+  int *boxes = NULL;
+  
+  PDM_box_tree_closest_upper_bound_dist_boxes_get (octree->btShared,
+                                                   n_pts,
+                                                   pts,
+                                                   upper_bound_dist,
+                                                   &i_boxes,
+                                                   &boxes);
+  
+  free (upper_bound_dist);
+
+  for (int i = 0; i < lComm; i++) {
+    n_send_pts[i] = 0;
+    n_recv_pts[i] = 0;
+  }
+  
+  for (int i = 0; i < lComm+1; i++) {
+    i_send_pts[i] = 0;
+    i_recv_pts[i] = 0;
+  }
+
+  for (int i = 0; i < i_boxes[n_pts]; i++) {
+    n_send_pts[boxes[i]]++;
+  }
+
+  PDM_MPI_Alltoall (n_send_pts, 1, PDM_MPI_INT, 
+                    n_recv_pts, 1, PDM_MPI_INT, 
+                    octree->comm);
+  
+  PDM_g_num_t n_sendrecv[2] = {0, 0};
+  for (int i = 0; i < lComm; i++) {
+    n_sendrecv[0] += n_send_pts[i];
+    n_sendrecv[1] += n_recv_pts[i];
+  }
+
+  PDM_g_num_t max_n_exch[2];
+  PDM_MPI_Allreduce (&n_sendrecv, &max_n_exch, 2, 
+                     PDM__PDM_MPI_G_NUM, PDM_MPI_MAX, octree->comm); 
+
+  PDM_g_num_t max_max_n_exch = PDM_MAX (max_n_exch[0], max_n_exch[1]);
+  
+  PDM_g_num_t sum_npts;
+  PDM_g_num_t _n_pts;
+          
+  PDM_MPI_Allreduce (&_n_pts, &sum_npts, 1, 
+                     PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, octree->comm); 
+  
+  int n_data_exch_max = (int) (sum_npts/ (PDM_g_num_t) lComm) * 10;
+  
+  int n_exch = (int)(max_max_n_exch / n_data_exch_max);
+  if ((int)(max_max_n_exch % n_data_exch_max) > 0) {
+    n_exch += 1;
+  }
+  
+  int *n_send_counts = (int *) calloc (sizeof(int) * lComm, 0);
+  int *n_recv_counts = (int *) calloc (sizeof(int) * lComm, 0);
+  
+  int *n_send_pts2 = (int *) calloc (sizeof(int) * lComm, 0);
+  int *n_recv_pts2 = (int *) calloc (sizeof(int) * lComm, 0);
+  
+  //unsigned char *data_send_pts = malloc (sizeof () ...
+  //unsigned char *data_recv_pts = malloc (sizeof () ...
+
+  for (int i = 0; i < n_exch; i++) {
+
+    
+  }
+  
+  
+  for (int i = 0; i < lComm; i++) {
+    i_send_pts[i+1] = i_send_pts[i] + n_send_pts[i];
+    n_send_pts[i] = 0;
+    i_recv_pts[i+1] = i_recv_pts[i] + n_recv_pts[i];
+  }
+  
   /* Synchro to find closest point (Part_to_block) */
   
   /* Send result (block_to_part) */
+  
+  
   
 }
 
