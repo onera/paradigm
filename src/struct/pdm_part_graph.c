@@ -25,6 +25,7 @@
 #include "pdm_priv.h"
 #include "pdm_part.h"
 #include "pdm_part_graph.h"
+#include "pdm_hilbert.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
 #include "pdm_sort.h"
@@ -162,8 +163,8 @@ PDM_part_graph_split
         }
       }
           
-      // double *tpwgts = NULL;
-      double *tpwgts = (double *) malloc(ncon * nPart * sizeof(double));
+      double *tpwgts = NULL;
+      // double *tpwgts = (double *) malloc(ncon * nPart * sizeof(double));
           
       if (flag_weights != 0) {
         double *ubvec = (double *) malloc(ncon * sizeof(double));
@@ -172,15 +173,15 @@ PDM_part_graph_split
         }
       }
           
-      // double *ubvec = NULL;
-      double *ubvec = (double *) malloc(ncon * sizeof(double));
+      double *ubvec = NULL;
+      // double *ubvec = (double *) malloc(ncon * sizeof(double));
           
       //TO ADD: USE OF ADJWGT IN AN IF STATEMENT                
         
       //This value is solely a memory space to be filled by METIS
 
       int edgecut;
-          
+        
       if (nPart < 8) {             
               
         PDM_METIS_PartGraphRecursive (&(part_ini->nCell),
@@ -253,7 +254,96 @@ PDM_part_graph_split
 #endif
           
       break;
-    }
+    }        
+    case 3:
+    {
+      
+      // To see with eric ...
+      abort();
+      /* Allocation */
+      double *cellCenter = (double *) malloc (part_ini->nCell * 3 * sizeof(double ));
+      
+      PDM_hilbert_code_t *hilbertCodes = (PDM_hilbert_code_t *) malloc (part_ini->nCell * sizeof(PDM_hilbert_code_t));
+      
+      /** Barycentre computation **/
+      
+      /* Allocate */
+      double *cellPond = (double *) malloc (part_ini->nCell * sizeof(double));
+      
+      /* Nulliffy cellCenterArray */
+      for(int iCell = 0; iCell < part_ini->nCell; iCell++) {
+        cellCenter[3*iCell  ] = 0.;
+        cellCenter[3*iCell+1] = 0.;
+        cellCenter[3*iCell+2] = 0.;
+        cellPond[iCell]     = 0.;
+      }
+      
+      /* Compute */
+      for(int iCell = 0; iCell < part_ini->nCell; iCell++) {
+        
+        /* Cellule composé de nFace */
+        int aFac = part_ini->cellFaceIdx[iCell];
+        int nFac = part_ini->cellFaceIdx[iCell+1] - aFac;
+  
+        for(int iFac = 0; iFac < nFac; iFac++) {
+          
+          /* Face composé de nVtx */
+          int lFac = PDM_ABS(part_ini->cellFace[aFac + iFac]) - 1;
+  
+          int aVtx = part_ini->faceVtxIdx[lFac];
+          int nVtx = part_ini->faceVtxIdx[lFac+1] - aVtx;
+          
+          for(int iVtx = 0; iVtx < nVtx; iVtx++) {
+  
+            /* Face composé de nVtx */
+            int lVtx = part_ini->faceVtx[aVtx + iVtx] - 1;
+
+            /* Add to current cell and stack weight */
+            cellCenter[3*iCell  ] += part_ini->vtx[3*lVtx  ];
+            cellCenter[3*iCell+1] += part_ini->vtx[3*lVtx+1];
+            cellCenter[3*iCell+2] += part_ini->vtx[3*lVtx+2];
+  
+            cellPond[iCell] += 1.;
+          }
+        }
+      }   
+  
+      /* Nulliffy cellCenterArray */
+      for(int iCell = 0; iCell < part_ini->nCell; iCell++) {
+        cellCenter[3*iCell  ] = cellCenter[3*iCell  ]/cellPond[iCell];
+        cellCenter[3*iCell+1] = cellCenter[3*iCell+1]/cellPond[iCell];
+        cellCenter[3*iCell+2] = cellCenter[3*iCell+2]/cellPond[iCell];
+      }
+      
+      
+      double extents[3 * 2]; 
+    
+      /** Get EXTENTS LOCAL **/
+      
+      PDM_hilbert_get_coord_extents_seq(3, part_ini->nCell, cellCenter, extents);
+      
+      /** Hilbert Coordinates Computation **/
+      
+      PDM_hilbert_encode_coords(3, PDM_HILBERT_CS, extents, part_ini->nCell, cellCenter, hilbertCodes);
+      
+      /** CHECK H_CODES **/
+      
+      free(cellCenter);
+      free(cellPond);
+      
+      int *newToOldOrder = (int *) malloc (part_ini->nCell * sizeof(int));
+      for(int i = 0; i < part_ini->nCell; ++i) {
+        newToOldOrder [i] = i;
+      }
+        
+      PDM_sort_double (hilbertCodes, *cellPart, part_ini->nCell);
+      
+      /* Free */
+      free (hilbertCodes);
+      free (newToOldOrder);
+      
+      break;
+    }        
   default:
     PDM_printf("PART error : '%i' unknown partitioning method\n", method);
     exit(1);        

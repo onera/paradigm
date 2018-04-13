@@ -1080,8 +1080,6 @@ _split
     }
   case PDM_PART_SPLIT_HILBERT:
     {
-      PDM_error(__FILE__, __LINE__, 0, "PPART error : Error in PT-Scotch graph check\n");
-      exit(1);
 
       PDM_part_geom (PDM_PART_GEOM_HILBERT,
                      ppart->nPart,
@@ -1091,8 +1089,8 @@ _split
                      ppart->_dCellFace,
                      ppart->_dCellWeight,
                      ppart->_dFaceVtxIdx,
-                     ppart->dFaceProc,
                      ppart->_dFaceVtx,
+                     ppart->dFaceProc,
                      ppart->_dVtxCoord,
                      ppart->dVtxProc,
                      cellPart);
@@ -2800,6 +2798,22 @@ _part_free
   if (part->vtxTag != NULL)
     free(part->vtxTag);
   part->vtxTag = NULL;    
+  
+  if (part->cellColor != NULL)
+    free(part->cellColor);
+  part->cellColor = NULL;    
+  
+  if (part->faceColor != NULL)
+    free(part->faceColor);
+  part->faceColor = NULL;    
+  
+  if (part->newToOldOrderCell != NULL)
+    free(part->newToOldOrderCell);
+  part->newToOldOrderCell = NULL;    
+  
+  if (part->newToOldOrderFace != NULL)
+    free(part->newToOldOrderFace);
+  part->newToOldOrderFace = NULL;    
 
   free(part);
 }
@@ -2869,9 +2883,9 @@ PDM_part_create
  const char                  *renum_cell_method,
  const char                  *renum_face_method,
  const int                    nPropertyCell,
- const int*                   renum_properties_cell,
+ const int                   *renum_properties_cell,
  const int                    nPropertyFace,
- const int*                   renum_properties_face,
+ const int                   *renum_properties_face,
  const int                    nPart,
  const int                    dNCell,
  const int                    dNFace,
@@ -3190,13 +3204,21 @@ PDM_part_create
    * Cell renumbering
    */
 
-  PDM_part_renum_cell (ppart); 
+  // PDM_part_renum_cell (ppart); 
+  PDM_part_renum_cell (        ppart->meshParts, 
+                               ppart->nPart, 
+                               ppart->renum_cell_method, 
+                       (void*) ppart->renum_properties_cell); 
     
   /*
    * Face renumbering
    */
 
-  PDM_part_renum_face (ppart); 
+  // PDM_part_renum_face (ppart); 
+  PDM_part_renum_face (         ppart->meshParts, 
+                                ppart->nPart, 
+                                ppart->renum_face_method, 
+                        (void*) ppart->renum_properties_face); 
 
   /*
    * Look for partitioning boundary faces
@@ -3626,8 +3648,8 @@ PROCF (pdm_part_part_val_get, PDM_PART_PART_VAL_GET)
  * 
  * \param [in]   ppartId            ppart identifier
  * \param [in]   ipart              Current partition
- * \param [out]  cellColor          Cell tag (size = nCell)
- * \param [out]  faceColor          Face tag (size = nFace)
+ * \param [out]  cellColor          Cell Color (size = nCell)
+ * \param [out]  faceColor          Face Color (size = nFace)
 
  */
 

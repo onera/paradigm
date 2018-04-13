@@ -1357,9 +1357,20 @@ char *argv[]
   const int  have_faceWeight = 0;
   const int  have_faceGroup = 0;
   
+  int *renum_properties_cell = NULL;
+  int *renum_properties_face = NULL;
+  int nPropertyCell = 0;
+  int nPropertyFace = 0;
+
   PDM_part_coarse_mesh_create (&cmId,
                                PDM_MPI_COMM_WORLD,
                                agglo_method,
+                               "PDM_PART_RENUM_CELL_NONE",
+                               "PDM_PART_RENUM_FACE_NONE",
+                               nPropertyCell,
+                               renum_properties_cell,
+                               nPropertyFace,
+                               renum_properties_face,
                                nPart, 
                                nTPart,
                                nEdgeGroup,

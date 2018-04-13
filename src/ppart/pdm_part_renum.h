@@ -32,7 +32,7 @@ extern "C" {
  *
  */
 
-typedef void (*PDM_part_renum_fct_t) (_PDM_part_t  *ppart);  
+typedef void (*PDM_part_renum_fct_t) (_part_t  **ppart, int nPart, void* specific_data);  
 
 /*============================================================================
  * Public function definitions
@@ -280,7 +280,10 @@ void
 void 
 PDM_part_renum_cell
 (
- _PDM_part_t   *ppart                
+ _part_t **part, 
+ int       nPart, 
+ int       renum_cell_method, 
+ void     *specific_data                 
 );       
 
 
@@ -295,9 +298,11 @@ PDM_part_renum_cell
 void 
 PDM_part_renum_face
 (
-  _PDM_part_t   *ppart                
+ _part_t **part, 
+ int       nPart, 
+ int       renum_face_method, 
+ void     *specific_data     
 );        
-
 
 /**
  *
@@ -336,6 +341,60 @@ PDM_part_reorder_face
  int     *newToOldOrder               
 );        
 
+
+/**
+ *
+ * \brief Perform faces renumbering from a new order 
+ *        Actualise all cells array according to the new numbering 
+ *        Connectivities/faceTag/faceColor/faceLNToGN
+ *
+ * \param [in,out]  part        Current partition
+ * \param [in]      newToOldOrder    NewOrder
+ *
+ */
+
+void 
+PDM_part_renum_connectivities
+(
+  const int nElt,
+  const int *newToOldOrder,
+  int       *connectivityIdx,
+  int       *connectivities             
+);        
+
+/**
+ * \brief Order an array
+ * 
+ * \param [in]      sizeArray       Number of elements
+ * \param [in]      newToOldOrder        New order (size = \ref nElt
+ * \param [in, out] Array           Array to renumber
+ *
+ */
+
+void 
+PDM_part_renum_array 
+(
+const int  sizeArray,
+const int *olToNewOrder,
+int       *array
+);
+
+/**
+ * \brief Order an array for faceCell 
+ * 
+ * \param [in]      sizeArray       Number of elements
+ * \param [in]      newToOldOrder        New order (size = \ref nElt
+ * \param [in, out] Array           Array to renumber
+ *
+ */
+
+void 
+PDM_part_renum_array_face_cell 
+(
+const int  sizeArray,
+const int *olToNewOrder,
+int       *array
+);
 
 /**
  *

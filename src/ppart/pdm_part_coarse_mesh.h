@@ -52,6 +52,12 @@ PDM_part_coarse_mesh_create
  int                *cmId,
  PDM_MPI_Comm        comm,        
  const char*         method,
+ const char         *renum_cell_method,
+ const char         *renum_face_method,
+ const int           nPropertyCell,
+ const int          *renum_properties_cell,
+ const int           nPropertyFace,
+ const int          *renum_properties_face,
  const int           nPart, 
  const int           nTPart,
  const int           nFaceGroup,
@@ -70,6 +76,14 @@ PROCF (pdm_part_coarse_mesh_create_cf, PDM_PART_COARSE_MESH_CREATE_CF)
  PDM_MPI_Fint       *fcomm,        
  const char         *method,
  const int          *l_method,
+ const char         *renum_cell_method,
+ const int          *l_renum_cell_method,
+ const char         *renum_face_method,
+ const int          *l_renum_face_method,
+ const int          *nPropertyCell,
+ const int          *renum_properties_cell,
+ const int          *nPropertyFace,
+ const int          *renum_properties_face,
  const int          *nPart, 
  const int          *nTPart, 
  const int          *nFaceGroup,
@@ -380,6 +394,24 @@ PROCF (pdm_part_coarse_mesh_part_get, PDM_PART_COARSE_MESH_PART_GET)
  int          *facePartBoundProcIdx,
  int          *facePartBoundPartIdx,
  int          *facePartBound
+);
+
+/**
+ *
+ * \brief Return a mesh partition
+ * 
+ * \param [in]   ppartId               ppart identifier
+ * \param [in]   ipart                 Current partition
+ * \param [out]  cellColor             Cell Color (size = nCell)
+ * \param [out]  faceColor             Face Color (size = nFace)
+ */
+
+void PDM_part_coarse_color_get
+(
+ const int   cmId,
+ const int   iPart,      
+       int **cellColor,
+       int **faceColor
 );
 
 /**

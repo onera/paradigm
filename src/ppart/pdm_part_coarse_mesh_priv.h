@@ -48,22 +48,19 @@ typedef struct  {
 
   int *coarseVtxToFineVtx;   //Coarse vertex - fine vertex connectivity (size = nCoarseVtx)
 
-  void *specific_data;   /*!< Specific data  */
-
-  /* Array specific to anisotropic agglomeration */
-  /* int *agglomerationLines;       */
-  /* int *agglomerationLinesIdx;    */
-  /* int  agglomerationLinesIdx_size;   */
-  /* int *isOnFineBnd;   */
-  
-  /* /\* Array specific to anisotropic agglomeration if Initialise from a finer grid *\/ */
-  /* int *agglomerationLinesInit;       */
-  /* int *agglomerationLinesInitIdx;    */
-  /* int  agglomerationLinesInitIdx_size;   */
-  /* int *isOnFineBndInit;   */
-  
+  void *specific_data;       /*!< Specific data      */
   
 } _coarse_part_t;
+
+/**
+ * \struct PDM_part_renum_fct_t
+ *
+ * \brief  Function pointer used to define a renumbering specific to agglomeration array
+ *
+ */
+
+typedef void (*PDM_coarse_mesh_renum_fct_t) (_coarse_part_t  *part);
+
 
 
 /**
@@ -93,6 +90,16 @@ typedef struct  {
   int have_faceGroup;
 
   void *specific_data;
+  
+  PDM_coarse_mesh_renum_fct_t specific_func;       /*!< Specific function  */
+  
+  /* Reordering */
+  int        renum_face_method;               /*!< Renumbering face method       */
+  int        renum_cell_method;               /*!< Renumbering cell method       */
+  int        nPropertyCell;                   /*!< Size of cells properties      */
+  int        nPropertyFace;                   /*!< Size of faces properties      */
+  const int* renum_properties_cell;           /*!< Renumbering cells properties  */
+  const int* renum_properties_face;           /*!< Renumbering faces properties  */
   
   //TIMER
   
@@ -158,8 +165,8 @@ typedef void (*PDM_coarse_mesh_fct_t) (_coarse_mesh_t  *cm,
 
 typedef struct _renum_method_t {
 
-  char                  *name; /*!< Name of method */
-  PDM_coarse_mesh_fct_t   fct;  /*!< Renumbering function */
+  char                  *name;  /*!< Name of method          */
+  PDM_coarse_mesh_fct_t   fct;  /*!< Agglometration function */
 
 } _coarse_mesh_method_t;
 

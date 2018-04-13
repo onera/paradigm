@@ -260,71 +260,50 @@ const int  nCell,
 const int  nFace,
 const int *cellFaceIdx, 
 const int *cellFace, 
-      int *faceCell 
+      int *faceCell, 
+      int *newToOldOrder 
 )
 {
 
-  for (int i = 0; i < 2 * nFace; i++) {
-    faceCell[i] = 0;
-  }
+  // for (int i = 0; i < 2 * nFace; i++) {
+  //   faceCell[i] = 0;
+  // }
 
-  for (int i = 0; i < nCell; ++i) {
-    for (int j = cellFaceIdx[i]; j < cellFaceIdx[i+1]; j++) {
-      int idx = 2 * (PDM_ABS(cellFace[j])-1);
-      if (faceCell[idx] == 0) { 
-        faceCell[idx] = i + 1;
-        if (cellFace[j] < 0) {
-          faceCell[idx] = -faceCell[idx];
-        }
-      }
-      else { 
-        faceCell[idx + 1] = i + 1;
-        if (cellFace[j] < 0) {
-          faceCell[idx+1] = -faceCell[idx+1];
-        }
-      }
-    }
+  // for (int i = 0; i < nCell; ++i) {
+  //   for (int j = cellFaceIdx[i]; j < cellFaceIdx[i+1]; j++) {
+  //     int idx = 2 * (PDM_ABS(cellFace[j])-1);
+  //     if (faceCell[idx] == 0) { 
+  //       faceCell[idx] = i + 1;
+  //       if (cellFace[j] < 0) {
+  //         faceCell[idx] = -faceCell[idx];
+  //       }
+  //     }
+  //     else { 
+  //       faceCell[idx + 1] = i + 1;
+  //       if (cellFace[j] < 0) {
+  //         faceCell[idx+1] = -faceCell[idx+1];
+  //       }
+  //     }
+  //   }
+  // }
+  
+  
+  int *oldToNewOrder = (int *) malloc (nCell * sizeof(int));
+  
+  for(int i = 0; i < nCell; i++) {
+   oldToNewOrder[newToOldOrder[i]] = i;
   }
  
+  // for(int i = 0; i < nFace; i++) {
+  //   printf("faceCell[%i] = %i/%i \n", i,faceCell[2*i], faceCell[2*i+1]);
+  // }
+    
+  PDM_part_renum_array_face_cell (nFace, 
+                                  oldToNewOrder,
+                                  faceCell);
+  free (oldToNewOrder);
+ 
 }
-
-
-/**
- * \brief Order an array
- * 
- * \param [in]      sizeArray       Number of elements
- * \param [in]      newToOldOrder        New order (size = \ref nElt
- * \param [in, out] Array         	Array to renumber
- *
- */
-
-static void 
-_order_array 
-(
-const int     sizeArray,
-const size_t  elt_size,        
-const int    *newToOldOrder,
-void         *array
-)
-{
-  unsigned char *oldArray = (unsigned char *) malloc (sizeArray * elt_size);
-  unsigned char *_array = (unsigned char *) array;
-  
-  for (int i = 0; i < sizeArray; ++i) {
-    for (int j = 0; j < elt_size; ++j) {
-      oldArray[elt_size * i + j] = _array[elt_size * i + j];
-    }
-  }
-  
-  for (int i = 0; i < sizeArray; ++i) {
-    for (int j = 0; j < elt_size; ++j) {
-      _array[elt_size * i + j] = oldArray[elt_size * newToOldOrder[i] +j];
-    }
-  }
-  
-  free(oldArray);
-}
-
 
 /**
  * \brief Order faceCell array
@@ -367,8 +346,8 @@ int         *faceCell
  *
  */
 
-static void 
-_renum_array 
+void 
+PDM_part_renum_array 
 (
 const int  sizeArray,
 const int *olToNewOrder,
@@ -390,6 +369,46 @@ int       *array
 
 
 /**
+ * \brief Order an array
+ * 
+ * \param [in]      sizeArray       Number of elements
+ * \param [in]      newToOldOrder   New order (size = \ref nElt
+ * \param [in, out] Array           Array to renumber
+ *
+ */
+
+void 
+PDM_part_renum_array_face_cell
+(
+const int  nFace,
+const int *olToNewOrder,
+int       *array
+)
+{
+  int *oldArray = (int *) malloc (sizeof(int) * 2 * nFace);
+  
+  for (int i = 0; i < 2*nFace; ++i) {
+    oldArray[i] = array[i];
+  }
+  
+  for (int i = 0; i < 2*nFace; ++i) {
+    if(PDM_ABS(oldArray[i]) == 0 ){
+      array[i] = 0;
+      // printf("[%i] BND \n", i);
+    }
+    else{
+      int signe = (oldArray[i] < 0 ) ? -1 : 1 ;
+      int iCel  = PDM_ABS(oldArray[i])-1;
+      // array[i] = olToNewOrder[oldArray[i]-1] + 1;
+      // printf("[%i] = %i/%i - %i  \n", i,signe, iCel, oldArray[i]);
+      array[i] = signe * (olToNewOrder[iCel] + 1);
+    }
+  }
+  
+  free(oldArray);
+}
+
+/**
  * \brief Renumber connectivities 
  * 
  * \param [in]      nElt            Number of elements
@@ -399,8 +418,8 @@ int       *array
  *
  */
  
-static void 
-_renum_connectivities 
+void 
+PDM_part_renum_connectivities 
 (
 const int nElt,
 const int *newToOldOrder,
@@ -611,116 +630,6 @@ double  *cellCenter
 
 }
 
-
-/**
- *
- * \brief Perform cells renumbering from a new order
- *
- * \param [in,out]  part        Current partition
- * \param [in]      newToOldOrder    NewOrder
- *
- */
-
-static void 
-_renum_cells
-(
- _part_t *part, 
- int     *newToOldOrder
-)
-{
-  /*
-   * Cell Renumbering
-   */
-   
-  _renum_connectivities (part->nCell,
-                         newToOldOrder,
-                         part->cellFaceIdx, 
-                         part->cellFace); 
-  
-  if (part->cellTag != NULL) {
-    _order_array (part->nCell,
-                  sizeof(int),
-                  newToOldOrder,
-                  part->cellTag);
-  }
-   
-  _order_array (part->nCell,
-                sizeof(PDM_g_num_t),
-                newToOldOrder,
-                part->cellLNToGN); 
-   
-  _renum_faceCell (part->nCell,
-                   part->nFace,
-                   part->cellFaceIdx, 
-                   part->cellFace, 
-                   part->faceCell); 
-   
-}
-
-
-/**
- *
- * \brief Perform faces renumbering from a new order
- *
- * \param [in,out]  part        Current partition
- * \param [in]      newToOldOrder    NewOrder
- *
- */
-
-static void 
-_renum_faces
-(
-_part_t *part, 
-int     *newToOldOrder
-)
-{
-  
-  /** Renum FaceVtx / FaceVtxIdx **/
-
-  _renum_connectivities (part->nFace, 
-                         newToOldOrder, 
-                         part->faceVtxIdx, 
-                         part->faceVtx);
-
-  /** CellFace **/
-  
-   int *oldToNewOrder = (int *) malloc (part->nFace * sizeof(int));
-  
-   for(int i = 0; i < part->nFace; i++) {
-    oldToNewOrder[newToOldOrder[i]] = i;
-   }
- 
-  _renum_array (part->cellFaceIdx[part->nCell], 
-                oldToNewOrder,
-                part->cellFace);
-  
-  free (oldToNewOrder);
-    
-    /** FaceTag **/
-
-  if (part->faceTag != NULL) {
-    _order_array (part->nFace,
-                  sizeof(int),
-                  newToOldOrder,
-                  part->faceTag); 
-  }
-    
-   /** FaceLNToGN **/
-
-  _order_array (part->nFace,
-                sizeof(PDM_g_num_t),
-                newToOldOrder,
-                part->faceLNToGN); // OK
-    
-    /** FaceCell Face **/
-  
-  _order_faceCell (part->nFace, 
-                   newToOldOrder,
-                   part->faceCell);  
-
-}
-
-
 /**
  *
  * \brief Perform a cells renumbering from a Hilbert curve
@@ -732,12 +641,14 @@ int     *newToOldOrder
 static void 
 _renum_cells_hilbert 
 (
-_PDM_part_t* ppart
+ _part_t **meshParts, 
+ int       nPart, 
+ void     *specific_data
 )
 {
   
-  for(int ipart = 0; ipart < ppart->nPart; ++ipart) {
-    _part_t *part = ppart->meshParts[ipart];       
+  for(int ipart = 0; ipart < nPart; ++ipart) {
+    _part_t *part = meshParts[ipart];       
     double *cellCenter = 
         (double *) malloc (part->nCell * 3 * sizeof(double ));
     PDM_hilbert_code_t *hilbertCodes = 
@@ -768,7 +679,7 @@ _PDM_part_t* ppart
       
     PDM_sort_double (hilbertCodes, newToOldOrder, part->nCell);
 	  
-    _renum_cells (part, newToOldOrder);
+    PDM_part_reorder_cell (part, newToOldOrder);
           
     free (hilbertCodes);
     free (newToOldOrder);
@@ -787,14 +698,16 @@ _PDM_part_t* ppart
 static void
 _renum_cells_cuthill
 (
-_PDM_part_t* ppart
+ _part_t **meshParts, 
+ int       nPart,
+ void     *specific_data
 )
 {
 
   /** Loop over all part of the current process **/
-  for(int ipart = 0; ipart < ppart->nPart; ++ipart) {
+  for(int ipart = 0; ipart < nPart; ++ipart) {
     /** Get current part id **/
-    _part_t *part = ppart->meshParts[ipart];
+    _part_t *part = meshParts[ipart];
     const int nCell = part->nCell;
     
     /** Allocate reoerdering/permutation array **/
@@ -809,11 +722,19 @@ _PDM_part_t* ppart
     PDM_cuthill_generate(part, order);
   
     /** Apply renumbering **/
-    _renum_cells(part, order);
+    PDM_part_reorder_cell(part, order);
 
     /** Verbose bandwidth **/
     // dualBandWidth = PDM_checkbandwidth(part);
     // PDM_printf("Bandwidth of graph after reordering : %d \n", dualBandWidth);
+    
+    /* Copy in partition */
+    if(part->newToOldOrderCell == NULL)
+      part->newToOldOrderCell = (int *) malloc (sizeof(int) * nCell);
+    
+    for (int i = 0; i < nCell; i++){
+      part->newToOldOrderCell[i] = order[i];
+    }
 
     /** Free memory **/
     free(order);
@@ -831,18 +752,28 @@ _PDM_part_t* ppart
 static void 
 _renum_cells_random 
 (
-_PDM_part_t* ppart
+ _part_t **meshParts, 
+ int       nPart, 
+ void     *specific_data
 )
 {
-  for(int ipart = 0; ipart < ppart->nPart; ++ipart) {
-    _part_t *part = ppart->meshParts[ipart];       
+  for(int ipart = 0; ipart < nPart; ++ipart) {
+    _part_t *part = meshParts[ipart];       
     const int nCell = part->nCell;
     
     int *order = (int *) malloc (sizeof(int) * nCell);
     
     _random_order (nCell, order);
     
-    _renum_cells (part, order);
+    PDM_part_reorder_cell (part, order);
+    
+    /* Copy in partition */
+    if(part->newToOldOrderCell == NULL)
+      part->newToOldOrderCell = (int *) malloc (sizeof(int) * nCell);
+    
+    for (int i = 0; i < nCell; i++){
+      part->newToOldOrderCell[i] = order[i];
+    }
       
     free (order);
   }
@@ -860,18 +791,28 @@ _PDM_part_t* ppart
 static void 
 _renum_faces_random 
 (
-_PDM_part_t* ppart
+ _part_t **meshParts, 
+ int       nPart,
+ void     *specific_data
 )
 {
-  for(int ipart = 0; ipart < ppart->nPart; ++ipart) {
-    _part_t *part = ppart->meshParts[ipart];       
+  for(int ipart = 0; ipart < nPart; ++ipart) {
+    _part_t *part = meshParts[ipart];       
     const int nFace = part->nFace;
     
     int *order = (int *) malloc (sizeof(int) * nFace);
     
     _random_order (nFace, order);
     
-    _renum_faces (part, order);
+    PDM_part_reorder_face (part, order);
+    
+    /* Copy in partition */
+    if(part->newToOldOrderFace == NULL)
+      part->newToOldOrderFace = (int *) malloc (sizeof(int) * nFace);
+    
+    for (int i = 0; i < nFace; i++){
+      part->newToOldOrderFace[i] = order[i];
+    }
       
     free (order);
   }
@@ -888,11 +829,14 @@ _PDM_part_t* ppart
 static void
 _renum_faces_lexicographic
 (
-_PDM_part_t* ppart
+ _part_t** meshParts, 
+ int       nPart, 
+ void     *specific_data
 )
 {
-  for(int ipart = 0; ipart < ppart->nPart; ++ipart) {
-    _part_t *part = ppart->meshParts[ipart];
+  printf("_renum_faces_lexicographic \n");
+  for(int ipart = 0; ipart < nPart; ++ipart) {
+    _part_t *part = meshParts[ipart];
     const int nFace = part->nFace;
 
     int *order = (int *) malloc (sizeof(int) * nFace);
@@ -919,8 +863,15 @@ _PDM_part_t* ppart
     _order_lnum_s (faceCellTmp, 2, order, nFace);
 
     /** Update face array with the new array **/
-    _renum_faces (part, order);
+    PDM_part_reorder_face (part, order);
 
+    if(part->newToOldOrderFace == NULL)
+      part->newToOldOrderFace = (int *) malloc (sizeof(int) * nFace);
+    
+    for (int i = 0; i < nFace; i++){
+      part->newToOldOrderFace[i] = order[i];
+    }
+    
     /** Free memory **/
     free (order);
     free (faceCellTmp);
@@ -1318,8 +1269,11 @@ void
 void 
 PDM_part_renum_cell
 (
-  _PDM_part_t   *ppart                
-)        
+ _part_t **meshParts, 
+ int       nPart, 
+ int       renum_cell_method, 
+ void     *specific_data               
+)      
 {
   
   if (cell_methods == NULL)  {
@@ -1327,12 +1281,14 @@ PDM_part_renum_cell
   }
   
   const _renum_method_t *method_ptr = (const _renum_method_t *) 
-                                    PDM_Handles_get (cell_methods, ppart->renum_cell_method);
+                                    PDM_Handles_get (cell_methods, renum_cell_method);
+                                    // PDM_Handles_get (cell_methods, ppart->renum_cell_method);
   
   PDM_part_renum_fct_t fct = method_ptr->fct;
   
   if (fct != NULL) {
-    (fct) (ppart);
+    // (fct) (ppart);
+    (fct) (meshParts, nPart, specific_data);
   }
   
 }
@@ -1402,7 +1358,10 @@ const int idx
 void 
 PDM_part_renum_face
 (
- _PDM_part_t           *ppart               
+ _part_t **meshParts, 
+ int       nPart, 
+ int       renum_face_method, 
+ void     *specific_data      
 )
 {
   if (face_methods == NULL)  {
@@ -1410,12 +1369,13 @@ PDM_part_renum_face
   }
   
   const _renum_method_t *method_ptr = (const _renum_method_t *) 
-                                      PDM_Handles_get (face_methods, ppart->renum_face_method);
+                                      PDM_Handles_get (face_methods, renum_face_method);
+                                      // PDM_Handles_get (face_methods, ppart->renum_face_method);
   
   PDM_part_renum_fct_t fct = method_ptr->fct;
   
   if (fct != NULL) {
-    (fct) (ppart);
+    (fct) (meshParts, nPart, specific_data);
   }
 }
 
@@ -1439,10 +1399,10 @@ PDM_part_reorder_cell
    * Cell Renumbering
    */
    
-  _renum_connectivities (part->nCell,
-                         newToOldOrder,
-                         part->cellFaceIdx, 
-                         part->cellFace); 
+  PDM_part_renum_connectivities (part->nCell,
+                                 newToOldOrder,
+                                 part->cellFaceIdx, 
+                                 part->cellFace); 
   
   if (part->cellTag != NULL) {
     PDM_order_array (part->nCell,
@@ -1467,7 +1427,8 @@ PDM_part_reorder_cell
                    part->nFace,
                    part->cellFaceIdx, 
                    part->cellFace, 
-                   part->faceCell); 
+                   part->faceCell, 
+                   newToOldOrder); 
    
 }
 
@@ -1489,25 +1450,20 @@ int     *newToOldOrder
 {
   
   /** Renum FaceVtx / FaceVtxIdx **/
-
-  _renum_connectivities (part->nFace, 
-                         newToOldOrder, 
-                         part->faceVtxIdx, 
-                         part->faceVtx);
+  PDM_part_renum_connectivities (part->nFace, 
+                                 newToOldOrder, 
+                                 part->faceVtxIdx, 
+                                 part->faceVtx);
 
   /** CellFace **/
-  
-   int *oldToNewOrder = (int *) malloc (part->nFace * sizeof(int));
-  
-   for(int i = 0; i < part->nFace; i++) {
-    oldToNewOrder[newToOldOrder[i]] = i;
-   }
+  int *oldToNewOrder = (int *) malloc (part->nFace * sizeof(int));
+  for(int i = 0; i < part->nFace; i++) {
+   oldToNewOrder[newToOldOrder[i]] = i;
+  }
  
-  _renum_array (part->cellFaceIdx[part->nCell], 
-                oldToNewOrder,
-                part->cellFace);
-  
-  free (oldToNewOrder);
+  PDM_part_renum_array (part->cellFaceIdx[part->nCell], 
+                        oldToNewOrder,
+                        part->cellFace);
     
   /** FaceTag **/
   if (part->faceTag != NULL) {
@@ -1526,17 +1482,25 @@ int     *newToOldOrder
   }
     
    /** FaceLNToGN **/
-
   PDM_order_array (part->nFace,
                    sizeof(PDM_g_num_t),
                    newToOldOrder,
                    part->faceLNToGN); // OK
+  
+  /** FaceGroup **/
+  if (part->faceGroup != NULL) {
+    PDM_part_renum_array (part->faceGroupIdx[part->nFaceGroup],
+                          oldToNewOrder,
+                          part->faceGroup); // OK
+  }
     
   /** FaceCell Face **/
-  
   _order_faceCell (part->nFace, 
                    newToOldOrder,
                    part->faceCell);  
+  
+  /* Free */
+  free (oldToNewOrder);
 
 }
 
