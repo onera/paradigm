@@ -407,10 +407,12 @@ PDM_octree_extents_get
  * Look for closest points stored inside an octree
  *
  * parameters:
+ *
  * \param [in]   id                     Identifier
  * \param [in]   n_pts                  Number of points
  * \param [in]   pts                    Point Coordinates
- * \param [out]  closest_octree_pt_id   Closest point in octree global number 
+ * \param [in]   pts_g_num              Point global numbers
+ * \param [out]  closest_octree_pt_id   Closest point in octree global number
  * \param [out]  closest_octree_pt_dist Closest point in octree distance
  *  
  */
@@ -421,6 +423,7 @@ PDM_octree_closest_point
 const int    id,
 const int    n_pts,
 double      *pts,
+PDM_g_num_t *pts_g_num,
 PDM_g_num_t *closest_octree_pt_g_num,
 double      *closest_octree_pt_dist2
 );
