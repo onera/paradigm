@@ -826,10 +826,12 @@ PDM_octree_processes_extents_get
  * Look for closest points stored inside an octree
  *
  * parameters:
+ *
  * \param [in]   id                     Identifier
  * \param [in]   n_pts                  Number of points
  * \param [in]   pts                    Point Coordinates
- * \param [out]  closest_octree_pt_id   Closest point in octree global number 
+ * \param [in]   pts_g_num              Point global numbers
+ * \param [out]  closest_octree_pt_id   Closest point in octree global number
  * \param [out]  closest_octree_pt_dist Closest point in octree distance
  *  
  */
@@ -840,6 +842,7 @@ PDM_octree_closest_point
 const int    id,
 const int    n_pts,
 double      *pts,
+PDM_g_num_t *pts_g_num,
 PDM_g_num_t *closest_octree_pt_g_num,
 double      *closest_octree_pt_dist2
 )
@@ -1014,27 +1017,207 @@ double      *closest_octree_pt_dist2
   PDM_g_num_t _n_pts;
           
   PDM_MPI_Allreduce (&_n_pts, &sum_npts, 1, 
-                     PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, octree->comm); 
+                     PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, octree->comm);
+
+  const int factor = 10;
   
-  int n_data_exch_max = (int) (sum_npts/ (PDM_g_num_t) lComm) * 10;
+  int n_data_exch_max = (int) (sum_npts/ (PDM_g_num_t) lComm) * factor;
   
   int n_exch = (int)(max_max_n_exch / n_data_exch_max);
   if ((int)(max_max_n_exch % n_data_exch_max) > 0) {
     n_exch += 1;
   }
-  
-  int *n_send_counts = (int *) calloc (sizeof(int) * lComm, 0);
-  int *n_recv_counts = (int *) calloc (sizeof(int) * lComm, 0);
-  
-  int *n_send_pts2 = (int *) calloc (sizeof(int) * lComm, 0);
-  int *n_recv_pts2 = (int *) calloc (sizeof(int) * lComm, 0);
-  
-  //unsigned char *data_send_pts = malloc (sizeof () ...
-  //unsigned char *data_recv_pts = malloc (sizeof () ...
+    
+  double *data_send_pts1 = malloc (sizeof(double) * 3 * n_data_exch_max); // Optimiser la taille
+  double *data_recv_pts1 = malloc (sizeof(double) * 3 * n_data_exch_max);
+
+  int *n_send_pts1 = NULL;
+  int *i_send_pts1 = NULL;
+  if (n_exch == 1) {
+    n_send_pts1 = n_send_pts;
+    i_send_pts1 = i_send_pts;
+  }
+  else {
+    n_send_pts1 = (int *) calloc (sizeof(int) * lComm, 0);
+    i_send_pts1 = (int *) calloc (sizeof(int) * (lComm + 1), 0);
+  }
+  int *n_recv_pts1 = n_recv_pts;
+  int *i_recv_pts1 = i_recv_pts;
+
+  PDM_g_num_t *data_send_gnum1 = malloc (sizeof(PDM_g_num_t) * n_data_exch_max); // Optimiser la taille
+  PDM_g_num_t *data_recv_gnum1 = malloc (sizeof(PDM_g_num_t) * n_data_exch_max);
+  int *n_send_gnum1 = (int *) calloc (sizeof(int) * lComm, 0);
+  int *n_recv_gnum1 = (int *) calloc (sizeof(int) * lComm, 0);
+  int *i_send_gnum1 = (int *) calloc (sizeof(int) * (lComm+1), 0);
+  int *i_recv_gnum1 = (int *) calloc (sizeof(int) * (lComm+1), 0);
+
+  unsigned char *data_send_pts2 = NULL;
+  unsigned char *data_recv_pts2 = NULL;
+  int *n_send_pts2 = NULL;
+  int *n_recv_pts2 = NULL;
+  int *i_send_pts2 = NULL;
+  int *i_recv_pts2 = NULL;
+  PDM_g_num_t *data_send_gnum2 = NULL;
+  PDM_g_num_t *data_recv_gnum2 = NULL;
+  int *n_send_gnum2 = NULL;
+  int *n_recv_gnum2 = NULL;
+  int *i_send_gnum2 = NULL;
+  int *i_recv_gnum2 = NULL;
+  int *send_bounds = NULL;
+  int *send_counts = NULL;
+
+  if (n_exch > 1) {
+    data_send_pts2 = malloc (sizeof(double) * 3 * n_data_exch_max);
+    data_recv_pts2 = malloc (sizeof(double) * 3 * n_data_exch_max);
+    n_send_pts2 = (int *) calloc (sizeof(int) * lComm, 0);
+    n_recv_pts2 = (int *) calloc (sizeof(int) * lComm, 0);
+    i_send_pts2 = (int *) calloc (sizeof(int) * (lComm+1), 0);
+    i_recv_pts2 = (int *) calloc (sizeof(int) * (lComm+1), 0);
+
+    data_send_gnum2 = malloc (sizeof(PDM_g_num_t) * n_data_exch_max); // Optimiser la taille
+    data_recv_gnum2 = malloc (sizeof(PDM_g_num_t) * n_data_exch_max);
+    n_send_gnum2 = (int *) calloc (sizeof(int) * lComm, 0);
+    n_recv_gnum2 = (int *) calloc (sizeof(int) * lComm, 0);
+    i_send_gnum2 = (int *) calloc (sizeof(int) * (lComm+1), 0);
+    i_recv_gnum2 = (int *) calloc (sizeof(int) * (lComm+1), 0);
+
+    send_bounds = (int *) calloc (sizeof(int) * 2 * lComm, 0);
+    send_counts = (int *) calloc (sizeof(int) * 2 * lComm, 0);
+  }
+
+  unsigned char *data_send_pts = NULL;
+  unsigned char *data_recv_pts = NULL;
+  unsigned char *data_send_pts_next = NULL;
+  unsigned char *data_recv_pts_next = NULL;
+
+  // Remplissage premier buffer et envoi
+
+  if (n_exch == 1) {
+    i_send_pts1[0]  = 0;
+    i_send_gnum1[0] = 0;
+    for (int i = 0; i < lComm; i++) {
+      i_send_pts1[i+1]   = i_send_pts1[i] + 3 * n_send_pts1[i];
+      i_send_gnum1[i+1] = i_send_gnum1[i] + n_send_pts1[i];
+      n_send_pts1[i]    = 0;
+      n_send_gnum1[i]   = 0;
+    }
+    for (int i = 0; i < n_pts; i++) {
+      for (int j = i_boxes[i]; j < i_boxes[i+1]; j++) {
+        int iproc     = boxes[j];
+        int idx_pts1  = i_send_pts1[iproc] + n_send_pts1[iproc];
+        int idx_gnum1 = i_send_gnum1[iproc] + n_send_gnum1[iproc];
+        for (int k = 0; k < 3; k++) {
+          data_send_pts1[idx_pts1] = pts[3*i+k];
+        }
+        data_send_gnum1[idx_gnum1] = pts_g_numpts[i];
+        n_send_pts1[iproc] += 3;
+        n_send_gnum1[iproc] += 1;
+      }
+    }
+  }
+  else {
+    i_send_pts1[0]  = 0;
+    i_send_gnum1[0] = 0;
+    for (int i = 0; i < lComm; i++) {
+      n_send_pts1[i]      = 0;
+      n_send_gnum1[i]     = 0;
+      send_counts[i]     = 0;
+      send_bounds[2*i]    = 0;
+      send_bounds[2*i+1]  = n_send_pts[i] / n_exch;
+      if (n_send_pts[i] % n_exch > 0) {
+        send_bounds[2*i+1]++;
+      }
+    }
+
+    for (int i = 0; i < n_pts; i++) {
+      for (int j = i_boxes[i]; j < i_boxes[i+1]; j++) {
+        int iproc     = boxes[j];
+        if ((send_counts[iproc] >= send_bounds[2*i]) &&
+            (send_counts[iproc] < send_bounds[2*i+1])) {
+          n_send_pts1[iproc] += 3;
+          n_send_gnum1[iproc] += 1;
+        }
+        send_counts[iproc]++;
+      }
+    }
+
+    for (int i = 0; i < lComm; i++) {
+      i_send_pts1[i+1]  = i_send_pts1[i] + n_send_pts1[i];
+      i_send_gnum1[i+1] = i_send_gnum1[i] + n_send_gnum1[i];
+      send_counts[i] = 0;
+      n_send_pts1[i] = 0;
+      n_send_gnum1[i] = 0;
+    }
+
+    for (int i = 0; i < n_pts; i++) {
+      for (int j = i_boxes[i]; j < i_boxes[i+1]; j++) {
+        int iproc     = boxes[j];
+        if ((send_counts[iproc] >= send_bounds[2*i]) &&
+            (send_counts[iproc] < send_bounds[2*i+1])) {
+          int idx_pts1  = i_send_pts1[iproc] + n_send_pts1[iproc];
+          int idx_gnum1 = i_send_gnum1[iproc] + n_send_gnum1[iproc];
+          for (int k = 0; k < 3; k++) {
+            data_send_pts1[idx_pts1] = pts[3*i+k];
+          }
+          data_send_gnum1[idx_gnum1] = pts_g_numpts[i];
+          n_send_pts1[iproc] += 3;
+          n_send_gnum1[iproc] += 1;
+        }
+        send_counts[iproc]++;
+      }
+    }
+
+  }
+
+  PDM_MPI_Request Request_coord[2];
+  PDM_MPI_Request Request_gnum[2];
+
+  PDM_MPI_Ial
 
   for (int i = 0; i < n_exch; i++) {
 
-    
+
+    if (i%2 == 0) {
+      n_send_pts = n_send_pts1;
+      n_recv_pts = n_recv_pts1;
+      i_send_pts = i_send_pts1;
+      i_recv_pts = i_recv_pts1;
+      data_send_pts      = data_send_pts1;
+      data_recv_pts      = data_recv_pts1;
+      data_send_pts_next = data_send_pts2;
+      data_recv_pts_next = data_recv_pts2;
+    }
+    else {
+      n_send_pts = n_send_pts2;
+      n_recv_pts = n_recv_pts2;
+      i_send_pts = i_send_pts2;
+      i_recv_pts = i_recv_pts2;
+      data_send_pts      = data_send_pts2;
+      data_recv_pts      = data_recv_pts2;
+      data_send_pts_next = data_send_pts1;
+      data_recv_pts_next = data_recv_pts1;
+    }
+
+    // Remplissage prochain buffer et envoi
+
+    if (i < (n_exch - 1)) {
+
+
+    }
+
+    // Attente reception buffer courant
+
+    /* Look for the closest points for received points */
+    //
+    //      PDM_octree_seq_closest_point
+    //      (
+    //      const int          id,
+    //      const int        n_pts,
+    //      double          *pts,
+    //      int             *closest_octree_pt_id,
+    //      double          *closest_octree_pt_dist2
+    //      )
+
   }
   
   
@@ -1043,8 +1226,39 @@ double      *closest_octree_pt_dist2
     n_send_pts[i] = 0;
     i_recv_pts[i+1] = i_recv_pts[i] + n_recv_pts[i];
   }
-  
-  /* Synchro to find closest point (Part_to_block) */
+
+  free (data_send_pts1);
+  free (data_recv_pts1);
+  free (n_send_pts);
+  free (n_recv_pts);
+  free (i_send_pts);
+  free (i_recv_pts);
+  free (data_send_gnum1);
+  free (data_recv_gnum1);
+  free (n_send_gnum1);
+  free (n_recv_gnum1);
+  free (i_send_gnum1);
+  free (i_recv_gnum1);
+  if (n_exch > 1) {
+    free (n_send_pts1);
+    free (i_send_pts1);
+    free (data_send_pts2);
+    free (data_recv_pts2);
+    free (n_send_pts2);
+    free (n_recv_pts2);
+    free (i_send_pts2);
+    free (i_recv_pts2);
+    free (data_send_gnum2);
+    free (data_recv_gnum2);
+    free (n_send_gnum2);
+    free (n_recv_gnum2);
+    free (i_send_gnum2);
+    free (i_recv_gnum2);
+    free (send_cpt);
+    free (send_bounds);
+  }
+
+  /* Synchro to find closest point (Part_to_block) with their absolute number */
   
   /* Send result (block_to_part) */
   
