@@ -150,6 +150,7 @@ PDM_octree_free
  * \param [in]   i_point_cloud      Number of point cloud 
  * \param [in]   n_points           Maximum depth
  * \param [in]   coords             Point coordinates 
+ * \param [in]   g_num              Point global number or NULL 
  * 
  */
 
@@ -160,7 +161,8 @@ PDM_octree_point_cloud_set
  const int          id,
  const int          i_point_cloud,
  const int          n_points,
- const double      *coords 
+ const double      *coords, 
+ const PDM_g_num_t *g_num  
 );
 
 //void

@@ -85,7 +85,7 @@ typedef struct  {
   int   *n_points;               /*!< Number of points in each cloud */
   int   t_n_points;              /*!< total number of points */
   int   n_point_clouds;          /*!< Number of point cloud */
-  const double **point_clouds;         /*!< points cloud */
+  const double **point_clouds;   /*!< points cloud */
   int *point_ids;                /*!< Id's of points in it cloud sorted by octree
                                       (size: n_points + 1) */
   int *point_icloud;             /*!< Cloud's of points sorted by octree
@@ -672,7 +672,7 @@ PDM_octree_seq_point_cloud_set
  const int          id,
  const int          i_point_cloud,
  const int          n_points,
- const double      *coords 
+ const double      *coords
 )
 {
   _octree_seq_t *octree = _get_from_id (id);
