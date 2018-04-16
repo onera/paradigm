@@ -156,25 +156,21 @@ PDM_part_graph_split
                     
       int *adjwgt = faceWeight; //Weights of the edges of the graph (NULL if unused)
 
+      double *tpwgts = NULL;
       if (flag_weights != 0) {
-        double *tpwgts = (double *) malloc(ncon * nPart * sizeof(double));
+        tpwgts = (double *) malloc(ncon * nPart * sizeof(double));
         for (int i = 0; i < ncon * nPart; i++){
           tpwgts[i] = (double) (1./nPart);
         }
       }
           
-      double *tpwgts = NULL;
-      // double *tpwgts = (double *) malloc(ncon * nPart * sizeof(double));
-          
+      double *ubvec = NULL;
       if (flag_weights != 0) {
-        double *ubvec = (double *) malloc(ncon * sizeof(double));
+        ubvec = (double *) malloc(ncon * sizeof(double));
         for (int i = 0; i < ncon; i++) {
           ubvec[i] = 1.05;
         }
       }
-          
-      double *ubvec = NULL;
-      // double *ubvec = (double *) malloc(ncon * sizeof(double));
           
       //TO ADD: USE OF ADJWGT IN AN IF STATEMENT                
         
