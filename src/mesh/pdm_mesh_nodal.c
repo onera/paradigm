@@ -3964,6 +3964,13 @@ PDM_g_num_t      *numabs
       PDM_l_num_t *face_som_nb_courant = mesh->prepa_blocks->face_vtx_nb[ipart];
       PDM_l_num_t *face_som_courant = mesh->prepa_blocks->face_vtx[ipart];
       PDM_g_num_t *numabs_courant = mesh->prepa_blocks->numabs[ipart];
+
+      adjust = 0;
+      if (n_face_courant > 0) {
+	if (face_som_idx_courant[0] == 1) {
+	  adjust = 1;
+	}
+      }
  
       n_tria   = mesh->prepa_blocks->n_tria[ipart];
       n_quad    = mesh->prepa_blocks->n_quad[ipart];
@@ -4021,8 +4028,10 @@ PDM_g_num_t      *numabs
       PDM_l_num_t idx_quad   = n_tria;
       PDM_l_num_t idx_poly2d = idx_quad + n_quad;
 
+      PDM_l_num_t n_som_face = 0;
+
       for (int i = 0; i < n_face_courant; i++) {
-        PDM_l_num_t n_som_face = face_som_nb_courant[i];
+	n_som_face = face_som_nb_courant[i];
         PDM_l_num_t idx_som_face = face_som_idx_courant[i] - adjust;
         PDM_l_num_t *connec_courant;
 
