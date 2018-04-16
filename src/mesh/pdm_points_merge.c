@@ -577,7 +577,7 @@ PDM_points_merge_cloud_set
   ppm->point_clouds[i_point_cloud] = coords;
   ppm->n_points[i_point_cloud] = n_points;
   
-  PDM_octree_point_cloud_set (ppm->octree_id, i_point_cloud, n_points, coords);
+  PDM_octree_point_cloud_set (ppm->octree_id, i_point_cloud, n_points, coords, NULL);
   
 }
 
@@ -633,8 +633,7 @@ PDM_points_merge_process
                                                      ppm->tolerance);
  
     PDM_octree_seq_point_cloud_set (octree_seq_id, 0, 
-                                    ppm->n_points[i], ppm->point_clouds[i]);
-    
+                                    ppm->n_points[i], ppm->point_clouds[i]);    
     PDM_octree_seq_build (octree_seq_id);
     
     const int root_id = PDM_octree_seq_root_node_id_get (octree_seq_id);

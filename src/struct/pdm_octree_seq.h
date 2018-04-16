@@ -139,7 +139,7 @@ PDM_octree_seq_point_cloud_set
  const int          id,
  const int          i_point_cloud,
  const int          n_points,
- const double      *coords 
+ const double      *coords
 );
 
 //void
