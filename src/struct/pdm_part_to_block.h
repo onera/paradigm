@@ -216,6 +216,8 @@ PDM_part_to_block_block_gnum_get
  * \param [out]  block_stride Block stride
  * \param [out]  block_data   Block data
  *
+ * \return       Size of highest block
+ *
  */
 
 int 

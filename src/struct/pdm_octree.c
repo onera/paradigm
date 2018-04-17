@@ -1058,6 +1058,19 @@ double      *closest_octree_pt_dist2
 
   int *n_send_pts1 = NULL;
   int *i_send_pts1 = NULL;
+
+  PDM_g_num_t *__closest_octree_pt_g_num = NULL;
+  double      *__closest_octree_pt_dist2 = NULL;
+  
+  if (n_exch > 1) {
+    __closest_octree_pt_g_num = malloc (sizeof(PDM_g_num_t) * n_pts);
+    __closest_octree_pt_dist2 = malloc (sizeof(double) * n_pts);
+  }
+  else {
+    __closest_octree_pt_g_num = closest_octree_pt_g_num; 
+    __closest_octree_pt_dist2 = closest_octree_pt_dist2;
+  }
+
   if (n_exch == 1) {
     n_send_pts1 = n_send_pts;
     i_send_pts1 = i_send_pts;
@@ -1090,6 +1103,8 @@ double      *closest_octree_pt_dist2
   int *i_recv_gnum2 = NULL;
   int *send_bounds = NULL;
   int *send_counts = NULL;
+  
+  int *stride_ptb = malloc (sizeof(int) * n_data_exch_max);
 
   if (n_exch > 1) {
     data_send_pts2 = malloc (sizeof(double) * 3 * n_data_exch_max);
@@ -1391,22 +1406,123 @@ double      *closest_octree_pt_dist2
               octree->g_num[_closest_octree_pt_id[2*j]][_closest_octree_pt_id[2*j+1]];
       
     }
-
-    int _n_pts1 = (int) n_pts;
     
     PDM_part_to_block_t *ptb = PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                          PDM_PART_TO_BLOCK_POST_MERGE,
                                                          1.,
-                                                         &pts_g_num,
-                                                         & _n_pts1,
+                                                         &data_recv_gnum,
+                                                         &(i_recv_gnum[lComm]),
                                                          1,
                                                          octree->comm);
     
+        
+    for (int j = 0; j < i_recv_gnum[lComm]; j++) {
+      stride_ptb[j] = 1;
+    }
+    
+    int *block_stride = NULL;
+    PDM_g_num_t *block_g_num = NULL;
+    double *block_dist2 = NULL;
+    
+    PDM_part_to_block_exch (ptb,
+                            sizeof(PDM_g_num_t),
+                            PDM_STRIDE_VAR,
+                            0,
+                            &stride_ptb,
+                            (void ** ) &_closest_octree_pt_g_num,
+                            &block_stride,
+                            (void ** ) &block_g_num);
+    
+    free (block_stride);
+   
+    PDM_part_to_block_exch (ptb,
+                            sizeof(double),
+                            PDM_STRIDE_VAR,
+                            0,
+                            &stride_ptb,
+                            (void ** ) &_closest_octree_pt_g_num,
+                            &block_stride,
+                            (void ** ) &block_dist2);
+    
+    PDM_g_num_t *distrib_block = PDM_part_to_block_distrib_index_get (ptb);
+    
+    const int n_elt_block = PDM_part_to_block_n_elt_block_get (ptb);
     
     PDM_part_to_block_free (ptb);
-         
+
+    int *i_block = malloc(sizeof(int) * (n_elt_block + 1));
+    
+    i_block[0] = 0;
+    for (int j = 0; j < n_elt_block; j++) {
+      i_block[j+1] = i_block[j] + block_stride[j];  
+    }
+
+    PDM_g_num_t *gnum_min_block = malloc(sizeof(PDM_g_num_t) * n_elt_block);
+    double *dist2_min_block     = malloc(sizeof(double) * n_elt_block);
+
+    for (int j = 0; j < n_elt_block; j++) {
+      gnum_min_block[j]  = -1;
+      dist2_min_block[j] = HUGE_VAL;
+      
+      for (int k = i_block[j]; k < i_block[j+1]; k++) {
+        if (block_dist2[k] < dist2_min_block[j]) {
+          dist2_min_block[j] = block_dist2[k];
+          gnum_min_block[j]  = block_g_num[k];
+        }
+      }
+    }
+    
+    free (i_block);
+    free (block_stride);
+    free (block_g_num);
+    free (block_dist2); 
+
+    PDM_part_to_block_free (ptb);
+
+    int __n_pts = (int) n_pts;
+    
+    PDM_block_to_part_t *btp = PDM_block_to_part_create (distrib_block,
+                                                         &pts_g_num,
+                                                         &__n_pts,
+                                                         1,
+                                                         octree->comm);
+
+    int strideOne = 1;
+    PDM_block_to_part_exch (btp,
+                            sizeof(PDM_g_num_t),
+                            PDM_STRIDE_CST,
+                            &strideOne,
+                            gnum_min_block,
+                            NULL,
+                            (void **) &__closest_octree_pt_g_num);
+
+    PDM_block_to_part_exch (btp,
+                            sizeof(double),
+                            PDM_STRIDE_CST,
+                            &strideOne,
+                            dist2_min_block,
+                            NULL,
+                            (void **) &__closest_octree_pt_dist2);
+
+    if (i > 0) {
+      for (int j = 0; j < n_pts; j++) {
+        if (__closest_octree_pt_dist2[j] < closest_octree_pt_dist2[j]) {
+          closest_octree_pt_g_num[j] = __closest_octree_pt_g_num[j];
+          closest_octree_pt_dist2[j] = __closest_octree_pt_dist2[j];
+        }
+      }
+    }
+
+    PDM_block_to_part_free (btp);
     
   }
+  
+  if (n_exch > 1) {
+    free (__closest_octree_pt_g_num);
+    free (__closest_octree_pt_dist2);
+  }
+
+  free (stride_ptb);
 
   free (data_send_pts1);
   free (data_recv_pts1);
@@ -1441,6 +1557,7 @@ double      *closest_octree_pt_dist2
 
   free (_closest_octree_pt_id); 
   free (_closest_octree_pt_dist2);
+  free (_closest_octree_pt_g_num);
   
   /* Synchro to find closest point (Part_to_block) with their absolute number */
   
