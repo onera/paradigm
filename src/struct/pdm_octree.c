@@ -1559,12 +1559,6 @@ double      *closest_octree_pt_dist2
   free (_closest_octree_pt_dist2);
   free (_closest_octree_pt_g_num);
   
-  /* Synchro to find closest point (Part_to_block) with their absolute number */
-  
-  /* Send result (block_to_part) */
-  
-  
-  
 }
 
 
