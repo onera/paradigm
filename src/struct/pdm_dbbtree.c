@@ -761,6 +761,107 @@ int              *box_l_num[]
 
 }
 
+/**
+ *
+ * Get minimum of maximum distance of boxes
+ *
+ *   \param [in] bt               Pointer to box tree structure
+ *   \param [in] n_pts            Number of points
+ *   \param [in] pts              Point coordinates (size = 3 * n_pts)
+ *   \param [in] pts_g_num        Point global numbers
+ *   \param [in] upper_bound_dist Upper bound distance (size = n_pts)
+ *   \param [out] i_boxes         Index of boxes (size = n_pts + 1)
+ *   \param [out] Boxes           (size = i_boxes[n_pts])
+ *
+ */
+
+void
+PDM_dbbtree_closest_upper_bound_dist_boxes_get
+(
+PDM_dbbtree_t    *dbbt,
+const int        n_pts,        
+double           pts[],
+PDM_g_num_t      pts_g_num[],
+double           upper_bound_dist[],
+int             *i_boxes[],  
+PDM_g_num_t     *boxes[]
+)
+{
+  assert (dbbt != NULL);
+  _PDM_dbbtree_t *_dbbt = (_PDM_dbbtree_t *) dbbt;
+
+  int myRank;
+  PDM_MPI_Comm_rank (_dbbt->comm, &myRank);
+  int lComm;
+  PDM_MPI_Comm_size (_dbbt->comm, &lComm);
+
+  /* 
+   * Determination de liste des procs concernes pour chaque sommet 
+   */
+
+/* void */
+/* PDM_box_tree_closest_upper_bound_dist_boxes_get */
+/* ( */
+/* PDM_box_tree_t  *bt, */
+/* const int        n_pts,         */
+/* double          pts[], */
+/* double          upper_bound_dist[], */
+/* int             *i_boxes[],   */
+/* int             *boxes[] */
+/* ); */
+
+  /* 
+   * Envoi des points a chaque sommet (en un seul coup) la distance 
+   */
+
+
+/* PDM_MPI_Alltoall (n_send_pts, 1, PDM_MPI_INT,  */
+/*                  n_recv_pts, 1, PDM_MPI_INT,  */
+/*                  octree->comm); */
+
+/* PDM_MPI_Alltoallv (send_pts, n_send_pts, i_send_pts, PDM_MPI_DOUBLE, */
+/*                    recv_pts, n_recv_pts, i_recv_pts, PDM_MPI_DOUBLE, */
+/*                    lComm);   */
+ 
+  /* 
+   * Determination des candidats
+   */
+
+/* void */
+/* PDM_box_tree_closest_upper_bound_dist_boxes_get */
+/* ( */
+/* PDM_box_tree_t  *bt, */
+/* const int        n_pts,         */
+/* double          pts[], */
+/* double          upper_bound_dist[], */
+/* int             *i_boxes[],   */
+/* int             *boxes[] */
+/* ); */
+
+  /* 
+   * Retour des resultats (AlltoAll inverse)
+   */
+
+/* PDM_MPI_Alltoall (n_send_pts, 1, PDM_MPI_INT,  */
+/*                  n_recv_pts, 1, PDM_MPI_INT,  */
+/*                  octree->comm); */
+
+/* PDM_MPI_Alltoallv (send_pts, n_send_pts, i_send_pts, PDM_MPI_DOUBLE, */
+/*                    recv_pts, n_recv_pts, i_recv_pts, PDM_MPI_DOUBLE, */
+/*                    lComm);   */
+  
+  /* 
+   * Tri du tableau de retour
+   */
+  
+  
+}
+
+
+
+
+
+
 #undef _MIN
 #undef _MAX
  

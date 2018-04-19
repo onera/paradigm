@@ -135,7 +135,7 @@ typedef struct  {
   int            *n_points;   /*!< Number of points */
   const PDM_g_num_t   **g_num;      /*!< Point global number */
   
-  //  int points_in_leaf_max;        /*!< Maximum number of points in a leaf */
+//  int points_in_leaf_max;        /*!< Maximum number of points in a leaf */
 //  double tolerance;              /*!< Relative geometric tolerance */
 //  int   n_nodes;                 /*!< Current number of nodes in octree */
 //  int   n_nodes_max;             /*!< Maximum number of nodes in octree */
@@ -1414,7 +1414,6 @@ double      *closest_octree_pt_dist2
                                                          &(i_recv_gnum[lComm]),
                                                          1,
                                                          octree->comm);
-    
         
     for (int j = 0; j < i_recv_gnum[lComm]; j++) {
       stride_ptb[j] = 1;
