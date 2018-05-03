@@ -133,7 +133,7 @@ typedef struct  {
 
   int          n_point_cloud; /*!< Number of point cloud */
   int            *n_points;   /*!< Number of points */
-  const PDM_g_num_t   **g_num;      /*!< Point global number */
+  PDM_g_num_t   **g_num;      /*!< Point global number */
   
 //  int points_in_leaf_max;        /*!< Maximum number of points in a leaf */
 //  double tolerance;              /*!< Relative geometric tolerance */
@@ -300,6 +300,10 @@ PDM_octree_create
   //octree->extents_proc = NULL;
   octree->n_point_cloud = n_point_cloud; /*!< Number of point cloud */
 
+  octree->n_points = (int *) malloc (sizeof(int) * n_point_cloud);
+
+  octree->g_num = (PDM_g_num_t **) malloc (sizeof(PDM_g_num_t *) * n_point_cloud);
+  
   for (int i = 0; i < n_point_cloud; i++) {
     octree->n_points[i] = 0;
     octree->g_num[i] = NULL;    
@@ -387,7 +391,12 @@ PDM_octree_free
   
   free (octree->n_points);
   free (octree->g_num); 
- 
+  free (octree->usedRank); 
+
+  PDM_box_set_destroy(&(octree->rankBoxes));
+  
+  PDM_box_tree_destroy(&(octree->btShared));
+  
   PDM_octree_seq_free (octree->octree_seq_id);
   
   free (octree);
@@ -436,7 +445,7 @@ PDM_octree_point_cloud_set
   
   
   octree->n_points[i_point_cloud] = n_points;
-  octree->g_num[i_point_cloud] = g_num;
+  octree->g_num[i_point_cloud] = (PDM_g_num_t *) g_num;
   PDM_octree_seq_point_cloud_set (octree->octree_seq_id, i_point_cloud, 
                                   n_points, coords);
 
@@ -525,6 +534,8 @@ PDM_octree_build
     }
   }
 
+  free (n_pts_proc);
+  
   extents_proc = (double *) realloc (extents_proc,
                                    sizeof(double) * sExtents * nUsedRank);
 
