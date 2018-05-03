@@ -10,7 +10,7 @@ cmake_host_system_information(RESULT HOSTNAME QUERY HOSTNAME)
 # Fortran default flags
 #------------------------------------------------------------------------------
 
-#if (NOT PASS_DEFAULT_FLAGS)
+if (NOT PASS_DEFAULT_FLAGS)
 
 if (CMAKE_Fortran_COMPILER_ID STREQUAL "GNU")
 
@@ -359,6 +359,6 @@ set (CXX_LIBRARIES_FLAG "${CXX_LIBRARIES_FLAG}" CACHE STRING "C++ flags" FORCE)
 
 set (PASS_DEFAULT_FLAGS 1 CACHE STRING "")
 mark_as_advanced (CMAKE_CXX_FLAGS_PROFILING CXX_LIBRARIES CXX_LIBRARIES_FLAG PASS_DEFAULT_FLAGS)
-#endif()
+endif()
 
 
