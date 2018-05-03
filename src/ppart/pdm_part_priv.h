@@ -124,6 +124,11 @@ typedef struct  _part_t {
                                             (size = nCel)                           */
   int          *faceColor;             /*!< Face color - For cache blocking            
                                             (size = nFac)                           */
+    
+  int          *newToOldOrderCell;   /*!< Cell reordering        
+                                         (size = nCel)                           */
+  int          *newToOldOrderFace;   /*!< Face reordering              
+                                            (size = nFac)                        */
   
   _subpartlayout_t *subpartlayout;    /*!< Layouts of subdomain                     */
 
@@ -324,6 +329,8 @@ void
   part->vtxTag = NULL;
   part->cellColor = NULL;
   part->faceColor = NULL;
+  part->newToOldOrderCell = NULL;
+  part->newToOldOrderFace = NULL;
   return part;
 }
 

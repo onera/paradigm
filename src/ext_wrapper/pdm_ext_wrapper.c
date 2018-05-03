@@ -57,27 +57,27 @@ extern "C" {
 int 
 PDM_METIS_PartGraphRecursive
 (
-int *nvtxs, 
-int *ncon, 
-int *xadj, 
-int *adjncy, 
-int *vwgt, 
-int *adjwgt, 
-int *nparts, 
+int    *nvtxs, 
+int    *ncon, 
+int    *xadj, 
+int    *adjncy, 
+int    *vwgt, 
+int    *adjwgt, 
+int    *nparts, 
 double *tpwgts, 
 double *ubvec, 
-int *edgecut, 
-int *part
+int    *edgecut, 
+int    *part
 )
 {
   idx_t options[METIS_NOPTIONS]; /* Options */
   METIS_SetDefaultOptions(options);
 
   options[METIS_OPTION_NUMBERING] = 0; //C numbering = 0 (Fortran = 1)
-  options[METIS_OPTION_MINCONN] = 1; //Minimize the maximum connectivity
-  options[METIS_OPTION_CONTIG] = 1; //Force contiguous partitions
-  //The graph should be compressed by combining together vertices that have identical adjacency lists.
-  options[METIS_OPTION_COMPRESS] = 1; 
+  options[METIS_OPTION_MINCONN]   = 1; //Minimize the maximum connectivity
+  options[METIS_OPTION_CONTIG]    = 1; //Force contiguous partitions
+  // The graph should be compressed by combining together vertices that have identical adjacency lists.
+  options[METIS_OPTION_COMPRESS]  = 1; 
 
 
   //METIS provide the METIS SetDefaultOptions routine to set the options to their default values. 
@@ -99,7 +99,10 @@ int *part
   real_t *_ubvec, *__ubvec;  
 
   __tpwgts = NULL;
-  __ubvec = NULL;
+  __ubvec  = NULL;
+  
+  _tpwgts  = NULL;
+  _ubvec   = NULL;
   
   if (sizeof (double) == sizeof(real_t)) {
     _tpwgts = (real_t *) tpwgts;
@@ -108,19 +111,24 @@ int *part
 
   else { 
 
-    __tpwgts = malloc (sizeof(real_t) * _ncon * _nparts);
-    __ubvec = malloc (sizeof(real_t) * _ncon);
-
-    _tpwgts = __tpwgts;
-    _ubvec = __ubvec;
-
-    for (int i = 0; i < _ncon * _nparts; i++) {
-      __tpwgts[i] = (real_t) tpwgts[i]; 
-    }
-    
-    for (int i = 0; i < _ncon; i++) {
-      __ubvec[i] = (real_t) ubvec[i];         
-    }
+    if(tpwgts != NULL){
+      
+      __tpwgts = malloc (sizeof(real_t) * _ncon * _nparts);
+      _tpwgts  = __tpwgts;
+      
+      for (int i = 0; i < _ncon * _nparts; i++) {
+        __tpwgts[i] = (real_t) tpwgts[i]; 
+      }
+    } /* End if tpwgts */
+      
+    if(ubvec != NULL){
+      __ubvec = malloc (sizeof(real_t) * _ncon);
+      _ubvec  = __ubvec;
+      
+      for (int i = 0; i < _ncon; i++) {
+        __ubvec[i] = (real_t) ubvec[i];         
+      }
+    } /* End if ubvec */
 
   }
   
@@ -243,27 +251,27 @@ int *part
 int 
 PDM_METIS_PartGraphKway
 (
-int *nvtxs, 
-int *ncon, 
-int *xadj, 
-int *adjncy, 
-int *vwgt, 
-int *adjwgt, 
-int *nparts, 
+int    *nvtxs, 
+int    *ncon, 
+int    *xadj, 
+int    *adjncy, 
+int    *vwgt, 
+int    *adjwgt, 
+int    *nparts, 
 double *tpwgts, 
 double *ubvec, 
-int *edgecut, 
-int *part
+int    *edgecut, 
+int    *part
 )
 {
   idx_t options[METIS_NOPTIONS]; /* Options */
   METIS_SetDefaultOptions(options);
 
-  options[METIS_OPTION_NUMBERING] = 0; //C numbering = 0 (Fortran = 1)
-  options[METIS_OPTION_MINCONN] = 1; //Minimize the maximum connectivity
-  options[METIS_OPTION_CONTIG] = 1; //Force contiguous partitions
-  //The graph should be compressed by combining together vertices that have identical adjacency lists.
-  options[METIS_OPTION_COMPRESS] = 1; 
+  options[METIS_OPTION_NUMBERING] = 0; // C numbering = 0 (Fortran = 1)
+  options[METIS_OPTION_MINCONN]   = 1; // Minimize the maximum connectivity
+  options[METIS_OPTION_CONTIG]    = 1; // Force contiguous partitions
+  // The graph should be compressed by combining together vertices that have identical adjacency lists.
+  options[METIS_OPTION_COMPRESS]  = 1; 
 
 
   //METIS provide the METIS SetDefaultOptions routine to set the options to their default values. 
@@ -286,7 +294,10 @@ int *part
   real_t *_ubvec, *__ubvec;  
 
   __tpwgts = NULL;
-  __ubvec = NULL;
+  __ubvec  = NULL;
+  
+  _tpwgts  = NULL;
+  _ubvec   = NULL;
   
   if (sizeof (double) == sizeof(real_t)) {
     _tpwgts = (real_t *) tpwgts;
@@ -295,19 +306,24 @@ int *part
 
   else { 
 
-    __tpwgts = malloc (sizeof(real_t) * _ncon * _nparts);
-    __ubvec = malloc (sizeof(real_t) * _ncon);
-
-    _tpwgts = __tpwgts;
-    _ubvec = __ubvec;
-
-    for (int i = 0; i < _ncon * _nparts; i++) {
-      __tpwgts[i] = (real_t) tpwgts[i]; 
-    }
-    
-    for (int i = 0; i < _ncon; i++) {
-      __ubvec[i] = (real_t) ubvec[i];         
-    }
+    if(tpwgts != NULL){
+      
+      __tpwgts = malloc (sizeof(real_t) * _ncon * _nparts);
+      _tpwgts  = __tpwgts;
+      
+      for (int i = 0; i < _ncon * _nparts; i++) {
+        __tpwgts[i] = (real_t) tpwgts[i]; 
+      }
+    } /* End if tpwgts */
+      
+    if(ubvec != NULL){
+      __ubvec = malloc (sizeof(real_t) * _ncon);
+      _ubvec  = __ubvec;
+      
+      for (int i = 0; i < _ncon; i++) {
+        __ubvec[i] = (real_t) ubvec[i];         
+      }
+    } /* End if ubvec */
 
   }
 

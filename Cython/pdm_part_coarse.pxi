@@ -54,6 +54,12 @@ cdef extern from "pdm_part_coarse_mesh.h":
     void PDM_part_coarse_mesh_create(int           *cmId,
                                      PDM_MPI_Comm  comm,
                                      char          *method,
+                                     char          *renum_cell_method,
+                                     char          *renum_face_method,
+                                     int           nPropertyCell,
+                                     int           *renum_properties_cell,
+                                     int           nPropertyFace,
+                                     int           *renum_properties_face,
                                      int           nPart, 
                                      int           nTPart,
                                      int           nFaceGroup, 
@@ -149,6 +155,11 @@ cdef extern from "pdm_part_coarse_mesh.h":
                                                         int   *agglomerationLinesIdx_size,
                                                         int **isOnFineBnd)
     
+    void PDM_part_coarse_color_get(int   cmId,
+                                   int   iPart,
+                                   int          **cellColor,
+                                   int          **faceColor)
+    
     void PDM_part_coarse_mesh_add_option_anisotropic(int  cmId, 
                                                      int *anisotropicOption)
     
@@ -173,17 +184,23 @@ cdef class CoarseMesh:
     cdef int _nFaceGroup
     # ------------------------------------------------------------------
     def __cinit__(self,
-                  MPI.Comm comm,
-                  char    *method, 
-                  int      nPart, 
-                  int      nTPart,
-                  int      nFaceGroup,
-                  int      have_cellTag    = 0, 
-                  int      have_faceTag    = 0, 
-                  int      have_vtxTag     = 0, 
-                  int      have_cellWeight = 0, 
-                  int      have_faceWeight = 0, 
-                  int      have_faceGroup  = 0): 
+                  MPI.Comm                                  comm,
+                  char                                      *method, 
+                  char                                      *renum_cell_method,
+                  char                                      *renum_face_method,
+                  int                                        nPropertyCell,
+                  NPY.ndarray[NPY.int32_t, mode='c', ndim=1] renum_properties_cell,
+                  int                                        nPropertyFace,
+                  NPY.ndarray[NPY.int32_t, mode='c', ndim=1] renum_properties_face,
+                  int                                        nPart, 
+                  int                                        nTPart,
+                  int                                        nFaceGroup,
+                  int                                        have_cellTag    = 0, 
+                  int                                        have_faceTag    = 0, 
+                  int                                        have_vtxTag     = 0, 
+                  int                                        have_cellWeight = 0, 
+                  int                                        have_faceWeight = 0, 
+                  int                                        have_faceGroup  = 0): 
       """
         Create a Coarse Ppart partition from a existing Ppart partition 
         with PDM Library ( Developed at ONERA by Eric Quemerais )
@@ -196,10 +213,30 @@ cdef class CoarseMesh:
       # ~> Set _nFaceGroup
       self._nFaceGroup =  nFaceGroup
 
+      # ~> \param [in]   renum_properties_cell
+      cdef int * renum_properties_cell_data
+      if (renum_properties_cell is None):
+          renum_properties_cell_data = NULL
+      else:
+          renum_properties_cell_data = <int *> renum_properties_cell.data
+          
+      # ~> \param [in] renum_properties_face
+      cdef int * renum_properties_face_data
+      if (renum_properties_face is None):
+          renum_properties_face_data = NULL
+      else:
+          renum_properties_face_data = <int *> renum_properties_face.data
+          
       # > Create 
       PDM_part_coarse_mesh_create(&self._cmId, 
                                   PDM_MPI_mpi_2_pdm_mpi_comm (<void *> &c_comm), 
                                   method, 
+                                  renum_cell_method,
+                                  renum_face_method,
+                                  nPropertyCell,
+                                  renum_properties_cell_data,
+                                  nPropertyFace,
+                                  renum_properties_face_data,
                                   nPart, 
                                   nTPart, 
                                   self._nFaceGroup, 
@@ -884,3 +921,46 @@ cdef class CoarseMesh:
                 'npAggloLinesIdx' : npAggloLinesIdx,
                 'npIsOnFineBnd'   : npIsOnFineBnd,
                 } 
+    
+    # ------------------------------------------------------------------
+    def part_color_get(self, int ipart):
+        """
+           Get partition dimensions
+        """
+        # ************************************************************************
+        # > Declaration
+        cdef int          *cellColor,
+        cdef int          *faceColor
+        # ************************************************************************
+
+        # dims = self.part_dim_get(self.id, ipart)
+        dims = self.part_coarse_dim_get(ipart)
+
+        # -> Call PPART to get info
+        PDM_part_coarse_color_get(self._cmId,
+                                  ipart,
+                                  &cellColor,
+                                  &faceColor)
+        # -> Begin
+        cdef NPY.npy_intp dim
+
+        # \param [out]  cellColor            Cell tag (size = nCell)
+        if (cellColor == NULL):
+            npCellColor = None
+        else :
+            dim = <NPY.npy_intp> dims['nCell']
+            npCellColor = NPY.PyArray_SimpleNewFromData(1,
+                                                        &dim,
+                                                        NPY.NPY_INT32,
+                                                        <void *> cellColor)
+        # \param [out]  faceColor            Cell tag (size = nFace)
+        if (faceColor == NULL):
+            npFaceColor = None
+        else :
+            dim = <NPY.npy_intp> dims['nFace']
+            npFaceColor = NPY.PyArray_SimpleNewFromData(1,
+                                                        &dim,
+                                                        NPY.NPY_INT32,
+                                                        <void *> faceColor)
+        return {'npCellColor'   : npCellColor,
+                'npFaceColor'   : npFaceColor}

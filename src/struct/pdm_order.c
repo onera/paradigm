@@ -59,7 +59,7 @@ void         *array
 )
 {
   unsigned char *oldArray = (unsigned char *) malloc (sizeArray * elt_size);
-  unsigned char *_array = (unsigned char *) array;
+  unsigned char *_array   = (unsigned char *) array;
   
   for (int i = 0; i < sizeArray; ++i) {
     for (int j = 0; j < elt_size; ++j) {

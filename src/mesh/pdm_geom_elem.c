@@ -1427,7 +1427,18 @@ PDM_geom_elem_polyhedra_properties
 
   double *surfaceVector = (double *) malloc (sizeof(double) * 3 *nFace); 
   double *faceCenter    = (double *) malloc (sizeof(double) * 3 *nFace); 
-
+  
+  // PDM_printf( "faceConnectivity : \n");
+  // for (int ipoly = 0; ipoly < nFace; ipoly++) {
+  //   PDM_printf( "  - face %i : ", ipoly+1);
+  //   for (int j = faceConnectivityIdx[ipoly]; j < faceConnectivityIdx[ipoly+1]; j++) {
+  //     PDM_printf( "%i ",faceConnectivity[j]);
+  //   }
+  //   PDM_printf( "\n");
+  // }
+  
+  
+  
   int convergenceFace = PDM_geom_elem_polygon_properties (nFace,
                                                           faceConnectivityIdx,
                                                           faceConnectivity,
