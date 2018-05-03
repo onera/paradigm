@@ -97,8 +97,7 @@ const int         *IdxFace,
 const int         *data,
 const int          nFac,
       PDM_g_num_t *connect,
-      PDM_g_num_t  iAbsFace,
-      PDM_g_num_t *nFacApprox
+      PDM_g_num_t  iAbsFace
 )
 {
   /*
@@ -704,7 +703,7 @@ PDM_elt_parent_find_from_distrib
     // dNFace = _find_pairs(IdxFace, BlkData, nFac, connect, elt_to_find_distrib[myRank], dNFace, &nFacApprox);
     
     PDM_g_num_t iAbsFace = 0;
-    iAbsFace = _find_pairs(IdxFace, BlkData, nFac, connectLocal, iAbsFace, &nFacApprox);
+    iAbsFace = _find_pairs(IdxFace, BlkData, nFac, connectLocal, iAbsFace);
     
     
     if(dNFace + iAbsFace > nFacApprox){

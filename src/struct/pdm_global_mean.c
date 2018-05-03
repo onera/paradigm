@@ -368,7 +368,7 @@ PDM_global_mean_field_compute
   if (_gpm->btp == NULL) {
     PDM_g_num_t *distrib = PDM_part_to_block_distrib_index_get (_gpm->ptb); 
     _gpm->btp = PDM_block_to_part_create (distrib,
-                                          _gpm->g_nums,
+                                          (const PDM_g_num_t **) _gpm->g_nums,
                                           _gpm->n_elts,
                                           _gpm->n_part,
                                           _gpm->comm);
