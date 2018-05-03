@@ -1492,7 +1492,7 @@ double      *closest_octree_pt_dist2
     int __n_pts = (int) n_pts;
     
     PDM_block_to_part_t *btp = PDM_block_to_part_create (distrib_block,
-                                                         &pts_g_num,
+                                                        (PDM_g_num_t **) &pts_g_num,
                                                          &__n_pts,
                                                          1,
                                                          octree->comm);
