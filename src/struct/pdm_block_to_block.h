@@ -107,17 +107,17 @@ PDM_block_to_block_exch
  void               **block_data_end
 );
 
-int 
-PDM_block_to_block_exch_int 
-(
- PDM_block_to_block_t *btb,
- size_t               s_data,
- PDM_stride_t         t_stride,
- int                 *block_stride_ini,
- int                 *block_data_ini,
- int                 *block_stride_end,
- int                 **block_data_end
-);
+/* int  */
+/* PDM_block_to_block_exch_int  */
+/* ( */
+/*  PDM_block_to_block_t *btb, */
+/*  size_t               s_data, */
+/*  PDM_stride_t         t_stride, */
+/*  int                 *block_stride_ini, */
+/*  int                 *block_data_ini, */
+/*  int                 *block_stride_end, */
+/*  int                 **block_data_end */
+/* ); */
 
 
 /**

@@ -975,7 +975,8 @@ PDM_part_to_block_free
     free (_ptb->order);
     _ptb->order = NULL;
   }
-  if (_ptb->block_gnum != NULL) {  
+  
+  if ((_ptb->t_post != PDM_PART_TO_BLOCK_POST_NOTHING) && (_ptb->block_gnum != NULL)) {  
     free (_ptb->block_gnum);
     _ptb->block_gnum = NULL;
   }
