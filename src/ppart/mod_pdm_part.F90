@@ -525,6 +525,12 @@ contains
 subroutine pdm_part_coarse_mesh_create_ (cmId, &
                                         comm, &        
                                         method, &
+                                        renum_cell_method, &
+                                        renum_face_method, &
+                                        nPropertyCell, &
+                                        renum_properties_cell, &
+                                        nPropertyFace, &
+                                        renum_properties_face, &
                                         nPart, &
                                         nTPart, &
                                         nFaceGroup,&
@@ -551,16 +557,33 @@ subroutine pdm_part_coarse_mesh_create_ (cmId, &
     integer                     ::  have_cellWeight
     integer                     ::  have_faceWeight
     integer                     ::  have_faceGroup
+    character (len=*)           ::  renum_cell_method
+    character (len=*)           ::  renum_face_method
+    integer                     ::  nPropertyCell
+    integer                     ::  renum_properties_cell
+    integer                     ::  nPropertyFace
+    integer                     ::  renum_properties_face
 
-    integer                     :: l_method
+    integer                     ::  l_method
+    integer                     ::  l_renum_cell_method
+    integer                     ::  l_renum_face_method
     
     l_method = len(method)
-  
+    l_renum_cell_method = len(renum_cell_method)
+    l_renum_face_method = len(renum_face_method)
 
     call pdm_part_coarse_mesh_create_cf (cmId, &
                                          comm, &        
                                          method, &
                                          l_method, &
+                                         renum_cell_method, &
+                                         l_renum_cell_method, &
+                                         renum_face_method, &
+                                         l_renum_face_method, &
+                                         nPropertyCell, &
+                                         renum_properties_cell, &
+                                         nPropertyFace, &
+                                         renum_properties_face, &
                                          nPart, &
                                          nTPart, &
                                          nFaceGroup,&
@@ -570,7 +593,6 @@ subroutine pdm_part_coarse_mesh_create_ (cmId, &
                                          have_cellWeight, &
                                          have_faceWeight, &
                                          have_faceGroup)
-
     
  end subroutine pdm_part_coarse_mesh_create_
 
