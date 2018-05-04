@@ -12,6 +12,7 @@
 #include "pdm_block_to_block_priv.h"
 #include "pdm_binary_search.h"
 #include "pdm_printf.h"
+#include "pdm_error.h"
 
 #ifdef __cplusplus
 extern "C" {
