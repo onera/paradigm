@@ -851,7 +851,7 @@ PDM_elt_parent_find_from_distrib
     FaceDistribNew[i] +=  FaceDistribNew[i-1];
   }
   
-  if (1 == 1) {
+  if (0 == 1) {
     printf("FaceDistribNew : "PDM_FMT_G_NUM,  FaceDistribNew[0]);
     for (int i = 1; i < nRank+1; i++) {
       printf(" "PDM_FMT_G_NUM, FaceDistribNew[i]);
@@ -859,59 +859,9 @@ PDM_elt_parent_find_from_distrib
     printf("\n");
   }
   
-  /* Tentative temporaire -> A passer en python */
-  PDM_block_to_block_t *btb = PDM_block_to_block_create(FaceDistrib, 
-                                                        FaceDistribNew, 
-                                                        comm);
-  
-  int cst_stri_ini = 1;
-  int cst_stri_end = 1;
-  
-  int *BlkData3 = NULL;
-  
-  // PDM_block_to_block_exch(btp, 
-  //                         sizeof(PDM_g_num_t), 
-  //                         PDM_STRIDE_CST,
-  //                         &cst_stri_ini,
-  //                         (void *) &parent, 
-  //                         &cst_stri_end,
-  //                         (void *) &BlkData3);
-
-  //FIXME: PDM_block_to_block_exch_int doit disparaitre. Un cast est temporairement fait pour passer la compil 
-  //    
-
-  if (sizeof(int) != sizeof(PDM_g_num_t)) {
-
-    
-    printf("pdm_elt_parent_find : Erreur : Cette fontion ne fonctionne pas en 64bit\n");
-    exit(1);
-    
-  }
-  
-  PDM_block_to_block_exch_int(btb, 
-                          sizeof(PDM_g_num_t), 
-                          PDM_STRIDE_CST,
-                          &cst_stri_ini,
-                              (int *) parent, // cast pour compilation !!!
-                          &cst_stri_end,
-                          (int **) &BlkData3);
-  
-   
-  /* 
-   * Verbose 
-   */
-  // if(1 == 1){
-  //   printf("[%d/%d] - ElmtTot : %d\n", myRank, nRank, dElmtTot);
-  //   for(int i = 0; i < dElmtTot; i++) {
-  //     printf("BlkData3[%d]    : %d \n", i, BlkData3[i]);
-  //     // printf("BlkStri2[%d] : %d \n", i, BlkStri2[i]);
-  //   }
-  // }
-  
-  /* Free */
   PDM_part_to_block_free(ptb );
-  PDM_block_to_block_free(btb );
-  // PDM_part_to_block_free(ptb2); // Plante si je decommente - Pb parttoblock PDM_writer_POST_NOTHING !!!
+
+  PDM_part_to_block_free(ptb2); 
   
   free(LNToGN);
   free(LNToGNElem);
