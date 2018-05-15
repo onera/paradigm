@@ -19,6 +19,7 @@ cdef extern from "pdm_part_to_block.h":
                                                   PDM_part_to_block_post_t      t_post,
                                                   float                         partActiveNode,
                                                   PDM_g_num_t                 **gnum_elt,
+                                                  float                       **weight,
                                                   int                          *n_elt,
                                                   int                           n_part,
                                                   PDM_MPI_Comm                  comm)
@@ -64,6 +65,7 @@ cdef class PartToBlock:
 
     cdef int                 *NbElmts
     cdef PDM_g_num_t        **LNToGN
+    cdef float              **weight
 
     cdef PDM_part_to_block_distrib_t t_distrib
     cdef PDM_part_to_block_post_t    t_post
@@ -71,7 +73,7 @@ cdef class PartToBlock:
 
 # ************************************************************************
     # ------------------------------------------------------------------------
-    def __cinit__(self, MPI.Comm comm, list pLNToGN, int partN,
+    def __cinit__(self, MPI.Comm comm, list pLNToGN, list pWeight, int partN,
                         PDM_part_to_block_distrib_t t_distrib = <PDM_part_to_block_distrib_t> (0),
                         PDM_part_to_block_post_t    t_post    = <PDM_part_to_block_post_t   > (0),
                         PDM_stride_t                t_stride  = <PDM_stride_t   > (0),
@@ -85,11 +87,15 @@ cdef class PartToBlock:
         cdef int      idx
         # > Numpy array
         cdef NPY.ndarray[npy_pdm_gnum_t, ndim=1, mode='fortran'] partLNToGN
+        cdef NPY.ndarray[float, ndim=1, mode='fortran'] partWeight
         # ************************************************************************
         
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
         # > Some verification
         assert(len(pLNToGN) == partN)
+        if (pWeight is not None):
+          assert(len(pWeight) == partN)
+        
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -112,6 +118,12 @@ cdef class PartToBlock:
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
         # > Allocate
         self.LNToGN   = <PDM_g_num_t **> malloc(sizeof(PDM_g_num_t *) * self.partN )
+        self.weight   = NULL
+
+        if (pWeight is not None):
+          self.weight   = <float **> malloc(sizeof(float *) * self.partN )
+          
+
         self.NbElmts  = <int * > malloc(sizeof(int  ) * self.partN )
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
@@ -131,12 +143,19 @@ cdef class PartToBlock:
           # ------------------------------------------------
           # print "nElts, partLNToGN",nElts, partLNToGN
 
+        idx = 0
+        if (pWeight is not None):
+          for idx, partWeight in enumerate(pWeight):
+            self.weight[idx] = <float *> partWeight.data
+
+
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
         # > Create
         self.PTB = PDM_part_to_block_create(t_distrib, 
                                             t_post, 
                                             partActiveNode,
-                                            self.LNToGN, 
+                                            self.LNToGN,
+                                            self.weight,
                                             self.NbElmts, 
                                             self.partN, 
                                             PDMC)
@@ -320,5 +339,7 @@ cdef class PartToBlock:
 
       # > Free allocated array
       free(self.LNToGN)
+      if (self.weight != NULL):
+        free(self.weight)      
       free(self.NbElmts)    
 

@@ -1422,6 +1422,7 @@ double      *closest_octree_pt_dist2
                                                          PDM_PART_TO_BLOCK_POST_MERGE,
                                                          1.,
                                                          &data_recv_gnum,
+                                                         NULL,
                                                          &(i_recv_gnum[lComm]),
                                                          1,
                                                          octree->comm);

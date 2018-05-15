@@ -2491,6 +2491,7 @@ const int   hdl
                                                       PDM_PART_TO_BLOCK_POST_MERGE,
                                                       1.,
                                                       &LNToGN,
+                                                      NULL,
                                                       &nFace,
                                                       1,
                                                       mesh->pdm_mpi_comm); 
@@ -2725,7 +2726,7 @@ const int   hdl
                                                        PDM_PART_TO_BLOCK_POST_MERGE,
                                                        1.,
                                                        &dFaceCellTmp,
-                                                       // &mesh->_dFaceCell,
+                                                       NULL,
                                                        &nFac2,
                                                        1,
                                                        mesh->pdm_mpi_comm); 

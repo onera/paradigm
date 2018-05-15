@@ -538,19 +538,21 @@ PDM_part_split_t           method,
   }
   
   PDM_part_to_block_t *ptb1 = PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
-                                                      PDM_PART_TO_BLOCk_POST_CLEANUP, 1.,
-                                                      &numabs_init,
-                                                      &dNVtx,
-                                                      1,  
-                                                      pdm_mpi_comm);
+                                                        PDM_PART_TO_BLOCk_POST_CLEANUP, 1.,
+                                                        &numabs_init,
+                                                        NULL,  
+                                                        &dNVtx,
+                                                        1,  
+                                                        pdm_mpi_comm);
 
                                         
   PDM_part_to_block_t *ptb2 = PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
-                                                      PDM_PART_TO_BLOCk_POST_CLEANUP, 1.,
-                                                      vtxLNToGNs,
-                                                      nVtxs,
-                                                      nPart,  
-                                                      pdm_mpi_comm);
+                                                        PDM_PART_TO_BLOCk_POST_CLEANUP, 1.,
+                                                        vtxLNToGNs,
+                                                        NULL,
+                                                        nVtxs,
+                                                        nPart,  
+                                                        pdm_mpi_comm);
   
   
   for (int ipart = 0; ipart < nPart; ipart++) {

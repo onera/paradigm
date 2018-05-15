@@ -2339,6 +2339,7 @@ _coarse_mesh_t * cm
                                                      PDM_PART_TO_BLOCk_POST_CLEANUP,
                                                      1.,
                                                      (PDM_g_num_t **) faceLNToGNPart,
+                                                       NULL,
                                                      nFacePart,
                                                      cm->nPart,
                                                      cm->comm);    
@@ -2536,6 +2537,7 @@ _coarse_mesh_t * cm
                                                      PDM_PART_TO_BLOCk_POST_CLEANUP,
                                                      1.,
                                                      (PDM_g_num_t **) vtxLNToGNPart,
+                                                       NULL,  
                                                      nVtxPart,
                                                      cm->nPart,
                                                      cm->comm);    
@@ -2817,6 +2819,7 @@ _coarse_mesh_t * cm
                                                          PDM_PART_TO_BLOCk_POST_CLEANUP,
                                                          1.,
                                                          (PDM_g_num_t **) faceGroupLNToGNPart,
+                                                         NULL,
                                                          nFaceGroupPart,
                                                          cm->nPart,
                                                          cm->comm);    
