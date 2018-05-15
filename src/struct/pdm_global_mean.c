@@ -355,6 +355,7 @@ PDM_global_mean_field_compute
                                           PDM_PART_TO_BLOCK_POST_MERGE,
                                           1.,
                                           _gpm->g_nums,
+                                          NULL,
                                           _gpm->n_elts,
                                           _gpm->n_part,
                                           _gpm->comm);

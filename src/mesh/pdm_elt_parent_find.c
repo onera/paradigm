@@ -565,6 +565,7 @@ PDM_elt_parent_find_from_distrib
                                                       PDM_PART_TO_BLOCK_POST_MERGE,
                                                       1.,
                                                       &LNToGN,
+                                                      NULL,
                                                       &nFace,
                                                       1,
                                                       comm); 
@@ -795,6 +796,7 @@ PDM_elt_parent_find_from_distrib
                                                        PDM_PART_TO_BLOCK_POST_NOTHING,
                                                        1.,
                                                        &LNToGNElem,
+                                                       NULL,
                                                        &__dNFace,
                                                        1,
                                                        comm); 
