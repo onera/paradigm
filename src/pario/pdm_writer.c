@@ -2219,15 +2219,17 @@ const int    id_var
       const int *ind = PDM_Handles_idx_get (cs->geom_tab);
       const int n_ind = PDM_Handles_n_get (cs->geom_tab);
 
-      for (int i = 0; i < n_ind; i++) {
-        int idx = ind[i];
-        if (var->_val[idx] != NULL)
-          free(var->_val[idx]);
-        var->_val[idx] = NULL;
-      }
+      if (var->_val != NULL) {
+        for (int i = 0; i < n_ind; i++) {
+          int idx = ind[i];
+          if (var->_val[idx] != NULL)
+            free(var->_val[idx]);
+          var->_val[idx] = NULL;
+        }
 
-      free(var->_val);
-      var->_val = NULL;
+        free(var->_val);
+        var->_val = NULL;
+      }
 
       /* Lib�ration sp�cifique au format */
 

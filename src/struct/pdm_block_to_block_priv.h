@@ -51,10 +51,10 @@ typedef struct {
   PDM_g_num_t    *blockDistribEndIdx;  /*!< Block distribution final
                                         * (size : \ref size of \ref comm + 1) */
   
-  PDM_g_num_t    *blockDistribIniN;    /*!< Number of requested data for each process index 
-                                          * (size : \ref size of \ref comm ) */
-  PDM_g_num_t    *blockDistribEndN;    /*!< Number of requested data for each process index 
-                                        * (size : \ref size of \ref comm ) */
+  //PDM_g_num_t    *blockDistribIniN;    /*!< Number of requested data for each process index 
+  //                                        * (size : \ref size of \ref comm ) */
+  //PDM_g_num_t    *blockDistribEndN;    /*!< Number of requested data for each process index 
+  //                                      * (size : \ref size of \ref comm ) */
   
   // int          **ind;                  /*!< Ind for each element partition in distributed_data */
   // int           *requested_data_n;     /*!< Numer of requested data for each process index 

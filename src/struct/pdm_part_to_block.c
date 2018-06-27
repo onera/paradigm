@@ -382,6 +382,7 @@ _distrib_data
  * \param [in]   t_post          Post processing type
  * \param [in]   partActiveNode  Part of active nodes (\ref PDM_writer_BLOCK_DISTRIB_PART_OF_NODE mode)
  * \param [in]   gnum_elt        Element global number
+ * \param [in]   weight          Weight of elements (or NULL)
  * \param [in]   n_elt           Local number of elements
  * \param [in]   n_part          Number of partition      
  * \param [in]   comm            MPI communicator         
@@ -397,6 +398,7 @@ PDM_part_to_block_create
  PDM_part_to_block_post_t      t_post,
  float                        partActiveNode,
  PDM_g_num_t                  **gnum_elt,
+ float                       **weight,
  int                         *n_elt,
  int                          n_part,
  PDM_MPI_Comm                     comm
@@ -421,6 +423,7 @@ PDM_part_to_block_create
   ptb->n_elt            = n_elt;        /*!< Number of elements for any part */
   ptb->n_eltProc        = 0;            /*!< Number of elements on the current rank */
   ptb->gnum_elt         = gnum_elt;     /*!< Global numbering of elements for any part */
+  ptb->weight           = weight;
   ptb->destProc         = NULL;
   ptb->dataDistribIndex = 
     (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * (ptb->s_comm + 1));   /*!< Data distribution on ranks */
@@ -975,7 +978,8 @@ PDM_part_to_block_free
     free (_ptb->order);
     _ptb->order = NULL;
   }
-  if (_ptb->block_gnum != NULL) {  
+  
+  if ((_ptb->t_post != PDM_PART_TO_BLOCK_POST_NOTHING) && (_ptb->block_gnum != NULL)) {  
     free (_ptb->block_gnum);
     _ptb->block_gnum = NULL;
   }

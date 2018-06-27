@@ -80,11 +80,12 @@ PDM_block_to_block_create
 
 /**
  *
- * \brief Initialize an exchange
+ * \brief Initialize an exchange (Variable stride is not yet available)
  *
  * \param [in]   btb          Block to part structure
  * \param [in]   s_data       Data size
  * \param [in]   t_stride     Stride type
+ * \param [in]   cst_stride   Constant stride
  * \param [in]   block_stride Stride for each block element for \ref PDM_STRIDE_VAR
  *                            Constant stride for \ref PDM_STRIDE_VAR  
  * \param [in]   block_data   Block data
@@ -99,23 +100,24 @@ PDM_block_to_block_exch
  PDM_block_to_block_t *btb,
  size_t               s_data,
  PDM_stride_t         t_stride,
+ int                  cst_stride,
  int                 *block_stride_ini,
  void                *block_data_ini,
  int                 *block_stride_end,
- void                *block_data_end
+ void               **block_data_end
 );
 
-int 
-PDM_block_to_block_exch_int 
-(
- PDM_block_to_block_t *btb,
- size_t               s_data,
- PDM_stride_t         t_stride,
- int                 *block_stride_ini,
- int                 *block_data_ini,
- int                 *block_stride_end,
- int                 **block_data_end
-);
+/* int  */
+/* PDM_block_to_block_exch_int  */
+/* ( */
+/*  PDM_block_to_block_t *btb, */
+/*  size_t               s_data, */
+/*  PDM_stride_t         t_stride, */
+/*  int                 *block_stride_ini, */
+/*  int                 *block_data_ini, */
+/*  int                 *block_stride_end, */
+/*  int                 **block_data_end */
+/* ); */
 
 
 /**

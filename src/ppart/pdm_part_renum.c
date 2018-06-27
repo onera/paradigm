@@ -258,45 +258,16 @@ _renum_faceCell
 (
 const int  nCell,
 const int  nFace,
-const int *cellFaceIdx, 
-const int *cellFace, 
       int *faceCell, 
       int *newToOldOrder 
 )
 {
-
-  // for (int i = 0; i < 2 * nFace; i++) {
-  //   faceCell[i] = 0;
-  // }
-
-  // for (int i = 0; i < nCell; ++i) {
-  //   for (int j = cellFaceIdx[i]; j < cellFaceIdx[i+1]; j++) {
-  //     int idx = 2 * (PDM_ABS(cellFace[j])-1);
-  //     if (faceCell[idx] == 0) { 
-  //       faceCell[idx] = i + 1;
-  //       if (cellFace[j] < 0) {
-  //         faceCell[idx] = -faceCell[idx];
-  //       }
-  //     }
-  //     else { 
-  //       faceCell[idx + 1] = i + 1;
-  //       if (cellFace[j] < 0) {
-  //         faceCell[idx+1] = -faceCell[idx+1];
-  //       }
-  //     }
-  //   }
-  // }
-  
   
   int *oldToNewOrder = (int *) malloc (nCell * sizeof(int));
   
   for(int i = 0; i < nCell; i++) {
    oldToNewOrder[newToOldOrder[i]] = i;
   }
- 
-  // for(int i = 0; i < nFace; i++) {
-  //   printf("faceCell[%i] = %i/%i \n", i,faceCell[2*i], faceCell[2*i+1]);
-  // }
     
   PDM_part_renum_array_face_cell (nFace, 
                                   oldToNewOrder,
@@ -637,6 +608,10 @@ double  *cellCenter
  * \param [in,out]  ppart    Current PPART structure
  *
  */
+#ifdef __INTEL_COMPILER
+#pragma warning(push)
+#pragma warning(disable:869)
+#endif
 
 static void 
 _renum_cells_hilbert 
@@ -686,6 +661,9 @@ _renum_cells_hilbert
     
   }
 }
+#ifdef __INTEL_COMPILER
+#pragma warning(pop)
+#endif
 
 /**
  *
@@ -694,6 +672,10 @@ _renum_cells_hilbert
  * \param [in,out]  ppart    Current PPART structure
  *
  */
+#ifdef __INTEL_COMPILER
+#pragma warning(push)
+#pragma warning(disable:869)
+#endif
 
 static void
 _renum_cells_cuthill
@@ -740,6 +722,9 @@ _renum_cells_cuthill
     free(order);
   }
 }
+#ifdef __INTEL_COMPILER
+#pragma warning(pop)
+#endif
 
 /**
  *
@@ -748,6 +733,11 @@ _renum_cells_cuthill
  * \param [in,out]  ppart    Current PPART structure
  *
  */
+
+#ifdef __INTEL_COMPILER
+#pragma warning(push)
+#pragma warning(disable:869)
+#endif
 
 static void 
 _renum_cells_random 
@@ -778,7 +768,9 @@ _renum_cells_random
     free (order);
   }
 }
-
+#ifdef __INTEL_COMPILER
+#pragma warning(pop)
+#endif
 
 /**
  *
@@ -788,6 +780,11 @@ _renum_cells_random
  *
  */
 
+#ifdef __INTEL_COMPILER
+#pragma warning(push)
+#pragma warning(disable:869)
+#endif
+
 static void 
 _renum_faces_random 
 (
@@ -796,6 +793,10 @@ _renum_faces_random
  void     *specific_data
 )
 {
+#ifdef __INTEL_COMPILER
+#pragma warning(push)
+#pragma warning(disable:869)
+#endif
   for(int ipart = 0; ipart < nPart; ++ipart) {
     _part_t *part = meshParts[ipart];       
     const int nFace = part->nFace;
@@ -817,6 +818,9 @@ _renum_faces_random
     free (order);
   }
 }
+#ifdef __INTEL_COMPILER
+#pragma warning(pop)
+#endif
 
 /**
  *
@@ -825,6 +829,10 @@ _renum_faces_random
  * \param [in,out]  ppart    Current PPART structure
  *
  */
+#ifdef __INTEL_COMPILER
+#pragma warning(push)
+#pragma warning(disable:869)
+#endif
 
 static void
 _renum_faces_lexicographic
@@ -834,7 +842,6 @@ _renum_faces_lexicographic
  void     *specific_data
 )
 {
-  printf("_renum_faces_lexicographic \n");
   for(int ipart = 0; ipart < nPart; ++ipart) {
     _part_t *part = meshParts[ipart];
     const int nFace = part->nFace;
@@ -877,6 +884,9 @@ _renum_faces_lexicographic
     free (faceCellTmp);
   }
 }
+#ifdef __INTEL_COMPILER
+#pragma warning(pop)
+#endif
 
 
 /*=============================================================================
@@ -1248,11 +1258,11 @@ void
     face_methods = PDM_Handles_create (n_default_methods);
 
     PDM_part_renum_method_face_add ("PDM_PART_RENUM_FACE_NONE",
-                             NULL);
+                                    NULL);
     PDM_part_renum_method_face_add ("PDM_PART_RENUM_FACE_RANDOM",
-                             _renum_faces_random);
+                                    _renum_faces_random);
     PDM_part_renum_method_face_add ("PDM_PART_RENUM_FACE_LEXICOGRAPHIC",
-                             _renum_faces_lexicographic);
+                                    _renum_faces_lexicographic);
   }
   
 }
@@ -1287,7 +1297,6 @@ PDM_part_renum_cell
   PDM_part_renum_fct_t fct = method_ptr->fct;
   
   if (fct != NULL) {
-    // (fct) (ppart);
     (fct) (meshParts, nPart, specific_data);
   }
   
@@ -1425,8 +1434,6 @@ PDM_part_reorder_cell
    
   _renum_faceCell (part->nCell,
                    part->nFace,
-                   part->cellFaceIdx, 
-                   part->cellFace, 
                    part->faceCell, 
                    newToOldOrder); 
    

@@ -2355,7 +2355,7 @@ const int   hdl
     PDM_DMesh_nodal_section_std_t *sectionStd = (PDM_DMesh_nodal_section_std_t *) PDM_Handles_get (mesh->sections_std, iSection);
     dnElemTot += ( sectionStd->distrib[mesh->i_proc+1] - sectionStd->distrib[mesh->i_proc] );
   }
-  PDM_g_num_t nFacApprox = dnElemTot*8;
+  int nFacApprox = dnElemTot*8;
   
   if(1 == 0)
   {
@@ -2479,7 +2479,7 @@ const int   hdl
     printf("nFacApprox  : %d \n", nFacApprox );
     printf("------------------------------------------- \n");
     for (int i = 0; i < nFace; i++) {
-      printf("[%d] - i/iKey  : %d - %d \n", mesh->i_proc, i, LNToGN[i]);
+      printf("[%d] - i/iKey  : %d - "PDM_FMT_G_NUM" \n", mesh->i_proc, i, LNToGN[i]);
     }
     printf("------------------------------------------- \n");
   }
@@ -2491,6 +2491,7 @@ const int   hdl
                                                       PDM_PART_TO_BLOCK_POST_MERGE,
                                                       1.,
                                                       &LNToGN,
+                                                      NULL,
                                                       &nFace,
                                                       1,
                                                       mesh->pdm_mpi_comm); 
@@ -2655,7 +2656,7 @@ const int   hdl
     printf("fetch->dNFace : %d \n", mesh->dNFace);
     for(int i = 0; i < mesh->dNFace; i++) {
       // printf("BlockData[%d]    : %d \n", i, BlkData2[i]);
-      printf("mesh->_dFaceCell[%d] : %d/%d \n", i, mesh->_dFaceCell[2*i], mesh->_dFaceCell[2*i+1]);
+      printf("mesh->_dFaceCell[%d] : "PDM_FMT_G_NUM"/"PDM_FMT_G_NUM" \n", i, mesh->_dFaceCell[2*i], mesh->_dFaceCell[2*i+1]);
     }
 
   }
@@ -2682,7 +2683,7 @@ const int   hdl
     printf("------------------------------------------- \n");
     for (int i = mesh->face_distrib[mesh->i_proc]; i < mesh->face_distrib[mesh->i_proc+1]; i++) {
       // printf("[%d] - i/iFace  : %d - %d \n", mesh->i_proc, i, LNToGNElem[i]);
-      printf("[%d] - i/iFace  : %d - %d / %d \n", mesh->i_proc, i, LNToGNElem[2*i], LNToGNElem[2*i+1]);
+      printf("[%d] - i/iFace  : %d - "PDM_FMT_G_NUM" / "PDM_FMT_G_NUM" \n", mesh->i_proc, i, LNToGNElem[2*i], LNToGNElem[2*i+1]);
     }
     printf("------------------------------------------- \n");
   }
@@ -2725,7 +2726,7 @@ const int   hdl
                                                        PDM_PART_TO_BLOCK_POST_MERGE,
                                                        1.,
                                                        &dFaceCellTmp,
-                                                       // &mesh->_dFaceCell,
+                                                       NULL,
                                                        &nFac2,
                                                        1,
                                                        mesh->pdm_mpi_comm); 

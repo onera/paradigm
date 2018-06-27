@@ -139,7 +139,7 @@ PDM_octree_seq_point_cloud_set
  const int          id,
  const int          i_point_cloud,
  const int          n_points,
- const double      *coords 
+ const double      *coords
 );
 
 //void
@@ -360,6 +360,29 @@ PDM_octree_seq_leaf_is
  const int                node_id
 );
 
+
+/**
+ *
+ * Look for closest points stored inside an octree
+ *
+ * parameters:
+ * \param [in]   id                     Identifier
+ * \param [in]   n_pts                  Number of points
+ * \param [in]   pts                    Point Coordinates
+ * \param [out]  closest_octree_pt_id   Closest point in octree index (couple icloud, index)
+ * \param [out]  closest_octree_pt_dist Closest point in octree distance
+ *  
+ */
+
+void
+PDM_octree_seq_closest_point
+(
+const int    id,
+const int    n_pts,
+double      *pts,
+int         *closest_octree_pt_id,
+double      *closest_octree_pt_dist2
+);
 
 #ifdef	__cplusplus
 }

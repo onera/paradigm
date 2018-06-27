@@ -15,19 +15,12 @@ cdef extern from "pdm_block_to_block.h":
     int PDM_block_to_block_exch(PDM_block_to_block_t  *btb,
                                 size_t                s_data,
                                 PDM_stride_t          t_stride,
+                                int                   cst_stride,
                                 int                  *block_stride_ini,
                                 void                 *block_data_ini,
                                 int                  *block_stride_end,
                                 void                **block_data_end)
     
-    int PDM_block_to_block_exch_int(PDM_block_to_block_t  *btb,
-                                    size_t                s_data,
-                                    PDM_stride_t          t_stride,
-                                    int                  *block_stride_ini,
-                                    int                  *block_data_ini,
-                                    int                  *block_stride_end,
-                                    int                 **block_data_end)
-
     PDM_block_to_block_t *PDM_block_to_block_free(PDM_block_to_block_t *btb)
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
@@ -99,6 +92,7 @@ cdef class BlockToBlock:
 
         # > Specific to PDM
         cdef size_t      s_data
+        cdef int         cst_stride
         cdef int        *block_stride_ini
         cdef int        *block_stride_end
         cdef void       *block_data_ini
@@ -108,6 +102,8 @@ cdef class BlockToBlock:
         # > Understand how to interface
         block_stride_ini = <int *> malloc( 1 * sizeof(int *))
         block_stride_end = <int *> malloc( 1 * sizeof(int *))
+
+        cst_stride = 1
 
         # > Init
         block_stride_ini[0] = 1 # No entrelacing data
@@ -137,13 +133,14 @@ cdef class BlockToBlock:
           #                         block_data_ini,
           #                         block_stride_end,
           #                         block_data_end)
-          c_size = PDM_block_to_block_exch_int(self.BTB, 
-                                               s_data, 
-                                               t_stride,
-                                               block_stride_ini,
-                                               <int *> block_data_ini,
-                                               block_stride_end,
-                                               <int **> &block_data_end)
+          c_size = PDM_block_to_block_exch(self.BTB, 
+                                           s_data, 
+                                           t_stride,
+                                           cst_stride,
+                                           block_stride_ini,
+                                           <void *> block_data_ini,
+                                           block_stride_end,
+                                           <void **> &block_data_end)
           
           dim = <NPY.npy_intp> c_size
           # print "c_size : ", c_size

@@ -59,11 +59,11 @@ extern "C" {
 PDM_block_to_part_t *
 PDM_block_to_part_create
 (
- PDM_g_num_t     *blockDistribIdx,
- PDM_g_num_t    **gnum_elt,
- int            *n_elt,
- int             n_part,
- PDM_MPI_Comm        comm
+ const PDM_g_num_t     *blockDistribIdx,
+ const PDM_g_num_t    **gnum_elt,
+ const int            *n_elt,
+ const int             n_part,
+ const PDM_MPI_Comm        comm
 )
 {
 
@@ -100,7 +100,7 @@ PDM_block_to_part_create
     btp->n_elt[i] = n_elt[i];
     btp->ind[i] = malloc (sizeof(int) * n_elt[i]);
     
-    PDM_g_num_t *_gnum_elt = gnum_elt[i];
+    const PDM_g_num_t *_gnum_elt = gnum_elt[i];
     
     for (int j = 0; j < n_elt[i]; j++) {
     
@@ -130,7 +130,7 @@ PDM_block_to_part_create
   
   for (int i = 0; i < n_part; i++) {
 
-    PDM_g_num_t *_gnum_elt = gnum_elt[i];
+    const PDM_g_num_t *_gnum_elt = gnum_elt[i];
     
     // printf("n_elt[%i] = %i \n", i, (int) n_elt[i]);
     for (int j = 0; j < n_elt[i]; j++) {

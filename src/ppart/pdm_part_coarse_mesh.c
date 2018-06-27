@@ -2339,6 +2339,7 @@ _coarse_mesh_t * cm
                                                      PDM_PART_TO_BLOCk_POST_CLEANUP,
                                                      1.,
                                                      (PDM_g_num_t **) faceLNToGNPart,
+                                                       NULL,
                                                      nFacePart,
                                                      cm->nPart,
                                                      cm->comm);    
@@ -2423,7 +2424,7 @@ _coarse_mesh_t * cm
   PDM_g_num_t *blockDistribIdx = PDM_part_to_block_distrib_index_get (ptb); 
 
   PDM_block_to_part_t *btp = PDM_block_to_part_create (blockDistribIdx,
-                                                       (PDM_g_num_t **) faceLNToGNPart,
+                                                       (const PDM_g_num_t **) faceLNToGNPart,
                                                        nFacePart,
                                                        cm->nPart,
                                                        cm->comm);
@@ -2536,6 +2537,7 @@ _coarse_mesh_t * cm
                                                      PDM_PART_TO_BLOCk_POST_CLEANUP,
                                                      1.,
                                                      (PDM_g_num_t **) vtxLNToGNPart,
+                                                       NULL,  
                                                      nVtxPart,
                                                      cm->nPart,
                                                      cm->comm);    
@@ -2619,7 +2621,7 @@ _coarse_mesh_t * cm
   PDM_g_num_t *blockDistribIdx = PDM_part_to_block_distrib_index_get (ptb); 
 
   PDM_block_to_part_t *btp = PDM_block_to_part_create (blockDistribIdx,
-                                                       (PDM_g_num_t **) vtxLNToGNPart,
+                                                       (const PDM_g_num_t **) vtxLNToGNPart,
                                                        nVtxPart,
                                                        cm->nPart,
                                                        cm->comm);
@@ -2817,6 +2819,7 @@ _coarse_mesh_t * cm
                                                          PDM_PART_TO_BLOCk_POST_CLEANUP,
                                                          1.,
                                                          (PDM_g_num_t **) faceGroupLNToGNPart,
+                                                         NULL,
                                                          nFaceGroupPart,
                                                          cm->nPart,
                                                          cm->comm);    
@@ -2902,7 +2905,7 @@ _coarse_mesh_t * cm
     //        assert(blockDistribIdx[rank+1] - blockDistribIdx[rank] ==  size_block);
     
     PDM_block_to_part_t *btp = PDM_block_to_part_create (blockDistribIdx,
-                                                         (PDM_g_num_t **) faceGroupLNToGNPart,
+                                                         (const PDM_g_num_t **) faceGroupLNToGNPart,
                                                          nFaceGroupPart,
                                                          cm->nPart,
                                                          cm->comm);
