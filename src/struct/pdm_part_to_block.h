@@ -97,6 +97,7 @@ typedef struct _cs_part_to_block_t PDM_part_to_block_t;
  * \param [in]   t_post          Post processing type
  * \param [in]   partActiveNode  Part of active nodes (\ref PDM_writer_BLOCK_DISTRIB_PART_OF_NODE mode)
  * \param [in]   gnum_elt        Element global number
+ * \param [in]   weight          Weight of elements (or NULL)
  * \param [in]   n_elt           Local number of elements
  * \param [in]   n_part          Number of partition      
  * \param [in]   comm            MPI communicator         
@@ -112,6 +113,7 @@ PDM_part_to_block_create
  PDM_part_to_block_post_t      t_post,
  float                         partActiveNode,
  PDM_g_num_t                 **gnum_elt,
+ float                       **weight,
  int                          *n_elt,
  int                           n_part,
  PDM_MPI_Comm                  comm
@@ -215,6 +217,8 @@ PDM_part_to_block_block_gnum_get
  * \param [in]   part_data    partitioned data
  * \param [out]  block_stride Block stride
  * \param [out]  block_data   Block data
+ *
+ * \return       Size of highest block
  *
  */
 

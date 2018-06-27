@@ -47,8 +47,8 @@ _prepare_connectivity
 (
 const PDM_MPI_Comm    comm,
 const PDM_g_num_t     dNCell,
-      int            *dCellFaceIdx,
-      PDM_g_num_t    *dCellFace,
+const int            *dCellFaceIdx,
+const PDM_g_num_t    *dCellFace,
 const int            *dFaceVtxIdx,
 const PDM_g_num_t    *dFaceVtx,
 const PDM_g_num_t    *dFaceProc,       
@@ -86,7 +86,7 @@ const double         *dVtxCoord,
       int nFac = dCellFaceIdx[i+1] - dCellFaceIdx[i];
       printf("nFac[%i] :  %i \n ", i, nFac);
       for (int iVtx = dCellFaceIdx[i]; iVtx < dCellFaceIdx[i+1]; iVtx++) {
-        printf("dCellFace[%i] :  %i \n ", iVtx, dCellFace[iVtx]);
+        printf("dCellFace[%i] :  "PDM_FMT_G_NUM" \n ", iVtx, dCellFace[iVtx]);
       }
     }
   }
@@ -135,7 +135,7 @@ const double         *dVtxCoord,
   // printf("ndCellFaceTot : %i \n", ndCellFaceTot);
   
   /* Alloc field */
-  int* lFaceVtx    = (int *) malloc (sizeof(int) * ndCellFaceTot);
+  PDM_g_num_t* lFaceVtx    = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * ndCellFaceTot);
   
   PDM_block_to_part_exch (           ptb,
                                      sizeof(PDM_g_num_t),
@@ -151,7 +151,7 @@ const double         *dVtxCoord,
       printf("nVtxFace :  %i \n ", nVtxFace[i]);
     }
     for (int i = 0; i < ndCellFaceTot; i++) {
-      printf("lFaceVtx[%i] :  %i \n ",i, lFaceVtx[i]);
+      printf("lFaceVtx[%i] :  "PDM_FMT_G_NUM" \n ",i, lFaceVtx[i]);
     }
   }
   
@@ -161,7 +161,7 @@ const double         *dVtxCoord,
   
   /* -------------------------------------------------------------- */
   ptb = PDM_block_to_part_create (dVtxProcLoc,
-                                  &lFaceVtx,  
+                                  (const PDM_g_num_t **) &lFaceVtx,  
                                   &ndCellFaceTot,
                                   1,
                                   comm);
@@ -195,8 +195,8 @@ const double         *dVtxCoord,
   
   *sizeFaceVtxIdx = dCellFaceIdx[dNCell] + 1 ;
   
-  *faceVtx    = (PDM_g_num_t * ) malloc( sizeof(int *) *   ndCellFaceTot              );
-  *faceVtxIdx = (PDM_g_num_t * ) malloc( sizeof(int *) * ( dCellFaceIdx[dNCell] + 1 ) );
+  *faceVtx    = (int *) malloc( sizeof(int *) *   ndCellFaceTot              );
+  *faceVtxIdx = (int *) malloc( sizeof(int *) * ( dCellFaceIdx[dNCell] + 1 ) );
   
   for (int i = 0; i < ndCellFaceTot; i++) {
     (*faceVtx)[i] = i+1;
@@ -238,8 +238,8 @@ _compute_cellCenter
 (
   const PDM_MPI_Comm  comm,       
   const int           dNCell,
-        int          *dCellFaceIdx,
-        PDM_g_num_t  *dCellFace,
+  const int          *dCellFaceIdx,
+  const PDM_g_num_t  *dCellFace,
   const int          *dFaceVtxIdx,
   const PDM_g_num_t  *dFaceVtx,
   const PDM_g_num_t  *dFaceProc,       
@@ -382,8 +382,8 @@ PDM_part_geom
  const int           nPart,       
  const PDM_MPI_Comm  comm,       
  const int           dNCell,
-       int          *dCellFaceIdx,
-       PDM_g_num_t  *dCellFace,
+ const int          *dCellFaceIdx,
+ const PDM_g_num_t  *dCellFace,
  const int          *dCellWeight,
  const int          *dFaceVtxIdx,
  const PDM_g_num_t  *dFaceVtx,

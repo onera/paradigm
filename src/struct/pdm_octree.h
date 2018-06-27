@@ -150,6 +150,7 @@ PDM_octree_free
  * \param [in]   i_point_cloud      Number of point cloud 
  * \param [in]   n_points           Maximum depth
  * \param [in]   coords             Point coordinates 
+ * \param [in]   g_num              Point global number or NULL 
  * 
  */
 
@@ -160,7 +161,8 @@ PDM_octree_point_cloud_set
  const int          id,
  const int          i_point_cloud,
  const int          n_points,
- const double      *coords 
+ const double      *coords, 
+ const PDM_g_num_t *g_num  
 );
 
 //void
@@ -190,17 +192,21 @@ PDM_octree_build
 
 /**
  *
- * \brief Processes extents  
+ * \brief Used processes extents
  *
  * \param [in]   id                 Identifier 
- * \param [in]   i_proc             Process
+ * \param [out]  used_ranks         Used ranks
+ * \param [out]  extents            Used ranks extents
  *
+ * \return Number of used ranks
  */
 
-const double *
+int
 PDM_octree_processes_extents_get
 (
- const int          id
+ const int          id,
+ int              *used_ranks[],
+ double           *extents[]
 );
 
 //void
@@ -395,6 +401,31 @@ double *
 PDM_octree_extents_get
 (
  const int          id
+);
+
+
+/**
+ *
+ * Look for closest points stored inside an octree
+ *
+ * \param [in]   id                     Identifier
+ * \param [in]   n_pts                  Number of points
+ * \param [in]   pts                    Point Coordinates
+ * \param [in]   pts_g_num              Point global numbers
+ * \param [out]  closest_octree_pt_id   Closest point in octree global number
+ * \param [out]  closest_octree_pt_dist Closest point in octree distance
+ *  
+ */
+
+void
+PDM_octree_closest_point
+(
+const int    id,
+const int    n_pts,
+double      *pts,
+PDM_g_num_t *pts_g_num,
+PDM_g_num_t *closest_octree_pt_g_num,
+double      *closest_octree_pt_dist2
 );
 
 #ifdef	__cplusplus

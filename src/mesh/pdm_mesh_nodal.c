@@ -2959,18 +2959,18 @@ PDM_g_num_t      *numabs
   PDM_l_num_t n_pyramid = 0;
   PDM_l_num_t n_poly3d  = 0;
   
-  if (1 == 0) {
-    printf("cellface 2: \n");
+  if (0 == 1) {
+    printf("1 cellface %d %d : \n",id_part, n_cell);
     for (int i = 0; i < n_cell; i++) {
-      for (int j = cell_face_idx[i]; j < cell_face_idx[i+1]; j++) {
+      for (int j = cell_face_idx[i] -adjust; j < cell_face_idx[i] -adjust + cell_face_nb[i]; j++) {
         printf(" %d", cell_face[j]);
       }
     printf("\n");
     }
       
-    printf("facevtx 2: \n");
+    printf("1 facevtx %d %d: \n", id_part, n_face);
     for (int i = 0; i < n_face; i++) {
-      for (int j = face_vtx_idx[i]; j < face_vtx_idx[i+1]; j++) {
+      for (int j = face_vtx_idx[i] -adjust; j < face_vtx_idx[i] -adjust + face_vtx_nb[i] ; j++) {
         printf(" %d", face_vtx[j]);
       }
     printf("\n");
@@ -3095,7 +3095,6 @@ PDM_g_num_t      *numabs
       PDM_l_num_t *cell_face_nb_courant = mesh->prepa_blocks->cell_face_nb[ipart];
       PDM_l_num_t *cell_face_courant = mesh->prepa_blocks->cell_face[ipart];
       PDM_g_num_t *numabs_courant = mesh->prepa_blocks->numabs[ipart];
-  
       PDM_l_num_t n_face_part   = mesh->prepa_blocks->n_face[ipart];
  
       PDM_l_num_t n_tetra_part   = mesh->prepa_blocks->n_tetra[ipart];
@@ -3121,7 +3120,32 @@ PDM_g_num_t      *numabs
       PDM_l_num_t *num_parent_pyramid = NULL;
       PDM_l_num_t *num_parent_poly3d = NULL;
 
-      if (n_tetra_part > 0) {
+      adjust = 0;
+      if (n_cell_courant > 0) { 
+        if (cell_face_idx_courant[0] == 1) {
+          adjust = 1;
+        }
+      }
+  
+  if (0 == 1) {
+    printf("2 cellface %d %d: \n",ipart, n_cell_courant);
+    for (int i = 0; i < n_cell_courant; i++) {
+      for (int j = cell_face_idx_courant[i] -adjust; j < cell_face_idx_courant[i]  -adjust+ cell_face_nb_courant[i]; j++) {
+        printf(" %d", cell_face_courant[j]);
+      }
+    printf("\n");
+    }
+      
+    printf("2 facevtx %d %d: \n", ipart, n_face_part);
+    for (int i = 0; i < n_face_part; i++) {
+      for (int j = face_som_idx_courant[i] -adjust; j < face_som_idx_courant[i] -adjust + face_som_nb_courant[i] ; j++) {
+        printf(" %d", face_som_courant[j]);
+      }
+    printf("\n");
+    }
+  }
+
+  if (n_tetra_part > 0) {
         connec_tetra = (PDM_l_num_t *) malloc(sizeof(PDM_l_num_t) * 4 *n_tetra_part);
         numabs_tetra = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * n_tetra_part);
         num_parent_tetra = (PDM_l_num_t *) malloc(sizeof(PDM_l_num_t) * n_tetra_part);
@@ -3592,6 +3616,13 @@ PDM_g_num_t       *numabs
       PDM_l_num_t *cell_face_courant = mesh->prepa_blocks->cell_face[ipart];
       PDM_g_num_t *numabs_courant = mesh->prepa_blocks->numabs[ipart];
    
+      adjust = 0;
+      if (n_cell_courant > 0) {
+        if (cell_face_idx_courant[0] == 1) {
+          adjust = 1;
+        }
+      }
+      
       n_tria   = mesh->prepa_blocks->n_tria[ipart];
       n_quad    = mesh->prepa_blocks->n_quad[ipart];
       n_poly2d  = mesh->prepa_blocks->n_poly2d[ipart];
@@ -3964,6 +3995,13 @@ PDM_g_num_t      *numabs
       PDM_l_num_t *face_som_nb_courant = mesh->prepa_blocks->face_vtx_nb[ipart];
       PDM_l_num_t *face_som_courant = mesh->prepa_blocks->face_vtx[ipart];
       PDM_g_num_t *numabs_courant = mesh->prepa_blocks->numabs[ipart];
+
+      adjust = 0;
+      if (n_face_courant > 0) {
+        if (face_som_idx_courant[0] == 1) {
+          adjust = 1;
+        }
+      }
  
       n_tria   = mesh->prepa_blocks->n_tria[ipart];
       n_quad    = mesh->prepa_blocks->n_quad[ipart];
@@ -4021,8 +4059,10 @@ PDM_g_num_t      *numabs
       PDM_l_num_t idx_quad   = n_tria;
       PDM_l_num_t idx_poly2d = idx_quad + n_quad;
 
+      PDM_l_num_t n_som_face = 0;
+
       for (int i = 0; i < n_face_courant; i++) {
-        PDM_l_num_t n_som_face = face_som_nb_courant[i];
+        n_som_face = face_som_nb_courant[i];
         PDM_l_num_t idx_som_face = face_som_idx_courant[i] - adjust;
         PDM_l_num_t *connec_courant;
 
