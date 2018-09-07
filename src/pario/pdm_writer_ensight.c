@@ -1692,9 +1692,8 @@ PDM_writer_ensight_var_write
 
           for (int i = 0; i < n_part; i++) {
             const int n_vertices = PDM_Mesh_nodal_n_vertices_get (geom->idx_mesh, i);
-            const double *vertices = PDM_Mesh_nodal_vertices_get (geom->idx_mesh, i);
             for (int j = 0; j < n_vertices; j++) {
-              buff[n_som_proc++] = (float) vertices[j*var->dim + comp_a_ecrire];
+              buff[n_som_proc++] = (float) var->_val[igeom][i][j*var->dim + comp_a_ecrire];
             }
           }
 

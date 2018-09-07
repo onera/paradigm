@@ -235,6 +235,10 @@ int             stack[]
   int sort_child[bt->n_children];
   double dist_child[bt->n_children];
 
+  for (int i = 0; i < bt->n_children; i++) {
+    dist_child[i] = HUGE_VAL;
+  }
+
   /* Sort children and store them into the stack */
 
   const int *_child_ids = bt->child_ids + id_curr_node*bt->n_children;
