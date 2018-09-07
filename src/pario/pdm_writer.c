@@ -2347,6 +2347,48 @@ PDM_writer_fmt_free
   }
 }
 
+/*----------------------------------------------------------------------------
+ * Réinitialisation des donnees decrivant le maillage courant
+ *
+ * parameters :
+ *   id_cs           <-- Identificateur de l'objet cs
+ *   id_geom         <-- Identificateur de l'objet geometrique
+ *
+ *----------------------------------------------------------------------------*/
+
+void
+PROCF (pdm_writer_geom_data_reset, PDM_WRITER_GEOM_DATA_RESET)
+(
+int           *id_cs,
+int           *id_geom
+) 
+{
+  PDM_writer_geom_data_reset(*id_cs,
+                   *id_geom); 
+}
+
+void
+PDM_writer_geom_data_reset
+(
+const int      id_cs,
+const int      id_geom
+) 
+{
+  /* Acces a l'objet de geometrie courant */
+
+  PDM_writer_t *cs = (PDM_writer_t *) PDM_Handles_get (cs_tab, id_cs);
+  if (cs == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad writer identifier\n");
+  }
+
+  PDM_writer_geom_t *geom = (PDM_writer_geom_t *) PDM_Handles_get (cs->geom_tab, id_geom);
+
+  if (geom != NULL) {
+  
+    PDM_Mesh_nodal_reset (geom->idx_mesh);
+
+  }
+}
 
 #ifdef __cplusplus
 }
