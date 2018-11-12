@@ -4393,6 +4393,113 @@ PDM_Mesh_nodal_vertices_g_num_parent_get
   return vtx->parent->_numabs;
 }
 
+/**
+ * \brief Reset a nodal mesh structure
+ *
+ * \param [in]  idx   Nodal mesh handle
+ *
+ * \return      NULL
+ *
+ */
+
+void
+PDM_Mesh_nodal_reset
+(
+const int idx
+)
+{
+  PDM_Mesh_nodal_t * mesh = (PDM_Mesh_nodal_t *) PDM_Handles_get (mesh_handles, idx);
+  
+  if (mesh == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
+  }
+
+  if (mesh->blocks_std != NULL) {
+    int n_blocks_std = PDM_Handles_n_get (mesh->blocks_std);
+    const int *list_ind = PDM_Handles_idx_get (mesh->blocks_std);
+
+    while (n_blocks_std > 0) {
+      PDM_Mesh_nodal_block_std_t *_bloc_std = 
+        (PDM_Mesh_nodal_block_std_t *) PDM_Handles_get (mesh->blocks_std, list_ind[0]);
+      _block_std_free(_bloc_std);
+      PDM_Handles_handle_free (mesh->blocks_std, list_ind[0], PDM_FALSE);
+      n_blocks_std = PDM_Handles_n_get (mesh->blocks_std);
+    }
+
+    mesh->blocks_std = PDM_Handles_free (mesh->blocks_std); 
+  }
+
+  if (mesh->blocks_poly2d != NULL) {
+    int n_blocks_poly2d = PDM_Handles_n_get (mesh->blocks_poly2d);
+    const int *list_ind = PDM_Handles_idx_get (mesh->blocks_poly2d);
+
+    while (n_blocks_poly2d > 0) {
+      PDM_Mesh_nodal_block_poly2d_t *_bloc_poly2d = 
+        (PDM_Mesh_nodal_block_poly2d_t *) PDM_Handles_get (mesh->blocks_poly2d, list_ind[0]);
+      _block_poly2d_free(_bloc_poly2d);
+      PDM_Handles_handle_free (mesh->blocks_poly2d, list_ind[0], PDM_FALSE);
+      n_blocks_poly2d = PDM_Handles_n_get (mesh->blocks_poly2d);
+    }
+
+    mesh->blocks_poly2d = PDM_Handles_free (mesh->blocks_poly2d); 
+  }
+
+  if (mesh->blocks_poly3d != NULL) {
+    int n_blocks_poly3d = PDM_Handles_n_get (mesh->blocks_poly3d);
+    const int *list_ind = PDM_Handles_idx_get (mesh->blocks_poly3d);
+
+    while (n_blocks_poly3d > 0) {
+      PDM_Mesh_nodal_block_poly3d_t *_bloc_poly3d = 
+        (PDM_Mesh_nodal_block_poly3d_t *) PDM_Handles_get (mesh->blocks_poly3d, list_ind[0]);
+      _block_poly3d_free(_bloc_poly3d);
+      PDM_Handles_handle_free (mesh->blocks_poly3d, list_ind[0], PDM_FALSE);
+      n_blocks_poly3d = PDM_Handles_n_get (mesh->blocks_poly3d);
+    }
+
+    mesh->blocks_poly3d = PDM_Handles_free (mesh->blocks_poly3d); 
+  }
+
+  mesh->blocks_std               = NULL;  
+  mesh->blocks_poly2d            = NULL;            
+  mesh->blocks_poly3d            = NULL;           
+  if (mesh->blocks_id != NULL) {
+    free (mesh->blocks_id);
+  }
+  mesh->blocks_id                = NULL;
+  mesh->n_blocks                 = 0;
+  mesh->prepa_blocks             = NULL;
+  mesh->is_vtx_def_from_parent   = 0;
+  
+  if (mesh->num_cell_parent_to_local != NULL) {
+    for (int ipart = 0; ipart < mesh->n_part; ipart++) {
+      if (mesh->num_cell_parent_to_local[ipart] != NULL)
+        free(mesh->num_cell_parent_to_local[ipart]);
+    }
+    free(mesh->num_cell_parent_to_local);
+    mesh->num_cell_parent_to_local = NULL;
+  }
+
+  for (int i = 0; i < mesh->n_part; i++) {
+    mesh->n_cell[i] = 0;
+  }
+
+  if (mesh->vtx != NULL) {
+    for (int i = 0; i < mesh->n_part; i++) {
+      mesh->vtx[i]->_coords = NULL;
+      mesh->vtx[i]->_numabs = NULL;
+      mesh->vtx[i]->_numparent = NULL;
+      mesh->vtx[i]->n_vtx   = 0;
+      if (mesh->vtx[i]->parent != NULL) {
+          mesh->vtx[i]->parent =_vtx_free (mesh->vtx[i]->parent);
+          mesh->vtx[i]->parent = NULL;
+      }
+      if (mesh->vtx[i]->coords != NULL) {
+        free (mesh->vtx[i]->coords);
+        mesh->vtx[i]->coords = NULL;
+      }
+    }
+  }
+}
 
 
 #ifdef __cplusplus
