@@ -12,6 +12,8 @@
  * Local headers
  *----------------------------------------------------------------------------*/
 
+#include "pdm_printf.h"
+#include "pdm_error.h"
 #include "pdm.h"
 #include "pdm_mpi.h"
 #include "pdm_mesh_dist.h"
@@ -70,9 +72,33 @@ typedef struct {
 
 static PDM_Handles_t *_dists   = NULL;
 
-  /*=============================================================================
+/*=============================================================================
  * Private function definitions
  *============================================================================*/
+
+  
+/**
+ *
+ * \brief Return ppart object from it identifier
+ *
+ * \param [in]   ppartId        ppart identifier
+ *
+ */
+
+static _PDM_dist_t *
+_get_from_id
+(
+ int  id
+)
+{
+  _PDM_dist_t *dist = (_PDM_dist_t *) PDM_Handles_get (_dists, id);
+    
+  if (dist == NULL) {
+    PDM_error(__FILE__, __LINE__, 0, "PDM_mesh_dist error : Bad identifier\n");
+  }
+
+  return dist;
+}
 
 /*============================================================================
  * Public function definitions
@@ -139,6 +165,9 @@ PDM_mesh_dist_n_part_cloud_set
  const int          n_part
 )
 {
+ _PDM_dist_t *dist = _get_from_id (id);
+
+ /* TO BE CONTINUED.... */
 }
 
 
