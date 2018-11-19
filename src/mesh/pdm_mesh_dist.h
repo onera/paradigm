@@ -49,6 +49,25 @@ PDM_mesh_dist_create
 
 /**
  *
+ * \brief Set the number of partitions of a point cloud
+ *
+ * \param [in]   id              Identifier
+ * \param [in]   i_point_cloud   Index of point cloud
+ * \param [in]   n_part          Number of partitions
+ *
+ */
+
+void
+PDM_mesh_dist_n_part_cloud_set
+(
+ const int          id,
+ const int          i_point_cloud,
+ const int          n_part
+);
+
+
+/**
+ *
  * \brief Set a point cloud
  *
  * \param [in]   id              Identifier
