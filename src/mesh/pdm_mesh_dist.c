@@ -2,6 +2,12 @@
  * System headers
  *----------------------------------------------------------------------------*/
 
+#include <assert.h>
+#include <stdio.h>
+#include <math.h>
+#include <string.h>
+#include <stdlib.h>
+
 /*----------------------------------------------------------------------------
  * Local headers
  *----------------------------------------------------------------------------*/
@@ -9,6 +15,9 @@
 #include "pdm.h"
 #include "pdm_mpi.h"
 #include "pdm_mesh_dist.h"
+#include "pdm_mesh_nodal.h"
+#include "pdm_handles.h"
+
 
 /*----------------------------------------------------------------------------*/
 
@@ -22,6 +31,47 @@ extern "C" {
 
 /*============================================================================
  * Type definitions
+ *============================================================================*/
+
+/**
+ * \struct _PDM_Dist_t
+ * \brief  Distance to a mesh surface structure
+ * 
+ */
+
+typedef struct {
+
+  int  n_part;
+  int  **coords;
+  PDM_g_num_t **gnum;
+  double **dist;
+  
+} _points_cloud_t;
+
+/**
+ * \struct _PDM_Dist_t
+ * \brief  Distance to a mesh surface structure
+ * 
+ */
+
+typedef struct {
+
+  int  n_point_cloud;
+  PDM_MPI_Comm comm;
+  int  mesh_nodal_id;
+
+  _points_cloud_t *points_cloud;
+  
+} _PDM_dist_t;
+
+/*============================================================================
+ * Global variable
+ *============================================================================*/
+
+static PDM_Handles_t *_dists   = NULL;
+
+  /*=============================================================================
+ * Private function definitions
  *============================================================================*/
 
 /*============================================================================
@@ -47,7 +97,48 @@ PDM_mesh_dist_create
  const PDM_MPI_Comm comm
 )
 {
-  return 0;
+  if (_dists == NULL) {
+    _dists = PDM_Handles_create (4);
+  }
+
+  _PDM_dist_t *dist = (_PDM_dist_t *) malloc(sizeof(_PDM_dist_t));
+
+  int id = PDM_Handles_store (_dists, dist);
+
+  dist->mesh_nodal_id = mesh_nodal_id;
+  dist->n_point_cloud = n_point_cloud;
+  dist->comm = comm;
+  dist->points_cloud = (_points_cloud_t*) malloc (sizeof(_points_cloud_t) * n_point_cloud);
+
+  for (int i = 0; i <  n_point_cloud; i++) {
+    dist->points_cloud[i].n_part = -1;
+    dist->points_cloud[i].coords = NULL;
+    dist->points_cloud[i].gnum = NULL;
+    dist->points_cloud[i].dist = NULL;
+  }
+  
+  return id;
+}
+
+
+/**
+ *
+ * \brief Set the number of partitions of a point cloud
+ *
+ * \param [in]   id              Identifier
+ * \param [in]   i_point_cloud   Index of point cloud
+ * \param [in]   n_part          Number of partitions
+ *
+ */
+
+void
+PDM_mesh_dist_n_part_cloud_set
+(
+ const int          id,
+ const int          i_point_cloud,
+ const int          n_part
+)
+{
 }
 
 
