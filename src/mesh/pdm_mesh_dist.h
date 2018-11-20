@@ -75,6 +75,7 @@ PDM_mesh_dist_n_part_cloud_set
  * \param [in]   i_part          Index of partition
  * \param [in]   n_points        Number of points
  * \param [in]   coords          Point coordinates
+ * \param [in]   gnum            Point global number 
  *
  */
 
@@ -85,7 +86,8 @@ PDM_mesh_dist_cloud_set
  const int          i_point_cloud,
  const int          i_part,
  const int          n_points,
- const double      *coords
+       double      *coords,
+       PDM_g_num_t *gnum
 );
 
 
@@ -102,16 +104,16 @@ PDM_mesh_dist_cloud_set
  *
  */
 
-void
-PDM_mesh_dist_cloud_with_initial_set
-(
- const int          id,
- const int          i_point_cloud,
- const int          i_part,
- const int          n_points,
- const double      *initial_dist,
- const double      *coords
-);
+/* void */
+/* PDM_mesh_dist_cloud_with_initial_set */
+/* ( */
+/*  const int          id, */
+/*  const int          i_point_cloud, */
+/*  const int          i_part, */
+/*  const int          n_points, */
+/*  const double      *initial_dist, */
+/*  const double      *coords */
+/* ); */
 
 
 /**
@@ -124,15 +126,13 @@ PDM_mesh_dist_cloud_with_initial_set
  *
  */
 
-void
-PDM_mesh_dist_normal_set
-(
- const int          id,
- const int          i_part,
- const double      *normal
-);
-
-  
+/* void */
+/* PDM_mesh_dist_normal_set */
+/* ( */
+/*  const int          id, */
+/*  const int          i_part, */
+/*  const double      *normal */
+/* ); */
 
 /**
  *
@@ -144,13 +144,13 @@ PDM_mesh_dist_normal_set
  *
  */
 
-void
-PDM_mesh_dist_center_set
-(
- const int          id,
- const int          i_part,
- const double      *center
-);
+/* void */
+/* PDM_mesh_dist_center_set */
+/* ( */
+/*  const int          id, */
+/*  const int          i_part, */
+/*  const double      *center */
+/* ); */
 
 
 /**
@@ -172,33 +172,41 @@ PDM_mesh_dist_process
  *
  * \brief Get mesh distance
  *
- * \param [in]   id              Identifier
- * \param [in]   i_point_cloud   Current cloud
- * \param [in]   i_part          Index of partition
- * \param [out]  dist            Distance
- * \param [out]  proj            Projected point coordinates
- * \param [out]  closest_part    Closest partition
- * \param [out]  closest_elt     Closest element
+ * \param [in]   id                Identifier
+ * \param [in]   i_point_cloud     Current cloud
+ * \param [in]   i_part            Index of partition of the cloud
+ * \param [out]  distance          Distance
+ * \param [out]  projected         Projected point coordinates
+ * \param [out]  closest_elt_rank  Closest element rank
+ * \param [out]  closest_elt_part  Closest element partition
+ * \param [out]  closest_elt_l_num Local number of the closest element
+ * \param [out]  closest_elt_g_num Global number of the closest element
  *
  */
 
 void
 PDM_mesh_dist_get
 (
- const int       id,
- const int       i_point_cloud,
-       double  **dist,
-       double  **proj,
-       int     **closest_part,
-       int     **closest_elt
-);
+ const int          id,
+ const int          i_point_cloud,
+ const int          i_part,
+       double      **distance,
+       double      **projected,
+       int         **closest_elt_rank,
+       int         **closest_elt_part,
+       int         **closest_elt_lnum,
+       PDM_g_num_t **closest_elt_gnum
+ );
+
+
 
 
 /**
  *
  * \brief Free a distance mesh structure
  *
- * \param [in]  id  Identifier
+ * \param [in]  id       Identifier
+ * \param [in]  partial  if partial is equal to 0, all data are removed. Otherwise, results are kept. 
  *
  * \return     Identifier
  */
@@ -206,8 +214,10 @@ PDM_mesh_dist_get
 int
 PDM_mesh_dist_free
 (
- const int id
-);
+ const int id,
+ const int partial
+ );
+
 
 #ifdef	__cplusplus
 }
