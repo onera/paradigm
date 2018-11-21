@@ -211,7 +211,7 @@ PDM_mesh_dist_get
  * \return     Identifier
  */
 
-int
+void
 PDM_mesh_dist_free
 (
  const int id,
