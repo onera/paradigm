@@ -418,17 +418,54 @@ PDM_mesh_dist_get
  * \param [in]  id       Identifier
  * \param [in]  partial  if partial is equal to 0, all data are removed. Otherwise, results are kept. 
  *
- * \return     Identifier
  */
 
-int
+void
 PDM_mesh_dist_free
 (
  const int id,
  const int partial
 )
 {
-  return 0;
+  _PDM_dist_t *dist = _get_from_id (id);
+
+  if (!partial) {
+    for (int i_point_cloud = 0; i_point_cloud < dist->n_point_cloud; i_point_cloud++) {
+      for (int i = 0; i < (dist->points_cloud[i_point_cloud]).n_part; i++) {
+        free (dist->points_cloud[i_point_cloud].dist[i]);
+        free (dist->points_cloud[i_point_cloud].proj[i]);
+        free (dist->points_cloud[i_point_cloud].closest_elt_rank[i]);
+        free (dist->points_cloud[i_point_cloud].closest_elt_part[i]);
+        free (dist->points_cloud[i_point_cloud].closest_elt_lnum[i]);
+        free (dist->points_cloud[i_point_cloud].closest_elt_gnum[i]); 
+      }
+    }
+  }
+  
+  for (int i_point_cloud = 0; i_point_cloud < dist->n_point_cloud; i_point_cloud++) {
+    free (dist->points_cloud[i_point_cloud].n_points);
+    free (dist->points_cloud[i_point_cloud].coords);
+    free (dist->points_cloud[i_point_cloud].gnum);
+    free (dist->points_cloud[i_point_cloud].dist);
+    free (dist->points_cloud[i_point_cloud].proj);
+    free (dist->points_cloud[i_point_cloud].closest_elt_rank);
+    free (dist->points_cloud[i_point_cloud].closest_elt_part);
+    free (dist->points_cloud[i_point_cloud].closest_elt_lnum);
+    free (dist->points_cloud[i_point_cloud].closest_elt_gnum);
+  }
+  
+  free (dist->points_cloud);
+  
+  free (dist);
+  
+  PDM_Handles_handle_free (_dists, id, PDM_FALSE);
+  
+  const int n_dists = PDM_Handles_n_get (_dists);
+  
+  if (n_dists == 0) {
+    _dists = PDM_Handles_free (_dists);
+  }
+
 }
 
   
