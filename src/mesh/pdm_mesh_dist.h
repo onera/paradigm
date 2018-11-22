@@ -116,42 +116,6 @@ PDM_mesh_dist_cloud_set
 /* ); */
 
 
-/**
- *
- * \brief Set normal surface mesh
- *
- * \param [in]   id              Identifier
- * \param [in]   i_part          Index of partition
- * \param [in]   normal          Normal
- *
- */
-
-/* void */
-/* PDM_mesh_dist_normal_set */
-/* ( */
-/*  const int          id, */
-/*  const int          i_part, */
-/*  const double      *normal */
-/* ); */
-
-/**
- *
- * \brief Set normal surface mesh
- *
- * \param [in]   id              Identifier
- * \param [in]   i_part          Index of partition
- * \param [in]   normal          Normal
- *
- */
-
-/* void */
-/* PDM_mesh_dist_center_set */
-/* ( */
-/*  const int          id, */
-/*  const int          i_part, */
-/*  const double      *center */
-/* ); */
-
 
 /**
  *
