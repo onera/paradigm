@@ -19,7 +19,7 @@
 #include "pdm_mesh_dist.h"
 #include "pdm_mesh_nodal.h"
 #include "pdm_handles.h"
-
+#include "pdm_octree.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -176,40 +176,40 @@ PDM_mesh_dist_n_part_cloud_set
  const int          n_part
 )
 {
- _PDM_dist_t *dist = _get_from_id (id);
+  _PDM_dist_t *dist = _get_from_id (id);
 
- dist->points_cloud[i_point_cloud].n_part = n_part;
- dist->points_cloud[i_point_cloud].n_points =
-   realloc(dist->points_cloud[i_point_cloud].n_points, n_part * sizeof(int));
- dist->points_cloud[i_point_cloud].coords =
-   realloc(dist->points_cloud[i_point_cloud].coords, n_part * sizeof(double *));
- dist->points_cloud[i_point_cloud].gnum =
-   realloc(dist->points_cloud[i_point_cloud].gnum, n_part * sizeof(PDM_g_num_t * ));
- dist->points_cloud[i_point_cloud].dist =
-   realloc(dist->points_cloud[i_point_cloud].dist, n_part * sizeof(double *));
- dist->points_cloud[i_point_cloud].proj =
-   realloc(dist->points_cloud[i_point_cloud].proj, n_part * sizeof(double *));
- dist->points_cloud[i_point_cloud].closest_elt_rank =
-   realloc(dist->points_cloud[i_point_cloud].closest_elt_rank, n_part * sizeof(int *));
- dist->points_cloud[i_point_cloud].closest_elt_part =
-   realloc(dist->points_cloud[i_point_cloud].closest_elt_part, n_part * sizeof(int *));
- dist->points_cloud[i_point_cloud].closest_elt_lnum =
-   realloc(dist->points_cloud[i_point_cloud].closest_elt_lnum, n_part * sizeof(int *));
- dist->points_cloud[i_point_cloud].closest_elt_gnum =
-   realloc(dist->points_cloud[i_point_cloud].closest_elt_gnum, n_part * sizeof(PDM_g_num_t * ));
-
- for (int i = 0; i < n_part; i++) {
-   dist->points_cloud[i_point_cloud].n_points[i] = -1;
-   dist->points_cloud[i_point_cloud].coords[i] = NULL;
-   dist->points_cloud[i_point_cloud].gnum[i] = NULL;
-   dist->points_cloud[i_point_cloud].dist[i] = NULL;
-   dist->points_cloud[i_point_cloud].proj[i] = NULL;
-   dist->points_cloud[i_point_cloud].closest_elt_rank[i] = NULL;
-   dist->points_cloud[i_point_cloud].closest_elt_part[i] = NULL;
-   dist->points_cloud[i_point_cloud].closest_elt_lnum[i] = NULL;
-   dist->points_cloud[i_point_cloud].closest_elt_gnum[i] = NULL;
- }
- 
+  dist->points_cloud[i_point_cloud].n_part = n_part;
+  dist->points_cloud[i_point_cloud].n_points =
+    realloc(dist->points_cloud[i_point_cloud].n_points, n_part * sizeof(int));
+  dist->points_cloud[i_point_cloud].coords =
+    realloc(dist->points_cloud[i_point_cloud].coords, n_part * sizeof(double *));
+  dist->points_cloud[i_point_cloud].gnum =
+    realloc(dist->points_cloud[i_point_cloud].gnum, n_part * sizeof(PDM_g_num_t * ));
+  dist->points_cloud[i_point_cloud].dist =
+    realloc(dist->points_cloud[i_point_cloud].dist, n_part * sizeof(double *));
+  dist->points_cloud[i_point_cloud].proj =
+    realloc(dist->points_cloud[i_point_cloud].proj, n_part * sizeof(double *));
+  dist->points_cloud[i_point_cloud].closest_elt_rank =
+    realloc(dist->points_cloud[i_point_cloud].closest_elt_rank, n_part * sizeof(int *));
+  dist->points_cloud[i_point_cloud].closest_elt_part =
+    realloc(dist->points_cloud[i_point_cloud].closest_elt_part, n_part * sizeof(int *));
+  dist->points_cloud[i_point_cloud].closest_elt_lnum =
+    realloc(dist->points_cloud[i_point_cloud].closest_elt_lnum, n_part * sizeof(int *));
+  dist->points_cloud[i_point_cloud].closest_elt_gnum =
+    realloc(dist->points_cloud[i_point_cloud].closest_elt_gnum, n_part * sizeof(PDM_g_num_t * ));
+  
+  for (int i = 0; i < n_part; i++) {
+    dist->points_cloud[i_point_cloud].n_points[i] = -1;
+    dist->points_cloud[i_point_cloud].coords[i] = NULL;
+    dist->points_cloud[i_point_cloud].gnum[i] = NULL;
+    dist->points_cloud[i_point_cloud].dist[i] = NULL;
+    dist->points_cloud[i_point_cloud].proj[i] = NULL;
+    dist->points_cloud[i_point_cloud].closest_elt_rank[i] = NULL;
+    dist->points_cloud[i_point_cloud].closest_elt_part[i] = NULL;
+    dist->points_cloud[i_point_cloud].closest_elt_lnum[i] = NULL;
+    dist->points_cloud[i_point_cloud].closest_elt_gnum[i] = NULL;
+  }
+  
 }
 
 
@@ -237,11 +237,11 @@ PDM_mesh_dist_cloud_set
        PDM_g_num_t *gnum
 )
 {
- _PDM_dist_t *dist = _get_from_id (id);
+  _PDM_dist_t *dist = _get_from_id (id);
 
- dist->points_cloud[i_point_cloud].n_points[i_part] = n_points;
- dist->points_cloud[i_point_cloud].coords[i_part] = coords;
- dist->points_cloud[i_point_cloud].gnum[i_part] = gnum;
+  dist->points_cloud[i_point_cloud].n_points[i_part] = n_points;
+  dist->points_cloud[i_point_cloud].coords[i_part] = coords;
+  dist->points_cloud[i_point_cloud].gnum[i_part] = gnum;
 }
 
 
@@ -274,49 +274,6 @@ PDM_mesh_dist_cloud_set
 
 /**
  *
- * \brief Set normal surface mesh
- *
- * \param [in]   id              Identifier
- * \param [in]   i_part          Index of partition
- * \param [in]   normal          Normal
- *
- */
-
-/* void */
-/* PDM_mesh_dist_normal_set */
-/* ( */
-/*  const int          id, */
-/*  const int          i_part, */
-/*  const double      *normal */
-/* ) */
-/* { */
-/* } */
-
-  
-
-/**
- *
- * \brief Set normal surface mesh
- *
- * \param [in]   id              Identifier
- * \param [in]   i_part          Index of partition
- * \param [in]   normal          Normal
- *
- */
-
-/* void */
-/* PDM_mesh_dist_center_set */
-/* ( */
-/*  const int          id, */
-/*  const int          i_part, */
-/*  const double      *center */
-/* ) */
-/* { */
-/* } */
-
-
-/**
- *
  * \brief Process merge points
  *
  * \param [in]   id  Identifier
@@ -329,21 +286,113 @@ PDM_mesh_dist_process
  const int id
 )
 {
+  _PDM_dist_t *dist = _get_from_id (id);
 
-  /* 
-   * Construction octree distribue avec les sommets de la surface 
-   * (ou centre face a voir) 
-   */
-
-  /*
-   *  Pour chaque point recherche du sommet le plus proche 
-   *  (initialisation du bbtree) 
-   */
-
-  /*
-   *  Construction du dbbtree 
-   */
+  const int n_point_cloud = dist->n_point_cloud;
+  const int mesh_id = dist->mesh_nodal_id;
+  PDM_MPI_Comm comm = dist->comm;
   
+  /* 
+   * For each cloud
+   */
+
+  int n_pt_rank = 0;
+
+  for (int i_point_cloud = 0; i_point_cloud < n_point_cloud; i_point_cloud++) {
+
+    _points_cloud_t *pt_cloud = &(dist->points_cloud[i_point_cloud]);
+    const int n_part = pt_cloud->n_part; 
+    
+    /********************************************************************************* 
+     * 
+     * Compute the upper bound distance. It is the distance from the closest vertex
+     *      - Store mesh vetices in a octree
+     *      - Compute the closest distance of points to vertices stored in the octree
+     *
+     *********************************************************************************/
+
+    const double tolerance = 1e-4;
+    const int depth_max = 1000;
+    const int points_in_leaf_max = 4; 
+
+    const int n_part_mesh = PDM_Mesh_nodal_n_part_get (mesh_id);
+
+    int octree_id = PDM_octree_create (n_part_mesh,
+                                       depth_max, 
+                                       points_in_leaf_max,
+                                       tolerance,
+                                       comm);
+    
+    for (int i_part = 0; i_part < n_part_mesh; i_part++) {
+
+      const int n_vertices = PDM_Mesh_nodal_n_vertices_get (mesh_id, i_part);
+
+      const double *vertices_coords = PDM_Mesh_nodal_vertices_get (mesh_id, i_part);
+
+      const PDM_g_num_t *vertices_gnum = PDM_Mesh_nodal_vertices_g_num_get (mesh_id, i_part);
+      
+      PDM_octree_point_cloud_set (octree_id, i_part, n_vertices,
+                                  vertices_coords, vertices_gnum);
+
+    }
+    
+    /*
+     * Build octree
+     */
+
+    PDM_octree_build (octree_id);
+
+    /*
+     * Concatenation of the partitions
+     */
+
+    int n_pts_rank = 0;
+
+    for (int i_part = 0; i_part < n_part; i_part++) {
+      n_pts_rank += pt_cloud->n_points[i_part];
+    }
+    
+    double *pts_rank = malloc (sizeof(double) * n_pts_rank * 3);
+    PDM_g_num_t *pts_g_num_rank = malloc (sizeof(PDM_g_num_t) * n_pts_rank);
+
+    n_pts_rank = 0;
+    for (int i_part = 0; i_part < n_part; i_part++) {
+      for (int i = 0; i < pt_cloud->n_points[i_part]; i++) {
+        for (int k = 0; k < 3; k++) {
+          pts_rank[3*(n_pts_rank + i) + k] = pt_cloud->coords[3*i+k];
+          pts_g_num_rank[n_pts_rank + i] = pt_cloud->gnum[i];
+        }
+      }
+      n_pts_rank += pt_cloud->n_points[i_part];
+    }
+
+    /*
+     * Look for closest surface mesh vertices
+     */
+
+    PDM_g_num_t *closest_vertices_gnum = malloc (sizeof(PDM_g_num_t) * n_pts_rank);
+
+    double *closest_vertices_dist2 =  malloc (sizeof(double) * n_pts_rank);
+    
+    PDM_octree_closest_point (octree_id, 
+                              n_pts_rank,
+                              pts_rank,
+                              pts_g_num_rank,
+                              closest_vertices_gnum,
+                              closest_vertices_dist2);
+
+    free (closest_vertices_gnum);
+    
+    PDM_octree_free (octree_id);
+  
+    /*
+     *  Construction du dbbtree 
+     */
+
+    free (pts_g_num_rank);
+    free (pts_rank);
+    free (closest_vertices_dist2);
+    
   /* 
    * Pour chaque point determination des boites situee 
    * a une plus courte distance que le maxima produit par l'octree 
@@ -366,7 +415,7 @@ PDM_mesh_dist_process
   /* 
    * Envoi du resultat selon la repartition initiale des points  
    */
-  
+  }
 }
 
 
