@@ -36,12 +36,13 @@ extern "C" {
  * \param [in]   comm           MPI communicator
  *
  * \return     Identifier
+ *
  */
 
 int
 PDM_mesh_dist_create
 (
- const int mesh_nodal_id,
+ const PDM_mesh_nature_t mesh_nature,
  const int n_point_cloud,
  const PDM_MPI_Comm comm
 );
@@ -49,20 +50,70 @@ PDM_mesh_dist_create
 
 /**
  *
- * \brief Set the number of partitions of a point cloud
+ * \brief Set the mesh nodal
  *
- * \param [in]   id              Identifier
- * \param [in]   i_point_cloud   Index of point cloud
- * \param [in]   n_part          Number of partitions
+ * \param [in]   id             Identifier
+ * \param [in]   mesh_nodal_id  Mesh nodal identifier
  *
  */
 
 void
-PDM_mesh_dist_n_part_cloud_set
+PDM_mesh_dist_nodal_mesh_set
+(
+ const int  id,
+ const int  mesh_nodal_id
+);
+
+
+/**
+ *
+ * \brief Set global data of a surface mesh
+ *
+ * \param [in]   id             Identifier
+ * \param [in]   n_g_face       Global number of faces
+ * \param [in]   n_g_vtx        Global number of vertices
+ * \param [in]   n_part         Number of partition
+ *
+ */
+
+void
+PDM_mesh_dist_surf_mesh_global_data_set
+(
+ const int         id,
+ const PDM_g_num_t n_g_face,
+ const PDM_g_num_t n_g_vtx,
+ const int         n_part
+);
+
+
+/**
+ *
+ * \brief Set a part of a surface mesh
+ *
+ * \param [in]   id            Identifier
+ * \param [in]   i_part        Partition to define  
+ * \param [in]   n_face        Number of faces                     
+ * \param [in]   face_vtx_idx  Index in the face -> vertex connectivity
+ * \param [in]   face_vtx      face -> vertex connectivity
+ * \param [in]   face_ln_to_gn Local face numbering to global face numbering 
+ * \param [in]   n_vtx         Number of vertices              
+ * \param [in]   coords        Coordinates       
+ * \param [in]   vtx_ln_to_gn  Local vertex numbering to global vertex numbering 
+ *
+ */
+
+void
+PDM_mesh_dist_surf_mesh_part_set
 (
  const int          id,
- const int          i_point_cloud,
- const int          n_part
+ const int          i_part,
+ const int          n_face,
+ const int         *face_vtx_idx,
+ const int         *face_vtx,
+ const PDM_g_num_t *face_ln_to_gn,
+ const int          n_vtx, 
+ const double      *coords,
+ const PDM_g_num_t *vtx_ln_to_gn
 );
 
 
@@ -75,7 +126,6 @@ PDM_mesh_dist_n_part_cloud_set
  * \param [in]   i_part          Index of partition
  * \param [in]   n_points        Number of points
  * \param [in]   coords          Point coordinates
- * \param [in]   gnum            Point global number 
  *
  */
 
@@ -86,8 +136,7 @@ PDM_mesh_dist_cloud_set
  const int          i_point_cloud,
  const int          i_part,
  const int          n_points,
-       double      *coords,
-       PDM_g_num_t *gnum
+ const double      *coords
 );
 
 
@@ -104,17 +153,55 @@ PDM_mesh_dist_cloud_set
  *
  */
 
-/* void */
-/* PDM_mesh_dist_cloud_with_initial_set */
-/* ( */
-/*  const int          id, */
-/*  const int          i_point_cloud, */
-/*  const int          i_part, */
-/*  const int          n_points, */
-/*  const double      *initial_dist, */
-/*  const double      *coords */
-/* ); */
+void
+PDM_mesh_dist_cloud_with_initial_set
+(
+ const int          id,
+ const int          i_point_cloud,
+ const int          i_part,
+ const int          n_points,
+ const double      *initial_dist,
+ const double      *coords
+);
 
+
+/**
+ *
+ * \brief Set normal surface mesh
+ *
+ * \param [in]   id              Identifier
+ * \param [in]   i_part          Index of partition
+ * \param [in]   normal          Normal
+ *
+ */
+
+void
+PDM_mesh_dist_normal_set
+(
+ const int          id,
+ const int          i_part,
+ const double      *normal
+);
+
+  
+
+/**
+ *
+ * \brief Set normal surface mesh
+ *
+ * \param [in]   id              Identifier
+ * \param [in]   i_part          Index of partition
+ * \param [in]   normal          Normal
+ *
+ */
+
+void
+PDM_mesh_dist_center_set
+(
+ const int          id,
+ const int          i_part,
+ const double      *center
+);
 
 
 /**
@@ -136,52 +223,42 @@ PDM_mesh_dist_process
  *
  * \brief Get mesh distance
  *
- * \param [in]   id                Identifier
- * \param [in]   i_point_cloud     Current cloud
- * \param [in]   i_part            Index of partition of the cloud
- * \param [out]  distance          Distance
- * \param [out]  projected         Projected point coordinates
- * \param [out]  closest_elt_rank  Closest element rank
- * \param [out]  closest_elt_part  Closest element partition
- * \param [out]  closest_elt_l_num Local number of the closest element
- * \param [out]  closest_elt_g_num Global number of the closest element
+ * \param [in]   id              Identifier
+ * \param [in]   i_point_cloud   Current cloud
+ * \param [in]   i_part          Index of partition
+ * \param [out]  dist            Distance
+ * \param [out]  proj            Projected point coordinates
+ * \param [out]  closest_part    Closest partition
+ * \param [out]  closest_elt     Closest element
  *
  */
 
 void
 PDM_mesh_dist_get
 (
- const int          id,
- const int          i_point_cloud,
- const int          i_part,
-       double      **distance,
-       double      **projected,
-       int         **closest_elt_rank,
-       int         **closest_elt_part,
-       int         **closest_elt_lnum,
-       PDM_g_num_t **closest_elt_gnum
- );
-
-
+ const int       id,
+ const int       i_point_cloud,
+       double  **dist,
+       double  **proj,
+       int     **closest_part,
+       int     **closest_elt
+);
 
 
 /**
  *
  * \brief Free a distance mesh structure
  *
- * \param [in]  id       Identifier
- * \param [in]  partial  if partial is equal to 0, all data are removed. Otherwise, results are kept. 
+ * \param [in]  id  Identifier
  *
  * \return     Identifier
  */
 
-void
+int
 PDM_mesh_dist_free
 (
- const int id,
- const int partial
- );
-
+ const int id
+);
 
 #ifdef	__cplusplus
 }
