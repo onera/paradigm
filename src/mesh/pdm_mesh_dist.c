@@ -329,7 +329,8 @@ PDM_mesh_dist_process
 
       const double *vertices_coords = PDM_Mesh_nodal_vertices_get (mesh_id, i_part);
 
-      const PDM_g_num_t *vertices_gnum = PDM_Mesh_nodal_vertices_g_num_get (mesh_id, i_part);
+      const PDM_g_num_t *vertices_gnum =
+        PDM_Mesh_nodal_vertices_g_num_get (mesh_id, i_part);
       
       PDM_octree_point_cloud_set (octree_id, i_part, n_vertices,
                                   vertices_coords, vertices_gnum);
@@ -389,32 +390,106 @@ PDM_mesh_dist_process
      *  Construction du dbbtree 
      */
 
-    free (pts_g_num_rank);
+    const int dim = 3;
+    
+    PDM_dbbtree_t *dbbt = PDM_dbbtree_create (comm, dim);
+
+    const int          *nElts   = malloc (sizeof(int) * n_part_mesh);
+    const double      **extents = malloc (sizeof(double *) * n_part_mesh);
+    const PDM_g_num_t **gNum    = malloc (sizeof(PDM_g_num_t *) * n_part_mesh);
+
+    int PDM_Mesh_nodal_n_blocks_get
+(
+const int   idx
+);
+
+int *
+PDM_Mesh_nodal_blocks_id_get
+(
+const int   idx
+);
+
+ 
+PDM_Mesh_nodal_elt_t
+PDM_Mesh_nodal_block_type_get
+(
+const int   idx,
+const int   id_block     
+);
+
+void
+PDM_Mesh_nodal_block_std_get 
+(   
+const int            idx,
+const int            id_block,     
+const int            id_part, 
+      PDM_l_num_t  **connec   
+); 
+
+int
+PDM_Mesh_nodal_block_n_elt_get 
+(   
+const int            idx,
+const int            id_block,     
+const int            id_part 
+);
+ 
+PDM_g_num_t *
+PDM_Mesh_nodal_block_g_num_get 
+(   
+const int            idx,
+const int            id_block,     
+const int            id_part 
+); 
+
+
+void
+PDM_Mesh_nodal_block_poly2d_get 
+(
+ const int          idx,
+ const int          id_block, 
+ const int          id_part, 
+       PDM_l_num_t  **connec_idx,   
+       PDM_l_num_t  **connec
+); 
+
+ 
+    PDM_dbbtree_boxes_set (dbbt, n_part_mesh,
+                           nElts,
+                           extents,
+                           gNum);
+
+
     free (pts_rank);
     free (closest_vertices_dist2);
     
-  /* 
-   * Pour chaque point determination des boites situee 
-   * a une plus courte distance que le maxima produit par l'octree 
-   */
+    /* 
+     * Pour chaque point determination des boites situee 
+     * a une plus courte distance que le maxima produit par l'octree 
+     */
 
-  /* 
-   * Repartition des sommets suivant la numerotation absolue en fonction 
-   * (poids sur le nombre de candidats)
-   *  Necessite de faire une block_to_part avec poids
-   * 
-   * Il faut envoyer les coordonnees des sommets de chaque triangle ou 
-   * quadrangle ou polygone
-   *
-   */
+    /* 
+     * Repartition des sommets suivant la numerotation absolue en fonction 
+     * (poids sur le nombre de candidats)
+     *  Necessite de faire une block_to_part avec poids
+     * 
+     * Il faut envoyer les coordonnees des sommets de chaque triangle ou 
+     * quadrangle ou polygone
+     *
+     */
 
-  /* 
-   * Calcul des distances pour chaque candidat 
-   */
+    free (pts_g_num_rank);
 
-  /* 
-   * Envoi du resultat selon la repartition initiale des points  
-   */
+    /* 
+     * Calcul des distances pour chaque candidat 
+     */
+
+    /* 
+     * Envoi du resultat selon la repartition initiale des points  
+     */
+
+    PDM_dbbtree_free (dbbt);
+
   }
 }
 
