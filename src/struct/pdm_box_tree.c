@@ -3702,7 +3702,7 @@ double          *box_max_dist
  *   bt                <-- pointer to box tree structure
  *   n_pts             <-- Number of points
  *   pts               <-- Point coordinates (size = 3 * n_pts)
- *   upper_bound_dist  <-- Upper bound distance (size = n_pts)
+ *   upper_bound_dist2 <-- Upper bound of the square of the distance (size = n_pts)
  *   i_boxes           --> Index of boxes (size = n_pts + 1)
  *   boxes             --> Boxes (size = i_boxes[n_pts])
  *----------------------------------------------------------------------------*/
@@ -3713,7 +3713,7 @@ PDM_box_tree_closest_upper_bound_dist_boxes_get
 PDM_box_tree_t  *bt,
 const int        n_pts,        
 double           pts[],
-double           upper_bound_dist[],
+double           upper_bound_dist2[],
 int             *i_boxes[],  
 int             *boxes[]
 )
@@ -3764,12 +3764,12 @@ int             *boxes[]
                               &min_dist2,            
                               &max_dist2);            
 
-      if ((min_dist2 <= upper_bound_dist[i]) || (inbox == 1)) {
+      if ((min_dist2 <= upper_bound_dist2[i]) || (inbox == 1)) {
 
         if (!curr_node->is_leaf) {
           
           _push_child_in_stack (bt, dim, id_curr_node, 
-                                upper_bound_dist[i], 
+                                upper_bound_dist2[i], 
                                 _pt, &pos_stack, stack);
       
         }
@@ -3790,7 +3790,7 @@ int             *boxes[]
                        &box_min_dist2,            
                        &box_max_dist2);            
 
-            if (box_max_dist2 < upper_bound_dist[i]) {
+            if (box_max_dist2 < upper_bound_dist2[i]) {
               if (idx_box >= tmp_s_boxes) {
                 tmp_s_boxes *= 2;
                 *boxes = realloc (*boxes, sizeof(int) * tmp_s_boxes);
