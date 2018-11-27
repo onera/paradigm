@@ -111,9 +111,9 @@ PDM_part_to_block_create
 (
  PDM_part_to_block_distrib_t   t_distrib,
  PDM_part_to_block_post_t      t_post,
- float                         partActiveNode,
+ double                         partActiveNode,
  PDM_g_num_t                 **gnum_elt,
- float                       **weight,
+ double                       **weight,
  int                          *n_elt,
  int                           n_part,
  PDM_MPI_Comm                  comm
