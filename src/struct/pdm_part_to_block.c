@@ -227,7 +227,7 @@ _define_rank_distrib( _cs_part_to_block_t *ptb,
 
   for (rank_id = 0; rank_id < n_ranks; rank_id++) {
 
-    PDM_g_num_t   sum = 0;
+    double   sum = 0.;
     int   shift = rank_id * sampling_factor;
 
     for (id = 0; id < sampling_factor; id++)
@@ -327,7 +327,7 @@ _update_sampling(int            dim,
 
   } /* End of loop on samples */
 
-  new_sampling[n_samples] = 1.0;
+  new_sampling[n_samples] = _sampling[n_samples];
 
   free(_sampling);
 
@@ -613,6 +613,12 @@ _distrib_data
 
     } /* End of while */
 
+    free (distrib);
+    free (cfreq);
+    free (sampling);
+
+    sampling = best_sampling;
+    
     int *_active_ranks = ptb->activeRanks;
 
     PDM_g_num_t *rank_index = malloc (sizeof(PDM_g_num_t) * (n_activeRanks + 1));
