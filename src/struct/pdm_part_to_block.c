@@ -143,6 +143,12 @@ _define_rank_distrib( _cs_part_to_block_t *ptb,
   /* Initialization */
 
   double   *l_distrib = (double  *) malloc (n_samples * sizeof(double));
+
+  printf ("sampling define rank distrib d: ");
+  for (int i = 0; i < n_samples + 1; i++) {
+    printf(PDM_FMT_G_NUM" ", sampling[i]);
+  }
+  printf ("\n");
   
   for (id = 0; id < n_samples; id++) {
     l_distrib[id] = 0;
@@ -161,7 +167,7 @@ _define_rank_distrib( _cs_part_to_block_t *ptb,
       int iSample = PDM_binary_search_gap_long (_gnum_elt,
                                                 sampling,
                                                 n_samples + 1);
-
+      printf ("l_idstrib : %ld %d %12.5e\n", _gnum_elt, iSample, ptb->weight[i][j]);
       l_distrib[iSample] += ptb->weight[i][j];
     }
   }
@@ -250,6 +256,11 @@ _define_rank_distrib( _cs_part_to_block_t *ptb,
     exit(1);
   }
 #endif /* sanity check */
+  printf ("sampling define rank distrib f: ");
+  for (int i = 0; i < n_samples + 1; i++) {
+    printf(PDM_FMT_G_NUM" ", sampling[i]);
+  }
+  printf ("\n");
 
 }
 
@@ -528,13 +539,13 @@ _distrib_data
     const int  sampling_factor = _sampling_factors[dim];
     const int  n_samples = sampling_factor * n_activeRanks;
     const double  unit = 1/(double)n_samples;
+    printf ("n_samples : %d %d %12.5e "PDM_FMT_G_NUM" \n", n_samples, n_activeRanks, unit, _id_max_max);
     double **weight = ptb->weight;
     PDM_MPI_Comm comm = ptb->comm;      
 
     PDM_g_num_t *sampling = malloc(sizeof(PDM_g_num_t) * (n_samples + 1));
     
     double  lsum_weight = 0.;
-    ptb->n_eltProc = 0;
     for (int i = 0; i < ptb->n_part; i++) {
       for (int j = 0; j < ptb->n_elt[i]; j++) {
         lsum_weight += weight[i][j];
@@ -549,9 +560,25 @@ _distrib_data
 
     /* Define a naive sampling (uniform distribution) */
 
-    for (int i = 0; i < n_samples + 1; i++) {
-      sampling[i] = i*unit;
+    PDM_g_num_t _n_sampleData = _id_max_max / n_samples;
+    PDM_g_num_t _samplerest = _id_max_max % n_samples;
+
+    sampling[0] = 0;
+    int k = 0;
+    for (int i = 0; i < n_samples; i++) {
+      sampling[i+1] = sampling[i];
+      sampling[i+1] += _n_sampleData;
+      if (k < _samplerest) {
+        sampling[i+1] += 1;
+        k += 1;
+      }
     }
+
+    printf ("sampling init: ");
+    for (int i = 0; i < n_samples + 1; i++) {
+      printf(PDM_FMT_G_NUM" ", sampling[i]);
+    }
+    printf ("\n");
 
     /* Define the distribution associated to the current sampling array */
 
@@ -632,7 +659,7 @@ _distrib_data
 
     ptb->dataDistribIndex[0] = 0;
 
-    int k = 0;
+    k = 0;
     for (int i = 0; i < n_activeRanks; i++) {
       int i_activeRank = _active_ranks[i];
       while (k < i_activeRank) {
@@ -830,7 +857,10 @@ PDM_part_to_block_create
   _cs_part_to_block_t *ptb = 
     (_cs_part_to_block_t *) malloc (sizeof(_cs_part_to_block_t));
 
-
+  if ((t_post != PDM_PART_TO_BLOCK_POST_MERGE) && (weight != NULL)) {
+    PDM_error(__FILE__, __LINE__, 0,"PDM_part_to_block_create : weights are available only if PDM_PART_TO_BLOCK_POST_MERGE is selected\n");
+  }
+  
   ptb->t_distrib        = t_distrib;    /*!< Distribution type */
   ptb->t_post           = t_post;       /*!< Post processing type */
   ptb->n_activeRanks    = 0;            /*!< Number of active ranks */
