@@ -774,7 +774,7 @@ _renum_faces_random
     
     _random_order (part->nFace, part->newToOldOrderFace);
     
-    PDM_part_reorder_face (part, part->newToOldorderFaces);
+    PDM_part_reorder_face (part, part->newToOldOrderFaces);
     
   }
 }
@@ -832,7 +832,6 @@ _renum_faces_lexicographic
 
     
     /** Free memory **/
-    free (order);
     free (faceCellTmp);
   }
 }
