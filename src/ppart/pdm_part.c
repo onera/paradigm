@@ -1382,11 +1382,20 @@ _distrib_cell
       PDM_printf("\n");
     }
 
+    /* reordering cells and faces */
+    meshPart->newToOldOrderCell = (int *) malloc (sizeof(int) * meshPart->nCell);
+    for (int i = 0; i < meshPart->nCell; i++){
+      meshPart->newToOldOrderCell[i] = i;
+    }
+    meshPart->newToOldOrderFace = (int *) malloc (sizeof(int) * meshPart->nFace);
+    for (int i = 0; i < meshPart->nFace; i++){
+      meshPart->newToOldOrderFace[i] = i;
+    }
+
     /* Free */
 
     free(initialIdx);
     meshPart->gCellFace = NULL;
-
   }
 
 }
