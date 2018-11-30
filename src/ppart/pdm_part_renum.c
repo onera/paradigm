@@ -774,7 +774,7 @@ _renum_faces_random
     
     _random_order (part->nFace, part->newToOldOrderFace);
     
-    PDM_part_reorder_face (part, part->newToOldOrderFaces);
+    PDM_part_reorder_face (part, part->newToOldOrderFace);
     
   }
 }
