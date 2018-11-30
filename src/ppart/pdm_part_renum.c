@@ -734,9 +734,9 @@ _renum_cells_random
   for(int ipart = 0; ipart < nPart; ++ipart) {
     _part_t *part = meshParts[ipart];       
     
-    _random_order (nCell, part->newToOldOrderCell);
+    _random_order (part->nCell, part->newToOldOrderCell);
     
-    PDM_part_reorder_cell (part, part->newToOldOrderCell);
+    PDM_part_reorder_cell (part->nFace, part->newToOldOrderCell);
     
   }
 }
@@ -772,7 +772,7 @@ _renum_faces_random
   for(int ipart = 0; ipart < nPart; ++ipart) {
     _part_t *part = meshParts[ipart];       
     
-    _random_order (nFace, part->newToOldOrderFace);
+    _random_order (part->nFace, part->newToOldOrderFace);
     
     PDM_part_reorder_face (part, part->newToOldorderFaces);
     
