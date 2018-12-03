@@ -23,6 +23,7 @@
 #include "pdm_octree.h"
 #include "pdm_dbbtree.h"
 #include "pdm_part_to_block.h"
+#include "pdm_block_to_part.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -658,6 +659,10 @@ PDM_mesh_dist_process
       box_n[i] = (double) (box_index[i+1] - box_index[i]);
     }
 
+    for (int i = 0; i < n_pts_rank; i++) {
+      i_box_n[i] = box_index[i+1] - box_index[i];
+    }
+
     PDM_part_to_block_t *ptb_vtx =
       PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                 PDM_PART_TO_BLOCK_POST_MERGE,
@@ -711,61 +716,146 @@ PDM_mesh_dist_process
      *
      */
 
-    PDM_g_num_t **gnum_face_mesh = malloc (sizeof(PDM_g_num_t *) * n_part_mesh);
-    double **gnum_face_mesh = malloc (sizeof(double *) * n_part_mesh);
+    /* part to block */
 
+    const PDM_g_num_t **gnum_face_mesh = malloc (sizeof(PDM_g_num_t *) * n_part_mesh);
+    int *n_face_mesh = malloc (sizeof(int *) * n_part_mesh);
     
+    for (int i = 0; i < n_part_mesh; i++) {
+      n_face_mesh[i] = PDM_surf_mesh_part_n_face_get (dist->surf_mesh, i);
+      gnum_face_mesh[i] = PDM_surf_mesh_part_face_g_num_get (dist->surf_mesh, i);      
+    }
+
     PDM_part_to_block_t *ptb_elt =
       PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
-                                PDM_PART_TO_BLOCK_POST_CLEAN_UP,
+                                PDM_PART_TO_BLOCK_POST_CLEANUP,
                                 1.,
-                                &pts_g_num_rank,
-                                &box_n,  
-                                &n_pts_rank,
-                                1,  
+                                (PDM_g_num_t **) gnum_face_mesh,
+                                NULL,  
+                                n_face_mesh,
+                                n_part_mesh,  
                                 comm);
 
-const double *
-PDM_surf_mesh_part_vtx_get
-(
- PDM_surf_mesh_t      *mesh,
- int                   iPart
-);
+    double **coords_face_mesh = malloc (sizeof(double *) * n_part_mesh);
+    int **coords_face_mesh_n = malloc (sizeof(int *) * n_part_mesh);
+    
+    for (int i = 0; i < n_part_mesh; i++) {
+      coords_face_mesh[i] = NULL;
+      const int *part_face_vtx     =
+        PDM_surf_mesh_part_face_vtx_get (dist->surf_mesh, i);
+      const int *part_face_vtx_idx =
+        PDM_surf_mesh_part_face_vtx_idx_get (dist->surf_mesh, i);
+      const double *part_vtx = PDM_surf_mesh_part_vtx_get (dist->surf_mesh, i);
 
-const PDM_g_num_t *
-PDM_surf_mesh_part_vtx_g_num_get
-(
- PDM_surf_mesh_t      *mesh,
- int                   iPart
-);
+      coords_face_mesh_n[i] = malloc (sizeof(int) * n_face_mesh[i]);
+      coords_face_mesh[i] = malloc(sizeof(double) * 3 * part_face_vtx_idx[n_face_mesh[i]]);
+      
+      for (int j = 0; j < n_face_mesh[i]; j++) {
+        coords_face_mesh_n[i][j] = (part_face_vtx_idx[j+1] - part_face_vtx_idx[j]) * 3;
+      }
 
-int
-PDM_surf_mesh_part_n_face_get
-(
- PDM_surf_mesh_t      *mesh,
- int                   iPart
-);
+      int idx = 0;
+      for (int j = 0; j < part_face_vtx_idx[n_face_mesh[i]]; j++) {
+        int _vtx = part_face_vtx[j] - 1;
+        for (int k = 0; k < 3; k++) {
+          coords_face_mesh[i][idx++] = part_vtx[3*_vtx+k];
+        }
+      }
 
-const int *
-PDM_surf_mesh_part_face_vtx_get
-(
- PDM_surf_mesh_t      *mesh,
- int                   iPart
-);
+    }
 
-const int *
-PDM_surf_mesh_part_face_vtx_idx_get
-(
- PDM_surf_mesh_t      *mesh,
- int                   iPart
-);
+    int *block_coords_face_mesh_n = NULL;
+    double *block_coords_face_mesh = NULL;
+    
+    PDM_part_to_block_exch (ptb_elt,
+                            sizeof(double),
+                            PDM_STRIDE_VAR,
+                            -1,
+                            coords_face_mesh_n,
+                            (void **) coords_face_mesh,
+                            &block_coords_face_mesh_n,
+                            (void **) &block_coords_face_mesh);
 
 
+    /* block to part */
+    
+    PDM_g_num_t *block_face_distrib_idx = PDM_part_to_block_distrib_index_get (ptb_elt);
+
+    int block_g_num_n = 0;
+    for (int i = 0; i < n_pts_rank; i++) {
+      block_g_num_n += block_g_num_stride[i]; 
+    }
+    
+    PDM_block_to_part_t *btp = PDM_block_to_part_create (block_face_distrib_idx,
+                                                         (const PDM_g_num_t **) &block_g_num,
+                                                         &block_g_num_n,
+                                                         1,
+                                                         comm);
+
+    int un = 1;
+    int *part_coords_vtx_face_n = malloc (sizeof(int) * block_g_num_n);
+    PDM_block_to_part_exch (btp,
+                            sizeof(int),
+                            PDM_STRIDE_CST,
+                            &un,
+                            block_coords_face_mesh_n,
+                            NULL,
+                            (void **) &part_coords_vtx_face_n);
+
+    int *part_coords_vtx_face_idx = malloc (sizeof(int) * (block_g_num_n+1));
+    part_coords_vtx_face_idx[0] = 0;
+
+    for (int i = 0; i < block_g_num_n; i++) {
+      part_coords_vtx_face_idx[i+1] = part_coords_vtx_face_idx[i] +
+                                      part_coords_vtx_face_n[i]/3;
+    }
+    
+    double *part_coords_vtx_face = malloc (sizeof(double) * 3 *
+                                           part_coords_vtx_face_idx[block_g_num_n]);
+    PDM_block_to_part_exch (btp,
+                            sizeof(double),
+                            PDM_STRIDE_VAR,
+                            block_coords_face_mesh_n,
+                            block_coords_face_mesh,
+                            &part_coords_vtx_face_n,
+                            (void **) &part_coords_vtx_face);
+
+    /* free */
+
+    for (int i = 0; i < n_part_mesh; i++) {
+      free (coords_face_mesh[i]);
+      free (coords_face_mesh_n[i]);
+    }
+    free (coords_face_mesh);
+    free (gnum_face_mesh);
+    free (n_face_mesh);
+
+    PDM_part_to_block_free (ptb_elt);
+    
+    /* compute distance min per points */
+
+    /* int idx = 0; */
+    /* for (int i = 0; i < n_pts_rank; i++) { */
+    /*   for (int j = 0; j < block_g_num_stride[i]; j++) { */
+    /*     for (int k = part_coords_vtx_face_idx[idx]; */
+    /*              k < part_coords_vtx_face_idx[idx+1]; k++) { */
+    /*       //A FINIR : TODO */
+    /*     } */
+    /*   } */
+    /* }    */
+
+    free (part_coords_vtx_face_n);
+    free (part_coords_vtx_face_idx);
+    free (part_coords_vtx_face);
+    
+    PDM_block_to_part_free (btp);
+    
+    
     
     const PDM_g_num_t *gnum_surf_mesh_boxes =
       (const PDM_g_num_t *) PDM_box_set_get_g_num (surf_mesh_boxes);
 
-    int n_surf_mesh_boxes    = PDM_box_set_get_size (surf_mesh_boxes);
+    int n_surf_mesh_boxes  = PDM_box_set_get_size (surf_mesh_boxes);
 
     
     /* PDM_l_num_t *destination_ = PDM_part_to_block_destination_get (ptb_boxesB); */
