@@ -1284,7 +1284,7 @@ PDM_part_to_block_exch
         if (_ptb->block_gnum[idx1] != _ptb->sorted_recvGnum[i]) {
           idx1 += 1;
           _block_stride[idx1] = _block_stride[i];
-          if (_ptb->t_post == PDM_PART_TO_BLOCk_POST_CLEANUP) {
+          if (_ptb->t_post == PDM_PART_TO_BLOCK_POST_CLEANUP) {
             for (int k = i_block_stride[i]; k < i_block_stride[i+1]; k++) {
               _block_data[idx2++] = _block_data[k];
             }
@@ -1299,7 +1299,7 @@ PDM_part_to_block_exch
       
       /* Cleanup */
 
-      if (_ptb->t_post == PDM_PART_TO_BLOCk_POST_CLEANUP) {
+      if (_ptb->t_post == PDM_PART_TO_BLOCK_POST_CLEANUP) {
         _block_data = realloc (_block_data, sizeof(unsigned char) * idx2);
         *block_data = _block_data;
 
@@ -1353,7 +1353,7 @@ PDM_part_to_block_exch
         }
         if (_ptb->block_gnum[idx1] != _ptb->sorted_recvGnum[i]) {
           idx1 += 1;
-          if (_ptb->t_post == PDM_PART_TO_BLOCk_POST_CLEANUP) {
+          if (_ptb->t_post == PDM_PART_TO_BLOCK_POST_CLEANUP) {
             int idx3 = i * cst_stride * (int) s_data;
             for (int k = 0; k < n_octet; k++) {
               _block_data[idx2++] = _block_data[idx3++];
@@ -1362,7 +1362,7 @@ PDM_part_to_block_exch
         }
       }
 
-      if (_ptb->t_post == PDM_PART_TO_BLOCk_POST_CLEANUP) {
+      if (_ptb->t_post == PDM_PART_TO_BLOCK_POST_CLEANUP) {
         _block_data = realloc (_block_data, sizeof(unsigned char) * idx2);
         *block_data = _block_data;
         s_block_data = idx2 / (int) s_data;

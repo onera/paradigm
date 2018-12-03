@@ -29,8 +29,16 @@ find_library(PARMETIS_LIBRARY   parmetis
      DOC "The ParMETIS library"
      ) 
 
+find_library(METIS_LIBRARY   metis 
+     HINTS ${PARMETIS_DIR}/lib $ENV{PARMETIS_DIR}/lib
+     NO_DEFAULT_PATH
+     DOC "The METIS library"
+     ) 
+find_library(METIS_LIBRARY   metis 
+     DOC "The METIS library"
+     ) 
 
-set(PARMETIS_LIBRARIES ${PARMETIS_LIBRARY} CACHE STRING "ParMETIS libraries")
+set(PARMETIS_LIBRARIES ${PARMETIS_LIBRARY} ${METIS_LIBRARY} CACHE STRING "ParMETIS libraries")
 mark_as_advanced(PARMETIS_LIBRARIES)
 
 if (PARMETIS_LIBRARIES AND PARMETIS_INCLUDE_DIRS)
