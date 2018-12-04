@@ -24,6 +24,8 @@
 #include "pdm_dbbtree.h"
 #include "pdm_part_to_block.h"
 #include "pdm_block_to_part.h"
+#include "pdm_triangle.h"
+#include "pdm_polygon.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -53,9 +55,6 @@ typedef struct {
   PDM_g_num_t **gnum;
   double      **dist;
   double      **proj;
-  int         **closest_elt_rank;
-  int         **closest_elt_part;
-  int         **closest_elt_lnum;
   PDM_g_num_t **closest_elt_gnum;
   
 } _points_cloud_t;
@@ -160,9 +159,6 @@ PDM_mesh_dist_create
     dist->points_cloud[i].gnum = NULL;
     dist->points_cloud[i].dist = NULL;
     dist->points_cloud[i].proj = NULL;
-    dist->points_cloud[i].closest_elt_rank = NULL;
-    dist->points_cloud[i].closest_elt_part = NULL;
-    dist->points_cloud[i].closest_elt_lnum = NULL;
     dist->points_cloud[i].closest_elt_gnum = NULL;
   }
   
@@ -201,15 +197,6 @@ PDM_mesh_dist_n_part_cloud_set
     realloc(dist->points_cloud[i_point_cloud].dist, n_part * sizeof(double *));
   dist->points_cloud[i_point_cloud].proj =
     realloc(dist->points_cloud[i_point_cloud].proj, n_part * sizeof(double *));
-  dist->points_cloud[i_point_cloud].closest_elt_rank =
-    realloc(dist->points_cloud[i_point_cloud].closest_elt_rank,
-            n_part * sizeof(int *));
-  dist->points_cloud[i_point_cloud].closest_elt_part =
-    realloc(dist->points_cloud[i_point_cloud].closest_elt_part,
-            n_part * sizeof(int *));
-  dist->points_cloud[i_point_cloud].closest_elt_lnum =
-    realloc(dist->points_cloud[i_point_cloud].closest_elt_lnum,
-            n_part * sizeof(int *));
   dist->points_cloud[i_point_cloud].closest_elt_gnum =
     realloc(dist->points_cloud[i_point_cloud].closest_elt_gnum,
             n_part * sizeof(PDM_g_num_t * ));
@@ -220,9 +207,6 @@ PDM_mesh_dist_n_part_cloud_set
     dist->points_cloud[i_point_cloud].gnum[i] = NULL;
     dist->points_cloud[i_point_cloud].dist[i] = NULL;
     dist->points_cloud[i_point_cloud].proj[i] = NULL;
-    dist->points_cloud[i_point_cloud].closest_elt_rank[i] = NULL;
-    dist->points_cloud[i_point_cloud].closest_elt_part[i] = NULL;
-    dist->points_cloud[i_point_cloud].closest_elt_lnum[i] = NULL;
     dist->points_cloud[i_point_cloud].closest_elt_gnum[i] = NULL;
   }
 }
@@ -621,11 +605,11 @@ PDM_mesh_dist_process
                 " PDM_mesh_dist_surf_mesh_part_set\n");
     }
  
-    PDM_box_set_t  *surf_mesh_boxes = PDM_dbbtree_boxes_set (dbbt,
-                                                             n_part_mesh,
-                                                             nElts,
-                                                             extents,
-                                                             gNum);
+    /* PDM_box_set_t  *surf_mesh_boxes = PDM_dbbtree_boxes_set (dbbt, */
+    /*                                                          n_part_mesh, */
+    /*                                                          nElts, */
+    /*                                                          extents, */
+    /*                                                          gNum); */
     /* 
      * Find elements closer than closest_vertices_dist2 distance
      */
@@ -706,7 +690,6 @@ PDM_mesh_dist_process
                             &block_g_num_stride,
                             (void **) &block_g_num);
 
-    PDM_part_to_block_free (ptb_vtx);
     free (i_box_n);
 
     /* 
@@ -820,7 +803,7 @@ PDM_mesh_dist_process
                             &part_coords_vtx_face_n,
                             (void **) &part_coords_vtx_face);
 
-    /* free */
+    /* free */ 
 
     for (int i = 0; i < n_part_mesh; i++) {
       free (coords_face_mesh[i]);
@@ -834,75 +817,102 @@ PDM_mesh_dist_process
     
     /* compute distance min per points */
 
-    /* int idx = 0; */
-    /* for (int i = 0; i < n_pts_rank; i++) { */
-    /*   for (int j = 0; j < block_g_num_stride[i]; j++) { */
-    /*     for (int k = part_coords_vtx_face_idx[idx]; */
-    /*              k < part_coords_vtx_face_idx[idx+1]; k++) { */
-    /*       //A FINIR : TODO */
-    /*     } */
-    /*   } */
-    /* }    */
+    double *block_closest = malloc (sizeof(double) * 4 * n_pts_rank);
+    PDM_g_num_t *block_closest_gnum = malloc (sizeof(PDM_g_num_t) *  n_pts_rank);
 
+    int idx = 0;
+    for (int i = 0; i < n_pts_rank; i++) {
+      double *_pt_coords = block_pts + 3*i;
+      double *_block_closest = block_closest + 4;
+      _block_closest[0] = HUGE_VAL;
+      
+      PDM_g_num_t *_block_closest_gnum = block_closest_gnum + 1; 
+      
+      for (int j = 0; j < block_g_num_stride[i]; j++) {
+        int n_vtx_elt = (part_coords_vtx_face_idx[idx+1] - part_coords_vtx_face_idx[idx])/3;
+        double *_coords_face_elt = part_coords_vtx_face + part_coords_vtx_face_idx[idx];
+        PDM_g_num_t face_g_num = block_g_num[idx];
+
+        double closestPoint[3];
+        double minDist2;
+
+        if (n_vtx_elt == 3) {
+
+          PDM_triangle_status_t status =
+            PDM_triangle_evaluate_position (_pt_coords,
+                                            _coords_face_elt,
+                                            closestPoint,
+                                            &minDist2,
+                                            NULL);
+          if (status == PDM_TRIANGLE_DEGENERATED) {
+            idx += 1;
+            continue;
+          }
+        }
+
+        else {
+          PDM_polygon_status_t status =
+            PDM_polygon_evaluate_position (_pt_coords,
+                                           n_vtx_elt,
+                                           _coords_face_elt,
+                                           closestPoint,
+                                           &minDist2);
+                                         
+          if (status == PDM_POLYGON_DEGENERATED) {
+            idx += 1;
+            continue;
+          }
+
+        }
+
+        if (minDist2 < _block_closest[0]) {
+          _block_closest[0] = minDist2;
+          for (int k = 0; k < 3; k++) {
+            _block_closest[k+1] = closestPoint[k];
+          }
+          _block_closest_gnum[0] = face_g_num;
+        }
+        
+        idx += 1;
+      }
+    }
+
+    /* Free */
+    
     free (part_coords_vtx_face_n);
     free (part_coords_vtx_face_idx);
     free (part_coords_vtx_face);
     
     PDM_block_to_part_free (btp);
-    
-    
-    
-    const PDM_g_num_t *gnum_surf_mesh_boxes =
-      (const PDM_g_num_t *) PDM_box_set_get_g_num (surf_mesh_boxes);
-
-    int n_surf_mesh_boxes  = PDM_box_set_get_size (surf_mesh_boxes);
-
-    
-    /* PDM_l_num_t *destination_ = PDM_part_to_block_destination_get (ptb_boxesB); */
-
-  /* n_g_eltB = PDM_box_set_get_global_size(boxesB); */
-
-  /* distribB = PDM_box_distrib_create (n_eltB, */
-  /*                                    n_g_eltB, */
-  /*                                    1, // Don't use in this case */
-  /*                                    ol->comm); */
-  /*   for (int i = 0; i < n_elt_blockB; i++) { */
-  /*   int iProc = destinationB[i] + 1; */
-  /*   distribB->index[iProc]++; */
-  /* } */
-
-  /* for (int i = 0; i < lComm; i++) { */
-  /*   distribB->index[i+1] += distribB->index[i]; */
-  /* } */
-  
-  /* distribB->list = (int *) malloc (sizeof(int) * distribB->index[lComm]); */
-  
-  /* for (int i = 0; i < n_elt_blockB; i++) { */
-  /*   int iProc = destinationB[i] + 1; */
-  /*   int idxB = distribB->index[iProc] + (countEltsB[iProc]++); */
-  /*   distribB->list[idxB] = i; */
-  /* } */
-
-  /* PDM_box_set_redistribute (distribB, boxesB); */
 
     /* 
-     * Repartition des sommets suivant la numerotation absolue en fonction 
-     * (poids sur le nombre de candidats)
-     *  Necessite de faire une block_to_part avec poids
-     * 
-     * Il faut envoyer les coordonnees des sommets de chaque triangle ou 
-     * quadrangle ou polygone
-     *
+     * Transfer results 
      */
 
+    PDM_g_num_t *block_vtx_distrib_idx = PDM_part_to_block_distrib_index_get (ptb_vtx);
 
-    /* 
-     * Calcul des distances pour chaque candidat 
-     */
+    PDM_block_to_part_t *btp_vtx = PDM_block_to_part_create (block_vtx_distrib_idx,
+                                                             (const long **) pt_cloud->gnum,
+                                                             pt_cloud->n_points,
+                                                             n_part,
+                                                             comm);
+
+    // TODO echange de gnum distance, projete !!!!!
+
+    /* int un = 1; */
+    /* int *part_coords_vtx_face_n = malloc (sizeof(int) * block_g_num_n); */
+    /* PDM_block_to_part_exch (btp, */
+    /*                         sizeof(int), */
+    /*                         PDM_STRIDE_CST, */
+    /*                         &un, */
+    /*                         block_coords_face_mesh_n, */
+    /*                         NULL, */
+    /*                         (void **) &part_coords_vtx_face_n); */
     
-    /* 
-     * Envoi du resultat selon la repartition initiale des points  
-     */
+    PDM_block_to_part_free (btp_vtx);
+    PDM_part_to_block_free (ptb_vtx);
+
+
 
   }
 }
@@ -917,9 +927,6 @@ PDM_mesh_dist_process
  * \param [in]   i_part            Index of partition of the cloud
  * \param [out]  distance          Distance
  * \param [out]  projected         Projected point coordinates
- * \param [out]  closest_elt_rank  Closest element rank
- * \param [out]  closest_elt_part  Closest element partition
- * \param [out]  closest_elt_l_num Local number of the closest element
  * \param [out]  closest_elt_g_num Global number of the closest element
  *
  */
@@ -932,9 +939,6 @@ PDM_mesh_dist_get
  const int          i_part,
        double      **distance,
        double      **projected,
-       int         **closest_elt_rank,
-       int         **closest_elt_part,
-       int         **closest_elt_lnum,
        PDM_g_num_t **closest_elt_gnum
 )
 {
@@ -942,9 +946,6 @@ PDM_mesh_dist_get
 
  *distance = dist->points_cloud[i_point_cloud].dist[i_part];
  *projected = dist->points_cloud[i_point_cloud].proj[i_part];
- *closest_elt_rank = dist->points_cloud[i_point_cloud].closest_elt_rank[i_part];
- *closest_elt_part = dist->points_cloud[i_point_cloud].closest_elt_part[i_part];
- *closest_elt_lnum = dist->points_cloud[i_point_cloud].closest_elt_lnum[i_part];
  *closest_elt_gnum = dist->points_cloud[i_point_cloud].closest_elt_gnum[i_part];
 }
 
@@ -973,9 +974,6 @@ PDM_mesh_dist_free
       for (int i = 0; i < (dist->points_cloud[i_point_cloud]).n_part; i++) {
         free (dist->points_cloud[i_point_cloud].dist[i]);
         free (dist->points_cloud[i_point_cloud].proj[i]);
-        free (dist->points_cloud[i_point_cloud].closest_elt_rank[i]);
-        free (dist->points_cloud[i_point_cloud].closest_elt_part[i]);
-        free (dist->points_cloud[i_point_cloud].closest_elt_lnum[i]);
         free (dist->points_cloud[i_point_cloud].closest_elt_gnum[i]); 
       }
     }
@@ -987,9 +985,6 @@ PDM_mesh_dist_free
     free (dist->points_cloud[i_point_cloud].gnum);
     free (dist->points_cloud[i_point_cloud].dist);
     free (dist->points_cloud[i_point_cloud].proj);
-    free (dist->points_cloud[i_point_cloud].closest_elt_rank);
-    free (dist->points_cloud[i_point_cloud].closest_elt_part);
-    free (dist->points_cloud[i_point_cloud].closest_elt_lnum);
     free (dist->points_cloud[i_point_cloud].closest_elt_gnum);
   }
   
