@@ -244,15 +244,12 @@ PDM_mesh_dist_process
  *
  * \brief Get mesh distance
  *
- * \param [in]   id                Identifier
- * \param [in]   i_point_cloud     Current cloud
- * \param [in]   i_part            Index of partition of the cloud
- * \param [out]  distance          Distance
- * \param [out]  projected         Projected point coordinates
- * \param [out]  closest_elt_rank  Closest element rank
- * \param [out]  closest_elt_part  Closest element partition
- * \param [out]  closest_elt_l_num Local number of the closest element
- * \param [out]  closest_elt_g_num Global number of the closest element
+ * \param [in]   id                    Identifier
+ * \param [in]   i_point_cloud         Current cloud
+ * \param [in]   i_part                Index of partition of the cloud
+ * \param [out]  closest_elt_distance  Distance
+ * \param [out]  closest_elt_projected Projected point coordinates
+ * \param [out]  closest_elt_g_num     Global number of the closest element
  *
  */
 
@@ -262,11 +259,8 @@ PDM_mesh_dist_get
  const int          id,
  const int          i_point_cloud,
  const int          i_part,
-       double      **distance,
-       double      **projected,
-       int         **closest_elt_rank,
-       int         **closest_elt_part,
-       int         **closest_elt_lnum,
+       double      **closest_elt_distance,
+       double      **closest_elt_projected,
        PDM_g_num_t **closest_elt_gnum
  );
 
