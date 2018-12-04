@@ -2235,6 +2235,16 @@ _coarse_grid_compute
   cm->times_cpu_s[itime]   = PDM_timer_cpu_sys(cm->timer);
   itime += 1;
   
+  /* reordering cells and faces */
+  part_res->part->newToOldOrderCell = (int *) malloc (sizeof(int) * part_res->part->nCell);
+  for (int i = 0; i < part_res->part->nCell; i++){
+    part_res->part->newToOldOrderCell[i] = i;
+  }
+  part_res->part->newToOldOrderFace = (int *) malloc (sizeof(int) * part_res->part->nFace);
+  for (int i = 0; i < part_res->part->nFace; i++){
+    part_res->part->newToOldOrderFace[i] = i;
+  }
+
   free(cellCoarseCell);
   
   free(dualGraphIdx);
