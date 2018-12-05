@@ -817,16 +817,18 @@ PDM_mesh_dist_process
     
     /* compute distance min per points */
 
-    double *block_closest = malloc (sizeof(double) * 4 * n_pts_rank);
+    double *block_closest_dist = malloc (sizeof(double) * n_pts_rank);
+    double *block_closest_proj = malloc (sizeof(double) * 3 * n_pts_rank);
     PDM_g_num_t *block_closest_gnum = malloc (sizeof(PDM_g_num_t) *  n_pts_rank);
 
     int idx = 0;
     for (int i = 0; i < n_pts_rank; i++) {
       double *_pt_coords = block_pts + 3*i;
-      double *_block_closest = block_closest + 4;
-      _block_closest[0] = HUGE_VAL;
+      double *_block_closest_proj = block_closest_proj + 3*i;
+      double *_block_closest_dist = block_closest_dist + i;
+      _block_closest_dist[0] = HUGE_VAL;
       
-      PDM_g_num_t *_block_closest_gnum = block_closest_gnum + 1; 
+      PDM_g_num_t *_block_closest_gnum = block_closest_gnum + i; 
       
       for (int j = 0; j < block_g_num_stride[i]; j++) {
         int n_vtx_elt = (part_coords_vtx_face_idx[idx+1] - part_coords_vtx_face_idx[idx])/3;
@@ -865,10 +867,10 @@ PDM_mesh_dist_process
 
         }
 
-        if (minDist2 < _block_closest[0]) {
-          _block_closest[0] = minDist2;
+        if (minDist2 < _block_closest_dist[0]) {
+          _block_closest_dist[0] = minDist2;
           for (int k = 0; k < 3; k++) {
-            _block_closest[k+1] = closestPoint[k];
+            _block_closest_proj[k+1] = closestPoint[k];
           }
           _block_closest_gnum[0] = face_g_num;
         }
@@ -897,22 +899,45 @@ PDM_mesh_dist_process
                                                              n_part,
                                                              comm);
 
-    // TODO echange de gnum distance, projete !!!!!
+    for (int i = 0; i < n_part; i++) {
+      int npts = pt_cloud->n_points[i];
+      pt_cloud->dist[i] = malloc (sizeof(double) * npts);
+      pt_cloud->proj[i] = malloc (sizeof(double) * npts * 3);
+      pt_cloud->closest_elt_gnum[i] = malloc (sizeof(PDM_g_num_t) * npts);
+    }
 
-    /* int un = 1; */
-    /* int *part_coords_vtx_face_n = malloc (sizeof(int) * block_g_num_n); */
-    /* PDM_block_to_part_exch (btp, */
-    /*                         sizeof(int), */
-    /*                         PDM_STRIDE_CST, */
-    /*                         &un, */
-    /*                         block_coords_face_mesh_n, */
-    /*                         NULL, */
-    /*                         (void **) &part_coords_vtx_face_n); */
-    
+    PDM_block_to_part_exch (btp,
+                            sizeof(double),
+                            PDM_STRIDE_CST,
+                            &un,
+                            block_closest_dist,
+                            NULL,
+                            (void **) pt_cloud->dist);
+
+    int three = 3;
+    PDM_block_to_part_exch (btp,
+                            sizeof(double),
+                            PDM_STRIDE_CST,
+                            &three,
+                            block_closest_proj,
+                            NULL,
+                            (void **) pt_cloud->proj);
+
+
+    PDM_block_to_part_exch (btp,
+                            sizeof(PDM_g_num_t),
+                            PDM_STRIDE_CST,
+                            &un,
+                            block_closest_gnum,
+                            NULL,
+                            (void **) pt_cloud->closest_elt_gnum);
+
     PDM_block_to_part_free (btp_vtx);
     PDM_part_to_block_free (ptb_vtx);
 
-
+    free (block_closest_proj);
+    free (block_closest_dist);
+    free (block_closest_gnum);
 
   }
 }
