@@ -26,6 +26,7 @@
 #include "pdm_block_to_part.h"
 #include "pdm_triangle.h"
 #include "pdm_polygon.h"
+#include "pdm_timer.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -37,10 +38,30 @@ extern "C" {
  * Macro definitions
  *============================================================================*/
 
+#define NTIMER 7
+  
 /*============================================================================
  * Type definitions
  *============================================================================*/
 
+/**
+ * \enum _ol_timer_step_t
+ *
+ */
+ 
+typedef enum {
+
+    BEGIN                         = 0,
+    UPPER_BOUND_DIST              = 1,        
+    CANDIDATE_SELECTION           = 2,
+    LOAD_BALANCING_ELEM_DIST      = 3,
+    COMPUTE_ELEM_DIST             = 4,
+    RESULT_TRANSMISSION           = 5,        
+    END                           = 6,        
+
+} _ol_timer_step_t;
+
+  
 /**
  * \struct _PDM_Dist_t
  * \brief  Distance to a mesh surface structure
@@ -67,16 +88,27 @@ typedef struct {
 
 typedef struct {
 
-  int  n_point_cloud;
-  PDM_MPI_Comm comm;
+  int  n_point_cloud; /*!< Number of point clouds */
+  PDM_MPI_Comm comm;  /*!< MPI communicator */ 
 
-  PDM_mesh_nature_t mesh_nature;
+  PDM_mesh_nature_t mesh_nature;  /*!< Nature of the mesh */
 
-  PDM_surf_mesh_t *surf_mesh;
+  PDM_surf_mesh_t *surf_mesh;  /*!< Surface mesh pointer */
   
-  int  mesh_nodal_id;
+  int  mesh_nodal_id;  /*!< Surface mesh identifier */
 
-  _points_cloud_t *points_cloud;
+  _points_cloud_t *points_cloud; /*!< Point clouds */
+
+  PDM_timer_t *timer; /*!< Timer */
+
+  double times_elapsed[NTIMER]; /*!< Elapsed time */
+  
+  double times_cpu[NTIMER];     /*!< CPU time */
+  
+  double times_cpu_u[NTIMER];  /*!< User CPU time */
+  
+  double times_cpu_s[NTIMER];  /*!< System CPU time */
+
   
 } _PDM_dist_t;
 
@@ -160,6 +192,15 @@ PDM_mesh_dist_create
     dist->points_cloud[i].dist = NULL;
     dist->points_cloud[i].proj = NULL;
     dist->points_cloud[i].closest_elt_gnum = NULL;
+  }
+
+  dist->timer = PDM_timer_create ();
+  
+  for (int i = 0; i < NTIMER; i++) {
+    dist->times_elapsed[i] = 0.;
+    dist->times_cpu[i] = 0.;
+    dist->times_cpu_u[i] = 0.;
+    dist->times_cpu_s[i] = 0.;
   }
   
   return id;
@@ -389,6 +430,23 @@ PDM_mesh_dist_process
   const int n_point_cloud = dist->n_point_cloud;
   const int mesh_id = dist->mesh_nodal_id;
   PDM_MPI_Comm comm = dist->comm;
+
+  double b_t_elapsed;
+  double b_t_cpu;
+  double b_t_cpu_u;
+  double b_t_cpu_s;
+
+  double e_t_elapsed;
+  double e_t_cpu;
+  double e_t_cpu_u;
+  double e_t_cpu_s;
+  
+  PDM_timer_hang_on(dist->timer);  
+  dist->times_elapsed[BEGIN] = PDM_timer_elapsed(dist->timer);
+  dist->times_cpu[BEGIN]     = PDM_timer_cpu(dist->timer);
+  dist->times_cpu_u[BEGIN]   = PDM_timer_cpu_user(dist->timer);
+  dist->times_cpu_s[BEGIN]   = PDM_timer_cpu_sys(dist->timer);
+  PDM_timer_resume(dist->timer);
   
   /* 
    * For each cloud
@@ -407,6 +465,13 @@ PDM_mesh_dist_process
      *
      *********************************************************************************/
 
+    PDM_timer_hang_on(dist->timer);  
+    b_t_elapsed = PDM_timer_elapsed(dist->timer);
+    b_t_cpu     = PDM_timer_cpu(dist->timer);
+    b_t_cpu_u   = PDM_timer_cpu_user(dist->timer);
+    b_t_cpu_s   = PDM_timer_cpu_sys(dist->timer);
+    PDM_timer_resume(dist->timer);
+  
     const double tolerance = 1e-4;
     const int depth_max = 1000;
     const int points_in_leaf_max = 4; 
@@ -510,12 +575,33 @@ PDM_mesh_dist_process
     
     PDM_octree_free (octree_id);
     
+    PDM_timer_hang_on(dist->timer);  
+    e_t_elapsed = PDM_timer_elapsed(dist->timer);
+    e_t_cpu     = PDM_timer_cpu(dist->timer);
+    e_t_cpu_u   = PDM_timer_cpu_user(dist->timer);
+    e_t_cpu_s   = PDM_timer_cpu_sys(dist->timer);
+
+    dist->times_elapsed[UPPER_BOUND_DIST] += e_t_elapsed - b_t_elapsed;
+    dist->times_cpu[UPPER_BOUND_DIST]     += e_t_cpu - b_t_cpu;
+    dist->times_cpu_u[UPPER_BOUND_DIST]   += e_t_cpu_u - b_t_cpu_u;
+    dist->times_cpu_s[UPPER_BOUND_DIST]   += e_t_cpu_s - b_t_cpu_s;
+
+    PDM_timer_resume(dist->timer);
+
+    
     /********************************************************************************* 
      * 
      * Compute bounding box structure to find candidates closest 
      *     to the upper bound distance
      *
      *********************************************************************************/
+
+    PDM_timer_hang_on(dist->timer);  
+    b_t_elapsed = PDM_timer_elapsed(dist->timer);
+    b_t_cpu     = PDM_timer_cpu(dist->timer);
+    b_t_cpu_u   = PDM_timer_cpu_user(dist->timer);
+    b_t_cpu_s   = PDM_timer_cpu_sys(dist->timer);
+    PDM_timer_resume(dist->timer);
 
     PDM_dbbtree_t *dbbt = PDM_dbbtree_create (dist->comm, 3);
 
@@ -631,10 +717,31 @@ PDM_mesh_dist_process
 
     PDM_dbbtree_free (dbbt);
 
-    /* 
+    PDM_timer_hang_on(dist->timer);  
+    e_t_elapsed = PDM_timer_elapsed(dist->timer);
+    e_t_cpu     = PDM_timer_cpu(dist->timer);
+    e_t_cpu_u   = PDM_timer_cpu_user(dist->timer);
+    e_t_cpu_s   = PDM_timer_cpu_sys(dist->timer);
+
+    dist->times_elapsed[CANDIDATE_SELECTION] += e_t_elapsed - b_t_elapsed;
+    dist->times_cpu[CANDIDATE_SELECTION]     += e_t_cpu - b_t_cpu;
+    dist->times_cpu_u[CANDIDATE_SELECTION]   += e_t_cpu_u - b_t_cpu_u;
+    dist->times_cpu_s[CANDIDATE_SELECTION]   += e_t_cpu_s - b_t_cpu_s;
+
+    PDM_timer_resume(dist->timer);
+
+    /*********************************************************************************
+     * 
      * Load balancing of elementary computations (distance from a point to an element)
      *
-     */
+     *********************************************************************************/
+
+    PDM_timer_hang_on(dist->timer);  
+    b_t_elapsed = PDM_timer_elapsed(dist->timer);
+    b_t_cpu     = PDM_timer_cpu(dist->timer);
+    b_t_cpu_u   = PDM_timer_cpu_user(dist->timer);
+    b_t_cpu_s   = PDM_timer_cpu_sys(dist->timer);
+    PDM_timer_resume(dist->timer);
 
     double *box_n = malloc (sizeof(double) * n_pts_rank);
     int *i_box_n = malloc (sizeof(int) * n_pts_rank);
@@ -692,7 +799,8 @@ PDM_mesh_dist_process
 
     free (i_box_n);
 
-    /* 
+
+    /*
      * Receive of needed elements
      *    - PDM_part_to_part function have to be write
      *    - This step is realised by a couple of  PDM_part_to_block and  PDM_block_to_part
@@ -815,7 +923,31 @@ PDM_mesh_dist_process
 
     PDM_part_to_block_free (ptb_elt);
     
-    /* compute distance min per points */
+    PDM_timer_hang_on(dist->timer);  
+    e_t_elapsed = PDM_timer_elapsed(dist->timer);
+    e_t_cpu     = PDM_timer_cpu(dist->timer);
+    e_t_cpu_u   = PDM_timer_cpu_user(dist->timer);
+    e_t_cpu_s   = PDM_timer_cpu_sys(dist->timer);
+
+    dist->times_elapsed[LOAD_BALANCING_ELEM_DIST] += e_t_elapsed - b_t_elapsed;
+    dist->times_cpu[LOAD_BALANCING_ELEM_DIST]     += e_t_cpu - b_t_cpu;
+    dist->times_cpu_u[LOAD_BALANCING_ELEM_DIST]   += e_t_cpu_u - b_t_cpu_u;
+    dist->times_cpu_s[LOAD_BALANCING_ELEM_DIST]   += e_t_cpu_s - b_t_cpu_s;
+
+    PDM_timer_resume(dist->timer);
+
+    /****************************************************************************
+     * 
+     * compute distance min per points 
+     *
+     ***************************************************************************/
+
+    PDM_timer_hang_on(dist->timer);  
+    b_t_elapsed = PDM_timer_elapsed(dist->timer);
+    b_t_cpu     = PDM_timer_cpu(dist->timer);
+    b_t_cpu_u   = PDM_timer_cpu_user(dist->timer);
+    b_t_cpu_s   = PDM_timer_cpu_sys(dist->timer);
+    PDM_timer_resume(dist->timer);
 
     double *block_closest_dist = malloc (sizeof(double) * n_pts_rank);
     double *block_closest_proj = malloc (sizeof(double) * 3 * n_pts_rank);
@@ -887,9 +1019,31 @@ PDM_mesh_dist_process
     
     PDM_block_to_part_free (btp);
 
-    /* 
+    PDM_timer_hang_on(dist->timer);  
+    e_t_elapsed = PDM_timer_elapsed(dist->timer);
+    e_t_cpu     = PDM_timer_cpu(dist->timer);
+    e_t_cpu_u   = PDM_timer_cpu_user(dist->timer);
+    e_t_cpu_s   = PDM_timer_cpu_sys(dist->timer);
+
+    dist->times_elapsed[COMPUTE_ELEM_DIST] += e_t_elapsed - b_t_elapsed;
+    dist->times_cpu[COMPUTE_ELEM_DIST]     += e_t_cpu - b_t_cpu;
+    dist->times_cpu_u[COMPUTE_ELEM_DIST]   += e_t_cpu_u - b_t_cpu_u;
+    dist->times_cpu_s[COMPUTE_ELEM_DIST]   += e_t_cpu_s - b_t_cpu_s;
+
+    PDM_timer_resume(dist->timer);
+
+    /**********************************************************************************
+     * 
      * Transfer results 
-     */
+     *
+     **********************************************************************************/
+
+    PDM_timer_hang_on(dist->timer);  
+    b_t_elapsed = PDM_timer_elapsed(dist->timer);
+    b_t_cpu     = PDM_timer_cpu(dist->timer);
+    b_t_cpu_u   = PDM_timer_cpu_user(dist->timer);
+    b_t_cpu_s   = PDM_timer_cpu_sys(dist->timer);
+    PDM_timer_resume(dist->timer);
 
     PDM_g_num_t *block_vtx_distrib_idx = PDM_part_to_block_distrib_index_get (ptb_vtx);
 
@@ -939,7 +1093,27 @@ PDM_mesh_dist_process
     free (block_closest_dist);
     free (block_closest_gnum);
 
+    PDM_timer_hang_on(dist->timer);  
+    e_t_elapsed = PDM_timer_elapsed(dist->timer);
+    e_t_cpu     = PDM_timer_cpu(dist->timer);
+    e_t_cpu_u   = PDM_timer_cpu_user(dist->timer);
+    e_t_cpu_s   = PDM_timer_cpu_sys(dist->timer);
+
+    dist->times_elapsed[RESULT_TRANSMISSION] += e_t_elapsed - b_t_elapsed;
+    dist->times_cpu[RESULT_TRANSMISSION]     += e_t_cpu - b_t_cpu;
+    dist->times_cpu_u[RESULT_TRANSMISSION]   += e_t_cpu_u - b_t_cpu_u;
+    dist->times_cpu_s[RESULT_TRANSMISSION]   += e_t_cpu_s - b_t_cpu_s;
+
+    PDM_timer_resume(dist->timer);
   }
+
+  PDM_timer_hang_on(dist->timer);  
+  dist->times_elapsed[END] = PDM_timer_elapsed(dist->timer);
+  dist->times_cpu[END]     = PDM_timer_cpu(dist->timer);
+  dist->times_cpu_u[END]   = PDM_timer_cpu_user(dist->timer);
+  dist->times_cpu_s[END]   = PDM_timer_cpu_sys(dist->timer);
+  PDM_timer_resume(dist->timer);
+  
 }
 
 
@@ -1015,6 +1189,8 @@ PDM_mesh_dist_free
   
   free (dist->points_cloud);
 
+  PDM_timer_free(dist->timer);
+
   if (dist->surf_mesh != NULL) {
     PDM_surf_mesh_free (dist->surf_mesh);
   }
@@ -1028,6 +1204,41 @@ PDM_mesh_dist_free
   if (n_dists == 0) {
     _dists = PDM_Handles_free (_dists);
   }
+
+}
+
+
+/**
+ *
+ * \brief  Dump elapsed an CPU time
+ *
+ * \param [in]  id       Identifier
+ *
+ */
+
+void
+PDM_mesh_dump_times
+(
+ const int id
+)
+{
+  _PDM_dist_t *dist = _get_from_id (id);
+  double t1 = dist->times_elapsed[END] - dist->times_elapsed[BEGIN];
+  double t2 = dist->times_cpu[END] - dist->times_cpu[BEGIN];
+  
+  PDM_printf( "distance times ALL (elapsed and cpu) : %12.5es %12.5es\n", t1, t2);
+  PDM_printf( "distance times UPPER_BOUND_DIST (elapsed and cpu) : %12.5es %12.5es\n",
+              dist->times_elapsed[UPPER_BOUND_DIST],
+              dist->times_cpu[UPPER_BOUND_DIST]);
+  PDM_printf( "distance times CANDIDATE_SELECTION (elapsed and cpu) : %12.5es %12.5es\n",
+              dist->times_elapsed[CANDIDATE_SELECTION],
+              dist->times_cpu[CANDIDATE_SELECTION]);
+  PDM_printf( "distance times LOAD_BALANCING_ELEM_DIST (elapsed and cpu) : %12.5es %12.5es\n",
+              dist->times_elapsed[LOAD_BALANCING_ELEM_DIST],
+              dist->times_cpu[LOAD_BALANCING_ELEM_DIST]);
+  PDM_printf( "distance times RESULT_TRANSMISSION (elapsed and cpu) : %12.5es %12.5es\n",
+              dist->times_elapsed[RESULT_TRANSMISSION],
+              dist->times_cpu[RESULT_TRANSMISSION]);
 
 }
 
