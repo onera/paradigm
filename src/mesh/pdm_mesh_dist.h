@@ -282,6 +282,20 @@ PDM_mesh_dist_free
  const int partial
  );
 
+  
+/**
+ *
+ * \brief  Dump elapsed an CPU time
+ *
+ * \param [in]  id       Identifier
+ *
+ */
+
+void
+PDM_mesh_dump_times
+(
+ const int id
+ );
 
 #ifdef	__cplusplus
 }
