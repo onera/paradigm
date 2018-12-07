@@ -441,7 +441,7 @@ PDM_mesh_dist_process
   double e_t_cpu_u;
   double e_t_cpu_s;
   
-  PDM_timer_hang_on(dist->timer);  
+  //PDM_timer_hang_on(dist->timer);  
   dist->times_elapsed[BEGIN] = PDM_timer_elapsed(dist->timer);
   dist->times_cpu[BEGIN]     = PDM_timer_cpu(dist->timer);
   dist->times_cpu_u[BEGIN]   = PDM_timer_cpu_user(dist->timer);
@@ -1226,17 +1226,17 @@ PDM_mesh_dump_times
   double t1 = dist->times_elapsed[END] - dist->times_elapsed[BEGIN];
   double t2 = dist->times_cpu[END] - dist->times_cpu[BEGIN];
   
-  PDM_printf( "distance times ALL (elapsed and cpu) : %12.5es %12.5es\n", t1, t2);
-  PDM_printf( "distance times UPPER_BOUND_DIST (elapsed and cpu) : %12.5es %12.5es\n",
+  PDM_printf( "distance timer : ALL (elapsed and cpu) : %12.5es %12.5es\n", t1, t2);
+  PDM_printf( "distance timer : UPPER_BOUND_DIST (elapsed and cpu) : %12.5es %12.5es\n",
               dist->times_elapsed[UPPER_BOUND_DIST],
               dist->times_cpu[UPPER_BOUND_DIST]);
-  PDM_printf( "distance times CANDIDATE_SELECTION (elapsed and cpu) : %12.5es %12.5es\n",
+  PDM_printf( "distance timer : CANDIDATE_SELECTION (elapsed and cpu) : %12.5es %12.5es\n",
               dist->times_elapsed[CANDIDATE_SELECTION],
               dist->times_cpu[CANDIDATE_SELECTION]);
-  PDM_printf( "distance times LOAD_BALANCING_ELEM_DIST (elapsed and cpu) : %12.5es %12.5es\n",
+  PDM_printf( "distance timer : LOAD_BALANCING_ELEM_DIST (elapsed and cpu) : %12.5es %12.5es\n",
               dist->times_elapsed[LOAD_BALANCING_ELEM_DIST],
               dist->times_cpu[LOAD_BALANCING_ELEM_DIST]);
-  PDM_printf( "distance times RESULT_TRANSMISSION (elapsed and cpu) : %12.5es %12.5es\n",
+  PDM_printf( "distance timer : RESULT_TRANSMISSION (elapsed and cpu) : %12.5es %12.5es\n",
               dist->times_elapsed[RESULT_TRANSMISSION],
               dist->times_cpu[RESULT_TRANSMISSION]);
 

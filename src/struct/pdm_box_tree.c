@@ -243,6 +243,8 @@ int             stack[]
 
   const int *_child_ids = bt->child_ids + id_curr_node*bt->n_children;
 
+  printf("      p1\n");
+  
   for (int j = 0; j < bt->n_children; j++) {
     int imin = 0;
     int imax = j-1;
@@ -260,26 +262,42 @@ int             stack[]
                 &child_min_dist2,            
                 &child_max_dist2);            
 
-    while (imin < imax) {
+    printf("      p2 %d %12.5e : ", j, child_min_dist2);
+    for (int i = 0; i < bt->n_children; i++) {
+      printf (" %12.5e", dist_child[i]);
+    }
+    printf("\n");
+    
+    int k1 = 0;
+    while ((imin < imax) && (k1++ < 10)) {
+      printf("      imin imax 1 : %d %d ", imin, imax);
       int pivot = j / 2;
 
       if (child_min_dist2 <= dist_child[imin]) {
         imax = imin;
+        printf("21\n");
       }
 
       else if (child_min_dist2 >= dist_child[imax]) {
         imin = imax;
+        printf("22\n");
       }
 
       else if (child_min_dist2 >= dist_child[pivot]) {
         imin = pivot;
+        printf("23\n");
       }
 
       else {
-        imax = pivot;            
+        imax = pivot;
+        printf("24\n");
       }
-
+      //      printf("      imin imax 2 : %d %d\n", imin, imax);
     }
+
+    if (k1 >= 10)
+      abort();
+    printf("      p3\n");
 
     int k = j;
     while (k > imin) {
@@ -288,10 +306,13 @@ int             stack[]
       k += -1;
     }
 
+    printf("      p4\n");
+
     sort_child[imin] = _child_ids[j];
     dist_child[imin] = child_min_dist2;
 
   }
+  printf("      p5\n");
 
   for (int j = 0; j < bt->n_children; j++) {
     int child_id = sort_child[bt->n_children - 1 - j];
@@ -301,6 +322,7 @@ int             stack[]
       stack[(*pos_stack)++] = child_id; /* push root in th stack */
     }          
   }
+  printf("      p6\n");
 
 }
 
@@ -3626,7 +3648,10 @@ double          *box_max_dist
 
   for (int i = 0; i < n_pts; i++) {
 
-    const double *_pt = pts + 3 * n_pts;
+    printf("\n\n **** point : %d %12.5e %12.5e %12.5e\n", i,
+           pts[3*i], pts[3*i+1], pts[3*i+2]);
+
+    const double *_pt = pts + 3 * i;
     
     /* Init stack */
 
@@ -3638,6 +3663,7 @@ double          *box_max_dist
     
     while (pos_stack > 0) {
       
+      printf("        pos_stack : %d %12.5e\n", pos_stack,  box_max_dist[i]);
       int id_curr_node = stack[--pos_stack];
 
       const double *extents = bt->extents + dim * 2 * id_curr_node;
@@ -3688,6 +3714,7 @@ double          *box_max_dist
         }  
       }
     }
+    printf(" fin pos_stack : %d %d %12.5e\n", i, box_id[i],  box_max_dist[i]);
   }
 
   free (stack);
