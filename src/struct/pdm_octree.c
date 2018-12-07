@@ -856,7 +856,6 @@ PDM_octree_processes_extents_get
  *
  * Look for closest points stored inside an octree
  *
- * parameters:
  *
  * \param [in]   id                     Identifier
  * \param [in]   n_pts                  Number of points
