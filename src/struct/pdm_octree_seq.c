@@ -1056,7 +1056,7 @@ double          *closest_octree_pt_dist2
 
   for (int i = 0; i < n_pts; i++) {
 
-    const double *_pt = pts + dim * n_pts;
+    const double *_pt = pts + dim * i;
 
     /* Init stack */
 
@@ -1078,10 +1078,10 @@ double          *closest_octree_pt_dist2
       double max_dist2;
 
       int inbox =  _box_dist2 (dim,
-                              extents,
-                              _pt,
-                              &min_dist2,
-                              &max_dist2);
+                               extents,
+                               _pt,
+                               &min_dist2,
+                               &max_dist2);
 
       if ((min_dist2 <= closest_octree_pt_dist2[i]) || (inbox == 1)) {
 
@@ -1160,10 +1160,12 @@ double          *closest_octree_pt_dist2
           for (int j = 0; j < curr_node->n_points; j++) {
 
             double point_dist2 = 0;
-            const double *_coords = octree->point_clouds[point_clouds_id[j]] + dim * point_indexes[j];
+            const double *_coords = octree->point_clouds[point_clouds_id[j]]
+                                    + dim * point_indexes[j];
             
             for (int k = 0; k < dim; k++) {        
-              point_dist2 += (_coords[dim*i+k] - _pt[dim*i+k]) * (_coords[dim*i+k] - _pt[dim*i+k]);
+              point_dist2 += (_coords[k] - _pt[k]) *
+                             (_coords[k] - _pt[k]);
             }
 
             if (point_dist2 < closest_octree_pt_dist2[i]) {
