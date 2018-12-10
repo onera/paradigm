@@ -890,7 +890,11 @@ double      *closest_octree_pt_dist2
     closest_octree_pt_dist2[i] = HUGE_VAL;
   }
   
-  /* Look for the closest process */
+  /*******************************
+   * 
+   * Look for the closest process
+   * 
+   *******************************/
 
   int *rank_id = (int *) malloc (sizeof(int) * n_pts);
   double *rank_min_max_dist = (double *) malloc (sizeof(double) * n_pts);
@@ -901,10 +905,18 @@ double      *closest_octree_pt_dist2
                                  rank_id,
                                  rank_min_max_dist);
   
-  /* Send points to closest processes */
+  /***********************************
+   *
+   * Send points to closest processes
+   *
+   ***********************************/ 
 
-  int *n_send_pts = (int *) calloc (sizeof(int) * lComm, 0);
+  int *n_send_pts = (int *) malloc (sizeof(int) * lComm);
   
+  for (int i = 0; i < lComm; i++) {
+    n_send_pts[i] = 0;  
+  }
+
   for (int i = 0; i < n_pts; i++) {
     n_send_pts[rank_id[i]]++;  
   }
@@ -950,7 +962,7 @@ double      *closest_octree_pt_dist2
   
   PDM_MPI_Alltoallv (send_pts, n_send_pts, i_send_pts, PDM_MPI_DOUBLE,
                      recv_pts, n_recv_pts, i_recv_pts, PDM_MPI_DOUBLE,
-                     lComm);  
+                     octree->comm);  
   
   free (rank_min_max_dist);
 
@@ -961,7 +973,11 @@ double      *closest_octree_pt_dist2
     i_recv_pts[i] *= 1/3;    
   }
 
-  /* Look for the closest point in closest processes */
+  /***************************************************
+   *
+   *  Look for the closest point in closest processes 
+   *
+   ***************************************************/
 
   int *closest_pt = (int *) malloc(sizeof(int) * 2 * i_recv_pts[lComm]);
   double *closest_dist = (double *) malloc(sizeof(double) * i_recv_pts[lComm]);
@@ -972,21 +988,23 @@ double      *closest_octree_pt_dist2
   free (closest_pt);
   free (recv_pts);
   
-  /* Receive distance to closest points from closest processes  */
+  /************************************************************
+   *
+   * Receive distance to closest points from closest processes
+   *
+   ************************************************************/
 
   double *recv_dist = send_pts;
   
   PDM_MPI_Alltoallv (closest_dist, n_recv_pts, i_recv_pts, PDM_MPI_DOUBLE,
                      recv_dist, n_send_pts, i_send_pts, PDM_MPI_DOUBLE,
-                     lComm);  
+                     octree->comm);  
   
   free (closest_dist);
-//  free (n_recv_pts);
-//  free (i_recv_pts);
   
   double *upper_bound_dist = (double *) malloc (sizeof(double) * n_pts);
   
-  for (int i = 0; i < n_pts; i++) {
+  for (int i = 0; i < lComm; i++) {
     n_send_pts[i] = 0; 
   }
 
@@ -998,13 +1016,16 @@ double      *closest_octree_pt_dist2
     upper_bound_dist[i] = recv_dist[idx];
   }
   
-//  free (n_send_pts);
-//  free (i_send_pts);
   free (recv_dist);
   free (rank_id);
 
-  /* Send points to processes that distance are inferior to computed distance 
-     Be careful with number of processes ! Make several send ! */
+  /****************************************************************************
+   *
+   *  Send points to processes that distance are inferior to computed distance
+   * 
+   *   Be careful with number of processes ! Make several send ! 
+   *
+   ****************************************************************************/
   
   int *i_boxes = NULL;
   int *boxes = NULL;
@@ -1017,7 +1038,7 @@ double      *closest_octree_pt_dist2
                                                    &boxes);
   
   free (upper_bound_dist);
-
+  
   for (int i = 0; i < lComm; i++) {
     n_send_pts[i] = 0;
     n_recv_pts[i] = 0;
@@ -1049,8 +1070,10 @@ double      *closest_octree_pt_dist2
   PDM_g_num_t max_max_n_exch = PDM_MAX (max_n_exch[0], max_n_exch[1]);
   
   PDM_g_num_t sum_npts;
-  PDM_g_num_t _n_pts;
-          
+  PDM_g_num_t _n_pts = n_pts;
+
+  //FIXME: _n_pts pas defini : somme des points ou max des sommets ?
+  
   PDM_MPI_Allreduce (&_n_pts, &sum_npts, 1, 
                      PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, octree->comm);
 
@@ -1380,12 +1403,16 @@ double      *closest_octree_pt_dist2
         }
       }
    
-      PDM_MPI_Ialltoallv (data_send_pts_next, n_send_pts_next, i_send_pts_next, PDM_MPI_DOUBLE,
-                          data_recv_pts_next, n_recv_pts_next, i_recv_pts_next, PDM_MPI_DOUBLE,
+      PDM_MPI_Ialltoallv (data_send_pts_next, n_send_pts_next,
+                          i_send_pts_next, PDM_MPI_DOUBLE,
+                          data_recv_pts_next, n_recv_pts_next,
+                          i_recv_pts_next, PDM_MPI_DOUBLE,
                           octree->comm, &(Request_coord[inext]));
 
-      PDM_MPI_Ialltoallv (data_send_gnum_next, n_send_gnum_next, i_send_gnum_next, PDM__PDM_MPI_G_NUM,
-                          data_recv_gnum_next, n_recv_gnum_next, i_recv_gnum_next, PDM__PDM_MPI_G_NUM,
+      PDM_MPI_Ialltoallv (data_send_gnum_next, n_send_gnum_next,
+                          i_send_gnum_next, PDM__PDM_MPI_G_NUM,
+                          data_recv_gnum_next, n_recv_gnum_next,
+                          i_recv_gnum_next, PDM__PDM_MPI_G_NUM,
                           octree->comm, &(Request_coord[inext]));
 
     }
@@ -1399,9 +1426,12 @@ double      *closest_octree_pt_dist2
 
     if (s_closest_octree_pt_dist2 < i_recv_gnum[lComm]) {
       s_closest_octree_pt_dist2 = i_recv_gnum[lComm];
-      _closest_octree_pt_id = realloc (_closest_octree_pt_id, sizeof(int) * 2 * s_closest_octree_pt_dist2);
-      _closest_octree_pt_dist2 = realloc (_closest_octree_pt_dist2, sizeof(double) * s_closest_octree_pt_dist2);
-      _closest_octree_pt_g_num = realloc (_closest_octree_pt_g_num, sizeof(PDM_g_num_t) * s_closest_octree_pt_dist2);
+      _closest_octree_pt_id =
+        realloc (_closest_octree_pt_id, sizeof(int) * 2 * s_closest_octree_pt_dist2);
+      _closest_octree_pt_dist2 =
+        realloc (_closest_octree_pt_dist2, sizeof(double) * s_closest_octree_pt_dist2);
+      _closest_octree_pt_g_num =
+        realloc (_closest_octree_pt_g_num, sizeof(PDM_g_num_t) * s_closest_octree_pt_dist2);
     }
     
     PDM_octree_seq_closest_point (octree->octree_seq_id, 
