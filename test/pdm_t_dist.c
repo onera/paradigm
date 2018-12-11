@@ -339,6 +339,9 @@ int main(int argc, char *argv[])
     for (int i = 0; i < nVtx; i++) {
       select_vtx[ipart][i] = 0;
     }
+    printf ("*** PDM_t_dist d step 0  \n");
+    printf ("     nVtx : %d\n", nVtx);
+    printf ("*** PDM_t_dist f step 0  \n");
     
     int          *cellTag;
     int          *cellFaceIdx;
@@ -379,14 +382,16 @@ int main(int argc, char *argv[])
                            &faceGroupIdx,
                            &faceGroup,
                            &faceGroupLNToGN);
-    
+
+    int iii = 0;
     for (int i = 0; i < nFace; i++) {
       int icel2 = faceCell[2*i+1];
       if (icel2 == 0) {
+        iii++;
         select_face[ipart][i] = 1;
       }
     }
-
+    printf ("nselectface : %d\n",iii);
     for (int i = 0; i < facePartBoundProcIdx[numProcs]; i++) {
       select_face[ipart][facePartBound[4*i]-1] = 0;
     }
@@ -424,8 +429,10 @@ int main(int argc, char *argv[])
     
     surface_coords[ipart] = malloc (sizeof(double) * 3 * n_select_vtx[ipart]);
     
-    surface_face_parent_gnum[ipart] = malloc (sizeof(PDM_g_num_t) * n_select_face[ipart]);
-    surface_vtx_parent_gnum[ipart] = malloc (sizeof(PDM_g_num_t) * n_select_vtx[ipart]);
+    surface_face_parent_gnum[ipart] =
+      malloc (sizeof(PDM_g_num_t) * n_select_face[ipart]);
+    surface_vtx_parent_gnum[ipart] =
+      malloc (sizeof(PDM_g_num_t) * n_select_vtx[ipart]);
     
     surface_face_gnum[ipart] = NULL;
     surface_vtx_gnum[ipart] = NULL;
@@ -528,6 +535,18 @@ int main(int argc, char *argv[])
                                       n_select_vtx[ipart],
                                       surface_coords[ipart],
                                       surface_vtx_gnum[ipart]);
+
+  printf ("*** PDM_t_dist d step 1  \n");
+  for (int i = 0; i < n_select_vtx[ipart]; i++) {
+    printf ("     %d (%12.5e %12.5e %12.5e) : %ld \n", i,
+            surface_coords[ipart][3*i],
+            surface_coords[ipart][3*i+1],
+            surface_coords[ipart][3*i+2],
+            surface_vtx_gnum[ipart][i]); 
+  }
+  printf ("*** PDM_t_dist f step 1 \n");
+
+
 
     int nCell;
     int nFace;

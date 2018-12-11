@@ -444,6 +444,12 @@ PDM_octree_point_cloud_set
   _octree_t *octree = _get_from_id (id);
   
   
+  printf ("*** PDM_octree_point_cloud_set d step 1  \n");
+  for (int i = 0; i < n_points; i++) {
+    printf ("     %d (%12.5e %12.5e %12.5e) : %ld \n", i, coords[3*i], coords[3*i+1], coords[3*i+2],
+            g_num[i]); 
+  }
+  printf ("*** PDM_octree_point_cloud_set f step 1 \n");
   octree->n_points[i_point_cloud] = n_points;
   octree->g_num[i_point_cloud] = (PDM_g_num_t *) g_num;
   PDM_octree_seq_point_cloud_set (octree->octree_seq_id, i_point_cloud, 
@@ -904,6 +910,13 @@ double      *closest_octree_pt_dist2
                                  pts,
                                  rank_id,
                                  rank_min_max_dist);
+
+  printf ("*** PDM_octree_closest_point d step 1 : the closest process \n");
+  for (int i = 0; i < n_pts; i++) {
+    printf ("     %d (%12.5e %12.5e %12.5e) : %d %12.5e\n", i, pts[3*i], pts[3*i+1], pts[3*i+2],
+            rank_id[i] ,rank_min_max_dist[i]); 
+  }
+  printf ("*** PDM_octree_closest_point f step 1 : the closest process \n");
   
   /***********************************
    *
@@ -921,7 +934,7 @@ double      *closest_octree_pt_dist2
     n_send_pts[rank_id[i]]++;  
   }
   
-  int *n_recv_pts = (int *) calloc (sizeof(int), lComm);
+  int *n_recv_pts = (int *) malloc (sizeof(int) * lComm);
 
   PDM_MPI_Alltoall (n_send_pts, 1, PDM_MPI_INT, 
                     n_recv_pts, 1, PDM_MPI_INT, 
@@ -985,6 +998,13 @@ double      *closest_octree_pt_dist2
   PDM_octree_seq_closest_point (octree->octree_seq_id, i_recv_pts[lComm],
                                 recv_pts, closest_pt, closest_dist);
   
+  printf ("*** PDM_octree_closest_point d step 2 : closest point in the closest process \n");
+  for (int i = 0; i <  i_recv_pts[lComm]; i++) {
+    printf ("     %d (%12.5e %12.5e %12.5e) : %d %d %12.5e\n", i, recv_pts[3*i], recv_pts[3*i+1], recv_pts[3*i+2],
+            closest_pt[2*i] , closest_pt[2*i+1] ,closest_dist[i]); 
+  }
+  printf ("*** PDM_octree_closest_point f step 2 : closest point in the closest process \n");
+
   free (closest_pt);
   free (recv_pts);
   
@@ -1080,6 +1100,8 @@ double      *closest_octree_pt_dist2
   const int factor = 10;
   
   int n_data_exch_max = (int) (sum_npts/ (PDM_g_num_t) lComm) * factor;
+
+  printf("max_max_n_exch n_data_exch_max : %ld %d\n", max_max_n_exch, n_data_exch_max);
   
   int n_exch = (int)(max_max_n_exch / n_data_exch_max);
   if ((int)(max_max_n_exch % n_data_exch_max) > 0) {
@@ -1109,19 +1131,33 @@ double      *closest_octree_pt_dist2
     i_send_pts1 = i_send_pts;
   }
   else {
-    n_send_pts1 = (int *) calloc (sizeof(int) * lComm, 0);
-    i_send_pts1 = (int *) calloc (sizeof(int) * (lComm + 1), 0);
+    n_send_pts1 = (int *) malloc (sizeof(int) * lComm);
+    for (int i = 0; i < lComm; i++) {
+      n_send_pts1[i] = 0;
+    }
+    i_send_pts1 = (int *) malloc (sizeof(int) * (lComm + 1));
+    i_send_pts1[0] = 0;
+    printf ("lComm %d\n", lComm);
   }
   int *n_recv_pts1 = n_recv_pts;
   int *i_recv_pts1 = i_recv_pts;
 
   PDM_g_num_t *data_send_gnum1 = malloc (sizeof(PDM_g_num_t) * n_data_exch_max); // Optimiser la taille
   PDM_g_num_t *data_recv_gnum1 = malloc (sizeof(PDM_g_num_t) * n_data_exch_max);
-  int *n_send_gnum1 = (int *) calloc (sizeof(int) * lComm, 0);
-  int *n_recv_gnum1 = (int *) calloc (sizeof(int) * lComm, 0);
-  int *i_send_gnum1 = (int *) calloc (sizeof(int) * (lComm+1), 0);
-  int *i_recv_gnum1 = (int *) calloc (sizeof(int) * (lComm+1), 0);
+  int *n_send_gnum1 = (int *) malloc (sizeof(int) * lComm);
+  int *n_recv_gnum1 = (int *) malloc (sizeof(int) * lComm);
 
+  int *i_send_gnum1 = (int *) malloc (sizeof(int) * (lComm+1));
+  int *i_recv_gnum1 = (int *) malloc (sizeof(int) * (lComm+1));
+
+  for (int i = 0; i < lComm; i++) {
+    n_send_gnum1[i] = 0;
+    n_recv_gnum1[i] = 0;
+  }
+  for (int i = 0; i < lComm+1; i++) {
+    i_send_gnum1[i] = 0;
+    i_recv_gnum1[i] = 0;
+  }
   double *data_send_pts2 = NULL;
   double *data_recv_pts2 = NULL;
   int *n_send_pts2 = NULL;
@@ -1142,25 +1178,51 @@ double      *closest_octree_pt_dist2
   if (n_exch > 1) {
     data_send_pts2 = malloc (sizeof(double) * 3 * n_data_exch_max);
     data_recv_pts2 = malloc (sizeof(double) * 3 * n_data_exch_max);
-    n_send_pts2 = (int *) calloc (sizeof(int) * lComm, 0);
-    n_recv_pts2 = (int *) calloc (sizeof(int) * lComm, 0);
-    i_send_pts2 = (int *) calloc (sizeof(int) * (lComm+1), 0);
-    i_recv_pts2 = (int *) calloc (sizeof(int) * (lComm+1), 0);
+    n_send_pts2 = (int *) malloc (sizeof(int) * lComm);
+    n_recv_pts2 = (int *) malloc (sizeof(int) * lComm);
+    i_send_pts2 = (int *) malloc (sizeof(int) * (lComm+1));
+    i_recv_pts2 = (int *) malloc (sizeof(int) * (lComm+1));
+
+    for (int i = 0; i < lComm; i++) {
+      n_send_pts2[i] = 0;
+      n_recv_pts2[i] = 0;
+    }
+    for (int i = 0; i < lComm+1; i++) {
+      i_send_pts2[i] = 0;
+      i_recv_pts2[i] = 0;
+    }
 
     data_send_gnum2 = malloc (sizeof(PDM_g_num_t) * n_data_exch_max); // Optimiser la taille
     data_recv_gnum2 = malloc (sizeof(PDM_g_num_t) * n_data_exch_max);
-    n_send_gnum2 = (int *) calloc (sizeof(int) * lComm, 0);
-    n_recv_gnum2 = (int *) calloc (sizeof(int) * lComm, 0);
-    i_send_gnum2 = (int *) calloc (sizeof(int) * (lComm+1), 0);
-    i_recv_gnum2 = (int *) calloc (sizeof(int) * (lComm+1), 0);
+    n_send_gnum2 = (int *) malloc (sizeof(int) * lComm);
+    n_recv_gnum2 = (int *) malloc (sizeof(int) * lComm);
+    i_send_gnum2 = (int *) malloc (sizeof(int) * (lComm+1));
+    i_recv_gnum2 = (int *) malloc (sizeof(int) * (lComm+1));
 
-    send_bounds = (int *) calloc (sizeof(int) * 2 * lComm, 0);
-    send_counts = (int *) calloc (sizeof(int) * 2 * lComm, 0);
+    for (int i = 0; i < lComm; i++) {
+      n_send_gnum2[i] = 0;
+      n_recv_gnum2[i] = 0;
+    }
+    for (int i = 0; i < lComm+1; i++) {
+      i_send_gnum2[i] = 0;
+      i_recv_gnum2[i] = 0;
+    }
+
+    send_bounds = (int *) malloc (sizeof(int) * 2 * lComm);
+    send_counts = (int *) malloc (sizeof(int) * 2 * lComm);
+    printf ("send_counts 0: %ld\n", send_counts);
+    for (int i = 0; i < 2 * lComm; i++) {
+      send_bounds[i] = 0;
+      send_counts[i] = 0;
+    }
+
   }
 
 
   // Remplissage premier buffer et envoi
 
+  printf ("n_exch : %d\n", n_exch);
+  
   if (n_exch == 1) {
     i_send_pts1[0]  = 0;
     i_send_gnum1[0] = 0;
@@ -1187,6 +1249,7 @@ double      *closest_octree_pt_dist2
   else {
     i_send_pts1[0]  = 0;
     i_send_gnum1[0] = 0;
+    printf ("send_counts 1: %ld\n", send_counts);
     for (int i = 0; i < lComm; i++) {
       n_send_pts1[i]      = 0;
       n_send_gnum1[i]     = 0;
