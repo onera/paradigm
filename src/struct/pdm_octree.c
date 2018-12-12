@@ -443,13 +443,14 @@ PDM_octree_point_cloud_set
 {
   _octree_t *octree = _get_from_id (id);
   
-  
   printf ("*** PDM_octree_point_cloud_set d step 1  \n");
   for (int i = 0; i < n_points; i++) {
-    printf ("     %d (%12.5e %12.5e %12.5e) : %ld \n", i, coords[3*i], coords[3*i+1], coords[3*i+2],
+    printf ("     %d (%12.5e %12.5e %12.5e) : %ld \n", i,
+            coords[3*i], coords[3*i+1], coords[3*i+2],
             g_num[i]); 
   }
   printf ("*** PDM_octree_point_cloud_set f step 1 \n");
+
   octree->n_points[i_point_cloud] = n_points;
   octree->g_num[i_point_cloud] = (PDM_g_num_t *) g_num;
   PDM_octree_seq_point_cloud_set (octree->octree_seq_id, i_point_cloud, 
@@ -883,7 +884,8 @@ PDM_g_num_t *closest_octree_pt_g_num,
 double      *closest_octree_pt_dist2
 )
 {
-
+  const int idebug = 1;
+  
   _octree_t *octree = _get_from_id (id);
  
   int myRank;
@@ -911,12 +913,17 @@ double      *closest_octree_pt_dist2
                                  rank_id,
                                  rank_min_max_dist);
 
-  printf ("*** PDM_octree_closest_point d step 1 : the closest process \n");
-  for (int i = 0; i < n_pts; i++) {
-    printf ("     %d (%12.5e %12.5e %12.5e) : %d %12.5e\n", i, pts[3*i], pts[3*i+1], pts[3*i+2],
-            rank_id[i] ,rank_min_max_dist[i]); 
+  if (idebug == 1) {
+    printf ("*** PDM_octree_closest_point d step 1 :"
+            " the closest process \n");
+    for (int i = 0; i < n_pts; i++) {
+      printf ("     %d (%12.5e %12.5e %12.5e) : %d %12.5e\n", i,
+              pts[3*i], pts[3*i+1], pts[3*i+2],
+              rank_id[i] ,rank_min_max_dist[i]); 
+    }
+    printf ("*** PDM_octree_closest_point f step 1 :"
+            " the closest process \n");
   }
-  printf ("*** PDM_octree_closest_point f step 1 : the closest process \n");
   
   /***********************************
    *
@@ -965,7 +972,7 @@ double      *closest_octree_pt_dist2
       send_pts [idx + j] = pts[3*i+j];
     }
   }
-  
+
   for (int i = 0; i < lComm; i++) {
     n_send_pts[i] *= 3;
     i_send_pts[i] *= 3;
@@ -980,10 +987,10 @@ double      *closest_octree_pt_dist2
   free (rank_min_max_dist);
 
   for (int i = 0; i < lComm; i++) {
-    n_send_pts[i] *= 1/3;
-    i_send_pts[i] *= 1/3;
-    n_recv_pts[i] *= 1/3;
-    i_recv_pts[i] *= 1/3;    
+    n_send_pts[i] = n_send_pts[i]/3;
+    i_send_pts[i] = i_send_pts[i]/3;
+    n_recv_pts[i] = n_recv_pts[i]/3;
+    i_recv_pts[i]*= i_recv_pts[i]/3;    
   }
 
   /***************************************************
@@ -998,13 +1005,18 @@ double      *closest_octree_pt_dist2
   PDM_octree_seq_closest_point (octree->octree_seq_id, i_recv_pts[lComm],
                                 recv_pts, closest_pt, closest_dist);
   
-  printf ("*** PDM_octree_closest_point d step 2 : closest point in the closest process \n");
-  for (int i = 0; i <  i_recv_pts[lComm]; i++) {
-    printf ("     %d (%12.5e %12.5e %12.5e) : %d %d %12.5e\n", i, recv_pts[3*i], recv_pts[3*i+1], recv_pts[3*i+2],
-            closest_pt[2*i] , closest_pt[2*i+1] ,closest_dist[i]); 
+  if (idebug == 1) {
+    printf ("*** PDM_octree_closest_point d step 2 :"
+            " closest point in the closest process \n");
+    for (int i = 0; i <  i_recv_pts[lComm]; i++) {
+      printf ("     %d (%12.5e %12.5e %12.5e) : %d %d %12.5e\n", i,
+              recv_pts[3*i], recv_pts[3*i+1], recv_pts[3*i+2],
+              closest_pt[2*i] , closest_pt[2*i+1] ,closest_dist[i]); 
+    }
+    printf ("*** PDM_octree_closest_point f step 2 :"
+            " closest point in the closest process \n");
   }
-  printf ("*** PDM_octree_closest_point f step 2 : closest point in the closest process \n");
-
+  
   free (closest_pt);
   free (recv_pts);
   
@@ -1056,6 +1068,22 @@ double      *closest_octree_pt_dist2
                                                    upper_bound_dist,
                                                    &i_boxes,
                                                    &boxes);
+
+  if (idebug == 1) {
+    printf ("*** PDM_octree_closest_point d step 3 :"
+            " proc to send \n");
+    for (int i = 0; i <  n_pts; i++) {
+      printf ("     %d (%12.5e %12.5e %12.5e) %12.5e %d : ", i,
+              pts[3*i], pts[3*i+1], pts[3*i+2], upper_bound_dist[i],
+              i_boxes[i+1] - i_boxes[i]);
+      for (int j = i_boxes[i]; j < i_boxes[i+1]; j++) {
+        printf(" %d", boxes[j]);
+      }
+      printf("\n");
+    }
+    printf ("*** PDM_octree_closest_point f step 3 :"
+            " proc to send \n");
+  }
   
   free (upper_bound_dist);
   
@@ -1101,7 +1129,8 @@ double      *closest_octree_pt_dist2
   
   int n_data_exch_max = (int) (sum_npts/ (PDM_g_num_t) lComm) * factor;
 
-  printf("max_max_n_exch n_data_exch_max : %ld %d\n", max_max_n_exch, n_data_exch_max);
+  printf("max_max_n_exch n_data_exch_max : %ld %d\n",
+         max_max_n_exch, n_data_exch_max);
   
   int n_exch = (int)(max_max_n_exch / n_data_exch_max);
   if ((int)(max_max_n_exch % n_data_exch_max) > 0) {

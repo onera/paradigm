@@ -391,7 +391,7 @@ int main(int argc, char *argv[])
         select_face[ipart][i] = 1;
       }
     }
-    printf ("nselectface : %d\n",iii);
+
     for (int i = 0; i < facePartBoundProcIdx[numProcs]; i++) {
       select_face[ipart][facePartBound[4*i]-1] = 0;
     }
@@ -406,10 +406,12 @@ int main(int argc, char *argv[])
       }
     }
     n_select_face[ipart] = idx - 1;
-      
+    
     for (int i = 0; i < nFace; i++) {
-      for (int j = faceVtxIdx[i]; j < faceVtxIdx[i+1]; j++) {
-        select_vtx[ipart][faceVtx[j]-1] = 1;
+      if (select_face[ipart][i] != 0) {
+        for (int j = faceVtxIdx[i]; j < faceVtxIdx[i+1]; j++) {
+          select_vtx[ipart][faceVtx[j]-1] = 1;
+        }
       }
     }
     
@@ -421,7 +423,6 @@ int main(int argc, char *argv[])
       }
     }
     n_select_vtx[ipart] = idx - 1;
-
 
     surface_face_vtx_idx[ipart] = malloc (sizeof(int) * (n_select_face[ipart] + 1));
     surface_face_vtx_idx[ipart][0] = 0;
