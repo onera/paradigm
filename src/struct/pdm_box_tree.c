@@ -198,8 +198,6 @@ double                *max_dist2
       inbox += 1;
       *max_dist2 += PDM_MAX ((coords[i] - extents[i]) * (coords[i] - extents[i]),
                              (coords[i] - extents[dim+i]) * (coords[i] - extents[dim+i]));
-      *min_dist2 += PDM_MIN ((coords[i] - extents[i]) * (coords[i] - extents[i]),
-                             (coords[i] - extents[dim+i]) * (coords[i] - extents[dim+i]));
     }
     
   }
@@ -247,8 +245,6 @@ int             stack[]
   const int *_child_ids = bt->child_ids + id_curr_node*bt->n_children;
   
   for (int j = 0; j < bt->n_children; j++) {
-    int imin = 0;
-    int imax = j;
 
     double child_min_dist2;
     double child_max_dist2;
@@ -262,50 +258,19 @@ int             stack[]
                             pt,
                             &child_min_dist2,            
                             &child_max_dist2);
-    printf("inbox : %d\n", inbox);
-    
-    while (imin < imax) {
 
-      if (child_min_dist2 <= dist_child[imin]) {
-        imax = imin - 1;
-      }
-
-      else if (child_min_dist2 >= dist_child[imax]) {
-        imin = imax + 1;
-      }
-
-      else {
-      
-        const int pivot = j / 2;
-        if (imin == pivot) {
-          imin = imin + 1;
-          imax = imax - 1;
-        }
-        else {
-          const double dist2_pivot = dist_child[pivot];
-          if (child_min_dist2 > dist2_pivot) {
-            imax = pivot;
-          }
-          else {
-            imin = pivot;
-          }
-        }
-      }
-    }
-    
-    int k = j;
-    while (k > imin) {
-      sort_child[k] = sort_child[k-1]; 
-      dist_child[k] = dist_child[k-1];
-      inbox_child[k] = inbox_child[k-1];
-      k += -1;
+    int i1 = 0;
+    for (i1 = j; (i1 > 0) && (dist_child[i1-1] > child_min_dist2) ; i1--) {
+      dist_child[i1] = dist_child[i1-1];
+      sort_child[i1] = sort_child[i1-1]; 
+      inbox_child[i1] = inbox_child[i1-1];
     }
 
-    sort_child[imin] = _child_ids[j];
-    dist_child[imin] = child_min_dist2;
-    inbox_child[imin] = inbox;
+    sort_child[i1] = _child_ids[j];
+    dist_child[i1] = child_min_dist2;
+    inbox_child[i1] = inbox;
 
-    if (1 == 0) {
+    if (1 == 1) {
       printf("      p2 %d %12.5e : ", j, child_min_dist2);
       for (int i = 0; i < bt->n_children; i++) {
         printf (" %12.5e", dist_child[i]);
@@ -319,7 +284,7 @@ int             stack[]
   for (int j = 0; j < bt->n_children; j++) {
     int child_id = sort_child[bt->n_children - 1 - j];
     _node_t *child_node = &(bt->nodes[child_id]);
-    printf ("push %d %12.5e %12.5e %d\n", j,  dist_child[j], upper_bound, inbox_child[j]);
+    printf ("push %d %12.5e %12.5e %d %d\n", j,  dist_child[j], upper_bound, inbox_child[j], child_node->n_boxes);
     if (((dist_child[j] < upper_bound) || (inbox_child[j] == 1))
         && (child_node->n_boxes > 0)) {
       stack[(*pos_stack)++] = child_id; /* push root in th stack */
@@ -1339,66 +1304,82 @@ _split_node_3d(PDM_box_tree_t       *bt,
     switch (i) {
     case 0:
       child_extents[0] = _node_extents[0];
-      child_extents[1] = split_extents[0];
-      child_extents[2] = _node_extents[1];
-      child_extents[3] = split_extents[1];
-      child_extents[4] = _node_extents[2];
+      child_extents[3] = split_extents[0];
+
+      child_extents[1] = _node_extents[1];
+      child_extents[4] = split_extents[1];
+
+      child_extents[2] = _node_extents[2];
       child_extents[5] = split_extents[2];
       break;
     case 1:
       child_extents[0] = _node_extents[0];
-      child_extents[1] = split_extents[0];
-      child_extents[2] = _node_extents[1];
-      child_extents[3] = split_extents[1];
-      child_extents[4] = split_extents[2];
+      child_extents[3] = split_extents[0];
+
+      child_extents[1] = _node_extents[1];
+      child_extents[4] = split_extents[1];
+
+      child_extents[2] = split_extents[2];
       child_extents[5] = _node_extents[5];
       break;
     case 2:
       child_extents[0] = _node_extents[0];
-      child_extents[1] = split_extents[0];
-      child_extents[2] = split_extents[1];
-      child_extents[3] = _node_extents[4];
-      child_extents[4] = _node_extents[2];
+      child_extents[3] = split_extents[0];
+
+      child_extents[1] = split_extents[1];
+      child_extents[4] = _node_extents[4];
+
+      child_extents[2] = _node_extents[2];
       child_extents[5] = split_extents[2];
       break;
     case 3:
       child_extents[0] = _node_extents[0];
-      child_extents[1] = split_extents[0];
-      child_extents[2] = split_extents[1];
-      child_extents[3] = _node_extents[4];
-      child_extents[4] = split_extents[2];
+      child_extents[3] = split_extents[0];
+
+      child_extents[1] = split_extents[1];
+      child_extents[4] = _node_extents[4];
+
+      child_extents[2] = split_extents[2];
       child_extents[5] = _node_extents[5];
       break;
     case 4:
       child_extents[0] = split_extents[0];
-      child_extents[1] = _node_extents[3];
-      child_extents[2] = _node_extents[1];
-      child_extents[3] = split_extents[1];
-      child_extents[4] = _node_extents[2];
+      child_extents[3] = _node_extents[3];
+
+      child_extents[1] = _node_extents[1];
+      child_extents[4] = split_extents[1];
+
+      child_extents[2] = _node_extents[2];
       child_extents[5] = split_extents[2];
       break;
     case 5:
       child_extents[0] = split_extents[0];
-      child_extents[1] = _node_extents[3];
-      child_extents[2] = _node_extents[1];
-      child_extents[3] = split_extents[1];
-      child_extents[4] = split_extents[2];
+      child_extents[3] = _node_extents[3];
+
+      child_extents[1] = _node_extents[1];
+      child_extents[4] = split_extents[1];
+
+      child_extents[2] = split_extents[2];
       child_extents[5] = _node_extents[5];
       break;
     case 6:
       child_extents[0] = split_extents[0];
-      child_extents[1] = _node_extents[3];
-      child_extents[2] = split_extents[1];
-      child_extents[3] = _node_extents[4];
-      child_extents[4] = _node_extents[2];
+      child_extents[3] = _node_extents[3];
+
+      child_extents[1] = split_extents[1];
+      child_extents[4] = _node_extents[4];
+
+      child_extents[2] = _node_extents[2];
       child_extents[5] = split_extents[2];
       break;
     case 7:
       child_extents[0] = split_extents[0];
-      child_extents[1] = _node_extents[3];
-      child_extents[2] = split_extents[1];
-      child_extents[3] = _node_extents[4];
-      child_extents[4] = split_extents[2];
+      child_extents[3] = _node_extents[3];
+
+      child_extents[1] = split_extents[1];
+      child_extents[4] = _node_extents[4];
+
+      child_extents[2] = split_extents[2];
       child_extents[5] = _node_extents[5];
       break;
     }
@@ -3676,11 +3657,11 @@ double          *box_max_dist
       double min_dist2;
       double max_dist2;
 
-      int inbox = _box_dist2 (dim,
-                              extents,
-                              _pt,
-                              &min_dist2,            
-                              &max_dist2);            
+      _box_dist2 (dim,
+                  extents,
+                  _pt,
+                  &min_dist2,            
+                  &max_dist2);            
 
       if (max_dist2 <= box_max_dist[i]) {
 

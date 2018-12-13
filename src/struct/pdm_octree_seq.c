@@ -1092,8 +1092,6 @@ double          *closest_octree_pt_dist2
           const int *_child_ids = curr_node->children_id;
 
           for (int j = 0; j < n_children; j++) {
-            int imin = 0;
-            int imax = j;
 
             double child_min_dist2;
             double child_max_dist2;
@@ -1109,61 +1107,14 @@ double          *closest_octree_pt_dist2
                         &child_min_dist2,
                         &child_max_dist2);
 
-            while (imin < imax) {
-              if (child_min_dist2 <= dist_child[imin]) {
-                imax = imin - 1;
-              }
-              
-              else if (child_min_dist2 >= dist_child[imax]) {
-                imin = imax + 1;
-              }
-              
-              else {
-                
-                const int pivot = j / 2;
-                if (imin == pivot) {
-                  imin = imin + 1;
-                  imax = imax - 1;
-                }
-                else {
-                  const double dist2_pivot = dist_child[pivot];
-                  if (child_min_dist2 > dist2_pivot) {
-                    imax = pivot;
-                  }
-                  else {
-                    imin = pivot;
-                  }
-                }
-              }
-              /* int pivot = j / 2; */
-
-              /* if (child_min_dist2 <= dist_child[imin]) { */
-              /*   imax = imin; */
-              /* } */
-
-              /* else if (child_min_dist2 >= dist_child[imax]) { */
-              /*   imin = imax; */
-              /* } */
-
-              /* else if (child_min_dist2 >= dist_child[pivot]) { */
-              /*   imin = pivot; */
-              /* } */
-
-              /* else { */
-              /*   imax = pivot; */
-              /* } */
-
+            int i1 = 0;
+            for (i1 = j; (i1 > 0) && (dist_child[i1-1] > child_min_dist2) ; i1--) {
+              dist_child[i1] = dist_child[i1-1];
+              sort_child[i1] = sort_child[i1-1]; 
             }
-
-            int k = j;
-            while (k > imin) {
-              sort_child[k] = sort_child[k-1];
-              dist_child[k] = dist_child[k-1];
-              k += -1;
-            }
-
-            sort_child[imin] = _child_ids[j];
-            dist_child[imin] = child_min_dist2;
+            
+            sort_child[i1] = _child_ids[j];
+            dist_child[i1] = child_min_dist2;
 
           }
 
