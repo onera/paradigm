@@ -258,6 +258,25 @@ int             stack[]
                             pt,
                             &child_min_dist2,            
                             &child_max_dist2);
+    printf ("  pt  %12.5e, %12.5e, %12.5e\n", pt[0], pt[1], pt[2]);
+    printf ("  extents : %12.5e < %12.5e\n", child_extents[0], child_extents[3]);
+    printf ("  extents : %12.5e < %12.5e\n", child_extents[1], child_extents[4]);
+    printf ("  extents : %12.5e < %12.5e\n", child_extents[2], child_extents[5]);
+
+    _node_t *child_node = &(bt->nodes[child_id]);
+    
+    for (int k = 0; k < child_node->n_boxes; k++) {
+      int   _box_id = bt->box_ids[child_node->start_id + k];
+      const double *_box_extents =  bt->boxes->extents + _box_id*dim*2;
+      printf ("    box_extents : %12.5e < %12.5e\n", _box_extents[0], _box_extents[3]);
+      printf ("    box_extents : %12.5e < %12.5e\n", _box_extents[1], _box_extents[4]);
+      printf ("    box_extents : %12.5e < %12.5e\n", _box_extents[2], _box_extents[5]);
+
+
+    }
+
+    printf ("  result  %12.5e, %12.5e, %d\n",
+            child_min_dist2, upper_bound, inbox);
 
     int i1 = 0;
     for (i1 = j; (i1 > 0) && (dist_child[i1-1] > child_min_dist2) ; i1--) {
@@ -270,7 +289,7 @@ int             stack[]
     dist_child[i1] = child_min_dist2;
     inbox_child[i1] = inbox;
 
-    if (1 == 1) {
+    if (1 == 0) {
       printf("      p2 %d %12.5e : ", j, child_min_dist2);
       for (int i = 0; i < bt->n_children; i++) {
         printf (" %12.5e", dist_child[i]);
@@ -284,7 +303,6 @@ int             stack[]
   for (int j = 0; j < bt->n_children; j++) {
     int child_id = sort_child[bt->n_children - 1 - j];
     _node_t *child_node = &(bt->nodes[child_id]);
-    printf ("push %d %12.5e %12.5e %d %d\n", j,  dist_child[j], upper_bound, inbox_child[j], child_node->n_boxes);
     if (((dist_child[j] < upper_bound) || (inbox_child[j] == 1))
         && (child_node->n_boxes > 0)) {
       stack[(*pos_stack)++] = child_id; /* push root in th stack */
@@ -3752,10 +3770,10 @@ int             *boxes[]
 
   int idx_box = 0;
   for (int i = 0; i < n_pts; i++) {
-
-    printf(" *** ipoint : %d\n", i);
     
     const double *_pt = pts + 3 * i;
+
+    printf (" *** pt : %d\n", i);
     
     /* Init stack */
     
@@ -3778,9 +3796,6 @@ int             *boxes[]
                               _pt,
                               &min_dist2,            
                               &max_dist2);            
-
-      printf ("--- box_min_dist2 upper_bound_dist2[i] : %12.5e %12.5e %d\n",
-              min_dist2, upper_bound_dist2[i], inbox);
 
       if ((min_dist2 <= upper_bound_dist2[i]) || (inbox == 1)) {
 
@@ -3808,9 +3823,8 @@ int             *boxes[]
                                 &box_min_dist2,            
                                 &box_max_dist2);            
 
-            printf ("box_min_dist2 upper_bound_dist2[i] : %12.5e %12.5e %d\n",
-                    box_min_dist2, upper_bound_dist2[i], inbox);
-            
+            printf ("   %12.5e, %12.5e, %d\n",
+                   box_min_dist2, upper_bound_dist2[i], inbox);
             if ((box_min_dist2 < upper_bound_dist2[i]) || (inbox == 1)) {
               if (idx_box >= tmp_s_boxes) {
                 tmp_s_boxes *= 2;

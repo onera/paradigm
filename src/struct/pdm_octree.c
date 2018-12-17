@@ -546,6 +546,15 @@ PDM_octree_build
   extents_proc = (double *) realloc (extents_proc,
                                    sizeof(double) * sExtents * nUsedRank);
 
+
+  printf("extents_proc \n");
+
+  for (int i = 0; i <  nUsedRank; i++) {
+    printf ("%12.5e < %12.5e\n", extents_proc[i*sExtents],   extents_proc[i*sExtents+3]);
+    printf ("%12.5e < %12.5e\n", extents_proc[i*sExtents+1],   extents_proc[i*sExtents+4]);
+    printf ("%12.5e < %12.5e\n", extents_proc[i*sExtents+2],   extents_proc[i*sExtents+5]);
+  }
+  
   int *initLocationProc = (int *) malloc (sizeof(int) * nInfoLocation * nUsedRank);
   for (int i = 0; i < nInfoLocation * nUsedRank; i++) {
     initLocationProc[i] = 0;
@@ -1072,7 +1081,7 @@ double      *closest_octree_pt_dist2
   if (idebug == 1) {
     printf ("*** PDM_octree_closest_point d step 3 :"
             " proc to send \n");
-    for (int i = 0; i <  n_pts; i++) {
+    for (int i = 0; i < n_pts; i++) {
       printf ("     %d (%12.5e %12.5e %12.5e) %12.5e %d : ", i,
               pts[3*i], pts[3*i+1], pts[3*i+2], upper_bound_dist[i],
               i_boxes[i+1] - i_boxes[i]);
