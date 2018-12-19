@@ -3775,10 +3775,20 @@ int             *boxes[]
   int dim = bt->boxes->dim;
 
   int idx_box = 0;
+
+  int n_boxes = bt->boxes->n_boxes;
+
+  int *tag = malloc(sizeof(int) * n_boxes);
+
+  for (int i = 0; i < n_boxes; i++) {
+    tag[i] = 0;
+  }
+  
   for (int i = 0; i < n_pts; i++) {
     
     const double *_pt = pts + 3 * i;
-
+    const int idx_box_pre = idx_box;
+    
     /* Init stack */
     
     pos_stack = 0;
@@ -3825,31 +3835,40 @@ int             *boxes[]
             double box_max_dist2;
 
             int   _box_id = bt->box_ids[curr_node->start_id + j];
-            const double *_box_extents =  bt->boxes->extents + _box_id*dim*2;
+
+            if (tag[_box_id] == 0) {
+              
+              const double *_box_extents =  bt->boxes->extents + _box_id*dim*2;
 
             /* printf ("    box extents X : %12.5e < %12.5e\n",_box_extents[0],_box_extents[3]); */
             /* printf ("    box extents Y : %12.5e < %12.5e\n",_box_extents[2],_box_extents[4]); */
             /* printf ("    box extents Z : %12.5e < %12.5e\n",_box_extents[3],_box_extents[5]); */
-            inbox = _box_dist2 (dim,
-                                _box_extents,
-                                _pt,
-                                &box_min_dist2,            
-                                &box_max_dist2);            
-
-            if ((box_min_dist2 < upper_bound_dist2[i]) || (inbox == 1)) {
-              if (idx_box >= tmp_s_boxes) {
-                tmp_s_boxes *= 2;
-                *boxes = realloc (*boxes, sizeof(int) * tmp_s_boxes);
-                _boxes = *boxes;
+              inbox = _box_dist2 (dim,
+                                  _box_extents,
+                                  _pt,
+                                  &box_min_dist2,            
+                                  &box_max_dist2);            
+              
+              if ((box_min_dist2 < upper_bound_dist2[i]) || (inbox == 1)) {
+                if (idx_box >= tmp_s_boxes) {
+                  tmp_s_boxes *= 2;
+                  *boxes = realloc (*boxes, sizeof(int) * tmp_s_boxes);
+                  _boxes = *boxes;
+                }
+                _boxes[idx_box++] = _box_id;
+                _i_boxes[i+1]++;
+                tag[_box_id] = 1;
               }
-              _boxes[idx_box++] = _box_id;
-              _i_boxes[i+1]++;
             }
           }
-          
         }  
       }
     }
+
+    for (int j = 0; j < _i_boxes[i+1]; j++) {
+      tag[_boxes[idx_box_pre+j]] = 0;
+    }
+    
   }
   
   for (int i = 0; i < n_pts; i++) {
