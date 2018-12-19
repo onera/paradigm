@@ -999,7 +999,7 @@ double      *closest_octree_pt_dist2
     n_send_pts[i] = n_send_pts[i]/3;
     i_send_pts[i] = i_send_pts[i]/3;
     n_recv_pts[i] = n_recv_pts[i]/3;
-    i_recv_pts[i]*= i_recv_pts[i]/3;    
+    i_recv_pts[i] = i_recv_pts[i]/3;    
   }
 
   /***************************************************
