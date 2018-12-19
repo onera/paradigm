@@ -1056,6 +1056,16 @@ double      *closest_octree_pt_dist2
     
     upper_bound_dist[i] = recv_dist[idx];
   }
+  if (idebug == 1) {
+    printf ("*** PDM_octree_closest_point d step 3 :"
+            " exchange closest distance \n");
+    for (int i = 0; i < n_pts; i++) {
+      printf ("     %d (%12.5e %12.5e %12.5e) : %12.5e\n", i,
+              pts[3*i], pts[3*i+1], pts[3*i+2], upper_bound_dist[i]); 
+    }
+    printf ("*** PDM_octree_closest_point f step 3 :"
+            " exchange closest distance \n");
+  }
   
   free (recv_dist);
   free (rank_id);
@@ -1079,7 +1089,7 @@ double      *closest_octree_pt_dist2
                                                    &boxes);
 
   if (idebug == 1) {
-    printf ("*** PDM_octree_closest_point d step 3 :"
+    printf ("*** PDM_octree_closest_point d step 4 :"
             " proc to send \n");
     for (int i = 0; i < n_pts; i++) {
       printf ("     %d (%12.5e %12.5e %12.5e) %12.5e %d : ", i,
@@ -1090,7 +1100,7 @@ double      *closest_octree_pt_dist2
       }
       printf("\n");
     }
-    printf ("*** PDM_octree_closest_point f step 3 :"
+    printf ("*** PDM_octree_closest_point f step 4 :"
             " proc to send \n");
   }
   

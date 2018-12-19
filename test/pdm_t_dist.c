@@ -392,6 +392,13 @@ int main(int argc, char *argv[])
       }
     }
 
+    printf ("gnumCell : \n");
+    for (int i = 0; i < nCell; i++) {
+      printf (" %ld", cellLNToGN[i]);
+    }
+    printf ("\n");
+      
+    
     for (int i = 0; i < facePartBoundProcIdx[numProcs]; i++) {
       select_face[ipart][facePartBound[4*i]-1] = 0;
     }
@@ -416,14 +423,18 @@ int main(int argc, char *argv[])
     }
     
     idx = 1;
+    printf("vtxLNToGN :");
     for (int i = 0; i < nVtx; i++) {
       if (select_vtx[ipart][i] == 1) {
         select_vtx[ipart][i] = idx;
+        printf(" %ld", vtxLNToGN[i]);
         idx += 1;
       }
     }
+    printf("\n");
     n_select_vtx[ipart] = idx - 1;
 
+    printf ("n_select_face %d\n", n_select_face[ipart]);
     surface_face_vtx_idx[ipart] = malloc (sizeof(int) * (n_select_face[ipart] + 1));
     surface_face_vtx_idx[ipart][0] = 0;
     surface_face_vtx[ipart] = malloc (sizeof(int) * s_face_vtx);
