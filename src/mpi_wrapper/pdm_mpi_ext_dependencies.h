@@ -72,6 +72,27 @@ int *part
 
 #endif
 
+void 
+PDM_kaffpaE
+(
+int* n, 
+int* vwgt,
+int* xadj, 
+int* adjcwgt, 
+int* adjncy,
+int* nparts, 
+double* inbalance,  
+int time_limit, 
+int seed, 
+int mode, 
+PDM_MPI_Comm communicator, 
+int* edgecut, 
+double* balance, 
+int* part
+); 
+
+
+
 
 #ifdef	__cplusplus
 }

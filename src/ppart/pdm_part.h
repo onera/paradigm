@@ -328,7 +328,8 @@ void PDM_part_part_color_get
 const int            ppartId,
 const int            ipart,
       int          **cellColor,
-      int          **faceColor
+      int          **faceColor,
+      int          **threadColor
 );
 
 void
@@ -337,7 +338,8 @@ PROCF (pdm_part_part_color_get, PDM_PART_PART_COLOR_GET)
  int           *ppartId,
  int           *ipart,
  int           *cellColor,
- int           *faceColor
+ int           *faceColor,
+ int           *threadColor
 );
 
 /**

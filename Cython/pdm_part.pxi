@@ -89,7 +89,8 @@ cdef extern from "pdm_part.h":
     void PDM_part_part_color_get(int            ppartId,
                                  int            ipart,
                                  int          **cellColor,
-                                 int          **faceColor)
+                                 int          **faceColor,
+                                 int          **threadColor)
 
     # ------------------------------------------------------------------
     void PDM_part_free(int ppartId)
@@ -628,6 +629,7 @@ cdef class Part:
         # > Declaration
         cdef int          *cellColor,
         cdef int          *faceColor
+        cdef int          *threadColor
         # ************************************************************************
 
         # dims = self.part_dim_get(self.id, ipart)
@@ -637,7 +639,8 @@ cdef class Part:
         PDM_part_part_color_get(self.id,
                                 ipart,
                                 &cellColor,
-                                &faceColor)
+                                &faceColor,
+                                &threadColor)
         # -> Begin
         cdef NPY.npy_intp dim
 
@@ -659,8 +662,19 @@ cdef class Part:
                                                         &dim,
                                                         NPY.NPY_INT32,
                                                         <void *> faceColor)
+            
+        # \param [out]  cellColor            Cell tag (size = nCell)
+        if (threadColor == NULL):
+            npThreadColor = None
+        else :
+            dim = <NPY.npy_intp> dims['nCell']
+            npThreadColor = NPY.PyArray_SimpleNewFromData(1,
+                                                        &dim,
+                                                        NPY.NPY_INT32,
+                                                        <void *> threadColor)
         return {'npCellColor'   : npCellColor,
-                'npFaceColor'   : npFaceColor}
+                'npFaceColor'   : npFaceColor, 
+                 'npThreadColor': npThreadColor}
 
     # ------------------------------------------------------------------
     def part_time_get(self):

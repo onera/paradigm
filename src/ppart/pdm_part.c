@@ -1042,6 +1042,50 @@ _split
                                 cellPart,
                                 ppart->comm);
 
+      printf(" ooooooo kaffpaE \n");
+      // double inbalance = 0.003;
+      double inbalance = 0.03;
+      double balance   = 0;
+      edgecut   = 0;
+      // bool   suppress_output = False;
+      // bool   graph_partitioned = False;
+      int time_limit = 0;
+      int seed  = 0;
+      int mode = 2;
+
+      // kaffpaE(_dCellProc,
+      // MPI_Comm mpi_comm = *((MPI_Comm *) PDM_MPI_2_mpi_comm (ppart->comm));
+      // PDM_kaffpaE(&ppart->dNCell,
+      //              NULL,
+      //              ppart->dDualGraphIdx,
+      //              (int *) ppart->_dCellWeight,
+      //              ppart->dDualGraph,
+      //              &ppart->tNPart,
+      //              &inbalance,
+      //              time_limit,
+      //              seed,
+      //              mode,
+      //              ppart->comm,
+      //              &edgecut,
+      //              &balance,
+      //              cellPart);
+      // > Good
+      // PDM_kaffpaE(&ppart->dNCell,
+      //              NULL,
+      //              ppart->dDualGraphIdx,
+      //              NULL,
+      //              ppart->dDualGraph,
+      //              &ppart->tNPart,
+      //              &inbalance,
+      //              time_limit,
+      //              seed,
+      //              mode,
+      //              ppart->comm,
+      //              &edgecut,
+      //              &balance,
+      //              cellPart);
+      // printf(" ooooooo kaffpaE end \n");
+
       free(ubvec);
       free(tpwgts);
       free(_dCellProc);
@@ -2816,6 +2860,10 @@ _part_free
     free(part->faceColor);
   part->faceColor = NULL;
 
+  if (part->threadColor != NULL)
+    free(part->threadColor);
+  part->threadColor = NULL;
+
   if (part->newToOldOrderCell != NULL)
     free(part->newToOldOrderCell);
   part->newToOldOrderCell = NULL;
@@ -2823,6 +2871,27 @@ _part_free
   if (part->newToOldOrderFace != NULL)
     free(part->newToOldOrderFace);
   part->newToOldOrderFace = NULL;
+
+  if(part->subpartlayout != NULL){
+    if(part->subpartlayout->cellTileIdx!= NULL)
+      free(part->subpartlayout->cellTileIdx);
+    if(part->subpartlayout->faceTileIdx!= NULL)
+      free(part->subpartlayout->faceTileIdx);
+    if(part->subpartlayout->faceBndTileIdx!= NULL)
+      free(part->subpartlayout->faceBndTileIdx);
+    if(part->subpartlayout->maskTileIdx!= NULL)
+      free(part->subpartlayout->maskTileIdx);
+    if(part->subpartlayout->cellVectTileIdx!= NULL)
+      free(part->subpartlayout->cellVectTileIdx);
+    if(part->subpartlayout->maskTileN!= NULL)
+      free(part->subpartlayout->maskTileN);
+    if(part->subpartlayout->cellVectTileN!= NULL)
+      free(part->subpartlayout->cellVectTileN);
+    if(part->subpartlayout->maskTile!= NULL)
+      free(part->subpartlayout->maskTile);
+    free(part->subpartlayout);
+  }
+
 
   free(part);
 }
@@ -3213,7 +3282,6 @@ PDM_part_create
    * Cell renumbering
    */
 
-  // PDM_part_renum_cell (ppart);
   PDM_part_renum_cell (        ppart->meshParts,
                                ppart->nPart,
                                ppart->renum_cell_method,
@@ -3667,7 +3735,8 @@ void PDM_part_part_color_get
 const  int      ppartId,
 const  int      ipart,
  int          **cellColor,
- int          **faceColor
+ int          **faceColor,
+ int          **threadColor
 )
 {
   _PDM_part_t *ppart = _get_from_id(ppartId);
@@ -3681,8 +3750,9 @@ const  int      ipart,
     exit(1);
   }
 
-  *cellColor = meshPart->cellColor;
-  *faceColor = meshPart->faceColor;
+  *cellColor   = meshPart->cellColor;
+  *faceColor   = meshPart->faceColor;
+  *threadColor = meshPart->threadColor;
 }
 
 void
@@ -3691,7 +3761,8 @@ PROCF (pdm_part_part_color_get, PDM_PART_PART_COLOR_GET)
  int           *ppartId,
  int           *ipart,
  int           *cellColor,
- int           *faceColor
+ int           *faceColor,
+ int           *threadColor
 )
 {
   _PDM_part_t *ppart = _get_from_id(*ppartId);
@@ -3716,6 +3787,12 @@ PROCF (pdm_part_part_color_get, PDM_PART_PART_COLOR_GET)
   if (meshPart->faceColor != NULL){
     for (int i = 0; i < meshPart->nFace; i++){
         faceColor[i]    = meshPart->faceColor[i];
+    }
+  }
+
+  if (meshPart->threadColor != NULL){
+    for (int i = 0; i < meshPart->nCell; i++){
+        threadColor[i]    = meshPart->threadColor[i];
     }
   }
 

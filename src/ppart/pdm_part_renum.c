@@ -1378,6 +1378,13 @@ PDM_part_reorder_cell
                      part->cellColor);
   }
 
+  if (part->threadColor != NULL) {
+    PDM_order_array (part->nCell,
+                     sizeof(int),
+                     newToOldOrder,
+                     part->threadColor);
+  }
+
   PDM_order_array (part->nCell,
                    sizeof(PDM_g_num_t),
                    newToOldOrder,
@@ -1465,4 +1472,3 @@ int     *newToOldOrder
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-

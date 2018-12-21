@@ -476,6 +476,47 @@ int *part
 #endif
 
 
+void
+PDM_kaffpaE
+(
+int* n,
+int* vwgt,
+int* xadj,
+int* adjcwgt,
+int* adjncy,
+int* nparts,
+double* inbalance,
+int time_limit,
+int seed,
+int mode,
+PDM_MPI_Comm communicator,
+int* edgecut,
+double* balance,
+int* part
+)
+{
+  // bool   suppress_output = False;
+  // bool   graph_partitioned = False;
+  // MPI_Comm mpi_comm = *((MPI_Comm *) PDM_MPI_2_mpi_comm (communicator));
+  // kaffpaE(n,
+  //         vwgt,
+  //         xadj,
+  //         adjcwgt,
+  //         adjncy,
+  //         nparts,
+  //         inbalance,
+  //         suppress_output,
+  //         graph_partitioned,
+  //         time_limit,
+  //         seed,
+  //         mode,
+  //         mpi_comm,
+  //         edgecut,
+  //         balance,
+  //         part);
+}
+
+
 
 #ifdef __cplusplus
 }
