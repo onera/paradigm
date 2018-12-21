@@ -178,35 +178,54 @@ PDM_part_graph_split
 
       int edgecut;
 
-      if (nPart < 8) {
+      // if (nPart < 8) {
 
-        PDM_METIS_PartGraphRecursive (&(part_ini->nCell),
-                                      &ncon,
-                                      cellCellIdx,
-                                      cellCell,
-                                      vwgt,
-                                      adjwgt,
-                                      &nPart,
-                                      tpwgts,
-                                      ubvec,
-                                      &edgecut,
-                                      *cellPart);
-      }
+      //   PDM_METIS_PartGraphRecursive (&(part_ini->nCell),
+      //                                 &ncon,
+      //                                 cellCellIdx,
+      //                                 cellCell,
+      //                                 vwgt,
+      //                                 adjwgt,
+      //                                 &nPart,
+      //                                 tpwgts,
+      //                                 ubvec,
+      //                                 &edgecut,
+      //                                 *cellPart);
+      // }
 
-      else {
+      // else {
 
-        PDM_METIS_PartGraphKway (&(part_ini->nCell),
-                                 &ncon,
-                                 cellCellIdx,
-                                 cellCell,
-                                 vwgt,
-                                 adjwgt,
-                                 &nPart,
-                                 tpwgts,
-                                 ubvec,
-                                 &edgecut,
-                                 *cellPart);
-      }
+      //   PDM_METIS_PartGraphKway (&(part_ini->nCell),
+      //                            &ncon,
+      //                            cellCellIdx,
+      //                            cellCell,
+      //                            vwgt,
+      //                            adjwgt,
+      //                            &nPart,
+      //                            tpwgts,
+      //                            ubvec,
+      //                            &edgecut,
+      //                            *cellPart);
+      // }
+      double inbalance = 0.03;
+      double balance   = 0;
+      edgecut   = 0;
+      // bool   suppress_output = False;
+      // bool   graph_partitioned = False;
+      int time_limit = 0;
+      int seed  = 0;
+      int mode = 2;
+      PDM_kaffpa(&(part_ini->nCell),
+                 NULL,
+                 cellCellIdx,
+                 NULL,
+                 cellCell,
+                 &nPart,
+                  &inbalance,
+                  seed,
+                  mode,
+                  &edgecut,
+                  *cellPart );
 
       if (0 == 1) {
         PDM_printf("\n Contenu de cellPart : \n");
@@ -258,7 +277,7 @@ PDM_part_graph_split
     {
 
       // To see with eric ...
-      abort();
+      // abort();
       /* Allocation */
       double *cellCenter = (double *) malloc (part_ini->nCell * 3 * sizeof(double ));
 
@@ -521,6 +540,177 @@ PDM_part_graph_compute_from_face_cell
                                 (*cellCellIdxCompressed)[part_ini->nCell] * sizeof(int));
 
 }
+
+
+
+
+void
+PDM_part_graph_split_bis
+(
+ int         method,
+ int         nPart,
+ int         graphSize,
+ int        *cellCellIdx,
+ int        *cellCell,
+ int        *cellWeight,
+ int        *faceWeight,
+ int       **cellPart
+)
+{
+  *cellPart = (int *) malloc(graphSize * sizeof(int));
+
+  for (int i = 0; i < graphSize; i++){
+    (*cellPart)[i] = 0;
+  }
+
+  switch(method) {
+  case 1:
+    {
+#ifdef PDM_HAVE_PARMETIS
+      //            Define Metis properties
+
+      //          int flag_weights = 0; //0 = False -> weights are unused
+
+      int flag_weights = 1; //0 = False -> weights are unused
+
+      int ncon = 1; //The number of balancing constraints
+
+      int *vwgt = cellWeight; //Weights of the vertices of the graph (NULL if unused)
+
+      int *adjwgt = faceWeight; //Weights of the edges of the graph (NULL if unused)
+
+      double *tpwgts = NULL;
+      if (flag_weights != 0) {
+        tpwgts = (double *) malloc(ncon * nPart * sizeof(double));
+        for (int i = 0; i < ncon * nPart; i++){
+          tpwgts[i] = (double) (1./nPart);
+        }
+      }
+
+      double *ubvec = NULL;
+      if (flag_weights != 0) {
+        ubvec = (double *) malloc(ncon * sizeof(double));
+        for (int i = 0; i < ncon; i++) {
+          ubvec[i] = 1.05;
+        }
+      }
+
+      //TO ADD: USE OF ADJWGT IN AN IF STATEMENT
+
+      //This value is solely a memory space to be filled by METIS
+
+      int edgecut;
+
+      // if (nPart < 8) {
+
+      //   PDM_METIS_PartGraphRecursive (&(graphSize),
+      //                                 &ncon,
+      //                                 cellCellIdx,
+      //                                 cellCell,
+      //                                 vwgt,
+      //                                 adjwgt,
+      //                                 &nPart,
+      //                                 tpwgts,
+      //                                 ubvec,
+      //                                 &edgecut,
+      //                                 *cellPart);
+      // }
+
+      // else {
+
+      //   PDM_METIS_PartGraphKway (&(graphSize),
+      //                            &ncon,
+      //                            cellCellIdx,
+      //                            cellCell,
+      //                            vwgt,
+      //                            adjwgt,
+      //                            &nPart,
+      //                            tpwgts,
+      //                            ubvec,
+      //                            &edgecut,
+      //                            *cellPart);
+      // }
+
+      double inbalance = 0.03;
+      double balance   = 0;
+      edgecut   = 0;
+      // bool   suppress_output = False;
+      // bool   graph_partitioned = False;
+      int time_limit = 0;
+      int seed  = 0;
+      int mode = 2;
+      PDM_kaffpa(&(graphSize),
+                 NULL,
+                 cellCellIdx,
+                 NULL,
+                 cellCell,
+                 &nPart,
+                  &inbalance,
+                  seed,
+                  mode,
+                  &edgecut,
+                  *cellPart );
+
+      if (0 == 1) {
+        PDM_printf("\n Contenu de cellPart : \n");
+        for (int i = 0; i < graphSize; i++) {
+          PDM_printf(" %d ", (*cellPart)[i]);
+        }
+        PDM_printf("\n");
+      }
+
+      if (flag_weights != 0) {
+        if(ubvec!= NULL)
+          free(ubvec);
+        if(tpwgts!= NULL)
+          free(tpwgts);
+        // if(adjwgt!= NULL)
+        //   free(adjwgt);
+      }
+
+#else
+      PDM_printf("PDM_part error : METIS unavailable\n");
+      exit(1);
+
+#endif
+      break;
+    }
+  case 2:
+    {
+#ifdef PDM_HAVE_PTSCOTCH
+
+      int check = 0;
+
+      PDM_SCOTCH_part (graphSize,
+                       cellCellIdx,
+                       cellCell,
+                       cellWeight,
+                       faceWeight,
+                       check,
+                       nPart,
+                       *cellPart);
+
+#else
+      PDM_printf("PDM_part error : Scotch unavailable\n");
+      exit(1);
+#endif
+
+      break;
+    }
+    case 3:
+    {
+
+      // To see with eric ...
+      abort();
+      break;
+    }
+  default:
+    PDM_printf("PART error : '%i' unknown partitioning method\n", method);
+    exit(1);
+  }
+
+}
+
 
 #ifdef  __cplusplus
 }

@@ -23,6 +23,7 @@
 #ifdef PDM_HAVE_PTSCOTCH
 #include <scotch.h>
 #endif
+#include <kaHIP_interface.h>
 
 /*=============================================================================
  * Macro definitions
@@ -420,10 +421,6 @@ int    *part
     free (__adjncy);
   }
 
-  if (__part != NULL) {
-    free (__part);
-  }
-
   if (__vwgt != NULL) {
     free (__vwgt);
   }
@@ -613,6 +610,40 @@ int *part
 }
 
 #endif
+
+void
+PDM_kaffpa
+(
+int* n,
+int* vwgt,
+int* xadj,
+int* adjcwgt,
+int* adjncy,
+int* nparts,
+double* inbalance,
+int seed,
+int mode,
+int* edgecut,
+int* part
+)
+{
+  bool   suppress_output = False;
+  // abort();
+  kaffpa(n,
+         vwgt,
+         xadj,
+         adjcwgt,
+         adjncy,
+         nparts,
+         inbalance,
+         suppress_output,
+         seed,
+         mode,
+         edgecut,
+         part);
+}
+
+
 
 #ifdef __cplusplus
 }

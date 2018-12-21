@@ -81,6 +81,21 @@ int *part
 
 #endif
 
+void 
+PDM_kaffpa
+(
+int* n, 
+int* vwgt,
+int* xadj, 
+int* adjcwgt, 
+int* adjncy,
+int* nparts, 
+double* inbalance,  
+int seed, 
+int mode, 
+int* edgecut, 
+int* part
+);
 #ifdef	__cplusplus
 }
 #endif

@@ -524,6 +524,8 @@ const int     *faceVtx
         }
 
         if (tagFace[iFace] == FACE_IN_STACK) {
+          // printf(" oooo %i \n", iFace);
+          // printf(" oooo %i \n", face);
           PDM_error (__FILE__, __LINE__, 0, "Error reorient : no neighbour processed face found\n");
         }
       }
@@ -631,4 +633,3 @@ const int     *faceVtx
 #ifdef	__cplusplus
 }
 #endif
-
