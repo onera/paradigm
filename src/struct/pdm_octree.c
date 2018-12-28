@@ -1,4 +1,5 @@
 
+
 /*----------------------------------------------------------------------------
  * Standard C library headers
  *----------------------------------------------------------------------------*/
@@ -445,9 +446,8 @@ PDM_octree_point_cloud_set
   
   printf ("*** PDM_octree_point_cloud_set d step 1  \n");
   for (int i = 0; i < n_points; i++) {
-    printf ("     %d (%12.5e %12.5e %12.5e) : %ld \n", i,
-            coords[3*i], coords[3*i+1], coords[3*i+2],
-            g_num[i]); 
+    printf ("     %d (%12.5e %12.5e %12.5e) : \n", i,
+            coords[3*i], coords[3*i+1], coords[3*i+2]); 
   }
   printf ("*** PDM_octree_point_cloud_set f step 1 \n");
 
