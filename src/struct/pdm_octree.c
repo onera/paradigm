@@ -1145,7 +1145,8 @@ double      *closest_octree_pt_dist2
   const int factor = 10;
   
   int n_data_exch_max = (int) (sum_npts/ (PDM_g_num_t) lComm) * factor;
-
+  
+  n_data_exch_max = 4;
   printf("max_max_n_exch n_data_exch_max : %ld %d\n",
          max_max_n_exch, n_data_exch_max);
   
@@ -1318,8 +1319,8 @@ double      *closest_octree_pt_dist2
     for (int i = 0; i < n_pts; i++) {
       for (int j = i_boxes[i]; j < i_boxes[i+1]; j++) {
         int iproc     = boxes[j];
-        if ((send_counts[iproc] >= send_bounds[2*i]) &&
-            (send_counts[iproc] < send_bounds[2*i+1])) {
+        if ((send_counts[iproc] >= send_bounds[2*iproc]) &&
+            (send_counts[iproc] < send_bounds[2*iproc+1])) {
           n_send_pts1[iproc] += 3;
           n_send_gnum1[iproc] += 1;
         }
@@ -1338,8 +1339,8 @@ double      *closest_octree_pt_dist2
     for (int i = 0; i < n_pts; i++) {
       for (int j = i_boxes[i]; j < i_boxes[i+1]; j++) {
         int iproc     = boxes[j];
-        if ((send_counts[iproc] >= send_bounds[2*i]) &&
-            (send_counts[iproc] < send_bounds[2*i+1])) {
+        if ((send_counts[iproc] >= send_bounds[2*iproc]) &&
+            (send_counts[iproc] < send_bounds[2*iproc+1])) {
           int idx_pts1  = i_send_pts1[iproc] + n_send_pts1[iproc];
           int idx_gnum1 = i_send_gnum1[iproc] + n_send_gnum1[iproc];
           for (int k = 0; k < 3; k++) {
@@ -1353,9 +1354,22 @@ double      *closest_octree_pt_dist2
       }
     }
 
+    PDM_MPI_Alltoall (n_send_gnum1, 1, PDM_MPI_INT, 
+                      n_recv_gnum1, 1, PDM_MPI_INT, 
+                      octree->comm);
+
+    i_recv_pts1[0] = 0;
+    i_recv_gnum1[0] = 0;
+
+    for (int i = 0; i < lComm; i++) {
+      i_recv_pts1[i+1]  = i_recv_pts1[i] + 3 * n_recv_gnum1[i];
+      i_recv_gnum1[i+1] = i_recv_gnum1[i] + n_recv_gnum1[i];
+    }
+    
   }
 
-  printf("n_exch == 1 -- step 2\n");
+  printf("--- 1\n");
+  fflush(stdout);
 
   double      *data_send_pts  = data_send_pts1;
   double      *data_recv_pts  = data_recv_pts1;
@@ -1397,6 +1411,9 @@ double      *closest_octree_pt_dist2
                       data_recv_gnum, n_recv_gnum, i_recv_gnum, PDM__PDM_MPI_G_NUM,
                       octree->comm, &(Request_gnum[0]));
 
+  printf("--- 2 %d %d\n", Request_coord[0], Request_gnum[0]);
+  fflush(stdout);
+
   int *_closest_octree_pt_id         = NULL;
   double *_closest_octree_pt_dist2   = NULL;
   PDM_g_num_t *_closest_octree_pt_g_num = NULL;
@@ -1407,6 +1424,8 @@ double      *closest_octree_pt_dist2
 
     const int icurr = i%2; 
     const int inext = 1 - icurr; 
+    printf("--- 3 %d %d %d\n", i, icurr, inext);
+    fflush(stdout);
 
     if (icurr == 0) {
       n_send_pts    = n_send_pts1;
@@ -1471,6 +1490,8 @@ double      *closest_octree_pt_dist2
 
     if (i < (n_exch - 1)) {
 
+    printf("--- 31 %d\n", i);
+    fflush(stdout);
       i_send_pts_next[0]  = 0;
       i_send_gnum_next[0] = 0;
       for (int j = 0; j < lComm; j++) {
@@ -1487,8 +1508,8 @@ double      *closest_octree_pt_dist2
       for (int k = 0; k < n_pts; k++) {
         for (int j = i_boxes[k]; j < i_boxes[k+1]; j++) {
           int iproc     = boxes[j];
-          if ((send_counts[iproc] >= send_bounds[2*k]) &&
-              (send_counts[iproc] < send_bounds[2*k+1])) {
+          if ((send_counts[iproc] >= send_bounds[2*iproc]) &&
+              (send_counts[iproc] < send_bounds[2*iproc+1])) {
             n_send_pts_next[iproc] += 3;
             n_send_gnum_next[iproc] += 1;
           }
@@ -1496,6 +1517,8 @@ double      *closest_octree_pt_dist2
         }
       }
 
+    printf("--- 32 %d\n", i);
+    fflush(stdout);
       for (int j = 0; j < lComm; j++) {
         i_send_pts_next[j+1]  = i_send_pts_next[j] + n_send_pts_next[j];
         i_send_gnum_next[j+1] = i_send_gnum_next[j] + n_send_gnum_next[j];
@@ -1507,8 +1530,8 @@ double      *closest_octree_pt_dist2
       for (int k = 0; k < n_pts; k++) {
         for (int j = i_boxes[k]; j < i_boxes[k+1]; j++) {
           int iproc     = boxes[j];
-          if ((send_counts[iproc] >= send_bounds[2*k]) &&
-              (send_counts[iproc] < send_bounds[2*k+1])) {
+          if ((send_counts[iproc] >= send_bounds[2*iproc]) &&
+              (send_counts[iproc] < send_bounds[2*iproc+1])) {
             int idx_pts_next  = i_send_pts_next[iproc] + n_send_pts_next[iproc];
             int idx_gnum_next = i_send_gnum_next[iproc] + n_send_gnum_next[iproc];
             for (int k1 = 0; k1 < 3; k1++) {
@@ -1522,23 +1545,43 @@ double      *closest_octree_pt_dist2
         }
       }
    
+      PDM_MPI_Alltoall (n_send_gnum_next, 1, PDM_MPI_INT, 
+                        n_recv_gnum_next, 1, PDM_MPI_INT, 
+                        octree->comm);
+      
+      i_recv_pts_next[0] = 0;
+      i_recv_gnum_next[0] = 0;
+
+      for (int j = 0; j < lComm; j++) {
+        i_recv_pts_next[j+1]  = i_recv_pts_next[j] + 3 * n_recv_gnum_next[j];
+        i_recv_gnum_next[j+1] = i_recv_gnum_next[j] + n_recv_gnum_next[j];
+      }
+
+    printf("--- 33 %d\n", i);
+      fflush(stdout);
       PDM_MPI_Ialltoallv (data_send_pts_next, n_send_pts_next,
                           i_send_pts_next, PDM_MPI_DOUBLE,
                           data_recv_pts_next, n_recv_pts_next,
                           i_recv_pts_next, PDM_MPI_DOUBLE,
                           octree->comm, &(Request_coord[inext]));
-
+      
       PDM_MPI_Ialltoallv (data_send_gnum_next, n_send_gnum_next,
                           i_send_gnum_next, PDM__PDM_MPI_G_NUM,
                           data_recv_gnum_next, n_recv_gnum_next,
                           i_recv_gnum_next, PDM__PDM_MPI_G_NUM,
                           octree->comm, &(Request_coord[inext]));
-
+      
+      printf("--- 34 %d\n", i);
+      fflush(stdout);
     }
     
+    printf("--- 341 %d %d %d\n", icurr, Request_coord[0], Request_gnum[0]);
+    fflush(stdout);
     PDM_MPI_Wait (&(Request_coord[icurr]));
     PDM_MPI_Wait (&(Request_gnum[icurr]));
 
+    printf("--- 35 %d\n", i);
+    fflush(stdout);
     // Attente reception buffer courant
 
     /* Look for the closest points for received points */
@@ -1558,6 +1601,8 @@ double      *closest_octree_pt_dist2
                  sizeof(PDM_g_num_t) * s_closest_octree_pt_dist2);
     }
     
+    printf("--- 36 %d\n", i);
+    fflush(stdout);
     PDM_octree_seq_closest_point (octree->octree_seq_id, 
                                   i_recv_gnum[lComm],
                                   data_recv_pts, 
@@ -1569,6 +1614,8 @@ double      *closest_octree_pt_dist2
         octree->g_num[_closest_octree_pt_id[2*j]][_closest_octree_pt_id[2*j+1]];
     }
     
+    printf("--- 37 %d\n", i);
+    fflush(stdout);
     PDM_part_to_block_t *ptb =
       PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                 PDM_PART_TO_BLOCK_POST_MERGE,
@@ -1607,6 +1654,8 @@ double      *closest_octree_pt_dist2
                             &block_stride,
                             (void ** ) &block_dist2);
     
+    printf("--- 38 %d\n", i);
+    fflush(stdout);
     PDM_g_num_t *distrib_block = PDM_part_to_block_distrib_index_get (ptb);
     
     const int n_elt_block = PDM_part_to_block_n_elt_block_get (ptb);
@@ -1640,6 +1689,15 @@ double      *closest_octree_pt_dist2
 
     int __n_pts = (int) n_pts;
     
+    printf("--- 39 %d\n", i);
+    fflush(stdout);
+
+    printf ("distrib_block : ");
+    for (int j = 0; j < lComm + 1; j++) {
+      printf (" %ld", distrib_block[j]);
+    }
+    printf ("\n");
+
     PDM_block_to_part_t *btp =
       PDM_block_to_part_create (distrib_block,
                                 (const PDM_g_num_t **) &pts_g_num,
@@ -1675,7 +1733,10 @@ double      *closest_octree_pt_dist2
 
     PDM_part_to_block_free (ptb);
     PDM_block_to_part_free (btp);
-    
+
+    printf("--- 4 %d\n", i);
+    fflush(stdout);
+
   }
   
   if (n_exch > 1) {
