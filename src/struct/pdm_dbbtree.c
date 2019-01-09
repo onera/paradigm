@@ -335,8 +335,6 @@ const PDM_g_num_t **gNum
     nEltsProc += nElts[i];
   }
 
-  PDM_printf ("nEltsProc : %d \n", nEltsProc);
-
   PDM_g_num_t *_boxGnum = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * nEltsProc);
   double *_extents      = (double *) malloc (sizeof(double) * nEltsProc * sExtents);
   int *_initLocation   = (int *) malloc (sizeof(int) * nEltsProc * nInfoLocation);
@@ -925,7 +923,7 @@ PDM_g_num_t     *box_g_num[]
       (*box_g_num)[i] = gnum_boxes[box_l_num_in_rank[i]];
     }
     free (box_l_num_in_rank);
-  }
+   }
   
   else {
 

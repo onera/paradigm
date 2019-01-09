@@ -344,6 +344,8 @@ PDM_block_to_part_exch
       }
     }
     free(sendStride);
+    free(sendStride_idx);
+    
   }
       
   else if (t_stride == PDM_STRIDE_CST) {

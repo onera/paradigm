@@ -339,9 +339,6 @@ int main(int argc, char *argv[])
     for (int i = 0; i < nVtx; i++) {
       select_vtx[ipart][i] = 0;
     }
-    printf ("*** PDM_t_dist d step 0  \n");
-    printf ("     nVtx : %d\n", nVtx);
-    printf ("*** PDM_t_dist f step 0  \n");
     
     int          *cellTag;
     int          *cellFaceIdx;
@@ -391,13 +388,6 @@ int main(int argc, char *argv[])
         select_face[ipart][i] = 1;
       }
     }
-
-    printf ("gnumCell : \n");
-    for (int i = 0; i < nCell; i++) {
-      printf (" %ld", cellLNToGN[i]);
-    }
-    printf ("\n");
-      
     
     for (int i = 0; i < facePartBoundProcIdx[numProcs]; i++) {
       select_face[ipart][facePartBound[4*i]-1] = 0;
@@ -423,18 +413,14 @@ int main(int argc, char *argv[])
     }
     
     idx = 1;
-    printf("vtxLNToGN :");
     for (int i = 0; i < nVtx; i++) {
       if (select_vtx[ipart][i] == 1) {
         select_vtx[ipart][i] = idx;
-        printf(" %ld", vtxLNToGN[i]);
         idx += 1;
       }
     }
-    printf("\n");
     n_select_vtx[ipart] = idx - 1;
 
-    printf ("n_select_face %d\n", n_select_face[ipart]);
     surface_face_vtx_idx[ipart] = malloc (sizeof(int) * (n_select_face[ipart] + 1));
     surface_face_vtx_idx[ipart][0] = 0;
     surface_face_vtx[ipart] = malloc (sizeof(int) * s_face_vtx);
@@ -548,18 +534,6 @@ int main(int argc, char *argv[])
                                       surface_coords[ipart],
                                       surface_vtx_gnum[ipart]);
 
-  printf ("*** PDM_t_dist d step 1  \n");
-  for (int i = 0; i < n_select_vtx[ipart]; i++) {
-    printf ("     %d (%12.5e %12.5e %12.5e) : %ld \n", i,
-            surface_coords[ipart][3*i],
-            surface_coords[ipart][3*i+1],
-            surface_coords[ipart][3*i+2],
-            surface_vtx_gnum[ipart][i]); 
-  }
-  printf ("*** PDM_t_dist f step 1 \n");
-
-
-
     int nCell;
     int nFace;
     int nFacePartBound;
@@ -647,7 +621,6 @@ int main(int argc, char *argv[])
                        &projected,
                        &closest_elt_gnum);
 
-
     int nCell;
     int nFace;
     int nFacePartBound;
@@ -719,11 +692,10 @@ int main(int argc, char *argv[])
       double d = PDM_MIN (PDM_MIN (d1,d2), d3);
       d = d * d;
       if (PDM_ABS(distance[i] - d) > 1e-6) {
-        printf ("Erreur distance : %12.5e %12.5e\n", PDM_ABS(distance[i]), d);
+        printf ("Erreur distance (%12.5e %12.5e %12.5e) : %12.5e %12.5e\n",
+                vtx[3*i], vtx[3*i+1], vtx[3*i+2], distance[i], d);
       }
     }
-
-    
   }
   
   PDM_part_free(ppartId);
@@ -732,7 +704,6 @@ int main(int argc, char *argv[])
   PDM_mesh_dump_times(id_dist);
   int partial = 0;
   PDM_mesh_dist_free (id_dist, partial);
-
 
   for (int ipart = 0; ipart < nPart; ipart++) {
     free (select_face[ipart]);

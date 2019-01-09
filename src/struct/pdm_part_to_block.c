@@ -144,12 +144,6 @@ _define_rank_distrib( _cs_part_to_block_t *ptb,
 
   double   *l_distrib = (double  *) malloc (n_samples * sizeof(double));
 
-  printf ("sampling define rank distrib d: ");
-  for (int i = 0; i < n_samples + 1; i++) {
-    printf(PDM_FMT_G_NUM" ", sampling[i]);
-  }
-  printf ("\n");
-  
   for (id = 0; id < n_samples; id++) {
     l_distrib[id] = 0;
     g_distrib[id] = 0;
@@ -167,7 +161,6 @@ _define_rank_distrib( _cs_part_to_block_t *ptb,
       int iSample = PDM_binary_search_gap_long (_gnum_elt,
                                                 sampling,
                                                 n_samples + 1);
-      printf ("l_idstrib : %ld %d %12.5e\n", _gnum_elt, iSample, ptb->weight[i][j]);
       l_distrib[iSample] += ptb->weight[i][j];
     }
   }
@@ -256,11 +249,6 @@ _define_rank_distrib( _cs_part_to_block_t *ptb,
     exit(1);
   }
 #endif /* sanity check */
-  printf ("sampling define rank distrib f: ");
-  for (int i = 0; i < n_samples + 1; i++) {
-    printf(PDM_FMT_G_NUM" ", sampling[i]);
-  }
-  printf ("\n");
 
 }
 
@@ -538,8 +526,7 @@ _distrib_data
     const int  n_activeRanks = ptb->n_activeRanks;
     const int  sampling_factor = _sampling_factors[dim];
     const int  n_samples = sampling_factor * n_activeRanks;
-    const double  unit = 1/(double)n_samples;
-    printf ("n_samples : %d %d %12.5e "PDM_FMT_G_NUM" \n", n_samples, n_activeRanks, unit, _id_max_max);
+
     double **weight = ptb->weight;
     PDM_MPI_Comm comm = ptb->comm;      
 
@@ -573,12 +560,6 @@ _distrib_data
         k += 1;
       }
     }
-
-    printf ("sampling init: ");
-    for (int i = 0; i < n_samples + 1; i++) {
-      printf(PDM_FMT_G_NUM" ", sampling[i]);
-    }
-    printf ("\n");
 
     /* Define the distribution associated to the current sampling array */
 
@@ -680,7 +661,7 @@ _distrib_data
   
   /* Affichage */
 
-  if (1 == 1) {
+  if (1 == 0) {
     if (ptb->myRank == 0) {
       PDM_printf("dataDistribIndex : ");
       for(int i = 0; i < ptb->s_comm + 1; i++)
