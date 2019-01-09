@@ -3876,7 +3876,8 @@ int             *boxes[]
   }
   
   *boxes = realloc (*boxes, sizeof(int) * _i_boxes[n_pts]);
-  
+
+  free (tag);
   free (stack);
   
 }
