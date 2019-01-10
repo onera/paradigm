@@ -32,6 +32,9 @@
 
 #ifdef	__cplusplus
 extern "C" {
+#if 0
+} /* Fake brace to force Emacs auto-indentation back to column 0 */
+#endif
 #endif
 
 /*============================================================================
@@ -51,13 +54,13 @@ extern "C" {
  
 typedef enum {
 
-    BEGIN                         = 0,
-    UPPER_BOUND_DIST              = 1,        
-    CANDIDATE_SELECTION           = 2,
-    LOAD_BALANCING_ELEM_DIST      = 3,
-    COMPUTE_ELEM_DIST             = 4,
-    RESULT_TRANSMISSION           = 5,        
-    END                           = 6,        
+  BEGIN                         = 0,
+  UPPER_BOUND_DIST              = 1,        
+  CANDIDATE_SELECTION           = 2,
+  LOAD_BALANCING_ELEM_DIST      = 3,
+  COMPUTE_ELEM_DIST             = 4,
+  RESULT_TRANSMISSION           = 5,        
+  END                           = 6,        
 
 } _ol_timer_step_t;
 
@@ -117,6 +120,8 @@ typedef struct {
  *============================================================================*/
 
 static PDM_Handles_t *_dists   = NULL;
+
+static int idebug = 1;
 
 /*=============================================================================
  * Private function definitions
@@ -707,6 +712,20 @@ PDM_mesh_dist_process
                                                              extents,
                                                              gNum);
 
+    printf ("surf_mesh_boxes->n_boxes : %d\n", PDM_box_set_get_size (surf_mesh_boxes));
+
+    if (idebug) {
+      for (int i_part = 0; i_part < n_part_mesh; i_part++) {
+        printf (" PDM_dbbtree_boxes_set nElts %d : %d\n", i_part, nElts[i_part]);
+        for (int i = 0; i < nElts[i_part]; i++) {
+          printf ("%d : extents %12.5e %12.5e %12.5e / %12.5e %12.5e %12.5e gnum %ld\n", i,
+                  extents[i_part][6*i  ], extents[i_part][6*i+1], extents[i_part][6*i+2], 
+                  extents[i_part][6*i+3], extents[i_part][6*i+4], extents[i_part][6*i+5],
+                  gNum[i_part][i]);
+        }
+      }
+    }
+
     /* 
      * Find elements closer than closest_vertices_dist2 distance
      */
@@ -721,6 +740,20 @@ PDM_mesh_dist_process
                                                     closest_vertices_dist2,
                                                     &box_index,  
                                                     &box_g_num);
+
+    if (idebug) {
+      printf (" PDM_dbbtree_closest_upper_bound_dist_boxes_get n_pts_rank : %d\n", n_pts_rank);
+      for (int i = 0; i < n_pts_rank; i++) {
+        printf ("%d : (%12.5e %12.5e %12.5e) %12.5e\n", i,
+                pts_rank[3*i], pts_rank[3*i+1], pts_rank[3*i+2],
+                closest_vertices_dist2[i]);
+        printf ("  boxes %d :" , box_index[i+1] - box_index[i]);
+        for (int j = box_index[i]; j < box_index[i+1]; j++) {
+          printf (" %ld", box_g_num[j]);
+        }          
+        printf ("\n");
+      }
+    }
 
     free (closest_vertices_dist2);
 
