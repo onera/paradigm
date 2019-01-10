@@ -819,6 +819,7 @@ PDM_g_num_t     *box_g_num[]
   //int nUsedRank = PDM_box_set_get_size (_dbbt->rankBoxes);
   const int *usedRanks = _dbbt->usedRank;
   
+  const int idebug = 0;
   if (_dbbt->btShared != NULL) {
   
     PDM_box_tree_closest_upper_bound_dist_boxes_get (_dbbt->btShared,
@@ -827,6 +828,20 @@ PDM_g_num_t     *box_g_num[]
                                                      upper_bound_dist2,
                                                      &box_index_tmp,
                                                      &box_l_num_tmp);
+    if (idebug) {
+      printf ("  **** PDM_box_tree_closest_upper_bound_dist_boxes_get shared n_pts : %d\n", n_pts);
+      for (int i = 0; i < n_pts; i++) {
+        printf ("%d : (%12.5e %12.5e %12.5e) %12.5e\n", i,
+                pts[3*i], pts[3*i+1], pts[3*i+2],
+                upper_bound_dist2[i]);
+        printf ("  boxes %d :" , box_index_tmp[i+1] - box_index_tmp[i]);
+        for (int j = box_index_tmp[i]; j < box_index_tmp[i+1]; j++) {
+          printf (" %d", box_l_num_tmp[j]);
+        }          
+        printf ("\n");
+      }
+    }
+
     /* 
      * Envoi des points a chaque proc concerne
      */
@@ -914,6 +929,21 @@ PDM_g_num_t     *box_g_num[]
                                                    upper_bound_dist_in_rank,
                                                    &box_index_in_rank,
                                                    &box_l_num_in_rank);
+
+    if (idebug) {
+      printf (" **** PDM_dbbtree_closest_upper_bound_dist_boxes_get n_pts_rank : %d\n", npts_in_rank);
+      for (int i = 0; i < npts_in_rank; i++) {
+        printf ("%d : (%12.5e %12.5e %12.5e) %12.5e\n", i,
+                pts_in_rank[3*i], pts_in_rank[3*i+1], pts_in_rank[3*i+2],
+                upper_bound_dist_in_rank[i]);
+        printf ("  boxes %d :" , box_index_in_rank[i+1] - box_index_in_rank[i]);
+        for (int j = box_index_in_rank[i]; j < box_index_in_rank[i+1]; j++) {
+          printf (" %d", box_l_num_in_rank[j]);
+        }          
+        printf ("\n");
+      }
+    }
+
 
   if (_dbbt->btShared == NULL) {
     *box_index = box_index_in_rank; 
