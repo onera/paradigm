@@ -15,6 +15,7 @@
 #include "pdm_printf.h"
 #include "pdm_error.h"
 #include "pdm.h"
+#include "pdm_priv.h"
 #include "pdm_mpi.h"
 #include "pdm_mesh_dist.h"
 #include "pdm_mesh_nodal.h"
@@ -121,7 +122,7 @@ typedef struct {
 
 static PDM_Handles_t *_dists   = NULL;
 
-static int idebug = 1;
+static int idebug = 0;
 
 /*=============================================================================
  * Private function definitions
@@ -585,6 +586,38 @@ PDM_mesh_dist_process
                               closest_vertices_gnum,
                               closest_vertices_dist2);
 
+    //debut test
+    
+    /* int ierr = 0; */
+    /* double xmin = 0.; */
+    /* double ymin = 0.; */
+    /* double zmin = 0.; */
+    /* double xmax = 1.; */
+    /* double ymax = 1.; */
+    /* double zmax = 1.; */
+    /* for (int i = 0; i < n_pts_rank; i++) { */
+    /*   double d1 = PDM_MIN (PDM_ABS (pts_rank[3*i] - xmin), PDM_ABS (pts_rank[3*i] - xmax));  */
+    /*   double d2 = PDM_MIN (PDM_ABS (pts_rank[3*i+1] - ymin), PDM_ABS (pts_rank[3*i+1] - ymax));  */
+    /*   double d3 = PDM_MIN (PDM_ABS (pts_rank[3*i+2] - zmin), PDM_ABS (pts_rank[3*i+2] - zmax)); */
+    /*   double d = PDM_MIN (PDM_MIN (d1,d2), d3); */
+    /*   d = d * d; */
+    /*   if (PDM_ABS(closest_vertices_dist2[i] - d) > 1e-6) { */
+    /*     printf ("Erreur distance %d (%12.5e %12.5e %12.5e) : %12.5e %12.5e\n", i, */
+    /*             pts_rank[3*i], pts_rank[3*i+1], pts_rank[3*i+2], closest_vertices_dist2[i], d); */
+    /*     ierr += 1; */
+    /*   } */
+    /*   /\* else { *\/ */
+    /*   /\*   printf ("ok distance %d (%12.5e %12.5e %12.5e) : %12.5e %12.5e\n", i, *\/ */
+    /*   /\*           vtx[3*i], vtx[3*i+1], vtx[3*i+2], distance[i], d); *\/ */
+    /*   /\* } *\/ */
+    /* } */
+
+    /* if (ierr > 0) { */
+    /*   abort(); */
+    /* } */
+
+    /* //fin test */
+    
     free (closest_vertices_gnum);
     
     PDM_octree_free (octree_id);
@@ -712,9 +745,9 @@ PDM_mesh_dist_process
                                                              extents,
                                                              gNum);
 
-    printf ("surf_mesh_boxes->n_boxes : %d\n", PDM_box_set_get_size (surf_mesh_boxes));
-
+      
     if (idebug) {
+      printf ("surf_mesh_boxes->n_boxes : %d\n", PDM_box_set_get_size (surf_mesh_boxes));
       for (int i_part = 0; i_part < n_part_mesh; i_part++) {
         printf (" PDM_dbbtree_boxes_set nElts %d : %d\n", i_part, nElts[i_part]);
         for (int i = 0; i < nElts[i_part]; i++) {

@@ -889,7 +889,7 @@ PDM_g_num_t *closest_octree_pt_g_num,
 double      *closest_octree_pt_dist2
 )
 {
-  const int idebug = 1;
+  const int idebug = 0;
   
   _octree_t *octree = _get_from_id (id);
  
@@ -1084,7 +1084,7 @@ double      *closest_octree_pt_dist2
                                                    &i_boxes,
                                                    &boxes);
 
-  if (idebug == 0) {
+  if (idebug == 1) {
     printf ("*** PDM_octree_closest_point d step 4 :"
             " proc to send \n");
     for (int i = 0; i < n_pts; i++) {
