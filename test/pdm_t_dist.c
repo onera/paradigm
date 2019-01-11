@@ -692,10 +692,17 @@ int main(int argc, char *argv[])
       double d = PDM_MIN (PDM_MIN (d1,d2), d3);
       d = d * d;
       if (PDM_ABS(distance[i] - d) > 1e-6) {
-        printf ("Erreur distance (%12.5e %12.5e %12.5e) : %12.5e %12.5e\n",
+        printf ("Erreur distance %d (%12.5e %12.5e %12.5e) : %12.5e %12.5e\n", i,
                 vtx[3*i], vtx[3*i+1], vtx[3*i+2], distance[i], d);
       }
+      /* else { */
+      /*   printf ("ok distance %d (%12.5e %12.5e %12.5e) : %12.5e %12.5e\n", i, */
+      /*           vtx[3*i], vtx[3*i+1], vtx[3*i+2], distance[i], d); */
+      /* } */
     }
+  
+    printf ("elements surfaciques : %d\n", 6*(nVtxSeg-1)*(nVtxSeg-1));
+    printf ("nombre de points     : %d\n", nVtx);
   }
   
   PDM_part_free(ppartId);
