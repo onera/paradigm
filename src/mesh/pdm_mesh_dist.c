@@ -28,6 +28,8 @@
 #include "pdm_triangle.h"
 #include "pdm_polygon.h"
 #include "pdm_timer.h"
+#include "pdm_hash_tab.h"
+
 
 /*----------------------------------------------------------------------------*/
 
@@ -122,7 +124,7 @@ typedef struct {
 
 static PDM_Handles_t *_dists   = NULL;
 
-static int idebug = 0;
+static int idebug = 1;
 
 /*=============================================================================
  * Private function definitions
@@ -586,7 +588,7 @@ PDM_mesh_dist_process
                               closest_vertices_gnum,
                               closest_vertices_dist2);
 
-    //debut test
+    // debut test
     
     /* int ierr = 0; */
     /* double xmin = 0.; */
@@ -596,27 +598,27 @@ PDM_mesh_dist_process
     /* double ymax = 1.; */
     /* double zmax = 1.; */
     /* for (int i = 0; i < n_pts_rank; i++) { */
-    /*   double d1 = PDM_MIN (PDM_ABS (pts_rank[3*i] - xmin), PDM_ABS (pts_rank[3*i] - xmax));  */
-    /*   double d2 = PDM_MIN (PDM_ABS (pts_rank[3*i+1] - ymin), PDM_ABS (pts_rank[3*i+1] - ymax));  */
+    /*   double d1 = PDM_MIN (PDM_ABS (pts_rank[3*i] - xmin), PDM_ABS (pts_rank[3*i] - xmax)); */
+    /*   double d2 = PDM_MIN (PDM_ABS (pts_rank[3*i+1] - ymin), PDM_ABS (pts_rank[3*i+1] - ymax)); */
     /*   double d3 = PDM_MIN (PDM_ABS (pts_rank[3*i+2] - zmin), PDM_ABS (pts_rank[3*i+2] - zmax)); */
     /*   double d = PDM_MIN (PDM_MIN (d1,d2), d3); */
     /*   d = d * d; */
     /*   if (PDM_ABS(closest_vertices_dist2[i] - d) > 1e-6) { */
-    /*     printf ("Erreur distance %d (%12.5e %12.5e %12.5e) : %12.5e %12.5e\n", i, */
+    /*     printf ("Erreur distance 1 %d (%12.5e %12.5e %12.5e) : %12.5e %12.5e\n", i, */
     /*             pts_rank[3*i], pts_rank[3*i+1], pts_rank[3*i+2], closest_vertices_dist2[i], d); */
     /*     ierr += 1; */
     /*   } */
-    /*   /\* else { *\/ */
-    /*   /\*   printf ("ok distance %d (%12.5e %12.5e %12.5e) : %12.5e %12.5e\n", i, *\/ */
-    /*   /\*           vtx[3*i], vtx[3*i+1], vtx[3*i+2], distance[i], d); *\/ */
-    /*   /\* } *\/ */
+    /*   else { */
+    /*     printf ("ok distance 1 %d (%12.5e %12.5e %12.5e) : %12.5e %12.5e\n", i, */
+    /*             pts_rank[3*i], pts_rank[3*i+1], pts_rank[3*i+2], closest_vertices_dist2[i], d); */
+    /*   } */
     /* } */
 
     /* if (ierr > 0) { */
     /*   abort(); */
     /* } */
 
-    /* //fin test */
+    //fin test
     
     free (closest_vertices_gnum);
     
@@ -777,7 +779,7 @@ PDM_mesh_dist_process
     if (idebug) {
       printf (" PDM_dbbtree_closest_upper_bound_dist_boxes_get n_pts_rank : %d\n", n_pts_rank);
       for (int i = 0; i < n_pts_rank; i++) {
-        printf ("%d : (%12.5e %12.5e %12.5e) %12.5e\n", i,
+        printf ("%ld : (%12.5e %12.5e %12.5e) %12.5e\n", pts_g_num_rank[i],
                 pts_rank[3*i], pts_rank[3*i+1], pts_rank[3*i+2],
                 closest_vertices_dist2[i]);
         printf ("  boxes %d :" , box_index[i+1] - box_index[i]);
@@ -881,6 +883,78 @@ PDM_mesh_dist_process
     free (box_n);
     free (box_g_num);
 
+    const int n_block_vtx = PDM_part_to_block_n_elt_block_get (ptb_vtx);
+
+    int *block_g_num_idx = malloc (sizeof(int) * (n_block_vtx+1));
+    block_g_num_idx[0] = 0;
+    for (int i = 0; i < n_block_vtx; i++) {
+      block_g_num_idx[i+1] = block_g_num_stride[i] + block_g_num_idx[i];
+      block_g_num_stride[i] = 0;
+    }
+
+
+    /*
+     * Remove double boxes
+     */
+
+    int *block_g_num_opt_idx = malloc (sizeof(int) * (n_block_vtx+1));
+    int keyMax = 3 * n_block_vtx;
+    PDM_hash_tab_t * ht = PDM_hash_tab_create (PDM_HASH_TAB_KEY_INT,
+                                               &keyMax);
+
+    block_g_num_opt_idx[0] = 0;
+    int idx2 = 0;
+    for (int i = 0; i <  n_block_vtx; i++) {
+      block_g_num_opt_idx[i+1] = block_g_num_opt_idx[i];
+      for (int j = block_g_num_idx[i]; j < block_g_num_idx[i+1]; j++) {
+        PDM_g_num_t curr_box = block_g_num[j];
+        int key = curr_box % keyMax;
+
+        int n_data = PDM_hash_tab_n_data_get (ht, &key);
+
+        int found = 0;
+
+        PDM_g_num_t **data = (PDM_g_num_t **) PDM_hash_tab_data_get (ht, &key);
+        for (int k = 0; k < n_data; k++) {
+          if (*(data[k]) == curr_box) {
+            found = 1;
+            break;
+          }
+        }
+
+        if (!found) {
+          PDM_hash_tab_data_add (ht, (void *) &key, block_g_num + idx2);
+          block_g_num[idx2++] = curr_box;
+          block_g_num_opt_idx[i+1] += 1;
+          block_g_num_stride[i] += 1;
+        }
+      }
+      PDM_hash_tab_purge (ht, PDM_FALSE);
+    }
+
+
+    PDM_hash_tab_free (ht);
+    
+    free (block_g_num_idx);
+
+    block_g_num = realloc(block_g_num, sizeof(PDM_g_num_t) * block_g_num_opt_idx[n_block_vtx]);
+
+    if (idebug) {
+      PDM_g_num_t *block_vtx_gnum = PDM_part_to_block_block_gnum_get (ptb_vtx);
+      
+      printf ("\n\n **** vtx load balancing : %d\n", n_block_vtx);
+      for (int i = 0; i < n_block_vtx; i++) {
+        printf ("%ld : \n", block_vtx_gnum[i]);
+        printf ("  boxes %d :" , block_g_num_opt_idx[i+1] - block_g_num_opt_idx[i]);
+        for (int j = block_g_num_opt_idx[i]; j < block_g_num_opt_idx[i+1]; j++) {
+          printf (" %ld", block_g_num[j]);
+        }          
+        printf ("\n");
+      }
+    }
+
+    free (block_g_num_opt_idx);
+  
     /*
      * Receive of needed elements
      *    - PDM_part_to_part function have to be write
@@ -959,7 +1033,7 @@ PDM_mesh_dist_process
       PDM_part_to_block_distrib_index_get (ptb_elt);
 
     int block_g_num_n = 0;
-    for (int i = 0; i < n_pts_rank; i++) {
+    for (int i = 0; i <  n_block_vtx; i++) {
       block_g_num_n += block_g_num_stride[i]; 
     }
     
@@ -1048,7 +1122,7 @@ PDM_mesh_dist_process
       malloc (sizeof(PDM_g_num_t) *  n_pts_rank);
 
     int idx = 0;
-    for (int i = 0; i < n_pts_rank; i++) {
+    for (int i = 0; i < n_block_vtx; i++) {
       double *_pt_coords = block_pts + 3*i;
       double *_block_closest_proj = block_closest_proj + 3*i;
       double *_block_closest_dist = block_closest_dist + i;
