@@ -124,7 +124,7 @@ typedef struct {
 
 static PDM_Handles_t *_dists   = NULL;
 
-static int idebug = 1;
+static int idebug = 0;
 
 /*=============================================================================
  * Private function definitions
@@ -864,7 +864,6 @@ PDM_mesh_dist_process
                             &block_stride,
                             (void **) &block_pts);
 
-    free (block_stride);
     free (pts_rank);
     free (stride);
 
@@ -887,15 +886,32 @@ PDM_mesh_dist_process
 
     int *block_g_num_idx = malloc (sizeof(int) * (n_block_vtx+1));
     block_g_num_idx[0] = 0;
-    for (int i = 0; i < n_block_vtx; i++) {
-      block_g_num_idx[i+1] = block_g_num_stride[i] + block_g_num_idx[i];
-      block_g_num_stride[i] = 0;
-    }
 
+    /*
+     * Remove double coordinates
+     */
+
+    int idx = 0;
+    int idx2 = 0;
+    for (int i = 0; i < n_block_vtx; i++) {
+      for (int j = 0; j < 3; j++) {
+        block_pts[idx2++] = block_pts[idx++];
+      }
+      for (int j = 3; j < block_stride[i]; j++) {
+        idx += 1;
+      }
+    }
+    free (block_stride);
 
     /*
      * Remove double boxes
      */
+
+
+    for (int i = 0; i < n_block_vtx; i++) {
+      block_g_num_idx[i+1] = block_g_num_stride[i] + block_g_num_idx[i];
+      block_g_num_stride[i] = 0;
+    }
 
     int *block_g_num_opt_idx = malloc (sizeof(int) * (n_block_vtx+1));
     int keyMax = 3 * n_block_vtx;
@@ -903,13 +919,12 @@ PDM_mesh_dist_process
                                                &keyMax);
 
     block_g_num_opt_idx[0] = 0;
-    int idx2 = 0;
+    idx2 = 0;
     for (int i = 0; i <  n_block_vtx; i++) {
       block_g_num_opt_idx[i+1] = block_g_num_opt_idx[i];
       for (int j = block_g_num_idx[i]; j < block_g_num_idx[i+1]; j++) {
         PDM_g_num_t curr_box = block_g_num[j];
-        int key = curr_box % keyMax;
-
+        int key = (int) (curr_box % keyMax);
         int n_data = PDM_hash_tab_n_data_get (ht, &key);
 
         int found = 0;
@@ -929,6 +944,7 @@ PDM_mesh_dist_process
           block_g_num_stride[i] += 1;
         }
       }
+      //PDM_hash_tab_purge (ht, PDM_FALSE);
       PDM_hash_tab_purge (ht, PDM_FALSE);
     }
 
@@ -944,7 +960,7 @@ PDM_mesh_dist_process
       
       printf ("\n\n **** vtx load balancing : %d\n", n_block_vtx);
       for (int i = 0; i < n_block_vtx; i++) {
-        printf ("%ld : \n", block_vtx_gnum[i]);
+        printf ("%ld : %12.5e %12.5e %12.5e\n", block_vtx_gnum[i], block_pts[3*i], block_pts[3*i+1] , block_pts[3*i+2]);
         printf ("  boxes %d :" , block_g_num_opt_idx[i+1] - block_g_num_opt_idx[i]);
         for (int j = block_g_num_opt_idx[i]; j < block_g_num_opt_idx[i+1]; j++) {
           printf (" %ld", block_g_num[j]);
@@ -953,7 +969,7 @@ PDM_mesh_dist_process
       }
     }
 
-    free (block_g_num_opt_idx);
+    int block_g_num_n = block_g_num_opt_idx[n_block_vtx];
   
     /*
      * Receive of needed elements
@@ -984,6 +1000,8 @@ PDM_mesh_dist_process
                                 n_part_mesh,  
                                 comm);
 
+    const int n_block_elt = PDM_part_to_block_n_elt_block_get (ptb_elt);
+
     double **coords_face_mesh = malloc (sizeof(double *) * n_part_mesh);
     int **coords_face_mesh_n = malloc (sizeof(int *) * n_part_mesh);
     
@@ -1004,11 +1022,11 @@ PDM_mesh_dist_process
           (part_face_vtx_idx[j+1] - part_face_vtx_idx[j]) * 3;
       }
 
-      int idx = 0;
+      int idx3 = 0;
       for (int j = 0; j < part_face_vtx_idx[n_face_mesh[i]]; j++) {
         int _vtx = part_face_vtx[j] - 1;
         for (int k = 0; k < 3; k++) {
-          coords_face_mesh[i][idx++] = part_vtx[3*_vtx+k];
+          coords_face_mesh[i][idx3++] = part_vtx[3*_vtx+k];
         }
       }
 
@@ -1026,17 +1044,28 @@ PDM_mesh_dist_process
                             &block_coords_face_mesh_n,
                             (void **) &block_coords_face_mesh);
 
+    if (idebug) {
+      int idx3 = 0;
+      PDM_g_num_t *block_elt_gnum = PDM_part_to_block_block_gnum_get (ptb_elt);
+      printf ("\n\n **** part to block elt : %d\n", n_block_elt);
+      for (int i = 0; i < n_block_elt; i++) {
+        printf ("%ld :\n", block_elt_gnum[i]);
+        for (int j = 0; j < block_coords_face_mesh_n[i]/3; j++) {
+          printf ("/ %12.5e %12.5e %12.5e /\n",
+                  block_coords_face_mesh[3*(idx3+j)],
+                  block_coords_face_mesh[3*(idx3+j)+1],
+                  block_coords_face_mesh[3*(idx3+j)+2]);
+        }
+        printf ("\n");
+        idx3 += block_coords_face_mesh_n[i]/3;
+      }
+    }
 
     /* block to part */
     
     PDM_g_num_t *block_face_distrib_idx =
       PDM_part_to_block_distrib_index_get (ptb_elt);
 
-    int block_g_num_n = 0;
-    for (int i = 0; i <  n_block_vtx; i++) {
-      block_g_num_n += block_g_num_stride[i]; 
-    }
-    
     PDM_block_to_part_t *btp =
       PDM_block_to_part_create (block_face_distrib_idx,
                                 (const PDM_g_num_t **) &block_g_num,
@@ -1116,21 +1145,31 @@ PDM_mesh_dist_process
     b_t_cpu_s   = PDM_timer_cpu_sys(dist->timer);
     PDM_timer_resume(dist->timer);
 
-    double *block_closest_dist = malloc (sizeof(double) * n_pts_rank);
-    double *block_closest_proj = malloc (sizeof(double) * 3 * n_pts_rank);
+    double *block_closest_dist = malloc (sizeof(double) * n_block_vtx);
+    double *block_closest_proj = malloc (sizeof(double) * 3 * n_block_vtx);
     PDM_g_num_t *block_closest_gnum =
-      malloc (sizeof(PDM_g_num_t) *  n_pts_rank);
+      malloc (sizeof(PDM_g_num_t) *  n_block_vtx);
 
-    int idx = 0;
+    idx = 0;
+
+    if (idebug) {
+      printf ("\n\n****   compute distance min per points   ****\n");
+    }
+    
+    PDM_g_num_t *block_vtx_gnum = PDM_part_to_block_block_gnum_get (ptb_vtx);
     for (int i = 0; i < n_block_vtx; i++) {
       double *_pt_coords = block_pts + 3*i;
       double *_block_closest_proj = block_closest_proj + 3*i;
       double *_block_closest_dist = block_closest_dist + i;
       _block_closest_dist[0] = HUGE_VAL;
       
+      if (idebug) {
+        printf ("    *** %ld : \n", block_vtx_gnum[i]);
+      }
+      
       PDM_g_num_t *_block_closest_gnum = block_closest_gnum + i; 
       
-      for (int j = 0; j < block_g_num_stride[i]; j++) {
+      for (int j = 0; j < block_g_num_opt_idx[i+1] - block_g_num_opt_idx[i]; j++) {
         int n_vtx_elt = (part_coords_vtx_face_idx[idx+1] -
                          part_coords_vtx_face_idx[idx]);
         
@@ -1158,18 +1197,20 @@ PDM_mesh_dist_process
 
         else {
 
-          /* printf ("_pt_coords : %12.5e %12.5e %12.5e\n", */
-          /*         _pt_coords[0], _pt_coords[1], _pt_coords[2]); */
-          
-          /* printf ("_coords_face_elt %d %d %d :", n_vtx_elt, part_coords_vtx_face_idx[idx], part_coords_vtx_face_idx[idx+1]); */
-          /* for (int k = 0; k < n_vtx_elt; k++) { */
-          /*   printf (" %12.5e %12.5e %12.5e ;", */
-          /*           _coords_face_elt[3*k], */
-          /*           _coords_face_elt[3*k+1], */
-          /*           _coords_face_elt[3*k+2]); */
-          /* } */
-          /* printf ("\n"); */
-
+          if (idebug) {
+            printf ("_pt_coords : %12.5e %12.5e %12.5e\n",
+                    _pt_coords[0], _pt_coords[1], _pt_coords[2]);
+            
+            printf ("_coords_face_elt %d %d %d :\n", n_vtx_elt, part_coords_vtx_face_idx[idx], part_coords_vtx_face_idx[idx+1]);
+            for (int k = 0; k < n_vtx_elt; k++) {
+              printf (" / %12.5e %12.5e %12.5e /\n",
+                      _coords_face_elt[3*k],
+                      _coords_face_elt[3*k+1],
+                    _coords_face_elt[3*k+2]);
+            }
+            printf ("\n          *********\n");
+          }
+            
           PDM_polygon_status_t status =
             PDM_polygon_evaluate_position (_pt_coords,
                                            n_vtx_elt,
@@ -1195,6 +1236,8 @@ PDM_mesh_dist_process
         idx += 1;
       }
     }
+
+    free (block_g_num_opt_idx);
 
     free (block_pts);
     free (block_g_num);

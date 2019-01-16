@@ -458,6 +458,8 @@ const PDM_g_num_t **gNum
       }
     }
 
+    free (allNBoxes);
+    
     allGExtents = (double *) realloc (allGExtents, sizeof(double) * sExtents * nUsedRank);
     
     int *initLocationProc = (int *) malloc (sizeof(int) * 3 * nUsedRank);
