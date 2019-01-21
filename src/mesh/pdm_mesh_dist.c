@@ -590,33 +590,33 @@ PDM_mesh_dist_process
 
     // debut test
     
-    /* int ierr = 0; */
-    /* double xmin = 0.; */
-    /* double ymin = 0.; */
-    /* double zmin = 0.; */
-    /* double xmax = 1.; */
-    /* double ymax = 1.; */
-    /* double zmax = 1.; */
-    /* for (int i = 0; i < n_pts_rank; i++) { */
-    /*   double d1 = PDM_MIN (PDM_ABS (pts_rank[3*i] - xmin), PDM_ABS (pts_rank[3*i] - xmax)); */
-    /*   double d2 = PDM_MIN (PDM_ABS (pts_rank[3*i+1] - ymin), PDM_ABS (pts_rank[3*i+1] - ymax)); */
-    /*   double d3 = PDM_MIN (PDM_ABS (pts_rank[3*i+2] - zmin), PDM_ABS (pts_rank[3*i+2] - zmax)); */
-    /*   double d = PDM_MIN (PDM_MIN (d1,d2), d3); */
-    /*   d = d * d; */
-    /*   if (PDM_ABS(closest_vertices_dist2[i] - d) > 1e-6) { */
-    /*     printf ("Erreur distance 1 %d (%12.5e %12.5e %12.5e) : %12.5e %12.5e\n", i, */
-    /*             pts_rank[3*i], pts_rank[3*i+1], pts_rank[3*i+2], closest_vertices_dist2[i], d); */
-    /*     ierr += 1; */
-    /*   } */
-    /*   else { */
-    /*     printf ("ok distance 1 %d (%12.5e %12.5e %12.5e) : %12.5e %12.5e\n", i, */
-    /*             pts_rank[3*i], pts_rank[3*i+1], pts_rank[3*i+2], closest_vertices_dist2[i], d); */
-    /*   } */
-    /* } */
+    int ierr = 0;
+    double xmin = 0.;
+    double ymin = 0.;
+    double zmin = 0.;
+    double xmax = 1.;
+    double ymax = 1.;
+    double zmax = 1.;
+    for (int i = 0; i < n_pts_rank; i++) {
+      double d1 = PDM_MIN (PDM_ABS (pts_rank[3*i] - xmin), PDM_ABS (pts_rank[3*i] - xmax));
+      double d2 = PDM_MIN (PDM_ABS (pts_rank[3*i+1] - ymin), PDM_ABS (pts_rank[3*i+1] - ymax));
+      double d3 = PDM_MIN (PDM_ABS (pts_rank[3*i+2] - zmin), PDM_ABS (pts_rank[3*i+2] - zmax));
+      double d = PDM_MIN (PDM_MIN (d1,d2), d3);
+      d = d * d;
+      if (PDM_ABS(closest_vertices_dist2[i] - d) > 1e-6) {
+        printf ("Erreur distance 1 %d (%12.5e %12.5e %12.5e) : %12.5e %12.5e\n", i,
+                pts_rank[3*i], pts_rank[3*i+1], pts_rank[3*i+2], closest_vertices_dist2[i], d);
+        ierr += 1;
+      }
+      /* else { */
+      /*   printf ("ok distance 1 %d (%12.5e %12.5e %12.5e) : %12.5e %12.5e\n", i, */
+      /*           pts_rank[3*i], pts_rank[3*i+1], pts_rank[3*i+2], closest_vertices_dist2[i], d); */
+      /* } */
+    }
 
-    /* if (ierr > 0) { */
-    /*   abort(); */
-    /* } */
+    if (ierr > 0) {
+      abort();
+    }
 
     //fin test
     
@@ -1468,27 +1468,45 @@ PDM_mesh_dump_times
   _PDM_dist_t *dist = _get_from_id (id);
   double t1 = dist->times_elapsed[END] - dist->times_elapsed[BEGIN];
   double t2 = dist->times_cpu[END] - dist->times_cpu[BEGIN];
-  
-  PDM_printf( "distance timer : all (elapsed and cpu) : %12.5es %12.5es\n",
-              t1, t2);
-  PDM_printf( "distance timer : Upper bound distance (elapsed and cpu) :"
-              " %12.5es %12.5es\n",
-              dist->times_elapsed[UPPER_BOUND_DIST],
-              dist->times_cpu[UPPER_BOUND_DIST]);
-  PDM_printf( "distance timer : Candidate selection (elapsed and cpu) :"
-              " %12.5es %12.5es\n",
-              dist->times_elapsed[CANDIDATE_SELECTION],
-              dist->times_cpu[CANDIDATE_SELECTION]);
-  PDM_printf( "distance timer : Computations of the distance"
-              " from the points to the candidates  (elapsed and cpu) :"
-              " %12.5es %12.5es\n",
-              dist->times_elapsed[LOAD_BALANCING_ELEM_DIST],
-              dist->times_cpu[LOAD_BALANCING_ELEM_DIST]);
-  PDM_printf( "distance timer : Results exchange (elapsed and cpu) :"
-              " %12.5es %12.5es\n",
-              dist->times_elapsed[RESULT_TRANSMISSION],
-              dist->times_cpu[RESULT_TRANSMISSION]);
 
+  double t1max;
+  PDM_MPI_Allreduce (&t1, &t1max, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, dist->comm);
+  
+  double t2max;
+  PDM_MPI_Allreduce (&t2, &t2max, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, dist->comm);
+
+  double t_elaps_max[NTIMER];
+  PDM_MPI_Allreduce (dist->times_elapsed, t_elaps_max, NTIMER, PDM_MPI_DOUBLE, PDM_MPI_MAX, dist->comm);
+
+  double t_cpu_max[NTIMER];
+  PDM_MPI_Allreduce (dist->times_cpu, t_cpu_max, NTIMER, PDM_MPI_DOUBLE, PDM_MPI_MAX, dist->comm);
+
+  int rank;
+  PDM_MPI_Comm_rank (dist->comm, &rank);
+  
+  if (rank == 0) {
+  
+    
+    PDM_printf( "distance timer : all (elapsed and cpu) : %12.5es %12.5es\n",
+                t1max, t2max);
+    PDM_printf( "distance timer : Upper bound distance (elapsed and cpu) :"
+                " %12.5es %12.5es\n",
+                t_elaps_max[UPPER_BOUND_DIST],
+                t_cpu_max[UPPER_BOUND_DIST]);
+    PDM_printf( "distance timer : Candidate selection (elapsed and cpu) :"
+                " %12.5es %12.5es\n",
+                t_elaps_max[CANDIDATE_SELECTION],
+                t_cpu_max[CANDIDATE_SELECTION]);
+    PDM_printf( "distance timer : Computations of the distance"
+                " from the points to the candidates  (elapsed and cpu) :"
+                " %12.5es %12.5es\n",
+                t_elaps_max[LOAD_BALANCING_ELEM_DIST],
+                t_cpu_max[LOAD_BALANCING_ELEM_DIST]);
+    PDM_printf( "distance timer : Results exchange (elapsed and cpu) :"
+                " %12.5es %12.5es\n",
+                t_elaps_max[RESULT_TRANSMISSION],
+                t_cpu_max[RESULT_TRANSMISSION]);
+  }
 }
 
   
