@@ -3712,11 +3712,17 @@ double          *box_max_dist
             /* printf ("    box_extents %d: %12.5e < %12.5e\n", j, */
             /*         _box_extents[2], _box_extents[5]); */
 
-            int inbox =_box_dist2 (dim,
-                                   _box_extents,
-                                   _pt,
-                                   &box_min_dist2,            
-                                   &box_max_dist2);            
+            _box_dist2 (dim,
+                        _box_extents,
+                        _pt,
+                        &box_min_dist2,            
+                        &box_max_dist2);            
+
+            /* int inbox =_box_dist2 (dim, */
+            /*                        _box_extents, */
+            /*                        _pt, */
+            /*                        &box_min_dist2,             */
+            /*                        &box_max_dist2);             */
 
             /* printf ("  pt  %12.5e, %12.5e, %12.5e\n", _pt[0], _pt[1], _pt[2]); */
             /* printf ("  result  %12.5e, %12.5e, %d\n", */

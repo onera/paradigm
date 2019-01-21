@@ -425,18 +425,18 @@ const PDM_g_num_t **gNum
                    allGExtents, sExtents, PDM__PDM_MPI_REAL, 
                    _dbbt->comm);
     
-    PDM_printf ("_extents shared :");
-    idx1 = 0;
-    for (int i = 0; i < lComm; i++) {
-      PDM_printf (" %12.5e", allGExtents[idx1++]);
-      PDM_printf (" %12.5e", allGExtents[idx1++]);
-      PDM_printf (" %12.5e", allGExtents[idx1++]);
-      PDM_printf (" %12.5e", allGExtents[idx1++]);
-      PDM_printf (" %12.5e", allGExtents[idx1++]);
-      PDM_printf (" %12.5e", allGExtents[idx1++]);
-      PDM_printf ("\n");
-    }
-    PDM_printf ("\n");
+    /* PDM_printf ("_extents shared :"); */
+    /* idx1 = 0; */
+    /* for (int i = 0; i < lComm; i++) { */
+    /*   PDM_printf (" %12.5e", allGExtents[idx1++]); */
+    /*   PDM_printf (" %12.5e", allGExtents[idx1++]); */
+    /*   PDM_printf (" %12.5e", allGExtents[idx1++]); */
+    /*   PDM_printf (" %12.5e", allGExtents[idx1++]); */
+    /*   PDM_printf (" %12.5e", allGExtents[idx1++]); */
+    /*   PDM_printf (" %12.5e", allGExtents[idx1++]); */
+    /*   PDM_printf ("\n"); */
+    /* } */
+    /* PDM_printf ("\n"); */
 
 
     int *numProc = (int *) malloc (sizeof(int *) * nUsedRank);
