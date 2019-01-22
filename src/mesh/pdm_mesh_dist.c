@@ -442,6 +442,9 @@ PDM_mesh_dist_process
   const int mesh_id = dist->mesh_nodal_id;
   PDM_MPI_Comm comm = dist->comm;
 
+  int rank;
+  PDM_MPI_Comm_rank (comm, &rank);
+
   double b_t_elapsed;
   double b_t_cpu;
   double b_t_cpu_u;
@@ -604,7 +607,7 @@ PDM_mesh_dist_process
       double d = PDM_MIN (PDM_MIN (d1,d2), d3);
       d = d * d;
       if (PDM_ABS(closest_vertices_dist2[i] - d) > 1e-6) {
-        printf ("Erreur distance 1 %d (%12.5e %12.5e %12.5e) : %12.5e %12.5e\n", i,
+        printf ("Erreur distance plus proche somm %d %d %ld (%12.5e %12.5e %12.5e) : %12.5e %12.5e\n", rank, i,pts_g_num_rank[i],
                 pts_rank[3*i], pts_rank[3*i+1], pts_rank[3*i+2], closest_vertices_dist2[i], d);
         ierr += 1;
       }

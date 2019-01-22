@@ -1070,7 +1070,10 @@ double          *closest_octree_pt_dist2
       int id_curr_node = stack[--pos_stack];
       /* printf (" +++++ id_curr_node : %d\n", id_curr_node); */
 
-      //const double *extents = octree->extents + dim * 2 * id_curr_node;
+      /* const double *extents = octree->extents + dim * 2 * id_curr_node; */
+      /* printf ("  node extents X : %12.5e < %12.5e\n",extents[0], extents[3]); */
+      /* printf ("  node extents Y : %12.5e < %12.5e\n",extents[1], extents[4]); */
+      /* printf ("  node extents Z : %12.5e < %12.5e\n",extents[2], extents[5]); */
 
       _octant_t *curr_node = &(octree->nodes[id_curr_node]);
 
@@ -1148,16 +1151,16 @@ double          *closest_octree_pt_dist2
             }
           }
 
-          /* printf ("\n   ****\n");  */
+          /* printf ("\n   ****\n"); */
           for (int j = 0; j < n_selec; j++) {
             int child_id = sort_child[n_selec- 1 - j];
             if (child_id != -1) {
               _octant_t *child_node = &(octree->nodes[child_id]);
               /* printf ("%12.5e, %d\n", dist_child[j], child_id); */
-              if ((dist_child[j] < closest_octree_pt_dist2[i])){
-                //                  (child_node->n_points > 0)) {
-              /* if ((dist_child[j] < closest_octree_pt_dist2[i]) && */
-              /*     (child_node->n_points > 0)) { */
+              /* if ((dist_child[j] < closest_octree_pt_dist2[i])){ */
+              /*   //                  (child_node->n_points > 0)) { */
+              if ((dist_child[j] < closest_octree_pt_dist2[i]) &&
+                  (child_node->n_points > 0)) {
                 stack[pos_stack++] = child_id; /* push root in th stack */
               }
             }

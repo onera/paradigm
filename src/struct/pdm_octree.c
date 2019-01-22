@@ -537,11 +537,14 @@ PDM_octree_build
   int idx = 0;
   for (int i = 0; i < lComm; i++) {
     if (n_pts_proc[i] > 0) {
-      gNumProc[idx] = idx;
+      gNumProc[idx] = idx+1;
       numProc[idx] = i;
+      /* printf ("extents_proc %d %d : ", i, idx); */
       for (int j = 0; j < sExtents; j++) {
         extents_proc[idx*sExtents + j] = extents_proc[i*sExtents + j];
+        /* printf (" %12.5e", extents_proc[idx*sExtents + j]); */
       }
+      /* printf("\n"); */
       idx += 1;
     }
   }
@@ -918,6 +921,12 @@ double      *closest_octree_pt_dist2
                                  rank_id,
                                  rank_min_max_dist);
 
+  for (int i = 0; i < n_pts; i++) {
+    if (rank_id[i] >= 0) {
+      rank_id[i] = octree->usedRank[rank_id[i]];
+    }
+  }
+
   if (idebug == 1) {
     printf ("*** PDM_octree_closest_point d step 1 :"
             " the closest process \n");
@@ -1113,6 +1122,7 @@ double      *closest_octree_pt_dist2
   }
 
   for (int i = 0; i < i_boxes[n_pts]; i++) {
+    boxes[i] = octree->usedRank[boxes[i]];
     n_send_pts[boxes[i]]++;
   }
 
