@@ -3695,8 +3695,8 @@ double          *box_max_dist
 
         else {
 
-          //          printf ("    is_leaf\n");
-
+          /* printf ("    is_leaf\n"); */
+                   
           for (int j = 0; j < curr_node->n_boxes; j++) {
 
             double box_min_dist2;
@@ -3715,14 +3715,14 @@ double          *box_max_dist
             _box_dist2 (dim,
                         _box_extents,
                         _pt,
-                        &box_min_dist2,            
-                        &box_max_dist2);            
+                        &box_min_dist2,
+                        &box_max_dist2);
 
             /* int inbox =_box_dist2 (dim, */
             /*                        _box_extents, */
             /*                        _pt, */
-            /*                        &box_min_dist2,             */
-            /*                        &box_max_dist2);             */
+            /*                        &box_min_dist2, */
+            /*                        &box_max_dist2); */
 
             /* printf ("  pt  %12.5e, %12.5e, %12.5e\n", _pt[0], _pt[1], _pt[2]); */
             /* printf ("  result  %12.5e, %12.5e, %d\n", */
