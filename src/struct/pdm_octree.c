@@ -539,12 +539,12 @@ PDM_octree_build
     if (n_pts_proc[i] > 0) {
       gNumProc[idx] = idx+1;
       numProc[idx] = i;
-      /* printf ("extents_proc %d %d : ", i, idx); */
+      printf ("extents_proc %d %d : ", i, idx);
       for (int j = 0; j < sExtents; j++) {
         extents_proc[idx*sExtents + j] = extents_proc[i*sExtents + j];
-        /* printf (" %12.5e", extents_proc[idx*sExtents + j]); */
+        printf (" %12.5e", extents_proc[idx*sExtents + j]);
       }
-      /* printf("\n"); */
+      printf("\n");
       idx += 1;
     }
   }
@@ -892,7 +892,7 @@ PDM_g_num_t *closest_octree_pt_g_num,
 double      *closest_octree_pt_dist2
 )
 {
-  const int idebug = 0;
+  const int idebug = 1;
   
   _octree_t *octree = _get_from_id (id);
  
@@ -1093,21 +1093,6 @@ double      *closest_octree_pt_dist2
                                                    &i_boxes,
                                                    &boxes);
 
-  if (idebug == 1) {
-    printf ("*** PDM_octree_closest_point d step 4 :"
-            " proc to send \n");
-    for (int i = 0; i < n_pts; i++) {
-      printf ("     %d (%12.5e %12.5e %12.5e) %12.5e %d : ", i,
-              pts[3*i], pts[3*i+1], pts[3*i+2], upper_bound_dist[i],
-              i_boxes[i+1] - i_boxes[i]);
-      for (int j = i_boxes[i]; j < i_boxes[i+1]; j++) {
-        printf(" %d", boxes[j]);
-      }
-      printf("\n");
-    }
-    printf ("*** PDM_octree_closest_point f step 4 :"
-            " proc to send \n");
-  }
   
   free (upper_bound_dist);
   
@@ -1124,6 +1109,22 @@ double      *closest_octree_pt_dist2
   for (int i = 0; i < i_boxes[n_pts]; i++) {
     boxes[i] = octree->usedRank[boxes[i]];
     n_send_pts[boxes[i]]++;
+  }
+
+  if (idebug == 1) {
+    printf ("*** PDM_octree_closest_point d step 4 :"
+            " proc to send \n");
+    for (int i = 0; i < n_pts; i++) {
+      printf ("     %d (%12.5e %12.5e %12.5e) %12.5e %d : ", i,
+              pts[3*i], pts[3*i+1], pts[3*i+2], upper_bound_dist[i],
+              i_boxes[i+1] - i_boxes[i]);
+      for (int j = i_boxes[i]; j < i_boxes[i+1]; j++) {
+        printf(" %d", boxes[j]);
+      }
+      printf("\n");
+    }
+    printf ("*** PDM_octree_closest_point f step 4 :"
+            " proc to send \n");
   }
 
   PDM_MPI_Alltoall (n_send_pts, 1, PDM_MPI_INT, 
@@ -1148,8 +1149,7 @@ double      *closest_octree_pt_dist2
   PDM_MPI_Allreduce (&_n_pts, &sum_npts, 1, 
                      PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, octree->comm);
 
-  const int factor = 10;
-  
+  const int factor = 10;  
   int n_data_exch_max = (int) (sum_npts/ (PDM_g_num_t) lComm) * factor;
   
   //n_data_exch_max = 4;
