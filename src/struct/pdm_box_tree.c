@@ -304,7 +304,7 @@ int             flag
   for (int j =  bt->n_children - 1; j >= 0; j--) {
     int child_id = sort_child[j];
     /* if (((dist_child[j] < upper_bound) || (inbox_child[j] == 1)) */
-    /*     && (child_node->n_boxes > 0)) { */
+    /*     && (bt->nodes[child_id].n_boxes > 0)) { */
     if (((dist_child[j] < upper_bound) || (inbox_child[j] == 1))) {
       stack[(*pos_stack)++] = child_id; /* push root in th stack */
     }          
@@ -3651,10 +3651,7 @@ double          *box_max_dist
 
   for (int i = 0; i < n_pts; i++) {
 
-    if (1 == 0) {
-      printf("\n\n **** point : %d %12.5e %12.5e %12.5e\n", i,
-             pts[3*i], pts[3*i+1], pts[3*i+2]);
-    }
+    
 
     const double *_pt = pts + 3 * i;
     
@@ -3800,11 +3797,24 @@ int             *boxes[]
     tag[i] = 0;
   }
 
+  /* double ptprintc[3] = {5.83333e-01,  6.25000e-01,  5.00000e-01}; */
+  /* double ptprintc2[3] = {5.83333e-01,  1.,  5.00000e-01}; */
+
   for (int i = 0; i < n_pts; i++) {
     
     const double *_pt = pts + 3 * i;
     const int idx_box_pre = idx_box;
     int flag = 0;
+
+    /* double t1 = (pts[3*i+0] - ptprintc[0]) * (pts[3*i+0] - ptprintc[0]); */
+    /* double t2 = (pts[3*i+1] - ptprintc[1]) * (pts[3*i+1] - ptprintc[1]); */
+    /* double t3 = (pts[3*i+2] - ptprintc[2]) * (pts[3*i+2] - ptprintc[2]); */
+    /* t1 = 1; */
+    /* if ((t1+t2+t3) < 1e-6) { */
+    /*   printf("\n\n **** point : %d %12.5e %12.5e %12.5e : %12.5e\n", i, */
+    /*          pts[3*i], pts[3*i+1], pts[3*i+2], upper_bound_dist2[i]); */
+    /*   flag = 1; */
+    /* } */
     /* if (i == 4) { */
     /*   printf ("\ncoords : %12.5e %12.5e %12.5e \n", _pt[0], _pt[1], _pt[2]); */
 
@@ -3824,12 +3834,13 @@ int             *boxes[]
 
       /* if (i == 4) { */
 
-      /*   printf ("  \n pos_stack : %d %d \n", pos_stack, id_curr_node); */
-      /*   printf ("  node extents X : %12.5e < %12.5e\n",extents[0],extents[3]); */
-      /*   printf ("  node extents Y : %12.5e < %12.5e\n",extents[1],extents[4]); */
-      /*   printf ("  node extents Z : %12.5e < %12.5e\n",extents[2],extents[5]); */
+    /* if ((t1+t2+t3) < 1e-6) { */
+    /*     printf ("  \n pos_stack : %d %d \n", pos_stack, id_curr_node); */
+    /*     printf ("  node extents X : %12.5e < %12.5e\n",extents[0],extents[3]); */
+    /*     printf ("  node extents Y : %12.5e < %12.5e\n",extents[1],extents[4]); */
+    /*     printf ("  node extents Z : %12.5e < %12.5e\n",extents[2],extents[5]); */
 
-      /* } */
+    /*   } */
       
       _node_t *curr_node = &(bt->nodes[id_curr_node]);
       
@@ -3849,13 +3860,13 @@ int             *boxes[]
                                 upper_bound_dist2[i], 
                                 _pt, &pos_stack, stack, flag);
       
-          /* if (i == 4) { */
+          /* if ((t1+t2+t3) < 1e-6) { */
           /*   printf ("  push child %d \n", pos_stack); */
           /* } */
         }
 
         else {
-          /* if (i == 4) { */
+          /* if ((t1+t2+t3) < 1e-6) { */
           /*   printf ("  leaf\n"); */
           /* } */
           for (int j = 0; j < curr_node->n_boxes; j++) {
@@ -3864,23 +3875,33 @@ int             *boxes[]
             double box_max_dist2;
 
             int   _box_id = bt->box_ids[curr_node->start_id + j];
+            /* if ((t1+t2+t3) < 1e-6) { */
+            /*   printf ("add _box_id : %d\n", _box_id); */
+            /* } */
             if (tag[_box_id] == 0) {
+              /* if ((t1+t2+t3) < 1e-6) { */
+              /*   printf ("  non tagge : %d\n", _box_id); */
+              /* } */
               
               const double *_box_extents =  bt->boxes->extents + _box_id*dim*2;
 
-              /* if (i == 4) { */
-              /*   printf ("\n    box extents X : %12.5e < %12.5e\n",_box_extents[0],_box_extents[3]); */
-              /*   printf ("    box extents Y : %12.5e < %12.5e\n",_box_extents[1],_box_extents[4]); */
-              /*   printf ("    box extents Z : %12.5e < %12.5e\n",_box_extents[2],_box_extents[5]); */
-              /* } */
+    /* if ((t1+t2+t3) < 1e-6) { */
+    /*             printf ("\n    box extents X : %12.5e < %12.5e\n",_box_extents[0],_box_extents[3]); */
+    /*             printf ("    box extents Y : %12.5e < %12.5e\n",_box_extents[1],_box_extents[4]); */
+    /*             printf ("    box extents Z : %12.5e < %12.5e\n",_box_extents[2],_box_extents[5]); */
+    /*           } */
                 
               inbox = _box_dist2 (dim,
                                   _box_extents,
                                   _pt,
                                   &box_min_dist2,            
                                   &box_max_dist2);            
+              /* if ((t1+t2+t3) < 1e-6) { */
+              /*   printf (" box_min_dist2 < upper_bound_dist2[i] inbox  : %12.5e %12.5e %d %d\n", */
+              /*           box_min_dist2, upper_bound_dist2[i], inbox,_box_id); */
+              /* } */
 
-              if ((box_min_dist2 < upper_bound_dist2[i]) || (inbox == 1)) {
+              if ((box_min_dist2 <= upper_bound_dist2[i]) || (inbox == 1)) {
                 if (idx_box >= tmp_s_boxes) {
                   tmp_s_boxes *= 2;
                   *boxes = realloc (*boxes, sizeof(int) * tmp_s_boxes);

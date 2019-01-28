@@ -445,11 +445,16 @@ PDM_octree_point_cloud_set
   _octree_t *octree = _get_from_id (id);
 
   const int idebug = 0;
+  double ptprintc[3] = {2.50000e-01,  0.,  1.25000e-01};
 
   if (idebug) {
   
     printf ("*** PDM_octree_point_cloud_set d step 1  \n");
     for (int i = 0; i < n_points; i++) {
+      double t1 = (coords[3*i]   - ptprintc[0]) * (coords[3*i]- ptprintc[0]);
+      double t2 = (coords[3*i+1] - ptprintc[1]) * (coords[3*i+1] - ptprintc[1]);
+      double t3 = (coords[3*i+2] - ptprintc[2]) * (coords[3*i+2] - ptprintc[2]);
+      if ((t1+t2+t3) < 1e-6)
       printf ("     %d (%12.5e %12.5e %12.5e) : \n", i,
               coords[3*i], coords[3*i+1], coords[3*i+2]); 
     }
@@ -535,16 +540,35 @@ PDM_octree_build
   PDM_g_num_t *gNumProc = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * nUsedRank);
 
   int idx = 0;
+  /* const int ptprint = 825; */
+  /* double ptprintc[3] = {5.83333e-01,  6.25000e-01,  5.00000e-01}; */
+  /* double ptcible[3] = {5.83333e-01,  1.,  5.00000e-01}; */
+ 
+
   for (int i = 0; i < lComm; i++) {
+    int inbox = 0;
     if (n_pts_proc[i] > 0) {
       gNumProc[idx] = idx+1;
       numProc[idx] = i;
-      printf ("extents_proc %d %d : ", i, idx);
+      /* printf ("extents_proc %d %d : ", i, idx); */
+      /* if ((extents_proc[i * sExtents + 0] <= ptcible[0]) && */
+      /*     (ptcible[0] <= extents_proc[i * sExtents + 3])) */
+      /*   inbox += 1; */
+      /* if ((extents_proc[i * sExtents + 1] <= ptcible[1]) && */
+      /*     (ptcible[1] <= extents_proc[i * sExtents + 4])) */
+      /*   inbox += 1; */
+      /* if ((extents_proc[i * sExtents + 2] <= ptcible[2]) && */
+      /*     (ptcible[2] <= extents_proc[i * sExtents + 5])) */
+      /*   inbox += 1; */
+      
       for (int j = 0; j < sExtents; j++) {
         extents_proc[idx*sExtents + j] = extents_proc[i*sExtents + j];
-        printf (" %12.5e", extents_proc[idx*sExtents + j]);
+        /* printf (" %12.5e", extents_proc[idx*sExtents + j]); */
       }
-      printf("\n");
+      /* printf("\n"); */
+      /* if (inbox == 3) { */
+      /*   printf("==== pt cible inbox\n"); */
+      /* } */
       idx += 1;
     }
   }
@@ -892,7 +916,7 @@ PDM_g_num_t *closest_octree_pt_g_num,
 double      *closest_octree_pt_dist2
 )
 {
-  const int idebug = 1;
+  const int idebug = 0;
   
   _octree_t *octree = _get_from_id (id);
  
@@ -912,6 +936,10 @@ double      *closest_octree_pt_dist2
    * 
    *******************************/
 
+  const int ptprint = 825;
+  double ptprintc[3] = {5.83333e-01,  6.25000e-01,  5.00000e-01};
+  double ptcible[3] = {5.83333e-01,  0.,  5.00000e-01};
+  
   int *rank_id = (int *) malloc (sizeof(int) * n_pts);
   double *rank_min_max_dist = (double *) malloc (sizeof(double) * n_pts);
   
@@ -931,6 +959,7 @@ double      *closest_octree_pt_dist2
     printf ("*** PDM_octree_closest_point d step 1 :"
             " the closest process \n");
     for (int i = 0; i < n_pts; i++) {
+      if (i == ptprint)
       printf ("     %d (%12.5e %12.5e %12.5e) : %d %12.5e\n", i,
               pts[3*i], pts[3*i+1], pts[3*i+2],
               rank_id[i] ,rank_min_max_dist[i]); 
@@ -1023,6 +1052,12 @@ double      *closest_octree_pt_dist2
     printf ("*** PDM_octree_closest_point d step 2 :"
             " closest point in the closest process \n");
     for (int i = 0; i <  i_recv_pts[lComm]; i++) {
+
+      double t1 = (recv_pts[3*i] - ptprintc[0]) * (recv_pts[3*i] - ptprintc[0]);
+      double t2 = (recv_pts[3*i+1] - ptprintc[1]) * (recv_pts[3*i+1] - ptprintc[1]);
+      double t3 = (recv_pts[3*i+2] - ptprintc[2]) * (recv_pts[3*i+2] - ptprintc[2]);
+      
+      if ((t1+t2+t3) < 1e-6)
       printf ("     %d (%12.5e %12.5e %12.5e) : %d %d %12.5e\n", i,
               recv_pts[3*i], recv_pts[3*i+1], recv_pts[3*i+2],
               closest_pt[2*i] , closest_pt[2*i+1] ,closest_dist[i]); 
@@ -1059,12 +1094,13 @@ double      *closest_octree_pt_dist2
     int idx = i_send_pts[irank] + n_send_pts[irank];
     n_send_pts[irank] += 1;
     
-    upper_bound_dist[i] = recv_dist[idx];
+    upper_bound_dist[i] = recv_dist[idx] + 1e-6 * recv_dist[idx];
   }
   if (idebug == 1) {
     printf ("*** PDM_octree_closest_point d step 3 :"
             " exchange closest distance \n");
     for (int i = 0; i < n_pts; i++) {
+      if (i == ptprint)
       printf ("     %d (%12.5e %12.5e %12.5e) : %12.5e\n", i,
               pts[3*i], pts[3*i+1], pts[3*i+2], upper_bound_dist[i]); 
     }
@@ -1094,8 +1130,6 @@ double      *closest_octree_pt_dist2
                                                    &boxes);
 
   
-  free (upper_bound_dist);
-  
   for (int i = 0; i < lComm; i++) {
     n_send_pts[i] = 0;
     n_recv_pts[i] = 0;
@@ -1115,6 +1149,7 @@ double      *closest_octree_pt_dist2
     printf ("*** PDM_octree_closest_point d step 4 :"
             " proc to send \n");
     for (int i = 0; i < n_pts; i++) {
+      if (i == ptprint) {
       printf ("     %d (%12.5e %12.5e %12.5e) %12.5e %d : ", i,
               pts[3*i], pts[3*i+1], pts[3*i+2], upper_bound_dist[i],
               i_boxes[i+1] - i_boxes[i]);
@@ -1122,11 +1157,14 @@ double      *closest_octree_pt_dist2
         printf(" %d", boxes[j]);
       }
       printf("\n");
+      }
     }
     printf ("*** PDM_octree_closest_point f step 4 :"
             " proc to send \n");
   }
 
+  
+  free (upper_bound_dist);
   PDM_MPI_Alltoall (n_send_pts, 1, PDM_MPI_INT, 
                     n_recv_pts, 1, PDM_MPI_INT, 
                     octree->comm);
@@ -1152,7 +1190,7 @@ double      *closest_octree_pt_dist2
   const int factor = 10;  
   int n_data_exch_max = (int) (sum_npts/ (PDM_g_num_t) lComm) * factor;
   
-  //n_data_exch_max = 4;
+  n_data_exch_max = max_max_n_exch;
   
   int n_exch = (int)(max_max_n_exch / n_data_exch_max);
   if ((int)(max_max_n_exch % n_data_exch_max) > 0) {
@@ -1464,7 +1502,9 @@ double      *closest_octree_pt_dist2
   /*   printf(" %ld", data_send_gnum[i]); */
   /* } */
   /* printf ("\n"); */
+
   
+
   PDM_MPI_Ialltoallv (data_send_pts, n_send_pts, i_send_pts, PDM_MPI_DOUBLE,
                       data_recv_pts, n_recv_pts, i_recv_pts, PDM_MPI_DOUBLE,
                       octree->comm, &(Request_coord[0]));
@@ -1562,7 +1602,8 @@ double      *closest_octree_pt_dist2
         n_send_gnum_next[j]     = 0;
         send_counts[j]          = 0;
         send_bounds_next[2*j]    = send_bounds[2*j+1];
-        send_bounds_next[2*j+1]  += PDM_MIN (n_send_pts[j] / n_exch, n_data_exch_max);
+        send_bounds_next[2*j+1]  = send_bounds_next[2*j] +
+                                   PDM_MIN (n_send_pts[j] / n_exch, n_data_exch_max);
       }
 
       for (int k = 0; k < n_pts; k++) {
@@ -1616,6 +1657,67 @@ double      *closest_octree_pt_dist2
         n_recv_pts_next[j] = 3 * n_recv_gnum_next[j];
       }
 
+  /* printf ("n_send_pts : "); */
+  /* for (int i = 0; i < lComm; i++) { */
+  /*   printf(" %d", n_send_pts_next[i]); */
+  /* } */
+  /* printf ("\n"); */
+
+  /* printf ("i_send_pts_next : "); */
+  /* for (int i = 0; i < lComm +1; i++) { */
+  /*   printf(" %d", i_send_pts_next[i]); */
+  /* } */
+  /* printf ("\n"); */
+
+
+  /* printf ("n_recv_pts_next : "); */
+  /* for (int i = 0; i < lComm; i++) { */
+  /*   printf(" %d", n_recv_pts_next[i]); */
+  /* } */
+  /* printf ("\n"); */
+
+  /* printf ("i_recv_pts_next : "); */
+  /* for (int i = 0; i < lComm +1; i++) { */
+  /*   printf(" %d", i_recv_pts_next[i]); */
+  /* } */
+  /* printf ("\n"); */
+
+  /* printf ("data_send_pts_next : "); */
+  /* for (int i = 0; i < i_send_pts_next[lComm]; i++) { */
+  /*   printf(" %12.5e", data_send_pts_next[i]); */
+  /* } */
+  /* printf ("\n"); */
+
+  /* printf ("n_send_gnum_next : "); */
+  /* for (int i = 0; i < lComm; i++) { */
+  /*   printf(" %d", n_send_gnum_next[i]); */
+  /* } */
+  /* printf ("\n"); */
+
+  /* printf ("i_send_gnum_next : "); */
+  /* for (int i = 0; i < lComm +1; i++) { */
+  /*   printf(" %d", i_send_gnum_next[i]); */
+  /* } */
+  /* printf ("\n"); */
+
+
+  /* printf ("n_recv_gnum_next : "); */
+  /* for (int i = 0; i < lComm; i++) { */
+  /*   printf(" %d", n_recv_gnum_next[i]); */
+  /* } */
+  /* printf ("\n"); */
+
+  /* printf ("i_recv_gnum_next : "); */
+  /* for (int i = 0; i < lComm +1; i++) { */
+  /*   printf(" %d", i_recv_gnum_next[i]); */
+  /* } */
+  /* printf ("\n"); */
+
+  /* printf ("data_send_gnum_next : "); */
+  /* for (int i = 0; i < i_send_gnum_next[lComm]; i++) { */
+  /*   printf(" %ld", data_send_gnum_next[i]); */
+  /* } */
+  /* printf ("\n"); */
       PDM_MPI_Ialltoallv (data_send_pts_next, n_send_pts_next,
                           i_send_pts_next, PDM_MPI_DOUBLE,
                           data_recv_pts_next, n_recv_pts_next,
@@ -1651,6 +1753,18 @@ double      *closest_octree_pt_dist2
         realloc (_closest_octree_pt_g_num,
                  sizeof(PDM_g_num_t) * s_closest_octree_pt_dist2);
     }
+
+    /* for (int j1 = 0; j1 < i_recv_gnum[lComm]; j1++) { */
+    /*   if (j1 == 13) { */
+    /*     for (int j = i_recv_gnum[j1]; j < i_recv_gnum[j1+1]; j++) { */
+    /*       if (((ptprintc[0] - data_recv_pts[3*j]) *(ptprintc[0] - data_recv_pts[3*j]) + */
+    /*           (ptprintc[1] - data_recv_pts[3*j+1]) *(ptprintc[1] - data_recv_pts[3*j+1]) + */
+    /*           (ptprintc[2] - data_recv_pts[3*j+2]) *(ptprintc[2] - data_recv_pts[3*j+2])) < 1e-6) { */
+    /*         printf ("pt recu du 13 %d : %12.5e  %12.5e  %12.5e\n", j, data_recv_pts[3*j], data_recv_pts[3*j+1], data_recv_pts[3*j+2]); */
+    /*     } */
+    /*     } */
+    /*   } */
+    /* } */
     
     PDM_octree_seq_closest_point (octree->octree_seq_id, 
                                   i_recv_gnum[lComm],
@@ -1687,12 +1801,17 @@ double      *closest_octree_pt_dist2
       for (int j = 0; j < lComm; j++) {
         n_send_gnum[j]     = 0;
       }
-      
+
       for (int j = 0; j < n_pts; j++) {
+        /*  if (825 == j) { */
+        /*   printf ("Resultat calcul distance :\n"); */
+        /* } */
         for (int l = i_boxes[j]; l < i_boxes[j+1]; l++) {
           int iproc = boxes[l];
           int idx   = i_send_gnum[iproc] + n_send_gnum[iproc];
-
+        /* if (825 == j) { */
+        /*   printf("iproc dist gnum : %d %12.5e %ld\n",iproc, data_recv_dist2[idx],  data_recv_gnum[idx]); */
+        /* } */
           if (data_recv_dist2[idx] < closest_octree_pt_dist2[j]) {
             closest_octree_pt_dist2[j] = data_recv_dist2[idx];
             closest_octree_pt_g_num[j] = data_recv_gnum[idx];
