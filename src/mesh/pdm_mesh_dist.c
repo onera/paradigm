@@ -591,35 +591,36 @@ PDM_mesh_dist_process
                               closest_vertices_gnum,
                               closest_vertices_dist2);
 
-    // debut test
+    //    debut test
     
-    int ierr = 0;
-    double xmin = 0.;
-    double ymin = 0.;
-    double zmin = 0.;
-    double xmax = 1.;
-    double ymax = 1.;
-    double zmax = 1.;
-    for (int i = 0; i < n_pts_rank; i++) {
-      double d1 = PDM_MIN (PDM_ABS (pts_rank[3*i] - xmin), PDM_ABS (pts_rank[3*i] - xmax));
-      double d2 = PDM_MIN (PDM_ABS (pts_rank[3*i+1] - ymin), PDM_ABS (pts_rank[3*i+1] - ymax));
-      double d3 = PDM_MIN (PDM_ABS (pts_rank[3*i+2] - zmin), PDM_ABS (pts_rank[3*i+2] - zmax));
-      double d = PDM_MIN (PDM_MIN (d1,d2), d3);
-      d = d * d;
-      if (PDM_ABS(closest_vertices_dist2[i] - d) > 1e-6) {
-        printf ("Erreur distance plus proche somm %d %d %ld (%12.5e %12.5e %12.5e) : %12.5e %12.5e\n", rank, i,pts_g_num_rank[i],
-                pts_rank[3*i], pts_rank[3*i+1], pts_rank[3*i+2], closest_vertices_dist2[i], d);
-        ierr += 1;
-      }
-      /* else { */
-      /*   printf ("ok distance 1 %d (%12.5e %12.5e %12.5e) : %12.5e %12.5e\n", i, */
-      /*           pts_rank[3*i], pts_rank[3*i+1], pts_rank[3*i+2], closest_vertices_dist2[i], d); */
-      /* } */
-    }
+    /* int ierr = 0; */
+    /* double xmin = 0.; */
+    /* double ymin = 0.; */
+    /* double zmin = 0.; */
+    /* double xmax = 1.; */
+    /* double ymax = 1.; */
+    /* double zmax = 1.; */
+    /* for (int i = 0; i < n_pts_rank; i++) { */
+    /*   double d1 = PDM_MIN (PDM_ABS (pts_rank[3*i] - xmin), PDM_ABS (pts_rank[3*i] - xmax)); */
+    /*   double d2 = PDM_MIN (PDM_ABS (pts_rank[3*i+1] - ymin), PDM_ABS (pts_rank[3*i+1] - ymax)); */
+    /*   double d3 = PDM_MIN (PDM_ABS (pts_rank[3*i+2] - zmin), PDM_ABS (pts_rank[3*i+2] - zmax)); */
+    /*   double d = PDM_MIN (PDM_MIN (d1,d2), d3); */
+    /*   d = d * d; */
+    /*   if (PDM_ABS(closest_vertices_dist2[i] - d) > 1e-6) { */
+    /*     /\* printf ("Erreur distance plus proche somm %d %d %ld (%12.5e %12.5e %12.5e) : %12.5e %12.5e\n", rank, i,pts_g_num_rank[i], *\/ */
+    /*     /\*         pts_rank[3*i], pts_rank[3*i+1], pts_rank[3*i+2], closest_vertices_dist2[i], d); *\/ */
+    /*     ierr += 1; */
+    /*   } */
+    /*   /\* else { *\/ */
+    /*   /\*   printf ("ok distance 1 %d (%12.5e %12.5e %12.5e) : %12.5e %12.5e\n", i, *\/ */
+    /*   /\*           pts_rank[3*i], pts_rank[3*i+1], pts_rank[3*i+2], closest_vertices_dist2[i], d); *\/ */
+    /*   /\* } *\/ */
+    /* } */
 
-    if (ierr > 0) {
-      abort();
-    }
+    /* if (ierr > 0) { */
+    /*   printf ("Erreur distance plus proche somm pour %d sommets\n", ierr); */
+    /*   abort(); */
+    /* } */
 
     //fin test
     
@@ -721,7 +722,7 @@ PDM_mesh_dist_process
 
     }
     else if (dist->surf_mesh != NULL) {
-      PDM_surf_mesh_compute_faceExtentsMesh (dist->surf_mesh, 1e-4);
+      PDM_surf_mesh_compute_faceExtentsMesh (dist->surf_mesh, 1e-6);
       for (int i_part = 0; i_part < n_part_mesh; i_part++) {
         nElts[i_part] = PDM_surf_mesh_part_n_face_get (dist->surf_mesh,
                                                        i_part);
@@ -1500,11 +1501,16 @@ PDM_mesh_dump_times
                 " %12.5es %12.5es\n",
                 t_elaps_max[CANDIDATE_SELECTION],
                 t_cpu_max[CANDIDATE_SELECTION]);
-    PDM_printf( "distance timer : Computations of the distance"
+    PDM_printf( "distance timer : Load balacing of elementary computations of distance"
                 " from the points to the candidates  (elapsed and cpu) :"
                 " %12.5es %12.5es\n",
                 t_elaps_max[LOAD_BALANCING_ELEM_DIST],
                 t_cpu_max[LOAD_BALANCING_ELEM_DIST]);
+    PDM_printf( "distance timer : Computations of the distance"
+                " from the points to the candidates  (elapsed and cpu) :"
+                " %12.5es %12.5es\n",
+                t_elaps_max[COMPUTE_ELEM_DIST],
+                t_cpu_max[COMPUTE_ELEM_DIST]);
     PDM_printf( "distance timer : Results exchange (elapsed and cpu) :"
                 " %12.5es %12.5es\n",
                 t_elaps_max[RESULT_TRANSMISSION],
