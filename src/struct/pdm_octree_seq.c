@@ -125,36 +125,48 @@ inline static int
 _box_dist2
 (
 const int              dim,
-const double          *extents,
-const double           *coords,
-double                *min_dist2,
-double                *max_dist2
+const double          *restrict extents,
+const double          *restrict coords,
+double                *restrict min_dist2,
+double                *restrict max_dist2
 )
 {
 
   int inbox = 0;
-  *min_dist2 = 0.;
-  *max_dist2 = 0.;
 
+  double _min_dist2 = 0.;
+  double _max_dist2 = 0.;
   for (int i = 0; i < dim; i++) {
-    if (coords[i] > extents[i+dim]) {
-      *min_dist2 += (coords[i] - extents[dim+i]) * (coords[i] - extents[dim+i]);
-      *max_dist2 += (coords[i] - extents[i]) * (coords[i] - extents[i]);
+    double x = coords[i];
+    double xmin = extents[i];
+    double xmax = extents[i+dim];
+    
+    if (x > xmax) {
+      double diff_max = x - xmax;
+      double diff_min = x - xmin;
+      _min_dist2 += diff_max * diff_max;
+      _max_dist2 += diff_min * diff_min;
     }
 
-    else if (coords[i] < extents[i]) {
-      *min_dist2 += (coords[i] - extents[i]) * (coords[i] - extents[i]);
-      *max_dist2 += (coords[i] - extents[dim+i]) * (coords[i] - extents[dim+i]);
+    else if (x < xmin) {
+      double diff_max = x - xmax;
+      double diff_min = x - xmin;
+      _min_dist2 += diff_min * diff_min;
+      _max_dist2 += diff_max * diff_max;
     }
 
     else {
+      double diff_max = x - xmax;
+      double diff_min = x - xmin;
       inbox += 1;
-      *max_dist2 += PDM_MAX ((coords[i] - extents[i]) * (coords[i] - extents[i]),
-                             (coords[i] - extents[dim+i]) * (coords[i] - extents[dim+i]));
+      _max_dist2 += PDM_MAX (diff_min * diff_min,
+                             diff_max * diff_max);
     }
 
   }
 
+  *min_dist2 = _min_dist2;
+  *max_dist2 = _max_dist2;
   return inbox == dim;
 
 }
@@ -1049,20 +1061,20 @@ double          *closest_octree_pt_dist2
   int *stack = malloc ((sizeof(int)) * s_pt_stack);
 
   int dim = 3;
-  double ptprintc[3] = {5.83333e-01,  6.25000e-01,  5.00000e-01};
-  double ptprintc2[3] = {5.83333e-01,  1.,  5.00000e-01};
+  /* double ptprintc[3] = {5.83333e-01,  6.25000e-01,  5.00000e-01}; */
+  /* double ptprintc2[3] = {5.83333e-01,  1.,  5.00000e-01}; */
 
   for (int i = 0; i < n_pts; i++) {
 
     int pos_stack = 0;
     const double *_pt = pts + dim * i;
 
-      double t1 = (_pt[0] - ptprintc[0]) * (_pt[0] - ptprintc[0]);
-      double t2 = (_pt[1] - ptprintc[1]) * (_pt[1] - ptprintc[1]);
-      double t3 = (_pt[2] - ptprintc[2]) * (_pt[2] - ptprintc[2]);
-      t1=1;
-      if ((t1+t2+t3) < 1e-6)
-      printf ("\n ******** pt %d : %12.5e, %12.5e, %12.5e\n", i, _pt[0], _pt[1], _pt[2]);
+      /* double t1 = (_pt[0] - ptprintc[0]) * (_pt[0] - ptprintc[0]); */
+      /* double t2 = (_pt[1] - ptprintc[1]) * (_pt[1] - ptprintc[1]); */
+      /* double t3 = (_pt[2] - ptprintc[2]) * (_pt[2] - ptprintc[2]); */
+      /* t1=1; */
+      /* if ((t1+t2+t3) < 1e-6) */
+      /* printf ("\n ******** pt %d : %12.5e, %12.5e, %12.5e\n", i, _pt[0], _pt[1], _pt[2]); */
 
     /* Init stack */
 
@@ -1076,21 +1088,21 @@ double          *closest_octree_pt_dist2
 
       int id_curr_node = stack[--pos_stack];
       _octant_t *curr_node = &(octree->nodes[id_curr_node]);
-      if ((t1+t2+t3) < 1e-6) {
-      printf ("\n +++++ id_curr_node : %d\n", id_curr_node);
+      /* if ((t1+t2+t3) < 1e-6) { */
+      /* printf ("\n +++++ id_curr_node : %d\n", id_curr_node); */
 
-      printf ("  node extents X : %12.5e < %12.5e\n",curr_node->extents[0], curr_node->extents[3]);
-      printf ("  node extents Y : %12.5e < %12.5e\n",curr_node->extents[1], curr_node->extents[4]);
-      printf ("  node extents Z : %12.5e < %12.5e\n",curr_node->extents[2], curr_node->extents[5]);
-        if ((ptprintc2[0] >= curr_node->extents[0]) &&
-          (ptprintc2[1] >= curr_node->extents[1]) &&
-          (ptprintc2[2] >= curr_node->extents[2]) &&
-          (ptprintc2[0] <= curr_node->extents[3]) &&
-          (ptprintc2[1] <= curr_node->extents[4]) &&
-          (ptprintc2[2] <= curr_node->extents[5])) 
+      /* printf ("  node extents X : %12.5e < %12.5e\n",curr_node->extents[0], curr_node->extents[3]); */
+      /* printf ("  node extents Y : %12.5e < %12.5e\n",curr_node->extents[1], curr_node->extents[4]); */
+      /* printf ("  node extents Z : %12.5e < %12.5e\n",curr_node->extents[2], curr_node->extents[5]); */
+      /*   if ((ptprintc2[0] >= curr_node->extents[0]) && */
+      /*     (ptprintc2[1] >= curr_node->extents[1]) && */
+      /*     (ptprintc2[2] >= curr_node->extents[2]) && */
+      /*     (ptprintc2[0] <= curr_node->extents[3]) && */
+      /*     (ptprintc2[1] <= curr_node->extents[4]) && */
+      /*     (ptprintc2[2] <= curr_node->extents[5]))  */
 
-        printf ("  ** point cible in **\n");
-      }
+      /*   printf ("  ** point cible in **\n"); */
+      /* } */
       
 
       double min_dist2;
@@ -1120,8 +1132,8 @@ double          *closest_octree_pt_dist2
 
             int child_id = _child_ids[j];
 
-      if ((t1+t2+t3) < 1e-6)
-            printf ("\n     child id : %d\n", child_id);
+      /* if ((t1+t2+t3) < 1e-6) */
+      /*       printf ("\n     child id : %d\n", child_id); */
 
             int child_inbox = 0;
             
@@ -1140,30 +1152,30 @@ double          *closest_octree_pt_dist2
               /* printf ("%12.5e\n", child_node->extents[3]); */
               /* printf ("%12.5e\n", child_node->extents[4]); */
               /* printf ("%12.5e\n", child_node->extents[5]); */
-              if ((t1+t2+t3) < 1e-6) {
-                if ((ptprintc2[0] >= child_node->extents[0]) &&
-                    (ptprintc2[1] >= child_node->extents[1]) &&
-                    (ptprintc2[2] >= child_node->extents[2]) &&
-                    (ptprintc2[0] <= child_node->extents[3]) &&
-                    (ptprintc2[1] <= child_node->extents[4]) &&
-                    (ptprintc2[2] <= child_node->extents[5]))
+              /* if ((t1+t2+t3) < 1e-6) { */
+              /*   if ((ptprintc2[0] >= child_node->extents[0]) && */
+              /*       (ptprintc2[1] >= child_node->extents[1]) && */
+              /*       (ptprintc2[2] >= child_node->extents[2]) && */
+              /*       (ptprintc2[0] <= child_node->extents[3]) && */
+              /*       (ptprintc2[1] <= child_node->extents[4]) && */
+              /*       (ptprintc2[2] <= child_node->extents[5])) */
               
-                  printf ("     ** point cible in child**\n");
-                printf ("     rappel pt : %12.5e %12.5e %12.5e\n", _pt[0],_pt[1],_pt[2]);
-              }
+              /*     printf ("     ** point cible in child**\n"); */
+              /*   printf ("     rappel pt : %12.5e %12.5e %12.5e\n", _pt[0],_pt[1],_pt[2]); */
+              /* } */
               
               child_inbox = _box_dist2 (dim,
-                                  child_node->extents,
-                                  _pt,
-                                  &child_min_dist2,
-                                  &child_max_dist2);
+                                        child_node->extents,
+                                        _pt,
+                                        &child_min_dist2,
+                                        &child_max_dist2);
 
-              if ((t1+t2+t3) < 1e-6) {
-              printf ("  child extents X : %12.5e < %12.5e\n",child_node->extents[0], child_node->extents[3]);
-              printf ("  child extents Y : %12.5e < %12.5e\n",child_node->extents[1], child_node->extents[4]);
-              printf ("  child extents Z : %12.5e < %12.5e\n",child_node->extents[2], child_node->extents[5]);
-              printf ("  inbox child_min_dist2 :%d %12.5e %d\n",child_inbox,child_min_dist2, _child_ids[j]);
-              }
+              /* if ((t1+t2+t3) < 1e-6) { */
+              /* printf ("  child extents X : %12.5e < %12.5e\n",child_node->extents[0], child_node->extents[3]); */
+              /* printf ("  child extents Y : %12.5e < %12.5e\n",child_node->extents[1], child_node->extents[4]); */
+              /* printf ("  child extents Z : %12.5e < %12.5e\n",child_node->extents[2], child_node->extents[5]); */
+              /* printf ("  inbox child_min_dist2 :%d %12.5e %d\n",child_inbox,child_min_dist2, _child_ids[j]); */
+              /* } */
 
               int i1 = 0;
               for (i1 = n_selec;
@@ -1182,24 +1194,24 @@ double          *closest_octree_pt_dist2
             }
           }
 
-              if ((t1+t2+t3) < 1e-6) {
-          printf ("\n   **** Elements pushes\n");
-              }
+          /*     if ((t1+t2+t3) < 1e-6) { */
+          /* printf ("\n   **** Elements pushes\n"); */
+          /*     } */
           for (int j = 0; j < n_selec; j++) {
             int j1 = n_selec- 1 - j;
             int child_id = sort_child[j1];
             if (child_id != -1) {
               _octant_t *child_node = &(octree->nodes[child_id]);
-              if ((t1+t2+t3) < 1e-6) {
-              printf ("%12.5e, %d %12.5e %d \n", dist_child[j1], child_id, closest_octree_pt_dist2[i], child_node->n_points);
-              }
+              /* if ((t1+t2+t3) < 1e-6) { */
+              /* printf ("%12.5e, %d %12.5e %d \n", dist_child[j1], child_id, closest_octree_pt_dist2[i], child_node->n_points); */
+              /* } */
               /* if ((dist_child[j] < closest_octree_pt_dist2[i])){ */
               /*   //                  (child_node->n_points > 0)) { */
               if ((dist_child[j1] < closest_octree_pt_dist2[i]) &&
                   (child_node->n_points > 0)) {
-              if ((t1+t2+t3) < 1e-6) {
-                printf("   pushe\n");
-              }
+              /* if ((t1+t2+t3) < 1e-6) { */
+              /*   printf("   pushe\n"); */
+              /* } */
                 stack[pos_stack++] = child_id; /* push root in th stack */
               }
             }
@@ -1207,8 +1219,8 @@ double          *closest_octree_pt_dist2
         }
 
         else {
-          if ((t1+t2+t3) < 1e-6)
-            printf ("    leaf\n");
+          /* if ((t1+t2+t3) < 1e-6) */
+          /*   printf ("    leaf\n"); */
 
           int *point_clouds_id = octree->point_icloud + curr_node->range[0];
           int *point_indexes = octree->point_ids + curr_node->range[0];
@@ -1225,10 +1237,10 @@ double          *closest_octree_pt_dist2
             }
 
             if (point_dist2 < closest_octree_pt_dist2[i]) {
-              if ((t1+t2+t3) < 1e-6)
-                printf (" ###### update : %d %d %12.5e : (%12.5e %12.5e %12.5e) #####\n",
-                        point_clouds_id[j],  point_indexes[j], point_dist2, _coords[0]
-                        ,_coords[1],_coords[2] );
+              /* if ((t1+t2+t3) < 1e-6) */
+              /*   printf (" ###### update : %d %d %12.5e : (%12.5e %12.5e %12.5e) #####\n", */
+              /*           point_clouds_id[j],  point_indexes[j], point_dist2, _coords[0] */
+              /*           ,_coords[1],_coords[2] ); */
               closest_octree_pt_id[2*i] = point_clouds_id[j];
               closest_octree_pt_id[2*i+1] = point_indexes[j];
               closest_octree_pt_dist2[i] = point_dist2;
@@ -1237,8 +1249,8 @@ double          *closest_octree_pt_dist2
         }
       }
     }
-          if ((t1+t2+t3) < 1e-6)
-      printf ("\n ******** fin point ******************\n");
+      /*     if ((t1+t2+t3) < 1e-6) */
+      /* printf ("\n ******** fin point ******************\n"); */
 
   }
 

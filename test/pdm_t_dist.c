@@ -204,6 +204,11 @@ int main(int argc, char *argv[])
   const double xmax = xmin + length;
   const double ymax = ymin + length;
   const double zmax = zmin + length;
+
+  if (myRank == 0) {
+    printf("-- Build cube\n");
+    fflush(stdout);
+  }
   
   PDM_dcube_gen_init(&id,
                      PDM_MPI_COMM_WORLD,
@@ -244,6 +249,11 @@ int main(int argc, char *argv[])
   int *renum_properties_face = NULL;
   int nPropertyCell = 0;
   int nPropertyFace = 0;
+
+  if (myRank == 0) {
+    printf("-- Part\n");
+    fflush(stdout);
+  }
 
   PDM_part_create(&ppartId,
                   PDM_MPI_COMM_WORLD,
@@ -299,6 +309,12 @@ int main(int argc, char *argv[])
   int id_gnum_face = PDM_gnum_create (3, nPart, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD);
   int id_gnum_vtx = PDM_gnum_create (3, nPart, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD);
   
+
+  if (myRank == 0) {
+    printf("-- mesh dist set\n");
+    fflush(stdout);
+  }
+
   for (int ipart = 0; ipart < nPart; ipart++) {
 
     int nCell;
@@ -607,7 +623,17 @@ int main(int argc, char *argv[])
 
   }
   
+  if (myRank == 0) {
+    printf("-- Dist compute\n");
+    fflush(stdout);
+  }
+
   PDM_mesh_dist_process (id_dist);
+
+  if (myRank == 0) {
+    printf("-- Dist check\n");
+    fflush(stdout);
+  }
 
   for (int ipart = 0; ipart < nPart; ipart++) {
     double      *distance;
@@ -685,6 +711,7 @@ int main(int argc, char *argv[])
                            &faceGroup,
                            &faceGroupLNToGN);
 
+    int ierr = 0;
     for (int i = 0; i < nVtx; i++) {
       double d1 = PDM_MIN (PDM_ABS (vtx[3*i] - xmin), PDM_ABS (vtx[3*i] - xmax)); 
       double d2 = PDM_MIN (PDM_ABS (vtx[3*i+1] - ymin), PDM_ABS (vtx[3*i+1] - ymax)); 
@@ -692,8 +719,9 @@ int main(int argc, char *argv[])
       double d = PDM_MIN (PDM_MIN (d1,d2), d3);
       d = d * d;
       if (PDM_ABS(distance[i] - d) > 1e-6) {
-        printf ("Erreur distance %d (%12.5e %12.5e %12.5e) : %12.5e %12.5e\n", i,
-                vtx[3*i], vtx[3*i+1], vtx[3*i+2], distance[i], d);
+        ierr += 1;
+        /* printf ("Erreur distance %d (%12.5e %12.5e %12.5e) : %12.5e %12.5e\n", i, */
+        /*         vtx[3*i], vtx[3*i+1], vtx[3*i+2], distance[i], d); */
       }
       /* else { */
       /*   printf ("ok distance %d (%12.5e %12.5e %12.5e) : %12.5e %12.5e\n", i, */
@@ -701,9 +729,15 @@ int main(int argc, char *argv[])
       /* } */
     }
 
+    if (ierr > 0) {
+      printf ("Erreur distance pour %d points\n", ierr);
+      abort();
+    }
+    
     if (myRank == 0) {
       printf ("elements surfaciques : %d\n", 6*(nVtxSeg-1)*(nVtxSeg-1));
       printf ("nombre de points     : %ld\n", nVtxSeg*nVtxSeg*nVtxSeg);
+      fflush(stdout);
     }
   }
   
@@ -748,7 +782,11 @@ int main(int argc, char *argv[])
   
   PDM_MPI_Finalize();
 
-  
+   if (myRank == 0) {
+    printf("-- End\n");
+    fflush(stdout);
+  }
+ 
   return 0;
 }
 

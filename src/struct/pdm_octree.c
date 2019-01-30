@@ -1189,8 +1189,12 @@ double      *closest_octree_pt_dist2
 
   const int factor = 10;  
   int n_data_exch_max = (int) (sum_npts/ (PDM_g_num_t) lComm) * factor;
+
+  //FIXME: reactiver multi echanges : correction des instabilites
   
-  n_data_exch_max = max_max_n_exch;
+  n_data_exch_max = max_max_n_exch;  /* Pour obliger a faire un echange */
+
+  // Fin correction des instabilites
   
   int n_exch = (int)(max_max_n_exch / n_data_exch_max);
   if ((int)(max_max_n_exch % n_data_exch_max) > 0) {

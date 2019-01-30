@@ -25,6 +25,7 @@
 #include "pdm_dbbtree_priv.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
+#include "pdm_timer.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -823,6 +824,12 @@ PDM_g_num_t     *box_g_num[]
   const int *usedRanks = _dbbt->usedRank;
   
   const int idebug = 0;
+  /* PDM_timer_t *timer = PDM_timer_create(); */
+
+  /* double elaps1 = PDM_timer_elapsed(timer); */
+  /* double cpu1 = PDM_timer_cpu(timer); */
+  /* PDM_timer_resume(timer); */
+
   if (_dbbt->btShared != NULL) {
   
     PDM_box_tree_closest_upper_bound_dist_boxes_get (_dbbt->btShared,
@@ -831,19 +838,19 @@ PDM_g_num_t     *box_g_num[]
                                                      upper_bound_dist2,
                                                      &box_index_tmp,
                                                      &box_l_num_tmp);
-    if (idebug) {
-      printf ("  **** PDM_box_tree_closest_upper_bound_dist_boxes_get shared n_pts : %d\n", n_pts);
-      for (int i = 0; i < n_pts; i++) {
-        printf ("%d : (%12.5e %12.5e %12.5e) %12.5e\n", i,
-                pts[3*i], pts[3*i+1], pts[3*i+2],
-                upper_bound_dist2[i]);
-        printf ("  boxes %d :" , box_index_tmp[i+1] - box_index_tmp[i]);
-        for (int j = box_index_tmp[i]; j < box_index_tmp[i+1]; j++) {
-          printf (" %d", box_l_num_tmp[j]);
-        }          
-        printf ("\n");
-      }
-    }
+    /* if (idebug) { */
+    /*   printf ("  **** PDM_box_tree_closest_upper_bound_dist_boxes_get shared n_pts : %d\n", n_pts); */
+    /*   for (int i = 0; i < n_pts; i++) { */
+    /*     printf ("%d : (%12.5e %12.5e %12.5e) %12.5e\n", i, */
+    /*             pts[3*i], pts[3*i+1], pts[3*i+2], */
+    /*             upper_bound_dist2[i]); */
+    /*     printf ("  boxes %d :" , box_index_tmp[i+1] - box_index_tmp[i]); */
+    /*     for (int j = box_index_tmp[i]; j < box_index_tmp[i+1]; j++) { */
+    /*       printf (" %d", box_l_num_tmp[j]); */
+    /*     }           */
+    /*     printf ("\n"); */
+    /*   } */
+    /* } */
 
     /* 
      * Envoi des points a chaque proc concerne
@@ -918,7 +925,19 @@ PDM_g_num_t     *box_g_num[]
     free(recv_pts);
 
   }
- 
+
+
+  /* PDM_MPI_Barrier(_dbbt->comm); */
+  /* PDM_timer_hang_on(timer);   */
+  /* double elaps2 = PDM_timer_elapsed(timer); */
+  /* double cpu2     = PDM_timer_cpu(timer); */
+  /* PDM_timer_resume(timer); */
+
+  /* if (myRank == 0) { */
+
+  /*   printf ("PDM_dbbtree_closest_upper_bound_dist_boxes_get : Temp distrib proc : %12.5es\n", elaps2 - elaps1); */
+  /* } */
+  
   /* 
    * Determination des candidats localement
    */
@@ -933,20 +952,31 @@ PDM_g_num_t     *box_g_num[]
                                                    &box_index_in_rank,
                                                    &box_l_num_in_rank);
 
-    if (idebug) {
-      printf (" **** PDM_dbbtree_closest_upper_bound_dist_boxes_get n_pts_rank : %d\n", npts_in_rank);
-      for (int i = 0; i < npts_in_rank; i++) {
-        printf ("%d : (%12.5e %12.5e %12.5e) %12.5e\n", i,
-                pts_in_rank[3*i], pts_in_rank[3*i+1], pts_in_rank[3*i+2],
-                upper_bound_dist_in_rank[i]);
-        printf ("  boxes %d :" , box_index_in_rank[i+1] - box_index_in_rank[i]);
-        for (int j = box_index_in_rank[i]; j < box_index_in_rank[i+1]; j++) {
-          printf (" %d", box_l_num_in_rank[j]);
-        }          
-        printf ("\n");
-      }
-    }
+    /* if (idebug) { */
+    /*   printf (" **** PDM_dbbtree_closest_upper_bound_dist_boxes_get n_pts_rank : %d\n", npts_in_rank); */
+    /*   for (int i = 0; i < npts_in_rank; i++) { */
+    /*     printf ("%d : (%12.5e %12.5e %12.5e) %12.5e\n", i, */
+    /*             pts_in_rank[3*i], pts_in_rank[3*i+1], pts_in_rank[3*i+2], */
+    /*             upper_bound_dist_in_rank[i]); */
+    /*     printf ("  boxes %d :" , box_index_in_rank[i+1] - box_index_in_rank[i]); */
+    /*     for (int j = box_index_in_rank[i]; j < box_index_in_rank[i+1]; j++) { */
+    /*       printf (" %d", box_l_num_in_rank[j]); */
+    /*     }           */
+    /*     printf ("\n"); */
+    /*   } */
+    /* } */
 
+  /* PDM_MPI_Barrier(_dbbt->comm); */
+  /* PDM_timer_hang_on(timer);   */
+  /* elaps1 = PDM_timer_elapsed(timer); */
+  /* cpu1     = PDM_timer_cpu(timer); */
+  /* PDM_timer_resume(timer); */
+
+  /* if (myRank == 0) { */
+
+  /*   printf ("PDM_dbbtree_closest_upper_bound_dist_boxes_get : Recherche locale : %12.5es\n", elaps1 - elaps2); */
+  /* } */
+  
 
   if (_dbbt->btShared == NULL) {
     *box_index = box_index_in_rank; 
@@ -981,12 +1011,35 @@ PDM_g_num_t     *box_g_num[]
       n_send_pts[i]   = n_send_pts[i]/4;
       n_recv_pts[i]   = n_recv_pts[i]/4;
     }
+
+    /* PDM_MPI_Barrier(_dbbt->comm); */
+    /* PDM_timer_hang_on(timer);   */
+    /* elaps2 = PDM_timer_elapsed(timer); */
+    /* cpu2     = PDM_timer_cpu(timer); */
+    /* PDM_timer_resume(timer); */
+    
+    /* if (myRank == 0) { */
+
+    /*   printf ("PDM_dbbtree_closest_upper_bound_dist_boxes_get : Distribution resultat 0 : %12.5es %d %d\n", elaps2 - elaps1, i_send_pts[lComm], i_recv_pts[lComm]); */
+    /* } */
     
     int *n_box_l_num_per_pts = malloc (sizeof(int) * i_send_pts[lComm]); 
+
     PDM_MPI_Alltoallv (n_box_l_num_in_rank, n_recv_pts, i_recv_pts, PDM_MPI_INT,
                        n_box_l_num_per_pts, n_send_pts, i_send_pts, PDM_MPI_INT,
                        _dbbt->comm);
 
+    /* PDM_MPI_Barrier(_dbbt->comm); */
+    /* PDM_timer_hang_on(timer);   */
+    /* elaps1 = PDM_timer_elapsed(timer); */
+    /* cpu1     = PDM_timer_cpu(timer); */
+    /* PDM_timer_resume(timer); */
+    
+    /* if (myRank == 0) { */
+
+    /*   printf ("PDM_dbbtree_closest_upper_bound_dist_boxes_get : Distribution resultat 1 : %12.5es\n", elaps1 - elaps2); */
+    /* } */
+    
     int *n_send_pts2 = malloc (sizeof(int) * lComm);
     int *i_send_pts2 = malloc (sizeof(int) * (lComm+1));
     
@@ -1026,6 +1079,17 @@ PDM_g_num_t     *box_g_num[]
     }
 
     PDM_g_num_t *box_g_num_per_pts = malloc(sizeof(PDM_g_num_t) * i_send_pts2[lComm]);
+
+    /* PDM_MPI_Barrier(_dbbt->comm); */
+    /* PDM_timer_hang_on(timer);   */
+    /* elaps2 = PDM_timer_elapsed(timer); */
+    /* cpu2     = PDM_timer_cpu(timer); */
+    /* PDM_timer_resume(timer); */
+    
+    /* if (myRank == 0) { */
+
+    /*   printf ("PDM_dbbtree_closest_upper_bound_dist_boxes_get : Distribution resultat 2 : %12.5es %d %d\n", elaps2 - elaps1,  i_send_pts2[lComm], i_recv_pts2[lComm]); */
+    /* } */
     
     PDM_MPI_Alltoallv (box_g_num_in_rank, n_recv_pts2, i_recv_pts2, PDM__PDM_MPI_G_NUM,
                        box_g_num_per_pts, n_send_pts2, i_send_pts2, PDM__PDM_MPI_G_NUM,
@@ -1040,6 +1104,17 @@ PDM_g_num_t     *box_g_num[]
     free (n_recv_pts2);
     free (i_recv_pts2);
     
+    /* PDM_MPI_Barrier(_dbbt->comm); */
+    /* PDM_timer_hang_on(timer);   */
+    /* elaps1 = PDM_timer_elapsed(timer); */
+    /* cpu1     = PDM_timer_cpu(timer); */
+    /* PDM_timer_resume(timer); */
+    
+    /* if (myRank == 0) { */
+
+    /*   printf ("PDM_dbbtree_closest_upper_bound_dist_boxes_get : Distribution resultat 3 : %12.5es\n", elaps1 - elaps2); */
+    /* } */
+
     /* 
      * Tri du tableau de retour
      */
@@ -1123,6 +1198,17 @@ PDM_g_num_t     *box_g_num[]
       PDM_hash_tab_purge (ht, PDM_FALSE);
     }
 
+    /* PDM_MPI_Barrier(_dbbt->comm); */
+    /* PDM_timer_hang_on(timer);   */
+    /* elaps2 = PDM_timer_elapsed(timer); */
+    /* cpu2     = PDM_timer_cpu(timer); */
+    /* PDM_timer_resume(timer); */
+    
+    /* if (myRank == 0) { */
+
+    /*   printf ("PDM_dbbtree_closest_upper_bound_dist_boxes_get : Tri resultats recus : %12.5es\n", elaps2 - elaps1); */
+    /* } */
+
     PDM_hash_tab_free (ht);
 
     free (n_box_l_num_per_pts);
@@ -1141,6 +1227,7 @@ PDM_g_num_t     *box_g_num[]
     free (n_send_pts2);
     free (i_send_pts2);
   }
+  /* PDM_timer_free(timer); */
 }
 
 #undef _MIN
