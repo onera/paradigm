@@ -591,7 +591,7 @@ PDM_mesh_dist_process
                               closest_vertices_gnum,
                               closest_vertices_dist2);
 
-    //    debut test
+    //      debut test cube : 
     
     /* int ierr = 0; */
     /* double xmin = 0.; */
@@ -622,7 +622,7 @@ PDM_mesh_dist_process
     /*   abort(); */
     /* } */
 
-    //fin test
+    //    fin test
     
     free (closest_vertices_gnum);
     
@@ -722,7 +722,7 @@ PDM_mesh_dist_process
 
     }
     else if (dist->surf_mesh != NULL) {
-      PDM_surf_mesh_compute_faceExtentsMesh (dist->surf_mesh, 1e-6);
+      PDM_surf_mesh_compute_faceExtentsMesh (dist->surf_mesh, 1e-8);
       for (int i_part = 0; i_part < n_part_mesh; i_part++) {
         nElts[i_part] = PDM_surf_mesh_part_n_face_get (dist->surf_mesh,
                                                        i_part);
