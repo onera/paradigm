@@ -214,6 +214,22 @@ PDM_mesh_dist_create
   return id;
 }
 
+void
+PDM_mesh_dist_create_cf 
+(
+ const PDM_mesh_nature_t mesh_nature,
+ const int n_point_cloud,
+ const PDM_MPI_Fint comm,
+ int *id
+)
+
+{
+  const PDM_MPI_Comm _comm        = PDM_MPI_Comm_f2c(comm);
+
+  *id = PDM_mesh_dist_create (mesh_nature, n_point_cloud, _comm);
+  
+}
+
 
 /**
  *
