@@ -47,6 +47,15 @@ PDM_mesh_dist_create
  const PDM_MPI_Comm comm
 );
 
+void
+PDM_mesh_dist_create_cf 
+(
+ const PDM_mesh_nature_t mesh_nature,
+ const int n_point_cloud,
+ const PDM_MPI_Fint comm,
+ int *id
+);
+
 
 /**
  *
