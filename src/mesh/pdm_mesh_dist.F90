@@ -180,7 +180,7 @@ module mod_mesh_dist
     !!
 
     subroutine pdm_mesh_dist_process (id) &
-         bind (c, name = 'PDM_mesh_dist_proces')
+         bind (c, name = 'PDM_mesh_dist_process')
       use iso_c_binding
         
       implicit none
