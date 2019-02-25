@@ -438,7 +438,8 @@ int             flag
   /* Sort children and store them into the stack */
 
   const int *_child_ids = bt->child_ids + id_curr_node*bt->n_children;
-  
+
+  int _n_push = 0;
   for (int j = 0; j < bt->n_children; j++) {
 
     double child_min_dist2;
@@ -448,6 +449,12 @@ int             flag
 
     const double *child_extents = bt->extents + dim * 2 * child_id;
 
+    _node_t *curr_node = &(bt->nodes[child_id]);
+      
+    if (curr_node->n_boxes == 0)
+      continue;
+
+    
     int inbox = _box_dist2_min (dim,
                                 normalized,
                                 d,
@@ -461,7 +468,7 @@ int             flag
       /* printf ("  inbox child_min_dist2 :%d %12.5e %12.5e\n",inbox,child_min_dist2,upper_bound); */
     /* } */
     int i1 = 0;
-    for (i1 = j; (i1 > 0) && (dist_child[i1-1] > child_min_dist2) ; i1--) {
+    for (i1 = _n_push; (i1 > 0) && (dist_child[i1-1] > child_min_dist2) ; i1--) {
       dist_child[i1] = dist_child[i1-1];
       sort_child[i1] = sort_child[i1-1]; 
       inbox_child[i1] = inbox_child[i1-1];
@@ -471,9 +478,11 @@ int             flag
     dist_child[i1] = child_min_dist2;
     inbox_child[i1] = inbox;
 
+    _n_push += 1;
+ 
   }
 
-  for (int j =  bt->n_children - 1; j >= 0; j--) {
+  for (int j =  _n_push - 1; j >= 0; j--) {
     int child_id = sort_child[j];
     /* if (((dist_child[j] < upper_bound) || (inbox_child[j] == 1)) */
     /*     && (bt->nodes[child_id].n_boxes > 0)) { */
@@ -1591,7 +1600,8 @@ _split_node_3d(PDM_box_tree_t       *bt,
   }
 
   split_node.start_id = 0;
-  split_node.n_boxes = 0;
+  //split_node.n_boxes = 0;
+   split_node.n_boxes = node.n_boxes;
   split_node.is_leaf = false;
 
   next_bt->nodes[node_id] = split_node;
@@ -3865,6 +3875,9 @@ double          *box_max_dist
       
       _node_t *curr_node = &(bt->nodes[id_curr_node]);
       
+      if (curr_node->n_boxes == 0)
+        continue;
+
       //double min_dist2;
       double max_dist2;
 
@@ -3970,7 +3983,7 @@ int             *i_boxes[],
 int             *boxes[]
 )
 {
-  printf ("PDM_box_tree_closest_upper_bound_dist_boxes_get\n");
+  //printf ("PDM_box_tree_closest_upper_bound_dist_boxes_get\n");
 
   int normalized = bt->boxes->normalized;
   const double *d = bt->boxes->d;
@@ -4046,9 +4059,12 @@ int             *boxes[]
       _node_t *curr_node = &(bt->nodes[id_curr_node]);
 
       if (curr_node->n_boxes == 0)
-        n_node_vid++;
+        continue;
+          
       n_node++;
-      
+      if (curr_node->n_boxes == 0)        
+        n_node_vid++;
+
       double min_dist2;
 
       int inbox = _box_dist2_min (dim,
@@ -4087,11 +4103,11 @@ int             *boxes[]
               
               const double *_box_extents =  bt->boxes->extents + _box_id*dim*2;
 
-    /* if ((t1+t2+t3) < 1e-6) { */
+              /* if ((t1+t2+t3) < 1e-6) { */
                 /* printf ("\n    box extents X : %12.5e < %12.5e\n",_box_extents[0],_box_extents[3]); */
                 /* printf ("    box extents Y : %12.5e < %12.5e\n",_box_extents[1],_box_extents[4]); */
                 /* printf ("    box extents Z : %12.5e < %12.5e\n",_box_extents[2],_box_extents[5]); */
-    /*           } */
+              /*           } */
                 
               inbox = _box_dist2_min (dim,
                                       normalized,
@@ -4127,9 +4143,9 @@ int             *boxes[]
 
   }
 
-  /* if (n_node_vid > 0) { */
-  /*   printf ("Parcours arbre : %ld noeuds vides sur %ld : %12.5e\%\n", n_node_vid, n_node, (double) n_node_vid/(double) n_node * 100); */
-  /* } */
+  //  if (n_node_vid > 0) {
+  // printf ("Parcours arbre : %ld noeuds vides sur %ld : %12.5e\%\n", n_node_vid, n_node, (double) n_node_vid/(double) n_node * 100);
+    //}
   
   for (int i = 0; i < n_pts; i++) {
     _i_boxes[i+1] += _i_boxes[i];

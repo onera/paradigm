@@ -333,7 +333,7 @@ int main(int argc, char *argv[])
     fflush(stdout);
   }
 
-  double strip = 0.05;
+  double strip = 0.1;
   
   double **pts_coords = malloc (sizeof(double *) * nPart);
   double **char_length = malloc (sizeof(double *) * nPart);
@@ -345,7 +345,10 @@ int main(int argc, char *argv[])
 
   double _char_length = (xmax-xmin)/nVtxSeg;
 
-  n_pts_x = n_pts - (n_pts_y + n_pts_z);
+  if ((n_pts - ( n_pts_y + n_pts_z)) < 0)
+    n_pts = n_pts_x + n_pts_y + n_pts_z;
+  else
+    n_pts_x = n_pts - ( n_pts_y + n_pts_z);
 
   for (int ipart = 0; ipart < nPart; ipart++) {
     pts_coords[ipart] = malloc (sizeof(double) * 3 * n_pts);
