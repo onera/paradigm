@@ -1133,7 +1133,7 @@ double          *closest_octree_pt_dist2
             int child_id = _child_ids[j];
 
       /* if ((t1+t2+t3) < 1e-6) */
-      /*       printf ("\n     child id : %d\n", child_id); */
+            /* printf ("\n     child id : %d\n", child_id); */
 
             int child_inbox = 0;
             
@@ -1210,7 +1210,7 @@ double          *closest_octree_pt_dist2
               if ((dist_child[j1] < closest_octree_pt_dist2[i]) &&
                   (child_node->n_points > 0)) {
               /* if ((t1+t2+t3) < 1e-6) { */
-              /*   printf("   pushe\n"); */
+                /* printf("   pushe\n"); */
               /* } */
                 stack[pos_stack++] = child_id; /* push root in th stack */
               }
@@ -1220,7 +1220,7 @@ double          *closest_octree_pt_dist2
 
         else {
           /* if ((t1+t2+t3) < 1e-6) */
-          /*   printf ("    leaf\n"); */
+            /* printf ("    leaf\n"); */
 
           int *point_clouds_id = octree->point_icloud + curr_node->range[0];
           int *point_indexes = octree->point_ids + curr_node->range[0];
@@ -1238,9 +1238,9 @@ double          *closest_octree_pt_dist2
 
             if (point_dist2 < closest_octree_pt_dist2[i]) {
               /* if ((t1+t2+t3) < 1e-6) */
-              /*   printf (" ###### update : %d %d %12.5e : (%12.5e %12.5e %12.5e) #####\n", */
-              /*           point_clouds_id[j],  point_indexes[j], point_dist2, _coords[0] */
-              /*           ,_coords[1],_coords[2] ); */
+                /* printf (" ###### update : %d %d %12.5e : (%12.5e %12.5e %12.5e) #####\n", */
+                /*         point_clouds_id[j],  point_indexes[j], point_dist2, _coords[0] */
+                /*         ,_coords[1],_coords[2] ); */
               closest_octree_pt_id[2*i] = point_clouds_id[j];
               closest_octree_pt_id[2*i+1] = point_indexes[j];
               closest_octree_pt_dist2[i] = point_dist2;
