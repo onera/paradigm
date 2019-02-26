@@ -421,6 +421,8 @@ const double    upper_bound,
 const double    *restrict pt,        
 int             *restrict pos_stack, 
 int             *restrict stack,
+int             *restrict inbox_stack,
+double          *restrict min_dist2_stack,
 int             flag
 )
 {
@@ -487,7 +489,12 @@ int             flag
     /* if (((dist_child[j] < upper_bound) || (inbox_child[j] == 1)) */
     /*     && (bt->nodes[child_id].n_boxes > 0)) { */
     if (((dist_child[j] < upper_bound) || (inbox_child[j] == 1))) {
-      stack[(*pos_stack)++] = child_id; /* push root in th stack */
+      
+      stack[*pos_stack]           = child_id; /* push root in th stack */
+      inbox_stack[*pos_stack]     = inbox_child[j]; /* push root in th stack */
+      min_dist2_stack[*pos_stack] = dist_child[j]; /* push root in th stack */
+
+      (*pos_stack)++;
     }          
   }
 
@@ -3838,6 +3845,8 @@ double          *box_max_dist
   int s_pt_stack = ((bt->n_children - 1) * (bt->max_level - 1) + bt->n_children);
   
   int *stack = malloc ((sizeof(int)) * s_pt_stack);
+  int *inbox_stack = malloc ((sizeof(int)) * s_pt_stack);
+  double *min_dist2_stack = malloc ((sizeof(double)) * s_pt_stack);
   int pos_stack = 0;
   
   int dim = bt->boxes->dim;
@@ -3865,7 +3874,15 @@ double          *box_max_dist
     box_max_dist[i] = HUGE_VAL;
     
     pos_stack = 0;
-    stack[pos_stack++] = 0; /* push root in th stack */
+    stack[pos_stack] = 0; /* push root in th stack */
+    inbox_stack[pos_stack] = _box_dist2_min (dim,
+                                             normalized,
+                                             d,
+                                             bt->extents,
+                                             _pt,
+                                             min_dist2_stack);            
+      
+    pos_stack++;
     
     while (pos_stack > 0) {
       
@@ -3893,13 +3910,19 @@ double          *box_max_dist
 
         if (!curr_node->is_leaf) {
       
-          _push_child_in_stack (bt, dim,
+          _push_child_in_stack (bt,
+                                dim,
                                 normalized,
                                 d,
                                 id_curr_node, 
                                 box_max_dist[i], 
-                                _pt, &pos_stack, stack, 0);
-
+                                _pt,
+                                &pos_stack,
+                                stack,
+                                inbox_stack,
+                                min_dist2_stack,
+                                0);
+          
         }
 
         else {
@@ -3922,12 +3945,12 @@ double          *box_max_dist
             /*         _box_extents[2], _box_extents[5]); */
 
             int inbox = _box_dist2_max (dim,
-                            normalized,
-                            d,
-                            _box_extents,
-                            _pt,
-                            //                        &box_min_dist2,
-                            &box_max_dist2);
+                                        normalized,
+                                        d,
+                                        _box_extents,
+                                        _pt,
+                                        //                        &box_min_dist2,
+                                        &box_max_dist2);
 
             /* int inbox =_box_dist2 (dim, */
             /*                        _box_extents, */
@@ -3953,6 +3976,9 @@ double          *box_max_dist
   }
 
   free (stack);
+  free (inbox_stack);
+  free (min_dist2_stack);
+  
   if (_pts != pts) {
     free (_pts);
   }
@@ -4012,6 +4038,9 @@ int             *boxes[]
   int *_boxes = *boxes;
    
   int *stack = malloc ((sizeof(int)) * s_pt_stack);
+  int *inbox_stack = malloc ((sizeof(int)) * s_pt_stack);
+  double *min_dist2_stack = malloc ((sizeof(double)) * s_pt_stack);
+
   int pos_stack = 0;
   
   int dim = bt->boxes->dim;
@@ -4021,10 +4050,12 @@ int             *boxes[]
   int n_boxes = bt->boxes->n_boxes;
 
   int *tag = malloc(sizeof(int) * n_boxes);
-
   for (int i = 0; i < n_boxes; i++) {
     tag[i] = 0;
   }
+  int n_visited_boxes = 0;
+
+  int *visited_boxes = malloc(sizeof(int) * n_boxes); // A optimiser
 
   //_node_t *root_node = &(bt->nodes[0]);
   /* printf("root_node n_boxes : %d %d\n", bt->boxes->n_boxes, n_pts);  */
@@ -4045,10 +4076,20 @@ int             *boxes[]
     /*         pts[3*i], pts[3*i+1], pts[3*i+2], upper_bound_dist2[i]); */
     /*   flag = 1; */
     
-    /* Init stack */
-    
+    /* Init stack :  push root */
+
     pos_stack = 0;
-    stack[pos_stack++] = 0; /* push root in th stack */
+    stack[pos_stack] = 0; /* push root in th stack */
+    inbox_stack[pos_stack] = _box_dist2_min (dim,
+                                             normalized,
+                                             d,
+                                             bt->extents,
+                                             _pt,
+                                             min_dist2_stack);            
+
+      
+    pos_stack++;
+    n_visited_boxes = 0;
 
     while (pos_stack > 0) {
       
@@ -4065,24 +4106,25 @@ int             *boxes[]
       if (curr_node->n_boxes == 0)        
         n_node_vid++;
 
-      double min_dist2;
+      double min_dist2 = min_dist2_stack[pos_stack];
 
-      int inbox = _box_dist2_min (dim,
-                                  normalized,
-                                  d,
-                                  extents,
-                                  _pt,
-                                  &min_dist2);            
+      int inbox = inbox_stack[pos_stack]; 
 
       if ((min_dist2 <= upper_bound_dist2[i]) || (inbox == 1)) {
         if (!curr_node->is_leaf) {
 
-          _push_child_in_stack (bt, dim,
+          _push_child_in_stack (bt,
+                                dim,
                                 normalized,
                                 d,
                                 id_curr_node, 
                                 upper_bound_dist2[i], 
-                                _pt, &pos_stack, stack, flag);
+                                _pt,
+                                &pos_stack,
+                                stack,
+                                inbox_stack,
+                                min_dist2_stack,
+                                flag);
       
         }
 
@@ -4129,16 +4171,17 @@ int             *boxes[]
                 }
                 _boxes[idx_box++] = _box_id;
                 _i_boxes[i+1]++;
-                tag[_box_id] = 1;
               }
+              visited_boxes[n_visited_boxes++] = _box_id;
+              tag[_box_id] = 1;
             }
           }
         }  
       }
     }
 
-    for (int j = 0; j < _i_boxes[i+1]; j++) {
-      tag[_boxes[idx_box_pre+j]] = 0;
+    for (int j = 0; j < n_visited_boxes; j++) {
+      tag[visited_boxes[j]] = 0;
     }
 
   }
@@ -4159,6 +4202,9 @@ int             *boxes[]
   
   free (tag);
   free (stack);
+  free (inbox_stack);
+  free (min_dist2_stack);
+  free (visited_boxes);
 }
 
 /*----------------------------------------------------------------------------*/
