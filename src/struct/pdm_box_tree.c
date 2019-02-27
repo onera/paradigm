@@ -168,79 +168,79 @@ struct _PDM_box_tree_t {
  *
  */
 
-inline static int
-_box_dist2
-(
-const int              dim,
-const int              normalized,
-const double          *d,
-const double          *extents,
-const double           *coords,
-double                *min_dist2,            
-double                *max_dist2            
-)
-{
+/* inline static int */
+/* _box_dist2 */
+/* ( */
+/* const int              dim, */
+/* const int              normalized, */
+/* const double          *d, */
+/* const double          *extents, */
+/* const double           *coords, */
+/* double                *min_dist2,             */
+/* double                *max_dist2             */
+/* ) */
+/* { */
 
-  int inbox = 0;
-  *min_dist2 = 0.;
-  *max_dist2 = 0.;
+/*   int inbox = 0; */
+/*   *min_dist2 = 0.; */
+/*   *max_dist2 = 0.; */
   
-  if (normalized) {
+/*   if (normalized) { */
   
-    for (int i = 0; i < dim; i++) {
-      if (coords[i] > extents[i+dim]) {
-        double _min_dist2 = d[i] * (coords[i] - extents[dim+i]);
-        *min_dist2 += _min_dist2 * _min_dist2;
-        double _max_dist2 = d[i] * (coords[i] - extents[i]);
-        *max_dist2 += _max_dist2 * _max_dist2;
-      }
+/*     for (int i = 0; i < dim; i++) { */
+/*       if (coords[i] > extents[i+dim]) { */
+/*         double _min_dist2 = d[i] * (coords[i] - extents[dim+i]); */
+/*         *min_dist2 += _min_dist2 * _min_dist2; */
+/*         double _max_dist2 = d[i] * (coords[i] - extents[i]); */
+/*         *max_dist2 += _max_dist2 * _max_dist2; */
+/*       } */
     
-      else if (coords[i] < extents[i]) {
-        double _min_dist2 = d[i] * (coords[i] - extents[i]);
-        *min_dist2 += _min_dist2 * _min_dist2;
-        double _max_dist2 = d[i] * (coords[i] - extents[dim+i]);
-        *max_dist2 += _max_dist2 * _max_dist2;
-      }
+/*       else if (coords[i] < extents[i]) { */
+/*         double _min_dist2 = d[i] * (coords[i] - extents[i]); */
+/*         *min_dist2 += _min_dist2 * _min_dist2; */
+/*         double _max_dist2 = d[i] * (coords[i] - extents[dim+i]); */
+/*         *max_dist2 += _max_dist2 * _max_dist2; */
+/*       } */
       
-      else {
-        inbox += 1;
-        double val1 = d[i] * (coords[i] - extents[i]);
-        double val2 = d[i] * (coords[i] - extents[dim+i]);
-        *max_dist2 += PDM_MAX (val1 * val1, val2 * val2);
-      }
-    }
+/*       else { */
+/*         inbox += 1; */
+/*         double val1 = d[i] * (coords[i] - extents[i]); */
+/*         double val2 = d[i] * (coords[i] - extents[dim+i]); */
+/*         *max_dist2 += PDM_MAX (val1 * val1, val2 * val2); */
+/*       } */
+/*     } */
 
-  }
+/*   } */
 
-  else {
+/*   else { */
     
-    for (int i = 0; i < dim; i++) {
-      if (coords[i] > extents[i+dim]) {
-        double _min_dist2 = coords[i] - extents[dim+i];
-        *min_dist2 += _min_dist2 * _min_dist2;
-        double _max_dist2 = coords[i] - extents[i];
-        *max_dist2 += _max_dist2 * _max_dist2;
-      }
+/*     for (int i = 0; i < dim; i++) { */
+/*       if (coords[i] > extents[i+dim]) { */
+/*         double _min_dist2 = coords[i] - extents[dim+i]; */
+/*         *min_dist2 += _min_dist2 * _min_dist2; */
+/*         double _max_dist2 = coords[i] - extents[i]; */
+/*         *max_dist2 += _max_dist2 * _max_dist2; */
+/*       } */
     
-      else if (coords[i] < extents[i]) {
-        double _min_dist2 = coords[i] - extents[i];
-        *min_dist2 += _min_dist2 * _min_dist2;
-        double _max_dist2 = coords[i] - extents[dim+i];
-        *max_dist2 += _max_dist2 * _max_dist2;
-      }
+/*       else if (coords[i] < extents[i]) { */
+/*         double _min_dist2 = coords[i] - extents[i]; */
+/*         *min_dist2 += _min_dist2 * _min_dist2; */
+/*         double _max_dist2 = coords[i] - extents[dim+i]; */
+/*         *max_dist2 += _max_dist2 * _max_dist2; */
+/*       } */
       
-      else {
-        inbox += 1;
-        double val1 = coords[i] - extents[i];
-        double val2 = coords[i] - extents[dim+i];
-        *max_dist2 += PDM_MAX (val1 * val1, val2 * val2);
-      }
-    }
-  }
+/*       else { */
+/*         inbox += 1; */
+/*         double val1 = coords[i] - extents[i]; */
+/*         double val2 = coords[i] - extents[dim+i]; */
+/*         *max_dist2 += PDM_MAX (val1 * val1, val2 * val2); */
+/*       } */
+/*     } */
+/*   } */
   
-  return inbox == dim;
+/*   return inbox == dim; */
   
-}
+/* } */
 
 /**
  *
@@ -423,7 +423,8 @@ int             *restrict pos_stack,
 int             *restrict stack,
 int             *restrict inbox_stack,
 double          *restrict min_dist2_stack,
-int             flag
+int             flag,
+int             sorted
 )
 {
   int sort_child[bt->n_children];
@@ -433,9 +434,6 @@ int             flag
   for (int i = 0; i < bt->n_children; i++) {
     dist_child[i] = HUGE_VAL;
   }
-    /* if (flag) { */
-    /*   printf ("\n_push_child_in_stack : %d\n",id_curr_node); */
-    /* } */
 
   /* Sort children and store them into the stack */
 
@@ -445,7 +443,6 @@ int             flag
   for (int j = 0; j < bt->n_children; j++) {
 
     double child_min_dist2;
-    //double child_max_dist2;
 
     int child_id = _child_ids[j];
 
@@ -455,7 +452,6 @@ int             flag
       
     if (curr_node->n_boxes == 0)
       continue;
-
     
     int inbox = _box_dist2_min (dim,
                                 normalized,
@@ -463,39 +459,49 @@ int             flag
                                 child_extents,
                                 pt,
                                 &child_min_dist2);            
-    /* if (flag) { */
-      /* printf ("\n  child extents X : %12.5e < %12.5e\n",child_extents[0],child_extents[3]); */
-      /* printf ("  child extents Y : %12.5e < %12.5e\n",child_extents[1],child_extents[4]); */
-      /* printf ("  child extents Z : %12.5e < %12.5e\n",child_extents[2],child_extents[5]); */
-      /* printf ("  inbox child_min_dist2 :%d %12.5e %12.5e\n",inbox,child_min_dist2,upper_bound); */
-    /* } */
-    int i1 = 0;
-    for (i1 = _n_push; (i1 > 0) && (dist_child[i1-1] > child_min_dist2) ; i1--) {
-      dist_child[i1] = dist_child[i1-1];
-      sort_child[i1] = sort_child[i1-1]; 
-      inbox_child[i1] = inbox_child[i1-1];
+
+    
+
+    if (sorted) {
+      int i1 = 0;
+      for (i1 = _n_push; (i1 > 0) && (dist_child[i1-1] > child_min_dist2) ; i1--) {
+        dist_child[i1] = dist_child[i1-1];
+        sort_child[i1] = sort_child[i1-1];
+        inbox_child[i1] = inbox_child[i1-1];
+      }
+      
+      sort_child[i1] = _child_ids[j];
+      dist_child[i1] = child_min_dist2;
+      inbox_child[i1] = inbox;
+    
+      _n_push += 1;
     }
-
-    sort_child[i1] = _child_ids[j];
-    dist_child[i1] = child_min_dist2;
-    inbox_child[i1] = inbox;
-
-    _n_push += 1;
+    else {
+      if (((child_min_dist2 < upper_bound) || (inbox == 1))) {
+        
+        stack[*pos_stack]           = child_id; /* push child in th stack */
+        inbox_stack[*pos_stack]     = inbox;
+        min_dist2_stack[*pos_stack] = child_min_dist2;
+        
+      (*pos_stack)++;
+      }
+    }
  
   }
 
-  for (int j =  _n_push - 1; j >= 0; j--) {
-    int child_id = sort_child[j];
-    /* if (((dist_child[j] < upper_bound) || (inbox_child[j] == 1)) */
-    /*     && (bt->nodes[child_id].n_boxes > 0)) { */
-    if (((dist_child[j] < upper_bound) || (inbox_child[j] == 1))) {
+  if (sorted) {
+    for (int j =  _n_push - 1; j >= 0; j--) {
+      int child_id = sort_child[j];
       
-      stack[*pos_stack]           = child_id; /* push root in th stack */
-      inbox_stack[*pos_stack]     = inbox_child[j]; /* push root in th stack */
-      min_dist2_stack[*pos_stack] = dist_child[j]; /* push root in th stack */
-
-      (*pos_stack)++;
-    }          
+      if (((dist_child[j] < upper_bound) || (inbox_child[j] == 1))) {
+        
+        stack[*pos_stack]           = child_id; /* push child in th stack */
+        inbox_stack[*pos_stack]     = inbox_child[j];
+        min_dist2_stack[*pos_stack] = dist_child[j];
+        
+        (*pos_stack)++;
+      }
+    }
   }
 
 }
@@ -3921,7 +3927,8 @@ double          *box_max_dist
                                 stack,
                                 inbox_stack,
                                 min_dist2_stack,
-                                0);
+                                0,
+                                1);
           
         }
 
@@ -4124,7 +4131,8 @@ int             *boxes[]
                                 stack,
                                 inbox_stack,
                                 min_dist2_stack,
-                                flag);
+                                flag,
+                                0);
       
         }
 

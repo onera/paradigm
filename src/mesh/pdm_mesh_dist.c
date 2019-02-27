@@ -44,7 +44,7 @@ extern "C" {
  * Macro definitions
  *============================================================================*/
 
-#define NTIMER 7
+#define NTIMER 8
   
 /*============================================================================
  * Type definitions
@@ -64,6 +64,7 @@ typedef enum {
   COMPUTE_ELEM_DIST             = 4,
   RESULT_TRANSMISSION           = 5,        
   END                           = 6,        
+  BBTREE_CREATE                 = 7,        
 
 } _ol_timer_step_t;
 
@@ -780,6 +781,26 @@ PDM_mesh_dist_process
         }
       }
     }
+
+    PDM_timer_hang_on(dist->timer);  
+    e_t_elapsed = PDM_timer_elapsed(dist->timer);
+    e_t_cpu     = PDM_timer_cpu(dist->timer);
+    e_t_cpu_u   = PDM_timer_cpu_user(dist->timer);
+    e_t_cpu_s   = PDM_timer_cpu_sys(dist->timer);
+
+    dist->times_elapsed[BBTREE_CREATE] += e_t_elapsed - b_t_elapsed;
+    dist->times_cpu[BBTREE_CREATE]     += e_t_cpu - b_t_cpu;
+    dist->times_cpu_u[BBTREE_CREATE]   += e_t_cpu_u - b_t_cpu_u;
+    dist->times_cpu_s[BBTREE_CREATE]   += e_t_cpu_s - b_t_cpu_s;
+
+    PDM_timer_resume(dist->timer);
+    
+    PDM_timer_hang_on(dist->timer);  
+    b_t_elapsed = PDM_timer_elapsed(dist->timer);
+    b_t_cpu     = PDM_timer_cpu(dist->timer);
+    b_t_cpu_u   = PDM_timer_cpu_user(dist->timer);
+    b_t_cpu_s   = PDM_timer_cpu_sys(dist->timer);
+    PDM_timer_resume(dist->timer);
 
     /* 
      * Find elements closer than closest_vertices_dist2 distance
@@ -1513,6 +1534,10 @@ PDM_mesh_dump_times
                 " %12.5es %12.5es\n",
                 t_elaps_max[UPPER_BOUND_DIST],
                 t_cpu_max[UPPER_BOUND_DIST]);
+    PDM_printf( "distance timer : Bbtree building (elapsed and cpu) :"
+                " %12.5es %12.5es\n",
+                t_elaps_max[BBTREE_CREATE],
+                t_cpu_max[BBTREE_CREATE]);
     PDM_printf( "distance timer : Candidate selection (elapsed and cpu) :"
                 " %12.5es %12.5es\n",
                 t_elaps_max[CANDIDATE_SELECTION],
