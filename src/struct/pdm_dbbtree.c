@@ -829,15 +829,9 @@ PDM_g_num_t     *box_g_num[]
   int *box_l_num_tmp = NULL;
 
 
-  //int nUsedRank = PDM_box_set_get_size (_dbbt->rankBoxes);
   const int *usedRanks = _dbbt->usedRank;
   
   const int idebug = 0;
-  /* PDM_timer_t *timer = PDM_timer_create(); */
-
-  /* double elaps1 = PDM_timer_elapsed(timer); */
-  /* double cpu1 = PDM_timer_cpu(timer); */
-  /* PDM_timer_resume(timer); */
 
   if (_dbbt->btShared != NULL) {
   
@@ -938,18 +932,6 @@ PDM_g_num_t     *box_g_num[]
     free(recv_pts);
 
   }
-
-
-  /* PDM_MPI_Barrier(_dbbt->comm); */
-  /* PDM_timer_hang_on(timer);   */
-  /* double elaps2 = PDM_timer_elapsed(timer); */
-  /* double cpu2     = PDM_timer_cpu(timer); */
-  /* PDM_timer_resume(timer); */
-
-  /* if (myRank == 0) { */
-
-  /*   printf ("PDM_dbbtree_closest_upper_bound_dist_boxes_get : Temp distrib proc : %12.5es\n", elaps2 - elaps1); */
-  /* } */
   
   /* 
    * Determination des candidats localement
@@ -978,18 +960,6 @@ PDM_g_num_t     *box_g_num[]
       printf ("\n");
     }
   }
-
-  /* PDM_MPI_Barrier(_dbbt->comm); */
-  /* PDM_timer_hang_on(timer);   */
-  /* elaps1 = PDM_timer_elapsed(timer); */
-  /* cpu1     = PDM_timer_cpu(timer); */
-  /* PDM_timer_resume(timer); */
-
-  /* if (myRank == 0) { */
-
-  /*   printf ("PDM_dbbtree_closest_upper_bound_dist_boxes_get : Recherche locale : %12.5es\n", elaps1 - elaps2); */
-  /* } */
-  
 
   if (_dbbt->btShared == NULL) {
     *box_index = box_index_in_rank; 
@@ -1025,34 +995,12 @@ PDM_g_num_t     *box_g_num[]
       n_recv_pts[i]   = n_recv_pts[i]/4;
     }
 
-    /* PDM_MPI_Barrier(_dbbt->comm); */
-    /* PDM_timer_hang_on(timer);   */
-    /* elaps2 = PDM_timer_elapsed(timer); */
-    /* cpu2     = PDM_timer_cpu(timer); */
-    /* PDM_timer_resume(timer); */
-    
-    /* if (myRank == 0) { */
-
-    /*   printf ("PDM_dbbtree_closest_upper_bound_dist_boxes_get : Distribution resultat 0 : %12.5es %d %d\n", elaps2 - elaps1, i_send_pts[lComm], i_recv_pts[lComm]); */
-    /* } */
-    
     int *n_box_l_num_per_pts = malloc (sizeof(int) * i_send_pts[lComm]); 
 
     PDM_MPI_Alltoallv (n_box_l_num_in_rank, n_recv_pts, i_recv_pts, PDM_MPI_INT,
                        n_box_l_num_per_pts, n_send_pts, i_send_pts, PDM_MPI_INT,
                        _dbbt->comm);
 
-    /* PDM_MPI_Barrier(_dbbt->comm); */
-    /* PDM_timer_hang_on(timer);   */
-    /* elaps1 = PDM_timer_elapsed(timer); */
-    /* cpu1     = PDM_timer_cpu(timer); */
-    /* PDM_timer_resume(timer); */
-    
-    /* if (myRank == 0) { */
-
-    /*   printf ("PDM_dbbtree_closest_upper_bound_dist_boxes_get : Distribution resultat 1 : %12.5es\n", elaps1 - elaps2); */
-    /* } */
-    
     int *n_send_pts2 = malloc (sizeof(int) * lComm);
     int *i_send_pts2 = malloc (sizeof(int) * (lComm+1));
     
@@ -1093,17 +1041,6 @@ PDM_g_num_t     *box_g_num[]
 
     PDM_g_num_t *box_g_num_per_pts = malloc(sizeof(PDM_g_num_t) * i_send_pts2[lComm]);
 
-    /* PDM_MPI_Barrier(_dbbt->comm); */
-    /* PDM_timer_hang_on(timer);   */
-    /* elaps2 = PDM_timer_elapsed(timer); */
-    /* cpu2     = PDM_timer_cpu(timer); */
-    /* PDM_timer_resume(timer); */
-    
-    /* if (myRank == 0) { */
-
-    /*   printf ("PDM_dbbtree_closest_upper_bound_dist_boxes_get : Distribution resultat 2 : %12.5es %d %d\n", elaps2 - elaps1,  i_send_pts2[lComm], i_recv_pts2[lComm]); */
-    /* } */
-    
     PDM_MPI_Alltoallv (box_g_num_in_rank, n_recv_pts2, i_recv_pts2, PDM__PDM_MPI_G_NUM,
                        box_g_num_per_pts, n_send_pts2, i_send_pts2, PDM__PDM_MPI_G_NUM,
                        _dbbt->comm);
@@ -1117,17 +1054,6 @@ PDM_g_num_t     *box_g_num[]
     free (n_recv_pts2);
     free (i_recv_pts2);
     
-    /* PDM_MPI_Barrier(_dbbt->comm); */
-    /* PDM_timer_hang_on(timer);   */
-    /* elaps1 = PDM_timer_elapsed(timer); */
-    /* cpu1     = PDM_timer_cpu(timer); */
-    /* PDM_timer_resume(timer); */
-    
-    /* if (myRank == 0) { */
-
-    /*   printf ("PDM_dbbtree_closest_upper_bound_dist_boxes_get : Distribution resultat 3 : %12.5es\n", elaps1 - elaps2); */
-    /* } */
-
     /* 
      * Tri du tableau de retour
      */
@@ -1211,17 +1137,6 @@ PDM_g_num_t     *box_g_num[]
       PDM_hash_tab_purge (ht, PDM_FALSE);
     }
 
-    /* PDM_MPI_Barrier(_dbbt->comm); */
-    /* PDM_timer_hang_on(timer);   */
-    /* elaps2 = PDM_timer_elapsed(timer); */
-    /* cpu2     = PDM_timer_cpu(timer); */
-    /* PDM_timer_resume(timer); */
-    
-    /* if (myRank == 0) { */
-
-    /*   printf ("PDM_dbbtree_closest_upper_bound_dist_boxes_get : Tri resultats recus : %12.5es\n", elaps2 - elaps1); */
-    /* } */
-
     PDM_hash_tab_free (ht);
 
     free (n_box_l_num_per_pts);
@@ -1240,7 +1155,7 @@ PDM_g_num_t     *box_g_num[]
     free (n_send_pts2);
     free (i_send_pts2);
   }
-  /* PDM_timer_free(timer); */
+
 }
 
 #undef _MIN

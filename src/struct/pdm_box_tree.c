@@ -150,6 +150,7 @@ struct _PDM_box_tree_t {
  * Static global variables
  *============================================================================*/
 
+static int iappel = 0;
 /*============================================================================
  * Private function definitions
  *============================================================================*/
@@ -410,99 +411,99 @@ double                *restrict min_dist2
  *
  */
 
-inline static void
-_box_dist2_min_v
-(
-const int              dim,
-const int              normalized,
-const double          *restrict d,
-const int             n_children,
-const double          *restrict extents,
-const double           *restrict coords,
-double                *restrict min_dist2,
-int                   *restrict inbox
+/* inline static void */
+/* _box_dist2_min_v */
+/* ( */
+/* const int              dim, */
+/* const int              normalized, */
+/* const double          *restrict d, */
+/* const int             n_children, */
+/* const double          *restrict extents, */
+/* const double           *restrict coords, */
+/* double                *restrict min_dist2, */
+/* int                   *restrict inbox */
 
-)
-{
+/* ) */
+/* { */
 
-  double max_contrib[dim*n_children];
-  double min_contrib[dim*n_children];
+/*   double max_contrib[dim*n_children]; */
+/*   double min_contrib[dim*n_children]; */
 
-  if (normalized) {
+/*   if (normalized) { */
 
-    for (int j = 0; j < n_children; j++) {
-      for (int i = 0; i < dim; i++) {
-        double val_max = d[i] * (coords[i] - extents[2*dim*j+dim+i]);
-        double val_min = d[i] * (coords[i] - extents[2*dim*j+i]);
+/*     for (int j = 0; j < n_children; j++) { */
+/*       for (int i = 0; i < dim; i++) { */
+/*         double val_max = d[i] * (coords[i] - extents[2*dim*j+dim+i]); */
+/*         double val_min = d[i] * (coords[i] - extents[2*dim*j+i]); */
         
-        max_contrib[dim*j+i] = val_max*val_max;
-        min_contrib[dim*j+i] = val_min*val_min;
+/*         max_contrib[dim*j+i] = val_max*val_max; */
+/*         min_contrib[dim*j+i] = val_min*val_min; */
 
-      }
-    }
+/*       } */
+/*     } */
     
   
-    for (int j = 0; j < n_children; j++) {
-      min_dist2[j] = 0;
-      inbox[j] = 0;
-      for (int i = 0; i < dim; i++) {
-        if (coords[i] > extents[2*dim*j+dim+i]) {
-          min_dist2[j] +=  max_contrib[dim*j+i];
-        }
-        else if (coords[i] < extents[2*dim*j+i]) {
-          min_dist2[j] +=  min_contrib[dim*j+i];
-        }
+/*     for (int j = 0; j < n_children; j++) { */
+/*       min_dist2[j] = 0; */
+/*       inbox[j] = 0; */
+/*       for (int i = 0; i < dim; i++) { */
+/*         if (coords[i] > extents[2*dim*j+dim+i]) { */
+/*           min_dist2[j] +=  max_contrib[dim*j+i]; */
+/*         } */
+/*         else if (coords[i] < extents[2*dim*j+i]) { */
+/*           min_dist2[j] +=  min_contrib[dim*j+i]; */
+/*         } */
       
-        else {
-          inbox[j] += 1;
-        }
-      }
-    }
+/*         else { */
+/*           inbox[j] += 1; */
+/*         } */
+/*       } */
+/*     } */
 
-    for (int j = 0; j < n_children; j++) {
-      inbox[j] = (inbox[j] == dim);
+/*     for (int j = 0; j < n_children; j++) { */
+/*       inbox[j] = (inbox[j] == dim); */
 
-    }
-  }
+/*     } */
+/*   } */
 
-  else {
+/*   else { */
 
-    for (int j = 0; j < n_children; j++) {
-      for (int i = 0; i < dim; i++) {
-        double val_max = d[i] * (coords[i] - extents[2*dim*j+dim+i]);
-        double val_min = d[i] * (coords[i] - extents[2*dim*j+i]);
+/*     for (int j = 0; j < n_children; j++) { */
+/*       for (int i = 0; i < dim; i++) { */
+/*         double val_max = d[i] * (coords[i] - extents[2*dim*j+dim+i]); */
+/*         double val_min = d[i] * (coords[i] - extents[2*dim*j+i]); */
         
-        max_contrib[dim*j+i] = val_max*val_max;
-        min_contrib[dim*j+i] = val_min*val_min;
+/*         max_contrib[dim*j+i] = val_max*val_max; */
+/*         min_contrib[dim*j+i] = val_min*val_min; */
 
-      }
-    }
+/*       } */
+/*     } */
   
-    for (int j = 0; j < n_children; j++) {
-      min_dist2[j] = 0;
-      inbox[j] = 0;
-      for (int i = 0; i < dim; i++) {
-        if (coords[i] > extents[i+dim]) {
-          min_dist2[j] +=  max_contrib[dim*j+i];
-        }
-        else if (coords[i] < extents[i]) {
-          min_dist2[j] +=  min_contrib[dim*j+i];
-        }
+/*     for (int j = 0; j < n_children; j++) { */
+/*       min_dist2[j] = 0; */
+/*       inbox[j] = 0; */
+/*       for (int i = 0; i < dim; i++) { */
+/*         if (coords[i] > extents[i+dim]) { */
+/*           min_dist2[j] +=  max_contrib[dim*j+i]; */
+/*         } */
+/*         else if (coords[i] < extents[i]) { */
+/*           min_dist2[j] +=  min_contrib[dim*j+i]; */
+/*         } */
       
-        else {
-          inbox[j] += 1;
-        }
-      }
-    }
+/*         else { */
+/*           inbox[j] += 1; */
+/*         } */
+/*       } */
+/*     } */
 
-    for (int j = 0; j < n_children; j++) {
-      if (inbox[j] == dim)
-        inbox[j] = 1;
+/*     for (int j = 0; j < n_children; j++) { */
+/*       if (inbox[j] == dim) */
+/*         inbox[j] = 1; */
 
-    }
-  }
+/*     } */
+/*   } */
   
-}
+/* } */
 
 /**
  *
@@ -518,125 +519,125 @@ int                   *restrict inbox
  *
  */
 
-inline static void          
-_push_child_in_stack 
-(
-PDM_box_tree_t *bt, 
-const int       dim,
-const int              normalized,
-const double          *restrict d,
-const int       id_curr_node,
-const double    upper_bound,
-const double    *restrict pt,        
-int             *restrict pos_stack, 
-int             *restrict stack,
-int             *restrict inbox_stack,
-double          *restrict min_dist2_stack,
-int             flag,
-int             sorted
-)
-{
-  int sort_child[bt->n_children];
-  double dist_child[bt->n_children];
-  int inbox_child[bt->n_children];
+/* inline static void           */
+/* _push_child_in_stack  */
+/* ( */
+/* PDM_box_tree_t *bt,  */
+/* const int       dim, */
+/* const int              normalized, */
+/* const double          *restrict d, */
+/* const int       id_curr_node, */
+/* const double    upper_bound, */
+/* const double    *restrict pt,         */
+/* int             *restrict pos_stack,  */
+/* int             *restrict stack, */
+/* int             *restrict inbox_stack, */
+/* double          *restrict min_dist2_stack, */
+/* int             flag, */
+/* int             sorted */
+/* ) */
+/* { */
+/*   int sort_child[bt->n_children]; */
+/*   double dist_child[bt->n_children]; */
+/*   int inbox_child[bt->n_children]; */
   
-  for (int i = 0; i < bt->n_children; i++) {
-    dist_child[i] = HUGE_VAL;
-  }
+/*   for (int i = 0; i < bt->n_children; i++) { */
+/*     dist_child[i] = HUGE_VAL; */
+/*   } */
 
-  /* Sort children and store them into the stack */
+/*   /\* Sort children and store them into the stack *\/ */
 
-  const int *_child_ids = bt->child_ids + id_curr_node*bt->n_children;
+/*   const int *_child_ids = bt->child_ids + id_curr_node*bt->n_children; */
 
-  int _n_push = 0;
+/*   int _n_push = 0; */
 
-  double children_extents[2*dim*bt->n_children];
-  double children_min_dist2[bt->n_children];
-  int children_inbox[bt->n_children];
+/*   double children_extents[2*dim*bt->n_children]; */
+/*   double children_min_dist2[bt->n_children]; */
+/*   int children_inbox[bt->n_children]; */
   
-  for (int j = 0; j < bt->n_children; j++) {
-    int child_id = _child_ids[j];
-    const double *child_extents = bt->extents + dim * 2 * child_id;
-    for (int k = 0; k < 2*dim; k++) {
-      children_extents[2*dim*j+k] = child_extents[k];
-    }
-  }
+/*   for (int j = 0; j < bt->n_children; j++) { */
+/*     int child_id = _child_ids[j]; */
+/*     const double *child_extents = bt->extents + dim * 2 * child_id; */
+/*     for (int k = 0; k < 2*dim; k++) { */
+/*       children_extents[2*dim*j+k] = child_extents[k]; */
+/*     } */
+/*   } */
   
-  _box_dist2_min_v (dim,
-                    normalized,
-                    d,
-                    bt->n_children,
-                    children_extents,
-                    pt,
-                    children_min_dist2,
-                    children_inbox);   
+/*   _box_dist2_min_v (dim, */
+/*                     normalized, */
+/*                     d, */
+/*                     bt->n_children, */
+/*                     children_extents, */
+/*                     pt, */
+/*                     children_min_dist2, */
+/*                     children_inbox);    */
 
   
-  //printf ("\n");
-  for (int j = 0; j < bt->n_children; j++) {
+/*   //printf ("\n"); */
+/*   for (int j = 0; j < bt->n_children; j++) { */
 
-    //double child_min_dist2;
+/*     //double child_min_dist2; */
 
-    int child_id = _child_ids[j];
+/*     int child_id = _child_ids[j]; */
 
-    //const double *child_extents = bt->extents + dim * 2 * child_id;
+/*     //const double *child_extents = bt->extents + dim * 2 * child_id; */
 
-    _node_t *curr_node = &(bt->nodes[child_id]);
+/*     _node_t *curr_node = &(bt->nodes[child_id]); */
       
-    if (curr_node->n_boxes == 0)
-      continue;
+/*     if (curr_node->n_boxes == 0) */
+/*       continue; */
 
-    //printf ("%d %d %12.5e\n", j, children_inbox[j], children_min_dist2[j]);
-    /* int inbox = _box_dist2_min (dim, */
-    /*                             normalized, */
-    /*                             d, */
-    /*                             child_extents, */
-    /*                             pt, */
-    /*                             &child_min_dist2);             */
+/*     //printf ("%d %d %12.5e\n", j, children_inbox[j], children_min_dist2[j]); */
+/*     /\* int inbox = _box_dist2_min (dim, *\/ */
+/*     /\*                             normalized, *\/ */
+/*     /\*                             d, *\/ */
+/*     /\*                             child_extents, *\/ */
+/*     /\*                             pt, *\/ */
+/*     /\*                             &child_min_dist2);             *\/ */
 
-    if (sorted) {
-      int i1 = 0;
-      for (i1 = _n_push; (i1 > 0) && (dist_child[i1-1] > children_min_dist2[j]) ; i1--) {
-        dist_child[i1] = dist_child[i1-1];
-        sort_child[i1] = sort_child[i1-1];
-        inbox_child[i1] = inbox_child[i1-1];
-      }
+/*     if (sorted) { */
+/*       int i1 = 0; */
+/*       for (i1 = _n_push; (i1 > 0) && (dist_child[i1-1] > children_min_dist2[j]) ; i1--) { */
+/*         dist_child[i1] = dist_child[i1-1]; */
+/*         sort_child[i1] = sort_child[i1-1]; */
+/*         inbox_child[i1] = inbox_child[i1-1]; */
+/*       } */
       
-      sort_child[i1] = _child_ids[j];
-      dist_child[i1] =  children_min_dist2[j];
-      inbox_child[i1] =  children_inbox[j];
+/*       sort_child[i1] = _child_ids[j]; */
+/*       dist_child[i1] =  children_min_dist2[j]; */
+/*       inbox_child[i1] =  children_inbox[j]; */
     
-      _n_push += 1;
-    }
-    else {
-      if (((children_min_dist2[j] < upper_bound) || (children_inbox[j] == 1))) {
+/*       _n_push += 1; */
+/*     } */
+/*     else { */
+/*       if (((children_min_dist2[j] < upper_bound) || (children_inbox[j] == 1))) { */
         
-        stack[*pos_stack]           = child_id; /* push child in th stack */
-        inbox_stack[*pos_stack]     = children_inbox[j];
-        min_dist2_stack[*pos_stack] = children_min_dist2[j];
+/*         stack[*pos_stack]           = child_id; /\* push child in th stack *\/ */
+/*         inbox_stack[*pos_stack]     = children_inbox[j]; */
+/*         min_dist2_stack[*pos_stack] = children_min_dist2[j]; */
         
-      (*pos_stack)++;
-      }
-    }
+/*       (*pos_stack)++; */
+/*       } */
+/*     } */
  
-  }
+/*   } */
 
-  if (sorted) {
-    for (int j =  _n_push - 1; j >= 0; j--) {
-      int child_id = sort_child[j];
+/*   if (sorted) { */
+/*     for (int j =  _n_push - 1; j >= 0; j--) { */
+/*       int child_id = sort_child[j]; */
       
-      if (((dist_child[j] < upper_bound) || (inbox_child[j] == 1))) {
+/*       if (((dist_child[j] < upper_bound) || (inbox_child[j] == 1))) { */
         
-        stack[*pos_stack]           = child_id; /* push child in th stack */
-        inbox_stack[*pos_stack]     = inbox_child[j];
-        min_dist2_stack[*pos_stack] = dist_child[j];
+/*         stack[*pos_stack]           = child_id; /\* push child in th stack *\/ */
+/*         inbox_stack[*pos_stack]     = inbox_child[j]; */
+/*         min_dist2_stack[*pos_stack] = dist_child[j]; */
         
-        (*pos_stack)++;
-      }
-    }
-  }
+/*         (*pos_stack)++; */
+/*       } */
+/*     } */
+/*   } */
 
-}
+/* } */
 
 /**
  *
@@ -4166,7 +4167,6 @@ double          *box_max_dist
       if (curr_node->n_boxes == 0)
         continue;
 
-      //double min_dist2;
       double max_dist2;
 
       _box_dist2_max (dim,
@@ -4174,7 +4174,6 @@ double          *box_max_dist
                       d,
                       extents,
                       _pt,
-                      //                  &min_dist2,            
                       &max_dist2);            
 
       if (max_dist2 <= box_max_dist[i]) {
@@ -4199,39 +4198,19 @@ double          *box_max_dist
 
         else {
 
-          /* printf ("    is_leaf\n"); */
-                   
           for (int j = 0; j < curr_node->n_boxes; j++) {
 
-            //double box_min_dist2;
             double box_max_dist2;
 
             int   _box_id = bt->box_ids[curr_node->start_id + j];
             const double *_box_extents =  bt->boxes->extents + _box_id*dim*2;
 
-            /* printf ("\n    box_extents %d : %12.5e < %12.5e\n", j, */
-            /*         _box_extents[0], _box_extents[3]); */
-            /* printf ("    box_extents %d : %12.5e < %12.5e\n", j, */
-            /*         _box_extents[1], _box_extents[4]); */
-            /* printf ("    box_extents %d: %12.5e < %12.5e\n", j, */
-            /*         _box_extents[2], _box_extents[5]); */
-
-            int inbox = _box_dist2_max (dim,
-                                        normalized,
-                                        d,
-                                        _box_extents,
-                                        _pt,
-                                        //                        &box_min_dist2,
-                                        &box_max_dist2);
-
-            /* int inbox =_box_dist2 (dim, */
-            /*                        _box_extents, */
-            /*                        _pt, */
-            /*                        &box_min_dist2, */
-            /*                        &box_max_dist2); */
-
-            /* printf ("  pt  %12.5e, %12.5e, %12.5e\n", _pt[0], _pt[1], _pt[2]); */
-            /* printf ("  result  %12.5e, %d\n", box_max_dist2, inbox); */
+            _box_dist2_max (dim,
+                            normalized,
+                            d,
+                            _box_extents,
+                            _pt,
+                            &box_max_dist2);
             
             if (box_max_dist2 < box_max_dist[i]) {
               box_id[i] = _box_id;
@@ -4241,9 +4220,6 @@ double          *box_max_dist
           
         }  
       }
-    }
-    if (1 == 0) {
-      printf(" fin pos_stack : %d %d %12.5e\n", i, box_id[i],  box_max_dist[i]);
     }
   }
 
@@ -4329,8 +4305,6 @@ int             *boxes[]
 
   int *visited_boxes = malloc(sizeof(int) * n_boxes); // A optimiser
 
-  //_node_t *root_node = &(bt->nodes[0]);
-  /* printf("root_node n_boxes : %d %d\n", bt->boxes->n_boxes, n_pts);  */
   size_t n_node = 0;
   size_t n_node_vid = 0;
     
@@ -4338,16 +4312,8 @@ int             *boxes[]
   for (int i = 0; i < n_pts; i++) {
 
     const double *_pt = _pts + 3 * i;
-    const int idx_box_pre = idx_box;
     int flag = 0;
 
-    
-    /* printf("\n\n **** point : %d %12.5e %12.5e %12.5e : %12.5e\n", i, */
-    /*        _pt[0], _pt[1], _pt[2], upper_bound_dist2[i]); */
-    /* printf("           : %d %12.5e %12.5e %12.5e : %12.5e\n", i, */
-    /*         pts[3*i], pts[3*i+1], pts[3*i+2], upper_bound_dist2[i]); */
-    /*   flag = 1; */
-    
     /* Init stack :  push root */
 
     pos_stack = 0;
@@ -4366,8 +4332,6 @@ int             *boxes[]
     while (pos_stack > 0) {
       
       int id_curr_node = stack[--pos_stack];
-
-      const double *extents = bt->extents + dim * 2 * id_curr_node;
 
       _node_t *curr_node = &(bt->nodes[id_curr_node]);
 
@@ -4402,39 +4366,23 @@ int             *boxes[]
         }
 
         else {
-            /* printf ("  leaf\n"); */
+
           for (int j = 0; j < curr_node->n_boxes; j++) {
 
             double box_min_dist2;
 
             int   _box_id = bt->box_ids[curr_node->start_id + j];
-            /* if ((t1+t2+t3) < 1e-6) { */
-            /*   printf ("add _box_id : %d\n", _box_id); */
-            /* } */
+
             if (tag[_box_id] == 0) {
-              /* if ((t1+t2+t3) < 1e-6) { */
-              /*   printf ("  non tagge : %d\n", _box_id); */
-              /* } */
               
               const double *_box_extents =  bt->boxes->extents + _box_id*dim*2;
 
-              /* if ((t1+t2+t3) < 1e-6) { */
-                /* printf ("\n    box extents X : %12.5e < %12.5e\n",_box_extents[0],_box_extents[3]); */
-                /* printf ("    box extents Y : %12.5e < %12.5e\n",_box_extents[1],_box_extents[4]); */
-                /* printf ("    box extents Z : %12.5e < %12.5e\n",_box_extents[2],_box_extents[5]); */
-              /*           } */
-                
               inbox = _box_dist2_min (dim,
                                       normalized,
                                       d,
                                       _box_extents,
                                       _pt,
                                       &box_min_dist2);            
-              //                                  &box_max_dist2);            
-              /* if ((t1+t2+t3) < 1e-6) { */
-                /* printf (" box_min_dist2 < upper_bound_dist2[i] inbox  : %12.5e %12.5e %d %d\n", */
-                /*         box_min_dist2, upper_bound_dist2[i], inbox,_box_id); */
-              /* } */
 
               if ((box_min_dist2 <= upper_bound_dist2[i]) || (inbox == 1)) {
                 if (idx_box >= tmp_s_boxes) {
@@ -4459,9 +4407,8 @@ int             *boxes[]
 
   }
 
-  //  if (n_node_vid > 0) {
-  // printf ("Parcours arbre : %ld noeuds vides sur %ld : %12.5e\%\n", n_node_vid, n_node, (double) n_node_vid/(double) n_node * 100);
-    //}
+  //printf ("[%d] Parours arbre : %ld \n", iappel, n_node);
+  iappel+=1;
   
   for (int i = 0; i < n_pts; i++) {
     _i_boxes[i+1] += _i_boxes[i];
