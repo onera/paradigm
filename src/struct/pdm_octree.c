@@ -128,6 +128,7 @@ typedef struct  {
   PDM_box_set_t  *rankBoxes;  /*!< Rank Boxes */
   int             nUsedRank;  /*!< Number of used ranks */
   int            *usedRank;   /*!< used ranks */
+  double         *usedRankExtents;   /*!< Extents of processes */
 
   PDM_box_tree_t *btShared;   /*!< Shared Boundary box tree */
   _box_tree_stats_t btsShared;/*!< Shared Boundary box tree statistic */
@@ -393,6 +394,7 @@ PDM_octree_free
   free (octree->n_points);
   free (octree->g_num); 
   free (octree->usedRank); 
+  free (octree->usedRankExtents);
 
   PDM_box_set_destroy(&(octree->rankBoxes));
   
@@ -445,20 +447,15 @@ PDM_octree_point_cloud_set
   _octree_t *octree = _get_from_id (id);
 
   const int idebug = 0;
-  double ptprintc[3] = {2.50000e-01,  0.,  1.25000e-01};
 
   if (idebug) {
   
-    /* printf ("*** PDM_octree_point_cloud_set d step 1  \n"); */
+    printf ("*** PDM_octree_point_cloud_set d step 1  \n");
     for (int i = 0; i < n_points; i++) {
-      /* double t1 = (coords[3*i]   - ptprintc[0]) * (coords[3*i]- ptprintc[0]); */
-      /* double t2 = (coords[3*i+1] - ptprintc[1]) * (coords[3*i+1] - ptprintc[1]); */
-      /* double t3 = (coords[3*i+2] - ptprintc[2]) * (coords[3*i+2] - ptprintc[2]); */
-      /* if ((t1+t2+t3) < 1e-6) */
-      /* printf ("     %d (%12.5e %12.5e %12.5e) : \n", i, */
-      /*         coords[3*i], coords[3*i+1], coords[3*i+2]);  */
+      printf ("     %d (%12.5e %12.5e %12.5e) : \n", i,
+              coords[3*i], coords[3*i+1], coords[3*i+2]);
     }
-    /* printf ("*** PDM_octree_point_cloud_set f step 1 \n"); */
+    printf ("*** PDM_octree_point_cloud_set f step 1 \n");
   }
     
   octree->n_points[i_point_cloud] = n_points;
@@ -540,35 +537,15 @@ PDM_octree_build
   PDM_g_num_t *gNumProc = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * nUsedRank);
 
   int idx = 0;
-  /* const int ptprint = 825; */
-  /* double ptprintc[3] = {5.83333e-01,  6.25000e-01,  5.00000e-01}; */
-  /* double ptcible[3] = {5.83333e-01,  1.,  5.00000e-01}; */
- 
 
   for (int i = 0; i < lComm; i++) {
-    int inbox = 0;
     if (n_pts_proc[i] > 0) {
       gNumProc[idx] = idx+1;
       numProc[idx] = i;
-      /* printf ("extents_proc %d %d : ", i, idx); */
-      /* if ((extents_proc[i * sExtents + 0] <= ptcible[0]) && */
-      /*     (ptcible[0] <= extents_proc[i * sExtents + 3])) */
-      /*   inbox += 1; */
-      /* if ((extents_proc[i * sExtents + 1] <= ptcible[1]) && */
-      /*     (ptcible[1] <= extents_proc[i * sExtents + 4])) */
-      /*   inbox += 1; */
-      /* if ((extents_proc[i * sExtents + 2] <= ptcible[2]) && */
-      /*     (ptcible[2] <= extents_proc[i * sExtents + 5])) */
-      /*   inbox += 1; */
       
       for (int j = 0; j < sExtents; j++) {
         extents_proc[idx*sExtents + j] = extents_proc[i*sExtents + j];
-        /* printf (" %12.5e", extents_proc[idx*sExtents + j]); */
       }
-      /* printf("\n"); */
-      /* if (inbox == 3) { */
-      /*   printf("==== pt cible inbox\n"); */
-      /* } */
       idx += 1;
     }
   }
@@ -611,8 +588,8 @@ PDM_octree_build
 
   free (gNumProc);
   free (initLocationProc);
-  
-  free (extents_proc);
+
+  octree->usedRankExtents = extents_proc;
   
 }
 
@@ -883,7 +860,7 @@ PDM_octree_processes_extents_get
 {
   _octree_t *octree = _get_from_id (id);
 
-  *extents = octree->rankBoxes->extents;
+  *extents = octree->usedRankExtents;
   *used_ranks = octree->usedRank;
   
   return octree->nUsedRank;          
@@ -936,10 +913,6 @@ double      *closest_octree_pt_dist2
    * 
    *******************************/
 
-  const int ptprint = 825;
-  double ptprintc[3] = {5.83333e-01,  6.25000e-01,  5.00000e-01};
-  double ptcible[3] = {5.83333e-01,  0.,  5.00000e-01};
-  
   int *rank_id = (int *) malloc (sizeof(int) * n_pts);
   double *rank_min_max_dist = (double *) malloc (sizeof(double) * n_pts);
   
@@ -1053,11 +1026,6 @@ double      *closest_octree_pt_dist2
             " closest point in the closest process \n");
     for (int i = 0; i <  i_recv_pts[lComm]; i++) {
 
-      double t1 = (recv_pts[3*i] - ptprintc[0]) * (recv_pts[3*i] - ptprintc[0]);
-      double t2 = (recv_pts[3*i+1] - ptprintc[1]) * (recv_pts[3*i+1] - ptprintc[1]);
-      double t3 = (recv_pts[3*i+2] - ptprintc[2]) * (recv_pts[3*i+2] - ptprintc[2]);
-      
-      //if ((t1+t2+t3) < 1e-6)
       printf ("     %d (%12.5e %12.5e %12.5e) : %d %d %12.5e\n", i,
               recv_pts[3*i], recv_pts[3*i+1], recv_pts[3*i+2],
               closest_pt[2*i] , closest_pt[2*i+1] ,closest_dist[i]); 
