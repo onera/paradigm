@@ -395,6 +395,115 @@ double                *restrict min_dist2
   
 }
 
+
+/**
+ *
+ * \brief Compute distance to a box
+ *
+ * \param [in]   dim        Dimension
+ * \param [in]   extents    Box extents
+ * \param [in]   coords     Point coords
+ * \param [out]  min_dist2  Square of minimum distance
+ * \param [out]  max_dist2  Sqaure of maximum distance
+ *
+ * \return 1 if point is in the box, 0 otherwise
+ *
+ */
+
+inline static void
+_box_dist2_min_v
+(
+const int              dim,
+const int              normalized,
+const double          *restrict d,
+const int             n_children,
+const double          *restrict extents,
+const double           *restrict coords,
+double                *restrict min_dist2,
+int                   *restrict inbox
+
+)
+{
+
+  double max_contrib[dim*n_children];
+  double min_contrib[dim*n_children];
+
+  if (normalized) {
+
+    for (int j = 0; j < n_children; j++) {
+      for (int i = 0; i < dim; i++) {
+        double val_max = d[i] * (coords[i] - extents[2*dim*j+dim+i]);
+        double val_min = d[i] * (coords[i] - extents[2*dim*j+i]);
+        
+        max_contrib[dim*j+i] = val_max*val_max;
+        min_contrib[dim*j+i] = val_min*val_min;
+
+      }
+    }
+    
+  
+    for (int j = 0; j < n_children; j++) {
+      min_dist2[j] = 0;
+      inbox[j] = 0;
+      for (int i = 0; i < dim; i++) {
+        if (coords[i] > extents[2*dim*j+dim+i]) {
+          min_dist2[j] +=  max_contrib[dim*j+i];
+        }
+        else if (coords[i] < extents[2*dim*j+i]) {
+          min_dist2[j] +=  min_contrib[dim*j+i];
+        }
+      
+        else {
+          inbox[j] += 1;
+        }
+      }
+    }
+
+    for (int j = 0; j < n_children; j++) {
+      inbox[j] = (inbox[j] == dim);
+
+    }
+  }
+
+  else {
+
+    for (int j = 0; j < n_children; j++) {
+      for (int i = 0; i < dim; i++) {
+        double val_max = d[i] * (coords[i] - extents[2*dim*j+dim+i]);
+        double val_min = d[i] * (coords[i] - extents[2*dim*j+i]);
+        
+        max_contrib[dim*j+i] = val_max*val_max;
+        min_contrib[dim*j+i] = val_min*val_min;
+
+      }
+    }
+  
+    for (int j = 0; j < n_children; j++) {
+      min_dist2[j] = 0;
+      inbox[j] = 0;
+      for (int i = 0; i < dim; i++) {
+        if (coords[i] > extents[i+dim]) {
+          min_dist2[j] +=  max_contrib[dim*j+i];
+        }
+        else if (coords[i] < extents[i]) {
+          min_dist2[j] +=  min_contrib[dim*j+i];
+        }
+      
+        else {
+          inbox[j] += 1;
+        }
+      }
+    }
+
+    for (int j = 0; j < n_children; j++) {
+      if (inbox[j] == dim)
+        inbox[j] = 1;
+
+    }
+  }
+  
+}
+
 /**
  *
  * \brief Add children nodes into stack
@@ -440,6 +549,163 @@ int             sorted
   const int *_child_ids = bt->child_ids + id_curr_node*bt->n_children;
 
   int _n_push = 0;
+
+  double children_extents[2*dim*bt->n_children];
+  double children_min_dist2[bt->n_children];
+  int children_inbox[bt->n_children];
+  
+  for (int j = 0; j < bt->n_children; j++) {
+    int child_id = _child_ids[j];
+    const double *child_extents = bt->extents + dim * 2 * child_id;
+    for (int k = 0; k < 2*dim; k++) {
+      children_extents[2*dim*j+k] = child_extents[k];
+    }
+  }
+  
+  _box_dist2_min_v (dim,
+                    normalized,
+                    d,
+                    bt->n_children,
+                    children_extents,
+                    pt,
+                    children_min_dist2,
+                    children_inbox);   
+
+  
+  //printf ("\n");
+  for (int j = 0; j < bt->n_children; j++) {
+
+    //double child_min_dist2;
+
+    int child_id = _child_ids[j];
+
+    //const double *child_extents = bt->extents + dim * 2 * child_id;
+
+    _node_t *curr_node = &(bt->nodes[child_id]);
+      
+    if (curr_node->n_boxes == 0)
+      continue;
+
+    //printf ("%d %d %12.5e\n", j, children_inbox[j], children_min_dist2[j]);
+    /* int inbox = _box_dist2_min (dim, */
+    /*                             normalized, */
+    /*                             d, */
+    /*                             child_extents, */
+    /*                             pt, */
+    /*                             &child_min_dist2);             */
+
+    if (sorted) {
+      int i1 = 0;
+      for (i1 = _n_push; (i1 > 0) && (dist_child[i1-1] > children_min_dist2[j]) ; i1--) {
+        dist_child[i1] = dist_child[i1-1];
+        sort_child[i1] = sort_child[i1-1];
+        inbox_child[i1] = inbox_child[i1-1];
+      }
+      
+      sort_child[i1] = _child_ids[j];
+      dist_child[i1] =  children_min_dist2[j];
+      inbox_child[i1] =  children_inbox[j];
+    
+      _n_push += 1;
+    }
+    else {
+      if (((children_min_dist2[j] < upper_bound) || (children_inbox[j] == 1))) {
+        
+        stack[*pos_stack]           = child_id; /* push child in th stack */
+        inbox_stack[*pos_stack]     = children_inbox[j];
+        min_dist2_stack[*pos_stack] = children_min_dist2[j];
+        
+      (*pos_stack)++;
+      }
+    }
+ 
+  }
+
+  if (sorted) {
+    for (int j =  _n_push - 1; j >= 0; j--) {
+      int child_id = sort_child[j];
+      
+      if (((dist_child[j] < upper_bound) || (inbox_child[j] == 1))) {
+        
+        stack[*pos_stack]           = child_id; /* push child in th stack */
+        inbox_stack[*pos_stack]     = inbox_child[j];
+        min_dist2_stack[*pos_stack] = dist_child[j];
+        
+        (*pos_stack)++;
+      }
+    }
+  }
+
+}
+
+/**
+ *
+ * \brief Add children nodes into stack
+ *
+ * \param [in]    bt            Box tree
+ * \param [in]    dim           Dimension
+ * \param [in]    id_curr_node  Identifier of current node
+ * \param [in]    upper_bound   Upper_bound criteria to store a child in stack
+ * \param [in]    pt            Distance to this point must be lesser van upper_bound
+ * \param [inout] pos_stack     Position in the stack
+ * \param [inout] stack         Stack
+ *
+ */
+
+inline static void          
+_push_child_in_stack_v0 
+(
+PDM_box_tree_t *bt, 
+const int       dim,
+const int              normalized,
+const double          *restrict d,
+const int       id_curr_node,
+const double    upper_bound,
+const double    *restrict pt,        
+int             *restrict pos_stack, 
+int             *restrict stack,
+int             *restrict inbox_stack,
+double          *restrict min_dist2_stack,
+int             flag,
+int             sorted
+)
+{
+  int sort_child[bt->n_children];
+  double dist_child[bt->n_children];
+  int inbox_child[bt->n_children];
+  
+  for (int i = 0; i < bt->n_children; i++) {
+    dist_child[i] = HUGE_VAL;
+  }
+
+  /* Sort children and store them into the stack */
+
+  const int *_child_ids = bt->child_ids + id_curr_node*bt->n_children;
+
+  int _n_push = 0;
+
+  /* double children_extents[2*dim*bt->n_children]; */
+  /* double children_min_dist2[bt->n_children]; */
+  /* int children_inbox[bt->n_children]; */
+  
+  /* for (int j = 0; j < bt->n_children; j++) { */
+  /*   int child_id = _child_ids[j]; */
+  /*   const double *child_extents = bt->extents + dim * 2 * child_id; */
+  /*   for (int k = 0; k < 2*dim; k++) { */
+  /*     children_extents[2*dim*j+k] = child_extents[k]; */
+  /*   } */
+  /* } */
+  
+  /* _box_dist2_min_v (dim, */
+  /*                   normalized, */
+  /*                   d, */
+  /*                   bt->n_children, */
+  /*                   children_extents, */
+  /*                   pt, */
+  /*                   children_min_dist2, */
+  /*                   children_inbox);    */
+
+  //printf ("\n");
   for (int j = 0; j < bt->n_children; j++) {
 
     double child_min_dist2;
@@ -458,10 +724,9 @@ int             sorted
                                 d,
                                 child_extents,
                                 pt,
-                                &child_min_dist2);            
+                                &child_min_dist2);
 
-    
-
+    //printf ("%d %d %12.5e\n", j, inbox, child_min_dist2);
     if (sorted) {
       int i1 = 0;
       for (i1 = _n_push; (i1 > 0) && (dist_child[i1-1] > child_min_dist2) ; i1--) {
@@ -471,8 +736,8 @@ int             sorted
       }
       
       sort_child[i1] = _child_ids[j];
-      dist_child[i1] = child_min_dist2;
-      inbox_child[i1] = inbox;
+      dist_child[i1] =  child_min_dist2;
+      inbox_child[i1] =  inbox;
     
       _n_push += 1;
     }
@@ -3916,7 +4181,7 @@ double          *box_max_dist
 
         if (!curr_node->is_leaf) {
       
-          _push_child_in_stack (bt,
+          _push_child_in_stack_v0 (bt,
                                 dim,
                                 normalized,
                                 d,
@@ -4120,7 +4385,7 @@ int             *boxes[]
       if ((min_dist2 <= upper_bound_dist2[i]) || (inbox == 1)) {
         if (!curr_node->is_leaf) {
 
-          _push_child_in_stack (bt,
+          _push_child_in_stack_v0 (bt,
                                 dim,
                                 normalized,
                                 d,
