@@ -1384,12 +1384,12 @@ _distrib_cell
 
     /* reordering cells and faces */
     meshPart->newToOldOrderCell = (int *) malloc (sizeof(int) * meshPart->nCell);
-    for (int i = 0; i < meshPart->nCell; i++){
-      meshPart->newToOldOrderCell[i] = i;
+    for (int i1 = 0; i1 < meshPart->nCell; i1++){
+      meshPart->newToOldOrderCell[i1] = i1;
     }
     meshPart->newToOldOrderFace = (int *) malloc (sizeof(int) * meshPart->nFace);
-    for (int i = 0; i < meshPart->nFace; i++){
-      meshPart->newToOldOrderFace[i] = i;
+    for (int i1 = 0; i1 < meshPart->nFace; i1++){
+      meshPart->newToOldOrderFace[i1] = i1;
     }
 
     /* Free */

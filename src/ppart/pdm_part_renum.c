@@ -736,7 +736,7 @@ _renum_cells_random
     
     _random_order (part->nCell, part->newToOldOrderCell);
     
-    PDM_part_reorder_cell (part->nFace, part->newToOldOrderCell);
+    PDM_part_reorder_cell (part, part->newToOldOrderCell);
     
   }
 }
