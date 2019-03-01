@@ -94,7 +94,7 @@ const PDM_MPI_Comm comm
   idx_t _ncon = *ncon;; 
   idx_t _nparts = *nparts; 
 
-  idx_t options[METIS_NOPTIONS]; /* Options */
+  idx_t options[3]; /* Options */
   /* METIS_SetDefaultOptions(options); */
 
   /* options[METIS_OPTION_NUMBERING] = 0; //C numbering = 0 (Fortran = 1) */
@@ -102,8 +102,8 @@ const PDM_MPI_Comm comm
   /* options[METIS_OPTION_CONTIG] = 1; //Force contiguous partitions */
   //The graph should be compressed by combining together vertices that have identical adjacency lists.
   options[0] = 0; 
-  options[0] = 0; 
-  options[0] = 0; 
+  options[1] = 0; 
+  options[2] = 0; 
 
   //METIS provide the METIS SetDefaultOptions routine to set the options to their default values. 
   //After that, the application can just modify the options that is interested in modifying.
