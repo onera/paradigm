@@ -62,7 +62,7 @@ if (PARMETIS_LIBRARIES AND PARMETIS_INCLUDE_DIRS)
 
 int main() {
 #ifdef PARMETIS_SUBMINOR_VERSION
-  printf(\"%i.%i.%i\\n\", 
+  printf(\"%i.%i.%i\", 
          PARMETIS_MAJOR_VERSION,
 	 PARMETIS_MINOR_VERSION,  
          PARMETIS_SUBMINOR_VERSION);
