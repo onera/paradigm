@@ -258,7 +258,8 @@ PDM_block_to_block_exch
 
   s_recvBuffer = i_recvBuffer[_btb->nRank-1] + n_recvBuffer[_btb->nRank-1];
 
-  unsigned char *recvBuffer = (unsigned char *) malloc(sizeof(unsigned char) * s_recvBuffer);
+  unsigned char *recvBuffer =
+    (unsigned char *) malloc(sizeof(unsigned char) * s_recvBuffer);
 
   /*
    * Data exchange

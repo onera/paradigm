@@ -230,8 +230,8 @@ PDM_block_to_part_exch
   unsigned char *sendBuffer = NULL;
   unsigned char *recvBuffer = NULL;
   
-  int s_sendBuffer = 0;
-  int s_recvBuffer = 0;
+  size_t s_sendBuffer = 0;
+  size_t s_recvBuffer = 0;
   
   int s_comm1 = _btp->s_comm - 1;
   
@@ -344,6 +344,8 @@ PDM_block_to_part_exch
       }
     }
     free(sendStride);
+    free(sendStride_idx);
+    
   }
       
   else if (t_stride == PDM_STRIDE_CST) {
