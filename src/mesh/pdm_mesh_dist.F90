@@ -17,6 +17,8 @@
 ! License along with this library. If not, see <http://www.gnu.org/licenses/>.
 !-----------------------------------------------------------------------------
 
+#include "pdm_configf.h"
+
 module mod_mesh_dist
 
   use mod_pdm
