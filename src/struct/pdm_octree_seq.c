@@ -100,7 +100,7 @@ typedef struct  {
 
 static PDM_Handles_t *_octrees   = NULL;
 
-static const double _eps_default = 1.e-25;
+static const double _eps_default = 1.e-12;
 
 /*=============================================================================
  * Private function definitions
