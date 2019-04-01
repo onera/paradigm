@@ -176,13 +176,13 @@ module mod_mesh_dist
                
     end subroutine pdm_mesh_dist_surf_mesh_part_set
 
-    !> \brief Process merge points
+    !> \brief Compute distance
     !!
     !! \param [in]   id  Identifier
     !!
 
-    subroutine pdm_mesh_dist_process (id) &
-         bind (c, name = 'PDM_mesh_dist_process')
+    subroutine pdm_mesh_dist_compute (id) &
+         bind (c, name = 'PDM_mesh_dist_compute')
       use iso_c_binding
         
       implicit none
@@ -243,8 +243,8 @@ module mod_mesh_dist
     !! \param [in]  id       Identifier
     !!
 
-    subroutine pdm_mesh_dump_times (id) &
-         bind (c, name = 'PDM_mesh_dump_times')
+    subroutine pdm_mesh_dist_dump_times (id) &
+         bind (c, name = 'PDM_mesh_dist_dump_times')
 
       use iso_c_binding
         
