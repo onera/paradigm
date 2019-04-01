@@ -319,41 +319,22 @@ PDM_gnum_location_compute
                                                        _gloc->n_part_out,
                                                        _gloc->comm);
 
-  const int stride = 1;
-  
-  part_stride = (int **) malloc (sizeof(int *) * _gloc->n_part_out);
-  for (int i = 0; i < _gloc->n_part_out; i++) {
-    part_stride[i] = malloc (sizeof(int) * _gloc->n_elts_out[i]);
-  }
-
-  PDM_block_to_part_exch (btp,
+  PDM_block_to_part_exch2 (btp,
                           s_data,
-                          PDM_STRIDE_CST,
-                          (int *) &stride,
+                          PDM_STRIDE_VAR,
                           block_stride,
-                          NULL,
-                          (void **) part_stride);
-
+                          block_data,
+                          &part_stride,
+                          &((void **) _gloc->location));
+  
   _gloc->location_idx = (int **) malloc (sizeof(int *) * _gloc->n_part_out);
-  _gloc->location = (int **) malloc (sizeof(int *) * _gloc->n_part_out);
-
   for (int i = 0; i < _gloc->n_part_out; i++) {
     _gloc->location_idx[i] = malloc (sizeof(int) * (_gloc->n_elts_out[i] + 1));
     _gloc->location_idx[i][0] = 0;
     for (int j = 0; j < _gloc->n_elts_out[i]; j++) {
       _gloc->location_idx[i][j+1] = _gloc->location_idx[i][j] + part_stride[i][j];;
     }
-     _gloc->location[i] = malloc (sizeof(int) * _gloc->location_idx[i][_gloc->n_elts_out[i]]);
   }
-
-  PDM_block_to_part_exch (btp,
-                          s_data,
-                          PDM_STRIDE_VAR,
-                          block_stride,
-                          block_data,
-                          part_stride,
-                          (void **) _gloc->location);
-  
   free (block_stride);
   free (block_data);
   
