@@ -126,6 +126,20 @@ PDM_surf_part_faceLnToGn_get
 PDM_surf_part_t *part
 );
 
+/**
+ * \brief Dump a surf_part_t object
+ *
+ * This function dumps a PDM_surf_part_t structure
+ *
+ * \param [in]  part       to dump
+ *
+ */
+
+void
+PDM_surf_part_dump
+(
+PDM_surf_part_t *part
+);
 
 
 

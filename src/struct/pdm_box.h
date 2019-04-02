@@ -434,6 +434,10 @@ PDM_box_distrib_dump_statistics(const PDM_box_distrib_t  *distrib,
 
 
 /*----------------------------------------------------------------------------*/
+void
+PDM_box_distrib_dump(const PDM_box_distrib_t  *distrib);
+
+/*----------------------------------------------------------------------------*/
 
 #ifdef __cplusplus
 }

@@ -1911,8 +1911,9 @@ PDM_box_distrib_create(int  n_boxes,
 
   new_distrib->index = (int *) malloc((n_ranks + 1) * sizeof(int));
 
-  for (i = 0; i < n_ranks + 1; i++)
+  for (i = 0; i < n_ranks + 1; i++){
     new_distrib->index[i] = 0;
+  }
 
   new_distrib->list = NULL;
 
@@ -2055,6 +2056,37 @@ PDM_box_distrib_dump_statistics(const PDM_box_distrib_t  *distrib,
 
   }
   fflush(stdout);
+}
+
+/*----------------------------------------------------------------------------
+ * Display a histogram on leaves associated to the boxes and several
+ * other pieces of information (min, max, ...)
+ *
+ * parameters:
+ *   distrib <-- pointer to the PDM_box_distrib_t structure
+ *   comm    <-- associated MPI communicator
+ *---------------------------------------------------------------------------*/
+
+void
+PDM_box_distrib_dump(const PDM_box_distrib_t  *distrib)
+{
+  PDM_printf("====  PDM_box_distrib_dump ==== \n");
+  PDM_printf("n_ranks : %d \n",distrib->n_ranks);
+  PDM_printf("n_boxes : %d \n",distrib->n_boxes);
+  PDM_printf("morton_index : %d \n", distrib->morton_index);
+  for (int i=0; i<distrib->n_ranks+1; i++)
+	  PDM_printf("%d ",distrib->morton_index[i]);
+  PDM_printf("\n");
+  PDM_printf("max_level : %d \n",distrib->max_level);
+  PDM_printf("fit : %f \n",distrib->fit);
+
+  PDM_printf("index : ");
+  for (int i = 0; i < distrib->n_ranks + 1; i++)
+    PDM_printf("%d ",distrib->index[i]);
+  PDM_printf("\n");
+  PDM_printf("list : %d \n",distrib->list);
+  fflush(stdout);
+  PDM_printf("====  PDM_box_distrib_dump ==== terminated ====\n");
 }
 
 /*---------------------------------------------------------------------------*/
