@@ -188,7 +188,7 @@ module mod_mesh_dist
       implicit none
 
       integer(c_int), value     :: id
-    end subroutine pdm_mesh_dist_process
+    end subroutine pdm_mesh_dist_compute
 
     !> \brief Get mesh distance
     !!
@@ -251,7 +251,7 @@ module mod_mesh_dist
       implicit none
 
       integer(c_int), value     :: id
-    end subroutine pdm_mesh_dump_times
+    end subroutine pdm_mesh_dist_dump_times
     
   end interface
 
