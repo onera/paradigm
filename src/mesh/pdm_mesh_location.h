@@ -109,7 +109,7 @@ PDM_mesh_location_cloud_set
  */
 
 void
-PDM_mesh_location_nodal_mesh_set
+PDM_mesh_location_shared_nodal_mesh_set
 (
  const int  id,
  const int  mesh_nodal_id
@@ -132,12 +132,8 @@ void
 PDM_mesh_location_volume_mesh_global_data_set
 (
  const int         id,
- const PDM_g_num_t n_g_cell,
- const PDM_g_num_t n_g_face,
- const PDM_g_num_t n_g_vtx,
  const int         n_part
 );
-
 
 
 /**
@@ -146,10 +142,11 @@ PDM_mesh_location_volume_mesh_global_data_set
  *
  * \param [in]   id            Identifier
  * \param [in]   i_part        Partition to define  
- * \param [in]   n_face        Number of faces                     
+ * \param [in]   n_cell        Number of cells                     
  * \param [in]   cell_face_idx Index in the cell -> face connectivity
  * \param [in]   cell_face     cell -> face connectivity
  * \param [in]   cell_ln_to_gn Local cell numbering to global cel numbering 
+ * \param [in]   n_face        Number of faces                     
  * \param [in]   face_vtx_idx  Index in the face -> vertex connectivity
  * \param [in]   face_vtx      face -> vertex connectivity
  * \param [in]   face_ln_to_gn Local face numbering to global face numbering 
@@ -160,14 +157,15 @@ PDM_mesh_location_volume_mesh_global_data_set
  */
 
 void
-PDM_mesh_location_surf_volume_part_set
+PDM_mesh_location_volume_part_set
 (
  const int          id,
  const int          i_part,
- const int          n_face,
+ const int          n_cell,
  const int         *cell_face_idx,
  const int         *cell_face,
  const PDM_g_num_t *cell_ln_to_gn,
+ const int          n_face,
  const int         *face_vtx_idx,
  const int         *face_vtx,
  const PDM_g_num_t *face_ln_to_gn,
@@ -244,7 +242,7 @@ void
 PDM_mesh_location_dump_times
 (
  const int id
- );
+);
 
 #ifdef	__cplusplus
 }
