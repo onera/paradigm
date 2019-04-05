@@ -325,7 +325,7 @@ PDM_gnum_location_compute
                           block_stride,
                           block_data,
                           &part_stride,
-                          &((void **) _gloc->location));
+                           (void ***) &_gloc->location);
   
   _gloc->location_idx = (int **) malloc (sizeof(int *) * _gloc->n_part_out);
   for (int i = 0; i < _gloc->n_part_out; i++) {
