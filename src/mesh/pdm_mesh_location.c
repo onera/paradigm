@@ -392,6 +392,11 @@ PDM_mesh_location_volume_part_set
  const PDM_g_num_t *vtx_ln_to_gn
 )
 {
+
+  /*
+   * Creation de mesh nodal
+   */
+
   /* PDM_l_num_t      *face_vtx_nb; */
   /* PDM_l_num_t      *cell_face_nb; */
 
@@ -407,6 +412,33 @@ PDM_mesh_location_volume_part_set
   /*                                     cell_face_nb, */
   /*                                     cell_face, */
   /*                                     PDM_g_num_t      *numabs);  */
+
+  /*
+   * Construction bbtree
+   */
+
+
+  /*
+   * Distribution dbbtree
+   */
+
+
+  /*
+   * Recherche candidats
+   *   - coder localisation dans ddbtree
+   */
+
+
+  /*
+   * Distribution des operations elementaires
+   */
+
+  
+  /*
+   * Calculs elementaires de localisation
+   */
+
+
 }
 
 
