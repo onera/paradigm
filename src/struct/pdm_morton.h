@@ -143,6 +143,8 @@ PDM_morton_encode(int                dim,
  *   n_coords <-- nomber of coordinates in array
  *   coords   <-- coordinates in the grid (interlaced, not normalized)
  *   m_code   --> array of corresponding Morton codes
+ *   d        --> Normalization (dilatation component)
+ *   s        --> Normalization (translation component)
  *----------------------------------------------------------------------------*/
 
 void
@@ -151,7 +153,9 @@ PDM_morton_encode_coords(int                dim,
                          const double   extents[],
                          size_t             n_coords,
                          const double   coords[],
-                         PDM_morton_code_t  m_code[]);
+                         PDM_morton_code_t  m_code[],
+                         double             d[3],
+                         double             s[3]);
 
 /*----------------------------------------------------------------------------
  * Given a Morton code in the grid, compute the Morton codes of its
@@ -229,6 +233,19 @@ PDM_morton_a_gt_b(PDM_morton_code_t  a,
                   PDM_morton_code_t  b);
 
 /*----------------------------------------------------------------------------
+ * Copy the code a into the code b
+ *
+ * parameters:
+ *   code_a <-- code a 
+ *   code_b <-> copy of the code a into the code b
+ *
+ *----------------------------------------------------------------------------*/
+
+void
+PDM_morton_copy (PDM_morton_code_t  a,
+                 PDM_morton_code_t  *b);
+
+/*----------------------------------------------------------------------------
  * Test if Morton code "a" is greater or equal to Morton code "b"
  *
  * parameters:
@@ -242,6 +259,36 @@ PDM_morton_a_gt_b(PDM_morton_code_t  a,
 _Bool
 PDM_morton_a_ge_b(PDM_morton_code_t  a,
                   PDM_morton_code_t  b);
+
+
+/*----------------------------------------------------------------------------
+ * Test if Morton code "a" is equal to Morton code "b" to the 
+ * level = max (level a, level b)
+ *
+ * parameters:
+ *   code_a <-- first Morton code to compare
+ *   code_b <-- second Morton code to compare
+ *
+ * returns:
+ *  true or false
+ *----------------------------------------------------------------------------*/
+
+_Bool
+PDM_morton_a_eq_b(PDM_morton_code_t  a,
+                  PDM_morton_code_t  b);
+
+/*----------------------------------------------------------------------------
+ * Assigne a level to Morton code
+ *
+ * parameters:
+ *   code <-- Morton code 
+ *   l    <-- Level to assign
+ *
+ *----------------------------------------------------------------------------*/
+
+void
+PDM_morton_assign_level (PDM_morton_code_t  a,
+                         int                l);
 
 /*----------------------------------------------------------------------------
  * Get the index associated to a Morton code using a binary search.
