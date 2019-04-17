@@ -38,6 +38,23 @@ extern "C" {
  *============================================================================*/
 
 /**
+ * \struct _l_octant_t
+ * \brief  Define a list of octants
+ * 
+ */
+
+/* typedef struct  { */
+
+/*   PDM_morton_code_t code; /\*!< morton code *\/ */
+
+/*   int  n_points;          /\*!< Number of points in octant*\/ */
+/*   int  range;             /\*!< Start index of point list for each octant *\/ */
+/*   int  is_leaf;           /\*!< IS a leaf >*\/ */
+  
+/* } _octant_t; */
+
+
+/**
  * \struct _octant_t
  * \brief  Define an octant
  * 
@@ -45,14 +62,22 @@ extern "C" {
 
 typedef struct  {
 
-  PDM_morton_code_t code; /*!< morton code */
+  int   n_nodes;                 /*!< Current number of nodes in octree */
+  int   n_nodes_max;             /*!< Maximum number of nodes in octree */
 
-  int  n_points;          /*!< Number of points in octant*/
-  int  range;             /*!< Start index of point list for each octant */
-  int  is_leaf;           /*!< IS a leaf >*/
+  PDM_morton_code_t *codes;        /*!< Morton codes */
+
+  int  *n_points;          /*!< Number of points in octant*/
+  int  *range;             /*!< Start index of point list for each octant */
+  int  *is_leaf;           /*!< IS a leaf >*/
+
+  int   *neighbor_idx;
+  int   *neighbors;               /*!< rank + id_node size = 2 * n_nodes */
+  int   *ancestor;                /*!< rank + id_node size = n_nodes */
+  int   *child;                /*!< rank + id_node size = 8 * n_nodes */
+  int   dim;
   
-} _octant_t;
-
+} _l_octant_t;
 
 /**
  * \struct _octree_t
@@ -77,15 +102,7 @@ typedef struct  {
   PDM_g_num_t *points_gnum;          /*!< Point global number */
   PDM_morton_code_t  *points_code;   /*!< Morton codes */
 
-  int   n_nodes;                 /*!< Current number of nodes in octree */
-  int   n_nodes_max;             /*!< Maximum number of nodes in octree */
-  _octant_t   *nodes;            /*!< Array of octree nodes
-                                       (size: n_nodes_max) */
-  int   *neighbor_idx;
-  int   *neighbors;               /*!< rank + id_node size = 2 * n_nodes */
-  int   *ancestor;                /*!< rank + id_node size = n_nodes */
-  int   *child;                /*!< rank + id_node size = 8 * n_nodes */
-  double   *extents;                /*!< rank + id_node size = 6 * n_nodes */
+  _l_octant_t *octants;       /*!< list of octants */
 
   PDM_MPI_Comm comm;           /*!< MPI communicator */
   int   dim;                     /*!< Dimension */
@@ -107,39 +124,179 @@ static const double _eps_default = 1.e-12;
 
 /**
  *
- * \brief Check size of the octree and realloc it if necessary
+ * \brief Free octants
  *
- * \param [in]   octree   octree to realloc
+ * \param [inout]   octants     Octants
+ *
+ * \return NULL
+ *
+ */
+
+static _l_octant_t *
+_octants_free
+(
+ _l_octant_t *octants
+)
+{
+  octants->n_nodes_max = 0;
+  octants->n_nodes     = 0;
+
+  if (octants->codes != NULL) {
+    free (octants->codes);
+  }
+
+  if (octants->n_points != NULL) {
+    free (octants->n_points);
+  }
+
+  if (octants->is_leaf != NULL) {
+    free (octants->is_leaf);
+  }
+
+  if (octants->range != NULL) {
+    free (octants->range);
+  }
+
+  if (octants->ancestor != NULL) {
+    free (octants->ancestor);
+  }
+
+  if (octants->child != NULL) {
+    free (octants->child);
+  }
+
+  if (octants->neighbor_idx != NULL) {
+    free (octants->neighbor_idx);
+  }
+
+  if (octants->neighbors != NULL) {
+    free (octants->neighbors);
+  }
+
+  free(octants);
+  return NULL;
+}
+
+
+/**
+ *
+ * \brief Initialize list of octants
+ *
+ * \param [inout]   octants     Octants
+ * \param [in]      octant_dim  Dimension of an octant
+ * \param [in]      init_size   Initial size of octants
  *
  */
 
 static void
-_check_alloc
+_octants_init
 (
- _octree_t *octree
+ _l_octant_t *octants,
+ const int   octant_dim,
+ const int   init_size
 )
 {
-  if (octree->n_nodes >= octree->n_nodes_max) {
+  octants->n_nodes_max = init_size;
+  octants->n_nodes     = 0;
+  
+  octants->codes    = malloc (sizeof(PDM_morton_code_t) * octants->n_nodes_max);
+  octants->n_points = malloc (sizeof(int) * octants->n_nodes_max);
+  octants->range = malloc (sizeof(int) * octants->n_nodes_max);
+  octants->is_leaf = malloc (sizeof(int) * octants->n_nodes_max);
+  octants->ancestor = malloc (sizeof(int) * octants->n_nodes_max);
+  octants->child    = malloc (sizeof(int) * octant_dim * octants->n_nodes_max);
+  
+  octants->neighbor_idx = NULL;
+  octants->neighbors    = NULL;
+  octants->dim = octant_dim;
+}
+
+
+/**
+ *
+ * \brief Check size of the size of a list of octants
+ *
+ * \param [in]   octants     Octants
+ *
+ */
+
+static void
+_octants_check_alloc
+(
+ _l_octant_t *octants
+)
+{
+  if (octants->n_nodes >= octants->n_nodes_max) {
     
-    if (octree->n_nodes_max == 0) {
-      octree->n_nodes_max = octree->n_points;
-    }
-    else {
-      octree->n_nodes_max *= 2;
-    }
+    octants->n_nodes_max *= 2;
     
-    octree->nodes    = realloc (octree->nodes,
-                                sizeof(_octant_t) * octree->n_nodes_max);
-    octree->ancestor = realloc (octree->ancestor,
-                                sizeof(_octant_t) * octree->n_nodes_max);
-    octree->child    = realloc (octree->child,
-                                sizeof(_octant_t) * octree->dim * octree->n_nodes_max);
-    octree->extents  = realloc (octree->extents,
-                                sizeof(_octant_t) * octree->dim * 2 * octree->n_nodes_max);
-    octree->neighbor_idx = NULL;
-    octree->neighbors      = NULL;
+    octants->codes    = realloc (octants->codes,
+                                 sizeof(PDM_morton_code_t) * octants->n_nodes_max);
+    octants->n_points = realloc (octants->n_points,
+                                 sizeof(int) * octants->n_nodes_max);
+    octants->range = realloc (octants->range,
+                              sizeof(int) * octants->n_nodes_max);
+    octants->is_leaf = realloc (octants->is_leaf,
+                                sizeof(int) * octants->n_nodes_max);
+    octants->ancestor = realloc (octants->ancestor,
+                                 sizeof(int) * octants->n_nodes_max);
+    octants->child    = realloc (octants->child,
+                                 sizeof(int) * octants->dim * octants->n_nodes_max);
+
+    octants->neighbor_idx = NULL;
+    octants->neighbors    = NULL;
     
   }
+}
+
+
+
+/**
+ *
+ * \brief Check size of the size of a list of octants
+ *
+ * \param [in]   octants     Octants
+ *
+ */
+
+static void
+_octants_add
+(
+ _l_octant_t *octants,
+ const PDM_morton_code_t code,
+ const int n_points,
+ const int range,
+ const int is_leaf,
+ const int ancestor,
+ const int *child_id
+)
+{
+
+  _octants_check_alloc (octants);
+    
+  const int idx = octants->n_nodes;
+    
+  PDM_morton_copy (code, octants->codes + idx);
+  
+  octants->n_points[idx] = n_points;
+  
+  octants->range[idx] = range;
+                             
+  octants->is_leaf[idx] = is_leaf;
+    
+  octants->ancestor[idx] = ancestor;
+
+  if (child_id != NULL) {
+    int idx2 = idx * octants->dim;
+    for (int i = 0; i < octants->dim; i++) {
+      octants->child[idx2+i] = child_id[i];
+    }
+  }
+
+
+  octants->neighbor_idx = NULL;
+  octants->neighbors    = NULL;
+    
 }
 
 
@@ -165,7 +322,242 @@ _get_from_id
 
   return octree;
 }
+
+
+/**
+ *
+ * \brief Build minimal octree between two octants
+ *
+ * \param [in]     octree    Current octree 
+ * \param [in]     code      Morton code
+ * \param [inout]  extents   Extents associated to the Morton code 
+ *
+ */
+
+static void
+_extents
+(
+ _octree_t *octree,
+ PDM_morton_code_t code,
+ double    extents[]
+)
+{
+  for (int i = 0; i < octree->dim; i++) { 
+    extents[i] =
+      ((double) code.X[i]/(double) code.L)* octree->d[i] + octree->s[i]; 
+    extents[octree->dim + i] =
+      (((double) code.X[i] + 1)/(double) code.L)* octree->d[i] + octree->s[i]; 
+  }
+}
+
+
+/**
+ *
+ * \brief Removing overlaps from a sorted lis of octants
+ *
+ * \param [inout]  octants A lis of octants
+ *
+ */
+
+void
+_linearize
+(
+ _l_octant_t octants
+)
+{
+}
+
+
+/**
+ *
+ * \brief Constructing a minimal linear octree between two octants
+ *
+ * \param [in]  a     Morton code a
+ * \param [in]  b     Morton code b
+ *
+ * \return octants The minimal linear octree between a and b
+ *
+ */
+
+_l_octant_t *
+_complete_region
+(
+ PDM_morton_code_t a,
+ PDM_morton_code_t b
+)
+{
+  _l_octant_t *_octants = NULL;
+
+
+  //TODO:
+  
+  return _octants;
+}
+
+/**
+ *
+ * \brief Constructing a complete linear octree from partial set of octants
+ *
+ * \param [in]  L     Distributed list of octants
+ * \param [in]  comm  MPI Communicator  
+ *
+ * \return octants The complete linear octree
+ *
+ */
+
+_l_octant_t *
+_complete_octree
+(
+ _l_octant_t *L,
+ PDM_MPI_Comm comm
+)
+{
+  _l_octant_t *_octants = NULL;
+
+   /* _remove_duplicates (L, comm); */
+
+   /*     PDM_morton_build_rank_index(dim, */
+   /*                              max_level, */
+   /*                              octree->n_points, */
+   /*                              octree->points_code, */
+   /*                              weight, */
+   /*                              order, */
+   /*                              morton_index, */
+   /*                              octree->comm); */
+
+  
+  return _octants;
+}
+
+
+/**
+ *
+ * \brief Partitioning octants into large contiguous blocks. The list of octants
+ *        is redistributed
+ *
+ * \param [inout]  octant_list  a list of octants,  
+ *
+ * \return block_octants A list of blocks
+ *
+ */
+
+_l_octant_t *
+_block_partition
+(
+ _l_octant_t *octant_list,
+ const PDM_MPI_Comm comm
+)
+{
  
+  /* Complete region */
+
+  _l_octant_t *T = _complete_region (octant_list->codes[0],
+                                     octant_list->codes[octant_list->n_nodes]);
+
+  int max_level = -1;
+  for (int i = 0; i < octant_list->n_nodes; i++) {
+    max_level = PDM_MAX (octant_list->codes[i].L, max_level);
+  }
+
+  /* Complete octree */
+
+  _l_octant_t C;
+  
+  _octants_init (&C, octant_list->dim, octant_list->n_nodes);
+                 
+  for (int i = 0; i < octant_list->n_nodes; i++) {
+
+    if (octant_list->codes[i].L >= max_level) {
+      _octants_add (&C,
+                    octant_list->codes[i],
+                    octant_list->n_points[i],
+                    octant_list->range[i],
+                    octant_list->is_leaf[i],
+                    octant_list->ancestor[i],
+                    NULL);
+    }
+  }
+
+  _octants_free (&C);
+
+  _l_octant_t *G = _complete_octree (&C, comm);
+  
+  _octants_free (T);
+
+  /* 
+   * Compute weight 
+   */ 
+
+  /* - exchange codes to ranks (weight per rank)*/
+  
+  int n_ranks;
+  PDM_MPI_Comm_size(comm, &n_ranks);
+
+  int rank;
+  PDM_MPI_Comm_rank(comm, &rank);
+  
+  int *code_buff = malloc (sizeof(int) * (octant_list->dim + 1));
+  int *rank_buff = malloc (sizeof(int) * n_ranks * (octant_list->dim + 1));
+  code_buff[0] = G->codes[0].L;
+
+  for (int i = 0; i < octant_list->dim; i++) {
+    code_buff[i+1] =  G->codes[0].X[i];
+  }
+  
+  PDM_MPI_Allgather (code_buff, octant_list->dim + 1, PDM_MPI_INT,
+                     rank_buff, octant_list->dim + 1, PDM_MPI_INT,
+                     comm);
+
+  PDM_morton_code_t *rank_codes = malloc (sizeof(PDM_morton_code_t) * n_ranks);
+  
+  for (int i = 0; i < n_ranks; i++) {
+    rank_codes[i].L = rank_buff[(octant_list->dim + 1) * i];
+    for (int j = 0; j < octant_list->dim; j++) {
+      rank_codes[i].X[j] = rank_buff[(octant_list->dim + 1) * i + j];
+    }
+  }
+
+  free (code_buff);
+
+  for (int i = 0; i < octant_list->n_nodes; i++) {
+    int irank = PDM_morton_binary_search(n_ranks,
+                                         octant_list->codes[i],
+                                         rank_codes);
+    //rank_counts[irank] += 1;
+  }
+
+  /* - compute weight of each cell (*/
+
+
+
+
+
+  
+  /* 
+   * Load balancing G from weight 
+   */
+
+  /* PDM_morton_build_rank_index(dim, */
+  /*                             max_level, */
+  /*                             octree->n_points, */
+  /*                             octree->points_code, */
+  /*                             weight, */
+  /*                             order, */
+  /*                             morton_index, */
+  /*                             octree->comm); */
+     
+  /* Redistribute octant_list : MPI_allgather about codes */
+
+  /* 
+   * Redistirbute octant list from coarse load balancing 
+   */
+
+
+  
+  return G;
+}
+
+
 /*=============================================================================
  * Public function definitions
  *============================================================================*/
@@ -222,15 +614,7 @@ PDM_para_octree_create
   octree->points_gnum = NULL;
   octree->points_code = NULL;
 
-  octree->n_nodes = 0;
-  octree->n_nodes_max = -1;
-  octree->nodes = NULL;
-  
-  octree->neighbor_idx = NULL;
-  octree->neighbors = NULL;
-  octree->ancestor = NULL;
-  octree->child = NULL;
-  octree->extents = NULL;
+  octree->octants = NULL;
   
   octree->comm = comm;
     
@@ -271,29 +655,7 @@ PDM_para_octree_free
     free (octree->points_code);
   }
 
-  if (octree->nodes != NULL) {
-    free (octree->nodes);
-  }
-  
-  if (octree->neighbor_idx != NULL) {
-    free (octree->neighbor_idx);
-  }
-        
-  if (octree->neighbors != NULL) {
-    free (octree->neighbors);
-  }
-        
-  if (octree->ancestor != NULL) {
-    free (octree->ancestor);
-  }
-        
-  if (octree->child != NULL) {
-    free (octree->child);
-  }
-        
-  if (octree->extents != NULL) {
-    free (octree->extents);
-  }
+  free (octree->octants);
 
   free (octree);
 
@@ -338,7 +700,7 @@ PDM_para_octree_point_cloud_set
   octree->points = realloc (octree->points, octree->n_points * sizeof(double) * octree->dim);
   octree->points_icloud = realloc (octree->points_icloud, octree->n_points * sizeof(int));
   octree->points_gnum = realloc (octree->points_gnum, octree->n_points * sizeof(PDM_g_num_t));
-  octree->points_code = realloc (octree->points_code, octree->n_points * sizeof(_octant_t));
+  octree->points_code = realloc (octree->points_code, octree->n_points * sizeof(PDM_morton_code_t));
 
   for (int i = 0; i < octree->dim * n_points; i++) {
     octree->points[octree->dim*idx + i] = coords[i];
@@ -598,9 +960,9 @@ PDM_para_octree_build
     free (recv_points_icloud);
     free (recv_points_gnum);
     free (recv_coords);
-    
-    
-    PDM_morton_code_t *_points_code = malloc (sizeof(PDM_morton_code_t) * octree->n_points);
+      
+    PDM_morton_code_t *_points_code =
+      malloc (sizeof(PDM_morton_code_t) * octree->n_points);
     
     for (int i = 0; i < octree->n_points; i++) {
       _points_code[i].L = octree->points_code[order[i]].L;
@@ -634,7 +996,8 @@ PDM_para_octree_build
     free (octree->points_gnum);
     octree->points_gnum = _points_gnum;
     
-    PDM_morton_code_t *_points_code = malloc (sizeof(PDM_morton_code_t) * octree->n_points);
+    PDM_morton_code_t *_points_code =
+      malloc (sizeof(PDM_morton_code_t) * octree->n_points);
     
     for (int i = 0; i < octree->n_points; i++) {
       _points_code[i].L = octree->points_code[order[i]].L;
@@ -659,57 +1022,68 @@ PDM_para_octree_build
   
   /*************************************************************************
    *
-   * Assign point morton code level to octree->depth_max
-   *
-   *************************************************************************/
-
-  for (int i = 0; i < octree->n_points; i++) {
-    PDM_morton_assign_level (octree->points_code[i], octree->depth_max);
-  }
-
-  /*************************************************************************
-   *
    * Store points in the octants (leaves) at the maximum depth of the octree 
    * to build
    *
    *************************************************************************/
 
   int chg_code = 1;
-  _octant_t *curr_node = NULL;
+  _l_octant_t *point_octants = malloc(sizeof(_l_octant_t));
+  
+  int curr_node = -1;
 
-  _check_alloc (octree);
+  _octants_init (point_octants, octree->n_points, octree->dim);
 
   for (int i = 0; i < octree->n_points; i++) {
 
-    if (curr_node != NULL) {
-      chg_code = !(PDM_morton_a_eq_b(curr_node->code,
-                                     octree->points_code[i]));
+    PDM_morton_code_t _point_code;
+    PDM_morton_copy (octree->points_code[i], &_point_code);
+    
+    PDM_morton_assign_level (&_point_code, octree->depth_max);
+
+    if (curr_node != -1) {
+      chg_code = !(PDM_morton_a_eq_b (point_octants->codes[curr_node],
+                                      _point_code));
     }
     
     if (chg_code) {
 
-      _check_alloc (octree);
+      _octants_check_alloc (point_octants);
 
-      int idx = octree->n_nodes;
+      int idx = point_octants->n_nodes;
 
-      _octant_t *_node =  octree->nodes + idx;
-      curr_node = _node;
+      curr_node = idx;
       
-      PDM_morton_copy (octree->points_code[i], &(_node->code));
+      PDM_morton_copy (octree->points_code[i], &(point_octants->codes[idx]));
       
-      _node->is_leaf = 1;
-      _node->n_points = 1;
-      _node->range = i;
+      point_octants->is_leaf[idx] = 1;
+      point_octants->n_points[idx] = 1;
+      point_octants->range[idx] = i;
       
-      octree->n_nodes += 1;
+      point_octants->n_nodes += 1;
     }
 
     else {
-      curr_node->n_points += 1;
+      point_octants->n_points[curr_node] += 1;
     }
 
   }
-  
+
+  /*************************************************************************
+   *
+   * Block partition (algo 2 sundar)
+   *
+   *************************************************************************/
+
+  _l_octant_t *block_octants = _block_partition (point_octants, octree->comm);
+
+  /*************************************************************************
+   *
+   * Add child (whilen points > N points max)
+   *     - sundar does not keep ancestors (Keep ancestor for our application ?)
+   *     - Build neighbor 
+   *
+   *************************************************************************/
 }
 
 
@@ -731,7 +1105,7 @@ PDM_para_octree_extents_get
 {
  _octree_t *octree = _get_from_id (id);
 
- return NULL;
+ return octree->global_extents;
 }
 
 
@@ -762,7 +1136,7 @@ double      *closest_octree_pt_dist2
 )
 {
  _octree_t *octree = _get_from_id (id);
- }
+}
 
 #ifdef __cplusplus
 }

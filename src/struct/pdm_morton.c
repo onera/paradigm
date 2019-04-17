@@ -202,15 +202,15 @@ _a_eq_b(PDM_morton_code_t  code_a,
   if (a_diff > 0) {
     code_a.L = l;
     code_a.X[0] = code_a.X[0] << a_diff;
-    code_a.X[1] = code_a.X[2] << a_diff;
-    code_a.X[1] = code_a.X[2] << a_diff;
+    code_a.X[1] = code_a.X[1] << a_diff;
+    code_a.X[2] = code_a.X[2] << a_diff;
   }
 
   if (b_diff > 0) {
     code_b.L = l;
     code_b.X[0] = code_b.X[0] << b_diff;
-    code_b.X[1] = code_b.X[2] << b_diff;
-    code_b.X[1] = code_b.X[2] << b_diff;
+    code_b.X[1] = code_b.X[1] << b_diff;
+    code_b.X[2] = code_b.X[2] << b_diff;
   }
 
   i = l - 1;
@@ -1326,6 +1326,57 @@ PDM_morton_copy (PDM_morton_code_t  a,
 }
 
 /*----------------------------------------------------------------------------
+ * Get the nearest common ancestor between two codes
+ *
+ * parameters:
+ *   a <-- code a 
+ *   b <-- code b 
+ *   c <-> Nearest common ancestor between a and b
+ *
+ *----------------------------------------------------------------------------*/
+
+void
+PDM_morton_nearest_common_ancestor (PDM_morton_code_t  code_a,
+                                    PDM_morton_code_t  code_b,
+                                    PDM_morton_code_t  *code_c)
+{
+  int i, a_diff, b_diff;
+  int l = PDM_MIN(code_a.L, code_b.L);
+
+  a_diff = code_a.L - l;
+  b_diff = code_b.L - l;
+
+  if (a_diff > 0) {
+    code_a.L = l;
+    code_a.X[0] = code_a.X[0] >> a_diff;
+    code_a.X[1] = code_a.X[2] >> a_diff;
+    code_a.X[1] = code_a.X[2] >> a_diff;
+  }
+
+  if (b_diff > 0) {
+    code_b.L = l;
+    code_b.X[0] = code_b.X[0] >> b_diff;
+    code_b.X[1] = code_b.X[2] >> b_diff;
+    code_b.X[1] = code_b.X[2] >> b_diff;
+  }
+
+  i = 0;
+  while (i <= l) {
+    if (   code_a.X[0] >> i == code_b.X[0] >> i
+        && code_a.X[1] >> i == code_b.X[1] >> i
+        && code_a.X[2] >> i == code_b.X[2] >> i)
+      break;
+    i++;
+  }
+
+  code_c->L = l - i;
+  code_c->X[0] = code_a.X[0] >> i;
+  code_c->X[1] = code_a.X[2] >> i;
+  code_c->X[1] = code_a.X[2] >> i;
+
+}
+
+/*----------------------------------------------------------------------------
  * Test if Morton code "a" is greater than Morton code "b"
  *
  * parameters:
@@ -1391,23 +1442,23 @@ PDM_morton_a_eq_b(PDM_morton_code_t  a,
  *----------------------------------------------------------------------------*/
 
 void
-PDM_morton_assign_level (PDM_morton_code_t  code,
+PDM_morton_assign_level (PDM_morton_code_t  *code,
                          int                l)
 {
-  int a_diff = l - code.L;
+  int a_diff = l - code->L;
   
   if (a_diff > 0) {
-    code.L = l;
-    code.X[0] = code.X[0] << a_diff;
-    code.X[1] = code.X[2] << a_diff;
-    code.X[1] = code.X[2] << a_diff;
+    code->L = l;
+    code->X[0] = code->X[0] << a_diff;
+    code->X[1] = code->X[1] << a_diff;
+    code->X[2] = code->X[2] << a_diff;
   }
   
   else if (a_diff < 0) {
-    code.L = l;
-    code.X[0] = code.X[0] >> a_diff;
-    code.X[1] = code.X[2] >> a_diff;
-    code.X[1] = code.X[2] >> a_diff;
+    code->L = l;
+    code->X[0] = code->X[0] >> a_diff;
+    code->X[1] = code->X[1] >> a_diff;
+    code->X[2] = code->X[2] >> a_diff;
   }
 
 }
