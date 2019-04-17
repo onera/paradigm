@@ -246,6 +246,21 @@ PDM_morton_copy (PDM_morton_code_t  a,
                  PDM_morton_code_t  *b);
 
 /*----------------------------------------------------------------------------
+ * Get the nearest common ancestor between two codes
+ *
+ * parameters:
+ *   a <-- code a 
+ *   b <-- code b 
+ *   c <-> Nearest common ancestor between a and b
+ *
+ *----------------------------------------------------------------------------*/
+
+void
+PDM_morton_nearest_common_ancestor (PDM_morton_code_t  code_a,
+                                    PDM_morton_code_t  code_b,
+                                    PDM_morton_code_t  *c);
+
+/*----------------------------------------------------------------------------
  * Test if Morton code "a" is greater or equal to Morton code "b"
  *
  * parameters:
@@ -287,7 +302,7 @@ PDM_morton_a_eq_b(PDM_morton_code_t  a,
  *----------------------------------------------------------------------------*/
 
 void
-PDM_morton_assign_level (PDM_morton_code_t  a,
+PDM_morton_assign_level (PDM_morton_code_t  *a,
                          int                l);
 
 /*----------------------------------------------------------------------------
