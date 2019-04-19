@@ -125,6 +125,8 @@ typedef struct  _part_t {
   int          *faceColor;             /*!< Face color - For cache blocking
                                             (size = nFac)                           */
   int          *threadColor;             /*!< Thread color - For cache blocking
+                                            (size = nThread)                        */
+  int          *hyperPlaneColor;         /*!< Thread color - For cache blocking
                                             (size = nThread)                         */
 
   int          *newToOldOrderCell;   /*!< Cell reordering
@@ -332,6 +334,7 @@ void
   part->cellColor = NULL;
   part->faceColor = NULL;
   part->threadColor = NULL;
+  part->hyperPlaneColor = NULL;
   part->newToOldOrderCell = NULL;
   part->newToOldOrderFace = NULL;
   part->subpartlayout = NULL;

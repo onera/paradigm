@@ -23,7 +23,7 @@
 #ifdef PDM_HAVE_PTSCOTCH
 #include <scotch.h>
 #endif
-#include <kaHIP_interface.h>
+// #include <kaHIP_interface.h>
 
 /*=============================================================================
  * Macro definitions
@@ -133,7 +133,7 @@ int    *part
 
   }
 
-  int *_vsize = NULL;
+  idx_t *_vsize = NULL;
 
   idx_t *__xadj, *_xadj;
   idx_t *__adjncy, *_adjncy;
@@ -197,6 +197,7 @@ int    *part
 
   }
 
+  printf("METIS_PartGraphRecursive \n");
   int rval = (int) METIS_PartGraphRecursive (&_nvtxs,
                                              &_ncon,
                                               _xadj,
@@ -210,8 +211,9 @@ int    *part
                                               options,
                                               &_edgecut,
                                               _part);
+  printf("METIS_PartGraphRecursive end \n");
 
-    if (sizeof(int) != sizeof(idx_t)) {
+  if (sizeof(int) != sizeof(idx_t)) {
     for (int i = 0; i < _nvtxs; i++) {
       part[i] = _part[i];
     }
@@ -274,6 +276,12 @@ int    *part
   // The graph should be compressed by combining together vertices that have identical adjacency lists.
   options[METIS_OPTION_COMPRESS]  = 1;
 
+  printf("PDM_METIS_PartGraphKway \n");
+
+  // options[METIS_OPTION_NCUTS]  = 5;
+  // options[METIS_OPTION_NSEPS]  = 5;
+  // options[METIS_OPTION_OBJTYPE]  = METIS_OBJTYPE_CUT;
+
 
   //METIS provide the METIS SetDefaultOptions routine to set the options to their default values.
   //After that, the application can just modify the options that is interested in modifying.
@@ -328,7 +336,7 @@ int    *part
 
   }
 
-  int *_vsize = NULL;
+  idx_t *_vsize = NULL;
 
   idx_t *__xadj, *_xadj;
   idx_t *__adjncy, *_adjncy;
@@ -392,6 +400,8 @@ int    *part
 
   }
 
+
+  printf("METIS_PartGraphKway");
   int rval = (int) METIS_PartGraphKway (&_nvtxs,
                                         &_ncon,
                                          _xadj,
@@ -405,6 +415,7 @@ int    *part
                                          options,
                                         &_edgecut,
                                          _part);
+  printf("end\n");
 
   if (__part != NULL) {
     for (int i = 0; i < _nvtxs; i++) {
@@ -627,20 +638,20 @@ int* edgecut,
 int* part
 )
 {
-  bool   suppress_output = False;
-  // abort();
-  kaffpa(n,
-         vwgt,
-         xadj,
-         adjcwgt,
-         adjncy,
-         nparts,
-         inbalance,
-         suppress_output,
-         seed,
-         mode,
-         edgecut,
-         part);
+  // bool   suppress_output = False;
+  // // abort();
+  // kaffpa(n,
+  //        vwgt,
+  //        xadj,
+  //        adjcwgt,
+  //        adjncy,
+  //        nparts,
+  //        inbalance,
+  //        suppress_output,
+  //        seed,
+  //        mode,
+  //        edgecut,
+  //        part);
 }
 
 

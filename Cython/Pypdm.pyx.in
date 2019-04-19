@@ -30,6 +30,7 @@ NPY.import_array()
 # -----------------
 
 ctypedef @PYX_NPY_G_NUM@ npy_pdm_gnum_t
+ctypedef @PYX_NPY_L_NUM@ npy_pdm_lnum_t
 npy_pdm_gnum_dtype = @PYX_NPY_G_NUM_DTYPE@
 ctypedef @PYX_G_NUM@ PDM_g_num_t
 ctypedef @PYX_L_NUM@ PDM_l_num_t
@@ -38,7 +39,6 @@ ctypedef int PDM_MPI_Comm
 
 ctypedef enum PDM_g_num_npy_t:
   PDM_G_NUM_NPY_INT = @PDM_G_NUM_NPY_INT@
-
 
 # -----------------------------------------------------------------
 
@@ -95,10 +95,4 @@ include "pdm_cellface_orient.pxi"
 include "pdm_dmesh_nodal.pxi"
 
 
-
-
-
 # TODO: PDM_writer, ...
-
-
-

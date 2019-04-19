@@ -1001,7 +1001,7 @@ _split
        * Define metis properties
        */
 
-      int wgtflag    = 0;
+      int wgtflag    = 2;
       int numflag    = 0;        /* C or Fortran numbering (C = 0) */
       int edgecut;
       int ncon       = 1;
@@ -1027,10 +1027,29 @@ _split
         _dCellProc[i] = ppart->dCellProc[i] - 1;
       }
 
+      int* dCellWeight = (int *) malloc( sizeof(int) * ppart->dNCell );
+      for (int i = 0; i < ppart->dNCell; i++) {
+        dCellWeight[i] = ppart->dDualGraphIdx[i+1]-ppart->dDualGraphIdx[i];
+      }
+
+      // PDM_ParMETIS_V3_PartKway (_dCellProc,
+      //                           ppart->dDualGraphIdx,
+      //                           ppart->dDualGraph,
+      //                           (int *) ppart->_dCellWeight,
+      //                           NULL,
+      //                           &wgtflag,
+      //                           &numflag,
+      //                           &ncon,
+      //                           &ppart->tNPart,
+      //                           tpwgts,
+      //                           ubvec,
+      //                           &edgecut,
+      //                           cellPart,
+      //                           ppart->comm);
       PDM_ParMETIS_V3_PartKway (_dCellProc,
                                 ppart->dDualGraphIdx,
                                 ppart->dDualGraph,
-                                (int *) ppart->_dCellWeight,
+                                dCellWeight,
                                 NULL,
                                 &wgtflag,
                                 &numflag,
@@ -1041,6 +1060,9 @@ _split
                                 &edgecut,
                                 cellPart,
                                 ppart->comm);
+
+      free(dCellWeight);
+
 
       printf(" ooooooo kaffpaE \n");
       // double inbalance = 0.003;
@@ -1104,15 +1126,22 @@ _split
       int check = 0;
       int *edgeWeight = NULL;
 
+      int* dCellWeight = (int *) malloc( sizeof(int) * ppart->dNCell );
+      for (int i = 0; i < ppart->dNCell; i++) {
+        dCellWeight[i] = ppart->dDualGraphIdx[i+1]-ppart->dDualGraphIdx[i];
+      }
       PDM_SCOTCH_dpart (ppart->dNCell,
                         ppart->dDualGraphIdx,
                         ppart->dDualGraph,
-                        ppart->_dCellWeight,
+                        dCellWeight,
+                        // ppart->_dCellWeight,
                         edgeWeight,
                         check,
                         ppart->comm,
                         ppart->tNPart,
                         cellPart);
+      free(dCellWeight);
+
 
 #else
       if(myRank == 0) {
@@ -2864,6 +2893,10 @@ _part_free
     free(part->threadColor);
   part->threadColor = NULL;
 
+  if (part->hyperPlaneColor != NULL)
+    free(part->hyperPlaneColor);
+  part->hyperPlaneColor = NULL;
+
   if (part->newToOldOrderCell != NULL)
     free(part->newToOldOrderCell);
   part->newToOldOrderCell = NULL;
@@ -2895,6 +2928,128 @@ _part_free
 
   free(part);
 }
+
+/**
+ *
+ * \brief Free partition
+ *
+ * \param [in]   part      partition
+ *
+ */
+
+static void
+_part_partial_free
+(
+ _part_t *part
+)
+{
+  if (part->cellFaceIdx != NULL)
+    free(part->cellFaceIdx);
+  part->cellFaceIdx = NULL;
+
+  if (part->gCellFace != NULL)
+    free(part->gCellFace);
+  part->gCellFace = NULL;
+
+  if (part->cellFace != NULL)
+    free(part->cellFace);
+  part->cellFace = NULL;
+
+  // if (part->cellLNToGN != NULL)
+  //   free(part->cellLNToGN);
+  // part->cellLNToGN = NULL;
+
+  // if (part->cellTag != NULL)
+  //   free(part->cellTag);
+  // part->cellTag = NULL;
+
+  if (part->faceCell != NULL)
+    free(part->faceCell);
+  part->faceCell = NULL;
+
+  if (part->faceVtxIdx != NULL)
+    free(part->faceVtxIdx);
+  part->faceVtxIdx = NULL;
+
+  if (part->gFaceVtx != NULL)
+    free(part->gFaceVtx);
+  part->gFaceVtx = NULL;
+
+  if (part->faceVtx != NULL)
+    free(part->faceVtx);
+  part->faceVtx = NULL;
+
+  // if (part->faceLNToGN != NULL)
+  //   free(part->faceLNToGN);
+  // part->faceLNToGN = NULL;
+
+  // if (part->faceTag != NULL)
+  //   free(part->faceTag);
+  // part->faceTag = NULL;
+
+  // if (part->facePartBoundProcIdx != NULL)
+  //   free(part->facePartBoundProcIdx);
+  // part->facePartBoundProcIdx = NULL;
+
+  // if (part->facePartBoundPartIdx != NULL)
+  //   free(part->facePartBoundPartIdx);
+  // part->facePartBoundPartIdx = NULL;
+
+  // if (part->facePartBound != NULL)
+  //   free(part->facePartBound);
+  // part->facePartBound = NULL;
+
+  // if (part->faceGroupIdx != NULL)
+  //   free(part->faceGroupIdx);
+  // part->faceGroupIdx = NULL;
+
+  // if (part->faceGroup != NULL)
+  //   free(part->faceGroup);
+  // part->faceGroup = NULL;
+
+  // if (part->faceGroupLNToGN != NULL)
+  //   free(part->faceGroupLNToGN);
+  // part->faceGroupLNToGN = NULL;
+
+  if (part->vtx != NULL)
+    free(part->vtx);
+  part->vtx = NULL;
+
+  // if (part->vtxLNToGN != NULL)
+  //   free(part->vtxLNToGN);
+  // part->vtxLNToGN = NULL;
+
+  // if (part->vtxTag != NULL)
+  //   free(part->vtxTag);
+  // part->vtxTag = NULL;
+
+  // if (part->cellColor != NULL)
+  //   free(part->cellColor);
+  // part->cellColor = NULL;
+
+  // if (part->faceColor != NULL)
+  //   free(part->faceColor);
+  // part->faceColor = NULL;
+
+  // if (part->threadColor != NULL)
+  //   free(part->threadColor);
+  // part->threadColor = NULL;
+
+  // if (part->hyperPlaneColor != NULL)
+  //   free(part->hyperPlaneColor);
+  // part->hyperPlaneColor = NULL;
+
+  if (part->newToOldOrderCell != NULL)
+    free(part->newToOldOrderCell);
+  part->newToOldOrderCell = NULL;
+
+  if (part->newToOldOrderFace != NULL)
+    free(part->newToOldOrderFace);
+  part->newToOldOrderFace = NULL;
+}
+
+
+
 
 /*=============================================================================
  * Public function definitions
@@ -3326,6 +3481,52 @@ PDM_part_create
     ppart->times_cpu_u[i]   -= ppart->times_cpu_u[i-1];
     ppart->times_cpu_s[i]   -= ppart->times_cpu_s[i-1];
   }
+
+  if (ppart->dCellFaceIdx != NULL)
+    free(ppart->dCellFaceIdx);
+  ppart->dCellFaceIdx = NULL;
+
+  if (ppart->dCellFace != NULL)
+    free(ppart->dCellFace);
+  ppart->dCellFace = NULL;
+
+  if (ppart->dCellProc != NULL)
+    free(ppart->dCellProc);
+  ppart->dCellProc = NULL;
+
+  if (ppart->dFaceProc != NULL)
+    free(ppart->dFaceProc);
+  ppart->dFaceProc = NULL;
+
+  if (ppart->dFaceCell != NULL)
+    free(ppart->dFaceCell);
+  ppart->dFaceCell = NULL;
+
+  if (ppart->dVtxProc != NULL)
+    free(ppart->dVtxProc);
+  ppart->dVtxProc = NULL;
+
+  // if (ppart->dPartProc != NULL)
+  //   free(ppart->dPartProc);
+  // ppart->dPartProc = NULL;
+
+  if (ppart->gPartTolProcPart != NULL)
+    free(ppart->gPartTolProcPart);
+  ppart->gPartTolProcPart = NULL;
+
+  if (ppart->dPartBound != NULL)
+    free(ppart->dPartBound);
+  ppart->dPartBound = NULL;
+
+  if (ppart->dDualGraphIdx != NULL)
+    free(ppart->dDualGraphIdx);
+  ppart->dDualGraphIdx = NULL;
+
+  if (ppart->dDualGraph != NULL)
+    free(ppart->dDualGraph);
+  ppart->dDualGraph = NULL;
+
+
 }
 
 
@@ -3736,7 +3937,8 @@ const  int      ppartId,
 const  int      ipart,
  int          **cellColor,
  int          **faceColor,
- int          **threadColor
+ int          **threadColor,
+ int          **hyperPlaneColor
 )
 {
   _PDM_part_t *ppart = _get_from_id(ppartId);
@@ -3750,9 +3952,10 @@ const  int      ipart,
     exit(1);
   }
 
-  *cellColor   = meshPart->cellColor;
-  *faceColor   = meshPart->faceColor;
-  *threadColor = meshPart->threadColor;
+  *cellColor       = meshPart->cellColor;
+  *faceColor       = meshPart->faceColor;
+  *threadColor     = meshPart->threadColor;
+  *hyperPlaneColor = meshPart->hyperPlaneColor;
 }
 
 void
@@ -3762,7 +3965,8 @@ PROCF (pdm_part_part_color_get, PDM_PART_PART_COLOR_GET)
  int           *ipart,
  int           *cellColor,
  int           *faceColor,
- int           *threadColor
+ int           *threadColor,
+ int           *hyperPlaneColor
 )
 {
   _PDM_part_t *ppart = _get_from_id(*ppartId);
@@ -3793,6 +3997,12 @@ PROCF (pdm_part_part_color_get, PDM_PART_PART_COLOR_GET)
   if (meshPart->threadColor != NULL){
     for (int i = 0; i < meshPart->nCell; i++){
         threadColor[i]    = meshPart->threadColor[i];
+    }
+  }
+
+  if (meshPart->hyperPlaneColor != NULL){
+    for (int i = 0; i < meshPart->nCell; i++){
+        hyperPlaneColor[i]    = meshPart->hyperPlaneColor[i];
     }
   }
 
@@ -4131,6 +4341,73 @@ const int      *ppartId,
                  bound_part_faces_max,
                  bound_part_faces_sum);
 }
+
+
+void
+PDM_part_partial_free
+(
+ int  ppartId
+)
+{
+  _PDM_part_t *ppart = _get_from_id(ppartId);
+  // return;
+
+  // printf("PDM_part_partial_free f1 \n");
+  PDM_MPI_Barrier(ppart->comm);
+
+  // if (ppart->dCellFaceIdx != NULL)
+  //   free(ppart->dCellFaceIdx);
+  // ppart->dCellFaceIdx = NULL;
+
+  // if (ppart->dCellFace != NULL)
+  //   free(ppart->dCellFace);
+  // ppart->dCellFace = NULL;
+
+  if (ppart->dCellProc != NULL)
+    free(ppart->dCellProc);
+  ppart->dCellProc = NULL;
+
+  if (ppart->dFaceProc != NULL)
+    free(ppart->dFaceProc);
+  ppart->dFaceProc = NULL;
+
+  // if (ppart->dFaceCell != NULL)
+  //   free(ppart->dFaceCell);
+  // ppart->dFaceCell = NULL;
+
+  if (ppart->dVtxProc != NULL)
+    free(ppart->dVtxProc);
+  ppart->dVtxProc = NULL;
+
+  if (ppart->dPartProc != NULL)
+    free(ppart->dPartProc);
+  ppart->dPartProc = NULL;
+
+  // if (ppart->gPartTolProcPart != NULL)
+  //   free(ppart->gPartTolProcPart);
+  // ppart->gPartTolProcPart = NULL;
+
+  // if (ppart->dPartBound != NULL)
+  //   free(ppart->dPartBound);
+  // ppart->dPartBound = NULL;
+
+  if (ppart->dDualGraphIdx != NULL)
+    free(ppart->dDualGraphIdx);
+  ppart->dDualGraphIdx = NULL;
+
+  if (ppart->dDualGraph != NULL)
+    free(ppart->dDualGraph);
+  ppart->dDualGraph = NULL;
+
+  // printf("PDM_part_partial_free f2 \n");
+  for (int i = 0; i < ppart->nPart; i++) {
+    _part_partial_free(ppart->meshParts[i]);
+  }
+  // printf("PDM_part_partial_free f3 \n");
+  // printf("PDM_part_partial_free f8 \n");
+
+}
+
 
 #ifdef __cplusplus
 }

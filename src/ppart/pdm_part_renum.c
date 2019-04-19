@@ -646,16 +646,17 @@ _renum_cells_hilbert
     /** CHECK H_CODES **/
 
     free(cellCenter);
-
+    int *newToOldOrder = (int *) malloc (part->nCell * sizeof(int));
     for(int i = 0; i < part->nCell; ++i) {
       part->newToOldOrderCell[i] = i;
     }
 
-    PDM_sort_double (hilbertCodes, part->newToOldOrderCell, part->nCell);
+    PDM_sort_double (hilbertCodes, newToOldOrder, part->nCell);
 
-    PDM_part_reorder_cell (part, part->newToOldOrderCell);
+    PDM_part_reorder_cell (part, newToOldOrder);
 
     free (hilbertCodes);
+    free (newToOldOrder);
 
   }
 }
@@ -688,6 +689,10 @@ _renum_cells_cuthill
   for(int ipart = 0; ipart < nPart; ++ipart) {
     /** Get current part id **/
     _part_t *part = meshParts[ipart];
+    const int nCell = part->nCell;
+
+    /** Allocate reoerdering/permutation array **/
+    int *order = (int *) malloc (sizeof(int) * nCell);
 
     /** Verbose bandwidth **/
     // dualBandWidth = PDM_checkbandwidth(part);
@@ -695,7 +700,7 @@ _renum_cells_cuthill
     // PDM_printf("Bandwidth of graph before reordering \n");
 
     /** Compute reordering **/
-    PDM_cuthill_generate(part, part->newToOldOrderCell);
+    PDM_cuthill_generate(part, order);
 
     /** Apply renumbering **/
     PDM_part_reorder_cell(part, part->newToOldOrderCell);
@@ -704,6 +709,16 @@ _renum_cells_cuthill
     // dualBandWidth = PDM_checkbandwidth(part);
     // PDM_printf("Bandwidth of graph after reordering : %d \n", dualBandWidth);
 
+    /* Copy in partition */
+    if(part->newToOldOrderCell == NULL)
+      part->newToOldOrderCell = (int *) malloc (sizeof(int) * nCell);
+
+    for (int i = 0; i < nCell; i++){
+      part->newToOldOrderCell[i] = order[i];
+    }
+
+    /** Free memory **/
+    free(order);
   }
 }
 #ifdef __INTEL_COMPILER
@@ -733,11 +748,23 @@ _renum_cells_random
 {
   for(int ipart = 0; ipart < nPart; ++ipart) {
     _part_t *part = meshParts[ipart];
+    const int nCell = part->nCell;
 
-    _random_order (part->nCell, part->newToOldOrderCell);
+    int *order = (int *) malloc (sizeof(int) * nCell);
 
-    PDM_part_reorder_cell (part, part->newToOldOrderCell);
+    _random_order (nCell, order);
 
+    PDM_part_reorder_cell (part, order);
+
+    /* Copy in partition */
+    if(part->newToOldOrderCell == NULL)
+      part->newToOldOrderCell = (int *) malloc (sizeof(int) * nCell);
+
+    for (int i = 0; i < nCell; i++){
+      part->newToOldOrderCell[i] = order[i];
+    }
+
+    free (order);
   }
 }
 #ifdef __INTEL_COMPILER
@@ -771,11 +798,23 @@ _renum_faces_random
 #endif
   for(int ipart = 0; ipart < nPart; ++ipart) {
     _part_t *part = meshParts[ipart];
+    const int nFace = part->nFace;
 
-    _random_order (part->nFace, part->newToOldOrderFace);
+    int *order = (int *) malloc (sizeof(int) * nFace);
 
-    PDM_part_reorder_face (part, part->newToOldOrderFace);
+    _random_order (nFace, order);
 
+    PDM_part_reorder_face (part, order);
+
+    /* Copy in partition */
+    if(part->newToOldOrderFace == NULL)
+      part->newToOldOrderFace = (int *) malloc (sizeof(int) * nFace);
+
+    for (int i = 0; i < nFace; i++){
+      part->newToOldOrderFace[i] = order[i];
+    }
+
+    free (order);
   }
 }
 #ifdef __INTEL_COMPILER
@@ -830,6 +869,12 @@ _renum_faces_lexicographic
     /** Update face array with the new array **/
     PDM_part_reorder_face (part, part->newToOldOrderFace);
 
+    if(part->newToOldOrderFace == NULL)
+      part->newToOldOrderFace = (int *) malloc (sizeof(int) * nFace);
+
+    for (int i = 0; i < nFace; i++){
+      part->newToOldOrderFace[i] = order[i];
+    }
 
     /** Free memory **/
     free (faceCellTmp);
@@ -1383,6 +1428,13 @@ PDM_part_reorder_cell
                      sizeof(int),
                      newToOldOrder,
                      part->threadColor);
+  }
+
+  if (part->hyperPlaneColor != NULL) {
+    PDM_order_array (part->nCell,
+                     sizeof(int),
+                     newToOldOrder,
+                     part->hyperPlaneColor);
   }
 
   PDM_order_array (part->nCell,

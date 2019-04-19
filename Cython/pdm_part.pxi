@@ -1,3 +1,7 @@
+cdef extern from "numpy/arrayobject.h":
+    void PyArray_ENABLEFLAGS(NPY.ndarray arr, int flags)
+
+
 cdef extern from "pdm_part.h":
 
     ctypedef enum PDM_part_split_t:
@@ -90,10 +94,12 @@ cdef extern from "pdm_part.h":
                                  int            ipart,
                                  int          **cellColor,
                                  int          **faceColor,
-                                 int          **threadColor)
+                                 int          **threadColor,
+                                 int          **hyperPlaneColor)
 
     # ------------------------------------------------------------------
     void PDM_part_free(int ppartId)
+    void PDM_part_partial_free(int ppartId)
 
     # ------------------------------------------------------------------
     void PDM_part_time_get(int ppartId,
@@ -316,6 +322,10 @@ cdef class Part:
         # > Save id for extract
         self.id = _id
 
+    # ------------------------------------------------------------------
+    def part_partial_free(self):
+        # print '__dealloc__ LibPpart a'
+        PDM_part_partial_free(self.id)
 
     # ------------------------------------------------------------------
     def __dealloc__(self):
@@ -492,6 +502,7 @@ cdef class Part:
                                                            <void *> faceVertexIdx)
 
         # \param [out]  faceVtx            Face to Vertex connectivity (size = faceVtxIdx[nFace])
+        cdef NPY.ndarray[NPY.int32_t, ndim=1] npFaceVertex
         if (faceVertex == NULL) :
             npFaceVertex = None
         else :
@@ -500,6 +511,10 @@ cdef class Part:
                                                          &dim,
                                                          NPY.NPY_INT32,
                                                          <void *> faceVertex)
+            # PyArray_ENABLEFLAGS(npFaceVertex, NPY.NPY_OWNDATA)
+            # print '*'*1000
+            # print 'Take ownership'
+            # print '*'*1000
 
         # \param [out]  faceLNToGN         Face local numbering to global numbering (size = nFace)
         if (faceLNToGN == NULL) :
@@ -630,6 +645,7 @@ cdef class Part:
         cdef int          *cellColor,
         cdef int          *faceColor
         cdef int          *threadColor
+        cdef int          *hyperPlaneColor
         # ************************************************************************
 
         # dims = self.part_dim_get(self.id, ipart)
@@ -640,7 +656,8 @@ cdef class Part:
                                 ipart,
                                 &cellColor,
                                 &faceColor,
-                                &threadColor)
+                                &threadColor,
+                                &hyperPlaneColor)
         # -> Begin
         cdef NPY.npy_intp dim
 
@@ -662,19 +679,30 @@ cdef class Part:
                                                         &dim,
                                                         NPY.NPY_INT32,
                                                         <void *> faceColor)
-            
-        # \param [out]  cellColor            Cell tag (size = nCell)
+
+        # \param [out]  threadColor            Cell tag (size = nCell)
         if (threadColor == NULL):
             npThreadColor = None
         else :
             dim = <NPY.npy_intp> dims['nCell']
             npThreadColor = NPY.PyArray_SimpleNewFromData(1,
-                                                        &dim,
-                                                        NPY.NPY_INT32,
-                                                        <void *> threadColor)
-        return {'npCellColor'   : npCellColor,
-                'npFaceColor'   : npFaceColor, 
-                 'npThreadColor': npThreadColor}
+                                                          &dim,
+                                                          NPY.NPY_INT32,
+                                                          <void *> threadColor)
+
+        # \param [out]  hyperPlaneColor            Cell tag (size = nCell)
+        if (hyperPlaneColor == NULL):
+            npHyperPlaneColor = None
+        else :
+            dim = <NPY.npy_intp> dims['nCell']
+            npHyperPlaneColor = NPY.PyArray_SimpleNewFromData(1,
+                                                              &dim,
+                                                              NPY.NPY_INT32,
+                                                              <void *> hyperPlaneColor)
+        return {'npCellColor'       : npCellColor,
+                'npFaceColor'       : npFaceColor,
+                'npThreadColor'     : npThreadColor,
+                'npHyperPlaneColor' : npHyperPlaneColor}
 
     # ------------------------------------------------------------------
     def part_time_get(self):

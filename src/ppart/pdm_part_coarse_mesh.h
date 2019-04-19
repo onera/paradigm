@@ -411,7 +411,9 @@ void PDM_part_coarse_color_get
  const int   cmId,
  const int   iPart,
        int **cellColor,
-       int **faceColor
+       int **faceColor,
+       int **threadColor,
+       int **hyperPlaneColor
 );
 
 /**

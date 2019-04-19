@@ -148,7 +148,7 @@ PDM_part_graph_split
 
       //          int flag_weights = 0; //0 = False -> weights are unused
 
-      int flag_weights = 1; //0 = False -> weights are unused
+      int flag_weights = 0; //0 = False -> weights are unused
 
       int ncon = 1; //The number of balancing constraints
 
@@ -177,55 +177,55 @@ PDM_part_graph_split
       //This value is solely a memory space to be filled by METIS
 
       int edgecut;
+      printf("PDM_part_graph_split \n");
+      if (nPart < 8) {
 
-      // if (nPart < 8) {
+        PDM_METIS_PartGraphRecursive (&(part_ini->nCell),
+                                      &ncon,
+                                      cellCellIdx,
+                                      cellCell,
+                                      vwgt,
+                                      adjwgt,
+                                      &nPart,
+                                      tpwgts,
+                                      ubvec,
+                                      &edgecut,
+                                      *cellPart);
+      }
 
-      //   PDM_METIS_PartGraphRecursive (&(part_ini->nCell),
-      //                                 &ncon,
-      //                                 cellCellIdx,
-      //                                 cellCell,
-      //                                 vwgt,
-      //                                 adjwgt,
-      //                                 &nPart,
-      //                                 tpwgts,
-      //                                 ubvec,
-      //                                 &edgecut,
-      //                                 *cellPart);
-      // }
+      else {
 
-      // else {
-
-      //   PDM_METIS_PartGraphKway (&(part_ini->nCell),
-      //                            &ncon,
-      //                            cellCellIdx,
-      //                            cellCell,
-      //                            vwgt,
-      //                            adjwgt,
-      //                            &nPart,
-      //                            tpwgts,
-      //                            ubvec,
-      //                            &edgecut,
-      //                            *cellPart);
-      // }
-      double inbalance = 0.03;
-      double balance   = 0;
-      edgecut   = 0;
-      // bool   suppress_output = False;
-      // bool   graph_partitioned = False;
-      int time_limit = 0;
-      int seed  = 0;
-      int mode = 2;
-      PDM_kaffpa(&(part_ini->nCell),
-                 NULL,
-                 cellCellIdx,
-                 NULL,
-                 cellCell,
-                 &nPart,
-                  &inbalance,
-                  seed,
-                  mode,
-                  &edgecut,
-                  *cellPart );
+        PDM_METIS_PartGraphKway (&(part_ini->nCell),
+                                 &ncon,
+                                 cellCellIdx,
+                                 cellCell,
+                                 vwgt,
+                                 adjwgt,
+                                 &nPart,
+                                 tpwgts,
+                                 ubvec,
+                                 &edgecut,
+                                 *cellPart);
+      }
+      // double inbalance = 0.03;
+      // double balance   = 0;
+      // edgecut   = 0;
+      // // bool   suppress_output = False;
+      // // bool   graph_partitioned = False;
+      // int time_limit = 0;
+      // int seed  = 0;
+      // int mode = 2;
+      // PDM_kaffpa(&(part_ini->nCell),
+      //            NULL,
+      //            cellCellIdx,
+      //            NULL,
+      //            cellCell,
+      //            &nPart,
+      //             &inbalance,
+      //             seed,
+      //             mode,
+      //             &edgecut,
+      //             *cellPart );
 
       if (0 == 1) {
         PDM_printf("\n Contenu de cellPart : \n");
@@ -433,7 +433,8 @@ PDM_part_graph_compute_from_face_cell
   }
 
   //cellCellIdx is rebuilt
-  *cellCellIdxCompressed = malloc((part_ini->nCell + 1) * sizeof(int));
+  assert((*cellCellIdxCompressed) == NULL);
+  (*cellCellIdxCompressed) = (int *) malloc((part_ini->nCell + 1) * sizeof(int));
 
   (*cellCellIdxCompressed)[0] = 0;
   for(int i = 0; i < part_ini->nCell; i++) {
@@ -444,7 +445,9 @@ PDM_part_graph_compute_from_face_cell
   //We have then nFace elements in cellCell whereas it needs to be composed of nCell elements
 
   //    PDM_printf("(*cellCellIdxCompressed)[part_ini->nCell] : %d \n", (*cellCellIdxCompressed)[part_ini->nCell]);
-  *cellCellCompressed = malloc((*cellCellIdxCompressed)[part_ini->nCell] * sizeof(int));
+  //
+  assert( (*cellCellCompressed) == NULL);
+  (*cellCellCompressed) = (int *) malloc((*cellCellIdxCompressed)[part_ini->nCell] * sizeof(int));
 
   int cpt_cellCellCompressed = 0;
   for(int i = 0; i < part_ini->cellFaceIdx[part_ini->nCell]; i++) {
@@ -601,55 +604,55 @@ PDM_part_graph_split_bis
 
       int edgecut;
 
-      // if (nPart < 8) {
+      if (nPart < 8) {
 
-      //   PDM_METIS_PartGraphRecursive (&(graphSize),
-      //                                 &ncon,
-      //                                 cellCellIdx,
-      //                                 cellCell,
-      //                                 vwgt,
-      //                                 adjwgt,
-      //                                 &nPart,
-      //                                 tpwgts,
-      //                                 ubvec,
-      //                                 &edgecut,
-      //                                 *cellPart);
-      // }
+        PDM_METIS_PartGraphRecursive (&(graphSize),
+                                      &ncon,
+                                      cellCellIdx,
+                                      cellCell,
+                                      vwgt,
+                                      adjwgt,
+                                      &nPart,
+                                      tpwgts,
+                                      ubvec,
+                                      &edgecut,
+                                      *cellPart);
+      }
 
-      // else {
+      else {
 
-      //   PDM_METIS_PartGraphKway (&(graphSize),
-      //                            &ncon,
-      //                            cellCellIdx,
-      //                            cellCell,
-      //                            vwgt,
-      //                            adjwgt,
-      //                            &nPart,
-      //                            tpwgts,
-      //                            ubvec,
-      //                            &edgecut,
-      //                            *cellPart);
-      // }
+        PDM_METIS_PartGraphKway (&(graphSize),
+                                 &ncon,
+                                 cellCellIdx,
+                                 cellCell,
+                                 vwgt,
+                                 adjwgt,
+                                 &nPart,
+                                 tpwgts,
+                                 ubvec,
+                                 &edgecut,
+                                 *cellPart);
+      }
 
-      double inbalance = 0.03;
-      double balance   = 0;
-      edgecut   = 0;
-      // bool   suppress_output = False;
-      // bool   graph_partitioned = False;
-      int time_limit = 0;
-      int seed  = 0;
-      int mode = 2;
-      PDM_kaffpa(&(graphSize),
-                 NULL,
-                 cellCellIdx,
-                 NULL,
-                 cellCell,
-                 &nPart,
-                  &inbalance,
-                  seed,
-                  mode,
-                  &edgecut,
-                  *cellPart );
+      // double inbalance = 0.03;
+      // double balance   = 0;
+      // edgecut   = 0;
+      // // bool   suppress_output = False;
+      // // bool   graph_partitioned = False;
+      // int time_limit = 0;
+      // int seed  = 0;
+      // int mode = 2;
+      // PDM_kaffpa(&(graphSize),
+      //            NULL,
+      //            cellCellIdx,
+      //            NULL,
+      //            cellCell,
+      //            &nPart,
+      //             &inbalance,
+      //             seed,
+      //             mode,
+      //             &edgecut,
+      //             *cellPart );
 
       if (0 == 1) {
         PDM_printf("\n Contenu de cellPart : \n");

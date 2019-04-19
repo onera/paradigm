@@ -145,7 +145,10 @@ cdef extern from "pdm_part_coarse_mesh.h":
     void PDM_part_coarse_color_get(int   cmId,
                                    int   iPart,
                                    int          **cellColor,
-                                   int          **faceColor)
+                                   int          **faceColor,
+                                   int          **threadColor,
+                                   int          **hyperPlaneColor)
+
 
 
     void PDM_part_coarse_mesh_free(int cmId)
@@ -933,8 +936,10 @@ cdef class CoarseMesh:
         """
         # ************************************************************************
         # > Declaration
-        cdef int          *cellColor,
+        cdef int          *cellColor
         cdef int          *faceColor
+        cdef int          *threadColor
+        cdef int          *hyperPlaneColor
         # ************************************************************************
 
         # dims = self.part_dim_get(self.id, ipart)
@@ -944,7 +949,9 @@ cdef class CoarseMesh:
         PDM_part_coarse_color_get(self._cmId,
                                   ipart,
                                   &cellColor,
-                                  &faceColor)
+                                  &faceColor,
+                                  &threadColor,
+                                  &hyperPlaneColor)
         # -> Begin
         cdef NPY.npy_intp dim
 
@@ -966,5 +973,27 @@ cdef class CoarseMesh:
                                                         &dim,
                                                         NPY.NPY_INT32,
                                                         <void *> faceColor)
-        return {'npCellColor'   : npCellColor,
-                'npFaceColor'   : npFaceColor}
+
+        # \param [out]  threadColor            Cell tag (size = nCell)
+        if (threadColor == NULL):
+            npThreadColor = None
+        else :
+            dim = <NPY.npy_intp> dims['nFace']
+            npThreadColor = NPY.PyArray_SimpleNewFromData(1,
+                                                          &dim,
+                                                          NPY.NPY_INT32,
+                                                          <void *> threadColor)
+
+        # \param [out]  threadColor            Cell tag (size = nCell)
+        if (hyperPlaneColor == NULL):
+            npHyperPlaneColor = None
+        else :
+            dim = <NPY.npy_intp> dims['nFace']
+            npHyperPlaneColor = NPY.PyArray_SimpleNewFromData(1,
+                                                              &dim,
+                                                              NPY.NPY_INT32,
+                                                              <void *> hyperPlaneColor)
+        return {'npCellColor'       : npCellColor,
+                'npFaceColor'       : npFaceColor,
+                'npThreadColor'     : npThreadColor,
+                'npHyperPlaneColor' : npHyperPlaneColor}
