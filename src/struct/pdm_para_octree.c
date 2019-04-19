@@ -435,9 +435,10 @@ _complete_octree
  * \brief Partitioning octants into large contiguous blocks. The list of octants
  *        is redistributed
  *
- * \param [inout]  octant_list  a list of octants,  
+ * \param [in]  octant_list  a list of distributed octants, 
+ *                           octant_list is not redistributed at the end  
  *
- * \return block_octants A list of blocks
+ * \return block_octants  A list of distributed blocks
  *
  */
 
@@ -667,7 +668,7 @@ _block_partition
   free (weight);
 
   /* 
-   * Redistirbute octant list from coarse load balancing 
+   * Redistribute octant list from coarse load balancing 
    */
 
   send_count = malloc(sizeof(int) * n_ranks);
@@ -745,18 +746,53 @@ _block_partition
   free (send_shift);
   free (recv_count);
 
-
   /* - tri des codes recus */
 
-/* PDM_morton_local_order(int                n_codes, */
-/*                        const PDM_morton_code_t  morton_codes[], */
-/*                        int                order[]) */
+  _octants_free (G);
+  _octants_init (G, octant_list->dim, recv_shift[n_ranks]/(octant_list->dim + 1));
 
-  // A finir
-
+  int idx = 0;
+  for (int i = 0; i < G->n_nodes; i++) {
+    G->codes[i].L = recv_codes[idx++];
+    for (int j = 0; j < octant_list->dim; j++) {
+      G->codes[i].X[j] = recv_codes[idx++];
+    }
+  }
   
+  PDM_morton_local_sort (G->n_nodes, G->codes);
+
+  /* - tri de octant list */
+
+
+
+
+
   
   return G;
+  
+}
+
+/**
+ *
+ * \brief Distribute points
+ *
+ * \param [in]   id                 Identifier 
+ *
+ */
+
+void
+_distribute_points
+(
+ int *n_points,
+ double **points,
+ int **points_icloud,
+ PDM_g_num_t **points_gnum,
+ PDM_morton_code_t **points_code,
+ PDM_morton_code_t *morton_index,
+ PDM_MPI_Comm comm
+)
+{
+
 }
 
 
@@ -923,6 +959,7 @@ PDM_para_octree_point_cloud_set
 }
 
 
+
 /**
  *
  * \brief Build octree  
@@ -991,7 +1028,8 @@ PDM_para_octree_build
       weight[i] = 1;
     }
     
-    PDM_morton_code_t *morton_index = malloc (sizeof(PDM_morton_code_t) * (n_ranks + 1));
+    PDM_morton_code_t *morton_index =
+      malloc (sizeof(PDM_morton_code_t) * (n_ranks + 1));
     
     PDM_morton_build_rank_index(dim,
                                 max_level,
@@ -1004,6 +1042,16 @@ PDM_para_octree_build
     
     free (weight);
     free (order);
+
+    /* redistribute point from morton_index */
+
+    _distribute_points (&octree->n_points,
+                        &octree->points,
+                        &octree->points_icloud,
+                        &octree->points_gnum,
+                        &octree->points_code,
+                        morton_index,
+                        octree->comm);
     
     int *c_rank = malloc (octree->n_points * sizeof(int));
     
@@ -1112,6 +1160,8 @@ PDM_para_octree_build
       send_count[rank_id] += 1;
     }
 
+    free (c_rank);
+    
     PDM_g_num_t *recv_points_gnum =
       malloc (recv_shift[n_ranks] * sizeof(PDM_g_num_t));
 
