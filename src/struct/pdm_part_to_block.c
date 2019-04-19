@@ -897,6 +897,96 @@ PDM_part_to_block_create
 
 /**
  *
+ * \brief Create a partitioning to block redistribution
+ *
+ * \param [in]   t_distrib       Distribution type
+ * \param [in]   t_post          Post processing type
+ * \param [in]   partActiveNode  Part of active nodes (\ref PDM_writer_BLOCK_DISTRIB_PART_OF_NODE mode)
+ * \param [in]   gnum_elt        Element global number
+ * \param [in]   weight          Weight of elements (or NULL)
+ * \param [in]   n_elt           Local number of elements
+ * \param [in]   n_part          Number of partition
+ * \param [in]   comm            MPI communicator
+ *
+ * \return   Initialized cs_part_to_block
+ *
+ */
+
+PDM_part_to_block_t *
+PDM_part_to_block_create2
+(
+ PDM_part_to_block_distrib_t   t_distrib,
+ PDM_part_to_block_post_t      t_post,
+ float                         partActiveNode,
+ PDM_g_num_t                 **gnum_elt,
+ PDM_g_num_t                  *dataDistribIndex,
+ int                          *n_elt,
+ int                           n_part,
+ PDM_MPI_Comm                  comm
+)
+{
+
+  _cs_part_to_block_t *ptb =
+    (_cs_part_to_block_t *) malloc (sizeof(_cs_part_to_block_t));
+
+
+  ptb->t_distrib        = t_distrib;    /*!< Distribution type */
+  ptb->t_post           = t_post;       /*!< Post processing type */
+  ptb->n_activeRanks    = 0;            /*!< Number of active ranks */
+  ptb->activeRanks      = NULL;         /*!< List of active ranks */
+  ptb->comm             = comm;         /*!< MSG communicator */
+  PDM_MPI_Comm_size (comm, &(ptb->s_comm));
+  PDM_MPI_Comm_rank (comm, &(ptb->myRank));
+  ptb->isMyRankActive   = 0;              /*!< Is active current rank */
+  ptb->partActiveNode   = partActiveNode; /*!< Part of active nodes */
+
+  ptb->n_part           = n_part;       /*!< Number of parts */
+  ptb->n_elt            = n_elt;        /*!< Number of elements for any part */
+  ptb->n_eltProc        = 0;            /*!< Number of elements on the current rank */
+  ptb->gnum_elt         = gnum_elt;     /*!< Global numbering of elements for any part */
+  ptb->weight           = NULL;
+  ptb->destProc         = NULL;
+  ptb->dataDistribIndex =
+    (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * (ptb->s_comm + 1));   /*!< Data distribution on ranks */
+
+  for(int iRank = 0; iRank < ptb->s_comm+1; iRank++)
+  {
+    ptb->dataDistribIndex[iRank] = dataDistribIndex[iRank];
+  }
+
+  ptb->s_blockMin   = INT_MAX;
+  ptb->s_blockMax   = 0;
+
+  ptb->i_sendData   = NULL;  /*!< Data to send to other processes index (size = s_comm) */
+  ptb->i_recvData   = NULL;  /*!< Received Data from other processes index (size = s_comm) */
+  ptb->n_sendData   = NULL;  /*!< Number of data to send to other processes (size = s_comm) */
+  ptb->n_recvData   = NULL;  /*!< Number of received Data from other processes (size = s_comm) */
+
+  ptb->tn_sendData  = 0;     /*!< Total number of sended data */
+  ptb->tn_recvData  = 0;     /*!< Total number of received data */
+  ptb->sorted_recvGnum    = NULL;  /*!< Sorted recv global num */
+  ptb->order        = NULL;  /*!< Order */
+  ptb->n_eltBlock   = 0;
+  ptb->block_gnum   = NULL;  /*!< Global number of reveived data (size = tn_recvData) */
+
+  /*
+   * Active ranks definition
+   */
+
+  _active_ranks (ptb);
+
+  /*
+   * Data distribution definition
+   */
+  // Rajouter un attribut de classe pour passer user ?
+  _distrib_data (ptb, 1);
+
+  return (PDM_part_to_block_t *) ptb;
+}
+
+
+/**
+ *
  * \brief Return number of active ranks
  *
  * \param [in]   ptb          Part to block structure
