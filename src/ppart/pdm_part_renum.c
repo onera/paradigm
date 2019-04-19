@@ -646,9 +646,10 @@ _renum_cells_hilbert
     /** CHECK H_CODES **/
 
     free(cellCenter);
+
     int *newToOldOrder = (int *) malloc (part->nCell * sizeof(int));
     for(int i = 0; i < part->nCell; ++i) {
-      part->newToOldOrderCell[i] = i;
+      newToOldOrder [i] = i;
     }
 
     PDM_sort_double (hilbertCodes, newToOldOrder, part->nCell);
@@ -703,7 +704,7 @@ _renum_cells_cuthill
     PDM_cuthill_generate(part, order);
 
     /** Apply renumbering **/
-    PDM_part_reorder_cell(part, part->newToOldOrderCell);
+    PDM_part_reorder_cell(part, order);
 
     /** Verbose bandwidth **/
     // dualBandWidth = PDM_checkbandwidth(part);
@@ -845,6 +846,8 @@ _renum_faces_lexicographic
     _part_t *part = meshParts[ipart];
     const int nFace = part->nFace;
 
+    int *order = (int *) malloc (sizeof(int) * nFace);
+
     /** Build a pre-array face cell ordered */
     int *faceCellTmp = (int *) malloc(2*nFace * sizeof(int));
 
@@ -864,10 +867,10 @@ _renum_faces_lexicographic
     }
 
     /** Reorder lexicographicly the array */
-    _order_lnum_s (faceCellTmp, 2, part->newToOldOrderFace, nFace);
+    _order_lnum_s (faceCellTmp, 2, order, nFace);
 
     /** Update face array with the new array **/
-    PDM_part_reorder_face (part, part->newToOldOrderFace);
+    PDM_part_reorder_face (part, order);
 
     if(part->newToOldOrderFace == NULL)
       part->newToOldOrderFace = (int *) malloc (sizeof(int) * nFace);
@@ -877,6 +880,7 @@ _renum_faces_lexicographic
     }
 
     /** Free memory **/
+    free (order);
     free (faceCellTmp);
   }
 }
