@@ -329,7 +329,8 @@ const int            ppartId,
 const int            ipart,
       int          **cellColor,
       int          **faceColor,
-      int          **threadColor
+      int          **threadColor,
+      int          **hyperPlaneColor
 );
 
 void
@@ -339,7 +340,8 @@ PROCF (pdm_part_part_color_get, PDM_PART_PART_COLOR_GET)
  int           *ipart,
  int           *cellColor,
  int           *faceColor,
- int           *threadColor
+ int           *threadColor,
+ int           *hyperPlaneColor
 );
 
 /**
@@ -446,6 +448,21 @@ const int      *ppartId,
       int      *bound_part_faces_min,
       int      *bound_part_faces_max,
       int      *bound_part_faces_sum
+);
+
+
+/**
+ *
+ * \brief Free some array in ppart
+ *
+ * \param [in]   ppartId        ppart identifier
+ *
+ */
+
+void
+PDM_part_partial_free
+(
+const  int                ppartId
 );
 
 #ifdef __cplusplus

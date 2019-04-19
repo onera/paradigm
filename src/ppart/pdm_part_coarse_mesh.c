@@ -2236,14 +2236,17 @@ _coarse_grid_compute
   itime += 1;
 
   /* reordering cells and faces */
-  part_res->part->newToOldOrderCell = (int *) malloc (sizeof(int) * part_res->part->nCell);
-  for (int i = 0; i < part_res->part->nCell; i++){
-    part_res->part->newToOldOrderCell[i] = i;
-  }
-  part_res->part->newToOldOrderFace = (int *) malloc (sizeof(int) * part_res->part->nFace);
-  for (int i = 0; i < part_res->part->nFace; i++){
-    part_res->part->newToOldOrderFace[i] = i;
-  }
+  // Conflict with New renumbering for OpenMP/Better vecto - Add part_to_block option
+  // HEAD ---------------------
+  // part_res->part->newToOldOrderCell = (int *) malloc (sizeof(int) * part_res->part->nCell);
+  // for (int i = 0; i < part_res->part->nCell; i++){
+  //   part_res->part->newToOldOrderCell[i] = i;
+  // }
+  // part_res->part->newToOldOrderFace = (int *) malloc (sizeof(int) * part_res->part->nFace);
+  // for (int i = 0; i < part_res->part->nFace; i++){
+  //   part_res->part->newToOldOrderFace[i] = i;
+  // }
+  // Conflict with New renumbering for OpenMP/Better vecto - Add part_to_block option VOID
 
   free(cellCoarseCell);
 
@@ -4560,7 +4563,9 @@ void PDM_part_coarse_color_get
  const int   cmId,
  const int   iPart,
        int **cellColor,
-       int **faceColor
+       int **faceColor,
+       int **threadColor,
+       int **hyperPlaneColor
 )
 {
   _coarse_mesh_t * cm = _get_from_id (cmId);
@@ -4576,8 +4581,10 @@ void PDM_part_coarse_color_get
     exit(1);
   }
 
-  *cellColor = part_res->part->cellColor;
-  *faceColor = part_res->part->faceColor;
+  *cellColor       = part_res->part->cellColor;
+  *faceColor       = part_res->part->faceColor;
+  *threadColor     = part_res->part->threadColor;
+  *hyperPlaneColor = part_res->part->hyperPlaneColor;
 }
 
 /**
