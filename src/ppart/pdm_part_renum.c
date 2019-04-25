@@ -711,11 +711,11 @@ _renum_cells_cuthill
     // PDM_printf("Bandwidth of graph after reordering : %d \n", dualBandWidth);
 
     /* Copy in partition */
-    if(part->newToOldOrderCell == NULL)
+    if(part->newToOldOrderCell == NULL){
       part->newToOldOrderCell = (int *) malloc (sizeof(int) * nCell);
-
-    for (int i = 0; i < nCell; i++){
-      part->newToOldOrderCell[i] = order[i];
+      for (int i = 0; i < nCell; i++){
+        part->newToOldOrderCell[i] = order[i];
+      }
     }
 
     /** Free memory **/
@@ -758,11 +758,11 @@ _renum_cells_random
     PDM_part_reorder_cell (part, order);
 
     /* Copy in partition */
-    if(part->newToOldOrderCell == NULL)
+    if(part->newToOldOrderCell == NULL){
       part->newToOldOrderCell = (int *) malloc (sizeof(int) * nCell);
-
-    for (int i = 0; i < nCell; i++){
-      part->newToOldOrderCell[i] = order[i];
+      for (int i = 0; i < nCell; i++){
+        part->newToOldOrderCell[i] = order[i];
+      }
     }
 
     free (order);
@@ -808,11 +808,11 @@ _renum_faces_random
     PDM_part_reorder_face (part, order);
 
     /* Copy in partition */
-    if(part->newToOldOrderFace == NULL)
+    if(part->newToOldOrderFace == NULL){
       part->newToOldOrderFace = (int *) malloc (sizeof(int) * nFace);
-
-    for (int i = 0; i < nFace; i++){
-      part->newToOldOrderFace[i] = order[i];
+      for (int i = 0; i < nFace; i++){
+        part->newToOldOrderFace[i] = order[i];
+      }
     }
 
     free (order);
@@ -872,11 +872,11 @@ _renum_faces_lexicographic
     /** Update face array with the new array **/
     PDM_part_reorder_face (part, order);
 
-    if(part->newToOldOrderFace == NULL)
+    if(part->newToOldOrderFace == NULL){
       part->newToOldOrderFace = (int *) malloc (sizeof(int) * nFace);
-
-    for (int i = 0; i < nFace; i++){
-      part->newToOldOrderFace[i] = order[i];
+      for (int i = 0; i < nFace; i++){
+        part->newToOldOrderFace[i] = order[i];
+      }
     }
 
     /** Free memory **/
@@ -1441,6 +1441,14 @@ PDM_part_reorder_cell
                      part->hyperPlaneColor);
   }
 
+  if (part->newToOldOrderCell != NULL) {
+    // printf("PDM_order_array :newToOldOrderCell \n");
+    PDM_order_array (part->nCell,
+                     sizeof(int),
+                     newToOldOrder,
+                     part->newToOldOrderCell);
+  }
+
   PDM_order_array (part->nCell,
                    sizeof(PDM_g_num_t),
                    newToOldOrder,
@@ -1500,6 +1508,15 @@ int     *newToOldOrder
                      sizeof(int),
                      newToOldOrder,
                      part->faceColor);
+  }
+
+  /** FaceColor **/
+  if (part->newToOldOrderFace != NULL) {
+    // printf("PDM_order_array :newToOldOrderFace \n");
+    PDM_order_array (part->nFace,
+                     sizeof(int),
+                     newToOldOrder,
+                     part->newToOldOrderFace);
   }
 
    /** FaceLNToGN **/
