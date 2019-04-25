@@ -978,7 +978,7 @@ cdef class CoarseMesh:
         if (threadColor == NULL):
             npThreadColor = None
         else :
-            dim = <NPY.npy_intp> dims['nFace']
+            dim = <NPY.npy_intp> dims['nCell']
             npThreadColor = NPY.PyArray_SimpleNewFromData(1,
                                                           &dim,
                                                           NPY.NPY_INT32,
@@ -988,7 +988,7 @@ cdef class CoarseMesh:
         if (hyperPlaneColor == NULL):
             npHyperPlaneColor = None
         else :
-            dim = <NPY.npy_intp> dims['nFace']
+            dim = <NPY.npy_intp> dims['nCell']
             npHyperPlaneColor = NPY.PyArray_SimpleNewFromData(1,
                                                               &dim,
                                                               NPY.NPY_INT32,
