@@ -32,30 +32,39 @@ extern "C" {
  */
 
 typedef enum {
-  PDM_NADIR,   
-  PDM_ZENITH,
   PDM_WEST,
   PDM_EAST,  
-  PDM_NORTH,   
   PDM_SOUTH,   
+  PDM_NORTH,
+  PDM_BOTTOM,   
+  PDM_UP,   
 } PDM_para_octree_direction_t;
 
 /**
  * \enum PDM_para_octree_child_t
  * \brief Names of 8 children of a node 
  *
+ * If the type is BOX_TREE_NODE, the ordering of children is defined as follows,
+ *  using notation B: bottom, U: up, E: east, W: west, S: south,  N: north.
+ *
+ *  octant:   0: BSW, 1: BSE, 2: BNW, 3: BNE, 4: USW, 5: USE, 6: UNW, 7: UNE
+ *  quadrant: 0:  SW, 1:  SE, 2:  NW, 3:  NE
+ *  segment:  0:   W, 1:   E
+ *
  */
 
 typedef enum {
-  PDM_NORTH_WEST_NADIR,   
-  PDM_NORTH_WEST_ZENITH,   
-  PDM_NORTH_EAST_NADIR,   
-  PDM_NORTH_EAST_ZENITH,   
-  PDM_SOUTH_WEST_NADIR,   
-  PDM_SOUTH_WEST_ZENITH,   
-  PDM_SOUTH_EAST_NADIR,   
-  PDM_SOUTH_EAST_ZENITH,   
+  PDM_BSW,   
+  PDM_BSE,   
+  PDM_BNW,   
+  PDM_BNE,   
+  PDM_USW,   
+  PDM_USE,   
+  PDM_UNW,   
+  PDM_UNE,   
 } PDM_para_octree_child_t;
+
+/*  */
 
 /*============================================================================
  * Public function definitions
