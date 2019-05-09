@@ -6,7 +6,7 @@ add_subdirectory(mpi_wrapper)
 # Liste de tous les sources
 # -------------------------
 
-file(GLOB_RECURSE SOURCES 
+file(GLOB_RECURSE SOURCES
      mesh/*.[ch]
      meshgen/*.[ch]
      pario/*.[ch]
@@ -16,11 +16,11 @@ file(GLOB_RECURSE SOURCES
      util/*.[ch]
      ext_wrapper/*.[ch]
      mpi_wrapper/pdm_mpi_node_first_rank.[hc]
-     pdm.h 
-     pdm_priv.h) 
+     pdm.h
+     pdm_priv.h)
 
-file(GLOB_RECURSE SOURCESF 
-     *.[fF] 
+file(GLOB_RECURSE SOURCESF
+     *.[fF]
      *.[fF]90)
 
 add_library(pdm OBJECT ${SOURCES})
@@ -61,7 +61,7 @@ if (PDM_ENABLE_STATIC_Fortran_INTERFACE OR PDM_ENABLE_SHARED_Fortran_INTERFACE)
                            PUBLIC    ${CMAKE_CURRENT_SOURCE_DIR}
                            PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/pario
                            PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/ppart
-                           PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/io                           
+                           PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/io
                            PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/mpi_wrapper
                            PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/ext_wrapper
                            PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/mesh
@@ -76,12 +76,12 @@ if (PDM_ENABLE_STATIC_Fortran_INTERFACE OR PDM_ENABLE_SHARED_Fortran_INTERFACE)
 endif()
 
 if (PTSCOTCH_FOUND)
-    target_include_directories(pdm 
+    target_include_directories(pdm
                               PRIVATE ${PTSCOTCH_INCLUDE_DIRS})
 endif (PTSCOTCH_FOUND)
 
 if (PARMETIS_FOUND)
-    target_include_directories(pdm 
+    target_include_directories(pdm
                               PRIVATE ${PARMETIS_INCLUDE_DIRS})
 endif (PARMETIS_FOUND)
 
@@ -111,7 +111,7 @@ list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_global_mean.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/mesh/pdm_cellface_orient.h")
 if (PDM_IN_PDMA)
   list(APPEND LIST_HEADER "${CMAKE_BINARY_DIR}/pdm_config.h")
-else() 
+else()
   list(APPEND LIST_HEADER "${PDM_BINARY_DIR}/pdm_config.h")
 endif()
 
@@ -126,7 +126,7 @@ if (PDM_ENABLE_STATIC_Fortran_INTERFACE OR PDM_ENABLE_SHARED_Fortran_INTERFACE)
   list(APPEND LIST_HEADERF "${CMAKE_CURRENT_SOURCE_DIR}/pdmf.h")
     if (PDM_IN_PDMA)
     list(APPEND LIST_HEADERF "${CMAKE_BINARY_DIR}/pdm_configf.h")
-  else() 
+  else()
     list(APPEND LIST_HEADERF "${PDM_BINARY_DIR}/pdm_configf.h")
   endif()
   list(APPEND LIST_HEADERF "${CMAKE_CURRENT_BINARY_DIR}/mod_pdm_io.mod")
@@ -152,7 +152,7 @@ if (PDM_ENABLE_SHARED)
   set_target_properties(pdm_shared PROPERTIES
                             PUBLIC_HEADER "${LIST_HEADER}")
 
-  get_target_property(PDM_INC pdm INCLUDE_DIRECTORIES)                          
+  get_target_property(PDM_INC pdm INCLUDE_DIRECTORIES)
   target_include_directories(pdm_shared PUBLIC ${PDM_INC})
 
 endif()

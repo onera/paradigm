@@ -48,7 +48,7 @@ PDM_mesh_dist_create
 );
 
 void
-PDM_mesh_dist_create_cf 
+PDM_mesh_dist_create_cf
 (
  const PDM_mesh_nature_t mesh_nature,
  const int n_point_cloud,
@@ -85,7 +85,7 @@ PDM_mesh_dist_n_part_cloud_set
  * \param [in]   i_part          Index of partition
  * \param [in]   n_points        Number of points
  * \param [in]   coords          Point coordinates
- * \param [in]   gnum            Point global number 
+ * \param [in]   gnum            Point global number
  *
  */
 
@@ -144,14 +144,14 @@ PDM_mesh_dist_surf_mesh_global_data_set
  * \brief Set a part of a surface mesh
  *
  * \param [in]   id            Identifier
- * \param [in]   i_part        Partition to define  
- * \param [in]   n_face        Number of faces                     
+ * \param [in]   i_part        Partition to define
+ * \param [in]   n_face        Number of faces
  * \param [in]   face_vtx_idx  Index in the face -> vertex connectivity
  * \param [in]   face_vtx      face -> vertex connectivity
- * \param [in]   face_ln_to_gn Local face numbering to global face numbering 
- * \param [in]   n_vtx         Number of vertices              
- * \param [in]   coords        Coordinates       
- * \param [in]   vtx_ln_to_gn  Local vertex numbering to global vertex numbering 
+ * \param [in]   face_ln_to_gn Local face numbering to global face numbering
+ * \param [in]   n_vtx         Number of vertices
+ * \param [in]   coords        Coordinates
+ * \param [in]   vtx_ln_to_gn  Local vertex numbering to global vertex numbering
  *
  */
 
@@ -164,7 +164,7 @@ PDM_mesh_dist_surf_mesh_part_set
  const int         *face_vtx_idx,
  const int         *face_vtx,
  const PDM_g_num_t *face_ln_to_gn,
- const int          n_vtx, 
+ const int          n_vtx,
  const double      *coords,
  const PDM_g_num_t *vtx_ln_to_gn
 );
@@ -215,8 +215,8 @@ PDM_mesh_dist_get
  * \brief Free a distance mesh structure
  *
  * \param [in]  id       Identifier
- * \param [in]  partial  if partial is equal to 0, all data are removed. 
- *                       Otherwise, results are kept. 
+ * \param [in]  partial  if partial is equal to 0, all data are removed.
+ *                       Otherwise, results are kept.
  *
  */
 
@@ -227,7 +227,7 @@ PDM_mesh_dist_free
  const int partial
  );
 
-  
+
 /**
  *
  * \brief  Dump elapsed an CPU time

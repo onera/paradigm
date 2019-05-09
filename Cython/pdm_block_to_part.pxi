@@ -1,13 +1,13 @@
 
 cdef extern from "pdm_block_to_part.h":
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-    # > Wrapping of Ppart Structure 
+    # > Wrapping of Ppart Structure
     ctypedef struct PDM_block_to_part_t:
       pass
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-    # > Wrapping of function 
+    # > Wrapping of function
     PDM_block_to_part_t *PDM_block_to_part_create(PDM_g_num_t   *blockDistribIdx,
                                                   PDM_g_num_t  **gnum_elt,
                                                   int           *n_elt,
@@ -50,8 +50,8 @@ cdef class BlockToPart:
     # ************************************************************************
     # ------------------------------------------------------------------------
     def __cinit__(self, NPY.ndarray[npy_pdm_gnum_t, ndim=1, mode='c'] Distrib,
-                        MPI.Comm comm, 
-                        list     pLNToGN, 
+                        MPI.Comm comm,
+                        list     pLNToGN,
                         int      partN):
         """
         Constructor of BlockToPart object : Python wrapping of PDM library (E. Quémerais)
@@ -122,19 +122,19 @@ cdef class BlockToPart:
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
         # > Create
         # self.BTP = PDM_block_to_part_create(self.BlkDistribIdx, self.LNToGN,
-        self.BTP = PDM_block_to_part_create(<PDM_g_num_t *> Distrib.data, 
+        self.BTP = PDM_block_to_part_create(<PDM_g_num_t *> Distrib.data,
                                             self.LNToGN,
-                                            self.NbElmts, 
-                                            self.partN, 
+                                            self.NbElmts,
+                                            self.partN,
                                             PDMC)
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
     # ------------------------------------------------------------------
-    def BlockToPart_Exchange(self, dict         dField, 
+    def BlockToPart_Exchange(self, dict         dField,
                                    dict         pField,
                                    PDM_stride_t t_stride = <PDM_stride_t> 0):
         """
-           TODOUX : 1) Exchange of variables types array 
+           TODOUX : 1) Exchange of variables types array
                     2) Assertion of type and accross MPI of the same field
         """
         # ************************************************************************
@@ -183,8 +183,8 @@ cdef class BlockToPart:
 
           # ::::::::::::::::::::::::::::::::::::::::::::::::::
           # > Compute
-          PDM_block_to_part_exch(self.BTP, 
-                                 s_data, 
+          PDM_block_to_part_exch(self.BTP,
+                                 s_data,
                                  t_stride,
                                  block_stride,
                                  block_data,
@@ -198,8 +198,8 @@ cdef class BlockToPart:
 
     # ------------------------------------------------------------------
     def __dealloc__(self):
-      """ 
-         Deallocate all the array 
+      """
+         Deallocate all the array
       """
       # ************************************************************************
       # > Declaration
