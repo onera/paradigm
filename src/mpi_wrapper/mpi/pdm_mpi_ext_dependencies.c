@@ -60,39 +60,39 @@ extern "C" {
 
 #ifdef PDM_HAVE_PARMETIS
 
-int 
-PDM_ParMETIS_V3_PartKway 
+int
+PDM_ParMETIS_V3_PartKway
 (
-const PDM_g_num_t *vtxdist, 
-const PDM_g_num_t *xadj, 
-const PDM_g_num_t *adjncy, 
-const int *vwgt, 
-const int *adjwgt, 
-const int *wgtflag, 
-const int *numflag, 
-const int *ncon, 
-const int *nparts, 
-const double *tpwgts, 
-const double *ubvec, 
-const int *edgecut, 
-int *part, 
+const PDM_g_num_t *vtxdist,
+const PDM_g_num_t *xadj,
+const PDM_g_num_t *adjncy,
+const int *vwgt,
+const int *adjwgt,
+const int *wgtflag,
+const int *numflag,
+const int *ncon,
+const int *nparts,
+const double *tpwgts,
+const double *ubvec,
+const int *edgecut,
+int *part,
 const PDM_MPI_Comm comm
 )
 {
   MPI_Comm mpi_comm = *((MPI_Comm *) PDM_MPI_2_mpi_comm (comm));
   int iRank = 0;
   PDM_MPI_Comm_rank (comm, &iRank);
-  
+
   int iSize = 0;
   PDM_MPI_Comm_size (comm, &iSize);
-  
+
   PDM_g_num_t nNode = vtxdist[iRank+1] - vtxdist[iRank];
   PDM_g_num_t nEdge = xadj[nNode];
 
   idx_t _wgtflag = *wgtflag;
   idx_t _numflag = *numflag;
-  idx_t _ncon = *ncon;; 
-  idx_t _nparts = *nparts; 
+  idx_t _ncon = *ncon;;
+  idx_t _nparts = *nparts;
 
   idx_t options[3]; /* Options */
   /* METIS_SetDefaultOptions(options); */
@@ -101,19 +101,19 @@ const PDM_MPI_Comm comm
   /* options[METIS_OPTION_MINCONN] = 1; //Minimize the maximum connectivity */
   /* options[METIS_OPTION_CONTIG] = 1; //Force contiguous partitions */
   //The graph should be compressed by combining together vertices that have identical adjacency lists.
-  options[0] = 0; 
-  options[1] = 0; 
-  options[2] = 0; 
+  options[0] = 0;
+  options[1] = 0;
+  options[2] = 0;
 
-  //METIS provide the METIS SetDefaultOptions routine to set the options to their default values. 
+  //METIS provide the METIS SetDefaultOptions routine to set the options to their default values.
   //After that, the application can just modify the options that is interested in modifying.
   //options[METIS_OPTION_NSEPS] = 10;
   //options[METIS_OPTION_UFACTOR] = 100;
-  
+
   idx_t _edgecut = (idx_t) *edgecut;
-  
-  real_t *_tpwgts, *__tpwgts; 
-  real_t *_ubvec, *__ubvec;  
+
+  real_t *_tpwgts, *__tpwgts;
+  real_t *_ubvec, *__ubvec;
 
   __tpwgts = NULL;
   __ubvec = NULL;
@@ -123,7 +123,7 @@ const PDM_MPI_Comm comm
     _ubvec = (real_t *) ubvec;
   }
 
-  else { 
+  else {
 
     __tpwgts = malloc (sizeof(real_t) * _ncon * _nparts);
     __ubvec = malloc (sizeof(real_t) * _ncon);
@@ -132,15 +132,15 @@ const PDM_MPI_Comm comm
     _ubvec = __ubvec;
 
     for (int i = 0; i < _ncon * _nparts; i++) {
-      __tpwgts[i] = (real_t) tpwgts[i]; 
+      __tpwgts[i] = (real_t) tpwgts[i];
     }
-    
+
     for (int i = 0; i < _ncon; i++) {
-      __ubvec[i] = (real_t) ubvec[i];         
+      __ubvec[i] = (real_t) ubvec[i];
     }
 
   }
-  
+
   idx_t *__vtxdist, *_vtxdist;
   idx_t *__xadj, *_xadj;
   idx_t *__adjncy, *_adjncy;
@@ -160,7 +160,7 @@ const PDM_MPI_Comm comm
     __xadj    = NULL;
     __adjncy  = NULL;
   }
-  
+
   else {
     __vtxdist = (idx_t *) malloc (sizeof(idx_t) * (iSize + 1));
     __xadj    = (idx_t *) malloc (sizeof(idx_t) * (nNode + 1));
@@ -168,24 +168,24 @@ const PDM_MPI_Comm comm
     _vtxdist = __vtxdist;
     _xadj    = __xadj;
     _adjncy  = __adjncy;
-    
+
     for (int i = 0; i < iSize + 1; i++) {
-      __vtxdist[i] = (idx_t) vtxdist[i]; 
+      __vtxdist[i] = (idx_t) vtxdist[i];
     }
-      
+
     for (int i = 0; i < nNode + 1; i++) {
-      __xadj[i] = (idx_t) xadj[i]; 
+      __xadj[i] = (idx_t) xadj[i];
     }
 
     for (int i = 0; i < nEdge; i++) {
-      __adjncy[i] =  (idx_t) adjncy[i]; 
+      __adjncy[i] =  (idx_t) adjncy[i];
     }
   }
 
-  idx_t *__vwgt, *_vwgt; 
-	idx_t *__adjwgt, *_adjwgt; 
+  idx_t *__vwgt, *_vwgt;
+	idx_t *__adjwgt, *_adjwgt;
 
-  idx_t *__part, *_part; 
+  idx_t *__part, *_part;
 
   if (sizeof(int) == sizeof(idx_t)) {
     _vwgt     = (idx_t *) vwgt;
@@ -197,21 +197,21 @@ const PDM_MPI_Comm comm
   }
 
   else {
-    if (vwgt != NULL) { 
+    if (vwgt != NULL) {
       __vwgt = (idx_t *) malloc (sizeof(idx_t) * nNode);
       for (int i = 0; i < nNode; i++) {
-        __vwgt[i] = vwgt[i]; 
-      }      
+        __vwgt[i] = vwgt[i];
+      }
     }
     else {
       __vwgt = NULL;
     }
-    
-    if (adjwgt != NULL) { 
+
+    if (adjwgt != NULL) {
       __adjwgt = (idx_t *) malloc (sizeof(idx_t) * nEdge);
       for (int i = 0; i < nEdge; i++) {
-        __adjwgt[i] = adjwgt[i]; 
-      }      
+        __adjwgt[i] = adjwgt[i];
+      }
     }
     else {
       __adjwgt = NULL;
@@ -226,31 +226,31 @@ const PDM_MPI_Comm comm
   }
 
   int rval = (int) ParMETIS_V3_PartKway (_vtxdist,
-                                         _xadj, 
-                                         _adjncy, 
-                                         _vwgt, 
-                                         _adjwgt, 
-                                         &_wgtflag, 
-                                         &_numflag, 
-                                         &_ncon, 
-                                         &_nparts, 
-	                                       _tpwgts, 
-                                         _ubvec, 
-                                         options, 
+                                         _xadj,
+                                         _adjncy,
+                                         _vwgt,
+                                         _adjwgt,
+                                         &_wgtflag,
+                                         &_numflag,
+                                         &_ncon,
+                                         &_nparts,
+	                                       _tpwgts,
+                                         _ubvec,
+                                         options,
                                          &_edgecut,
-                                        _part, 
+                                        _part,
 	                                      &mpi_comm);
-  
+
   if (sizeof(int) != sizeof(idx_t)) {
     for (int i = 0; i < nNode; i++) {
-      part[i] = _part[i]; 
-    }      
+      part[i] = _part[i];
+    }
   }
-  
+
   if (__vtxdist != NULL) {
     free (__vtxdist);
   }
-  
+
   if (__xadj != NULL) {
     free (__xadj);
   }
@@ -274,31 +274,31 @@ const PDM_MPI_Comm comm
   if (__tpwgts != NULL) {
     free (__tpwgts);
   }
-  
+
   if (__ubvec != NULL) {
-    free (__ubvec);    
+    free (__ubvec);
   }
-  
-  
+
+
   return rval;
-  
+
 }
 
 #endif
-    
+
 #ifdef PDM_HAVE_PTSCOTCH
 
-void  
-PDM_SCOTCH_dpart 
+void
+PDM_SCOTCH_dpart
 (
 const PDM_g_num_t dNCell,
 const PDM_g_num_t *dDualGraphIdx,
-const PDM_g_num_t *dDualGraph,        
+const PDM_g_num_t *dDualGraph,
 const int *cellWeight,
 const int *edgeWeight,
-const int check,        
+const int check,
 const PDM_MPI_Comm comm,
-const int  nPart,        
+const int  nPart,
 int *part
 )
 {
@@ -313,21 +313,21 @@ int *part
     PDM_error(__FILE__, __LINE__, 0,"PPART error : Error in PT-Scotch graph initialization\n");
     exit(1);
   }
-    
-  SCOTCH_Num _baseval = 0; 
+
+  SCOTCH_Num _baseval = 0;
   SCOTCH_Num _vertlocnbr = (SCOTCH_Num) dNCell;
-  SCOTCH_Num _vertlocmax = (SCOTCH_Num) dNCell; 
-  SCOTCH_Num *_vertloctab, *__vertloctab; 
-  SCOTCH_Num *_vendloctab, *__vendloctab; 
-  SCOTCH_Num *_veloloctab, *__veloloctab; 
-  SCOTCH_Num *_vlblloctab = NULL; 
+  SCOTCH_Num _vertlocmax = (SCOTCH_Num) dNCell;
+  SCOTCH_Num *_vertloctab, *__vertloctab;
+  SCOTCH_Num *_vendloctab, *__vendloctab;
+  SCOTCH_Num *_veloloctab, *__veloloctab;
+  SCOTCH_Num *_vlblloctab = NULL;
   SCOTCH_Num _edgelocnbr = (SCOTCH_Num) dDualGraphIdx[dNCell];
   SCOTCH_Num _edgelocsiz = (SCOTCH_Num) dDualGraphIdx[dNCell];
-  SCOTCH_Num *_edgeloctab, *__edgeloctab; 
-  SCOTCH_Num *_edgegsttab = NULL; 
+  SCOTCH_Num *_edgeloctab, *__edgeloctab;
+  SCOTCH_Num *_edgegsttab = NULL;
   SCOTCH_Num *_edloloctab, *__edloloctab;
   SCOTCH_Num *_part, *__part;
-  
+
   if (sizeof(PDM_g_num_t) == sizeof(SCOTCH_Num)) {
 #ifdef __INTEL_COMPILER
 #pragma warning(push)
@@ -338,23 +338,23 @@ int *part
     _edgeloctab = (SCOTCH_Num *) dDualGraph;
 #ifdef __INTEL_COMPILER
 #pragma warning(pop)
-#endif    
+#endif
     __vertloctab = NULL;
     __vendloctab = NULL;
     __edgeloctab = NULL;
   }
-  
+
   else {
     __vertloctab = (SCOTCH_Num *) malloc (sizeof(SCOTCH_Num) * (_vertlocnbr + 1));
-    __vendloctab = __vertloctab + 1; 
+    __vendloctab = __vertloctab + 1;
     __edgeloctab  = (SCOTCH_Num *) malloc (sizeof(SCOTCH_Num) * _edgelocsiz);
 
     for (int i = 0; i < _vertlocnbr + 1; i++) {
-      __vertloctab[i] = (SCOTCH_Num) dDualGraphIdx[i]; 
+      __vertloctab[i] = (SCOTCH_Num) dDualGraphIdx[i];
     }
 
     for (int i = 0; i < _edgelocsiz; i++) {
-      __edgeloctab[i] = (SCOTCH_Num) dDualGraph[i]; 
+      __edgeloctab[i] = (SCOTCH_Num) dDualGraph[i];
     }
 
     _vertloctab = __vertloctab;
@@ -364,26 +364,26 @@ int *part
   }
 
   if (sizeof(int) == sizeof(SCOTCH_Num)) {
-    
-    _veloloctab = (SCOTCH_Num *) cellWeight; 
+
+    _veloloctab = (SCOTCH_Num *) cellWeight;
     _edloloctab = (SCOTCH_Num *) edgeWeight;
     _part = (SCOTCH_Num *) part;
-    
-    __veloloctab = NULL; 
+
+    __veloloctab = NULL;
     __edloloctab = NULL;
     __part = NULL;
-    
+
   }
-  
+
   else {
 
-    __veloloctab = NULL; 
+    __veloloctab = NULL;
     __edloloctab = NULL;
 
     if (cellWeight != NULL) {
       __veloloctab = (SCOTCH_Num *) malloc (sizeof(SCOTCH_Num) * _vertlocnbr);
       for (int i = 0; i < _vertlocnbr; i++) {
-        __veloloctab[i] = cellWeight[i]; 
+        __veloloctab[i] = cellWeight[i];
       }
     }
 
@@ -392,28 +392,28 @@ int *part
     if (edgeWeight != NULL) {
       __edloloctab = (SCOTCH_Num *) malloc (sizeof(SCOTCH_Num) * _edgelocsiz);
       for (int i = 0; i < _edgelocsiz; i++) {
-        __edloloctab[i] = edgeWeight[i]; 
+        __edloloctab[i] = edgeWeight[i];
       }
     }
 
-    _veloloctab = __veloloctab; 
+    _veloloctab = __veloloctab;
     _edloloctab = __edloloctab;
     _part = __part;
-    
+
   }
 
   ierr = SCOTCH_dgraphBuild  (&graph,
-                              _baseval, 
-                              _vertlocnbr, 
-                              _vertlocmax, 
-                              _vertloctab, 
+                              _baseval,
+                              _vertlocnbr,
+                              _vertlocmax,
+                              _vertloctab,
                               _vendloctab,
-                              _veloloctab, 
-                              _vlblloctab, 
-                              _edgelocnbr, 
-                              _edgelocsiz, 
-                              _edgeloctab, 
-                              _edgegsttab, 
+                              _veloloctab,
+                              _vlblloctab,
+                              _edgelocnbr,
+                              _edgelocsiz,
+                              _edgeloctab,
+                              _edgegsttab,
                               _edloloctab);
 
   if (ierr) {
@@ -449,7 +449,7 @@ int *part
 
   if (__part != NULL) {
     for (int i = 0; i < _vertlocnbr; i++) {
-      part[i] = __part[i]; 
+      part[i] = __part[i];
     }
     free (__part);
   }
@@ -458,7 +458,7 @@ int *part
     free (__vertloctab);
   }
 
-    
+
   if (__edgeloctab != NULL) {
     free (__edgeloctab);
   }
@@ -466,11 +466,11 @@ int *part
   if (__veloloctab != NULL) {
     free (__veloloctab);
   }
-  
+
   if (__edloloctab != NULL) {
     free (__edloloctab);
   }
-  
+
 }
 
 #endif

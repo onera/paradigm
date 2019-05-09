@@ -67,7 +67,7 @@ typedef enum {
 //typedef enum {
 //
 //  PDM_PART_TO_BLOCK_STRIDE_CST = 0,  /*!< Constant stride element */
-//  PDM_PART_TO_BLOCK_STRIDE_VAR = 1,  /*!< Variable stride element */               
+//  PDM_PART_TO_BLOCK_STRIDE_VAR = 1,  /*!< Variable stride element */
 //
 //} PDM_part_to_block_stride_t;
 
@@ -75,7 +75,7 @@ typedef enum {
 /**
  * \struct PDM_part_to_block_t
  * \brief  Partitioning to block redistribution
- * 
+ *
  */
 
 typedef struct _cs_part_to_block_t PDM_part_to_block_t;
@@ -85,7 +85,7 @@ typedef struct _cs_part_to_block_t PDM_part_to_block_t;
  *============================================================================*/
 
 /*=============================================================================
- * Public function prototypes 
+ * Public function prototypes
  *============================================================================*/
 
 
@@ -99,10 +99,10 @@ typedef struct _cs_part_to_block_t PDM_part_to_block_t;
  * \param [in]   gnum_elt        Element global number
  * \param [in]   weight          Weight of elements (or NULL)
  * \param [in]   n_elt           Local number of elements
- * \param [in]   n_part          Number of partition      
- * \param [in]   comm            MPI communicator         
+ * \param [in]   n_part          Number of partition
+ * \param [in]   comm            MPI communicator
  *
- * \return   Initialized cs_part_to_block         
+ * \return   Initialized cs_part_to_block
  *
  */
 
@@ -130,7 +130,7 @@ PDM_part_to_block_create
  *
  */
 
-int 
+int
 PDM_part_to_block_n_active_ranks_get
 (
  PDM_part_to_block_t *ptb
@@ -181,7 +181,7 @@ PDM_part_to_block_is_active_rank
  *
  */
 
-int 
+int
 PDM_part_to_block_n_elt_block_get
 (
  PDM_part_to_block_t *ptb
@@ -222,7 +222,7 @@ PDM_part_to_block_block_gnum_get
  *
  */
 
-int 
+int
 PDM_part_to_block_exch
 (
  PDM_part_to_block_t       *ptb,
@@ -238,11 +238,11 @@ PDM_part_to_block_exch
 
 /**
  *
- * \brief Free a part to block structure                       
+ * \brief Free a part to block structure
  *
  * \param [inout] ptb         Part to block structure
  *
- * \return       NULL                             
+ * \return       NULL
  */
 
 PDM_part_to_block_t *
@@ -254,11 +254,11 @@ PDM_part_to_block_free
 
 /**
  *
- * \brief Return block distribution                     
+ * \brief Return block distribution
  *
  * \param [in] ptb         Part to block structure
  *
- * \return  Distribution (size = communicator size + 1)                            
+ * \return  Distribution (size = communicator size + 1)
  */
 
 PDM_g_num_t *
@@ -270,11 +270,11 @@ PDM_part_to_block_distrib_index_get
 
 /**
  *
- * \brief Return processus destination                     
+ * \brief Return processus destination
  *
  * \param [in] ptb         Part to block structure
  *
- * \return  Destination (size = sum of partition elements)                            
+ * \return  Destination (size = sum of partition elements)
  */
 
 PDM_l_num_t *

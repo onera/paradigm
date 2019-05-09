@@ -10,7 +10,7 @@ cdef extern from "pdm_part.h":
         PDM_PART_RENUM_FACE_NONE          = 2
         PDM_PART_RENUM_FACE_LEXICOGRAPHIC = 3
 
-    ctypedef enum PDM_part_renum_cell_t: 
+    ctypedef enum PDM_part_renum_cell_t:
         PDM_PART_RENUM_CELL_HILBERT       = 1
         PDM_PART_RENUM_CELL_RANDOM        = 2
         PDM_PART_RENUM_CELL_NONE          = 3
@@ -84,7 +84,7 @@ cdef extern from "pdm_part.h":
                                int          **faceGroupIdx,
                                int          **faceGroup,
                                PDM_g_num_t **faceGroupLNToGN)
-    
+
     # ------------------------------------------------------------------
     void PDM_part_part_color_get(int            ppartId,
                                  int            ipart,
@@ -192,14 +192,14 @@ cdef class Part:
             dCellFaceIdx_data = NULL
         else:
             dCellFaceIdx_data = <int *> dCellFaceIdx.data
-            
+
         # ~> \param [in]   renum_properties_cell
         cdef int * renum_properties_cell_data
         if (renum_properties_cell is None):
             renum_properties_cell_data = NULL
         else:
             renum_properties_cell_data = <int *> renum_properties_cell.data
-            
+
         # ~> \param [in] renum_properties_face
         cdef int * renum_properties_face_data
         if (renum_properties_face is None):
@@ -350,7 +350,7 @@ cdef class Part:
                               &nTPart,
                               &sCellFace,
                               &sFaceVertex,
-                              &sFaceGroup, 
+                              &sFaceGroup,
                               &nFaceGroup)
 
         return {'nCell'          :nCell,

@@ -1,5 +1,5 @@
 !-----------------------------------------------------------------------------
-! This file is part of the ParaDiGM library. 
+! This file is part of the ParaDiGM library.
 !
 ! Copyright (C) 2019  ONERA
 !
@@ -22,7 +22,7 @@
 module mod_mesh_dist
 
   use mod_pdm
-  
+
   implicit none
 
 
@@ -35,22 +35,22 @@ module mod_mesh_dist
     !! \param [in]    comm           MPI communicator
     !! \param [inout] id             Identifier
     !!
-    
+
     subroutine pdm_mesh_dist_create (mesh_nature, n_point_cloud, fComm, id) &
-         bind (c, name = 'PDM_mesh_dist_create_cf')  
+         bind (c, name = 'PDM_mesh_dist_create_cf')
 
       use iso_c_binding
-        
+
       implicit none
-      
+
       integer(c_int), value :: mesh_nature
       integer(c_int), value :: n_point_cloud
       integer(c_int), value :: fComm
-      
+
       integer(c_int)        :: id
-      
+
     end subroutine pdm_mesh_dist_create
-    
+
     !> \brief Set the number of partitions of a point cloud
     !!
     !! \param [in]   id              Identifier
@@ -59,10 +59,10 @@ module mod_mesh_dist
     !!
 
     subroutine pdm_mesh_dist_n_part_cloud_set (id, i_point_cloud, n_part) &
-         bind (c, name = 'PDM_mesh_dist_n_part_cloud_set')  
+         bind (c, name = 'PDM_mesh_dist_n_part_cloud_set')
 
       use iso_c_binding
-        
+
       implicit none
 
       integer(c_int), value        :: id
@@ -78,14 +78,14 @@ module mod_mesh_dist
     !! \param [in]   i_part          Index of partition
     !! \param [in]   n_points        Number of points
     !! \param [in]   coords          Point coordinates
-    !! \param [in]   gnum            Point global number 
+    !! \param [in]   gnum            Point global number
     !!
 
     subroutine pdm_mesh_dist_cloud_set (id, i_point_cloud, i_part, n_points, coords, gnum ) &
          bind (c, name = 'PDM_mesh_dist_cloud_set')
-      
+
       use iso_c_binding
-        
+
       implicit none
 
       integer(c_int), value        :: id
@@ -95,7 +95,7 @@ module mod_mesh_dist
 
       type(c_ptr), value        :: coords
       type(c_ptr), value        :: gnum
-      
+
     end subroutine pdm_mesh_dist_cloud_set
 
     !> \brief Set the mesh nodal
@@ -104,12 +104,12 @@ module mod_mesh_dist
     !! \param [in]   mesh_nodal_id  Mesh nodal identifier
     !!
     !!
-    
+
     subroutine pdm_mesh_dist_nodal_mesh_set (id, mesh_nodal_id) &
          bind (c, name = 'PDM_mesh_dist_nodal_mesh_set')
-    
+
       use iso_c_binding
-        
+
       implicit none
 
       integer(c_int), value        :: id
@@ -127,9 +127,9 @@ module mod_mesh_dist
 
     subroutine pdm_mesh_dist_surf_mesh_global_data_set (id, n_g_face, n_g_vtx, n_part) &
          bind (c, name = 'PDM_mesh_dist_surf_mesh_global_data_set')
-    
+
       use iso_c_binding
-        
+
       implicit none
 
       integer(c_int), value        :: id
@@ -146,14 +146,14 @@ module mod_mesh_dist
     !> \brief Set a part of a surface mesh
     !!
     !! \param [in]   id            Identifier
-    !! \param [in]   i_part        Partition to define  
-    !! \param [in]   n_face        Number of faces                     
+    !! \param [in]   i_part        Partition to define
+    !! \param [in]   n_face        Number of faces
     !! \param [in]   face_vtx_idx  Index in the face -> vertex connectivity
     !! \param [in]   face_vtx      face -> vertex connectivity
-    !! \param [in]   face_ln_to_gn Local face numbering to global face numbering 
-    !! \param [in]   n_vtx         Number of vertices              
-    !! \param [in]   coords        Coordinates       
-    !! \param [in]   vtx_ln_to_gn  Local vertex numbering to global vertex numbering 
+    !! \param [in]   face_ln_to_gn Local face numbering to global face numbering
+    !! \param [in]   n_vtx         Number of vertices
+    !! \param [in]   coords        Coordinates
+    !! \param [in]   vtx_ln_to_gn  Local vertex numbering to global vertex numbering
     !!
 
     subroutine pdm_mesh_dist_surf_mesh_part_set (id, i_part, n_face, face_vtx_idx, &
@@ -161,7 +161,7 @@ module mod_mesh_dist
                                                  vtx_ln_to_gn) &
       bind (c, name = 'PDM_mesh_dist_surf_mesh_part_set')
       use iso_c_binding
-        
+
       implicit none
 
       integer(c_int), value     :: id
@@ -173,7 +173,7 @@ module mod_mesh_dist
       integer(c_int), value     :: n_vtx
       type(c_ptr), value        :: coords
       type(c_ptr), value        :: vtx_ln_to_gn
-               
+
     end subroutine pdm_mesh_dist_surf_mesh_part_set
 
     !> \brief Compute distance
@@ -184,7 +184,7 @@ module mod_mesh_dist
     subroutine pdm_mesh_dist_compute (id) &
          bind (c, name = 'PDM_mesh_dist_compute')
       use iso_c_binding
-        
+
       implicit none
 
       integer(c_int), value     :: id
@@ -207,7 +207,7 @@ module mod_mesh_dist
       bind (c, name = 'PDM_mesh_dist_get')
 
       use iso_c_binding
-        
+
       implicit none
 
       integer(c_int), value     :: id
@@ -222,22 +222,22 @@ module mod_mesh_dist
     !> \brief Free a distance mesh structure
     !!
     !! \param [in]  id       Identifier
-    !! \param [in]  partial  if partial is equal to 0, all data are removed. 
-    !!                       Otherwise, results are kept. 
+    !! \param [in]  partial  if partial is equal to 0, all data are removed.
+    !!                       Otherwise, results are kept.
     !!
 
     subroutine pdm_mesh_dist_free (id, partial) &
        bind (c, name = 'PDM_mesh_dist_free')
 
       use iso_c_binding
-        
+
       implicit none
 
       integer(c_int), value     :: id
       integer(c_int), value     :: partial
 
     end subroutine pdm_mesh_dist_free
- 
+
     !> \brief  Dump elapsed an CPU time
     !!
     !! \param [in]  id       Identifier
@@ -247,12 +247,12 @@ module mod_mesh_dist
          bind (c, name = 'PDM_mesh_dist_dump_times')
 
       use iso_c_binding
-        
+
       implicit none
 
       integer(c_int), value     :: id
     end subroutine pdm_mesh_dist_dump_times
-    
+
   end interface
 
 end module mod_mesh_dist
