@@ -137,6 +137,11 @@ if (PDM_ENABLE_STATIC_Fortran_INTERFACE OR PDM_ENABLE_SHARED_Fortran_INTERFACE)
 
 endif ()
 
+if (OPENMP_FOUND)
+   set_target_properties(pdm PROPERTIES
+                         COMPILE_FLAGS ${OpenMP_C_FLAGS})
+endif()
+
 # Options du link
 # ---------------
 
@@ -148,6 +153,11 @@ if (PDM_ENABLE_SHARED)
   add_library(pdm_shared SHARED  $<TARGET_OBJECTS:pdm>)
   set_target_properties(pdm_shared PROPERTIES OUTPUT_NAME "pdm")
   set_target_properties(pdm_shared PROPERTIES VERSION ${PDM_VERSION})
+  if (OPENMP_FOUND)
+    set_target_properties(pdm_shared PROPERTIES
+                          COMPILE_FLAGS ${OpenMP_C_FLAGS}
+                          LINK_FLAGS ${OpenMP_C_FLAGS})
+  endif()
   target_link_libraries(pdm_shared ${LINK_LIBRARIES} pdm_io_shared pdm_mpi_shared)
   set_target_properties(pdm_shared PROPERTIES
                             PUBLIC_HEADER "${LIST_HEADER}")
@@ -163,6 +173,11 @@ if (PDM_ENABLE_STATIC)
   set_target_properties(pdm_static PROPERTIES OUTPUT_NAME "pdm")
   set_target_properties(pdm_static PROPERTIES VERSION ${PDM_VERSION})
 
+  if (OPENMP_FOUND)
+    set_target_properties(pdm_static PROPERTIES
+                          COMPILE_FLAGS ${OpenMP_C_FLAGS}
+                          LINK_FLAGS ${OpenMP_C_FLAGS})
+  endif()
   target_link_libraries(pdm_static ${LINK_LIBRARIES} pdm_io_static pdm_mpi_static)
   set_target_properties(pdm_static PROPERTIES
                              PUBLIC_HEADER "${LIST_HEADER}")

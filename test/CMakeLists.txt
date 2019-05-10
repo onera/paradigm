@@ -39,6 +39,10 @@ else ()
  endif()
 endif()
 
+if (OPENMP_FOUND)
+  list(APPEND LINK_LIBRARIES ${OpenMP_C_FLAGS})
+endif()
+
 get_target_property(PDM_INC pdm INCLUDE_DIRECTORIES)
 
 
