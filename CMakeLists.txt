@@ -236,7 +236,10 @@ if (NOT (PDM_IN_PDMA OR PDM_IN_CWP))
   # -------------------------------------------------------
 
   if (PDM_ENABLE_OPENMP)
-     find_package(OpenMP)
+    find_package(OpenMP)
+    if (OPENMP_FOUND)
+      set(PDM_HAVE_OPENMP 1)
+    endif()
   endif()
 
   # Python bindings
@@ -365,7 +368,3 @@ if (NOT (PDM_IN_PDMA OR PDM_IN_CWP))
 add_subdirectory(${PDM_CMAKE_DIR}/post-install)
 
 endif()
-
-
-
-
