@@ -142,6 +142,7 @@ PDM_wall_dist_vol_mesh_global_data_set
  * \param [in]   n_face        Number of faces
  * \param [in]   face_vtx_idx  Face -> vtx connectivity index
  * \param [in]   face_vtx      Face -> vtx connectivity
+ * \param [in]   face_cell     face -> cell   connectivity
  * \param [in]   face_ln_to_gn Local face numbering to global face numbering
  * \param [in]   n_vtx         Number of vertices
  * \param [in]   coords        Coordinates
@@ -162,6 +163,7 @@ PDM_wall_dist_vol_mesh_part_set
  const int          n_face,
  const int         *face_vtx_idx,
  const int         *face_vtx,
+ const int         *face_cell,
  const PDM_g_num_t *face_ln_to_gn,
  const int          n_vtx,
  const double      *coords,
