@@ -333,6 +333,30 @@ PDM_mesh_dist_nodal_mesh_set
 }
 
 
+
+
+/**
+ *
+ * \brief Map a surface mesh
+ *
+ * \param [in]   id         Identifier
+ * \param [in]   surf_mesh  Surface mesh pointer
+ *
+ */
+
+void
+PDM_mesh_dist_surf_mesh_map
+(
+ const int  id,
+ PDM_surf_mesh_t *surf_mesh
+)
+{
+  _PDM_dist_t *dist = _get_from_id (id);
+
+  dist->surf_mesh = surf_mesh;
+}
+
+
 /**
  *
  * \brief Set global data of a surface mesh

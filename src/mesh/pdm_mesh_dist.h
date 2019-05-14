@@ -7,6 +7,7 @@
 
 #include "pdm.h"
 #include "pdm_mpi.h"
+#include "pdm_surf_mesh.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -101,6 +102,7 @@ PDM_mesh_dist_cloud_set
  );
 
 
+
 /**
  *
  * \brief Set the mesh nodal
@@ -115,6 +117,22 @@ PDM_mesh_dist_nodal_mesh_set
 (
  const int  id,
  const int  mesh_nodal_id
+ );
+
+/**
+ *
+ * \brief Map a surface mesh
+ *
+ * \param [in]   id         Identifier
+ * \param [in]   surf_mesh  Surface mesh pointer
+ *
+ */
+
+void
+PDM_mesh_dist_surf_mesh_map
+(
+ const int  id,
+ PDM_surf_mesh_t *surf_mesh
 );
 
 

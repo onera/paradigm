@@ -18,19 +18,20 @@
 #include "pdm_priv.h"
 #include "pdm_mpi.h"
 #include "pdm_mesh_dist.h"
-#include "pdm_mesh_nodal.h"
+//#include "pdm_mesh_nodal.h"
 #include "pdm_surf_mesh.h"
 #include "pdm_handles.h"
-#include "pdm_octree.h"
-#include "pdm_dbbtree.h"
+//#include "pdm_octree.h"
+//#include "pdm_dbbtree.h"
 #include "pdm_part_to_block.h"
 #include "pdm_block_to_part.h"
-#include "pdm_triangle.h"
-#include "pdm_polygon.h"
+//#include "pdm_triangle.h"
+//#include "pdm_polygon.h"
 #include "pdm_timer.h"
-#include "pdm_hash_tab.h"
-#include "pdm_wall_dist.h"
+//#include "pdm_hash_tab.h"
+#include "pdm_gnum.h"
 
+#include "pdm_wall_dist.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -63,7 +64,7 @@ typedef struct {
   int end;       /*!< End of the queue */
 
   int size;      /*!< Size of the queue */
-  int n_free;    /*!< Number of free elements */
+  int n_elt;    /*!< Number of elements */
 
   int *queue;    /*!< queue array */
 
@@ -105,6 +106,7 @@ typedef struct {
   const PDM_g_num_t  **cell_ln_to_gn; /*!< Cell local numbering to global numbering */
   const int          **face_vtx_idx;  /*!< Face -> vtx connectivity index */
   const int          **face_vtx;      /*!< Face -> vtx connectivity */
+  const int          **face_cell;     /*!< Face -> cell connectivity */
   const PDM_g_num_t  **face_ln_to_gn; /*!< Face local numbering to global numbering */
   const double       **coords;        /*!< Vertex coordinates */
   const PDM_g_num_t  **vtx_ln_to_gn;  /*!< Vertex local numbering to global numbering */
@@ -176,7 +178,7 @@ _PDM_queue_init
   q->queue = malloc(sizeof(int) * ini_size);
   q->beg = 0;
   q->end = -1;
-  q->n_free = ini_size;
+  q->n_elt = 0;
 
   return q;
 
@@ -214,12 +216,94 @@ _PDM_queue_free
 static void
 _PDM_queue_update_size
 (
- _PDM_queue_t *q
+ _PDM_queue_t *q,
+ const int new_size
+)
+{
+  assert (new_size > q->size);
+
+  q->queue = realloc (q->queue, sizeof(int) * new_size);
+
+  const int _beg = q->beg;
+  const int _end = q->end;
+
+  assert (_beg != _end);
+
+  const int step = new_size - q->size;
+
+  if (_beg > _end) {
+
+    for (int i = q->size - 1; i >= _beg; i--) {
+      q->queue[i+step] = q->queue[i];
+    }
+    q->beg += step;
+
+  }
+
+}
+
+
+/**
+ *
+ * \brief Push value into the queue
+ *
+ * \param [in]   q      Queue
+ * \param [in]   val    Value
+ *
+ */
+
+static void
+_PDM_queue_push
+(
+ _PDM_queue_t *q,
+ const int val
 )
 {
 
-  // TODO
+  if (q->n_elt >= q->size) {
+    _PDM_queue_update_size (q, 2*q->size);
+  }
 
+  q->end = (q->end + 1) % q->size;
+
+  q->queue[q->end] = val;
+
+  q->n_elt += 1;
+
+}
+
+
+/**
+ *
+ * \brief Pull the firts value in the queue
+ *
+ * \param [in]   q      Queue
+ * \param [out]  val    Value
+ *
+ * \return 1 if the queue is empty, 0 otherwise
+ */
+
+static int
+_PDM_queue_pull
+(
+ _PDM_queue_t *q,
+ int  *val
+)
+{
+
+  int is_empty = 0;
+
+  if (q->n_elt <= 0) {
+    is_empty = 1;
+  }
+
+  else {
+    *val = q->queue[q->beg];
+    q->beg = (q->beg + 1) % q->size;
+    q->n_elt += -1;
+  }
+
+  return is_empty;
 }
 
 
@@ -425,6 +509,7 @@ PDM_wall_dist_vol_mesh_global_data_set
 
   _vol_mesh->face_vtx_idx = malloc (sizeof(int *) * n_part);
   _vol_mesh->face_vtx = malloc (sizeof(int *) * n_part);
+  _vol_mesh->face_cell = malloc (sizeof(int *) * n_part);
   _vol_mesh->face_ln_to_gn = malloc (sizeof (PDM_g_num_t *) * n_part);
 
   _vol_mesh->coords = malloc (sizeof(double *) * n_part);
@@ -446,6 +531,7 @@ PDM_wall_dist_vol_mesh_global_data_set
  * \param [in]   n_face        Number of faces
  * \param [in]   face_vtx_idx  Index in the face -> vertex connectivity
  * \param [in]   face_vtx      face -> vertex connectivity
+ * \param [in]   face_cell     face -> cell   connectivity
  * \param [in]   face_ln_to_gn Local face numbering to global face numbering
  * \param [in]   n_vtx         Number of vertices
  * \param [in]   coords        Coordinates
@@ -466,6 +552,7 @@ PDM_wall_dist_vol_mesh_part_set
  const int          n_face,
  const int         *face_vtx_idx,
  const int         *face_vtx,
+ const int         *face_cell,
  const PDM_g_num_t *face_ln_to_gn,
  const int          n_vtx,
  const double      *coords,
@@ -489,6 +576,7 @@ PDM_wall_dist_vol_mesh_part_set
   _vol_mesh->n_face[i_part] = n_face;
   _vol_mesh->face_vtx_idx[i_part] = face_vtx_idx;
   _vol_mesh->face_vtx[i_part] = face_vtx;
+  _vol_mesh->face_cell[i_part] = face_cell;
   _vol_mesh->face_ln_to_gn[i_part] = face_ln_to_gn;
 
   _vol_mesh->n_vtx[i_part] = n_vtx;
@@ -512,21 +600,275 @@ PDM_wall_dist_compute
  const int id
 )
 {
-  //_PDM_dist_t *dist = _get_from_id (id);
+  _PDM_dist_t *dist = _get_from_id (id);
 
-  //_PDM_vol_mesh_t *_vol_mesh = dist->vol_mesh;
+  _PDM_vol_mesh_t *_vol_mesh = dist->vol_mesh;
+  PDM_surf_mesh_t *_surf_mesh = dist->surf_mesh;
+
+  double b_t_elapsed;
+  double b_t_cpu;
+  double b_t_cpu_u;
+  double b_t_cpu_s;
+
+  double e_t_elapsed;
+  double e_t_cpu;
+  double e_t_cpu_u;
+  double e_t_cpu_s;
+
+  dist->times_elapsed[BEGIN] = PDM_timer_elapsed(dist->timer);
+  dist->times_cpu[BEGIN]     = PDM_timer_cpu(dist->timer);
+  dist->times_cpu_u[BEGIN]   = PDM_timer_cpu_user(dist->timer);
+  dist->times_cpu_s[BEGIN]   = PDM_timer_cpu_sys(dist->timer);
+  PDM_timer_resume(dist->timer);
 
   /* First step : Look for boundary cells in the volume mesh */
 
+  PDM_timer_hang_on(dist->timer);
+  b_t_elapsed = PDM_timer_elapsed(dist->timer);
+  b_t_cpu     = PDM_timer_cpu(dist->timer);
+  b_t_cpu_u   = PDM_timer_cpu_user(dist->timer);
+  b_t_cpu_s   = PDM_timer_cpu_sys(dist->timer);
+  PDM_timer_resume(dist->timer);
 
+  int _t_n_face = 0;
+  for (int i = 0; _vol_mesh->n_part; i++) {
+    _t_n_face += _vol_mesh->n_face[i];
+  }
+
+  int *bound_cell_idx = malloc (sizeof(int) * (_vol_mesh->n_part + 1));
+  bound_cell_idx[0] = 0;
+
+  int n_bound_cell = 0;
+  int *bound_cell = malloc (sizeof(int) * _t_n_face);
+  PDM_g_num_t *bound_parent_gnum = malloc (sizeof(PDM_g_num_t) * _t_n_face);
+  double * bound_cell_center = malloc (sizeof(double) * 3 * _t_n_face);
+
+  for (int i = 0; _vol_mesh->n_part; i++) {
+
+    bound_cell_idx[i+1] = bound_cell_idx[i];
+
+    const int *_face_cell = _vol_mesh->face_cell[i];
+    const int _n_face = _vol_mesh->n_face[i];
+    const double *_cell_center = _vol_mesh->cell_center[i];
+    const PDM_g_num_t *_gnum = _vol_mesh->cell_ln_to_gn[i];
+
+    for (int j = 0; j < _n_face; j++) {
+      if (_face_cell[2*j+1] == 0) {
+        int icell = _face_cell[2*j] - 1;
+        bound_cell[n_bound_cell] = icell;
+        bound_parent_gnum[n_bound_cell] = _gnum[icell];
+        bound_cell_idx[i+1] += 1;
+        for (int k = 0; k < 3; k++) {
+          bound_cell_center[3*n_bound_cell+k] = _cell_center[3*icell+k];
+        }
+        n_bound_cell += 1;
+      }
+    }
+
+  }
+
+  bound_cell = realloc (bound_cell, sizeof(int) * n_bound_cell);
+  bound_cell_center = realloc (bound_cell_center, sizeof(double) * 3 * n_bound_cell);
+  bound_parent_gnum = realloc (bound_parent_gnum, sizeof(PDM_g_num_t) * n_bound_cell);
 
   /* Second step : Compute distance to the surface mesh for the cell centers of boundary cells
                    Call PDM_mesh_dist */
 
+  int id_bound_dist = PDM_mesh_dist_create (PDM_MESH_NATURE_SURFACE_MESH,
+                                            1,
+                                            dist->comm);
 
-  /* Third step : Compute distance to the surface mesh for the other centers from the distance
-                  of the cell centers of boundary cells  */
+  PDM_mesh_dist_n_part_cloud_set (id_bound_dist, 0, 1);
 
+  int id_gnum = PDM_gnum_create (3, 1, 0, 0.001, dist->comm);
+
+  PDM_gnum_set_from_parents (id_gnum, 0,  n_bound_cell, bound_parent_gnum);
+
+  PDM_gnum_compute (id_gnum);
+
+  PDM_g_num_t *bound_gnum = PDM_gnum_get (id_gnum, 0);
+
+  PDM_gnum_free (id_gnum, 1);
+
+  PDM_mesh_dist_cloud_set (id_bound_dist,
+                           0,
+                           0,
+                           n_bound_cell,
+                           bound_cell_center,
+                           bound_gnum);
+
+  PDM_mesh_dist_surf_mesh_map (id_bound_dist, dist->surf_mesh);
+
+  PDM_mesh_dist_compute (id_bound_dist);
+
+  double      *closest_elt_distance_bound = NULL;
+  double      *closest_elt_projected_bound = NULL;
+  PDM_g_num_t *closest_elt_gnum_bound = NULL;
+
+  PDM_mesh_dist_get (id_bound_dist,
+                     0,
+                     0,
+                     &closest_elt_distance_bound,
+                     &closest_elt_projected_bound,
+                     &closest_elt_gnum_bound);
+
+  PDM_mesh_dist_free (id_bound_dist, 1);
+
+  free (bound_gnum);
+  free (bound_cell_center);
+  free (bound_parent_gnum);
+
+  PDM_timer_hang_on(dist->timer);
+  e_t_elapsed = PDM_timer_elapsed(dist->timer);
+  e_t_cpu     = PDM_timer_cpu(dist->timer);
+  e_t_cpu_u   = PDM_timer_cpu_user(dist->timer);
+  e_t_cpu_s   = PDM_timer_cpu_sys(dist->timer);
+
+  dist->times_elapsed[FIRST_THICKNESS] += e_t_elapsed - b_t_elapsed;
+  dist->times_cpu[FIRST_THICKNESS]     += e_t_cpu - b_t_cpu;
+  dist->times_cpu_u[FIRST_THICKNESS]   += e_t_cpu_u - b_t_cpu_u;
+  dist->times_cpu_s[FIRST_THICKNESS]   += e_t_cpu_s - b_t_cpu_s;
+
+  /* Third step : Get vertices about closest faces :
+     - Build connectivity with coordinates
+     - Part to block faces */
+
+  b_t_elapsed = e_t_elapsed;
+  b_t_cpu     = e_t_cpu;
+  b_t_cpu_u   = e_t_cpu_u;
+  b_t_cpu_s   = e_t_cpu_s;
+
+  PDM_timer_resume(dist->timer);
+
+  int n_part_sm = PDM_surf_mesh_n_part_get (_surf_mesh);
+
+  int *n_face_sm = malloc (sizeof(int) * n_part_sm);
+
+  const PDM_g_num_t **gnum_sm = malloc (sizeof(PDM_g_num_t *) * n_part_sm);
+
+  for (int i = 0; i < n_part_sm; i++) {
+    n_face_sm[i] = PDM_surf_mesh_part_n_face_get (_surf_mesh, i);
+    gnum_sm[i]   = PDM_surf_mesh_part_face_g_num_get (_surf_mesh, i);
+  }
+
+  PDM_part_to_block_t *ptb =
+    PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                              PDM_PART_TO_BLOCK_POST_CLEANUP,
+                              1.,
+                              (PDM_g_num_t **) gnum_sm,
+                              NULL,
+                              n_face_sm,
+                              n_part_sm,
+                              dist->comm);
+
+  /* const int * */
+/* PDM_surf_mesh_part_face_vtx_get */
+/* ( */
+/*  PDM_surf_mesh_t      *mesh, */
+/*  int                   iPart */
+/* ); */
+
+
+/* const int * */
+/* PDM_surf_mesh_part_face_vtx_idx_get */
+/* ( */
+/*  PDM_surf_mesh_t      *mesh, */
+/*  int                   iPart */
+/* ); */
+
+/* const double * */
+/* PDM_surf_mesh_part_vtx_get */
+/* ( */
+/*  PDM_surf_mesh_t      *mesh, */
+/*  int                   iPart */
+/* ); */
+
+
+/* PDM_part_to_block_exch */
+/* ( */
+/*  PDM_part_to_block_t       *ptb, */
+/*  size_t                     s_data, */
+/*  PDM_stride_t               t_stride, */
+/*  int                        cst_stride, */
+/*  int                      **part_stride, */
+/*  void                     **part_data, */
+/*  int                      **block_stride, */
+/*  void                     **block_data */
+/* ); */
+
+
+  /* Fourth step : Get connectivity with coordinates +
+        Compute distance to the surface mesh for the other centers from the distance
+        of the cell centers of boundary cells  */
+
+  for (int i = 0; i < _vol_mesh->n_part; i++) {
+
+    int n_bound_cell_part = bound_cell_idx[i+1] - bound_cell_idx[i];
+    double      *_closest_elt_distance = _vol_mesh->closest_elt_distance[i];
+    double      *_closest_elt_projected = _vol_mesh->closest_elt_projected[i];
+    PDM_g_num_t *_closest_elt_gnum = _vol_mesh->closest_elt_gnum[i];
+    const int _n_cell = _vol_mesh->n_cell[i];
+
+    int *in_queue = malloc(sizeof(int) * _n_cell);
+
+    for (int j = 0; j < _n_cell; j++) {
+      _closest_elt_distance[j] = HUGE_VAL;
+      _closest_elt_gnum[j] = -1;
+      in_queue[j] = 0;
+      for (int k = 0; k < 3; k++) {
+        _closest_elt_projected[3*j+k] = HUGE_VAL;
+      }
+    }
+
+    _PDM_queue_t * q = _PDM_queue_init(2 * n_bound_cell_part);
+
+    // Faux : il faut ajouter les voisins dans la pile
+
+    for (int j = 0; j < n_bound_cell_part; j++) {
+      int idx = bound_cell_idx[i] + j;
+      int icell = bound_cell[idx];
+      in_queue[icell] = 1;
+      _PDM_queue_push (q, bound_cell[idx]);
+      _closest_elt_distance[icell] = closest_elt_distance_bound[idx];
+      _closest_elt_gnum[icell] = closest_elt_gnum_bound[idx];
+      for (int k = 0; k < 3; k++) {
+        _closest_elt_projected[3*icell+k] = closest_elt_projected_bound[3*idx+k];
+      }
+    }
+
+    int curr_cell;
+    while (!_PDM_queue_pull(q, &curr_cell)) {
+      in_queue[curr_cell] = 0;
+
+      //TODO : calcul
+
+    }
+
+    free (in_queue);
+    _PDM_queue_free (q);
+  }
+
+  PDM_part_to_block_free (ptb);
+
+  free (n_face_sm);
+  free (gnum_sm);
+
+  free (closest_elt_distance_bound);
+  free (closest_elt_projected_bound);
+  free (closest_elt_gnum_bound);
+  free (bound_cell);
+  free (bound_cell_idx);
+
+  PDM_timer_hang_on(dist->timer);
+  e_t_elapsed = PDM_timer_elapsed(dist->timer);
+  e_t_cpu     = PDM_timer_cpu(dist->timer);
+  e_t_cpu_u   = PDM_timer_cpu_user(dist->timer);
+  e_t_cpu_s   = PDM_timer_cpu_sys(dist->timer);
+
+  dist->times_elapsed[PROPAGATION] += e_t_elapsed - b_t_elapsed;
+  dist->times_cpu[PROPAGATION]     += e_t_cpu - b_t_cpu;
+  dist->times_cpu_u[PROPAGATION]   += e_t_cpu_u - b_t_cpu_u;
+  dist->times_cpu_s[PROPAGATION]   += e_t_cpu_s - b_t_cpu_s;
 }
 
 
@@ -652,6 +994,10 @@ PDM_wall_dist_free
 
   if (_vol_mesh->face_vtx != NULL) {
     free (_vol_mesh->face_vtx);
+  }
+
+  if (_vol_mesh->face_cell != NULL) {
+    free (_vol_mesh->face_cell);
   }
 
   if (_vol_mesh->face_ln_to_gn != NULL) {

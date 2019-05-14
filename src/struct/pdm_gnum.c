@@ -1425,7 +1425,7 @@ PROCF (pdm_gnum_compute, PDM_GNUM_COMPUTE)
  *
  */
 
-const PDM_g_num_t *
+PDM_g_num_t *
 PDM_gnum_get
 (
  const int id,
