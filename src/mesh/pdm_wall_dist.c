@@ -760,54 +760,96 @@ PDM_wall_dist_compute
                               n_face_sm,
                               n_part_sm,
                               dist->comm);
+  
+  double **sm_face_coords = malloc (sizeof(double *) * n_part_sm);
+  int **sm_face_coords_stride = malloc (sizeof(int *) * n_part_sm);
 
-  /* const int * */
-/* PDM_surf_mesh_part_face_vtx_get */
-/* ( */
-/*  PDM_surf_mesh_t      *mesh, */
-/*  int                   iPart */
-/* ); */
+  for (int i = 0; i < n_part_sm; i++) {
+    const int *_sm_face_vtx_idx =
+      PDM_surf_mesh_part_face_vtx_idx_get (_surf_mesh, i);  
+    const int *_sm_face_vtx =
+      PDM_surf_mesh_part_face_vtx_get (_surf_mesh, i);  
+    const double *_sm_vtx = PDM_surf_mesh_part_vtx_get (_surf_mesh, i); 
 
+    sm_face_coords[i] = malloc (sizeof(double) * 3 * _sm_face_vtx_idx[n_face_sm[i]]);
+    sm_face_coords_stride[i] = malloc (sizeof(int) * n_face_sm[i]);
 
-/* const int * */
-/* PDM_surf_mesh_part_face_vtx_idx_get */
-/* ( */
-/*  PDM_surf_mesh_t      *mesh, */
-/*  int                   iPart */
-/* ); */
+    for (int j = 0; j < n_face_sm[i]; j++) {
+      sm_face_coords_stride[i][j] =
+        3 * (_sm_face_vtx_idx[j+1] - _sm_face_vtx_idx[j]); 
+    }
 
-/* const double * */
-/* PDM_surf_mesh_part_vtx_get */
-/* ( */
-/*  PDM_surf_mesh_t      *mesh, */
-/*  int                   iPart */
-/* ); */
+    for (int j = 0; j < _sm_face_vtx_idx[n_face_sm[i]]; j++) {
 
+      int iface = _sm_face_vtx[j]-1;
+      const double *_coords = _sm_vtx + 3 * iface;
 
-/* PDM_part_to_block_exch */
-/* ( */
-/*  PDM_part_to_block_t       *ptb, */
-/*  size_t                     s_data, */
-/*  PDM_stride_t               t_stride, */
-/*  int                        cst_stride, */
-/*  int                      **part_stride, */
-/*  void                     **part_data, */
-/*  int                      **block_stride, */
-/*  void                     **block_data */
-/* ); */
+      for (int k = 0; k < 3; k++) {
+        sm_face_coords[i][3*j+k] = _coords[k];
+      }
+    }
 
+  }
 
+  int     *sm_block_face_coords_stride;
+  double  *sm_block_face_coords;
+  PDM_part_to_block_exch (ptb,
+                          sizeof(double),
+                          PDM_STRIDE_VAR,
+                          0,
+                          sm_face_coords_stride,
+                          (void **) sm_face_coords,
+                          &sm_block_face_coords_stride,
+                          (void **) &sm_block_face_coords);
+
+  const PDM_g_num_t  *blockDistribIdx = PDM_part_to_block_distrib_index_get (ptb);
+  
+  PDM_block_to_part_t *btp =
+    PDM_block_to_part_create (blockDistribIdx,
+                              (const PDM_g_num_t **) &closest_elt_gnum_bound,
+                              &n_bound_cell,
+                              1,
+                              dist->comm);
+  
+  int  **sm_info_bound_cell_stride;
+  double **sm_info_bound_cell;
+
+  PDM_block_to_part_exch2 (btp,
+                           sizeof(double),
+                           PDM_STRIDE_VAR,
+                           sm_block_face_coords_stride,
+                           (void *) sm_block_face_coords,
+                           &sm_info_bound_cell_stride,
+                           (void ***) &sm_info_bound_cell);
+
+  PDM_part_to_block_free (ptb);
+  PDM_block_to_part_free (btp);
+  
+  free (sm_block_face_coords_stride);
+  free (sm_block_face_coords);
+  
   /* Fourth step : Get connectivity with coordinates +
         Compute distance to the surface mesh for the other centers from the distance
         of the cell centers of boundary cells  */
-
+  
   for (int i = 0; i < _vol_mesh->n_part; i++) {
 
-    int n_bound_cell_part = bound_cell_idx[i+1] - bound_cell_idx[i];
+    // - Construire le tableau cell_cell en conservant cell_face_idx ()
+    // - Ajouter tag_cell :
+    //       * -1 : cellule de bord
+    //       *  0 : cellule interne en dehors de la pile
+    //       *  1 : cellule interne dans la pile
+    // - Mettre les voisines des cellules de bord dans la pile
+    // - Traitement element haut de pile :
+    //       * Calcul distance à partir de toutes les cellules voisines ayant une distance
+    //       * Si Changement de valeur on remet toutes les cellules voisines dans la pile sauf la source
+    // - Arret losrque la pile est vide
+    
+    int          n_bound_cell_part = bound_cell_idx[i+1] - bound_cell_idx[i];
     double      *_closest_elt_distance = _vol_mesh->closest_elt_distance[i];
     double      *_closest_elt_projected = _vol_mesh->closest_elt_projected[i];
     PDM_g_num_t *_closest_elt_gnum = _vol_mesh->closest_elt_gnum[i];
-    const int _n_cell = _vol_mesh->n_cell[i];
+    const int    _n_cell = _vol_mesh->n_cell[i];
 
     int *in_queue = malloc(sizeof(int) * _n_cell);
 
@@ -820,7 +862,7 @@ PDM_wall_dist_compute
       }
     }
 
-    _PDM_queue_t * q = _PDM_queue_init(2 * n_bound_cell_part);
+    _PDM_queue_t *q = _PDM_queue_init(2 * n_bound_cell_part);
 
     // Faux : il faut ajouter les voisins dans la pile
 
@@ -852,6 +894,13 @@ PDM_wall_dist_compute
 
   free (n_face_sm);
   free (gnum_sm);
+
+  for (int i = 0; i < n_part_sm; i++) {
+    free (sm_face_coords[i]);
+    free (sm_face_coords_stride[i]);
+  }
+  free (sm_face_coords);
+  free (sm_face_coords_stride);
 
   free (closest_elt_distance_bound);
   free (closest_elt_projected_bound);
