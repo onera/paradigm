@@ -15,7 +15,9 @@
 #include "pdm_priv.h"
 #include "pdm_part.h"
 #include "pdm_dcube_gen.h"
-#include "pdm_mesh_dist.h"
+//#include "pdm_mesh_dist.h"
+#include "pdm_wall_dist.h"
+#include "pdm_geom_elem.h"
 #include "pdm_gnum.h"
 
 #include "pdm_writer.h"
@@ -293,10 +295,7 @@ int main(int argc, char *argv[])
   /* free (dFaceGroupIdx); */
   /* free (dFaceGroup); */
 
-  int n_point_cloud = 1;
-  int id_dist = PDM_mesh_dist_create (PDM_MESH_NATURE_SURFACE_MESH,
-                                      n_point_cloud,
-                                      PDM_MPI_COMM_WORLD);
+  int id_dist = PDM_wall_dist_create (PDM_MPI_COMM_WORLD);
 
   int **select_face = malloc (sizeof(int *) * nPart);
   int *n_select_face = malloc (sizeof(int) * nPart);
@@ -316,12 +315,17 @@ int main(int argc, char *argv[])
   int id_gnum_face = PDM_gnum_create (3, nPart, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD);
   int id_gnum_vtx = PDM_gnum_create (3, nPart, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD);
 
+  double **cell_volume = malloc (sizeof(double *) * nPart);
+  double **cell_center = malloc (sizeof(double *) * nPart);
 
   if (myRank == 0) {
     printf("-- mesh dist set\n");
     fflush(stdout);
   }
 
+  PDM_g_num_t n_g_vol_cell = -1;
+  PDM_g_num_t n_g_vol_face = -1;
+  PDM_g_num_t n_g_vol_vtx = -1;
   for (int ipart = 0; ipart < nPart; ipart++) {
 
     int nCell;
@@ -402,6 +406,18 @@ int main(int argc, char *argv[])
                            &faceGroupIdx,
                            &faceGroup,
                            &faceGroupLNToGN);
+
+    for (int i = 0; i < nFace; i++) {
+      n_g_vol_face = PDM_MAX(faceLNToGN[i], n_g_vol_face);
+    }
+
+    for (int i = 0; i < nVtx; i++) {
+      n_g_vol_vtx = PDM_MAX(vtxLNToGN[i], n_g_vol_vtx);
+    }
+
+    for (int i = 0; i < nCell; i++) {
+      n_g_vol_cell = PDM_MAX(cellLNToGN[i], n_g_vol_cell);
+    }
 
     int iii = 0;
     for (int i = 0; i < nFace; i++) {
@@ -538,16 +554,22 @@ int main(int argc, char *argv[])
                      PDM__PDM_MPI_G_NUM, PDM_MPI_MAX,
                      PDM_MPI_COMM_WORLD);
 
-  PDM_mesh_dist_surf_mesh_global_data_set (id_dist,
+  PDM_wall_dist_surf_mesh_global_data_set (id_dist,
                                            n_g_face,
                                            n_g_vtx,
                                            nPart);
 
-  PDM_mesh_dist_n_part_cloud_set (id_dist, 0, nPart);
+  //  PDM_mesh_dist_n_part_cloud_set (id_dist, 0, nPart);
+
+  PDM_wall_dist_vol_mesh_global_data_set (id_dist,
+                                          n_g_vol_cell,
+                                          n_g_vol_face,
+                                          n_g_vol_vtx,
+                                          nPart);
 
   for (int ipart = 0; ipart < nPart; ipart++) {
 
-    PDM_mesh_dist_surf_mesh_part_set (id_dist,
+    PDM_wall_dist_surf_mesh_part_set (id_dist,
                                       ipart,
                                       n_select_face[ipart],
                                       surface_face_vtx_idx[ipart],
@@ -621,13 +643,38 @@ int main(int argc, char *argv[])
                            &faceGroup,
                            &faceGroupLNToGN);
 
-    PDM_mesh_dist_cloud_set (id_dist,
-                             0,
-                             ipart,
-                             nVtx,
-                             vtx,
-                             vtxLNToGN);
+    const int     isOriented = 0;
+    cell_volume[ipart] = malloc(sizeof(double) * nCell);
+    cell_center[ipart] = malloc(sizeof(double) * 3 * nCell);
 
+    PDM_geom_elem_polyhedra_properties (isOriented,
+                                        nCell,
+                                        nFace,
+                                        faceVtxIdx,
+                                        faceVtx,
+                                        cellFaceIdx,
+                                        cellFace,
+                                        nVtx,
+                                        vtx,
+                                        cell_volume[ipart],
+                                        cell_center[ipart],
+                                        NULL,
+                                        NULL);
+
+    PDM_wall_dist_vol_mesh_part_set (id_dist,
+                                     ipart,
+                                     nCell,
+                                     cellFaceIdx,
+                                     cellFace,
+                                     cell_center[ipart],
+                                     cellLNToGN,
+                                     nFace,
+                                     faceVtxIdx,
+                                     faceVtx,
+                                     faceLNToGN,
+                                     nVtx,
+                                     vtx,
+                                     vtxLNToGN);
   }
 
   if (myRank == 0) {
@@ -635,7 +682,7 @@ int main(int argc, char *argv[])
     fflush(stdout);
   }
 
-  PDM_mesh_dist_compute (id_dist);
+  PDM_wall_dist_compute (id_dist);
 
   if (myRank == 0) {
     printf("-- Dist check\n");
@@ -647,8 +694,7 @@ int main(int argc, char *argv[])
     double      *projected;
     PDM_g_num_t *closest_elt_gnum;
 
-    PDM_mesh_dist_get (id_dist,
-                       0,
+    PDM_wall_dist_get (id_dist,
                        ipart,
                        &distance,
                        &projected,
@@ -719,10 +765,13 @@ int main(int argc, char *argv[])
                            &faceGroupLNToGN);
 
     int ierr = 0;
-    for (int i = 0; i < nVtx; i++) {
-      double d1 = PDM_MIN (PDM_ABS (vtx[3*i] - xmin), PDM_ABS (vtx[3*i] - xmax));
-      double d2 = PDM_MIN (PDM_ABS (vtx[3*i+1] - ymin), PDM_ABS (vtx[3*i+1] - ymax));
-      double d3 = PDM_MIN (PDM_ABS (vtx[3*i+2] - zmin), PDM_ABS (vtx[3*i+2] - zmax));
+    for (int i = 0; i < nCell; i++) {
+      double d1 = PDM_MIN (PDM_ABS (cell_center[ipart][3*i] - xmin),
+                           PDM_ABS (cell_center[ipart][3*i] - xmax));
+      double d2 = PDM_MIN (PDM_ABS (cell_center[ipart][3*i+1] - ymin),
+                           PDM_ABS (cell_center[ipart][3*i+1] - ymax));
+      double d3 = PDM_MIN (PDM_ABS (cell_center[ipart][3*i+2] - zmin),
+                           PDM_ABS (cell_center[ipart][3*i+2] - zmax));
       double d = PDM_MIN (PDM_MIN (d1,d2), d3);
       d = d * d;
       if (PDM_ABS(distance[i] - d) > 1e-6) {
@@ -742,7 +791,7 @@ int main(int argc, char *argv[])
     }
 
     if (myRank == 0) {
-      printf ("elements surfaciques : %d\n", 6*(nVtxSeg-1)*(nVtxSeg-1));
+      printf ("elements surfaciques : %d\n", (int)(6*(nVtxSeg-1)*(nVtxSeg-1)));
       printf ("nombre de points     : %ld\n", nVtxSeg*nVtxSeg*nVtxSeg);
       fflush(stdout);
     }
@@ -751,9 +800,9 @@ int main(int argc, char *argv[])
   PDM_part_free(ppartId);
 
   PDM_dcube_gen_free(id);
-  PDM_mesh_dist_dump_times(id_dist);
+  PDM_wall_dist_dump_times(id_dist);
   int partial = 0;
-  PDM_mesh_dist_free (id_dist, partial);
+  PDM_wall_dist_free (id_dist, partial);
 
   for (int ipart = 0; ipart < nPart; ipart++) {
     free (select_face[ipart]);
