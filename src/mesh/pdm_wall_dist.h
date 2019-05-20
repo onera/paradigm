@@ -163,7 +163,6 @@ PDM_wall_dist_vol_mesh_part_set
  const int          n_face,
  const int         *face_vtx_idx,
  const int         *face_vtx,
- const int         *face_cell,
  const PDM_g_num_t *face_ln_to_gn,
  const int          n_vtx,
  const double      *coords,

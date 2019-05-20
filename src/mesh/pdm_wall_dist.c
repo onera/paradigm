@@ -25,8 +25,8 @@
 //#include "pdm_dbbtree.h"
 #include "pdm_part_to_block.h"
 #include "pdm_block_to_part.h"
-//#include "pdm_triangle.h"
-//#include "pdm_polygon.h"
+#include "pdm_triangle.h"
+#include "pdm_polygon.h"
 #include "pdm_timer.h"
 //#include "pdm_hash_tab.h"
 #include "pdm_gnum.h"
@@ -101,12 +101,13 @@ typedef struct {
   int                 *n_face;        /*!< Number of faces (size = \n_part) */
   int                 *n_vtx;         /*!< Number of vertices (size = \n_part) */
   const int          **cell_face_idx; /*!< Cell -> face connectivity index */
+        int          **cell_cell;     /*!< Cell -> cell connectivity */
   const int          **cell_face;     /*!< Cell -> face connectivity */
   const double       **cell_center;   /*!< Cell center or NULL */
   const PDM_g_num_t  **cell_ln_to_gn; /*!< Cell local numbering to global numbering */
   const int          **face_vtx_idx;  /*!< Face -> vtx connectivity index */
   const int          **face_vtx;      /*!< Face -> vtx connectivity */
-  const int          **face_cell;     /*!< Face -> cell connectivity */
+        int          **face_cell;     /*!< Face -> cell connectivity */
   const PDM_g_num_t  **face_ln_to_gn; /*!< Face local numbering to global numbering */
   const double       **coords;        /*!< Vertex coordinates */
   const PDM_g_num_t  **vtx_ln_to_gn;  /*!< Vertex local numbering to global numbering */
@@ -504,6 +505,7 @@ PDM_wall_dist_vol_mesh_global_data_set
 
   _vol_mesh->cell_face_idx = malloc (sizeof(int *) * n_part);
   _vol_mesh->cell_face = malloc (sizeof(int *) * n_part);
+  _vol_mesh->cell_cell = malloc (sizeof(int *) * n_part);
   _vol_mesh->cell_center = malloc (sizeof(double *) * n_part);
   _vol_mesh->cell_ln_to_gn = malloc (sizeof(PDM_g_num_t *) * n_part);
 
@@ -531,7 +533,6 @@ PDM_wall_dist_vol_mesh_global_data_set
  * \param [in]   n_face        Number of faces
  * \param [in]   face_vtx_idx  Index in the face -> vertex connectivity
  * \param [in]   face_vtx      face -> vertex connectivity
- * \param [in]   face_cell     face -> cell   connectivity
  * \param [in]   face_ln_to_gn Local face numbering to global face numbering
  * \param [in]   n_vtx         Number of vertices
  * \param [in]   coords        Coordinates
@@ -552,7 +553,6 @@ PDM_wall_dist_vol_mesh_part_set
  const int          n_face,
  const int         *face_vtx_idx,
  const int         *face_vtx,
- const int         *face_cell,
  const PDM_g_num_t *face_ln_to_gn,
  const int          n_vtx,
  const double      *coords,
@@ -576,7 +576,38 @@ PDM_wall_dist_vol_mesh_part_set
   _vol_mesh->n_face[i_part] = n_face;
   _vol_mesh->face_vtx_idx[i_part] = face_vtx_idx;
   _vol_mesh->face_vtx[i_part] = face_vtx;
-  _vol_mesh->face_cell[i_part] = face_cell;
+  _vol_mesh->face_cell[i_part] = malloc (sizeof(int) * 2 * n_face);
+
+  for (int i = 0; i < 2*n_face; i++) {
+    _vol_mesh->face_cell[i_part][i] = 0;
+  }
+
+  for (int i = 0; i < n_cell; i++) {
+    for (int j = cell_face_idx[i]; j < cell_face_idx[i+1]; j++) {
+      int ifac = cell_face[j]-1;
+      if (_vol_mesh->face_cell[i_part][2*ifac] == 0) {
+        _vol_mesh->face_cell[i_part][2*ifac] = i + 1;
+      }
+      else{
+        _vol_mesh->face_cell[i_part][2*ifac+1] = i + 1;
+      }
+    }
+  }
+
+  for (int i = 0; i < n_cell; i++) {
+    for (int j = cell_face_idx[i]; j < cell_face_idx[i+1]; j++) {
+      int ifac = cell_face[j]-1;
+      if (_vol_mesh->face_cell[i_part][2*ifac] == i+1) {
+        int icell1 = _vol_mesh->face_cell[i_part][2*ifac+1];
+        _vol_mesh->cell_cell[i_part][j] = icell1;
+      }
+      else if (_vol_mesh->face_cell[i_part][2*ifac+1] == i+1) {
+        int icell1 = _vol_mesh->face_cell[i_part][2*ifac];
+        _vol_mesh->cell_cell[i_part][j] = icell1;
+      }
+    }
+  }
+
   _vol_mesh->face_ln_to_gn[i_part] = face_ln_to_gn;
 
   _vol_mesh->n_vtx[i_part] = n_vtx;
@@ -760,23 +791,23 @@ PDM_wall_dist_compute
                               n_face_sm,
                               n_part_sm,
                               dist->comm);
-  
+
   double **sm_face_coords = malloc (sizeof(double *) * n_part_sm);
   int **sm_face_coords_stride = malloc (sizeof(int *) * n_part_sm);
 
   for (int i = 0; i < n_part_sm; i++) {
     const int *_sm_face_vtx_idx =
-      PDM_surf_mesh_part_face_vtx_idx_get (_surf_mesh, i);  
+      PDM_surf_mesh_part_face_vtx_idx_get (_surf_mesh, i);
     const int *_sm_face_vtx =
-      PDM_surf_mesh_part_face_vtx_get (_surf_mesh, i);  
-    const double *_sm_vtx = PDM_surf_mesh_part_vtx_get (_surf_mesh, i); 
+      PDM_surf_mesh_part_face_vtx_get (_surf_mesh, i);
+    const double *_sm_vtx = PDM_surf_mesh_part_vtx_get (_surf_mesh, i);
 
     sm_face_coords[i] = malloc (sizeof(double) * 3 * _sm_face_vtx_idx[n_face_sm[i]]);
     sm_face_coords_stride[i] = malloc (sizeof(int) * n_face_sm[i]);
 
     for (int j = 0; j < n_face_sm[i]; j++) {
       sm_face_coords_stride[i][j] =
-        3 * (_sm_face_vtx_idx[j+1] - _sm_face_vtx_idx[j]); 
+        3 * (_sm_face_vtx_idx[j+1] - _sm_face_vtx_idx[j]);
     }
 
     for (int j = 0; j < _sm_face_vtx_idx[n_face_sm[i]]; j++) {
@@ -803,14 +834,14 @@ PDM_wall_dist_compute
                           (void **) &sm_block_face_coords);
 
   const PDM_g_num_t  *blockDistribIdx = PDM_part_to_block_distrib_index_get (ptb);
-  
+
   PDM_block_to_part_t *btp =
     PDM_block_to_part_create (blockDistribIdx,
                               (const PDM_g_num_t **) &closest_elt_gnum_bound,
                               &n_bound_cell,
                               1,
                               dist->comm);
-  
+
   int  **sm_info_bound_cell_stride;
   double **sm_info_bound_cell;
 
@@ -822,36 +853,54 @@ PDM_wall_dist_compute
                            &sm_info_bound_cell_stride,
                            (void ***) &sm_info_bound_cell);
 
+  int *sm_info_bound_cell_idx = malloc(sizeof(int) * (n_bound_cell + 1));
+
+  sm_info_bound_cell_idx[0] = 0;
+  for (int i = 0; i < n_bound_cell; i++) {
+    sm_info_bound_cell_idx[i+1] = sm_info_bound_cell_stride[0][i] + sm_info_bound_cell_idx[i];
+  }
+
   PDM_part_to_block_free (ptb);
   PDM_block_to_part_free (btp);
-  
+
   free (sm_block_face_coords_stride);
   free (sm_block_face_coords);
-  
+
   /* Fourth step : Get connectivity with coordinates +
         Compute distance to the surface mesh for the other centers from the distance
         of the cell centers of boundary cells  */
-  
+
   for (int i = 0; i < _vol_mesh->n_part; i++) {
 
-    // - Construire le tableau cell_cell en conservant cell_face_idx ()
-    // - Ajouter tag_cell :
-    //       * -1 : cellule de bord
-    //       *  0 : cellule interne en dehors de la pile
-    //       *  1 : cellule interne dans la pile
-    // - Mettre les voisines des cellules de bord dans la pile
     // - Traitement element haut de pile :
     //       * Calcul distance à partir de toutes les cellules voisines ayant une distance
     //       * Si Changement de valeur on remet toutes les cellules voisines dans la pile sauf la source
     // - Arret losrque la pile est vide
-    
+
     int          n_bound_cell_part = bound_cell_idx[i+1] - bound_cell_idx[i];
     double      *_closest_elt_distance = _vol_mesh->closest_elt_distance[i];
     double      *_closest_elt_projected = _vol_mesh->closest_elt_projected[i];
     PDM_g_num_t *_closest_elt_gnum = _vol_mesh->closest_elt_gnum[i];
     const int    _n_cell = _vol_mesh->n_cell[i];
+    int         *_cell_cell = _vol_mesh->cell_cell[i];
+    const int   *_cell_cell_idx = _vol_mesh->cell_face_idx[i];
+    const double *_cell_center = _vol_mesh->cell_center[i];
 
-    int *in_queue = malloc(sizeof(int) * _n_cell);
+    int *in_queue = malloc(sizeof(int) * _n_cell); /* -1 : boundary cell,
+                                                       0 : outside the queue,
+                                                       1 : inside the queue */
+
+
+    int *cell_to_closest_bound_cell = malloc(sizeof(int) * _n_cell);
+    for (int j = 0; j < _n_cell; j++) {
+      cell_to_closest_bound_cell[j] = -1;
+    }
+
+    for (int j = bound_cell_idx[i]; j < bound_cell_idx[i+1]; j++) {
+      cell_to_closest_bound_cell[bound_cell[j]] = j;
+    }
+
+    /* Initialize distances to a huge value */
 
     for (int j = 0; j < _n_cell; j++) {
       _closest_elt_distance[j] = HUGE_VAL;
@@ -862,38 +911,148 @@ PDM_wall_dist_compute
       }
     }
 
-    _PDM_queue_t *q = _PDM_queue_init(2 * n_bound_cell_part);
+    /* Initialize the queue (add neighbours of the boundary cells) */
 
-    // Faux : il faut ajouter les voisins dans la pile
+    _PDM_queue_t *q = _PDM_queue_init(2 * n_bound_cell_part);
 
     for (int j = 0; j < n_bound_cell_part; j++) {
       int idx = bound_cell_idx[i] + j;
       int icell = bound_cell[idx];
-      in_queue[icell] = 1;
-      _PDM_queue_push (q, bound_cell[idx]);
+      in_queue[icell] = -1;
       _closest_elt_distance[icell] = closest_elt_distance_bound[idx];
       _closest_elt_gnum[icell] = closest_elt_gnum_bound[idx];
       for (int k = 0; k < 3; k++) {
         _closest_elt_projected[3*icell+k] = closest_elt_projected_bound[3*idx+k];
+      }
+
+      for (int k = _cell_cell_idx[icell]; k < _cell_cell_idx[icell+1]; k++) {
+        int icell1 = _cell_cell[k] - 1;
+        if (icell1 > 0) {
+          if (in_queue[icell1] == 0) {
+            _PDM_queue_push (q, icell1);
+            in_queue[icell1] = 1;
+          }
+        }
       }
     }
 
     int curr_cell;
     while (!_PDM_queue_pull(q, &curr_cell)) {
       in_queue[curr_cell] = 0;
+      double  _curr_closest_elt_distance = _closest_elt_distance[curr_cell];
+      int _curr_closest_bound_cell = cell_to_closest_bound_cell[curr_cell];
+      const double *_pt_coords = _cell_center + 3 * curr_cell;
+      double new_closestPoint[3];
 
-      //TODO : calcul
+      for (int k = _cell_cell_idx[curr_cell]; k < _cell_cell_idx[curr_cell+1]; k++) {
+        int icell1 = _cell_cell[k] - 1;
+        if (icell1 > 0) {
+          if (in_queue[icell1] == 0) {
+            int _icell1_closest_bound_cell = cell_to_closest_bound_cell[icell1];
 
+            if (_curr_closest_bound_cell != _icell1_closest_bound_cell) {
+              double * _coords_face_elt = sm_info_bound_cell[0] +
+                sm_info_bound_cell_idx[_icell1_closest_bound_cell];
+              int    n_vtx_elt= sm_info_bound_cell_stride[0][_icell1_closest_bound_cell] / 3;
+
+              double closestPoint[3];
+              double minDist2;
+
+              if (n_vtx_elt == 3) {
+
+                PDM_triangle_status_t status =
+                  PDM_triangle_evaluate_position (_pt_coords,
+                                                  _coords_face_elt,
+                                                  closestPoint,
+                                                  &minDist2,
+                                                  NULL);
+
+                if (status == PDM_TRIANGLE_DEGENERATED) {
+                  continue;
+                }
+              }
+
+              else {
+
+                if (idebug) {
+                  printf ("_pt_coords : %12.5e %12.5e %12.5e\n",
+                          _pt_coords[0], _pt_coords[1], _pt_coords[2]);
+                  printf ("_coords_face_elt %d %d %d :\n", n_vtx_elt,
+                          sm_info_bound_cell_idx[_icell1_closest_bound_cell],
+                          sm_info_bound_cell_idx[_icell1_closest_bound_cell]);
+
+                  for (int k1 = 0; k1 < n_vtx_elt; k1++) {
+                    printf (" / %12.5e %12.5e %12.5e /\n",
+                            _coords_face_elt[3*k1],
+                            _coords_face_elt[3*k1+1],
+                            _coords_face_elt[3*k1+2]);
+                  }
+                  printf ("\n          *********\n");
+                }
+
+                PDM_polygon_status_t status =
+                  PDM_polygon_evaluate_position (_pt_coords,
+                                                 n_vtx_elt,
+                                                 _coords_face_elt,
+                                                 closestPoint,
+                                                 &minDist2);
+
+                if (status == PDM_POLYGON_DEGENERATED) {
+                  continue;
+                }
+
+                if (minDist2 < _curr_closest_elt_distance) {
+                  _curr_closest_elt_distance = minDist2;
+                  _curr_closest_bound_cell = _icell1_closest_bound_cell;
+                  for (int k1 = 0; k1 < n_vtx_elt; k1++) {
+                    new_closestPoint[k1] = closestPoint[k1];
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+
+      /* Update distance and add neighbours cell into the queue*/
+
+      if (_curr_closest_bound_cell != cell_to_closest_bound_cell[curr_cell]) {
+        cell_to_closest_bound_cell[curr_cell] = _curr_closest_bound_cell;
+        _closest_elt_distance[curr_cell] = _curr_closest_elt_distance;
+        for (int k1 = 0; k1 < 3; k1++) {
+          _closest_elt_projected[3*curr_cell+k1] = new_closestPoint[k1];
+        }
+        _closest_elt_gnum[curr_cell] = closest_elt_gnum_bound[_curr_closest_bound_cell];
+      }
+
+      for (int k = _cell_cell_idx[curr_cell]; k < _cell_cell_idx[curr_cell+1]; k++) {
+        int icell1 = _cell_cell[k] - 1;
+        if (icell1 > 0) {
+          int _icell1_closest_bound_cell = cell_to_closest_bound_cell[icell1];
+
+          if (_curr_closest_bound_cell != _icell1_closest_bound_cell) {
+            if (in_queue[icell1] == 0) {
+              _PDM_queue_push (q, icell1);
+              in_queue[icell1] = 1;
+            }
+          }
+        }
+      }
     }
 
     free (in_queue);
+    free (cell_to_closest_bound_cell);
     _PDM_queue_free (q);
+
   }
 
   PDM_part_to_block_free (ptb);
 
   free (n_face_sm);
   free (gnum_sm);
+  free (sm_info_bound_cell);
+  free (sm_info_bound_cell_stride);
+  free (sm_info_bound_cell_idx);
 
   for (int i = 0; i < n_part_sm; i++) {
     free (sm_face_coords[i]);
@@ -1046,7 +1205,21 @@ PDM_wall_dist_free
   }
 
   if (_vol_mesh->face_cell != NULL) {
+    for (int i = 0; i < _vol_mesh->n_part; i++) {
+      if (_vol_mesh->face_cell[i] != NULL) {
+        free (_vol_mesh->face_cell[i]);
+      }
+    }
     free (_vol_mesh->face_cell);
+  }
+
+  if (_vol_mesh->cell_cell != NULL) {
+    for (int i = 0; i < _vol_mesh->n_part; i++) {
+      if (_vol_mesh->cell_cell[i] != NULL) {
+        free (_vol_mesh->cell_cell[i]);
+      }
+    }
+    free (_vol_mesh->cell_cell);
   }
 
   if (_vol_mesh->face_ln_to_gn != NULL) {
