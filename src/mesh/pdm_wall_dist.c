@@ -363,6 +363,7 @@ PDM_wall_dist_create
 
   dist->surf_mesh = NULL;
   dist->vol_mesh = NULL;
+  dist->comm = comm;
 
   dist->timer = PDM_timer_create ();
 
@@ -561,13 +562,12 @@ PDM_wall_dist_vol_mesh_part_set
 {
   _PDM_dist_t *dist = _get_from_id (id);
 
-  assert (dist->vol_mesh == NULL);
-
-  dist->vol_mesh = malloc (sizeof(_PDM_vol_mesh_t));
+  assert (dist->vol_mesh != NULL);
 
   _PDM_vol_mesh_t *_vol_mesh = dist->vol_mesh;
 
   _vol_mesh->n_cell[i_part] = n_cell;
+
   _vol_mesh->cell_face_idx[i_part] = cell_face_idx;
   _vol_mesh->cell_face[i_part] = cell_face;
   _vol_mesh->cell_center[i_part] = cell_center;
@@ -584,7 +584,7 @@ PDM_wall_dist_vol_mesh_part_set
 
   for (int i = 0; i < n_cell; i++) {
     for (int j = cell_face_idx[i]; j < cell_face_idx[i+1]; j++) {
-      int ifac = cell_face[j]-1;
+      int ifac = PDM_ABS(cell_face[j])-1;
       if (_vol_mesh->face_cell[i_part][2*ifac] == 0) {
         _vol_mesh->face_cell[i_part][2*ifac] = i + 1;
       }
@@ -594,9 +594,10 @@ PDM_wall_dist_vol_mesh_part_set
     }
   }
 
+  _vol_mesh->cell_cell[i_part] = malloc(sizeof(int) * cell_face_idx[n_cell]);
   for (int i = 0; i < n_cell; i++) {
     for (int j = cell_face_idx[i]; j < cell_face_idx[i+1]; j++) {
-      int ifac = cell_face[j]-1;
+      int ifac = PDM_ABS (cell_face[j])-1;
       if (_vol_mesh->face_cell[i_part][2*ifac] == i+1) {
         int icell1 = _vol_mesh->face_cell[i_part][2*ifac+1];
         _vol_mesh->cell_cell[i_part][j] = icell1;
@@ -654,6 +655,9 @@ PDM_wall_dist_compute
 
   /* First step : Look for boundary cells in the volume mesh */
 
+  fflush(stdout);
+  printf(" --- First step\n");
+
   PDM_timer_hang_on(dist->timer);
   b_t_elapsed = PDM_timer_elapsed(dist->timer);
   b_t_cpu     = PDM_timer_cpu(dist->timer);
@@ -662,7 +666,7 @@ PDM_wall_dist_compute
   PDM_timer_resume(dist->timer);
 
   int _t_n_face = 0;
-  for (int i = 0; _vol_mesh->n_part; i++) {
+  for (int i = 0; i < _vol_mesh->n_part; i++) {
     _t_n_face += _vol_mesh->n_face[i];
   }
 
@@ -674,7 +678,7 @@ PDM_wall_dist_compute
   PDM_g_num_t *bound_parent_gnum = malloc (sizeof(PDM_g_num_t) * _t_n_face);
   double * bound_cell_center = malloc (sizeof(double) * 3 * _t_n_face);
 
-  for (int i = 0; _vol_mesh->n_part; i++) {
+  for (int i = 0; i < _vol_mesh->n_part; i++) {
 
     bound_cell_idx[i+1] = bound_cell_idx[i];
 
@@ -704,6 +708,10 @@ PDM_wall_dist_compute
 
   /* Second step : Compute distance to the surface mesh for the cell centers of boundary cells
                    Call PDM_mesh_dist */
+
+
+  fflush(stdout);
+  printf(" --- Second step\n");
 
   int id_bound_dist = PDM_mesh_dist_create (PDM_MESH_NATURE_SURFACE_MESH,
                                             1,
@@ -763,6 +771,9 @@ PDM_wall_dist_compute
   /* Third step : Get vertices about closest faces :
      - Build connectivity with coordinates
      - Part to block faces */
+
+  fflush(stdout);
+  printf(" --- Third step\n");
 
   b_t_elapsed = e_t_elapsed;
   b_t_cpu     = e_t_cpu;
@@ -869,6 +880,9 @@ PDM_wall_dist_compute
   /* Fourth step : Get connectivity with coordinates +
         Compute distance to the surface mesh for the other centers from the distance
         of the cell centers of boundary cells  */
+
+  fflush(stdout);
+  printf(" --- Fourth step\n");
 
   for (int i = 0; i < _vol_mesh->n_part; i++) {
 
