@@ -17,7 +17,7 @@
 #include "pdm.h"
 #include "pdm_priv.h"
 #include "pdm_mpi.h"
-#include "pdm_mesh_dist.h"
+#include "pdm_dist_cloud_surf.h"
 //#include "pdm_mesh_nodal.h"
 #include "pdm_surf_mesh.h"
 #include "pdm_handles.h"
@@ -31,7 +31,7 @@
 //#include "pdm_hash_tab.h"
 #include "pdm_gnum.h"
 
-#include "pdm_wall_dist.h"
+#include "pdm_dist_cellcenter_surf.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -365,7 +365,7 @@ _get_from_id
  */
 
 int
-PDM_wall_dist_create
+PDM_dist_cellcenter_surf_create
 (
  const PDM_MPI_Comm comm
 )
@@ -395,7 +395,7 @@ PDM_wall_dist_create
 }
 
 void
-PDM_wall_dist_create_cf
+PDM_dist_cellcenter_surf_create_cf
 (
  const PDM_MPI_Fint comm,
  int *id
@@ -403,7 +403,7 @@ PDM_wall_dist_create_cf
 {
   const PDM_MPI_Comm _comm        = PDM_MPI_Comm_f2c(comm);
 
-  *id = PDM_wall_dist_create (_comm);
+  *id = PDM_dist_cellcenter_surf_create (_comm);
 }
 
 
@@ -419,7 +419,7 @@ PDM_wall_dist_create_cf
  */
 
 void
-PDM_wall_dist_surf_mesh_global_data_set
+PDM_dist_cellcenter_surf_surf_mesh_global_data_set
 (
  const int         id,
  const PDM_g_num_t n_g_face,
@@ -455,7 +455,7 @@ PDM_wall_dist_surf_mesh_global_data_set
  */
 
 void
-PDM_wall_dist_surf_mesh_part_set
+PDM_dist_cellcenter_surf_surf_mesh_part_set
 (
  const int          id,
  const int          i_part,
@@ -495,7 +495,7 @@ PDM_wall_dist_surf_mesh_part_set
  */
 
 void
-PDM_wall_dist_vol_mesh_global_data_set
+PDM_dist_cellcenter_surf_vol_mesh_global_data_set
 (
  const int         id,
  const PDM_g_num_t n_g_cell,
@@ -564,7 +564,7 @@ PDM_wall_dist_vol_mesh_global_data_set
  */
 
 void
-PDM_wall_dist_vol_mesh_part_set
+PDM_dist_cellcenter_surf_vol_mesh_part_set
 (
  const int          id,
  const int          i_part,
@@ -665,7 +665,7 @@ PDM_wall_dist_vol_mesh_part_set
  */
 
 void
-PDM_wall_dist_compute
+PDM_dist_cellcenter_surf_compute
 (
  const int id
 )
@@ -766,11 +766,11 @@ PDM_wall_dist_compute
   /* fflush(stdout); */
   /* printf(" --- Second step\n"); */
 
-  int id_bound_dist = PDM_mesh_dist_create (PDM_MESH_NATURE_SURFACE_MESH,
+  int id_bound_dist = PDM_dist_cloud_surf_create (PDM_MESH_NATURE_SURFACE_MESH,
                                             1,
                                             dist->comm);
 
-  PDM_mesh_dist_n_part_cloud_set (id_bound_dist, 0, 1);
+  PDM_dist_cloud_surf_n_part_cloud_set (id_bound_dist, 0, 1);
 
   int id_gnum = PDM_gnum_create (3, 1, 0, 0.001, dist->comm);
 
@@ -782,29 +782,29 @@ PDM_wall_dist_compute
 
   PDM_gnum_free (id_gnum, 1);
 
-  PDM_mesh_dist_cloud_set (id_bound_dist,
+  PDM_dist_cloud_surf_cloud_set (id_bound_dist,
                            0,
                            0,
                            n_bound_cell,
                            bound_cell_center,
                            bound_gnum);
 
-  PDM_mesh_dist_surf_mesh_map (id_bound_dist, dist->surf_mesh);
+  PDM_dist_cloud_surf_surf_mesh_map (id_bound_dist, dist->surf_mesh);
 
-  PDM_mesh_dist_compute (id_bound_dist);
+  PDM_dist_cloud_surf_compute (id_bound_dist);
 
   double      *closest_elt_distance_bound = NULL;
   double      *closest_elt_projected_bound = NULL;
   PDM_g_num_t *closest_elt_gnum_bound = NULL;
 
-  PDM_mesh_dist_get (id_bound_dist,
+  PDM_dist_cloud_surf_get (id_bound_dist,
                      0,
                      0,
                      &closest_elt_distance_bound,
                      &closest_elt_projected_bound,
                      &closest_elt_gnum_bound);
 
-  PDM_mesh_dist_free (id_bound_dist, 1);
+  PDM_dist_cloud_surf_free (id_bound_dist, 1);
 
   free (bound_gnum);
   free (bound_cell_center);
@@ -1217,7 +1217,7 @@ PDM_wall_dist_compute
  */
 
 void
-PDM_wall_dist_get
+PDM_dist_cellcenter_surf_get
 (
  const int          id,
  const int          i_part,
@@ -1249,7 +1249,7 @@ PDM_wall_dist_get
  */
 
 void
-PDM_wall_dist_free
+PDM_dist_cellcenter_surf_free
 (
  const int id,
  const int partial
@@ -1388,7 +1388,7 @@ PDM_wall_dist_free
  */
 
 void
-PDM_wall_dist_dump_times
+PDM_dist_cellcenter_surf_dump_times
 (
  const int id
 )

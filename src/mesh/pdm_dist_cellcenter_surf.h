@@ -1,5 +1,5 @@
-#ifndef PDM_WALL_DIST_H
-#define PDM_WALL_DIST_H
+#ifndef PDM_DIST_CELLCENTER_SURF_H
+#define PDM_DIST_CELLCENTER_SURF_H
 
 /*----------------------------------------------------------------------------
  * Local headers
@@ -40,13 +40,13 @@ extern "C" {
  */
 
 int
-PDM_wall_dist_create
+PDM_dist_cellcenter_surf_create
 (
  const PDM_MPI_Comm comm
 );
 
 void
-PDM_wall_dist_create_cf
+PDM_dist_cellcenter_surf_create_cf
 (
  const PDM_MPI_Fint comm,
  int *id
@@ -65,7 +65,7 @@ PDM_wall_dist_create_cf
  */
 
 void
-PDM_wall_dist_surf_mesh_global_data_set
+PDM_dist_cellcenter_surf_surf_mesh_global_data_set
 (
  const int         id,
  const PDM_g_num_t n_g_face,
@@ -91,7 +91,7 @@ PDM_wall_dist_surf_mesh_global_data_set
  */
 
 void
-PDM_wall_dist_surf_mesh_part_set
+PDM_dist_cellcenter_surf_surf_mesh_part_set
 (
  const int          id,
  const int          i_part,
@@ -118,7 +118,7 @@ PDM_wall_dist_surf_mesh_part_set
  */
 
 void
-PDM_wall_dist_vol_mesh_global_data_set
+PDM_dist_cellcenter_surf_vol_mesh_global_data_set
 (
  const int         id,
  const PDM_g_num_t n_g_cell,
@@ -151,7 +151,7 @@ PDM_wall_dist_vol_mesh_global_data_set
  */
 
 void
-PDM_wall_dist_vol_mesh_part_set
+PDM_dist_cellcenter_surf_vol_mesh_part_set
 (
  const int          id,
  const int          i_part,
@@ -179,7 +179,7 @@ PDM_wall_dist_vol_mesh_part_set
  */
 
 void
-PDM_wall_dist_compute
+PDM_dist_cellcenter_surf_compute
 (
  const int id
 );
@@ -198,7 +198,7 @@ PDM_wall_dist_compute
  */
 
 void
-PDM_wall_dist_get
+PDM_dist_cellcenter_surf_get
 (
  const int          id,
  const int          i_part,
@@ -219,7 +219,7 @@ PDM_wall_dist_get
  */
 
 void
-PDM_wall_dist_free
+PDM_dist_cellcenter_surf_free
 (
  const int id,
  const int partial
@@ -235,7 +235,7 @@ PDM_wall_dist_free
  */
 
 void
-PDM_wall_dist_dump_times
+PDM_dist_cellcenter_surf_dump_times
 (
  const int id
 );

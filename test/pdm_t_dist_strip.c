@@ -15,7 +15,7 @@
 #include "pdm_priv.h"
 #include "pdm_part.h"
 #include "pdm_dcube_gen.h"
-#include "pdm_mesh_dist.h"
+#include "pdm_dist_cloud_surf.h"
 #include "pdm_gnum.h"
 
 #include "pdm_writer.h"
@@ -305,7 +305,7 @@ int main(int argc, char *argv[])
   free(dCellPart);
 
   int n_point_cloud = 1;
-  int id_dist = PDM_mesh_dist_create (PDM_MESH_NATURE_SURFACE_MESH,
+  int id_dist = PDM_dist_cloud_surf_create (PDM_MESH_NATURE_SURFACE_MESH,
                                       n_point_cloud,
                                       PDM_MPI_COMM_WORLD);
 
@@ -642,16 +642,16 @@ int main(int argc, char *argv[])
                      PDM__PDM_MPI_G_NUM, PDM_MPI_MAX,
                      PDM_MPI_COMM_WORLD);
 
-  PDM_mesh_dist_surf_mesh_global_data_set (id_dist,
+  PDM_dist_cloud_surf_surf_mesh_global_data_set (id_dist,
                                            n_g_face,
                                            n_g_vtx,
                                            nPart);
 
-  PDM_mesh_dist_n_part_cloud_set (id_dist, 0, nPart);
+  PDM_dist_cloud_surf_n_part_cloud_set (id_dist, 0, nPart);
 
   for (int ipart = 0; ipart < nPart; ipart++) {
 
-    PDM_mesh_dist_surf_mesh_part_set (id_dist,
+    PDM_dist_cloud_surf_surf_mesh_part_set (id_dist,
                                       ipart,
                                       n_select_face[ipart],
                                       surface_face_vtx_idx[ipart],
@@ -725,7 +725,7 @@ int main(int argc, char *argv[])
                            &faceGroup,
                            &faceGroupLNToGN);
 
-    /* PDM_mesh_dist_cloud_set (id_dist, */
+    /* PDM_dist_cloud_surf_cloud_set (id_dist, */
     /*                          0, */
     /*                          ipart, */
     /*                          nVtx, */
@@ -734,7 +734,7 @@ int main(int argc, char *argv[])
 
     PDM_g_num_t *pts_gnum =  PDM_gnum_get (id_gnum_pts, ipart);
 
-    PDM_mesh_dist_cloud_set (id_dist,
+    PDM_dist_cloud_surf_cloud_set (id_dist,
                              0,
                              ipart,
                              n_pts,
@@ -748,7 +748,7 @@ int main(int argc, char *argv[])
     fflush(stdout);
   }
 
-  PDM_mesh_dist_compute (id_dist);
+  PDM_dist_cloud_surf_compute (id_dist);
 
   if (myRank == 0) {
     printf("-- Dist check\n");
@@ -760,7 +760,7 @@ int main(int argc, char *argv[])
     double      *projected;
     PDM_g_num_t *closest_elt_gnum;
 
-    PDM_mesh_dist_get (id_dist,
+    PDM_dist_cloud_surf_get (id_dist,
                        0,
                        ipart,
                        &distance,
@@ -864,9 +864,9 @@ int main(int argc, char *argv[])
   PDM_part_free(ppartId);
 
   PDM_dcube_gen_free(id);
-  PDM_mesh_dist_dump_times(id_dist);
+  PDM_dist_cloud_surf_dump_times(id_dist);
   int partial = 0;
-  PDM_mesh_dist_free (id_dist, partial);
+  PDM_dist_cloud_surf_free (id_dist, partial);
 
   for (int ipart = 0; ipart < nPart; ipart++) {
     free (select_face[ipart]);
@@ -881,7 +881,6 @@ int main(int argc, char *argv[])
 
     free (char_length[ipart]);
     free (pts_coords[ipart]);
-
 
   }
 
@@ -910,11 +909,10 @@ int main(int argc, char *argv[])
 
   PDM_MPI_Finalize();
 
-   if (myRank == 0) {
+  if (myRank == 0) {
     printf("-- End\n");
     fflush(stdout);
   }
 
   return 0;
 }
-
