@@ -17,6 +17,7 @@
 #include "pdm_dcube_gen.h"
 #include "pdm_mesh_dist.h"
 #include "pdm_gnum.h"
+#include "pdm_geom_elem.h"
 
 #include "pdm_writer.h"
 #include "pdm_printf.h"
@@ -316,6 +317,8 @@ int main(int argc, char *argv[])
   int id_gnum_face = PDM_gnum_create (3, nPart, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD);
   int id_gnum_vtx = PDM_gnum_create (3, nPart, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD);
 
+  double **cell_volume = malloc (sizeof(double *) * nPart);
+  double **cell_center = malloc (sizeof(double *) * nPart);
 
   if (myRank == 0) {
     printf("-- mesh dist set\n");
@@ -621,12 +624,30 @@ int main(int argc, char *argv[])
                            &faceGroup,
                            &faceGroupLNToGN);
 
+    const int     isOriented = 0;
+    cell_volume[ipart] = malloc(sizeof(double) * nCell);
+    cell_center[ipart] = malloc(sizeof(double) * 3 * nCell);
+
+    PDM_geom_elem_polyhedra_properties (isOriented,
+                                        nCell,
+                                        nFace,
+                                        faceVtxIdx,
+                                        faceVtx,
+                                        cellFaceIdx,
+                                        cellFace,
+                                        nVtx,
+                                        vtx,
+                                        cell_volume[ipart],
+                                        cell_center[ipart],
+                                        NULL,
+                                        NULL);
+
     PDM_mesh_dist_cloud_set (id_dist,
                              0,
                              ipart,
-                             nVtx,
-                             vtx,
-                             vtxLNToGN);
+                             nCell,
+                             cell_center[ipart],
+                             cellLNToGN);
 
   }
 
@@ -719,20 +740,42 @@ int main(int argc, char *argv[])
                            &faceGroupLNToGN);
 
     int ierr = 0;
-    for (int i = 0; i < nVtx; i++) {
-      double d1 = PDM_MIN (PDM_ABS (vtx[3*i] - xmin), PDM_ABS (vtx[3*i] - xmax));
-      double d2 = PDM_MIN (PDM_ABS (vtx[3*i+1] - ymin), PDM_ABS (vtx[3*i+1] - ymax));
-      double d3 = PDM_MIN (PDM_ABS (vtx[3*i+2] - zmin), PDM_ABS (vtx[3*i+2] - zmax));
+    for (int i = 0; i < nCell; i++) {
+      double d1 = PDM_MIN (PDM_ABS (cell_center[ipart][3*i] - xmin),
+                           PDM_ABS (cell_center[ipart][3*i] - xmax));
+      double d2 = PDM_MIN (PDM_ABS (cell_center[ipart][3*i+1] - ymin),
+                           PDM_ABS (cell_center[ipart][3*i+1] - ymax));
+      double d3 = PDM_MIN (PDM_ABS (cell_center[ipart][3*i+2] - zmin),
+                           PDM_ABS (cell_center[ipart][3*i+2] - zmax));
       double d = PDM_MIN (PDM_MIN (d1,d2), d3);
       d = d * d;
       if (PDM_ABS(distance[i] - d) > 1e-6) {
         ierr += 1;
-        /* printf ("Erreur distance %d (%12.5e %12.5e %12.5e) : %12.5e %12.5e\n", i, */
-        /*         vtx[3*i], vtx[3*i+1], vtx[3*i+2], distance[i], d); */
+        printf ("Erreur distance %d (%12.5e %12.5e %12.5e) : %12.5e %12.5e %ld\n", i,
+                cell_center[ipart][3*i],
+                cell_center[ipart][3*i+1],
+                cell_center[ipart][3*i+2],
+                distance[i],
+                d,
+                closest_elt_gnum[i]);
       }
       /* else { */
-      /*   printf ("ok distance %d (%12.5e %12.5e %12.5e) : %12.5e %12.5e\n", i, */
-      /*           vtx[3*i], vtx[3*i+1], vtx[3*i+2], distance[i], d); */
+      /*   if ((i+1 == 874) || */
+      /*       (i+1 == 1266) || */
+      /*       (i+1 == 1069) || */
+      /*       (i+1 == 1071) || */
+      /*       (i+1 == 1056) || */
+      /*       (i+1 == 1084) || */
+      /*       (i+1 == 1070)){ */
+
+      /*     printf ("Affiche distance %d (%12.5e %12.5e %12.5e) : %12.5e %12.5e %ld\n", i+1, */
+      /*             cell_center[ipart][3*i], */
+      /*             cell_center[ipart][3*i+1], */
+      /*             cell_center[ipart][3*i+2], */
+      /*             distance[i], */
+      /*             d, */
+      /*             closest_elt_gnum[i]); */
+      /*   } */
       /* } */
     }
 

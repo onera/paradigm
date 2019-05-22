@@ -1205,8 +1205,9 @@ double          *closest_octree_pt_dist2
 
   }
 
+  free (inbox_stack);
+  free (min_dist2_stack);
   free (stack);
-
 
 }
 
