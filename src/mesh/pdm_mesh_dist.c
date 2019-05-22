@@ -101,6 +101,7 @@ typedef struct {
   PDM_mesh_nature_t mesh_nature;  /*!< Nature of the mesh */
 
   PDM_surf_mesh_t *surf_mesh;  /*!< Surface mesh pointer */
+  PDM_surf_mesh_t *_surf_mesh;  /*!< Surface mesh pointer */
 
   int  mesh_nodal_id;  /*!< Surface mesh identifier */
 
@@ -188,6 +189,7 @@ PDM_mesh_dist_create
   dist->mesh_nature = mesh_nature;
   dist->mesh_nodal_id = -1;
   dist->surf_mesh = NULL;
+  dist->_surf_mesh = NULL;
   dist->n_point_cloud = n_point_cloud;
   dist->comm = comm;
   dist->points_cloud =
@@ -353,7 +355,7 @@ PDM_mesh_dist_surf_mesh_map
 {
   _PDM_dist_t *dist = _get_from_id (id);
 
-  dist->surf_mesh = surf_mesh;
+  dist->_surf_mesh = surf_mesh;
 }
 
 
@@ -380,13 +382,11 @@ PDM_mesh_dist_surf_mesh_global_data_set
 
   _PDM_dist_t *dist = _get_from_id (id);
 
-  if (dist->surf_mesh != NULL) {
-    dist->surf_mesh = PDM_surf_mesh_free (dist->surf_mesh);
-  }
+  assert (dist->surf_mesh == NULL);
 
   dist->surf_mesh =
     PDM_surf_mesh_create (n_g_face, n_g_vtx, n_part, dist->comm);
-
+  dist->_surf_mesh = dist->surf_mesh;
 }
 
 
@@ -509,8 +509,8 @@ PDM_mesh_dist_compute
     if (dist->mesh_nodal_id != -1) {
       n_part_mesh = PDM_Mesh_nodal_n_part_get (mesh_id);
     }
-    else if (dist->surf_mesh != NULL) {
-      n_part_mesh = PDM_surf_mesh_n_part_get (dist->surf_mesh);
+    else if (dist->_surf_mesh != NULL) {
+      n_part_mesh = PDM_surf_mesh_n_part_get (dist->_surf_mesh);
     }
     else {
       PDM_error(__FILE__, __LINE__, 0,
@@ -538,10 +538,10 @@ PDM_mesh_dist_compute
         vertices_coords = PDM_Mesh_nodal_vertices_get (mesh_id, i_part);
         vertices_gnum   = PDM_Mesh_nodal_vertices_g_num_get (mesh_id, i_part);
       }
-      else if (dist->surf_mesh != NULL) {
-        n_vertices      = PDM_surf_mesh_part_n_vtx_get(dist->surf_mesh, i_part);
-        vertices_coords = PDM_surf_mesh_part_vtx_get (dist->surf_mesh, i_part);
-        vertices_gnum   = PDM_surf_mesh_part_vtx_g_num_get (dist->surf_mesh,
+      else if (dist->_surf_mesh != NULL) {
+        n_vertices      = PDM_surf_mesh_part_n_vtx_get(dist->_surf_mesh, i_part);
+        vertices_coords = PDM_surf_mesh_part_vtx_get (dist->_surf_mesh, i_part);
+        vertices_gnum   = PDM_surf_mesh_part_vtx_g_num_get (dist->_surf_mesh,
                                                             i_part);
       }
       else {
@@ -734,16 +734,16 @@ PDM_mesh_dist_compute
 /* );  */
 
     }
-    else if (dist->surf_mesh != NULL) {
-      PDM_surf_mesh_compute_faceExtentsMesh (dist->surf_mesh, 1e-8);
+    else if (dist->_surf_mesh != NULL) {
+      PDM_surf_mesh_compute_faceExtentsMesh (dist->_surf_mesh, 1e-8);
       for (int i_part = 0; i_part < n_part_mesh; i_part++) {
-        nElts[i_part] = PDM_surf_mesh_part_n_face_get (dist->surf_mesh,
+        nElts[i_part] = PDM_surf_mesh_part_n_face_get (dist->_surf_mesh,
                                                        i_part);
 
-        gNum[i_part] = PDM_surf_mesh_part_face_g_num_get (dist->surf_mesh,
+        gNum[i_part] = PDM_surf_mesh_part_face_g_num_get (dist->_surf_mesh,
                                                           i_part);
 
-        extents[i_part] = PDM_surf_mesh_part_extents_get (dist->surf_mesh,
+        extents[i_part] = PDM_surf_mesh_part_extents_get (dist->_surf_mesh,
                                                           i_part);
 
       }
@@ -1023,8 +1023,8 @@ PDM_mesh_dist_compute
     int *n_face_mesh = malloc (sizeof(int *) * n_part_mesh);
 
     for (int i = 0; i < n_part_mesh; i++) {
-      n_face_mesh[i] = PDM_surf_mesh_part_n_face_get (dist->surf_mesh, i);
-      gnum_face_mesh[i] = PDM_surf_mesh_part_face_g_num_get(dist->surf_mesh, i);
+      n_face_mesh[i] = PDM_surf_mesh_part_n_face_get (dist->_surf_mesh, i);
+      gnum_face_mesh[i] = PDM_surf_mesh_part_face_g_num_get(dist->_surf_mesh, i);
     }
 
     PDM_part_to_block_t *ptb_elt =
@@ -1045,10 +1045,10 @@ PDM_mesh_dist_compute
     for (int i = 0; i < n_part_mesh; i++) {
       coords_face_mesh[i] = NULL;
       const int *part_face_vtx     =
-        PDM_surf_mesh_part_face_vtx_get (dist->surf_mesh, i);
+        PDM_surf_mesh_part_face_vtx_get (dist->_surf_mesh, i);
       const int *part_face_vtx_idx =
-        PDM_surf_mesh_part_face_vtx_idx_get (dist->surf_mesh, i);
-      const double *part_vtx = PDM_surf_mesh_part_vtx_get (dist->surf_mesh, i);
+        PDM_surf_mesh_part_face_vtx_idx_get (dist->_surf_mesh, i);
+      const double *part_vtx = PDM_surf_mesh_part_vtx_get (dist->_surf_mesh, i);
 
       coords_face_mesh_n[i] = malloc (sizeof(int) * n_face_mesh[i]);
       coords_face_mesh[i] =
@@ -1471,8 +1471,10 @@ PDM_mesh_dist_free
 
   PDM_timer_free(dist->timer);
 
-  if (dist->surf_mesh != NULL) {
-    PDM_surf_mesh_free (dist->surf_mesh);
+  if (dist->_surf_mesh != NULL) {
+    if (dist->surf_mesh != NULL) {
+      PDM_surf_mesh_free (dist->surf_mesh);
+    }
   }
 
   free (dist);

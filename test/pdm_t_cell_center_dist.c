@@ -776,9 +776,30 @@ int main(int argc, char *argv[])
       d = d * d;
       if (PDM_ABS(distance[i] - d) > 1e-6) {
         ierr += 1;
-        /* printf ("Erreur distance %d (%12.5e %12.5e %12.5e) : %12.5e %12.5e\n", i, */
-        /*         vtx[3*i], vtx[3*i+1], vtx[3*i+2], distance[i], d); */
+        printf ("Erreur distance %d (%12.5e %12.5e %12.5e) : %12.5e %12.5e %ld\n", i+1,
+                cell_center[ipart][3*i],
+                cell_center[ipart][3*i+1],
+                cell_center[ipart][3*i+2],
+                distance[i],
+                d,
+                closest_elt_gnum[i]);
       }
+      /* else { */
+      /*   if ((i+1 == 874) || */
+      /*       (i+1 == 1266) || */
+      /*       (i+1 == 1069) || */
+      /*       (i+1 == 1071) || */
+      /*       (i+1 == 1056) || */
+      /*       (i+1 == 1084)) { */
+      /*     printf ("Affichage distance %d (%12.5e %12.5e %12.5e) : %12.5e %12.5e %ld\n", i+1, */
+      /*             cell_center[ipart][3*i], */
+      /*             cell_center[ipart][3*i+1], */
+      /*             cell_center[ipart][3*i+2], */
+      /*             distance[i], */
+      /*             d, */
+      /*             closest_elt_gnum[i]); */
+      /*   } */
+      /* } */
       /* else { */
       /*   printf ("ok distance %d (%12.5e %12.5e %12.5e) : %12.5e %12.5e\n", i, */
       /*           vtx[3*i], vtx[3*i+1], vtx[3*i+2], distance[i], d); */
@@ -805,6 +826,10 @@ int main(int argc, char *argv[])
   PDM_wall_dist_free (id_dist, partial);
 
   for (int ipart = 0; ipart < nPart; ipart++) {
+
+    free (cell_volume[ipart]);
+    free (cell_center[ipart]);
+
     free (select_face[ipart]);
     free (select_vtx[ipart]);
 
@@ -816,6 +841,9 @@ int main(int argc, char *argv[])
     free (surface_vtx_parent_gnum[ipart]);
 
   }
+
+  free (cell_volume);
+  free (cell_center);
 
   free (select_face);
   free (select_vtx);
