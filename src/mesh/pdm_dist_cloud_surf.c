@@ -17,7 +17,7 @@
 #include "pdm.h"
 #include "pdm_priv.h"
 #include "pdm_mpi.h"
-#include "pdm_mesh_dist.h"
+#include "pdm_dist_cloud_surf.h"
 #include "pdm_mesh_nodal.h"
 #include "pdm_surf_mesh.h"
 #include "pdm_handles.h"
@@ -171,7 +171,7 @@ _get_from_id
  */
 
 int
-PDM_mesh_dist_create
+PDM_dist_cloud_surf_create
 (
  const PDM_mesh_nature_t mesh_nature,
  const int n_point_cloud,
@@ -218,7 +218,7 @@ PDM_mesh_dist_create
 }
 
 void
-PDM_mesh_dist_create_cf
+PDM_dist_cloud_surf_create_cf
 (
  const PDM_mesh_nature_t mesh_nature,
  const int n_point_cloud,
@@ -229,7 +229,7 @@ PDM_mesh_dist_create_cf
 {
   const PDM_MPI_Comm _comm        = PDM_MPI_Comm_f2c(comm);
 
-  *id = PDM_mesh_dist_create (mesh_nature, n_point_cloud, _comm);
+  *id = PDM_dist_cloud_surf_create (mesh_nature, n_point_cloud, _comm);
 
 }
 
@@ -245,7 +245,7 @@ PDM_mesh_dist_create_cf
  */
 
 void
-PDM_mesh_dist_n_part_cloud_set
+PDM_dist_cloud_surf_n_part_cloud_set
 (
  const int          id,
  const int          i_point_cloud,
@@ -296,7 +296,7 @@ PDM_mesh_dist_n_part_cloud_set
  */
 
 void
-PDM_mesh_dist_cloud_set
+PDM_dist_cloud_surf_cloud_set
 (
  const int          id,
  const int          i_point_cloud,
@@ -324,7 +324,7 @@ PDM_mesh_dist_cloud_set
  */
 
 void
-PDM_mesh_dist_nodal_mesh_set
+PDM_dist_cloud_surf_nodal_mesh_set
 (
  const int  id,
  const int  mesh_nodal_id
@@ -347,7 +347,7 @@ PDM_mesh_dist_nodal_mesh_set
  */
 
 void
-PDM_mesh_dist_surf_mesh_map
+PDM_dist_cloud_surf_surf_mesh_map
 (
  const int  id,
  PDM_surf_mesh_t *surf_mesh
@@ -371,7 +371,7 @@ PDM_mesh_dist_surf_mesh_map
  */
 
 void
-PDM_mesh_dist_surf_mesh_global_data_set
+PDM_dist_cloud_surf_surf_mesh_global_data_set
 (
  const int         id,
  const PDM_g_num_t n_g_face,
@@ -408,7 +408,7 @@ PDM_mesh_dist_surf_mesh_global_data_set
  */
 
 void
-PDM_mesh_dist_surf_mesh_part_set
+PDM_dist_cloud_surf_surf_mesh_part_set
 (
  const int          id,
  const int          i_part,
@@ -444,7 +444,7 @@ PDM_mesh_dist_surf_mesh_part_set
  */
 
 void
-PDM_mesh_dist_compute
+PDM_dist_cloud_surf_compute
 (
  const int id
 )
@@ -514,11 +514,11 @@ PDM_mesh_dist_compute
     }
     else {
       PDM_error(__FILE__, __LINE__, 0,
-                "PDM_mesh_dist error : The surface mesh is not defined. "
+                "PDM_dist_cloud_surf error : The surface mesh is not defined. "
                 "To do that : \n"
-                "        Call PDM_mesh_dist_nodal_mesh_set or\n"
-                "        Call PDM_mesh_dist_surf_mesh_global_data_set +"
-                " PDM_mesh_dist_surf_mesh_part_set\n");
+                "        Call PDM_dist_cloud_surf_nodal_mesh_set or\n"
+                "        Call PDM_dist_cloud_surf_surf_mesh_global_data_set +"
+                " PDM_dist_cloud_surf_surf_mesh_part_set\n");
     }
 
     int octree_id = PDM_octree_create (n_part_mesh,
@@ -546,11 +546,11 @@ PDM_mesh_dist_compute
       }
       else {
         PDM_error(__FILE__, __LINE__, 0,
-                  "PDM_mesh_dist error : The surface mesh is not defined. "
+                  "PDM_dist_cloud_surf error : The surface mesh is not defined. "
                   "To do that : \n"
-                  "        Call PDM_mesh_dist_nodal_mesh_set or\n"
-                  "        Call PDM_mesh_dist_surf_mesh_global_data_set +"
-                  " PDM_mesh_dist_surf_mesh_part_set\n");
+                  "        Call PDM_dist_cloud_surf_nodal_mesh_set or\n"
+                  "        Call PDM_dist_cloud_surf_surf_mesh_global_data_set +"
+                  " PDM_dist_cloud_surf_surf_mesh_part_set\n");
       }
 
       PDM_octree_point_cloud_set (octree_id, i_part, n_vertices,
@@ -751,11 +751,11 @@ PDM_mesh_dist_compute
 
     else {
       PDM_error(__FILE__, __LINE__, 0,
-                "PDM_mesh_dist error : The surface mesh is not defined."
+                "PDM_dist_cloud_surf error : The surface mesh is not defined."
                 " To do that : \n"
-                "        Call PDM_mesh_dist_nodal_mesh_set or\n"
-                "        Call PDM_mesh_dist_surf_mesh_global_data_set +"
-                " PDM_mesh_dist_surf_mesh_part_set\n");
+                "        Call PDM_dist_cloud_surf_nodal_mesh_set or\n"
+                "        Call PDM_dist_cloud_surf_surf_mesh_global_data_set +"
+                " PDM_dist_cloud_surf_surf_mesh_part_set\n");
     }
 
     PDM_box_set_t  *surf_mesh_boxes = PDM_dbbtree_boxes_set (dbbt,
@@ -1405,7 +1405,7 @@ PDM_mesh_dist_compute
  */
 
 void
-PDM_mesh_dist_get
+PDM_dist_cloud_surf_get
 (
  const int          id,
  const int          i_point_cloud,
@@ -1434,7 +1434,7 @@ PDM_mesh_dist_get
  */
 
 void
-PDM_mesh_dist_free
+PDM_dist_cloud_surf_free
 (
  const int id,
  const int partial
@@ -1499,7 +1499,7 @@ PDM_mesh_dist_free
  */
 
 void
-PDM_mesh_dist_dump_times
+PDM_dist_cloud_surf_dump_times
 (
  const int id
 )
