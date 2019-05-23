@@ -81,6 +81,8 @@ const PDM_hash_tab_key_t  tKey,
 void                     *keyMax
 )
 {
+int vb = 1;
+if (vb == 1)   PDM_printf ("==== PDM_hash_tab_create ====\n");
   _hash_tab_t *ht = malloc (sizeof(_hash_tab_t));
   const int nDataDefault = 4;
 
@@ -96,7 +98,8 @@ void                     *keyMax
     PDM_error(__FILE__, __LINE__, 0, "Error PDM_hash_tab_create : Unknown hey type");
     abort();
   }
-
+ PDM_printf ("keyMax = %d   %d    %d \n", (int*)keyMax, (long*)keyMax, ht->keyMax);  
+  
   ht->l_key_info = PDM_MAX (ht->keyMax/10, 2);
   ht->key_info = malloc (sizeof(PDM_g_num_t)*ht->l_key_info);
   ht->n_key_info = 0;
@@ -109,7 +112,12 @@ void                     *keyMax
     ht->mDataKey[i] = nDataDefault;
     ht->data[i] = malloc (sizeof(void *) * nDataDefault);
   }
+ PDM_printf ("ht->keyMax = %d", ht->keyMax);  
+ PDM_printf ("ht->nDataKey = %d", ht->nDataKey);  
+ PDM_printf (", ht->nDataKey[0] \n", ht->nDataKey[0]);  
 
+if (vb == 1)   PDM_printf ("==== PDM_hash_tab_create ==== terminated ====\n");
+ 
   return (PDM_hash_tab_t *) ht;
 }
 
@@ -230,18 +238,23 @@ void           *key
 )
 {
   _hash_tab_t *_ht = (_hash_tab_t *) ht;
-  PDM_g_num_t _key = -1;
-
+  PDM_printf ("_ht->keyMax = %d \n", _ht->keyMax);  
+ PDM_g_num_t _key = -1;
+  
   if (_ht->tKey == PDM_HASH_TAB_KEY_INT) {
+ PDM_printf ("I_", _key);  
     _key = (PDM_g_num_t) *((int *) (key));
   }
   else if (_ht->tKey == PDM_HASH_TAB_KEY_LONG) {
+ PDM_printf ("L_", _key);  
     _key = *((PDM_g_num_t *) (key));
   }
   else {
 	  PDM_error(__FILE__, __LINE__, 0, "PDM_hash_tab_data_get error : unknown PDM_hash_tab_key_t\n");
 		abort();
 	}
+ PDM_printf ("_nkey = %d \n", _key);  
+ PDM_printf ("_ht->nDataKey = %d, _ht->nDataKey[0] \n", _ht->nDataKey, _ht->nDataKey[0]);  
   return _ht->nDataKey[_key];
 }
 
@@ -269,15 +282,18 @@ void           *key
   PDM_g_num_t _key = -1;
 
   if (_ht->tKey == PDM_HASH_TAB_KEY_INT) {
+ PDM_printf ("I_", _key);  
     _key = (PDM_g_num_t) *((int *) (key));
   }
   else if (_ht->tKey == PDM_HASH_TAB_KEY_LONG) {
+ PDM_printf ("L_", _key);  
     _key = *((PDM_g_num_t *) (key));
   }
   else {
 	  PDM_error(__FILE__, __LINE__, 0, "PDM_hash_tab_data_get error : unknown PDM_hash_tab_key_t\n");
 		abort();
 	}
+ PDM_printf ("_key = %d \n", _key);  
   return _ht->data[_key];
 }
 

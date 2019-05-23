@@ -665,7 +665,7 @@ _distrib_data
 
   /* Affichage */
 
-  if (1 == 1) {
+  if (0 == 1) {
     if (ptb->myRank == 0) {
       PDM_printf("dataDistribIndex : ");
       for(int i = 0; i < ptb->s_comm + 1; i++)
@@ -1553,7 +1553,7 @@ PDM_part_to_block_destination_get
 )
 {
   _cs_part_to_block_t *_ptb = (_cs_part_to_block_t *) ptb;
-  if (1 == 1) {
+  if (0 == 1) {
 	  PDM_printf("dataDistribIndex : ");
 	  for(int i = 0; i < _ptb->s_comm + 1; i++)
 		PDM_printf(PDM_FMT_G_NUM" ", _ptb->dataDistribIndex[i]);
