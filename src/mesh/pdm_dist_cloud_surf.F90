@@ -19,9 +19,9 @@
 
 #include "pdm_configf.h"
 
-module mod_dist_cloud_surf
+module pdm_dist_cloud_surf
 
-  use mod_pdm
+  use pdm
 
   implicit none
 
@@ -255,4 +255,4 @@ module mod_dist_cloud_surf
 
   end interface
 
-end module mod_dist_cloud_surf
+end module pdm_dist_cloud_surf

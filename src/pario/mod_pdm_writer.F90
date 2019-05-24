@@ -1,6 +1,6 @@
-module mod_pdm_writer
+module pdm_writer
 
-  use mod_pdm
+  use pdm
 
   implicit none
 
@@ -671,4 +671,4 @@ contains
   !     integer (kind = pdm_l_num_s), intent(in)    :: id_geom
   !     integer (kind = pdm_l_num_s), intent(in)    :: id_var
 
-end module mod_pdm_writer
+end module pdm_writer

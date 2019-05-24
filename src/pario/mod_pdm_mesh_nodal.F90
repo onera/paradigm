@@ -5,9 +5,9 @@
 ! Created on July 10, 2017, 1:34 PM
 !
 
-MODULE mod_pdm_mesh_nodal
+MODULE pdm_mesh_nodal
 
-  use mod_pdm
+  use pdm
   use iso_c_binding
 
   implicit none
@@ -126,7 +126,7 @@ MODULE mod_pdm_mesh_nodal
         bind(c, name='PDM_Mesh_nodal_coord_set')
 
         use iso_c_binding
-        use mod_pdm
+        use pdm
 
         implicit none
 
@@ -144,4 +144,4 @@ MODULE mod_pdm_mesh_nodal
 
   end subroutine
 
-END MODULE mod_pdm_mesh_nodal
+END MODULE pdm_mesh_nodal

@@ -19,9 +19,9 @@
 
 #include "pdm_configf.h"
 
-module mod_gnum_location
+module pdm_gnum_location
 
-  use mod_pdm
+  use pdm
 
   implicit none
 
@@ -175,4 +175,4 @@ module mod_gnum_location
 
   end interface
 
-end module mod_gnum_location
+end module pdm_gnum_location
