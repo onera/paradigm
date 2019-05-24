@@ -133,7 +133,8 @@ if (PDM_ENABLE_STATIC_Fortran_INTERFACE OR PDM_ENABLE_SHARED_Fortran_INTERFACE)
   list(APPEND LIST_HEADERF "${CMAKE_CURRENT_BINARY_DIR}/mod_pdm_writer.mod")
   list(APPEND LIST_HEADERF "${CMAKE_CURRENT_BINARY_DIR}/mod_pdm.mod")
   list(APPEND LIST_HEADERF "${CMAKE_CURRENT_BINARY_DIR}/mod_pdm_part.mod")
-  list(APPEND LIST_HEADERF "${CMAKE_CURRENT_BINARY_DIR}/mod_mesh_dist.mod")
+  list(APPEND LIST_HEADERF "${CMAKE_CURRENT_BINARY_DIR}/mod_dist_cellcenter_surf.mod")
+  list(APPEND LIST_HEADERF "${CMAKE_CURRENT_BINARY_DIR}/mod_dist_cloud_surf.mod")
 
 endif ()
 
