@@ -19,7 +19,7 @@
 
 #include "pdm_configf.h"
 
-module mod_mesh_dist
+module mod_dist_cloud_surf
 
   use mod_pdm
 
@@ -255,4 +255,4 @@ module mod_mesh_dist
 
   end interface
 
-end module mod_mesh_dist
+end module mod_dist_cloud_surf
