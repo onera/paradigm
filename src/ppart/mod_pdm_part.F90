@@ -1,6 +1,6 @@
-module mod_pdm_part
+module pdm_part
 
-  use mod_pdm
+  use pdm
 
   integer, parameter :: PDM_part_SPLIT_PARMETIS = 1
   integer, parameter :: PDM_part_SPLIT_PTSCOTCH = 2
@@ -73,7 +73,7 @@ interface
                                   sFaceVtx, &
                                   sFaceGroup, &
                                   nFaceGroup)
-     use mod_pdm
+     use pdm
 
      implicit none
 
@@ -173,7 +173,7 @@ interface
                                 faceGroup, &
                                 faceGroupLNToGN)
 
-   use mod_pdm
+   use pdm
 
    implicit none
 
@@ -275,7 +275,7 @@ interface
                             bound_part_faces_max, &
                             bound_part_faces_sum)
 
-   use mod_pdm
+   use pdm
    implicit none
 
    integer      :: ppartId
@@ -303,7 +303,7 @@ interface
  !================================================================================
 
  subroutine pdm_part_n_renum_method_cell_get (n_method)
-   use mod_pdm
+   use pdm
    implicit none
    integer      :: n_method
 
@@ -320,7 +320,7 @@ interface
  !================================================================================
 
  subroutine pdm_part_n_renum_method_face_get (n_method)
-   use mod_pdm
+   use pdm
    implicit none
    integer      :: n_method
 
@@ -419,7 +419,7 @@ contains
                           dFaceGroupIdx,&
                           dFaceGroup)
 
-    use mod_pdm
+    use pdm
 
     implicit none
 
@@ -541,7 +541,7 @@ subroutine pdm_part_coarse_mesh_create_ (cmId, &
                                         have_faceWeight, &
                                         have_faceGroup)
 
-    use mod_pdm
+    use pdm
 
     implicit none
 
@@ -609,7 +609,7 @@ subroutine pdm_part_coarse_mesh_create_ (cmId, &
   subroutine pdm_part_renum_method_face_idx_get_ (name, &
                                                   idx)
 
-     use mod_pdm
+     use pdm
 
     implicit none
 
@@ -637,7 +637,7 @@ subroutine pdm_part_coarse_mesh_create_ (cmId, &
  subroutine pdm_part_renum_method_cell_idx_get_ (name, &
                                                  idx)
 
-   use mod_pdm
+   use pdm
 
    implicit none
 
@@ -665,7 +665,7 @@ subroutine pdm_part_coarse_mesh_create_ (cmId, &
 subroutine pdm_part_renum_method_face_name_get_ (idx, &
                                                 name)
 
-   use mod_pdm
+   use pdm
    implicit none
 
    character (len = *) :: name
@@ -693,7 +693,7 @@ end subroutine pdm_part_renum_method_face_name_get_
 subroutine pdm_part_renum_method_cell_name_get_ (idx, &
                                                 name)
 
-   use mod_pdm
+   use pdm
    implicit none
 
    character (len = *) :: name
@@ -707,4 +707,4 @@ subroutine pdm_part_renum_method_cell_name_get_ (idx, &
 
 end subroutine pdm_part_renum_method_cell_name_get_
 
-end module mod_pdm_part
+end module pdm_part

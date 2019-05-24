@@ -1,7 +1,7 @@
 
-module mod_pdm_io
+module pdm_io
 
-  use mod_pdm
+  use pdm
 
   implicit none
 
@@ -856,4 +856,4 @@ contains
 !                                minute, &
 !                                seconde)
 
-end module mod_pdm_io
+end module pdm_io

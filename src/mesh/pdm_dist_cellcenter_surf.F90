@@ -19,9 +19,9 @@
 
 #include "pdm_configf.h"
 
-module mod_dist_cellcenter_surf
+module pdm_dist_cellcenter_surf
 
-  use mod_pdm
+  use pdm
 
   implicit none
 
@@ -273,4 +273,4 @@ module mod_dist_cellcenter_surf
 
   end interface
 
-end module mod_dist_cellcenter_surf
+end module pdm_dist_cellcenter_surf
