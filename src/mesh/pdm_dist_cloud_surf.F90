@@ -59,7 +59,7 @@ module pdm_dist_cloud_surf
     !!
 
     subroutine pdm_dist_cloud_surf_n_part_cloud_set (id, i_point_cloud, n_part) &
-         bind (c, name = 'pdm_dist_cloud_surf_n_part_cloud_set')
+         bind (c, name = 'PDM_dist_cloud_surf_n_part_cloud_set')
 
       use iso_c_binding
 
