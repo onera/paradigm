@@ -1129,7 +1129,6 @@ PDM_dist_cellcenter_surf_compute
 
           int icell1 = _cell_cell[k] - 1;
           if (icell1 >= 0) {
-            int _icell1_closest_bound_cell = cell_to_closest_bound_cell[icell1];
 
             /* if (curr_cell == 1083) { */
             /*   printf(" %d", icell1+1); */

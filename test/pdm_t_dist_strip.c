@@ -339,9 +339,9 @@ int main(int argc, char *argv[])
   double **char_length = malloc (sizeof(double *) * nPart);
 
   int n_pts   = ((nVtxSeg * nVtxSeg * nVtxSeg) / numProcs) / nPart;
-  int n_pts_x = n_pts/(1.+(1.-4.*strip)+(1.-4.*strip) * (1.-4.*strip));
-  int n_pts_y = (1.-4.*strip) * n_pts;
-  int n_pts_z = (1.-4.*strip) * (1.-4.*strip) * n_pts;
+  int n_pts_x = (int) (n_pts/(1.+(1.-4.*strip)+(1.-4.*strip) * (1.-4.*strip)));
+  int n_pts_y = (int) ((1.-4.*strip) * n_pts);
+  int n_pts_z = (int) ((1.-4.*strip) * (1.-4.*strip) * n_pts);
 
   double _char_length = (xmax-xmin)/nVtxSeg;
 
@@ -855,8 +855,8 @@ int main(int argc, char *argv[])
     }
 
     if (myRank == 0) {
-      printf ("elements surfaciques : %d\n", 6*(nVtxSeg-1)*(nVtxSeg-1));
-      printf ("nombre de points     : %ld\n", n_pts*nPart*numProcs);
+      printf ("elements surfaciques : %ld\n", 6*(nVtxSeg-1)*(nVtxSeg-1));
+      printf ("nombre de points     : %d\n", n_pts*nPart*numProcs);
       fflush(stdout);
     }
   }

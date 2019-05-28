@@ -785,7 +785,7 @@ int main(int argc, char *argv[])
     }
 
     if (myRank == 0) {
-      printf ("elements surfaciques : %d\n", 6*(nVtxSeg-1)*(nVtxSeg-1));
+      printf ("elements surfaciques : %ld\n", 6*(nVtxSeg-1)*(nVtxSeg-1));
       printf ("nombre de points     : %ld\n", nVtxSeg*nVtxSeg*nVtxSeg);
       fflush(stdout);
     }
