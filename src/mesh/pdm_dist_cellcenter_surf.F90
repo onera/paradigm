@@ -218,7 +218,7 @@ module pdm_dist_cellcenter_surf
     !! \param [out]  closest_elt_g_num     Global number of the closest element
     !!
 
-    subroutine pdm_dist_cellcenter_surf_get (id, i_point_cloud, i_part, &
+    subroutine pdm_dist_cellcenter_surf_get (id, i_part, &
                                             closest_elt_distance, &
                                             closest_elt_projected, &
                                             closest_elt_gnum) &
@@ -229,7 +229,6 @@ module pdm_dist_cellcenter_surf
       implicit none
 
       integer(c_int), value     :: id
-      integer(c_int), value     :: i_point_cloud
       integer(c_int), value     :: i_part
       type(c_ptr)               :: closest_elt_distance
       type(c_ptr)               :: closest_elt_projected
