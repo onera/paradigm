@@ -163,7 +163,7 @@ module pdm_gnum_location
     !!/
 
     subroutine pdm_gnum_location_free (id, partial) &
-      bind (c, name = 'PDM_gnum_location_get')
+      bind (c, name = 'PDM_gnum_location_free')
 
       use iso_c_binding
 
