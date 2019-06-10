@@ -85,8 +85,7 @@ PDM_genrcm
 int node_num,
 int adj_row[],
 int adj[],
-int perm[],
-int level_rowg[]
+int perm[]
 );
 
 
