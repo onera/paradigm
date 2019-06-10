@@ -73,6 +73,23 @@ PDM_cuthill_checkbandwidth
  _part_t           *ppart
 );
 
+/*----------------------------------------------------------------------------
+ * Compute the bandwidth of the current mesh
+ *
+ * parameters:
+ *   part       --> Mesh Partition
+ *---------------------------------------------------------------------------*/
+void
+PDM_genrcm
+(
+int node_num,
+int adj_row[],
+int adj[],
+int perm[],
+int level_rowg[]
+);
+
+
 /*----------------------------------------------------------------------------*/
 
 #ifdef __cplusplus
