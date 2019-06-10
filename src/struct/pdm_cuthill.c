@@ -496,7 +496,6 @@ int level[]
     }
 
    /** Generate the rooted level structure associated with this node. **/
-
    _level_set( *root, adj_row, adj, mask, &level_num2,
                 level_row, level);
 
@@ -812,11 +811,11 @@ int node_num
   *   We now have the Cuthill-McKee ordering.
   *   Reverse it to get the Reverse Cuthill-McKee ordering.
   */
-
   _i4vec_reverse ( *iccsze, perm );
 
   /**  Free memory. **/
   free(deg);// delete [] deg;
+
 
   return;
 }
@@ -848,8 +847,8 @@ int perm[]
   int num;
   int root;
 
-  int *level_row = (int *) malloc(sizeof(int) * node_num + 1); //level_row = new int[node_num+1];
-  int *mask      = (int *) malloc(sizeof(int) * node_num    ); //mask = new int[node_num];
+  int *level_row  = (int *) malloc(sizeof(int) * node_num + 1); //level_row = new int[node_num+1];
+  int *mask       = (int *) malloc(sizeof(int) * node_num    ); //mask = new int[node_num];
 
   for ( i = 0; i < node_num; i++ )
   {
@@ -863,7 +862,7 @@ int perm[]
     /*
      * For each masked connected component...
      */
-
+    // printf(" mask[%i] = %i \n", i, mask[i]);
     if ( mask[i] != 0 )
     {
       root = i + 1;
@@ -873,7 +872,6 @@ int perm[]
        */
       _root_find(&root, adj_row, adj, mask, &level_num,
                 level_row, perm+num-1);
-
       /*
        *   RCM orders the component using ROOT as the starting node.
        */
@@ -924,12 +922,10 @@ PDM_cuthill_checkbandwidth
                         (int **) &dualGraph);
 
   /** Offset Graph and Arr **/
-  for (int i = 0; i < ppart->nCell; i++)
-  {
+  for (int i = 0; i < ppart->nCell; i++){
     dualGraphIdx[i] = dualGraphIdx[i]+1;
   }
-  for (int i = 0; i < dualGraphIdx[ppart->nCell]; i++)
-  {
+  for (int i = 0; i < dualGraphIdx[ppart->nCell]; i++){
     dualGraph[i] = dualGraph[i]+1;
   }
 
@@ -966,12 +962,10 @@ PDM_cuthill_generate
                         (int **) &dualGraph);
 
   /** Offset Graph and Arr **/
-  for (int i = 0; i < ppart->nCell; i++)
-  {
+  for (int i = 0; i < ppart->nCell; i++){
     dualGraphIdx[i] = dualGraphIdx[i]+1;
   }
-  for (int i = 0; i < dualGraphIdx[ppart->nCell]; i++)
-  {
+  for (int i = 0; i < dualGraphIdx[ppart->nCell]; i++){
     dualGraph[i] = dualGraph[i]+1;
   }
 
@@ -997,6 +991,148 @@ PDM_cuthill_generate
   free(dualGraphIdx);
   free(dualGraph);
 }
+
+
+/**
+ *
+ * \brief Compute reverse Cut-Hill Mac-Kee ordering
+ *
+ * \param [in,out]  node_num            The number of nodes.
+ * \param [in,out]  adj_num[NODE_NUM+1] The number of adjacency entries
+ * \param [in,out]  adj_row[ADJ_NUM]    Information about row I is stored in entries ADJ_ROW(I) through ADJ_ROW(I+1)-1 of ADJ
+ * \param [in,out]  adj                 The adjacency structure. For each row, it contains the column indices of the nonzero entries.
+ * \param [out]     perm                The RCM ordering
+ */
+
+void
+PDM_genrcm
+(
+int node_num,
+int adj_row[],
+int adj[],
+int perm[],
+int level_rowg[]
+)
+{
+  int i;
+  int iccsze;
+  int level_num;
+  int num;
+  int root;
+
+  int *mask      = (int *) malloc(sizeof(int) * node_num    ); //mask = new int[node_num];
+  int *level_row = (int *) malloc(sizeof(int) * node_num + 1); //level_row = new int[node_num+1];
+
+  for ( i = 0; i < node_num; i++ ){
+    mask[i] = 1;
+  }
+  level_rowg[0] = 1;
+  num = 1;
+
+  for ( i = 0; i < node_num; i++ )
+  {
+    /*
+     * For each masked connected component...
+     */
+
+    if ( mask[i] != 0 )
+    {
+      root = i + 1;
+      /*
+       *  Find a pseudo-peripheral node ROOT.  The level structure found by
+       *   ROOT_FIND is stored starting at PERM(NUM).
+       */
+      _root_find(&root, adj_row, adj, mask, &level_num,
+                 level_row, perm+num-1);
+
+      /*
+       *   RCM orders the component using ROOT as the starting node.
+       */
+      _rcm(root, adj_row, adj, mask, perm+num-1, &iccsze, node_num );
+
+      num = num + iccsze;
+
+      /*
+       *   We can stop once every node is in one of the connected components.
+       */
+      if ( node_num < num )
+      {
+        // printf(" sortie 1 %i / %i \n", node_num, num);
+        free(level_row); //delete [] level_row;
+        free(mask);      //delete [] mask;
+        return;
+      }
+    }
+  }
+
+  // printf(" sortie 2 \n");
+  free(level_row); //delete [] level_row;
+  free(mask);      //delete [] mask;
+
+  return ;
+}
+
+
+/**
+ *
+ * \brief Compute reverse Cut-Hill Mac-Kee ordering cyclic permutation
+ *
+ * \param [in/out]     perm                The RCM ordering
+ */
+
+// void
+// PDM_compute_cyclic_rcm
+// (
+// int nColor,
+// int perm[],
+// int color[],
+// int node_num,
+// int level_row[],
+// int level_num
+// )
+// {
+
+//   int *permtmp   = (int *) malloc(sizeof(int) * node_num    ); //mask = new int[node_num];
+//   // printf(" level_num = %i \n", level_num);
+//   // for ( int k = 0; k < level_num+1; k++ ){
+//   //   printf(" level_row[%i] = %i \n", k, level_row[k] );
+//   //   // printf(" mask[%i] = %i \n", k, mask[k] );
+//   // }
+
+//   // for( int k = 0; k < node_num; k++){permtmp[k] = perm[k];}
+//   for( int k = 0; k < node_num; k++){permtmp[k] = perm[k];}
+//   for( int k = 0; k < node_num; k++){perm[k] = perm[k]-1;}
+
+//   // Revert level_row
+//   int *level_rowp = (int *) malloc ( (level_num+1) * sizeof(int));
+//   int *level_n = (int *) malloc (level_num * sizeof(int));
+
+
+//   for(int ii=0; ii < level_num; ii++){
+//     level_n[ii] = level_row[ii+1] - level_row[ii];
+//   }
+
+//   int idxEnd = level_num-1;
+//   level_rowp[0] = 1;
+//   for(int ii=0; ii < level_num; ii++){
+//     level_rowp[ii+1] = level_rowp[ii] + level_n[idxEnd--];
+//   }
+
+//   for( int k = 0; k < level_num; k++){
+//     int begLS = level_rowp[k  ]-1;
+//     int endLS = level_rowp[k+1]-1;
+//     for(int l = begLS; l < endLS; l++){
+//       color[l]  = k;
+//     }
+//   }
+//   free(level_rowp);
+//   free(level_n);
+
+//   // printf(" ---------------- \n");
+//   // for ( int k = 0; k < node_num; k++ ){
+//   //   printf(" perm[%i] = %i | permtmp = %i |  color = %i  \n", k, perm[k], permtmp[k], color[k] );
+//   // }
+// }
 
 
 #ifdef  __cplusplus
