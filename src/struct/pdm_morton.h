@@ -236,7 +236,7 @@ PDM_morton_a_gt_b(PDM_morton_code_t  a,
  * Copy the code a into the code b
  *
  * parameters:
- *   code_a <-- code a 
+ *   code_a <-- code a
  *   code_b <-> copy of the code a into the code b
  *
  *----------------------------------------------------------------------------*/
@@ -249,8 +249,8 @@ PDM_morton_copy (PDM_morton_code_t  a,
  * Get the nearest common ancestor between two codes
  *
  * parameters:
- *   a <-- code a 
- *   b <-- code b 
+ *   a <-- code a
+ *   b <-- code b
  *   c <-> Nearest common ancestor between a and b
  *
  *----------------------------------------------------------------------------*/
@@ -259,6 +259,21 @@ void
 PDM_morton_nearest_common_ancestor (PDM_morton_code_t  code_a,
                                     PDM_morton_code_t  code_b,
                                     PDM_morton_code_t  *c);
+
+/*----------------------------------------------------------------------------
+ * Is 'a' an ancestor of 'b' ?
+ *
+ * parameters:
+ *   a <-- code a
+ *   b <-- code b
+ *
+ * return True if a is an ancestor of b
+ *
+ *----------------------------------------------------------------------------*/
+
+_Bool
+PDM_morton_ancestor_is (PDM_morton_code_t  a,
+                        PDM_morton_code_t  b);
 
 /*----------------------------------------------------------------------------
  * Test if Morton code "a" is greater or equal to Morton code "b"
@@ -277,7 +292,7 @@ PDM_morton_a_ge_b(PDM_morton_code_t  a,
 
 
 /*----------------------------------------------------------------------------
- * Test if Morton code "a" is equal to Morton code "b" to the 
+ * Test if Morton code "a" is equal to Morton code "b" to the
  * level = max (level a, level b)
  *
  * parameters:
@@ -296,7 +311,7 @@ PDM_morton_a_eq_b(PDM_morton_code_t  a,
  * Assigne a level to Morton code
  *
  * parameters:
- *   code <-- Morton code 
+ *   code <-- Morton code
  *   l    <-- Level to assign
  *
  *----------------------------------------------------------------------------*/

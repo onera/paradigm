@@ -1310,7 +1310,7 @@ PDM_morton_compare(int                dim,
  * Copy the code a into the code b
  *
  * parameters:
- *   code_a <-- code a 
+ *   code_a <-- code a
  *   code_b <-> copy of the code a into the code b
  *
  *----------------------------------------------------------------------------*/
@@ -1329,8 +1329,8 @@ PDM_morton_copy (PDM_morton_code_t  a,
  * Get the nearest common ancestor between two codes
  *
  * parameters:
- *   a <-- code a 
- *   b <-- code b 
+ *   a <-- code a
+ *   b <-- code b
  *   c <-> Nearest common ancestor between a and b
  *
  *----------------------------------------------------------------------------*/
@@ -1414,7 +1414,7 @@ PDM_morton_a_ge_b(PDM_morton_code_t  a,
 
 
 /*----------------------------------------------------------------------------
- * Test if Morton code "a" is equal to Morton code "b" to the 
+ * Test if Morton code "a" is equal to Morton code "b" to the
  * level = max (level a, level b)
  *
  * parameters:
@@ -1436,7 +1436,7 @@ PDM_morton_a_eq_b(PDM_morton_code_t  a,
  * Assigne a level to Morton code
  *
  * parameters:
- *   code <-- Morton code 
+ *   code <-- Morton code
  *   l    <-- Level to assign
  *
  *----------------------------------------------------------------------------*/
@@ -1446,14 +1446,14 @@ PDM_morton_assign_level (PDM_morton_code_t  *code,
                          int                l)
 {
   int a_diff = l - code->L;
-  
+
   if (a_diff > 0) {
     code->L = l;
     code->X[0] = code->X[0] << a_diff;
     code->X[1] = code->X[1] << a_diff;
     code->X[2] = code->X[2] << a_diff;
   }
-  
+
   else if (a_diff < 0) {
     code->L = l;
     code->X[0] = code->X[0] >> a_diff;
@@ -1673,9 +1673,38 @@ PDM_morton_dump(int                dim,
   fflush(stdout);
 }
 
+/*----------------------------------------------------------------------------
+ * Is 'a' an ancestor of 'b' ?
+ *
+ * parameters:
+ *   a <-- code a
+ *   b <-- code b
+ *
+ * return True if a is an ancestor of b
+ *
+ *----------------------------------------------------------------------------*/
+
+_Bool
+PDM_morton_ancestor_is (PDM_morton_code_t  a,
+                        PDM_morton_code_t  b)
+{
+  _Bool status = 0;
+
+  if (a.L <= b.L) {
+    PDM_morton_assign_level (&b,
+                             a.L);
+
+    int val_a = (a.X[0] % 2) * 4 + (a.X[1] % 2) * 2 + (a.X[2] % 2);
+    int val_b = (b.X[0] % 2) * 4 + (b.X[1] % 2) * 2 + (b.X[2] % 2);
+
+    status = val_a == val_b;
+  }
+
+  return status;
+}
+
 /*----------------------------------------------------------------------------*/
 
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-
