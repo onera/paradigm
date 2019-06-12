@@ -1785,15 +1785,78 @@ int PDM_MPI_Alltoallv(void *sendbuf, int *sendcounts, int *sdispls,
                       PDM_MPI_Datatype sendtype, void *recvbuf, int *recvcounts,
                       int *rdispls, PDM_MPI_Datatype recvtype, PDM_MPI_Comm comm)
 {
-  int code = MPI_Alltoallv(sendbuf,
-                           sendcounts,
-                           sdispls,
-                           _pdm_mpi_2_mpi_datatype(sendtype),
-                           recvbuf,
-                           recvcounts,
-                           rdispls,
-                           _pdm_mpi_2_mpi_datatype(recvtype),
-                           _pdm_mpi_2_mpi_comm(comm));
+  /* int code = MPI_Alltoallv(sendbuf, */
+  /*                          sendcounts, */
+  /*                          sdispls, */
+  /*                          _pdm_mpi_2_mpi_datatype(sendtype), */
+  /*                          recvbuf, */
+  /*                          recvcounts, */
+  /*                          rdispls, */
+  /*                          _pdm_mpi_2_mpi_datatype(recvtype), */
+  /*                          _pdm_mpi_2_mpi_comm(comm)); */
+
+  int size;
+  MPI_Comm_size(_pdm_mpi_2_mpi_comm(comm), &size);
+
+  MPI_Request *request_r = malloc(sizeof(MPI_Request) * size);
+  MPI_Request *request_s = malloc(sizeof(MPI_Request) * size);
+
+  int size_sendType;
+  MPI_Type_size(_pdm_mpi_2_mpi_datatype(sendtype), &size_sendType);
+
+  int size_recvType;
+  MPI_Type_size(_pdm_mpi_2_mpi_datatype(recvtype), &size_recvType);
+
+  int code = MPI_SUCCESS;
+
+  for (int i = 0; i < size; i++) {
+    if (recvcounts[i] != 0) {
+      void *buf = (void *) ((unsigned char*) recvbuf + rdispls[i] * size_recvType);
+      code = MPI_Irecv(buf, recvcounts[i], _pdm_mpi_2_mpi_datatype(recvtype), i,
+                       0, _pdm_mpi_2_mpi_comm(comm), request_r + i);
+      if (code != MPI_SUCCESS) {
+        break;
+      }
+    }
+    if (sendcounts[i] != 0) {
+      void *buf = (void *) ((unsigned char*) sendbuf + sdispls[i] * size_sendType);
+      code = MPI_Issend(buf, sendcounts[i], _pdm_mpi_2_mpi_datatype(sendtype), i,
+                        0, _pdm_mpi_2_mpi_comm(comm), request_s + i);
+      if (code != MPI_SUCCESS) {
+        break;
+      }
+    }
+  }
+
+  if (code != MPI_SUCCESS) {
+    return _mpi_2_pdm_mpi_err(code);
+  }
+
+  for (int i = 0; i < size; i++) {
+    if (recvcounts[i] != 0) {
+      code = MPI_Wait(request_r + i, MPI_STATUS_IGNORE);
+    }
+    if (code != MPI_SUCCESS) {
+      break;
+    }
+  }
+
+  if (code != MPI_SUCCESS) {
+    return _mpi_2_pdm_mpi_err(code);
+  }
+
+  for (int i = 0; i < size; i++) {
+    if (sendcounts[i] != 0) {
+      code = MPI_Wait(request_s + i, MPI_STATUS_IGNORE);
+    }
+    if (code != MPI_SUCCESS) {
+      break;
+    }
+  }
+
+  free (request_r);
+  free (request_s);
+
   return _mpi_2_pdm_mpi_err(code);
 }
 
