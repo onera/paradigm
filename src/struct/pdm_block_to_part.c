@@ -215,8 +215,8 @@ PDM_block_to_part_exch
   unsigned char *_block_data = (unsigned char *) block_data;
   unsigned char **_part_data = (unsigned char **) part_data;
 
-  int *i_sendBuffer = (int *) malloc (sizeof(int) * _btp->s_comm);
-  int *i_recvBuffer = (int *) malloc (sizeof(int) * _btp->s_comm);
+  size_t *i_sendBuffer = (size_t *) malloc (sizeof(size_t) * _btp->s_comm);
+  size_t *i_recvBuffer = (size_t *) malloc (sizeof(size_t) * _btp->s_comm);
   int *n_sendBuffer = (int *) malloc (sizeof(int) * _btp->s_comm);
   int *n_recvBuffer = (int *) malloc (sizeof(int) * _btp->s_comm);
 
@@ -392,15 +392,15 @@ PDM_block_to_part_exch
    * Data exchange
    */
 
-  PDM_MPI_Alltoallv(sendBuffer,
-                    n_sendBuffer,
-                    i_sendBuffer,
-                    PDM_MPI_BYTE,
-                    recvBuffer,
-                    n_recvBuffer,
-                    i_recvBuffer,
-                    PDM_MPI_BYTE,
-                    _btp->comm);
+  PDM_MPI_Alltoallv_l(sendBuffer,
+                      n_sendBuffer,
+                      i_sendBuffer,
+                      PDM_MPI_BYTE,
+                      recvBuffer,
+                      n_recvBuffer,
+                      i_recvBuffer,
+                      PDM_MPI_BYTE,
+                      _btp->comm);
 
   free(sendBuffer);
   free(n_sendBuffer);
@@ -518,8 +518,8 @@ PDM_block_to_part_exch2
   unsigned char *_block_data = (unsigned char *) block_data;
   unsigned char **_part_data;
 
-  int *i_sendBuffer = (int *) malloc (sizeof(int) * _btp->s_comm);
-  int *i_recvBuffer = (int *) malloc (sizeof(int) * _btp->s_comm);
+  size_t *i_sendBuffer = (size_t *) malloc (sizeof(size_t) * _btp->s_comm);
+  size_t *i_recvBuffer = (size_t *) malloc (sizeof(size_t) * _btp->s_comm);
   int *n_sendBuffer = (int *) malloc (sizeof(int) * _btp->s_comm);
   int *n_recvBuffer = (int *) malloc (sizeof(int) * _btp->s_comm);
 
@@ -703,15 +703,15 @@ PDM_block_to_part_exch2
    * Data exchange
    */
 
-  PDM_MPI_Alltoallv(sendBuffer,
-                    n_sendBuffer,
-                    i_sendBuffer,
-                    PDM_MPI_BYTE,
-                    recvBuffer,
-                    n_recvBuffer,
-                    i_recvBuffer,
-                    PDM_MPI_BYTE,
-                    _btp->comm);
+  PDM_MPI_Alltoallv_l(sendBuffer,
+                      n_sendBuffer,
+                      i_sendBuffer,
+                      PDM_MPI_BYTE,
+                      recvBuffer,
+                      n_recvBuffer,
+                      i_recvBuffer,
+                      PDM_MPI_BYTE,
+                      _btp->comm);
 
   free(sendBuffer);
   free(n_sendBuffer);
