@@ -770,7 +770,7 @@ PDM_dist_cloud_surf_compute
       for (int i_part = 0; i_part < n_part_mesh; i_part++) {
         printf (" PDM_dbbtree_boxes_set nElts %d : %d\n", i_part, nElts[i_part]);
         for (int i = 0; i < nElts[i_part]; i++) {
-          printf ("%d : extents %12.5e %12.5e %12.5e / %12.5e %12.5e %12.5e gnum %ld\n", i,
+          printf ("%d : extents %12.5e %12.5e %12.5e / %12.5e %12.5e %12.5e gnum "PDM_FMT_G_NUM"\n", i,
                   extents[i_part][6*i  ], extents[i_part][6*i+1], extents[i_part][6*i+2],
                   extents[i_part][6*i+3], extents[i_part][6*i+4], extents[i_part][6*i+5],
                   gNum[i_part][i]);
@@ -816,12 +816,12 @@ PDM_dist_cloud_surf_compute
     if (idebug) {
       printf (" PDM_dbbtree_closest_upper_bound_dist_boxes_get n_pts_rank : %d\n", n_pts_rank);
       for (int i = 0; i < n_pts_rank; i++) {
-        printf ("%ld : (%12.5e %12.5e %12.5e) %12.5e\n", pts_g_num_rank[i],
+        printf (PDM_FMT_G_NUM" : (%12.5e %12.5e %12.5e) %12.5e\n", pts_g_num_rank[i],
                 pts_rank[3*i], pts_rank[3*i+1], pts_rank[3*i+2],
                 closest_vertices_dist2[i]);
         printf ("  boxes %d :" , box_index[i+1] - box_index[i]);
         for (int j = box_index[i]; j < box_index[i+1]; j++) {
-          printf (" %ld", box_g_num[j]);
+          printf (" "PDM_FMT_G_NUM, box_g_num[j]);
         }
         printf ("\n");
       }
@@ -997,10 +997,10 @@ PDM_dist_cloud_surf_compute
 
       printf ("\n\n **** vtx load balancing : %d\n", n_block_vtx);
       for (int i = 0; i < n_block_vtx; i++) {
-        printf ("%ld : %12.5e %12.5e %12.5e\n", block_vtx_gnum[i], block_pts[3*i], block_pts[3*i+1] , block_pts[3*i+2]);
+        printf (PDM_FMT_G_NUM" : %12.5e %12.5e %12.5e\n", block_vtx_gnum[i], block_pts[3*i], block_pts[3*i+1] , block_pts[3*i+2]);
         printf ("  boxes %d :" , block_g_num_opt_idx[i+1] - block_g_num_opt_idx[i]);
         for (int j = block_g_num_opt_idx[i]; j < block_g_num_opt_idx[i+1]; j++) {
-          printf (" %ld", block_g_num[j]);
+          printf (" "PDM_FMT_G_NUM, block_g_num[j]);
         }
         printf ("\n");
       }
@@ -1086,7 +1086,7 @@ PDM_dist_cloud_surf_compute
       PDM_g_num_t *block_elt_gnum = PDM_part_to_block_block_gnum_get (ptb_elt);
       printf ("\n\n **** part to block elt : %d\n", n_block_elt);
       for (int i = 0; i < n_block_elt; i++) {
-        printf ("%ld :\n", block_elt_gnum[i]);
+        printf (PDM_FMT_G_NUM" :\n", block_elt_gnum[i]);
         for (int j = 0; j < block_coords_face_mesh_n[i]/3; j++) {
           printf ("/ %12.5e %12.5e %12.5e /\n",
                   block_coords_face_mesh[3*(idx3+j)],
@@ -1201,7 +1201,7 @@ PDM_dist_cloud_surf_compute
       _block_closest_dist[0] = HUGE_VAL;
 
       if (idebug) {
-        printf ("    *** %ld : \n", block_vtx_gnum[i]);
+        printf ("    *** "PDM_FMT_G_NUM" : \n", block_vtx_gnum[i]);
       }
 
       PDM_g_num_t *_block_closest_gnum = block_closest_gnum + i;
@@ -1319,7 +1319,7 @@ PDM_dist_cloud_surf_compute
 
     PDM_block_to_part_t *btp_vtx =
       PDM_block_to_part_create (block_vtx_distrib_idx,
-                                (const long **) pt_cloud->gnum,
+                                (const PDM_g_num_t **) pt_cloud->gnum,
                                 pt_cloud->n_points,
                                 n_part,
                                 comm);

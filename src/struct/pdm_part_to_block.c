@@ -311,10 +311,10 @@ _update_sampling(int            dim,
 
     if (f_high - f_low > 0) {
       delta = (target_freq - f_low) * (s_high - s_low) / (f_high - f_low);
-      new_sampling[i+1] = s_low + delta;
+      new_sampling[i+1] = (PDM_g_num_t) (s_low + delta);
     }
     else /* f_high = f_low */
-      new_sampling[i+1] = s_low + 0.5 * (s_low + s_high);
+      new_sampling[i+1] = (PDM_g_num_t) (s_low + 0.5 * (s_low + s_high));
 
 #if 0 && defined(DEBUG) && !defined(NDEBUG)
     PDM_printf( " <_update_distrib> (rank: %d) delta: %g, target: %g,"
