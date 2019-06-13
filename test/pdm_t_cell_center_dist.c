@@ -775,7 +775,7 @@ int main(int argc, char *argv[])
       d = d * d;
       if (PDM_ABS(distance[i] - d) > 1e-6) {
         ierr += 1;
-        printf ("Erreur distance %d (%12.5e %12.5e %12.5e) : %12.5e %12.5e %ld\n", i+1,
+        printf ("Erreur distance %d (%12.5e %12.5e %12.5e) : %12.5e %12.5e "PDM_FMT_G_NUM"\n", i+1,
                 cell_center[ipart][3*i],
                 cell_center[ipart][3*i+1],
                 cell_center[ipart][3*i+2],
@@ -812,7 +812,7 @@ int main(int argc, char *argv[])
 
     if (myRank == 0) {
       printf ("elements surfaciques : %d\n", (int)(6*(nVtxSeg-1)*(nVtxSeg-1)));
-      printf ("nombre de points     : %ld\n", nVtxSeg*nVtxSeg*nVtxSeg);
+      printf ("nombre de points     : "PDM_FMT_G_NUM"\n", nVtxSeg*nVtxSeg*nVtxSeg);
       fflush(stdout);
     }
   }
