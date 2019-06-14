@@ -381,9 +381,9 @@ _extents
 {
   for (int i = 0; i < octree->dim; i++) {
     extents[i] =
-      ((double) code.X[i]/(double) code.L)* octree->d[i] + octree->s[i];
+      ((double) code.X[i]/((double) (code.L + 1)))* octree->d[i] + octree->s[i];
     extents[octree->dim + i] =
-      (((double) code.X[i] + 1)/(double) code.L)* octree->d[i] + octree->s[i];
+      (((double) code.X[i] + 1)/((double) (code.L + 1))) * octree->d[i] + octree->s[i];
   }
 }
 
@@ -400,17 +400,9 @@ _extents
 static _l_octant_t *
 _remove_duplicates
 (
- _l_octant_t *octants,
- PDM_MPI_Comm comm
+ _l_octant_t *octants
 )
 {
-  int rank;
-  PDM_MPI_Comm_rank (comm, &rank);
-
-  int size;
-  PDM_MPI_Comm_size (comm, &size);
-
-
   PDM_morton_code_t *_codes = octants->codes;
   _l_octant_t *r_octants = malloc(sizeof(_l_octant_t));
 
@@ -418,7 +410,40 @@ _remove_duplicates
 
   _octants_init (r_octants, dim, octants->n_nodes);
 
-  return NULL;
+  PDM_morton_code_t prev_code;
+
+  prev_code.L = -1;
+  prev_code.X[0] = 0;
+  prev_code.X[1] = 0;
+  prev_code.X[2] = 0;
+
+  for (int i = 0; i < octants->n_nodes; i++) {
+
+    if (_codes[i].L == prev_code.L) {
+      if ((prev_code.X[0] == _codes[i].X[0]) &&
+          (prev_code.X[1] == _codes[i].X[1]) &&
+          (prev_code.X[2] == _codes[i].X[2])) {
+
+        break;
+      }
+    }
+
+    prev_code.L    = _codes[i].L;
+    prev_code.X[0] = _codes[i].X[0];
+    prev_code.X[1] = _codes[i].X[1];
+    prev_code.X[2] = _codes[i].X[2];
+
+    _octants_add (r_octants,
+                  _codes[i],
+                  0,
+                  0,
+                  0,
+                  0,
+                  NULL);
+
+  }
+
+  return r_octants;
 }
 
 /**
@@ -558,6 +583,133 @@ _complete_region
   return r_octants;
 }
 
+
+
+/**
+ *
+ * \brief Redistribute octants
+ *
+ * \param [inout]  L             Distributed list of octants
+ * \param [in]     morton_index  Morton index
+ * \param [in]     comm          MPI communicator
+ *
+ */
+
+static void
+_distribute_octants
+(
+ _l_octant_t       *L,
+ PDM_morton_code_t *morton_index,
+ PDM_MPI_Comm       comm
+)
+{
+  int n_ranks;
+  PDM_MPI_Comm_size (comm, &n_ranks);
+
+  int *send_count = malloc(sizeof(int) * n_ranks);
+  size_t *send_shift = malloc(sizeof(int) * (n_ranks+1));
+
+  int *recv_count = malloc(sizeof(int) * n_ranks);
+  size_t *recv_shift = malloc(sizeof(int) * (n_ranks+1));
+
+  for (int i = 0; i < n_ranks; i++) {
+    send_count[i] = 0;
+  }
+
+  int irank = 0;
+  for (int i = 0; i < L->n_nodes; i++) {
+    if (PDM_morton_a_ge_b (L->codes[i], morton_index[irank+1])) {
+
+      irank += 1 + PDM_morton_binary_search (n_ranks - (irank + 1),
+                                             L->codes[i],
+                                             morton_index + irank + 1);
+    }
+    send_count[irank] += L->dim + 1;
+  }
+
+  /* Exchange number of coords to send to each process */
+
+  PDM_MPI_Alltoall(send_count, 1, PDM_MPI_INT,
+                   recv_count, 1, PDM_MPI_INT, comm);
+
+  send_shift[0] = 0;
+  recv_shift[0] = 0;
+  for (int rank_id = 0; rank_id < n_ranks; rank_id++) {
+    send_shift[rank_id + 1] = send_shift[rank_id] + send_count[rank_id];
+    recv_shift[rank_id + 1] = recv_shift[rank_id] + recv_count[rank_id];
+  }
+
+  /* Build send and receive buffers */
+
+  PDM_morton_int_t *send_codes =
+    malloc (send_shift[n_ranks] * sizeof(PDM_morton_int_t));
+
+  for (int rank_id = 0; rank_id < n_ranks; rank_id++) {
+    send_count[rank_id] = 0;
+  }
+
+  irank = 0;
+  for (int i = 0; i < L->n_nodes; i++) {
+
+    if (PDM_morton_a_ge_b (L->codes[i], morton_index[irank+1])) {
+
+      irank += 1 + PDM_morton_binary_search(n_ranks - (irank + 1),
+                                            L->codes[i],
+                                            morton_index + irank + 1);
+    }
+
+    int shift = send_shift[irank] + send_count[irank];
+    send_codes[shift++] = L->codes[i].L;
+
+    for (int j = 0; j < L->dim; j++) {
+      send_codes[shift++] = L->codes[i].X[j];
+    }
+
+    send_count[irank] += L->dim + 1;
+  }
+
+  PDM_morton_int_t * recv_codes = malloc (recv_shift[n_ranks] * sizeof(PDM_morton_int_t));
+
+  /* - exchange codes between processes */
+
+  PDM_MPI_Alltoallv_l(send_codes, send_count, send_shift, PDM_MPI_UNSIGNED,
+                      recv_codes, recv_count, recv_shift, PDM_MPI_UNSIGNED,
+                      comm);
+
+  free (send_codes);
+  free (send_count);
+  free (send_shift);
+  free (recv_count);
+
+  /* - tri des codes recus */
+
+  _octants_free (L);
+  _octants_init (L, L->dim, recv_shift[n_ranks]/(L->dim + 1));
+
+  int idx = 0;
+  for (int i = 0; i < recv_shift[n_ranks]; i++) {
+    PDM_morton_code_t _code;
+    _code.L = recv_codes[idx++];
+    for (int j = 0; j < L->dim; j++) {
+     _code.X[j] = recv_codes[idx++];
+    }
+    _octants_add (L,
+                  _code,
+                  0,
+                  0,
+                  0,
+                  0,
+                  NULL);
+  }
+
+  free (recv_shift);
+  free (recv_codes);
+
+  PDM_morton_local_sort (L->n_nodes, L->codes);
+
+}
+
+
 /**
  *
  * \brief Constructing a complete linear octree from partial set of octants
@@ -576,24 +728,58 @@ _complete_octree
  PDM_MPI_Comm comm
 )
 {
-  _l_octant_t *_octants = NULL;
+  int n_ranks;
 
-  /* _remove_duplicates (L, comm); */
+  const int dim = 3;
 
-  /* _remove_duplicates (L); */
+  PDM_MPI_Comm_size (comm, &n_ranks);
 
+  /* Remove duplicates */
 
-   /*     PDM_morton_build_rank_index(dim, */
-   /*                              max_level, */
-   /*                              octree->n_points, */
-   /*                              octree->points_code, */
-   /*                              weight, */
-   /*                              order, */
-   /*                              morton_index, */
-   /*                              octree->comm); */
+  _l_octant_t *L1 = _remove_duplicates (L);
 
+  /* Linearize */
 
-  return _octants;
+  _l_octant_t *L2 = _linearize (L1);
+
+  _octants_free (L1);
+
+  PDM_morton_code_t *L2_morton_index = malloc(sizeof(PDM_morton_code_t) * (n_ranks + 1));
+
+  int *order = malloc (sizeof(int) * L2->n_nodes);
+  int *weight = malloc (sizeof(int) * L2->n_nodes);
+
+  for (int i = 0; i < L2->n_nodes; i++) {
+    weight[i] = 0;
+    order[i] = i;
+  }
+
+  int max_level = -1;
+  for (int i = 0; i < L2->n_nodes; i++) {
+    max_level = PDM_MAX (L2->codes[i].L, max_level);
+  }
+
+  int max_max_level;
+  PDM_MPI_Allreduce(&max_level, &max_max_level, 1,
+                    PDM_MPI_INT, PDM_MPI_MAX, comm);
+
+  PDM_morton_build_rank_index(dim,
+                              max_level,
+                              L2->n_nodes,
+                              L2->codes,
+                              weight,
+                              order,
+                              L2_morton_index,
+                              comm);
+
+  free(weight);
+  free(order);
+
+  _distribute_octants (L2, L2_morton_index, comm);
+
+  free (L2_morton_index);
+
+  return NULL;
 }
 
 
@@ -1067,98 +1253,7 @@ _block_partition
    * Redistribute octant list from coarse load balancing
    */
 
-  send_count = malloc(sizeof(int) * n_ranks);
-  send_shift = malloc(sizeof(int) * (n_ranks+1));
-
-  recv_count = malloc(sizeof(int) * n_ranks);
-  recv_shift = malloc(sizeof(int) * (n_ranks+1));
-
-  for (int i = 0; i < n_ranks; i++) {
-    send_count[i] = 0;
-  }
-
-  irank = 0;
-  for (int i = 0; i < G->n_nodes; i++) {
-    if (PDM_morton_a_ge_b (G->codes[i], _G_morton_index[irank+1])) {
-
-      irank += 1 + PDM_morton_binary_search (n_ranks - (irank + 1),
-                                             G->codes[i],
-                                             _G_morton_index + irank + 1);
-    }
-    //send_count[irank] += send_shift[irank] + (octant_list->dim + 1);
-    send_count[irank] += octant_list->dim + 1;
-  }
-
-  /* Exchange number of coords to send to each process */
-
-  PDM_MPI_Alltoall(send_count, 1, PDM_MPI_INT,
-                   recv_count, 1, PDM_MPI_INT, comm);
-
-  send_shift[0] = 0;
-  recv_shift[0] = 0;
-  for (int rank_id = 0; rank_id < n_ranks; rank_id++) {
-    send_shift[rank_id + 1] = send_shift[rank_id] + send_count[rank_id];
-    recv_shift[rank_id + 1] = recv_shift[rank_id] + recv_count[rank_id];
-  }
-
-  /* Build send and receive buffers */
-
-  send_codes =
-    malloc (send_shift[n_ranks] * sizeof(PDM_morton_int_t));
-
-  for (int rank_id = 0; rank_id < n_ranks; rank_id++) {
-    send_count[rank_id] = 0;
-  }
-
-  irank = 0;
-  for (int i = 0; i < G->n_nodes; i++) {
-
-    if (PDM_morton_a_ge_b (G->codes[i], rank_codes[irank+1])) {
-
-      irank += 1 + PDM_morton_binary_search(n_ranks - (irank + 1),
-                                            G->codes[i],
-                                            _G_morton_index + irank + 1);
-    }
-
-    int shift = send_shift[irank] + send_count[irank];
-    send_codes[shift++] = G->codes[i].L;
-
-    for (int j = 0; j < octant_list->dim; j++) {
-      send_codes[shift++] = G->codes[i].X[j];
-    }
-
-    send_count[irank] += octant_list->dim + 1;
-  }
-
-  recv_codes = malloc (recv_shift[n_ranks] * sizeof(PDM_morton_int_t));
-
-  /* - exchange codes between processes */
-
-  PDM_MPI_Alltoallv(send_codes, send_count, send_shift, PDM_MPI_UNSIGNED,
-                    recv_codes, recv_count, recv_shift, PDM_MPI_UNSIGNED,
-                    comm);
-
-  free (send_codes);
-  free (send_count);
-  free (send_shift);
-  free (recv_count);
-
-  /* - tri des codes recus */
-
-  _octants_free (G);
-  _octants_init (G, octant_list->dim, recv_shift[n_ranks]/(octant_list->dim + 1));
-
-  int idx = 0;
-  for (int i = 0; i < G->n_nodes; i++) {
-    G->codes[i].L = recv_codes[idx++];
-    for (int j = 0; j < octant_list->dim; j++) {
-      G->codes[i].X[j] = recv_codes[idx++];
-    }
-  }
-
-  PDM_morton_local_sort (G->n_nodes, G->codes);
-
-  /* - pas de tri des donnees */
+  _distribute_octants (G, _G_morton_index, comm);
 
   return G;
 
