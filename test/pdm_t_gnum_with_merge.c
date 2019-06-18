@@ -221,64 +221,72 @@ PDM_part_split_t           method,
                      &dEdgeGroupIdx,
                      &dEdgeGroup);
 
-  const PDM_g_num_t *_numabs2 = NULL;
-  int id;
+  int id = PDM_gnum_create (3, 1, PDM_FALSE, 1e-3, pdm_mpi_comm);
 
-  int nn = 10000;
+  PDM_gnum_set_from_coords (id, 0, dNVtx, dVtxCoord, NULL);
 
-  for (int i = 0; i < nn; i++) {
+  PDM_gnum_compute (id);
 
-    if (i < nn - 1) {
+  const PDM_g_num_t *_numabs2 = PDM_gnum_get (id, 0);
 
-      id = PDM_gnum_create (3, 1, PDM_TRUE, 1e-3, pdm_mpi_comm);
-    }
+  /* const PDM_g_num_t *_numabs2 = NULL; */
+  /* int id; */
 
-    else {
-      id = PDM_gnum_create (3, 1, PDM_FALSE, 1e-3, pdm_mpi_comm);
+  /* int nn = 10000; */
 
-    }
+  /* for (int i = 0; i < nn; i++) { */
 
-    double *dd = malloc (sizeof(double) * dNVtx);
+  /*   if (i < nn - 1) { */
 
-    for (int j = 0; j < dNVtx; j++) {
-      dd[j] = 1e-5;
-    }
+  /*     id = PDM_gnum_create (3, 1, PDM_TRUE, 1e-3, pdm_mpi_comm); */
+  /*   } */
 
-    if (i < nn - 1) {
-      PDM_gnum_set_from_coords (id, 0, dNVtx, dVtxCoord, dd);
-    }
-    else {
-      PDM_gnum_set_from_coords (id, 0, dNVtx, dVtxCoord, NULL);
-    }
+  /*   else { */
+  /*     id = PDM_gnum_create (3, 1, PDM_FALSE, 1e-3, pdm_mpi_comm); */
 
-    PDM_gnum_compute (id);
+  /*   } */
 
-    _numabs2 = PDM_gnum_get (id, 0);
+  /*   double *dd = malloc (sizeof(double) * dNVtx); */
 
-    free(dd);
+  /*   for (int j = 0; j < dNVtx; j++) { */
+  /*     dd[j] = 1e-5; */
+  /*   } */
 
-    if (i < nn - 1) {
-      PDM_gnum_free (id, 0);
-    }
+  /*   if (i < nn - 1) { */
+  /*     PDM_gnum_set_from_coords (id, 0, dNVtx, dVtxCoord, dd); */
+  /*   } */
+  /*   else { */
+  /*     PDM_gnum_set_from_coords (id, 0, dNVtx, dVtxCoord, NULL); */
+  /*   } */
 
-    FILE *f = fopen("/proc/self/statm", "r");
+  /*   PDM_gnum_compute (id); */
 
-    long int mvirt, mres, mshared, val1, val2, val3;
-    fscanf(f, "%ld %ld %ld %ld %ld %ld", &mvirt, &mres, &mshared, &val1, &val2, &val3);
+  /*   _numabs2 = PDM_gnum_get (id, 0); */
 
-    long int m_mvirt, m_mres, m_mshared;
+  /*   free(dd); */
 
-    PDM_MPI_Allreduce (&mvirt, &m_mvirt, 1, PDM_MPI_LONG, PDM_MPI_MAX, pdm_mpi_comm);
-    PDM_MPI_Allreduce (&mres, &m_mres, 1, PDM_MPI_LONG, PDM_MPI_MAX, pdm_mpi_comm);
-    PDM_MPI_Allreduce (&mshared, &m_mshared, 1, PDM_MPI_LONG, PDM_MPI_MAX, pdm_mpi_comm);
+  /*   if (i < nn - 1) { */
+  /*     PDM_gnum_free (id, 0); */
+  /*   } */
 
-    if (myRank == 0) {
-      printf("mem %d %d : %ld Ko %ld Ko %ld Ko\n", i, dNVtx, 4*m_mvirt , 4*m_mres, 4*m_mshared);
-      //      printf("mem %d %d : %ld Mo %ld Mo %ld Mo\n", i, dNVtx, 4*m_mvirt/1024 , 4*m_mres/1024, 4*m_mshared/1024);
-    }
-    fclose(f);
+  /*   FILE *f = fopen("/proc/self/statm", "r"); */
 
-  }
+  /*   long int mvirt, mres, mshared, val1, val2, val3; */
+  /*   fscanf(f, "%ld %ld %ld %ld %ld %ld", &mvirt, &mres, &mshared, &val1, &val2, &val3); */
+
+  /*   long int m_mvirt, m_mres, m_mshared; */
+
+  /*   PDM_MPI_Allreduce (&mvirt, &m_mvirt, 1, PDM_MPI_LONG, PDM_MPI_MAX, pdm_mpi_comm); */
+  /*   PDM_MPI_Allreduce (&mres, &m_mres, 1, PDM_MPI_LONG, PDM_MPI_MAX, pdm_mpi_comm); */
+  /*   PDM_MPI_Allreduce (&mshared, &m_mshared, 1, PDM_MPI_LONG, PDM_MPI_MAX, pdm_mpi_comm); */
+
+  /*   if (myRank == 0) { */
+  /*     printf("mem %d %d : %ld Ko %ld Ko %ld Ko\n", i, dNVtx, 4*m_mvirt , 4*m_mres, 4*m_mshared); */
+  /*     //      printf("mem %d %d : %ld Mo %ld Mo %ld Mo\n", i, dNVtx, 4*m_mvirt/1024 , 4*m_mres/1024, 4*m_mshared/1024); */
+  /*   } */
+  /*   fclose(f); */
+
+  /* } */
 
 //  for (int j = 0; j < dNVtx; j++) {
 //    PDM_printf (PDM_FMT_G_NUM" %12.5e %12.5e %12.5e\n", _numabs2[j], dVtxCoord[3*j],
