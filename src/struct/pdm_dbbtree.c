@@ -232,6 +232,7 @@ const int         dim
   _PDM_dbbtree_t *_dbbt = (_PDM_dbbtree_t *) malloc(sizeof(_PDM_dbbtree_t));
 
   _dbbt->comm                 = comm;
+  _dbbt->rankComm             = PDM_MPI_COMM_NULL;
   _dbbt->dim                  = dim;
   _dbbt->maxTreeDepth         = 30;
   _dbbt->maxBoxRatio          = 10.;
@@ -282,6 +283,9 @@ PDM_dbbtree_t     *dbbt
     PDM_box_set_destroy (&_dbbt->boxes);
 
     free (_dbbt->usedRank);
+    if (_dbbt->rankComm != PDM_MPI_COMM_NULL) {
+      PDM_MPI_Comm_free (&(_dbbt->rankComm));
+    }
 
     PDM_box_tree_destroy (&_dbbt->btShared);
     PDM_box_tree_destroy (&_dbbt->btLoc);
@@ -479,8 +483,8 @@ const PDM_g_num_t **gNum
 
     //TODO: Faire un PDM_box_set et PDM_box_tree_create sequentiel ! Le comm split a u n 1 proc ici : pas terrible
 
-    PDM_MPI_Comm rankComm;
-    PDM_MPI_Comm_split(_dbbt->comm, myRank, 0, &rankComm);
+    //    PDM_MPI_Comm rankComm;
+    PDM_MPI_Comm_split(_dbbt->comm, myRank, 0, &(_dbbt->rankComm));
 
     _dbbt->rankBoxes = PDM_box_set_create(3,
                                           1,  // No normalization to preserve initial extents
@@ -491,7 +495,7 @@ const PDM_g_num_t **gNum
                                           1,
                                           &nUsedRank,
                                           initLocationProc,
-                                          rankComm);
+                                          _dbbt->rankComm);
 
     _dbbt->btShared = PDM_box_tree_create (_dbbt->maxTreeDepthShared,
                                            _dbbt->maxBoxesLeafShared,

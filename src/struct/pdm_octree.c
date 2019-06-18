@@ -117,6 +117,7 @@ typedef struct  {
 //  double *extents_proc;          /*!< Extents of processes */
 //  int    depth_max;              /*!< Maximum depth of the three */
   PDM_MPI_Comm comm;             /*!< MPI communicator */
+  PDM_MPI_Comm rankComm;             /*!< MPI communicator */
 
   int     maxBoxesLeafShared; /*!<  Max number of boxes in a leaf for coarse shared BBTree */
 
@@ -298,6 +299,7 @@ PDM_octree_create
   octree->octree_seq_id = PDM_octree_seq_create (n_point_cloud, depth_max,
                                                  points_in_leaf_max, tolerance);
   octree->comm = comm;
+  octree->rankComm = PDM_MPI_COMM_NULL;
 
   //octree->extents_proc = NULL;
   octree->n_point_cloud = n_point_cloud; /*!< Number of point cloud */
@@ -401,6 +403,10 @@ PDM_octree_free
   PDM_box_tree_destroy(&(octree->btShared));
 
   PDM_octree_seq_free (octree->octree_seq_id);
+
+  if (octree->rankComm != PDM_MPI_COMM_NULL) {
+    PDM_MPI_Comm_free (&(octree->rankComm));
+  }
 
   free (octree);
 
@@ -560,8 +566,8 @@ PDM_octree_build
     initLocationProc[i] = 0;
   }
 
-  PDM_MPI_Comm rankComm;
-  PDM_MPI_Comm_split(octree->comm, myRank, 0, &rankComm);
+  //PDM_MPI_Comm rankComm;
+  PDM_MPI_Comm_split(octree->comm, myRank, 0, &(octree->rankComm));
 
   octree->rankBoxes = PDM_box_set_create(3,
                                          1,
@@ -572,7 +578,7 @@ PDM_octree_build
                                          1,
                                          &nUsedRank,
                                          initLocationProc,
-                                         rankComm);
+                                         octree->rankComm);
 
   octree->btShared = PDM_box_tree_create (octree->maxTreeDepthShared,
                                           octree->maxBoxesLeafShared,
@@ -1870,5 +1876,3 @@ double      *closest_octree_pt_dist2
 #ifdef	__cplusplus
 }
 #endif
-
-
