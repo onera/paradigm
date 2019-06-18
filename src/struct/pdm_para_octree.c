@@ -1255,6 +1255,9 @@ _block_partition
 
   _distribute_octants (G, _G_morton_index, comm);
 
+  //TODO last step
+
+
   return G;
 
 }
