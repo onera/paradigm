@@ -381,9 +381,9 @@ _extents
 {
   for (int i = 0; i < octree->dim; i++) {
     extents[i] =
-      ((double) code.X[i]/((double) (code.L + 1)))* octree->d[i] + octree->s[i];
+      ((double) code.X[i]/((double) pow(2,code.L)))* octree->d[i] + octree->s[i];
     extents[octree->dim + i] =
-      (((double) code.X[i] + 1)/((double) (code.L + 1))) * octree->d[i] + octree->s[i];
+      (((double) code.X[i] + 1)/((double) pow(2,code.L))) * octree->d[i] + octree->s[i];
   }
 }
 
