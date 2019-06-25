@@ -114,9 +114,9 @@ typedef struct  {
  * Global variable
  *============================================================================*/
 
-static PDM_Handles_t *_octrees   = NULL;
+static PDM_Handles_t *_octrees    = NULL;
 
-static const double _eps_default = 1.e-12;
+static const double _eps_default  = 1.e-12;
 
 static const int max_morton_level = 31;
 
@@ -910,53 +910,100 @@ _complete_octree
 
   }
 
+  unsigned int sbuff[4];
+  unsigned int rbuff[4];
+  PDM_MPI_Request srequest;
+  PDM_MPI_Request rrequest;
+
   if (rank < n_ranks - 1) {
-    // PDM_MPI_Irecv()
+
+    PDM_MPI_Irecv ((void *) rbuff,
+                   4,
+                   PDM_MPI_UNSIGNED,
+                   rank+1,
+                   0,
+                   comm,
+                   &rrequest);
+
+  }
+
+  if (rank > 0) {
+    sbuff[0] = L2->codes[0].L;
+    sbuff[1] = L2->codes[0].X[0];
+    sbuff[2] = L2->codes[0].X[1];
+    sbuff[3] = L2->codes[0].X[2];
+
+    PDM_MPI_Issend ((void *) sbuff,
+                    4,
+                    PDM_MPI_UNSIGNED,
+                    rank-1,
+                    0,
+                    comm,
+                    &srequest);
+
+
+  }
+
+  if (rank < n_ranks - 1) {
+
+    PDM_MPI_Wait (&rrequest);
+    PDM_morton_code_t code;
+
+    code.L = rbuff[0];
+    code.X[0] = rbuff[1];
+    code.X[1] = rbuff[2];
+    code.X[2] = rbuff[3];
+
+    _octants_push_back (L2,
+                        code,
+                        0,
+                        0,
+                        0,
+                        0,
+                        NULL);
 
   }
 
   if (rank > 0) {
 
-    // PDM_MPI_Issen()
-
-  }
-
-
-  if (rank < n_ranks - 1) {
-
-    // PDM_MPI_wait
-    // add L2
-
-  }
-
-  if (rank > 0) {
-
-    // PDM_MPI_Wait
+    PDM_MPI_Wait (&srequest);
 
   }
 
   _l_octant_t *R = malloc(sizeof(_l_octant_t));
   _octants_init (R, dim, L2->n_nodes);
 
-  /* for (int i = 0; i < L2->n_nodes - 1; i++) { */
-  /*   _l_octant_t *A = _complete_region (L2->codes[i], L2->codes[i+1]); */
+  for (int i = 0; i < L2->n_nodes - 1; i++) {
+    _l_octant_t *A = _complete_region (L2->codes[i], L2->codes[i+1]);
 
-  /*   _octants_push_back (R, */
-  /*                       child[7], */
-  /*                       0, */
-  /*                       0, */
-  /*                       0, */
-  /*                       0, */
-  /*                       NULL); */
-  /*   //_octants_push_back (R, L2[i]); */
-  /*   for (int j = 0; j < A->n_nodes - 1; j++) { */
-  /*     //_octants_push_back (R, A[j]); */
-  /*   } */
-  /*   _octants_free (A); */
-  /* } */
+    _octants_push_back (R,
+                        L2->codes[i],
+                        0,
+                        0,
+                        0,
+                        0,
+                        NULL);
+
+    for (int j = 0; j < A->n_nodes - 1; j++) {
+      _octants_push_back (R,
+                          A->codes[j],
+                          0,
+                          0,
+                          0,
+                          0,
+                          NULL);
+    }
+    _octants_free (A);
+  }
 
   if (rank == n_ranks - 1) {
-    //_octants_push_back (R, L2[L2->n_nodes-1]);
+    _octants_push_back (R,
+                        L2->codes[L2->n_nodes-1],
+                        0,
+                        0,
+                        0,
+                        0,
+                        NULL);
   }
 
   _octants_free (L2);
