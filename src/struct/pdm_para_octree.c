@@ -118,6 +118,8 @@ static PDM_Handles_t *_octrees   = NULL;
 
 static const double _eps_default = 1.e-12;
 
+static const int max_morton_level = 31;
+
 /*============================================================================
  * Private function definitions
  *============================================================================*/
@@ -288,17 +290,16 @@ _octants_check_alloc
 }
 
 
-
 /**
  *
- * \brief Check size of the size of a list of octants
+ * \brief Push back a octant to a list of octants
  *
  * \param [in]   octants     Octants
  *
  */
 
 static void
-_octants_add
+_octants_push_back
 (
  _l_octant_t *octants,
  const PDM_morton_code_t code,
@@ -330,6 +331,78 @@ _octants_add
       octants->child[idx2+i] = child_id[i];
     }
   }
+
+  octants->n_nodes += 1;
+
+  octants->neighbor_idx = NULL;
+  octants->neighbors    = NULL;
+}
+
+
+/**
+ *
+ * \brief Push front a octant to a list of octants
+ *
+ * \param [in]   octants     Octants
+ *
+ */
+
+static void
+_octants_push_front
+(
+ _l_octant_t *octants,
+ const PDM_morton_code_t code,
+ const int n_points,
+ const int range,
+ const int is_leaf,
+ const int ancestor,
+ const int *child_id
+)
+{
+
+  _octants_check_alloc (octants);
+
+  for (int i = octants->n_nodes; i > 0; i--) {
+
+    PDM_morton_copy (octants->codes[i - 1], octants->codes + i);
+
+    octants->n_points[i] =  octants->n_points[i-1];
+
+    octants->range[i] = octants->range[i-1];
+
+    octants->is_leaf[i] = octants->is_leaf[i-1];
+
+    octants->ancestor[i] = octants->ancestor[i-1];
+
+    if (child_id != NULL) {
+      int idx1 = i * octants->dim;
+      int idx2 = (i-1) * octants->dim;
+      for (int j = 0; j < octants->dim; j++) {
+        octants->child[idx1+j] = octants->child[idx2+j];
+      }
+    }
+  }
+
+  const int idx = 0;
+
+  PDM_morton_copy (code, octants->codes + idx);
+
+  octants->n_points[idx] = n_points;
+
+  octants->range[idx] = range;
+
+  octants->is_leaf[idx] = is_leaf;
+
+  octants->ancestor[idx] = ancestor;
+
+  if (child_id != NULL) {
+    int idx2 = idx * octants->dim;
+    for (int i = 0; i < octants->dim; i++) {
+      octants->child[idx2+i] = child_id[i];
+    }
+  }
+
+  octants->n_nodes += 1;
 
   octants->neighbor_idx = NULL;
   octants->neighbors    = NULL;
@@ -433,13 +506,13 @@ _remove_duplicates
     prev_code.X[1] = _codes[i].X[1];
     prev_code.X[2] = _codes[i].X[2];
 
-    _octants_add (r_octants,
-                  _codes[i],
-                  0,
-                  0,
-                  0,
-                  0,
-                  NULL);
+    _octants_push_back (r_octants,
+                        _codes[i],
+                        0,
+                        0,
+                        0,
+                        0,
+                        NULL);
 
   }
 
@@ -470,24 +543,24 @@ _linearize
   for (int i = 0; i < octants->n_nodes - 1; i++) {
 
     if (!PDM_morton_ancestor_is (_codes[i], _codes[i+1])) {
-      _octants_add (r_octants,
-                    _codes[i],
-                    0,
-                    0,
-                    0,
-                    0,
-                    NULL);
+      _octants_push_back (r_octants,
+                          _codes[i],
+                          0,
+                          0,
+                          0,
+                          0,
+                          NULL);
     }
 
   }
 
-  _octants_add (r_octants,
-                _codes[octants->n_nodes-1],
-                0,
-                0,
-                0,
-                0,
-                NULL);
+  _octants_push_back (r_octants,
+                      _codes[octants->n_nodes-1],
+                      0,
+                      0,
+                      0,
+                      0,
+                      NULL);
 
   return r_octants;
 }
@@ -530,13 +603,13 @@ _complete_region
                           children);
 
   for (int i = 0; i < 8; i++) {
-    _octants_add (w_octants,
-                  children[i],
-                  0,
-                  0,
-                  0,
-                  0,
-                  NULL);
+    _octants_push_back (w_octants,
+                        children[i],
+                        0,
+                        0,
+                        0,
+                        0,
+                        NULL);
   }
 
   int i1 = 0;
@@ -548,13 +621,13 @@ _complete_region
         PDM_morton_a_gt_b (b, *_code) &&
         !PDM_morton_ancestor_is (*_code, b)) {
 
-      _octants_add (r_octants,
-                    *_code,
-                    0,
-                    0,
-                    0,
-                    0,
-                    NULL);
+      _octants_push_back (r_octants,
+                          *_code,
+                          0,
+                          0,
+                          0,
+                          0,
+                          NULL);
     }
 
     else if (PDM_morton_ancestor_is (*_code, a) || PDM_morton_ancestor_is (*_code, b)) {
@@ -564,13 +637,13 @@ _complete_region
                               children);
 
       for (int i = 0; i < 8; i++) {
-        _octants_add (w_octants,
-                      children[i],
-                      0,
-                      0,
-                      0,
-                      0,
-                      NULL);
+        _octants_push_back (w_octants,
+                            children[i],
+                            0,
+                            0,
+                            0,
+                            0,
+                            NULL);
       }
 
     }
@@ -693,13 +766,13 @@ _distribute_octants
     for (int j = 0; j < L->dim; j++) {
      _code.X[j] = recv_codes[idx++];
     }
-    _octants_add (L,
-                  _code,
-                  0,
-                  0,
-                  0,
-                  0,
-                  NULL);
+    _octants_push_back (L,
+                        _code,
+                        0,
+                        0,
+                        0,
+                        0,
+                        NULL);
   }
 
   free (recv_shift);
@@ -728,11 +801,13 @@ _complete_octree
  PDM_MPI_Comm comm
 )
 {
-  int n_ranks;
-
   const int dim = 3;
 
+  int n_ranks;
   PDM_MPI_Comm_size (comm, &n_ranks);
+
+  int rank;
+  PDM_MPI_Comm_size (comm, &rank);
 
   /* Remove duplicates */
 
@@ -779,7 +854,114 @@ _complete_octree
 
   free (L2_morton_index);
 
-  return NULL;
+  if (rank == 0) {
+    PDM_morton_code_t root_DFD;
+
+    root_DFD.L = max_morton_level;
+    root_DFD.X[0] = 0;
+    root_DFD.X[1] = 0;
+    root_DFD.X[2] = 0;
+
+    PDM_morton_code_t FINA;
+
+    PDM_morton_nearest_common_ancestor (root_DFD,
+                                        L2->codes[0],
+                                        &FINA);
+
+    PDM_morton_code_t child[8];
+    PDM_morton_get_children(dim,
+                            FINA,
+                            child);
+
+    _octants_push_front (L2,
+                         child[0],
+                         0,
+                         0,
+                         0,
+                         0,
+                         NULL);
+  }
+
+  if (rank == n_ranks - 1) {
+    PDM_morton_code_t root_DLD;
+
+    root_DLD.L = max_morton_level;
+    root_DLD.X[0] = 1 << max_morton_level;
+    root_DLD.X[1] = 1 << max_morton_level;
+    root_DLD.X[2] = 1 << max_morton_level;
+
+    PDM_morton_code_t FINA;
+    PDM_morton_nearest_common_ancestor (root_DLD,
+                                        L2->codes[0],
+                                        &FINA);
+
+    PDM_morton_code_t child[8];
+    PDM_morton_get_children(dim,
+                            FINA,
+                            child);
+
+    _octants_push_back (L2,
+                        child[7],
+                        0,
+                        0,
+                        0,
+                        0,
+                        NULL);
+
+  }
+
+  if (rank < n_ranks - 1) {
+    // PDM_MPI_Irecv()
+
+  }
+
+  if (rank > 0) {
+
+    // PDM_MPI_Issen()
+
+  }
+
+
+  if (rank < n_ranks - 1) {
+
+    // PDM_MPI_wait
+    // add L2
+
+  }
+
+  if (rank > 0) {
+
+    // PDM_MPI_Wait
+
+  }
+
+  _l_octant_t *R = malloc(sizeof(_l_octant_t));
+  _octants_init (R, dim, L2->n_nodes);
+
+  /* for (int i = 0; i < L2->n_nodes - 1; i++) { */
+  /*   _l_octant_t *A = _complete_region (L2->codes[i], L2->codes[i+1]); */
+
+  /*   _octants_push_back (R, */
+  /*                       child[7], */
+  /*                       0, */
+  /*                       0, */
+  /*                       0, */
+  /*                       0, */
+  /*                       NULL); */
+  /*   //_octants_push_back (R, L2[i]); */
+  /*   for (int j = 0; j < A->n_nodes - 1; j++) { */
+  /*     //_octants_push_back (R, A[j]); */
+  /*   } */
+  /*   _octants_free (A); */
+  /* } */
+
+  if (rank == n_ranks - 1) {
+    //_octants_push_back (R, L2[L2->n_nodes-1]);
+  }
+
+  _octants_free (L2);
+
+  return R;
 }
 
 
@@ -1058,13 +1240,13 @@ _block_partition
   for (int i = 0; i < octant_list->n_nodes; i++) {
 
     if (octant_list->codes[i].L <= min_level) {
-      _octants_add (&C,
-                    octant_list->codes[i],
-                    octant_list->n_points[i],
-                    octant_list->range[i],
-                    octant_list->is_leaf[i],
-                    octant_list->ancestor[i],
-                    NULL);
+      _octants_push_back (&C,
+                          octant_list->codes[i],
+                          octant_list->n_points[i],
+                          octant_list->range[i],
+                          octant_list->is_leaf[i],
+                          octant_list->ancestor[i],
+                          NULL);
     }
   }
 
@@ -1686,13 +1868,13 @@ PDM_para_octree_build
     code.X[1] = 0;
     code.X[2] = 0;
 
-    _octants_add (octree->octants,
-                  code,
-                  octree->n_points,
-                  0,
-                  0,
-                  0,
-                  NULL);
+    _octants_push_back (octree->octants,
+                        code,
+                        octree->n_points,
+                        0,
+                        0,
+                        0,
+                        NULL);
 
   }
 
