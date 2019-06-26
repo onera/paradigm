@@ -1478,14 +1478,13 @@ _block_partition
   free (order);
   free (weight);
 
+  _distribute_octants (G, _G_morton_index, comm);
+
   /*
    * Redistribute octant list from coarse load balancing
    */
 
-  _distribute_octants (G, _G_morton_index, comm);
-
-  //TODO last step
-
+  _distribute_octants (octant_list, _G_morton_index, comm);
 
   return G;
 
@@ -1880,24 +1879,23 @@ PDM_para_octree_build
 
     int iblock = 0;
     for (int i = 0; i < octree->n_points; i++) {
-      if (iblock < octree->octants->n_nodes) {
+      if (iblock < (octree->octants->n_nodes - 1)) {
         if (PDM_morton_a_ge_b (octree->points_code[i], octree->octants->codes[iblock+1])) {
 
-          iblock += 1 + PDM_morton_binary_search (octree->octants->n_nodes - (iblock + 1),
-                                                  octree->points_code[i],
-                                                  octree->octants->codes + iblock + 1);
+          iblock = iblock + 1 + PDM_morton_binary_search (octree->octants->n_nodes - (iblock + 1),
+                                                          octree->points_code[i],
+                                                          octree->octants->codes + iblock + 1);
         }
       }
       octree->octants->n_points[iblock] += 1;
     }
 
-    for (int i = 0; i < octree->octants->n_nodes; i++) {
-      octree->octants->range[i] = 0;
-    }
+    octree->octants->range[0] = 0;
 
-    for (int i = 0; i < octree->octants->n_nodes - 1; i++) {
+    for (int i = 0; i < octree->octants->n_nodes; i++) {
       octree->octants->range[i+1] =
-        octree->octants->range[i] + octree->octants->n_points[iblock];
+        octree->octants->range[i] +
+        octree->octants->n_points[i];
     }
 
   }
@@ -1923,6 +1921,10 @@ PDM_para_octree_build
                         0,
                         NULL);
 
+    octree->octants->range[0] = 0;
+    octree->octants->range[1] = octree->n_points;
+    octree->octants->n_points[0] = octree->n_points;
+
   }
 
   /*************************************************************************
@@ -1943,8 +1945,7 @@ PDM_para_octree_build
     _neighbor[i] = NULL;
   }
 
-  //TODO 26/04: Continuer a partir d'ici + faire algo 4, 3 et 7 de sundar. Puis faire algo de
-  //  de localisation de points puis d'intersection avec une boite englobante.
+  //  TODO: Finir construction finale + algo d'intersection avec une boite englobante + point le plus proche
 
   if (n_ranks > 1) {
 
