@@ -792,6 +792,7 @@ void PDM_io_open
   }
 
   nouveau_fichier->comm = comm;
+  nouveau_fichier->scomm = PDM_MPI_COMM_NULL;
   nouveau_fichier->prop_noeuds_actifs = prop_noeuds_actifs;
 
   /* Test d'existence du fichier en lecture */
@@ -4230,6 +4231,9 @@ void PDM_io_detruit
       fichier->tag_rangs_actifs = NULL;
     }
 
+    if (fichier->scomm != PDM_MPI_COMM_NULL) {
+      PDM_MPI_Comm_free (&(fichier->scomm));
+    }
     free(fichier);
 
     PDM_Handles_handle_free (PDM_io_fichiers, unite, PDM_FALSE);
