@@ -502,7 +502,7 @@ PDM_dist_cloud_surf_compute
     PDM_timer_resume(dist->timer);
 
     const double tolerance = 1e-4;
-    const int depth_max = 35;
+    int depth_max = 31;
     const int points_in_leaf_max = 4;
 
     int n_part_mesh = 0;
@@ -511,6 +511,34 @@ PDM_dist_cloud_surf_compute
     }
     else if (dist->_surf_mesh != NULL) {
       n_part_mesh = PDM_surf_mesh_n_part_get (dist->_surf_mesh);
+
+      double glob_extents[6];
+      glob_extents[0] = HUGE_VAL;
+      glob_extents[1] = HUGE_VAL;
+      glob_extents[2] = HUGE_VAL;
+      glob_extents[3] = -HUGE_VAL;
+      glob_extents[4] = -HUGE_VAL;
+      glob_extents[5] = -HUGE_VAL;
+
+      for (int i = 0; i < n_part_mesh; i++) {
+        const double *_extents = PDM_surf_mesh_part_extents_get (dist->_surf_mesh, i);
+        glob_extents[0] = PDM_MIN (_extents[0], glob_extents[0]);
+        glob_extents[1] = PDM_MIN (_extents[1], glob_extents[1]);
+        glob_extents[2] = PDM_MIN (_extents[2], glob_extents[2]);
+        glob_extents[3] = PDM_MAX (_extents[3], glob_extents[3]);
+        glob_extents[4] = PDM_MAX (_extents[4], glob_extents[4]);
+        glob_extents[5] = PDM_MAX (_extents[5], glob_extents[5]);
+      }
+      double min_dim = HUGE_VAL;
+      min_dim = glob_extents[3] - glob_extents[0];
+      min_dim = PDM_MIN (min_dim, glob_extents[4] - glob_extents[1]);
+      min_dim = PDM_MIN (min_dim, glob_extents[5] - glob_extents[2]);
+
+      depth_max = 0;
+      while ((min_dim) > 1e-10) {
+        min_dim = min_dim / 2.;
+        depth_max += 1;
+      }
     }
     else {
       PDM_error(__FILE__, __LINE__, 0,
