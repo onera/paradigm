@@ -328,7 +328,18 @@ _build_octree_seq_leaves(const int       ancestor_id,
         }
         /* 1.0e-12 term in assert() used to allow for
            truncation error in for xmin = xmax case */
-        assert(sub_extents[0] < sub_extents[3] + 1.0e-12);
+        //assert(sub_extents[0] < sub_extents[3] + 1.0e-12);
+        if (sub_extents[0] >= sub_extents[3] + 1.0e-12) {
+          printf("Erreur construction octree [%12.5e %12.5e %12.5e / %12.5e %12.5e %12.5e] %d :\n",
+                 octree->extents[0],
+                 octree->extents[1],
+                 octree->extents[2],
+                 octree->extents[3],
+                 octree->extents[4],
+                 octree->extents[5],
+                 depth);
+          abort();
+        }
 
         if (i%4 < 2) {
           sub_extents[1] = extents[1];
