@@ -383,7 +383,8 @@ _octants_replace_node_by_child
   const int dim = 3;
   const int n_child = 8;
 
-  if (!octants->is_leaf[node_id]) {
+  if ((octants->codes[node_id].L < max_morton_level) &&
+      !octants->is_leaf[node_id]) {
 
     _octants_check_alloc (octants, 8);
 
@@ -433,6 +434,13 @@ _octants_replace_node_by_child
 
     octants->n_nodes += n_child - 1;
 
+    for (int i = node_id; i < node_id + n_child; i++) {
+      _octants_replace_node_by_child (octants,
+                                      points_in_leaf_max,
+                                      i,
+                                      n_stored_points,
+                                      stored_points_code);
+    }
   }
 }
 
@@ -1945,9 +1953,22 @@ PDM_para_octree_build
 
   if (n_ranks > 1) {
 
-    /* On part des octants blocks et on subdivise */
+    int n_init_node = octree->octants->n_nodes;
+    while (n_init_node > 0) {
+      int current_id = octree->octants->n_nodes - n_init_node;
+      _octants_replace_node_by_child (octree->octants,
+                                      octree->points_in_leaf_max,
+                                      current_id,
+                                      octree->n_points,
+                                      octree->points_code);
+      n_init_node += 1;
+    }
 
-    /* Recherche des voisins (processus ou octant local) -num_proc ou numero */
+      /* On part des octants blocks et on subdivise */
+
+    /* Recherche des voisins (processus ou octant local)
+
+       /* intialisation a 0 si bord, node_id + 1 si internes, -num_proc si frontiere de partitionnement */
 
     /* Raffinement automatique :
          - Ajout des noeuds enfants recursivement avec stockage temporaire des voisins
@@ -1963,10 +1984,17 @@ PDM_para_octree_build
   }
 
   else {
-    /* on part de la racine et on subdivise */
 
+    int is_leaf = 0;
+    if (is_leaf <= octree->points_in_leaf_max) {
+      is_leaf = 1;
+    }
 
-
+    _octants_replace_node_by_child (octree->octants,
+                                    octree->points_in_leaf_max,
+                                    0,
+                                    octree->n_points,
+                                    octree->points_code);
 
   }
 
@@ -1987,7 +2015,8 @@ PDM_para_octree_build
   }
 
   octree->octants->neighbors =
-    malloc(sizeof(int) * octree->octants->neighbor_idx[n_direction * octree->octants->n_nodes]);
+    malloc(sizeof(int) *
+           octree->octants->neighbor_idx[n_direction * octree->octants->n_nodes]);
 
   idx = 0;
   for (int i = 0; i < octree->octants->n_nodes; i++) {
