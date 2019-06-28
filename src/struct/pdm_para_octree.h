@@ -27,22 +27,22 @@ extern "C" {
 
 /**
  * \enum pdm_para_octree_child_t
- * \brief Names of 8 children of a node 
+ * \brief Names of 8 children of a node
  *
  */
 
 typedef enum {
-  PDM_WEST,
-  PDM_EAST,  
-  PDM_SOUTH,   
+  PDM_BOTTOM,
+  PDM_UP,
+  PDM_SOUTH,
   PDM_NORTH,
-  PDM_BOTTOM,   
-  PDM_UP,   
+  PDM_WEST,
+  PDM_EAST,
 } PDM_para_octree_direction_t;
 
 /**
  * \enum PDM_para_octree_child_t
- * \brief Names of 8 children of a node 
+ * \brief Names of 8 children of a node
  *
  * If the type is BOX_TREE_NODE, the ordering of children is defined as follows,
  *  using notation B: bottom, U: up, E: east, W: west, S: south,  N: north.
@@ -54,14 +54,14 @@ typedef enum {
  */
 
 typedef enum {
-  PDM_BSW,   
-  PDM_BSE,   
-  PDM_BNW,   
-  PDM_BNE,   
-  PDM_USW,   
-  PDM_USE,   
-  PDM_UNW,   
-  PDM_UNE,   
+  PDM_BSW,
+  PDM_BSE,
+  PDM_BNW,
+  PDM_BNE,
+  PDM_USW,
+  PDM_USE,
+  PDM_UNW,
+  PDM_UNE,
 } PDM_para_octree_child_t;
 
 /*  */
@@ -72,32 +72,32 @@ typedef enum {
 
 /**
  *
- * \brief Create an octree structure   
+ * \brief Create an octree structure
  *
- * \param [in]   n_point_cloud      Number of point cloud 
+ * \param [in]   n_point_cloud      Number of point cloud
  * \param [in]   depth_max          Maximum depth
  * \param [in]   points_in_leaf_max Maximum points in a leaf
  * \param [in]   tolerance          Relative geometric tolerance
  * \param [in]   comm               MPI communicator
  *
- * \return     Identifier    
+ * \return     Identifier
  */
 
 int
 PDM_para_octree_create
 (
  const int n_point_cloud,
- const int depth_max, 
+ const int depth_max,
  const int points_in_leaf_max,
  const PDM_MPI_Comm comm
 );
 
 /**
  *
- * \brief Free an octree structure   
+ * \brief Free an octree structure
  *
- * \param [in]   id                 Identifier 
- *  
+ * \param [in]   id                 Identifier
+ *
  */
 
 void
@@ -109,14 +109,14 @@ PDM_para_octree_free
 
 /**
  *
- * \brief Set a point cloud  
+ * \brief Set a point cloud
  *
- * \param [in]   id                 Identifier 
- * \param [in]   i_point_cloud      Number of point cloud 
+ * \param [in]   id                 Identifier
+ * \param [in]   i_point_cloud      Number of point cloud
  * \param [in]   n_points           Maximum depth
- * \param [in]   coords             Point coordinates 
- * \param [in]   g_num              Point global number or NULL 
- * 
+ * \param [in]   coords             Point coordinates
+ * \param [in]   g_num              Point global number or NULL
+ *
  */
 
 
@@ -126,16 +126,16 @@ PDM_para_octree_point_cloud_set
  const int          id,
  const int          i_point_cloud,
  const int          n_points,
- const double      *coords, 
- const PDM_g_num_t *g_num  
+ const double      *coords,
+ const PDM_g_num_t *g_num
 );
 
 
 /**
  *
- * \brief Build octree  
+ * \brief Build octree
  *
- * \param [in]   id                 Identifier 
+ * \param [in]   id                 Identifier
  *
  */
 
@@ -148,12 +148,12 @@ PDM_para_octree_build
 
 /**
  *
- * \brief Get extents  
+ * \brief Get extents
  *
- * \param [in]   id                 Identifier 
+ * \param [in]   id                 Identifier
  *
- * \return     Extents    
- * 
+ * \return     Extents
+ *
  */
 
 double *
@@ -174,7 +174,7 @@ PDM_para_octree_extents_get
  * \param [in]   pts_g_num              Point global numbers
  * \param [out]  closest_octree_pt_id   Closest points in octree global number
  * \param [out]  closest_octree_pt_dist Closest points in octree distance
- *  
+ *
  */
 
 void
@@ -194,4 +194,3 @@ double      *closest_octree_pt_dist2
 #endif
 
 #endif	/* PDM_PARA_OCTREE_H */
-

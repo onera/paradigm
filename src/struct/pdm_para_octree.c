@@ -73,8 +73,8 @@ typedef struct  {
 
   int   *neighbor_idx;
   int   *neighbors;               /*!< rank + id_node size = 2 * n_nodes */
-  int   *ancestor;                /*!< rank + id_node size = n_nodes */
-  int   *child;                /*!< rank + id_node size = 8 * n_nodes */
+  //  int   *ancestor;                /*!< rank + id_node size = n_nodes */
+  // int   *child;                /*!< rank + id_node size = 8 * n_nodes */
   int   dim;
 
 } _l_octant_t;
@@ -197,14 +197,6 @@ _octants_free
     free (octants->range);
   }
 
-  if (octants->ancestor != NULL) {
-    free (octants->ancestor);
-  }
-
-  if (octants->child != NULL) {
-    free (octants->child);
-  }
-
   if (octants->neighbor_idx != NULL) {
     free (octants->neighbor_idx);
   }
@@ -243,8 +235,6 @@ _octants_init
   octants->n_points = malloc (sizeof(int) * octants->n_nodes_max);
   octants->range    = malloc (sizeof(int) * (octants->n_nodes_max+1));
   octants->is_leaf  = malloc (sizeof(int) * octants->n_nodes_max);
-  octants->ancestor = malloc (sizeof(int) * octants->n_nodes_max);
-  octants->child    = malloc (sizeof(int) * octant_dim * octants->n_nodes_max);
 
   octants->neighbor_idx = NULL;
   octants->neighbors    = NULL;
@@ -278,10 +268,6 @@ _octants_check_alloc
                               sizeof(int) * (octants->n_nodes_max+1));
     octants->is_leaf = realloc (octants->is_leaf,
                                 sizeof(int) * octants->n_nodes_max);
-    octants->ancestor = realloc (octants->ancestor,
-                                 sizeof(int) * octants->n_nodes_max);
-    octants->child    = realloc (octants->child,
-                                 sizeof(int) * octants->dim * octants->n_nodes_max);
 
     octants->neighbor_idx = NULL;
     octants->neighbors    = NULL;
@@ -305,9 +291,7 @@ _octants_push_back
  const PDM_morton_code_t code,
  const int n_points,
  const int range,
- const int is_leaf,
- const int ancestor,
- const int *child_id
+ const int is_leaf
 )
 {
 
@@ -323,19 +307,8 @@ _octants_push_back
 
   octants->is_leaf[idx] = is_leaf;
 
-  octants->ancestor[idx] = ancestor;
-
-  if (child_id != NULL) {
-    int idx2 = idx * octants->dim;
-    for (int i = 0; i < octants->dim; i++) {
-      octants->child[idx2+i] = child_id[i];
-    }
-  }
-
   octants->n_nodes += 1;
 
-  octants->neighbor_idx = NULL;
-  octants->neighbors    = NULL;
 }
 
 
@@ -354,9 +327,7 @@ _octants_push_front
  const PDM_morton_code_t code,
  const int n_points,
  const int range,
- const int is_leaf,
- const int ancestor,
- const int *child_id
+ const int is_leaf
 )
 {
 
@@ -372,15 +343,6 @@ _octants_push_front
 
     octants->is_leaf[i] = octants->is_leaf[i-1];
 
-    octants->ancestor[i] = octants->ancestor[i-1];
-
-    if (child_id != NULL) {
-      int idx1 = i * octants->dim;
-      int idx2 = (i-1) * octants->dim;
-      for (int j = 0; j < octants->dim; j++) {
-        octants->child[idx1+j] = octants->child[idx2+j];
-      }
-    }
   }
 
   const int idx = 0;
@@ -393,19 +355,7 @@ _octants_push_front
 
   octants->is_leaf[idx] = is_leaf;
 
-  octants->ancestor[idx] = ancestor;
-
-  if (child_id != NULL) {
-    int idx2 = idx * octants->dim;
-    for (int i = 0; i < octants->dim; i++) {
-      octants->child[idx2+i] = child_id[i];
-    }
-  }
-
   octants->n_nodes += 1;
-
-  octants->neighbor_idx = NULL;
-  octants->neighbors    = NULL;
 
 }
 
@@ -510,9 +460,7 @@ _remove_duplicates
                         _codes[i],
                         0,
                         0,
-                        0,
-                        0,
-                        NULL);
+                        0);
 
   }
 
@@ -547,9 +495,7 @@ _linearize
                           _codes[i],
                           0,
                           0,
-                          0,
-                          0,
-                          NULL);
+                          0);
     }
 
   }
@@ -558,9 +504,7 @@ _linearize
                       _codes[octants->n_nodes-1],
                       0,
                       0,
-                      0,
-                      0,
-                      NULL);
+                      0);
 
   return r_octants;
 }
@@ -607,9 +551,7 @@ _complete_region
                         children[i],
                         0,
                         0,
-                        0,
-                        0,
-                        NULL);
+                        0);
   }
 
   int i1 = 0;
@@ -625,9 +567,7 @@ _complete_region
                           *_code,
                           0,
                           0,
-                          0,
-                          0,
-                          NULL);
+                          0);
     }
 
     else if (PDM_morton_ancestor_is (*_code, a) || PDM_morton_ancestor_is (*_code, b)) {
@@ -641,9 +581,7 @@ _complete_region
                             children[i],
                             0,
                             0,
-                            0,
-                            0,
-                            NULL);
+                            0);
       }
 
     }
@@ -770,9 +708,7 @@ _distribute_octants
                         _code,
                         0,
                         0,
-                        0,
-                        0,
-                        NULL);
+                        0);
   }
 
   free (recv_shift);
@@ -877,9 +813,7 @@ _complete_octree
                          child[0],
                          0,
                          0,
-                         0,
-                         0,
-                         NULL);
+                         0);
   }
 
   if (rank == n_ranks - 1) {
@@ -904,9 +838,7 @@ _complete_octree
                         child[7],
                         0,
                         0,
-                        0,
-                        0,
-                        NULL);
+                        0);
 
   }
 
@@ -958,9 +890,7 @@ _complete_octree
                         code,
                         0,
                         0,
-                        0,
-                        0,
-                        NULL);
+                        0);
 
   }
 
@@ -980,18 +910,14 @@ _complete_octree
                         L2->codes[i],
                         0,
                         0,
-                        0,
-                        0,
-                        NULL);
+                        0);
 
     for (int j = 0; j < A->n_nodes - 1; j++) {
       _octants_push_back (R,
                           A->codes[j],
                           0,
                           0,
-                          0,
-                          0,
-                          NULL);
+                          0);
     }
     _octants_free (A);
   }
@@ -1001,9 +927,7 @@ _complete_octree
                         L2->codes[L2->n_nodes-1],
                         0,
                         0,
-                        0,
-                        0,
-                        NULL);
+                        0);
   }
 
   _octants_free (L2);
@@ -1291,9 +1215,7 @@ _block_partition
                           octant_list->codes[i],
                           octant_list->n_points[i],
                           octant_list->range[i],
-                          octant_list->is_leaf[i],
-                          octant_list->ancestor[i],
-                          NULL);
+                          octant_list->is_leaf[i]);
     }
   }
 
@@ -1917,9 +1839,7 @@ PDM_para_octree_build
                         code,
                         octree->n_points,
                         0,
-                        0,
-                        0,
-                        NULL);
+                        0);
 
     octree->octants->range[0] = 0;
     octree->octants->range[1] = octree->n_points;
@@ -1937,29 +1857,31 @@ PDM_para_octree_build
   int _max_size = octree->octants->n_nodes_max;
 
   int **_neighbor_idx = malloc(sizeof(int*) * _max_size);
-
   int **_neighbor = malloc(sizeof(int*) * _max_size);
+  int *_s_neighbor = malloc(sizeof(int*) * _max_size);
 
   for (int i = 0; i < _max_size; i++) {
     _neighbor_idx[i] = NULL;
     _neighbor[i] = NULL;
+    _s_neighbor[i] = -1;
   }
-
-  //  TODO: Finir construction finale + algo d'intersection avec une boite englobante + point le plus proche
 
   if (n_ranks > 1) {
 
     /* On part des octants blocks et on subdivise */
 
-    /* Recherche des voisins (processus ou octant local) */
+    /* Recherche des voisins (processus ou octant local) -num_proc ou numero */
 
     /* Raffinement automatique :
-         - remplacement du noeud par ses enfants
+         - Ajout des noeuds enfants recursivement avec stockage temporaire des voisins
+           + tag des noeuds qui ne sont pas des feuilles
+         - On garde uniquement les uniquement les feuilles
+         - Construction de la table des voisin avec double indexation (index sur les feuilles puis sur les directions des feuilles)
          - mise a jour des voisins (remplancement du noeud par les 4 de la direction concernee */
 
     /* Echange de la table de voisinage (octants fantome à ajouter ?)
-         - remplacement du noeud par ses enfants
-         - mise a jour des voisins (remplancement du noeud par les 4 de la direction concernee */
+         - Construction d'une structure parallele boundary*/
+
 
   }
 
