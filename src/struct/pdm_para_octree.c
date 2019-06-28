@@ -246,17 +246,19 @@ _octants_init
  *
  * \brief Check size of the size of a list of octants
  *
- * \param [in]   octants     Octants
+ * \param [in]   octants       Octants
+ * \param [in]   n_free_node   Number of required fre nodes
  *
  */
 
 static void
 _octants_check_alloc
 (
- _l_octant_t *octants
+ _l_octant_t *octants,
+ const int n_free_node
 )
 {
-  if (octants->n_nodes >= octants->n_nodes_max) {
+  if (octants->n_nodes + n_free_node > octants->n_nodes_max) {
 
     octants->n_nodes_max *= 2;
 
@@ -295,7 +297,7 @@ _octants_push_back
 )
 {
 
-  _octants_check_alloc (octants);
+  _octants_check_alloc (octants, 1);
 
   const int idx = octants->n_nodes;
 
@@ -331,7 +333,7 @@ _octants_push_front
 )
 {
 
-  _octants_check_alloc (octants);
+  _octants_check_alloc (octants, 1);
 
   for (int i = octants->n_nodes; i > 0; i--) {
 
@@ -357,6 +359,81 @@ _octants_push_front
 
   octants->n_nodes += 1;
 
+}
+
+
+/**
+ *
+ * \brief Push back a octant to a list of octants
+ *
+ * \param [in]   octants     Octants
+ *
+ */
+
+static void
+_octants_replace_node_by_child
+(
+ _l_octant_t *octants,
+ const int points_in_leaf_max,
+ const int node_id,
+ const int n_stored_points,
+ const PDM_morton_code_t  *stored_points_code
+)
+{
+  const int dim = 3;
+  const int n_child = 8;
+
+  if (!octants->is_leaf[node_id]) {
+
+    _octants_check_alloc (octants, 8);
+
+    PDM_morton_code_t children[n_child];
+    PDM_morton_get_children(dim,
+                            octants->codes[node_id],
+                            children);
+
+    const int step = dim - 1;
+    for (int i = octants->n_nodes - 1; i > node_id; i--) {
+      PDM_morton_copy (octants->codes[i], octants->codes + step + i);
+      octants->n_points[step+i] =  octants->n_points[i];
+      octants->range[step+i] = octants->range[i];
+      octants->is_leaf[step+i] = octants->is_leaf[i];
+    }
+
+    const int n_points_node = octants->n_points[node_id];
+    const int range_node = octants->range[node_id];
+
+    int range_children[n_child];
+    int n_points_children[n_child];
+
+    for (int i = 0; i < dim; i++) {
+      range_children[i] = PDM_morton_binary_search (n_points_node,
+                                                    children[i],
+                                                    (PDM_morton_code_t *) stored_points_code + range_node);
+    }
+
+    for (int i = 0; i < dim - 1; i++) {
+      n_points_children[i] = range_children[i+1] - range_children[i];
+    }
+
+    n_points_children[dim-1] = n_points_node - range_children[dim-1];
+
+    int k = 0;
+    for (int i = node_id; i < node_id + n_child; i++) {
+      PDM_morton_copy (children[k], octants->codes + step + i);
+      octants->n_points[i] = n_points_children[k];
+      octants->range[i] = range_children[k];
+      if (n_points_children[k] <= points_in_leaf_max) {
+        octants->is_leaf[i] = 1;
+      }
+      else {
+        octants->is_leaf[i] = 0;
+      }
+    }
+
+    octants->n_nodes += n_child - 1;
+
+  }
 }
 
 
@@ -1751,7 +1828,7 @@ PDM_para_octree_build
 
       if (chg_code) {
 
-        _octants_check_alloc (point_octants);
+        _octants_check_alloc (point_octants, 1);
 
         int idx = point_octants->n_nodes;
 
