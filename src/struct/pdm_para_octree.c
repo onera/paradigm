@@ -451,12 +451,30 @@ _octants_replace_node_by_child
   const int n_child = 8;
   const int n_direction = 6;
 
+  _neighbors_tmp_t *_neighbors_tmp = *neighbors_tmp;
+
   if ((octants->codes[node_id].L < max_morton_level) &&
       !octants->is_leaf[node_id]) {
 
     _octants_check_alloc (octants, 8);
 
-    _neighbors_tmp_t *_neighbors_tmp = *neighbors_tmp;
+    if (octants->n_nodes >= octants->n_nodes_max) {
+      int pre_nodes_max = octants->n_nodes_max;
+      octants->n_nodes_max *= 2;
+
+      *neighbors_tmp =
+        realloc (neighbors_tmp, sizeof(_neighbors_tmp_t) * octants->n_nodes_max);
+      _neighbors_tmp = *neighbors_tmp;
+
+      for (int i = pre_nodes_max; i < octants->n_nodes_max; i++) {
+        for (int j = 0; j < n_direction; j++) {
+          _neighbors_tmp[i].n_neighbor[j] = 0;
+          _neighbors_tmp[i].s_neighbor[j] = 1;
+          _neighbors_tmp[i].neighbors[j] =
+            malloc (sizeof(int) * _neighbors_tmp[i].s_neighbor[j]);
+        }
+      }
+    }
 
     _neighbors_tmp_t cp_neighbors;
 
@@ -480,6 +498,11 @@ _octants_replace_node_by_child
       octants->n_points[step+i] =  octants->n_points[i];
       octants->range[step+i] = octants->range[i];
       octants->is_leaf[step+i] = octants->is_leaf[i];
+      for (int j = 0; j < n_direction; j++) {
+        _neighbors_tmp[step+i].n_neighbor[j] = _neighbors_tmp[i].n_neighbor[j];
+        _neighbors_tmp[step+i].s_neighbor[j] = _neighbors_tmp[i].s_neighbor[j];
+        _neighbors_tmp[step+i].neighbors[j] = _neighbors_tmp[i].neighbors[j];
+      }
     }
 
     const int n_points_node = octants->n_points[node_id];
@@ -513,6 +536,118 @@ _octants_replace_node_by_child
         octants->is_leaf[i] = 0;
       }
     }
+
+    /* Inter children neighborhood */
+
+    const int id_1 = node_id;
+    const int id_2 = node_id + 1;
+    const int dir_1 = PDM_WEST;
+    const int dir_2 = PDM_EAST;
+    neighbors_tmp[id_1].neighbors[dir_1][neighbors_tmp[id_1].n_neighbor[dir_1]] = id_2;
+    neighbors_tmp[id_1].n_neighbor[dir_1] += 1;
+    neighbors_tmp[id_2].neighbors[dir_2][neighbors_tmp[id_2].n_neighbor[dir_2]] = id_1;
+    neighbors_tmp[id_2].n_neighbor[dir_2] += 1;
+
+    id_1 = node_id;
+    id_2 = node_id + 2;
+    dir_1 = PDM_NORTH;
+    dir_2 = PDM_SOUTH;
+    neighbors_tmp[id_1].neighbors[dir_1][neighbors_tmp[id_1].n_neighbor[dir_1]] = id_2;
+    neighbors_tmp[id_1].n_neighbor[dir_1] += 1;
+    neighbors_tmp[id_2].neighbors[dir_2][neighbors_tmp[id_2].n_neighbor[dir_2]] = id_1;
+    neighbors_tmp[id_2].n_neighbor[dir_2] += 1;
+
+    id_1 = node_id;
+    id_2 = node_id + 4;
+    dir_1 = PDM_UP;
+    dir_2 = PDM_BOTTOM;
+    neighbors_tmp[id_1].neighbors[dir_1][neighbors_tmp[id_1].n_neighbor[dir_1]] = id_2;
+    neighbors_tmp[id_1].n_neighbor[dir_1] += 1;
+    neighbors_tmp[id_2].neighbors[dir_2][neighbors_tmp[id_2].n_neighbor[dir_2]] = id_1;
+    neighbors_tmp[id_2].n_neighbor[dir_2] += 1;
+
+    id_1 = node_id + 1;
+    id_2 = node_id + 3;
+    dir_1 = PDM_NORTH;
+    dir_2 = PDM_SOUTH;
+    neighbors_tmp[id_1].neighbors[dir_1][neighbors_tmp[id_1].n_neighbor[dir_1]] = id_2;
+    neighbors_tmp[id_1].n_neighbor[dir_1] += 1;
+    neighbors_tmp[id_2].neighbors[dir_2][neighbors_tmp[id_2].n_neighbor[dir_2]] = id_1;
+    neighbors_tmp[id_2].n_neighbor[dir_2] += 1;
+
+    id_1 = node_id + 1;
+    id_2 = node_id + 5;
+    dir_1 = PDM_UP;
+    dir_2 = PDM_BOTTOM;
+    neighbors_tmp[id_1].neighbors[dir_1][neighbors_tmp[id_1].n_neighbor[dir_1]] = id_2;
+    neighbors_tmp[id_1].n_neighbor[dir_1] += 1;
+    neighbors_tmp[id_2].neighbors[dir_2][neighbors_tmp[id_2].n_neighbor[dir_2]] = id_1;
+    neighbors_tmp[id_2].n_neighbor[dir_2] += 1;
+
+    id_1 = node_id + 2;
+    id_2 = node_id + 3;
+    dir_1 = PDM_EAST;
+    dir_2 = PDM_WEST;
+    neighbors_tmp[id_1].neighbors[dir_1][neighbors_tmp[id_1].n_neighbor[dir_1]] = id_2;
+    neighbors_tmp[id_1].n_neighbor[dir_1] += 1;
+    neighbors_tmp[id_2].neighbors[dir_2][neighbors_tmp[id_2].n_neighbor[dir_2]] = id_1;
+    neighbors_tmp[id_2].n_neighbor[dir_2] += 1;
+
+    id_1 = node_id + 2;
+    id_2 = node_id + 6;
+    dir_1 = PDM_UP;
+    dir_2 = PDM_BOTTOM;
+    neighbors_tmp[id_1].neighbors[dir_1][neighbors_tmp[id_1].n_neighbor[dir_1]] = id_2;
+    neighbors_tmp[id_1].n_neighbor[dir_1] += 1;
+    neighbors_tmp[id_2].neighbors[dir_2][neighbors_tmp[id_2].n_neighbor[dir_2]] = id_1;
+    neighbors_tmp[id_2].n_neighbor[dir_2] += 1;
+
+    id_1 = node_id + 3;
+    id_2 = node_id + 7;
+    dir_1 = PDM_UP;
+    dir_2 = PDM_BOTTOM;
+    neighbors_tmp[id_1].neighbors[dir_1][neighbors_tmp[id_1].n_neighbor[dir_1]] = id_2;
+    neighbors_tmp[id_1].n_neighbor[dir_1] += 1;
+    neighbors_tmp[id_2].neighbors[dir_2][neighbors_tmp[id_2].n_neighbor[dir_2]] = id_1;
+    neighbors_tmp[id_2].n_neighbor[dir_2] += 1;
+
+    id_1 = node_id + 4;
+    id_2 = node_id + 5;
+    dir_1 = PDM_EAST;
+    dir_2 = PDM_WEST;
+    neighbors_tmp[id_1].neighbors[dir_1][neighbors_tmp[id_1].n_neighbor[dir_1]] = id_2;
+    neighbors_tmp[id_1].n_neighbor[dir_1] += 1;
+    neighbors_tmp[id_2].neighbors[dir_2][neighbors_tmp[id_2].n_neighbor[dir_2]] = id_1;
+    neighbors_tmp[id_2].n_neighbor[dir_2] += 1;
+
+    id_1 = node_id + 4;
+    id_2 = node_id + 6;
+    dir_1 = PDM_NORTH;
+    dir_2 = PDM_SOUTH;
+    neighbors_tmp[id_1].neighbors[dir_1][neighbors_tmp[id_1].n_neighbor[dir_1]] = id_2;
+    neighbors_tmp[id_1].n_neighbor[dir_1] += 1;
+    neighbors_tmp[id_2].neighbors[dir_2][neighbors_tmp[id_2].n_neighbor[dir_2]] = id_1;
+    neighbors_tmp[id_2].n_neighbor[dir_2] += 1;
+
+    id_1 = node_id + 5;
+    id_2 = node_id + 7;
+    dir_1 = PDM_NORTH;
+    dir_2 = PDM_SOUTH;
+    neighbors_tmp[id_1].neighbors[dir_1][neighbors_tmp[id_1].n_neighbor[dir_1]] = id_2;
+    neighbors_tmp[id_1].n_neighbor[dir_1] += 1;
+    neighbors_tmp[id_2].neighbors[dir_2][neighbors_tmp[id_2].n_neighbor[dir_2]] = id_1;
+    neighbors_tmp[id_2].n_neighbor[dir_2] += 1;
+
+    id_1 = node_id + 6;
+    id_2 = node_id + 7;
+    dir_1 = PDM_EAST;
+    dir_2 = PDM_WEST;
+    neighbors_tmp[id_1].neighbors[dir_1][neighbors_tmp[id_1].n_neighbor[dir_1]] = id_2;
+    neighbors_tmp[id_1].n_neighbor[dir_1] += 1;
+    neighbors_tmp[id_2].neighbors[dir_2][neighbors_tmp[id_2].n_neighbor[dir_2]] = id_1;
+    neighbors_tmp[id_2].n_neighbor[dir_2] += 1;
+
+    /* Extern neighborhood */
 
     octants->n_nodes += n_child - 1;
 
