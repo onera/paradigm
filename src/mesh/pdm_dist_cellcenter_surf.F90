@@ -131,7 +131,7 @@ module pdm_dist_cellcenter_surf
       integer(c_long), value       :: n_g_face
       integer(c_long), value       :: n_g_vtx
 #else
-      integer(c_int), value        :: n_g_int
+      integer(c_int), value        :: n_g_cell
       integer(c_int), value        :: n_g_face
       integer(c_int), value        :: n_g_vtx
 #endif
