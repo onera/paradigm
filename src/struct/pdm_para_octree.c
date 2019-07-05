@@ -539,115 +539,132 @@ _octants_replace_node_by_child
 
     /* Inter children neighborhood */
 
-    const int id_1 = node_id;
-    const int id_2 = node_id + 1;
-    const int dir_1 = PDM_WEST;
-    const int dir_2 = PDM_EAST;
-    neighbors_tmp[id_1].neighbors[dir_1][neighbors_tmp[id_1].n_neighbor[dir_1]] = id_2;
-    neighbors_tmp[id_1].n_neighbor[dir_1] += 1;
-    neighbors_tmp[id_2].neighbors[dir_2][neighbors_tmp[id_2].n_neighbor[dir_2]] = id_1;
-    neighbors_tmp[id_2].n_neighbor[dir_2] += 1;
+    int id_1 = node_id;
+    int id_2 = node_id + 1;
+    int dir_1 = PDM_WEST;
+    int dir_2 = PDM_EAST;
+    _neighbors_tmp[id_1].neighbors[dir_1][_neighbors_tmp[id_1].n_neighbor[dir_1]] = id_2;
+    _neighbors_tmp[id_1].n_neighbor[dir_1] += 1;
+    _neighbors_tmp[id_2].neighbors[dir_2][_neighbors_tmp[id_2].n_neighbor[dir_2]] = id_1;
+    _neighbors_tmp[id_2].n_neighbor[dir_2] += 1;
 
     id_1 = node_id;
     id_2 = node_id + 2;
     dir_1 = PDM_NORTH;
     dir_2 = PDM_SOUTH;
-    neighbors_tmp[id_1].neighbors[dir_1][neighbors_tmp[id_1].n_neighbor[dir_1]] = id_2;
-    neighbors_tmp[id_1].n_neighbor[dir_1] += 1;
-    neighbors_tmp[id_2].neighbors[dir_2][neighbors_tmp[id_2].n_neighbor[dir_2]] = id_1;
-    neighbors_tmp[id_2].n_neighbor[dir_2] += 1;
+    _neighbors_tmp[id_1].neighbors[dir_1][_neighbors_tmp[id_1].n_neighbor[dir_1]] = id_2;
+    _neighbors_tmp[id_1].n_neighbor[dir_1] += 1;
+    _neighbors_tmp[id_2].neighbors[dir_2][_neighbors_tmp[id_2].n_neighbor[dir_2]] = id_1;
+    _neighbors_tmp[id_2].n_neighbor[dir_2] += 1;
 
     id_1 = node_id;
     id_2 = node_id + 4;
     dir_1 = PDM_UP;
     dir_2 = PDM_BOTTOM;
-    neighbors_tmp[id_1].neighbors[dir_1][neighbors_tmp[id_1].n_neighbor[dir_1]] = id_2;
-    neighbors_tmp[id_1].n_neighbor[dir_1] += 1;
-    neighbors_tmp[id_2].neighbors[dir_2][neighbors_tmp[id_2].n_neighbor[dir_2]] = id_1;
-    neighbors_tmp[id_2].n_neighbor[dir_2] += 1;
+    _neighbors_tmp[id_1].neighbors[dir_1][_neighbors_tmp[id_1].n_neighbor[dir_1]] = id_2;
+    _neighbors_tmp[id_1].n_neighbor[dir_1] += 1;
+    _neighbors_tmp[id_2].neighbors[dir_2][_neighbors_tmp[id_2].n_neighbor[dir_2]] = id_1;
+    _neighbors_tmp[id_2].n_neighbor[dir_2] += 1;
 
     id_1 = node_id + 1;
     id_2 = node_id + 3;
     dir_1 = PDM_NORTH;
     dir_2 = PDM_SOUTH;
-    neighbors_tmp[id_1].neighbors[dir_1][neighbors_tmp[id_1].n_neighbor[dir_1]] = id_2;
-    neighbors_tmp[id_1].n_neighbor[dir_1] += 1;
-    neighbors_tmp[id_2].neighbors[dir_2][neighbors_tmp[id_2].n_neighbor[dir_2]] = id_1;
-    neighbors_tmp[id_2].n_neighbor[dir_2] += 1;
+    _neighbors_tmp[id_1].neighbors[dir_1][_neighbors_tmp[id_1].n_neighbor[dir_1]] = id_2;
+    _neighbors_tmp[id_1].n_neighbor[dir_1] += 1;
+    _neighbors_tmp[id_2].neighbors[dir_2][_neighbors_tmp[id_2].n_neighbor[dir_2]] = id_1;
+    _neighbors_tmp[id_2].n_neighbor[dir_2] += 1;
 
     id_1 = node_id + 1;
     id_2 = node_id + 5;
     dir_1 = PDM_UP;
     dir_2 = PDM_BOTTOM;
-    neighbors_tmp[id_1].neighbors[dir_1][neighbors_tmp[id_1].n_neighbor[dir_1]] = id_2;
-    neighbors_tmp[id_1].n_neighbor[dir_1] += 1;
-    neighbors_tmp[id_2].neighbors[dir_2][neighbors_tmp[id_2].n_neighbor[dir_2]] = id_1;
-    neighbors_tmp[id_2].n_neighbor[dir_2] += 1;
+    _neighbors_tmp[id_1].neighbors[dir_1][_neighbors_tmp[id_1].n_neighbor[dir_1]] = id_2;
+    _neighbors_tmp[id_1].n_neighbor[dir_1] += 1;
+    _neighbors_tmp[id_2].neighbors[dir_2][_neighbors_tmp[id_2].n_neighbor[dir_2]] = id_1;
+    _neighbors_tmp[id_2].n_neighbor[dir_2] += 1;
 
     id_1 = node_id + 2;
     id_2 = node_id + 3;
     dir_1 = PDM_EAST;
     dir_2 = PDM_WEST;
-    neighbors_tmp[id_1].neighbors[dir_1][neighbors_tmp[id_1].n_neighbor[dir_1]] = id_2;
-    neighbors_tmp[id_1].n_neighbor[dir_1] += 1;
-    neighbors_tmp[id_2].neighbors[dir_2][neighbors_tmp[id_2].n_neighbor[dir_2]] = id_1;
-    neighbors_tmp[id_2].n_neighbor[dir_2] += 1;
+    _neighbors_tmp[id_1].neighbors[dir_1][_neighbors_tmp[id_1].n_neighbor[dir_1]] = id_2;
+    _neighbors_tmp[id_1].n_neighbor[dir_1] += 1;
+    _neighbors_tmp[id_2].neighbors[dir_2][_neighbors_tmp[id_2].n_neighbor[dir_2]] = id_1;
+    _neighbors_tmp[id_2].n_neighbor[dir_2] += 1;
 
     id_1 = node_id + 2;
     id_2 = node_id + 6;
     dir_1 = PDM_UP;
     dir_2 = PDM_BOTTOM;
-    neighbors_tmp[id_1].neighbors[dir_1][neighbors_tmp[id_1].n_neighbor[dir_1]] = id_2;
-    neighbors_tmp[id_1].n_neighbor[dir_1] += 1;
-    neighbors_tmp[id_2].neighbors[dir_2][neighbors_tmp[id_2].n_neighbor[dir_2]] = id_1;
-    neighbors_tmp[id_2].n_neighbor[dir_2] += 1;
+    _neighbors_tmp[id_1].neighbors[dir_1][_neighbors_tmp[id_1].n_neighbor[dir_1]] = id_2;
+    _neighbors_tmp[id_1].n_neighbor[dir_1] += 1;
+    _neighbors_tmp[id_2].neighbors[dir_2][_neighbors_tmp[id_2].n_neighbor[dir_2]] = id_1;
+    _neighbors_tmp[id_2].n_neighbor[dir_2] += 1;
 
     id_1 = node_id + 3;
     id_2 = node_id + 7;
     dir_1 = PDM_UP;
     dir_2 = PDM_BOTTOM;
-    neighbors_tmp[id_1].neighbors[dir_1][neighbors_tmp[id_1].n_neighbor[dir_1]] = id_2;
-    neighbors_tmp[id_1].n_neighbor[dir_1] += 1;
-    neighbors_tmp[id_2].neighbors[dir_2][neighbors_tmp[id_2].n_neighbor[dir_2]] = id_1;
-    neighbors_tmp[id_2].n_neighbor[dir_2] += 1;
+    _neighbors_tmp[id_1].neighbors[dir_1][_neighbors_tmp[id_1].n_neighbor[dir_1]] = id_2;
+    _neighbors_tmp[id_1].n_neighbor[dir_1] += 1;
+    _neighbors_tmp[id_2].neighbors[dir_2][_neighbors_tmp[id_2].n_neighbor[dir_2]] = id_1;
+    _neighbors_tmp[id_2].n_neighbor[dir_2] += 1;
 
     id_1 = node_id + 4;
     id_2 = node_id + 5;
     dir_1 = PDM_EAST;
     dir_2 = PDM_WEST;
-    neighbors_tmp[id_1].neighbors[dir_1][neighbors_tmp[id_1].n_neighbor[dir_1]] = id_2;
-    neighbors_tmp[id_1].n_neighbor[dir_1] += 1;
-    neighbors_tmp[id_2].neighbors[dir_2][neighbors_tmp[id_2].n_neighbor[dir_2]] = id_1;
-    neighbors_tmp[id_2].n_neighbor[dir_2] += 1;
+    _neighbors_tmp[id_1].neighbors[dir_1][_neighbors_tmp[id_1].n_neighbor[dir_1]] = id_2;
+    _neighbors_tmp[id_1].n_neighbor[dir_1] += 1;
+    _neighbors_tmp[id_2].neighbors[dir_2][_neighbors_tmp[id_2].n_neighbor[dir_2]] = id_1;
+    _neighbors_tmp[id_2].n_neighbor[dir_2] += 1;
 
     id_1 = node_id + 4;
     id_2 = node_id + 6;
     dir_1 = PDM_NORTH;
     dir_2 = PDM_SOUTH;
-    neighbors_tmp[id_1].neighbors[dir_1][neighbors_tmp[id_1].n_neighbor[dir_1]] = id_2;
-    neighbors_tmp[id_1].n_neighbor[dir_1] += 1;
-    neighbors_tmp[id_2].neighbors[dir_2][neighbors_tmp[id_2].n_neighbor[dir_2]] = id_1;
-    neighbors_tmp[id_2].n_neighbor[dir_2] += 1;
+    _neighbors_tmp[id_1].neighbors[dir_1][_neighbors_tmp[id_1].n_neighbor[dir_1]] = id_2;
+    _neighbors_tmp[id_1].n_neighbor[dir_1] += 1;
+    _neighbors_tmp[id_2].neighbors[dir_2][_neighbors_tmp[id_2].n_neighbor[dir_2]] = id_1;
+    _neighbors_tmp[id_2].n_neighbor[dir_2] += 1;
 
     id_1 = node_id + 5;
     id_2 = node_id + 7;
     dir_1 = PDM_NORTH;
     dir_2 = PDM_SOUTH;
-    neighbors_tmp[id_1].neighbors[dir_1][neighbors_tmp[id_1].n_neighbor[dir_1]] = id_2;
-    neighbors_tmp[id_1].n_neighbor[dir_1] += 1;
-    neighbors_tmp[id_2].neighbors[dir_2][neighbors_tmp[id_2].n_neighbor[dir_2]] = id_1;
-    neighbors_tmp[id_2].n_neighbor[dir_2] += 1;
+    _neighbors_tmp[id_1].neighbors[dir_1][_neighbors_tmp[id_1].n_neighbor[dir_1]] = id_2;
+    _neighbors_tmp[id_1].n_neighbor[dir_1] += 1;
+    _neighbors_tmp[id_2].neighbors[dir_2][_neighbors_tmp[id_2].n_neighbor[dir_2]] = id_1;
+    _neighbors_tmp[id_2].n_neighbor[dir_2] += 1;
 
     id_1 = node_id + 6;
     id_2 = node_id + 7;
     dir_1 = PDM_EAST;
     dir_2 = PDM_WEST;
-    neighbors_tmp[id_1].neighbors[dir_1][neighbors_tmp[id_1].n_neighbor[dir_1]] = id_2;
-    neighbors_tmp[id_1].n_neighbor[dir_1] += 1;
-    neighbors_tmp[id_2].neighbors[dir_2][neighbors_tmp[id_2].n_neighbor[dir_2]] = id_1;
-    neighbors_tmp[id_2].n_neighbor[dir_2] += 1;
+    _neighbors_tmp[id_1].neighbors[dir_1][_neighbors_tmp[id_1].n_neighbor[dir_1]] = id_2;
+    _neighbors_tmp[id_1].n_neighbor[dir_1] += 1;
+    _neighbors_tmp[id_2].neighbors[dir_2][_neighbors_tmp[id_2].n_neighbor[dir_2]] = id_1;
+    _neighbors_tmp[id_2].n_neighbor[dir_2] += 1;
 
     /* Extern neighborhood */
+
+    PDM_para_octree_direction_t dir_children[8][3] = {{PDM_BOTTOM, PDM_SOUTH, PDM_WEST},
+                                                      {PDM_BOTTOM, PDM_SOUTH, PDM_EAST},
+                                                      {PDM_BOTTOM, PDM_NORTH, PDM_WEST},
+                                                      {PDM_BOTTOM, PDM_NORTH, PDM_EAST},
+                                                      {PDM_UP, PDM_SOUTH, PDM_WEST},
+                                                      {PDM_UP, PDM_SOUTH, PDM_EAST},
+                                                      {PDM_UP, PDM_NORTH, PDM_WEST},
+                                                      {PDM_UP, PDM_NORTH, PDM_EAST}};
+
+    for (int i = 0; i < n_child; i++) {
+      int id = node_id + i;
+
+
+
+
+    }
 
     octants->n_nodes += n_child - 1;
 
