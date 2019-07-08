@@ -535,6 +535,7 @@ _octants_replace_node_by_child
       else {
         octants->is_leaf[i] = 0;
       }
+      k += 1;
     }
 
     /* Inter children neighborhood */
@@ -649,21 +650,89 @@ _octants_replace_node_by_child
 
     /* Extern neighborhood */
 
-    PDM_para_octree_direction_t dir_children[8][3] = {{PDM_BOTTOM, PDM_SOUTH, PDM_WEST},
-                                                      {PDM_BOTTOM, PDM_SOUTH, PDM_EAST},
-                                                      {PDM_BOTTOM, PDM_NORTH, PDM_WEST},
-                                                      {PDM_BOTTOM, PDM_NORTH, PDM_EAST},
-                                                      {PDM_UP, PDM_SOUTH, PDM_WEST},
-                                                      {PDM_UP, PDM_SOUTH, PDM_EAST},
-                                                      {PDM_UP, PDM_NORTH, PDM_WEST},
-                                                      {PDM_UP, PDM_NORTH, PDM_EAST}};
+    /* PDM_para_octree_direction_t dir_children[8][3] = {{PDM_BOTTOM, PDM_SOUTH, PDM_WEST}, */
+    /*                                                   {PDM_BOTTOM, PDM_SOUTH, PDM_EAST}, */
+    /*                                                   {PDM_BOTTOM, PDM_NORTH, PDM_WEST}, */
+    /*                                                   {PDM_BOTTOM, PDM_NORTH, PDM_EAST}, */
+    /*                                                   {PDM_UP, PDM_SOUTH, PDM_WEST}, */
+    /*                                                   {PDM_UP, PDM_SOUTH, PDM_EAST}, */
+    /*                                                   {PDM_UP, PDM_NORTH, PDM_WEST}, */
+    /*                                                   {PDM_UP, PDM_NORTH, PDM_EAST}}; */
 
-    for (int i = 0; i < n_child; i++) {
-      int id = node_id + i;
+    const int dir_children[6][4] = {{0, 1, 2, 3},
+                                    {4, 5, 6, 7},
+                                    {0, 1, 4, 5},
+                                    {2, 3, 6, 7},
+                                    {0, 2, 4, 6},
+                                    {1, 3, 5, 7}};
 
+    int sel_children[4] = {0, 0, 0, 0};
 
+    for (int i = 0; i < n_direction; i++) {
 
+       for (int j = 0; j < cp_neighbors.n_neighbor[i]; j++) {
+        int neighbor_id = cp_neighbors.neighbors[i][j];
 
+        int n_neighbor_child = 0;
+        for (k = 0; k < 4; k++) {
+          int child_id = node_id + dir_children[i][k];
+
+          PDM_morton_code_t *neighbour_code = _neighbour (children[dir_children[i][k]], i);
+
+          if (neighbor_id >= 0) {
+
+            PDM_morton_compare_t pmc =
+              PDM_morton_compare(dim,  *neighbour_code, octants->codes[neighbor_id]);
+
+            if ((pmc == PDM_MORTON_SAME_ANCHOR) || (pmc == PDM_MORTON_EQUAL_ID)) {
+              sel_children[n_neighbor_child++] = k;
+
+              _neighbors_tmp[child_id].neighbors[i][_neighbors_tmp[child_id].n_neighbor[i]] =
+                neighbor_id;
+              _neighbors_tmp[child_id].n_neighbor[i] += 1;
+            }
+
+          }
+          else {
+            _neighbors_tmp[child_id].neighbors[i][_neighbors_tmp[child_id].n_neighbor[i]] =
+              neighbor_id;
+            _neighbors_tmp[child_id].n_neighbor[i] += 1;
+          }
+
+        }
+
+        if (n_neighbor_child > 0) {
+
+          for (k = 0; k < 4; k++) {
+
+            while ((_neighbors_tmp[neighbor_id].n_neighbor[i] + (n_neighbor_child - 1))
+                   >= _neighbors_tmp[neighbor_id].s_neighbor[i]) {
+              _neighbors_tmp[neighbor_id].s_neighbor[i] *= 2;
+              _neighbors_tmp[neighbor_id].neighbors[i] =
+                realloc (_neighbors_tmp[neighbor_id].neighbors[i],
+                         sizeof(int) *  _neighbors_tmp[neighbor_id].s_neighbor[i]);
+            }
+
+            int idx = -1;
+            for (int k1 = 0; k1 < _neighbors_tmp[neighbor_id].n_neighbor[i]; k1++) {
+              if (_neighbors_tmp[neighbor_id].neighbors[i][k1] == node_id) {
+                idx = k1;
+                break;
+              }
+            }
+
+            assert (idx != -1);
+            _neighbors_tmp[neighbor_id].neighbors[i][idx] = node_id + sel_children[0];
+
+            for (int k1 = 1; k1 < n_neighbor_child; k1++) {
+
+              _neighbors_tmp[neighbor_id].neighbors[i][_neighbors_tmp[neighbor_id].n_neighbor[i]++] =
+                node_id + sel_children[k1];
+            }
+
+          }
+        }
+      }
     }
 
     octants->n_nodes += n_child - 1;
@@ -2317,20 +2386,6 @@ PDM_para_octree_build
                                       &neighbors_tmp);
       n_init_node += 1;
     }
-
-    /* intialisation a 0 si bord, node_id + 1 si internes, -num_proc si frontiere de partitionnement */
-
-    /* Raffinement automatique :
-         - Ajout des noeuds enfants recursivement avec stockage temporaire des voisins
-           + tag des noeuds qui ne sont pas des feuilles
-         - On garde uniquement les uniquement les feuilles
-         - Construction de la table des voisin avec double indexation (index sur les feuilles puis sur les directions des feuilles)
-         - mise a jour des voisins (remplancement du noeud par les 4 de la direction concernee */
-
-    /* Echange de la table de voisinage (octants fantome à ajouter ?)
-         - Construction d'une structure parallele boundary*/
-
-
   }
 
   else {
@@ -2343,6 +2398,13 @@ PDM_para_octree_build
                                     &neighbors_tmp);
 
   }
+
+  /* Echange de la table de voisinage (octants fantome à ajouter ?)
+     - Construction d'une structure parallele boundary*/
+
+
+
+
 
   /* Copy temporary neighbours in the octree structure*/
 
