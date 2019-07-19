@@ -458,6 +458,13 @@ PDM_dist_cloud_surf_compute
   int rank;
   PDM_MPI_Comm_rank (comm, &rank);
 
+  int step;
+
+  step = 0;
+  printf ("[%d]    - PDM_dist_cloud_surf_compute : step %d\n", rank, step);
+  fflush(stdout);
+
+
   double b_t_elapsed;
   double b_t_cpu;
   double b_t_cpu_u;
@@ -511,6 +518,7 @@ PDM_dist_cloud_surf_compute
     }
     else if (dist->_surf_mesh != NULL) {
       n_part_mesh = PDM_surf_mesh_n_part_get (dist->_surf_mesh);
+      PDM_surf_mesh_compute_faceExtentsMesh (dist->_surf_mesh, 1e-6);
 
       double glob_extents[6];
       glob_extents[0] = HUGE_VAL;
@@ -548,6 +556,14 @@ PDM_dist_cloud_surf_compute
                 "        Call PDM_dist_cloud_surf_surf_mesh_global_data_set +"
                 " PDM_dist_cloud_surf_surf_mesh_part_set\n");
     }
+
+    depth_max = PDM_MIN (depth_max, 31);
+    printf("depth_max [%d] : %d\n", rank, depth_max);
+    fflush(stdout);
+
+    step = 1;
+    printf ("[%d]    - PDM_dist_cloud_surf_compute : step %d\n", rank, step);
+    fflush(stdout);
 
     int octree_id = PDM_octree_create (n_part_mesh,
                                        depth_max,
@@ -590,7 +606,18 @@ PDM_dist_cloud_surf_compute
      * Build octree
      */
 
+
+    step = 2;
+    printf ("[%d]    - PDM_dist_cloud_surf_compute : step %d\n", rank, step);
+    fflush(stdout);
+
+
     PDM_octree_build (octree_id);
+
+    step = 3;
+    printf ("[%d]    - PDM_dist_cloud_surf_compute : step %d\n", rank, step);
+    fflush(stdout);
+
 
     /*
      * Concatenation of the partitions
@@ -632,6 +659,11 @@ PDM_dist_cloud_surf_compute
                               closest_vertices_gnum,
                               closest_vertices_dist2);
 
+    step = 4;
+    printf ("[%d]    - PDM_dist_cloud_surf_compute : step %d\n", rank, step);
+    fflush(stdout);
+
+
     //      debut test cube :
 
     /* int ierr = 0; */
@@ -669,6 +701,11 @@ PDM_dist_cloud_surf_compute
 
     PDM_octree_free (octree_id);
 
+    step = 5;
+    printf ("[%d]    - PDM_dist_cloud_surf_compute : step %d\n", rank, step);
+    fflush(stdout);
+
+
     PDM_timer_hang_on(dist->timer);
     e_t_elapsed = PDM_timer_elapsed(dist->timer);
     e_t_cpu     = PDM_timer_cpu(dist->timer);
@@ -702,6 +739,11 @@ PDM_dist_cloud_surf_compute
           int          *nElts   = malloc (sizeof(int) * n_part_mesh);
     const double      **extents = malloc (sizeof(double *) * n_part_mesh);
     const PDM_g_num_t **gNum    = malloc (sizeof(PDM_g_num_t *) * n_part_mesh);
+
+
+    step = 6;
+    printf ("[%d]    - PDM_dist_cloud_surf_compute : step %d\n", rank, step);
+    fflush(stdout);
 
 
     if (dist->mesh_nodal_id != -1) {
@@ -793,6 +835,11 @@ PDM_dist_cloud_surf_compute
                                                              gNum);
 
 
+    step = 7;
+    printf ("[%d]    - PDM_dist_cloud_surf_compute : step %d\n", rank, step);
+    fflush(stdout);
+
+
     if (idebug) {
       printf ("surf_mesh_boxes->n_boxes : %d\n", PDM_box_set_get_size (surf_mesh_boxes));
       for (int i_part = 0; i_part < n_part_mesh; i_part++) {
@@ -841,6 +888,11 @@ PDM_dist_cloud_surf_compute
                                                     &box_index,
                                                     &box_g_num);
 
+    step = 8;
+    printf ("[%d]    - PDM_dist_cloud_surf_compute : step %d\n", rank, step);
+    fflush(stdout);
+
+
     if (idebug) {
       printf (" PDM_dbbtree_closest_upper_bound_dist_boxes_get n_pts_rank : %d\n", n_pts_rank);
       for (int i = 0; i < n_pts_rank; i++) {
@@ -875,6 +927,11 @@ PDM_dist_cloud_surf_compute
     dist->times_cpu_s[CANDIDATE_SELECTION]   += e_t_cpu_s - b_t_cpu_s;
 
     PDM_timer_resume(dist->timer);
+
+    step = 9;
+    printf ("[%d]    - PDM_dist_cloud_surf_compute : step %d\n", rank, step);
+    fflush(stdout);
+
 
     /***************************************************************************
      *
@@ -947,6 +1004,11 @@ PDM_dist_cloud_surf_compute
     free (box_n);
     free (box_g_num);
 
+    step = 10;
+    printf ("[%d]    - PDM_dist_cloud_surf_compute : step %d\n", rank, step);
+    fflush(stdout);
+
+
     const int n_block_vtx = PDM_part_to_block_n_elt_block_get (ptb_vtx);
 
     int *block_g_num_idx = malloc (sizeof(int) * (n_block_vtx+1));
@@ -1014,6 +1076,11 @@ PDM_dist_cloud_surf_compute
     }
 
 
+    step = 11;
+    printf ("[%d]    - PDM_dist_cloud_surf_compute : step %d\n", rank, step);
+    fflush(stdout);
+
+
     PDM_hash_tab_free (ht);
 
     free (block_g_num_idx);
@@ -1054,6 +1121,12 @@ PDM_dist_cloud_surf_compute
       n_face_mesh[i] = PDM_surf_mesh_part_n_face_get (dist->_surf_mesh, i);
       gnum_face_mesh[i] = PDM_surf_mesh_part_face_g_num_get(dist->_surf_mesh, i);
     }
+
+
+    step = 12;
+    printf ("[%d]    - PDM_dist_cloud_surf_compute : step %d\n", rank, step);
+    fflush(stdout);
+
 
     PDM_part_to_block_t *ptb_elt =
       PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
@@ -1097,6 +1170,11 @@ PDM_dist_cloud_surf_compute
 
     }
 
+    step = 13;
+    printf ("[%d]    - PDM_dist_cloud_surf_compute : step %d\n", rank, step);
+    fflush(stdout);
+
+
     int *block_coords_face_mesh_n = NULL;
     double *block_coords_face_mesh = NULL;
 
@@ -1125,6 +1203,11 @@ PDM_dist_cloud_surf_compute
         idx3 += block_coords_face_mesh_n[i]/3;
       }
     }
+
+    step = 14;
+    printf ("[%d]    - PDM_dist_cloud_surf_compute : step %d\n", rank, step);
+    fflush(stdout);
+
 
     /* block to part */
 
@@ -1196,6 +1279,11 @@ PDM_dist_cloud_surf_compute
     dist->times_cpu_s[LOAD_BALANCING_ELEM_DIST]   += e_t_cpu_s - b_t_cpu_s;
 
     PDM_timer_resume(dist->timer);
+
+    step = 15;
+    printf ("[%d]    - PDM_dist_cloud_surf_compute : step %d\n", rank, step);
+    fflush(stdout);
+
 
     /***************************************************************************
      *
@@ -1302,6 +1390,11 @@ PDM_dist_cloud_surf_compute
       }
     }
 
+    step = 16;
+    printf ("[%d]    - PDM_dist_cloud_surf_compute : step %d\n", rank, step);
+    fflush(stdout);
+
+
     free (block_g_num_opt_idx);
 
     free (block_pts);
@@ -1388,6 +1481,11 @@ PDM_dist_cloud_surf_compute
     PDM_block_to_part_free (btp_vtx);
     PDM_part_to_block_free (ptb_vtx);
 
+    step = 17;
+    printf ("[%d]    - PDM_dist_cloud_surf_compute : step %d\n", rank, step);
+    fflush(stdout);
+
+
     free (block_closest_proj);
     free (block_closest_dist);
     free (block_closest_gnum);
@@ -1415,6 +1513,12 @@ PDM_dist_cloud_surf_compute
   dist->times_cpu_u[END]   = PDM_timer_cpu_user(dist->timer);
   dist->times_cpu_s[END]   = PDM_timer_cpu_sys(dist->timer);
   PDM_timer_resume(dist->timer);
+
+
+  step = 18;
+  printf ("[%d]    - PDM_dist_cloud_surf_compute : step %d\n", rank, step);
+  fflush(stdout);
+
 
 }
 
