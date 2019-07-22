@@ -73,8 +73,6 @@ typedef struct  {
 
   int   *neighbor_idx;
   int   *neighbors;               /*!< rank + id_node size = 2 * n_nodes */
-  //  int   *ancestor;                /*!< rank + id_node size = n_nodes */
-  // int   *child;                /*!< rank + id_node size = 8 * n_nodes */
   int   dim;
 
 } _l_octant_t;
@@ -110,11 +108,6 @@ typedef struct  {
 
 } _octree_t;
 
-
-
-typedef struct  {
-
-} _neighbor_tmp_t;
 
 
 /**
@@ -2398,7 +2391,11 @@ PDM_para_octree_build
   }
 
 
-  /* Copy temporary neighbours in the octree structure*/
+  /*************************************************************************
+   *
+   * Copy temporary neighbours in the neighbor structure
+   *
+   *************************************************************************/
 
   octree->octants->neighbor_idx =
     malloc(sizeof(int) * (n_direction * octree->octants->n_nodes + 1));
@@ -2438,7 +2435,12 @@ PDM_para_octree_build
 
   free (neighbors_tmp);
 
-  /* Build partition boundary */
+
+  /*************************************************************************
+   *
+   * Build parallel partition boundary
+   *
+   *************************************************************************/
 
   if (n_ranks > 1) {
 
@@ -2505,33 +2507,42 @@ PDM_para_octree_build
 
     /* Tri des codes */
 
-    int *order = malloc (sizeof(int) * max_node_dir);
+    order = malloc (sizeof(int) * max_node_dir);
     int *tmp_node_id = malloc (sizeof(int) * max_node_dir);
     PDM_morton_code_t *tmp_code = malloc (sizeof(int) * max_node_dir);
 
     for (int i = 0; i < octree->octants->n_nodes; i++) {
-      int idx1 = 0;
       for (int j = 0; j < n_direction; j++) {
         PDM_morton_local_order (octree->octants->neighbor_idx[n_direction * i + j +1] -
                                 octree->octants->neighbor_idx[n_direction * i + j],
                                 neighbor_rank_code + octree->octants->neighbor_idx[n_direction * i + j],
                                 order);
-        PDM_morton_copy (neighbor_rank_code[octree->octants->neighbor_idx[n_direction * i + j]],
-                         tmp_code + idx1);
+        int idx1 = 0;
+        for (int k = octree->octants->neighbor_idx[n_direction * i + j];
+             k < octree->octants->neighbor_idx[n_direction * i + j + 1];
+             k++) {
+          PDM_morton_copy (neighbor_rank_code[k], tmp_code + idx1);
+          tmp_node_id[idx1] = neighbor_rank_node_id[k];
+          idx1 += 1;
+        }
 
-
-        // cONTINUER ICI - FINIR LE TRI !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-        /* tmp_node_id[idx1] = ; /// */
-        /* idx1 += 1; */
+        idx1 = 0;
+        for (int k = octree->octants->neighbor_idx[n_direction * i + j];
+             k < octree->octants->neighbor_idx[n_direction * i + j + 1];
+             k++) {
+          PDM_morton_copy (tmp_code[order[idx1]], neighbor_rank_code + k );
+          neighbor_rank_node_id[k] = tmp_node_id[order[idx1]];
+          idx1 += 1;
+        }
       }
     }
 
     free (order);
-    free (tmp_node_id);
-    free (tmp_code);
+    free (neighbor_rank_node_id);
+    free (neighbor_rank_code);
 
-    /* remplacement du num proc dans neighbor par num_part_bound */
+    neighbor_rank_node_id = tmp_node_id;
+    neighbor_rank_code = tmp_code;
 
 
     /* Envoi reception (Les donnees recues sont triee )*/
@@ -2539,13 +2550,15 @@ PDM_para_octree_build
 
     /* Troisieme boucle pour stocker les infos distantes */
 
-    //neighbor_rank[i_rank] += 1;
+    // neighbor_rank[i_rank] += 1;
 
     /* - Pour chaque rang en regard : envoi des noeuds (direction id et des codes de morton) en frontiere de ce rang avec au prealable Tri en fonction de la direction puis chaque direction tri des codes de morton  */
 
     /* - A reception : Pour chaque noeud frontiere en regard du rang recu : recherche des noeuds distants frontiere puis stockage */
 
-          free (order);
+
+    /* Remplacement du num proc dans neighbor par num_part_bound */
+
     free (neighbor_rank_n);
     free (neighbor_rank_idx);
     free (neighbor_rank_node_id);
