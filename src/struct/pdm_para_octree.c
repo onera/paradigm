@@ -2544,8 +2544,14 @@ PDM_para_octree_build
     neighbor_rank_node_id = tmp_node_id;
     neighbor_rank_code = tmp_code;
 
+    /* Envoi reception (Les donnees recues sont triees) */
 
-    /* Envoi reception (Les donnees recues sont triee )*/
+    for (int i = 0; i < n_ranks; i++) {
+
+
+    }
+
+
 
 
     /* Troisieme boucle pour stocker les infos distantes */
