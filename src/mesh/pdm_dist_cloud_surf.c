@@ -518,7 +518,7 @@ PDM_dist_cloud_surf_compute
     }
     else if (dist->_surf_mesh != NULL) {
       n_part_mesh = PDM_surf_mesh_n_part_get (dist->_surf_mesh);
-      PDM_surf_mesh_compute_faceExtentsMesh (dist->_surf_mesh, 1e-8);
+      /* PDM_surf_mesh_compute_faceExtentsMesh (dist->_surf_mesh, 1e-8); */
 
       /* double glob_extents[6]; */
       /* glob_extents[0] = HUGE_VAL; */
