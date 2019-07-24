@@ -82,6 +82,12 @@ PDM_block_to_part_create
    * Define requested data for each process
    */
 
+  /* printf("gnum_elt"); */
+  /* for (int i = 0; i < *n_elt; i++) { */
+  /*   printf (" %ld", (*gnum_elt)[i]); */
+  /* } */
+  /* printf("\n"); */
+
   btp->blockDistribIdx = malloc (sizeof(PDM_g_num_t) * (btp->s_comm + 1));
   int max_data_block = -1;
   for (int i = 0; i < btp->s_comm + 1; i++) {
@@ -184,6 +190,7 @@ PDM_block_to_part_create
                      comm);
 
   int coeff = 5;
+  printf("max_data_blokc : %d %d %d\n", btp->distributed_data_idx[btp->s_comm],  max_data_block, *n_elt);
   if (btp->distributed_data_idx[btp->s_comm] >= coeff * max_data_block) {
     btp->pttopt_comm = 1;
   }
@@ -230,12 +237,15 @@ PDM_block_to_part_exch
   unsigned char *_block_data = (unsigned char *) block_data;
   unsigned char **_part_data = (unsigned char **) part_data;
 
+  int n_elt_block = _btp->blockDistribIdx[_btp->myRank+1] - _btp->blockDistribIdx[_btp->myRank];
+
   size_t *i_sendBuffer = (size_t *) malloc (sizeof(size_t) * _btp->s_comm);
   size_t *i_recvBuffer = (size_t *) malloc (sizeof(size_t) * _btp->s_comm);
   int *n_sendBuffer = (int *) malloc (sizeof(int) * _btp->s_comm);
   int *n_recvBuffer = (int *) malloc (sizeof(int) * _btp->s_comm);
   int max_n_sendBuffer = -1;
   int max_n_recvBuffer = -1;
+  int *block_stride_idx = NULL;
 
   for (int i = 0; i < _btp->s_comm; i++) {
     n_sendBuffer[i] = 0;
@@ -254,6 +264,14 @@ PDM_block_to_part_exch
 
   int s_distributed_data = _btp->distributed_data_idx[_btp->s_comm];
 
+  int step;
+
+  int rank;
+  PDM_MPI_Comm_rank(_btp->comm, &rank);
+
+  step = 0;
+  printf ("[%d]    - block_top_part_exch : step t_stride ptopt %d %d %d\n", rank, step, t_stride, _btp->pttopt_comm);
+  fflush(stdout);
 
   /*
    * Exchange Stride and build buffer properties
@@ -327,7 +345,7 @@ PDM_block_to_part_exch
       }
 
       n_recvBuffer[i] *= (int) s_data;
-      max_n_recvBuffer = PDM_MAX(max_n_recvBuffer, n_sendBuffer[i]);
+      max_n_recvBuffer = PDM_MAX(max_n_recvBuffer, n_recvBuffer[i]);
 
       if (i > 0) {
         i_recvBuffer[i] = i_recvBuffer[i-1] + n_recvBuffer[i-1];
@@ -336,11 +354,21 @@ PDM_block_to_part_exch
         i_recvBuffer[i] = 0;
       }
     }
+
+    block_stride_idx = (int *) malloc(sizeof(int)  * (n_elt_block + 1));
+    block_stride_idx[0] = 0;
+
+    for (int i = 0; i < n_elt_block; i++) {
+      block_stride_idx[i+1] = block_stride[i] + block_stride_idx[i];
+    }
+
   }
 
   else {
 
     int cst_stride = *block_stride;
+    max_n_sendBuffer = 0;
+    max_n_recvBuffer = 0;
 
     for (int i = 0; i < _btp->s_comm; i++) {
 
@@ -349,17 +377,19 @@ PDM_block_to_part_exch
 
       n_sendBuffer[i] = _btp->distributed_data_n[i] * cst_stride * (int) s_data;
       n_recvBuffer[i] = _btp->requested_data_n[i] * cst_stride * (int) s_data;
+      max_n_sendBuffer = PDM_MAX(max_n_sendBuffer, n_sendBuffer[i]);
+      max_n_recvBuffer = PDM_MAX(max_n_recvBuffer, n_recvBuffer[i]);
 
     }
 
     s_sendBuffer = i_sendBuffer[s_comm1] + n_sendBuffer[s_comm1];
     s_recvBuffer = i_recvBuffer[s_comm1] + n_recvBuffer[s_comm1];
 
-    recvBuffer = (unsigned char *) malloc(sizeof(unsigned char) * s_recvBuffer);
-
-
   }
 
+  step = 1;
+  printf ("[%d]    - block_top_part_exch : step %d\n", rank, step);
+  fflush(stdout);
 
   s_recvBuffer = i_recvBuffer[s_comm1] + n_recvBuffer[s_comm1];
 
@@ -374,32 +404,40 @@ PDM_block_to_part_exch
 
   sendBuffer = (unsigned char **) malloc(sizeof(unsigned char *) * n_active_buffer);
 
+  step = 2;
+  printf ("[%d]    - block_top_part_exch : step %d\n", rank, step);
+  fflush(stdout);
 
   if (_btp->pttopt_comm) {
+    printf (" max_n_sendBuffer : %d \n",  max_n_sendBuffer);
     for (int i = 0; i < n_active_buffer; i++) {
-      sendBuffer[i] = malloc (sizeof(int) * max_n_sendBuffer);
+      sendBuffer[i] = (unsigned char *) malloc(sizeof(unsigned char) *  max_n_sendBuffer);
     }
   }
   else {
     s_sendBuffer = i_sendBuffer[s_comm1] + n_sendBuffer[s_comm1];
+    printf (" max_n_sendBuffer : %d \n",  max_n_sendBuffer);
     sendBuffer[0] = (unsigned char *) malloc(sizeof(unsigned char) * s_sendBuffer);
   }
 
+  step = 3;
+  printf ("[%d]    - block_top_part_exch : step %d\n", rank, step);
+  fflush(stdout);
+
   recvBuffer = (unsigned char *) malloc(sizeof(unsigned char ) * s_recvBuffer);
 
-  int n_elt_block = _btp->blockDistribIdx[_btp->myRank+1] - _btp->blockDistribIdx[_btp->myRank];
-  int *block_stride_idx = (int *) malloc(sizeof(int)  * (n_elt_block + 1));
-  block_stride_idx[0] = 0;
-
-  for (int i = 0; i < n_elt_block; i++) {
-    block_stride_idx[i+1] = block_stride[i] + block_stride_idx[i];
-  }
+  step = 4;
+  printf ("[%d]    - block_top_part_exch : step %d\n", rank, step);
+  fflush(stdout);
 
   if (_btp->pttopt_comm) {
 
     PDM_MPI_Request *s_request =  malloc (sizeof(PDM_MPI_Request) * n_active_buffer);
     PDM_MPI_Request *r_request = malloc (sizeof(PDM_MPI_Request) * _btp->s_comm);
 
+  step = 41;
+  printf ("[%d]    - block_top_part_exch : step %d\n", rank, step);
+  fflush(stdout);
     for (int i = 0; i < _btp->s_comm; i++) {
       if (n_recvBuffer[i] > 0) {
         PDM_MPI_Irecv(recvBuffer + i_recvBuffer[i],
@@ -412,6 +450,9 @@ PDM_block_to_part_exch
       }
     }
 
+  step = 42;
+  printf ("[%d]    - block_top_part_exch : step %d\n", rank, step);
+  fflush(stdout);
 
     int *active_rank = malloc(sizeof(int) * n_active_buffer);
     for (int i = 0; i < n_active_buffer; i++) {
@@ -419,8 +460,11 @@ PDM_block_to_part_exch
     }
 
     while (1) {
+  step = 43;
+  printf ("[%d]    - block_top_part_exch : step %d\n", rank, step);
+  fflush(stdout);
       int _n_active_buffer = 0;
-      for (int i = 0; i < _n_active_buffer; i++) {
+      for (int i = 0; i < n_active_buffer; i++) {
         if (active_rank[i] < _btp->s_comm) {
           _n_active_buffer += 1;
         }
@@ -434,7 +478,7 @@ PDM_block_to_part_exch
         if (n_sendBuffer[active_rank[i]] > 0) {
 
           int s_distributed_active_rank = _btp->distributed_data_idx[active_rank[i]] +
-            _btp->distributed_data_n [active_rank[i]];
+                                          _btp->distributed_data_n [active_rank[i]];
 
           if (t_stride == PDM_STRIDE_VAR) {
             int idx1 = 0;
@@ -476,6 +520,10 @@ PDM_block_to_part_exch
                          s_request + i);
         }
       }
+        step = 44;
+  printf ("[%d]    - block_top_part_exch : step %d\n", rank, step);
+  fflush(stdout);
+
 
       for (int i = 0; i < _n_active_buffer; i++) {
         if (n_sendBuffer[active_rank[i]] > 0) {
@@ -483,17 +531,31 @@ PDM_block_to_part_exch
         }
       }
 
+  step = 45;
+  printf ("[%d]    - block_top_part_exch : step %d\n", rank, step);
+  fflush(stdout);
       for (int i = 0; i < n_active_buffer; i++) {
         active_rank[i] += n_active_buffer;
       }
 
     }
 
+  step = 46;
+  printf ("[%d]    - block_top_part_exch : step %d\n", rank, step);
+  fflush(stdout);
     for (int i = 0; i < _btp->s_comm; i++) {
       if (n_recvBuffer[i] > 0) {
         PDM_MPI_Wait (r_request + i);
       }
     }
+
+  step = 47;
+  printf ("[%d]    - block_top_part_exch : step %d\n", rank, step);
+  fflush(stdout);
+
+  free (s_request);
+  free (r_request);
+  free (active_rank);
 
   }
 
@@ -523,7 +585,7 @@ PDM_block_to_part_exch
       }
     }
 
-    PDM_MPI_Alltoallv_l(sendBuffer,
+    PDM_MPI_Alltoallv_l(sendBuffer[0],
                         n_sendBuffer,
                         i_sendBuffer,
                         PDM_MPI_BYTE,
@@ -543,8 +605,13 @@ PDM_block_to_part_exch
   free(n_recvBuffer);
   free(i_recvBuffer);
 
-  free (block_stride_idx);
+  if (block_stride_idx != NULL) {
+    free (block_stride_idx);
+  }
 
+  step = 5;
+  printf ("[%d]    - block_top_part_exch : step %d\n", rank, step);
+  fflush(stdout);
 
   /*
    * Partitions filling
@@ -618,6 +685,9 @@ PDM_block_to_part_exch
   }
 
   free(recvBuffer);
+  step = 6;
+  printf ("[%d]    - block_top_part_exch : step %d\n", rank, step);
+  fflush(stdout);
 
 }
 
@@ -652,6 +722,8 @@ PDM_block_to_part_exch2
 )
 {
   _pdm_block_to_part_t *_btp = (_pdm_block_to_part_t *) btp;
+
+  int n_elt_block = _btp->blockDistribIdx[_btp->myRank+1] - _btp->blockDistribIdx[_btp->myRank];
 
   unsigned char *_block_data = (unsigned char *) block_data;
   unsigned char **_part_data;
@@ -780,7 +852,6 @@ PDM_block_to_part_exch2
 
     int idx1 = 0;
 
-    int n_elt_block = _btp->blockDistribIdx[_btp->myRank+1] - _btp->blockDistribIdx[_btp->myRank];
     int *block_stride_idx = (int *) malloc(sizeof(int)  * (n_elt_block + 1));
     block_stride_idx[0] = 0;
 
