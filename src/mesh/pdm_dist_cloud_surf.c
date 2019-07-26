@@ -1580,6 +1580,7 @@ PDM_dist_cloud_surf_dump_times
                 " %12.5es %12.5es\n",
                 t_elaps_max[RESULT_TRANSMISSION],
                 t_cpu_max[RESULT_TRANSMISSION]);
+    PDM_printf_flush();
   }
 }
 
