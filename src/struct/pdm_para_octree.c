@@ -2551,7 +2551,7 @@ PDM_para_octree_build
 
     }
 
-
+    // Au retour des vacances : Envoyer neighbor_rank_node_id[k] et neighbor_rank_code */
 
 
     /* Troisieme boucle pour stocker les infos distantes */
