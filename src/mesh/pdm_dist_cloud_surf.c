@@ -503,7 +503,7 @@ PDM_dist_cloud_surf_compute
 
     const double tolerance = 1e-4;
     int depth_max = 31;
-    const int points_in_leaf_max = 10;
+    const int points_in_leaf_max = 4;
 
     int n_part_mesh = 0;
     if (dist->mesh_nodal_id != -1) {
