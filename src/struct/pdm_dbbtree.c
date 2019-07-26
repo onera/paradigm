@@ -234,9 +234,10 @@ const int         dim
   _dbbt->comm                 = comm;
   _dbbt->rankComm             = PDM_MPI_COMM_NULL;
   _dbbt->dim                  = dim;
+
   _dbbt->maxTreeDepth         = 30;
   _dbbt->maxBoxRatio          = 10.;
-  _dbbt->maxBoxesLeaf         = 30;
+  _dbbt->maxBoxesLeaf         = 10;
 
   _dbbt->maxTreeDepthShared   = 10;
   _dbbt->maxBoxRatioShared    = 6;
