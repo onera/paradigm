@@ -387,7 +387,7 @@ PDM_block_to_part_exch
   int n_active_buffer;
 
   if (_btp->pttopt_comm) {
-    n_active_buffer = 10;
+    n_active_buffer = 5;
   }
   else {
     n_active_buffer = 1;
