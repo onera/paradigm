@@ -189,7 +189,7 @@ PDM_block_to_part_create
                      PDM_MPI_INT,
                      comm);
 
-  int coeff = 10;
+  int coeff = 5;
   if (btp->distributed_data_idx[btp->s_comm] >= coeff * max_data_block) {
     btp->pttopt_comm = 1;
   }
