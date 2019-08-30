@@ -237,14 +237,14 @@ const int         dim
 
   _dbbt->maxTreeDepth         = 30;
   _dbbt->maxBoxRatio          = 10.;
-  _dbbt->maxBoxesLeaf         = 10;
+  _dbbt->maxBoxesLeaf         = 30;
 
   _dbbt->maxTreeDepthShared   = 10;
-  _dbbt->maxBoxRatioShared    = 6;
-  _dbbt->maxBoxesLeafShared   = 5;
+  _dbbt->maxBoxRatioShared    =  6;
+  _dbbt->maxBoxesLeafShared   = 30;
 
   _dbbt->maxTreeDepthCoarse   = 30;
-  _dbbt->maxBoxRatioCoarse    =  6.;
+  _dbbt->maxBoxRatioCoarse    =  6;
   _dbbt->maxBoxesLeafCoarse   = 30;
 
   _dbbt->rankBoxes            = NULL;
