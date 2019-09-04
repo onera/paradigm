@@ -106,6 +106,10 @@ typedef struct  {
   PDM_MPI_Comm comm;           /*!< MPI communicator */
   int   dim;                     /*!< Dimension */
 
+  int n_part_boundary_elt;    /*!< Number of partitioning boundary element */
+  int *part_boundary_elt_idx; /*!< Index for part_boundary_elt (size=\ref n_part_boundary_elt + 1 */
+  int *part_boundary_elt;     /*!< Partitioning boundary elements description (proc number + element number) */
+
 } _octree_t;
 
 
@@ -1853,6 +1857,10 @@ PDM_para_octree_create
 
   octree->octants = NULL;
 
+  octree->n_part_boundary_elt = 0;
+  octree->part_boundary_elt_idx = NULL;
+  octree->part_boundary_elt = NULL;
+
   octree->comm = comm;
 
   return id;
@@ -1890,6 +1898,14 @@ PDM_para_octree_free
 
   if (octree->points_code != NULL) {
     free (octree->points_code);
+  }
+
+  if (octree->part_boundary_elt_idx != NULL) {
+    free (octree->part_boundary_elt_idx);
+  }
+
+  if (octree->part_boundary_elt != NULL) {
+    free (octree->part_boundary_elt);
   }
 
   free (octree->octants);
@@ -1956,7 +1972,6 @@ PDM_para_octree_point_cloud_set
   }
 
 }
-
 
 
 /**
@@ -2390,7 +2405,6 @@ PDM_para_octree_build
 
   }
 
-
   /*************************************************************************
    *
    * Copy temporary neighbours in the neighbor structure
@@ -2435,7 +2449,6 @@ PDM_para_octree_build
 
   free (neighbors_tmp);
 
-
   /*************************************************************************
    *
    * Build parallel partition boundary
@@ -2448,7 +2461,6 @@ PDM_para_octree_build
 
     int *neighbor_rank_n = malloc (sizeof(int) * n_quantile);
     int *neighbor_rank_idx = malloc (sizeof(int) * (n_quantile + 1));
-    int n_neighbor_rank = 0;
 
     for (int i = 0; i < n_quantile; i++) {
       neighbor_rank_n[i] = 0;
@@ -2546,29 +2558,188 @@ PDM_para_octree_build
 
     /* Envoi reception (Les donnees recues sont triees) */
 
-    for (int i = 0; i < n_ranks; i++) {
+    int *recv_neighbor_rank_n = malloc (sizeof(int) * n_quantile);
 
-
+    for (int i = 0; i < n_quantile; i++) {
+      recv_neighbor_rank_n[i] = 0;
     }
 
-    // Au retour des vacances : Envoyer neighbor_rank_node_id[k] et neighbor_rank_code */
+    PDM_MPI_Request *recv_request = malloc (sizeof(PDM_MPI_Request) * n_ranks);
+    PDM_MPI_Request *send_request = malloc (sizeof(PDM_MPI_Request) * n_ranks);
 
+    int *used_ranks = malloc (sizeof(int) * n_ranks);
+    int n_used_ranks = 0;
 
-    /* Troisieme boucle pour stocker les infos distantes */
+    idx = 0;
+    for (int i = 0; i < n_ranks; i++) {
+      if (i != rank) {
+        int n_val_proc = 0;
+        for (int j = 0; j < n_direction; j++) {
+          n_val_proc += neighbor_rank_n[idx++];
+        }
+        if (n_val_proc > 0) {
+          used_ranks[n_used_ranks++] = i;
+          PDM_MPI_Irecv(recv_neighbor_rank_n + i*n_direction,
+                        n_direction,
+                        PDM_MPI_INT,
+                        i,
+                        0,
+                        octree->comm,
+                        recv_request + i);
 
-    // neighbor_rank[i_rank] += 1;
+          PDM_MPI_Issend(neighbor_rank_n + i*n_direction,
+                         n_direction,
+                         PDM_MPI_INT,
+                         i,
+                         0,
+                         octree->comm,
+                         send_request + i);
+        }
+      }
+    }
 
-    /* - Pour chaque rang en regard : envoi des noeuds (direction id et des codes de morton) en frontiere de ce rang avec au prealable Tri en fonction de la direction puis chaque direction tri des codes de morton  */
+    for (int i = 0; i < n_used_ranks; i++) {
+      int _rank = used_ranks[i];
+      PDM_MPI_Wait (send_request + _rank);
+      PDM_MPI_Wait (recv_request + _rank);
+    }
 
-    /* - A reception : Pour chaque noeud frontiere en regard du rang recu : recherche des noeuds distants frontiere puis stockage */
+    free (recv_request);
+    free (send_request);
 
+    int *recv_neighbor_rank_idx = malloc (sizeof(int) * n_direction * n_ranks + 1);
+    recv_neighbor_rank_idx[0] = 0;
 
-    /* Remplacement du num proc dans neighbor par num_part_bound */
+    for (int i = 0; i < n_quantile; i++) {
+      recv_neighbor_rank_idx[i+1] = recv_neighbor_rank_idx[i] + recv_neighbor_rank_n[i];
+    }
+
+    int *recv_neighbor_rank_node_id = malloc (sizeof(int) * recv_neighbor_rank_idx[n_quantile]);
+    PDM_morton_code_t *recv_neighbor_rank_code = malloc (sizeof(PDM_morton_code_t) * recv_neighbor_rank_idx[n_quantile]);
+
+    unsigned int *_neighbor_rank_code =  malloc (sizeof(unsigned int) * 4 * neighbor_rank_idx[n_quantile]);
+    unsigned int *_recv_neighbor_rank_code =  malloc (sizeof(unsigned int) * 4 * recv_neighbor_rank_idx[n_quantile]);
+
+    idx = 0;
+    for (int i = 0; i < neighbor_rank_idx[n_quantile]; i++) {
+      _neighbor_rank_code[idx++] = neighbor_rank_code[i].L;
+      for (int j = 0; j < 3; j++) {
+        _neighbor_rank_code[idx++] = neighbor_rank_code[i].X[j];
+      }
+    }
+
+    for (int i = 0; i < n_used_ranks; i++) {
+      int _rank = used_ranks[i];
+      int n_val_rank_recv = 0;
+      int n_val_rank_send = 0;
+      for (int j = 0; j < n_direction; j++) {
+        n_val_rank_recv += recv_neighbor_rank_n[_rank * n_direction + j];
+        n_val_rank_send += recv_neighbor_rank_n[_rank * n_direction + j];
+      }
+      PDM_MPI_Irecv(recv_neighbor_rank_node_id + recv_neighbor_rank_idx[_rank * n_direction],
+                    n_val_rank_recv,
+                    PDM_MPI_INT,
+                    _rank,
+                    0,
+                    octree->comm,
+                    recv_request + i);
+
+      PDM_MPI_Issend(neighbor_rank_node_id + neighbor_rank_idx[_rank * n_direction],
+                     n_val_rank_send,
+                     PDM_MPI_INT,
+                     _rank,
+                     0,
+                     octree->comm,
+                     send_request + i);
+    }
+
+    for (int i = 0; i < n_used_ranks; i++) {
+      int _rank = used_ranks[i];
+      PDM_MPI_Wait (send_request + _rank);
+      PDM_MPI_Wait (recv_request + _rank);
+    }
+
+    for (int i = 0; i < n_used_ranks; i++) {
+      int _rank = used_ranks[i];
+      int n_val_rank_recv = 0;
+      int n_val_rank_send = 0;
+      for (int j = 0; j < n_direction; j++) {
+        n_val_rank_recv += recv_neighbor_rank_n[_rank * n_direction + j];
+        n_val_rank_send += recv_neighbor_rank_n[_rank * n_direction + j];
+      }
+      n_val_rank_recv *= 4;
+      n_val_rank_send *= 4;
+
+      PDM_MPI_Irecv(_recv_neighbor_rank_code + 4 * recv_neighbor_rank_idx[_rank * n_direction],
+                    n_val_rank_recv,
+                    PDM_MPI_UNSIGNED,
+                    _rank,
+                    0,
+                    octree->comm,
+                    recv_request + i);
+
+      PDM_MPI_Issend(_neighbor_rank_code + 4 * neighbor_rank_idx[_rank * n_direction],
+                     n_val_rank_send,
+                     PDM_MPI_UNSIGNED,
+                     _rank,
+                     0,
+                     octree->comm,
+                     send_request + i);
+    }
+
+    for (int i = 0; i < n_used_ranks; i++) {
+      int _rank = used_ranks[i];
+      PDM_MPI_Wait (send_request + _rank);
+      PDM_MPI_Wait (recv_request + _rank);
+    }
+
+    free (_neighbor_rank_code);
+
+    idx = 0;
+    for (int i = 0; i < recv_neighbor_rank_idx[n_quantile]; i++) {
+      recv_neighbor_rank_code[i].L = _recv_neighbor_rank_code[idx++];
+      for (int j = 0; j < 3; j++) {
+        recv_neighbor_rank_code[i].X[j] = _recv_neighbor_rank_code[idx++];
+      }
+    }
+    free (_recv_neighbor_rank_code);
+
+    free (recv_request);
+    free (send_request);
+
+    free (used_ranks);
 
     free (neighbor_rank_n);
     free (neighbor_rank_idx);
     free (neighbor_rank_node_id);
     free (neighbor_rank_code);
+
+    // Copy in par_boundary_elt
+
+    octree->n_part_boundary_elt = neighbor_rank_idx[n_quantile];
+    octree->part_boundary_elt_idx = malloc (sizeof(int) * (octree->n_part_boundary_elt));
+
+    /* int s_part_boundary_elt = ; */
+    /* int n_part_boundary_elt = 0; */
+
+    // Remplissage avec realloc si necessaire
+
+    /* int *neighbor_rank_node_id = malloc (sizeof(int) * neighbor_rank_idx[n_quantile]); */
+    /* PDM_morton_code_t *neighbor_rank_code = malloc (sizeof(PDM_morton_code_t) * */
+    /*                                             neighbor_rank_idx[n_quantile]); */
+
+
+    /* octree->n_part_boundary_elt = 0;  */
+    /* octree->part_boundary_elt_idx = NULL; */
+    /* octree->part_boundary_elt = NULL; */
+
+    free (recv_neighbor_rank_n);
+    free (recv_neighbor_rank_idx);
+
+    free (recv_neighbor_rank_node_id);
+    free (recv_neighbor_rank_code);
+
+
 
   }
 
