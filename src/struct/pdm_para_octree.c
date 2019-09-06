@@ -71,8 +71,8 @@ typedef struct  {
   int  *range;             /*!< Start index of point list for each octant */
   int  *is_leaf;           /*!< IS a leaf >*/
 
-  int   *neighbor_idx;
-  int   *neighbors;               /*!< rank + id_node size = 2 * n_nodes */
+  int   *neighbour_idx;
+  int   *neighbours;               /*!< rank + id_node size = 2 * n_nodes */
   int   dim;
 
 } _l_octant_t;
@@ -115,19 +115,19 @@ typedef struct  {
 
 
 /**
- * \struct _neighbors_tmp_t
- * \brief  Define a temporary neighbor structure
+ * \struct _neighbours_tmp_t
+ * \brief  Define a temporary neighbour structure
  *
  */
 
 
 typedef struct  {
 
-  int n_neighbor[6];     /*!< Number of neighbors in the arrays  */
-  int s_neighbor[6];     /*!< Size of arrays */
-  int *neighbors[6];     /*!< Arrays */
+  int n_neighbour[6];     /*!< Number of neighbours in the arrays  */
+  int s_neighbour[6];     /*!< Size of arrays */
+  int *neighbours[6];     /*!< Arrays */
 
-} _neighbors_tmp_t;
+} _neighbours_tmp_t;
 
 
 /*============================================================================
@@ -148,7 +148,7 @@ static const int max_morton_level = 31;
 
 /**
  *
- * \brief Neighbor
+ * \brief Neighbour
  *
  * \param [inout]   octants     Octants
  *
@@ -188,11 +188,11 @@ _inv_direction
 
 /**
  *
- * \brief Neighbor
+ * \brief Neighbour
  *
  * \param [inout]   octants     Octants
  *
- * \return NULL
+ * \return neighbour or NULL ()
  *
  */
 
@@ -260,12 +260,12 @@ _octants_free
     free (octants->range);
   }
 
-  if (octants->neighbor_idx != NULL) {
-    free (octants->neighbor_idx);
+  if (octants->neighbour_idx != NULL) {
+    free (octants->neighbour_idx);
   }
 
-  if (octants->neighbors != NULL) {
-    free (octants->neighbors);
+  if (octants->neighbours != NULL) {
+    free (octants->neighbours);
   }
 
   free(octants);
@@ -299,8 +299,8 @@ _octants_init
   octants->range    = malloc (sizeof(int) * (octants->n_nodes_max+1));
   octants->is_leaf  = malloc (sizeof(int) * octants->n_nodes_max);
 
-  octants->neighbor_idx = NULL;
-  octants->neighbors    = NULL;
+  octants->neighbour_idx = NULL;
+  octants->neighbours    = NULL;
   octants->dim = octant_dim;
 }
 
@@ -334,8 +334,8 @@ _octants_check_alloc
     octants->is_leaf = realloc (octants->is_leaf,
                                 sizeof(int) * octants->n_nodes_max);
 
-    octants->neighbor_idx = NULL;
-    octants->neighbors    = NULL;
+    octants->neighbour_idx = NULL;
+    octants->neighbours    = NULL;
 
   }
 }
@@ -441,14 +441,14 @@ _octants_replace_node_by_child
  const int node_id,
  const int n_stored_points,
  const PDM_morton_code_t  *stored_points_code,
- _neighbors_tmp_t **neighbors_tmp
+ _neighbours_tmp_t **neighbours_tmp
 )
 {
   const int dim = 3;
   const int n_child = 8;
   const int n_direction = 6;
 
-  _neighbors_tmp_t *_neighbors_tmp = *neighbors_tmp;
+  _neighbours_tmp_t *_neighbours_tmp = *neighbours_tmp;
 
   if ((octants->codes[node_id].L < max_morton_level) &&
       !octants->is_leaf[node_id]) {
@@ -459,28 +459,28 @@ _octants_replace_node_by_child
       int pre_nodes_max = octants->n_nodes_max;
       octants->n_nodes_max *= 2;
 
-      *neighbors_tmp =
-        realloc (neighbors_tmp, sizeof(_neighbors_tmp_t) * octants->n_nodes_max);
-      _neighbors_tmp = *neighbors_tmp;
+      *neighbours_tmp =
+        realloc (neighbours_tmp, sizeof(_neighbours_tmp_t) * octants->n_nodes_max);
+      _neighbours_tmp = *neighbours_tmp;
 
       for (int i = pre_nodes_max; i < octants->n_nodes_max; i++) {
         for (int j = 0; j < n_direction; j++) {
-          _neighbors_tmp[i].n_neighbor[j] = 0;
-          _neighbors_tmp[i].s_neighbor[j] = 1;
-          _neighbors_tmp[i].neighbors[j] =
-            malloc (sizeof(int) * _neighbors_tmp[i].s_neighbor[j]);
+          _neighbours_tmp[i].n_neighbour[j] = 0;
+          _neighbours_tmp[i].s_neighbour[j] = 1;
+          _neighbours_tmp[i].neighbours[j] =
+            malloc (sizeof(int) * _neighbours_tmp[i].s_neighbour[j]);
         }
       }
     }
 
-    _neighbors_tmp_t cp_neighbors;
+    _neighbours_tmp_t cp_neighbours;
 
     for (int i = 0; i < n_direction; i++) {
-      cp_neighbors.s_neighbor[i] = _neighbors_tmp[node_id].s_neighbor[i];
-      cp_neighbors.n_neighbor[i] = _neighbors_tmp[node_id].n_neighbor[i];
-      cp_neighbors.neighbors[i] = malloc(sizeof(int) *  cp_neighbors.s_neighbor[i]);
-      for (int j = 0; j < _neighbors_tmp[node_id].n_neighbor[i]; j++) {
-        cp_neighbors.neighbors[i][j] =  _neighbors_tmp[node_id].neighbors[i][j];
+      cp_neighbours.s_neighbour[i] = _neighbours_tmp[node_id].s_neighbour[i];
+      cp_neighbours.n_neighbour[i] = _neighbours_tmp[node_id].n_neighbour[i];
+      cp_neighbours.neighbours[i] = malloc(sizeof(int) *  cp_neighbours.s_neighbour[i]);
+      for (int j = 0; j < _neighbours_tmp[node_id].n_neighbour[i]; j++) {
+        cp_neighbours.neighbours[i][j] =  _neighbours_tmp[node_id].neighbours[i][j];
       }
     }
 
@@ -496,9 +496,9 @@ _octants_replace_node_by_child
       octants->range[step+i] = octants->range[i];
       octants->is_leaf[step+i] = octants->is_leaf[i];
       for (int j = 0; j < n_direction; j++) {
-        _neighbors_tmp[step+i].n_neighbor[j] = _neighbors_tmp[i].n_neighbor[j];
-        _neighbors_tmp[step+i].s_neighbor[j] = _neighbors_tmp[i].s_neighbor[j];
-        _neighbors_tmp[step+i].neighbors[j] = _neighbors_tmp[i].neighbors[j];
+        _neighbours_tmp[step+i].n_neighbour[j] = _neighbours_tmp[i].n_neighbour[j];
+        _neighbours_tmp[step+i].s_neighbour[j] = _neighbours_tmp[i].s_neighbour[j];
+        _neighbours_tmp[step+i].neighbours[j] = _neighbours_tmp[i].neighbours[j];
       }
     }
 
@@ -535,117 +535,117 @@ _octants_replace_node_by_child
       k += 1;
     }
 
-    /* Inter children neighborhood */
+    /* Inter children neighbourhood */
 
     int id_1 = node_id;
     int id_2 = node_id + 1;
     int dir_1 = PDM_WEST;
     int dir_2 = PDM_EAST;
-    _neighbors_tmp[id_1].neighbors[dir_1][_neighbors_tmp[id_1].n_neighbor[dir_1]] = id_2;
-    _neighbors_tmp[id_1].n_neighbor[dir_1] += 1;
-    _neighbors_tmp[id_2].neighbors[dir_2][_neighbors_tmp[id_2].n_neighbor[dir_2]] = id_1;
-    _neighbors_tmp[id_2].n_neighbor[dir_2] += 1;
+    _neighbours_tmp[id_1].neighbours[dir_1][_neighbours_tmp[id_1].n_neighbour[dir_1]] = id_2;
+    _neighbours_tmp[id_1].n_neighbour[dir_1] += 1;
+    _neighbours_tmp[id_2].neighbours[dir_2][_neighbours_tmp[id_2].n_neighbour[dir_2]] = id_1;
+    _neighbours_tmp[id_2].n_neighbour[dir_2] += 1;
 
     id_1 = node_id;
     id_2 = node_id + 2;
     dir_1 = PDM_NORTH;
     dir_2 = PDM_SOUTH;
-    _neighbors_tmp[id_1].neighbors[dir_1][_neighbors_tmp[id_1].n_neighbor[dir_1]] = id_2;
-    _neighbors_tmp[id_1].n_neighbor[dir_1] += 1;
-    _neighbors_tmp[id_2].neighbors[dir_2][_neighbors_tmp[id_2].n_neighbor[dir_2]] = id_1;
-    _neighbors_tmp[id_2].n_neighbor[dir_2] += 1;
+    _neighbours_tmp[id_1].neighbours[dir_1][_neighbours_tmp[id_1].n_neighbour[dir_1]] = id_2;
+    _neighbours_tmp[id_1].n_neighbour[dir_1] += 1;
+    _neighbours_tmp[id_2].neighbours[dir_2][_neighbours_tmp[id_2].n_neighbour[dir_2]] = id_1;
+    _neighbours_tmp[id_2].n_neighbour[dir_2] += 1;
 
     id_1 = node_id;
     id_2 = node_id + 4;
     dir_1 = PDM_UP;
     dir_2 = PDM_BOTTOM;
-    _neighbors_tmp[id_1].neighbors[dir_1][_neighbors_tmp[id_1].n_neighbor[dir_1]] = id_2;
-    _neighbors_tmp[id_1].n_neighbor[dir_1] += 1;
-    _neighbors_tmp[id_2].neighbors[dir_2][_neighbors_tmp[id_2].n_neighbor[dir_2]] = id_1;
-    _neighbors_tmp[id_2].n_neighbor[dir_2] += 1;
+    _neighbours_tmp[id_1].neighbours[dir_1][_neighbours_tmp[id_1].n_neighbour[dir_1]] = id_2;
+    _neighbours_tmp[id_1].n_neighbour[dir_1] += 1;
+    _neighbours_tmp[id_2].neighbours[dir_2][_neighbours_tmp[id_2].n_neighbour[dir_2]] = id_1;
+    _neighbours_tmp[id_2].n_neighbour[dir_2] += 1;
 
     id_1 = node_id + 1;
     id_2 = node_id + 3;
     dir_1 = PDM_NORTH;
     dir_2 = PDM_SOUTH;
-    _neighbors_tmp[id_1].neighbors[dir_1][_neighbors_tmp[id_1].n_neighbor[dir_1]] = id_2;
-    _neighbors_tmp[id_1].n_neighbor[dir_1] += 1;
-    _neighbors_tmp[id_2].neighbors[dir_2][_neighbors_tmp[id_2].n_neighbor[dir_2]] = id_1;
-    _neighbors_tmp[id_2].n_neighbor[dir_2] += 1;
+    _neighbours_tmp[id_1].neighbours[dir_1][_neighbours_tmp[id_1].n_neighbour[dir_1]] = id_2;
+    _neighbours_tmp[id_1].n_neighbour[dir_1] += 1;
+    _neighbours_tmp[id_2].neighbours[dir_2][_neighbours_tmp[id_2].n_neighbour[dir_2]] = id_1;
+    _neighbours_tmp[id_2].n_neighbour[dir_2] += 1;
 
     id_1 = node_id + 1;
     id_2 = node_id + 5;
     dir_1 = PDM_UP;
     dir_2 = PDM_BOTTOM;
-    _neighbors_tmp[id_1].neighbors[dir_1][_neighbors_tmp[id_1].n_neighbor[dir_1]] = id_2;
-    _neighbors_tmp[id_1].n_neighbor[dir_1] += 1;
-    _neighbors_tmp[id_2].neighbors[dir_2][_neighbors_tmp[id_2].n_neighbor[dir_2]] = id_1;
-    _neighbors_tmp[id_2].n_neighbor[dir_2] += 1;
+    _neighbours_tmp[id_1].neighbours[dir_1][_neighbours_tmp[id_1].n_neighbour[dir_1]] = id_2;
+    _neighbours_tmp[id_1].n_neighbour[dir_1] += 1;
+    _neighbours_tmp[id_2].neighbours[dir_2][_neighbours_tmp[id_2].n_neighbour[dir_2]] = id_1;
+    _neighbours_tmp[id_2].n_neighbour[dir_2] += 1;
 
     id_1 = node_id + 2;
     id_2 = node_id + 3;
     dir_1 = PDM_EAST;
     dir_2 = PDM_WEST;
-    _neighbors_tmp[id_1].neighbors[dir_1][_neighbors_tmp[id_1].n_neighbor[dir_1]] = id_2;
-    _neighbors_tmp[id_1].n_neighbor[dir_1] += 1;
-    _neighbors_tmp[id_2].neighbors[dir_2][_neighbors_tmp[id_2].n_neighbor[dir_2]] = id_1;
-    _neighbors_tmp[id_2].n_neighbor[dir_2] += 1;
+    _neighbours_tmp[id_1].neighbours[dir_1][_neighbours_tmp[id_1].n_neighbour[dir_1]] = id_2;
+    _neighbours_tmp[id_1].n_neighbour[dir_1] += 1;
+    _neighbours_tmp[id_2].neighbours[dir_2][_neighbours_tmp[id_2].n_neighbour[dir_2]] = id_1;
+    _neighbours_tmp[id_2].n_neighbour[dir_2] += 1;
 
     id_1 = node_id + 2;
     id_2 = node_id + 6;
     dir_1 = PDM_UP;
     dir_2 = PDM_BOTTOM;
-    _neighbors_tmp[id_1].neighbors[dir_1][_neighbors_tmp[id_1].n_neighbor[dir_1]] = id_2;
-    _neighbors_tmp[id_1].n_neighbor[dir_1] += 1;
-    _neighbors_tmp[id_2].neighbors[dir_2][_neighbors_tmp[id_2].n_neighbor[dir_2]] = id_1;
-    _neighbors_tmp[id_2].n_neighbor[dir_2] += 1;
+    _neighbours_tmp[id_1].neighbours[dir_1][_neighbours_tmp[id_1].n_neighbour[dir_1]] = id_2;
+    _neighbours_tmp[id_1].n_neighbour[dir_1] += 1;
+    _neighbours_tmp[id_2].neighbours[dir_2][_neighbours_tmp[id_2].n_neighbour[dir_2]] = id_1;
+    _neighbours_tmp[id_2].n_neighbour[dir_2] += 1;
 
     id_1 = node_id + 3;
     id_2 = node_id + 7;
     dir_1 = PDM_UP;
     dir_2 = PDM_BOTTOM;
-    _neighbors_tmp[id_1].neighbors[dir_1][_neighbors_tmp[id_1].n_neighbor[dir_1]] = id_2;
-    _neighbors_tmp[id_1].n_neighbor[dir_1] += 1;
-    _neighbors_tmp[id_2].neighbors[dir_2][_neighbors_tmp[id_2].n_neighbor[dir_2]] = id_1;
-    _neighbors_tmp[id_2].n_neighbor[dir_2] += 1;
+    _neighbours_tmp[id_1].neighbours[dir_1][_neighbours_tmp[id_1].n_neighbour[dir_1]] = id_2;
+    _neighbours_tmp[id_1].n_neighbour[dir_1] += 1;
+    _neighbours_tmp[id_2].neighbours[dir_2][_neighbours_tmp[id_2].n_neighbour[dir_2]] = id_1;
+    _neighbours_tmp[id_2].n_neighbour[dir_2] += 1;
 
     id_1 = node_id + 4;
     id_2 = node_id + 5;
     dir_1 = PDM_EAST;
     dir_2 = PDM_WEST;
-    _neighbors_tmp[id_1].neighbors[dir_1][_neighbors_tmp[id_1].n_neighbor[dir_1]] = id_2;
-    _neighbors_tmp[id_1].n_neighbor[dir_1] += 1;
-    _neighbors_tmp[id_2].neighbors[dir_2][_neighbors_tmp[id_2].n_neighbor[dir_2]] = id_1;
-    _neighbors_tmp[id_2].n_neighbor[dir_2] += 1;
+    _neighbours_tmp[id_1].neighbours[dir_1][_neighbours_tmp[id_1].n_neighbour[dir_1]] = id_2;
+    _neighbours_tmp[id_1].n_neighbour[dir_1] += 1;
+    _neighbours_tmp[id_2].neighbours[dir_2][_neighbours_tmp[id_2].n_neighbour[dir_2]] = id_1;
+    _neighbours_tmp[id_2].n_neighbour[dir_2] += 1;
 
     id_1 = node_id + 4;
     id_2 = node_id + 6;
     dir_1 = PDM_NORTH;
     dir_2 = PDM_SOUTH;
-    _neighbors_tmp[id_1].neighbors[dir_1][_neighbors_tmp[id_1].n_neighbor[dir_1]] = id_2;
-    _neighbors_tmp[id_1].n_neighbor[dir_1] += 1;
-    _neighbors_tmp[id_2].neighbors[dir_2][_neighbors_tmp[id_2].n_neighbor[dir_2]] = id_1;
-    _neighbors_tmp[id_2].n_neighbor[dir_2] += 1;
+    _neighbours_tmp[id_1].neighbours[dir_1][_neighbours_tmp[id_1].n_neighbour[dir_1]] = id_2;
+    _neighbours_tmp[id_1].n_neighbour[dir_1] += 1;
+    _neighbours_tmp[id_2].neighbours[dir_2][_neighbours_tmp[id_2].n_neighbour[dir_2]] = id_1;
+    _neighbours_tmp[id_2].n_neighbour[dir_2] += 1;
 
     id_1 = node_id + 5;
     id_2 = node_id + 7;
     dir_1 = PDM_NORTH;
     dir_2 = PDM_SOUTH;
-    _neighbors_tmp[id_1].neighbors[dir_1][_neighbors_tmp[id_1].n_neighbor[dir_1]] = id_2;
-    _neighbors_tmp[id_1].n_neighbor[dir_1] += 1;
-    _neighbors_tmp[id_2].neighbors[dir_2][_neighbors_tmp[id_2].n_neighbor[dir_2]] = id_1;
-    _neighbors_tmp[id_2].n_neighbor[dir_2] += 1;
+    _neighbours_tmp[id_1].neighbours[dir_1][_neighbours_tmp[id_1].n_neighbour[dir_1]] = id_2;
+    _neighbours_tmp[id_1].n_neighbour[dir_1] += 1;
+    _neighbours_tmp[id_2].neighbours[dir_2][_neighbours_tmp[id_2].n_neighbour[dir_2]] = id_1;
+    _neighbours_tmp[id_2].n_neighbour[dir_2] += 1;
 
     id_1 = node_id + 6;
     id_2 = node_id + 7;
     dir_1 = PDM_EAST;
     dir_2 = PDM_WEST;
-    _neighbors_tmp[id_1].neighbors[dir_1][_neighbors_tmp[id_1].n_neighbor[dir_1]] = id_2;
-    _neighbors_tmp[id_1].n_neighbor[dir_1] += 1;
-    _neighbors_tmp[id_2].neighbors[dir_2][_neighbors_tmp[id_2].n_neighbor[dir_2]] = id_1;
-    _neighbors_tmp[id_2].n_neighbor[dir_2] += 1;
+    _neighbours_tmp[id_1].neighbours[dir_1][_neighbours_tmp[id_1].n_neighbour[dir_1]] = id_2;
+    _neighbours_tmp[id_1].n_neighbour[dir_1] += 1;
+    _neighbours_tmp[id_2].neighbours[dir_2][_neighbours_tmp[id_2].n_neighbour[dir_2]] = id_1;
+    _neighbours_tmp[id_2].n_neighbour[dir_2] += 1;
 
-    /* Extern neighborhood */
+    /* Extern neighbourhood */
 
     /* PDM_para_octree_direction_t dir_children[8][3] = {{PDM_BOTTOM, PDM_SOUTH, PDM_WEST}, */
     /*                                                   {PDM_BOTTOM, PDM_SOUTH, PDM_EAST}, */
@@ -667,63 +667,63 @@ _octants_replace_node_by_child
 
     for (int i = 0; i < n_direction; i++) {
 
-       for (int j = 0; j < cp_neighbors.n_neighbor[i]; j++) {
-        int neighbor_id = cp_neighbors.neighbors[i][j];
+       for (int j = 0; j < cp_neighbours.n_neighbour[i]; j++) {
+        int neighbour_id = cp_neighbours.neighbours[i][j];
 
-        int n_neighbor_child = 0;
+        int n_neighbour_child = 0;
         for (k = 0; k < 4; k++) {
           int child_id = node_id + dir_children[i][k];
 
           PDM_morton_code_t *neighbour_code = _neighbour (children[dir_children[i][k]], i);
 
-          if (neighbor_id >= 0) {
+          if (neighbour_id >= 0) {
 
             PDM_morton_compare_t pmc =
-              PDM_morton_compare(dim,  *neighbour_code, octants->codes[neighbor_id]);
+              PDM_morton_compare(dim,  *neighbour_code, octants->codes[neighbour_id]);
 
             if ((pmc == PDM_MORTON_SAME_ANCHOR) || (pmc == PDM_MORTON_EQUAL_ID)) {
-              sel_children[n_neighbor_child++] = k;
+              sel_children[n_neighbour_child++] = k;
 
-              _neighbors_tmp[child_id].neighbors[i][_neighbors_tmp[child_id].n_neighbor[i]] =
-                neighbor_id;
-              _neighbors_tmp[child_id].n_neighbor[i] += 1;
+              _neighbours_tmp[child_id].neighbours[i][_neighbours_tmp[child_id].n_neighbour[i]] =
+                neighbour_id;
+              _neighbours_tmp[child_id].n_neighbour[i] += 1;
             }
 
           }
           else {
-            _neighbors_tmp[child_id].neighbors[i][_neighbors_tmp[child_id].n_neighbor[i]] =
-              neighbor_id;
-            _neighbors_tmp[child_id].n_neighbor[i] += 1;
+            _neighbours_tmp[child_id].neighbours[i][_neighbours_tmp[child_id].n_neighbour[i]] =
+              neighbour_id;
+            _neighbours_tmp[child_id].n_neighbour[i] += 1;
           }
 
         }
 
-        if (n_neighbor_child > 0) {
+        if (n_neighbour_child > 0) {
 
           for (k = 0; k < 4; k++) {
 
-            while ((_neighbors_tmp[neighbor_id].n_neighbor[i] + (n_neighbor_child - 1))
-                   >= _neighbors_tmp[neighbor_id].s_neighbor[i]) {
-              _neighbors_tmp[neighbor_id].s_neighbor[i] *= 2;
-              _neighbors_tmp[neighbor_id].neighbors[i] =
-                realloc (_neighbors_tmp[neighbor_id].neighbors[i],
-                         sizeof(int) *  _neighbors_tmp[neighbor_id].s_neighbor[i]);
+            while ((_neighbours_tmp[neighbour_id].n_neighbour[i] + (n_neighbour_child - 1))
+                   >= _neighbours_tmp[neighbour_id].s_neighbour[i]) {
+              _neighbours_tmp[neighbour_id].s_neighbour[i] *= 2;
+              _neighbours_tmp[neighbour_id].neighbours[i] =
+                realloc (_neighbours_tmp[neighbour_id].neighbours[i],
+                         sizeof(int) *  _neighbours_tmp[neighbour_id].s_neighbour[i]);
             }
 
             int idx = -1;
-            for (int k1 = 0; k1 < _neighbors_tmp[neighbor_id].n_neighbor[i]; k1++) {
-              if (_neighbors_tmp[neighbor_id].neighbors[i][k1] == node_id) {
+            for (int k1 = 0; k1 < _neighbours_tmp[neighbour_id].n_neighbour[i]; k1++) {
+              if (_neighbours_tmp[neighbour_id].neighbours[i][k1] == node_id) {
                 idx = k1;
                 break;
               }
             }
 
             assert (idx != -1);
-            _neighbors_tmp[neighbor_id].neighbors[i][idx] = node_id + sel_children[0];
+            _neighbours_tmp[neighbour_id].neighbours[i][idx] = node_id + sel_children[0];
 
-            for (int k1 = 1; k1 < n_neighbor_child; k1++) {
+            for (int k1 = 1; k1 < n_neighbour_child; k1++) {
 
-              _neighbors_tmp[neighbor_id].neighbors[i][_neighbors_tmp[neighbor_id].n_neighbor[i]++] =
+              _neighbours_tmp[neighbour_id].neighbours[i][_neighbours_tmp[neighbour_id].n_neighbour[i]++] =
                 node_id + sel_children[k1];
             }
 
@@ -740,7 +740,7 @@ _octants_replace_node_by_child
                                       i,
                                       n_stored_points,
                                       stored_points_code,
-                                      neighbors_tmp);
+                                      neighbours_tmp);
     }
   }
 }
@@ -2256,19 +2256,19 @@ PDM_para_octree_build
   /*************************************************************************
    *
    * Add child (while n points > N points max)
-   *     - Build neighbor
+   *     - Build neighbour
    *
    *************************************************************************/
 
   const int n_direction = 6;
 
-  _neighbors_tmp_t *neighbors_tmp = malloc(sizeof(_neighbors_tmp_t) * octree->octants->n_nodes_max);
+  _neighbours_tmp_t *neighbours_tmp = malloc(sizeof(_neighbours_tmp_t) * octree->octants->n_nodes_max);
 
   for (int i = 0; i < octree->octants->n_nodes_max; i++) {
     for (int j = 0; j < n_direction; j++) {
-      neighbors_tmp[i].n_neighbor[j] = 0;
-      neighbors_tmp[i].s_neighbor[j] = 1;
-      neighbors_tmp[i].neighbors[j] = malloc (sizeof(int) * neighbors_tmp[i].s_neighbor[j]);
+      neighbours_tmp[i].n_neighbour[j] = 0;
+      neighbours_tmp[i].s_neighbour[j] = 1;
+      neighbours_tmp[i].neighbours[j] = malloc (sizeof(int) * neighbours_tmp[i].s_neighbour[j]);
     }
   }
 
@@ -2276,7 +2276,7 @@ PDM_para_octree_build
 
     int n_init_node = octree->octants->n_nodes;
 
-    /* Initialize neighbor */
+    /* Initialize neighbour */
 
     for (int i = 0; i < octree->octants->n_nodes; i++) {
 
@@ -2304,25 +2304,25 @@ PDM_para_octree_build
 
               if ((pmc == PDM_MORTON_SAME_ANCHOR) || pmc ==  (PDM_MORTON_EQUAL_ID)) {
 
-                if (neighbors_tmp[i].n_neighbor[j] >= neighbors_tmp[i].s_neighbor[j]) {
-                  neighbors_tmp[i].s_neighbor[j] *= 2;
-                  neighbors_tmp[i].neighbors[j] =
-                    realloc (neighbors_tmp[i].neighbors[j],
-                             sizeof(int) *  neighbors_tmp[i].s_neighbor[j]);
+                if (neighbours_tmp[i].n_neighbour[j] >= neighbours_tmp[i].s_neighbour[j]) {
+                  neighbours_tmp[i].s_neighbour[j] *= 2;
+                  neighbours_tmp[i].neighbours[j] =
+                    realloc (neighbours_tmp[i].neighbours[j],
+                             sizeof(int) *  neighbours_tmp[i].s_neighbour[j]);
                 }
-                neighbors_tmp[i].neighbors[j][neighbors_tmp[i].n_neighbor[j]] = first_octant;
-                neighbors_tmp[i].n_neighbor[j]++;
+                neighbours_tmp[i].neighbours[j][neighbours_tmp[i].n_neighbour[j]] = first_octant;
+                neighbours_tmp[i].n_neighbour[j]++;
 
-                if (neighbors_tmp[first_octant].n_neighbor[inv_dir] >=
-                    neighbors_tmp[first_octant].s_neighbor[inv_dir]) {
+                if (neighbours_tmp[first_octant].n_neighbour[inv_dir] >=
+                    neighbours_tmp[first_octant].s_neighbour[inv_dir]) {
 
-                  neighbors_tmp[first_octant].s_neighbor[inv_dir] *= 2;
-                  neighbors_tmp[first_octant].neighbors[inv_dir] =
-                    realloc (neighbors_tmp[first_octant].neighbors[inv_dir],
-                             sizeof(int) *  neighbors_tmp[first_octant].s_neighbor[inv_dir]);
+                  neighbours_tmp[first_octant].s_neighbour[inv_dir] *= 2;
+                  neighbours_tmp[first_octant].neighbours[inv_dir] =
+                    realloc (neighbours_tmp[first_octant].neighbours[inv_dir],
+                             sizeof(int) *  neighbours_tmp[first_octant].s_neighbour[inv_dir]);
                 }
-                neighbors_tmp[first_octant].neighbors[inv_dir][neighbors_tmp[first_octant].n_neighbor[inv_dir]] = i;
-                neighbors_tmp[first_octant].n_neighbor[inv_dir]++;
+                neighbours_tmp[first_octant].neighbours[inv_dir][neighbours_tmp[first_octant].n_neighbour[inv_dir]] = i;
+                neighbours_tmp[first_octant].n_neighbour[inv_dir]++;
 
               }
 
@@ -2336,25 +2336,25 @@ PDM_para_octree_build
                     PDM_morton_compare(dim,  *neighbour_code, octree->octants->codes[first_octant]);
 
                   if ((pmc2 == PDM_MORTON_SAME_ANCHOR) || (pmc2  == PDM_MORTON_EQUAL_ID)) {
-                    if (neighbors_tmp[i].n_neighbor[j] >= neighbors_tmp[i].s_neighbor[j]) {
-                      neighbors_tmp[i].s_neighbor[j] *= 2;
-                      neighbors_tmp[i].neighbors[j] =
-                        realloc (neighbors_tmp[i].neighbors[j],
-                                 sizeof(int) *  neighbors_tmp[i].s_neighbor[j]);
+                    if (neighbours_tmp[i].n_neighbour[j] >= neighbours_tmp[i].s_neighbour[j]) {
+                      neighbours_tmp[i].s_neighbour[j] *= 2;
+                      neighbours_tmp[i].neighbours[j] =
+                        realloc (neighbours_tmp[i].neighbours[j],
+                                 sizeof(int) *  neighbours_tmp[i].s_neighbour[j]);
                     }
-                    neighbors_tmp[i].neighbors[j][neighbors_tmp[i].n_neighbor[j]] = first_octant;
-                    neighbors_tmp[i].n_neighbor[j]++;
+                    neighbours_tmp[i].neighbours[j][neighbours_tmp[i].n_neighbour[j]] = first_octant;
+                    neighbours_tmp[i].n_neighbour[j]++;
 
-                    if (neighbors_tmp[first_octant].n_neighbor[inv_dir] >=
-                        neighbors_tmp[first_octant].s_neighbor[inv_dir]) {
+                    if (neighbours_tmp[first_octant].n_neighbour[inv_dir] >=
+                        neighbours_tmp[first_octant].s_neighbour[inv_dir]) {
 
-                      neighbors_tmp[first_octant].s_neighbor[inv_dir] *= 2;
-                      neighbors_tmp[first_octant].neighbors[inv_dir] =
-                        realloc (neighbors_tmp[first_octant].neighbors[inv_dir],
-                                 sizeof(int) *  neighbors_tmp[first_octant].s_neighbor[inv_dir]);
+                      neighbours_tmp[first_octant].s_neighbour[inv_dir] *= 2;
+                      neighbours_tmp[first_octant].neighbours[inv_dir] =
+                        realloc (neighbours_tmp[first_octant].neighbours[inv_dir],
+                                 sizeof(int) *  neighbours_tmp[first_octant].s_neighbour[inv_dir]);
                     }
-                    neighbors_tmp[first_octant].neighbors[inv_dir][neighbors_tmp[first_octant].n_neighbor[inv_dir]] = i;
-                    neighbors_tmp[first_octant].n_neighbor[inv_dir]++;
+                    neighbours_tmp[first_octant].neighbours[inv_dir][neighbours_tmp[first_octant].n_neighbour[inv_dir]] = i;
+                    neighbours_tmp[first_octant].n_neighbour[inv_dir]++;
 
                   }
                 }
@@ -2364,15 +2364,15 @@ PDM_para_octree_build
 
           else {
 
-            if (neighbors_tmp[i].n_neighbor[j] >= neighbors_tmp[i].s_neighbor[j]) {
-              neighbors_tmp[i].s_neighbor[j] *= 2;
-              neighbors_tmp[i].neighbors[j] =
-                realloc (neighbors_tmp[i].neighbors[j],
-                         sizeof(int) *  neighbors_tmp[i].s_neighbor[j]);
+            if (neighbours_tmp[i].n_neighbour[j] >= neighbours_tmp[i].s_neighbour[j]) {
+              neighbours_tmp[i].s_neighbour[j] *= 2;
+              neighbours_tmp[i].neighbours[j] =
+                realloc (neighbours_tmp[i].neighbours[j],
+                         sizeof(int) *  neighbours_tmp[i].s_neighbour[j]);
             }
 
-            neighbors_tmp[i].neighbors[j][neighbors_tmp[i].n_neighbor[j]] = -(i_rank + 1);
-            neighbors_tmp[i].n_neighbor[j]++;
+            neighbours_tmp[i].neighbours[j][neighbours_tmp[i].n_neighbour[j]] = -(i_rank + 1);
+            neighbours_tmp[i].n_neighbour[j]++;
 
           }
         }
@@ -2389,7 +2389,7 @@ PDM_para_octree_build
                                       current_id,
                                       octree->n_points,
                                       octree->points_code,
-                                      &neighbors_tmp);
+                                      &neighbours_tmp);
       n_init_node += 1;
     }
   }
@@ -2401,38 +2401,38 @@ PDM_para_octree_build
                                     0,
                                     octree->n_points,
                                     octree->points_code,
-                                    &neighbors_tmp);
+                                    &neighbours_tmp);
 
   }
 
   /*************************************************************************
    *
-   * Copy temporary neighbours in the neighbor structure
+   * Copy temporary neighbours in the neighbour structure
    *
    *************************************************************************/
 
-  octree->octants->neighbor_idx =
+  octree->octants->neighbour_idx =
     malloc(sizeof(int) * (n_direction * octree->octants->n_nodes + 1));
 
   int idx = 0;
-  octree->octants->neighbor_idx[0] = 0;
+  octree->octants->neighbour_idx[0] = 0;
   for (int i = 0; i < octree->octants->n_nodes; i++) {
     for (int j = 0; j < n_direction; j++) {
-      octree->octants->neighbor_idx[idx+1] =
-        octree->octants->neighbor_idx[idx] + neighbors_tmp[i].n_neighbor[j];
+      octree->octants->neighbour_idx[idx+1] =
+        octree->octants->neighbour_idx[idx] + neighbours_tmp[i].n_neighbour[j];
       idx += 1;
     }
   }
 
-  octree->octants->neighbors =
+  octree->octants->neighbours =
     malloc(sizeof(int) *
-           octree->octants->neighbor_idx[n_direction * octree->octants->n_nodes]);
+           octree->octants->neighbour_idx[n_direction * octree->octants->n_nodes]);
 
   idx = 0;
   for (int i = 0; i < octree->octants->n_nodes; i++) {
     for (int j = 0; j < n_direction; j++) {
-      for (int k = 0; k < neighbors_tmp[i].n_neighbor[j]; k++) {
-        octree->octants->neighbors[idx++] = neighbors_tmp[i].neighbors[j][k];
+      for (int k = 0; k < neighbours_tmp[i].n_neighbour[j]; k++) {
+        octree->octants->neighbours[idx++] = neighbours_tmp[i].neighbours[j][k];
       }
     }
   }
@@ -2441,13 +2441,13 @@ PDM_para_octree_build
 
   for (int i = 0; i < octree->octants->n_nodes; i++) {
     for (int j = 0; j < n_direction; j++) {
-      if (neighbors_tmp[i].neighbors[j] != NULL) {
-        free (neighbors_tmp[i].neighbors[j]);
+      if (neighbours_tmp[i].neighbours[j] != NULL) {
+        free (neighbours_tmp[i].neighbours[j]);
       }
     }
   }
 
-  free (neighbors_tmp);
+  free (neighbours_tmp);
 
   /*************************************************************************
    *
@@ -2459,59 +2459,59 @@ PDM_para_octree_build
 
     const int n_quantile =  n_ranks * n_direction;
 
-    int *neighbor_rank_n = malloc (sizeof(int) * n_quantile);
-    int *neighbor_rank_idx = malloc (sizeof(int) * (n_quantile + 1));
+    int *neighbour_rank_n = malloc (sizeof(int) * n_quantile);
+    int *neighbour_rank_idx = malloc (sizeof(int) * (n_quantile + 1));
 
     for (int i = 0; i < n_quantile; i++) {
-      neighbor_rank_n[i] = 0;
+      neighbour_rank_n[i] = 0;
     }
 
     /* Premiere boucle pour compter */
 
     for (int i = 0; i < octree->octants->n_nodes; i++) {
       for (int j = 0; j < n_direction; j++) {
-        for (int k = octree->octants->neighbor_idx[n_direction * i + j];
-             k < octree->octants->neighbor_idx[n_direction * i + j + 1];
+        for (int k = octree->octants->neighbour_idx[n_direction * i + j];
+             k < octree->octants->neighbour_idx[n_direction * i + j + 1];
              k++) {
-          if (octree->octants->neighbors[k] < 0) {
-            neighbor_rank_n[(PDM_ABS(octree->octants->neighbors[k]) - 1)*n_direction +j]++;
+          if (octree->octants->neighbours[k] < 0) {
+            neighbour_rank_n[(PDM_ABS(octree->octants->neighbours[k]) - 1)*n_direction +j]++;
           }
         }
       }
     }
 
-    neighbor_rank_idx[0] = 0;
+    neighbour_rank_idx[0] = 0;
     for (int i = 0; i < n_quantile; i++) {
-      neighbor_rank_idx[i+1] = neighbor_rank_idx[i] + neighbor_rank_n[i];
-      neighbor_rank_n[i] = 0;
+      neighbour_rank_idx[i+1] = neighbour_rank_idx[i] + neighbour_rank_n[i];
+      neighbour_rank_n[i] = 0;
     }
 
     /* Allocation */
 
-    int *neighbor_rank_node_id = malloc (sizeof(int) * neighbor_rank_idx[n_quantile]);
-    PDM_morton_code_t *neighbor_rank_code = malloc (sizeof(PDM_morton_code_t) *
-                                                neighbor_rank_idx[n_quantile]);
+    int *neighbour_rank_node_id = malloc (sizeof(int) * neighbour_rank_idx[n_quantile]);
+    PDM_morton_code_t *neighbour_rank_code = malloc (sizeof(PDM_morton_code_t) *
+                                                neighbour_rank_idx[n_quantile]);
 
     /* Deuxieme boucle pour stocker avec tri suivant la direction */
 
     int max_node_dir = -1;
     for (int i = 0; i < octree->octants->n_nodes; i++) {
       for (int j = 0; j < n_direction; j++) {
-        for (int k = octree->octants->neighbor_idx[n_direction * i + j];
-             k < octree->octants->neighbor_idx[n_direction * i + j + 1];
+        for (int k = octree->octants->neighbour_idx[n_direction * i + j];
+             k < octree->octants->neighbour_idx[n_direction * i + j + 1];
              k++) {
           max_node_dir = PDM_MAX (max_node_dir,
-                                  octree->octants->neighbor_idx[n_direction * i + j + 1] -
-                                  octree->octants->neighbor_idx[n_direction * i + j]);
-          if (octree->octants->neighbors[k] < 0) {
-            int index = (PDM_ABS(octree->octants->neighbors[k]) - 1) * n_direction + j;
-            int index2 = neighbor_rank_idx[index] + neighbor_rank_n[index];
+                                  octree->octants->neighbour_idx[n_direction * i + j + 1] -
+                                  octree->octants->neighbour_idx[n_direction * i + j]);
+          if (octree->octants->neighbours[k] < 0) {
+            int index = (PDM_ABS(octree->octants->neighbours[k]) - 1) * n_direction + j;
+            int index2 = neighbour_rank_idx[index] + neighbour_rank_n[index];
 
-            neighbor_rank_node_id[index2] = i;
+            neighbour_rank_node_id[index2] = i;
             PDM_morton_copy (octree->octants->codes[i],
-                             neighbor_rank_code + index2);
+                             neighbour_rank_code + index2);
 
-            neighbor_rank_n[index]++;
+            neighbour_rank_n[index]++;
           }
         }
       }
@@ -2525,43 +2525,43 @@ PDM_para_octree_build
 
     for (int i = 0; i < octree->octants->n_nodes; i++) {
       for (int j = 0; j < n_direction; j++) {
-        PDM_morton_local_order (octree->octants->neighbor_idx[n_direction * i + j +1] -
-                                octree->octants->neighbor_idx[n_direction * i + j],
-                                neighbor_rank_code + octree->octants->neighbor_idx[n_direction * i + j],
+        PDM_morton_local_order (octree->octants->neighbour_idx[n_direction * i + j +1] -
+                                octree->octants->neighbour_idx[n_direction * i + j],
+                                neighbour_rank_code + octree->octants->neighbour_idx[n_direction * i + j],
                                 order);
         int idx1 = 0;
-        for (int k = octree->octants->neighbor_idx[n_direction * i + j];
-             k < octree->octants->neighbor_idx[n_direction * i + j + 1];
+        for (int k = octree->octants->neighbour_idx[n_direction * i + j];
+             k < octree->octants->neighbour_idx[n_direction * i + j + 1];
              k++) {
-          PDM_morton_copy (neighbor_rank_code[k], tmp_code + idx1);
-          tmp_node_id[idx1] = neighbor_rank_node_id[k];
+          PDM_morton_copy (neighbour_rank_code[k], tmp_code + idx1);
+          tmp_node_id[idx1] = neighbour_rank_node_id[k];
           idx1 += 1;
         }
 
         idx1 = 0;
-        for (int k = octree->octants->neighbor_idx[n_direction * i + j];
-             k < octree->octants->neighbor_idx[n_direction * i + j + 1];
+        for (int k = octree->octants->neighbour_idx[n_direction * i + j];
+             k < octree->octants->neighbour_idx[n_direction * i + j + 1];
              k++) {
-          PDM_morton_copy (tmp_code[order[idx1]], neighbor_rank_code + k );
-          neighbor_rank_node_id[k] = tmp_node_id[order[idx1]];
+          PDM_morton_copy (tmp_code[order[idx1]], neighbour_rank_code + k );
+          neighbour_rank_node_id[k] = tmp_node_id[order[idx1]];
           idx1 += 1;
         }
       }
     }
 
     free (order);
-    free (neighbor_rank_node_id);
-    free (neighbor_rank_code);
+    free (neighbour_rank_node_id);
+    free (neighbour_rank_code);
 
-    neighbor_rank_node_id = tmp_node_id;
-    neighbor_rank_code = tmp_code;
+    neighbour_rank_node_id = tmp_node_id;
+    neighbour_rank_code = tmp_code;
 
     /* Envoi reception (Les donnees recues sont triees) */
 
-    int *recv_neighbor_rank_n = malloc (sizeof(int) * n_quantile);
+    int *recv_neighbour_rank_n = malloc (sizeof(int) * n_quantile);
 
     for (int i = 0; i < n_quantile; i++) {
-      recv_neighbor_rank_n[i] = 0;
+      recv_neighbour_rank_n[i] = 0;
     }
 
     PDM_MPI_Request *recv_request = malloc (sizeof(PDM_MPI_Request) * n_ranks);
@@ -2575,11 +2575,11 @@ PDM_para_octree_build
       if (i != rank) {
         int n_val_proc = 0;
         for (int j = 0; j < n_direction; j++) {
-          n_val_proc += neighbor_rank_n[idx++];
+          n_val_proc += neighbour_rank_n[idx++];
         }
         if (n_val_proc > 0) {
           used_ranks[n_used_ranks++] = i;
-          PDM_MPI_Irecv(recv_neighbor_rank_n + i*n_direction,
+          PDM_MPI_Irecv(recv_neighbour_rank_n + i*n_direction,
                         n_direction,
                         PDM_MPI_INT,
                         i,
@@ -2587,7 +2587,7 @@ PDM_para_octree_build
                         octree->comm,
                         recv_request + i);
 
-          PDM_MPI_Issend(neighbor_rank_n + i*n_direction,
+          PDM_MPI_Issend(neighbour_rank_n + i*n_direction,
                          n_direction,
                          PDM_MPI_INT,
                          i,
@@ -2607,24 +2607,24 @@ PDM_para_octree_build
     free (recv_request);
     free (send_request);
 
-    int *recv_neighbor_rank_idx = malloc (sizeof(int) * n_direction * n_ranks + 1);
-    recv_neighbor_rank_idx[0] = 0;
+    int *recv_neighbour_rank_idx = malloc (sizeof(int) * n_direction * n_ranks + 1);
+    recv_neighbour_rank_idx[0] = 0;
 
     for (int i = 0; i < n_quantile; i++) {
-      recv_neighbor_rank_idx[i+1] = recv_neighbor_rank_idx[i] + recv_neighbor_rank_n[i];
+      recv_neighbour_rank_idx[i+1] = recv_neighbour_rank_idx[i] + recv_neighbour_rank_n[i];
     }
 
-    int *recv_neighbor_rank_node_id = malloc (sizeof(int) * recv_neighbor_rank_idx[n_quantile]);
-    PDM_morton_code_t *recv_neighbor_rank_code = malloc (sizeof(PDM_morton_code_t) * recv_neighbor_rank_idx[n_quantile]);
+    int *recv_neighbour_rank_node_id = malloc (sizeof(int) * recv_neighbour_rank_idx[n_quantile]);
+    PDM_morton_code_t *recv_neighbour_rank_code = malloc (sizeof(PDM_morton_code_t) * recv_neighbour_rank_idx[n_quantile]);
 
-    unsigned int *_neighbor_rank_code =  malloc (sizeof(unsigned int) * 4 * neighbor_rank_idx[n_quantile]);
-    unsigned int *_recv_neighbor_rank_code =  malloc (sizeof(unsigned int) * 4 * recv_neighbor_rank_idx[n_quantile]);
+    unsigned int *_neighbour_rank_code =  malloc (sizeof(unsigned int) * 4 * neighbour_rank_idx[n_quantile]);
+    unsigned int *_recv_neighbour_rank_code =  malloc (sizeof(unsigned int) * 4 * recv_neighbour_rank_idx[n_quantile]);
 
     idx = 0;
-    for (int i = 0; i < neighbor_rank_idx[n_quantile]; i++) {
-      _neighbor_rank_code[idx++] = neighbor_rank_code[i].L;
+    for (int i = 0; i < neighbour_rank_idx[n_quantile]; i++) {
+      _neighbour_rank_code[idx++] = neighbour_rank_code[i].L;
       for (int j = 0; j < 3; j++) {
-        _neighbor_rank_code[idx++] = neighbor_rank_code[i].X[j];
+        _neighbour_rank_code[idx++] = neighbour_rank_code[i].X[j];
       }
     }
 
@@ -2633,10 +2633,10 @@ PDM_para_octree_build
       int n_val_rank_recv = 0;
       int n_val_rank_send = 0;
       for (int j = 0; j < n_direction; j++) {
-        n_val_rank_recv += recv_neighbor_rank_n[_rank * n_direction + j];
-        n_val_rank_send += recv_neighbor_rank_n[_rank * n_direction + j];
+        n_val_rank_recv += recv_neighbour_rank_n[_rank * n_direction + j];
+        n_val_rank_send += recv_neighbour_rank_n[_rank * n_direction + j];
       }
-      PDM_MPI_Irecv(recv_neighbor_rank_node_id + recv_neighbor_rank_idx[_rank * n_direction],
+      PDM_MPI_Irecv(recv_neighbour_rank_node_id + recv_neighbour_rank_idx[_rank * n_direction],
                     n_val_rank_recv,
                     PDM_MPI_INT,
                     _rank,
@@ -2644,7 +2644,7 @@ PDM_para_octree_build
                     octree->comm,
                     recv_request + i);
 
-      PDM_MPI_Issend(neighbor_rank_node_id + neighbor_rank_idx[_rank * n_direction],
+      PDM_MPI_Issend(neighbour_rank_node_id + neighbour_rank_idx[_rank * n_direction],
                      n_val_rank_send,
                      PDM_MPI_INT,
                      _rank,
@@ -2664,13 +2664,13 @@ PDM_para_octree_build
       int n_val_rank_recv = 0;
       int n_val_rank_send = 0;
       for (int j = 0; j < n_direction; j++) {
-        n_val_rank_recv += recv_neighbor_rank_n[_rank * n_direction + j];
-        n_val_rank_send += recv_neighbor_rank_n[_rank * n_direction + j];
+        n_val_rank_recv += recv_neighbour_rank_n[_rank * n_direction + j];
+        n_val_rank_send += recv_neighbour_rank_n[_rank * n_direction + j];
       }
       n_val_rank_recv *= 4;
       n_val_rank_send *= 4;
 
-      PDM_MPI_Irecv(_recv_neighbor_rank_code + 4 * recv_neighbor_rank_idx[_rank * n_direction],
+      PDM_MPI_Irecv(_recv_neighbour_rank_code + 4 * recv_neighbour_rank_idx[_rank * n_direction],
                     n_val_rank_recv,
                     PDM_MPI_UNSIGNED,
                     _rank,
@@ -2678,7 +2678,7 @@ PDM_para_octree_build
                     octree->comm,
                     recv_request + i);
 
-      PDM_MPI_Issend(_neighbor_rank_code + 4 * neighbor_rank_idx[_rank * n_direction],
+      PDM_MPI_Issend(_neighbour_rank_code + 4 * neighbour_rank_idx[_rank * n_direction],
                      n_val_rank_send,
                      PDM_MPI_UNSIGNED,
                      _rank,
@@ -2693,53 +2693,105 @@ PDM_para_octree_build
       PDM_MPI_Wait (recv_request + _rank);
     }
 
-    free (_neighbor_rank_code);
+    free (_neighbour_rank_code);
 
     idx = 0;
-    for (int i = 0; i < recv_neighbor_rank_idx[n_quantile]; i++) {
-      recv_neighbor_rank_code[i].L = _recv_neighbor_rank_code[idx++];
+    for (int i = 0; i < recv_neighbour_rank_idx[n_quantile]; i++) {
+      recv_neighbour_rank_code[i].L = _recv_neighbour_rank_code[idx++];
       for (int j = 0; j < 3; j++) {
-        recv_neighbor_rank_code[i].X[j] = _recv_neighbor_rank_code[idx++];
+        recv_neighbour_rank_code[i].X[j] = _recv_neighbour_rank_code[idx++];
       }
     }
-    free (_recv_neighbor_rank_code);
+    free (_recv_neighbour_rank_code);
 
     free (recv_request);
     free (send_request);
 
     free (used_ranks);
 
-    free (neighbor_rank_n);
-    free (neighbor_rank_idx);
-    free (neighbor_rank_node_id);
-    free (neighbor_rank_code);
-
-    // Copy in par_boundary_elt
-
-    octree->n_part_boundary_elt = neighbor_rank_idx[n_quantile];
+    octree->n_part_boundary_elt = neighbour_rank_idx[n_quantile];
     octree->part_boundary_elt_idx = malloc (sizeof(int) * (octree->n_part_boundary_elt));
 
-    /* int s_part_boundary_elt = ; */
-    /* int n_part_boundary_elt = 0; */
+    int s_part_boundary_elt = 2 * 2 * neighbour_rank_idx[n_quantile];
+    octree->part_boundary_elt = malloc (sizeof(int) * s_part_boundary_elt);
 
-    // Remplissage avec realloc si necessaire
+    int n_part_boundary_elt = 0;
 
-    /* int *neighbor_rank_node_id = malloc (sizeof(int) * neighbor_rank_idx[n_quantile]); */
-    /* PDM_morton_code_t *neighbor_rank_code = malloc (sizeof(PDM_morton_code_t) * */
-    /*                                             neighbor_rank_idx[n_quantile]); */
+    idx = 0;
+    int idx_part_boundary_elt = 0;
+    octree->part_boundary_elt_idx[0];
+    for (int i = 0; i < n_ranks; i++ ) {
 
+      for (int j = 0; j < n_direction; j++) {
 
-    /* octree->n_part_boundary_elt = 0;  */
-    /* octree->part_boundary_elt_idx = NULL; */
-    /* octree->part_boundary_elt = NULL; */
+        int idx_recv = n_direction * i + _inv_direction(j);
 
-    free (recv_neighbor_rank_n);
-    free (recv_neighbor_rank_idx);
+        idx += 1;
+        for (int k = neighbour_rank_idx[idx]; k < neighbour_rank_idx[idx+1]; k++) {
 
-    free (recv_neighbor_rank_node_id);
-    free (recv_neighbor_rank_code);
+          PDM_morton_code_t *neighbour_code = _neighbour (neighbour_rank_code[k], j);
 
+          assert (neighbour_code != NULL);
 
+          int idx_candidate = recv_neighbour_rank_idx[idx_recv];
+          int n_candidate = recv_neighbour_rank_idx[idx_recv+1] - idx_candidate;
+
+          int idx_beg = PDM_morton_binary_search (n_candidate,
+                                                  *neighbour_code,
+                                                  recv_neighbour_rank_code + idx_candidate);
+
+          int idx_max = idx_candidate + n_candidate;
+          assert (idx_beg <  idx_max);
+
+          octree->part_boundary_elt_idx[n_part_boundary_elt+1] =
+            octree->part_boundary_elt_idx[n_part_boundary_elt];
+
+          int idx_neighbour =
+            octree->octants->neighbour_idx[n_direction*neighbour_rank_node_id[k] + j];
+
+          assert (octree->octants->neighbours[idx_neighbour] == -i);
+
+          octree->octants->neighbours[idx_neighbour] = n_part_boundary_elt;
+
+          while (PDM_morton_compare (dim,
+                                     *neighbour_code,
+                                     recv_neighbour_rank_code[idx_beg]) == PDM_MORTON_SAME_ANCHOR) {
+
+            if ((s_part_boundary_elt - n_part_boundary_elt) <= 2) {
+              s_part_boundary_elt *= 2;
+              octree->part_boundary_elt = realloc (octree->part_boundary_elt,
+                                                   sizeof(int) * s_part_boundary_elt);
+            }
+
+            octree->part_boundary_elt_idx[n_part_boundary_elt+1]++;
+            octree->part_boundary_elt[idx_part_boundary_elt++] = recv_neighbour_rank_node_id[idx_beg];
+
+            idx_beg += 1;
+
+            if (idx_beg >= idx_max) {
+              break;
+            }
+
+          }
+
+          free (neighbour_code);
+
+          n_part_boundary_elt++;
+
+        }
+      }
+    }
+
+    free (neighbour_rank_n);
+    free (neighbour_rank_idx);
+    free (neighbour_rank_node_id);
+    free (neighbour_rank_code);
+
+    free (recv_neighbour_rank_n);
+    free (recv_neighbour_rank_idx);
+
+    free (recv_neighbour_rank_node_id);
+    free (recv_neighbour_rank_code);
 
   }
 
