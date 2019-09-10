@@ -37,26 +37,10 @@ extern "C" {
  * Type definitions
  *============================================================================*/
 
+
 /**
  * \struct _l_octant_t
  * \brief  Define a list of octants
- *
- */
-
-/* typedef struct  { */
-
-/*   PDM_morton_code_t code; /\*!< morton code *\/ */
-
-/*   int  n_points;          /\*!< Number of points in octant*\/ */
-/*   int  range;             /\*!< Start index of point list for each octant *\/ */
-/*   int  is_leaf;           /\*!< IS a leaf >*\/ */
-
-/* } _octant_t; */
-
-
-/**
- * \struct _octant_t
- * \brief  Define an octant
  *
  */
 
@@ -89,8 +73,8 @@ typedef struct  {
   double  global_extents[6];     /*!< Extents of current process */
   int     depth_max;             /*!< Maximum depth of the three */
   int     points_in_leaf_max;    /*!< Maximum number of points in a leaf */
-  double      s[3];           /* Translation for the normalization */
-  double      d[3];           /* Dilatation for the normalization */
+  double      s[3];           /*!< Translation for the normalization */
+  double      d[3];           /*!< Dilatation for the normalization */
 
   int     n_point_clouds;        /*!< Number of point cloud */
 
