@@ -148,6 +148,21 @@ PDM_para_octree_build
 
 /**
  *
+ * \brief Dump octree
+ *
+ * \param [in]   id                 Identifier
+ *
+ */
+
+void
+PDM_para_octree_dum
+(
+ const int          id
+);
+
+
+/**
+ *
  * \brief Get extents
  *
  * \param [in]   id                 Identifier
