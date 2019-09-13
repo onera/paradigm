@@ -2703,7 +2703,7 @@ PDM_para_octree_build
 
     idx = 0;
     int idx_part_boundary_elt = 0;
-    octree->part_boundary_elt_idx[0];
+    octree->part_boundary_elt_idx[0] = 0;
     for (int i = 0; i < n_ranks; i++ ) {
 
       for (int j = 0; j < n_direction; j++) {
@@ -2818,7 +2818,46 @@ PDM_para_octree_dump
  const int          id
 )
 {
+ _octree_t *octree = _get_from_id (id);
+ printf ("PDM_dump_para_octree : %d\n",id);
 
+ printf ("  - n_nodes : %d\n", octree->octants->n_nodes);
+ printf ("  - global_extents :");
+ for (int i = 0; i < octree->dim; i++) {
+   printf (" %12.5e", octree->global_extents[i]);
+ }
+ printf ("\n");
+ printf ("  - depth_max : %d\n", octree->depth_max);
+ printf ("  - points_in_leaf_max : %d\n", octree->points_in_leaf_max);
+
+ printf ("  - s : %12.5e %12.5e %12.5e\n", octree->s[0], octree->s[1], octree->s[2]);
+ printf ("  - d : %12.5e %12.5e %12.5e\n", octree->d[0], octree->d[1], octree->d[2]);
+ 
+ printf ("  - n_point_clouds : %d\n", octree->n_point_clouds);
+ printf ("  - t_n_points : "PDM_FMT_G_NUM"\n", octree->t_n_points);
+ printf ("  - n_points : %d\n", octree->n_points);
+ for (int i = 0; i < octree->n_points; i++) {
+   printf ("  %d "PDM_FMT_G_NUM" : %12.5e %12.5e %12.5e / %u %u %u %u\n",
+           i, octree->points_gnum[i],
+           octree->points[3*i], octree->points[3*i+1], octree->points[3*i+2],
+           octree->points_code[i].L,
+           octree->points_code[i].X[0],
+           octree->points_code[i].X[1],
+           octree->points_code[i].X[2]);
+ }
+ printf ("  - n_nodes : %d\n", octree->octants->n_nodes);
+ for (int i = 0; i < octree->n_points; i++) {
+   printf ("  %d "PDM_FMT_G_NUM" : %12.5e %12.5e %12.5e / %u %u %u %u\n",
+           i, octree->points_gnum[i],
+           octree->points[3*i], octree->points[3*i+1], octree->points[3*i+2],
+           octree->points_code[i].L,
+           octree->points_code[i].X[0],
+           octree->points_code[i].X[1],
+           octree->points_code[i].X[2]);
+ }
+
+
+ 
 }
 
 
