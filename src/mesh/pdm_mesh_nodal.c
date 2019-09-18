@@ -2323,13 +2323,13 @@ const int            id_part
 
 
 /**
- * \brief Get global numbering of block elements
+ * \brief Get global element numbering of block elements inside the block
  *
  * \param [in]  idx            Nodal mesh handle
  * \param [in]  id_block       Block identifier
  * \param [in]  id_part        Partition identifier
  *
- * \return      Return global numbering of block elements
+ * \return      Return global numbering of block elements inside the block
  *
  */
 
@@ -2406,18 +2406,18 @@ const int            id_part
 
 
 /**
- * \brief Get global inside numbering of block elements
+ * \brief Get global element numbering of block elements
  *
  * \param [in]  idx            Nodal mesh handle
  * \param [in]  id_block       Block identifier
  * \param [in]  id_part        Partition identifier
  *
- * \return      Return global inside numbering of block elements
+ * \return      Return global element numbering of block elements
  *
  */
 
 PDM_g_num_t *
-PDM_Mesh_nodal_block_inside_g_num_get
+PDM_Mesh_nodal_g_num_get
 (
 const int            idx,
 const int            id_block,
@@ -2432,7 +2432,7 @@ const int            id_part
 
   int _id_block;
 
-  PDM_g_num_t *_numabs_int = NULL;
+  PDM_g_num_t *_numabs = NULL;
 
   if (id_block >= PDM_BLOCK_ID_BLOCK_POLY3D) {
 
@@ -2450,7 +2450,7 @@ const int            id_part
     }
 
     if (block->numabs_int != NULL) {
-      _numabs_int = block->numabs_int[id_part];
+      _numabs = block->_numabs[id_part];
     }
   }
 
@@ -2470,7 +2470,7 @@ const int            id_part
     }
 
     if (block->numabs_int != NULL) {
-      _numabs_int = block->numabs_int[id_part];
+      _numabs = block->_numabs[id_part];
     }
   }
 
@@ -2490,11 +2490,11 @@ const int            id_part
     }
 
     if (block->numabs_int != NULL) {
-      _numabs_int = block->numabs_int[id_part];
+      _numabs = block->_numabs[id_part];
     }
   }
 
-  return _numabs_int;
+  return _numabs;
 }
 
 
@@ -4505,4 +4505,3 @@ const int idx
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-
