@@ -434,6 +434,8 @@ _octants_replace_node_by_child
 
   _neighbours_tmp_t *_neighbours_tmp = *neighbours_tmp;
 
+  printf ("max_morton : %u \n", octants->codes[node_id].X[0]);
+
   if ((octants->codes[node_id].L < max_morton_level) &&
       !octants->is_leaf[node_id]) {
 
@@ -492,18 +494,18 @@ _octants_replace_node_by_child
     int range_children[n_child];
     int n_points_children[n_child];
 
-    for (int i = 0; i < dim; i++) {
+    for (int i = 0; i < n_child; i++) {
       range_children[i] =
         PDM_morton_binary_search (n_points_node,
                                   children[i],
                                   (PDM_morton_code_t *) stored_points_code + range_node);
     }
 
-    for (int i = 0; i < dim - 1; i++) {
+    for (int i = 0; i < n_child - 1; i++) {
       n_points_children[i] = range_children[i+1] - range_children[i];
     }
 
-    n_points_children[dim-1] = n_points_node - range_children[dim-1];
+    n_points_children[n_child-1] = n_points_node - range_children[n_child-1];
 
     int k = 0;
     for (int i = node_id; i < node_id + n_child; i++) {
@@ -649,7 +651,7 @@ _octants_replace_node_by_child
 
     int sel_children[4] = {0, 0, 0, 0};
 
-    for (int i = 0; i < n_direction; i++) {
+    for (PDM_para_octree_direction_t i = PDM_BOTTOM; i < n_direction; i++) {
 
        for (int j = 0; j < cp_neighbours.n_neighbour[i]; j++) {
         int neighbour_id = cp_neighbours.neighbours[i][j];
@@ -2100,7 +2102,6 @@ PDM_para_octree_build
         _points[dim*i+j] = octree->points[dim*order[i]+j];
       }
     }
-    free (octree->points_code);
     free (order);
   }
 
@@ -2264,7 +2265,7 @@ PDM_para_octree_build
 
     for (int i = 0; i < octree->octants->n_nodes; i++) {
 
-      for (PDM_para_octree_direction_t j = 0; j < n_direction; j++) {
+      for (PDM_para_octree_direction_t j = PDM_BOTTOM; j < n_direction; j++) {
 
         PDM_morton_code_t *neighbour_code = _neighbour (octree->octants->codes[i], j);
         PDM_para_octree_direction_t inv_dir = _inv_direction(j);
@@ -2379,6 +2380,8 @@ PDM_para_octree_build
   }
 
   else {
+
+    printf ("avant _octants_replace_node_by_child : %u \n", octree->octants->codes[0].X[0]);
 
     _octants_replace_node_by_child (octree->octants,
                                     octree->points_in_leaf_max,
@@ -2706,7 +2709,7 @@ PDM_para_octree_build
     octree->part_boundary_elt_idx[0] = 0;
     for (int i = 0; i < n_ranks; i++ ) {
 
-      for (int j = 0; j < n_direction; j++) {
+      for (PDM_para_octree_direction_t j = PDM_BOTTOM; j < n_direction; j++) {
 
         int idx_recv = n_direction * i + _inv_direction(j);
 
@@ -2818,46 +2821,55 @@ PDM_para_octree_dump
  const int          id
 )
 {
- _octree_t *octree = _get_from_id (id);
- printf ("PDM_dump_para_octree : %d\n",id);
+  _octree_t *octree = _get_from_id (id);
+  printf ("PDM_dump_para_octree : %d\n",id);
 
- printf ("  - n_nodes : %d\n", octree->octants->n_nodes);
- printf ("  - global_extents :");
- for (int i = 0; i < octree->dim; i++) {
-   printf (" %12.5e", octree->global_extents[i]);
- }
- printf ("\n");
- printf ("  - depth_max : %d\n", octree->depth_max);
- printf ("  - points_in_leaf_max : %d\n", octree->points_in_leaf_max);
+  printf ("  - n_nodes : %d\n", octree->octants->n_nodes);
+  printf ("  - global_extents :");
+  for (int i = 0; i < 2*octree->dim; i++) {
+    printf (" %12.5e", octree->global_extents[i]);
+  }
+  printf ("\n");
+  printf ("  - depth_max : %d\n", octree->depth_max);
+  printf ("  - points_in_leaf_max : %d\n", octree->points_in_leaf_max);
 
- printf ("  - s : %12.5e %12.5e %12.5e\n", octree->s[0], octree->s[1], octree->s[2]);
- printf ("  - d : %12.5e %12.5e %12.5e\n", octree->d[0], octree->d[1], octree->d[2]);
- 
- printf ("  - n_point_clouds : %d\n", octree->n_point_clouds);
- printf ("  - t_n_points : "PDM_FMT_G_NUM"\n", octree->t_n_points);
- printf ("  - n_points : %d\n", octree->n_points);
- for (int i = 0; i < octree->n_points; i++) {
-   printf ("  %d "PDM_FMT_G_NUM" : %12.5e %12.5e %12.5e / %u %u %u %u\n",
-           i, octree->points_gnum[i],
-           octree->points[3*i], octree->points[3*i+1], octree->points[3*i+2],
-           octree->points_code[i].L,
-           octree->points_code[i].X[0],
-           octree->points_code[i].X[1],
-           octree->points_code[i].X[2]);
- }
- printf ("  - n_nodes : %d\n", octree->octants->n_nodes);
- for (int i = 0; i < octree->n_points; i++) {
-   printf ("  %d "PDM_FMT_G_NUM" : %12.5e %12.5e %12.5e / %u %u %u %u\n",
-           i, octree->points_gnum[i],
-           octree->points[3*i], octree->points[3*i+1], octree->points[3*i+2],
-           octree->points_code[i].L,
-           octree->points_code[i].X[0],
-           octree->points_code[i].X[1],
-           octree->points_code[i].X[2]);
- }
+  printf ("  - s : %12.5e %12.5e %12.5e\n", octree->s[0], octree->s[1], octree->s[2]);
+  printf ("  - d : %12.5e %12.5e %12.5e\n", octree->d[0], octree->d[1], octree->d[2]);
 
-
- 
+  printf ("  - n_point_clouds : %d\n", octree->n_point_clouds);
+  printf ("  - t_n_points : "PDM_FMT_G_NUM"\n", octree->t_n_points);
+  printf ("  - n_points : %d\n", octree->n_points);
+  for (int i = 0; i < octree->n_points; i++) {
+    printf ("  %d "PDM_FMT_G_NUM" : %12.5e %12.5e %12.5e / %u %u %u %u\n",
+            i, octree->points_gnum[i],
+            octree->points[3*i], octree->points[3*i+1], octree->points[3*i+2],
+            octree->points_code[i].L,
+            octree->points_code[i].X[0],
+            octree->points_code[i].X[1],
+            octree->points_code[i].X[2]);
+  }
+  printf ("  - n_nodes : %d\n", octree->octants->n_nodes);
+  for (int i = 0; i < octree->octants->n_nodes; i++) {
+    printf ("  %d : code %u %u %u %u , range %d , is_leaf %d , octree->octants->n_points %d\n",
+            i,
+            octree->octants->codes[i].L,
+            octree->octants->codes[i].X[0],
+            octree->octants->codes[i].X[1],
+            octree->octants->codes[i].X[2],
+            octree->octants->range[i],
+            octree->octants->is_leaf[i],
+            octree->octants->n_points[i]
+            );
+  }
+  for (int i = 0; i < octree->octants->n_nodes; i++) {
+    printf ("  %d : neighbors %d : ", i,
+            octree->octants->neighbour_idx[i+1] -  octree->octants->neighbour_idx[i]);
+    for (int j = octree->octants->neighbour_idx[i];
+         j < octree->octants->neighbour_idx[i+1]; j++) {
+      printf (" %d",octree->octants->neighbours[j]);
+    }
+    printf ("\n");
+  }
 }
 
 
