@@ -180,6 +180,21 @@ PDM_para_octree_extents_get
 
 /**
  *
+ * \brief Dump octree
+ *
+ * \param [in]   id                 Identifier
+ *
+ */
+
+void
+PDM_para_octree_dump
+(
+ const int          id
+ );
+
+
+/**
+ *
  * Look for closest points stored inside an octree
  *
  * \param [in]   id                     Identifier

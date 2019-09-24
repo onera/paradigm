@@ -242,6 +242,8 @@ char *argv[]
 
   PDM_para_octree_build (id2);
 
+  PDM_para_octree_dump (id2);
+
   PDM_para_octree_free (id2);
 
   /* Free */
