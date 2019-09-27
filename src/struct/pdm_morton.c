@@ -1456,6 +1456,7 @@ PDM_morton_assign_level (PDM_morton_code_t  *code,
 
   else if (a_diff < 0) {
     code->L = l;
+    a_diff = -a_diff;
     code->X[0] = code->X[0] >> a_diff;
     code->X[1] = code->X[1] >> a_diff;
     code->X[2] = code->X[2] >> a_diff;
@@ -1645,7 +1646,7 @@ PDM_morton_dump(int                dim,
   int  i;
   double  coord[3];
 
-  const PDM_g_num_t   n = 1 << code.L;
+  const unsigned long   n = 1 << code.L;
 #ifdef __INTEL_COMPILER
 #pragma warning(push)
 #pragma warning(disable:2259)
@@ -1689,10 +1690,18 @@ PDM_morton_ancestor_is (PDM_morton_code_t  a,
                         PDM_morton_code_t  b)
 {
   _Bool status = 0;
+  PDM_morton_dump (3,b);
 
   if (a.L <= b.L) {
     PDM_morton_assign_level (&b,
                              a.L);
+
+    PDM_morton_dump (3,a);
+    PDM_morton_dump (3,b);
+
+    printf("------------\n");
+
+
 
     int val_a = (a.X[0] % 2) * 4 + (a.X[1] % 2) * 2 + (a.X[2] % 2);
     int val_b = (b.X[0] % 2) * 4 + (b.X[1] % 2) * 2 + (b.X[2] % 2);

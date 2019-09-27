@@ -231,7 +231,7 @@ char *argv[]
 
   const int n_point_cloud = 1;
   const int depth_max = 31;
-  const int points_in_leaf_max = 5;
+  const int points_in_leaf_max = 1;
 
   int id2 = PDM_para_octree_create (n_point_cloud,
                                     depth_max,
