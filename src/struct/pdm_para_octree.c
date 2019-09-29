@@ -455,7 +455,7 @@ _octants_replace_node_by_child
       _neighbours_tmp = *neighbours_tmp;
 
       //printf("reallocation neighbours_tmp : %d %d %ld\n", pre_nodes_max, octants->n_nodes_max, *neighbours_tmp);
-
++
       for (int i = pre_nodes_max; i < octants->n_nodes_max; i++) {
         for (int j = 0; j < n_direction; j++) {
           _neighbours_tmp[i].n_neighbour[j] = 0;
@@ -682,7 +682,6 @@ _octants_replace_node_by_child
 
     int sel_children[4] = {0, 0, 0, 0};
 
-    printf (" ******** Voisins id origine : %d ********\n", node_id);
     for (PDM_para_octree_direction_t i = PDM_BOTTOM; i < n_direction; i++) {
       printf ("    - direction : %d %d\n", i, cp_neighbours.n_neighbour[i]);
 
@@ -692,7 +691,8 @@ _octants_replace_node_by_child
         int n_neighbour_child = 0;
         for (k = 0; k < 4; k++) {
           int child_id = node_id + dir_children[i][k];
-          printf ("     * child_id %d\n", neighbour_id);
+          printf ("     * child_id %d\n",  child_id);
+          PDM_morton_dump (3,  octants->codes[child_id]);
 
           PDM_morton_code_t *neighbour_code = _neighbour (children[dir_children[i][k]], i);
 
@@ -700,6 +700,7 @@ _octants_replace_node_by_child
             break;
           }
 
+          printf ("Code recherche : \n");
           PDM_morton_dump (3,  *neighbour_code);
 
           if (neighbour_id >= 0) {
@@ -729,39 +730,46 @@ _octants_replace_node_by_child
 
         if (n_neighbour_child > 0) {
 
-          for (k = 0; k < 4; k++) {
+          /* Allocation si necessaire */
+          
+          while ((_neighbours_tmp[neighbour_id].n_neighbour[i] + (n_neighbour_child - 1))
+                 >= _neighbours_tmp[neighbour_id].s_neighbour[i]) {
+            
+            int pre_s =  _neighbours_tmp[neighbour_id].s_neighbour[i];
 
-            while ((_neighbours_tmp[neighbour_id].n_neighbour[i] + (n_neighbour_child - 1))
-                   >= _neighbours_tmp[neighbour_id].s_neighbour[i]) {
-              int pre_s =  _neighbours_tmp[neighbour_id].s_neighbour[i];
-              _neighbours_tmp[neighbour_id].s_neighbour[i] *= 2;
-              printf ("realloc _neighbours_tmp : %d %d %d\n", neighbour_id, i, _neighbours_tmp[neighbour_id].s_neighbour[i]);
-              _neighbours_tmp[neighbour_id].neighbours[i] =
-                realloc (_neighbours_tmp[neighbour_id].neighbours[i],
-                         sizeof(int) *  _neighbours_tmp[neighbour_id].s_neighbour[i]);
-              for (int k1 = pre_s; k1 <  _neighbours_tmp[neighbour_id].s_neighbour[i]; k1++) {
-                _neighbours_tmp[neighbour_id].neighbours[i][k1] = -1;
-              }
+            _neighbours_tmp[neighbour_id].s_neighbour[i] *= 2;
+            printf ("realloc _neighbours_tmp : %d %d %d\n",
+                    neighbour_id,
+                    i,
+                    _neighbours_tmp[neighbour_id].s_neighbour[i]);
+
+            _neighbours_tmp[neighbour_id].neighbours[i] =
+              realloc (_neighbours_tmp[neighbour_id].neighbours[i],
+                       sizeof(int) *  _neighbours_tmp[neighbour_id].s_neighbour[i]);
+
+            for (int k1 = pre_s; k1 <  _neighbours_tmp[neighbour_id].s_neighbour[i]; k1++) {
+              _neighbours_tmp[neighbour_id].neighbours[i][k1] = -1;
             }
-
-            int idx = -1;
-            for (int k1 = 0; k1 < _neighbours_tmp[neighbour_id].n_neighbour[i]; k1++) {
-              if (_neighbours_tmp[neighbour_id].neighbours[i][k1] == node_id) {
-                idx = k1;
-                break;
-              }
-            }
-
-            assert (idx != -1);
-            _neighbours_tmp[neighbour_id].neighbours[i][idx] = node_id + sel_children[0];
-
-            for (int k1 = 1; k1 < n_neighbour_child; k1++) {
-
-              _neighbours_tmp[neighbour_id].neighbours[i][_neighbours_tmp[neighbour_id].n_neighbour[i]++] =
-                node_id + sel_children[k1];
-            }
-
           }
+
+          int idx = -1;
+          for (int k1 = 0; k1 < _neighbours_tmp[neighbour_id].n_neighbour[i]; k1++) {
+            if (_neighbours_tmp[neighbour_id].neighbours[i][k1] == node_id) {
+              idx = k1;
+              break;
+            }
+          }
+          
+          assert (idx != -1);
+          _neighbours_tmp[neighbour_id].neighbours[i][idx] = node_id + sel_children[0];
+
+          printf ("Ajout de : %d a %d \n", n_neighbour_child, neighbour_id);
+          
+          for (int k1 = 1; k1 < n_neighbour_child; k1++) {
+            _neighbours_tmp[neighbour_id].neighbours[i][_neighbours_tmp[neighbour_id].n_neighbour[i]++] =
+              node_id + sel_children[k1];
+          }
+
         }
       }
     }
@@ -776,6 +784,11 @@ _octants_replace_node_by_child
                                       stored_points_code,
                                       neighbours_tmp);
     }
+  }
+  else {
+
+    printf("  - Fin de recursion\n");
+    PDM_morton_dump (3, octants->codes[node_id]);
   }
 }
 
@@ -2135,15 +2148,15 @@ PDM_para_octree_build
     PDM_morton_code_t *_points_code =
       malloc (sizeof(PDM_morton_code_t) * octree->n_points);
 
-    printf("before orderer : ");
-    for (int i = 0; i < octree->n_points; i++) {
-      PDM_morton_dump(dim, octree->points_code[i]);
-      /* unsigned long _tmp =  pow(2,(octree->points_code[i].L+1))*(unsigned long)octree->points_code[i].X[0] + */
-      /*                       pow(2,octree->points_code[i].L)*(unsigned long)octree->points_code[i].X[1] + */
-      /*                         (unsigned long)octree->points_code[i].X[2]; */
-      /* printf (" %lu", _tmp);; */
-    }
-    printf("\n");
+    /* printf("before orderer : "); */
+    /* for (int i = 0; i < octree->n_points; i++) { */
+    /*   PDM_morton_dump(dim, octree->points_code[i]); */
+    /*   /\* unsigned long _tmp =  pow(2,(octree->points_code[i].L+1))*(unsigned long)octree->points_code[i].X[0] + *\/ */
+    /*   /\*                       pow(2,octree->points_code[i].L)*(unsigned long)octree->points_code[i].X[1] + *\/ */
+    /*   /\*                         (unsigned long)octree->points_code[i].X[2]; *\/ */
+    /*   /\* printf (" %lu", _tmp);; *\/ */
+    /* } */
+    /* printf("\n"); */
 
     /* PDM_morton_local_sort(octree->n_points, */
     /*                       octree->points_code); */
@@ -2171,15 +2184,15 @@ PDM_para_octree_build
       _points_code[i].X[2] = octree->points_code[order[i]].X[2];
     }
 
-    printf("orderer : ");
-    for (int i = 0; i < octree->n_points; i++) {
-      PDM_morton_dump(dim,  _points_code[i]);
-      /* unsigned long _tmp =  pow(2,(_points_code[i].L+1))*(unsigned long)_points_code[i].X[0] + */
-      /*                       pow(2,_points_code[i].L)*(unsigned long)_points_code[i].X[1] + */
-      /*                         (unsigned long)_points_code[i].X[2]; */
-      /* printf (" %lu", _tmp); */
-    }
-    printf("\n");
+    /* printf("orderer : "); */
+    /* for (int i = 0; i < octree->n_points; i++) { */
+    /*   PDM_morton_dump(dim,  _points_code[i]); */
+    /*   /\* unsigned long _tmp =  pow(2,(_points_code[i].L+1))*(unsigned long)_points_code[i].X[0] + *\/ */
+    /*   /\*                       pow(2,_points_code[i].L)*(unsigned long)_points_code[i].X[1] + *\/ */
+    /*   /\*                         (unsigned long)_points_code[i].X[2]; *\/ */
+    /*   /\* printf (" %lu", _tmp); *\/ */
+    /* } */
+    /* printf("\n"); */
 
     free (octree->points_code);
     octree->points_code = _points_code;
