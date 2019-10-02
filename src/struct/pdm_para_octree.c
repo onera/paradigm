@@ -37,6 +37,22 @@ extern "C" {
  * Type definitions
  *============================================================================*/
 
+/**
+ * \struct _heap_t
+ * \brief  Heap used to recursively subdivide nodes
+ *
+ */
+
+typedef struct  {
+
+  int   top;                  /*!< Top of head  */
+  int   size;                 /*!< Size of heap */
+  PDM_morton_code_t *codes;   /*!< Morton codes */
+  int *range;                 /*!< Points range */
+  int *n_points;              /*!< Points number */
+
+} _heap_t;
+
 
 /**
  * \struct _l_octant_t
@@ -129,7 +145,122 @@ static const int max_morton_level = 2;
  * Private function definitions
  *============================================================================*/
 
+/**
+ *
+ * \brief Create a heap
+ *
+ * \param [in]  Size    Size of heap
+ *
+ * \return   a new heap
+ *
+ */
 
+static _heap_t *
+_heap_create
+(
+const int size
+)
+{
+  _heap_t *heap = malloc(sizeof(_heap_t));
+  heap->top = 0;
+  heap->size = size;
+  heap->codes = malloc(sizeof(PDM_morton_code_t) * size);
+  heap->range =  malloc(sizeof(int) * size);
+  heap->n_points =  malloc(sizeof(int) * size);
+  return heap;
+}
+
+
+/**
+ *
+ * \brief Free a heap
+ *
+ * \param [in]  heap   Heap to free
+ *
+ * \return NULL
+ *
+ */
+
+static _heap_t *
+_heap_free
+(
+_heap_t *heap
+)
+{
+  free (heap->codes);
+  free (heap->range);
+  free (heap->n_points);
+  free (heap);
+  return NULL;
+}
+
+
+/**
+ *
+ * \brief Push a new element in the heap
+ *
+ * \param [inout]  heap      Heap
+ * \param [in]     code      Morton code
+ * \param [in]     range     Range
+ * \param [in]     n_points  Number of points
+ *
+ * \return  1 if pushed 0 otherwise
+ *
+ */
+
+static int
+_heap_push
+(
+ _heap_t *heap,
+ const PDM_morton_code_t code,
+ const int range,
+ const int n_points
+)
+{
+  if (heap->top >= heap->size) {
+    return 0;
+  }
+  int idx = heap->top;
+  PDM_morton_copy (code, &(heap->codes[idx]));
+  heap->range[idx] = range;
+  heap->n_points[idx] = n_points;
+  heap->top++;
+  return 1;
+}
+
+
+/**
+ *
+ * \brief Pull top element of the heap
+ *
+ * \param [inout]  heap      Heap
+ * \param [out]    code      Morton code
+ * \param [out]    range     Range
+ * \param [out]    n_points  Number of points
+ *
+ * \return  1 if pulled 0 otherwise
+ *
+ */
+
+static int
+_heap_pull
+(
+ _heap_t *heap,
+ PDM_morton_code_t *code,
+ int *range,
+ int *n_points
+)
+{
+  heap->top--;
+  if (heap->top < 0) {
+    return 0;
+  }
+  int idx = heap->top;
+  PDM_morton_copy (heap->codes[idx], code);
+  *range = heap->range[idx];
+  *n_points = heap->n_points[idx];
+  return 1;
+}
 
 /**
  *
@@ -455,7 +586,7 @@ _octants_replace_node_by_child
       _neighbours_tmp = *neighbours_tmp;
 
       //printf("reallocation neighbours_tmp : %d %d %ld\n", pre_nodes_max, octants->n_nodes_max, *neighbours_tmp);
-+
+
       for (int i = pre_nodes_max; i < octants->n_nodes_max; i++) {
         for (int j = 0; j < n_direction; j++) {
           _neighbours_tmp[i].n_neighbour[j] = 0;
@@ -731,10 +862,10 @@ _octants_replace_node_by_child
         if (n_neighbour_child > 0) {
 
           /* Allocation si necessaire */
-          
+
           while ((_neighbours_tmp[neighbour_id].n_neighbour[i] + (n_neighbour_child - 1))
                  >= _neighbours_tmp[neighbour_id].s_neighbour[i]) {
-            
+
             int pre_s =  _neighbours_tmp[neighbour_id].s_neighbour[i];
 
             _neighbours_tmp[neighbour_id].s_neighbour[i] *= 2;
@@ -759,12 +890,12 @@ _octants_replace_node_by_child
               break;
             }
           }
-          
+
           assert (idx != -1);
           _neighbours_tmp[neighbour_id].neighbours[i][idx] = node_id + sel_children[0];
 
           printf ("Ajout de : %d a %d \n", n_neighbour_child, neighbour_id);
-          
+
           for (int k1 = 1; k1 < n_neighbour_child; k1++) {
             _neighbours_tmp[neighbour_id].neighbours[i][_neighbours_tmp[neighbour_id].n_neighbour[i]++] =
               node_id + sel_children[k1];
@@ -2342,9 +2473,13 @@ PDM_para_octree_build
   /*************************************************************************
    *
    * Add child (while n points > N points max)
-   *     - Build neighbour
    *
    *************************************************************************/
+
+  /* Copie des noeuds initiaux dans une structure et initialisation d'une associée*/
+
+
+
 
   const int n_direction = 6;
 
@@ -2478,7 +2613,7 @@ PDM_para_octree_build
                                       octree->n_points,
                                       octree->points_code,
                                       &neighbours_tmp);
-      n_init_node += 1;
+      n_init_node += -1;
     }
   }
 
@@ -2495,6 +2630,53 @@ PDM_para_octree_build
     printf("sortie neighbours_tmp : %ld\n", neighbours_tmp);
 
   }
+
+  /*************************************************************************
+   *
+   * Build local octree
+   *
+   *************************************************************************/
+
+  int  size = octree->depth_max * 8;
+  _heap_t *heap = _heap_create (size);
+
+  for (int i = octree->octants->n_nodes - 1; i >= 0; i--) {
+    int is_pushed = _heap_push (heap,
+                                octree->octants->codes[i],
+                                octree->octants->range[i],
+                                octree->octants->n_points[i]);
+    if (!is_pushed) {
+      printf ("Internal error PDM_para_octree : heap is full\n");
+    }
+  }
+
+  PDM_morton_code_t code;
+  int range;
+  int n_points;
+
+  octree->octants->n_nodes = 0;
+
+  while (_heap_pull (heap, &code, &range, &n_points)) {
+
+    /* Store the leaf */
+
+    if (...) {
+
+      int n_free_node = 1;
+      _octants_check_alloc (octree->octants, 1);
+
+    }
+
+    /* Add children into the heap*/
+
+    else {
+
+    }
+
+  }
+
+  /* !!! Tout a revoir a la fin !!! */
+
 
   /*************************************************************************
    *
