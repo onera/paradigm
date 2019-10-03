@@ -55,8 +55,12 @@ _computeBary
  double bary[3]
 )
 {
-/*int vb = 0;
-if (vb == 1)   PDM_printf ("==== _computeBary ==== %d \n", numPts);*/
+int vb = 0;
+if (vb == 1)  { PDM_printf ("==== _computeBary ==== %d \n", numPts);
+    for (int ipt = 0; ipt < numPts; ipt++) {
+		PDM_printf ("pts[%d] : %f, %f, %f \n", ipt, pts[3*ipt+0], pts[3*ipt+1], pts[3*ipt+2]);
+    }
+}
   bary[0] = 0.;
   bary[1] = 0.;
   bary[2] = 0.;
@@ -67,11 +71,10 @@ if (vb == 1)   PDM_printf ("==== _computeBary ==== %d \n", numPts);*/
     }
     bary[i] /= numPts;
   }
-  PDM_printf ("pts[0] : %f, %f, %f \n", pts[0], pts[1], pts[2]);
-  PDM_printf ("pts[1] : %f, %f, %f \n", pts[3], pts[4], pts[5]);
-  PDM_printf ("pts[2] : %f, %f, %f \n", pts[6], pts[7], pts[8]);
-  PDM_printf ("bary : %f, %f, %f \n", bary[0], bary[1], bary[2]);
-/*if (vb == 1)   PDM_printf ("==== _computeBary ==== terminated ====\n");*/
+if (vb == 1) {
+PDM_printf ("bary : %f, %f, %f \n", bary[0], bary[1], bary[2]);
+PDM_printf ("==== _computeBary ==== terminated ====\n");
+}
 }
 
 
@@ -97,21 +100,23 @@ PDM_plane_normal
  double        n[3]
 )
 {
-int vb = 1;
+int vb = 0;
 if (vb == 1)   PDM_printf ("==== PDM_plane_normal ==== %d numPts = %d\n", numPts);
-  PDM_printf ("pts[0] : %f, %f, %f \n", pts[0], pts[1], pts[2]);
-  PDM_printf ("pts[1] : %f, %f, %f \n", pts[3], pts[4], pts[5]);
-  PDM_printf ("pts[2] : %f, %f, %f \n", pts[6], pts[7], pts[8]);
   double length = 0.;
   double bary[3]= {0., 0., 0.};
 
   n[0] = 0.;
   n[1] = 0.;
   n[2] = 0.;
-  if (vb == 1)   PDM_printf ("n : %f, %f, %f, length : %f, bary : %f, %f, %f \n", n[0], n[1], n[2], length, bary[0], bary[1], bary[2]);
+//  if (vb == 1)   PDM_printf ("n : %f, %f, %f, length : %f, bary : %f, %f, %f \n", n[0], n[1], n[2], length, bary[0], bary[1], bary[2]);
 
+if (vb == 1) {
+    PDM_printf ("PDM_plane_normal : numPts = %d\n", numPts);
+    for (int ipt = 0; ipt < numPts; ipt++) 
+		PDM_printf (" pts[%d] : %f, %f, %f \n", ipt, pts[3*ipt+0], pts[3*ipt+1], pts[3*ipt+2]);
+    }
   _computeBary (numPts, pts, bary);
-  if (vb == 1)   PDM_printf ("n : %f, %f, %f, length : %f, bary : %f, %f, %f \n", n[0], n[1], n[2], length, bary[0], bary[1], bary[2]);
+//  if (vb == 1)   PDM_printf ("n : %f, %f, %f, length : %f, bary : %f, %f, %f \n", n[0], n[1], n[2], length, bary[0], bary[1], bary[2]);
   
   for (int ipt = 0; ipt < numPts; ipt++) {
 
@@ -132,7 +137,7 @@ if (vb == 1)   PDM_printf ("==== PDM_plane_normal ==== %d numPts = %d\n", numPts
   } //over all points
 
   length = sqrt (n[0] * n[0] + n[1] * n[1] + n[2] * n[2]);
-  if (vb == 1)   PDM_printf ("n : %f, %f, %f, length : %f, bary : %f, %f, %f \n", n[0], n[1], n[2], length, bary[0], bary[1], bary[2]);
+//  if (vb == 1)   PDM_printf ("n : %f, %f, %f, length : %f, bary : %f, %f, %f \n", n[0], n[1], n[2], length, bary[0], bary[1], bary[2]);
   if (length != 0.0) {
     n[0] /= length;
     n[1] /= length;

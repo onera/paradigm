@@ -145,7 +145,9 @@ _redistribute_boxes
 {
 
   /* Sanity checks */
-
+  int vb = 1;
+  if (vb == 1) PDM_printf ("==== _redistribute_boxes ==== \n");
+  vb=0;
   assert (dbbt != NULL);
 
   PDM_box_tree_t  *coarse_tree = PDM_box_tree_create (dbbt->maxTreeDepthCoarse,
@@ -160,7 +162,7 @@ _redistribute_boxes
 
   _update_bt_statistics(&(dbbt->btsCoarse), coarse_tree);
 
-  if (1 == 0) {
+  if (1 == vb) {
     PDM_printf ("-- dump stats\n");
 
     PDM_box_tree_dump_statistics(coarse_tree);
@@ -183,14 +185,14 @@ _redistribute_boxes
 
   PDM_box_tree_destroy (&coarse_tree);
 
-  if (1 == 0) {
+  if (1 == vb) {
     PDM_box_distrib_dump_statistics (distrib, dbbt->comm);
   }
 
   /* Define a new distribution of boxes according to the Morton
      encoding index */
 
-  if (1 == 0) {
+  if (1 == vb) {
     PDM_printf("affichage 1\n");
     PDM_box_set_dump( dbbt->boxes,1);
     PDM_printf("fin affichage 1\n");
@@ -198,7 +200,7 @@ _redistribute_boxes
 
   PDM_box_set_redistribute (distrib, dbbt->boxes);
 
-  if (1 == 0) {
+  if (1 == vb) {
     PDM_printf("affichage 2\n");
     PDM_box_set_dump( dbbt->boxes,1);
     PDM_printf("fin affichage 2\n");
@@ -207,6 +209,8 @@ _redistribute_boxes
   /* Delete intermediate structures */
 
   PDM_box_distrib_destroy (&distrib);
+  vb = 1;
+  if (vb == 1) PDM_printf ("==== _redistribute_boxes ==== terminated ====\n");
 }
 
 /*=============================================================================
@@ -584,6 +588,9 @@ PDM_dbbtree_intersect_boxes_set
  )
 {
 
+  int vb = 1;
+  if (vb == 1) PDM_printf ("==== PDM_dbbtree_intersect_boxes_set ==== terminated ====\n");  
+  vb = 0;
   assert (dbbt != NULL);
   _PDM_dbbtree_t *_dbbt = (_PDM_dbbtree_t *) dbbt;
 
@@ -624,7 +631,7 @@ PDM_dbbtree_intersect_boxes_set
 
   }
 
-  if (1 == 0) {
+  if (1 == vb) {
 
     PDM_printf ("nEltsProc : %d", nEltsProc);
 
@@ -667,9 +674,7 @@ PDM_dbbtree_intersect_boxes_set
                                               nPart,
                                               nElts,
                                               _initLocation,
-                                              _dbbt->comm);
-  PDM_printf ("A- n_elt: %d\n", PDM_box_set_get_size (boxes));
-											  
+                                              _dbbt->comm);											  
 
   free (_boxGnum);
   free (_extents);
@@ -688,13 +693,12 @@ PDM_dbbtree_intersect_boxes_set
 
     int nUsedRank = PDM_box_set_get_size (_dbbt->rankBoxes);
     const int *usedRanks = _dbbt->usedRank;
-   PDM_printf ("B- n_elt: %d\n", PDM_box_set_get_size (boxes));
    
     /*
      * Distribute boxes on intersection ranks
      */
     
-    if (0==1){
+    if (vb==1){
 		PDM_printf ("box_l_num_shared : ");
 		for (int i = 0; i < nUsedRank; i++) {
 		  for (int j = (*box_index)[i]; j < (*box_index)[i+1]; j++) {
@@ -709,7 +713,6 @@ PDM_dbbtree_intersect_boxes_set
                                       boxes->n_g_boxes,
                                       1, // Don't use in this case
                                       boxes->comm);
-   PDM_printf ("C- n_elt: %d\n", PDM_box_set_get_size (boxes));
    
     for (int i = 0; i < lComm + 1; i++) {
       distrib->index[i] = 0;
@@ -733,10 +736,8 @@ PDM_dbbtree_intersect_boxes_set
      * Redistribute boxes on intersecting ranks
      */ 
     
-  PDM_printf ("D- n_elt: %d\n", PDM_box_set_get_size (boxes));
     PDM_box_set_redistribute (distrib,
                               boxes);
-  PDM_printf ("E- n_elt: %d\n", PDM_box_set_get_size (boxes));
   
     /*
      * Free
@@ -757,7 +758,6 @@ PDM_dbbtree_intersect_boxes_set
                                      boxes,
                                      box_index,
                                      box_l_num);
-  PDM_printf ("F- n_elt: %d\n", PDM_box_set_get_size (boxes));
 
   /*
    * Sort boxes and remove double boxes
@@ -790,7 +790,6 @@ PDM_dbbtree_intersect_boxes_set
       }
     }
   }
-  PDM_printf ("G- n_elt: %d\n", PDM_box_set_get_size (boxes));
 
   for (int i = 0; i < nBoxesA; i++) {
     newIndex[i+1] += newIndex[i];
@@ -800,7 +799,9 @@ PDM_dbbtree_intersect_boxes_set
   *box_index = newIndex;
 
   *box_l_num = (int *) realloc (*box_l_num, sizeof (int) * newIndex[nBoxesA]);
-  PDM_printf ("H- n_elt: %d\n", PDM_box_set_get_size (boxes));
+ 
+  vb = 1;
+  if (vb == 1) PDM_printf ("==== PDM_dbbtree_intersect_boxes_set ==== terminated ====\n");
 
   return boxes;
 

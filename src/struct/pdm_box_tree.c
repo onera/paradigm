@@ -3316,7 +3316,7 @@ PDM_box_tree_get_distrib(PDM_box_tree_t        *bt,
   for (i = 0; i < distrib->n_ranks; i++)
     distrib->index[i+1] += distrib->index[i];
 
-  distrib->list = (int *) malloc(distrib->index[distrib->n_ranks] * sizeof(int));
+ distrib->list = (int *) malloc(distrib->index[distrib->n_ranks] * sizeof(int));
 
   counter = (int *) malloc(distrib->n_ranks * sizeof(int));
 
