@@ -148,15 +148,15 @@ _a_ge_b(PDM_morton_code_t  code_a,
   if (a_diff > 0) {
     code_a.L = l;
     code_a.X[0] = code_a.X[0] << a_diff;
-    code_a.X[1] = code_a.X[2] << a_diff;
-    code_a.X[1] = code_a.X[2] << a_diff;
+    code_a.X[1] = code_a.X[1] << a_diff;
+    code_a.X[2] = code_a.X[2] << a_diff;
   }
 
   if (b_diff > 0) {
     code_b.L = l;
     code_b.X[0] = code_b.X[0] << b_diff;
-    code_b.X[1] = code_b.X[2] << b_diff;
-    code_b.X[1] = code_b.X[2] << b_diff;
+    code_b.X[1] = code_b.X[1] << b_diff;
+    code_b.X[2] = code_b.X[2] << b_diff;
   }
 
   i = l - 1;
@@ -174,8 +174,7 @@ _a_ge_b(PDM_morton_code_t  code_a,
   b =   ((code_b.X[0] >> i) % 2) * 4
       + ((code_b.X[1] >> i) % 2) * 2
       + ((code_b.X[2] >> i) % 2);
-
-  return (a >= b) ? true : false;
+ return (a >= b) ? true : false;
 }
 
 /*----------------------------------------------------------------------------
@@ -256,19 +255,20 @@ _a_gt_b(PDM_morton_code_t  code_a,
   if (a_diff > 0) {
     code_a.L = l;
     code_a.X[0] = code_a.X[0] << a_diff;
-    code_a.X[1] = code_a.X[2] << a_diff;
-    code_a.X[1] = code_a.X[2] << a_diff;
+    code_a.X[1] = code_a.X[1] << a_diff;
+    code_a.X[2] = code_a.X[2] << a_diff;
   }
 
   if (b_diff > 0) {
     code_b.L = l;
     code_b.X[0] = code_b.X[0] << b_diff;
-    code_b.X[1] = code_b.X[2] << b_diff;
-    code_b.X[1] = code_b.X[2] << b_diff;
+    code_b.X[1] = code_b.X[1] << b_diff;
+    code_b.X[2] = code_b.X[2] << b_diff;
   }
 
   i = l - 1;
   while (i > 0) {
+
     if (   code_a.X[0] >> i != code_b.X[0] >> i
         || code_a.X[1] >> i != code_b.X[1] >> i
         || code_a.X[2] >> i != code_b.X[2] >> i)
@@ -276,12 +276,12 @@ _a_gt_b(PDM_morton_code_t  code_a,
     i--;
   }
 
-  a =   ((code_a.X[0] >> i) % 2) * 4
-      + ((code_a.X[1] >> i) % 2) * 2
-      + ((code_a.X[2] >> i) % 2);
-  b =   ((code_b.X[0] >> i) % 2) * 4
-      + ((code_b.X[1] >> i) % 2) * 2
-      + ((code_b.X[2] >> i) % 2);
+   a =   ((code_a.X[0] >> i) % 2) * 4
+       + ((code_a.X[1] >> i) % 2) * 2
+       + ((code_a.X[2] >> i) % 2);
+   b =   ((code_b.X[0] >> i) % 2) * 4
+       + ((code_b.X[1] >> i) % 2) * 2
+       + ((code_b.X[2] >> i) % 2);
 
   return (a > b) ? true : false;
 }
@@ -1342,6 +1342,9 @@ PDM_morton_nearest_common_ancestor (PDM_morton_code_t  code_a,
 {
   int i, a_diff, b_diff;
   int l = PDM_MIN(code_a.L, code_b.L);
+  printf ("common_ancestor : a, b\n");
+  PDM_morton_dump(3, code_a);
+  PDM_morton_dump(3, code_b);
 
   a_diff = code_a.L - l;
   b_diff = code_b.L - l;
@@ -1349,16 +1352,21 @@ PDM_morton_nearest_common_ancestor (PDM_morton_code_t  code_a,
   if (a_diff > 0) {
     code_a.L = l;
     code_a.X[0] = code_a.X[0] >> a_diff;
-    code_a.X[1] = code_a.X[2] >> a_diff;
-    code_a.X[1] = code_a.X[2] >> a_diff;
+    code_a.X[1] = code_a.X[1] >> a_diff;
+    code_a.X[2] = code_a.X[2] >> a_diff;
   }
 
   if (b_diff > 0) {
     code_b.L = l;
     code_b.X[0] = code_b.X[0] >> b_diff;
-    code_b.X[1] = code_b.X[2] >> b_diff;
-    code_b.X[1] = code_b.X[2] >> b_diff;
+    code_b.X[1] = code_b.X[1] >> b_diff;
+    code_b.X[2] = code_b.X[2] >> b_diff;
   }
+
+  printf ("common_ancestor : a, b 2\n");
+
+  PDM_morton_dump(3, code_a);
+  PDM_morton_dump(3, code_b);
 
   i = 0;
   while (i <= l) {
@@ -1371,8 +1379,8 @@ PDM_morton_nearest_common_ancestor (PDM_morton_code_t  code_a,
 
   code_c->L = l - i;
   code_c->X[0] = code_a.X[0] >> i;
-  code_c->X[1] = code_a.X[2] >> i;
-  code_c->X[1] = code_a.X[2] >> i;
+  code_c->X[1] = code_a.X[1] >> i;
+  code_c->X[2] = code_a.X[2] >> i;
 
 }
 
@@ -1490,10 +1498,14 @@ PDM_morton_binary_search(int           size,
 
     int  middle = (end - start)/2 + start;
 
+    PDM_morton_dump( 3, codes[middle]);
+    PDM_morton_dump( 3, code);
+    printf ("start end middle : %d %d %d\n", start, end, middle);
     if (_a_gt_b(codes[middle], code))
       end = middle;
     else
       start = middle;
+
   }
 
   return start;
@@ -1695,10 +1707,9 @@ PDM_morton_ancestor_is (PDM_morton_code_t  a,
     PDM_morton_assign_level (&b,
                              a.L);
 
-    int val_a = (a.X[0] % 2) * 4 + (a.X[1] % 2) * 2 + (a.X[2] % 2);
-    int val_b = (b.X[0] % 2) * 4 + (b.X[1] % 2) * 2 + (b.X[2] % 2);
+    assert (a.L == b.L);
 
-    status = val_a == val_b;
+    status = a.X[0] == b.X[0] && a.X[1] == b.X[1] && a.X[2] == b.X[2];
   }
 
   return status;
