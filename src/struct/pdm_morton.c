@@ -1498,9 +1498,9 @@ PDM_morton_binary_search(int           size,
 
     int  middle = (end - start)/2 + start;
 
-    PDM_morton_dump( 3, codes[middle]);
-    PDM_morton_dump( 3, code);
-    printf ("start end middle : %d %d %d\n", start, end, middle);
+    /* PDM_morton_dump( 3, codes[middle]); */
+    /* PDM_morton_dump( 3, code); */
+    /* printf ("start end middle : %d %d %d\n", start, end, middle); */
     if (_a_gt_b(codes[middle], code))
       end = middle;
     else

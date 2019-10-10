@@ -1503,11 +1503,12 @@ _distribute_points
   __points_code = realloc (__points_code,
                            sizeof(PDM_morton_code_t) * _n_points);
 
-  assert(__points_code != NULL);
+  printf("_n_points) : %d\n", _n_points);
+  //assert(__points_code != NULL);
   double d[3];
   double s[3];
 
-  printf ("_n_points : %d \n", _n_points);
+  //printf ("_n_points : %d \n", _n_points);
 
   PDM_morton_encode_coords(dim,
                            max_level,
@@ -1541,12 +1542,15 @@ _distribute_points
   PDM_morton_code_t *_points_code =
     malloc (sizeof(PDM_morton_code_t) * _n_points);
 
+  printf("_points_code after distrib deb\n");
   for (int i = 0; i < _n_points; i++) {
     _points_code[i].L = __points_code[order[i]].L;
     _points_code[i].X[0] = __points_code[order[i]].X[0];
     _points_code[i].X[1] = __points_code[order[i]].X[1];
     _points_code[i].X[2] = __points_code[order[i]].X[2];
+    PDM_morton_dump (3, _points_code[i]);
   }
+  printf("_points_code after distrib fin\n");
 
   free (__points_code);
   free (order);
@@ -1638,11 +1642,28 @@ _block_partition
 
   _octants_free (T);
 
+
+  printf ("  - _complete_octree G : %d\n", G->n_nodes);
+  for (int i = 0; i < G->n_nodes; i++) {
+    printf ("  %d : level %u code [%u, %u, %u], range %d , is_leaf %d , n_points %d\n",
+            i,
+            G->codes[i].L,
+            G->codes[i].X[0],
+            G->codes[i].X[1],
+            G->codes[i].X[2],
+            G->range[i],
+            G->is_leaf[i],
+            G->n_points[i]);
+  }
+
+
   /*
    * Compute weight
    */
 
   /* - exchange codes to ranks (weight per rank)*/
+
+  printf("dim : %d %d\n", G->dim, octant_list->dim);
 
   int n_ranks;
   PDM_MPI_Comm_size(comm, &n_ranks);
@@ -1650,24 +1671,24 @@ _block_partition
   int rank;
   PDM_MPI_Comm_rank(comm, &rank);
 
-  int *code_buff = malloc (sizeof(int) * (octant_list->dim + 1));
-  int *rank_buff = malloc (sizeof(int) * n_ranks * (octant_list->dim + 1));
+  PDM_morton_int_t *code_buff = malloc (sizeof(PDM_morton_int_t) * (G->dim + 1));
+  PDM_morton_int_t *rank_buff = malloc (sizeof(PDM_morton_int_t) * n_ranks * (G->dim + 1));
   code_buff[0] = G->codes[0].L;
 
-  for (int i = 0; i < octant_list->dim; i++) {
+  for (int i = 0; i < G->dim; i++) {
     code_buff[i+1] =  G->codes[0].X[i];
   }
 
-  PDM_MPI_Allgather (code_buff, octant_list->dim + 1, PDM_MPI_INT,
-                     rank_buff, octant_list->dim + 1, PDM_MPI_INT,
+  PDM_MPI_Allgather (code_buff, G->dim + 1, PDM_MPI_UNSIGNED,
+                     rank_buff, G->dim + 1, PDM_MPI_UNSIGNED,
                      comm);
 
   PDM_morton_code_t *rank_codes = malloc (sizeof(PDM_morton_code_t) * n_ranks);
 
   for (int i = 0; i < n_ranks; i++) {
-    rank_codes[i].L = rank_buff[(octant_list->dim + 1) * i];
-    for (int j = 0; j < octant_list->dim; j++) {
-      rank_codes[i].X[j] = rank_buff[(octant_list->dim + 1) * i + j];
+    rank_codes[i].L = rank_buff[(G->dim + 1) * i];
+    for (int j = 0; j < G->dim; j++) {
+      rank_codes[i].X[j] = rank_buff[(G->dim + 1) * i + j + 1];
     }
   }
 
@@ -1684,18 +1705,45 @@ _block_partition
     send_count[i] = 0;
   }
 
+  // Probleme   !!!!!
+
+  printf("rank codes debut\n");
+  for (int i = 0; i < n_ranks; i++) {
+    printf ("  %d : level %u code [%u, %u, %u]\n",
+            i,
+            rank_codes[i].L,
+            rank_codes[i].X[0],
+            rank_codes[i].X[1],
+            rank_codes[i].X[2]);
+  }
+
+  printf("rank codes fin\n");
+
+  printf("  octant_list->n_nodes : %d %d \n",  octant_list->n_nodes, octant_list->dim);
+
   for (int i = 0; i < octant_list->n_nodes; i++) {
 
+    PDM_morton_dump(3, octant_list->codes[i]);
+
     if (irank < (n_ranks - 1)) {
+      printf("  -- pass\n");
       if (PDM_morton_a_ge_b (octant_list->codes[i], rank_codes[irank+1])) {
+        printf("  -- irank : %d\n", irank);
 
         irank += 1 + PDM_morton_binary_search(n_ranks - (irank + 1),
                                               octant_list->codes[i],
                                               rank_codes + irank + 1);
       }
     }
-    send_count[irank] += send_shift[irank] + (octant_list->dim + 1);
+    send_count[irank] += octant_list->dim + 2;
   }
+  printf("fin\n\n\n");
+
+  printf ("send_count :");
+  for (int rank_id = 0; rank_id < n_ranks; rank_id++) {
+    printf (" %d", send_count[rank_id]);
+  }
+  printf ("\n");
 
   /* Exchange number of coords to send to each process */
 
@@ -1704,10 +1752,13 @@ _block_partition
 
   send_shift[0] = 0;
   recv_shift[0] = 0;
+  printf ("recv_shift : %d", recv_shift[0]);
   for (int rank_id = 0; rank_id < n_ranks; rank_id++) {
     send_shift[rank_id + 1] = send_shift[rank_id] + send_count[rank_id];
     recv_shift[rank_id + 1] = recv_shift[rank_id] + recv_count[rank_id];
+    printf (" %d", recv_shift[rank_id + 1]);
   }
+  printf ("\n");
 
   /* Build send and receive buffers */
 
@@ -1731,14 +1782,20 @@ _block_partition
     }
 
     int shift = send_shift[irank] + send_count[irank];
+
+    assert(octant_list->n_points[i] >= 0);
+
     send_codes[shift++] = octant_list->codes[i].L;
 
     for (int j = 0; j < octant_list->dim; j++) {
       send_codes[shift++] = octant_list->codes[i].X[j];
     }
 
-    send_count[irank] += octant_list->dim + 1;
+    send_codes[shift++] = (PDM_morton_int_t) octant_list->n_points[i];
+
+    send_count[irank] += octant_list->dim + 2;
   }
+
 
   PDM_morton_int_t *recv_codes =
     malloc (recv_shift[n_ranks] * sizeof(PDM_morton_int_t));
@@ -1755,7 +1812,8 @@ _block_partition
   free (send_shift);
   free (recv_count);
 
-  const int n_recv_codes = recv_shift[n_ranks] / (1+octant_list->dim);
+  const int _stride = octant_list->dim + 2;
+  const int n_recv_codes = recv_shift[n_ranks] / _stride;
 
   free (recv_shift);
 
@@ -1767,23 +1825,24 @@ _block_partition
 
   /* - compute weight of each cell */
 
-  const int _stride = octant_list->dim + 1;
-
   for (int i = 0; i < n_recv_codes; i++) {
 
     PDM_morton_code_t code;
 
     code.L = recv_codes[i*_stride];
 
-    for (int j = 0; j < _stride-1; j++) {
+    for (int j = 0; j < octant_list->dim; j++) {
       code.X[j] = recv_codes[i*_stride+j+1];
     }
+
+    printf ("i %d\n", i);
+    PDM_morton_dump( 3, code);
 
     int G_node =  PDM_morton_binary_search(G->n_nodes,
                                            code,
                                            G->codes);
 
-    weight[G_node] += octant_list->n_points[i];
+    weight[G_node] +=  recv_codes[i*_stride + 1 + octant_list->dim];
   }
 
   free (recv_codes);
@@ -1797,6 +1856,12 @@ _block_partition
   for (int i = 0; i <  G->n_nodes; i++) {
     order[i] = i;
   }
+
+  printf("weight : ");
+  for (int i = 0; i <  G->n_nodes; i++) {
+    printf(" %d", weight[i]);
+  }
+  printf("\n");
 
   *G_morton_index = malloc(sizeof(PDM_morton_code_t) * (n_ranks + 1));
   PDM_morton_code_t *_G_morton_index = *G_morton_index;
@@ -2193,7 +2258,7 @@ PDM_para_octree_build
 
     int curr_node = -1;
 
-    _octants_init (point_octants, octree->n_points, octree->dim);
+    _octants_init (point_octants, octree->dim, octree->n_points);
 
     for (int i = 0; i < octree->n_points; i++) {
 
@@ -2373,6 +2438,9 @@ PDM_para_octree_build
       for (int i = 0; i < n_child; i++) {
         n_points_children[i] = 0;
       }
+
+
+      //FIXME
 
       int ichild = 0;
       for (int i = 0; i < n_points; i++) {
