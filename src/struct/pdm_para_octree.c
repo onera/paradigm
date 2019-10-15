@@ -1168,9 +1168,9 @@ _complete_octree
     PDM_morton_code_t root_DLD;
 
     root_DLD.L = max_morton_level;
-    root_DLD.X[0] = (1 << max_morton_level) - 1;
-    root_DLD.X[1] = (1 << max_morton_level) - 1;
-    root_DLD.X[2] = (1 << max_morton_level) - 1;
+    root_DLD.X[0] = (1u << max_morton_level) - 1u;
+    root_DLD.X[1] = (1u << max_morton_level) - 1u;
+    root_DLD.X[2] = (1u << max_morton_level) - 1u;
 
     printf("DLD\n");
     PDM_morton_dump(3, root_DLD);
@@ -1866,17 +1866,22 @@ _block_partition
   *G_morton_index = malloc(sizeof(PDM_morton_code_t) * (n_ranks + 1));
   PDM_morton_code_t *_G_morton_index = *G_morton_index;
 
-  PDM_morton_build_rank_index (octant_list->dim,
-                               max_max_level,
-                               G->n_nodes,
-                               G->codes,
-                               weight,
-                               order,
-                               _G_morton_index,
-                               comm);
+  PDM_morton_ordered_build_rank_index (octant_list->dim,
+                                       max_max_level,
+                                       G->n_nodes,
+                                       G->codes,
+                                       weight,
+                                       _G_morton_index,
+                                       comm);
 
   free (order);
   free (weight);
+
+  printf ("_G_morton_index : ");
+  for (int i = 0; i < n_ranks + 1; i++) {
+    PDM_morton_dump (3, _G_morton_index[i]);
+  }
+  printf("\n");
 
   _distribute_octants (G, _G_morton_index, comm);
 
@@ -2110,8 +2115,8 @@ PDM_para_octree_build
   _octree_t *octree = _get_from_id (id);
 
   const int dim = octree->dim;
-  //const int max_level = sizeof(PDM_morton_int_t)*8 - 1;
-  const PDM_morton_int_t max_level = 2;
+  //const PDM_morton_int_t max_level = 31u;
+  const PDM_morton_int_t max_level = 2u;
 
   int n_ranks;
   PDM_MPI_Comm_size (octree->comm, &n_ranks);
@@ -2339,16 +2344,28 @@ PDM_para_octree_build
 
     int iblock = 0;
     for (int i = 0; i < octree->n_points; i++) {
-      if (iblock < (octree->octants->n_nodes - 1)) {
-        if (PDM_morton_a_ge_b (octree->points_code[i], octree->octants->codes[iblock+1])) {
-
-          iblock = iblock + 1 + PDM_morton_binary_search (octree->octants->n_nodes - (iblock + 1),
-                                                          octree->points_code[i],
-                                                          octree->octants->codes + iblock + 1);
-        }
+      PDM_morton_dump (3, octree->points_code[i]);
+      while (!PDM_morton_ancestor_is (octree->octants->codes[iblock],
+                                      octree->points_code[i])) {
+        iblock++;
       }
+      assert (iblock < octree->octants->n_nodes);
       octree->octants->n_points[iblock] += 1;
     }
+
+
+    /* for (int i = 0; i < octree->n_points; i++) { */
+
+    /*   if (iblock < (octree->octants->n_nodes - 1)) { */
+    /*     if (PDM_morton_a_ge_b (octree->points_code[i], octree->octants->codes[iblock+1])) { */
+
+    /*       iblock = iblock + 1 + PDM_morton_binary_search (octree->octants->n_nodes - (iblock + 1), */
+    /*                                                       octree->points_code[i], */
+    /*                                                       octree->octants->codes + iblock + 1); */
+    /*     } */
+    /*   } */
+    /*   octree->octants->n_points[iblock] += 1; */
+    /* } */
 
     octree->octants->range[0] = 0;
 
@@ -2403,8 +2420,9 @@ PDM_para_octree_build
 
   int  size = octree->depth_max * 8;
   _heap_t *heap = _heap_create (size);
-
+  printf("Init point heap : %d\n", octree->n_points);
   for (int i = octree->octants->n_nodes - 1; i >= 0; i--) {
+    printf ("%d : %d %d\n", i ,octree->octants->range[i],octree->octants->n_points[i]);
     int is_pushed = _heap_push (heap,
                                 octree->octants->codes[i],
                                 octree->octants->range[i],
@@ -2424,7 +2442,7 @@ PDM_para_octree_build
 
     /* Add children into the heap*/
 
-    if ((code.L < max_morton_level) &&
+    if ((code.L < max_morton_level) && (code.L < max_level) &&
         (n_points > octree->points_in_leaf_max)) {
 
       PDM_morton_code_t children[n_child];
@@ -2439,14 +2457,26 @@ PDM_para_octree_build
         n_points_children[i] = 0;
       }
 
-
-      //FIXME
-
       int ichild = 0;
       for (int i = 0; i < n_points; i++) {
+        assert ((range + i) < octree->n_points);
+        assert (PDM_morton_ancestor_is(code, octree->points_code[range + i]));
+        printf("child l : %u\n",children[ichild].L);
+        printf("points_code : %u\n",octree->points_code[range + i].L);
+        PDM_morton_dump (3, octree->points_code[range + i]);
+        PDM_morton_dump (3, code);
+        PDM_morton_dump (3, children[0]);
+        PDM_morton_dump (3, children[1]);
+        PDM_morton_dump (3, children[2]);
+        PDM_morton_dump (3, children[3]);
+        PDM_morton_dump (3, children[4]);
+        PDM_morton_dump (3, children[5]);
+        PDM_morton_dump (3, children[6]);
+        PDM_morton_dump (3, children[7]);
         while (!PDM_morton_ancestor_is (children[ichild], octree->points_code[range + i])) {
           ichild += 1;
         }
+        assert (ichild < n_child);
         n_points_children[ichild] += 1;
       }
 

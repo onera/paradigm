@@ -359,6 +359,34 @@ PDM_morton_quantile_search(size_t              n_quantiles,
                            PDM_morton_code_t  *quantile_start);
 
 /*----------------------------------------------------------------------------
+ * Build a global Morton encoding rank index from ordered codes
+ *
+ * The rank_index[i] contains the first Morton code assigned to rank [i].
+ *
+ * parameters:
+ *   dim         <-- 1D, 2D or 3D
+ *   gmax_level  <-- level in octree used to build the Morton encoding
+ *   n_codes     <-- number of Morton codes to be indexed
+ *   orderer_code<-- array of Morton codes to be indexed
+ *   weight      <-- weighting related to each code
+ *   rank_index  <-> pointer to the global Morton encoding rank index
+ *   comm        <-- MPI communicator on which we build the global index
+ *
+ *----------------------------------------------------------------------------*/
+
+void
+PDM_morton_ordered_build_rank_index
+(
+ int                      dim,
+ int                      gmax_level,
+ PDM_l_num_t              n_codes,
+ const PDM_morton_code_t  ordered_code[],
+ const int                weight[],
+ PDM_morton_code_t        rank_index[],
+ PDM_MPI_Comm             comm
+ );
+
+/*----------------------------------------------------------------------------
  * Build a global Morton encoding rank index.
  *
  * The rank_index[i] contains the first Morton code assigned to rank [i].

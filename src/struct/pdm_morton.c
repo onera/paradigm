@@ -47,6 +47,7 @@
 
 #include "pdm_priv.h"
 #include "pdm_morton.h"
+#include "pdm_binary_search.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
 
@@ -995,7 +996,7 @@ PDM_morton_encode(int               dim,
   int  i;
   PDM_morton_code_t  morton_code;
 
-  PDM_morton_int_t  refinement = 1 << level;
+  PDM_morton_int_t  refinement = 1u << level;
 
   morton_code.L = level;
 
@@ -1041,7 +1042,7 @@ PDM_morton_encode_coords(int                dim,
   double n[3];
   double d_max = 0.0;
 
-  PDM_morton_int_t  refinement = 1 << level;
+  PDM_morton_int_t  refinement = 1u << level;
 
   for (i = 0; i < (size_t)dim; i++) {
     s[i] = extents[i];
@@ -1557,6 +1558,188 @@ PDM_morton_quantile_search(size_t              n_quantiles,
 }
 
 /*----------------------------------------------------------------------------
+ * Build a global Morton encoding rank index from ordered codes
+ *
+ * The rank_index[i] contains the first Morton code assigned to rank [i].
+ *
+ * parameters:
+ *   dim         <-- 1D, 2D or 3D
+ *   gmax_level  <-- level in octree used to build the Morton encoding
+ *   n_codes     <-- number of Morton codes to be indexed
+ *   orderer_code<-- array of Morton codes to be indexed
+ *   weight      <-- weighting related to each code
+ *   rank_index  <-> pointer to the global Morton encoding rank index
+ *   comm        <-- MPI communicator on which we build the global index
+ *
+ *----------------------------------------------------------------------------*/
+
+void
+PDM_morton_ordered_build_rank_index
+(
+ int                      dim,
+ int                      gmax_level,
+ PDM_l_num_t              n_codes,
+ const PDM_morton_code_t  ordered_code[],
+ const int                weight[],
+ PDM_morton_code_t        rank_index[],
+ PDM_MPI_Comm             comm
+)
+{
+  PDM_g_num_t *_weight = malloc(sizeof(PDM_g_num_t) * n_codes);
+
+  int comm_size;
+  PDM_MPI_Comm_size (comm, &comm_size);
+
+  int comm_rank;
+  PDM_MPI_Comm_rank (comm, &comm_rank);
+
+  _weight[0] = (PDM_g_num_t) weight[0];
+  for (int i = 1; i < n_codes; i++) {
+    _weight[i] = (PDM_g_num_t) weight[i] + _weight[i-1];
+  }
+
+  PDM_g_num_t scan;
+  PDM_MPI_Scan (_weight + n_codes-1, &scan, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, comm);
+  scan += -_weight[n_codes-1];
+
+  for (int i = 0; i < n_codes; i++) {
+    _weight[i] += scan;
+  }
+
+  PDM_g_num_t total_weight =0;
+
+  if (comm_rank == (comm_size - 1)) {
+    total_weight = _weight[n_codes-1];
+  }
+
+  PDM_MPI_Bcast (&total_weight, 1, PDM__PDM_MPI_G_NUM,
+                 comm_size - 1, comm);
+
+  PDM_g_num_t mean = total_weight / comm_size;
+  PDM_g_num_t k    = total_weight % comm_size;
+
+  int idx = 0;
+
+  PDM_g_num_t *quantiles = malloc (sizeof(PDM_g_num_t) * (comm_size + 1));
+
+  for (int i = 0; i < comm_size; i++) {
+    if (i < k) {
+      quantiles[i] = i * (mean + 1);
+    }
+    else {
+      quantiles[i] = i * mean + k;
+    }
+  }
+  quantiles[comm_size] = total_weight + 1;
+
+  int *send_count = malloc (sizeof(int) * comm_size);
+  for (int i = 0; i < comm_size; i++) {
+    send_count[i] = 0;
+  }
+
+  for (int i = 0; i < n_codes; i++) {
+    int irank = PDM_binary_search_gap_long (_weight[i], quantiles, comm_size+1);
+    send_count[irank]++;
+  }
+
+  int *recv_count = malloc (sizeof(int) * comm_size);
+  PDM_MPI_Alltoall (send_count, 1, PDM_MPI_INT,
+                    recv_count, 1, PDM_MPI_INT,
+                    comm);
+
+  int *send_idx = malloc (sizeof(int) * (comm_size + 1));
+  int *recv_idx = malloc (sizeof(int) * (comm_size + 1));
+
+  send_idx[0] = 0;
+  recv_idx[0] = 0;
+  for (int i = 0; i < comm_size; i++) {
+    send_idx[i+1] = send_idx[i] + 4 * send_count[i];
+    recv_count[i] *= 4;
+    recv_idx[i+1] = recv_idx[i] + recv_count[i];
+    send_count[i] = 0;
+  }
+
+  PDM_morton_int_t *send_data = malloc(sizeof(PDM_morton_int_t) * send_idx[comm_size]);
+  PDM_morton_int_t *recv_data = malloc(sizeof(PDM_morton_int_t) * recv_idx[comm_size]);
+
+  for (int i = 0; i < n_codes; i++) {
+    int irank = PDM_binary_search_gap_long (_weight[i], quantiles, comm_size+1);
+    send_data[send_idx[irank]+send_count[irank]++] = ordered_code[i].L;
+    send_data[send_idx[irank]+send_count[irank]++] = ordered_code[i].X[0];
+    send_data[send_idx[irank]+send_count[irank]++] = ordered_code[i].X[1];
+    send_data[send_idx[irank]+send_count[irank]++] = ordered_code[i].X[2];
+  }
+
+  free (quantiles);
+
+  PDM_MPI_Alltoallv(send_data, send_count, send_idx, PDM_MPI_UNSIGNED,
+                    recv_data, recv_count, recv_idx, PDM_MPI_UNSIGNED,
+                    comm);
+
+  int n_recv_codes = recv_idx[comm_size] / 4;
+
+  free (send_data);
+  free (send_count);
+  free (send_idx);
+  free (recv_count);
+  free (recv_idx);
+
+  PDM_morton_code_t min_code;
+  min_code.L = 31u;
+  min_code.X[0] = (1u << min_code.L) - 1u;
+  min_code.X[1] = (1u << min_code.L) - 1u;
+  min_code.X[2] = (1u << min_code.L) - 1u;
+
+  idx = 0;
+
+  PDM_morton_int_t send_min_code[4] = {0, 0, 0, 0};
+
+  for (int i = 0; i < n_recv_codes; i++) {
+    PDM_morton_code_t tmp_code;
+    tmp_code.L = recv_data[idx++];
+    tmp_code.X[0] = recv_data[idx++];
+    tmp_code.X[1] = recv_data[idx++];
+    tmp_code.X[2] = recv_data[idx++];
+
+    if (_a_gt_b( min_code, tmp_code)) {
+      min_code.L = tmp_code.L;
+      min_code.X[0] = tmp_code.X[0];
+      min_code.X[1] = tmp_code.X[1];
+      min_code.X[2] = tmp_code.X[2];
+      send_min_code[0] = tmp_code.L;
+      send_min_code[1] = tmp_code.X[0];
+      send_min_code[2] = tmp_code.X[1];
+      send_min_code[3] = tmp_code.X[2];
+    }
+  }
+
+  free (recv_data);
+
+  PDM_morton_int_t *buff_min_codes = malloc(sizeof(PDM_morton_int_t) * 4 * comm_size);
+
+  PDM_MPI_Allgather (send_min_code, 4, PDM_MPI_UNSIGNED,
+                     buff_min_codes, 4, PDM_MPI_UNSIGNED,
+                     comm);
+
+  idx = 0;
+  for (int i = 0; i < comm_size; i++) {
+    rank_index[i].L = buff_min_codes[idx++];
+    rank_index[i].X[0] = buff_min_codes[idx++];
+    rank_index[i].X[1] = buff_min_codes[idx++];
+    rank_index[i].X[2] = buff_min_codes[idx++];
+  }
+
+  rank_index[comm_size].L = 31u;
+  rank_index[comm_size].X[0] = (1u << 31u) - 1u;
+  rank_index[comm_size].X[1] = (1u << 31u) - 1u;
+  rank_index[comm_size].X[2] = (1u << 31u) - 1u;
+
+  free (buff_min_codes);
+
+}
+
+
+/*----------------------------------------------------------------------------
  * Build a global Morton encoding rank index.
  *
  * The rank_index[i] contains the first Morton code assigned to rank [i].
@@ -1658,7 +1841,7 @@ PDM_morton_dump(int                dim,
   int  i;
   double  coord[3];
 
-  const unsigned long   n = 1 << code.L;
+  const unsigned long   n = 1u << code.L;
 #ifdef __INTEL_COMPILER
 #pragma warning(push)
 #pragma warning(disable:2259)
