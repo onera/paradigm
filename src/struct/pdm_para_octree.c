@@ -745,14 +745,6 @@ _complete_region
   PDM_morton_code_t nca;
   PDM_morton_nearest_common_ancestor (a, b, &nca);
 
-  /* printf ("\n\n ************** \n\nnca\n"); */
-  /* PDM_morton_dump (3, nca); */
-  /* printf ("a\n"); */
-  /* PDM_morton_dump (3, a); */
-  /* printf ("b\n"); */
-  /* PDM_morton_dump (3, b); */
-  /* printf ("    ----\n"); */
-
   const int n_child = 8;
 
   int  size = max_morton_level * 8;
@@ -816,58 +808,6 @@ _complete_region
       }
     }
   }
-
-  /* printf ("\n\n ****** frb ******** \n\nnca\n"); */
-
-  /* for (int i = 0; i < r_octants->n_nodes; i++) { */
-
-  /*   PDM_morton_dump (3, r_octants->codes[i]); */
-  /* } */
-
-  /* printf ("\n\n ****** fin ******** \n\nnca\n"); */
-
-  /* for (int i = 0; i < 8; i++) { */
-  /*   _octants_push_back (w_octants, */
-  /*                       children[i], */
-  /*                       0, */
-  /*                       0, */
-  /*                       0); */
-  /* } */
-
-  /* int i1 = 0; */
-  /* while (i1 < w_octants->n_nodes) { */
-
-  /*   PDM_morton_code_t *_code = w_octants->codes + i1; */
-
-  /*   if (PDM_morton_a_gt_b (*_code, a) && */
-  /*       PDM_morton_a_gt_b (b, *_code) && */
-  /*       !PDM_morton_ancestor_is (*_code, b)) { */
-
-  /*     _octants_push_back (r_octants, */
-  /*                         *_code, */
-  /*                         0, */
-  /*                         0, */
-  /*                         0); */
-  /*   } */
-
-  /*   else if (PDM_morton_ancestor_is (*_code, a) || PDM_morton_ancestor_is (*_code, b)) { */
-
-  /*     PDM_morton_get_children(dim, */
-  /*                             nca, */
-  /*                             children); */
-
-  /*     for (int i = 0; i < 8; i++) { */
-  /*       _octants_push_back (w_octants, */
-  /*                           children[i], */
-  /*                           0, */
-  /*                           0, */
-  /*                           0); */
-  /*     } */
-
-  /*   } */
-
-  /*   i1 += 1; */
-  /* } */
 
   _octants_free (w_octants);
 
@@ -1030,50 +970,11 @@ _complete_octree
 
   /* Remove duplicates */
 
-  printf ("  - _complete_octree L : %d\n", L->n_nodes);
-  for (int i = 0; i < L->n_nodes; i++) {
-    printf ("  %d : level %u code [%u, %u, %u], range %d , is_leaf %d , n_points %d\n",
-            i,
-            L->codes[i].L,
-            L->codes[i].X[0],
-            L->codes[i].X[1],
-            L->codes[i].X[2],
-            L->range[i],
-            L->is_leaf[i],
-            L->n_points[i]);
-  }
-
   _l_octant_t *L1 = _remove_duplicates (L);
-
-  printf ("  - _complete_octree L1 : %d\n", L1->n_nodes);
-  for (int i = 0; i < L1->n_nodes; i++) {
-    printf ("  %d : level %u code [%u, %u, %u], range %d , is_leaf %d , n_points %d\n",
-            i,
-            L1->codes[i].L,
-            L1->codes[i].X[0],
-            L1->codes[i].X[1],
-            L1->codes[i].X[2],
-            L1->range[i],
-            L1->is_leaf[i],
-            L1->n_points[i]);
-  }
 
   /* Linearize */
 
   _l_octant_t *L2 = _linearize (L1);
-
-  printf ("  - _complete_octree L2 : %d\n", L2->n_nodes);
-  for (int i = 0; i < L2->n_nodes; i++) {
-    printf ("  %d : level %u code [%u, %u, %u], range %d , is_leaf %d , n_points %d\n",
-            i,
-            L2->codes[i].L,
-            L2->codes[i].X[0],
-            L2->codes[i].X[1],
-            L2->codes[i].X[2],
-            L2->range[i],
-            L2->is_leaf[i],
-            L2->n_points[i]);
-  }
 
   _octants_free (L1);
 
@@ -1089,16 +990,13 @@ _complete_octree
 
   PDM_morton_int_t max_level = 0;
   for (int i = 0; i < L2->n_nodes; i++) {
-    printf ("%d\n",L2->codes[i].L );
     max_level = PDM_MAX (L2->codes[i].L, max_level);
   }
 
   PDM_morton_int_t max_max_level;
-  printf ("max_level : %d\n", max_level);
   PDM_MPI_Allreduce(&max_level, &max_max_level, 1,
                     PDM_MPI_UNSIGNED, PDM_MPI_MAX, comm);
 
-  printf ("max_max_level : %d\n", max_max_level);
   PDM_morton_build_rank_index(dim,
                               max_max_level,
                               L2->n_nodes,
@@ -1108,32 +1006,12 @@ _complete_octree
                               L2_morton_index,
                               comm);
 
-
-  printf ("  - L2 morton index : %d\n", n_ranks);
-  for (int i = 0; i < n_ranks; i++) {
-    PDM_morton_dump (3, L2_morton_index[i]);
-  }
-
   free(weight);
   free(order);
 
   _distribute_octants (L2, L2_morton_index, comm);
 
-  printf ("  - _complete_octree L2 apres distri : %d\n", L2->n_nodes);
-  for (int i = 0; i < L2->n_nodes; i++) {
-    printf ("  %d : level %u code [%u, %u, %u], range %d , is_leaf %d , n_points %d\n",
-            i,
-            L2->codes[i].L,
-            L2->codes[i].X[0],
-            L2->codes[i].X[1],
-            L2->codes[i].X[2],
-            L2->range[i],
-            L2->is_leaf[i],
-            L2->n_points[i]);
-  }
-
   free (L2_morton_index);
-  printf("rank : %d\n", rank);
 
   if (rank == 0) {
     PDM_morton_code_t root_DFD;
@@ -1154,7 +1032,6 @@ _complete_octree
                             FINA,
                             child);
 
-    printf ("push_front\n");
     PDM_morton_dump (3, child[0]);
     _octants_push_front (L2,
                          child[0],
@@ -1172,41 +1049,22 @@ _complete_octree
     root_DLD.X[1] = (1u << max_morton_level) - 1u;
     root_DLD.X[2] = (1u << max_morton_level) - 1u;
 
-    printf("DLD\n");
-    PDM_morton_dump(3, root_DLD);
-
     PDM_morton_code_t FINA;
     PDM_morton_nearest_common_ancestor (root_DLD,
                                         L2->codes[0],
                                         &FINA);
-    printf("FINA\n");
-    PDM_morton_dump(3, FINA);
 
     PDM_morton_code_t child[8];
     PDM_morton_get_children(dim,
                             FINA,
                             child);
-    printf ("push_back\n");
-    PDM_morton_dump (3, child[7]);
+
     _octants_push_back (L2,
                         child[7],
                         0,
                         0,
                         0);
 
-  }
-
-  printf ("  - _complete_octree L2 avant envoi : %d\n", L2->n_nodes);
-  for (int i = 0; i < L2->n_nodes; i++) {
-    printf ("  %d : level %u code [%u, %u, %u], range %d , is_leaf %d , n_points %d\n",
-            i,
-            L2->codes[i].L,
-            L2->codes[i].X[0],
-            L2->codes[i].X[1],
-            L2->codes[i].X[2],
-            L2->range[i],
-            L2->is_leaf[i],
-            L2->n_points[i]);
   }
 
   unsigned int sbuff[4];
@@ -1268,19 +1126,6 @@ _complete_octree
 
   }
 
-  printf ("  - _complete_octree L2 apres envoi : %d\n", L2->n_nodes);
-  for (int i = 0; i < L2->n_nodes; i++) {
-    printf ("  %d : level %u code [%u, %u, %u], range %d , is_leaf %d , n_points %d\n",
-            i,
-            L2->codes[i].L,
-            L2->codes[i].X[0],
-            L2->codes[i].X[1],
-            L2->codes[i].X[2],
-            L2->range[i],
-            L2->is_leaf[i],
-            L2->n_points[i]);
-  }
-
   _l_octant_t *R = malloc(sizeof(_l_octant_t));
   _octants_init (R, dim, L2->n_nodes);
 
@@ -1293,7 +1138,7 @@ _complete_octree
                         0,
                         0);
 
-    for (int j = 0; j < A->n_nodes - 1; j++) {
+    for (int j = 0; j < A->n_nodes; j++) {
       _octants_push_back (R,
                           A->codes[j],
                           0,
@@ -1313,18 +1158,6 @@ _complete_octree
 
   _octants_free (L2);
 
-  printf ("  - _complete_octree R : %d\n", R->n_nodes);
-  for (int i = 0; i < R->n_nodes; i++) {
-    printf ("  %d : level %u code [%u, %u, %u], range %d , is_leaf %d , n_points %d\n",
-            i,
-            R->codes[i].L,
-            R->codes[i].X[0],
-            R->codes[i].X[1],
-            R->codes[i].X[2],
-            R->range[i],
-            R->is_leaf[i],
-            R->n_points[i]);
-  }
   return R;
 }
 
@@ -1503,12 +1336,8 @@ _distribute_points
   __points_code = realloc (__points_code,
                            sizeof(PDM_morton_code_t) * _n_points);
 
-  printf("_n_points) : %d\n", _n_points);
-  //assert(__points_code != NULL);
   double d[3];
   double s[3];
-
-  //printf ("_n_points : %d \n", _n_points);
 
   PDM_morton_encode_coords(dim,
                            max_level,
@@ -1542,15 +1371,12 @@ _distribute_points
   PDM_morton_code_t *_points_code =
     malloc (sizeof(PDM_morton_code_t) * _n_points);
 
-  printf("_points_code after distrib deb\n");
   for (int i = 0; i < _n_points; i++) {
     _points_code[i].L = __points_code[order[i]].L;
     _points_code[i].X[0] = __points_code[order[i]].X[0];
     _points_code[i].X[1] = __points_code[order[i]].X[1];
     _points_code[i].X[2] = __points_code[order[i]].X[2];
-    PDM_morton_dump (3, _points_code[i]);
   }
-  printf("_points_code after distrib fin\n");
 
   free (__points_code);
   free (order);
@@ -1588,8 +1414,6 @@ _block_partition
 
   /* Complete region */
 
-  printf(" -- debut _block_partition\n");
-
   _l_octant_t *T = _complete_region (octant_list->codes[0],
                                      octant_list->codes[octant_list->n_nodes-1]);
 
@@ -1621,19 +1445,6 @@ _block_partition
     }
   }
 
-  printf ("  - block partition C : %d\n", C->n_nodes);
-  for (int i = 0; i < C->n_nodes; i++) {
-    printf ("  %d : level %u code [%u, %u, %u], range %d , is_leaf %d , n_points %d\n",
-            i,
-            C->codes[i].L,
-            C->codes[i].X[0],
-            C->codes[i].X[1],
-            C->codes[i].X[2],
-            C->range[i],
-            C->is_leaf[i],
-            C->n_points[i]);
-  }
-
   /* Complete octree */
 
   _l_octant_t *G = _complete_octree (C, comm);
@@ -1642,28 +1453,11 @@ _block_partition
 
   _octants_free (T);
 
-
-  printf ("  - _complete_octree G : %d\n", G->n_nodes);
-  for (int i = 0; i < G->n_nodes; i++) {
-    printf ("  %d : level %u code [%u, %u, %u], range %d , is_leaf %d , n_points %d\n",
-            i,
-            G->codes[i].L,
-            G->codes[i].X[0],
-            G->codes[i].X[1],
-            G->codes[i].X[2],
-            G->range[i],
-            G->is_leaf[i],
-            G->n_points[i]);
-  }
-
-
   /*
    * Compute weight
    */
 
   /* - exchange codes to ranks (weight per rank)*/
-
-  printf("dim : %d %d\n", G->dim, octant_list->dim);
 
   int n_ranks;
   PDM_MPI_Comm_size(comm, &n_ranks);
@@ -1693,6 +1487,7 @@ _block_partition
   }
 
   free (code_buff);
+  free (rank_buff);
 
   int *send_count = malloc(sizeof(int) * n_ranks);
   int *send_shift = malloc(sizeof(int) * (n_ranks+1));
@@ -1705,30 +1500,12 @@ _block_partition
     send_count[i] = 0;
   }
 
-  // Probleme   !!!!!
-
-  printf("rank codes debut\n");
-  for (int i = 0; i < n_ranks; i++) {
-    printf ("  %d : level %u code [%u, %u, %u]\n",
-            i,
-            rank_codes[i].L,
-            rank_codes[i].X[0],
-            rank_codes[i].X[1],
-            rank_codes[i].X[2]);
-  }
-
-  printf("rank codes fin\n");
-
-  printf("  octant_list->n_nodes : %d %d \n",  octant_list->n_nodes, octant_list->dim);
-
   for (int i = 0; i < octant_list->n_nodes; i++) {
 
     PDM_morton_dump(3, octant_list->codes[i]);
 
     if (irank < (n_ranks - 1)) {
-      printf("  -- pass\n");
       if (PDM_morton_a_ge_b (octant_list->codes[i], rank_codes[irank+1])) {
-        printf("  -- irank : %d\n", irank);
 
         irank += 1 + PDM_morton_binary_search(n_ranks - (irank + 1),
                                               octant_list->codes[i],
@@ -1737,13 +1514,6 @@ _block_partition
     }
     send_count[irank] += octant_list->dim + 2;
   }
-  printf("fin\n\n\n");
-
-  printf ("send_count :");
-  for (int rank_id = 0; rank_id < n_ranks; rank_id++) {
-    printf (" %d", send_count[rank_id]);
-  }
-  printf ("\n");
 
   /* Exchange number of coords to send to each process */
 
@@ -1752,13 +1522,11 @@ _block_partition
 
   send_shift[0] = 0;
   recv_shift[0] = 0;
-  printf ("recv_shift : %d", recv_shift[0]);
+
   for (int rank_id = 0; rank_id < n_ranks; rank_id++) {
     send_shift[rank_id + 1] = send_shift[rank_id] + send_count[rank_id];
     recv_shift[rank_id + 1] = recv_shift[rank_id] + recv_count[rank_id];
-    printf (" %d", recv_shift[rank_id + 1]);
   }
-  printf ("\n");
 
   /* Build send and receive buffers */
 
@@ -1796,6 +1564,7 @@ _block_partition
     send_count[irank] += octant_list->dim + 2;
   }
 
+  free (rank_codes);
 
   PDM_morton_int_t *recv_codes =
     malloc (recv_shift[n_ranks] * sizeof(PDM_morton_int_t));
@@ -1835,9 +1604,6 @@ _block_partition
       code.X[j] = recv_codes[i*_stride+j+1];
     }
 
-    printf ("i %d\n", i);
-    PDM_morton_dump( 3, code);
-
     int G_node =  PDM_morton_binary_search(G->n_nodes,
                                            code,
                                            G->codes);
@@ -1857,12 +1623,6 @@ _block_partition
     order[i] = i;
   }
 
-  printf("weight : ");
-  for (int i = 0; i <  G->n_nodes; i++) {
-    printf(" %d", weight[i]);
-  }
-  printf("\n");
-
   *G_morton_index = malloc(sizeof(PDM_morton_code_t) * (n_ranks + 1));
   PDM_morton_code_t *_G_morton_index = *G_morton_index;
 
@@ -1877,11 +1637,12 @@ _block_partition
   free (order);
   free (weight);
 
-  printf ("_G_morton_index : ");
-  for (int i = 0; i < n_ranks + 1; i++) {
-    PDM_morton_dump (3, _G_morton_index[i]);
+
+  printf("\nblock_partition avant d\n");
+  for (int i = 0; i <  G->n_nodes; i++) {
+    PDM_morton_dump (3, G->codes[i]);
   }
-  printf("\n");
+  printf("block_partition avant f\n\n");
 
   _distribute_octants (G, _G_morton_index, comm);
 
@@ -2300,19 +2061,19 @@ PDM_para_octree_build
 
     }
 
-    printf ("  - n_nodes before block partition : %d\n", point_octants->n_nodes);
-    for (int i = 0; i < point_octants->n_nodes; i++) {
-      printf ("  %d : level %u code [%u, %u, %u], range %d , is_leaf %d , n_points %d\n",
-              i,
-              point_octants->codes[i].L,
-              point_octants->codes[i].X[0],
-              point_octants->codes[i].X[1],
-              point_octants->codes[i].X[2],
-              point_octants->range[i],
-              point_octants->is_leaf[i],
-              point_octants->n_points[i]
-              );
-    }
+    /* printf ("  - n_nodes before block partition : %d\n", point_octants->n_nodes); */
+    /* for (int i = 0; i < point_octants->n_nodes; i++) { */
+    /*   printf ("  %d : level %u code [%u, %u, %u], range %d , is_leaf %d , n_points %d\n", */
+    /*           i, */
+    /*           point_octants->codes[i].L, */
+    /*           point_octants->codes[i].X[0], */
+    /*           point_octants->codes[i].X[1], */
+    /*           point_octants->codes[i].X[2], */
+    /*           point_octants->range[i], */
+    /*           point_octants->is_leaf[i], */
+    /*           point_octants->n_points[i] */
+    /*           ); */
+    /* } */
 
 
     /*************************************************************************
@@ -2324,6 +2085,20 @@ PDM_para_octree_build
     octree->octants = _block_partition (point_octants,
                                         octree->comm,
                                         &block_octants_index);
+
+    _octants_free (point_octants);
+
+    printf("\nblock_partition d\n");
+    for (int i = 0; i <  octree->octants->n_nodes; i++) {
+      PDM_morton_dump (3, octree->octants->codes[i]);
+    }
+    printf("block_partition f\n\n");
+
+    printf("block_index d\n");
+    for (int i = 0; i <  n_ranks + 1; i++) {
+      PDM_morton_dump (3, block_octants_index[i]);
+    }
+    printf("block_index f\n\n");
 
     /*************************************************************************
      *
@@ -2342,30 +2117,27 @@ PDM_para_octree_build
                         max_level,
                         octree->global_extents);
 
-    int iblock = 0;
+
+    printf("points d\n");
     for (int i = 0; i < octree->n_points; i++) {
       PDM_morton_dump (3, octree->points_code[i]);
+    }
+    printf("points f\n\n");
+
+    int iblock = 0;
+    for (int i = 0; i < octree->n_points; i++) {
+      printf("\n\n---- point d : %d %d %d\n",i, iblock, octree->octants->n_nodes);
+      PDM_morton_dump (3, octree->points_code[i]);
+      PDM_morton_dump (3, octree->octants->codes[iblock]);
       while (!PDM_morton_ancestor_is (octree->octants->codes[iblock],
                                       octree->points_code[i])) {
         iblock++;
+        PDM_morton_dump (3, octree->octants->codes[iblock]);
       }
+      printf("---- point f : %d %d %d\n",i, iblock, octree->octants->n_nodes);
       assert (iblock < octree->octants->n_nodes);
       octree->octants->n_points[iblock] += 1;
     }
-
-
-    /* for (int i = 0; i < octree->n_points; i++) { */
-
-    /*   if (iblock < (octree->octants->n_nodes - 1)) { */
-    /*     if (PDM_morton_a_ge_b (octree->points_code[i], octree->octants->codes[iblock+1])) { */
-
-    /*       iblock = iblock + 1 + PDM_morton_binary_search (octree->octants->n_nodes - (iblock + 1), */
-    /*                                                       octree->points_code[i], */
-    /*                                                       octree->octants->codes + iblock + 1); */
-    /*     } */
-    /*   } */
-    /*   octree->octants->n_points[iblock] += 1; */
-    /* } */
 
     octree->octants->range[0] = 0;
 
@@ -2414,15 +2186,12 @@ PDM_para_octree_build
    *
    *************************************************************************/
 
-  //  const int dim = 3;
   const int n_child = 8;
   const int n_direction = 6;
 
   int  size = octree->depth_max * 8;
   _heap_t *heap = _heap_create (size);
-  printf("Init point heap : %d\n", octree->n_points);
   for (int i = octree->octants->n_nodes - 1; i >= 0; i--) {
-    printf ("%d : %d %d\n", i ,octree->octants->range[i],octree->octants->n_points[i]);
     int is_pushed = _heap_push (heap,
                                 octree->octants->codes[i],
                                 octree->octants->range[i],
@@ -2461,18 +2230,6 @@ PDM_para_octree_build
       for (int i = 0; i < n_points; i++) {
         assert ((range + i) < octree->n_points);
         assert (PDM_morton_ancestor_is(code, octree->points_code[range + i]));
-        printf("child l : %u\n",children[ichild].L);
-        printf("points_code : %u\n",octree->points_code[range + i].L);
-        PDM_morton_dump (3, octree->points_code[range + i]);
-        PDM_morton_dump (3, code);
-        PDM_morton_dump (3, children[0]);
-        PDM_morton_dump (3, children[1]);
-        PDM_morton_dump (3, children[2]);
-        PDM_morton_dump (3, children[3]);
-        PDM_morton_dump (3, children[4]);
-        PDM_morton_dump (3, children[5]);
-        PDM_morton_dump (3, children[6]);
-        PDM_morton_dump (3, children[7]);
         while (!PDM_morton_ancestor_is (children[ichild], octree->points_code[range + i])) {
           ichild += 1;
         }
@@ -2576,6 +2333,9 @@ PDM_para_octree_build
 
                 free (neighbour_code_2);
               }
+              if (idx == octree->octants->n_nodes - 1) {
+                break;
+              }
               idx++;
             }
           }
@@ -2638,6 +2398,7 @@ PDM_para_octree_build
     }
   }
 
+  free(block_octants_index);
 
   /*************************************************************************
    *
@@ -2672,22 +2433,57 @@ PDM_para_octree_build
   }
 
   /* Free temporary arrays */
-  printf("sortie 2 neighbours_tmp : %ld\n", neighbours_tmp);
+  printf("sortie 2 neighbours_tmp debut\n");
 
   for (int i = 0; i < octree->octants->n_nodes; i++) {
     for (int j = 0; j < n_direction; j++) {
       if (neighbours_tmp[i].neighbours[j] != NULL) {
-        printf ("i neighbours[j] %d %d : ",i ,j);
-        for (int k = 0; k < neighbours_tmp[i].n_neighbour[j]; k++) {
-          printf (" %d",neighbours_tmp[i].neighbours[j][k]);
+        if (neighbours_tmp[i].neighbours[j][0] < 0) {
+          printf ("i neighbours[j] %d [%d / %d %d %d] %d : ",
+                  i,
+                  octree->octants->codes[i].L,
+                  octree->octants->codes[i].X[0],
+                  octree->octants->codes[i].X[1],
+                  octree->octants->codes[i].X[2],
+                  j);
+          for (int k = 0; k < neighbours_tmp[i].n_neighbour[j]; k++) {
+            printf (" %d",neighbours_tmp[i].neighbours[j][k]);
+          }
+          printf ("\n");
         }
-        printf ("\n");
         free (neighbours_tmp[i].neighbours[j]);
       }
     }
   }
 
+  printf("sortie 2 neighbours_tmp fin\n");
+
   free (neighbours_tmp);
+
+  for (int i = 0; i < octree->octants->n_nodes; i++) {
+    for (int j = 0; j < n_direction; j++) {
+      idx = octree->octants->neighbour_idx[i*n_direction+j];
+      int n_b = octree->octants->neighbour_idx[i*n_direction+j+1]
+              - octree->octants->neighbour_idx[i*n_direction+j];
+      if (n_b > 0) {
+        if (octree->octants->neighbours[idx] < 0) {
+
+          printf ("i neighbours[j] %d [%d / %d %d %d] %d : ",
+                  i,
+                  octree->octants->codes[i].L,
+                  octree->octants->codes[i].X[0],
+                  octree->octants->codes[i].X[1],
+                  octree->octants->codes[i].X[2],
+                  j);
+          for (int k = octree->octants->neighbour_idx[i*n_direction+j];
+               k < octree->octants->neighbour_idx[i*n_direction+j+1]; k++) {
+            printf (" %d", octree->octants->neighbours[k]);
+          }
+          printf ("\n");
+        }
+      }
+    }
+  }
 
   /*************************************************************************
    *
@@ -2720,29 +2516,29 @@ PDM_para_octree_build
       }
     }
 
+    int max_node_dir = -1;
     neighbour_rank_idx[0] = 0;
     for (int i = 0; i < n_quantile; i++) {
       neighbour_rank_idx[i+1] = neighbour_rank_idx[i] + neighbour_rank_n[i];
+      max_node_dir = PDM_MAX (max_node_dir, neighbour_rank_n[i]);
       neighbour_rank_n[i] = 0;
     }
 
     /* Allocation */
 
+    printf("max_node_dir : %d\n", max_node_dir);
+
     int *neighbour_rank_node_id = malloc (sizeof(int) * neighbour_rank_idx[n_quantile]);
     PDM_morton_code_t *neighbour_rank_code = malloc (sizeof(PDM_morton_code_t) *
-                                                neighbour_rank_idx[n_quantile]);
+                                                     neighbour_rank_idx[n_quantile]);
 
     /* Deuxieme boucle pour stocker avec tri suivant la direction */
 
-    int max_node_dir = -1;
     for (int i = 0; i < octree->octants->n_nodes; i++) {
       for (int j = 0; j < n_direction; j++) {
         for (int k = octree->octants->neighbour_idx[n_direction * i + j];
              k < octree->octants->neighbour_idx[n_direction * i + j + 1];
              k++) {
-          max_node_dir = PDM_MAX (max_node_dir,
-                                  octree->octants->neighbour_idx[n_direction * i + j + 1] -
-                                  octree->octants->neighbour_idx[n_direction * i + j]);
           if (octree->octants->neighbours[k] < 0) {
             int index = (PDM_ABS(octree->octants->neighbours[k]) - 1) * n_direction + j;
             int index2 = neighbour_rank_idx[index] + neighbour_rank_n[index];
@@ -2757,21 +2553,20 @@ PDM_para_octree_build
       }
     }
 
-    /* Tri des codes */
+    /* Tri des codes pour chaque direction de chaque rang */
 
     order = malloc (sizeof(int) * max_node_dir);
     int *tmp_node_id = malloc (sizeof(int) * max_node_dir);
-    PDM_morton_code_t *tmp_code = malloc (sizeof(int) * max_node_dir);
+    PDM_morton_code_t *tmp_code = malloc (sizeof(PDM_morton_code_t) * max_node_dir);
 
-    for (int i = 0; i < octree->octants->n_nodes; i++) {
+    for (int i = 0; i < n_ranks; i++) {
       for (int j = 0; j < n_direction; j++) {
-        PDM_morton_local_order (octree->octants->neighbour_idx[n_direction * i + j +1] -
-                                octree->octants->neighbour_idx[n_direction * i + j],
-                                neighbour_rank_code + octree->octants->neighbour_idx[n_direction * i + j],
+        PDM_morton_local_order (neighbour_rank_n[n_direction * i + j],
+                                neighbour_rank_code + neighbour_rank_idx[n_direction * i + j],
                                 order);
         int idx1 = 0;
-        for (int k = octree->octants->neighbour_idx[n_direction * i + j];
-             k < octree->octants->neighbour_idx[n_direction * i + j + 1];
+        for (int k = neighbour_rank_idx[n_direction * i + j];
+             k < neighbour_rank_idx[n_direction * i + j + 1];
              k++) {
           PDM_morton_copy (neighbour_rank_code[k], tmp_code + idx1);
           tmp_node_id[idx1] = neighbour_rank_node_id[k];
@@ -2779,8 +2574,8 @@ PDM_para_octree_build
         }
 
         idx1 = 0;
-        for (int k = octree->octants->neighbour_idx[n_direction * i + j];
-             k < octree->octants->neighbour_idx[n_direction * i + j + 1];
+        for (int k = neighbour_rank_idx[n_direction * i + j];
+             k < neighbour_rank_idx[n_direction * i + j + 1];
              k++) {
           PDM_morton_copy (tmp_code[order[idx1]], neighbour_rank_code + k );
           neighbour_rank_node_id[k] = tmp_node_id[order[idx1]];
@@ -2789,14 +2584,11 @@ PDM_para_octree_build
       }
     }
 
+    free (tmp_code);
     free (order);
-    free (neighbour_rank_node_id);
-    free (neighbour_rank_code);
+    free (tmp_node_id);
 
-    neighbour_rank_node_id = tmp_node_id;
-    neighbour_rank_code = tmp_code;
-
-    /* Envoi reception (Les donnees recues sont triees) */
+    /* Envoi / reception (Les donnees recues sont triees) */
 
     int *recv_neighbour_rank_n = malloc (sizeof(int) * n_quantile);
 
@@ -2810,15 +2602,20 @@ PDM_para_octree_build
     int *used_ranks = malloc (sizeof(int) * n_ranks);
     int n_used_ranks = 0;
 
-    idx = 0;
     for (int i = 0; i < n_ranks; i++) {
+      printf("iproc : %d\n", i);
+      fflush(stdout);
       if (i != rank) {
         int n_val_proc = 0;
         for (int j = 0; j < n_direction; j++) {
-          n_val_proc += neighbour_rank_n[idx++];
+          n_val_proc += neighbour_rank_n[ i * n_direction + j];
         }
+        printf("n_val_proc : %d\n", n_val_proc);
+        fflush(stdout);
         if (n_val_proc > 0) {
           used_ranks[n_used_ranks++] = i;
+          printf("issend irecv : %d\n", i);
+          fflush(stdout);
           PDM_MPI_Irecv(recv_neighbour_rank_n + i*n_direction,
                         n_direction,
                         PDM_MPI_INT,
@@ -2840,25 +2637,31 @@ PDM_para_octree_build
 
     for (int i = 0; i < n_used_ranks; i++) {
       int _rank = used_ranks[i];
+      printf("wait issend : %d\n", _rank);
+      fflush(stdout);
       PDM_MPI_Wait (send_request + _rank);
+      printf("wait irecv : %d\n", _rank);
+      fflush(stdout);
       PDM_MPI_Wait (recv_request + _rank);
     }
 
-    free (recv_request);
-    free (send_request);
+    PDM_MPI_Barrier (octree->comm);
 
-    int *recv_neighbour_rank_idx = malloc (sizeof(int) * n_direction * n_ranks + 1);
+    int *recv_neighbour_rank_idx = malloc (sizeof(int) * (n_direction * n_ranks + 1));
     recv_neighbour_rank_idx[0] = 0;
 
-    for (int i = 0; i < n_quantile; i++) {
+    for (int i = 0; i <  n_direction * n_ranks; i++) {
       recv_neighbour_rank_idx[i+1] = recv_neighbour_rank_idx[i] + recv_neighbour_rank_n[i];
     }
 
     int *recv_neighbour_rank_node_id = malloc (sizeof(int) * recv_neighbour_rank_idx[n_quantile]);
-    PDM_morton_code_t *recv_neighbour_rank_code = malloc (sizeof(PDM_morton_code_t) * recv_neighbour_rank_idx[n_quantile]);
+    PDM_morton_code_t *recv_neighbour_rank_code =
+      malloc (sizeof(PDM_morton_code_t) * recv_neighbour_rank_idx[n_quantile]);
 
-    unsigned int *_neighbour_rank_code =  malloc (sizeof(unsigned int) * 4 * neighbour_rank_idx[n_quantile]);
-    unsigned int *_recv_neighbour_rank_code =  malloc (sizeof(unsigned int) * 4 * recv_neighbour_rank_idx[n_quantile]);
+    unsigned int *_neighbour_rank_code =
+      malloc (sizeof(unsigned int) * 4 * neighbour_rank_idx[n_quantile]);
+    unsigned int *_recv_neighbour_rank_code =
+      malloc (sizeof(unsigned int) * 4 * recv_neighbour_rank_idx[n_quantile]);
 
     idx = 0;
     for (int i = 0; i < neighbour_rank_idx[n_quantile]; i++) {
@@ -2874,7 +2677,7 @@ PDM_para_octree_build
       int n_val_rank_send = 0;
       for (int j = 0; j < n_direction; j++) {
         n_val_rank_recv += recv_neighbour_rank_n[_rank * n_direction + j];
-        n_val_rank_send += recv_neighbour_rank_n[_rank * n_direction + j];
+        n_val_rank_send += neighbour_rank_n[_rank * n_direction + j];
       }
       PDM_MPI_Irecv(recv_neighbour_rank_node_id + recv_neighbour_rank_idx[_rank * n_direction],
                     n_val_rank_recv,
@@ -2882,7 +2685,7 @@ PDM_para_octree_build
                     _rank,
                     0,
                     octree->comm,
-                    recv_request + i);
+                    recv_request + _rank);
 
       PDM_MPI_Issend(neighbour_rank_node_id + neighbour_rank_idx[_rank * n_direction],
                      n_val_rank_send,
@@ -2890,7 +2693,7 @@ PDM_para_octree_build
                      _rank,
                      0,
                      octree->comm,
-                     send_request + i);
+                     send_request + _rank);
     }
 
     for (int i = 0; i < n_used_ranks; i++) {
@@ -2905,10 +2708,13 @@ PDM_para_octree_build
       int n_val_rank_send = 0;
       for (int j = 0; j < n_direction; j++) {
         n_val_rank_recv += recv_neighbour_rank_n[_rank * n_direction + j];
-        n_val_rank_send += recv_neighbour_rank_n[_rank * n_direction + j];
+        n_val_rank_send += neighbour_rank_n[_rank * n_direction + j];
       }
       n_val_rank_recv *= 4;
       n_val_rank_send *= 4;
+
+      printf("2eme envoi\n");
+      fflush(stdout);
 
       PDM_MPI_Irecv(_recv_neighbour_rank_code + 4 * recv_neighbour_rank_idx[_rank * n_direction],
                     n_val_rank_recv,
@@ -2916,7 +2722,7 @@ PDM_para_octree_build
                     _rank,
                     0,
                     octree->comm,
-                    recv_request + i);
+                    recv_request + _rank);
 
       PDM_MPI_Issend(_neighbour_rank_code + 4 * neighbour_rank_idx[_rank * n_direction],
                      n_val_rank_send,
@@ -2924,11 +2730,13 @@ PDM_para_octree_build
                      _rank,
                      0,
                      octree->comm,
-                     send_request + i);
+                     send_request + _rank);
     }
 
     for (int i = 0; i < n_used_ranks; i++) {
       int _rank = used_ranks[i];
+      printf("wait issend : %d\n", _rank);
+      fflush(stdout);
       PDM_MPI_Wait (send_request + _rank);
       PDM_MPI_Wait (recv_request + _rank);
     }
@@ -2950,7 +2758,7 @@ PDM_para_octree_build
     free (used_ranks);
 
     octree->n_part_boundary_elt = neighbour_rank_idx[n_quantile];
-    octree->part_boundary_elt_idx = malloc (sizeof(int) * (octree->n_part_boundary_elt));
+    octree->part_boundary_elt_idx = malloc (sizeof(int) * (octree->n_part_boundary_elt + 1));
 
     int s_part_boundary_elt = 2 * 2 * neighbour_rank_idx[n_quantile];
     octree->part_boundary_elt = malloc (sizeof(int) * s_part_boundary_elt);
@@ -2960,14 +2768,19 @@ PDM_para_octree_build
     idx = 0;
     int idx_part_boundary_elt = 0;
     octree->part_boundary_elt_idx[0] = 0;
+
     for (int i = 0; i < n_ranks; i++ ) {
 
       for (PDM_para_octree_direction_t j = PDM_BOTTOM; j < n_direction; j++) {
 
+        printf ("irank, idrection, n : %d %d %d \n",
+                i, j,
+                neighbour_rank_idx[i * n_direction+j+1] - neighbour_rank_idx[i * n_direction +j]);
+
         int idx_recv = n_direction * i + _inv_direction(j);
 
-        idx += 1;
-        for (int k = neighbour_rank_idx[idx]; k < neighbour_rank_idx[idx+1]; k++) {
+        for (int k = neighbour_rank_idx[i * n_direction + j];
+             k < neighbour_rank_idx[i*n_direction + j +1]; k++) {
 
           PDM_morton_code_t *neighbour_code = _neighbour (neighbour_rank_code[k], j);
 
@@ -2979,8 +2792,24 @@ PDM_para_octree_build
           int idx_beg = PDM_morton_binary_search (n_candidate,
                                                   *neighbour_code,
                                                   recv_neighbour_rank_code + idx_candidate);
+          printf("idx_beg : %d\n", idx_beg);
 
           int idx_max = idx_candidate + n_candidate;
+
+          printf("\n\n ----- \nnode d %d\n",j);
+          PDM_morton_dump(3, neighbour_rank_code[k]);
+          printf("node f\n");
+
+          printf("\nneighbor d\n");
+          PDM_morton_dump(3, *neighbour_code);
+          printf("neighbor f\n");
+
+          printf("\ncandidates d\n");
+          for (int k1 = 0; k1 < n_candidate; k1++) {
+            PDM_morton_dump(3, (recv_neighbour_rank_code + idx_candidate)[k1]);
+          }
+          printf("candidates f\n");
+
           assert (idx_beg <  idx_max);
 
           octree->part_boundary_elt_idx[n_part_boundary_elt+1] =
@@ -2989,7 +2818,7 @@ PDM_para_octree_build
           int idx_neighbour =
             octree->octants->neighbour_idx[n_direction*neighbour_rank_node_id[k] + j];
 
-          assert (octree->octants->neighbours[idx_neighbour] == -i);
+          assert (octree->octants->neighbours[idx_neighbour] == -(i+1));
 
           octree->octants->neighbours[idx_neighbour] = n_part_boundary_elt;
 
