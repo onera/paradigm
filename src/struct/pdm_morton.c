@@ -1671,6 +1671,7 @@ PDM_morton_ordered_build_rank_index
   }
 
   free (quantiles);
+  free (_weight);
 
   PDM_MPI_Alltoallv(send_data, send_count, send_idx, PDM_MPI_UNSIGNED,
                     recv_data, recv_count, recv_idx, PDM_MPI_UNSIGNED,
