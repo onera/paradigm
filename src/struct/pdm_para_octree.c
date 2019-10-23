@@ -2505,9 +2505,7 @@ PDM_para_octree_build
         printf("\n");
 
         for (int i_inter = 0; i_inter <  n_intersected_quantile; i_inter++) {
-          int neighbour_rank = PDM_morton_quantile_search (n_ranks,
-                                                           *neighbour_code,
-                                                           block_octants_index);
+          int neighbour_rank = intersected_quantile[i_inter];
 
           if (neighbour_rank != rank) {
 
@@ -2759,48 +2757,53 @@ PDM_para_octree_build
     int *used_ranks = malloc (sizeof(int) * n_ranks);
     int n_used_ranks = 0;
 
-    for (int i = 0; i < n_ranks; i++) {
-      //printf("iproc : %d\n", i);
-      fflush(stdout);
-      if (i != rank) {
-        int n_val_proc = 0;
-        for (int j = 0; j < n_direction; j++) {
-          n_val_proc += neighbour_rank_n[ i * n_direction + j];
-        }
-        //printf("n_val_proc : %d\n", n_val_proc);
-        fflush(stdout);
-        if (n_val_proc > 0) {
-          used_ranks[n_used_ranks++] = i;
-          printf("issend irecv : %d %d\n", i, n_val_proc);
-          fflush(stdout);
-          PDM_MPI_Irecv(recv_neighbour_rank_n + i*n_direction,
-                        n_direction,
-                        PDM_MPI_INT,
-                        i,
-                        0,
-                        octree->comm,
-                        recv_request + i);
+    PDM_MPI_Alltoall (neighbour_rank_n, n_direction, PDM_MPI_INT,
+                      recv_neighbour_rank_n, n_direction, PDM_MPI_INT,
+                      octree->comm);
 
-          PDM_MPI_Issend(neighbour_rank_n + i*n_direction,
-                         n_direction,
-                         PDM_MPI_INT,
-                         i,
-                         0,
-                         octree->comm,
-                         send_request + i);
-        }
-      }
-    }
+    /* for (int i = 0; i < n_ranks; i++) { */
+    /*   //printf("iproc : %d\n", i); */
+    /*   fflush(stdout); */
+    /*   if (i != rank) { */
+    /*     int n_val_proc = 0; */
+    /*     for (int j = 0; j < n_direction; j++) { */
+    /*       n_val_proc += neighbour_rank_n[ i * n_direction + j]; */
+    /*     } */
+    /*     //printf("n_val_proc : %d\n", n_val_proc); */
+    /*     fflush(stdout); */
+    /*     if (n_val_proc > 0) { */
+    /*       used_ranks[n_used_ranks++] = i; */
+    /*       printf("issend irecv : %d %d\n", i, n_val_proc); */
+    /*       fflush(stdout); */
+    /*       PDM_MPI_Irecv(recv_neighbour_rank_n + i*n_direction, */
+    /*                     n_direction, */
+    /*                     PDM_MPI_INT, */
+    /*                     i, */
+    /*                     0, */
+    /*                     octree->comm, */
+    /*                     recv_request + i); */
 
-    for (int i = 0; i < n_used_ranks; i++) {
-      int _rank = used_ranks[i];
-      printf("wait issend : %d\n", _rank);
-      fflush(stdout);
-      PDM_MPI_Wait (send_request + _rank);
-      printf("wait irecv : %d\n", _rank);
-      fflush(stdout);
-      PDM_MPI_Wait (recv_request + _rank);
-    }
+    /*       PDM_MPI_Issend(neighbour_rank_n + i*n_direction, */
+    /*                      n_direction, */
+    /*                      PDM_MPI_INT, */
+    /*                      i, */
+    /*                      0, */
+    /*                      octree->comm, */
+    /*                      send_request + i); */
+    /*     } */
+    /*   } */
+    /* } */
+
+
+    /* for (int i = 0; i < n_used_ranks; i++) { */
+    /*   int _rank = used_ranks[i]; */
+    /*   printf("wait issend : %d\n", _rank); */
+    /*   fflush(stdout); */
+    /*   PDM_MPI_Wait (send_request + _rank); */
+    /*   printf("wait irecv : %d\n", _rank); */
+    /*   fflush(stdout); */
+    /*   PDM_MPI_Wait (recv_request + _rank); */
+    /* } */
 
     PDM_MPI_Barrier (octree->comm);
 
@@ -2831,79 +2834,134 @@ PDM_para_octree_build
       }
     }
 
-    for (int i = 0; i < n_used_ranks; i++) {
-      int _rank = used_ranks[i];
-      int n_val_rank_recv = 0;
-      int n_val_rank_send = 0;
+    int *rank_neighbour_rank_n = malloc (sizeof(int) * n_ranks);
+    int *rank_neighbour_rank_idx = malloc (sizeof(int) * (n_ranks + 1));
+    int *rank_recv_neighbour_rank_n = malloc (sizeof(int) * n_ranks);
+    int *rank_recv_neighbour_rank_idx = malloc (sizeof(int) * (n_ranks + 1));
+
+    rank_neighbour_rank_idx[0] = 0;
+    rank_recv_neighbour_rank_idx[0] = 0;
+
+    for (int i = 0; i < n_ranks; i++) {
+      rank_neighbour_rank_n[i] = 0;
+      rank_recv_neighbour_rank_n[i] = 0;
+    }
+
+    for (int i = 0; i < n_ranks; i++) {
       for (int j = 0; j < n_direction; j++) {
-        n_val_rank_recv += recv_neighbour_rank_n[_rank * n_direction + j];
-        n_val_rank_send += neighbour_rank_n[_rank * n_direction + j];
+        rank_neighbour_rank_n[i] += neighbour_rank_n[i*n_direction+j];
+        rank_recv_neighbour_rank_n[i] += recv_neighbour_rank_n[i*n_direction+j];
       }
-      PDM_MPI_Irecv(recv_neighbour_rank_node_id + recv_neighbour_rank_idx[_rank * n_direction],
-                    n_val_rank_recv,
-                    PDM_MPI_INT,
-                    _rank,
-                    0,
-                    octree->comm,
-                    recv_request + _rank);
-
-      PDM_MPI_Issend(neighbour_rank_node_id + neighbour_rank_idx[_rank * n_direction],
-                     n_val_rank_send,
-                     PDM_MPI_INT,
-                     _rank,
-                     0,
-                     octree->comm,
-                     send_request + _rank);
+      rank_neighbour_rank_idx[i+1] = rank_neighbour_rank_n[i] + rank_neighbour_rank_idx[i];
+      rank_recv_neighbour_rank_idx[i+1] = rank_recv_neighbour_rank_n[i] + rank_recv_neighbour_rank_idx[i];
     }
 
-    for (int i = 0; i < n_used_ranks; i++) {
-      int _rank = used_ranks[i];
-      PDM_MPI_Wait (send_request + _rank);
-      PDM_MPI_Wait (recv_request + _rank);
+    PDM_MPI_Alltoallv (neighbour_rank_node_id,
+                       rank_neighbour_rank_n,
+                       rank_neighbour_rank_idx,
+                       PDM_MPI_INT,
+                       recv_neighbour_rank_node_id,
+                       rank_recv_neighbour_rank_n,
+                       rank_recv_neighbour_rank_idx,
+                       PDM_MPI_INT,
+                       octree->comm);
+
+ /* for (int i = 0; i < n_used_ranks; i++) { */
+ /*      int _rank = used_ranks[i]; */
+ /*      int n_val_rank_recv = 0; */
+ /*      int n_val_rank_send = 0; */
+ /*      for (int j = 0; j < n_direction; j++) { */
+ /*        n_val_rank_recv += recv_neighbour_rank_n[_rank * n_direction + j]; */
+ /*        n_val_rank_send += neighbour_rank_n[_rank * n_direction + j]; */
+ /*      } */
+ /*      PDM_MPI_Irecv(recv_neighbour_rank_node_id + recv_neighbour_rank_idx[_rank * n_direction], */
+ /*                    n_val_rank_recv, */
+ /*                    PDM_MPI_INT, */
+ /*                    _rank, */
+ /*                    0, */
+ /*                    octree->comm, */
+ /*                    recv_request + _rank); */
+
+ /*      PDM_MPI_Issend(neighbour_rank_node_id + neighbour_rank_idx[_rank * n_direction], */
+ /*                     n_val_rank_send, */
+ /*                     PDM_MPI_INT, */
+ /*                     _rank, */
+ /*                     0, */
+ /*                     octree->comm, */
+ /*                     send_request + _rank); */
+ /*    } */
+
+ /*    for (int i = 0; i < n_used_ranks; i++) { */
+ /*      int _rank = used_ranks[i]; */
+ /*      PDM_MPI_Wait (send_request + _rank); */
+ /*      PDM_MPI_Wait (recv_request + _rank); */
+ /*    } */
+
+    for (int i = 0; i < n_ranks; i++) {
+      rank_neighbour_rank_n[i] *= 4;
+      rank_recv_neighbour_rank_n[i] *= 4;
+      rank_neighbour_rank_idx[i+1] *= 4;
+      rank_recv_neighbour_rank_idx[i+1] *= 4;
     }
 
-    for (int i = 0; i < n_used_ranks; i++) {
-      int _rank = used_ranks[i];
-      int n_val_rank_recv = 0;
-      int n_val_rank_send = 0;
-      for (int j = 0; j < n_direction; j++) {
-        n_val_rank_recv += recv_neighbour_rank_n[_rank * n_direction + j];
-        n_val_rank_send += neighbour_rank_n[_rank * n_direction + j];
-      }
-      n_val_rank_recv *= 4;
-      n_val_rank_send *= 4;
 
-      printf("2eme envoi\n");
-      fflush(stdout);
+    PDM_MPI_Alltoallv (_neighbour_rank_code,
+                       rank_neighbour_rank_n,
+                       rank_neighbour_rank_idx,
+                       PDM_MPI_UNSIGNED,
+                       _recv_neighbour_rank_code,
+                       rank_recv_neighbour_rank_n,
+                       rank_recv_neighbour_rank_idx,
+                       PDM_MPI_UNSIGNED,
+                       octree->comm);
 
-      PDM_MPI_Irecv(_recv_neighbour_rank_code + 4 * recv_neighbour_rank_idx[_rank * n_direction],
-                    n_val_rank_recv,
-                    PDM_MPI_UNSIGNED,
-                    _rank,
-                    0,
-                    octree->comm,
-                    recv_request + _rank);
+    /* for (int i = 0; i < n_used_ranks; i++) { */
+    /*   int _rank = used_ranks[i]; */
+    /*   int n_val_rank_recv = 0; */
+    /*   int n_val_rank_send = 0; */
+    /*   for (int j = 0; j < n_direction; j++) { */
+    /*     n_val_rank_recv += recv_neighbour_rank_n[_rank * n_direction + j]; */
+    /*     n_val_rank_send += neighbour_rank_n[_rank * n_direction + j]; */
+    /*   } */
+    /*   n_val_rank_recv *= 4; */
+    /*   n_val_rank_send *= 4; */
 
-      PDM_MPI_Issend(_neighbour_rank_code + 4 * neighbour_rank_idx[_rank * n_direction],
-                     n_val_rank_send,
-                     PDM_MPI_UNSIGNED,
-                     _rank,
-                     0,
-                     octree->comm,
-                     send_request + _rank);
-    }
+    /*   printf("2eme envoi\n"); */
+    /*   fflush(stdout); */
 
-    for (int i = 0; i < n_used_ranks; i++) {
-      int _rank = used_ranks[i];
-      printf("wait issend : %d\n", _rank);
-      fflush(stdout);
-      PDM_MPI_Wait (send_request + _rank);
-      printf("wait irecv : %d\n", _rank);
-      fflush(stdout);
-      PDM_MPI_Wait (recv_request + _rank);
-    }
+    /*   PDM_MPI_Irecv(_recv_neighbour_rank_code + 4 * recv_neighbour_rank_idx[_rank * n_direction], */
+    /*                 n_val_rank_recv, */
+    /*                 PDM_MPI_UNSIGNED, */
+    /*                 _rank, */
+    /*                 0, */
+    /*                 octree->comm, */
+    /*                 recv_request + _rank); */
+
+    /*   PDM_MPI_Issend(_neighbour_rank_code + 4 * neighbour_rank_idx[_rank * n_direction], */
+    /*                  n_val_rank_send, */
+    /*                  PDM_MPI_UNSIGNED, */
+    /*                  _rank, */
+    /*                  0, */
+    /*                  octree->comm, */
+    /*                  send_request + _rank); */
+    /* } */
+
+    /* for (int i = 0; i < n_used_ranks; i++) { */
+    /*   int _rank = used_ranks[i]; */
+    /*   printf("wait issend : %d\n", _rank); */
+    /*   fflush(stdout); */
+    /*   PDM_MPI_Wait (send_request + _rank); */
+    /*   printf("wait irecv : %d\n", _rank); */
+    /*   fflush(stdout); */
+    /*   PDM_MPI_Wait (recv_request + _rank); */
+    /* } */
 
     free (_neighbour_rank_code);
+
+    free (rank_neighbour_rank_n);
+    free (rank_neighbour_rank_idx);
+    free (rank_recv_neighbour_rank_n);
+    free (rank_recv_neighbour_rank_idx);
 
     idx = 0;
     for (int i = 0; i < recv_neighbour_rank_idx[n_quantile]; i++) {
