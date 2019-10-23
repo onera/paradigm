@@ -1689,14 +1689,6 @@ PDM_morton_ordered_build_rank_index
     }
   }
 
-  printf("_weight :");
-  for (int i = 0; i < n_codes; i++) {
-
-    printf (" %ld", _weight[i]);
-  }
-
-  printf("\n");
-
 
   PDM_g_num_t scan;
   if  (n_codes > 0) {
@@ -1743,13 +1735,32 @@ PDM_morton_ordered_build_rank_index
     }
   }
   quantiles[comm_size] = total_weight + 1;
+  //quantiles[comm_size] = total_weight;
 
-  printf("quantiles :");
+  // if (comm_rank == 0) {
+  printf("quantiles %ld :", total_weight);
   for (int i = 0; i < comm_size + 1; i++) {
     printf(" %ld",  quantiles[i]);
   }
   printf("\n");
+  // }
 
+
+  printf("weight :");
+  for (int i = 0; i < n_codes; i++) {
+
+    printf (" %d", weight[i]);
+  }
+
+  printf("\n");
+
+  printf("_weight :");
+  for (int i = 0; i < n_codes; i++) {
+
+    printf (" %ld", _weight[i]);
+  }
+
+  printf("\n");
   /* PDM_MPI_Barrier(comm); */
   /* exit(1); */
 
