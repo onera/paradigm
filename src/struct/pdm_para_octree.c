@@ -1079,7 +1079,10 @@ _complete_octree
     prev_rank--;
   }
 
-  if (rank == first_rank) {
+  printf ("[%d] first last next prev : %d %d %d %d\n", rank,
+          first_rank, last_rank, next_rank, prev_rank);
+
+  if (rank == first_rank && rank_n_nodes[rank] > 0) {
     PDM_morton_code_t root_DFD;
 
     root_DFD.L = max_morton_level;
@@ -1107,7 +1110,7 @@ _complete_octree
   }
 
 
-  if (rank == last_rank) {
+  if (rank == last_rank && rank_n_nodes[rank] > 0) {
     PDM_morton_code_t root_DLD;
 
     root_DLD.L = max_morton_level;
