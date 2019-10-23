@@ -252,7 +252,11 @@ char *argv[]
   free (char_length);
   free (gnum);
 
+  PDM_MPI_Barrier (PDM_MPI_COMM_WORLD);
+
   PDM_printf ("\nfin Test\n");
+
+  PDM_MPI_Finalize ();
 
   return 0;
 

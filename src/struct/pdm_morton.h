@@ -359,6 +359,27 @@ PDM_morton_quantile_search(size_t              n_quantiles,
                            PDM_morton_code_t  *quantile_start);
 
 /*----------------------------------------------------------------------------
+ * Get the intersected quantiles associated to a Morton code using a binary search.
+ *
+ * No check is done to ensure that the code is present in the quantiles.
+ *
+ * parameters:
+ *   n_quantiles    <-- number of quantiles
+ *   code           <-- code we are searching for
+ *   quantile_start <-- first Morton code in each quantile (size: n_quantiles)
+ *   n_intersect    <-> number of intersections with quantiles
+ *   intersect      <-> list intersected quantiles (size : n_quantiles)
+ *
+ *----------------------------------------------------------------------------*/
+
+void
+PDM_morton_quantile_intersect(size_t              n_quantiles,
+                              PDM_morton_code_t   code,
+                              PDM_morton_code_t  *quantile_start,
+                              size_t              *n_intersect,
+                              int                 *intersect );
+
+/*----------------------------------------------------------------------------
  * Build a global Morton encoding rank index from ordered codes
  *
  * The rank_index[i] contains the first Morton code assigned to rank [i].

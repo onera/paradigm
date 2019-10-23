@@ -155,9 +155,9 @@ _a_ge_b(PDM_morton_code_t  code_a,
 
   if (b_diff > 0) {
     code_b.L = l;
-    code_b.X[0] = code_b.X[0] << b_diff;
-    code_b.X[1] = code_b.X[1] << b_diff;
-    code_b.X[2] = code_b.X[2] << b_diff;
+    code_b.X[0] = (code_b.X[0] << b_diff) + 1;
+    code_b.X[1] = (code_b.X[1] << b_diff) + 1;
+    code_b.X[2] = (code_b.X[2] << b_diff) + 1;
   }
 
   i = l - 1;
@@ -208,9 +208,9 @@ _a_eq_b(PDM_morton_code_t  code_a,
 
   if (b_diff > 0) {
     code_b.L = l;
-    code_b.X[0] = code_b.X[0] << b_diff;
-    code_b.X[1] = code_b.X[1] << b_diff;
-    code_b.X[2] = code_b.X[2] << b_diff;
+    code_b.X[0] = (code_b.X[0] << b_diff) + 1;
+    code_b.X[1] = (code_b.X[1] << b_diff) + 1;
+    code_b.X[2] = (code_b.X[2] << b_diff) + 1;
   }
 
   i = l - 1;
@@ -262,9 +262,9 @@ _a_gt_b(PDM_morton_code_t  code_a,
 
   if (b_diff > 0) {
     code_b.L = l;
-    code_b.X[0] = code_b.X[0] << b_diff;
-    code_b.X[1] = code_b.X[1] << b_diff;
-    code_b.X[2] = code_b.X[2] << b_diff;
+    code_b.X[0] = (code_b.X[0] << b_diff) + 1;
+    code_b.X[1] = (code_b.X[1] << b_diff) + 1;
+    code_b.X[2] = (code_b.X[2] << b_diff) + 1;
   }
 
   i = l - 1;
@@ -1558,6 +1558,95 @@ PDM_morton_quantile_search(size_t              n_quantiles,
 }
 
 /*----------------------------------------------------------------------------
+ * Get the intersected quantiles associated to a Morton code using a binary search.
+ *
+ * No check is done to ensure that the code is present in the quantiles.
+ *
+ * parameters:
+ *   n_quantiles    <-- number of quantiles
+ *   code           <-- code we are searching for
+ *   quantile_start <-- first Morton code in each quantile (size: n_quantiles)
+ *   n_intersect    <-> number of intersections with quantiles
+ *   intersect      <-> list intersected quantiles (size : n_quantiles)
+ *
+ *----------------------------------------------------------------------------*/
+
+void
+PDM_morton_quantile_intersect(size_t              n_quantiles,
+                              PDM_morton_code_t   code,
+                              PDM_morton_code_t  *quantile_start,
+                              size_t              *n_intersect,
+                              int                 *intersect )
+{
+  size_t mid_id = 0;
+  size_t start_id = 0;
+  size_t end_id = n_quantiles;
+
+  /* use binary search */
+
+  while (start_id + 1 < end_id) {
+    mid_id = start_id + ((end_id -start_id) / 2);
+    printf("\na d\n");
+    PDM_morton_dump (3,quantile_start[mid_id]),
+    printf("a f\n");
+    /* printf("\ncode d\n"); */
+    /* PDM_morton_dump (3,code), */
+    /* printf("code f\n"); */
+    printf("a > code : %d\n",_a_gt_b(quantile_start[mid_id], code));
+    if (_a_gt_b(quantile_start[mid_id], code))
+      end_id = mid_id;
+    else
+      start_id = mid_id;
+  }
+
+  /* We may have stopped short of the required value,
+     or have multiple occurences of a quantile start
+     (in case of empty quantiles), of which we want to
+     find the find highest one */
+
+  *n_intersect = 0;
+
+  int start_id_save = start_id;
+
+  printf ("start_id 1 : %ld\n",start_id);
+
+  while (   start_id < n_quantiles - 1
+            && quantile_start[start_id_save].L == quantile_start[start_id+1].L
+            && quantile_start[start_id_save].X[0] == quantile_start[start_id+1].X[0]
+            && quantile_start[start_id_save].X[1] == quantile_start[start_id+1].X[1]
+            && quantile_start[start_id_save].X[2] == quantile_start[start_id+1].X[2])
+    start_id++;
+
+  printf ("start_id 2 : %ld\n",start_id);
+  intersect[(*n_intersect)++] = start_id;
+
+  start_id = start_id_save;
+
+  while (start_id > 0
+         && quantile_start[start_id_save].L == quantile_start[start_id-1].L
+         && quantile_start[start_id_save].X[0] == quantile_start[start_id-1].X[0]
+         && quantile_start[start_id_save].X[1] == quantile_start[start_id-1].X[1]
+         && quantile_start[start_id_save].X[2] == quantile_start[start_id-1].X[2]) {
+    start_id--;
+  }
+
+  printf ("start_id 3 : %ld\n",start_id);
+
+  while (start_id > 0
+         && PDM_morton_ancestor_is (code, quantile_start[start_id])
+         && !(code.L == quantile_start[start_id].L
+              && code.X[0] == quantile_start[start_id].X[0]
+              && code.X[1] == quantile_start[start_id].X[1]
+              && code.X[2] == quantile_start[start_id].X[2])) {
+    intersect[(*n_intersect)++] = start_id - 1;
+    start_id--;
+  }
+
+    printf ("start_id 4 : %ld\n",start_id);
+
+}
+
+/*----------------------------------------------------------------------------
  * Build a global Morton encoding rank index from ordered codes
  *
  * The rank_index[i] contains the first Morton code assigned to rank [i].
@@ -1593,23 +1682,46 @@ PDM_morton_ordered_build_rank_index
   int comm_rank;
   PDM_MPI_Comm_rank (comm, &comm_rank);
 
-  _weight[0] = (PDM_g_num_t) weight[0];
-  for (int i = 1; i < n_codes; i++) {
-    _weight[i] = (PDM_g_num_t) weight[i] + _weight[i-1];
+  if (n_codes > 0) {
+    _weight[0] = (PDM_g_num_t) weight[0];
+    for (int i = 1; i < n_codes; i++) {
+      _weight[i] = (PDM_g_num_t) weight[i] + _weight[i-1];
+    }
   }
+
+  printf("_weight :");
+  for (int i = 0; i < n_codes; i++) {
+
+    printf (" %ld", _weight[i]);
+  }
+
+  printf("\n");
+
 
   PDM_g_num_t scan;
-  PDM_MPI_Scan (_weight + n_codes-1, &scan, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, comm);
-  scan += -_weight[n_codes-1];
-
-  for (int i = 0; i < n_codes; i++) {
-    _weight[i] += scan;
+  if  (n_codes > 0) {
+    PDM_MPI_Scan (_weight + n_codes-1, &scan, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, comm);
+    scan += -_weight[n_codes-1];
+    for (int i = 0; i < n_codes; i++) {
+      _weight[i] += scan;
+    }
+  }
+  else {
+    printf("00 node\n");
+    PDM_g_num_t __weight_0 = 0;
+    PDM_MPI_Scan (&__weight_0, &scan, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, comm);
+    //    scan = 0;
   }
 
-  PDM_g_num_t total_weight =0;
+  PDM_g_num_t total_weight = 0;
 
   if (comm_rank == (comm_size - 1)) {
-    total_weight = _weight[n_codes-1];
+    if (n_codes > 0) {
+      total_weight = _weight[n_codes-1];
+    }
+    else {
+      total_weight = scan;
+    }
   }
 
   PDM_MPI_Bcast (&total_weight, 1, PDM__PDM_MPI_G_NUM,
@@ -1631,6 +1743,15 @@ PDM_morton_ordered_build_rank_index
     }
   }
   quantiles[comm_size] = total_weight + 1;
+
+  printf("quantiles :");
+  for (int i = 0; i < comm_size + 1; i++) {
+    printf(" %ld",  quantiles[i]);
+  }
+  printf("\n");
+
+  /* PDM_MPI_Barrier(comm); */
+  /* exit(1); */
 
   int *send_count = malloc (sizeof(int) * comm_size);
   for (int i = 0; i < comm_size; i++) {
@@ -1662,8 +1783,10 @@ PDM_morton_ordered_build_rank_index
   PDM_morton_int_t *send_data = malloc(sizeof(PDM_morton_int_t) * send_idx[comm_size]);
   PDM_morton_int_t *recv_data = malloc(sizeof(PDM_morton_int_t) * recv_idx[comm_size]);
 
+
   for (int i = 0; i < n_codes; i++) {
     int irank = PDM_binary_search_gap_long (_weight[i], quantiles, comm_size+1);
+    printf("irank, _weight : %d %ld %ld\n", irank, _weight[i], quantiles[0]);
     send_data[send_idx[irank]+send_count[irank]++] = ordered_code[i].L;
     send_data[send_idx[irank]+send_count[irank]++] = ordered_code[i].X[0];
     send_data[send_idx[irank]+send_count[irank]++] = ordered_code[i].X[1];
