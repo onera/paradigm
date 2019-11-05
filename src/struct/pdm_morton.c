@@ -1642,7 +1642,7 @@ PDM_morton_quantile_intersect(size_t              n_quantiles,
     start_id--;
   }
 
-    printf ("start_id 4 : %ld\n",start_id);
+  printf ("start_id 4 : %ld\n",start_id);
 
 }
 
@@ -1674,6 +1674,9 @@ PDM_morton_ordered_build_rank_index
  PDM_MPI_Comm             comm
 )
 {
+
+  printf("\n\n******** Debut PDM_morton_ordered_build_rank_index ********\n\n");
+
   PDM_g_num_t *_weight = malloc(sizeof(PDM_g_num_t) * n_codes);
 
   int comm_size;
@@ -1827,7 +1830,7 @@ PDM_morton_ordered_build_rank_index
 
   idx = 0;
 
-  PDM_morton_int_t send_min_code[4] = {0, 0, 0, 0};
+  PDM_morton_int_t send_min_code[4] = {31u, 0, 0, 0};
 
   for (int i = 0; i < n_recv_codes; i++) {
     PDM_morton_code_t tmp_code;
@@ -1852,16 +1855,36 @@ PDM_morton_ordered_build_rank_index
 
   PDM_morton_int_t *buff_min_codes = malloc(sizeof(PDM_morton_int_t) * 4 * comm_size);
 
+  int *n_nodes = malloc(sizeof(int) * comm_size);
+
+  PDM_MPI_Allgather (&n_recv_codes, 1, PDM_MPI_INT,
+                     n_nodes, 1, PDM_MPI_INT,
+                     comm);
+
   PDM_MPI_Allgather (send_min_code, 4, PDM_MPI_UNSIGNED,
                      buff_min_codes, 4, PDM_MPI_UNSIGNED,
                      comm);
 
   idx = 0;
   for (int i = 0; i < comm_size; i++) {
-    rank_index[i].L = buff_min_codes[idx++];
-    rank_index[i].X[0] = buff_min_codes[idx++];
-    rank_index[i].X[1] = buff_min_codes[idx++];
-    rank_index[i].X[2] = buff_min_codes[idx++];
+    if (n_nodes[i] > 0) {
+      rank_index[i].L = buff_min_codes[idx++];
+      rank_index[i].X[0] = buff_min_codes[idx++];
+      rank_index[i].X[1] = buff_min_codes[idx++];
+      rank_index[i].X[2] = buff_min_codes[idx++];
+    }
+    else {
+      idx += 4;
+    }
+  }
+
+  for (int i = comm_size - 1; i >= 0; i--) {
+    if ((n_nodes[i] == 0) && (i != comm_size - 1)) {
+      rank_index[i].L = rank_index[i+1].L;
+      rank_index[i].X[0] = rank_index[i+1].X[0];
+      rank_index[i].X[1] = rank_index[i+1].X[1];
+      rank_index[i].X[2] = rank_index[i+1].X[2];
+    }
   }
 
   rank_index[comm_size].L = 31u;
@@ -1870,6 +1893,9 @@ PDM_morton_ordered_build_rank_index
   rank_index[comm_size].X[2] = (1u << 31u) - 1u;
 
   free (buff_min_codes);
+  free (n_nodes);
+
+  printf("\n\n******** Fin PDM_morton_ordered_build_rank_index ********\n\n");
 
 }
 

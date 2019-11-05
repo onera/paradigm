@@ -1230,6 +1230,8 @@ _complete_octree
 
   _octants_free (L2);
 
+  free (rank_n_nodes);
+
   printf("fin complete_octree\n");
   fflush(stdout);
 
@@ -1497,22 +1499,43 @@ _block_partition
   int comm_rank;
   PDM_MPI_Comm_rank(comm, &comm_rank);
 
-  printf("\noctant_list %d %d : d\n", comm_rank, octant_list->n_nodes);
-  for (int i = 0; i < octant_list->n_nodes; i++) {
-    PDM_morton_dump (3, octant_list->codes[i]);
+  printf("\n_block_partition : octant_list %d : d\n", comm_rank);
+  if (octant_list!=NULL) {
+    printf("\n_nodes : %d\n", octant_list->n_nodes);
+    for (int i = 0; i < octant_list->n_nodes; i++) {
+      PDM_morton_dump (3, octant_list->codes[i]);
+    }
   }
-  printf("octant_list f\n");
+  else {
+    printf ("octant_list NULL\n");
+  }
+
+  printf("_block_partition :octant_list f\n\n");
 
   if (octant_list->n_nodes > 1 ) {
 
     T = _complete_region (octant_list->codes[0],
                           octant_list->codes[octant_list->n_nodes-1]);
 
-    for (int i = 0; i < T->n_nodes; i++) {
-      max_level = PDM_MAX (T->codes[i].L, max_level);
-      min_level = PDM_MIN (T->codes[i].L, min_level);
+    if (T !=NULL) {
+      for (int i = 0; i < T->n_nodes; i++) {
+        max_level = PDM_MAX (T->codes[i].L, max_level);
+        min_level = PDM_MIN (T->codes[i].L, min_level);
+      }
     }
   }
+
+  printf("\n_block_partition : complete_region %d :d\n", comm_rank);
+  if (T!=NULL) {
+    printf("\n_nodes : %d\n", T->n_nodes);
+    for (int i = 0; i < T->n_nodes; i++) {
+      PDM_morton_dump (3, T->codes[i]);
+    }
+  }
+  else {
+    printf ("T NULL\n");
+  }
+  printf("_block_partition : complete_region f\n\n");
 
   int max_max_level;
   PDM_MPI_Allreduce(&max_level, &max_max_level, 1,
@@ -1544,8 +1567,20 @@ _block_partition
 
   /* Complete octree */
 
+  printf("\n_block_partition : before complete_octree %d %d : d\n", comm_rank, C->n_nodes);
+  for (int i = 0; i < C->n_nodes; i++) {
+    PDM_morton_dump (3, C->codes[i]);
+  }
+  printf("_block_partition : before complete_octree f\n\n");
+
   _l_octant_t *G = _complete_octree (C, comm);
 
+
+  printf("\n_block_partition : after complete_octree %d %d : d\n", comm_rank, C->n_nodes);
+  for (int i = 0; i < G->n_nodes; i++) {
+    PDM_morton_dump (3, G->codes[i]);
+  }
+  printf("_block_partition : after complete_octree f\n\n");
 
   /* PDM_MPI_Barrier (comm); */
   /* exit(1); */
@@ -1569,22 +1604,48 @@ _block_partition
 
   PDM_morton_int_t *code_buff = malloc (sizeof(PDM_morton_int_t) * (G->dim + 1));
   PDM_morton_int_t *rank_buff = malloc (sizeof(PDM_morton_int_t) * n_ranks * (G->dim + 1));
-  code_buff[0] = G->codes[0].L;
+  int *n_nodes_rank = malloc (sizeof(int) * n_ranks);
 
-  for (int i = 0; i < G->dim; i++) {
-    code_buff[i+1] =  G->codes[0].X[i];
+  for (int i = 0; i < G->dim + 1; i++) {
+    code_buff[i] = 0;
   }
+
+  if ( G->n_nodes > 0) {
+    code_buff[0] = G->codes[0].L;
+    for (int i = 0; i < G->dim; i++) {
+      code_buff[i+1] =  G->codes[0].X[i];
+    }
+  }
+
+  PDM_MPI_Allgather (&(G->n_nodes), 1, PDM_MPI_INT,
+                     n_nodes_rank,  1, PDM_MPI_INT,
+                     comm);
 
   PDM_MPI_Allgather (code_buff, G->dim + 1, PDM_MPI_UNSIGNED,
                      rank_buff, G->dim + 1, PDM_MPI_UNSIGNED,
                      comm);
 
-  PDM_morton_code_t *rank_codes = malloc (sizeof(PDM_morton_code_t) * n_ranks);
-
+  int n_active_ranks = 0;
   for (int i = 0; i < n_ranks; i++) {
-    rank_codes[i].L = rank_buff[(G->dim + 1) * i];
-    for (int j = 0; j < G->dim; j++) {
-      rank_codes[i].X[j] = rank_buff[(G->dim + 1) * i + j + 1];
+    if (n_nodes_rank[i] > 0) {
+      n_active_ranks++;
+    }
+  }
+
+  //assert (n_active_ranks > 0);
+
+  PDM_morton_code_t *rank_codes = malloc (sizeof(PDM_morton_code_t) * n_active_ranks);
+  int *active_ranks = malloc (sizeof(int) * n_active_ranks);
+
+  n_active_ranks = 0;
+  for (int i = 0; i < n_ranks; i++) {
+    if (n_nodes_rank[i] > 0) {
+      active_ranks[n_active_ranks] = i;
+      rank_codes[n_active_ranks].L = rank_buff[(G->dim + 1) * i];
+      for (int j = 0; j < G->dim; j++) {
+        rank_codes[n_active_ranks].X[j] = rank_buff[(G->dim + 1) * i + j + 1];
+      }
+      n_active_ranks++;
     }
   }
 
@@ -1602,20 +1663,28 @@ _block_partition
     send_count[i] = 0;
   }
 
+  printf("rank codes deb\n");
+  for (int i = 0; i < n_active_ranks; i++) {
+    PDM_morton_dump(3, rank_codes[i]);
+  }
+  printf("rank codes fin\n");
+
   for (int i = 0; i < octant_list->n_nodes; i++) {
 
     PDM_morton_dump(3, octant_list->codes[i]);
 
-    if (irank < (n_ranks - 1)) {
+    if (irank < (n_active_ranks - 1)) {
       if (PDM_morton_a_ge_b (octant_list->codes[i], rank_codes[irank+1])) {
 
-        irank += 1 + PDM_morton_binary_search(n_ranks - (irank + 1),
+        irank += 1 + PDM_morton_binary_search(n_active_ranks - (irank + 1),
                                               octant_list->codes[i],
                                               rank_codes + irank + 1);
       }
     }
-    send_count[irank] += octant_list->dim + 2;
+    send_count[active_ranks[irank]] += octant_list->dim + 2;
   }
+
+  printf("fin boucle\n");
 
   /* Exchange number of coords to send to each process */
 
@@ -1642,16 +1711,16 @@ _block_partition
   irank = 0;
   for (int i = 0; i < octant_list->n_nodes; i++) {
 
-    if (irank < (n_ranks - 1)) {
+    if (irank < (n_active_ranks - 1)) {
       if (PDM_morton_a_ge_b (octant_list->codes[i], rank_codes[irank+1])) {
 
-        irank += 1 + PDM_morton_binary_search(n_ranks - (irank + 1),
+        irank += 1 + PDM_morton_binary_search(n_active_ranks - (irank + 1),
                                               octant_list->codes[i],
                                               rank_codes + irank + 1);
       }
     }
 
-    int shift = send_shift[irank] + send_count[irank];
+    int shift = send_shift[active_ranks[irank]] + send_count[active_ranks[irank]];
 
     assert(octant_list->n_points[i] >= 0);
 
@@ -1663,7 +1732,7 @@ _block_partition
 
     send_codes[shift++] = (PDM_morton_int_t) octant_list->n_points[i];
 
-    send_count[irank] += octant_list->dim + 2;
+    send_count[active_ranks[irank]] += octant_list->dim + 2;
   }
 
   free (rank_codes);
@@ -1695,6 +1764,7 @@ _block_partition
   }
 
   /* - compute weight of each cell */
+
 
   for (int i = 0; i < n_recv_codes; i++) {
 
@@ -1754,6 +1824,8 @@ _block_partition
 
   _distribute_octants (octant_list, _G_morton_index, comm);
 
+  free (active_ranks);
+  free (n_nodes_rank);
   return G;
 
 }
@@ -2254,7 +2326,6 @@ PDM_para_octree_build
     for (int i = 0; i < octree->n_points; i++) {
       printf("\n\n---- point d : %d %d %d\n",i, iblock, octree->octants->n_nodes);
       PDM_morton_dump (3, octree->points_code[i]);
-      PDM_morton_dump (3, octree->octants->codes[iblock]);
       while (!PDM_morton_ancestor_is (octree->octants->codes[iblock],
                                       octree->points_code[i])) {
         iblock++;
