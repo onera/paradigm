@@ -64,6 +64,8 @@ extern "C" {
  * Local Macro definitions
  *============================================================================*/
 
+const PDM_morton_int_t PDM_morton_max_level = 31u;
+
 /*=============================================================================
  * Static global variables
  *============================================================================*/
@@ -2047,15 +2049,22 @@ PDM_morton_ancestor_is (PDM_morton_code_t  a,
 {
   _Bool status = 0;
 
+  printf("---- PDM_morton_ancestor_is a ancetre b---- d\n");
+
+  PDM_morton_dump(3, a);
+  PDM_morton_dump(3, b);
+
   if (a.L <= b.L) {
     PDM_morton_assign_level (&b,
                              a.L);
 
+    PDM_morton_dump(3, b);
     assert (a.L == b.L);
 
     status = a.X[0] == b.X[0] && a.X[1] == b.X[1] && a.X[2] == b.X[2];
   }
 
+  printf("---- PDM_morton_ancestor_is ---- f : %d\n", status);
   return status;
 }
 
