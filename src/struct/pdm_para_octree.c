@@ -70,7 +70,6 @@ typedef struct  {
 
   int  *n_points;          /*!< Number of points in octant*/
   int  *range;             /*!< Start index of point list for each octant */
-  int  *is_leaf;           /*!< IS a leaf >*/
 
   int   *neighbour_idx;
   int   *neighbours;               /*!< rank + id_node size = 2 * n_nodes */
@@ -371,10 +370,6 @@ _octants_purge
     free (octants->n_points);
   }
 
-  if (octants->is_leaf != NULL) {
-    free (octants->is_leaf);
-  }
-
   if (octants->range != NULL) {
     free (octants->range);
   }
@@ -436,7 +431,6 @@ _octants_init
   octants->codes    = malloc (sizeof(PDM_morton_code_t) * octants->n_nodes_max);
   octants->n_points = malloc (sizeof(int) * octants->n_nodes_max);
   octants->range    = malloc (sizeof(int) * (octants->n_nodes_max+1));
-  octants->is_leaf  = malloc (sizeof(int) * octants->n_nodes_max);
 
   octants->neighbour_idx = NULL;
   octants->neighbours    = NULL;
@@ -471,9 +465,6 @@ _octants_check_alloc
                                  sizeof(int) * octants->n_nodes_max);
     octants->range = realloc (octants->range,
                               sizeof(int) * (octants->n_nodes_max+1));
-    octants->is_leaf = realloc (octants->is_leaf,
-                                sizeof(int) * octants->n_nodes_max);
-
     octants->neighbour_idx = NULL;
     octants->neighbours    = NULL;
 
@@ -497,8 +488,7 @@ _octants_push_back
  _l_octant_t *octants,
  const PDM_morton_code_t code,
  const int n_points,
- const int range,
- const int is_leaf
+ const int range
 )
 {
 
@@ -511,8 +501,6 @@ _octants_push_back
   octants->n_points[idx] = n_points;
 
   octants->range[idx] = range;
-
-  octants->is_leaf[idx] = is_leaf;
 
   octants->n_nodes += 1;
 
@@ -533,8 +521,7 @@ _octants_push_front
  _l_octant_t *octants,
  const PDM_morton_code_t code,
  const int n_points,
- const int range,
- const int is_leaf
+ const int range
 )
 {
 
@@ -547,9 +534,6 @@ _octants_push_front
     octants->n_points[i] =  octants->n_points[i-1];
 
     octants->range[i] = octants->range[i-1];
-
-    octants->is_leaf[i] = octants->is_leaf[i-1];
-
   }
 
   const int idx = 0;
@@ -559,8 +543,6 @@ _octants_push_front
   octants->n_points[idx] = n_points;
 
   octants->range[idx] = range;
-
-  octants->is_leaf[idx] = is_leaf;
 
   octants->n_nodes += 1;
 
@@ -666,7 +648,6 @@ _remove_duplicates
     _octants_push_back (r_octants,
                         _codes[i],
                         0,
-                        0,
                         0);
 
   }
@@ -702,7 +683,6 @@ _linearize
         _octants_push_back (r_octants,
                             _codes[i],
                             0,
-                            0,
                             0);
       }
 
@@ -710,7 +690,6 @@ _linearize
 
     _octants_push_back (r_octants,
                         _codes[octants->n_nodes-1],
-                        0,
                         0,
                         0);
   }
@@ -794,7 +773,6 @@ _complete_region
 
         _octants_push_back (r_octants,
                             code,
-                            0,
                             0,
                             0);
       }
@@ -949,7 +927,6 @@ _distribute_octants
     }
     _octants_push_back (L,
                         _code,
-                        0,
                         0,
                         0);
   }
@@ -1118,7 +1095,6 @@ _complete_octree
       _octants_push_front (L2,
                            child[0],
                            0,
-                           0,
                            0);
     }
 
@@ -1143,7 +1119,6 @@ _complete_octree
 
       _octants_push_back (L2,
                           child[7],
-                          0,
                           0,
                           0);
 
@@ -1198,7 +1173,6 @@ _complete_octree
       _octants_push_back (L2,
                           code,
                           0,
-                          0,
                           0);
 
     }
@@ -1215,14 +1189,12 @@ _complete_octree
       _octants_push_back (R,
                           L2->codes[i],
                           0,
-                          0,
                           0);
 
       if (A != NULL) {
         for (int j = 0; j < A->n_nodes; j++) {
           _octants_push_back (R,
                               A->codes[j],
-                              0,
                               0,
                               0);
         }
@@ -1233,7 +1205,6 @@ _complete_octree
     if (rank == last_rank  && rank_n_nodes[rank] > 0) {
       _octants_push_back (R,
                           L2->codes[L2->n_nodes-1],
-                          0,
                           0,
                           0);
     }
@@ -1254,7 +1225,6 @@ _complete_octree
 
       _octants_push_back (R,
                           _code,
-                          0,
                           0,
                           0);
 
@@ -1585,8 +1555,7 @@ _block_partition
         _octants_push_back (C,
                             T->codes[i],
                             T->n_points[i],
-                            T->range[i],
-                            T->is_leaf[i]);
+                            T->range[i]);
       }
     }
   }
@@ -1986,10 +1955,6 @@ PDM_para_octree_free
       free (octree->octants->neighbours);
     }
 
-    if (octree->octants->is_leaf != NULL) {
-      free (octree->octants->is_leaf);
-    }
-
     free (octree->octants);
   }
 
@@ -2246,7 +2211,6 @@ PDM_para_octree_build
 
         PDM_morton_copy (octree->points_code[i], &(point_octants->codes[idx]));
 
-        point_octants->is_leaf[idx] = 1;
         point_octants->n_points[idx] = 1;
         point_octants->range[idx] = i;
 
@@ -2383,16 +2347,10 @@ PDM_para_octree_build
     code.X[1] = 0;
     code.X[2] = 0;
 
-    int is_leaf = 0;
-    if (octree->n_points <= octree->points_in_leaf_max) {
-      is_leaf = 1;
-    }
-
     _octants_push_back (octree->octants,
                         code,
                         octree->n_points,
-                        0,
-                        is_leaf);
+                        0);
 
     octree->octants->range[0] = 0;
     octree->octants->range[1] = octree->n_points;
@@ -2484,8 +2442,7 @@ PDM_para_octree_build
     /* Store the leaf */
 
     else {
-      const int is_leaf = 1;
-      _octants_push_back (octree->octants, code, n_points, range, is_leaf);
+      _octants_push_back (octree->octants, code, n_points, range);
     }
 
   }
@@ -3345,14 +3302,13 @@ PDM_para_octree_dump
   }
   PDM_printf("  - n_nodes : %d\n", octree->octants->n_nodes);
   for (int i = 0; i < octree->octants->n_nodes; i++) {
-    PDM_printf("  %d : level %u code [%u, %u, %u], range %d , is_leaf %d , n_points %d\n",
+    PDM_printf("  %d : level %u code [%u, %u, %u], range %d, n_points %d\n",
                i,
                octree->octants->codes[i].L,
                octree->octants->codes[i].X[0],
                octree->octants->codes[i].X[1],
                octree->octants->codes[i].X[2],
                octree->octants->range[i],
-               octree->octants->is_leaf[i],
                octree->octants->n_points[i]
                );
   }
