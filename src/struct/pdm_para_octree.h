@@ -155,7 +155,7 @@ PDM_para_octree_build
  */
 
 void
-PDM_para_octree_dum
+PDM_para_octree_dump
 (
  const int          id
 );
@@ -218,6 +218,20 @@ PDM_g_num_t *pts_g_num,
 PDM_g_num_t *closest_octree_pt_g_num,
 double      *closest_octree_pt_dist2
 );
+
+/**
+ *
+ * \brief  Dump elapsed an CPU time
+ *
+ * \param [in]  id       Identifier
+ *
+ */
+
+void
+PDM_para_octree_dump_times
+(
+ const int id
+ );
 
 #ifdef	__cplusplus
 }
