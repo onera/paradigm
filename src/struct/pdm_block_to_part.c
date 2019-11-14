@@ -812,7 +812,7 @@ PDM_block_to_part_exch2
       int s_block_unit =  block_stride[_btp->distributed_data[i]] * (int) s_data;
 
       unsigned char *_block_data_deb = _block_data + ind;
-
+  PDM_printf ("s_sendBuffer : %d   s_block_unit : %d \n", s_sendBuffer, s_block_unit);
       for (int k = 0; k < s_block_unit; k++) {
         sendBuffer[idx1++] = _block_data_deb[k];
       }

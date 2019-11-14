@@ -1153,6 +1153,8 @@ PDM_part_to_block_exch
       }
     }
 
+// PDM_printf (" ---------------------------------------------------_ptb->tn_recvData : %d\n", _ptb->tn_recvData);
+
     recvStride = (int *) malloc (sizeof(int) * _ptb->tn_recvData);
 
     PDM_MPI_Alltoallv (sendStride,

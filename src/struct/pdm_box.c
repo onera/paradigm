@@ -1066,7 +1066,7 @@ PDM_box_set_recv_data_from_origin_distrib
 )
 {
   int vb = 1;
-  if (vb == 1) PDM_printf ("==== PDM_box_set_recv_data_from_origin_distrib ====\n");
+  if (vb >= 1) PDM_printf ("==== PDM_box_set_recv_data_from_origin_distrib ====\n");
 
   /*
    * If current_distrib_stride != NULL :
@@ -1081,11 +1081,12 @@ PDM_box_set_recv_data_from_origin_distrib
   unsigned char **_origin_distrib_data = (unsigned char **) origin_distrib_data;
 
   long** l = (long**)origin_distrib_data;
- PDM_printf ("origin_distrib_data : %d\n", origin_distrib_data);
+  if (vb >= 3) {
+	  PDM_printf ("origin_distrib_data : %d\n", origin_distrib_data);
  PDM_printf ("l : %d\n", l);
  PDM_printf ("l[0][0] : %ld\n", l[0][0]);
  PDM_printf ("l[0][1] : %ld\n", l[0][1]);
-
+  }
 /* PDM_printf ("origin_distrib_data[0][0] : %d\n", (long)(origin_distrib_data[0][0]));
  PDM_printf ("origin_distrib_data[0][1] : %d\n", origin_distrib_data[0][0]);
  PDM_printf ("origin_distrib_data[0][0] : %u\n", ((unsigned char **)origin_distrib_data)[0][0]);
@@ -1118,7 +1119,7 @@ PDM_box_set_recv_data_from_origin_distrib
   int *orig_count = (int *) malloc (sizeof(int) * s_comm);
   PDM_MPI_Alltoall(curr_count, 1, PDM_MPI_INT,
                orig_count, 1, PDM_MPI_INT, boxes->comm);
-  if (vb == 1) {
+  if (vb >=2) {
    for (int i = 0; i < s_comm; i++) {
    PDM_printf ("curr_count[%d]=%d  orig_count[%d]=%d  \n", i, curr_count[i], i, orig_count[i]);}
   }
@@ -1140,15 +1141,15 @@ PDM_box_set_recv_data_from_origin_distrib
     curr_shift[i] *= 2;
     orig_shift[i] *= 2;
   }
-  if (vb == 1) {
+  if (vb >= 2) {
    for (int i = 0; i < s_comm + 1; i++) {
     PDM_printf ("curr_shift[%d]=%d  orig_shift[%d]=%d  \n", i, curr_shift[i], i, orig_shift[i]);}
   }
   for (int i = 0; i < s_comm; i++) {
     orig_count[i] *= 2;
   }
-  if (vb == 1) {
-   for (int i = 0; i < s_comm; i++) {
+  if (vb >= 2) {
+	  for (int i = 0; i < s_comm; i++) {
    PDM_printf ("orig_count[%d]=%d  \n", i, orig_count[i]);}
   }
 
@@ -1176,26 +1177,31 @@ PDM_box_set_recv_data_from_origin_distrib
 //PDM_printf (" curr_count[%d] : %d\n", iProc, curr_count[iProc]);
     curr_count[iProc] += 2;
   }
-vb=0;
-  if (vb == 1) {
+  if (vb >= 2) {
    for (int i = 0; i < curr_shift[s_comm]; i++) {
-   PDM_printf ("curr_loc[%d]=%d  \n", i, curr_loc[i]);}
+   PDM_printf ("curr_loc[%d]=%d  ", i, curr_loc[i]);}
+   PDM_printf ("\n");
    for (int i = 0; i < s_comm; i++) {
-   PDM_printf ("curr_count[%d]=%d  \n", i, curr_count[i]);}
+   PDM_printf ("curr_count[%d]=%d  ", i, curr_count[i]);}
+   PDM_printf ("\n");
    for (int i = 0; i < s_comm+1; i++) {
-   PDM_printf ("curr_shift[%d]=%d  \n", i, curr_shift[i]);}
+   PDM_printf ("curr_shift[%d]=%d  ", i, curr_shift[i]);}
+   PDM_printf ("\n");
   }
 
   PDM_MPI_Alltoallv(curr_loc, curr_count, curr_shift, PDM_MPI_INT,
                 orig_loc, orig_count, orig_shift, PDM_MPI_INT,
                 boxes->comm);
-  if (vb == 1) {
+  if (vb >= 2) {
    for (int i = 0; i < orig_shift[s_comm]; i++) {
-   PDM_printf ("orig_loc[%d]=%d  \n", i, orig_loc[i]);}
+   PDM_printf ("orig_loc[%d]=%d  ", i, orig_loc[i]);}
+   PDM_printf ("\n");
    for (int i = 0; i < s_comm; i++) {
-   PDM_printf ("orig_count[%d]=%d  \n", i, orig_count[i]);}
+   PDM_printf ("orig_count[%d]=%d  ", i, orig_count[i]);}
+   PDM_printf ("\n");
    for (int i = 0; i < s_comm + 1; i++) {
-    PDM_printf ("orig_shift[%d]=%d  \n", i, orig_shift[i]);}
+    PDM_printf ("orig_shift[%d]=%d  ", i, orig_shift[i]);}
+   PDM_printf ("\n");
   }
   free (curr_loc);
 
@@ -1218,7 +1224,7 @@ vb=0;
 
   if (t_stride == PDM_STRIDE_VAR) {
 
-   PDM_printf ("curr_count[s_comm]=%d  orig_shift[s_comm]=%d  \n", curr_shift[s_comm], orig_shift[s_comm]);
+//   PDM_printf ("curr_count[s_comm]=%d  orig_shift[s_comm]=%d  \n", curr_shift[s_comm], orig_shift[s_comm]);
     curr_stride = (int *) malloc (sizeof(int) * curr_shift[s_comm]);
     orig_stride = (int *) malloc (sizeof(int) * orig_shift[s_comm]);
 
@@ -1227,26 +1233,30 @@ vb=0;
       int iElt  = orig_loc[2*i + 1];
       orig_stride[i] = origin_distrib_stride[iPart][iElt];
     }
-vb = 1;
-  if (vb == 1) {
+  if (vb >= 2) {
    for (int i = 0; i < orig_shift[s_comm]; i++) {
-   PDM_printf ("orig_stride[%d]=%d  \n", i, orig_stride[i]);}
+   PDM_printf ("orig_stride[%d]=%d  ", i, orig_stride[i]);}
+   PDM_printf ("\n");
    for (int i = 0; i < s_comm; i++) {
-   PDM_printf ("orig_count[%d]=%d  \n", i, orig_count[i]);}
-   for (int i = 0; i < s_comm+1; i++) {
-   PDM_printf ("orig_shift[%d]=%d  \n", i, orig_shift[i]);}
+   PDM_printf ("orig_count[%d]=%d  ", i, orig_count[i]);}
+   PDM_printf ("\n");
+   for (int i = 0; i < s_comm + 1; i++) {
+    PDM_printf ("orig_shift[%d]=%d  ", i, orig_shift[i]);}
+   PDM_printf ("\n");
   }
-vb = 0;
     PDM_MPI_Alltoallv(orig_stride, orig_count, orig_shift, PDM_MPI_INT,
                   curr_stride, curr_count, curr_shift, PDM_MPI_INT,
                   boxes->comm);
-  if (vb == 1) {
+  if (vb >= 2) {
    for (int i = 0; i < curr_shift[s_comm]; i++) {
-   PDM_printf ("curr_stride[%d]=%d  \n", i, curr_stride[i]);}
+   PDM_printf ("curr_stride[%d]=%d  ", i, curr_stride[i]);}
+   PDM_printf ("\n");
    for (int i = 0; i < s_comm; i++) {
-   PDM_printf ("curr_count[%d]=%d  \n", i, curr_count[i]);}
+   PDM_printf ("curr_count[%d]=%d  ", i, curr_count[i]);}
+   PDM_printf ("\n");
    for (int i = 0; i < s_comm+1; i++) {
-   PDM_printf ("curr_shift[%d]=%d  \n", i, curr_shift[i]);}
+   PDM_printf ("curr_shift[%d]=%d  ", i, curr_shift[i]);}
+   PDM_printf ("\n");
   }
 
     if (alloc_distrib_stride) {
@@ -1256,7 +1266,7 @@ vb = 0;
 
       for (int i = 0; i < curr_shift[s_comm]; i++) {
         _current_distrib_stride[i] = curr_stride[idxCurrToBuff[i]];
-   PDM_printf ("_current_distrib_stride[%d]=%d  idxCurrToBuff[%d]=%d\n", i, _current_distrib_stride[i], i, idxCurrToBuff[i]);
+//   PDM_printf ("_current_distrib_stride[%d]=%d  idxCurrToBuff[%d]=%d\n", i, _current_distrib_stride[i], i, idxCurrToBuff[i]);
       }
     }
 
@@ -1273,7 +1283,7 @@ vb = 0;
       orig_count[i] = 0;
     }
 
-if (vb == 1) {
+if (vb >=3) {
         PDM_printf ("curr_stride : \n");
    for (int i = 0; i < s_comm; i++) {
       for (int k = curr_shift[i]; k < curr_shift[i+1]; k++) {
@@ -1289,47 +1299,47 @@ if (vb == 1) {
   }
 
     for (int i = 0; i < s_comm; i++) {
-      PDM_printf ("curr_count[%d] = ", i);
+      //PDM_printf ("curr_count[%d] = ", i);
       for (int k = curr_shift[i]; k < curr_shift[i+1]; k++) {
-      PDM_printf (" + %d ", curr_stride[k]);
+      //PDM_printf (" + %d ", curr_stride[k]);
         curr_count[i] += curr_stride[k];
       }
-      PDM_printf (" = %d \n", curr_count[i]);
-      PDM_printf ("orig_count[%d] = ", i);
+      //PDM_printf (" = %d \n", curr_count[i]);
+      //PDM_printf ("orig_count[%d] = ", i);
       for (int k = orig_shift[i]; k < orig_shift[i+1]; k++) {
-      PDM_printf (" + %d ", orig_stride[k]);
+      //PDM_printf (" + %d ", orig_stride[k]);
         orig_count[i] += orig_stride[k];
       }
-      PDM_printf (" = %d \n", orig_count[i]);
+      //PDM_printf (" = %d \n", orig_count[i]);
     }
 
     int n_origin = orig_shift[s_comm];
-      PDM_printf ("n_origin = %d \n", n_origin);
-      PDM_printf ("data_size = %d \n", (int)data_size);
+      //PDM_printf ("n_origin = %d \n", n_origin);
+      //PDM_printf ("data_size = %d \n", (int)data_size);
 
     for (int i = 0; i < s_comm + 1; i++) {
       curr_shift[i] = 0;
       orig_shift[i] = 0;
-      PDM_printf ("curr_shift[%d] = %d \n", i, curr_shift[i]);
+      //PDM_printf ("curr_shift[%d] = %d \n", i, curr_shift[i]);
     }
 
     for (int i = 0; i < s_comm; i++) {
       curr_shift[i+1] = curr_shift[i] + curr_count[i];
       orig_shift[i+1] = orig_shift[i] + orig_count[i];
-      PDM_printf ("curr_shift[%d] = curr_shift[%d] + curr_count[%d] = %d + %d = %d \n", i+1, i, i, curr_shift[i],  curr_count[i], curr_shift[i+1]);
+      //PDM_printf ("curr_shift[%d] = curr_shift[%d] + curr_count[%d] = %d + %d = %d \n", i+1, i, i, curr_shift[i],  curr_count[i], curr_shift[i+1]);
     }
 
     for (int i = 0; i < s_comm + 1; i++) {
       curr_shift[i] *= (int) data_size;
       orig_shift[i] *= (int) data_size;
-      PDM_printf ("curr_shift[%d] = %d \n", i, curr_shift[i]);
+      //PDM_printf ("curr_shift[%d] = %d \n", i, curr_shift[i]);
    }
 
     for (int i = 0; i < s_comm; i++) {
       curr_count[i] *= (int) data_size;
       orig_count[i] *= (int) data_size;
     }
-  if (vb == 1) {
+  if (vb >= 2) {
    for (int i = 0; i < s_comm; i++) {
    PDM_printf ("curr_count[%d]=%d  orig_count[%d]=%d  \n", i, curr_count[i], i, orig_count[i]);}
    for (int i = 0; i < s_comm+1; i++) {
@@ -1355,7 +1365,7 @@ if (vb == 1) {
     }
 
 	int idx0 = 0;
-   PDM_printf ("n_origin=%d\n", n_origin);
+//   PDM_printf ("n_origin=%d\n", n_origin);
     for (int i = 0; i < n_origin; i++) {
       int iPart = orig_loc[2*i    ];
       int iElt  = orig_loc[2*i + 1];
@@ -1372,33 +1382,39 @@ if (vb == 1) {
     }
     free (_origin_distrib_idx);
 
-	if (vb == 1){
+	if (vb >= 2){
 		int nb = orig_count[s_comm-1];
 		for (int ii=0; ii<nb; ii=ii+data_size){
-			PDM_printf ("orig_data[%d] = %d \n",  ii/data_size, orig_data[ii]);
+			PDM_printf ("orig_data[%d] = %d ",  ii/data_size, orig_data[ii]);
 		}
+		PDM_printf ("\n");
 		for (int ii=0; ii<s_comm+1; ii++){
-			PDM_printf ("orig_shift[%d] = %d \n",  ii, orig_shift[ii]);
+			PDM_printf ("orig_shift[%d] = %d ",  ii, orig_shift[ii]);
 		}
+		PDM_printf ("\n");
 		for (int ii=0; ii<s_comm; ii++){
-			PDM_printf ("orig_count[%d] = %d \n",  ii, orig_count[ii]);
+			PDM_printf ("orig_count[%d] = %d ",  ii, orig_count[ii]);
 		}
+		PDM_printf ("\n");
 	}
 
     PDM_MPI_Alltoallv(orig_data, orig_count, orig_shift, PDM_MPI_UNSIGNED_CHAR,
                   curr_data, curr_count, curr_shift, PDM_MPI_UNSIGNED_CHAR,
                   boxes->comm);
-	if (vb == 1){
+	if (vb >= 2){
 		int nb = curr_count[s_comm-1];
 		for (int ii=0; ii<nb; ii=ii+data_size){
-			PDM_printf ("curr_data[%d] = %d \n",  ii/data_size, curr_data[ii]);
+			PDM_printf ("curr_data[%d] = %d ",  ii/data_size, curr_data[ii]);
 		}
+		PDM_printf ("\n");
 		for (int ii=0; ii<s_comm+1; ii++){
-			PDM_printf ("curr_shift[%d] = %d \n",  ii, curr_shift[ii]);
+			PDM_printf ("curr_shift[%d] = %d ",  ii, curr_shift[ii]);
 		}
+		PDM_printf ("\n");
 		for (int ii=0; ii<s_comm; ii++){
-			PDM_printf ("curr_count[%d] = %d \n",  ii, curr_count[ii]);
+			PDM_printf ("curr_count[%d] = %d ",  ii, curr_count[ii]);
 		}
+		PDM_printf ("\n");
 	}
 
 
