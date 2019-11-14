@@ -258,9 +258,13 @@ char *argv[]
   free (char_length);
   free (gnum);
 
-  PDM_MPI_Barrier (PDM_MPI_COMM_WORLD);
+  if (myRank == 0) {
 
-  PDM_printf ("\nfin Test\n");
+    PDM_printf ("\nfin Test\n");
+
+  }
+
+  PDM_MPI_Barrier (PDM_MPI_COMM_WORLD);
 
   PDM_MPI_Finalize ();
 
