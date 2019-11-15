@@ -24,7 +24,7 @@
 #include "pdm_timer.h"
 
 #ifdef __cplusplus
-extern "C" {
+extern "C" {CORE-AVX512
 #if 0
 } /* Fake brace to force back Emacs auto-indentation back to column 0 */
 #endif
@@ -34,7 +34,7 @@ extern "C" {
  * Local macro definitions
  *============================================================================*/
 
-#define NTIMER 8
+#define NTIMER 11
 
 /*============================================================================
  * Type definitions
@@ -52,10 +52,13 @@ typedef enum {
   BUILD_ORDER_POINTS            = 1,
   BUILD_BLOCK_PARTITION         = 2,
   BUILD_LOCAL_NODES             = 3,
-  BUILD_LOCAL_NEIGHBOURS        = 4,
-  BUILD_DISTANT_NEIGHBOURS      = 5,
-  BUILD_TOTAL                   = 6,
-  END                           = 7,
+  BUILD_LOCAL_NEIGHBOURS_STEP1  = 4,
+  BUILD_LOCAL_NEIGHBOURS_STEP2  = 5,
+  BUILD_LOCAL_NEIGHBOURS_STEP3  = 6,
+  BUILD_LOCAL_NEIGHBOURS        = 7,
+  BUILD_DISTANT_NEIGHBOURS      = 8,
+  BUILD_TOTAL                   = 9,
+  END                           = 10,
 
 } _ol_timer_step_t;
 
@@ -2620,6 +2623,8 @@ PDM_para_octree_build
    *
    *************************************************************************/
 
+  //_compute_local_neighbours (octree->octants);
+
   _neighbours_tmp_t *neighbours_tmp = malloc (sizeof(_neighbours_tmp_t) * octree->octants->n_nodes);
   for (int i = 0; i < octree->octants->n_nodes; i++) {
     for (int j =  0; j < n_direction; j++) {
@@ -2705,6 +2710,24 @@ PDM_para_octree_build
     }
   }
 
+  PDM_timer_hang_on(octree->timer);
+  e_t_elapsed = PDM_timer_elapsed(octree->timer);
+  e_t_cpu     = PDM_timer_cpu(octree->timer);
+  e_t_cpu_u   = PDM_timer_cpu_user(octree->timer);
+  e_t_cpu_s   = PDM_timer_cpu_sys(octree->timer);
+
+  octree->times_elapsed[BUILD_LOCAL_NEIGHBOURS_STEP1] += e_t_elapsed - b_t_elapsed;
+  octree->times_cpu[BUILD_LOCAL_NEIGHBOURS_STEP1]     += e_t_cpu - b_t_cpu;
+  octree->times_cpu_u[BUILD_LOCAL_NEIGHBOURS_STEP1]   += e_t_cpu_u - b_t_cpu_u;
+  octree->times_cpu_s[BUILD_LOCAL_NEIGHBOURS_STEP1]   += e_t_cpu_s - b_t_cpu_s;
+
+  b_t_elapsed = e_t_elapsed;
+  b_t_cpu     = e_t_cpu;
+  b_t_cpu_u   = e_t_cpu_u;
+  b_t_cpu_s   = e_t_cpu_s;
+
+  PDM_timer_resume(octree->timer);
+
   for (int i = 0; i < octree->octants->n_nodes; i++) {
     for (int j = 0; j < n_direction; j+=2) {
       PDM_morton_code_t *neighbour_code =
@@ -2749,6 +2772,25 @@ PDM_para_octree_build
   if (block_octants_index != NULL) {
     free(block_octants_index);
   }
+
+
+  PDM_timer_hang_on(octree->timer);
+  e_t_elapsed = PDM_timer_elapsed(octree->timer);
+  e_t_cpu     = PDM_timer_cpu(octree->timer);
+  e_t_cpu_u   = PDM_timer_cpu_user(octree->timer);
+  e_t_cpu_s   = PDM_timer_cpu_sys(octree->timer);
+
+  octree->times_elapsed[BUILD_LOCAL_NEIGHBOURS_STEP2] += e_t_elapsed - b_t_elapsed;
+  octree->times_cpu[BUILD_LOCAL_NEIGHBOURS_STEP2]     += e_t_cpu - b_t_cpu;
+  octree->times_cpu_u[BUILD_LOCAL_NEIGHBOURS_STEP2]   += e_t_cpu_u - b_t_cpu_u;
+  octree->times_cpu_s[BUILD_LOCAL_NEIGHBOURS_STEP2]   += e_t_cpu_s - b_t_cpu_s;
+
+  b_t_elapsed = e_t_elapsed;
+  b_t_cpu     = e_t_cpu;
+  b_t_cpu_u   = e_t_cpu_u;
+  b_t_cpu_s   = e_t_cpu_s;
+
+  PDM_timer_resume(octree->timer);
 
   /*************************************************************************
    *
@@ -2841,10 +2883,27 @@ PDM_para_octree_build
   e_t_cpu_u   = PDM_timer_cpu_user(octree->timer);
   e_t_cpu_s   = PDM_timer_cpu_sys(octree->timer);
 
-  octree->times_elapsed[BUILD_LOCAL_NEIGHBOURS] += e_t_elapsed - b_t_elapsed;
-  octree->times_cpu[BUILD_LOCAL_NEIGHBOURS]     += e_t_cpu - b_t_cpu;
-  octree->times_cpu_u[BUILD_LOCAL_NEIGHBOURS]   += e_t_cpu_u - b_t_cpu_u;
-  octree->times_cpu_s[BUILD_LOCAL_NEIGHBOURS]   += e_t_cpu_s - b_t_cpu_s;
+  octree->times_elapsed[BUILD_LOCAL_NEIGHBOURS_STEP3] += e_t_elapsed - b_t_elapsed;
+  octree->times_cpu[BUILD_LOCAL_NEIGHBOURS_STEP3]     += e_t_cpu - b_t_cpu;
+  octree->times_cpu_u[BUILD_LOCAL_NEIGHBOURS_STEP3]   += e_t_cpu_u - b_t_cpu_u;
+  octree->times_cpu_s[BUILD_LOCAL_NEIGHBOURS_STEP3]   += e_t_cpu_s - b_t_cpu_s;
+
+
+  octree->times_elapsed[BUILD_LOCAL_NEIGHBOURS] +=  octree->times_elapsed[BUILD_LOCAL_NEIGHBOURS_STEP1]
+    + octree->times_elapsed[BUILD_LOCAL_NEIGHBOURS_STEP2]
+    + octree->times_elapsed[BUILD_LOCAL_NEIGHBOURS_STEP3];
+
+  octree->times_cpu[BUILD_LOCAL_NEIGHBOURS] +=  octree->times_cpu[BUILD_LOCAL_NEIGHBOURS_STEP1]
+    + octree->times_cpu[BUILD_LOCAL_NEIGHBOURS_STEP2]
+    + octree->times_cpu[BUILD_LOCAL_NEIGHBOURS_STEP3];
+
+  octree->times_cpu_u[BUILD_LOCAL_NEIGHBOURS] +=  octree->times_cpu_u[BUILD_LOCAL_NEIGHBOURS_STEP1]
+    + octree->times_cpu_u[BUILD_LOCAL_NEIGHBOURS_STEP2]
+    + octree->times_cpu_u[BUILD_LOCAL_NEIGHBOURS_STEP3];
+
+  octree->times_cpu_s[BUILD_LOCAL_NEIGHBOURS] +=  octree->times_cpu_s[BUILD_LOCAL_NEIGHBOURS_STEP1]
+    + octree->times_cpu_s[BUILD_LOCAL_NEIGHBOURS_STEP2]
+    + octree->times_cpu_s[BUILD_LOCAL_NEIGHBOURS_STEP3];
 
   b_t_elapsed = e_t_elapsed;
   b_t_cpu     = e_t_cpu;
@@ -2852,6 +2911,19 @@ PDM_para_octree_build
   b_t_cpu_s   = e_t_cpu_s;
 
   PDM_timer_resume(octree->timer);
+
+  /* PDM_timer_hang_on(octree->timer); */
+  /* e_t_elapsed = PDM_timer_elapsed(octree->timer); */
+  /* e_t_cpu     = PDM_timer_cpu(octree->timer); */
+  /* e_t_cpu_u   = PDM_timer_cpu_user(octree->timer); */
+  /* e_t_cpu_s   = PDM_timer_cpu_sys(octree->timer); */
+
+  /* b_t_elapsed = e_t_elapsed; */
+  /* b_t_cpu     = e_t_cpu; */
+  /* b_t_cpu_u   = e_t_cpu_u; */
+  /* b_t_cpu_s   = e_t_cpu_s; */
+
+  /* PDM_timer_resume(octree->timer); */
 
   /*************************************************************************
    *
@@ -3420,6 +3492,18 @@ PDM_para_octree_dump_times
                 " %12.5es %12.5es\n",
                 t_elaps_max[BUILD_LOCAL_NEIGHBOURS],
                 t_cpu_max[BUILD_LOCAL_NEIGHBOURS]);
+    PDM_printf( "PDM_para_octree timer : build octree : step local neighbours - step 1 (elapsed and cpu) :"
+                " %12.5es %12.5es\n",
+                t_elaps_max[BUILD_LOCAL_NEIGHBOURS_STEP1],
+                t_cpu_max[BUILD_LOCAL_NEIGHBOURS_STEP1]);
+    PDM_printf( "PDM_para_octree timer : build octree : step local neighbours - step 2 (elapsed and cpu) :"
+                " %12.5es %12.5es\n",
+                t_elaps_max[BUILD_LOCAL_NEIGHBOURS_STEP2],
+                t_cpu_max[BUILD_LOCAL_NEIGHBOURS_STEP2]);
+    PDM_printf( "PDM_para_octree timer : build octree : step local neighbours - step 3 (elapsed and cpu) :"
+                " %12.5es %12.5es\n",
+                t_elaps_max[BUILD_LOCAL_NEIGHBOURS_STEP3],
+                t_cpu_max[BUILD_LOCAL_NEIGHBOURS_STEP3]);
     PDM_printf( "PDM_para_octree timer : build octree : step distant neighbours (elapsed and cpu) :"
                 " %12.5es %12.5es\n",
                 t_elaps_max[BUILD_DISTANT_NEIGHBOURS],
