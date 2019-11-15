@@ -1813,7 +1813,6 @@ _block_partition
 
   /* - compute weight of each cell */
 
-
   for (int i = 0; i < n_recv_codes; i++) {
 
     PDM_morton_code_t code;
@@ -3153,7 +3152,6 @@ PDM_para_octree_build
             /*   PDM_morton_dump(3, (recv_neighbour_rank_code + idx_candidate)[k1]); */
             /* } */
             /* printf("candidates f\n"); */
-
 
             /* printf("\nintersect d\n"); */
             /* for (int k1 = 0; k1 < n_intersect; k1++) { */
