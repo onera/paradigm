@@ -184,6 +184,8 @@ cdef class PartToBlock:
         cdef void    *block_data
         cdef void   **part_data
         cdef int      ndim
+        cdef int      npyflags=-1;
+        cdef NPY.ndarray tmpData
         # ************************************************************************
 
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -232,6 +234,7 @@ cdef class PartToBlock:
             # > Fill s_data - How to check if array is different ?
             s_data     = pArray.dtype.itemsize
             dtype_data = pArray.dtype.num
+            dtypep     = pArray.dtype
             # ------------------------------------------------
 
           # ::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -262,8 +265,9 @@ cdef class PartToBlock:
           # > Put in dict
           dim           = <NPY.npy_intp> c_size
           if(c_size == 0):
-            dField[field] = None # Attention faire une caspule vide serait mieux non ?
-            print 'Attention in PDM_part_to_block'
+            # dField[field] = None # Attention faire une caspule vide serait mieux non ?
+            dField[field] = NPY.empty((0), dtype=dtypep)
+            # print 'Attention in PDM_part_to_block'
           else:
             if(ndim == 2):
               ArrayDim    = <NPY.npy_intp *> malloc(2 * sizeof(NPY.npy_intp *))
@@ -271,21 +275,37 @@ cdef class PartToBlock:
               ArrayDim[1] = <NPY.npy_intp> c_size
 
               # > Put in dField
-              dField[field] = NPY.PyArray_SimpleNewFromData(ndim, ArrayDim, dtype_data, <void *> block_data)
-
+              tmpData = NPY.PyArray_SimpleNewFromData(ndim, ArrayDim, dtype_data, <void *> block_data)
+              PyArray_ENABLEFLAGS(tmpData, NPY.NPY_OWNDATA);
+              dField[field] = tmpData
               # > Free
               free(ArrayDim)
             else:
-              dField[field] = NPY.PyArray_SimpleNewFromData(1, &dim, dtype_data, <void *> block_data)
-
+              # dField[field] = NPY.PyArray_SimpleNewFromData(1, &dim, dtype_data,
+              #                                               <void *> block_data)
+              tmpData = NPY.PyArray_SimpleNewFromData(1, &dim, dtype_data,
+                                                         <void *> block_data)
+              PyArray_ENABLEFLAGS(tmpData, NPY.NPY_OWNDATA);
+              dField[field] = tmpData
+              # print(dField[field].flags)
           # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
           # ::::::::::::::::::::::::::::::::::::::::::::::::::
           # > Stride management
           if(self.t_stride == 1 ):
             dimStri = <NPY.npy_intp> blk_size
-            dField[field+'#Stride'] = NPY.PyArray_SimpleNewFromData(1, &dimStri, NPY.NPY_INT32, <void *> block_stride)
+            # dField[field+'#Stride'] = NPY.PyArray_SimpleNewFromData(1, &dimStri, NPY.NPY_INT32, <void *> block_stride)
+            tmpData = NPY.PyArray_SimpleNewFromData(1, &dimStri, NPY.NPY_INT32, <void *> block_stride)
+            PyArray_ENABLEFLAGS(tmpData, NPY.NPY_OWNDATA);
+            dField[field+'#Stride'] = tmpData
           # ::::::::::::::::::::::::::::::::::::::::::::::::::
+
+        # ::::::::::::::::::::::::::::::::::::::::::::::::::
+        # > Deallocate
+        free(part_data)
+        if(self.t_stride != 0): # Var Stride
+          free(part_stride)
+        # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
     # ------------------------------------------------------------------------
     def getDistributionCopy(self):
