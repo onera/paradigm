@@ -172,7 +172,7 @@ typedef struct  {
 
 static PDM_Handles_t *_octrees    = NULL;
 
-static const double _eps_default  = 1.e-12;
+//static const double _eps_default  = 1.e-12;
 
 static const PDM_morton_int_t max_morton_level = 15;
 //static const int max_morton_level = 2;
@@ -619,21 +619,21 @@ _get_from_id
  *
  */
 
-static void
-g_extents
-(
- _octree_t *octree,
- PDM_morton_code_t code,
- double    extents[]
-)
-{
-  for (int i = 0; i < octree->dim; i++) {
-    extents[i] =
-      ((double) code.X[i]/((double) pow(2,code.L)))* octree->d[i] + octree->s[i];
-    extents[octree->dim + i] =
-      (((double) code.X[i] + 1)/((double) pow(2,code.L))) * octree->d[i] + octree->s[i];
-  }
-}
+/* static void */
+/* g_extents */
+/* ( */
+/*  _octree_t *octree, */
+/*  PDM_morton_code_t code, */
+/*  double    extents[] */
+/* ) */
+/* { */
+/*   for (int i = 0; i < octree->dim; i++) { */
+/*     extents[i] = */
+/*       ((double) code.X[i]/((double) pow(2,code.L)))* octree->d[i] + octree->s[i]; */
+/*     extents[octree->dim + i] = */
+/*       (((double) code.X[i] + 1)/((double) pow(2,code.L))) * octree->d[i] + octree->s[i]; */
+/*   } */
+/* } */
 
 /**
  *
@@ -3431,7 +3431,7 @@ PDM_g_num_t *closest_octree_pt_g_num,
 double      *closest_octree_pt_dist2
 )
 {
- _octree_t *octree = _get_from_id (id);
+  // _octree_t *octree = _get_from_id (id);
 }
 
 /**
