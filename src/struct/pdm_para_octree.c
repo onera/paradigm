@@ -146,6 +146,8 @@ typedef struct  {
 
   double times_cpu_s[NTIMER];  /*!< System CPU time */
 
+  int neighboursToBuild;
+
 } _octree_t;
 
 
@@ -1880,750 +1882,42 @@ _block_partition
 }
 
 
-/*=============================================================================
- * Public function definitions
- *============================================================================*/
-
-
 /**
  *
- * \brief Create an octree structure
+ * \brief Compute neighbours
  *
- * \param [in]   n_point_cloud      Number of point cloud
- * \param [in]   depth_max          Maximum depth
- * \param [in]   points_in_leaf_max Maximum points in a leaf
- * \param [in]   tolerance          Relative geometric tolerance
- * \param [in]   comm               MPI communicator
- *
- * \return     Identifier
- */
-
-int
-PDM_para_octree_create
-(
- const int n_point_cloud,
- const int depth_max,
- const int points_in_leaf_max,
- const PDM_MPI_Comm comm
-)
-{
-
-  if (_octrees == NULL) {
-    _octrees = PDM_Handles_create (4);
-  }
-
-  _octree_t *octree = (_octree_t *) malloc(sizeof(_octree_t));
-
-  int id = PDM_Handles_store (_octrees, octree);
-
-  octree->dim = 3;
-
-  for (int i = 0; i < octree->dim; i++) {
-    octree->global_extents[i]   = -HUGE_VAL;
-    octree->global_extents[octree->dim+i] =  HUGE_VAL;
-    octree->s[i]         = 0.;
-    octree->d[i]         = 0.;
-  }
-
-  octree->depth_max = depth_max;
-  octree->points_in_leaf_max = points_in_leaf_max;
-
-  octree->n_point_clouds = n_point_cloud;
-  octree->t_n_points = 0;
-  octree->n_points = 0;
-  octree->points = NULL;
-  octree->points_icloud = NULL;
-  octree->points_gnum = NULL;
-  octree->points_code = NULL;
-
-  octree->octants = NULL;
-
-  octree->n_part_boundary_elt = 0;
-  octree->part_boundary_elt_idx = NULL;
-  octree->part_boundary_elt = NULL;
-
-  octree->comm = comm;
-
-  octree->timer = PDM_timer_create ();
-
-  for (int i = 0; i < NTIMER; i++) {
-    octree->times_elapsed[i] = 0.;
-    octree->times_cpu[i] = 0.;
-    octree->times_cpu_u[i] = 0.;
-    octree->times_cpu_s[i] = 0.;
-  }
-
-  return id;
-
-}
-
-
-/**
- *
- * \brief Free an octree structure
- *
- * \param [in]   id                 Identifier
+ * \param [inout]   octree
+ * \param [in]      block_octants_index
+ * \param [in]      b_t_elapsed
+ * \param [in]      b_t_cpu
+ * \param [in]      b_t_cpu_u
+ * \param [in]      b_t_cpu_s
  *
  */
 
-void
-PDM_para_octree_free
+static void
+_compute_neighbours
 (
- const int          id
+ _octree_t *octree,
+ PDM_morton_code_t *block_octants_index,
+ double   b_t_elapsed,
+ double   b_t_cpu,
+ double   b_t_cpu_u,
+ double   b_t_cpu_s
 )
 {
-  _octree_t *octree = _get_from_id (id);
+  double   e_t_elapsed;
+  double   e_t_cpu;
+  double   e_t_cpu_u;
+  double   e_t_cpu_s;
 
-  if (octree->points != NULL) {
-    free (octree->points);
-  }
-
-  if (octree->points_icloud != NULL) {
-    free (octree->points_icloud);
-  }
-
-  if (octree->points_gnum != NULL) {
-    free (octree->points_gnum);
-  }
-
-  if (octree->points_code != NULL) {
-    free (octree->points_code);
-  }
-
-  if (octree->part_boundary_elt_idx != NULL) {
-    free (octree->part_boundary_elt_idx);
-  }
-
-  if (octree->part_boundary_elt != NULL) {
-    free (octree->part_boundary_elt);
-  }
-
-  if (octree->octants != NULL) {
-
-    if (octree->octants->codes != NULL) {
-      free (octree->octants->codes);
-    }
-
-    if (octree->octants->range != NULL) {
-      free (octree->octants->range);
-    }
-
-    if (octree->octants->n_points != NULL) {
-      free (octree->octants->n_points);
-    }
-
-    if (octree->octants->neighbour_idx != NULL) {
-      free (octree->octants->neighbour_idx);
-    }
-
-    if (octree->octants->neighbours != NULL) {
-      free (octree->octants->neighbours);
-    }
-
-    free (octree->octants);
-  }
-
-  PDM_timer_free (octree->timer);
-
-  free (octree);
-
-  PDM_Handles_handle_free (_octrees, id, PDM_FALSE);
-
-  const int n_octrees = PDM_Handles_n_get (_octrees);
-
-  if (n_octrees == 0) {
-    _octrees = PDM_Handles_free (_octrees);
-  }
-}
-
-
-/**
- *
- * \brief Set a point cloud
- *
- * \param [in]   id                 Identifier
- * \param [in]   i_point_cloud      Number of point cloud
- * \param [in]   n_points           Maximum depth
- * \param [in]   coords             Point coordinates
- * \param [in]   g_num              Point global number or NULL
- *
- */
-
-
-void
-PDM_para_octree_point_cloud_set
-(
- const int          id,
- const int          i_point_cloud,
- const int          n_points,
- const double      *coords,
- const PDM_g_num_t *g_num
-)
-{
-  _octree_t *octree = _get_from_id (id);
-
-  const int idx = octree->n_points;
-
-  octree->n_points += n_points;
-  octree->points =
-    realloc (octree->points, octree->n_points * sizeof(double) * octree->dim);
-  octree->points_icloud =
-    realloc (octree->points_icloud, octree->n_points * sizeof(int));
-  octree->points_gnum =
-    realloc (octree->points_gnum, octree->n_points * sizeof(PDM_g_num_t));
-  octree->points_code =
-    realloc (octree->points_code, octree->n_points * sizeof(PDM_morton_code_t));
-
-  for (int i = 0; i < octree->dim * n_points; i++) {
-    octree->points[octree->dim*idx + i] = coords[i];
-  }
-
-  for (int i = 0; i < n_points; i++) {
-    octree->points_gnum[idx + i] = g_num[i];
-  }
-
-  for (int i = 0; i < n_points; i++) {
-    octree->points_icloud[idx + i] = i_point_cloud;
-  }
-
-}
-
-
-/**
- *
- * \brief Build octree
- *
- * \param [in]   id                 Identifier
- *
- */
-
-void
-PDM_para_octree_build
-(
- const int  id
-)
-{
-  _octree_t *octree = _get_from_id (id);
-
-  const int dim = octree->dim;
-  //const PDM_morton_int_t max_level = 31u;
-  const PDM_morton_int_t max_level = PDM_morton_max_level;
+  const int n_direction = 6;
 
   int n_ranks;
   PDM_MPI_Comm_size (octree->comm, &n_ranks);
 
   int rank;
   PDM_MPI_Comm_rank (octree->comm, &rank);
-
-  double b_t_elapsed;
-  double b_t_cpu;
-  double b_t_cpu_u;
-  double b_t_cpu_s;
-
-  double e_t_elapsed;
-  double e_t_cpu;
-  double e_t_cpu_u;
-  double e_t_cpu_s;
-
-  octree->times_elapsed[BEGIN] = PDM_timer_elapsed(octree->timer);
-  octree->times_cpu[BEGIN]     = PDM_timer_cpu(octree->timer);
-  octree->times_cpu_u[BEGIN]   = PDM_timer_cpu_user(octree->timer);
-  octree->times_cpu_s[BEGIN]   = PDM_timer_cpu_sys(octree->timer);
-
-  b_t_elapsed = octree->times_elapsed[BEGIN];
-  b_t_cpu     = octree->times_cpu[BEGIN];
-  b_t_cpu_u   = octree->times_cpu_u[BEGIN];
-  b_t_cpu_s   = octree->times_cpu_s[BEGIN];
-  PDM_timer_resume(octree->timer);
-
-  /*
-   * Get coord extents
-   */
-
-  PDM_morton_get_coord_extents(dim,
-                               octree->n_points,
-                               octree->points,
-                               octree->global_extents,
-                               octree->comm);
-
-  /*
-   * Encode coords
-   */
-
-  PDM_morton_encode_coords(dim,
-                           max_level,
-                           octree->global_extents,
-                           octree->n_points,
-                           octree->points,
-                           octree->points_code,
-                           octree->d,
-                           octree->s);
-
-  int *order = malloc (sizeof(int) * octree->n_points);
-
-  for (int i = 0; i < octree->n_points; i++) {
-    order[i] = i;
-  }
-
-  /**************************************
-   *
-   * Global order of codes and balancing
-   *
-   **************************************/
-
-  PDM_morton_local_order (octree->n_points,
-                          octree->points_code,
-                          order);
-
-  if (n_ranks > 1) {
-
-    int *weight = malloc (sizeof(int) * octree->n_points);
-    for (int i = 0; i < octree->n_points; i++) {
-      weight[i] = 1;
-    }
-
-    PDM_morton_code_t *morton_index =
-      malloc (sizeof(PDM_morton_code_t) * (n_ranks + 1));
-
-    PDM_morton_build_rank_index(dim,
-                                max_level,
-                                octree->n_points,
-                                octree->points_code,
-                                weight,
-                                order,
-                                morton_index,
-                                octree->comm);
-
-    free (weight);
-    free (order);
-
-    /* distribute point from morton_index */
-
-    _distribute_points (&octree->n_points,
-                        &octree->points,
-                        &octree->points_icloud,
-                        &octree->points_gnum,
-                        &octree->points_code,
-                        morton_index,
-                        octree->comm,
-                        octree->dim,
-                        max_level,
-                        octree->global_extents);
-
-    free(morton_index);
-
-  }
-
-  else {
-
-    int *_points_icloud = malloc (sizeof(int) * octree->n_points);
-
-    for (int i = 0; i < octree->n_points; i++) {
-      _points_icloud[i] =  octree->points_icloud[order[i]];
-    }
-
-    free (octree->points_icloud);
-    octree->points_icloud = _points_icloud;
-
-    PDM_g_num_t *_points_gnum = malloc (sizeof(PDM_g_num_t) * octree->n_points);
-
-    for (int i = 0; i < octree->n_points; i++) {
-      _points_gnum[i] =  octree->points_gnum[order[i]];
-    }
-
-    free (octree->points_gnum);
-    octree->points_gnum = _points_gnum;
-
-    PDM_morton_code_t *_points_code =
-      malloc (sizeof(PDM_morton_code_t) * octree->n_points);
-
-    for (int i = 0; i < octree->n_points; i++) {
-      _points_code[i].L = octree->points_code[order[i]].L;
-      _points_code[i].X[0] = octree->points_code[order[i]].X[0];
-      _points_code[i].X[1] = octree->points_code[order[i]].X[1];
-      _points_code[i].X[2] = octree->points_code[order[i]].X[2];
-    }
-
-    free (octree->points_code);
-    octree->points_code = _points_code;
-
-    double *_points = malloc (sizeof(double) * dim * octree->n_points);
-    for (int i = 0; i < octree->n_points; i++) {
-      for (int j = 0; j < dim; j++) {
-        _points[dim*i+j] = octree->points[dim*order[i]+j];
-      }
-    }
-
-    free (octree->points);
-    octree->points = _points;
-
-    free (order);
-  }
-
-
-  PDM_timer_hang_on(octree->timer);
-  e_t_elapsed = PDM_timer_elapsed(octree->timer);
-  e_t_cpu     = PDM_timer_cpu(octree->timer);
-  e_t_cpu_u   = PDM_timer_cpu_user(octree->timer);
-  e_t_cpu_s   = PDM_timer_cpu_sys(octree->timer);
-
-  octree->times_elapsed[BUILD_ORDER_POINTS] += e_t_elapsed - b_t_elapsed;
-  octree->times_cpu[BUILD_ORDER_POINTS]     += e_t_cpu - b_t_cpu;
-  octree->times_cpu_u[BUILD_ORDER_POINTS]   += e_t_cpu_u - b_t_cpu_u;
-  octree->times_cpu_s[BUILD_ORDER_POINTS]   += e_t_cpu_s - b_t_cpu_s;
-
-  b_t_elapsed = e_t_elapsed;
-  b_t_cpu     = e_t_cpu;
-  b_t_cpu_u   = e_t_cpu_u;
-  b_t_cpu_s   = e_t_cpu_s;
-
-  PDM_timer_resume(octree->timer);
-
-  PDM_morton_code_t *block_octants_index = NULL;
-  if (n_ranks > 1) {
-
-    /*************************************************************************
-     *
-     * Store points in the octants (leaves) at the maximum depth of the octree
-     * to build
-     *
-     *************************************************************************/
-
-    int chg_code = 1;
-    _l_octant_t *point_octants = malloc(sizeof(_l_octant_t));
-
-    int curr_node = -1;
-
-    _octants_init (point_octants, octree->dim, octree->n_points);
-
-    for (int i = 0; i < octree->n_points; i++) {
-
-      PDM_morton_code_t _point_code;
-      PDM_morton_copy (octree->points_code[i], &_point_code);
-
-      PDM_morton_assign_level (&_point_code, octree->depth_max);
-
-      if (curr_node != -1) {
-        chg_code = !(PDM_morton_a_eq_b (point_octants->codes[curr_node],
-                                        _point_code));
-      }
-
-      if (chg_code) {
-
-        _octants_check_alloc (point_octants, 1);
-
-        int idx = point_octants->n_nodes;
-
-        curr_node = idx;
-
-        PDM_morton_copy (octree->points_code[i], &(point_octants->codes[idx]));
-
-        point_octants->n_points[idx] = 1;
-        point_octants->range[idx] = i;
-
-        point_octants->n_nodes += 1;
-      }
-
-      else {
-        point_octants->n_points[curr_node] += 1;
-      }
-
-    }
-
-    /* printf ("  - n_nodes before block partition : %d\n", point_octants->n_nodes); */
-    /* for (int i = 0; i < point_octants->n_nodes; i++) { */
-    /*   printf ("  %d : level %u code [%u, %u, %u], range %d , is_leaf %d , n_points %d\n", */
-    /*           i, */
-    /*           point_octants->codes[i].L, */
-    /*           point_octants->codes[i].X[0], */
-    /*           point_octants->codes[i].X[1], */
-    /*           point_octants->codes[i].X[2], */
-    /*           point_octants->range[i], */
-    /*           point_octants->is_leaf[i], */
-    /*           point_octants->n_points[i] */
-    /*           ); */
-    /* } */
-
-    /* PDM_morton_code_t *point_octants_morton_index = malloc(sizeof(PDM_morton_code_t) * (n_ranks + 1)); */
-
-    /* PDM_morton_ordered_build_rank_index (dim, */
-    /*                                      octree->depth_max, */
-    /*                                      point_octants->n_nodes, */
-    /*                                      point_octants->codes, */
-    /*                                      point_octants->n_points, */
-    /*                                      point_octants_morton_index, */
-    /*                                      octree->comm); */
-
-    /* _distribute_octants (point_octants, point_octants_morton_index, octree->comm); */
-
-    /* _distribute_points (&octree->n_points, */
-    /*                     &octree->points, */
-    /*                     &octree->points_icloud, */
-    /*                     &octree->points_gnum, */
-    /*                     &octree->points_code, */
-    /*                     point_octants_morton_index, */
-    /*                     octree->comm, */
-    /*                     octree->dim, */
-    /*                     octree->depth_max, */
-    /*                     octree->global_extents); */
-
-    /* free (point_octants_morton_index); */
-
-    /*************************************************************************
-     *
-     * Block partition (algo 2 sundar)
-     *
-     *************************************************************************/
-
-    octree->octants = _block_partition (point_octants,
-                                        octree->comm,
-                                        &block_octants_index);
-
-    _octants_free (point_octants);
-
-    /* printf("\nblock_partition d\n"); */
-    /* for (int i = 0; i <  octree->octants->n_nodes; i++) { */
-    /*   PDM_morton_dump (3, octree->octants->codes[i]); */
-    /* } */
-    /* printf("block_partition f\n\n"); */
-
-    /* printf("block_index d\n"); */
-    /* for (int i = 0; i <  n_ranks + 1; i++) { */
-    /*   PDM_morton_dump (3, block_octants_index[i]); */
-    /* } */
-    /* printf("block_index f\n\n"); */
-
-    /*************************************************************************
-     *
-     * Redistribute points
-     *
-     *************************************************************************/
-
-    _distribute_points (&octree->n_points,
-                        &octree->points,
-                        &octree->points_icloud,
-                        &octree->points_gnum,
-                        &octree->points_code,
-                        block_octants_index,
-                        octree->comm,
-                        octree->dim,
-                        max_level,
-                        octree->global_extents);
-
-
-    /* printf("Liste des points a ranger d\n"); */
-    /* for (int i = 0; i < octree->n_points; i++) { */
-    /*   PDM_morton_dump (3, octree->points_code[i]); */
-    /* } */
-    /* printf("Liste des points a ranger dpoints f\n\n"); */
-
-    int iblock = 0;
-    for (int i = 0; i < octree->n_points; i++) {
-      /* printf("\n\n---- point d : %d %d %d\n",i, iblock, octree->octants->n_nodes); */
-      /* PDM_morton_dump (3, octree->points_code[i]); */
-      while (!PDM_morton_ancestor_is (octree->octants->codes[iblock],
-                                      octree->points_code[i])) {
-        iblock++;
-        /* PDM_morton_dump (3, octree->octants->codes[iblock]); */
-      }
-      /* printf("---- point f : %d %d %d\n",i, iblock, octree->octants->n_nodes); */
-      assert (iblock < octree->octants->n_nodes);
-      octree->octants->n_points[iblock] += 1;
-    }
-
-    octree->octants->range[0] = 0;
-
-    double vol = 0;
-    for (int i = 0; i < octree->octants->n_nodes; i++) {
-      vol += pow(1./pow(2, octree->octants->codes[i].L),3);
-      octree->octants->range[i+1] =
-        octree->octants->range[i] +
-        octree->octants->n_points[i];
-    }
-    double total_vol;
-    PDM_MPI_Allreduce(&vol, &total_vol, 1, PDM_MPI_DOUBLE, PDM_MPI_SUM, octree->comm);
-
-    if ( (PDM_ABS(total_vol - 1.)>= 1e-15)) {
-      printf("Erreur volume different de 1 : %12.5e\n", total_vol);
-    }
-
-    assert (PDM_ABS(total_vol - 1.) < 1e-15);
-
-  }
-
-  else {
-
-    octree->octants = malloc(sizeof(_l_octant_t));
-
-    _octants_init (octree->octants, octree->dim, octree->n_points);
-
-    PDM_morton_code_t code;
-
-    code.L = 0;
-    code.X[0] = 0;
-    code.X[1] = 0;
-    code.X[2] = 0;
-
-    _octants_push_back (octree->octants,
-                        code,
-                        octree->n_points,
-                        0);
-
-    octree->octants->range[0] = 0;
-    octree->octants->range[1] = octree->n_points;
-    octree->octants->n_points[0] = octree->n_points;
-
-  }
-
-  PDM_timer_hang_on(octree->timer);
-  e_t_elapsed = PDM_timer_elapsed(octree->timer);
-  e_t_cpu     = PDM_timer_cpu(octree->timer);
-  e_t_cpu_u   = PDM_timer_cpu_user(octree->timer);
-  e_t_cpu_s   = PDM_timer_cpu_sys(octree->timer);
-
-  octree->times_elapsed[BUILD_BLOCK_PARTITION] += e_t_elapsed - b_t_elapsed;
-  octree->times_cpu[BUILD_BLOCK_PARTITION]     += e_t_cpu - b_t_cpu;
-  octree->times_cpu_u[BUILD_BLOCK_PARTITION]   += e_t_cpu_u - b_t_cpu_u;
-  octree->times_cpu_s[BUILD_BLOCK_PARTITION]   += e_t_cpu_s - b_t_cpu_s;
-
-  b_t_elapsed = e_t_elapsed;
-  b_t_cpu     = e_t_cpu;
-  b_t_cpu_u   = e_t_cpu_u;
-  b_t_cpu_s   = e_t_cpu_s;
-
-  PDM_timer_resume(octree->timer);
-
-  /*************************************************************************
-   *
-   * Build local octree
-   *
-   *************************************************************************/
-
-  const int n_child = 8;
-  const int n_direction = 6;
-
-  int  size = octree->depth_max * 8;
-  _heap_t *heap = _heap_create (size);
-  for (int i = octree->octants->n_nodes - 1; i >= 0; i--) {
-    int is_pushed = _heap_push (heap,
-                                octree->octants->codes[i],
-                                octree->octants->range[i],
-                                octree->octants->n_points[i]);
-    if (!is_pushed) {
-      printf ("Internal error PDM_para_octree 3 : heap is full\n");
-      exit(1);
-    }
-  }
-
-  PDM_morton_code_t code;
-  int range;
-  int n_points;
-
-  octree->octants->n_nodes = 0;
-
-  while (_heap_pull (heap, &code, &range, &n_points)) {
-
-    /* Add children into the heap*/
-
-    if ((code.L < max_morton_level) && (code.L < max_level) &&
-        (n_points > octree->points_in_leaf_max)) {
-
-      PDM_morton_code_t children[n_child];
-      PDM_morton_get_children(dim,
-                              code,
-                              children);
-
-      int range_children[n_child];
-      int n_points_children[n_child];
-
-      for (int i = 0; i < n_child; i++) {
-        n_points_children[i] = 0;
-      }
-
-      int ichild = 0;
-      for (int i = 0; i < n_points; i++) {
-        assert ((range + i) < octree->n_points);
-        if (!PDM_morton_ancestor_is(code, octree->points_code[range + i])) {
-          printf("Erreur : n'est pas un ancetre !!!!!\n");
-
-        }
-        assert (PDM_morton_ancestor_is(code, octree->points_code[range + i]));
-        while (!PDM_morton_ancestor_is (children[ichild], octree->points_code[range + i])) {
-          ichild += 1;
-        }
-        assert (ichild < n_child);
-        n_points_children[ichild] += 1;
-      }
-
-      range_children[0] = 0;
-      for (int i = 0; i < n_child - 1; i++) {
-        range_children[i+1] = range_children[i] + n_points_children[i];
-      }
-
-      for (int i = n_child - 1; i >= 0; i--) {
-        int is_pushed = _heap_push (heap,
-                                    children[i],
-                                    range + range_children[i],
-                                    n_points_children[i]);
-        if (!is_pushed) {
-          printf ("Internal error PDM_para_octree 4 : heap is full\n");
-          exit(1);
-        }
-      }
-
-    }
-
-    /* Store the leaf */
-
-    else {
-      _octants_push_back (octree->octants, code, n_points, range);
-    }
-
-  }
-
-
-  double vol = 0;
-  for (int i = 0; i < octree->octants->n_nodes; i++) {
-    vol += pow(1./pow(2, octree->octants->codes[i].L),3);
-  }
-  double total_vol;
-  PDM_MPI_Allreduce(&vol, &total_vol, 1, PDM_MPI_DOUBLE, PDM_MPI_SUM, octree->comm);
-
-  assert (PDM_ABS(total_vol - 1.) < 1e-15);
-
-  heap = _heap_free (heap);
-
-  PDM_timer_hang_on(octree->timer);
-  e_t_elapsed = PDM_timer_elapsed(octree->timer);
-  e_t_cpu     = PDM_timer_cpu(octree->timer);
-  e_t_cpu_u   = PDM_timer_cpu_user(octree->timer);
-  e_t_cpu_s   = PDM_timer_cpu_sys(octree->timer);
-
-  octree->times_elapsed[BUILD_LOCAL_NODES] += e_t_elapsed - b_t_elapsed;
-  octree->times_cpu[BUILD_LOCAL_NODES]     += e_t_cpu - b_t_cpu;
-  octree->times_cpu_u[BUILD_LOCAL_NODES]   += e_t_cpu_u - b_t_cpu_u;
-  octree->times_cpu_s[BUILD_LOCAL_NODES]   += e_t_cpu_s - b_t_cpu_s;
-
-  b_t_elapsed = e_t_elapsed;
-  b_t_cpu     = e_t_cpu;
-  b_t_cpu_u   = e_t_cpu_u;
-  b_t_cpu_s   = e_t_cpu_s;
-
-  PDM_timer_resume(octree->timer);
-
-  /* printf("\noctant nodes d\n"); */
-  /* for (int i = 0; i <  octree->octants->n_nodes; i++) { */
-  /*   PDM_morton_dump (3, octree->octants->codes[i]); */
-  /* } */
-  /* printf("\noctant nodes f\n\n"); */
-
-  /*************************************************************************
-   *
-   * Neighbours
-   *
-   *************************************************************************/
-
-  //_compute_local_neighbours (octree->octants);
 
   _neighbours_tmp_t *neighbours_tmp = malloc (sizeof(_neighbours_tmp_t) * octree->octants->n_nodes);
   for (int i = 0; i < octree->octants->n_nodes; i++) {
@@ -3007,7 +2301,7 @@ PDM_para_octree_build
 
     /* Tri des codes pour chaque direction de chaque rang */
 
-    order = malloc (sizeof(int) * max_node_dir);
+    int *order = malloc (sizeof(int) * max_node_dir);
     int *tmp_node_id = malloc (sizeof(int) * max_node_dir);
     PDM_morton_code_t *tmp_code = malloc (sizeof(PDM_morton_code_t) * max_node_dir);
 
@@ -3282,7 +2576,6 @@ PDM_para_octree_build
 
   }
 
-
   PDM_timer_hang_on(octree->timer);
   e_t_elapsed = PDM_timer_elapsed(octree->timer);
   e_t_cpu     = PDM_timer_cpu(octree->timer);
@@ -3300,6 +2593,693 @@ PDM_para_octree_build
   b_t_cpu_s   = e_t_cpu_s;
 
   PDM_timer_resume(octree->timer);
+
+}
+
+
+/*=============================================================================
+ * Public function definitions
+ *============================================================================*/
+
+
+/**
+ *
+ * \brief Create an octree structure
+ *
+ * \param [in]   n_point_cloud          Number of point cloud
+ * \param [in]   depth_max              Maximum depth
+ * \param [in]   points_in_leaf_max     Maximum points in a leaf
+ * \param [in]   build_leaf_neighbours  Build leaf nieghbours (1 = true)
+ * \param [in]   comm                   MPI communicator
+ *
+ * \return     Identifier
+ */
+
+int
+PDM_para_octree_create
+(
+ const int n_point_cloud,
+ const int depth_max,
+ const int points_in_leaf_max,
+ const int build_leaf_neighbours,
+ const PDM_MPI_Comm comm
+)
+{
+
+  if (_octrees == NULL) {
+    _octrees = PDM_Handles_create (4);
+  }
+
+  _octree_t *octree = (_octree_t *) malloc(sizeof(_octree_t));
+
+  int id = PDM_Handles_store (_octrees, octree);
+
+  octree->dim = 3;
+
+  for (int i = 0; i < octree->dim; i++) {
+    octree->global_extents[i]   = -HUGE_VAL;
+    octree->global_extents[octree->dim+i] =  HUGE_VAL;
+    octree->s[i]         = 0.;
+    octree->d[i]         = 0.;
+  }
+
+  octree->depth_max = depth_max;
+  octree->points_in_leaf_max = points_in_leaf_max;
+
+  octree->n_point_clouds = n_point_cloud;
+  octree->t_n_points = 0;
+  octree->n_points = 0;
+  octree->points = NULL;
+  octree->points_icloud = NULL;
+  octree->points_gnum = NULL;
+  octree->points_code = NULL;
+
+  octree->octants = NULL;
+
+  octree->n_part_boundary_elt = 0;
+  octree->part_boundary_elt_idx = NULL;
+  octree->part_boundary_elt = NULL;
+
+  octree->comm = comm;
+
+  octree->timer = PDM_timer_create ();
+
+  for (int i = 0; i < NTIMER; i++) {
+    octree->times_elapsed[i] = 0.;
+    octree->times_cpu[i] = 0.;
+    octree->times_cpu_u[i] = 0.;
+    octree->times_cpu_s[i] = 0.;
+  }
+
+  return id;
+
+}
+
+
+/**
+ *
+ * \brief Free an octree structure
+ *
+ * \param [in]   id                 Identifier
+ *
+ */
+
+void
+PDM_para_octree_free
+(
+ const int          id
+)
+{
+  _octree_t *octree = _get_from_id (id);
+
+  if (octree->points != NULL) {
+    free (octree->points);
+  }
+
+  if (octree->points_icloud != NULL) {
+    free (octree->points_icloud);
+  }
+
+  if (octree->points_gnum != NULL) {
+    free (octree->points_gnum);
+  }
+
+  if (octree->points_code != NULL) {
+    free (octree->points_code);
+  }
+
+  if (octree->part_boundary_elt_idx != NULL) {
+    free (octree->part_boundary_elt_idx);
+  }
+
+  if (octree->part_boundary_elt != NULL) {
+    free (octree->part_boundary_elt);
+  }
+
+  if (octree->octants != NULL) {
+
+    if (octree->octants->codes != NULL) {
+      free (octree->octants->codes);
+    }
+
+    if (octree->octants->range != NULL) {
+      free (octree->octants->range);
+    }
+
+    if (octree->octants->n_points != NULL) {
+      free (octree->octants->n_points);
+    }
+
+    if (octree->octants->neighbour_idx != NULL) {
+      free (octree->octants->neighbour_idx);
+    }
+
+    if (octree->octants->neighbours != NULL) {
+      free (octree->octants->neighbours);
+    }
+
+    free (octree->octants);
+  }
+
+  PDM_timer_free (octree->timer);
+
+  free (octree);
+
+  PDM_Handles_handle_free (_octrees, id, PDM_FALSE);
+
+  const int n_octrees = PDM_Handles_n_get (_octrees);
+
+  if (n_octrees == 0) {
+    _octrees = PDM_Handles_free (_octrees);
+  }
+}
+
+
+/**
+ *
+ * \brief Set a point cloud
+ *
+ * \param [in]   id                 Identifier
+ * \param [in]   i_point_cloud      Number of point cloud
+ * \param [in]   n_points           Maximum depth
+ * \param [in]   coords             Point coordinates
+ * \param [in]   g_num              Point global number or NULL
+ *
+ */
+
+
+void
+PDM_para_octree_point_cloud_set
+(
+ const int          id,
+ const int          i_point_cloud,
+ const int          n_points,
+ const double      *coords,
+ const PDM_g_num_t *g_num
+)
+{
+  _octree_t *octree = _get_from_id (id);
+
+  const int idx = octree->n_points;
+
+  octree->n_points += n_points;
+  octree->points =
+    realloc (octree->points, octree->n_points * sizeof(double) * octree->dim);
+  octree->points_icloud =
+    realloc (octree->points_icloud, octree->n_points * sizeof(int));
+  octree->points_gnum =
+    realloc (octree->points_gnum, octree->n_points * sizeof(PDM_g_num_t));
+  octree->points_code =
+    realloc (octree->points_code, octree->n_points * sizeof(PDM_morton_code_t));
+
+  for (int i = 0; i < octree->dim * n_points; i++) {
+    octree->points[octree->dim*idx + i] = coords[i];
+  }
+
+  for (int i = 0; i < n_points; i++) {
+    octree->points_gnum[idx + i] = g_num[i];
+  }
+
+  for (int i = 0; i < n_points; i++) {
+    octree->points_icloud[idx + i] = i_point_cloud;
+  }
+
+}
+
+
+/**
+ *
+ * \brief Build octree
+ *
+ * \param [in]   id                 Identifier
+ *
+ */
+
+void
+PDM_para_octree_build
+(
+ const int  id
+)
+{
+  _octree_t *octree = _get_from_id (id);
+
+  const int dim = octree->dim;
+  const PDM_morton_int_t max_level = PDM_morton_max_level;
+
+  int n_ranks;
+  PDM_MPI_Comm_size (octree->comm, &n_ranks);
+
+  int rank;
+  PDM_MPI_Comm_rank (octree->comm, &rank);
+
+  double b_t_elapsed;
+  double b_t_cpu;
+  double b_t_cpu_u;
+  double b_t_cpu_s;
+
+  double e_t_elapsed;
+  double e_t_cpu;
+  double e_t_cpu_u;
+  double e_t_cpu_s;
+
+  octree->times_elapsed[BEGIN] = PDM_timer_elapsed(octree->timer);
+  octree->times_cpu[BEGIN]     = PDM_timer_cpu(octree->timer);
+  octree->times_cpu_u[BEGIN]   = PDM_timer_cpu_user(octree->timer);
+  octree->times_cpu_s[BEGIN]   = PDM_timer_cpu_sys(octree->timer);
+
+  b_t_elapsed = octree->times_elapsed[BEGIN];
+  b_t_cpu     = octree->times_cpu[BEGIN];
+  b_t_cpu_u   = octree->times_cpu_u[BEGIN];
+  b_t_cpu_s   = octree->times_cpu_s[BEGIN];
+  PDM_timer_resume(octree->timer);
+
+  /*
+   * Get coord extents
+   */
+
+  PDM_morton_get_coord_extents(dim,
+                               octree->n_points,
+                               octree->points,
+                               octree->global_extents,
+                               octree->comm);
+
+  /*
+   * Encode coords
+   */
+
+  PDM_morton_encode_coords(dim,
+                           max_level,
+                           octree->global_extents,
+                           octree->n_points,
+                           octree->points,
+                           octree->points_code,
+                           octree->d,
+                           octree->s);
+
+  int *order = malloc (sizeof(int) * octree->n_points);
+
+  for (int i = 0; i < octree->n_points; i++) {
+    order[i] = i;
+  }
+
+  /**************************************
+   *
+   * Global order of codes and balancing
+   *
+   **************************************/
+
+  PDM_morton_local_order (octree->n_points,
+                          octree->points_code,
+                          order);
+
+  if (n_ranks > 1) {
+
+    int *weight = malloc (sizeof(int) * octree->n_points);
+    for (int i = 0; i < octree->n_points; i++) {
+      weight[i] = 1;
+    }
+
+    PDM_morton_code_t *morton_index =
+      malloc (sizeof(PDM_morton_code_t) * (n_ranks + 1));
+
+    PDM_morton_build_rank_index(dim,
+                                max_level,
+                                octree->n_points,
+                                octree->points_code,
+                                weight,
+                                order,
+                                morton_index,
+                                octree->comm);
+
+    free (weight);
+    free (order);
+
+    /* distribute point from morton_index */
+
+    _distribute_points (&octree->n_points,
+                        &octree->points,
+                        &octree->points_icloud,
+                        &octree->points_gnum,
+                        &octree->points_code,
+                        morton_index,
+                        octree->comm,
+                        octree->dim,
+                        max_level,
+                        octree->global_extents);
+
+    free(morton_index);
+
+  }
+
+  else {
+
+    int *_points_icloud = malloc (sizeof(int) * octree->n_points);
+
+    for (int i = 0; i < octree->n_points; i++) {
+      _points_icloud[i] =  octree->points_icloud[order[i]];
+    }
+
+    free (octree->points_icloud);
+    octree->points_icloud = _points_icloud;
+
+    PDM_g_num_t *_points_gnum = malloc (sizeof(PDM_g_num_t) * octree->n_points);
+
+    for (int i = 0; i < octree->n_points; i++) {
+      _points_gnum[i] =  octree->points_gnum[order[i]];
+    }
+
+    free (octree->points_gnum);
+    octree->points_gnum = _points_gnum;
+
+    PDM_morton_code_t *_points_code =
+      malloc (sizeof(PDM_morton_code_t) * octree->n_points);
+
+    for (int i = 0; i < octree->n_points; i++) {
+      _points_code[i].L = octree->points_code[order[i]].L;
+      _points_code[i].X[0] = octree->points_code[order[i]].X[0];
+      _points_code[i].X[1] = octree->points_code[order[i]].X[1];
+      _points_code[i].X[2] = octree->points_code[order[i]].X[2];
+    }
+
+    free (octree->points_code);
+    octree->points_code = _points_code;
+
+    double *_points = malloc (sizeof(double) * dim * octree->n_points);
+    for (int i = 0; i < octree->n_points; i++) {
+      for (int j = 0; j < dim; j++) {
+        _points[dim*i+j] = octree->points[dim*order[i]+j];
+      }
+    }
+
+    free (octree->points);
+    octree->points = _points;
+
+    free (order);
+  }
+
+
+  PDM_timer_hang_on(octree->timer);
+  e_t_elapsed = PDM_timer_elapsed(octree->timer);
+  e_t_cpu     = PDM_timer_cpu(octree->timer);
+  e_t_cpu_u   = PDM_timer_cpu_user(octree->timer);
+  e_t_cpu_s   = PDM_timer_cpu_sys(octree->timer);
+
+  octree->times_elapsed[BUILD_ORDER_POINTS] += e_t_elapsed - b_t_elapsed;
+  octree->times_cpu[BUILD_ORDER_POINTS]     += e_t_cpu - b_t_cpu;
+  octree->times_cpu_u[BUILD_ORDER_POINTS]   += e_t_cpu_u - b_t_cpu_u;
+  octree->times_cpu_s[BUILD_ORDER_POINTS]   += e_t_cpu_s - b_t_cpu_s;
+
+  b_t_elapsed = e_t_elapsed;
+  b_t_cpu     = e_t_cpu;
+  b_t_cpu_u   = e_t_cpu_u;
+  b_t_cpu_s   = e_t_cpu_s;
+
+  PDM_timer_resume(octree->timer);
+
+  PDM_morton_code_t *block_octants_index = NULL;
+  if (n_ranks > 1) {
+
+    /*************************************************************************
+     *
+     * Store points in the octants (leaves) at the maximum depth of the octree
+     * to build
+     *
+     *************************************************************************/
+
+    int chg_code = 1;
+    _l_octant_t *point_octants = malloc(sizeof(_l_octant_t));
+
+    int curr_node = -1;
+
+    _octants_init (point_octants, octree->dim, octree->n_points);
+
+    for (int i = 0; i < octree->n_points; i++) {
+
+      PDM_morton_code_t _point_code;
+      PDM_morton_copy (octree->points_code[i], &_point_code);
+
+      PDM_morton_assign_level (&_point_code, octree->depth_max);
+
+      if (curr_node != -1) {
+        chg_code = !(PDM_morton_a_eq_b (point_octants->codes[curr_node],
+                                        _point_code));
+      }
+
+      if (chg_code) {
+
+        _octants_check_alloc (point_octants, 1);
+
+        int idx = point_octants->n_nodes;
+
+        curr_node = idx;
+
+        PDM_morton_copy (octree->points_code[i], &(point_octants->codes[idx]));
+
+        point_octants->n_points[idx] = 1;
+        point_octants->range[idx] = i;
+
+        point_octants->n_nodes += 1;
+      }
+
+      else {
+        point_octants->n_points[curr_node] += 1;
+      }
+
+    }
+
+    /*************************************************************************
+     *
+     * Block partition (algo 2 sundar)
+     *
+     *************************************************************************/
+
+    octree->octants = _block_partition (point_octants,
+                                        octree->comm,
+                                        &block_octants_index);
+
+    _octants_free (point_octants);
+
+    /*************************************************************************
+     *
+     * Redistribute points
+     *
+     *************************************************************************/
+
+    _distribute_points (&octree->n_points,
+                        &octree->points,
+                        &octree->points_icloud,
+                        &octree->points_gnum,
+                        &octree->points_code,
+                        block_octants_index,
+                        octree->comm,
+                        octree->dim,
+                        max_level,
+                        octree->global_extents);
+
+    int iblock = 0;
+    for (int i = 0; i < octree->n_points; i++) {
+      while (!PDM_morton_ancestor_is (octree->octants->codes[iblock],
+                                      octree->points_code[i])) {
+        iblock++;
+      }
+      assert (iblock < octree->octants->n_nodes);
+      octree->octants->n_points[iblock] += 1;
+    }
+
+    octree->octants->range[0] = 0;
+
+    double vol = 0;
+    for (int i = 0; i < octree->octants->n_nodes; i++) {
+      vol += pow(1./pow(2, octree->octants->codes[i].L),3);
+      octree->octants->range[i+1] =
+        octree->octants->range[i] +
+        octree->octants->n_points[i];
+    }
+    double total_vol;
+    PDM_MPI_Allreduce(&vol, &total_vol, 1, PDM_MPI_DOUBLE, PDM_MPI_SUM, octree->comm);
+
+    if ( (PDM_ABS(total_vol - 1.)>= 1e-15)) {
+      printf("Erreur volume different de 1 : %12.5e\n", total_vol);
+    }
+
+    assert (PDM_ABS(total_vol - 1.) < 1e-15);
+
+  }
+
+  else {
+
+    octree->octants = malloc(sizeof(_l_octant_t));
+
+    _octants_init (octree->octants, octree->dim, octree->n_points);
+
+    PDM_morton_code_t code;
+
+    code.L = 0;
+    code.X[0] = 0;
+    code.X[1] = 0;
+    code.X[2] = 0;
+
+    _octants_push_back (octree->octants,
+                        code,
+                        octree->n_points,
+                        0);
+
+    octree->octants->range[0] = 0;
+    octree->octants->range[1] = octree->n_points;
+    octree->octants->n_points[0] = octree->n_points;
+
+  }
+
+  PDM_timer_hang_on(octree->timer);
+  e_t_elapsed = PDM_timer_elapsed(octree->timer);
+  e_t_cpu     = PDM_timer_cpu(octree->timer);
+  e_t_cpu_u   = PDM_timer_cpu_user(octree->timer);
+  e_t_cpu_s   = PDM_timer_cpu_sys(octree->timer);
+
+  octree->times_elapsed[BUILD_BLOCK_PARTITION] += e_t_elapsed - b_t_elapsed;
+  octree->times_cpu[BUILD_BLOCK_PARTITION]     += e_t_cpu - b_t_cpu;
+  octree->times_cpu_u[BUILD_BLOCK_PARTITION]   += e_t_cpu_u - b_t_cpu_u;
+  octree->times_cpu_s[BUILD_BLOCK_PARTITION]   += e_t_cpu_s - b_t_cpu_s;
+
+  b_t_elapsed = e_t_elapsed;
+  b_t_cpu     = e_t_cpu;
+  b_t_cpu_u   = e_t_cpu_u;
+  b_t_cpu_s   = e_t_cpu_s;
+
+  PDM_timer_resume(octree->timer);
+
+  /*************************************************************************
+   *
+   * Build local octree
+   *
+   *************************************************************************/
+
+  const int n_child = 8;
+  //const int n_direction = 6;
+
+  int  size = octree->depth_max * 8;
+  _heap_t *heap = _heap_create (size);
+  for (int i = octree->octants->n_nodes - 1; i >= 0; i--) {
+    int is_pushed = _heap_push (heap,
+                                octree->octants->codes[i],
+                                octree->octants->range[i],
+                                octree->octants->n_points[i]);
+    if (!is_pushed) {
+      printf ("Internal error PDM_para_octree 3 : heap is full\n");
+      exit(1);
+    }
+  }
+
+  PDM_morton_code_t code;
+  int range;
+  int n_points;
+
+  octree->octants->n_nodes = 0;
+
+  while (_heap_pull (heap, &code, &range, &n_points)) {
+
+    /* Add children into the heap*/
+
+    if ((code.L < max_morton_level) && (code.L < max_level) &&
+        (n_points > octree->points_in_leaf_max)) {
+
+      PDM_morton_code_t children[n_child];
+      PDM_morton_get_children(dim,
+                              code,
+                              children);
+
+      int range_children[n_child];
+      int n_points_children[n_child];
+
+      for (int i = 0; i < n_child; i++) {
+        n_points_children[i] = 0;
+      }
+
+      int ichild = 0;
+      for (int i = 0; i < n_points; i++) {
+        assert ((range + i) < octree->n_points);
+        if (!PDM_morton_ancestor_is(code, octree->points_code[range + i])) {
+          printf("Erreur : n'est pas un ancetre !!!!!\n");
+
+        }
+        assert (PDM_morton_ancestor_is(code, octree->points_code[range + i]));
+        while (!PDM_morton_ancestor_is (children[ichild], octree->points_code[range + i])) {
+          ichild += 1;
+        }
+        assert (ichild < n_child);
+        n_points_children[ichild] += 1;
+      }
+
+      range_children[0] = 0;
+      for (int i = 0; i < n_child - 1; i++) {
+        range_children[i+1] = range_children[i] + n_points_children[i];
+      }
+
+      for (int i = n_child - 1; i >= 0; i--) {
+        int is_pushed = _heap_push (heap,
+                                    children[i],
+                                    range + range_children[i],
+                                    n_points_children[i]);
+        if (!is_pushed) {
+          printf ("Internal error PDM_para_octree 4 : heap is full\n");
+          exit(1);
+        }
+      }
+
+    }
+
+    /* Store the leaf */
+
+    else {
+      _octants_push_back (octree->octants, code, n_points, range);
+    }
+
+  }
+
+
+  double vol = 0;
+  for (int i = 0; i < octree->octants->n_nodes; i++) {
+    vol += pow(1./pow(2, octree->octants->codes[i].L),3);
+  }
+  double total_vol;
+  PDM_MPI_Allreduce(&vol, &total_vol, 1, PDM_MPI_DOUBLE, PDM_MPI_SUM, octree->comm);
+
+  assert (PDM_ABS(total_vol - 1.) < 1e-15);
+
+  heap = _heap_free (heap);
+
+  PDM_timer_hang_on(octree->timer);
+  e_t_elapsed = PDM_timer_elapsed(octree->timer);
+  e_t_cpu     = PDM_timer_cpu(octree->timer);
+  e_t_cpu_u   = PDM_timer_cpu_user(octree->timer);
+  e_t_cpu_s   = PDM_timer_cpu_sys(octree->timer);
+
+  octree->times_elapsed[BUILD_LOCAL_NODES] += e_t_elapsed - b_t_elapsed;
+  octree->times_cpu[BUILD_LOCAL_NODES]     += e_t_cpu - b_t_cpu;
+  octree->times_cpu_u[BUILD_LOCAL_NODES]   += e_t_cpu_u - b_t_cpu_u;
+  octree->times_cpu_s[BUILD_LOCAL_NODES]   += e_t_cpu_s - b_t_cpu_s;
+
+  b_t_elapsed = e_t_elapsed;
+  b_t_cpu     = e_t_cpu;
+  b_t_cpu_u   = e_t_cpu_u;
+  b_t_cpu_s   = e_t_cpu_s;
+
+  PDM_timer_resume(octree->timer);
+
+  /*************************************************************************
+   *
+   * Neighbours
+   *
+   *************************************************************************/
+
+  if (octree->neighboursToBuild) {
+    _compute_neighbours (octree,
+                         block_octants_index,
+                         b_t_elapsed,
+                         b_t_cpu,
+                         b_t_cpu_u,
+                         b_t_cpu_s);
+  }
 
   PDM_timer_hang_on(octree->timer);
   octree->times_elapsed[BUILD_TOTAL] = PDM_timer_elapsed(octree->timer);

@@ -89,6 +89,7 @@ PDM_para_octree_create
  const int n_point_cloud,
  const int depth_max,
  const int points_in_leaf_max,
+ const int build_leaf_neighbours,
  const PDM_MPI_Comm comm
 );
 
