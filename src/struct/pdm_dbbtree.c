@@ -895,6 +895,19 @@ PDM_g_num_t     *box_g_num[]
                       n_recv_pts, 1, PDM_MPI_INT,
                       _dbbt->comm);
 
+    // Somme locale des  n_recv_pts
+
+    // alltoallreduce pour somme globale (allgather pour donner la somme locale de chaque proc)
+
+    // moyenne de points recus
+    // n_fois la moyenne dans la limite n_rank_max_duplicated
+
+    // Si rank candidat appel aux fonctions :
+    //    - PDM_box_copy_to_ranks
+    //    - PDM_box_tree_set_copied_rank_boxes(PDM_box_tree_t       *bt);
+
+    // Revoir les boucles pour faire le tri des points a envoyer et stocker les points associes aux box copiees localement
+
     for (int i = 0; i < lComm; i++) {
       i_send_pts[i+1] = i_send_pts[i] + 4 * n_send_pts[i];
       i_recv_pts[i+1] = i_recv_pts[i] + 4 * n_recv_pts[i];
@@ -945,6 +958,9 @@ PDM_g_num_t     *box_g_num[]
   /*
    * Determination des candidats localement
    */
+
+
+
 
   int *box_index_in_rank;
   int *box_l_num_in_rank;

@@ -135,6 +135,10 @@ PDM_box_tree_set_boxes(PDM_box_tree_t       *bt,
                        const PDM_box_set_t  *boxes,
                        PDM_box_tree_sync_t   build_type);
 
+void
+PDM_box_tree_set_copied_rank_boxes(PDM_box_tree_t       *bt);
+
+
 /*----------------------------------------------------------------------------
  * Compute an index based on Morton encoding to ensure a good distribution
  * of boxes among the participating ranks.
