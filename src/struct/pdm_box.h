@@ -295,23 +295,21 @@ PDM_box_set_send_data_to_origin_distrib
 );
 
 /*----------------------------------------------------------------------------
- * Create a PDM_box_distrib_t structure.
+ * Copy local boxes to
  *
  * parameters:
- *   n_boxes   <-- number of boxes
- *   n_g_boxes <-- global number of boxes
- *   max_level <-- max level reached locally in the related tree
- *   comm      <-- MPI comm. on which distribution takes place
- *
- * returns:
- *   a pointer to a new allocated PDM_box_distrib_t structure.
+ *   boxes     <-- pointer to the PDM_box_t structure
+ *   n_ranks   <-- number of ranks
+ *   ranks     <-- list of ranks
  *---------------------------------------------------------------------------*/
 
-PDM_box_distrib_t *
-PDM_box_distrib_create(int  n_boxes,
-                       PDM_g_num_t  n_g_boxes,
-                       int        max_level,
-                       PDM_MPI_Comm   comm);
+void
+PDM_box_copy_to_ranks
+(
+ PDM_box_set_t  *boxes,
+ const int       n_ranks,
+ int            *ranks
+);
 
 /*----------------------------------------------------------------------------
  * Destroy a PDM_box_distrib_t structure.
@@ -332,6 +330,20 @@ PDM_box_distrib_destroy(PDM_box_distrib_t  **distrib);
 
 void
 PDM_box_distrib_clean(PDM_box_distrib_t  *distrib);
+
+/*----------------------------------------------------------------------------
+ * Display a histogramm on leaves associated to the boxes and
+ * several other pieces of information (min, max, ...)
+ *
+ * parameters:
+ *   distrib <-- pointer to the PDM_box_distrib_t structure
+ *   comm    <-- associated MPI communicator
+ *---------------------------------------------------------------------------*/
+
+void
+PDM_box_distrib_dump_statistics(const PDM_box_distrib_t  *distrib,
+                                PDM_MPI_Comm                  comm);
+
 
 /*----------------------------------------------------------------------------
  * Display a histogramm on leaves associated to the boxes and

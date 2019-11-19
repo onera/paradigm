@@ -247,7 +247,6 @@ PDM_box_set_create(int                dim,
   boxes = (PDM_box_set_t  *) malloc (sizeof(PDM_box_set_t));
 
   boxes->dim = dim;
-  boxes->n_boxes      = n_boxes;
   boxes->n_g_boxes = n_g_boxes;
 
   for (j = 0; j < 3; j++) {
@@ -256,12 +255,14 @@ PDM_box_set_create(int                dim,
     boxes->gmax[j] = g_max[j];
   }
 
-  boxes->g_num = NULL;
-  boxes->extents = NULL;
+  boxes->local_boxes           = malloc(sizeotf(_PDM_boxes_t));
+  boxes->local_boxes->n_boxes  = n_boxes;
+  boxes->local_boxes->g_num = NULL;
+  boxes->local_boxes->extents = NULL;
 
-  boxes->n_part_orig = n_part_orig;
-  boxes->n_boxes_orig = NULL;
-  boxes->origin = NULL;
+  boxes->local_boxes->n_part_orig = n_part_orig;
+  boxes->local_boxes->n_boxes_orig = NULL;
+  boxes->local_boxes->origin = NULL;
 
   boxes->comm = comm;
 
@@ -410,6 +411,7 @@ PDM_box_set_destroy(PDM_box_set_t  **boxes)
     free(_boxes->extents);
     free(_boxes->origin);
     free(_boxes->n_boxes_orig);
+    free(_boxes->local_boxes);
     free(_boxes);
   }
 }

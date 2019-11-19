@@ -120,6 +120,7 @@ struct _PDM_box_tree_t {
 
   PDM_box_tree_stats_t stats;        /* Statistics related to the structure */
 
+  // debut structure _PDM_box_tree_data_t
   int         n_max_nodes;     /* Current max. allocated nodes */
   int         n_nodes;         /* Number of nodes (including leaves) */
 
@@ -137,6 +138,12 @@ struct _PDM_box_tree_t {
 
 
   int     n_build_loops;             /* Number of loops required to build */
+  // fin structure
+
+  // _PDM_box_tree_data_t local_data
+  //  int n_copied_rank
+  //  copied_ranks
+  //  _PDM_box_tree_data_t copied_data
 
   PDM_MPI_Comm          comm;            /* Associated MPI communicator */
 
