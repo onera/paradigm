@@ -98,7 +98,7 @@ if (vb == 1)   PDM_printf ("==== PDM_hash_tab_create ====\n");
     PDM_error(__FILE__, __LINE__, 0, "Error PDM_hash_tab_create : Unknown hey type");
     abort();
   }
-  
+
   ht->l_key_info = PDM_MAX (ht->keyMax/10, 2);
   ht->key_info = malloc (sizeof(PDM_g_num_t)*ht->l_key_info);
   ht->n_key_info = 0;
@@ -114,7 +114,7 @@ if (vb == 1)   PDM_printf ("==== PDM_hash_tab_create ====\n");
   }
 
 if (vb == 1)   PDM_printf ("==== PDM_hash_tab_create ==== terminated ====\n");
- 
+
   return (PDM_hash_tab_t *) ht;
 }
 
@@ -170,7 +170,7 @@ if (vb == 1)   PDM_printf ("==== PDM_hash_tab_data_add ====\n");
   }
 //PDM_printf ("_key : %d     _ht->nDataKey[_key] : %d\n", _key, _ht->nDataKey[_key]);
   _ht->data[_key][_ht->nDataKey[_key]++] = data;
-  
+
   if (vb == 1)   PDM_printf ("==== PDM_hash_tab_data_add ==== terminated ====\n");
 }
 
@@ -240,9 +240,9 @@ void           *key
 int vb = 0;
 if (vb == 1)   PDM_printf ("==== PDM_hash_tab_n_data_get ====\n");
   _hash_tab_t *_ht = (_hash_tab_t *) ht;
-//if (vb == 1)  PDM_printf ("_ht = %d ", _ht);  
+//if (vb == 1)  PDM_printf ("_ht = %d ", _ht);
   PDM_g_num_t _key = -1;
-  
+
   if (_ht->tKey == PDM_HASH_TAB_KEY_INT) {
     _key = (PDM_g_num_t) *((int *) (key));
   }
@@ -254,10 +254,10 @@ if (vb == 1)   PDM_printf ("==== PDM_hash_tab_n_data_get ====\n");
 		abort();
 	}
 if (vb == 1) {
- PDM_printf ("_key = %d ", _key);  
- PDM_printf ("_ht->nDataKey = %d, _ht->nDataKey[0] = %d \n", _ht->nDataKey, _ht->nDataKey[0]);  
+ PDM_printf ("_key = %d ", _key);
+ PDM_printf ("_ht->nDataKey = %d, _ht->nDataKey[0] = %d \n", _ht->nDataKey, _ht->nDataKey[0]);
  for (int i=0; i<=_key; i++)
- PDM_printf ("_ht->nDataKey[%d] = %d \n", i , _ht->nDataKey[i]);  
+ PDM_printf ("_ht->nDataKey[%d] = %d \n", i , _ht->nDataKey[i]);
 	PDM_printf ("==== PDM_hash_tab_n_data_get ==== terminated ====\n");
 }
   return _ht->nDataKey[_key];
@@ -299,12 +299,12 @@ if (vb == 1)   PDM_printf ("==== PDM_hash_tab_data_get ====\n");
 		abort();
 	}
 if (vb == 1) {
- PDM_printf ("_key = %d ", _key);  
- PDM_printf ("_ht->data = %d, _ht->data[0] = %d, _ht->data[0][0] = %d, _ht->data[0][1] = %d \n", _ht->data, _ht->data[0], _ht->data[0][0], _ht->data[0][1]);  
+ PDM_printf ("_key = %d ", _key);
+ PDM_printf ("_ht->data = %d, _ht->data[0] = %d, _ht->data[0][0] = %d, _ht->data[0][1] = %d \n", _ht->data, _ht->data[0], _ht->data[0][0], _ht->data[0][1]);
  for (int i=0; i<=_key; i++)
-   PDM_printf ("_ht->data[%d] = %d \n", i , _ht->data[i]);  
- PDM_printf ("_ht->data[_key][0] = %d \n", _ht->data[_key][0]);  
-PDM_printf ("_ht->data[_key][1] = %d \n", _ht->data[_key][1]);  
+   PDM_printf ("_ht->data[%d] = %d \n", i , _ht->data[i]);
+ PDM_printf ("_ht->data[_key][0] = %d \n", _ht->data[_key][0]);
+PDM_printf ("_ht->data[_key][1] = %d \n", _ht->data[_key][1]);
 	PDM_printf ("==== PDM_hash_tab_data_get ==== terminated ====\n");
 }
   return _ht->data[_key];
@@ -331,7 +331,7 @@ PDM_hash_tab_t *ht
   _hash_tab_t *_ht = (_hash_tab_t *) ht;
 
   for (int i = 0; i<_ht->keyMax; i++) {
-	free(_ht->data[i]);
+    free(_ht->data[i]);
   }
   free (_ht->data);
   free (_ht->nDataKey);
@@ -426,7 +426,7 @@ PDM_hash_tab_t *ht
   return _ht->tKey;
 }
 
-void 
+void
 PDM_hash_tab_dump
 (
 PDM_hash_tab_t *ht
@@ -437,15 +437,15 @@ PDM_hash_tab_t *ht
   for (int i=0; i <_ht->keyMax; i++){
 	PDM_printf ("_ht->nDataKey[%d] : %d\n", i, _ht->nDataKey[i]);
   }
-  PDM_printf ("_ht->data = %d\n", _ht->data);  
+  PDM_printf ("_ht->data = %d\n", _ht->data);
   for (int i=0; i <_ht->keyMax; i++){
-	  PDM_printf ("_ht->data[%d] = %d, ",i, _ht->data[i]);  
-	  PDM_printf ("_ht->data[%d][0] = %d, ", i, _ht->data[i][0]);  
-	  PDM_printf ("_ht->data[%d][1] = %d, ", i, _ht->data[i][1]);  
-	  PDM_printf ("_ht->data[%d][2] = %d, ", i, _ht->data[i][2]);  
-	  PDM_printf ("_ht->data[%d][3] = %d \n", i, _ht->data[i][3]);  
+	  PDM_printf ("_ht->data[%d] = %d, ",i, _ht->data[i]);
+	  PDM_printf ("_ht->data[%d][0] = %d, ", i, _ht->data[i][0]);
+	  PDM_printf ("_ht->data[%d][1] = %d, ", i, _ht->data[i][1]);
+	  PDM_printf ("_ht->data[%d][2] = %d, ", i, _ht->data[i][2]);
+	  PDM_printf ("_ht->data[%d][3] = %d \n", i, _ht->data[i][3]);
   }
-  
+
  PDM_printf ("==== PDM_hash_tab_dump ==== terminated ====\n");
  }
 
