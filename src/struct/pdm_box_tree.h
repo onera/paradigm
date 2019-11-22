@@ -56,6 +56,7 @@ extern "C" {
  * Type definitions
  *============================================================================*/
 
+typedef struct _PDM_box_tree_data_t PDM_box_tree_data_t;
 typedef struct _PDM_box_tree_t PDM_box_tree_t;
 
 typedef enum {
@@ -70,6 +71,15 @@ typedef enum {
 /*============================================================================
  * Public function definitions
  *============================================================================*/
+
+ /*----------------------------------------------------------------------------
+  * Create a PDM_box_tree_data_t structure and initialize it.
+  * 
+  * returns:
+  *   pointer to an empty PDM_box_tree_data_t structure.
+  *----------------------------------------------------------------------------*/
+PDM_box_tree_data_t *
+PDM_box_tree_data_create(void);
 
 /*----------------------------------------------------------------------------
  * Create a PDM_box_tree_t structure and initialize it.
@@ -88,6 +98,16 @@ PDM_box_tree_t *
 PDM_box_tree_create(int    max_level,
                     int    threshold,
                     float  max_box_ratio);
+
+/*----------------------------------------------------------------------------
+ * Destroy a PDM_box_tree_data_t structure.
+ *
+ * parameters:
+ *   btd <-- pointer to pointer to PDM_box_tree_data_t structure to destroy
+ *----------------------------------------------------------------------------*/
+
+void
+PDM_box_tree_data_destroy(PDM_box_tree_data_t  **btd);
 
 /*----------------------------------------------------------------------------
  * Destroy a PDM_box_tree_t structure.

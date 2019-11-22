@@ -73,9 +73,11 @@ struct _PDM_box_distrib_t {
 
 };
 
+
+
 struct _PDM_boxes_t {
   int         n_boxes;        /* Number of bounding boxes */
-  PDM_g_num_t *g_num;          /* Array of associated global numbers */
+  PDM_g_num_t *g_num;         /* Array of associated global numbers */
   double     *extents;        /* Extents associated with each box:
                                   * x_min_0, y_min_0, ..., x_max_0, y_max_0, ...
                                   * x_min_n, y_min_n, ..., x_max_n, y_max_n,
@@ -87,6 +89,7 @@ struct _PDM_boxes_t {
                                   * iproc, ipart, local_num */
 };
 
+
 /* Set of bounding boxes */
 
 struct _PDM_box_set_t {
@@ -96,11 +99,11 @@ struct _PDM_box_set_t {
 
   PDM_g_num_t  n_g_boxes;      /* Global number of bounding boxes */
 
-  _PDM_boxes_t *local_boxes;
+  PDM_boxes_t *local_boxes;   /* Local boxes */
 
-  int n_copied_rank;
-  int *copied_rank;
-  _PDM_boxes_t *rank_boxes;
+  int n_copied_ranks;          /* Number of copies from other ranks */
+  int *copied_ranks;           /* Copied ranks */
+  PDM_boxes_t *rank_boxes;    /* Boxes copied from other ranks */
 
   double      gmin[3];        /* Global minima of the coordinates */
   double      gmax[3];        /* Global maxima of the coordinates */
