@@ -585,7 +585,6 @@ PDM_dist_cloud_surf_compute
 
       PDM_octree_point_cloud_set (octree_id, i_part, n_vertices,
                                   vertices_coords, vertices_gnum);
-
     }
 
     /*
@@ -593,7 +592,7 @@ PDM_dist_cloud_surf_compute
      */
 
     PDM_octree_build (octree_id);
-
+    
     /*
      * Concatenation of the partitions
      */
@@ -627,13 +626,15 @@ PDM_dist_cloud_surf_compute
 
     double *closest_vertices_dist2 =  malloc (sizeof(double) * n_pts_rank);
 
+    //printf("PDM_dist_cloud_surf_compute: -> PDM_octree_closest_point\n");
     PDM_octree_closest_point (octree_id,
                               n_pts_rank,
                               pts_rank,
                               pts_g_num_rank,
                               closest_vertices_gnum,
                               closest_vertices_dist2);
-
+    //printf("PDM_dist_cloud_surf_compute: <- PDM_octree_closest_point\n");
+    
     //      debut test cube :
 
     /* int ierr = 0; */
@@ -669,7 +670,9 @@ PDM_dist_cloud_surf_compute
 
     free (closest_vertices_gnum);
 
+    //printf("PDM_dist_cloud_surf_compute: -> PDM_octree_free\n");
     PDM_octree_free (octree_id);
+    //printf("PDM_dist_cloud_surf_compute: PDM_octree_free OK\n");
 
     PDM_timer_hang_on(dist->timer);
     e_t_elapsed = PDM_timer_elapsed(dist->timer);
@@ -700,6 +703,7 @@ PDM_dist_cloud_surf_compute
     PDM_timer_resume(dist->timer);
 
     PDM_dbbtree_t *dbbt = PDM_dbbtree_create (dist->comm, 3);
+    //printf("PDM_dist_cloud_surf_compute: PDM_dbbtree_create OK\n");
 
           int          *nElts   = malloc (sizeof(int) * n_part_mesh);
     const double      **extents = malloc (sizeof(double *) * n_part_mesh);
@@ -787,11 +791,13 @@ PDM_dist_cloud_surf_compute
                 " PDM_dist_cloud_surf_surf_mesh_part_set\n");
     }
 
+    //printf("PDM_dist_cloud_surf_compute: -->> PDM_dbbtree_boxes_set");
     PDM_box_set_t  *surf_mesh_boxes = PDM_dbbtree_boxes_set (dbbt,
                                                              n_part_mesh,
                                                              nElts,
                                                              extents,
                                                              gNum);
+    //printf("PDM_dist_cloud_surf_compute: PDM_dbbtree_boxes_set OK\n");
 
     if (idebug) {
       printf ("surf_mesh_boxes->n_boxes : %d\n", PDM_box_set_get_size (surf_mesh_boxes));
@@ -832,7 +838,8 @@ PDM_dist_cloud_surf_compute
 
     int         *box_index;
     PDM_g_num_t *box_g_num;
-
+    
+    //printf("PDM_dist_cloud_surf_compute: -->> PDM_dbbtree_closest_upper_bound_dist_boxes_get");
     PDM_dbbtree_closest_upper_bound_dist_boxes_get (dbbt,
                                                     n_pts_rank,
                                                     pts_rank,
@@ -840,6 +847,7 @@ PDM_dist_cloud_surf_compute
                                                     closest_vertices_dist2,
                                                     &box_index,
                                                     &box_g_num);
+    //printf("PDM_dist_cloud_surf_compute: <<-- PDM_dbbtree_closest_upper_bound_dist_boxes_get\n");
 
     if (idebug) {
       printf (" PDM_dbbtree_closest_upper_bound_dist_boxes_get n_pts_rank : %d\n", n_pts_rank);
@@ -857,8 +865,11 @@ PDM_dist_cloud_surf_compute
 
     free (closest_vertices_dist2);
 
+    //printf("PDM_dist_cloud_surf_compute: -->> PDM_dbbtree_free\n");
     PDM_dbbtree_free (dbbt);
+    //printf("PDM_dist_cloud_surf_compute: <<-- PDM_dbbtree_free\n");
 
+    
     free (nElts);
     free (gNum);
     free (extents);
