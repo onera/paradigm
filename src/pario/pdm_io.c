@@ -134,8 +134,11 @@ _mkdir
 const char* path
  )
 {
+#ifdef _WIN32
+  if (mkdir(path) != 0) {
+#else
   if (mkdir(path, S_IRWXU|S_IRWXG|S_IRWXO) != 0) {
-
+#endif
     if (errno == EEXIST) {
       struct stat buf;
 

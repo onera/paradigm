@@ -384,7 +384,11 @@ const char          *options
 
   /* Creation du r�pertoire de sortie si non cr�� */
 
+#ifdef _WIN32
+  mkdir(rep_sortie);
+#else
   mkdir(rep_sortie, 0775);
+#endif
 
   /* Allocation de la structure PDM_writer_t */
 
