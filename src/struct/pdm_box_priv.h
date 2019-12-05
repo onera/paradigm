@@ -76,16 +76,16 @@ struct _PDM_box_distrib_t {
 
 
 struct _PDM_boxes_t {
-  int         n_boxes;        /* Number of bounding boxes */
-  PDM_g_num_t *g_num;         /* Array of associated global numbers */
-  double     *extents;        /* Extents associated with each box:
+  int          n_boxes;        /* Number of bounding boxes */
+  PDM_g_num_t *g_num;          /* Array of associated global numbers */
+  double      *extents;        /* Extents associated with each box:
                                   * x_min_0, y_min_0, ..., x_max_0, y_max_0, ...
                                   * x_min_n, y_min_n, ..., x_max_n, y_max_n,
                                   * (size: n_boxes * dim * 2) */
 
-  int         n_part_orig;
-  int        *n_boxes_orig;   /* Number of origin bounding boxes */
-  int        *origin;         /* Initial location :
+  int          n_part_orig;
+  int         *n_boxes_orig;   /* Number of origin bounding boxes */
+  int         *origin;         /* Initial location :
                                   * iproc, ipart, local_num */
 };
 
