@@ -163,6 +163,19 @@ PDM_g_num_t     *box_g_num[]
 );
 
 
+void
+PDM_dbbtree_closest_upper_bound_dist_boxes_getB
+(
+ PDM_dbbtree_t    *dbbt,
+ const int        n_pts,
+ double           pts[],
+ PDM_g_num_t      pts_g_num[],
+ double           upper_bound_dist2[],
+ int             *box_index[],
+ PDM_g_num_t     *box_g_num[]
+);
+
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
