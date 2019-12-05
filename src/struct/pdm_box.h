@@ -216,6 +216,21 @@ PDM_box_set_get_g_num(PDM_box_set_t  *boxes);
 
 
 /*----------------------------------------------------------------------------
+ * Return global numbers associated with a set of boxes (copied from another rank).
+ *
+ * parameters:
+ *   boxes <-- pointer to set of boxes
+ *
+ * returns:
+ *   pointer to global box numbers array
+ *---------------------------------------------------------------------------*/
+
+PDM_g_num_t *
+PDM_box_set_get_rank_boxes_g_num(PDM_box_set_t  *boxes,
+                                 const int       i_rank);
+                                 
+
+/*----------------------------------------------------------------------------
  * Return initial location associated with a set of boxes.
  *
  * parameters:
@@ -343,7 +358,7 @@ PDM_box_set_send_data_to_origin_distrib
  *---------------------------------------------------------------------------*/
 
 void
-PDM_box_copy_to_ranks
+PDM_box_copy_boxes_to_ranks
 (
  PDM_box_set_t  *boxes,
  const int       n_ranks,
@@ -416,6 +431,7 @@ PDM_box_distrib_dump_statistics(const PDM_box_distrib_t  *distrib,
 void
 PDM_box_distrib_dump_statistics(const PDM_box_distrib_t  *distrib,
                                 PDM_MPI_Comm                  comm);
+
 
 /*----------------------------------------------------------------------------*/
 

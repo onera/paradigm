@@ -231,6 +231,20 @@ PDM_hash_tab_t *ht
 );
 
 
+/**
+ * description...
+ *
+ */
+
+int
+PDM_hash_tab_check_collision
+(
+ PDM_hash_tab_t *ht,
+ const int       value,
+ const int       keyMax,
+ int            *key
+ );
+
 #ifdef	__cplusplus
 }
 #endif

@@ -398,6 +398,40 @@ PDM_hash_tab_t *ht
 }
 
 
+
+
+
+
+/**
+ * description...
+ *
+ */
+
+int
+PDM_hash_tab_check_collision
+(
+ PDM_hash_tab_t *ht,
+ const int       value,
+ const int       keyMax,
+ int            *key
+)
+{
+  *key = value % keyMax;
+	      
+  int n_data = PDM_hash_tab_n_data_get (ht, key);
+
+  PDM_g_num_t **data = (PDM_g_num_t **) PDM_hash_tab_data_get (ht, key);
+  for (int i = 0; i < n_data; i++) {
+    if (*(data[i]) == value) {
+      return 1;
+    }
+  }
+  
+  return 0;
+}
+
+
+
 #ifdef	__cplusplus
 }
 #endif

@@ -362,13 +362,9 @@ PDM_octree_free
   free (octree->usedRank);
   free (octree->usedRankExtents);
 
-  //printf("PDM_octree_free: -> PDM_box_set_destroy\n");
   PDM_box_set_destroy(&(octree->rankBoxes));
-  //printf("PDM_octree_free: <- PDM_box_set_destroy\n");
 
-  //printf("PDM_octree_free: -> PDM_box_tree_destroy\n");
   PDM_box_tree_destroy(&(octree->btShared));
-  //printf("PDM_octree_free: <- PDM_box_tree_destroy\n");
 
   PDM_octree_seq_free (octree->octree_seq_id);
 
@@ -463,7 +459,6 @@ PDM_octree_build
  const int          id
 )
 {
-  /*printf("-->> PDM_octree_build\n");*/
   _octree_t *octree = _get_from_id (id);
 
   const int nInfoLocation = 3;
@@ -554,18 +549,15 @@ PDM_octree_build
 
   /* Build a tree and associate boxes */
 
-  /*printf("PDM_octree_build: -> PDM_box_tree_set_boxes\n");*/
   PDM_box_tree_set_boxes (octree->btShared,
                           octree->rankBoxes,
-                          PDM_BOX_TREE_ASYNC_LEVEL); //--> set LOCAL boxes
-  /*printf("PDM_octree_build: <- PDM_box_tree_set_boxes\n");*/
+                          PDM_BOX_TREE_ASYNC_LEVEL);
   _update_bt_statistics(&(octree->btsShared), octree->btShared);
 
   free (gNumProc);
   free (initLocationProc);
 
   octree->usedRankExtents = extents_proc;
-  /*printf("<<-- PDM_octree_build\n");*/
 }
 
 //void
@@ -895,7 +887,7 @@ double      *closest_octree_pt_dist2
                                  n_pts,
                                  pts,
                                  rank_id,
-                                 rank_min_max_dist); //--> use LOCAL boxes
+                                 rank_min_max_dist);
 
   for (int i = 0; i < n_pts; i++) {
     if (rank_id[i] >= 0) {
@@ -1070,7 +1062,7 @@ double      *closest_octree_pt_dist2
                                                    pts,
                                                    upper_bound_dist,
                                                    &i_boxes,
-                                                   &boxes); //--> use LOCAL boxes
+                                                   &boxes);
 
 
   for (int i = 0; i < lComm; i++) {

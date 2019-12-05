@@ -428,6 +428,7 @@ PDM_box_set_create(int                dim,
 
   }
 
+  boxes->n_copied_ranks = 0;
   /* Return pointer to structure */
 
   return boxes;
@@ -652,6 +653,29 @@ PDM_box_set_get_g_num(PDM_box_set_t  *boxes) //***
   assert(boxes->local_boxes != NULL);
   return boxes->local_boxes->g_num;
   //return boxes->g_num;
+}
+
+/*----------------------------------------------------------------------------
+ * Return global numbers associated with a set of boxes (copied from another rank).
+ *
+ * parameters:
+ *   boxes <-- pointer to set of boxes
+ *
+ * returns:
+ *   pointer to global box numbers array
+ *---------------------------------------------------------------------------*/
+
+PDM_g_num_t *
+PDM_box_set_get_rank_boxes_g_num(PDM_box_set_t  *boxes,
+                                 const int       i_rank)
+{
+  assert(boxes != NULL);
+
+  //printf("i_rank / n_copied_ranks = %d / %d\n", i_rank, boxes->n_copied_ranks);
+  assert(i_rank < boxes->n_copied_ranks);
+  assert(i_rank > -1);
+
+  return boxes->rank_boxes[i_rank].g_num;
 }
 
 /*----------------------------------------------------------------------------
@@ -1733,6 +1757,129 @@ PDM_box_set_send_data_to_origin_distrib
 
 }
 
+
+/*----------------------------------------------------------------------------
+ * Copy local boxes to
+ *
+ * parameters:
+ *   boxes     <-- pointer to the PDM_boxes_t structure
+ *   n_ranks   <-- number of ranks
+ *   ranks     <-- list of ranks
+ *---------------------------------------------------------------------------*/
+
+void
+PDM_box_copy_boxes_to_ranks
+(
+ PDM_box_set_t  *boxes,
+ const int       n_copied_ranks,
+ int            *copied_ranks
+)
+{
+  int myRank;
+  PDM_MPI_Comm_rank(boxes->comm, &myRank);
+  
+  boxes->copied_ranks = (int *) malloc (sizeof(int) * n_copied_ranks);
+
+  boxes->n_copied_ranks = 0;
+  int irank = 0;
+  int i = 0;
+  for (i = 0; i < n_copied_ranks; i++) {
+    irank = copied_ranks[i];
+    if ( myRank != irank ) {
+      boxes->copied_ranks[boxes->n_copied_ranks++] = copied_ranks[i];
+    }
+  }
+  boxes->copied_ranks = (int *) realloc (boxes->copied_ranks, sizeof(int) * boxes->n_copied_ranks);
+    
+  boxes->rank_boxes = (PDM_boxes_t *) malloc (sizeof(PDM_boxes_t) * boxes->n_copied_ranks);
+
+  int          n_boxes      = 0;
+  int          n_part_orig  = 0;
+  PDM_g_num_t *g_num        = NULL;
+  double      *extents      = NULL;
+  int         *n_boxes_orig = NULL;
+  int         *origin       = NULL;
+  
+  int icopied = 0;
+  
+  for (i = 0; i < n_copied_ranks; i++) {
+    irank = copied_ranks[i];
+    
+    if ( myRank == irank ) {
+      n_boxes     = boxes->local_boxes->n_boxes;
+      n_part_orig = boxes->local_boxes->n_part_orig;
+    }
+    
+    PDM_MPI_Bcast(&n_boxes,     1, PDM_MPI_INT, irank, boxes->comm);
+    PDM_MPI_Bcast(&n_part_orig, 1, PDM_MPI_INT, irank, boxes->comm);
+
+
+    // prepare buffers
+    g_num        = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * n_boxes);
+    extents      = (double *)      malloc (sizeof(double)      * n_boxes*boxes->dim*2);
+    n_boxes_orig = (int *)         malloc (sizeof(int)         * n_part_orig);
+    origin       = (int *)         malloc (sizeof(int)         * n_part_orig*3);
+    if ( myRank == irank ) {
+      // set buffers
+      memcpy(g_num,        boxes->local_boxes->g_num,        sizeof(PDM_g_num_t) * n_boxes);
+      memcpy(extents,      boxes->local_boxes->extents,      sizeof(PDM_g_num_t) * n_boxes*boxes->dim*2);
+      memcpy(n_boxes_orig, boxes->local_boxes->n_boxes_orig, sizeof(PDM_g_num_t) * n_part_orig);
+      memcpy(origin,       boxes->local_boxes->origin,       sizeof(PDM_g_num_t) * n_part_orig*3);
+    }
+    // broadcast buffers
+    PDM_MPI_Bcast(g_num,        n_boxes,              PDM__PDM_MPI_G_NUM, irank, boxes->comm);
+    PDM_MPI_Bcast(extents,      n_boxes*boxes->dim*2, PDM_MPI_DOUBLE,     irank, boxes->comm);
+    PDM_MPI_Bcast(n_boxes_orig, n_part_orig,          PDM_MPI_INT,        irank, boxes->comm);
+    PDM_MPI_Bcast(origin,       n_part_orig*3,        PDM_MPI_INT,        irank, boxes->comm);
+
+    
+    if  ( myRank != irank ) {
+      boxes->rank_boxes[icopied].n_boxes     = n_boxes;
+      boxes->rank_boxes[icopied].n_part_orig = n_part_orig;
+
+      boxes->rank_boxes[icopied].g_num        = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * n_boxes);
+      boxes->rank_boxes[icopied].extents      = (double *)      malloc (sizeof(double)      * n_boxes*boxes->dim*2);
+      boxes->rank_boxes[icopied].n_boxes_orig = (int *)         malloc (sizeof(int)         * n_part_orig);
+      boxes->rank_boxes[icopied].origin       = (int *)         malloc (sizeof(int)         * n_part_orig*3);
+
+      memcpy(boxes->rank_boxes[icopied].g_num,        g_num,        sizeof(PDM_g_num_t) * n_boxes);
+      memcpy(boxes->rank_boxes[icopied].extents,      extents,      sizeof(PDM_g_num_t) * n_boxes*boxes->dim*2);
+      memcpy(boxes->rank_boxes[icopied].n_boxes_orig, n_boxes_orig, sizeof(PDM_g_num_t) * n_part_orig);
+      memcpy(boxes->rank_boxes[icopied].origin,       origin,       sizeof(PDM_g_num_t) * n_part_orig*3);
+
+      icopied++;
+    }
+
+    free(g_num);
+    free(extents);
+    free(n_boxes_orig);
+    free(origin);
+  }
+
+
+
+  // --->>>
+  if ( 0 ) {
+    char report[1000], line[100];
+    sprintf(report, "\nrank #%d: \n", myRank);
+    for (i = 0; i < boxes->n_copied_ranks; i++) {
+      sprintf(line, "\tcopy %d boxes from rank %d", boxes->rank_boxes[i].n_boxes, boxes->copied_ranks[i]);
+      strcat(report, line);
+      if ( 0 ) {
+        for (int k = 0; k < 6; k++) {
+          sprintf(line, " %f", boxes->rank_boxes[i].extents[k]);
+          strcat(report, line);
+        }
+      }
+      strcat(report, "\n");
+    }
+    printf("%s\n", report);
+  }
+  // ---<<<
+  
+}
+
+
 /*----------------------------------------------------------------------------
  * Create a PDM_box_distrib_t structure.
  *
@@ -1925,7 +2072,6 @@ PDM_box_distrib_dump_statistics(const PDM_box_distrib_t  *distrib,
   }
   fflush(stdout);
 }
-
 
 /*---------------------------------------------------------------------------*/
 

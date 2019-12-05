@@ -72,12 +72,12 @@ typedef enum {
  * Public function definitions
  *============================================================================*/
 
- /*----------------------------------------------------------------------------
-  * Create a PDM_box_tree_data_t structure and initialize it.
-  * 
-  * returns:
-  *   pointer to an empty PDM_box_tree_data_t structure.
-  *----------------------------------------------------------------------------*/
+/*----------------------------------------------------------------------------
+ * Create a PDM_box_tree_data_t structure and initialize it.
+ * 
+ * returns:
+ *   pointer to an empty PDM_box_tree_data_t structure.
+ *----------------------------------------------------------------------------*/
 PDM_box_tree_data_t *
 PDM_box_tree_data_create(void);
 
@@ -293,12 +293,12 @@ PDM_box_tree_dump(PDM_box_tree_t  *bt);
 void
 PDM_box_tree_min_dist_max_box
 (
-PDM_box_tree_t  *bt,
-const int        n_pts,
-double          *pts,
-int             *box_id,
-double          *box_max_dist
-);
+ PDM_box_tree_t  *bt,
+ const int        n_pts,
+ double          *pts,
+ int             *box_id,
+ double          *box_max_dist
+ );
 
 
 /*----------------------------------------------------------------------------
@@ -316,15 +316,77 @@ double          *box_max_dist
 void
 PDM_box_tree_closest_upper_bound_dist_boxes_get
 (
-PDM_box_tree_t  *bt,
-const int        n_pts,
-double           pts[],
-double           upper_bound_dist2[],
-int             *i_boxes[],
-int             *boxes[]
-);
+ PDM_box_tree_t  *bt,
+ const int        n_pts,
+ double           pts[],
+ double           upper_bound_dist2[],
+ int             *i_boxes[],
+ int             *boxes[]
+ );
 
 /*----------------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------------
+ * Get minimum of maximum distance of boxes (extended version: rank tree data)
+ *
+ * parameters:
+ *   bt                <-- pointer to box tree structure
+ *   i_pts             <-- index of points (size = bt->n_copied_ranks+1)
+ *   pts               <-- Point coordinates (size = 3 * n_pts) (with n_pts = i_pts[bt->n_copied_ranks])
+ *   upper_bound_dist2 <-- Upper bound of the square of the distance (size = n_pts)
+ *   i_boxes_rank      --> Index of boxes (size = bt->n_copied_ranks) (i_boxes_rank[r] is of size n_pts_rank[r] + 1) (with n_pts_rank[r] = i_pts[r+1] - i_pts[r])
+ *   boxes_rank        --> Boxes (size = bt->n_copied_ranks)          (boxes_rank[r] is of size i_boxes_rank[r][n_pts_rank[r]])
+ *----------------------------------------------------------------------------*/
+void
+PDM_box_tree_closest_upper_bound_dist_boxes_getB
+(
+ PDM_box_tree_t  *bt,
+ const int        i_pts[],
+ double           pts[],
+ double           upper_bound_dist2[],
+ int             **i_boxes_rank[],
+ int             **boxes_rank[]
+ );
+
+void
+PDM_box_tree_closest_upper_bound_dist_boxes_getB_v2
+(
+ PDM_box_tree_t  *bt,
+ const int        i_pts[],
+ double           pts[],
+ double           upper_bound_dist2[],
+ int             **i_boxes_rank[],
+ int             **boxes_rank[]
+ );
+
+
+void
+PDM_box_tree_closest_upper_bound_dist_boxes_get_v2
+(
+ PDM_box_tree_t  *bt,
+ const int        irank,
+ const int        n_pts,
+ double           pts[],
+ double           upper_bound_dist2[],
+ int             *i_boxes[],
+ int             *boxes[]
+ );
+
+
+/*----------------------------------------------------------------------------
+ * DESCRIPTION...
+ *---------------------------------------------------------------------------*/
+void
+PDM_box_tree_copy_to_ranks
+(
+ PDM_box_tree_t *bt,
+ int            *n_copied_ranks,
+ int            *copied_ranks,
+ int            *rank_copy_num
+ );
+
+
+
 
 #ifdef __cplusplus
 }
