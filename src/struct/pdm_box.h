@@ -81,7 +81,7 @@ PDM_box_set_normalize_inv
  *---------------------------------------------------------------------------*/
 
 PDM_boxes_t *
-PDM_boxes_create(const int          dim,                
+PDM_boxes_create(const int          dim,
 		         int                n_boxes,
 		         const PDM_g_num_t *box_gnum,
 		         const double      *box_extents,
@@ -131,7 +131,7 @@ PDM_box_set_create(int                dim,
  *---------------------------------------------------------------------------*/
 
 void
-PDM_boxes_destroy(PDM_boxes_t  **boxes);
+PDM_boxes_destroy(PDM_boxes_t  *boxes);
 
 /*----------------------------------------------------------------------------
  * Destroy a PDM_box_set_t structure.
@@ -228,7 +228,7 @@ PDM_box_set_get_g_num(PDM_box_set_t  *boxes);
 PDM_g_num_t *
 PDM_box_set_get_rank_boxes_g_num(PDM_box_set_t  *boxes,
                                  const int       i_rank);
-                                 
+
 
 /*----------------------------------------------------------------------------
  * Return initial location associated with a set of boxes.

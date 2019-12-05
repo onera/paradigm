@@ -1312,8 +1312,8 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_getB
 
     /* identify ranks to be copied
      * n_fois la moyenne dans la limite n_rank_max_duplicated */
-    int threshold_n_req = 0;//2*mean_n_requests;   // --> PARAMETRE
-    int max_copied_ranks = 2;//_MAX (1, lComm/10); // --> PARAMETRE
+    int threshold_n_req = 2*mean_n_requests;   // --> PARAMETRE
+    int max_copied_ranks = _MAX (1, lComm/10); // --> PARAMETRE
 
     int n_copied_ranks = 0;
     int *copied_ranks = malloc (max_copied_ranks * sizeof(int));
@@ -1656,13 +1656,10 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_getB
     for (int i_copied_rank = 0; i_copied_rank < n_copied_ranks; i_copied_rank++) {
       gnum_boxes_rank = PDM_box_set_get_rank_boxes_g_num (_dbbt->boxes,
                                                           i_copied_rank);
-
       box_g_num_rank[i_copied_rank] = malloc(sizeof(PDM_g_num_t) * box_index_rank[i_copied_rank][n_pts_rank[i_copied_rank]]);
       for (int i = 0; i < box_index_rank[i_copied_rank][n_pts_rank[i_copied_rank]]; i++) {
         box_g_num_rank[i_copied_rank][i] = gnum_boxes_rank[box_l_num_rank[i_copied_rank][i]];
       }
-
-      free(gnum_boxes_rank);
     }
     free(box_l_num_rank);
 
@@ -1807,6 +1804,10 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_getB
     free(box_index_local);
     free(box_g_num_local);
 
+    for (int i_copied_rank = 0; i_copied_rank < n_copied_ranks; i_copied_rank++) {
+      free(box_index_rank[i_copied_rank]);
+      free(box_g_num_rank[i_copied_rank]);
+    }
     free(box_index_rank);
     free(box_g_num_rank);
 

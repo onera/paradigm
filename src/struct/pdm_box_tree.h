@@ -74,7 +74,7 @@ typedef enum {
 
 /*----------------------------------------------------------------------------
  * Create a PDM_box_tree_data_t structure and initialize it.
- * 
+ *
  * returns:
  *   pointer to an empty PDM_box_tree_data_t structure.
  *----------------------------------------------------------------------------*/
@@ -107,7 +107,7 @@ PDM_box_tree_create(int    max_level,
  *----------------------------------------------------------------------------*/
 
 void
-PDM_box_tree_data_destroy(PDM_box_tree_data_t  **btd);
+PDM_box_tree_data_destroy(PDM_box_tree_data_t  *btd);
 
 /*----------------------------------------------------------------------------
  * Destroy a PDM_box_tree_t structure.
