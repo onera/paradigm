@@ -589,8 +589,8 @@ PDM_dbbtree_intersect_boxes_set
 {
 
   int vb = 1;
-  if (vb == 1) PDM_printf ("==== PDM_dbbtree_intersect_boxes_set ==== terminated ====\n");  
-  vb = 0;
+  if (vb == 1) PDM_printf ("==== PDM_dbbtree_intersect_boxes_set ==== begin ====\n");
+  //  vb = 0;
   assert (dbbt != NULL);
   _PDM_dbbtree_t *_dbbt = (_PDM_dbbtree_t *) dbbt;
 
@@ -633,7 +633,7 @@ PDM_dbbtree_intersect_boxes_set
 
   if (1 == vb) {
 
-    PDM_printf ("nEltsProc : %d", nEltsProc);
+    PDM_printf ("nEltsProc : %d\n", nEltsProc);
 
     PDM_printf ("_boxGnum :");
     for (int i = 0; i < nEltsProc; i++) {
@@ -641,9 +641,10 @@ PDM_dbbtree_intersect_boxes_set
     }
     PDM_printf ("\n");
 
-    PDM_printf ("_extents :");
+    PDM_printf ("_extents :\n");
     idx1 = 0;
     for (int i = 0; i < nEltsProc; i++) {
+      PDM_printf (" "PDM_FMT_G_NUM":", _boxGnum[i]);
       PDM_printf (" %12.5e", _extents[idx1++]);
       PDM_printf (" %12.5e", _extents[idx1++]);
       PDM_printf (" %12.5e", _extents[idx1++]);
@@ -674,11 +675,8 @@ PDM_dbbtree_intersect_boxes_set
                                               nPart,
                                               nElts,
                                               _initLocation,
-                                              _dbbt->comm);											  
+                                              _dbbt->comm);
 
-  free (_boxGnum);
-  free (_extents);
-  free (_initLocation);
 
   /*
    * Intersection boxes whith shared tree
@@ -693,33 +691,34 @@ PDM_dbbtree_intersect_boxes_set
 
     int nUsedRank = PDM_box_set_get_size (_dbbt->rankBoxes);
     const int *usedRanks = _dbbt->usedRank;
-   
+
     /*
      * Distribute boxes on intersection ranks
      */
-    
+
     if (vb==1){
-		PDM_printf ("box_l_num_shared : ");
-		for (int i = 0; i < nUsedRank; i++) {
-		  for (int j = (*box_index)[i]; j < (*box_index)[i+1]; j++) {
-			PDM_printf (" %d", (*box_l_num)[j]);
-		  }
-		  PDM_printf ("\n");
-		}
-	}
-    
+      PDM_printf ("box_l_num_shared : \n");
+      for (int i = 0; i < nUsedRank; i++) {
+        printf("[%d] : ",i);
+        for (int j = (*box_index)[i]; j < (*box_index)[i+1]; j++) {
+          PDM_printf ("%d:%ld ",  (*box_l_num)[j], _boxGnum[(*box_l_num)[j]]);
+        }
+        PDM_printf ("\n");
+      }
+    }
+
     PDM_box_distrib_t  *distrib = NULL;
     distrib = PDM_box_distrib_create (boxes->local_boxes->n_boxes,//*
                                       boxes->n_g_boxes,
                                       1, // Don't use in this case
                                       boxes->comm);
-   
+
     for (int i = 0; i < lComm + 1; i++) {
       distrib->index[i] = 0;
     }
 
     for (int i = 0; i < nUsedRank; i++) {
-      distrib->index[usedRanks[i]] = (*box_index)[i+1] - (*box_index)[i];
+      distrib->index[usedRanks[i]+1] = (*box_index)[i+1] - (*box_index)[i];
     }
 
     for (int i = 0; i < lComm; i++) {
@@ -734,11 +733,18 @@ PDM_dbbtree_intersect_boxes_set
 
     /*
      * Redistribute boxes on intersecting ranks
-     */ 
-    
+     */
+
     PDM_box_set_redistribute (distrib,
                               boxes);
-  
+
+
+    printf ("Boxes B apres redistribution : %d\n", boxes->n_boxes);
+    for (int i = 0; i < boxes->n_boxes; i++) {
+      printf (" %ld", boxes->g_num[i]);
+    }
+    printf("\n");
+
     /*
      * Free
      */
@@ -749,6 +755,10 @@ PDM_dbbtree_intersect_boxes_set
     free (*box_index);
 
   }
+
+  free (_boxGnum);
+  free (_extents);
+  free (_initLocation);
 
   /*
    * Intersection boxes whith local tree
@@ -799,7 +809,7 @@ PDM_dbbtree_intersect_boxes_set
   *box_index = newIndex;
 
   *box_l_num = (int *) realloc (*box_l_num, sizeof (int) * newIndex[nBoxesA]);
- 
+
   vb = 1;
   if (vb == 1) PDM_printf ("==== PDM_dbbtree_intersect_boxes_set ==== terminated ====\n");
 
