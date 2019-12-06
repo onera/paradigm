@@ -45,6 +45,7 @@
 #include "pdm_box_priv.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
+#include "pdm_sort.h"
 
 #include "pdm_morton.h"
 
@@ -3419,8 +3420,34 @@ PDM_box_tree_get_boxes_intersects(PDM_box_tree_t       *bt,
                              _l_num);
   }
 
-  free(counter);
+  /* Remove duplicate boxes */
 
+  int idx=0;
+  for (i = 0; i < boxes->n_boxes; i++) {
+    counter[i] = 0;
+    int *_l_num_box = _l_num + _index[i];
+    int n_elt = _index[i+1] -_index[i];
+    counter[i] = 0;
+    _index[i] = 0;
+    PDM_sort_int(_l_num_box, NULL, n_elt);
+
+    int pre = -1;
+    for (int j = 0; j < n_elt; j++) {
+      if (pre < _l_num_box[j]) {
+        pre = _l_num_box[j];
+        _l_num[idx++] = pre;
+        counter[i]++;
+      }
+    }
+  }
+
+  for (i = 0; i < boxes->n_boxes; i++) {
+    _index[i+1] = _index[i] + counter[i];
+  }
+
+  _l_num = realloc (_l_num, sizeof(int) * _index[boxes->n_boxes]);
+
+  free(counter);
 
   /* Return pointers */
 

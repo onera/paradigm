@@ -701,7 +701,7 @@ PDM_dbbtree_intersect_boxes_set
       for (int i = 0; i < nUsedRank; i++) {
         printf("[%d] : ",i);
         for (int j = (*box_index)[i]; j < (*box_index)[i+1]; j++) {
-          PDM_printf ("%d:%ld ",  (*box_l_num)[j], _boxGnum[(*box_l_num)[j]]);
+          PDM_printf (" %d",  (*box_l_num)[j]);
         }
         PDM_printf ("\n");
       }
