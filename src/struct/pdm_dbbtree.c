@@ -1660,6 +1660,8 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_getB
       for (int i = 0; i < box_index_rank[i_copied_rank][n_pts_rank[i_copied_rank]]; i++) {
         box_g_num_rank[i_copied_rank][i] = gnum_boxes_rank[box_l_num_rank[i_copied_rank][i]];
       }
+
+      free(box_l_num_rank[i_copied_rank]);
     }
     free(box_l_num_rank);
 
