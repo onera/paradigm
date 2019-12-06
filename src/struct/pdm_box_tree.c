@@ -3421,6 +3421,7 @@ PDM_box_tree_get_boxes_intersects(PDM_box_tree_t       *bt,
 
   free(counter);
 
+
   /* Return pointers */
 
   *box_index = _index;

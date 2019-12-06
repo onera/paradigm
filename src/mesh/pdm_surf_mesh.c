@@ -172,7 +172,7 @@ PDM_surf_mesh_build_edges_gn_and_edge_part_bound
   int vb = 1;
   if (vb == 1) PDM_printf ("==== PDM_surf_mesh_build_edges_gn_and_edge_part_bound ====\n");
   vb = 0;
-  
+
   assert (mesh != NULL);
 
   int nPart = mesh->nPart;
@@ -194,8 +194,25 @@ PDM_surf_mesh_build_edges_gn_and_edge_part_bound
   int *nIntEdgePart = (int *) malloc(sizeof(int) * (nPart + 1));
   nIntEdgePart[0] = 0;
 
-if (myRank == 0)
-	PDM_surf_part_dump(mesh->part[myRank]);
+/* if (myRank == 0) */
+/* 	PDM_surf_part_dump(mesh->part[myRank]); */
+
+
+  if (1 == 1) {
+    for (int i1 = 0; i1 < nPart; i1++) {
+      PDM_surf_part_t *part =  mesh->part[i1];
+      PDM_printf ("part->vtxEdge   --- PDM_surf_mesh_build_edges_gn_and_edge_part_bound debut \n");
+      for (int i = 0; i < part->nVtx; i++) {
+        PDM_printf ("[%d] :", i+1);
+        for (int j = part->vtxEdgeIdx[i]; j < part->vtxEdgeIdx[i+1]; j++) {
+          PDM_printf (" %d", part->vtxEdge[j]);
+        }
+        PDM_printf ("\n");
+      }
+    }
+  }
+
+
 
   for (int i = 0; i < nPart; i++) {
     PDM_surf_part_t *part =  mesh->part[i];
@@ -244,14 +261,14 @@ if (myRank == 0)
   for (int i = 1; i < nPart + 1; i++) {
     nIntEdgePart[i] = nIntEdgePart[i] + nIntEdgePart[i-1];
   }
-if (vb==1) { 
+if (vb==1) {
   for (int i = 0; i < lHashTableIdx; i++) {
 PDM_printf ("%d- hashTableIdx[ %d ] = %d\n", myRank, i, hashTableIdx[i]);
   }
   for (int i = 0; i < keyMax; i++) {
 PDM_printf ("%d- nHashTable[ %d ] = %d\n", myRank, i, nHashTable[i]);
 } }
- 
+
   int nIntEdgeProc = nIntEdgePart[nPart];
 
   int *nEdgeBoundPart = (int *) malloc(sizeof(int) * nPart);
@@ -280,8 +297,8 @@ PDM_printf ("%d- nHashTable[ %d ] = %d\n", myRank, i, nHashTable[i]);
       }
     }
   }
-if (myRank == 0)
-	PDM_surf_part_dump(mesh->part[myRank]);
+/* if (myRank == 0) */
+/* 	PDM_surf_part_dump(mesh->part[myRank]); */
 
   free(nHashTable);
   free(nIntEdgePart);
@@ -486,7 +503,7 @@ if (myRank == 0)
     PDM_g_num_t gVtx2 = part->vtxLnToGn[vtx2 - 1];
 
     PDM_g_num_t key = gVtx1 + gVtx2;
-    edgeToSendN[PDM_binary_search_gap_long (key, nKeyProcs, lComm + 1)] += nDataToSend; 
+    edgeToSendN[PDM_binary_search_gap_long (key, nKeyProcs, lComm + 1)] += nDataToSend;
   }
 
   int *edgeToSendIdx = (int *) malloc((lComm+1) * sizeof(int));
@@ -587,7 +604,7 @@ if (vb == 1){
 		  PDM_printf ("\n");
 		}
 }
-		
+
   int nRecvKey = edgeToRecvIdx[lComm]/nDataToSend;
 
   /*
@@ -598,7 +615,7 @@ if (vb == 1){
 
   PDM_g_num_t *dHashTable =
     (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * nDatadHashTable * nRecvKey);
-	  
+
 
   for (int i = 0; i < nRecvKey; i++) {
     PDM_g_num_t _keyLoc = edgeToRecv[i*nDataToSend] - nKeyProcs[myRank];
@@ -619,14 +636,14 @@ if (vb == 1){
 
       int keyLoc       = (int) _keyLoc;
       dHashTable[dHashTableIdx[keyLoc]+(dNHashTable[keyLoc]++)] =
-        cptEdgeToRecv - 1; 
+        cptEdgeToRecv - 1;
 	  dHashTable[dHashTableIdx[keyLoc]+(dNHashTable[keyLoc]++)] = i;
-   } 
+   }
   }
   if (vb==1) {
   for (int i = 0; i < lComm; i++) {
 		PDM_printf ("dHashTableIdx[%d] %d dHashTableIdx[%d] %d\n", i, dHashTableIdx[i], i+1, dHashTableIdx[i+1]);
-    for (int j = dHashTableIdx[i]; j <  dHashTableIdx[i+1]; j ++)	
+    for (int j = dHashTableIdx[i]; j <  dHashTableIdx[i+1]; j ++)
 		PDM_printf ("%d- dHashTable[ %d] = %d\n", myRank, j, dHashTable[j]);
 	  }
   }
@@ -737,7 +754,7 @@ if (vb == 1){
   PDM_g_num_t *gNCurrentProcs =
     (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * (lComm + 1));
 
-  PDM_MPI_Allgather((void *) &gNCurrent, 1, PDM__PDM_MPI_G_NUM, 
+  PDM_MPI_Allgather((void *) &gNCurrent, 1, PDM__PDM_MPI_G_NUM,
                 (void *) (&gNCurrentProcs[1]), 1, PDM__PDM_MPI_G_NUM, mesh->comm);
 
   gNCurrentProcs[0] = 0;
@@ -763,11 +780,11 @@ if (vb == 1){
 }
 
 if (vb == 1){
-PDM_printf ("nRecvKey : %d \n", nRecvKey);	  
-PDM_printf ("gNCurrentProcs[%d] : %d \n", myRank, gNCurrentProcs[myRank]);	  
-PDM_printf ("gNBoundPartEdge\n");	  
-  for (int i = 0; i < nRecvKey; i++) PDM_printf ("%d ", gNBoundPartEdge[i]);	  
-PDM_printf ("\n");	  
+PDM_printf ("nRecvKey : %d \n", nRecvKey);
+PDM_printf ("gNCurrentProcs[%d] : %d \n", myRank, gNCurrentProcs[myRank]);
+PDM_printf ("gNBoundPartEdge\n");
+  for (int i = 0; i < nRecvKey; i++) PDM_printf ("%d ", gNBoundPartEdge[i]);
+PDM_printf ("\n");
 }
 
   for (int i = 0; i < nRecvKey; i++) {
@@ -838,7 +855,7 @@ if (vb == 1){
 
   for (int i = 0; i < lComm; i++) {
 
-    int id1 = edgeToSendIdx[i]; 
+    int id1 = edgeToSendIdx[i];
     int id2 = (edgeToSendIdx[i+1] - edgeToSendIdx[i]) / nDataToSend;
 
     int idx = id1;
@@ -914,6 +931,21 @@ if (vb == 1){
   free(gNBoundPartEdge);
   free(gNCurrentProcs);
   vb=1;
+
+   if (1 == 1) {
+    for (int i1 = 0; i1 < nPart; i1++) {
+      PDM_surf_part_t *part =  mesh->part[i1];
+      PDM_printf ("part->vtxEdge   --- PDM_surf_mesh_build_edges_gn_and_edge_part_bound fin \n");
+      for (int i = 0; i < part->nVtx; i++) {
+        PDM_printf ("[%ld] :",  part->vtxLnToGn[i]);
+        for (int j = part->vtxEdgeIdx[i]; j < part->vtxEdgeIdx[i+1]; j++) {
+          PDM_printf (" %d", part->edgeLnToGn[part->vtxEdge[j]-1]);
+        }
+        PDM_printf ("\n");
+      }
+    }
+  }
+
 if (vb == 1)   PDM_printf ("==== PDM_surf_mesh_build_edges_gn_and_edge_part_bound ==== terminated ====\n");
 }
 
@@ -1637,22 +1669,74 @@ PDM_surf_mesh_build_exchange_graph
     mesh->edgePartBound[i] = part->edgePartBound;
   }
 
+   if (1 == 1) {
+    for (int i1 = 0; i1 <  mesh->nPart; i1++) {
+      PDM_surf_part_t *part =  mesh->part[i1];
+      PDM_printf ("part->vtxEdge   --- PDM_surf_mesh_build_exchange_graph debut \n");
+      for (int i = 0; i < part->nVtx; i++) {
+        PDM_printf ("[%ld] :",  part->vtxLnToGn[i]);
+        for (int j = part->vtxEdgeIdx[i]; j < part->vtxEdgeIdx[i+1]; j++) {
+          PDM_printf (" %d", part->edgeLnToGn[part->vtxEdge[j]-1]);
+        }
+        PDM_printf ("\n");
+      }
+    }
+   }
   mesh->interPartVtxGraph = PDM_graph_bound_create (mesh->comm,
                                                     mesh->nPart,
                                                     mesh->vtxPartBound);
 
+  if (1 == 1) {
+    for (int i1 = 0; i1 <  mesh->nPart; i1++) {
+      PDM_surf_part_t *part =  mesh->part[i1];
+      PDM_printf ("part->vtxEdge   --- PDM_surf_mesh_build_exchange_graph mil 1 \n");
+      for (int i = 0; i < part->nVtx; i++) {
+        PDM_printf ("[%ld] :",  part->vtxLnToGn[i]);
+        for (int j = part->vtxEdgeIdx[i]; j < part->vtxEdgeIdx[i+1]; j++) {
+          PDM_printf (" %d", part->edgeLnToGn[part->vtxEdge[j]-1]);
+        }
+        PDM_printf ("\n");
+      }
+    }
+  }
 
   mesh->interPartEdgeGraph = PDM_graph_bound_create (mesh->comm,
                                                      mesh->nPart,
                                                      mesh->edgePartBound);
 
-  if (1 == 0) {
+  if (1 == 1) {
     PDM_graph_bound_dump (mesh->interPartVtxGraph);
     PDM_graph_bound_dump (mesh->interPartEdgeGraph);
+  }
+  if (1 == 1) {
+    for (int i1 = 0; i1 <  mesh->nPart; i1++) {
+      PDM_surf_part_t *part =  mesh->part[i1];
+      PDM_printf ("part->vtxEdge   --- PDM_surf_mesh_build_exchange_graph mil 2 \n");
+      for (int i = 0; i < part->nVtx; i++) {
+        PDM_printf ("[%ld] :",  part->vtxLnToGn[i]);
+        for (int j = part->vtxEdgeIdx[i]; j < part->vtxEdgeIdx[i+1]; j++) {
+          PDM_printf (" %d", part->edgeLnToGn[part->vtxEdge[j]-1]);
+        }
+        PDM_printf ("\n");
+      }
+    }
   }
 
   PDM_surf_mesh_build_ghost_element (mesh);
 
+  if (1 == 1) {
+    for (int i1 = 0; i1 <  mesh->nPart; i1++) {
+      PDM_surf_part_t *part =  mesh->part[i1];
+      PDM_printf ("part->vtxEdge   --- PDM_surf_mesh_build_exchange_graph fin \n");
+      for (int i = 0; i < part->nVtx; i++) {
+        PDM_printf ("[%ld] :",  part->vtxLnToGn[i]);
+        for (int j = part->vtxEdgeIdx[i]; j < part->vtxEdgeIdx[i+1]; j++) {
+          PDM_printf (" %d", part->edgeLnToGn[part->vtxEdge[j]-1]);
+        }
+        PDM_printf ("\n");
+      }
+    }
+  }
 
 }
 
@@ -2150,20 +2234,15 @@ PDM_surf_mesh_build_edges
  PDM_surf_mesh_t *mesh
 )
 {
-	
+
   assert (mesh != NULL);
   int vb=1;
   if (vb == 1)   PDM_printf ("==== PDM_surf_mesh_build_edges ==== \n");
   /*PDM_surf_part_t * _part;*/
- 
-  for (int i = 0; i < mesh->nPart; i++) 
+
+  for (int i = 0; i < mesh->nPart; i++)
     PDM_surf_part_build_edges (mesh->part[i]);
-	
-  if (1==1){
-  for (int i = 0; i < mesh->nPart; i++) {
-	  PDM_printf ("==== affichage de mesh->part[%d] ==== \n", i);
-	  PDM_surf_part_dump(mesh->part[i]);}
-  }
+
 
   if (vb == 1)   PDM_printf ("==== PDM_surf_mesh_build_edges ==== terminated ====\n");
 
