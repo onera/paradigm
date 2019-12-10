@@ -4291,8 +4291,15 @@ PDM_box_tree_closest_upper_bound_dist_boxes_getB
   int **_boxes_rank = *boxes_rank;
 
   int dim = bt->boxes->dim;
-  int *tag = NULL;
-  int *visited_boxes = NULL;
+
+  int n_boxes_max = 0;
+  for (int i_copied_rank = 0; i_copied_rank < bt->n_copied_ranks; i_copied_rank++) {
+    int n_boxes = bt->boxes->rank_boxes[i_copied_rank].n_boxes;
+    n_boxes_max = (n_boxes_max > n_boxes) ? n_boxes_max : n_boxes;
+  }
+  int *tag           = (int *) malloc(sizeof(int) * n_boxes_max);
+  int *visited_boxes = (int *) malloc(sizeof(int) * n_boxes_max); // A optimiser
+
   //>>> begin loop over copied ranks
   for (int i_copied_rank = 0; i_copied_rank < bt->n_copied_ranks; i_copied_rank++) {
     tmp_s_boxes = 4 * n_pts_rank[i_copied_rank];
@@ -4303,13 +4310,10 @@ PDM_box_tree_closest_upper_bound_dist_boxes_getB
 
     int n_boxes = bt->boxes->rank_boxes[i_copied_rank].n_boxes;
 
-    tag = malloc(sizeof(int) * n_boxes);
     for (int i = 0; i < n_boxes; i++) {
       tag[i] = 0;
     }
     int n_visited_boxes = 0;
-
-    visited_boxes = malloc(sizeof(int) * n_boxes); // A optimiser
 
     size_t n_node = 0;
     size_t n_node_vid = 0;
@@ -4322,7 +4326,6 @@ PDM_box_tree_closest_upper_bound_dist_boxes_getB
       int flag = 0;
 
       /* Init stack :  push root */
-
       pos_stack = 0;
       stack[pos_stack] = 0; /* push root in th stack */
       _extents (dim, bt->rank_data[i_copied_rank].nodes[0].morton_code, extents2);
@@ -4424,11 +4427,10 @@ PDM_box_tree_closest_upper_bound_dist_boxes_getB
       _boxes_rank[i_copied_rank] = tmp;
       }*/
 
-    free(tag);
-    free(visited_boxes);
   }
   //<<< end loop over copied ranks
-
+  free(tag);
+  free(visited_boxes);
 
   if (pts != _pts) {
     free (_pts);
