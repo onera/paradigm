@@ -85,26 +85,6 @@ typedef struct {
 } _box_tree_stats_t;
 
 
-//
-///**
-// * \struct _octant_t
-// * \brief  Define an octant
-// *
-// */
-//
-//typedef struct  {
-//
-//  int  ancestor_id; /*!< Ids of ancestor in octree array */
-//  PDM_octree_child_t  location_in_ancestor; /*!< Location in ancestor */
-//  int  depth;       /*!< Depth in the tree */
-//  int  children_id[8]; /*!< Ids of children in octree array */
-//  int  idx[9];         /*!< Start index of point list for each octant */
-//  int  n_points;       /*!< Number of points in octant*/
-//  double extents[6];   /*!< Extents of the node */
-//
-//} _octant_t;
-
-
 /**
  * \struct _octree_t
  * \brief  Define an octree
@@ -113,10 +93,9 @@ typedef struct {
 
 typedef struct  {
   int    octree_seq_id;             /*!< Identifier of the associated octree seq */
-//  double  extents[6];            /*!< Extents of current process */
-//  double *extents_proc;          /*!< Extents of processes */
-//  int    depth_max;              /*!< Maximum depth of the three */
+
   PDM_MPI_Comm comm;             /*!< MPI communicator */
+  PDM_MPI_Comm rankComm;             /*!< MPI communicator */
 
   int     maxBoxesLeafShared; /*!<  Max number of boxes in a leaf for coarse shared BBTree */
 
@@ -137,20 +116,6 @@ typedef struct  {
   int            *n_points;   /*!< Number of points */
   PDM_g_num_t   **g_num;      /*!< Point global number */
 
-//  int points_in_leaf_max;        /*!< Maximum number of points in a leaf */
-//  double tolerance;              /*!< Relative geometric tolerance */
-//  int   n_nodes;                 /*!< Current number of nodes in octree */
-//  int   n_nodes_max;             /*!< Maximum number of nodes in octree */
-//  int   *n_points;               /*!< Number of points in each cloud */
-//  int   t_n_points;              /*!< total number of points */
-//  int   n_point_clouds;          /*!< Number of point cloud */
-//  const double **point_clouds;         /*!< points cloud */
-//  int *point_ids;                /*!< Id's of points in it cloud sorted by octree
-//                                      (size: n_points + 1) */
-//  int *point_icloud;             /*!< Cloud's of points sorted by octree
-//                                      (size: n_points + 1) */
-//  _octant_t   *nodes;            /*!< Array of octree nodes
-//                                      (size: n_nodes_max) */
 } _octree_t;
 
 /*============================================================================
@@ -298,6 +263,7 @@ PDM_octree_create
   octree->octree_seq_id = PDM_octree_seq_create (n_point_cloud, depth_max,
                                                  points_in_leaf_max, tolerance);
   octree->comm = comm;
+  octree->rankComm = PDM_MPI_COMM_NULL;
 
   //octree->extents_proc = NULL;
   octree->n_point_cloud = n_point_cloud; /*!< Number of point cloud */
@@ -401,6 +367,10 @@ PDM_octree_free
   PDM_box_tree_destroy(&(octree->btShared));
 
   PDM_octree_seq_free (octree->octree_seq_id);
+
+  if (octree->rankComm != PDM_MPI_COMM_NULL) {
+    PDM_MPI_Comm_free (&(octree->rankComm));
+  }
 
   free (octree);
 
@@ -560,8 +530,8 @@ PDM_octree_build
     initLocationProc[i] = 0;
   }
 
-  PDM_MPI_Comm rankComm;
-  PDM_MPI_Comm_split(octree->comm, myRank, 0, &rankComm);
+  //PDM_MPI_Comm rankComm;
+  PDM_MPI_Comm_split(octree->comm, myRank, 0, &(octree->rankComm));
 
   octree->rankBoxes = PDM_box_set_create(3,
                                          1,
@@ -572,7 +542,7 @@ PDM_octree_build
                                          1,
                                          &nUsedRank,
                                          initLocationProc,
-                                         rankComm);
+                                         octree->rankComm);
 
   octree->btShared = PDM_box_tree_create (octree->maxTreeDepthShared,
                                           octree->maxBoxesLeafShared,
@@ -1870,5 +1840,3 @@ double      *closest_octree_pt_dist2
 #ifdef	__cplusplus
 }
 #endif
-
-

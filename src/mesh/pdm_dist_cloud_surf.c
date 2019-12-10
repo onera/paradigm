@@ -502,7 +502,8 @@ PDM_dist_cloud_surf_compute
     PDM_timer_resume(dist->timer);
 
     const double tolerance = 1e-4;
-    const int depth_max = 1000;
+    // const int depth_max = 35;
+    const int depth_max = 31;
     const int points_in_leaf_max = 4;
 
     int n_part_mesh = 0;
@@ -511,6 +512,35 @@ PDM_dist_cloud_surf_compute
     }
     else if (dist->_surf_mesh != NULL) {
       n_part_mesh = PDM_surf_mesh_n_part_get (dist->_surf_mesh);
+      /* PDM_surf_mesh_compute_faceExtentsMesh (dist->_surf_mesh, 1e-8); */
+
+      /* double glob_extents[6]; */
+      /* glob_extents[0] = HUGE_VAL; */
+      /* glob_extents[1] = HUGE_VAL; */
+      /* glob_extents[2] = HUGE_VAL; */
+      /* glob_extents[3] = -HUGE_VAL; */
+      /* glob_extents[4] = -HUGE_VAL; */
+      /* glob_extents[5] = -HUGE_VAL; */
+
+      /* for (int i = 0; i < n_part_mesh; i++) { */
+      /*   const double *_extents = PDM_surf_mesh_part_extents_get (dist->_surf_mesh, i); */
+      /*   glob_extents[0] = PDM_MIN (_extents[0], glob_extents[0]); */
+      /*   glob_extents[1] = PDM_MIN (_extents[1], glob_extents[1]); */
+      /*   glob_extents[2] = PDM_MIN (_extents[2], glob_extents[2]); */
+      /*   glob_extents[3] = PDM_MAX (_extents[3], glob_extents[3]); */
+      /*   glob_extents[4] = PDM_MAX (_extents[4], glob_extents[4]); */
+      /*   glob_extents[5] = PDM_MAX (_extents[5], glob_extents[5]); */
+      /* } */
+      /* double min_dim = HUGE_VAL; */
+      /* min_dim = glob_extents[3] - glob_extents[0]; */
+      /* min_dim = PDM_MIN (min_dim, glob_extents[4] - glob_extents[1]); */
+      /* min_dim = PDM_MIN (min_dim, glob_extents[5] - glob_extents[2]); */
+
+      /* depth_max = 0; */
+      /* while ((min_dim) > 1e-10) { */
+      /*   min_dim = min_dim / 2.; */
+      /*   depth_max += 1; */
+      /* } */
     }
     else {
       PDM_error(__FILE__, __LINE__, 0,
@@ -675,7 +705,6 @@ PDM_dist_cloud_surf_compute
     const double      **extents = malloc (sizeof(double *) * n_part_mesh);
     const PDM_g_num_t **gNum    = malloc (sizeof(PDM_g_num_t *) * n_part_mesh);
 
-
     if (dist->mesh_nodal_id != -1) {
 
 /*     int PDM_Mesh_nodal_n_blocks_get */
@@ -764,13 +793,12 @@ PDM_dist_cloud_surf_compute
                                                              extents,
                                                              gNum);
 
-
     if (idebug) {
       printf ("surf_mesh_boxes->n_boxes : %d\n", PDM_box_set_get_size (surf_mesh_boxes));
       for (int i_part = 0; i_part < n_part_mesh; i_part++) {
         printf (" PDM_dbbtree_boxes_set nElts %d : %d\n", i_part, nElts[i_part]);
         for (int i = 0; i < nElts[i_part]; i++) {
-          printf ("%d : extents %12.5e %12.5e %12.5e / %12.5e %12.5e %12.5e gnum %ld\n", i,
+          printf ("%d : extents %12.5e %12.5e %12.5e / %12.5e %12.5e %12.5e gnum "PDM_FMT_G_NUM"\n", i,
                   extents[i_part][6*i  ], extents[i_part][6*i+1], extents[i_part][6*i+2],
                   extents[i_part][6*i+3], extents[i_part][6*i+4], extents[i_part][6*i+5],
                   gNum[i_part][i]);
@@ -816,12 +844,12 @@ PDM_dist_cloud_surf_compute
     if (idebug) {
       printf (" PDM_dbbtree_closest_upper_bound_dist_boxes_get n_pts_rank : %d\n", n_pts_rank);
       for (int i = 0; i < n_pts_rank; i++) {
-        printf ("%ld : (%12.5e %12.5e %12.5e) %12.5e\n", pts_g_num_rank[i],
+        printf (PDM_FMT_G_NUM" : (%12.5e %12.5e %12.5e) %12.5e\n", pts_g_num_rank[i],
                 pts_rank[3*i], pts_rank[3*i+1], pts_rank[3*i+2],
                 closest_vertices_dist2[i]);
         printf ("  boxes %d :" , box_index[i+1] - box_index[i]);
         for (int j = box_index[i]; j < box_index[i+1]; j++) {
-          printf (" %ld", box_g_num[j]);
+          printf (" "PDM_FMT_G_NUM, box_g_num[j]);
         }
         printf ("\n");
       }
@@ -985,7 +1013,6 @@ PDM_dist_cloud_surf_compute
       PDM_hash_tab_purge (ht, PDM_FALSE);
     }
 
-
     PDM_hash_tab_free (ht);
 
     free (block_g_num_idx);
@@ -997,10 +1024,10 @@ PDM_dist_cloud_surf_compute
 
       printf ("\n\n **** vtx load balancing : %d\n", n_block_vtx);
       for (int i = 0; i < n_block_vtx; i++) {
-        printf ("%ld : %12.5e %12.5e %12.5e\n", block_vtx_gnum[i], block_pts[3*i], block_pts[3*i+1] , block_pts[3*i+2]);
+        printf (PDM_FMT_G_NUM" : %12.5e %12.5e %12.5e\n", block_vtx_gnum[i], block_pts[3*i], block_pts[3*i+1] , block_pts[3*i+2]);
         printf ("  boxes %d :" , block_g_num_opt_idx[i+1] - block_g_num_opt_idx[i]);
         for (int j = block_g_num_opt_idx[i]; j < block_g_num_opt_idx[i+1]; j++) {
-          printf (" %ld", block_g_num[j]);
+          printf (" "PDM_FMT_G_NUM, block_g_num[j]);
         }
         printf ("\n");
       }
@@ -1086,7 +1113,7 @@ PDM_dist_cloud_surf_compute
       PDM_g_num_t *block_elt_gnum = PDM_part_to_block_block_gnum_get (ptb_elt);
       printf ("\n\n **** part to block elt : %d\n", n_block_elt);
       for (int i = 0; i < n_block_elt; i++) {
-        printf ("%ld :\n", block_elt_gnum[i]);
+        printf (PDM_FMT_G_NUM" :\n", block_elt_gnum[i]);
         for (int j = 0; j < block_coords_face_mesh_n[i]/3; j++) {
           printf ("/ %12.5e %12.5e %12.5e /\n",
                   block_coords_face_mesh[3*(idx3+j)],
@@ -1201,7 +1228,7 @@ PDM_dist_cloud_surf_compute
       _block_closest_dist[0] = HUGE_VAL;
 
       if (idebug) {
-        printf ("    *** %ld : \n", block_vtx_gnum[i]);
+        printf ("    *** "PDM_FMT_G_NUM" : \n", block_vtx_gnum[i]);
       }
 
       PDM_g_num_t *_block_closest_gnum = block_closest_gnum + i;
@@ -1319,7 +1346,7 @@ PDM_dist_cloud_surf_compute
 
     PDM_block_to_part_t *btp_vtx =
       PDM_block_to_part_create (block_vtx_distrib_idx,
-                                (const long **) pt_cloud->gnum,
+                                (const PDM_g_num_t **) pt_cloud->gnum,
                                 pt_cloud->n_points,
                                 n_part,
                                 comm);
@@ -1554,6 +1581,7 @@ PDM_dist_cloud_surf_dump_times
                 " %12.5es %12.5es\n",
                 t_elaps_max[RESULT_TRANSMISSION],
                 t_cpu_max[RESULT_TRANSMISSION]);
+    PDM_printf_flush();
   }
 }
 
