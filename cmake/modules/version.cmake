@@ -1,1 +1,1 @@
-set (PDM_DEF_VERSION "1.10.0")
+set (PDM_DEF_VERSION "1.11.0")
