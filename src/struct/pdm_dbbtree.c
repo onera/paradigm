@@ -1302,7 +1302,7 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_getB
     mean_n_requests /= lComm;
 
     /* sort the ranks in ascending order of
-     * the nb of points they are supposed to receive */
+     * the total nb of points they are supposed to receive */
     int *order = malloc (lComm * sizeof(int));
     for (int i = 0; i < lComm; i ++) {
       order[i] = i;
@@ -1311,8 +1311,8 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_getB
     PDM_sort_int (n_requests, order, lComm);
 
     /* identify ranks to be copied
-     * n_fois la moyenne dans la limite n_rank_max_duplicated */
-    int threshold_n_req = 2*mean_n_requests;   // --> PARAMETRE
+     * n_fois la moyenne dans la limite max_copied_ranks */
+    int threshold_n_req  = 2*mean_n_requests;  // --> PARAMETRE
     int max_copied_ranks = _MAX (1, lComm/10); // --> PARAMETRE
 
     int n_copied_ranks = 0;
@@ -1351,10 +1351,10 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_getB
     //    - PDM_box_tree_set_copied_rank_boxes(PDM_box_tree_t       *bt);
     int *rank_copy_num = (int *) malloc (sizeof(int) * lComm);
     PDM_box_tree_copy_to_ranks (_dbbt->btLoc, &n_copied_ranks, copied_ranks, rank_copy_num);
-
+    /* rank_copy_num[_dbbt->btLoc->copied_ranks[i]] (def)= i*/
 
     free(copied_ranks);
-    /* rank_copy_num[_dbbt->btLoc->copied_ranks[i]] (def)= i*/
+
 
     int  n_pts_local = 0;
     int *n_pts_rank  = malloc (sizeof(int) * n_copied_ranks);
