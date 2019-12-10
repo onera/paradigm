@@ -1082,18 +1082,12 @@ PDM_box_set_recv_data_from_origin_distrib
 
   long** l = (long**)origin_distrib_data;
   if (vb >= 3) {
-	  PDM_printf ("origin_distrib_data : %d\n", origin_distrib_data);
+	  PDM_printf ("origin_distrib_data : %d ==", origin_distrib_data);
  PDM_printf ("l : %d\n", l);
- PDM_printf ("l[0][0] : %ld\n", l[0][0]);
+ PDM_printf ("l[0][0] : %ld, ", l[0][0]);
  PDM_printf ("l[0][1] : %ld\n", l[0][1]);
   }
-/* PDM_printf ("origin_distrib_data[0][0] : %d\n", (long)(origin_distrib_data[0][0]));
- PDM_printf ("origin_distrib_data[0][1] : %d\n", origin_distrib_data[0][0]);
- PDM_printf ("origin_distrib_data[0][0] : %u\n", ((unsigned char **)origin_distrib_data)[0][0]);
- PDM_printf ("origin_distrib_data[0][1] : %u\n", ((unsigned char **)origin_distrib_data)[0][0]);
- PDM_printf ("origin_distrib_data[0][0] : %u\n", (unsigned char)(origin_distrib_data)[0][0]);
- PDM_printf ("origin_distrib_data[0][1] : %u\n", (unsigned char)(origin_distrib_data)[0][0]);
-*/
+
   /* Send origin properties to the origin process :
    *   - Compute the number element to send for any process
    *   - Exchange -> origin these numbers all_to_all
@@ -1106,6 +1100,10 @@ PDM_box_set_recv_data_from_origin_distrib
 
   int s_comm;
   PDM_MPI_Comm_size (boxes->comm, &s_comm);
+  if (vb >= 3) {
+	  PDM_printf ("s_comm : %d\n", s_comm);
+	  PDM_printf ("n_boxes : %d\n", n_boxes);
+  }
 
   int *curr_count = (int *) malloc (sizeof(int) * s_comm);
   for (int i = 0; i < s_comm; i++) {
