@@ -855,7 +855,7 @@ int main(int argc, char *argv[])
     }
 
     if (myRank == 0) {
-      printf ("elements surfaciques : %ld\n", 6*(nVtxSeg-1)*(nVtxSeg-1));
+      printf ("elements surfaciques : "PDM_FMT_G_NUM"\n", 6*(nVtxSeg-1)*(nVtxSeg-1));
       printf ("nombre de points     : %d\n", n_pts*nPart*numProcs);
       fflush(stdout);
     }
