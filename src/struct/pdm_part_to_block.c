@@ -311,10 +311,10 @@ _update_sampling(int            dim,
 
     if (f_high - f_low > 0) {
       delta = (target_freq - f_low) * (s_high - s_low) / (f_high - f_low);
-      new_sampling[i+1] = s_low + delta;
+      new_sampling[i+1] = (PDM_g_num_t) (s_low + delta);
     }
     else /* f_high = f_low */
-      new_sampling[i+1] = s_low + 0.5 * (s_low + s_high);
+      new_sampling[i+1] = (PDM_g_num_t) (s_low + 0.5 * (s_low + s_high));
 
 #if 0 && defined(DEBUG) && !defined(NDEBUG)
     PDM_printf( " <_update_distrib> (rank: %d) delta: %g, target: %g,"
@@ -745,14 +745,14 @@ _distrib_data
     (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * ptb->tn_recvData);
 
   PDM_MPI_Alltoallv(send_gnum,
-                ptb->n_sendData,
-                ptb->i_sendData,
-                PDM__PDM_MPI_G_NUM,
-                ptb->sorted_recvGnum,
-                ptb->n_recvData,
-                ptb->i_recvData,
-                PDM__PDM_MPI_G_NUM,
-                ptb->comm);
+                    ptb->n_sendData,
+                    ptb->i_sendData,
+                    PDM__PDM_MPI_G_NUM,
+                    ptb->sorted_recvGnum,
+                    ptb->n_recvData,
+                    ptb->i_recvData,
+                    PDM__PDM_MPI_G_NUM,
+                    ptb->comm);
 
   free(send_gnum);
 
@@ -1125,8 +1125,8 @@ PDM_part_to_block_exch
     abort ();
   }
 
-  int *i_sendBuffer = (int *) malloc (sizeof(int) * _ptb->s_comm);
-  int *i_recvBuffer = (int *) malloc (sizeof(int) * _ptb->s_comm);
+  size_t *i_sendBuffer = (size_t *) malloc (sizeof(size_t) * _ptb->s_comm);
+  size_t *i_recvBuffer = (size_t *) malloc (sizeof(size_t) * _ptb->s_comm);
   int *n_sendBuffer = (int *) malloc (sizeof(int) * _ptb->s_comm);
   int *n_recvBuffer = (int *) malloc (sizeof(int) * _ptb->s_comm);
 
@@ -1156,14 +1156,14 @@ PDM_part_to_block_exch
     recvStride = (int *) malloc (sizeof(int) * _ptb->tn_recvData);
 
     PDM_MPI_Alltoallv (sendStride,
-                   _ptb->n_sendData,
-                   _ptb->i_sendData,
-                   PDM_MPI_INT,
-                   recvStride,
-                   _ptb->n_recvData,
-                   _ptb->i_recvData,
-                   PDM_MPI_INT,
-                   _ptb->comm);
+                       _ptb->n_sendData,
+                       _ptb->i_sendData,
+                       PDM_MPI_INT,
+                       recvStride,
+                       _ptb->n_recvData,
+                       _ptb->i_recvData,
+                       PDM_MPI_INT,
+                       _ptb->comm);
 
     /*
      * Build buffers
@@ -1273,15 +1273,15 @@ PDM_part_to_block_exch
       free (i_part);
   }
 
-  PDM_MPI_Alltoallv(sendBuffer,
-                n_sendBuffer,
-                i_sendBuffer,
-                PDM_MPI_BYTE,
-                recvBuffer,
-                n_recvBuffer,
-                i_recvBuffer,
-                PDM_MPI_BYTE,
-                _ptb->comm);
+  PDM_MPI_Alltoallv_l(sendBuffer,
+                      n_sendBuffer,
+                      i_sendBuffer,
+                      PDM_MPI_BYTE,
+                      recvBuffer,
+                      n_recvBuffer,
+                      i_recvBuffer,
+                      PDM_MPI_BYTE,
+                      _ptb->comm);
 
   free(sendBuffer);
   free(n_sendBuffer);
@@ -1297,7 +1297,10 @@ PDM_part_to_block_exch
   int s_block_data = ((int) sizeof(unsigned char) * s_recvBuffer) / (int) s_data;
 
   if (t_stride == PDM_STRIDE_VAR) {
-    int *_block_stride = malloc(sizeof(int) * _ptb->tn_recvData);
+    int* _block_stride = NULL;
+    if(_ptb->tn_recvData > 0){
+      _block_stride = malloc(sizeof(int) * _ptb->tn_recvData);
+    }
     *block_stride = _block_stride;
     for (int i = 0; i < _ptb->tn_recvData; i++) {
       _block_stride[i] = recvStride[_ptb->order[i]];

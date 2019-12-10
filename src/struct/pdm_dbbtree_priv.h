@@ -104,6 +104,7 @@ typedef struct {
   _box_tree_stats_t btsCoarse; /*!< Local Boundary box tree statistic */
 
   PDM_MPI_Comm   comm;             /*!< MPI communicator */
+  PDM_MPI_Comm   rankComm;        /*!< MPI ommunicator with only the current rank */
   int        dim;              /*!< Dimension */
 
 } _PDM_dbbtree_t;

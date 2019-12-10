@@ -148,7 +148,15 @@ enum {
   PDM_MPI_INTEGER          = -21,
   PDM_MPI_REAL             = -22,
   PDM_MPI_DOUBLE_PRECISION = -23,
-  PDM_MPI_DATATYPE_NULL    = -24
+  PDM_MPI_DATATYPE_NULL    = -24,
+  PDM_MPI_INT8_T           = -25,
+  PDM_MPI_INT16_T          = -26,
+  PDM_MPI_INT32_T          = -27,
+  PDM_MPI_INT64_T          = -28,
+  PDM_MPI_UINT8_T          = -29,
+  PDM_MPI_UINT16_T         = -30,
+  PDM_MPI_UINT32_T         = -31,
+  PDM_MPI_UINT64_T         = -32
 };
 
 enum {
@@ -527,6 +535,10 @@ int PDM_MPI_Ialltoall(void *sendbuf, int sendcount, PDM_MPI_Datatype sendtype,
 int PDM_MPI_Alltoallv(void *sendbuf, int *sendcounts, int *sdispls,
                   PDM_MPI_Datatype sendtype, void *recvbuf, int *recvcounts,
                   int *rdispls, PDM_MPI_Datatype recvtype, PDM_MPI_Comm comm);
+
+int PDM_MPI_Alltoallv_l(void *sendbuf, int *sendcounts, size_t *sdispls,
+                  PDM_MPI_Datatype sendtype, void *recvbuf, int *recvcounts,
+                  size_t *rdispls, PDM_MPI_Datatype recvtype, PDM_MPI_Comm comm);
 
 /*----------------------------------------------------------------------------
  * PDM_MPI_Ialltoallv (wrapping de la fonction MPI_Ialltoallv)

@@ -42,6 +42,10 @@ extern "C" {
  * Type
  *============================================================================*/
 
+#if defined(_WIN64)
+# define __int64 long long
+#endif
+
 
 /**
  * \enum PDM_g_num_t
