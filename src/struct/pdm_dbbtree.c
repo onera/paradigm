@@ -810,7 +810,7 @@ PDM_dbbtree_intersect_boxes_set
  */
 
 void
-PDM_dbbtree_closest_upper_bound_dist_boxes_get
+PDM_dbbtree_closest_upper_bound_dist_boxes_get_OLD
 (
  PDM_dbbtree_t    *dbbt,
  const int        n_pts,
@@ -1186,7 +1186,7 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
 
 
 void
-PDM_dbbtree_closest_upper_bound_dist_boxes_getB
+PDM_dbbtree_closest_upper_bound_dist_boxes_get
 (
  PDM_dbbtree_t    *dbbt,
  const int        n_pts,

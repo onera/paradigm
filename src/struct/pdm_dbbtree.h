@@ -151,7 +151,7 @@ int              *box_l_num[]
  */
 
 void
-PDM_dbbtree_closest_upper_bound_dist_boxes_get
+PDM_dbbtree_closest_upper_bound_dist_boxes_get_OLD
 (
 PDM_dbbtree_t    *dbbt,
 const int        n_pts,
@@ -164,7 +164,7 @@ PDM_g_num_t     *box_g_num[]
 
 
 void
-PDM_dbbtree_closest_upper_bound_dist_boxes_getB
+PDM_dbbtree_closest_upper_bound_dist_boxes_get
 (
  PDM_dbbtree_t    *dbbt,
  const int        n_pts,
