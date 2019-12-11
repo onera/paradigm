@@ -1313,7 +1313,7 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
     /* identify ranks to be copied
      * n_fois la moyenne dans la limite max_copied_ranks */
     double threshold_n_req = 1.5*mean_n_requests;  // --> PARAMETRE
-    int max_copied_ranks   = _MAX (1, lComm/5); // --> PARAMETRE
+    int max_copied_ranks   = _MAX (1, lComm/10); // --> PARAMETRE
 
     int n_copied_ranks = 0;
     int *copied_ranks = malloc (max_copied_ranks * sizeof(int));
