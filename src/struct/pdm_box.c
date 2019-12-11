@@ -50,6 +50,7 @@
 #include "pdm_box_priv.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
+#include "pdm_hash_tab.h"
 
 /*---------------------------------------------------------------------------*/
 
@@ -484,6 +485,77 @@ PDM_boxes_destroy(PDM_boxes_t  *boxes)
   free(boxes->extents);
   free(boxes->origin);
   free(boxes->n_boxes_orig);
+}
+
+/*----------------------------------------------------------------------------
+ * Remove duplicated boxes
+ *
+ * parameters:
+ *   boxes <-> pointer to the PDM_box_set_t structure to delete
+ *---------------------------------------------------------------------------*/
+
+void
+PDM_box_set_remove_duplicate(PDM_box_set_t  *boxes)
+{
+  int *selected = malloc (sizeof(int)* boxes->local_boxes->n_boxes);
+  for (int i = 0; i < boxes->local_boxes->n_boxes; i++) {
+    selected[i] = 0;
+  }
+
+  int lComm;
+  PDM_MPI_Comm_size (boxes->comm, &lComm);
+
+
+  PDM_g_num_t _max_key = boxes->n_g_boxes / lComm;
+  int max_key = (int) _max_key + 1;
+
+  PDM_hash_tab_t *ht = PDM_hash_tab_create (PDM_HASH_TAB_KEY_INT, &max_key);
+
+  for (int i = 0; i < boxes->local_boxes->n_boxes; i++) {
+    int _key = (int) (boxes->local_boxes->g_num[i] / lComm);
+
+    int _n_data = 0;
+    _n_data = PDM_hash_tab_n_data_get (ht, &_key);
+
+    PDM_g_num_t **_data = NULL;
+    if (_n_data > 0) {
+      _data = (PDM_g_num_t **) PDM_hash_tab_data_get (ht, &_key);
+    }
+    int _add = 1;
+    for (int k = 0; k < _n_data; k++) {
+      PDM_g_num_t _g_num_data = (PDM_g_num_t) *(_data[k]);
+      if (_g_num_data == boxes->local_boxes->g_num[i]) {
+        _add = 0;
+        break;
+      }
+    }
+
+    if (_add == 1) {
+      PDM_hash_tab_data_add (ht, &_key, (void *) &(boxes->local_boxes->g_num[i]));
+      selected[i] = 1;
+
+    }
+  }
+
+  PDM_hash_tab_free (ht);
+
+  int idx = 0;
+  for (int i = 0; i < boxes->local_boxes->n_boxes; i++) {
+    if (selected[i] == 1) {
+
+      boxes->local_boxes->g_num[idx] =  boxes->local_boxes->g_num[i];
+      for (int j = 0; j < boxes->dim; j++) {
+        boxes->local_boxes->extents[idx*boxes->dim+j] = boxes->local_boxes->extents[i*boxes->dim+j];
+      }
+      for (int j = 0; j < 3; j++) {
+        boxes->local_boxes->origin[3*idx+j] = boxes->local_boxes->origin[3*i+j];
+      }
+      idx++;
+    }
+  }
+  boxes->local_boxes->n_boxes = idx;
+
+  free (selected);
 }
 
 
@@ -1087,7 +1159,10 @@ PDM_box_set_recv_data_from_origin_distrib
  PDM_printf ("l[0][0] : %ld, ", l[0][0]);
  PDM_printf ("l[0][1] : %ld\n", l[0][1]);
   }
+<<<<<<< HEAD
 
+=======
+>>>>>>> pdm_box : add remove duplicate function
   /* Send origin properties to the origin process :
    *   - Compute the number element to send for any process
    *   - Exchange -> origin these numbers all_to_all
@@ -1351,10 +1426,18 @@ if (vb >=3) {
     unsigned char *curr_data = (unsigned char *) malloc (sizeof(unsigned char)
                                                          * curr_shift[s_comm]);
 
+<<<<<<< HEAD
     int **_origin_distrib_idx = (int **) malloc (sizeof(int) * _local_boxes->n_part_orig);
     for (int i = 0; i < _local_boxes->n_part_orig; i++) {
       _origin_distrib_idx[i] = (int *) malloc (sizeof(int) * (_local_boxes->n_boxes_orig[i] + 1));
       for (int k = 0; k < _local_boxes->n_boxes_orig[i] + 1; k++) {
+=======
+    int **_origin_distrib_idx = (int **) malloc (sizeof(int*) * boxes->n_part_orig);
+
+    for (int i = 0; i < boxes->n_part_orig; i++) {
+      _origin_distrib_idx[i] = (int *) malloc (sizeof(int) * (boxes->n_boxes_orig[i] + 1));
+      for (int k = 0; k < boxes->n_boxes_orig[i] + 1; k++) {
+>>>>>>> pdm_box : add remove duplicate function
         _origin_distrib_idx[i][k] = 0;
       }
       for (int k = 0; k < _local_boxes->n_boxes_orig[i]; k++) {
