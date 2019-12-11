@@ -65,6 +65,19 @@ PDM_box_set_normalize_inv
 
 
 /*----------------------------------------------------------------------------
+ * Remove duplicated boxes
+ *
+ * parameters:
+ *   boxes <-> pointer to the PDM_box_set_t structure to delete
+ *---------------------------------------------------------------------------*/
+
+void
+PDM_box_set_remove_duplicate
+(
+ PDM_box_set_t  *boxes
+ );
+
+/*----------------------------------------------------------------------------
  * Create a set of boxes and initialize it.
  *
  * parameters:
