@@ -833,24 +833,24 @@ PDM_dist_cloud_surf_compute
     PDM_g_num_t *box_g_num;
 
     //--------->>>>
-    #if 1
+    #if 0
       // WITHOUT DUPLICATIONS
-      PDM_dbbtree_closest_upper_bound_dist_boxes_get (dbbt,
-                                                      n_pts_rank,
-                                                      pts_rank,
-                                                      pts_g_num_rank,
-                                                      closest_vertices_dist2,
-                                                      &box_index,
-                                                      &box_g_num);
+      PDM_dbbtree_closest_upper_bound_dist_boxes_get_OLD (dbbt,
+							  n_pts_rank,
+							  pts_rank,
+							  pts_g_num_rank,
+							  closest_vertices_dist2,
+							  &box_index,
+							  &box_g_num);
     #else
       // WITH DUPLICATIONS
-      PDM_dbbtree_closest_upper_bound_dist_boxes_getB (dbbt,
-                                                       n_pts_rank,
-                                                       pts_rank,
-                                                       pts_g_num_rank,
-                                                       closest_vertices_dist2,
-                                                       &box_index,
-                                                       &box_g_num);
+      PDM_dbbtree_closest_upper_bound_dist_boxes_get (dbbt,
+						      n_pts_rank,
+						      pts_rank,
+						      pts_g_num_rank,
+						      closest_vertices_dist2,
+						      &box_index,
+						      &box_g_num);
     #endif
     //<<<<---------
 
