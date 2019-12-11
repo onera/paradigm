@@ -1198,6 +1198,16 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
  )
 {
   /*
+   * PARAMETERS
+   */
+  double RANK_COPY_threshold  = 1.5;
+  double RANK_COPY_max_copies = 0.2;
+
+
+
+
+
+  /*
    * Initialization
    */
 
@@ -1312,8 +1322,8 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
 
     /* identify ranks to be copied
      * n_fois la moyenne dans la limite max_copied_ranks */
-    double threshold_n_req = 1.5*mean_n_requests;  // --> PARAMETRE
-    int max_copied_ranks   = _MAX (1, lComm/5); // --> PARAMETRE
+    double threshold_n_req = RANK_COPY_threshold*mean_n_requests;
+    int max_copied_ranks   = (int) _MAX (1, RANK_COPY_max_copies*lComm);
 
     int n_copied_ranks = 0;
     int *copied_ranks = malloc (max_copied_ranks * sizeof(int));
