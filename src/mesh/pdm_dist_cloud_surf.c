@@ -833,7 +833,7 @@ PDM_dist_cloud_surf_compute
     PDM_g_num_t *box_g_num;
 
     //--------->>>>
-    if ( 0 ) {
+    #if 1
       // WITHOUT DUPLICATIONS
       PDM_dbbtree_closest_upper_bound_dist_boxes_get (dbbt,
                                                       n_pts_rank,
@@ -842,7 +842,7 @@ PDM_dist_cloud_surf_compute
                                                       closest_vertices_dist2,
                                                       &box_index,
                                                       &box_g_num);
-    } else {
+    #else
       // WITH DUPLICATIONS
       PDM_dbbtree_closest_upper_bound_dist_boxes_getB (dbbt,
                                                        n_pts_rank,
@@ -851,7 +851,7 @@ PDM_dist_cloud_surf_compute
                                                        closest_vertices_dist2,
                                                        &box_index,
                                                        &box_g_num);
-    }
+    #endif
     //<<<<---------
 
     if (idebug) {

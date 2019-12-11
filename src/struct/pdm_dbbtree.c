@@ -1312,8 +1312,8 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_getB
 
     /* identify ranks to be copied
      * n_fois la moyenne dans la limite max_copied_ranks */
-    int threshold_n_req  = 2*mean_n_requests;  // --> PARAMETRE
-    int max_copied_ranks = _MAX (1, lComm/10); // --> PARAMETRE
+    double threshold_n_req = 2*mean_n_requests;  // --> PARAMETRE
+    int max_copied_ranks   = _MAX (1, lComm/10); // --> PARAMETRE
 
     int n_copied_ranks = 0;
     int *copied_ranks = malloc (max_copied_ranks * sizeof(int));
@@ -1504,7 +1504,7 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_getB
     /*
      * ---->> Renvoi aux procs expediteurs (Alltoall inverse)
      *          - nombre de boites trouvees pour chaque point
-     *          - numero des boites en numerotation absolue
+     *          - numeros des boites en numerotation absolue
      */
 
     int *n_box_l_num_recv = malloc (sizeof(int) * n_pts_recv_total);
@@ -1586,14 +1586,14 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_getB
     int *box_index_local;
     int *box_l_num_local;
 
-    if ( 0 ) {
+    #if 1
       PDM_box_tree_closest_upper_bound_dist_boxes_get (_dbbt->btLoc,
 						       n_pts_local,
 						       pts_local,
 						       upper_bound_dist_local,
 						       &box_index_local,
 						       &box_l_num_local);
-    } else {
+    #else
       PDM_box_tree_closest_upper_bound_dist_boxes_get_v2 (_dbbt->btLoc,
 							  -1,
 							  n_pts_local,
@@ -1601,7 +1601,7 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_getB
 							  upper_bound_dist_local,
 							  &box_index_local,
 							  &box_l_num_local);
-    }
+    #endif
     free(pts_local);
     free(upper_bound_dist_local);
 
@@ -1618,14 +1618,14 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_getB
     int **box_index_rank;
     int **box_l_num_rank;
 
-    if ( 1 ) {
+    #if 1
       PDM_box_tree_closest_upper_bound_dist_boxes_getB (_dbbt->btLoc,
 							i_pts_rank,
 							pts_rank,
 							upper_bound_dist_rank,
 							&box_index_rank,
 							&box_l_num_rank);
-    } else {
+    #else
       //---->>> A DEBUGGER
       box_index_rank = (int **) malloc (sizeof(int *) * n_copied_ranks);
       box_l_num_rank = (int **) malloc (sizeof(int *) * n_copied_ranks);
@@ -1641,7 +1641,7 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_getB
 							    &(box_l_num_rank[i_copied_rank]));
       }
       //<<<---- A DEBUGGER
-    }
+    #endif
 
     free(pts_rank);
     free(upper_bound_dist_rank);
