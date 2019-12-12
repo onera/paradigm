@@ -1200,8 +1200,8 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
   /*
    * PARAMETERS
    */
-  double RANK_COPY_threshold  = 1.5;
-  double RANK_COPY_max_copies = 0.1;
+  double RANK_COPY_threshold  = 1.2;
+  double RANK_COPY_max_copies = 0.15;
 
 
 
