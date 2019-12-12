@@ -1724,19 +1724,6 @@ PDM_surf_mesh_build_exchange_graph
 
   PDM_surf_mesh_build_ghost_element (mesh);
 
-  if (1 == 1) {
-    for (int i1 = 0; i1 <  mesh->nPart; i1++) {
-      PDM_surf_part_t *part =  mesh->part[i1];
-      PDM_printf ("part->vtxEdge   --- PDM_surf_mesh_build_exchange_graph fin \n");
-      for (int i = 0; i < part->nVtx; i++) {
-        PDM_printf ("[%ld] :",  part->vtxLnToGn[i]);
-        for (int j = part->vtxEdgeIdx[i]; j < part->vtxEdgeIdx[i+1]; j++) {
-          PDM_printf (" %d", part->edgeLnToGn[part->vtxEdge[j]-1]);
-        }
-        PDM_printf ("\n");
-      }
-    }
-  }
 
 }
 
