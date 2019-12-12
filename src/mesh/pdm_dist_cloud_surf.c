@@ -833,7 +833,7 @@ PDM_dist_cloud_surf_compute
     PDM_g_num_t *box_g_num;
 
     //--------->>>>
-    #if 0
+    #if 1
       // WITHOUT DUPLICATIONS
       PDM_dbbtree_closest_upper_bound_dist_boxes_get_OLD (dbbt,
 							  n_pts_rank,
