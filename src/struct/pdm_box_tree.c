@@ -4072,29 +4072,28 @@ PDM_box_tree_closest_upper_bound_dist_boxes_get
 
   int s_pt_stack = ((bt->n_children - 1) * (bt->max_level - 1) + bt->n_children);
 
-  *i_boxes = malloc (sizeof(int) * (n_pts + 1)); //**
-  int *_i_boxes = *i_boxes;                      //**
+  *i_boxes = malloc (sizeof(int) * (n_pts + 1));
+  int *_i_boxes = *i_boxes;
 
   for (int i = 0; i < n_pts + 1; i++) {
     _i_boxes[i] = 0;
   }
 
-  int tmp_s_boxes = 4 * n_pts;                 //**
-  *boxes = malloc (sizeof(int) * tmp_s_boxes); //**
-  int *_boxes = *boxes;                        //**
+  int tmp_s_boxes = 4 * n_pts;
+  *boxes = malloc (sizeof(int) * tmp_s_boxes);
+  int *_boxes = *boxes;
 
   int *stack = malloc ((sizeof(int)) * s_pt_stack);
   int *inbox_stack = malloc ((sizeof(int)) * s_pt_stack);
   double *min_dist2_stack = malloc ((sizeof(double)) * s_pt_stack);
 
-  //>>> begin loop over copied ranks
   int pos_stack = 0;
 
   int dim = bt->boxes->dim;
 
   int idx_box = 0;
 
-  int n_boxes = bt->boxes->local_boxes->n_boxes; //###
+  int n_boxes = bt->boxes->local_boxes->n_boxes;
 
   int *tag = malloc(sizeof(int) * n_boxes);
   for (int i = 0; i < n_boxes; i++) {
@@ -4117,7 +4116,7 @@ PDM_box_tree_closest_upper_bound_dist_boxes_get
 
     pos_stack = 0;
     stack[pos_stack] = 0; /* push root in th stack */
-    _extents (dim, bt->local_data->nodes[0].morton_code, extents2); //###
+    _extents (dim, bt->local_data->nodes[0].morton_code, extents2);
     inbox_stack[pos_stack] = _box_dist2_min (dim,
                                              normalized,
                                              d,
@@ -4133,7 +4132,7 @@ PDM_box_tree_closest_upper_bound_dist_boxes_get
 
       int id_curr_node = stack[--pos_stack];
 
-      _node_t *curr_node = &(bt->local_data->nodes[id_curr_node]); //###
+      _node_t *curr_node = &(bt->local_data->nodes[id_curr_node]);
 
       if (curr_node->n_boxes == 0)
         continue;
@@ -4161,7 +4160,7 @@ PDM_box_tree_closest_upper_bound_dist_boxes_get
 				   inbox_stack,
 				   min_dist2_stack,
 				   flag,
-				   0); //###
+				   0);
 
         }
 
@@ -4171,11 +4170,11 @@ PDM_box_tree_closest_upper_bound_dist_boxes_get
 
             double box_min_dist2;
 
-            int   _box_id = bt->local_data->box_ids[curr_node->start_id + j]; //###
+            int   _box_id = bt->local_data->box_ids[curr_node->start_id + j];
 
             if (tag[_box_id] == 0) {
 
-              const double *_box_extents =  bt->boxes->local_boxes->extents + _box_id*dim*2; //###
+              const double *_box_extents =  bt->boxes->local_boxes->extents + _box_id*dim*2;
 
               inbox = _box_dist2_min (dim,
                                       normalized,
@@ -4198,14 +4197,14 @@ PDM_box_tree_closest_upper_bound_dist_boxes_get
             }
           }
         }
-      }//end if ((min_dist2 <= upper_bound_dist2[i]) || (inbox == 1))
-    }//end while (pos_stack > 0) loop
+      }
+    }
 
     for (int j = 0; j < n_visited_boxes; j++) {
       tag[visited_boxes[j]] = 0;
     }
 
-  }//end i-for loop
+  }
 
 
   //printf ("[%d] Parours arbre : %ld \n", iappel, n_node);
@@ -4215,8 +4214,7 @@ PDM_box_tree_closest_upper_bound_dist_boxes_get
     _i_boxes[i+1] += _i_boxes[i];
   }
 
-  *boxes = realloc (*boxes, sizeof(int) * _i_boxes[n_pts]); //**
-  //<<< end loop over copied ranks
+  *boxes = realloc (*boxes, sizeof(int) * _i_boxes[n_pts]);
   if (pts != _pts) {
     free (_pts);
   }
@@ -4228,7 +4226,219 @@ PDM_box_tree_closest_upper_bound_dist_boxes_get
   free (visited_boxes);
 }
 
-/*----------------------------------------------------------------------------*/
+
+void
+PDM_box_tree_closest_upper_bound_dist_boxes_get_v2
+(
+ PDM_box_tree_t  *bt,
+ const int        irank,
+ const int        n_pts,
+ double           pts[],
+ double           upper_bound_dist2[],
+ int             *i_boxes[],
+ int             *boxes[]
+ )
+{
+  assert(irank < bt->n_copied_ranks);
+
+  int normalized = bt->boxes->normalized;
+  const double *d = bt->boxes->d;
+
+  double *_pts = pts;
+  if (normalized) {
+    _pts = malloc (sizeof(double) * 3 * n_pts);
+    for (int i = 0; i < n_pts; i++) {
+      const double *_pt_origin = pts + 3 * i;
+      double *_pt              = _pts + 3 * i;
+      PDM_box_set_normalize ((PDM_box_set_t *)bt->boxes, _pt_origin, _pt);
+    }
+  }
+
+  int s_pt_stack = ((bt->n_children - 1) * (bt->max_level - 1) + bt->n_children);
+
+  *i_boxes = malloc (sizeof(int) * (n_pts + 1));
+  int *_i_boxes = *i_boxes;
+
+  for (int i = 0; i < n_pts + 1; i++) {
+    _i_boxes[i] = 0;
+  }
+
+  int tmp_s_boxes = 4 * n_pts;
+  *boxes = malloc (sizeof(int) * tmp_s_boxes);
+  int *_boxes = *boxes;
+
+  int *stack = malloc ((sizeof(int)) * s_pt_stack);
+  int *inbox_stack = malloc ((sizeof(int)) * s_pt_stack);
+  double *min_dist2_stack = malloc ((sizeof(double)) * s_pt_stack);
+
+  int pos_stack = 0;
+
+  int dim = bt->boxes->dim;
+
+  int idx_box = 0;
+
+  int n_boxes = 0;
+  if ( irank < 0 ) {
+    n_boxes = bt->boxes->local_boxes->n_boxes;
+  } else {
+    n_boxes = bt->boxes->rank_boxes[irank].n_boxes;
+  }
+
+  int *tag = malloc(sizeof(int) * n_boxes);
+  for (int i = 0; i < n_boxes; i++) {
+    tag[i] = 0;
+  }
+  int n_visited_boxes = 0;
+
+  int *visited_boxes = malloc(sizeof(int) * n_boxes); // A optimiser
+
+  size_t n_node = 0;
+  size_t n_node_vid = 0;
+
+  double extents2[2*dim];
+  _node_t *curr_node = NULL;
+
+  for (int i = 0; i < n_pts; i++) {
+    const double *_pt = _pts + 3 * i;
+    int flag = 0;
+
+    pos_stack = 0;
+    stack[pos_stack] = 0; /* push root in th stack */
+    if ( irank < 0 ) {
+      _extents (dim, bt->local_data->nodes[0].morton_code, extents2);
+    } else {
+      _extents (dim, bt->rank_data[irank].nodes[0].morton_code, extents2);
+    }
+    inbox_stack[pos_stack] = _box_dist2_min (dim,
+                                             normalized,
+                                             d,
+                                             extents2,
+                                             _pt,
+                                             min_dist2_stack);
+
+
+    pos_stack++;
+    n_visited_boxes = 0;
+
+    while (pos_stack > 0) {
+
+      int id_curr_node = stack[--pos_stack];
+
+      if ( irank < 0 ) {
+	curr_node = &(bt->local_data->nodes[id_curr_node]);
+      } else {
+	curr_node = &(bt->rank_data[irank].nodes[id_curr_node]);
+      }
+
+      if (curr_node->n_boxes == 0)
+        continue;
+
+      n_node++;
+      if (curr_node->n_boxes == 0)
+        n_node_vid++;
+
+      double min_dist2 = min_dist2_stack[pos_stack];
+
+      int inbox = inbox_stack[pos_stack];
+
+      if ((min_dist2 <= upper_bound_dist2[i]) || (inbox == 1)) {
+        if (!curr_node->is_leaf) {
+
+          _push_child_in_stack_v2 (bt,
+				   irank,
+				   dim,
+				   normalized,
+				   d,
+				   id_curr_node,
+				   upper_bound_dist2[i],
+				   _pt,
+				   &pos_stack,
+				   stack,
+				   inbox_stack,
+				   min_dist2_stack,
+				   flag,
+				   0);
+
+        }
+
+        else {
+
+          for (int j = 0; j < curr_node->n_boxes; j++) {
+
+            double box_min_dist2;
+
+	    int _box_id = 0;
+	    if ( irank < 0 ) {
+	      _box_id = bt->local_data->box_ids[curr_node->start_id + j];
+	    } else {
+	      _box_id = bt->rank_data[irank].box_ids[curr_node->start_id + j];
+	    }
+
+            if (tag[_box_id] == 0) {
+
+	      const double *_box_extents = NULL;
+	      if ( irank < 0 ) {
+		_box_extents = bt->boxes->local_boxes->extents + _box_id*dim*2;
+	      } else {
+		_box_extents = bt->boxes->rank_boxes[irank].extents + _box_id*dim*2;
+	      }
+
+              inbox = _box_dist2_min (dim,
+                                      normalized,
+                                      d,
+                                      _box_extents,
+                                      _pt,
+                                      &box_min_dist2);
+
+              if ((box_min_dist2 <= upper_bound_dist2[i]) || (inbox == 1)) {
+                if (idx_box >= tmp_s_boxes) {
+                  tmp_s_boxes *= 2;
+                  *boxes = realloc (*boxes, sizeof(int) * tmp_s_boxes);
+                  _boxes = *boxes;
+                }
+                _boxes[idx_box++] = _box_id;
+                _i_boxes[i+1]++;
+              }
+              visited_boxes[n_visited_boxes++] = _box_id;
+              tag[_box_id] = 1;
+            }
+          }
+        }
+      }
+    }
+
+    for (int j = 0; j < n_visited_boxes; j++) {
+      tag[visited_boxes[j]] = 0;
+    }
+
+  }
+
+  //printf ("[%d] Parours arbre : %ld \n", iappel, n_node);
+  iappel+=1;
+
+  for (int i = 0; i < n_pts; i++) {
+    _i_boxes[i+1] += _i_boxes[i];
+  }
+
+  *boxes = realloc (*boxes, sizeof(int) * _i_boxes[n_pts]);
+  if (pts != _pts) {
+    free (_pts);
+  }
+
+  free (tag);
+  free (stack);
+  free (inbox_stack);
+  free (min_dist2_stack);
+  free (visited_boxes);
+}
+
+
+
+
+
+
+
+
 
 /*----------------------------------------------------------------------------
  * Get minimum of maximum distance of boxes (extended version: rank tree data)
@@ -4448,222 +4658,12 @@ PDM_box_tree_closest_upper_bound_dist_boxes_get_from_copied_ranks
 
 
 
-void
-PDM_box_tree_closest_upper_bound_dist_boxes_get_v2
-(
- PDM_box_tree_t  *bt,
- const int        irank,
- const int        n_pts,
- double           pts[],
- double           upper_bound_dist2[],
- int             *i_boxes[],
- int             *boxes[]
- )
-{
-  assert(irank < bt->n_copied_ranks);
-
-  int normalized = bt->boxes->normalized;
-  const double *d = bt->boxes->d;
-
-  double *_pts = pts;
-  if (normalized) {
-    _pts = malloc (sizeof(double) * 3 * n_pts);
-    for (int i = 0; i < n_pts; i++) {
-      const double *_pt_origin = pts + 3 * i;
-      double *_pt              = _pts + 3 * i;
-      PDM_box_set_normalize ((PDM_box_set_t *)bt->boxes, _pt_origin, _pt);
-    }
-  }
-
-  int s_pt_stack = ((bt->n_children - 1) * (bt->max_level - 1) + bt->n_children);
-
-  *i_boxes = malloc (sizeof(int) * (n_pts + 1));
-  int *_i_boxes = *i_boxes;
-
-  for (int i = 0; i < n_pts + 1; i++) {
-    _i_boxes[i] = 0;
-  }
-
-  int tmp_s_boxes = 4 * n_pts;
-  *boxes = malloc (sizeof(int) * tmp_s_boxes);
-  int *_boxes = *boxes;
-
-  int *stack = malloc ((sizeof(int)) * s_pt_stack);
-  int *inbox_stack = malloc ((sizeof(int)) * s_pt_stack);
-  double *min_dist2_stack = malloc ((sizeof(double)) * s_pt_stack);
-
-  int pos_stack = 0;
-
-  int dim = bt->boxes->dim;
-
-  int idx_box = 0;
-
-  int n_boxes = 0;
-  if ( irank < 0 ) {
-    n_boxes = bt->boxes->local_boxes->n_boxes;
-  } else {
-    n_boxes = bt->boxes->rank_boxes[irank].n_boxes;
-  }
-
-  int *tag = malloc(sizeof(int) * n_boxes);
-  for (int i = 0; i < n_boxes; i++) {
-    tag[i] = 0;
-  }
-  int n_visited_boxes = 0;
-
-  int *visited_boxes = malloc(sizeof(int) * n_boxes); // A optimiser
-
-  size_t n_node = 0;
-  size_t n_node_vid = 0;
-
-  double extents2[2*dim];
-  _node_t *curr_node = NULL;
-
-  for (int i = 0; i < n_pts; i++) {
-    const double *_pt = _pts + 3 * i;
-    int flag = 0;
-
-    pos_stack = 0;
-    stack[pos_stack] = 0; /* push root in th stack */
-    if ( irank < 0 ) {
-      _extents (dim, bt->local_data->nodes[0].morton_code, extents2);
-    } else {
-      _extents (dim, bt->rank_data[irank].nodes[0].morton_code, extents2);
-    }
-    inbox_stack[pos_stack] = _box_dist2_min (dim,
-                                             normalized,
-                                             d,
-                                             extents2,
-                                             _pt,
-                                             min_dist2_stack);
-
-
-    pos_stack++;
-    n_visited_boxes = 0;
-
-    while (pos_stack > 0) {
-
-      int id_curr_node = stack[--pos_stack];
-
-      if ( irank < 0 ) {
-	curr_node = &(bt->local_data->nodes[id_curr_node]);
-      } else {
-	curr_node = &(bt->rank_data[irank].nodes[id_curr_node]);
-      }
-
-      if (curr_node->n_boxes == 0)
-        continue;
-
-      n_node++;
-      if (curr_node->n_boxes == 0)
-        n_node_vid++;
-
-      double min_dist2 = min_dist2_stack[pos_stack];
-
-      int inbox = inbox_stack[pos_stack];
-
-      if ((min_dist2 <= upper_bound_dist2[i]) || (inbox == 1)) {
-        if (!curr_node->is_leaf) {
-
-          _push_child_in_stack_v2 (bt,
-				   irank,
-				   dim,
-				   normalized,
-				   d,
-				   id_curr_node,
-				   upper_bound_dist2[i],
-				   _pt,
-				   &pos_stack,
-				   stack,
-				   inbox_stack,
-				   min_dist2_stack,
-				   flag,
-				   0);
-
-        }
-
-        else {
-
-          for (int j = 0; j < curr_node->n_boxes; j++) {
-
-            double box_min_dist2;
-
-	    int _box_id = 0;
-	    if ( irank < 0 ) {
-	      _box_id = bt->local_data->box_ids[curr_node->start_id + j];
-	    } else {
-	      _box_id = bt->rank_data[irank].box_ids[curr_node->start_id + j];
-	    }
-
-            if (tag[_box_id] == 0) {
-
-	      const double *_box_extents = NULL;
-	      if ( irank < 0 ) {
-		_box_extents = bt->boxes->local_boxes->extents + _box_id*dim*2;
-	      } else {
-		_box_extents = bt->boxes->rank_boxes[irank].extents + _box_id*dim*2;
-	      }
-
-              inbox = _box_dist2_min (dim,
-                                      normalized,
-                                      d,
-                                      _box_extents,
-                                      _pt,
-                                      &box_min_dist2);
-
-              if ((box_min_dist2 <= upper_bound_dist2[i]) || (inbox == 1)) {
-                if (idx_box >= tmp_s_boxes) {
-                  tmp_s_boxes *= 2;
-                  *boxes = realloc (*boxes, sizeof(int) * tmp_s_boxes);
-                  _boxes = *boxes;
-                }
-                _boxes[idx_box++] = _box_id;
-                _i_boxes[i+1]++;
-              }
-              visited_boxes[n_visited_boxes++] = _box_id;
-              tag[_box_id] = 1;
-            }
-          }
-        }
-      }//end if ((min_dist2 <= upper_bound_dist2[i]) || (inbox == 1))
-    }//end while (pos_stack > 0) loop
-
-    for (int j = 0; j < n_visited_boxes; j++) {
-      tag[visited_boxes[j]] = 0;
-    }
-
-  }//end i-for loop
-
-  //printf ("[%d] Parours arbre : %ld \n", iappel, n_node);
-  iappel+=1;
-
-  for (int i = 0; i < n_pts; i++) {
-    _i_boxes[i+1] += _i_boxes[i];
-  }
-
-  *boxes = realloc (*boxes, sizeof(int) * _i_boxes[n_pts]);
-  //<<< end loop over copied ranks
-  if (pts != _pts) {
-    free (_pts);
-  }
-
-  free (tag);
-  free (stack);
-  free (inbox_stack);
-  free (min_dist2_stack);
-  free (visited_boxes);
-}
-
-
-
-
-
 
 
 
 
 /*----------------------------------------------------------------------------
- * DESCRIPTION...
+ * Send copies of box tree data from selected ranks to all other ranks for better load balancing
  *---------------------------------------------------------------------------*/
 void
 PDM_box_tree_copy_to_ranks
@@ -4823,28 +4823,6 @@ PDM_box_tree_copy_to_ranks
   }
 
   *n_copied_ranks = bt->n_copied_ranks;
-
-  // --->>>
-  char report[1000], line[100];
-  if ( 0 ) {
-    sprintf(report, "\nrank #%d: \n", myRank);
-    for (i = 0; i < bt->n_copied_ranks; i++) {
-      sprintf(line, "\tcopy %d nodes from rank %d", bt->rank_data[i].n_nodes, bt->copied_ranks[i]);
-      strcat(report, line);
-      strcat(report, "\n");
-    }
-    printf("%s\n", report);
-  }
-
-  if ( 0 ) {
-    sprintf(report, "\nrank #%d: rank_copy_num =\n\t", myRank);
-    for (i = 0; i < lComm; i++) {
-      sprintf(line, "%d  ", rank_copy_num[i]);
-      strcat(report, line);
-    }
-    printf("%s\n", report);
-  }
-  // ---<<<
 }
 
 

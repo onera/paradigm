@@ -349,7 +349,7 @@ PDM_box_set_send_data_to_origin_distrib
 );
 
 /*----------------------------------------------------------------------------
- * Copy local boxes to
+ * Send copies of boxes from selected ranks to all other ranks for better load balancing
  *
  * parameters:
  *   boxes     <-- pointer to the PDM_box_t structure

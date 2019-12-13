@@ -1195,10 +1195,10 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
  )
 {
   /*
-   * PARAMETERS
+   * RANK DATA COPY PARAMETERS
    */
-  const double RANK_COPY_threshold  = 1.2;
-  const double RANK_COPY_max_copies = 0.15;
+  const double RANK_COPY_threshold  = 1.2;  // factor of the mean nb of requests
+  const double RANK_COPY_max_copies = 0.15; // factor of the total nb of processes
 
   /*
    * Initialization
@@ -1216,7 +1216,7 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
   PDM_MPI_Comm_size (_dbbt->comm, &lComm);
 
   /*
-   * Determination de liste des procs concernes pour chaque sommet
+   * Determine for each point the list of involved processes
    */
   int *n_send_pts = NULL;
   int *n_recv_pts = NULL;
@@ -1233,15 +1233,13 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
   int *i_pts_send = NULL;
   int *i_pts_recv = NULL;
 
-  double *pts_rank = NULL;
+  double *pts_rank              = NULL;
   double *upper_bound_dist_rank = NULL;
-  //double *data_send = NULL;
-  //double *data_recv = NULL;
-  double *pts_recv = NULL;
+  double *pts_recv              = NULL;
   double *upper_bound_dist_recv = NULL;
 
   int n_copied_ranks = 0;
-  int *copied_ranks = NULL;
+  int *copied_ranks  = NULL;
   int *rank_copy_num = NULL;
 
   const int *usedRanks = _dbbt->usedRank;
@@ -1278,7 +1276,7 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
     }
 
     /*
-     * Envoi des points a chaque proc concerne
+     * Count (provisional) nb of points to send to each process
      */
     n_send_pts = malloc (sizeof(int) * lComm);
     n_recv_pts = malloc (sizeof(int) * lComm);
@@ -1299,22 +1297,21 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
     free(n_send_pts);
 
     /*
-     * Preparation des copies
+     * Prepare copies
      */
-    // local sum of n_recv_pts
+    // total nb of requests received by current process
     int local_sum_nrecv = 0;
     for (int i = 0; i < lComm; i++) {
       local_sum_nrecv += n_recv_pts[i];
     }
     free(n_recv_pts);
 
-    // Allgather sums of n_recv_pts
     int *n_requests = malloc (lComm * sizeof(int));
     PDM_MPI_Allgather (&local_sum_nrecv, 1, PDM_MPI_INT,
                        n_requests,       1, PDM_MPI_INT,
                        _dbbt->comm);
 
-    // mean nb of received points
+    // mean nb of requests
     int mean_n_requests = 0;
     for (int i = 0; i < lComm; i++) {
       mean_n_requests += n_requests[i];
@@ -1330,8 +1327,7 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
 
     PDM_sort_int (n_requests, order, lComm);
 
-    /* identify ranks to be copied
-     * n_fois la moyenne dans la limite max_copied_ranks */
+    // identify ranks to be copied
     double threshold_n_req = RANK_COPY_threshold*mean_n_requests;
     int max_copied_ranks   = (int) _MAX (1, RANK_COPY_max_copies*lComm);
 
@@ -1365,7 +1361,7 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
     //<<<-------------
 
     /*
-     * Copie des rangs selectionnes
+     * Copy the data of selected ranks
      */
     rank_copy_num = (int *) malloc (sizeof(int) * lComm);
     PDM_box_tree_copy_to_ranks (_dbbt->btLoc,
@@ -1377,7 +1373,10 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
 
 
     /*
-     * Repartition des points...
+     * Distribution of points...
+     *    ..._local --> search in local box tree
+     *    ..._rank  --> search in copied box trees
+     *    ..._send  --> search in distant box trees (send to other processes)
      */
     n_pts_local = 0;
 
@@ -1397,13 +1396,13 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
       for (int j = box_index_tmp[i]; j < box_index_tmp[i+1]; j++) {
         i_rank = usedRanks[box_l_num_tmp[j]];
         if ( i_rank == myRank ) {
-          // ---> recherche dans btLoc->local_data du rang courant
+          // ---> search in btLoc->local_data of current process
           n_pts_local++;
         } else if ( rank_copy_num[i_rank] >= 0 ) {
-          // ---> recherche dans btLoc->rank_data[rank_copy_num[i_rank]] du rang courant
+          // ---> search in btLoc->rank_data[rank_copy_num[i_rank]] of current process
           n_pts_rank[rank_copy_num[i_rank]]++;
         } else {
-          // ---> recherche dans btLoc->local_data du rang i_rank
+          // ---> search in btLoc->local_data of process with rank i_rank
           n_pts_send[i_rank]++;
         }
       }
@@ -1450,14 +1449,14 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
       for (int j = box_index_tmp[i]; j < box_index_tmp[i+1]; j++) {
         i_rank = usedRanks[box_l_num_tmp[j]];
         if ( i_rank == myRank ) {
-          // --> pts_local, upper_bound_dist_local (points locaux, box_tree local)
+          // pts_local, upper_bound_dist_local (local points, local box tree)
           upper_bound_dist_local[i1] = upper_bound_dist2[i];
           pts_local[3*i1]            = pts[3*i];
           pts_local[3*i1+1]          = pts[3*i+1];
           pts_local[3*i1+2]          = pts[3*i+2];
           i1++;
         } else if ( rank_copy_num[i_rank] >= 0 ) {
-          // --> pts_rank, upper_bound_dist_rank (points locaux, box_trees distants copies)
+          // pts_rank, upper_bound_dist_rank (local points, distant (copied) box trees)
           int j_rank = rank_copy_num[i_rank];
           i2 = i_pts_rank[j_rank] + n_pts_rank[j_rank];
           upper_bound_dist_rank[i2] = upper_bound_dist2[i];
@@ -1466,7 +1465,7 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
           pts_rank[3*i2+2]          = pts[3*i+2];
           n_pts_rank[j_rank]++;
         } else {
-          // --> pts_send (points locaux, box_trees distants non-copies)
+          // data_send (local points, distant (not copied) box trees)
           i3 = i_pts_send[i_rank] + 4*n_pts_send[i_rank];
           data_send[i3++] = pts[3*i];
           data_send[i3++] = pts[3*i+1];
@@ -1483,7 +1482,7 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
     }
 
 
-    // Envoi des points a traiter dans les box_trees distants non-copies
+    // Send points to search in distant (not copied) box trees
     PDM_MPI_Alltoallv (data_send, n_pts_send, i_pts_send, PDM_MPI_DOUBLE,
                        data_recv, n_pts_recv, i_pts_recv, PDM_MPI_DOUBLE,
                        _dbbt->comm);
@@ -1501,23 +1500,33 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
       upper_bound_dist_recv[i] = data_recv[4*i+3];
     }
     free(data_recv);
-  } //<<--
+  }
 
 
 
-  // Determination des candidats dans l'arbre local (points locaux)
+  // Determine candidate boxes in local box tree (local points)
   int *box_index_local;
   int *box_l_num_local;
+  #if 0
   PDM_box_tree_closest_upper_bound_dist_boxes_get (_dbbt->btLoc,
 						   n_pts_local,
 						   pts_local,
 						   upper_bound_dist_local,
 						   &box_index_local,
 						   &box_l_num_local);
+  #else
+  PDM_box_tree_closest_upper_bound_dist_boxes_get_v2 (_dbbt->btLoc,
+						      -1, // search in local box tree
+						      n_pts_local,
+						      pts_local,
+						      upper_bound_dist_local,
+						      &box_index_local,
+						      &box_l_num_local);
+  #endif
   free(pts_local);
   free(upper_bound_dist_local);
 
-  // conversion num locale --> absolue
+  // conversion local --> global numbering
   const PDM_g_num_t *gnum_boxes_local = PDM_box_set_get_g_num (_dbbt->boxes);
   PDM_g_num_t *box_g_num_local = malloc(sizeof(PDM_g_num_t) * box_index_local[n_pts_local]);
 
@@ -1533,7 +1542,7 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
     *box_g_num = box_g_num_local;
 
   } else {
-    // Determination des candidats dans les copies (points locaux)
+    // Determine candidate boxes in copied box trees (local points)
     int **box_index_rank;
     int **box_l_num_rank;
 
@@ -1565,7 +1574,7 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
     free(pts_rank);
     free(upper_bound_dist_rank);
 
-    // conversion num locale --> absolue pour chaque rang copie
+    // conversion local --> global numbering for each copied rank
     PDM_g_num_t **box_g_num_rank = malloc(sizeof(PDM_g_num_t *) * n_copied_ranks);
 
     PDM_g_num_t *gnum_boxes_rank = NULL;
@@ -1583,7 +1592,7 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
 
 
 
-    // Determination des candidats dans l'arbre local (points reçus)
+    // Determine candidate boxes in local box tree (received points)
     int *n_pts_send2 = NULL;
     int *i_pts_send2 = NULL;
     int *n_box_l_num_per_pts = NULL;
@@ -1593,19 +1602,29 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
     int *box_index_recv = NULL;
     int *box_l_num_recv = NULL;
 
+    #if 0
     PDM_box_tree_closest_upper_bound_dist_boxes_get (_dbbt->btLoc,
                                                      n_pts_recv_total,
                                                      pts_recv,
                                                      upper_bound_dist_recv,
                                                      &box_index_recv,
                                                      &box_l_num_recv);
+    #else
+    PDM_box_tree_closest_upper_bound_dist_boxes_get_v2 (_dbbt->btLoc,
+							-1, // search in local box tree
+							n_pts_recv_total,
+							pts_recv,
+							upper_bound_dist_recv,
+							&box_index_recv,
+							&box_l_num_recv);
+    #endif
     free(pts_recv);
     free(upper_bound_dist_recv);
 
     /*
-     * ---->> Renvoi aux procs expediteurs (Alltoall inverse)
-     *          - nombre de boites trouvees pour chaque point
-     *          - numeros des boites en numerotation absolue
+     * Send back results for distant points to original processes:
+     *     - nb of boxes for each point
+     *     - global numbering of these boxes
      */
 
     int *n_box_l_num_recv = malloc (sizeof(int) * n_pts_recv_total);
@@ -1657,7 +1676,7 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
     }
 
 
-    // Conversion numerotation locale -> absolue
+    // Conversion local --> global numbering
     PDM_g_num_t *box_g_num_recv = malloc(sizeof(PDM_g_num_t) * box_index_recv[n_pts_recv_total]);
 
     for (int i = 0; i < box_index_recv[n_pts_recv_total]; i++) {
@@ -1677,14 +1696,12 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
     free(i_pts_recv);
     free(n_pts_recv2);
     free(i_pts_recv2);
-    /*
-     * <<---- fin renvoi aux expediteurs
-     */
+
 
 
 
     /*
-     * --->> Tri des resultats
+     * Merge all results and resolve duplicates
      */
     *box_index = malloc(sizeof(int) * (n_pts + 1));
 
@@ -1728,7 +1745,7 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
         for (int j = rank_index[i]; j < rank_index[i+1]; j++) { // loop over procs to which the current point was sent
           i_rank = usedRanks[box_l_num_tmp[j]]; // i_rank = rank j-th proc to which the current point was sent
 
-          if ( i_rank == myRank ) { // point local, boites locales
+          if ( i_rank == myRank ) { // boxes local to current process
             for (int k = box_index_local[i1]; k < box_index_local[i1+1]; k++) {
               i_box = box_g_num_local[k];
 
@@ -1743,7 +1760,7 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
             }
             i1++;
 
-          } else if ( rank_copy_num[i_rank] >= 0 ) { // point local, boites distantes copiees
+          } else if ( rank_copy_num[i_rank] >= 0 ) { // distant boxes copied in current process
             int j_rank = rank_copy_num[i_rank];
             i2 = n_pts_rank[j_rank];
 
@@ -1761,7 +1778,7 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
             }
             n_pts_rank[j_rank]++;
 
-          } else { // point local, boites distantes non-copiees
+          } else { // distant boxes (not copied)
             i3 = n_pts_send[i_rank];
             int i4 = i_pts_send2[i_rank] + n_pts_send2[i_rank];
             int i5 = i_pts_send[i_rank] + i3;
@@ -1799,7 +1816,7 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
     *box_g_num = realloc (*box_g_num, sizeof(PDM_g_num_t) * box_index_tmp[n_pts]);
 
     /*
-     * --->> fin tri des resultats
+     * Deallocate stuff
      */
     free(box_l_num_tmp);
     free(box_g_num_per_pts);
