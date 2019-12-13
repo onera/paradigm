@@ -324,7 +324,26 @@ PDM_box_tree_closest_upper_bound_dist_boxes_get
  int             *boxes[]
  );
 
-/*----------------------------------------------------------------------------*/
+/*----------------------------------------------------------------------------
+ * same as above but extended to support search in local box tree as well as in box trees from copied ranks
+ *
+ * if irank < 0 then search is performed in local box tree data,
+ * otherwise search is performed in box tree data copied from proc with rank bt->copied_rank[irank]
+ *
+ *----------------------------------------------------------------------------*/
+
+void
+PDM_box_tree_closest_upper_bound_dist_boxes_get_v2
+(
+ PDM_box_tree_t  *bt,
+ const int        irank,
+ const int        n_pts,
+ double           pts[],
+ double           upper_bound_dist2[],
+ int             *i_boxes[],
+ int             *boxes[]
+ );
+
 
 /*----------------------------------------------------------------------------
  * Get minimum of maximum distance of boxes (extended version: rank tree data)
@@ -350,21 +369,11 @@ PDM_box_tree_closest_upper_bound_dist_boxes_get_from_copied_ranks
  int            **boxes_rank[]
  );
 
-void
-PDM_box_tree_closest_upper_bound_dist_boxes_get_v2
-(
- PDM_box_tree_t  *bt,
- const int        irank,
- const int        n_pts,
- double           pts[],
- double           upper_bound_dist2[],
- int             *i_boxes[],
- int             *boxes[]
- );
+
 
 
 /*----------------------------------------------------------------------------
- * DESCRIPTION...
+ * Send copies of box tree data from selected ranks to all other ranks for better load balancing
  *---------------------------------------------------------------------------*/
 void
 PDM_box_tree_copy_to_ranks
