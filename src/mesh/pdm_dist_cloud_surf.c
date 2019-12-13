@@ -833,7 +833,9 @@ PDM_dist_cloud_surf_compute
     PDM_g_num_t *box_g_num;
 
     //--------->>>>
-    #if 0
+    int lComm;
+    PDM_MPI_Comm_size (comm, &lComm);
+    if ( lComm < 2 ) {//#if 0
       // WITHOUT DUPLICATIONS
       PDM_dbbtree_closest_upper_bound_dist_boxes_get_OLD (dbbt,
 							  n_pts_rank,
@@ -842,7 +844,7 @@ PDM_dist_cloud_surf_compute
 							  closest_vertices_dist2,
 							  &box_index,
 							  &box_g_num);
-    #else
+    } else {//#else
       // WITH DUPLICATIONS
       PDM_dbbtree_closest_upper_bound_dist_boxes_get (dbbt,
 						      n_pts_rank,
@@ -851,8 +853,8 @@ PDM_dist_cloud_surf_compute
 						      closest_vertices_dist2,
 						      &box_index,
 						      &box_g_num);
-    #endif
-    //<<<<---------
+    }  //#endif
+      //<<<<---------
 
     if (idebug) {
       printf (" PDM_dbbtree_closest_upper_bound_dist_boxes_get n_pts_rank : %d\n", n_pts_rank);

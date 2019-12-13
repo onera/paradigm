@@ -73,8 +73,8 @@ PDM_dbbtree_create
 PDM_dbbtree_t *
 PDM_dbbtree_free
 (
-PDM_dbbtree_t     *dbbt
-);
+ PDM_dbbtree_t     *dbbt
+ );
 
 
 /**
@@ -96,12 +96,12 @@ PDM_dbbtree_t     *dbbt
 PDM_box_set_t  *
 PDM_dbbtree_boxes_set
 (
-PDM_dbbtree_t     *dbbt,
-const int          nPart,
-const int         *nElts,
-const double     **extents,
-const PDM_g_num_t **gNum
-);
+ PDM_dbbtree_t     *dbbt,
+ const int          nPart,
+ const int         *nElts,
+ const double     **extents,
+ const PDM_g_num_t **gNum
+ );
 
 
 /**
@@ -126,14 +126,14 @@ const PDM_g_num_t **gNum
 PDM_box_set_t  *
 PDM_dbbtree_intersect_boxes_set
 (
-PDM_dbbtree_t    *dbbt,
-const int         nPart,
-const int        *nElts,
-const double     **extents,
-const PDM_g_num_t **gNum,
-int              *box_index[],
-int              *box_l_num[]
-);
+ PDM_dbbtree_t    *dbbt,
+ const int         nPart,
+ const int        *nElts,
+ const double     **extents,
+ const PDM_g_num_t **gNum,
+ int              *box_index[],
+ int              *box_l_num[]
+ );
 
 
 /**
@@ -153,14 +153,14 @@ int              *box_l_num[]
 void
 PDM_dbbtree_closest_upper_bound_dist_boxes_get_OLD
 (
-PDM_dbbtree_t    *dbbt,
-const int        n_pts,
-double           pts[],
-PDM_g_num_t      pts_g_num[],
-double           upper_bound_dist2[],
-int             *box_index[],
-PDM_g_num_t     *box_g_num[]
-);
+ PDM_dbbtree_t    *dbbt,
+ const int        n_pts,
+ double           pts[],
+ PDM_g_num_t      pts_g_num[],
+ double           upper_bound_dist2[],
+ int             *box_index[],
+ PDM_g_num_t     *box_g_num[]
+ );
 
 
 void
@@ -173,7 +173,7 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
  double           upper_bound_dist2[],
  int             *box_index[],
  PDM_g_num_t     *box_g_num[]
-);
+ );
 
 
 #ifdef __cplusplus
