@@ -232,8 +232,7 @@ PDM_hash_tab_t *ht
 
 
 /**
- * description...
- *
+ * Checks whether a given value is already contained in a hash table
  */
 
 int
@@ -250,4 +249,3 @@ PDM_hash_tab_check_collision
 #endif
 
 #endif	/* __PDM_HASH_TAB_H__ */
-

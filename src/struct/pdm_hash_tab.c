@@ -403,8 +403,7 @@ PDM_hash_tab_t *ht
 
 
 /**
- * description...
- *
+ * Checks whether a given value is already contained in a hash table
  */
 
 int
@@ -417,7 +416,7 @@ PDM_hash_tab_check_collision
 )
 {
   *key = value % keyMax;
-	      
+
   int n_data = PDM_hash_tab_n_data_get (ht, key);
 
   PDM_g_num_t **data = (PDM_g_num_t **) PDM_hash_tab_data_get (ht, key);
@@ -426,7 +425,7 @@ PDM_hash_tab_check_collision
       return 1;
     }
   }
-  
+
   return 0;
 }
 
@@ -435,4 +434,3 @@ PDM_hash_tab_check_collision
 #ifdef	__cplusplus
 }
 #endif
-
