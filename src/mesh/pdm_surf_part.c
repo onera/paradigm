@@ -248,9 +248,11 @@ PDM_surf_part_t *part
   int *edgeFaceUncompress = (int *) malloc(sizeof(int) * l_edges/2);
   l_edges = 0;
 
+  int max_nVtxFace = 0;
   for (int i = 0; i < part->nFace; i++) {
     int idxFace = part->faceVtxIdx[i];
     int nVtxFace = part->faceVtxIdx[i+1] - idxFace;
+    max_nVtxFace = PDM_MAX(max_nVtxFace, nVtxFace);
     for (int j = idxFace; j < idxFace + nVtxFace; j++) {
       int k = (j == part->faceVtxIdx[i+1] - 1) ? idxFace : (j + 1);
       int vtx1 = part->faceVtx[j];
@@ -426,10 +428,12 @@ if (0 == 1) {
     int ifac1 = 2*iEdge;
     int ifac2 = 2*iEdge + 1;
 
-    if (part->edgeFace[ifac1] == 0)
+    if (part->edgeFace[ifac1] == 0) {
       part->edgeFace[ifac1] = edgeFaceUncompress[i] + 1;
-    else if (part->edgeFace[ifac2] == 0)
+    }
+    else if (part->edgeFace[ifac2] == 0) {
       part->edgeFace[ifac2] = edgeFaceUncompress[i] + 1;
+    }
     else {
       PDM_error(__FILE__, __LINE__, 0, "Error _build_edges_part : Error in edgeFace computing\n");
       abort();
@@ -454,19 +458,113 @@ if (0 == 1) {
   const int *faceEdgeIdx = part->faceEdgeIdx;
   part->faceEdge = (int *) malloc(sizeof(int) * faceEdgeIdx[part->nFace]);
   int *n_faceEdge = (int *) malloc(sizeof(int) * part->nFace);
-  for (int i = 0; i < part->nFace; i++)
+  for (int i = 0; i < part->nFace; i++) {
     n_faceEdge[i] = 0;
+  }
 
   for (int i = 0; i < nEdge; i++) {
     int face1 = PDM_ABS (part->edgeFace[2*i]);
     int face2 = PDM_ABS (part->edgeFace[2*i+1]);
-    if (face1 > 0)
+    if (face1 > 0) {
       part->faceEdge[faceEdgeIdx[face1-1] + n_faceEdge[face1-1]++] = i + 1;
-    if (face2 > 0)
+    }
+    if (face2 > 0) {
       part->faceEdge[faceEdgeIdx[face2-1] + n_faceEdge[face2-1]++] = i + 1;
+    }
   }
 
-    if (vb == 1) {
+  /*
+   * face -> edge orientation (same than face -> vtx)
+   */
+
+  int *vtxEdge = malloc (sizeof(int) *2 * part->nVtx);
+
+  for (int i = 0; i < 2 * part->nVtx; i++) {
+    vtxEdge[i] = -1;
+  }
+
+
+  for (int i = 0; i < part->nFace; i++) {
+    int idx = 0;
+    for (int j = part->faceEdgeIdx[i]; j < part->faceEdgeIdx[i+1]; j++) {
+      int _edge = part->faceEdge[j];
+      int _iedge = _edge - 1;
+
+      int ivtx1 = part->edgeVtx[2*_iedge] - 1;
+      int ivtx2 = part->edgeVtx[2*_iedge+1] -1;
+
+      if (vtxEdge[2*ivtx1] == -1) {
+        vtxEdge[2*ivtx1] = _iedge;
+      }
+      else {
+        vtxEdge[2*ivtx1+1] = _iedge;
+      }
+
+      if (vtxEdge[2*ivtx2] == -1) {
+        vtxEdge[2*ivtx2] = _iedge;
+      }
+      else {
+        vtxEdge[2*ivtx2+1] = _iedge;
+      }
+    }
+
+    int nVtxFace = part->faceVtxIdx[i+1] - part->faceVtxIdx[i];
+    idx = part->faceVtxIdx[i];
+    for (int j = part->faceVtxIdx[i]; j < part->faceVtxIdx[i+1]; j++) {
+      int ivtx = part->faceVtx[j] - 1;
+      int ivtx_next = part->faceVtx[idx + (j+1-idx) % nVtxFace] -1;
+
+      int iedge1;
+      int iedge2;
+      int k;
+      int k1;
+
+      for (k = 0; k < 2; k++) {
+        iedge1 = vtxEdge[2*ivtx + k];
+        assert (iedge1 != -1);
+        for (k1 = 0; k1 < 2; k1++) {
+          iedge2 = vtxEdge[2*ivtx_next + k1];
+          assert (iedge2 != -1);
+          if (iedge1 == iedge2) {
+            break;
+          }
+        }
+        if (iedge1 == iedge2) {
+          break;
+        }
+      }
+      assert (iedge1 == iedge2);
+
+      if (part->edgeVtx[2*iedge1] == (ivtx + 1)) {
+        part->faceEdge[j] = iedge1 + 1;
+      }
+      else {
+        part->faceEdge[j] = -(iedge1 + 1);
+      }
+    }
+
+    for (int j = part->faceEdgeIdx[i]; j < part->faceEdgeIdx[i+1]; j++) {
+      int _edge = PDM_ABS(part->faceEdge[j]);
+      int _iedge = _edge - 1;
+
+      assert(_edge <= part->nEdge);
+
+      printf("pointeuer : %ld %ld\n", part->edgeVtx,  part->vtxEdge);
+      int ivtx1 = part->edgeVtx[2*_iedge] - 1;
+      int ivtx2 = part->edgeVtx[2*_iedge+1] -1;
+
+      vtxEdge[2*ivtx1]   = -1;
+      vtxEdge[2*ivtx1+1] = -1;
+
+      vtxEdge[2*ivtx2]   = -1;
+      vtxEdge[2*ivtx2+1] = -1;
+
+    }
+  }
+
+  free (vtxEdge);
+
+  if (vb == 1) {
     PDM_printf ("part->faceEdge   --- PDM_surf_part_build_edges \n");
     for (int i = 0; i < part->nFace; i++) {
       PDM_printf ("[%d] :", i+1);
@@ -550,7 +648,8 @@ PDM_surf_part_dump
 		for (int j = 0; j <part->nFace; j++) {
 		  PDM_printf ("%ld-> ", part->faceLnToGn[j]);
 		  for (int k = (part->faceEdgeIdx)[j]; k < (part->faceEdgeIdx)[j+1]; k++)
-        PDM_printf (" "PDM_FMT_G_NUM, part->edgeLnToGn[part->faceEdge[k]-1]);
+        PDM_printf (" "PDM_FMT_G_NUM,
+                    (PDM_ABS(part->faceEdge[k])/ part->faceEdge[k])*  part->edgeLnToGn[PDM_ABS(part->faceEdge[k])-1]);
 		  PDM_printf ("\n");
 		}
     PDM_printf ("  - faceLnToGn :\n");
