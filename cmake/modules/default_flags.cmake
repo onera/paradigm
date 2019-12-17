@@ -287,6 +287,8 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "XL")
     link_directories(/opt/ibm/xlC/13.1.0/lib64)
   endif()
 
+  link_libraries ("m")
+
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "PGI")
 
   set (CMAKE_CXX_FLAGS "-Xa -noswitcherror")
@@ -355,5 +357,3 @@ set (CXX_LIBRARIES_FLAG "${CXX_LIBRARIES_FLAG}" CACHE STRING "C++ flags" FORCE)
 set (PASS_DEFAULT_FLAGS 1 CACHE STRING "")
 mark_as_advanced (CMAKE_CXX_FLAGS_PROFILING CXX_LIBRARIES CXX_LIBRARIES_FLAG PASS_DEFAULT_FLAGS)
 endif()
-
-
