@@ -24,7 +24,7 @@
 #include "pdm_timer.h"
 
 #ifdef __cplusplus
-extern "C" {CORE-AVX512
+extern "C"
 #if 0
 } /* Fake brace to force back Emacs auto-indentation back to column 0 */
 #endif
@@ -1613,7 +1613,9 @@ _block_partition
 
   double vol = 0;
   for (int i = 0; i < G->n_nodes; i++) {
-    vol += pow(1./pow(2, G->codes[i].L),3);
+    vol += ((1./pow(2, G->codes[i].L)) *
+            (1./pow(2, G->codes[i].L)) *
+            (1./pow(2, G->codes[i].L)));
     G->range[i+1] =
       G->range[i] +
       G->n_points[i];
@@ -2435,7 +2437,9 @@ PDM_para_octree_build
 
     double vol = 0;
     for (int i = 0; i < octree->octants->n_nodes; i++) {
-      vol += pow(1./pow(2, octree->octants->codes[i].L),3);
+      vol += ((1./pow(2, octree->octants->codes[i].L)) *
+              (1./pow(2, octree->octants->codes[i].L)) *
+              (1./pow(2, octree->octants->codes[i].L)));
       octree->octants->range[i+1] =
         octree->octants->range[i] +
         octree->octants->n_points[i];
@@ -2584,7 +2588,9 @@ PDM_para_octree_build
 
   double vol = 0;
   for (int i = 0; i < octree->octants->n_nodes; i++) {
-    vol += pow(1./pow(2, octree->octants->codes[i].L),3);
+    vol += ((1./pow(2, octree->octants->codes[i].L)) *
+            (1./pow(2, octree->octants->codes[i].L)) *
+            (1./pow(2, octree->octants->codes[i].L)));
   }
   double total_vol;
   PDM_MPI_Allreduce(&vol, &total_vol, 1, PDM_MPI_DOUBLE, PDM_MPI_SUM, octree->comm);
