@@ -182,7 +182,7 @@ elseif (CMAKE_C_COMPILER_ID MATCHES "XL")
     link_directories(/opt/ibm/xlC/13.1.0/lib64)
   endif()
 
-  link_libraries (m)
+  link_libraries(m)
 
 elseif (CMAKE_C_COMPILER_ID STREQUAL "PGI")
 
@@ -293,7 +293,7 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "XL")
     link_directories(/opt/ibm/xlC/13.1.0/lib64)
   endif()
 
-  link_libraries (m)
+#link_libraries (m)
 
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "PGI")
 
