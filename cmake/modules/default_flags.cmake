@@ -178,6 +178,12 @@ elseif (CMAKE_C_COMPILER_ID MATCHES "XL")
   set (CMAKE_C_FLAGS_RELWITHDEBINFO  "-O3 -g")
   set (CMAKE_C_FLAGS_MINSIZEREL      "-O2")
 
+  if (${HOSTNAME} STREQUAL "tanit")
+    link_directories(/opt/ibm/xlC/13.1.0/lib64)
+  endif()
+
+  link_libraries ("m")
+
 elseif (CMAKE_C_COMPILER_ID STREQUAL "PGI")
 
   set (CMAKE_C_FLAGS "-c99 -noswitcherror")
