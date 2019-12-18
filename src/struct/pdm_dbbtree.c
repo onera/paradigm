@@ -739,9 +739,9 @@ PDM_dbbtree_intersect_boxes_set
                               boxes);
 
 
-    printf ("Boxes B apres redistribution : %d\n", boxes->n_boxes);
-    for (int i = 0; i < boxes->n_boxes; i++) {
-      printf (" %ld", boxes->g_num[i]);
+    printf ("Boxes B apres redistribution : %d\n", boxes->local_boxes->n_boxes);
+    for (int i = 0; i < boxes->local_boxes->n_boxes; i++) {
+      printf (" %ld", boxes->local_boxes->g_num[i]);
     }
     printf("\n");
 
