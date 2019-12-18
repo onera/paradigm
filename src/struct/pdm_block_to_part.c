@@ -357,6 +357,8 @@ PDM_block_to_part_exch
       block_stride_idx[i+1] = block_stride[i] + block_stride_idx[i];
     }
 
+    free (sendStride);
+
   }
 
   else {
