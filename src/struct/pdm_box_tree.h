@@ -152,7 +152,7 @@ PDM_box_tree_get_max_level(const PDM_box_tree_t  *bt);
 
 void
 PDM_box_tree_set_boxes(PDM_box_tree_t       *bt,
-                       const PDM_box_set_t  *boxes,
+                       PDM_box_set_t  *boxes,
                        PDM_box_tree_sync_t   build_type);
 
 void

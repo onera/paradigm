@@ -160,7 +160,7 @@ struct _PDM_box_tree_t {
 
   PDM_MPI_Comm          comm;         /* Associated MPI communicator */
 
-  const PDM_box_set_t  *boxes;        /* Associated boxes */
+  PDM_box_set_t  *boxes;        /* Associated boxes */
 };
 
 /*=============================================================================
@@ -3108,7 +3108,7 @@ PDM_box_tree_get_max_level(const PDM_box_tree_t  *bt)
 
 void
 PDM_box_tree_set_boxes(PDM_box_tree_t       *bt,
-                       const PDM_box_set_t  *boxes,
+                       PDM_box_set_t  *boxes,
                        PDM_box_tree_sync_t   build_type)
 {
   //printf("  -->> PDM_box_tree_set_boxes\n");
@@ -3423,7 +3423,7 @@ PDM_box_tree_get_boxes_intersects(PDM_box_tree_t       *bt,
   /* Remove duplicate boxes */
 
   int idx=0;
-  for (i = 0; i < boxes->n_boxes; i++) {
+  for (i = 0; i < boxes->local_boxes->n_boxes; i++) {
     counter[i] = 0;
     int *_l_num_box = _l_num + _index[i];
     int n_elt = _index[i+1] -_index[i];
@@ -3441,11 +3441,11 @@ PDM_box_tree_get_boxes_intersects(PDM_box_tree_t       *bt,
     }
   }
 
-  for (i = 0; i < boxes->n_boxes; i++) {
+  for (i = 0; i < boxes->local_boxes->n_boxes; i++) {
     _index[i+1] = _index[i] + counter[i];
   }
 
-  _l_num = realloc (_l_num, sizeof(int) * _index[boxes->n_boxes]);
+  _l_num = realloc (_l_num, sizeof(int) * _index[boxes->local_boxes->n_boxes]);
 
   free(counter);
 
@@ -4702,7 +4702,7 @@ PDM_box_tree_copy_to_ranks
  int            *rank_copy_num
  ) {
   // copy boxes
-  PDM_box_copy_boxes_to_ranks (bt->boxes, *n_copied_ranks, copied_ranks);
+  PDM_box_copy_boxes_to_ranks ((PDM_box_set_t *) bt->boxes, *n_copied_ranks, copied_ranks);
 
   // set (copy) tree structure
   int myRank;

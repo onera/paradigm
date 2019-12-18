@@ -1159,10 +1159,7 @@ PDM_box_set_recv_data_from_origin_distrib
  PDM_printf ("l[0][0] : %ld, ", l[0][0]);
  PDM_printf ("l[0][1] : %ld\n", l[0][1]);
   }
-<<<<<<< HEAD
 
-=======
->>>>>>> pdm_box : add remove duplicate function
   /* Send origin properties to the origin process :
    *   - Compute the number element to send for any process
    *   - Exchange -> origin these numbers all_to_all
@@ -1426,18 +1423,10 @@ if (vb >=3) {
     unsigned char *curr_data = (unsigned char *) malloc (sizeof(unsigned char)
                                                          * curr_shift[s_comm]);
 
-<<<<<<< HEAD
     int **_origin_distrib_idx = (int **) malloc (sizeof(int) * _local_boxes->n_part_orig);
     for (int i = 0; i < _local_boxes->n_part_orig; i++) {
       _origin_distrib_idx[i] = (int *) malloc (sizeof(int) * (_local_boxes->n_boxes_orig[i] + 1));
       for (int k = 0; k < _local_boxes->n_boxes_orig[i] + 1; k++) {
-=======
-    int **_origin_distrib_idx = (int **) malloc (sizeof(int*) * boxes->n_part_orig);
-
-    for (int i = 0; i < boxes->n_part_orig; i++) {
-      _origin_distrib_idx[i] = (int *) malloc (sizeof(int) * (boxes->n_boxes_orig[i] + 1));
-      for (int k = 0; k < boxes->n_boxes_orig[i] + 1; k++) {
->>>>>>> pdm_box : add remove duplicate function
         _origin_distrib_idx[i][k] = 0;
       }
       for (int k = 0; k < _local_boxes->n_boxes_orig[i]; k++) {
