@@ -130,6 +130,8 @@ PDM_line_intersection
  )
 {
 
+  const double _eps = 1e-9;
+
   double a21[3], b21[3], b1a1[3];
   double c[2];
   double A[2][2];
@@ -144,17 +146,17 @@ PDM_line_intersection
   a21[0] = a2[0] - a1[0];
   a21[1] = a2[1] - a1[1];
   a21[2] = a2[2] - a1[2];
-// AEffacer //	//PDM_printf ("a21 = %e %e %e\n", a21[0], a21[1], a21[2]);  
+// AEffacer //	//PDM_printf ("a21 = %e %e %e\n", a21[0], a21[1], a21[2]);
 
   b21[0] = b2[0] - b1[0];
   b21[1] = b2[1] - b1[1];
   b21[2] = b2[2] - b1[2];
-// AEffacer //	//PDM_printf ("b21 = %e %e %e\n", b21[0], b21[1], b21[2]);  
+// AEffacer //	//PDM_printf ("b21 = %e %e %e\n", b21[0], b21[1], b21[2]);
 
   b1a1[0] = b1[0] - a1[0];
   b1a1[1] = b1[1] - a1[1];
   b1a1[2] = b1[2] - a1[2];
-// AEffacer //	PDM_printf ("b1a1 = %e %e %e\n", b1a1[0], b1a1[1], b1a1[2]);  
+// AEffacer //	PDM_printf ("b1a1 = %e %e %e\n", b1a1[0], b1a1[1], b1a1[2]);
 
   /*
    * Define least squares system matrix.
@@ -170,15 +172,15 @@ PDM_line_intersection
    */
 
   c[0] = PDM_DOT_PRODUCT( a21, b1a1 );
-// AEffacer // 	PDM_printf ("%e  == %e\n", c[0], b1a1[0]*a21[0]+b1a1[1]*a21[1]+b1a1[2]*a21[2]);  
- 
+// AEffacer // 	PDM_printf ("%e  == %e\n", c[0], b1a1[0]*a21[0]+b1a1[1]*a21[1]+b1a1[2]*a21[2]);
+
   c[1] = - PDM_DOT_PRODUCT( b21, b1a1 );
-// AEffacer // 	PDM_printf ("%e  == %e\n", c[1], b1a1[0]*b21[0]+b1a1[1]*b21[1]+b1a1[2]*b21[2]);  
+// AEffacer // 	PDM_printf ("%e  == %e\n", c[1], b1a1[0]*b21[0]+b1a1[1]*b21[1]+b1a1[2]*b21[2]);
 
   /*
    * Solve the system of equations
    */
-  if ( _solve_2x2 (A, c) == 0 ) {
+  if ( PDM_ABS(_solve_2x2 (A, c)) < _eps ) {
 // AEffacer //	PDM_printf ("u = %e v = %e\n", c[0], c[1]);
     return PDM_LINE_INTERSECT_ON_LINE;
   }
@@ -194,7 +196,7 @@ PDM_line_intersection
 // AEffacer //	PDM_printf ("u = %e v = %e\n", c[0], c[1]);
 
 // EQU  if ( (0.0 <= *u) && (*u <= 1.0) && (0.0 <= *v) && (*v <= 1.0) ) {
-  if ( (-1.0*PDM_EPS <= *u) && (*u <= 1.0+PDM_EPS) && (-1.0*PDM_EPS <= *v) && (*v <= 1.0+PDM_EPS) ) {
+  if (( -_eps < *u) && (*u < 1.0 + _eps) && (-_eps <= *v) && (*v <= 1.0+_eps) ) {
 // AEffacer //	  PDM_printf ("YES\n");
     return PDM_LINE_INTERSECT_YES;
   }
@@ -288,4 +290,3 @@ PDM_line_distance
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-
