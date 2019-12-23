@@ -2,6 +2,9 @@
  * Standard C library headers
  *----------------------------------------------------------------------------*/
 
+#include <limits.h>
+#include <float.h>
+
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
@@ -136,8 +139,8 @@ PDM_line_intersection
   double c[2];
   double A[2][2];
 
-  *u = 0.;
-  *v = 0.;
+  *u = DBL_MAX;
+  *v = DBL_MAX;
 
   /*
    * Determine vectors
