@@ -35,6 +35,8 @@ extern "C" {
  * Static global variables
  *============================================================================*/
 
+static  const double _eps = 1e-12;
+
 /*============================================================================
  * Private function definitions
  *============================================================================*/
@@ -85,7 +87,8 @@ _solve_2x2
 
   double det = _det_2x2 (A[0][0], A[0][1], A[1][0], A[1][1]);
 
-  if (det == 0.0) {
+  if (PDM_ABS(det) == 0.0) {
+    //  if (PDM_ABS(det) < 1e-12) {
     return PDM_FALSE;
   }
 
@@ -132,8 +135,6 @@ PDM_line_intersection
  double *v
  )
 {
-
-  const double _eps = 1e-9;
 
   double a21[3], b21[3], b1a1[3];
   double c[2];
@@ -183,12 +184,12 @@ PDM_line_intersection
   /*
    * Solve the system of equations
    */
-  if ( PDM_ABS(_solve_2x2 (A, c)) < _eps ) {
+  if (_solve_2x2 (A, c) == PDM_FALSE) {
 // AEffacer //	PDM_printf ("u = %e v = %e\n", c[0], c[1]);
     return PDM_LINE_INTERSECT_ON_LINE;
   }
   else {
-// AEffacer //	PDM_printf ("u = %e v = %e\n", c[0], c[1]);
+    PDM_printf ("u = %e v = %e\n", c[0], c[1]);
     *u = c[0];
     *v = c[1];
   }
@@ -198,8 +199,8 @@ PDM_line_intersection
    */
 // AEffacer //	PDM_printf ("u = %e v = %e\n", c[0], c[1]);
 
-// EQU  if ( (0.0 <= *u) && (*u <= 1.0) && (0.0 <= *v) && (*v <= 1.0) ) {
-  if (( -_eps < *u) && (*u < 1.0 + _eps) && (-_eps <= *v) && (*v <= 1.0+_eps) ) {
+   if ( (0.0 <= *u) && (*u <= 1.0) && (0.0 <= *v) && (*v <= 1.0) ) {
+//  if (( -_eps < *u) && (*u < 1.0 + _eps) && (-_eps <= *v) && (*v <= 1.0+_eps) ) {
 // AEffacer //	  PDM_printf ("YES\n");
     return PDM_LINE_INTERSECT_YES;
   }
