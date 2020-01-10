@@ -87,8 +87,7 @@ _solve_2x2
 
   double det = _det_2x2 (A[0][0], A[0][1], A[1][0], A[1][1]);
 
-  if (PDM_ABS(det) == 0.0) {
-    //  if (PDM_ABS(det) < 1e-12) {
+  if (PDM_ABS(det) < _eps) {
     return PDM_FALSE;
   }
 
