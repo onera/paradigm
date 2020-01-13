@@ -68,6 +68,10 @@ PDM_block_to_part_create
 )
 {
 
+  printf("toto -1\n");
+  fflush(stdout);
+
+
   _pdm_block_to_part_t *btp =
     (_pdm_block_to_part_t *) malloc (sizeof(_pdm_block_to_part_t));
 
@@ -77,6 +81,11 @@ PDM_block_to_part_create
 
   PDM_MPI_Comm_size (comm, &btp->s_comm);
   PDM_MPI_Comm_rank (comm, &btp->myRank);
+
+  printf("toto 0\n");
+  fflush(stdout);
+
+
 
   /*
    * Define requested data for each process
@@ -97,6 +106,10 @@ PDM_block_to_part_create
     max_data_block = PDM_MAX(max_data_block, blockDistribIdx[i+1] - blockDistribIdx[i]) ;
   }
 
+  printf("toto 00\n");
+  fflush(stdout);
+
+
   btp->n_part = n_part;
 
   btp->requested_data_idx = malloc (sizeof(int) * (btp->s_comm + 1));
@@ -108,6 +121,9 @@ PDM_block_to_part_create
 
   btp->n_elt = malloc (sizeof(int) * n_part);
   btp->ind = malloc (sizeof(int *) * n_part);
+
+  printf("toto\n");
+  fflush(stdout);
 
   for (int i = 0; i < n_part; i++) {
 
@@ -131,6 +147,10 @@ PDM_block_to_part_create
                                    btp->requested_data_n[i];
   }
 
+
+  printf("toto 1\n");
+  fflush(stdout);
+
   int s_requested_data = btp->requested_data_idx[btp->s_comm - 1]
                        + btp->requested_data_n[btp->s_comm - 1];
 
@@ -141,6 +161,10 @@ PDM_block_to_part_create
   for (int i = 0; i < btp->s_comm; i++) {
     btp->requested_data_n[i] = 0;
   }
+
+
+  printf("toto 2\n");
+  fflush(stdout);
 
   for (int i = 0; i < n_part; i++) {
 
@@ -162,11 +186,17 @@ PDM_block_to_part_create
     }
   }
 
+  printf("toto 3\n");
+  fflush(stdout);
+
   btp->distributed_data_n = malloc (sizeof(int) * btp->s_comm);
 
   PDM_MPI_Alltoall (btp->requested_data_n,   1, PDM_MPI_INT,
                     btp->distributed_data_n, 1, PDM_MPI_INT,
                     comm);
+
+  printf("toto 4\n");
+  fflush(stdout);
 
   btp->distributed_data_idx = malloc (sizeof(int) * (btp->s_comm + 1));
   btp->distributed_data_idx[0] = 0;
