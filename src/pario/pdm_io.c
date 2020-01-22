@@ -2787,10 +2787,10 @@ void PDM_io_ecr_par_entrelacee
         if (fichier->fmt_t == PDM_IO_FMT_TXT) {
           n_composante_trie =  (int*) malloc(sizeof(int) * _id_max);
 
-	  for (int i = 0; i < _id_max; i++){
-	    n_composante_trie[i] = 0;
-	  }
-	}
+          for (int i = 0; i < _id_max; i++){
+            n_composante_trie[i] = 0;
+          }
+        }
 
         int k = 0;
         for (int i = 0; i < n_donnees; i++){
@@ -2913,14 +2913,14 @@ void PDM_io_ecr_par_entrelacee
         int n_donnees_ecrites;
 
         if (fichier->PDM_file_seq != NULL) {
-	  PDM_g_num_t l_string_donnee_gnum = l_string_donnee - 1 ;
-	  PDM_g_num_t n_donnees_ecrites_gnum = PDM_file_seq_write(fichier->PDM_file_seq,
-                                                 sizeof(char),
-                                                 l_string_donnee_gnum,
-                                                 (void *) string_donnee);
-	  // Fonction intrinsèquement parallèle <=> pas de vérification
-	  // du dépassement de la taille max d'un int
-	  n_donnees_ecrites = (int) n_donnees_ecrites_gnum ;
+          PDM_g_num_t l_string_donnee_gnum = l_string_donnee - 1 ;
+          PDM_g_num_t n_donnees_ecrites_gnum = PDM_file_seq_write(fichier->PDM_file_seq,
+                                                                  sizeof(char),
+                                                                  l_string_donnee_gnum,
+                                                                  (void *) string_donnee);
+          // Fonction intrinsèquement parallèle <=> pas de vérification
+          // du dépassement de la taille max d'un int
+          n_donnees_ecrites = (int) n_donnees_ecrites_gnum ;
         }
         else if (fichier->PDM_file_par != NULL) {
           if (fichier->rang_actif) {
@@ -3601,7 +3601,7 @@ void PDM_io_ecr_par_entrelacee
               PDM_MPI_Recv(buffer, l_buffer, PDM_MPI_BYTE, fichier->rangs_actifs[i],
                            PDM_io_tag, fichier->comm);
 
-	      n_donnees_blocs_tmp = n_donnees_blocs[fichier->rangs_actifs[i]];
+              n_donnees_blocs_tmp = n_donnees_blocs[fichier->rangs_actifs[i]];
               donnees_ecrites =
                 PDM_file_seq_write(fichier->PDM_file_seq,
                                    _taille_donnee,
