@@ -842,7 +842,6 @@ PDM_block_to_part_exch2
       int s_block_unit =  block_stride[_btp->distributed_data[i]] * (int) s_data;
 
       unsigned char *_block_data_deb = _block_data + ind;
-  PDM_printf ("s_sendBuffer : %d   s_block_unit : %d \n", s_sendBuffer, s_block_unit);
       for (int k = 0; k < s_block_unit; k++) {
         sendBuffer[idx1++] = _block_data_deb[k];
       }
@@ -1021,6 +1020,28 @@ PDM_block_to_part_free
   free (_btp);
 
   return NULL;
+}
+
+
+/**
+ *
+ * \brief Return index in the block for a gnum
+ *
+ * \param [in] ptb         Part to block structure
+ * \param [in] gNum        Global number
+ *
+ * \return  Index
+ */
+
+PDM_l_num_t
+PDM_block_to_part_gnum_idx_get
+(
+ PDM_block_to_part_t *btp,
+ PDM_g_num_t gNum
+)
+{
+  _pdm_block_to_part_t *_btp = (_pdm_block_to_part_t *) btp;
+  return (PDM_l_num_t) (gNum - 1 - _btp->blockDistribIdx[_btp->myRank]);
 }
 
 #ifdef __cplusplus
