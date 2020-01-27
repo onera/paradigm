@@ -1970,24 +1970,32 @@ _compute_neighbours
                                           intersect_nodes);
 
             for (int k = 0; k < n_intersect_nodes; k++) {
-              int idx = intersect_nodes[k];
-              if (neighbours_tmp[i].n_neighbour[j] >= neighbours_tmp[i].s_neighbour[j]) {
-                neighbours_tmp[i].s_neighbour[j] *= 2;
-                neighbours_tmp[i].neighbours[j] =
-                  realloc (neighbours_tmp[i].neighbours[j],
-                           sizeof(int) * neighbours_tmp[i].s_neighbour[j]);
-              }
-              neighbours_tmp[i].neighbours[j][neighbours_tmp[i].n_neighbour[j]++] = idx;
+              int idx = intersect_nodes[k] + i + 1;
+              PDM_morton_code_t *neighbour_neighbour_code =
+                _neighbour (octree->octants->codes[idx], inv_j);
 
-              if (neighbours_tmp[idx].n_neighbour[inv_j] >= neighbours_tmp[idx].s_neighbour[inv_j]) {
-                neighbours_tmp[idx].s_neighbour[inv_j] *= 2;
-                neighbours_tmp[idx].neighbours[inv_j] =
+              assert (neighbour_neighbour_code != NULL);
+
+              if (PDM_morton_ancestor_is (octree->octants->codes[i], *neighbour_neighbour_code) ||
+                  PDM_morton_ancestor_is (*neighbour_neighbour_code, octree->octants->codes[i])) {
+
+                if (neighbours_tmp[i].n_neighbour[j] >= neighbours_tmp[i].s_neighbour[j]) {
+                  neighbours_tmp[i].s_neighbour[j] *= 2;
+                  neighbours_tmp[i].neighbours[j] =
+                    realloc (neighbours_tmp[i].neighbours[j],
+                             sizeof(int) * neighbours_tmp[i].s_neighbour[j]);
+                }
+                neighbours_tmp[i].neighbours[j][neighbours_tmp[i].n_neighbour[j]++] = idx;
+
+                if (neighbours_tmp[idx].n_neighbour[inv_j] >= neighbours_tmp[idx].s_neighbour[inv_j]) {
+                  neighbours_tmp[idx].s_neighbour[inv_j] *= 2;
+                  neighbours_tmp[idx].neighbours[inv_j] =
                   realloc (neighbours_tmp[idx].neighbours[inv_j],
                            sizeof(int) * neighbours_tmp[idx].s_neighbour[inv_j]);
+                }
+                neighbours_tmp[idx].neighbours[inv_j][neighbours_tmp[idx].n_neighbour[inv_j]++] = i;
               }
-              neighbours_tmp[idx].neighbours[inv_j][neighbours_tmp[idx].n_neighbour[inv_j]++] = i;
             }
-
           }
 
           else {
