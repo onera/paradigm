@@ -1595,16 +1595,16 @@ PDM_morton_quantile_intersect(size_t              n_quantiles,
 
   int start_id_save = start_id;
 
-  while (   start_id < n_quantiles - 1
-            && quantile_start[start_id_save].L == quantile_start[start_id+1].L
-            && quantile_start[start_id_save].X[0] == quantile_start[start_id+1].X[0]
-            && quantile_start[start_id_save].X[1] == quantile_start[start_id+1].X[1]
-            && quantile_start[start_id_save].X[2] == quantile_start[start_id+1].X[2])
-    start_id++;
+  /* while (   start_id < n_quantiles - 1 */
+  /*           && quantile_start[start_id_save].L == quantile_start[start_id+1].L */
+  /*           && quantile_start[start_id_save].X[0] == quantile_start[start_id+1].X[0] */
+  /*           && quantile_start[start_id_save].X[1] == quantile_start[start_id+1].X[1] */
+  /*           && quantile_start[start_id_save].X[2] == quantile_start[start_id+1].X[2]) */
+  /*   start_id++; */
 
-  intersect[(*n_intersect)++] = start_id;
+  /* intersect[(*n_intersect)++] = start_id; // erreur */
 
-  start_id = start_id_save;
+  /* start_id = start_id_save; */
 
   while (start_id > 0
          && quantile_start[start_id_save].L == quantile_start[start_id-1].L
@@ -1614,14 +1614,17 @@ PDM_morton_quantile_intersect(size_t              n_quantiles,
     start_id--;
   }
 
-  while (start_id > 0
-         && PDM_morton_ancestor_is (code, quantile_start[start_id])
-         && !(code.L == quantile_start[start_id].L
-              && code.X[0] == quantile_start[start_id].X[0]
-              && code.X[1] == quantile_start[start_id].X[1]
-              && code.X[2] == quantile_start[start_id].X[2])) {
-    intersect[(*n_intersect)++] = start_id - 1;
-    start_id--;
+  if (PDM_morton_ancestor_is (code, quantile_start[start_id]) ||
+      PDM_morton_ancestor_is (quantile_start[start_id], code)) {
+      intersect[(*n_intersect)++] = start_id;
+      start_id++;
+  }
+
+  while (start_id < n_quantiles
+         && (PDM_morton_ancestor_is (code, quantile_start[start_id]) ||
+             PDM_morton_ancestor_is (quantile_start[start_id], code))) {
+    intersect[(*n_intersect)++] = start_id;
+    start_id++;
   }
 
 }
