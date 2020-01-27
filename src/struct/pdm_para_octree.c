@@ -24,7 +24,7 @@
 #include "pdm_timer.h"
 
 #ifdef __cplusplus
-extern "C" {CORE-AVX512
+extern "C"
 #if 0
 } /* Fake brace to force back Emacs auto-indentation back to column 0 */
 #endif
@@ -3371,15 +3371,17 @@ PDM_para_octree_dump
                octree->octants->n_points[i]
                );
   }
-  for (int i = 0; i < octree->octants->n_nodes; i++) {
-    PDM_printf("  %d : neighbors\n", i);
-    for (int j = 0; j < 6; j++) {
-      PDM_printf("    - direction %d : ", j);
-      for (int k = octree->octants->neighbour_idx[6*i+j];
-         k < octree->octants->neighbour_idx[6*i+j+1]; k++) {
-        PDM_printf(" %d",octree->octants->neighbours[k]);
+  if (octree->neighboursToBuild) {
+    for (int i = 0; i < octree->octants->n_nodes; i++) {
+      PDM_printf("  %d : neighbors\n", i);
+      for (int j = 0; j < 6; j++) {
+        PDM_printf("    - direction %d : ", j);
+        for (int k = octree->octants->neighbour_idx[6*i+j];
+             k < octree->octants->neighbour_idx[6*i+j+1]; k++) {
+          PDM_printf(" %d",octree->octants->neighbours[k]);
+        }
+        PDM_printf("\n");
       }
-      PDM_printf("\n");
     }
   }
 }
