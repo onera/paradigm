@@ -2660,6 +2660,8 @@ PDM_para_octree_create
   octree->part_boundary_elt_idx = NULL;
   octree->part_boundary_elt = NULL;
 
+  octree->neighboursToBuild = build_leaf_neighbours;
+
   octree->comm = comm;
 
   octree->timer = PDM_timer_create ();
