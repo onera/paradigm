@@ -1963,11 +1963,11 @@ _compute_neighbours
 
           if (neighbour_rank == rank) {
 
-            PDM_morton_quantile_intersect(octree->octants->n_nodes - (i+1),
-                                          *neighbour_code,
-                                          octree->octants->codes + i + 1,
-                                          &n_intersect_nodes,
-                                          intersect_nodes);
+            PDM_morton_list_intersect(octree->octants->n_nodes - (i+1),
+                                      *neighbour_code,
+                                      octree->octants->codes + i + 1,
+                                      &n_intersect_nodes,
+                                      intersect_nodes);
 
             for (int k = 0; k < n_intersect_nodes; k++) {
               int idx = intersect_nodes[k] + i + 1;
