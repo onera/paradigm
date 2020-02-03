@@ -549,7 +549,6 @@ if (0 == 1) {
 
       assert(_edge <= part->nEdge);
 
-      printf("pointeuer : %ld %ld\n", part->edgeVtx,  part->vtxEdge);
       int ivtx1 = part->edgeVtx[2*_iedge] - 1;
       int ivtx2 = part->edgeVtx[2*_iedge+1] -1;
 
