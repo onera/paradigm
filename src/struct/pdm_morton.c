@@ -1640,6 +1640,20 @@ PDM_morton_quantile_intersect(size_t              n_quantiles,
                               size_t              *n_intersect,
                               int                 *intersect )
 {
+#if 0
+  *n_intersect = 0;
+  for (int i = 0; i < n_quantiles; i++) {
+    if (i == n_quantiles-1) {
+      if (!_a_gt_b(quantile_start[i], code))
+        intersect[(*n_intersect)++] = i;
+    } else {
+      if ((!_a_gt_b(quantile_start[i], code)) && _a_gtmin_b(quantile_start[i+1], code))
+        intersect[(*n_intersect)++] = i;
+    }
+  }
+  return;
+#endif
+
   size_t mid_id = 0;
   size_t start_id = 0;
   size_t end_id = n_quantiles;
@@ -1697,8 +1711,19 @@ PDM_morton_list_intersect(size_t              n_quantiles,
         PDM_morton_ancestor_is (quantile_start[i], code)) {
       _intersect[_n_intersect++] = i;
     }
-  }
-  //<<--*/
+  }*/
+
+  /*
+   *n_intersect = 0;
+   for (int i = 0; i < n_quantiles; i++) {
+   if (PDM_morton_ancestor_is (code, quantile_start[i]) ||
+   PDM_morton_ancestor_is (quantile_start[i], code)) {
+   intersect[(*n_intersect)++] = i;
+   }
+   }
+   return;
+  */
+  //<<--
 
   size_t mid_id = 0;
   size_t start_id = 0;
@@ -1745,7 +1770,7 @@ PDM_morton_list_intersect(size_t              n_quantiles,
     // quantile #start_id_save does NOT intersect
     // Place start_id to the rightmost duplicate of quantile #start_id_save
     start_id++;
-    while (start_id < n_quantiles
+    while (start_id < n_quantiles-1
            && quantile_start[start_id_save].L == quantile_start[start_id+1].L
            && quantile_start[start_id_save].X[0] == quantile_start[start_id+1].X[0]
            && quantile_start[start_id_save].X[1] == quantile_start[start_id+1].X[1]
