@@ -157,9 +157,6 @@ _a_ge_b(PDM_morton_code_t  code_a,
 
   if (b_diff > 0) {
     code_b.L = l;
-    /*code_b.X[0] = (code_b.X[0] << b_diff) + 1;
-    code_b.X[1] = (code_b.X[1] << b_diff) + 1;
-    code_b.X[2] = (code_b.X[2] << b_diff) + 1;*/
     code_b.X[0] = ((code_b.X[0] + 1) << b_diff) - 1;
     code_b.X[1] = ((code_b.X[1] + 1) << b_diff) - 1;
     code_b.X[2] = ((code_b.X[2] + 1) << b_diff) - 1;
@@ -213,9 +210,6 @@ _a_eq_b(PDM_morton_code_t  code_a,
 
   if (b_diff > 0) {
     code_b.L = l;
-    /*code_b.X[0] = (code_b.X[0] << b_diff) + 1;
-    code_b.X[1] = (code_b.X[1] << b_diff) + 1;
-    code_b.X[2] = (code_b.X[2] << b_diff) + 1;*/
     code_b.X[0] = ((code_b.X[0] + 1) << b_diff) - 1;
     code_b.X[1] = ((code_b.X[1] + 1) << b_diff) - 1;
     code_b.X[2] = ((code_b.X[2] + 1) << b_diff) - 1;
@@ -270,9 +264,6 @@ _a_gt_b(PDM_morton_code_t  code_a,
 
   if (b_diff > 0) {
     code_b.L = l;
-    /*code_b.X[0] = (code_b.X[0] << b_diff) + 1;
-    code_b.X[1] = (code_b.X[1] << b_diff) + 1;
-    code_b.X[2] = (code_b.X[2] << b_diff) + 1;*/
     code_b.X[0] = ((code_b.X[0] + 1) << b_diff) - 1;
     code_b.X[1] = ((code_b.X[1] + 1) << b_diff) - 1;
     code_b.X[2] = ((code_b.X[2] + 1) << b_diff) - 1;
@@ -1640,20 +1631,6 @@ PDM_morton_quantile_intersect(size_t              n_quantiles,
                               size_t              *n_intersect,
                               int                 *intersect )
 {
-#if 0
-  *n_intersect = 0;
-  for (int i = 0; i < n_quantiles; i++) {
-    if (i == n_quantiles-1) {
-      if (!_a_gt_b(quantile_start[i], code))
-        intersect[(*n_intersect)++] = i;
-    } else {
-      if ((!_a_gt_b(quantile_start[i], code)) && _a_gtmin_b(quantile_start[i+1], code))
-        intersect[(*n_intersect)++] = i;
-    }
-  }
-  return;
-#endif
-
   size_t mid_id = 0;
   size_t start_id = 0;
   size_t end_id = n_quantiles;
@@ -1703,45 +1680,12 @@ PDM_morton_list_intersect(size_t              n_quantiles,
                           size_t              *n_intersect,
                           int                 *intersect )
 {
-  /*//-->>
-  size_t _n_intersect = 0;
-  int *_intersect = malloc (sizeof(int) * n_quantiles);
-  for (int i = 0; i < n_quantiles; i++) {
-    if (PDM_morton_ancestor_is (code, quantile_start[i]) ||
-        PDM_morton_ancestor_is (quantile_start[i], code)) {
-      _intersect[_n_intersect++] = i;
-    }
-  }*/
-
-  /*
-   *n_intersect = 0;
-   for (int i = 0; i < n_quantiles; i++) {
-   if (PDM_morton_ancestor_is (code, quantile_start[i]) ||
-   PDM_morton_ancestor_is (quantile_start[i], code)) {
-   intersect[(*n_intersect)++] = i;
-   }
-   }
-   return;
-  */
-  //<<--
-
   size_t mid_id = 0;
   size_t start_id = 0;
   size_t end_id = n_quantiles;
 
   /* use binary search */
 
-#if 0
-  // DOES NOT WORK
-  while (start_id + 1 < end_id) {
-    mid_id = start_id + ((end_id -start_id) / 2);
-    if (_a_gt_b(quantile_start[mid_id], code))
-      end_id = mid_id;
-    else
-      start_id = mid_id;
-  }
-#else
-  // DOES WORK
   while (start_id + 1 < end_id) {
     mid_id = start_id + ((end_id -start_id) / 2);
     if (_a_gt_b(code, quantile_start[mid_id]))
@@ -1749,7 +1693,7 @@ PDM_morton_list_intersect(size_t              n_quantiles,
     else
       end_id = mid_id;
   }
-#endif
+
 
   *n_intersect = 0;
 
@@ -1785,19 +1729,6 @@ PDM_morton_list_intersect(size_t              n_quantiles,
              PDM_morton_ancestor_is (quantile_start[start_id], code))) {
     intersect[(*n_intersect)++] = start_id++;
   }
-
-  /*//-->>
-  assert (_n_intersect == *n_intersect);
-  printf("{");
-  for (int i = 0; i < *n_intersect; i++) printf(" %d", intersect[i]);
-  printf("}\n");
-  printf("[");
-  for (int i = 0; i < _n_intersect; i++) printf(" %d", _intersect[i]);
-  printf("]\n");
-  *n_intersect = _n_intersect;
-  for (int i = 0; i < _n_intersect; i++) intersect[i] = _intersect[i];
-  //<<--*/
-
 }
 
 /*----------------------------------------------------------------------------
