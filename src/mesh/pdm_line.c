@@ -188,7 +188,6 @@ PDM_line_intersection
     return PDM_LINE_INTERSECT_ON_LINE;
   }
   else {
-    PDM_printf ("u = %e v = %e\n", c[0], c[1]);
     *u = c[0];
     *v = c[1];
   }
