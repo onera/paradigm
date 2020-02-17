@@ -39,6 +39,7 @@
 #include "pdm_mpi.h"
 #include "pdm_timer.h"
 #include "pdm_closest_points.h"
+#include "pdm_para_octree.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -88,9 +89,9 @@ typedef struct {
   double      **coords;            /*!< Point coordinates points of each partition */
   PDM_g_num_t **gnum;              /*!< Point global numbering of each partition */
   PDM_g_num_t **closest_src_gnum;  /*!< Global numbering of the n_closest source points
-                                        for each point of each partition  */
+                                     for each point of each partition  */
   double      **closest_src_dist; /*!< Distance to the n_closest source points
-                                        for each point of each partition  */
+                                    for each point of each partition  */
 
 } _tgt_point_cloud_t;
 
@@ -166,7 +167,7 @@ static _PDM_closest_t *
 _get_from_id
 (
  int  id
-)
+ )
 {
   _PDM_closest_t *closest = (_PDM_closest_t *) PDM_Handles_get (_closest_pts, id);
 
@@ -200,7 +201,7 @@ PDM_closest_points_create
 (
  const PDM_MPI_Comm comm,
  const int          n_closest
-)
+ )
 {
   if (_closest_pts == NULL) {
     _closest_pts = PDM_Handles_create (4);
@@ -233,7 +234,7 @@ PDM_closest_points_create_cf
  const PDM_MPI_Fint comm,
  const int          n_closest,
  int *id
-)
+ )
 {
   const PDM_MPI_Comm _comm        = PDM_MPI_Comm_f2c(comm);
 
@@ -257,7 +258,7 @@ PDM_closest_points_n_part_cloud_set
  const int  id,
  const int  n_part_cloud_src,
  const int  n_part_cloud_tgt
-)
+ )
 {
   _PDM_closest_t *cls = _get_from_id (id);
   assert(cls->src_cloud == NULL);
@@ -298,12 +299,13 @@ PDM_closest_points_tgt_cloud_set
  const int          id,
  const int          i_part,
  const int          n_points,
-       double      *coords,
-       PDM_g_num_t *gnum
-)
+ double      *coords,
+ PDM_g_num_t *gnum
+ )
 {
   _PDM_closest_t *cls = _get_from_id (id);
-  assert(cls->tgt_cloud == NULL);
+  assert(cls->tgt_cloud != NULL);
+  cls->tgt_cloud->n_points[i_part] = n_points;
   cls->tgt_cloud->coords[i_part] = coords;
   cls->tgt_cloud->gnum[i_part] = gnum;
 }
@@ -327,12 +329,13 @@ PDM_closest_points_src_cloud_set
  const int          id,
  const int          i_part,
  const int          n_points,
-       double      *coords,
-       PDM_g_num_t *gnum
-)
+ double      *coords,
+ PDM_g_num_t *gnum
+ )
 {
   _PDM_closest_t *cls = _get_from_id (id);
-  assert(cls->src_cloud == NULL);
+  assert(cls->src_cloud != NULL);
+  cls->src_cloud->n_points[i_part] = n_points;
   cls->src_cloud->coords[i_part] = coords;
   cls->src_cloud->gnum[i_part] = gnum;
 }
@@ -349,57 +352,154 @@ void
 PDM_closest_points_compute
 (
  const int id
-)
+ )
 {
-  //  _PDM_closest_t *cls = _get_from_id (id);
-  //TODO: PDM_closest_points_compute algorithm
+  _PDM_closest_t *cls = _get_from_id (id);
 
-  /* int */
-  /*   PDM_para_octree_create */
-  /*   ( */
-  /*    const int n_point_cloud, (n_part_source) */
-  /*    const int depth_max, */
-  /*    const int points_in_leaf_max, */
-  /*    const PDM_MPI_Comm comm */
-  /*    ); */
+  double b_t_elapsed;
+  double b_t_cpu;
+  double b_t_cpu_u;
+  double b_t_cpu_s;
 
+  cls->times_elapsed[BEGIN] = PDM_timer_elapsed(cls->timer);
+  cls->times_cpu[BEGIN]     = PDM_timer_cpu(cls->timer);
+  cls->times_cpu_u[BEGIN]   = PDM_timer_cpu_user(cls->timer);
+  cls->times_cpu_s[BEGIN]   = PDM_timer_cpu_sys(cls->timer);
 
-
-/* void */
-/* PDM_para_octree_point_cloud_set */
-/* ( */
-/*  const int          id, */
-/*  const int          i_point_cloud, */
-/*  const int          n_points, */
-/*  const double      *coords, */
-/*  const PDM_g_num_t *g_num */
-/* ); */
-
-/* void */
-/* PDM_para_octree_build */
-/* ( */
-/*  const int          id */
-/* ); */
-
-/* void */
-/* PDM_para_octree_closest_point */
-/* ( */
-/* const int    id, */
-/* const int    n_closest_points, */
-/* const int    n_pts, */
-/* double      *pts, */
-/* PDM_g_num_t *pts_g_num, */
-/* PDM_g_num_t *closest_octree_pt_g_num, */
-/* double      *closest_octree_pt_dist2 */
-/* ); */
-
-/* void */
-/* PDM_para_octree_free */
-/* ( */
-/*  const int          id */
-/* ); */
+  b_t_elapsed = cls->times_elapsed[BEGIN];
+  b_t_cpu     = cls->times_cpu[BEGIN];
+  b_t_cpu_u   = cls->times_cpu_u[BEGIN];
+  b_t_cpu_s   = cls->times_cpu_s[BEGIN];
+  PDM_timer_resume(cls->timer);
 
 
+  int myRank;
+  PDM_MPI_Comm_rank (cls->comm, &myRank);
+
+  const int depth_max = 31;//?
+  const int points_in_leaf_max = 2*cls->n_closest;//?
+  const int build_leaf_neighbours = 1;
+
+
+  /* Create empty parallel octree structure */
+  int octree_id = PDM_para_octree_create (cls->src_cloud->n_part,
+                                          depth_max,
+                                          points_in_leaf_max,
+                                          build_leaf_neighbours,
+                                          cls->comm);
+
+
+  /* Set source point clouds */
+  for (int ipart = 0; ipart < cls->src_cloud->n_part; ipart++) {
+    PDM_para_octree_point_cloud_set (octree_id,
+                                     ipart,
+                                     cls->src_cloud->n_points[ipart],
+                                     cls->src_cloud->coords[ipart],
+                                     cls->src_cloud->gnum[ipart]);
+  }
+
+
+  /* Build parallel octree */
+  PDM_para_octree_build (octree_id);
+  //PDM_para_octree_dump (octree_id);
+  PDM_para_octree_dump_times (octree_id);
+
+  //DBG -->>
+  /*char filename[999];
+  sprintf(filename,
+          "/home/bandrieu/workspace/paradigma-dev/test/para_octree/src_points_%4.4d.vtk", myRank);
+  DBG_write_octree_points(octree_id, filename);
+  sprintf(filename,
+          "/home/bandrieu/workspace/paradigma-dev/test/para_octree/octants_%4.4d.vtk", myRank);
+          DBG_write_octree_octants(octree_id, filename);*/
+  //<<--
+
+
+
+  /* Concatenate partitions */
+  int n_tgt = 0;
+  for (int i_part = 0; i_part < cls->tgt_cloud->n_part; i_part++)
+    n_tgt += cls->tgt_cloud->n_points[i_part];
+
+  double      *tgt_coord = malloc (sizeof(double)      * n_tgt * 3);
+  PDM_g_num_t *tgt_g_num = malloc (sizeof(PDM_g_num_t) * n_tgt);
+  PDM_g_num_t *closest_src_gnum = malloc (sizeof(PDM_g_num_t) * n_tgt * cls->n_closest);
+  double      *closest_src_dist = malloc (sizeof(double)      * n_tgt * cls->n_closest);
+
+  n_tgt = 0;
+  for (int i_part = 0; i_part < cls->tgt_cloud->n_part; i_part++) {
+    for (int i = 0; i < cls->tgt_cloud->n_points[i_part]; i++) {
+      for (int j = 0; j < 3; j++)
+        tgt_coord[n_tgt + 3*i + j] = cls->tgt_cloud->coords[i_part][3*i + j];
+      tgt_g_num[n_tgt + i] = cls->tgt_cloud->gnum[i_part][i];
+    }
+    n_tgt += cls->tgt_cloud->n_points[i_part];
+  }
+
+  //DBG -->>
+  /*sprintf(filename,
+    "/home/bandrieu/workspace/paradigma-dev/test/para_octree/tgt_points_%4.4d.vtk", myRank);
+    DBG_write_points(tgt_coord, n_tgt, 3, filename);*/
+  //<<--
+
+  /* Search closest source points from target points */
+  PDM_para_octree_closest_point (octree_id,
+                                 cls->n_closest,
+                                 n_tgt,
+                                 tgt_coord,
+                                 tgt_g_num,
+                                 closest_src_gnum,
+                                 closest_src_dist);
+
+
+
+  /* Restore partitions */
+  free (tgt_coord);
+  free (tgt_g_num);
+  n_tgt = 0;
+
+  cls->tgt_cloud->closest_src_gnum = malloc (sizeof(PDM_g_num_t *) * cls->tgt_cloud->n_part);
+  cls->tgt_cloud->closest_src_dist = malloc (sizeof(double *)      * cls->tgt_cloud->n_part);
+
+  for (int i_part = 0; i_part < cls->tgt_cloud->n_part; i_part++) {
+    int s_closest_src = cls->n_closest * cls->tgt_cloud->n_points[i_part];
+
+    cls->tgt_cloud->closest_src_gnum[i_part] = malloc (sizeof(PDM_g_num_t) * s_closest_src);
+    cls->tgt_cloud->closest_src_dist[i_part] = malloc (sizeof(double)      * s_closest_src);
+
+    for (int i = 0; i < cls->tgt_cloud->n_points[i_part]; i++) {
+      for (int j = 0; j < cls->n_closest; j++) {
+        cls->tgt_cloud->closest_src_gnum[i_part][cls->n_closest*i+j] =
+          closest_src_gnum[n_tgt + cls->n_closest*i + j];
+
+        cls->tgt_cloud->closest_src_dist[i_part][cls->n_closest*i+j] =
+          closest_src_dist[n_tgt + cls->n_closest*i + j];
+      }
+    }
+    n_tgt += cls->n_closest * cls->tgt_cloud->n_points[i_part];
+  }
+  free (closest_src_gnum);
+  free (closest_src_dist);
+
+
+
+  /* Free parallel octree */
+  PDM_para_octree_free (octree_id);
+
+
+
+  PDM_timer_hang_on(cls->timer);
+
+  cls->times_elapsed[END] = PDM_timer_elapsed(cls->timer);
+  cls->times_cpu[END]     = PDM_timer_cpu(cls->timer);
+  cls->times_cpu_u[END]   = PDM_timer_cpu_user(cls->timer);
+  cls->times_cpu_s[END]   = PDM_timer_cpu_sys(cls->timer);
+
+  b_t_elapsed = cls->times_elapsed[END];
+  b_t_cpu     = cls->times_cpu[END];
+  b_t_cpu_u   = cls->times_cpu_u[END];
+  b_t_cpu_s   = cls->times_cpu_s[END];
+  PDM_timer_resume(cls->timer);
 }
 
 
@@ -420,8 +520,8 @@ PDM_closest_points_get
  const int        id,
  const int        i_part_tgt,
  PDM_g_num_t    **closest_src_gnum,
-       double   **closest_src_distance
-)
+ double   **closest_src_distance
+ )
 {
   _PDM_closest_t *cls = _get_from_id (id);
 
@@ -448,7 +548,7 @@ PDM_closest_points_free
 (
  const int id,
  const int partial
-)
+ )
 {
   _PDM_closest_t *cls = _get_from_id (id);
 
@@ -478,6 +578,13 @@ PDM_closest_points_free
   if (cls->tgt_cloud->coords != NULL) {
     free (cls->tgt_cloud->coords);
   }
+  if (cls->tgt_cloud->n_points != NULL) {
+    free (cls->tgt_cloud->n_points);
+  }
+  if (cls->tgt_cloud != NULL) {
+    free (cls->tgt_cloud);
+  }
+
 
   if (cls->src_cloud->gnum != NULL) {
     free (cls->src_cloud->gnum);
@@ -485,6 +592,13 @@ PDM_closest_points_free
   if (cls->src_cloud->coords != NULL) {
     free (cls->src_cloud->coords);
   }
+  if (cls->src_cloud->n_points != NULL) {
+    free (cls->src_cloud->n_points);
+  }
+  if (cls->src_cloud != NULL) {
+    free (cls->src_cloud);
+  }
+
 
   PDM_timer_free(cls->timer);
 
@@ -512,7 +626,7 @@ void
 PDM_closest_points_dump_times
 (
  const int id
-)
+ )
 {
   _PDM_closest_t *cls = _get_from_id (id);
   double t1 = cls->times_elapsed[END] - cls->times_elapsed[BEGIN];
