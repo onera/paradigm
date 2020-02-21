@@ -58,6 +58,9 @@ extern "C" {
  * \brief Build a multipart structure
  *
  * \param [in]   n_block      Number of blocks in the original mesh
+ * \param [in]   n_part       Number of partition per proc in each block
+ * \param [in]   merge_blocks Merge or not the blocks before splitting
+ * \param [in]   split_method Choice of library used to split the mesh
  * \param [in]   comm         PDM_MPI communicator
  *
  * \return     Identifier
@@ -66,16 +69,104 @@ extern "C" {
 int
 PDM_multipart_create
 (
- const int          n_block,
- const PDM_MPI_Comm comm
+ const int              n_block,
+ const int              n_part,
+ const PDM_bool_t       merge_blocks,
+ const PDM_part_split_t split_method,
+ const PDM_MPI_Comm     comm
+);
+
+// void
+// PROCF (pdm_multipart_create, PDM_MULTIPART_CREATE)
+// (
+//  const int *n_block,
+//  const PDM_MPI_Fint *fcomm,
+//        int *id
+// );
+
+/**
+ *
+ * \brief Set a block in the multipart structure
+ *
+ * \param [in]   id           Identifier
+ * \param [in]   i_block      Number of block to set
+ * \param [in]   dFaceCell    Face to cell connectivity for the block
+ * TODO LIST PARAMS
+ *
+ */
+
+ void PDM_multipart_set_block
+(
+  const int                   id,
+  const int                   i_block,
+  const int                   dNCell,
+  const int                   dNFace,
+  const int                   dNVtx,
+  const int                   nFaceGroup,
+  const PDM_g_num_t          *dFaceCell,
+  const int                  *dFaceVtxIdx,
+  const PDM_g_num_t          *dFaceVtx,
+  const double               *dVtxCoord,
+  const int                  *dFaceGroupIdx,
+  const PDM_g_num_t          *dFaceGroup
+);
+
+/**
+ *
+ * \brief Call the partitionner (via PDM_part_create) on the multipart object
+ *
+ * \param [in]   id           Identifier
+ *
+ */
+
+void
+PDM_multipart_run_ppart
+(
+ const int id
 );
 
 void
-PROCF (pdm_multipart_create, PDM_MULTIPART_CREATE)
+PDM_multipart_part_dim_get
 (
- const int *n_block,
- const PDM_MPI_Fint *fcomm,
-       int *id
+const   int  mpartId,
+const   int  iblock,
+const   int  ipart,
+ int        *nCell,
+ int        *nFace,
+ int        *nFacePartBound,
+ int        *nVtx,
+ int        *nProc,
+ int        *nTPart,
+ int        *sCellFace,
+ int        *sFaceVtx,
+ int        *sFaceGroup,
+ int        *nFaceGroup
+);
+
+void
+PDM_multipart_part_val_get
+(
+const int            mpartId,
+const int            iblock,
+const int            ipart,
+      int          **cellTag,
+      int          **cellFaceIdx,
+      int          **cellFace,
+      PDM_g_num_t  **cellLNToGN,
+      int          **faceTag,
+      int          **faceCell,
+      int          **faceVtxIdx,
+      int          **faceVtx,
+      PDM_g_num_t  **faceLNToGN,
+      int          **facePartBoundProcIdx,
+      int          **facePartBoundPartIdx,
+      int          **facePartBound,
+      int          **vtxTag,
+      double       **vtx,
+      PDM_g_num_t  **vtxLNToGN,
+      int          **faceGroupIdx,
+      int          **faceGroup,
+      PDM_g_num_t  **faceGroupLNToGN
 );
 
 
