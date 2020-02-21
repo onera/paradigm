@@ -94,21 +94,11 @@ PDM_multipart_create
  * TODO LIST PARAMS
  *
  */
-
- void PDM_multipart_set_block
+void PDM_multipart_register_block
 (
-  const int                   id,
-  const int                   i_block,
-  const int                   dNCell,
-  const int                   dNFace,
-  const int                   dNVtx,
-  const int                   nFaceGroup,
-  const PDM_g_num_t          *dFaceCell,
-  const int                  *dFaceVtxIdx,
-  const PDM_g_num_t          *dFaceVtx,
-  const double               *dVtxCoord,
-  const int                  *dFaceGroupIdx,
-  const PDM_g_num_t          *dFaceGroup
+ const int        mpart_id,
+ const int        block_id,
+ const int        block_data_id
 );
 
 /**

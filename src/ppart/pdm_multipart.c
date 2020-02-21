@@ -39,6 +39,7 @@
 #include "pdm_part.h"
 #include "pdm_part_priv.h"
 #include "pdm_handles.h"
+#include "pdm_dmesh.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
 
@@ -62,41 +63,6 @@ extern "C" {
  *============================================================================*/
 
 /**
- * \struct _pdm_blockdata_t
- * \brief  This structure makes the link to the distributed data
- *         known by the process for a given block.
- *         Note that arrays are shared references : the structure does not hold
- *         the memory.
- *
- */
-
-typedef struct
-{
-  int               dNCell;          /*!< Number of distributed cells         */
-  int               dNFace;          /*!< Number of distributed faces         */
-  int               dNVtx;           /*!< Number of distributed vertices      */
-  int               nFaceGroup;      /*!< Number of boundaries                */
-  const PDM_g_num_t *_dFaceCell;     /*!< Face-cell connectivity of distributed
-                                        faces (size = 2 * dNFace, shared array)
-                                        if iface is a boundary face,
-                                        _dFaceCell[2*iface + 1] = 0           */
-  const int         *_dFaceVtxIdx;   /*!< Face-vertex connectivity index of
-                                        distributed faces (size = dNFace + 1,
-                                        shared array)                         */
-  const PDM_g_num_t *_dFaceVtx;      /*!< Face-vertex connectivity of
-                                        distributed faces (size = dFaceVtxIdx[
-                                        dNFace],shared array)                 */
-  const double      *_dVtxCoord;     /*!< Coordinates of ditributed vertices
-                                        (size = 3 * dNVtx, shared array)      */
-  const int         *_dFaceGroupIdx; /*!< Index of distributed faces list of
-                                        each boundary (size = nBound + 1)
-                                        or NULL                               */
-  const PDM_g_num_t *_dFaceGroup;    /*!< Distributed faces list of each
-                                       boundary (size = dfaceBoundIdx[nBound])
-                                        or NULL                               */
-} _pdm_blockdata_t;
-
-/**
  * \struct _pdm_multipart_t
  * \brief  This structure describe a multipart. In addition to splitting
  *         parameters, it stores the multiples blocks and part as well as
@@ -111,7 +77,7 @@ typedef struct  {
   PDM_bool_t        merge_blocks;     /*!< Merge before partitionning or not */
   PDM_part_split_t  split_method;     /*!< Partitioning method */
   PDM_MPI_Comm      comm;             /*!< MPI communicator */
-  _pdm_blockdata_t  **meshBlocks;     /*!< Blocks (size = n_block) */
+  int                *dmeshesIds;     /*!< Ids of distributed blocks (size = n_block)  */
   _part_t           **meshParts;      /*!< Partitions built on this process (size = ?) */
 
 } _pdm_multipart_t;
@@ -150,33 +116,6 @@ _get_from_id
   return multipart;
 }
 
-static inline _pdm_blockdata_t*
-_block_create
-(
- void
-)
-{
-  _pdm_blockdata_t *block = (_pdm_blockdata_t *) malloc(sizeof(_pdm_blockdata_t));
-  block->dNCell = 0;
-  block->dNFace = 0;
-  block->dNVtx = 0;
-  block->nFaceGroup = 0;
-  block->_dFaceCell = NULL;
-  block->_dFaceVtxIdx = NULL;
-  block->_dFaceVtx = NULL;
-  block->_dVtxCoord = NULL;
-  block->_dFaceGroupIdx = NULL;
-  block->_dFaceGroup = NULL;
-  return block;
-}
-static void
-_block_free
-(
- _pdm_blockdata_t *block
-)
-{
-  free(block);
-}
 
 /*=============================================================================
  * Public function definitions
@@ -223,9 +162,9 @@ PDM_multipart_create
   _multipart->split_method= split_method;
   _multipart->comm        = comm;
 
-  _multipart->meshBlocks = (_pdm_blockdata_t **) malloc(_multipart->n_block * sizeof(_pdm_blockdata_t *));
+  _multipart->dmeshesIds = (int *) malloc(_multipart->n_block * sizeof(int));
   for (int i = 0; i < _multipart->n_block; i++)
-    _multipart->meshBlocks[i] = NULL;
+    _multipart->dmeshesIds[i] = -1;
 
   int totalPartNumber = (_multipart->n_block)*(_multipart->n_part);
   _multipart->meshParts = (_part_t **) malloc(totalPartNumber * sizeof(_part_t *));
@@ -251,42 +190,19 @@ PDM_multipart_create
 // }
 
 /* TODO : copy doc of the function */
-
- void PDM_multipart_set_block
+void PDM_multipart_register_block
 (
-  const int                   id,
-  const int                   i_block,
-  const int                   dNCell,
-  const int                   dNFace,
-  const int                   dNVtx,
-  const int                   nFaceGroup,
-  const PDM_g_num_t          *dFaceCell,
-  const int                  *dFaceVtxIdx,
-  const PDM_g_num_t          *dFaceVtx,
-  const double               *dVtxCoord,
-  const int                  *dFaceGroupIdx,
-  const PDM_g_num_t          *dFaceGroup
+ const int        mpart_id,
+ const int        block_id,
+ const int        block_data_id
 )
 {
-  PDM_printf("Set  block n° %d \n", i_block);
-  _pdm_multipart_t *_multipart = _get_from_id (id);
+  PDM_printf("In multipart %d, set block n°%d using blockdata %d \n",
+             mpart_id, block_id, block_data_id);
 
-  assert(_multipart->meshBlocks[i_block] == NULL);
-  _multipart->meshBlocks[i_block] = _block_create();
-  _pdm_blockdata_t *block =  _multipart->meshBlocks[i_block];
-
-  block->dNCell = dNCell;
-  block->dNFace = dNFace;
-  block->dNVtx = dNVtx;
-  block->nFaceGroup = nFaceGroup;
-
-  block->_dFaceCell = dFaceCell;
-  block->_dFaceVtxIdx = dFaceVtxIdx;
-  block->_dFaceVtx = dFaceVtx;
-  block->_dVtxCoord = dVtxCoord;
-  block->_dFaceGroupIdx = dFaceGroupIdx;
-  block->_dFaceGroup = dFaceGroup;
-  PDM_printf("Block n° %d filled\n", i_block);
+  _pdm_multipart_t *_multipart = _get_from_id (mpart_id);
+  assert(block_id < _multipart->n_block);
+  _multipart->dmeshesIds[block_id] = block_data_id;
 }
 
 void
@@ -308,10 +224,26 @@ PDM_multipart_run_ppart
     for (int iblock = 0; iblock<_multipart->n_block; iblock++)
     {
       PDM_printf("You requested no merge : partitionning block %d/%d \n", iblock+1, _multipart->n_block);
-      _pdm_blockdata_t *block =  _multipart->meshBlocks[iblock];
+      int blockId = _multipart->dmeshesIds[iblock];
+      PDM_printf("block id for block %d is %d\n", iblock, blockId);
+      int dNCell;
+      int dNFace;
+      int dNVtx;
+      int dNBounds;
+      double       *dVtxCoord;
+      int          *dFaceVtxIdx;
+      PDM_g_num_t  *dFaceVtx;
+      PDM_g_num_t  *dFaceCell;
+      int          *dFaceGroupIdx;
+      PDM_g_num_t  *dFaceGroup;
+
+      PDM_dmesh_dims_get(blockId, &dNCell, &dNFace, &dNVtx, &dNBounds);
+      PDM_dmesh_data_get(blockId, &dVtxCoord, &dFaceVtxIdx, &dFaceVtx, &dFaceCell, &dFaceGroupIdx, &dFaceGroup);
+
+
       int ppartId = 0;
       int have_dCellPart = 0;
-      int *dCellPart = (int *) malloc(block->dNCell*sizeof(int));
+      int *dCellPart = (int *) malloc(dNCell*sizeof(int));
       // We probably should create a subcomm to imply only the procs sharing this block
       PDM_part_create(&ppartId,
               _multipart->comm,
@@ -323,25 +255,25 @@ PDM_multipart_run_ppart
               0,                          // nPropertyFace
               NULL,                       // renum_properties_face
               _multipart->n_part,
-              block->dNCell,
-              block->dNFace,
-              block->dNVtx,
-              block->nFaceGroup,
+              dNCell,
+              dNFace,
+              dNVtx,
+              dNBounds,
               NULL,                       // dCellFaceIdx
               NULL,                       // dCellFace
               NULL,                       // dCellTag
               NULL,                       // dCellWeight
               have_dCellPart,
               dCellPart,                  // dCellPart
-              block->_dFaceCell,
-              block->_dFaceVtxIdx,
-              block->_dFaceVtx,
+              dFaceCell,
+              dFaceVtxIdx,
+              dFaceVtx,
               NULL,                       // dFaceTag
-              block->_dVtxCoord,
+              dVtxCoord,
               NULL,                       // dVtxTag
-              block->_dFaceGroupIdx,
-              block->_dFaceGroup);
-      PDM_printf("New call to partitionner, ppardId is %d \n", ppartId);
+              dFaceGroupIdx,
+              dFaceGroup);
+      PDM_printf("Partitionning done, ppardId is %d \n", ppartId);
 
 
       // Store partitions in array
@@ -522,14 +454,7 @@ PDM_multipart_free
 {
   _pdm_multipart_t *_multipart = _get_from_id (id);
 
-  for (int i = 0; i < _multipart->n_block; i++) {
-    if (_multipart->meshBlocks[i] != NULL)
-      _block_free(_multipart->meshBlocks[i]);
-    _multipart->meshBlocks[i] = NULL;
-  }
-  if (_multipart->meshBlocks != NULL)
-    free(_multipart->meshBlocks);
-  _multipart->meshBlocks = NULL;
+  free(_multipart->dmeshesIds);
 
   int totalPartNumber = (_multipart->n_block)*(_multipart->n_part);
   for (int i = 0; i < totalPartNumber; i++) {
