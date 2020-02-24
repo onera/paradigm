@@ -374,6 +374,55 @@ const int            ipart,
 
 }
 
+void
+PDM_multipart_part_color_get
+(
+const int            mpartId,
+const int            iblock,
+const int            ipart,
+      int          **cellColor,
+      int          **faceColor,
+      int          **threadColor,
+      int          **hyperPlaneColor
+)
+{
+  _pdm_multipart_t *_multipart = _get_from_id (mpartId);
+
+  assert(iblock < _multipart->n_block && ipart < _multipart->n_part);
+  int ppartId = _multipart->partIds[iblock];
+
+  PDM_part_part_color_get(ppartId,
+                          ipart,
+                          cellColor,
+                          faceColor,
+                          threadColor,
+                          hyperPlaneColor);
+
+}
+
+void
+PDM_multipart_time_get
+(
+const int       mpartId,
+const int       iblock,
+      double  **elapsed,
+      double  **cpu,
+      double  **cpu_user,
+      double  **cpu_sys
+)
+{
+  _pdm_multipart_t *_multipart = _get_from_id (mpartId);
+  assert(iblock < _multipart->n_block);
+  int ppartId = _multipart->partIds[iblock];
+
+  PDM_part_time_get(ppartId,
+                    elapsed,
+                    cpu,
+                    cpu_user,
+                    cpu_sys);
+
+}
+
 /**
  *
  * \brief Free
