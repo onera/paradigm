@@ -3943,6 +3943,8 @@ PDM_part_free
 
   free (ppart);
 
+  PDM_part_renum_method_purge();
+
   PDM_Handles_handle_free (_pparts, ppartId, PDM_FALSE);
 
   const int n_part = PDM_Handles_n_get (_pparts);
