@@ -53,6 +53,7 @@ include(TestCreate)
 
 if (PDM_HAVE_PARMETIS OR PDM_HAVE_PTSCOTCH)
   test_c_create (pdm_t_part_dcube ${MPIEXEC_MAX_NUMPROCS})
+	test_c_create (pdm_t_multipart ${MPIEXEC_MAX_NUMPROCS})
   test_c_create (pdm_t_global_mean ${MPIEXEC_MAX_NUMPROCS})
   test_c_create (pdm_t_writer_ensight_3d ${MPIEXEC_MAX_NUMPROCS})
   test_c_create (pdm_t_writer_ensight_moving_mesh_3d ${MPIEXEC_MAX_NUMPROCS})
