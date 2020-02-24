@@ -37,7 +37,6 @@
 #include "pdm.h"
 #include "pdm_mpi.h"
 #include "pdm_part.h"
-#include "pdm_part_priv.h"
 #include "pdm_handles.h"
 #include "pdm_dmesh.h"
 #include "pdm_printf.h"
@@ -77,9 +76,9 @@ typedef struct  {
   PDM_bool_t        merge_blocks;     /*!< Merge before partitionning or not */
   PDM_part_split_t  split_method;     /*!< Partitioning method */
   PDM_MPI_Comm      comm;             /*!< MPI communicator */
-  int                *dmeshesIds;     /*!< Ids of distributed blocks (size = n_block)  */
-  _part_t           **meshParts;      /*!< Partitions built on this process (size = ?) */
-
+  int               *dmeshesIds;     /*!< Ids of distributed blocks (size = n_block)  */
+  int               *partIds;         /*!< Ids of partitions built on each block of this
+                                           process (size = n_block)                    */
 } _pdm_multipart_t;
 
 /*============================================================================
@@ -166,10 +165,9 @@ PDM_multipart_create
   for (int i = 0; i < _multipart->n_block; i++)
     _multipart->dmeshesIds[i] = -1;
 
-  int totalPartNumber = (_multipart->n_block)*(_multipart->n_part);
-  _multipart->meshParts = (_part_t **) malloc(totalPartNumber * sizeof(_part_t *));
-  for (int i = 0; i < totalPartNumber; i++)
-    _multipart->meshParts[i] = NULL;
+  _multipart->partIds = (int *) malloc(_multipart->n_block * sizeof(int));
+  for (int iblock = 0; iblock < _multipart->n_block; iblock++)
+    _multipart->partIds[iblock] = -1;
 
   PDM_printf("Created from PDM_multipart_create. You requested a multipart with %d blocks \n", n_block);
   return id;
@@ -274,62 +272,9 @@ PDM_multipart_run_ppart
               dFaceGroupIdx,
               dFaceGroup);
       PDM_printf("Partitionning done, ppardId is %d \n", ppartId);
+      //Store the partition id for future access
+      _multipart->partIds[iblock] = ppartId;
 
-
-      // Store partitions in array
-      for (int ipart = 0; ipart < _multipart->n_part; ipart++) {
-
-        assert(_multipart->meshParts[iblock+ipart] == NULL);
-        _multipart->meshParts[iblock+ipart] = _part_create();
-        _part_t *part =  _multipart->meshParts[iblock+ipart];
-
-        int nProc;
-        int nTPart;
-        int sCellFace;
-        int sFaceVtx;
-        int sFaceGroup;
-
-        PDM_part_part_dim_get(ppartId,
-                             ipart,
-                             &(part->nCell),
-                             &(part->nFace),
-                             &(part->nFacePartBound),
-                             &(part->nVtx),
-                             &nProc,
-                             &nTPart,
-                             &sCellFace,
-                             &sFaceVtx,
-                             &sFaceGroup,
-                             &(part->nFaceGroup));
-
-        PDM_part_part_val_get(ppartId,
-                             ipart,
-                             &(part->cellTag),
-                             &(part->cellFaceIdx),
-                             &(part->cellFace),
-                             &(part->cellLNToGN),
-                             &(part->faceTag),
-                             &(part->faceCell),
-                             &(part->faceVtxIdx),
-                             &(part->faceVtx),
-                             &(part->faceLNToGN),
-                             &(part->facePartBoundProcIdx),
-                             &(part->facePartBoundPartIdx),
-                             &(part->facePartBound),
-                             &(part->vtxTag),
-                             &(part->vtx),
-                             &(part->vtxLNToGN),
-                             &(part->faceGroupIdx),
-                             &(part->faceGroup),
-                             &(part->faceGroupLNToGN));
-
-      PDM_printf("ncell is %d \n", part->nCell);
-      PDM_printf("cellLNToGN from multipart");
-      for (int k=0; k<part->nCell; k++)
-        PDM_printf(" %d ", part->cellLNToGN[k]);
-      PDM_printf("\n");
-
-      }
       free(dCellPart);
     }
   }
@@ -355,31 +300,23 @@ const   int  ipart,
 )
 {
   _pdm_multipart_t *_multipart = _get_from_id (mpartId);
-  int numProcs;
-  PDM_MPI_Comm_size(_multipart->comm, &numProcs);
 
-  _part_t *meshPart = NULL;
-  if (iblock < _multipart->n_block && ipart < _multipart->n_part)
-    meshPart = _multipart->meshParts[iblock+ipart];
+  assert(iblock < _multipart->n_block && ipart < _multipart->n_part);
+  int ppartId = _multipart->partIds[iblock];
 
-  if (meshPart == NULL) {
-    PDM_printf("PDM_part_part_get error : unknown partition\n");
-    exit(1);
-  }
+  PDM_part_part_dim_get(ppartId,
+                        ipart,
+                        nCell,
+                        nFace,
+                        nFacePartBound,
+                        nVtx,
+                        nProc,
+                        nTPart,
+                        sCellFace,
+                        sFaceVtx,
+                        sFaceGroup,
+                        nFaceGroup);
 
-  *nCell           = meshPart->nCell;
-  *nFace           = meshPart->nFace;
-  *nFacePartBound  = meshPart->nFacePartBound;
-  *nProc           = numProcs;
-  // *nTPart          = _multipart->tNPart;
-  *nTPart          = 0;
-  *nVtx            = meshPart->nVtx;
-  *sCellFace       = meshPart->cellFaceIdx[*nCell];
-  *sFaceVtx        = meshPart->faceVtxIdx[*nFace];
-  *sFaceGroup      = 0;
-  // if (ppart->nFaceGroup > 0)
-    // *sFaceGroup    = meshPart->faceGroupIdx[ppart->nFaceGroup];
-    // *nFaceGroup    = ppart->nFaceGroup;
 }
 
 void
@@ -410,32 +347,31 @@ const int            ipart,
 {
    _pdm_multipart_t *_multipart = _get_from_id (mpartId);
 
-  _part_t *meshPart = NULL;
-  if (iblock < _multipart->n_block && ipart < _multipart->n_part)
-    meshPart = _multipart->meshParts[iblock+ipart];
+  assert(iblock < _multipart->n_block && ipart < _multipart->n_part);
+  int ppartId = _multipart->partIds[iblock];
 
-  if (meshPart == NULL) {
-    PDM_printf("PDM_part_part_val_get error : unknown partition\n");
-    exit(1);
-  }
-  *cellTag              = meshPart->cellTag;
-  *cellFaceIdx          = meshPart->cellFaceIdx;
-  *cellFace             = meshPart->cellFace;
-  *cellLNToGN           = meshPart->cellLNToGN;
-  *faceTag              = meshPart->faceTag;
-  *faceCell             = meshPart->faceCell;
-  *faceVtxIdx           = meshPart->faceVtxIdx;
-  *faceVtx              = meshPart->faceVtx;
-  *faceLNToGN           = meshPart->faceLNToGN;
-  *facePartBoundProcIdx = meshPart->facePartBoundProcIdx;
-  *facePartBoundPartIdx = meshPart->facePartBoundPartIdx;
-  *facePartBound        = meshPart->facePartBound;
-  *vtxTag               = meshPart->vtxTag;
-  *vtx                  = meshPart->vtx;
-  *vtxLNToGN            = meshPart->vtxLNToGN;
-  *faceGroupIdx         = meshPart->faceGroupIdx;
-  *faceGroup            = meshPart->faceGroup;
-  *faceGroupLNToGN      = meshPart->faceGroupLNToGN;
+  PDM_part_part_val_get(ppartId,
+                        ipart,
+                        cellTag,
+                        cellFaceIdx,
+                        cellFace,
+                        cellLNToGN,
+                        faceTag,
+                        faceCell,
+                        faceVtxIdx,
+                        faceVtx,
+                        faceLNToGN,
+                        facePartBoundProcIdx,
+                        facePartBoundPartIdx,
+                        facePartBound,
+                        vtxTag,
+                        vtx,
+                        vtxLNToGN,
+                        faceGroupIdx,
+                        faceGroup,
+                        faceGroupLNToGN
+                        );
+
 }
 
 /**
@@ -456,17 +392,10 @@ PDM_multipart_free
 
   free(_multipart->dmeshesIds);
 
-  int totalPartNumber = (_multipart->n_block)*(_multipart->n_part);
-  for (int i = 0; i < totalPartNumber; i++) {
-    if (_multipart->meshParts[i] != NULL)
-    _multipart->meshParts[i] = NULL;
-  }
-  if (_multipart->meshParts != NULL)
-    free(_multipart->meshParts);
-  _multipart->meshParts = NULL;
+  for (int iblock = 0; iblock<_multipart->n_block; iblock++)
+    PDM_part_free(_multipart->partIds[iblock]);
+  free(_multipart->partIds);
 
-  //TODO : remplacer par le vrai ID
-  PDM_part_free(0);
   free (_multipart);
 
   PDM_Handles_handle_free (_multiparts, id, PDM_FALSE);
