@@ -159,6 +159,29 @@ const int            ipart,
       PDM_g_num_t  **faceGroupLNToGN
 );
 
+void
+PDM_multipart_part_color_get
+(
+const int            mpartId,
+const int            iblock,
+const int            ipart,
+      int          **cellColor,
+      int          **faceColor,
+      int          **threadColor,
+      int          **hyperPlaneColor
+);
+
+void
+PDM_multipart_time_get
+(
+const int       mpartId,
+const int       iblock,
+      double  **elapsed,
+      double  **cpu,
+      double  **cpu_user,
+      double  **cpu_sys
+);
+
 
 /**
  *
