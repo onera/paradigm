@@ -20,6 +20,10 @@ cdef extern from "pdm_points_merge.h":
                                          int    i_point_cloud,
                                          int    **candidates_idx,
                                          int    **candidates_desc);
+    void PDM_points_merge_candidates_size_get(int    id,
+                                              int    i_point_cloud,
+                                              int   *n_point_cloud,
+                                              int   *n_candidates_desc);
 
 
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -78,11 +82,18 @@ cdef class PointsMerge:
         # ************************************************************************
 
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
+        print("coords::", coords)
+        print("char_length::", char_length)
         PDM_points_merge_cloud_set(self._id,
                                    i_point_cloud,
                                    n_points,
                                    <double *> coords.data,
                                    <double *> char_length.data)
+        # PDM_points_merge_cloud_set(self._id,
+        #                            i_point_cloud,
+        #                            n_points,
+        #                            <double *> coords.data,
+        #                            NULL)
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
     # ------------------------------------------------------------------------
@@ -100,9 +111,18 @@ cdef class PointsMerge:
         """
         # ************************************************************************
         # > Declaration
-        cdef int *candidates_idx
-        cdef int *candidates_desc
+        cdef int          *candidates_idx
+        cdef int          *candidates_desc
+        cdef int           n_point_cloud
+        cdef int           n_candidates_desc
+        cdef NPY.npy_intp  dim
         # ************************************************************************
+
+        PDM_points_merge_candidates_size_get(self._id,
+                                             i_point_cloud,
+                                             &n_point_cloud,
+                                             &n_candidates_desc)
+
 
         # > Get Size
         PDM_points_merge_candidates_get(self._id,
@@ -111,13 +131,19 @@ cdef class PointsMerge:
                                         &candidates_desc)
 
         # > Build numpy capsule
-        # dim = <NPY.npy_intp> 2 * dNface
-        # npFaceCell = NPY.PyArray_SimpleNewFromData(1,
-        #                                            &dim,
-        #                                            PDM_G_NUM_NPY_INT,
-        #                                            <void *> faceCell)
-        np_candidates_idx  = None
-        np_candidates_desc = None
+        dim = <NPY.npy_intp> n_point_cloud + 1
+        np_candidates_idx = NPY.PyArray_SimpleNewFromData(1,
+                                                   &dim,
+                                                   NPY.NPY_INT32,
+                                                   <void *> candidates_idx)
+
+        dim = <NPY.npy_intp> 3 * candidates_idx[n_point_cloud]
+        np_candidates_desc = NPY.PyArray_SimpleNewFromData(1,
+                                                           &dim,
+                                                           NPY.NPY_INT32,
+                                                           <void *> candidates_desc)
+        # np_candidates_idx  = None
+        # np_candidates_desc = None
 
         return {'candidates_idx'  : np_candidates_idx,
                 'candidates_desc' : np_candidates_desc

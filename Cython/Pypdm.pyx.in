@@ -90,9 +90,19 @@ cdef extern from "pdm_mpi.h":
 @COMMENT_NOT_PDMA@PDM_plugin_load()
 @COMMENT_NOT_PDMA@
 
+# -----------------------------------------------------------------
+# > Enable transfer of ownership between C and Python
+cdef extern from "numpy/arrayobject.h":
+    void PyArray_ENABLEFLAGS(NPY.ndarray arr, int flags)
+# -----------------------------------------------------------------
+
 # PDM_part :
 # ----------
 include "pdm_part.pxi"
+
+# PDM_multi_part :
+# ----------
+include "pdm_multi_part.pxi"
 
 # PDM_part_coarse :
 # ----------
@@ -129,6 +139,10 @@ include "pdm_dist_cloud_surf.pxi"
 # PDM_points_merge :
 # --------------------
 include "pdm_points_merge.pxi"
+
+
+
+
 
 
 

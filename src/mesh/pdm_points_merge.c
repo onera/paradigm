@@ -1074,3 +1074,32 @@ PDM_points_merge_candidates_get
     }
   }
 }
+
+/**
+ *
+ * \brief Get size of the resulting array
+ *
+ * \param [in]   id                Identifier
+ * \param [in]   i_point_cloud     Current cloud
+ * \param [out]  n_point_cloud     Number of points in the current cloud
+ * \param [out]  n_candidates_desc Size of candidates_desc = candidates_idx[n_point_cloud+1]
+ *
+ */
+void
+PDM_points_merge_candidates_size_get
+(
+ const int     id,
+ const int     i_point_cloud,
+       int    *n_point_cloud,
+       int    *n_candidates_desc
+)
+{
+  _point_merge_t *ppm = _get_from_id (id);
+
+  assert(ppm->candidates_idx  != NULL);
+  assert(ppm->candidates_desc != NULL);
+
+  *n_point_cloud     = ppm->n_points[i_point_cloud];
+  *n_candidates_desc = ppm->candidates_idx[i_point_cloud][ppm->n_points[i_point_cloud]]; // ou x3 ?
+
+}
