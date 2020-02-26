@@ -1934,12 +1934,9 @@ _compute_neighbours
   }
 
   /* Boucle sur les noeuds : */
+  size_t start_intersect, end_intersect;
+  size_t start_intersect_quantile, end_intersect_quantile;
 
-  int *intersected_quantile = malloc(sizeof(int) * n_ranks);
-  size_t  n_intersected_quantile = 0;
-
-  int *intersect_nodes = malloc (sizeof(int) * octree->octants->n_nodes);
-  size_t n_intersect_nodes = 0;
   for (int i = 0; i < octree->octants->n_nodes; i++) {
     for (int j = 1; j < n_direction; j+=2) {
       PDM_morton_code_t *neighbour_code =
@@ -1950,30 +1947,31 @@ _compute_neighbours
       if (neighbour_code != NULL) {
 
         if (block_octants_index != NULL) {
+
           PDM_morton_quantile_intersect (n_ranks,
                                          *neighbour_code,
                                          block_octants_index,
-                                         &n_intersected_quantile,
-                                         intersected_quantile);
+                                         &start_intersect_quantile,
+                                         &end_intersect_quantile);
         }
         else {
-          n_intersected_quantile = 1;
-          intersected_quantile[0] = 0;
+          start_intersect_quantile = 0;
+          end_intersect_quantile = 1;
         }
 
-        for (int i_inter = 0; i_inter < n_intersected_quantile; i_inter++) {
-          int neighbour_rank = intersected_quantile[i_inter];
+        for (int neighbour_rank = start_intersect_quantile;
+             neighbour_rank < end_intersect_quantile; neighbour_rank++) {
 
           if (neighbour_rank == rank) {
 
-            PDM_morton_list_intersect(octree->octants->n_nodes - (i+1),
-                                      *neighbour_code,
-                                      octree->octants->codes + i + 1,
-                                      &n_intersect_nodes,
-                                      intersect_nodes);
+            PDM_morton_list_intersect (octree->octants->n_nodes - (i+1),
+                                       *neighbour_code,
+                                       octree->octants->codes + i + 1,
+                                       &start_intersect,
+                                       &end_intersect);
 
-            for (int k = 0; k < n_intersect_nodes; k++) {
-              int idx = intersect_nodes[k] + i + 1;
+            for (int k = start_intersect; k < end_intersect; k++) {
+              int idx = k + i + 1;
               PDM_morton_code_t *neighbour_neighbour_code =
                 _neighbour (octree->octants->codes[idx], inv_j);
 
@@ -2017,7 +2015,7 @@ _compute_neighbours
       }
     }
   }
-  free (intersect_nodes);
+  //free (intersect_nodes);
 
   PDM_timer_hang_on(octree->timer);
   e_t_elapsed = PDM_timer_elapsed(octree->timer);
@@ -2049,16 +2047,16 @@ _compute_neighbours
           PDM_morton_quantile_intersect (n_ranks,
                                          *neighbour_code,
                                          block_octants_index,
-                                         &n_intersected_quantile,
-                                         intersected_quantile);
+                                         &start_intersect_quantile,
+                                         &end_intersect_quantile);
         }
         else {
-          n_intersected_quantile = 1;
-          intersected_quantile[0] = 0;
+          start_intersect_quantile = 0;
+          end_intersect_quantile = 1;
         }
 
-        for (int i_inter = 0; i_inter <  n_intersected_quantile; i_inter++) {
-          int neighbour_rank = intersected_quantile[i_inter];
+        for (int neighbour_rank = start_intersect_quantile;
+             neighbour_rank < end_intersect_quantile; neighbour_rank++) {
 
           if (neighbour_rank != rank) {
             if (neighbours_tmp[i].n_neighbour[j] >= neighbours_tmp[i].s_neighbour[j]) {
@@ -2073,8 +2071,6 @@ _compute_neighbours
       }
     }
   }
-
-  free (intersected_quantile);
 
   if (block_octants_index != NULL) {
     free(block_octants_index);
@@ -2436,8 +2432,8 @@ _compute_neighbours
     }
 
 
-    int *intersect = malloc(sizeof(int) * recv_neighbour_rank_idx[n_quantile]);
-    size_t n_intersect;
+    /*int *intersect = malloc(sizeof(int) * recv_neighbour_rank_idx[n_quantile]);
+      size_t n_intersect;*/
 
     for (int i = 0; i < n_ranks; i++ ) {
       for (PDM_para_octree_direction_t j = PDM_BOTTOM; j < n_direction; j++) {
@@ -2454,16 +2450,17 @@ _compute_neighbours
                    k < neighbour_rank_idx[i * n_direction + j + 1]; k++) {
             PDM_morton_code_t *neighbour_code = _neighbour (neighbour_rank_code[k], j);
 
-            PDM_morton_list_intersect(n_candidate,
-                                      *neighbour_code,
-                                      recv_neighbour_rank_code + idx_candidate,
-                                      &n_intersect,
-                                      intersect);
+            PDM_morton_list_intersect (n_candidate,
+                                       *neighbour_code,
+                                       recv_neighbour_rank_code + idx_candidate,
+                                       &start_intersect,
+                                       &end_intersect);
+
             int n_intersect_neighbours = 0;
 
-            if (n_intersect > 0) {
-              for (int k1 = 0; k1 < n_intersect; k1++) {
-                int k2 = idx_candidate + intersect[k1];
+            if (end_intersect > start_intersect) {
+              for (int k1 = start_intersect; k1 < end_intersect; k1++) {
+                int k2 = idx_candidate + k1;
 
                 PDM_morton_code_t *neighbour_neighbour_code =
                   _neighbour (recv_neighbour_rank_code[k2], inv_j);
@@ -2509,7 +2506,7 @@ _compute_neighbours
       }
     }
 
-    free (intersect);
+    //free (intersect);
 
     free (neighbour_rank_n);
     free (neighbour_rank_idx);

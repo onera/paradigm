@@ -1628,8 +1628,8 @@ void
 PDM_morton_quantile_intersect(size_t              n_quantiles,
                               PDM_morton_code_t   code,
                               PDM_morton_code_t  *quantile_start,
-                              size_t              *n_intersect,
-                              int                 *intersect )
+                              size_t             *start,
+                              size_t             *end )
 {
   size_t mid_id = 0;
   size_t start_id = 0;
@@ -1643,20 +1643,34 @@ PDM_morton_quantile_intersect(size_t              n_quantiles,
       end_id = mid_id;
   }
 
-  *n_intersect = 0;
-  for (int i = start_id; i < n_quantiles; i++) {
-    if (i == n_quantiles-1 && !_a_gt_b(quantile_start[i], code)) {
-      intersect[(*n_intersect)++] = i;
+  size_t start_id_save = start_id;
+  int assigned = 0, condition = 0;
+  for (size_t i = start_id_save; i < n_quantiles; i++) {
+
+    if (i == n_quantiles-1) {
+      condition = 1;
     } else {
-      if (_a_gtmin_b(quantile_start[i+1], code)) {
-        if (_a_gt_b(quantile_start[i], code))
-          break;
-        else
-          intersect[(*n_intersect)++] = i;
+      condition = _a_gtmin_b(quantile_start[i+1], code);
+    }
+
+    if (condition) {
+      if (_a_gt_b(quantile_start[i], code)) {
+        break;
+      } else {
+        if (!assigned) {
+          start_id = i;
+          end_id = i;
+          assigned = 1;
+        }
+        end_id++;
       }
     }
   }
+
+  *start = start_id;
+  *end   = end_id;
 }
+
 
 /*----------------------------------------------------------------------------
  * Get, within a sorted list of Morton codes, the sublist of elements
@@ -1677,8 +1691,8 @@ void
 PDM_morton_list_intersect(size_t              n_quantiles,
                           PDM_morton_code_t   code,
                           PDM_morton_code_t  *quantile_start,
-                          size_t              *n_intersect,
-                          int                 *intersect )
+                          size_t             *start,
+                          size_t             *end)
 {
   size_t mid_id = 0;
   size_t start_id = 0;
@@ -1695,7 +1709,7 @@ PDM_morton_list_intersect(size_t              n_quantiles,
   }
 
 
-  *n_intersect = 0;
+  //*n_intersect = 0;
 
   int start_id_save = start_id;
 
@@ -1724,12 +1738,17 @@ PDM_morton_list_intersect(size_t              n_quantiles,
   }
 
   // Sweep right
-  while (start_id < n_quantiles
-         && (PDM_morton_ancestor_is (code, quantile_start[start_id]) ||
-             PDM_morton_ancestor_is (quantile_start[start_id], code))) {
-    intersect[(*n_intersect)++] = start_id++;
+  end_id = start_id;
+  while (end_id < n_quantiles
+         && (PDM_morton_ancestor_is (code, quantile_start[end_id]) ||
+             PDM_morton_ancestor_is (quantile_start[end_id], code))) {
+    end_id++;
   }
+
+  *start = start_id;
+  *end   = end_id;
 }
+
 
 /*----------------------------------------------------------------------------
  * Build a global Morton encoding rank index from ordered codes
