@@ -38,7 +38,13 @@ extern "C" {
  */
 typedef struct  {
   PDM_MPI_Comm comm;             /*!< MPI communicator */
-
+  int          n_part;           /*!< Number of partitions */
+  const int   *n_entity;         /*!< Number of entities for each partition */
+  const int  **neighbor_idx;     /*!< Indexes of candidate for each current part point
+                                  *   (size = number of entities in the current part + 1) */
+  const int  **neighbor_desc;    /*!< Candidates description (process,
+                                  *                           part in the process,
+                                  *                           entitiy number in the part) */
 } _distant_neighbor_t;
 
 /*=============================================================================
@@ -116,7 +122,16 @@ const int          **neighbor_desc
 
   int id = PDM_Handles_store (_pdns, pdn);
 
-  pdn->comm = comm;
+  pdn->comm          = comm;
+  pdn->n_part        = n_part;
+  pdn->n_entity      = n_entity;
+  pdn->neighbor_idx  = neighbor_idx;
+  pdn->neighbor_desc = neighbor_desc;
+
+  /*
+   *  Setup exchange protocol
+   */
+
 
   return id;
 }
@@ -147,6 +162,37 @@ PDM_distant_neighbor_free
   if (n_ppm == 0) {
     _pdns = PDM_Handles_free (_pdns);
   }
+
+}
+
+
+/**
+ * \brief Exchange data between \ref _distant_neighbor_t structure
+ * \param [in]   id          identifier of internal structre
+ *  NB : On va commencer par des entiers en stride constantes
+ *
+ */
+void
+PDM_distant_neighbor_exch
+(
+ const int      id,
+ size_t         s_data,
+ PDM_stride_t   t_stride,
+ int            cst_stride,
+ const int    **send_entity_stride,
+ const int    **send_entity_data,
+       int    **recv_entity_stride,
+       int    **recv_entity_data
+)
+{
+  printf(" PDM_distant_neighbor_exchange \n");
+  _distant_neighbor_t *pdn = _get_from_id (id);
+
+  if(t_stride !=  PDM_STRIDE_CST) {
+    PDM_error(__FILE__, __LINE__, 0,"PDM_distant_neighbor_exch : STRIDE_CST is only availble \n");
+    abort ();
+  }
+
 
 }
 
