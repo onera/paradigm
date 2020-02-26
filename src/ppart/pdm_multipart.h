@@ -57,9 +57,9 @@ extern "C" {
  *
  * \brief Build a multipart structure
  *
- * \param [in]   n_block      Number of blocks in the original mesh
- * \param [in]   n_part       Number of partition per proc in each block
- * \param [in]   merge_blocks Merge or not the blocks before splitting
+ * \param [in]   n_zone       Number of zones in the original mesh
+ * \param [in]   n_part       Number of partition per proc in each zone
+ * \param [in]   merge_blocks Merge or not the zones before splitting
  * \param [in]   split_method Choice of library used to split the mesh
  * \param [in]   comm         PDM_MPI communicator
  *
@@ -69,20 +69,13 @@ extern "C" {
 int
 PDM_multipart_create
 (
- const int              n_block,
+ const int              n_zone,
  const int              n_part,
  const PDM_bool_t       merge_blocks,
  const PDM_part_split_t split_method,
  const PDM_MPI_Comm     comm
 );
 
-// void
-// PROCF (pdm_multipart_create, PDM_MULTIPART_CREATE)
-// (
-//  const int *n_block,
-//  const PDM_MPI_Fint *fcomm,
-//        int *id
-// );
 
 /**
  *
@@ -94,12 +87,14 @@ PDM_multipart_create
  * TODO LIST PARAMS
  *
  */
+
 void PDM_multipart_register_block
 (
  const int        mpart_id,
- const int        block_id,
+ const int        zoneGId,
  const int        block_data_id
 );
+
 
 /**
  *
@@ -119,7 +114,7 @@ void
 PDM_multipart_part_dim_get
 (
 const   int  mpartId,
-const   int  iblock,
+const   int  zoneGId,
 const   int  ipart,
  int        *nCell,
  int        *nFace,
@@ -137,7 +132,7 @@ void
 PDM_multipart_part_val_get
 (
 const int            mpartId,
-const int            iblock,
+const int            zoneGId,
 const int            ipart,
       int          **cellTag,
       int          **cellFaceIdx,
@@ -163,7 +158,7 @@ void
 PDM_multipart_part_color_get
 (
 const int            mpartId,
-const int            iblock,
+const int            zoneGId,
 const int            ipart,
       int          **cellColor,
       int          **faceColor,
@@ -175,7 +170,7 @@ void
 PDM_multipart_time_get
 (
 const int       mpartId,
-const int       iblock,
+const int       zoneGId,
       double  **elapsed,
       double  **cpu,
       double  **cpu_user,
@@ -197,11 +192,6 @@ PDM_multipart_free
  const int id
 );
 
-void
-PROCF (pdm_multipart_free, PDM_MULTIPART_FREE)
-(
- const int *id
-);
 
 /*----------------------------------------------------------------------------*/
 

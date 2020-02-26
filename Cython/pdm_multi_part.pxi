@@ -4,15 +4,15 @@ cdef extern from "pdm_multipart.h":
     # -> PPART bases functions
     # ------------------------------------------------------------------
     # MPI_Comm      comm,
-    int PDM_multipart_create(int              n_block,
-                              int              n_part,
-                              PDM_bool_t       merge_blocks,
-                              PDM_part_split_t split_method,
-                              PDM_MPI_Comm     comm)
+    int PDM_multipart_create(int              n_zone,
+                             int              n_part,
+                             PDM_bool_t       merge_blocks,
+                             PDM_part_split_t split_method,
+                             PDM_MPI_Comm     comm)
 
     # ------------------------------------------------------------------
     void PDM_multipart_register_block(int        mpart_id,
-                                      int        block_id,
+                                      int        zoneGId,
                                       int        block_data_id)
 
     # ------------------------------------------------------------------
@@ -20,7 +20,7 @@ cdef extern from "pdm_multipart.h":
 
     # ------------------------------------------------------------------
     void PDM_multipart_part_dim_get(int  mpartId,
-                                    int  iblock,
+                                    int  zoneGId,
                                     int  ipart,
                                     int *nCell,
                                     int *nFace,
@@ -35,7 +35,7 @@ cdef extern from "pdm_multipart.h":
 
     # ------------------------------------------------------------------
     void PDM_multipart_part_val_get(int            mpartId,
-                                    int            iblock,
+                                    int            zoneGId,
                                     int            ipart,
                                     int          **cellTag,
                                     int          **cellFaceIdx,
@@ -57,7 +57,7 @@ cdef extern from "pdm_multipart.h":
                                     PDM_g_num_t  **faceGroupLNToGN)
     # ------------------------------------------------------------------
     void PDM_multipart_part_color_get(int            mpartId,
-                                      int            iblock,
+                                      int            zoneGId,
                                       int            ipart,
                                       int          **cellColor,
                                       int          **faceColor,
@@ -66,7 +66,7 @@ cdef extern from "pdm_multipart.h":
 
     # ------------------------------------------------------------------
     void PDM_multipart_time_get(int       mpartId,
-                                int       iblock,
+                                int       zoneGId,
                                 double  **elapsed,
                                 double  **cpu,
                                 double  **cpu_user,
@@ -83,7 +83,7 @@ cdef class MultiPart:
     cdef int _mpart_id
     # ------------------------------------------------------------------
     def __cinit__(self,
-                  int              n_block,
+                  int              n_zone,
                   int              n_part,
                   PDM_bool_t       merge_blocks,
                   PDM_part_split_t split_method,
@@ -96,7 +96,7 @@ cdef class MultiPart:
 
         # -> Create PPART
         # DM_multipart_create(&_mpart_id,
-        self._mpart_id = PDM_multipart_create(n_block,
+        self._mpart_id = PDM_multipart_create(n_zone,
                                               n_part,
                                               merge_blocks,
                                               split_method,
@@ -113,21 +113,20 @@ cdef class MultiPart:
         PDM_multipart_free(self._mpart_id)
 
     # ------------------------------------------------------------------
-    def multipart_register_block(self, int block_id,
+    def multipart_register_block(self, int zoneGId,
                                        int block_data_id):
         """
         """
-        PDM_multipart_register_block(self._mpart_id, block_id, block_data_id)
+        PDM_multipart_register_block(self._mpart_id, zoneGId, block_data_id)
 
     # ------------------------------------------------------------------
-    def multipart_run_ppart(self, int block_id,
-                                       int block_data_id):
+    def multipart_run_ppart(self):
         """
         """
         PDM_multipart_run_ppart(self._mpart_id)
 
     # ------------------------------------------------------------------
-    def multipart_dim_get(self, int ipart, int iblock):
+    def multipart_dim_get(self, int ipart, int zoneGId):
         """
            Get partition dimensions
         """
@@ -146,7 +145,7 @@ cdef class MultiPart:
         # ************************************************************************
 
         PDM_multipart_part_dim_get(self._mpart_id,
-                                   iblock,
+                                   zoneGId,
                                    ipart,
                                    &nCell,
                                    &nFace,
@@ -172,7 +171,7 @@ cdef class MultiPart:
                 'nFaceGroup'     :nFaceGroup}
 
     # ------------------------------------------------------------------
-    def mutlipart_val_get(self, int ipart, int iblock):
+    def mutlipart_val_get(self, int ipart, int zoneGId):
         """
            Get partition dimensions
         """
@@ -199,11 +198,11 @@ cdef class MultiPart:
         # ************************************************************************
 
         # dims = self.part_dim_get(self._mpart_id, ipart)
-        dims = self.multipart_dim_get(ipart, iblock)
+        dims = self.multipart_dim_get(ipart, zoneGId)
 
         # -> Call PPART to get info
         PDM_multipart_part_val_get(self._mpart_id,
-                                   iblock,
+                                   zoneGId,
                                    ipart,
                                    &cellTag,
                                    &cellFaceIdx,
@@ -432,7 +431,7 @@ cdef class MultiPart:
                 'npFaceGroupLNToGN'          : npFaceGroupLNToGN}
 
     # ------------------------------------------------------------------
-    def multipart_color_get(self, int ipart, int iblock):
+    def multipart_color_get(self, int ipart, int zoneGId):
         """
            Get partition dimensions
         """
@@ -449,7 +448,7 @@ cdef class MultiPart:
 
         # -> Call PPART to get info
         PDM_multipart_part_color_get(self._mpart_id,
-                                     iblock,
+                                     zoneGId,
                                      ipart,
                                      &cellColor,
                                      &faceColor,
@@ -502,7 +501,7 @@ cdef class MultiPart:
                 'npHyperPlaneColor' : npHyperPlaneColor}
 
     # ------------------------------------------------------------------
-    def multipart_time_get(self, int iblock):
+    def multipart_time_get(self, int zoneGId):
         """
         Get times
         """
@@ -514,7 +513,7 @@ cdef class MultiPart:
         cdef double *cpu_sys
         # ************************************************************************
 
-        PDM_multipart_time_get(self._mpart_id, iblock, &elapsed, &cpu, &cpu_user, &cpu_sys)
+        PDM_multipart_time_get(self._mpart_id, zoneGId, &elapsed, &cpu, &cpu_user, &cpu_sys)
 
         d_elapsed = {'total'              : elapsed[0],
                      'building graph'     : elapsed[1],
@@ -540,7 +539,7 @@ cdef class MultiPart:
 
 
     # ------------------------------------------------------------------
-    # def multipart_stat_get(self, int iblock):
+    # def multipart_stat_get(self, int zoneGId):
     #     """
     #     Get statistics
     #     """
@@ -560,7 +559,7 @@ cdef class MultiPart:
     #     # ************************************************************************
 
     #     PDM_multipart_stat_get(self._mpart_id,
-    #                            iblock,
+    #                            zoneGId,
     #                            &cells_average,
     #                            &cells_median,
     #                            &cells_std_deviation,
