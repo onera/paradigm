@@ -69,8 +69,8 @@ const int                nPart,
   int myRank;
   int lComm;
 
-  PDM_MPI_Comm_rank(PDM_MPI_COMM_WORLD, &myRank);
-  PDM_MPI_Comm_size(PDM_MPI_COMM_WORLD, &lComm);
+  PDM_MPI_Comm_rank(comm, &myRank);
+  PDM_MPI_Comm_size(comm, &lComm);
 
   PDM_graph_bound_t * graph_bound =
     (PDM_graph_bound_t *) malloc (sizeof(PDM_graph_bound_t));
@@ -1463,8 +1463,8 @@ const PDM_data_t         tData,
 
   int myRank;
   int lComm;
-  PDM_MPI_Comm_rank(PDM_MPI_COMM_WORLD, &myRank);
-  PDM_MPI_Comm_size(PDM_MPI_COMM_WORLD, &lComm);
+  PDM_MPI_Comm_rank(graph_bound->comm, &myRank);
+  PDM_MPI_Comm_size(graph_bound->comm, &lComm);
 
   graph_bound->field      = field;
   graph_bound->ghostField = ghostField;
@@ -1610,7 +1610,7 @@ PDM_graph_bound_t *graph_bound
   }
 
   int myRank;
-  PDM_MPI_Comm_rank(PDM_MPI_COMM_WORLD, &myRank);
+  PDM_MPI_Comm_rank(graph_bound->comm, &myRank);
 
   for (int i = 0; i < graph_bound->nExchRank; i++) {
     if (graph_bound->recvRequest[i] != PDM_MPI_REQUEST_NULL) {
