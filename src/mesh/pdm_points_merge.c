@@ -99,7 +99,7 @@ _get_from_id
   _point_merge_t *ppm = (_point_merge_t *) PDM_Handles_get (_ppms, id);
 
   if (ppm == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_octree error : Bad identifier\n");
+    PDM_error(__FILE__, __LINE__, 0, "PDM_points_merge error : Bad identifier\n");
   }
 
   return ppm;
