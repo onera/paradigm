@@ -71,14 +71,14 @@ extern "C" {
 
 typedef struct  {
 
-  int               n_block;          /*!< Number of blocks */
-  int               n_part;           /*!< Number of partitions per proc in each block */
+  int               n_zone;           /*!< Number of initial zones */
+  int               n_part;           /*!< Number of partitions per proc in each zone */
   PDM_bool_t        merge_blocks;     /*!< Merge before partitionning or not */
   PDM_part_split_t  split_method;     /*!< Partitioning method */
   PDM_MPI_Comm      comm;             /*!< MPI communicator */
-  int               *dmeshesIds;     /*!< Ids of distributed blocks (size = n_block)  */
+  int               *dmeshesIds;     /*!< Ids of distributed blocks (size = n_zone)   */
   int               *partIds;         /*!< Ids of partitions built on each block of this
-                                           process (size = n_block)                    */
+                                           process (size = n_zone)                    */
 } _pdm_multipart_t;
 
 /*============================================================================
@@ -124,9 +124,9 @@ _get_from_id
  *
  * \brief Build a multipart structure
  *
- * \param [in]   n_block      Number of blocks in the original mesh
- * \param [in]   n_part       Number of partition per proc in each block
- * \param [in]   merge_blocks Merge or not the blocks before splitting
+ * \param [in]   n_zone       Number of zones in the original mesh
+ * \param [in]   n_part       Number of partition per proc in each zone
+ * \param [in]   merge_blocks Merge or not the zones before splitting
  * \param [in]   split_method Choice of library used to split the mesh
  * \param [in]   comm         PDM_MPI communicator
  *
@@ -136,7 +136,7 @@ _get_from_id
 int
 PDM_multipart_create
 (
- const int              n_block,
+ const int              n_zone,
  const int              n_part,
  const PDM_bool_t       merge_blocks,
  const PDM_part_split_t split_method,
@@ -155,52 +155,39 @@ PDM_multipart_create
   _pdm_multipart_t *_multipart = (_pdm_multipart_t *) malloc(sizeof(_pdm_multipart_t));
   int id = PDM_Handles_store (_multiparts, _multipart);
 
-  _multipart->n_block     = n_block;
+  _multipart->n_zone      = n_zone;
   _multipart->n_part      = n_part;
   _multipart->merge_blocks= merge_blocks;
   _multipart->split_method= split_method;
   _multipart->comm        = comm;
 
-  _multipart->dmeshesIds = (int *) malloc(_multipart->n_block * sizeof(int));
-  for (int i = 0; i < _multipart->n_block; i++)
+  _multipart->dmeshesIds = (int *) malloc(_multipart->n_zone * sizeof(int));
+  for (int i = 0; i < _multipart->n_zone; i++)
     _multipart->dmeshesIds[i] = -1;
 
-  _multipart->partIds = (int *) malloc(_multipart->n_block * sizeof(int));
-  for (int iblock = 0; iblock < _multipart->n_block; iblock++)
+  _multipart->partIds = (int *) malloc(_multipart->n_zone * sizeof(int));
+  for (int iblock = 0; iblock < _multipart->n_zone; iblock++)
     _multipart->partIds[iblock] = -1;
 
-  PDM_printf("Created from PDM_multipart_create. You requested a multipart with %d blocks \n", n_block);
+  PDM_printf("Created from PDM_multipart_create. You requested a multipart with %d zones \n", n_zone);
   return id;
 
 }
-
-// void
-// PROCF (pdm_multipart_create, PDM_MULTIPART_CREATE)
-// (
-//  const int          *n_block,
-//  const PDM_MPI_Fint *fcomm,
-//        int          *id
-// )
-// {
-//   const PDM_MPI_Comm c_comm = PDM_MPI_Comm_f2c (*fcomm);
-
-//   *id = PDM_multipart_create (*n_block, c_comm);
-// }
 
 /* TODO : copy doc of the function */
 void PDM_multipart_register_block
 (
  const int        mpart_id,
- const int        block_id,
+ const int        zoneGId,
  const int        block_data_id
 )
 {
-  PDM_printf("In multipart %d, set block n°%d using blockdata %d \n",
-             mpart_id, block_id, block_data_id);
+  PDM_printf("In multipart %d, set zone n°%d using blockdata %d \n",
+             mpart_id, zoneGId, block_data_id);
 
   _pdm_multipart_t *_multipart = _get_from_id (mpart_id);
-  assert(block_id < _multipart->n_block);
-  _multipart->dmeshesIds[block_id] = block_data_id;
+  assert(zoneGId < _multipart->n_zone);
+  _multipart->dmeshesIds[zoneGId] = block_data_id;
 }
 
 void
@@ -219,11 +206,11 @@ PDM_multipart_run_ppart
   else
   {
     // 2. Loop over the blocks and call the partitionner
-    for (int iblock = 0; iblock<_multipart->n_block; iblock++)
+    for (int zoneGId = 0; zoneGId<_multipart->n_zone; zoneGId++)
     {
-      PDM_printf("You requested no merge : partitionning block %d/%d \n", iblock+1, _multipart->n_block);
-      int blockId = _multipart->dmeshesIds[iblock];
-      PDM_printf("block id for block %d is %d\n", iblock, blockId);
+      PDM_printf("You requested no merge : partitionning zone %d/%d \n", zoneGId+1, _multipart->n_zone);
+      int blockId = _multipart->dmeshesIds[zoneGId];
+      PDM_printf("block id for zone %d is %d\n", zoneGId, blockId);
       int dNCell;
       int dNFace;
       int dNVtx;
@@ -273,7 +260,7 @@ PDM_multipart_run_ppart
               dFaceGroup);
       PDM_printf("Partitionning done, ppardId is %d \n", ppartId);
       //Store the partition id for future access
-      _multipart->partIds[iblock] = ppartId;
+      _multipart->partIds[zoneGId] = ppartId;
 
       free(dCellPart);
     }
@@ -285,7 +272,7 @@ void
 PDM_multipart_part_dim_get
 (
 const   int  mpartId,
-const   int  iblock,
+const   int  zoneGId,
 const   int  ipart,
  int        *nCell,
  int        *nFace,
@@ -301,8 +288,8 @@ const   int  ipart,
 {
   _pdm_multipart_t *_multipart = _get_from_id (mpartId);
 
-  assert(iblock < _multipart->n_block && ipart < _multipart->n_part);
-  int ppartId = _multipart->partIds[iblock];
+  assert(zoneGId < _multipart->n_zone && ipart < _multipart->n_part);
+  int ppartId = _multipart->partIds[zoneGId];
 
   PDM_part_part_dim_get(ppartId,
                         ipart,
@@ -323,7 +310,7 @@ void
 PDM_multipart_part_val_get
 (
 const int            mpartId,
-const int            iblock,
+const int            zoneGId,
 const int            ipart,
       int          **cellTag,
       int          **cellFaceIdx,
@@ -347,8 +334,8 @@ const int            ipart,
 {
    _pdm_multipart_t *_multipart = _get_from_id (mpartId);
 
-  assert(iblock < _multipart->n_block && ipart < _multipart->n_part);
-  int ppartId = _multipart->partIds[iblock];
+  assert(zoneGId < _multipart->n_zone && ipart < _multipart->n_part);
+  int ppartId = _multipart->partIds[zoneGId];
 
   PDM_part_part_val_get(ppartId,
                         ipart,
@@ -378,7 +365,7 @@ void
 PDM_multipart_part_color_get
 (
 const int            mpartId,
-const int            iblock,
+const int            zoneGId,
 const int            ipart,
       int          **cellColor,
       int          **faceColor,
@@ -388,8 +375,8 @@ const int            ipart,
 {
   _pdm_multipart_t *_multipart = _get_from_id (mpartId);
 
-  assert(iblock < _multipart->n_block && ipart < _multipart->n_part);
-  int ppartId = _multipart->partIds[iblock];
+  assert(zoneGId < _multipart->n_zone && ipart < _multipart->n_part);
+  int ppartId = _multipart->partIds[zoneGId];
 
   PDM_part_part_color_get(ppartId,
                           ipart,
@@ -404,7 +391,7 @@ void
 PDM_multipart_time_get
 (
 const int       mpartId,
-const int       iblock,
+const int       zoneGId,
       double  **elapsed,
       double  **cpu,
       double  **cpu_user,
@@ -412,8 +399,8 @@ const int       iblock,
 )
 {
   _pdm_multipart_t *_multipart = _get_from_id (mpartId);
-  assert(iblock < _multipart->n_block);
-  int ppartId = _multipart->partIds[iblock];
+  assert(zoneGId < _multipart->n_zone);
+  int ppartId = _multipart->partIds[zoneGId];
 
   PDM_part_time_get(ppartId,
                     elapsed,
@@ -441,8 +428,8 @@ PDM_multipart_free
 
   free(_multipart->dmeshesIds);
 
-  for (int iblock = 0; iblock<_multipart->n_block; iblock++)
-    PDM_part_free(_multipart->partIds[iblock]);
+  for (int izone = 0; izone<_multipart->n_zone; izone++)
+    PDM_part_free(_multipart->partIds[izone]);
   free(_multipart->partIds);
 
   free (_multipart);
@@ -457,14 +444,6 @@ PDM_multipart_free
   PDM_printf("Cleaned from PDM_multipart_free\n");
 }
 
-void
-PROCF (pdm_multipart_free, PDM_MULTIPART_FREE)
-(
- const int *id
-)
-{
-  PDM_multipart_free (*id);
-}
 
 /*----------------------------------------------------------------------------*/
 
