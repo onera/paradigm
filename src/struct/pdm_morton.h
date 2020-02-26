@@ -378,8 +378,8 @@ void
 PDM_morton_quantile_intersect(size_t              n_quantiles,
                               PDM_morton_code_t   code,
                               PDM_morton_code_t  *quantile_start,
-                              size_t              *n_intersect,
-                              int                 *intersect );
+                              size_t             *start,
+                              size_t             *end);
 
 /*----------------------------------------------------------------------------
  * Get, within a sorted list of Morton codes, the sublist of elements
@@ -400,8 +400,8 @@ void
 PDM_morton_list_intersect(size_t              n_quantiles,
                           PDM_morton_code_t   code,
                           PDM_morton_code_t  *quantile_start,
-                          size_t              *n_intersect,
-                          int                 *intersect );
+                          size_t             *start,
+                          size_t             *end);
 
 /*----------------------------------------------------------------------------
  * Build a global Morton encoding rank index from ordered codes
