@@ -59,8 +59,8 @@ PDM_distant_neighbor_create
 const PDM_MPI_Comm   comm,
 const int            n_part,
 const int           *n_entity,
-const int          **neighbor_idx,
-const int          **neighbor_desc
+      int          **neighbor_idx,
+      int          **neighbor_desc
 );
 
 
@@ -90,10 +90,10 @@ PDM_distant_neighbor_exch
  size_t         s_data,
  PDM_stride_t   t_stride,
  int            cst_stride,
- const int    **send_entity_stride,
- const int    **send_entity_data,
-       int    **recv_entity_stride,
-       int    **recv_entity_data
+ int          **send_entity_stride,
+ int          **send_entity_data,
+ int          **recv_entity_stride,
+ int          **recv_entity_data
 );
 
 

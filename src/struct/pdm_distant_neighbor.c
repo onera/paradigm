@@ -40,11 +40,11 @@ typedef struct  {
   PDM_MPI_Comm comm;             /*!< MPI communicator */
   int          n_part;           /*!< Number of partitions */
   const int   *n_entity;         /*!< Number of entities for each partition */
-  const int  **neighbor_idx;     /*!< Indexes of candidate for each current part point
-                                  *   (size = number of entities in the current part + 1) */
-  const int  **neighbor_desc;    /*!< Candidates description (process,
-                                  *                           part in the process,
-                                  *                           entitiy number in the part) */
+  int        **neighbor_idx;     /*!< Indexes of candidate for each current part point
+                                 *   (size = number of entities in the current part + 1) */
+  int        **neighbor_desc;    /*!< Candidates description (process,
+                                 *                           part in the process,
+                                 *                           entitiy number in the part) */
 } _distant_neighbor_t;
 
 /*=============================================================================
@@ -108,8 +108,8 @@ PDM_distant_neighbor_create
 const PDM_MPI_Comm   comm,
 const int            n_part,
 const int           *n_entity,
-const int          **neighbor_idx,
-const int          **neighbor_desc
+      int          **neighbor_idx,
+      int          **neighbor_desc
 )
 {
   printf(" PDM_distant_neighbor_create \n");
@@ -179,10 +179,10 @@ PDM_distant_neighbor_exch
  size_t         s_data,
  PDM_stride_t   t_stride,
  int            cst_stride,
- const int    **send_entity_stride,
- const int    **send_entity_data,
-       int    **recv_entity_stride,
-       int    **recv_entity_data
+ int          **send_entity_stride,
+ int          **send_entity_data,
+ int          **recv_entity_stride,
+ int          **recv_entity_data
 )
 {
   printf(" PDM_distant_neighbor_exchange \n");
