@@ -106,11 +106,11 @@ char *argv[]
   if(nRank == 1){
     PDM_points_merge_cloud_set(pm_id, 0, n_points, coords[0], char_lenght[0]);
     PDM_points_merge_cloud_set(pm_id, 1, n_points, coords[1], char_lenght[1]);
-  } else if(nRank == 1){
+  } else if(nRank == 2){
     if(iRank == 0){
       PDM_points_merge_cloud_set(pm_id, 0, n_points, coords[0], char_lenght[0]);
     } else if(iRank == 1){
-      PDM_points_merge_cloud_set(pm_id, 1, n_points, coords[1], char_lenght[1]);
+      PDM_points_merge_cloud_set(pm_id, 0, n_points, coords[0], char_lenght[0]);
     }
   }
 
