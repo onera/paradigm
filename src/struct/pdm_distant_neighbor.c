@@ -45,6 +45,8 @@ typedef struct  {
   int        **neighbor_desc;    /*!< Candidates description (process,
                                  *                           part in the process,
                                  *                           entitiy number in the part) */
+  int          n_rank_exch;      /*!< Number of rank concerned by exchange */
+  int*         exch_rank;
 } _distant_neighbor_t;
 
 /*=============================================================================
@@ -127,11 +129,95 @@ const int           *n_entity,
   pdn->n_entity      = n_entity;
   pdn->neighbor_idx  = neighbor_idx;
   pdn->neighbor_desc = neighbor_desc;
+  pdn->n_rank_exch   = -1;
+  pdn->exch_rank     = NULL;
+
+  int iRank;
+  int nRank;
+  PDM_MPI_Comm_rank(pdn->comm, &iRank);
+  PDM_MPI_Comm_size(pdn->comm, &nRank);
 
   /*
-   *  Setup exchange protocol
+   * Setup exchange protocol
+   *   I/ Compute the total size of connected elmts by each proc with others
    */
+  int *offered_elmts_rank_idx = (int *) malloc ((nRank + 1) * sizeof(int));
+  for(int i = 0; i < nRank+1; i++){
+    offered_elmts_rank_idx[i] = 0;
+  }
 
+  for(int ipart = 0; ipart < pdn->n_part; ipart++){
+    int *_part_neighbor_idx  = pdn->neighbor_idx[ipart];
+    int *_part_neighbor_desc = pdn->neighbor_desc[ipart];
+
+    for(int i_entity = 0; i_entity < n_entity[ipart]; i_entity++){
+      for(int j = _part_neighbor_idx[i_entity]; j < _part_neighbor_idx[i_entity+1]; j++){
+        int opp_proc = _part_neighbor_desc[3*j  ];
+        // int opp_part = _part_neighbor_desc[3*j+1];
+        // int opp_enty = _part_neighbor_desc[3*j+2];
+        offered_elmts_rank_idx[opp_proc+1]++;
+      }
+    }
+  }
+
+  /*
+   * Panic verbose
+   */
+  if(0 == 0){
+    printf("offered_elmts_rank_idx:: ");
+    for(int i = 0; i < nRank+1; i++){
+      printf("%d ", offered_elmts_rank_idx[i]);
+    }
+    printf("\n");
+  }
+
+  /*
+   * Build list of exchanged ranks
+   */
+  pdn->n_rank_exch = 0;
+  for(int i = 0; i < nRank+1; i++){
+    if((i != iRank) && (offered_elmts_rank_idx[i+1] > 0)) {
+      pdn->n_rank_exch += 1;
+    }
+    offered_elmts_rank_idx[i+1] = offered_elmts_rank_idx[i+1] + offered_elmts_rank_idx[i];
+  }
+
+  /*
+   * Allocate and reset
+   */
+  pdn->exch_rank = (int *) malloc( pdn->n_rank_exch * sizeof(int) );
+  pdn->n_rank_exch = 0;
+
+  for(int i = 0; i < nRank+1; i++){
+    if((i != iRank) && (offered_elmts_rank_idx[i+1] > offered_elmts_rank_idx[i])) {
+      pdn->exch_rank[pdn->n_rank_exch++] = i; // Communication graph
+    }
+  }
+
+  /*
+   * Panic verbose
+   */
+  if(0 == 0){
+    printf("offered_elmts_rank_idx shift:: ");
+    for(int i = 0; i < nRank+1; i++){
+      printf("%d ", offered_elmts_rank_idx[i]);
+    }
+    printf("\n");
+  }
+
+  /*
+   * Exchange number of offered elements for each connected element
+   * to connected ranks
+   */
+  int *n_recv_elmt    = (int *) malloc (nRank * sizeof(int));
+  for (int i = 0; i < nRank; i++) {
+    n_recv_elmt[i] = 0;
+  }
+
+  /*
+   * Free
+   */
+  free(offered_elmts_rank_idx);
 
   return id;
 }
@@ -158,6 +244,9 @@ PDM_distant_neighbor_free
   PDM_Handles_handle_free (_pdns, id, PDM_FALSE);
 
   const int n_ppm = PDM_Handles_n_get (_pdns);
+
+  if (pdn->exch_rank != NULL)
+    free (pdn->exch_rank);
 
   if (n_ppm == 0) {
     _pdns = PDM_Handles_free (_pdns);
@@ -192,7 +281,6 @@ PDM_distant_neighbor_exch
     PDM_error(__FILE__, __LINE__, 0,"PDM_distant_neighbor_exch : STRIDE_CST is only availble \n");
     abort ();
   }
-
 
 }
 
