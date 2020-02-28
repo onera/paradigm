@@ -267,14 +267,6 @@ int main(int argc, char *argv[])
   int nPropertyCell = 0;
   int nPropertyFace = 0;
 
-  if(myRank == 0){
-    nPart = 1;
-  } else if (myRank == 1) {
-    nPart = 1;
-  } else {
-    nPart = 0;
-  }
-
   PDM_part_create(&ppartId,
                   comm,
                   method,
