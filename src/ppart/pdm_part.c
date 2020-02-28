@@ -253,7 +253,7 @@ static int
  int            id2
 )
 {
-  if (elt > array[id2]) {
+  if (elt >= array[id2]) {
     PDM_printf("PPART error : Element not in initial distributed array "
            PDM_FMT_G_NUM" "PDM_FMT_G_NUM" "PDM_FMT_G_NUM"\n",
            elt, array[id1], array[id2]);
@@ -273,17 +273,15 @@ static int
 
   else {
 
+    while(array[id1] == array[id1+1]) id1++;
+
     int midId = (id2 + id1) / 2;
 
     if (elt == array[id1])
       return id1;
-    else if (elt == array[id2])
-      return id2;
-    else if (elt == array[midId])
-      return midId;
     else if (elt < array[midId])
       return _search_rank(elt, array, id1, midId);
-    else if (elt > array[midId])
+    else if (elt >= array[midId])
       return _search_rank(elt, array, midId, id2);
   }
   return -1;
