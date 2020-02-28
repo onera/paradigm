@@ -284,6 +284,16 @@ PDM_distant_neighbor_exch
 
 }
 
+// void
+// PDM_distant_neighbor_irecv()
+// PDM_distant_neighbor_iisend()
+// PDM_distant_neighbor_wait()
+
+// void
+// PDM_distant_neighbor_alltoall()
+// {
+// }
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
