@@ -211,19 +211,34 @@ PDM_multipart_run_ppart
       PDM_printf("You requested no merge : partitionning zone %d/%d \n", zoneGId+1, _multipart->n_zone);
       int blockId = _multipart->dmeshesIds[zoneGId];
       PDM_printf("block id for zone %d is %d\n", zoneGId, blockId);
-      int dNCell;
-      int dNFace;
-      int dNVtx;
-      int dNBounds;
-      double       *dVtxCoord;
-      int          *dFaceVtxIdx;
-      PDM_g_num_t  *dFaceVtx;
-      PDM_g_num_t  *dFaceCell;
-      int          *dFaceGroupIdx;
-      PDM_g_num_t  *dFaceGroup;
+      int dNCell  = 0;
+      int dNFace  = 0;
+      int dNVtx   = 0;
+      int nBounds = 0;
+      double       *dVtxCoord     = NULL;
+      int          *dFaceVtxIdx   = NULL;
+      PDM_g_num_t  *dFaceVtx      = NULL;
+      PDM_g_num_t  *dFaceCell     = NULL;
+      int          *dFaceGroupIdx = NULL;
+      PDM_g_num_t  *dFaceGroup    = NULL;
 
-      PDM_dmesh_dims_get(blockId, &dNCell, &dNFace, &dNVtx, &dNBounds);
-      PDM_dmesh_data_get(blockId, &dVtxCoord, &dFaceVtxIdx, &dFaceVtx, &dFaceCell, &dFaceGroupIdx, &dFaceGroup);
+      // Number of faceGroup and faceGroupIdx must be known even when proc has no distributed data
+      if (blockId >= 0)
+      {
+        PDM_dmesh_dims_get(blockId, &dNCell, &dNFace, &dNVtx, &nBounds);
+        PDM_dmesh_data_get(blockId, &dVtxCoord, &dFaceVtxIdx, &dFaceVtx, &dFaceCell, &dFaceGroupIdx, &dFaceGroup);
+
+      }
+      int nBoundsForGhost = -1;
+      PDM_MPI_Allreduce(&nBounds, &nBoundsForGhost, 1, PDM_MPI_INT, PDM_MPI_MAX, _multipart->comm);
+      if (blockId < 0)
+      {
+        nBounds = nBoundsForGhost;
+        dFaceGroupIdx = (int *) malloc((nBounds + 1)  * sizeof(int));
+        for (int k=0; k < nBounds + 1; k++)
+          dFaceGroupIdx[k] = 0;
+        dFaceCell = (PDM_g_num_t *) malloc(0); //Must be != NULL to enter in _dual_graph
+      }
 
 
       int ppartId = 0;
@@ -243,7 +258,7 @@ PDM_multipart_run_ppart
               dNCell,
               dNFace,
               dNVtx,
-              dNBounds,
+              nBounds,
               NULL,                       // dCellFaceIdx
               NULL,                       // dCellFace
               NULL,                       // dCellTag
@@ -263,6 +278,11 @@ PDM_multipart_run_ppart
       _multipart->partIds[zoneGId] = ppartId;
 
       free(dCellPart);
+      if (blockId < 0)
+      {
+        free(dFaceGroupIdx);
+        free(dFaceCell);
+      }
     }
   }
   // 3. rebuild the joins
