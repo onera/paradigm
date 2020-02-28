@@ -127,6 +127,7 @@ typedef struct  {
   PDM_g_num_t *points_gnum;          /*!< Point global number */
   PDM_morton_code_t  *points_code;   /*!< Morton codes */
 
+  PDM_morton_code_t *rank_octants_index;
   _l_octant_t *octants;       /*!< list of octants */
 
   PDM_MPI_Comm comm;           /*!< MPI communicator */
@@ -1891,7 +1892,6 @@ _block_partition
  * \brief Compute neighbours
  *
  * \param [inout]   octree
- * \param [in]      block_octants_index
  * \param [in]      b_t_elapsed
  * \param [in]      b_t_cpu
  * \param [in]      b_t_cpu_u
@@ -1903,7 +1903,6 @@ static void
 _compute_neighbours
 (
  _octree_t *octree,
- PDM_morton_code_t *block_octants_index,
  double   b_t_elapsed,
  double   b_t_cpu,
  double   b_t_cpu_u,
@@ -1946,11 +1945,11 @@ _compute_neighbours
 
       if (neighbour_code != NULL) {
 
-        if (block_octants_index != NULL) {
+        if (octree->rank_octants_index != NULL) {
 
           PDM_morton_quantile_intersect (n_ranks,
                                          *neighbour_code,
-                                         block_octants_index,
+                                         octree->rank_octants_index,
                                          &start_intersect_quantile,
                                          &end_intersect_quantile);
         }
@@ -2015,7 +2014,6 @@ _compute_neighbours
       }
     }
   }
-  //free (intersect_nodes);
 
   PDM_timer_hang_on(octree->timer);
   e_t_elapsed = PDM_timer_elapsed(octree->timer);
@@ -2042,11 +2040,11 @@ _compute_neighbours
 
       if (neighbour_code != NULL) {
 
-        if (block_octants_index != NULL) {
+        if (octree->rank_octants_index != NULL) {
 
           PDM_morton_quantile_intersect (n_ranks,
                                          *neighbour_code,
-                                         block_octants_index,
+                                         octree->rank_octants_index,
                                          &start_intersect_quantile,
                                          &end_intersect_quantile);
         }
@@ -2070,10 +2068,6 @@ _compute_neighbours
         free (neighbour_code);
       }
     }
-  }
-
-  if (block_octants_index != NULL) {
-    free(block_octants_index);
   }
 
 
@@ -2196,23 +2190,6 @@ _compute_neighbours
 
     /* Deuxieme boucle pour stocker avec tri suivant la direction */
 
-    /*for (int i = 0; i < octree->octants->n_nodes; i++) {
-      for (int j = 0; j < n_direction; j++) {
-        for (int k = 0; k < neighbours_tmp[i].n_neighbour[j]; k++) {
-          if (neighbours_tmp[i].neighbours[j][k] < 0) {
-            int index = -(neighbours_tmp[i].neighbours[j][k] + 1)*n_direction +j;
-            int index2 = neighbour_rank_idx[index] + neighbour_rank_n[index];
-
-            neighbour_rank_node_id[index2] = i;
-            PDM_morton_copy (octree->octants->codes[i],
-                             neighbour_rank_code + index2);
-            neighbour_rank_node_k[index2] = k;
-
-            neighbour_rank_n[index]++;
-          }
-        }
-      }
-      }*/
     for (int i_part = 0; i_part < octree->n_connected; i_part++) {
       for (int i = octree->connected_idx[i_part]; i < octree->connected_idx[i_part+1]; i++) {
         for (int j = 0; j < n_direction; j++) {
@@ -2883,6 +2860,7 @@ PDM_para_octree_create
   octree->points_gnum = NULL;
   octree->points_code = NULL;
 
+  octree->rank_octants_index = NULL;
   octree->octants = NULL;
 
   octree->n_part_boundary_elt = 0;
@@ -2948,6 +2926,10 @@ PDM_para_octree_free
 
   if (octree->part_boundary_elt != NULL) {
     free (octree->part_boundary_elt);
+  }
+
+  if (octree->rank_octants_index != NULL) {
+    free (octree->rank_octants_index);
   }
 
   if (octree->octants != NULL) {
@@ -3234,7 +3216,6 @@ PDM_para_octree_build
 
   PDM_timer_resume(octree->timer);
 
-  PDM_morton_code_t *block_octants_index = NULL;
   if (n_ranks > 1) {
 
     /*************************************************************************
@@ -3293,7 +3274,7 @@ PDM_para_octree_build
 
     octree->octants = _block_partition (point_octants,
                                         octree->comm,
-                                        &block_octants_index);
+                                        &octree->rank_octants_index);
 
     _octants_free (point_octants);
 
@@ -3308,7 +3289,7 @@ PDM_para_octree_build
                         &octree->points_icloud,
                         &octree->points_gnum,
                         &octree->points_code,
-                        block_octants_index,
+                        octree->rank_octants_index,
                         octree->comm,
                         octree->dim,
                         max_level,
@@ -3512,7 +3493,6 @@ PDM_para_octree_build
 
   if (octree->neighboursToBuild) {
     _compute_neighbours (octree,
-                         block_octants_index,
                          b_t_elapsed,
                          b_t_cpu,
                          b_t_cpu_u,
