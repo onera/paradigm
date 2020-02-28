@@ -1,6 +1,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <assert.h>
+#include</stck/jcoulet/dev/dev-Test/json-c/install/include/json-c/json.h>
 
 #include "pdm.h"
 #include "pdm_config.h"
@@ -15,7 +17,7 @@
 /*============================================================================
  * Type definitions
  *============================================================================*/
-
+  #define MAXBUFLEN 10000000 // Taille max (en char --> wc file.dat) du ficher json
 /*============================================================================
  * Private function definitions
  *============================================================================*/
@@ -35,9 +37,8 @@ _usage(int exit_code)
      "  -n      <level>  Number of vertices on the cube side.\n\n"
      "  -l      <level>  Cube length.\n\n"
      "  -n_part <level>  Number of partitions par process.\n\n"
-     "  -post            Ensight outputs (only if n_part == 1). \n\n"
      "  -parmetis        Call ParMETIS.\n\n"
-     "  -pt-scocth       Call PT-Scotch.\n\n"
+     "  -pt-scotch       Call PT-Scotch.\n\n"
      "  -h               This message.\n\n");
 
   exit(exit_code);
@@ -53,7 +54,6 @@ _usage(int exit_code)
  * \param [inout]   nVtxSeg  Number of vertices on the cube side
  * \param [inout]   length   Cube length
  * \param [inout]   n_part   Number of partitions par process
- * \param [inout]   post     Ensight outputs status
  * \param [inout]   method   Partitioner (1 ParMETIS, 2 Pt-Scotch)
  *
  */
@@ -64,8 +64,8 @@ _read_args(int            argc,
            PDM_g_num_t  *nVtxSeg,
            double        *length,
            int           *n_part,
-	         int           *post,
-	         int           *method)
+	         int           *method,
+           char         **distri_dir)
 {
   int i = 1;
 
@@ -100,8 +100,13 @@ _read_args(int            argc,
         *n_part = atoi(argv[i]);
       }
     }
-    else if (strcmp(argv[i], "-post") == 0) {
-      *post = 1;
+    else if (strcmp(argv[i], "-distri_dir") == 0) {
+      i++;
+      if (i >= argc)
+        _usage(EXIT_FAILURE);
+      else {
+        *distri_dir = (argv[i]);
+      }
     }
     else if (strcmp(argv[i], "-pt-scotch") == 0) {
       *method = 2;
@@ -211,6 +216,142 @@ static void _dumpJsonData
   fclose(fp);
 }
 
+static int _readJsonNumberOfBlocks
+(
+ const char *filename
+)
+{
+  FILE *fp;
+  char buffer[MAXBUFLEN];
+  fp = fopen(filename, "r");
+  fread(buffer, sizeof(char), MAXBUFLEN, fp);
+  fclose(fp);
+
+  struct json_object *parsed_json;
+  struct json_object *intdata;
+  int nbZones = -1;
+
+  parsed_json = json_tokener_parse(buffer);
+  json_object_object_get_ex(parsed_json, "nbZones", &intdata);
+  nbZones = json_object_get_int(intdata);
+  return nbZones;
+}
+
+static void _readJsonBlock
+(
+  const char  *filename,
+  const int    blockId,
+  int         *meshIds,
+  int         *zoneIds
+)
+{
+  PDM_printf("Parsing json data from %s\n", filename);
+  FILE *fp;
+  char buffer[MAXBUFLEN];
+  fp = fopen(filename, "r");
+  fread(buffer, sizeof(char), MAXBUFLEN, fp);
+  fclose(fp);
+
+  struct json_object *parsed_json;
+  struct json_object *zonedata;
+  struct json_object *intdata;
+  struct json_object *array;
+  struct json_object *arraydata;
+
+  parsed_json = json_tokener_parse(buffer);
+  // json_object_object_get_ex(parsed_json, "nbZones", &intdata);
+  // PDM_printf("Nb of zones in json is %d\n\n", json_object_get_int(intdata));
+  json_object_object_get_ex(parsed_json, "Zones", &zonedata);
+  zonedata = json_object_array_get_idx(zonedata, blockId);
+
+  int nbVtx, nbFace, nbCell, nFaceGroup;
+  int zoneGId = -1;
+  json_object_object_get_ex(zonedata, "nbVtx", &intdata);
+  nbVtx = json_object_get_int(intdata);
+  json_object_object_get_ex(zonedata, "nbFace", &intdata);
+  nbFace = json_object_get_int(intdata);
+  json_object_object_get_ex(zonedata, "nbCell", &intdata);
+  nbCell = json_object_get_int(intdata);
+  json_object_object_get_ex(zonedata, "nbFaceGroup", &intdata);
+  nFaceGroup = json_object_get_int(intdata);
+  json_object_object_get_ex(zonedata, "ZoneGId", &intdata);
+  zoneGId = json_object_get_int(intdata);
+
+
+  json_object_object_get_ex(zonedata, "VtxCoord", &array);
+  assert(json_object_array_length(array) == nbVtx);
+  double * vtxCoord = (double *) malloc(3*nbVtx * sizeof(double));
+  for (int i = 0; i < nbVtx; i++)
+  {
+    arraydata = json_object_array_get_idx(array, i);
+    vtxCoord[3*i] = json_object_get_double(json_object_array_get_idx(arraydata, 0));
+    vtxCoord[3*i+1] = json_object_get_double(json_object_array_get_idx(arraydata, 1));
+    vtxCoord[3*i+2] = json_object_get_double(json_object_array_get_idx(arraydata, 2));
+  }
+
+  json_object_object_get_ex(zonedata, "NGonConnectivity", &array);
+  assert(json_object_array_length(array) == nbFace);
+  int * faceVtxIdx = (int *) malloc((nbFace+1) * sizeof(int));
+  faceVtxIdx[0] = 0;
+  //First gets size of faceVtx and fills faceVtxIdx
+  for (int i = 0; i < nbFace; i++)
+  {
+    arraydata = json_object_array_get_idx(array, i);
+    faceVtxIdx[i+1] = json_object_array_length(arraydata) + faceVtxIdx[i];
+  }
+  PDM_g_num_t * faceVtx = (PDM_g_num_t *) malloc(faceVtxIdx[nbFace] * sizeof(PDM_g_num_t));
+  //Now fill faceVtx
+  int iface = 0;
+  for (int i = 0; i < nbFace; i++)
+  {
+    arraydata = json_object_array_get_idx(array, i);
+    for (int k = 0; k < json_object_array_length(arraydata); k++)
+    {
+      faceVtx[iface] = json_object_get_int(json_object_array_get_idx(arraydata, k));
+      iface += 1;
+    }
+  }
+
+  json_object_object_get_ex(zonedata, "NGonParentElement", &array);
+  assert(json_object_array_length(array) == nbFace);
+  PDM_g_num_t * faceCell = (PDM_g_num_t *) malloc(2*nbFace * sizeof(PDM_g_num_t));
+  for (int i = 0; i < nbFace; i++)
+  {
+    arraydata = json_object_array_get_idx(array, i);
+    faceCell[2*i] = json_object_get_int(json_object_array_get_idx(arraydata, 0));
+    faceCell[2*i+1] = json_object_get_int(json_object_array_get_idx(arraydata, 1));
+  }
+
+  json_object_object_get_ex(zonedata, "FaceGroups", &array);
+  assert(json_object_array_length(array) == nFaceGroup);
+  int * faceGroupIdx = (int *) malloc((nFaceGroup+1) * sizeof(int));
+  faceGroupIdx[0] = 0;
+  //First gets size of faceGroup and fills faceGroupIdx
+  for (int i = 0; i < nFaceGroup; i++)
+  {
+    arraydata = json_object_array_get_idx(array, i);
+    faceGroupIdx[i+1] = json_object_array_length(arraydata) + faceGroupIdx[i];
+  }
+  PDM_g_num_t * faceGroup = (PDM_g_num_t *) malloc(faceGroupIdx[nFaceGroup] * sizeof(PDM_g_num_t));
+  //Now fill faceGroup
+  iface = 0;
+  for (int i = 0; i < nFaceGroup; i++)
+  {
+    arraydata = json_object_array_get_idx(array, i);
+    for (int k = 0; k < json_object_array_length(arraydata); k++)
+    {
+      faceGroup[iface] = json_object_get_int(json_object_array_get_idx(arraydata, k));
+      iface += 1;
+    }
+  }
+
+  int dmeshId = PDM_dmesh_create(nbCell, nbFace, nbVtx, nFaceGroup);
+  PDM_dmesh_set(dmeshId, vtxCoord, faceVtxIdx, faceVtx, faceCell, faceGroupIdx, faceGroup);
+  meshIds[blockId] = dmeshId;
+  zoneIds[blockId] = zoneGId;
+  //Fuite méloire -> les données allouées ici sont perdues
+}
+
 /**
  *
  * \brief  Main
@@ -227,7 +368,8 @@ int main(int argc, char *argv[])
   PDM_g_num_t        nVtxSeg = 10;
   double             length  = 1.;
   int                nPart   = 1;
-  int                post    = 0;
+  char               *distri_dir = strdup("\0");
+
 #ifdef PDM_HAVE_PARMETIS
   PDM_part_split_t method  = PDM_PART_SPLIT_PARMETIS;
 #else
@@ -245,8 +387,8 @@ int main(int argc, char *argv[])
              &nVtxSeg,
              &length,
              &nPart,
-             &post,
-             (int *) &method);
+             (int *) &method,
+             &distri_dir);
 
   /*
    *  Init
@@ -279,51 +421,90 @@ int main(int argc, char *argv[])
   int              cubeid;
   PDM_MPI_Comm     comm = PDM_MPI_COMM_WORLD;
 
-  //Alloue les pointeurs de la structure interne dFaceCell, dFaceVtxIdx, dFaceVtx, dVtxCoord, dFaceGroupIdx, dFaceGroup
-  PDM_dcube_gen_init(&cubeid,
-                      comm,
-                      nVtxSeg,
-                      length,
-            		      0.,
-		                  0.,
-		                  0.);
+  int nbzone = 1;
+  int mpartId = -1;
+  int multipartSize = 1;
+  int *dmeshIds;             // For a given block, store the identifier of the corresponding blockdata (size = nzone)
+  int *dblockIds;            // For a given block, store the globalId of the parent zone
 
-  PDM_dcube_gen_dim_get(cubeid,
-                         &nFaceGroup,
-                         &dNCell,
-                         &dNFace,
-                         &dNVtx,
-                         &dFaceVtxL,
-                         &dFaceGroupL);
-
-  PDM_dcube_gen_data_get(cubeid,
-                          &dFaceCell,
-                          &dFaceVtxIdx,
-                          &dFaceVtx,
-                          &dVtxCoord,
-                          &dFaceGroupIdx,
-                          &dFaceGroup);
-
-  int nblocks = 1;
-  int mpartId;
-  mpartId = PDM_multipart_create(nblocks, nPart, PDM_FALSE, method, comm);
-  PDM_printf("From exe : created a multipart object, id is %i \n", mpartId);
-
-  int *dmeshIds = (int *) malloc(nblocks * sizeof(int));
-  for (int iblock = 0; iblock<nblocks; iblock++)
+  if (strcmp(distri_dir, "\0") == 0) // No distributed data provided -> generate cube (only 1 zone)
   {
-    int dmeshId = 0;
+    //Alloue les pointeurs de la structure interne dFaceCell, dFaceVtxIdx, dFaceVtx, dVtxCoord, dFaceGroupIdx, dFaceGroup
+    PDM_dcube_gen_init(&cubeid,
+                        comm,
+                        nVtxSeg,
+                        length,
+              		      0.,
+  		                  0.,
+  		                  0.);
+
+    PDM_dcube_gen_dim_get(cubeid,
+                           &nFaceGroup,
+                           &dNCell,
+                           &dNFace,
+                           &dNVtx,
+                           &dFaceVtxL,
+                           &dFaceGroupL);
+
+    PDM_dcube_gen_data_get(cubeid,
+                            &dFaceCell,
+                            &dFaceVtxIdx,
+                            &dFaceVtx,
+                            &dVtxCoord,
+                            &dFaceGroupIdx,
+                            &dFaceGroup);
+
+    dmeshIds  = (int *) malloc(nbzone * sizeof(int));
+    dblockIds = (int *) malloc(nbzone * sizeof(int));
+    int dmeshId = -1;
     dmeshId = PDM_dmesh_create(dNCell, dNFace, dNVtx, nFaceGroup);
     PDM_dmesh_set(dmeshId, dVtxCoord, dFaceVtxIdx, dFaceVtx, dFaceCell, dFaceGroupIdx, dFaceGroup);
-    PDM_multipart_register_block(mpartId, iblock, dmeshId);
-    dmeshIds[iblock] = dmeshId;
+    dmeshIds[0] = dmeshId;
+    dblockIds[0] = 1;
+
+    // Dump arrays
+    char filename[25];
+    snprintf(filename,sizeof(filename),"distributed_P%d.json",myRank);
+    _dumpJsonData(filename, dNVtx, dNFace, dNCell, nFaceGroup,
+                  dVtxCoord, dFaceVtxIdx, dFaceVtx, dFaceCell, NULL, NULL, dFaceGroupIdx, dFaceGroup);
+  }
+  else  // -> parse Json data
+  {
+    char filename[25];
+    snprintf(filename,sizeof(filename),"distributed_P%d.json",myRank);
+    char path[50];
+    strcpy(path, distri_dir);
+    strcat(path, filename);
+    // 1. Get number of zones known by each zone
+    nbzone = _readJsonNumberOfBlocks(path);
+    PDM_printf("[%i] Found %d blocks in distributed data\n", myRank, nbzone);
+    dmeshIds  = (int *) malloc(nbzone * sizeof(int));
+    dblockIds = (int *) malloc(nbzone * sizeof(int));
+
+    // 2. Read the data for each zone and store it in arrays
+    for (int iblock=0; iblock < nbzone; iblock++)
+    {
+      _readJsonBlock(path, iblock, dmeshIds, dblockIds);
+      // PDM_dmesh_dims_get(dmeshId, &dNCell, &dNFace, &dNVtx, &nFaceGroup);
+      // PDM_dmesh_data_get(dmeshId, &dVtxCoord, &dFaceVtxIdx, &dFaceVtx, &dFaceCell, &dFaceGroupIdx, &dFaceGroup);
+    }
+    // 3. Compute the multizone size (total number of different zones)
+    int maxZoneGId = -1;
+    for (int k = 0; k < nbzone; k++)
+      maxZoneGId = (dblockIds[k] > maxZoneGId) ? dblockIds[k] : maxZoneGId;
+    PDM_MPI_Allreduce(&maxZoneGId, &multipartSize, 1, PDM_MPI_INT, PDM_MPI_MAX, comm);
   }
 
+   mpartId = PDM_multipart_create(multipartSize, nPart, PDM_FALSE, method, comm);
+   PDM_printf("From exe : created a multipart object, id is %i \n", mpartId);
+   for (int iblock=0; iblock < nbzone; iblock++)
+   {
+    // PDM_printf("[%i] check -- iblock %i : gid %i meshid %i\n", myRank, iblock, dblockIds[iblock], dmeshIds[iblock]);
+    PDM_multipart_register_block(mpartId, dblockIds[iblock]-1, dmeshIds[iblock]);
+   }
+   PDM_MPI_Barrier(comm);
 
-  char filename[25];
-  snprintf(filename,sizeof(filename),"distributed_P%d.pdm",myRank);
-  _dumpJsonData(filename, dNVtx, dNFace, dNCell, nFaceGroup,
-            dVtxCoord, dFaceVtxIdx, dFaceVtx, dFaceCell, NULL, NULL, dFaceGroupIdx, dFaceGroup);
+
 
   PDM_multipart_run_ppart(mpartId);
 
@@ -332,11 +513,12 @@ int main(int argc, char *argv[])
   double  *cpu_user = NULL;
   double  *cpu_sys = NULL;
 
-  PDM_part_time_get(mpartId,
-                 &elapsed,
-                 &cpu,
-                 &cpu_user,
-                 &cpu_sys);
+  PDM_multipart_time_get(mpartId,
+                         multipartSize-1,
+                         &elapsed,
+                         &cpu,
+                         &cpu_user,
+                         &cpu_sys);
 
   if (myRank == 0)
   {
@@ -361,89 +543,96 @@ int main(int argc, char *argv[])
     PDM_printf("[%i]   - cpu_sys building mesh partitions : %12.5e\n", myRank, cpu_sys[3]);
   }
 
-  for (int ipart = 0; ipart < nPart; ipart++) {
+  for (int iblock = 0; iblock < multipartSize; iblock++) {
+    for (int ipart = 0; ipart < nPart; ipart++) {
 
-    int nCell;
-    int nFace;
-    int nFacePartBound;
-    int nVtx;
-    int nProc;
-    int nTPart;
-    int sCellFace;
-    int sFaceVtx;
-    int sFaceGroup;
-    int nFaceGroup2;
+      int nCell;
+      int nFace;
+      int nFacePartBound;
+      int nVtx;
+      int nProc;
+      int nTPart;
+      int sCellFace;
+      int sFaceVtx;
+      int sFaceGroup;
+      int nFaceGroup2;
 
-    PDM_multipart_part_dim_get(mpartId,
-                       0,
-                       ipart,
-                       &nCell,
-                       &nFace,
-                       &nFacePartBound,
-                       &nVtx,
-                       &nProc,
-                       &nTPart,
-                       &sCellFace,
-                       &sFaceVtx,
-                       &sFaceGroup,
-                       &nFaceGroup2);
+      PDM_multipart_part_dim_get(mpartId,
+                                 iblock,
+                                 ipart,
+                                 &nCell,
+                                 &nFace,
+                                 &nFacePartBound,
+                                 &nVtx,
+                                 &nProc,
+                                 &nTPart,
+                                 &sCellFace,
+                                 &sFaceVtx,
+                                 &sFaceGroup,
+                                 &nFaceGroup2);
 
-    int          *cellTag;
-    int          *cellFaceIdx;
-    int          *cellFace;
-    PDM_g_num_t *cellLNToGN;
-    int          *faceTag;
-    int          *faceCell;
-    int          *faceVtxIdx;
-    int          *faceVtx;
-    PDM_g_num_t *faceLNToGN;
-    int          *facePartBoundProcIdx;
-    int          *facePartBoundPartIdx;
-    int          *facePartBound;
-    int          *vtxTag;
-    double       *vtx;
-    PDM_g_num_t *vtxLNToGN;
-    int          *faceGroupIdx;
-    int          *faceGroup;
-    PDM_g_num_t *faceGroupLNToGN;
+      int          *cellTag;
+      int          *cellFaceIdx;
+      int          *cellFace;
+      PDM_g_num_t *cellLNToGN;
+      int          *faceTag;
+      int          *faceCell;
+      int          *faceVtxIdx;
+      int          *faceVtx;
+      PDM_g_num_t *faceLNToGN;
+      int          *facePartBoundProcIdx;
+      int          *facePartBoundPartIdx;
+      int          *facePartBound;
+      int          *vtxTag;
+      double       *vtx;
+      PDM_g_num_t *vtxLNToGN;
+      int          *faceGroupIdx;
+      int          *faceGroup;
+      PDM_g_num_t *faceGroupLNToGN;
 
 
-    PDM_multipart_part_val_get(mpartId,
-                       0,
-                       ipart,
-                       &cellTag,
-                       &cellFaceIdx,
-                       &cellFace,
-                       &cellLNToGN,
-                       &faceTag,
-                       &faceCell,
-                       &faceVtxIdx,
-                       &faceVtx,
-                       &faceLNToGN,
-                       &facePartBoundProcIdx,
-                       &facePartBoundPartIdx,
-                       &facePartBound,
-                       &vtxTag,
-                       &vtx,
-                       &vtxLNToGN,
-                       &faceGroupIdx,
-                       &faceGroup,
-                       &faceGroupLNToGN);
+      PDM_multipart_part_val_get(mpartId,
+                                 iblock,
+                                 ipart,
+                                 &cellTag,
+                                 &cellFaceIdx,
+                                 &cellFace,
+                                 &cellLNToGN,
+                                 &faceTag,
+                                 &faceCell,
+                                 &faceVtxIdx,
+                                 &faceVtx,
+                                 &faceLNToGN,
+                                 &facePartBoundProcIdx,
+                                 &facePartBoundPartIdx,
+                                 &facePartBound,
+                                 &vtxTag,
+                                 &vtx,
+                                 &vtxLNToGN,
+                                 &faceGroupIdx,
+                                 &faceGroup,
+                                 &faceGroupLNToGN);
 
-    snprintf(filename,sizeof(filename),"partitionned_P%dN%d.pdm",myRank, ipart);
-    _dumpJsonData(filename, nVtx, nFace, nCell, nFaceGroup2, vtx,
-                  faceVtxIdx, faceVtx, faceCell, cellFaceIdx, cellFace,faceGroupIdx, faceGroup);
+      char filename[25];
+      snprintf(filename,sizeof(filename),"partitionned_P%dB%dN%d.json",myRank, iblock, ipart);
+      _dumpJsonData(filename, nVtx, nFace, nCell, nFaceGroup2, vtx,
+                    faceVtxIdx, faceVtx, faceCell, cellFaceIdx, cellFace,faceGroupIdx, faceGroup);
 
+    }
   }
 
   PDM_multipart_free(mpartId);
 
-  for (int iblock = 0; iblock<nblocks; iblock++)
+  for (int iblock = 0; iblock<nbzone; iblock++)
     PDM_dmesh_free(dmeshIds[iblock]);
   free(dmeshIds);
+  free(dblockIds);
 
+  if (strcmp(distri_dir, "\0") == 0) // No distributed data provided
+  {
   //Desalloue les pointeurs de la structure interne dFaceCell, dFaceVtxIdx, dFaceVtx, dVtxCoord, dFaceGroupIdx, dFaceGroup
-  PDM_dcube_gen_free(cubeid);
+    PDM_dcube_gen_free(cubeid);
+  }
 
   PDM_MPI_Finalize();
 
