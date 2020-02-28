@@ -128,10 +128,12 @@ _read_args(int            argc,
 static void _dumpJsonData
 (
  const char  *filename,
+ const int    iblock,
  const int    nVtx,
  const int    nFace,
  const int    nCell,
  const int    nFaceGroup,
+ const int    nTpart,
  double      *VtxCoord,
  int         *FaceVtxIdx,
  PDM_g_num_t *FaceVtx,
@@ -139,7 +141,11 @@ static void _dumpJsonData
  int         *cellFaceIdx,
  int         *cellFace,
  int         *FaceGroupIdx,
- PDM_g_num_t *FaceGroup
+ PDM_g_num_t *FaceGroup,
+ int         *facePartBoundProcIdx,
+ int         *facePartBoundPartIdx,
+ int         *facePartBound
+
  )
 {
   FILE * fp;
@@ -210,7 +216,39 @@ static void _dumpJsonData
       fprintf(fp, "]");
     endcomma = ',';
   }
-  fprintf(fp, "\n  ]\n");
+  fprintf(fp, "\n  ],\n");
+
+  endcomma = ' ';
+  fprintf(fp, "  \"PartBoundGroups\" :\n  {");
+  for (int iMatch=0; iMatch < nTpart; iMatch++) //Local number of parts
+  {
+    if (facePartBoundPartIdx[iMatch+1] != facePartBoundPartIdx[iMatch])
+    {
+      int lastindex = -1;
+      fprintf(fp, "%c\n    \"Match%i\" :\n    {", endcomma, iMatch);
+
+      fprintf(fp, "\n      \"PointList\" : [");
+      for (int k=facePartBoundPartIdx[iMatch]; k < facePartBoundPartIdx[iMatch+1]-1; k++)
+        fprintf(fp, "%i, ", facePartBound[4*k] );
+      lastindex = 4*(facePartBoundPartIdx[iMatch+1]-1);
+      fprintf(fp, "%i]", facePartBound[lastindex]);
+
+      fprintf(fp, ",\n      \"PointListDonor\" : [");
+          for (int k=facePartBoundPartIdx[iMatch]; k < facePartBoundPartIdx[iMatch+1]-1; k++)
+        fprintf(fp, "%i, ", facePartBound[4*k+3] );
+      lastindex = 4*(facePartBoundPartIdx[iMatch+1]-1)+3;
+      fprintf(fp, "%i]", facePartBound[lastindex]);
+
+      char targetname[25];
+      int procOpp = facePartBound[4*facePartBoundPartIdx[iMatch] + 1];
+      int partOpp = facePartBound[4*facePartBoundPartIdx[iMatch] + 2];
+      snprintf(targetname,sizeof(targetname),"P%dB%dN%d",procOpp, iblock, partOpp-1);
+      fprintf(fp, ",\n      \"targetPart\" : \"%s\"", targetname);
+      fprintf(fp, "\n    }");
+    endcomma = ',';
+    }
+  }
+  fprintf(fp, "\n  }\n");
 
   fprintf(fp, "}");
   fclose(fp);
@@ -465,8 +503,9 @@ int main(int argc, char *argv[])
     // Dump arrays
     char filename[25];
     snprintf(filename,sizeof(filename),"distributed_P%d.json",myRank);
-    _dumpJsonData(filename, dNVtx, dNFace, dNCell, nFaceGroup,
-                  dVtxCoord, dFaceVtxIdx, dFaceVtx, dFaceCell, NULL, NULL, dFaceGroupIdx, dFaceGroup);
+    _dumpJsonData(filename, 0, dNVtx, dNFace, dNCell, nFaceGroup, 0,
+                  dVtxCoord, dFaceVtxIdx, dFaceVtx, dFaceCell, NULL, NULL, dFaceGroupIdx, dFaceGroup,
+                  NULL, NULL, NULL);
   }
   else  // -> parse Json data
   {
@@ -615,8 +654,9 @@ int main(int argc, char *argv[])
 
       char filename[25];
       snprintf(filename,sizeof(filename),"partitionned_P%dB%dN%d.json",myRank, iblock, ipart);
-      _dumpJsonData(filename, nVtx, nFace, nCell, nFaceGroup2, vtx,
-                    faceVtxIdx, faceVtx, faceCell, cellFaceIdx, cellFace,faceGroupIdx, faceGroup);
+      _dumpJsonData(filename, iblock, nVtx, nFace, nCell, nFaceGroup2, nTPart, vtx,
+                    faceVtxIdx, faceVtx, faceCell, cellFaceIdx, cellFace,faceGroupIdx, faceGroup,
+                    facePartBoundProcIdx, facePartBoundPartIdx, facePartBound);
 
     }
   }
