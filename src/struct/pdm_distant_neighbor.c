@@ -256,17 +256,20 @@ const int           *n_entity,
     // For now we order/unique only the part !
     printf("[%i] - n_entity:: %d\n", ipart, n_entity[ipart]);
 
-    pdn->order       [ipart] = (int *) malloc( n_entity[ipart] * sizeof(int *));
-    pdn->order_unique[ipart] = (int *) malloc( n_entity[ipart] * sizeof(int *));
+    pdn->order       [ipart] = (int *) malloc( _part_neighbor_idx[n_entity[ipart]] * sizeof(int *));
+    pdn->order_unique[ipart] = (int *) malloc( _part_neighbor_idx[n_entity[ipart]] * sizeof(int *));
 
     // Sort
-    PDM_order_lnum_s(pdn->neighbor_desc[ipart], 3, pdn->order[ipart], n_entity[ipart]);
+    PDM_order_lnum_s(pdn->neighbor_desc[ipart],
+                     3,
+                     pdn->order[ipart],
+                     _part_neighbor_idx[n_entity[ipart]]);
 
     // Compute the unique idx from sort
     compute_unique_idx(pdn->order[ipart],
                        pdn->order_unique[ipart],
                        pdn->neighbor_desc[ipart],
-                       pdn->n_entity[ipart]);
+                       _part_neighbor_idx[n_entity[ipart]]);
 
     // Il faut connaitre le nombre d'occurence une fois trié --> Taille du buffer d'envoie
     // Mais par proc / part
