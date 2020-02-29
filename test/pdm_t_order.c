@@ -37,11 +37,6 @@ int iproc2, int ipart2, int ielt2
   return 0;
 }
 
-/**
- *
- * \brief  Main
- *
- */
 static
 void
 compute_unique_idx
@@ -52,6 +47,10 @@ compute_unique_idx
  const size_t nb_ent
 )
 {
+  if(nb_ent == 0){
+    return;
+  }
+
   int idx        = 0;
   int idx_unique = 0;
   int last_idx   = order[idx++];
@@ -106,6 +105,65 @@ compute_unique_idx
 }
 
 
+static
+void
+compute_unique_idx2
+(
+ int order[],
+ int order_unique[],
+ int connect_triplet[],
+ const size_t nb_ent
+)
+{
+  int idx_unique = -1;
+  int last_proc  = -1;
+  int last_part  = -1;
+  int last_elmt  = -1;
+
+  for(int i = 0; i < nb_ent; i++){
+
+    int old_order = order[i];
+    int curr_proc = connect_triplet[3*old_order  ];
+    int curr_part = connect_triplet[3*old_order+1];
+    int curr_elmt = connect_triplet[3*old_order+2];
+    int is_same = is_same_triplet(last_proc, last_part, last_elmt,
+                                  curr_proc, curr_part, curr_elmt);
+    printf(" curr:: ( %d / %d / %d ) | last:: ( %d / %d / %d ) \n",
+           curr_proc, curr_part, curr_elmt,
+           last_proc, last_part, last_elmt);
+
+    if(is_same == 0){ // N'est pas le meme
+      idx_unique++;
+      last_proc = curr_proc;
+      last_part = curr_part;
+      last_elmt = curr_elmt;
+    }
+    order_unique[i] = idx_unique;
+    printf("[%d] = %d --> %d \n", i, is_same, idx_unique);
+  }
+
+
+  if(1 == 1){
+    printf("order_unique:: \n");
+    for(int i = 0; i < nb_ent; i++){
+      printf(" -------------------------- \n");
+      // int pos_unique = order_unique_j1[i];
+      // int curr_idx   = order_j1[pos_unique];
+      int pos_unique = order_unique[i];
+      int curr_idx   = order[i];
+
+      int curr_proc  = connect_triplet[3*curr_idx  ];
+      int curr_part  = connect_triplet[3*curr_idx+1];
+      int curr_elmt  = connect_triplet[3*curr_idx+2];
+
+      printf("\t pos_unique :: %d \n", pos_unique);
+      printf("\t curr_idx   :: %d \n", curr_idx  );
+      printf("\t triplet    :: ( %d / %d / %d ) \n", curr_proc, curr_part, curr_elmt);
+
+    }
+    printf("\n");
+  }
+}
 
 /**
  *
@@ -195,6 +253,9 @@ char *argv[]
   int order_unique_j2[nb_ent]; // Très mauvais nom
   compute_unique_idx(order_j1, order_unique_j1, connect_triplet_j1, nb_ent);
   compute_unique_idx(order_j2, order_unique_j2, connect_triplet_j2, nb_ent);
+
+  compute_unique_idx2(order_j1, order_unique_j1, connect_triplet_j1, nb_ent);
+  compute_unique_idx2(order_j2, order_unique_j2, connect_triplet_j2, nb_ent);
 
   PDM_printf ("\nfin Test\n");
 
