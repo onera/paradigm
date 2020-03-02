@@ -72,7 +72,7 @@ extern "C" {
 typedef struct  {
 
   int               n_zone;           /*!< Number of initial zones */
-  int               n_part;           /*!< Number of partitions per proc in each zone */
+  int               *n_part;          /*!< Number of partitions per proc in each zone */
   PDM_bool_t        merge_blocks;     /*!< Merge before partitionning or not */
   PDM_part_split_t  split_method;     /*!< Partitioning method */
   PDM_MPI_Comm      comm;             /*!< MPI communicator */
@@ -137,7 +137,7 @@ int
 PDM_multipart_create
 (
  const int              n_zone,
- const int              n_part,
+ const int             *n_part,
  const PDM_bool_t       merge_blocks,
  const PDM_part_split_t split_method,
  const PDM_MPI_Comm     comm
@@ -256,7 +256,7 @@ PDM_multipart_run_ppart
               NULL,                       // renum_properties_cell
               0,                          // nPropertyFace
               NULL,                       // renum_properties_face
-              _multipart->n_part,
+              _multipart->n_part[zoneGId],
               dNCell,
               dNFace,
               dNVtx,
@@ -311,7 +311,7 @@ const   int  ipart,
 {
   _pdm_multipart_t *_multipart = _get_from_id (mpartId);
 
-  assert(zoneGId < _multipart->n_zone && ipart < _multipart->n_part);
+  assert(zoneGId < _multipart->n_zone && ipart < _multipart->n_part[zoneGId]);
   int ppartId = _multipart->partIds[zoneGId];
 
   PDM_part_part_dim_get(ppartId,
@@ -357,7 +357,7 @@ const int            ipart,
 {
    _pdm_multipart_t *_multipart = _get_from_id (mpartId);
 
-  assert(zoneGId < _multipart->n_zone && ipart < _multipart->n_part);
+  assert(zoneGId < _multipart->n_zone && ipart < _multipart->n_part[zoneGId]);
   int ppartId = _multipart->partIds[zoneGId];
 
   PDM_part_part_val_get(ppartId,
@@ -398,7 +398,7 @@ const int            ipart,
 {
   _pdm_multipart_t *_multipart = _get_from_id (mpartId);
 
-  assert(zoneGId < _multipart->n_zone && ipart < _multipart->n_part);
+  assert(zoneGId < _multipart->n_zone && ipart < _multipart->n_part[zoneGId]);
   int ppartId = _multipart->partIds[zoneGId];
 
   PDM_part_part_color_get(ppartId,
