@@ -70,7 +70,7 @@ int
 PDM_multipart_create
 (
  const int              n_zone,
- const int              n_part,
+ const int             *n_part,
  const PDM_bool_t       merge_blocks,
  const PDM_part_split_t split_method,
  const PDM_MPI_Comm     comm

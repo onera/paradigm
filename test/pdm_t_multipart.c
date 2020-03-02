@@ -572,7 +572,10 @@ int main(int argc, char *argv[])
     PDM_MPI_Allreduce(&maxZoneGId, &multipartSize, 1, PDM_MPI_INT, PDM_MPI_MAX, comm);
   }
 
-   mpartId = PDM_multipart_create(multipartSize, nPart, PDM_FALSE, method, comm);
+  int * nPartArray = (int *) malloc((multipartSize) * sizeof(int));
+  for (int k=0; k<multipartSize; k++)
+    nPartArray[k] = nPart;
+   mpartId = PDM_multipart_create(multipartSize, nPartArray, PDM_FALSE, method, comm);
    PDM_printf("From exe : created a multipart object, id is %i \n", mpartId);
    for (int iblock=0; iblock < nbzone; iblock++)
    {
@@ -621,7 +624,7 @@ int main(int argc, char *argv[])
   }
 
   for (int iblock = 0; iblock < multipartSize; iblock++) {
-    for (int ipart = 0; ipart < nPart; ipart++) {
+    for (int ipart = 0; ipart < nPartArray[iblock]; ipart++) {
 
       int nCell;
       int nFace;
@@ -705,6 +708,7 @@ int main(int argc, char *argv[])
     PDM_dmesh_free(dmeshIds[iblock]);
   free(dmeshIds);
   free(dblockIds);
+  free(nPartArray);
 
   if (strcmp(distri_dir, "\0") == 0) // No distributed data provided
   {
