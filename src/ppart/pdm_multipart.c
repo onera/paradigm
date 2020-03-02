@@ -221,12 +221,13 @@ PDM_multipart_run_ppart
       PDM_g_num_t  *dFaceCell     = NULL;
       int          *dFaceGroupIdx = NULL;
       PDM_g_num_t  *dFaceGroup    = NULL;
+      int          *dFaceTag      = NULL;
 
       // Number of faceGroup and faceGroupIdx must be known even when proc has no distributed data
       if (blockId >= 0)
       {
         PDM_dmesh_dims_get(blockId, &dNCell, &dNFace, &dNVtx, &nBounds);
-        PDM_dmesh_data_get(blockId, &dVtxCoord, &dFaceVtxIdx, &dFaceVtx, &dFaceCell, &dFaceGroupIdx, &dFaceGroup);
+        PDM_dmesh_data_get(blockId, &dVtxCoord, &dFaceVtxIdx, &dFaceVtx, &dFaceCell, &dFaceGroupIdx, &dFaceGroup, &dFaceTag);
 
       }
       int nBoundsForGhost = -1;
@@ -238,6 +239,7 @@ PDM_multipart_run_ppart
         for (int k=0; k < nBounds + 1; k++)
           dFaceGroupIdx[k] = 0;
         dFaceCell = (PDM_g_num_t *) malloc(0); //Must be != NULL to enter in _dual_graph
+        dFaceTag  = (int *) malloc(0); //Must be != NULL to enter in _dual_graph
       }
 
 
@@ -268,7 +270,7 @@ PDM_multipart_run_ppart
               dFaceCell,
               dFaceVtxIdx,
               dFaceVtx,
-              NULL,                       // dFaceTag
+              dFaceTag,
               dVtxCoord,
               NULL,                       // dVtxTag
               dFaceGroupIdx,
@@ -282,6 +284,7 @@ PDM_multipart_run_ppart
       {
         free(dFaceGroupIdx);
         free(dFaceCell);
+        free(dFaceTag);
       }
     }
   }

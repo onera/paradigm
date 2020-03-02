@@ -87,10 +87,11 @@ PDM_dmesh_create
  * \param [in]   dFaceCell          Face-cell connectivity of faces (size =
  *                                    2 * dNFace). If iface is a boundary face,
  *                                    dFaceCell[2*iface + 1] = 0
- * \param [in]   dFaceVtxIdx        Index of faces list of each boundary
+ * \param [in]   dFaceGroupIdx      Index of faces list of each boundary
  *                                    (size = nBound + 1)
- * \param [in]   dFaceVtx           Faces list of each boundary
+ * \param [in]   dFaceGroup         Faces list of each boundary
  *                                    (size = dfaceBoundIdx[nBound])
+ * \param [in]   dFaceTag           Distributed face tag (size = dNFace)
  */
 
 void
@@ -102,7 +103,8 @@ PDM_dmesh_set
  const PDM_g_num_t  *dFaceVtx,
  const PDM_g_num_t  *dFaceCell,
  const int          *dFaceGroupIdx,
- const PDM_g_num_t  *dFaceGroup
+ const PDM_g_num_t  *dFaceGroup,
+ const int          *dFaceTag
 );
 
 /**
@@ -137,6 +139,7 @@ PDM_dmesh_dims_get
  * \param [out]   dFaceCell          Face-cell connectivity of faces
  * \param [out]   dFaceVtxIdx        Indicesof faces list of each boundary
  * \param [out]   dFaceVtx           Faces list of each boundary
+ * \param [out]   dFaceTag           Faces tags
  */
 
 void
@@ -148,7 +151,8 @@ PDM_dmesh_data_get
  PDM_g_num_t  **dFaceVtx,
  PDM_g_num_t  **dFaceCell,
  int          **dFaceGroupIdx,
- PDM_g_num_t  **dFaceGroup
+ PDM_g_num_t  **dFaceGroup,
+ int          **dFaceTag
 );
 
 /**

@@ -89,6 +89,8 @@ typedef struct
   const PDM_g_num_t *_dFaceGroup;    /*!< Distributed faces list of each
                                        boundary (size = dfaceBoundIdx[nBound])
                                         or NULL                               */
+  const int         *_dFaceTag       /*!< Distributed tag on each face
+                                        (size = dNFace) or NULL               */
 } _pdm_dmesh_t;
 
 /*============================================================================
@@ -172,6 +174,7 @@ PDM_dmesh_create
   dmesh->_dVtxCoord     = NULL;
   dmesh->_dFaceGroupIdx = NULL;
   dmesh->_dFaceGroup    = NULL;
+  dmesh->_dFaceTag      = NULL;
 
   return id;
 
@@ -194,6 +197,7 @@ PDM_dmesh_create
  *                                    (size = nBound + 1)
  * \param [in]   dFaceVtx           Faces list of each boundary
  *                                    (size = dfaceBoundIdx[nBound])
+ * \param [in]   dFaceTag           Distributed face tag (size = dNFace)
  */
 
 void
@@ -205,7 +209,8 @@ PDM_dmesh_set
  const PDM_g_num_t  *dFaceVtx,
  const PDM_g_num_t  *dFaceCell,
  const int          *dFaceGroupIdx,
- const PDM_g_num_t  *dFaceGroup
+ const PDM_g_num_t  *dFaceGroup,
+ const int          *dFaceTag
 )
 {
   _pdm_dmesh_t *dmesh = _get_from_id (id);
@@ -216,6 +221,7 @@ PDM_dmesh_set
   dmesh->_dFaceCell     = dFaceCell;
   dmesh->_dFaceGroupIdx = dFaceGroupIdx;
   dmesh->_dFaceGroup    = dFaceGroup;
+  dmesh->_dFaceTag      = dFaceTag;
 }
 
 /**
@@ -257,6 +263,7 @@ PDM_dmesh_dims_get
  * \param [out]   dFaceCell          Face-cell connectivity of faces
  * \param [out]   dFaceVtxIdx        Indicesof faces list of each boundary
  * \param [out]   dFaceVtx           Faces list of each boundary
+ * \param [out]   dFaceTag           Faces tags
  */
 
 void
@@ -268,7 +275,8 @@ PDM_dmesh_data_get
  PDM_g_num_t  **dFaceVtx,
  PDM_g_num_t  **dFaceCell,
  int          **dFaceGroupIdx,
- PDM_g_num_t  **dFaceGroup
+ PDM_g_num_t  **dFaceGroup,
+ int          **dFaceTag
 )
 {
   _pdm_dmesh_t *dmesh = _get_from_id (id);
@@ -279,6 +287,7 @@ PDM_dmesh_data_get
   *dFaceCell     = dmesh->_dFaceCell;
   *dFaceGroupIdx = dmesh->_dFaceGroupIdx;
   *dFaceGroup    = dmesh->_dFaceGroup;
+  *dFaceTag      = dmesh->_dFaceTag;
 }
 
 /**
@@ -307,6 +316,7 @@ PDM_dmesh_free
   dmesh->_dVtxCoord     = NULL;
   dmesh->_dFaceGroupIdx = NULL;
   dmesh->_dFaceGroup    = NULL;
+  dmesh->_dFaceTag      = NULL;
 
   free (dmesh);
 
