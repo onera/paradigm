@@ -214,29 +214,52 @@ PDM_multipart_run_ppart
       int dNCell  = 0;
       int dNFace  = 0;
       int dNVtx   = 0;
-      int nBounds = 0;
+      int nBnd    = 0;
+      int nJoin   = 0;
       double       *dVtxCoord     = NULL;
       int          *dFaceVtxIdx   = NULL;
       PDM_g_num_t  *dFaceVtx      = NULL;
       PDM_g_num_t  *dFaceCell     = NULL;
-      int          *dFaceGroupIdx = NULL;
-      PDM_g_num_t  *dFaceGroup    = NULL;
+      int          *dFaceBoundIdx = NULL;
+      PDM_g_num_t  *dFaceBound    = NULL;
+      int          *dJoinZoneOpp  = NULL;
+      int          *dFaceJoinIdx  = NULL;
+      PDM_g_num_t  *dFaceJoin     = NULL;
       int          *dFaceTag      = NULL;
 
-      // Number of faceGroup and faceGroupIdx must be known even when proc has no distributed data
+      int nFaceGroup = 0;
+      int          *dFaceGroupIdx = NULL;
+      PDM_g_num_t  *dFaceGroup    = NULL;
+
       if (blockId >= 0)
       {
-        PDM_dmesh_dims_get(blockId, &dNCell, &dNFace, &dNVtx, &nBounds);
-        PDM_dmesh_data_get(blockId, &dVtxCoord, &dFaceVtxIdx, &dFaceVtx, &dFaceCell, &dFaceGroupIdx, &dFaceGroup, &dFaceTag);
+        PDM_dmesh_dims_get(blockId, &dNCell, &dNFace, &dNVtx, &nBnd, &nJoin);
+        PDM_dmesh_data_get(blockId, &dVtxCoord, &dFaceVtxIdx, &dFaceVtx, &dFaceCell,
+                           &dFaceBoundIdx, &dFaceBound, &dJoinZoneOpp, &dFaceJoinIdx, &dFaceJoin, &dFaceTag);
+        //Merge FaceBounds and FaceJoins into FaceGroup
+        nFaceGroup = nBnd + nJoin;
+        dFaceGroupIdx = (int *) malloc((nFaceGroup + 1) * sizeof(int));
+        dFaceGroup = (PDM_g_num_t *) malloc((dFaceBoundIdx[nBnd] + dFaceJoinIdx[nJoin]) * sizeof(PDM_g_num_t));
 
+        for (int i=0; i < nBnd + 1; i++)
+          dFaceGroupIdx[i] = dFaceBoundIdx[i];
+        for (int i=0; i < dFaceBoundIdx[nBnd]; i++)
+          dFaceGroup[i] = dFaceBound[i];
+
+        for (int i=1; i < nJoin + 1; i++)
+          dFaceGroupIdx[nBnd + i] = dFaceBoundIdx[nBnd] + dFaceJoinIdx[i];
+        for (int i=0; i < dFaceJoinIdx[nJoin]; i++)
+          dFaceGroup[dFaceBoundIdx[nBnd] + i] = dFaceJoin[i];
       }
-      int nBoundsForGhost = -1;
-      PDM_MPI_Allreduce(&nBounds, &nBoundsForGhost, 1, PDM_MPI_INT, PDM_MPI_MAX, _multipart->comm);
+      // nFaceGroup must be the same for every proc. We assume it is the same for procs having data
+      // faceGroupIdx must also be know (even if filled with 0) for every proc
+      int nFaceGroupForGhost = -1;
+      PDM_MPI_Allreduce(&nFaceGroup,  &nFaceGroupForGhost,  1, PDM_MPI_INT, PDM_MPI_MAX, _multipart->comm);
       if (blockId < 0)
       {
-        nBounds = nBoundsForGhost;
-        dFaceGroupIdx = (int *) malloc((nBounds + 1)  * sizeof(int));
-        for (int k=0; k < nBounds + 1; k++)
+        nFaceGroup = nFaceGroupForGhost;
+        dFaceGroupIdx = (int *) malloc((nFaceGroup + 1) * sizeof(int));
+        for (int k=0; k < nFaceGroup + 1; k++)
           dFaceGroupIdx[k] = 0;
         dFaceCell = (PDM_g_num_t *) malloc(0); //Must be != NULL to enter in _dual_graph
         dFaceTag  = (int *) malloc(0); //Must be != NULL to enter in _dual_graph
@@ -260,7 +283,7 @@ PDM_multipart_run_ppart
               dNCell,
               dNFace,
               dNVtx,
-              nBounds,
+              nFaceGroup,
               NULL,                       // dCellFaceIdx
               NULL,                       // dCellFace
               NULL,                       // dCellTag
@@ -270,7 +293,7 @@ PDM_multipart_run_ppart
               dFaceCell,
               dFaceVtxIdx,
               dFaceVtx,
-              dFaceTag,
+              NULL,                       //dFaceTag
               dVtxCoord,
               NULL,                       // dVtxTag
               dFaceGroupIdx,
@@ -280,9 +303,10 @@ PDM_multipart_run_ppart
       _multipart->partIds[zoneGId] = ppartId;
 
       free(dCellPart);
+      free(dFaceGroupIdx);
+      free(dFaceGroup);
       if (blockId < 0)
       {
-        free(dFaceGroupIdx);
         free(dFaceCell);
         free(dFaceTag);
       }
