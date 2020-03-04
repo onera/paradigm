@@ -302,7 +302,7 @@ static void _readJsonBlock
   json_object_object_get_ex(parsed_json, "Zones", &zonedata);
   zonedata = json_object_array_get_idx(zonedata, blockId);
 
-  int nbVtx, nbFace, nbCell, nFaceGroup, nInterface;
+  int nbVtx, nbFace, nbCell, nbBound, nbJoin;
   int zoneGId = -1;
   json_object_object_get_ex(zonedata, "nbVtx", &intdata);
   nbVtx = json_object_get_int(intdata);
@@ -310,20 +310,15 @@ static void _readJsonBlock
   nbFace = json_object_get_int(intdata);
   json_object_object_get_ex(zonedata, "nbCell", &intdata);
   nbCell = json_object_get_int(intdata);
-  json_object_object_get_ex(zonedata, "nbFaceGroup", &intdata);
-  nFaceGroup = json_object_get_int(intdata);
+  json_object_object_get_ex(zonedata, "nbBoundary", &intdata);
+  nbBound = json_object_get_int(intdata);
   json_object_object_get_ex(zonedata, "nbInterface", &intdata);
-  nInterface = json_object_get_int(intdata);
+  nbJoin = json_object_get_int(intdata);
   json_object_object_get_ex(zonedata, "ZoneGId", &intdata);
   zoneGId = json_object_get_int(intdata);
 
-  // FaceTag convention : -1 = internal face,
-  //                       0 = boundary face,
-  //                       n = join face connecting with zone of GId n
-  //                       -999 = something went wrong
-  int * faceTag = (int *) malloc((nbFace) * sizeof(int));
-  for (int i=0; i<nbFace; i++)
-    faceTag[i] = -1;
+  // PDM_printf("Found in json : nbVtx = %d, nbFace = %d, nbCell = %d, nbBound = %d, \
+  nbJoin = %d for zoneGId %d\n", nbVtx, nbFace, nbCell, nbBound, nbJoin, zoneGId);
 
   json_object_object_get_ex(zonedata, "VtxCoord", &array);
   assert(json_object_array_length(array) == nbVtx);
@@ -369,63 +364,63 @@ static void _readJsonBlock
     faceCell[2*i+1] = json_object_get_int(json_object_array_get_idx(arraydata, 1));
   }
 
-  //First gets size of faceGroup and fills faceGroupIdx
-  int * faceGroupIdx = (int *) malloc((nFaceGroup + nInterface + 1) * sizeof(int));
-  faceGroupIdx[0] = 0;
-  //BC part
-  json_object_object_get_ex(zonedata, "FaceGroups", &array);
-  assert(json_object_array_length(array) == nFaceGroup);
-  for (int i = 0; i < nFaceGroup; i++)
+  //First get size of faceBound and fills faceBoundIdx
+  int * faceBoundIdx = (int *) malloc((nbBound + 1) * sizeof(int));
+  faceBoundIdx[0] = 0;
+  json_object_object_get_ex(zonedata, "BoundGroups", &array);
+  assert(json_object_array_length(array) == nbBound);
+  for (int i = 0; i < nbBound; i++)
   {
     arraydata = json_object_array_get_idx(array, i);
-    faceGroupIdx[i+1] = json_object_array_length(arraydata) + faceGroupIdx[i];
+    faceBoundIdx[i+1] = json_object_array_length(arraydata) + faceBoundIdx[i];
   }
-  //GC part
-  json_object_object_get_ex(zonedata, "InterfaceGroups", &array);
-  assert(json_object_array_length(array) == nInterface);
-  for (int i = 0; i < nInterface; i++)
-  {
-    arraydata = json_object_array_get_idx(array, i);
-    json_object_object_get_ex(arraydata, "PointList", &arraydata);
-    faceGroupIdx[nFaceGroup + i + 1] = json_object_array_length(arraydata) + faceGroupIdx[nFaceGroup + i];
-  }
-  //Now fill faceGroup
-  PDM_g_num_t * faceGroup = (PDM_g_num_t *) malloc(faceGroupIdx[nFaceGroup+nInterface] * sizeof(PDM_g_num_t));
+  //Now fill faceBound
+  PDM_g_num_t * faceBound = (PDM_g_num_t *) malloc(faceBoundIdx[nbBound] * sizeof(PDM_g_num_t));
   iface = 0;
-  //BC part
-  json_object_object_get_ex(zonedata, "FaceGroups", &array);
-  for (int i = 0; i < nFaceGroup; i++)
+  for (int i = 0; i < nbBound; i++)
   {
     arraydata = json_object_array_get_idx(array, i);
     for (int k = 0; k < json_object_array_length(arraydata); k++)
     {
-      faceGroup[iface] = json_object_get_int(json_object_array_get_idx(arraydata, k));
-      faceTag[faceGroup[iface] - 1] = 0;
-      iface += 1;
-    }
-  }
-  //GC part
-  json_object_object_get_ex(zonedata, "InterfaceGroups", &array);
-  for (int i = 0; i < nInterface; i++)
-  {
-    arraydata = json_object_array_get_idx(array, i);
-    int targetId = -999;
-    json_object_object_get_ex(arraydata, "targetGId", &intdata);
-    targetId = json_object_get_int(intdata);
-    json_object_object_get_ex(arraydata, "PointList", &arraydata);
-    for (int k = 0; k < json_object_array_length(arraydata); k++)
-    {
-      faceGroup[iface] = json_object_get_int(json_object_array_get_idx(arraydata, k));
-      faceTag[faceGroup[iface] - 1] = targetId;
+      faceBound[iface] = json_object_get_int(json_object_array_get_idx(arraydata, k));
       iface += 1;
     }
   }
 
-  int dmeshId = PDM_dmesh_create(nbCell, nbFace, nbVtx, nFaceGroup+nInterface);
-  PDM_dmesh_set(dmeshId, vtxCoord, faceVtxIdx, faceVtx, faceCell, faceGroupIdx, faceGroup, faceTag);
+  //First get size of faceJoin and fills faceJoinIdx
+  int * faceJoinIdx = (int *) malloc((nbJoin + 1) * sizeof(int));
+  faceJoinIdx[0] = 0;
+  json_object_object_get_ex(zonedata, "InterfaceGroups", &array);
+  assert(json_object_array_length(array) == nbJoin);
+  for (int i = 0; i < nbJoin; i++)
+  {
+    arraydata = json_object_array_get_idx(array, i);
+    json_object_object_get_ex(arraydata, "PointList", &arraydata);
+    faceJoinIdx[i+1] = json_object_array_length(arraydata) + faceJoinIdx[i];
+  }
+  //Now fill faceJoin
+  PDM_g_num_t * faceJoin = (PDM_g_num_t *) malloc(faceJoinIdx[nbJoin] * sizeof(PDM_g_num_t));
+  int * joinZoneOpp = (int *) malloc(nbJoin * sizeof(int));
+  iface = 0;
+  for (int i = 0; i < nbJoin; i++)
+  {
+    arraydata = json_object_array_get_idx(array, i);
+    json_object_object_get_ex(arraydata, "targetGId", &intdata);
+    joinZoneOpp[i] = json_object_get_int(intdata);
+    json_object_object_get_ex(arraydata, "PointList", &arraydata);
+    for (int k = 0; k < json_object_array_length(arraydata); k++)
+    {
+      faceJoin[iface] = json_object_get_int(json_object_array_get_idx(arraydata, k));
+      iface += 1;
+    }
+  }
+
+  int dmeshId = PDM_dmesh_create(nbCell, nbFace, nbVtx, nbBound, nbJoin);
+  PDM_dmesh_set(dmeshId, vtxCoord, faceVtxIdx, faceVtx, faceCell,
+                faceBoundIdx, faceBound, joinZoneOpp, faceJoinIdx, faceJoin, NULL);
   meshIds[blockId] = dmeshId;
   zoneIds[blockId] = zoneGId;
-  //Fuite méloire -> les données allouées ici sont perdues
+  //Fuite mémoire -> les données allouées ici sont perdues
 }
 
 /**
@@ -533,8 +528,8 @@ int main(int argc, char *argv[])
     dmeshIds  = (int *) malloc(nbzone * sizeof(int));
     dblockIds = (int *) malloc(nbzone * sizeof(int));
     int dmeshId = -1;
-    dmeshId = PDM_dmesh_create(dNCell, dNFace, dNVtx, nFaceGroup);
-    PDM_dmesh_set(dmeshId, dVtxCoord, dFaceVtxIdx, dFaceVtx, dFaceCell, dFaceGroupIdx, dFaceGroup, NULL);
+    dmeshId = PDM_dmesh_create(dNCell, dNFace, dNVtx, nFaceGroup, 0);
+    PDM_dmesh_set(dmeshId, dVtxCoord, dFaceVtxIdx, dFaceVtx, dFaceCell, dFaceGroupIdx, dFaceGroup, NULL, NULL, NULL, NULL);
     dmeshIds[0] = dmeshId;
     dblockIds[0] = 1;
 
