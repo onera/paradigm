@@ -99,7 +99,6 @@ PDM_dmesh_create
  *                                    (size = dNJoin + 1)
  * \param [in]   dFaceJoin          Faces list of each join
  *                                    (size = dfaceJoinIdx[dNJoin])
- * \param [in]   dFaceTag           Distributed face tag (size = dNFace)
  */
 
 void
@@ -114,8 +113,7 @@ PDM_dmesh_set
  const PDM_g_num_t  *dFaceBound,
  const int          *dJoinZoneOpp,
  const int          *dFaceJoinIdx,
- const PDM_g_num_t  *dFaceJoin,
- const int          *dFaceTag
+ const PDM_g_num_t  *dFaceJoin
 );
 
 /**
@@ -155,7 +153,6 @@ PDM_dmesh_dims_get
  * \param [out]   dJoinZoneOpp       Global Id of the opposed zone for each join
  * \param [out]   dFaceJoinIdx       Indices of faces list of each join
  * \param [out]   dFaceJoin          Faces list of each join
- * \param [out]   dFaceTag           Faces tags
  */
 
 void
@@ -170,8 +167,7 @@ PDM_dmesh_data_get
  PDM_g_num_t  **dFaceBound,
  int          **dJoinZoneOpp,
  int          **dFaceJoinIdx,
- PDM_g_num_t  **dFaceJoin,
- int          **dFaceTag
+ PDM_g_num_t  **dFaceJoin
 );
 
 /**

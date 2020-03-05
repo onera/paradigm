@@ -272,18 +272,17 @@ PDM_multipart_run_ppart
       int          *dJoinZoneOpp  = NULL;
       int          *dFaceJoinIdx  = NULL;
       PDM_g_num_t  *dFaceJoin     = NULL;
-      int          *dFaceTag      = NULL;
 
       int nFaceGroup = 0;
       int          *dFaceGroupIdx = NULL;
       PDM_g_num_t  *dFaceGroup    = NULL;
-      int          *dFaceTagNew   = NULL;
+      int          *dFaceTag      = NULL;
 
       if (blockId >= 0)
       {
         PDM_dmesh_dims_get(blockId, &dNCell, &dNFace, &dNVtx, &nBnd, &nJoin);
         PDM_dmesh_data_get(blockId, &dVtxCoord, &dFaceVtxIdx, &dFaceVtx, &dFaceCell,
-                           &dFaceBoundIdx, &dFaceBound, &dJoinZoneOpp, &dFaceJoinIdx, &dFaceJoin, &dFaceTag);
+                           &dFaceBoundIdx, &dFaceBound, &dJoinZoneOpp, &dFaceJoinIdx, &dFaceJoin);
         //Merge FaceBounds and FaceJoins into FaceGroup
         nFaceGroup = nBnd + nJoin;
         dFaceGroupIdx = (int *) malloc((nFaceGroup + 1) * sizeof(int));
@@ -310,7 +309,6 @@ PDM_multipart_run_ppart
         for (int k=0; k < nFaceGroup + 1; k++)
           dFaceGroupIdx[k] = 0;
         dFaceCell = (PDM_g_num_t *) malloc(0); //Must be != NULL to enter in _dual_graph
-        dFaceTag  = (int *) malloc(0); //Must be != NULL to enter in _dual_graph
       }
       // Build FaceTag using join informations
       // Construct face distribution -- will be needed to find owner of faces
@@ -398,12 +396,12 @@ PDM_multipart_run_ppart
       free(faceToRecvIdx);
 
       //Go back to local numerotation and flag received faces
-      dFaceTagNew = (int *) malloc((dNFace) * sizeof(int));
+      dFaceTag = (int *) malloc((dNFace) * sizeof(int));
       for (int iface = 0; iface < dNFace; iface++)
-        dFaceTagNew[iface] = -1;
+        dFaceTag[iface] = -1;
       for (int i=0; i<nRecv; i++) {
         int lfaceId = faceToRecv[nData*i] - dFaceProc[iRank];
-        dFaceTagNew[lfaceId] = faceToRecv[nData*i + 1];
+        dFaceTag[lfaceId] = faceToRecv[nData*i + 1];
       }
       free(faceToRecv);
 
@@ -435,7 +433,7 @@ PDM_multipart_run_ppart
               dFaceCell,
               dFaceVtxIdx,
               dFaceVtx,
-              dFaceTagNew, //NULL,                       //dFaceTag
+              dFaceTag,
               dVtxCoord,
               NULL,                       // dVtxTag
               dFaceGroupIdx,
@@ -447,10 +445,10 @@ PDM_multipart_run_ppart
       free(dCellPart);
       free(dFaceGroupIdx);
       free(dFaceGroup);
+      free(dFaceTag);
       if (blockId < 0)
       {
         free(dFaceCell);
-        free(dFaceTag);
       }
     }
   }
