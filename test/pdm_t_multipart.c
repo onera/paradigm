@@ -417,7 +417,7 @@ static void _readJsonBlock
 
   int dmeshId = PDM_dmesh_create(nbCell, nbFace, nbVtx, nbBound, nbJoin);
   PDM_dmesh_set(dmeshId, vtxCoord, faceVtxIdx, faceVtx, faceCell,
-                faceBoundIdx, faceBound, joinZoneOpp, faceJoinIdx, faceJoin, NULL);
+                faceBoundIdx, faceBound, joinZoneOpp, faceJoinIdx, faceJoin);
   meshIds[blockId] = dmeshId;
   zoneIds[blockId] = zoneGId;
   //Fuite mémoire -> les données allouées ici sont perdues
@@ -529,7 +529,7 @@ int main(int argc, char *argv[])
     dblockIds = (int *) malloc(nbzone * sizeof(int));
     int dmeshId = -1;
     dmeshId = PDM_dmesh_create(dNCell, dNFace, dNVtx, nFaceGroup, 0);
-    PDM_dmesh_set(dmeshId, dVtxCoord, dFaceVtxIdx, dFaceVtx, dFaceCell, dFaceGroupIdx, dFaceGroup, NULL, NULL, NULL, NULL);
+    PDM_dmesh_set(dmeshId, dVtxCoord, dFaceVtxIdx, dFaceVtx, dFaceCell, dFaceGroupIdx, dFaceGroup, NULL, NULL, NULL);
     dmeshIds[0] = dmeshId;
     dblockIds[0] = 1;
 
