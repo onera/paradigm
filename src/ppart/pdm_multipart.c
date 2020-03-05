@@ -115,6 +115,48 @@ _get_from_id
   return multipart;
 }
 
+static int
+ _search_rank
+(
+ PDM_g_num_t   elt,
+ PDM_g_num_t  *array,
+ int            id1,
+ int            id2
+)
+{
+  if (elt >= array[id2]) {
+    PDM_printf("PPART error : Element not in initial distributed array "
+           PDM_FMT_G_NUM" "PDM_FMT_G_NUM" "PDM_FMT_G_NUM"\n",
+           elt, array[id1], array[id2]);
+    abort();
+  }
+
+  if (elt < array[id1]) {
+    PDM_printf("PPART error : Element not in initial distributed array "
+           PDM_FMT_G_NUM" "PDM_FMT_G_NUM" "PDM_FMT_G_NUM"\n",
+           elt, array[id1], array[id2]);
+    abort();
+  }
+
+  if (id2 == id1 + 1) {
+    return id1;
+  }
+
+  else {
+
+    while(array[id1] == array[id1+1]) id1++;
+
+    int midId = (id2 + id1) / 2;
+
+    if (elt == array[id1])
+      return id1;
+    else if (elt < array[midId])
+      return _search_rank(elt, array, id1, midId);
+    else if (elt >= array[midId])
+      return _search_rank(elt, array, midId, id2);
+  }
+  return -1;
+}
 
 /*=============================================================================
  * Public function definitions
@@ -198,6 +240,11 @@ PDM_multipart_run_ppart
 {
   _pdm_multipart_t *_multipart = _get_from_id (id);
 
+  int iRank;
+  int nRank;
+  PDM_MPI_Comm_rank(_multipart->comm, &iRank);
+  PDM_MPI_Comm_size(_multipart->comm, &nRank);
+
   if (_multipart->merge_blocks)
   {
     // 1. Generate global numerotation using all blocks
@@ -230,6 +277,7 @@ PDM_multipart_run_ppart
       int nFaceGroup = 0;
       int          *dFaceGroupIdx = NULL;
       PDM_g_num_t  *dFaceGroup    = NULL;
+      int          *dFaceTagNew   = NULL;
 
       if (blockId >= 0)
       {
@@ -264,6 +312,100 @@ PDM_multipart_run_ppart
         dFaceCell = (PDM_g_num_t *) malloc(0); //Must be != NULL to enter in _dual_graph
         dFaceTag  = (int *) malloc(0); //Must be != NULL to enter in _dual_graph
       }
+      // Build FaceTag using join informations
+      // Construct face distribution -- will be needed to find owner of faces
+      PDM_g_num_t * dFaceProc = (PDM_g_num_t *) malloc((nRank+1) * sizeof(PDM_g_num_t));
+      int *dNFaceProc = (int *) malloc((nRank) * sizeof(int));
+
+      PDM_MPI_Allgather((void *) &dNFace,
+                1,
+                PDM_MPI_INT,
+                (void *) dNFaceProc,
+                1,
+                PDM_MPI_INT,
+                _multipart->comm);
+
+      dFaceProc[0] = 1;
+      for (int i = 1; i < nRank+1; i++)
+        dFaceProc[i] = (PDM_g_num_t) dNFaceProc[i-1] + dFaceProc[i-1];
+      free(dNFaceProc);
+
+      int *faceToSendN   = (int *) malloc(nRank * sizeof(int));
+      int *faceToSendIdx = (int *) malloc((nRank+1) * sizeof(int));
+      int  nData = 2; //Face Id, JoinOppId
+
+      for (int i = 0; i < nRank; i++)
+        faceToSendN[i] = 0;
+
+      //Count faces to send
+      for (int ijoin = 0; ijoin < nJoin; ijoin++) {
+        for (int iface = dFaceJoinIdx[ijoin]; iface < dFaceJoinIdx[ijoin+1]; iface++) {
+          int rank = _search_rank(dFaceJoin[iface], dFaceProc, 0, nRank);
+          faceToSendN[rank] += nData;
+        }
+      }
+      //Prepare variable stride
+      faceToSendIdx[0] = 0;
+      for (int i = 1; i < nRank + 1; i++) {
+        faceToSendIdx[i] = faceToSendIdx[i-1] + faceToSendN[i-1];
+        faceToSendN[i-1] = 0;
+      }
+      //Prepare data
+      PDM_g_num_t *faceToSend = (PDM_g_num_t *) malloc(faceToSendIdx[nRank] * sizeof(PDM_g_num_t));
+      for (int ijoin = 0; ijoin < nJoin; ijoin++)
+      {
+        for (int iface = dFaceJoinIdx[ijoin]; iface < dFaceJoinIdx[ijoin+1]; iface++)
+        {
+          int rank = _search_rank(dFaceJoin[iface], dFaceProc, 0, nRank);
+          int idx   = faceToSendIdx[rank] + faceToSendN[rank];
+          faceToSend[idx  ]   = dFaceJoin[iface];
+          faceToSend[idx+1]   = dJoinZoneOpp[ijoin];
+          faceToSendN[rank] += nData;
+        }
+      }
+
+      //Exchange sizes
+      int *faceToRecvN   = (int *) malloc(nRank * sizeof(int));
+      PDM_MPI_Alltoall(faceToSendN,
+                 1,
+                 PDM_MPI_INT,
+                 faceToRecvN,
+                 1,
+                 PDM_MPI_INT,
+                 _multipart->comm);
+      int *faceToRecvIdx = (int *) malloc((nRank+1) * sizeof(int));
+      faceToRecvIdx[0] = 0;
+      for(int i = 1; i < (nRank+1); i++) {
+        faceToRecvIdx[i] = faceToRecvIdx[i-1] + faceToRecvN[i-1];
+      }
+      //Exchange data
+      PDM_g_num_t *faceToRecv = (PDM_g_num_t *) malloc(faceToRecvIdx[nRank]*sizeof(PDM_g_num_t));
+      PDM_MPI_Alltoallv(faceToSend,
+                  faceToSendN,
+                  faceToSendIdx,
+                  PDM__PDM_MPI_G_NUM,
+                  faceToRecv,
+                  faceToRecvN,
+                  faceToRecvIdx,
+                  PDM__PDM_MPI_G_NUM,
+                  _multipart->comm);
+      int nRecv = faceToRecvIdx[nRank]/nData;
+
+      free(faceToSendN);
+      free(faceToSendIdx);
+      free(faceToSend);
+      free(faceToRecvN);
+      free(faceToRecvIdx);
+
+      //Go back to local numerotation and flag received faces
+      dFaceTagNew = (int *) malloc((dNFace) * sizeof(int));
+      for (int iface = 0; iface < dNFace; iface++)
+        dFaceTagNew[iface] = -1;
+      for (int i=0; i<nRecv; i++) {
+        int lfaceId = faceToRecv[nData*i] - dFaceProc[iRank];
+        dFaceTagNew[lfaceId] = faceToRecv[nData*i + 1];
+      }
+      free(faceToRecv);
 
 
       int ppartId = 0;
@@ -293,7 +435,7 @@ PDM_multipart_run_ppart
               dFaceCell,
               dFaceVtxIdx,
               dFaceVtx,
-              NULL,                       //dFaceTag
+              dFaceTagNew, //NULL,                       //dFaceTag
               dVtxCoord,
               NULL,                       // dVtxTag
               dFaceGroupIdx,
