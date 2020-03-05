@@ -76,9 +76,11 @@ typedef struct  {
   PDM_bool_t        merge_blocks;     /*!< Merge before partitionning or not */
   PDM_part_split_t  split_method;     /*!< Partitioning method */
   PDM_MPI_Comm      comm;             /*!< MPI communicator */
-  int               *dmeshesIds;     /*!< Ids of distributed blocks (size = n_zone)   */
+  int               *dmeshesIds;      /*!< Ids of distributed blocks (size = n_zone)  */
   int               *partIds;         /*!< Ids of partitions built on each block of this
                                            process (size = n_zone)                    */
+  int               *nBoundsAndJoins; /*!< Number of boundaries and joins in each zone
+                                           (size = 2*n_zone, global data)             */
 } _pdm_multipart_t;
 
 /*============================================================================
@@ -302,13 +304,16 @@ PDM_multipart_create
   _multipart->split_method= split_method;
   _multipart->comm        = comm;
 
-  _multipart->dmeshesIds = (int *) malloc(_multipart->n_zone * sizeof(int));
-  for (int i = 0; i < _multipart->n_zone; i++)
-    _multipart->dmeshesIds[i] = -1;
+  _multipart->dmeshesIds      = (int *) malloc(_multipart->n_zone * sizeof(int));
+  _multipart->partIds         = (int *) malloc(_multipart->n_zone * sizeof(int));
+  _multipart->nBoundsAndJoins = (int *) malloc(_multipart->n_zone * 2 * sizeof(int));
 
-  _multipart->partIds = (int *) malloc(_multipart->n_zone * sizeof(int));
-  for (int iblock = 0; iblock < _multipart->n_zone; iblock++)
-    _multipart->partIds[iblock] = -1;
+  for (int izone = 0; izone < _multipart->n_zone; izone++) {
+    _multipart->dmeshesIds[izone] = -1;
+    _multipart->partIds   [izone] = -1;
+    _multipart->nBoundsAndJoins[2*izone]   = -1;
+    _multipart->nBoundsAndJoins[2*izone+1] = -1;
+  }
 
   PDM_printf("Created from PDM_multipart_create. You requested a multipart with %d zones \n", n_zone);
   return id;
@@ -383,6 +388,10 @@ PDM_multipart_run_ppart
         PDM_dmesh_data_get(blockId, &dVtxCoord, &dFaceVtxIdx, &dFaceVtx, &dFaceCell,
                            &dFaceBoundIdx, &dFaceBound, &dJoinZoneOpp, &dFaceJoinIdx, &dFaceJoin);
         //Merge FaceBounds and FaceJoins into FaceGroup
+        if (dFaceJoinIdx == NULL){
+          int singleArray[1] = {0};
+          dFaceJoinIdx = singleArray;
+        }
         nFaceGroup = nBnd + nJoin;
         dFaceGroupIdx = (int *) malloc((nFaceGroup + 1) * sizeof(int));
         dFaceGroup = (PDM_g_num_t *) malloc((dFaceBoundIdx[nBnd] + dFaceJoinIdx[nJoin]) * sizeof(PDM_g_num_t));
@@ -397,13 +406,17 @@ PDM_multipart_run_ppart
         for (int i=0; i < dFaceJoinIdx[nJoin]; i++)
           dFaceGroup[dFaceBoundIdx[nBnd] + i] = dFaceJoin[i];
       }
-      // nFaceGroup must be the same for every proc. We assume it is the same for procs having data
-      // faceGroupIdx must also be know (even if filled with 0) for every proc
-      int nFaceGroupForGhost = -1;
-      PDM_MPI_Allreduce(&nFaceGroup,  &nFaceGroupForGhost,  1, PDM_MPI_INT, PDM_MPI_MAX, _multipart->comm);
+      // Fill global array nBoundsAndJoins. nBound and nJoin are supposed to be the same for
+      // procs having distributed data, so we send it to procs having no data with reduce_max
+      PDM_MPI_Allreduce(&nBnd, &_multipart->nBoundsAndJoins[2*zoneGId], 1,
+                        PDM_MPI_INT, PDM_MPI_MAX, _multipart->comm);
+      PDM_MPI_Allreduce(&nJoin, &_multipart->nBoundsAndJoins[2*zoneGId+1], 1,
+                        PDM_MPI_INT, PDM_MPI_MAX, _multipart->comm);
+
+      // nFaceGroup and faceGroupIdx must also be know (even if filled with 0) for every proc
       if (blockId < 0)
       {
-        nFaceGroup = nFaceGroupForGhost;
+        nFaceGroup = _multipart->nBoundsAndJoins[2*zoneGId] + _multipart->nBoundsAndJoins[2*zoneGId+1];
         dFaceGroupIdx = (int *) malloc((nFaceGroup + 1) * sizeof(int));
         for (int k=0; k < nFaceGroup + 1; k++)
           dFaceGroupIdx[k] = 0;
@@ -621,6 +634,7 @@ PDM_multipart_free
   _pdm_multipart_t *_multipart = _get_from_id (id);
 
   free(_multipart->dmeshesIds);
+  free(_multipart->nBoundsAndJoins);
 
   for (int izone = 0; izone<_multipart->n_zone; izone++)
     PDM_part_free(_multipart->partIds[izone]);
