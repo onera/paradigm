@@ -61,6 +61,16 @@ extern "C" {
  * Local structure definitions
  *============================================================================*/
 
+typedef struct  {
+  int  nBound;
+  int  nJoin;
+  int *faceBoundIdx;
+  int *faceJoinIdx;
+  int *faceBound;
+  int *faceJoin;
+
+} _boundsAndJoins_t;
+
 /**
  * \struct _pdm_multipart_t
  * \brief  This structure describe a multipart. In addition to splitting
@@ -81,6 +91,8 @@ typedef struct  {
                                            process (size = n_zone)                    */
   int               *nBoundsAndJoins; /*!< Number of boundaries and joins in each zone
                                            (size = 2*n_zone, global data)             */
+  _boundsAndJoins_t **pBoundsAndJoins;/*!< partitionned boundary and join data in each
+                                           zone/part                                  */
 } _pdm_multipart_t;
 
 /*============================================================================
@@ -257,6 +269,116 @@ _set_dFaceTag_from_joins
     dFaceTag[lfaceId] = faceToRecv[nData*i + 1];
   }
   free(faceToRecv);
+}
+
+static void
+_rebuild_boundaries
+(
+ _pdm_multipart_t *_multipart
+)
+{
+
+  //Set structure : we need a to retrive pboundsAndJoin for a given zone/part
+  int *boundsAndJoinsIdx = (int *) malloc((_multipart->n_zone + 1) * sizeof(int));
+  boundsAndJoinsIdx[0] = 0;
+  for (int i = 0; i < _multipart->n_zone; i++)
+    boundsAndJoinsIdx[i + 1] = _multipart->n_part[i] + boundsAndJoinsIdx[i];
+
+  _multipart->pBoundsAndJoins = (_boundsAndJoins_t **)
+  malloc(boundsAndJoinsIdx[_multipart->n_zone] * sizeof(_boundsAndJoins_t *));
+
+  // Loop over zones and part to get data
+  for (int zoneGId = 0; zoneGId<_multipart->n_zone; zoneGId++)
+  {
+    for (int ipart = 0; ipart < _multipart->n_part[zoneGId]; ipart++)
+    {
+      int nCell, nFace, nFacePartBound, nVtx, nProc, nTPart, sCellFace, sFaceVtx, sFaceGroup, nFaceGroup;
+      PDM_part_part_dim_get(_multipart->partIds[zoneGId],
+                        ipart,
+                        &nCell,
+                        &nFace,
+                        &nFacePartBound,
+                        &nVtx,
+                        &nProc,
+                        &nTPart,
+                        &sCellFace,
+                        &sFaceVtx,
+                        &sFaceGroup,
+                        &nFaceGroup);
+
+      int nBound = _multipart->nBoundsAndJoins[2*zoneGId];
+      int nJoin  = _multipart->nBoundsAndJoins[2*zoneGId+1];
+      assert(nFaceGroup == nBound + nJoin);
+
+      int          *cellTag;
+      int          *cellFaceIdx;
+      int          *cellFace;
+      PDM_g_num_t *cellLNToGN;
+      int          *faceTag;
+      int          *faceCell;
+      int          *faceVtxIdx;
+      int          *faceVtx;
+      PDM_g_num_t *faceLNToGN;
+      int          *facePartBoundProcIdx;
+      int          *facePartBoundPartIdx;
+      int          *facePartBound;
+      int          *vtxTag;
+      double       *vtx;
+      PDM_g_num_t  *vtxLNToGN;
+      int          *faceGroupIdx;
+      int          *faceGroup;
+      PDM_g_num_t *faceGroupLNToGN;
+      PDM_part_part_val_get(_multipart->partIds[zoneGId],
+                        ipart,
+                        &cellTag,
+                        &cellFaceIdx,
+                        &cellFace,
+                        &cellLNToGN,
+                        &faceTag,
+                        &faceCell,
+                        &faceVtxIdx,
+                        &faceVtx,
+                        &faceLNToGN,
+                        &facePartBoundProcIdx,
+                        &facePartBoundPartIdx,
+                        &facePartBound,
+                        &vtxTag,
+                        &vtx,
+                        &vtxLNToGN,
+                        &faceGroupIdx,
+                        &faceGroup,
+                        &faceGroupLNToGN
+                        );
+
+      //Retrieve boundaries and joins from faceGroup
+      int *pFaceBoundIdx = (int *) malloc((nBound+1) * sizeof(int));
+      int *pFaceJoinIdx  = (int *) malloc((nJoin +1) * sizeof(int));
+      for (int i = 0; i < nBound + 1; i++)
+        pFaceBoundIdx[i] = faceGroupIdx[i];
+      pFaceJoinIdx[0] = 0;
+      for (int i = nBound + 1; i < nBound + nJoin + 1; i++)
+        pFaceJoinIdx[i-nBound] = faceGroupIdx[i] - faceGroupIdx[nBound];
+
+      int *pFaceBound = (int *) malloc(pFaceBoundIdx[nBound] * sizeof(int));
+      int *pFaceJoin  = (int *) malloc(pFaceJoinIdx[nJoin]   * sizeof(int));
+      for (int i = 0; i < pFaceBoundIdx[nBound]; i++)
+        pFaceBound[i] = faceGroup[i];
+      for (int i = pFaceBoundIdx[nBound]; i < faceGroupIdx[nFaceGroup]; i++)
+        pFaceJoin[i - pFaceBoundIdx[nBound]] = faceGroup[i];
+
+      // Store data in pBoundsAndJoins
+      int idx = boundsAndJoinsIdx[zoneGId] + ipart;
+      _multipart->pBoundsAndJoins[idx] = malloc(sizeof(_boundsAndJoins_t));
+      _multipart->pBoundsAndJoins[idx]->nBound = nBound;
+      _multipart->pBoundsAndJoins[idx]->nJoin = nJoin;
+      _multipart->pBoundsAndJoins[idx]->faceBoundIdx = pFaceBoundIdx;
+      _multipart->pBoundsAndJoins[idx]->faceJoinIdx  = pFaceJoinIdx;
+      _multipart->pBoundsAndJoins[idx]->faceBound    = pFaceBound;
+      _multipart->pBoundsAndJoins[idx]->faceJoin     = pFaceJoin;
+
+    }
+  }
+  free(boundsAndJoinsIdx);
 }
 
 /*=============================================================================
@@ -471,6 +593,8 @@ PDM_multipart_run_ppart
         free(dFaceCell);
       }
     }
+    // Now separate joins and boundaries and we rebuild joins over the zones
+    _rebuild_boundaries(_multipart);
   }
   // 3. rebuild the joins
 }
@@ -489,8 +613,10 @@ const   int  ipart,
  int        *nTPart,
  int        *sCellFace,
  int        *sFaceVtx,
- int        *sFaceGroup,
- int        *nFaceGroup
+ int        *sFaceBound,
+ int        *nFaceBound,
+ int        *sFaceJoin,
+ int        *nFaceJoin
 )
 {
   _pdm_multipart_t *_multipart = _get_from_id (mpartId);
@@ -508,8 +634,18 @@ const   int  ipart,
                         nTPart,
                         sCellFace,
                         sFaceVtx,
-                        sFaceGroup,
-                        nFaceGroup);
+                        sFaceBound,
+                        nFaceBound);
+  // Get boundary and join data from pBoundsAndJoins
+  int idx = 0;
+  for (int i = 0; i < zoneGId; i++)
+    idx += _multipart->n_part[i];
+  idx += ipart;
+  //Attention au cas ou pas de face de bord
+  *nFaceBound = _multipart->pBoundsAndJoins[idx]->nBound;
+  *sFaceBound = _multipart->pBoundsAndJoins[idx]->faceBoundIdx[*nFaceBound];
+  *nFaceJoin  = _multipart->pBoundsAndJoins[idx]->nJoin;
+  *sFaceJoin  = _multipart->pBoundsAndJoins[idx]->faceJoinIdx[*nFaceJoin];
 
 }
 
@@ -534,9 +670,11 @@ const int            ipart,
       int          **vtxTag,
       double       **vtx,
       PDM_g_num_t  **vtxLNToGN,
-      int          **faceGroupIdx,
-      int          **faceGroup,
-      PDM_g_num_t  **faceGroupLNToGN
+      int          **faceBoundIdx,
+      int          **faceBound,
+      PDM_g_num_t  **faceGroupLNToGN,
+      int          **faceJoinIdx,
+      int          **faceJoin
 )
 {
    _pdm_multipart_t *_multipart = _get_from_id (mpartId);
@@ -561,10 +699,22 @@ const int            ipart,
                         vtxTag,
                         vtx,
                         vtxLNToGN,
-                        faceGroupIdx,
-                        faceGroup,
+                        faceBoundIdx,
+                        faceBound,
                         faceGroupLNToGN
                         );
+
+  // Get boundary and join data from pBoundsAndJoins
+  int idx = 0;
+  for (int i = 0; i < zoneGId; i++)
+    idx += _multipart->n_part[i];
+  idx += ipart;
+  //Attention au cas ou pas de face de bord
+  // TODO : deal with faceGroupLNToGN
+  *faceBoundIdx = _multipart->pBoundsAndJoins[idx]->faceBoundIdx;
+  *faceBound    = _multipart->pBoundsAndJoins[idx]->faceBound;
+  *faceJoinIdx  = _multipart->pBoundsAndJoins[idx]->faceJoinIdx;
+  *faceJoin     = _multipart->pBoundsAndJoins[idx]->faceJoin;
 
 }
 
