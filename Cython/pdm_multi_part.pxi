@@ -56,9 +56,10 @@ cdef extern from "pdm_multipart.h":
                                     PDM_g_num_t  **vtxLNToGN,
                                     int          **faceBoundIdx,
                                     int          **faceBound,
-                                    PDM_g_num_t  **faceGroupLNToGN,
+                                    PDM_g_num_t  **faceBoundLNToGN,
                                     int          **faceJoinIdx,
-                                    int          **faceJoin)
+                                    int          **faceJoin,
+                                    PDM_g_num_t  **faceJoinLNToGN)
     # ------------------------------------------------------------------
     void PDM_multipart_part_color_get(int            mpartId,
                                       int            zoneGId,
@@ -204,9 +205,10 @@ cdef class MultiPart:
         cdef PDM_g_num_t  *vertexLNToGN,
         cdef int          *faceBoundIdx,
         cdef int          *faceBound,
-        cdef PDM_g_num_t  *faceGroupLNToGN,
+        cdef PDM_g_num_t  *faceBoundLNToGN,
         cdef int          *faceJoinIdx,
-        cdef int          *faceJoin
+        cdef int          *faceJoin,
+        cdef PDM_g_num_t  *faceJoinLNToGN
         # ************************************************************************
 
         # dims = self.part_dim_get(self._mpart_id, ipart)
@@ -233,9 +235,10 @@ cdef class MultiPart:
                                    &vertexLNToGN,
                                    &faceBoundIdx,
                                    &faceBound,
-                                   &faceGroupLNToGN,
+                                   &faceBoundLNToGN,
                                    &faceJoinIdx,
-                                   &faceJoin)
+                                   &faceJoin,
+                                   &faceJoinLNToGN)
         # -> Begin
         cdef NPY.npy_intp dim
 
@@ -415,15 +418,15 @@ cdef class MultiPart:
                                                        NPY.NPY_INT32,
                                                        <void *> faceBound)
 
-        # \param [out]  faceGroupLNToGN    faces global numbering for each group (size = faceGroupIdx[nFaceGroup] = lFaceGroup)
-        if (faceGroupLNToGN == NULL) :
-            npFaceGroupLNToGN = None
+        # \param [out]  faceBoundLNToGN    faces global numbering for each group (size = faceBoundIdx[nFaceBound] = lFaceBound)
+        if (faceBoundLNToGN == NULL) :
+            npFaceBoundLNToGN = None
         else :
-            dim = <NPY.npy_intp> dims['sFaceGroup']
-            npFaceGroupLNToGN = NPY.PyArray_SimpleNewFromData(1,
+            dim = <NPY.npy_intp> dims['sFaceBound']
+            npFaceBoundLNToGN = NPY.PyArray_SimpleNewFromData(1,
                                                              &dim,
                                                              PDM_G_NUM_NPY_INT,
-                                                             <void *> faceGroupLNToGN)
+                                                             <void *> faceBoundLNToGN)
 
         # \param [out]  faceJoinIdx       face group index (size = nFaceJoin + 1)
         if (faceJoinIdx == NULL) :
@@ -445,6 +448,16 @@ cdef class MultiPart:
                                                       NPY.NPY_INT32,
                                                       <void *> faceJoin)
 
+        # \param [out]  faceJoinLNToGN    faces global numbering for each group (size = faceJoinIdx[nFaceJoin] = lFaceJoin)
+        if (faceJoinLNToGN == NULL) :
+            npFaceJoinLNToGN = None
+        else :
+            dim = <NPY.npy_intp> dims['sFaceJoin']
+            npFaceJoinLNToGN = NPY.PyArray_SimpleNewFromData(1,
+                                                             &dim,
+                                                             PDM_G_NUM_NPY_INT,
+                                                             <void *> faceJoinLNToGN)
+
         return {'npCellTag'                  : npCellTag,
                 'npCellFaceIdx'              : npCellFaceIdx,
                 'npCellFace'                 : npCellFace,
@@ -462,9 +475,10 @@ cdef class MultiPart:
                 'npVertexLNToGN'             : npVertexLNToGN,
                 'npFaceBoundIdx'             : npFaceBoundIdx,
                 'npFaceBound'                : npFaceBound,
-                'npFaceGroupLNToGN'          : npFaceGroupLNToGN,
+                'npFaceBoundLNToGN'          : npFaceBoundLNToGN,
                 'npFaceJoinIdx'              : npFaceJoinIdx,
-                'npFaceJoin'                 : npFaceJoin}
+                'npFaceJoin'                 : npFaceJoin,
+                'npFaceJoinLNToGN'          : npFaceJoinLNToGN}
 
     # ------------------------------------------------------------------
     def multipart_color_get(self, int ipart, int zoneGId):

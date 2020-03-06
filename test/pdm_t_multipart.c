@@ -687,9 +687,10 @@ int main(int argc, char *argv[])
       PDM_g_num_t *vtxLNToGN;
       int          *faceBoundIdx;
       int          *faceBound;
-      PDM_g_num_t *faceGroupLNToGN;
+      PDM_g_num_t *faceBoundLNToGN;
       int          *faceJoinIdx;
       int          *faceJoin;
+      PDM_g_num_t *faceJoinLNToGN;
 
 
       PDM_multipart_part_val_get(mpartId,
@@ -712,9 +713,10 @@ int main(int argc, char *argv[])
                                  &vtxLNToGN,
                                  &faceBoundIdx,
                                  &faceBound,
-                                 &faceGroupLNToGN,
+                                 &faceBoundLNToGN,
                                  &faceJoinIdx,
-                                 &faceJoin);
+                                 &faceJoin,
+                                 &faceJoinLNToGN);
 
       char filename[25];
       snprintf(filename,sizeof(filename),"partitionned_P%dB%dN%d.json",myRank, iblock, ipart);
