@@ -68,6 +68,8 @@ typedef struct  {
   int *faceJoinIdx;
   int *faceBound;
   int *faceJoin;
+  PDM_g_num_t *faceBoundLNToGN;
+  PDM_g_num_t *faceJoinLNToGN;
 
 } _boundsAndJoins_t;
 
@@ -366,6 +368,13 @@ _rebuild_boundaries
       for (int i = pFaceBoundIdx[nBound]; i < faceGroupIdx[nFaceGroup]; i++)
         pFaceJoin[i - pFaceBoundIdx[nBound]] = faceGroup[i];
 
+      PDM_g_num_t *pFaceBoundLNToGN = (PDM_g_num_t *) malloc(pFaceBoundIdx[nBound] * sizeof(PDM_g_num_t));
+      PDM_g_num_t *pFaceJoinLNToGN  = (PDM_g_num_t *) malloc(pFaceJoinIdx[nJoin]   * sizeof(PDM_g_num_t));
+      for (int i = 0; i < pFaceBoundIdx[nBound]; i++)
+        pFaceBoundLNToGN[i] = faceGroupLNToGN[i];
+      for (int i = pFaceBoundIdx[nBound]; i < faceGroupIdx[nFaceGroup]; i++)
+        pFaceJoinLNToGN[i - pFaceBoundIdx[nBound]] = faceGroupLNToGN[i];
+
       // Store data in pBoundsAndJoins
       int idx = boundsAndJoinsIdx[zoneGId] + ipart;
       _multipart->pBoundsAndJoins[idx] = malloc(sizeof(_boundsAndJoins_t));
@@ -375,6 +384,8 @@ _rebuild_boundaries
       _multipart->pBoundsAndJoins[idx]->faceJoinIdx  = pFaceJoinIdx;
       _multipart->pBoundsAndJoins[idx]->faceBound    = pFaceBound;
       _multipart->pBoundsAndJoins[idx]->faceJoin     = pFaceJoin;
+      _multipart->pBoundsAndJoins[idx]->faceBoundLNToGN    = pFaceBoundLNToGN;
+      _multipart->pBoundsAndJoins[idx]->faceJoinLNToGN     = pFaceJoinLNToGN;
 
     }
   }
@@ -672,9 +683,10 @@ const int            ipart,
       PDM_g_num_t  **vtxLNToGN,
       int          **faceBoundIdx,
       int          **faceBound,
-      PDM_g_num_t  **faceGroupLNToGN,
+      PDM_g_num_t  **faceBoundLNToGN,
       int          **faceJoinIdx,
-      int          **faceJoin
+      int          **faceJoin,
+      PDM_g_num_t  **faceJoinLNToGN
 )
 {
    _pdm_multipart_t *_multipart = _get_from_id (mpartId);
@@ -701,7 +713,7 @@ const int            ipart,
                         vtxLNToGN,
                         faceBoundIdx,
                         faceBound,
-                        faceGroupLNToGN
+                        faceBoundLNToGN
                         );
 
   // Get boundary and join data from pBoundsAndJoins
@@ -710,11 +722,12 @@ const int            ipart,
     idx += _multipart->n_part[i];
   idx += ipart;
   //Attention au cas ou pas de face de bord
-  // TODO : deal with faceGroupLNToGN
-  *faceBoundIdx = _multipart->pBoundsAndJoins[idx]->faceBoundIdx;
-  *faceBound    = _multipart->pBoundsAndJoins[idx]->faceBound;
-  *faceJoinIdx  = _multipart->pBoundsAndJoins[idx]->faceJoinIdx;
-  *faceJoin     = _multipart->pBoundsAndJoins[idx]->faceJoin;
+  *faceBoundIdx       = _multipart->pBoundsAndJoins[idx]->faceBoundIdx;
+  *faceBound          = _multipart->pBoundsAndJoins[idx]->faceBound;
+  *faceBoundLNToGN    = _multipart->pBoundsAndJoins[idx]->faceBoundLNToGN;
+  *faceJoinIdx        = _multipart->pBoundsAndJoins[idx]->faceJoinIdx;
+  *faceJoin           = _multipart->pBoundsAndJoins[idx]->faceJoin;
+  *faceJoinLNToGN     = _multipart->pBoundsAndJoins[idx]->faceJoinLNToGN;
 
 }
 

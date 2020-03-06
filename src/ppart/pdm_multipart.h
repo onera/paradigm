@@ -153,9 +153,10 @@ const int            ipart,
       PDM_g_num_t  **vtxLNToGN,
       int          **faceBoundIdx,
       int          **faceBound,
-      PDM_g_num_t  **faceGroupLNToGN,
+      PDM_g_num_t  **faceBoundLNToGN,
       int          **faceJoinIdx,
-      int          **faceJoin
+      int          **faceJoin,
+      PDM_g_num_t  **faceJoinLNToGN
 );
 
 void
