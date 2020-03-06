@@ -124,8 +124,10 @@ const   int  ipart,
  int        *nTPart,
  int        *sCellFace,
  int        *sFaceVtx,
- int        *sFaceGroup,
- int        *nFaceGroup
+ int        *sFaceBound,
+ int        *nFaceBound,
+ int        *sFaceJoin,
+ int        *nFaceJoin
 );
 
 void
@@ -149,9 +151,11 @@ const int            ipart,
       int          **vtxTag,
       double       **vtx,
       PDM_g_num_t  **vtxLNToGN,
-      int          **faceGroupIdx,
-      int          **faceGroup,
-      PDM_g_num_t  **faceGroupLNToGN
+      int          **faceBoundIdx,
+      int          **faceBound,
+      PDM_g_num_t  **faceGroupLNToGN,
+      int          **faceJoinIdx,
+      int          **faceJoin
 );
 
 void

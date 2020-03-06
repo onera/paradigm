@@ -132,7 +132,8 @@ static void _dumpJsonData
  const int    nVtx,
  const int    nFace,
  const int    nCell,
- const int    nFaceGroup,
+ const int    nFaceBound,
+ const int    nFaceJoin,
  const int    nTpart,
  double      *VtxCoord,
  int         *FaceVtxIdx,
@@ -140,8 +141,10 @@ static void _dumpJsonData
  PDM_g_num_t *FaceCell,
  int         *cellFaceIdx,
  int         *cellFace,
- int         *FaceGroupIdx,
- PDM_g_num_t *FaceGroup,
+ int         *FaceBoundIdx,
+ PDM_g_num_t *FaceBound,
+ int         *FaceJoinIdx,
+ PDM_g_num_t *FaceJoin,
  int         *facePartBoundProcIdx,
  int         *facePartBoundPartIdx,
  int         *facePartBound
@@ -156,7 +159,8 @@ static void _dumpJsonData
   fprintf(fp, "  \"nbVtx\" : %d,\n", nVtx);
   fprintf(fp, "  \"nbFace\" : %d,\n", nFace);
   fprintf(fp, "  \"nbCell\" : %d,\n", nCell);
-  fprintf(fp, "  \"nbFaceGroup\" : %d,\n", nFaceGroup);
+  fprintf(fp, "  \"nbFaceBound\" : %d,\n", nFaceBound);
+  fprintf(fp, "  \"nbFaceJoin\" : %d,\n", nFaceJoin);
 
   fprintf(fp, "  \"VtxCoord\" :\n  [");
   for (int k=0; k<nVtx; k++)
@@ -203,15 +207,31 @@ static void _dumpJsonData
   }
 
   endcomma = ' ';
-  fprintf(fp, "  \"FaceGroups\" :\n  [");
-  for (int k=0; k<nFaceGroup; k++)
+  fprintf(fp, "  \"FaceBounds\" :\n  [");
+  for (int k=0; k<nFaceBound; k++)
   {
     fprintf(fp, "%c\n    [", endcomma);
-    for (int i=FaceGroupIdx[k]; i<FaceGroupIdx[k+1]-1; i++)
-      fprintf(fp, "%d,  ", FaceGroup[i]);
+    for (int i=FaceBoundIdx[k]; i<FaceBoundIdx[k+1]-1; i++)
+      fprintf(fp, "%d,  ", FaceBound[i]);
     // Cas particulier ou le groupe n'a aucun élément
-    if (FaceGroupIdx[k+1] > FaceGroupIdx[k])
-      fprintf(fp, "%d]", FaceGroup[FaceGroupIdx[k+1]-1]);
+    if (FaceBoundIdx[k+1] > FaceBoundIdx[k])
+      fprintf(fp, "%d]", FaceBound[FaceBoundIdx[k+1]-1]);
+    else
+      fprintf(fp, "]");
+    endcomma = ',';
+  }
+  fprintf(fp, "\n  ],\n");
+
+  endcomma = ' ';
+  fprintf(fp, "  \"FaceJoins\" :\n  [");
+  for (int k=0; k<nFaceJoin; k++)
+  {
+    fprintf(fp, "%c\n    [", endcomma);
+    for (int i=FaceJoinIdx[k]; i<FaceJoinIdx[k+1]-1; i++)
+      fprintf(fp, "%d,  ", FaceJoin[i]);
+    // Cas particulier ou le groupe n'a aucun élément
+    if (FaceJoinIdx[k+1] > FaceJoinIdx[k])
+      fprintf(fp, "%d]", FaceJoin[FaceJoinIdx[k+1]-1]);
     else
       fprintf(fp, "]");
     endcomma = ',';
@@ -536,9 +556,9 @@ int main(int argc, char *argv[])
     // Dump arrays
     char filename[25];
     snprintf(filename,sizeof(filename),"distributed_P%d.json",myRank);
-    _dumpJsonData(filename, 0, dNVtx, dNFace, dNCell, nFaceGroup, 0,
+    _dumpJsonData(filename, 0, dNVtx, dNFace, dNCell, nFaceGroup, 0, 0,
                   dVtxCoord, dFaceVtxIdx, dFaceVtx, dFaceCell, NULL, NULL, dFaceGroupIdx, dFaceGroup,
-                  NULL, NULL, NULL);
+                  NULL, NULL, NULL, NULL, NULL);
   }
   else  // -> parse Json data
   {
@@ -629,8 +649,10 @@ int main(int argc, char *argv[])
       int nTPart;
       int sCellFace;
       int sFaceVtx;
-      int sFaceGroup;
-      int nFaceGroup2;
+      int sFaceBound;
+      int nFaceBound;
+      int sFaceJoin;
+      int nFaceJoin;
 
       PDM_multipart_part_dim_get(mpartId,
                                  iblock,
@@ -643,8 +665,10 @@ int main(int argc, char *argv[])
                                  &nTPart,
                                  &sCellFace,
                                  &sFaceVtx,
-                                 &sFaceGroup,
-                                 &nFaceGroup2);
+                                 &sFaceBound,
+                                 &nFaceBound,
+                                 &sFaceJoin,
+                                 &nFaceJoin);
 
       int          *cellTag;
       int          *cellFaceIdx;
@@ -661,9 +685,11 @@ int main(int argc, char *argv[])
       int          *vtxTag;
       double       *vtx;
       PDM_g_num_t *vtxLNToGN;
-      int          *faceGroupIdx;
-      int          *faceGroup;
+      int          *faceBoundIdx;
+      int          *faceBound;
       PDM_g_num_t *faceGroupLNToGN;
+      int          *faceJoinIdx;
+      int          *faceJoin;
 
 
       PDM_multipart_part_val_get(mpartId,
@@ -684,15 +710,17 @@ int main(int argc, char *argv[])
                                  &vtxTag,
                                  &vtx,
                                  &vtxLNToGN,
-                                 &faceGroupIdx,
-                                 &faceGroup,
-                                 &faceGroupLNToGN);
+                                 &faceBoundIdx,
+                                 &faceBound,
+                                 &faceGroupLNToGN,
+                                 &faceJoinIdx,
+                                 &faceJoin);
 
       char filename[25];
       snprintf(filename,sizeof(filename),"partitionned_P%dB%dN%d.json",myRank, iblock, ipart);
-      _dumpJsonData(filename, iblock, nVtx, nFace, nCell, nFaceGroup2, nTPart, vtx,
-                    faceVtxIdx, faceVtx, faceCell, cellFaceIdx, cellFace,faceGroupIdx, faceGroup,
-                    facePartBoundProcIdx, facePartBoundPartIdx, facePartBound);
+      _dumpJsonData(filename, iblock, nVtx, nFace, nCell, nFaceBound, nFaceJoin, nTPart, vtx,
+                    faceVtxIdx, faceVtx, faceCell, cellFaceIdx, cellFace,faceBoundIdx, faceBound,
+                    faceJoinIdx, faceJoin, facePartBoundProcIdx, facePartBoundPartIdx, facePartBound);
 
     }
   }
