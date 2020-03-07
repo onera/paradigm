@@ -43,13 +43,32 @@ char *argv[]
 
   /* Connection de join1 avec join2 */
   int connect_idx_j1[4] = {0, 1, 3, 4};
+
+  int oppRank;
+  int oppPart;
+  if(nRank == 1){
+    oppRank = 0;
+    oppPart = 1;
+  } else if (nRank == 2){
+    oppRank = 1;
+    oppPart = 0;
+  }
+
+  // int connect_triplet_j1[12] = {// Fisrt
+  //                               1, 0, 0,
+  //                               // Second
+  //                               1, 0, 0,
+  //                               1, 0, 1,
+  //                               // Third
+  //                               1, 0, 1};
   int connect_triplet_j1[12] = {// Fisrt
-                                1, 0, 0,
+                                oppRank, oppPart, 0,
                                 // Second
-                                1, 0, 0,
-                                1, 0, 1,
+                                oppRank, oppPart, 1,
+                                oppRank, oppPart, 0,
                                 // Third
-                                1, 0, 1};
+                                oppRank, oppPart, 1};
+
 
   /* Connection de join2 avec join1 */
   // const int n_faces_j2 = 3;

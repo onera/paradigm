@@ -5,6 +5,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
@@ -12,6 +13,7 @@
 
 #include "pdm_distant_neighbor.h"
 #include "pdm_printf.h"
+#include "pdm_logging.h"
 #include "pdm_error.h"
 #include "pdm_handles.h"
 #include "pdm_mpi.h"
@@ -51,9 +53,16 @@ typedef struct  {
   int**        order;
   int**        order_unique;
   int         *requested_data_n; /*!< Numer of requested data for each process index
-                                    * (size : s_comm) */
+                                  * (size : s_comm) */
   int         *requested_data_idx;/*!< Requested data for each process index
-                                    * (size : s_comm) */
+                                   * (size : s_comm) */
+  int         *distributed_data_n;/*!< Numer of distributed data for each process index
+                                   * (size : s_comm) */
+  int         *distributed_data_idx;/*!< Distributed data for each process index
+                                     * (size : s_comm) */
+  int         *distributed_data;    /*!< Distributed data for each process
+                                     * (size : requestd_data_idx[s_comm - 1] */
+
 } _distant_neighbor_t;
 
 /*=============================================================================
@@ -217,6 +226,14 @@ const int           *n_entity,
   PDM_MPI_Comm_rank(pdn->comm, &iRank);
   PDM_MPI_Comm_size(pdn->comm, &nRank);
 
+  char filename[50];
+  sprintf(filename, "pdm_logging_%d.log", iRank);
+  FILE* fp = fopen(filename, "w");
+  log_set_fp(fp);
+  log_set_quiet(1);
+  log_set_level(-1);
+  // log_trace("PDM_distant_neighbor_create::SuperTest");
+
   pdn->n_part             = n_part;
   pdn->n_entity           = n_entity;
   pdn->neighbor_idx       = neighbor_idx;
@@ -250,11 +267,13 @@ const int           *n_entity,
 
   for(int ipart = 0; ipart < pdn->n_part; ipart++){
 
+    printf("[%d] ------------------------------------------ %d \n", ipart, pdn->requested_data_n[0]);
+
     int *_part_neighbor_idx  = pdn->neighbor_idx[ipart];
     int *_part_neighbor_desc = pdn->neighbor_desc[ipart];
 
     // For now we order/unique only the part !
-    printf("[%i] - n_entity:: %d\n", ipart, n_entity[ipart]);
+    // printf("[%i] - n_entity:: %d\n", ipart, n_entity[ipart]);
 
     pdn->order       [ipart] = (int *) malloc( _part_neighbor_idx[n_entity[ipart]] * sizeof(int *));
     pdn->order_unique[ipart] = (int *) malloc( _part_neighbor_idx[n_entity[ipart]] * sizeof(int *));
@@ -274,12 +293,16 @@ const int           *n_entity,
     // Il faut connaitre le nombre d'occurence une fois trié --> Taille du buffer d'envoie
     // Mais par proc / part
     // Il faut pas parcourir ce pacquet mais le unique !
-    for(int i_entity = 0; i_entity < n_entity[ipart]; i_entity++){
-      for(int j = _part_neighbor_idx[i_entity]; j < _part_neighbor_idx[i_entity+1]; j++){
-        int opp_proc = _part_neighbor_desc[3*j  ];
-        // int opp_part = _part_neighbor_desc[3*j+1];
-        // int opp_etty = _part_neighbor_desc[3*j+2];
+    int lastidx = -1;
+    for(int i_entity = 0; i_entity < _part_neighbor_idx[n_entity[ipart]]; i_entity++){
+      // Go to sorted order
+      int u_entity = pdn->order_unique[ipart][i_entity];
+      int s_entity = pdn->order[ipart][i_entity];
+      // printf("[%d] - order:: %d | unique:: %d | lastidx:: %d \n", i_entity, s_entity, u_entity, lastidx);
+      if(lastidx != u_entity){
+        int opp_proc = _part_neighbor_desc[3*s_entity  ];
         pdn->requested_data_n[opp_proc]++;
+        lastidx = u_entity;
       }
     }
   }
@@ -306,26 +329,94 @@ const int           *n_entity,
     int *_part_neighbor_idx  = pdn->neighbor_idx[ipart];
     int *_part_neighbor_desc = pdn->neighbor_desc[ipart];
 
-    for(int i_entity = 0; i_entity < n_entity[ipart]; i_entity++){
-      for(int j = _part_neighbor_idx[i_entity]; j < _part_neighbor_idx[i_entity+1]; j++){
-        int opp_proc = _part_neighbor_desc[3*j  ];
-        int opp_part = _part_neighbor_desc[3*j+1];
-        int opp_etty = _part_neighbor_desc[3*j+2];
+    int lastidx = -1;
+    for(int i_entity = 0; i_entity < _part_neighbor_idx[n_entity[ipart]]; i_entity++){
+      // Go to sorted order
+      int u_entity = pdn->order_unique[ipart][i_entity];
+      int s_entity = pdn->order[ipart][i_entity];
+      printf("[%d] - order:: %d | unique:: %d | lastidx:: %d \n", i_entity, s_entity, u_entity, lastidx);
+      if(lastidx != u_entity){
+
+        int opp_proc = _part_neighbor_desc[3*s_entity  ];
+        int opp_part = _part_neighbor_desc[3*s_entity+1];
+        int opp_etty = _part_neighbor_desc[3*s_entity+2];
 
         int idx = pdn->requested_data_idx[opp_proc] + pdn->requested_data_n[opp_proc]++;
 
         requested_data[2*idx  ] = opp_part;
         requested_data[2*idx+1] = opp_etty;
 
-
+        lastidx = u_entity;
       }
     }
   }
 
+  // Each pacquet have 2 value so we multiply by 2
+  for (int i = 0; i < nRank; i++) {
+    pdn->requested_data_n[i] = 2*pdn->requested_data_n[i];
+  }
+
+
+  log_trace("PDM_distant_neighbor_create::requested_data :: --> ");
+  for(int i = 0; i < s_requested_data; ++i){
+    log_trace("[%d/%d] ", requested_data[2*i], requested_data[2*i+1]);
+  }
+  log_trace("\n");
+
+  /*
+   * Exchange the requested data
+   */
+  pdn->distributed_data_n = malloc (sizeof(int) * nRank);
+
+  PDM_MPI_Alltoall (pdn->requested_data_n,   1, PDM_MPI_INT,
+                    pdn->distributed_data_n, 1, PDM_MPI_INT,
+                    pdn->comm);
+
+  log_trace("PDM_distant_neighbor_create::distributed_data_n :: --> ");
+  for(int i = 0; i < nRank; ++i){
+    log_trace("%d ",  pdn->distributed_data_n[i]);
+  }
+  log_trace("\n");
+
+
+  pdn->distributed_data_idx = malloc (sizeof(int) * (nRank + 1));
+  pdn->distributed_data_idx[0] = 0;
+
+  for (int i = 0; i < nRank; i++) {
+    pdn->distributed_data_idx[i+1] = pdn->distributed_data_n[i] +
+                                     pdn->distributed_data_idx[i];
+  }
+
+  log_trace("PDM_distant_neighbor_create::distributed_data_idx :: --> ");
+  for(int i = 0; i < nRank+1; ++i){
+    log_trace("%d ",  pdn->distributed_data_idx[i]);
+  }
+  log_trace("\n");
+
+
+  // pdn->distributed_data = malloc (sizeof(int) * 2 * pdn->distributed_data_idx[nRank]);
+  pdn->distributed_data = malloc (sizeof(int) * pdn->distributed_data_idx[nRank]);
+
+  PDM_MPI_Alltoallv (requested_data,
+                     pdn->requested_data_n,
+                     pdn->requested_data_idx,
+                     PDM_MPI_INT,
+                     pdn->distributed_data,
+                     pdn->distributed_data_n,
+                     pdn->distributed_data_idx,
+                     PDM_MPI_INT,
+                     pdn->comm);
+
+  log_trace("PDM_distant_neighbor_create::distributed_data :: --> ");
+  for(int i = 0; i < pdn->distributed_data_idx[nRank]/2; ++i){
+    log_trace("[%d/%d] ", pdn->distributed_data[2*i], pdn->distributed_data[2*i+1]);
+  }
+  log_trace("\n");
 
   /*
    * Store in structure the ordering in the recv buffer
    */
+
 
 
   /*
@@ -333,51 +424,12 @@ const int           *n_entity,
    */
   free(requested_data);
 
+  assert(fclose(fp) == 0);
+
   return id;
 }
 
 
-/**
- *
- * \brief Free an distant negihtbor structure
- *
- * \param [in]   id                 Identifier
- *
- */
-
-void
-PDM_distant_neighbor_free
-(
- const int          id
-)
-{
-  _distant_neighbor_t *pdn = _get_from_id (id);
-
-  for(int ipart = 0; ipart < pdn->n_part; ipart++){
-    free(pdn->order[ipart]);
-    free(pdn->order_unique[ipart]);
-  }
-  free(pdn->order);
-  free(pdn->order_unique);
-
-  free(pdn->requested_data_n);
-  free(pdn->requested_data_idx);
-
-  if (pdn->exch_rank != NULL)
-    free (pdn->exch_rank);
-
-  free (pdn);
-
-  PDM_Handles_handle_free (_pdns, id, PDM_FALSE);
-
-  const int n_ppm = PDM_Handles_n_get (_pdns);
-
-
-  if (n_ppm == 0) {
-    _pdns = PDM_Handles_free (_pdns);
-  }
-
-}
 
 
 /**
@@ -407,8 +459,82 @@ PDM_distant_neighbor_exch
     abort ();
   }
 
+  /*
+   * On doit echanger de la même manière que les requested du create mais en multipliant par la stride
+   */
+
+
+  /*
+   * Une seule valeur est echangé mais plusieurs occurence peuvent exister donc on passe du buffer MPI
+   * au donné sans le sort/unique
+   */
+
+  /*
+   * Pour les globBorder :
+   *      -> On connait le lien dans une numérotation absolu [PointList - PointListDonor]
+   * C'est possible que ce soit les mêmes domaines utilisateurs :
+   *    ex : périodicité
+   *
+   * Une fois partitioner on garde 2 choses :
+   *      - FaceGroupLNToGN : Position in Original PointList
+   *
+   *  Dans les nouvelles partitions on doit retrouver des nouvelles correspondances entre les nv PointList
+   *   Seul la comparaison avec les PointList Initiaux permette de faire le lien !
+   *  A voire avec globgraph mais je pense que ce n'est pas du tt le même algorithme !!
+   *  On pourrait effectivement jouer sur la nature des blocks qui sont "des partitions"
+   *  Mais je pense que l'algo n'apportera rien !
+   *
+   */
+
+
 }
 
+
+/**
+ *
+ * \brief Free an distant negihtbor structure
+ *
+ * \param [in]   id                 Identifier
+ *
+ */
+
+void
+PDM_distant_neighbor_free
+(
+ const int          id
+)
+{
+  _distant_neighbor_t *pdn = _get_from_id (id);
+
+  for(int ipart = 0; ipart < pdn->n_part; ipart++){
+    free(pdn->order[ipart]);
+    free(pdn->order_unique[ipart]);
+  }
+  free(pdn->order);
+  free(pdn->order_unique);
+
+  free(pdn->requested_data_n);
+  free(pdn->requested_data_idx);
+
+  free(pdn->distributed_data);
+  free(pdn->distributed_data_n);
+  free(pdn->distributed_data_idx);
+
+  if (pdn->exch_rank != NULL)
+    free (pdn->exch_rank);
+
+  free (pdn);
+
+  PDM_Handles_handle_free (_pdns, id, PDM_FALSE);
+
+  const int n_ppm = PDM_Handles_n_get (_pdns);
+
+
+  if (n_ppm == 0) {
+    _pdns = PDM_Handles_free (_pdns);
+  }
+
+}
 // void
 // PDM_distant_neighbor_irecv()
 // PDM_distant_neighbor_iisend()
