@@ -393,6 +393,128 @@ _rebuild_boundaries
 
     }
   }
+
+  // Implementation avec le alltoall + trie (en cours mais a jeter ?)
+  int myRank;
+  int nRank;
+  PDM_MPI_Comm_rank(PDM_MPI_COMM_WORLD, &myRank);
+  PDM_MPI_Comm_size(PDM_MPI_COMM_WORLD, &nRank);
+
+  //Step 0 ; construction de joinGId -> liste partitions partageant ce join en num globale (apres PT)
+  // TODO -> ASSUME WE HAVE IT FOR NOW
+  // Local ou pas local ? La zone est la même pour tt les parts partageant le join
+  int *JoinToPartIdx = (int *) malloc(3 * sizeof(int));
+  JoinToPartIdx[0] = 0;
+  JoinToPartIdx[1] = 1;
+  JoinToPartIdx[2] = 3;
+  int *JoinToPart = (int *) malloc(JoinToPartIdx[2] * sizeof(int));
+  JoinToPart[0] = 0; //zone 0 part 0   (zone 0 had 2 parts)
+  JoinToPart[1] = 2; //zone 1 part 0   (zone 1 had 3 parts)
+  JoinToPart[2] = 4; //zone 1 part 2   (zone 1 had 3 parts)
+
+  // ASSUME we have the array dJoinGIds : for each zone, gives joinId, joinOppId
+  int *dJoinGIds = (int *) malloc(2*_multipart->n_zone * sizeof(int));
+  dJoinGIds[2*0] = 0;
+  dJoinGIds[2*0+1] = 1;
+  dJoinGIds[2*1] = 1;
+  dJoinGIds[2*1+1] = 0;
+
+  // Step 1. Count data
+  int *dataToSendN = (int *) malloc(nRank * sizeof(int));
+  for (int i=0; i < nRank; i++)
+    dataToSendN[i] = 0;
+
+  for (int izone = 0; izone < _multipart->n_zone; izone++)
+  {
+    for (int ipart = 0; ipart < _multipart->n_part[izone]; ipart++)
+    {
+      int idx = boundsAndJoinsIdx[izone] + ipart; //TO CHECK
+      int *faceJoinIdx = _multipart->pBoundsAndJoins[idx]->faceJoinIdx;
+      for (int ijoin = 0; ijoin < _multipart->nBoundsAndJoins[2*izone+1]; ijoin++)
+      {
+        // Get destination and deduce procs that could require this data
+        int joinGId = dJoinGIds[2*izone];
+        int oppJoiGId = dJoinGIds[2*izone + 1];
+        PDM_printf("[%i] Zone %i, ipart %i, ijoin %i (gid %i) : joinopp %i --> receiving parts are",
+                   myRank, izone, ipart, ijoin, joinGId, oppJoiGId);
+        for (int i = JoinToPartIdx[oppJoiGId]; i < JoinToPartIdx[oppJoiGId+1]; i++)
+        {
+          int destPartition = JoinToPart[i];
+          int destProc = _multipart->gPartToProc[2*destPartition];
+
+          PDM_printf(" %d (proc %d)", destPartition, _multipart->gPartToProc[2*destPartition]);
+          //We have the destination, exchanged data is 3 times the lenght of point list
+          // (pl value, LNToGN value, joinGId value)
+          dataToSendN[destProc] += 3*(faceJoinIdx[ijoin+1] - faceJoinIdx[ijoin]);
+        }
+        PDM_printf("\n");
+
+      }
+    }
+  }
+  // Step 2. Prepare data and performs alltoall
+  // Prepare stride
+  int *dataToSendIdx = (int *) malloc((nRank+1) * sizeof(int));
+  dataToSendIdx[0] = 0;
+  for (int i = 1; i < nRank + 1; i++) {
+    dataToSendIdx[i] = dataToSendIdx[i-1] + dataToSendN[i-1];
+    dataToSendN[i-1] = 0;
+  }
+  //Prepare data
+  PDM_g_num_t *dataToSend = (PDM_g_num_t *) malloc(dataToSendIdx[nRank] * sizeof(PDM_g_num_t));
+  for (int izone = 0; izone < _multipart->n_zone; izone++)
+  {
+    for (int ipart = 0; ipart < _multipart->n_part[izone]; ipart++)
+    {
+      int idx = boundsAndJoinsIdx[izone] + ipart; //TO CHECK
+      int *faceJoinIdx    = _multipart->pBoundsAndJoins[idx]->faceJoinIdx;
+      int *faceJoin       = _multipart->pBoundsAndJoins[idx]->faceJoin;
+      int *faceJoinLNToGN = _multipart->pBoundsAndJoins[idx]->faceJoinLNToGN;
+      for (int ijoin = 0; ijoin < _multipart->nBoundsAndJoins[2*izone+1]; ijoin++)
+      {
+        int joinGId = dJoinGIds[2*izone];
+        int oppJoiGId = dJoinGIds[2*izone + 1];
+        for (int i = JoinToPartIdx[oppJoiGId]; i < JoinToPartIdx[oppJoiGId+1]; i++)
+        {
+          int destPartition = JoinToPart[i];
+          int destProc = _multipart->gPartToProc[2*destPartition];
+          int idx2 = dataToSendIdx[destProc] + dataToSendN[destProc];
+          int k = 0;
+          for (int iface = faceJoinIdx[ijoin]; iface < faceJoinIdx[ijoin+1]; iface++)
+          {
+            dataToSend[idx2 + 3*k    ] = faceJoin[iface];
+            dataToSend[idx2 + 3*k + 1] = faceJoinLNToGN[iface];
+            dataToSend[idx2 + 3*k + 2] = joinGId;
+            k += 1;
+          }
+          dataToSendN[destProc] += 3*k;
+        }
+      }
+    }
+  }
+  //Exchange sizes
+  int *dataToRecvN   = (int *) malloc(nRank * sizeof(int));
+  PDM_MPI_Alltoall(dataToSendN, 1, PDM_MPI_INT, dataToRecvN, 1, PDM_MPI_INT, _multipart->comm);
+  int *dataToRecvIdx = (int *) malloc((nRank+1) * sizeof(int));
+  dataToRecvIdx[0] = 0;
+  for(int i = 1; i < (nRank+1); i++) {
+    dataToRecvIdx[i] = dataToRecvIdx[i-1] + dataToRecvN[i-1];
+  }
+  //Exchange data
+  PDM_g_num_t *dataToRecv = (PDM_g_num_t *) malloc(dataToRecvIdx[nRank]*sizeof(PDM_g_num_t));
+  PDM_MPI_Alltoallv(dataToSend,
+                    dataToSendN,
+                    dataToSendIdx,
+                    PDM__PDM_MPI_G_NUM,
+                    dataToRecv,
+                    dataToRecvN,
+                    dataToRecvIdx,
+                    PDM__PDM_MPI_G_NUM,
+                    _multipart->comm);
+  int nRecv = dataToRecvIdx[nRank]/3;
+
+  // Step 3. Search in received data the matching faces
+
   free(boundsAndJoinsIdx);
 }
 
