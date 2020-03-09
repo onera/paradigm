@@ -88,6 +88,10 @@ typedef struct  {
   PDM_bool_t        merge_blocks;     /*!< Merge before partitionning or not */
   PDM_part_split_t  split_method;     /*!< Partitioning method */
   PDM_MPI_Comm      comm;             /*!< MPI communicator */
+  int               *partZoneDistri;  /*!< Number of part in each zone (distribution,
+                                           size = n_zone + 1)                         */
+  int               *gPartToProc;     /*!< For each global part id, proc storing this
+                                           part and localId of part in this process   */
   int               *dmeshesIds;      /*!< Ids of distributed blocks (size = n_zone)  */
   int               *partIds;         /*!< Ids of partitions built on each block of this
                                            process (size = n_zone)                    */
@@ -448,6 +452,48 @@ PDM_multipart_create
     _multipart->nBoundsAndJoins[2*izone+1] = -1;
   }
 
+  int nRank;
+  PDM_MPI_Comm_size(comm, &nRank);
+
+  // Number of partitions in each zone (distribution)
+  _multipart->partZoneDistri = (int *) malloc((n_zone + 1) * sizeof(int));
+  int *partZoneDistri = _multipart->partZoneDistri;
+  partZoneDistri[0] = 0;
+
+  // For each zone (slot of nRank + 1 in array), number of part per proc (distribution)
+  int *dPartProc = (int *) malloc(n_zone*(nRank + 1) * sizeof(int));
+  for (int izone = 0; izone < _multipart->n_zone; izone++)
+  {
+    dPartProc[izone*(nRank + 1)] = 0;
+    PDM_MPI_Allgather((void *) &n_part[izone],
+                      1,
+                      PDM_MPI_INT,
+                      (void *) (&dPartProc[izone*(nRank+1) + 1]),
+                      1,
+                      PDM_MPI_INT,
+                      _multipart->comm);
+
+    for (int i = 1; i < nRank+1; i++) {
+      dPartProc[izone*(nRank+1) + i] = dPartProc[izone*(nRank+1) + i] + dPartProc[izone*(nRank+1) + i-1];
+    }
+
+    partZoneDistri[izone+1] = partZoneDistri[izone] + dPartProc[izone*(nRank+1) + nRank];
+  }
+  // For each global part number, owner proc and ipart in proc
+  _multipart->gPartToProc = (int *) malloc(2*partZoneDistri[n_zone] * sizeof(int));
+  for (int izone = 0; izone < _multipart->n_zone; izone++)
+  {
+    int zshift = partZoneDistri[izone];
+    for (int i = 0; i < nRank; i++) {
+      for (int j = dPartProc[izone*(nRank+1) + i]; j < dPartProc[izone*(nRank+1) + i+1]; j++) {
+        _multipart->gPartToProc[2*(zshift + j)] = i;
+        _multipart->gPartToProc[2*(zshift + j) + 1] = j - dPartProc[izone*(nRank+1) + i];
+
+      }
+    }
+  }
+  free(dPartProc);
+
   PDM_printf("Created from PDM_multipart_create. You requested a multipart with %d zones \n", n_zone);
   return id;
 
@@ -798,6 +844,8 @@ PDM_multipart_free
 
   free(_multipart->dmeshesIds);
   free(_multipart->nBoundsAndJoins);
+  free(_multipart->partZoneDistri);
+  free(_multipart->gPartToProc);
 
   for (int izone = 0; izone<_multipart->n_zone; izone++)
     PDM_part_free(_multipart->partIds[izone]);
