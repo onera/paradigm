@@ -592,6 +592,8 @@ int main(int argc, char *argv[])
   int * nPartArray = (int *) malloc((multipartSize) * sizeof(int));
   for (int k=0; k<multipartSize; k++)
     nPartArray[k] = nPart;
+  nPartArray[0] = (myRank == 0) ? 0 : 1;
+  nPartArray[1] = (myRank == 0) ? 1 : 1;
    mpartId = PDM_multipart_create(multipartSize, nPartArray, PDM_FALSE, method, comm);
    PDM_printf("From exe : created a multipart object, id is %i \n", mpartId);
    for (int iblock=0; iblock < nbzone; iblock++)

@@ -39,6 +39,7 @@
 #include "pdm_part.h"
 #include "pdm_handles.h"
 #include "pdm_dmesh.h"
+#include "pdm_gnum_location.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
 
@@ -293,6 +294,8 @@ _rebuild_boundaries
   _multipart->pBoundsAndJoins = (_boundsAndJoins_t **)
   malloc(boundsAndJoinsIdx[_multipart->n_zone] * sizeof(_boundsAndJoins_t *));
 
+  // Test GNUM location
+  int idtest = PDM_gnum_location_create(_multipart->n_part[0], _multipart->n_part[0], _multipart->comm);
   // Loop over zones and part to get data
   for (int zoneGId = 0; zoneGId<_multipart->n_zone; zoneGId++)
   {
@@ -355,6 +358,14 @@ _rebuild_boundaries
                         &faceGroup,
                         &faceGroupLNToGN
                         );
+      //Test gnum location
+      if (zoneGId == 0) {
+        PDM_gnum_location_elements_set (idtest, ipart, nFace, faceLNToGN);
+        PDM_g_num_t *_numabs2 = malloc(sizeof(PDM_g_num_t) * 227);
+        for (int i=0; i < 227; i++)
+          _numabs2[i] = i+1;
+        PDM_gnum_location_requested_elements_set (idtest, ipart, 227, _numabs2);
+      }
 
       //Retrieve boundaries and joins from faceGroup
       int *pFaceBoundIdx = (int *) malloc((nBound+1) * sizeof(int));
@@ -393,6 +404,20 @@ _rebuild_boundaries
 
     }
   }
+  //Test du gnum location
+  PDM_gnum_location_compute (idtest);
+  int *location_idx;
+  int *location;
+
+  PDM_gnum_location_get(idtest, 0, &location_idx, &location);
+  PDM_gnum_location_free (idtest, 1);
+
+
+
+
+
+
+
 
   // Implementation avec le alltoall + trie (en cours mais a jeter ?)
   int myRank;
