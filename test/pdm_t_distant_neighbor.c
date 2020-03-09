@@ -165,7 +165,7 @@ char *argv[]
   if(nRank == 1){
     send_entity_data[0] = point_list_j1;
     send_entity_data[1] = point_list_j2;
-  } else if(nRank == 1){
+  } else if(nRank == 2){
     if(iRank == 0){
       send_entity_data[0] = point_list_j1;
     } else if(iRank == 1){
@@ -203,8 +203,8 @@ char *argv[]
 
   PDM_printf ("\nfin Test\n");
 
-  return 0;
 
+  return 0;
 }
 
 
