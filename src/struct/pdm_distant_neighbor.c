@@ -40,28 +40,26 @@ extern "C" {
  *
  */
 typedef struct  {
-  PDM_MPI_Comm comm;             /*!< MPI communicator */
-  int          n_part;           /*!< Number of partitions */
-  const int   *n_entity;         /*!< Number of entities for each partition */
-  int        **neighbor_idx;     /*!< Indexes of candidate for each current part point
-                                 *   (size = number of entities in the current part + 1) */
-  int        **neighbor_desc;    /*!< Candidates description (process,
-                                 *                           part in the process,
-                                 *                           entitiy number in the part) */
-  int          n_rank_exch;      /*!< Number of rank concerned by exchange */
-  int*         exch_rank;
+  PDM_MPI_Comm comm;                  /*!< MPI communicator */
+  int          n_part;                /*!< Number of partitions */
+  const int   *n_entity;              /*!< Number of entities for each partition */
+  int        **neighbor_idx;          /*!< Indexes of candidate for each current part point
+                                       *   (size = number of entities in the current part + 1) */
+  int        **neighbor_desc;         /*!< Candidates description (process,
+                                       *                           part in the process,
+                                       *                           entitiy number in the part) */
   int**        order;
   int**        order_unique;
-  int         *requested_data_n; /*!< Numer of requested data for each process index
-                                  * (size : s_comm) */
-  int         *requested_data_idx;/*!< Requested data for each process index
-                                   * (size : s_comm) */
-  int         *distributed_data_n;/*!< Numer of distributed data for each process index
-                                   * (size : s_comm) */
-  int         *distributed_data_idx;/*!< Distributed data for each process index
-                                     * (size : s_comm) */
-  int         *distributed_data;    /*!< Distributed data for each process
-                                     * (size : requestd_data_idx[s_comm - 1] */
+  int         *requested_data_n;      /*!< Numer of requested data for each process index
+                                       * (size : s_comm) */
+  int         *requested_data_idx;    /*!< Requested data for each process index
+                                       * (size : s_comm) */
+  int         *distributed_data_n;    /*!< Numer of distributed data for each process index
+                                       * (size : s_comm) */
+  int         *distributed_data_idx;  /*!< Distributed data for each process index
+                                       * (size : s_comm) */
+  int         *distributed_data;      /*!< Distributed data for each process
+                                       * (size : requestd_data_idx[s_comm - 1] */
 
 } _distant_neighbor_t;
 
@@ -238,8 +236,6 @@ const int           *n_entity,
   pdn->n_entity           = n_entity;
   pdn->neighbor_idx       = neighbor_idx;
   pdn->neighbor_desc      = neighbor_desc;
-  pdn->n_rank_exch        = -1;
-  pdn->exch_rank          = NULL;
   pdn->order              = (int **) malloc( pdn->n_part * sizeof(int **));
   pdn->order_unique       = (int **) malloc( pdn->n_part * sizeof(int **));
   pdn->requested_data_n   = (int * ) malloc( (nRank    ) * sizeof(int * ));
@@ -356,7 +352,6 @@ const int           *n_entity,
     pdn->requested_data_n[i] = 2*pdn->requested_data_n[i];
   }
 
-
   log_trace("PDM_distant_neighbor_create::requested_data :: --> ");
   for(int i = 0; i < s_requested_data; ++i){
     log_trace("[%d/%d] ", requested_data[2*i], requested_data[2*i+1]);
@@ -447,12 +442,39 @@ PDM_distant_neighbor_exch
  int            cst_stride,
  int          **send_entity_stride,
  int          **send_entity_data,
- int          **recv_entity_stride,
- int          **recv_entity_data
+ int         ***recv_entity_stride,
+ int         ***recv_entity_data
 )
 {
   printf(" PDM_distant_neighbor_exchange \n");
   _distant_neighbor_t *pdn = _get_from_id (id);
+
+  int iRank;
+  int nRank;
+  PDM_MPI_Comm_rank(pdn->comm, &iRank);
+  PDM_MPI_Comm_size(pdn->comm, &nRank);
+
+  int s_distributed_data = pdn->distributed_data_idx[nRank]/2;
+
+  size_t *i_sendBuffer = (size_t *) malloc (sizeof(size_t) * nRank);
+  size_t *i_recvBuffer = (size_t *) malloc (sizeof(size_t) * nRank);
+  int *n_sendBuffer = (int *) malloc (sizeof(int) * nRank);
+  int *n_recvBuffer = (int *) malloc (sizeof(int) * nRank);
+
+  size_t s_sendBuffer = 0;
+  size_t s_recvBuffer = 0;
+
+  for (int i = 0; i < nRank; i++) {
+    n_sendBuffer[i] = 0;
+    n_recvBuffer[i] = 0;
+    i_sendBuffer[i] = 0;
+    i_recvBuffer[i] = 0;
+  }
+
+  // unsigned char *sendBuffer = NULL;
+  // unsigned char *recvBuffer = NULL;
+  int *sendBuffer = NULL;
+  int *recvBuffer = NULL;
 
   if(t_stride !=  PDM_STRIDE_CST) {
     PDM_error(__FILE__, __LINE__, 0,"PDM_distant_neighbor_exch : STRIDE_CST is only availble \n");
@@ -463,11 +485,100 @@ PDM_distant_neighbor_exch
    * On doit echanger de la même manière que les requested du create mais en multipliant par la stride
    */
 
+  if (t_stride == PDM_STRIDE_VAR) {
+    PDM_error(__FILE__, __LINE__, 0,"PDM_distant_neighbor_exch : STRIDE_CST is only availble \n");
+    abort ();
+  } else if (t_stride == PDM_STRIDE_CST) {
+
+    int s_block_unit = cst_stride * (int) s_data;
+
+    for (int i = 0; i < nRank; i++) {
+
+      // i_sendBuffer[i] = pdn->distributed_data_idx[i] * cst_stride * (int) s_data;
+      // i_recvBuffer[i] = pdn->requested_data_idx[i] * cst_stride * (int) s_data;
+
+      // n_sendBuffer[i] = pdn->distributed_data_n[i] * cst_stride * (int) s_data;
+      // n_recvBuffer[i] = pdn->requested_data_n[i] * cst_stride * (int) s_data;
+      i_sendBuffer[i] = pdn->distributed_data_idx[i] * cst_stride;
+      i_recvBuffer[i] = pdn->requested_data_idx[i] * cst_stride;
+
+      n_sendBuffer[i] = pdn->distributed_data_n[i] * cst_stride;
+      n_recvBuffer[i] = pdn->requested_data_n[i] * cst_stride;
+
+    }
+
+    s_sendBuffer = i_sendBuffer[nRank-1] + n_sendBuffer[nRank-1];
+    s_recvBuffer = i_recvBuffer[nRank-1] + n_recvBuffer[nRank-1];
+
+    // sendBuffer = (unsigned char *) malloc(sizeof(unsigned char) * s_sendBuffer);
+    // recvBuffer = (unsigned char *) malloc(sizeof(unsigned char) * s_recvBuffer);
+    sendBuffer = (int *) malloc(sizeof(int) * s_sendBuffer);
+    recvBuffer = (int *) malloc(sizeof(int) * s_recvBuffer);
+
+    int idx1 = 0;
+    for (int i = 0; i < s_distributed_data; i++) {
+      int ipart = pdn->distributed_data[2*i  ];
+      int ienty = pdn->distributed_data[2*i+1];
+      printf("[%d/%d] --> [%d,%d] -> %d \n", idx1, s_distributed_data, ipart, ienty, send_entity_data[ipart][ienty]);
+      sendBuffer[idx1++] = send_entity_data[ipart][ienty];
+    }
+  }
+
+
+  /*
+   * Exchnage
+   */
+  // PDM_MPI_Alltoallv_l(sendBuffer,
+  //                     n_sendBuffer,
+  //                     i_sendBuffer,
+  //                     PDM_MPI_BYTE,
+  //                     recvBuffer,
+  //                     n_recvBuffer,
+  //                     i_recvBuffer,
+  //                     PDM_MPI_BYTE,
+  //                     pdn->comm);
+  PDM_MPI_Alltoallv_l(sendBuffer,
+                      n_sendBuffer,
+                      i_sendBuffer,
+                      PDM_MPI_INT,
+                      recvBuffer,
+                      n_recvBuffer,
+                      i_recvBuffer,
+                      PDM_MPI_INT,
+                      pdn->comm);
+
+
+  free(sendBuffer);
+  free(n_sendBuffer);
+  free(n_recvBuffer);
+  free(i_recvBuffer);
 
   /*
    * Une seule valeur est echangé mais plusieurs occurence peuvent exister donc on passe du buffer MPI
    * au donné sans le sort/unique
    */
+  *recv_entity_data = malloc( pdn->n_part * sizeof(int *) );
+  int **_recv_entity_data = (*(int ***) recv_entity_data);
+  // Shift is not good because the buffer contains only one occurence of each elements !!!
+  int shiftpart = 0;
+  for(int ipart = 0; ipart < pdn->n_part; ipart++){
+    int *_part_neighbor_idx  = pdn->neighbor_idx[ipart];
+    _recv_entity_data[ipart] = (int *) malloc( _part_neighbor_idx[pdn->n_entity[ipart]] * sizeof(int *));
+
+
+    for(int i_entity = 0; i_entity < _part_neighbor_idx[pdn->n_entity[ipart]]; i_entity++){
+      // int idx = i_sendBuffer[] + order_unique[i_entity]
+      int idx = shiftpart + pdn->order_unique[ipart][i_entity];
+      printf("recv ::[%d/%d] --> [%d,%d] -> %d \n", idx, _part_neighbor_idx[pdn->n_entity[ipart]], ipart, i_entity, recvBuffer[idx]);
+      _recv_entity_data[ipart][i_entity] = recvBuffer[idx];
+    }
+    shiftpart += _part_neighbor_idx[pdn->n_entity[ipart]];
+
+  }
+
+
+  free(i_sendBuffer);
+  free(recvBuffer);
 
   /*
    * Pour les globBorder :
@@ -520,113 +631,17 @@ PDM_distant_neighbor_free
   free(pdn->distributed_data_n);
   free(pdn->distributed_data_idx);
 
-  if (pdn->exch_rank != NULL)
-    free (pdn->exch_rank);
-
   free (pdn);
 
   PDM_Handles_handle_free (_pdns, id, PDM_FALSE);
 
   const int n_ppm = PDM_Handles_n_get (_pdns);
 
-
   if (n_ppm == 0) {
     _pdns = PDM_Handles_free (_pdns);
   }
 
 }
-// void
-// PDM_distant_neighbor_irecv()
-// PDM_distant_neighbor_iisend()
-// PDM_distant_neighbor_wait()
-
-// void
-// PDM_distant_neighbor_alltoall()
-// {
-// }
-
-
-  // /*
-  //  * Setup exchange protocol
-  //  *   I/ Compute the total size of connected elmts by each proc with others
-  //  */
-  // int *offered_elmts_rank_idx = (int *) malloc ((nRank + 1) * sizeof(int));
-  // for(int i = 0; i < nRank+1; i++){
-  //   offered_elmts_rank_idx[i] = 0;
-  // }
-
-  // for(int ipart = 0; ipart < pdn->n_part; ipart++){
-  //   int *_part_neighbor_idx  = pdn->neighbor_idx[ipart];
-  //   int *_part_neighbor_desc = pdn->neighbor_desc[ipart];
-
-  //   for(int i_entity = 0; i_entity < n_entity[ipart]; i_entity++){
-  //     for(int j = _part_neighbor_idx[i_entity]; j < _part_neighbor_idx[i_entity+1]; j++){
-  //       int opp_proc = _part_neighbor_desc[3*j  ];
-  //       // int opp_part = _part_neighbor_desc[3*j+1];
-  //       // int opp_etty = _part_neighbor_desc[3*j+2];
-  //       offered_elmts_rank_idx[opp_proc+1]++;
-  //     }
-  //   }
-  // }
-
-  // /*
-  //  * Panic verbose
-  //  */
-  // if(0 == 0){
-  //   printf("offered_elmts_rank_idx:: ");
-  //   for(int i = 0; i < nRank+1; i++){
-  //     printf("%d ", offered_elmts_rank_idx[i]);
-  //   }
-  //   printf("\n");
-  // }
-
-
-  //  * Build list of exchanged ranks
-
-  // pdn->n_rank_exch = 0;
-  // for(int i = 0; i < nRank+1; i++){
-  //   if((i != iRank) && (offered_elmts_rank_idx[i+1] > 0)) {
-  //     pdn->n_rank_exch += 1;
-  //   }
-  //   offered_elmts_rank_idx[i+1] = offered_elmts_rank_idx[i+1] + offered_elmts_rank_idx[i];
-  // }
-
-  // /*
-  //  * Allocate and reset
-  //  */
-  // pdn->exch_rank = (int *) malloc( pdn->n_rank_exch * sizeof(int) );
-  // pdn->n_rank_exch = 0;
-
-  // for(int i = 0; i < nRank+1; i++){
-  //   if((i != iRank) && (offered_elmts_rank_idx[i+1] > offered_elmts_rank_idx[i])) {
-  //     pdn->exch_rank[pdn->n_rank_exch++] = i; // Communication graph
-  //   }
-  // }
-
-  // /*
-  //  * Panic verbose
-  //  */
-  // if(0 == 0){
-  //   printf("offered_elmts_rank_idx shift:: ");
-  //   for(int i = 0; i < nRank+1; i++){
-  //     printf("%d ", offered_elmts_rank_idx[i]);
-  //   }
-  //   printf("\n");
-  // }
-
-  // /*
-  //  * Exchange number of offered elements for each connected element
-  //  * to connected ranks
-  //  */
-  // int *n_recv_elmt    = (int *) malloc (nRank * sizeof(int));
-  // for (int i = 0; i < nRank; i++) {
-  //   n_recv_elmt[i] = 0;
-  // }
-
-  // /*
-  //  * Free
-  //  */
-  // free(offered_elmts_rank_idx);
 
 #ifdef __cplusplus
 }

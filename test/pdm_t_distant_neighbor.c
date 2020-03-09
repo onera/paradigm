@@ -182,9 +182,7 @@ char *argv[]
                             NULL,
                             send_entity_data,
                             NULL,
-                   (int**) &recv_entity_data);
-
-
+                 (int***) &recv_entity_data);
 
   /*
    * Free
@@ -197,6 +195,10 @@ char *argv[]
   free(candidates_desc);
   free(n_entity);
   free(send_entity_data);
+  for(int i_cloud = 0; i_cloud < n_cloud; i_cloud++){
+    free(recv_entity_data[i_cloud]);
+  }
+  free(recv_entity_data);
   PDM_MPI_Finalize();
 
   PDM_printf ("\nfin Test\n");

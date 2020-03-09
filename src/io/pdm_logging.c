@@ -62,6 +62,19 @@ extern "C" {
  * Local function prototypes
  *-----------------------------------------------------------------------------*/
 
+static FILE* logging_file = NULL;
+
+static
+void
+free_logging_file
+(
+)
+{
+  printf("free_logging_file\n");
+  if(logging_file != NULL)
+    fclose(logging_file);
+}
+
 static struct {
   void *udata;
   log_LockFn lock;
@@ -124,6 +137,11 @@ void log_set_quiet(int enable) {
 void log_log(int level, const char *file, int line, const char *fmt, ...) {
   if (level < L.level) {
     return;
+  }
+
+  if(logging_file == NULL){
+    logging_file = fopen("test.log", "w");
+    atexit(free_logging_file);
   }
 
   /* Acquire lock */

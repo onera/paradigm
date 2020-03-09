@@ -92,8 +92,8 @@ PDM_distant_neighbor_exch
  int            cst_stride,
  int          **send_entity_stride,
  int          **send_entity_data,
- int          **recv_entity_stride,
- int          **recv_entity_data
+ int         ***recv_entity_stride,
+ int         ***recv_entity_data
 );
 
 
