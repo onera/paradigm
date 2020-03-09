@@ -420,13 +420,15 @@ static void _readJsonBlock
   }
   //Now fill faceJoin
   PDM_g_num_t * faceJoin = (PDM_g_num_t *) malloc(faceJoinIdx[nbJoin] * sizeof(PDM_g_num_t));
-  int * joinZoneOpp = (int *) malloc(nbJoin * sizeof(int));
+  int * joinGIds = (int *) malloc(2*nbJoin * sizeof(int));
   iface = 0;
   for (int i = 0; i < nbJoin; i++)
   {
     arraydata = json_object_array_get_idx(array, i);
+    json_object_object_get_ex(arraydata, "sourceGId", &intdata);
+    joinGIds[2*i] = json_object_get_int(intdata);
     json_object_object_get_ex(arraydata, "targetGId", &intdata);
-    joinZoneOpp[i] = json_object_get_int(intdata);
+    joinGIds[2*i+1] = json_object_get_int(intdata);
     json_object_object_get_ex(arraydata, "PointList", &arraydata);
     for (int k = 0; k < json_object_array_length(arraydata); k++)
     {
@@ -437,7 +439,7 @@ static void _readJsonBlock
 
   int dmeshId = PDM_dmesh_create(nbCell, nbFace, nbVtx, nbBound, nbJoin);
   PDM_dmesh_set(dmeshId, vtxCoord, faceVtxIdx, faceVtx, faceCell,
-                faceBoundIdx, faceBound, joinZoneOpp, faceJoinIdx, faceJoin);
+                faceBoundIdx, faceBound, joinGIds, faceJoinIdx, faceJoin);
   meshIds[blockId] = dmeshId;
   zoneIds[blockId] = zoneGId;
   //Fuite mémoire -> les données allouées ici sont perdues

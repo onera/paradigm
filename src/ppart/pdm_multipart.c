@@ -179,7 +179,7 @@ _set_dFaceTag_from_joins
 (
  const int          dNFace,
  const int          nJoin,
- const int         *dJoinZoneOpp,
+ const int         *dJoinGIds,
  const int         *dFaceJoinIdx,
  const PDM_g_num_t *dFaceJoin,
  int               *dFaceTag,
@@ -232,7 +232,7 @@ _set_dFaceTag_from_joins
       int rank = _search_rank(dFaceJoin[iface], dFaceProc, 0, nRank);
       int idx   = faceToSendIdx[rank] + faceToSendN[rank];
       faceToSend[idx  ]   = dFaceJoin[iface];
-      faceToSend[idx+1]   = dJoinZoneOpp[ijoin];
+      faceToSend[idx+1]   = dJoinGIds[2*ijoin+1];
       faceToSendN[rank] += nData;
     }
   }
@@ -506,7 +506,7 @@ PDM_multipart_run_ppart
       PDM_g_num_t  *dFaceCell     = NULL;
       int          *dFaceBoundIdx = NULL;
       PDM_g_num_t  *dFaceBound    = NULL;
-      int          *dJoinZoneOpp  = NULL;
+      int          *dJoinGIds     = NULL;
       int          *dFaceJoinIdx  = NULL;
       PDM_g_num_t  *dFaceJoin     = NULL;
 
@@ -519,7 +519,7 @@ PDM_multipart_run_ppart
       {
         PDM_dmesh_dims_get(blockId, &dNCell, &dNFace, &dNVtx, &nBnd, &nJoin);
         PDM_dmesh_data_get(blockId, &dVtxCoord, &dFaceVtxIdx, &dFaceVtx, &dFaceCell,
-                           &dFaceBoundIdx, &dFaceBound, &dJoinZoneOpp, &dFaceJoinIdx, &dFaceJoin);
+                           &dFaceBoundIdx, &dFaceBound, &dJoinGIds, &dFaceJoinIdx, &dFaceJoin);
         //Merge FaceBounds and FaceJoins into FaceGroup
         if (dFaceJoinIdx == NULL){
           int singleArray[1] = {0};
@@ -557,7 +557,7 @@ PDM_multipart_run_ppart
       }
 
       dFaceTag = (int *) malloc((dNFace) * sizeof(int));
-      _set_dFaceTag_from_joins(dNFace, nJoin, dJoinZoneOpp, dFaceJoinIdx, dFaceJoin, dFaceTag, _multipart->comm);
+      _set_dFaceTag_from_joins(dNFace, nJoin, dJoinGIds, dFaceJoinIdx, dFaceJoin, dFaceTag, _multipart->comm);
 
       int ppartId = 0;
       int have_dCellPart = 0;

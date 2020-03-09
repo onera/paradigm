@@ -93,8 +93,8 @@ PDM_dmesh_create
  *                                    (size = dNBnd + 1)
  * \param [in]   dFaceBound         Faces list of each boundary
  *                                    (size = dfaceBoundIdx[dNBnd])
- * \param [in]   dJoinZoneOpp       Global Id of the opposed zone for each join
- *                                    (size = dNJoin)
+ * \param [in]   dJoinGIds          Tuple JoinGId, JoinGIdDonnor for
+ *                                    each join (size = 2*dNJoin)
  * \param [in]   dFaceJoinIdx       Index of faces list of each join
  *                                    (size = dNJoin + 1)
  * \param [in]   dFaceJoin          Faces list of each join
@@ -111,7 +111,7 @@ PDM_dmesh_set
  const PDM_g_num_t  *dFaceCell,
  const int          *dFaceBoundIdx,
  const PDM_g_num_t  *dFaceBound,
- const int          *dJoinZoneOpp,
+ const int          *dJoinGIds,
  const int          *dFaceJoinIdx,
  const PDM_g_num_t  *dFaceJoin
 );
@@ -150,7 +150,7 @@ PDM_dmesh_dims_get
  * \param [out]   dFaceCell          Face-cell connectivity of faces
  * \param [out]   dFaceBoundIdx      Indices of faces list of each boundary
  * \param [out]   dFaceBound         Faces list of each boundary
- * \param [out]   dJoinZoneOpp       Global Id of the opposed zone for each join
+ * \param [out]   dJoinGIds          Global Ids of the join and opposed join
  * \param [out]   dFaceJoinIdx       Indices of faces list of each join
  * \param [out]   dFaceJoin          Faces list of each join
  */
@@ -165,7 +165,7 @@ PDM_dmesh_data_get
  PDM_g_num_t  **dFaceCell,
  int          **dFaceBoundIdx,
  PDM_g_num_t  **dFaceBound,
- int          **dJoinZoneOpp,
+ int          **dJoinGIds,
  int          **dFaceJoinIdx,
  PDM_g_num_t  **dFaceJoin
 );
