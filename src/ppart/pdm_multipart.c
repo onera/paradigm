@@ -278,12 +278,137 @@ _set_dFaceTag_from_joins
   free(faceToRecv);
 }
 
+
+// static void
+// _rebuild_boundaries2
+// (
+//  _pdm_multipart_t *_multipart
+// )
+// {
+//   /*
+//    * I/ For each block we build the gnum location
+//    */
+//   int* userdom_gnum_id = (int *) malloc(_multipart->n_zone * sizeof(int*) );
+//   for (int zoneGId = 0; zoneGId < _multipart->n_zone; zoneGId++) {
+
+//     // Gnum creation
+//     userdom_gnum_id[zoneGId] = PDM_gnum_location_create( _multipart->n_part[zoneGId], _multipart->n_part[0], _multipart->comm);
+
+//     for (int ipart = 0; ipart < _multipart->n_part[zoneGId]; ipart++) {
+
+//       int nCell, nFace, nFacePartBound, nVtx, nProc, nTPart, sCellFace, sFaceVtx, sFaceGroup, nFaceGroup;
+//       PDM_part_part_dim_get(_multipart->partIds[zoneGId],
+//                         ipart,
+//                         &nCell,
+//                         &nFace,
+//                         &nFacePartBound,
+//                         &nVtx,
+//                         &nProc,
+//                         &nTPart,
+//                         &sCellFace,
+//                         &sFaceVtx,
+//                         &sFaceGroup,
+//                         &nFaceGroup);
+
+//       int nBound = _multipart->nBoundsAndJoins[2*zoneGId];
+//       int nJoin  = _multipart->nBoundsAndJoins[2*zoneGId+1];
+//       assert(nFaceGroup == nBound + nJoin);
+
+//       int          *cellTag;
+//       int          *cellFaceIdx;
+//       int          *cellFace;
+//       PDM_g_num_t *cellLNToGN;
+//       int          *faceTag;
+//       int          *faceCell;
+//       int          *faceVtxIdx;
+//       int          *faceVtx;
+//       PDM_g_num_t *faceLNToGN;
+//       int          *facePartBoundProcIdx;
+//       int          *facePartBoundPartIdx;
+//       int          *facePartBound;
+//       int          *vtxTag;
+//       double       *vtx;
+//       PDM_g_num_t  *vtxLNToGN;
+//       int          *faceGroupIdx;
+//       int          *faceGroup;
+//       PDM_g_num_t *faceGroupLNToGN;
+//       PDM_part_part_val_get(_multipart->partIds[zoneGId],
+//                         ipart,
+//                         &cellTag,
+//                         &cellFaceIdx,
+//                         &cellFace,
+//                         &cellLNToGN,
+//                         &faceTag,
+//                         &faceCell,
+//                         &faceVtxIdx,
+//                         &faceVtx,
+//                         &faceLNToGN,
+//                         &facePartBoundProcIdx,
+//                         &facePartBoundPartIdx,
+//                         &facePartBound,
+//                         &vtxTag,
+//                         &vtx,
+//                         &vtxLNToGN,
+//                         &faceGroupIdx,
+//                         &faceGroup,
+//                         &faceGroupLNToGN
+//                         );
+//       //Test gnum location
+//       if (zoneGId == 0) {
+//         PDM_gnum_location_elements_set (idtest, ipart, nFace, faceLNToGN);
+//         PDM_g_num_t *_numabs2 = malloc(sizeof(PDM_g_num_t) * 227);
+//         for (int i=0; i < 227; i++)
+//           _numabs2[i] = i+1;
+//         PDM_gnum_location_requested_elements_set (idtest, ipart, 227, _numabs2);
+//       }
+
+//       //Retrieve boundaries and joins from faceGroup
+//       int *pFaceBoundIdx = (int *) malloc((nBound+1) * sizeof(int));
+//       int *pFaceJoinIdx  = (int *) malloc((nJoin +1) * sizeof(int));
+//       for (int i = 0; i < nBound + 1; i++)
+//         pFaceBoundIdx[i] = faceGroupIdx[i];
+//       pFaceJoinIdx[0] = 0;
+//       for (int i = nBound + 1; i < nBound + nJoin + 1; i++)
+//         pFaceJoinIdx[i-nBound] = faceGroupIdx[i] - faceGroupIdx[nBound];
+
+//       int *pFaceBound = (int *) malloc(pFaceBoundIdx[nBound] * sizeof(int));
+//       int *pFaceJoin  = (int *) malloc(pFaceJoinIdx[nJoin]   * sizeof(int));
+//       for (int i = 0; i < pFaceBoundIdx[nBound]; i++)
+//         pFaceBound[i] = faceGroup[i];
+//       for (int i = pFaceBoundIdx[nBound]; i < faceGroupIdx[nFaceGroup]; i++)
+//         pFaceJoin[i - pFaceBoundIdx[nBound]] = faceGroup[i];
+
+//       PDM_g_num_t *pFaceBoundLNToGN = (PDM_g_num_t *) malloc(pFaceBoundIdx[nBound] * sizeof(PDM_g_num_t));
+//       PDM_g_num_t *pFaceJoinLNToGN  = (PDM_g_num_t *) malloc(pFaceJoinIdx[nJoin]   * sizeof(PDM_g_num_t));
+//       for (int i = 0; i < pFaceBoundIdx[nBound]; i++)
+//         pFaceBoundLNToGN[i] = faceGroupLNToGN[i];
+//       for (int i = pFaceBoundIdx[nBound]; i < faceGroupIdx[nFaceGroup]; i++)
+//         pFaceJoinLNToGN[i - pFaceBoundIdx[nBound]] = faceGroupLNToGN[i];
+
+//       // Store data in pBoundsAndJoins
+//       int idx = boundsAndJoinsIdx[zoneGId] + ipart;
+//       _multipart->pBoundsAndJoins[idx] = malloc(sizeof(_boundsAndJoins_t));
+//       _multipart->pBoundsAndJoins[idx]->nBound = nBound;
+//       _multipart->pBoundsAndJoins[idx]->nJoin = nJoin;
+//       _multipart->pBoundsAndJoins[idx]->faceBoundIdx = pFaceBoundIdx;
+//       _multipart->pBoundsAndJoins[idx]->faceJoinIdx  = pFaceJoinIdx;
+//       _multipart->pBoundsAndJoins[idx]->faceBound    = pFaceBound;
+//       _multipart->pBoundsAndJoins[idx]->faceJoin     = pFaceJoin;
+//       _multipart->pBoundsAndJoins[idx]->faceBoundLNToGN    = pFaceBoundLNToGN;
+//       _multipart->pBoundsAndJoins[idx]->faceJoinLNToGN     = pFaceJoinLNToGN;
+//     }
+//   }
+//   free(userdom_gnum_id);
+// }
+
 static void
 _rebuild_boundaries
 (
  _pdm_multipart_t *_multipart
 )
 {
+
+  printf("_rebuild_boundaries::\n");
 
   //Set structure : we need a to retrive pboundsAndJoin for a given zone/part
   int *boundsAndJoinsIdx = (int *) malloc((_multipart->n_zone + 1) * sizeof(int));
@@ -628,8 +753,7 @@ PDM_multipart_create
   }
   // For each global part number, owner proc and ipart in proc
   _multipart->gPartToProc = (int *) malloc(2*partZoneDistri[n_zone] * sizeof(int));
-  for (int izone = 0; izone < _multipart->n_zone; izone++)
-  {
+  for (int izone = 0; izone < _multipart->n_zone; izone++){
     int zshift = partZoneDistri[izone];
     for (int i = 0; i < nRank; i++) {
       for (int j = dPartProc[izone*(nRank+1) + i]; j < dPartProc[izone*(nRank+1) + i+1]; j++) {
@@ -683,7 +807,7 @@ PDM_multipart_run_ppart
   else
   {
     // 2. Loop over the blocks and call the partitionner
-    for (int zoneGId = 0; zoneGId<_multipart->n_zone; zoneGId++)
+    for (int zoneGId = 0; zoneGId < _multipart->n_zone; zoneGId++)
     {
       PDM_printf("You requested no merge : partitionning zone %d/%d \n", zoneGId+1, _multipart->n_zone);
       int blockId = _multipart->dmeshesIds[zoneGId];
@@ -801,6 +925,7 @@ PDM_multipart_run_ppart
     _rebuild_boundaries(_multipart);
   }
   // 3. rebuild the joins
+  // _rebuild_boundaries2(_multipart);
 }
 
 void

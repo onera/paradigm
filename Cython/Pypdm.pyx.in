@@ -140,11 +140,9 @@ include "pdm_dist_cloud_surf.pxi"
 # --------------------
 include "pdm_points_merge.pxi"
 
-
-
-
-
-
+# PDM_dmesh :
+# --------------------
+include "pdm_dmesh.pxi"
 
 
 # TODO: PDM_writer, ...
