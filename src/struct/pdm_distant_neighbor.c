@@ -679,24 +679,6 @@ PDM_distant_neighbor_exch
   free(i_sendBuffer);
   free(recvBuffer);
 
-  /*
-   * Pour les globBorder :
-   *      -> On connait le lien dans une numérotation absolu [PointList - PointListDonor]
-   * C'est possible que ce soit les mêmes domaines utilisateurs :
-   *    ex : périodicité
-   *
-   * Une fois partitioner on garde 2 choses :
-   *      - FaceGroupLNToGN : Position in Original PointList
-   *
-   *  Dans les nouvelles partitions on doit retrouver des nouvelles correspondances entre les nv PointList
-   *   Seul la comparaison avec les PointList Initiaux permette de faire le lien !
-   *  A voire avec globgraph mais je pense que ce n'est pas du tt le même algorithme !!
-   *  On pourrait effectivement jouer sur la nature des blocks qui sont "des partitions"
-   *  Mais je pense que l'algo n'apportera rien !
-   *
-   */
-
-
 }
 
 
