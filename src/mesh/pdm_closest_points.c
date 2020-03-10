@@ -354,6 +354,8 @@ PDM_closest_points_compute
  const int id
  )
 {
+  const int VISU = 0;
+
   _PDM_closest_t *cls = _get_from_id (id);
 
   double b_t_elapsed;
@@ -377,7 +379,7 @@ PDM_closest_points_compute
   PDM_MPI_Comm_rank (cls->comm, &myRank);
 
   const int depth_max = 31;//?
-  const int points_in_leaf_max = 2*cls->n_closest;//?
+  const int points_in_leaf_max = 1;//2*cls->n_closest;//?
   const int build_leaf_neighbours = 1;
 
 
@@ -405,13 +407,15 @@ PDM_closest_points_compute
   PDM_para_octree_dump_times (octree_id);
 
   //DBG -->>
-  /*char filename[999];
-  sprintf(filename,
-          "/home/bandrieu/workspace/paradigma-dev/test/para_octree/src_points_%4.4d.vtk", myRank);
-  DBG_write_octree_points(octree_id, filename);
-  sprintf(filename,
-          "/home/bandrieu/workspace/paradigma-dev/test/para_octree/octants_%4.4d.vtk", myRank);
-          DBG_write_octree_octants(octree_id, filename);*/
+  if (VISU) {
+    char filename[999];
+    sprintf(filename,
+            "/home/bandrieu/workspace/paradigma-dev/test/para_octree/src_points_%4.4d.vtk", myRank);
+    DBG_write_octree_points(octree_id, filename);
+    sprintf(filename,
+            "/home/bandrieu/workspace/paradigma-dev/test/para_octree/octants_%4.4d.vtk", myRank);
+    DBG_write_octree_octants(octree_id, filename);
+  }
   //<<--
 
 
@@ -437,20 +441,32 @@ PDM_closest_points_compute
   }
 
   //DBG -->>
-  /*sprintf(filename,
-    "/home/bandrieu/workspace/paradigma-dev/test/para_octree/tgt_points_%4.4d.vtk", myRank);
-    DBG_write_points(tgt_coord, n_tgt, 3, filename);*/
+  if (VISU) {
+    char filename[999];
+    sprintf(filename,
+            "/home/bandrieu/workspace/paradigma-dev/test/para_octree/tgt_points_%4.4d.vtk", myRank);
+    DBG_write_points(tgt_coord, n_tgt, 3, filename);
+  }
   //<<--
 
   /* Search closest source points from target points */
-  PDM_para_octree_closest_point (octree_id,
-                                 cls->n_closest,
-                                 n_tgt,
-                                 tgt_coord,
-                                 tgt_g_num,
-                                 closest_src_gnum,
-                                 closest_src_dist);
-
+#if 1
+  PDM_para_octree_closest_point2 (octree_id,
+                                  cls->n_closest,
+                                  n_tgt,
+                                  tgt_coord,
+                                  tgt_g_num,
+                                  closest_src_gnum,
+                                  closest_src_dist);
+#else
+  PDM_para_octree_closest_point3 (octree_id,
+                                  cls->n_closest,
+                                  n_tgt,
+                                  tgt_coord,
+                                  tgt_g_num,
+                                  closest_src_gnum,
+                                  closest_src_dist);
+#endif
 
 
   /* Restore partitions */
