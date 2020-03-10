@@ -243,6 +243,8 @@ PDM_dmesh_set
   dmesh->_dJoinGIds     = dJoinGIds;
   dmesh->_dFaceJoinIdx  = dFaceJoinIdx;
   dmesh->_dFaceJoin     = dFaceJoin;
+
+  printf("PDM_dmesh_set::dmesh->_dFaceVtx :: %d \n", dmesh->_dFaceVtx[0]);
 }
 
 /**
@@ -335,6 +337,8 @@ PDM_dmesh_free
 )
 {
   _pdm_dmesh_t *dmesh = _get_from_id (id);
+
+  printf("PDM_dmesh_free::dmesh->_dFaceVtx : %d \n", dmesh->_dFaceVtx[0]);
 
   dmesh->dNCell   = 0;
   dmesh->dNFace   = 0;
