@@ -5,7 +5,7 @@ cdef extern from "pdm_multipart.h":
     # ------------------------------------------------------------------
     # MPI_Comm      comm,
     int PDM_multipart_create(int              n_zone,
-                             int              n_part,
+                             int*             n_part,
                              PDM_bool_t       merge_blocks,
                              PDM_part_split_t split_method,
                              PDM_MPI_Comm     comm)
@@ -88,24 +88,30 @@ cdef class MultiPart:
     cdef int _mpart_id
     # ------------------------------------------------------------------
     def __cinit__(self,
-                  int              n_zone,
-                  int              n_part,
-                  PDM_bool_t       merge_blocks,
-                  PDM_part_split_t split_method,
-                  MPI.Comm         comm):
+                  int                                           n_zone,
+                  NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] n_part,
+                  int                                           merge_blocks,
+                  PDM_part_split_t                              split_method,
+                  MPI.Comm                                      comm):
 
         """
         """
         # ~> Communicator Mpi
         cdef MPI.MPI_Comm c_comm = comm.ob_mpi
 
+        # print("MultiPart::n_zone -->", n_zone)
+        # print("MultiPart::n_part -->", n_part)
+        # print("MultiPart::merge_blocks -->", merge_blocks)
+        # print("MultiPart::split_method -->", split_method)
+
         # -> Create PPART
         # DM_multipart_create(&_mpart_id,
         self._mpart_id = PDM_multipart_create(n_zone,
-                                              n_part,
-                                              merge_blocks,
+                                              <int*> n_part.data,
+                                              <PDM_bool_t> merge_blocks,
                                               split_method,
                                               PDM_MPI_mpi_2_pdm_mpi_comm (<void *> &c_comm))
+        print("MultiPart::end ")
 
     # ------------------------------------------------------------------
     # def multi_part_partial_free(self):

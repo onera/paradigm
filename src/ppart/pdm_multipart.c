@@ -695,7 +695,9 @@ PDM_multipart_create
  const PDM_MPI_Comm     comm
 )
 {
-
+  printf("PDM_multipart_create::n_zone:: %d \n", n_zone);
+  printf("PDM_multipart_create::n_part:: %d \n", n_part[0]);
+  printf("PDM_multipart_create::split_method:: %d \n", split_method);
   /*
    * Search a ppart free id
    */
