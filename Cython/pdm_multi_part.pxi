@@ -188,7 +188,7 @@ cdef class MultiPart:
                 'nFaceJoin'      :nFaceJoin}
 
     # ------------------------------------------------------------------
-    def mutlipart_val_get(self, int ipart, int zoneGId):
+    def multipart_val_get(self, int ipart, int zoneGId):
         """
            Get partition dimensions
         """
@@ -408,7 +408,7 @@ cdef class MultiPart:
         if (faceBoundIdx == NULL) :
             npFaceBoundIdx = None
         else :
-            dim = <NPY.npy_intp> (self._nFaceBound + 1)
+            dim = <NPY.npy_intp> dims['nFaceBound'] + 1
             npFaceBoundIdx  = NPY.PyArray_SimpleNewFromData(1,
                                                            &dim,
                                                            NPY.NPY_INT32,
@@ -438,7 +438,7 @@ cdef class MultiPart:
         if (faceJoinIdx == NULL) :
             npFaceJoinIdx = None
         else :
-            dim = <NPY.npy_intp> (self._nFaceJoin + 1)
+            dim = <NPY.npy_intp> dims['nFaceJoin'] + 1
             npFaceJoinIdx  = NPY.PyArray_SimpleNewFromData(1,
                                                           &dim,
                                                           NPY.NPY_INT32,
@@ -484,7 +484,7 @@ cdef class MultiPart:
                 'npFaceBoundLNToGN'          : npFaceBoundLNToGN,
                 'npFaceJoinIdx'              : npFaceJoinIdx,
                 'npFaceJoin'                 : npFaceJoin,
-                'npFaceJoinLNToGN'          : npFaceJoinLNToGN}
+                'npFaceJoinLNToGN'           : npFaceJoinLNToGN}
 
     # ------------------------------------------------------------------
     def multipart_color_get(self, int ipart, int zoneGId):
@@ -500,7 +500,7 @@ cdef class MultiPart:
         # ************************************************************************
 
         # dims = self.part_dim_get(self._mpart_id, ipart)
-        dims = self.multipart_dim_get(ipart)
+        dims = self.multipart_dim_get(ipart, zoneGId)
 
         # -> Call PPART to get info
         PDM_multipart_part_color_get(self._mpart_id,
