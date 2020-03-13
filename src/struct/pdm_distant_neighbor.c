@@ -543,6 +543,7 @@ PDM_distant_neighbor_exch
 
   // int s_distributed_data = pdn->distributed_data_idx[nRank]/2;
   int s_distributed_data = pdn->distributed_data_idx[nRank];
+  int s_requested_data   = pdn->requested_data_idx[nRank];
 
   size_t *i_sendBuffer = (size_t *) malloc (sizeof(size_t) * nRank);
   size_t *i_recvBuffer = (size_t *) malloc (sizeof(size_t) * nRank);
@@ -564,18 +565,65 @@ PDM_distant_neighbor_exch
   int *sendBuffer = NULL;
   int *recvBuffer = NULL;
 
-  if(t_stride !=  PDM_STRIDE_CST) {
-    PDM_error(__FILE__, __LINE__, 0,"PDM_distant_neighbor_exch : STRIDE_CST is only availble \n");
-    abort ();
-  }
+  // if(t_stride !=  PDM_STRIDE_CST) {
+  //   PDM_error(__FILE__, __LINE__, 0,"PDM_distant_neighbor_exch : STRIDE_CST is only availble \n");
+  //   abort ();
+  // }
 
   /*
    * On doit echanger de la même manière que les requested du create mais en multipliant par la stride
    */
-
+  int *recvStride = NULL;
   if (t_stride == PDM_STRIDE_VAR) {
-    PDM_error(__FILE__, __LINE__, 0,"PDM_distant_neighbor_exch : STRIDE_CST is only availble \n");
-    abort ();
+
+    int *sendStride = (int *) malloc (sizeof(int) * s_distributed_data);
+    recvStride = (int *) malloc (sizeof(int) * s_requested_data);
+
+    /*
+     * Prepare send stride
+     */
+    int idx_send = 0;
+    for (int i = 0; i < s_distributed_data; i++) {
+      int ipart = pdn->distributed_data[2*i  ];
+      int ienty = pdn->distributed_data[2*i+1];
+      printf("sendStride[%d/%d] --> [%d,%d] -> %d \n", idx_send, s_distributed_data, ipart, ienty, send_entity_stride[ipart][ienty]);
+      log_trace("sendStride[%d/%d] --> [%d,%d] -> %d \n", idx_send, s_distributed_data, ipart, ienty, send_entity_stride[ipart][ienty]);
+      sendStride[idx_send++] = send_entity_stride[ipart][ienty];
+    }
+
+    printf("Exch stride %d\n", s_requested_data);
+    PDM_MPI_Alltoallv (sendStride,
+                       pdn->distributed_data_n,
+                       pdn->distributed_data_idx,
+                       PDM_MPI_INT,
+                       recvStride,
+                       pdn->requested_data_n,
+                       pdn->requested_data_idx,
+                       PDM_MPI_INT,
+                       pdn->comm);
+    printf("Exch stride end \n");
+
+    /*
+     * Fill the recv stride for all parts / entity
+     */
+    *recv_entity_stride = malloc( pdn->n_part * sizeof(int *) );
+    int **_recv_entity_stride = (*(int ***) recv_entity_stride);
+
+    for(int ipart = 0; ipart < pdn->n_part; ipart++){
+      int *_part_neighbor_idx  = pdn->neighbor_idx[ipart];
+      _recv_entity_stride[ipart] = (int *) malloc( _part_neighbor_idx[pdn->n_entity[ipart]] * sizeof(int *));
+
+      for(int i_entity = 0; i_entity < _part_neighbor_idx[pdn->n_entity[ipart]]; i_entity++){
+        int idx = pdn->distributed_part_idx[ipart] + pdn->order_unique[ipart][i_entity];
+        printf("recv strid ::[%d/%d] --> [%d,%d] -> %d \n", idx, _part_neighbor_idx[pdn->n_entity[ipart]], ipart, i_entity, recvStride[idx]);
+        log_trace("recv strid::[%d/%d] --> [%d,%d] -> %d \n", idx, _part_neighbor_idx[pdn->n_entity[ipart]], ipart, i_entity, recvStride[idx]);
+        _recv_entity_stride[ipart][i_entity] = recvStride[idx];
+      }
+    }
+
+    free (recvStride);
+    free (sendStride);
+
   } else if (t_stride == PDM_STRIDE_CST) {
 
     int s_block_unit = cst_stride * (int) s_data;
