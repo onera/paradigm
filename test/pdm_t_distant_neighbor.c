@@ -312,28 +312,3 @@ char *argv[]
 }
 
 
-  // for(int i_cloud = 0; i_cloud < n_cloud; i_cloud++){
-  //   free(coords[i_cloud]);
-  //   free(char_lenght[i_cloud]);
-  // }
-  // for(int i_cloud = 0; i_cloud < n_cloud; i_cloud++){
-  //   coords     [i_cloud] = (double *) malloc( 3 * n_points * sizeof(double *));
-  //   char_lenght[i_cloud] = (double *) malloc(     n_points * sizeof(double *));
-  // }
-
-
-  // printf("distrib_index : ");
-  // for (int i = 0; i < nRank + 1; i++) {
-  //   printf(PDM_FMT_G_NUM" ", distrib_index[i]);
-  // }
-  // printf("\n");
-
-  // PDM_MPI_Allgather (&weight_sum, 1, PDM_MPI_DOUBLE,
-  //                    weights_sum_procs, 1, PDM_MPI_DOUBLE,
-  //                    PDM_MPI_COMM_WORLD);
-
-  // printf("weights procs :");
-  // for (int i = 0; i < nRank; i++) {
-  //   printf(" %12.5e", weights_sum_procs[i]);
-  // }
-  // printf("\n");
