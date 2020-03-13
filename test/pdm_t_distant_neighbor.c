@@ -44,6 +44,37 @@ char *argv[]
    *    II/ Use distant_neighbor to find out the face number in the partition
    */
   int point_list_j1[15] = {145, 153, 155, 163, 172, 180, 201, 206, 207, 211, 212, 215, 217, 222, 227};
+  int point_list_var_j1[45] = {145, 1450, 14500,
+                               153, 1530, 15300,
+                               155, 1550, 15500,
+                               163, 1630, 16300,
+                               172, 1720, 17200,
+                               180, 1800, 18000,
+                               201, 2010, 20100,
+                               206, 2060, 20600,
+                               207, 2070, 20700,
+                               211, 2110, 21100,
+                               212, 2120, 21200,
+                               215, 2150, 21500,
+                               217, 2170, 21700,
+                               222, 2220, 22200,
+                               227, 2270, 22700};
+
+  int point_list_var_stri_j1[15] = {3,
+                                    3,
+                                    3,
+                                    3,
+                                    3,
+                                    3,
+                                    3,
+                                    3,
+                                    3,
+                                    3,
+                                    3,
+                                    3,
+                                    3,
+                                    3,
+                                    3};
 
   double xyz_j1[45] = {0.5,  2.5,  4. ,  0.5,  1.5,  4. ,  1.5,  2.5,  4. ,  1.5,  1.5,
                        4. ,  2.5,  1.5,  4. ,  3.5,  1.5,  4. ,  1.5,  0.5,  4. ,  2.5,
@@ -54,6 +85,39 @@ char *argv[]
   double cln_j1[15] = {1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,  1.,  1., 1., 1.};
 
   int point_list_j2[15] = {136, 142, 150, 151, 160, 161, 170, 171, 188, 191, 194, 199, 205, 214, 221};
+
+  int point_list_var_j2[30] = {136, 1360,
+                               142, 1420,
+                               150, 1500,
+                               151, 1510,
+                               160, 1600,
+                               161, 1610,
+                               170, 1700,
+                               171, 1710,
+                               188, 1880,
+                               191, 1910,
+                               194, 1940,
+                               199, 1990,
+                               205, 2050,
+                               214, 2140,
+                               221, 2210};
+
+  int point_list_var_stri_j2[15] = {2,
+                                    2,
+                                    2,
+                                    2,
+                                    2,
+                                    2,
+                                    2,
+                                    2,
+                                    2,
+                                    2,
+                                    2,
+                                    2,
+                                    2,
+                                    2,
+                                    2};
+
 
   double xyz_j2[45] = {0.5,  1.5,  4. ,  1.5,  1.5,  4. ,  1.5,  2.5,  4. ,  2.5,  1.5,
                        4. ,  2.5,  2.5,  4. ,  3.5,  1.5,  4. ,  3.5,  2.5,  4. ,  4.5,
@@ -173,6 +237,9 @@ char *argv[]
     }
   }
 
+  /*
+   * Constant stride test
+   */
   int stride = 1;
   int** recv_entity_data = NULL;
   PDM_distant_neighbor_exch(pdn_id,
@@ -185,6 +252,37 @@ char *argv[]
                  (int***) &recv_entity_data);
 
   /*
+   * Variable stride test
+   */
+  int** send_entity_var_data = (int **) malloc( n_cloud * sizeof(int**));
+  int** send_entity_var_stri = (int **) malloc( n_cloud * sizeof(int**));
+  if(nRank == 1){
+    send_entity_var_data[0] = point_list_var_j1;
+    send_entity_var_stri[0] = point_list_var_stri_j1;
+    send_entity_var_data[1] = point_list_var_j2;
+    send_entity_var_stri[1] = point_list_var_stri_j2;
+  } else if(nRank == 2){
+    if(iRank == 0){
+    send_entity_var_data[0] = point_list_var_j1;
+    send_entity_var_stri[0] = point_list_var_stri_j1;
+    } else if(iRank == 1){
+    send_entity_var_data[0] = point_list_var_j2;
+    send_entity_var_stri[0] = point_list_var_stri_j2;
+    }
+  }
+
+  int** recv_entity_var_stri = NULL;
+  int** recv_entity_var_data = NULL;
+  PDM_distant_neighbor_exch(pdn_id,
+                            sizeof(int),
+                            PDM_STRIDE_VAR,
+                            -1,
+                            send_entity_var_stri,
+                            send_entity_var_data,
+                 (int***) &recv_entity_var_stri,
+                 (int***) &recv_entity_var_data);
+
+  /*
    * Free
    */
   PDM_distant_neighbor_free(pdn_id);
@@ -195,10 +293,16 @@ char *argv[]
   free(candidates_desc);
   free(n_entity);
   free(send_entity_data);
+  free(send_entity_var_data);
+  free(send_entity_var_stri);
   for(int i_cloud = 0; i_cloud < n_cloud; i_cloud++){
     free(recv_entity_data[i_cloud]);
+    free(recv_entity_var_stri[i_cloud]);
+    free(recv_entity_var_data[i_cloud]);
   }
   free(recv_entity_data);
+  free(recv_entity_var_stri);
+  free(recv_entity_var_data);
   PDM_MPI_Finalize();
 
   PDM_printf ("\nfin Test\n");

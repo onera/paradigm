@@ -246,7 +246,6 @@ const int           *n_entity,
   pdn->distributed_part_n     = (int * ) malloc( ( pdn->n_part     ) * sizeof(int * ));
   pdn->distributed_part_idx   = (int * ) malloc( ( pdn->n_part + 1 ) * sizeof(int * ));
 
-
   /*
    * Init the requested counter
    */
