@@ -3084,6 +3084,18 @@ PDM_para_octree_build
                                octree->comm);
 
   /*
+   * Dilate extents
+   */
+  const double EPS_range  = 1.e-6;
+  const double EPS_double = 1.e-12;
+  for (int i = 0; i < dim; i++) {
+    double range = octree->global_extents[i+dim] - octree->global_extents[i];
+    double epsilon = PDM_MAX (EPS_double, range * EPS_range);
+    octree->global_extents[i]     -= epsilon;
+    octree->global_extents[i+dim] += epsilon;
+  }
+
+  /*
    * Encode coords
    */
 
