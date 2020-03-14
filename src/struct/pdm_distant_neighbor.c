@@ -621,8 +621,107 @@ PDM_distant_neighbor_exch
       }
     }
 
+    /*
+     * Build buffer
+     */
+    for (int i = 0; i < nRank; i++) {
+
+      /*
+       * Setup send data
+       */
+
+      int iBeg = pdn->distributed_data_idx[i];
+      int iEnd = pdn->distributed_data_idx[i] + pdn->distributed_data_n[i];
+
+      n_sendBuffer[i] = 0;
+      for (int k = iBeg; k < iEnd; k++)  {
+        n_sendBuffer[i] += sendStride[k];
+      }
+
+      // n_sendBuffer[i] *= (int) s_data;
+
+      if (i > 0) {
+        i_sendBuffer[i] = i_sendBuffer[i-1] + n_sendBuffer[i-1];
+      }
+      else {
+        i_sendBuffer[i] = 0;
+      }
+
+      /*
+       * Setup recv data
+       */
+      iBeg = pdn->requested_data_idx[i];
+      iEnd = pdn->requested_data_idx[i] + pdn->requested_data_n[i];
+
+      n_recvBuffer[i] = 0;
+      for (int k = iBeg; k < iEnd; k++) {
+        n_recvBuffer[i] += recvStride[k];
+      }
+
+      // n_recvBuffer[i] *= (int) s_data;
+
+      if (i > 0) {
+        i_recvBuffer[i] = i_recvBuffer[i-1] + n_recvBuffer[i-1];
+      }
+      else {
+        i_recvBuffer[i] = 0;
+      }
+    } /* End iRank loop */
+
+    s_sendBuffer = i_sendBuffer[nRank-1] + n_sendBuffer[nRank-1];
+    s_recvBuffer = i_recvBuffer[nRank-1] + n_recvBuffer[nRank-1];
+
+    // sendBuffer = (unsigned char *) malloc(sizeof(unsigned char) * s_sendBuffer);
+    // recvBuffer = (unsigned char *) malloc(sizeof(unsigned char) * s_recvBuffer);
+    log_trace("PDM_distant_neighbor_exch::s_sendBuffer :: %d --> \n ", s_sendBuffer);
+    log_trace("PDM_distant_neighbor_exch::s_recvBuffer :: %d --> \n ", s_recvBuffer);
+
+    sendBuffer = (int *) malloc(sizeof(int) * s_sendBuffer);
+    recvBuffer = (int *) malloc(sizeof(int) * s_recvBuffer);
+
+    int *sendStride_idx = (int *) malloc(sizeof(int) * (s_distributed_data+1));
+    sendStride_idx[0] = 0;
+    for (int i = 0; i < s_distributed_data; i++) {
+      sendStride_idx[i+1] = sendStride_idx[i] + sendStride[i];
+    }
+
+    /*
+     * Compute stride for each part (in the order of send buffer )
+     */
+    int** stride_idx = (int**) malloc( pdn->n_part * sizeof(int **));
+    for(int ipart = 0; ipart < pdn->n_part; ipart++){
+      stride_idx[ipart] = (int*) malloc( (pdn->n_entity[ipart] + 1)  * sizeof(int*));
+      stride_idx[ipart][0] = 0;
+      for(int i_entity = 0; i_entity < pdn->n_entity[ipart]; i_entity++){
+        stride_idx[ipart][i_entity+1] = stride_idx[ipart][i_entity] + send_entity_stride[ipart][i_entity];
+      }
+    }
+
+    /*
+     * Fill the sendBuffer
+     */
+    log_trace("PDM_distant_neighbor_exch::sendBuffer :: --> \n ");
+    int idx1 = 0;
+    for (int i = 0; i < s_distributed_data; i++) {
+      int ipart = pdn->distributed_data[2*i  ];
+      int ienty = pdn->distributed_data[2*i+1];
+      for(int idata = 0; idata < send_entity_stride[ipart][ienty]; idata++){
+        int idxdata = stride_idx[ipart][ienty] + idata;
+        printf("send[%d/%d] --> [%d,%d] -> %d \n", idx1, s_distributed_data, ipart, ienty, send_entity_data[ipart][idxdata]);
+        log_trace("send[%d/%d] --> [%d,%d] -> %d \n", idx1, s_distributed_data, ipart, ienty, send_entity_data[ipart][idxdata]);
+
+        sendBuffer[idx1++] = send_entity_data[ipart][idxdata];
+      }
+    }
+    log_trace("PDM_distant_neighbor_exch::sendBuffer END \n ");
+
+    for(int ipart = 0; ipart < pdn->n_part; ipart++){
+      free (stride_idx[ipart]);
+    }
+    free (stride_idx);
     free (recvStride);
     free (sendStride);
+    free (sendStride_idx);
 
   } else if (t_stride == PDM_STRIDE_CST) {
 
