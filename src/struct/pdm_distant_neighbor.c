@@ -709,7 +709,6 @@ PDM_distant_neighbor_exch
         int idxdata = stride_idx[ipart][ienty] + idata;
         printf("send[%d/%d] --> [%d,%d] -> %d \n", idx1, s_distributed_data, ipart, ienty, send_entity_data[ipart][idxdata]);
         log_trace("send[%d/%d] --> [%d,%d] -> %d \n", idx1, s_distributed_data, ipart, ienty, send_entity_data[ipart][idxdata]);
-
         sendBuffer[idx1++] = send_entity_data[ipart][idxdata];
       }
     }
@@ -806,18 +805,74 @@ PDM_distant_neighbor_exch
    */
   *recv_entity_data = malloc( pdn->n_part * sizeof(int *) );
   int **_recv_entity_data = (*(int ***) recv_entity_data);
-  // Shift is not good because the buffer contains only one occurence of each elements !!!
-  for(int ipart = 0; ipart < pdn->n_part; ipart++){
-    int *_part_neighbor_idx  = pdn->neighbor_idx[ipart];
-    _recv_entity_data[ipart] = (int *) malloc( _part_neighbor_idx[pdn->n_entity[ipart]] * sizeof(int *));
 
-    log_trace("PDM_distant_neighbor_exch::recvBuffer :: --> \n ");
-    for(int i_entity = 0; i_entity < _part_neighbor_idx[pdn->n_entity[ipart]]; i_entity++){
-      // int idx = i_sendBuffer[] + order_unique[i_entity]
-      int idx = pdn->distributed_part_idx[ipart] + pdn->order_unique[ipart][i_entity];
-      printf("recv ::[%d/%d] --> [%d,%d] -> %d \n", idx, _part_neighbor_idx[pdn->n_entity[ipart]], ipart, i_entity, recvBuffer[idx]);
-      log_trace("recv ::[%d/%d] --> [%d,%d] -> %d \n", idx, _part_neighbor_idx[pdn->n_entity[ipart]], ipart, i_entity, recvBuffer[idx]);
-      _recv_entity_data[ipart][i_entity] = recvBuffer[idx];
+  if (t_stride == PDM_STRIDE_VAR) {
+
+    /*
+     * Compute the recv stride index for each entity
+     */
+    int** _recv_entity_stride = (*(int ***) recv_entity_stride);
+    int** recv_stride_idx = (int**) malloc( pdn->n_part * sizeof(int **));
+    for(int ipart = 0; ipart < pdn->n_part; ipart++){
+      recv_stride_idx[ipart] = (int*) malloc( (pdn->n_entity[ipart] + 1)  * sizeof(int*));
+      recv_stride_idx[ipart][0] = 0;
+      for(int i_entity = 0; i_entity < pdn->n_entity[ipart]; i_entity++){
+        recv_stride_idx[ipart][i_entity+1] = recv_stride_idx[ipart][i_entity] + _recv_entity_stride[ipart][i_entity];
+      }
+    }
+
+    /*
+     * Copy buffer into the recv_data
+     */
+    for(int ipart = 0; ipart < pdn->n_part; ipart++){
+      int *_part_neighbor_idx  = pdn->neighbor_idx[ipart];
+
+      int recv_part_size = _part_neighbor_idx[pdn->n_entity[ipart]] * recv_stride_idx[ipart][pdn->n_entity[ipart]];
+
+      log_trace("PDM_distant_neighbor_exch::recv_part_size :: --> %d \n ", recv_part_size);
+      _recv_entity_data[ipart] = (int *) malloc( recv_part_size * sizeof(int *));
+
+      for(int i_entity = 0; i_entity < _part_neighbor_idx[pdn->n_entity[ipart]]; i_entity++){
+
+        int idx = pdn->distributed_part_idx[ipart] + pdn->order_unique[ipart][i_entity];
+
+        for(int idata = 0; idata < _recv_entity_stride[ipart][i_entity]; idata++){
+          int idxdata = recv_stride_idx[ipart][i_entity] + idata;
+          // printf("recv ::[%d/%d] --> [%d,%d] -> %d \n", idx, _part_neighbor_idx[pdn->n_entity[ipart]], ipart, i_entity, recvBuffer[idx]);
+          // log_trace("recv ::[%d/%d] --> [%d,%d] -> %d \n", idx, _part_neighbor_idx[pdn->n_entity[ipart]], ipart, i_entity, recvBuffer[idx]);
+          _recv_entity_data[ipart][idxdata] = recvBuffer[idx+idata];
+        }
+      } /* End ientity */
+    } /* End part */
+
+
+
+
+    /*
+     * Free
+     */
+
+    for(int ipart = 0; ipart < pdn->n_part; ipart++){
+     free(recv_stride_idx[ipart]);
+    }
+    free(recv_stride_idx);
+
+
+  } else if (t_stride == PDM_STRIDE_CST) {
+
+    // Shift is not good because the buffer contains only one occurence of each elements !!!
+    for(int ipart = 0; ipart < pdn->n_part; ipart++){
+      int *_part_neighbor_idx  = pdn->neighbor_idx[ipart];
+      _recv_entity_data[ipart] = (int *) malloc( _part_neighbor_idx[pdn->n_entity[ipart]] * sizeof(int *));
+
+      log_trace("PDM_distant_neighbor_exch::recvBuffer :: --> \n ");
+      for(int i_entity = 0; i_entity < _part_neighbor_idx[pdn->n_entity[ipart]]; i_entity++){
+        // int idx = i_sendBuffer[] + order_unique[i_entity]
+        int idx = pdn->distributed_part_idx[ipart] + pdn->order_unique[ipart][i_entity];
+        printf("recv ::[%d/%d] --> [%d,%d] -> %d \n", idx, _part_neighbor_idx[pdn->n_entity[ipart]], ipart, i_entity, recvBuffer[idx]);
+        log_trace("recv ::[%d/%d] --> [%d,%d] -> %d \n", idx, _part_neighbor_idx[pdn->n_entity[ipart]], ipart, i_entity, recvBuffer[idx]);
+        _recv_entity_data[ipart][i_entity] = recvBuffer[idx];
+      }
     }
   }
 
