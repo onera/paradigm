@@ -827,25 +827,81 @@ PDM_distant_neighbor_exch
     for(int ipart = 0; ipart < pdn->n_part; ipart++){
       int *_part_neighbor_idx  = pdn->neighbor_idx[ipart];
 
-      int recv_part_size = _part_neighbor_idx[pdn->n_entity[ipart]] * recv_stride_idx[ipart][pdn->n_entity[ipart]];
+      // int recv_part_size = _part_neighbor_idx[pdn->n_entity[ipart]] * recv_stride_idx[ipart][pdn->n_entity[ipart]];
+
+      int recv_part_size = 0;
+      printf("recv_part_size :: \n");
+      for(int i_entity = 0; i_entity < pdn->n_entity[ipart]; i_entity++){
+
+        printf("[%d->%d] | [%d]\n", _part_neighbor_idx[i_entity], _part_neighbor_idx[i_entity+1], _recv_entity_stride[ipart][i_entity]);
+        recv_part_size += (_part_neighbor_idx[i_entity+1] - _part_neighbor_idx[i_entity])*_recv_entity_stride[ipart][i_entity];
+      }
+
 
       log_trace("PDM_distant_neighbor_exch::recv_part_size :: --> %d \n ", recv_part_size);
       _recv_entity_data[ipart] = (int *) malloc( recv_part_size * sizeof(int *));
 
+      /*
+       * Il faut revoir la recopie car la stride variable s'applique sur le buffer entier
+       * C'est le recv stride ??? --> Non
+       * Il faut recalculer les strides proprement
+       */
+      int* unique_recv_stride_idx = (int*) malloc( (_part_neighbor_idx[pdn->n_entity[ipart]] + 1)  * sizeof(int*)); // Suralloc
+      for(int i_entity = 0; i_entity < _part_neighbor_idx[pdn->n_entity[ipart]]; i_entity++){
+        unique_recv_stride_idx[i_entity] = 0;
+      }
+
+      int n_unique = 0;
+      for(int i_entity = 0; i_entity < _part_neighbor_idx[pdn->n_entity[ipart]]; i_entity++){
+        int u_enty = pdn->order_unique[ipart][i_entity];
+        if(unique_recv_stride_idx[u_enty] == 0){
+          unique_recv_stride_idx[u_enty] = _recv_entity_stride[ipart][i_entity];
+          n_unique++;
+        }
+      }
+
+      int tmp1 = unique_recv_stride_idx[0];
+      unique_recv_stride_idx[0] = 0;
+      for(int i_entity = 1; i_entity < n_unique; i_entity++){
+        int tmp2 = unique_recv_stride_idx[i_entity+1];
+        unique_recv_stride_idx[i_entity+1] = unique_recv_stride_idx[i_entity] + tmp1;
+        tmp1 = tmp2;
+      }
+
+      printf("unique_recv_stride_idx ::");
+      for(int i_entity = 0; i_entity < n_unique+1; i_entity++){
+        printf("%d ", unique_recv_stride_idx[i_entity]);
+      }
+      printf("\n");
+      // tmp1 = faceTileIdx(0)
+      // faceTileIdx(0) = 0
+      // do iSub = 0, nSdom-1
+      //   tmp2 = faceTileIdx(iSub+1)
+      //   faceTileIdx(iSub+1) = faceTileIdx(iSub) + tmp1
+      //   tmp1 = tmp2
+      // end do
+
       for(int i_entity = 0; i_entity < _part_neighbor_idx[pdn->n_entity[ipart]]; i_entity++){
 
-        int idx = pdn->distributed_part_idx[ipart] + pdn->order_unique[ipart][i_entity];
+        // int idx = pdn->distributed_part_idx[ipart] + pdn->order_unique[ipart][i_entity];
+        int u_enty = pdn->order_unique[ipart][i_entity];
+        // int idx = pdn->distributed_part_idx[ipart] + pdn->order_unique[ipart][i_entity] + unique_recv_stride_idx[u_enty];
+        int idx = pdn->distributed_part_idx[ipart] + unique_recv_stride_idx[u_enty];
+
+        printf(" debug:: [%d] - [u_enty::%d] | [unique::%d] | [unique_recv_strid::%d] | [shiftpart::%d]\n",
+               i_entity, u_enty, pdn->order_unique[ipart][i_entity], unique_recv_stride_idx[u_enty], pdn->distributed_part_idx[ipart]
+               );
 
         for(int idata = 0; idata < _recv_entity_stride[ipart][i_entity]; idata++){
           int idxdata = recv_stride_idx[ipart][i_entity] + idata;
-          // printf("recv ::[%d/%d] --> [%d,%d] -> %d \n", idx, _part_neighbor_idx[pdn->n_entity[ipart]], ipart, i_entity, recvBuffer[idx]);
-          // log_trace("recv ::[%d/%d] --> [%d,%d] -> %d \n", idx, _part_neighbor_idx[pdn->n_entity[ipart]], ipart, i_entity, recvBuffer[idx]);
+          printf("recv ::[%d/%d] --> [%d,%d] -> %d \n", idx+idata, _part_neighbor_idx[pdn->n_entity[ipart]], ipart, i_entity, recvBuffer[idx+idata]);
+          log_trace("recv ::[%d/%d] --> [%d,%d] -> %d \n", idx+idata, _part_neighbor_idx[pdn->n_entity[ipart]], ipart, i_entity, recvBuffer[idx+idata]);
           _recv_entity_data[ipart][idxdata] = recvBuffer[idx+idata];
         }
       } /* End ientity */
+
+      free(unique_recv_stride_idx);
     } /* End part */
-
-
 
 
     /*
