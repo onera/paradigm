@@ -79,15 +79,38 @@ char *argv[]
   int point_list_j1[3] = {101, 201, 301};
   int point_list_j2[2] = {102, 202};
 
-  int point_list_var_j1[6] = {101, 1010,
+  // Test 1 :
+  // int point_list_var_j1[6] = {101, 1010,
+  //                             201, 2010,
+  //                             301, 3010};
+  // int point_list_var_stri_j1[3] = {2, 2, 2};
+
+  // Test 2 :
+  int point_list_var_j1[6] = {101,
                               201, 2010,
                               301, 3010};
-  int point_list_var_stri_j1[3] = {2, 2, 2};
+  int point_list_var_stri_j1[3] = {1, 2, 2};
 
+  // Test 3 :
+  // int point_list_var_j1[6] = {101, 1010,
+  //                             201,
+  //                             301, 3010, 30100};
+  // int point_list_var_stri_j1[3] = {2, 1, 3};
 
+  // Test 1
   int point_list_var_j2[6] = {102, 1020, 10200,
                               202, 2020, 20200};
   int point_list_var_stri_j2[3] = {3, 3, 3};
+
+  // Test 2
+  // int point_list_var_j2[6] = {102,
+  //                             202, 2020, 20200};
+  // int point_list_var_stri_j2[2] = {1, 3};
+
+  // Test 3
+  // int point_list_var_j2[6] = {102, 1020, 10200,
+  //                             202};
+  // int point_list_var_stri_j2[2] = {3, 1};
 
   /*
    * Begin
