@@ -485,8 +485,6 @@ const int           *n_entity,
 }
 
 
-
-
 /**
  * \brief Exchange data between \ref _distant_neighbor_t structure
  * \param [in]   id          identifier of internal structre
@@ -501,12 +499,258 @@ PDM_distant_neighbor_exch
  PDM_stride_t   t_stride,
  int            cst_stride,
  int          **send_entity_stride,
+ void         **send_entity_data,
+ int         ***recv_entity_stride,
+ void        ***recv_entity_data
+)
+{
+  log_trace(" PDM_distant_neighbor_exch \n");
+
+  _distant_neighbor_t *pdn = _get_from_id (id);
+
+  int iRank;
+  int nRank;
+  PDM_MPI_Comm_rank(pdn->comm, &iRank);
+  PDM_MPI_Comm_size(pdn->comm, &nRank);
+
+  int s_distributed_data = pdn->distributed_data_idx[nRank];
+  int s_requested_data   = pdn->requested_data_idx[nRank];
+
+  size_t *i_send_buffer = (size_t *) malloc (sizeof(size_t) * nRank);
+  size_t *i_recv_buffer = (size_t *) malloc (sizeof(size_t) * nRank);
+  int *n_send_buffer = (int *) malloc (sizeof(int) * nRank);
+  int *n_recv_buffer = (int *) malloc (sizeof(int) * nRank);
+
+  size_t s_send_buffer = 0;
+  size_t s_recv_buffer = 0;
+
+  for (int i = 0; i < nRank; i++) {
+    n_send_buffer[i] = 0;
+    n_recv_buffer[i] = 0;
+    i_send_buffer[i] = 0;
+    i_recv_buffer[i] = 0;
+  }
+
+  unsigned char *send_buffer = NULL;
+  unsigned char *recv_buffer = NULL;
+
+  unsigned char **_send_entity_data = (unsigned char **) send_entity_data;
+  // unsigned char **_recv_entity_data;
+
+  int *recv_stride = NULL;
+  int *recv_stride_idx = NULL;
+
+  int s_block_unit = -1;
+
+  if (t_stride == PDM_STRIDE_VAR) {
+
+    int *send_stride = (int *) malloc (sizeof(int) *   s_distributed_data    );
+    recv_stride      = (int *) malloc (sizeof(int) *   s_requested_data      );
+    recv_stride_idx  = (int *) malloc (sizeof(int) * ( s_requested_data + 1) );
+
+    /*
+     * Prepare send stride
+     */
+    int idx_send = 0;
+    for (int i = 0; i < s_distributed_data; i++) {
+      int ipart = pdn->distributed_data[2*i  ];
+      int ienty = pdn->distributed_data[2*i+1];
+      log_trace("send_stride[%d/%d] --> [%d,%d] -> %d \n", idx_send, s_distributed_data, ipart, ienty, send_entity_stride[ipart][ienty]);
+      send_stride[idx_send++] = send_entity_stride[ipart][ienty];
+    }
+
+    PDM_MPI_Alltoallv (send_stride,
+                       pdn->distributed_data_n,
+                       pdn->distributed_data_idx,
+                       PDM_MPI_INT,
+                       recv_stride,
+                       pdn->requested_data_n,
+                       pdn->requested_data_idx,
+                       PDM_MPI_INT,
+                       pdn->comm);
+
+    /*
+     * Fill the recv stride for all parts / entity
+     */
+    *recv_entity_stride = malloc( pdn->n_part * sizeof(int *) );
+    int **_recv_entity_stride = (*(int ***) recv_entity_stride);
+
+    for(int ipart = 0; ipart < pdn->n_part; ipart++){
+      int *_part_neighbor_idx  = pdn->neighbor_idx[ipart];
+      _recv_entity_stride[ipart] = (int *) malloc( _part_neighbor_idx[pdn->n_entity[ipart]] * sizeof(int *));
+
+      for(int i_entity = 0; i_entity < _part_neighbor_idx[pdn->n_entity[ipart]]; i_entity++){
+        int idx = pdn->distributed_part_idx[ipart] + pdn->order_unique[ipart][i_entity];
+        log_trace("recv strid::[%d/%d] --> [%d,%d] -> %d \n", idx, _part_neighbor_idx[pdn->n_entity[ipart]], ipart, i_entity, recv_stride[idx]);
+        _recv_entity_stride[ipart][i_entity] = recv_stride[idx];
+      }
+    }
+
+    /*
+     * Build buffer
+     */
+    for (int i = 0; i < nRank; i++) {
+
+      /*
+       * Setup send data
+       */
+
+      int iBeg = pdn->distributed_data_idx[i];
+      int iEnd = pdn->distributed_data_idx[i] + pdn->distributed_data_n[i];
+
+      n_send_buffer[i] = 0;
+      for (int k = iBeg; k < iEnd; k++)  {
+        n_send_buffer[i] += send_stride[k];
+      }
+
+      // n_send_buffer[i] *= (int) s_data;
+
+      if (i > 0) {
+        i_send_buffer[i] = i_send_buffer[i-1] + n_send_buffer[i-1];
+      }
+      else {
+        i_send_buffer[i] = 0;
+      }
+
+      /*
+       * Setup recv data
+       */
+      iBeg = pdn->requested_data_idx[i];
+      iEnd = pdn->requested_data_idx[i] + pdn->requested_data_n[i];
+
+      n_recv_buffer[i] = 0;
+      for (int k = iBeg; k < iEnd; k++) {
+        n_recv_buffer[i] += recv_stride[k];
+      }
+
+      // n_recv_buffer[i] *= (int) s_data;
+
+      if (i > 0) {
+        i_recv_buffer[i] = i_recv_buffer[i-1] + n_recv_buffer[i-1];
+      }
+      else {
+        i_recv_buffer[i] = 0;
+      }
+    } /* End iRank loop */
+
+
+  } else if (t_stride == PDM_STRIDE_CST) {
+
+    s_block_unit = cst_stride * (int) s_data;
+
+    log_trace("PDM_distant_neighbor_exch::requested_data :: --> \n ");
+
+    for (int i = 0; i < nRank; i++) {
+
+      i_send_buffer[i] = pdn->distributed_data_idx[i] * s_block_unit;
+      i_recv_buffer[i] = pdn->requested_data_idx[i] * s_block_unit;
+
+      n_send_buffer[i] = pdn->distributed_data_n[i] * s_block_unit;
+      n_recv_buffer[i] = pdn->requested_data_n[i] * s_block_unit;
+
+      log_trace("[%d] send::[%d/%d] | recv::[%d/%d] \n ", i, i_send_buffer[i], n_send_buffer[i],
+                                                             i_recv_buffer[i], n_recv_buffer[i]);
+
+    }
+
+    s_send_buffer = i_send_buffer[nRank-1] + n_send_buffer[nRank-1];
+    s_recv_buffer = i_recv_buffer[nRank-1] + n_recv_buffer[nRank-1];
+
+    log_trace("PDM_distant_neighbor_exch::s_send_buffer :: %d --> \n ", s_send_buffer);
+    log_trace("PDM_distant_neighbor_exch::s_recv_buffer :: %d --> \n ", s_recv_buffer);
+
+    send_buffer = (unsigned char *) malloc(sizeof(unsigned char) * s_send_buffer);
+    recv_buffer = (unsigned char *) malloc(sizeof(unsigned char) * s_recv_buffer);
+
+    log_trace("PDM_distant_neighbor_exch::send_buffer :: --> \n ");
+    int idx1 = 0;
+    for (int i = 0; i < s_distributed_data; i++) {
+      int ipart = pdn->distributed_data[2*i  ];
+      int ienty = pdn->distributed_data[2*i+1];
+      for(int idata = 0; idata < s_block_unit; idata++){
+        send_buffer[idx1++] = _send_entity_data[ipart][s_block_unit*ienty+idata];
+      }
+    }
+  }
+
+  /*
+   * Exchange
+   */
+  PDM_MPI_Alltoallv_l(send_buffer,
+                      n_send_buffer,
+                      i_send_buffer,
+                      PDM_MPI_BYTE,
+                      recv_buffer,
+                      n_recv_buffer,
+                      i_recv_buffer,
+                      PDM_MPI_BYTE,
+                      pdn->comm);
+
+  free(send_buffer);
+  free(n_send_buffer);
+  free(n_recv_buffer);
+  free(i_recv_buffer);
+
+  *recv_entity_data = malloc( pdn->n_part * sizeof(unsigned char *) );
+  unsigned char **_recv_entity_data = (*(unsigned char ***) recv_entity_data);
+
+
+  if (t_stride == PDM_STRIDE_VAR) {
+
+  } else if (t_stride == PDM_STRIDE_CST) {
+
+    // Shift is not good because the buffer contains only one occurence of each elements !!!
+    for(int ipart = 0; ipart < pdn->n_part; ipart++){
+      int *_part_neighbor_idx  = pdn->neighbor_idx[ipart];
+      _recv_entity_data[ipart] = (unsigned char *) malloc( _part_neighbor_idx[pdn->n_entity[ipart]] * sizeof(unsigned char *));
+
+      log_trace("PDM_distant_neighbor_exch::recv_buffer :: --> \n ");
+      for(int i_entity = 0; i_entity < _part_neighbor_idx[pdn->n_entity[ipart]]; i_entity++){
+        int idx = pdn->distributed_part_idx[ipart] + pdn->order_unique[ipart][i_entity];
+        for(int idata = 0; idata < s_block_unit; idata++){
+          _recv_entity_data[ipart][s_block_unit*i_entity+idata] = recv_buffer[s_block_unit*idx+idata];
+        }
+      }
+    }
+
+  }
+
+  /*
+   * Free
+   */
+  free(i_send_buffer);
+  free(recv_buffer);
+  if(recv_stride_idx != NULL){
+    free(recv_stride_idx);
+  }
+  if(recv_stride != NULL){
+    free(recv_stride);
+  }
+
+
+}
+
+
+/**
+ * \brief Exchange data between \ref _distant_neighbor_t structure
+ * \param [in]   id          identifier of internal structre
+ *  NB : On va commencer par des entiers en stride constantes
+ *
+ */
+void
+PDM_distant_neighbor_exch_int
+(
+ const int      id,
+ size_t         s_data,
+ PDM_stride_t   t_stride,
+ int            cst_stride,
+ int          **send_entity_stride,
  int          **send_entity_data,
  int         ***recv_entity_stride,
  int         ***recv_entity_data
 )
 {
-  log_trace(" PDM_distant_neighbor_exchange \n");
+  log_trace(" PDM_distant_neighbor_exch_int \n");
 
   _distant_neighbor_t *pdn = _get_from_id (id);
 
@@ -538,16 +782,13 @@ PDM_distant_neighbor_exch
   int *send_buffer = NULL;
   int *recv_buffer = NULL;
 
-  /*
-   * On doit echanger de la même manière que les requested du create mais en multipliant par la stride
-   */
   int *recv_stride = NULL;
   int *recv_stride_idx = NULL;
   if (t_stride == PDM_STRIDE_VAR) {
 
-    int *send_stride = (int *) malloc (sizeof(int) * s_distributed_data);
-    recv_stride      = (int *) malloc (sizeof(int) * s_requested_data);
-    recv_stride_idx  = (int *) malloc (sizeof(int) * (s_requested_data + 1) );
+    int *send_stride = (int *) malloc (sizeof(int) *   s_distributed_data    );
+    recv_stride      = (int *) malloc (sizeof(int) *   s_requested_data      );
+    recv_stride_idx  = (int *) malloc (sizeof(int) * ( s_requested_data + 1) );
 
     /*
      * Prepare send stride
@@ -734,7 +975,7 @@ PDM_distant_neighbor_exch
 
 
   /*
-   * Exchnage
+   * Exchange
    */
   // PDM_MPI_Alltoallv_l(send_buffer,
   //                     n_send_buffer,
@@ -855,6 +1096,9 @@ PDM_distant_neighbor_exch
   }
 
 
+  /*
+   * Free
+   */
   free(i_send_buffer);
   free(recv_buffer);
   if(recv_stride_idx != NULL){
