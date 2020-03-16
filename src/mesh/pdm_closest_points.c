@@ -354,8 +354,6 @@ PDM_closest_points_compute
  const int id
  )
 {
-  const int VISU = 0;
-
   _PDM_closest_t *cls = _get_from_id (id);
 
   double b_t_elapsed;
@@ -406,18 +404,6 @@ PDM_closest_points_compute
   //PDM_para_octree_dump (octree_id);
   PDM_para_octree_dump_times (octree_id);
 
-  //DBG -->>
-  if (VISU) {
-    char filename[999];
-    sprintf(filename,
-            "/home/bandrieu/workspace/paradigma-dev/test/para_octree/src_points_%4.4d.vtk", myRank);
-    DBG_write_octree_points(octree_id, filename);
-    sprintf(filename,
-            "/home/bandrieu/workspace/paradigma-dev/test/para_octree/octants_%4.4d.vtk", myRank);
-    DBG_write_octree_octants(octree_id, filename);
-  }
-  //<<--
-
 
 
   /* Concatenate partitions */
@@ -440,33 +426,14 @@ PDM_closest_points_compute
     n_tgt += cls->tgt_cloud->n_points[i_part];
   }
 
-  //DBG -->>
-  if (VISU) {
-    char filename[999];
-    sprintf(filename,
-            "/home/bandrieu/workspace/paradigma-dev/test/para_octree/tgt_points_%4.4d.vtk", myRank);
-    DBG_write_points(tgt_coord, n_tgt, 3, filename);
-  }
-  //<<--
-
   /* Search closest source points from target points */
-#if 1
-  PDM_para_octree_closest_point2 (octree_id,
-                                  cls->n_closest,
-                                  n_tgt,
-                                  tgt_coord,
-                                  tgt_g_num,
-                                  closest_src_gnum,
-                                  closest_src_dist);
-#else
-  PDM_para_octree_closest_point3 (octree_id,
-                                  cls->n_closest,
-                                  n_tgt,
-                                  tgt_coord,
-                                  tgt_g_num,
-                                  closest_src_gnum,
-                                  closest_src_dist);
-#endif
+  PDM_para_octree_closest_point (octree_id,
+                                 cls->n_closest,
+                                 n_tgt,
+                                 tgt_coord,
+                                 tgt_g_num,
+                                 closest_src_gnum,
+                                 closest_src_dist);
 
 
   /* Restore partitions */
