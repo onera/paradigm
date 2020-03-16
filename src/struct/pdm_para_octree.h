@@ -233,19 +233,6 @@ PDM_g_num_t *closest_octree_pt_g_num,
 double      *closest_octree_pt_dist2
 );
 
-
-void
-PDM_para_octree_closest_point3
-(
-const int    id,
-const int    n_closest_points,
-const int    n_pts,
-double      *pts,
-PDM_g_num_t *pts_g_num,
-PDM_g_num_t *closest_octree_pt_g_num,
-double      *closest_octree_pt_dist2
-);
-
 /**
  *
  * \brief  Dump elapsed an CPU time
@@ -259,12 +246,6 @@ PDM_para_octree_dump_times
 (
  const int id
  );
-
-//--->>>
-void DBG_write_octree_octants(const int id, const char* filename);
-void DBG_write_octree_points(const int id, const char* filename);
-void DBG_write_points(const double *pts, const int npts, const int dim, const char* filename);
-//<<<---
 
 #ifdef	__cplusplus
 }
