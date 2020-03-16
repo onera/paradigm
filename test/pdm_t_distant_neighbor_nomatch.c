@@ -235,6 +235,22 @@ char *argv[]
                  (int***) &recv_entity_var_stri,
                  (int***) &recv_entity_var_data);
 
+  log_trace(" Variable strid exchange results ---- \n");
+  if(1 == 1){
+    for(int ipart = 0; ipart < n_cloud; ipart++){
+      int *_part_neighbor_idx  = candidates_idx[ipart];
+      log_trace(" ---> recv_entity_data[%d]::", ipart);
+      int idx = 0;
+      for(int i_entity = 0; i_entity < _part_neighbor_idx[n_entity[ipart]]; i_entity++){
+        log_trace("i_entity::%d - strid::%d --> ", i_entity, recv_entity_var_stri[ipart][i_entity]);
+        for(int i_data = 0; i_data < recv_entity_var_stri[ipart][i_entity]; i_data++){
+          log_trace("%d ", recv_entity_var_data[ipart][idx++]);
+        }
+        log_trace("\n");
+      }
+      log_trace("\n");
+    }
+  }
   /*
    * Free
    */
