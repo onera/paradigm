@@ -775,9 +775,11 @@ PDM_distant_neighbor_exch
     int** _recv_entity_stride = (*(int ***) recv_entity_stride);
     int** _recv_entity_stride_idx = (int**) malloc( pdn->n_part * sizeof(int **));
     for(int ipart = 0; ipart < pdn->n_part; ipart++){
+      int *_part_neighbor_idx  = pdn->neighbor_idx[ipart];
       _recv_entity_stride_idx[ipart] = (int*) malloc( (pdn->n_entity[ipart] + 1)  * sizeof(int*));
       _recv_entity_stride_idx[ipart][0] = 0;
-      for(int i_entity = 0; i_entity < pdn->n_entity[ipart]; i_entity++){
+      // for(int i_entity = 0; i_entity < pdn->n_entity[ipart]; i_entity++){
+      for(int i_entity = 0; i_entity < _part_neighbor_idx[pdn->n_entity[ipart]]; i_entity++){
         _recv_entity_stride_idx[ipart][i_entity+1] = _recv_entity_stride_idx[ipart][i_entity] + _recv_entity_stride[ipart][i_entity];
       }
     }
@@ -815,7 +817,8 @@ PDM_distant_neighbor_exch
 
         for(int idata = 0; idata < _recv_entity_stride[ipart][i_entity]; idata++){
           int idxdata = _recv_entity_stride_idx[ipart][i_entity] + idata;
-          log_trace("recv ::[%d/%d] --> [%d,%d] -> %d \n", idx+idata, _part_neighbor_idx[pdn->n_entity[ipart]], ipart, i_entity, recv_buffer[idx+idata]);
+          // log_trace("recv ::[%d/%d] --> [%d,%d] -> %d \n", idx+idata, _part_neighbor_idx[pdn->n_entity[ipart]], ipart, i_entity, recv_buffer[idx+idata]);
+          log_trace("_recv_entity_data[%d,%d] = %d \n", ipart, idxdata, recv_buffer[idx+idata]);
           _recv_entity_data[ipart][idxdata] = recv_buffer[idx+idata];
         }
       } /* End ientity */
