@@ -91,6 +91,25 @@ PDM_distant_neighbor_exch
  PDM_stride_t   t_stride,
  int            cst_stride,
  int          **send_entity_stride,
+ void         **send_entity_data,
+ int         ***recv_entity_stride,
+ void        ***recv_entity_data
+);
+
+/**
+ * \brief Exchange data between \ref _distant_neighbor_t structure
+ * \param [in]   id          identifier of internal structre
+ *
+ *
+ */
+void
+PDM_distant_neighbor_exch_int
+(
+ const int      id,
+ size_t         s_data,
+ PDM_stride_t   t_stride,
+ int            cst_stride,
+ int          **send_entity_stride,
  int          **send_entity_data,
  int         ***recv_entity_stride,
  int         ***recv_entity_data

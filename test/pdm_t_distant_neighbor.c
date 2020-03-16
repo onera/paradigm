@@ -247,9 +247,9 @@ char *argv[]
                             PDM_STRIDE_CST,
                             stride,
                             NULL,
-                            send_entity_data,
+                 ( void**)  send_entity_data,
                             NULL,
-                 (int***) &recv_entity_data);
+                 (void***) &recv_entity_data);
 
   /*
    * Variable stride test
@@ -278,9 +278,9 @@ char *argv[]
                             PDM_STRIDE_VAR,
                             -1,
                             send_entity_var_stri,
-                            send_entity_var_data,
+                 (void**)   send_entity_var_data,
                  (int***) &recv_entity_var_stri,
-                 (int***) &recv_entity_var_data);
+                (void***) &recv_entity_var_data);
 
   /*
    * Free
