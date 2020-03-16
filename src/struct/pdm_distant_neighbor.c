@@ -1034,7 +1034,7 @@ PDM_distant_neighbor_exch_int
 
   } else if (t_stride == PDM_STRIDE_CST) {
 
-    int s_block_unit = cst_stride * (int) s_data;
+    // int s_block_unit = cst_stride * (int) s_data;
 
     log_trace("PDM_distant_neighbor_exch::requested_data :: --> \n ");
 

@@ -208,7 +208,7 @@ char *argv[]
    * Constant stride test
    */
   int** recv_entity_data = NULL;
-  PDM_distant_neighbor_exch_(pdn_id,
+  PDM_distant_neighbor_exch(pdn_id,
                             sizeof(int),
                             PDM_STRIDE_CST,
                             stride,
