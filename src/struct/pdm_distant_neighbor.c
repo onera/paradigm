@@ -118,9 +118,9 @@ compute_unique_idx
     int curr_elmt = connect_triplet[3*old_order+2];
     int is_same = is_same_triplet(last_proc, last_part, last_elmt,
                                   curr_proc, curr_part, curr_elmt);
-    printf(" curr:: ( %d / %d / %d ) | last:: ( %d / %d / %d ) \n",
-           curr_proc, curr_part, curr_elmt,
-           last_proc, last_part, last_elmt);
+    // printf(" curr:: ( %d / %d / %d ) | last:: ( %d / %d / %d ) \n",
+    //        curr_proc, curr_part, curr_elmt,
+    //        last_proc, last_part, last_elmt);
 
     if(is_same == 0){ // N'est pas le meme
       idx_unique++;
@@ -133,7 +133,7 @@ compute_unique_idx
   }
 
 
-  if(1 == 1){
+  if(0 == 1){
     printf("order_unique:: \n");
     for(int i = 0; i < nb_ent; i++){
       printf(" -------------------------- \n");
@@ -211,6 +211,7 @@ const int           *n_entity,
 )
 {
   printf(" PDM_distant_neighbor_create \n");
+  log_trace(" PDM_distant_neighbor_create \n");
 
   if (_pdns == NULL) {
     _pdns = PDM_Handles_create (4);
@@ -226,14 +227,6 @@ const int           *n_entity,
   int nRank;
   PDM_MPI_Comm_rank(pdn->comm, &iRank);
   PDM_MPI_Comm_size(pdn->comm, &nRank);
-
-  char filename[50];
-  sprintf(filename, "pdm_logging_%d.log", iRank);
-  FILE* fp = fopen(filename, "w");
-  log_set_fp(fp);
-  log_set_quiet(1);
-  log_set_level(-1);
-  // log_trace("PDM_distant_neighbor_create::SuperTest");
 
   pdn->n_part                 = n_part;
   pdn->n_entity               = n_entity;
@@ -498,7 +491,7 @@ const int           *n_entity,
    */
   free(requested_data);
 
-  assert(fclose(fp) == 0);
+  // assert(fclose(fp) == 0);
 
   return id;
 }
@@ -533,15 +526,6 @@ PDM_distant_neighbor_exch
   PDM_MPI_Comm_rank(pdn->comm, &iRank);
   PDM_MPI_Comm_size(pdn->comm, &nRank);
 
-  char filename[50];
-  sprintf(filename, "pdm_logging_exch_%d.log", iRank);
-  FILE* fp = fopen(filename, "w");
-  log_set_fp(fp);
-  log_set_quiet(1);
-  log_set_level(-1);
-  // log_trace("PDM_distant_neighbor_create::Su
-
-  // int s_distributed_data = pdn->distributed_data_idx[nRank]/2;
   int s_distributed_data = pdn->distributed_data_idx[nRank];
   int s_requested_data   = pdn->requested_data_idx[nRank];
 
@@ -565,20 +549,15 @@ PDM_distant_neighbor_exch
   int *send_buffer = NULL;
   int *recv_buffer = NULL;
 
-  // if(t_stride !=  PDM_STRIDE_CST) {
-  //   PDM_error(__FILE__, __LINE__, 0,"PDM_distant_neighbor_exch : STRIDE_CST is only availble \n");
-  //   abort ();
-  // }
-
   /*
    * On doit echanger de la même manière que les requested du create mais en multipliant par la stride
    */
-  int *recvStride = NULL;
+  int *recv_stride = NULL;
   int *recv_stride_idx = NULL;
   if (t_stride == PDM_STRIDE_VAR) {
 
     int *send_stride = (int *) malloc (sizeof(int) * s_distributed_data);
-    recvStride      = (int *) malloc (sizeof(int) * s_requested_data);
+    recv_stride      = (int *) malloc (sizeof(int) * s_requested_data);
     recv_stride_idx  = (int *) malloc (sizeof(int) * (s_requested_data + 1) );
 
     /*
@@ -598,7 +577,7 @@ PDM_distant_neighbor_exch
                        pdn->distributed_data_n,
                        pdn->distributed_data_idx,
                        PDM_MPI_INT,
-                       recvStride,
+                       recv_stride,
                        pdn->requested_data_n,
                        pdn->requested_data_idx,
                        PDM_MPI_INT,
@@ -617,9 +596,9 @@ PDM_distant_neighbor_exch
 
       for(int i_entity = 0; i_entity < _part_neighbor_idx[pdn->n_entity[ipart]]; i_entity++){
         int idx = pdn->distributed_part_idx[ipart] + pdn->order_unique[ipart][i_entity];
-        printf("recv strid ::[%d/%d] --> [%d,%d] -> %d \n", idx, _part_neighbor_idx[pdn->n_entity[ipart]], ipart, i_entity, recvStride[idx]);
-        log_trace("recv strid::[%d/%d] --> [%d,%d] -> %d \n", idx, _part_neighbor_idx[pdn->n_entity[ipart]], ipart, i_entity, recvStride[idx]);
-        _recv_entity_stride[ipart][i_entity] = recvStride[idx];
+        printf("recv strid ::[%d/%d] --> [%d,%d] -> %d \n", idx, _part_neighbor_idx[pdn->n_entity[ipart]], ipart, i_entity, recv_stride[idx]);
+        log_trace("recv strid::[%d/%d] --> [%d,%d] -> %d \n", idx, _part_neighbor_idx[pdn->n_entity[ipart]], ipart, i_entity, recv_stride[idx]);
+        _recv_entity_stride[ipart][i_entity] = recv_stride[idx];
       }
     }
 
@@ -657,7 +636,7 @@ PDM_distant_neighbor_exch
 
       n_recv_buffer[i] = 0;
       for (int k = iBeg; k < iEnd; k++) {
-        n_recv_buffer[i] += recvStride[k];
+        n_recv_buffer[i] += recv_stride[k];
       }
 
       // n_recv_buffer[i] *= (int) s_data;
@@ -689,7 +668,7 @@ PDM_distant_neighbor_exch
 
     recv_stride_idx[0] = 0;
     for (int i = 0; i < s_requested_data; i++) {
-      recv_stride_idx[i+1] = recv_stride_idx[i] + recvStride[i];
+      recv_stride_idx[i+1] = recv_stride_idx[i] + recv_stride[i];
     }
 
     /*
@@ -842,7 +821,7 @@ PDM_distant_neighbor_exch
       int recv_part_size = 0;
       for(int i_entity = 0; i_entity < _part_neighbor_idx[pdn->n_entity[ipart]]; i_entity++){
         int u_enty = pdn->distributed_part_idx[ipart]+pdn->order_unique[ipart][i_entity];
-        recv_part_size += recvStride[u_enty];
+        recv_part_size += recv_stride[u_enty];
       }
 
       log_trace("PDM_distant_neighbor_exch::recv_part_size :: --> %d \n ", recv_part_size);
@@ -901,8 +880,8 @@ PDM_distant_neighbor_exch
   if(recv_stride_idx != NULL){
     free(recv_stride_idx);
   }
-  if(recvStride != NULL){
-    free(recvStride);
+  if(recv_stride != NULL){
+    free(recv_stride);
   }
 
 }
