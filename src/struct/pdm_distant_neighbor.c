@@ -578,8 +578,8 @@ PDM_distant_neighbor_exch
   if (t_stride == PDM_STRIDE_VAR) {
 
     int *sendStride = (int *) malloc (sizeof(int) * s_distributed_data);
-    recvStride = (int *) malloc (sizeof(int) * s_requested_data);
-    recvStride_idx = (int *) malloc (sizeof(int) * (s_requested_data + 1) );
+    recvStride      = (int *) malloc (sizeof(int) * s_requested_data);
+    recvStride_idx  = (int *) malloc (sizeof(int) * (s_requested_data + 1) );
 
     /*
      * Prepare send stride
@@ -724,7 +724,7 @@ PDM_distant_neighbor_exch
       free (stride_idx[ipart]);
     }
     free (stride_idx);
-    free (recvStride);
+    // free (recvStride);
     free (sendStride);
     free (sendStride_idx);
 
@@ -842,14 +842,19 @@ PDM_distant_neighbor_exch
 
       // int recv_part_size = _part_neighbor_idx[pdn->n_entity[ipart]] * recv_stride_idx[ipart][pdn->n_entity[ipart]];
 
+      // int recv_part_size = 0;
+      // printf("recv_part_size :: \n");
+      // for(int i_entity = 0; i_entity < pdn->n_entity[ipart]; i_entity++){
+
+      //   printf("[%d->%d] | [%d]\n", _part_neighbor_idx[i_entity], _part_neighbor_idx[i_entity+1], _recv_entity_stride[ipart][i_entity]);
+      //   recv_part_size += (_part_neighbor_idx[i_entity+1] - _part_neighbor_idx[i_entity])*_recv_entity_stride[ipart][i_entity];
+      // }
+
       int recv_part_size = 0;
-      printf("recv_part_size :: \n");
-      for(int i_entity = 0; i_entity < pdn->n_entity[ipart]; i_entity++){
-
-        printf("[%d->%d] | [%d]\n", _part_neighbor_idx[i_entity], _part_neighbor_idx[i_entity+1], _recv_entity_stride[ipart][i_entity]);
-        recv_part_size += (_part_neighbor_idx[i_entity+1] - _part_neighbor_idx[i_entity])*_recv_entity_stride[ipart][i_entity];
+      for(int i_entity = 0; i_entity < _part_neighbor_idx[pdn->n_entity[ipart]]; i_entity++){
+        int u_enty = pdn->distributed_part_idx[ipart]+pdn->order_unique[ipart][i_entity];
+        recv_part_size += recvStride[u_enty];
       }
-
 
       log_trace("PDM_distant_neighbor_exch::recv_part_size :: --> %d \n ", recv_part_size);
       _recv_entity_data[ipart] = (int *) malloc( recv_part_size * sizeof(int *));
@@ -857,10 +862,9 @@ PDM_distant_neighbor_exch
       for(int i_entity = 0; i_entity < _part_neighbor_idx[pdn->n_entity[ipart]]; i_entity++){
 
         int u_enty = pdn->distributed_part_idx[ipart]+pdn->order_unique[ipart][i_entity];
-        int idx = recvStride_idx[u_enty];
+        int idx    = recvStride_idx[u_enty];
 
         printf(" debug:: [%d] - [u_enty::%d] | [unique::%d] | [recvStride_idx::%d] | [shiftpart::%d]\n",
-               // i_entity, u_enty, pdn->order_unique[ipart][i_entity], unique_recv_stride_idx[u_enty], pdn->distributed_part_idx[ipart]
                i_entity, u_enty, pdn->order_unique[ipart][i_entity], recvStride_idx[u_enty], pdn->distributed_part_idx[ipart]
                );
 
@@ -907,6 +911,9 @@ PDM_distant_neighbor_exch
   free(recvBuffer);
   if(recvStride_idx != NULL){
     free(recvStride_idx);
+  }
+  if(recvStride != NULL){
+    free(recvStride);
   }
 
 }
