@@ -574,12 +574,12 @@ PDM_distant_neighbor_exch
    * On doit echanger de la même manière que les requested du create mais en multipliant par la stride
    */
   int *recvStride = NULL;
-  int *recvStride_idx = NULL;
+  int *recv_stride_idx = NULL;
   if (t_stride == PDM_STRIDE_VAR) {
 
     int *send_stride = (int *) malloc (sizeof(int) * s_distributed_data);
     recvStride      = (int *) malloc (sizeof(int) * s_requested_data);
-    recvStride_idx  = (int *) malloc (sizeof(int) * (s_requested_data + 1) );
+    recv_stride_idx  = (int *) malloc (sizeof(int) * (s_requested_data + 1) );
 
     /*
      * Prepare send stride
@@ -687,9 +687,9 @@ PDM_distant_neighbor_exch
     //   send_stride_idx[i+1] = send_stride_idx[i] + send_stride[i];
     // }
 
-    recvStride_idx[0] = 0;
+    recv_stride_idx[0] = 0;
     for (int i = 0; i < s_requested_data; i++) {
-      recvStride_idx[i+1] = recvStride_idx[i] + recvStride[i];
+      recv_stride_idx[i+1] = recv_stride_idx[i] + recvStride[i];
     }
 
     /*
@@ -817,12 +817,12 @@ PDM_distant_neighbor_exch
      * Compute the recv stride index for each entity
      */
     int** _recv_entity_stride = (*(int ***) recv_entity_stride);
-    int** recv_stride_idx = (int**) malloc( pdn->n_part * sizeof(int **));
+    int** _recv_entity_stride_idx = (int**) malloc( pdn->n_part * sizeof(int **));
     for(int ipart = 0; ipart < pdn->n_part; ipart++){
-      recv_stride_idx[ipart] = (int*) malloc( (pdn->n_entity[ipart] + 1)  * sizeof(int*));
-      recv_stride_idx[ipart][0] = 0;
+      _recv_entity_stride_idx[ipart] = (int*) malloc( (pdn->n_entity[ipart] + 1)  * sizeof(int*));
+      _recv_entity_stride_idx[ipart][0] = 0;
       for(int i_entity = 0; i_entity < pdn->n_entity[ipart]; i_entity++){
-        recv_stride_idx[ipart][i_entity+1] = recv_stride_idx[ipart][i_entity] + _recv_entity_stride[ipart][i_entity];
+        _recv_entity_stride_idx[ipart][i_entity+1] = _recv_entity_stride_idx[ipart][i_entity] + _recv_entity_stride[ipart][i_entity];
       }
     }
 
@@ -830,9 +830,9 @@ PDM_distant_neighbor_exch
      * Copy buffer into the recv_data
      */
 
-    printf("recvStride_idx::");
+    printf("recv_stride_idx::");
     for (int i = 0; i < s_requested_data+1; i++) {
-      printf("%d ", recvStride_idx[i]);
+      printf("%d ", recv_stride_idx[i]);
     }
     printf("\n");
 
@@ -851,14 +851,14 @@ PDM_distant_neighbor_exch
       for(int i_entity = 0; i_entity < _part_neighbor_idx[pdn->n_entity[ipart]]; i_entity++){
 
         int u_enty = pdn->distributed_part_idx[ipart]+pdn->order_unique[ipart][i_entity];
-        int idx    = recvStride_idx[u_enty];
+        int idx    = recv_stride_idx[u_enty];
 
-        printf(" debug:: [%d] - [u_enty::%d] | [unique::%d] | [recvStride_idx::%d] | [shiftpart::%d]\n",
-               i_entity, u_enty, pdn->order_unique[ipart][i_entity], recvStride_idx[u_enty], pdn->distributed_part_idx[ipart]
+        printf(" debug:: [%d] - [u_enty::%d] | [unique::%d] | [recv_stride_idx::%d] | [shiftpart::%d]\n",
+               i_entity, u_enty, pdn->order_unique[ipart][i_entity], recv_stride_idx[u_enty], pdn->distributed_part_idx[ipart]
                );
 
         for(int idata = 0; idata < _recv_entity_stride[ipart][i_entity]; idata++){
-          int idxdata = recv_stride_idx[ipart][i_entity] + idata;
+          int idxdata = _recv_entity_stride_idx[ipart][i_entity] + idata;
           printf("recv ::[%d/%d] --> [%d,%d] -> %d \n", idx+idata, _part_neighbor_idx[pdn->n_entity[ipart]], ipart, i_entity, recv_buffer[idx+idata]);
           log_trace("recv ::[%d/%d] --> [%d,%d] -> %d \n", idx+idata, _part_neighbor_idx[pdn->n_entity[ipart]], ipart, i_entity, recv_buffer[idx+idata]);
           _recv_entity_data[ipart][idxdata] = recv_buffer[idx+idata];
@@ -872,9 +872,9 @@ PDM_distant_neighbor_exch
      */
 
     for(int ipart = 0; ipart < pdn->n_part; ipart++){
-     free(recv_stride_idx[ipart]);
+     free(_recv_entity_stride_idx[ipart]);
     }
-    free(recv_stride_idx);
+    free(_recv_entity_stride_idx);
 
 
   } else if (t_stride == PDM_STRIDE_CST) {
@@ -898,8 +898,8 @@ PDM_distant_neighbor_exch
 
   free(i_send_buffer);
   free(recv_buffer);
-  if(recvStride_idx != NULL){
-    free(recvStride_idx);
+  if(recv_stride_idx != NULL){
+    free(recv_stride_idx);
   }
   if(recvStride != NULL){
     free(recvStride);
