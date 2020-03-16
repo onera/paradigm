@@ -837,7 +837,6 @@ PDM_distant_neighbor_exch
     }
     printf("\n");
 
-    int shift_part = 0;
     for(int ipart = 0; ipart < pdn->n_part; ipart++){
       int *_part_neighbor_idx  = pdn->neighbor_idx[ipart];
 
@@ -855,54 +854,10 @@ PDM_distant_neighbor_exch
       log_trace("PDM_distant_neighbor_exch::recv_part_size :: --> %d \n ", recv_part_size);
       _recv_entity_data[ipart] = (int *) malloc( recv_part_size * sizeof(int *));
 
-      /*
-       * Il faut revoir la recopie car la stride variable s'applique sur le buffer entier
-       * C'est le recv stride ??? --> Non
-       * Il faut recalculer les strides proprement
-       */
-      int* unique_recv_stride_idx = (int*) malloc( (_part_neighbor_idx[pdn->n_entity[ipart]] + 1)  * sizeof(int*)); // Suralloc
-      for(int i_entity = 0; i_entity < _part_neighbor_idx[pdn->n_entity[ipart]]; i_entity++){
-        unique_recv_stride_idx[i_entity] = 0;
-      }
-
-      int n_unique = 0;
-      for(int i_entity = 0; i_entity < _part_neighbor_idx[pdn->n_entity[ipart]]; i_entity++){
-        int u_enty = pdn->order_unique[ipart][i_entity];
-        if(unique_recv_stride_idx[u_enty] == 0){
-          unique_recv_stride_idx[u_enty] = _recv_entity_stride[ipart][i_entity];
-          n_unique++;
-        }
-      }
-
-      int tmp1 = unique_recv_stride_idx[0];
-      unique_recv_stride_idx[0] = 0;
-      for(int i_entity = 1; i_entity < n_unique; i_entity++){
-        int tmp2 = unique_recv_stride_idx[i_entity+1];
-        unique_recv_stride_idx[i_entity+1] = unique_recv_stride_idx[i_entity] + tmp1;
-        tmp1 = tmp2;
-      }
-
-      printf("unique_recv_stride_idx ::");
-      for(int i_entity = 0; i_entity < n_unique+1; i_entity++){
-        printf("%d ", unique_recv_stride_idx[i_entity]);
-      }
-      printf("\n");
-
-      int shift_current_part = 0;
-      int lastidx = -1;
       for(int i_entity = 0; i_entity < _part_neighbor_idx[pdn->n_entity[ipart]]; i_entity++){
 
-        // int idx = pdn->distributed_part_idx[ipart] + pdn->order_unique[ipart][i_entity];
         int u_enty = pdn->distributed_part_idx[ipart]+pdn->order_unique[ipart][i_entity];
-        // int idx = pdn->distributed_part_idx[ipart] + pdn->order_unique[ipart][i_entity] + unique_recv_stride_idx[u_enty];
-        // int idx = pdn->distributed_part_idx[ipart] + unique_recv_stride_idx[u_enty];
-        // int idx = shift_part + unique_recv_stride_idx[u_enty];
-        // int idx = shift_part + recvStride_idx[u_enty];
-        int idx = recvStride_idx[u_enty]; // Il manque un shift ici
-        if(lastidx != u_enty){
-          lastidx = u_enty;
-          shift_current_part += _recv_entity_stride[ipart][i_entity];
-        }
+        int idx = recvStride_idx[u_enty];
 
         printf(" debug:: [%d] - [u_enty::%d] | [unique::%d] | [recvStride_idx::%d] | [shiftpart::%d]\n",
                // i_entity, u_enty, pdn->order_unique[ipart][i_entity], unique_recv_stride_idx[u_enty], pdn->distributed_part_idx[ipart]
@@ -916,9 +871,6 @@ PDM_distant_neighbor_exch
           _recv_entity_data[ipart][idxdata] = recvBuffer[idx+idata];
         }
       } /* End ientity */
-      shift_part += shift_current_part;
-
-      free(unique_recv_stride_idx);
     } /* End part */
 
 
