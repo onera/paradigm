@@ -94,8 +94,18 @@ char *argv[]
   /*
    * Data
    */
-  int point_list_j1[3] = {101, 201, 301};
-  int point_list_j2[2] = {102, 202};
+  // Test with stride = 1
+  // int stride = 1;
+  // int point_list_j1[3] = {101, 201, 301};
+  // int point_list_j2[2] = {102, 202};
+
+  // Test with stride = 2
+  int stride = 2;
+  int point_list_j1[6] = {101, 1010,
+                          201, 2010,
+                          301, 3010};
+  int point_list_j2[4] = {102, 1020,
+                          202, 2020};
 
   // Test 1 :
   // int point_list_var_j1[6] = {101, 1010,
@@ -197,7 +207,6 @@ char *argv[]
   /*
    * Constant stride test
    */
-  int stride = 1;
   int** recv_entity_data = NULL;
   PDM_distant_neighbor_exch(pdn_id,
                             sizeof(int),
@@ -209,11 +218,14 @@ char *argv[]
                  (int***) &recv_entity_data);
 
   if(1 == 1){
+    log_trace(" Constant strid exchange results ---- \n");
     for(int ipart = 0; ipart < n_cloud; ipart++){
       int *_part_neighbor_idx  = candidates_idx[ipart];
-      log_trace(" recv_entity_data[%d]::", ipart);
+      log_trace("recv_entity_data[%d]::", ipart);
       for(int i_entity = 0; i_entity < _part_neighbor_idx[n_entity[ipart]]; i_entity++){
-        log_trace("%d ", recv_entity_data[ipart][i_entity]);
+        for(int idata = 0; idata < stride; idata++){
+          log_trace("%d ", recv_entity_data[ipart][stride*i_entity+idata]);
+        }
       }
       log_trace("\n");
     }
