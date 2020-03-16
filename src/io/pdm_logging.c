@@ -71,7 +71,6 @@ free_logging_file
 (
 )
 {
-  printf("free_logging_file\n");
   if(logging_file != NULL)
     fclose(logging_file);
 }

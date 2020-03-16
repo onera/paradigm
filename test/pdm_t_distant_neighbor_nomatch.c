@@ -16,6 +16,7 @@
 #include "pdm_distant_neighbor.h"
 #include "pdm_points_merge.h"
 #include "pdm_printf.h"
+#include "pdm_logging.h"
 #include "pdm_error.h"
 
 /**
@@ -195,11 +196,11 @@ char *argv[]
   if(1 == 1){
     for(int ipart = 0; ipart < n_cloud; ipart++){
       int *_part_neighbor_idx  = candidates_idx[ipart];
-      printf(" recv_entity_data[%d]::", ipart);
+      log_trace(" recv_entity_data[%d]::", ipart);
       for(int i_entity = 0; i_entity < _part_neighbor_idx[n_entity[ipart]]; i_entity++){
-        printf("%d ", recv_entity_data[ipart][i_entity]);
+        log_trace("%d ", recv_entity_data[ipart][i_entity]);
       }
-      printf("\n");
+      log_trace("\n");
     }
   }
 
