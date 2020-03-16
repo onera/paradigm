@@ -19,6 +19,26 @@
 #include "pdm_logging.h"
 #include "pdm_error.h"
 
+/*
+ *  Use case with no match
+ *
+ *                   jn1             jn2
+ * ------------------ |               | ------------------
+ *         |          |               |            |
+ *         |   (2)    |               |            |
+ *         |          |               |     (1)    |
+ * ------------------ |               |            |
+ *         |          |               |            |
+ *         |   (1)    |               | ------------------
+ *         |          |               |            |
+ * ------------------ |               |            |
+ *         |          |               |     (0)    |
+ *         |   (0)    |               |            |
+ *         |          |               |            |
+ * ------------------ |               | ------------------
+ *
+ */
+
 /**
  *
  * \brief  Main
@@ -38,9 +58,6 @@ char *argv[]
   PDM_MPI_Init (&argc, &argv);
   PDM_MPI_Comm_rank (PDM_MPI_COMM_WORLD, &iRank);
   PDM_MPI_Comm_size (PDM_MPI_COMM_WORLD, &nRank);
-
-  // int point_list_j1[15] = {145, 153, 155, 163, 172, 180, 201, 206, 207, 211, 212, 215, 217, 222, 227};
-  // int point_list_j2[15] = {136, 142, 150, 151, 160, 161, 170, 171, 188, 191, 194, 199, 205, 214, 221};
 
   /* Connection de join1 avec join2 */
   int connect_idx_j1[4] = {0, 1, 3, 4};
@@ -154,9 +171,7 @@ char *argv[]
   }
 
   /*
-   *  Now we have the connection between the two cloud (in this case it's a perfect match )
-   *  We need to find out the connection in the partition (not in the cloud )
-   *  To do that we setup an exchange with distant neighbor with the local face of each partition
+   *  Setup exchange protocol
    */
   int pdn_id = PDM_distant_neighbor_create(PDM_MPI_COMM_WORLD,
                                            n_cloud,
