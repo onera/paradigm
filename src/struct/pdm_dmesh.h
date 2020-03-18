@@ -158,16 +158,16 @@ PDM_dmesh_dims_get
 void
 PDM_dmesh_data_get
 (
- const int      id,
- double       **dVtxCoord,
- int          **dFaceVtxIdx,
- PDM_g_num_t  **dFaceVtx,
- PDM_g_num_t  **dFaceCell,
- int          **dFaceBoundIdx,
- PDM_g_num_t  **dFaceBound,
- int          **dJoinGIds,
- int          **dFaceJoinIdx,
- PDM_g_num_t  **dFaceJoin
+ const int           id,
+ const double       **dVtxCoord,
+ const int          **dFaceVtxIdx,
+ const PDM_g_num_t  **dFaceVtx,
+ const PDM_g_num_t  **dFaceCell,
+ const int          **dFaceBoundIdx,
+ const PDM_g_num_t  **dFaceBound,
+ const int          **dJoinGIds,
+ const int          **dFaceJoinIdx,
+ const PDM_g_num_t  **dFaceJoin
 );
 
 /**

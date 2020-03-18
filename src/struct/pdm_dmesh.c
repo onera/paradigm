@@ -244,7 +244,7 @@ PDM_dmesh_set
   dmesh->_dFaceJoinIdx  = dFaceJoinIdx;
   dmesh->_dFaceJoin     = dFaceJoin;
 
-  printf("PDM_dmesh_set::dmesh->_dFaceVtx :: %d \n", dmesh->_dFaceVtx[0]);
+  printf("PDM_dmesh_set::dmesh->_dFaceVtx :: "PDM_FMT_G_NUM" \n", dmesh->_dFaceVtx[0]);
 }
 
 /**
@@ -297,16 +297,16 @@ PDM_dmesh_dims_get
 void
 PDM_dmesh_data_get
 (
- const int      id,
- double       **dVtxCoord,
- int          **dFaceVtxIdx,
- PDM_g_num_t  **dFaceVtx,
- PDM_g_num_t  **dFaceCell,
- int          **dFaceBoundIdx,
- PDM_g_num_t  **dFaceBound,
- int          **dJoinGIds,
- int          **dFaceJoinIdx,
- PDM_g_num_t  **dFaceJoin
+ const int          id,
+ const double       **dVtxCoord,
+ const int          **dFaceVtxIdx,
+ const PDM_g_num_t  **dFaceVtx,
+ const PDM_g_num_t  **dFaceCell,
+ const int          **dFaceBoundIdx,
+ const PDM_g_num_t  **dFaceBound,
+ const int          **dJoinGIds,
+ const int          **dFaceJoinIdx,
+ const PDM_g_num_t  **dFaceJoin
 )
 {
   _pdm_dmesh_t *dmesh = _get_from_id (id);
@@ -338,7 +338,7 @@ PDM_dmesh_free
 {
   _pdm_dmesh_t *dmesh = _get_from_id (id);
 
-  printf("PDM_dmesh_free::dmesh->_dFaceVtx : %d \n", dmesh->_dFaceVtx[0]);
+  printf("PDM_dmesh_free::dmesh->_dFaceVtx : "PDM_FMT_G_NUM" \n", dmesh->_dFaceVtx[0]);
 
   dmesh->dNCell   = 0;
   dmesh->dNFace   = 0;
