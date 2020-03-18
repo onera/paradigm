@@ -10,7 +10,6 @@
 
 #include "pdm.h"
 #include "pdm_priv.h"
-#include "pdm_part.h"
 
 #include "pdm_mpi.h"
 #include "pdm_config.h"
@@ -49,8 +48,6 @@ _usage(int exit_code)
      "  -c      <level>  Number of closest points (default : 10).\n\n"
      "  -t      <level>  Number of Target points (default : 10).\n\n"
      "  -n_part <level>  Number of partitions par process.\n\n"
-     "  -parmetis        Call ParMETIS.\n\n"
-     "  -pt-scocth       Call PT-Scotch.\n\n"
      "  -h               This message.\n\n");
 
   exit(exit_code);
@@ -69,7 +66,6 @@ _usage(int exit_code)
  * \param [inout]   nClosest Number of closest points
  * \param [inout]   nTgt     Number of Target points
  * \param [inout]   n_part   Number of partitions par process
- * \param [inout]   method   Partitioner (1 ParMETIS, 2 Pt-Scotch)
  *
  */
 
@@ -80,8 +76,7 @@ _read_args(int            argc,
            double        *length,
            int           *nClosest,
            PDM_g_num_t   *nTgt,
-           int           *n_part,
-           int           *method)
+           int           *n_part)
 {
   int i = 1;
 
@@ -134,15 +129,6 @@ _read_args(int            argc,
       else {
         *n_part = atoi(argv[i]);
       }
-    }
-    else if (strcmp(argv[i], "-pt-scotch") == 0) {
-      *method = PDM_PART_SPLIT_PTSCOTCH;
-    }
-    else if (strcmp(argv[i], "-parmetis") == 0) {
-      *method = PDM_PART_SPLIT_PARMETIS;
-    }
-    else if (strcmp(argv[i], "-hilbert") == 0) {
-      *method = PDM_PART_SPLIT_HILBERT;
     }
     else
       _usage(EXIT_FAILURE);
@@ -273,13 +259,6 @@ int main(int argc, char *argv[])
   PDM_g_num_t  nFaceSeg  = 10;
   double        length  = 1.;
   int           nPart   = 1;
-#ifdef PDM_HAVE_PTSCOTCH
-  PDM_part_split_t method  = PDM_PART_SPLIT_PTSCOTCH;
-#else
-#ifdef PDM_HAVE_PARMETIS
-  PDM_part_split_t method  = PDM_PART_SPLIT_PARMETIS;
-#endif
-#endif
 
   int n_closest_points = 10;
   PDM_g_num_t nTgt = 10;
@@ -294,8 +273,7 @@ int main(int argc, char *argv[])
              &length,
              &n_closest_points,
              &nTgt,
-             &nPart,
-             (int *) &method);
+             &nPart);
 
 
   /* Define the target point cloud */
