@@ -193,6 +193,10 @@ _gen_clouds_random2
  )
 {
   *nSrc_l = (int) (nSrc/numProcs);
+  if (myRank < nSrc%numProcs) {
+    (*nSrc_l) += 1;
+  }
+  
   *src_coord = malloc (sizeof(double) * 3 * (*nSrc_l));
   double *_src_coord = *src_coord;
   double x;
@@ -412,7 +416,7 @@ main
   }
 
 
-  if ( n_closest_points > _nSrc_l ) n_closest_points = (int) _nSrc_l;
+  //n_closest_points = PDM_MIN (n_closest_points, nSrc);
 
   /* Source points definition  */
   int id = PDM_gnum_create (3, 1, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD);

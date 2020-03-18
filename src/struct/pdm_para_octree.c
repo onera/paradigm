@@ -4785,6 +4785,7 @@ PDM_para_octree_closest_point
                             s);
 
   if (COMPUTE_FIRST_UPPER_BOUND && octree->n_points >= n_closest_points) {
+    const double EPS_max_dist = 1.e-6;
     const int window_width = (int) ceil (0.5 * n_closest_points);
     int window_start, window_end;
     /* Inspect a window of src points around each tgt point on the Z-order curve */
@@ -4817,7 +4818,7 @@ PDM_para_octree_closest_point
         max_dist = PDM_MAX (max_dist, src_dist);
       }
 
-      upper_bound_dist[i] = max_dist;
+      upper_bound_dist[i] = max_dist + EPS_max_dist * max_dist;
     }
 
   } else {
