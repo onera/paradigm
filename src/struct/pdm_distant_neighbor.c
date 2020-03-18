@@ -79,7 +79,7 @@ static PDM_Handles_t *_pdns   = NULL;
 
 static inline
 int
-is_same_triplet
+_is_same_triplet
 (
 int iproc1, int ipart1, int ielt1,
 int iproc2, int ipart2, int ielt2
@@ -97,7 +97,7 @@ int iproc2, int ipart2, int ielt2
 
 static
 void
-compute_unique_idx
+_compute_unique_idx
 (
  int order[],
  int order_unique[],
@@ -116,8 +116,8 @@ compute_unique_idx
     int curr_proc = connect_triplet[3*old_order  ];
     int curr_part = connect_triplet[3*old_order+1];
     int curr_elmt = connect_triplet[3*old_order+2];
-    int is_same = is_same_triplet(last_proc, last_part, last_elmt,
-                                  curr_proc, curr_part, curr_elmt);
+    int is_same = _is_same_triplet(last_proc, last_part, last_elmt,
+                                   curr_proc, curr_part, curr_elmt);
     // log_trace(" curr:: ( %d / %d / %d ) | last:: ( %d / %d / %d ) \n",
     //             curr_proc, curr_part, curr_elmt,
     //             last_proc, last_part, last_elmt);
@@ -274,10 +274,10 @@ const int           *n_entity,
                      _part_neighbor_idx[n_entity[ipart]]);
 
     // Compute the unique idx from sort
-    compute_unique_idx(pdn->order[ipart],
-                       pdn->order_unique[ipart],
-                       pdn->neighbor_desc[ipart],
-                       _part_neighbor_idx[n_entity[ipart]]);
+    _compute_unique_idx(pdn->order[ipart],
+                        pdn->order_unique[ipart],
+                        pdn->neighbor_desc[ipart],
+                        _part_neighbor_idx[n_entity[ipart]]);
 
     // Il faut connaitre le nombre d'occurence une fois trié --> Taille du buffer d'envoie
     int lastidx = -1;
