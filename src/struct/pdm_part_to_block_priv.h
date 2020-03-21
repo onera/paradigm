@@ -82,7 +82,7 @@ typedef struct {
                                                         reveived data (size = tn_recvData) */
   int                        *order;                /*!< Order of sorted_recvGnum
                                                       (size = tn_recvData) */
-  int                         n_eltBlock ;          /*!< Number of element in current block */
+  int                         n_elt_block ;         /*!< Number of element in current block */
   PDM_g_num_t                *block_gnum;           /*!< Sorted Global number of
                                                          reveived data (size = block_n_elt) */
 
