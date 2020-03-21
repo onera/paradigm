@@ -43,8 +43,8 @@ extern "C" {
 /**
  * \brief Order an array
  *
- * \param [in]      sizeArray       Number of elements
- * \param [in]      newToOldOrder   New order (size = \ref nElt
+ * \param [in]      size_array       Number of elements
+ * \param [in]      new_to_old_order   New order (size = \ref nElt
  * \param [in, out] Array           Array to renumber
  *
  */
@@ -52,28 +52,28 @@ extern "C" {
 void
 PDM_order_array
 (
-const int     sizeArray,
+const int     size_array,
 const size_t  elt_size,
-const int    *newToOldOrder,
+const int    *new_to_old_order,
 void         *array
 )
 {
-  unsigned char *oldArray = (unsigned char *) malloc (sizeArray * elt_size);
-  unsigned char *_array   = (unsigned char *) array;
+  unsigned char *old_array = (unsigned char *) malloc (size_array * elt_size);
+  unsigned char *_array    = (unsigned char *) array;
 
-  for (int i = 0; i < sizeArray; ++i) {
+  for (int i = 0; i < size_array; ++i) {
     for (int j = 0; j < elt_size; ++j) {
-      oldArray[elt_size * i + j] = _array[elt_size * i + j];
+      old_array[elt_size * i + j] = _array[elt_size * i + j];
     }
   }
 
-  for (int i = 0; i < sizeArray; ++i) {
+  for (int i = 0; i < size_array; ++i) {
     for (int j = 0; j < elt_size; ++j) {
-      _array[elt_size * i + j] = oldArray[elt_size * newToOldOrder[i] +j];
+      _array[elt_size * i + j] = old_array[elt_size * new_to_old_order[i] +j];
     }
   }
 
-  free(oldArray);
+  free(old_array);
 }
 
 /**
