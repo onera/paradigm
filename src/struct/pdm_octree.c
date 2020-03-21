@@ -92,29 +92,29 @@ typedef struct {
  */
 
 typedef struct  {
-  int    octree_seq_id;             /*!< Identifier of the associated octree seq */
+  int    octree_seq_id;                      /*!< Identifier of the associated octree seq */
 
-  PDM_MPI_Comm comm;             /*!< MPI communicator */
-  PDM_MPI_Comm rankComm;             /*!< MPI communicator */
+  PDM_MPI_Comm comm;                         /*!< MPI communicator */
+  PDM_MPI_Comm rank_comm;                    /*!< MPI communicator */
 
-  int     maxBoxesLeafShared; /*!<  Max number of boxes in a leaf for coarse shared BBTree */
+  int                 max_boxes_leaf_shared; /*!<  Max number of boxes in a leaf for coarse shared BBTree */
 
-  int     maxTreeDepthShared; /*!< Max tree depth for coarse shared BBTree */
+  int                 max_tree_depth_shared; /*!< Max tree depth for coarse shared BBTree */
 
-  float   maxBoxRatioShared;  /*!< Max ratio for local BBTree (nConnectedBoxe < ratio * nBoxes)
-                                for coarse shared BBTree */
+  float               max_box_ratio_shared;  /*!< Max ratio for local BBTree (nConnectedBoxe < ratio * nBoxes)
+                                                  for coarse shared BBTree */
 
-  PDM_box_set_t  *rankBoxes;  /*!< Rank Boxes */
-  int             nUsedRank;  /*!< Number of used ranks */
-  int            *usedRank;   /*!< used ranks */
-  double         *usedRankExtents;   /*!< Extents of processes */
+  PDM_box_set_t      *rank_boxes;            /*!< Rank Boxes */
+  int                 n_used_rank;           /*!< Number of used ranks */
+  int                *used_rank;             /*!< used ranks */
+  double             *used_rank_extents;     /*!< Extents of processes */
 
-  PDM_box_tree_t *btShared;   /*!< Shared Boundary box tree */
-  _box_tree_stats_t btsShared;/*!< Shared Boundary box tree statistic */
+  PDM_box_tree_t     *bt_shared;             /*!< Shared Boundary box tree */
+  _box_tree_stats_t   bts_shared;            /*!< Shared Boundary box tree statistic */
 
-  int          n_point_cloud; /*!< Number of point cloud */
-  int            *n_points;   /*!< Number of points */
-  PDM_g_num_t   **g_num;      /*!< Point global number */
+  int                 n_point_cloud;         /*!< Number of point cloud */
+  int                *n_points;              /*!< Number of points */
+  PDM_g_num_t       **g_num;                 /*!< Point global number */
 
 } _octree_t;
 
@@ -172,13 +172,13 @@ _box_tree_stats_t  *bts
   bts->dim = 0;
 
   for (i = 0; i < 3; i++) {
-    bts->depth[i] = 0;
-    bts->n_leaves[i] = 0;
-    bts->n_boxes[i] = 0;
+    bts->depth[i]              = 0;
+    bts->n_leaves[i]           = 0;
+    bts->n_boxes[i]            = 0;
     bts->n_threshold_leaves[i] = 0;
-    bts->n_leaf_boxes[i] = 0;
-    bts->mem_used[i] = 0;
-    bts->mem_required[i] = 0;
+    bts->n_leaf_boxes[i]       = 0;
+    bts->mem_used[i]           = 0;
+    bts->mem_required[i]       = 0;
   }
 }
 
@@ -263,7 +263,7 @@ PDM_octree_create
   octree->octree_seq_id = PDM_octree_seq_create (n_point_cloud, depth_max,
                                                  points_in_leaf_max, tolerance);
   octree->comm = comm;
-  octree->rankComm = PDM_MPI_COMM_NULL;
+  octree->rank_comm = PDM_MPI_COMM_NULL;
 
   //octree->extents_proc = NULL;
   octree->n_point_cloud = n_point_cloud; /*!< Number of point cloud */
@@ -277,16 +277,16 @@ PDM_octree_create
     octree->g_num[i] = NULL;
   }
 
-  octree->rankBoxes = NULL;  /*!< Rank Boxes */
-  octree->usedRank = NULL;  /*!< Rank Boxes */
-  octree->nUsedRank = 0;  /*!< Rank Boxes */
-  octree->btShared = NULL;   /*!< Shared Boundary box tree */
+  octree->rank_boxes  = NULL;  /*!< Rank Boxes */
+  octree->used_rank   = NULL;  /*!< Rank Boxes */
+  octree->n_used_rank = 0;     /*!< Rank Boxes */
+  octree->bt_shared   = NULL;  /*!< Shared Boundary box tree */
 
-  octree->maxTreeDepthShared = 10;
-  octree->maxBoxesLeafShared = 6;
-  octree->maxBoxRatioShared = 5;
+  octree->max_tree_depth_shared = 10;
+  octree->max_boxes_leaf_shared = 6;
+  octree->max_box_ratio_shared = 5;
 
-  _init_bt_statistics (&(octree->btsShared));
+  _init_bt_statistics (&(octree->bts_shared));
 
   return id;
 }
@@ -359,17 +359,17 @@ PDM_octree_free
 
   free (octree->n_points);
   free (octree->g_num);
-  free (octree->usedRank);
-  free (octree->usedRankExtents);
+  free (octree->used_rank);
+  free (octree->used_rank_extents);
 
-  PDM_box_set_destroy(&(octree->rankBoxes));
+  PDM_box_set_destroy(&(octree->rank_boxes));
 
-  PDM_box_tree_destroy(&(octree->btShared));
+  PDM_box_tree_destroy(&(octree->bt_shared));
 
   PDM_octree_seq_free (octree->octree_seq_id);
 
-  if (octree->rankComm != PDM_MPI_COMM_NULL) {
-    PDM_MPI_Comm_free (&(octree->rankComm));
+  if (octree->rank_comm != PDM_MPI_COMM_NULL) {
+    PDM_MPI_Comm_free (&(octree->rank_comm));
   }
 
   free (octree);
@@ -491,19 +491,19 @@ PDM_octree_build
                      n_pts_proc, 1, PDM_MPI_INT,
                      octree->comm);
 
-  int nUsedRank = 0;
+  int n_used_rank = 0;
   for (int i = 0; i < lComm; i++) {
     if (n_pts_proc[i] > 0) {
-      nUsedRank += 1;
+      n_used_rank += 1;
     }
   }
 
-  int *numProc = (int *) malloc (sizeof(int *) * nUsedRank);
+  int *numProc = (int *) malloc (sizeof(int *) * n_used_rank);
 
-  octree->usedRank = numProc;
-  octree->nUsedRank = nUsedRank;
+  octree->used_rank = numProc;
+  octree->n_used_rank = n_used_rank;
 
-  PDM_g_num_t *gNumProc = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * nUsedRank);
+  PDM_g_num_t *gNumProc = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * n_used_rank);
 
   int idx = 0;
 
@@ -522,42 +522,41 @@ PDM_octree_build
   free (n_pts_proc);
 
   extents_proc = (double *) realloc (extents_proc,
-                                   sizeof(double) * sExtents * nUsedRank);
+                                   sizeof(double) * sExtents * n_used_rank);
 
-  int *initLocationProc = (int *) malloc (sizeof(int) * nInfoLocation * nUsedRank);
-  for (int i = 0; i < nInfoLocation * nUsedRank; i++) {
+  int *initLocationProc = (int *) malloc (sizeof(int) * nInfoLocation * n_used_rank);
+  for (int i = 0; i < nInfoLocation * n_used_rank; i++) {
     initLocationProc[i] = 0;
   }
 
-  //PDM_MPI_Comm rankComm;
-  PDM_MPI_Comm_split(octree->comm, myRank, 0, &(octree->rankComm));
+  //PDM_MPI_Comm rank_comm;
+  PDM_MPI_Comm_split(octree->comm, myRank, 0, &(octree->rank_comm));
 
-  octree->rankBoxes = PDM_box_set_create(3,
-                                         1,
-                                         0,
-                                         nUsedRank,
-                                         gNumProc,
-                                         extents_proc,
-                                         1,
-                                         &nUsedRank,
-                                         initLocationProc,
-                                         octree->rankComm);
+  octree->rank_boxes = PDM_box_set_create(3,
+                                          1,
+                                          0,
+                                          n_used_rank,
+                                          gNumProc,
+                                          extents_proc,
+                                          1,
+                                          &n_used_rank,
+                                          initLocationProc,
+                                          octree->rank_comm);
 
-  octree->btShared = PDM_box_tree_create (octree->maxTreeDepthShared,
-                                          octree->maxBoxesLeafShared,
-                                          octree->maxBoxRatioShared);
+  octree->bt_shared = PDM_box_tree_create (octree->max_tree_depth_shared,
+                                          octree->max_boxes_leaf_shared,
+                                          octree->max_box_ratio_shared);
 
   /* Build a tree and associate boxes */
 
-  PDM_box_tree_set_boxes (octree->btShared,
-                          octree->rankBoxes,
-                          PDM_BOX_TREE_ASYNC_LEVEL);
-  _update_bt_statistics(&(octree->btsShared), octree->btShared);
+  PDM_box_tree_set_boxes (octree->bt_shared,
+                          octree->rank_boxes,                          PDM_BOX_TREE_ASYNC_LEVEL);
+  _update_bt_statistics(&(octree->bts_shared), octree->bt_shared);
 
   free (gNumProc);
   free (initLocationProc);
 
-  octree->usedRankExtents = extents_proc;
+  octree->used_rank_extents = extents_proc;
 }
 
 //void
@@ -827,10 +826,10 @@ PDM_octree_processes_extents_get
 {
   _octree_t *octree = _get_from_id (id);
 
-  *extents = octree->usedRankExtents;
-  *used_ranks = octree->usedRank;
+  *extents = octree->used_rank_extents;
+  *used_ranks = octree->used_rank;
 
-  return octree->nUsedRank;
+  return octree->n_used_rank;
 
 }
 
@@ -883,7 +882,7 @@ double      *closest_octree_pt_dist2
   int *rank_id = (int *) malloc (sizeof(int) * n_pts);
   double *rank_min_max_dist = (double *) malloc (sizeof(double) * n_pts);
 
-  PDM_box_tree_min_dist_max_box (octree->btShared,
+  PDM_box_tree_min_dist_max_box (octree->bt_shared,
                                  n_pts,
                                  pts,
                                  rank_id,
@@ -891,7 +890,7 @@ double      *closest_octree_pt_dist2
 
   for (int i = 0; i < n_pts; i++) {
     if (rank_id[i] >= 0) {
-      rank_id[i] = octree->usedRank[rank_id[i]];
+      rank_id[i] = octree->used_rank[rank_id[i]];
     }
   }
 
@@ -1057,7 +1056,7 @@ double      *closest_octree_pt_dist2
   int *i_boxes = NULL;
   int *boxes = NULL;
 
-  PDM_box_tree_closest_upper_bound_dist_boxes_get (octree->btShared,
+  PDM_box_tree_closest_upper_bound_dist_boxes_get (octree->bt_shared,
                                                    n_pts,
                                                    pts,
                                                    upper_bound_dist,
@@ -1076,7 +1075,7 @@ double      *closest_octree_pt_dist2
   }
 
   for (int i = 0; i < i_boxes[n_pts]; i++) {
-    boxes[i] = octree->usedRank[boxes[i]];
+    boxes[i] = octree->used_rank[boxes[i]];
     n_send_pts[boxes[i]]++;
   }
 
