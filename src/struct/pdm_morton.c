@@ -577,15 +577,15 @@ static void
 _define_rank_distrib(int                      dim,
                      int                      n_ranks,
                      int                      gmax_level,
-                     PDM_g_num_t                gsum_weight,
-                     int                n_codes,
+                     PDM_g_num_t              gsum_weight,
+                     int                      n_codes,
                      const PDM_morton_code_t  morton_codes[],
-                     const int          weight[],
-                     const int          order[],
+                     const int                weight[],
+                     const int                order[],
                      const double             sampling[],
                      double                   cfreq[],
-                     PDM_g_num_t                g_distrib[],
-                     PDM_MPI_Comm                 comm)
+                     PDM_g_num_t              g_distrib[],
+                     PDM_MPI_Comm             comm)
 {
   int  id, rank_id;
   PDM_morton_code_t  sample_code;
@@ -824,13 +824,13 @@ _update_sampling(int      dim,
 static double
 _bucket_sampling(int                      dim,
                  int                      n_ranks,
-                 int                     gmax_level,
-                 int                n_codes,
+                 int                      gmax_level,
+                 int                      n_codes,
                  const PDM_morton_code_t  morton_codes[],
-                 const int          weight[],
-                 const int          order[],
+                 const int                weight[],
+                 const int                order[],
                  double                  *sampling[],
-                 PDM_MPI_Comm                 comm)
+                 PDM_MPI_Comm             comm)
 {
   int  i, n_iters;
   int   j;
@@ -966,11 +966,11 @@ _bucket_sampling(int                      dim,
  *---------------------------------------------------------------------------*/
 
 void
-PDM_morton_get_coord_extents(int               dim,
-                             size_t            n_coords,
-                             const double  coords[],
-                             double        g_extents[],
-                             PDM_MPI_Comm          comm)
+PDM_morton_get_coord_extents(int          dim,
+                             size_t       n_coords,
+                             const double coords[],
+                             double       g_extents[],
+                             PDM_MPI_Comm comm)
 {
   size_t  i, j;
 
@@ -1007,11 +1007,11 @@ PDM_morton_get_coord_extents(int               dim,
  *---------------------------------------------------------------------------*/
 
 void
-PDM_morton_get_global_extents(int               dim,
-                              size_t            n_extents,
+PDM_morton_get_global_extents(int           dim,
+                              size_t        n_extents,
                               const double  extents[],
                               double        g_extents[],
-                              PDM_MPI_Comm          comm)
+                              PDM_MPI_Comm  comm)
 {
   size_t  i, j;
 
@@ -1052,7 +1052,7 @@ PDM_morton_get_global_extents(int               dim,
 PDM_morton_code_t
 PDM_morton_encode(int               dim,
                   PDM_morton_int_t  level,
-                  const double  coords[])
+                  const double      coords[])
 {
   int  i;
   PDM_morton_code_t  morton_code;
@@ -1092,9 +1092,9 @@ PDM_morton_encode(int               dim,
 void
 PDM_morton_encode_coords(int                dim,
                          PDM_morton_int_t   level,
-                         const double   extents[],
+                         const double       extents[],
                          size_t             n_coords,
-                         const double   coords[],
+                         const double       coords[],
                          PDM_morton_code_t  m_code[],
                          double             d[3],
                          double             s[3])
@@ -1225,9 +1225,9 @@ PDM_morton_get_children(int                dim,
  *----------------------------------------------------------------------------*/
 
 void
-PDM_morton_local_order(int                n_codes,
-                       const PDM_morton_code_t  morton_codes[],
-                       int                order[])
+PDM_morton_local_order(int                     n_codes,
+                       const PDM_morton_code_t morton_codes[],
+                       int                     order[])
 {
   int   i;
   int   tmp;
@@ -1276,8 +1276,8 @@ PDM_morton_local_order(int                n_codes,
  *----------------------------------------------------------------------------*/
 
 void
-PDM_morton_local_sort(int          n_codes,
-                      PDM_morton_code_t  morton_codes[])
+PDM_morton_local_sort(int               n_codes,
+                      PDM_morton_code_t morton_codes[])
 {
   int   i;
   PDM_morton_code_t  tmp;
@@ -1400,7 +1400,7 @@ PDM_morton_copy (PDM_morton_code_t  a,
 void
 PDM_morton_nearest_common_ancestor (PDM_morton_code_t  code_a,
                                     PDM_morton_code_t  code_b,
-                                    PDM_morton_code_t  *code_c)
+                                    PDM_morton_code_t *code_c)
 {
   int i, a_diff, b_diff;
   int l = PDM_MIN(code_a.L, code_b.L);
@@ -1541,9 +1541,9 @@ PDM_morton_assign_level (PDM_morton_code_t  *code,
  *----------------------------------------------------------------------------*/
 
 int
-PDM_morton_binary_search(int           size,
-                         PDM_morton_code_t   code,
-                         PDM_morton_code_t  *codes)
+PDM_morton_binary_search(int                size,
+                         PDM_morton_code_t  code,
+                         PDM_morton_code_t *codes)
 {
   int start = 0;
   int end = size;
@@ -1580,9 +1580,9 @@ PDM_morton_binary_search(int           size,
  *----------------------------------------------------------------------------*/
 
 size_t
-PDM_morton_quantile_search(size_t              n_quantiles,
-                           PDM_morton_code_t   code,
-                           PDM_morton_code_t  *quantile_start)
+PDM_morton_quantile_search(size_t             n_quantiles,
+                           PDM_morton_code_t  code,
+                           PDM_morton_code_t *quantile_start)
 {
   size_t mid_id = 0;
   size_t start_id = 0;
@@ -1625,11 +1625,11 @@ PDM_morton_quantile_search(size_t              n_quantiles,
  *----------------------------------------------------------------------------*/
 
 void
-PDM_morton_quantile_intersect(size_t              n_quantiles,
-                              PDM_morton_code_t   code,
-                              PDM_morton_code_t  *quantile_start,
-                              size_t             *start,
-                              size_t             *end )
+PDM_morton_quantile_intersect(size_t             n_quantiles,
+                              PDM_morton_code_t  code,
+                              PDM_morton_code_t *quantile_start,
+                              size_t            *start,
+                              size_t            *end )
 {
   size_t mid_id = 0;
   size_t start_id = 0;
@@ -1688,11 +1688,11 @@ PDM_morton_quantile_intersect(size_t              n_quantiles,
  *----------------------------------------------------------------------------*/
 
 void
-PDM_morton_list_intersect(size_t              n_quantiles,
-                          PDM_morton_code_t   code,
-                          PDM_morton_code_t  *quantile_start,
-                          size_t             *start,
-                          size_t             *end)
+PDM_morton_list_intersect(size_t             n_quantiles,
+                          PDM_morton_code_t  code,
+                          PDM_morton_code_t *quantile_start,
+                          size_t            *start,
+                          size_t            *end)
 {
   size_t mid_id = 0;
   size_t start_id = 0;
@@ -1989,14 +1989,14 @@ PDM_morton_ordered_build_rank_index
  *----------------------------------------------------------------------------*/
 
 double
-PDM_morton_build_rank_index(int                      dim,
-                            int                      gmax_level,
-                            PDM_l_num_t                n_codes,
-                            const PDM_morton_code_t  code[],
-                            const int          weight[],
-                            const int          order[],
-                            PDM_morton_code_t        rank_index[],
-                            PDM_MPI_Comm                 comm)
+PDM_morton_build_rank_index(int                     dim,
+                            int                     gmax_level,
+                            PDM_l_num_t             n_codes,
+                            const PDM_morton_code_t code[],
+                            const int               weight[],
+                            const int               order[],
+                            PDM_morton_code_t       rank_index[],
+                            PDM_MPI_Comm            comm)
 {
   int  i, id, rank_id, n_ranks, n_samples;
   double  best_fit;

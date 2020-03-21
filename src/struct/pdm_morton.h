@@ -90,11 +90,11 @@ extern const  PDM_morton_int_t PDM_morton_max_level;
  *---------------------------------------------------------------------------*/
 
 void
-PDM_morton_get_coord_extents(int               dim,
-                             size_t            n_coords,
-                             const double      coords[],
-                             double             g_extents[],
-                             PDM_MPI_Comm          comm);
+PDM_morton_get_coord_extents(int            dim,
+                             size_t         n_coords,
+                             const double   coords[],
+                             double         g_extents[],
+                             PDM_MPI_Comm   comm);
 
 /*----------------------------------------------------------------------------
  * Determine the global extents associated with a set of local extents
@@ -110,9 +110,9 @@ PDM_morton_get_coord_extents(int               dim,
 void
 PDM_morton_get_global_extents(int               dim,
                               size_t            n_extents,
-                              const double  extents[],
-                              double        g_extents[],
-                              PDM_MPI_Comm          comm);
+                              const double      extents[],
+                              double            g_extents[],
+                              PDM_MPI_Comm      comm);
 
 /*----------------------------------------------------------------------------
  * Build a Morton code according to the level in an octree grid and its
@@ -130,7 +130,7 @@ PDM_morton_get_global_extents(int               dim,
 PDM_morton_code_t
 PDM_morton_encode(int                dim,
                   PDM_morton_int_t   level,
-                  const double   coords[]);
+                  const double       coords[]);
 
 /*----------------------------------------------------------------------------
  * Encode an array of coordinates.
@@ -152,9 +152,9 @@ PDM_morton_encode(int                dim,
 void
 PDM_morton_encode_coords(int                dim,
                          PDM_morton_int_t   level,
-                         const double   extents[],
+                         const double       extents[],
                          size_t             n_coords,
-                         const double   coords[],
+                         const double       coords[],
                          PDM_morton_code_t  m_code[],
                          double             d[3],
                          double             s[3]);
@@ -203,9 +203,9 @@ PDM_morton_compare(int                dim,
  *----------------------------------------------------------------------------*/
 
 void
-PDM_morton_local_order(int                n_codes,
+PDM_morton_local_order(int                      n_codes,
                        const PDM_morton_code_t  morton_codes[],
-                       int                order[]);
+                       int                      order[]);
 
 /*----------------------------------------------------------------------------
  * Locally sort a list of Morton ids.
@@ -216,7 +216,7 @@ PDM_morton_local_order(int                n_codes,
  *----------------------------------------------------------------------------*/
 
 void
-PDM_morton_local_sort(int          n_codes,
+PDM_morton_local_sort(int                n_codes,
                       PDM_morton_code_t  morton_codes[]);
 
 /*----------------------------------------------------------------------------
@@ -337,7 +337,7 @@ PDM_morton_assign_level (PDM_morton_code_t  *a,
  *----------------------------------------------------------------------------*/
 
 int
-PDM_morton_binary_search(int           size,
+PDM_morton_binary_search(int                 size,
                          PDM_morton_code_t   code,
                          PDM_morton_code_t  *codes);
 
@@ -453,12 +453,12 @@ PDM_morton_ordered_build_rank_index
 double
 PDM_morton_build_rank_index(int                      dim,
                             int                      gmax_level,
-                            PDM_l_num_t                n_codes,
+                            PDM_l_num_t              n_codes,
                             const PDM_morton_code_t  code[],
-                            const int          weight[],
-                            const int          order[],
+                            const int                weight[],
+                            const int                order[],
                             PDM_morton_code_t        rank_index[],
-                            PDM_MPI_Comm                 comm);
+                            PDM_MPI_Comm             comm);
 
 /*----------------------------------------------------------------------------
  * Dump a Morton to standard output or to a file.
