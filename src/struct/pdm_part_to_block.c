@@ -930,27 +930,26 @@ PDM_part_to_block_create2
     (_cs_part_to_block_t *) malloc (sizeof(_cs_part_to_block_t));
 
 
-  ptb->t_distrib        = t_distrib;    /*!< Distribution type */
-  ptb->t_post           = t_post;       /*!< Post processing type */
+  ptb->t_distrib         = t_distrib;    /*!< Distribution type */
+  ptb->t_post            = t_post;       /*!< Post processing type */
   ptb->n_active_ranks    = 0;            /*!< Number of active ranks */
   ptb->active_ranks      = NULL;         /*!< List of active ranks */
-  ptb->comm             = comm;         /*!< MSG communicator */
+  ptb->comm              = comm;         /*!< MSG communicator */
   PDM_MPI_Comm_size (comm, &(ptb->s_comm));
   PDM_MPI_Comm_rank (comm, &(ptb->myRank));
-  ptb->is_my_rank_active   = 0;              /*!< Is active current rank */
-  ptb->part_active_node   = part_active_node; /*!< Part of active nodes */
+  ptb->is_my_rank_active   = 0;                /*!< Is active current rank */
+  ptb->part_active_node    = part_active_node; /*!< Part of active nodes */
 
-  ptb->n_part           = n_part;       /*!< Number of parts */
-  ptb->n_elt            = n_elt;        /*!< Number of elements for any part */
-  ptb->n_elt_proc       = 0;            /*!< Number of elements on the current rank */
-  ptb->gnum_elt         = gnum_elt;     /*!< Global numbering of elements for any part */
-  ptb->weight           = NULL;
-  ptb->dest_proc         = NULL;
+  ptb->n_part             = n_part;       /*!< Number of parts */
+  ptb->n_elt              = n_elt;        /*!< Number of elements for any part */
+  ptb->n_elt_proc         = 0;            /*!< Number of elements on the current rank */
+  ptb->gnum_elt           = gnum_elt;     /*!< Global numbering of elements for any part */
+  ptb->weight             = NULL;
+  ptb->dest_proc          = NULL;
   ptb->data_distrib_index =
     (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * (ptb->s_comm + 1));   /*!< Data distribution on ranks */
 
-  for(int iRank = 0; iRank < ptb->s_comm+1; iRank++)
-  {
+  for(int iRank = 0; iRank < ptb->s_comm+1; iRank++){
     ptb->data_distrib_index[iRank] = data_distrib_index[iRank];
   }
 
@@ -962,12 +961,12 @@ PDM_part_to_block_create2
   ptb->n_send_data   = NULL;  /*!< Number of data to send to other processes (size = s_comm) */
   ptb->n_recv_data   = NULL;  /*!< Number of received Data from other processes (size = s_comm) */
 
-  ptb->tn_send_data  = 0;     /*!< Total number of sended data */
-  ptb->tn_recv_data  = 0;     /*!< Total number of received data */
-  ptb->sorted_recv_gnum    = NULL;  /*!< Sorted recv global num */
-  ptb->order        = NULL;  /*!< Order */
-  ptb->n_elt_block   = 0;
-  ptb->block_gnum   = NULL;  /*!< Global number of reveived data (size = tn_recv_data) */
+  ptb->tn_send_data     = 0;     /*!< Total number of sended data */
+  ptb->tn_recv_data     = 0;     /*!< Total number of received data */
+  ptb->sorted_recv_gnum = NULL;  /*!< Sorted recv global num */
+  ptb->order            = NULL;  /*!< Order */
+  ptb->n_elt_block      = 0;
+  ptb->block_gnum       = NULL;  /*!< Global number of reveived data (size = tn_recv_data) */
 
   /*
    * Active ranks definition
@@ -1108,13 +1107,13 @@ int
 PDM_part_to_block_exch
 (
  PDM_part_to_block_t *ptb,
- size_t              s_data,
- PDM_stride_t       t_stride,
- int                 cst_stride,
- int               **part_stride,
- void              **part_data,
- int               **block_stride,
- void              **block_data
+ size_t               s_data,
+ PDM_stride_t         t_stride,
+ int                  cst_stride,
+ int                **part_stride,
+ void               **part_data,
+ int                **block_stride,
+ void               **block_data
 )
 {
   _cs_part_to_block_t *_ptb = (_cs_part_to_block_t *) ptb;
@@ -1125,41 +1124,41 @@ PDM_part_to_block_exch
     abort ();
   }
 
-  size_t *i_sendBuffer = (size_t *) malloc (sizeof(size_t) * _ptb->s_comm);
-  size_t *i_recvBuffer = (size_t *) malloc (sizeof(size_t) * _ptb->s_comm);
-  int *n_sendBuffer = (int *) malloc (sizeof(int) * _ptb->s_comm);
-  int *n_recvBuffer = (int *) malloc (sizeof(int) * _ptb->s_comm);
+  size_t *i_send_buffer = (size_t *) malloc (sizeof(size_t) * _ptb->s_comm);
+  size_t *i_recv_buffer = (size_t *) malloc (sizeof(size_t) * _ptb->s_comm);
+  int *n_send_buffer = (int *) malloc (sizeof(int) * _ptb->s_comm);
+  int *n_recv_buffer = (int *) malloc (sizeof(int) * _ptb->s_comm);
 
   /*
    * Exchange Stride and build buffer properties
    */
 
-  int *recvStride = NULL;
+  int *recv_stride = NULL;
   if (t_stride == PDM_STRIDE_VAR) {
 
     for (int i = 0; i < _ptb->s_comm; i++) {
-      n_sendBuffer[i] = 0;
-      n_recvBuffer[i] = 0;
+      n_send_buffer[i] = 0;
+      n_recv_buffer[i] = 0;
     }
 
-    int *sendStride = (int *) malloc (sizeof(int) * _ptb->tn_send_data);
+    int *send_stride = (int *) malloc (sizeof(int) * _ptb->tn_send_data);
 
     int idx = -1;
     for (int i = 0; i < _ptb->n_part; i++) {
       for (int j = 0; j < _ptb->n_elt[i]; j++) {
         int iproc = _ptb->dest_proc[++idx];
-        sendStride[_ptb->i_send_data[iproc] + n_sendBuffer[iproc]] = part_stride[i][j];
-        n_sendBuffer[iproc] += 1;
+        send_stride[_ptb->i_send_data[iproc] + n_send_buffer[iproc]] = part_stride[i][j];
+        n_send_buffer[iproc] += 1;
       }
     }
 
-    recvStride = (int *) malloc (sizeof(int) * _ptb->tn_recv_data);
+    recv_stride = (int *) malloc (sizeof(int) * _ptb->tn_recv_data);
 
-    PDM_MPI_Alltoallv (sendStride,
+    PDM_MPI_Alltoallv (send_stride,
                        _ptb->n_send_data,
                        _ptb->i_send_data,
                        PDM_MPI_INT,
-                       recvStride,
+                       recv_stride,
                        _ptb->n_recv_data,
                        _ptb->i_recv_data,
                        PDM_MPI_INT,
@@ -1170,39 +1169,39 @@ PDM_part_to_block_exch
      */
 
     for (int i = 0; i < _ptb->s_comm; i++) {
-      int iBeg = _ptb->i_send_data[i];
-      int iEnd = _ptb->i_send_data[i] + _ptb->n_send_data[i];
+      int ibeg = _ptb->i_send_data[i];
+      int iend = _ptb->i_send_data[i] + _ptb->n_send_data[i];
 
-      n_sendBuffer[i] = 0;
-      for (int k = iBeg; k < iEnd; k++)
-        n_sendBuffer[i] += sendStride[k];
+      n_send_buffer[i] = 0;
+      for (int k = ibeg; k < iend; k++)
+        n_send_buffer[i] += send_stride[k];
 
-      n_sendBuffer[i] *= (int) s_data;
+      n_send_buffer[i] *= (int) s_data;
 
       if (i > 0) {
-        i_sendBuffer[i] = i_sendBuffer[i-1] + n_sendBuffer[i-1];
+        i_send_buffer[i] = i_send_buffer[i-1] + n_send_buffer[i-1];
       }
       else {
-        i_sendBuffer[i] = 0;
+        i_send_buffer[i] = 0;
       }
 
-      iBeg = _ptb->i_recv_data[i];
-      iEnd = _ptb->i_recv_data[i] + _ptb->n_recv_data[i];
+      ibeg = _ptb->i_recv_data[i];
+      iend = _ptb->i_recv_data[i] + _ptb->n_recv_data[i];
 
-      n_recvBuffer[i] = 0;
-      for (int k = iBeg; k < iEnd; k++)
-        n_recvBuffer[i] += recvStride[k];
+      n_recv_buffer[i] = 0;
+      for (int k = ibeg; k < iend; k++)
+        n_recv_buffer[i] += recv_stride[k];
 
-      n_recvBuffer[i] *= (int) s_data;
+      n_recv_buffer[i] *= (int) s_data;
 
       if (i > 0)
-        i_recvBuffer[i] = i_recvBuffer[i-1] + n_recvBuffer[i-1];
+        i_recv_buffer[i] = i_recv_buffer[i-1] + n_recv_buffer[i-1];
       else
-        i_recvBuffer[i] = 0;
+        i_recv_buffer[i] = 0;
 
     }
 
-    free(sendStride);
+    free(send_stride);
 
   }
 
@@ -1210,30 +1209,30 @@ PDM_part_to_block_exch
 
     for (int i = 0; i < _ptb->s_comm; i++) {
 
-      i_sendBuffer[i] = _ptb->i_send_data[i] * cst_stride * (int) s_data;
-      i_recvBuffer[i] = _ptb->i_recv_data[i] * cst_stride * (int) s_data;
+      i_send_buffer[i] = _ptb->i_send_data[i] * cst_stride * (int) s_data;
+      i_recv_buffer[i] = _ptb->i_recv_data[i] * cst_stride * (int) s_data;
 
-      n_sendBuffer[i] = _ptb->n_send_data[i] * cst_stride * (int) s_data;
-      n_recvBuffer[i] = _ptb->n_recv_data[i] * cst_stride * (int) s_data;
+      n_send_buffer[i] = _ptb->n_send_data[i] * cst_stride * (int) s_data;
+      n_recv_buffer[i] = _ptb->n_recv_data[i] * cst_stride * (int) s_data;
 
     }
     fflush(stdout);
   }
 
-  int s_sendBuffer = i_sendBuffer[_ptb->s_comm - 1] + n_sendBuffer[_ptb->s_comm -1];
-  int s_recvBuffer = i_recvBuffer[_ptb->s_comm - 1] + n_recvBuffer[_ptb->s_comm -1];
+  int s_send_buffer = i_send_buffer[_ptb->s_comm - 1] + n_send_buffer[_ptb->s_comm -1];
+  int s_recv_buffer = i_recv_buffer[_ptb->s_comm - 1] + n_recv_buffer[_ptb->s_comm -1];
 
   /*
    * Data exchange
    */
 
-  unsigned char *sendBuffer = (unsigned char *) malloc(sizeof(unsigned char) * s_sendBuffer);
-  unsigned char *recvBuffer = (unsigned char *) malloc(sizeof(unsigned char) * s_recvBuffer);
+  unsigned char *send_buffer = (unsigned char *) malloc(sizeof(unsigned char) * s_send_buffer);
+  unsigned char *recv_buffer = (unsigned char *) malloc(sizeof(unsigned char) * s_recv_buffer);
 
   unsigned char **_part_data = (unsigned char **) part_data;
 
   for (int i = 0; i <  _ptb->s_comm; i++) {
-    n_sendBuffer[i] = 0;
+    n_send_buffer[i] = 0;
   }
 
   int idx = -1;
@@ -1264,7 +1263,7 @@ PDM_part_to_block_exch
       }
 
       for (int k = 0; k < s_octet_elt; k++) {
-        sendBuffer[i_sendBuffer[iproc] + n_sendBuffer[iproc]++] =
+        send_buffer[i_send_buffer[iproc] + n_send_buffer[iproc]++] =
           _part_data[i][i_part_elt + k];
       }
     }
@@ -1273,28 +1272,28 @@ PDM_part_to_block_exch
       free (i_part);
   }
 
-  PDM_MPI_Alltoallv_l(sendBuffer,
-                      n_sendBuffer,
-                      i_sendBuffer,
+  PDM_MPI_Alltoallv_l(send_buffer,
+                      n_send_buffer,
+                      i_send_buffer,
                       PDM_MPI_BYTE,
-                      recvBuffer,
-                      n_recvBuffer,
-                      i_recvBuffer,
+                      recv_buffer,
+                      n_recv_buffer,
+                      i_recv_buffer,
                       PDM_MPI_BYTE,
                       _ptb->comm);
 
-  free(sendBuffer);
-  free(n_sendBuffer);
-  free(i_sendBuffer);
-  free(n_recvBuffer);
-  free(i_recvBuffer);
+  free(send_buffer);
+  free(n_send_buffer);
+  free(i_send_buffer);
+  free(n_recv_buffer);
+  free(i_recv_buffer);
 
-  unsigned char *_block_data = malloc(sizeof(unsigned char) * s_recvBuffer);
+  unsigned char *_block_data = malloc(sizeof(unsigned char) * s_recv_buffer);
   *block_data = _block_data;
   *block_stride = NULL;
-  int *i_recvStride = NULL;
+  int *i_recv_stride = NULL;
   int *i_block_stride = NULL;
-  int s_block_data = ((int) sizeof(unsigned char) * s_recvBuffer) / (int) s_data;
+  int s_block_data = ((int) sizeof(unsigned char) * s_recv_buffer) / (int) s_data;
 
   if (t_stride == PDM_STRIDE_VAR) {
     int* _block_stride = NULL;
@@ -1303,25 +1302,25 @@ PDM_part_to_block_exch
     }
     *block_stride = _block_stride;
     for (int i = 0; i < _ptb->tn_recv_data; i++) {
-      _block_stride[i] = recvStride[_ptb->order[i]];
+      _block_stride[i] = recv_stride[_ptb->order[i]];
     }
 
     /*
      * Compute index in data
      */
 
-    i_recvStride = malloc (sizeof(int) * (_ptb->tn_recv_data + 1));
+    i_recv_stride = malloc (sizeof(int) * (_ptb->tn_recv_data + 1));
     i_block_stride = malloc (sizeof(int) * (_ptb->tn_recv_data + 1));
 
-    i_recvStride[0] = 0;
+    i_recv_stride[0] = 0;
     i_block_stride[0] = 0;
     for (int i = 0; i < _ptb->tn_recv_data; i++) {
-      i_recvStride[i+1]   = i_recvStride[i] + recvStride[i];
+      i_recv_stride[i+1]   = i_recv_stride[i] + recv_stride[i];
       i_block_stride[i+1] = i_block_stride[i] + _block_stride[i];
     }
 
     for (int i = 0; i < _ptb->tn_recv_data; i++) {
-      i_recvStride[i+1]   *= (int) s_data;
+      i_recv_stride[i+1]   *= (int) s_data;
       i_block_stride[i+1] *= (int) s_data;
     }
 
@@ -1331,15 +1330,15 @@ PDM_part_to_block_exch
 
     for (int i = 0; i < _ptb->tn_recv_data; i++) {
       int old = _ptb->order[i];
-      int idOld = i_recvStride[old];
+      int idOld = i_recv_stride[old];
       for (int k = i_block_stride[i]; k < i_block_stride[i+1]; k++) {
-        _block_data[k] = recvBuffer[idOld++];
+        _block_data[k] = recv_buffer[idOld++];
       }
     }
 
-//    free (recvBuffer);
-    free (recvStride);
-    free (i_recvStride);
+//    free (recv_buffer);
+    free (recv_stride);
+    free (i_recv_stride);
 
     /*
      * post processing
@@ -1405,7 +1404,7 @@ PDM_part_to_block_exch
       int idOld = old * n_octet;
 
       for (int k = i*n_octet; k < (i+1)*n_octet; k++) {
-        _block_data[k] = recvBuffer[idOld++];
+        _block_data[k] = recv_buffer[idOld++];
       }
     }
 
@@ -1448,7 +1447,7 @@ PDM_part_to_block_exch
     }
   }
 
-  free (recvBuffer);
+  free (recv_buffer);
   return s_block_data;
 
 }
