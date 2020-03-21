@@ -38,7 +38,7 @@ extern "C" {
  * \param [in]  x        Point coordinates to evaluate position
  * \param [in]  pts      Triangle vertices coordinates
  * \param [out] closest  Closest Point in Triangle or NULL
- * \param [out] minDist2 Square of the distance
+ * \param [out] min_dist2 Square of the distance
  * \param [out] weights  Vertices weights or NULL
  *
  * \return      \ref PDM_TRIANGLE_INSIDE or \ref PDM_TRIANGLE_OUTSIDE
@@ -57,8 +57,8 @@ PDM_triangle_evaluate_position
 (
  const double  x[3],
  const double  pts[9],
-       double *closestPoint,
-       double *minDist2,
+       double *closest_point,
+       double *min_dist2,
        double *weights
 )
 {
@@ -68,8 +68,8 @@ PDM_triangle_evaluate_position
   double det;
   double maxComponent;
   int idx=0, indices[2];
-  double dist2Point, dist2Line1, dist2Line2;
-  double *closest, closestPoint1[3], closestPoint2[3], cp[3];
+  double dist_to_point, dist_to_line1, dist_to_line2;
+  double *closest, closest_point1[3], closest_point2[3], cp[3];
   double pcoords[3];
 
   pcoords[2] = 0.0;
@@ -159,45 +159,45 @@ PDM_triangle_evaluate_position
      * Projection distance
      */
 
-    if (closestPoint) {
+    if (closest_point) {
       double v_cp_x[3];
       for (int i = 0; i < 3; i++) {
         v_cp_x[i] = cp[i] - x[i];
       }
 
-      *minDist2 = PDM_DOT_PRODUCT(v_cp_x, v_cp_x);
-      closestPoint[0] = cp[0];
-      closestPoint[1] = cp[1];
-      closestPoint[2] = cp[2];
+      *min_dist2 = PDM_DOT_PRODUCT(v_cp_x, v_cp_x);
+      closest_point[0] = cp[0];
+      closest_point[1] = cp[1];
+      closest_point[2] = cp[2];
     }
     return PDM_TRIANGLE_INSIDE;
   }
 
   else {
     double t;
-    if (closestPoint) {
+    if (closest_point) {
       if (_weights[1] < 0.0 && _weights[2] < 0.0) {
         double v_pt3_x[3];
         for (int i = 0; i < 3; i++) {
           v_pt3_x[i] = pt3[i] - x[i];
         }
-        dist2Point = PDM_DOT_PRODUCT (v_pt3_x, v_pt3_x);
-        dist2Line1 = PDM_line_distance (x, pt1, pt3, &t, closestPoint1);
-        dist2Line2 = PDM_line_distance (x, pt3, pt2, &t, closestPoint2);
-        if (dist2Point < dist2Line1) {
-          *minDist2 = dist2Point;
+        dist_to_point = PDM_DOT_PRODUCT (v_pt3_x, v_pt3_x);
+        dist_to_line1 = PDM_line_distance (x, pt1, pt3, &t, closest_point1);
+        dist_to_line2 = PDM_line_distance (x, pt3, pt2, &t, closest_point2);
+        if (dist_to_point < dist_to_line1) {
+          *min_dist2 = dist_to_point;
           closest = pt3;
         }
         else {
-          *minDist2 = dist2Line1;
-          closest = closestPoint1;
+          *min_dist2 = dist_to_line1;
+          closest = closest_point1;
         }
-        if (dist2Line2 < *minDist2) {
-          *minDist2 = dist2Line2;
-          closest = closestPoint2;
+        if (dist_to_line2 < *min_dist2) {
+          *min_dist2 = dist_to_line2;
+          closest = closest_point2;
         }
         for (int i = 0; i < 3; i++) {
-          closestPoint[i] = closest[i];
+          closest_point[i] = closest[i];
         }
 
       }
@@ -206,23 +206,23 @@ PDM_triangle_evaluate_position
         for (int i = 0; i < 3; i++) {
           v_pt1_x[i] = pt1[i] - x[i];
         }
-        dist2Point = PDM_DOT_PRODUCT(v_pt1_x, v_pt1_x);
-        dist2Line1 = PDM_line_distance (x, pt1, pt3, &t, closestPoint1);
-        dist2Line2 = PDM_line_distance (x, pt1, pt2, &t, closestPoint2);
-        if (dist2Point < dist2Line1) {
-          *minDist2 = dist2Point;
+        dist_to_point = PDM_DOT_PRODUCT(v_pt1_x, v_pt1_x);
+        dist_to_line1 = PDM_line_distance (x, pt1, pt3, &t, closest_point1);
+        dist_to_line2 = PDM_line_distance (x, pt1, pt2, &t, closest_point2);
+        if (dist_to_point < dist_to_line1) {
+          *min_dist2 = dist_to_point;
           closest = pt1;
         }
         else {
-          *minDist2 = dist2Line1;
-          closest = closestPoint1;
+          *min_dist2 = dist_to_line1;
+          closest = closest_point1;
         }
-        if (dist2Line2 < *minDist2) {
-          *minDist2 = dist2Line2;
-          closest = closestPoint2;
+        if (dist_to_line2 < *min_dist2) {
+          *min_dist2 = dist_to_line2;
+          closest = closest_point2;
         }
         for (int i = 0; i < 3; i++) {
-          closestPoint[i] = closest[i];
+          closest_point[i] = closest[i];
         }
 
       }
@@ -231,36 +231,36 @@ PDM_triangle_evaluate_position
         for (int i = 0; i < 3; i++) {
           v_pt2_x[i] = pt2[i] - x[i];
         }
-        dist2Point = PDM_DOT_PRODUCT (v_pt2_x, v_pt2_x);
-        dist2Line1 = PDM_line_distance (x, pt2, pt3, &t, closestPoint1);
-        dist2Line2 = PDM_line_distance (x, pt1, pt2, &t, closestPoint2);
-        if (dist2Point < dist2Line1) {
-          *minDist2 = dist2Point;
+        dist_to_point = PDM_DOT_PRODUCT (v_pt2_x, v_pt2_x);
+        dist_to_line1 = PDM_line_distance (x, pt2, pt3, &t, closest_point1);
+        dist_to_line2 = PDM_line_distance (x, pt1, pt2, &t, closest_point2);
+        if (dist_to_point < dist_to_line1) {
+          *min_dist2 = dist_to_point;
           closest = pt2;
         }
         else {
-          *minDist2 = dist2Line1;
-          closest = closestPoint1;
+          *min_dist2 = dist_to_line1;
+          closest = closest_point1;
         }
-        if (dist2Line2 < *minDist2) {
-          *minDist2 = dist2Line2;
-          closest = closestPoint2;
+        if (dist_to_line2 < *min_dist2) {
+          *min_dist2 = dist_to_line2;
+          closest = closest_point2;
         }
         for (int i = 0; i < 3; i++) {
-          closestPoint[i] = closest[i];
+          closest_point[i] = closest[i];
         }
 
       }
       else if (_weights[0] < 0.0) {
-        *minDist2 = PDM_line_distance (x, pt1, pt2, &t, closestPoint);
+        *min_dist2 = PDM_line_distance (x, pt1, pt2, &t, closest_point);
 
       }
       else if (_weights[1] < 0.0) {
-        *minDist2 = PDM_line_distance (x, pt2, pt3, &t, closestPoint);
+        *min_dist2 = PDM_line_distance (x, pt2, pt3, &t, closest_point);
 
       }
       else if (_weights[2] < 0.0) {
-        *minDist2 = PDM_line_distance (x, pt1, pt3, &t, closestPoint);
+        *min_dist2 = PDM_line_distance (x, pt1, pt3, &t, closest_point);
 
       }
 
