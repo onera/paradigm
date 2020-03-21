@@ -694,13 +694,13 @@ _distrib_data
 
       PDM_g_num_t _gnum_elt = ptb->gnum_elt[i][j] - 1;
 
-      int iProc = PDM_binary_search_gap_long (_gnum_elt,
+      int iproc = PDM_binary_search_gap_long (_gnum_elt,
                                               ptb->data_distrib_index,
                                               ptb->s_comm + 1);
 
-      ptb->dest_proc[++idx] = iProc;
+      ptb->dest_proc[++idx] = iproc;
       assert (ptb->dest_proc[idx] >= 0);
-      ptb->n_send_data[iProc] += 1;
+      ptb->n_send_data[iproc] += 1;
     }
   }
 
@@ -769,7 +769,7 @@ _distrib_data
                  ptb->order,
                  ptb->tn_recv_data);
 
-  ptb->n_eltBlock = ptb->tn_recv_data;
+  ptb->n_elt_block = ptb->tn_recv_data;
 
   /*
    * Cleanup
@@ -777,21 +777,21 @@ _distrib_data
 
   if (ptb->t_post != PDM_PART_TO_BLOCK_POST_NOTHING) {
 
-    int n_eltBlock = 0;
+    int n_elt_block = 0;
 
     ptb->block_gnum = malloc (sizeof(PDM_g_num_t) * ptb->tn_recv_data);
 
     for (int i = 0; i < ptb->tn_recv_data; i++) {
       if (i == 0) {
-        ptb->block_gnum[n_eltBlock++] = ptb->sorted_recv_gnum[i];
+        ptb->block_gnum[n_elt_block++] = ptb->sorted_recv_gnum[i];
       }
-      else if (ptb->block_gnum[n_eltBlock-1] != ptb->sorted_recv_gnum[i]) {
-        ptb->block_gnum[n_eltBlock++] = ptb->sorted_recv_gnum[i];
+      else if (ptb->block_gnum[n_elt_block-1] != ptb->sorted_recv_gnum[i]) {
+        ptb->block_gnum[n_elt_block++] = ptb->sorted_recv_gnum[i];
       }
     }
-    ptb->n_eltBlock = n_eltBlock;
+    ptb->n_elt_block = n_elt_block;
 
-    ptb->block_gnum = realloc (ptb->block_gnum, sizeof(PDM_g_num_t) * ptb->n_eltBlock);
+    ptb->block_gnum = realloc (ptb->block_gnum, sizeof(PDM_g_num_t) * ptb->n_elt_block);
 
   }
 
@@ -830,11 +830,11 @@ PDM_part_to_block_create
  PDM_part_to_block_distrib_t   t_distrib,
  PDM_part_to_block_post_t      t_post,
  double                        part_active_node,
- PDM_g_num_t                  **gnum_elt,
- double                       **weight,
- int                         *n_elt,
- int                          n_part,
- PDM_MPI_Comm                     comm
+ PDM_g_num_t                 **gnum_elt,
+ double                      **weight,
+ int                          *n_elt,
+ int                           n_part,
+ PDM_MPI_Comm                  comm
 )
 {
 
@@ -855,11 +855,11 @@ PDM_part_to_block_create
   ptb->is_my_rank_active   = 0;              /*!< Is active current rank */
   ptb->part_active_node   = part_active_node; /*!< Part of active nodes */
 
-  ptb->n_part           = n_part;       /*!< Number of parts */
-  ptb->n_elt            = n_elt;        /*!< Number of elements for any part */
-  ptb->n_elt_proc       = 0;            /*!< Number of elements on the current rank */
-  ptb->gnum_elt         = gnum_elt;     /*!< Global numbering of elements for any part */
-  ptb->weight           = weight;
+  ptb->n_part            = n_part;       /*!< Number of parts */
+  ptb->n_elt             = n_elt;        /*!< Number of elements for any part */
+  ptb->n_elt_proc        = 0;            /*!< Number of elements on the current rank */
+  ptb->gnum_elt          = gnum_elt;     /*!< Global numbering of elements for any part */
+  ptb->weight            = weight;
   ptb->dest_proc         = NULL;
   ptb->data_distrib_index =
     (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * (ptb->s_comm + 1));   /*!< Data distribution on ranks */
@@ -872,12 +872,12 @@ PDM_part_to_block_create
   ptb->n_send_data   = NULL;  /*!< Number of data to send to other processes (size = s_comm) */
   ptb->n_recv_data   = NULL;  /*!< Number of received Data from other processes (size = s_comm) */
 
-  ptb->tn_send_data  = 0;     /*!< Total number of sended data */
-  ptb->tn_recv_data  = 0;     /*!< Total number of received data */
-  ptb->sorted_recv_gnum    = NULL;  /*!< Sorted recv global num */
-  ptb->order        = NULL;  /*!< Order */
-  ptb->n_eltBlock   = 0;
-  ptb->block_gnum   = NULL;  /*!< Global number of reveived data (size = tn_recv_data) */
+  ptb->tn_send_data      = 0;     /*!< Total number of sended data */
+  ptb->tn_recv_data      = 0;     /*!< Total number of received data */
+  ptb->sorted_recv_gnum  = NULL;  /*!< Sorted recv global num */
+  ptb->order             = NULL;  /*!< Order */
+  ptb->n_elt_block       = 0;
+  ptb->block_gnum        = NULL;  /*!< Global number of reveived data (size = tn_recv_data) */
 
   /*
    * Active ranks definition
@@ -966,7 +966,7 @@ PDM_part_to_block_create2
   ptb->tn_recv_data  = 0;     /*!< Total number of received data */
   ptb->sorted_recv_gnum    = NULL;  /*!< Sorted recv global num */
   ptb->order        = NULL;  /*!< Order */
-  ptb->n_eltBlock   = 0;
+  ptb->n_elt_block   = 0;
   ptb->block_gnum   = NULL;  /*!< Global number of reveived data (size = tn_recv_data) */
 
   /*
@@ -1065,7 +1065,7 @@ PDM_part_to_block_n_elt_block_get
 )
 {
   _cs_part_to_block_t *_ptb = (_cs_part_to_block_t *) ptb;
-  return _ptb->n_eltBlock;
+  return _ptb->n_elt_block;
 }
 
 
@@ -1147,9 +1147,9 @@ PDM_part_to_block_exch
     int idx = -1;
     for (int i = 0; i < _ptb->n_part; i++) {
       for (int j = 0; j < _ptb->n_elt[i]; j++) {
-        int iProc = _ptb->dest_proc[++idx];
-        sendStride[_ptb->i_send_data[iProc] + n_sendBuffer[iProc]] = part_stride[i][j];
-        n_sendBuffer[iProc] += 1;
+        int iproc = _ptb->dest_proc[++idx];
+        sendStride[_ptb->i_send_data[iproc] + n_sendBuffer[iproc]] = part_stride[i][j];
+        n_sendBuffer[iproc] += 1;
       }
     }
 
@@ -1249,7 +1249,7 @@ PDM_part_to_block_exch
     }
 
     for (int j = 0; j < _ptb->n_elt[i]; j++) {
-      int iProc = _ptb->dest_proc[++idx];
+      int iproc = _ptb->dest_proc[++idx];
       int s_octet_elt = 0;
       int i_part_elt = 0;
 
@@ -1264,7 +1264,7 @@ PDM_part_to_block_exch
       }
 
       for (int k = 0; k < s_octet_elt; k++) {
-        sendBuffer[i_sendBuffer[iProc] + n_sendBuffer[iProc]++] =
+        sendBuffer[i_sendBuffer[iproc] + n_sendBuffer[iproc]++] =
           _part_data[i][i_part_elt + k];
       }
     }
@@ -1380,7 +1380,7 @@ PDM_part_to_block_exch
         _block_data = realloc (_block_data, sizeof(unsigned char) * idx2);
         *block_data = _block_data;
 
-        _block_stride = realloc (_block_stride, sizeof(int) * _ptb->n_eltBlock);
+        _block_stride = realloc (_block_stride, sizeof(int) * _ptb->n_elt_block);
 
         *block_stride = _block_stride;
         s_block_data = idx2 / (int) s_data;
