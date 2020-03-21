@@ -54,19 +54,19 @@ extern "C" {
 
 typedef struct  {
 
-  PDM_MPI_Comm comm;             /*!< MPI communicator */
-  double tolerance;              /*!< Relative geometric tolerance */
-  int   n_point_clouds;          /*!< Number of point cloud */
-  int  depth_max;                /*!< Maximum depth of internal octrees */
-  int  points_in_leaf_max;       /*!< Maximum number of point in a leaf
-                                  *   of internal octrees */
-  int   *n_points;               /*!< Number of points in each cloud */
-  int  max_n_points;             /*!< Maximum number of points in each cloud */
-  const double **point_clouds;   /*!< points cloud */
-  const double **char_length;    /*!< Characteristic length of points (optionnal) */
-  int   octree_id;               /*!< Octree identifier */
-  int   **candidates_idx;        /*!< Candidates indexes for each cloud */
-  int   **candidates_desc;       /*!< Candidates description for each cloud */
+  PDM_MPI_Comm   comm;                    /*!< MPI communicator */
+  double         tolerance;               /*!< Relative geometric tolerance */
+  int            n_point_clouds;          /*!< Number of point cloud */
+  int            depth_max;               /*!< Maximum depth of internal octrees */
+  int            points_in_leaf_max;      /*!< Maximum number of point in a leaf
+                                           *   of internal octrees */
+  int           *n_points;                /*!< Number of points in each cloud */
+  int            max_n_points;            /*!< Maximum number of points in each cloud */
+  const double **point_clouds;            /*!< points cloud */
+  const double **char_length;             /*!< Characteristic length of points (optionnal) */
+  int            octree_id;               /*!< Octree identifier */
+  int          **candidates_idx;          /*!< Candidates indexes for each cloud */
+  int          **candidates_desc;         /*!< Candidates description for each cloud */
 
 } _point_merge_t;
 
@@ -601,11 +601,11 @@ PDM_points_merge_process
 
   PDM_octree_build (ppm->octree_id);
 
-  int n_proc;
-  PDM_MPI_Comm_size(ppm->comm , &n_proc);
+  int n_rank;
+  PDM_MPI_Comm_size(ppm->comm , &n_rank);
 
-  int i_proc;
-  PDM_MPI_Comm_rank(ppm->comm , &i_proc);
+  int i_rank;
+  PDM_MPI_Comm_rank(ppm->comm , &i_rank);
 
   int *local_couple = NULL;
   int n_local_couple = 0;
@@ -687,7 +687,7 @@ PDM_points_merge_process
   int *tmp_store = malloc (sizeof(int) * s_tmp_store * 3);
 
 //  printf ("Extents proc \n");
-//  for (int k = 0; k < n_proc ; k++) {
+//  for (int k = 0; k < n_rank ; k++) {
 //    const double *_extents_proc = extents_proc + k * 6;
 //    printf("%d %12.5e %12.5e %12.5e %12.5e %12.5e %12.5e\n",k, _extents_proc[0],
 //            _extents_proc[1],
@@ -725,7 +725,7 @@ PDM_points_merge_process
       for (int k = 0; k < n_used_ranks ; k++) {
         const int curr_rank  = used_ranks[k];
         const double *_extents_proc = extents_proc + k * 6;
-        if (curr_rank != i_proc) {
+        if (curr_rank != i_rank) {
 
           if (_intersect_extents(box, _extents_proc)) {
             if (n_tmp_store >= s_tmp_store) {
@@ -742,9 +742,9 @@ PDM_points_merge_process
     }
   }
 
-  int *val_send_n = malloc(sizeof(int)*n_proc);
+  int *val_send_n = malloc(sizeof(int)*n_rank);
 
-  for (int i = 0; i < n_proc; i++) {
+  for (int i = 0; i < n_rank; i++) {
     val_send_n[i] = 0;
   }
 
@@ -752,36 +752,36 @@ PDM_points_merge_process
     val_send_n[tmp_store[3*i]]++;
   }
 
-  int *val_recv_n = malloc (sizeof(int)*n_proc);
+  int *val_recv_n = malloc (sizeof(int)*n_rank);
   PDM_MPI_Alltoall (val_send_n, 1, PDM_MPI_INT, val_recv_n, 1, PDM_MPI_INT, ppm->comm);
 
   // Envoi des points + char length en option sur les autres procs (test bounding box)
 
-  int *val_send_idx = malloc (sizeof(int)*(n_proc+1));
-  int *val_recv_idx = malloc (sizeof(int)*(n_proc+1));
+  int *val_send_idx = malloc (sizeof(int)*(n_rank+1));
+  int *val_recv_idx = malloc (sizeof(int)*(n_rank+1));
 
   int _stride = 3 * 8 + 4 + 4; /* Coords + icloud + ipoint */
   if (ppm->char_length != NULL) {
     _stride += 8; /* char_length */
   }
 
-  for (int i = 0; i < n_proc; i++) {
+  for (int i = 0; i < n_rank; i++) {
     val_send_n[i] *= _stride;
     val_recv_n[i] *= _stride;
   }
 
   val_send_idx[0] = 0;
   val_recv_idx[0] = 0;
-  for (int i = 0; i < n_proc; i++) {
+  for (int i = 0; i < n_rank; i++) {
     val_send_idx[i+1] = val_send_idx[i] + val_send_n[i];
     val_recv_idx[i+1] = val_recv_idx[i] + val_recv_n[i];
     val_send_n[i] = 0;
   }
 
   unsigned char *val_send =
-        malloc (sizeof(unsigned char) * val_send_idx[n_proc]);
+        malloc (sizeof(unsigned char) * val_send_idx[n_rank]);
   unsigned char *val_recv =
-        malloc (sizeof(unsigned char) * val_recv_idx[n_proc]);
+        malloc (sizeof(unsigned char) * val_recv_idx[n_rank]);
 
   for (int i = 0; i < n_tmp_store; i++) {
     int iproc   = tmp_store[3*i];
@@ -823,7 +823,7 @@ PDM_points_merge_process
 
   int *n_fusion_from_proc = val_send_n;
 
-  for (int i = 0; i < n_proc; i++) {
+  for (int i = 0; i < n_rank; i++) {
     n_fusion_from_proc[i] = 0;
   }
 
@@ -835,7 +835,7 @@ PDM_points_merge_process
 
   unsigned char *_tmp_recv = val_recv;
 
-  for (int i = 0; i < n_proc; i++) {
+  for (int i = 0; i < n_rank; i++) {
     int _deb = val_recv_idx[i] / _stride;
     int _end = _deb + val_recv_n[i] / _stride;
 
@@ -897,7 +897,7 @@ PDM_points_merge_process
                     n_fusion_with_proc, 1, PDM_MPI_INT,
                     ppm->comm);
 
-  for (int i = 0; i < n_proc; i++) {
+  for (int i = 0; i < n_rank; i++) {
     assert (n_fusion_with_proc[i] == n_fusion_from_proc[i]);
   }
 
