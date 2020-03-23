@@ -42,6 +42,7 @@
 #include "pdm_gnum_location.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
+#include "pdm_binary_search.h"
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
