@@ -72,7 +72,7 @@ PDM_SCOTCH_part
 const int n_cell,
 int *dualGraphIdx,
 int *dualGraph,
-int *cellWeight,
+int *cell_weight,
 int *edgeWeight,
 int check,
 const int n_part,

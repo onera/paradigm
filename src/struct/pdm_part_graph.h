@@ -48,8 +48,8 @@ PDM_part_graph_split
  _part_t    *part_ini,
  int        *cell_cell_idx,
  int        *cell_cell,
- int        *cellWeight,
- int        *faceWeight,
+ int        *cell_weight,
+ int        *face_weight,
  int       **cell_part
 );
 
@@ -86,8 +86,8 @@ PDM_part_graph_split_bis
  int         graphSize,
  int        *cell_cell_idx,
  int        *cell_cell,
- int        *cellWeight,
- int        *faceWeight,
+ int        *cell_weight,
+ int        *face_weight,
  int       **cell_part
 );
 

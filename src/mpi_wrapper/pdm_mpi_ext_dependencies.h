@@ -62,7 +62,7 @@ PDM_SCOTCH_dpart
 const PDM_g_num_t dn_cell,
 const PDM_g_num_t *ddual_graph_idx,
 const PDM_g_num_t *ddual_graph,
-const int *cellWeight,
+const int *cell_weight,
 const int *edgeWeight,
 const int check,
 const PDM_MPI_Comm comm,

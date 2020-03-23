@@ -454,7 +454,7 @@ PDM_SCOTCH_part
 const int n_cell,
 int *dualGraphIdx,
 int *dualGraph,
-int *cellWeight,
+int *cell_weight,
 int *edgeWeight,
 int check,
 const int n_part,
@@ -489,7 +489,7 @@ int *part
     _verttab = dualGraphIdx;
     _vendtab = dualGraphIdx + 1;
     _edgetab = dualGraph;
-    _velotab = cellWeight;
+    _velotab = cell_weight;
     _edlotab = edgeWeight;
     _part = part;
 
@@ -518,10 +518,10 @@ int *part
     __velotab = NULL;
     __edlotab = NULL;
 
-    if (cellWeight != NULL) {
+    if (cell_weight != NULL) {
       __velotab = (SCOTCH_Num *) malloc (sizeof(SCOTCH_Num) * _vertnbr);
       for (int i = 0; i < _vertnbr; i++) {
-        __velotab[i] = cellWeight[i];
+        __velotab[i] = cell_weight[i];
       }
     }
 
