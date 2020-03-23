@@ -21,6 +21,7 @@
 #include "pdm_printf.h"
 #include "pdm_error.h"
 #include "pdm_gnum.h"
+#include "pdm_sort.h"
 #include "pdm_geom_elem.h"
 
 #ifdef __cplusplus
@@ -68,49 +69,6 @@ static PDM_Handles_t *mesh_handles = NULL;
 /*============================================================================
  * Private function definitions
  *============================================================================*/
-
-/**
- *
- * \brief Quick sort
- *
- * \param [inout]   a     Array to sort
- * \param [in]      l     First element
- * \param [in]      r     Last  element
- *
- */
-
-static void
-_quickSort_int
-(
- int a[],
- int l,
- int r
-)
-{
-  if (l < r) {
-    int j = r+1;
-    int t;
-    int pivot = a[l];
-    int i = l;
-
-    while(1) {
-      do ++i; while (a[i] <= pivot && i < r);
-      do --j; while (a[j] > pivot);
-      if (i >= j) break;
-
-      t    = a[i];
-      a[i] = a[j];
-      a[j] = t;
-
-    }
-    t    = a[l];
-    a[l] = a[j];
-    a[j] = t;
-
-    _quickSort_int(a, l  , j-1);
-    _quickSort_int(a, j+1,   r);
-  }
-}
 
 /**
  * \def _find_pairs
@@ -200,7 +158,7 @@ const int  nFac,
         ElmCon1[i_vtx] = data[curFac+3+i_vtx];
         tKey1        += data[curFac+3+i_vtx];
       }
-      _quickSort_int(ElmCon1, 0, n_vtx1-1);
+      PDM_quick_sort_int(ElmCon1, 0, n_vtx1-1);
 
       if(0 == 1){
         for(int i_vtx=0; i_vtx<n_vtx1; i_vtx++){
@@ -241,7 +199,7 @@ const int  nFac,
           /*
            * Sort ElemCon2
            */
-          _quickSort_int(ElmCon2, 0, n_vtx2-1);
+          PDM_quick_sort_int(ElmCon2, 0, n_vtx2-1);
 
           if(0 == 1){
             for(int i_vtx=0; i_vtx < n_vtx1; i_vtx++){

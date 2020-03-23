@@ -89,6 +89,24 @@ PDM_sort_double
  int         lArray
 );
 
+
+/**
+ *
+ * \brief Quick sort
+ *
+ * \param [inout]   a     Array to sort
+ * \param [in]      l     First element
+ * \param [in]      r     Last  element
+ *
+ */
+void
+PDM_quick_sort_int
+(
+ int a[],
+ int l,
+ int r
+);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
