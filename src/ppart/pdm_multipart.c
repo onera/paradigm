@@ -805,7 +805,7 @@ PDM_multipart_run_ppart
       int dn_cell  = 0;
       int dn_face  = 0;
       int dn_vtx   = 0;
-      int nBnd    = 0;
+      int n_bnd    = 0;
       int n_join   = 0;
       const double       *dvtx_coord;
       const int          *dface_vtx_idx;
@@ -824,7 +824,7 @@ PDM_multipart_run_ppart
 
       if (block_id >= 0)
       {
-        PDM_dmesh_dims_get(block_id, &dn_cell, &dn_face, &dn_vtx, &nBnd, &n_join);
+        PDM_dmesh_dims_get(block_id, &dn_cell, &dn_face, &dn_vtx, &n_bnd, &n_join);
         PDM_dmesh_data_get(block_id, &dvtx_coord, &dface_vtx_idx, &dface_vtx, &dface_cell,
                            &dface_bound_idx, &dface_bound, &djoin_gids, &dface_join_idx, &dface_join);
         //Merge face_bounds and face_joins into face_group
@@ -832,23 +832,23 @@ PDM_multipart_run_ppart
           int single_array[1] = {0};
           dface_join_idx = single_array;
         }
-        n_face_group = nBnd + n_join;
+        n_face_group = n_bnd + n_join;
         dface_group_idx = (int *) malloc((n_face_group + 1) * sizeof(int));
-        dface_group = (PDM_g_num_t *) malloc((dface_bound_idx[nBnd] + dface_join_idx[n_join]) * sizeof(PDM_g_num_t));
+        dface_group = (PDM_g_num_t *) malloc((dface_bound_idx[n_bnd] + dface_join_idx[n_join]) * sizeof(PDM_g_num_t));
 
-        for (int i=0; i < nBnd + 1; i++)
+        for (int i=0; i < n_bnd + 1; i++)
           dface_group_idx[i] = dface_bound_idx[i];
-        for (int i=0; i < dface_bound_idx[nBnd]; i++)
+        for (int i=0; i < dface_bound_idx[n_bnd]; i++)
           dface_group[i] = dface_bound[i];
 
         for (int i=1; i < n_join + 1; i++)
-          dface_group_idx[nBnd + i] = dface_bound_idx[nBnd] + dface_join_idx[i];
+          dface_group_idx[n_bnd + i] = dface_bound_idx[n_bnd] + dface_join_idx[i];
         for (int i=0; i < dface_join_idx[n_join]; i++)
-          dface_group[dface_bound_idx[nBnd] + i] = dface_join[i];
+          dface_group[dface_bound_idx[n_bnd] + i] = dface_join[i];
       }
       // Fill global array n_bounds_and_joins. n_bound and n_join are supposed to be the same for
       // procs having distributed data, so we send it to procs having no data with reduce_max
-      PDM_MPI_Allreduce(&nBnd, &_multipart->n_bounds_and_joins[2*zone_gid], 1,
+      PDM_MPI_Allreduce(&n_bnd, &_multipart->n_bounds_and_joins[2*zone_gid], 1,
                         PDM_MPI_INT, PDM_MPI_MAX, _multipart->comm);
       PDM_MPI_Allreduce(&n_join, &_multipart->n_bounds_and_joins[2*zone_gid+1], 1,
                         PDM_MPI_INT, PDM_MPI_MAX, _multipart->comm);
