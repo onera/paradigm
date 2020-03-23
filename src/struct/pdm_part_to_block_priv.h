@@ -47,7 +47,7 @@ typedef struct {
   int                         *active_ranks;       /*!< List of active ranks */
   PDM_MPI_Comm                 comm;               /*!< MSG communicator */
   int                          s_comm;             /*!< Communicator size */
-  int                          myRank;             /*!< Current rank in comm */
+  int                          i_rank;             /*!< Current rank in comm */
   int                          is_my_rank_active;  /*!< Is active current rank */
   double                       part_active_node;   /*!< Part of active nodes */
 

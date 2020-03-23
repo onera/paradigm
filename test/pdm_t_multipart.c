@@ -487,11 +487,11 @@ int main(int argc, char *argv[])
    *  Init
    */
 
-  int myRank;
+  int i_rank;
   int numProcs;
 
   PDM_MPI_Init(&argc, &argv);
-  PDM_MPI_Comm_rank(PDM_MPI_COMM_WORLD, &myRank);
+  PDM_MPI_Comm_rank(PDM_MPI_COMM_WORLD, &i_rank);
   PDM_MPI_Comm_size(PDM_MPI_COMM_WORLD, &numProcs);
 
   int           dn_cell;
@@ -557,7 +557,7 @@ int main(int argc, char *argv[])
 
     // Dump arrays
     char filename[25];
-    snprintf(filename,sizeof(filename),"distributed_P%d.json",myRank);
+    snprintf(filename,sizeof(filename),"distributed_P%d.json",i_rank);
     _dumpJsonData(filename, 0, dn_vtx, dn_face, dn_cell, n_face_group, 0, 0,
                   dvtx_coord, dface_vtx_idx, dface_vtx, dface_cell, NULL, NULL, dface_group_idx, dface_group,
                   NULL, NULL, NULL, NULL, NULL);
@@ -565,13 +565,13 @@ int main(int argc, char *argv[])
   else  // -> parse Json data
   {
     char filename[25];
-    snprintf(filename,sizeof(filename),"distributed_P%d.json",myRank);
+    snprintf(filename,sizeof(filename),"distributed_P%d.json",i_rank);
     char path[50];
     strcpy(path, distri_dir);
     strcat(path, filename);
     // 1. Get number of zones known by each zone
     nbzone = _readJsonNumberOfBlocks(path);
-    PDM_printf("[%i] Found %d blocks in distributed data\n", myRank, nbzone);
+    PDM_printf("[%i] Found %d blocks in distributed data\n", i_rank, nbzone);
     dmeshIds  = (int *) malloc(nbzone * sizeof(int));
     dblockIds = (int *) malloc(nbzone * sizeof(int));
 
@@ -592,13 +592,13 @@ int main(int argc, char *argv[])
   int * n_partArray = (int *) malloc((multipartSize) * sizeof(int));
   for (int k=0; k<multipartSize; k++)
     n_partArray[k] = n_part;
-  n_partArray[0] = (myRank == 0) ? 0 : 1;
-  n_partArray[1] = (myRank == 0) ? 1 : 1;
+  n_partArray[0] = (i_rank == 0) ? 0 : 1;
+  n_partArray[1] = (i_rank == 0) ? 1 : 1;
    mpartId = PDM_multipart_create(multipartSize, n_partArray, PDM_FALSE, method, comm);
    PDM_printf("From exe : created a multipart object, id is %i \n", mpartId);
    for (int iblock=0; iblock < nbzone; iblock++)
    {
-    // PDM_printf("[%i] check -- iblock %i : gid %i meshid %i\n", myRank, iblock, dblockIds[iblock], dmeshIds[iblock]);
+    // PDM_printf("[%i] check -- iblock %i : gid %i meshid %i\n", i_rank, iblock, dblockIds[iblock], dmeshIds[iblock]);
     PDM_multipart_register_block(mpartId, dblockIds[iblock]-1, dmeshIds[iblock]);
    }
    PDM_MPI_Barrier(comm);
@@ -619,27 +619,27 @@ int main(int argc, char *argv[])
                          &cpu_user,
                          &cpu_sys);
 
-  if (myRank == 0)
+  if (i_rank == 0)
   {
-    PDM_printf("[%i]   - elapsed total                    : %12.5e\n", myRank, elapsed[0]);
-    PDM_printf("[%i]   - elapsed building graph           : %12.5e\n", myRank, elapsed[1]);
-    PDM_printf("[%i]   - elapsed splitting graph          : %12.5e\n", myRank, elapsed[2]);
-    PDM_printf("[%i]   - elapsed building mesh partitions : %12.5e\n", myRank, elapsed[3]);
+    PDM_printf("[%i]   - elapsed total                    : %12.5e\n", i_rank, elapsed[0]);
+    PDM_printf("[%i]   - elapsed building graph           : %12.5e\n", i_rank, elapsed[1]);
+    PDM_printf("[%i]   - elapsed splitting graph          : %12.5e\n", i_rank, elapsed[2]);
+    PDM_printf("[%i]   - elapsed building mesh partitions : %12.5e\n", i_rank, elapsed[3]);
 
-    PDM_printf("[%i]   - cpu total                        : %12.5e\n", myRank, cpu[0]);
-    PDM_printf("[%i]   - cpu building graph               : %12.5e\n", myRank, cpu[1]);
-    PDM_printf("[%i]   - cpu splitting graph              : %12.5e\n", myRank, cpu[2]);
-    PDM_printf("[%i]   - cpu building mesh partitions     : %12.5e\n", myRank, cpu[3]);
+    PDM_printf("[%i]   - cpu total                        : %12.5e\n", i_rank, cpu[0]);
+    PDM_printf("[%i]   - cpu building graph               : %12.5e\n", i_rank, cpu[1]);
+    PDM_printf("[%i]   - cpu splitting graph              : %12.5e\n", i_rank, cpu[2]);
+    PDM_printf("[%i]   - cpu building mesh partitions     : %12.5e\n", i_rank, cpu[3]);
 
-    PDM_printf("[%i]   - cpu_user total                   : %12.5e\n", myRank, cpu_user[0]);
-    PDM_printf("[%i]   - cpu_user building graph          : %12.5e\n", myRank, cpu_user[1]);
-    PDM_printf("[%i]   - cpu_user splitting graph         : %12.5e\n", myRank, cpu_user[2]);
-    PDM_printf("[%i]   - cpu_user building mesh partitions: %12.5e\n", myRank, cpu_user[3]);
+    PDM_printf("[%i]   - cpu_user total                   : %12.5e\n", i_rank, cpu_user[0]);
+    PDM_printf("[%i]   - cpu_user building graph          : %12.5e\n", i_rank, cpu_user[1]);
+    PDM_printf("[%i]   - cpu_user splitting graph         : %12.5e\n", i_rank, cpu_user[2]);
+    PDM_printf("[%i]   - cpu_user building mesh partitions: %12.5e\n", i_rank, cpu_user[3]);
 
-    PDM_printf("[%i]   - cpu_sys total                    : %12.5e\n", myRank, cpu_sys[0]);
-    PDM_printf("[%i]   - cpu_sys building graph           : %12.5e\n", myRank, cpu_sys[1]);
-    PDM_printf("[%i]   - cpu_sys splitting graph          : %12.5e\n", myRank, cpu_sys[2]);
-    PDM_printf("[%i]   - cpu_sys building mesh partitions : %12.5e\n", myRank, cpu_sys[3]);
+    PDM_printf("[%i]   - cpu_sys total                    : %12.5e\n", i_rank, cpu_sys[0]);
+    PDM_printf("[%i]   - cpu_sys building graph           : %12.5e\n", i_rank, cpu_sys[1]);
+    PDM_printf("[%i]   - cpu_sys splitting graph          : %12.5e\n", i_rank, cpu_sys[2]);
+    PDM_printf("[%i]   - cpu_sys building mesh partitions : %12.5e\n", i_rank, cpu_sys[3]);
   }
 
   for (int iblock = 0; iblock < multipartSize; iblock++) {
@@ -723,7 +723,7 @@ int main(int argc, char *argv[])
                                  &faceJoinLNToGN);
 
       char filename[25];
-      snprintf(filename,sizeof(filename),"partitionned_P%dB%dN%d.json",myRank, iblock, i_part);
+      snprintf(filename,sizeof(filename),"partitionned_P%dB%dN%d.json",i_rank, iblock, i_part);
       _dumpJsonData(filename, iblock, n_vtx, n_face, n_cell, n_faceBound, n_faceJoin, n_total_part, vtx,
                     face_vtx_idx, face_vtx, face_cell, cell_face_idx, cell_face,faceBoundIdx, faceBound,
                     faceJoinIdx, faceJoin, face_part_bound_proc_idx, face_part_bound_part_idx, face_part_bound);

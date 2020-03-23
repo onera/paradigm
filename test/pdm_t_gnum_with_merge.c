@@ -157,10 +157,10 @@ PDM_part_split_t           method,
 {
   struct timeval t_elaps_debut;
 
-  int myRank;
+  int i_rank;
   int numProcs;
 
-  PDM_MPI_Comm_rank (pdm_mpi_comm, &myRank);
+  PDM_MPI_Comm_rank (pdm_mpi_comm, &i_rank);
   PDM_MPI_Comm_size (pdm_mpi_comm, &numProcs);
 
   double        xmin = 0.;
@@ -280,7 +280,7 @@ PDM_part_split_t           method,
   /*   PDM_MPI_Allreduce (&mres, &m_mres, 1, PDM_MPI_LONG, PDM_MPI_MAX, pdm_mpi_comm); */
   /*   PDM_MPI_Allreduce (&mshared, &m_mshared, 1, PDM_MPI_LONG, PDM_MPI_MAX, pdm_mpi_comm); */
 
-  /*   if (myRank == 0) { */
+  /*   if (i_rank == 0) { */
   /*     printf("mem %d %d : %ld Ko %ld Ko %ld Ko\n", i, dn_vtx, 4*m_mvirt , 4*m_mres, 4*m_mshared); */
   /*     //      printf("mem %d %d : %ld Mo %ld Mo %ld Mo\n", i, dn_vtx, 4*m_mvirt/1024 , 4*m_mres/1024, 4*m_mshared/1024); */
   /*   } */
@@ -310,9 +310,9 @@ PDM_part_split_t           method,
 #ifdef __INTEL_COMPILER
 #pragma warning(pop)
 #endif
-  if (myRank == 0)
+  if (i_rank == 0)
     PDM_printf("[%d] Temps dans creeMaillagePolygone2D %d : %12.5e\n",
-           myRank, imesh, t_elapsed);
+           i_rank, imesh, t_elapsed);
 
   if (0 == 1) {
 
@@ -592,7 +592,7 @@ PDM_part_split_t           method,
   PDM_g_num_t *numabs_init = malloc(sizeof(PDM_g_num_t) * dn_vtx);
 
   for (int i = 0; i < dn_vtx; i++) {
-    numabs_init[i] = distrib[myRank] + 1 + i;
+    numabs_init[i] = distrib[i_rank] + 1 + i;
   }
 
   PDM_part_to_block_t *ptb1 = PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
@@ -778,7 +778,7 @@ char *argv[]
 #endif
   int           haveRandom = 0;
 
-  int           myRank;
+  int           i_rank;
   int           numProcs;
 
   /*
@@ -791,7 +791,7 @@ char *argv[]
               &n_part,
               &length);
 
-  PDM_MPI_Comm_rank (PDM_MPI_COMM_WORLD, &myRank);
+  PDM_MPI_Comm_rank (PDM_MPI_COMM_WORLD, &i_rank);
   PDM_MPI_Comm_size (PDM_MPI_COMM_WORLD, &numProcs);
 
   /*

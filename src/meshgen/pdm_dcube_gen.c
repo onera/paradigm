@@ -108,10 +108,10 @@ PDM_dcube_gen_init
 {
 
   int n_rank;
-  int myRank;
+  int i_rank;
 
   PDM_MPI_Comm_size(comm, &n_rank);
-  PDM_MPI_Comm_rank(comm, &myRank);
+  PDM_MPI_Comm_rank(comm, &i_rank);
 
   /*
    * Search a dcube free id
@@ -200,13 +200,13 @@ PDM_dcube_gen_init
   }
 
   dcube->n_face_group = 6;
-  PDM_g_num_t _dn_cell = distribCell[myRank+1] - distribCell[myRank];
+  PDM_g_num_t _dn_cell = distribCell[i_rank+1] - distribCell[i_rank];
   dcube->dn_cell       = (int) _dn_cell;
-  PDM_g_num_t _dn_face = distribFace[myRank+1]    - distribFace[myRank];
+  PDM_g_num_t _dn_face = distribFace[i_rank+1]    - distribFace[i_rank];
   dcube->dn_face       = (int) _dn_face;
-  PDM_g_num_t _dn_vtx  = distribVtx[myRank+1]     - distribVtx[myRank];
+  PDM_g_num_t _dn_vtx  = distribVtx[i_rank+1]     - distribVtx[i_rank];
   dcube->dn_vtx        = (int) _dn_vtx;
-  PDM_g_num_t _dn_faceLim = distribFaceLim[myRank+1] - distribFaceLim[myRank];
+  PDM_g_num_t _dn_faceLim = distribFaceLim[i_rank+1] - distribFaceLim[i_rank];
   int dn_faceLim = (int) _dn_faceLim;
 
   dcube->dface_cell     = (PDM_g_num_t *) malloc(2*(dcube->dn_face) * sizeof(PDM_g_num_t *));
@@ -231,8 +231,8 @@ PDM_dcube_gen_init
   //
   // Coordinates
 
-  const PDM_g_num_t bVtxZ = distribVtx[myRank] / n_vtx_face;
-  const PDM_g_num_t rVtxZ = distribVtx[myRank] % n_vtx_face;
+  const PDM_g_num_t bVtxZ = distribVtx[i_rank] / n_vtx_face;
+  const PDM_g_num_t rVtxZ = distribVtx[i_rank] % n_vtx_face;
 
   const PDM_g_num_t bVtxY = rVtxZ / n_vtx_seg;
   const PDM_g_num_t bVtxX = rVtxZ % n_vtx_seg;
@@ -270,8 +270,8 @@ PDM_dcube_gen_init
   cpt = 0;
 
   PDM_g_num_t serie  = n_face / 3;
-  PDM_g_num_t iSerie = distribFace[myRank] / serie;
-  PDM_g_num_t rSerie = distribFace[myRank] % serie;
+  PDM_g_num_t iSerie = distribFace[i_rank] / serie;
+  PDM_g_num_t rSerie = distribFace[i_rank] % serie;
 
   PDM_g_num_t b1 = 0;
   PDM_g_num_t r1 = 0;
@@ -439,8 +439,8 @@ PDM_dcube_gen_init
   int firstGroup = 0;
 
   serie  = n_faceLim / dcube->n_face_group;
-  iSerie = distribFaceLim[myRank] / serie;
-  rSerie = distribFaceLim[myRank] % serie;
+  iSerie = distribFaceLim[i_rank] / serie;
+  rSerie = distribFaceLim[i_rank] % serie;
 
   for (int i = 0; i < dcube->n_face_group + 1; i++)
     _dface_group_idx[i] = 0;

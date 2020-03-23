@@ -543,9 +543,9 @@ _rebuild_boundaries
 
 
   // Implementation avec le alltoall + trie (en cours mais a jeter ?)
-  int myRank;
+  int i_rank;
   int n_rank;
-  PDM_MPI_Comm_rank(PDM_MPI_COMM_WORLD, &myRank);
+  PDM_MPI_Comm_rank(PDM_MPI_COMM_WORLD, &i_rank);
   PDM_MPI_Comm_size(PDM_MPI_COMM_WORLD, &n_rank);
 
   //Step 0 ; construction de joinGId -> liste partitions partageant ce join en num globale (apres PT)
@@ -581,7 +581,7 @@ _rebuild_boundaries
         int joinGId = dJoinGIds[2*izone];
         int oppJoiGId = dJoinGIds[2*izone + 1];
         PDM_printf("[%i] Zone %i, i_part %i, ijoin %i (gid %i) : joinopp %i --> receiving parts are",
-                   myRank, izone, i_part, ijoin, joinGId, oppJoiGId);
+                   i_rank, izone, i_part, ijoin, joinGId, oppJoiGId);
         for (int i = JoinToPartIdx[oppJoiGId]; i < JoinToPartIdx[oppJoiGId+1]; i++) {
           int destPartition = JoinToPart[i];
           int destProc = _multipart->gPartToProc[2*destPartition];

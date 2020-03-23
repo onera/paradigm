@@ -164,11 +164,11 @@ int main(int argc, char *argv[])
 
   struct timeval t_elaps_debut;
 
-  int myRank;
+  int i_rank;
   int numProcs;
 
   PDM_MPI_Init(&argc, &argv);
-  PDM_MPI_Comm_rank(PDM_MPI_COMM_WORLD, &myRank);
+  PDM_MPI_Comm_rank(PDM_MPI_COMM_WORLD, &i_rank);
   PDM_MPI_Comm_size(PDM_MPI_COMM_WORLD, &numProcs);
 
   int           dn_cell;
@@ -217,37 +217,37 @@ int main(int argc, char *argv[])
 
   if (0 == 1) {
 
-    PDM_printf("[%i] n_face_group    : %i\n", myRank, n_face_group);
-    PDM_printf("[%i] dn_cell        : %i\n", myRank, dn_cell);
-    PDM_printf("[%i] dn_face        : %i\n", myRank, dn_face);
-    PDM_printf("[%i] dn_vtx         : %i\n", myRank, dn_vtx);
+    PDM_printf("[%i] n_face_group    : %i\n", i_rank, n_face_group);
+    PDM_printf("[%i] dn_cell        : %i\n", i_rank, dn_cell);
+    PDM_printf("[%i] dn_face        : %i\n", i_rank, dn_face);
+    PDM_printf("[%i] dn_vtx         : %i\n", i_rank, dn_vtx);
 
-    PDM_printf("[%i] dface_cell     : ", myRank);
+    PDM_printf("[%i] dface_cell     : ", i_rank);
     for (int i = 0; i < 2 * dn_face; i++)
       PDM_printf(" "PDM_FMT_G_NUM, dface_cell[i]);
     PDM_printf("\n");
 
-    PDM_printf("[%i] dface_vtx_idx   : ", myRank);
+    PDM_printf("[%i] dface_vtx_idx   : ", i_rank);
     for (int i = 0; i < dn_face + 1; i++)
       PDM_printf(" %i", dface_vtx_idx[i]);
     PDM_printf("\n");
 
-    PDM_printf("[%i] dface_vtx      : ", myRank);
+    PDM_printf("[%i] dface_vtx      : ", i_rank);
     for (int i = 0; i < dface_vtx_idx[dn_face]; i++)
       PDM_printf(" "PDM_FMT_G_NUM, dface_vtx[i]);
     PDM_printf("\n");
 
-    PDM_printf("[%i] dvtx_coord     : ", myRank);
+    PDM_printf("[%i] dvtx_coord     : ", i_rank);
     for (int i = 0; i < 3*dn_vtx; i++)
       PDM_printf(" %12.5e", dvtx_coord[i]);
     PDM_printf("\n");
 
-    PDM_printf("[%i] dface_group_idx : ", myRank);
+    PDM_printf("[%i] dface_group_idx : ", i_rank);
     for (int i = 0; i < n_face_group + 1; i++)
       PDM_printf(" %i", dface_group_idx[i]);
     PDM_printf("\n");
 
-    PDM_printf("[%i] dface_group    : ", myRank);
+    PDM_printf("[%i] dface_group    : ", i_rank);
     for (int i = 0; i < dface_group_idx[n_face_group]; i++)
       PDM_printf(" "PDM_FMT_G_NUM, dface_group[i]);
     PDM_printf("\n");
@@ -311,25 +311,25 @@ int main(int argc, char *argv[])
                  &cpu_user,
                  &cpu_sys);
 
-  PDM_printf("[%i]   - elapsed total                    : %12.5e\n", myRank, elapsed[0]);
-  PDM_printf("[%i]   - elapsed building graph           : %12.5e\n", myRank, elapsed[1]);
-  PDM_printf("[%i]   - elapsed splitting graph          : %12.5e\n", myRank, elapsed[2]);
-  PDM_printf("[%i]   - elapsed building mesh partitions : %12.5e\n", myRank, elapsed[3]);
+  PDM_printf("[%i]   - elapsed total                    : %12.5e\n", i_rank, elapsed[0]);
+  PDM_printf("[%i]   - elapsed building graph           : %12.5e\n", i_rank, elapsed[1]);
+  PDM_printf("[%i]   - elapsed splitting graph          : %12.5e\n", i_rank, elapsed[2]);
+  PDM_printf("[%i]   - elapsed building mesh partitions : %12.5e\n", i_rank, elapsed[3]);
 
-  PDM_printf("[%i]   - cpu total                        : %12.5e\n", myRank, cpu[0]);
-  PDM_printf("[%i]   - cpu building graph               : %12.5e\n", myRank, cpu[1]);
-  PDM_printf("[%i]   - cpu splitting graph              : %12.5e\n", myRank, cpu[2]);
-  PDM_printf("[%i]   - cpu building mesh partitions     : %12.5e\n", myRank, cpu[3]);
+  PDM_printf("[%i]   - cpu total                        : %12.5e\n", i_rank, cpu[0]);
+  PDM_printf("[%i]   - cpu building graph               : %12.5e\n", i_rank, cpu[1]);
+  PDM_printf("[%i]   - cpu splitting graph              : %12.5e\n", i_rank, cpu[2]);
+  PDM_printf("[%i]   - cpu building mesh partitions     : %12.5e\n", i_rank, cpu[3]);
 
-  PDM_printf("[%i]   - cpu_user total                   : %12.5e\n", myRank, cpu_user[0]);
-  PDM_printf("[%i]   - cpu_user building graph          : %12.5e\n", myRank, cpu_user[1]);
-  PDM_printf("[%i]   - cpu_user splitting graph         : %12.5e\n", myRank, cpu_user[2]);
-  PDM_printf("[%i]   - cpu_user building mesh partitions: %12.5e\n", myRank, cpu_user[3]);
+  PDM_printf("[%i]   - cpu_user total                   : %12.5e\n", i_rank, cpu_user[0]);
+  PDM_printf("[%i]   - cpu_user building graph          : %12.5e\n", i_rank, cpu_user[1]);
+  PDM_printf("[%i]   - cpu_user splitting graph         : %12.5e\n", i_rank, cpu_user[2]);
+  PDM_printf("[%i]   - cpu_user building mesh partitions: %12.5e\n", i_rank, cpu_user[3]);
 
-  PDM_printf("[%i]   - cpu_sys total                    : %12.5e\n", myRank, cpu_sys[0]);
-  PDM_printf("[%i]   - cpu_sys building graph           : %12.5e\n", myRank, cpu_sys[1]);
-  PDM_printf("[%i]   - cpu_sys splitting graph          : %12.5e\n", myRank, cpu_sys[2]);
-  PDM_printf("[%i]   - cpu_sys building mesh partitions : %12.5e\n", myRank, cpu_sys[3]);
+  PDM_printf("[%i]   - cpu_sys total                    : %12.5e\n", i_rank, cpu_sys[0]);
+  PDM_printf("[%i]   - cpu_sys building graph           : %12.5e\n", i_rank, cpu_sys[1]);
+  PDM_printf("[%i]   - cpu_sys splitting graph          : %12.5e\n", i_rank, cpu_sys[2]);
+  PDM_printf("[%i]   - cpu_sys building mesh partitions : %12.5e\n", i_rank, cpu_sys[3]);
 
   struct timeval t_elaps_fin;
   gettimeofday(&t_elaps_fin, NULL);
@@ -347,7 +347,7 @@ int main(int argc, char *argv[])
 #pragma warning(pop)
 #endif
 
-  PDM_printf("[%i]   - TEMPS DANS PART_CUBE  : %12.5e\n", myRank,  t_elapsed);
+  PDM_printf("[%i]   - TEMPS DANS PART_CUBE  : %12.5e\n", i_rank,  t_elapsed);
 
   PDM_g_num_t **cellVtxGN = malloc (sizeof(PDM_g_num_t *) * n_part);
 

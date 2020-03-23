@@ -172,11 +172,11 @@ int main(int argc, char *argv[])
 
   struct timeval t_elaps_debut;
 
-  int myRank;
+  int i_rank;
   int numProcs;
 
   PDM_MPI_Init(&argc, &argv);
-  PDM_MPI_Comm_rank(PDM_MPI_COMM_WORLD, &myRank);
+  PDM_MPI_Comm_rank(PDM_MPI_COMM_WORLD, &i_rank);
   PDM_MPI_Comm_size(PDM_MPI_COMM_WORLD, &numProcs);
 
   int           dn_cell;
@@ -206,7 +206,7 @@ int main(int argc, char *argv[])
   const double ymax = ymin + length;
   const double zmax = zmin + length;
 
-  if (myRank == 0) {
+  if (i_rank == 0) {
     printf("-- Build cube\n");
     fflush(stdout);
   }
@@ -251,7 +251,7 @@ int main(int argc, char *argv[])
   int n_property_cell = 0;
   int n_property_face = 0;
 
-  if (myRank == 0) {
+  if (i_rank == 0) {
     printf("-- Part\n");
     fflush(stdout);
   }
@@ -320,7 +320,7 @@ int main(int argc, char *argv[])
   double **cell_volume = malloc (sizeof(double *) * n_part);
   double **cell_center = malloc (sizeof(double *) * n_part);
 
-  if (myRank == 0) {
+  if (i_rank == 0) {
     printf("-- mesh dist set\n");
     fflush(stdout);
   }
@@ -651,14 +651,14 @@ int main(int argc, char *argv[])
 
   }
 
-  if (myRank == 0) {
+  if (i_rank == 0) {
     printf("-- Dist compute\n");
     fflush(stdout);
   }
 
   PDM_dist_cloud_surf_compute (id_dist);
 
-  if (myRank == 0) {
+  if (i_rank == 0) {
     printf("-- Dist check\n");
     fflush(stdout);
   }
@@ -784,7 +784,7 @@ int main(int argc, char *argv[])
       abort();
     }
 
-    if (myRank == 0) {
+    if (i_rank == 0) {
       printf ("elements surfaciques : "PDM_FMT_G_NUM"\n", 6*(n_vtx_seg-1)*(n_vtx_seg-1));
       printf ("nombre de points     : "PDM_FMT_G_NUM"\n", n_vtx_seg*n_vtx_seg*n_vtx_seg);
       fflush(stdout);
@@ -832,7 +832,7 @@ int main(int argc, char *argv[])
 
   PDM_MPI_Finalize();
 
-   if (myRank == 0) {
+   if (i_rank == 0) {
     printf("-- End\n");
     fflush(stdout);
   }

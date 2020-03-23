@@ -144,10 +144,10 @@ PDM_part_split_t           method,
 {
   struct timeval t_elaps_debut;
 
-  int myRank;
+  int i_rank;
   int numProcs;
 
-  PDM_MPI_Comm_rank (pdm_mpi_comm, &myRank);
+  PDM_MPI_Comm_rank (pdm_mpi_comm, &i_rank);
   PDM_MPI_Comm_size (pdm_mpi_comm, &numProcs);
 
   double        xmin = 0.;
@@ -242,9 +242,9 @@ PDM_part_split_t           method,
 #ifdef __INTEL_COMPILER
 #pragma warning(pop)
 #endif
-  if (myRank == 0)
+  if (i_rank == 0)
     PDM_printf("[%d] Temps dans creeMaillagePolygone2D %d : %12.5e\n",
-           myRank, imesh, t_elapsed);
+           i_rank, imesh, t_elapsed);
 
   if (0 == 1) {
 
@@ -351,9 +351,9 @@ PDM_part_split_t           method,
                   &cpu_user,
                   &cpu_sys);
 
-  if (myRank == 0)
+  if (i_rank == 0)
     PDM_printf("[%d] Temps dans ppart %d : %12.5e\n",
-           myRank, imesh, elapsed[0]);
+           i_rank, imesh, elapsed[0]);
 
   /* Statistiques */
 
@@ -382,7 +382,7 @@ PDM_part_split_t           method,
                   &bound_part_faces_max,
                   &bound_part_faces_sum);
 
-  /* if (myRank == 0) { */
+  /* if (i_rank == 0) { */
   /*   PDM_printf ("Statistics :\n"); */
   /*   PDM_printf ("  - Number of cells :\n"); */
   /*   PDM_printf ("       * average            : %i\n", cells_average);    */
@@ -471,7 +471,7 @@ char *argv[]
 #endif
   int           haveRandom = 0;
 
-  int           myRank;
+  int           i_rank;
   int           numProcs;
 
   /*
@@ -483,7 +483,7 @@ char *argv[]
               &n_vtx_seg,
               &length);
 
-  PDM_MPI_Comm_rank (PDM_MPI_COMM_WORLD, &myRank);
+  PDM_MPI_Comm_rank (PDM_MPI_COMM_WORLD, &i_rank);
   PDM_MPI_Comm_size (PDM_MPI_COMM_WORLD, &numProcs);
 
   /*

@@ -60,10 +60,10 @@ PDM_distrib_compute
  const PDM_MPI_Comm  comm
 )
 {
-  int myRank;
+  int i_rank;
   int n_rank;
 
-  PDM_MPI_Comm_rank(comm, &myRank);
+  PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_size(comm, &n_rank);
 
   /* Compute distribution for element */
