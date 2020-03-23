@@ -143,7 +143,7 @@ _gen_clouds_random
  const int         nPts,
  const double      length,
  const int         numProcs,
- const int         myRank,
+ const int         i_rank,
  const PDM_g_num_t n_faceSeg,
  double          **pts_coord,
  int              *nPts_l
@@ -160,7 +160,7 @@ _gen_clouds_random
   for (int i = 0; i < numProcs*(*nPts_l); i++) {
     for (int j = 0; j < 3; j++) {
       double x = offset + length2 * (double) rand() / ((double) RAND_MAX);
-      if (i%numProcs == myRank) {
+      if (i%numProcs == i_rank) {
         _pts_coord[idx++] = x;
       }
     }
@@ -183,10 +183,10 @@ _gen_cube_cell_centers
  )
 {
   int n_rank;
-  int myRank;
+  int i_rank;
 
   PDM_MPI_Comm_size(comm, &n_rank);
-  PDM_MPI_Comm_rank(comm, &myRank);
+  PDM_MPI_Comm_rank(comm, &i_rank);
 
   PDM_g_num_t *distribCell = (PDM_g_num_t *) malloc((n_rank + 1) * sizeof(PDM_g_num_t));
 
@@ -209,7 +209,7 @@ _gen_cube_cell_centers
     distribCell[i] += distribCell[i-1];
   }
 
-  PDM_g_num_t _dn_cell = distribCell[myRank+1] - distribCell[myRank];
+  PDM_g_num_t _dn_cell = distribCell[i_rank+1] - distribCell[i_rank];
 
   const double step = length / (double) n_faceSeg;
 
@@ -217,7 +217,7 @@ _gen_cube_cell_centers
   *coord = malloc (sizeof(double)      * _dn_cell * 3);
 
   int _npts = 0;
-  for (PDM_g_num_t g = distribCell[myRank]; g < distribCell[myRank+1]; g++) {
+  for (PDM_g_num_t g = distribCell[i_rank]; g < distribCell[i_rank+1]; g++) {
     PDM_g_num_t i = g % n_faceSeg;
     PDM_g_num_t j = ((g - i) % n_faceFace) / n_faceSeg;
     PDM_g_num_t k = (g - i - n_faceSeg * j) / n_faceFace;
@@ -245,11 +245,11 @@ _gen_cube_cell_centers
 
 int main(int argc, char *argv[])
 {
-  int myRank;
+  int i_rank;
   int numProcs;
 
   PDM_MPI_Init(&argc, &argv);
-  PDM_MPI_Comm_rank(PDM_MPI_COMM_WORLD, &myRank);
+  PDM_MPI_Comm_rank(PDM_MPI_COMM_WORLD, &i_rank);
   PDM_MPI_Comm_size(PDM_MPI_COMM_WORLD, &numProcs);
 
   /*
@@ -282,7 +282,7 @@ int main(int argc, char *argv[])
   _gen_clouds_random (nTgt,
                       length,
                       numProcs,
-                      myRank,
+                      i_rank,
                       n_faceSeg,
                       &tgt_coords,
                       &_nTgt_l);
@@ -362,7 +362,7 @@ int main(int argc, char *argv[])
 
 #if 1
   /* Check results */
-  if (myRank == 0) {
+  if (i_rank == 0) {
     printf("-- Check\n");
     fflush(stdout);
   }
@@ -381,7 +381,7 @@ int main(int argc, char *argv[])
   double cell_ctr[3];
 
   for (int itgt = 0; itgt < _nTgt_l; itgt++) {
-    /*printf("[%d] %d/%d\n", myRank, itgt, _nTgt_l);*/
+    /*printf("[%d] %d/%d\n", i_rank, itgt, _nTgt_l);*/
 
     n_tgt++;
     int wrong = 0;
@@ -466,7 +466,7 @@ int main(int argc, char *argv[])
 
       if (closest_src_dist[n_closest_points*itgt + l] > true_closest_src_dist[l]) {
         printf("[%d] (%ld) [%f %f %f]: %f / %f (relative err. = %f)\t\t%ld / %ld\n",
-               myRank,
+               i_rank,
                tgt_gnum[itgt],
                tgt_coords[3*itgt], tgt_coords[3*itgt+1], tgt_coords[3*itgt+2],
                closest_src_dist[n_closest_points*itgt + l],
@@ -491,7 +491,7 @@ int main(int argc, char *argv[])
     wrong_percentage = 100 * n_wrong / n_tgt;
   }
   printf("[%d] n_wrong = %ld / %ld (%ld%%)\n",
-         myRank,
+         i_rank,
          n_wrong,
          n_tgt,
          wrong_percentage);*/
@@ -514,7 +514,7 @@ int main(int argc, char *argv[])
                   0,
                   PDM_MPI_COMM_WORLD);
 
-  if (myRank == 0) {
+  if (i_rank == 0) {
     PDM_g_num_t wrong_percentage_total = 0;
     if (n_tgt_total > 0) {
       wrong_percentage_total = 100 * n_wrong_total / n_tgt_total;
@@ -548,7 +548,7 @@ int main(int argc, char *argv[])
 
   PDM_MPI_Finalize();
 
-  if (myRank == 0) {
+  if (i_rank == 0) {
     printf("-- End\n");
     fflush(stdout);
   }

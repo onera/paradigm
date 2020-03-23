@@ -357,7 +357,7 @@ _active_ranks
     ptb->is_my_rank_active = 1;
     ptb->n_active_ranks = 1;
     ptb->active_ranks = (int *) malloc(sizeof(int) * ptb->n_active_ranks);
-    ptb->active_ranks[0] = ptb->myRank;
+    ptb->active_ranks[0] = ptb->i_rank;
   }
 
   else {
@@ -666,7 +666,7 @@ _distrib_data
   /* Affichage */
 
   if (1 == 0) {
-    if (ptb->myRank == 0) {
+    if (ptb->i_rank == 0) {
       PDM_printf("data_distrib_index : ");
       for(int i = 0; i < ptb->s_comm + 1; i++)
         PDM_printf(PDM_FMT_G_NUM" ", ptb->data_distrib_index[i]);
@@ -851,7 +851,7 @@ PDM_part_to_block_create
   ptb->active_ranks      = NULL;         /*!< List of active ranks */
   ptb->comm             = comm;         /*!< MSG communicator */
   PDM_MPI_Comm_size (comm, &(ptb->s_comm));
-  PDM_MPI_Comm_rank (comm, &(ptb->myRank));
+  PDM_MPI_Comm_rank (comm, &(ptb->i_rank));
   ptb->is_my_rank_active   = 0;              /*!< Is active current rank */
   ptb->part_active_node   = part_active_node; /*!< Part of active nodes */
 
@@ -936,7 +936,7 @@ PDM_part_to_block_create2
   ptb->active_ranks      = NULL;         /*!< List of active ranks */
   ptb->comm              = comm;         /*!< MSG communicator */
   PDM_MPI_Comm_size (comm, &(ptb->s_comm));
-  PDM_MPI_Comm_rank (comm, &(ptb->myRank));
+  PDM_MPI_Comm_rank (comm, &(ptb->i_rank));
   ptb->is_my_rank_active   = 0;                /*!< Is active current rank */
   ptb->part_active_node    = part_active_node; /*!< Part of active nodes */
 

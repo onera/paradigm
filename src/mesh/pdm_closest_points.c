@@ -373,8 +373,8 @@ PDM_closest_points_compute
   PDM_timer_resume(cls->timer);
 
 
-  int myRank;
-  PDM_MPI_Comm_rank (cls->comm, &myRank);
+  int i_rank;
+  PDM_MPI_Comm_rank (cls->comm, &i_rank);
 
   const int depth_max = 31;//?
   const int points_in_leaf_max = 1;//2*cls->n_closest;//?

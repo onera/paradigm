@@ -60,10 +60,10 @@ const double         *dvtx_coord,
       double       **lvtx_coord
 )
 {
-  int myRank;
+  int i_rank;
   int n_rank;
 
-  PDM_MPI_Comm_rank(comm, &myRank);
+  PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_size(comm, &n_rank);
 
   /* Offset Distribution to work with block_to_part */
@@ -100,7 +100,7 @@ const double         *dvtx_coord,
                                                         comm);
 
   /* Echange sur les nombre de sommet de chaque face */
-  int dn_face = dface_proc[myRank+1] - dface_proc[myRank];
+  int dn_face = dface_proc[i_rank+1] - dface_proc[i_rank];
 
   int* n_vtx_face_loc = (int *) malloc (sizeof(int) * dn_face              );
   int* n_vtx_face    = (int *) malloc (sizeof(int) * dcell_face_idx[dn_cell]);
@@ -169,7 +169,7 @@ const double         *dvtx_coord,
   int stride = 3;
 
 
-  // int dn_vtx = dvtx_proc[myRank+1] - dvtx_proc[myRank];
+  // int dn_vtx = dvtx_proc[i_rank+1] - dvtx_proc[i_rank];
   // for (int i = 0; i < dn_vtx; i++) {
   //   printf("dvtx_coord[%i] :  %12.5e \n ",i, dvtx_coord[i]);
   // }
@@ -249,10 +249,10 @@ _compute_cellCenter
 )
 {
 
-  int myRank;
+  int i_rank;
   int n_rank;
 
-  PDM_MPI_Comm_rank(comm, &myRank);
+  PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_size(comm, &n_rank);
 
   /* Local connectivity (Allocate in _prepareconnectivity */

@@ -66,10 +66,10 @@ const int                n_part,
       PDM_part_bound_t **partBound
 )
 {
-  int myRank;
+  int i_rank;
   int lComm;
 
-  PDM_MPI_Comm_rank(comm, &myRank);
+  PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_size(comm, &lComm);
 
   PDM_graph_bound_t * graph_bound =
@@ -150,7 +150,7 @@ const int                n_part,
   graph_bound->nExchRank = 0;
   graph_bound->lBuffer = 0;
   for (int i = 0; i < lComm; i++) {
-    if ((i != myRank) && (offeredEltsRankIdx[i+1] > 0)) {
+    if ((i != i_rank) && (offeredEltsRankIdx[i+1] > 0)) {
       graph_bound->nExchRank += 1;
       graph_bound->lBuffer += offeredEltsRankIdx[i+1];
     }
@@ -166,7 +166,7 @@ const int                n_part,
   graph_bound->nExchRank = 0;
 
   for (int i = 0; i < lComm; i++) {
-    if ((offeredEltsRankIdx[i+1] > offeredEltsRankIdx[i]) && (i != myRank)) {
+    if ((offeredEltsRankIdx[i+1] > offeredEltsRankIdx[i]) && (i != i_rank)) {
         graph_bound->exchRank[graph_bound->nExchRank++] = i;
     }
   }
@@ -231,7 +231,7 @@ const int                n_part,
                                        &i_part,
                                        &iElt,
                                        &iDistElt);
-        if (iProc != myRank) {
+        if (iProc != i_rank) {
           int idx = nDataExchCreate *
             (offeredEltsRankIdx[iProc] + recvEltN[iProc]++);
 
@@ -277,8 +277,8 @@ const int                n_part,
 
   }
 
-  int idxMyrank = nDataExchCreate * offeredEltsRankIdx[myRank];
-  int idxMyrank1 = nDataExchCreate * offeredEltsRankIdx[myRank];
+  int idxMyrank = nDataExchCreate * offeredEltsRankIdx[i_rank];
+  int idxMyrank1 = nDataExchCreate * offeredEltsRankIdx[i_rank];
 
   for (int i = 0; i < n_part; i++) {
     PDM_part_bound_t *_partBound = graph_bound->partBound[i];
@@ -307,7 +307,7 @@ const int                n_part,
                                        &i_part,
                                        &iElt,
                                        &iDistElt);
-        if (iProc == myRank) {
+        if (iProc == i_rank) {
           sendOfferedElts[idxMyrank++] = i;
           sendOfferedElts[idxMyrank++] = localElt;
           sendOfferedElts[idxMyrank++] = nOfferElt;
@@ -566,8 +566,8 @@ const int                n_part,
 
   }
 
-  idxMyrank = offeredEltsRankIdx[myRank];
-  idxMyrank1 = graph_bound->ghostEltIdx[myRank];
+  idxMyrank = offeredEltsRankIdx[i_rank];
+  idxMyrank1 = graph_bound->ghostEltIdx[i_rank];
 
   for (int i = 0; i < n_part; i++) {
     PDM_part_bound_t *_partBound = graph_bound->partBound[i];
@@ -597,7 +597,7 @@ const int                n_part,
                                         &iElt,
                                         &iDistElt);
 
-        if (iProc == myRank) {
+        if (iProc == i_rank) {
           for (int k1 = 0; k1 < nOfferElt; k1++) {
             gNumOfferedEltsRecv[idxMyrank1++] =
               gNumOfferedEltsSend[idxMyrank++];
@@ -840,8 +840,8 @@ const int                n_part,
     for (int j = hashTableIdx[i]; j < iBegLocal; j++) {
       PDM_g_num_t gNum1 = hashTableGnum[j];
       int dataNumLoc1 = hashTableDataNumLoc[j];
-      int iSLocalProc1 = (dataNumLoc1 >= graph_bound->ghostEltIdx[myRank]) &&
-                         (dataNumLoc1 < graph_bound->ghostEltIdx[myRank+1]);
+      int iSLocalProc1 = (dataNumLoc1 >= graph_bound->ghostEltIdx[i_rank]) &&
+                         (dataNumLoc1 < graph_bound->ghostEltIdx[i_rank+1]);
 
       /*
        * If not tagged : Look for in other ghost elements
@@ -853,8 +853,8 @@ const int                n_part,
 
           PDM_g_num_t gNum2 = hashTableGnum[k];
           int dataNumLoc2 = hashTableDataNumLoc[k];
-          int iSLocalProc2 = (dataNumLoc2 >= graph_bound->ghostEltIdx[myRank]) &&
-            (dataNumLoc2 < graph_bound->ghostEltIdx[myRank+1]);
+          int iSLocalProc2 = (dataNumLoc2 >= graph_bound->ghostEltIdx[i_rank]) &&
+            (dataNumLoc2 < graph_bound->ghostEltIdx[i_rank+1]);
 
           if ((gNum1 == gNum2) && (tagGhostElt[dataNumLoc2] == 0)) {
 
@@ -1006,13 +1006,13 @@ const int                n_part,
    * Update recvTag for current Rank
    */
 
-  int idx1MyRank   = graph_bound->ghostEltIdx[myRank];
-  int count1MyRank = graph_bound->ghostEltIdx[myRank+1]
-                   - graph_bound->ghostEltIdx[myRank];
+  int idx1MyRank   = graph_bound->ghostEltIdx[i_rank];
+  int count1MyRank = graph_bound->ghostEltIdx[i_rank+1]
+                   - graph_bound->ghostEltIdx[i_rank];
 
-  int idx2MyRank   = offeredEltsRankIdx[myRank];
-  int count2MyRank = offeredEltsRankIdx[myRank+1]
-                   - offeredEltsRankIdx[myRank];
+  int idx2MyRank   = offeredEltsRankIdx[i_rank];
+  int count2MyRank = offeredEltsRankIdx[i_rank+1]
+                   - offeredEltsRankIdx[i_rank];
 
   assert (count1MyRank == count2MyRank);
 
@@ -1048,8 +1048,8 @@ const int                n_part,
     }
   }
 
-  int begNewLocalGhost = newGhostEltIdx[myRank+1];
-  newGhostEltIdx[myRank+1] += nNewLocalGhost;
+  int begNewLocalGhost = newGhostEltIdx[i_rank+1];
+  newGhostEltIdx[i_rank+1] += nNewLocalGhost;
   nTotalNewGhost += nNewLocalGhost;
 
   for (int i = 0; i < lComm; i++) {
@@ -1077,7 +1077,7 @@ const int                n_part,
         oldToNewGhost[j] = newGhostEltIdx[i] + nNewGhostElt[i]++;
       }
       else if (tagGhostElt[j]  < -1) {
-        oldToNewGhost[j] = newGhostEltIdx[myRank] + begNewLocalGhost -(tagGhostElt[j]+1+1);;
+        oldToNewGhost[j] = newGhostEltIdx[i_rank] + begNewLocalGhost -(tagGhostElt[j]+1+1);;
       }
     }
   }
@@ -1260,7 +1260,7 @@ const int                n_part,
     newSendEltIdx[i+1] = 0;
   }
 
-  newSendEltIdx[myRank+1] = newGhostEltIdx[myRank+1] - newGhostEltIdx[myRank];
+  newSendEltIdx[i_rank+1] = newGhostEltIdx[i_rank+1] - newGhostEltIdx[i_rank];
 
   for (int i = 0; i < graph_bound->nExchRank; i++) {
     int iProc = graph_bound->exchRank[i];
@@ -1291,17 +1291,17 @@ const int                n_part,
     }
   }
 
-  for (int j = offeredEltsRankIdx[myRank]; j < offeredEltsRankIdx[myRank+1]; j++) {
+  for (int j = offeredEltsRankIdx[i_rank]; j < offeredEltsRankIdx[i_rank+1]; j++) {
 
     if (recvTagGhostElt[j] == 0) {
-      int idx = newSendEltIdx[myRank] + nNewSendElt[myRank]++;
+      int idx = newSendEltIdx[i_rank] + nNewSendElt[i_rank]++;
       newSendElt[idx] = graph_bound->sendElt[j];
       newSendEltPart[idx] = graph_bound->sendEltPart[j];
     }
   }
 
   for (int i = 0; i < nNewLocalGhost; i++) {
-    int idx = newSendEltIdx[myRank] + nNewSendElt[myRank]++;
+    int idx = newSendEltIdx[i_rank] + nNewSendElt[i_rank]++;
     newSendElt[idx] = newLocalGhost[2*i+1];
     newSendEltPart[idx] = newLocalGhost[2*i];
   }
@@ -1461,9 +1461,9 @@ const PDM_data_t         tData,
     abort();
   }
 
-  int myRank;
+  int i_rank;
   int lComm;
-  PDM_MPI_Comm_rank(graph_bound->comm, &myRank);
+  PDM_MPI_Comm_rank(graph_bound->comm, &i_rank);
   PDM_MPI_Comm_size(graph_bound->comm, &lComm);
 
   graph_bound->field      = field;
@@ -1567,16 +1567,16 @@ const PDM_data_t         tData,
    */
 
   unsigned char *sendLocPtr = (unsigned char *) graph_bound->sendBuffer;
-  sendLocPtr +=  graph_bound->sendEltIdx[myRank] * sizeExchType * nComp;
+  sendLocPtr +=  graph_bound->sendEltIdx[i_rank] * sizeExchType * nComp;
 
   unsigned char *recvLocPtr = (unsigned char *) graph_bound->recvBuffer;
-  recvLocPtr += graph_bound->ghostEltIdx[myRank] * sizeExchType * nComp;
+  recvLocPtr += graph_bound->ghostEltIdx[i_rank] * sizeExchType * nComp;
 
   int sendLocCount =
-    (graph_bound->sendEltIdx[myRank+1] - graph_bound->sendEltIdx[myRank])
+    (graph_bound->sendEltIdx[i_rank+1] - graph_bound->sendEltIdx[i_rank])
     * (int) sizeExchType * nComp;
   int recvLocCount =
-    (graph_bound->ghostEltIdx[myRank+1] - graph_bound->ghostEltIdx[myRank])
+    (graph_bound->ghostEltIdx[i_rank+1] - graph_bound->ghostEltIdx[i_rank])
     * (int) sizeExchType * nComp;
 
   assert (sendLocCount == recvLocCount);
@@ -1609,8 +1609,8 @@ PDM_graph_bound_t *graph_bound
     abort();
   }
 
-  int myRank;
-  PDM_MPI_Comm_rank(graph_bound->comm, &myRank);
+  int i_rank;
+  PDM_MPI_Comm_rank(graph_bound->comm, &i_rank);
 
   for (int i = 0; i < graph_bound->nExchRank; i++) {
     if (graph_bound->recvRequest[i] != PDM_MPI_REQUEST_NULL) {
