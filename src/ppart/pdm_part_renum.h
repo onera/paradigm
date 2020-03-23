@@ -308,7 +308,7 @@ PDM_part_renum_face
  *
  * \brief Perform cells renumbering from a new order
  *        Actualise all cells array according to the new numbering
- *        Connectivities/cell_tag/cellColor/cell_ln_to_gn
+ *        Connectivities/cell_tag/cell_color/cell_ln_to_gn
  *
  * \param [in,out]  part        Current partition
  * \param [in]      newToOldOrder    NewOrder
@@ -327,7 +327,7 @@ PDM_part_reorder_cell
  *
  * \brief Perform faces renumbering from a new order
  *        Actualise all cells array according to the new numbering
- *        Connectivities/face_tag/faceColor/face_ln_to_gn
+ *        Connectivities/face_tag/face_color/face_ln_to_gn
  *
  * \param [in,out]  part        Current partition
  * \param [in]      newToOldOrder    NewOrder
@@ -346,7 +346,7 @@ PDM_part_reorder_face
  *
  * \brief Perform faces renumbering from a new order
  *        Actualise all cells array according to the new numbering
- *        Connectivities/face_tag/faceColor/face_ln_to_gn
+ *        Connectivities/face_tag/face_color/face_ln_to_gn
  *
  * \param [in,out]  part        Current partition
  * \param [in]      newToOldOrder    NewOrder

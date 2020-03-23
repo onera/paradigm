@@ -1045,10 +1045,10 @@ PDM_multipart_part_color_get
 const int            mpartId,
 const int            zoneGId,
 const int            i_part,
-      int          **cellColor,
-      int          **faceColor,
-      int          **threadColor,
-      int          **hyperPlaneColor
+      int          **cell_color,
+      int          **face_color,
+      int          **thread_color,
+      int          **hyperplane_color
 )
 {
   _pdm_multipart_t *_multipart = _get_from_id (mpartId);
@@ -1058,10 +1058,10 @@ const int            i_part,
 
   PDM_part_part_color_get(ppart_id,
                           i_part,
-                          cellColor,
-                          faceColor,
-                          threadColor,
-                          hyperPlaneColor);
+                          cell_color,
+                          face_color,
+                          thread_color,
+                          hyperplane_color);
 
 }
 

@@ -65,7 +65,7 @@ typedef struct _PDM_part_t PDM_part_t;
  * \param [in]   split_method   Split method
  * \param [in]   renum_cell_method Cell renumbering method
  * \param [in]   renum_face_method Cell renumbering method
- * \param [in]   renum_properties_cell  For cache blocking [ n_cellPerCacheWanted, isAsynchrone, isVectorisation ] \ref PDM_renum_cacheblocking
+ * \param [in]   renum_properties_cell  For cache blocking [ n_cell_per_cache_wanted, isAsynchrone, isVectorisation ] \ref PDM_renum_cacheblocking
  * \param [in]   renum_face_method Cell renumbering method
  * \param [in]   renum_properties_face  NOT USE
  * \param [in]   n_part          Number of partition to build on this process
@@ -320,18 +320,18 @@ PROCF (pdm_part_part_val_get, PDM_PART_PART_VAL_GET)
  *
  * \param [in]   ppart_id               ppart identifier
  * \param [in]   i_part                 Current partition
- * \param [out]  cellColor             Cell Color (size = n_cell)
- * \param [out]  faceColor             Face Color (size = n_face)
+ * \param [out]  cell_color             Cell Color (size = n_cell)
+ * \param [out]  face_color             Face Color (size = n_face)
  */
 
 void PDM_part_part_color_get
 (
 const int            ppart_id,
 const int            i_part,
-      int          **cellColor,
-      int          **faceColor,
-      int          **threadColor,
-      int          **hyperPlaneColor
+      int          **cell_color,
+      int          **face_color,
+      int          **thread_color,
+      int          **hyperplane_color
 );
 
 void
@@ -339,10 +339,10 @@ PROCF (pdm_part_part_color_get, PDM_PART_PART_COLOR_GET)
 (
  int           *ppart_id,
  int           *i_part,
- int           *cellColor,
- int           *faceColor,
- int           *threadColor,
- int           *hyperPlaneColor
+ int           *cell_color,
+ int           *face_color,
+ int           *thread_color,
+ int           *hyperplane_color
 );
 
 /**

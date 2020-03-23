@@ -2805,21 +2805,21 @@ _part_free
     free(part->vtx_tag);
   part->vtx_tag = NULL;
 
-  if (part->cellColor != NULL)
-    free(part->cellColor);
-  part->cellColor = NULL;
+  if (part->cell_color != NULL)
+    free(part->cell_color);
+  part->cell_color = NULL;
 
-  if (part->faceColor != NULL)
-    free(part->faceColor);
-  part->faceColor = NULL;
+  if (part->face_color != NULL)
+    free(part->face_color);
+  part->face_color = NULL;
 
-  if (part->threadColor != NULL)
-    free(part->threadColor);
-  part->threadColor = NULL;
+  if (part->thread_color != NULL)
+    free(part->thread_color);
+  part->thread_color = NULL;
 
-  if (part->hyperPlaneColor != NULL)
-    free(part->hyperPlaneColor);
-  part->hyperPlaneColor = NULL;
+  if (part->hyperplane_color != NULL)
+    free(part->hyperplane_color);
+  part->hyperplane_color = NULL;
 
   if (part->new_to_old_order_cell != NULL)
     free(part->new_to_old_order_cell);
@@ -2932,7 +2932,7 @@ _part_partial_free
  * \param [in]   split_method   Split method
  * \param [in]   renum_cell_method Cell renumbering method
  * \param [in]   renum_face_method Cell renumbering method
- * \param [in]   renum_properties_cell  For cache blocking [ n_cellPerCacheWanted, isAsynchrone, isVectorisation ] \ref PDM_renum_cacheblocking
+ * \param [in]   renum_properties_cell  For cache blocking [ n_cell_per_cache_wanted, isAsynchrone, isVectorisation ] \ref PDM_renum_cacheblocking
  * \param [in]   renum_face_method Cell renumbering method
  * \param [in]   renum_properties_face  NOT USE
  * \param [in]   n_part          Number of partition to build on this process
@@ -3784,8 +3784,8 @@ PROCF (pdm_part_part_val_get, PDM_PART_PART_VAL_GET)
  *
  * \param [in]   ppart_id            ppart identifier
  * \param [in]   i_part              Current partition
- * \param [out]  cellColor          Cell Color (size = n_cell)
- * \param [out]  faceColor          Face Color (size = n_face)
+ * \param [out]  cell_color          Cell Color (size = n_cell)
+ * \param [out]  face_color          Face Color (size = n_face)
 
  */
 
@@ -3793,10 +3793,10 @@ void PDM_part_part_color_get
 (
 const  int      ppart_id,
 const  int      i_part,
- int          **cellColor,
- int          **faceColor,
- int          **threadColor,
- int          **hyperPlaneColor
+ int          **cell_color,
+ int          **face_color,
+ int          **thread_color,
+ int          **hyperplane_color
 )
 {
   _PDM_part_t *ppart = _get_from_id(ppart_id);
@@ -3810,10 +3810,10 @@ const  int      i_part,
     exit(1);
   }
 
-  *cellColor       = mesh_part->cellColor;
-  *faceColor       = mesh_part->faceColor;
-  *threadColor     = mesh_part->threadColor;
-  *hyperPlaneColor = mesh_part->hyperPlaneColor;
+  *cell_color       = mesh_part->cell_color;
+  *face_color       = mesh_part->face_color;
+  *thread_color     = mesh_part->thread_color;
+  *hyperplane_color = mesh_part->hyperplane_color;
 }
 
 void
@@ -3821,10 +3821,10 @@ PROCF (pdm_part_part_color_get, PDM_PART_PART_COLOR_GET)
 (
  int           *ppart_id,
  int           *i_part,
- int           *cellColor,
- int           *faceColor,
- int           *threadColor,
- int           *hyperPlaneColor
+ int           *cell_color,
+ int           *face_color,
+ int           *thread_color,
+ int           *hyperplane_color
 )
 {
   _PDM_part_t *ppart = _get_from_id(*ppart_id);
@@ -3840,27 +3840,27 @@ PROCF (pdm_part_part_color_get, PDM_PART_PART_COLOR_GET)
     exit(1);
   }
 
-  if (mesh_part->cellColor != NULL){
+  if (mesh_part->cell_color != NULL){
     for (int i = 0; i < mesh_part->n_cell; i++){
-        cellColor[i]    = mesh_part->cellColor[i];
+        cell_color[i]    = mesh_part->cell_color[i];
     }
   }
 
-  if (mesh_part->faceColor != NULL){
+  if (mesh_part->face_color != NULL){
     for (int i = 0; i < mesh_part->n_face; i++){
-        faceColor[i]    = mesh_part->faceColor[i];
+        face_color[i]    = mesh_part->face_color[i];
     }
   }
 
-  if (mesh_part->threadColor != NULL){
+  if (mesh_part->thread_color != NULL){
     for (int i = 0; i < mesh_part->n_cell; i++){
-        threadColor[i]    = mesh_part->threadColor[i];
+        thread_color[i]    = mesh_part->thread_color[i];
     }
   }
 
-  if (mesh_part->hyperPlaneColor != NULL){
+  if (mesh_part->hyperplane_color != NULL){
     for (int i = 0; i < mesh_part->n_cell; i++){
-        hyperPlaneColor[i]    = mesh_part->hyperPlaneColor[i];
+        hyperplane_color[i]    = mesh_part->hyperplane_color[i];
     }
   }
 

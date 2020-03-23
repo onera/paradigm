@@ -1300,25 +1300,25 @@ PDM_part_reorder_cell
                      part->cell_tag);
   }
 
-  if (part->cellColor != NULL) {
+  if (part->cell_color != NULL) {
     PDM_order_array (part->n_cell,
                      sizeof(int),
                      newToOldOrder,
-                     part->cellColor);
+                     part->cell_color);
   }
 
-  if (part->threadColor != NULL) {
+  if (part->thread_color != NULL) {
     PDM_order_array (part->n_cell,
                      sizeof(int),
                      newToOldOrder,
-                     part->threadColor);
+                     part->thread_color);
   }
 
-  if (part->hyperPlaneColor != NULL) {
+  if (part->hyperplane_color != NULL) {
     PDM_order_array (part->n_cell,
                      sizeof(int),
                      newToOldOrder,
-                     part->hyperPlaneColor);
+                     part->hyperplane_color);
   }
 
   if (part->new_to_old_order_cell != NULL) {
@@ -1382,15 +1382,15 @@ int     *newToOldOrder
                      part->face_tag);
   }
 
-  /** FaceColor **/
-  if (part->faceColor != NULL) {
+  /** face_color **/
+  if (part->face_color != NULL) {
     PDM_order_array (part->n_face,
                      sizeof(int),
                      newToOldOrder,
-                     part->faceColor);
+                     part->face_color);
   }
 
-  /** FaceColor **/
+  /** face_color **/
   if (part->new_to_old_order_face != NULL) {
     // printf("PDM_order_array :new_to_old_order_face \n");
     PDM_order_array (part->n_face,

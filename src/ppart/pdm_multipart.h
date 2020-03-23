@@ -165,10 +165,10 @@ PDM_multipart_part_color_get
 const int            mpartId,
 const int            zoneGId,
 const int            i_part,
-      int          **cellColor,
-      int          **faceColor,
-      int          **threadColor,
-      int          **hyperPlaneColor
+      int          **cell_color,
+      int          **face_color,
+      int          **thread_color,
+      int          **hyperplane_color
 );
 
 void

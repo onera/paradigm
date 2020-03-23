@@ -4553,8 +4553,8 @@ PROCF (pdm_part_coarse_mesh_part_get, PDM_PART_COARSE_MESH_PART_GET)
  *
  * \param [in]   ppart_id            ppart identifier
  * \param [in]   i_part              Current partition
- * \param [out]  cellColor          Cell tag (size = n_cell)
- * \param [out]  faceColor          Face tag (size = n_face)
+ * \param [out]  cell_color          Cell tag (size = n_cell)
+ * \param [out]  face_color          Face tag (size = n_face)
 
  */
 
@@ -4562,10 +4562,10 @@ void PDM_part_coarse_color_get
 (
  const int   cmId,
  const int   i_part,
-       int **cellColor,
-       int **faceColor,
-       int **threadColor,
-       int **hyperPlaneColor
+       int **cell_color,
+       int **face_color,
+       int **thread_color,
+       int **hyperplane_color
 )
 {
   _coarse_mesh_t * cm = _get_from_id (cmId);
@@ -4581,10 +4581,10 @@ void PDM_part_coarse_color_get
     exit(1);
   }
 
-  *cellColor       = part_res->part->cellColor;
-  *faceColor       = part_res->part->faceColor;
-  *threadColor     = part_res->part->threadColor;
-  *hyperPlaneColor = part_res->part->hyperPlaneColor;
+  *cell_color       = part_res->part->cell_color;
+  *face_color       = part_res->part->face_color;
+  *thread_color     = part_res->part->thread_color;
+  *hyperplane_color = part_res->part->hyperplane_color;
 }
 
 /**
