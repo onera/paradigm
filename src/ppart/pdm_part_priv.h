@@ -215,7 +215,7 @@ typedef struct _PDM_part_t {
                                         each boundary (size = nBound + 1)
                                         or NULL                               */
   const PDM_g_num_t *_dface_group    ;/*!< Distributed faces list of each
-                                       boundary (size = dfaceBoundIdx[nBound])
+                                       boundary (size = dface_bound_idx[nBound])
                                        or NULL                                */
 
   /* Partitioning boundary faces */
