@@ -124,9 +124,9 @@ const int *IdxFace,
 const int *data,
 const int  nFac,
       int  iAbsFace,  /* A passer ren reference ou a return */
-      PDM_g_num_t *dFaceVtx,
-      int *dFaceVtxIdx,
-      PDM_g_num_t *dFaceCell
+      PDM_g_num_t *dface_vtx,
+      int *dface_vtx_idx,
+      PDM_g_num_t *dface_cell
 )
 {
   if(0 == 1){
@@ -140,24 +140,24 @@ const int  nFac,
   //   // printf("Something strange append for in find_pairs - Check mesh ooo \n");
 
   //   /* Stokage en element externe */
-  //   int iFacIdx = dFaceVtxIdx[iAbsFace];
+  //   int iFacIdx = dface_vtx_idx[iAbsFace];
 
   //   int curFac = IdxFace[0];
-  //   int nVtx1  = data[curFac+2];
+  //   int n_vtx1  = data[curFac+2];
 
 
-  //   dFaceCell[2*iAbsFace  ] = data[curFac];
-  //   dFaceCell[2*iAbsFace+1] = 0;
+  //   dface_cell[2*iAbsFace  ] = data[curFac];
+  //   dface_cell[2*iAbsFace+1] = 0;
 
-  //   // printf("----------: %d - %d - %d\n", curFac, nVtx1, iFacIdx);
+  //   // printf("----------: %d - %d - %d\n", curFac, n_vtx1, iFacIdx);
 
 
-  //   for(int iVtx=0; iVtx < nVtx1; iVtx++){
-  //     dFaceVtx[iFacIdx+iVtx] = data[curFac+3+iVtx];
+  //   for(int iVtx=0; iVtx < n_vtx1; iVtx++){
+  //     dface_vtx[iFacIdx+iVtx] = data[curFac+3+iVtx];
   //   }
 
   //   /* Update index */
-  //   dFaceVtxIdx[iAbsFace+1] = dFaceVtxIdx[iAbsFace] + nVtx1;
+  //   dface_vtx_idx[iAbsFace+1] = dface_vtx_idx[iAbsFace] + n_vtx1;
   //   iAbsFace++;
 
   //   return iAbsFace;
@@ -177,8 +177,8 @@ const int  nFac,
    */
   for(int iPos=0; iPos < nFac; iPos++){
 
-    /** Get the current Idx in dFaceVtx **/
-    int iFacIdx = dFaceVtxIdx[iAbsFace];
+    /** Get the current Idx in dface_vtx **/
+    int iFacIdx = dface_vtx_idx[iAbsFace];
 
     /*
      * Verbose
@@ -191,19 +191,19 @@ const int  nFac,
     if(AlreadyTreat[iPos] != 1){
 
       int curFac = IdxFace[iPos ];
-      int nVtx1  = data[curFac+2];
+      int n_vtx1  = data[curFac+2];
 
       /** Prepare ElemCon **/
-      int *ElmCon1 = (int *) malloc( sizeof(int *) * nVtx1); /* To sort out of loop */
+      int *ElmCon1 = (int *) malloc( sizeof(int *) * n_vtx1); /* To sort out of loop */
       int  tKey1   = 0;
-      for(int iVtx=0; iVtx < nVtx1; iVtx++){
+      for(int iVtx=0; iVtx < n_vtx1; iVtx++){
         ElmCon1[iVtx] = data[curFac+3+iVtx];
         tKey1        += data[curFac+3+iVtx];
       }
-      _quickSort_int(ElmCon1, 0, nVtx1-1);
+      _quickSort_int(ElmCon1, 0, n_vtx1-1);
 
       if(0 == 1){
-        for(int iVtx=0; iVtx<nVtx1; iVtx++){
+        for(int iVtx=0; iVtx<n_vtx1; iVtx++){
           printf("ElmCon1[%d] : %d \n", iVtx, ElmCon1[iVtx]);
         }
       }
@@ -220,20 +220,20 @@ const int  nFac,
          * On sait que la prochaine a traiter est forcement plus grande
          */
         int nexFac = IdxFace[iNex ];
-        int nVtx2  = data[nexFac+2];
+        int n_vtx2  = data[nexFac+2];
 
-        // printf("+++++++++++++++++++ : %d - %d \n", nVtx1, nVtx2);
+        // printf("+++++++++++++++++++ : %d - %d \n", n_vtx1, n_vtx2);
         /*
          * First sort - Number of Vertex is different -> Si Vtx different c'est pas la meme
          */
-        if(nVtx1 == nVtx2){
+        if(n_vtx1 == n_vtx2){
 
           /*
            * Allocate memory and copy
            */
-          int *ElmCon2 = (int *) malloc( sizeof(int *) * nVtx1);
+          int *ElmCon2 = (int *) malloc( sizeof(int *) * n_vtx1);
           int  tKey2   = 0;
-          for(int iVtx=0; iVtx < nVtx1; iVtx++){
+          for(int iVtx=0; iVtx < n_vtx1; iVtx++){
             ElmCon2[iVtx] = data[nexFac+3+iVtx];
             tKey2        += data[nexFac+3+iVtx];
           }
@@ -241,17 +241,17 @@ const int  nFac,
           /*
            * Sort ElemCon2
            */
-          _quickSort_int(ElmCon2, 0, nVtx2-1);
+          _quickSort_int(ElmCon2, 0, n_vtx2-1);
 
           if(0 == 1){
-            for(int iVtx=0; iVtx < nVtx1; iVtx++){
+            for(int iVtx=0; iVtx < n_vtx1; iVtx++){
               printf("ElmCon2[%d] : %d \n", iVtx, ElmCon2[iVtx]);
             }
           }
 
           /** Compare **/
           int isSameFace = 1;
-          for(int iVtx=0; iVtx < nVtx1; iVtx++){
+          for(int iVtx=0; iVtx < n_vtx1; iVtx++){
              if(ElmCon1[iVtx] != ElmCon2[iVtx]){
                 isSameFace = -1;
                 break;
@@ -278,40 +278,40 @@ const int  nFac,
              *    Il faut que le parent element d'une boundary soit le droit ...
              */
             // if(data[curFac] == -1){
-            // if(data[curFac] > nCell ){
-            //   dFaceCell[2*iAbsFace  ] = data[nexFac];
-            //   // dFaceCell[2*iAbsFace+1] = 0;//data[curFac];
-            //   dFaceCell[2*iAbsFace+1] = data[curFac];
+            // if(data[curFac] > n_cell ){
+            //   dface_cell[2*iAbsFace  ] = data[nexFac];
+            //   // dface_cell[2*iAbsFace+1] = 0;//data[curFac];
+            //   dface_cell[2*iAbsFace+1] = data[curFac];
 
             //   /*
-            //    * Fill FaceVtx connectivity array
+            //    * Fill face_vtx connectivity array
             //    */
-            //   for(int iVtx=0; iVtx < nVtx1; iVtx++){
-            //     dFaceVtx[iFacIdx+iVtx] = data[nexFac+3+iVtx];
+            //   for(int iVtx=0; iVtx < n_vtx1; iVtx++){
+            //     dface_vtx[iFacIdx+iVtx] = data[nexFac+3+iVtx];
             //   }
             //   printf("Impossible case now \n");
             //   exit(1);
             // }
             // else
             // {
-              dFaceCell[2*iAbsFace  ] = data[curFac];
-              dFaceCell[2*iAbsFace+1] = data[nexFac];
+              dface_cell[2*iAbsFace  ] = data[curFac];
+              dface_cell[2*iAbsFace+1] = data[nexFac];
 
               /*
-               * Fill FaceVtx connectivity array
+               * Fill face_vtx connectivity array
                */
-              for(int iVtx=0; iVtx < nVtx1; iVtx++){
-                dFaceVtx[iFacIdx+iVtx] = data[curFac+3+iVtx];
+              for(int iVtx=0; iVtx < n_vtx1; iVtx++){
+                dface_vtx[iFacIdx+iVtx] = data[curFac+3+iVtx];
               }
             // }
 
             /*
-             * Stockage FaceVtx connectivity Index
+             * Stockage face_vtx connectivity Index
              */
-            // printf("dFaceVtxIdx est faux %d \n", nVtx1);
-            // dFaceVtxIdx[++iAbsFace] = nVtx1-1;
-            // printf("dFaceVtxIdx est faux [%d] -> %d \n", iAbsFace+1, dFaceVtxIdx[iAbsFace+1]);
-            dFaceVtxIdx[iAbsFace+1] = dFaceVtxIdx[iAbsFace] + nVtx1;
+            // printf("dface_vtx_idx est faux %d \n", n_vtx1);
+            // dface_vtx_idx[++iAbsFace] = n_vtx1-1;
+            // printf("dface_vtx_idx est faux [%d] -> %d \n", iAbsFace+1, dface_vtx_idx[iAbsFace+1]);
+            dface_vtx_idx[iAbsFace+1] = dface_vtx_idx[iAbsFace] + n_vtx1;
             iAbsFace++;
 
             /*
@@ -338,21 +338,21 @@ const int  nFac,
 
       // printf("iAbsFace : %d \n", iAbsFace);
       // printf("iPos : %d \n", iPos);
-      // printf("----------: %d - %d - %d\n", curFac, nVtx1, iFacIdx);
+      // printf("----------: %d - %d - %d\n", curFac, n_vtx1, iFacIdx);
 
-      int iFacIdx2 = dFaceVtxIdx[iAbsFace];
+      int iFacIdx2 = dface_vtx_idx[iAbsFace];
       int curFac  = IdxFace[iPos];
-      int nVtx1   = data[curFac+2];
+      int n_vtx1   = data[curFac+2];
 
-      dFaceCell[2*iAbsFace  ] = data[curFac];
-      dFaceCell[2*iAbsFace+1] = 0;
+      dface_cell[2*iAbsFace  ] = data[curFac];
+      dface_cell[2*iAbsFace+1] = 0;
 
-      for(int iVtx=0; iVtx < nVtx1; iVtx++){
-        dFaceVtx[iFacIdx2+iVtx] = data[curFac+3+iVtx];
+      for(int iVtx=0; iVtx < n_vtx1; iVtx++){
+        dface_vtx[iFacIdx2+iVtx] = data[curFac+3+iVtx];
       }
 
       /* Update index */
-      dFaceVtxIdx[iAbsFace+1] = dFaceVtxIdx[iAbsFace] + nVtx1;
+      dface_vtx_idx[iAbsFace+1] = dface_vtx_idx[iAbsFace] + n_vtx1;
       iAbsFace++;
 
     }
@@ -372,17 +372,17 @@ static void
 _make_absolute_face_numbering(PDM_DMesh_nodal_t* mesh)
 {
 
-  PDM_g_num_t nFaceProc = mesh->dNFace;
+  PDM_g_num_t n_faceProc = mesh->dn_face;
   PDM_g_num_t beg_NumAbs;
 
-  PDM_MPI_Scan(&nFaceProc, &beg_NumAbs, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, mesh->pdm_mpi_comm);
-  beg_NumAbs -= nFaceProc;
+  PDM_MPI_Scan(&n_faceProc, &beg_NumAbs, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, mesh->pdm_mpi_comm);
+  beg_NumAbs -= n_faceProc;
 
 
   /** Compute the distribution of elements amont proc **/
   mesh->face_distrib = (PDM_g_num_t *) malloc((mesh->n_proc+1) * sizeof(PDM_g_num_t));
-  PDM_g_num_t _dNFace = (PDM_g_num_t) mesh->dNFace;
-  PDM_MPI_Allgather((void *) &_dNFace,
+  PDM_g_num_t _dn_face = (PDM_g_num_t) mesh->dn_face;
+  PDM_MPI_Allgather((void *) &_dn_face,
                     1,
                     PDM__PDM_MPI_G_NUM,
                     (void *) (&mesh->face_distrib[1]),
@@ -451,7 +451,7 @@ _mesh_init
 (
 PDM_DMesh_nodal_t *mesh,
 const PDM_MPI_Comm comm,
-      PDM_g_num_t  nVtx,
+      PDM_g_num_t  n_vtx,
       PDM_g_num_t  nCel
 )
 {
@@ -464,7 +464,7 @@ const PDM_MPI_Comm comm,
   mesh->n_proc                   = n_proc;
   mesh->i_proc                   = i_proc;
 
-  mesh->n_som_abs                = nVtx;
+  mesh->n_som_abs                = n_vtx;
   mesh->n_cell_abs               = nCel;
 
   mesh->vtx                      = malloc(sizeof(PDM_DMesh_nodal_vtx_t ));
@@ -480,14 +480,14 @@ const PDM_MPI_Comm comm,
   mesh->n_sections               = 0;
 
   mesh->n_dcell                  = -1;
-  mesh->dCellFace                = NULL;
-  mesh->dCellFaceIdx             = NULL;
+  mesh->dcell_face                = NULL;
+  mesh->dcell_faceIdx             = NULL;
   mesh->cell_distrib             = NULL;
 
-  mesh->dNFace                   = -1;
-  mesh->_dFaceVtx                = NULL;
-  mesh->_dFaceVtxIdx             = NULL;
-  mesh->_dFaceCell               = NULL;
+  mesh->dn_face                   = -1;
+  mesh->_dface_vtx                = NULL;
+  mesh->_dface_vtx_idx             = NULL;
+  mesh->_dface_cell               = NULL;
   mesh->face_distrib             = NULL;
 
 }
@@ -1099,7 +1099,7 @@ int
 PDM_DMesh_nodal_create
 (
 const PDM_MPI_Comm comm,
-      PDM_g_num_t  nVtx,
+      PDM_g_num_t  n_vtx,
       PDM_g_num_t  nCel
 )
 {
@@ -1113,7 +1113,7 @@ const PDM_MPI_Comm comm,
 
   }
 
-  _mesh_init (mesh, comm, nVtx, nCel);
+  _mesh_init (mesh, comm, n_vtx, nCel);
 
   if (mesh_handles == NULL) {
     mesh_handles = PDM_Handles_create (4);
@@ -1206,24 +1206,24 @@ const int hdl
       free (mesh->sections_id);
     }
 
-    if (mesh->dCellFaceIdx != NULL) {
-      free (mesh->dCellFaceIdx);
+    if (mesh->dcell_faceIdx != NULL) {
+      free (mesh->dcell_faceIdx);
     }
 
-    if (mesh->dCellFace != NULL) {
-      free (mesh->dCellFace);
+    if (mesh->dcell_face != NULL) {
+      free (mesh->dcell_face);
     }
 
     if (mesh->cell_distrib != NULL) {
       free (mesh->cell_distrib);
     }
 
-    if (mesh->_dFaceVtxIdx != NULL) {
-      free (mesh->_dFaceVtxIdx);
+    if (mesh->_dface_vtx_idx != NULL) {
+      free (mesh->_dface_vtx_idx);
     }
 
-    if (mesh->_dFaceVtx != NULL) {
-      free (mesh->_dFaceVtx);
+    if (mesh->_dface_vtx != NULL) {
+      free (mesh->_dface_vtx);
     }
 
     if (mesh->face_distrib != NULL) {
@@ -2241,7 +2241,7 @@ const int  hdl
     PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
   }
 
-  // if (mesh->dCellFace == NULL) {
+  // if (mesh->dcell_face == NULL) {
   //   PDM_error (__FILE__, __LINE__, 0, "Not implemented yet\n");
   // }
 
@@ -2375,7 +2375,7 @@ const int   hdl
   int* part_stri = (int *) malloc( sizeof(int) * nFacApprox  );
 
   /** Initialisation of some data **/
-  int nFace  = 0;
+  int n_face  = 0;
   int nData  = 0;
 
   /** Loop over Elements **/
@@ -2385,18 +2385,18 @@ const int   hdl
     PDM_DMesh_nodal_section_std_t *sectionStd = (PDM_DMesh_nodal_section_std_t *) PDM_Handles_get (mesh->sections_std, iSection);
 
     /** Convert type to stride on elements **/
-    int nVtxPerElmt = _get_size_of_element(sectionStd->t_elt);
+    int n_vtxPerElmt = _get_size_of_element(sectionStd->t_elt);
     int nFacPerElmt = _get_nbface_per_element(sectionStd->t_elt);
 
     /** Get the index wich compute the elements **/
-    int*  nVtxpFac  = (int * ) malloc( nFacPerElmt * sizeof(int * ) );
+    int*  n_vtxpFac  = (int * ) malloc( nFacPerElmt * sizeof(int * ) );
     int** tabFacVtx = (int **) malloc( nFacPerElmt * sizeof(int **) );
 
-    /** Fill up nVtxpFac and tabFacVtx **/
-    _get_elmt_info(sectionStd->t_elt, nVtxpFac, tabFacVtx);
+    /** Fill up n_vtxpFac and tabFacVtx **/
+    _get_elmt_info(sectionStd->t_elt, n_vtxpFac, tabFacVtx);
 
-    // int BegE = sectionStd->distrib[mesh->i_proc  ]*nVtxPerElmt  ; //+ offset;
-    // int EndE = sectionStd->distrib[mesh->i_proc+1]*nVtxPerElmt-1; //+ offset;
+    // int BegE = sectionStd->distrib[mesh->i_proc  ]*n_vtxPerElmt  ; //+ offset;
+    // int EndE = sectionStd->distrib[mesh->i_proc+1]*n_vtxPerElmt-1; //+ offset;
 
     /** Verbose **/
     // if(0 == 0){
@@ -2406,18 +2406,18 @@ const int   hdl
     /** Each section is composed of multiple elements **/
     for(int iElmt = sectionStd->distrib[mesh->i_proc]; iElmt < sectionStd->distrib[mesh->i_proc+1]; iElmt++){
 
-      // int iOffSet = iElmt*nVtxPerElmt-sectionStd->distrib[mesh->i_proc];
-      int iOffSet = (iElmt-sectionStd->distrib[mesh->i_proc])*nVtxPerElmt;
+      // int iOffSet = iElmt*n_vtxPerElmt-sectionStd->distrib[mesh->i_proc];
+      int iOffSet = (iElmt-sectionStd->distrib[mesh->i_proc])*n_vtxPerElmt;
       // printf("[%i] - iOffset : %i --- %i \n",mesh->i_proc,  iOffSet, sectionStd->distrib[mesh->i_proc]);
       /** For each Elemt we decompose it to face  **/
       for(int iFace = 0; iFace < nFacPerElmt; iFace++){
 
         /* Compute the key */
-        int iKey = _compute_key(sectionStd->_connec, tabFacVtx[iFace], iOffSet, nVtxpFac[iFace]);
+        int iKey = _compute_key(sectionStd->_connec, tabFacVtx[iFace], iOffSet, n_vtxpFac[iFace]);
 
         /* Build the LNToGN */
         // Attnetion ici c'est faux je pense !!!!
-        if(nFace >= nFacApprox){
+        if(n_face >= nFacApprox){
           nFacApprox = 2*nFacApprox;
           LNToGN    = (PDM_g_num_t *) realloc(LNToGN   , sizeof(PDM_g_num_t) * nFacApprox );
           part_stri = (int         *) realloc(part_stri, sizeof(int) * nFacApprox );
@@ -2427,16 +2427,16 @@ const int   hdl
           part_data = (int         *) realloc(part_data, sizeof(int) * nDataApprox );
         }
 
-        LNToGN[nFace] = iKey;
+        LNToGN[n_face] = iKey;
 
-        /** Prepare part_data - iElem iType nVtx (i1, i2, i3, ... ) - **/
+        /** Prepare part_data - iElem iType n_vtx (i1, i2, i3, ... ) - **/
         part_data[nData++] = iElmt+1+mesh->sectionDistribution[iSection];
         part_data[nData++] = 1;
 
-        /* Setup nVtx */
-        part_data[nData++] = nVtxpFac[iFace] ;
+        /* Setup n_vtx */
+        part_data[nData++] = n_vtxpFac[iFace] ;
 
-        for(int iVtx=0; iVtx < nVtxpFac[iFace]; iVtx++){
+        for(int iVtx=0; iVtx < n_vtxpFac[iFace]; iVtx++){
           // printf("lVtxIdx[%d] : %d -> %d \n ", iVtx, lVtxIdx[iVtx],dCellVtxArr[lVtxIdx[iVtx]]);
           // printf("lVtxIdx[%d] : %d -> %d \n ", BegE+tabFacVtx[iFace][iVtx], fetch->_dElemArr[BegE+tabFacVtx[iFace][iVtx]], iKey);
           // printf("lVtxIdx[%d] : %d -> %d \n ", iVtx, sectionStd->_connec[iOffSet+tabFacVtx[iFace][iVtx]], iKey);
@@ -2444,16 +2444,16 @@ const int   hdl
         }
 
         /** Prepare part_data **/
-        part_stri[nFace] = 1+1+1+nVtxpFac[iFace];
+        part_stri[n_face] = 1+1+1+n_vtxpFac[iFace];
 
         /** Go to next face **/
-        nFace++;
+        n_face++;
 
       } /* End face loop */
     } /* End element loop */
 
     /** Free **/
-    free(nVtxpFac);
+    free(n_vtxpFac);
     for(int i=0; i < nFacPerElmt; i++){
       free(tabFacVtx[i]);
     }
@@ -2465,8 +2465,8 @@ const int   hdl
   /*
    * Re-Allocate Array
    */
-  LNToGN    = (PDM_g_num_t *) realloc((LNToGN   ), nFace * sizeof(PDM_g_num_t * ));
-  part_stri = (int *) realloc((part_stri), nFace * sizeof(int * ));
+  LNToGN    = (PDM_g_num_t *) realloc((LNToGN   ), n_face * sizeof(PDM_g_num_t * ));
+  part_stri = (int *) realloc((part_stri), n_face * sizeof(int * ));
   part_data = (int *) realloc((part_data), nData * sizeof(int * ));
 
   /*
@@ -2474,11 +2474,11 @@ const int   hdl
    */
   if(0 == 1){
     printf("------------------------------------------- \n");
-    printf("nFace       : %d \n", nFace );
+    printf("n_face       : %d \n", n_face );
     printf("nData       : %d \n", nData );
     printf("nFacApprox  : %d \n", nFacApprox );
     printf("------------------------------------------- \n");
-    for (int i = 0; i < nFace; i++) {
+    for (int i = 0; i < n_face; i++) {
       printf("[%d] - i/iKey  : %d - "PDM_FMT_G_NUM" \n", mesh->i_proc, i, LNToGN[i]);
     }
     printf("------------------------------------------- \n");
@@ -2492,7 +2492,7 @@ const int   hdl
                                                       1.,
                                                       &LNToGN,
                                                       NULL,
-                                                      &nFace,
+                                                      &n_face,
                                                       1,
                                                       mesh->pdm_mpi_comm);
 
@@ -2538,17 +2538,17 @@ const int   hdl
   free(BlkStri);
 
   /*
-   * Allocate Memory - FaceVtx - FaceCell
+   * Allocate Memory - face_vtx - face_cell
    */
-  mesh->_dFaceVtx     = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t *) * dataSize/2); /* Not stupid at all */
-  mesh->_dFaceVtxIdx  = (int *) malloc( sizeof(int *) * dataSize/2); /* Surdim as Hell */
-  mesh->_dFaceCell    = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t *) * dataSize/2); /* Surdim as Hell */
+  mesh->_dface_vtx     = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t *) * dataSize/2); /* Not stupid at all */
+  mesh->_dface_vtx_idx  = (int *) malloc( sizeof(int *) * dataSize/2); /* Surdim as Hell */
+  mesh->_dface_cell    = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t *) * dataSize/2); /* Surdim as Hell */
 
   /*
    * Init AbsNumerotation
    */
   int iAbsFace = 0;
-  mesh->_dFaceVtxIdx[0] = 0;
+  mesh->_dface_vtx_idx[0] = 0;
 
   /*
    * Loop over BlkData : Each block correspond to a key
@@ -2559,7 +2559,7 @@ const int   hdl
 
     /*
      * Traitement des groupes de données
-     * Reminder Blk = [ [iCell, iType, nVtx, i1, i2, ...], ... ]
+     * Reminder Blk = [ [iCell, iType, n_vtx, i1, i2, ...], ... ]
      */
     int nEntryFace = BlkStriIdx[iBlk+1] - BlkStriIdx[iBlk];
 
@@ -2626,9 +2626,9 @@ const int   hdl
                            BlkData,
                            nFac,
                            iAbsFace,
-                           mesh->_dFaceVtx,
-                           mesh->_dFaceVtxIdx,
-                           mesh->_dFaceCell);
+                           mesh->_dface_vtx,
+                           mesh->_dface_vtx_idx,
+                           mesh->_dface_cell);
 
     /*
      * Free
@@ -2640,23 +2640,23 @@ const int   hdl
   /*
    * Fill up fetch structure
    */
-  mesh->dNFace = iAbsFace;
+  mesh->dn_face = iAbsFace;
 
   /*
    * Realloc -> TODOUX
    */
-  mesh->_dFaceVtxIdx = (int *        ) realloc((mesh->_dFaceVtxIdx), (mesh->dNFace + 1) * sizeof(int * ) );
-  mesh->_dFaceVtx    = (PDM_g_num_t *) realloc((mesh->_dFaceVtx   ), mesh->_dFaceVtxIdx[mesh->dNFace] * sizeof(PDM_g_num_t * ));
-  mesh->_dFaceCell   = (PDM_g_num_t *) realloc((mesh->_dFaceCell  ), mesh->dNFace * 2 * sizeof(PDM_g_num_t * ));
+  mesh->_dface_vtx_idx = (int *        ) realloc((mesh->_dface_vtx_idx), (mesh->dn_face + 1) * sizeof(int * ) );
+  mesh->_dface_vtx    = (PDM_g_num_t *) realloc((mesh->_dface_vtx   ), mesh->_dface_vtx_idx[mesh->dn_face] * sizeof(PDM_g_num_t * ));
+  mesh->_dface_cell   = (PDM_g_num_t *) realloc((mesh->_dface_cell  ), mesh->dn_face * 2 * sizeof(PDM_g_num_t * ));
 
   /*
    * Verbose
    */
   if(1 == 0){
-    printf("fetch->dNFace : %d \n", mesh->dNFace);
-    for(int i = 0; i < mesh->dNFace; i++) {
+    printf("fetch->dn_face : %d \n", mesh->dn_face);
+    for(int i = 0; i < mesh->dn_face; i++) {
       // printf("BlockData[%d]    : %d \n", i, BlkData2[i]);
-      printf("mesh->_dFaceCell[%d] : "PDM_FMT_G_NUM"/"PDM_FMT_G_NUM" \n", i, mesh->_dFaceCell[2*i], mesh->_dFaceCell[2*i+1]);
+      printf("mesh->_dface_cell[%d] : "PDM_FMT_G_NUM"/"PDM_FMT_G_NUM" \n", i, mesh->_dface_cell[2*i], mesh->_dface_cell[2*i+1]);
     }
 
   }
@@ -2669,7 +2669,7 @@ const int   hdl
   /*
    * Rebuild cell face
    */
-  PDM_g_num_t *LNToGNElem = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) * 2 * mesh->dNFace );
+  PDM_g_num_t *LNToGNElem = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) * 2 * mesh->dn_face );
   for (PDM_g_num_t i = mesh->face_distrib[mesh->i_proc]; i < mesh->face_distrib[mesh->i_proc+1]; i++) {
     int idx = (int) (i-mesh->face_distrib[mesh->i_proc]);
     LNToGNElem[2*idx  ] = i+1;
@@ -2689,29 +2689,29 @@ const int   hdl
   }
 
 
-  int nFac2 = 2*mesh->dNFace;
+  int nFac2 = 2*mesh->dn_face;
 
-  int* part_stri2 = (int *) malloc( sizeof(int) * 2 * mesh->dNFace );
+  int* part_stri2 = (int *) malloc( sizeof(int) * 2 * mesh->dn_face );
 
-  /* Prepare dFaceCell loc */
-  PDM_g_num_t* dFaceCellTmp = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) * 2 * mesh->dNFace );
+  /* Prepare dface_cell loc */
+  PDM_g_num_t* dface_cellTmp = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) * 2 * mesh->dn_face );
 
   int idxG = 0;
   for (int i = mesh->face_distrib[mesh->i_proc]; i < mesh->face_distrib[mesh->i_proc+1]; i++) {
     int idx = (int) (i-mesh->face_distrib[mesh->i_proc]);
-    dFaceCellTmp[idxG] = mesh->_dFaceCell[2*idx];
+    dface_cellTmp[idxG] = mesh->_dface_cell[2*idx];
     LNToGNElem[idxG] = i+1;
     part_stri2[idxG] = 1;
     idxG++;
-    if(mesh->_dFaceCell[2*idx+1] != 0){
-      dFaceCellTmp[idxG] = mesh->_dFaceCell[2*idx+1];
+    if(mesh->_dface_cell[2*idx+1] != 0){
+      dface_cellTmp[idxG] = mesh->_dface_cell[2*idx+1];
       LNToGNElem[idxG  ] = i+1;
       part_stri2[idxG] = 1;
       idxG++;
     }
     else
     {
-      dFaceCellTmp[idxG] = mesh->_dFaceCell[2*idx];
+      dface_cellTmp[idxG] = mesh->_dface_cell[2*idx];
       LNToGNElem[idxG  ] = i+1;
       part_stri2[idxG] = 0;
       idxG++;
@@ -2725,7 +2725,7 @@ const int   hdl
   PDM_part_to_block_t *ptb2 = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                        PDM_PART_TO_BLOCK_POST_MERGE,
                                                        1.,
-                                                       &dFaceCellTmp,
+                                                       &dface_cellTmp,
                                                        NULL,
                                                        &nFac2,
                                                        1,
@@ -2734,11 +2734,11 @@ const int   hdl
   int *BlkStri2 = NULL;
   int *BlkData2 = NULL;
 
-  /** Prepare part_stride for dFaceCell - 2 for all **/
-  // for(int i = 0; i < 2*mesh->dNFace ; i++){
+  /** Prepare part_stride for dface_cell - 2 for all **/
+  // for(int i = 0; i < 2*mesh->dn_face ; i++){
   // for(int i = 0; i < idxG ; i++){
   //   part_stri2[i] = 1;
-  //   // part_stri2[i] = mesh->dNFace;
+  //   // part_stri2[i] = mesh->dn_face;
   // }
 
   PDM_part_to_block_exch(          ptb2,
@@ -2767,33 +2767,33 @@ const int   hdl
     }
   }
 
-  mesh->dCellFaceIdx = (PDM_l_num_t * ) malloc( (dElmtTot + 1) * sizeof(PDM_l_num_t * ) );
+  mesh->dcell_faceIdx = (PDM_l_num_t * ) malloc( (dElmtTot + 1) * sizeof(PDM_l_num_t * ) );
 
-  mesh->dCellFaceIdx[0] = 0;
+  mesh->dcell_faceIdx[0] = 0;
   for(int i = 0; i < dElmtTot; i++){
-    mesh->dCellFaceIdx[i+1] = mesh->dCellFaceIdx[i] + BlkStri2[i];
+    mesh->dcell_faceIdx[i+1] = mesh->dcell_faceIdx[i] + BlkStri2[i];
   }
 
-  // printf("dElmtTot : %d\n", mesh->dCellFaceIdx[dElmtTot]);
+  // printf("dElmtTot : %d\n", mesh->dcell_faceIdx[dElmtTot]);
 
-  mesh->dCellFace = (PDM_g_num_t *) malloc(mesh->dCellFaceIdx[dElmtTot] * sizeof(PDM_g_num_t * ));
+  mesh->dcell_face = (PDM_g_num_t *) malloc(mesh->dcell_faceIdx[dElmtTot] * sizeof(PDM_g_num_t * ));
 
   for(int i = 0; i < dElmtTot; i++){
 
     // int nFacPerElmt = BlkStri2[i];
-    int nFacPerElmt = mesh->dCellFaceIdx[i+1] - mesh->dCellFaceIdx[i];
+    int nFacPerElmt = mesh->dcell_faceIdx[i+1] - mesh->dcell_faceIdx[i];
     // printf("nFacPerElmt : %d\n", nFacPerElmt);
     for(int iFac = 0; iFac < nFacPerElmt; iFac++){
-      mesh->dCellFace[mesh->dCellFaceIdx[i]+iFac] = BlkData2[mesh->dCellFaceIdx[i]+iFac];
+      mesh->dcell_face[mesh->dcell_faceIdx[i]+iFac] = BlkData2[mesh->dcell_faceIdx[i]+iFac];
     }
   }
 
   /*
-   * Mask all FaceCell with boundary
+   * Mask all face_cell with boundary
    */
-  // for(int i = 0; i < mesh->dNFace; i++) {
-  //    if(mesh->_dFaceCell[2*i+1] > mesh->n_cell_abs){
-  //       mesh->_dFaceCell[2*i+1] = 0;
+  // for(int i = 0; i < mesh->dn_face; i++) {
+  //    if(mesh->_dface_cell[2*i+1] > mesh->n_cell_abs){
+  //       mesh->_dface_cell[2*i+1] = 0;
   //    }
   // }
 
@@ -2803,7 +2803,7 @@ const int   hdl
 
   free(LNToGN);
   free(LNToGNElem);
-  free(dFaceCellTmp);
+  free(dface_cellTmp);
   free(part_data);
   free(part_stri);
 
@@ -2820,8 +2820,8 @@ const int   hdl
  * \brief  Return cell \rightarrow face connectivity
  *
  * \param [in]   hdl              Distributed nodal mesh handle
- * \param [out]  dCellFaceIdx   Index of distributed cell->face connectivity
- * \param [out]  dCellFace       Distributed cell->face connectivity
+ * \param [out]  dcell_faceIdx   Index of distributed cell->face connectivity
+ * \param [out]  dcell_face       Distributed cell->face connectivity
  *
  * \return     Number of cells on the current process
  *
@@ -2831,8 +2831,8 @@ int
 PDM_DMesh_nodal_cell_face_get
 (
 const int   hdl,
-      int   **dCellFaceIdx,
-PDM_g_num_t **dCellFace
+      int   **dcell_faceIdx,
+PDM_g_num_t **dcell_face
 )
 {
   PDM_DMesh_nodal_t * mesh =
@@ -2842,8 +2842,8 @@ PDM_g_num_t **dCellFace
     PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
   }
 
-  *dCellFaceIdx = mesh->dCellFaceIdx;
-  *dCellFace = mesh->dCellFace;
+  *dcell_faceIdx = mesh->dcell_faceIdx;
+  *dcell_face = mesh->dcell_face;
 
   return mesh->n_dcell;
 
@@ -2853,7 +2853,7 @@ PDM_g_num_t **dCellFace
  * \brief  Return face->cell connectivity
  *
  * \param [in]   hdl              Distributed nodal mesh handle
- * \param [out]  FaceCell       Distributed face->cell connectivity
+ * \param [out]  face_cell       Distributed face->cell connectivity
  *
  * \return     Number of cells on the current process
  *
@@ -2862,7 +2862,7 @@ int
 PDM_DMesh_nodal_face_cell_get
 (
 const int     hdl,
-PDM_g_num_t **dFaceCell
+PDM_g_num_t **dface_cell
 )
 {
   PDM_DMesh_nodal_t * mesh =
@@ -2872,9 +2872,9 @@ PDM_g_num_t **dFaceCell
     PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
   }
 
-  *dFaceCell = mesh->_dFaceCell;
+  *dface_cell = mesh->_dface_cell;
 
-  return mesh->dNFace;
+  return mesh->dn_face;
 
 }
 
@@ -2884,8 +2884,8 @@ PDM_g_num_t **dFaceCell
  * \brief  Return face \rightarrow vertex connectivity
  *
  * \param [in]   hdl              Distributed nodal mesh handle
- * \param [out]  dCellFaceIdx   Index of distributed cell->face connectivity
- * \param [out]  dCellFace       Distributed cell->face connectivity
+ * \param [out]  dcell_faceIdx   Index of distributed cell->face connectivity
+ * \param [out]  dcell_face       Distributed cell->face connectivity
  *
  * \return     Number of faces on the current process
  *
@@ -2895,8 +2895,8 @@ int
 PDM_DMesh_nodal_face_vtx_get
 (
 const int   hdl,
-      int   **_dFaceVtxIdx,
-PDM_g_num_t **_dFaceVtx
+      int   **_dface_vtx_idx,
+PDM_g_num_t **_dface_vtx
 )
 {
   PDM_DMesh_nodal_t * mesh =
@@ -2906,10 +2906,10 @@ PDM_g_num_t **_dFaceVtx
     PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
   }
 
-  *_dFaceVtxIdx = mesh->_dFaceVtxIdx;
-  *_dFaceVtx     = mesh->_dFaceVtx;
+  *_dface_vtx_idx = mesh->_dface_vtx_idx;
+  *_dface_vtx     = mesh->_dface_vtx;
 
-  return mesh->dNFace;
+  return mesh->dn_face;
 
 }
 

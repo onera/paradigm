@@ -99,8 +99,8 @@ _quickSort_int
  *
  * \param [inout] part_ini                 Part object - fine mesh partition
  *
- * \param [inout] cellCellIdxCompressed    Array of indexes of the dual graph
- * \param [inout] cellCellCompressed       Dual graph
+ * \param [inout] cell_cell_idxCompressed    Array of indexes of the dual graph
+ * \param [inout] cell_cellCompressed       Dual graph
  *
  */
 
@@ -108,103 +108,103 @@ static void
 _dual_graph_firstrank
 (
   _part_t        *part_ini,
-  int           **cellCellIdxCompressed,
-  int           **cellCellCompressed
+  int           **cell_cell_idxCompressed,
+  int           **cell_cellCompressed
 )
 {
-  //cellCellN: array of counters of the numbers of connectivities
-  //cellCell: dual graph to be built
-  //cellCellIdx: array of indexes of the dual graph (same as cellFaceIdx)
+  //cell_cellN: array of counters of the numbers of connectivities
+  //cell_cell: dual graph to be built
+  //cell_cell_idx: array of indexes of the dual graph (same as cell_face_idx)
 
-  int *cellCellN = (int *) malloc(part_ini->nCell * sizeof(int));
-  for (int i = 0; i < part_ini->nCell; i++) {
-    cellCellN[i] = 0;
+  int *cell_cellN = (int *) malloc(part_ini->n_cell * sizeof(int));
+  for (int i = 0; i < part_ini->n_cell; i++) {
+    cell_cellN[i] = 0;
   }
 
-  int *cellCell = (int *) malloc(part_ini->cellFaceIdx[part_ini->nCell] * sizeof(int));
-  for (int i = 0; i < part_ini->cellFaceIdx[part_ini->nCell]; i++) {
-    cellCell[i] = -1;
+  int *cell_cell = (int *) malloc(part_ini->cell_face_idx[part_ini->n_cell] * sizeof(int));
+  for (int i = 0; i < part_ini->cell_face_idx[part_ini->n_cell]; i++) {
+    cell_cell[i] = -1;
   }
 
-  int *cellCellIdx = (int *) malloc((part_ini->nCell + 1) * sizeof(int));
-  for(int i = 0; i < part_ini->nCell + 1; i++) {
-    cellCellIdx[i] = part_ini->cellFaceIdx[i];
+  int *cell_cell_idx = (int *) malloc((part_ini->n_cell + 1) * sizeof(int));
+  for(int i = 0; i < part_ini->n_cell + 1; i++) {
+    cell_cell_idx[i] = part_ini->cell_face_idx[i];
   }
 
-  for (int i = 0; i < part_ini->nFace; i++) {
-    int iCell1 = PDM_ABS (part_ini->faceCell[2*i    ]) - 1;
-    int iCell2 = PDM_ABS (part_ini->faceCell[2*i + 1]) - 1;
+  for (int i = 0; i < part_ini->n_face; i++) {
+    int iCell1 = PDM_ABS (part_ini->face_cell[2*i    ]) - 1;
+    int iCell2 = PDM_ABS (part_ini->face_cell[2*i + 1]) - 1;
     //Only the non-boundary faces are stored
     if (iCell2 > 0) {
-      int idx1 = cellCellIdx[iCell1] + cellCellN[iCell1];
-      cellCell[idx1] = iCell2 + 1;
-      cellCellN[iCell1] += 1;
+      int idx1 = cell_cell_idx[iCell1] + cell_cellN[iCell1];
+      cell_cell[idx1] = iCell2 + 1;
+      cell_cellN[iCell1] += 1;
 
-      int idx2 = cellCellIdx[iCell2] + cellCellN[iCell2];
-      cellCell[idx2] = iCell1 + 1;
-      cellCellN[iCell2] += 1;
+      int idx2 = cell_cell_idx[iCell2] + cell_cellN[iCell2];
+      cell_cell[idx2] = iCell1 + 1;
+      cell_cellN[iCell2] += 1;
     }
   }
 
   if (0 == 1) {
-    PDM_printf("Content of cellCellN after looping over cellFace: ");
-    for(int i = 0; i < part_ini->nCell; i++) {
-      PDM_printf(" %d ", cellCellN[i]);
+    PDM_printf("Content of cell_cellN after looping over cell_face: ");
+    for(int i = 0; i < part_ini->n_cell; i++) {
+      PDM_printf(" %d ", cell_cellN[i]);
     }
     PDM_printf("\n");
 
-    PDM_printf("Content of cellCell after looping over cellFace: ");
-    for(int i = 0; i < part_ini->cellFaceIdx[part_ini->nCell]; i++) {
-      PDM_printf(" %d ", cellCell[i]);
+    PDM_printf("Content of cell_cell after looping over cell_face: ");
+    for(int i = 0; i < part_ini->cell_face_idx[part_ini->n_cell]; i++) {
+      PDM_printf(" %d ", cell_cell[i]);
     }
     PDM_printf("\n");
   }
 
-  //cellCellIdx is rebuilt
-  *cellCellIdxCompressed = malloc((part_ini->nCell + 1) * sizeof(int));
+  //cell_cell_idx is rebuilt
+  *cell_cell_idxCompressed = malloc((part_ini->n_cell + 1) * sizeof(int));
 
-  (*cellCellIdxCompressed)[0] = 0;
-  for(int i = 0; i < part_ini->nCell; i++) {
-    (*cellCellIdxCompressed)[i + 1] = (*cellCellIdxCompressed)[i] + cellCellN[i];
+  (*cell_cell_idxCompressed)[0] = 0;
+  for(int i = 0; i < part_ini->n_cell; i++) {
+    (*cell_cell_idxCompressed)[i + 1] = (*cell_cell_idxCompressed)[i] + cell_cellN[i];
   }
 
-  //We compress the dual graph since cellCellIdx was built from cellFaceIdx
-  //We have then nFace elements in cellCell whereas it needs to be composed of nCell elements
+  //We compress the dual graph since cell_cell_idx was built from cell_face_idx
+  //We have then n_face elements in cell_cell whereas it needs to be composed of n_cell elements
 
-  //    PDM_printf("(*cellCellIdxCompressed)[part_ini->nCell] : %d \n", (*cellCellIdxCompressed)[part_ini->nCell]);
-  *cellCellCompressed = malloc((*cellCellIdxCompressed)[part_ini->nCell] * sizeof(int));
+  //    PDM_printf("(*cell_cell_idxCompressed)[part_ini->n_cell] : %d \n", (*cell_cell_idxCompressed)[part_ini->n_cell]);
+  *cell_cellCompressed = malloc((*cell_cell_idxCompressed)[part_ini->n_cell] * sizeof(int));
 
-  int cpt_cellCellCompressed = 0;
-  for(int i = 0; i < part_ini->cellFaceIdx[part_ini->nCell]; i++) {
+  int cpt_cell_cellCompressed = 0;
+  for(int i = 0; i < part_ini->cell_face_idx[part_ini->n_cell]; i++) {
     //        PDM_printf("I am testing a value for the %d time! \n", i);
 
     //We have an information to store when a neighboring cell exists
-    if(cellCell[i] > -1){
+    if(cell_cell[i] > -1){
       //            PDM_printf("I am storing a value for the %d time! \n", i);
       //We add a -1 to have the graph vertices numbered from 0 to n (C numbering)
-      (*cellCellCompressed)[cpt_cellCellCompressed++] = cellCell[i] - 1;
-      //            PDM_printf("Valeur stockee : %d \n ", (*cellCellCompressed)[cpt_cellCellCompressed - 1]);
+      (*cell_cellCompressed)[cpt_cell_cellCompressed++] = cell_cell[i] - 1;
+      //            PDM_printf("Valeur stockee : %d \n ", (*cell_cellCompressed)[cpt_cell_cellCompressed - 1]);
     }
   }
 
   if( 0 == 1) {
-    PDM_printf("Content of cellCellCompressed after compression and renumbering: ");
-    for(int i = 0; i < (*cellCellIdxCompressed)[part_ini->nCell]; i++) {
-      PDM_printf(" %d ", (*cellCellCompressed)[i]);
+    PDM_printf("Content of cell_cellCompressed after compression and renumbering: ");
+    for(int i = 0; i < (*cell_cell_idxCompressed)[part_ini->n_cell]; i++) {
+      PDM_printf(" %d ", (*cell_cellCompressed)[i]);
     }
     PDM_printf("\n");
   }
 
   /* Free temporary arrays*/
 
-  free(cellCellN);
-  free(cellCell);
-  free(cellCellIdx);
+  free(cell_cellN);
+  free(cell_cell);
+  free(cell_cell_idx);
 
   //Remove duplicate cells of the dual graph
   //We use the following scheme:
   //We loop over the indexes for the whole array to subdivide it into subarrays
-  //We sort locally each subarray (determined thanks to cellCellIdxCompressed)
+  //We sort locally each subarray (determined thanks to cell_cell_idxCompressed)
   //We loop over each subarray
   //We store the first value of each subarray anyway
   //We store each non-duplicated value and increment the writing index
@@ -213,59 +213,59 @@ _dual_graph_firstrank
   int idx_write = 0;
   int tabIdxTemp = 0;
 
-  for (int i = 0; i < part_ini->nCell; i++) {
-    _quickSort_int((*cellCellCompressed), tabIdxTemp, (*cellCellIdxCompressed)[i + 1] - 1);
+  for (int i = 0; i < part_ini->n_cell; i++) {
+    _quickSort_int((*cell_cellCompressed), tabIdxTemp, (*cell_cell_idxCompressed)[i + 1] - 1);
 
     int last_value = -1;
 
-    for (int j = tabIdxTemp; j < (*cellCellIdxCompressed)[i + 1]; j++) {
-      //We need to have a local index (between 0 and nFace)
+    for (int j = tabIdxTemp; j < (*cell_cell_idxCompressed)[i + 1]; j++) {
+      //We need to have a local index (between 0 and n_face)
       //If the value is different from the previous one (higher than is the same as different since the array is sorted)
 
-      if(last_value != (*cellCellCompressed)[j]) {
-        (*cellCellCompressed)[idx_write++] = (*cellCellCompressed)[j];
-        last_value = (*cellCellCompressed)[j];
+      if(last_value != (*cell_cellCompressed)[j]) {
+        (*cell_cellCompressed)[idx_write++] = (*cell_cellCompressed)[j];
+        last_value = (*cell_cellCompressed)[j];
       }
     }
 
     if (0 == 1) {
-      PDM_printf("\n Contenu de cellCellCompressed apres reecriture: \n");
-      for(int i1 = 0; i1 < (*cellCellIdxCompressed)[part_ini->nCell]; i1++) {
-        PDM_printf(" %d ", (*cellCellCompressed)[i1]);
+      PDM_printf("\n Contenu de cell_cellCompressed apres reecriture: \n");
+      for(int i1 = 0; i1 < (*cell_cell_idxCompressed)[part_ini->n_cell]; i1++) {
+        PDM_printf(" %d ", (*cell_cellCompressed)[i1]);
       }
       PDM_printf("\n");
     }
 
-    tabIdxTemp = (*cellCellIdxCompressed)[i + 1];
-    (*cellCellIdxCompressed)[i + 1] = idx_write;
+    tabIdxTemp = (*cell_cell_idxCompressed)[i + 1];
+    (*cell_cell_idxCompressed)[i + 1] = idx_write;
 
     if (0 == 1) {
-      PDM_printf("\n Contenu de cellCellIdxCompressed apres reecriture: \n");
-      for(int i1 = 0; i1 < part_ini->nCell + 1; i1++) {
-        PDM_printf(" %d ", (*cellCellIdxCompressed)[i1]);
+      PDM_printf("\n Contenu de cell_cell_idxCompressed apres reecriture: \n");
+      for(int i1 = 0; i1 < part_ini->n_cell + 1; i1++) {
+        PDM_printf(" %d ", (*cell_cell_idxCompressed)[i1]);
       }
       PDM_printf("\n");
     }
   }
 
   if (0 == 1) {
-    PDM_printf("Content of cellCellIdxCompressed after compression: ");
-    for(int i1 = 0; i1 < part_ini->nCell + 1; i1++) {
-      PDM_printf(" %d ", (*cellCellIdxCompressed)[i1]);
+    PDM_printf("Content of cell_cell_idxCompressed after compression: ");
+    for(int i1 = 0; i1 < part_ini->n_cell + 1; i1++) {
+      PDM_printf(" %d ", (*cell_cell_idxCompressed)[i1]);
     }
     PDM_printf("\n");
 
-    PDM_printf("Content of cellCellCompressed after compression: ");
-    for(int i1 = 0; i1 < (*cellCellIdxCompressed)[part_ini->nCell]; i1++) {
-      PDM_printf(" %d ", (*cellCellCompressed)[i1]);
+    PDM_printf("Content of cell_cellCompressed after compression: ");
+    for(int i1 = 0; i1 < (*cell_cell_idxCompressed)[part_ini->n_cell]; i1++) {
+      PDM_printf(" %d ", (*cell_cellCompressed)[i1]);
     }
     PDM_printf("\n");
   }
 
   //We reallocate the memory in case of duplicated values removed
-  //The new array size is idx_write (stored in (*cellCellIdxCompressed)[part_ini->nCell])
-  *cellCellCompressed = realloc(*cellCellCompressed,
-                                (*cellCellIdxCompressed)[part_ini->nCell] * sizeof(int));
+  //The new array size is idx_write (stored in (*cell_cell_idxCompressed)[part_ini->n_cell])
+  *cell_cellCompressed = realloc(*cell_cellCompressed,
+                                (*cell_cell_idxCompressed)[part_ini->n_cell] * sizeof(int));
 
 }
 
@@ -922,14 +922,14 @@ PDM_cuthill_checkbandwidth
                         (int **) &dualGraph);
 
   /** Offset Graph and Arr **/
-  for (int i = 0; i < ppart->nCell; i++){
+  for (int i = 0; i < ppart->n_cell; i++){
     dualGraphIdx[i] = dualGraphIdx[i]+1;
   }
-  for (int i = 0; i < dualGraphIdx[ppart->nCell]; i++){
+  for (int i = 0; i < dualGraphIdx[ppart->n_cell]; i++){
     dualGraph[i] = dualGraph[i]+1;
   }
 
-  int dualBandWidth = _adj_bandwidth(dualGraphIdx[ppart->nCell], dualGraphIdx, dualGraph);
+  int dualBandWidth = _adj_bandwidth(dualGraphIdx[ppart->n_cell], dualGraphIdx, dualGraph);
 
   /** Free memory **/
   free(dualGraphIdx);
@@ -962,18 +962,18 @@ PDM_cuthill_generate
                         (int **) &dualGraph);
 
   /** Offset Graph and Arr **/
-  for (int i = 0; i < ppart->nCell; i++){
+  for (int i = 0; i < ppart->n_cell; i++){
     dualGraphIdx[i] = dualGraphIdx[i]+1;
   }
-  for (int i = 0; i < dualGraphIdx[ppart->nCell]; i++){
+  for (int i = 0; i < dualGraphIdx[ppart->n_cell]; i++){
     dualGraph[i] = dualGraph[i]+1;
   }
 
   /** Apply rcm to current Graph **/
-  PDM_genrcm(ppart->nCell, dualGraphIdx, dualGraph, perm);
+  PDM_genrcm(ppart->n_cell, dualGraphIdx, dualGraph, perm);
 
   /** Offset Permutation array **/
-  for (int i = 0; i < ppart->nCell; i++)
+  for (int i = 0; i < ppart->n_cell; i++)
   {
     perm[i] = perm[i]-1;
   }
@@ -981,7 +981,7 @@ PDM_cuthill_generate
   /** Verbose **/
   if (0 == 1) {
       PDM_printf("\n Contenu de perm : \n");
-      for(int i = 0; i < ppart->nCell; i++) {
+      for(int i = 0; i < ppart->n_cell; i++) {
         PDM_printf(" %d ", perm[i]);
     }
     PDM_printf("\n");

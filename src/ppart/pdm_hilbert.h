@@ -177,7 +177,7 @@ PDM_hilbert_quantile_search(size_t              n_quantiles,
 
 double
 PDM_hilbert_build_rank_index(int                       dim,
-                             int                       nPart,
+                             int                       n_part,
                              int                       n_codes,
                              const PDM_hilbert_code_t  hilbert_code[],
                              const int                 weight[],

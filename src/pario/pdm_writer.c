@@ -826,7 +826,7 @@ const PDM_g_num_t *numabs
   PDM_Mesh_nodal_coord_set (geom->idx_mesh, id_part, n_som, coords, numabs);
 
   if (0 == 1) {
-    printf("nvtx : %d\n", n_som);
+    printf("n_vtx : %d\n", n_som);
     for (int i = 0; i < n_som; i++) {
       printf ("%d "PDM_FMT_G_NUM" : %12.5e %12.5e %12.5e\n", i+1, numabs[i],
               coords[3*i], coords[3*i+1], coords[3*i+2]);
@@ -1294,7 +1294,7 @@ const PDM_l_num_t   n_face,
  *----------------------------------------------------------------------------*/
 
 void
-PROCF (pdm_writer_geom_cell3d_cellface_add, PDM_WRITER_GEOM_CELL3D_CELLFACE_ADD)
+PROCF (pdm_writer_geom_cell3d_cell_face_add, PDM_WRITER_GEOM_CELL3D_cell_face_ADD)
 (
 int         *id_cs,
 int         *id_geom,
@@ -1310,7 +1310,7 @@ PDM_l_num_t    *cell_face,
 PDM_g_num_t   *numabs
 )
 {
-  PDM_writer_geom_cell3d_cellface_add(*id_cs,
+  PDM_writer_geom_cell3d_cell_face_add(*id_cs,
                               *id_geom,
                               *id_part,
                               *n_cell,
@@ -1325,7 +1325,7 @@ PDM_g_num_t   *numabs
 }
 
 void
-PDM_writer_geom_cell3d_cellface_add
+PDM_writer_geom_cell3d_cell_face_add
 (
 const int    id_cs,
 const int    id_geom,
@@ -1355,7 +1355,7 @@ PDM_g_num_t   *numabs
     abort();
   }
 
-  PDM_Mesh_nodal_cell3d_cellface_add (geom->idx_mesh,
+  PDM_Mesh_nodal_cell3d_cell_face_add (geom->idx_mesh,
                                       id_part,
                                       n_cell,
                                       n_face,
@@ -1367,7 +1367,7 @@ PDM_g_num_t   *numabs
                                       cell_face,
                                       numabs);
   if (0 == 1) {
-    printf("ncell : %d\n", n_cell);
+    printf("n_cell : %d\n", n_cell);
     for (int i = 0; i < n_cell; i++) {
       printf ("%d "PDM_FMT_G_NUM" : \n", i+1, numabs[i]);
       for (int j = cell_face_idx[i]; j < cell_face_idx[i+1]; j++) {
@@ -1375,7 +1375,7 @@ PDM_g_num_t   *numabs
       }
       printf ("\n");
     }
-    printf("nface : %d\n", n_face);
+    printf("n_face : %d\n", n_face);
     for (int i = 0; i < n_face; i++) {
       printf ("%d: \n", i+1);
       for (int j = face_som_idx[i]; j < face_som_idx[i+1]; j++) {
@@ -1410,7 +1410,7 @@ PDM_g_num_t   *numabs
  *----------------------------------------------------------------------------*/
 
 void
-PROCF (pdm_writer_geom_cell2d_cellface_add, PDM_WRITER_GEOM_CELL2D_CELLFACE_ADD)
+PROCF (pdm_writer_geom_cell2d_cell_face_add, PDM_WRITER_GEOM_CELL2D_cell_face_ADD)
 (
 int         *id_cs,
 int         *id_geom,
@@ -1426,7 +1426,7 @@ PDM_l_num_t    *cell_face,
 PDM_g_num_t   *numabs
 )
 {
-  PDM_writer_geom_cell2d_cellface_add(*id_cs,
+  PDM_writer_geom_cell2d_cell_face_add(*id_cs,
                               *id_geom,
                               *id_part,
                               *n_cell,
@@ -1441,7 +1441,7 @@ PDM_g_num_t   *numabs
 }
 
 void
-PDM_writer_geom_cell2d_cellface_add
+PDM_writer_geom_cell2d_cell_face_add
 (
 const int          id_cs,
 const int          id_geom,
@@ -1553,7 +1553,7 @@ PDM_g_num_t   *numabs
     abort();
   }
 
-  PDM_Mesh_nodal_faces_facevtx_add (geom->idx_mesh,
+  PDM_Mesh_nodal_faces_face_vtx_add (geom->idx_mesh,
                                     id_part,
                                     n_face,
                                     face_som_idx,

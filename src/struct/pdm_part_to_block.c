@@ -126,7 +126,7 @@ _evaluate_distribution(int          n_ranges,
  */
 
 static void
-_define_rank_distrib( _cs_part_to_block_t *ptb,
+_define_rank_distrib( _pdm_part_to_block_t *ptb,
                       int                 dim,
                       int                 n_ranks,
                       double              gsum_weight,
@@ -347,7 +347,7 @@ _update_sampling(int            dim,
 static void
 _active_ranks
 (
- _cs_part_to_block_t  *ptb
+ _pdm_part_to_block_t  *ptb
 )
 {
 
@@ -464,7 +464,7 @@ _active_ranks
 static void
 _distrib_data
 (
- _cs_part_to_block_t *ptb,
+ _pdm_part_to_block_t *ptb,
  int                  user_distrib
 )
 {
@@ -838,8 +838,8 @@ PDM_part_to_block_create
 )
 {
 
-  _cs_part_to_block_t *ptb =
-    (_cs_part_to_block_t *) malloc (sizeof(_cs_part_to_block_t));
+  _pdm_part_to_block_t *ptb =
+    (_pdm_part_to_block_t *) malloc (sizeof(_pdm_part_to_block_t));
 
   if ((t_post != PDM_PART_TO_BLOCK_POST_MERGE) && (weight != NULL)) {
     PDM_error(__FILE__, __LINE__, 0,"PDM_part_to_block_create : weights are available only if PDM_PART_TO_BLOCK_POST_MERGE is selected\n");
@@ -926,8 +926,8 @@ PDM_part_to_block_create2
 )
 {
 
-  _cs_part_to_block_t *ptb =
-    (_cs_part_to_block_t *) malloc (sizeof(_cs_part_to_block_t));
+  _pdm_part_to_block_t *ptb =
+    (_pdm_part_to_block_t *) malloc (sizeof(_pdm_part_to_block_t));
 
 
   ptb->t_distrib         = t_distrib;    /*!< Distribution type */
@@ -949,8 +949,8 @@ PDM_part_to_block_create2
   ptb->data_distrib_index =
     (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * (ptb->s_comm + 1));   /*!< Data distribution on ranks */
 
-  for(int iRank = 0; iRank < ptb->s_comm+1; iRank++){
-    ptb->data_distrib_index[iRank] = data_distrib_index[iRank];
+  for(int i_rank = 0; i_rank < ptb->s_comm+1; i_rank++){
+    ptb->data_distrib_index[i_rank] = data_distrib_index[i_rank];
   }
 
   ptb->s_block_min   = INT_MAX;
@@ -1000,7 +1000,7 @@ PDM_part_to_block_n_active_ranks_get
  PDM_part_to_block_t *ptb
 )
 {
-  _cs_part_to_block_t *_ptb = (_cs_part_to_block_t *) ptb;
+  _pdm_part_to_block_t *_ptb = (_pdm_part_to_block_t *) ptb;
   return _ptb->n_active_ranks;
 }
 
@@ -1021,7 +1021,7 @@ PDM_part_to_block_is_active_rank
  PDM_part_to_block_t *ptb
  )
 {
-  _cs_part_to_block_t *_ptb = (_cs_part_to_block_t *) ptb;
+  _pdm_part_to_block_t *_ptb = (_pdm_part_to_block_t *) ptb;
   return _ptb->is_my_rank_active;
 }
 
@@ -1042,7 +1042,7 @@ PDM_part_to_block_active_ranks_get
  PDM_part_to_block_t *ptb
 )
 {
-  _cs_part_to_block_t *_ptb = (_cs_part_to_block_t *) ptb;
+  _pdm_part_to_block_t *_ptb = (_pdm_part_to_block_t *) ptb;
   return _ptb->active_ranks;
 }
 
@@ -1063,7 +1063,7 @@ PDM_part_to_block_n_elt_block_get
  PDM_part_to_block_t *ptb
 )
 {
-  _cs_part_to_block_t *_ptb = (_cs_part_to_block_t *) ptb;
+  _pdm_part_to_block_t *_ptb = (_pdm_part_to_block_t *) ptb;
   return _ptb->n_elt_block;
 }
 
@@ -1084,7 +1084,7 @@ PDM_part_to_block_block_gnum_get
  PDM_part_to_block_t *ptb
 )
 {
-  _cs_part_to_block_t *_ptb = (_cs_part_to_block_t *) ptb;
+  _pdm_part_to_block_t *_ptb = (_pdm_part_to_block_t *) ptb;
   return _ptb->block_gnum;
 }
 
@@ -1116,7 +1116,7 @@ PDM_part_to_block_exch
  void               **block_data
 )
 {
-  _cs_part_to_block_t *_ptb = (_cs_part_to_block_t *) ptb;
+  _pdm_part_to_block_t *_ptb = (_pdm_part_to_block_t *) ptb;
 
   if ((_ptb->t_post == PDM_PART_TO_BLOCK_POST_MERGE) &&
       (t_stride ==  PDM_STRIDE_CST)) {
@@ -1468,7 +1468,7 @@ PDM_part_to_block_free
  PDM_part_to_block_t *ptb
 )
 {
-  _cs_part_to_block_t *_ptb = (_cs_part_to_block_t *) ptb;
+  _pdm_part_to_block_t *_ptb = (_pdm_part_to_block_t *) ptb;
 
   if (_ptb->active_ranks != NULL) {
     free (_ptb->active_ranks);
@@ -1531,7 +1531,7 @@ PDM_part_to_block_distrib_index_get
  PDM_part_to_block_t *ptb
 )
 {
-  _cs_part_to_block_t *_ptb = (_cs_part_to_block_t *) ptb;
+  _pdm_part_to_block_t *_ptb = (_pdm_part_to_block_t *) ptb;
   return _ptb->data_distrib_index;
 }
 
@@ -1551,7 +1551,7 @@ PDM_part_to_block_destination_get
  PDM_part_to_block_t *ptb
 )
 {
-  _cs_part_to_block_t *_ptb = (_cs_part_to_block_t *) ptb;
+  _pdm_part_to_block_t *_ptb = (_pdm_part_to_block_t *) ptb;
   return _ptb->dest_proc;
 }
 

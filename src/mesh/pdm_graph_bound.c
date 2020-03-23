@@ -51,8 +51,8 @@ const int nDataExchCreate = 5; /*!< Number of exchanged data for creation */
  * This function returns an initialized \ref PDM_graph_bound_t structure
  *
  * \param [in]  comm         MPI communicator
- * \param [in]  nPart        Number of partitions
- * \param [in]  partBound    partition boundaries (size : \ref nPart)
+ * \param [in]  n_part        Number of partitions
+ * \param [in]  partBound    partition boundaries (size : \ref n_part)
  *
  * \return      A new initialized \ref PDM_graph_bound_t structure
  *
@@ -62,7 +62,7 @@ PDM_graph_bound_t *
 PDM_graph_bound_create
 (
 const PDM_MPI_Comm           comm,
-const int                nPart,
+const int                n_part,
       PDM_part_bound_t **partBound
 )
 {
@@ -76,7 +76,7 @@ const int                nPart,
     (PDM_graph_bound_t *) malloc (sizeof(PDM_graph_bound_t));
 
   graph_bound->comm  = comm;
-  graph_bound->nPart = nPart;
+  graph_bound->n_part = n_part;
 
   graph_bound->exchRank = NULL;
   graph_bound->partBound = NULL;
@@ -91,16 +91,16 @@ const int                nPart,
 
   graph_bound->lComm = lComm;
   graph_bound->partBound =
-    (PDM_part_bound_t **) malloc (nPart * sizeof(PDM_part_bound_t *));
+    (PDM_part_bound_t **) malloc (n_part * sizeof(PDM_part_bound_t *));
 
-  memcpy (graph_bound->partBound, partBound, nPart * sizeof(PDM_part_bound_t *));
+  memcpy (graph_bound->partBound, partBound, n_part * sizeof(PDM_part_bound_t *));
 
   /*
    * Dump pdm_part_boud
    */
 
   if (1 == 0) {
-    for (int i = 0; i < nPart; i++) {
+    for (int i = 0; i < n_part; i++) {
       PDM_part_bound_dump (graph_bound->partBound[i]);
     }
   }
@@ -114,7 +114,7 @@ const int                nPart,
     offeredEltsRankIdx[i] = 0;
   }
 
-  for (int i = 0; i < nPart; i++) {
+  for (int i = 0; i < n_part; i++) {
     PDM_part_bound_t *part_bound = graph_bound->partBound[i];
     int nEltPartBound = PDM_part_bound_n_elt_bound_get (part_bound);
 
@@ -130,14 +130,14 @@ const int                nPart,
 
       for (int k = 0; k < nConnectedElt; k++) {
         int iProc;
-        int iPart;
+        int i_part;
         int iElt;
         int iDistElt;
         PDM_part_bound_distant_elt_get (part_bound,
                                         j+1,
                                         k,
                                         &iProc,
-                                        &iPart,
+                                        &i_part,
                                         &iElt,
                                         &iDistElt);
 
@@ -201,7 +201,7 @@ const int                nPart,
     recvOfferedElts[i] = -999;
   }
 
-  for (int i = 0; i < nPart; i++) {
+  for (int i = 0; i < n_part; i++) {
 
     PDM_part_bound_t *_partBound = graph_bound->partBound[i];
     int nEltPartBound = PDM_part_bound_n_elt_bound_get(_partBound);
@@ -221,14 +221,14 @@ const int                nPart,
 
       for (int k = 0; k < nConnectedElt; k++) {
         int iProc;
-        int iPart;
+        int i_part;
         int iElt;
         int iDistElt;
         PDM_part_bound_distant_elt_get(_partBound,
                                        j+1,
                                        k,
                                        &iProc,
-                                       &iPart,
+                                       &i_part,
                                        &iElt,
                                        &iDistElt);
         if (iProc != myRank) {
@@ -238,7 +238,7 @@ const int                nPart,
           sendOfferedElts[idx++] = i;
           sendOfferedElts[idx++] = localElt;
           sendOfferedElts[idx++] = nOfferElt;
-          sendOfferedElts[idx++] = iPart;
+          sendOfferedElts[idx++] = i_part;
           sendOfferedElts[idx++] = iElt;
         }
       }
@@ -280,7 +280,7 @@ const int                nPart,
   int idxMyrank = nDataExchCreate * offeredEltsRankIdx[myRank];
   int idxMyrank1 = nDataExchCreate * offeredEltsRankIdx[myRank];
 
-  for (int i = 0; i < nPart; i++) {
+  for (int i = 0; i < n_part; i++) {
     PDM_part_bound_t *_partBound = graph_bound->partBound[i];
     int nEltPartBound = PDM_part_bound_n_elt_bound_get(_partBound);
     for (int j = 0; j < nEltPartBound; j++) {
@@ -297,26 +297,26 @@ const int                nPart,
 
       for (int k = 0; k < nConnectedElt; k++) {
         int iProc;
-        int iPart;
+        int i_part;
         int iElt;
         int iDistElt;
         PDM_part_bound_distant_elt_get(_partBound,
                                        j+1,
                                        k,
                                        &iProc,
-                                       &iPart,
+                                       &i_part,
                                        &iElt,
                                        &iDistElt);
         if (iProc == myRank) {
           sendOfferedElts[idxMyrank++] = i;
           sendOfferedElts[idxMyrank++] = localElt;
           sendOfferedElts[idxMyrank++] = nOfferElt;
-          sendOfferedElts[idxMyrank++] = iPart;
+          sendOfferedElts[idxMyrank++] = i_part;
           sendOfferedElts[idxMyrank++] = iElt;
           recvOfferedElts[idxMyrank1++] = i;
           recvOfferedElts[idxMyrank1++] = localElt;
           recvOfferedElts[idxMyrank1++] = nOfferElt;
-          recvOfferedElts[idxMyrank1++] = iPart;
+          recvOfferedElts[idxMyrank1++] = i_part;
           recvOfferedElts[idxMyrank1++] = iElt;
         }
       }
@@ -409,7 +409,7 @@ const int                nPart,
     offeredEltsRankIdx[i] = 0;
   }
 
-  for (int i = 0; i < nPart; i++) {
+  for (int i = 0; i < n_part; i++) {
     PDM_part_bound_t *part_bound = graph_bound->partBound[i];
     int nEltPartBound = PDM_part_bound_n_elt_bound_get(part_bound);
 
@@ -425,14 +425,14 @@ const int                nPart,
 
       for (int k = 0; k < nConnectedElt; k++) {
         int iProc;
-        int iPart;
+        int i_part;
         int iElt;
         int iDistElt;
         PDM_part_bound_distant_elt_get (part_bound,
                                         j+1,
                                         k,
                                         &iProc,
-                                        &iPart,
+                                        &i_part,
                                         &iElt,
                                         &iDistElt);
 
@@ -475,7 +475,7 @@ const int                nPart,
     gNumOfferedEltsRecv[i] = -999;
   }
 
-  for (int i = 0; i < nPart; i++) {
+  for (int i = 0; i < n_part; i++) {
     PDM_part_bound_t *part_bound = graph_bound->partBound[i];
     int nEltPartBound = PDM_part_bound_n_elt_bound_get(part_bound);
 
@@ -491,14 +491,14 @@ const int                nPart,
 
       for (int k = 0; k < nConnectedElt; k++) {
         int iProc;
-        int iPart;
+        int i_part;
         int iElt;
         int iDistElt;
         PDM_part_bound_distant_elt_get (part_bound,
                                         j+1,
                                         k,
                                         &iProc,
-                                        &iPart,
+                                        &i_part,
                                         &iElt,
                                         &iDistElt);
 
@@ -569,7 +569,7 @@ const int                nPart,
   idxMyrank = offeredEltsRankIdx[myRank];
   idxMyrank1 = graph_bound->ghostEltIdx[myRank];
 
-  for (int i = 0; i < nPart; i++) {
+  for (int i = 0; i < n_part; i++) {
     PDM_part_bound_t *_partBound = graph_bound->partBound[i];
     int nEltPartBound = PDM_part_bound_n_elt_bound_get(_partBound);
     for (int j = 0; j < nEltPartBound; j++) {
@@ -586,14 +586,14 @@ const int                nPart,
 
       for (int k = 0; k < nConnectedElt; k++) {
         int iProc;
-        int iPart;
+        int i_part;
         int iElt;
         int iDistElt;
         PDM_part_bound_distant_elt_get (_partBound,
                                         j+1,
                                         k,
                                         &iProc,
-                                        &iPart,
+                                        &i_part,
                                         &iElt,
                                         &iDistElt);
 
@@ -659,7 +659,7 @@ const int                nPart,
     hashTableIdx[key+1]++;
   }
 
-  for (int i = 0; i < nPart; i++) {
+  for (int i = 0; i < n_part; i++) {
     PDM_part_bound_t *_partBound = graph_bound->partBound[i];
     int nLocalOfferElt = PDM_part_bound_n_local_offer_elt_get (_partBound);
     const PDM_g_num_t *localOfferEltLnToGn =
@@ -698,7 +698,7 @@ const int                nPart,
     hashTableDataNumLoc[idx] = i;
   }
 
-  for (int i = 0; i < nPart; i++) {
+  for (int i = 0; i < n_part; i++) {
     PDM_part_bound_t *_partBound = graph_bound->partBound[i];
     int nLocalOfferElt = PDM_part_bound_n_local_offer_elt_get (_partBound);
     const PDM_g_num_t *localOfferEltLnToGn =
@@ -729,8 +729,8 @@ const int                nPart,
    * Remove elements already in local offered elements
    */
 
-  int **eltToPartBound = (int **) malloc(sizeof(int *) * nPart);
-  for (int i = 0; i < nPart; i++) {
+  int **eltToPartBound = (int **) malloc(sizeof(int *) * n_part);
+  for (int i = 0; i < n_part; i++) {
     PDM_part_bound_t *_partBound = graph_bound->partBound[i];
 
     int nElt = PDM_part_bound_n_elt_get (_partBound);
@@ -789,7 +789,7 @@ const int                nPart,
 
   free (gNumOfferedEltsRecv);
 
-  for (int i = 0; i < nPart; i++) {
+  for (int i = 0; i < n_part; i++) {
     free (eltToPartBound[i]);
   }
   free (eltToPartBound);
@@ -951,7 +951,7 @@ const int                nPart,
 
     PDM_printf ("localgnum : ");
 
-    for (int i = 0; i < nPart; i++) {
+    for (int i = 0; i < n_part; i++) {
       PDM_part_bound_t *_partBound = graph_bound->partBound[i];
       int nLocalOfferElt = PDM_part_bound_n_local_offer_elt_get (_partBound);
       const PDM_g_num_t *localOfferEltLnToGn =
@@ -1352,14 +1352,14 @@ const int                nPart,
     PDM_printf("\n");
   }
 
-  graph_bound->nGhostEltPart = (int *) malloc (nPart * sizeof(int));
-  graph_bound->ghostEltPart2GhostElt = (int **) malloc (nPart * sizeof(int *));
-  graph_bound->ghostEltPartIdx = (int **) malloc (nPart * sizeof(int *));
-  graph_bound->ghostEltPartElt = (int **) malloc (nPart * sizeof(int *));
+  graph_bound->nGhostEltPart = (int *) malloc (n_part * sizeof(int));
+  graph_bound->ghostEltPart2GhostElt = (int **) malloc (n_part * sizeof(int *));
+  graph_bound->ghostEltPartIdx = (int **) malloc (n_part * sizeof(int *));
+  graph_bound->ghostEltPartElt = (int **) malloc (n_part * sizeof(int *));
 
-  int **tagGhostEltPart =  (int **) malloc (nPart * sizeof(int *));
+  int **tagGhostEltPart =  (int **) malloc (n_part * sizeof(int *));
 
-  for (int i = 0; i < nPart; i++) {
+  for (int i = 0; i < n_part; i++) {
     tagGhostEltPart[i] =  (int *) malloc (graph_bound->nGhostElt * sizeof(int *));
     graph_bound->nGhostEltPart[i] = 0;
 
@@ -1376,7 +1376,7 @@ const int                nPart,
   }
 
   int lGhostEltPartElt = 0;
-  for (int i = 0; i < nPart; i++) {
+  for (int i = 0; i < n_part; i++) {
     for (int j = 0; j < graph_bound->nGhostElt; j++) {
       if (tagGhostEltPart[i][j] > 0) {
         lGhostEltPartElt += tagGhostEltPart[i][j];
@@ -1491,10 +1491,10 @@ const PDM_data_t         tData,
 
     int idx = 0;
     for (int i = 0; i < graph_bound->nSendElt; i++) {
-      int iPart = graph_bound->sendEltPart[i];
+      int i_part = graph_bound->sendEltPart[i];
       int iElt  = graph_bound->sendElt[i]-1;
       for (int k = 0; k < nComp; k++) {
-        _sendBuffer[idx++] = _field[iPart][nComp*iElt+k];
+        _sendBuffer[idx++] = _field[i_part][nComp*iElt+k];
       }
     }
     break;
@@ -1511,10 +1511,10 @@ const PDM_data_t         tData,
 
     int idx = 0;
     for (int i = 0; i < graph_bound->nSendElt; i++) {
-      int iPart = graph_bound->sendEltPart[i];
+      int i_part = graph_bound->sendEltPart[i];
       int iElt  = graph_bound->sendElt[i]-1;
       for (int k = 0; k < nComp; k++) {
-        _sendBuffer[idx++] = _field[iPart][nComp*iElt+k];
+        _sendBuffer[idx++] = _field[i_part][nComp*iElt+k];
       }
     }
     break;
@@ -1635,7 +1635,7 @@ PDM_graph_bound_t *graph_bound
 
     free (_sendBuffer);
 
-    for (int i = 0; i < graph_bound->nPart; i++) {
+    for (int i = 0; i < graph_bound->n_part; i++) {
       int *ghostFieldPart        = ghostField[i];
       int *ghostEltPart2GhostElt = graph_bound->ghostEltPart2GhostElt[i];
       for (int j = 0; j < graph_bound->nGhostEltPart[i]; j++) {
@@ -1658,7 +1658,7 @@ PDM_graph_bound_t *graph_bound
 
     free (_sendBuffer);
 
-    for (int i = 0; i < graph_bound->nPart; i++) {
+    for (int i = 0; i < graph_bound->n_part; i++) {
       double *ghostFieldPart        = ghostField[i];
       int *ghostEltPart2GhostElt = graph_bound->ghostEltPart2GhostElt[i];
       for (int j = 0; j < graph_bound->nGhostEltPart[i]; j++) {
@@ -1723,7 +1723,7 @@ PDM_graph_bound_t *graph_bound
       free (graph_bound->ghostEltIdx);
     if (graph_bound->partBound != NULL)
       free (graph_bound->partBound);
-    for (int i = 0; i < graph_bound->nPart; i++) {
+    for (int i = 0; i < graph_bound->n_part; i++) {
       free (graph_bound->ghostEltPartIdx[i]);
       free (graph_bound->ghostEltPartElt[i]);
       free (graph_bound->ghostEltPart2GhostElt[i]);
@@ -1758,7 +1758,7 @@ PDM_graph_bound_n_ghost_elt_get
 )
 {
 
-  if (part < 0 || part >= graph_bound->nPart) {
+  if (part < 0 || part >= graph_bound->n_part) {
     PDM_error(__FILE__, __LINE__, 0, "Error PDM_graph_bound_n_ghost_elt_get : "
             "part number '%d' is not available\n", part);
     abort();
@@ -1790,7 +1790,7 @@ PDM_graph_bound_ghost_elt_n_touch_elt_get
 )
 {
 
-  if (part < 0 || part >= graph_bound->nPart) {
+  if (part < 0 || part >= graph_bound->n_part) {
     PDM_error(__FILE__, __LINE__, 0, "Error PDM_graph_bound_ghost_elt_n_touch_elt_get : "
             "part number '%d' is not available\n", part);
     abort();
@@ -1831,7 +1831,7 @@ PDM_graph_bound_ghost_elt_touch_elt_get
 )
 {
 
-  if (part < 0 || part >= graph_bound->nPart) {
+  if (part < 0 || part >= graph_bound->n_part) {
     PDM_error(__FILE__, __LINE__, 0, "Error PDM_graph_bound_ghost_elt_touch_elt_get : "
             "part number '%d' is not available\n", part);
     abort();
@@ -1988,7 +1988,7 @@ PDM_graph_bound_dump
 
   PDM_printf ("    -  Received element per part\n");
 
-  for (int i = 0; i < graph_bound->nPart; i++) {
+  for (int i = 0; i < graph_bound->n_part; i++) {
 
     PDM_printf ("      -  Part %d\n", i);
 

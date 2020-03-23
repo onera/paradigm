@@ -1845,8 +1845,8 @@ PDM_morton_ordered_build_rank_index
   }
 
   for (int i = 0; i < n_codes; i++) {
-    int irank = PDM_binary_search_gap_long (_weight[i], quantiles, comm_size+1);
-    send_count[irank]++;
+    int i_rank = PDM_binary_search_gap_long (_weight[i], quantiles, comm_size+1);
+    send_count[i_rank]++;
   }
 
   int *recv_count = malloc (sizeof(int) * comm_size);
@@ -1871,11 +1871,11 @@ PDM_morton_ordered_build_rank_index
 
 
   for (int i = 0; i < n_codes; i++) {
-    int irank = PDM_binary_search_gap_long (_weight[i], quantiles, comm_size+1);
-    send_data[send_idx[irank]+send_count[irank]++] = ordered_code[i].L;
-    send_data[send_idx[irank]+send_count[irank]++] = ordered_code[i].X[0];
-    send_data[send_idx[irank]+send_count[irank]++] = ordered_code[i].X[1];
-    send_data[send_idx[irank]+send_count[irank]++] = ordered_code[i].X[2];
+    int i_rank = PDM_binary_search_gap_long (_weight[i], quantiles, comm_size+1);
+    send_data[send_idx[i_rank]+send_count[i_rank]++] = ordered_code[i].L;
+    send_data[send_idx[i_rank]+send_count[i_rank]++] = ordered_code[i].X[0];
+    send_data[send_idx[i_rank]+send_count[i_rank]++] = ordered_code[i].X[1];
+    send_data[send_idx[i_rank]+send_count[i_rank]++] = ordered_code[i].X[2];
   }
 
   free (quantiles);

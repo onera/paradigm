@@ -61,14 +61,14 @@ PDM_distrib_compute
 )
 {
   int myRank;
-  int nRank;
+  int n_rank;
 
   PDM_MPI_Comm_rank(comm, &myRank);
-  PDM_MPI_Comm_size(comm, &nRank);
+  PDM_MPI_Comm_size(comm, &n_rank);
 
   /* Compute distribution for element */
 
-  // PDM_g_num_t* elt_distrib = (PDM_g_num_t *) malloc((nRank+1) * sizeof(PDM_g_num_t));
+  // PDM_g_num_t* elt_distrib = (PDM_g_num_t *) malloc((n_rank+1) * sizeof(PDM_g_num_t));
   PDM_g_num_t  _dnelt      = (PDM_g_num_t) dnelt;
 
   PDM_MPI_Allgather((void *) &_dnelt,
@@ -80,14 +80,14 @@ PDM_distrib_compute
                     comm);
 
   elt_distrib[0] = 1+offset;
-  for (int i = 1; i < nRank+1; i++) {
+  for (int i = 1; i < n_rank+1; i++) {
     elt_distrib[i] +=  elt_distrib[i-1];
   }
 
   /* Verbose */
   if (1 == 0) {
     PDM_printf("elt_distrib : "PDM_FMT_G_NUM,  elt_distrib[0]);
-    for (int i = 1; i < nRank+1; i++) {
+    for (int i = 1; i < n_rank+1; i++) {
       PDM_printf(" "PDM_FMT_G_NUM, elt_distrib[i]);
     }
     PDM_printf("\n");

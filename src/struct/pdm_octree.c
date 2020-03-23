@@ -132,7 +132,7 @@ static PDM_Handles_t *_octrees   = NULL;
  *
  * \brief Return ppart object from it identifier
  *
- * \param [in]   ppartId        ppart identifier
+ * \param [in]   ppart_id        ppart identifier
  *
  */
 
@@ -524,9 +524,9 @@ PDM_octree_build
   extents_proc = (double *) realloc (extents_proc,
                                    sizeof(double) * s_extents * n_used_rank);
 
-  int *initLocationProc = (int *) malloc (sizeof(int) * n_info_location * n_used_rank);
+  int *initLocation_proc = (int *) malloc (sizeof(int) * n_info_location * n_used_rank);
   for (int i = 0; i < n_info_location * n_used_rank; i++) {
-    initLocationProc[i] = 0;
+    initLocation_proc[i] = 0;
   }
 
   //PDM_MPI_Comm rank_comm;
@@ -540,7 +540,7 @@ PDM_octree_build
                                           extents_proc,
                                           1,
                                           &n_used_rank,
-                                          initLocationProc,
+                                          initLocation_proc,
                                           octree->rank_comm);
 
   octree->bt_shared = PDM_box_tree_create (octree->max_tree_depth_shared,
@@ -554,7 +554,7 @@ PDM_octree_build
   _update_bt_statistics(&(octree->bts_shared), octree->bt_shared);
 
   free (gnum_proc);
-  free (initLocationProc);
+  free (initLocation_proc);
 
   octree->used_rank_extents = extents_proc;
 }
@@ -946,9 +946,9 @@ double      *closest_octree_pt_dist2
   double *recv_pts = malloc(sizeof(double) * 3 * i_recv_pts[n_rank]);
 
   for (int i = 0; i < n_pts; i++) {
-    int irank = rank_id[i];
-    int idx = 3*(i_send_pts[irank] + n_send_pts[irank]);
-    n_send_pts[irank] += 1;
+    int id_rank = rank_id[i];
+    int idx = 3*(i_send_pts[id_rank] + n_send_pts[id_rank]);
+    n_send_pts[id_rank] += 1;
 
     for (int j = 0; j < 3; j++) {
       send_pts [idx + j] = pts[3*i+j];
@@ -1024,9 +1024,9 @@ double      *closest_octree_pt_dist2
   }
 
   for (int i = 0; i < n_pts; i++) {
-    int irank = rank_id[i];
-    int idx = i_send_pts[irank] + n_send_pts[irank];
-    n_send_pts[irank] += 1;
+    int id_rank = rank_id[i];
+    int idx = i_send_pts[id_rank] + n_send_pts[id_rank];
+    n_send_pts[id_rank] += 1;
 
     upper_bound_dist[i] = recv_dist[idx] + 1e-6 * recv_dist[idx];
   }

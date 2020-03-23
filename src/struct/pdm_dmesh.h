@@ -57,9 +57,9 @@ extern "C" {
  *
  * \brief Build a distributed mesh structure
  *
- * \param [in]   dNCell             Number of distributed cells
- * \param [in]   dNFace             Number of distributed faces
- * \param [in]   dNVtx              Number of distributed vertices
+ * \param [in]   dn_cell             Number of distributed cells
+ * \param [in]   dn_face             Number of distributed faces
+ * \param [in]   dn_vtx              Number of distributed vertices
  * \param [in]   dNBnd              Number of boundaries
  * \param [in]   dNJoin             Number of interfaces with other zones
  *
@@ -69,9 +69,9 @@ extern "C" {
 int
 PDM_dmesh_create
 (
- const int          dNCell,
- const int          dNFace,
- const int          dNVtx,
+ const int          dn_cell,
+ const int          dn_face,
+ const int          dn_vtx,
  const int          dNBnd,
  const int          dNJoin
 );
@@ -81,14 +81,14 @@ PDM_dmesh_create
  * \brief Set the arrays into the distributed mesh structure
  *
  * \param [in]   id                 id of the dmesh to be set
- * \param [in]   dVtxCoord          Coordinates of  vertices (size = 3 * dNVtx)
- * \param [in]   dFaceVtxIdx        Face-vertex connectivity index of
- *                                    faces (size = dNFace + 1)
- * \param [in]   dFaceVtx           Face-vertex connectivity of faces
- *                                    (size = dFaceVtxIdx[dNFace])
- * \param [in]   dFaceCell          Face-cell connectivity of faces (size =
- *                                    2 * dNFace). If iface is a boundary face,
- *                                    dFaceCell[2*iface + 1] = 0
+ * \param [in]   dvtx_coord          Coordinates of  vertices (size = 3 * dn_vtx)
+ * \param [in]   dface_vtx_idx        Face-vertex connectivity index of
+ *                                    faces (size = dn_face + 1)
+ * \param [in]   dface_vtx           Face-vertex connectivity of faces
+ *                                    (size = dface_vtx_idx[dn_face])
+ * \param [in]   dface_cell          Face-cell connectivity of faces (size =
+ *                                    2 * dn_face). If iface is a boundary face,
+ *                                    dface_cell[2*iface + 1] = 0
  * \param [in]   dFaceBoundIdx      Index of faces list of each boundary
  *                                    (size = dNBnd + 1)
  * \param [in]   dFaceBound         Faces list of each boundary
@@ -105,10 +105,10 @@ void
 PDM_dmesh_set
 (
  const int           id,
- const double       *dVtxCoord,
- const int          *dFaceVtxIdx,
- const PDM_g_num_t  *dFaceVtx,
- const PDM_g_num_t  *dFaceCell,
+ const double       *dvtx_coord,
+ const int          *dface_vtx_idx,
+ const PDM_g_num_t  *dface_vtx,
+ const PDM_g_num_t  *dface_cell,
  const int          *dFaceBoundIdx,
  const PDM_g_num_t  *dFaceBound,
  const int          *dJoinGIds,
@@ -121,9 +121,9 @@ PDM_dmesh_set
  * \brief Get the dimensions of the distributed mesh
  *
  * \param [in]    id                id of the requested dmesh
- * \param [out]   dNCell            Number of distributed cells
- * \param [out]   dNFace            Number of distributed faces
- * \param [out]   dNVtx             Number of distributed vertices
+ * \param [out]   dn_cell            Number of distributed cells
+ * \param [out]   dn_face            Number of distributed faces
+ * \param [out]   dn_vtx             Number of distributed vertices
  * \param [out]   dNBnd             Number of boundaries
  * \param [out]   dNJoin            Number of interfaces with other zones
  */
@@ -132,9 +132,9 @@ void
 PDM_dmesh_dims_get
 (
  const int   id,
- int        *dNCell,
- int        *dNFace,
- int        *dNVtx,
+ int        *dn_cell,
+ int        *dn_face,
+ int        *dn_vtx,
  int        *dNBnd,
  int        *dNJoins
 );
@@ -144,10 +144,10 @@ PDM_dmesh_dims_get
  * \brief Get the data (arrays) of the distributed mesh
  *
  * \param [in]    id                 id of the requested dmesh
- * \param [out]   dVtxCoord          Coordinates of  vertices
- * \param [out]   dFaceVtxIdx        Face-vertex connectivity indices
- * \param [out]   dFaceVtx           Face-vertex connectivity
- * \param [out]   dFaceCell          Face-cell connectivity of faces
+ * \param [out]   dvtx_coord          Coordinates of  vertices
+ * \param [out]   dface_vtx_idx        Face-vertex connectivity indices
+ * \param [out]   dface_vtx           Face-vertex connectivity
+ * \param [out]   dface_cell          Face-cell connectivity of faces
  * \param [out]   dFaceBoundIdx      Indices of faces list of each boundary
  * \param [out]   dFaceBound         Faces list of each boundary
  * \param [out]   dJoinGIds          Global Ids of the join and opposed join
@@ -159,10 +159,10 @@ void
 PDM_dmesh_data_get
 (
  const int           id,
- const double       **dVtxCoord,
- const int          **dFaceVtxIdx,
- const PDM_g_num_t  **dFaceVtx,
- const PDM_g_num_t  **dFaceCell,
+ const double       **dvtx_coord,
+ const int          **dface_vtx_idx,
+ const PDM_g_num_t  **dface_vtx,
+ const PDM_g_num_t  **dface_cell,
  const int          **dFaceBoundIdx,
  const PDM_g_num_t  **dFaceBound,
  const int          **dJoinGIds,
