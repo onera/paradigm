@@ -402,18 +402,18 @@ PROCF (pdm_part_coarse_mesh_part_get, PDM_PART_COARSE_MESH_PART_GET)
  *
  * \param [in]   ppart_id               ppart identifier
  * \param [in]   i_part                 Current partition
- * \param [out]  cellColor             Cell Color (size = n_cell)
- * \param [out]  faceColor             Face Color (size = n_face)
+ * \param [out]  cell_color             Cell Color (size = n_cell)
+ * \param [out]  face_color             Face Color (size = n_face)
  */
 
 void PDM_part_coarse_color_get
 (
  const int   cmId,
  const int   i_part,
-       int **cellColor,
-       int **faceColor,
-       int **threadColor,
-       int **hyperPlaneColor
+       int **cell_color,
+       int **face_color,
+       int **thread_color,
+       int **hyperplane_color
 );
 
 /**

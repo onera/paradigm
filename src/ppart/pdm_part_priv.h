@@ -116,21 +116,21 @@ typedef struct  _part_t {
 
 
   const int          *cell_weight;             /*!< Cell weight - For coarse mesh
-                                            (size = nCel)                           */
+                                            (size = n_cell)                           */
   const int          *face_weight;             /*!< Face weight - For coarse mesh
                                             (size = nFac)                           */
 
-  int          *cellColor;             /*!< Cell color - For cache blocking
-                                            (size = nCel)                           */
-  int          *faceColor;             /*!< Face color - For cache blocking
+  int          *cell_color;             /*!< Cell color - For cache blocking
+                                            (size = n_cell)                           */
+  int          *face_color;             /*!< Face color - For cache blocking
                                             (size = nFac)                           */
-  int          *threadColor;             /*!< Thread color - For cache blocking
+  int          *thread_color;             /*!< Thread color - For cache blocking
                                             (size = nThread)                        */
-  int          *hyperPlaneColor;         /*!< Thread color - For cache blocking
+  int          *hyperplane_color;         /*!< Thread color - For cache blocking
                                             (size = nThread)                         */
 
   int          *new_to_old_order_cell;   /*!< Cell reordering
-                                         (size = nCel)                           */
+                                         (size = n_cell)                           */
   int          *new_to_old_order_face;   /*!< Face reordering
                                             (size = nFac)                        */
 
@@ -331,10 +331,10 @@ void
   part->vtx = NULL;
   part->vtx_ln_to_gn = NULL;
   part->vtx_tag = NULL;
-  part->cellColor = NULL;
-  part->faceColor = NULL;
-  part->threadColor = NULL;
-  part->hyperPlaneColor = NULL;
+  part->cell_color = NULL;
+  part->face_color = NULL;
+  part->thread_color = NULL;
+  part->hyperplane_color = NULL;
   part->new_to_old_order_cell = NULL;
   part->new_to_old_order_face = NULL;
   part->subpartlayout = NULL;

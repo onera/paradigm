@@ -452,7 +452,7 @@ _mesh_init
 PDM_DMesh_nodal_t *mesh,
 const PDM_MPI_Comm comm,
       PDM_g_num_t  n_vtx,
-      PDM_g_num_t  nCel
+      PDM_g_num_t  n_cell
 )
 {
   int n_proc;
@@ -465,7 +465,7 @@ const PDM_MPI_Comm comm,
   mesh->i_proc                   = i_proc;
 
   mesh->n_som_abs                = n_vtx;
-  mesh->n_cell_abs               = nCel;
+  mesh->n_cell_abs               = n_cell;
 
   mesh->vtx                      = malloc(sizeof(PDM_DMesh_nodal_vtx_t ));
   mesh->vtx->_coords             = NULL;
@@ -1100,7 +1100,7 @@ PDM_DMesh_nodal_create
 (
 const PDM_MPI_Comm comm,
       PDM_g_num_t  n_vtx,
-      PDM_g_num_t  nCel
+      PDM_g_num_t  n_cell
 )
 {
   PDM_DMesh_nodal_t *mesh = (PDM_DMesh_nodal_t *) malloc (sizeof(PDM_DMesh_nodal_t));
@@ -1113,7 +1113,7 @@ const PDM_MPI_Comm comm,
 
   }
 
-  _mesh_init (mesh, comm, n_vtx, nCel);
+  _mesh_init (mesh, comm, n_vtx, n_cell);
 
   if (mesh_handles == NULL) {
     mesh_handles = PDM_Handles_create (4);
