@@ -175,7 +175,7 @@ typedef struct _PDM_part_t {
   PDM_g_num_t       *dCellFace;     /*!< Cell-face connectivity of distributed
                                        cells (size = dcellFaceIdx[dNCell],
                                        computed                               */
-  PDM_g_num_t       *dCellProc;     /*!< Initial cell distribution on processes
+  PDM_g_num_t       *dcell_proc;     /*!< Initial cell distribution on processes
                                        (size = nRank + 1) (computed)          */
 
   /* Face definitions */
@@ -193,7 +193,7 @@ typedef struct _PDM_part_t {
                                        distributed faces
                                        (size = dFaceVtxIdx[dNFace],shared array)
                                      */
-  PDM_g_num_t       *dFaceProc;     /*!< Initial face distribution on processes
+  PDM_g_num_t       *dface_proc;     /*!< Initial face distribution on processes
                                        (size = nRank + 1)                     */
 
   PDM_g_num_t       *dFaceCell;    /*!< Face-cell connectivity of distributed
