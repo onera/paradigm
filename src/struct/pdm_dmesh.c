@@ -71,8 +71,8 @@ typedef struct
   int               dn_cell;          /*!< Number of distributed cells         */
   int               dn_face;          /*!< Number of distributed faces         */
   int               dn_vtx;           /*!< Number of distributed vertices      */
-  int               dNBnd;           /*!< Number of boundaries                */
-  int               dNJoin;          /*!< Number of interfaces with other zone*/
+  int               dn_bnd;           /*!< Number of boundaries                */
+  int               dn_join;          /*!< Number of interfaces with other zone*/
   const PDM_g_num_t *_dface_cell;     /*!< Face-cell connectivity of distributed
                                         faces (size = 2 * dn_face)
                                         if iface is a boundary face,
@@ -84,19 +84,19 @@ typedef struct
                                         dn_face])                              */
   const double      *_dvtx_coord;     /*!< Coordinates of ditributed vertices
                                         (size = 3 * dn_vtx)                    */
-  const int         *_dFaceBoundIdx; /*!< Index of distributed faces list of
-                                        each boundary (size = dNBnd + 1)
+  const int         *_dface_bound_idx; /*!< Index of distributed faces list of
+                                        each boundary (size = dn_bnd + 1)
                                         or NULL                               */
-  const PDM_g_num_t *_dFaceBound;    /*!< Distributed faces list of each
-                                       boundary (size = dfaceBoundIdx[dNBnd])
+  const PDM_g_num_t *_dface_bound;    /*!< Distributed faces list of each
+                                       boundary (size = dface_bound_idx[dn_bnd])
                                         or NULL                               */
   const int         *_dJoinGIds;     /*!< Tuple JoinGId, JoinGIdDonnor for
-                                        each join (size = 2*dNJoin) or NULL   */
-  const int         *_dFaceJoinIdx;  /*!< Index of distributed faces list of
-                                        each join (size = dNJoin + 1)
+                                        each join (size = 2*dn_join) or NULL   */
+  const int         *_dface_join_idx;  /*!< Index of distributed faces list of
+                                        each join (size = dn_join + 1)
                                         or NULL                               */
-  const PDM_g_num_t *_dFaceJoin;     /*!< Distributed faces list of each
-                                       join (size = dfaceJoinIdx[dNJoin])
+  const PDM_g_num_t *_dface_join;     /*!< Distributed faces list of each
+                                       join (size = dface_join_idx[dn_join])
                                         or NULL                               */
 } _pdm_dmesh_t;
 
@@ -146,8 +146,8 @@ _get_from_id
  * \param [in]   dn_cell             Number of distributed cells
  * \param [in]   dn_face             Number of distributed faces
  * \param [in]   dn_vtx              Number of distributed vertices
- * \param [in]   dNBnd              Number of boundaries
- * \param [in]   dNJoin             Number of interfaces with other zones
+ * \param [in]   dn_bnd              Number of boundaries
+ * \param [in]   dn_join             Number of interfaces with other zones
  *
  * \return     Identifier
  */
@@ -158,8 +158,8 @@ PDM_dmesh_create
  const int          dn_cell,
  const int          dn_face,
  const int          dn_vtx,
- const int          dNBnd,
- const int          dNJoin
+ const int          dn_bnd,
+ const int          dn_join
 )
 {
 
@@ -176,17 +176,17 @@ PDM_dmesh_create
   dmesh->dn_cell         = dn_cell;
   dmesh->dn_face         = dn_face;
   dmesh->dn_vtx          = dn_vtx;
-  dmesh->dNBnd          = dNBnd;
-  dmesh->dNJoin         = dNJoin;
+  dmesh->dn_bnd          = dn_bnd;
+  dmesh->dn_join         = dn_join;
   dmesh->_dface_cell     = NULL;
   dmesh->_dface_vtx_idx   = NULL;
   dmesh->_dface_vtx      = NULL;
   dmesh->_dvtx_coord     = NULL;
-  dmesh->_dFaceBoundIdx = NULL;
-  dmesh->_dFaceBound    = NULL;
+  dmesh->_dface_bound_idx = NULL;
+  dmesh->_dface_bound    = NULL;
   dmesh->_dJoinGIds     = NULL;
-  dmesh->_dFaceJoinIdx  = NULL;
-  dmesh->_dFaceJoin     = NULL;
+  dmesh->_dface_join_idx  = NULL;
+  dmesh->_dface_join     = NULL;
 
   return id;
 
@@ -205,16 +205,16 @@ PDM_dmesh_create
  * \param [in]   dface_cell          Face-cell connectivity of faces (size =
  *                                    2 * dn_face). If iface is a boundary face,
  *                                    dface_cell[2*iface + 1] = 0
- * \param [in]   dFaceBoundIdx      Index of faces list of each boundary
- *                                    (size = dNBnd + 1)
- * \param [in]   dFaceBound         Faces list of each boundary
- *                                    (size = dfaceBoundIdx[dNBnd])
+ * \param [in]   dface_bound_idx      Index of faces list of each boundary
+ *                                    (size = dn_bnd + 1)
+ * \param [in]   dface_bound         Faces list of each boundary
+ *                                    (size = dface_bound_idx[dn_bnd])
  * \param [in]   dJoinGIds          Tuple JoinGId, JoinGIdDonnor for
- *                                    each join (size = 2*dNJoin)
- * \param [in]   dFaceJoinIdx       Index of faces list of each join
- *                                    (size = dNJoin + 1)
- * \param [in]   dFaceJoin          Faces list of each join
- *                                    (size = dfaceJoinIdx[dNJoin])
+ *                                    each join (size = 2*dn_join)
+ * \param [in]   dface_join_idx       Index of faces list of each join
+ *                                    (size = dn_join + 1)
+ * \param [in]   dface_join          Faces list of each join
+ *                                    (size = dface_join_idx[dn_join])
  */
 
 void
@@ -225,11 +225,11 @@ PDM_dmesh_set
  const int          *dface_vtx_idx,
  const PDM_g_num_t  *dface_vtx,
  const PDM_g_num_t  *dface_cell,
- const int          *dFaceBoundIdx,
- const PDM_g_num_t  *dFaceBound,
+ const int          *dface_bound_idx,
+ const PDM_g_num_t  *dface_bound,
  const int          *dJoinGIds,
- const int          *dFaceJoinIdx,
- const PDM_g_num_t  *dFaceJoin
+ const int          *dface_join_idx,
+ const PDM_g_num_t  *dface_join
 )
 {
   _pdm_dmesh_t *dmesh = _get_from_id (id);
@@ -238,11 +238,11 @@ PDM_dmesh_set
   dmesh->_dface_vtx_idx   = dface_vtx_idx;
   dmesh->_dface_vtx      = dface_vtx;
   dmesh->_dface_cell     = dface_cell;
-  dmesh->_dFaceBoundIdx = dFaceBoundIdx;
-  dmesh->_dFaceBound    = dFaceBound;
+  dmesh->_dface_bound_idx = dface_bound_idx;
+  dmesh->_dface_bound    = dface_bound;
   dmesh->_dJoinGIds     = dJoinGIds;
-  dmesh->_dFaceJoinIdx  = dFaceJoinIdx;
-  dmesh->_dFaceJoin     = dFaceJoin;
+  dmesh->_dface_join_idx  = dface_join_idx;
+  dmesh->_dface_join     = dface_join;
 
   printf("PDM_dmesh_set::dmesh->_dface_vtx :: "PDM_FMT_G_NUM" \n", dmesh->_dface_vtx[0]);
 }
@@ -255,8 +255,8 @@ PDM_dmesh_set
  * \param [out]   dn_cell            Number of distributed cells
  * \param [out]   dn_face            Number of distributed faces
  * \param [out]   dn_vtx             Number of distributed vertices
- * \param [out]   dNBnd             Number of boundaries
- * \param [out]   dNJoin            Number of interfaces with other zones
+ * \param [out]   dn_bnd             Number of boundaries
+ * \param [out]   dn_join            Number of interfaces with other zones
  */
 
 void
@@ -266,16 +266,16 @@ PDM_dmesh_dims_get
  int        *dn_cell,
  int        *dn_face,
  int        *dn_vtx,
- int        *dNBnd,
- int        *dNJoin
+ int        *dn_bnd,
+ int        *dn_join
 )
 {
   _pdm_dmesh_t *dmesh = _get_from_id (id);
   *dn_cell = dmesh->dn_cell;
   *dn_face = dmesh->dn_face;
   *dn_vtx = dmesh->dn_vtx;
-  *dNBnd = dmesh->dNBnd;
-  *dNJoin = dmesh->dNJoin;
+  *dn_bnd = dmesh->dn_bnd;
+  *dn_join = dmesh->dn_join;
 }
 
 /**
@@ -287,11 +287,11 @@ PDM_dmesh_dims_get
  * \param [out]   dface_vtx_idx        Face-vertex connectivity indices
  * \param [out]   dface_vtx           Face-vertex connectivity
  * \param [out]   dface_cell          Face-cell connectivity of faces
- * \param [out]   dFaceBoundIdx      Indices of faces list of each boundary
- * \param [out]   dFaceBound         Faces list of each boundary
+ * \param [out]   dface_bound_idx      Indices of faces list of each boundary
+ * \param [out]   dface_bound         Faces list of each boundary
  * \param [out]   dJoinGIds          Global Ids of the join and opposed join
- * \param [out]   dFaceJoinIdx       Indices of faces list of each join
- * \param [out]   dFaceJoin          Faces list of each join
+ * \param [out]   dface_join_idx       Indices of faces list of each join
+ * \param [out]   dface_join          Faces list of each join
  */
 
 void
@@ -302,11 +302,11 @@ PDM_dmesh_data_get
  const int          **dface_vtx_idx,
  const PDM_g_num_t  **dface_vtx,
  const PDM_g_num_t  **dface_cell,
- const int          **dFaceBoundIdx,
- const PDM_g_num_t  **dFaceBound,
+ const int          **dface_bound_idx,
+ const PDM_g_num_t  **dface_bound,
  const int          **dJoinGIds,
- const int          **dFaceJoinIdx,
- const PDM_g_num_t  **dFaceJoin
+ const int          **dface_join_idx,
+ const PDM_g_num_t  **dface_join
 )
 {
   _pdm_dmesh_t *dmesh = _get_from_id (id);
@@ -315,11 +315,11 @@ PDM_dmesh_data_get
   *dface_vtx_idx   = dmesh->_dface_vtx_idx;
   *dface_vtx      = dmesh->_dface_vtx;
   *dface_cell     = dmesh->_dface_cell;
-  *dFaceBoundIdx = dmesh->_dFaceBoundIdx;
-  *dFaceBound    = dmesh->_dFaceBound;
+  *dface_bound_idx = dmesh->_dface_bound_idx;
+  *dface_bound    = dmesh->_dface_bound;
   *dJoinGIds     = dmesh->_dJoinGIds;
-  *dFaceJoinIdx  = dmesh->_dFaceJoinIdx;
-  *dFaceJoin     = dmesh->_dFaceJoin;
+  *dface_join_idx  = dmesh->_dface_join_idx;
+  *dface_join     = dmesh->_dface_join;
 }
 
 /**
@@ -343,17 +343,17 @@ PDM_dmesh_free
   dmesh->dn_cell   = 0;
   dmesh->dn_face   = 0;
   dmesh->dn_vtx    = 0;
-  dmesh->dNBnd    = 0;
-  dmesh->dNJoin   = 0;
+  dmesh->dn_bnd    = 0;
+  dmesh->dn_join   = 0;
   dmesh->_dface_cell     = NULL;
   dmesh->_dface_vtx_idx   = NULL;
   dmesh->_dface_vtx      = NULL;
   dmesh->_dvtx_coord     = NULL;
-  dmesh->_dFaceBoundIdx = NULL;
-  dmesh->_dFaceBound    = NULL;
+  dmesh->_dface_bound_idx = NULL;
+  dmesh->_dface_bound    = NULL;
   dmesh->_dJoinGIds     = NULL;
-  dmesh->_dFaceJoinIdx  = NULL;
-  dmesh->_dFaceJoin     = NULL;
+  dmesh->_dface_join_idx  = NULL;
+  dmesh->_dface_join     = NULL;
 
   free (dmesh);
 

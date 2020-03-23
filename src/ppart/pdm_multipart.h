@@ -91,7 +91,7 @@ PDM_multipart_create
 void PDM_multipart_register_block
 (
  const int        mpart_id,
- const int        zoneGId,
+ const int        zone_gid,
  const int        block_data_id
 );
 
@@ -113,8 +113,8 @@ PDM_multipart_run_ppart
 void
 PDM_multipart_part_dim_get
 (
-const   int  mpartId,
-const   int  zoneGId,
+const   int  mpart_id,
+const   int  zone_gid,
 const   int  i_part,
  int        *n_cell,
  int        *n_face,
@@ -124,17 +124,17 @@ const   int  i_part,
  int        *n_total_part,
  int        *scell_face,
  int        *sface_vtx,
- int        *sFaceBound,
- int        *n_faceBound,
- int        *sFaceJoin,
- int        *n_faceJoin
+ int        *sface_bound,
+ int        *n_face_bound,
+ int        *sface_join,
+ int        *n_face_join
 );
 
 void
 PDM_multipart_part_val_get
 (
-const int            mpartId,
-const int            zoneGId,
+const int            mpart_id,
+const int            zone_gid,
 const int            i_part,
       int          **cell_tag,
       int          **cell_face_idx,
@@ -151,19 +151,19 @@ const int            i_part,
       int          **vtx_tag,
       double       **vtx,
       PDM_g_num_t  **vtx_ln_to_gn,
-      int          **faceBoundIdx,
-      int          **faceBound,
-      PDM_g_num_t  **faceBoundLNToGN,
-      int          **faceJoinIdx,
-      int          **faceJoin,
-      PDM_g_num_t  **faceJoinLNToGN
+      int          **face_bound_idx,
+      int          **face_bound,
+      PDM_g_num_t  **face_bound_ln_to_gn,
+      int          **face_join_idx,
+      int          **face_join,
+      PDM_g_num_t  **face_join_ln_to_gn
 );
 
 void
 PDM_multipart_part_color_get
 (
-const int            mpartId,
-const int            zoneGId,
+const int            mpart_id,
+const int            zone_gid,
 const int            i_part,
       int          **cell_color,
       int          **face_color,
@@ -174,8 +174,8 @@ const int            i_part,
 void
 PDM_multipart_time_get
 (
-const int       mpartId,
-const int       zoneGId,
+const int       mpart_id,
+const int       zone_gid,
       double  **elapsed,
       double  **cpu,
       double  **cpu_user,
