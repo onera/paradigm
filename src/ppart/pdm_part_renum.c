@@ -424,7 +424,7 @@ double  *cellCenter
     free (volume);
   }
   else {   /* isPoly3D */
-    double *surfaceVector = (double * ) malloc( sizeof(double) * 3 * part->n_cell);
+    double *surface_vector = (double * ) malloc( sizeof(double) * 3 * part->n_cell);
     int isDegenerated;
 
     int *connectivity = (int *) malloc (part->cell_face_idx[part->n_cell]
@@ -469,12 +469,12 @@ double  *cellCenter
                                       part->cell_face_idx,
                                       connectivity,
                                       part->vtx,
-                                      surfaceVector,
+                                      surface_vector,
                                       cellCenter,
                                       NULL,
                                       &isDegenerated);
 
-    free (surfaceVector);
+    free (surface_vector);
     free (connectivity);
 
   }

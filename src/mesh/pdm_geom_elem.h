@@ -67,7 +67,7 @@ PDM_geom_elem_geometric_epsilon
  *  @param [in]  nTriangle      Number of triangles
  *  @param [in]  connectivity   Connectivity
  *  @param [in]  coords         Vertice coordinates
- *  @param [out] surfaceVector  Surface Vector
+ *  @param [out] surface_vector  Surface Vector
  *  @param [out] characteristicLength  Characteristic length (active if != NULL)
  *  @param [out] isDegenerated         Degenerated edge indicator (active if != NULL)
  */
@@ -78,7 +78,7 @@ PDM_geom_elem_tria_surface_vector
  const int     nTriangle,
  const int    *connectivity,
  const double *coords,
- double       *surfaceVector,
+ double       *surface_vector,
  double       *characteristicLength,
  int          *isDegenerated
  );
@@ -87,7 +87,7 @@ PDM_geom_elem_tria_surface_vector
  *  \brief Triangle area
  *
  *  @param [in]  nTriangle      Number of triangles
- *  @param [in]  surfaceVector         SurfaceVector vectors
+ *  @param [in]  surface_vector         surface_vector vectors
  *  @param [out] area           Area
  */
 
@@ -95,7 +95,7 @@ void
 PDM_geom_elem_tria_area
 (
  const int     nTriangle,
- const double *surfaceVector,
+ const double *surface_vector,
  double *area
 );
 
@@ -271,7 +271,7 @@ PDM_geom_elem_edges_properties
  *  @param [in]  connectivity          Connectivity
  *  @param [in]  nVertices             Number of vertices
  *  @param [in]  coords                Vertices coordinates
- *  @param [out] surfaceVector         Surface vector
+ *  @param [out] surface_vector         Surface vector
  *  @param [out] center                Center
  *  @param [out] characteristicLength  Characteristic length (active if != NULL)
  *  @param [out] isDegenerated         Degenerated edge indicator (active if != NULL)
@@ -283,7 +283,7 @@ PDM_geom_elem_tria_properties
  const int     nTriangle,
  const int    *connectivity,
  const double *coords,
- double       *surfaceVector,
+ double       *surface_vector,
  double       *center,
  double       *characteristicLength,
  int         *isDegenerated
@@ -297,7 +297,7 @@ PDM_geom_elem_tria_properties
  *  @param [in]  connectivity          Connectivity
  *  @param [in]  nVertices             Number of vertices
  *  @param [in]  coords                Vertices coordinates
- *  @param [out] surfaceVector         Surface vector
+ *  @param [out] surface_vector         Surface vector
  *  @param [out] center                Center
  *  @param [out] characteristicLength  Characteristic length (active if != NULL)
  *  @param [out] isDegenerated         Degenerated edge indicator (active if != NULL)
@@ -311,7 +311,7 @@ PDM_geom_elem_quad_properties
  const int     nQuadrangle,
  const int    *connectivity,
  const double *coords,
- double       *surfaceVector,
+ double       *surface_vector,
  double       *center,
  double       *characteristicLength,
  int         *isDegenerated
@@ -354,7 +354,7 @@ PDM_geom_elem_compute_polygon_barycentric_coordinates
  *  @param [in]  connectivity          Connectivity
  *  @param [in]  nVertices             Number of vertices
  *  @param [in]  coords                Vertices coordinates
- *  @param [out] surfaceVector         Surface vector
+ *  @param [out] surface_vector         Surface vector
  *  @param [out] center                Center
  *  @param [out] characteristicLength  Characteristic length (active if != NULL)
  *  @param [out] isDegenerated         Degenerated edge indicator (active if != NULL)
@@ -369,7 +369,7 @@ PDM_geom_elem_polygon_properties
  const int    *connectivityIndex,
  const int    *connectivity,
  const double *coords,
- double       *surfaceVector,
+ double       *surface_vector,
  double       *center,
  double       *characteristicLength,
  int         *isDegenerated
