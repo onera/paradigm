@@ -31,12 +31,12 @@ int argc,
 char *argv[]
 )
 {
-  int iRank;
-  int nRank;
+  int i_rank;
+  int n_rank;
 
   PDM_MPI_Init (&argc, &argv);
-  PDM_MPI_Comm_rank (PDM_MPI_COMM_WORLD, &iRank);
-  PDM_MPI_Comm_size (PDM_MPI_COMM_WORLD, &nRank);
+  PDM_MPI_Comm_rank (PDM_MPI_COMM_WORLD, &i_rank);
+  PDM_MPI_Comm_size (PDM_MPI_COMM_WORLD, &n_rank);
 
   /*
    * The test case represent two conform interface between 2 partitions, we need to find out connection of each faces
@@ -134,7 +134,7 @@ char *argv[]
   int      n_points = 15;
   double** coords;
   double** char_lenght;
-  if(nRank == 1){
+  if(n_rank == 1){
     n_cloud = 2;
     coords      = (double **) malloc( n_cloud * sizeof(double *));
     char_lenght = (double **) malloc( n_cloud * sizeof(double *));
@@ -144,14 +144,14 @@ char *argv[]
     char_lenght[0] = cln_j1;
     char_lenght[1] = cln_j2;
 
-  } else if ( nRank == 2){
+  } else if ( n_rank == 2){
     n_cloud = 1;
     coords      = (double **) malloc( n_cloud * sizeof(double **));
     char_lenght = (double **) malloc( n_cloud * sizeof(double **));
-    if(iRank == 0){
+    if(i_rank == 0){
       coords     [0] = xyz_j1;
       char_lenght[0] = cln_j1;
-    } else if (iRank == 1){
+    } else if (i_rank == 1){
       coords     [0] = xyz_j2;
       char_lenght[0] = cln_j2;
     }
@@ -167,13 +167,13 @@ char *argv[]
   double tolerance = 0.1;
   int pm_id = PDM_points_merge_create(n_cloud, tolerance, PDM_MPI_COMM_WORLD);
 
-  if(nRank == 1){
+  if(n_rank == 1){
     PDM_points_merge_cloud_set(pm_id, 0, n_points, coords[0], char_lenght[0]);
     PDM_points_merge_cloud_set(pm_id, 1, n_points, coords[1], char_lenght[1]);
-  } else if(nRank == 2){
-    if(iRank == 0){
+  } else if(n_rank == 2){
+    if(i_rank == 0){
       PDM_points_merge_cloud_set(pm_id, 0, n_points, coords[0], char_lenght[0]);
-    } else if(iRank == 1){
+    } else if(i_rank == 1){
       PDM_points_merge_cloud_set(pm_id, 0, n_points, coords[0], char_lenght[0]);
     }
   }
@@ -226,13 +226,13 @@ char *argv[]
    *  SetUp exchange
    */
   int** send_entity_data = (int **) malloc( n_cloud * sizeof(int**));
-  if(nRank == 1){
+  if(n_rank == 1){
     send_entity_data[0] = point_list_j1;
     send_entity_data[1] = point_list_j2;
-  } else if(nRank == 2){
-    if(iRank == 0){
+  } else if(n_rank == 2){
+    if(i_rank == 0){
       send_entity_data[0] = point_list_j1;
-    } else if(iRank == 1){
+    } else if(i_rank == 1){
       send_entity_data[0] = point_list_j2;
     }
   }
@@ -256,16 +256,16 @@ char *argv[]
    */
   int** send_entity_var_data = (int **) malloc( n_cloud * sizeof(int**));
   int** send_entity_var_stri = (int **) malloc( n_cloud * sizeof(int**));
-  if(nRank == 1){
+  if(n_rank == 1){
     send_entity_var_data[0] = point_list_var_j1;
     send_entity_var_stri[0] = point_list_var_stri_j1;
     send_entity_var_data[1] = point_list_var_j2;
     send_entity_var_stri[1] = point_list_var_stri_j2;
-  } else if(nRank == 2){
-    if(iRank == 0){
+  } else if(n_rank == 2){
+    if(i_rank == 0){
     send_entity_var_data[0] = point_list_var_j1;
     send_entity_var_stri[0] = point_list_var_stri_j1;
-    } else if(iRank == 1){
+    } else if(i_rank == 1){
     send_entity_var_data[0] = point_list_var_j2;
     send_entity_var_stri[0] = point_list_var_stri_j2;
     }

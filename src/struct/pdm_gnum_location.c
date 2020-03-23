@@ -95,7 +95,7 @@ static PDM_Handles_t *_glocs   = NULL;
  *
  * \brief Return ppart object from it identifier
  *
- * \param [in]   ppartId        ppart identifier
+ * \param [in]   ppart_id        ppart identifier
  *
  */
 

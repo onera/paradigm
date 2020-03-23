@@ -178,15 +178,15 @@ int argc,
 char *argv[]
 )
 {
-  int iRank;
-  int nRank;
+  int i_rank;
+  int n_rank;
 
   PDM_MPI_Init (&argc, &argv);
-  PDM_MPI_Comm_rank (PDM_MPI_COMM_WORLD, &iRank);
-  PDM_MPI_Comm_size (PDM_MPI_COMM_WORLD, &nRank);
+  PDM_MPI_Comm_rank (PDM_MPI_COMM_WORLD, &i_rank);
+  PDM_MPI_Comm_size (PDM_MPI_COMM_WORLD, &n_rank);
 
   /*
-   * Triplet : (iproc, ipart, index)
+   * Triplet : (iproc, i_part, index)
    *
    * ----------------------------|           |----------------------------
    *     |                       |           |               |

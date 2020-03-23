@@ -389,17 +389,17 @@ PDM_geom_elem_tetra_faces
  int          *faceConnectivity
  )
 {
-  const int nFace       = 4;         /* 4 triangles */
-  const int nVertex     = nFace * 3; /* 4 * 3 vertices */
+  const int n_face       = 4;         /* 4 triangles */
+  const int nVertex     = n_face * 3; /* 4 * 3 vertices */
   const int nVertexElt  = 4;         /* 4 vertices */
 
   faceConnectivityIndex[0] = 0;
 
   for (int ielt = 0; ielt < nTetrahedra; ielt++) {
 
-    for (int iface = 0; iface < nFace; iface++)
-      faceConnectivityIndex[ielt * nFace + iface + 1] =
-        faceConnectivityIndex[ielt * nFace + iface] + 3;
+    for (int iface = 0; iface < n_face; iface++)
+      faceConnectivityIndex[ielt * n_face + iface + 1] =
+        faceConnectivityIndex[ielt * n_face + iface] + 3;
 
     if (orientation == 0) {
 
@@ -463,17 +463,17 @@ PDM_geom_elem_hexa_faces
  int          *faceConnectivity
  )
 {
-  const int nFace       = 6;         /* 6 quadrangles */
-  const int nVertex     = nFace * 4; /* 6 * 4 vertices */
+  const int n_face       = 6;         /* 6 quadrangles */
+  const int nVertex     = n_face * 4; /* 6 * 4 vertices */
   const int nVertexElt  = 8;         /* 8 vertices */
 
   faceConnectivityIndex[0] = 0;
 
   for (int ielt = 0; ielt < nHexahedra; ielt++) {
 
-    for (int iface = 0; iface < nFace; iface++)
-      faceConnectivityIndex[ielt * nFace + iface + 1] =
-        faceConnectivityIndex[ielt * nFace + iface] + 4;
+    for (int iface = 0; iface < n_face; iface++)
+      faceConnectivityIndex[ielt * n_face + iface + 1] =
+        faceConnectivityIndex[ielt * n_face + iface] + 4;
 
     if (orientation == 0) {
 
@@ -565,7 +565,7 @@ PDM_geom_elem_prism_faces
  int          *faceConnectivity
  )
 {
-  const int nFace       = 5;         /* 3 quadrangles + 2 triangles */
+  const int n_face       = 5;         /* 3 quadrangles + 2 triangles */
   const int nVertex     = 3*4 + 2*3; /* */
   const int nVertexElt  = 6;         /* 6 vertices */
 
@@ -573,11 +573,11 @@ PDM_geom_elem_prism_faces
 
   for (int ielt = 0; ielt < nPrism; ielt++) {
 
-    faceConnectivityIndex[ielt * nFace + 1] = faceConnectivityIndex[ielt * nFace    ] + 3;
-    faceConnectivityIndex[ielt * nFace + 2] = faceConnectivityIndex[ielt * nFace + 1] + 3;
-    faceConnectivityIndex[ielt * nFace + 3] = faceConnectivityIndex[ielt * nFace + 2] + 4;
-    faceConnectivityIndex[ielt * nFace + 4] = faceConnectivityIndex[ielt * nFace + 3] + 4;
-    faceConnectivityIndex[ielt * nFace + 5] = faceConnectivityIndex[ielt * nFace + 4] + 4;
+    faceConnectivityIndex[ielt * n_face + 1] = faceConnectivityIndex[ielt * n_face    ] + 3;
+    faceConnectivityIndex[ielt * n_face + 2] = faceConnectivityIndex[ielt * n_face + 1] + 3;
+    faceConnectivityIndex[ielt * n_face + 3] = faceConnectivityIndex[ielt * n_face + 2] + 4;
+    faceConnectivityIndex[ielt * n_face + 4] = faceConnectivityIndex[ielt * n_face + 3] + 4;
+    faceConnectivityIndex[ielt * n_face + 5] = faceConnectivityIndex[ielt * n_face + 4] + 4;
 
     if (orientation == 0) {
 
@@ -654,7 +654,7 @@ PDM_geom_elem_pyramid_faces
  int        *faceConnectivity
  )
 {
-  const int nFace       = 5;         /* 1 quadrangle + 4 triangles */
+  const int n_face       = 5;         /* 1 quadrangle + 4 triangles */
   const int nVertex     = 1*4 + 4*3; /* */
   const int nVertexElt  = 5;         /* 5 vertices */
 
@@ -662,11 +662,11 @@ PDM_geom_elem_pyramid_faces
 
   for (int ielt = 0; ielt < nPyramid; ielt++) {
 
-    faceConnectivityIndex[ielt * nFace + 1] = faceConnectivityIndex[ielt * nFace    ] + 4;
-    faceConnectivityIndex[ielt * nFace + 2] = faceConnectivityIndex[ielt * nFace + 1] + 3;
-    faceConnectivityIndex[ielt * nFace + 3] = faceConnectivityIndex[ielt * nFace + 2] + 3;
-    faceConnectivityIndex[ielt * nFace + 4] = faceConnectivityIndex[ielt * nFace + 3] + 3;
-    faceConnectivityIndex[ielt * nFace + 5] = faceConnectivityIndex[ielt * nFace + 4] + 3;
+    faceConnectivityIndex[ielt * n_face + 1] = faceConnectivityIndex[ielt * n_face    ] + 4;
+    faceConnectivityIndex[ielt * n_face + 2] = faceConnectivityIndex[ielt * n_face + 1] + 3;
+    faceConnectivityIndex[ielt * n_face + 3] = faceConnectivityIndex[ielt * n_face + 2] + 3;
+    faceConnectivityIndex[ielt * n_face + 4] = faceConnectivityIndex[ielt * n_face + 3] + 3;
+    faceConnectivityIndex[ielt * n_face + 5] = faceConnectivityIndex[ielt * n_face + 4] + 3;
 
     if (orientation == 0) {
 
@@ -1468,12 +1468,12 @@ PDM_geom_elem_hexa_properties
   const int nQuadrangle = 6;
   const int nTriangle = 0;
   const int nHexahedraFaces = nQuadrangle + nTriangle;
-  const int nFaces = nHexahedraFaces * nHexahedra;
+  const int n_faces = nHexahedraFaces * nHexahedra;
 
   int *faceConnectivity          = (int *) malloc (sizeof(int) * ((nQuadrangle*4 + nTriangle*3) * nHexahedra));
-  int *faceConnectivityIdx       = (int *) malloc (sizeof(int) * (nFaces + 1));
+  int *faceConnectivityIdx       = (int *) malloc (sizeof(int) * (n_faces + 1));
   int *cellToFaceConnectivityIdx = (int *) malloc (sizeof(int) * (nHexahedra + 1));
-  int *cellToFaceConnectivity    = (int *) malloc (sizeof(int) * (nFaces));
+  int *cellToFaceConnectivity    = (int *) malloc (sizeof(int) * (n_faces));
 
   /*
    * Get hexahedra faces
@@ -1489,7 +1489,7 @@ PDM_geom_elem_hexa_properties
    * Define cell to face connectivity
    */
 
-  for (int i = 0; i < nFaces; i++)
+  for (int i = 0; i < n_faces; i++)
     cellToFaceConnectivity[i] = i + 1;
 
   cellToFaceConnectivityIdx[0] = 0;
@@ -1502,7 +1502,7 @@ PDM_geom_elem_hexa_properties
 
   PDM_geom_elem_polyhedra_properties (1,
                                       nHexahedra,
-                                      nFaces,
+                                      n_faces,
                                       faceConnectivityIdx,
                                       faceConnectivity,
                                       cellToFaceConnectivityIdx,
@@ -1558,12 +1558,12 @@ PDM_geom_elem_prism_properties
   const int nQuadrangle = 3;
   const int nTriangle = 2;
   const int nPrismFaces = nQuadrangle + nTriangle;
-  const int nFaces = nPrismFaces * nPrism;
+  const int n_faces = nPrismFaces * nPrism;
 
   int *faceConnectivity          = (int *) malloc (sizeof(int) * ((nQuadrangle*4 + nTriangle*3) * nPrism));
-  int *faceConnectivityIdx       = (int *) malloc (sizeof(int) * (nFaces + 1));
+  int *faceConnectivityIdx       = (int *) malloc (sizeof(int) * (n_faces + 1));
   int *cellToFaceConnectivityIdx = (int *) malloc (sizeof(int) * (nPrism + 1));
-  int *cellToFaceConnectivity    = (int *) malloc (sizeof(int) * (nFaces));
+  int *cellToFaceConnectivity    = (int *) malloc (sizeof(int) * (n_faces));
 
   /*
    * Get prism faces
@@ -1579,7 +1579,7 @@ PDM_geom_elem_prism_properties
    * Define cell to face connectivity
    */
 
-  for (int i = 0; i < nFaces; i++)
+  for (int i = 0; i < n_faces; i++)
     cellToFaceConnectivity[i] = i + 1;
 
   cellToFaceConnectivityIdx[0] = 0;
@@ -1592,7 +1592,7 @@ PDM_geom_elem_prism_properties
 
   PDM_geom_elem_polyhedra_properties (1,
                                       nPrism,
-                                      nFaces,
+                                      n_faces,
                                       faceConnectivityIdx,
                                       faceConnectivity,
                                       cellToFaceConnectivityIdx,
@@ -1648,12 +1648,12 @@ PDM_geom_elem_pyramid_properties
   const int nQuadrangle = 1;
   const int nTriangle = 4;
   const int nPyramidFaces = nQuadrangle + nTriangle;
-  const int nFaces = nPyramidFaces * nPyramid;
+  const int n_faces = nPyramidFaces * nPyramid;
 
   int *faceConnectivity          = (int *) malloc (sizeof(int) * ((nQuadrangle*4 + nTriangle*3) * nPyramid));
-  int *faceConnectivityIdx       = (int *) malloc (sizeof(int) * (nFaces + 1));
+  int *faceConnectivityIdx       = (int *) malloc (sizeof(int) * (n_faces + 1));
   int *cellToFaceConnectivityIdx = (int *) malloc (sizeof(int) * (nPyramid + 1));
-  int *cellToFaceConnectivity    = (int *) malloc (sizeof(int) * (nFaces));
+  int *cellToFaceConnectivity    = (int *) malloc (sizeof(int) * (n_faces));
 
   /*
    * Get pyramid faces
@@ -1669,7 +1669,7 @@ PDM_geom_elem_pyramid_properties
    * Define cell to face connectivity
    */
 
-  for (int i = 0; i < nFaces; i++)
+  for (int i = 0; i < n_faces; i++)
     cellToFaceConnectivity[i] = i + 1;
 
   cellToFaceConnectivityIdx[0] = 0;
@@ -1682,7 +1682,7 @@ PDM_geom_elem_pyramid_properties
 
   PDM_geom_elem_polyhedra_properties (1,
                                       nPyramid,
-                                      nFaces,
+                                      n_faces,
                                       faceConnectivityIdx,
                                       faceConnectivity,
                                       cellToFaceConnectivityIdx,
@@ -1713,7 +1713,7 @@ PDM_geom_elem_pyramid_properties
  *
  *  @param [in]  isOriented                 1 if cellToFaceConnectivity is already oriented, 0 otherwise
  *  @param [in]  nPolyhedra                 Number of polyhedra
- *  @param [in]  nFace                      Number of faces
+ *  @param [in]  n_face                      Number of faces
  *  @param [in]  faceConnectivityIdx        Face connectivity index
  *  @param [in]  faceConnectivity           Face connectivity
  *  @param [in,out]  cellToFaceConnectivityIdx  Cell to face connectivity index
@@ -1731,7 +1731,7 @@ PDM_geom_elem_polyhedra_properties
 (
  const int     isOriented,
  const int     nPolyhedra,
- const int     nFace,
+ const int     n_face,
  const int    *faceConnectivityIdx,
  const int    *faceConnectivity,
  const int    *cellToFaceConnectivityIdx,
@@ -1758,11 +1758,11 @@ PDM_geom_elem_polyhedra_properties
    * Compute face properties
    */
 
-  double *surfaceVector = (double *) malloc (sizeof(double) * 3 *nFace);
-  double *faceCenter    = (double *) malloc (sizeof(double) * 3 *nFace);
+  double *surfaceVector = (double *) malloc (sizeof(double) * 3 *n_face);
+  double *faceCenter    = (double *) malloc (sizeof(double) * 3 *n_face);
 
   // PDM_printf( "faceConnectivity : \n");
-  // for (int ipoly = 0; ipoly < nFace; ipoly++) {
+  // for (int ipoly = 0; ipoly < n_face; ipoly++) {
   //   PDM_printf( "  - face %i : ", ipoly+1);
   //   for (int j = faceConnectivityIdx[ipoly]; j < faceConnectivityIdx[ipoly+1]; j++) {
   //     PDM_printf( "%i ",faceConnectivity[j]);
@@ -1772,7 +1772,7 @@ PDM_geom_elem_polyhedra_properties
 
 
 
-  int convergenceFace = PDM_geom_elem_polygon_properties (nFace,
+  int convergenceFace = PDM_geom_elem_polygon_properties (n_face,
                                                           faceConnectivityIdx,
                                                           faceConnectivity,
                                                           coords,
@@ -1784,7 +1784,7 @@ PDM_geom_elem_polyhedra_properties
   if (0 == 1) {
 
     PDM_printf( "faceConnectivity : \n");
-    for (int ipoly = 0; ipoly < nFace; ipoly++) {
+    for (int ipoly = 0; ipoly < n_face; ipoly++) {
       PDM_printf( "  - face %i : ", ipoly+1);
       for (int j = faceConnectivityIdx[ipoly]; j < faceConnectivityIdx[ipoly+1]; j++) {
         PDM_printf( "%i ",faceConnectivity[j]);
@@ -1793,13 +1793,13 @@ PDM_geom_elem_polyhedra_properties
     }
 
     PDM_printf( "surfacevector : ");
-    for (int ipoly = 0; ipoly < 3 * nFace; ipoly++) {
+    for (int ipoly = 0; ipoly < 3 * n_face; ipoly++) {
       PDM_printf( "%12.5e ",surfaceVector[ipoly]);
     }
     PDM_printf( "\n");
 
     PDM_printf( "facecenter : ");
-    for (int ipoly = 0; ipoly < 3 * nFace; ipoly++) {
+    for (int ipoly = 0; ipoly < 3 * n_face; ipoly++) {
       PDM_printf( "%12.5e ",faceCenter[ipoly]);
     }
     PDM_printf( "\n");
@@ -1869,13 +1869,13 @@ PDM_geom_elem_polyhedra_properties
 
       const int face          = abs(cellToFaceConnectivity[polyIdx + iface]) - 1;
       const int faceIdx       = faceConnectivityIdx[face];
-      const int nFaceVertices = faceConnectivityIdx[face+1] - faceIdx;
+      const int n_faceVertices = faceConnectivityIdx[face+1] - faceIdx;
 
-      for (int ivert = 0; ivert < nFaceVertices; ivert++) {
+      for (int ivert = 0; ivert < n_faceVertices; ivert++) {
         const int vertex = faceConnectivity[faceIdx + ivert] - 1;
 
         if (!isOriented) {
-          const int inext = (ivert + 1) % nFaceVertices;
+          const int inext = (ivert + 1) % n_faceVertices;
           const int vertexNext = faceConnectivity[faceIdx + inext] - 1;
           const int key = vertex + vertexNext;
 
@@ -1918,10 +1918,10 @@ PDM_geom_elem_polyhedra_properties
 
         const int face          = abs(cellToFaceConnectivity[polyIdx + iFace]) - 1;
         const int faceIdx       = faceConnectivityIdx[face];
-        const int nFaceVertices = faceConnectivityIdx[face+1] - faceIdx;
+        const int n_faceVertices = faceConnectivityIdx[face+1] - faceIdx;
 
-        for (int ivert = 0; ivert < nFaceVertices; ivert++) {
-          const int inext = (ivert + 1) % nFaceVertices;
+        for (int ivert = 0; ivert < n_faceVertices; ivert++) {
+          const int inext = (ivert + 1) % n_faceVertices;
 
           const int vertex = faceConnectivity[faceIdx + ivert] - 1;
           const int vertexNext = faceConnectivity[faceIdx + inext] - 1;
@@ -2053,13 +2053,13 @@ PDM_geom_elem_polyhedra_properties
       const int direction     = (cellToFaceConnectivity[polyIdx + iface] < 0) ? -1 : 1;
 
       const int faceIdx       = faceConnectivityIdx[face];
-      const int nFaceVertices = faceConnectivityIdx[face+1] - faceIdx;
+      const int n_faceVertices = faceConnectivityIdx[face+1] - faceIdx;
 
       /*
        * Loop on vertices
        */
 
-      for (int ivert = 0; ivert < nFaceVertices; ivert++) {
+      for (int ivert = 0; ivert < n_faceVertices; ivert++) {
 
         int vert1;
         int vert2;
@@ -2067,11 +2067,11 @@ PDM_geom_elem_polyhedra_properties
 
         if (direction > 0) {
           vert1 = faceConnectivity[faceIdx + ivert1] - 1;
-          vert2 = faceConnectivity[faceIdx + (ivert1 + 1) % nFaceVertices] - 1;
+          vert2 = faceConnectivity[faceIdx + (ivert1 + 1) % n_faceVertices] - 1;
         }
         else {
-          ivert1 = nFaceVertices - 1 - ivert;
-          vert1 = faceConnectivity[faceIdx + (ivert1 + 1) % nFaceVertices] - 1;
+          ivert1 = n_faceVertices - 1 - ivert;
+          vert1 = faceConnectivity[faceIdx + (ivert1 + 1) % n_faceVertices] - 1;
           vert2 = faceConnectivity[faceIdx + ivert1] - 1;
         }
 
@@ -2188,13 +2188,13 @@ PDM_geom_elem_polyhedra_properties
   if (0 == 1) {
 
     PDM_printf( "surfacevector : ");
-    for (int ipoly = 0; ipoly < 3 * nFace; ipoly++) {
+    for (int ipoly = 0; ipoly < 3 * n_face; ipoly++) {
       PDM_printf( "%12.5e ",surfaceVector[ipoly]);
     }
     PDM_printf( "\n");
 
     PDM_printf( "facecenter : ");
-    for (int ipoly = 0; ipoly < 3 * nFace; ipoly++) {
+    for (int ipoly = 0; ipoly < 3 * n_face; ipoly++) {
       PDM_printf( "%12.5e ",faceCenter[ipoly]);
     }
     PDM_printf( "\n");

@@ -29,7 +29,7 @@ extern "C" {
 
 
 /**
- * \struct _cs_part_to_block_t
+ * \struct _pdm_part_to_block_t
  *
  * \brief  Data transfer from partitions to blocks
  *
@@ -87,7 +87,7 @@ typedef struct {
                                                          reveived data (size = block_n_elt) */
 
 
-} _cs_part_to_block_t;
+} _pdm_part_to_block_t;
 
 /*=============================================================================
  * Static global variables

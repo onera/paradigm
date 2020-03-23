@@ -487,7 +487,7 @@ PDM_geom_elem_pyramid_properties
  *  \brief Polyhedra properties
  *
  *  @param [in]  nPolyhedra                 Number of polyhedra
- *  @param [in]  nFace                      Number of faces
+ *  @param [in]  n_face                      Number of faces
  *  @param [in]  faceConnectivityIdx        Face connectivity index
  *  @param [in]  faceConnectivity           Face connectivity
  *  @param [in]  cellToFaceConnectivityIdx  Cell to face connectivity index
@@ -505,7 +505,7 @@ PDM_geom_elem_polyhedra_properties
 (
  const  int    isOriented,
  const int     nPolyhedra,
- const int     nFace,
+ const int     n_face,
  const int    *faceConnectivityIdx,
  const int    *faceConnectivity,
  const int    *cellToFaceConnectivityIdx,

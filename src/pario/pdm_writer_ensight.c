@@ -103,7 +103,7 @@ static const char  *_ensight_type_name[10] = {"point",
                                               "pyramid5",
                                               "penta6",
                                               "hexa8",
-                                              "nfaced"};
+                                              "n_faced"};
 
 /*=============================================================================
  * Fonctions privées
@@ -1026,8 +1026,8 @@ PDM_writer_ensight_geom_write
 
   const int n_part = PDM_Mesh_nodal_n_part_get (geom->idx_mesh);
 
-  for (int ipart = 0; ipart < n_part; ipart++) {
-    const int n_vtx = PDM_Mesh_nodal_n_vertices_get (geom->idx_mesh, ipart);
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    const int n_vtx = PDM_Mesh_nodal_n_vertices_get (geom->idx_mesh, i_part);
     n_som_proc += n_vtx;
   }
 
@@ -1046,12 +1046,12 @@ PDM_writer_ensight_geom_write
       s_ecr_n_val = PDM_WRITER_OFF;
     n_som_proc = 0;
 
-    for (int ipart = 0; ipart < n_part; ipart++) {
+    for (int i_part = 0; i_part < n_part; i_part++) {
 
-      const int n_vtx = PDM_Mesh_nodal_n_vertices_get (geom->idx_mesh, ipart);
-      const double *vtx = PDM_Mesh_nodal_vertices_get (geom->idx_mesh, ipart);
+      const int n_vtx = PDM_Mesh_nodal_n_vertices_get (geom->idx_mesh, i_part);
+      const double *vtx = PDM_Mesh_nodal_vertices_get (geom->idx_mesh, i_part);
       const PDM_g_num_t *numabs =
-                    PDM_Mesh_nodal_vertices_g_num_get (geom->idx_mesh, ipart);
+                    PDM_Mesh_nodal_vertices_g_num_get (geom->idx_mesh, i_part);
 
       for (int i = 0; i < n_vtx; i++) {
         coord_tmp[n_som_proc+i] = (float) vtx[3*i+idim];

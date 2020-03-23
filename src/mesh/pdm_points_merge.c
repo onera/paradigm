@@ -86,7 +86,7 @@ static const double _default_eps = 1e-9;
  *
  * \brief Return ppart object from it identifier
  *
- * \param [in]   ppartId        ppart identifier
+ * \param [in]   ppart_id        ppart identifier
  *
  */
 
@@ -110,7 +110,7 @@ _get_from_id
  *
  * \brief Search a point
  *
- * \param [in]   ppartId        ppart identifier
+ * \param [in]   ppart_id        ppart identifier
  *
  */
 
@@ -146,7 +146,7 @@ const double *second_extents
  *
  * \brief Search a point in local partitions
  *
- * \param [in]   ppartId        ppart identifier
+ * \param [in]   ppart_id        ppart identifier
  *
  */
 
@@ -279,7 +279,7 @@ const double tolerance
  *
  * \brief Search a point in distant partitions
  *
- * \param [in]   ppartId        ppart identifier
+ * \param [in]   ppart_id        ppart identifier
  *
  */
 

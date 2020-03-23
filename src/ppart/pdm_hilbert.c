@@ -59,14 +59,14 @@ static const int _sampling_factors[4] = {1, /* OD */
 static const unsigned  _imax = ~(0U);
 
 /* 2 dimension to nkey conversion */
-static const unsigned  _cs_idata2d[]
+static const unsigned  _pdm_idata2d[]
 = {0, 3, 1, 2,
    0, 1, 3, 2,
    2, 3, 1, 0,
    2, 1, 3, 0};
 
 /* 2 dimension to nkey state transitions */
-static const unsigned  _cs_istate2d[]
+static const unsigned  _pdm_istate2d[]
 = {1, 2, 0, 0,
    0, 1, 3, 1,
    2, 0, 2, 3,
@@ -112,7 +112,7 @@ static const unsigned _bader_istate2d[]
     };
 
 /* 3 dimension to nkey conversion */
-static const unsigned  _cs_idata3d[]
+static const unsigned  _pdm_idata3d[]
 = {0,  7,  3,  4,  1,  6,  2,  5,
    0,  1,  3,  2,  7,  6,  4,  5,
    0,  3,  7,  4,  1,  2,  6,  5,
@@ -139,7 +139,7 @@ static const unsigned  _cs_idata3d[]
    6,  5,  7,  4,  1,  2,  0,  3};
 
 /* 3 dimension to nkey state transitions */
-static const unsigned  _cs_istate3d[]
+static const unsigned  _pdm_istate3d[]
 = { 1,  6,  3,  4,  2,  5,  0,  0,
     0,  7,  8,  1,  9,  4,  5,  1,
    15, 22, 23, 20,  0,  2, 19,  2,
@@ -1056,12 +1056,12 @@ PDM_hilbert_encode_coords(int                 dim,
   case PDM_HILBERT_CS:
 
     if (dim == 2) {
-      idata  = _cs_idata2d;
-      istate = _cs_istate2d;
+      idata  = _pdm_idata2d;
+      istate = _pdm_istate2d;
     }
     else if (dim == 3) {
-      idata  = _cs_idata3d;
-      istate = _cs_istate3d;
+      idata  = _pdm_idata3d;
+      istate = _pdm_istate3d;
     }
     break;
 

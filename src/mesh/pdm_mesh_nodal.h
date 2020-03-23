@@ -767,7 +767,7 @@ const int            id_part,
  */
 
 void
-PDM_Mesh_nodal_cell3d_cellface_add
+PDM_Mesh_nodal_cell3d_cell_face_add
 (
 const int          idx,
 const int          id_part,
@@ -839,7 +839,7 @@ const PDM_g_num_t *numabs
  */
 
 void
-PDM_Mesh_nodal_faces_facevtx_add
+PDM_Mesh_nodal_faces_face_vtx_add
 (
 const int          idx,
 const int          id_part,

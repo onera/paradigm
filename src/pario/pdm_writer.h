@@ -664,7 +664,7 @@ const PDM_l_num_t   n_face,
  *----------------------------------------------------------------------------*/
 
 void
-PROCF (pdm_writer_geom_cell3d_cellface_add, PDM_WRITER_GEOM_CELL3D_CELLFACE_ADD)
+PROCF (pdm_writer_geom_cell3d_cell_face_add, PDM_WRITER_GEOM_CELL3D_cell_face_ADD)
 (
 int         *id_cs,
 int         *id_geom,
@@ -681,7 +681,7 @@ PDM_g_num_t   *numabs
 );
 
 void
-PDM_writer_geom_cell3d_cellface_add
+PDM_writer_geom_cell3d_cell_face_add
 (
 const int    id_cs,
 const int    id_geom,
@@ -720,7 +720,7 @@ PDM_g_num_t   *numabs
  *----------------------------------------------------------------------------*/
 
 void
-PROCF (pdm_writer_geom_cell2d_cellface_add, PDM_WRITER_GEOM_CELL2D_CELLFACE_ADD)
+PROCF (pdm_writer_geom_cell2d_cell_face_add, PDM_WRITER_GEOM_CELL2D_cell_face_ADD)
 (
 int         *id_cs,
 int         *id_geom,
@@ -737,7 +737,7 @@ PDM_g_num_t   *numabs
 );
 
 void
-PDM_writer_geom_cell2d_cellface_add
+PDM_writer_geom_cell2d_cell_face_add
 (
 const int          id_cs,
 const int          id_geom,

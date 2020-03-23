@@ -83,7 +83,7 @@ PDM_multipart_create
  *
  * \param [in]   id           Identifier
  * \param [in]   i_block      Number of block to set
- * \param [in]   dFaceCell    Face to cell connectivity for the block
+ * \param [in]   dface_cell    Face to cell connectivity for the block
  * TODO LIST PARAMS
  *
  */
@@ -115,19 +115,19 @@ PDM_multipart_part_dim_get
 (
 const   int  mpartId,
 const   int  zoneGId,
-const   int  ipart,
- int        *nCell,
- int        *nFace,
- int        *nFacePartBound,
- int        *nVtx,
- int        *nProc,
- int        *nTPart,
- int        *sCellFace,
- int        *sFaceVtx,
+const   int  i_part,
+ int        *n_cell,
+ int        *n_face,
+ int        *n_face_part_bound,
+ int        *n_vtx,
+ int        *n_proc,
+ int        *n_total_part,
+ int        *scell_face,
+ int        *sface_vtx,
  int        *sFaceBound,
- int        *nFaceBound,
+ int        *n_faceBound,
  int        *sFaceJoin,
- int        *nFaceJoin
+ int        *n_faceJoin
 );
 
 void
@@ -135,22 +135,22 @@ PDM_multipart_part_val_get
 (
 const int            mpartId,
 const int            zoneGId,
-const int            ipart,
-      int          **cellTag,
-      int          **cellFaceIdx,
-      int          **cellFace,
-      PDM_g_num_t  **cellLNToGN,
-      int          **faceTag,
-      int          **faceCell,
-      int          **faceVtxIdx,
-      int          **faceVtx,
-      PDM_g_num_t  **faceLNToGN,
-      int          **facePartBoundProcIdx,
-      int          **facePartBoundPartIdx,
-      int          **facePartBound,
-      int          **vtxTag,
+const int            i_part,
+      int          **cell_tag,
+      int          **cell_face_idx,
+      int          **cell_face,
+      PDM_g_num_t  **cell_ln_to_gn,
+      int          **face_tag,
+      int          **face_cell,
+      int          **face_vtx_idx,
+      int          **face_vtx,
+      PDM_g_num_t  **face_ln_to_gn,
+      int          **face_part_bound_proc_idx,
+      int          **face_part_bound_part_idx,
+      int          **face_part_bound,
+      int          **vtx_tag,
       double       **vtx,
-      PDM_g_num_t  **vtxLNToGN,
+      PDM_g_num_t  **vtx_ln_to_gn,
       int          **faceBoundIdx,
       int          **faceBound,
       PDM_g_num_t  **faceBoundLNToGN,
@@ -164,7 +164,7 @@ PDM_multipart_part_color_get
 (
 const int            mpartId,
 const int            zoneGId,
-const int            ipart,
+const int            i_part,
       int          **cellColor,
       int          **faceColor,
       int          **threadColor,

@@ -58,13 +58,13 @@ extern "C" {
 int
 PDM_METIS_PartGraphRecursive
 (
-int    *nvtxs,
+int    *n_vtxs,
 int    *ncon,
 int    *xadj,
 int    *adjncy,
 int    *vwgt,
 int    *adjwgt,
-int    *nparts,
+int    *n_parts,
 double *tpwgts,
 double *ubvec,
 int    *edgecut,
@@ -86,13 +86,13 @@ int    *part
   //options[METIS_OPTION_NSEPS] = 10;
   //options[METIS_OPTION_UFACTOR] = 100;
 
-  idx_t _nvtxs = *nvtxs;
+  idx_t _n_vtxs = *n_vtxs;
 
   idx_t _ncon = *ncon;
 
-  int nEdge = xadj[_nvtxs];
+  int nEdge = xadj[_n_vtxs];
 
-  idx_t _nparts = *nparts;
+  idx_t _n_parts = *n_parts;
 
   idx_t _edgecut = (idx_t) (*edgecut);
 
@@ -114,10 +114,10 @@ int    *part
 
     if(tpwgts != NULL){
 
-      __tpwgts = malloc (sizeof(real_t) * _ncon * _nparts);
+      __tpwgts = malloc (sizeof(real_t) * _ncon * _n_parts);
       _tpwgts  = __tpwgts;
 
-      for (int i = 0; i < _ncon * _nparts; i++) {
+      for (int i = 0; i < _ncon * _n_parts; i++) {
         __tpwgts[i] = (real_t) tpwgts[i];
       }
     } /* End if tpwgts */
@@ -156,12 +156,12 @@ int    *part
   }
 
   else {
-    __xadj    = (idx_t *) malloc (sizeof(idx_t) * (_nvtxs + 1));
+    __xadj    = (idx_t *) malloc (sizeof(idx_t) * (_n_vtxs + 1));
     __adjncy  = (idx_t *) malloc (sizeof(idx_t) * nEdge);
     _xadj    = __xadj;
     _adjncy  = __adjncy;
 
-    for (int i = 0; i < _nvtxs + 1; i++) {
+    for (int i = 0; i < _n_vtxs + 1; i++) {
       __xadj[i] = xadj[i];
     }
 
@@ -170,8 +170,8 @@ int    *part
     }
 
     if (vwgt != NULL) {
-      __vwgt = (idx_t *) malloc (sizeof(idx_t) * _nvtxs);
-      for (int i = 0; i < _nvtxs; i++) {
+      __vwgt = (idx_t *) malloc (sizeof(idx_t) * _n_vtxs);
+      for (int i = 0; i < _n_vtxs; i++) {
         __vwgt[i] = vwgt[i];
       }
     }
@@ -189,7 +189,7 @@ int    *part
       __adjwgt = NULL;
     }
 
-    __part = (idx_t *) malloc (sizeof(idx_t) * _nvtxs);
+    __part = (idx_t *) malloc (sizeof(idx_t) * _n_vtxs);
 
     _vwgt   = __vwgt;
     _adjwgt = __adjwgt;
@@ -197,14 +197,14 @@ int    *part
 
   }
 
-  int rval = (int) METIS_PartGraphRecursive (&_nvtxs,
+  int rval = (int) METIS_PartGraphRecursive (&_n_vtxs,
                                              &_ncon,
                                               _xadj,
                                               _adjncy,
                                               _vwgt,
                                               _vsize,
                                               _adjwgt,
-                                              &_nparts,
+                                              &_n_parts,
                                               _tpwgts,
                                               _ubvec,
                                               options,
@@ -212,7 +212,7 @@ int    *part
                                               _part);
 
     if (sizeof(int) != sizeof(idx_t)) {
-    for (int i = 0; i < _nvtxs; i++) {
+    for (int i = 0; i < _n_vtxs; i++) {
       part[i] = _part[i];
     }
   }
@@ -252,13 +252,13 @@ int    *part
 int
 PDM_METIS_PartGraphKway
 (
-int    *nvtxs,
+int    *n_vtxs,
 int    *ncon,
 int    *xadj,
 int    *adjncy,
 int    *vwgt,
 int    *adjwgt,
-int    *nparts,
+int    *n_parts,
 double *tpwgts,
 double *ubvec,
 int    *edgecut,
@@ -280,13 +280,13 @@ int    *part
   //options[METIS_OPTION_NSEPS] = 10;
   //options[METIS_OPTION_UFACTOR] = 100;
 
-  idx_t _nvtxs = *nvtxs;
+  idx_t _n_vtxs = *n_vtxs;
 
   idx_t _ncon = *ncon;
 
-  int nEdge = xadj[_nvtxs];
+  int nEdge = xadj[_n_vtxs];
 
-  idx_t _nparts = *nparts;
+  idx_t _n_parts = *n_parts;
 
   idx_t _edgecut = (idx_t) *edgecut;
 
@@ -309,10 +309,10 @@ int    *part
 
     if(tpwgts != NULL){
 
-      __tpwgts = malloc (sizeof(real_t) * _ncon * _nparts);
+      __tpwgts = malloc (sizeof(real_t) * _ncon * _n_parts);
       _tpwgts  = __tpwgts;
 
-      for (int i = 0; i < _ncon * _nparts; i++) {
+      for (int i = 0; i < _ncon * _n_parts; i++) {
         __tpwgts[i] = (real_t) tpwgts[i];
       }
     } /* End if tpwgts */
@@ -351,12 +351,12 @@ int    *part
   }
 
   else {
-    __xadj    = (idx_t *) malloc (sizeof(idx_t) * (_nvtxs + 1));
+    __xadj    = (idx_t *) malloc (sizeof(idx_t) * (_n_vtxs + 1));
     __adjncy  = (idx_t *) malloc (sizeof(idx_t) * nEdge);
     _xadj    = __xadj;
     _adjncy  = __adjncy;
 
-    for (int i = 0; i < _nvtxs + 1; i++) {
+    for (int i = 0; i < _n_vtxs + 1; i++) {
       __xadj[i] = xadj[i];
     }
 
@@ -365,8 +365,8 @@ int    *part
     }
 
     if (vwgt != NULL) {
-      __vwgt = (idx_t *) malloc (sizeof(idx_t) * _nvtxs);
-      for (int i = 0; i < _nvtxs; i++) {
+      __vwgt = (idx_t *) malloc (sizeof(idx_t) * _n_vtxs);
+      for (int i = 0; i < _n_vtxs; i++) {
         __vwgt[i] = vwgt[i];
       }
     }
@@ -384,7 +384,7 @@ int    *part
       __adjwgt = NULL;
     }
 
-    __part = (idx_t *) malloc (sizeof(idx_t) * _nvtxs);
+    __part = (idx_t *) malloc (sizeof(idx_t) * _n_vtxs);
 
     _vwgt   = __vwgt;
     _adjwgt = __adjwgt;
@@ -392,14 +392,14 @@ int    *part
 
   }
 
-  int rval = (int) METIS_PartGraphKway (&_nvtxs,
+  int rval = (int) METIS_PartGraphKway (&_n_vtxs,
                                         &_ncon,
                                          _xadj,
                                          _adjncy,
                                          _vwgt,
                                          _vsize,
                                          _adjwgt,
-                                        &_nparts,
+                                        &_n_parts,
                                          _tpwgts,
                                          _ubvec,
                                          options,
@@ -407,7 +407,7 @@ int    *part
                                          _part);
 
   if (__part != NULL) {
-    for (int i = 0; i < _nvtxs; i++) {
+    for (int i = 0; i < _n_vtxs; i++) {
       part[i] = __part[i];
     }
   }
@@ -451,13 +451,13 @@ int    *part
 void
 PDM_SCOTCH_part
 (
-const int nCell,
+const int n_cell,
 int *dualGraphIdx,
 int *dualGraph,
 int *cellWeight,
 int *edgeWeight,
 int check,
-const int nPart,
+const int n_part,
 int *part
 )
 {
@@ -474,13 +474,13 @@ int *part
   }
 
   SCOTCH_Num _baseval = 0;
-  SCOTCH_Num _vertnbr = (SCOTCH_Num) nCell;
+  SCOTCH_Num _vertnbr = (SCOTCH_Num) n_cell;
   SCOTCH_Num *_verttab, *__verttab;
   SCOTCH_Num *_vendtab, *__vendtab;
   SCOTCH_Num *_velotab, *__velotab;
   SCOTCH_Num *_vlbltab = NULL;
-  SCOTCH_Num _edgenbr = (SCOTCH_Num) dualGraphIdx[nCell];
-  SCOTCH_Num _edgesiz = (SCOTCH_Num) dualGraphIdx[nCell];
+  SCOTCH_Num _edgenbr = (SCOTCH_Num) dualGraphIdx[n_cell];
+  SCOTCH_Num _edgesiz = (SCOTCH_Num) dualGraphIdx[n_cell];
   SCOTCH_Num *_edgetab, *__edgetab;
   SCOTCH_Num *_edlotab, *__edlotab;
   SCOTCH_Num *_part, *__part;
@@ -568,10 +568,10 @@ int *part
   //Partitioning strategy
   SCOTCH_stratInit (&straptr);
 
-  SCOTCH_Num _nPart = (SCOTCH_Num) nPart;
+  SCOTCH_Num _n_part = (SCOTCH_Num) n_part;
 
   ierr = SCOTCH_graphPart (&grafptr,
-                           _nPart, //nombre de partitions
+                           _n_part, //nombre de partitions
                            &straptr,
                            _part);
 
