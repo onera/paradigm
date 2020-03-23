@@ -136,48 +136,48 @@ _get_from_id
   return multipart;
 }
 
-static int
- _search_rank
-(
- PDM_g_num_t   elt,
- PDM_g_num_t  *array,
- int            id1,
- int            id2
-)
-{
-  if (elt >= array[id2]) {
-    PDM_printf("PPART error : Element not in initial distributed array "
-           PDM_FMT_G_NUM" "PDM_FMT_G_NUM" "PDM_FMT_G_NUM"\n",
-           elt, array[id1], array[id2]);
-    abort();
-  }
+// static int
+//  PDM_search_rank
+// (
+//  PDM_g_num_t   elt,
+//  PDM_g_num_t  *array,
+//  int            id1,
+//  int            id2
+// )
+// {
+//   if (elt >= array[id2]) {
+//     PDM_printf("PPART error : Element not in initial distributed array "
+//            PDM_FMT_G_NUM" "PDM_FMT_G_NUM" "PDM_FMT_G_NUM"\n",
+//            elt, array[id1], array[id2]);
+//     abort();
+//   }
 
-  if (elt < array[id1]) {
-    PDM_printf("PPART error : Element not in initial distributed array "
-           PDM_FMT_G_NUM" "PDM_FMT_G_NUM" "PDM_FMT_G_NUM"\n",
-           elt, array[id1], array[id2]);
-    abort();
-  }
+//   if (elt < array[id1]) {
+//     PDM_printf("PPART error : Element not in initial distributed array "
+//            PDM_FMT_G_NUM" "PDM_FMT_G_NUM" "PDM_FMT_G_NUM"\n",
+//            elt, array[id1], array[id2]);
+//     abort();
+//   }
 
-  if (id2 == id1 + 1) {
-    return id1;
-  }
+//   if (id2 == id1 + 1) {
+//     return id1;
+//   }
 
-  else {
+//   else {
 
-    while(array[id1] == array[id1+1]) id1++;
+//     while(array[id1] == array[id1+1]) id1++;
 
-    int midId = (id2 + id1) / 2;
+//     int midId = (id2 + id1) / 2;
 
-    if (elt == array[id1])
-      return id1;
-    else if (elt < array[midId])
-      return _search_rank(elt, array, id1, midId);
-    else if (elt >= array[midId])
-      return _search_rank(elt, array, midId, id2);
-  }
-  return -1;
-}
+//     if (elt == array[id1])
+//       return id1;
+//     else if (elt < array[midId])
+//       return PDM_search_rank(elt, array, id1, midId);
+//     else if (elt >= array[midId])
+//       return PDM_search_rank(elt, array, midId, id2);
+//   }
+//   return -1;
+// }
 
 static void
 _set_dface_tag_from_joins
@@ -218,7 +218,7 @@ _set_dface_tag_from_joins
   //Count faces to send
   for (int ijoin = 0; ijoin < n_join; ijoin++) {
     for (int iface = dface_join_idx[ijoin]; iface < dface_join_idx[ijoin+1]; iface++) {
-      int rank = _search_rank(dface_join[iface], dface_proc, 0, n_rank);
+      int rank = PDM_search_rank(dface_join[iface], dface_proc, 0, n_rank);
       face_to_send_n[rank] += nData;
     }
   }
@@ -234,7 +234,7 @@ _set_dface_tag_from_joins
   {
     for (int iface = dface_join_idx[ijoin]; iface < dface_join_idx[ijoin+1]; iface++)
     {
-      int rank = _search_rank(dface_join[iface], dface_proc, 0, n_rank);
+      int rank = PDM_search_rank(dface_join[iface], dface_proc, 0, n_rank);
       int idx   = face_to_send_idx[rank] + face_to_send_n[rank];
       face_to_send[idx  ]   = dface_join[iface];
       face_to_send[idx+1]   = djoin_gids[2*ijoin+1];
