@@ -30,6 +30,7 @@
 #include "pdm_fortran_to_c_string.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
+#include "pdm_sort.h"
 #include "pdm_handles.h"
 
 
@@ -81,155 +82,6 @@ static PDM_Handles_t *_pparts   = NULL;
 /*============================================================================
  * Private function definitions
  *============================================================================*/
-
-/**
- *
- * \brief Quick sort
- *
- * \param [inout]   a     Array to sort
- * \param [in]      l     First element
- * \param [in]      r     Last  element
- * \param [inout]   c     Array sorted as a
- *
- */
-
-static void
-_quickSort_pdm_part_long_t
-(
- PDM_g_num_t a[],
- int          l,
- int          r,
- int          c[]
-)
-{
-  if (l < r) {
-    int j = r+1;
-
-    PDM_g_num_t t;
-    int v;
-    PDM_g_num_t pivot = a[l];
-    int i = l;
-
-    while(1) {
-      do ++i; while (a[i] <= pivot && i < r);
-      do --j; while (a[j] > pivot);
-      if (i >= j) break;
-
-      t    = a[i];
-      a[i] = a[j];
-      a[j] = t;
-
-      v    = c[i];
-      c[i] = c[j];
-      c[j] = v;
-    }
-    t    = a[l];
-    a[l] = a[j];
-    a[j] = t;
-
-    v    = c[l];
-    c[l] = c[j];
-    c[j] = v;
-
-    _quickSort_pdm_part_long_t(a, l  , j-1, c);
-    _quickSort_pdm_part_long_t(a, j+1,   r, c);
-  }
-}
-
-/**
- *
- * \brief Quick sort
- *
- * \param [inout]   a     Array to sort
- * \param [in]      l     First element
- * \param [in]      r     Last  element
- *
- */
-
-static void
-_quickSort_int
-(
- int a[],
- int l,
- int r
-)
-{
-  if (l < r) {
-    int j = r+1;
-    int t;
-    int pivot = a[l];
-    int i = l;
-
-    while(1) {
-      do ++i; while (a[i] <= pivot && i < r);
-      do --j; while (a[j] > pivot);
-      if (i >= j) break;
-
-      t    = a[i];
-      a[i] = a[j];
-      a[j] = t;
-
-    }
-    t    = a[l];
-    a[l] = a[j];
-    a[j] = t;
-
-    _quickSort_int(a, l  , j-1);
-    _quickSort_int(a, j+1,   r);
-  }
-}
-
-/**
- *
- * \brief Quick sort 2
- *
- * \param [inout]   a     Array to sort
- * \param [in]      l     First element
- * \param [in]      r     Last  element
- * \param [inout]   c     Array sorted as a
- *
- */
-
-static void
-_quickSort_int2
-(
- int          a[],
- int          l,
- int          r,
- int          c[]
-)
-{
-  if (l < r) {
-    int j = r+1;
-    int  t, v;
-    int pivot = a[l];
-    int i = l;
-
-    while(1) {
-      do ++i; while (a[i] <= pivot && i < r);
-      do --j; while (a[j] > pivot);
-      if (i >= j) break;
-
-      t    = a[i];
-      a[i] = a[j];
-      a[j] = t;
-
-      v    = c[i];
-      c[i] = c[j];
-      c[j] = v;
-    }
-    t    = a[l];
-    a[l] = a[j];
-    a[j] = t;
-
-    v    = c[l];
-    c[l] = c[j];
-    c[j] = v;
-
-    _quickSort_int2(a, l  , j-1, c);
-    _quickSort_int2(a, j+1,   r, c);
-  }
-}
 
 /**
  *
@@ -1323,10 +1175,10 @@ _distrib_cell
       PDM_printf("\n");
     }
 
-    _quickSort_pdm_part_long_t(mesh_part->face_ln_to_gn, /* tableau a trier */
-                            0,                    /* premier elt */
-                            mesh_part->n_face - 1,  /* dernier elt */
-                            initial_idx);
+    PDM_quick_sort_long2(mesh_part->face_ln_to_gn, /* tableau a trier */
+                         0,                    /* premier elt */
+                         mesh_part->n_face - 1,  /* dernier elt */
+                         initial_idx);
 
     /* Remove duplicate faces and build local cell face connectivity*/
 
@@ -1632,10 +1484,10 @@ _distrib_face
 
       /* Sort face_ln_to_gn */
 
-      _quickSort_pdm_part_long_t(mesh_part->vtx_ln_to_gn,                       /* Array to sort */
-                                 0,                                         /* First face */
-                                 mesh_part->face_vtx_idx[mesh_part->n_face] - 1, /* Latest face */
-                                 initial_idx);
+      PDM_quick_sort_long2(mesh_part->vtx_ln_to_gn,                       /* Array to sort */
+                           0,                                         /* First face */
+                           mesh_part->face_vtx_idx[mesh_part->n_face] - 1, /* Latest face */
+                           initial_idx);
 
       /* Remove duplicate Vertex and build local face vertex connectivity*/
 
@@ -2273,7 +2125,7 @@ _search_part_bound_face
       work_array[j] =  mesh_part->face_part_bound[n_data_face_part_bound * j + 1];
     }
 
-    _quickSort_int2(work_array,
+    PDM_quick_sort_int2(work_array,
                     0,
                     mesh_part->n_face_part_bound - 1,
                     ind);
@@ -2301,7 +2153,7 @@ _search_part_bound_face
     }
 
     for (int j = 0; j < n_rank; j++) {
-      _quickSort_int2(work_array,
+      PDM_quick_sort_int2(work_array,
                       mesh_part->face_part_bound_proc_idx[j],
                       mesh_part->face_part_bound_proc_idx[j+1]-1,
                       ind);
@@ -2327,10 +2179,10 @@ _search_part_bound_face
     }
 
     for (int j = 0; j < ppart->tn_part; j++) {
-      _quickSort_pdm_part_long_t (work_array2,
-                                  mesh_part->face_part_bound_part_idx[j],
-                                  mesh_part->face_part_bound_part_idx[j+1]-1,
-                                  ind);
+      PDM_quick_sort_long2(work_array2,
+                           mesh_part->face_part_bound_part_idx[j],
+                           mesh_part->face_part_bound_part_idx[j+1]-1,
+                           ind);
     }
 
     for (int j = 0; j <  mesh_part->n_face_part_bound; j++) {
@@ -4095,8 +3947,8 @@ const int       ppart_id,
                      PDM_MPI_INT,
                      ppart->comm);
 
-  _quickSort_int(s_tot, 0, ppart->dpart_proc[numProcs]-1);
-  _quickSort_int(n_tot, 0, ppart->dpart_proc[numProcs]-1);
+  PDM_quick_sort_int(s_tot, 0, ppart->dpart_proc[numProcs]-1);
+  PDM_quick_sort_int(n_tot, 0, ppart->dpart_proc[numProcs]-1);
 
   double   _cells_average;
 
