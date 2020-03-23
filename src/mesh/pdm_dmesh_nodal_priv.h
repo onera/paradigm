@@ -127,7 +127,7 @@ struct _PDM_DMesh_nodal_t {
   int                    i_proc;                   /*!< Number of processes */
   int                   *sections_id;              /*!< Blocks identifier */
   int                    n_sections;               /*!< Total number of sections */
-  PDM_g_num_t           *sectionDistribution;      /*!< Element distribution  */
+  PDM_g_num_t           *section_distribution;      /*!< Element distribution  */
 
   PDM_l_num_t            n_dcell;                  /*!< Local number of cells in the local block */
   PDM_l_num_t           *dcell_faceIdx;           /*!< Index of the cell to face connectivity
