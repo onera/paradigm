@@ -24,20 +24,20 @@
 
 typedef struct  _subpartlayout_t {
 
-  int           nSdom;                  /*!< Number of subDomain                     */
+  int           n_sdom;                  /*!< Number of subDomain                     */
   int           n_face_int;               /*!< Number of Interior face                 */
   int           n_face_ext;               /*!< Number of Exterior face                 */
 
   /* Idx array of displacement */
-  int*          cell_tile_idx;           /*!< Cell Tile Index     (Size = nSdom + 1)   */
-  int*          face_tile_idx;           /*!< Face Tile Index     (Size = nSdom + 1)   */
-  int*          face_bnd_tile_idx;        /*!< Face Bnd Tile Index (Size = nSdom + 1)   */
+  int*          cell_tile_idx;           /*!< Cell Tile Index     (Size = n_sdom + 1)   */
+  int*          face_tile_idx;           /*!< Face Tile Index     (Size = n_sdom + 1)   */
+  int*          face_bnd_tile_idx;        /*!< Face Bnd Tile Index (Size = n_sdom + 1)   */
 
   /* Idx array of displacement */
-  int*          mask_tile_idx;           /*!< Mask Tile Index   (Size = nSdom + 1)     */
-  int*          cell_vect_tile_idx;       /*!< Cell Tile Index   (Size = nSdom + 1)     */
-  int*          mask_tile_n;             /*!< Mask Tile number  (Size = nSdom + 1)     */
-  int*          cell_vect_tile_n;         /*!< Cell Tile number  (Size = nSdom + 1)     */
+  int*          mask_tile_idx;           /*!< Mask Tile Index   (Size = n_sdom + 1)     */
+  int*          cell_vect_tile_idx;       /*!< Cell Tile Index   (Size = n_sdom + 1)     */
+  int*          mask_tile_n;             /*!< Mask Tile number  (Size = n_sdom + 1)     */
+  int*          cell_vect_tile_n;         /*!< Cell Tile number  (Size = n_sdom + 1)     */
   int*          mask_tile;              /*!< Mask Tile number                         */
 
 
