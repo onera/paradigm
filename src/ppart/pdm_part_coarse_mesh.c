@@ -217,13 +217,13 @@ int            *cell_part
 #ifdef PDM_HAVE_PTSCOTCH
 
       int check = 0;
-      int n_part  = cm->part_res[i_part]->nCoarseCellWanted;
+      int n_part  = cm->part_res[i_part]->n_coarse_cell_wanted;
 
       PDM_SCOTCH_part (cm->part_ini[i_part]->n_cell,
                        cell_cell_idx,
                        cell_cell,
-                       (int *) cm->part_ini[i_part]->cellWeight,
-                       (int *) cm->part_ini[i_part]->faceWeight,
+                       (int *) cm->part_ini[i_part]->cell_weight,
+                       (int *) cm->part_ini[i_part]->face_weight,
                        check,
                        n_part,
                        cell_part);
@@ -268,10 +268,10 @@ int            *cell_part
       _part_t * part_ini       = cm->part_ini[i_part];
       _coarse_part_t *part_res = cm->part_res[i_part];
 
-      int *cellWeight = (int *) part_ini->cellWeight;
-      int *faceWeight = (int *) part_ini->faceWeight;
+      int *cell_weight = (int *) part_ini->cell_weight;
+      int *face_weight = (int *) part_ini->face_weight;
 
-      int n_part  = part_res->nCoarseCellWanted;
+      int n_part  = part_res->n_coarse_cell_wanted;
       //            Define Metis properties
 
       //          int flag_weights = 0; //0 = False -> weights are unused
@@ -280,9 +280,9 @@ int            *cell_part
 
       int ncon = 1; //The number of balancing constraints
 
-      int *vwgt = cellWeight; //Weights of the vertices of the graph (NULL if unused)
+      int *vwgt = cell_weight; //Weights of the vertices of the graph (NULL if unused)
 
-      int *adjwgt = faceWeight; //Weights of the edges of the graph (NULL if unused)
+      int *adjwgt = face_weight; //Weights of the edges of the graph (NULL if unused)
 
       if (flag_weights != 0) {
         double *tpwgts = (double *) malloc(ncon * n_part * sizeof(double));
@@ -618,8 +618,8 @@ _dual_graph_from_face_cell
  *
  * \param [in]  cell_cell                  Dual graph (size : cell_cell_idx[n_cell])
  * \param [in]  cell_cell_idx               Array of indexes of the dual graph (size : n_cell + 1)
- * \param [in]  cellWeight         Cell weight (size = n_cell)
- * \param [in]  faceWeight         Face weight (size = n_face)
+ * \param [in]  cell_weight         Cell weight (size = n_cell)
+ * \param [in]  face_weight         Face weight (size = n_face)
  *
  * \param [inout] cell_part  Cell partitioning (size : n_cell)
  *
@@ -666,80 +666,80 @@ int            **cell_part)
  *
  * \brief Obtains the cells per processor from the partition of each cell
  *
- * \param [in]  nCoarseCell  Number of partitions ( = number of coarse cells)
+ * \param [in]  n_coarse_cell  Number of partitions ( = number of coarse cells)
  * \param [in]  n_cell        Number of cells before refining
  * \param [in]  cell_part     Cell partitioning (size : n_cell)
  *
- * \param [inout] partCellIdx  Array of indexes of the partitioning array (size : nCoarseCell + 1)
- * \param [inout] partCell     Partitioning array (size : partCellIdx[nCoarseCell] = n_cell)
+ * \param [inout] part_cell_idx  Array of indexes of the partitioning array (size : n_coarse_cell + 1)
+ * \param [inout] part_cell     Partitioning array (size : part_cell_idx[n_coarse_cell] = n_cell)
  *
  */
 
 static void
-_partCell_from_cell_part
+_part_cell_from_cell_part
 (
- int            nCoarseCell,
+ int            n_coarse_cell,
  int            n_cell,
  int           *cell_part,
- int          **partCellIdx,
- int          **partCell
+ int          **part_cell_idx,
+ int          **part_cell
 )
 {
   //Allocation of an array to count the number of cells per partition
-  int * cptCellsPerPartitions = (int *) malloc(nCoarseCell * sizeof(int));
-  for (int i = 0; i < nCoarseCell; i++){
-    cptCellsPerPartitions[i] = 0;
+  int * cpt_cells_per_partitions = (int *) malloc(n_coarse_cell * sizeof(int));
+  for (int i = 0; i < n_coarse_cell; i++){
+    cpt_cells_per_partitions[i] = 0;
   }
 
   for (int i = 0; i < n_cell; i++){
     int color = cell_part[i]; //A color is a number of partition (output of Metis or Scotch)
-    cptCellsPerPartitions[color]++;
+    cpt_cells_per_partitions[color]++;
   }
 
   if(0 == 1) {
-    PDM_printf("\n Contenu de cptCellsPerPartitions : \n");
-    for(int i = 0; i < nCoarseCell; i++) {
-      PDM_printf(" %d ", cptCellsPerPartitions[i]);
+    PDM_printf("\n Contenu de cpt_cells_per_partitions : \n");
+    for(int i = 0; i < n_coarse_cell; i++) {
+      PDM_printf(" %d ", cpt_cells_per_partitions[i]);
     }
     PDM_printf("\n");
   }
 
   //Allocation of an array for counter indexes
-  *partCellIdx = (int *) malloc((nCoarseCell + 1) * sizeof(int));
-  (*partCellIdx)[0] = 0;
-  for (int i = 0; i < nCoarseCell; i++){
-    (*partCellIdx)[i + 1] = (*partCellIdx)[i] + cptCellsPerPartitions[i];
+  *part_cell_idx = (int *) malloc((n_coarse_cell + 1) * sizeof(int));
+  (*part_cell_idx)[0] = 0;
+  for (int i = 0; i < n_coarse_cell; i++){
+    (*part_cell_idx)[i + 1] = (*part_cell_idx)[i] + cpt_cells_per_partitions[i];
   }
 
   if (0 == 1) {
-    PDM_printf("\n Contenu de partCellIdx : \n");
-    for(int i = 0; i < nCoarseCell + 1; i++) {
-      PDM_printf(" %d ", (*partCellIdx)[i]);
+    PDM_printf("\n Contenu de part_cell_idx : \n");
+    for(int i = 0; i < n_coarse_cell + 1; i++) {
+      PDM_printf(" %d ", (*part_cell_idx)[i]);
     }
     PDM_printf("\n");
   }
 
-  *partCell = (int *) malloc((*partCellIdx)[nCoarseCell] * sizeof(int));
+  *part_cell = (int *) malloc((*part_cell_idx)[n_coarse_cell] * sizeof(int));
 
-  //cptCellsPerPartitions is reused for building partCell
-  for (int i = 0; i < nCoarseCell; i++){
-    cptCellsPerPartitions[i] = 0;
+  //cpt_cells_per_partitions is reused for building part_cell
+  for (int i = 0; i < n_coarse_cell; i++){
+    cpt_cells_per_partitions[i] = 0;
   }
 
-  //We store each cell in partCell by means of (*partCellIdx)
+  //We store each cell in part_cell by means of (*part_cell_idx)
   for (int i = 0; i < n_cell; i++){
     int color = cell_part[i]; //A color is a number of partition (output of Metis or Scotch)
-    int idx = (*partCellIdx)[color] + cptCellsPerPartitions[color];
-    (*partCell)[idx] = i;
-    cptCellsPerPartitions[color]++;
+    int idx = (*part_cell_idx)[color] + cpt_cells_per_partitions[color];
+    (*part_cell)[idx] = i;
+    cpt_cells_per_partitions[color]++;
   }
 
   if (0 == 1) {
-    PDM_printf("\nContenu de partCell \n");
-    for (int i = 0; i < nCoarseCell; i++){
+    PDM_printf("\nContenu de part_cell \n");
+    for (int i = 0; i < n_coarse_cell; i++){
       PDM_printf("Valeur de i + 1 : %d \n", i + 1);
-      for (int j = (*partCellIdx)[i]; j < (*partCellIdx)[i + 1]; j++){
-        PDM_printf("%d " ,(*partCell)[j]);
+      for (int j = (*part_cell_idx)[i]; j < (*part_cell_idx)[i + 1]; j++){
+        PDM_printf("%d " ,(*part_cell)[j]);
       }
       PDM_printf("\n");
     }
@@ -747,34 +747,34 @@ _partCell_from_cell_part
   }
 
   //Free
-  free(cptCellsPerPartitions);
+  free(cpt_cells_per_partitions);
 
 }
 
 /**
  *
  * \brief Checks the neighboring cell of each studied cell by filling an array of tags
- *        A tag is set to -1 by default and set to numberGlobalPartition if the studied cell has valid neighbors
+ *        A tag is set to -1 by default and set to number_global_partition if the studied cell has valid neighbors
  *
- * \param [in]  cellNumber                Number of the cell studied
+ * \param [in]  cell_number                Number of the cell studied
  * \param [in]  cell_part                  Cell partitioning (size : n_cell)
  * \param [in]  cell_cell                  Dual graph (size : cell_cell_idx[n_cell])
  * \param [in]  cell_cell_idx               Array of indexes of the dual graph (size : n_cell + 1)
- * \param [in]  numberGlobalPartition     Number of the coarse cell to be applied
+ * \param [in]  number_global_partition     Number of the coarse cell to be applied
  *
- * \param [inout] cellCoarseCell          Cell partitioning (size : n_cell) (partitions are equal to coarse cells for a good partitioning)
+ * \param [inout] cell_coarse_cell          Cell partitioning (size : n_cell) (partitions are equal to coarse cells for a good partitioning)
  * \param [inout] cptCellConnectedLocal   Number of cells that have been tagged
  */
 
 static void
 _fill_Neighboring
 (
- int            cellNumber,
+ int            cell_number,
  int           *cell_part,
  int           *cell_cell,
  int           *cell_cell_idx,
- int          **cellCoarseCell,
- int            numberGlobalPartition,
+ int          **cell_coarse_cell,
+ int            number_global_partition,
  int           *cptCellConnectedLocal
 )
 {
@@ -782,8 +782,8 @@ _fill_Neighboring
    * If the studied cell is not tagged, it is tagged
    */
 
-  if ((*cellCoarseCell)[cellNumber] == -1) {
-    (*cellCoarseCell)[cellNumber] = numberGlobalPartition;
+  if ((*cell_coarse_cell)[cell_number] == -1) {
+    (*cell_coarse_cell)[cell_number] = number_global_partition;
     (*cptCellConnectedLocal)++;
   }
 
@@ -799,19 +799,19 @@ _fill_Neighboring
    * Loop over the partition cells (k is a neighbor cell number)
    */
 
-  for (int k = cell_cell_idx[cellNumber]; k < cell_cell_idx[cellNumber + 1]; k++) {
+  for (int k = cell_cell_idx[cell_number]; k < cell_cell_idx[cell_number + 1]; k++) {
 
     /*
      * if the neighboring cell is part of the same partition
      */
 
-    if (cell_part[cellNumber] == cell_part[cell_cell[k]]) {
+    if (cell_part[cell_number] == cell_part[cell_cell[k]]) {
       _fill_Neighboring (cell_cell[k],
                          cell_part,
                          cell_cell,
                          cell_cell_idx,
-                         cellCoarseCell,
-                         numberGlobalPartition,
+                         cell_coarse_cell,
+                         number_global_partition,
                          cptCellConnectedLocal);
     }
   }
@@ -822,57 +822,57 @@ _fill_Neighboring
  *
  * \brief Checks that the partitioning is fully connected
  * Otherwise, the cells that are not connected are removed for their initial partition to be part of a new one
- * partCell and partCellIdx are updated
+ * part_cell and part_cell_idx are updated
  *
- * \param [in]  nCoarseCellChecked  Number of partitions checked ( >= number of coarse cells wanted by the user)
+ * \param [in]  n_coarse_cell_checked  Number of partitions checked ( >= number of coarse cells wanted by the user)
  * \param [in]  n_cell               Number of cells before refining
  * \param [in]  cell_part            Cell partitioning (size : n_cell) *
  * \param [in]  cell_cell            Dual graph (size : cell_cell_idx[n_cell])
  * \param [in]  cell_cell_idx         Array of indexes of the dual graph (size : n_cell + 1)
- * \param [in]  partCell            Partitioning array (size : partCellIdx[nCoarseCell] = n_cell)
- * \param [in]  partCellIdx         Array of indexes of the partitions (size : nCoarseCellWanted + 1)
+ * \param [in]  part_cell            Partitioning array (size : part_cell_idx[n_coarse_cell] = n_cell)
+ * \param [in]  part_cell_idx         Array of indexes of the partitions (size : n_coarse_cell_wanted + 1)
  *
- * \param [inout] coarse_cell_cell_idx  Array of indexes of the connected partitions (size : nCoarseCellChecked + 1)
- * \param [inout] coarse_cell_cell     Partitioning array (size : coarse_cell_cell_idx[nCoarseCellChecked])
- * \param [inout] cellCoarseCell     Cell partitioning with coarse cells (size : nCoarseCellChecked)
+ * \param [inout] coarse_cell_cell_idx  Array of indexes of the connected partitions (size : n_coarse_cell_checked + 1)
+ * \param [inout] coarse_cell_cell     Partitioning array (size : coarse_cell_cell_idx[n_coarse_cell_checked])
+ * \param [inout] cell_coarse_cell     Cell partitioning with coarse cells (size : n_coarse_cell_checked)
  */
 
 static void
 _adapt_Connectedness
 (
- int           *nCoarseCellChecked,
+ int           *n_coarse_cell_checked,
  int            n_cell,
  int           *cell_part,
- int          **cellCoarseCell,
+ int          **cell_coarse_cell,
  int           *cell_cell,
  int           *cell_cell_idx,
- int           *partCell,
- int           *partCellIdx,
+ int           *part_cell,
+ int           *part_cell_idx,
  int          **coarse_cell_cell,
  int          **coarse_cell_cell_idx
 )
 {
-  int numberGlobalPartition = 1;
+  int number_global_partition = 1;
 
-  *cellCoarseCell = (int *) malloc(n_cell * sizeof(int));
+  *cell_coarse_cell = (int *) malloc(n_cell * sizeof(int));
 
   for (int i = 0; i < n_cell; i++) {
-    (*cellCoarseCell)[i] = -1;
+    (*cell_coarse_cell)[i] = -1;
   }
 
   /*
    *  We store the initial number of coarse cells wanted by the user
    */
 
-  int nCoarseCellWanted = (*nCoarseCellChecked);
+  int n_coarse_cell_wanted = (*n_coarse_cell_checked);
 
   if (0 == 1) {
-    PDM_printf("Valeur finale de (*nCoarseCellChecked) : %d %d\n", (*nCoarseCellChecked), n_cell);
+    PDM_printf("Valeur finale de (*n_coarse_cell_checked) : %d %d\n", (*n_coarse_cell_checked), n_cell);
 
-    PDM_printf("partCell : \n");
-    for (int i = 0; i < nCoarseCellWanted; i++) {
-      for (int j = partCellIdx[i]; j < partCellIdx[i+1]; j++) {
-        PDM_printf(" %d ", partCell[j]);
+    PDM_printf("part_cell : \n");
+    for (int i = 0; i < n_coarse_cell_wanted; i++) {
+      for (int j = part_cell_idx[i]; j < part_cell_idx[i+1]; j++) {
+        PDM_printf(" %d ", part_cell[j]);
       }
       PDM_printf("\n");
     }
@@ -889,36 +889,36 @@ _adapt_Connectedness
 
 
   /*
-   * cellNumber will be replaced by the first cell of the first partition at the beginning of the loop
+   * cell_number will be replaced by the first cell of the first partition at the beginning of the loop
    */
 
-  int cellNumber = -1;
+  int cell_number = -1;
 
   /*
    * Loop over the partitions (i is a partition number)
    */
 
-  for (int i = 0; i < nCoarseCellWanted; i++) {
+  for (int i = 0; i < n_coarse_cell_wanted; i++) {
     /*
      * We study the first cell of the partition
      */
 
-    cellNumber = partCell[partCellIdx[i]];
+    cell_number = part_cell[part_cell_idx[i]];
     int cptCellConnectedLocal = 0;
 
     /*
-     * We tag all the neighboring cells of the cell cellNumber of the partition
+     * We tag all the neighboring cells of the cell cell_number of the partition
      */
 
-    _fill_Neighboring(cellNumber, cell_part, cell_cell, cell_cell_idx, &(*cellCoarseCell), numberGlobalPartition, &cptCellConnectedLocal);
+    _fill_Neighboring(cell_number, cell_part, cell_cell, cell_cell_idx, &(*cell_coarse_cell), number_global_partition, &cptCellConnectedLocal);
 
-    numberGlobalPartition++;
+    number_global_partition++;
 
     /*
      * If the size of array indexes is too low
      */
 
-    int n_cellLocal = partCellIdx[i + 1] - partCellIdx[i];
+    int n_cellLocal = part_cell_idx[i + 1] - part_cell_idx[i];
     int n_cellLocalRemaining = n_cellLocal - cptCellConnectedLocal;
 
     /*
@@ -938,15 +938,15 @@ _adapt_Connectedness
 
     while (cptCellConnectedLocal < n_cellLocalRemaining) {
       for (int j = 1; j < n_cellLocal; j++) {
-        cellNumber = partCell[partCellIdx[i] + j];
-        if ((*cellCoarseCell)[cellNumber] == -1) {
+        cell_number = part_cell[part_cell_idx[i] + j];
+        if ((*cell_coarse_cell)[cell_number] == -1) {
           break;
         }
       }
 
-      _fill_Neighboring(cellNumber, cell_part, cell_cell, cell_cell_idx, &(*cellCoarseCell), numberGlobalPartition, &cptCellConnectedLocal);
+      _fill_Neighboring(cell_number, cell_part, cell_cell, cell_cell_idx, &(*cell_coarse_cell), number_global_partition, &cptCellConnectedLocal);
 
-      numberGlobalPartition++;
+      number_global_partition++;
 
       /*
        * If the size of array indexes is too low
@@ -956,116 +956,116 @@ _adapt_Connectedness
 
   }
 
-  (*nCoarseCellChecked) = numberGlobalPartition - 1;
+  (*n_coarse_cell_checked) = number_global_partition - 1;
 
   /*
    * Size of *coarse_cell_cell_idx may be dynamic
    */
 
-  *coarse_cell_cell_idx = malloc(((*nCoarseCellChecked) + 1) * sizeof(int));
-  for (int i = 0; i < (*nCoarseCellChecked) + 1; i++) {
+  *coarse_cell_cell_idx = malloc(((*n_coarse_cell_checked) + 1) * sizeof(int));
+  for (int i = 0; i < (*n_coarse_cell_checked) + 1; i++) {
     (*coarse_cell_cell_idx)[i] = 0;
   }
 
   for (int i = 0; i < n_cell; i++) {
-    (*coarse_cell_cell_idx)[(*cellCoarseCell)[i]]++;
+    (*coarse_cell_cell_idx)[(*cell_coarse_cell)[i]]++;
   }
 
-  for (int i = 0; i < (*nCoarseCellChecked); i++) {
+  for (int i = 0; i < (*n_coarse_cell_checked); i++) {
     (*coarse_cell_cell_idx)[i+1] += (*coarse_cell_cell_idx)[i];
   }
 
   if (0 == 1) {
-    PDM_printf("Valeur finale de (*nCoarseCellChecked) : %d %d\n", (*nCoarseCellChecked), n_cell);
+    PDM_printf("Valeur finale de (*n_coarse_cell_checked) : %d %d\n", (*n_coarse_cell_checked), n_cell);
 
     PDM_printf("Affichage de *coarse_cell_cell_idx");
-    for (int i = 0; i < (*nCoarseCellChecked) + 1; i++) {
+    for (int i = 0; i < (*n_coarse_cell_checked) + 1; i++) {
       PDM_printf(" %d ", (*coarse_cell_cell_idx)[i]);
     }
     PDM_printf("\n");
 
-    PDM_printf("Content of cellCoarseCell: ");
+    PDM_printf("Content of cell_coarse_cell: ");
     for (int i = 0; i < n_cell; i++) {
-      PDM_printf(" %d ", (*cellCoarseCell)[i]);
+      PDM_printf(" %d ", (*cell_coarse_cell)[i]);
     }
     PDM_printf("\n");
   }
 
   /*
-   * Creation of coarse_cell_cell from cellCoarseCell and cellCoarseCellIdx
+   * Creation of coarse_cell_cell from cell_coarse_cell and cell_coarse_cell_idx
    */
 
   *coarse_cell_cell = (int *) malloc(n_cell * sizeof(int));
 
-  int * cptCellsPerPartitions = (int *) malloc((*nCoarseCellChecked) * sizeof(int));
-  for (int i = 0; i < (*nCoarseCellChecked); i++){
-    cptCellsPerPartitions[i] = 0;
+  int * cpt_cells_per_partitions = (int *) malloc((*n_coarse_cell_checked) * sizeof(int));
+  for (int i = 0; i < (*n_coarse_cell_checked); i++){
+    cpt_cells_per_partitions[i] = 0;
   }
 
   /*
-   * We store each cell in partCell by means of (*partCellIdx)
+   * We store each cell in part_cell by means of (*part_cell_idx)
    */
 
   for (int i = 0; i < n_cell; i++){
-    int color = (*cellCoarseCell)[i] - 1; //A color is a number of partition (output of Metis or Scotch)
-    int idx = (*coarse_cell_cell_idx)[color] + cptCellsPerPartitions[color];
+    int color = (*cell_coarse_cell)[i] - 1; //A color is a number of partition (output of Metis or Scotch)
+    int idx = (*coarse_cell_cell_idx)[color] + cpt_cells_per_partitions[color];
     (*coarse_cell_cell)[idx] = i + 1;
-    cptCellsPerPartitions[color]++;
+    cpt_cells_per_partitions[color]++;
   }
 
-  free(cptCellsPerPartitions);
+  free(cpt_cells_per_partitions);
 }
 
 /**
  *
- * \brief Builds the array faceCoarseCell with all the inner faces removed
+ * \brief Builds the array face_coarse_cell with all the inner faces removed
  *
- * \param [in]  n_faceChecked                Number of faces after refining ( <= n_face)
+ * \param [in]  n_face_checked                Number of faces after refining ( <= n_face)
  * \param [in]  face_cell                    Face to cell connectivity  (size = 2 * n_face, numbering : 1 to n)
- * \param [in]  cellCoarseCell              Cell partitioning with coarse cells (size : nCoarseCellChecked)
+ * \param [in]  cell_coarse_cell              Cell partitioning with coarse cells (size : n_coarse_cell_checked)
  *
- * \param [inout] faceCoarseCell            Face to coarse cell connectivity  (size = 2 * n_faceChecked, numbering : 1 to n)
- * \param [inout] fineFaceToCoarseFace      Fine face - coarse face connectivity (size = n_face)
- * \param [inout] coarse_face_to_fine_face      Coarse face - fine face connectivity (size = n_faceChecked)
+ * \param [inout] face_coarse_cell            Face to coarse cell connectivity  (size = 2 * n_face_checked, numbering : 1 to n)
+ * \param [inout] fine_face_to_coarse_face      Fine face - coarse face connectivity (size = n_face)
+ * \param [inout] coarse_face_to_fine_face      Coarse face - fine face connectivity (size = n_face_checked)
  *
  */
 
 static void
-_build_faceCoarseCell
+_build_face_coarse_cell
 (
- int           *n_faceChecked,
+ int           *n_face_checked,
  int           *face_cell,
- int           *cellCoarseCell,
- int          **faceCoarseCell,
- int          **fineFaceToCoarseFace,
+ int           *cell_coarse_cell,
+ int          **face_coarse_cell,
+ int          **fine_face_to_coarse_face,
  int          **coarse_face_to_fine_face
 )
 {
   /*
-   * n_faceChecked = n_face at the beginning of the method
+   * n_face_checked = n_face at the beginning of the method
    */
 
-  int n_face = (*n_faceChecked);
+  int n_face = (*n_face_checked);
 
   /*
    * Fine face - coarse face connectivity (size = n_face)
    */
 
-  *fineFaceToCoarseFace = malloc(n_face * sizeof(int));
+  *fine_face_to_coarse_face = malloc(n_face * sizeof(int));
 
-  int *faceCellTemp = (int *) malloc(2 * n_face * sizeof(int));
+  int *face_cell_temp = (int *) malloc(2 * n_face * sizeof(int));
 
   for (int i = 0; i < n_face; i++) {
-    (*fineFaceToCoarseFace)[i] = -1;
+    (*fine_face_to_coarse_face)[i] = -1;
   }
 
   for (int i = 0; i < 2 * n_face; i++) {
-    faceCellTemp[i] = 0;
+    face_cell_temp[i] = 0;
   }
 
   /*
    * Loop over face_cell. i = number of face, face_cell[i] = cell number
-   * We fill faceCellTemp with the coarse cells associated
+   * We fill face_cell_temp with the coarse cells associated
    */
 
   for (int i = 0; i < 2 * n_face; i++) {
@@ -1076,14 +1076,14 @@ _build_faceCoarseCell
      */
 
     if (face_cell[i] != 0) {
-      faceCellTemp[i] = cellCoarseCell[PDM_ABS (face_cell[i]) - 1];
+      face_cell_temp[i] = cell_coarse_cell[PDM_ABS (face_cell[i]) - 1];
     }
   }
 
   if (0 == 1) {
-    PDM_printf("Content of faceCellTemp: |");
+    PDM_printf("Content of face_cell_temp: |");
     for (int i = 0; i < 2 * n_face; i++) {
-      PDM_printf(" %d ", faceCellTemp[i]);
+      PDM_printf(" %d ", face_cell_temp[i]);
       if (i % 2 == 1) {
         PDM_printf("|");
       }
@@ -1091,35 +1091,35 @@ _build_faceCoarseCell
     PDM_printf("\n");
   }
 
-  *faceCoarseCell = (int *) malloc(2 * n_face * sizeof(int));
+  *face_coarse_cell = (int *) malloc(2 * n_face * sizeof(int));
 
   /*
-   * Loop over faceCellTemp which is to be compressed. i = face number
+   * Loop over face_cell_temp which is to be compressed. i = face number
    */
 
   int idx = 0;
   for (int i = 0; i < n_face; i++) {
-    int iCell1 = PDM_ABS (faceCellTemp[2 * i    ]);
-    int iCell2 = PDM_ABS (faceCellTemp[2 * i + 1]);
+    int iCell1 = PDM_ABS (face_cell_temp[2 * i    ]);
+    int iCell2 = PDM_ABS (face_cell_temp[2 * i + 1]);
 
     /*
      * If a face is surrounded by the same coarse cell, it is not stored
      */
     if (iCell1 != iCell2) {
-      (*faceCoarseCell)[2 * idx]     = iCell1;
-      (*faceCoarseCell)[2 * idx + 1] = iCell2;
+      (*face_coarse_cell)[2 * idx]     = iCell1;
+      (*face_coarse_cell)[2 * idx + 1] = iCell2;
 
-      (*fineFaceToCoarseFace)[i] = idx + 1;
+      (*fine_face_to_coarse_face)[i] = idx + 1;
       idx++;
     }
   }
 
-  (*n_faceChecked) = idx;
+  (*n_face_checked) = idx;
   /*
    * realloc of the correct size
    */
 
-  *faceCoarseCell = realloc((*faceCoarseCell), 2 * (*n_faceChecked) * sizeof(int));
+  *face_coarse_cell = realloc((*face_coarse_cell), 2 * (*n_face_checked) * sizeof(int));
 
   /*
    * Fine face - coarse face connectivity (size = n_face)
@@ -1130,7 +1130,7 @@ _build_faceCoarseCell
   int idx_coarse_face_to_fine_face = 0;
 
   /*
-   *  Loop over fineFaceToCoarseFace
+   *  Loop over fine_face_to_coarse_face
    */
 
   for (int i = 0; i < n_face; i++) {
@@ -1139,67 +1139,67 @@ _build_faceCoarseCell
      * If the fine face has not been removed, I store it
      */
 
-    if((*fineFaceToCoarseFace)[i] != -1) {
+    if((*fine_face_to_coarse_face)[i] != -1) {
       (*coarse_face_to_fine_face)[idx_coarse_face_to_fine_face++] = i + 1;
     }
   }
 
   /*
-   * At the end of the loop, idx_coarse_face_to_fine_face must be equal to n_faceChecked
+   * At the end of the loop, idx_coarse_face_to_fine_face must be equal to n_face_checked
    */
 
-  assert(idx_coarse_face_to_fine_face == (*n_faceChecked));
+  assert(idx_coarse_face_to_fine_face == (*n_face_checked));
 
   *coarse_face_to_fine_face = realloc((*coarse_face_to_fine_face), idx_coarse_face_to_fine_face * sizeof(int));
 
   if(0 == 1) {
-    PDM_printf("Valeur finale de (*n_faceChecked) : %d \n", (*n_faceChecked));
+    PDM_printf("Valeur finale de (*n_face_checked) : %d \n", (*n_face_checked));
 
-    PDM_printf("Final content of faceCoarseCell: |");
-    for (int i = 0; i < 2 * (*n_faceChecked); i++) {
-      PDM_printf(" %d ", (*faceCoarseCell)[i]);
+    PDM_printf("Final content of face_coarse_cell: |");
+    for (int i = 0; i < 2 * (*n_face_checked); i++) {
+      PDM_printf(" %d ", (*face_coarse_cell)[i]);
       if (i % 2 == 1) {
         PDM_printf("|");
       }
     }
     PDM_printf("\n");
 
-    PDM_printf("Final content of fineFaceToCoarseFace: \n");
+    PDM_printf("Final content of fine_face_to_coarse_face: \n");
     for (int i = 0; i < n_face; i++) {
-      PDM_printf(" %d ", (*fineFaceToCoarseFace)[i]);
+      PDM_printf(" %d ", (*fine_face_to_coarse_face)[i]);
     }
     PDM_printf("\n");
 
 
     PDM_printf("Affichage final de (*coarse_face_to_fine_face) \n");
-    for (int i = 0; i < (*n_faceChecked); i++) {
+    for (int i = 0; i < (*n_face_checked); i++) {
       PDM_printf(" %d ", (*coarse_face_to_fine_face)[i]);
     }
     PDM_printf("\n");
   }
 
-  free(faceCellTemp);
+  free(face_cell_temp);
 }
 
 /**
  *
  * \brief Obtains the faces per coarse cell from the coarse cell of each face
  *
- * \param [in]  nCoarseCellChecked    Number of coarse cells after the connectedness check
- * \param [in]  n_faceChecked          Number of faces obtained after the creation of faceCoarseCell
- * \param [in]  faceCoarseCell        Face to coarse cell connectivity  (size = 2 * n_faceChecked, numbering : 1 to n)
+ * \param [in]  n_coarse_cell_checked    Number of coarse cells after the connectedness check
+ * \param [in]  n_face_checked          Number of faces obtained after the creation of face_coarse_cell
+ * \param [in]  face_coarse_cell        Face to coarse cell connectivity  (size = 2 * n_face_checked, numbering : 1 to n)
 
- * \param [inout] coarsecell_face_idx   Array of indexes of the coarse cell to face connectivity (size = nCoarseCellChecked + 1, numbering : 1 to n)
- * \param [inout] coarsecell_face      Coarse cell to face connectivity  (size = coarsecell_face_idx[nCoarseCellChecked], numbering : 1 to n)
+ * \param [inout] coarsecell_face_idx   Array of indexes of the coarse cell to face connectivity (size = n_coarse_cell_checked + 1, numbering : 1 to n)
+ * \param [inout] coarsecell_face      Coarse cell to face connectivity  (size = coarsecell_face_idx[n_coarse_cell_checked], numbering : 1 to n)
  *
  */
 
 static void
-_coarsecell_face_from_faceCoarseCell
+_coarsecell_face_from_face_coarse_cell
 (
- int            nCoarseCellChecked,
- int            n_faceChecked,
- int           *faceCoarseCell,
+ int            n_coarse_cell_checked,
+ int            n_face_checked,
+ int           *face_coarse_cell,
  int          **coarsecell_face_idx,
  int          **coarsecell_face
 )
@@ -1208,34 +1208,34 @@ _coarsecell_face_from_faceCoarseCell
    *  Allocation of an array to count the number of faces per coarse cell
    */
 
-  int * cptFacesPerCoarseCell = (int *) malloc(nCoarseCellChecked * sizeof(int));
-  for (int i = 0; i < nCoarseCellChecked; i++) {
-    cptFacesPerCoarseCell[i] = 0;
+  int * cpt_faces_per_coarse_cell = (int *) malloc(n_coarse_cell_checked * sizeof(int));
+  for (int i = 0; i < n_coarse_cell_checked; i++) {
+    cpt_faces_per_coarse_cell[i] = 0;
   }
 
   /*
-   * Loop over faceCoarseCell. i = number of face
+   * Loop over face_coarse_cell. i = number of face
    */
 
-  for (int i = 0; i < n_faceChecked; i++) {
-    int coarseCell1 = faceCoarseCell[2 * i    ];
-    int coarseCell2 = faceCoarseCell[2 * i + 1];
-    cptFacesPerCoarseCell[coarseCell1 - 1]++;
+  for (int i = 0; i < n_face_checked; i++) {
+    int coarse_cell1 = face_coarse_cell[2 * i    ];
+    int coarse_cell2 = face_coarse_cell[2 * i + 1];
+    cpt_faces_per_coarse_cell[coarse_cell1 - 1]++;
 
     /*
-     * If coarseCell2 != -1, it is not a boarder cell
+     * If coarse_cell2 != -1, it is not a boarder cell
      * A non-boarder cell touches two coarse cells
      */
 
-    if(coarseCell2 != 0) {
-      cptFacesPerCoarseCell[coarseCell2 - 1]++;
+    if(coarse_cell2 != 0) {
+      cpt_faces_per_coarse_cell[coarse_cell2 - 1]++;
     }
   }
 
   if(0 == 1) {
-    PDM_printf("\n Contenu de cptFacesPerCoarseCell : \n");
-    for(int i = 0; i < nCoarseCellChecked; i++) {
-      PDM_printf(" %d ", cptFacesPerCoarseCell[i]);
+    PDM_printf("\n Contenu de cpt_faces_per_coarse_cell : \n");
+    for(int i = 0; i < n_coarse_cell_checked; i++) {
+      PDM_printf(" %d ", cpt_faces_per_coarse_cell[i]);
     }
     PDM_printf("\n");
   }
@@ -1244,44 +1244,44 @@ _coarsecell_face_from_faceCoarseCell
    * Allocation of an array for counter indexes
    */
 
-  *coarsecell_face_idx = (int *)malloc((nCoarseCellChecked + 1) * sizeof(int));
+  *coarsecell_face_idx = (int *)malloc((n_coarse_cell_checked + 1) * sizeof(int));
   (*coarsecell_face_idx)[0] = 0;
-  for (int i = 0; i < nCoarseCellChecked; i++) {
-    (*coarsecell_face_idx)[i + 1] = (*coarsecell_face_idx)[i] + cptFacesPerCoarseCell[i];
+  for (int i = 0; i < n_coarse_cell_checked; i++) {
+    (*coarsecell_face_idx)[i + 1] = (*coarsecell_face_idx)[i] + cpt_faces_per_coarse_cell[i];
   }
 
-  *coarsecell_face = (int *) malloc((*coarsecell_face_idx)[nCoarseCellChecked] * sizeof(int));
+  *coarsecell_face = (int *) malloc((*coarsecell_face_idx)[n_coarse_cell_checked] * sizeof(int));
 
   /*
-   *  cptFacesPerCoarseCell is reused for building coarsecell_face
+   *  cpt_faces_per_coarse_cell is reused for building coarsecell_face
    */
 
-  for (int i = 0; i < nCoarseCellChecked; i++){
-    cptFacesPerCoarseCell[i] = 0;
+  for (int i = 0; i < n_coarse_cell_checked; i++){
+    cpt_faces_per_coarse_cell[i] = 0;
   }
 
   /*
    * We store each face in coarsecell_face by means of (*coarsecell_face_idx)
-   * Loop over faceCoarseCell. i = number of face
+   * Loop over face_coarse_cell. i = number of face
    */
 
-  for (int i = 0; i < n_faceChecked; i++) {
-    int coarseCell1 = faceCoarseCell[2 * i];
-    int coarseCell2 = faceCoarseCell[2 * i + 1];
+  for (int i = 0; i < n_face_checked; i++) {
+    int coarse_cell1 = face_coarse_cell[2 * i];
+    int coarse_cell2 = face_coarse_cell[2 * i + 1];
 
-    int idx1 = (*coarsecell_face_idx)[coarseCell1 - 1] + cptFacesPerCoarseCell[coarseCell1 - 1];
+    int idx1 = (*coarsecell_face_idx)[coarse_cell1 - 1] + cpt_faces_per_coarse_cell[coarse_cell1 - 1];
     int idx2 = -1;
 
     /*
      * If the face is not on the boarder, we store it
      */
 
-    if (coarseCell2 != 0) {
-      idx2 = (*coarsecell_face_idx)[coarseCell2 - 1] + cptFacesPerCoarseCell[coarseCell2 - 1];
+    if (coarse_cell2 != 0) {
+      idx2 = (*coarsecell_face_idx)[coarse_cell2 - 1] + cpt_faces_per_coarse_cell[coarse_cell2 - 1];
     }
 
     (*coarsecell_face)[idx1] = i + 1;
-    cptFacesPerCoarseCell[coarseCell1 - 1]++;
+    cpt_faces_per_coarse_cell[coarse_cell1 - 1]++;
 
     /*
      * If idx2 is higher than -1, it means that the face is not on the boarder
@@ -1289,13 +1289,13 @@ _coarsecell_face_from_faceCoarseCell
 
     if (idx2 > -1) {
       (*coarsecell_face)[idx2] = i + 1;
-      cptFacesPerCoarseCell[coarseCell2 - 1]++;
+      cpt_faces_per_coarse_cell[coarse_cell2 - 1]++;
     }
   }
 
   if(0 == 1) {
     PDM_printf("Contenu de (*coarsecell_face) \n");
-    for (int i = 0; i < (*coarsecell_face_idx)[nCoarseCellChecked]; i++) {
+    for (int i = 0; i < (*coarsecell_face_idx)[n_coarse_cell_checked]; i++) {
       PDM_printf(" %d ", (*coarsecell_face)[i]);
       if (i % (*coarsecell_face_idx)[1] == (*coarsecell_face_idx)[1] - 1) {
         PDM_printf("|");
@@ -1303,13 +1303,13 @@ _coarsecell_face_from_faceCoarseCell
     }
 
     PDM_printf("\n Contenu de (*coarsecell_face_idx) : \n");
-    for (int i = 0; i < nCoarseCellChecked + 1; i++) {
+    for (int i = 0; i < n_coarse_cell_checked + 1; i++) {
       PDM_printf(" %d ", (*coarsecell_face_idx)[i]);
     }
     PDM_printf("\n");
   }
 
-  free(cptFacesPerCoarseCell);
+  free(cpt_faces_per_coarse_cell);
 }
 
 /**
@@ -1317,15 +1317,15 @@ _coarsecell_face_from_faceCoarseCell
  * \brief Builds the array face_vtx with all the inner vertices removed
  *
  * \param [in] n_face                 Number of faces before refining
- * \param [in] n_faceChecked          Number of faces after refining ( <= n_face)
+ * \param [in] n_face_checked          Number of faces after refining ( <= n_face)
  * \param [in] n_vtx                  Number of vertices before refining
- * \param [in] fineFaceToCoarseFace  Fine face - coarse face connectivity (size = n_face)
+ * \param [in] fine_face_to_coarse_face  Fine face - coarse face connectivity (size = n_face)
  *
- * \param [inout] face_vtx_idx         Face vertex connectivity index (final size = n_faceChecked + 1)
- * \param [inout] face_vtx            Face vertex connectivity (final size = face_vtx_idx[n_faceChecked])
- * \param [inout] n_vtxChecked        Number of vertices before refining becoming the number of vertices after refining
- * \param [inout] fineVtxToCoarseVtx Fine vertex - coarse vertex connectivity (size = n_vtx)
- * \param [inout] coarse_vtx_to_fine_vtx Coarse vertex - fine vertex connectivity (size = n_vtxChecked)
+ * \param [inout] face_vtx_idx         Face vertex connectivity index (final size = n_face_checked + 1)
+ * \param [inout] face_vtx            Face vertex connectivity (final size = face_vtx_idx[n_face_checked])
+ * \param [inout] n_vtx_checked        Number of vertices before refining becoming the number of vertices after refining
+ * \param [inout] fine_vtx_to_coarse_vtx Fine vertex - coarse vertex connectivity (size = n_vtx)
+ * \param [inout] coarse_vtx_to_fine_vtx Coarse vertex - fine vertex connectivity (size = n_vtx_checked)
  *
  */
 
@@ -1333,13 +1333,13 @@ static void
 _build_face_vtx
 (
  int            n_face,
- int            n_faceChecked,
+ int            n_face_checked,
  int            n_vtx,
- int           *fineFaceToCoarseFace,
+ int           *fine_face_to_coarse_face,
  int          **face_vtx_idx,
  int          **face_vtx,
- int           *n_vtxChecked,
- int          **fineVtxToCoarseVtx,
+ int           *n_vtx_checked,
+ int          **fine_vtx_to_coarse_vtx,
  int          **coarse_vtx_to_fine_vtx
 )
 {
@@ -1354,7 +1354,7 @@ _build_face_vtx
 
   for (int i = 0; i < n_face; i++) {
     //Loop over the old face_vtx, j = vertex number
-    if (fineFaceToCoarseFace[i] != - 1) {
+    if (fine_face_to_coarse_face[i] != - 1) {
 
       for (int j = (*face_vtx_idx)[i]; j < (*face_vtx_idx)[i + 1]; j++) {
         //If the face studied has been removed, I skip it
@@ -1367,13 +1367,13 @@ _build_face_vtx
     }
   }
 
-  *face_vtx_idx = realloc((*face_vtx_idx), (n_faceChecked + 1) * sizeof(int));
-  *face_vtx = realloc((*face_vtx), (*face_vtx_idx)[n_faceChecked] * sizeof(int));
+  *face_vtx_idx = realloc((*face_vtx_idx), (n_face_checked + 1) * sizeof(int));
+  *face_vtx = realloc((*face_vtx), (*face_vtx_idx)[n_face_checked] * sizeof(int));
 
   if (0 == 1) {
-    PDM_printf("Valeur de (*face_vtx_idx)[n_faceChecked] : %d \n", (*face_vtx_idx)[n_faceChecked]);
+    PDM_printf("Valeur de (*face_vtx_idx)[n_face_checked] : %d \n", (*face_vtx_idx)[n_face_checked]);
 
-    for (int i = 0; i < n_faceChecked; i++) {
+    for (int i = 0; i < n_face_checked; i++) {
       for (int j = (*face_vtx_idx)[i]; j < (*face_vtx_idx)[i + 1]; j++) {
         //If the face studied has been removed, I skip it
         int vtx = (*face_vtx)[j];
@@ -1395,7 +1395,7 @@ _build_face_vtx
    * Creation of a correspondence table coarse vertex to fine vertex
    */
 
-  *coarse_vtx_to_fine_vtx = malloc((*face_vtx_idx)[n_faceChecked] * sizeof(int));
+  *coarse_vtx_to_fine_vtx = malloc((*face_vtx_idx)[n_face_checked] * sizeof(int));
 
   int idx_write_coarse_vtx_to_fine_vtx = 0;
 
@@ -1406,11 +1406,11 @@ _build_face_vtx
    * We have our correspondence table
    */
 
-  for (int i = 0; i < (*face_vtx_idx)[n_faceChecked]; i++) {
+  for (int i = 0; i < (*face_vtx_idx)[n_face_checked]; i++) {
     (*coarse_vtx_to_fine_vtx)[i] = (*face_vtx)[i];
   }
 
-  _quickSort_int((*coarse_vtx_to_fine_vtx), 0, (*face_vtx_idx)[n_faceChecked] - 1);
+  _quickSort_int((*coarse_vtx_to_fine_vtx), 0, (*face_vtx_idx)[n_face_checked] - 1);
 
   int last_value = -1;
 
@@ -1419,20 +1419,20 @@ _build_face_vtx
    * Each vertex is stored only once
    */
 
-  for (int i = 0; i < (*face_vtx_idx)[n_faceChecked]; i++) {
+  for (int i = 0; i < (*face_vtx_idx)[n_face_checked]; i++) {
     if (last_value != (*coarse_vtx_to_fine_vtx)[i]) {
       (*coarse_vtx_to_fine_vtx)[idx_write_coarse_vtx_to_fine_vtx++] = (*coarse_vtx_to_fine_vtx)[i];
       last_value = (*coarse_vtx_to_fine_vtx)[i];
     }
   }
 
-  (*n_vtxChecked) = idx_write_coarse_vtx_to_fine_vtx;
+  (*n_vtx_checked) = idx_write_coarse_vtx_to_fine_vtx;
 
-  (*coarse_vtx_to_fine_vtx) = realloc((*coarse_vtx_to_fine_vtx), (*n_vtxChecked) * sizeof(int));
+  (*coarse_vtx_to_fine_vtx) = realloc((*coarse_vtx_to_fine_vtx), (*n_vtx_checked) * sizeof(int));
 
   if (0 == 1) {
     PDM_printf("\nFinal content of coarse_vtx_to_fine_vtx: ");
-    for (int i = 0; i < (*n_vtxChecked); i++) {
+    for (int i = 0; i < (*n_vtx_checked); i++) {
       PDM_printf(" %d ", (*coarse_vtx_to_fine_vtx)[i]);
     }
     PDM_printf("\n");
@@ -1442,47 +1442,47 @@ _build_face_vtx
    * Creation of a correspondence table fine vertex to coarse vertex
    */
 
-  *fineVtxToCoarseVtx = malloc(n_vtx * sizeof(int));
+  *fine_vtx_to_coarse_vtx = malloc(n_vtx * sizeof(int));
 
   for (int i = 0; i < n_vtx; i++) {
-    (*fineVtxToCoarseVtx)[i] = -1;
+    (*fine_vtx_to_coarse_vtx)[i] = -1;
   }
 
   /*
    * Loop over (*coarse_vtx_to_fine_vtx)
    */
 
-  for (int i = 0; i < (*n_vtxChecked); i++) {
-    int fineVtx = (*coarse_vtx_to_fine_vtx)[i];
-    //        PDM_printf("Valeur de fineVtx : %d \n", fineVtx);
-    (*fineVtxToCoarseVtx)[fineVtx - 1] = i + 1;
+  for (int i = 0; i < (*n_vtx_checked); i++) {
+    int fine_vtx = (*coarse_vtx_to_fine_vtx)[i];
+    //        PDM_printf("Valeur de fine_vtx : %d \n", fine_vtx);
+    (*fine_vtx_to_coarse_vtx)[fine_vtx - 1] = i + 1;
   }
 
   if(0 == 1) {
-    PDM_printf("Content of fineVtxToCoarseVtx: ");
+    PDM_printf("Content of fine_vtx_to_coarse_vtx: ");
     for (int i = 0; i < n_vtx; i++) {
-      PDM_printf(" %d ", (*fineVtxToCoarseVtx)[i]);
+      PDM_printf(" %d ", (*fine_vtx_to_coarse_vtx)[i]);
     }
     PDM_printf("\n");
   }
 
   //Loop over face_vtx to re-number face_vtx thanks to (*coarse_vtx_to_fine_vtx)
-  for (int i = 0; i < (*face_vtx_idx)[n_faceChecked]; i++) {
-    (*face_vtx)[i] = (*fineVtxToCoarseVtx)[(*face_vtx)[i] - 1];
+  for (int i = 0; i < (*face_vtx_idx)[n_face_checked]; i++) {
+    (*face_vtx)[i] = (*fine_vtx_to_coarse_vtx)[(*face_vtx)[i] - 1];
   }
 
   if (0 == 1) {
-    PDM_printf("Valeur de (*n_vtxChecked) : %d \n", (*n_vtxChecked));
+    PDM_printf("Valeur de (*n_vtx_checked) : %d \n", (*n_vtx_checked));
     PDM_printf("Valeur de idx_write_face_vtx : %d \n", idx_write_face_vtx);
 
     PDM_printf("Final content of face_vtx_idx: ");
-    for(int i = 0; i < n_faceChecked + 1; i++) {
+    for(int i = 0; i < n_face_checked + 1; i++) {
       PDM_printf(" %d ", (*face_vtx_idx)[i]);
     }
     PDM_printf("\n");
 
     PDM_printf("Final content of face_vtx: |");
-    for (int i = 0; i < (*face_vtx_idx)[n_faceChecked]; i++) {
+    for (int i = 0; i < (*face_vtx_idx)[n_face_checked]; i++) {
       PDM_printf(" %d ", (*face_vtx)[i]);
       if (i % (*face_vtx_idx)[1] == (*face_vtx_idx)[1] - 1) {
         PDM_printf("|");
@@ -1498,10 +1498,10 @@ _build_face_vtx
  * \brief Builds the array vtx with all the coordinates of the inner vertices removed
  *
  * \param [in]  n_vtx                 Number of vertices before refining
- * \param [in]  n_vtxChecked          Number of vertices after refining
- * \param [in]  fineVtxToCoarseVtx   Fine vertex - coarse vertex connectivity (size = n_vtx)
+ * \param [in]  n_vtx_checked          Number of vertices after refining
+ * \param [in]  fine_vtx_to_coarse_vtx   Fine vertex - coarse vertex connectivity (size = n_vtx)
  *
- * \param [inout] vtx                Vertex coordinates (size = n_vtxChecked)
+ * \param [inout] vtx                Vertex coordinates (size = n_vtx_checked)
  *
  */
 
@@ -1509,22 +1509,22 @@ static void
 _build_vtx
 (
  int            n_vtx,
- int            n_vtxChecked,
- int           *fineVtxToCoarseVtx,
+ int            n_vtx_checked,
+ int           *fine_vtx_to_coarse_vtx,
  double       **vtx
 )
 {
   //If no vertex has been removed, nothing to do!
-  if (n_vtx == n_vtxChecked) {
+  if (n_vtx == n_vtx_checked) {
       return;
   }
 
   int idx_write = 0;
 
-  //Loop over fineVtxToCoarseVtx, i = index of a vertex number (vertex number - 1)
+  //Loop over fine_vtx_to_coarse_vtx, i = index of a vertex number (vertex number - 1)
   for (int i = 0; i < n_vtx; i++) {
     //We store each vertex that has not been removed
-    if (fineVtxToCoarseVtx[i] != -1) {
+    if (fine_vtx_to_coarse_vtx[i] != -1) {
       double coord1 = (*vtx)[3 * i    ];
       double coord2 = (*vtx)[3 * i + 1];
       double coord3 = (*vtx)[3 * i + 2];
@@ -1536,13 +1536,13 @@ _build_vtx
   }
 
   //Reallocation of vtx at the suitable size
-  *vtx = realloc((*vtx), 3 * n_vtxChecked * sizeof(double));
+  *vtx = realloc((*vtx), 3 * n_vtx_checked * sizeof(double));
 
-  assert(3 * n_vtxChecked == idx_write);
+  assert(3 * n_vtx_checked == idx_write);
 
   if(0 == 1) {
     PDM_printf("Contenu final de vtx\n");
-    for (int i = 0; i < 3 * n_vtxChecked; i++) {
+    for (int i = 0; i < 3 * n_vtx_checked; i++) {
       PDM_printf(" %.1f ", (*vtx)[i]);
       if (i % 3 == 2) {
           PDM_printf("|");
@@ -1556,19 +1556,19 @@ _build_vtx
  *
  * \brief Updates the array cell_tag in an array called coarsecell_tag
  *
- * \param [in] nCoarseCellChecked Number of partitions checked ( >= number of coarse cells wanted by the user)
- * \param [in] coarse_cell_cell_idx  Array of indexes of the connected partitions (size : nCoarseCellChecked + 1)
- * \param [in] coarse_cell_cell     Partitioning array (size : coarse_cell_cell_idx[nCoarseCellChecked])
+ * \param [in] n_coarse_cell_checked Number of partitions checked ( >= number of coarse cells wanted by the user)
+ * \param [in] coarse_cell_cell_idx  Array of indexes of the connected partitions (size : n_coarse_cell_checked + 1)
+ * \param [in] coarse_cell_cell     Partitioning array (size : coarse_cell_cell_idx[n_coarse_cell_checked])
  * \param [in] cell_tag            Cell tag (size = n_cell)
  *
- * \param [inout] coarsecell_tag   Tag coarse cell connectivity index (size = nCoarseCellChecked)
+ * \param [inout] coarsecell_tag   Tag coarse cell connectivity index (size = n_coarse_cell_checked)
  *
  */
 
 static void
 _build_coarsecell_tag
 (
- int            nCoarseCellChecked,
+ int            n_coarse_cell_checked,
  int           *coarse_cell_cell_idx,
  int           *coarse_cell_cell,
  int           *cell_tag,
@@ -1579,10 +1579,10 @@ _build_coarsecell_tag
       return;
   }
 
-  *coarsecell_tag = (int *) malloc(nCoarseCellChecked * sizeof(int));
+  *coarsecell_tag = (int *) malloc(n_coarse_cell_checked * sizeof(int));
 
   //Loop over coarse_cell_cell_idx, i = index of coarse cell
-  for (int i = 0; i < nCoarseCellChecked; i++) {
+  for (int i = 0; i < n_coarse_cell_checked; i++) {
     //This should be the tag of all the fine cells of the coarse cell j
     int tag = cell_tag[coarse_cell_cell[coarse_cell_cell_idx[i]] - 1];
 
@@ -1603,7 +1603,7 @@ _build_coarsecell_tag
 
   if(0 == 1) {
     PDM_printf("Affichage de (*coarsecell_tag)\n");
-    for (int i = 0; i < nCoarseCellChecked; i++) {
+    for (int i = 0; i < n_coarse_cell_checked; i++) {
       PDM_printf(" %d ", (*coarsecell_tag)[i]);
     }
     PDM_printf("\n");
@@ -1614,17 +1614,17 @@ _build_coarsecell_tag
  *
  * \brief Updates the array face_tag
  *
- * \param [in]    n_faceChecked          Number of faces after refining ( <= n_face)
- * \param [in]    coarse_face_to_fine_face  Coarse face - fine face connectivity (size = n_faceChecked)
+ * \param [in]    n_face_checked          Number of faces after refining ( <= n_face)
+ * \param [in]    coarse_face_to_fine_face  Coarse face - fine face connectivity (size = n_face_checked)
  *
- * \param [inout] face_tag               Tag face connectivity index (size = n_face at first and n_faceChecked at the end)
+ * \param [inout] face_tag               Tag face connectivity index (size = n_face at first and n_face_checked at the end)
  *
  */
 
 static void
 _build_face_tag
 (
- int            n_faceChecked,
+ int            n_face_checked,
  int           *coarse_face_to_fine_face,
  int          **face_tag
 )
@@ -1634,15 +1634,15 @@ _build_face_tag
   }
 
   //Loop over coarse_face_to_fine_face, i = number of a face after refinement
-  for (int i = 0; i < n_faceChecked; i++) {
+  for (int i = 0; i < n_face_checked; i++) {
     (*face_tag)[i] = (*face_tag)[coarse_face_to_fine_face[i] - 1];
   }
 
-  (*face_tag) = realloc((*face_tag), n_faceChecked * sizeof(int));
+  (*face_tag) = realloc((*face_tag), n_face_checked * sizeof(int));
 
   if(0 == 1) {
     PDM_printf("Contenu de (*face_tag)\n");
-    for (int i = 0; i < n_faceChecked; i++) {
+    for (int i = 0; i < n_face_checked; i++) {
         PDM_printf(" %d ", (*face_tag)[i]);
     }
     PDM_printf("\n");
@@ -1653,17 +1653,17 @@ _build_face_tag
  *
  * \brief Updates the array vtx_tag
  *
- * \param [in]    n_vtxChecked          Number of vertices after refining
- * \param [in]    coarse_vtx_to_fine_vtx   Coarse vertex - fine vertex connectivity (size = n_vtxChecked)
+ * \param [in]    n_vtx_checked          Number of vertices after refining
+ * \param [in]    coarse_vtx_to_fine_vtx   Coarse vertex - fine vertex connectivity (size = n_vtx_checked)
  *
- * \param [inout] vtx_tag               Tag vertex connectivity index (size = n_vtx at first and n_vtxChecked at the end)
+ * \param [inout] vtx_tag               Tag vertex connectivity index (size = n_vtx at first and n_vtx_checked at the end)
  *
  */
 
 static void
 _build_vtx_tag
 (
- int            n_vtxChecked,
+ int            n_vtx_checked,
  int           *coarse_vtx_to_fine_vtx,
  int          **vtx_tag
 )
@@ -1673,15 +1673,15 @@ _build_vtx_tag
   }
 
   //Loop over coarse_face_to_fine_face, i = number of a face after refinement
-  for (int i = 0; i < n_vtxChecked; i++) {
+  for (int i = 0; i < n_vtx_checked; i++) {
     (*vtx_tag)[i] = (*vtx_tag)[coarse_vtx_to_fine_vtx[i] - 1];
   }
 
-  (*vtx_tag) = realloc((*vtx_tag), n_vtxChecked * sizeof(int));
+  (*vtx_tag) = realloc((*vtx_tag), n_vtx_checked * sizeof(int));
 
   if(0 == 1) {
     PDM_printf("Contenu de (*vtx_tag)\n");
-    for (int i = 0; i < n_vtxChecked; i++) {
+    for (int i = 0; i < n_vtx_checked; i++) {
       PDM_printf(" %d ", (*vtx_tag)[i]);
     }
     PDM_printf("\n");
@@ -1693,7 +1693,7 @@ _build_vtx_tag
  * \brief Updates the array face_group by renumbering the faces and removing the removed faces
  *
  * \param [in] n_face_group            Number of groups of faces
- * \param [in] fineFaceToCoarseFace  Fine face - coarse face connectivity (size = n_face)
+ * \param [in] fine_face_to_coarse_face  Fine face - coarse face connectivity (size = n_face)
  *
  * \param [inout] face_group          Face group index (size = face_group_idx[n_face_group])
  * \param [inout] face_group_idx       Face group index (size = n_face_group + 1)
@@ -1718,7 +1718,7 @@ _build_faceGroup
   //Renumbering of partGroup from the fine numbering to the coarse one
   //Loop over face_group, i = face number
 //  for (int i = 0; i < (*face_group_idx)[n_face_group]; i++) {
-//      (*face_group)[i] = fineFaceToCoarseFace[(*face_group)[i] - 1];
+//      (*face_group)[i] = fine_face_to_coarse_face[(*face_group)[i] - 1];
 //  }
 
   if (0 == 1) {
@@ -1802,7 +1802,7 @@ _build_faceGroup
  * \param [out] cgId              Coarse grid identifier
  *
  * \param [in]  i_part              Partition identifier
- * \param [in]  nCoarseCellWanted  Number of cells in the coarse grid wanted by the user
+ * \param [in]  n_coarse_cell_wanted  Number of cells in the coarse grid wanted by the user
  * \param [in]  n_cell              Number of cells
  * \param [in]  n_face              Number of faces
  * \param [in]  n_vtx               Number of vertices
@@ -1812,8 +1812,8 @@ _build_faceGroup
  * \param [in]  cell_face           Cell to face connectivity (size = cell_face_idx[n_cell] = lcell_face
  *                                                             numbering : 1 to n)
  * \param [in]  cell_tag            Cell tag (size = n_cell)
- * \param [in]  cellWeight         Cell weight (size = n_cell)
- * \param [in]  faceWeight         Face weight (size = n_face)
+ * \param [in]  cell_weight         Cell weight (size = n_cell)
+ * \param [in]  face_weight         Face weight (size = n_face)
  * \param [in]  cell_ln_to_gn         Cell local numbering to global numbering (size = n_cell, numbering : 1 to n)
  * \param [in]  face_cell           Face to cell connectivity  (size = 2 * n_face, numbering : 1 to n)
  * \param [in]  face_vtx_idx         Face to Vertex connectivity index (size = n_face + 1, numbering : 0 to n-1)
@@ -1846,7 +1846,7 @@ _coarse_grid_mesh_input
 (
  _coarse_mesh_t     *cm,
  const int           i_part,
- const int           nCoarseCellWanted,
+ const int           n_coarse_cell_wanted,
  const int           n_cell,
  const int           n_face,
  const int           n_vtx,
@@ -1855,8 +1855,8 @@ _coarse_grid_mesh_input
  const int          *cell_face_idx,
  const int          *cell_face,
  const int          *cell_tag,
- const int          *cellWeight,
- const int          *faceWeight,
+ const int          *cell_weight,
+ const int          *face_weight,
  const PDM_g_num_t  *cell_ln_to_gn,
  const int          *face_cell,
  const int          *face_vtx_idx,
@@ -1877,11 +1877,11 @@ _coarse_grid_mesh_input
   _part_t * part_ini = cm->part_ini[i_part];
   _coarse_part_t *part_res = cm->part_res[i_part];
 
-  // const int *_cellWeight = cellWeight;
-  // const int *_faceWeight = faceWeight;
+  // const int *_cell_weight = cell_weight;
+  // const int *_face_weight = face_weight;
 
-  part_ini->cellWeight = cellWeight;
-  part_ini->faceWeight = faceWeight;
+  part_ini->cell_weight = cell_weight;
+  part_ini->face_weight = face_weight;
 
   part_ini->n_vtx = n_vtx;
   part_ini->n_cell = n_cell;
@@ -1915,7 +1915,7 @@ _coarse_grid_mesh_input
 #pragma warning(pop)
 #endif
 
-  part_res->nCoarseCellWanted = nCoarseCellWanted;
+  part_res->n_coarse_cell_wanted = n_coarse_cell_wanted;
 
 }
 
@@ -1928,7 +1928,7 @@ _coarse_grid_mesh_input
  * \param [out] cgId              Coarse grid identifier
  *
  * \param [in]  i_part              Partition identifier
- * \param [in]  nCoarseCellWanted  Number of cells in the coarse grid wanted by the user
+ * \param [in]  n_coarse_cell_wanted  Number of cells in the coarse grid wanted by the user
  */
 
 static void
@@ -1997,16 +1997,16 @@ _coarse_grid_compute
   /* Assign size of multigrid */
   part_res->part->n_cell = n_coarse_cell_computed;
 
-  //  From the cell_part array, get the partCell
-  int *partCellIdx = NULL;
-  int *partCell = NULL;
+  //  From the cell_part array, get the part_cell
+  int *part_cell_idx = NULL;
+  int *part_cell = NULL;
 
-  // _partCell_from_cell_part(nCoarseCellWanted,
-  _partCell_from_cell_part(part_res->part->n_cell,
+  // _part_cell_from_cell_part(n_coarse_cell_wanted,
+  _part_cell_from_cell_part(part_res->part->n_cell,
                           part_ini->n_cell,
                           cell_part,
-                          (int **) &partCellIdx,
-                          (int **) &partCell);
+                          (int **) &part_cell_idx,
+                          (int **) &part_cell);
 
   PDM_timer_hang_on(cm->timer);
   cm->times_elapsed[itime] = PDM_timer_elapsed(cm->timer);
@@ -2019,23 +2019,23 @@ _coarse_grid_compute
 
   PDM_timer_resume(cm->timer);
 
-  int *cellCoarseCell = NULL;
+  int *cell_coarse_cell = NULL;
 
-  // part_res->part->n_cell = nCoarseCellWanted;
+  // part_res->part->n_cell = n_coarse_cell_wanted;
 
   _adapt_Connectedness(&(part_res->part->n_cell),
                        part_ini->n_cell,
                        cell_part,
-                       (int **) &cellCoarseCell,
+                       (int **) &cell_coarse_cell,
                        dualGraph,
                        dualGraphIdx,
-                       partCell,
-                       partCellIdx,
+                       part_cell,
+                       part_cell_idx,
                        (int **) &(part_res->coarse_cell_cell),
                        (int **) &(part_res->coarse_cell_cell_idx));
 
-  free(partCellIdx);
-  free(partCell);
+  free(part_cell_idx);
+  free(part_cell);
 
   free(cell_part);
 
@@ -2046,20 +2046,20 @@ _coarse_grid_compute
   cm->times_cpu_s[itime]   = PDM_timer_cpu_sys(cm->timer);
   itime += 1;
 
-  //Compress the face_cell array to create the faceCoarseCell array
+  //Compress the face_cell array to create the face_coarse_cell array
 
   PDM_timer_resume(cm->timer);
-  int *fineFaceToCoarseFace = NULL;
+  int *fine_face_to_coarse_face = NULL;
 
   //Temporary storage of the data of part_ini
   part_res->part->face_cell = part_ini->face_cell;
   part_res->part->n_face = part_ini->n_face;
 
-  _build_faceCoarseCell(&(part_res->part->n_face),
+  _build_face_coarse_cell(&(part_res->part->n_face),
                         part_ini->face_cell,
-                        cellCoarseCell,
+                        cell_coarse_cell,
                         &(part_res->part->face_cell),
-                        (int **) &fineFaceToCoarseFace,
+                        (int **) &fine_face_to_coarse_face,
                         &(part_res->coarse_face_to_fine_face));
 
   PDM_timer_hang_on(cm->timer);
@@ -2083,7 +2083,7 @@ _coarse_grid_compute
     }
     part_res->part->face_group = malloc(part_res->part->face_group_idx[part_ini->n_face_group] * sizeof(int));
     for (int i = 0; i < part_ini->face_group_idx[part_ini->n_face_group]; i++) {
-      part_res->part->face_group[i] = fineFaceToCoarseFace[part_ini->face_group[i] - 1];
+      part_res->part->face_group[i] = fine_face_to_coarse_face[part_ini->face_group[i] - 1];
     }
   }
 
@@ -2103,7 +2103,7 @@ _coarse_grid_compute
 
   PDM_timer_resume(cm->timer);
 
-  _coarsecell_face_from_faceCoarseCell(part_res->part->n_cell,
+  _coarsecell_face_from_face_coarse_cell(part_res->part->n_cell,
                                       part_res->part->n_face,
                                       part_res->part->face_cell,
                                       &(part_res->part->cell_face_idx),
@@ -2132,16 +2132,16 @@ _coarse_grid_compute
     part_res->part->face_vtx[i] = part_ini->face_vtx[i];
   }
 
-  int *fineVtxToCoarseVtx = NULL;
+  int *fine_vtx_to_coarse_vtx = NULL;
 
   _build_face_vtx(part_ini->n_face,
                  part_res->part->n_face,
                  part_ini->n_vtx,
-                 fineFaceToCoarseFace,
+                 fine_face_to_coarse_face,
                  &(part_res->part->face_vtx_idx),
                  &(part_res->part->face_vtx),
                  &(part_res->part->n_vtx),
-                 (int **) &fineVtxToCoarseVtx,
+                 (int **) &fine_vtx_to_coarse_vtx,
                  (int **) &(part_res->coarse_vtx_to_fine_vtx));
 
 
@@ -2163,7 +2163,7 @@ _coarse_grid_compute
 
   _build_vtx(part_ini->n_vtx,
              part_res->part->n_vtx,
-             fineVtxToCoarseVtx,
+             fine_vtx_to_coarse_vtx,
              &(part_res->part->vtx));
 
   PDM_timer_hang_on(cm->timer);
@@ -2248,14 +2248,14 @@ _coarse_grid_compute
   // }
   // Conflict with New renumbering for OpenMP/Better vecto - Add part_to_block option VOID
 
-  free(cellCoarseCell);
+  free(cell_coarse_cell);
 
   free(dualGraphIdx);
   free(dualGraph);
 
-  free(fineFaceToCoarseFace);
+  free(fine_face_to_coarse_face);
 
-  free(fineVtxToCoarseVtx);
+  free(fine_vtx_to_coarse_vtx);
 }
 
 /**
@@ -2560,12 +2560,12 @@ _coarse_mesh_t * cm
   int idx_write = 0;
 
   for (int i = 0; i < cm->n_part; i++) {
-    int nFineVtx = cm->part_ini[i]->n_vtx;
+    int nFine_vtx = cm->part_ini[i]->n_vtx;
     int nCoarseVtx = cm->part_res[i]->part->n_vtx;
     idx_write = 0;
-    vtx_ln_to_gnTag[i] = (PDM_g_num_t *) malloc(nFineVtx * sizeof(PDM_g_num_t));
+    vtx_ln_to_gnTag[i] = (PDM_g_num_t *) malloc(nFine_vtx * sizeof(PDM_g_num_t));
     //Loop over coarse_face_to_fine_face, i = index of coarse_vtx_to_fine_vtx (from 0 to cm->part_res[i_part]->part->n_vtx)
-    for (int j = 0; j < nFineVtx; j++) {
+    for (int j = 0; j < nFine_vtx; j++) {
       vtx_ln_to_gnTag[i][j] = -1;
     }
 
@@ -3043,31 +3043,31 @@ _coarse_mesh_t * cm
     cmp_coarse->face_part_bound_proc_idx = coarseFacePartBoundProcIdx;
   }
 
-  int **fineFaceToCoarseFace = (int **) malloc(cm->n_part * sizeof(int *));
+  int **fine_face_to_coarse_face = (int **) malloc(cm->n_part * sizeof(int *));
 
   for (int i_part = 0; i_part < cm->n_part; i_part++) {
     _part_t *cmp_fine = cm->part_ini[i_part];
     _part_t *cmp_coarse = cm->part_res[i_part]->part;
 
-    //Creation of fineFaceToCoarseFace
-    fineFaceToCoarseFace[i_part] = (int *) malloc(cmp_fine->n_face * sizeof(int));
+    //Creation of fine_face_to_coarse_face
+    fine_face_to_coarse_face[i_part] = (int *) malloc(cmp_fine->n_face * sizeof(int));
 
     //Initialization to -1
     for (int i = 0; i < cmp_fine->n_face; i++) {
-      fineFaceToCoarseFace[i_part][i] = -1;
+      fine_face_to_coarse_face[i_part][i] = -1;
     }
 
     //Loop over coarse_face_to_fine_face
     for (int i = 0; i < cmp_coarse->n_face; i++) {
       int fineFace = cm->part_res[i_part]->coarse_face_to_fine_face[i] - 1;
-      fineFaceToCoarseFace[i_part][fineFace] = i + 1;
+      fine_face_to_coarse_face[i_part][fineFace] = i + 1;
     }
 
     if(0 == 1) {
-      PDM_printf("Final content of fineFaceToCoarseFace[%d]: \n",i_part);
+      PDM_printf("Final content of fine_face_to_coarse_face[%d]: \n",i_part);
       PDM_printf("Valeur de cm->part_ini[i_part]->n_face : %d \n", cm->part_ini[i_part]->n_face);
       for (int i = 0; i < cm->part_ini[i_part]->n_face; i++) {
-        PDM_printf(" %d ", fineFaceToCoarseFace[i_part][i]);
+        PDM_printf(" %d ", fine_face_to_coarse_face[i_part][i]);
       }
       PDM_printf("\n");
       PDM_printf("------------------------------------------\n\n");
@@ -3158,7 +3158,7 @@ _coarse_mesh_t * cm
 //
       sendBuff[3*id    ] = i_part;
       sendBuff[3*id + 1] = iFacDist;
-      sendBuff[3*id + 2] = fineFaceToCoarseFace[i][iFacLoc - 1];
+      sendBuff[3*id + 2] = fine_face_to_coarse_face[i][iFacLoc - 1];
 
     }
 
@@ -3219,7 +3219,7 @@ _coarse_mesh_t * cm
 
     //Update of the data about faces in the face_part_bound of part_res
     _part_t *cmp = cm->part_res[iPartLoc - 1]->part;
-    cmp->face_part_bound[4 * posFacePartBoundCoarse    ] = fineFaceToCoarseFace[iPartLoc - 1][iFacLocFine - 1];
+    cmp->face_part_bound[4 * posFacePartBoundCoarse    ] = fine_face_to_coarse_face[iPartLoc - 1][iFacLocFine - 1];
     cmp->face_part_bound[4 * posFacePartBoundCoarse + 3] = iFacDistCoarse;
   }
 
@@ -3239,11 +3239,11 @@ _coarse_mesh_t * cm
 
   for (int i_part = 0; i_part < cm->n_part; i_part++) { //Modif : n_partB => cm->n_part
 
-    free(fineFaceToCoarseFace[i_part]);
+    free(fine_face_to_coarse_face[i_part]);
     free(iFaceLocToIPartBound[i_part]);
   }
 
-  free(fineFaceToCoarseFace);
+  free(fine_face_to_coarse_face);
   free(iFaceLocToIPartBound);
 
   free(sendN);
@@ -3808,7 +3808,7 @@ PROCF (pdm_part_coarse_mesh_create_cf, PDM_PART_COARSE_MESH_CREATE_CF)
  *
  * \param [in]  cmId               Coarse mesh identifier
  * \param [in]  i_part              Partition identifier
- * \param [in]  nCoarseCell        Number of cells in the coarse grid
+ * \param [in]  n_coarse_cell        Number of cells in the coarse grid
  * \param [in]  n_cell              Number of cells
  * \param [in]  n_face              Number of faces
  * \param [in]  n_face_part_bound     Number of partitioning boundary faces
@@ -3819,8 +3819,8 @@ PROCF (pdm_part_coarse_mesh_create_cf, PDM_PART_COARSE_MESH_CREATE_CF)
  *                                                             numbering : 1 to n)
  * \param [in]  cell_tag            Cell tag (size = n_cell)
  * \param [in]  cell_ln_to_gn         Cell local numbering to global numbering (size = n_cell, numbering : 1 to n)
- * \param [in]  cellWeight         Cell weight (size = n_cell)
- * \param [in]  faceWeight         Face weight (size = n_face)
+ * \param [in]  cell_weight         Cell weight (size = n_cell)
+ * \param [in]  face_weight         Face weight (size = n_face)
  * \param [in]  face_cell           Face to cell connectivity  (size = 2 * n_face, numbering : 1 to n)
  * \param [in]  face_vtx_idx         Face to Vertex connectivity index (size = n_face + 1, numbering : 0 to n-1)
  * \param [in]  face_vtx            Face to Vertex connectivity (size = faceVertexIdx[n_face], numbering : 1 to n)
@@ -3838,7 +3838,7 @@ PDM_part_coarse_mesh_input
 (
  int                 cmId,
  int                 i_part,
- const int           nCoarseCellWanted,
+ const int           n_coarse_cell_wanted,
  const int           n_cell,
  const int           n_face,
  const int           n_vtx,
@@ -3847,8 +3847,8 @@ PDM_part_coarse_mesh_input
  const int          *cell_face_idx,
  const int          *cell_face,
  const int          *cell_tag,
- const int          *cellWeight,
- const int          *faceWeight,
+ const int          *cell_weight,
+ const int          *face_weight,
  const PDM_g_num_t  *cell_ln_to_gn,
  const int          *face_cell,
  const int          *face_vtx_idx,
@@ -3870,7 +3870,7 @@ PDM_part_coarse_mesh_input
 
   _coarse_grid_mesh_input (cm,
                            i_part,
-                           nCoarseCellWanted,
+                           n_coarse_cell_wanted,
                            n_cell,
                            n_face,
                            n_vtx,
@@ -3879,8 +3879,8 @@ PDM_part_coarse_mesh_input
                            cell_face_idx,
                            cell_face,
                            cell_tag,
-                           cellWeight,
-                           faceWeight,
+                           cell_weight,
+                           face_weight,
                            cell_ln_to_gn,
                            face_cell,
                            face_vtx_idx,
@@ -3903,7 +3903,7 @@ PROCF (pdm_part_coarse_mesh_input, PDM_PART_COARSE_MESH_INPUT)
 (
  int                *cmId,
  int                *i_part,
- const int          *nCoarseCellWanted,
+ const int          *n_coarse_cell_wanted,
  const int          *n_cell,
  const int          *n_face,
  const int          *n_vtx,
@@ -3914,9 +3914,9 @@ PROCF (pdm_part_coarse_mesh_input, PDM_PART_COARSE_MESH_INPUT)
  const int          *have_cell_tag,
  const int          *cell_tag,
  const int          *have_cell_weight,
- const int          *cellWeight,
+ const int          *cell_weight,
  const int          *have_face_weight,
- const int          *faceWeight,
+ const int          *face_weight,
  const PDM_g_num_t *cell_ln_to_gn,
  const int          *face_cell,
  const int          *face_vtx_idx,
@@ -3941,8 +3941,8 @@ PROCF (pdm_part_coarse_mesh_input, PDM_PART_COARSE_MESH_INPUT)
   int *_cell_tag = (int *) cell_tag;
   int *_face_tag = (int *) face_tag;
   int *_vtx_tag = (int *) vtx_tag;
-  int *_cellWeight = (int *) cellWeight;
-  int *_faceWeight = (int *) faceWeight;
+  int *_cell_weight = (int *) cell_weight;
+  int *_face_weight = (int *) face_weight;
   int *_faceGroupIdx = (int *) face_group_idx;
   int *_faceGroup = (int *) face_group;
 #ifdef __INTEL_COMPILER
@@ -3967,11 +3967,11 @@ PROCF (pdm_part_coarse_mesh_input, PDM_PART_COARSE_MESH_INPUT)
   }
 
   if (*have_cell_weight == 0) {
-    _cellWeight = NULL;
+    _cell_weight = NULL;
   }
 
   if (*have_face_weight == 0) {
-    _faceWeight = NULL;
+    _face_weight = NULL;
   }
 
   if (*have_face_group == 0) {
@@ -3982,7 +3982,7 @@ PROCF (pdm_part_coarse_mesh_input, PDM_PART_COARSE_MESH_INPUT)
 
   PDM_part_coarse_mesh_input(*cmId,
                              *i_part,
-                             *nCoarseCellWanted,
+                             *n_coarse_cell_wanted,
                              *n_cell,
                              *n_face,
                              *n_vtx,
@@ -3991,8 +3991,8 @@ PROCF (pdm_part_coarse_mesh_input, PDM_PART_COARSE_MESH_INPUT)
                              cell_face_idx,
                              cell_face,
                              _cell_tag,
-                             _cellWeight,
-                             _faceWeight,
+                             _cell_weight,
+                             _face_weight,
                              cell_ln_to_gn,
                              face_cell,
                              face_vtx_idx,
@@ -4313,8 +4313,8 @@ PROCF (pdm_part_coarse_mesh_part_dim_get, PDM_PART_COARSE_MESH_PART_DIM_GET)
  *                                                             numbering : 1 to n)
  * \param [out]  cell_tag            Cell tag (size = n_cell)
  * \param [out]  cell_ln_to_gn         Cell local numbering to global numbering (size = n_cell, numbering : 1 to n)
- * \param [out]  cellInitCellIdx    Array of indexes of the connected partitions (size : nCoarseCell + 1)
- * \param [out]  cellInitCell       Partitioning array (size : cellInitCellIdx[nCoarseCell])
+ * \param [out]  cellInitCellIdx    Array of indexes of the connected partitions (size : n_coarse_cell + 1)
+ * \param [out]  cellInitCell       Partitioning array (size : cellInitCellIdx[n_coarse_cell])
  *
  * \param [out]  face_cell           Face to cell connectivity  (size = 2 * n_face, numbering : 1 to n)
  * \param [out]  face_vtx_idx         Face to Vertex connectivity index (size = n_face + 1, numbering : 0 to n-1)

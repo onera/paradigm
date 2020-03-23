@@ -102,7 +102,7 @@ PROCF (pdm_part_coarse_mesh_create_cf, PDM_PART_COARSE_MESH_CREATE_CF)
  *
  * \param [in]  cmId               Coarse mesh identifier
  * \param [in]  i_part              Partition identifier
- * \param [in]  nCoarseCell        Number of cells in the coarse grid
+ * \param [in]  n_coarse_cell        Number of cells in the coarse grid
  * \param [in]  n_cell              Number of cells
  * \param [in]  n_face              Number of faces
  * \param [in]  n_face_part_bound     Number of partitioning boundary faces
@@ -113,8 +113,8 @@ PROCF (pdm_part_coarse_mesh_create_cf, PDM_PART_COARSE_MESH_CREATE_CF)
  *                                                             numbering : 1 to n)
  * \param [in]  cell_tag            Cell tag (size = n_cell)
  * \param [in]  cell_ln_to_gn         Cell local numbering to global numbering (size = n_cell, numbering : 1 to n)
- * \param [in]  cellWeight         Cell weight (size = n_cell)
- * \param [in]  faceWeight         Face weight (size = n_face)
+ * \param [in]  cell_weight         Cell weight (size = n_cell)
+ * \param [in]  face_weight         Face weight (size = n_face)
  * \param [in]  face_cell           Face to cell connectivity  (size = 2 * n_face, numbering : 1 to n)
  * \param [in]  face_vtx_idx         Face to Vertex connectivity index (size = n_face + 1, numbering : 0 to n-1)
  * \param [in]  face_vtx            Face to Vertex connectivity (size = faceVertexIdx[n_face], numbering : 1 to n)
@@ -146,7 +146,7 @@ PDM_part_coarse_mesh_input
 (
  int                 cmId,
  int                 i_part,
- const int           nCoarseCell,
+ const int           n_coarse_cell,
  const int           n_cell,
  const int           n_face,
  const int           n_vtx,
@@ -155,8 +155,8 @@ PDM_part_coarse_mesh_input
  const int          *cell_face_idx,
  const int          *cell_face,
  const int          *cell_tag,
- const int          *cellWeight,
- const int          *faceWeight,
+ const int          *cell_weight,
+ const int          *face_weight,
  const PDM_g_num_t  *cell_ln_to_gn,
  const int          *face_cell,
  const int          *face_vtx_idx,
@@ -179,7 +179,7 @@ PROCF (pdm_part_coarse_mesh_input, PDM_PART_COARSE_MESH_INPUT)
 (
  int                *cmId,
  int                *i_part,
- const int          *nCoarseCell,
+ const int          *n_coarse_cell,
  const int          *n_cell,
  const int          *n_face,
  const int          *n_vtx,
@@ -190,9 +190,9 @@ PROCF (pdm_part_coarse_mesh_input, PDM_PART_COARSE_MESH_INPUT)
  const int          *have_cell_tag,
  const int          *cell_tag,
  const int          *have_cell_weight,
- const int          *cellWeight,
+ const int          *cell_weight,
  const int          *have_face_weight,
- const int          *faceWeight,
+ const int          *face_weight,
  const PDM_g_num_t *cell_ln_to_gn,
  const int          *face_cell,
  const int          *face_vtx_idx,
@@ -301,8 +301,8 @@ PROCF (pdm_part_coarse_mesh_part_dim_get, PDM_PART_COARSE_MESH_PART_DIM_GET)
  *                                                             numbering : 1 to n)
  * \param [out]  cell_tag            Cell tag (size = n_cell)
  * \param [out]  cell_ln_to_gn         Cell local numbering to global numbering (size = n_cell, numbering : 1 to n)
- * \param [out]  cellInitCellIdx    Array of indexes of the connected partitions (size : nCoarseCell + 1)
- * \param [out]  cellInitCell       Partitioning array (size : cellInitCellIdx[nCoarseCell])
+ * \param [out]  cellInitCellIdx    Array of indexes of the connected partitions (size : n_coarse_cell + 1)
+ * \param [out]  cellInitCell       Partitioning array (size : cellInitCellIdx[n_coarse_cell])
  *
  * \param [out]  face_cell           Face to cell connectivity  (size = 2 * n_face, numbering : 1 to n)
  * \param [out]  face_vtx_idx         Face to Vertex connectivity index (size = n_face + 1, numbering : 0 to n-1)

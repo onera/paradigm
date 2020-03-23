@@ -114,8 +114,8 @@ _quickSort_int
  *
  * \param [in]  cell_cell                  Dual graph (size : cell_cell_idx[n_cell])
  * \param [in]  cell_cell_idx               Array of indexes of the dual graph (size : n_cell + 1)
- * \param [in]  cellWeight         Cell weight (size = n_cell)
- * \param [in]  faceWeight         Face weight (size = n_face)
+ * \param [in]  cell_weight         Cell weight (size = n_cell)
+ * \param [in]  face_weight         Face weight (size = n_face)
  *
  * \param [inout] cell_part  Cell partitioning (size : n_cell)
  *
@@ -129,8 +129,8 @@ PDM_part_graph_split
  _part_t    *part_ini,
  int        *cell_cell_idx,
  int        *cell_cell,
- int        *cellWeight,
- int        *faceWeight,
+ int        *cell_weight,
+ int        *face_weight,
  int       **cell_part
 )
 {
@@ -152,9 +152,9 @@ PDM_part_graph_split
 
       int ncon = 1; //The number of balancing constraints
 
-      int *vwgt = cellWeight; //Weights of the vertices of the graph (NULL if unused)
+      int *vwgt = cell_weight; //Weights of the vertices of the graph (NULL if unused)
 
-      int *adjwgt = faceWeight; //Weights of the edges of the graph (NULL if unused)
+      int *adjwgt = face_weight; //Weights of the edges of the graph (NULL if unused)
 
       double *tpwgts = NULL;
       if (flag_weights != 0) {
@@ -260,8 +260,8 @@ PDM_part_graph_split
       PDM_SCOTCH_part (part_ini->n_cell,
                        cell_cell_idx,
                        cell_cell,
-                       cellWeight,
-                       faceWeight,
+                       cell_weight,
+                       face_weight,
                        check,
                        n_part,
                        *cell_part);
@@ -555,8 +555,8 @@ PDM_part_graph_split_bis
  int         graphSize,
  int        *cell_cell_idx,
  int        *cell_cell,
- int        *cellWeight,
- int        *faceWeight,
+ int        *cell_weight,
+ int        *face_weight,
  int       **cell_part
 )
 {
@@ -578,9 +578,9 @@ PDM_part_graph_split_bis
 
       int ncon = 1; //The number of balancing constraints
 
-      int *vwgt = cellWeight; //Weights of the vertices of the graph (NULL if unused)
+      int *vwgt = cell_weight; //Weights of the vertices of the graph (NULL if unused)
 
-      int *adjwgt = faceWeight; //Weights of the edges of the graph (NULL if unused)
+      int *adjwgt = face_weight; //Weights of the edges of the graph (NULL if unused)
 
       double *tpwgts = NULL;
       if (flag_weights != 0) {
@@ -687,8 +687,8 @@ PDM_part_graph_split_bis
       PDM_SCOTCH_part (graphSize,
                        cell_cell_idx,
                        cell_cell,
-                       cellWeight,
-                       faceWeight,
+                       cell_weight,
+                       face_weight,
                        check,
                        n_part,
                        *cell_part);

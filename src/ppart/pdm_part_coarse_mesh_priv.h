@@ -33,14 +33,14 @@ typedef struct  {
 
   _part_t      *part;        //Coarse mesh
 
-  int           nCoarseCellWanted;    /*!< Number Cell wanted for agglomeration     */
+  int           n_coarse_cell_wanted;    /*!< Number Cell wanted for agglomeration     */
 
-  // int *cellWeight;    /*!< Integer weight for graoh partitionning  */
-  // int *faceWeight;    /*!< Number Cell wanted for agglomeration     */
+  // int *cell_weight;    /*!< Integer weight for graoh partitionning  */
+  // int *face_weight;    /*!< Number Cell wanted for agglomeration     */
 
-  int *coarse_cell_cell_idx;    //Array of indexes of the connected partitions (size : nCoarseCell + 1)
+  int *coarse_cell_cell_idx;    //Array of indexes of the connected partitions (size : n_coarse_cell + 1)
 
-  int *coarse_cell_cell;       //Partitioning array (size : coarse_cell_cell_idx[nCoarseCell])
+  int *coarse_cell_cell;       //Partitioning array (size : coarse_cell_cell_idx[n_coarse_cell])
 
   int *coarse_face_group_to_fine_face_group; //Coarse face group - fine face group connectivity (size = face_group_idx[n_face_group])
 

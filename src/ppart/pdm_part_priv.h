@@ -115,9 +115,9 @@ typedef struct  _part_t {
                                       (size = n_vtx)                           */
 
 
-  const int          *cellWeight;             /*!< Cell weight - For coarse mesh
+  const int          *cell_weight;             /*!< Cell weight - For coarse mesh
                                             (size = nCel)                           */
-  const int          *faceWeight;             /*!< Face weight - For coarse mesh
+  const int          *face_weight;             /*!< Face weight - For coarse mesh
                                             (size = nFac)                           */
 
   int          *cellColor;             /*!< Cell color - For cache blocking

@@ -360,14 +360,14 @@ double  *cellCenter
     else /*Trash patch */
     {
       /* Allocate */
-      double *cellWeight = (double *) malloc (part->n_cell * sizeof(double));
+      double *cell_weight = (double *) malloc (part->n_cell * sizeof(double));
 
       /* Nulliffy cellCenterArray */
       for(int iCell = 0; iCell < part->n_cell; iCell++) {
         cellCenter[3*iCell  ] = 0.;
         cellCenter[3*iCell+1] = 0.;
         cellCenter[3*iCell+2] = 0.;
-        cellWeight[iCell]     = 0.;
+        cell_weight[iCell]     = 0.;
       }
 
       /* Compute */
@@ -395,28 +395,28 @@ double  *cellCenter
             cellCenter[3*iCell+1] += part->vtx[3*lVtx+1];
             cellCenter[3*iCell+2] += part->vtx[3*lVtx+2];
 
-            cellWeight[iCell] += 1.;
+            cell_weight[iCell] += 1.;
           }
         }
       }
 
       /* Nulliffy cellCenterArray */
       for(int iCell = 0; iCell < part->n_cell; iCell++) {
-        cellCenter[3*iCell  ] = cellCenter[3*iCell  ]/cellWeight[iCell];
-        cellCenter[3*iCell+1] = cellCenter[3*iCell+1]/cellWeight[iCell];
-        cellCenter[3*iCell+2] = cellCenter[3*iCell+2]/cellWeight[iCell];
+        cellCenter[3*iCell  ] = cellCenter[3*iCell  ]/cell_weight[iCell];
+        cellCenter[3*iCell+1] = cellCenter[3*iCell+1]/cell_weight[iCell];
+        cellCenter[3*iCell+2] = cellCenter[3*iCell+2]/cell_weight[iCell];
       }
 
       /* Verbose */
       if(0 == 1){
         for(int iCell = 0; iCell < part->n_cell; iCell++) {
           PDM_printf("cellCenter (X,Y,Z) : %f - %f - %f \n", cellCenter[3*iCell  ], cellCenter[3*iCell+1], cellCenter[3*iCell+2]);
-          PDM_printf("cellWeight         : %f  \n", cellWeight[iCell  ]);
+          PDM_printf("cell_weight         : %f  \n", cell_weight[iCell  ]);
         }
       }
 
       /* Free */
-      free(cellWeight);
+      free(cell_weight);
 
     }
 

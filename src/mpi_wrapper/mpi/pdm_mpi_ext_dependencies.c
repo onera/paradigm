@@ -294,7 +294,7 @@ PDM_SCOTCH_dpart
 const PDM_g_num_t dn_cell,
 const PDM_g_num_t *ddual_graph_idx,
 const PDM_g_num_t *ddual_graph,
-const int *cellWeight,
+const int *cell_weight,
 const int *edgeWeight,
 const int check,
 const PDM_MPI_Comm comm,
@@ -365,7 +365,7 @@ int *part
 
   if (sizeof(int) == sizeof(SCOTCH_Num)) {
 
-    _veloloctab = (SCOTCH_Num *) cellWeight;
+    _veloloctab = (SCOTCH_Num *) cell_weight;
     _edloloctab = (SCOTCH_Num *) edgeWeight;
     _part = (SCOTCH_Num *) part;
 
@@ -380,10 +380,10 @@ int *part
     __veloloctab = NULL;
     __edloloctab = NULL;
 
-    if (cellWeight != NULL) {
+    if (cell_weight != NULL) {
       __veloloctab = (SCOTCH_Num *) malloc (sizeof(SCOTCH_Num) * _vertlocnbr);
       for (int i = 0; i < _vertlocnbr; i++) {
-        __veloloctab[i] = cellWeight[i];
+        __veloloctab[i] = cell_weight[i];
       }
     }
 
