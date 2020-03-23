@@ -481,7 +481,7 @@ const PDM_MPI_Comm comm,
 
   mesh->n_dcell                  = -1;
   mesh->dcell_face                = NULL;
-  mesh->dcell_faceIdx             = NULL;
+  mesh->dcell_face_idx             = NULL;
   mesh->cell_distrib             = NULL;
 
   mesh->dn_face                   = -1;
@@ -1206,8 +1206,8 @@ const int hdl
       free (mesh->sections_id);
     }
 
-    if (mesh->dcell_faceIdx != NULL) {
-      free (mesh->dcell_faceIdx);
+    if (mesh->dcell_face_idx != NULL) {
+      free (mesh->dcell_face_idx);
     }
 
     if (mesh->dcell_face != NULL) {
@@ -2669,11 +2669,11 @@ const int   hdl
   /*
    * Rebuild cell face
    */
-  PDM_g_num_t *ln_to_gnElem = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) * 2 * mesh->dn_face );
+  PDM_g_num_t *ln_to_gn_elem = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) * 2 * mesh->dn_face );
   for (PDM_g_num_t i = mesh->face_distrib[mesh->i_proc]; i < mesh->face_distrib[mesh->i_proc+1]; i++) {
     int idx = (int) (i-mesh->face_distrib[mesh->i_proc]);
-    ln_to_gnElem[2*idx  ] = i+1;
-    ln_to_gnElem[2*idx+1] = i+1;
+    ln_to_gn_elem[2*idx  ] = i+1;
+    ln_to_gn_elem[2*idx+1] = i+1;
   }
 
   /*
@@ -2682,52 +2682,52 @@ const int   hdl
   if(0 == 1){
     printf("------------------------------------------- \n");
     for (int i = mesh->face_distrib[mesh->i_proc]; i < mesh->face_distrib[mesh->i_proc+1]; i++) {
-      // printf("[%d] - i/i_face  : %d - %d \n", mesh->i_proc, i, ln_to_gnElem[i]);
-      printf("[%d] - i/i_face  : %d - "PDM_FMT_G_NUM" / "PDM_FMT_G_NUM" \n", mesh->i_proc, i, ln_to_gnElem[2*i], ln_to_gnElem[2*i+1]);
+      // printf("[%d] - i/i_face  : %d - %d \n", mesh->i_proc, i, ln_to_gn_elem[i]);
+      printf("[%d] - i/i_face  : %d - "PDM_FMT_G_NUM" / "PDM_FMT_G_NUM" \n", mesh->i_proc, i, ln_to_gn_elem[2*i], ln_to_gn_elem[2*i+1]);
     }
     printf("------------------------------------------- \n");
   }
 
 
-  int nFac2 = 2*mesh->dn_face;
+  int n_face2 = 2*mesh->dn_face;
 
   int* part_stri2 = (int *) malloc( sizeof(int) * 2 * mesh->dn_face );
 
   /* Prepare dface_cell loc */
-  PDM_g_num_t* dface_cellTmp = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) * 2 * mesh->dn_face );
+  PDM_g_num_t* dface_cell_tmp = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) * 2 * mesh->dn_face );
 
-  int idxG = 0;
+  int idx_g = 0;
   for (int i = mesh->face_distrib[mesh->i_proc]; i < mesh->face_distrib[mesh->i_proc+1]; i++) {
     int idx = (int) (i-mesh->face_distrib[mesh->i_proc]);
-    dface_cellTmp[idxG] = mesh->_dface_cell[2*idx];
-    ln_to_gnElem[idxG] = i+1;
-    part_stri2[idxG] = 1;
-    idxG++;
+    dface_cell_tmp[idx_g] = mesh->_dface_cell[2*idx];
+    ln_to_gn_elem[idx_g] = i+1;
+    part_stri2[idx_g] = 1;
+    idx_g++;
     if(mesh->_dface_cell[2*idx+1] != 0){
-      dface_cellTmp[idxG] = mesh->_dface_cell[2*idx+1];
-      ln_to_gnElem[idxG  ] = i+1;
-      part_stri2[idxG] = 1;
-      idxG++;
+      dface_cell_tmp[idx_g] = mesh->_dface_cell[2*idx+1];
+      ln_to_gn_elem[idx_g  ] = i+1;
+      part_stri2[idx_g] = 1;
+      idx_g++;
     }
     else
     {
-      dface_cellTmp[idxG] = mesh->_dface_cell[2*idx];
-      ln_to_gnElem[idxG  ] = i+1;
-      part_stri2[idxG] = 0;
-      idxG++;
+      dface_cell_tmp[idx_g] = mesh->_dface_cell[2*idx];
+      ln_to_gn_elem[idx_g  ] = i+1;
+      part_stri2[idx_g] = 0;
+      idx_g++;
     }
   }
 
-  nFac2 = idxG;
+  n_face2 = idx_g;
 
 
 
   PDM_part_to_block_t *ptb2 = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                        PDM_PART_TO_BLOCK_POST_MERGE,
                                                        1.,
-                                                       &dface_cellTmp,
+                                                       &dface_cell_tmp,
                                                        NULL,
-                                                       &nFac2,
+                                                       &n_face2,
                                                        1,
                                                        mesh->pdm_mpi_comm);
 
@@ -2736,7 +2736,7 @@ const int   hdl
 
   /** Prepare part_stride for dface_cell - 2 for all **/
   // for(int i = 0; i < 2*mesh->dn_face ; i++){
-  // for(int i = 0; i < idxG ; i++){
+  // for(int i = 0; i < idx_g ; i++){
   //   part_stri2[i] = 1;
   //   // part_stri2[i] = mesh->dn_face;
   // }
@@ -2746,45 +2746,45 @@ const int   hdl
                                    PDM_STRIDE_VAR,
                                    -1,
                                    &part_stri2,
-                         (void **) &ln_to_gnElem,
+                         (void **) &ln_to_gn_elem,
                                    &blk_stri2,
                          (void **) &blk_data2);
 
   /*
    *  Get the size of the current process bloc
    */
-  int dElmtTot = PDM_part_to_block_n_elt_block_get(ptb2); /* Volumic and surfacic */
-  mesh->n_dcell = dElmtTot;
+  int delmt_tot = PDM_part_to_block_n_elt_block_get(ptb2); /* Volumic and surfacic */
+  mesh->n_dcell = delmt_tot;
 
   /*
    * Verbose
    */
   if(0 == 1){
-    printf("dElmtTot : %d\n", dElmtTot);
-    for(int i = 0; i < dElmtTot; i++) {
+    printf("delmt_tot : %d\n", delmt_tot);
+    for(int i = 0; i < delmt_tot; i++) {
       printf("BlockData[%d]    : %d \n", i, blk_data2[i]);
       printf("blk_stri2[%d] : %d \n", i, blk_stri2[i]);
     }
   }
 
-  mesh->dcell_faceIdx = (PDM_l_num_t * ) malloc( (dElmtTot + 1) * sizeof(PDM_l_num_t * ) );
+  mesh->dcell_face_idx = (PDM_l_num_t * ) malloc( (delmt_tot + 1) * sizeof(PDM_l_num_t * ) );
 
-  mesh->dcell_faceIdx[0] = 0;
-  for(int i = 0; i < dElmtTot; i++){
-    mesh->dcell_faceIdx[i+1] = mesh->dcell_faceIdx[i] + blk_stri2[i];
+  mesh->dcell_face_idx[0] = 0;
+  for(int i = 0; i < delmt_tot; i++){
+    mesh->dcell_face_idx[i+1] = mesh->dcell_face_idx[i] + blk_stri2[i];
   }
 
-  // printf("dElmtTot : %d\n", mesh->dcell_faceIdx[dElmtTot]);
+  // printf("delmt_tot : %d\n", mesh->dcell_face_idx[delmt_tot]);
 
-  mesh->dcell_face = (PDM_g_num_t *) malloc(mesh->dcell_faceIdx[dElmtTot] * sizeof(PDM_g_num_t * ));
+  mesh->dcell_face = (PDM_g_num_t *) malloc(mesh->dcell_face_idx[delmt_tot] * sizeof(PDM_g_num_t * ));
 
-  for(int i = 0; i < dElmtTot; i++){
+  for(int i = 0; i < delmt_tot; i++){
 
     // int n_face_per_elmt = blk_stri2[i];
-    int n_face_per_elmt = mesh->dcell_faceIdx[i+1] - mesh->dcell_faceIdx[i];
+    int n_face_per_elmt = mesh->dcell_face_idx[i+1] - mesh->dcell_face_idx[i];
     // printf("n_face_per_elmt : %d\n", n_face_per_elmt);
     for(int iFac = 0; iFac < n_face_per_elmt; iFac++){
-      mesh->dcell_face[mesh->dcell_faceIdx[i]+iFac] = blk_data2[mesh->dcell_faceIdx[i]+iFac];
+      mesh->dcell_face[mesh->dcell_face_idx[i]+iFac] = blk_data2[mesh->dcell_face_idx[i]+iFac];
     }
   }
 
@@ -2802,8 +2802,8 @@ const int   hdl
   PDM_part_to_block_free(ptb2);
 
   free(ln_to_gn);
-  free(ln_to_gnElem);
-  free(dface_cellTmp);
+  free(ln_to_gn_elem);
+  free(dface_cell_tmp);
   free(part_data);
   free(part_stri);
 
@@ -2820,7 +2820,7 @@ const int   hdl
  * \brief  Return cell \rightarrow face connectivity
  *
  * \param [in]   hdl              Distributed nodal mesh handle
- * \param [out]  dcell_faceIdx   Index of distributed cell->face connectivity
+ * \param [out]  dcell_face_idx   Index of distributed cell->face connectivity
  * \param [out]  dcell_face       Distributed cell->face connectivity
  *
  * \return     Number of cells on the current process
@@ -2831,7 +2831,7 @@ int
 PDM_DMesh_nodal_cell_face_get
 (
 const int   hdl,
-      int   **dcell_faceIdx,
+      int   **dcell_face_idx,
 PDM_g_num_t **dcell_face
 )
 {
@@ -2842,7 +2842,7 @@ PDM_g_num_t **dcell_face
     PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
   }
 
-  *dcell_faceIdx = mesh->dcell_faceIdx;
+  *dcell_face_idx = mesh->dcell_face_idx;
   *dcell_face = mesh->dcell_face;
 
   return mesh->n_dcell;
@@ -2884,7 +2884,7 @@ PDM_g_num_t **dface_cell
  * \brief  Return face \rightarrow vertex connectivity
  *
  * \param [in]   hdl              Distributed nodal mesh handle
- * \param [out]  dcell_faceIdx   Index of distributed cell->face connectivity
+ * \param [out]  dcell_face_idx   Index of distributed cell->face connectivity
  * \param [out]  dcell_face       Distributed cell->face connectivity
  *
  * \return     Number of faces on the current process
