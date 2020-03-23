@@ -31,6 +31,7 @@
 #include "pdm_printf.h"
 #include "pdm_error.h"
 #include "pdm_sort.h"
+#include "pdm_binary_search.h"
 #include "pdm_handles.h"
 
 
@@ -83,61 +84,6 @@ static PDM_Handles_t *_pparts   = NULL;
  * Private function definitions
  *============================================================================*/
 
-/**
- *
- * \brief Search the rank where element of distributed array is storage
- *
- * \param [in]   elt          Element to find
- * \param [in]   array        Array where to search
- * \param [in]   id1          First index into array
- * \param [in]   id2          Last index into array
- *
- * \return       Rank where the element is stored
- */
-
-
-static int
- _search_rank
-(
- PDM_g_num_t   elt,
- PDM_g_num_t  *array,
- int            id1,
- int            id2
-)
-{
-  if (elt >= array[id2]) {
-    PDM_printf("PPART error : Element not in initial distributed array "
-           PDM_FMT_G_NUM" "PDM_FMT_G_NUM" "PDM_FMT_G_NUM"\n",
-           elt, array[id1], array[id2]);
-    abort();
-  }
-
-  if (elt < array[id1]) {
-    PDM_printf("PPART error : Element not in initial distributed array "
-           PDM_FMT_G_NUM" "PDM_FMT_G_NUM" "PDM_FMT_G_NUM"\n",
-           elt, array[id1], array[id2]);
-    abort();
-  }
-
-  if (id2 == id1 + 1) {
-    return id1;
-  }
-
-  else {
-
-    while(array[id1] == array[id1+1]) id1++;
-
-    int midId = (id2 + id1) / 2;
-
-    if (elt == array[id1])
-      return id1;
-    else if (elt < array[midId])
-      return _search_rank(elt, array, id1, midId);
-    else if (elt >= array[midId])
-      return _search_rank(elt, array, midId, id2);
-  }
-  return -1;
-}
 
 
 /**
@@ -269,11 +215,11 @@ _dual_graph_from_face_cell
     PDM_g_num_t i_cell1 = PDM_ABS (ppart->_dface_cell[2*i    ]);
     PDM_g_num_t i_cell2 = PDM_ABS (ppart->_dface_cell[2*i + 1]);
 
-    int i_rank1 = _search_rank(i_cell1, ppart->dcell_proc, 0, n_rank);
+    int i_rank1 = PDM_search_rank(i_cell1, ppart->dcell_proc, 0, n_rank);
     cell_to_send_n[i_rank1] += n_data;
 
     if (i_cell2 > 0) {
-      int i_rank2 = _search_rank(i_cell2, ppart->dcell_proc, 0, n_rank);
+      int i_rank2 = PDM_search_rank(i_cell2, ppart->dcell_proc, 0, n_rank);
       cell_to_send_n[i_rank2] += n_data;
     }
   }
@@ -299,7 +245,7 @@ _dual_graph_from_face_cell
   for (int i = 0; i < ppart->dn_face ; i++) {
     PDM_g_num_t i_cell1 = PDM_ABS (ppart->_dface_cell[2*i    ]);
     PDM_g_num_t i_cell2 = PDM_ABS (ppart->_dface_cell[2*i + 1]);
-    int i_rank1 = _search_rank(i_cell1, ppart->dcell_proc, 0, n_rank);
+    int i_rank1 = PDM_search_rank(i_cell1, ppart->dcell_proc, 0, n_rank);
 
     int idx1             = cell_to_send_idx[i_rank1] + cell_to_send_n[i_rank1];
     cell_to_send[idx1  ]   = i_cell1;
@@ -308,7 +254,7 @@ _dual_graph_from_face_cell
     cell_to_send_n[i_rank1] += n_data;
 
     if (i_cell2 > 0) {
-      int i_rank2 = _search_rank(i_cell2, ppart->dcell_proc, 0, n_rank);
+      int i_rank2 = PDM_search_rank(i_cell2, ppart->dcell_proc, 0, n_rank);
       int idx2             = cell_to_send_idx[i_rank2] + cell_to_send_n[i_rank2];
       cell_to_send[idx2  ]   = i_cell2;
       cell_to_send[idx2+1]   = i_cell1;
@@ -565,7 +511,7 @@ _dual_graph_from_cell_face
     for (int j = ppart->_dcell_face_idx[i]; j < ppart->_dcell_face_idx[i+1]; j++) {
       PDM_g_num_t iface = PDM_ABS(ppart->_dcell_face[j]);
 
-      int found_rank = _search_rank(iface, ppart->dface_proc, 0, n_rank);
+      int found_rank = PDM_search_rank(iface, ppart->dface_proc, 0, n_rank);
       face_to_send_n[found_rank] += n_data;
     }
   }
@@ -593,7 +539,7 @@ _dual_graph_from_cell_face
     for (int j = ppart->_dcell_face_idx[i]; j < ppart->_dcell_face_idx[i+1]; j++) {
       PDM_g_num_t iface = PDM_ABS (ppart->_dcell_face[j]);
 
-      int found_rank = _search_rank(iface, ppart->dface_proc, 0, n_rank);
+      int found_rank = PDM_search_rank(iface, ppart->dface_proc, 0, n_rank);
       int idx        = face_to_send_idx[found_rank] + face_to_send_n[found_rank];
       face_to_send[idx  ]   = iface;
       face_to_send[idx+1]   = ppart->dcell_proc[found_rank] + i;
@@ -1306,7 +1252,7 @@ _distrib_face
 
       for (int i = 0; i < mesh_part->n_face; i++) {
         PDM_g_num_t iface = mesh_part->face_ln_to_gn[i];
-        int          found_rank = _search_rank(iface, ppart->dface_proc, 0, n_rank);
+        int          found_rank = PDM_search_rank(iface, ppart->dface_proc, 0, n_rank);
         face_to_send_idx[found_rank+1] += n_data;
 
       }
@@ -1320,7 +1266,7 @@ _distrib_face
       for (int i = 0; i < mesh_part->n_face; i++) {
 
         PDM_g_num_t iface = mesh_part->face_ln_to_gn[i];
-        int found_rank = _search_rank(iface, ppart->dface_proc, 0, n_rank);
+        int found_rank = PDM_search_rank(iface, ppart->dface_proc, 0, n_rank);
 
         int idx = face_to_send_idx[found_rank] + face_to_send_n[found_rank];
 
@@ -1615,7 +1561,7 @@ _distrib_vtx
 
       for (int i = 0; i < mesh_part->n_vtx; i++) {
         PDM_g_num_t iVtx = mesh_part->vtx_ln_to_gn[i];
-        int found_rank = _search_rank(iVtx, ppart->dvtx_proc, 0, n_rank);
+        int found_rank = PDM_search_rank(iVtx, ppart->dvtx_proc, 0, n_rank);
         vtx_to_send_idx[found_rank+1] += n_data;
       }
 
@@ -1628,7 +1574,7 @@ _distrib_vtx
       for (int i = 0; i < mesh_part->n_vtx; i++) {
 
         PDM_g_num_t iVtx = mesh_part->vtx_ln_to_gn[i];
-        int found_rank = _search_rank(iVtx, ppart->dvtx_proc, 0, n_rank);
+        int found_rank = PDM_search_rank(iVtx, ppart->dvtx_proc, 0, n_rank);
 
         int idx = vtx_to_send_idx[found_rank] + vtx_to_send_n[found_rank];
 
@@ -1887,7 +1833,7 @@ _search_part_bound_face
         int i_cell2 = PDM_ABS (mesh_part->face_cell[2*i + 1]);
         if (i_cell2 == 0) {
           PDM_g_num_t iface = mesh_part->face_ln_to_gn[i];
-          int found_rank = _search_rank(iface, ppart->dface_proc, 0, n_rank);
+          int found_rank = PDM_search_rank(iface, ppart->dface_proc, 0, n_rank);
           face_to_send_idx[found_rank+1] += n_data;
           nBoundFace += 1;
         }
@@ -1904,7 +1850,7 @@ _search_part_bound_face
         int i_cell2 = PDM_ABS (mesh_part->face_cell[2*i + 1]);
         if (i_cell2 == 0) {
           PDM_g_num_t gface = mesh_part->face_ln_to_gn[i];
-          int found_rank = _search_rank(gface, ppart->dface_proc, 0, n_rank);
+          int found_rank = PDM_search_rank(gface, ppart->dface_proc, 0, n_rank);
 
           int idx = face_to_send_idx[found_rank] + face_to_send_n[found_rank];
 
@@ -2302,7 +2248,7 @@ _distrib_face_groups
              i < ppart->_dface_group_idx[igroup+1];
              i++) {
       PDM_g_num_t iface =  ppart->_dface_group[i];
-      int found_rank = _search_rank(iface,  ppart->dface_proc, 0, n_rank);
+      int found_rank = PDM_search_rank(iface,  ppart->dface_proc, 0, n_rank);
       face_to_send_idx[found_rank+1] += n_data_g;
     }
 
@@ -2315,7 +2261,7 @@ _distrib_face_groups
          i < ppart->_dface_group_idx[igroup+1];
          i++) {
       PDM_g_num_t iface = ppart->_dface_group[i];
-      int found_rank = _search_rank(iface, ppart->dface_proc, 0, n_rank);
+      int found_rank = PDM_search_rank(iface, ppart->dface_proc, 0, n_rank);
       int idx = face_to_send_idx[found_rank] + face_to_send_n[found_rank];
       face_to_send[idx++] = dface_group_proc[i_rank] + (PDM_g_num_t) (i - ppart->_dface_group_idx[igroup] + 1);
       face_to_send[idx++] = iface;
@@ -2377,7 +2323,7 @@ _distrib_face_groups
 
         for (int i = 0; i < mesh_part->n_face; i++) {
           PDM_g_num_t iface = mesh_part->face_ln_to_gn[i];
-          int found_rank = _search_rank(iface, ppart->dface_proc, 0, n_rank);
+          int found_rank = PDM_search_rank(iface, ppart->dface_proc, 0, n_rank);
           face_to_send_idx[found_rank+1] += n_data;
         }
 
@@ -2390,7 +2336,7 @@ _distrib_face_groups
         for (int i = 0; i < mesh_part->n_face; i++) {
 
           PDM_g_num_t iface = mesh_part->face_ln_to_gn[i];
-          int found_rank = _search_rank(iface, ppart->dface_proc, 0, n_rank);
+          int found_rank = PDM_search_rank(iface, ppart->dface_proc, 0, n_rank);
 
           idx = face_to_send_idx[found_rank] + face_to_send_n[found_rank];
 
