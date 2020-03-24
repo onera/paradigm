@@ -1294,7 +1294,7 @@ const PDM_l_num_t   n_face,
  *----------------------------------------------------------------------------*/
 
 void
-PROCF (pdm_writer_geom_cell3d_cell_face_add, PDM_WRITER_GEOM_CELL3D_cell_face_ADD)
+PROCF (pdm_writer_geom_cell3d_cellface_add, PDM_WRITER_GEOM_CELL3D_CELLFACE_ADD)
 (
 int         *id_cs,
 int         *id_geom,
@@ -1310,22 +1310,22 @@ PDM_l_num_t    *cell_face,
 PDM_g_num_t   *numabs
 )
 {
-  PDM_writer_geom_cell3d_cell_face_add(*id_cs,
-                              *id_geom,
-                              *id_part,
-                              *n_cell,
-                              *n_face,
-                              face_som_idx,
-                              face_som_nb,
-                              face_som,
-                              cell_face_idx,
-                              cell_face_nb,
-                              cell_face,
-                              numabs);
+  PDM_writer_geom_cell3d_cellface_add(*id_cs,
+                                      *id_geom,
+                                      *id_part,
+                                      *n_cell,
+                                      *n_face,
+                                      face_som_idx,
+                                      face_som_nb,
+                                      face_som,
+                                      cell_face_idx,
+                                      cell_face_nb,
+                                      cell_face,
+                                      numabs);
 }
 
 void
-PDM_writer_geom_cell3d_cell_face_add
+PDM_writer_geom_cell3d_cellface_add
 (
 const int    id_cs,
 const int    id_geom,
@@ -1355,7 +1355,7 @@ PDM_g_num_t   *numabs
     abort();
   }
 
-  PDM_Mesh_nodal_cell3d_cell_face_add (geom->idx_mesh,
+  PDM_Mesh_nodal_cell3d_cellface_add (geom->idx_mesh,
                                       id_part,
                                       n_cell,
                                       n_face,
@@ -1410,7 +1410,7 @@ PDM_g_num_t   *numabs
  *----------------------------------------------------------------------------*/
 
 void
-PROCF (pdm_writer_geom_cell2d_cell_face_add, PDM_WRITER_GEOM_CELL2D_cell_face_ADD)
+PROCF (pdm_writer_geom_cell2d_cellface_add, PDM_WRITER_GEOM_CELL2D_CELLFACE_ADD)
 (
 int         *id_cs,
 int         *id_geom,
@@ -1426,22 +1426,22 @@ PDM_l_num_t    *cell_face,
 PDM_g_num_t   *numabs
 )
 {
-  PDM_writer_geom_cell2d_cell_face_add(*id_cs,
-                              *id_geom,
-                              *id_part,
-                              *n_cell,
-                              *n_face,
-                              face_som_idx,
-                              face_som_nb,
-                              face_som,
-                              cell_face_idx,
-                              cell_face_nb,
-                              cell_face,
-                              numabs);
+  PDM_writer_geom_cell2d_cellface_add(*id_cs,
+                                      *id_geom,
+                                      *id_part,
+                                      *n_cell,
+                                      *n_face,
+                                      face_som_idx,
+                                      face_som_nb,
+                                      face_som,
+                                      cell_face_idx,
+                                      cell_face_nb,
+                                      cell_face,
+                                      numabs);
 }
 
 void
-PDM_writer_geom_cell2d_cell_face_add
+PDM_writer_geom_cell2d_cellface_add
 (
 const int          id_cs,
 const int          id_geom,
@@ -1553,7 +1553,7 @@ PDM_g_num_t   *numabs
     abort();
   }
 
-  PDM_Mesh_nodal_faces_face_vtx_add (geom->idx_mesh,
+  PDM_Mesh_nodal_faces_facevtx_add (geom->idx_mesh,
                                     id_part,
                                     n_face,
                                     face_som_idx,

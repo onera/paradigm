@@ -456,7 +456,7 @@ int main(int argc, char *argv[])
                        &face_group,
                        &face_group_ln_to_gn);
 
-    PDM_cell_face_orient (n_cell,
+    PDM_cellface_orient (n_cell,
                          n_face,
                          n_vtx,
                          vtx,
@@ -519,7 +519,7 @@ int main(int argc, char *argv[])
 
     /* Construction de la connectivite pour sortie graphique */
 
-    PDM_writer_geom_cell3d_cell_face_add (id_cs,
+    PDM_writer_geom_cell3d_cellface_add (id_cs,
                                          id_geom,
                                          i_part,
                                          n_cell,
@@ -691,4 +691,3 @@ int main(int argc, char *argv[])
 
   return 0;
 }
-

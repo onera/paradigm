@@ -62,7 +62,7 @@ extern "C" {
  */
 
 void
-PDM_cell_face_orient
+PDM_cellface_orient
 (
 const int      n_cell,
 const int      n_face,
@@ -81,4 +81,3 @@ const int     *face_vtx
 #endif
 
 #endif	/* PDM_FACECELL_ORIENT_H */
-

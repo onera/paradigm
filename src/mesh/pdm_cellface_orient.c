@@ -100,7 +100,7 @@ typedef enum {
  */
 
 void
-PDM_cell_face_orient
+PDM_cellface_orient
 (
 const int      n_cell,
 const int      n_face,
