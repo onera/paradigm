@@ -17,11 +17,11 @@
 #include "pdm.h"
 #include "pdm_priv.h"
 #include "pdm_mpi.h"
-#include "pdm_mesh_dist.h"
+//#include "pdm_mesh_dist.h"
 #include "pdm_mesh_nodal.h"
 #include "pdm_surf_mesh.h"
 #include "pdm_handles.h"
-#include "pdm_octree.h"
+//#include "pdm_octree.h"
 #include "pdm_dbbtree.h"
 #include "pdm_part_to_block.h"
 #include "pdm_block_to_part.h"
@@ -30,6 +30,8 @@
 #include "pdm_timer.h"
 #include "pdm_hash_tab.h"
 #include "pdm_mesh_location.h"
+
+#include "pdm_para_octree.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -97,9 +99,14 @@ typedef struct {
   PDM_mesh_nature_t mesh_nature;  /*!< Nature of the mesh */
   
   int  shared_nodal;   /*!< 1 if mesh nodal is shared, 0 otherwise */
-  int  mesh_nodal_id;  /*!< Volume mesh identifier */
+  int  mesh_nodal_id;  /*!< Mesh identifier */
+  int _mesh_nodal_id;
 
   _point_cloud_t *point_clouds; /*!< Point clouds */
+
+  double tolerance;
+
+  PDM_mesh_location_method_t method;
 
   PDM_timer_t *timer; /*!< Timer */
 
@@ -150,6 +157,97 @@ _get_from_id
 }
 
 
+
+
+
+
+static void
+_get_candidate_elements_from_octree
+(
+ const int          dim,
+ const PDM_MPI_Comm comm,
+ _point_cloud_t    *pcloud,
+ const int          n_boxes,
+ const double      *box_extents,
+ const PDM_g_num_t *box_g_num,
+ PDM_g_num_t       *candidates_g_num, //**, ie one pointer for each part?
+ int               *candidates_idx //**, ie one pointer for each part?
+ )
+{
+  int myRank;
+  PDM_MPI_Comm_rank (comm, &myRank);
+
+  int lComm;
+  PDM_MPI_Comm_rank (comm, &lComm);
+
+  /**************************************
+   * Build octree from point cloud
+   ***************************************/
+  const int depth_max = 15;//?
+  const int points_in_leaf_max = 1;
+  const int build_leaf_neighbours = 0;
+  
+  /* Create empty parallel octree structure */
+  int octree_id = PDM_para_octree_create (pcloud->n_part,
+					  depth_max,
+					  points_in_leaf_max,
+					  build_leaf_neighbours,
+					  comm);
+
+  /* Set octree point cloud */
+  for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
+    PDM_para_octree_point_cloud_set (octree_id,
+				     ipart,
+				     pcloud->n_points[ipart],
+				     pcloud->coords[ipart],
+				     pcloud->gnum[ipart]);
+  }
+    
+  /* Build parallel octree */
+  PDM_para_octree_build (octree_id);
+  //PDM_para_octree_dump (octree_id);
+  //PDM_para_octree_dump_times (octree_id);
+
+  PDM_para_octree_location_boxes_get (octree_id,
+				      n_boxes,
+				      box_extents,
+				      box_g_num,
+				      &candidates_g_num,
+				      &candidates_idx);
+			   
+  /***************************************
+   * Free octree
+   ***************************************/
+  PDM_para_octree_free (octree_id);
+
+  /* Go from box->points to point->boxes */
+  //...
+}
+
+
+
+
+
+static void
+_get_candidate_elements_from_bbtree
+(
+ const PDM_MPI_Comm comm,
+ _point_cloud_t    *pcloud,
+ const int          n_boxes,
+ const double      *box_extents,
+ const PDM_g_num_t *box_g_num
+ )
+{
+  /*
+   * Construction bbtree
+   */
+
+  /*
+   * Distribution dbbtree
+   */
+}
+
+
 /*============================================================================
  * Public function definitions
  *============================================================================*/
@@ -187,8 +285,9 @@ PDM_mesh_location_create
  location->comm = comm;
  location->mesh_nature = mesh_nature;
 
- location->shared_nodal  = 0;
- location->mesh_nodal_id = -1;
+ location->shared_nodal   = 0;
+ location->mesh_nodal_id  = -1;
+ location->_mesh_nodal_id = -1;
 
   location->point_clouds =
     (_point_cloud_t*) malloc (sizeof(_point_cloud_t) * n_point_cloud);
@@ -204,6 +303,10 @@ PDM_mesh_location_create
     location->point_clouds[i].weights_idx = NULL;
   }
 
+  location->tolerance = 0.;
+
+  location->method = PDM_MESH_LOCATION_OCTREE;
+  
   location->timer = PDM_timer_create ();
   
   for (int i = 0; i < NTIMER; i++) {
@@ -330,7 +433,7 @@ PDM_mesh_location_shared_nodal_mesh_set
 
 /**
  *
- * \brief Set global data of a volume mesh
+ * \brief Set global data of a mesh
  *
  * \param [in]   id             Identifier
  * \param [in]   n_part         Number of partition
@@ -338,7 +441,7 @@ PDM_mesh_location_shared_nodal_mesh_set
  */
 
 void
-PDM_mesh_location_volume_mesh_global_data_set
+PDM_mesh_location_mesh_global_data_set
 (
  const int  id,
  const int  n_part
@@ -350,13 +453,13 @@ PDM_mesh_location_volume_mesh_global_data_set
     PDM_Mesh_nodal_free (location->mesh_nodal_id);
   }
 
-    location->mesh_nodal_id = PDM_Mesh_nodal_create (n_part, location->comm);
+  location->mesh_nodal_id = PDM_Mesh_nodal_create (n_part, location->comm);
 }
 
 
 /**
  *
- * \brief Set a part of a surface mesh
+ * \brief Set a part of a mesh
  *
  * \param [in]   id            Identifier
  * \param [in]   i_part        Partition to define  
@@ -375,7 +478,7 @@ PDM_mesh_location_volume_mesh_global_data_set
  */
 
 void
-PDM_mesh_location_volume_part_set
+PDM_mesh_location_part_set
 (
  const int          id,
  const int          i_part,
@@ -392,54 +495,104 @@ PDM_mesh_location_volume_part_set
  const PDM_g_num_t *vtx_ln_to_gn
 )
 {
-
+  _PDM_location_t *location = _get_from_id (id);
+ 
   /*
    * Creation de mesh nodal
    */
 
-  /* PDM_l_num_t      *face_vtx_nb; */
-  /* PDM_l_num_t      *cell_face_nb; */
+  PDM_Mesh_nodal_coord_set (location->mesh_nodal_id,
+			    i_part,
+			    n_vtx,
+			    coords,
+			    vtx_ln_to_gn);
 
-  /* PDM_Mesh_nodal_cell3d_cellface_add (location->mesh_nodal_id, */
-  /*                                     i_part, */
-  /*                                     n_cell, */
-  /*                                     n_face, */
-
-  /*                                     face_vtx_idx, */
-  /*                                     face_vtx_nb, */
-  /*                                     face_vtx, */
-  /*                                     cell_face_idx, */
-  /*                                     cell_face_nb, */
-  /*                                     cell_face, */
-  /*                                     PDM_g_num_t      *numabs);  */
-
-  /*
-   * Construction bbtree
-   */
-
-
-  /*
-   * Distribution dbbtree
-   */
-
-
-  /*
-   * Recherche candidats
-   *   - coder localisation dans ddbtree
-   */
-
-
-  /*
-   * Distribution des operations elementaires
-   */
 
   
-  /*
-   * Calculs elementaires de localisation
-   */
+  PDM_l_num_t *face_vtx_nb  = malloc (sizeof(PDM_l_num_t) * n_face);
+  PDM_l_num_t *cell_face_nb = malloc (sizeof(PDM_l_num_t) * n_cell);
 
+  for (int i = 0; i < n_face; i++) {
+    face_vtx_nb[i] = face_vtx_idx[i+1] - face_vtx_idx[i];
+  }
 
+  for (int i = 0; i < n_cell; i++) {
+    cell_face_nb[i] = cell_face_idx[i+1] - cell_face_idx[i];
+  }
+
+  PDM_Mesh_nodal_cell3d_cellface_add (location->mesh_nodal_id,
+				      i_part,
+				      n_cell,
+				      n_face,
+				      face_vtx_idx,
+				      face_vtx_nb,
+				      face_vtx,
+				      cell_face_idx,
+				      cell_face_nb,
+				      cell_face,
+				      cell_ln_to_gn);
 }
+
+/*PDM_Mesh_nodal_cell2d_celledge_add
+(
+const int          idx,
+const int          id_part,
+const int          n_elt,
+const int          n_edge,
+const PDM_l_num_t *edge_vtx_idx,
+const PDM_l_num_t *edge_vtx_nb,
+const PDM_l_num_t *edge_vtx,
+const PDM_l_num_t *cell_edge_idx,
+const PDM_l_num_t *cell_edge_nb,
+const PDM_l_num_t *cell_edge,
+const PDM_g_num_t *numabs
+);*/
+
+
+/**
+ *
+ * \brief Set the tolerance for bounding boxes
+ *
+ * \param [in]   id              Identifier
+ * \param [in]   tol             Tolerance
+ *
+ */
+
+void
+PDM_mesh_location_tolerance_set
+(
+ const int    id,
+ const double tol
+)
+{
+  _PDM_location_t *location = _get_from_id (id);
+
+  location->tolerance = tol;
+}
+
+
+/**
+ *
+ * \brief Set the method for computing location
+ *
+ * \param [in]   id              Identifier
+ * \param [in]   method          Method
+ *
+ */
+
+void
+PDM_mesh_location_method_set
+(
+ const int                        id,
+ const PDM_mesh_location_method_t method
+)
+{
+  _PDM_location_t *location = _get_from_id (id);
+
+  location->method = method;
+}
+
+
 
 
 /**
@@ -456,6 +609,106 @@ PDM_mesh_location_compute
  const int id
 )
 {
+  _PDM_location_t *location = _get_from_id (id);
+  
+  /*
+   * Construction bounding boxes
+   */
+  int n_boxes = 0;
+  
+  int n_blocks = PDM_Mesh_nodal_n_blocks_get (location->mesh_nodal_id);
+  int n_parts  = PDM_Mesh_nodal_n_part_get (location->mesh_nodal_id);
+  int *blocks_id = PDM_Mesh_nodal_blocks_id_get (location->mesh_nodal_id);
+
+  for (int ipart = 0; ipart < n_parts; ipart++) {
+    n_boxes += PDM_Mesh_nodal_n_cell_get (location->mesh_nodal_id,
+					  ipart);
+  }
+  /*for (int iblock = 0; iblock < n_blocks; iblock++) {
+    for (int ipart = 0; ipart < n_parts; ipart++) {
+      n_boxes += PDM_Mesh_nodal_block_n_elt_get (location->mesh_nodal_id,
+						 blocks_id[iblock],
+						 ipart);
+    }			       
+    }*/
+  printf("n_boxes = %d\n", n_boxes);
+
+
+  PDM_g_num_t *box_g_num   = malloc (sizeof(PDM_g_num_t) * n_boxes);
+  double      *box_extents = malloc (sizeof(double)      * n_boxes * 6);
+  int ibox = 0;
+  for (int iblock = 0; iblock < n_blocks; iblock++) {
+    
+    int id_block = blocks_id[iblock];
+    PDM_Mesh_nodal_elt_t block_type = PDM_Mesh_nodal_block_type_get (location->mesh_nodal_id,
+								     id_block);
+    
+    for (int ipart = 0; ipart < n_parts; ipart++) {
+
+      // get element extents
+      PDM_Mesh_nodal_compute_cell_extents (location->mesh_nodal_id,
+					   id_block,
+					   ipart,
+					   location->tolerance,
+					   (&box_extents + ibox));
+
+      // get elements global numbers
+      PDM_g_num_t *_gnum = PDM_Mesh_nodal_g_num_get (location->mesh_nodal_id,
+						     id_block,
+						     ipart);
+      
+      int n_elt = PDM_Mesh_nodal_block_n_elt_get (location->mesh_nodal_id,
+						  id_block,
+						  ipart);
+      
+      for (int ielt = 0; ielt < n_elt; ielt++) {
+	box_g_num[ibox] = _gnum[ielt];
+	ibox++;
+      }
+    }
+  }
+  
+
+  PDM_g_num_t *candidates_g_num = NULL;
+  int         *candidates_idx   = NULL;
+  /*
+   * Recherche candidats (switch sur methode)
+   *   - coder localisation dans ddbtree
+   *   - coder localisation avec octree
+   */
+  for (int icloud = 0; icloud < location->n_point_cloud; icloud++) {
+    switch (location->method) {
+    case PDM_MESH_LOCATION_OCTREE:
+      /*_get_candidate_elements_from_octree (...);*/
+      _get_candidate_elements_from_octree (3,
+					   location->comm,
+					   location->point_clouds + icloud,
+					   n_boxes,
+					   box_extents,
+					   box_g_num,
+					   &candidates_g_num,
+					   &candidates_idx);
+      break;
+    
+    case PDM_MESH_LOCATION_DBBTREE:
+      /*_get_candidate_elements_from_bbtree (...);*/
+      break;
+      
+    default:
+      printf("Error: unknown location method %d\n", location->method);
+      assert (1 == 0);
+    }
+
+
+    /*
+     * Distribution des operations elementaires
+     */
+
+  
+    /*
+     * Calculs elementaires de localisation
+     */
+  }
 }
 
 
