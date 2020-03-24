@@ -94,7 +94,7 @@ int main(int argc, char *argv[])
                       31, 30, 27, 28, 32, 31, 29, 30, 34, 33,
                       30, 31, 35, 34, 31, 32, 36, 35};
 
-  PDM_cell_face_orient (n_cell,
+  PDM_cellface_orient (n_cell,
                        n_face,
                        n_vtx,
                        vtx,
@@ -108,4 +108,3 @@ int main(int argc, char *argv[])
 
   return 0;
 }
-

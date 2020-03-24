@@ -667,18 +667,18 @@ _export_ini_mesh
                        vtx,
                        vtx_ln_to_gn);
 
-    PDM_writer_geom_cell2d_cell_face_add (id_cs,
-                                 id_geom,
-                                 i_part,
-                                 n_face,
-                                 nEdge,
-                                 edgeVtxIdx1[i_part],
-                                 edgeVtxNB1[i_part],
-                                 edgeVtx,
-                                 faceEdgeIdx1[i_part],
-                                 faceEdgeNB1[i_part],
-                                 faceEdge,
-                                 face_ln_to_gn);
+    PDM_writer_geom_cell2d_cellface_add (id_cs,
+                                         id_geom,
+                                         i_part,
+                                         n_face,
+                                         nEdge,
+                                         edgeVtxIdx1[i_part],
+                                         edgeVtxNB1[i_part],
+                                         edgeVtx,
+                                         faceEdgeIdx1[i_part],
+                                         faceEdgeNB1[i_part],
+                                         faceEdge,
+                                         face_ln_to_gn);
   }
 
   PDM_writer_geom_write(id_cs,
@@ -1068,18 +1068,18 @@ _export_coarse_mesh
                        vtx,
                        vtx_ln_to_gn);
 
-    PDM_writer_geom_cell2d_cell_face_add (id_cs,
-                                 id_geom,
-                                 i_part,
-                                 n_face,
-                                 nEdge,
-                                 edgeVtxIdx1[i_part],
-                                 edgeVtxNB1[i_part],
-                                 edgeVtx,
-                                 faceEdgeIdx1[i_part],
-                                 faceEdgeNB1[i_part],
-                                 faceEdge,
-                                 face_ln_to_gn);
+    PDM_writer_geom_cell2d_cellface_add (id_cs,
+                                         id_geom,
+                                         i_part,
+                                         n_face,
+                                         nEdge,
+                                         edgeVtxIdx1[i_part],
+                                         edgeVtxNB1[i_part],
+                                         edgeVtx,
+                                         faceEdgeIdx1[i_part],
+                                         faceEdgeNB1[i_part],
+                                         faceEdge,
+                                         face_ln_to_gn);
   }
 
   PDM_writer_geom_write(id_cs,
@@ -1513,4 +1513,3 @@ char *argv[]
  return 0;
 
 }
-

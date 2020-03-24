@@ -121,7 +121,7 @@ PDM_surf_part_t *part
  */
 
 const PDM_g_num_t *
-PDM_surf_part_face_ln_to_gn_get
+PDM_surf_part_faceLnToGn_get
 (
 PDM_surf_part_t *part
 );
