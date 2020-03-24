@@ -839,7 +839,7 @@ const PDM_g_num_t *numabs
  */
 
 void
-PDM_Mesh_nodal_faces_facevtx_add
+PDM_Mesh_nodal_faces_face_vtx_add
 (
 const int          idx,
 const int          id_part,

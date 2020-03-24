@@ -86,7 +86,7 @@ struct _PDM_boxes_t {
   int          n_part_orig;
   int         *n_boxes_orig;   /* Number of origin bounding boxes */
   int         *origin;         /* Initial location :
-                                  * iproc, ipart, local_num */
+                                  * iproc, i_part, local_num */
 };
 
 

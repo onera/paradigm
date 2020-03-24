@@ -83,7 +83,7 @@ PDM_multipart_create
  *
  * \param [in]   id           Identifier
  * \param [in]   i_block      Number of block to set
- * \param [in]   dFaceCell    Face to cell connectivity for the block
+ * \param [in]   dface_cell    Face to cell connectivity for the block
  * TODO LIST PARAMS
  *
  */
@@ -91,7 +91,7 @@ PDM_multipart_create
 void PDM_multipart_register_block
 (
  const int        mpart_id,
- const int        zoneGId,
+ const int        zone_gid,
  const int        block_data_id
 );
 
@@ -113,69 +113,69 @@ PDM_multipart_run_ppart
 void
 PDM_multipart_part_dim_get
 (
-const   int  mpartId,
-const   int  zoneGId,
-const   int  ipart,
- int        *nCell,
- int        *nFace,
- int        *nFacePartBound,
- int        *nVtx,
- int        *nProc,
- int        *nTPart,
- int        *sCellFace,
- int        *sFaceVtx,
- int        *sFaceBound,
- int        *nFaceBound,
- int        *sFaceJoin,
- int        *nFaceJoin
+const   int  mpart_id,
+const   int  zone_gid,
+const   int  i_part,
+ int        *n_cell,
+ int        *n_face,
+ int        *n_face_part_bound,
+ int        *n_vtx,
+ int        *n_proc,
+ int        *n_total_part,
+ int        *scell_face,
+ int        *sface_vtx,
+ int        *sface_bound,
+ int        *n_face_bound,
+ int        *sface_join,
+ int        *n_face_join
 );
 
 void
 PDM_multipart_part_val_get
 (
-const int            mpartId,
-const int            zoneGId,
-const int            ipart,
-      int          **cellTag,
-      int          **cellFaceIdx,
-      int          **cellFace,
-      PDM_g_num_t  **cellLNToGN,
-      int          **faceTag,
-      int          **faceCell,
-      int          **faceVtxIdx,
-      int          **faceVtx,
-      PDM_g_num_t  **faceLNToGN,
-      int          **facePartBoundProcIdx,
-      int          **facePartBoundPartIdx,
-      int          **facePartBound,
-      int          **vtxTag,
+const int            mpart_id,
+const int            zone_gid,
+const int            i_part,
+      int          **cell_tag,
+      int          **cell_face_idx,
+      int          **cell_face,
+      PDM_g_num_t  **cell_ln_to_gn,
+      int          **face_tag,
+      int          **face_cell,
+      int          **face_vtx_idx,
+      int          **face_vtx,
+      PDM_g_num_t  **face_ln_to_gn,
+      int          **face_part_bound_proc_idx,
+      int          **face_part_bound_part_idx,
+      int          **face_part_bound,
+      int          **vtx_tag,
       double       **vtx,
-      PDM_g_num_t  **vtxLNToGN,
-      int          **faceBoundIdx,
-      int          **faceBound,
-      PDM_g_num_t  **faceBoundLNToGN,
-      int          **faceJoinIdx,
-      int          **faceJoin,
-      PDM_g_num_t  **faceJoinLNToGN
+      PDM_g_num_t  **vtx_ln_to_gn,
+      int          **face_bound_idx,
+      int          **face_bound,
+      PDM_g_num_t  **face_bound_ln_to_gn,
+      int          **face_join_idx,
+      int          **face_join,
+      PDM_g_num_t  **face_join_ln_to_gn
 );
 
 void
 PDM_multipart_part_color_get
 (
-const int            mpartId,
-const int            zoneGId,
-const int            ipart,
-      int          **cellColor,
-      int          **faceColor,
-      int          **threadColor,
-      int          **hyperPlaneColor
+const int            mpart_id,
+const int            zone_gid,
+const int            i_part,
+      int          **cell_color,
+      int          **face_color,
+      int          **thread_color,
+      int          **hyperplane_color
 );
 
 void
 PDM_multipart_time_get
 (
-const int       mpartId,
-const int       zoneGId,
+const int       mpart_id,
+const int       zone_gid,
       double  **elapsed,
       double  **cpu,
       double  **cpu_user,

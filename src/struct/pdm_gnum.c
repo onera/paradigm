@@ -118,7 +118,7 @@ static PDM_Handles_t *_gnums   = NULL;
  *
  * \brief Return ppart object from it identifier
  *
- * \param [in]   ppartId        ppart identifier
+ * \param [in]   ppart_id        ppart identifier
  *
  */
 
@@ -370,12 +370,12 @@ _gnum_from_coords_compute
 
     id_pm = PDM_points_merge_create (_gnum->n_part, _gnum->tolerance, _gnum->comm);
 
-    for (int ipart = 0; ipart < _gnum->n_part; ipart++) {
-      _gnum->index[ipart] = malloc (sizeof(int) * _gnum->n_elts[ipart]);
-      PDM_points_merge_cloud_set (id_pm, ipart, _gnum->n_elts[ipart],
-                                  _gnum->coords[ipart], _gnum->char_length[ipart]);
-      for (int i = 0; i < _gnum->n_elts[ipart]; i++) {
-        _gnum->index[ipart][i] = 0;
+    for (int i_part = 0; i_part < _gnum->n_part; i_part++) {
+      _gnum->index[i_part] = malloc (sizeof(int) * _gnum->n_elts[i_part]);
+      PDM_points_merge_cloud_set (id_pm, i_part, _gnum->n_elts[i_part],
+                                  _gnum->coords[i_part], _gnum->char_length[i_part]);
+      for (int i = 0; i < _gnum->n_elts[i_part]; i++) {
+        _gnum->index[i_part][i] = 0;
       }
     }
 
@@ -386,46 +386,46 @@ _gnum_from_coords_compute
 //    printf("Compute points merge %12.5es\n", PDM_timer_elapsed(timer));
 //    PDM_timer_free(timer);
 
-    for (int ipart = 0; ipart < _gnum->n_part; ipart++) {
+    for (int i_part = 0; i_part < _gnum->n_part; i_part++) {
 
       int *candidates_idx;
       int *candidates_desc;
 
-      PDM_points_merge_candidates_get (id_pm, ipart, &candidates_idx, &candidates_desc);
+      PDM_points_merge_candidates_get (id_pm, i_part, &candidates_idx, &candidates_desc);
 
-      for (int i = 0; i < _gnum->n_elts[ipart]; i++) {
+      for (int i = 0; i < _gnum->n_elts[i_part]; i++) {
         for (int j = candidates_idx[i]; j < candidates_idx[i+1]; j++) {
           int idx = j;
           int distant_proc = candidates_desc[3*idx    ];
           int distant_part = candidates_desc[3*idx + 1];
 //          int distant_pt = candidates_desc[3*idx + 2];
 
-          if ((distant_proc < iproc) || ((distant_proc == iproc) && (distant_part < ipart))) {
-            _gnum->index[ipart][i] = -1;
+          if ((distant_proc < iproc) || ((distant_proc == iproc) && (distant_part < i_part))) {
+            _gnum->index[i_part][i] = -1;
           }
         }
-        if (_gnum->index[ipart][i] == 0) {
-          _gnum->index[ipart][i] = n_entities;
+        if (_gnum->index[i_part][i] == 0) {
+          _gnum->index[i_part][i] = n_entities;
           n_entities++;
         }
       }
     }
   }
   else {
-    for (int ipart = 0; ipart < _gnum->n_part; ipart++) {
-      n_entities += _gnum->n_elts[ipart];
+    for (int i_part = 0; i_part < _gnum->n_part; i_part++) {
+      n_entities += _gnum->n_elts[i_part];
     }
   }
 
   double *coords = malloc (sizeof(double) * _gnum->dim * n_entities);
 
   if (_gnum->merge) {
-    for (int ipart = 0; ipart < _gnum->n_part; ipart++) {
-      for (int i = 0; i <  _gnum->n_elts[ipart]; i++) {
-        if (_gnum->index[ipart][i] != -1) {
+    for (int i_part = 0; i_part < _gnum->n_part; i_part++) {
+      for (int i = 0; i <  _gnum->n_elts[i_part]; i++) {
+        if (_gnum->index[i_part][i] != -1) {
           for (int k = 0; k < _gnum->dim; k++) {
-            coords[_gnum->dim * _gnum->index[ipart][i] + k] =
-            _gnum->coords[ipart][_gnum->dim * i + k];
+            coords[_gnum->dim * _gnum->index[i_part][i] + k] =
+            _gnum->coords[i_part][_gnum->dim * i + k];
           }
         }
       }
@@ -433,9 +433,9 @@ _gnum_from_coords_compute
   }
   else {
     int k = 0;
-    for (int ipart = 0; ipart < _gnum->n_part; ipart++) {
-      for (int j = 0; j < _gnum->dim * _gnum->n_elts[ipart]; j++) {
-        coords[k++] = _gnum->coords[ipart][j];
+    for (int i_part = 0; i_part < _gnum->n_part; i_part++) {
+      for (int j = 0; j < _gnum->dim * _gnum->n_elts[i_part]; j++) {
+        coords[k++] = _gnum->coords[i_part][j];
       }
     }
   }
@@ -636,16 +636,16 @@ _gnum_from_coords_compute
        */
 
       int k = 0;
-      for (int ipart = 0; ipart < _gnum->n_part; ipart++) {
-        _gnum->g_nums[ipart] = malloc (sizeof(PDM_g_num_t) * _gnum->n_elts[ipart]);
-        for (int j1 = 0; j1 < _gnum->n_elts[ipart]; j1++) {
-          _gnum->g_nums[ipart][j1] = -1;
+      for (int i_part = 0; i_part < _gnum->n_part; i_part++) {
+        _gnum->g_nums[i_part] = malloc (sizeof(PDM_g_num_t) * _gnum->n_elts[i_part]);
+        for (int j1 = 0; j1 < _gnum->n_elts[i_part]; j1++) {
+          _gnum->g_nums[i_part][j1] = -1;
         }
-        for (int j1 = 0; j1 < _gnum->n_elts[ipart]; j1++) {
-          if (_gnum->index[ipart][j1] != -1) {
+        for (int j1 = 0; j1 < _gnum->n_elts[i_part]; j1++) {
+          if (_gnum->index[i_part][j1] != -1) {
             rank_id = c_rank[k++];
             shift = send_shift[rank_id] + send_count[rank_id];
-            _gnum->g_nums[ipart][j1] = part_global_num[shift];
+            _gnum->g_nums[i_part][j1] = part_global_num[shift];
             _max_loc = PDM_MAX (_max_loc, part_global_num[shift]);
             send_count[rank_id] += 1;
           }
@@ -670,15 +670,15 @@ _gnum_from_coords_compute
         recv_shift2[rank_id] = 0;
       }
 
-      for (int ipart = 0; ipart < _gnum->n_part; ipart++) {
+      for (int i_part = 0; i_part < _gnum->n_part; i_part++) {
 
         int *candidates_idx;
         int *candidates_desc;
 
 
-        PDM_points_merge_candidates_get (id_pm, ipart, &candidates_idx, &candidates_desc);
+        PDM_points_merge_candidates_get (id_pm, i_part, &candidates_idx, &candidates_desc);
 
-        for (int i = 0; i < _gnum->n_elts[ipart]; i++) {
+        for (int i = 0; i < _gnum->n_elts[i_part]; i++) {
           int update_proc = iproc;
 
           for (int j = candidates_idx[i]; j < candidates_idx[i+1]; j++) {
@@ -695,13 +695,13 @@ _gnum_from_coords_compute
             int distant_pt   = candidates_desc[3*idx + 2];
             if ((update_proc == iproc) && (distant_proc != iproc)) {
               send_count2[distant_proc] += 1;
-              assert (_gnum->g_nums[ipart][i] != -1);
+              assert (_gnum->g_nums[i_part][i] != -1);
             }
             else if (  (update_proc == iproc)
                     && (distant_proc == iproc)
-                    && (ipart <= distant_part)) {
-              assert (_gnum->g_nums[ipart][i] != -1);
-              _gnum->g_nums[distant_part][distant_pt] = _gnum->g_nums[ipart][i];
+                    && (i_part <= distant_part)) {
+              assert (_gnum->g_nums[i_part][i] != -1);
+              _gnum->g_nums[distant_part][distant_pt] = _gnum->g_nums[i_part][i];
             }
           }
         }
@@ -727,14 +727,14 @@ _gnum_from_coords_compute
       PDM_g_num_t *recv_buff = (PDM_g_num_t *)
               malloc (sizeof(PDM_g_num_t)*recv_shift2[n_ranks]);
 
-      for (int ipart = 0; ipart < _gnum->n_part; ipart++) {
+      for (int i_part = 0; i_part < _gnum->n_part; i_part++) {
 
         int *candidates_idx;
         int *candidates_desc;
 
-        PDM_points_merge_candidates_get (id_pm, ipart, &candidates_idx, &candidates_desc);
+        PDM_points_merge_candidates_get (id_pm, i_part, &candidates_idx, &candidates_desc);
 
-        for (int i = 0; i < _gnum->n_elts[ipart]; i++) {
+        for (int i = 0; i < _gnum->n_elts[i_part]; i++) {
           int update_proc = iproc;
 
           for (int j = candidates_idx[i]; j < candidates_idx[i+1]; j++) {
@@ -755,7 +755,7 @@ _gnum_from_coords_compute
               int idx2 = send_shift2[distant_proc] + send_count2[distant_proc];
               send_buff[idx2]     = distant_part;
               send_buff[idx2 + 1] = distant_pt;
-              send_buff[idx2 + 2] = _gnum->g_nums[ipart][i];;
+              send_buff[idx2 + 2] = _gnum->g_nums[i_part][i];;
 
               send_count2[distant_proc] += 3;
             }
@@ -777,10 +777,10 @@ _gnum_from_coords_compute
 
       k = 0;
       while (k < recv_shift2[n_ranks]) {
-        int ipart        = (int) recv_buff[k++];
+        int i_part        = (int) recv_buff[k++];
         int ipt          = (int) recv_buff[k++];
         PDM_g_num_t gnum =       recv_buff[k++];
-         _gnum->g_nums[ipart][ipt] = gnum;
+         _gnum->g_nums[i_part][ipt] = gnum;
       }
 
       free (send_buff);
@@ -794,12 +794,12 @@ _gnum_from_coords_compute
 
     else {
       int k = 0;
-      for (int ipart = 0; ipart < _gnum->n_part; ipart++) {
-        _gnum->g_nums[ipart] = malloc (sizeof(PDM_g_num_t) * _gnum->n_elts[ipart]);
-        for (int j1 = 0; j1 < _gnum->n_elts[ipart]; j1++) {
+      for (int i_part = 0; i_part < _gnum->n_part; i_part++) {
+        _gnum->g_nums[i_part] = malloc (sizeof(PDM_g_num_t) * _gnum->n_elts[i_part]);
+        for (int j1 = 0; j1 < _gnum->n_elts[i_part]; j1++) {
           rank_id = c_rank[k++];
           shift = send_shift[rank_id] + send_count[rank_id];
-          _gnum->g_nums[ipart][j1] = part_global_num[shift];
+          _gnum->g_nums[i_part][j1] = part_global_num[shift];
           _max_loc = PDM_MAX (_max_loc, part_global_num[shift]);
           send_count[rank_id] += 1;
         }
@@ -845,12 +845,12 @@ _gnum_from_coords_compute
 
       int *_entities = malloc (sizeof(int) * 2 * n_entities);
       int k = 0;
-      for (int ipart = 0; ipart < _gnum->n_part; ipart++) {
-        _gnum->g_nums[ipart] = malloc (sizeof(PDM_g_num_t) * _gnum->n_elts[ipart]);
-        for (int j1 = 0; j1 < _gnum->n_elts[ipart]; j1++) {
-          _gnum->g_nums[ipart][j1] = -1;
-          if (_gnum->index[ipart][j1] != -1) {
-            _entities[k++] = ipart;
+      for (int i_part = 0; i_part < _gnum->n_part; i_part++) {
+        _gnum->g_nums[i_part] = malloc (sizeof(PDM_g_num_t) * _gnum->n_elts[i_part]);
+        for (int j1 = 0; j1 < _gnum->n_elts[i_part]; j1++) {
+          _gnum->g_nums[i_part][j1] = -1;
+          if (_gnum->index[i_part][j1] != -1) {
+            _entities[k++] = i_part;
             _entities[k++] = j1;
           }
         }
@@ -864,20 +864,20 @@ _gnum_from_coords_compute
 
       free (_entities);
 
-      for (int ipart = 0; ipart < _gnum->n_part; ipart++) {
+      for (int i_part = 0; i_part < _gnum->n_part; i_part++) {
         int *candidates_idx;
         int *candidates_desc;
-        PDM_points_merge_candidates_get (id_pm, ipart, &candidates_idx, &candidates_desc);
+        PDM_points_merge_candidates_get (id_pm, i_part, &candidates_idx, &candidates_desc);
 
-        for (int i = 0; i < _gnum->n_elts[ipart]; i++) {
+        for (int i = 0; i < _gnum->n_elts[i_part]; i++) {
           for (int j = candidates_idx[i]; j < candidates_idx[i+1]; j++) {
             int idx = j;
             int distant_proc = candidates_desc[3*idx    ];
             int distant_part = candidates_desc[3*idx + 1];
             int distant_pt   = candidates_desc[3*idx + 2];
-            if ((iproc == distant_proc) && (ipart <= distant_part)) {
-              assert (_gnum->g_nums[ipart][i] != -1);
-              _gnum->g_nums[distant_part][distant_pt] = _gnum->g_nums[ipart][i];
+            if ((iproc == distant_proc) && (i_part <= distant_part)) {
+              assert (_gnum->g_nums[i_part][i] != -1);
+              _gnum->g_nums[distant_part][distant_pt] = _gnum->g_nums[i_part][i];
             }
           }
         }
@@ -888,10 +888,10 @@ _gnum_from_coords_compute
     else {
 
       int k = 0;
-      for (int ipart = 0; ipart < _gnum->n_part; ipart++) {
-        _gnum->g_nums[ipart] = malloc (sizeof(PDM_g_num_t) * _gnum->n_elts[ipart]);
-        for (int j1 = 0; j1 <  _gnum->n_elts[ipart]; j1++) {
-          _gnum->g_nums[ipart][j1] = tmp_gnum[k++];
+      for (int i_part = 0; i_part < _gnum->n_part; i_part++) {
+        _gnum->g_nums[i_part] = malloc (sizeof(PDM_g_num_t) * _gnum->n_elts[i_part]);
+        for (int j1 = 0; j1 <  _gnum->n_elts[i_part]; j1++) {
+          _gnum->g_nums[i_part][j1] = tmp_gnum[k++];
         }
       }
     }
@@ -904,8 +904,8 @@ _gnum_from_coords_compute
   }
 
   if (_gnum->merge) {
-    for (int ipart = 0; ipart < _gnum->n_part; ipart++) {
-      free (_gnum->index[ipart]);
+    for (int i_part = 0; i_part < _gnum->n_part; i_part++) {
+      free (_gnum->index[i_part]);
     }
     free(_gnum->index);
     PDM_points_merge_free (id_pm);
