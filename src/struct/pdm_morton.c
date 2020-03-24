@@ -2128,6 +2128,148 @@ PDM_morton_ancestor_is (PDM_morton_code_t  a,
   return status;
 }
 
+
+
+
+
+
+static int
+_intersect_node_box
+(
+ const int                dim,
+ const PDM_morton_code_t  node,
+ const PDM_morton_code_t  box_min,
+ const PDM_morton_code_t  box_max,
+ int                     *inside
+ )
+{
+  const PDM_morton_int_t level_diff = box_min.L - node.L;
+
+  const PDM_morton_int_t side = 1 << level_diff;
+
+  for (int i = 0; i < dim; i++) {
+    PDM_morton_int_t xmin = side * node.X[i];
+    PDM_morton_int_t xmax = xmin + side;
+
+    if (xmin > box_max.X[i] || xmax < box_min.X[i]) {
+      return 0;
+    } else if (xmin > box_min.X[i] || xmax > box_max.X[i]) {
+      *inside = 0;
+    };
+  }
+
+  return 1;
+}
+
+
+const size_t N_BRUTE_FORCE = 10;
+void
+PDM_morton_intersect_box
+(
+ const int                dim,
+ const PDM_morton_code_t  node,
+ const PDM_morton_code_t  box_min,
+ const PDM_morton_code_t  box_max,
+ const PDM_morton_code_t  nodes[],
+ const size_t             start,
+ const size_t             end,
+ size_t                  *n_intersect,
+ int                     *intersect
+ )
+{
+  int inside;
+  
+  /* If current range contains few octants, go brute force */
+  if (end - start < N_BRUTE_FORCE) {
+    
+    for (size_t i = start; i < end; i++) {
+      if (_intersect_node_box (dim,
+			       nodes[i],
+			       box_min,
+			       box_max,
+			       &inside)) {
+	intersect[(*n_intersect)++] = i;
+      }
+    }
+    
+  } else {
+
+    if (_intersect_node_box (dim,
+			     node,
+			     box_min,
+			     box_max,
+			     &inside)) {
+
+      if (inside) {
+	/* Every descendant must intersect the box */
+	for (size_t i = start; i < end; i++) {
+	  intersect[(*n_intersect)++] = i;
+	}
+      
+      } else {
+	/* Some descendants may intersect the box */
+	const size_t n_children = 1 << dim;
+	PDM_morton_code_t *children = malloc (sizeof(PDM_morton_code_t) * n_children);
+	PDM_morton_get_children (dim,
+				 node,
+				 children);
+
+	for (size_t ichild = 0; ichild < n_children; ichild++) {
+	  /*
+	    PDM_morton_code_t child_min;
+	    PDM_morton_copy (children[ichild],
+	    &child_min);
+	    PDM_morton_assign_level (&child_min,
+	    PDM_morton_max_level);
+	  */
+
+	  size_t new_start, new_end;
+	  if (ichild == 0) {
+	    new_start = start;
+	  } else {
+	    new_start = new_end; // end of previous child
+	  }
+	
+	  PDM_morton_code_t child_max;
+	  PDM_morton_copy (children[ichild],
+			   &child_max);
+	  PDM_morton_assign_level (&child_max,
+				   PDM_morton_max_level);
+	  for (int idim = 0; idim < dim; idim++) {
+	    child_max.X[idim]++;
+	  }
+
+	  new_end = end;
+	  if (ichild < n_children-1) {
+	    size_t l = new_start;
+	    while (l < new_end - 1) {
+	      size_t m = l + (new_end - l) / 2;
+	      if (_a_gt_b (nodes[m], child_max)) {
+		new_end = m;
+	      } else {
+		l = m;
+	      }
+	    }
+	  }
+
+	  /* Carry on recursion */
+	  PDM_morton_intersect_box (dim,
+				    children[ichild],
+				    box_min,
+				    box_max,
+				    nodes,
+				    new_start,
+				    new_end,
+				    n_intersect,
+				    intersect);
+	}
+
+	free (children);
+      }
+    }
+  }
+}
+
 /*----------------------------------------------------------------------------*/
 
 #ifdef __cplusplus

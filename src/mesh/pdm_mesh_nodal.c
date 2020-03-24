@@ -4889,6 +4889,178 @@ const int idx
 }
 
 
+
+
+
+void
+PDM_Mesh_nodal_compute_cell_extents
+(
+ const int      idx,
+ const int      id_block,
+ const int      id_part,
+ const double   tolerance,
+ double       **extents
+ )
+{
+  PDM_Mesh_nodal_t *mesh = (PDM_Mesh_nodal_t *) PDM_Handles_get (mesh_handles, idx);
+
+  if (mesh == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
+  }
+
+  
+  PDM_l_num_t *connec     = NULL;
+  PDM_l_num_t *connec_idx = NULL;
+  PDM_l_num_t  n_elt = 0;
+
+  int free_connec_idx = 1;
+  int free_connec     = 0;
+
+  if (id_block >= PDM_BLOCK_ID_BLOCK_POLY3D) {
+
+    int _id_block = id_block - PDM_BLOCK_ID_BLOCK_POLY3D;
+
+    PDM_Mesh_nodal_block_poly3d_t *block =
+      (PDM_Mesh_nodal_block_poly3d_t *) PDM_Handles_get (mesh->blocks_poly3d, _id_block);
+
+    if (block == NULL) {
+      PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
+    }
+  
+    n_elt = block->n_elt[id_part];
+    connec_idx = (PDM_l_num_t *) malloc (sizeof(PDM_l_num_t) * (n_elt + 1));
+    connec_idx[0] = 0;
+  
+    //-->>
+    for (PDM_l_num_t i = 0; i < n_elt; i++) {
+      connec_idx[i+1] = connec_idx[i] + 1;
+    }
+  
+    connec = (PDM_l_num_t *) malloc (sizeof(PDM_l_num_t) * connec_idx[n_elt]);
+    for (PDM_l_num_t i = 0; i < connec_idx[n_elt]; i++) {
+      connec[i] = 1;
+    }
+    //<<--
+    free_connec = 1;
+  
+  
+  } else {
+  
+    if (id_block >= PDM_BLOCK_ID_BLOCK_POLY2D) {
+      
+      int _id_block = id_block - PDM_BLOCK_ID_BLOCK_POLY2D;
+
+      PDM_Mesh_nodal_block_poly2d_t *block =
+	(PDM_Mesh_nodal_block_poly2d_t *) PDM_Handles_get (mesh->blocks_poly2d, _id_block);
+
+      if (block == NULL) {
+	PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
+      }
+    
+      n_elt      = block->n_elt[id_part];
+      connec_idx = block->_connec_idx[id_part];
+      connec     = block->_connec[id_part];
+    
+      free_connec_idx = 0;
+    
+    } else {
+      
+      int _id_block = id_block;
+    
+      PDM_Mesh_nodal_block_std_t *block =
+	(PDM_Mesh_nodal_block_std_t *) PDM_Handles_get (mesh->blocks_std, _id_block);
+              
+      if (block == NULL) {
+	PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
+      }
+    
+      n_elt = block->n_elt[id_part];
+      connec = block->_connec[id_part];
+      connec_idx = (PDM_l_num_t *) malloc (sizeof(PDM_l_num_t) * (n_elt + 1));
+      connec_idx[0] = 0;
+    
+      int n_vtx = 0;
+      switch (block->t_elt) {
+      case PDM_MESH_NODAL_POINT:
+	n_vtx = 1;
+	break;
+      case PDM_MESH_NODAL_BAR2:
+	n_vtx = 2;
+	break;
+      case PDM_MESH_NODAL_TRIA3:
+	n_vtx = 3;
+	break;
+      case PDM_MESH_NODAL_QUAD4:
+	n_vtx = 4;
+	break;
+      case PDM_MESH_NODAL_TETRA4:
+	n_vtx = 4;
+	break;
+      case PDM_MESH_NODAL_PYRAMID5:
+	n_vtx = 5;
+	break;
+      case PDM_MESH_NODAL_PRISM6:
+	n_vtx = 6;
+	break;
+      case PDM_MESH_NODAL_HEXA8:
+	n_vtx = 8;
+	break;
+      default:
+	printf("Unknown standard element type %d\n", block->t_elt);
+	assert (1 == 0);
+      }
+    
+      for (PDM_l_num_t i = 0; i < n_elt; i++) {
+	connec_idx[i+1] = connec_idx[i] + n_vtx;
+      }
+    }
+  }
+
+
+  double *coords = (double *) PDM_Mesh_nodal_vertices_get (idx, id_part);
+  
+  double *_extents = *extents;
+  for (PDM_l_num_t i = 0; i < n_elt; i++) {
+    for (int k = 0; k < 3; k++) {
+      _extents[k]   = HUGE_VAL;
+      _extents[3+k] = -HUGE_VAL;
+    }
+  
+    for (PDM_l_num_t j = connec_idx[i]; j < connec_idx[i+1]; j++) {
+      PDM_l_num_t ivtx = connec[j] - 1;
+      double *_coords = (double *) coords + 3 * ivtx;
+    
+      for (int k = 0; k < 3; k++) {
+	_extents[k]   = PDM_MIN (_extents[k], _coords[k]);
+	_extents[3+k] = PDM_MAX (_extents[3+k], _coords[k]);
+      }
+    }
+  
+    double delta = -HUGE_VAL;
+    for (int k = 0; k < 3; k++) {
+      delta = PDM_MAX (delta, fabs(_extents[3+k] - _extents[k]));
+    }
+  
+    delta *= tolerance;
+  
+    for (int k = 0; k < 3; k++) {
+      _extents[k]   -= delta;
+      _extents[3+k] += delta;
+    }
+  
+    _extents += 6;
+  }
+
+  if (free_connec_idx) {
+    free (connec_idx);
+  }
+
+  if (free_connec) {
+    free (connec);
+  }
+    
+}
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

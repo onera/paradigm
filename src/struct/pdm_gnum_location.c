@@ -401,7 +401,7 @@ PDM_gnum_location_free
   free (_gloc->n_elts_out);
   free (_gloc->g_nums_out);
 
-  if (partial != 1) {
+  if (keep_results != 1) {//if (partial != 1) {
     for (int i = 0; i < _gloc->n_part_out; i++) {
       free (_gloc->location_idx[i]);
     }

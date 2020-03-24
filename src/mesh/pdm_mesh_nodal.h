@@ -934,6 +934,21 @@ PDM_Mesh_nodal_reset
 const int idx
  );
 
+
+
+
+
+void
+PDM_Mesh_nodal_compute_cell_extents
+(
+ const int      idx,
+ const int      id_block,
+ const int      i_part,
+ const double   tolerance,
+ double       **extents
+ );
+
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
