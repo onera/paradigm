@@ -1311,17 +1311,17 @@ PDM_g_num_t   *numabs
 )
 {
   PDM_writer_geom_cell3d_cellface_add(*id_cs,
-                              *id_geom,
-                              *id_part,
-                              *n_cell,
-                              *n_face,
-                              face_som_idx,
-                              face_som_nb,
-                              face_som,
-                              cell_face_idx,
-                              cell_face_nb,
-                              cell_face,
-                              numabs);
+                                      *id_geom,
+                                      *id_part,
+                                      *n_cell,
+                                      *n_face,
+                                      face_som_idx,
+                                      face_som_nb,
+                                      face_som,
+                                      cell_face_idx,
+                                      cell_face_nb,
+                                      cell_face,
+                                      numabs);
 }
 
 void
@@ -1427,17 +1427,17 @@ PDM_g_num_t   *numabs
 )
 {
   PDM_writer_geom_cell2d_cellface_add(*id_cs,
-                              *id_geom,
-                              *id_part,
-                              *n_cell,
-                              *n_face,
-                              face_som_idx,
-                              face_som_nb,
-                              face_som,
-                              cell_face_idx,
-                              cell_face_nb,
-                              cell_face,
-                              numabs);
+                                      *id_geom,
+                                      *id_part,
+                                      *n_cell,
+                                      *n_face,
+                                      face_som_idx,
+                                      face_som_nb,
+                                      face_som,
+                                      cell_face_idx,
+                                      cell_face_nb,
+                                      cell_face,
+                                      numabs);
 }
 
 void
@@ -1553,7 +1553,7 @@ PDM_g_num_t   *numabs
     abort();
   }
 
-  PDM_Mesh_nodal_faces_face_vtx_add (geom->idx_mesh,
+  PDM_Mesh_nodal_faces_facevtx_add (geom->idx_mesh,
                                     id_part,
                                     n_face,
                                     face_som_idx,
