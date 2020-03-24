@@ -456,7 +456,7 @@ int main(int argc, char *argv[])
                        &face_group,
                        &face_group_ln_to_gn);
 
-    PDM_cell_face_orient (n_cell,
+    PDM_cellface_orient (n_cell,
                          n_face,
                          n_vtx,
                          vtx,
