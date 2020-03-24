@@ -52,22 +52,22 @@ int argc,
 char *argv[]
 )
 {
-  int iRank;
-  int nRank;
+  int i_rank;
+  int n_rank;
 
   PDM_MPI_Init (&argc, &argv);
-  PDM_MPI_Comm_rank (PDM_MPI_COMM_WORLD, &iRank);
-  PDM_MPI_Comm_size (PDM_MPI_COMM_WORLD, &nRank);
+  PDM_MPI_Comm_rank (PDM_MPI_COMM_WORLD, &i_rank);
+  PDM_MPI_Comm_size (PDM_MPI_COMM_WORLD, &n_rank);
 
   /* Connection de join1 avec join2 */
   int connect_idx_j1[4] = {0, 1, 3, 4};
 
   int oppRank;
   int oppPart;
-  if(nRank == 1){
+  if(n_rank == 1){
     oppRank = 0;
     oppPart = 1;
-  } else if (nRank == 2){
+  } else if (n_rank == 2){
     oppRank = 1;
     oppPart = 0;
   }
@@ -148,7 +148,7 @@ char *argv[]
   int *n_entity;
   int **candidates_idx;
   int **candidates_desc;
-  if(nRank == 1){
+  if(n_rank == 1){
     n_cloud = 2;
     candidates_idx  = (int **) malloc( n_cloud * sizeof(int**));
     candidates_desc = (int **) malloc( n_cloud * sizeof(int**));
@@ -161,16 +161,16 @@ char *argv[]
     n_entity[1] = 2;
     candidates_idx[1]  = connect_idx_j2;
     candidates_desc[1] = connect_triplet_j2;
-  } else if ( nRank == 2){
+  } else if ( n_rank == 2){
     n_cloud = 1;
     candidates_idx  = (int **) malloc( n_cloud * sizeof(int**));
     candidates_desc = (int **) malloc( n_cloud * sizeof(int**));
     n_entity        = (int * ) malloc( n_cloud * sizeof(int* ));
-    if(iRank == 0){
+    if(i_rank == 0){
       n_entity[0]        = 3;
       candidates_idx[0]  = connect_idx_j1;
       candidates_desc[0] = connect_triplet_j1;
-    } else if (iRank == 1){
+    } else if (i_rank == 1){
       n_entity[0]        = 2;
       candidates_idx[0]  = connect_idx_j2;
       candidates_desc[0] = connect_triplet_j2;
@@ -193,13 +193,13 @@ char *argv[]
    *  SetUp exchange
    */
   int** send_entity_data = (int **) malloc( n_cloud * sizeof(int**));
-  if(nRank == 1){
+  if(n_rank == 1){
     send_entity_data[0] = point_list_j1;
     send_entity_data[1] = point_list_j2;
-  } else if(nRank == 2){
-    if(iRank == 0){
+  } else if(n_rank == 2){
+    if(i_rank == 0){
       send_entity_data[0] = point_list_j1;
-    } else if(iRank == 1){
+    } else if(i_rank == 1){
       send_entity_data[0] = point_list_j2;
     }
   }
@@ -213,18 +213,18 @@ char *argv[]
                             PDM_STRIDE_CST,
                             stride,
                             NULL,
-                            send_entity_data,
+                 (void**)   send_entity_data,
                             NULL,
-                 (int***) &recv_entity_data);
+                 (void***) &recv_entity_data);
 
   if(1 == 1){
     log_trace(" Constant strid exchange results ---- \n");
-    for(int ipart = 0; ipart < n_cloud; ipart++){
-      int *_part_neighbor_idx  = candidates_idx[ipart];
-      log_trace("recv_entity_data[%d]::", ipart);
-      for(int i_entity = 0; i_entity < _part_neighbor_idx[n_entity[ipart]]; i_entity++){
+    for(int i_part = 0; i_part < n_cloud; i_part++){
+      int *_part_neighbor_idx  = candidates_idx[i_part];
+      log_trace("recv_entity_data[%d]::", i_part);
+      for(int i_entity = 0; i_entity < _part_neighbor_idx[n_entity[i_part]]; i_entity++){
         for(int idata = 0; idata < stride; idata++){
-          log_trace("%d ", recv_entity_data[ipart][stride*i_entity+idata]);
+          log_trace("%d ", recv_entity_data[i_part][stride*i_entity+idata]);
         }
       }
       log_trace("\n");
@@ -236,16 +236,16 @@ char *argv[]
    */
   int** send_entity_var_data = (int **) malloc( n_cloud * sizeof(int**));
   int** send_entity_var_stri = (int **) malloc( n_cloud * sizeof(int**));
-  if(nRank == 1){
+  if(n_rank == 1){
     send_entity_var_data[0] = point_list_var_j1;
     send_entity_var_stri[0] = point_list_var_stri_j1;
     send_entity_var_data[1] = point_list_var_j2;
     send_entity_var_stri[1] = point_list_var_stri_j2;
-  } else if(nRank == 2){
-    if(iRank == 0){
+  } else if(n_rank == 2){
+    if(i_rank == 0){
     send_entity_var_data[0] = point_list_var_j1;
     send_entity_var_stri[0] = point_list_var_stri_j1;
-    } else if(iRank == 1){
+    } else if(i_rank == 1){
     send_entity_var_data[0] = point_list_var_j2;
     send_entity_var_stri[0] = point_list_var_stri_j2;
     }
@@ -258,20 +258,20 @@ char *argv[]
                             PDM_STRIDE_VAR,
                             -1,
                             send_entity_var_stri,
-                            send_entity_var_data,
+                 (void**)   send_entity_var_data,
                  (int***) &recv_entity_var_stri,
-                 (int***) &recv_entity_var_data);
+                 (void***)&recv_entity_var_data);
 
   log_trace(" Variable strid exchange results ---- \n");
   if(1 == 1){
-    for(int ipart = 0; ipart < n_cloud; ipart++){
-      int *_part_neighbor_idx  = candidates_idx[ipart];
-      log_trace(" ---> recv_entity_data[%d]::", ipart);
+    for(int i_part = 0; i_part < n_cloud; i_part++){
+      int *_part_neighbor_idx  = candidates_idx[i_part];
+      log_trace(" ---> recv_entity_data[%d]::", i_part);
       int idx = 0;
-      for(int i_entity = 0; i_entity < _part_neighbor_idx[n_entity[ipart]]; i_entity++){
-        log_trace("i_entity::%d - strid::%d --> ", i_entity, recv_entity_var_stri[ipart][i_entity]);
-        for(int i_data = 0; i_data < recv_entity_var_stri[ipart][i_entity]; i_data++){
-          log_trace("%d ", recv_entity_var_data[ipart][idx++]);
+      for(int i_entity = 0; i_entity < _part_neighbor_idx[n_entity[i_part]]; i_entity++){
+        log_trace("i_entity::%d - strid::%d --> ", i_entity, recv_entity_var_stri[i_part][i_entity]);
+        for(int i_data = 0; i_data < recv_entity_var_stri[i_part][i_entity]; i_data++){
+          log_trace("%d ", recv_entity_var_data[i_part][idx++]);
         }
         log_trace("\n");
       }

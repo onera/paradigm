@@ -65,11 +65,11 @@ PDM_g_num_t   ny,
 PDM_g_num_t  *nGFace,
 PDM_g_num_t  *nGVtx,
 PDM_g_num_t  *nGEdge,
-int         *dNVtx,
-double     **dVtxCoord,
-int         *dNFace,
-int        **dFaceVtxIdx,
-PDM_g_num_t **dFaceVtx,
+int         *dn_vtx,
+double     **dvtx_coord,
+int         *dn_face,
+int        **dface_vtx_idx,
+PDM_g_num_t **dface_vtx,
 PDM_g_num_t **dFaceEdge,
 int         *dNEdge,
 PDM_g_num_t **dEdgeVtx,
@@ -83,9 +83,9 @@ PDM_g_num_t **dEdgeGroup
   int vb = 1;
   if (vb == 1)   PDM_printf ("==== PDM_poly_surf_gen ====\n");
   vb=0;
-  
-  int nRank;
-  PDM_MPI_Comm_size(localComm, &nRank);
+
+  int n_rank;
+  PDM_MPI_Comm_size(localComm, &n_rank);
 
   int localRank;
   PDM_MPI_Comm_rank(localComm, &localRank);
@@ -128,7 +128,7 @@ PDM_g_num_t **dEdgeGroup
 
   /* Comptage des Sommets */
 
-  PDM_g_num_t dNVtxTotal = 0;
+  PDM_g_num_t dn_vtxTotal = 0;
 
   PDM_g_num_t cpt = 0;
   PDM_g_num_t cptMax;
@@ -140,20 +140,20 @@ PDM_g_num_t **dEdgeGroup
 
   while(cpt < cptMax) {
     if (cpt % 3 == 1 || cpt % 3 == 2) {
-      dNVtxTotal +=  nx1/2;
+      dn_vtxTotal +=  nx1/2;
     }
     else if ((cpt % 3) == 0) {
       if ((cpt == (cptMax-1)) || (cpt == 0)) {
-        dNVtxTotal++;
+        dn_vtxTotal++;
       }
 
-      dNVtxTotal++;
+      dn_vtxTotal++;
 
       for (PDM_g_num_t ix = 2; ix < nx1-1; ix++) {
-        dNVtxTotal++;
+        dn_vtxTotal++;
       }
       if ((cpt == (cptMax-1)) || (cpt == 0)) {
-        dNVtxTotal++;
+        dn_vtxTotal++;
       }
     }
     cpt++;
@@ -165,15 +165,15 @@ PDM_g_num_t **dEdgeGroup
   *dEdgeGroupIdx = (int *) malloc(sizeof(int) * (*nEdgeGroup + 1));
   (*dEdgeGroupIdx)[0] = 0;
 
-  PDM_g_num_t *dNEdgeLim13Rank = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * (nRank+1));
+  PDM_g_num_t *dNEdgeLim13Rank = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * (n_rank+1));
   dNEdgeLim13Rank[0] = 0;
-  for (int i = 0; i < nRank; i++)
-    dNEdgeLim13Rank[i+1] = (PDM_g_num_t) (nx1 - 1) / nRank;
+  for (int i = 0; i < n_rank; i++)
+    dNEdgeLim13Rank[i+1] = (PDM_g_num_t) (nx1 - 1) / n_rank;
 
-  PDM_g_num_t _reste = (nx1 - 1) % nRank;
+  PDM_g_num_t _reste = (nx1 - 1) % n_rank;
   int reste =  (int) _reste;
 
-  for (int i = 0; i < nRank; i++) {
+  for (int i = 0; i < n_rank; i++) {
     if (i < reste) {
       dNEdgeLim13Rank[i+1] += 1;
     }
@@ -182,19 +182,19 @@ PDM_g_num_t **dEdgeGroup
 
   PDM_g_num_t dNEdgeLim13 = dNEdgeLim13Rank[localRank + 1];
 
-  for (int i = 0; i < nRank; i++) {
+  for (int i = 0; i < n_rank; i++) {
     dNEdgeLim13Rank[i+1] = dNEdgeLim13Rank[i+1] + dNEdgeLim13Rank[i];
   }
 
-  PDM_g_num_t *dNEdgeLim24Rank = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * (nRank+1));
+  PDM_g_num_t *dNEdgeLim24Rank = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * (n_rank+1));
   dNEdgeLim24Rank[0] = 0;
-  for (int i = 0; i < nRank; i++)
-    dNEdgeLim24Rank[i+1] = (PDM_g_num_t) (ny1 - 1) / nRank;
+  for (int i = 0; i < n_rank; i++)
+    dNEdgeLim24Rank[i+1] = (PDM_g_num_t) (ny1 - 1) / n_rank;
 
-  _reste = (ny1 - 1) % nRank;
+  _reste = (ny1 - 1) % n_rank;
   reste =  (int) (_reste);
 
-  for (int i = 0; i < nRank; i++) {
+  for (int i = 0; i < n_rank; i++) {
     if (i < reste) {
       dNEdgeLim24Rank[i+1] += 1;
     }
@@ -202,7 +202,7 @@ PDM_g_num_t **dEdgeGroup
 
   PDM_g_num_t dNEdgeLim24 = dNEdgeLim24Rank[localRank + 1];
 
-  for (int i = 0; i < nRank; i++) {
+  for (int i = 0; i < n_rank; i++) {
     dNEdgeLim24Rank[i+1] = dNEdgeLim24Rank[i+1] + dNEdgeLim24Rank[i];
   }
 
@@ -220,112 +220,112 @@ PDM_g_num_t **dEdgeGroup
   /* Construction des sommets */
   /* ------------------------ */
 
-  PDM_g_num_t *dNVtxRank = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * (nRank+1));
+  PDM_g_num_t *dn_vtxRank = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * (n_rank+1));
 
-  dNVtxRank[0] = 0;
-  for (int i = 0; i < nRank; i++)
-    dNVtxRank[i+1] = (PDM_g_num_t) dNVtxTotal / nRank;
+  dn_vtxRank[0] = 0;
+  for (int i = 0; i < n_rank; i++)
+    dn_vtxRank[i+1] = (PDM_g_num_t) dn_vtxTotal / n_rank;
 
-  _reste = dNVtxTotal % nRank;
+  _reste = dn_vtxTotal % n_rank;
   reste =  (int) (_reste);
 
-  for (int i = 0; i < nRank; i++) {
+  for (int i = 0; i < n_rank; i++) {
     if (i < reste) {
-      dNVtxRank[i+1] += 1;
+      dn_vtxRank[i+1] += 1;
     }
   }
 
-  *dNVtx = (int) dNVtxRank[localRank + 1];
+  *dn_vtx = (int) dn_vtxRank[localRank + 1];
 
-  for (int i = 0; i < nRank; i++) {
-    dNVtxRank[i+1] = dNVtxRank[i+1] + dNVtxRank[i];
+  for (int i = 0; i < n_rank; i++) {
+    dn_vtxRank[i+1] = dn_vtxRank[i+1] + dn_vtxRank[i];
   }
 
-  *dVtxCoord = (double*) malloc (sizeof(double) * 3 * (*dNVtx));
+  *dvtx_coord = (double*) malloc (sizeof(double) * 3 * (*dn_vtx));
 
   /* Construction des elements et des aretes */
   /* --------------------------------------- */
 
   /* Comptage des elements et des aretes */
 
-  PDM_g_num_t  dNFaceTotal = 0;
+  PDM_g_num_t  dn_faceTotal = 0;
 
   /* Triangles */
 
   /* -- Premiere ligne */
-  dNFaceTotal += nx1/2;
+  dn_faceTotal += nx1/2;
 
   /* -- Autres triangles (un a gauche un a droite */
   PDM_g_num_t nbLi = (ny1-4)/2;
-  dNFaceTotal += 2*nbLi;
+  dn_faceTotal += 2*nbLi;
 
   /* -- Derniere ligne */
-  dNFaceTotal += nx1/2;
+  dn_faceTotal += nx1/2;
 
   /* Quadrangles */
   PDM_g_num_t nxQuad = (nx1-4)/2;
   PDM_g_num_t nyQuad = (ny1-4)/2;
-  dNFaceTotal += nyQuad * nxQuad;
+  dn_faceTotal += nyQuad * nxQuad;
 
   /* Polygones */
   PDM_g_num_t nxPoly = (nx1-2)/2;
   PDM_g_num_t nyPoly = (ny1-2)/2;
-  dNFaceTotal += nxPoly * nyPoly;
+  dn_faceTotal += nxPoly * nyPoly;
 
   PDM_g_num_t dNEdgeTotal = (6 * nxPoly + 1) * nyPoly + nxPoly; /* Aretes touchant un polygone */
   dNEdgeTotal += nx1 + ny1; /* Aretes des cotes ne touchant pa sun polygone */
 
   PDM_g_num_t nPoly = nxPoly * nyPoly;
   PDM_g_num_t nQuad = nxQuad * nyQuad;
-  PDM_g_num_t nTri  = dNFaceTotal - nQuad - nPoly;
+  PDM_g_num_t nTri  = dn_faceTotal - nQuad - nPoly;
 
   /* Allocation des elts */
 
-  PDM_g_num_t *dNFaceRank = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * (nRank+1));
-  PDM_g_num_t *dNEdgeRank = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * (nRank+1));
+  PDM_g_num_t *dn_faceRank = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * (n_rank+1));
+  PDM_g_num_t *dNEdgeRank = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * (n_rank+1));
 
-  dNFaceRank[0] = 0;
-  for (int i = 0; i < nRank; i++)
-    dNFaceRank[i+1] = dNFaceTotal / nRank ;
+  dn_faceRank[0] = 0;
+  for (int i = 0; i < n_rank; i++)
+    dn_faceRank[i+1] = dn_faceTotal / n_rank ;
 
-  _reste = dNFaceTotal % nRank;
+  _reste = dn_faceTotal % n_rank;
   reste =  (int) _reste ;
-  for (int i = 0; i < nRank; i++) {
+  for (int i = 0; i < n_rank; i++) {
     if (i < reste) {
-      dNFaceRank[i+1] += 1;
+      dn_faceRank[i+1] += 1;
     }
   }
 
   dNEdgeRank[0] = 0;
-  for (int i = 0; i < nRank; i++)
-    dNEdgeRank[i+1] = dNEdgeTotal / nRank ;
+  for (int i = 0; i < n_rank; i++)
+    dNEdgeRank[i+1] = dNEdgeTotal / n_rank ;
 
-  _reste = dNEdgeTotal % nRank;
+  _reste = dNEdgeTotal % n_rank;
   reste =  (int) _reste;
-  for (int i = 0; i < nRank; i++) {
+  for (int i = 0; i < n_rank; i++) {
     if (i < reste) {
       dNEdgeRank[i+1] += 1;
     }
   }
 
-  *dNFace = (int) dNFaceRank[localRank+1];
+  *dn_face = (int) dn_faceRank[localRank+1];
   *dNEdge = (int) dNEdgeRank[localRank+1];
 
-  for (int i = 0; i < nRank; i++) {
-    dNFaceRank[i+1] = dNFaceRank[i+1] + dNFaceRank[i];
+  for (int i = 0; i < n_rank; i++) {
+    dn_faceRank[i+1] = dn_faceRank[i+1] + dn_faceRank[i];
     dNEdgeRank[i+1] = dNEdgeRank[i+1] + dNEdgeRank[i];
   }
 
-  *dFaceVtxIdx = (int *) malloc(sizeof(int) * ((*dNFace)+1));
-  *dFaceVtx    = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * 8 * (*dNFace));
-  *dFaceEdge      = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * 8 * (*dNFace));
+  *dface_vtx_idx = (int *) malloc(sizeof(int) * ((*dn_face)+1));
+  *dface_vtx    = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * 8 * (*dn_face));
+  *dFaceEdge      = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * 8 * (*dn_face));
   *dEdgeVtx    = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * 2 * (*dNEdge));
   *dEdgeFace      = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * 2 * (*dNEdge));
-	for (int i=0; i<(*dNFace)+1; i++)
-		(*dFaceVtxIdx)[i]=-1;
-	for (int i=0; i<(8 * (*dNFace)); i++)
-		(*dFaceVtx)[i]=-1;
-	for (int i=0; i<(8 * (*dNFace)); i++)
+	for (int i=0; i<(*dn_face)+1; i++)
+		(*dface_vtx_idx)[i]=-1;
+	for (int i=0; i<(8 * (*dn_face)); i++)
+		(*dface_vtx)[i]=-1;
+	for (int i=0; i<(8 * (*dn_face)); i++)
 		(*dFaceEdge)[i]=-1;
 	for (int i=0; i<(2 * (*dNEdge)); i++)
 		(*dEdgeVtx)[i]=-1;
@@ -337,7 +337,7 @@ PDM_g_num_t **dEdgeGroup
 
   /* Calcul des coordonnees */
 
-  PDM_g_num_t dNVtxTmp = 0;
+  PDM_g_num_t dn_vtxTmp = 0;
 
   cpt = 0;
   if (ny1 > 4)
@@ -351,70 +351,70 @@ PDM_g_num_t **dEdgeGroup
   while (cpt < cptMax) {
     if (cpt % 3 == 1 || cpt % 3 == 2) {
       for (PDM_g_num_t ix = 0; ix < nx1/2; ix++) {
-        if ((dNVtxRank[localRank] <= dNVtxTmp) && (dNVtxRank[localRank+1] > dNVtxTmp)) {
-          PDM_g_num_t _localIdx = dNVtxTmp - dNVtxRank[localRank];
+        if ((dn_vtxRank[localRank] <= dn_vtxTmp) && (dn_vtxRank[localRank+1] > dn_vtxTmp)) {
+          PDM_g_num_t _localIdx = dn_vtxTmp - dn_vtxRank[localRank];
           int localIdx = (int) _localIdx;
-          (*dVtxCoord)[3*localIdx]   = xmin + ix * (1+sqrt(2)) * cote1;
-          (*dVtxCoord)[3*localIdx+1] = ycourant;
-          (*dVtxCoord)[3*localIdx+2] = 0.;
+          (*dvtx_coord)[3*localIdx]   = xmin + ix * (1+sqrt(2)) * cote1;
+          (*dvtx_coord)[3*localIdx+1] = ycourant;
+          (*dvtx_coord)[3*localIdx+2] = 0.;
         }
-        dNVtxTmp++;
+        dn_vtxTmp++;
       }
     }
     else if ((cpt % 3) == 0) {
       if ((cpt == (cptMax-1)) || (cpt == 0)) {
-        if ((dNVtxRank[localRank] <= dNVtxTmp) && (dNVtxRank[localRank+1] > dNVtxTmp)) {
-          PDM_g_num_t _localIdx = dNVtxTmp - dNVtxRank[localRank];
+        if ((dn_vtxRank[localRank] <= dn_vtxTmp) && (dn_vtxRank[localRank+1] > dn_vtxTmp)) {
+          PDM_g_num_t _localIdx = dn_vtxTmp - dn_vtxRank[localRank];
           int localIdx = (int) _localIdx;
-          (*dVtxCoord)[3*localIdx]   = xmin;
-          (*dVtxCoord)[3*localIdx+1] = ycourant;
-          (*dVtxCoord)[3*localIdx+2] = 0.;
+          (*dvtx_coord)[3*localIdx]   = xmin;
+          (*dvtx_coord)[3*localIdx+1] = ycourant;
+          (*dvtx_coord)[3*localIdx+2] = 0.;
         }
-        dNVtxTmp++;
+        dn_vtxTmp++;
       }
 
-      if ((dNVtxRank[localRank] <= dNVtxTmp) && (dNVtxRank[localRank+1] > dNVtxTmp)) {
-        PDM_g_num_t _localIdx = dNVtxTmp - dNVtxRank[localRank];
+      if ((dn_vtxRank[localRank] <= dn_vtxTmp) && (dn_vtxRank[localRank+1] > dn_vtxTmp)) {
+        PDM_g_num_t _localIdx = dn_vtxTmp - dn_vtxRank[localRank];
         int localIdx = (int) _localIdx;
-        (*dVtxCoord)[3*localIdx]   = xmin + cote1/sqrt(2);
-        (*dVtxCoord)[3*localIdx+1] = ycourant;
-        (*dVtxCoord)[3*localIdx+2] = 0.;
+        (*dvtx_coord)[3*localIdx]   = xmin + cote1/sqrt(2);
+        (*dvtx_coord)[3*localIdx+1] = ycourant;
+        (*dvtx_coord)[3*localIdx+2] = 0.;
       }
-      dNVtxTmp++;
+      dn_vtxTmp++;
 
       double xbase = xmin + cote1/sqrt(2);
 
       PDM_g_num_t nx11 = (nx1-2)/2;
       for (PDM_g_num_t ix = 0; ix < nx11; ix++) {
-        if ((dNVtxRank[localRank] <= dNVtxTmp) && (dNVtxRank[localRank+1] > dNVtxTmp)) {
-          PDM_g_num_t _localIdx = dNVtxTmp - dNVtxRank[localRank];
+        if ((dn_vtxRank[localRank] <= dn_vtxTmp) && (dn_vtxRank[localRank+1] > dn_vtxTmp)) {
+          PDM_g_num_t _localIdx = dn_vtxTmp - dn_vtxRank[localRank];
           int localIdx = (int) _localIdx;
-          (*dVtxCoord)[3*localIdx] = xbase + (ix+1) * cote1 + ix * cote1*sqrt(2);
-          (*dVtxCoord)[3*localIdx+1] = ycourant;
-          (*dVtxCoord)[3*localIdx+2] = 0.;
+          (*dvtx_coord)[3*localIdx] = xbase + (ix+1) * cote1 + ix * cote1*sqrt(2);
+          (*dvtx_coord)[3*localIdx+1] = ycourant;
+          (*dvtx_coord)[3*localIdx+2] = 0.;
         }
-        dNVtxTmp++;
+        dn_vtxTmp++;
         if (ix < (nx11 - 1)) {
-          if ((dNVtxRank[localRank] <= dNVtxTmp) && (dNVtxRank[localRank+1] > dNVtxTmp)) {
-            PDM_g_num_t _localIdx = dNVtxTmp - dNVtxRank[localRank];
+          if ((dn_vtxRank[localRank] <= dn_vtxTmp) && (dn_vtxRank[localRank+1] > dn_vtxTmp)) {
+            PDM_g_num_t _localIdx = dn_vtxTmp - dn_vtxRank[localRank];
             int localIdx = (int) _localIdx;
-            (*dVtxCoord)[3*localIdx] = xbase + (ix+1) * cote1 + (ix+1) * cote1*sqrt(2);
-            (*dVtxCoord)[3*localIdx+1] = ycourant;
-            (*dVtxCoord)[3*localIdx+2] = 0.;
+            (*dvtx_coord)[3*localIdx] = xbase + (ix+1) * cote1 + (ix+1) * cote1*sqrt(2);
+            (*dvtx_coord)[3*localIdx+1] = ycourant;
+            (*dvtx_coord)[3*localIdx+2] = 0.;
           }
-          dNVtxTmp++;
+          dn_vtxTmp++;
         }
       }
 
       if ((cpt == (cptMax-1)) || (cpt == 0)) {
-        if ((dNVtxRank[localRank] <= dNVtxTmp) && (dNVtxRank[localRank+1] > dNVtxTmp)) {
-          PDM_g_num_t _localIdx = dNVtxTmp - dNVtxRank[localRank];
+        if ((dn_vtxRank[localRank] <= dn_vtxTmp) && (dn_vtxRank[localRank+1] > dn_vtxTmp)) {
+          PDM_g_num_t _localIdx = dn_vtxTmp - dn_vtxRank[localRank];
           int localIdx = (int) _localIdx;
-          (*dVtxCoord)[3*localIdx]   = xmax;
-          (*dVtxCoord)[3*localIdx+1] = ycourant;
-          (*dVtxCoord)[3*localIdx+2] = 0.;
+          (*dvtx_coord)[3*localIdx]   = xmax;
+          (*dvtx_coord)[3*localIdx+1] = ycourant;
+          (*dvtx_coord)[3*localIdx+2] = 0.;
         }
-        dNVtxTmp++;
+        dn_vtxTmp++;
       }
     }
     cpt++;
@@ -424,30 +424,31 @@ PDM_g_num_t **dEdgeGroup
       ycourant += cote2;
   }
 
-  *nGVtx = dNVtxTmp;
+  *nGVtx = dn_vtxTmp;
 
   /* Perturbation des coordonnees + Creation d'une courbure en Z */
-  for (PDM_g_num_t ix = 0; ix <(*dNVtx) ; ix++) {
-    if (ABS(xmin-(*dVtxCoord)[3*ix]) > eps &&
-        ABS(xmax-(*dVtxCoord)[3*ix]) > eps &&
-        ABS(ymax-(*dVtxCoord)[3*ix+1]) > eps &&
-        ABS(ymin-(*dVtxCoord)[3*ix+1]) > eps) {
+
+  for (PDM_g_num_t ix = 0; ix <(*dn_vtx) ; ix++) {
+    if (ABS(xmin-(*dvtx_coord)[3*ix]) > eps &&
+        ABS(xmax-(*dvtx_coord)[3*ix]) > eps &&
+        ABS(ymax-(*dvtx_coord)[3*ix+1]) > eps &&
+        ABS(ymin-(*dvtx_coord)[3*ix+1]) > eps) {
       if (haveRandom != 0) {
-        (*dVtxCoord)[3*ix]   += random01() * coefRand * cote1;
-        (*dVtxCoord)[3*ix+1] += random01() * coefRand * cote2;
+        (*dvtx_coord)[3*ix]   += random01() * coefRand * cote1;
+        (*dvtx_coord)[3*ix+1] += random01() * coefRand * cote2;
       }
     }
-    //dVtxCoord[3*ix+2]=2*sin(3*dVtxCoord[3*ix+1])*sin(3*dVtxCoord[3*ix]);
-    //dVtxCoord[3*ix+2]=20*sin(dVtxCoord[3*ix+1]/5.)*sin(dVtxCoord[3*ix]/5.);
-    (*dVtxCoord)[3*ix+2] = 0.;
+    //dvtx_coord[3*ix+2]=2*sin(3*dvtx_coord[3*ix+1])*sin(3*dvtx_coord[3*ix]);
+    //dvtx_coord[3*ix+2]=20*sin(dvtx_coord[3*ix+1]/5.)*sin(dvtx_coord[3*ix]/5.);
+    (*dvtx_coord)[3*ix+2] = 0.;
   }
 
   /* Construction simultanée des connectivites des elements et des aretes internes */
   /* ----------------------------------------------------------------------------- */
 
-  int dNFaceTmp = 0;
+  int dn_faceTmp = 0;
   int dNEdgeTmp = 0;
-  int dNFaceAbs = 0;
+  int dn_faceAbs = 0;
   int dNEdgeAbs = 0;
 
   PDM_g_num_t n1;
@@ -459,23 +460,23 @@ PDM_g_num_t **dEdgeGroup
   PDM_g_num_t n7;
   PDM_g_num_t n8;
 
-  vb = 0; 
+  vb = 0;
   /* Triangle */
 
   /* -- Premiere ligne */
 
   n1 = 1;
   n2 = n1+nx1;
-  (*dFaceVtxIdx)[0] = 0;
+  (*dface_vtx_idx)[0] = 0;
 
   for (PDM_g_num_t ix = 0; ix < nx1/2; ix++) {
     PDM_g_num_t ix1 = 2 * ix;
 
-    if ((dNFaceRank[localRank] <= dNFaceAbs) && (dNFaceRank[localRank+1] > dNFaceAbs)) {
-      int ideb = (*dFaceVtxIdx)[dNFaceTmp] ;
-      (*dFaceVtx)[ideb]   = n1+ix1;
-      (*dFaceVtx)[ideb+1] = n1+ix1+1;
-      (*dFaceVtx)[ideb+2] = n2+ix;
+    if ((dn_faceRank[localRank] <= dn_faceAbs) && (dn_faceRank[localRank+1] > dn_faceAbs)) {
+      int ideb = (*dface_vtx_idx)[dn_faceTmp] ;
+      (*dface_vtx)[ideb]   = n1+ix1;
+      (*dface_vtx)[ideb+1] = n1+ix1+1;
+      (*dface_vtx)[ideb+2] = n2+ix;
       if (ix == 0)
         (*dFaceEdge)[ideb]   = 1;
       else
@@ -490,27 +491,27 @@ PDM_g_num_t **dEdgeGroup
         (*dFaceEdge)[ideb+2]   = nTri + 4 + 6*ix + 7;
       else
         (*dFaceEdge)[ideb+2]   = nTri + 4 + 6*ix + 6;
-if (vb==1) {PDM_printf ("dFaceVtx[ %d ] = %d\n", ideb, (*dFaceVtx)[ideb]);	 
-PDM_printf ("dFaceVtx[ %d ] = %d\n", ideb+1, (*dFaceVtx)[ideb+1]);	 
-PDM_printf ("dFaceVtx[ %d ] = %d\n", ideb+2, (*dFaceVtx)[ideb+2]);	 
-PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb, (*dFaceEdge)[ideb]);	 
-PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb+1, (*dFaceEdge)[ideb+1]);	 
+if (vb==1) {PDM_printf ("dface_vtx[ %d ] = %d\n", ideb, (*dface_vtx)[ideb]);
+PDM_printf ("dface_vtx[ %d ] = %d\n", ideb+1, (*dface_vtx)[ideb+1]);
+PDM_printf ("dface_vtx[ %d ] = %d\n", ideb+2, (*dface_vtx)[ideb+2]);
+PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb, (*dFaceEdge)[ideb]);
+PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb+1, (*dFaceEdge)[ideb+1]);
 PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb+2, (*dFaceEdge)[ideb+2]);}
-	
-      dNFaceTmp += 1;
-      (*dFaceVtxIdx)[dNFaceTmp] = ideb + 3;
+
+      dn_faceTmp += 1;
+      (*dface_vtx_idx)[dn_faceTmp] = ideb + 3;
     }
-    dNFaceAbs += 1;
+    dn_faceAbs += 1;
 
     if (ix == 0) {
       if ((dNEdgeRank[localRank] <= dNEdgeAbs) && (dNEdgeRank[localRank+1] > dNEdgeAbs)) {
         (*dEdgeVtx)[2*dNEdgeTmp]     = n2+ix;
         (*dEdgeVtx)[2*dNEdgeTmp + 1] = n1+ix1;
-        (*dEdgeFace)[2*dNEdgeTmp]       = dNFaceAbs;
+        (*dEdgeFace)[2*dNEdgeTmp]       = dn_faceAbs;
         (*dEdgeFace)[2*dNEdgeTmp + 1]   = 0;
-if (vb==1) {PDM_printf ("dEdgeVtx[ %d ] = %d\n", 2*dNEdgeTmp, (*dEdgeVtx)[2*dNEdgeTmp]);	 
-PDM_printf ("dEdgeVtx[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeVtx)[2*dNEdgeTmp+1]);	 
-PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp, (*dEdgeFace)[2*dNEdgeTmp]);	 
+if (vb==1) {PDM_printf ("dEdgeVtx[ %d ] = %d\n", 2*dNEdgeTmp, (*dEdgeVtx)[2*dNEdgeTmp]);
+PDM_printf ("dEdgeVtx[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeVtx)[2*dNEdgeTmp+1]);
+PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp, (*dEdgeFace)[2*dNEdgeTmp]);
 PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeFace)[2*dNEdgeTmp+1]);	 }
         dNEdgeTmp += 1;
       }
@@ -520,11 +521,11 @@ PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeFace)[2*dNEdgeTmp+1]
     if ((dNEdgeRank[localRank] <= dNEdgeAbs) && (dNEdgeRank[localRank+1] > dNEdgeAbs)) {
       (*dEdgeVtx)[2*dNEdgeTmp]     = n1+ix1;
       (*dEdgeVtx)[2*dNEdgeTmp + 1] = n1+ix1+1;
-      (*dEdgeFace)[2*dNEdgeTmp]       = dNFaceAbs;
+      (*dEdgeFace)[2*dNEdgeTmp]       = dn_faceAbs;
       (*dEdgeFace)[2*dNEdgeTmp + 1]   = 0;
-if (vb==1) {PDM_printf ("dEdgeVtx[ %d ] = %d\n", 2*dNEdgeTmp, (*dEdgeVtx)[2*dNEdgeTmp]);	 
-PDM_printf ("dEdgeVtx[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeVtx)[2*dNEdgeTmp+1]);	 
-PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp, (*dEdgeFace)[2*dNEdgeTmp]);	 
+if (vb==1) {PDM_printf ("dEdgeVtx[ %d ] = %d\n", 2*dNEdgeTmp, (*dEdgeVtx)[2*dNEdgeTmp]);
+PDM_printf ("dEdgeVtx[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeVtx)[2*dNEdgeTmp+1]);
+PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp, (*dEdgeFace)[2*dNEdgeTmp]);
 PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeFace)[2*dNEdgeTmp+1]);	 }
       dNEdgeTmp += 1;
     }
@@ -534,11 +535,11 @@ PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeFace)[2*dNEdgeTmp+1]
       if ((dNEdgeRank[localRank] <= dNEdgeAbs) && (dNEdgeRank[localRank+1] > dNEdgeAbs)) {
         (*dEdgeVtx)[2*dNEdgeTmp]     = n1+ix1+1;
         (*dEdgeVtx)[2*dNEdgeTmp + 1] = n2+ix;
-        (*dEdgeFace)[2*dNEdgeTmp]       = dNFaceAbs;
+        (*dEdgeFace)[2*dNEdgeTmp]       = dn_faceAbs;
         (*dEdgeFace)[2*dNEdgeTmp + 1]   = 0;
-if (vb==1) {PDM_printf ("dEdgeVtx[ %d ] = %d\n", 2*dNEdgeTmp, (*dEdgeVtx)[2*dNEdgeTmp]);	 
-PDM_printf ("dEdgeVtx[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeVtx)[2*dNEdgeTmp+1]);	 
-PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp, (*dEdgeFace)[2*dNEdgeTmp]);	 
+if (vb==1) {PDM_printf ("dEdgeVtx[ %d ] = %d\n", 2*dNEdgeTmp, (*dEdgeVtx)[2*dNEdgeTmp]);
+PDM_printf ("dEdgeVtx[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeVtx)[2*dNEdgeTmp+1]);
+PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp, (*dEdgeFace)[2*dNEdgeTmp]);
 PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeFace)[2*dNEdgeTmp+1]);	 }
         dNEdgeTmp += 1;
       }
@@ -558,73 +559,72 @@ PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeFace)[2*dNEdgeTmp+1]
     n5 = n2 + nx1-2 - 1;
     n6 = n3 + nx1/2 - 1;
 
-    if ((dNFaceRank[localRank] <= dNFaceAbs) && (dNFaceRank[localRank+1] > dNFaceAbs)) {
-      int ideb = (*dFaceVtxIdx)[dNFaceTmp];
-      (*dFaceVtx)[ideb]   = n1;
-      (*dFaceVtx)[ideb+1] = n2;
-      (*dFaceVtx)[ideb+2] = n3;
+    if ((dn_faceRank[localRank] <= dn_faceAbs) && (dn_faceRank[localRank+1] > dn_faceAbs)) {
+      int ideb = (*dface_vtx_idx)[dn_faceTmp];
+      (*dface_vtx)[ideb]   = n1;
+      (*dface_vtx)[ideb+1] = n2;
+      (*dface_vtx)[ideb+2] = n3;
       (*dFaceEdge)[ideb]     = dNEdgeAbs + 1;
       (*dFaceEdge)[ideb+1]   = nTri + 4 + (6 * nxPoly + 1) * itri + 4;
       if (itri == nbLi - 1)
         (*dFaceEdge)[ideb+2]   = nTri + 4 + (6 * nxPoly + 1) * (itri+1) + 7;
       else
         (*dFaceEdge)[ideb+2]   = nTri + 4 + (6 * nxPoly + 1) * (itri+1) + 6;
-      dNFaceTmp += 1;
-      (*dFaceVtxIdx)[dNFaceTmp] = ideb + 3;
-if (vb==1) {PDM_printf ("dFaceVtx[ %d ] = %d\n", ideb, (*dFaceVtx)[ideb]);	 
-PDM_printf ("dFaceVtx[ %d ] = %d\n", ideb+1, (*dFaceVtx)[ideb+1]);	 
-PDM_printf ("dFaceVtx[ %d ] = %d\n", ideb+2, (*dFaceVtx)[ideb+2]);	 
-PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb, (*dFaceEdge)[ideb]);	 
-PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb+1, (*dFaceEdge)[ideb+1]);	 
-PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb+2, (*dFaceEdge)[ideb+2]);	} 
+      dn_faceTmp += 1;
+      (*dface_vtx_idx)[dn_faceTmp] = ideb + 3;
+if (vb==1) {PDM_printf ("dface_vtx[ %d ] = %d\n", ideb, (*dface_vtx)[ideb]);
+PDM_printf ("dface_vtx[ %d ] = %d\n", ideb+1, (*dface_vtx)[ideb+1]);
+PDM_printf ("dface_vtx[ %d ] = %d\n", ideb+2, (*dface_vtx)[ideb+2]);
+PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb, (*dFaceEdge)[ideb]);
+PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb+1, (*dFaceEdge)[ideb+1]);
+PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb+2, (*dFaceEdge)[ideb+2]);	}
 
     }
-    dNFaceAbs += 1;
+    dn_faceAbs += 1;
 
     if ((dNEdgeRank[localRank] <= dNEdgeAbs) && (dNEdgeRank[localRank+1] > dNEdgeAbs)) {
       (*dEdgeVtx)[2*dNEdgeTmp]     = n3;
       (*dEdgeVtx)[2*dNEdgeTmp + 1] = n1;
-      (*dEdgeFace)[2*dNEdgeTmp]       = dNFaceAbs;
+      (*dEdgeFace)[2*dNEdgeTmp]       = dn_faceAbs;
       (*dEdgeFace)[2*dNEdgeTmp + 1]   = 0;
-if (vb==1) {PDM_printf ("dEdgeVtx[ %d ] = %d\n", 2*dNEdgeTmp, (*dEdgeVtx)[2*dNEdgeTmp]);	 
-PDM_printf ("dEdgeVtx[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeVtx)[2*dNEdgeTmp+1]);	 
-PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp, (*dEdgeFace)[2*dNEdgeTmp]);	 
+if (vb==1) {PDM_printf ("dEdgeVtx[ %d ] = %d\n", 2*dNEdgeTmp, (*dEdgeVtx)[2*dNEdgeTmp]);
+PDM_printf ("dEdgeVtx[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeVtx)[2*dNEdgeTmp+1]);
+PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp, (*dEdgeFace)[2*dNEdgeTmp]);
 PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeFace)[2*dNEdgeTmp+1]);	 }
       dNEdgeTmp += 1;
     }
     dNEdgeAbs += 1;
 
-    if ((dNFaceRank[localRank] <= dNFaceAbs) && (dNFaceRank[localRank+1] > dNFaceAbs)) {
-      int ideb = (*dFaceVtxIdx)[dNFaceTmp];
-      (*dFaceVtx)[ideb]   = n4;
-      (*dFaceVtx)[ideb+1] = n6;
-      (*dFaceVtx)[ideb+2] = n5;
+    if ((dn_faceRank[localRank] <= dn_faceAbs) && (dn_faceRank[localRank+1] > dn_faceAbs)) {
+      int ideb = (*dface_vtx_idx)[dn_faceTmp];
+      (*dface_vtx)[ideb]   = n4;
+      (*dface_vtx)[ideb+1] = n6;
+      (*dface_vtx)[ideb+2] = n5;
       (*dFaceEdge)[ideb]     = dNEdgeAbs + 1;
       if (itri == nbLi - 1)
         (*dFaceEdge)[ideb+1]   = nTri + 4 + (6 * nxPoly + 1) * (itri + 1) + (7 * nxPoly + 1) - 6;
       else
         (*dFaceEdge)[ideb+1]   = nTri + 4 + (6 * nxPoly + 1) * (itri+2) + 2;
       (*dFaceEdge)[ideb+2]   = nTri + 4 + (6 * nxPoly + 1) * (itri + 1) - 3;
-      dNFaceTmp += 1;
-      (*dFaceVtxIdx)[dNFaceTmp] = ideb + 3;
-if (vb==1) {PDM_printf ("dFaceVtx[ %d ] = %d\n", ideb, (*dFaceVtx)[ideb]);	 
-PDM_printf ("dFaceVtx[ %d ] = %d\n", ideb+1, (*dFaceVtx)[ideb+1]);	 
-PDM_printf ("dFaceVtx[ %d ] = %d\n", ideb+2, (*dFaceVtx)[ideb+2]);	 
-PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb, (*dFaceEdge)[ideb]);	 
-PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb+1, (*dFaceEdge)[ideb+1]);	 
+      dn_faceTmp += 1;
+      (*dface_vtx_idx)[dn_faceTmp] = ideb + 3;
+if (vb==1) {PDM_printf ("dface_vtx[ %d ] = %d\n", ideb, (*dface_vtx)[ideb]);
+PDM_printf ("dface_vtx[ %d ] = %d\n", ideb+1, (*dface_vtx)[ideb+1]);
+PDM_printf ("dface_vtx[ %d ] = %d\n", ideb+2, (*dface_vtx)[ideb+2]);
+PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb, (*dFaceEdge)[ideb]);
+PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb+1, (*dFaceEdge)[ideb+1]);
 PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb+2, (*dFaceEdge)[ideb+2]);	 }
-
     }
-    dNFaceAbs += 1;
+    dn_faceAbs += 1;
 
     if ((dNEdgeRank[localRank] <= dNEdgeAbs) && (dNEdgeRank[localRank+1] > dNEdgeAbs)) {
       (*dEdgeVtx)[2*dNEdgeTmp]     = n4;
       (*dEdgeVtx)[2*dNEdgeTmp + 1] = n6;
-      (*dEdgeFace)[2*dNEdgeTmp]       = dNFaceAbs;
+      (*dEdgeFace)[2*dNEdgeTmp]       = dn_faceAbs;
       (*dEdgeFace)[2*dNEdgeTmp + 1]   = 0;
-if (vb==1) {PDM_printf ("dEdgeVtx[ %d ] = %d\n", 2*dNEdgeTmp, (*dEdgeVtx)[2*dNEdgeTmp]);	 
-PDM_printf ("dEdgeVtx[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeVtx)[2*dNEdgeTmp+1]);	 
-PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp, (*dEdgeFace)[2*dNEdgeTmp]);	 
+if (vb==1) {PDM_printf ("dEdgeVtx[ %d ] = %d\n", 2*dNEdgeTmp, (*dEdgeVtx)[2*dNEdgeTmp]);
+PDM_printf ("dEdgeVtx[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeVtx)[2*dNEdgeTmp+1]);
+PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp, (*dEdgeFace)[2*dNEdgeTmp]);
 PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeFace)[2*dNEdgeTmp+1]);	 }
       dNEdgeTmp += 1;
     }
@@ -640,11 +640,11 @@ PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeFace)[2*dNEdgeTmp+1]
   n2 = n1 + nx1/2;
   for (PDM_g_num_t ix = 0; ix < nx1/2; ix++) {
     PDM_g_num_t ix1 = 2 * ix;
-    if ((dNFaceRank[localRank] <= dNFaceAbs) && (dNFaceRank[localRank+1] > dNFaceAbs)) {
-      int ideb = (*dFaceVtxIdx)[dNFaceTmp] ;
-      (*dFaceVtx)[ideb]   = n1 + ix;
-      (*dFaceVtx)[ideb+1] = n2 + ix1 + 1;
-      (*dFaceVtx)[ideb+2] = n2 + ix1;
+    if ((dn_faceRank[localRank] <= dn_faceAbs) && (dn_faceRank[localRank+1] > dn_faceAbs)) {
+      int ideb = (*dface_vtx_idx)[dn_faceTmp] ;
+      (*dface_vtx)[ideb]   = n1 + ix;
+      (*dface_vtx)[ideb+1] = n2 + ix1 + 1;
+      (*dface_vtx)[ideb+2] = n2 + ix1;
       if (ix == 0)
         (*dFaceEdge)[ideb+1]   = dNEdgeAbs + 2;
       else
@@ -661,27 +661,27 @@ PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeFace)[2*dNEdgeTmp+1]
         (*dFaceEdge)[ideb+2]   = nTri + 4 + (6 * nxPoly + 1) * (nyPoly - 1) + 6*(nxPoly - 1) + 7;
       else
         (*dFaceEdge)[ideb+2]   = nTri + 4 + (6 * nxPoly + 1) * (nyPoly - 1) + 6*ix + 5;
-      dNFaceTmp += 1;
-      (*dFaceVtxIdx)[dNFaceTmp] = ideb + 3;
-if (vb==1) {PDM_printf ("dFaceVtx[ %d ] = %d\n", ideb, (*dFaceVtx)[ideb]);	 
-PDM_printf ("dFaceVtx[ %d ] = %d\n", ideb+1, (*dFaceVtx)[ideb+1]);	 
-PDM_printf ("dFaceVtx[ %d ] = %d\n", ideb+2, (*dFaceVtx)[ideb+2]);	 
-PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb, (*dFaceEdge)[ideb]);	 
-PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb+1, (*dFaceEdge)[ideb+1]);	 
+      dn_faceTmp += 1;
+      (*dface_vtx_idx)[dn_faceTmp] = ideb + 3;
+if (vb==1) {PDM_printf ("dface_vtx[ %d ] = %d\n", ideb, (*dface_vtx)[ideb]);
+PDM_printf ("dface_vtx[ %d ] = %d\n", ideb+1, (*dface_vtx)[ideb+1]);
+PDM_printf ("dface_vtx[ %d ] = %d\n", ideb+2, (*dface_vtx)[ideb+2]);
+PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb, (*dFaceEdge)[ideb]);
+PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb+1, (*dFaceEdge)[ideb+1]);
 PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb+2, (*dFaceEdge)[ideb+2]);	 }
 
     }
-    dNFaceAbs += 1;
+    dn_faceAbs += 1;
 
     if (ix == 0) {
       if ((dNEdgeRank[localRank] <= dNEdgeAbs) && (dNEdgeRank[localRank+1] > dNEdgeAbs)) {
         (*dEdgeVtx)[2*dNEdgeTmp]     = n2 + ix1;
         (*dEdgeVtx)[2*dNEdgeTmp + 1] = n1 + ix;
-        (*dEdgeFace)[2*dNEdgeTmp]       = dNFaceAbs;
+        (*dEdgeFace)[2*dNEdgeTmp]       = dn_faceAbs;
         (*dEdgeFace)[2*dNEdgeTmp + 1]   = 0;
-if (vb==1) {PDM_printf ("dEdgeVtx[ %d ] = %d\n", 2*dNEdgeTmp, (*dEdgeVtx)[2*dNEdgeTmp]);	 
-PDM_printf ("dEdgeVtx[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeVtx)[2*dNEdgeTmp+1]);	 
-PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp, (*dEdgeFace)[2*dNEdgeTmp]);	 
+if (vb==1) {PDM_printf ("dEdgeVtx[ %d ] = %d\n", 2*dNEdgeTmp, (*dEdgeVtx)[2*dNEdgeTmp]);
+PDM_printf ("dEdgeVtx[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeVtx)[2*dNEdgeTmp+1]);
+PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp, (*dEdgeFace)[2*dNEdgeTmp]);
 PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeFace)[2*dNEdgeTmp+1]);	 }
         dNEdgeTmp += 1;
       }
@@ -691,12 +691,12 @@ PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeFace)[2*dNEdgeTmp+1]
     if ((dNEdgeRank[localRank] <= dNEdgeAbs) && (dNEdgeRank[localRank+1] > dNEdgeAbs)) {
       (*dEdgeVtx)[2*dNEdgeTmp]     = n2 + ix1;
       (*dEdgeVtx)[2*dNEdgeTmp + 1] = n2 + ix1 + 1;
-      (*dEdgeFace)[2*dNEdgeTmp]       = dNFaceAbs;
+      (*dEdgeFace)[2*dNEdgeTmp]       = dn_faceAbs;
       (*dEdgeFace)[2*dNEdgeTmp + 1]   = 0;
-if (vb==1) {PDM_printf ("dEdgeVtx[ %d ] = %d\n", 2*dNEdgeTmp, (*dEdgeVtx)[2*dNEdgeTmp]);	 
-PDM_printf ("dEdgeVtx[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeVtx)[2*dNEdgeTmp+1]);	 
-PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp, (*dEdgeFace)[2*dNEdgeTmp]);	 
-PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeFace)[2*dNEdgeTmp+1]);}	 
+if (vb==1) {PDM_printf ("dEdgeVtx[ %d ] = %d\n", 2*dNEdgeTmp, (*dEdgeVtx)[2*dNEdgeTmp]);
+PDM_printf ("dEdgeVtx[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeVtx)[2*dNEdgeTmp+1]);
+PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp, (*dEdgeFace)[2*dNEdgeTmp]);
+PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeFace)[2*dNEdgeTmp+1]);}
       dNEdgeTmp += 1;
     }
     dNEdgeAbs += 1;
@@ -705,12 +705,12 @@ PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeFace)[2*dNEdgeTmp+1]
       if ((dNEdgeRank[localRank] <= dNEdgeAbs) && (dNEdgeRank[localRank+1] > dNEdgeAbs)) {
         (*dEdgeVtx)[2*dNEdgeTmp]     = n1 + ix;
         (*dEdgeVtx)[2*dNEdgeTmp + 1] = n2 + ix1 + 1;
-        (*dEdgeFace)[2*dNEdgeTmp]       = dNFaceAbs;
+        (*dEdgeFace)[2*dNEdgeTmp]       = dn_faceAbs;
         (*dEdgeFace)[2*dNEdgeTmp + 1]   = 0;
-if (vb==1) {PDM_printf ("dEdgeVtx[ %d ] = %d\n", 2*dNEdgeTmp, (*dEdgeVtx)[2*dNEdgeTmp]);	 
-PDM_printf ("dEdgeVtx[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeVtx)[2*dNEdgeTmp+1]);	 
-PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp, (*dEdgeFace)[2*dNEdgeTmp]);	 
-PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeFace)[2*dNEdgeTmp+1]);	} 
+if (vb==1) {PDM_printf ("dEdgeVtx[ %d ] = %d\n", 2*dNEdgeTmp, (*dEdgeVtx)[2*dNEdgeTmp]);
+PDM_printf ("dEdgeVtx[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeVtx)[2*dNEdgeTmp+1]);
+PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp, (*dEdgeFace)[2*dNEdgeTmp]);
+PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeFace)[2*dNEdgeTmp+1]);	}
         dNEdgeTmp += 1;
       }
       dNEdgeAbs += 1;
@@ -725,12 +725,12 @@ PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeFace)[2*dNEdgeTmp+1]
       n2 = iy*(2*nx1-2) + 2*nx1 + 1 + 2*ix + 1;
       n3 = n2 + 1;
       n4 = iy*(2*nx1-2) + 3*nx1 - 2 + 1 + ix + 1;
-      if ((dNFaceRank[localRank] <= dNFaceAbs) && (dNFaceRank[localRank+1] > dNFaceAbs)) {
-        int ideb = (*dFaceVtxIdx)[dNFaceTmp];
-        (*dFaceVtx)[ideb]   = n1;
-        (*dFaceVtx)[ideb+1] = n3;
-        (*dFaceVtx)[ideb+2] = n4;
-        (*dFaceVtx)[ideb+3] = n2;
+      if ((dn_faceRank[localRank] <= dn_faceAbs) && (dn_faceRank[localRank+1] > dn_faceAbs)) {
+        int ideb = (*dface_vtx_idx)[dn_faceTmp];
+        (*dface_vtx)[ideb]   = n1;
+        (*dface_vtx)[ideb+1] = n3;
+        (*dface_vtx)[ideb+2] = n4;
+        (*dface_vtx)[ideb+3] = n2;
         (*dFaceEdge)[ideb]     = nTri + 4 + (6 * nxPoly + 1) * iy     + 6*ix     + 3;
         if (ix == nxQuad - 1)
           (*dFaceEdge)[ideb+1]   = nTri + 4 + (6 * nxPoly + 1) * iy     + 6*(ix+1) + 5;
@@ -747,19 +747,19 @@ PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeFace)[2*dNEdgeTmp+1]
           else
             (*dFaceEdge)[ideb+2]   = nTri + 4 + (6 * nxPoly + 1) * (iy+1) + 6*(ix+1) + 6;
         (*dFaceEdge)[ideb+3]   = nTri + 4 + (6 * nxPoly + 1) * (iy+1) + 6*ix     + 2;
-        dNFaceTmp += 1;
-        (*dFaceVtxIdx)[dNFaceTmp] = ideb + 4;
-if (vb==1) {PDM_printf ("dFaceVtx[ %d ] = %d\n", ideb, (*dFaceVtx)[ideb]);	 
-PDM_printf ("dFaceVtx[ %d ] = %d\n", ideb+1, (*dFaceVtx)[ideb+1]);	 
-PDM_printf ("dFaceVtx[ %d ] = %d\n", ideb+2, (*dFaceVtx)[ideb+2]);	 
-PDM_printf ("dFaceVtx[ %d ] = %d\n", ideb+3, (*dFaceVtx)[ideb+3]);	 
-PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb, (*dFaceEdge)[ideb]);	 
-PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb+1, (*dFaceEdge)[ideb+1]);	 
-PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb+2, (*dFaceEdge)[ideb+2]);	 
+        dn_faceTmp += 1;
+        (*dface_vtx_idx)[dn_faceTmp] = ideb + 4;
+if (vb==1) {PDM_printf ("dface_vtx[ %d ] = %d\n", ideb, (*dface_vtx)[ideb]);
+PDM_printf ("dface_vtx[ %d ] = %d\n", ideb+1, (*dface_vtx)[ideb+1]);
+PDM_printf ("dface_vtx[ %d ] = %d\n", ideb+2, (*dface_vtx)[ideb+2]);
+PDM_printf ("dface_vtx[ %d ] = %d\n", ideb+3, (*dface_vtx)[ideb+3]);
+PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb, (*dFaceEdge)[ideb]);
+PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb+1, (*dFaceEdge)[ideb+1]);
+PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb+2, (*dFaceEdge)[ideb+2]);
 PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb+3, (*dFaceEdge)[ideb+3]);	 }
 
       }
-      dNFaceAbs += 1;
+      dn_faceAbs += 1;
     }
   }
 
@@ -774,7 +774,7 @@ PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb+3, (*dFaceEdge)[ideb+3]);	 }
     else if (iy != 0)
       delta += 2*nx1-2;
     for (PDM_g_num_t ix = 0; ix < nxPoly; ix++) {
-		
+
       ipoLy += 1;
       if (iy == 0)
         n1 = delta + 1 + 2*ix +1;
@@ -789,9 +789,9 @@ PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb+3, (*dFaceEdge)[ideb+3]);	 }
       if (iy == (nyPoly - 1))
         n7 = iy*(2*nx1-2) + 1 + 2*nx1 + 2*ix + 1;
       n8 = n7 + 1;
-if (vb==1) {PDM_printf ("n1: %d n2: %d n3: %d n4: %d n5: %d n6: %d n7: %d n8: %d\n", n1, n2,n3,n4,n5,n6,n7,n8);	 
+if (vb==1) {PDM_printf ("n1: %d n2: %d n3: %d n4: %d n5: %d n6: %d n7: %d n8: %d\n", n1, n2,n3,n4,n5,n6,n7,n8);
 PDM_printf ("dNEdgeAbs: %d \n", dNEdgeAbs);	 }
-	  
+
 
       PDM_g_num_t connecPoly[8];
       connecPoly[0]      = n1;
@@ -803,16 +803,16 @@ PDM_printf ("dNEdgeAbs: %d \n", dNEdgeAbs);	 }
       connecPoly[6]      = n5;
       connecPoly[7]      = n3;
 
-      if ((dNFaceRank[localRank] <= dNFaceAbs) && (dNFaceRank[localRank+1] > dNFaceAbs)) {
-        int ideb = (*dFaceVtxIdx)[dNFaceTmp] ;
+      if ((dn_faceRank[localRank] <= dn_faceAbs) && (dn_faceRank[localRank+1] > dn_faceAbs)) {
+        int ideb = (*dface_vtx_idx)[dn_faceTmp] ;
         for (int k = 0; k < 8; k++)
-          (*dFaceVtx)[ideb+k] = connecPoly[k];
+          (*dface_vtx)[ideb+k] = connecPoly[k];
         int id = 0;
         (*dFaceEdge)[ideb]     = dNEdgeAbs + (++id);
         (*dFaceEdge)[ideb+1]   = dNEdgeAbs + (++id);
         if (ix == (nxPoly - 1))
           (*dFaceEdge)[ideb+2]   = dNEdgeAbs + (++id);
-        else { 
+        else {
 /* version d eric			(*dFaceEdge)[ideb+2]   = dNEdgeAbs + (6 * nxPoly + 1) + 5; */
 /* version de stephanie */
 			(*dFaceEdge)[ideb+2]   = dNEdgeAbs+(id+1) + 8;
@@ -836,27 +836,27 @@ PDM_printf ("dNEdgeAbs: %d \n", dNEdgeAbs);	 }
         (*dFaceEdge)[ideb+5]   = dNEdgeAbs + (++id);
         (*dFaceEdge)[ideb+6]   = dNEdgeAbs + (++id);
         (*dFaceEdge)[ideb+7]   = dNEdgeAbs + (++id);
-        dNFaceTmp += 1;
-        (*dFaceVtxIdx)[dNFaceTmp] = ideb + 8;
-if (vb==1) {PDM_printf ("dFaceVtx[ %d ] = %d\n", ideb, (*dFaceVtx)[ideb]);	 
-PDM_printf ("dFaceVtx[ %d ] = %d\n", ideb+1, (*dFaceVtx)[ideb+1]);	 
-PDM_printf ("dFaceVtx[ %d ] = %d\n", ideb+2, (*dFaceVtx)[ideb+2]);	 
-PDM_printf ("dFaceVtx[ %d ] = %d\n", ideb+3, (*dFaceVtx)[ideb+3]);	 
-PDM_printf ("dFaceVtx[ %d ] = %d\n", ideb+4, (*dFaceVtx)[ideb+4]);	 
-PDM_printf ("dFaceVtx[ %d ] = %d\n", ideb+5, (*dFaceVtx)[ideb+5]);	 
-PDM_printf ("dFaceVtx[ %d ] = %d\n", ideb+6, (*dFaceVtx)[ideb+6]);	 
-PDM_printf ("dFaceVtx[ %d ] = %d\n", ideb+7, (*dFaceVtx)[ideb+7]);	 
-PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb, (*dFaceEdge)[ideb]);	 
-PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb+1, (*dFaceEdge)[ideb+1]);	 
-PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb+2, (*dFaceEdge)[ideb+2]);	 
-PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb+3, (*dFaceEdge)[ideb+3]);	 
-PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb+4, (*dFaceEdge)[ideb+4]);	 
-PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb+5, (*dFaceEdge)[ideb+5]);	 
-PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb+6, (*dFaceEdge)[ideb+6]);	 
+        dn_faceTmp += 1;
+        (*dface_vtx_idx)[dn_faceTmp] = ideb + 8;
+if (vb==1) {PDM_printf ("dface_vtx[ %d ] = %d\n", ideb, (*dface_vtx)[ideb]);
+PDM_printf ("dface_vtx[ %d ] = %d\n", ideb+1, (*dface_vtx)[ideb+1]);
+PDM_printf ("dface_vtx[ %d ] = %d\n", ideb+2, (*dface_vtx)[ideb+2]);
+PDM_printf ("dface_vtx[ %d ] = %d\n", ideb+3, (*dface_vtx)[ideb+3]);
+PDM_printf ("dface_vtx[ %d ] = %d\n", ideb+4, (*dface_vtx)[ideb+4]);
+PDM_printf ("dface_vtx[ %d ] = %d\n", ideb+5, (*dface_vtx)[ideb+5]);
+PDM_printf ("dface_vtx[ %d ] = %d\n", ideb+6, (*dface_vtx)[ideb+6]);
+PDM_printf ("dface_vtx[ %d ] = %d\n", ideb+7, (*dface_vtx)[ideb+7]);
+PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb, (*dFaceEdge)[ideb]);
+PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb+1, (*dFaceEdge)[ideb+1]);
+PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb+2, (*dFaceEdge)[ideb+2]);
+PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb+3, (*dFaceEdge)[ideb+3]);
+PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb+4, (*dFaceEdge)[ideb+4]);
+PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb+5, (*dFaceEdge)[ideb+5]);
+PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb+6, (*dFaceEdge)[ideb+6]);
 PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb+7, (*dFaceEdge)[ideb+7]);	 }
 
       }
-      dNFaceAbs += 1;
+      dn_faceAbs += 1;
 
       /* Definition de toutes les aretes internes */
 
@@ -927,9 +927,9 @@ PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb+7, (*dFaceEdge)[ideb+7]);	 }
                   (*dEdgeFace)[2*dNEdgeTmp + 1] = nTri + (iy-1)*nxQuad + ix + 1 - 1;
               }
             }
-if (vb==1) {PDM_printf ("dEdgeVtx[ %d ] = %d\n", 2*dNEdgeTmp, (*dEdgeVtx)[2*dNEdgeTmp]);	 
-PDM_printf ("dEdgeVtx[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeVtx)[2*dNEdgeTmp+1]);	 
-PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp, (*dEdgeFace)[2*dNEdgeTmp]);	 
+if (vb==1) {PDM_printf ("dEdgeVtx[ %d ] = %d\n", 2*dNEdgeTmp, (*dEdgeVtx)[2*dNEdgeTmp]);
+PDM_printf ("dEdgeVtx[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeVtx)[2*dNEdgeTmp+1]);
+PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp, (*dEdgeFace)[2*dNEdgeTmp]);
 PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeFace)[2*dNEdgeTmp+1]);	 }
             dNEdgeTmp += 1;
           }
@@ -940,7 +940,7 @@ PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeFace)[2*dNEdgeTmp+1]
   }
 vb = 1;
   *nGEdge = dNEdgeAbs;
-  *nGFace = dNFaceAbs;
+  *nGFace = dn_faceAbs;
 
   /* Definition des limites */
   /* ---------------------- */
@@ -1030,36 +1030,36 @@ vb = 1;
     ++dNEdgeGroupAbs;
   }
 
-/*  *dFaceVtxIdx = (int *) malloc(sizeof(int) * ((*dNFace)+1));
-  *dFaceVtx    = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * 8 * (*dNFace));
-  *dFaceEdge      = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * 8 * (*dNFace));
+/*  *dface_vtx_idx = (int *) malloc(sizeof(int) * ((*dn_face)+1));
+  *dface_vtx    = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * 8 * (*dn_face));
+  *dFaceEdge      = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * 8 * (*dn_face));
   *dEdgeVtx    = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * 2 * (*dNEdge));
   *dEdgeFace      = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * 2 * (*dNEdge)); */
 
 	if (vb==1){
-/*		PDM_printf ("- dFaceVtxIdx : \n");
-		for (int i=0; i<(*dNFace)+1; i++)
-			PDM_printf ("%d->%d  ", i, (*dFaceVtxIdx)[i]);
+/*		PDM_printf ("- dface_vtx_idx : \n");
+		for (int i=0; i<(*dn_face)+1; i++)
+			PDM_printf ("%d->%d  ", i, (*dface_vtx_idx)[i]);
 		*/
-		PDM_printf ("- dVtxCoord : \n");
-		for (int i = 0; i < (*dNVtx); i++) {
+		PDM_printf ("- dvtx_coord : \n");
+		for (int i = 0; i < (*dn_vtx); i++) {
 		  PDM_printf ("%d-> ", i);
-		  PDM_printf (" %f", (*dVtxCoord)[3*i]);
-		  PDM_printf (" %f", (*dVtxCoord)[3*i+1]);
-		  PDM_printf (" %f", (*dVtxCoord)[3*i+2]);
+		  PDM_printf (" %f", (*dvtx_coord)[3*i]);
+		  PDM_printf (" %f", (*dvtx_coord)[3*i+1]);
+		  PDM_printf (" %f", (*dvtx_coord)[3*i+2]);
 		  PDM_printf ("\n");
 		}
-		PDM_printf ("- dFaceVtx : \n");
-		for (int i = 0; i <(*dNFace); i++) {
+		PDM_printf ("- dface_vtx : \n");
+		for (int i = 0; i <(*dn_face); i++) {
 		  PDM_printf ("%d-> ", i);
-		  for (int j = (*dFaceVtxIdx)[i]; j < (*dFaceVtxIdx)[i+1]; j++)
-			PDM_printf (" "PDM_FMT_G_NUM, (*dFaceVtx)[j]);
+		  for (int j = (*dface_vtx_idx)[i]; j < (*dface_vtx_idx)[i+1]; j++)
+			PDM_printf (" "PDM_FMT_G_NUM, (*dface_vtx)[j]);
 		  PDM_printf ("\n");
 		}
 		PDM_printf ("- dFaceEdge : \n");
-		for (int i = 0; i < (*dNFace); i++) {
+		for (int i = 0; i < (*dn_face); i++) {
 		  PDM_printf ("%d-> ", i);
-		  for (int j = (*dFaceVtxIdx)[i]; j < (*dFaceVtxIdx)[i+1]; j++)
+		  for (int j = (*dface_vtx_idx)[i]; j < (*dface_vtx_idx)[i+1]; j++)
 			PDM_printf (" "PDM_FMT_G_NUM, (*dFaceEdge)[j]);
 		  PDM_printf ("\n");
 		}
@@ -1079,13 +1079,13 @@ vb = 1;
 		  PDM_printf (" "PDM_FMT_G_NUM, (*dEdgeFace)[2*i+1]);
 		  PDM_printf ("\n");
 		}
-	}			
+	}
 
 
-  free(dNEdgeLim13Rank); 
-  free(dNEdgeLim24Rank); 
-  free(dNVtxRank);
-  free(dNFaceRank);
+  free(dNEdgeLim13Rank);
+  free(dNEdgeLim24Rank);
+  free(dn_vtxRank);
+  free(dn_faceRank);
   free(dNEdgeRank);
   vb = 1;
   if (vb == 1)   PDM_printf ("==== PDM_poly_surf_gen ==== terminated ====\n");
@@ -1103,11 +1103,11 @@ vb = 1;
 /* int        *initRandom, */
 /* PDM_g_num_t *nx, */
 /* PDM_g_num_t *ny, */
-/* int        *dNVtx, */
-/* double     *dVtxCoord_f, */
-/* int        *dNFace, */
-/* int        *dFaceVtxIdx_f, */
-/* PDM_g_num_t *dFaceVtx_f, */
+/* int        *dn_vtx, */
+/* double     *dvtx_coord_f, */
+/* int        *dn_face, */
+/* int        *dface_vtx_idx_f, */
+/* PDM_g_num_t *dface_vtx_f, */
 /* PDM_g_num_t *dFaceEdge_f,    */
 /* int        *dNEdge, */
 /* PDM_g_num_t *dEdgeVtx_f, */
@@ -1115,12 +1115,12 @@ vb = 1;
 /* ) */
 /* { */
 /*   PDM_MPI_Comm localComm = PDM_MPI_Comm_f2c(*localFComm); */
-/*   int dNVtx_f = *dNVtx; */
-/*   int dNFace_f = *dNFace; */
+/*   int dn_vtx_f = *dn_vtx; */
+/*   int dn_face_f = *dn_face; */
 
-/*   double *dVtxCoord = NULL; */
-/*   int    *dFaceVtxIdx = NULL; */
-/*   int    *dFaceVtx = NULL; */
+/*   double *dvtx_coord = NULL; */
+/*   int    *dface_vtx_idx = NULL; */
+/*   int    *dface_vtx = NULL; */
 
 /*   creeMaillagePolygone2D(*order, */
 /*                          localComm, */
@@ -1131,39 +1131,39 @@ vb = 1;
 /*                          *initRandom, */
 /*                          *nx, */
 /*                          *ny, */
-/*                          dNVtx, */
-/*                          &dVtxCoord, */
-/*                          dNFace, */
-/*                          &dFaceVtxIdx, */
-/*                          &dFaceVtx); */
+/*                          dn_vtx, */
+/*                          &dvtx_coord, */
+/*                          dn_face, */
+/*                          &dface_vtx_idx, */
+/*                          &dface_vtx); */
 
-/*   if (dNVtx_f < *dNVtx) { */
-/*     PDM_printf("Augmenter le nombre de sommets Fortran a : %i \n", *dNVtx); */
+/*   if (dn_vtx_f < *dn_vtx) { */
+/*     PDM_printf("Augmenter le nombre de sommets Fortran a : %i \n", *dn_vtx); */
 /*     exit(1); */
 /*   } */
 
-/*   if (dNFace_f < *dNFace) { */
-/*     PDM_printf("Augmenter le nombre d'elements a : %i \n", *dNFace); */
+/*   if (dn_face_f < *dn_face) { */
+/*     PDM_printf("Augmenter le nombre d'elements a : %i \n", *dn_face); */
 /*     exit(1); */
 /*   } */
 
-/*   if (*lEltsConnecPointer_f < dFaceVtxIdx[*dNFace]) { */
-/*     PDM_printf("Augmenter la taille du tableau de connectivite a : %i \n", dFaceVtxIdx[*dNFace]); */
+/*   if (*lEltsConnecPointer_f < dface_vtx_idx[*dn_face]) { */
+/*     PDM_printf("Augmenter la taille du tableau de connectivite a : %i \n", dface_vtx_idx[*dn_face]); */
 /*     exit(1); */
 /*   } */
 
-/*   for(int i = 0; i < 3*(*dNVtx); i++) */
-/*     dVtxCoord_f[i] = dVtxCoord[i]; */
+/*   for(int i = 0; i < 3*(*dn_vtx); i++) */
+/*     dvtx_coord_f[i] = dvtx_coord[i]; */
 
-/*   for(int i = 0; i < *dNFace + 1; i++) */
-/*     dFaceVtxIdx_f[i] = dFaceVtxIdx[i]; */
+/*   for(int i = 0; i < *dn_face + 1; i++) */
+/*     dface_vtx_idx_f[i] = dface_vtx_idx[i]; */
 
-/*   for(int i = 0; i < dFaceVtxIdx[*dNFace]; i++) */
-/*     dFaceVtx_f[i] = dFaceVtx[i]; */
+/*   for(int i = 0; i < dface_vtx_idx[*dn_face]; i++) */
+/*     dface_vtx_f[i] = dface_vtx[i]; */
 
-/*   free(dVtxCoord); */
-/*   free(dFaceVtxIdx); */
-/*   free(dFaceVtx); */
+/*   free(dvtx_coord); */
+/*   free(dface_vtx_idx); */
+/*   free(dface_vtx); */
 /* } */
 
 #ifdef __cplusplus

@@ -42,6 +42,7 @@
 #include "pdm_gnum_location.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
+#include "pdm_binary_search.h"
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
@@ -63,14 +64,14 @@ extern "C" {
  *============================================================================*/
 
 typedef struct  {
-  int  nBound;
-  int  nJoin;
-  int *faceBoundIdx;
-  int *faceJoinIdx;
-  int *faceBound;
-  int *faceJoin;
-  PDM_g_num_t *faceBoundLNToGN;
-  PDM_g_num_t *faceJoinLNToGN;
+  int  n_bound;
+  int  n_join;
+  int *face_bound_idx;
+  int *face_join_idx;
+  int *face_bound;
+  int *face_join;
+  PDM_g_num_t *face_bound_ln_to_gn;
+  PDM_g_num_t *face_join_ln_to_gn;
 
 } _boundsAndJoins_t;
 
@@ -89,16 +90,16 @@ typedef struct  {
   PDM_bool_t        merge_blocks;     /*!< Merge before partitionning or not */
   PDM_part_split_t  split_method;     /*!< Partitioning method */
   PDM_MPI_Comm      comm;             /*!< MPI communicator */
-  int               *partZoneDistri;  /*!< Number of part in each zone (distribution,
+  int               *part_zone_distribution;  /*!< Number of part in each zone (distribution,
                                            size = n_zone + 1)                         */
-  int               *gPartToProc;     /*!< For each global part id, proc storing this
+  int               *gpart_to_proc;     /*!< For each global part id, proc storing this
                                            part and localId of part in this process   */
-  int               *dmeshesIds;      /*!< Ids of distributed blocks (size = n_zone)  */
-  int               *partIds;         /*!< Ids of partitions built on each block of this
+  int               *dmeshes_ids;      /*!< Ids of distributed blocks (size = n_zone)  */
+  int               *part_ids;         /*!< Ids of partitions built on each block of this
                                            process (size = n_zone)                    */
-  int               *nBoundsAndJoins; /*!< Number of boundaries and joins in each zone
+  int               *n_bounds_and_joins; /*!< Number of boundaries and joins in each zone
                                            (size = 2*n_zone, global data)             */
-  _boundsAndJoins_t **pBoundsAndJoins;/*!< partitionned boundary and join data in each
+  _boundsAndJoins_t **pbounds_and_joins;/*!< partitionned boundary and join data in each
                                            zone/part                                  */
 } _pdm_multipart_t;
 
@@ -136,146 +137,146 @@ _get_from_id
   return multipart;
 }
 
-static int
- _search_rank
-(
- PDM_g_num_t   elt,
- PDM_g_num_t  *array,
- int            id1,
- int            id2
-)
-{
-  if (elt >= array[id2]) {
-    PDM_printf("PPART error : Element not in initial distributed array "
-           PDM_FMT_G_NUM" "PDM_FMT_G_NUM" "PDM_FMT_G_NUM"\n",
-           elt, array[id1], array[id2]);
-    abort();
-  }
+// static int
+//  PDM_search_rank
+// (
+//  PDM_g_num_t   elt,
+//  PDM_g_num_t  *array,
+//  int            id1,
+//  int            id2
+// )
+// {
+//   if (elt >= array[id2]) {
+//     PDM_printf("PPART error : Element not in initial distributed array "
+//            PDM_FMT_G_NUM" "PDM_FMT_G_NUM" "PDM_FMT_G_NUM"\n",
+//            elt, array[id1], array[id2]);
+//     abort();
+//   }
 
-  if (elt < array[id1]) {
-    PDM_printf("PPART error : Element not in initial distributed array "
-           PDM_FMT_G_NUM" "PDM_FMT_G_NUM" "PDM_FMT_G_NUM"\n",
-           elt, array[id1], array[id2]);
-    abort();
-  }
+//   if (elt < array[id1]) {
+//     PDM_printf("PPART error : Element not in initial distributed array "
+//            PDM_FMT_G_NUM" "PDM_FMT_G_NUM" "PDM_FMT_G_NUM"\n",
+//            elt, array[id1], array[id2]);
+//     abort();
+//   }
 
-  if (id2 == id1 + 1) {
-    return id1;
-  }
+//   if (id2 == id1 + 1) {
+//     return id1;
+//   }
 
-  else {
+//   else {
 
-    while(array[id1] == array[id1+1]) id1++;
+//     while(array[id1] == array[id1+1]) id1++;
 
-    int midId = (id2 + id1) / 2;
+//     int midId = (id2 + id1) / 2;
 
-    if (elt == array[id1])
-      return id1;
-    else if (elt < array[midId])
-      return _search_rank(elt, array, id1, midId);
-    else if (elt >= array[midId])
-      return _search_rank(elt, array, midId, id2);
-  }
-  return -1;
-}
+//     if (elt == array[id1])
+//       return id1;
+//     else if (elt < array[midId])
+//       return PDM_search_rank(elt, array, id1, midId);
+//     else if (elt >= array[midId])
+//       return PDM_search_rank(elt, array, midId, id2);
+//   }
+//   return -1;
+// }
 
 static void
-_set_dFaceTag_from_joins
+_set_dface_tag_from_joins
 (
- const int          dNFace,
- const int          nJoin,
- const int         *dJoinGIds,
- const int         *dFaceJoinIdx,
- const PDM_g_num_t *dFaceJoin,
- int               *dFaceTag,
+ const int          dn_face,
+ const int          n_join,
+ const int         *djoin_gids,
+ const int         *dface_join_idx,
+ const PDM_g_num_t *dface_join,
+ int               *dface_tag,
  const PDM_MPI_Comm  comm
 )
 {
-  int iRank;
-  int nRank;
+  int i_rank;
+  int n_rank;
 
-  PDM_MPI_Comm_rank(comm, &iRank);
-  PDM_MPI_Comm_size(comm, &nRank);
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  PDM_MPI_Comm_size(comm, &n_rank);
 
   // 1. Construct face distribution -- will be needed to find owner of faces
-  PDM_g_num_t * dFaceProc = (PDM_g_num_t *) malloc((nRank+1) * sizeof(PDM_g_num_t));
-  int *dNFaceProc = (int *) malloc((nRank) * sizeof(int));
+  PDM_g_num_t * dface_proc = (PDM_g_num_t *) malloc((n_rank+1) * sizeof(PDM_g_num_t));
+  int *dn_face_proc = (int *) malloc((n_rank) * sizeof(int));
 
-  PDM_MPI_Allgather((void *) &dNFace, 1, PDM_MPI_INT, (void *) dNFaceProc, 1, PDM_MPI_INT, comm);
+  PDM_MPI_Allgather((void *) &dn_face, 1, PDM_MPI_INT, (void *) dn_face_proc, 1, PDM_MPI_INT, comm);
 
-  dFaceProc[0] = 1;
-  for (int i = 1; i < nRank+1; i++)
-    dFaceProc[i] = (PDM_g_num_t) dNFaceProc[i-1] + dFaceProc[i-1];
-  free(dNFaceProc);
+  dface_proc[0] = 1;
+  for (int i = 1; i < n_rank+1; i++)
+    dface_proc[i] = (PDM_g_num_t) dn_face_proc[i-1] + dface_proc[i-1];
+  free(dn_face_proc);
 
   int  nData = 2; //Face Id, JoinOppId
-  int *faceToSendN   = (int *) malloc(nRank * sizeof(int));
-  int *faceToSendIdx = (int *) malloc((nRank+1) * sizeof(int));
-  for (int i = 0; i < nRank; i++)
-    faceToSendN[i] = 0;
+  int *face_to_send_n   = (int *) malloc(n_rank * sizeof(int));
+  int *face_to_send_idx = (int *) malloc((n_rank+1) * sizeof(int));
+  for (int i = 0; i < n_rank; i++)
+    face_to_send_n[i] = 0;
 
   // 2. Prepare and send data
   //Count faces to send
-  for (int ijoin = 0; ijoin < nJoin; ijoin++) {
-    for (int iface = dFaceJoinIdx[ijoin]; iface < dFaceJoinIdx[ijoin+1]; iface++) {
-      int rank = _search_rank(dFaceJoin[iface], dFaceProc, 0, nRank);
-      faceToSendN[rank] += nData;
+  for (int ijoin = 0; ijoin < n_join; ijoin++) {
+    for (int iface = dface_join_idx[ijoin]; iface < dface_join_idx[ijoin+1]; iface++) {
+      int rank = PDM_search_rank(dface_join[iface], dface_proc, 0, n_rank);
+      face_to_send_n[rank] += nData;
     }
   }
   //Prepare variable stride
-  faceToSendIdx[0] = 0;
-  for (int i = 1; i < nRank + 1; i++) {
-    faceToSendIdx[i] = faceToSendIdx[i-1] + faceToSendN[i-1];
-    faceToSendN[i-1] = 0;
+  face_to_send_idx[0] = 0;
+  for (int i = 1; i < n_rank + 1; i++) {
+    face_to_send_idx[i] = face_to_send_idx[i-1] + face_to_send_n[i-1];
+    face_to_send_n[i-1] = 0;
   }
   //Prepare data
-  PDM_g_num_t *faceToSend = (PDM_g_num_t *) malloc(faceToSendIdx[nRank] * sizeof(PDM_g_num_t));
-  for (int ijoin = 0; ijoin < nJoin; ijoin++)
+  PDM_g_num_t *face_to_send = (PDM_g_num_t *) malloc(face_to_send_idx[n_rank] * sizeof(PDM_g_num_t));
+  for (int ijoin = 0; ijoin < n_join; ijoin++)
   {
-    for (int iface = dFaceJoinIdx[ijoin]; iface < dFaceJoinIdx[ijoin+1]; iface++)
+    for (int iface = dface_join_idx[ijoin]; iface < dface_join_idx[ijoin+1]; iface++)
     {
-      int rank = _search_rank(dFaceJoin[iface], dFaceProc, 0, nRank);
-      int idx   = faceToSendIdx[rank] + faceToSendN[rank];
-      faceToSend[idx  ]   = dFaceJoin[iface];
-      faceToSend[idx+1]   = dJoinGIds[2*ijoin+1];
-      faceToSendN[rank] += nData;
+      int rank = PDM_search_rank(dface_join[iface], dface_proc, 0, n_rank);
+      int idx   = face_to_send_idx[rank] + face_to_send_n[rank];
+      face_to_send[idx  ]   = dface_join[iface];
+      face_to_send[idx+1]   = djoin_gids[2*ijoin+1];
+      face_to_send_n[rank] += nData;
     }
   }
   //Exchange sizes
-  int *faceToRecvN   = (int *) malloc(nRank * sizeof(int));
-  PDM_MPI_Alltoall(faceToSendN, 1, PDM_MPI_INT, faceToRecvN, 1, PDM_MPI_INT, comm);
-  int *faceToRecvIdx = (int *) malloc((nRank+1) * sizeof(int));
-  faceToRecvIdx[0] = 0;
-  for(int i = 1; i < (nRank+1); i++) {
-    faceToRecvIdx[i] = faceToRecvIdx[i-1] + faceToRecvN[i-1];
+  int *face_to_recv_n   = (int *) malloc(n_rank * sizeof(int));
+  PDM_MPI_Alltoall(face_to_send_n, 1, PDM_MPI_INT, face_to_recv_n, 1, PDM_MPI_INT, comm);
+  int *face_to_recv_idx = (int *) malloc((n_rank+1) * sizeof(int));
+  face_to_recv_idx[0] = 0;
+  for(int i = 1; i < (n_rank+1); i++) {
+    face_to_recv_idx[i] = face_to_recv_idx[i-1] + face_to_recv_n[i-1];
   }
   //Exchange data
-  PDM_g_num_t *faceToRecv = (PDM_g_num_t *) malloc(faceToRecvIdx[nRank]*sizeof(PDM_g_num_t));
-  PDM_MPI_Alltoallv(faceToSend,
-                    faceToSendN,
-                    faceToSendIdx,
+  PDM_g_num_t *face_to_recv = (PDM_g_num_t *) malloc(face_to_recv_idx[n_rank]*sizeof(PDM_g_num_t));
+  PDM_MPI_Alltoallv(face_to_send,
+                    face_to_send_n,
+                    face_to_send_idx,
                     PDM__PDM_MPI_G_NUM,
-                    faceToRecv,
-                    faceToRecvN,
-                    faceToRecvIdx,
+                    face_to_recv,
+                    face_to_recv_n,
+                    face_to_recv_idx,
                     PDM__PDM_MPI_G_NUM,
                     comm);
-  int nRecv = faceToRecvIdx[nRank]/nData;
+  int nRecv = face_to_recv_idx[n_rank]/nData;
 
-  free(faceToSendN);
-  free(faceToSendIdx);
-  free(faceToSend);
-  free(faceToRecvN);
-  free(faceToRecvIdx);
+  free(face_to_send_n);
+  free(face_to_send_idx);
+  free(face_to_send);
+  free(face_to_recv_n);
+  free(face_to_recv_idx);
 
   // 3. Process received data : go back to local numerotation and flag received faces
-  for (int iface = 0; iface < dNFace; iface++)
-    dFaceTag[iface] = -1;
+  for (int iface = 0; iface < dn_face; iface++)
+    dface_tag[iface] = -1;
   for (int i=0; i<nRecv; i++) {
-    int lfaceId = faceToRecv[nData*i] - dFaceProc[iRank];
-    dFaceTag[lfaceId] = faceToRecv[nData*i + 1];
+    int lfaceId = face_to_recv[nData*i] - dface_proc[i_rank];
+    dface_tag[lfaceId] = face_to_recv[nData*i + 1];
   }
-  free(faceToRecv);
+  free(face_to_recv);
 }
 
 
@@ -289,113 +290,113 @@ _set_dFaceTag_from_joins
 //    * I/ For each block we build the gnum location
 //    */
 //   int* userdom_gnum_id = (int *) malloc(_multipart->n_zone * sizeof(int*) );
-//   for (int zoneGId = 0; zoneGId < _multipart->n_zone; zoneGId++) {
+//   for (int zone_gid = 0; zone_gid < _multipart->n_zone; zone_gid++) {
 
 //     // Gnum creation
-//     userdom_gnum_id[zoneGId] = PDM_gnum_location_create( _multipart->n_part[zoneGId], _multipart->n_part[0], _multipart->comm);
+//     userdom_gnum_id[zone_gid] = PDM_gnum_location_create( _multipart->n_part[zone_gid], _multipart->n_part[0], _multipart->comm);
 
-//     for (int ipart = 0; ipart < _multipart->n_part[zoneGId]; ipart++) {
+//     for (int i_part = 0; i_part < _multipart->n_part[zone_gid]; i_part++) {
 
-//       int nCell, nFace, nFacePartBound, nVtx, nProc, nTPart, sCellFace, sFaceVtx, sFaceGroup, nFaceGroup;
-//       PDM_part_part_dim_get(_multipart->partIds[zoneGId],
-//                         ipart,
-//                         &nCell,
-//                         &nFace,
-//                         &nFacePartBound,
-//                         &nVtx,
-//                         &nProc,
-//                         &nTPart,
-//                         &sCellFace,
-//                         &sFaceVtx,
-//                         &sFaceGroup,
-//                         &nFaceGroup);
+//       int n_cell, n_face, n_face_part_bound, n_vtx, n_proc, n_total_part, scell_face, sface_vtx, sface_group, n_face_group;
+//       PDM_part_part_dim_get(_multipart->part_ids[zone_gid],
+//                         i_part,
+//                         &n_cell,
+//                         &n_face,
+//                         &n_face_part_bound,
+//                         &n_vtx,
+//                         &n_proc,
+//                         &n_total_part,
+//                         &scell_face,
+//                         &sface_vtx,
+//                         &sface_group,
+//                         &n_face_group);
 
-//       int nBound = _multipart->nBoundsAndJoins[2*zoneGId];
-//       int nJoin  = _multipart->nBoundsAndJoins[2*zoneGId+1];
-//       assert(nFaceGroup == nBound + nJoin);
+//       int n_bound = _multipart->n_bounds_and_joins[2*zone_gid];
+//       int n_join  = _multipart->n_bounds_and_joins[2*zone_gid+1];
+//       assert(n_face_group == n_bound + n_join);
 
-//       int          *cellTag;
-//       int          *cellFaceIdx;
-//       int          *cellFace;
-//       PDM_g_num_t *cellLNToGN;
-//       int          *faceTag;
-//       int          *faceCell;
-//       int          *faceVtxIdx;
-//       int          *faceVtx;
-//       PDM_g_num_t *faceLNToGN;
-//       int          *facePartBoundProcIdx;
-//       int          *facePartBoundPartIdx;
-//       int          *facePartBound;
-//       int          *vtxTag;
+//       int          *cell_tag;
+//       int          *cell_face_idx;
+//       int          *cell_face;
+//       PDM_g_num_t *cell_ln_to_gn;
+//       int          *face_tag;
+//       int          *face_cell;
+//       int          *face_vtx_idx;
+//       int          *face_vtx;
+//       PDM_g_num_t *face_ln_to_gn;
+//       int          *face_part_bound_proc_idx;
+//       int          *face_part_bound_part_idx;
+//       int          *face_part_bound;
+//       int          *vtx_tag;
 //       double       *vtx;
-//       PDM_g_num_t  *vtxLNToGN;
-//       int          *faceGroupIdx;
-//       int          *faceGroup;
-//       PDM_g_num_t *faceGroupLNToGN;
-//       PDM_part_part_val_get(_multipart->partIds[zoneGId],
-//                         ipart,
-//                         &cellTag,
-//                         &cellFaceIdx,
-//                         &cellFace,
-//                         &cellLNToGN,
-//                         &faceTag,
-//                         &faceCell,
-//                         &faceVtxIdx,
-//                         &faceVtx,
-//                         &faceLNToGN,
-//                         &facePartBoundProcIdx,
-//                         &facePartBoundPartIdx,
-//                         &facePartBound,
-//                         &vtxTag,
+//       PDM_g_num_t  *vtx_ln_to_gn;
+//       int          *face_group_idx;
+//       int          *face_group;
+//       PDM_g_num_t *face_group_ln_to_gn;
+//       PDM_part_part_val_get(_multipart->part_ids[zone_gid],
+//                         i_part,
+//                         &cell_tag,
+//                         &cell_face_idx,
+//                         &cell_face,
+//                         &cell_ln_to_gn,
+//                         &face_tag,
+//                         &face_cell,
+//                         &face_vtx_idx,
+//                         &face_vtx,
+//                         &face_ln_to_gn,
+//                         &face_part_bound_proc_idx,
+//                         &face_part_bound_part_idx,
+//                         &face_part_bound,
+//                         &vtx_tag,
 //                         &vtx,
-//                         &vtxLNToGN,
-//                         &faceGroupIdx,
-//                         &faceGroup,
-//                         &faceGroupLNToGN
+//                         &vtx_ln_to_gn,
+//                         &face_group_idx,
+//                         &face_group,
+//                         &face_group_ln_to_gn
 //                         );
 //       //Test gnum location
-//       if (zoneGId == 0) {
-//         PDM_gnum_location_elements_set (idtest, ipart, nFace, faceLNToGN);
+//       if (zone_gid == 0) {
+//         PDM_gnum_location_elements_set (idtest, i_part, n_face, face_ln_to_gn);
 //         PDM_g_num_t *_numabs2 = malloc(sizeof(PDM_g_num_t) * 227);
 //         for (int i=0; i < 227; i++)
 //           _numabs2[i] = i+1;
-//         PDM_gnum_location_requested_elements_set (idtest, ipart, 227, _numabs2);
+//         PDM_gnum_location_requested_elements_set (idtest, i_part, 227, _numabs2);
 //       }
 
-//       //Retrieve boundaries and joins from faceGroup
-//       int *pFaceBoundIdx = (int *) malloc((nBound+1) * sizeof(int));
-//       int *pFaceJoinIdx  = (int *) malloc((nJoin +1) * sizeof(int));
-//       for (int i = 0; i < nBound + 1; i++)
-//         pFaceBoundIdx[i] = faceGroupIdx[i];
-//       pFaceJoinIdx[0] = 0;
-//       for (int i = nBound + 1; i < nBound + nJoin + 1; i++)
-//         pFaceJoinIdx[i-nBound] = faceGroupIdx[i] - faceGroupIdx[nBound];
+//       //Retrieve boundaries and joins from face_group
+//       int *pface_bound_idx = (int *) malloc((n_bound+1) * sizeof(int));
+//       int *pface_join_idx  = (int *) malloc((n_join +1) * sizeof(int));
+//       for (int i = 0; i < n_bound + 1; i++)
+//         pface_bound_idx[i] = face_group_idx[i];
+//       pface_join_idx[0] = 0;
+//       for (int i = n_bound + 1; i < n_bound + n_join + 1; i++)
+//         pface_join_idx[i-n_bound] = face_group_idx[i] - face_group_idx[n_bound];
 
-//       int *pFaceBound = (int *) malloc(pFaceBoundIdx[nBound] * sizeof(int));
-//       int *pFaceJoin  = (int *) malloc(pFaceJoinIdx[nJoin]   * sizeof(int));
-//       for (int i = 0; i < pFaceBoundIdx[nBound]; i++)
-//         pFaceBound[i] = faceGroup[i];
-//       for (int i = pFaceBoundIdx[nBound]; i < faceGroupIdx[nFaceGroup]; i++)
-//         pFaceJoin[i - pFaceBoundIdx[nBound]] = faceGroup[i];
+//       int *pface_bound = (int *) malloc(pface_bound_idx[n_bound] * sizeof(int));
+//       int *pface_join  = (int *) malloc(pface_join_idx[n_join]   * sizeof(int));
+//       for (int i = 0; i < pface_bound_idx[n_bound]; i++)
+//         pface_bound[i] = face_group[i];
+//       for (int i = pface_bound_idx[n_bound]; i < face_group_idx[n_face_group]; i++)
+//         pface_join[i - pface_bound_idx[n_bound]] = face_group[i];
 
-//       PDM_g_num_t *pFaceBoundLNToGN = (PDM_g_num_t *) malloc(pFaceBoundIdx[nBound] * sizeof(PDM_g_num_t));
-//       PDM_g_num_t *pFaceJoinLNToGN  = (PDM_g_num_t *) malloc(pFaceJoinIdx[nJoin]   * sizeof(PDM_g_num_t));
-//       for (int i = 0; i < pFaceBoundIdx[nBound]; i++)
-//         pFaceBoundLNToGN[i] = faceGroupLNToGN[i];
-//       for (int i = pFaceBoundIdx[nBound]; i < faceGroupIdx[nFaceGroup]; i++)
-//         pFaceJoinLNToGN[i - pFaceBoundIdx[nBound]] = faceGroupLNToGN[i];
+//       PDM_g_num_t *pface_bound_ln_to_gn = (PDM_g_num_t *) malloc(pface_bound_idx[n_bound] * sizeof(PDM_g_num_t));
+//       PDM_g_num_t *pface_join_ln_to_gn  = (PDM_g_num_t *) malloc(pface_join_idx[n_join]   * sizeof(PDM_g_num_t));
+//       for (int i = 0; i < pface_bound_idx[n_bound]; i++)
+//         pface_bound_ln_to_gn[i] = face_group_ln_to_gn[i];
+//       for (int i = pface_bound_idx[n_bound]; i < face_group_idx[n_face_group]; i++)
+//         pface_join_ln_to_gn[i - pface_bound_idx[n_bound]] = face_group_ln_to_gn[i];
 
-//       // Store data in pBoundsAndJoins
-//       int idx = boundsAndJoinsIdx[zoneGId] + ipart;
-//       _multipart->pBoundsAndJoins[idx] = malloc(sizeof(_boundsAndJoins_t));
-//       _multipart->pBoundsAndJoins[idx]->nBound = nBound;
-//       _multipart->pBoundsAndJoins[idx]->nJoin = nJoin;
-//       _multipart->pBoundsAndJoins[idx]->faceBoundIdx = pFaceBoundIdx;
-//       _multipart->pBoundsAndJoins[idx]->faceJoinIdx  = pFaceJoinIdx;
-//       _multipart->pBoundsAndJoins[idx]->faceBound    = pFaceBound;
-//       _multipart->pBoundsAndJoins[idx]->faceJoin     = pFaceJoin;
-//       _multipart->pBoundsAndJoins[idx]->faceBoundLNToGN    = pFaceBoundLNToGN;
-//       _multipart->pBoundsAndJoins[idx]->faceJoinLNToGN     = pFaceJoinLNToGN;
+//       // Store data in pbounds_and_joins
+//       int idx = bounds_and_joins_idx[zone_gid] + i_part;
+//       _multipart->pbounds_and_joins[idx] = malloc(sizeof(_boundsAndJoins_t));
+//       _multipart->pbounds_and_joins[idx]->n_bound = n_bound;
+//       _multipart->pbounds_and_joins[idx]->n_join = n_join;
+//       _multipart->pbounds_and_joins[idx]->face_bound_idx = pface_bound_idx;
+//       _multipart->pbounds_and_joins[idx]->face_join_idx  = pface_join_idx;
+//       _multipart->pbounds_and_joins[idx]->face_bound    = pface_bound;
+//       _multipart->pbounds_and_joins[idx]->face_join     = pface_join;
+//       _multipart->pbounds_and_joins[idx]->face_bound_ln_to_gn    = pface_bound_ln_to_gn;
+//       _multipart->pbounds_and_joins[idx]->face_join_ln_to_gn     = pface_join_ln_to_gn;
 //     }
 //   }
 //   free(userdom_gnum_id);
@@ -411,119 +412,119 @@ _rebuild_boundaries
   printf("_rebuild_boundaries::\n");
 
   //Set structure : we need a to retrive pboundsAndJoin for a given zone/part
-  int *boundsAndJoinsIdx = (int *) malloc((_multipart->n_zone + 1) * sizeof(int));
-  boundsAndJoinsIdx[0] = 0;
+  int *bounds_and_joins_idx = (int *) malloc((_multipart->n_zone + 1) * sizeof(int));
+  bounds_and_joins_idx[0] = 0;
   for (int i = 0; i < _multipart->n_zone; i++)
-    boundsAndJoinsIdx[i + 1] = _multipart->n_part[i] + boundsAndJoinsIdx[i];
+    bounds_and_joins_idx[i + 1] = _multipart->n_part[i] + bounds_and_joins_idx[i];
 
-  _multipart->pBoundsAndJoins = (_boundsAndJoins_t **)
-  malloc(boundsAndJoinsIdx[_multipart->n_zone] * sizeof(_boundsAndJoins_t *));
+  _multipart->pbounds_and_joins = (_boundsAndJoins_t **)
+  malloc(bounds_and_joins_idx[_multipart->n_zone] * sizeof(_boundsAndJoins_t *));
 
   // Test GNUM location
   int idtest = PDM_gnum_location_create(_multipart->n_part[0], _multipart->n_part[0], _multipart->comm);
   // Loop over zones and part to get data
-  for (int zoneGId = 0; zoneGId<_multipart->n_zone; zoneGId++) {
-    for (int ipart = 0; ipart < _multipart->n_part[zoneGId]; ipart++) {
-      int nCell, nFace, nFacePartBound, nVtx, nProc, nTPart, sCellFace, sFaceVtx, sFaceGroup, nFaceGroup;
-      PDM_part_part_dim_get(_multipart->partIds[zoneGId],
-                        ipart,
-                        &nCell,
-                        &nFace,
-                        &nFacePartBound,
-                        &nVtx,
-                        &nProc,
-                        &nTPart,
-                        &sCellFace,
-                        &sFaceVtx,
-                        &sFaceGroup,
-                        &nFaceGroup);
+  for (int zone_gid = 0; zone_gid<_multipart->n_zone; zone_gid++) {
+    for (int i_part = 0; i_part < _multipart->n_part[zone_gid]; i_part++) {
+      int n_cell, n_face, n_face_part_bound, n_vtx, n_proc, n_total_part, scell_face, sface_vtx, sface_group, n_face_group;
+      PDM_part_part_dim_get(_multipart->part_ids[zone_gid],
+                        i_part,
+                        &n_cell,
+                        &n_face,
+                        &n_face_part_bound,
+                        &n_vtx,
+                        &n_proc,
+                        &n_total_part,
+                        &scell_face,
+                        &sface_vtx,
+                        &sface_group,
+                        &n_face_group);
 
-      int nBound = _multipart->nBoundsAndJoins[2*zoneGId];
-      int nJoin  = _multipart->nBoundsAndJoins[2*zoneGId+1];
-      assert(nFaceGroup == nBound + nJoin);
+      int n_bound = _multipart->n_bounds_and_joins[2*zone_gid];
+      int n_join  = _multipart->n_bounds_and_joins[2*zone_gid+1];
+      assert(n_face_group == n_bound + n_join);
 
-      int          *cellTag;
-      int          *cellFaceIdx;
-      int          *cellFace;
-      PDM_g_num_t *cellLNToGN;
-      int          *faceTag;
-      int          *faceCell;
-      int          *faceVtxIdx;
-      int          *faceVtx;
-      PDM_g_num_t *faceLNToGN;
-      int          *facePartBoundProcIdx;
-      int          *facePartBoundPartIdx;
-      int          *facePartBound;
-      int          *vtxTag;
+      int          *cell_tag;
+      int          *cell_face_idx;
+      int          *cell_face;
+      PDM_g_num_t *cell_ln_to_gn;
+      int          *face_tag;
+      int          *face_cell;
+      int          *face_vtx_idx;
+      int          *face_vtx;
+      PDM_g_num_t *face_ln_to_gn;
+      int          *face_part_bound_proc_idx;
+      int          *face_part_bound_part_idx;
+      int          *face_part_bound;
+      int          *vtx_tag;
       double       *vtx;
-      PDM_g_num_t  *vtxLNToGN;
-      int          *faceGroupIdx;
-      int          *faceGroup;
-      PDM_g_num_t *faceGroupLNToGN;
-      PDM_part_part_val_get(_multipart->partIds[zoneGId],
-                        ipart,
-                        &cellTag,
-                        &cellFaceIdx,
-                        &cellFace,
-                        &cellLNToGN,
-                        &faceTag,
-                        &faceCell,
-                        &faceVtxIdx,
-                        &faceVtx,
-                        &faceLNToGN,
-                        &facePartBoundProcIdx,
-                        &facePartBoundPartIdx,
-                        &facePartBound,
-                        &vtxTag,
+      PDM_g_num_t  *vtx_ln_to_gn;
+      int          *face_group_idx;
+      int          *face_group;
+      PDM_g_num_t *face_group_ln_to_gn;
+      PDM_part_part_val_get(_multipart->part_ids[zone_gid],
+                        i_part,
+                        &cell_tag,
+                        &cell_face_idx,
+                        &cell_face,
+                        &cell_ln_to_gn,
+                        &face_tag,
+                        &face_cell,
+                        &face_vtx_idx,
+                        &face_vtx,
+                        &face_ln_to_gn,
+                        &face_part_bound_proc_idx,
+                        &face_part_bound_part_idx,
+                        &face_part_bound,
+                        &vtx_tag,
                         &vtx,
-                        &vtxLNToGN,
-                        &faceGroupIdx,
-                        &faceGroup,
-                        &faceGroupLNToGN
+                        &vtx_ln_to_gn,
+                        &face_group_idx,
+                        &face_group,
+                        &face_group_ln_to_gn
                         );
       //Test gnum location
-      if (zoneGId == 0) {
-        PDM_gnum_location_elements_set (idtest, ipart, nFace, faceLNToGN);
+      if (zone_gid == 0) {
+        PDM_gnum_location_elements_set (idtest, i_part, n_face, face_ln_to_gn);
         PDM_g_num_t *_numabs2 = malloc(sizeof(PDM_g_num_t) * 227);
         for (int i=0; i < 227; i++)
           _numabs2[i] = i+1;
-        PDM_gnum_location_requested_elements_set (idtest, ipart, 227, _numabs2);
+        PDM_gnum_location_requested_elements_set (idtest, i_part, 227, _numabs2);
       }
 
-      //Retrieve boundaries and joins from faceGroup
-      int *pFaceBoundIdx = (int *) malloc((nBound+1) * sizeof(int));
-      int *pFaceJoinIdx  = (int *) malloc((nJoin +1) * sizeof(int));
-      for (int i = 0; i < nBound + 1; i++)
-        pFaceBoundIdx[i] = faceGroupIdx[i];
-      pFaceJoinIdx[0] = 0;
-      for (int i = nBound + 1; i < nBound + nJoin + 1; i++)
-        pFaceJoinIdx[i-nBound] = faceGroupIdx[i] - faceGroupIdx[nBound];
+      //Retrieve boundaries and joins from face_group
+      int *pface_bound_idx = (int *) malloc((n_bound+1) * sizeof(int));
+      int *pface_join_idx  = (int *) malloc((n_join +1) * sizeof(int));
+      for (int i = 0; i < n_bound + 1; i++)
+        pface_bound_idx[i] = face_group_idx[i];
+      pface_join_idx[0] = 0;
+      for (int i = n_bound + 1; i < n_bound + n_join + 1; i++)
+        pface_join_idx[i-n_bound] = face_group_idx[i] - face_group_idx[n_bound];
 
-      int *pFaceBound = (int *) malloc(pFaceBoundIdx[nBound] * sizeof(int));
-      int *pFaceJoin  = (int *) malloc(pFaceJoinIdx[nJoin]   * sizeof(int));
-      for (int i = 0; i < pFaceBoundIdx[nBound]; i++)
-        pFaceBound[i] = faceGroup[i];
-      for (int i = pFaceBoundIdx[nBound]; i < faceGroupIdx[nFaceGroup]; i++)
-        pFaceJoin[i - pFaceBoundIdx[nBound]] = faceGroup[i];
+      int *pface_bound = (int *) malloc(pface_bound_idx[n_bound] * sizeof(int));
+      int *pface_join  = (int *) malloc(pface_join_idx[n_join]   * sizeof(int));
+      for (int i = 0; i < pface_bound_idx[n_bound]; i++)
+        pface_bound[i] = face_group[i];
+      for (int i = pface_bound_idx[n_bound]; i < face_group_idx[n_face_group]; i++)
+        pface_join[i - pface_bound_idx[n_bound]] = face_group[i];
 
-      PDM_g_num_t *pFaceBoundLNToGN = (PDM_g_num_t *) malloc(pFaceBoundIdx[nBound] * sizeof(PDM_g_num_t));
-      PDM_g_num_t *pFaceJoinLNToGN  = (PDM_g_num_t *) malloc(pFaceJoinIdx[nJoin]   * sizeof(PDM_g_num_t));
-      for (int i = 0; i < pFaceBoundIdx[nBound]; i++)
-        pFaceBoundLNToGN[i] = faceGroupLNToGN[i];
-      for (int i = pFaceBoundIdx[nBound]; i < faceGroupIdx[nFaceGroup]; i++)
-        pFaceJoinLNToGN[i - pFaceBoundIdx[nBound]] = faceGroupLNToGN[i];
+      PDM_g_num_t *pface_bound_ln_to_gn = (PDM_g_num_t *) malloc(pface_bound_idx[n_bound] * sizeof(PDM_g_num_t));
+      PDM_g_num_t *pface_join_ln_to_gn  = (PDM_g_num_t *) malloc(pface_join_idx[n_join]   * sizeof(PDM_g_num_t));
+      for (int i = 0; i < pface_bound_idx[n_bound]; i++)
+        pface_bound_ln_to_gn[i] = face_group_ln_to_gn[i];
+      for (int i = pface_bound_idx[n_bound]; i < face_group_idx[n_face_group]; i++)
+        pface_join_ln_to_gn[i - pface_bound_idx[n_bound]] = face_group_ln_to_gn[i];
 
-      // Store data in pBoundsAndJoins
-      int idx = boundsAndJoinsIdx[zoneGId] + ipart;
-      _multipart->pBoundsAndJoins[idx] = malloc(sizeof(_boundsAndJoins_t));
-      _multipart->pBoundsAndJoins[idx]->nBound = nBound;
-      _multipart->pBoundsAndJoins[idx]->nJoin = nJoin;
-      _multipart->pBoundsAndJoins[idx]->faceBoundIdx = pFaceBoundIdx;
-      _multipart->pBoundsAndJoins[idx]->faceJoinIdx  = pFaceJoinIdx;
-      _multipart->pBoundsAndJoins[idx]->faceBound    = pFaceBound;
-      _multipart->pBoundsAndJoins[idx]->faceJoin     = pFaceJoin;
-      _multipart->pBoundsAndJoins[idx]->faceBoundLNToGN    = pFaceBoundLNToGN;
-      _multipart->pBoundsAndJoins[idx]->faceJoinLNToGN     = pFaceJoinLNToGN;
+      // Store data in pbounds_and_joins
+      int idx = bounds_and_joins_idx[zone_gid] + i_part;
+      _multipart->pbounds_and_joins[idx] = malloc(sizeof(_boundsAndJoins_t));
+      _multipart->pbounds_and_joins[idx]->n_bound         = n_bound;
+      _multipart->pbounds_and_joins[idx]->n_join          = n_join;
+      _multipart->pbounds_and_joins[idx]->face_bound_idx    = pface_bound_idx;
+      _multipart->pbounds_and_joins[idx]->face_join_idx     = pface_join_idx;
+      _multipart->pbounds_and_joins[idx]->face_bound       = pface_bound;
+      _multipart->pbounds_and_joins[idx]->face_join        = pface_join;
+      _multipart->pbounds_and_joins[idx]->face_bound_ln_to_gn = pface_bound_ln_to_gn;
+      _multipart->pbounds_and_joins[idx]->face_join_ln_to_gn  = pface_join_ln_to_gn;
 
     }
   }
@@ -543,53 +544,53 @@ _rebuild_boundaries
 
 
   // Implementation avec le alltoall + trie (en cours mais a jeter ?)
-  int myRank;
-  int nRank;
-  PDM_MPI_Comm_rank(PDM_MPI_COMM_WORLD, &myRank);
-  PDM_MPI_Comm_size(PDM_MPI_COMM_WORLD, &nRank);
+  int i_rank;
+  int n_rank;
+  PDM_MPI_Comm_rank(PDM_MPI_COMM_WORLD, &i_rank);
+  PDM_MPI_Comm_size(PDM_MPI_COMM_WORLD, &n_rank);
 
-  //Step 0 ; construction de joinGId -> liste partitions partageant ce join en num globale (apres PT)
+  //Step 0 ; construction de join_gid -> liste partitions partageant ce join en num globale (apres PT)
   // TODO -> ASSUME WE HAVE IT FOR NOW
   // Local ou pas local ? La zone est la même pour tt les parts partageant le join
-  int *JoinToPartIdx = (int *) malloc(3 * sizeof(int));
-  JoinToPartIdx[0] = 0;
-  JoinToPartIdx[1] = 1;
-  JoinToPartIdx[2] = 3;
-  int *JoinToPart = (int *) malloc(JoinToPartIdx[2] * sizeof(int));
-  JoinToPart[0] = 0; //zone 0 part 0   (zone 0 had 2 parts)
-  JoinToPart[1] = 2; //zone 1 part 0   (zone 1 had 3 parts)
-  JoinToPart[2] = 4; //zone 1 part 2   (zone 1 had 3 parts)
+  int *join_to_part_idx = (int *) malloc(3 * sizeof(int));
+  join_to_part_idx[0] = 0;
+  join_to_part_idx[1] = 1;
+  join_to_part_idx[2] = 3;
+  int *join_to_part = (int *) malloc(join_to_part_idx[2] * sizeof(int));
+  join_to_part[0] = 0; //zone 0 part 0   (zone 0 had 2 parts)
+  join_to_part[1] = 2; //zone 1 part 0   (zone 1 had 3 parts)
+  join_to_part[2] = 4; //zone 1 part 2   (zone 1 had 3 parts)
 
-  // ASSUME we have the array dJoinGIds : for each zone, gives joinId, joinOppId
-  int *dJoinGIds = (int *) malloc(2*_multipart->n_zone * sizeof(int));
-  dJoinGIds[2*0] = 0;
-  dJoinGIds[2*0+1] = 1;
-  dJoinGIds[2*1] = 1;
-  dJoinGIds[2*1+1] = 0;
+  // ASSUME we have the array djoin_gids : for each zone, gives joinId, joinOppId
+  int *djoin_gids = (int *) malloc(2*_multipart->n_zone * sizeof(int));
+  djoin_gids[2*0] = 0;
+  djoin_gids[2*0+1] = 1;
+  djoin_gids[2*1] = 1;
+  djoin_gids[2*1+1] = 0;
 
   // Step 1. Count data
-  int *dataToSendN = (int *) malloc(nRank * sizeof(int));
-  for (int i=0; i < nRank; i++)
-    dataToSendN[i] = 0;
+  int *data_to_send_n = (int *) malloc(n_rank * sizeof(int));
+  for (int i=0; i < n_rank; i++)
+    data_to_send_n[i] = 0;
 
   for (int izone = 0; izone < _multipart->n_zone; izone++) {
-    for (int ipart = 0; ipart < _multipart->n_part[izone]; ipart++) {
-      int idx = boundsAndJoinsIdx[izone] + ipart; //TO CHECK
-      int *faceJoinIdx = _multipart->pBoundsAndJoins[idx]->faceJoinIdx;
-      for (int ijoin = 0; ijoin < _multipart->nBoundsAndJoins[2*izone+1]; ijoin++) {
+    for (int i_part = 0; i_part < _multipart->n_part[izone]; i_part++) {
+      int idx = bounds_and_joins_idx[izone] + i_part; //TO CHECK
+      int *face_join_idx = _multipart->pbounds_and_joins[idx]->face_join_idx;
+      for (int ijoin = 0; ijoin < _multipart->n_bounds_and_joins[2*izone+1]; ijoin++) {
         // Get destination and deduce procs that could require this data
-        int joinGId = dJoinGIds[2*izone];
-        int oppJoiGId = dJoinGIds[2*izone + 1];
-        PDM_printf("[%i] Zone %i, ipart %i, ijoin %i (gid %i) : joinopp %i --> receiving parts are",
-                   myRank, izone, ipart, ijoin, joinGId, oppJoiGId);
-        for (int i = JoinToPartIdx[oppJoiGId]; i < JoinToPartIdx[oppJoiGId+1]; i++) {
-          int destPartition = JoinToPart[i];
-          int destProc = _multipart->gPartToProc[2*destPartition];
+        int join_gid = djoin_gids[2*izone];
+        int opp_join_gid = djoin_gids[2*izone + 1];
+        PDM_printf("[%i] Zone %i, i_part %i, ijoin %i (gid %i) : joinopp %i --> receiving parts are",
+                   i_rank, izone, i_part, ijoin, join_gid, opp_join_gid);
+        for (int i = join_to_part_idx[opp_join_gid]; i < join_to_part_idx[opp_join_gid+1]; i++) {
+          int destPartition = join_to_part[i];
+          int destProc = _multipart->gpart_to_proc[2*destPartition];
 
-          PDM_printf(" %d (proc %d)", destPartition, _multipart->gPartToProc[2*destPartition]);
+          PDM_printf(" %d (proc %d)", destPartition, _multipart->gpart_to_proc[2*destPartition]);
           //We have the destination, exchanged data is 3 times the lenght of point list
-          // (pl value, LNToGN value, joinGId value)
-          dataToSendN[destProc] += 3*(faceJoinIdx[ijoin+1] - faceJoinIdx[ijoin]);
+          // (pl value, LNToGN value, join_gid value)
+          data_to_send_n[destProc] += 3*(face_join_idx[ijoin+1] - face_join_idx[ijoin]);
         }
         PDM_printf("\n");
 
@@ -598,64 +599,64 @@ _rebuild_boundaries
   }
   // Step 2. Prepare data and performs alltoall
   // Prepare stride
-  int *dataToSendIdx = (int *) malloc((nRank+1) * sizeof(int));
-  dataToSendIdx[0] = 0;
-  for (int i = 1; i < nRank + 1; i++) {
-    dataToSendIdx[i] = dataToSendIdx[i-1] + dataToSendN[i-1];
-    dataToSendN[i-1] = 0;
+  int *data_to_send_idx = (int *) malloc((n_rank+1) * sizeof(int));
+  data_to_send_idx[0] = 0;
+  for (int i = 1; i < n_rank + 1; i++) {
+    data_to_send_idx[i] = data_to_send_idx[i-1] + data_to_send_n[i-1];
+    data_to_send_n[i-1] = 0;
   }
   //Prepare data
-  PDM_g_num_t *dataToSend = (PDM_g_num_t *) malloc(dataToSendIdx[nRank] * sizeof(PDM_g_num_t));
+  PDM_g_num_t *data_to_send = (PDM_g_num_t *) malloc(data_to_send_idx[n_rank] * sizeof(PDM_g_num_t));
   for (int izone = 0; izone < _multipart->n_zone; izone++) {
-    for (int ipart = 0; ipart < _multipart->n_part[izone]; ipart++) {
-      int idx = boundsAndJoinsIdx[izone] + ipart; //TO CHECK
-      int *faceJoinIdx    = _multipart->pBoundsAndJoins[idx]->faceJoinIdx;
-      int *faceJoin       = _multipart->pBoundsAndJoins[idx]->faceJoin;
-      PDM_g_num_t *faceJoinLNToGN = _multipart->pBoundsAndJoins[idx]->faceJoinLNToGN;
-      for (int ijoin = 0; ijoin < _multipart->nBoundsAndJoins[2*izone+1]; ijoin++) {
-        int joinGId = dJoinGIds[2*izone];
-        int oppJoiGId = dJoinGIds[2*izone + 1];
-        for (int i = JoinToPartIdx[oppJoiGId]; i < JoinToPartIdx[oppJoiGId+1]; i++) {
-          int destPartition = JoinToPart[i];
-          int destProc = _multipart->gPartToProc[2*destPartition];
-          int idx2 = dataToSendIdx[destProc] + dataToSendN[destProc];
+    for (int i_part = 0; i_part < _multipart->n_part[izone]; i_part++) {
+      int idx = bounds_and_joins_idx[izone] + i_part; //TO CHECK
+      int *face_join_idx    = _multipart->pbounds_and_joins[idx]->face_join_idx;
+      int *face_join       = _multipart->pbounds_and_joins[idx]->face_join;
+      PDM_g_num_t *face_join_ln_to_gn = _multipart->pbounds_and_joins[idx]->face_join_ln_to_gn;
+      for (int ijoin = 0; ijoin < _multipart->n_bounds_and_joins[2*izone+1]; ijoin++) {
+        int join_gid     = djoin_gids[2*izone];
+        int opp_join_gid = djoin_gids[2*izone + 1];
+        for (int i = join_to_part_idx[opp_join_gid]; i < join_to_part_idx[opp_join_gid+1]; i++) {
+          int destPartition = join_to_part[i];
+          int destProc = _multipart->gpart_to_proc[2*destPartition];
+          int idx2 = data_to_send_idx[destProc] + data_to_send_n[destProc];
           int k = 0;
-          for (int iface = faceJoinIdx[ijoin]; iface < faceJoinIdx[ijoin+1]; iface++) {
-            dataToSend[idx2 + 3*k    ] = faceJoin[iface];
-            dataToSend[idx2 + 3*k + 1] = faceJoinLNToGN[iface];
-            dataToSend[idx2 + 3*k + 2] = joinGId;
+          for (int iface = face_join_idx[ijoin]; iface < face_join_idx[ijoin+1]; iface++) {
+            data_to_send[idx2 + 3*k    ] = face_join[iface];
+            data_to_send[idx2 + 3*k + 1] = face_join_ln_to_gn[iface];
+            data_to_send[idx2 + 3*k + 2] = join_gid;
             k += 1;
           }
-          dataToSendN[destProc] += 3*k;
+          data_to_send_n[destProc] += 3*k;
         }
       }
     }
   }
   //Exchange sizes
-  int *dataToRecvN   = (int *) malloc(nRank * sizeof(int));
-  PDM_MPI_Alltoall(dataToSendN, 1, PDM_MPI_INT, dataToRecvN, 1, PDM_MPI_INT, _multipart->comm);
-  int *dataToRecvIdx = (int *) malloc((nRank+1) * sizeof(int));
-  dataToRecvIdx[0] = 0;
-  for(int i = 1; i < (nRank+1); i++) {
-    dataToRecvIdx[i] = dataToRecvIdx[i-1] + dataToRecvN[i-1];
+  int *data_to_recv_n   = (int *) malloc(n_rank * sizeof(int));
+  PDM_MPI_Alltoall(data_to_send_n, 1, PDM_MPI_INT, data_to_recv_n, 1, PDM_MPI_INT, _multipart->comm);
+  int *data_to_recv_idx = (int *) malloc((n_rank+1) * sizeof(int));
+  data_to_recv_idx[0] = 0;
+  for(int i = 1; i < (n_rank+1); i++) {
+    data_to_recv_idx[i] = data_to_recv_idx[i-1] + data_to_recv_n[i-1];
   }
   //Exchange data
-  PDM_g_num_t *dataToRecv = (PDM_g_num_t *) malloc(dataToRecvIdx[nRank]*sizeof(PDM_g_num_t));
-  PDM_MPI_Alltoallv(dataToSend,
-                    dataToSendN,
-                    dataToSendIdx,
+  PDM_g_num_t *data_to_recv = (PDM_g_num_t *) malloc(data_to_recv_idx[n_rank]*sizeof(PDM_g_num_t));
+  PDM_MPI_Alltoallv(data_to_send,
+                    data_to_send_n,
+                    data_to_send_idx,
                     PDM__PDM_MPI_G_NUM,
-                    dataToRecv,
-                    dataToRecvN,
-                    dataToRecvIdx,
+                    data_to_recv,
+                    data_to_recv_n,
+                    data_to_recv_idx,
                     PDM__PDM_MPI_G_NUM,
                     _multipart->comm);
 
-  int nRecv = dataToRecvIdx[nRank]/3;
+  int nRecv = data_to_recv_idx[n_rank]/3;
 
   // Step 3. Search in received data the matching faces
 
-  free(boundsAndJoinsIdx);
+  free(bounds_and_joins_idx);
 }
 
 /*=============================================================================
@@ -705,56 +706,56 @@ PDM_multipart_create
   _multipart->split_method= split_method;
   _multipart->comm        = comm;
 
-  _multipart->dmeshesIds      = (int *) malloc(_multipart->n_zone * sizeof(int));
-  _multipart->partIds         = (int *) malloc(_multipart->n_zone * sizeof(int));
-  _multipart->nBoundsAndJoins = (int *) malloc(_multipart->n_zone * 2 * sizeof(int));
+  _multipart->dmeshes_ids      = (int *) malloc(_multipart->n_zone * sizeof(int));
+  _multipart->part_ids         = (int *) malloc(_multipart->n_zone * sizeof(int));
+  _multipart->n_bounds_and_joins = (int *) malloc(_multipart->n_zone * 2 * sizeof(int));
 
   for (int izone = 0; izone < _multipart->n_zone; izone++) {
-    _multipart->dmeshesIds[izone] = -1;
-    _multipart->partIds   [izone] = -1;
-    _multipart->nBoundsAndJoins[2*izone]   = -1;
-    _multipart->nBoundsAndJoins[2*izone+1] = -1;
+    _multipart->dmeshes_ids[izone] = -1;
+    _multipart->part_ids   [izone] = -1;
+    _multipart->n_bounds_and_joins[2*izone]   = -1;
+    _multipart->n_bounds_and_joins[2*izone+1] = -1;
   }
 
-  int nRank;
-  PDM_MPI_Comm_size(comm, &nRank);
+  int n_rank;
+  PDM_MPI_Comm_size(comm, &n_rank);
 
   // Number of partitions in each zone (distribution)
-  _multipart->partZoneDistri = (int *) malloc((n_zone + 1) * sizeof(int));
-  int *partZoneDistri = _multipart->partZoneDistri;
-  partZoneDistri[0] = 0;
+  _multipart->part_zone_distribution = (int *) malloc((n_zone + 1) * sizeof(int));
+  int *part_zone_distribution = _multipart->part_zone_distribution;
+  part_zone_distribution[0] = 0;
 
-  // For each zone (slot of nRank + 1 in array), number of part per proc (distribution)
-  int *dPartProc = (int *) malloc(n_zone*(nRank + 1) * sizeof(int));
+  // For each zone (slot of n_rank + 1 in array), number of part per proc (distribution)
+  int *dpart_proc = (int *) malloc(n_zone*(n_rank + 1) * sizeof(int));
   for (int izone = 0; izone < _multipart->n_zone; izone++) {
-    dPartProc[izone*(nRank + 1)] = 0;
+    dpart_proc[izone*(n_rank + 1)] = 0;
     PDM_MPI_Allgather((void *) &n_part[izone],
                       1,
                       PDM_MPI_INT,
-                      (void *) (&dPartProc[izone*(nRank+1) + 1]),
+                      (void *) (&dpart_proc[izone*(n_rank+1) + 1]),
                       1,
                       PDM_MPI_INT,
                       _multipart->comm);
 
-    for (int i = 1; i < nRank+1; i++) {
-      dPartProc[izone*(nRank+1) + i] = dPartProc[izone*(nRank+1) + i] + dPartProc[izone*(nRank+1) + i-1];
+    for (int i = 1; i < n_rank+1; i++) {
+      dpart_proc[izone*(n_rank+1) + i] = dpart_proc[izone*(n_rank+1) + i] + dpart_proc[izone*(n_rank+1) + i-1];
     }
 
-    partZoneDistri[izone+1] = partZoneDistri[izone] + dPartProc[izone*(nRank+1) + nRank];
+    part_zone_distribution[izone+1] = part_zone_distribution[izone] + dpart_proc[izone*(n_rank+1) + n_rank];
   }
-  // For each global part number, owner proc and ipart in proc
-  _multipart->gPartToProc = (int *) malloc(2*partZoneDistri[n_zone] * sizeof(int));
+  // For each global part number, owner proc and i_part in proc
+  _multipart->gpart_to_proc = (int *) malloc(2*part_zone_distribution[n_zone] * sizeof(int));
   for (int izone = 0; izone < _multipart->n_zone; izone++){
-    int zshift = partZoneDistri[izone];
-    for (int i = 0; i < nRank; i++) {
-      for (int j = dPartProc[izone*(nRank+1) + i]; j < dPartProc[izone*(nRank+1) + i+1]; j++) {
-        _multipart->gPartToProc[2*(zshift + j)] = i;
-        _multipart->gPartToProc[2*(zshift + j) + 1] = j - dPartProc[izone*(nRank+1) + i];
+    int zshift = part_zone_distribution[izone];
+    for (int i = 0; i < n_rank; i++) {
+      for (int j = dpart_proc[izone*(n_rank+1) + i]; j < dpart_proc[izone*(n_rank+1) + i+1]; j++) {
+        _multipart->gpart_to_proc[2*(zshift + j)] = i;
+        _multipart->gpart_to_proc[2*(zshift + j) + 1] = j - dpart_proc[izone*(n_rank+1) + i];
 
       }
     }
   }
-  free(dPartProc);
+  free(dpart_proc);
 
   PDM_printf("Created from PDM_multipart_create. You requested a multipart with %d zones \n", n_zone);
   return id;
@@ -765,16 +766,16 @@ PDM_multipart_create
 void PDM_multipart_register_block
 (
  const int        mpart_id,
- const int        zoneGId,
+ const int        zone_gid,
  const int        block_data_id
 )
 {
   PDM_printf("In multipart %d, set zone n°%d using blockdata %d \n",
-             mpart_id, zoneGId, block_data_id);
+             mpart_id, zone_gid, block_data_id);
 
   _pdm_multipart_t *_multipart = _get_from_id (mpart_id);
-  assert(zoneGId < _multipart->n_zone);
-  _multipart->dmeshesIds[zoneGId] = block_data_id;
+  assert(zone_gid < _multipart->n_zone);
+  _multipart->dmeshes_ids[zone_gid] = block_data_id;
 }
 
 void
@@ -785,10 +786,10 @@ PDM_multipart_run_ppart
 {
   _pdm_multipart_t *_multipart = _get_from_id (id);
 
-  int iRank;
-  int nRank;
-  PDM_MPI_Comm_rank(_multipart->comm, &iRank);
-  PDM_MPI_Comm_size(_multipart->comm, &nRank);
+  int i_rank;
+  int n_rank;
+  PDM_MPI_Comm_rank(_multipart->comm, &i_rank);
+  PDM_MPI_Comm_size(_multipart->comm, &n_rank);
 
   if (_multipart->merge_blocks)
   {
@@ -798,117 +799,117 @@ PDM_multipart_run_ppart
   else
   {
     // 2. Loop over the blocks and call the partitionner
-    for (int zoneGId = 0; zoneGId < _multipart->n_zone; zoneGId++) {
-      PDM_printf("You requested no merge : partitionning zone %d/%d \n", zoneGId+1, _multipart->n_zone);
-      int blockId = _multipart->dmeshesIds[zoneGId];
-      PDM_printf("block id for zone %d is %d\n", zoneGId, blockId);
-      int dNCell  = 0;
-      int dNFace  = 0;
-      int dNVtx   = 0;
-      int nBnd    = 0;
-      int nJoin   = 0;
-      const double       *dVtxCoord;
-      const int          *dFaceVtxIdx;
-      const PDM_g_num_t  *dFaceVtx;
-      const PDM_g_num_t  *dFaceCell;
-      const int          *dFaceBoundIdx;
-      const PDM_g_num_t  *dFaceBound;
-      const int          *dJoinGIds;
-      const int          *dFaceJoinIdx;
-      const PDM_g_num_t  *dFaceJoin;
+    for (int zone_gid = 0; zone_gid < _multipart->n_zone; zone_gid++) {
+      PDM_printf("You requested no merge : partitionning zone %d/%d \n", zone_gid+1, _multipart->n_zone);
+      int block_id = _multipart->dmeshes_ids[zone_gid];
+      PDM_printf("block id for zone %d is %d\n", zone_gid, block_id);
+      int dn_cell  = 0;
+      int dn_face  = 0;
+      int dn_vtx   = 0;
+      int n_bnd    = 0;
+      int n_join   = 0;
+      const double       *dvtx_coord;
+      const int          *dface_vtx_idx;
+      const PDM_g_num_t  *dface_vtx;
+      const PDM_g_num_t  *dface_cell;
+      const int          *dface_bound_idx;
+      const PDM_g_num_t  *dface_bound;
+      const int          *djoin_gids;
+      const int          *dface_join_idx;
+      const PDM_g_num_t  *dface_join;
 
-      int nFaceGroup = 0;
-      int          *dFaceGroupIdx = NULL;
-      PDM_g_num_t  *dFaceGroup    = NULL;
-      int          *dFaceTag      = NULL;
+      int n_face_group = 0;
+      int          *dface_group_idx = NULL;
+      PDM_g_num_t  *dface_group    = NULL;
+      int          *dface_tag      = NULL;
 
-      if (blockId >= 0)
+      if (block_id >= 0)
       {
-        PDM_dmesh_dims_get(blockId, &dNCell, &dNFace, &dNVtx, &nBnd, &nJoin);
-        PDM_dmesh_data_get(blockId, &dVtxCoord, &dFaceVtxIdx, &dFaceVtx, &dFaceCell,
-                           &dFaceBoundIdx, &dFaceBound, &dJoinGIds, &dFaceJoinIdx, &dFaceJoin);
-        //Merge FaceBounds and FaceJoins into FaceGroup
-        if (dFaceJoinIdx == NULL){
-          int singleArray[1] = {0};
-          dFaceJoinIdx = singleArray;
+        PDM_dmesh_dims_get(block_id, &dn_cell, &dn_face, &dn_vtx, &n_bnd, &n_join);
+        PDM_dmesh_data_get(block_id, &dvtx_coord, &dface_vtx_idx, &dface_vtx, &dface_cell,
+                           &dface_bound_idx, &dface_bound, &djoin_gids, &dface_join_idx, &dface_join);
+        //Merge face_bounds and face_joins into face_group
+        if (dface_join_idx == NULL){
+          int single_array[1] = {0};
+          dface_join_idx = single_array;
         }
-        nFaceGroup = nBnd + nJoin;
-        dFaceGroupIdx = (int *) malloc((nFaceGroup + 1) * sizeof(int));
-        dFaceGroup = (PDM_g_num_t *) malloc((dFaceBoundIdx[nBnd] + dFaceJoinIdx[nJoin]) * sizeof(PDM_g_num_t));
+        n_face_group = n_bnd + n_join;
+        dface_group_idx = (int *) malloc((n_face_group + 1) * sizeof(int));
+        dface_group = (PDM_g_num_t *) malloc((dface_bound_idx[n_bnd] + dface_join_idx[n_join]) * sizeof(PDM_g_num_t));
 
-        for (int i=0; i < nBnd + 1; i++)
-          dFaceGroupIdx[i] = dFaceBoundIdx[i];
-        for (int i=0; i < dFaceBoundIdx[nBnd]; i++)
-          dFaceGroup[i] = dFaceBound[i];
+        for (int i=0; i < n_bnd + 1; i++)
+          dface_group_idx[i] = dface_bound_idx[i];
+        for (int i=0; i < dface_bound_idx[n_bnd]; i++)
+          dface_group[i] = dface_bound[i];
 
-        for (int i=1; i < nJoin + 1; i++)
-          dFaceGroupIdx[nBnd + i] = dFaceBoundIdx[nBnd] + dFaceJoinIdx[i];
-        for (int i=0; i < dFaceJoinIdx[nJoin]; i++)
-          dFaceGroup[dFaceBoundIdx[nBnd] + i] = dFaceJoin[i];
+        for (int i=1; i < n_join + 1; i++)
+          dface_group_idx[n_bnd + i] = dface_bound_idx[n_bnd] + dface_join_idx[i];
+        for (int i=0; i < dface_join_idx[n_join]; i++)
+          dface_group[dface_bound_idx[n_bnd] + i] = dface_join[i];
       }
-      // Fill global array nBoundsAndJoins. nBound and nJoin are supposed to be the same for
+      // Fill global array n_bounds_and_joins. n_bound and n_join are supposed to be the same for
       // procs having distributed data, so we send it to procs having no data with reduce_max
-      PDM_MPI_Allreduce(&nBnd, &_multipart->nBoundsAndJoins[2*zoneGId], 1,
+      PDM_MPI_Allreduce(&n_bnd, &_multipart->n_bounds_and_joins[2*zone_gid], 1,
                         PDM_MPI_INT, PDM_MPI_MAX, _multipart->comm);
-      PDM_MPI_Allreduce(&nJoin, &_multipart->nBoundsAndJoins[2*zoneGId+1], 1,
+      PDM_MPI_Allreduce(&n_join, &_multipart->n_bounds_and_joins[2*zone_gid+1], 1,
                         PDM_MPI_INT, PDM_MPI_MAX, _multipart->comm);
 
-      // nFaceGroup and faceGroupIdx must also be know (even if filled with 0) for every proc
-      if (blockId < 0)
+      // n_face_group and face_group_idx must also be know (even if filled with 0) for every proc
+      if (block_id < 0)
       {
-        nFaceGroup = _multipart->nBoundsAndJoins[2*zoneGId] + _multipart->nBoundsAndJoins[2*zoneGId+1];
-        dFaceGroupIdx = (int *) malloc((nFaceGroup + 1) * sizeof(int));
-        for (int k=0; k < nFaceGroup + 1; k++)
-          dFaceGroupIdx[k] = 0;
-        dFaceCell = (PDM_g_num_t *) malloc(0); //Must be != NULL to enter in _dual_graph
+        n_face_group = _multipart->n_bounds_and_joins[2*zone_gid] + _multipart->n_bounds_and_joins[2*zone_gid+1];
+        dface_group_idx = (int *) malloc((n_face_group + 1) * sizeof(int));
+        for (int k=0; k < n_face_group + 1; k++)
+          dface_group_idx[k] = 0;
+        dface_cell = (PDM_g_num_t *) malloc(0); //Must be != NULL to enter in _dual_graph
       }
 
-      dFaceTag = (int *) malloc((dNFace) * sizeof(int));
-      _set_dFaceTag_from_joins(dNFace, nJoin, dJoinGIds, dFaceJoinIdx, dFaceJoin, dFaceTag, _multipart->comm);
+      dface_tag = (int *) malloc((dn_face) * sizeof(int));
+      _set_dface_tag_from_joins(dn_face, n_join, djoin_gids, dface_join_idx, dface_join, dface_tag, _multipart->comm);
 
-      int ppartId = 0;
-      int have_dCellPart = 0;
-      int *dCellPart = (int *) malloc(dNCell*sizeof(int));
+      int ppart_id = 0;
+      int have_dcell_part = 0;
+      int *dcell_part = (int *) malloc(dn_cell*sizeof(int));
       // We probably should create a subcomm to imply only the procs sharing this block
-      PDM_part_create(&ppartId,
+      PDM_part_create(&ppart_id,
               _multipart->comm,
               _multipart->split_method,
               "PDM_PART_RENUM_CELL_NONE",
               "PDM_PART_RENUM_FACE_NONE",
-              0,                          // nPropertyCell
+              0,                          // n_property_cell
               NULL,                       // renum_properties_cell
-              0,                          // nPropertyFace
+              0,                          // n_property_face
               NULL,                       // renum_properties_face
-              _multipart->n_part[zoneGId],
-              dNCell,
-              dNFace,
-              dNVtx,
-              nFaceGroup,
-              NULL,                       // dCellFaceIdx
-              NULL,                       // dCellFace
-              NULL,                       // dCellTag
-              NULL,                       // dCellWeight
-              have_dCellPart,
-              dCellPart,                  // dCellPart
-              dFaceCell,
-              dFaceVtxIdx,
-              dFaceVtx,
-              dFaceTag,
-              dVtxCoord,
-              NULL,                       // dVtxTag
-              dFaceGroupIdx,
-              dFaceGroup);
-      PDM_printf("Partitionning done, ppardId is %d \n", ppartId);
+              _multipart->n_part[zone_gid],
+              dn_cell,
+              dn_face,
+              dn_vtx,
+              n_face_group,
+              NULL,                       // dcell_faceIdx
+              NULL,                       // dcell_face
+              NULL,                       // dcell_tag
+              NULL,                       // dcell_weight
+              have_dcell_part,
+              dcell_part,                  // dcell_part
+              dface_cell,
+              dface_vtx_idx,
+              dface_vtx,
+              dface_tag,
+              dvtx_coord,
+              NULL,                       // dvtx_tag
+              dface_group_idx,
+              dface_group);
+      PDM_printf("Partitionning done, ppardId is %d \n", ppart_id);
       //Store the partition id for future access
-      _multipart->partIds[zoneGId] = ppartId;
+      _multipart->part_ids[zone_gid] = ppart_id;
 
-      free(dCellPart);
-      free(dFaceGroupIdx);
-      free(dFaceGroup);
-      free(dFaceTag);
-      if (blockId < 0)
+      free(dcell_part);
+      free(dface_group_idx);
+      free(dface_group);
+      free(dface_tag);
+      if (block_id < 0)
       {
-        free(dFaceCell); //FIXME: Revoir la gestion du rien
+        free(dface_cell); //FIXME: Revoir la gestion du rien
       }
     }
     // Now separate joins and boundaries and we rebuild joins over the zones
@@ -921,166 +922,166 @@ PDM_multipart_run_ppart
 void
 PDM_multipart_part_dim_get
 (
-const   int  mpartId,
-const   int  zoneGId,
-const   int  ipart,
- int        *nCell,
- int        *nFace,
- int        *nFacePartBound,
- int        *nVtx,
- int        *nProc,
- int        *nTPart,
- int        *sCellFace,
- int        *sFaceVtx,
- int        *sFaceBound,
- int        *nFaceBound,
- int        *sFaceJoin,
- int        *nFaceJoin
+const   int  mpart_id,
+const   int  zone_gid,
+const   int  i_part,
+ int        *n_cell,
+ int        *n_face,
+ int        *n_face_part_bound,
+ int        *n_vtx,
+ int        *n_proc,
+ int        *n_total_part,
+ int        *scell_face,
+ int        *sface_vtx,
+ int        *sface_bound,
+ int        *n_face_bound,
+ int        *sface_join,
+ int        *n_face_join
 )
 {
-  _pdm_multipart_t *_multipart = _get_from_id (mpartId);
+  _pdm_multipart_t *_multipart = _get_from_id (mpart_id);
 
-  assert(zoneGId < _multipart->n_zone && ipart < _multipart->n_part[zoneGId]);
-  int ppartId = _multipart->partIds[zoneGId];
+  assert(zone_gid < _multipart->n_zone && i_part < _multipart->n_part[zone_gid]);
+  int ppart_id = _multipart->part_ids[zone_gid];
 
-  PDM_part_part_dim_get(ppartId,
-                        ipart,
-                        nCell,
-                        nFace,
-                        nFacePartBound,
-                        nVtx,
-                        nProc,
-                        nTPart,
-                        sCellFace,
-                        sFaceVtx,
-                        sFaceBound,
-                        nFaceBound);
-  // Get boundary and join data from pBoundsAndJoins
+  PDM_part_part_dim_get(ppart_id,
+                        i_part,
+                        n_cell,
+                        n_face,
+                        n_face_part_bound,
+                        n_vtx,
+                        n_proc,
+                        n_total_part,
+                        scell_face,
+                        sface_vtx,
+                        sface_bound,
+                        n_face_bound);
+  // Get boundary and join data from pbounds_and_joins
   int idx = 0;
-  for (int i = 0; i < zoneGId; i++)
+  for (int i = 0; i < zone_gid; i++)
     idx += _multipart->n_part[i];
-  idx += ipart;
+  idx += i_part;
   //Attention au cas ou pas de face de bord
-  *nFaceBound = _multipart->pBoundsAndJoins[idx]->nBound;
-  *sFaceBound = _multipart->pBoundsAndJoins[idx]->faceBoundIdx[*nFaceBound];
-  *nFaceJoin  = _multipart->pBoundsAndJoins[idx]->nJoin;
-  *sFaceJoin  = _multipart->pBoundsAndJoins[idx]->faceJoinIdx[*nFaceJoin];
+  *n_face_bound = _multipart->pbounds_and_joins[idx]->n_bound;
+  *sface_bound = _multipart->pbounds_and_joins[idx]->face_bound_idx[*n_face_bound];
+  *n_face_join  = _multipart->pbounds_and_joins[idx]->n_join;
+  *sface_join  = _multipart->pbounds_and_joins[idx]->face_join_idx[*n_face_join];
 
 }
 
 void
 PDM_multipart_part_val_get
 (
-const int            mpartId,
-const int            zoneGId,
-const int            ipart,
-      int          **cellTag,
-      int          **cellFaceIdx,
-      int          **cellFace,
-      PDM_g_num_t  **cellLNToGN,
-      int          **faceTag,
-      int          **faceCell,
-      int          **faceVtxIdx,
-      int          **faceVtx,
-      PDM_g_num_t  **faceLNToGN,
-      int          **facePartBoundProcIdx,
-      int          **facePartBoundPartIdx,
-      int          **facePartBound,
-      int          **vtxTag,
+const int            mpart_id,
+const int            zone_gid,
+const int            i_part,
+      int          **cell_tag,
+      int          **cell_face_idx,
+      int          **cell_face,
+      PDM_g_num_t  **cell_ln_to_gn,
+      int          **face_tag,
+      int          **face_cell,
+      int          **face_vtx_idx,
+      int          **face_vtx,
+      PDM_g_num_t  **face_ln_to_gn,
+      int          **face_part_bound_proc_idx,
+      int          **face_part_bound_part_idx,
+      int          **face_part_bound,
+      int          **vtx_tag,
       double       **vtx,
-      PDM_g_num_t  **vtxLNToGN,
-      int          **faceBoundIdx,
-      int          **faceBound,
-      PDM_g_num_t  **faceBoundLNToGN,
-      int          **faceJoinIdx,
-      int          **faceJoin,
-      PDM_g_num_t  **faceJoinLNToGN
+      PDM_g_num_t  **vtx_ln_to_gn,
+      int          **face_bound_idx,
+      int          **face_bound,
+      PDM_g_num_t  **face_bound_ln_to_gn,
+      int          **face_join_idx,
+      int          **face_join,
+      PDM_g_num_t  **face_join_ln_to_gn
 )
 {
-   _pdm_multipart_t *_multipart = _get_from_id (mpartId);
+   _pdm_multipart_t *_multipart = _get_from_id (mpart_id);
 
-  assert(zoneGId < _multipart->n_zone && ipart < _multipart->n_part[zoneGId]);
-  int ppartId = _multipart->partIds[zoneGId];
+  assert(zone_gid < _multipart->n_zone && i_part < _multipart->n_part[zone_gid]);
+  int ppart_id = _multipart->part_ids[zone_gid];
 
-  PDM_part_part_val_get(ppartId,
-                        ipart,
-                        cellTag,
-                        cellFaceIdx,
-                        cellFace,
-                        cellLNToGN,
-                        faceTag,
-                        faceCell,
-                        faceVtxIdx,
-                        faceVtx,
-                        faceLNToGN,
-                        facePartBoundProcIdx,
-                        facePartBoundPartIdx,
-                        facePartBound,
-                        vtxTag,
+  PDM_part_part_val_get(ppart_id,
+                        i_part,
+                        cell_tag,
+                        cell_face_idx,
+                        cell_face,
+                        cell_ln_to_gn,
+                        face_tag,
+                        face_cell,
+                        face_vtx_idx,
+                        face_vtx,
+                        face_ln_to_gn,
+                        face_part_bound_proc_idx,
+                        face_part_bound_part_idx,
+                        face_part_bound,
+                        vtx_tag,
                         vtx,
-                        vtxLNToGN,
-                        faceBoundIdx,
-                        faceBound,
-                        faceBoundLNToGN
+                        vtx_ln_to_gn,
+                        face_bound_idx,
+                        face_bound,
+                        face_bound_ln_to_gn
                         );
 
-  // Get boundary and join data from pBoundsAndJoins
+  // Get boundary and join data from pbounds_and_joins
   int idx = 0;
-  for (int i = 0; i < zoneGId; i++)
+  for (int i = 0; i < zone_gid; i++)
     idx += _multipart->n_part[i];
-  idx += ipart;
+  idx += i_part;
   //Attention au cas ou pas de face de bord
-  *faceBoundIdx       = _multipart->pBoundsAndJoins[idx]->faceBoundIdx;
-  *faceBound          = _multipart->pBoundsAndJoins[idx]->faceBound;
-  *faceBoundLNToGN    = _multipart->pBoundsAndJoins[idx]->faceBoundLNToGN;
-  *faceJoinIdx        = _multipart->pBoundsAndJoins[idx]->faceJoinIdx;
-  *faceJoin           = _multipart->pBoundsAndJoins[idx]->faceJoin;
-  *faceJoinLNToGN     = _multipart->pBoundsAndJoins[idx]->faceJoinLNToGN;
+  *face_bound_idx       = _multipart->pbounds_and_joins[idx]->face_bound_idx;
+  *face_bound           = _multipart->pbounds_and_joins[idx]->face_bound;
+  *face_bound_ln_to_gn  = _multipart->pbounds_and_joins[idx]->face_bound_ln_to_gn;
+  *face_join_idx        = _multipart->pbounds_and_joins[idx]->face_join_idx;
+  *face_join            = _multipart->pbounds_and_joins[idx]->face_join;
+  *face_join_ln_to_gn   = _multipart->pbounds_and_joins[idx]->face_join_ln_to_gn;
 
 }
 
 void
 PDM_multipart_part_color_get
 (
-const int            mpartId,
-const int            zoneGId,
-const int            ipart,
-      int          **cellColor,
-      int          **faceColor,
-      int          **threadColor,
-      int          **hyperPlaneColor
+const int            mpart_id,
+const int            zone_gid,
+const int            i_part,
+      int          **cell_color,
+      int          **face_color,
+      int          **thread_color,
+      int          **hyperplane_color
 )
 {
-  _pdm_multipart_t *_multipart = _get_from_id (mpartId);
+  _pdm_multipart_t *_multipart = _get_from_id (mpart_id);
 
-  assert(zoneGId < _multipart->n_zone && ipart < _multipart->n_part[zoneGId]);
-  int ppartId = _multipart->partIds[zoneGId];
+  assert(zone_gid < _multipart->n_zone && i_part < _multipart->n_part[zone_gid]);
+  int ppart_id = _multipart->part_ids[zone_gid];
 
-  PDM_part_part_color_get(ppartId,
-                          ipart,
-                          cellColor,
-                          faceColor,
-                          threadColor,
-                          hyperPlaneColor);
+  PDM_part_part_color_get(ppart_id,
+                          i_part,
+                          cell_color,
+                          face_color,
+                          thread_color,
+                          hyperplane_color);
 
 }
 
 void
 PDM_multipart_time_get
 (
-const int       mpartId,
-const int       zoneGId,
+const int       mpart_id,
+const int       zone_gid,
       double  **elapsed,
       double  **cpu,
       double  **cpu_user,
       double  **cpu_sys
 )
 {
-  _pdm_multipart_t *_multipart = _get_from_id (mpartId);
-  assert(zoneGId < _multipart->n_zone);
-  int ppartId = _multipart->partIds[zoneGId];
+  _pdm_multipart_t *_multipart = _get_from_id (mpart_id);
+  assert(zone_gid < _multipart->n_zone);
+  int ppart_id = _multipart->part_ids[zone_gid];
 
-  PDM_part_time_get(ppartId,
+  PDM_part_time_get(ppart_id,
                     elapsed,
                     cpu,
                     cpu_user,
@@ -1104,14 +1105,14 @@ PDM_multipart_free
 {
   _pdm_multipart_t *_multipart = _get_from_id (id);
 
-  free(_multipart->dmeshesIds);
-  free(_multipart->nBoundsAndJoins);
-  free(_multipart->partZoneDistri);
-  free(_multipart->gPartToProc);
+  free(_multipart->dmeshes_ids);
+  free(_multipart->n_bounds_and_joins);
+  free(_multipart->part_zone_distribution);
+  free(_multipart->gpart_to_proc);
 
   for (int izone = 0; izone<_multipart->n_zone; izone++)
-    PDM_part_free(_multipart->partIds[izone]);
-  free(_multipart->partIds);
+    PDM_part_free(_multipart->part_ids[izone]);
+  free(_multipart->part_ids);
 
   free (_multipart);
 

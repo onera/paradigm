@@ -78,7 +78,7 @@ typedef enum {
  *
  */
 
-typedef struct _cs_part_to_block_t PDM_part_to_block_t;
+typedef struct _pdm_part_to_block_t PDM_part_to_block_t;
 
 /*=============================================================================
  * Static global variables

@@ -87,7 +87,7 @@ PDM_box_set_remove_duplicate
  *   box_extents      <-- coordinate extents (size: n_boxes*dim*2, as
  *                        xmin1, ymin1, .. xmax1, ymax1, ..., xmin2, ...)
  *   origin   <--  initial location (size: n_boxes*3, as
- *                        iproc, ipart, local num, ...)
+ *                        iproc, i_part, local num, ...)
  *
  * returns:
  *   a new allocated pointer to a PDM_boxes_t structure.
@@ -117,7 +117,7 @@ PDM_boxes_create(const int          dim,
  *   extents          <-- coordinate extents (size: n_boxes*dim*2, as
  *                        xmin1, ymin1, .. xmax1, ymax1, ..., xmin2, ...)
  *   origin   <--  initial location (size: n_boxes*3, as
- *                        iproc, ipart, local num, ...)
+ *                        iproc, i_part, local num, ...)
  *   comm             <-- associated MPI communicator
  *
  * returns:

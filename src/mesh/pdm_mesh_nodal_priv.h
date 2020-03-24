@@ -138,8 +138,8 @@ typedef struct PDM_Mesh_nodal_prepa_blocks_t {
   PDM_l_num_t  n_pyramid_proc;    /*!< Number of pyramids per proc */
   PDM_l_num_t  n_poly3d_proc;     /*!< Number of poly3d per proc */
   PDM_l_num_t *add_etat;          /*!< Allows to check if all partitions are taking into account */
-  PDM_l_num_t  t_add;             /*!< Type of input (1 : cell3d_cellface,
-                                                      2 : cell2d_cellface,
+  PDM_l_num_t  t_add;             /*!< Type of input (1 : cell3d_cell_face,
+                                                      2 : cell2d_cell_face,
                                                       3 : faces_facesvtx_add) */
   PDM_l_num_t  *n_tetra;          /*!< Number of tetrahedra per partition */
   PDM_l_num_t  *n_hexa;           /*!< Number of hexhedra per partition */
