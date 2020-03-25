@@ -186,17 +186,17 @@ _gen_clouds_random2
  const int      nTgt_l,
  const double   radius,
  const int      numProcs,
- const int      myRank,
+ const int      i_rank,
  double       **src_coord,
  double       **tgt_coord,
  int           *nSrc_l
  )
 {
   *nSrc_l = (int) (nSrc/numProcs);
-  if (myRank < nSrc%numProcs) {
+  if (i_rank < nSrc%numProcs) {
     (*nSrc_l) += 1;
   }
-  
+
   *src_coord = malloc (sizeof(double) * 3 * (*nSrc_l));
   double *_src_coord = *src_coord;
   double x;
@@ -204,7 +204,7 @@ _gen_clouds_random2
   for (int i = 0; i < numProcs*(*nSrc_l); i++) {
     for (int j = 0; j < 3; j++) {
       x = _random01() * radius;
-      if (i%numProcs == myRank) {
+      if (i%numProcs == i_rank) {
         _src_coord[idx++] = x;
       }
     }
@@ -266,7 +266,7 @@ _gen_clouds_clumps
  const int      nTgt,
  const double   radius,
  const int      numProcs,
- const int      myRank,
+ const int      i_rank,
  const double   clump_scale,
  double       **src_coord,
  double       **tgt_coord,
@@ -291,7 +291,7 @@ _gen_clouds_clumps
   for (int i = 0; i < (*nTgt_l)*numProcs; i++) {
     for (int j = 0; j < 3; j++) {
       x = _random01() * radius;
-      if (i%numProcs == myRank) {
+      if (i%numProcs == i_rank) {
         _tgt_coord[3*ii+j] = x;
       }
     }
@@ -300,12 +300,12 @@ _gen_clouds_clumps
       for (int j = 0; j < 3; j++) {
         x = _random01() * clump_radius;
 
-        if (i%numProcs == myRank)
+        if (i%numProcs == i_rank)
           _src_coord[idx++] = _tgt_coord[3*ii+j] + x;
       }
     }
 
-    if (i%numProcs == myRank)
+    if (i%numProcs == i_rank)
       ii++;
   }
 }
@@ -330,8 +330,8 @@ main
 
   PDM_MPI_Init (&argc, &argv);
 
-  int myRank;
-  PDM_MPI_Comm_rank (PDM_MPI_COMM_WORLD, &myRank);
+  int i_rank;
+  PDM_MPI_Comm_rank (PDM_MPI_COMM_WORLD, &i_rank);
 
   int numProcs;
   PDM_MPI_Comm_size (PDM_MPI_COMM_WORLD, &numProcs);
@@ -360,7 +360,7 @@ main
     srand(time(NULL));
   }
   else {
-    srand(myRank);
+    srand(i_rank);
   }
 
 
@@ -374,10 +374,10 @@ main
   else {
     _nSrc_l = (int) (nSrc/numProcs);
     _nTgt_l = (int) (nTgt/numProcs);
-    if (myRank < nSrc%numProcs) {
+    if (i_rank < nSrc%numProcs) {
       _nSrc_l += 1;
     }
-    if (myRank < nTgt%numProcs) {
+    if (i_rank < nTgt%numProcs) {
       _nTgt_l += 1;
     }
   }
@@ -393,7 +393,7 @@ main
                         nTgt,
                         radius,
                         numProcs,
-                        myRank,
+                        i_rank,
                         clump_scale,
                         &src_coords,
                         &tgt_coords,
@@ -409,7 +409,7 @@ main
                          _nTgt_l,
                          radius,
                          numProcs,
-                         myRank,
+                         i_rank,
                          &src_coords,
                          &tgt_coords,
                          &_nSrc_l);
@@ -525,7 +525,7 @@ main
   free (tgt_char_length);
   free (tgt_gnum);
 
-  if (myRank == 0) {
+  if (i_rank == 0) {
 
     PDM_printf ("\nfin Test\n");
 

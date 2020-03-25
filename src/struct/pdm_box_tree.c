@@ -45,6 +45,7 @@
 #include "pdm_box_priv.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
+#include "pdm_sort.h"
 
 #include "pdm_morton.h"
 
@@ -159,7 +160,7 @@ struct _PDM_box_tree_t {
 
   PDM_MPI_Comm          comm;         /* Associated MPI communicator */
 
-  const PDM_box_set_t  *boxes;        /* Associated boxes */
+  PDM_box_set_t  *boxes;        /* Associated boxes */
 };
 
 /*=============================================================================
@@ -3107,7 +3108,7 @@ PDM_box_tree_get_max_level(const PDM_box_tree_t  *bt)
 
 void
 PDM_box_tree_set_boxes(PDM_box_tree_t       *bt,
-                       const PDM_box_set_t  *boxes,
+                       PDM_box_set_t  *boxes,
                        PDM_box_tree_sync_t   build_type)
 {
   //printf("  -->> PDM_box_tree_set_boxes\n");
@@ -3316,7 +3317,7 @@ PDM_box_tree_get_distrib(PDM_box_tree_t        *bt,
   for (i = 0; i < distrib->n_ranks; i++)
     distrib->index[i+1] += distrib->index[i];
 
-  distrib->list = (int *) malloc(distrib->index[distrib->n_ranks] * sizeof(int));
+ distrib->list = (int *) malloc(distrib->index[distrib->n_ranks] * sizeof(int));
 
   counter = (int *) malloc(distrib->n_ranks * sizeof(int));
 
@@ -3418,6 +3419,33 @@ PDM_box_tree_get_boxes_intersects(PDM_box_tree_t       *bt,
                              _index,
                              _l_num);
   }
+
+  /* Remove duplicate boxes */
+
+  int idx=0;
+  for (i = 0; i < boxes->local_boxes->n_boxes; i++) {
+    counter[i] = 0;
+    int *_l_num_box = _l_num + _index[i];
+    int n_elt = _index[i+1] -_index[i];
+    counter[i] = 0;
+    _index[i] = 0;
+    PDM_sort_int(_l_num_box, NULL, n_elt);
+
+    int pre = -1;
+    for (int j = 0; j < n_elt; j++) {
+      if (pre < _l_num_box[j]) {
+        pre = _l_num_box[j];
+        _l_num[idx++] = pre;
+        counter[i]++;
+      }
+    }
+  }
+
+  for (i = 0; i < boxes->local_boxes->n_boxes; i++) {
+    _index[i+1] = _index[i] + counter[i];
+  }
+
+  _l_num = realloc (_l_num, sizeof(int) * _index[boxes->local_boxes->n_boxes]);
 
   free(counter);
 
@@ -4231,7 +4259,7 @@ void
 PDM_box_tree_closest_upper_bound_dist_boxes_get_v2
 (
  PDM_box_tree_t  *bt,
- const int        irank,
+ const int        i_rank,
  const int        n_pts,
  double           pts[],
  double           upper_bound_dist2[],
@@ -4239,7 +4267,7 @@ PDM_box_tree_closest_upper_bound_dist_boxes_get_v2
  int             *boxes[]
  )
 {
-  assert(irank < bt->n_copied_ranks);
+  assert(i_rank < bt->n_copied_ranks);
 
   int normalized = bt->boxes->normalized;
   const double *d = bt->boxes->d;
@@ -4278,10 +4306,10 @@ PDM_box_tree_closest_upper_bound_dist_boxes_get_v2
   int idx_box = 0;
 
   int n_boxes = 0;
-  if ( irank < 0 ) {
+  if ( i_rank < 0 ) {
     n_boxes = bt->boxes->local_boxes->n_boxes;
   } else {
-    n_boxes = bt->boxes->rank_boxes[irank].n_boxes;
+    n_boxes = bt->boxes->rank_boxes[i_rank].n_boxes;
   }
 
   int *tag = malloc(sizeof(int) * n_boxes);
@@ -4304,10 +4332,10 @@ PDM_box_tree_closest_upper_bound_dist_boxes_get_v2
 
     pos_stack = 0;
     stack[pos_stack] = 0; /* push root in th stack */
-    if ( irank < 0 ) {
+    if ( i_rank < 0 ) {
       _extents (dim, bt->local_data->nodes[0].morton_code, extents2);
     } else {
-      _extents (dim, bt->rank_data[irank].nodes[0].morton_code, extents2);
+      _extents (dim, bt->rank_data[i_rank].nodes[0].morton_code, extents2);
     }
     inbox_stack[pos_stack] = _box_dist2_min (dim,
                                              normalized,
@@ -4324,10 +4352,10 @@ PDM_box_tree_closest_upper_bound_dist_boxes_get_v2
 
       int id_curr_node = stack[--pos_stack];
 
-      if ( irank < 0 ) {
+      if ( i_rank < 0 ) {
 	curr_node = &(bt->local_data->nodes[id_curr_node]);
       } else {
-	curr_node = &(bt->rank_data[irank].nodes[id_curr_node]);
+	curr_node = &(bt->rank_data[i_rank].nodes[id_curr_node]);
       }
 
       if (curr_node->n_boxes == 0)
@@ -4345,7 +4373,7 @@ PDM_box_tree_closest_upper_bound_dist_boxes_get_v2
         if (!curr_node->is_leaf) {
 
           _push_child_in_stack_v2 (bt,
-				   irank,
+				   i_rank,
 				   dim,
 				   normalized,
 				   d,
@@ -4368,19 +4396,19 @@ PDM_box_tree_closest_upper_bound_dist_boxes_get_v2
             double box_min_dist2;
 
 	    int _box_id = 0;
-	    if ( irank < 0 ) {
+	    if ( i_rank < 0 ) {
 	      _box_id = bt->local_data->box_ids[curr_node->start_id + j];
 	    } else {
-	      _box_id = bt->rank_data[irank].box_ids[curr_node->start_id + j];
+	      _box_id = bt->rank_data[i_rank].box_ids[curr_node->start_id + j];
 	    }
 
             if (tag[_box_id] == 0) {
 
 	      const double *_box_extents = NULL;
-	      if ( irank < 0 ) {
+	      if ( i_rank < 0 ) {
 		_box_extents = bt->boxes->local_boxes->extents + _box_id*dim*2;
 	      } else {
-		_box_extents = bt->boxes->rank_boxes[irank].extents + _box_id*dim*2;
+		_box_extents = bt->boxes->rank_boxes[i_rank].extents + _box_id*dim*2;
 	      }
 
               inbox = _box_dist2_min (dim,
@@ -4674,7 +4702,7 @@ PDM_box_tree_copy_to_ranks
  int            *rank_copy_num
  ) {
   // copy boxes
-  PDM_box_copy_boxes_to_ranks (bt->boxes, *n_copied_ranks, copied_ranks);
+  PDM_box_copy_boxes_to_ranks ((PDM_box_set_t *) bt->boxes, *n_copied_ranks, copied_ranks);
 
   // set (copy) tree structure
   int myRank;
@@ -4693,11 +4721,11 @@ PDM_box_tree_copy_to_ranks
 
 
   bt->n_copied_ranks = 0;
-  int irank = 0;
+  int i_rank = 0;
 
   for (i = 0; i < *n_copied_ranks; i++) {
-    irank = copied_ranks[i];
-    if ( myRank != irank ) {
+    i_rank = copied_ranks[i];
+    if ( myRank != i_rank ) {
       rank_copy_num[copied_ranks[i]]         = bt->n_copied_ranks;
       bt->copied_ranks[bt->n_copied_ranks++] = copied_ranks[i];
     }
@@ -4728,8 +4756,8 @@ PDM_box_tree_copy_to_ranks
   int icopied = 0;
   int j = 0, k = 0;
   for (i = 0; i < *n_copied_ranks; i++) {
-    irank = copied_ranks[i];
-    if ( myRank == irank ) {
+    i_rank = copied_ranks[i];
+    if ( myRank == i_rank ) {
       n_max_nodes   = bt->local_data->n_max_nodes;
       n_nodes       = bt->local_data->n_nodes;
       n_build_loops = bt->local_data->n_build_loops;
@@ -4743,12 +4771,12 @@ PDM_box_tree_copy_to_ranks
       */
     }
 
-    PDM_MPI_Bcast(&n_max_nodes,   1, PDM_MPI_INT, irank, bt->comm);
-    PDM_MPI_Bcast(&n_nodes,       1, PDM_MPI_INT, irank, bt->comm);
-    PDM_MPI_Bcast(&n_build_loops, 1, PDM_MPI_INT, irank, bt->comm);
-    PDM_MPI_Bcast(&l_box_ids,     1, PDM_MPI_INT, irank, bt->comm);
+    PDM_MPI_Bcast(&n_max_nodes,   1, PDM_MPI_INT, i_rank, bt->comm);
+    PDM_MPI_Bcast(&n_nodes,       1, PDM_MPI_INT, i_rank, bt->comm);
+    PDM_MPI_Bcast(&n_build_loops, 1, PDM_MPI_INT, i_rank, bt->comm);
+    PDM_MPI_Bcast(&l_box_ids,     1, PDM_MPI_INT, i_rank, bt->comm);
     /*
-      PDM_MPI_Bcast(int_buffer, 4, PDM_MPI_INT, irank, bt->comm);
+      PDM_MPI_Bcast(int_buffer, 4, PDM_MPI_INT, i_rank, bt->comm);
       n_max_nodes   = int_buffer[0];
       n_nodes       = int_buffer[1];
       n_build_loops = int_buffer[2];
@@ -4764,7 +4792,7 @@ PDM_box_tree_copy_to_ranks
     child_ids      = (int *) malloc (sizeof(int) * n_max_nodes*bt->n_children);
     box_ids        = (int *) malloc (sizeof(int) * l_box_ids);
 
-    if ( myRank == irank ) {
+    if ( myRank == i_rank ) {
       // set buffers
       for (j = 0; j < n_max_nodes; j++) {
         nodes_is_leaf[j]  = (int) bt->local_data->nodes[j].is_leaf;
@@ -4781,15 +4809,15 @@ PDM_box_tree_copy_to_ranks
     }
 
     // broadcast buffers
-    PDM_MPI_Bcast(nodes_is_leaf,  n_max_nodes,   PDM_MPI_INT, irank, bt->comm);
-    PDM_MPI_Bcast(nodes_n_boxes,  n_max_nodes,   PDM_MPI_INT, irank, bt->comm);
-    PDM_MPI_Bcast(nodes_start_id, n_max_nodes,   PDM_MPI_INT, irank, bt->comm);
-    PDM_MPI_Bcast(nodes_morton,   n_max_nodes*4, PDM_MPI_INT, irank, bt->comm);
+    PDM_MPI_Bcast(nodes_is_leaf,  n_max_nodes,   PDM_MPI_INT, i_rank, bt->comm);
+    PDM_MPI_Bcast(nodes_n_boxes,  n_max_nodes,   PDM_MPI_INT, i_rank, bt->comm);
+    PDM_MPI_Bcast(nodes_start_id, n_max_nodes,   PDM_MPI_INT, i_rank, bt->comm);
+    PDM_MPI_Bcast(nodes_morton,   n_max_nodes*4, PDM_MPI_INT, i_rank, bt->comm);
 
-    PDM_MPI_Bcast(child_ids, n_max_nodes*bt->n_children, PDM_MPI_INT, irank, bt->comm);
-    PDM_MPI_Bcast(box_ids,   l_box_ids,                  PDM_MPI_INT, irank, bt->comm);
+    PDM_MPI_Bcast(child_ids, n_max_nodes*bt->n_children, PDM_MPI_INT, i_rank, bt->comm);
+    PDM_MPI_Bcast(box_ids,   l_box_ids,                  PDM_MPI_INT, i_rank, bt->comm);
 
-    if  ( myRank != irank ) {
+    if  ( myRank != i_rank ) {
       bt->rank_data[icopied].n_max_nodes   = n_max_nodes;
       bt->rank_data[icopied].n_nodes       = n_nodes;
       bt->rank_data[icopied].n_build_loops = n_build_loops;

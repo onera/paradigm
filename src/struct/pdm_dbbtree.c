@@ -207,6 +207,7 @@ _redistribute_boxes
   /* Delete intermediate structures */
 
   PDM_box_distrib_destroy (&distrib);
+
 }
 
 /*=============================================================================
@@ -309,7 +310,7 @@ PDM_dbbtree_free
  * This function assigns a set of boxes to an empty \ref PDM_dbbtree_t structure.
  *
  * \param [in]  dbbt     Pointer to a distributed bounding box tree
- * \param [in]  nPart    Number of partitions
+ * \param [in]  n_part    Number of partitions
  * \param [in]  nElts    Number of elements of each partition
  * \param [in]  extents  Extents of each element of each partition
  * \param [in]  gNum     Global number of each element of each partition
@@ -324,7 +325,7 @@ PDM_box_set_t  *
 PDM_dbbtree_boxes_set
 (
  PDM_dbbtree_t     *dbbt,
- const int          nPart,
+ const int          n_part,
  const int         *nElts,
  const double     **extents,
  const PDM_g_num_t **gNum
@@ -344,7 +345,7 @@ PDM_dbbtree_boxes_set
   const int sExtents = _dbbt->dim * 2;
 
   int nEltsProc = 0;
-  for (int i = 0; i < nPart; i++) {
+  for (int i = 0; i < n_part; i++) {
     nEltsProc += nElts[i];
   }
 
@@ -356,7 +357,7 @@ PDM_dbbtree_boxes_set
   int idx1 = 0;
   int idx2 = 0;
 
-  for (int i = 0; i < nPart; i++) {
+  for (int i = 0; i < n_part; i++) {
 
     for (int j = 0; j < nElts[i]; j++) {
       _boxGnum[idx++] = gNum[i][j];
@@ -382,7 +383,7 @@ PDM_dbbtree_boxes_set
                                     nEltsProc,
                                     _boxGnum,
                                     _extents,
-                                    nPart,
+                                    n_part,
                                     nElts,
                                     _initLocation,
                                     _dbbt->comm);
@@ -487,9 +488,9 @@ PDM_dbbtree_boxes_set
 
     // Retour espace reel pour allGExtents
 
-    int *initLocationProc = (int *) malloc (sizeof(int) * 3 * nUsedRank);
+    int *initLocation_proc = (int *) malloc (sizeof(int) * 3 * nUsedRank);
     for (int i = 0; i < 3 * nUsedRank; i++) {
-      initLocationProc[i] = 0;
+      initLocation_proc[i] = 0;
     }
 
     //TODO: Faire un PDM_box_set et PDM_box_tree_create sequentiel ! Le comm split a u n 1 proc ici : pas terrible
@@ -506,7 +507,7 @@ PDM_dbbtree_boxes_set
                                           allGExtents,
                                           1,
                                           &nUsedRank,
-                                          initLocationProc,
+                                          initLocation_proc,
                                           _dbbt->rankComm);
     //printf("  PDM_dbbtree_boxes_set <<-- PDM_box_set_create (rankBoxes) (rank %d)\n", myRank);
 
@@ -528,7 +529,7 @@ PDM_dbbtree_boxes_set
 
     free (allGExtents);
     free (gNumProc);
-    free (initLocationProc);
+    free (initLocation_proc);
 
   }
 
@@ -561,7 +562,7 @@ PDM_dbbtree_boxes_set
  * This function assigns boxes to intersect to the tree.
  *
  * \param [in]  dbbt     Pointer to a distributed bounding box tree
- * \param [in]  nPart    Number of partitions
+ * \param [in]  n_part    Number of partitions
  * \param [in]  nElts    Number of elements of each partition
  * \param [in]  extents  Extents of each element of each partition
  * \param [in]  gNum     Global number of each element of each partition
@@ -575,7 +576,7 @@ PDM_box_set_t  *
 PDM_dbbtree_intersect_boxes_set
 (
  PDM_dbbtree_t    *dbbt,
- const int         nPart,
+ const int         n_part,
  const int        *nElts,
  const double     **extents,
  const PDM_g_num_t **gNum,
@@ -596,7 +597,7 @@ PDM_dbbtree_intersect_boxes_set
   const int sExtents = _dbbt->dim * 2;
 
   int nEltsProc = 0;
-  for (int i = 0; i < nPart; i++) {
+  for (int i = 0; i < n_part; i++) {
     nEltsProc += nElts[i];
   }
 
@@ -608,7 +609,7 @@ PDM_dbbtree_intersect_boxes_set
   int idx1 = 0;
   int idx2 = 0;
 
-  for (int i = 0; i < nPart; i++) {
+  for (int i = 0; i < n_part; i++) {
 
     for (int j = 0; j < nElts[i]; j++) {
       _boxGnum[idx++] = gNum[i][j];
@@ -626,7 +627,7 @@ PDM_dbbtree_intersect_boxes_set
 
   if (1 == 0) {
 
-    PDM_printf ("nEltsProc : %d", nEltsProc);
+    PDM_printf ("nEltsProc : %d\n", nEltsProc);
 
     PDM_printf ("_boxGnum :");
     for (int i = 0; i < nEltsProc; i++) {
@@ -634,9 +635,10 @@ PDM_dbbtree_intersect_boxes_set
     }
     PDM_printf ("\n");
 
-    PDM_printf ("_extents :");
+    PDM_printf ("_extents :\n");
     idx1 = 0;
     for (int i = 0; i < nEltsProc; i++) {
+      PDM_printf (" "PDM_FMT_G_NUM":", _boxGnum[i]);
       PDM_printf (" %12.5e", _extents[idx1++]);
       PDM_printf (" %12.5e", _extents[idx1++]);
       PDM_printf (" %12.5e", _extents[idx1++]);
@@ -664,14 +666,11 @@ PDM_dbbtree_intersect_boxes_set
                                               nEltsProc,
                                               _boxGnum,
                                               _extents,
-                                              nPart,
+                                              n_part,
                                               nElts,
                                               _initLocation,
                                               _dbbt->comm);
 
-  free (_boxGnum);
-  free (_extents);
-  free (_initLocation);
 
   /*
    * Intersection boxes whith shared tree
@@ -691,12 +690,15 @@ PDM_dbbtree_intersect_boxes_set
      * Distribute boxes on intersection ranks
      */
 
-    PDM_printf ("box_l_num_shared : ");
-    for (int i = 0; i < nUsedRank; i++) {
-      for (int j = (*box_index)[i]; j < (*box_index)[i+1]; j++) {
-        PDM_printf (" %d", (*box_l_num)[j]);
+    if (1==0){
+      PDM_printf ("box_l_num_shared : \n");
+      for (int i = 0; i < nUsedRank; i++) {
+        printf("[%d] : ",i);
+        for (int j = (*box_index)[i]; j < (*box_index)[i+1]; j++) {
+          PDM_printf (" %d",  (*box_l_num)[j]);
+        }
+        PDM_printf ("\n");
       }
-      PDM_printf ("\n");
     }
 
     PDM_box_distrib_t  *distrib = NULL;
@@ -710,7 +712,7 @@ PDM_dbbtree_intersect_boxes_set
     }
 
     for (int i = 0; i < nUsedRank; i++) {
-      distrib->index[usedRanks[i]] = (*box_index)[i+1] - (*box_index)[i];
+      distrib->index[usedRanks[i]+1] = (*box_index)[i+1] - (*box_index)[i];
     }
 
     for (int i = 0; i < lComm; i++) {
@@ -730,6 +732,14 @@ PDM_dbbtree_intersect_boxes_set
     PDM_box_set_redistribute (distrib,
                               boxes);
 
+    if (1 == 0) {
+      printf ("Boxes B apres redistribution : %d\n", boxes->local_boxes->n_boxes);
+      for (int i = 0; i < boxes->local_boxes->n_boxes; i++) {
+        printf (" %ld", boxes->local_boxes->g_num[i]);
+      }
+      printf("\n");
+    }
+
     /*
      * Free
      */
@@ -740,6 +750,10 @@ PDM_dbbtree_intersect_boxes_set
     free (*box_index);
 
   }
+
+  free (_boxGnum);
+  free (_extents);
+  free (_initLocation);
 
   /*
    * Intersection boxes whith local tree
@@ -924,13 +938,13 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get_OLD
 
     for (int i = 0; i < n_pts; i++) {
       for (int j = box_index_tmp[i]; j < box_index_tmp[i+1]; j++) {
-        const int irank = usedRanks[box_l_num_tmp[j]];
-        int idx            = i_send_pts[irank] + n_send_pts[irank];
+        const int i_rank = usedRanks[box_l_num_tmp[j]];
+        int idx            = i_send_pts[i_rank] + n_send_pts[i_rank];
         send_pts[idx++]    = pts[3*i];
         send_pts[idx++]    = pts[3*i+1];
         send_pts[idx++]    = pts[3*i+2];
         send_pts[idx++]    = upper_bound_dist2[i];
-        n_send_pts[irank] += 4;
+        n_send_pts[i_rank] += 4;
       }
     }
 
@@ -1096,10 +1110,10 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get_OLD
 
     for (int i = 0; i < n_pts; i++) {
       for (int j = box_index_tmp[i]; j < box_index_tmp[i+1]; j++) {
-        const int irank = usedRanks[box_l_num_tmp[j]];
-        const int idx   = i_send_pts[irank] + n_send_pts[irank];
+        const int i_rank = usedRanks[box_l_num_tmp[j]];
+        const int idx   = i_send_pts[i_rank] + n_send_pts[i_rank];
         box_n[i]        += n_box_l_num_per_pts[idx];
-        n_send_pts[irank] += 1;
+        n_send_pts[i_rank] += 1;
       }
     }
 
@@ -1116,14 +1130,14 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get_OLD
 
     for (int i = 0; i < n_pts; i++) {
       for (int j = box_index_tmp[i]; j < box_index_tmp[i+1]; j++) {
-        const int irank = usedRanks[box_l_num_tmp[j]];
-        int idx  = i_send_pts[irank] + n_send_pts[irank];
-        int idx2 = i_send_pts2[irank] + n_send_pts2[irank];
+        const int i_rank = usedRanks[box_l_num_tmp[j]];
+        int idx  = i_send_pts[i_rank] + n_send_pts[i_rank];
+        int idx2 = i_send_pts2[i_rank] + n_send_pts2[i_rank];
         for (int k = 0; k < n_box_l_num_per_pts[idx]; k++) {
           (*box_g_num)[k1++] = box_g_num_per_pts[idx2++];
         }
-        n_send_pts2[irank] += n_box_l_num_per_pts[idx];
-        n_send_pts[irank] += 1;
+        n_send_pts2[i_rank] += n_box_l_num_per_pts[idx];
+        n_send_pts[i_rank] += 1;
       }
     }
 

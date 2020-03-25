@@ -152,7 +152,7 @@ PDM_box_tree_get_max_level(const PDM_box_tree_t  *bt);
 
 void
 PDM_box_tree_set_boxes(PDM_box_tree_t       *bt,
-                       const PDM_box_set_t  *boxes,
+                       PDM_box_set_t  *boxes,
                        PDM_box_tree_sync_t   build_type);
 
 void
@@ -327,8 +327,8 @@ PDM_box_tree_closest_upper_bound_dist_boxes_get
 /*----------------------------------------------------------------------------
  * same as above but extended to support search in local box tree as well as in box trees from copied ranks
  *
- * if irank < 0 then search is performed in local box tree data,
- * otherwise search is performed in box tree data copied from proc with rank bt->copied_rank[irank]
+ * if i_rank < 0 then search is performed in local box tree data,
+ * otherwise search is performed in box tree data copied from proc with rank bt->copied_rank[i_rank]
  *
  *----------------------------------------------------------------------------*/
 
@@ -336,7 +336,7 @@ void
 PDM_box_tree_closest_upper_bound_dist_boxes_get_v2
 (
  PDM_box_tree_t  *bt,
- const int        irank,
+ const int        i_rank,
  const int        n_pts,
  double           pts[],
  double           upper_bound_dist2[],

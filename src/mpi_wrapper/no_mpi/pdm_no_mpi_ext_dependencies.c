@@ -62,7 +62,7 @@ const int *adjwgt,
 const int *wgtflag,
 const int *numflag,
 const int *ncon,
-const int *nparts,
+const int *n_parts,
 const double *tpwgts,
 const double *ubvec,
 const int *edgecut,
@@ -78,7 +78,7 @@ const PDM_MPI_Comm comm
   wgtflag;
   numflag;
   ncon;
-  nparts;
+  n_parts;
   tpwgts;
   ubvec;
   edgecut;
@@ -98,25 +98,25 @@ const PDM_MPI_Comm comm
 void
 PDM_SCOTCH_dpart
 (
-const PDM_g_num_t dNCell,
-const PDM_g_num_t *dDualGraphIdx,
-const PDM_g_num_t *dDualGraph,
-const int *cellWeight,
+const PDM_g_num_t dn_cell,
+const PDM_g_num_t *ddual_graph_idx,
+const PDM_g_num_t *ddual_graph,
+const int *cell_weight,
 const int *edgeWeight,
 const int check,
 const PDM_MPI_Comm comm,
-const int nPart,
+const int n_part,
 int *part
 )
 {
-  dNCell;
-  dDualGraphIdx;
-  dDualGraph;
-  cellWeight;
+  dn_cell;
+  ddual_graph_idx;
+  ddual_graph;
+  cell_weight;
   edgeWeight;
   check;
   comm;
-  nPart;
+  n_part;
   part;
 
   PDM_error(__FILE__, __LINE__, 0,"PDM_SCOTCH_dpart : Unavailable function with pdm_no_mpi library\n" );

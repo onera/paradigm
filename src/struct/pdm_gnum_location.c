@@ -68,16 +68,16 @@ extern "C" {
  */
 
 typedef struct  {
-  int n_part_in;                       /*!< Number of local partitions  */
-  int n_part_out;                      /*!< Number of local partitions
-                                            for requested locations */
-  int *n_elts_in;                      /*!< Number of elements of each partition */
-  const PDM_g_num_t **g_nums_in;       /*!< Global numbering  */
-  int *n_elts_out;                     /*!< Number of elements requesting location */
-  const PDM_g_num_t **g_nums_out;      /*!< Global numbering of elements requesting location */
-  int **location_idx;                  /*!< Location index of elements requesting location */
-  int **location;                      /*!< Location of elements requesting location */
-  PDM_MPI_Comm comm;                   /*!< Communicator */
+  PDM_MPI_Comm        comm;         /*!< Communicator */
+  int                 n_part_in;    /*!< Number of local partitions  */
+  int                 n_part_out;   /*!< Number of local partitions
+                                        for requested locations */
+  int                *n_elts_in;    /*!< Number of elements of each partition */
+  const PDM_g_num_t **g_nums_in;    /*!< Global numbering  */
+  int                *n_elts_out;   /*!< Number of elements requesting location */
+  const PDM_g_num_t **g_nums_out;   /*!< Global numbering of elements requesting location */
+  int               **location_idx; /*!< Location index of elements requesting location */
+  int               **location;     /*!< Location of elements requesting location */
 } _pdm_gnum_location_t;
 
 /*============================================================================
@@ -95,7 +95,7 @@ static PDM_Handles_t *_glocs   = NULL;
  *
  * \brief Return ppart object from it identifier
  *
- * \param [in]   ppartId        ppart identifier
+ * \param [in]   ppart_id        ppart identifier
  *
  */
 
