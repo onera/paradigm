@@ -80,10 +80,6 @@ PDM_g_num_t **dEdgeGroup
 )
 {
 
-  int vb = 1;
-  if (vb == 1)   PDM_printf ("==== PDM_poly_surf_gen ====\n");
-  vb=0;
-
   int n_rank;
   PDM_MPI_Comm_size(localComm, &n_rank);
 
@@ -460,7 +456,6 @@ PDM_g_num_t **dEdgeGroup
   PDM_g_num_t n7;
   PDM_g_num_t n8;
 
-  vb = 0;
   /* Triangle */
 
   /* -- Premiere ligne */
@@ -491,12 +486,6 @@ PDM_g_num_t **dEdgeGroup
         (*dFaceEdge)[ideb+2]   = nTri + 4 + 6*ix + 7;
       else
         (*dFaceEdge)[ideb+2]   = nTri + 4 + 6*ix + 6;
-if (vb==1) {PDM_printf ("dface_vtx[ %d ] = %d\n", ideb, (*dface_vtx)[ideb]);
-PDM_printf ("dface_vtx[ %d ] = %d\n", ideb+1, (*dface_vtx)[ideb+1]);
-PDM_printf ("dface_vtx[ %d ] = %d\n", ideb+2, (*dface_vtx)[ideb+2]);
-PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb, (*dFaceEdge)[ideb]);
-PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb+1, (*dFaceEdge)[ideb+1]);
-PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb+2, (*dFaceEdge)[ideb+2]);}
 
       dn_faceTmp += 1;
       (*dface_vtx_idx)[dn_faceTmp] = ideb + 3;
@@ -509,10 +498,6 @@ PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb+2, (*dFaceEdge)[ideb+2]);}
         (*dEdgeVtx)[2*dNEdgeTmp + 1] = n1+ix1;
         (*dEdgeFace)[2*dNEdgeTmp]       = dn_faceAbs;
         (*dEdgeFace)[2*dNEdgeTmp + 1]   = 0;
-if (vb==1) {PDM_printf ("dEdgeVtx[ %d ] = %d\n", 2*dNEdgeTmp, (*dEdgeVtx)[2*dNEdgeTmp]);
-PDM_printf ("dEdgeVtx[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeVtx)[2*dNEdgeTmp+1]);
-PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp, (*dEdgeFace)[2*dNEdgeTmp]);
-PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeFace)[2*dNEdgeTmp+1]);	 }
         dNEdgeTmp += 1;
       }
       dNEdgeAbs += 1;
@@ -523,10 +508,6 @@ PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeFace)[2*dNEdgeTmp+1]
       (*dEdgeVtx)[2*dNEdgeTmp + 1] = n1+ix1+1;
       (*dEdgeFace)[2*dNEdgeTmp]       = dn_faceAbs;
       (*dEdgeFace)[2*dNEdgeTmp + 1]   = 0;
-if (vb==1) {PDM_printf ("dEdgeVtx[ %d ] = %d\n", 2*dNEdgeTmp, (*dEdgeVtx)[2*dNEdgeTmp]);
-PDM_printf ("dEdgeVtx[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeVtx)[2*dNEdgeTmp+1]);
-PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp, (*dEdgeFace)[2*dNEdgeTmp]);
-PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeFace)[2*dNEdgeTmp+1]);	 }
       dNEdgeTmp += 1;
     }
     dNEdgeAbs += 1;
@@ -537,10 +518,6 @@ PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeFace)[2*dNEdgeTmp+1]
         (*dEdgeVtx)[2*dNEdgeTmp + 1] = n2+ix;
         (*dEdgeFace)[2*dNEdgeTmp]       = dn_faceAbs;
         (*dEdgeFace)[2*dNEdgeTmp + 1]   = 0;
-if (vb==1) {PDM_printf ("dEdgeVtx[ %d ] = %d\n", 2*dNEdgeTmp, (*dEdgeVtx)[2*dNEdgeTmp]);
-PDM_printf ("dEdgeVtx[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeVtx)[2*dNEdgeTmp+1]);
-PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp, (*dEdgeFace)[2*dNEdgeTmp]);
-PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeFace)[2*dNEdgeTmp+1]);	 }
         dNEdgeTmp += 1;
       }
       dNEdgeAbs += 1;
@@ -572,12 +549,6 @@ PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeFace)[2*dNEdgeTmp+1]
         (*dFaceEdge)[ideb+2]   = nTri + 4 + (6 * nxPoly + 1) * (itri+1) + 6;
       dn_faceTmp += 1;
       (*dface_vtx_idx)[dn_faceTmp] = ideb + 3;
-if (vb==1) {PDM_printf ("dface_vtx[ %d ] = %d\n", ideb, (*dface_vtx)[ideb]);
-PDM_printf ("dface_vtx[ %d ] = %d\n", ideb+1, (*dface_vtx)[ideb+1]);
-PDM_printf ("dface_vtx[ %d ] = %d\n", ideb+2, (*dface_vtx)[ideb+2]);
-PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb, (*dFaceEdge)[ideb]);
-PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb+1, (*dFaceEdge)[ideb+1]);
-PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb+2, (*dFaceEdge)[ideb+2]);	}
 
     }
     dn_faceAbs += 1;
@@ -587,10 +558,6 @@ PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb+2, (*dFaceEdge)[ideb+2]);	}
       (*dEdgeVtx)[2*dNEdgeTmp + 1] = n1;
       (*dEdgeFace)[2*dNEdgeTmp]       = dn_faceAbs;
       (*dEdgeFace)[2*dNEdgeTmp + 1]   = 0;
-if (vb==1) {PDM_printf ("dEdgeVtx[ %d ] = %d\n", 2*dNEdgeTmp, (*dEdgeVtx)[2*dNEdgeTmp]);
-PDM_printf ("dEdgeVtx[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeVtx)[2*dNEdgeTmp+1]);
-PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp, (*dEdgeFace)[2*dNEdgeTmp]);
-PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeFace)[2*dNEdgeTmp+1]);	 }
       dNEdgeTmp += 1;
     }
     dNEdgeAbs += 1;
@@ -608,12 +575,6 @@ PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeFace)[2*dNEdgeTmp+1]
       (*dFaceEdge)[ideb+2]   = nTri + 4 + (6 * nxPoly + 1) * (itri + 1) - 3;
       dn_faceTmp += 1;
       (*dface_vtx_idx)[dn_faceTmp] = ideb + 3;
-if (vb==1) {PDM_printf ("dface_vtx[ %d ] = %d\n", ideb, (*dface_vtx)[ideb]);
-PDM_printf ("dface_vtx[ %d ] = %d\n", ideb+1, (*dface_vtx)[ideb+1]);
-PDM_printf ("dface_vtx[ %d ] = %d\n", ideb+2, (*dface_vtx)[ideb+2]);
-PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb, (*dFaceEdge)[ideb]);
-PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb+1, (*dFaceEdge)[ideb+1]);
-PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb+2, (*dFaceEdge)[ideb+2]);	 }
     }
     dn_faceAbs += 1;
 
@@ -622,10 +583,6 @@ PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb+2, (*dFaceEdge)[ideb+2]);	 }
       (*dEdgeVtx)[2*dNEdgeTmp + 1] = n6;
       (*dEdgeFace)[2*dNEdgeTmp]       = dn_faceAbs;
       (*dEdgeFace)[2*dNEdgeTmp + 1]   = 0;
-if (vb==1) {PDM_printf ("dEdgeVtx[ %d ] = %d\n", 2*dNEdgeTmp, (*dEdgeVtx)[2*dNEdgeTmp]);
-PDM_printf ("dEdgeVtx[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeVtx)[2*dNEdgeTmp+1]);
-PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp, (*dEdgeFace)[2*dNEdgeTmp]);
-PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeFace)[2*dNEdgeTmp+1]);	 }
       dNEdgeTmp += 1;
     }
     dNEdgeAbs += 1;
@@ -663,13 +620,6 @@ PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeFace)[2*dNEdgeTmp+1]
         (*dFaceEdge)[ideb+2]   = nTri + 4 + (6 * nxPoly + 1) * (nyPoly - 1) + 6*ix + 5;
       dn_faceTmp += 1;
       (*dface_vtx_idx)[dn_faceTmp] = ideb + 3;
-if (vb==1) {PDM_printf ("dface_vtx[ %d ] = %d\n", ideb, (*dface_vtx)[ideb]);
-PDM_printf ("dface_vtx[ %d ] = %d\n", ideb+1, (*dface_vtx)[ideb+1]);
-PDM_printf ("dface_vtx[ %d ] = %d\n", ideb+2, (*dface_vtx)[ideb+2]);
-PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb, (*dFaceEdge)[ideb]);
-PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb+1, (*dFaceEdge)[ideb+1]);
-PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb+2, (*dFaceEdge)[ideb+2]);	 }
-
     }
     dn_faceAbs += 1;
 
@@ -679,10 +629,6 @@ PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb+2, (*dFaceEdge)[ideb+2]);	 }
         (*dEdgeVtx)[2*dNEdgeTmp + 1] = n1 + ix;
         (*dEdgeFace)[2*dNEdgeTmp]       = dn_faceAbs;
         (*dEdgeFace)[2*dNEdgeTmp + 1]   = 0;
-if (vb==1) {PDM_printf ("dEdgeVtx[ %d ] = %d\n", 2*dNEdgeTmp, (*dEdgeVtx)[2*dNEdgeTmp]);
-PDM_printf ("dEdgeVtx[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeVtx)[2*dNEdgeTmp+1]);
-PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp, (*dEdgeFace)[2*dNEdgeTmp]);
-PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeFace)[2*dNEdgeTmp+1]);	 }
         dNEdgeTmp += 1;
       }
       dNEdgeAbs += 1;
@@ -693,10 +639,6 @@ PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeFace)[2*dNEdgeTmp+1]
       (*dEdgeVtx)[2*dNEdgeTmp + 1] = n2 + ix1 + 1;
       (*dEdgeFace)[2*dNEdgeTmp]       = dn_faceAbs;
       (*dEdgeFace)[2*dNEdgeTmp + 1]   = 0;
-if (vb==1) {PDM_printf ("dEdgeVtx[ %d ] = %d\n", 2*dNEdgeTmp, (*dEdgeVtx)[2*dNEdgeTmp]);
-PDM_printf ("dEdgeVtx[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeVtx)[2*dNEdgeTmp+1]);
-PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp, (*dEdgeFace)[2*dNEdgeTmp]);
-PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeFace)[2*dNEdgeTmp+1]);}
       dNEdgeTmp += 1;
     }
     dNEdgeAbs += 1;
@@ -707,10 +649,6 @@ PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeFace)[2*dNEdgeTmp+1]
         (*dEdgeVtx)[2*dNEdgeTmp + 1] = n2 + ix1 + 1;
         (*dEdgeFace)[2*dNEdgeTmp]       = dn_faceAbs;
         (*dEdgeFace)[2*dNEdgeTmp + 1]   = 0;
-if (vb==1) {PDM_printf ("dEdgeVtx[ %d ] = %d\n", 2*dNEdgeTmp, (*dEdgeVtx)[2*dNEdgeTmp]);
-PDM_printf ("dEdgeVtx[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeVtx)[2*dNEdgeTmp+1]);
-PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp, (*dEdgeFace)[2*dNEdgeTmp]);
-PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeFace)[2*dNEdgeTmp+1]);	}
         dNEdgeTmp += 1;
       }
       dNEdgeAbs += 1;
@@ -749,15 +687,6 @@ PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeFace)[2*dNEdgeTmp+1]
         (*dFaceEdge)[ideb+3]   = nTri + 4 + (6 * nxPoly + 1) * (iy+1) + 6*ix     + 2;
         dn_faceTmp += 1;
         (*dface_vtx_idx)[dn_faceTmp] = ideb + 4;
-if (vb==1) {PDM_printf ("dface_vtx[ %d ] = %d\n", ideb, (*dface_vtx)[ideb]);
-PDM_printf ("dface_vtx[ %d ] = %d\n", ideb+1, (*dface_vtx)[ideb+1]);
-PDM_printf ("dface_vtx[ %d ] = %d\n", ideb+2, (*dface_vtx)[ideb+2]);
-PDM_printf ("dface_vtx[ %d ] = %d\n", ideb+3, (*dface_vtx)[ideb+3]);
-PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb, (*dFaceEdge)[ideb]);
-PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb+1, (*dFaceEdge)[ideb+1]);
-PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb+2, (*dFaceEdge)[ideb+2]);
-PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb+3, (*dFaceEdge)[ideb+3]);	 }
-
       }
       dn_faceAbs += 1;
     }
@@ -789,9 +718,6 @@ PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb+3, (*dFaceEdge)[ideb+3]);	 }
       if (iy == (nyPoly - 1))
         n7 = iy*(2*nx1-2) + 1 + 2*nx1 + 2*ix + 1;
       n8 = n7 + 1;
-if (vb==1) {PDM_printf ("n1: %d n2: %d n3: %d n4: %d n5: %d n6: %d n7: %d n8: %d\n", n1, n2,n3,n4,n5,n6,n7,n8);
-PDM_printf ("dNEdgeAbs: %d \n", dNEdgeAbs);	 }
-
 
       PDM_g_num_t connecPoly[8];
       connecPoly[0]      = n1;
@@ -813,48 +739,27 @@ PDM_printf ("dNEdgeAbs: %d \n", dNEdgeAbs);	 }
         if (ix == (nxPoly - 1))
           (*dFaceEdge)[ideb+2]   = dNEdgeAbs + (++id);
         else {
-/* version d eric			(*dFaceEdge)[ideb+2]   = dNEdgeAbs + (6 * nxPoly + 1) + 5; */
-/* version de stephanie */
-			(*dFaceEdge)[ideb+2]   = dNEdgeAbs+(id+1) + 8;
-			if (ix == (nxPoly-2))
-				(*dFaceEdge)[ideb+2]= (*dFaceEdge)[ideb+2]+1; /*car cette arrete est num ici (droite)*/
-			if (iy == (nyPoly-1))
-				(*dFaceEdge)[ideb+2]= (*dFaceEdge)[ideb+2]+2; /*car cette arrete est num ici pour les deux polyg (haut)*/
+          (*dFaceEdge)[ideb+2]   = dNEdgeAbs+(id+1) + 8;
+          if (ix == (nxPoly-2))
+            (*dFaceEdge)[ideb+2]= (*dFaceEdge)[ideb+2]+1;
+          if (iy == (nyPoly-1))
+            (*dFaceEdge)[ideb+2]= (*dFaceEdge)[ideb+2]+2;
 }
         (*dFaceEdge)[ideb+3]   = dNEdgeAbs + (++id);
         if (iy == (nyPoly - 1))
           (*dFaceEdge)[ideb+4]   = dNEdgeAbs + (++id);
         else {
-/* version d eric			(*dFaceEdge)[ideb+4]   = dNEdgeAbs + (6 * nxPoly + 1) + 1; */
-/* version de stephanie */
-			(*dFaceEdge)[ideb+4]   = dNEdgeAbs+(id+1) + (6*(nxPoly-1)+1) +3;
-			if (ix == (nxPoly-1))
-				(*dFaceEdge)[ideb+4]= (*dFaceEdge)[ideb+4]-1; /*car pas d arete bord droit*/
-			if (iy == (nyPoly-2))
-				(*dFaceEdge)[ideb+4]= (*dFaceEdge)[ideb+4]+ix; /*car cette arrete est num ici pour les deux polyg (haut)*/
-}
+          (*dFaceEdge)[ideb+4]   = dNEdgeAbs+(id+1) + (6*(nxPoly-1)+1) +3;
+          if (ix == (nxPoly-1))
+            (*dFaceEdge)[ideb+4]= (*dFaceEdge)[ideb+4]-1;
+          if (iy == (nyPoly-2))
+            (*dFaceEdge)[ideb+4]= (*dFaceEdge)[ideb+4]+ix;
+        }
         (*dFaceEdge)[ideb+5]   = dNEdgeAbs + (++id);
         (*dFaceEdge)[ideb+6]   = dNEdgeAbs + (++id);
         (*dFaceEdge)[ideb+7]   = dNEdgeAbs + (++id);
         dn_faceTmp += 1;
         (*dface_vtx_idx)[dn_faceTmp] = ideb + 8;
-if (vb==1) {PDM_printf ("dface_vtx[ %d ] = %d\n", ideb, (*dface_vtx)[ideb]);
-PDM_printf ("dface_vtx[ %d ] = %d\n", ideb+1, (*dface_vtx)[ideb+1]);
-PDM_printf ("dface_vtx[ %d ] = %d\n", ideb+2, (*dface_vtx)[ideb+2]);
-PDM_printf ("dface_vtx[ %d ] = %d\n", ideb+3, (*dface_vtx)[ideb+3]);
-PDM_printf ("dface_vtx[ %d ] = %d\n", ideb+4, (*dface_vtx)[ideb+4]);
-PDM_printf ("dface_vtx[ %d ] = %d\n", ideb+5, (*dface_vtx)[ideb+5]);
-PDM_printf ("dface_vtx[ %d ] = %d\n", ideb+6, (*dface_vtx)[ideb+6]);
-PDM_printf ("dface_vtx[ %d ] = %d\n", ideb+7, (*dface_vtx)[ideb+7]);
-PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb, (*dFaceEdge)[ideb]);
-PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb+1, (*dFaceEdge)[ideb+1]);
-PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb+2, (*dFaceEdge)[ideb+2]);
-PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb+3, (*dFaceEdge)[ideb+3]);
-PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb+4, (*dFaceEdge)[ideb+4]);
-PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb+5, (*dFaceEdge)[ideb+5]);
-PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb+6, (*dFaceEdge)[ideb+6]);
-PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb+7, (*dFaceEdge)[ideb+7]);	 }
-
       }
       dn_faceAbs += 1;
 
@@ -927,10 +832,6 @@ PDM_printf ("dFaceEdge[ %d ] = %d\n", ideb+7, (*dFaceEdge)[ideb+7]);	 }
                   (*dEdgeFace)[2*dNEdgeTmp + 1] = nTri + (iy-1)*nxQuad + ix + 1 - 1;
               }
             }
-if (vb==1) {PDM_printf ("dEdgeVtx[ %d ] = %d\n", 2*dNEdgeTmp, (*dEdgeVtx)[2*dNEdgeTmp]);
-PDM_printf ("dEdgeVtx[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeVtx)[2*dNEdgeTmp+1]);
-PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp, (*dEdgeFace)[2*dNEdgeTmp]);
-PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeFace)[2*dNEdgeTmp+1]);	 }
             dNEdgeTmp += 1;
           }
           dNEdgeAbs += 1;
@@ -938,7 +839,7 @@ PDM_printf ("dEdgeFace[ %d ] = %d\n", 2*dNEdgeTmp+1, (*dEdgeFace)[2*dNEdgeTmp+1]
       }
     }
   }
-vb = 1;
+
   *nGEdge = dNEdgeAbs;
   *nGFace = dn_faceAbs;
 
@@ -1030,17 +931,11 @@ vb = 1;
     ++dNEdgeGroupAbs;
   }
 
-/*  *dface_vtx_idx = (int *) malloc(sizeof(int) * ((*dn_face)+1));
-  *dface_vtx    = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * 8 * (*dn_face));
-  *dFaceEdge      = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * 8 * (*dn_face));
-  *dEdgeVtx    = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * 2 * (*dNEdge));
-  *dEdgeFace      = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * 2 * (*dNEdge)); */
-
+  int vb = 0;
 	if (vb==1){
-/*		PDM_printf ("- dface_vtx_idx : \n");
+		PDM_printf ("- dface_vtx_idx : \n");
 		for (int i=0; i<(*dn_face)+1; i++)
 			PDM_printf ("%d->%d  ", i, (*dface_vtx_idx)[i]);
-		*/
 		PDM_printf ("- dvtx_coord : \n");
 		for (int i = 0; i < (*dn_vtx); i++) {
 		  PDM_printf ("%d-> ", i);
@@ -1087,9 +982,6 @@ vb = 1;
   free(dn_vtxRank);
   free(dn_faceRank);
   free(dNEdgeRank);
-  vb = 1;
-  if (vb == 1)   PDM_printf ("==== PDM_poly_surf_gen ==== terminated ====\n");
-
 }
 
 
