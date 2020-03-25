@@ -159,7 +159,7 @@ static int idebug = 0;
  *
  * \brief Return ppart object from it identifier
  *
- * \param [in]   ppartId        ppart identifier
+ * \param [in]   ppart_id        ppart identifier
  *
  */
 
@@ -373,8 +373,8 @@ PDM_closest_points_compute
   PDM_timer_resume(cls->timer);
 
 
-  int myRank;
-  PDM_MPI_Comm_rank (cls->comm, &myRank);
+  int i_rank;
+  PDM_MPI_Comm_rank (cls->comm, &i_rank);
 
   const int depth_max = 31;//?
   const int points_in_leaf_max = 1;//2*cls->n_closest;//?
@@ -390,12 +390,12 @@ PDM_closest_points_compute
 
 
   /* Set source point clouds */
-  for (int ipart = 0; ipart < cls->src_cloud->n_part; ipart++) {
+  for (int i_part = 0; i_part < cls->src_cloud->n_part; i_part++) {
     PDM_para_octree_point_cloud_set (octree_id,
-                                     ipart,
-                                     cls->src_cloud->n_points[ipart],
-                                     cls->src_cloud->coords[ipart],
-                                     cls->src_cloud->gnum[ipart]);
+                                     i_part,
+                                     cls->src_cloud->n_points[i_part],
+                                     cls->src_cloud->coords[i_part],
+                                     cls->src_cloud->gnum[i_part]);
   }
 
 

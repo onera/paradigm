@@ -83,7 +83,7 @@ PDM_dbbtree_free
  * This function assigns a set of boxes to an empty \ref PDM_dbbtree_t structure.
  *
  * \param [in]  dbbt     Pointer to a distributed bounding box tree
- * \param [in]  nPart    Number of partitions
+ * \param [in]  n_part    Number of partitions
  * \param [in]  nElts    Number of elements of each partition
  * \param [in]  extents  Extents of each element of each partition
  * \param [in]  gNum     Global number of each element of each partition
@@ -97,7 +97,7 @@ PDM_box_set_t  *
 PDM_dbbtree_boxes_set
 (
  PDM_dbbtree_t     *dbbt,
- const int          nPart,
+ const int          n_part,
  const int         *nElts,
  const double     **extents,
  const PDM_g_num_t **gNum
@@ -110,7 +110,7 @@ PDM_dbbtree_boxes_set
  * This function  assigns boxes to intersect to the tree.
  *
  * \param [in]  dbbt     Pointer to a distributed bounding box tree
- * \param [in]  nPart    Number of partitions
+ * \param [in]  n_part    Number of partitions
  * \param [in]  nElts    Number of elements of each partition
  * \param [in]  extents  Extents of each element of each partition
  * \param [in]  gNum     Global number of each element of each partition
@@ -127,7 +127,7 @@ PDM_box_set_t  *
 PDM_dbbtree_intersect_boxes_set
 (
  PDM_dbbtree_t    *dbbt,
- const int         nPart,
+ const int         n_part,
  const int        *nElts,
  const double     **extents,
  const PDM_g_num_t **gNum,

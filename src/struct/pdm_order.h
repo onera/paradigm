@@ -38,18 +38,18 @@ extern "C" {
 /**
  * \brief Order an array
  *
- * \param [in]      sizeArray       Number of elements
- * \param [in]      newToOldOrder   New order (size = \ref nElt
- * \param [in, out] Array           Array to renumber
+ * \param [in]      size_array       Number of elements
+ * \param [in]      new_to_old_order New order (size = \ref nElt
+ * \param [in, out] Array            Array to renumber
  *
  */
 
 void
 PDM_order_array
 (
-const int     sizeArray,
+const int     size_array,
 const size_t  elt_size,
-const int    *newToOldOrder,
+const int    *new_to_old_order,
 void         *array
 );
 

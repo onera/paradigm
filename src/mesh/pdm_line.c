@@ -2,6 +2,9 @@
  * Standard C library headers
  *----------------------------------------------------------------------------*/
 
+#include <limits.h>
+#include <float.h>
+
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
@@ -10,6 +13,8 @@
 #include "pdm.h"
 #include "pdm_priv.h"
 #include "pdm_line.h"
+#include "pdm_printf.h"
+#include "pdm_error.h"
 
 /*=============================================================================
  * Macro definitions
@@ -29,6 +34,8 @@ extern "C" {
 /*=============================================================================
  * Static global variables
  *============================================================================*/
+
+static  const double _eps = 1e-12;
 
 /*============================================================================
  * Private function definitions
@@ -80,7 +87,7 @@ _solve_2x2
 
   double det = _det_2x2 (A[0][0], A[0][1], A[1][0], A[1][1]);
 
-  if (det == 0.0) {
+  if (PDM_ABS(det) < _eps) {
     return PDM_FALSE;
   }
 
@@ -132,8 +139,8 @@ PDM_line_intersection
   double c[2];
   double A[2][2];
 
-  *u = 0.;
-  *v = 0.;
+  *u = DBL_MAX;
+  *v = DBL_MAX;
 
   /*
    * Determine vectors
@@ -165,13 +172,13 @@ PDM_line_intersection
    */
 
   c[0] = PDM_DOT_PRODUCT( a21, b1a1 );
+
   c[1] = - PDM_DOT_PRODUCT( b21, b1a1 );
 
   /*
    * Solve the system of equations
    */
-
-  if ( _solve_2x2 (A, c) == 0 ) {
+  if (_solve_2x2 (A, c) == PDM_FALSE) {
     return PDM_LINE_INTERSECT_ON_LINE;
   }
   else {
@@ -183,7 +190,7 @@ PDM_line_intersection
    * Check parametric coordinates for intersection.
    */
 
-  if ( (0.0 <= *u) && (*u <= 1.0) && (0.0 <= *v) && (*v <= 1.0) ) {
+   if ( (0.0 <= *u) && (*u <= 1.0) && (0.0 <= *v) && (*v <= 1.0) ) {
     return PDM_LINE_INTERSECT_YES;
   }
   else {
@@ -276,4 +283,3 @@ PDM_line_distance
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-

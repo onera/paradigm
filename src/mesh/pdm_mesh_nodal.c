@@ -1428,9 +1428,9 @@ const int idx
     /* Free structure */
 
     if (mesh->num_cell_parent_to_local != NULL) {
-      for (int ipart = 0; ipart < mesh->n_part; ipart++) {
-        if (mesh->num_cell_parent_to_local[ipart] != NULL)
-          free(mesh->num_cell_parent_to_local[ipart]);
+      for (int i_part = 0; i_part < mesh->n_part; i_part++) {
+        if (mesh->num_cell_parent_to_local[i_part] != NULL)
+          free(mesh->num_cell_parent_to_local[i_part]);
       }
       free(mesh->num_cell_parent_to_local);
       mesh->num_cell_parent_to_local = NULL;
@@ -3006,8 +3006,8 @@ const PDM_g_num_t *numabs
 
   if (mesh->num_cell_parent_to_local == NULL) {
     mesh->num_cell_parent_to_local = (PDM_l_num_t **) malloc(sizeof(PDM_l_num_t *) * mesh->n_part);
-    for (int ipart = 0; ipart < mesh->n_part; ipart++) {
-      mesh->num_cell_parent_to_local[ipart] = NULL;
+    for (int i_part = 0; i_part < mesh->n_part; i_part++) {
+      mesh->num_cell_parent_to_local[i_part] = NULL;
     }
   }
 
@@ -3048,7 +3048,7 @@ const PDM_g_num_t *numabs
   }
 
   if (mesh->prepa_blocks->t_add != 1) {
-    PDM_error(__FILE__, __LINE__, 0, "Erreur Cs_geom_cell3d_cellface_add : Un autre type d'ajout est en cours\n");
+    PDM_error(__FILE__, __LINE__, 0, "Erreur Cs_geom_cell3d_cell_face_add : Un autre type d'ajout est en cours\n");
     abort();
   }
 
@@ -3063,7 +3063,7 @@ const PDM_g_num_t *numabs
   PDM_l_num_t n_poly3d  = 0;
 
   if (0 == 1) {
-    printf("1 cellface %d %d : \n",id_part, n_cell);
+    printf("1 cell_face %d %d : \n",id_part, n_cell);
     for (int i = 0; i < n_cell; i++) {
       for (int j = cell_face_idx[i] -adjust; j < cell_face_idx[i] -adjust + cell_face_nb[i]; j++) {
         printf(" %d", cell_face[j]);
@@ -3071,7 +3071,7 @@ const PDM_g_num_t *numabs
     printf("\n");
     }
 
-    printf("1 facevtx %d %d: \n", id_part, n_face);
+    printf("1 face_vtx %d %d: \n", id_part, n_face);
     for (int i = 0; i < n_face; i++) {
       for (int j = face_vtx_idx[i] -adjust; j < face_vtx_idx[i] -adjust + face_vtx_nb[i] ; j++) {
         printf(" %d", face_vtx[j]);
@@ -3187,24 +3187,24 @@ const PDM_g_num_t *numabs
     /* Determination de la connectivite de chaque element */
 
 
-    for (int ipart = 0; ipart < mesh->n_part; ipart++) {
+    for (int i_part = 0; i_part < mesh->n_part; i_part++) {
 
-      PDM_l_num_t n_cell_courant = mesh->prepa_blocks->n_cell[ipart];
-      PDM_l_num_t *num_cell_parent_to_local_courant = mesh->num_cell_parent_to_local[ipart];
-      PDM_l_num_t *face_som_idx_courant = mesh->prepa_blocks->face_vtx_idx[ipart];
-      PDM_l_num_t *face_som_nb_courant = mesh->prepa_blocks->face_vtx_nb[ipart];
-      PDM_l_num_t *face_som_courant = mesh->prepa_blocks->face_vtx[ipart];
-      PDM_l_num_t *cell_face_idx_courant = mesh->prepa_blocks->cell_face_idx[ipart];
-      PDM_l_num_t *cell_face_nb_courant = mesh->prepa_blocks->cell_face_nb[ipart];
-      PDM_l_num_t *cell_face_courant = mesh->prepa_blocks->cell_face[ipart];
-      PDM_g_num_t *numabs_courant = mesh->prepa_blocks->numabs[ipart];
-      PDM_l_num_t n_face_part   = mesh->prepa_blocks->n_face[ipart];
+      PDM_l_num_t n_cell_courant = mesh->prepa_blocks->n_cell[i_part];
+      PDM_l_num_t *num_cell_parent_to_local_courant = mesh->num_cell_parent_to_local[i_part];
+      PDM_l_num_t *face_som_idx_courant = mesh->prepa_blocks->face_vtx_idx[i_part];
+      PDM_l_num_t *face_som_nb_courant = mesh->prepa_blocks->face_vtx_nb[i_part];
+      PDM_l_num_t *face_som_courant = mesh->prepa_blocks->face_vtx[i_part];
+      PDM_l_num_t *cell_face_idx_courant = mesh->prepa_blocks->cell_face_idx[i_part];
+      PDM_l_num_t *cell_face_nb_courant = mesh->prepa_blocks->cell_face_nb[i_part];
+      PDM_l_num_t *cell_face_courant = mesh->prepa_blocks->cell_face[i_part];
+      PDM_g_num_t *numabs_courant = mesh->prepa_blocks->numabs[i_part];
+      PDM_l_num_t n_face_part   = mesh->prepa_blocks->n_face[i_part];
 
-      PDM_l_num_t n_tetra_part   = mesh->prepa_blocks->n_tetra[ipart];
-      PDM_l_num_t n_hexa_part    = mesh->prepa_blocks->n_hexa[ipart];
-      PDM_l_num_t n_prism_part   = mesh->prepa_blocks->n_prism[ipart];
-      PDM_l_num_t n_pyramid_part = mesh->prepa_blocks->n_pyramid[ipart];
-      PDM_l_num_t n_poly3d_part  = mesh->prepa_blocks->n_poly3d[ipart];
+      PDM_l_num_t n_tetra_part   = mesh->prepa_blocks->n_tetra[i_part];
+      PDM_l_num_t n_hexa_part    = mesh->prepa_blocks->n_hexa[i_part];
+      PDM_l_num_t n_prism_part   = mesh->prepa_blocks->n_prism[i_part];
+      PDM_l_num_t n_pyramid_part = mesh->prepa_blocks->n_pyramid[i_part];
+      PDM_l_num_t n_poly3d_part  = mesh->prepa_blocks->n_poly3d[i_part];
 
       PDM_l_num_t *connec_tetra = NULL;
       PDM_l_num_t *connec_hexa = NULL;
@@ -3231,7 +3231,7 @@ const PDM_g_num_t *numabs
       }
 
   if (0 == 1) {
-    printf("2 cellface %d %d: \n",ipart, n_cell_courant);
+    printf("2 cell_face %d %d: \n",i_part, n_cell_courant);
     for (int i = 0; i < n_cell_courant; i++) {
       for (int j = cell_face_idx_courant[i] -adjust; j < cell_face_idx_courant[i]  -adjust+ cell_face_nb_courant[i]; j++) {
         printf(" %d", cell_face_courant[j]);
@@ -3239,7 +3239,7 @@ const PDM_g_num_t *numabs
     printf("\n");
     }
 
-    printf("2 facevtx %d %d: \n", ipart, n_face_part);
+    printf("2 face_vtx %d %d: \n", i_part, n_face_part);
     for (int i = 0; i < n_face_part; i++) {
       for (int j = face_som_idx_courant[i] -adjust; j < face_som_idx_courant[i] -adjust + face_som_nb_courant[i] ; j++) {
         printf(" %d", face_som_courant[j]);
@@ -3330,7 +3330,7 @@ const PDM_g_num_t *numabs
 
         switch(cell_type) {
         case PDM_MESH_NODAL_TETRA4 :
-          _connec_tetra(mesh->vtx[ipart],
+          _connec_tetra(mesh->vtx[i_part],
                         cell_som_tria,
                         connec_tetra_courant);
           *numabs_tetra_courant = numabs_courant[i];
@@ -3341,7 +3341,7 @@ const PDM_g_num_t *numabs
           num_cell_parent_to_local_courant[i] = idx_tetra++;
           break;
         case PDM_MESH_NODAL_HEXA8 :
-          _connec_hexa(mesh->vtx[ipart],
+          _connec_hexa(mesh->vtx[i_part],
                        cell_som_quad,
                        connec_hexa_courant);
           *numabs_hexa_courant = numabs_courant[i];
@@ -3352,7 +3352,7 @@ const PDM_g_num_t *numabs
           num_cell_parent_to_local_courant[i] = idx_hexa++;
           break;
         case PDM_MESH_NODAL_PRISM6 :
-          _connec_prism(mesh->vtx[ipart],
+          _connec_prism(mesh->vtx[i_part],
                         cell_som_tria,
                         cell_som_quad,
                         connec_prism_courant);
@@ -3364,7 +3364,7 @@ const PDM_g_num_t *numabs
           num_cell_parent_to_local_courant[i] = idx_prism++;
           break;
         case PDM_MESH_NODAL_PYRAMID5 :
-          _connec_pyramid(mesh->vtx[ipart],
+          _connec_pyramid(mesh->vtx[i_part],
                           cell_som_tria,
                           cell_som_quad,
                           connec_pyramid_courant);
@@ -3460,7 +3460,7 @@ const PDM_g_num_t *numabs
       if (som_elts[0] > 0)
         PDM_Mesh_nodal_block_std_set(idx,
                                      id_bloc_tetra4,
-                                     ipart,
+                                     i_part,
                                      n_tetra_part,
                                      connec_tetra,
                                      numabs_tetra,
@@ -3469,7 +3469,7 @@ const PDM_g_num_t *numabs
       if (som_elts[1] > 0)
         PDM_Mesh_nodal_block_std_set(idx,
                              id_bloc_hexa8,
-                             ipart,
+                             i_part,
                              n_hexa_part,
                              connec_hexa,
                              numabs_hexa,
@@ -3478,7 +3478,7 @@ const PDM_g_num_t *numabs
       if (som_elts[2] > 0)
         PDM_Mesh_nodal_block_std_set(idx,
                              id_bloc_prism6,
-                             ipart,
+                             i_part,
                              n_prism_part,
                              connec_prism,
                              numabs_prism,
@@ -3487,7 +3487,7 @@ const PDM_g_num_t *numabs
       if (som_elts[3] > 0)
         PDM_Mesh_nodal_block_std_set(idx,
                              id_bloc_pyramid5,
-                             ipart,
+                             i_part,
                              n_pyramid_part,
                              connec_pyramid,
                              numabs_pyramid,
@@ -3496,7 +3496,7 @@ const PDM_g_num_t *numabs
       if (som_elts[4] > 0)
         PDM_Mesh_nodal_block_poly3d_set(idx,
                                 id_bloc_poly_3d,
-                                ipart,
+                                i_part,
                                 n_poly3d_part,
                                 n_face_poly,
                                 facsom_poly_idx,
@@ -3591,8 +3591,8 @@ const PDM_g_num_t *numabs
 
   if (mesh->num_cell_parent_to_local == NULL) {
     mesh->num_cell_parent_to_local = (PDM_l_num_t **) malloc(sizeof(PDM_l_num_t *) * mesh->n_part);
-    for (int ipart = 0; ipart < mesh->n_part; ipart++) {
-      mesh->num_cell_parent_to_local[ipart] = NULL;
+    for (int i_part = 0; i_part < mesh->n_part; i_part++) {
+      mesh->num_cell_parent_to_local[i_part] = NULL;
     }
   }
 
@@ -3627,7 +3627,7 @@ const PDM_g_num_t *numabs
   }
 
   if (mesh->prepa_blocks->t_add != 2) {
-    PDM_error(__FILE__, __LINE__, 0, "Erreur Cs_geom_cell2d_cellface_add : Un autre type d'ajout est en cours\n");
+    PDM_error(__FILE__, __LINE__, 0, "Erreur Cs_geom_cell2d_cell_face_add : Un autre type d'ajout est en cours\n");
     abort();
   }
 
@@ -3709,15 +3709,15 @@ const PDM_g_num_t *numabs
 
     /* Determination de la connectivite de chaque element */
 
-    for (int ipart = 0; ipart < mesh->n_part; ipart++) {
+    for (int i_part = 0; i_part < mesh->n_part; i_part++) {
 
-      PDM_l_num_t n_cell_courant = mesh->prepa_blocks->n_cell[ipart];
-      PDM_l_num_t *num_cell_parent_to_local_courant = mesh->num_cell_parent_to_local[ipart];
-      PDM_l_num_t *face_som_courant = mesh->prepa_blocks->face_vtx[ipart];
-      PDM_l_num_t *cell_face_idx_courant = mesh->prepa_blocks->cell_face_idx[ipart];
-      PDM_l_num_t *cell_face_nb_courant = mesh->prepa_blocks->cell_face_nb[ipart];
-      PDM_l_num_t *cell_face_courant = mesh->prepa_blocks->cell_face[ipart];
-      PDM_g_num_t *numabs_courant = mesh->prepa_blocks->numabs[ipart];
+      PDM_l_num_t n_cell_courant = mesh->prepa_blocks->n_cell[i_part];
+      PDM_l_num_t *num_cell_parent_to_local_courant = mesh->num_cell_parent_to_local[i_part];
+      PDM_l_num_t *face_som_courant = mesh->prepa_blocks->face_vtx[i_part];
+      PDM_l_num_t *cell_face_idx_courant = mesh->prepa_blocks->cell_face_idx[i_part];
+      PDM_l_num_t *cell_face_nb_courant = mesh->prepa_blocks->cell_face_nb[i_part];
+      PDM_l_num_t *cell_face_courant = mesh->prepa_blocks->cell_face[i_part];
+      PDM_g_num_t *numabs_courant = mesh->prepa_blocks->numabs[i_part];
 
       adjust = 0;
       if (n_cell_courant > 0) {
@@ -3726,10 +3726,10 @@ const PDM_g_num_t *numabs
         }
       }
 
-      n_tria   = mesh->prepa_blocks->n_tria[ipart];
-      n_quad    = mesh->prepa_blocks->n_quad[ipart];
-      n_poly2d  = mesh->prepa_blocks->n_poly2d[ipart];
-      l_connec_poly2d = mesh->prepa_blocks->l_connec_poly2d[ipart];
+      n_tria   = mesh->prepa_blocks->n_tria[i_part];
+      n_quad    = mesh->prepa_blocks->n_quad[i_part];
+      n_poly2d  = mesh->prepa_blocks->n_poly2d[i_part];
+      l_connec_poly2d = mesh->prepa_blocks->l_connec_poly2d[i_part];
 
       PDM_l_num_t *connec_tria = NULL;
       PDM_l_num_t *connec_quad = NULL;
@@ -3780,13 +3780,13 @@ const PDM_g_num_t *numabs
       /* Construction de la connectivit� sommet-> arrete */
 
       PDM_l_num_t *connec_som_are =
-              (PDM_l_num_t *) malloc(sizeof(PDM_l_num_t) * 2 * mesh->vtx[ipart]->n_vtx);
+              (PDM_l_num_t *) malloc(sizeof(PDM_l_num_t) * 2 * mesh->vtx[i_part]->n_vtx);
 
       PDM_l_num_t idx_tria   = 0;
       PDM_l_num_t idx_quad   = n_tria;
       PDM_l_num_t idx_poly2d = idx_quad + n_quad;
 
-      for (int j = 0; j < 2 * mesh->vtx[ipart]->n_vtx; j++) {
+      for (int j = 0; j < 2 * mesh->vtx[i_part]->n_vtx; j++) {
         connec_som_are[j] = -1;
       }
 
@@ -3881,7 +3881,7 @@ const PDM_g_num_t *numabs
       if (som_elts[0] > 0)
         PDM_Mesh_nodal_block_std_set(idx,
                                      id_bloc_tria3,
-                                     ipart,
+                                     i_part,
                                      n_tria,
                                      connec_tria,
                                      numabs_tria,
@@ -3890,7 +3890,7 @@ const PDM_g_num_t *numabs
       if (som_elts[1] > 0)
         PDM_Mesh_nodal_block_std_set(idx,
                                      id_bloc_quad4,
-                                     ipart,
+                                     i_part,
                                      n_quad,
                                      connec_quad,
                                      numabs_quad,
@@ -3899,7 +3899,7 @@ const PDM_g_num_t *numabs
       if (som_elts[2] > 0)
         PDM_Mesh_nodal_block_poly2d_set(idx,
                                         id_bloc_poly_2d,
-                                        ipart,
+                                        i_part,
                                         n_poly2d,
                                         connec_poly2d_idx,
                                         connec_poly2d,
@@ -3977,8 +3977,8 @@ const PDM_g_num_t *numabs
 
   if (mesh->num_cell_parent_to_local == NULL) {
     mesh->num_cell_parent_to_local = (PDM_l_num_t **) malloc(sizeof(PDM_l_num_t *) * mesh->n_part);
-    for (int ipart = 0; ipart < mesh->n_part; ipart++) {
-      mesh->num_cell_parent_to_local[ipart] = NULL;
+    for (int i_part = 0; i_part < mesh->n_part; i_part++) {
+      mesh->num_cell_parent_to_local[i_part] = NULL;
     }
   }
 
@@ -4009,7 +4009,7 @@ const PDM_g_num_t *numabs
   }
 
   if (mesh->prepa_blocks->t_add != 3) {
-    PDM_error(__FILE__, __LINE__, 0, "Erreur Cs_geom_cell2d_cellface_add : Un autre type d'ajout est en cours\n");
+    PDM_error(__FILE__, __LINE__, 0, "Erreur Cs_geom_cell2d_cell_face_add : Un autre type d'ajout est en cours\n");
     abort();
   }
 
@@ -4090,14 +4090,14 @@ const PDM_g_num_t *numabs
 
     /* Determination de la connectivite de chaque element */
 
-    for (int ipart = 0; ipart < mesh->n_part; ipart++) {
+    for (int i_part = 0; i_part < mesh->n_part; i_part++) {
 
-      PDM_l_num_t n_face_courant = mesh->prepa_blocks->n_face[ipart];
-      PDM_l_num_t *num_cell_parent_to_local_courant = mesh->num_cell_parent_to_local[ipart];
-      PDM_l_num_t *face_som_idx_courant = mesh->prepa_blocks->face_vtx_idx[ipart];
-      PDM_l_num_t *face_som_nb_courant = mesh->prepa_blocks->face_vtx_nb[ipart];
-      PDM_l_num_t *face_som_courant = mesh->prepa_blocks->face_vtx[ipart];
-      PDM_g_num_t *numabs_courant = mesh->prepa_blocks->numabs[ipart];
+      PDM_l_num_t n_face_courant = mesh->prepa_blocks->n_face[i_part];
+      PDM_l_num_t *num_cell_parent_to_local_courant = mesh->num_cell_parent_to_local[i_part];
+      PDM_l_num_t *face_som_idx_courant = mesh->prepa_blocks->face_vtx_idx[i_part];
+      PDM_l_num_t *face_som_nb_courant = mesh->prepa_blocks->face_vtx_nb[i_part];
+      PDM_l_num_t *face_som_courant = mesh->prepa_blocks->face_vtx[i_part];
+      PDM_g_num_t *numabs_courant = mesh->prepa_blocks->numabs[i_part];
 
       adjust = 0;
       if (n_face_courant > 0) {
@@ -4106,10 +4106,10 @@ const PDM_g_num_t *numabs
         }
       }
 
-      n_tria   = mesh->prepa_blocks->n_tria[ipart];
-      n_quad    = mesh->prepa_blocks->n_quad[ipart];
-      n_poly2d  = mesh->prepa_blocks->n_poly2d[ipart];
-      l_connec_poly2d  = mesh->prepa_blocks->l_connec_poly2d[ipart];
+      n_tria   = mesh->prepa_blocks->n_tria[i_part];
+      n_quad    = mesh->prepa_blocks->n_quad[i_part];
+      n_poly2d  = mesh->prepa_blocks->n_poly2d[i_part];
+      l_connec_poly2d  = mesh->prepa_blocks->l_connec_poly2d[i_part];
 
       PDM_l_num_t *connec_tria = NULL;
       PDM_l_num_t *connec_quad = NULL;
@@ -4208,7 +4208,7 @@ const PDM_g_num_t *numabs
       if (som_elts[0] > 0)
         PDM_Mesh_nodal_block_std_set(idx,
                              id_bloc_tria3,
-                             ipart,
+                             i_part,
                              n_tria,
                              connec_tria,
                              numabs_tria,
@@ -4217,7 +4217,7 @@ const PDM_g_num_t *numabs
       if (som_elts[1] > 0)
         PDM_Mesh_nodal_block_std_set(idx,
                              id_bloc_quad4,
-                             ipart,
+                             i_part,
                              n_quad,
                              connec_quad,
                              numabs_quad,
@@ -4226,7 +4226,7 @@ const PDM_g_num_t *numabs
       if (som_elts[2] > 0)
         PDM_Mesh_nodal_block_poly2d_set(idx,
                                 id_bloc_poly_2d,
-                                ipart,
+                                i_part,
                                 n_poly2d,
                                 connec_poly2d_idx,
                                 connec_poly2d,
@@ -4490,9 +4490,9 @@ const int         i_part
       PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
     }
 
-    double**  surfaceVector  = (double**)malloc(sizeof(double*)*mesh->n_part);
+    double**  surface_vector  = (double**)malloc(sizeof(double*)*mesh->n_part);
     double* coords = (double *) PDM_Mesh_nodal_vertices_get(idx,i_part);
-    surfaceVector[i_part] = (double*)malloc(sizeof(double)*3*block->n_elt[i_part]);
+    surface_vector[i_part] = (double*)malloc(sizeof(double)*3*block->n_elt[i_part]);
 
     if (block->cell_centers == NULL) {
       block->cell_centers = (double **) malloc (sizeof(double *) * mesh->n_part);
@@ -4515,16 +4515,16 @@ const int         i_part
                                      block->_connec_idx[i_part],
                                      block->_connec[i_part],
                                      coords,
-                                     surfaceVector[i_part],
+                                     surface_vector[i_part],
                                      block->cell_centers[i_part],
                                      characteristicLength[i_part],
                                      isDegenerated[i_part] );
 
-    free(surfaceVector[i_part]);
+    free(surface_vector[i_part]);
     free(characteristicLength[i_part]);
     free(isDegenerated[i_part]);
 
-    free(surfaceVector);
+    free(surface_vector);
     free(characteristicLength);
     free(isDegenerated);
 
@@ -4540,7 +4540,7 @@ const int         i_part
        PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
     }
 
-    double**  surfaceVector  = (double**)malloc(sizeof(double*)*mesh->n_part);
+    double**  surface_vector  = (double**)malloc(sizeof(double*)*mesh->n_part);
     double**  volume         = (double**)malloc(sizeof(double*)*mesh->n_part);
     double**  length         = (double**)malloc(sizeof(double*)*mesh->n_part);
 
@@ -4582,11 +4582,11 @@ const int         i_part
       break;
 
     case PDM_MESH_NODAL_TRIA3:
-      surfaceVector[i_part] = (double*)malloc(sizeof(double)*3*block->n_elt[i_part]);
+      surface_vector[i_part] = (double*)malloc(sizeof(double)*3*block->n_elt[i_part]);
       PDM_geom_elem_tria_properties(block->n_elt[i_part],
                                     block->_connec[i_part],
                                     coords,
-                                    surfaceVector[i_part],
+                                    surface_vector[i_part],
                                     block->cell_centers[i_part],
                                     characteristicLength[i_part],
                                     isDegenerated[i_part]);
@@ -4595,11 +4595,11 @@ const int         i_part
       break;
 
     case PDM_MESH_NODAL_QUAD4:
-      surfaceVector[i_part] = (double*)malloc(sizeof(double)*3*block->n_elt[i_part]);
+      surface_vector[i_part] = (double*)malloc(sizeof(double)*3*block->n_elt[i_part]);
       PDM_geom_elem_quad_properties(block->n_elt[i_part],
                                     block->_connec[i_part],
                                     coords,
-                                    surfaceVector[i_part],
+                                    surface_vector[i_part],
                                     block->cell_centers[i_part],
                                     characteristicLength[i_part],
                                     isDegenerated[i_part]);
@@ -4654,7 +4654,7 @@ const int         i_part
 
     if ((block->t_elt ==  PDM_MESH_NODAL_TRIA3) ||
         (block->t_elt == PDM_MESH_NODAL_QUAD4)) {
-      free(surfaceVector[i_part]);
+      free(surface_vector[i_part]);
     }
     else if (block->t_elt == PDM_MESH_NODAL_BAR2) {
       free(length[i_part]);
@@ -4671,7 +4671,7 @@ const int         i_part
 
     free(characteristicLength);
     free(isDegenerated);
-    free(surfaceVector);
+    free(surface_vector);
     free(length);
     free(volume);
 
@@ -4858,9 +4858,9 @@ const int idx
   mesh->is_vtx_def_from_parent   = 0;
 
   if (mesh->num_cell_parent_to_local != NULL) {
-    for (int ipart = 0; ipart < mesh->n_part; ipart++) {
-      if (mesh->num_cell_parent_to_local[ipart] != NULL)
-        free(mesh->num_cell_parent_to_local[ipart]);
+    for (int i_part = 0; i_part < mesh->n_part; i_part++) {
+      if (mesh->num_cell_parent_to_local[i_part] != NULL)
+        free(mesh->num_cell_parent_to_local[i_part]);
     }
     free(mesh->num_cell_parent_to_local);
     mesh->num_cell_parent_to_local = NULL;

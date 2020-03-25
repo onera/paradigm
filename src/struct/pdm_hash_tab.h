@@ -230,6 +230,21 @@ PDM_hash_tab_keyType_get
 PDM_hash_tab_t *ht
 );
 
+/**
+ * \brief Dump hash table
+ *
+ * This function returns the key type
+ *
+ * \param [in]  ht        Hash table
+ *
+ */
+
+void
+PDM_hash_tab_dump
+(
+PDM_hash_tab_t *ht
+);
+
 
 /**
  * Checks whether a given value is already contained in a hash table

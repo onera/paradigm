@@ -165,8 +165,8 @@ char *argv[]
 
   PDM_MPI_Init (&argc, &argv);
 
-  int myRank;
-  PDM_MPI_Comm_rank (PDM_MPI_COMM_WORLD, &myRank);
+  int i_rank;
+  PDM_MPI_Comm_rank (PDM_MPI_COMM_WORLD, &i_rank);
 
   int numProcs;
   PDM_MPI_Comm_size (PDM_MPI_COMM_WORLD, &numProcs);
@@ -189,7 +189,7 @@ char *argv[]
     srand(time(NULL));
   }
   else {
-    srand(myRank);
+    srand(i_rank);
   }
 
   /* Define the number of points */
@@ -200,7 +200,7 @@ char *argv[]
   }
   else {
     _nPts_l = (int) (nPts/numProcs);
-    if (myRank < nPts%numProcs) {
+    if (i_rank < nPts%numProcs) {
       _nPts_l += 1;
     }
   }
@@ -260,7 +260,7 @@ char *argv[]
   free (char_length);
   free (gnum);
 
-  if (myRank == 0) {
+  if (i_rank == 0) {
 
     PDM_printf ("\nfin Test\n");
 

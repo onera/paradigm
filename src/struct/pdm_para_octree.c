@@ -929,7 +929,7 @@ _octants_push_front
  *
  * \brief Return ppart object from it identifier
  *
- * \param [in]   ppartId        ppart identifier
+ * \param [in]   ppart_id        ppart identifier
  *
  */
 
@@ -1223,21 +1223,21 @@ _distribute_octants
     send_count[i] = 0;
   }
 
-  int irank = 0;
+  int i_rank = 0;
   for (int i = 0; i < L->n_nodes; i++) {
-    if (PDM_morton_a_ge_b (L->codes[i], morton_index[irank+1])) {
+    if (PDM_morton_a_ge_b (L->codes[i], morton_index[i_rank+1])) {
 
-      irank += 1 + PDM_morton_binary_search (n_ranks - (irank + 1),
+      i_rank += 1 + PDM_morton_binary_search (n_ranks - (i_rank + 1),
                                              L->codes[i],
-                                             morton_index + irank + 1);
+                                             morton_index + i_rank + 1);
     }
     //DBG-->>
-    if (irank < 0 || irank >= n_ranks) {
+    if (i_rank < 0 || i_rank >= n_ranks) {
       PDM_morton_dump (3, L->codes[i]);
-      printf("i = %d, irank = %d\n\n\n", i, irank);
+      printf("i = %d, i_rank = %d\n\n\n", i, i_rank);
     }
     //<<--
-    send_count[irank] += L->dim + 1;
+    send_count[i_rank] += L->dim + 1;
   }
 
   /* Exchange number of coords to send to each process */
@@ -1261,24 +1261,24 @@ _distribute_octants
     send_count[rank_id] = 0;
   }
 
-  irank = 0;
+  i_rank = 0;
   for (int i = 0; i < L->n_nodes; i++) {
 
-    if (PDM_morton_a_ge_b (L->codes[i], morton_index[irank+1])) {
+    if (PDM_morton_a_ge_b (L->codes[i], morton_index[i_rank+1])) {
 
-      irank += 1 + PDM_morton_binary_search(n_ranks - (irank + 1),
+      i_rank += 1 + PDM_morton_binary_search(n_ranks - (i_rank + 1),
                                             L->codes[i],
-                                            morton_index + irank + 1);
+                                            morton_index + i_rank + 1);
     }
 
-    int shift = send_shift[irank] + send_count[irank];
+    int shift = send_shift[i_rank] + send_count[i_rank];
     send_codes[shift++] = L->codes[i].L;
 
     for (int j = 0; j < L->dim; j++) {
       send_codes[shift++] = L->codes[i].X[j];
     }
 
-    send_count[irank] += L->dim + 1;
+    send_count[i_rank] += L->dim + 1;
   }
 
   PDM_morton_int_t * recv_codes = malloc (recv_shift[n_ranks] * sizeof(PDM_morton_int_t));
@@ -2059,7 +2059,7 @@ _block_partition
   int *recv_count = malloc(sizeof(int) * n_ranks);
   int *recv_shift = malloc(sizeof(int) * (n_ranks+1));
 
-  int irank = 0;
+  int i_rank = 0;
   for (int i = 0; i < n_ranks; i++) {
     send_count[i] = 0;
   }
@@ -2072,15 +2072,15 @@ _block_partition
 
   for (int i = 0; i < octant_list->n_nodes; i++) {
 
-    if (irank < (n_active_ranks - 1)) {
-      if (PDM_morton_a_ge_b (octant_list->codes[i], rank_codes[irank+1])) {
+    if (i_rank < (n_active_ranks - 1)) {
+      if (PDM_morton_a_ge_b (octant_list->codes[i], rank_codes[i_rank+1])) {
 
-        irank += 1 + PDM_morton_binary_search(n_active_ranks - (irank + 1),
+        i_rank += 1 + PDM_morton_binary_search(n_active_ranks - (i_rank + 1),
                                               octant_list->codes[i],
-                                              rank_codes + irank + 1);
+                                              rank_codes + i_rank + 1);
       }
     }
-    send_count[active_ranks[irank]] += octant_list->dim + 2;
+    send_count[active_ranks[i_rank]] += octant_list->dim + 2;
   }
 
   /* Exchange number of coords to send to each process */
@@ -2105,19 +2105,19 @@ _block_partition
     send_count[rank_id] = 0;
   }
 
-  irank = 0;
+  i_rank = 0;
   for (int i = 0; i < octant_list->n_nodes; i++) {
 
-    if (irank < (n_active_ranks - 1)) {
-      if (PDM_morton_a_ge_b (octant_list->codes[i], rank_codes[irank+1])) {
+    if (i_rank < (n_active_ranks - 1)) {
+      if (PDM_morton_a_ge_b (octant_list->codes[i], rank_codes[i_rank+1])) {
 
-        irank += 1 + PDM_morton_binary_search(n_active_ranks - (irank + 1),
+        i_rank += 1 + PDM_morton_binary_search(n_active_ranks - (i_rank + 1),
                                               octant_list->codes[i],
-                                              rank_codes + irank + 1);
+                                              rank_codes + i_rank + 1);
       }
     }
 
-    int shift = send_shift[active_ranks[irank]] + send_count[active_ranks[irank]];
+    int shift = send_shift[active_ranks[i_rank]] + send_count[active_ranks[i_rank]];
 
     assert(octant_list->n_points[i] >= 0);
 
@@ -2129,7 +2129,7 @@ _block_partition
 
     send_codes[shift++] = (PDM_morton_int_t) octant_list->n_points[i];
 
-    send_count[active_ranks[irank]] += octant_list->dim + 2;
+    send_count[active_ranks[i_rank]] += octant_list->dim + 2;
   }
 
   free (rank_codes);

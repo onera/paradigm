@@ -141,9 +141,9 @@ void log_log(int level, const char *file, int line, const char *fmt, ...) {
 
   if(logging_file == NULL){
     char filename[50];
-    int iRank;
-    PDM_MPI_Comm_rank (PDM_MPI_COMM_WORLD, &iRank);
-    sprintf(filename, "paradigm_%d.log", iRank);
+    int i_rank;
+    PDM_MPI_Comm_rank (PDM_MPI_COMM_WORLD, &i_rank);
+    sprintf(filename, "paradigm_%d.log", i_rank);
     logging_file = fopen(filename, "w");
     atexit(free_logging_file);
   }
@@ -179,9 +179,9 @@ void log_log(int level, const char *file, int line, const char *fmt, ...) {
 
 //   if(logging_file == NULL){
 //     char filename[50];
-//     int iRank;
-//     PDM_MPI_Comm_rank (PDM_MPI_COMM_WORLD, &iRank);
-//     sprintf(filename, "paradigm_%d.log", iRank);
+//     int i_rank;
+//     PDM_MPI_Comm_rank (PDM_MPI_COMM_WORLD, &i_rank);
+//     sprintf(filename, "paradigm_%d.log", i_rank);
 //     logging_file = fopen(filename, "w");
 //     atexit(free_logging_file);
 //   }
