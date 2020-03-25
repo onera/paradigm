@@ -154,17 +154,11 @@ PDM_block_to_part_create
     }
   }
 
-  printf("toto 3\n");
-  fflush(stdout);
-
   btp->distributed_data_n = malloc (sizeof(int) * btp->n_rank);
 
   PDM_MPI_Alltoall (btp->requested_data_n,   1, PDM_MPI_INT,
                     btp->distributed_data_n, 1, PDM_MPI_INT,
                     comm);
-
-  printf("toto 4\n");
-  fflush(stdout);
 
   btp->distributed_data_idx = malloc (sizeof(int) * (btp->n_rank + 1));
   btp->distributed_data_idx[0] = 0;
