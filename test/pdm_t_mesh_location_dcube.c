@@ -187,7 +187,7 @@ int main(int argc, char *argv[])
   double       length = 1.;
   int          nPart  = 1;
   int          post   = 0;
-#ifdef PDM_HAVE_PARMETIS
+#ifdef PDM_HAVE_PARMETIS
   PDM_part_split_t method  = PDM_PART_SPLIT_PARMETIS;
 #else
 #ifdef PDM_HAVE_PTSCOTCH
@@ -502,9 +502,39 @@ int main(int argc, char *argv[])
 
   PDM_mesh_location_compute (id_loc);
 
+  PDM_g_num_t *location_elt_gnum = NULL;
+  PDM_mesh_location_get (id_loc,
+			 0,//i_point_cloud,
+			 0,//i_part,
+			 &location_elt_gnum);
 
-  /*PDM_mesh_location_free (id_loc,
-    0);*/
+#if 1
+  /* Check results */
+  if (myRank == 0) {
+    printf("-- Check\n");
+    fflush(stdout);
+  }
+
+  PDM_g_num_t nFaceSeg = nVtxSeg - 1;
+  double cell_side = length / ((double) nFaceSeg);
+  
+  for (int ipt = 0; ipt < _nPts_l; ipt++) {
+    double *pt_coord = coords + 3*ipt;
+
+    int i = (int) floor (pt_coord[0] / cell_side);
+    int j = (int) floor (pt_coord[1] / cell_side);
+    int k = (int) floor (pt_coord[2] / cell_side);
+
+    PDM_g_num_t box_gnum = 1 + i + nFaceSeg*(j + nFaceSeg*k);
+
+    //printf("%d: (%ld) | (%ld)\n", ipt, location_elt_gnum[ipt], box_gnum);
+    assert (location_elt_gnum[ipt] == box_gnum);
+  }
+#endif
+
+
+  PDM_mesh_location_free (id_loc,
+			  0);
 
   
   

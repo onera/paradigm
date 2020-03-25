@@ -268,8 +268,8 @@ PDM_para_octree_location_boxes_get
  const int           n_boxes,
  const double       *box_extents,
  const PDM_g_num_t  *box_g_num,
- PDM_g_num_t       **candidates_g_num,
- int               **candidates_idx
+ PDM_g_num_t       **block_candidates_g_num,
+ int               **block_n_candidates
  );
 
 #ifdef	__cplusplus
