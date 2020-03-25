@@ -164,14 +164,14 @@ _get_from_id
 static void
 _get_candidate_elements_from_octree
 (
- const int          dim,
- const PDM_MPI_Comm comm,
- _point_cloud_t    *pcloud,
- const int          n_boxes,
- const double      *box_extents,
- const PDM_g_num_t *box_g_num,
- PDM_g_num_t       *candidates_g_num, //**, ie one pointer for each part?
- int               *candidates_idx //**, ie one pointer for each part?
+ const int           dim,
+ const PDM_MPI_Comm  comm,
+ _point_cloud_t     *pcloud,
+ const int           n_boxes,
+ const double       *box_extents,
+ const PDM_g_num_t  *box_g_num,
+ PDM_g_num_t        **candidates_g_num,
+ int                **candidates_idx
  )
 {
   int myRank;
@@ -186,42 +186,109 @@ _get_candidate_elements_from_octree
   const int depth_max = 15;//?
   const int points_in_leaf_max = 1;
   const int build_leaf_neighbours = 0;
+
   
+  /* Concatenate partitions */
+  int n_points = 0;
+  for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
+    n_points += pcloud->n_points[ipart];
+  }
+
+  double      *pts_coord = malloc (sizeof(double) *      n_points*3);
+  PDM_g_num_t *pts_g_num = malloc (sizeof(PDM_g_num_t) * n_points);
+  int idx = 0;
+  for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
+    for (int ipt = 0; ipt < pcloud->n_points[ipart]; ipt++) {
+      for (int idim = 0; idim < 3; idim++) {
+	pts_coord[3*idx + idim] = pcloud->coords[ipart][3*ipt + idim];
+      }
+      pts_g_num[idx] = pcloud->gnum[ipart][ipt];
+      idx++;
+    }
+  }
+
   /* Create empty parallel octree structure */
-  int octree_id = PDM_para_octree_create (pcloud->n_part,
+  int octree_id = PDM_para_octree_create (1,
 					  depth_max,
 					  points_in_leaf_max,
 					  build_leaf_neighbours,
 					  comm);
 
   /* Set octree point cloud */
-  for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
-    PDM_para_octree_point_cloud_set (octree_id,
-				     ipart,
-				     pcloud->n_points[ipart],
-				     pcloud->coords[ipart],
-				     pcloud->gnum[ipart]);
-  }
+  PDM_para_octree_point_cloud_set (octree_id,
+				   0,
+				   n_points,
+				   pts_coord,
+				   pts_g_num);
     
   /* Build parallel octree */
   PDM_para_octree_build (octree_id);
   //PDM_para_octree_dump (octree_id);
   //PDM_para_octree_dump_times (octree_id);
 
+  
+  PDM_part_to_block_t *ptb = PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+						       PDM_PART_TO_BLOCK_POST_MERGE,
+						       1.,
+						       &pts_g_num,
+						       NULL,
+						       &n_points,
+						       1,
+						       comm);
+
+  PDM_g_num_t *block_distrib_idx = PDM_part_to_block_distrib_index_get (ptb);
+  const int n_pts_block = PDM_part_to_block_n_elt_block_get (ptb);
+
+  int *block_n_candidates = NULL;
+  PDM_g_num_t *block_candidates_g_num = NULL;
+
   PDM_para_octree_location_boxes_get (octree_id,
 				      n_boxes,
 				      box_extents,
 				      box_g_num,
-				      &candidates_g_num,
-				      &candidates_idx);
-			   
+				      &block_candidates_g_num,
+				      &block_n_candidates);
+
+  PDM_block_to_part_t *btp = PDM_block_to_part_create (block_distrib_idx,
+						       (const PDM_g_num_t **) &pts_g_num,
+						       &n_points,
+						       1,
+						       comm);
+  int *part_stride = malloc (sizeof(int) * n_points);
+  int one = 1;
+  PDM_block_to_part_exch (btp,
+                          sizeof(int),
+                          PDM_STRIDE_CST,
+                          &one,
+                          (void *) block_n_candidates,
+                          NULL,
+                          (void **) &part_stride);
+
+  *candidates_idx = malloc (sizeof(int) * (n_points+1));
+  int *_candidates_idx = *candidates_idx;
+  _candidates_idx[0] = 0;
+  for (int i = 0; i < n_points; i++) {
+    _candidates_idx[i+1] = _candidates_idx[i] + part_stride[i];
+  }
+
+  *candidates_g_num = malloc (sizeof(PDM_g_num_t) * _candidates_idx[n_points]);
+  
+  PDM_block_to_part_exch (btp,
+                          sizeof(PDM_g_num_t),
+                          PDM_STRIDE_VAR,
+                          block_n_candidates,
+                          (void *) block_candidates_g_num,
+                          &part_stride,
+                          (void **) candidates_g_num);
+  
+  ptb = PDM_part_to_block_free (ptb);
+  btp = PDM_block_to_part_free (btp);
+  free (pts_coord);
+  free (pts_g_num);		   
   /***************************************
    * Free octree
    ***************************************/
   PDM_para_octree_free (octree_id);
-
-  /* Go from box->points to point->boxes */
-  //...
 }
 
 
@@ -624,14 +691,6 @@ PDM_mesh_location_compute
     n_boxes += PDM_Mesh_nodal_n_cell_get (location->mesh_nodal_id,
 					  ipart);
   }
-  /*for (int iblock = 0; iblock < n_blocks; iblock++) {
-    for (int ipart = 0; ipart < n_parts; ipart++) {
-      n_boxes += PDM_Mesh_nodal_block_n_elt_get (location->mesh_nodal_id,
-						 blocks_id[iblock],
-						 ipart);
-    }			       
-    }*/
-  printf("n_boxes = %d\n", n_boxes);
 
 
   PDM_g_num_t *box_g_num   = malloc (sizeof(PDM_g_num_t) * n_boxes);
@@ -677,12 +736,13 @@ PDM_mesh_location_compute
    *   - coder localisation avec octree
    */
   for (int icloud = 0; icloud < location->n_point_cloud; icloud++) {
+    _point_cloud_t *pcloud = location->point_clouds + icloud;
     switch (location->method) {
     case PDM_MESH_LOCATION_OCTREE:
       /*_get_candidate_elements_from_octree (...);*/
       _get_candidate_elements_from_octree (3,
 					   location->comm,
-					   location->point_clouds + icloud,
+					   pcloud,
 					   n_boxes,
 					   box_extents,
 					   box_g_num,
@@ -698,6 +758,26 @@ PDM_mesh_location_compute
       printf("Error: unknown location method %d\n", location->method);
       assert (1 == 0);
     }
+
+
+    //----------->>>>
+    assert (pcloud->location == NULL);
+#if 1
+    int myRank;
+    PDM_MPI_Comm_rank (location->comm, &myRank);
+    
+    int idx = 0;
+    pcloud->location = (PDM_g_num_t **) malloc (sizeof(PDM_g_num_t *) * pcloud->n_part);
+    for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
+      pcloud->location[ipart] = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * pcloud->n_points[ipart]);
+      for (int ipt = 0; ipt < pcloud->n_points[ipart]; ipt++) {
+	assert (candidates_idx[idx+1] == candidates_idx[idx] + 1);
+	pcloud->location[ipart][ipt] = candidates_g_num[candidates_idx[idx]];
+	idx++;
+      }
+    }
+#endif
+    //<<<<-----------
 
 
     /*
@@ -733,6 +813,16 @@ PDM_mesh_location_get
        PDM_g_num_t **location_elt_gnum
 )
 {
+  _PDM_location_t *location = _get_from_id (id);
+
+  assert (location->point_clouds != NULL);
+  assert (i_point_cloud < location->n_point_cloud);
+
+  _point_cloud_t *pcloud = location->point_clouds + i_point_cloud;
+
+  assert (i_part < pcloud->n_part);
+
+  *location_elt_gnum = pcloud->location[i_part];
 }
 
 
@@ -751,8 +841,9 @@ PDM_mesh_location_free
 (
  const int id,
  const int partial
- );
-
+ )
+{
+}
   
 /**
  *
