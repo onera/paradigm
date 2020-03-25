@@ -75,8 +75,6 @@ const double     *coords,
 const PDM_g_num_t *vtx_ln_to_gn
 )
 {
-  int vb=1;
-  if (vb == 1)   PDM_printf ("==== PDM_surf_part_create ====\n");
   PDM_surf_part_t *_part = (PDM_surf_part_t *) malloc(sizeof(PDM_surf_part_t));
 
   _part->n_face                = n_face;
@@ -105,7 +103,6 @@ const PDM_g_num_t *vtx_ln_to_gn
   _part->faceNormal           = NULL;
   _part->extents              = NULL;
 
-  if (vb == 1)   PDM_printf ("==== PDM_surf_part_create ==== terminated ====\n");
   return _part;
 }
 
@@ -126,8 +123,6 @@ PDM_surf_part_free
  PDM_surf_part_t * part
 )
 {
-  int vb=1;
-  if (vb == 1)   PDM_printf ("==== PDM_surf_part_free ==== \n");
   assert (part != NULL);
 
   if (part != NULL) {
@@ -171,7 +166,6 @@ PDM_surf_part_free
 
     free(part);
   }
-  if (vb == 1)   PDM_printf ("==== PDM_surf_part_free ==== terminated ====\n");
 
   return NULL;
 }
@@ -195,9 +189,7 @@ PDM_surf_part_t *part
 {
 
   assert (part != NULL);
-  int vb = 1;
-  if (vb == 1)   PDM_printf ("==== PDM_surf_part_build_edges ==== \n");
-  vb = 0;
+
   /*
    * build hash table with key = vertices sum and list of edges
    */
@@ -226,7 +218,6 @@ PDM_surf_part_t *part
       int k = (j == part->face_vtx_idx[i+1] - 1) ? idxFace : (j + 1);
       int s_vtx = part->face_vtx[j] + part->face_vtx[k];
       hashTableIdx[s_vtx+1] += 1;
-/*PDM_printf("i: %d  j: %d, k: %d, s_vtx:%d+%d: %d hashTableIdx[%d] : %d\n", i, j, k, part->face_vtx[j], part->face_vtx[k], s_vtx, s_vtx+1, hashTableIdx[s_vtx+1]); */
       l_edges += 2;
     }
   }
@@ -234,14 +225,6 @@ PDM_surf_part_t *part
   hashTableIdx[0] = 0;
   for (int i = 1; i < lHashTableIdx; i++) {
     hashTableIdx[i] =  hashTableIdx[i] +  hashTableIdx[i-1];
-  }
-  if (vb == 1) {
-    PDM_printf("hashTableIdx :\n");
-    for (int i = 0; i < lHashTableIdx; i++) {
-      PDM_printf("%d: %d  ", i, hashTableIdx[i]);
-    }
-    PDM_printf("\n");
-    PDM_printf("l_edges : %d\n", l_edges);
   }
 
   int *listEdges = (int *) malloc(sizeof(int) * l_edges);
@@ -261,35 +244,11 @@ PDM_surf_part_t *part
 
       hashTable[hashTableIdx[s_vtx] + (nHashTable[s_vtx]++)] = l_edges/2;
       edgeFaceUncompress[l_edges/2] = i;
-/* PDM_printf("i: %d  idxFace: %d, n_vtx_face: %d, j: %d, k: %d, vtx1: %d, vtx2: %d, s_vtx: %d hashTable[%d+%d] : %d, edgeFaceUncompress[%d]: %d\n", i, idxFace, n_vtx_face, j, k, vtx1, vtx2, s_vtx, hashTableIdx[s_vtx] , (nHashTable[s_vtx]-1), l_edges/2, l_edges/2, i);  */
+
       listEdges[l_edges++] = vtx1;
       listEdges[l_edges++] = vtx2;
     }
   }
-   if (vb == 1) {
-    PDM_printf("nHashTable :\n");
-    for (int i = 0; i < 2*part->n_vtx; i++)
-      PDM_printf("%d: %d   ", i, nHashTable[i]);
-    PDM_printf("\n");
-    PDM_printf("l_edges : %d\n", l_edges);
-    PDM_printf("edgeFaceUncompress :\n");
-    for (int i = 0; i < l_edges/2; i++)
-      PDM_printf("%d: %d   ", i, edgeFaceUncompress[i]);
-    PDM_printf("\n");
-    PDM_printf("listEdges :\n");
-    for (int i = 0; i < l_edges; i++) {
-      PDM_printf("%d: %d   ", i, listEdges[i]);
-    }
-    PDM_printf("\n");
-    PDM_printf("hashtable :\n");
-
-    for (int i = 0; i < 2 * part->n_vtx; i++) {
-      PDM_printf("[%d] : ", i);
-      for (int k = hashTableIdx[i]; k < hashTableIdx[i+1]; k++)
-        PDM_printf(" %d", hashTable[k]);
-      PDM_printf("\n");
-    }
-	}
 
   free(nHashTable);
 
@@ -326,9 +285,7 @@ PDM_surf_part_t *part
     int nEdgeSameSum = (hashTableIdx[i+1] - idx);
     for (int j = idx; j < idx + nEdgeSameSum; j++) {
       int iEdge = hashTable[j];
-/*PDM_printf("i: %d, j: %d, iEdge: %d ", i, j,iEdge); */
       if (iEdge != -1) {
-/*PDM_printf("edgesToCompressEdges[%d] = %d  ", iEdge, nEdge); */
         edgesToCompressEdges[iEdge] = nEdge;
         int vtx1 = listEdges[2*iEdge];
         int vtx2 = listEdges[2*iEdge+1];
@@ -345,29 +302,15 @@ PDM_surf_part_t *part
             if (((vtx1 == vtx11) && (vtx2 == vtx12)) ||
                 ((vtx2 == vtx11) && (vtx1 == vtx12))) {
               hashTable[k] = -1;
-/*PDM_printf("i: %d, j: %d, k: %d, edgesToCompressEdges[%d]: %d\n", i, j, k, iEdge1, nEdge); */
 
               edgesToCompressEdges[iEdge1] = nEdge;
             }
           }
         }
         nEdge += 1;
-/*PDM_printf("\n"); */
       }
     }
   }
-
-if (0 == 1) {
-    PDM_printf ("nEdge: %d nEdgesFaces: %d \n", nEdge,nEdgesFaces);
-    PDM_printf ("edgesToCompressEdges \n");
-    for (int i = 0; i < nEdgesFaces; i++) {
-		PDM_printf("edgesToCompressEdges[%d]: %d\n", i, edgesToCompressEdges[i]);
-	}
-    PDM_printf ("part->edgeVtx \n");
-    for (int i = 0; i < nEdge; i++) {
-		PDM_printf("[%d]: %d %d\n", i, part->edgeVtx[2*i], part->edgeVtx[2*i+1]);
-	}
-}
 
   part->nEdge = nEdge;
 
@@ -379,12 +322,6 @@ if (0 == 1) {
   for (int i = 0; i < part->n_vtx; i++) {
     n_vtxEdge[i] = 0;
   }
-  if (0 == 1) {
-    PDM_printf ("part->vtxEdgeIdx   --- PDM_surf_part_build_edges \n");
-    for (int i = 0; i < part->n_vtx; i++) {
-      PDM_printf ("[%d] :  %d \n", i+1, part->vtxEdgeIdx[i]);
-     }
-  }
 
   for (int i = 0; i < part->nEdge; i++) {
     int vtx1 = part->edgeVtx[2*i    ] - 1;
@@ -393,17 +330,6 @@ if (0 == 1) {
     part->vtxEdge[part->vtxEdgeIdx[vtx2] + n_vtxEdge[vtx2]++] = i+1;
   }
   free(n_vtxEdge);
-
-  if (1 == 1) {
-    PDM_printf ("part->vtxEdge   --- PDM_surf_part_build_edges \n");
-    for (int i = 0; i < part->n_vtx; i++) {
-      PDM_printf ("[%d] :", i+1);
-      for (int j = part->vtxEdgeIdx[i]; j < part->vtxEdgeIdx[i+1]; j++) {
-        PDM_printf (" %d", part->vtxEdge[j]);
-      }
-      PDM_printf ("\n");
-    }
-  }
 
   free(hashTable);
   free(hashTableIdx);
@@ -563,21 +489,8 @@ if (0 == 1) {
 
   free (vtxEdge);
 
-  if (vb == 1) {
-    PDM_printf ("part->faceEdge   --- PDM_surf_part_build_edges \n");
-    for (int i = 0; i < part->n_face; i++) {
-      PDM_printf ("[%d] :", i+1);
-      for (int j = part->faceEdgeIdx[i]; j < part->faceEdgeIdx[i+1]; j++) {
-        PDM_printf (" %d", part->faceEdge[j]);
-      }
-      PDM_printf ("\n");
-    }
-  }
-
   free(edgeFaceUncompress);
   free(n_faceEdge);
-  vb = 1;
-  if (vb == 1)   PDM_printf ("==== PDM_surf_part_build_edges ==== terminated ====\n");
 
 }
 
@@ -615,8 +528,6 @@ PDM_surf_part_dump
  PDM_surf_part_t *part
  )
 {
-	int vb = 1;
-	if (vb == 1)   PDM_printf ("==== PDM_surf_part_dump ====\n");
   if (part != NULL) {
 	  PDM_printf ("PDM_surf_part_t : \n");
     PDM_printf ("  - edgeLnToGn :\n", part->edgeLnToGn);
@@ -679,9 +590,6 @@ PDM_surf_part_dump
         }
 		  PDM_printf ("\n");
 		}
-/* PDM_printf ("  - vtx_ln_to_gn : \n", part->vtx_ln_to_gn); */
-/* for (int j=0; j<part->n_vtx; j++) */
-/* 	PDM_printf ("%d -> %d\n", j+1, part->vtx_ln_to_gn[j]); */
     PDM_printf ("  - nEdge : %d \n", part->nEdge);
     PDM_printf ("  - nGhostEdge : %d \n", part->nGhostEdge);
     PDM_printf ("  - nTotalEdge : %d \n", part->nTotalEdge);
@@ -709,74 +617,41 @@ PDM_surf_part_dump
     for (int j=0; j<part->nEdge; j++){
       PDM_printf ("\n%ld : ",  part->edgeLnToGn[j]);
       PDM_printf (" %d", part->edgeVtx[2*j]);
-      PDM_printf (" %d", part->edgeVtx[2*j+1]);}
+      PDM_printf (" %d", part->edgeVtx[2*j+1]);
+    }
     PDM_printf ("\n");
     PDM_printf ("  - edgeVtx : ");
     for (int j=0; j<part->nEdge; j++){
       PDM_printf ("\n%ld : ",  part->edgeLnToGn[j]);
       PDM_printf (" "PDM_FMT_G_NUM, part->vtx_ln_to_gn[part->edgeVtx[2*j]-1]);
-      PDM_printf (" "PDM_FMT_G_NUM, part->vtx_ln_to_gn[part->edgeVtx[2*j+1]-1]);}
+      PDM_printf (" "PDM_FMT_G_NUM, part->vtx_ln_to_gn[part->edgeVtx[2*j+1]-1]);
+    }
     PDM_printf ("\n");
-    /* PDM_printf ("  - edgeLnToGn :\n", part->edgeLnToGn); */
-    /* if (part->edgeLnToGn != NULL) { */
-    /* 	for (int j=0; j<part->nEdge; j++) */
-    /* 		PDM_printf ("%d -> %d \n", j+1, part->edgeLnToGn[j]); */
-    /* } */
     PDM_printf ("  - edgePartBound : %d \n", part->edgePartBound);
     PDM_printf ("  - vtxPartBound : %d \n", part->vtxPartBound);
     PDM_printf ("  - carLgthVtx : %d : ", part->carLgthVtx);
-    if (part->carLgthVtx == NULL)
+    if (part->carLgthVtx == NULL) {
       PDM_printf ("\n");
-    else{
-      for (int j=0; j<part->n_vtx; j++)
+    }
+    else {
+      for (int j=0; j<part->n_vtx; j++) {
         PDM_printf ("%d ", part->carLgthVtx[j]);
-      PDM_printf ("\n");}
-    PDM_printf ("  - extents : %d : ", part->extents);
-    if (part->extents == NULL)
+      }
       PDM_printf ("\n");
-    else{
-      for (int j=0; j<part->n_vtx; j++)
+    }
+    PDM_printf ("  - extents : %d : ", part->extents);
+    if (part->extents == NULL) {
+      PDM_printf ("\n");
+    }
+    else {
+      for (int j=0; j<part->n_vtx; j++) {
         PDM_printf ("%d ", part->extents[j]);
-      PDM_printf ("\n");}
-
-
-    fflush(stdout);
+      }
+      PDM_printf ("\n");
+    }
   }
-if (vb == 1)   PDM_printf ("==== PDM_surf_part_dump ==== terminated ====\n");
 }
 
-
-/*
-pour afficher un PDM_surf_part_t
-
-PDM_printf ("n_face : %d \n", _part->n_face);
-PDM_printf ("nGhostFace : %d \n", _part->nGhostFace);
-PDM_printf ("nTotalFace : %d \n", _part->nTotalFace);
-PDM_printf ("sface_vtx : %d \n", _part->sface_vtx);
-PDM_printf ("face_vtx_idx : %d \n", _part->face_vtx_idx);
-PDM_printf ("face_vtx : %d \n", _part->face_vtx);
-PDM_printf ("faceEdgeIdx : %d \n", _part->faceEdgeIdx);
-PDM_printf ("faceEdge : %d \n", _part->faceEdge);
-PDM_printf ("face_ln_to_gn : %d \n", _part->face_ln_to_gn);
-PDM_printf ("n_vtx : %d \n", _part->n_vtx);
-PDM_printf ("coords : %d \n", _part->coords);
-PDM_printf ("vtxEdgeIdx : %d \n", _part->vtxEdgeIdx);
-PDM_printf ("vtxEdge : %d \n", _part->vtxEdge);
-PDM_printf ("vtx_ln_to_gn : %d \n", _part->vtx_ln_to_gn);
-PDM_printf ("nEdge : %d \n", _part->nEdge);
-PDM_printf ("nGhostEdge : %d \n", _part->nGhostEdge);
-PDM_printf ("nTotalEdge : %d \n", _part->nTotalEdge);
-PDM_printf ("edgeFace : %d \n", _part->edgeFace);
-PDM_printf ("edgeVtx : %d \n", _part->edgeVtx);
-PDM_printf ("edgeLnToGn : %d \n", _part->edgeLnToGn);
-PDM_printf ("edgePartBound : %d \n", _part->edgePartBound);
-PDM_printf ("vtxPartBound : %d \n", _part->vtxPartBound);
-PDM_printf ("carLgthVtx : %d \n", _part->carLgthVtx);
-PDM_printf ("faceNormal : %d \n", _part->faceNormal);
-PDM_printf ("extents : %d \n", _part->extents);
-
-
-  */
 
 #ifdef __cplusplus
 }

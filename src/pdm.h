@@ -170,7 +170,5 @@ void
 }
 #endif /* __cplusplus */
 
-#define PDM_EPS 1.0e-6
-
 
 #endif  /* __PDM_H__ */

@@ -169,7 +169,6 @@ PDM_surf_mesh_build_edges_gn_and_edge_part_bound
  PDM_surf_mesh_t *mesh
 )
 {
-
   assert (mesh != NULL);
 
   int n_part = mesh->n_part;
@@ -202,7 +201,6 @@ PDM_surf_mesh_build_edges_gn_and_edge_part_bound
   }
 
   int  keyMax        = 2 * n_vtxProc;
-
   int  lHashTableIdx = keyMax + 1;
   int *hashTableIdx  = (int *) malloc(sizeof(int) * lHashTableIdx);
   int *hashTable     = (int *) malloc(sizeof(int) * 2 * nEdgeProc);

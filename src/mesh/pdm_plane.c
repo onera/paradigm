@@ -10,7 +10,6 @@
 #include "pdm.h"
 #include "pdm_priv.h"
 #include "pdm_plane.h"
-#include "pdm_printf.h"
 
 /*=============================================================================
  * Macro definitions
@@ -55,8 +54,6 @@ _computeBary
  double bary[3]
 )
 {
-int vb = 0;
-if (vb >= 1)  PDM_printf ("==== _computeBary ==== %d \n", numPts);
 
   bary[0] = 0.;
   bary[1] = 0.;
@@ -68,8 +65,6 @@ if (vb >= 1)  PDM_printf ("==== _computeBary ==== %d \n", numPts);
     }
     bary[i] /= numPts;
   }
-if (vb >= 2) PDM_printf ("bary : %f, %f, %f \n", bary[0], bary[1], bary[2]);
-if (vb >= 1) PDM_printf ("==== _computeBary ==== terminated ====\n");
 
 }
 
@@ -96,24 +91,15 @@ PDM_plane_normal
  double        n[3]
 )
 {
-int vb = 0;
-if (vb >= 1)   PDM_printf ("==== PDM_plane_normal ==== %d numPts = %d\n", numPts);
   double length = 0.;
   double bary[3]= {0., 0., 0.};
 
   n[0] = 0.;
   n[1] = 0.;
   n[2] = 0.;
-  if (vb >= 2)   PDM_printf ("n : %f, %f, %f, length : %f, bary : %f, %f, %f \n", n[0], n[1], n[2], length, bary[0], bary[1], bary[2]);
 
-if (vb >= 3) {
-    PDM_printf ("PDM_plane_normal : numPts = %d\n", numPts);
-    for (int ipt = 0; ipt < numPts; ipt++) 
-		PDM_printf (" pts[%d] : %f, %f, %f \n", ipt, pts[3*ipt+0], pts[3*ipt+1], pts[3*ipt+2]);
-}
   _computeBary (numPts, pts, bary);
-if (vb >= 2)   PDM_printf ("bary : %f, %f, %f \n", bary[0], bary[1], bary[2]);
-  
+
   for (int ipt = 0; ipt < numPts; ipt++) {
 
     const double *pt1 = pts + 3 * ipt;
@@ -133,15 +119,11 @@ if (vb >= 2)   PDM_printf ("bary : %f, %f, %f \n", bary[0], bary[1], bary[2]);
   } //over all points
 
   length = sqrt (n[0] * n[0] + n[1] * n[1] + n[2] * n[2]);
-if (vb >= 2)   PDM_printf ("length : %f\n", length);
   if (length != 0.0) {
     n[0] /= length;
     n[1] /= length;
     n[2] /= length;
   }
-if (vb >= 2)   PDM_printf ("n : %f, %f, %f\n", n[0], n[1], n[2]);
-  
-if (vb >= 1)   PDM_printf ("==== PDM_plane_normal ==== terminated ====\n");
 }
 
 
@@ -212,4 +194,3 @@ const double n[3],
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-

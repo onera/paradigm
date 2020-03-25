@@ -3333,8 +3333,6 @@ const   int  i_part,
  int        *n_face_group
 )
 {
-int vb = 1;
-if (vb == 1)   PDM_printf ("==== PDM_part_part_dim_get ==== \n");
   _PDM_part_t *ppart = _get_from_id(ppart_id);
   int numProcs;
   PDM_MPI_Comm_size(ppart->comm, &numProcs);
@@ -3359,8 +3357,7 @@ if (vb == 1)   PDM_printf ("==== PDM_part_part_dim_get ==== \n");
   *sface_group      = 0;
   if (ppart->n_face_group > 0)
     *sface_group    = mesh_part->face_group_idx[ppart->n_face_group];
-    *n_face_group    = ppart->n_face_group;
-if (vb == 1)   PDM_printf ("==== PDM_part_part_dim_get ==== terminated ====\n");
+  *n_face_group    = ppart->n_face_group;
 }
 
 void
