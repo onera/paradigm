@@ -2130,9 +2130,6 @@ PDM_morton_ancestor_is (PDM_morton_code_t  a,
 
 
 
-
-
-
 static int
 _intersect_node_box
 (
@@ -2143,19 +2140,30 @@ _intersect_node_box
  int                     *inside
  )
 {
+  const int DEBUG = 0;
+  
+  assert (box_min.L >= node.L);
+      
   const PDM_morton_int_t level_diff = box_min.L - node.L;
 
   const PDM_morton_int_t side = 1 << level_diff;
 
   for (int i = 0; i < dim; i++) {
     PDM_morton_int_t xmin = side * node.X[i];
-    PDM_morton_int_t xmax = xmin + side;
+    PDM_morton_int_t xmax = side * (node.X[i]+1);
 
-    if (xmin > box_max.X[i] || xmax < box_min.X[i]) {
+    if (xmin > box_max.X[i]+1 || xmax < box_min.X[i]) {
+      if (DEBUG) {
+	printf("\t not intersecting\n");
+      }
       return 0;
-    } else if (xmin > box_min.X[i] || xmax > box_max.X[i]) {
+    } else if (xmin > box_min.X[i] || xmax > box_max.X[i]+1) {
       *inside = 0;
     };
+  }
+
+  if (DEBUG) {
+    printf("\t intersecting\n");
   }
 
   return 1;
@@ -2178,6 +2186,12 @@ PDM_morton_intersect_box
  )
 {
   int inside;
+
+#if 0
+  printf("PDM_morton_intersect_box: node.L = %u (side = %f) \tstart = %zu, end = %zu\n",
+	 node.L, 1./pow(2.,node.L), start, end);
+  PDM_morton_dump (dim, node);
+#endif
   
   /* If current range contains few octants, go brute force */
   if (end - start < N_BRUTE_FORCE) {
@@ -2214,20 +2228,41 @@ PDM_morton_intersect_box
 				 node,
 				 children);
 
+	size_t new_start, new_end;
+	size_t prev_end = start;
 	for (size_t ichild = 0; ichild < n_children; ichild++) {
-	  /*
-	    PDM_morton_code_t child_min;
-	    PDM_morton_copy (children[ichild],
-	    &child_min);
-	    PDM_morton_assign_level (&child_min,
-	    PDM_morton_max_level);
-	  */
-
-	  size_t new_start, new_end;
+#if 0
+	  /* get start and end of range in list of nodes covered by current child */
+	  /* start <-- greatest n in list such that child !gt n     */
+	  /* end   <-- smallest n in list such that     n  gt child */
+	  PDM_morton_code_t child_min;
+	  PDM_morton_copy (children[ichild],
+			   &child_min);
+	  PDM_morton_assign_level (&child_min,
+				   PDM_morton_max_level);
+	  
 	  if (ichild == 0) {
 	    new_start = start;
 	  } else {
 	    new_start = new_end; // end of previous child
+	    size_t r = end;
+	    while (new_start < r - 1) {
+	      size_t m = new_start + (r - new_start) / 2;
+	      if (_a_gt_b (nodes[m], child_min)) {
+		r = m;
+	      } else {
+		new_start = m;
+	      }
+	    }
+
+	    // if multiple instances of octants[new_start], go to first one
+	    while (new_start > 0 &&
+		   nodes[new_start-1].L    = nodes[new_start].L    &&
+		   nodes[new_start-1].X[0] = nodes[new_start].X[0] &&
+		   nodes[new_start-1].X[1] = nodes[new_start].X[1] &&
+		   nodes[new_start-1].X[2] = nodes[new_start].X[2]) {
+	      new_start--;
+	    }
 	  }
 	
 	  PDM_morton_code_t child_max;
@@ -2251,8 +2286,60 @@ PDM_morton_intersect_box
 	      }
 	    }
 	  }
+#else
+	  /* get start and end of range in list of nodes covered by current child */
+	  /* new_start <-- first descendant of child in list */
+	  //printf("previous child's end of range = %zu\n", prev_end);
+	  new_start = prev_end; // end of previous child's range
+#if 1
+	  // linear search
+	  while (new_start < end) {
+	    if (PDM_morton_ancestor_is (children[ichild], nodes[new_start])) {
+	      break;
+	    } else if (_a_gt_b(nodes[new_start], children[ichild])) {
+	      /* all the following nodes are clearly not descendants of current child */
+	      new_start = end+1;
+	      break;
+	    }
+	    new_start++;
+	  }
 
+	  if (new_start > end) {
+	    /* no need to go further for that child 
+	       because it has no descendants in the node list */
+	    continue;
+	  }
+#else
+	  // binary search
+	  //?
+#endif
+	  
+	  /* new_end <-- next of last descendant of child in list */
+#if 0
+	  // linear search
+	  for (new_end = end; new_end > new_start; new_end--) {
+	    if (PDM_morton_ancestor_is (children[ichild], nodes[new_end-1])) {
+	      break;
+	    }
+	  }
+#else
+	  // binary search
+	  size_t l = new_start;
+	  new_end = end;
+	  while (new_end > l + 1) {
+	    size_t m = l + (new_end - l) / 2;
+	    if (PDM_morton_ancestor_is (children[ichild], nodes[m])) {
+	      l = m;
+	    } else {
+	      new_end = m;
+	    }
+	  }
+#endif
+#endif
+	  prev_end = new_end;
+	  
 	  /* Carry on recursion */
+	  //printf("\n--> child #%d\n", ichild);
 	  PDM_morton_intersect_box (dim,
 				    children[ichild],
 				    box_min,

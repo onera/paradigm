@@ -6915,7 +6915,7 @@ PDM_para_octree_location_boxes_get
  )
 {
   const int DEBUG = 0;
-  const int VISU_POINTS_GNUM = 0;
+  const int VISU_POINTS_GNUM = 1;
   
   _octree_t *octree = _get_from_id (octree_id);
   const int dim = octree->dim;
@@ -6923,28 +6923,28 @@ PDM_para_octree_location_boxes_get
 
   const _l_octant_t *octants = octree->octants;
 
-  int myRank;
-  PDM_MPI_Comm_rank (octree->comm, &myRank);
+  int my_rank;
+  PDM_MPI_Comm_rank (octree->comm, &my_rank);
 
-  int lComm;
-  PDM_MPI_Comm_size (octree->comm, &lComm);
+  int n_ranks;
+  PDM_MPI_Comm_size (octree->comm, &n_ranks);
 
-  if (DEBUG) {    
+  if (1) {    
     char filename[999];
     
     sprintf(filename,
-	    "/home/bastien/workspace/debug/mesh_location/octants_%3.3d.vtk", myRank);
+	    "/home/bastien/workspace/debug/mesh_location/octants_%3.3d.vtk", my_rank);
     write_octree_octants (octree_id,
 			  filename);
 
     sprintf(filename,
-	    "/home/bastien/workspace/debug/mesh_location/points_%3.3d.vtk", myRank);
+	    "/home/bastien/workspace/debug/mesh_location/points_%3.3d.vtk", my_rank);
     write_octree_points (octree_id,
 			 filename,
 			 VISU_POINTS_GNUM);
 
     sprintf(filename,
-	    "/home/bastien/workspace/debug/mesh_location/boxes_%3.3d.vtk", myRank);
+	    "/home/bastien/workspace/debug/mesh_location/boxes_%3.3d.vtk", my_rank);
     write_boxes (octree->comm,
 		 n_boxes,
 		 box_extents,
@@ -6956,9 +6956,9 @@ PDM_para_octree_location_boxes_get
   /***************************************
    * Redistribute bounding boxes
    ***************************************/
-  int *send_count = malloc (sizeof(int) * lComm);
+  int *send_count = malloc (sizeof(int) * n_ranks);
 
-  for (int i = 0; i < lComm; i++) {
+  for (int i = 0; i < n_ranks; i++) {
     send_count[i] = 0;
   }
 
@@ -6978,7 +6978,7 @@ PDM_para_octree_location_boxes_get
   double s[3], d[3];
   PDM_morton_code_t *box_corners = malloc (sizeof(PDM_morton_code_t) * 2 * n_boxes);
   PDM_morton_encode_coords (dim,
-			    31,//?
+			    PDM_morton_max_level,
 			    octree->global_extents,
 			    2 * n_boxes,
 			    _box_extents,
@@ -6991,13 +6991,13 @@ PDM_para_octree_location_boxes_get
   /* Find which ranks possibly intersect each box */
   size_t start, end, tmp;
   for (int ibox = 0; ibox < n_boxes; ibox++) {    
-    PDM_morton_quantile_intersect (lComm,
+    PDM_morton_quantile_intersect (n_ranks,
 				   box_corners[2*ibox],
 				   octree->rank_octants_index,
 				   &start,
 				   &tmp);
 
-    PDM_morton_quantile_intersect (lComm - start,
+    PDM_morton_quantile_intersect (n_ranks - start,
 				   box_corners[2*ibox+1],
 				   octree->rank_octants_index + start,
 				   &tmp,
@@ -7013,27 +7013,27 @@ PDM_para_octree_location_boxes_get
   }
   free (box_corners);
 
-  int *recv_count = malloc (sizeof(int) * lComm);
+  int *recv_count = malloc (sizeof(int) * n_ranks);
   PDM_MPI_Alltoall (send_count, 1, PDM_MPI_INT,
 		    recv_count, 1, PDM_MPI_INT,
 		    octree->comm);
   
-  int *send_shift = malloc (sizeof(int) * (lComm+1));
-  int *recv_shift = malloc (sizeof(int) * (lComm+1));
+  int *send_shift = malloc (sizeof(int) * (n_ranks+1));
+  int *recv_shift = malloc (sizeof(int) * (n_ranks+1));
   send_shift[0] = 0;
   recv_shift[0] = 0;
-  for (int i = 0; i < lComm; i++) {
+  for (int i = 0; i < n_ranks; i++) {
     send_shift[i+1] = send_shift[i] + send_count[i];
     recv_shift[i+1] = recv_shift[i] + recv_count[i];
     send_count[i] = 0;
   }
-  int n_recv_boxes = recv_shift[lComm];
+  int n_recv_boxes = recv_shift[n_ranks];
 
   /* Fill send buffers */
-  PDM_g_num_t *send_box_g_num = malloc (sizeof(PDM_g_num_t) * send_shift[lComm]);
-  PDM_g_num_t *recv_box_g_num = malloc (sizeof(PDM_g_num_t) * recv_shift[lComm]);
-  double *send_box_extents = malloc (sizeof(double) * two_dim * send_shift[lComm]);
-  double *recv_box_extents = malloc (sizeof(double) * two_dim * recv_shift[lComm]);
+  PDM_g_num_t *send_box_g_num = malloc (sizeof(PDM_g_num_t) * send_shift[n_ranks]);
+  PDM_g_num_t *recv_box_g_num = malloc (sizeof(PDM_g_num_t) * recv_shift[n_ranks]);
+  double *send_box_extents = malloc (sizeof(double) * two_dim * send_shift[n_ranks]);
+  double *recv_box_extents = malloc (sizeof(double) * two_dim * recv_shift[n_ranks]);
   
   for (int ibox = 0; ibox < n_boxes; ibox++) {
     for (size_t irank = box_rank[2*ibox]; irank < box_rank[2*ibox+1]; irank++) {
@@ -7056,7 +7056,7 @@ PDM_para_octree_location_boxes_get
 		     octree->comm);
 
   /* Send boxes extents buffer */  
-  for (int i = 0; i < lComm; i++) {
+  for (int i = 0; i < n_ranks; i++) {
     send_shift[i+1] *= two_dim;
     recv_shift[i+1] *= two_dim;
     send_count[i]   *= two_dim;
@@ -7082,7 +7082,7 @@ PDM_para_octree_location_boxes_get
    ***************************************/
   box_corners = malloc (sizeof(PDM_morton_code_t) * 2 * n_recv_boxes);
   PDM_morton_encode_coords (dim,
-			    31,//?
+			    PDM_morton_max_level,
 			    octree->global_extents,
 			    2 * n_recv_boxes,
 			    recv_box_extents,
@@ -7112,15 +7112,13 @@ PDM_para_octree_location_boxes_get
 
 
 
-  if (DEBUG && 0) {
-    printf("[%d] --- Box pts ---\n", myRank);
-  }
-  
   for (int ibox = 0; ibox < n_recv_boxes; ibox++) {    
     n_intersect_nodes = 0;
     box_pts_idx[ibox+1] = box_pts_idx[ibox];
 
     /* Get list of all nodes that intersect the box */
+    printf("\n\n\n[%d] box %d  (%ld) --> PDM_morton_intersect_box\n",
+	   my_rank, ibox, recv_box_g_num[ibox]);
     PDM_morton_intersect_box (dim,
 			      root,
 			      box_corners[2*ibox],
@@ -7130,6 +7128,14 @@ PDM_para_octree_location_boxes_get
 			      octants->n_nodes,
 			      &n_intersect_nodes,
 			      intersect_nodes);
+
+    if (1) {
+      printf("[%d]\tbox %d (%ld) nodes:", my_rank, ibox, recv_box_g_num[ibox]);
+      for (int j = 0; j < n_intersect_nodes; j++) {
+	printf(" %d", intersect_nodes[j]);
+      }
+      printf("\n");
+    }
 
     size_t new_max_size = box_pts_idx[ibox] + n_intersect_nodes * octree->points_in_leaf_max;
     if (s_box_pts <= new_max_size) {
@@ -7165,8 +7171,8 @@ PDM_para_octree_location_boxes_get
       }
     }
 
-    if (DEBUG && 0) {// && recv_box_g_num[ibox] == 579) {
-      printf("[%d]\tbox %d (%ld):", myRank, ibox, recv_box_g_num[ibox]);
+    if (1) {// && recv_box_g_num[ibox] == 579) {
+      printf("[%d]\tbox %d (%ld) pts:", my_rank, ibox, recv_box_g_num[ibox]);
       for (int j = box_pts_idx[ibox]; j < box_pts_idx[ibox+1]; j++) {
 	printf(" %d", box_pts[j]);
       }
@@ -7197,14 +7203,11 @@ PDM_para_octree_location_boxes_get
 
   free (box_pts);
   free (box_pts_idx);
-  //free (n_candidates);
-
-
 
   if (DEBUG) {
-    printf("[%d] --- Candidates ---\n", myRank);
+    printf("[%d] --- Candidates ---\n", my_rank);
     for (int i = 0; i < octree->n_points; i++) {
-      printf("[%d]\tpoint %d (%ld):", myRank, i, octree->points_gnum[i]);
+      printf("[%d]\tpoint %d (%ld):", my_rank, i, octree->points_gnum[i]);
       for (int j = candidates_idx[i]; j < candidates_idx[i+1]; j++) {
 	printf(" %ld", candidates_g_num[j]);
       }
@@ -7212,8 +7215,6 @@ PDM_para_octree_location_boxes_get
     }
   }
   free (candidates_idx);
-
-
 
 
 
@@ -7230,32 +7231,7 @@ PDM_para_octree_location_boxes_get
 
   PDM_g_num_t *block_distrib_idx = PDM_part_to_block_distrib_index_get (ptb);
   const int n_pts_block = PDM_part_to_block_n_elt_block_get (ptb);
-
-  /*int *block_n_candidates = NULL;
-    int *block_stride = NULL;
-
-    int *stride = malloc (sizeof(int) * octree->n_points);
-    for (int i = 0; i < octree->n_points; i++) {
-    stride[i] = 1;
-    }
-
-    PDM_part_to_block_exch (ptb,
-    sizeof(double),
-    PDM_STRIDE_VAR,
-    1,
-    &stride,
-    (void **) &n_candidates,
-    &block_stride,
-    (void **) &block_n_candidates);
-    free (stride);
-
-    block_candidates_idx[0] = 0;
-    for (int i = 0; i < n_pts_block; i++) {
-    block_candidates_idx[i+1] = block_candidates_idx[i] + block_n_candidates[i];
-    }
-  */
   
-  //int *block_stride = NULL;
   PDM_part_to_block_exch (ptb,
 			  sizeof(PDM_g_num_t),
 			  PDM_STRIDE_VAR,
@@ -7266,13 +7242,6 @@ PDM_para_octree_location_boxes_get
 			  (void **) block_candidates_g_num);
   free (n_candidates);
   free (candidates_g_num);
-
-  /*block_candidates_idx[0] = 0;
-  for (int i = 0; i < n_pts_block; i++) {
-    block_candidates_idx[i+1] = block_candidates_idx[i] + block_stride[i];
-    }*/
-
-  //free (block_stride);
 }
 
 
