@@ -174,11 +174,11 @@ _get_candidate_elements_from_octree
  int                **candidates_idx
  )
 {
-  int myRank;
-  PDM_MPI_Comm_rank (comm, &myRank);
+  int my_rank;
+  PDM_MPI_Comm_rank (comm, &my_rank);
 
-  int lComm;
-  PDM_MPI_Comm_rank (comm, &lComm);
+  int n_ranks;
+  PDM_MPI_Comm_rank (comm, &n_ranks);
 
   /**************************************
    * Build octree from point cloud
@@ -223,7 +223,7 @@ _get_candidate_elements_from_octree
     
   /* Build parallel octree */
   PDM_para_octree_build (octree_id);
-  //PDM_para_octree_dump (octree_id);
+  PDM_para_octree_dump (octree_id);
   //PDM_para_octree_dump_times (octree_id);
 
   
@@ -763,15 +763,24 @@ PDM_mesh_location_compute
     //----------->>>>
     assert (pcloud->location == NULL);
 #if 1
-    int myRank;
-    PDM_MPI_Comm_rank (location->comm, &myRank);
+    int my_rank;
+    PDM_MPI_Comm_rank (location->comm, &my_rank);
     
     int idx = 0;
     pcloud->location = (PDM_g_num_t **) malloc (sizeof(PDM_g_num_t *) * pcloud->n_part);
     for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
       pcloud->location[ipart] = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * pcloud->n_points[ipart]);
       for (int ipt = 0; ipt < pcloud->n_points[ipart]; ipt++) {
-	assert (candidates_idx[idx+1] == candidates_idx[idx] + 1);
+	//assert (candidates_idx[idx+1] == candidates_idx[idx] + 1);
+	if (candidates_idx[idx+1] != candidates_idx[idx] + 1) {
+	  printf("[%d] cloud %d part %d: pt %d (%ld) has %d candidate boxes\n",
+		 my_rank,
+		 icloud,
+		 ipart,
+		 ipt,
+		 pcloud->gnum[ipart][ipt],
+		 candidates_idx[idx+1] - candidates_idx[idx]);
+	}
 	pcloud->location[ipart][ipt] = candidates_g_num[candidates_idx[idx]];
 	idx++;
       }
