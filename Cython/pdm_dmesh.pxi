@@ -104,6 +104,6 @@ cdef class DistributedMesh:
     # ************************************************************************
     # > Declaration
     # ************************************************************************
-    print 'PDM_dmesh_free'
+    print('PDM_dmesh_free')
     PDM_dmesh_free(self._id)
 
