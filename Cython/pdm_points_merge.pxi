@@ -157,6 +157,6 @@ cdef class PointsMerge:
       # ************************************************************************
       # > Declaration
       # ************************************************************************
-      print 'PDM_points_merge_free'
+      print('PDM_points_merge_free')
       PDM_points_merge_free(self._id)
 
