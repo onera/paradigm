@@ -4909,12 +4909,12 @@ PDM_Mesh_nodal_compute_cell_extents
   }
 
   
-  PDM_l_num_t *connec     = NULL;
-  PDM_l_num_t *connec_idx = NULL;
+  PDM_l_num_t *cell_vtx     = NULL;
+  PDM_l_num_t *cell_vtx_idx = NULL;
   PDM_l_num_t  n_elt = 0;
 
-  int free_connec_idx = 1;
-  int free_connec     = 0;
+  int free_cell_vtx_idx = 1;
+  int free_cell_vtx     = 0;
 
   if (id_block >= PDM_BLOCK_ID_BLOCK_POLY3D) {
 
@@ -4928,20 +4928,54 @@ PDM_Mesh_nodal_compute_cell_extents
     }
   
     n_elt = block->n_elt[id_part];
-    connec_idx = (PDM_l_num_t *) malloc (sizeof(PDM_l_num_t) * (n_elt + 1));
-    connec_idx[0] = 0;
+    cell_vtx_idx = (PDM_l_num_t *) malloc (sizeof(PDM_l_num_t) * (n_elt + 1));
+    cell_vtx_idx[0] = 0;
   
     //-->>
+    PDM_l_num_t  n_faces;
+    PDM_l_num_t *face_vtx_idx  = NULL;
+    PDM_l_num_t *face_vtx      = NULL;
+    PDM_l_num_t *cell_face_idx = NULL;
+    PDM_l_num_t *cell_face     = NULL;
+    PDM_Mesh_nodal_block_poly3d_get (idx,
+				     id_block,
+				     id_part,
+				     &n_faces,
+				     &face_vtx_idx,
+				     &face_vtx,
+				     &cell_face_idx,
+				     &cell_face);
+    
+#if 1
+    for (PDM_l_num_t ielt = 0; ielt < n_elt; ielt++) {
+      PDM_l_num_t n_vtx = 0;
+      for (PDM_l_num_t i = cell_face_idx[ielt]; i < cell_face_idx[ielt+1]; i++) {
+	n_vtx += face_vtx_idx[cell_face[i]+1] - face_vtx_idx[cell_face[i]];
+      }
+      cell_vtx_idx[ielt+1] = cell_vtx_idx[ielt] + n_vtx;
+    }
+
+    cell_vtx = (PDM_l_num_t *) malloc (sizeof(PDM_l_num_t) * cell_vtx_idx[n_elt]);
+    int k = 0;
+    for (PDM_l_num_t ielt = 0; ielt < n_elt; ielt++) {
+      for (PDM_l_num_t i = cell_face_idx[ielt]; i < cell_face_idx[ielt+1]; i++) {
+	PDM_l_num_t iface = cell_face[i];
+	for (PDM_l_num_t j = face_vtx_idx[iface]; j < face_vtx_idx[iface+1]; j++) {
+	  cell_vtx[k++] = face_vtx[j];
+	}
+      }
+    }
+#else
     for (PDM_l_num_t i = 0; i < n_elt; i++) {
-      connec_idx[i+1] = connec_idx[i] + 1;
+      cell_vtx_idx[i+1] = cell_vtx_idx[i] + 1;
     }
   
-    connec = (PDM_l_num_t *) malloc (sizeof(PDM_l_num_t) * connec_idx[n_elt]);
-    for (PDM_l_num_t i = 0; i < connec_idx[n_elt]; i++) {
-      connec[i] = 1;
+    cell_vtx = (PDM_l_num_t *) malloc (sizeof(PDM_l_num_t) * cell_vtx_idx[n_elt]);
+    for (PDM_l_num_t i = 0; i < cell_vtx_idx[n_elt]; i++) {
+      cell_vtx[i] = 1;
     }
-    //<<--
-    free_connec = 1;
+#endif
+    free_cell_vtx = 1;
   
   
   } else {
@@ -4958,10 +4992,10 @@ PDM_Mesh_nodal_compute_cell_extents
       }
     
       n_elt      = block->n_elt[id_part];
-      connec_idx = block->_connec_idx[id_part];
-      connec     = block->_connec[id_part];
+      cell_vtx_idx = block->_connec_idx[id_part];
+      cell_vtx     = block->_connec[id_part];
     
-      free_connec_idx = 0;
+      free_cell_vtx_idx = 0;
     
     } else {
       
@@ -4975,9 +5009,9 @@ PDM_Mesh_nodal_compute_cell_extents
       }
     
       n_elt = block->n_elt[id_part];
-      connec = block->_connec[id_part];
-      connec_idx = (PDM_l_num_t *) malloc (sizeof(PDM_l_num_t) * (n_elt + 1));
-      connec_idx[0] = 0;
+      cell_vtx = block->_connec[id_part];
+      cell_vtx_idx = (PDM_l_num_t *) malloc (sizeof(PDM_l_num_t) * (n_elt + 1));
+      cell_vtx_idx[0] = 0;
     
       int n_vtx = 0;
       switch (block->t_elt) {
@@ -5011,12 +5045,14 @@ PDM_Mesh_nodal_compute_cell_extents
       }
     
       for (PDM_l_num_t i = 0; i < n_elt; i++) {
-	connec_idx[i+1] = connec_idx[i] + n_vtx;
+	cell_vtx_idx[i+1] = cell_vtx_idx[i] + n_vtx;
       }
     }
   }
 
 
+
+  
   double *coords = (double *) PDM_Mesh_nodal_vertices_get (idx, id_part);
   
   double *_extents = *extents;
@@ -5026,8 +5062,8 @@ PDM_Mesh_nodal_compute_cell_extents
       _extents[3+k] = -HUGE_VAL;
     }
   
-    for (PDM_l_num_t j = connec_idx[i]; j < connec_idx[i+1]; j++) {
-      PDM_l_num_t ivtx = connec[j] - 1;
+    for (PDM_l_num_t j = cell_vtx_idx[i]; j < cell_vtx_idx[i+1]; j++) {
+      PDM_l_num_t ivtx = cell_vtx[j] - 1;
       double *_coords = (double *) coords + 3 * ivtx;
     
       for (int k = 0; k < 3; k++) {
@@ -5051,12 +5087,12 @@ PDM_Mesh_nodal_compute_cell_extents
     _extents += 6;
   }
 
-  if (free_connec_idx) {
-    free (connec_idx);
+  if (free_cell_vtx_idx) {
+    free (cell_vtx_idx);
   }
 
-  if (free_connec) {
-    free (connec);
+  if (free_cell_vtx) {
+    free (cell_vtx);
   }
     
 }

@@ -62,7 +62,7 @@ _usage(int exit_code)
  *
  * \param [in]      argc     Number of arguments
  * \param [in]      argv     Arguments
- * \param [inout]   nVtxSeg  Number of vertices on the cube side
+ * \param [inout]   n_vtx_seg  Number of vertices on the cube side
  * \param [inout]   length   Cube length
  * \param [inout]   n_part   Number of partitions par process
  * \param [inout]   post     Ensight outputs status
@@ -73,10 +73,10 @@ _usage(int exit_code)
 static void
 _read_args(int            argc,
            char         **argv,
-           PDM_g_num_t   *nVtxSeg,
+           PDM_g_num_t   *n_vtx_seg,
            double        *length,
            int           *n_part,
-	   PDM_g_num_t   *nPts,
+	   PDM_g_num_t   *n_pts,
            int           *post,
            int           *method)
 {
@@ -94,8 +94,8 @@ _read_args(int            argc,
       if (i >= argc)
         _usage(EXIT_FAILURE);
       else {
-        long _nVtxSeg = atol(argv[i]);
-        *nVtxSeg = (PDM_g_num_t) _nVtxSeg;
+        long _n_vtx_seg = atol(argv[i]);
+        *n_vtx_seg = (PDM_g_num_t) _n_vtx_seg;
       }
     }
     else if (strcmp(argv[i], "-l") == 0) {
@@ -119,7 +119,7 @@ _read_args(int            argc,
         _usage(EXIT_FAILURE);
       }
       else {
-        *nPts = atoi(argv[i]);
+        *n_pts = atoi(argv[i]);
       }
     }
     else if (strcmp(argv[i], "-pt-scotch") == 0) {
@@ -143,23 +143,23 @@ _read_args(int            argc,
 static void
 _gen_cloud_random
 (
- const int      nPts,
+ const int      n_pts,
  const double   length,
- const int      numProcs,
- const int      myRank,
+ const int      n_procs,
+ const int      my_rank,
  double       **coord,
- int           *nPts_l
+ int           *n_pts_l
  )
 {
-  *nPts_l = (int) (nPts/numProcs);
-  *coord = malloc (sizeof(double) * 3 * (*nPts_l));
+  *n_pts_l = (int) (n_pts/n_procs);
+  *coord = malloc (sizeof(double) * 3 * (*n_pts_l));
   double *_coord = *coord;
   double x;
   int idx = 0;
-  for (PDM_g_num_t i = 0; i < numProcs*(*nPts_l); i++) {
+  for (PDM_g_num_t i = 0; i < n_procs*(*n_pts_l); i++) {
     for (int j = 0; j < 3; j++) {
       x = length * (double) rand() / ((double) RAND_MAX);
-      if (i%numProcs == myRank) {
+      if (i%n_procs == my_rank) {
         _coord[idx++] = x;
       }
     }
@@ -183,10 +183,10 @@ int main(int argc, char *argv[])
    *  Set default values
    */
 
-  PDM_g_num_t nVtxSeg = 10;
-  double       length = 1.;
-  int          nPart  = 1;
-  int          post   = 0;
+  PDM_g_num_t n_vtx_seg = 10;
+  double      length    = 1.;
+  int         n_part    = 1;
+  int         post      = 0;
 #ifdef PDM_HAVE_PARMETIS
   PDM_part_split_t method  = PDM_PART_SPLIT_PARMETIS;
 #else
@@ -197,7 +197,7 @@ int main(int argc, char *argv[])
 #endif
 #endif
 
-  PDM_g_num_t nPts = 10;
+  PDM_g_num_t n_pts = 10;
 
   /*
    *  Read args
@@ -205,40 +205,40 @@ int main(int argc, char *argv[])
 
   _read_args(argc,
              argv,
-             &nVtxSeg,
+             &n_vtx_seg,
              &length,
-             &nPart,
-	     &nPts,
+             &n_part,
+	     &n_pts,
              &post,
              (int *) &method);
 
 
-/*
+  /*
    *  Init
    */
 
   struct timeval t_elaps_debut;
 
-  int myRank;
-  int numProcs;
+  int my_rank;
+  int n_procs;
 
   PDM_MPI_Init(&argc, &argv);
-  PDM_MPI_Comm_rank(PDM_MPI_COMM_WORLD, &myRank);
-  PDM_MPI_Comm_size(PDM_MPI_COMM_WORLD, &numProcs);
+  PDM_MPI_Comm_rank(PDM_MPI_COMM_WORLD, &my_rank);
+  PDM_MPI_Comm_size(PDM_MPI_COMM_WORLD, &n_procs);
 
-  int           dNCell;
-  int           dNFace;
-  int           dNVtx;
-  int           nFaceGroup;
-  PDM_g_num_t *dFaceCell = NULL;
-  int          *dFaceVtxIdx = NULL;
-  PDM_g_num_t *dFaceVtx = NULL;
-  double       *dVtxCoord = NULL;
-  int          *dFaceGroupIdx = NULL;
-  PDM_g_num_t *dFaceGroup = NULL;
-  int           dFaceVtxL;
-  int           dFaceGroupL;
-
+  int          dn_cell;
+  int          dn_face;
+  int          dn_vtx;
+  int          n_face_group;
+  PDM_g_num_t *dface_cell = NULL;
+  int         *dface_vtx_idx = NULL;
+  PDM_g_num_t *dface_vtx = NULL;
+  double      *dvtx_coord = NULL;
+  int         *dface_group_idx = NULL;
+  PDM_g_num_t *dface_group = NULL;
+  int          dface_vtx_l;
+  int          dface_group_l;
+  
   /*
    *  Create distributed cube
    */
@@ -249,39 +249,39 @@ int main(int argc, char *argv[])
   const double ymin = 0;
   const double zmin = 0;
 
-  const double xmax = xmin + length;
+  /*const double xmax = xmin + length;
   const double ymax = ymin + length;
-  const double zmax = zmin + length;
+  const double zmax = zmin + length;*/
 
-  if (myRank == 0) {
+  if (my_rank == 0) {
     printf("-- Build cube\n");
     fflush(stdout);
   }
 
   PDM_dcube_gen_init(&id,
                      PDM_MPI_COMM_WORLD,
-                     nVtxSeg,
+                     n_vtx_seg,
                      length,
                      xmin,
                      ymin,
                      zmin);
 
   PDM_dcube_gen_dim_get(id,
-                      &nFaceGroup,
-                      &dNCell,
-                      &dNFace,
-                      &dNVtx,
-                      &dFaceVtxL,
-                      &dFaceGroupL);
+			&n_face_group,
+			&dn_cell,
+			&dn_face,
+			&dn_vtx,
+			&dface_vtx_l,
+			&dface_group_l);
 
   PDM_dcube_gen_data_get(id,
-                       &dFaceCell,
-                       &dFaceVtxIdx,
-                       &dFaceVtx,
-                       &dVtxCoord,
-                       &dFaceGroupIdx,
-                       &dFaceGroup);
-  int ppartId = 0;
+			 &dface_cell,
+			 &dface_vtx_idx,
+			 &dface_vtx,
+			 &dvtx_coord,
+			 &dface_group_idx,
+			 &dface_group);
+  int ppart_id = 0;
 
   gettimeofday(&t_elaps_debut, NULL);
 
@@ -289,50 +289,50 @@ int main(int argc, char *argv[])
    *  Create mesh partitions
    */
 
-  int have_dCellPart = 0;
+  int have_dcell_part = 0;
 
-  int *dCellPart = (int *) malloc(dNCell*sizeof(int));
+  int *dcell_part = (int *) malloc(dn_cell*sizeof(int));
 
   int *renum_properties_cell = NULL;
   int *renum_properties_face = NULL;
-  int nPropertyCell = 0;
-  int nPropertyFace = 0;
+  int n_property_cell = 0;
+  int n_property_face = 0;
 
-  if (myRank == 0) {
+  if (my_rank == 0) {
     printf("-- Part\n");
     fflush(stdout);
   }
 
-  PDM_part_create(&ppartId,
+  PDM_part_create(&ppart_id,
                   PDM_MPI_COMM_WORLD,
                   method,
                   "PDM_PART_RENUM_CELL_NONE",
                   "PDM_PART_RENUM_FACE_NONE",
-                  nPropertyCell,
+                  n_property_cell,
                   renum_properties_cell,
-                  nPropertyFace,
+                  n_property_face,
                   renum_properties_face,
-                  nPart,
-                  dNCell,
-                  dNFace,
-                  dNVtx,
-                  nFaceGroup,
+                  n_part,
+                  dn_cell,
+                  dn_face,
+                  dn_vtx,
+                  n_face_group,
                   NULL,
                   NULL,
                   NULL,
                   NULL,
-                  have_dCellPart,
-                  dCellPart,
-                  dFaceCell,
-                  dFaceVtxIdx,
-                  dFaceVtx,
+                  have_dcell_part,
+                  dcell_part,
+                  dface_cell,
+                  dface_vtx_idx,
+                  dface_vtx,
                   NULL,
-                  dVtxCoord,
+                  dvtx_coord,
                   NULL,
-                  dFaceGroupIdx,
-                  dFaceGroup);
+                  dface_group_idx,
+                  dface_group);
 
-  free(dCellPart);
+  free(dcell_part);
 
 
 
@@ -341,24 +341,24 @@ int main(int argc, char *argv[])
    * Point cloud definition
    *
    ************************/
-  int _nPts_l;
+  int _n_pts_l;
   double *coords = NULL;
-  _gen_cloud_random (nPts,
+  _gen_cloud_random (n_pts,
 		     length,
-		     numProcs,
-		     myRank,
+		     n_procs,
+		     my_rank,
 		     &coords,
-		     &_nPts_l);
+		     &_n_pts_l);
 
   int id_gnum = PDM_gnum_create (3, 1, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD);
 
-  double *char_length = malloc(sizeof(double) * _nPts_l);
+  double *char_length = malloc(sizeof(double) * _n_pts_l);
 
-  for (int i = 0; i < _nPts_l; i++) {
+  for (int i = 0; i < _n_pts_l; i++) {
     char_length[i] = length * 1.e-6;
   }
 
-  PDM_gnum_set_from_coords (id_gnum, 0, _nPts_l, coords, char_length);
+  PDM_gnum_set_from_coords (id_gnum, 0, _n_pts_l, coords, char_length);
 
   PDM_gnum_compute (id_gnum);
 
@@ -387,93 +387,93 @@ int main(int argc, char *argv[])
   PDM_mesh_location_cloud_set (id_loc,
 			       0,//i_point_cloud,
 			       0,//i_part,
-			       _nPts_l,
+			       _n_pts_l,
 			       coords,
 			       gnum);
 
   PDM_mesh_location_mesh_global_data_set (id_loc,
-					  nPart);
+					  n_part);
      
   /* Set mesh */
-  for (int ipart = 0; ipart < nPart; ipart++) {
+  for (int ipart = 0; ipart < n_part; ipart++) {
     
-    int nCell;
-    int nFace;
-    int nFacePartBound;
-    int nVtx;
-    int nProc;
-    int nTPart;
-    int sCellFace;
-    int sFaceVtx;
-    int sFaceGroup;
-    int nEdgeGroup2;
+    int n_cell;
+    int n_face;
+    int n_face_part_bound;
+    int n_vtx;
+    int n_proc;
+    int n_t_part;
+    int s_cell_face;
+    int s_face_vtx;
+    int s_face_group;
+    int n_edge_group2;
 
-    PDM_part_part_dim_get(ppartId,
-                       ipart,
-                       &nCell,
-                       &nFace,
-                       &nFacePartBound,
-                       &nVtx,
-                       &nProc,
-                       &nTPart,
-                       &sCellFace,
-                       &sFaceVtx,
-                       &sFaceGroup,
-                       &nEdgeGroup2);
+    PDM_part_part_dim_get(ppart_id,
+			  ipart,
+			  &n_cell,
+			  &n_face,
+			  &n_face_part_bound,
+			  &n_vtx,
+			  &n_proc,
+			  &n_t_part,
+			  &s_cell_face,
+			  &s_face_vtx,
+			  &s_face_group,
+			  &n_edge_group2);
 
-    int         *cellTag;
-    int         *cellFaceIdx;
-    int         *cellFace;
-    PDM_g_num_t *cellLNToGN;
-    int         *faceTag;
-    int         *faceCell;
-    int         *faceVtxIdx;
-    int         *faceVtx;
-    PDM_g_num_t *faceLNToGN;
-    int         *facePartBoundProcIdx;
-    int         *facePartBoundPartIdx;
-    int         *facePartBound;
-    int         *vtxTag;
+    int         *cell_tag;
+    int         *cell_face_idx;
+    int         *cell_face;
+    PDM_g_num_t *cell_ln_to_gn;
+    int         *face_tag;
+    int         *face_cell;
+    int         *face_vtx_idx;
+    int         *face_vtx;
+    PDM_g_num_t *face_ln_to_gn;
+    int         *face_part_boundProcIdx;
+    int         *face_part_boundPartIdx;
+    int         *face_part_bound;
+    int         *vtx_tag;
     double      *vtx;
-    PDM_g_num_t *vtxLNToGN;
-    int         *faceGroupIdx;
-    int         *faceGroup;
-    PDM_g_num_t *faceGroupLNToGN;
+    PDM_g_num_t *vtx_ln_to_gn;
+    int         *face_group_idx;
+    int         *face_group;
+    PDM_g_num_t *face_group_ln_to_gn;
 
-    PDM_part_part_val_get (ppartId,
+    PDM_part_part_val_get (ppart_id,
 			   ipart,
-			   &cellTag,
-			   &cellFaceIdx,
-			   &cellFace,
-			   &cellLNToGN,
-			   &faceTag,
-			   &faceCell,
-			   &faceVtxIdx,
-			   &faceVtx,
-			   &faceLNToGN,
-			   &facePartBoundProcIdx,
-			   &facePartBoundPartIdx,
-			   &facePartBound,
-			   &vtxTag,
+			   &cell_tag,
+			   &cell_face_idx,
+			   &cell_face,
+			   &cell_ln_to_gn,
+			   &face_tag,
+			   &face_cell,
+			   &face_vtx_idx,
+			   &face_vtx,
+			   &face_ln_to_gn,
+			   &face_part_boundProcIdx,
+			   &face_part_boundPartIdx,
+			   &face_part_bound,
+			   &vtx_tag,
 			   &vtx,
-			   &vtxLNToGN,
-			   &faceGroupIdx,
-			   &faceGroup,
-			   &faceGroupLNToGN);
+			   &vtx_ln_to_gn,
+			   &face_group_idx,
+			   &face_group,
+			   &face_group_ln_to_gn);
 
     PDM_mesh_location_part_set (id_loc,
 				ipart,
-				nCell,
-				cellFaceIdx,
-				cellFace,
-				cellLNToGN,
-				nFace,
-				faceVtxIdx,
-				faceVtx,
-				faceLNToGN,
-				nVtx,
+				n_cell,
+				cell_face_idx,
+				cell_face,
+				cell_ln_to_gn,
+				n_face,
+				face_vtx_idx,
+				face_vtx,
+				face_ln_to_gn,
+				n_vtx,
 				vtx,
-				vtxLNToGN);
+				vtx_ln_to_gn);
   }
 
 
@@ -490,7 +490,7 @@ int main(int argc, char *argv[])
 
 
 
-  const double tolerance = 1.e-6;
+  const double tolerance = 1.e-9;
   PDM_mesh_location_tolerance_set (id_loc,
 				   tolerance);
   
@@ -502,6 +502,8 @@ int main(int argc, char *argv[])
 
   PDM_mesh_location_compute (id_loc);
 
+  PDM_mesh_location_dump_times (id_loc);
+
   PDM_g_num_t *location_elt_gnum = NULL;
   PDM_mesh_location_get (id_loc,
 			 0,//i_point_cloud,
@@ -510,37 +512,38 @@ int main(int argc, char *argv[])
 
 #if 1
   /* Check results */
-  if (myRank == 0) {
+  if (my_rank == 0) {
     printf("-- Check\n");
     fflush(stdout);
   }
 
-  PDM_g_num_t nFaceSeg = nVtxSeg - 1;
-  double cell_side = length / ((double) nFaceSeg);
+  const PDM_g_num_t n_cell_seg = n_vtx_seg - 1;
+  const double cell_side = length / ((double) n_cell_seg);
   
-  for (int ipt = 0; ipt < _nPts_l; ipt++) {
+  for (int ipt = 0; ipt < _n_pts_l; ipt++) {
     double *pt_coord = coords + 3*ipt;
 
     int i = (int) floor (pt_coord[0] / cell_side);
     int j = (int) floor (pt_coord[1] / cell_side);
     int k = (int) floor (pt_coord[2] / cell_side);
 
-    PDM_g_num_t box_gnum = 1 + i + nFaceSeg*(j + nFaceSeg*k);
+    PDM_g_num_t box_gnum = 1 + i + n_cell_seg*(j + n_cell_seg*k);
 
     //printf("%d: (%ld) | (%ld)\n", ipt, location_elt_gnum[ipt], box_gnum);
     assert (location_elt_gnum[ipt] == box_gnum);
   }
 #endif
 
-
   PDM_mesh_location_free (id_loc,
 			  0);
 
-  
+  PDM_part_free (ppart_id);
+
+  PDM_dcube_gen_free (id);
   
   PDM_MPI_Finalize();
 
-  if (myRank == 0) {
+  if (my_rank == 0) {
     printf("-- End\n");
     fflush(stdout);
   }
