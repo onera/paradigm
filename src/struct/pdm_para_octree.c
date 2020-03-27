@@ -4535,19 +4535,6 @@ PDM_para_octree_extents_get
   return octree->global_extents;
 }
 
-
-int *
-PDM_para_octree_rank_octants_index_get
-(
- const int  id
- )
-{
-  _octree_t *octree = _get_from_id (id);
-
-  return octree->rank_octants_index;
-}
-
-
 /**
  *
  * \brief Dump octree
@@ -6915,6 +6902,7 @@ PDM_para_octree_location_boxes_get
  )
 {
   const int DEBUG = 0;
+  const int VISU = 0;
   const int VISU_POINTS_GNUM = 1;
   
   _octree_t *octree = _get_from_id (octree_id);
@@ -6929,7 +6917,7 @@ PDM_para_octree_location_boxes_get
   int n_ranks;
   PDM_MPI_Comm_size (octree->comm, &n_ranks);
 
-  if (1) {    
+  if (VISU) {    
     char filename[999];
     
     sprintf(filename,
@@ -7117,8 +7105,10 @@ PDM_para_octree_location_boxes_get
     box_pts_idx[ibox+1] = box_pts_idx[ibox];
 
     /* Get list of all nodes that intersect the box */
-    printf("\n\n\n[%d] box %d  (%ld) --> PDM_morton_intersect_box\n",
-	   my_rank, ibox, recv_box_g_num[ibox]);
+    if (DEBUG) {
+      printf("\n\n\n[%d] box %d  (%ld) --> PDM_morton_intersect_box\n",
+	     my_rank, ibox, recv_box_g_num[ibox]);
+    }
     PDM_morton_intersect_box (dim,
 			      root,
 			      box_corners[2*ibox],
@@ -7129,7 +7119,7 @@ PDM_para_octree_location_boxes_get
 			      &n_intersect_nodes,
 			      intersect_nodes);
 
-    if (1) {
+    if (DEBUG) {
       printf("[%d]\tbox %d (%ld) nodes:", my_rank, ibox, recv_box_g_num[ibox]);
       for (int j = 0; j < n_intersect_nodes; j++) {
 	printf(" %d", intersect_nodes[j]);
@@ -7171,7 +7161,7 @@ PDM_para_octree_location_boxes_get
       }
     }
 
-    if (1) {// && recv_box_g_num[ibox] == 579) {
+    if (DEBUG) {
       printf("[%d]\tbox %d (%ld) pts:", my_rank, ibox, recv_box_g_num[ibox]);
       for (int j = box_pts_idx[ibox]; j < box_pts_idx[ibox+1]; j++) {
 	printf(" %d", box_pts[j]);
@@ -7200,7 +7190,7 @@ PDM_para_octree_location_boxes_get
       n_candidates[ipt]++;
     }
   }
-
+  free (recv_box_g_num);
   free (box_pts);
   free (box_pts_idx);
 
@@ -7228,9 +7218,6 @@ PDM_para_octree_location_boxes_get
 						       &(octree->n_points),
 						       1,
 						       octree->comm);
-
-  PDM_g_num_t *block_distrib_idx = PDM_part_to_block_distrib_index_get (ptb);
-  const int n_pts_block = PDM_part_to_block_n_elt_block_get (ptb);
   
   PDM_part_to_block_exch (ptb,
 			  sizeof(PDM_g_num_t),
@@ -7240,6 +7227,9 @@ PDM_para_octree_location_boxes_get
 			  (void **) &candidates_g_num,
 			  block_n_candidates,
 			  (void **) block_candidates_g_num);
+
+  PDM_part_to_block_free (ptb);
+  
   free (n_candidates);
   free (candidates_g_num);
 }

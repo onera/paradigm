@@ -2141,6 +2141,7 @@ _intersect_node_box
  )
 {
   const int DEBUG = 0;
+  *inside = 1;
   
   assert (box_min.L >= node.L);
       
@@ -2231,62 +2232,7 @@ PDM_morton_intersect_box
 	size_t new_start, new_end;
 	size_t prev_end = start;
 	for (size_t ichild = 0; ichild < n_children; ichild++) {
-#if 0
-	  /* get start and end of range in list of nodes covered by current child */
-	  /* start <-- greatest n in list such that child !gt n     */
-	  /* end   <-- smallest n in list such that     n  gt child */
-	  PDM_morton_code_t child_min;
-	  PDM_morton_copy (children[ichild],
-			   &child_min);
-	  PDM_morton_assign_level (&child_min,
-				   PDM_morton_max_level);
-	  
-	  if (ichild == 0) {
-	    new_start = start;
-	  } else {
-	    new_start = new_end; // end of previous child
-	    size_t r = end;
-	    while (new_start < r - 1) {
-	      size_t m = new_start + (r - new_start) / 2;
-	      if (_a_gt_b (nodes[m], child_min)) {
-		r = m;
-	      } else {
-		new_start = m;
-	      }
-	    }
 
-	    // if multiple instances of octants[new_start], go to first one
-	    while (new_start > 0 &&
-		   nodes[new_start-1].L    = nodes[new_start].L    &&
-		   nodes[new_start-1].X[0] = nodes[new_start].X[0] &&
-		   nodes[new_start-1].X[1] = nodes[new_start].X[1] &&
-		   nodes[new_start-1].X[2] = nodes[new_start].X[2]) {
-	      new_start--;
-	    }
-	  }
-	
-	  PDM_morton_code_t child_max;
-	  PDM_morton_copy (children[ichild],
-			   &child_max);
-	  PDM_morton_assign_level (&child_max,
-				   PDM_morton_max_level);
-	  for (int idim = 0; idim < dim; idim++) {
-	    child_max.X[idim]++;
-	  }
-
-	  new_end = end;
-	  if (ichild < n_children-1) {
-	    size_t l = new_start;
-	    while (l < new_end - 1) {
-	      size_t m = l + (new_end - l) / 2;
-	      if (_a_gt_b (nodes[m], child_max)) {
-		new_end = m;
-	      } else {
-		l = m;
-	      }
-	    }
-	  }
-#else
 	  /* get start and end of range in list of nodes covered by current child */
 	  /* new_start <-- first descendant of child in list */
 	  //printf("previous child's end of range = %zu\n", prev_end);
@@ -2335,7 +2281,7 @@ PDM_morton_intersect_box
 	    }
 	  }
 #endif
-#endif
+
 	  prev_end = new_end;
 	  
 	  /* Carry on recursion */

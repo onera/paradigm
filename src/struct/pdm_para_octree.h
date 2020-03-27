@@ -179,13 +179,6 @@ PDM_para_octree_extents_get
 );
 
 
-int *
-PDM_para_octree_rank_octants_index_get
-(
- const int  id
- );
-
-
 /**
  *
  * \brief Dump octree
