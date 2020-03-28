@@ -170,6 +170,7 @@ cdef class DistantNeighbor:
             for i in xrange(self._n_entity[i_part]):
               size_data += recv_entity_stri[i_part][i]
             # >
+            ndim     = 1
             dim_stri = <NPY.npy_intp> self._n_entity[i_part]
             tmp_data = NPY.PyArray_SimpleNewFromData(ndim, &dim_stri, NPY.NPY_INT32, <void *> recv_entity_stri[i_part])
             PyArray_ENABLEFLAGS(tmp_data, NPY.NPY_OWNDATA);
