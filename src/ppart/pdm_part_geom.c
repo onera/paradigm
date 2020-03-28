@@ -67,8 +67,8 @@ const double         *dvtx_coord,
   PDM_MPI_Comm_size(comm, &n_rank);
 
   /* Offset Distribution to work with block_to_part */
-  PDM_g_num_t* dface_proc_loc = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) * (n_rank + 1));//B
-  PDM_g_num_t* dvtx_proc_loc  = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) * (n_rank + 1));//B
+  PDM_g_num_t* dface_proc_loc = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) * (n_rank + 1));
+  PDM_g_num_t* dvtx_proc_loc  = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) * (n_rank + 1));
   for (int i = 0; i < n_rank+1; i++) {
     dface_proc_loc[i] = dface_proc[i]-1;
     dvtx_proc_loc[i]  = dvtx_proc[i]-1;
@@ -156,7 +156,7 @@ const double         *dvtx_coord,
   }
 
   PDM_block_to_part_free(ptb);
-  free (dface_proc_loc);//B
+  free (dface_proc_loc);
   /* -------------------------------------------------------------- */
 
 
@@ -192,7 +192,7 @@ const double         *dvtx_coord,
   }
 
   PDM_block_to_part_free(ptb);
-  free (dvtx_proc_loc);//B
+  free (dvtx_proc_loc);
   /* -------------------------------------------------------------- */
 
   *sizeface_vtx_idx = dcell_face_idx[dn_cell] + 1 ;
@@ -293,7 +293,7 @@ _compute_cellCenter
       PDM_printf("\n");
     }
   }
-  free (face_vtx);//B
+  free (face_vtx);
 
   /*
    * Compute cell centers
@@ -336,8 +336,8 @@ _compute_cellCenter
     cellCenter[3*iCell + 1] = cellCenter[3*iCell + 1]/n_vtxOn_cell;
     cellCenter[3*iCell + 2] = cellCenter[3*iCell + 2]/n_vtxOn_cell;
   }
-  free (lvtx_coord);//B
-  free (face_vtx_idx);//B
+  free (lvtx_coord);
+  free (face_vtx_idx);
   
   /* Verbose */
   if(0 == 1){
