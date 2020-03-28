@@ -144,4 +144,18 @@ include "pdm_points_merge.pxi"
 # --------------------
 include "pdm_dmesh.pxi"
 
+# PDM_dmesh :
+# --------------------
+include "pdm_distant_neighbor.pxi"
+
+
+
+
+
+
+
+
+
+
+
 # TODO: PDM_writer, ...
