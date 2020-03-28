@@ -17,6 +17,7 @@
 #include "pdm_points_merge.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
+#include "pdm_logging.h"
 
 /**
  *
@@ -282,6 +283,22 @@ char *argv[]
                  (int***) &recv_entity_var_stri,
                 (void***) &recv_entity_var_data);
 
+  log_trace(" Variable strid exchange results ---- \n");
+  if(1 == 1){
+    for(int i_part = 0; i_part < n_cloud; i_part++){
+      int *_part_neighbor_idx  = candidates_idx[i_part];
+      log_trace(" ---> recv_entity_data[%d]::", i_part);
+      int idx = 0;
+      for(int i_entity = 0; i_entity < _part_neighbor_idx[n_entity[i_part]]; i_entity++){
+        log_trace("i_entity::%d - strid::%d --> ", i_entity, recv_entity_var_stri[i_part][i_entity]);
+        for(int i_data = 0; i_data < recv_entity_var_stri[i_part][i_entity]; i_data++){
+          log_trace("%d ", recv_entity_var_data[i_part][idx++]);
+        }
+        log_trace("\n");
+      }
+      log_trace("\n");
+    }
+  }
   /*
    * Free
    */
