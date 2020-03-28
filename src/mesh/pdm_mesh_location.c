@@ -47,7 +47,7 @@ extern "C" {
  * Macro definitions
  *============================================================================*/
 
-#define NTIMER 2
+#define NTIMER 6
   
 /*============================================================================
  * Type definitions
@@ -60,8 +60,12 @@ extern "C" {
  
 typedef enum {
 
-  BEGIN                         = 0,
-  END                           = 1,        
+  BEGIN                            = 0,
+  BUILD_BOUNDING_BOXES             = 1,
+  SEARCH_CANDIDATES                = 2,
+  DISTRIBUTE_ELEMENTARY_OPERATIONS = 3,
+  COMPUTE_ELEMENTARY_LOCATIONS     = 4,
+  END                              = 5,        
 
 } _ol_timer_step_t;
 
@@ -382,9 +386,9 @@ PDM_mesh_location_create
   
   for (int i = 0; i < NTIMER; i++) {
     location->times_elapsed[i] = 0.;
-    location->times_cpu[i] = 0.;
-    location->times_cpu_u[i] = 0.;
-    location->times_cpu_s[i] = 0.;
+    location->times_cpu[i]     = 0.;
+    location->times_cpu_u[i]   = 0.;
+    location->times_cpu_s[i]   = 0.;
   }
   
   return id;
@@ -683,10 +687,21 @@ PDM_mesh_location_compute
 {
   _PDM_location_t *location = _get_from_id (id);
 
+   int my_rank;
+  PDM_MPI_Comm_rank (location->comm, &my_rank);
+
+  int n_procs;
+  PDM_MPI_Comm_size (location->comm, &n_procs);
+
   double b_t_elapsed;
   double b_t_cpu;
   double b_t_cpu_u;
   double b_t_cpu_s;
+
+  double e_t_elapsed;
+  double e_t_cpu;
+  double e_t_cpu_u;
+  double e_t_cpu_s;
 
   location->times_elapsed[BEGIN] = PDM_timer_elapsed(location->timer);
   location->times_cpu[BEGIN]     = PDM_timer_cpu(location->timer);
@@ -698,13 +713,6 @@ PDM_mesh_location_compute
   b_t_cpu_u   = location->times_cpu_u[BEGIN];
   b_t_cpu_s   = location->times_cpu_s[BEGIN];
   PDM_timer_resume(location->timer);
-  
-
-  int my_rank;
-  PDM_MPI_Comm_rank (location->comm, &my_rank);
-
-  int n_procs;
-  PDM_MPI_Comm_size (location->comm, &n_procs);
   
   /*
    * Construction bounding boxes
@@ -783,6 +791,28 @@ PDM_mesh_location_compute
 			  (void **) &block_box_origin);
   free (block_stride);
   free (box_origin);
+
+
+  
+  PDM_timer_hang_on(location->timer);
+  e_t_elapsed = PDM_timer_elapsed(location->timer);
+  e_t_cpu     = PDM_timer_cpu(location->timer);
+  e_t_cpu_u   = PDM_timer_cpu_user(location->timer);
+  e_t_cpu_s   = PDM_timer_cpu_sys(location->timer);
+
+  location->times_elapsed[BUILD_BOUNDING_BOXES] += e_t_elapsed - b_t_elapsed;
+  location->times_cpu[BUILD_BOUNDING_BOXES]     += e_t_cpu - b_t_cpu;
+  location->times_cpu_u[BUILD_BOUNDING_BOXES]   += e_t_cpu_u - b_t_cpu_u;
+  location->times_cpu_s[BUILD_BOUNDING_BOXES]   += e_t_cpu_s - b_t_cpu_s;
+
+  b_t_elapsed = e_t_elapsed;
+  b_t_cpu     = e_t_cpu;
+  b_t_cpu_u   = e_t_cpu_u;
+  b_t_cpu_s   = e_t_cpu_s;
+
+  PDM_timer_resume(location->timer);
+
+  
   
   /*
    * Search candidates
@@ -816,6 +846,16 @@ PDM_mesh_location_compute
       assert (1 == 0);
     }
 
+    PDM_timer_hang_on(location->timer);
+    e_t_elapsed = PDM_timer_elapsed(location->timer);
+    e_t_cpu     = PDM_timer_cpu(location->timer);
+    e_t_cpu_u   = PDM_timer_cpu_user(location->timer);
+    e_t_cpu_s   = PDM_timer_cpu_sys(location->timer);
+
+    location->times_elapsed[SEARCH_CANDIDATES] += e_t_elapsed - b_t_elapsed;
+    location->times_cpu[SEARCH_CANDIDATES]     += e_t_cpu - b_t_cpu;
+    location->times_cpu_u[SEARCH_CANDIDATES]   += e_t_cpu_u - b_t_cpu_u;
+    location->times_cpu_s[SEARCH_CANDIDATES]   += e_t_cpu_s - b_t_cpu_s;
 
     //----------->>>> Remove that as soon as location in ELEMENTS is implemented
 #if 1
@@ -844,6 +884,12 @@ PDM_mesh_location_compute
     }
 #endif
     //<<<<-----------
+
+    b_t_elapsed = e_t_elapsed;
+    b_t_cpu     = e_t_cpu;
+    b_t_cpu_u   = e_t_cpu_u;
+    b_t_cpu_s   = e_t_cpu_s;
+    PDM_timer_resume(location->timer);
 
     int n_points = 0;
     for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
@@ -1001,6 +1047,26 @@ PDM_mesh_location_compute
 
     free (send_coord);
     free (send_origin);
+
+
+
+    PDM_timer_hang_on(location->timer);
+    e_t_elapsed = PDM_timer_elapsed(location->timer);
+    e_t_cpu     = PDM_timer_cpu(location->timer);
+    e_t_cpu_u   = PDM_timer_cpu_user(location->timer);
+    e_t_cpu_s   = PDM_timer_cpu_sys(location->timer);
+
+    location->times_elapsed[DISTRIBUTE_ELEMENTARY_OPERATIONS] += e_t_elapsed - b_t_elapsed;
+    location->times_cpu[DISTRIBUTE_ELEMENTARY_OPERATIONS]     += e_t_cpu - b_t_cpu;
+    location->times_cpu_u[DISTRIBUTE_ELEMENTARY_OPERATIONS]   += e_t_cpu_u - b_t_cpu_u;
+    location->times_cpu_s[DISTRIBUTE_ELEMENTARY_OPERATIONS]   += e_t_cpu_s - b_t_cpu_s;
+
+    b_t_elapsed = e_t_elapsed;
+    b_t_cpu     = e_t_cpu;
+    b_t_cpu_u   = e_t_cpu_u;
+    b_t_cpu_s   = e_t_cpu_s;
+
+    PDM_timer_resume(location->timer);
     
     /*
      * Elementary location computations
@@ -1011,6 +1077,24 @@ PDM_mesh_location_compute
     free (candidates_origin);
     free (recv_coord);
     free (recv_origin);
+
+    PDM_timer_hang_on(location->timer);
+    e_t_elapsed = PDM_timer_elapsed(location->timer);
+    e_t_cpu     = PDM_timer_cpu(location->timer);
+    e_t_cpu_u   = PDM_timer_cpu_user(location->timer);
+    e_t_cpu_s   = PDM_timer_cpu_sys(location->timer);
+
+    location->times_elapsed[COMPUTE_ELEMENTARY_LOCATIONS] += e_t_elapsed - b_t_elapsed;
+    location->times_cpu[COMPUTE_ELEMENTARY_LOCATIONS]     += e_t_cpu - b_t_cpu;
+    location->times_cpu_u[COMPUTE_ELEMENTARY_LOCATIONS]   += e_t_cpu_u - b_t_cpu_u;
+    location->times_cpu_s[COMPUTE_ELEMENTARY_LOCATIONS]   += e_t_cpu_s - b_t_cpu_s;
+
+    b_t_elapsed = e_t_elapsed;
+    b_t_cpu     = e_t_cpu;
+    b_t_cpu_u   = e_t_cpu_u;
+    b_t_cpu_s   = e_t_cpu_s;
+
+    PDM_timer_resume(location->timer);
 
   }
   free (box_g_num);
@@ -1183,13 +1267,49 @@ PDM_mesh_location_dump_times
   double t2max;
   PDM_MPI_Allreduce (&t2, &t2max, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, location->comm);
 
+  double t_elaps_max[NTIMER];
+  PDM_MPI_Allreduce (location->times_elapsed,
+		     t_elaps_max,
+		     NTIMER,
+		     PDM_MPI_DOUBLE,
+		     PDM_MPI_MAX,
+		     location->comm);
+
+  double t_cpu_max[NTIMER];
+  PDM_MPI_Allreduce (location->times_cpu,
+		     t_cpu_max, NTIMER,
+		     PDM_MPI_DOUBLE,
+		     PDM_MPI_MAX,
+		     location->comm);
+
   int rank;
   PDM_MPI_Comm_rank (location->comm, &rank);
 
   if (rank == 0) {
 
-    PDM_printf( "mesh_location timer : all (elapsed and cpu) : %12.5es %12.5es\n",
+    PDM_printf( "mesh_location timer : all (elapsed and cpu) :                                      "
+		" %12.5es %12.5es\n",
                 t1max, t2max);
+    
+    PDM_printf( "mesh_location timer : build bounding boxes (elapsed and cpu) :                     "
+                " %12.5es %12.5es\n",
+                t_elaps_max[BUILD_BOUNDING_BOXES],
+                t_cpu_max[BUILD_BOUNDING_BOXES]);
+
+    PDM_printf( "mesh_location timer : search candidates (elapsed and cpu) :                        "
+                " %12.5es %12.5es\n",
+                t_elaps_max[SEARCH_CANDIDATES],
+                t_cpu_max[SEARCH_CANDIDATES]);
+
+    PDM_printf( "mesh_location timer : distribute elementary operations (+CHECK) (elapsed and cpu) :"
+                " %12.5es %12.5es\n",
+                t_elaps_max[DISTRIBUTE_ELEMENTARY_OPERATIONS],
+                t_cpu_max[DISTRIBUTE_ELEMENTARY_OPERATIONS]);
+
+    PDM_printf( "mesh_location timer : compute elementary locations (elapsed and cpu) :             "
+                " %12.5es %12.5es\n",
+                t_elaps_max[COMPUTE_ELEMENTARY_LOCATIONS],
+                t_cpu_max[COMPUTE_ELEMENTARY_LOCATIONS]);
   }
 }
 
