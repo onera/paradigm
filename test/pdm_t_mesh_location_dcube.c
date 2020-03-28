@@ -47,6 +47,8 @@ _usage(int exit_code)
      "  -l      <level>  Cube length.\n\n"
      "  -n_part <level>  Number of partitions par process.\n\n"
      "  -p      <level>  Number of points to locate.\n\n"
+     "  -octree          Use octree-based method.\n\n"
+     "  -dbbree          Use dbbtree-based method.\n\n"
      "  -parmetis        Call ParMETIS.\n\n"
      "  -pt-scocth       Call PT-Scotch.\n\n"
      "  -h               This message.\n\n");
@@ -78,7 +80,8 @@ _read_args(int            argc,
            int           *n_part,
 	   PDM_g_num_t   *n_pts,
            int           *post,
-           int           *method)
+           int           *part_method,
+	   PDM_mesh_location_method_t *loc_method)
 {
   int i = 1;
 
@@ -123,13 +126,19 @@ _read_args(int            argc,
       }
     }
     else if (strcmp(argv[i], "-pt-scotch") == 0) {
-      *method = PDM_PART_SPLIT_PTSCOTCH;
+      *part_method = PDM_PART_SPLIT_PTSCOTCH;
     }
     else if (strcmp(argv[i], "-parmetis") == 0) {
-      *method = PDM_PART_SPLIT_PARMETIS;
+      *part_method = PDM_PART_SPLIT_PARMETIS;
     }
     else if (strcmp(argv[i], "-hilbert") == 0) {
-      *method = PDM_PART_SPLIT_HILBERT;
+      *part_method = PDM_PART_SPLIT_HILBERT;
+    }
+    else if (strcmp(argv[i], "-octree") == 0) {
+      *loc_method = PDM_MESH_LOCATION_OCTREE;
+    }
+    else if (strcmp(argv[i], "-dbbtree") == 0) {
+      *loc_method = PDM_MESH_LOCATION_DBBTREE;
     }
     else
       _usage(EXIT_FAILURE);
@@ -188,16 +197,17 @@ int main(int argc, char *argv[])
   int         n_part    = 1;
   int         post      = 0;
 #ifdef PDM_HAVE_PARMETIS
-  PDM_part_split_t method  = PDM_PART_SPLIT_PARMETIS;
+  PDM_part_split_t part_method  = PDM_PART_SPLIT_PARMETIS;
 #else
 #ifdef PDM_HAVE_PTSCOTCH
-  PDM_part_split_t method  = PDM_PART_SPLIT_PTSCOTCH;
+  PDM_part_split_t part_method  = PDM_PART_SPLIT_PTSCOTCH;
 #else
-  PDM_part_split_t method  = PDM_PART_SPLIT_HILBERT;
+  PDM_part_split_t part_method  = PDM_PART_SPLIT_HILBERT;
 #endif
 #endif
 
   PDM_g_num_t n_pts = 10;
+  PDM_mesh_location_method_t loc_method = PDM_MESH_LOCATION_OCTREE;
 
   /*
    *  Read args
@@ -210,7 +220,8 @@ int main(int argc, char *argv[])
              &n_part,
 	     &n_pts,
              &post,
-             (int *) &method);
+             (int *) &part_method,
+	     &loc_method);
 
 
   /*
@@ -305,7 +316,7 @@ int main(int argc, char *argv[])
 
   PDM_part_create(&ppart_id,
                   PDM_MPI_COMM_WORLD,
-                  method,
+                  part_method,
                   "PDM_PART_RENUM_CELL_NONE",
                   "PDM_PART_RENUM_FACE_NONE",
                   n_property_cell,
@@ -495,7 +506,7 @@ int main(int argc, char *argv[])
 				   tolerance);
   
   PDM_mesh_location_method_set (id_loc,
-				PDM_MESH_LOCATION_OCTREE);
+				loc_method);
 
 
   
