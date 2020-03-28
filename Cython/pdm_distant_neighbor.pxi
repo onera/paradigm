@@ -95,6 +95,7 @@ cdef class DistantNeighbor:
     def DistantNeighbor_Exchange(self, list         l_send_entity_data,
                                        list         l_recv_entity_data,
                                        int          cst_stride = 1,
+                                       PDM_stride_t t_stride  = <PDM_stride_t> (0),
                                        list         l_send_entity_stri = None,
                                        list         l_recv_entity_stri = None):
         """
@@ -132,13 +133,11 @@ cdef class DistantNeighbor:
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
-        # print(" ----> flag 1")
         send_entity_stri  = <int ** > malloc(self._n_part * sizeof(int  **))
         send_entity_data  = <void **> malloc(self._n_part * sizeof(void **))
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
-        # print(" ----> flag 2")
         for i_part in range(self._n_part):
           psend_entity_data = l_send_entity_data[i_part]
           send_entity_data[i_part] = <void*> psend_entity_data.data
@@ -150,16 +149,13 @@ cdef class DistantNeighbor:
           dtypep     = psend_entity_data.dtype
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
-        #  = <PDM_stride_t> (0),
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
-        # print(" ----> flag 3 :: PDM_distant_neighbor_exch")
         PDM_distant_neighbor_exch(self._dnid, s_data, t_stride,
                                   cst_stride,
                                   send_entity_stri,
                                   send_entity_data,
                                   &recv_entity_stri,
                                   &recv_entity_data)
-        # print(" ----> flag 3 :: PDM_distant_neighbor_exch end ")
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -169,7 +165,6 @@ cdef class DistantNeighbor:
             size_data = 0
             for i in xrange(self._n_entity[i_part]):
               size_data += recv_entity_stri[i_part][i]
-            # >
             ndim     = 1
             dim_stri = <NPY.npy_intp> self._n_entity[i_part]
             tmp_data = NPY.PyArray_SimpleNewFromData(ndim, &dim_stri, NPY.NPY_INT32, <void *> recv_entity_stri[i_part])
@@ -191,7 +186,6 @@ cdef class DistantNeighbor:
         if(l_send_entity_stri is not None):
           free(recv_entity_stri)
         free(recv_entity_data)
-        # print(" ----> flag 4 :: free end ")
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
     # ------------------------------------------------------------------------
