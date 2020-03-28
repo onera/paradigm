@@ -149,7 +149,4 @@ include "pdm_dmesh.pxi"
 include "pdm_distant_neighbor.pxi"
 
 
-
-
-
 # TODO: PDM_writer, ...
