@@ -92,174 +92,94 @@ cdef class DistantNeighbor:
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
     # ------------------------------------------------------------------------
-    # def DistantNeighbor_Exchange(self, dict dField, dict pField, list pStrid = None):
-    #     """
-    #        TODOUX : 1) Exchange of variables types array
-    #                 2) Assertion of type and accross MPI of the same field
-    #     """
-    #     # ************************************************************************
-    #     # > Declaration
-    #     cdef NPY.ndarray   dArray
-    #     cdef NPY.ndarray   pArray
-    #     cdef NPY.ndarray   partStrid
-    #     cdef int           idx
-    #     cdef int           blk_size
-    #     cdef NPY.npy_intp *ArrayDim
+    def DistantNeighbor_Exchange(self, list         l_send_entity_data,
+                                       list         l_recv_entity_data,
+                                       int          cst_stride = 1,
+                                       PDM_stride_t t_stride  = <PDM_stride_t> (0),
+                                       list         l_send_entity_stri = None,
+                                       list         l_recv_entity_stri = None):
+        """
+        """
+        # ************************************************************************
+        # > Declaration
+        cdef int           i
+        cdef int           idx
+        cdef int           i_part
 
-    #     # > For PDM
-    #     cdef size_t   s_data
-    #     cdef int      strideOne
-    #     cdef int    **part_stride
-    #     cdef int     *block_stride
-    #     cdef void    *block_data
-    #     cdef void   **part_data
-    #     cdef int      ndim
-    #     cdef int      npyflags=-1;
-    #     cdef NPY.ndarray tmpData
-    #     # ************************************************************************
+        cdef NPY.ndarray psend_entity_data
+        cdef NPY.ndarray[NPY.int32_t, ndim=1, mode='fortran'] psend_entity_stri
+        cdef NPY.ndarray precv_entity_data
+        cdef NPY.ndarray[NPY.int32_t, ndim=1, mode='fortran'] precv_entity_stri
 
-    #     # ::::::::::::::::::::::::::::::::::::::::::::::::::
-    #     # > Allocate
-    #     part_data = <void **> malloc(self.partN * sizeof(void **))
-    #     # ::::::::::::::::::::::::::::::::::::::::::::::::::
+        # > For PDM
+        cdef int         **send_entity_stri
+        cdef void        **send_entity_data
+        cdef int         **recv_entity_stri
+        cdef void        **recv_entity_data
+        cdef size_t        s_data
+        cdef int           stride_one
+        cdef int           size_data
+        cdef int           npyflags=-1;
+        cdef NPY.ndarray   tmp_data
+        # ************************************************************************
 
-    #     # ::::::::::::::::::::::::::::::::::::::::::::::::::
-    #     # > Prepare stride
-    #     if(self.t_stride == 0): # Cst Stride
-    #        strideOne     = 1
-    #        part_stride   = NULL
-    #     else:
-    #        strideOne     = 0
-    #        part_stride   = <int **> malloc(self.partN * sizeof(int *))
-    #        assert(pStrid is not None)
-    #        assert(len(pStrid) == self.partN)
-    #        # for idx in xrange(self.partN):
-    #        for idx, partStrid in enumerate(pStrid):
-    #           part_stride[idx] = <int *> partStrid.data
-    #     # ::::::::::::::::::::::::::::::::::::::::::::::::::
-    #     ndim = -1
+        # ::::::::::::::::::::::::::::::::::::::::::::::::::
+        assert(len(l_send_entity_data) == self._n_part)
+        assert(len(l_recv_entity_data) == 0           )
+        # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
-    #     # ::::::::::::::::::::::::::::::::::::::::::::::::::
-    #     # > Loop on all field to build
-    #     for field, partList in pField.iteritems():
+        # ::::::::::::::::::::::::::::::::::::::::::::::::::
+        send_entity_stri  = <int ** > malloc(self._n_part * sizeof(int  **))
+        send_entity_data  = <void **> malloc(self._n_part * sizeof(void **))
+        # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
-    #       # print field, partList
+        # ::::::::::::::::::::::::::::::::::::::::::::::::::
+        for i_part in range(self._n_part):
+          psend_entity_data = l_send_entity_data[i_part]
+          send_entity_data[i_part] = <void*> psend_entity_data.data
+          if(l_send_entity_stri is not None):
+            psend_entity_stri = l_send_entity_stri[i_part]
+            send_entity_stri[i_part] = <int*> psend_entity_stri.data
+          s_data     = psend_entity_data.dtype.itemsize
+          dtype_data = psend_entity_data.dtype.num
+          dtypep     = psend_entity_data.dtype
+        # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
-    #       # ::::::::::::::::::::::::::::::::::::::::::::::::::
-    #       # > Prepare part_data
-    #       for idx, pArray in enumerate(partList):
-    #         # ------------------------------------------------
-    #         # > Get flow solution
-    #         if(pArray.ndim == 2):
-    #           assert(pArray.shape[1] == self.NbElmts[idx])
-    #           ndim = 2
-    #         else:
-    #           if(self.t_stride == <PDM_stride_t   >(0)):
-    #             assert(pArray.shape[0] == self.NbElmts[idx])
-    #           ndim = 1
-    #         part_data[idx] = <void *> pArray.data
-    #         # ------------------------------------------------
+        # ::::::::::::::::::::::::::::::::::::::::::::::::::
+        PDM_distant_neighbor_exch(self._dnid, s_data, t_stride,
+                                  cst_stride,
+                                  send_entity_stri,
+                                  send_entity_data,
+                                  &recv_entity_stri,
+                                  &recv_entity_data)
+        # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
-    #         # ------------------------------------------------
-    #         # > Fill s_data - How to check if array is different ?
-    #         s_data     = pArray.dtype.itemsize
-    #         dtype_data = pArray.dtype.num
-    #         dtypep     = pArray.dtype
-    #         # ------------------------------------------------
+        # ::::::::::::::::::::::::::::::::::::::::::::::::::
+        # > Take owership with numpy and create
+        for i_part in range(self._n_part):
+          if(l_send_entity_stri is not None):
+            size_data = 0
+            for i in xrange(self._n_entity[i_part]):
+              size_data += recv_entity_stri[i_part][i]
+            # >
+            dim_stri = <NPY.npy_intp> self._n_entity[i_part]
+            tmp_data = NPY.PyArray_SimpleNewFromData(ndim, &dim_stri, NPY.NPY_INT32, <void *> recv_entity_stri[i_part])
+            PyArray_ENABLEFLAGS(tmp_data, NPY.NPY_OWNDATA);
+            l_recv_entity_stri.append(tmp_data)
+          else:
+            size_data = cst_stride * self._n_entity[i_part]
+          ndim     = 1
+          dim      = <NPY.npy_intp> size_data
+          tmp_data = NPY.PyArray_SimpleNewFromData(ndim, &dim, dtype_data, <void *> recv_entity_data)
+          PyArray_ENABLEFLAGS(tmp_data, NPY.NPY_OWNDATA);
+        # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
-    #       # ::::::::::::::::::::::::::::::::::::::::::::::::::
-    #       # > Prepare block_data
-    #       block_stride  = NULL
-    #       block_data    = NULL
-    #       # ::::::::::::::::::::::::::::::::::::::::::::::::::
-
-    #       # ::::::::::::::::::::::::::::::::::::::::::::::::::
-    #       # > Exchange
-    #       # print "PDM_part_to_block_exch "
-    #       c_size = PDM_part_to_block_exch(self.PTB,
-    #                                       s_data,
-    #                                       self.t_stride,
-    #                                       strideOne,
-    #                                       part_stride,
-    #                                       part_data,
-    #                                       &block_stride,
-    #                                       <void **> &block_data)
-    #       # print "PDM_part_to_block_exch end "
-    #       # ::::::::::::::::::::::::::::::::::::::::::::::::::
-
-    #       # ::::::::::::::::::::::::::::::::::::::::::::::::::
-    #       blk_size = PDM_part_to_block_n_elt_block_get(self.PTB);
-    #       # ::::::::::::::::::::::::::::::::::::::::::::::::::
-
-    #       # ::::::::::::::::::::::::::::::::::::::::::::::::::
-    #       # > Put in dict
-    #       dim           = <NPY.npy_intp> c_size
-    #       if(c_size == 0):
-    #         # dField[field] = None # Attention faire une caspule vide serait mieux non ?
-    #         dField[field] = NPY.empty((0), dtype=dtypep)
-    #         # print 'Attention in PDM_part_to_block'
-    #       else:
-    #         if(ndim == 2):
-    #           ArrayDim    = <NPY.npy_intp *> malloc(2 * sizeof(NPY.npy_intp *))
-    #           ArrayDim[0] = <NPY.npy_intp> 1
-    #           ArrayDim[1] = <NPY.npy_intp> c_size
-
-    #           # > Put in dField
-    #           tmpData = NPY.PyArray_SimpleNewFromData(ndim, ArrayDim, dtype_data, <void *> block_data)
-    #           PyArray_ENABLEFLAGS(tmpData, NPY.NPY_OWNDATA);
-    #           dField[field] = tmpData
-    #           # > Free
-    #           free(ArrayDim)
-    #         else:
-    #           # dField[field] = NPY.PyArray_SimpleNewFromData(1, &dim, dtype_data,
-    #           #                                               <void *> block_data)
-    #           tmpData = NPY.PyArray_SimpleNewFromData(1, &dim, dtype_data,
-    #                                                      <void *> block_data)
-    #           PyArray_ENABLEFLAGS(tmpData, NPY.NPY_OWNDATA);
-    #           dField[field] = tmpData
-    #           # print(dField[field].flags)
-    #       # ::::::::::::::::::::::::::::::::::::::::::::::::::
-
-    #       # ::::::::::::::::::::::::::::::::::::::::::::::::::
-    #       # > Stride management
-    #       if(self.t_stride == 1 ):
-    #         dimStri = <NPY.npy_intp> blk_size
-    #         # dField[field+'#Stride'] = NPY.PyArray_SimpleNewFromData(1, &dimStri, NPY.NPY_INT32, <void *> block_stride)
-    #         tmpData = NPY.PyArray_SimpleNewFromData(1, &dimStri, NPY.NPY_INT32, <void *> block_stride)
-    #         PyArray_ENABLEFLAGS(tmpData, NPY.NPY_OWNDATA);
-    #         dField[field+'#Stride'] = tmpData
-    #       # ::::::::::::::::::::::::::::::::::::::::::::::::::
-
-    #     # ::::::::::::::::::::::::::::::::::::::::::::::::::
-    #     # > Deallocate
-    #     free(part_data)
-    #     if(self.t_stride != 0): # Var Stride
-    #       free(part_stride)
-    #     # ::::::::::::::::::::::::::::::::::::::::::::::::::
-
-    # # ------------------------------------------------------------------------
-    # def getDistributionCopy(self):
-    #   """
-    #      Return a copy of the distrisbution array compute in library
-    #      Copy because remove of PTB object can made a core ...
-    #   """
-    #   # ************************************************************************
-    #   # > Declaration
-    #   cdef PDM_g_num_t* Distrib
-    #   # ************************************************************************
-
-    #   # ::::::::::::::::::::::::::::::::::::::::::::::::::
-    #   # > Get
-    #   Distrib = PDM_part_to_block_distrib_index_get(self.PTB)
-    #   # ::::::::::::::::::::::::::::::::::::::::::::::::::
-
-    #   # ::::::::::::::::::::::::::::::::::::::::::::::::::
-    #   dim        = <NPY.npy_intp> (self.Size+1)
-    #   DistribNPY = NPY.PyArray_SimpleNewFromData(1, &dim, PDM_G_NUM_NPY_INT, <void *> Distrib)
-    #   # ::::::::::::::::::::::::::::::::::::::::::::::::::
-
-    #   return NPY.copy(DistribNPY)
-
+        # ::::::::::::::::::::::::::::::::::::::::::::::::::
+        free(send_entity_stri)
+        free(send_entity_data)
+        free(recv_entity_stri)
+        free(recv_entity_data)
+        # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
     # ------------------------------------------------------------------------
     def __dealloc__(self):
