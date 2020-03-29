@@ -1884,7 +1884,7 @@ PDM_dbbtree_location_boxes_get
  PDM_g_num_t   *box_g_num[]
 )
 {
-  const int DEBUG = 1;
+  const int USE_UPPER_BOUND_DIST = 0;
 
   int npts_in_rank = n_pts;
   double *pts_in_rank = pts;
@@ -1912,22 +1912,34 @@ PDM_dbbtree_location_boxes_get
   int *pts_ranks_idx = NULL;
   int *pts_ranks     = NULL;
 
-  //-->> quick and dirty solution...
-  double *upper_bound_dist2 = malloc (sizeof(double) * n_pts);
-  for (int ipt = 0; ipt < n_pts; ipt++) {
-    upper_bound_dist2[ipt] = 0.;
+  double *upper_bound_dist2 = NULL;
+
+  if (USE_UPPER_BOUND_DIST) {
+    //-->> quick and dirty solution...
+    upper_bound_dist2 = malloc (sizeof(double) * n_pts);
+    for (int ipt = 0; ipt < n_pts; ipt++) {
+      upper_bound_dist2[ipt] = 0.;
+    }
+    //<<--
   }
-  //<<--
 
   if (_dbbt->btShared != NULL) {
+    if (USE_UPPER_BOUND_DIST) {
     //-->> quick and dirty solution...
-    PDM_box_tree_closest_upper_bound_dist_boxes_get (_dbbt->btShared,
-                                                     n_pts,
-                                                     pts,
-                                                     upper_bound_dist2,
-                                                     &pts_ranks_idx,
-                                                     &pts_ranks);
-    //<<--
+      PDM_box_tree_closest_upper_bound_dist_boxes_get (_dbbt->btShared,
+						       n_pts,
+						       pts,
+						       upper_bound_dist2,
+						       &pts_ranks_idx,
+						       &pts_ranks);
+      //<<--
+    } else {
+      PDM_box_tree_location_boxes_get (_dbbt->btShared,
+				       n_pts,
+				       pts,
+				       &pts_ranks_idx,
+				       &pts_ranks);
+    }
     
     /*
      * Send points to processes
@@ -1986,10 +1998,15 @@ PDM_dbbtree_location_boxes_get
 
     npts_in_rank = recv_shift[n_ranks] / 3;
 
-    upper_bound_dist2 = realloc (upper_bound_dist2, sizeof(double) * npts_in_rank);
-    for (int ipt = 0; ipt < npts_in_rank; ipt++) {
-      upper_bound_dist2[ipt] = 0.;
+    if (USE_UPPER_BOUND_DIST) {
+      //-->> quick and dirty solution
+      upper_bound_dist2 = realloc (upper_bound_dist2, sizeof(double) * npts_in_rank);
+      for (int ipt = 0; ipt < npts_in_rank; ipt++) {
+	upper_bound_dist2[ipt] = 0.;
+      }
+      //<<--
     }
+    
   }
 
 
@@ -1999,15 +2016,23 @@ PDM_dbbtree_location_boxes_get
   int *box_index_in_rank;
   int *box_l_num_in_rank;
 
-  //-->> quick and dirty solution
-  PDM_box_tree_closest_upper_bound_dist_boxes_get (_dbbt->btLoc,
-                                                   npts_in_rank,
-                                                   pts_in_rank,
-                                                   upper_bound_dist2,
-                                                   &box_index_in_rank,
-                                                   &box_l_num_in_rank);
-  free (upper_bound_dist2);
-  //<<--
+  if (USE_UPPER_BOUND_DIST) {
+    //-->> quick and dirty solution
+    PDM_box_tree_closest_upper_bound_dist_boxes_get (_dbbt->btLoc,
+						     npts_in_rank,
+						     pts_in_rank,
+						     upper_bound_dist2,
+						     &box_index_in_rank,
+						     &box_l_num_in_rank);
+    free (upper_bound_dist2);
+    //<<--
+  } else {
+    PDM_box_tree_location_boxes_get (_dbbt->btLoc,
+				     npts_in_rank,
+				     pts_in_rank,
+				     &box_index_in_rank,
+				     &box_l_num_in_rank);
+  }
 
   if (_dbbt->btShared == NULL) {
     *box_index = box_index_in_rank;
