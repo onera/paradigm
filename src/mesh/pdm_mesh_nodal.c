@@ -4950,7 +4950,8 @@ PDM_Mesh_nodal_compute_cell_extents
     for (PDM_l_num_t ielt = 0; ielt < n_elt; ielt++) {
       PDM_l_num_t n_vtx = 0;
       for (PDM_l_num_t i = cell_face_idx[ielt]; i < cell_face_idx[ielt+1]; i++) {
-	n_vtx += face_vtx_idx[cell_face[i]+1] - face_vtx_idx[cell_face[i]];
+	int iface = cell_face[i]-1;
+	n_vtx += face_vtx_idx[iface+1] - face_vtx_idx[iface];
       }
       cell_vtx_idx[ielt+1] = cell_vtx_idx[ielt] + n_vtx;
     }
@@ -4959,9 +4960,10 @@ PDM_Mesh_nodal_compute_cell_extents
     int k = 0;
     for (PDM_l_num_t ielt = 0; ielt < n_elt; ielt++) {
       for (PDM_l_num_t i = cell_face_idx[ielt]; i < cell_face_idx[ielt+1]; i++) {
-	PDM_l_num_t iface = cell_face[i];
+	int iface = cell_face[i]-1;
 	for (PDM_l_num_t j = face_vtx_idx[iface]; j < face_vtx_idx[iface+1]; j++) {
-	  cell_vtx[k++] = face_vtx[j];
+	  int ivtx = face_vtx[j];
+	  cell_vtx[k++] = ivtx;
 	}
       }
     }
