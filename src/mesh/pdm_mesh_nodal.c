@@ -4946,7 +4946,6 @@ PDM_Mesh_nodal_compute_cell_extents
 				     &cell_face_idx,
 				     &cell_face);
     
-#if 1
     for (PDM_l_num_t ielt = 0; ielt < n_elt; ielt++) {
       PDM_l_num_t n_vtx = 0;
       for (PDM_l_num_t i = cell_face_idx[ielt]; i < cell_face_idx[ielt+1]; i++) {
@@ -4967,16 +4966,7 @@ PDM_Mesh_nodal_compute_cell_extents
 	}
       }
     }
-#else
-    for (PDM_l_num_t i = 0; i < n_elt; i++) {
-      cell_vtx_idx[i+1] = cell_vtx_idx[i] + 1;
-    }
-  
-    cell_vtx = (PDM_l_num_t *) malloc (sizeof(PDM_l_num_t) * cell_vtx_idx[n_elt]);
-    for (PDM_l_num_t i = 0; i < cell_vtx_idx[n_elt]; i++) {
-      cell_vtx[i] = 1;
-    }
-#endif
+    //<<-- not optimal...vertices are counted multiple times (once per face)
     free_cell_vtx = 1;
   
   
@@ -4993,7 +4983,7 @@ PDM_Mesh_nodal_compute_cell_extents
 	PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
       }
     
-      n_elt      = block->n_elt[id_part];
+      n_elt = block->n_elt[id_part];
       cell_vtx_idx = block->_connec_idx[id_part];
       cell_vtx     = block->_connec[id_part];
     
