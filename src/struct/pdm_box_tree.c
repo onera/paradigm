@@ -4741,17 +4741,17 @@ PDM_box_tree_copy_to_ranks
   PDM_box_copy_boxes_to_ranks ((PDM_box_set_t *) bt->boxes, *n_copied_ranks, copied_ranks);
 
   // set (copy) tree structure
-  int myRank;
-  PDM_MPI_Comm_rank(bt->comm, &myRank);
-  int lComm;
-  PDM_MPI_Comm_size(bt->comm, &lComm);
+  int my_rank;
+  PDM_MPI_Comm_rank(bt->comm, &my_rank);
+  int n_ranks;
+  PDM_MPI_Comm_size(bt->comm, &n_ranks);
 
   bt->copied_ranks = (int *) malloc (sizeof(int) * (*n_copied_ranks));
   if ( rank_copy_num == NULL ) {
-    rank_copy_num = (int *) malloc (sizeof(int) * lComm);
+    rank_copy_num = (int *) malloc (sizeof(int) * n_ranks);
   }
   int i = 0;
-  for (i = 0; i < lComm; i++) {
+  for (i = 0; i < n_ranks; i++) {
     rank_copy_num[i] = -1;
   }
 
@@ -4761,7 +4761,7 @@ PDM_box_tree_copy_to_ranks
 
   for (i = 0; i < *n_copied_ranks; i++) {
     i_rank = copied_ranks[i];
-    if ( myRank != i_rank ) {
+    if ( my_rank != i_rank ) {
       rank_copy_num[copied_ranks[i]]         = bt->n_copied_ranks;
       bt->copied_ranks[bt->n_copied_ranks++] = copied_ranks[i];
     }
@@ -4793,7 +4793,7 @@ PDM_box_tree_copy_to_ranks
   int j = 0, k = 0;
   for (i = 0; i < *n_copied_ranks; i++) {
     i_rank = copied_ranks[i];
-    if ( myRank == i_rank ) {
+    if ( my_rank == i_rank ) {
       n_max_nodes   = bt->local_data->n_max_nodes;
       n_nodes       = bt->local_data->n_nodes;
       n_build_loops = bt->local_data->n_build_loops;
@@ -4828,7 +4828,7 @@ PDM_box_tree_copy_to_ranks
     child_ids      = (int *) malloc (sizeof(int) * n_max_nodes*bt->n_children);
     box_ids        = (int *) malloc (sizeof(int) * l_box_ids);
 
-    if ( myRank == i_rank ) {
+    if ( my_rank == i_rank ) {
       // set buffers
       for (j = 0; j < n_max_nodes; j++) {
         nodes_is_leaf[j]  = (int) bt->local_data->nodes[j].is_leaf;
@@ -4853,7 +4853,7 @@ PDM_box_tree_copy_to_ranks
     PDM_MPI_Bcast(child_ids, n_max_nodes*bt->n_children, PDM_MPI_INT, i_rank, bt->comm);
     PDM_MPI_Bcast(box_ids,   l_box_ids,                  PDM_MPI_INT, i_rank, bt->comm);
 
-    if  ( myRank != i_rank ) {
+    if  ( my_rank != i_rank ) {
       bt->rank_data[icopied].n_max_nodes   = n_max_nodes;
       bt->rank_data[icopied].n_nodes       = n_nodes;
       bt->rank_data[icopied].n_build_loops = n_build_loops;
