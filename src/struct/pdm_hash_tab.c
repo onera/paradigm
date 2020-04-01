@@ -151,6 +151,8 @@ void           *data
 		abort();
 	}
 
+  assert ((PDM_g_num_t) _key < _ht->keyMax);
+
   if (_ht->nDataKey[_key] >= _ht->mDataKey[_key]) {
     _ht->mDataKey[_key] *= 2;
     _ht->data[_key] = realloc (_ht->data[_key], sizeof(void *) *
@@ -201,6 +203,8 @@ void           *key
 	  PDM_error(__FILE__, __LINE__, 0, "PDM_hash_tab_data_free error : unknown PDM_hash_tab_key_t\n");
 		abort();
 	}
+
+  assert ((PDM_g_num_t) _key < _ht->keyMax);
 
   for (int i = 0; i < _ht->nDataKey[_key]; i++) {
     if (_ht->data[_key][i] != NULL) {
