@@ -38,6 +38,7 @@ extern "C"
  *============================================================================*/
 
 #define NTIMER 11
+#define BMODIF 1
 
 /*============================================================================
  * Type definitions
@@ -192,6 +193,24 @@ typedef struct {
   double      *priority;
 
 } _min_heap_t;
+
+
+
+#if BMODIF
+/*static const int _2d_sibling_neighbours[4][4] = {{-1, 2,-1, 1},
+						 {-1, 3, 0,-1},
+						 { 0,-1,-1, 3},
+						 { 1,-1, 2,-1}};*/
+
+static const int _3d_sibling_neighbours[8][6] = {{-1, 4,-1, 2,-1, 1},
+						 {-1, 5,-1, 3, 0,-1},
+						 {-1, 6, 0,-1,-1, 3},
+						 {-1, 7, 1,-1, 2,-1},
+						 { 0,-1,-1, 6,-1, 5},
+						 { 1,-1,-1, 7, 4,-1},
+						 { 2,-1, 4,-1,-1, 7},
+						 { 3,-1, 5,-1, 6,-1}};
+#endif
 
 /*============================================================================
  * Global variable
@@ -2872,6 +2891,23 @@ _compute_neighbours
    * Copy temporary neighbours in the neighbour structure
    *
    *************************************************************************/
+#if 0//BMODIF
+  printf("\n\n- - - - - - - - - -\n\n");
+  for (int i = 0; i < octree->octants->n_nodes; i++) {
+    printf("\n[%d] node %d (L = %d, X = [%d, %d, %d]), neighbours =\n",
+	   rank, i, octree->octants->codes[i].L,
+	   octree->octants->codes[i].X[0],
+	   octree->octants->codes[i].X[1],
+	   octree->octants->codes[i].X[2]);
+    for (PDM_para_octree_direction_t dir = 0; dir < 6; dir++) {
+      printf("[%d]\tin dir %d:", rank, dir);
+      for (int j = 0; j < neighbours_tmp[i].n_neighbour[dir]; j++) {
+	printf(" %d", neighbours_tmp[i].neighbours[dir][j]);
+      }
+      printf("\n");
+    }
+  }
+#endif
 
   octree->octants->neighbour_idx =
     malloc(sizeof(int) * (n_direction * octree->octants->n_nodes + 1));
@@ -2964,22 +3000,620 @@ _compute_neighbours
 
 
 
+
+static void
+_finalize_neighbours
+(
+ _octree_t          *octree,
+ _neighbours_tmp_t **ngb_octree,
+ double              b_t_elapsed,
+ double              b_t_cpu,
+ double              b_t_cpu_u,
+ double              b_t_cpu_s
+ )
+{
+  double   e_t_elapsed;
+  double   e_t_cpu;
+  double   e_t_cpu_u;
+  double   e_t_cpu_s;
+
+  const int n_direction = 6;
+
+  int n_ranks;
+  PDM_MPI_Comm_size (octree->comm, &n_ranks);
+
+  int rank;
+  PDM_MPI_Comm_rank (octree->comm, &rank);
+
+  _neighbours_tmp_t *neighbours_tmp = *ngb_octree;
+
+  if (octree->rank_octants_index != NULL) {
+    for (int i = 0; i < octree->octants->n_nodes; i++) {
+      for (PDM_para_octree_direction_t j = 0; j < n_direction; j++) {
+	
+	PDM_morton_code_t *neighbour_code =  _neighbour (octree->octants->codes[i], j);
+	if (neighbour_code == NULL) {
+	  continue;
+	}
+
+	size_t start, end;
+	PDM_morton_quantile_intersect (n_ranks,
+				       *neighbour_code,
+				       octree->rank_octants_index,
+				       &start,
+				       &end);
+	for (int neighbour_rank = start; neighbour_rank < end; neighbour_rank++) {
+
+	  if (neighbour_rank == rank) {
+	    continue;
+	  }
+
+	  if (neighbours_tmp[i].n_neighbour[j] >= neighbours_tmp[i].s_neighbour[j]) {
+	    neighbours_tmp[i].s_neighbour[j] *= 2;
+	    neighbours_tmp[i].neighbours[j] = realloc (neighbours_tmp[i].neighbours[j],
+						       sizeof(int) * neighbours_tmp[i].s_neighbour[j]);
+	  }
+	  neighbours_tmp[i].neighbours[j][neighbours_tmp[i].n_neighbour[j]++] = - (neighbour_rank + 1);
+	}
+	free (neighbour_code);
+      }
+    }
+  }
+
+
+  /*************************************************************************
+   *
+   * Compute connected parts
+   *
+   *************************************************************************/
+  int s_connected = 3;
+  octree->connected_idx = malloc (sizeof(int) * s_connected);
+  octree->connected_idx[0] = 0;
+
+  int *visited = malloc (sizeof(int) * octree->octants->n_nodes);
+  for (int i = 0; i < octree->octants->n_nodes; i++)
+    visited[i] = 0;
+
+  int *stack = malloc (sizeof(int) * octree->octants->n_nodes);
+  int pos_stack = 0;
+
+  int max = 0;
+  while (max < octree->octants->n_nodes) {
+
+    stack[pos_stack++] = max;
+    visited[max] = 1;
+
+    while (pos_stack > 0) {
+      int i_node = stack[--pos_stack];
+
+      for (int j = 0; j < n_direction; j++) {
+        for (int k = 0; k < neighbours_tmp[i_node].n_neighbour[j]; k++) {
+          int i_ngb = neighbours_tmp[i_node].neighbours[j][k];
+          if (i_ngb >= 0) {
+            if (!visited[i_ngb]) {
+              stack[pos_stack++] = i_ngb;
+              visited[i_ngb] = 1;
+              max = PDM_MAX (max, i_ngb);
+            }
+          }
+        }
+      }
+
+    }
+
+    max++;
+    if (s_connected <= octree->n_connected) {
+      s_connected *= 2;
+      octree->connected_idx = realloc (octree->connected_idx, sizeof(int) * s_connected);
+    }
+    octree->connected_idx[++octree->n_connected] = max;
+  }
+  free (visited);
+  free (stack);
+
+  octree->connected_idx = realloc (octree->connected_idx,
+				   sizeof(int) * (octree->n_connected+1));
+
+
+  /*************************************************************************
+   *
+   * Build parallel partition boundary
+   *
+   *************************************************************************/
+
+  int FALSE_NEIGHBOUR = -1;
+  if (n_ranks > 1) {
+    const int n_quantile =  n_ranks * n_direction;
+
+    int *neighbour_rank_n = malloc (sizeof(int) * n_quantile);
+    int *neighbour_rank_idx = malloc (sizeof(int) * (n_quantile + 1));
+
+    for (int i = 0; i < n_quantile; i++) {
+      neighbour_rank_n[i] = 0;
+    }
+
+    /* Premiere boucle pour compter */
+
+    for (int i = 0; i < octree->octants->n_nodes; i++) {
+      for (int j = 0; j < n_direction; j++) {
+        for (int k = 0; k < neighbours_tmp[i].n_neighbour[j]; k++) {
+          if (neighbours_tmp[i].neighbours[j][k] < 0) {
+            neighbour_rank_n[-(neighbours_tmp[i].neighbours[j][k] + 1)*n_direction +j]++;
+          }
+        }
+      }
+    }
+
+    int max_node_dir = -1;
+    neighbour_rank_idx[0] = 0;
+    for (int i = 0; i < n_quantile; i++) {
+      neighbour_rank_idx[i+1] = neighbour_rank_idx[i] + neighbour_rank_n[i];
+      max_node_dir = PDM_MAX (max_node_dir, neighbour_rank_n[i]);
+      neighbour_rank_n[i] = 0;
+    }
+
+    /* Allocation */
+
+    int *neighbour_rank_node_id = malloc (sizeof(int) * neighbour_rank_idx[n_quantile]);
+    PDM_morton_code_t *neighbour_rank_code = malloc (sizeof(PDM_morton_code_t) *
+                                                     neighbour_rank_idx[n_quantile]);
+    int *neighbour_rank_node_k = malloc (sizeof(int) * neighbour_rank_idx[n_quantile]);
+    int *neighbour_rank_node_part = malloc (sizeof(int) * neighbour_rank_idx[n_quantile]);//
+
+    /* Deuxieme boucle pour stocker avec tri suivant la direction */
+
+    for (int i_part = 0; i_part < octree->n_connected; i_part++) {
+      for (int i = octree->connected_idx[i_part]; i < octree->connected_idx[i_part+1]; i++) {
+        for (int j = 0; j < n_direction; j++) {
+          for (int k = 0; k < neighbours_tmp[i].n_neighbour[j]; k++) {
+            if (neighbours_tmp[i].neighbours[j][k] < 0) {
+              int index = -(neighbours_tmp[i].neighbours[j][k] + 1)*n_direction +j;
+              int index2 = neighbour_rank_idx[index] + neighbour_rank_n[index];
+
+              neighbour_rank_node_id[index2] = i;
+              PDM_morton_copy (octree->octants->codes[i],
+                               neighbour_rank_code + index2);
+              neighbour_rank_node_k[index2] = k;
+              neighbour_rank_node_part[index2] = i_part;
+
+              neighbour_rank_n[index]++;
+            }
+          }
+        }
+      }
+    }
+
+
+    /* Tri des codes pour chaque direction de chaque rang */
+    int *order = malloc (sizeof(int) * max_node_dir);
+    int *tmp_node_id = malloc (sizeof(int) * max_node_dir);
+    PDM_morton_code_t *tmp_code = malloc (sizeof(PDM_morton_code_t) * max_node_dir);
+    int *tmp_node_k = malloc (sizeof(int) * max_node_dir);
+    int *tmp_node_part = malloc (sizeof(int) * max_node_dir);
+
+    for (int i = 0; i < n_ranks; i++) {
+      for (int j = 0; j < n_direction; j++) {
+        PDM_morton_local_order (neighbour_rank_n[n_direction * i + j],
+                                neighbour_rank_code + neighbour_rank_idx[n_direction * i + j],
+                                order);
+        int idx1 = 0;
+        for (int k = neighbour_rank_idx[n_direction * i + j];
+             k < neighbour_rank_idx[n_direction * i + j + 1];
+             k++) {
+          PDM_morton_copy (neighbour_rank_code[k], tmp_code + idx1);
+          tmp_node_id[idx1]   = neighbour_rank_node_id[k];
+          tmp_node_k[idx1]    = neighbour_rank_node_k[k];
+          tmp_node_part[idx1] = neighbour_rank_node_part[k];
+          idx1 += 1;
+        }
+
+        idx1 = 0;
+        for (int k = neighbour_rank_idx[n_direction * i + j];
+             k < neighbour_rank_idx[n_direction * i + j + 1];
+             k++) {
+          PDM_morton_copy (tmp_code[order[idx1]], neighbour_rank_code + k );
+          neighbour_rank_node_id[k]   = tmp_node_id[order[idx1]];
+          neighbour_rank_node_k[k]    = tmp_node_k[order[idx1]];
+          neighbour_rank_node_part[k] = tmp_node_part[order[idx1]];
+          idx1 += 1;
+        }
+      }
+    }
+
+    free (tmp_code);
+    free (order);
+    free (tmp_node_id);
+    free (tmp_node_k);
+    free (tmp_node_part);
+
+
+    /* Envoi / reception (Les donnees recues sont triees) */
+
+    int *recv_neighbour_rank_n = malloc (sizeof(int) * n_quantile);
+
+    for (int i = 0; i < n_quantile; i++) {
+      recv_neighbour_rank_n[i] = 0;
+    }
+
+    PDM_MPI_Request *recv_request = malloc (sizeof(PDM_MPI_Request) * n_ranks);
+    PDM_MPI_Request *send_request = malloc (sizeof(PDM_MPI_Request) * n_ranks);
+
+    int *used_ranks = malloc (sizeof(int) * n_ranks);
+
+    PDM_MPI_Alltoall (neighbour_rank_n, n_direction, PDM_MPI_INT,
+                      recv_neighbour_rank_n, n_direction, PDM_MPI_INT,
+                      octree->comm);
+
+    int *recv_neighbour_rank_idx = malloc (sizeof(int) * (n_direction * n_ranks + 1));
+    recv_neighbour_rank_idx[0] = 0;
+
+
+    for (int i = 0; i <  n_direction * n_ranks; i++)
+      recv_neighbour_rank_idx[i+1] = recv_neighbour_rank_idx[i] + recv_neighbour_rank_n[i];
+
+
+
+    int *recv_neighbour_rank_node_id   = malloc (sizeof(int) * recv_neighbour_rank_idx[n_quantile]);
+    int *recv_neighbour_rank_node_part = malloc (sizeof(int) * recv_neighbour_rank_idx[n_quantile]);
+    PDM_morton_code_t *recv_neighbour_rank_code =
+      malloc (sizeof(PDM_morton_code_t) * recv_neighbour_rank_idx[n_quantile]);
+
+
+    unsigned int *_neighbour_rank_code =
+      malloc (sizeof(unsigned int) * 4 * neighbour_rank_idx[n_quantile]);
+    unsigned int *_recv_neighbour_rank_code =
+      malloc (sizeof(unsigned int) * 4 * recv_neighbour_rank_idx[n_quantile]);
+
+    int idx = 0;
+    for (int i = 0; i < neighbour_rank_idx[n_quantile]; i++) {
+      _neighbour_rank_code[idx++] = neighbour_rank_code[i].L;
+      for (int j = 0; j < 3; j++) {
+        _neighbour_rank_code[idx++] = neighbour_rank_code[i].X[j];
+      }
+    }
+
+    int *rank_neighbour_rank_n = malloc (sizeof(int) * n_ranks);
+    int *rank_neighbour_rank_idx = malloc (sizeof(int) * (n_ranks + 1));
+    int *rank_recv_neighbour_rank_n = malloc (sizeof(int) * n_ranks);
+    int *rank_recv_neighbour_rank_idx = malloc (sizeof(int) * (n_ranks + 1));
+
+    rank_neighbour_rank_idx[0] = 0;
+    rank_recv_neighbour_rank_idx[0] = 0;
+
+    for (int i = 0; i < n_ranks; i++) {
+      rank_neighbour_rank_n[i] = 0;
+      rank_recv_neighbour_rank_n[i] = 0;
+    }
+
+    for (int i = 0; i < n_ranks; i++) {
+      for (int j = 0; j < n_direction; j++) {
+        rank_neighbour_rank_n[i] += neighbour_rank_n[i*n_direction+j];
+        rank_recv_neighbour_rank_n[i] += recv_neighbour_rank_n[i*n_direction+j];
+      }
+      rank_neighbour_rank_idx[i+1] = rank_neighbour_rank_n[i] + rank_neighbour_rank_idx[i];
+      rank_recv_neighbour_rank_idx[i+1] = rank_recv_neighbour_rank_n[i] + rank_recv_neighbour_rank_idx[i];
+    }
+
+    PDM_MPI_Alltoallv (neighbour_rank_node_id,
+                       rank_neighbour_rank_n,
+                       rank_neighbour_rank_idx,
+                       PDM_MPI_INT,
+                       recv_neighbour_rank_node_id,
+                       rank_recv_neighbour_rank_n,
+                       rank_recv_neighbour_rank_idx,
+                       PDM_MPI_INT,
+                       octree->comm);
+
+    PDM_MPI_Alltoallv (neighbour_rank_node_part,
+                       rank_neighbour_rank_n,
+                       rank_neighbour_rank_idx,
+                       PDM_MPI_INT,
+                       recv_neighbour_rank_node_part,
+                       rank_recv_neighbour_rank_n,
+                       rank_recv_neighbour_rank_idx,
+                       PDM_MPI_INT,
+                       octree->comm);
+
+    for (int i = 0; i < n_ranks; i++) {
+      rank_neighbour_rank_n[i] *= 4;
+      rank_recv_neighbour_rank_n[i] *= 4;
+      rank_neighbour_rank_idx[i+1] *= 4;
+      rank_recv_neighbour_rank_idx[i+1] *= 4;
+    }
+
+
+    PDM_MPI_Alltoallv (_neighbour_rank_code,
+                       rank_neighbour_rank_n,
+                       rank_neighbour_rank_idx,
+                       PDM_MPI_UNSIGNED,
+                       _recv_neighbour_rank_code,
+                       rank_recv_neighbour_rank_n,
+                       rank_recv_neighbour_rank_idx,
+                       PDM_MPI_UNSIGNED,
+                       octree->comm);
+
+
+    free (_neighbour_rank_code);
+
+    free (rank_neighbour_rank_n);
+    free (rank_neighbour_rank_idx);
+    free (rank_recv_neighbour_rank_n);
+    free (rank_recv_neighbour_rank_idx);
+
+    idx = 0;
+    for (int i = 0; i < recv_neighbour_rank_idx[n_quantile]; i++) {
+      recv_neighbour_rank_code[i].L = _recv_neighbour_rank_code[idx++];
+      for (int j = 0; j < 3; j++) {
+        recv_neighbour_rank_code[i].X[j] = _recv_neighbour_rank_code[idx++];
+      }
+    }
+    free (_recv_neighbour_rank_code);
+
+    free (recv_request);
+    free (send_request);
+
+    free (used_ranks);
+
+
+    octree->n_part_boundary_elt = neighbour_rank_idx[n_quantile];
+    octree->part_boundary_elt_idx = malloc (sizeof(int) * (octree->n_part_boundary_elt + 1));
+
+    int s_part_boundary_elt = 2 * 3 * neighbour_rank_idx[n_quantile];
+    octree->part_boundary_elt = malloc (sizeof(int) * s_part_boundary_elt);
+
+    int n_part_boundary_elt = 0;
+
+    idx = 0;
+    int idx_part_boundary_elt = 0;
+    for (int i = 0; i <= octree->n_part_boundary_elt; i++)
+      octree->part_boundary_elt_idx[i] = 0;
+
+
+    FALSE_NEIGHBOUR = -(octree->n_part_boundary_elt + 1);
+
+    for (int i = 0; i < octree->octants->n_nodes; i++) {
+      for (int j = 0; j < n_direction; j++) {
+        for (int k = 0; k < neighbours_tmp[i].n_neighbour[j]; k++) {
+          if (neighbours_tmp[i].neighbours[j][k] < 0)
+            neighbours_tmp[i].neighbours[j][k] = FALSE_NEIGHBOUR;
+        }
+      }
+    }
+
+
+
+    for (int i = 0; i < n_ranks; i++ ) {
+      for (PDM_para_octree_direction_t j = PDM_BOTTOM; j < n_direction; j++) {
+        PDM_para_octree_direction_t inv_j = _inv_direction(j);
+
+        int idx_recv = n_direction * i + inv_j;
+
+        int idx_candidate = recv_neighbour_rank_idx[idx_recv];
+        int n_candidate = recv_neighbour_rank_idx[idx_recv+1] - idx_candidate;
+
+        if (n_candidate > 0) {
+
+          for (int k = neighbour_rank_idx[i * n_direction + j];
+               k < neighbour_rank_idx[i * n_direction + j + 1]; k++) {
+            PDM_morton_code_t *neighbour_code = _neighbour (neighbour_rank_code[k], j);
+
+	    size_t start_intersect, end_intersect;
+            PDM_morton_list_intersect (n_candidate,
+                                       *neighbour_code,
+                                       recv_neighbour_rank_code + idx_candidate,
+                                       &start_intersect,
+                                       &end_intersect);
+
+            int n_intersect_neighbours = 0;
+
+            if (end_intersect > start_intersect) {
+              for (int k1 = start_intersect; k1 < end_intersect; k1++) {
+                int k2 = idx_candidate + k1;
+
+                PDM_morton_code_t *neighbour_neighbour_code =
+                  _neighbour (recv_neighbour_rank_code[k2], inv_j);
+
+                assert (neighbour_neighbour_code != NULL);
+
+                if (PDM_morton_ancestor_is (neighbour_rank_code[k], *neighbour_neighbour_code) ||
+                    PDM_morton_ancestor_is (*neighbour_neighbour_code, neighbour_rank_code[k])) {
+                  n_intersect_neighbours++;
+
+                  if ((s_part_boundary_elt - idx_part_boundary_elt) <= 3) {
+                    s_part_boundary_elt *= 2;
+                    octree->part_boundary_elt = realloc (octree->part_boundary_elt,
+                                                         sizeof(int) * s_part_boundary_elt);
+                  }
+                  octree->part_boundary_elt_idx[n_part_boundary_elt+1]++;
+                  octree->part_boundary_elt[idx_part_boundary_elt++] = i; // rank
+                  octree->part_boundary_elt[idx_part_boundary_elt++] = recv_neighbour_rank_node_id[k2]; // neighbour's local number in rank i
+                  octree->part_boundary_elt[idx_part_boundary_elt++] = recv_neighbour_rank_node_part[k2]; // neighbour's part number in rank i
+                }
+
+                free (neighbour_neighbour_code);
+              }
+            }
+
+            int k3 = neighbour_rank_node_k[k];
+            int i2 = neighbour_rank_node_id[k];
+
+            if (n_intersect_neighbours > 0) {
+              neighbours_tmp[i2].neighbours[j][k3] = -(n_part_boundary_elt+1);
+
+              assert (neighbours_tmp[i2].neighbours[j][k3] != FALSE_NEIGHBOUR);
+
+              n_part_boundary_elt++;
+            }
+            else {
+              neighbours_tmp[i2].neighbours[j][k3] = FALSE_NEIGHBOUR;
+            }
+
+            free (neighbour_code);
+          }
+        }
+      }
+    }
+
+    free (neighbour_rank_n);
+    free (neighbour_rank_idx);
+    free (neighbour_rank_node_id);
+    free (neighbour_rank_node_k);
+    free (neighbour_rank_node_part);
+    free (neighbour_rank_code);
+
+    free (recv_neighbour_rank_n);
+    free (recv_neighbour_rank_idx);
+
+    free (recv_neighbour_rank_node_id);
+    free (recv_neighbour_rank_node_part);
+    free (recv_neighbour_rank_code);
+
+    octree->n_part_boundary_elt = n_part_boundary_elt;
+  }
+
+  for (int i = 0; i < octree->n_part_boundary_elt; i++) {
+    octree->part_boundary_elt_idx[i+1] += octree->part_boundary_elt_idx[i];
+  }
+
+
+  PDM_timer_hang_on(octree->timer);
+  e_t_elapsed = PDM_timer_elapsed(octree->timer);
+  e_t_cpu     = PDM_timer_cpu(octree->timer);
+  e_t_cpu_u   = PDM_timer_cpu_user(octree->timer);
+  e_t_cpu_s   = PDM_timer_cpu_sys(octree->timer);
+
+  octree->times_elapsed[BUILD_DISTANT_NEIGHBOURS] += e_t_elapsed - b_t_elapsed;
+  octree->times_cpu[BUILD_DISTANT_NEIGHBOURS]     += e_t_cpu - b_t_cpu;
+  octree->times_cpu_u[BUILD_DISTANT_NEIGHBOURS]   += e_t_cpu_u - b_t_cpu_u;
+  octree->times_cpu_s[BUILD_DISTANT_NEIGHBOURS]   += e_t_cpu_s - b_t_cpu_s;
+
+  b_t_elapsed = e_t_elapsed;
+  b_t_cpu     = e_t_cpu;
+  b_t_cpu_u   = e_t_cpu_u;
+  b_t_cpu_s   = e_t_cpu_s;
+
+  PDM_timer_resume(octree->timer);
+
+
+
+  /*************************************************************************
+   *
+   * Copy temporary neighbours in the neighbour structure
+   *
+   *************************************************************************/
+  octree->octants->neighbour_idx = malloc(sizeof(int) * (n_direction * octree->octants->n_nodes + 1));
+
+  int idx = 0;
+  octree->octants->neighbour_idx[0] = 0;
+  for (int i = 0; i < octree->octants->n_nodes; i++) {
+    for (int j = 0; j < n_direction; j++) {
+      octree->octants->neighbour_idx[idx+1] =
+        octree->octants->neighbour_idx[idx] + neighbours_tmp[i].n_neighbour[j];
+
+      /* account for false distant neighbours */
+      for (int k = 0; k < neighbours_tmp[i].n_neighbour[j]; k++) {
+        if (neighbours_tmp[i].neighbours[j][k] == FALSE_NEIGHBOUR)
+          octree->octants->neighbour_idx[idx+1]--;
+      }
+
+      idx += 1;
+    }
+  }
+
+  octree->octants->neighbours =
+    malloc(sizeof(int) *
+           octree->octants->neighbour_idx[n_direction * octree->octants->n_nodes]);
+
+  idx = 0;
+  for (int i = 0; i < octree->octants->n_nodes; i++) {
+    for (int j = 0; j < n_direction; j++) {
+      for (int k = 0; k < neighbours_tmp[i].n_neighbour[j]; k++) {
+
+        if (neighbours_tmp[i].neighbours[j][k] != FALSE_NEIGHBOUR)
+          octree->octants->neighbours[idx++] = neighbours_tmp[i].neighbours[j][k];
+
+      }
+    }
+  }
+
+  /* Free temporary arrays */
+  /* printf("sortie 2 neighbours_tmp debut\n"); */
+  for (int i = 0; i < octree->octants->n_nodes; i++) {
+    for (int j = 0; j < n_direction; j++) {
+      if (neighbours_tmp[i].neighbours[j] != NULL) {
+        free (neighbours_tmp[i].neighbours[j]);
+      }
+    }
+  }
+  /* printf("sortie 2 neighbours_tmp fin\n"); */
+
+  free (neighbours_tmp);
+
+
+
+
+  PDM_timer_hang_on(octree->timer);
+  e_t_elapsed = PDM_timer_elapsed(octree->timer);
+  e_t_cpu     = PDM_timer_cpu(octree->timer);
+  e_t_cpu_u   = PDM_timer_cpu_user(octree->timer);
+  e_t_cpu_s   = PDM_timer_cpu_sys(octree->timer);
+
+  octree->times_elapsed[BUILD_LOCAL_NEIGHBOURS_STEP3] += e_t_elapsed - b_t_elapsed;
+  octree->times_cpu[BUILD_LOCAL_NEIGHBOURS_STEP3]     += e_t_cpu - b_t_cpu;
+  octree->times_cpu_u[BUILD_LOCAL_NEIGHBOURS_STEP3]   += e_t_cpu_u - b_t_cpu_u;
+  octree->times_cpu_s[BUILD_LOCAL_NEIGHBOURS_STEP3]   += e_t_cpu_s - b_t_cpu_s;
+
+
+  octree->times_elapsed[BUILD_LOCAL_NEIGHBOURS] += octree->times_elapsed[BUILD_LOCAL_NEIGHBOURS_STEP1]
+    + octree->times_elapsed[BUILD_LOCAL_NEIGHBOURS_STEP2]
+    + octree->times_elapsed[BUILD_LOCAL_NEIGHBOURS_STEP3];
+
+  octree->times_cpu[BUILD_LOCAL_NEIGHBOURS] += octree->times_cpu[BUILD_LOCAL_NEIGHBOURS_STEP1]
+    + octree->times_cpu[BUILD_LOCAL_NEIGHBOURS_STEP2]
+    + octree->times_cpu[BUILD_LOCAL_NEIGHBOURS_STEP3];
+
+  octree->times_cpu_u[BUILD_LOCAL_NEIGHBOURS] += octree->times_cpu_u[BUILD_LOCAL_NEIGHBOURS_STEP1]
+    + octree->times_cpu_u[BUILD_LOCAL_NEIGHBOURS_STEP2]
+    + octree->times_cpu_u[BUILD_LOCAL_NEIGHBOURS_STEP3];
+
+  octree->times_cpu_s[BUILD_LOCAL_NEIGHBOURS] += octree->times_cpu_s[BUILD_LOCAL_NEIGHBOURS_STEP1]
+    + octree->times_cpu_s[BUILD_LOCAL_NEIGHBOURS_STEP2]
+    + octree->times_cpu_s[BUILD_LOCAL_NEIGHBOURS_STEP3];
+
+  b_t_elapsed = e_t_elapsed;
+  b_t_cpu     = e_t_cpu;
+  b_t_cpu_u   = e_t_cpu_u;
+  b_t_cpu_s   = e_t_cpu_s;
+
+  PDM_timer_resume(octree->timer);
+}
+
+
+
+
+
+
+
+
 static void
 _check_neighbours_area
 (
  const _octree_t *octree
  )
 {
-  int myRank, lComm;
-  PDM_MPI_Comm_rank (octree->comm, &myRank);
-  PDM_MPI_Comm_size (octree->comm, &lComm);
+  int my_rank, n_ranks;
+  PDM_MPI_Comm_rank (octree->comm, &my_rank);
+  PDM_MPI_Comm_size (octree->comm, &n_ranks);
 
-
+  if (my_rank == 0) {
+    printf("-- Check neighbours\n");
+  }
+  
   _l_octant_t *octants = octree->octants;
   double *area = malloc (sizeof(double) * octants->n_nodes);
 
-  int *rank_ngb_n = malloc (sizeof(double) * lComm);
-  for (int i = 0; i < lComm; i++)
+  int *rank_ngb_n = malloc (sizeof(double) * n_ranks);
+  for (int i = 0; i < n_ranks; i++)
     rank_ngb_n[i] = 0;
 
   for (int i = 0; i < octants->n_nodes; i++) {
@@ -3018,14 +3652,14 @@ _check_neighbours_area
   int *recv_rank_ngb_idx = NULL;
   int *recv_rank_ngb_id_level = NULL;
 
-  if (lComm > 1) {
-    rank_ngb_idx = malloc (sizeof(int) * (lComm + 1));
+  if (n_ranks > 1) {
+    rank_ngb_idx = malloc (sizeof(int) * (n_ranks + 1));
     rank_ngb_idx[0] = 0;
-    for (int i = 0; i < lComm; i++) {
+    for (int i = 0; i < n_ranks; i++) {
       rank_ngb_idx[i+1] = rank_ngb_idx[i] + 2*rank_ngb_n[i];
       rank_ngb_n[i] = 0;
     }
-    rank_ngb_id_level = malloc (sizeof(int) * rank_ngb_idx[lComm]);
+    rank_ngb_id_level = malloc (sizeof(int) * rank_ngb_idx[n_ranks]);
 
     for (int i = 0; i < octants->n_nodes; i++) {
       for (int j = 0; j < 6; j++) {
@@ -3050,18 +3684,18 @@ _check_neighbours_area
       }
     }
 
-    recv_rank_ngb_n = malloc (sizeof(int) * lComm);
+    recv_rank_ngb_n = malloc (sizeof(int) * n_ranks);
     PDM_MPI_Alltoall (rank_ngb_n, 1, PDM_MPI_INT,
                       recv_rank_ngb_n, 1, PDM_MPI_INT,
                       octree->comm);
 
-    recv_rank_ngb_idx = malloc (sizeof(int) * (lComm + 1));
+    recv_rank_ngb_idx = malloc (sizeof(int) * (n_ranks + 1));
     recv_rank_ngb_idx[0] = 0;
-    for (int i = 0; i < lComm; i++) {
+    for (int i = 0; i < n_ranks; i++) {
       recv_rank_ngb_idx[i+1] = recv_rank_ngb_idx[i] + recv_rank_ngb_n[i];
     }
 
-    recv_rank_ngb_id_level = malloc (sizeof(int) * recv_rank_ngb_idx[lComm]);
+    recv_rank_ngb_id_level = malloc (sizeof(int) * recv_rank_ngb_idx[n_ranks]);
     PDM_MPI_Alltoallv (rank_ngb_id_level, rank_ngb_n, rank_ngb_idx, PDM_MPI_INT,
                        recv_rank_ngb_id_level, recv_rank_ngb_n, recv_rank_ngb_idx, PDM_MPI_INT,
                        octree->comm);
@@ -3071,11 +3705,11 @@ _check_neighbours_area
     free (rank_ngb_idx);
 
 
-    for (int i = 0; i < lComm; i++) {
+    for (int i = 0; i < n_ranks; i++) {
       recv_rank_ngb_n[i] /= 2;
       recv_rank_ngb_idx[i+1] /= 2;
     }
-    for (int i = 0; i < lComm; i++) {
+    for (int i = 0; i < n_ranks; i++) {
       for (int j = recv_rank_ngb_idx[i]; j < recv_rank_ngb_idx[i+1]; j++) {
         int id = recv_rank_ngb_id_level[2*j];
         PDM_morton_int_t level = (PDM_morton_int_t) recv_rank_ngb_id_level[2*j+1];
@@ -3098,8 +3732,11 @@ _check_neighbours_area
     double side = 1./pow(2, code.L);
     int ndir = 0;
     for (int j = 0; j < 6; j++) {
-      if (_neighbour (code, (PDM_para_octree_direction_t) j) != NULL)
+      PDM_morton_code_t *ngb_code = _neighbour (code, (PDM_para_octree_direction_t) j);
+      if (ngb_code != NULL) {
         ndir++;
+	free (ngb_code);
+      }
     }
     double exact_area = ndir * side * side;
 
@@ -3112,7 +3749,7 @@ _check_neighbours_area
     //-->>
     /*if (PDM_ABS(area[i]/exact_area - 1) > 1e-15) {
       printf("[%d] node %d, level %u, area = %f, exact = %f, relative area error = %f\n",
-      myRank, i, octants->codes[i].L, area[i], exact_area, area[i]/exact_area - 1);
+      my_rank, i, octants->codes[i].L, area[i], exact_area, area[i]/exact_area - 1);
       printf("\tneighbours (rank, node_id):\n");
       for (int j = 0; j < 6; j++) {
       printf("\t\tdirection %d:", j);
@@ -3129,7 +3766,7 @@ _check_neighbours_area
       printf(" (%d, %d)", ngb_rank, ngb_id);
       }
       } else {
-      printf(" (%d, %d)", myRank, ingb);
+      printf(" (%d, %d)", my_rank, ingb);
       }
       }
       printf("\n");
@@ -4372,7 +5009,36 @@ PDM_para_octree_build
   const int n_child = 8;
   //const int n_direction = 6;
 
+#if BMODIF
+  _neighbours_tmp_t parent_ngb;
+  _neighbours_tmp_t *ngb_heap   = NULL;
+  _neighbours_tmp_t *ngb_octree = NULL;
+  size_t s_ngb_octree;
+  const int n_coarse = octree->octants->n_nodes;
+#endif
+
   int  size = octree->depth_max * 8;
+
+#if BMODIF
+  if (octree->neighboursToBuild) {
+    for (PDM_para_octree_direction_t dir = 0; dir < 6; dir++) {
+      parent_ngb.n_neighbour[dir] = 0;
+      parent_ngb.s_neighbour[dir] = 1;
+      parent_ngb.neighbours[dir] = malloc (sizeof(int) * parent_ngb.s_neighbour[dir]);
+    }
+
+    ngb_heap = malloc (sizeof(_neighbours_tmp_t) * size);
+    for (int i = 0; i < size; i++) {
+      for (PDM_para_octree_direction_t dir = 0; dir < 6; dir++) {
+	ngb_heap[i].neighbours[dir] = NULL;
+      }
+    }
+
+    s_ngb_octree = octree->octants->n_nodes_max;
+    ngb_octree = malloc (sizeof(_neighbours_tmp_t) * s_ngb_octree);
+  }
+#endif
+  
   _heap_t *heap = _heap_create (size);
   for (int i = octree->octants->n_nodes - 1; i >= 0; i--) {
     int is_pushed = _heap_push (heap,
@@ -4383,6 +5049,91 @@ PDM_para_octree_build
       printf ("Internal error PDM_para_octree 3 : heap is full\n");
       exit(1);
     }
+
+#if BMODIF
+    if (octree->neighboursToBuild) {
+      int h = heap->top - 1;
+      /*printf("\n\n[%d] octant %d pushed in heap %d (L = %d, X = [%d, %d, %d])\n",
+	     rank, i, h, heap->codes[h].L,
+	     heap->codes[h].X[0], heap->codes[h].X[1], heap->codes[h].X[2]);*/
+
+      /* init ngb_heap[h] */
+      for (PDM_para_octree_direction_t dir = 0; dir < 6; dir++) {
+	ngb_heap[h].n_neighbour[dir] = 0;
+	ngb_heap[h].s_neighbour[dir] = 1;
+	ngb_heap[h].neighbours[dir] = malloc (sizeof(int) * ngb_heap[h].s_neighbour[dir]);
+      }
+
+      if (h == 0) {
+	continue;
+      }
+      
+      for (PDM_para_octree_direction_t dir = 1; dir < 6; dir+=2) {
+	//printf("[%d]\tin dir %d:\n", rank, dir);
+	PDM_para_octree_direction_t inv_dir = _inv_direction (dir);
+
+	PDM_morton_code_t *ngb_code = _neighbour (heap->codes[h],
+						  dir);
+	if (ngb_code == NULL) {
+	  continue;
+	}
+	/*printf("[%d]\t\tngb_code = (L = %d, X = [%d, %d, %d])\n",
+	  rank, ngb_code->L, ngb_code->X[0], ngb_code->X[1], ngb_code->X[2]);*/
+
+	size_t start, end;
+	PDM_morton_list_intersect (n_coarse - (i+1),
+				   *ngb_code,
+				   octree->octants->codes + (i+1),
+				   &start,
+				   &end);
+	free (ngb_code);
+
+	if (start >= end) {
+	  continue;
+	}
+
+	start += i+1;
+	end   += i+1;
+	//printf("[%d]\t\tcoarse start = %d, end = %d\n", rank, start, end);
+
+	size_t tmp = start;
+	start = n_coarse - end;
+	end = n_coarse - tmp;
+	//printf("[%d]\t\tin heap start = %d, end = %d\n", rank, start, end);
+	
+	for (int j = start; j < end; j++) {
+	  /*printf("[%d]\t\tcheck in heap %d (L = %d, X = [%d, %d, %d])\n",
+		 rank, j, heap->codes[j].L,
+		 heap->codes[j].X[0], heap->codes[j].X[1], heap->codes[j].X[2]);*/
+	  
+	  PDM_morton_code_t *ngb_ngb_code = _neighbour (heap->codes[j], inv_dir);
+	  assert (ngb_ngb_code != NULL);
+
+	  if (PDM_morton_ancestor_is (heap->codes[h], *ngb_ngb_code) ||
+	      PDM_morton_ancestor_is (*ngb_ngb_code, heap->codes[h])) {
+	    /* add -(j+1) to ngb_heap[h].neighbours[dir] */
+	    if (ngb_heap[h].n_neighbour[dir] >= ngb_heap[h].s_neighbour[dir]) {
+	      ngb_heap[h].s_neighbour[dir] = PDM_MAX (2*ngb_heap[h].s_neighbour[dir],
+						      ngb_heap[h].n_neighbour[dir] + 1);
+	      ngb_heap[h].neighbours[dir] = realloc (ngb_heap[h].neighbours[dir],
+						     sizeof(int) * ngb_heap[h].s_neighbour[dir]);
+	    }
+	    ngb_heap[h].neighbours[dir][ngb_heap[h].n_neighbour[dir]++] = -(j+1);
+	    
+	    /* add -(h+1) to ngb_heap[j].neighbours[inv_dir] */
+	    if (ngb_heap[j].n_neighbour[inv_dir] >= ngb_heap[j].s_neighbour[inv_dir]) {
+	      ngb_heap[j].s_neighbour[inv_dir] = PDM_MAX (2*ngb_heap[j].s_neighbour[inv_dir],
+							  ngb_heap[j].n_neighbour[inv_dir] + 1);
+	      ngb_heap[j].neighbours[inv_dir] = realloc (ngb_heap[j].neighbours[inv_dir],
+							 sizeof(int) * ngb_heap[j].s_neighbour[inv_dir]);
+	    }
+	    ngb_heap[j].neighbours[inv_dir][ngb_heap[j].n_neighbour[inv_dir]++] = -(h+1);
+	  }
+	  free (ngb_ngb_code);
+	}
+      }
+    }
+#endif
   }
 
   PDM_morton_code_t code;
@@ -4392,11 +5143,73 @@ PDM_para_octree_build
   octree->octants->n_nodes = 0;
 
   while (_heap_pull (heap, &code, &range, &n_points)) {
-
+    /*printf("\n\n[%d] pulled %d from heap (L = %d, X = [%d, %d, %d])\n",
+      rank, heap->top, code.L, code.X[0], code.X[1], code.X[2]);*/
+    
     /* Add children into the heap*/
 
     if ((code.L < max_morton_level) && (code.L < max_level) &&
         (n_points > octree->points_in_leaf_max)) {
+
+#if BMODIF
+      if (octree->neighboursToBuild) {
+	int h_parent = heap->top;
+	//printf("[%d] subdivide\n", rank);
+
+	/* copy ngb_heap[h_parent] into parent_ngb
+	   and remove references to -(h_parent+1) from all neighbours of parent */
+	for (PDM_para_octree_direction_t dir = 0; dir < 6; dir++) {
+	  /* copy ngb_heap[h_parent].neighbours[dir] into parent_ngb.neighbours[dir] */
+	  parent_ngb.n_neighbour[dir] = ngb_heap[h_parent].n_neighbour[dir];
+	  if (parent_ngb.n_neighbour[dir] >= parent_ngb.s_neighbour[dir]) {
+	    parent_ngb.s_neighbour[dir] = PDM_MAX (2*parent_ngb.s_neighbour[dir],
+						   parent_ngb.n_neighbour[dir]);
+	    parent_ngb.neighbours[dir] = realloc (parent_ngb.neighbours[dir],
+						  sizeof(int) * parent_ngb.s_neighbour[dir]);
+	  }
+	  for (int j = 0; j < parent_ngb.n_neighbour[dir]; j++) {
+	    parent_ngb.neighbours[dir][j] = ngb_heap[h_parent].neighbours[dir][j];
+	  }
+
+	  /* remove all references to -(h_parent+1) from all neighbours of parent */
+	  PDM_para_octree_direction_t inv_dir = _inv_direction (dir);
+	  _neighbours_tmp_t *ngb = NULL;
+	  for (int j = 0; j < parent_ngb.n_neighbour[dir]; j++) {
+	    int ingb = parent_ngb.neighbours[dir][j];
+
+	    if (ingb < 0) {
+	      // neighbour in heap
+	      ngb = ngb_heap - (ingb+1);
+	    } else {
+	      // neighbour in octree
+	      ngb = ngb_octree + ingb;
+	    }
+
+	    int found = 0;
+	    int pos;
+	    for (pos = 0; pos < ngb->n_neighbour[inv_dir]; pos++) {
+	      if (ngb->neighbours[inv_dir][pos] == -(h_parent+1)) {
+		found = 1;
+		break;
+	      }
+	    }
+
+	    assert (found);
+	    /*if (ingb < 0) {
+	      printf("[%d] remove %d from ngb_heap[%d].neighbours[%d]\n", rank, -(h_parent+1), -(ingb+1), inv_dir);
+	    } else {
+	      printf("[%d] remove %d from ngb_octree[%d].neighbours[%d]\n", rank, -(h_parent+1), ingb, inv_dir);
+	      }*/
+
+	    ngb->n_neighbour[inv_dir]--;
+	    for (int k = pos; k < ngb->n_neighbour[inv_dir]; k++) {
+	      ngb->neighbours[inv_dir][k] =ngb->neighbours[inv_dir][k+1];
+	    }
+	   
+	  }
+	}
+      }
+#endif
 
       PDM_morton_code_t children[n_child];
       PDM_morton_get_children(dim,
@@ -4439,6 +5252,85 @@ PDM_para_octree_build
           printf ("Internal error PDM_para_octree 4 : heap is full\n");
           exit(1);
         }
+
+#if BMODIF
+	if (octree->neighboursToBuild) {
+	  int h_child = heap->top - 1;
+
+	  for (PDM_para_octree_direction_t dir = 0; dir < 6; dir++) {
+	    /* reset ngb_heap[h_child].neighbours[dir] */
+	    ngb_heap[h_child].n_neighbour[dir] = 0;
+	    if (ngb_heap[h_child].neighbours[dir] == NULL) {
+	      ngb_heap[h_child].s_neighbour[dir] = 1;
+	      ngb_heap[h_child].neighbours[dir] = malloc (sizeof(int) * ngb_heap[h_child].s_neighbour[dir]);
+	    } else {
+	      if (parent_ngb.n_neighbour[dir] >= ngb_heap[h_child].s_neighbour[dir]) {
+		ngb_heap[h_child].s_neighbour[dir] = PDM_MAX (2*ngb_heap[h_child].s_neighbour[dir],
+							      parent_ngb.n_neighbour[dir]);
+		ngb_heap[h_child].neighbours[dir] = realloc (ngb_heap[h_child].neighbours[dir],
+							     sizeof(int) * ngb_heap[h_child].s_neighbour[dir]);
+	      }
+	    }
+	  
+
+	    /* set neighbours */
+	    int i_sibling = _3d_sibling_neighbours[i][dir];
+	    
+	    if (i_sibling < 0) {
+	      /* inherit neighbours from parent */
+	      PDM_para_octree_direction_t inv_dir = _inv_direction (dir);
+	      _neighbours_tmp_t *ngb = NULL;
+	      PDM_morton_code_t *ngb_code = NULL;
+	      for (int j = 0; j < parent_ngb.n_neighbour[dir]; j++) {
+		int ingb = parent_ngb.neighbours[dir][j];
+
+		if (ingb < 0) {
+		  // neighbour in heap
+		  ngb = ngb_heap - (ingb+1);
+		  ngb_code = heap->codes - (ingb+1);
+		} else {
+		  // neighbour in octree
+		  ngb = ngb_octree + ingb;
+		  ngb_code = octree->octants->codes + ingb;
+		}
+
+		/* check if current neighbour of parent is also a neighbour of current child */
+		PDM_morton_code_t *ngb_ngb_code = _neighbour (*ngb_code, inv_dir);
+		assert (ngb_ngb_code != NULL);
+
+		if (PDM_morton_ancestor_is (children[i], *ngb_ngb_code) ||
+		    PDM_morton_ancestor_is (*ngb_ngb_code, children[i])) {
+		  /* add ingb to ngb_heap[h_child].neighbours[dir] */
+		  ngb_heap[h_child].neighbours[dir][ngb_heap[h_child].n_neighbour[dir]++] = ingb;
+		  //printf("[%d] append %d to ngb_heap[%d].neighbours[%d] (neighbour of parent)\n", rank, ingb, h_child, dir);
+		
+		  /* add -(h_child+1) to ngb->neighbours[inv_dir] */
+		  if (ngb->n_neighbour[inv_dir] >= ngb->s_neighbour[inv_dir]) {
+		    ngb->s_neighbour[inv_dir] = PDM_MAX (2*ngb->s_neighbour[inv_dir],
+							 ngb->n_neighbour[inv_dir]);
+		    ngb->neighbours[inv_dir] = realloc (ngb->neighbours[inv_dir],
+							sizeof(int) * ngb->s_neighbour[inv_dir]);
+		  }
+		  ngb->neighbours[inv_dir][ngb->n_neighbour[inv_dir]++] = -(h_child+1);
+		  /*if (ingb < 0) {
+		    printf("[%d] append %d to ngb_heap[%d].neighbours[%d] (child of neighbour)\n", rank, -(h_child+1), -(ingb+1), inv_dir);
+		  } else {
+		    printf("[%d] append %d to ngb_octree[%d].neighbours[%d] (child of neighbour)\n", rank, -(h_child+1), ingb, inv_dir);
+		  }*/
+		}
+		free (ngb_ngb_code);
+	      }
+	    }
+	    else {
+	      /* add sibling neighbour */
+	      int h_sibling = h_child + i - i_sibling;
+	      ngb_heap[h_child].neighbours[dir][ngb_heap[h_child].n_neighbour[dir]++] = -(h_sibling+1);
+	      //printf("[%d] append %d to ngb_heap[%d].neighbours[%d] (sibling neighbour)\n", rank, -(h_sibling+1), h_child, dir);
+	    }
+	    
+	  }
+	}
+#endif
       }
 
     }
@@ -4447,6 +5339,67 @@ PDM_para_octree_build
 
     else {
       _octants_push_back (octree->octants, code, n_points, range);
+
+#if BMODIF
+      if (octree->neighboursToBuild) {
+	int i = octree->octants->n_nodes - 1;
+	int h = heap->top;
+
+	/*printf("[%d] --> octree node #%d (L=%d, X=[%d,%d,%d])\n",
+	     rank, i,
+	     octree->octants->codes[i].L,
+	     octree->octants->codes[i].X[0],
+	     octree->octants->codes[i].X[1],
+	     octree->octants->codes[i].X[2]);*/
+
+	if (i >= s_ngb_octree) {
+	  s_ngb_octree = PDM_MAX (2*s_ngb_octree,
+				  octree->octants->n_nodes_max);
+	  ngb_octree = realloc (ngb_octree, sizeof(_neighbours_tmp_t) * s_ngb_octree);
+	}
+	
+	/* copy ngb_heap[h] into ngb_octree[i],
+	   and change references to -(h+1) into i for all neighbours */
+	for (PDM_para_octree_direction_t dir = 0; dir < 6; dir++) {
+	  /* copy ngb_heap[h].neighbours[dir] into ngb_octree[i].neighbours[dir] */
+	  ngb_octree[i].n_neighbour[dir] = ngb_heap[h].n_neighbour[dir];
+	  ngb_octree[i].s_neighbour[dir] = ngb_heap[h].s_neighbour[dir];
+	  ngb_octree[i].neighbours[dir] = malloc (sizeof(int) * ngb_octree[i].s_neighbour[dir]);
+	
+	  for (int j = 0; j < ngb_heap[h].n_neighbour[dir]; j++) {
+	    ngb_octree[i].neighbours[dir][j] = ngb_heap[h].neighbours[dir][j];
+	  }
+
+	  /* change references to -(h+1) into i for all neighbours */
+	  PDM_para_octree_direction_t inv_dir = _inv_direction (dir);
+	  _neighbours_tmp_t *ngb = NULL;
+	  for (int j = 0; j < ngb_octree[i].n_neighbour[dir]; j++) {
+	    int ingb = ngb_octree[i].neighbours[dir][j];
+
+	    if (ingb < 0) {
+	      // neighbour in heap
+	      ngb = ngb_heap - (ingb+1);
+	    } else {
+	      // neighbour in octree
+	      ngb = ngb_octree + ingb;
+	    }
+
+	    int found = 0;
+	    int pos;
+	    for (pos = 0; pos < ngb->n_neighbour[inv_dir]; pos++) {
+	      if (ngb->neighbours[inv_dir][pos] == -(h+1)) {
+		found = 1;
+		break;
+	      }
+	    }
+
+	    assert (found);
+
+	    ngb->neighbours[inv_dir][pos] = i;
+	  }
+	}
+      }
+#endif
     }
 
   }
@@ -4461,6 +5414,22 @@ PDM_para_octree_build
 
   assert (PDM_ABS(total_vol - 1.) < 1e-15);
 
+#if BMODIF
+  if (octree->neighboursToBuild) {
+    for (PDM_para_octree_direction_t dir = 0; dir < 6; dir++) {
+      free (parent_ngb.neighbours[dir]);
+    }
+    
+    for (int i = 0; i < heap->max_top; i++) {
+      for (PDM_para_octree_direction_t dir = 0; dir < 6; dir++) {
+	if (ngb_heap[i].neighbours[dir] != NULL) {
+	  free (ngb_heap[i].neighbours[dir]);
+	}
+      }
+    }
+    free (ngb_heap);
+  }
+#endif
   heap = _heap_free (heap);
 
   PDM_timer_hang_on(octree->timer);
@@ -4486,15 +5455,61 @@ PDM_para_octree_build
    * Neighbours
    *
    *************************************************************************/
+#if 0//BMODIF
+  if (octree->neighboursToBuild) {
+    int sorted[100];
+    printf("\n\n\n\n");
+    for (int i = 0; i < octree->octants->n_nodes; i++) {
+      printf("\n[%d] node %d (L = %d, X = [%d, %d, %d]), neighbours =\n",
+	     rank, i, octree->octants->codes[i].L,
+	     octree->octants->codes[i].X[0],
+	     octree->octants->codes[i].X[1],
+	     octree->octants->codes[i].X[2]);
+      for (PDM_para_octree_direction_t dir = 0; dir < 6; dir++) {
+#if 1
+	for (int j = 0; j < ngb_octree[i].n_neighbour[dir]; j++) {
+	  sorted[j] = ngb_octree[i].neighbours[dir][j];
+	}
+	PDM_sort_int (sorted, NULL, ngb_octree[i].n_neighbour[dir]);
+	for (int j = 0; j < ngb_octree[i].n_neighbour[dir]; j++) {
+	  ngb_octree[i].neighbours[dir][j] = sorted[j];
+	}
+#endif
+	
+	printf("[%d]\tin dir %d:", rank, dir);
+	for (int j = 0; j < ngb_octree[i].n_neighbour[dir]; j++) {
+	  printf(" %d", ngb_octree[i].neighbours[dir][j]);
+	}
+	printf("\n");
+      }
+    }
+  }
+#endif
 
   if (octree->neighboursToBuild) {
+#if BMODIF
+    _finalize_neighbours (octree,
+			  &ngb_octree,
+			  b_t_elapsed,
+			  b_t_cpu,
+			  b_t_cpu_u,
+			  b_t_cpu_s);
+#else
     _compute_neighbours (octree,
                          b_t_elapsed,
                          b_t_cpu,
                          b_t_cpu_u,
                          b_t_cpu_s);
+#endif
 
-#if 0
+#if BMODIF
+    /*for (int i = 0; i < octree->octants->n_nodes; i++) {
+      for (PDM_para_octree_direction_t dir = 0; dir < 6; dir++) {
+	free (ngb_octree[i].neighbours[dir]);
+      }
+    }
+    free (ngb_octree);*/
+    
     _check_neighbours_area (octree);
 #endif
   }
