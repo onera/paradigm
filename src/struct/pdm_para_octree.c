@@ -2,6 +2,7 @@
 /*----------------------------------------------------------------------------
  *  System headers
  *----------------------------------------------------------------------------*/
+#include <sys/resource.h>
 
 #include <math.h>
 #include <stdlib.h>
@@ -38,7 +39,7 @@ extern "C"
  *============================================================================*/
 
 #define NTIMER 11
-#define BMODIF 1
+#define NGB_ON_THE_FLY 1
 
 /*============================================================================
  * Type definitions
@@ -196,7 +197,7 @@ typedef struct {
 
 
 
-#if BMODIF
+#if NGB_ON_THE_FLY
 /*static const int _2d_sibling_neighbours[4][4] = {{-1, 2,-1, 1},
 						 {-1, 3, 0,-1},
 						 { 0,-1,-1, 3},
@@ -2246,6 +2247,74 @@ _block_partition
 
 
 
+
+
+static void
+_compute_connected_parts 
+(
+ _octree_t         *octree,
+ _neighbours_tmp_t *neighbours
+ )
+{
+  const int n_direction = 6;
+  
+  int s_connected = 3;
+  octree->connected_idx = malloc (sizeof(int) * s_connected);
+  octree->connected_idx[0] = 0;
+
+  int *visited = malloc (sizeof(int) * octree->octants->n_nodes);
+  for (int i = 0; i < octree->octants->n_nodes; i++)
+    visited[i] = 0;
+
+  int *stack = malloc (sizeof(int) * octree->octants->n_nodes);
+  int pos_stack = 0;
+
+  int max = 0;
+  while (max < octree->octants->n_nodes) {
+
+    stack[pos_stack++] = max;
+    visited[max] = 1;
+
+    while (pos_stack > 0) {
+      int i_node = stack[--pos_stack];
+
+      for (int j = 0; j < n_direction; j++) {
+        for (int k = 0; k < neighbours[i_node].n_neighbour[j]; k++) {
+          int i_ngb = neighbours[i_node].neighbours[j][k];
+          if (i_ngb >= 0) {
+            if (!visited[i_ngb]) {
+              stack[pos_stack++] = i_ngb;
+              visited[i_ngb] = 1;
+              max = PDM_MAX (max, i_ngb);
+            }
+          }
+        }
+      }
+
+    }
+
+    max++;
+    if (s_connected <= octree->n_connected) {
+      s_connected *= 2;
+      octree->connected_idx = realloc (octree->connected_idx, sizeof(int) * s_connected);
+    }
+    octree->connected_idx[++octree->n_connected] = max;
+  }
+  free (visited);
+  free (stack);
+
+  octree->connected_idx = realloc (octree->connected_idx,
+				   sizeof(int) * (octree->n_connected+1));
+}
+
+
+
+
+
+
+
+
+
 /**
  *
  * \brief Compute neighbours
@@ -2280,6 +2349,8 @@ _compute_neighbours
 
   int rank;
   PDM_MPI_Comm_rank (octree->comm, &rank);
+
+  printf("[%d] compute neighbours...\n", rank);
 
   _neighbours_tmp_t *neighbours_tmp = malloc (sizeof(_neighbours_tmp_t) * octree->octants->n_nodes);
   for (int i = 0; i < octree->octants->n_nodes; i++) {
@@ -2385,11 +2456,13 @@ _compute_neighbours
   octree->times_cpu_u[BUILD_LOCAL_NEIGHBOURS_STEP1]   += e_t_cpu_u - b_t_cpu_u;
   octree->times_cpu_s[BUILD_LOCAL_NEIGHBOURS_STEP1]   += e_t_cpu_s - b_t_cpu_s;
 
-  b_t_elapsed = e_t_elapsed;
-  b_t_cpu     = e_t_cpu;
-  b_t_cpu_u   = e_t_cpu_u;
-  b_t_cpu_s   = e_t_cpu_s;
-
+  PDM_timer_resume(octree->timer);
+  
+  PDM_timer_hang_on(octree->timer);
+  b_t_elapsed = PDM_timer_elapsed(octree->timer);
+  b_t_cpu     = PDM_timer_cpu(octree->timer);
+  b_t_cpu_u   = PDM_timer_cpu_user(octree->timer);
+  b_t_cpu_s   = PDM_timer_cpu_sys(octree->timer);
   PDM_timer_resume(octree->timer);
 
   for (int i = 0; i < octree->octants->n_nodes; i++) {
@@ -2430,7 +2503,7 @@ _compute_neighbours
   }
 
 
-  PDM_timer_hang_on(octree->timer);
+  /*PDM_timer_hang_on(octree->timer);
   e_t_elapsed = PDM_timer_elapsed(octree->timer);
   e_t_cpu     = PDM_timer_cpu(octree->timer);
   e_t_cpu_u   = PDM_timer_cpu_user(octree->timer);
@@ -2440,13 +2513,15 @@ _compute_neighbours
   octree->times_cpu[BUILD_LOCAL_NEIGHBOURS_STEP2]     += e_t_cpu - b_t_cpu;
   octree->times_cpu_u[BUILD_LOCAL_NEIGHBOURS_STEP2]   += e_t_cpu_u - b_t_cpu_u;
   octree->times_cpu_s[BUILD_LOCAL_NEIGHBOURS_STEP2]   += e_t_cpu_s - b_t_cpu_s;
-
-  b_t_elapsed = e_t_elapsed;
-  b_t_cpu     = e_t_cpu;
-  b_t_cpu_u   = e_t_cpu_u;
-  b_t_cpu_s   = e_t_cpu_s;
-
+  
   PDM_timer_resume(octree->timer);
+
+  PDM_timer_hang_on(octree->timer);
+  b_t_elapsed = PDM_timer_elapsed(octree->timer);
+  b_t_cpu     = PDM_timer_cpu(octree->timer);
+  b_t_cpu_u   = PDM_timer_cpu_user(octree->timer);
+  b_t_cpu_s   = PDM_timer_cpu_sys(octree->timer);
+  PDM_timer_resume(octree->timer);*/
 
   /*************************************************************************
    *
@@ -2501,6 +2576,26 @@ _compute_neighbours
 
   octree->connected_idx = realloc (octree->connected_idx, sizeof(int) * (octree->n_connected+1));
 
+
+  PDM_timer_hang_on(octree->timer);
+  e_t_elapsed = PDM_timer_elapsed(octree->timer);
+  e_t_cpu     = PDM_timer_cpu(octree->timer);
+  e_t_cpu_u   = PDM_timer_cpu_user(octree->timer);
+  e_t_cpu_s   = PDM_timer_cpu_sys(octree->timer);
+
+  octree->times_elapsed[BUILD_LOCAL_NEIGHBOURS_STEP2] += e_t_elapsed - b_t_elapsed;
+  octree->times_cpu[BUILD_LOCAL_NEIGHBOURS_STEP2]     += e_t_cpu - b_t_cpu;
+  octree->times_cpu_u[BUILD_LOCAL_NEIGHBOURS_STEP2]   += e_t_cpu_u - b_t_cpu_u;
+  octree->times_cpu_s[BUILD_LOCAL_NEIGHBOURS_STEP2]   += e_t_cpu_s - b_t_cpu_s;
+  
+  PDM_timer_resume(octree->timer);
+
+  PDM_timer_hang_on(octree->timer);
+  b_t_elapsed = PDM_timer_elapsed(octree->timer);
+  b_t_cpu     = PDM_timer_cpu(octree->timer);
+  b_t_cpu_u   = PDM_timer_cpu_user(octree->timer);
+  b_t_cpu_s   = PDM_timer_cpu_sys(octree->timer);
+  PDM_timer_resume(octree->timer);
 
   /*************************************************************************
    *
@@ -2861,9 +2956,9 @@ _compute_neighbours
     octree->n_part_boundary_elt = n_part_boundary_elt;
   }
 
-  for (int i = 0; i < octree->n_part_boundary_elt; i++)
+  for (int i = 0; i < octree->n_part_boundary_elt; i++) {
     octree->part_boundary_elt_idx[i+1] += octree->part_boundary_elt_idx[i];
-
+  }
 
 
   PDM_timer_hang_on(octree->timer);
@@ -2876,12 +2971,14 @@ _compute_neighbours
   octree->times_cpu[BUILD_DISTANT_NEIGHBOURS]     += e_t_cpu - b_t_cpu;
   octree->times_cpu_u[BUILD_DISTANT_NEIGHBOURS]   += e_t_cpu_u - b_t_cpu_u;
   octree->times_cpu_s[BUILD_DISTANT_NEIGHBOURS]   += e_t_cpu_s - b_t_cpu_s;
-
-  b_t_elapsed = e_t_elapsed;
-  b_t_cpu     = e_t_cpu;
-  b_t_cpu_u   = e_t_cpu_u;
-  b_t_cpu_s   = e_t_cpu_s;
-
+  
+  PDM_timer_resume(octree->timer);
+  
+  PDM_timer_hang_on(octree->timer);
+  b_t_elapsed = PDM_timer_elapsed(octree->timer);
+  b_t_cpu     = PDM_timer_cpu(octree->timer);
+  b_t_cpu_u   = PDM_timer_cpu_user(octree->timer);
+  b_t_cpu_s   = PDM_timer_cpu_sys(octree->timer);
   PDM_timer_resume(octree->timer);
 
 
@@ -2891,7 +2988,7 @@ _compute_neighbours
    * Copy temporary neighbours in the neighbour structure
    *
    *************************************************************************/
-#if 0//BMODIF
+#if 0//NGB_ON_THE_FLY
   printf("\n\n- - - - - - - - - -\n\n");
   for (int i = 0; i < octree->octants->n_nodes; i++) {
     printf("\n[%d] node %d (L = %d, X = [%d, %d, %d]), neighbours =\n",
@@ -2989,14 +3086,13 @@ _compute_neighbours
     + octree->times_cpu_s[BUILD_LOCAL_NEIGHBOURS_STEP2]
     + octree->times_cpu_s[BUILD_LOCAL_NEIGHBOURS_STEP3];
 
-  b_t_elapsed = e_t_elapsed;
+  /*b_t_elapsed = e_t_elapsed;
   b_t_cpu     = e_t_cpu;
   b_t_cpu_u   = e_t_cpu_u;
-  b_t_cpu_s   = e_t_cpu_s;
+  b_t_cpu_s   = e_t_cpu_s;*/
 
   PDM_timer_resume(octree->timer);
 }
-
 
 
 
@@ -3025,107 +3121,51 @@ _finalize_neighbours
   int rank;
   PDM_MPI_Comm_rank (octree->comm, &rank);
 
+  printf("[%d] finalize neighbours2...\n", rank);
+
   _neighbours_tmp_t *neighbours_tmp = *ngb_octree;
-
-  if (octree->rank_octants_index != NULL) {
-    for (int i = 0; i < octree->octants->n_nodes; i++) {
-      for (PDM_para_octree_direction_t j = 0; j < n_direction; j++) {
-	
-	PDM_morton_code_t *neighbour_code =  _neighbour (octree->octants->codes[i], j);
-	if (neighbour_code == NULL) {
-	  continue;
-	}
-
-	size_t start, end;
-	PDM_morton_quantile_intersect (n_ranks,
-				       *neighbour_code,
-				       octree->rank_octants_index,
-				       &start,
-				       &end);
-	for (int neighbour_rank = start; neighbour_rank < end; neighbour_rank++) {
-
-	  if (neighbour_rank == rank) {
-	    continue;
-	  }
-
-	  if (neighbours_tmp[i].n_neighbour[j] >= neighbours_tmp[i].s_neighbour[j]) {
-	    neighbours_tmp[i].s_neighbour[j] *= 2;
-	    neighbours_tmp[i].neighbours[j] = realloc (neighbours_tmp[i].neighbours[j],
-						       sizeof(int) * neighbours_tmp[i].s_neighbour[j]);
-	  }
-	  neighbours_tmp[i].neighbours[j][neighbours_tmp[i].n_neighbour[j]++] = - (neighbour_rank + 1);
-	}
-	free (neighbour_code);
-      }
-    }
-  }
-
+  
 
   /*************************************************************************
    *
    * Compute connected parts
    *
    *************************************************************************/
-  int s_connected = 3;
-  octree->connected_idx = malloc (sizeof(int) * s_connected);
-  octree->connected_idx[0] = 0;
+  _compute_connected_parts (octree,
+			    neighbours_tmp);
 
-  int *visited = malloc (sizeof(int) * octree->octants->n_nodes);
-  for (int i = 0; i < octree->octants->n_nodes; i++)
-    visited[i] = 0;
+  PDM_timer_hang_on(octree->timer);
+  e_t_elapsed = PDM_timer_elapsed(octree->timer);
+  e_t_cpu     = PDM_timer_cpu(octree->timer);
+  e_t_cpu_u   = PDM_timer_cpu_user(octree->timer);
+  e_t_cpu_s   = PDM_timer_cpu_sys(octree->timer);
 
-  int *stack = malloc (sizeof(int) * octree->octants->n_nodes);
-  int pos_stack = 0;
+  octree->times_elapsed[BUILD_LOCAL_NEIGHBOURS_STEP1] += e_t_elapsed - b_t_elapsed;
+  octree->times_cpu[BUILD_LOCAL_NEIGHBOURS_STEP1]     += e_t_cpu - b_t_cpu;
+  octree->times_cpu_u[BUILD_LOCAL_NEIGHBOURS_STEP1]   += e_t_cpu_u - b_t_cpu_u;
+  octree->times_cpu_s[BUILD_LOCAL_NEIGHBOURS_STEP1]   += e_t_cpu_s - b_t_cpu_s;
 
-  int max = 0;
-  while (max < octree->octants->n_nodes) {
+  PDM_timer_resume(octree->timer);
+  
 
-    stack[pos_stack++] = max;
-    visited[max] = 1;
+  PDM_timer_hang_on(octree->timer);
+  b_t_elapsed = PDM_timer_elapsed(octree->timer);
+  b_t_cpu     = PDM_timer_cpu(octree->timer);
+  b_t_cpu_u   = PDM_timer_cpu_user(octree->timer);
+  b_t_cpu_s   = PDM_timer_cpu_sys(octree->timer);
+  PDM_timer_resume(octree->timer);
 
-    while (pos_stack > 0) {
-      int i_node = stack[--pos_stack];
-
-      for (int j = 0; j < n_direction; j++) {
-        for (int k = 0; k < neighbours_tmp[i_node].n_neighbour[j]; k++) {
-          int i_ngb = neighbours_tmp[i_node].neighbours[j][k];
-          if (i_ngb >= 0) {
-            if (!visited[i_ngb]) {
-              stack[pos_stack++] = i_ngb;
-              visited[i_ngb] = 1;
-              max = PDM_MAX (max, i_ngb);
-            }
-          }
-        }
-      }
-
-    }
-
-    max++;
-    if (s_connected <= octree->n_connected) {
-      s_connected *= 2;
-      octree->connected_idx = realloc (octree->connected_idx, sizeof(int) * s_connected);
-    }
-    octree->connected_idx[++octree->n_connected] = max;
-  }
-  free (visited);
-  free (stack);
-
-  octree->connected_idx = realloc (octree->connected_idx,
-				   sizeof(int) * (octree->n_connected+1));
-
-
+  
   /*************************************************************************
    *
    * Build parallel partition boundary
    *
    *************************************************************************/
-
   int FALSE_NEIGHBOUR = -1;
   if (n_ranks > 1) {
-    const int n_quantile =  n_ranks * n_direction;
+    const int n_quantile = n_ranks * n_direction;
 
-    int *neighbour_rank_n = malloc (sizeof(int) * n_quantile);
+    int *neighbour_rank_n   = malloc (sizeof(int) * n_quantile);
     int *neighbour_rank_idx = malloc (sizeof(int) * (n_quantile + 1));
 
     for (int i = 0; i < n_quantile; i++) {
@@ -3133,14 +3173,38 @@ _finalize_neighbours
     }
 
     /* Premiere boucle pour compter */
-
     for (int i = 0; i < octree->octants->n_nodes; i++) {
-      for (int j = 0; j < n_direction; j++) {
-        for (int k = 0; k < neighbours_tmp[i].n_neighbour[j]; k++) {
-          if (neighbours_tmp[i].neighbours[j][k] < 0) {
-            neighbour_rank_n[-(neighbours_tmp[i].neighbours[j][k] + 1)*n_direction +j]++;
-          }
-        }
+      for (PDM_para_octree_direction_t dir = 0; dir < n_direction; dir++) {
+
+	PDM_morton_code_t *neighbour_code = _neighbour (octree->octants->codes[i], dir);
+	if (neighbour_code == NULL) {
+	  continue;
+	}
+
+	// single neighbour with inferior or equal level?...
+	
+	size_t start, end;
+	PDM_morton_quantile_intersect (n_ranks,
+				       *neighbour_code,
+				       octree->rank_octants_index,
+				       &start,
+				       &end);
+
+	for (int neighbour_rank = start; neighbour_rank < end; neighbour_rank++) {
+
+	  if (neighbour_rank == rank) {
+	    continue;
+	  }
+
+	  if (neighbours_tmp[i].n_neighbour[dir] >= neighbours_tmp[i].s_neighbour[dir]) {
+	    neighbours_tmp[i].s_neighbour[dir] *= 2;
+	    neighbours_tmp[i].neighbours[dir] = realloc (neighbours_tmp[i].neighbours[dir],
+							 sizeof(int) * neighbours_tmp[i].s_neighbour[dir]);
+	  }
+	  neighbours_tmp[i].neighbours[dir][neighbours_tmp[i].n_neighbour[dir]++] = - (neighbour_rank + 1);
+	  neighbour_rank_n[neighbour_rank*n_direction + dir]++;
+	}
+	free (neighbour_code);
       }
     }
 
@@ -3152,16 +3216,17 @@ _finalize_neighbours
       neighbour_rank_n[i] = 0;
     }
 
-    /* Allocation */
 
+
+    /* Allocation */
     int *neighbour_rank_node_id = malloc (sizeof(int) * neighbour_rank_idx[n_quantile]);
     PDM_morton_code_t *neighbour_rank_code = malloc (sizeof(PDM_morton_code_t) *
                                                      neighbour_rank_idx[n_quantile]);
     int *neighbour_rank_node_k = malloc (sizeof(int) * neighbour_rank_idx[n_quantile]);
-    int *neighbour_rank_node_part = malloc (sizeof(int) * neighbour_rank_idx[n_quantile]);//
+    int *neighbour_rank_node_part = malloc (sizeof(int) * neighbour_rank_idx[n_quantile]);
 
+    
     /* Deuxieme boucle pour stocker avec tri suivant la direction */
-
     for (int i_part = 0; i_part < octree->n_connected; i_part++) {
       for (int i = octree->connected_idx[i_part]; i < octree->connected_idx[i_part+1]; i++) {
         for (int j = 0; j < n_direction; j++) {
@@ -3225,7 +3290,6 @@ _finalize_neighbours
     free (tmp_node_id);
     free (tmp_node_k);
     free (tmp_node_part);
-
 
     /* Envoi / reception (Les donnees recues sont triees) */
 
@@ -3585,11 +3649,8 @@ _finalize_neighbours
   b_t_cpu_u   = e_t_cpu_u;
   b_t_cpu_s   = e_t_cpu_s;
 
-  PDM_timer_resume(octree->timer);
+  PDM_timer_resume(octree->timer);  
 }
-
-
-
 
 
 
@@ -5005,25 +5066,29 @@ PDM_para_octree_build
    * Build local octree
    *
    *************************************************************************/
-
+  struct rusage r_usage;
+  printf("[%d] build local octree,\tnpts = %d,\tncoarse = %d\n",
+	 rank,
+	 octree->n_points,
+	 octree->octants->n_nodes);
+ 
   const int n_child = 8;
   //const int n_direction = 6;
 
-#if BMODIF
+  int  size = octree->depth_max * 8;
+
+#if NGB_ON_THE_FLY
+  const int init_s = 1;
   _neighbours_tmp_t parent_ngb;
   _neighbours_tmp_t *ngb_heap   = NULL;
   _neighbours_tmp_t *ngb_octree = NULL;
   size_t s_ngb_octree;
   const int n_coarse = octree->octants->n_nodes;
-#endif
-
-  int  size = octree->depth_max * 8;
-
-#if BMODIF
+  
   if (octree->neighboursToBuild) {
     for (PDM_para_octree_direction_t dir = 0; dir < 6; dir++) {
       parent_ngb.n_neighbour[dir] = 0;
-      parent_ngb.s_neighbour[dir] = 1;
+      parent_ngb.s_neighbour[dir] = init_s;
       parent_ngb.neighbours[dir] = malloc (sizeof(int) * parent_ngb.s_neighbour[dir]);
     }
 
@@ -5050,7 +5115,7 @@ PDM_para_octree_build
       exit(1);
     }
 
-#if BMODIF
+#if NGB_ON_THE_FLY
     if (octree->neighboursToBuild) {
       int h = heap->top - 1;
       /*printf("\n\n[%d] octant %d pushed in heap %d (L = %d, X = [%d, %d, %d])\n",
@@ -5060,7 +5125,7 @@ PDM_para_octree_build
       /* init ngb_heap[h] */
       for (PDM_para_octree_direction_t dir = 0; dir < 6; dir++) {
 	ngb_heap[h].n_neighbour[dir] = 0;
-	ngb_heap[h].s_neighbour[dir] = 1;
+	ngb_heap[h].s_neighbour[dir] = init_s;
 	ngb_heap[h].neighbours[dir] = malloc (sizeof(int) * ngb_heap[h].s_neighbour[dir]);
       }
 
@@ -5136,6 +5201,11 @@ PDM_para_octree_build
 #endif
   }
 
+  /*getrusage (RUSAGE_SELF, &r_usage);
+  printf("[%d] after pushing coarse octants in ngb_heap: mem usage = %ld\n",
+	 rank,
+	 r_usage.ru_maxrss);*/
+
   PDM_morton_code_t code;
   int range;
   int n_points;
@@ -5151,7 +5221,7 @@ PDM_para_octree_build
     if ((code.L < max_morton_level) && (code.L < max_level) &&
         (n_points > octree->points_in_leaf_max)) {
 
-#if BMODIF
+#if NGB_ON_THE_FLY
       if (octree->neighboursToBuild) {
 	int h_parent = heap->top;
 	//printf("[%d] subdivide\n", rank);
@@ -5253,7 +5323,7 @@ PDM_para_octree_build
           exit(1);
         }
 
-#if BMODIF
+#if NGB_ON_THE_FLY
 	if (octree->neighboursToBuild) {
 	  int h_child = heap->top - 1;
 
@@ -5261,7 +5331,7 @@ PDM_para_octree_build
 	    /* reset ngb_heap[h_child].neighbours[dir] */
 	    ngb_heap[h_child].n_neighbour[dir] = 0;
 	    if (ngb_heap[h_child].neighbours[dir] == NULL) {
-	      ngb_heap[h_child].s_neighbour[dir] = 1;
+	      ngb_heap[h_child].s_neighbour[dir] = init_s;
 	      ngb_heap[h_child].neighbours[dir] = malloc (sizeof(int) * ngb_heap[h_child].s_neighbour[dir]);
 	    } else {
 	      if (parent_ngb.n_neighbour[dir] >= ngb_heap[h_child].s_neighbour[dir]) {
@@ -5340,7 +5410,15 @@ PDM_para_octree_build
     else {
       _octants_push_back (octree->octants, code, n_points, range);
 
-#if BMODIF
+      if (octree->octants->n_nodes % 500000 == 0) {
+	getrusage (RUSAGE_SELF, &r_usage);
+	printf("[%d] %d octree leaves,\tmem usage = %ld\n",
+	       rank,
+	       octree->octants->n_nodes,
+	       r_usage.ru_maxrss);	  
+      }
+
+#if NGB_ON_THE_FLY
       if (octree->neighboursToBuild) {
 	int i = octree->octants->n_nodes - 1;
 	int h = heap->top;
@@ -5404,18 +5482,16 @@ PDM_para_octree_build
 
   }
 
+  getrusage (RUSAGE_SELF, &r_usage);
+  printf("[%d] n_octants = %d,\tmem usage = %ld\n",
+	 rank,
+	 octree->octants->n_nodes,
+	 r_usage.ru_maxrss);
 
-  double vol = 0;
-  for (int i = 0; i < octree->octants->n_nodes; i++) {
-    vol += pow(1./pow(2, octree->octants->codes[i].L),3);
-  }
-  double total_vol;
-  PDM_MPI_Allreduce(&vol, &total_vol, 1, PDM_MPI_DOUBLE, PDM_MPI_SUM, octree->comm);
-
-  assert (PDM_ABS(total_vol - 1.) < 1e-15);
-
-#if BMODIF
+#if NGB_ON_THE_FLY
   if (octree->neighboursToBuild) {
+    ngb_octree = realloc (ngb_octree, sizeof(_neighbours_tmp_t) * octree->octants->n_nodes);
+
     for (PDM_para_octree_direction_t dir = 0; dir < 6; dir++) {
       free (parent_ngb.neighbours[dir]);
     }
@@ -5430,6 +5506,18 @@ PDM_para_octree_build
     free (ngb_heap);
   }
 #endif
+
+
+  double vol = 0;
+  for (int i = 0; i < octree->octants->n_nodes; i++) {
+    vol += pow(1./pow(2, octree->octants->codes[i].L),3);
+  }
+  double total_vol;
+  PDM_MPI_Allreduce(&vol, &total_vol, 1, PDM_MPI_DOUBLE, PDM_MPI_SUM, octree->comm);
+
+  assert (PDM_ABS(total_vol - 1.) < 1e-15);
+
+
   heap = _heap_free (heap);
 
   PDM_timer_hang_on(octree->timer);
@@ -5443,11 +5531,13 @@ PDM_para_octree_build
   octree->times_cpu_u[BUILD_LOCAL_NODES]   += e_t_cpu_u - b_t_cpu_u;
   octree->times_cpu_s[BUILD_LOCAL_NODES]   += e_t_cpu_s - b_t_cpu_s;
 
-  b_t_elapsed = e_t_elapsed;
-  b_t_cpu     = e_t_cpu;
-  b_t_cpu_u   = e_t_cpu_u;
-  b_t_cpu_s   = e_t_cpu_s;
+  PDM_timer_resume(octree->timer);
 
+  PDM_timer_hang_on(octree->timer);
+  b_t_elapsed = PDM_timer_elapsed(octree->timer);
+  b_t_cpu     = PDM_timer_cpu(octree->timer);
+  b_t_cpu_u   = PDM_timer_cpu_user(octree->timer);
+  b_t_cpu_s   = PDM_timer_cpu_sys(octree->timer);
   PDM_timer_resume(octree->timer);
 
   /*************************************************************************
@@ -5455,7 +5545,7 @@ PDM_para_octree_build
    * Neighbours
    *
    *************************************************************************/
-#if 0//BMODIF
+#if 0//NGB_ON_THE_FLY
   if (octree->neighboursToBuild) {
     int sorted[100];
     printf("\n\n\n\n");
@@ -5487,7 +5577,7 @@ PDM_para_octree_build
 #endif
 
   if (octree->neighboursToBuild) {
-#if BMODIF
+#if NGB_ON_THE_FLY
     _finalize_neighbours (octree,
 			  &ngb_octree,
 			  b_t_elapsed,
@@ -5502,14 +5592,7 @@ PDM_para_octree_build
                          b_t_cpu_s);
 #endif
 
-#if BMODIF
-    /*for (int i = 0; i < octree->octants->n_nodes; i++) {
-      for (PDM_para_octree_direction_t dir = 0; dir < 6; dir++) {
-	free (ngb_octree[i].neighbours[dir]);
-      }
-    }
-    free (ngb_octree);*/
-    
+#if 0
     _check_neighbours_area (octree);
 #endif
   }
@@ -7578,6 +7661,72 @@ PDM_para_octree_closest_point2
 
 }
 
+
+
+
+static void
+_my_dump_times
+(
+ const _octree_t *octree
+ )
+{
+  double tot = octree->times_elapsed[END] - octree->times_elapsed[BEGIN];
+
+  int rank;
+  PDM_MPI_Comm_rank (octree->comm, &rank);
+
+  PDM_printf("[%d] Elapsed = %12.5es\n", rank, tot);
+
+  PDM_printf("[%d]   total              = %12.5es (%d%%)\n",
+	     rank,
+	     octree->times_elapsed[BUILD_TOTAL],
+	     (int) (100 * octree->times_elapsed[BUILD_TOTAL] / tot));
+
+  PDM_printf("[%d]   order points       = %12.5es (%d%%)\n",
+	     rank,
+	     octree->times_elapsed[BUILD_ORDER_POINTS],
+	     (int) (100 * octree->times_elapsed[BUILD_ORDER_POINTS] / tot));
+
+  PDM_printf("[%d]   block partition    = %12.5es (%d%%)\n",
+	     rank,
+	     octree->times_elapsed[BUILD_BLOCK_PARTITION],
+	     (int) (100 * octree->times_elapsed[BUILD_BLOCK_PARTITION] / tot));
+
+#if 0
+  PDM_printf("[%d]   local nodes        = %12.5es (%d%%)\n",
+	     rank,
+	     octree->times_elapsed[BUILD_LOCAL_NODES],
+	     (int) (100 * octree->times_elapsed[BUILD_LOCAL_NODES] / tot));
+
+  PDM_printf("[%d]   local neighbours   = %12.5es (%d%%)\n",
+	     rank,
+	     octree->times_elapsed[BUILD_LOCAL_NEIGHBOURS],
+	     (int) (100 * octree->times_elapsed[BUILD_LOCAL_NEIGHBOURS] / tot));
+#else
+  double t = octree->times_elapsed[BUILD_LOCAL_NODES] + octree->times_elapsed[BUILD_LOCAL_NEIGHBOURS];
+  PDM_printf("[%d]   local nodes + ngbs = %12.5es (%d%%)\n",
+	     rank,
+	     t,
+	     (int) (100 * t / tot));
+#endif
+  
+  PDM_printf("[%d]   distant neighbours = %12.5es (%d%%)\n",
+	     rank,
+	     octree->times_elapsed[BUILD_DISTANT_NEIGHBOURS],
+	     (int) (100 * octree->times_elapsed[BUILD_DISTANT_NEIGHBOURS] / tot));
+}
+
+
+
+
+
+
+
+
+
+
+
+
 /**
  *
  * \brief  Dump elapsed an CPU time
@@ -7593,6 +7742,10 @@ PDM_para_octree_dump_times
  )
 {
   _octree_t *octree = _get_from_id (id);
+#if 1
+  _my_dump_times (octree);
+  return;
+#endif
 
   double t1 = octree->times_elapsed[END] - octree->times_elapsed[BEGIN];
   double t2 = octree->times_cpu[END] - octree->times_cpu[BEGIN];
@@ -7614,25 +7767,26 @@ PDM_para_octree_dump_times
 
   if (rank == 0) {
 
-    PDM_printf( "PDM_para_octree timer : all (elapsed and cpu) : %12.5es %12.5es\n",
+    PDM_printf( "PDM_para_octree timer : all (elapsed and cpu)                                           :"
+		" %12.5es %12.5es\n",
                 t1max, t2max);
-    PDM_printf( "PDM_para_octree timer : build octree : total (elapsed and cpu) :"
+    PDM_printf( "PDM_para_octree timer : build octree : total (elapsed and cpu)                          :"
                 " %12.5es %12.5es\n",
                 t_elaps_max[BUILD_TOTAL],
                 t_cpu_max[BUILD_TOTAL]);
-    PDM_printf( "PDM_para_octree timer : build octree : step order points (elapsed and cpu) :"
+    PDM_printf( "PDM_para_octree timer : build octree : step order points (elapsed and cpu)              :"
                 " %12.5es %12.5es\n",
                 t_elaps_max[BUILD_ORDER_POINTS],
                 t_cpu_max[BUILD_ORDER_POINTS]);
-    PDM_printf( "PDM_para_octree timer : build octree : step block partition (elapsed and cpu) :"
+    PDM_printf( "PDM_para_octree timer : build octree : step block partition (elapsed and cpu)           :"
                 " %12.5es %12.5es\n",
                 t_elaps_max[BUILD_BLOCK_PARTITION],
                 t_cpu_max[BUILD_BLOCK_PARTITION]);
-    PDM_printf( "PDM_para_octree timer : build octree : step local nodes (elapsed and cpu) :"
+    PDM_printf( "PDM_para_octree timer : build octree : step local nodes (elapsed and cpu)               :"
                 " %12.5es %12.5es\n",
                 t_elaps_max[BUILD_LOCAL_NODES],
                 t_cpu_max[BUILD_LOCAL_NODES]);
-    PDM_printf( "PDM_para_octree timer : build octree : step local neighbours (elapsed and cpu) :"
+    PDM_printf( "PDM_para_octree timer : build octree : step local neighbours (elapsed and cpu)          :"
                 " %12.5es %12.5es\n",
                 t_elaps_max[BUILD_LOCAL_NEIGHBOURS],
                 t_cpu_max[BUILD_LOCAL_NEIGHBOURS]);
@@ -7648,7 +7802,7 @@ PDM_para_octree_dump_times
                 " %12.5es %12.5es\n",
                 t_elaps_max[BUILD_LOCAL_NEIGHBOURS_STEP3],
                 t_cpu_max[BUILD_LOCAL_NEIGHBOURS_STEP3]);
-    PDM_printf( "PDM_para_octree timer : build octree : step distant neighbours (elapsed and cpu) :"
+    PDM_printf( "PDM_para_octree timer : build octree : step distant neighbours (elapsed and cpu)        :"
                 " %12.5es %12.5es\n",
                 t_elaps_max[BUILD_DISTANT_NEIGHBOURS],
                 t_cpu_max[BUILD_DISTANT_NEIGHBOURS]);
