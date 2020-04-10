@@ -100,6 +100,10 @@ typedef struct  {
                                            (size = 2*n_zone, global data)             */
   _boundsAndJoins_t **pbounds_and_joins;/*!< partitionned boundary and join data in each
                                            zone/part                                  */
+  int               n_total_joins;      /*Total number of joins between zones
+                                          (nb : each counts twice)                    */
+  int               *join_to_opposite;  /*For each global joinId, give the globalId of
+                                          the opposite join (size = n_total_joins)    */
 } _pdm_multipart_t;
 
 /*============================================================================
@@ -605,6 +609,9 @@ PDM_multipart_create
     _multipart->n_bounds_and_joins[2*izone+1] = -1;
   }
 
+  _multipart->n_total_joins = 0;
+  _multipart->join_to_opposite = NULL;
+
   int n_rank;
   PDM_MPI_Comm_size(comm, &n_rank);
 
@@ -664,6 +671,19 @@ void PDM_multipart_register_block
   _pdm_multipart_t *_multipart = _get_from_id (mpart_id);
   assert(zone_gid < _multipart->n_zone);
   _multipart->dmeshes_ids[zone_gid] = block_data_id;
+}
+
+void PDM_multipart_register_joins
+(
+ const int        mpart_id,
+ const int        n_total_joins,
+ int             *matching_join_array
+)
+{
+  _pdm_multipart_t *_multipart = _get_from_id (mpart_id);
+
+  _multipart->n_total_joins    = n_total_joins;
+  _multipart->join_to_opposite = matching_join_array;
 }
 
 void
