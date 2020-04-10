@@ -284,13 +284,13 @@ _set_dface_tag_from_joins
 
 
 static void
-_rebuild_boundaries
+_split_bounds_and_joins
 (
  _pdm_multipart_t *_multipart
 )
 {
 
-  printf("_rebuild_boundaries::\n");
+  printf("_split_bounds_and_joins::\n");
 
   //Set structure : we need a to retrive pboundsAndJoin for a given zone/part
   int *bounds_and_joins_idx = (int *) malloc((_multipart->n_zone + 1) * sizeof(int));
@@ -399,13 +399,25 @@ _rebuild_boundaries
 
     }
   }
-
+  free(bounds_and_joins_idx);
+}
+static void
+_search_matching_joins
+(
+ _pdm_multipart_t *_multipart
+)
+{
 
   // Implementation avec le alltoall + trie (en cours mais a jeter ?)
   int i_rank;
   int n_rank;
   PDM_MPI_Comm_rank(PDM_MPI_COMM_WORLD, &i_rank);
   PDM_MPI_Comm_size(PDM_MPI_COMM_WORLD, &n_rank);
+
+  int *bounds_and_joins_idx = (int *) malloc((_multipart->n_zone + 1) * sizeof(int));
+  bounds_and_joins_idx[0] = 0;
+  for (int i = 0; i < _multipart->n_zone; i++)
+    bounds_and_joins_idx[i + 1] = _multipart->n_part[i] + bounds_and_joins_idx[i];
 
   //Step 0 ; construction de join_gid -> liste partitions partageant ce join en num globale (apres PT)
   // TODO -> ASSUME WE HAVE IT FOR NOW
@@ -821,7 +833,8 @@ PDM_multipart_run_ppart
       }
     }
     // Now separate joins and boundaries and we rebuild joins over the zones
-    _rebuild_boundaries(_multipart);
+    _split_bounds_and_joins(_multipart);
+    _search_matching_joins(_multipart);
   }
 }
 
