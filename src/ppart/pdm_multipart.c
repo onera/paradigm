@@ -65,6 +65,7 @@ extern "C" {
 typedef struct  {
   int  n_bound;
   int  n_join;
+  int *joins_ids;
   int *face_bound_idx;
   int *face_join_idx;
   int *face_bound;
@@ -212,7 +213,7 @@ _set_dface_tag_from_joins
     dface_proc[i] = (PDM_g_num_t) dn_face_proc[i-1] + dface_proc[i-1];
   free(dn_face_proc);
 
-  int  nData = 2; //Face Id, JoinOppId
+  int  nData = 2; //Face Id, JoinId
   int *face_to_send_n   = (int *) malloc(n_rank * sizeof(int));
   int *face_to_send_idx = (int *) malloc((n_rank+1) * sizeof(int));
   for (int i = 0; i < n_rank; i++)
@@ -241,7 +242,7 @@ _set_dface_tag_from_joins
       int rank = PDM_search_rank(dface_join[iface], dface_proc, 0, n_rank);
       int idx   = face_to_send_idx[rank] + face_to_send_n[rank];
       face_to_send[idx  ]   = dface_join[iface];
-      face_to_send[idx+1]   = djoin_gids[2*ijoin+1];
+      face_to_send[idx+1]   = djoin_gids[2*ijoin];
       face_to_send_n[rank] += nData;
     }
   }
@@ -385,6 +386,19 @@ _split_bounds_and_joins
       for (int i = pface_bound_idx[n_bound]; i < face_group_idx[n_face_group]; i++)
         pface_join_ln_to_gn[i - pface_bound_idx[n_bound]] = face_group_ln_to_gn[i];
 
+      // Retrieve joinId using facetag
+      int *pjoins_ids      = (int *) malloc(n_join * sizeof(int)); //Faut il init ?
+      for (int ijoin = 0; ijoin < n_join; ijoin++)
+      {
+        if (pface_join_idx[ijoin] != pface_join_idx[ijoin + 1])
+        {
+          //TODO : coherence des ordinaux joins (démarrage a 0 pour joinOpp, mais à 1 dans le dmesh ...)
+          int first_face_lid = pface_join[pface_join_idx[ijoin]];
+          int joinId         = face_tag[first_face_lid];
+          pjoins_ids[ijoin] = joinId - 1;
+        }
+      }
+
       // Store data in pbounds_and_joins
       int idx = bounds_and_joins_idx[zone_gid] + i_part;
       _multipart->pbounds_and_joins[idx] = malloc(sizeof(_boundsAndJoins_t));
@@ -396,6 +410,7 @@ _split_bounds_and_joins
       _multipart->pbounds_and_joins[idx]->face_join        = pface_join;
       _multipart->pbounds_and_joins[idx]->face_bound_ln_to_gn = pface_bound_ln_to_gn;
       _multipart->pbounds_and_joins[idx]->face_join_ln_to_gn  = pface_join_ln_to_gn;
+      _multipart->pbounds_and_joins[idx]->joins_ids  = pjoins_ids;
 
     }
   }
@@ -434,13 +449,6 @@ _search_matching_joins
   /*join_to_part[1] = 2; //zone 1 part 0   (zone 1 had 3 parts)*/
   /*join_to_part[2] = 4; //zone 1 part 2   (zone 1 had 3 parts)*/
 
-  // ASSUME we have the array djoin_gids : for each zone, gives joinId, joinOppId
-  int *djoin_gids = (int *) malloc(2*_multipart->n_zone * sizeof(int));
-  djoin_gids[2*0] = 0;
-  djoin_gids[2*0+1] = 1;
-  djoin_gids[2*1] = 1;
-  djoin_gids[2*1+1] = 0;
-
   // Step 1. Count data
   int *data_to_send_n = (int *) malloc(n_rank * sizeof(int));
   for (int i=0; i < n_rank; i++)
@@ -450,20 +458,24 @@ _search_matching_joins
     for (int i_part = 0; i_part < _multipart->n_part[izone]; i_part++) {
       int idx = bounds_and_joins_idx[izone] + i_part; //TO CHECK
       int *face_join_idx = _multipart->pbounds_and_joins[idx]->face_join_idx;
+      int *joins_ids     = _multipart->pbounds_and_joins[idx]->joins_ids;
       for (int ijoin = 0; ijoin < _multipart->n_bounds_and_joins[2*izone+1]; ijoin++) {
-        // Get destination and deduce procs that could require this data
-        int join_gid = djoin_gids[2*izone];
-        int opp_join_gid = djoin_gids[2*izone + 1];
-        PDM_printf("[%i] Zone %i, i_part %i, ijoin %i (gid %i) : joinopp %i --> receiving parts are",
-                   i_rank, izone, i_part, ijoin, join_gid, opp_join_gid);
-        for (int i = join_to_part_idx[opp_join_gid]; i < join_to_part_idx[opp_join_gid+1]; i++) {
-          int destPartition = join_to_part[i];
-          int destProc = _multipart->gpart_to_proc[2*destPartition];
+        int n_face_on_join = face_join_idx[ijoin+1] - face_join_idx[ijoin];
+        if (n_face_on_join > 0) {
+          // Get destination and deduce procs that could require this data
+          int join_gid = joins_ids[ijoin];
+          int opp_join_gid = _multipart->join_to_opposite[join_gid];
+          PDM_printf("[%i] Zone %i, i_part %i, ijoin %i (gid %i) : joinopp %i --> receiving parts are",
+                     i_rank, izone, i_part, ijoin, join_gid, opp_join_gid);
+          for (int i = join_to_part_idx[opp_join_gid]; i < join_to_part_idx[opp_join_gid+1]; i++) {
+            int destPartition = join_to_part[i];
+            int destProc = _multipart->gpart_to_proc[2*destPartition];
 
-          PDM_printf(" %d (proc %d)", destPartition, _multipart->gpart_to_proc[2*destPartition]);
-          //We have the destination, exchanged data is 3 times the lenght of point list
-          // (pl value, LNToGN value, join_gid value)
-          data_to_send_n[destProc] += 3*(face_join_idx[ijoin+1] - face_join_idx[ijoin]);
+            PDM_printf(" %d (proc %d)", destPartition, _multipart->gpart_to_proc[2*destPartition]);
+            //We have the destination, exchanged data is 3 times the lenght of point list
+            // (pl value, LNToGN value, join_gid value)
+            data_to_send_n[destProc] += 3*n_face_on_join;
+          }
         }
         PDM_printf("\n");
 
@@ -484,23 +496,27 @@ _search_matching_joins
     for (int i_part = 0; i_part < _multipart->n_part[izone]; i_part++) {
       int idx = bounds_and_joins_idx[izone] + i_part; //TO CHECK
       int *face_join_idx    = _multipart->pbounds_and_joins[idx]->face_join_idx;
+      int *joins_ids     = _multipart->pbounds_and_joins[idx]->joins_ids;
       int *face_join       = _multipart->pbounds_and_joins[idx]->face_join;
       PDM_g_num_t *face_join_ln_to_gn = _multipart->pbounds_and_joins[idx]->face_join_ln_to_gn;
       for (int ijoin = 0; ijoin < _multipart->n_bounds_and_joins[2*izone+1]; ijoin++) {
-        int join_gid     = djoin_gids[2*izone];
-        int opp_join_gid = djoin_gids[2*izone + 1];
-        for (int i = join_to_part_idx[opp_join_gid]; i < join_to_part_idx[opp_join_gid+1]; i++) {
-          int destPartition = join_to_part[i];
-          int destProc = _multipart->gpart_to_proc[2*destPartition];
-          int idx2 = data_to_send_idx[destProc] + data_to_send_n[destProc];
-          int k = 0;
-          for (int iface = face_join_idx[ijoin]; iface < face_join_idx[ijoin+1]; iface++) {
-            data_to_send[idx2 + 3*k    ] = face_join[2*iface];
-            data_to_send[idx2 + 3*k + 1] = face_join_ln_to_gn[iface];
-            data_to_send[idx2 + 3*k + 2] = opp_join_gid;
-            k += 1;
+        int n_face_on_join = face_join_idx[ijoin+1] - face_join_idx[ijoin];
+        if (n_face_on_join > 0) {
+          int join_gid = joins_ids[ijoin];
+          int opp_join_gid = _multipart->join_to_opposite[join_gid];
+          for (int i = join_to_part_idx[opp_join_gid]; i < join_to_part_idx[opp_join_gid+1]; i++) {
+            int destPartition = join_to_part[i];
+            int destProc = _multipart->gpart_to_proc[2*destPartition];
+            int idx2 = data_to_send_idx[destProc] + data_to_send_n[destProc];
+            int k = 0;
+            for (int iface = face_join_idx[ijoin]; iface < face_join_idx[ijoin+1]; iface++) {
+              data_to_send[idx2 + 3*k    ] = face_join[2*iface];
+              data_to_send[idx2 + 3*k + 1] = face_join_ln_to_gn[iface];
+              data_to_send[idx2 + 3*k + 2] = opp_join_gid;
+              k += 1;
+            }
+            data_to_send_n[destProc] += 3*k;
           }
-          data_to_send_n[destProc] += 3*k;
         }
       }
     }
@@ -540,11 +556,12 @@ _search_matching_joins
       int idx = bounds_and_joins_idx[izone] + ipart; //TO CHECK
       int *face_join_idx    = _multipart->pbounds_and_joins[idx]->face_join_idx;
       int *face_join        = _multipart->pbounds_and_joins[idx]->face_join;
+      int *joins_ids     = _multipart->pbounds_and_joins[idx]->joins_ids;
       int *face_join_ln_to_gn = _multipart->pbounds_and_joins[idx]->face_join_ln_to_gn;
       // A optimiser
       for (int ijoin = 0; ijoin < _multipart->n_bounds_and_joins[2*izone + 1]; ijoin++)
       {
-        int join_gid = djoin_gids[2*izone + ijoin];
+        int join_gid = joins_ids[ijoin];
         for (int i = 0; i < nRecv; i++)
         {
           if (data_to_recv[3*i + 2] == join_gid)
