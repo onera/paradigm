@@ -98,6 +98,24 @@ void PDM_multipart_register_block
 
 /**
  *
+ * \brief Set the global list of joins between meshes
+ *
+ * \param [in]   mpart_id            Identifier
+ * \param [in]   n_total_joins       Total number of joins
+ * \param [in]   matching_join_array Link join i to join j
+ *
+ */
+
+void PDM_multipart_register_joins
+(
+ const int        mpart_id,
+ const int        n_total_joins,
+ int             *matching_join_array
+);
+
+
+/**
+ *
  * \brief Call the partitionner (via PDM_part_create) on the multipart object
  *
  * \param [in]   id           Identifier

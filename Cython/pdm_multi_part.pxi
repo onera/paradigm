@@ -16,6 +16,11 @@ cdef extern from "pdm_multipart.h":
                                       int        block_data_id)
 
     # ------------------------------------------------------------------
+    void PDM_multipart_register_joins(int        mpart_id,
+                                      int        n_total_joins,
+                                      int*       matching_join_array)
+
+    # ------------------------------------------------------------------
     void PDM_multipart_run_ppart(int id);
 
     # ------------------------------------------------------------------
@@ -129,6 +134,15 @@ cdef class MultiPart:
         """
         """
         PDM_multipart_register_block(self._mpart_id, zoneGId, block_data_id)
+
+    # ------------------------------------------------------------------
+    def multipart_register_joins(self, int n_total_joins,
+                                 NPY.ndarray[NPY.int32_t, mode='c', ndim=1] matching_join):
+        """
+        """
+        PDM_multipart_register_joins(       self._mpart_id,
+                                            n_total_joins,
+                                     <int*> matching_join.data)
 
     # ------------------------------------------------------------------
     def multipart_run_ppart(self):
