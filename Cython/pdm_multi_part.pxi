@@ -462,7 +462,7 @@ cdef class MultiPart:
         if (faceJoin == NULL) :
             npFaceJoin = None
         else :
-            dim = <NPY.npy_intp> 2*dims['sFaceJoin']
+            dim = <NPY.npy_intp> (4 * dims['sFaceJoin'])
             npFaceJoin = NPY.PyArray_SimpleNewFromData(1,
                                                       &dim,
                                                       NPY.NPY_INT32,
