@@ -373,11 +373,11 @@ _split_bounds_and_joins
         pface_join_idx[i-n_bound] = face_group_idx[i] - face_group_idx[n_bound];
 
       int *pface_bound = (int *) malloc(pface_bound_idx[n_bound] * sizeof(int));
-      int *pface_join  = (int *) malloc(2*pface_join_idx[n_join]   * sizeof(int));
+      int *pface_join  = (int *) malloc(4*pface_join_idx[n_join]   * sizeof(int));
       for (int i = 0; i < pface_bound_idx[n_bound]; i++)
         pface_bound[i] = face_group[i];
       for (int i = pface_bound_idx[n_bound]; i < face_group_idx[n_face_group]; i++)
-        pface_join[2*(i - pface_bound_idx[n_bound])] = face_group[i];
+        pface_join[4*(i - pface_bound_idx[n_bound])] = face_group[i];
 
       PDM_g_num_t *pface_bound_ln_to_gn = (PDM_g_num_t *) malloc(pface_bound_idx[n_bound] * sizeof(PDM_g_num_t));
       PDM_g_num_t *pface_join_ln_to_gn  = (PDM_g_num_t *) malloc(pface_join_idx[n_join]   * sizeof(PDM_g_num_t));
@@ -393,7 +393,7 @@ _split_bounds_and_joins
         if (pface_join_idx[ijoin] != pface_join_idx[ijoin + 1])
         {
           //TODO : coherence des ordinaux joins (démarrage a 0 pour joinOpp, mais à 1 dans le dmesh ...)
-          int first_face_lid = pface_join[pface_join_idx[ijoin]];
+          int first_face_lid = pface_join[4*pface_join_idx[ijoin]];
           int joinId         = face_tag[first_face_lid];
           pjoins_ids[ijoin] = joinId - 1;
         }
@@ -562,9 +562,9 @@ _search_matching_joins
             int destProc = join_to_procs[i];
 
             PDM_printf(" proc %d ", destProc);
-            //We have the destination, exchanged data is 3 times the lenght of point list
-            // (pl value, LNToGN value, join_gid value)
-            data_to_send_n[destProc] += 3*n_face_on_join;
+            //We have the destination, exchanged data is 5 times the lenght of point list
+            // (pl value, LNToGN value, join_gid value, giving proc, giving part)
+            data_to_send_n[destProc] += 5*n_face_on_join;
           }
         }
         PDM_printf("\n");
@@ -599,12 +599,14 @@ _search_matching_joins
             int idx2 = data_to_send_idx[destProc] + data_to_send_n[destProc];
             int k = 0;
             for (int iface = face_join_idx[ijoin]; iface < face_join_idx[ijoin+1]; iface++) {
-              data_to_send[idx2 + 3*k    ] = face_join[2*iface];
-              data_to_send[idx2 + 3*k + 1] = face_join_ln_to_gn[iface];
-              data_to_send[idx2 + 3*k + 2] = opp_join_gid;
+              data_to_send[idx2 + 5*k    ] = face_join[4*iface];
+              data_to_send[idx2 + 5*k + 1] = face_join_ln_to_gn[iface];
+              data_to_send[idx2 + 5*k + 2] = opp_join_gid;
+              data_to_send[idx2 + 5*k + 3] = i_rank;
+              data_to_send[idx2 + 5*k + 4] = i_part;
               k += 1;
             }
-            data_to_send_n[destProc] += 3*k;
+            data_to_send_n[destProc] += 5*k;
           }
         }
       }
@@ -630,7 +632,7 @@ _search_matching_joins
                     PDM__PDM_MPI_G_NUM,
                     _multipart->comm);
 
-  int nRecv = data_to_recv_idx[n_rank]/3;
+  int nRecv = data_to_recv_idx[n_rank]/5;
   free(data_to_send);
   free(data_to_send_n);
   free(data_to_send_idx);
@@ -653,12 +655,16 @@ _search_matching_joins
         int join_gid = joins_ids[ijoin];
         for (int i = 0; i < nRecv; i++)
         {
-          if (data_to_recv[3*i + 2] == join_gid)
+          if (data_to_recv[5*i + 2] == join_gid)
           {
             for (int j = face_join_idx[ijoin]; j < face_join_idx[ijoin+1]; j++)
             {
-              if (data_to_recv[3*i+1] == face_join_ln_to_gn[j])
-                face_join[2*j+1] = data_to_recv[3*i];
+              if (data_to_recv[5*i+1] == face_join_ln_to_gn[j])
+              {
+                face_join[4*j+1] = data_to_recv[5*i+3]; //Proc
+                face_join[4*j+2] = data_to_recv[5*i+4]; //Part
+                face_join[4*j+3] = data_to_recv[5*i];
+              }
             }
           }
         }
