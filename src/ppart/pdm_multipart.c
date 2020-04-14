@@ -426,28 +426,119 @@ _search_matching_joins
   // Implementation avec le alltoall + trie (en cours mais a jeter ?)
   int i_rank;
   int n_rank;
-  PDM_MPI_Comm_rank(PDM_MPI_COMM_WORLD, &i_rank);
-  PDM_MPI_Comm_size(PDM_MPI_COMM_WORLD, &n_rank);
+  PDM_MPI_Comm_rank(_multipart->comm, &i_rank);
+  PDM_MPI_Comm_size(_multipart->comm, &n_rank);
 
   int *bounds_and_joins_idx = (int *) malloc((_multipart->n_zone + 1) * sizeof(int));
   bounds_and_joins_idx[0] = 0;
   for (int i = 0; i < _multipart->n_zone; i++)
     bounds_and_joins_idx[i + 1] = _multipart->n_part[i] + bounds_and_joins_idx[i];
 
-  //Step 0 ; construction de join_gid -> liste partitions partageant ce join en num globale (apres PT)
-  // TODO -> ASSUME WE HAVE IT FOR NOW
-  // Local ou pas local ? La zone est la même pour tt les parts partageant le join
-  // //Taille = nb joins + 1?
-  int *join_to_part_idx = (int *) malloc(3 * sizeof(int));
-  join_to_part_idx[0] = 0;
-  join_to_part_idx[1] = 1;
-  join_to_part_idx[2] = 2;
-  int *join_to_part = (int *) malloc(join_to_part_idx[2] * sizeof(int));
-  join_to_part[0] = 2;
-  join_to_part[1] = 0;
-  /*join_to_part[0] = 0; //zone 0 part 0   (zone 0 had 2 parts)*/
-  /*join_to_part[1] = 2; //zone 1 part 0   (zone 1 had 3 parts)*/
-  /*join_to_part[2] = 4; //zone 1 part 2   (zone 1 had 3 parts)*/
+
+
+  // Step 0 : for a given join unique id, we want the list of process having a least one zone/part that
+  // includes this join (after partitionning). 
+  int n_total_joins = _multipart->n_total_joins;
+
+  // Array of size njoin indicating if join is known or not by this proc
+  int *proc_knows_join = (int *) malloc(n_total_joins * sizeof(int));
+  for (int i = 0; i < n_total_joins; i++)
+    proc_knows_join[i] = 0;
+  for (int izone = 0 ; izone < _multipart->n_zone; izone ++)
+  {
+    for (int i_part = 0; i_part < _multipart->n_part[izone]; i_part++)
+    {
+      int idx = bounds_and_joins_idx[izone] + i_part; //TO CHECK
+      int *face_join_idx = _multipart->pbounds_and_joins[idx]->face_join_idx;
+      int *join_gid      = _multipart->pbounds_and_joins[idx]->joins_ids;
+      for (int ijoin = 0; ijoin < _multipart->n_bounds_and_joins[2*izone+1]; ijoin++)
+      {
+        if (face_join_idx[ijoin+1] != face_join_idx[ijoin])
+          proc_knows_join[join_gid[ijoin]] = 1;
+      }
+    }
+  }
+  // To exchange data, we move to a representation proc->list of known joins
+  int nb_joins_on_proc = 0; 
+  for (int i = 0; i < n_total_joins; i++)
+    nb_joins_on_proc += proc_knows_join[i];
+  int *joins_on_proc = (int *) malloc(nb_joins_on_proc * sizeof(int));
+  int k = 0;
+  for (int i = 0; i < n_total_joins; i++)
+  {
+    if (proc_knows_join[i] == 1)
+    {
+      joins_on_proc[k] = i;
+      k++;
+    }
+  }
+  free(proc_knows_join);
+
+  int *nb_joins_on_procs = (int *) malloc((n_rank) * sizeof(int));
+  PDM_MPI_Allgather(&nb_joins_on_proc, 1, PDM_MPI_INT, nb_joins_on_procs, 1, PDM_MPI_INT, _multipart->comm);
+
+  int *proc_to_joins_idx = (int *) malloc((n_rank + 1) * sizeof(int));
+  proc_to_joins_idx[0] = 0;
+  for (int i=0; i < n_rank; i++)
+    proc_to_joins_idx[i+1] = proc_to_joins_idx[i] + nb_joins_on_procs[i];
+  
+  PDM_printf("[%d] proc_to_joins_idx are :", i_rank);
+  for (int i=0; i < n_rank + 1; i ++)
+    PDM_printf(" %d ", proc_to_joins_idx[i]);
+  PDM_printf("\n");
+
+  int *proc_to_joins = (int *) malloc(proc_to_joins_idx[n_rank] * sizeof(int));
+  PDM_MPI_Allgatherv(joins_on_proc, nb_joins_on_proc, PDM_MPI_INT,
+                     proc_to_joins, nb_joins_on_procs, proc_to_joins_idx, PDM_MPI_INT,
+                     _multipart->comm);
+
+  free(joins_on_proc);
+  PDM_printf("[%d] proc_to_joins is :", i_rank);
+  for (int i=0; i < proc_to_joins_idx[n_rank]; i ++)
+    PDM_printf(" %d ", proc_to_joins[i]);
+  PDM_printf("\n");
+  
+  // We have proc -> join, move back to join -> proc
+  int *join_to_procs_idx = (int *) malloc((n_total_joins + 1) * sizeof(int));
+  for (int i=0; i < n_total_joins + 1; i++)
+    join_to_procs_idx[i] = 0;
+  for (int iproc = 0; iproc < n_rank; iproc++)
+  {
+    for (int ijoin = proc_to_joins_idx[iproc]; ijoin < proc_to_joins_idx[iproc+1]; ijoin++)
+    {
+      int join_id = proc_to_joins[ijoin];
+      join_to_procs_idx[join_id + 1] ++;
+    }
+  }
+  for (int i=1; i < n_total_joins + 1; i++)
+    join_to_procs_idx[i] = join_to_procs_idx[i] + join_to_procs_idx[i-1];
+  
+  int *join_to_procs = (int *) malloc(join_to_procs_idx[n_total_joins] * sizeof(int));
+  int *ngiven_on_join = (int *) malloc(n_total_joins * sizeof(int));
+  for (int i=0; i < n_total_joins; i++)
+    ngiven_on_join[i] = 0;
+  for (int iproc = 0; iproc < n_rank; iproc++)
+  {
+    for (int ijoin = proc_to_joins_idx[iproc]; ijoin < proc_to_joins_idx[iproc+1]; ijoin++)
+    {
+      int join_id = proc_to_joins[ijoin];
+      join_to_procs[join_to_procs_idx[join_id] + ngiven_on_join[join_id]] = iproc;
+      ngiven_on_join[join_id] ++;
+    }
+  }
+  free(ngiven_on_join);
+  free(proc_to_joins_idx);
+  free(proc_to_joins);
+
+  PDM_printf("[%d] join_to_procs_idx are :", i_rank);
+  for (int i=0; i < n_total_joins + 1; i ++)
+    PDM_printf(" %d ", join_to_procs_idx[i]);
+  PDM_printf("\n");
+    
+  PDM_printf("[%d] join_to_procs is :", i_rank);
+  for (int i=0; i < join_to_procs_idx[n_total_joins]; i ++)
+    PDM_printf(" %d ", join_to_procs[i]);
+  PDM_printf("\n");
 
   // Step 1. Count data
   int *data_to_send_n = (int *) malloc(n_rank * sizeof(int));
@@ -467,11 +558,10 @@ _search_matching_joins
           int opp_join_gid = _multipart->join_to_opposite[join_gid];
           PDM_printf("[%i] Zone %i, i_part %i, ijoin %i (gid %i) : joinopp %i --> receiving parts are",
                      i_rank, izone, i_part, ijoin, join_gid, opp_join_gid);
-          for (int i = join_to_part_idx[opp_join_gid]; i < join_to_part_idx[opp_join_gid+1]; i++) {
-            int destPartition = join_to_part[i];
-            int destProc = _multipart->gpart_to_proc[2*destPartition];
+          for (int i = join_to_procs_idx[opp_join_gid]; i < join_to_procs_idx[opp_join_gid+1]; i++) {
+            int destProc = join_to_procs[i];
 
-            PDM_printf(" %d (proc %d)", destPartition, _multipart->gpart_to_proc[2*destPartition]);
+            PDM_printf(" proc %d ", destProc);
             //We have the destination, exchanged data is 3 times the lenght of point list
             // (pl value, LNToGN value, join_gid value)
             data_to_send_n[destProc] += 3*n_face_on_join;
@@ -504,9 +594,8 @@ _search_matching_joins
         if (n_face_on_join > 0) {
           int join_gid = joins_ids[ijoin];
           int opp_join_gid = _multipart->join_to_opposite[join_gid];
-          for (int i = join_to_part_idx[opp_join_gid]; i < join_to_part_idx[opp_join_gid+1]; i++) {
-            int destPartition = join_to_part[i];
-            int destProc = _multipart->gpart_to_proc[2*destPartition];
+          for (int i = join_to_procs_idx[opp_join_gid]; i < join_to_procs_idx[opp_join_gid+1]; i++) {
+            int destProc = join_to_procs[i];
             int idx2 = data_to_send_idx[destProc] + data_to_send_n[destProc];
             int k = 0;
             for (int iface = face_join_idx[ijoin]; iface < face_join_idx[ijoin+1]; iface++) {
@@ -578,6 +667,8 @@ _search_matching_joins
   }
 
   free(bounds_and_joins_idx);
+  free(join_to_procs_idx);
+  free(join_to_procs);
 }
 
 /*=============================================================================
