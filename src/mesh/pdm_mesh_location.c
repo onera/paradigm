@@ -327,7 +327,7 @@ _get_candidate_elements_from_dbbtree
     n_points += pcloud->n_points[ipart];
   }
 
-  double      *pts_coord = malloc (sizeof(double) *      n_points*3);
+  double      *pts_coord = malloc (sizeof(double)      * n_points*3);
   PDM_g_num_t *pts_g_num = malloc (sizeof(PDM_g_num_t) * n_points);
   int idx = 0;
   for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
@@ -825,19 +825,6 @@ PDM_mesh_location_compute
   free (box_origin);
 
 
-  PDM_dbbtree_t *dbbt = NULL;
-  if (location->method == PDM_MESH_LOCATION_DBBTREE) {
-    dbbt = PDM_dbbtree_create (location->comm, dim);
-
-    PDM_dbbtree_boxes_set (dbbt,
-			   1,//const int n_part,
-			   &n_boxes,
-			   &box_extents,
-			   &box_g_num);
-  }
-
-
-  
   PDM_timer_hang_on(location->timer);
   e_t_elapsed = PDM_timer_elapsed(location->timer);
   e_t_cpu     = PDM_timer_cpu(location->timer);
@@ -855,8 +842,18 @@ PDM_mesh_location_compute
   b_t_cpu_s   = e_t_cpu_s;
 
   PDM_timer_resume(location->timer);
+  
 
+  PDM_dbbtree_t *dbbt = NULL;
+  if (location->method == PDM_MESH_LOCATION_DBBTREE) {
+    dbbt = PDM_dbbtree_create (location->comm, dim);
 
+    PDM_dbbtree_boxes_set (dbbt,
+			   1,//const int n_part,
+			   &n_boxes,
+			   &box_extents,
+			   &box_g_num);
+  }
   
   
   /*
@@ -1351,7 +1348,7 @@ PDM_mesh_location_dump_times
                 t_elaps_max[BUILD_BOUNDING_BOXES],
                 t_cpu_max[BUILD_BOUNDING_BOXES]);
 
-    PDM_printf( "mesh_location timer : search candidates (elapsed and cpu) :                        "
+    PDM_printf( "mesh_location timer : build aux. struct + search candidates (elapsed and cpu) :    "
                 " %12.5es %12.5es\n",
                 t_elaps_max[SEARCH_CANDIDATES],
                 t_cpu_max[SEARCH_CANDIDATES]);
