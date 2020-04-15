@@ -394,7 +394,7 @@ _split_bounds_and_joins
         {
           //TODO : coherence des ordinaux joins (démarrage a 0 pour joinOpp, mais à 1 dans le dmesh ...)
           int first_face_lid = pface_join[4*pface_join_idx[ijoin]];
-          int joinId         = face_tag[first_face_lid];
+          int joinId         = face_tag[first_face_lid-1];
           pjoins_ids[ijoin] = joinId - 1;
         }
       }
