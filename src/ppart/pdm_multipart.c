@@ -246,19 +246,16 @@ _build_join_uface_distribution
     const int          *dface_join_idx;
     const PDM_g_num_t  *dface_join;
 
-    if (block_id >= 0)
+    PDM_dmesh_dims_get(block_id, &dn_cell, &dn_face, &dn_vtx, &n_bnd, &n_join);
+    PDM_dmesh_data_get(block_id, &dvtx_coord, &dface_vtx_idx, &dface_vtx, &dface_cell,
+                       &dface_bound_idx, &dface_bound, &djoin_gids, &dface_join_idx, &dface_join);
+    for (int ijoin=0; ijoin < n_join; ijoin ++)
     {
-      PDM_dmesh_dims_get(block_id, &dn_cell, &dn_face, &dn_vtx, &n_bnd, &n_join);
-      PDM_dmesh_data_get(block_id, &dvtx_coord, &dface_vtx_idx, &dface_vtx, &dface_cell,
-                         &dface_bound_idx, &dface_bound, &djoin_gids, &dface_join_idx, &dface_join);
-      for (int ijoin=0; ijoin < n_join; ijoin ++)
-      {
-        int join_gid = djoin_gids[2*ijoin];
-        int join_opp_gid = djoin_gids[2*ijoin + 1];
-        //Paired joins must be counted only once
-        if (join_gid < join_opp_gid)
-          nb_face_in_joins[join_to_ref_join[join_gid-1]] = dface_join_idx[ijoin+1] - dface_join_idx[ijoin];
-      }
+      int join_gid = djoin_gids[2*ijoin];
+      int join_opp_gid = djoin_gids[2*ijoin + 1];
+      //Paired joins must be counted only once
+      if (join_gid < join_opp_gid)
+        nb_face_in_joins[join_to_ref_join[join_gid-1]] = dface_join_idx[ijoin+1] - dface_join_idx[ijoin];
     }
   }
   /*
@@ -1209,46 +1206,28 @@ PDM_multipart_run_ppart
       PDM_g_num_t  *dface_group    = NULL;
       int          *dface_tag      = NULL;
 
-      if (block_id >= 0)
-      {
-        PDM_dmesh_dims_get(block_id, &dn_cell, &dn_face, &dn_vtx, &n_bnd, &n_join);
-        PDM_dmesh_data_get(block_id, &dvtx_coord, &dface_vtx_idx, &dface_vtx, &dface_cell,
-                           &dface_bound_idx, &dface_bound, &djoin_gids, &dface_join_idx, &dface_join);
-        //Merge face_bounds and face_joins into face_group
-        if (dface_join_idx == NULL){
-          int single_array[1] = {0};
-          dface_join_idx = single_array;
-        }
-        n_face_group = n_bnd + n_join;
-        dface_group_idx = (int *) malloc((n_face_group + 1) * sizeof(int));
-        dface_group = (PDM_g_num_t *) malloc((dface_bound_idx[n_bnd] + dface_join_idx[n_join]) * sizeof(PDM_g_num_t));
+      PDM_dmesh_dims_get(block_id, &dn_cell, &dn_face, &dn_vtx, &n_bnd, &n_join);
+      PDM_dmesh_data_get(block_id, &dvtx_coord, &dface_vtx_idx, &dface_vtx, &dface_cell,
+                         &dface_bound_idx, &dface_bound, &djoin_gids, &dface_join_idx, &dface_join);
 
-        for (int i=0; i < n_bnd + 1; i++)
-          dface_group_idx[i] = dface_bound_idx[i];
-        for (int i=0; i < dface_bound_idx[n_bnd]; i++)
-          dface_group[i] = dface_bound[i];
+      //Merge face_bounds and face_joins into face_group
+      n_face_group = n_bnd + n_join;
+      dface_group_idx = (int *)         malloc((n_face_group + 1) * sizeof(int));
+      dface_group     = (PDM_g_num_t *) malloc((dface_bound_idx[n_bnd] + dface_join_idx[n_join]) * sizeof(PDM_g_num_t));
 
-        for (int i=1; i < n_join + 1; i++)
-          dface_group_idx[n_bnd + i] = dface_bound_idx[n_bnd] + dface_join_idx[i];
-        for (int i=0; i < dface_join_idx[n_join]; i++)
-          dface_group[dface_bound_idx[n_bnd] + i] = dface_join[i];
-      }
-      // Fill global array n_bounds_and_joins. n_bound and n_join are supposed to be the same for
-      // procs having distributed data, so we send it to procs having no data with reduce_max
-      PDM_MPI_Allreduce(&n_bnd, &_multipart->n_bounds_and_joins[2*zone_gid], 1,
-                        PDM_MPI_INT, PDM_MPI_MAX, _multipart->comm);
-      PDM_MPI_Allreduce(&n_join, &_multipart->n_bounds_and_joins[2*zone_gid+1], 1,
-                        PDM_MPI_INT, PDM_MPI_MAX, _multipart->comm);
+      for (int i=0; i < n_bnd + 1; i++)
+        dface_group_idx[i] = dface_bound_idx[i];
+      for (int i=0; i < dface_bound_idx[n_bnd]; i++)
+        dface_group[i] = dface_bound[i];
 
-      // n_face_group and face_group_idx must also be know (even if filled with 0) for every proc
-      if (block_id < 0)
-      {
-        n_face_group = _multipart->n_bounds_and_joins[2*zone_gid] + _multipart->n_bounds_and_joins[2*zone_gid+1];
-        dface_group_idx = (int *) malloc((n_face_group + 1) * sizeof(int));
-        for (int k=0; k < n_face_group + 1; k++)
-          dface_group_idx[k] = 0;
-        dface_cell = (PDM_g_num_t *) malloc(0); //Must be != NULL to enter in _dual_graph
-      }
+      for (int i=1; i < n_join + 1; i++)
+        dface_group_idx[n_bnd + i] = dface_bound_idx[n_bnd] + dface_join_idx[i];
+      for (int i=0; i < dface_join_idx[n_join]; i++)
+        dface_group[dface_bound_idx[n_bnd] + i] = dface_join[i];
+
+      //Store number of bounds and joins in the structure
+      _multipart->n_bounds_and_joins[2*zone_gid    ] = n_bnd;
+      _multipart->n_bounds_and_joins[2*zone_gid + 1] = n_join;
 
       dface_tag = (int *) malloc((dn_face) * sizeof(int));
       _set_dface_tag_from_joins(dn_face, n_join, djoin_gids, dface_join_idx, dface_join, dface_tag, _multipart->comm);
@@ -1258,33 +1237,33 @@ PDM_multipart_run_ppart
       int *dcell_part = (int *) malloc(dn_cell*sizeof(int));
       // We probably should create a subcomm to imply only the procs sharing this block
       PDM_part_create(&ppart_id,
-              _multipart->comm,
-              _multipart->split_method,
-              "PDM_PART_RENUM_CELL_NONE",
-              "PDM_PART_RENUM_FACE_NONE",
-              0,                          // n_property_cell
-              NULL,                       // renum_properties_cell
-              0,                          // n_property_face
-              NULL,                       // renum_properties_face
-              _multipart->n_part[zone_gid],
-              dn_cell,
-              dn_face,
-              dn_vtx,
-              n_face_group,
-              NULL,                       // dcell_faceIdx
-              NULL,                       // dcell_face
-              NULL,                       // dcell_tag
-              NULL,                       // dcell_weight
-              have_dcell_part,
-              dcell_part,                  // dcell_part
-              dface_cell,
-              dface_vtx_idx,
-              dface_vtx,
-              dface_tag,
-              dvtx_coord,
-              NULL,                       // dvtx_tag
-              dface_group_idx,
-              dface_group);
+                      _multipart->comm,
+                      _multipart->split_method,
+                      "PDM_PART_RENUM_CELL_NONE",
+                      "PDM_PART_RENUM_FACE_NONE",
+                      0,                          // n_property_cell
+                      NULL,                       // renum_properties_cell
+                      0,                          // n_property_face
+                      NULL,                       // renum_properties_face
+                      _multipart->n_part[zone_gid],
+                      dn_cell,
+                      dn_face,
+                      dn_vtx,
+                      n_face_group,
+                      NULL,                       // dcell_faceIdx
+                      NULL,                       // dcell_face
+                      NULL,                       // dcell_tag
+                      NULL,                       // dcell_weight
+                      have_dcell_part,
+                      dcell_part,                  // dcell_part
+                      dface_cell,
+                      dface_vtx_idx,
+                      dface_vtx,
+                      dface_tag,
+                      dvtx_coord,
+                      NULL,                       // dvtx_tag
+                      dface_group_idx,
+                      dface_group);
       PDM_printf("Partitionning done, ppardId is %d \n", ppart_id);
       //Store the partition id for future access
       _multipart->part_ids[zone_gid] = ppart_id;
@@ -1293,10 +1272,6 @@ PDM_multipart_run_ppart
       free(dface_group_idx);
       free(dface_group);
       free(dface_tag);
-      if (block_id < 0)
-      {
-        free(dface_cell); //FIXME: Revoir la gestion du rien
-      }
     }
     // Now separate joins and boundaries and we rebuild joins over the zones
     _split_bounds_and_joins(_multipart);

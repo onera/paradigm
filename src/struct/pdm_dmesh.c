@@ -244,7 +244,6 @@ PDM_dmesh_set
   dmesh->_dface_join_idx  = dface_join_idx;
   dmesh->_dface_join     = dface_join;
 
-  printf("PDM_dmesh_set::dmesh->_dface_vtx :: "PDM_FMT_G_NUM" \n", dmesh->_dface_vtx[0]);
 }
 
 /**
@@ -337,8 +336,6 @@ PDM_dmesh_free
 )
 {
   _pdm_dmesh_t *dmesh = _get_from_id (id);
-
-  printf("PDM_dmesh_free::dmesh->_dface_vtx : "PDM_FMT_G_NUM" \n", dmesh->_dface_vtx[0]);
 
   dmesh->dn_cell   = 0;
   dmesh->dn_face   = 0;
