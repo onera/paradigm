@@ -35,7 +35,7 @@ extern "C" {
  * Static global variables
  *============================================================================*/
 
-static  const double _eps = 1e-12;
+static  const double _eps = 1e-16;
 
 /*============================================================================
  * Private function definitions
@@ -62,6 +62,7 @@ _det_2x2
  double d
 )
 {
+
   return (a * d - b * c);
 }
 
@@ -172,7 +173,6 @@ PDM_line_intersection
    */
 
   c[0] = PDM_DOT_PRODUCT( a21, b1a1 );
-
   c[1] = - PDM_DOT_PRODUCT( b21, b1a1 );
 
   /*
