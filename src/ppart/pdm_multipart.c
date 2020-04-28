@@ -716,7 +716,7 @@ _search_matching_joins
             }
             else if (part_data_loc[6*i + 5] != i_part)
             {
-              opp_part = part_data_loc[6*i + 4];
+              opp_part = part_data_loc[6*i + 5];
               opp_pl   = part_data_loc[6*i + 3];
             }
             // The two joins have the same proc id / part id, we need to check original pl
