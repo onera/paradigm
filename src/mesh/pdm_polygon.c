@@ -542,8 +542,10 @@ PDM_polygon_point_in
          *    (u!=0 u!=1 v=0), (u!=0 u!=1 v=1)
          */
 
-        if ( (_POLYGON_RAY_TOL < u) && (u < 1.0 - _POLYGON_RAY_TOL) &&
-             (_POLYGON_RAY_TOL < v) && (v < 1.0 - _POLYGON_RAY_TOL) ) {
+        if ( (0. < u) && (u < 1.0) &&
+             (0. < v) && (v < 1.0) ) {
+        /* if ( (_POLYGON_RAY_TOL < u) && (u < 1.0 - _POLYGON_RAY_TOL) && */
+        /*      (_POLYGON_RAY_TOL < v) && (v < 1.0 - _POLYGON_RAY_TOL) ) { */
           numInts++;
         }
         else {
