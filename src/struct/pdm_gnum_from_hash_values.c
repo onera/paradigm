@@ -180,9 +180,8 @@ PDM_gnum_from_hash_values_create
 {
 
   /*
-   * Search a ppart free id
+   * Search a gnum_from_hash_values free id
    */
-
   if (_gnums_from_hv == NULL) {
     _gnums_from_hv = PDM_Handles_create (4);
   }
