@@ -26,6 +26,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <stdbool.h>
 
 /*----------------------------------------------------------------------------
@@ -68,19 +69,24 @@ extern "C" {
  *
  */
 
-typedef struct  {
-  int          n_part;      /*!< Number of partitions */
-  PDM_bool_t   equilibrate; /*!< Equilibrate the hash values distribution */
-  PDM_MPI_Comm comm;        /*!< MPI communicator */
+typedef struct {
+  int             n_part;          /*!< Number of partitions */
+  PDM_bool_t      equilibrate;     /*!< Equilibrate the hash values distribution */
+  PDM_MPI_Comm    comm;            /*!< MPI communicator */
 
-  int     *n_elts;          /*!< Number of elements in partitions */
-  size_t **part_hkeys;
-  int    **part_hdata;
-  int    **part_hstri;
+  int            *n_elts;          /*!< Number of elements in partitions */
+  size_t        **part_hkeys;
+  unsigned char **part_hdata;
+  int           **part_hstri;
 
+  // size_t         *blk_hkeys;
+  unsigned char  *blk_hdata;
+  int            *blk_hstri;
 
-  PDM_g_num_t  n_g_elt;     /*!< Global number of elements */
-  PDM_g_num_t **g_nums;     /*!< Global numbering of elements */
+  PDM_g_num_t     n_g_elt;        /*!< Global number of elements    */
+  PDM_g_num_t   **g_nums;         /*!< Global numbering of elements */
+
+  PDM_g_num_t     *distribution;
 
 } _pdm_gnum_from_hv_t;
 
@@ -126,7 +132,7 @@ _get_from_id
  *
  */
 static void
-_gnum_from_hv_compute_equilibrate
+_compute_distribution_equilibrate
 (
  _pdm_gnum_from_hv_t *_gnum
 )
@@ -134,6 +140,43 @@ _gnum_from_hv_compute_equilibrate
   printf("_gnum_from_hv_compute_equilibrate Not implemented \n");
   abort();
 
+}
+
+/**
+ *
+ * \brief Compute with equilibrate algorithm
+ *
+ * \param [in]   _gnum          Current _pdm_gnum_from_hv_t structure
+ *
+ */
+static void
+_compute_distribution
+(
+ _pdm_gnum_from_hv_t *_gnum_from_hv
+)
+{
+
+  size_t max_key_loc = 0;
+  size_t min_key_loc = SIZE_MAX;
+
+  size_t max_key = 0;
+  size_t min_key = SIZE_MAX;
+
+  for(int i_part = 0; i_part < _gnum_from_hv->n_part; i_part++){
+    for(int ielt = 0; ielt < _gnum_from_hv->n_elts[i_part]; ++ielt){
+      max_key_loc = PDM_MAX(max_key_loc, _gnum_from_hv->part_hkeys[i_part][ielt]);
+      min_key_loc = PDM_MIN(min_key_loc, _gnum_from_hv->part_hkeys[i_part][ielt]);
+    }
+  }
+  int ierr;
+  ierr = PDM_MPI_Allreduce(&min_key_loc, &min_key, 1, PDM_MPI_UNSIGNED_LONG, PDM_MPI_MIN, _gnum_from_hv->comm);
+  assert(ierr == 0);
+
+  ierr = PDM_MPI_Allreduce(&max_key_loc, &max_key, 1, PDM_MPI_UNSIGNED_LONG, PDM_MPI_MAX, _gnum_from_hv->comm);
+  assert(ierr == 0);
+
+  printf(" max_key:: %lu \n", max_key);
+  printf(" min_key:: %lu \n", min_key);
 }
 
 /**
@@ -146,11 +189,32 @@ _gnum_from_hv_compute_equilibrate
 static void
 _gnum_from_hv_compute
 (
- _pdm_gnum_from_hv_t *_gnum
+ _pdm_gnum_from_hv_t *_gnum_from_hv
 )
 {
   printf("_gnum_from_hv_compute Not implemented \n");
-  abort();
+
+  if(_gnum_from_hv->equilibrate) {
+    _compute_distribution_equilibrate(_gnum_from_hv);
+  } else {
+    _compute_distribution(_gnum_from_hv);
+  }
+
+  /*
+   * Remapping of partition data in block data according to the hash values distribution
+   */
+
+
+
+  /*
+   * Generate global numbering from the block_data
+   */
+  // PDM_generate_global_id_from();
+
+  /*
+   * Reverse all_to_all exchange in order to remap global id on current partition
+   */
+
 }
 
 
@@ -178,6 +242,11 @@ PDM_gnum_from_hash_values_create
  const PDM_MPI_Comm comm
 )
 {
+  int i_rank;
+  PDM_MPI_Comm_rank (PDM_MPI_COMM_WORLD, &i_rank);
+
+  int n_rank;
+  PDM_MPI_Comm_size (PDM_MPI_COMM_WORLD, &n_rank);
 
   /*
    * Search a gnum_from_hash_values free id
@@ -195,10 +264,10 @@ PDM_gnum_from_hash_values_create
   _gnum_from_hv->n_g_elt     = -1;
   _gnum_from_hv->g_nums      = (PDM_g_num_t **) malloc (sizeof(PDM_g_num_t * ) * n_part);
 
-  _gnum_from_hv->n_elts      = (int     *) malloc (sizeof(int     ) * n_part);
-  _gnum_from_hv->part_hkeys  = (size_t **) malloc (sizeof(size_t *) * n_part);
-  _gnum_from_hv->part_hstri  = (int    **) malloc (sizeof(int    *) * n_part);
-  _gnum_from_hv->part_hdata  = (int    **) malloc (sizeof(int    *) * n_part);
+  _gnum_from_hv->n_elts      = (int            *) malloc (sizeof(int            ) * n_part);
+  _gnum_from_hv->part_hkeys  = (size_t        **) malloc (sizeof(size_t        *) * n_part);
+  _gnum_from_hv->part_hstri  = (int           **) malloc (sizeof(int           *) * n_part);
+  _gnum_from_hv->part_hdata  = (unsigned char **) malloc (sizeof(unsigned char *) * n_part);
 
   for (int i = 0; i < n_part; i++) {
     _gnum_from_hv->g_nums[i]     = NULL;
@@ -206,6 +275,8 @@ PDM_gnum_from_hash_values_create
     _gnum_from_hv->part_hstri[i] = NULL;
     _gnum_from_hv->part_hdata[i] = NULL;
   }
+
+  _gnum_from_hv->distribution = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t ) * ( n_rank + 1 ));
 
   return id;
 
@@ -241,12 +312,12 @@ PROCF (pdm_gnum_from_hash_values_create, PDM_GNUM_FROM_HVALUES_CREATE)
 void
 PDM_gnum_set_hash_values
 (
- const int     id,
- const int     i_part,
- const int     n_elts,
- const size_t *part_hkeys,
- const int    *part_hstri,
- const int    *part_hdata
+ const int            id,
+ const int            i_part,
+ const int            n_elts,
+ const size_t        *part_hkeys,
+ const int           *part_hstri,
+ const unsigned char *part_hdata
 )
 {
   _pdm_gnum_from_hv_t *_gnum_from_hv = _get_from_id (id);
@@ -260,21 +331,21 @@ PDM_gnum_set_hash_values
   assert(_gnum_from_hv->part_hdata[i_part] == NULL);
 
   _gnum_from_hv->n_elts[i_part]      = n_elts;
-  _gnum_from_hv->part_hkeys[i_part]  = (size_t *) part_hkeys;
-  _gnum_from_hv->part_hstri[i_part]  = (int    *) part_hstri;
-  _gnum_from_hv->part_hdata[i_part]  = (int    *) part_hdata;
+  _gnum_from_hv->part_hkeys[i_part]  = (size_t        *) part_hkeys;
+  _gnum_from_hv->part_hstri[i_part]  = (int           *) part_hstri;
+  _gnum_from_hv->part_hdata[i_part]  = (unsigned char *) part_hdata;
 
 }
 
 void
 PROCF (pdm_gnum_set_hash_values, PDM_GNUM_SET_FROM_HASH_VALUES)
 (
- const int    *id,
- const int    *i_part,
- const int    *n_elts,
- const size_t *part_hkeys,
- const int    *part_hstri,
- const int    *part_hdata
+ const int           *id,
+ const int           *i_part,
+ const int           *n_elts,
+ const size_t        *part_hkeys,
+ const int           *part_hstri,
+ const unsigned char *part_hdata
 )
 {
   PDM_gnum_set_hash_values (*id, *i_part, *n_elts, part_hkeys, part_hstri, part_hdata);
@@ -300,11 +371,7 @@ PDM_gnum_from_hv_compute
 
   printf("PDM_gnum_from_hv_compute::oooooooooo \n");
 
-  if(_gnum_from_hv->equilibrate) {
-    _gnum_from_hv_compute_equilibrate(_gnum_from_hv);
-  } else {
-    _gnum_from_hv_compute(_gnum_from_hv);
-  }
+  _gnum_from_hv_compute(_gnum_from_hv);
 
 }
 
@@ -386,6 +453,7 @@ PDM_gnum_from_hv_free
   free (_gnum_from_hv->part_hkeys);
   free (_gnum_from_hv->part_hstri);
   free (_gnum_from_hv->part_hdata);
+  free (_gnum_from_hv->distribution);
 
   free (_gnum_from_hv);
 
@@ -408,6 +476,59 @@ PROCF (pdm_gnum_from_hv_free, PDM_GNUM_FROM_HV_FREE)
 {
   PDM_gnum_from_hv_free (*id, *partial);
 }
+
+
+
+void
+PDM_generate_global_id_from
+(
+ const int              blk_size,
+ const unsigned char   *blk_data,
+ const int             *blk_stri,
+ gnum_from_hv_compare   fcompare,
+ gnum_from_hv_equal     fequal,
+ PDM_g_num_t          **gnum
+)
+{
+  printf(" TODO \n");
+  abort();
+  // int nBlock = blockPaths.size();
+  // std::vector<int> orderName(nBlock);
+  // std::iota(begin(orderName), end(orderName), 0);
+  // std::sort(begin(orderName), end(orderName), [&](const int& i1, const int& i2){
+  //   return blockPaths[i1] < blockPaths[i2];
+  // });
+
+  // // -------------------------------------------------------------------
+  // // 2 - Give an local number for each element in blockPaths
+  // std::vector<int> globalNameNum(nBlock);
+  // int nextNameId =  0;
+  // int nLocNameId =  0;
+  // std::string lastName;
+  // for(int i = 0; i < nBlock; i++){
+  //   if(blockPaths[orderName[i]] == lastName){
+  //     globalNameNum[orderName[i]] = nextNameId;
+  //   } else {
+  //     nextNameId++;
+  //     nLocNameId++;
+  //     globalNameNum[orderName[i]] = nextNameId;
+  //     lastName = blockPaths[orderName[i]];
+  //   }
+  // }
+
+  // // -------------------------------------------------------------------
+  // // 3 - Setup global numbering by simply shift
+  // int shiftG;
+  // int ierr = MPI_Scan(&nLocNameId, &shiftG, 1, MPI_INT, MPI_SUM, comm);
+  // assert(ierr == 0);
+  // shiftG -= nLocNameId;
+
+  // for(int i = 0; i < nBlock; i++){
+  //   globalNameNum[i] += shiftG;
+  // }
+}
+
+
 
 /*----------------------------------------------------------------------------*/
 

@@ -44,6 +44,8 @@ extern "C" {
 /*============================================================================
  * Type definitions
  *============================================================================*/
+typedef int (*gnum_from_hv_compare)(void* a, int na, void* b, int nb);
+typedef int (*gnum_from_hv_equal  )(void* a, int na, void* b, int nb);
 
 /*=============================================================================
  * Static global variables
@@ -98,12 +100,12 @@ PROCF (pdm_gnum_from_hash_values_create, PDM_GNUM_FROM_HVALUES_CREATE)
 void
 PDM_gnum_set_hash_values
 (
- const int     id,
- const int     i_part,
- const int     n_elts,
- const size_t *part_hkeys,
- const int    *part_hstri,
- const int    *part_hdata
+ const int            id,
+ const int            i_part,
+ const int            n_elts,
+ const size_t        *part_hkeys,
+ const int           *part_hstri,
+ const unsigned char *part_hdata
 );
 
 void
@@ -114,7 +116,7 @@ PROCF (pdm_gnum_set_hash_values, PDM_GNUM_SET_FROM_HASH_VALUES)
  const int    *n_elts,
  const size_t *part_hkeys,
  const int    *part_hstri,
- const int    *part_hdata
+ const unsigned char *part_hdata
 );
 
 /**
@@ -187,6 +189,24 @@ PROCF (pdm_gnum_from_hv_free, PDM_GNUM_FROM_HV_FREE)
 (
  const int *id,
  const int *partial
+);
+
+/**
+ *
+ * \brief Generate global id
+ *
+ * \param [in] blk_size  Size of the current block
+ *
+ */
+void
+PDM_generate_global_id_from
+(
+ const int              n_part,
+ const unsigned char   *blk_data,
+ const int             *blk_stri,
+ gnum_from_hv_compare   fcompare,
+ gnum_from_hv_equal     fequal,
+ PDM_g_num_t          **gnum
 );
 
 /*----------------------------------------------------------------------------*/
