@@ -79,6 +79,7 @@ typedef struct {
   size_t        **part_hkeys;
   unsigned char **part_hdata;
   int           **part_hstri;
+  size_t          s_data;
 
   // size_t         *blk_hkeys;
   unsigned char  *blk_hdata;
@@ -166,7 +167,7 @@ setup_distribution_from_min_max
   printf(PDM_FMT_G_NUM"\n", quotient);
   printf(PDM_FMT_G_NUM"\n", remainder);
 
-  distribution[0] = 0;
+  distribution[0] = min_elt;
   for(int i = 1; i < n_dist+1; ++i) {
     distribution[i] = quotient;
     PDM_g_num_t i1 = i - 1;
@@ -184,6 +185,7 @@ setup_distribution_from_min_max
   for(int i = 0; i < n_dist+1; ++i) {
     printf(PDM_FMT_G_NUM" ", distribution[i]);
   }
+  printf("\n");
 
 }
 
@@ -254,8 +256,89 @@ _gnum_from_hv_compute
   /*
    * Remapping of partition data in block data according to the hash values distribution
    */
+  int* send_count = (int *) malloc( _gnum_from_hv->n_rank * sizeof(int));
+  int* recv_count = (int *) malloc( _gnum_from_hv->n_rank * sizeof(int));
+  int* send_strid = (int *) malloc( _gnum_from_hv->n_rank * sizeof(int));
+  int* recv_strid = (int *) malloc( _gnum_from_hv->n_rank * sizeof(int));
 
+  for(int i = 0; i < _gnum_from_hv->n_rank; ++i){
+    send_count[i] = 0;
+    send_strid[i] = 0;
+  }
 
+  /*
+   * Prepare send
+   */
+  for(int i_part = 0; i_part < _gnum_from_hv->n_part; ++i_part){
+    for(int ielt = 0; ielt < _gnum_from_hv->n_elts[i_part]; ++ielt){
+
+      PDM_g_num_t g_key = (PDM_g_num_t) _gnum_from_hv->part_hkeys[i_part][ielt];
+      printf(" Search for :: %d\n", (int)g_key);
+      int t_rank = PDM_binary_search_gap_long(g_key, _gnum_from_hv->distribution, _gnum_from_hv->n_rank+1);
+
+      printf(" Found in t_rank :: %d\n", (int)t_rank);
+      send_strid[t_rank] += _gnum_from_hv->s_data * _gnum_from_hv->part_hstri[i_part][ielt];
+      send_count[t_rank]++;
+
+    }
+  }
+
+  /*
+   * Exchange
+   */
+  PDM_MPI_Alltoall(send_count, 1, PDM_MPI_INT, recv_count, 1, PDM_MPI_INT, _gnum_from_hv->comm);
+  PDM_MPI_Alltoall(send_strid, 1, PDM_MPI_INT, recv_strid, 1, PDM_MPI_INT, _gnum_from_hv->comm);
+
+  /*
+   * Prepare utility array to setup the second exchange
+   */
+  int* send_count_idx = (int *) malloc( (_gnum_from_hv->n_rank+1) * sizeof(int));
+  int* recv_count_idx = (int *) malloc( (_gnum_from_hv->n_rank+1) * sizeof(int));
+  int* send_strid_idx = (int *) malloc( (_gnum_from_hv->n_rank+1) * sizeof(int));
+  int* recv_strid_idx = (int *) malloc( (_gnum_from_hv->n_rank+1) * sizeof(int));
+
+  send_count_idx[0] = 0;
+  recv_count_idx[0] = 0;
+  send_strid_idx[0] = 0;
+  recv_strid_idx[0] = 0;
+  for(int i = 0; i < _gnum_from_hv->n_rank; ++i){
+    send_count_idx[i+1] = send_count_idx[i] + send_count[i];
+    recv_count_idx[i+1] = recv_count_idx[i] + recv_count[i];
+    send_strid_idx[i+1] = send_strid_idx[i] + send_strid[i];
+    recv_strid_idx[i+1] = recv_strid_idx[i] + recv_strid[i];
+  }
+
+  int s_send      = send_count_idx[_gnum_from_hv->n_rank];
+  int s_recv      = recv_count_idx[_gnum_from_hv->n_rank];
+  int s_data_send = send_strid_idx[_gnum_from_hv->n_rank];
+  int s_data_recv = recv_strid_idx[_gnum_from_hv->n_rank];
+
+  printf("s_send     ::%d\n", s_send     );
+  printf("s_recv     ::%d\n", s_recv     );
+  printf("s_data_send::%d\n", s_data_send);
+  printf("s_data_recv::%d\n", s_data_recv);
+
+  /*
+   * Allocate
+   */
+  int *send_stri_buffer = (int *) malloc(sizeof(int) * s_send );
+  int *recv_stri_buffer = (int *) malloc(sizeof(int) * s_recv );
+
+  unsigned char *send_data_buffer = (unsigned char *) malloc(sizeof(unsigned char) * s_data_send);
+  unsigned char *recv_data_buffer = (unsigned char *) malloc(sizeof(unsigned char) * s_data_recv);
+
+  /*
+   * Exchange
+   */
+  printf(" First exchange \n");
+  PDM_MPI_Alltoallv(send_stri_buffer, send_count, send_count_idx, PDM_MPI_INT,
+                    recv_stri_buffer, recv_count, recv_count_idx, PDM_MPI_INT, _gnum_from_hv->comm);
+
+  printf(" Second exchange \n");
+  PDM_MPI_Alltoallv(send_data_buffer, send_strid, send_strid_idx, PDM_MPI_BYTE,
+                    recv_data_buffer, recv_strid, recv_strid_idx, PDM_MPI_BYTE, _gnum_from_hv->comm);
+
+  printf(" Fin exchange \n");
 
   /*
    * Generate global numbering from the block_data
@@ -265,6 +348,19 @@ _gnum_from_hv_compute
   /*
    * Reverse all_to_all exchange in order to remap global id on current partition
    */
+
+  free(send_count);
+  free(recv_count);
+  free(send_strid);
+  free(recv_strid);
+  free(send_count_idx);
+  free(recv_count_idx);
+  free(send_strid_idx);
+  free(recv_strid_idx);
+  free(send_stri_buffer);
+  free(recv_stri_buffer);
+  free(send_data_buffer);
+  free(recv_data_buffer);
 
 }
 
@@ -290,6 +386,7 @@ PDM_gnum_from_hash_values_create
 (
  const int          n_part,
  const PDM_bool_t   equilibrate,
+ const size_t       s_data,
  const PDM_MPI_Comm comm
 )
 {
@@ -316,6 +413,7 @@ PDM_gnum_from_hash_values_create
   _gnum_from_hv->n_g_elt     = -1;
   _gnum_from_hv->g_nums      = (PDM_g_num_t **) malloc (sizeof(PDM_g_num_t * ) * n_part);
 
+  _gnum_from_hv->s_data      = s_data;
   _gnum_from_hv->n_elts      = (int            *) malloc (sizeof(int            ) * n_part);
   _gnum_from_hv->part_hkeys  = (size_t        **) malloc (sizeof(size_t        *) * n_part);
   _gnum_from_hv->part_hstri  = (int           **) malloc (sizeof(int           *) * n_part);
@@ -339,13 +437,14 @@ PROCF (pdm_gnum_from_hash_values_create, PDM_GNUM_FROM_HVALUES_CREATE)
 (
  const int          *n_part,
  const int          *equilibrate,
+ const size_t       *s_data,
  const PDM_MPI_Fint *fcomm,
        int          *id
 )
 {
   const PDM_MPI_Comm c_comm = PDM_MPI_Comm_f2c (*fcomm);
 
-  *id = PDM_gnum_from_hash_values_create (*n_part, (PDM_bool_t) *equilibrate, c_comm);
+  *id = PDM_gnum_from_hash_values_create (*n_part, (PDM_bool_t) *equilibrate, *s_data, c_comm);
 }
 
 /**

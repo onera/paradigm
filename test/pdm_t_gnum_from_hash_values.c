@@ -120,6 +120,7 @@ char *argv[]
 
   int gnum_fhv_id = PDM_gnum_from_hash_values_create(n_part,
                                                      equilibrate,
+                                                     sizeof(int),
                                                      PDM_MPI_COMM_WORLD);
 
   printf("gnum_fhv_id:: %d \n", gnum_fhv_id);
