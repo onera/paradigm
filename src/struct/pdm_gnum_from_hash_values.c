@@ -70,11 +70,12 @@ extern "C" {
  */
 
 typedef struct {
-  int             n_part;          /*!< Number of partitions */
+  int             n_part;          /*!< Number of partitions                     */
   PDM_bool_t      equilibrate;     /*!< Equilibrate the hash values distribution */
-  PDM_MPI_Comm    comm;            /*!< MPI communicator */
+  PDM_MPI_Comm    comm;            /*!< MPI communicator                         */
+  int             n_rank;          /*!< MPI communicator size                    */
 
-  int            *n_elts;          /*!< Number of elements in partitions */
+  int            *n_elts;          /*!< Number of elements in partitions         */
   size_t        **part_hkeys;
   unsigned char **part_hdata;
   int           **part_hstri;
@@ -83,8 +84,8 @@ typedef struct {
   unsigned char  *blk_hdata;
   int            *blk_hstri;
 
-  PDM_g_num_t     n_g_elt;        /*!< Global number of elements    */
-  PDM_g_num_t   **g_nums;         /*!< Global numbering of elements */
+  PDM_g_num_t     n_g_elt;        /*!< Global number of elements                 */
+  PDM_g_num_t   **g_nums;         /*!< Global numbering of elements              */
 
   PDM_g_num_t     *distribution;
 
@@ -144,6 +145,50 @@ _compute_distribution_equilibrate
 
 /**
  *
+ * \brief Setup a naive distribution from min max of data
+ */
+static void
+setup_distribution_from_min_max
+(
+ size_t       min_elt,
+ size_t       max_elt,
+ PDM_g_num_t* distribution,
+ int          n_dist
+)
+{
+  PDM_g_num_t nelmt = max_elt - min_elt + 1;
+
+  assert(nelmt > 0);
+
+  PDM_g_num_t quotient  = nelmt/n_dist;
+  PDM_g_num_t remainder = nelmt%n_dist;
+
+  printf(PDM_FMT_G_NUM"\n", quotient);
+  printf(PDM_FMT_G_NUM"\n", remainder);
+
+  distribution[0] = 0;
+  for(int i = 1; i < n_dist+1; ++i) {
+    distribution[i] = quotient;
+    PDM_g_num_t i1 = i - 1;
+    if(i1 < remainder){
+      distribution[i] += 1;
+    }
+  }
+
+  for(int i = 0; i < n_dist; ++i) {
+    distribution[i+1] += distribution[i];
+  }
+
+
+  printf(" distribution:: ");
+  for(int i = 0; i < n_dist+1; ++i) {
+    printf(PDM_FMT_G_NUM" ", distribution[i]);
+  }
+
+}
+
+/**
+ *
  * \brief Compute with equilibrate algorithm
  *
  * \param [in]   _gnum          Current _pdm_gnum_from_hv_t structure
@@ -177,6 +222,12 @@ _compute_distribution
 
   printf(" max_key:: %lu \n", max_key);
   printf(" min_key:: %lu \n", min_key);
+
+  /* Prepare distribution from min and max elements */
+  setup_distribution_from_min_max(min_key, max_key, _gnum_from_hv->distribution, _gnum_from_hv->n_rank);
+
+
+
 }
 
 /**
@@ -192,7 +243,7 @@ _gnum_from_hv_compute
  _pdm_gnum_from_hv_t *_gnum_from_hv
 )
 {
-  printf("_gnum_from_hv_compute Not implemented \n");
+  printf("_gnum_from_hv_compute \n");
 
   if(_gnum_from_hv->equilibrate) {
     _compute_distribution_equilibrate(_gnum_from_hv);
@@ -261,6 +312,7 @@ PDM_gnum_from_hash_values_create
   _gnum_from_hv->n_part      = n_part;
   _gnum_from_hv->equilibrate = equilibrate;
   _gnum_from_hv->comm        = comm;
+  _gnum_from_hv->n_rank      = n_rank;
   _gnum_from_hv->n_g_elt     = -1;
   _gnum_from_hv->g_nums      = (PDM_g_num_t **) malloc (sizeof(PDM_g_num_t * ) * n_part);
 
