@@ -12,6 +12,7 @@
  *----------------------------------------------------------------------------*/
 
 #include "pdm_mpi.h"
+#include "pdm_priv.h"
 #include "pdm_graph_bound.h"
 #include "pdm_graph_bound_priv.h"
 #include "pdm_part_bound.h"
@@ -644,7 +645,7 @@ const int                n_part,
    *
    */
 
-  PDM_g_num_t _nKeys = PDM_part_bound_n_total_offer_elt_get (graph_bound->partBound[0]) / lComm;
+  PDM_g_num_t _nKeys = PDM_MAX (PDM_part_bound_n_total_offer_elt_get (graph_bound->partBound[0]) / lComm, 1);
 
   int nKeys = (int) (_nKeys);
 
