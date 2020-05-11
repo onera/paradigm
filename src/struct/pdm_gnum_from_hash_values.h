@@ -71,6 +71,7 @@ PDM_gnum_from_hash_values_create
 (
  const int          n_part,
  const PDM_bool_t   equilibrate,
+ const size_t       s_data,
  const PDM_MPI_Comm comm
 );
 
@@ -79,6 +80,7 @@ PROCF (pdm_gnum_from_hash_values_create, PDM_GNUM_FROM_HVALUES_CREATE)
 (
  const int          *n_part,
  const int          *equilibrate,
+ const size_t       *s_data,
  const PDM_MPI_Fint *fcomm,
        int          *id
 );
