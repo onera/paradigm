@@ -16,6 +16,7 @@
 #include "pdm_gnum_from_hash_values.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
+#include "pdm_logging.h"
 
 /*
  *  Use case
@@ -124,7 +125,7 @@ char *argv[]
       for(int idata = 0; idata < part_stri[i_part][ielmt]; ++idata){
         key += part_data[i_part][idx++];
       }
-      printf(" part_key[%d][%d] = %lu \n", i_part, ielmt, key);
+      // printf(" part_key[%d][%d] = %lu \n", i_part, ielmt, key);
       part_key[i_part][ielmt] = key;
     }
   }
@@ -151,30 +152,14 @@ char *argv[]
 
   PDM_gnum_from_hv_compute(gnum_fhv_id); /* Passage de part --> block */
 
-
-  // size_t        *blk_hkeys = NULL;
-  // unsigned char *blk_hdata = NULL;
-  // int           *blk_hstri = NULL;
-  // int            blk_size  = 0;
-  // PDM_gnum_from_hv_get_block(&blk_hkeys, &blk_hdata, &blk_hstri);
-
-  /*
-   * User responsability to sort the block av
-   */
-  // int* order = ...
-
-
-  /*
-   * User responsability to sort the block av
-   */
-  // PDM_gnum_from_hv_set_order(order);
-
   /*
    *
    */
-  // PDM_gnum_from_hv_generate_global_numebering(gnum_fhv_id); /* Passage de part --> block */
-
-
+  PDM_g_num_t** ln_to_gn = (PDM_g_num_t **) malloc(n_part * sizeof(PDM_g_num_t *));
+  for(int i_part = 0; i_part < n_part; ++i_part){
+    ln_to_gn[i_part] = PDM_gnum_from_hv_get(gnum_fhv_id, i_part);
+    PDM_log_trace_array_long(ln_to_gn[i_part], n_elmts[i_part], "ln_to_gn::");
+  }
 
   /*
    * Free
@@ -187,6 +172,7 @@ char *argv[]
     free(part_key[i_part]);
   }
   free(part_key);
+  free(ln_to_gn);
 
   PDM_MPI_Finalize ();
 

@@ -343,8 +343,8 @@ _gnum_from_hv_compute
   /*
    * Allocate
    */
-  int *send_buffer_keys = (int *) malloc(sizeof(int) * s_send_keys );
-  int *recv_buffer_keys = (int *) malloc(sizeof(int) * s_recv_keys );
+  size_t *send_buffer_keys = (size_t *) malloc(sizeof(size_t) * s_send_keys );
+  size_t *recv_buffer_keys = (size_t *) malloc(sizeof(size_t) * s_recv_keys );
 
   int *send_buffer_stri = (int *) malloc(sizeof(int) * ( s_send_keys + 1) );
   int *recv_buffer_stri = (int *) malloc(sizeof(int) * ( s_recv_keys + 1) );
@@ -371,7 +371,7 @@ _gnum_from_hv_compute
 
       /* Send key and stride */
       int idx_send = i_key_send[t_rank]+n_key_send[t_rank]++;
-      send_buffer_keys[idx_send] = g_key;
+      send_buffer_keys[idx_send] = (size_t) g_key;
       send_buffer_stri[idx_send] = _gnum_from_hv->part_hstri[i_part][ielt];
 
       /* Send data */
@@ -416,8 +416,9 @@ _gnum_from_hv_compute
   /*
    * Exchange
    */
-  PDM_MPI_Alltoallv(send_buffer_keys, n_key_send, i_key_send, PDM_MPI_INT,
-                    recv_buffer_keys, n_key_recv, i_key_recv, PDM_MPI_INT, _gnum_from_hv->comm);
+  assert(sizeof(unsigned long) == sizeof(size_t));
+  PDM_MPI_Alltoallv(send_buffer_keys, n_key_send, i_key_send, PDM_MPI_UNSIGNED_LONG,
+                    recv_buffer_keys, n_key_recv, i_key_recv, PDM_MPI_UNSIGNED_LONG, _gnum_from_hv->comm);
 
   PDM_MPI_Alltoallv(send_buffer_stri, n_key_send, i_key_send, PDM_MPI_INT,
                     recv_buffer_stri, n_key_recv, i_key_recv, PDM_MPI_INT, _gnum_from_hv->comm);
@@ -429,8 +430,8 @@ _gnum_from_hv_compute
    * Verbose
    */
 
-  PDM_log_trace_array_int(send_buffer_keys, s_send_keys, "send_buffer_keys:: ");
-  PDM_log_trace_array_int(recv_buffer_keys, s_recv_keys, "recv_buffer_keys:: ");
+  PDM_log_trace_array_size_t(send_buffer_keys, s_send_keys, "send_buffer_keys:: ");
+  PDM_log_trace_array_size_t(recv_buffer_keys, s_recv_keys, "recv_buffer_keys:: ");
   PDM_log_trace_array_int(send_buffer_stri, s_send_keys, "send_buffer_stri:: ");
   PDM_log_trace_array_int(recv_buffer_stri, s_recv_keys, "recv_buffer_stri:: ");
 
@@ -533,8 +534,17 @@ _gnum_from_hv_compute
   /*
    * Reverse all_to_all exchange in order to remap global id on current partition
    */
-  // MPI_Alltoallv(blk_gid , n_key_recv, i_key_recv, PDM__PDM_MPI_G_NUM,
-  //               part_gid, n_key_send, i_key_send, PDM__PDM_MPI_G_NUM, _gnum_from_hv->comm);
+  PDM_g_num_t* part_ln_to_gn = (PDM_g_num_t*) malloc( sizeof(PDM_g_num_t*) * s_send_keys);
+
+  PDM_MPI_Alltoallv(blk_ln_to_gn , n_key_recv, i_key_recv, PDM__PDM_MPI_G_NUM,
+                    part_ln_to_gn, n_key_send, i_key_send, PDM__PDM_MPI_G_NUM, _gnum_from_hv->comm);
+
+  int idx = 0;
+  for(int i_part = 0; i_part < _gnum_from_hv->n_part; ++i_part){
+    for(int ielt = 0; ielt < _gnum_from_hv->n_elts[i_part]; ++ielt){
+      _gnum_from_hv->g_nums[i_part][ielt] = part_ln_to_gn[idx++];
+    }
+  }
 
   /*
    *  Remise en place dans chaque partition
@@ -555,6 +565,7 @@ _gnum_from_hv_compute
   free(send_buffer_stri);
   free(recv_buffer_stri);
   free(blk_ln_to_gn);
+  free(part_ln_to_gn);
 
 }
 
@@ -679,6 +690,8 @@ PDM_gnum_set_hash_values
   _gnum_from_hv->part_hkeys[i_part]  = (size_t        *) part_hkeys;
   _gnum_from_hv->part_hstri[i_part]  = (int           *) part_hstri;
   _gnum_from_hv->part_hdata[i_part]  = (unsigned char *) part_hdata;
+
+  _gnum_from_hv->g_nums[i_part] = (PDM_g_num_t * ) malloc( n_elts * sizeof(PDM_g_num_t));
 
 }
 
@@ -837,40 +850,6 @@ PDM_generate_global_id_from
 {
   printf(" TODO \n");
   abort();
-  // int nBlock = blockPaths.size();
-  // std::vector<int> orderName(nBlock);
-  // std::iota(begin(orderName), end(orderName), 0);
-  // std::sort(begin(orderName), end(orderName), [&](const int& i1, const int& i2){
-  //   return blockPaths[i1] < blockPaths[i2];
-  // });
-
-  // // -------------------------------------------------------------------
-  // // 2 - Give an local number for each element in blockPaths
-  // std::vector<int> globalNameNum(nBlock);
-  // int nextNameId =  0;
-  // int nLocNameId =  0;
-  // std::string lastName;
-  // for(int i = 0; i < nBlock; i++){
-  //   if(blockPaths[orderName[i]] == lastName){
-  //     globalNameNum[orderName[i]] = nextNameId;
-  //   } else {
-  //     nextNameId++;
-  //     nLocNameId++;
-  //     globalNameNum[orderName[i]] = nextNameId;
-  //     lastName = blockPaths[orderName[i]];
-  //   }
-  // }
-
-  // // -------------------------------------------------------------------
-  // // 3 - Setup global numbering by simply shift
-  // int shiftG;
-  // int ierr = MPI_Scan(&nLocNameId, &shiftG, 1, MPI_INT, MPI_SUM, comm);
-  // assert(ierr == 0);
-  // shiftG -= nLocNameId;
-
-  // for(int i = 0; i < nBlock; i++){
-  //   globalNameNum[i] += shiftG;
-  // }
 }
 
 
