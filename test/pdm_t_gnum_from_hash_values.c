@@ -14,6 +14,7 @@
 #include "pdm_mpi.h"
 #include "pdm_config.h"
 #include "pdm_gnum_from_hash_values.h"
+#include "pdm_sort.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
 #include "pdm_logging.h"
@@ -137,9 +138,9 @@ char *argv[]
   int gnum_fhv_id = PDM_gnum_from_hash_values_create(n_part,
                                                      equilibrate,
                                                      sizeof(int),
+                                                     PDM_operator_compare_connectivity,
+                                                     PDM_operator_equal_connectivity,
                                                      PDM_MPI_COMM_WORLD);
-
-  printf("gnum_fhv_id:: %d \n", gnum_fhv_id);
 
   for(int i_part = 0; i_part < n_part; ++i_part){
     PDM_gnum_set_hash_values(gnum_fhv_id,
