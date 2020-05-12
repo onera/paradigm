@@ -882,7 +882,7 @@ const void* b,
   int ni = us->idx[i+1] - us->idx[i];
   int nj = us->idx[j+1] - us->idx[j];
 
-  printf("PDM_operator_compare_connectivity:: %d %d - %d %d \n", i, j, ni, nj);
+  // printf("PDM_operator_compare_connectivity:: %d %d - %d %d \n", i, j, ni, nj);
 
   int* arr_i = (int *) &us->arr[us->idx[i]*sizeof(int)];
   int* arr_j = (int *) &us->arr[us->idx[j]*sizeof(int)];
@@ -890,11 +890,28 @@ const void* b,
   if(ni < nj){
     return 1;
   } else if (ni == nj){
+
+    /* Dans notre cas on veut sort les entiers avant de les comparers */
+    int* sort_arr_i = (int*) malloc( ni * sizeof(int));
+    int* sort_arr_j = (int*) malloc( ni * sizeof(int));
+
     for(int k = 0; k < ni; ++k){
-      if(arr_i[k] < arr_j[k]) {
+      sort_arr_i[k] = arr_i[k];
+      sort_arr_j[k] = arr_j[k];
+    }
+    PDM_quick_sort_int(sort_arr_i, 0, ni-1);
+    PDM_quick_sort_int(sort_arr_j, 0, ni-1);
+
+    for(int k = 0; k < ni; ++k){
+      if(sort_arr_i[k] < sort_arr_j[k]) {
+        free(sort_arr_i);
+        free(sort_arr_j);
         return 1;
       }
     }
+
+    free(sort_arr_i);
+    free(sort_arr_j);
   }
 
   return 0;
@@ -922,7 +939,7 @@ const void* b,
   int ni = us->idx[i+1] - us->idx[i];
   int nj = us->idx[j+1] - us->idx[j];
 
-  printf("PDM_operator_equal_connectivity:: %d %d - %d %d - %d %d \n", i, j, ni, nj, us->idx[i], us->idx[j]);
+  // printf("PDM_operator_equal_connectivity:: %d %d - %d %d - %d %d \n", i, j, ni, nj, us->idx[i], us->idx[j]);
 
   int* arr_i = (int*) &us->arr[us->idx[i]*sizeof(int)];
   int* arr_j = (int*) &us->arr[us->idx[j]*sizeof(int)];
@@ -944,7 +961,7 @@ const void* b,
     PDM_quick_sort_int(sort_arr_j, 0, ni-1);
 
     for(int k = 0; k < ni; ++k){
-      printf(" \t sort_arr_i[%d] = %d | sort_arr_j[%d] = %d \n", k, sort_arr_i[k], k, sort_arr_j[k]);
+      // printf(" \t sort_arr_i[%d] = %d | sort_arr_j[%d] = %d \n", k, sort_arr_i[k], k, sort_arr_j[k]);
       if(sort_arr_i[k] != sort_arr_j[k]) {
         free(sort_arr_i);
         free(sort_arr_j);
@@ -978,7 +995,6 @@ PDM_sort_long_special
  void*                 context
 )
 {
-  printf(" PDM_sort_long_s : %d \n", lArray);
   /* size of subarray sorted by straight insertion */
   const int M = 7;
   /* default size of the stack */
@@ -989,7 +1005,7 @@ PDM_sort_long_special
   int j;
   int ir = lArray - 1;
   PDM_g_num_t a;
-  int        b;
+  // int        b;
   int *istack = (int *) malloc (sizeof(int) * sizeStack);
 
   for (;;) {

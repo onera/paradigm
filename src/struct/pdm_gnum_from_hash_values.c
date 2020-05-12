@@ -466,7 +466,7 @@ _gnum_from_hv_compute
 
   PDM_user_defined_sort* us = (PDM_user_defined_sort *) malloc( sizeof(PDM_user_defined_sort) );
   us->idx = recv_buffer_stri;
-  us->arr = (int *) recv_buffer_data;
+  us->arr = recv_buffer_data;
 
   PDM_sort_long_special(order, s_recv_keys, _gnum_from_hv->fcompare, (void*) us);
 
@@ -494,10 +494,10 @@ _gnum_from_hv_compute
   PDM_g_num_t* blk_ln_to_gn = (PDM_g_num_t*) malloc( sizeof(PDM_g_num_t*) * s_recv_keys);
   PDM_g_num_t next_id = 0;
   PDM_g_num_t n_id    = 0;
-  PDM_g_num_t last_id = order[0];
+  PDM_g_num_t last_id = -1;
   for(int i = 0; i < s_recv_keys; ++i){
     log_trace(" generate g_id :: %d \n", i);
-    if(_gnum_from_hv->fequal(&order[i], &last_id, (void*) us)){
+    if(i != 0 && _gnum_from_hv->fequal(&order[i], &last_id, (void*) us)){
       log_trace(" \t Cas 1 :: order[%d] = %d | next_id : %d\n", i, order[i], next_id);
       blk_ln_to_gn[order[i]] = next_id;
     } else {
@@ -513,20 +513,21 @@ _gnum_from_hv_compute
   log_trace("next_id:: %d \n", next_id);
 
   /*
+   *  Rebuild the global numbering
+   */
+  PDM_g_num_t shift_g;
+  PDM_MPI_Scan(&n_id, &shift_g, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, _gnum_from_hv->comm);
+  shift_g -= n_id;
+
+  for(int i = 0; i < s_recv_keys; ++i){
+    blk_ln_to_gn[i] += shift_g;
+  }
+
+  /*
    * Panic verbose
    */
   if(0 == 0 ){
-    log_trace("blk_ln_to_gn = ");
-    int* arr_tmp = (int*) us->arr;
-    for(int i = 0; i < s_recv_keys; ++i){
-      log_trace("%d --> ", (int)blk_ln_to_gn[i]);
-      int j   = blk_ln_to_gn[i];
-      for(int k = us->idx[j]; k < us->idx[j+1]; ++k ){
-        log_trace(" %d ", arr_tmp[k]);
-      }
-      log_trace("\n");
-    }
-    log_trace("\n");
+    PDM_log_trace_array_long(blk_ln_to_gn, s_recv_keys, "blk_ln_to_gn:: ");
   }
 
   /*
