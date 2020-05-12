@@ -256,7 +256,7 @@ PDM_log_trace_array_long
 {
   log_trace(header);
   for(int i = 0; i < larray; ++i){
-    log_trace("%d ", array[i]);
+    log_trace(PDM_FMT_G_NUM" ", array[i]);
   }
   log_trace("\n");
 }
@@ -271,7 +271,7 @@ PDM_log_trace_array_size_t
 {
   log_trace(header);
   for(int i = 0; i < larray; ++i){
-    log_trace("%d ", array[i]);
+    log_trace("%lu ", array[i]);
   }
   log_trace("\n");
 }

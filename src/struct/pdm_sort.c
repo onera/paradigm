@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
@@ -11,6 +12,7 @@
 
 #include "pdm.h"
 #include "pdm_sort.h"
+#include "pdm_logging.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -859,6 +861,146 @@ PDM_quick_sort_long2
     PDM_quick_sort_long2(a, l  , j-1, c);
     PDM_quick_sort_long2(a, j+1,   r, c);
   }
+}
+
+
+/**
+ *
+ * \brief Compare operator for connectivities
+ *
+ */
+int
+PDM_operator_compare_string
+(
+const void* a,
+const void* b,
+      void* ctxt
+)
+{
+  int i = *(const int *) a;
+  int j = *(const int *) b;
+
+  PDM_user_defined_sort* us = (PDM_user_defined_sort*) ctxt;
+
+  int ni = us->idx[i+1] - us->idx[i];
+  int nj = us->idx[j+1] - us->idx[j];
+
+  // printf("PDM_operator_compare_string:: %d %d - %d %d \n", i, j, ni, nj);
+  log_trace("PDM_operator_compare_string:: %d %d - %d %d \n", i, j, ni, nj);
+  // unsigned char* arr_i = (unsigned char *) &us->arr[us->idx[i]*sizeof(unsigned char)];
+  // unsigned char* arr_j = (unsigned char *) &us->arr[us->idx[j]*sizeof(unsigned char)];
+  char* arr_i = (char *) &us->arr[us->idx[i]*sizeof(char)];
+  char* arr_j = (char *) &us->arr[us->idx[j]*sizeof(char)];
+
+  char* carr_i = malloc( sizeof(char) * (ni+1));
+  char* carr_j = malloc( sizeof(char) * (nj+1));
+  for(int k = 0; k < ni; ++k){
+    carr_i[k] = (char)arr_i[k];
+  }
+  for(int k = 0; k < nj; ++k){
+    carr_j[k] = (char)arr_j[k];
+  }
+  carr_i[ni] = '\0';
+  carr_j[nj] = '\0';
+  log_trace(" \t carr_i = %s \n", carr_i);
+  log_trace(" \t carr_j = %s \n", carr_j);
+
+  int i_comp = strcmp(carr_i, carr_j);
+  log_trace(" \t i_comp = %d \n", i_comp);
+  free(carr_i);
+  free(carr_j);
+
+  if(i_comp <= 0) {
+    return 1;
+  } else {
+    return 0;
+  }
+
+  return i_comp;
+
+  if(ni < nj){
+    return 1;
+  } else if (ni == nj){
+    for(int k = 0; k < ni; ++k){
+      if(arr_i[k] < arr_j[k]) {
+        return 1;
+      }
+    }
+  }
+
+  return 0;
+}
+
+
+/**
+ *
+ * \brief Equal operator for connectivities
+ *
+ */
+int
+PDM_operator_equal_string
+(
+const void* a,
+const void* b,
+      void* ctxt)
+{
+  int i = *(const int *) a;
+  int j = *(const int *) b;
+
+  PDM_user_defined_sort* us = (PDM_user_defined_sort*) ctxt;
+
+  int ni = us->idx[i+1] - us->idx[i];
+  int nj = us->idx[j+1] - us->idx[j];
+
+  log_trace("PDM_operator_equal_string:: %d %d - %d %d - %d %d \n", i, j, ni, nj, us->idx[i], us->idx[j]);
+
+  unsigned char* arr_i = (unsigned char *) &us->arr[us->idx[i]*sizeof(unsigned char)];
+  unsigned char* arr_j = (unsigned char *) &us->arr[us->idx[j]*sizeof(unsigned char)];
+
+
+  char* carr_i = malloc( sizeof(char) * (ni+1));
+  char* carr_j = malloc( sizeof(char) * (nj+1));
+  for(int k = 0; k < ni; ++k){
+    carr_i[k] = (char)arr_i[k];
+  }
+  for(int k = 0; k < nj; ++k){
+    carr_j[k] = (char)arr_j[k];
+  }
+  carr_i[ni] = '\0';
+  carr_j[nj] = '\0';
+  log_trace(" \t carr_i = %s \n", carr_i);
+  log_trace(" \t carr_j = %s \n", carr_j);
+
+  int i_comp = strcmp(carr_i, carr_j);
+  log_trace(" \t i_comp = %d \n", i_comp);
+
+  free(carr_i);
+  free(carr_j);
+
+  if(i_comp == 0) {
+    return 1;
+  } else {
+    return 0;
+  }
+
+  return i_comp;
+
+  if(ni != nj){
+    return 0;
+  } else if (ni == nj){
+
+    for(int k = 0; k < ni; ++k){
+      // char* t_i = (char*) arr_i[k];
+      // char* t_j = (char*) arr_j[k];
+      log_trace(" \t arr_i[%d] = %u | arr_j[%d] = %u \n", k, arr_i[k], k, arr_j[k]);
+      // log_trace(" \t arr_i[%d] = %s | arr_j[%d] = %s \n", k, t_i, k, t_j);
+      if(arr_i[k] != arr_j[k]) {
+        return 0;
+      }
+    }
+  }
+
+  return 1;
 }
 
 /**
