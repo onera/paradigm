@@ -37,9 +37,11 @@
 #include "pdm_priv.h"
 #include "pdm_config.h"
 #include "pdm_printf.h"
+#include "pdm_logging.h"
 #include "pdm_error.h"
 #include "pdm_handles.h"
 #include "pdm_binary_search.h"
+#include "pdm_sort.h"
 #include "pdm_mpi.h"
 #include "pdm_timer.h"
 
@@ -84,7 +86,6 @@ typedef struct  {
 //   int* arr_i = my_struct->arr[2*my_struct->idx[i]];
 //   int* arr_j = my_struct->arr[2*my_struct->idx[j]];
 // }
-
 
 static int
 my_compare
@@ -294,13 +295,7 @@ setup_distribution_from_min_max
     distribution[i+1] += distribution[i];
   }
 
-
-  printf(" distribution:: ");
-  for(int i = 0; i < n_dist+1; ++i) {
-    printf(PDM_FMT_G_NUM" ", distribution[i]);
-  }
-  printf("\n");
-
+  PDM_log_trace_array_long(distribution, n_dist+1, "distribution:: ");
 }
 
 /**
@@ -336,13 +331,11 @@ _compute_distribution
   ierr = PDM_MPI_Allreduce(&max_key_loc, &max_key, 1, PDM_MPI_UNSIGNED_LONG, PDM_MPI_MAX, _gnum_from_hv->comm);
   assert(ierr == 0);
 
-  printf(" max_key:: %lu \n", max_key);
-  printf(" min_key:: %lu \n", min_key);
+  // printf(" max_key:: %lu \n", max_key);
+  // printf(" min_key:: %lu \n", min_key);
 
   /* Prepare distribution from min and max elements */
   setup_distribution_from_min_max(min_key, max_key, _gnum_from_hv->distribution, _gnum_from_hv->n_rank);
-
-
 
 }
 
@@ -387,10 +380,10 @@ _gnum_from_hv_compute
     for(int ielt = 0; ielt < _gnum_from_hv->n_elts[i_part]; ++ielt){
 
       PDM_g_num_t g_key = (PDM_g_num_t) _gnum_from_hv->part_hkeys[i_part][ielt];
-      printf(" Search for :: %d\n", (int)g_key);
+      log_trace(" Search for :: %d\n", (int)g_key);
       int t_rank = PDM_binary_search_gap_long(g_key, _gnum_from_hv->distribution, _gnum_from_hv->n_rank+1);
 
-      printf(" Found in t_rank :: %d\n", (int)t_rank);
+      log_trace(" Found in t_rank :: %d\n", (int)t_rank);
       // n_data_send[t_rank] += _gnum_from_hv->s_data * _gnum_from_hv->part_hstri[i_part][ielt];
       n_data_send[t_rank] += _gnum_from_hv->part_hstri[i_part][ielt];
       n_key_send[t_rank]++;
@@ -430,12 +423,12 @@ _gnum_from_hv_compute
   int s_send_data = i_data_send[_gnum_from_hv->n_rank] * _gnum_from_hv->s_data;
   int s_recv_data = i_data_recv[_gnum_from_hv->n_rank] * _gnum_from_hv->s_data;
 
-  printf("s_send_keys::%d\n", s_send_keys);
-  printf("s_recv_keys::%d\n", s_recv_keys);
-  printf("s_send_data::%d\n", s_send_data);
-  printf("s_recv_data::%d\n", s_recv_data);
-  printf("i_data_send[_gnum_from_hv->n_rank]::%d\n", i_data_send[_gnum_from_hv->n_rank]);
-  printf("i_data_recv[_gnum_from_hv->n_rank]::%d\n", i_data_recv[_gnum_from_hv->n_rank]);
+  log_trace("s_send_keys::%d\n", s_send_keys);
+  log_trace("s_recv_keys::%d\n", s_recv_keys);
+  log_trace("s_send_data::%d\n", s_send_data);
+  log_trace("s_recv_data::%d\n", s_recv_data);
+  log_trace("i_data_send[_gnum_from_hv->n_rank]::%d\n", i_data_send[_gnum_from_hv->n_rank]);
+  log_trace("i_data_recv[_gnum_from_hv->n_rank]::%d\n", i_data_recv[_gnum_from_hv->n_rank]);
 
   /*
    * Allocate
@@ -461,10 +454,10 @@ _gnum_from_hv_compute
     for(int ielt = 0; ielt < _gnum_from_hv->n_elts[i_part]; ++ielt){
 
       PDM_g_num_t g_key = (PDM_g_num_t) _gnum_from_hv->part_hkeys[i_part][ielt];
-      printf(" Search for :: %d\n", (int)g_key);
+      log_trace(" Search for :: %d\n", (int)g_key);
       int t_rank = PDM_binary_search_gap_long(g_key, _gnum_from_hv->distribution, _gnum_from_hv->n_rank+1);
 
-      printf(" Found in t_rank :: %d\n", (int)t_rank);
+      log_trace(" Found in t_rank :: %d\n", (int)t_rank);
 
       /* Send key and stride */
       int idx_send = i_key_send[t_rank]+n_key_send[t_rank]++;
@@ -474,7 +467,7 @@ _gnum_from_hv_compute
       /* Send data */
       int n_data = s_data * _gnum_from_hv->part_hstri[i_part][ielt];
       int shift  = n_data_send[t_rank];
-      printf(" n_data = %d | shift = %d | idx = %d \n", n_data, shift, idx);
+      log_trace(" n_data = %d | shift = %d | idx = %d \n", n_data, shift, idx);
       for(int i_data = 0; i_data < n_data; ++i_data) {
         int shift_tot = ( i_data_send[t_rank] + shift)*s_data;
         send_buffer_data[shift_tot+i_data] = _part_data[idx*s_data+i_data];
@@ -489,11 +482,7 @@ _gnum_from_hv_compute
   // abort();
 
   int* send_buffer_data_int = (int*) send_buffer_data;
-  printf("send_buffer_data_int:: ");
-  for(int i = 0; i < s_send_data/s_data; ++i){
-    printf("%d ", send_buffer_data_int[i]);
-  }
-  printf("\n");
+  PDM_log_trace_array_int(send_buffer_data_int, s_send_data/s_data, "send_buffer_data_int:: ");
 
 
   for(int i = 0; i < _gnum_from_hv->n_rank+1; ++i){
@@ -504,100 +493,40 @@ _gnum_from_hv_compute
   }
 
 
-  printf("i_key_send:: ");
-  for(int i = 0; i < _gnum_from_hv->n_rank+1; ++i){
-    printf("%d ", i_key_send[i]);
-  }
-  printf("\n");
-  printf("n_key_send:: ");
-  for(int i = 0; i < _gnum_from_hv->n_rank; ++i){
-    printf("%d ", n_key_send[i]);
-  }
-  printf("\n");
-  printf("i_key_recv:: ");
-  for(int i = 0; i < _gnum_from_hv->n_rank+1; ++i){
-    printf("%d ", i_key_recv[i]);
-  }
-  printf("\n");
-  printf("n_key_recv:: ");
-  for(int i = 0; i < _gnum_from_hv->n_rank; ++i){
-    printf("%d ", n_key_recv[i]);
-  }
-  printf("\n");
+  PDM_log_trace_array_int(i_key_send, _gnum_from_hv->n_rank+1, "i_key_send:: ");
+  PDM_log_trace_array_int(n_key_send, _gnum_from_hv->n_rank  , "n_key_send:: ");
+  PDM_log_trace_array_int(i_key_recv, _gnum_from_hv->n_rank+1, "i_key_recv:: ");
+  PDM_log_trace_array_int(n_key_recv, _gnum_from_hv->n_rank  , "n_key_recv:: ");
 
-
-  printf("i_data_send:: ");
-  for(int i = 0; i < _gnum_from_hv->n_rank+1; ++i){
-    printf("%d ", i_data_send[i]);
-  }
-  printf("\n");
-  printf("n_data_send:: ");
-  for(int i = 0; i < _gnum_from_hv->n_rank; ++i){
-    printf("%d ", n_data_send[i]);
-  }
-  printf("\n");
-  printf("i_data_recv:: ");
-  for(int i = 0; i < _gnum_from_hv->n_rank+1; ++i){
-    printf("%d ", i_data_recv[i]);
-  }
-  printf("\n");
-  printf("n_data_recv:: ");
-  for(int i = 0; i < _gnum_from_hv->n_rank; ++i){
-    printf("%d ", n_data_recv[i]);
-  }
-  printf("\n");
+  PDM_log_trace_array_int(i_data_send, _gnum_from_hv->n_rank+1, "i_data_send:: ");
+  PDM_log_trace_array_int(n_data_send, _gnum_from_hv->n_rank  , "n_data_send:: ");
+  PDM_log_trace_array_int(i_data_recv, _gnum_from_hv->n_rank+1, "i_data_recv:: ");
+  PDM_log_trace_array_int(n_data_recv, _gnum_from_hv->n_rank  , "n_data_recv:: ");
 
   /*
    * Exchange
    */
-  printf(" Exchnage 1 \n");
   PDM_MPI_Alltoallv(send_buffer_keys, n_key_send, i_key_send, PDM_MPI_INT,
                     recv_buffer_keys, n_key_recv, i_key_recv, PDM_MPI_INT, _gnum_from_hv->comm);
 
-  printf(" Exchnage 2 \n");
   PDM_MPI_Alltoallv(send_buffer_stri, n_key_send, i_key_send, PDM_MPI_INT,
                     recv_buffer_stri, n_key_recv, i_key_recv, PDM_MPI_INT, _gnum_from_hv->comm);
 
-
-  printf(" Exchnage 1 end \n");
-  printf(" Exchnage 2 \n");
   PDM_MPI_Alltoallv(send_buffer_data, n_data_send, i_data_send, PDM_MPI_BYTE,
                     recv_buffer_data, n_data_recv, i_data_recv, PDM_MPI_BYTE, _gnum_from_hv->comm);
 
-  printf(" Exchnage 2 end \n");
+  /*
+   * Verbose
+   */
 
-  if(0 == 0){
-    printf("send_buffer_keys:: ");
-    for(int i = 0; i < s_send_keys; ++i){
-      printf("%d ", send_buffer_keys[i]);
-    }
-    printf("\n");
-    printf("recv_buffer_keys:: ");
-    for(int i = 0; i < s_recv_keys; ++i){
-      printf("%d ", recv_buffer_keys[i]);
-    }
-    printf("\n");
-    printf("send_buffer_stri:: ");
-    for(int i = 0; i < s_send_keys; ++i){
-      printf("%d ", send_buffer_stri[i]);
-    }
-    printf("\n");
-    printf("recv_buffer_stri:: ");
-    for(int i = 0; i < s_recv_keys; ++i){
-      printf("%d ", recv_buffer_stri[i]);
-    }
-    printf("\n");
-  }
+  PDM_log_trace_array_int(send_buffer_keys, s_send_keys, "send_buffer_keys:: ");
+  PDM_log_trace_array_int(recv_buffer_keys, s_recv_keys, "recv_buffer_keys:: ");
+  PDM_log_trace_array_int(send_buffer_stri, s_send_keys, "send_buffer_stri:: ");
+  PDM_log_trace_array_int(recv_buffer_stri, s_recv_keys, "recv_buffer_stri:: ");
 
   int* recv_buffer_data_int = (int*) recv_buffer_data;
-  printf("recv_buffer_data_int:: ");
-  for(int i = 0; i < s_recv_data/s_data; ++i){
-    printf("%d ", recv_buffer_data_int[i]);
-  }
-  printf("\n");
-  for(int i = 0; i < s_recv_data/s_data; ++i){
-    printf("recv_buffer_data_int[%d] = %d \n ", i, recv_buffer_data_int[i]);
-  }
+  PDM_log_trace_array_int(recv_buffer_data_int, s_recv_data/s_data, "recv_buffer_data_int:: ");
+
   /*
    * Rebuild a total stride
    */
@@ -610,11 +539,7 @@ _gnum_from_hv_compute
   }
 
   if(0 == 0){
-    printf("recv_buffer_stri:: ");
-    for(int i = 0; i < s_recv_keys+1; ++i){
-      printf("%d ", recv_buffer_stri[i]);
-    }
-    printf("\n");
+    PDM_log_trace_array_int(recv_buffer_stri, s_recv_keys+1, "recv_buffer_stri:: ");
   }
 
   /*
@@ -633,34 +558,23 @@ _gnum_from_hv_compute
   my_struct->idx = recv_buffer_stri;
   my_struct->arr = (int *) recv_buffer_data;
 
-
   PDM_sort_long_s(order, s_recv_keys, _gnum_from_hv->fcompare, (void*) my_struct);
-
 
   /*
    * Panic verbose
    */
-  if(0 == 0 ){
-    printf("order = ");
+  if(0 == 0){
+    PDM_log_trace_array_int(order, s_recv_keys, "order:: ");
+    log_trace("order = ");
     for(int i = 0; i < s_recv_keys; ++i){
-      printf("%d ", order[i]);
-    }
-    printf("\n");
-
-
-  }
-
-  if(0 == 0 ){
-    printf("order = ");
-    for(int i = 0; i < s_recv_keys; ++i){
-      printf("%d --> ", (int)order[i]);
+      log_trace("%d --> ", (int)order[i]);
       int j   = order[i];
       for(int k = my_struct->idx[j]; k < my_struct->idx[j+1]; ++k ){
-        printf(" %d ", my_struct->arr[k]);
+        log_trace(" %d ", my_struct->arr[k]);
       }
-      printf("\n");
+      log_trace("\n");
     }
-    printf("\n");
+    log_trace("\n");
   }
 
   /*
@@ -671,36 +585,36 @@ _gnum_from_hv_compute
   PDM_g_num_t n_id    = 0;
   PDM_g_num_t last_id = order[0];
   for(int i = 0; i < s_recv_keys; ++i){
-    printf(" generate g_id :: %d \n", i);
+    log_trace(" generate g_id :: %d \n", i);
     if(_gnum_from_hv->fequal(&order[i], &last_id, (void*) my_struct)){
-      printf(" \t Cas 1 :: order[%d] = %d | next_id : %d\n", i, order[i], next_id);
+      log_trace(" \t Cas 1 :: order[%d] = %d | next_id : %d\n", i, order[i], next_id);
       blk_ln_to_gn[order[i]] = next_id;
     } else {
       next_id++;
       n_id++;
-      printf(" \t Cas 2 :: order[%d] = %d | next_id : %d\n", i, order[i], next_id);
+      log_trace(" \t Cas 2 :: order[%d] = %d | next_id : %d\n", i, order[i], next_id);
       blk_ln_to_gn[order[i]] = next_id;
       last_id = order[i];
     }
   }
 
-  printf("n_id   :: %d \n", n_id);
-  printf("next_id:: %d \n", next_id);
+  log_trace("n_id   :: %d \n", n_id);
+  log_trace("next_id:: %d \n", next_id);
 
   /*
    * Panic verbose
    */
   if(0 == 0 ){
-    printf("blk_ln_to_gn = ");
+    log_trace("blk_ln_to_gn = ");
     for(int i = 0; i < s_recv_keys; ++i){
-      printf("%d --> ", (int)blk_ln_to_gn[i]);
+      log_trace("%d --> ", (int)blk_ln_to_gn[i]);
       int j   = blk_ln_to_gn[i];
       for(int k = my_struct->idx[j]; k < my_struct->idx[j+1]; ++k ){
-        printf(" %d ", my_struct->arr[k]);
+        log_trace(" %d ", my_struct->arr[k]);
       }
-      printf("\n");
+      log_trace("\n");
     }
-    printf("\n");
+    log_trace("\n");
   }
 
   /*
@@ -708,6 +622,10 @@ _gnum_from_hv_compute
    */
   // MPI_Alltoallv(blk_gid , n_key_recv, i_key_recv, PDM__PDM_MPI_G_NUM,
   //               part_gid, n_key_send, i_key_send, PDM__PDM_MPI_G_NUM, _gnum_from_hv->comm);
+
+  /*
+   *  Remise en place dans chaque partition
+   */
 
   free(n_key_send);
   free(n_key_recv);
