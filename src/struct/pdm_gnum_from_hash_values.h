@@ -44,8 +44,8 @@ extern "C" {
 /*============================================================================
  * Type definitions
  *============================================================================*/
-typedef int (*gnum_from_hv_compare)(void* a, int na, void* b, int nb);
-typedef int (*gnum_from_hv_equal  )(void* a, int na, void* b, int nb);
+typedef int (*gnum_from_hv_compare)(const void* a, const void* b, void* );
+typedef int (*gnum_from_hv_equal  )(const void* a, const void* b, void* );
 
 /*=============================================================================
  * Static global variables
@@ -113,11 +113,11 @@ PDM_gnum_set_hash_values
 void
 PROCF (pdm_gnum_set_hash_values, PDM_GNUM_SET_FROM_HASH_VALUES)
 (
- const int    *id,
- const int    *i_part,
- const int    *n_elts,
- const size_t *part_hkeys,
- const int    *part_hstri,
+ const int           *id,
+ const int           *i_part,
+ const int           *n_elts,
+ const size_t        *part_hkeys,
+ const int           *part_hstri,
  const unsigned char *part_hdata
 );
 

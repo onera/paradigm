@@ -62,6 +62,117 @@ extern "C" {
  * Local structure definitions
  *============================================================================*/
 
+//
+typedef struct  {
+  int* idx;
+  int* arr;
+} user_defined_sort_t;
+
+// static int
+// my_compare_edge
+// (
+// const void* a,
+// const void* b,
+//       void* ctxt)
+// {
+//   int i = *(const int *) a;
+//   int j = *(const int *) b;
+
+//   user_defined_sort_t* my_struct = (user_defined_sort_t *) ctxt;
+//   int ni = 2
+//   int nj = 2
+//   int* arr_i = my_struct->arr[2*my_struct->idx[i]];
+//   int* arr_j = my_struct->arr[2*my_struct->idx[j]];
+// }
+
+
+static int
+my_compare
+(
+const void* a,
+const void* b,
+      void* ctxt)
+{
+  int i = *(const int *) a;
+  int j = *(const int *) b;
+
+  user_defined_sort_t* my_struct = (user_defined_sort_t*) ctxt;
+
+  int ni = my_struct->idx[i+1] - my_struct->idx[i];
+  int nj = my_struct->idx[j+1] - my_struct->idx[j];
+
+  printf("my_compare:: %d %d - %d %d \n", i, j, ni, nj);
+
+  int* arr_i = &my_struct->arr[my_struct->idx[i]];
+  int* arr_j = &my_struct->arr[my_struct->idx[j]];
+
+  if(ni < nj){
+    return 1;
+  } else if (ni == nj){
+    for(int k = 0; k < ni; ++k){
+      if(arr_i[k] < arr_j[k]) {
+        return 1;
+      }
+    }
+  }
+
+  return 0;
+}
+
+static int
+my_equal
+(
+const void* a,
+const void* b,
+      void* ctxt)
+{
+  int i = *(const int *) a;
+  int j = *(const int *) b;
+
+
+  user_defined_sort_t* my_struct = (user_defined_sort_t*) ctxt;
+
+  int ni = my_struct->idx[i+1] - my_struct->idx[i];
+  int nj = my_struct->idx[j+1] - my_struct->idx[j];
+
+  printf("my_equal:: %d %d - %d %d - %d %d \n", i, j, ni, nj, my_struct->idx[i], my_struct->idx[j]);
+
+  int* arr_i = &my_struct->arr[my_struct->idx[i]];
+  int* arr_j = &my_struct->arr[my_struct->idx[j]];
+
+
+  if(ni != nj){
+    return 0;
+  } else if (ni == nj){
+
+    /* Dans notre cas on veut sort les entiers avant de les comparers */
+    int* sort_arr_i = (int*) malloc( ni * sizeof(int));
+    int* sort_arr_j = (int*) malloc( ni * sizeof(int));
+
+    for(int k = 0; k < ni; ++k){
+      sort_arr_i[k] = arr_i[k];
+      sort_arr_j[k] = arr_j[k];
+    }
+    PDM_quick_sort_int(sort_arr_i, 0, ni-1);
+    PDM_quick_sort_int(sort_arr_j, 0, ni-1);
+
+    for(int k = 0; k < ni; ++k){
+      printf(" \t sort_arr_i[%d] = %d | sort_arr_j[%d] = %d \n", k, sort_arr_i[k], k, sort_arr_j[k]);
+      if(sort_arr_i[k] != sort_arr_j[k]) {
+        free(sort_arr_i);
+        free(sort_arr_j);
+        return 0;
+      }
+    }
+
+    free(sort_arr_i);
+    free(sort_arr_j);
+  }
+
+  return 1;
+}
+
+
 
 /**
  * \struct _pdm_gnum_from_hv_t
@@ -80,6 +191,9 @@ typedef struct {
   unsigned char **part_hdata;
   int           **part_hstri;
   size_t          s_data;
+
+  gnum_from_hv_compare fcompare;
+  gnum_from_hv_equal   fequal;
 
   // size_t         *blk_hkeys;
   unsigned char  *blk_hdata;
@@ -256,14 +370,14 @@ _gnum_from_hv_compute
   /*
    * Remapping of partition data in block data according to the hash values distribution
    */
-  int* send_count = (int *) malloc( _gnum_from_hv->n_rank * sizeof(int));
-  int* recv_count = (int *) malloc( _gnum_from_hv->n_rank * sizeof(int));
-  int* send_strid = (int *) malloc( _gnum_from_hv->n_rank * sizeof(int));
-  int* recv_strid = (int *) malloc( _gnum_from_hv->n_rank * sizeof(int));
+  int* n_key_send  = (int *) malloc( _gnum_from_hv->n_rank * sizeof(int));
+  int* n_key_recv  = (int *) malloc( _gnum_from_hv->n_rank * sizeof(int));
+  int* n_data_send = (int *) malloc( _gnum_from_hv->n_rank * sizeof(int));
+  int* n_data_recv = (int *) malloc( _gnum_from_hv->n_rank * sizeof(int));
 
   for(int i = 0; i < _gnum_from_hv->n_rank; ++i){
-    send_count[i] = 0;
-    send_strid[i] = 0;
+    n_key_send[i] = 0;
+    n_data_send[i] = 0;
   }
 
   /*
@@ -277,8 +391,9 @@ _gnum_from_hv_compute
       int t_rank = PDM_binary_search_gap_long(g_key, _gnum_from_hv->distribution, _gnum_from_hv->n_rank+1);
 
       printf(" Found in t_rank :: %d\n", (int)t_rank);
-      send_strid[t_rank] += _gnum_from_hv->s_data * _gnum_from_hv->part_hstri[i_part][ielt];
-      send_count[t_rank]++;
+      // n_data_send[t_rank] += _gnum_from_hv->s_data * _gnum_from_hv->part_hstri[i_part][ielt];
+      n_data_send[t_rank] += _gnum_from_hv->part_hstri[i_part][ielt];
+      n_key_send[t_rank]++;
 
     }
   }
@@ -286,81 +401,329 @@ _gnum_from_hv_compute
   /*
    * Exchange
    */
-  PDM_MPI_Alltoall(send_count, 1, PDM_MPI_INT, recv_count, 1, PDM_MPI_INT, _gnum_from_hv->comm);
-  PDM_MPI_Alltoall(send_strid, 1, PDM_MPI_INT, recv_strid, 1, PDM_MPI_INT, _gnum_from_hv->comm);
+  PDM_MPI_Alltoall(n_key_send , 1, PDM_MPI_INT, n_key_recv , 1, PDM_MPI_INT, _gnum_from_hv->comm);
+  PDM_MPI_Alltoall(n_data_send, 1, PDM_MPI_INT, n_data_recv, 1, PDM_MPI_INT, _gnum_from_hv->comm);
 
   /*
    * Prepare utility array to setup the second exchange
    */
-  int* send_count_idx = (int *) malloc( (_gnum_from_hv->n_rank+1) * sizeof(int));
-  int* recv_count_idx = (int *) malloc( (_gnum_from_hv->n_rank+1) * sizeof(int));
-  int* send_strid_idx = (int *) malloc( (_gnum_from_hv->n_rank+1) * sizeof(int));
-  int* recv_strid_idx = (int *) malloc( (_gnum_from_hv->n_rank+1) * sizeof(int));
+  int* i_key_send  = (int *) malloc( (_gnum_from_hv->n_rank+1) * sizeof(int));
+  int* i_key_recv  = (int *) malloc( (_gnum_from_hv->n_rank+1) * sizeof(int));
+  int* i_data_send = (int *) malloc( (_gnum_from_hv->n_rank+1) * sizeof(int));
+  int* i_data_recv = (int *) malloc( (_gnum_from_hv->n_rank+1) * sizeof(int));
 
-  send_count_idx[0] = 0;
-  recv_count_idx[0] = 0;
-  send_strid_idx[0] = 0;
-  recv_strid_idx[0] = 0;
+  i_key_send[0] = 0;
+  i_key_recv[0] = 0;
+  i_data_send[0] = 0;
+  i_data_recv[0] = 0;
   for(int i = 0; i < _gnum_from_hv->n_rank; ++i){
-    send_count_idx[i+1] = send_count_idx[i] + send_count[i];
-    recv_count_idx[i+1] = recv_count_idx[i] + recv_count[i];
-    send_strid_idx[i+1] = send_strid_idx[i] + send_strid[i];
-    recv_strid_idx[i+1] = recv_strid_idx[i] + recv_strid[i];
+    i_key_send[i+1] = i_key_send[i] + n_key_send[i];
+    i_key_recv[i+1] = i_key_recv[i] + n_key_recv[i];
+    i_data_send[i+1] = i_data_send[i] + n_data_send[i];
+    i_data_recv[i+1] = i_data_recv[i] + n_data_recv[i];
+    n_key_send[i]  = 0;
+    n_data_send[i] = 0;
   }
 
-  int s_send      = send_count_idx[_gnum_from_hv->n_rank];
-  int s_recv      = recv_count_idx[_gnum_from_hv->n_rank];
-  int s_data_send = send_strid_idx[_gnum_from_hv->n_rank];
-  int s_data_recv = recv_strid_idx[_gnum_from_hv->n_rank];
+  int s_send_keys = i_key_send[_gnum_from_hv->n_rank];
+  int s_recv_keys = i_key_recv[_gnum_from_hv->n_rank];
+  int s_send_data = i_data_send[_gnum_from_hv->n_rank] * _gnum_from_hv->s_data;
+  int s_recv_data = i_data_recv[_gnum_from_hv->n_rank] * _gnum_from_hv->s_data;
 
-  printf("s_send     ::%d\n", s_send     );
-  printf("s_recv     ::%d\n", s_recv     );
-  printf("s_data_send::%d\n", s_data_send);
-  printf("s_data_recv::%d\n", s_data_recv);
+  printf("s_send_keys::%d\n", s_send_keys);
+  printf("s_recv_keys::%d\n", s_recv_keys);
+  printf("s_send_data::%d\n", s_send_data);
+  printf("s_recv_data::%d\n", s_recv_data);
+  printf("i_data_send[_gnum_from_hv->n_rank]::%d\n", i_data_send[_gnum_from_hv->n_rank]);
+  printf("i_data_recv[_gnum_from_hv->n_rank]::%d\n", i_data_recv[_gnum_from_hv->n_rank]);
 
   /*
    * Allocate
    */
-  int *send_stri_buffer = (int *) malloc(sizeof(int) * s_send );
-  int *recv_stri_buffer = (int *) malloc(sizeof(int) * s_recv );
+  int *send_buffer_keys = (int *) malloc(sizeof(int) * s_send_keys );
+  int *recv_buffer_keys = (int *) malloc(sizeof(int) * s_recv_keys );
 
-  unsigned char *send_data_buffer = (unsigned char *) malloc(sizeof(unsigned char) * s_data_send);
-  unsigned char *recv_data_buffer = (unsigned char *) malloc(sizeof(unsigned char) * s_data_recv);
+  int *send_buffer_stri = (int *) malloc(sizeof(int) * ( s_send_keys + 1) );
+  int *recv_buffer_stri = (int *) malloc(sizeof(int) * ( s_recv_keys + 1) );
+
+  unsigned char *send_buffer_data = (unsigned char *) malloc(sizeof(unsigned char) * s_send_data);
+  unsigned char *recv_buffer_data = (unsigned char *) malloc(sizeof(unsigned char) * s_recv_data);
+
+  /*
+   * Setup send_buffer
+   */
+  int s_data = (int) _gnum_from_hv->s_data;
+  for(int i_part = 0; i_part < _gnum_from_hv->n_part; ++i_part){
+
+    unsigned char* _part_data = (unsigned char *) _gnum_from_hv->part_hdata[i_part];
+
+    int idx = 0;
+    for(int ielt = 0; ielt < _gnum_from_hv->n_elts[i_part]; ++ielt){
+
+      PDM_g_num_t g_key = (PDM_g_num_t) _gnum_from_hv->part_hkeys[i_part][ielt];
+      printf(" Search for :: %d\n", (int)g_key);
+      int t_rank = PDM_binary_search_gap_long(g_key, _gnum_from_hv->distribution, _gnum_from_hv->n_rank+1);
+
+      printf(" Found in t_rank :: %d\n", (int)t_rank);
+
+      /* Send key and stride */
+      int idx_send = i_key_send[t_rank]+n_key_send[t_rank]++;
+      send_buffer_keys[idx_send] = g_key;
+      send_buffer_stri[idx_send] = _gnum_from_hv->part_hstri[i_part][ielt];
+
+      /* Send data */
+      int n_data = s_data * _gnum_from_hv->part_hstri[i_part][ielt];
+      int shift  = n_data_send[t_rank];
+      printf(" n_data = %d | shift = %d | idx = %d \n", n_data, shift, idx);
+      for(int i_data = 0; i_data < n_data; ++i_data) {
+        int shift_tot = ( i_data_send[t_rank] + shift)*s_data;
+        send_buffer_data[shift_tot+i_data] = _part_data[idx*s_data+i_data];
+      }
+      idx += _gnum_from_hv->part_hstri[i_part][ielt];
+
+      // n_data_send[t_rank] += s_data * _gnum_from_hv->part_hstri[i_part][ielt];
+      n_data_send[t_rank] += _gnum_from_hv->part_hstri[i_part][ielt];
+
+    }
+  }
+  // abort();
+
+  int* send_buffer_data_int = (int*) send_buffer_data;
+  printf("send_buffer_data_int:: ");
+  for(int i = 0; i < s_send_data/s_data; ++i){
+    printf("%d ", send_buffer_data_int[i]);
+  }
+  printf("\n");
+
+
+  for(int i = 0; i < _gnum_from_hv->n_rank+1; ++i){
+    i_data_send[i] = i_data_send[i] * s_data;
+    i_data_recv[i] = i_data_recv[i] * s_data;
+    n_data_send[i] = n_data_send[i] * s_data;
+    n_data_recv[i] = n_data_recv[i] * s_data;
+  }
+
+
+  printf("i_key_send:: ");
+  for(int i = 0; i < _gnum_from_hv->n_rank+1; ++i){
+    printf("%d ", i_key_send[i]);
+  }
+  printf("\n");
+  printf("n_key_send:: ");
+  for(int i = 0; i < _gnum_from_hv->n_rank; ++i){
+    printf("%d ", n_key_send[i]);
+  }
+  printf("\n");
+  printf("i_key_recv:: ");
+  for(int i = 0; i < _gnum_from_hv->n_rank+1; ++i){
+    printf("%d ", i_key_recv[i]);
+  }
+  printf("\n");
+  printf("n_key_recv:: ");
+  for(int i = 0; i < _gnum_from_hv->n_rank; ++i){
+    printf("%d ", n_key_recv[i]);
+  }
+  printf("\n");
+
+
+  printf("i_data_send:: ");
+  for(int i = 0; i < _gnum_from_hv->n_rank+1; ++i){
+    printf("%d ", i_data_send[i]);
+  }
+  printf("\n");
+  printf("n_data_send:: ");
+  for(int i = 0; i < _gnum_from_hv->n_rank; ++i){
+    printf("%d ", n_data_send[i]);
+  }
+  printf("\n");
+  printf("i_data_recv:: ");
+  for(int i = 0; i < _gnum_from_hv->n_rank+1; ++i){
+    printf("%d ", i_data_recv[i]);
+  }
+  printf("\n");
+  printf("n_data_recv:: ");
+  for(int i = 0; i < _gnum_from_hv->n_rank; ++i){
+    printf("%d ", n_data_recv[i]);
+  }
+  printf("\n");
 
   /*
    * Exchange
    */
-  printf(" First exchange \n");
-  PDM_MPI_Alltoallv(send_stri_buffer, send_count, send_count_idx, PDM_MPI_INT,
-                    recv_stri_buffer, recv_count, recv_count_idx, PDM_MPI_INT, _gnum_from_hv->comm);
+  printf(" Exchnage 1 \n");
+  PDM_MPI_Alltoallv(send_buffer_keys, n_key_send, i_key_send, PDM_MPI_INT,
+                    recv_buffer_keys, n_key_recv, i_key_recv, PDM_MPI_INT, _gnum_from_hv->comm);
 
-  printf(" Second exchange \n");
-  PDM_MPI_Alltoallv(send_data_buffer, send_strid, send_strid_idx, PDM_MPI_BYTE,
-                    recv_data_buffer, recv_strid, recv_strid_idx, PDM_MPI_BYTE, _gnum_from_hv->comm);
+  printf(" Exchnage 2 \n");
+  PDM_MPI_Alltoallv(send_buffer_stri, n_key_send, i_key_send, PDM_MPI_INT,
+                    recv_buffer_stri, n_key_recv, i_key_recv, PDM_MPI_INT, _gnum_from_hv->comm);
 
-  printf(" Fin exchange \n");
+
+  printf(" Exchnage 1 end \n");
+  printf(" Exchnage 2 \n");
+  PDM_MPI_Alltoallv(send_buffer_data, n_data_send, i_data_send, PDM_MPI_BYTE,
+                    recv_buffer_data, n_data_recv, i_data_recv, PDM_MPI_BYTE, _gnum_from_hv->comm);
+
+  printf(" Exchnage 2 end \n");
+
+  if(0 == 0){
+    printf("send_buffer_keys:: ");
+    for(int i = 0; i < s_send_keys; ++i){
+      printf("%d ", send_buffer_keys[i]);
+    }
+    printf("\n");
+    printf("recv_buffer_keys:: ");
+    for(int i = 0; i < s_recv_keys; ++i){
+      printf("%d ", recv_buffer_keys[i]);
+    }
+    printf("\n");
+    printf("send_buffer_stri:: ");
+    for(int i = 0; i < s_send_keys; ++i){
+      printf("%d ", send_buffer_stri[i]);
+    }
+    printf("\n");
+    printf("recv_buffer_stri:: ");
+    for(int i = 0; i < s_recv_keys; ++i){
+      printf("%d ", recv_buffer_stri[i]);
+    }
+    printf("\n");
+  }
+
+  int* recv_buffer_data_int = (int*) recv_buffer_data;
+  printf("recv_buffer_data_int:: ");
+  for(int i = 0; i < s_recv_data/s_data; ++i){
+    printf("%d ", recv_buffer_data_int[i]);
+  }
+  printf("\n");
+  for(int i = 0; i < s_recv_data/s_data; ++i){
+    printf("recv_buffer_data_int[%d] = %d \n ", i, recv_buffer_data_int[i]);
+  }
+  /*
+   * Rebuild a total stride
+   */
+  int tmp1 = recv_buffer_stri[0];
+  recv_buffer_stri[0] = 0;
+  for(int i = 0; i < s_recv_keys; ++i){
+    int tmp2 = recv_buffer_stri[i+1];
+    recv_buffer_stri[i+1] = recv_buffer_stri[i] + tmp1;
+    tmp1 = tmp2;
+  }
+
+  if(0 == 0){
+    printf("recv_buffer_stri:: ");
+    for(int i = 0; i < s_recv_keys+1; ++i){
+      printf("%d ", recv_buffer_stri[i]);
+    }
+    printf("\n");
+  }
 
   /*
    * Generate global numbering from the block_data
    */
   // PDM_generate_global_id_from();
+  int* order = (int *) malloc( sizeof(int) * s_recv_keys);
+  for(int i = 0; i < s_recv_keys; ++i){
+    order[i] = i;
+  }
+
+  _gnum_from_hv->fcompare = my_compare;
+  _gnum_from_hv->fequal   = my_equal;
+
+  user_defined_sort_t* my_struct = (user_defined_sort_t *) malloc( sizeof(user_defined_sort_t) );
+  my_struct->idx = recv_buffer_stri;
+  my_struct->arr = (int *) recv_buffer_data;
+
+
+  PDM_sort_long_s(order, s_recv_keys, _gnum_from_hv->fcompare, (void*) my_struct);
+
+
+  /*
+   * Panic verbose
+   */
+  if(0 == 0 ){
+    printf("order = ");
+    for(int i = 0; i < s_recv_keys; ++i){
+      printf("%d ", order[i]);
+    }
+    printf("\n");
+
+
+  }
+
+  if(0 == 0 ){
+    printf("order = ");
+    for(int i = 0; i < s_recv_keys; ++i){
+      printf("%d --> ", (int)order[i]);
+      int j   = order[i];
+      for(int k = my_struct->idx[j]; k < my_struct->idx[j+1]; ++k ){
+        printf(" %d ", my_struct->arr[k]);
+      }
+      printf("\n");
+    }
+    printf("\n");
+  }
+
+  /*
+   * Use operator == to have an global numbering
+   */
+  PDM_g_num_t* blk_ln_to_gn = (PDM_g_num_t*) malloc( sizeof(PDM_g_num_t*) * s_recv_keys);
+  PDM_g_num_t next_id = 0;
+  PDM_g_num_t n_id    = 0;
+  PDM_g_num_t last_id = order[0];
+  for(int i = 0; i < s_recv_keys; ++i){
+    printf(" generate g_id :: %d \n", i);
+    if(_gnum_from_hv->fequal(&order[i], &last_id, (void*) my_struct)){
+      printf(" \t Cas 1 :: order[%d] = %d | next_id : %d\n", i, order[i], next_id);
+      blk_ln_to_gn[order[i]] = next_id;
+    } else {
+      next_id++;
+      n_id++;
+      printf(" \t Cas 2 :: order[%d] = %d | next_id : %d\n", i, order[i], next_id);
+      blk_ln_to_gn[order[i]] = next_id;
+      last_id = order[i];
+    }
+  }
+
+  printf("n_id   :: %d \n", n_id);
+  printf("next_id:: %d \n", next_id);
+
+  /*
+   * Panic verbose
+   */
+  if(0 == 0 ){
+    printf("blk_ln_to_gn = ");
+    for(int i = 0; i < s_recv_keys; ++i){
+      printf("%d --> ", (int)blk_ln_to_gn[i]);
+      int j   = blk_ln_to_gn[i];
+      for(int k = my_struct->idx[j]; k < my_struct->idx[j+1]; ++k ){
+        printf(" %d ", my_struct->arr[k]);
+      }
+      printf("\n");
+    }
+    printf("\n");
+  }
 
   /*
    * Reverse all_to_all exchange in order to remap global id on current partition
    */
+  // MPI_Alltoallv(blk_gid , n_key_recv, i_key_recv, PDM__PDM_MPI_G_NUM,
+  //               part_gid, n_key_send, i_key_send, PDM__PDM_MPI_G_NUM, _gnum_from_hv->comm);
 
-  free(send_count);
-  free(recv_count);
-  free(send_strid);
-  free(recv_strid);
-  free(send_count_idx);
-  free(recv_count_idx);
-  free(send_strid_idx);
-  free(recv_strid_idx);
-  free(send_stri_buffer);
-  free(recv_stri_buffer);
-  free(send_data_buffer);
-  free(recv_data_buffer);
+  free(n_key_send);
+  free(n_key_recv);
+  free(n_data_send);
+  free(n_data_recv);
+  free(i_key_send);
+  free(i_key_recv);
+  free(i_data_send);
+  free(i_data_recv);
+  free(send_buffer_keys);
+  free(recv_buffer_keys);
+  free(send_buffer_data);
+  free(recv_buffer_data);
+  free(send_buffer_stri);
+  free(recv_buffer_stri);
+  free(blk_ln_to_gn);
 
 }
 

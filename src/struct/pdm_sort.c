@@ -106,6 +106,101 @@ double *b
  * Public function definitions
  *============================================================================*/
 
+void
+PDM_sort_long_s
+(
+ PDM_g_num_t *array,
+ int          lArray,
+ comp_type    comp,
+ void*        context
+)
+{
+  printf(" PDM_sort_long_s : %d \n", lArray);
+  /* size of subarray sorted by straight insertion */
+  const int M = 7;
+  /* default size of the stack */
+  int sizeStack = 64; /* default size of the stack */
+  int jstack = -1;
+  int l = 0;
+  int i;
+  int j;
+  int ir = lArray - 1;
+  PDM_g_num_t a;
+  int        b;
+  int *istack = (int *) malloc (sizeof(int) * sizeStack);
+
+  for (;;) {
+    if ( ir-l < M ) {
+      for (j = l+1; j <= ir; ++j) {
+        a = array[j];
+        for(i = j-1; i >= l; --i) {
+          if (comp(&array[i], &a       , context)) {
+            break;
+          }
+          array[i+1] = array[i];
+        }
+        array[i+1] = a;
+      }
+      if (jstack < 0) {
+        break;
+      }
+      ir = istack[jstack--];
+      l  = istack[jstack--];
+    }
+    else{
+      int k = (l+ir) / 2;
+      _swap_long (&(array[k]), &(array[l+1]));
+      if (array[l] > array[ir]){
+        _swap_long (&(array[l]), &(array[ir]));
+      }
+      if (array[l+1] > array[ir]) {
+        _swap_long (&(array[l+1]), &(array[ir]));
+      }
+      if (array[l] > array[l+1]) {
+        _swap_long (&(array[l]), &(array[l+1]));
+      }
+      i = l + 1;
+      j = ir;
+      a = array[l+1];
+      for (;;) {
+        do {
+          ++i;
+        } while (comp(&array[i], &a       , context));
+        do {
+          --j;
+        } while (comp(&a       , &array[j], context));
+
+        if (j < i) {
+          break;
+        }
+        _swap_long (&(array[i]), &(array[j]));
+      }
+
+      array[l+1] = array[j];
+      array[j] = a;
+      jstack += 2;
+
+      if (jstack >= sizeStack) {
+        sizeStack *= 2;
+        istack = (int *) realloc (istack, sizeof(int) * sizeStack);
+      }
+
+      if (ir-i+1 >= j-1) {
+        istack[jstack  ] = ir;
+        istack[jstack-1] = i;
+        ir = j -1;
+      }
+      else {
+        istack[jstack  ] = j -1;
+        istack[jstack-1] = l;
+        l = i;
+      }
+    }
+  }
+  free (istack);
+  return;
+
+}
 
 
 /**
