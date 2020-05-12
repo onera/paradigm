@@ -94,8 +94,23 @@ char *argv[]
     part_stri[1] = edge_str_p1;
 
   } else if( n_rank == 2) {
-    PDM_printf ("\n Test is not implemented for 2 ranks \n");
-    abort();
+    n_part = 1;
+    n_elmts   = (int *     ) malloc( n_part * sizeof(int    ));
+    part_stri = (int **    ) malloc( n_part * sizeof(int*   ));
+    part_data = (int **    ) malloc( n_part * sizeof(int*   ));
+    part_key  = (size_t ** ) malloc( n_part * sizeof(size_t*));
+
+    if( i_rank == 0) {
+      n_elmts[0] = 4;
+      part_data[0] = edge_vtx_p0;
+      part_stri[0] = edge_str_p0;
+
+    } else if( i_rank == 1) {
+
+      n_elmts[0] = 4;
+      part_data[0] = edge_vtx_p1;
+      part_stri[0] = edge_str_p1;
+    }
   }
 
   /*
