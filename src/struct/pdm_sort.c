@@ -106,103 +106,6 @@ double *b
  * Public function definitions
  *============================================================================*/
 
-void
-PDM_sort_long_s
-(
- PDM_g_num_t *array,
- int          lArray,
- comp_type    comp,
- void*        context
-)
-{
-  printf(" PDM_sort_long_s : %d \n", lArray);
-  /* size of subarray sorted by straight insertion */
-  const int M = 7;
-  /* default size of the stack */
-  int sizeStack = 64; /* default size of the stack */
-  int jstack = -1;
-  int l = 0;
-  int i;
-  int j;
-  int ir = lArray - 1;
-  PDM_g_num_t a;
-  int        b;
-  int *istack = (int *) malloc (sizeof(int) * sizeStack);
-
-  for (;;) {
-    if ( ir-l < M ) {
-      for (j = l+1; j <= ir; ++j) {
-        a = array[j];
-        for(i = j-1; i >= l; --i) {
-          if (comp(&array[i], &a       , context)) {
-            break;
-          }
-          array[i+1] = array[i];
-        }
-        array[i+1] = a;
-      }
-      if (jstack < 0) {
-        break;
-      }
-      ir = istack[jstack--];
-      l  = istack[jstack--];
-    }
-    else{
-      int k = (l+ir) / 2;
-      _swap_long (&(array[k]), &(array[l+1]));
-      if (array[l] > array[ir]){
-        _swap_long (&(array[l]), &(array[ir]));
-      }
-      if (array[l+1] > array[ir]) {
-        _swap_long (&(array[l+1]), &(array[ir]));
-      }
-      if (array[l] > array[l+1]) {
-        _swap_long (&(array[l]), &(array[l+1]));
-      }
-      i = l + 1;
-      j = ir;
-      a = array[l+1];
-      for (;;) {
-        do {
-          ++i;
-        } while (comp(&array[i], &a       , context));
-        do {
-          --j;
-        } while (comp(&a       , &array[j], context));
-
-        if (j < i) {
-          break;
-        }
-        _swap_long (&(array[i]), &(array[j]));
-      }
-
-      array[l+1] = array[j];
-      array[j] = a;
-      jstack += 2;
-
-      if (jstack >= sizeStack) {
-        sizeStack *= 2;
-        istack = (int *) realloc (istack, sizeof(int) * sizeStack);
-      }
-
-      if (ir-i+1 >= j-1) {
-        istack[jstack  ] = ir;
-        istack[jstack-1] = i;
-        ir = j -1;
-      }
-      else {
-        istack[jstack  ] = j -1;
-        istack[jstack-1] = l;
-        l = i;
-      }
-    }
-  }
-  free (istack);
-  return;
-
-}
-
-
 /**
  *
  * \brief Search element index in a sorted array
@@ -958,7 +861,209 @@ PDM_quick_sort_long2
   }
 }
 
+/**
+ *
+ * \brief Compare operator for connectivities
+ *
+ */
+int
+PDM_operator_compare_connectivity
+(
+const void* a,
+const void* b,
+      void* ctxt
+)
+{
+  int i = *(const int *) a;
+  int j = *(const int *) b;
 
+  PDM_user_defined_sort* us = (PDM_user_defined_sort*) ctxt;
+
+  int ni = us->idx[i+1] - us->idx[i];
+  int nj = us->idx[j+1] - us->idx[j];
+
+  printf("PDM_operator_compare_connectivity:: %d %d - %d %d \n", i, j, ni, nj);
+
+  int* arr_i = (int *) &us->arr[us->idx[i]*sizeof(int)];
+  int* arr_j = (int *) &us->arr[us->idx[j]*sizeof(int)];
+
+  if(ni < nj){
+    return 1;
+  } else if (ni == nj){
+    for(int k = 0; k < ni; ++k){
+      if(arr_i[k] < arr_j[k]) {
+        return 1;
+      }
+    }
+  }
+
+  return 0;
+}
+
+
+/**
+ *
+ * \brief Equal operator for connectivities
+ *
+ */
+int
+PDM_operator_equal_connectivity
+(
+const void* a,
+const void* b,
+      void* ctxt)
+{
+  int i = *(const int *) a;
+  int j = *(const int *) b;
+
+
+  PDM_user_defined_sort* us = (PDM_user_defined_sort*) ctxt;
+
+  int ni = us->idx[i+1] - us->idx[i];
+  int nj = us->idx[j+1] - us->idx[j];
+
+  printf("PDM_operator_equal_connectivity:: %d %d - %d %d - %d %d \n", i, j, ni, nj, us->idx[i], us->idx[j]);
+
+  int* arr_i = (int*) &us->arr[us->idx[i]*sizeof(int)];
+  int* arr_j = (int*) &us->arr[us->idx[j]*sizeof(int)];
+
+
+  if(ni != nj){
+    return 0;
+  } else if (ni == nj){
+
+    /* Dans notre cas on veut sort les entiers avant de les comparers */
+    int* sort_arr_i = (int*) malloc( ni * sizeof(int));
+    int* sort_arr_j = (int*) malloc( ni * sizeof(int));
+
+    for(int k = 0; k < ni; ++k){
+      sort_arr_i[k] = arr_i[k];
+      sort_arr_j[k] = arr_j[k];
+    }
+    PDM_quick_sort_int(sort_arr_i, 0, ni-1);
+    PDM_quick_sort_int(sort_arr_j, 0, ni-1);
+
+    for(int k = 0; k < ni; ++k){
+      printf(" \t sort_arr_i[%d] = %d | sort_arr_j[%d] = %d \n", k, sort_arr_i[k], k, sort_arr_j[k]);
+      if(sort_arr_i[k] != sort_arr_j[k]) {
+        free(sort_arr_i);
+        free(sort_arr_j);
+        return 0;
+      }
+    }
+
+    free(sort_arr_i);
+    free(sort_arr_j);
+  }
+
+  return 1;
+}
+
+/**
+ *
+ * \brief Indirect sort of structure according to a user comparison function
+ *
+ * \param [inout] array        Array to sort
+ * \param [in]    lArray       Array length
+ * \param [in]    lArray       User compare function (return int )
+ * \param [in]    lArray       Context anonymous pointer to a struct to perfomr user compare
+ *
+ */
+void
+PDM_sort_long_special
+(
+ PDM_g_num_t          *array,
+ int                   lArray,
+ pdm_operator_compare  comp,
+ void*                 context
+)
+{
+  printf(" PDM_sort_long_s : %d \n", lArray);
+  /* size of subarray sorted by straight insertion */
+  const int M = 7;
+  /* default size of the stack */
+  int sizeStack = 64; /* default size of the stack */
+  int jstack = -1;
+  int l = 0;
+  int i;
+  int j;
+  int ir = lArray - 1;
+  PDM_g_num_t a;
+  int        b;
+  int *istack = (int *) malloc (sizeof(int) * sizeStack);
+
+  for (;;) {
+    if ( ir-l < M ) {
+      for (j = l+1; j <= ir; ++j) {
+        a = array[j];
+        for(i = j-1; i >= l; --i) {
+          if (comp(&array[i], &a       , context)) {
+            break;
+          }
+          array[i+1] = array[i];
+        }
+        array[i+1] = a;
+      }
+      if (jstack < 0) {
+        break;
+      }
+      ir = istack[jstack--];
+      l  = istack[jstack--];
+    }
+    else{
+      int k = (l+ir) / 2;
+      _swap_long (&(array[k]), &(array[l+1]));
+      if (array[l] > array[ir]){
+        _swap_long (&(array[l]), &(array[ir]));
+      }
+      if (array[l+1] > array[ir]) {
+        _swap_long (&(array[l+1]), &(array[ir]));
+      }
+      if (array[l] > array[l+1]) {
+        _swap_long (&(array[l]), &(array[l+1]));
+      }
+      i = l + 1;
+      j = ir;
+      a = array[l+1];
+      for (;;) {
+        do {
+          ++i;
+        } while (comp(&array[i], &a       , context));
+        do {
+          --j;
+        } while (comp(&a       , &array[j], context));
+
+        if (j < i) {
+          break;
+        }
+        _swap_long (&(array[i]), &(array[j]));
+      }
+
+      array[l+1] = array[j];
+      array[j] = a;
+      jstack += 2;
+
+      if (jstack >= sizeStack) {
+        sizeStack *= 2;
+        istack = (int *) realloc (istack, sizeof(int) * sizeStack);
+      }
+
+      if (ir-i+1 >= j-1) {
+        istack[jstack  ] = ir;
+        istack[jstack-1] = i;
+        ir = j -1;
+      }
+      else {
+        istack[jstack  ] = j -1;
+        istack[jstack-1] = l;
+        l = i;
+      }
+    }
+  }
+  free (istack);
+  return;
+
+}
 
 #ifdef __cplusplus
 }

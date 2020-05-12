@@ -65,11 +65,6 @@ extern "C" {
  *============================================================================*/
 
 //
-typedef struct  {
-  int* idx;
-  int* arr;
-} user_defined_sort_t;
-
 // static int
 // my_compare_edge
 // (
@@ -80,98 +75,13 @@ typedef struct  {
 //   int i = *(const int *) a;
 //   int j = *(const int *) b;
 
-//   user_defined_sort_t* my_struct = (user_defined_sort_t *) ctxt;
+//   PDM_user_defined_sort* us = (PDM_user_defined_sort *) ctxt;
 //   int ni = 2
 //   int nj = 2
-//   int* arr_i = my_struct->arr[2*my_struct->idx[i]];
-//   int* arr_j = my_struct->arr[2*my_struct->idx[j]];
+//   int* arr_i = us->arr[2*us->idx[i]];
+//   int* arr_j = us->arr[2*us->idx[j]];
 // }
 
-static int
-my_compare
-(
-const void* a,
-const void* b,
-      void* ctxt)
-{
-  int i = *(const int *) a;
-  int j = *(const int *) b;
-
-  user_defined_sort_t* my_struct = (user_defined_sort_t*) ctxt;
-
-  int ni = my_struct->idx[i+1] - my_struct->idx[i];
-  int nj = my_struct->idx[j+1] - my_struct->idx[j];
-
-  printf("my_compare:: %d %d - %d %d \n", i, j, ni, nj);
-
-  int* arr_i = &my_struct->arr[my_struct->idx[i]];
-  int* arr_j = &my_struct->arr[my_struct->idx[j]];
-
-  if(ni < nj){
-    return 1;
-  } else if (ni == nj){
-    for(int k = 0; k < ni; ++k){
-      if(arr_i[k] < arr_j[k]) {
-        return 1;
-      }
-    }
-  }
-
-  return 0;
-}
-
-static int
-my_equal
-(
-const void* a,
-const void* b,
-      void* ctxt)
-{
-  int i = *(const int *) a;
-  int j = *(const int *) b;
-
-
-  user_defined_sort_t* my_struct = (user_defined_sort_t*) ctxt;
-
-  int ni = my_struct->idx[i+1] - my_struct->idx[i];
-  int nj = my_struct->idx[j+1] - my_struct->idx[j];
-
-  printf("my_equal:: %d %d - %d %d - %d %d \n", i, j, ni, nj, my_struct->idx[i], my_struct->idx[j]);
-
-  int* arr_i = &my_struct->arr[my_struct->idx[i]];
-  int* arr_j = &my_struct->arr[my_struct->idx[j]];
-
-
-  if(ni != nj){
-    return 0;
-  } else if (ni == nj){
-
-    /* Dans notre cas on veut sort les entiers avant de les comparers */
-    int* sort_arr_i = (int*) malloc( ni * sizeof(int));
-    int* sort_arr_j = (int*) malloc( ni * sizeof(int));
-
-    for(int k = 0; k < ni; ++k){
-      sort_arr_i[k] = arr_i[k];
-      sort_arr_j[k] = arr_j[k];
-    }
-    PDM_quick_sort_int(sort_arr_i, 0, ni-1);
-    PDM_quick_sort_int(sort_arr_j, 0, ni-1);
-
-    for(int k = 0; k < ni; ++k){
-      printf(" \t sort_arr_i[%d] = %d | sort_arr_j[%d] = %d \n", k, sort_arr_i[k], k, sort_arr_j[k]);
-      if(sort_arr_i[k] != sort_arr_j[k]) {
-        free(sort_arr_i);
-        free(sort_arr_j);
-        return 0;
-      }
-    }
-
-    free(sort_arr_i);
-    free(sort_arr_j);
-  }
-
-  return 1;
-}
 
 
 
@@ -551,14 +461,14 @@ _gnum_from_hv_compute
     order[i] = i;
   }
 
-  _gnum_from_hv->fcompare = my_compare;
-  _gnum_from_hv->fequal   = my_equal;
+  _gnum_from_hv->fcompare = PDM_operator_compare_connectivity;
+  _gnum_from_hv->fequal   = PDM_operator_equal_connectivity;
 
-  user_defined_sort_t* my_struct = (user_defined_sort_t *) malloc( sizeof(user_defined_sort_t) );
-  my_struct->idx = recv_buffer_stri;
-  my_struct->arr = (int *) recv_buffer_data;
+  PDM_user_defined_sort* us = (PDM_user_defined_sort *) malloc( sizeof(PDM_user_defined_sort) );
+  us->idx = recv_buffer_stri;
+  us->arr = (int *) recv_buffer_data;
 
-  PDM_sort_long_s(order, s_recv_keys, _gnum_from_hv->fcompare, (void*) my_struct);
+  PDM_sort_long_special(order, s_recv_keys, _gnum_from_hv->fcompare, (void*) us);
 
   /*
    * Panic verbose
@@ -566,11 +476,12 @@ _gnum_from_hv_compute
   if(0 == 0){
     PDM_log_trace_array_int(order, s_recv_keys, "order:: ");
     log_trace("order = ");
+    int* arr_tmp = (int*) us->arr;
     for(int i = 0; i < s_recv_keys; ++i){
       log_trace("%d --> ", (int)order[i]);
       int j   = order[i];
-      for(int k = my_struct->idx[j]; k < my_struct->idx[j+1]; ++k ){
-        log_trace(" %d ", my_struct->arr[k]);
+      for(int k = us->idx[j]; k < us->idx[j+1]; ++k ){
+        log_trace(" %d ", arr_tmp[k]);
       }
       log_trace("\n");
     }
@@ -586,7 +497,7 @@ _gnum_from_hv_compute
   PDM_g_num_t last_id = order[0];
   for(int i = 0; i < s_recv_keys; ++i){
     log_trace(" generate g_id :: %d \n", i);
-    if(_gnum_from_hv->fequal(&order[i], &last_id, (void*) my_struct)){
+    if(_gnum_from_hv->fequal(&order[i], &last_id, (void*) us)){
       log_trace(" \t Cas 1 :: order[%d] = %d | next_id : %d\n", i, order[i], next_id);
       blk_ln_to_gn[order[i]] = next_id;
     } else {
@@ -606,11 +517,12 @@ _gnum_from_hv_compute
    */
   if(0 == 0 ){
     log_trace("blk_ln_to_gn = ");
+    int* arr_tmp = (int*) us->arr;
     for(int i = 0; i < s_recv_keys; ++i){
       log_trace("%d --> ", (int)blk_ln_to_gn[i]);
       int j   = blk_ln_to_gn[i];
-      for(int k = my_struct->idx[j]; k < my_struct->idx[j+1]; ++k ){
-        log_trace(" %d ", my_struct->arr[k]);
+      for(int k = us->idx[j]; k < us->idx[j+1]; ++k ){
+        log_trace(" %d ", arr_tmp[k]);
       }
       log_trace("\n");
     }

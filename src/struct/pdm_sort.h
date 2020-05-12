@@ -26,7 +26,13 @@ extern "C" {
 /*============================================================================
  * Type
  *============================================================================*/
-typedef int (*comp_type )(const void* a, const void* b, void* );
+typedef int (*pdm_operator_compare)(const void* a, const void* b, void* );
+
+typedef struct  {
+  int*  idx;
+  unsigned char* arr; /* Not void* to avoid arithmetic pointer */
+} PDM_user_defined_sort;
+
 
 /*=============================================================================
  * Static global variables
@@ -35,25 +41,6 @@ typedef int (*comp_type )(const void* a, const void* b, void* );
 /*=============================================================================
  * Public function prototypes
  *============================================================================*/
-
-/**
- *
- * \brief Search element index in a sorted array
- *
- * \param [inout] array        Array to sort
- * \param [inout] order        new indice to old indice  (or NULL)
- * \param [in]    lArray       Array length
- *
- */
-
-void
-PDM_sort_long_s
-(
- PDM_g_num_t *array,
- int          lArray,
- comp_type    comp,
- void*        context
-);
 
 /**
  *
@@ -183,6 +170,52 @@ PDM_quick_sort_int2
  int          c[]
 );
 
+
+/**
+ *
+ * \brief Compare operator for connectivities
+ *
+ */
+int
+PDM_operator_compare_connectivity
+(
+const void* a,
+const void* b,
+      void* ctxt
+);
+
+/**
+ *
+ * \brief Equal operator for connectivities
+ *
+ */
+int
+PDM_operator_equal_connectivity
+(
+const void* a,
+const void* b,
+      void* ctxt
+);
+
+
+/**
+ *
+ * \brief Indirect sort of structure according to a user comparison function
+ *
+ * \param [inout] array        Array to sort
+ * \param [in]    lArray       Array length
+ * \param [in]    lArray       User compare function (return int )
+ * \param [in]    lArray       Context anonymous pointer to a struct to perfomr user compare
+ *
+ */
+void
+PDM_sort_long_special
+(
+ PDM_g_num_t          *array,
+ int                   lArray,
+ pdm_operator_compare  comp,
+ void*                 context
+);
 
 
 #ifdef __cplusplus
