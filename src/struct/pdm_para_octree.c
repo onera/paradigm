@@ -3203,7 +3203,45 @@ _maximal_intersecting_range
 
 
 
+#define N_TIMER_LS 8
+typedef enum {
+  LS_BEGIN,
+  LS_INIT,
+  LS_POINT_INIT,
+  LS_SORT_START_LEAVES,
+  LS_CHECK_CLOSEST,
+  LS_TRAVERSAL,
+  LS_FINALIZE,
+  LS_END,
+} _timer_step_knnls_t;
 
+
+//-->> DETAIL TIMERS
+static void
+_dump_timer_knnls
+(
+ const double timer[]
+ )
+{
+  double tot = timer[LS_END] - timer[LS_BEGIN];
+
+  PDM_printf("kNN local search:\n"
+	     "\t total              = %12.5es\n"
+	     "\t init               = %12.5es (%d%%)\n"
+	     "\t cum. point init    = %12.5es (%d%%)\n"
+	     "\t cum. sort start    = %12.5es (%d%%)\n"
+	     "\t cum. check closest = %12.5es (%d%%)\n"
+	     "\t cum. traversal     = %12.5es (%d%%)\n"
+	     "\t finalize           = %12.5es (%d%%)\n",
+	     tot,
+	     timer[LS_INIT],              (int) (100 * timer[LS_INIT] / tot),
+	     timer[LS_POINT_INIT],        (int) (100 * timer[LS_POINT_INIT] / tot),
+	     timer[LS_SORT_START_LEAVES], (int) (100 * timer[LS_SORT_START_LEAVES] / tot),
+	     timer[LS_CHECK_CLOSEST],     (int) (100 * timer[LS_CHECK_CLOSEST] / tot),
+	     timer[LS_TRAVERSAL],         (int) (100 * timer[LS_TRAVERSAL] / tot),
+	     timer[LS_FINALIZE],          (int) (100 * timer[LS_FINALIZE] / tot));
+}
+//<<--
 
 static void
 _closest_points_local
@@ -3244,6 +3282,19 @@ _closest_points_local
   for (int i = 0; i < lComm; i++) {
     send_count[i] = 0;
   }
+
+  //-->> DETAIL TIMERS
+  double timer_ls[N_TIMER_LS];
+  for (int i = 0; i < N_TIMER_LS; i++) {
+    timer_ls[i] = 0;
+  }
+  double b_timer, e_timer, start_main;
+
+  PDM_timer_hang_on(octree->timer);
+  timer_ls[LS_BEGIN] = PDM_timer_elapsed(octree->timer);
+  b_timer = timer_ls[LS_BEGIN];
+  PDM_timer_resume(octree->timer);
+  //<<--
 
   //--->>>
   int **tmp_send_tgt_lnum       = malloc (sizeof(int *) * lComm);
@@ -3286,9 +3337,22 @@ _closest_points_local
   /* Min heap used to visit leaves from neighbour to neighbour */
   _min_heap_t *leaf_heap = _min_heap_create (octants->n_nodes);
 
+  //-->> DETAIL TIMERS
+  PDM_timer_hang_on(octree->timer);
+  e_timer = PDM_timer_elapsed(octree->timer);
+  timer_ls[LS_INIT] = e_timer - b_timer;
+  PDM_timer_resume(octree->timer);
+  //<<--
+
 
   /* Loop over target points */
   for (int i_tgt = 0; i_tgt < n_pts; i_tgt++) {
+
+    //-->> DETAIL TIMERS
+    PDM_timer_hang_on(octree->timer);
+    b_timer = PDM_timer_elapsed(octree->timer);
+    PDM_timer_resume(octree->timer);
+    //<<--
 
     /* Init */
     for (int i = 0; i < octree->n_connected; i++) {
@@ -3328,6 +3392,14 @@ _closest_points_local
       printf("\n=== pt (%ld) (upper_bound_dist = %f) ===\nstart leaves (%d):\n",
              pts_g_num[i_tgt], upper_bound_dist[i_tgt], n_start_leaves);
     }
+
+    //-->> DETAIL TIMERS
+    PDM_timer_hang_on(octree->timer);
+    e_timer = PDM_timer_elapsed(octree->timer);
+    timer_ls[LS_POINT_INIT] += e_timer - b_timer;
+    b_timer = e_timer;
+    PDM_timer_resume(octree->timer);
+    //<<--
 
     if (n_start_leaves < 1) {
       continue; /* move on to next target point */
@@ -3375,6 +3447,13 @@ _closest_points_local
       printf("============================\n");
     }
 
+    //-->> DETAIL TIMERS
+    PDM_timer_hang_on(octree->timer);
+    e_timer = PDM_timer_elapsed(octree->timer);
+    timer_ls[LS_SORT_START_LEAVES] += e_timer - b_timer;
+    b_timer = e_timer;
+    PDM_timer_resume(octree->timer);
+    //<<--
 
     /* Check whether start_heap is empty */
     //if (CHECK_EMPTY_START) {
@@ -3504,6 +3583,15 @@ _closest_points_local
         } // end loop over visited parts
       } // end if (min_start_dist >= THRESHOLD_CLOSEST * (*max_src_dist))
     } // end if (CHECK_CLOSEST && n_start_leaves > 0)
+
+    //-->> DETAIL TIMERS
+    PDM_timer_hang_on(octree->timer);
+    e_timer = PDM_timer_elapsed(octree->timer);
+    timer_ls[LS_CHECK_CLOSEST] += e_timer - b_timer;
+    b_timer = e_timer;
+    PDM_timer_resume(octree->timer);
+    //<<--
+
 
     /* Loop over (sorted) start leaves */
     int start_id;
@@ -3708,12 +3796,24 @@ _closest_points_local
       }
     }
 
+    //-->> DETAIL TIMERS
+    PDM_timer_hang_on(octree->timer);
+    e_timer = PDM_timer_elapsed(octree->timer);
+    timer_ls[LS_TRAVERSAL] += e_timer - b_timer;
+    PDM_timer_resume(octree->timer);
+    //<<--
+
   } // end loop over target points (i_tgt)
   free (is_visited);
   free (visited_leaves);
   _min_heap_free (start_heap);
   _min_heap_free (leaf_heap);
 
+  //-->> DETAIL TIMERS
+  PDM_timer_hang_on(octree->timer);
+  b_timer = PDM_timer_elapsed(octree->timer);
+  PDM_timer_resume(octree->timer);
+  //<<--
 
   free (n_send_to_rank_leaves);
   free (s_send_to_rank_leaves);
@@ -3777,6 +3877,16 @@ _closest_points_local
   free (s_tmp_send_start_leaves);
   free (n_tmp_send_start_leaves);
   free (tmp_send_start_leaves);
+
+  //-->> DETAIL TIMERS
+  PDM_timer_hang_on(octree->timer);
+  e_timer = PDM_timer_elapsed(octree->timer);
+  timer_ls[LS_FINALIZE] = e_timer - b_timer;
+  timer_ls[LS_END] = e_timer;
+  PDM_timer_resume(octree->timer);
+
+  _dump_timer_knnls (timer_ls);
+  //<<--
 }
 
 
@@ -4619,6 +4729,67 @@ PDM_para_octree_dump
  *
  */
 
+#define N_TIMER_KNN 12
+typedef enum {
+  KNN_BEGIN,
+  KNN_INIT,
+  KNN_MAIN,
+  LOOP_BEGIN,
+  LOOP_FILTER,
+  LOOP_LOCAL_SEARCH,
+  LOOP_PTB_EXCH,
+  LOOP_MERGE_PTB,
+  LOOP_PREP_NEXT,
+  LOOP_END,
+  KNN_BTP_EXCH,
+  KNN_END,
+} _timer_step_knn_t;
+
+
+static void
+_dump_timer_knn
+(
+ const double timer[]
+ )
+{
+  double tot = timer[KNN_END] - timer[KNN_BEGIN];
+
+  PDM_printf("kNN algorithm:\n"
+	     "\t total    = %12.5es\n"
+	     "\t init     = %12.5es (%d%%)\n"
+	     "\t main     = %12.5es (%d%%)\n"
+	     "\t btp exch = %12.5es (%d%%)\n",
+	     tot,
+	     timer[KNN_INIT],     (int) (100 * timer[KNN_INIT] / tot),
+	     timer[KNN_MAIN],     (int) (100 * timer[KNN_MAIN] / tot),
+	     timer[KNN_BTP_EXCH], (int) (100 * timer[KNN_BTP_EXCH] / tot));
+}
+
+static void
+_dump_timer_knn_loop
+(
+ const int    iteration,
+ const double timer[]
+ )
+{
+  double tot = timer[LOOP_END] - timer[LOOP_BEGIN];
+
+  PDM_printf("kNN loop iteration %d:\n"
+	     "\t total        = %12.5es\n"
+	     "\t filter       = %12.5es (%d%%)\n"
+	     "\t local search = %12.5es (%d%%)\n"
+	     "\t ptb exch     = %12.5es (%d%%)\n"
+	     "\t merge ptb    = %12.5es (%d%%)\n"
+	     "\t prep next    = %12.5es (%d%%)\n\n",
+	     iteration,
+	     tot,
+	     timer[LOOP_FILTER],       (int) (100 * timer[LOOP_FILTER] / tot),
+	     timer[LOOP_LOCAL_SEARCH], (int) (100 * timer[LOOP_LOCAL_SEARCH] / tot),
+	     timer[LOOP_PTB_EXCH],     (int) (100 * timer[LOOP_PTB_EXCH] / tot),
+	     timer[LOOP_MERGE_PTB],    (int) (100 * timer[LOOP_MERGE_PTB] / tot),
+	     timer[LOOP_PREP_NEXT],    (int) (100 * timer[LOOP_PREP_NEXT] / tot));
+}
+
 
 void
 PDM_para_octree_closest_point
@@ -4632,6 +4803,14 @@ PDM_para_octree_closest_point
  double      *closest_octree_pt_dist2
  )
 {
+  //-->> DETAIL TIMERS
+  double timer_knn[N_TIMER_KNN];
+  for (int i = 0; i < N_TIMER_KNN; i++) {
+    timer_knn[i] = 0;
+  }
+  double b_timer, e_timer, start_main;
+  //<<--
+
   const int DEBUG = 0;
   const int DEBUG_FILTER = 0;
   const int DEBUG_MERGE = 0;
@@ -4648,6 +4827,13 @@ PDM_para_octree_closest_point
   int myRank, lComm;
   PDM_MPI_Comm_rank (octree->comm, &myRank);
   PDM_MPI_Comm_size (octree->comm, &lComm);
+
+  //-->> DETAIL TIMERS
+  PDM_timer_hang_on(octree->timer);
+  timer_knn[KNN_BEGIN] = PDM_timer_elapsed(octree->timer);
+  b_timer = timer_knn[KNN_BEGIN];
+  PDM_timer_resume(octree->timer);
+  //<<--
 
 
   /* /!\ /!\ /!\ Force target points inside octree extents /!\ /!\ /!\ -->> */
@@ -4890,9 +5076,25 @@ PDM_para_octree_closest_point
   int *send_start_leaves_count = NULL;
   int *send_start_leaves_rank_shift = NULL;
 
+  //-->> DETAIL TIMERS
+  PDM_timer_hang_on(octree->timer);
+  e_timer = PDM_timer_elapsed(octree->timer);
+  timer_knn[KNN_INIT] = e_timer - b_timer;
+  start_main = e_timer;
+  PDM_timer_resume(octree->timer);
+  //<<--
+
   // while loop...
   int iteration = 0;
   while (1) {
+
+    //-->> DETAIL TIMERS
+    PDM_timer_hang_on(octree->timer);
+    timer_knn[LOOP_BEGIN] = PDM_timer_elapsed(octree->timer);
+    b_timer = timer_knn[LOOP_BEGIN];
+    PDM_timer_resume(octree->timer);
+    //<<--
+
     //-->>
     iteration++;
     if (DEBUG) {
@@ -5198,6 +5400,15 @@ PDM_para_octree_closest_point
     }
     //<<<---
 
+    //-->> DETAIL TIMERS
+    PDM_timer_hang_on(octree->timer);
+    e_timer = PDM_timer_elapsed(octree->timer);
+    timer_knn[LOOP_FILTER] = e_timer - b_timer;
+
+    b_timer = PDM_timer_elapsed(octree->timer);
+    PDM_timer_resume(octree->timer);
+    //<<--
+
     /* Search closest src points in local octree */
     _closest_points_local (octree,
                            n_closest_points,
@@ -5215,6 +5426,14 @@ PDM_para_octree_closest_point
                            &send_start_leaves,
                            &send_start_leaves_count,
                            &send_start_leaves_rank_shift);
+
+    //-->> DETAIL TIMERS
+    PDM_timer_hang_on(octree->timer);
+    e_timer = PDM_timer_elapsed(octree->timer);
+    timer_knn[LOOP_LOCAL_SEARCH] = e_timer - b_timer;
+    b_timer = PDM_timer_elapsed(octree->timer);
+    PDM_timer_resume(octree->timer);
+    //<<--
 
     /* Part-to-block exchanges to merge results in block arrays */
     PDM_part_to_block_t *ptb2 = PDM_part_to_block_create2 (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
@@ -5253,6 +5472,14 @@ PDM_para_octree_closest_point
                             &block_stride2,
                             (void **) &block_closest_src_gnum2);
     free (stride2);
+
+    //-->> DETAIL TIMERS
+    PDM_timer_hang_on(octree->timer);
+    e_timer = PDM_timer_elapsed(octree->timer);
+    timer_knn[LOOP_PTB_EXCH] = e_timer - b_timer;
+    b_timer = PDM_timer_elapsed(octree->timer);
+    PDM_timer_resume(octree->timer);
+    //<<--
 
     /* Merge block data */
     if (DEBUG && DEBUG_MERGE) {
@@ -5369,6 +5596,14 @@ PDM_para_octree_closest_point
     ptb2 = PDM_part_to_block_free (ptb2);
     // end merge
 
+    //-->> DETAIL TIMERS
+    PDM_timer_hang_on(octree->timer);
+    e_timer = PDM_timer_elapsed(octree->timer);
+    timer_knn[LOOP_MERGE_PTB] = e_timer - b_timer;
+    b_timer = PDM_timer_elapsed(octree->timer);
+    PDM_timer_resume(octree->timer);
+    //<<--
+
 
     /* Update upper_bound_dist */
     PDM_block_to_part_t *btp2 = PDM_block_to_part_create (block_distrib_idx1,
@@ -5416,6 +5651,16 @@ PDM_para_octree_closest_point
       free (send_start_leaves);
       free (send_start_leaves_count);
       free (send_start_leaves_rank_shift);
+
+      //-->> DETAIL TIMERS
+      PDM_timer_hang_on(octree->timer);
+      e_timer = PDM_timer_elapsed(octree->timer);
+      timer_knn[LOOP_PREP_NEXT] = e_timer - b_timer;
+      timer_knn[LOOP_END] = e_timer;
+      PDM_timer_resume(octree->timer);
+
+      _dump_timer_knn_loop (iteration, timer_knn);
+      //<<--
       break;
     }
 
@@ -5526,7 +5771,23 @@ PDM_para_octree_closest_point
     local_closest_src_gnum = realloc (local_closest_src_gnum, sizeof(PDM_g_num_t) * n_recv_pts * n_closest_points);
     local_closest_src_dist = realloc (local_closest_src_dist, sizeof(double)      * n_recv_pts * n_closest_points);
 
+    //-->> DETAIL TIMERS
+    PDM_timer_hang_on(octree->timer);
+    e_timer = PDM_timer_elapsed(octree->timer);
+    timer_knn[LOOP_PREP_NEXT] = e_timer - b_timer;
+    timer_knn[LOOP_END] = e_timer;
+    PDM_timer_resume(octree->timer);
+    _dump_timer_knn_loop (iteration, timer_knn);
+    //<<--
   } // end while loop
+
+  //-->> DETAIL TIMERS
+  PDM_timer_hang_on(octree->timer);
+  e_timer = PDM_timer_elapsed(octree->timer);
+  timer_knn[KNN_MAIN] = e_timer - start_main;
+  b_timer = e_timer;
+  PDM_timer_resume(octree->timer);
+  //<<--
 
   /* Free stuff */
   free (start_leaves);
@@ -5591,6 +5852,16 @@ PDM_para_octree_closest_point
   free (block_closest_src_gnum1);
 
   btp1 = PDM_block_to_part_free (btp1);
+
+  //-->> DETAIL TIMERS
+  PDM_timer_hang_on(octree->timer);
+  e_timer = PDM_timer_elapsed(octree->timer);
+  timer_knn[KNN_BTP_EXCH] = e_timer - b_timer;
+  timer_knn[KNN_END] = e_timer;
+  PDM_timer_resume(octree->timer);
+
+  _dump_timer_knn (timer_knn);
+  //<<--
 }
 
 
