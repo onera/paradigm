@@ -80,6 +80,24 @@ PDM_log_trace_array_long
  const char*  header
 );
 
+/**
+ *
+ * \brief Pretty print of array in trace_log
+ *
+ * \param [inout] array        Array to print
+ * \param [in]    lArray       Array length
+ * \param [inout] header       First line of log
+ *
+ */
+void
+PDM_log_trace_array_size_t
+(
+ size_t      *array,
+ int          larray,
+ const char  *header
+);
+
+
 /*----------------------------------------------------------------------------*/
 
 #ifdef __cplusplus

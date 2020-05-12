@@ -261,6 +261,21 @@ PDM_log_trace_array_long
   log_trace("\n");
 }
 
+void
+PDM_log_trace_array_size_t
+(
+ size_t      *array,
+ int          larray,
+ const char  *header
+)
+{
+  log_trace(header);
+  for(int i = 0; i < larray; ++i){
+    log_trace("%d ", array[i]);
+  }
+  log_trace("\n");
+}
+
 
 #ifdef __cplusplus
 }
