@@ -398,6 +398,8 @@ _gnum_from_hv_compute
   for(int i = 0; i < _gnum_from_hv->n_rank+1; ++i){
     i_data_send[i] = i_data_send[i] * s_data;
     i_data_recv[i] = i_data_recv[i] * s_data;
+  }
+  for(int i = 0; i < _gnum_from_hv->n_rank; ++i){
     n_data_send[i] = n_data_send[i] * s_data;
     n_data_recv[i] = n_data_recv[i] * s_data;
   }
@@ -566,6 +568,8 @@ _gnum_from_hv_compute
   free(recv_buffer_stri);
   free(blk_ln_to_gn);
   free(part_ln_to_gn);
+  free(order);
+  free(us);
 
 }
 
