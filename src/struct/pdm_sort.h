@@ -26,6 +26,7 @@ extern "C" {
 /*============================================================================
  * Type
  *============================================================================*/
+typedef int (*comp_type )(const void* a, const void* b, void* );
 
 /*=============================================================================
  * Static global variables
@@ -34,6 +35,25 @@ extern "C" {
 /*=============================================================================
  * Public function prototypes
  *============================================================================*/
+
+/**
+ *
+ * \brief Search element index in a sorted array
+ *
+ * \param [inout] array        Array to sort
+ * \param [inout] order        new indice to old indice  (or NULL)
+ * \param [in]    lArray       Array length
+ *
+ */
+
+void
+PDM_sort_long_s
+(
+ PDM_g_num_t *array,
+ int          lArray,
+ comp_type    comp,
+ void*        context
+);
 
 /**
  *
