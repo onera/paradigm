@@ -69,10 +69,12 @@ typedef int (*gnum_from_hv_equal  )(const void* a, const void* b, void* );
 int
 PDM_gnum_from_hash_values_create
 (
- const int          n_part,
- const PDM_bool_t   equilibrate,
- const size_t       s_data,
- const PDM_MPI_Comm comm
+ const int            n_part,
+ const PDM_bool_t     equilibrate,
+ const size_t         s_data,
+ gnum_from_hv_compare fcompare,
+ gnum_from_hv_equal   fequal,
+ const PDM_MPI_Comm   comm
 );
 
 void
@@ -200,16 +202,16 @@ PROCF (pdm_gnum_from_hv_free, PDM_GNUM_FROM_HV_FREE)
  * \param [in] blk_size  Size of the current block
  *
  */
-void
-PDM_generate_global_id_from
-(
- const int              n_part,
- const unsigned char   *blk_data,
- const int             *blk_stri,
- gnum_from_hv_compare   fcompare,
- gnum_from_hv_equal     fequal,
- PDM_g_num_t          **gnum
-);
+// void
+// PDM_generate_global_id_from
+// (
+//  const int              n_part,
+//  const unsigned char   *blk_data,
+//  const int             *blk_stri,
+//  gnum_from_hv_compare   fcompare,
+//  gnum_from_hv_equal     fequal,
+//  PDM_g_num_t          **gnum
+// );
 
 /*----------------------------------------------------------------------------*/
 

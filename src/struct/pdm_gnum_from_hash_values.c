@@ -64,27 +64,6 @@ extern "C" {
  * Local structure definitions
  *============================================================================*/
 
-//
-// static int
-// my_compare_edge
-// (
-// const void* a,
-// const void* b,
-//       void* ctxt)
-// {
-//   int i = *(const int *) a;
-//   int j = *(const int *) b;
-
-//   PDM_user_defined_sort* us = (PDM_user_defined_sort *) ctxt;
-//   int ni = 2
-//   int nj = 2
-//   int* arr_i = us->arr[2*us->idx[i]];
-//   int* arr_j = us->arr[2*us->idx[j]];
-// }
-
-
-
-
 /**
  * \struct _pdm_gnum_from_hv_t
  * \brief  Define a global numberring
@@ -105,10 +84,6 @@ typedef struct {
 
   gnum_from_hv_compare fcompare;
   gnum_from_hv_equal   fequal;
-
-  // size_t         *blk_hkeys;
-  unsigned char  *blk_hdata;
-  int            *blk_hstri;
 
   PDM_g_num_t     n_g_elt;        /*!< Global number of elements                 */
   PDM_g_num_t   **g_nums;         /*!< Global numbering of elements              */
@@ -189,8 +164,8 @@ setup_distribution_from_min_max
   PDM_g_num_t quotient  = nelmt/n_dist;
   PDM_g_num_t remainder = nelmt%n_dist;
 
-  printf(PDM_FMT_G_NUM"\n", quotient);
-  printf(PDM_FMT_G_NUM"\n", remainder);
+  // printf(PDM_FMT_G_NUM"\n", quotient);
+  // printf(PDM_FMT_G_NUM"\n", remainder);
 
   distribution[0] = min_elt;
   for(int i = 1; i < n_dist+1; ++i) {
@@ -458,14 +433,13 @@ _gnum_from_hv_compute
   /*
    * Generate global numbering from the block_data
    */
-  // PDM_generate_global_id_from();
   int* order = (int *) malloc( sizeof(int) * s_recv_keys);
   for(int i = 0; i < s_recv_keys; ++i){
     order[i] = i;
   }
 
-  _gnum_from_hv->fcompare = PDM_operator_compare_connectivity;
-  _gnum_from_hv->fequal   = PDM_operator_equal_connectivity;
+  // _gnum_from_hv->fcompare = PDM_operator_compare_connectivity;
+  // _gnum_from_hv->fequal   = PDM_operator_equal_connectivity;
 
   PDM_user_defined_sort* us = (PDM_user_defined_sort *) malloc( sizeof(PDM_user_defined_sort) );
   us->idx = recv_buffer_stri;
@@ -541,16 +515,15 @@ _gnum_from_hv_compute
   PDM_MPI_Alltoallv(blk_ln_to_gn , n_key_recv, i_key_recv, PDM__PDM_MPI_G_NUM,
                     part_ln_to_gn, n_key_send, i_key_send, PDM__PDM_MPI_G_NUM, _gnum_from_hv->comm);
 
+  /*
+   *  Remise en place dans chaque partition
+   */
   int idx = 0;
   for(int i_part = 0; i_part < _gnum_from_hv->n_part; ++i_part){
     for(int ielt = 0; ielt < _gnum_from_hv->n_elts[i_part]; ++ielt){
       _gnum_from_hv->g_nums[i_part][ielt] = part_ln_to_gn[idx++];
     }
   }
-
-  /*
-   *  Remise en place dans chaque partition
-   */
 
   free(n_key_send);
   free(n_key_recv);
@@ -593,10 +566,12 @@ _gnum_from_hv_compute
 int
 PDM_gnum_from_hash_values_create
 (
- const int          n_part,
- const PDM_bool_t   equilibrate,
- const size_t       s_data,
- const PDM_MPI_Comm comm
+ const int            n_part,
+ const PDM_bool_t     equilibrate,
+ const size_t         s_data,
+ gnum_from_hv_compare fcompare,
+ gnum_from_hv_equal   fequal,
+ const PDM_MPI_Comm   comm
 )
 {
   int i_rank;
@@ -614,6 +589,9 @@ PDM_gnum_from_hash_values_create
 
   _pdm_gnum_from_hv_t *_gnum_from_hv = (_pdm_gnum_from_hv_t *) malloc(sizeof(_pdm_gnum_from_hv_t));
   int id = PDM_Handles_store (_gnums_from_hv, _gnum_from_hv);
+
+  _gnum_from_hv->fcompare    = fcompare;
+  _gnum_from_hv->fequal      = fequal;
 
   _gnum_from_hv->n_part      = n_part;
   _gnum_from_hv->equilibrate = equilibrate;
@@ -652,8 +630,9 @@ PROCF (pdm_gnum_from_hash_values_create, PDM_GNUM_FROM_HVALUES_CREATE)
 )
 {
   const PDM_MPI_Comm c_comm = PDM_MPI_Comm_f2c (*fcomm);
+  abort();
 
-  *id = PDM_gnum_from_hash_values_create (*n_part, (PDM_bool_t) *equilibrate, *s_data, c_comm);
+  // *id = PDM_gnum_from_hash_values_create (*n_part, (PDM_bool_t) *equilibrate, *s_data, c_comm);
 }
 
 /**
@@ -730,8 +709,6 @@ PDM_gnum_from_hv_compute
 )
 {
   _pdm_gnum_from_hv_t *_gnum_from_hv = _get_from_id (id);
-
-  printf("PDM_gnum_from_hv_compute::oooooooooo \n");
 
   _gnum_from_hv_compute(_gnum_from_hv);
 
@@ -841,20 +818,20 @@ PROCF (pdm_gnum_from_hv_free, PDM_GNUM_FROM_HV_FREE)
 
 
 
-void
-PDM_generate_global_id_from
-(
- const int              blk_size,
- const unsigned char   *blk_data,
- const int             *blk_stri,
- gnum_from_hv_compare   fcompare,
- gnum_from_hv_equal     fequal,
- PDM_g_num_t          **gnum
-)
-{
-  printf(" TODO \n");
-  abort();
-}
+// void
+// PDM_generate_global_id_from
+// (
+//  const int              blk_size,
+//  const unsigned char   *blk_data,
+//  const int             *blk_stri,
+//  gnum_from_hv_compare   fcompare,
+//  gnum_from_hv_equal     fequal,
+//  PDM_g_num_t          **gnum
+// )
+// {
+//   printf(" TODO \n");
+//   abort();
+// }
 
 
 
