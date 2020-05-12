@@ -170,6 +170,31 @@ PDM_quick_sort_int2
  int          c[]
 );
 
+/**
+ *
+ * \brief Compare operator for connectivities
+ *
+ */
+int
+PDM_operator_compare_string
+(
+const void* a,
+const void* b,
+      void* ctxt
+);
+
+/**
+ *
+ * \brief Equal operator for connectivities
+ *
+ */
+int
+PDM_operator_equal_string
+(
+const void* a,
+const void* b,
+      void* ctxt
+);
 
 /**
  *
