@@ -77,3 +77,7 @@ test_c_create (pdm_t_knn_cube ${MPIEXEC_MAX_NUMPROCS})
 test_c_create (pdm_t_distant_neighbor 1)
 test_c_create (pdm_t_distant_neighbor_nomatch 1)
 test_c_create (pdm_t_order 1)
+
+if (PDM_HAVE_CUDA)
+  test_c_create (pdm_t_GPU_HelloWorld 1)
+endif()
