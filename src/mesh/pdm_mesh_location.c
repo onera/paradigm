@@ -17,11 +17,11 @@
 #include "pdm.h"
 #include "pdm_priv.h"
 #include "pdm_mpi.h"
-//#include "pdm_mesh_dist.h"
+/* #include "pdm_mesh_dist.h" */
 #include "pdm_mesh_nodal.h"
 #include "pdm_surf_mesh.h"
 #include "pdm_handles.h"
-//#include "pdm_octree.h"
+/* #include "pdm_octree.h" */
 #include "pdm_dbbtree.h"
 #include "pdm_part_to_block.h"
 #include "pdm_block_to_part.h"
@@ -48,7 +48,7 @@ extern "C" {
  *============================================================================*/
 
 #define NTIMER 6
-  
+
 /*============================================================================
  * Type definitions
  *============================================================================*/
@@ -57,7 +57,7 @@ extern "C" {
  * \enum _ol_timer_step_t
  *
  */
- 
+
 typedef enum {
 
   BEGIN                            = 0,
@@ -65,7 +65,7 @@ typedef enum {
   SEARCH_CANDIDATES                = 2,
   DISTRIBUTE_ELEMENTARY_OPERATIONS = 3,
   COMPUTE_ELEMENTARY_LOCATIONS     = 4,
-  END                              = 5,        
+  END                              = 5,
 
 } _ol_timer_step_t;
 
@@ -73,7 +73,7 @@ typedef enum {
 /**
  * \struct _PDM_Dist_t
  * \brief  Distance to a mesh surface structure
- * 
+ *
  */
 
 typedef struct {
@@ -85,24 +85,24 @@ typedef struct {
   PDM_g_num_t **location;
   double      **uvw;
   int         **weights_idx;
-  double      **weights;
-  
+  double      **weights; /*!< Barycentric coordinates */
+
 } _point_cloud_t;
 
 
 /**
  * \struct _PDM_Dist_t
  * \brief  Distance to a mesh surface structure
- * 
+ *
  */
 
 typedef struct {
 
   int  n_point_cloud; /*!< Number of point clouds */
-  PDM_MPI_Comm comm;  /*!< MPI communicator */ 
+  PDM_MPI_Comm comm;  /*!< MPI communicator */
 
   PDM_mesh_nature_t mesh_nature;  /*!< Nature of the mesh */
-  
+
   int  shared_nodal;   /*!< 1 if mesh nodal is shared, 0 otherwise */
   int  mesh_nodal_id;  /*!< Mesh identifier */
   int _mesh_nodal_id;
@@ -116,14 +116,14 @@ typedef struct {
   PDM_timer_t *timer; /*!< Timer */
 
   double times_elapsed[NTIMER]; /*!< Elapsed time */
-  
+
   double times_cpu[NTIMER];     /*!< CPU time */
-  
+
   double times_cpu_u[NTIMER];  /*!< User CPU time */
-  
+
   double times_cpu_s[NTIMER];  /*!< System CPU time */
 
-  
+
 } _PDM_location_t;
 
 /*============================================================================
@@ -137,7 +137,7 @@ static int idebug = 0;
 /*=============================================================================
  * Private function definitions
  *============================================================================*/
-  
+
 /**
  *
  * \brief Return ppart object from it identifier
@@ -150,10 +150,10 @@ static _PDM_location_t *
 _get_from_id
 (
  int  id
-)
+ )
 {
   _PDM_location_t *location = (_PDM_location_t *) PDM_Handles_get (_locations, id);
-    
+
   if (location == NULL) {
     PDM_error(__FILE__, __LINE__, 0, "PDM_mesh_location error : Bad identifier\n");
   }
@@ -191,7 +191,7 @@ _get_candidate_elements_from_octree
   const int points_in_leaf_max = 1;
   const int build_leaf_neighbours = 0;
 
-  
+
   /* Concatenate partitions */
   int n_points = 0;
   for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
@@ -204,7 +204,7 @@ _get_candidate_elements_from_octree
   for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
     for (int ipt = 0; ipt < pcloud->n_points[ipart]; ipt++) {
       for (int idim = 0; idim < 3; idim++) {
-	pts_coord[3*idx + idim] = pcloud->coords[ipart][3*ipt + idim];
+        pts_coord[3*idx + idim] = pcloud->coords[ipart][3*ipt + idim];
       }
       pts_g_num[idx] = pcloud->gnum[ipart][ipt];
       idx++;
@@ -213,32 +213,32 @@ _get_candidate_elements_from_octree
 
   /* Create empty parallel octree structure */
   int octree_id = PDM_para_octree_create (1,
-					  depth_max,
-					  points_in_leaf_max,
-					  build_leaf_neighbours,
-					  comm);
+                                          depth_max,
+                                          points_in_leaf_max,
+                                          build_leaf_neighbours,
+                                          comm);
 
   /* Set octree point cloud */
   PDM_para_octree_point_cloud_set (octree_id,
-				   0,
-				   n_points,
-				   pts_coord,
-				   pts_g_num);
-    
+                                   0,
+                                   n_points,
+                                   pts_coord,
+                                   pts_g_num);
+
   /* Build parallel octree */
   PDM_para_octree_build (octree_id);
   //PDM_para_octree_dump (octree_id);
   PDM_para_octree_dump_times (octree_id);
 
-  
+
   PDM_part_to_block_t *ptb = PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
-						       PDM_PART_TO_BLOCK_POST_MERGE,
-						       1.,
-						       &pts_g_num,
-						       NULL,
-						       &n_points,
-						       1,
-						       comm);
+                                                       PDM_PART_TO_BLOCK_POST_MERGE,
+                                                       1.,
+                                                       &pts_g_num,
+                                                       NULL,
+                                                       &n_points,
+                                                       1,
+                                                       comm);
 
   PDM_g_num_t *block_distrib_idx = PDM_part_to_block_distrib_index_get (ptb);
 
@@ -246,17 +246,17 @@ _get_candidate_elements_from_octree
   PDM_g_num_t *block_candidates_g_num = NULL;
 
   PDM_para_octree_location_boxes_get (octree_id,
-				      n_boxes,
-				      box_extents,
-				      box_g_num,
-				      &block_candidates_g_num,
-				      &block_n_candidates);
+                                      n_boxes,
+                                      box_extents,
+                                      box_g_num,
+                                      &block_candidates_g_num,
+                                      &block_n_candidates);
 
   PDM_block_to_part_t *btp = PDM_block_to_part_create (block_distrib_idx,
-						       (const PDM_g_num_t **) &pts_g_num,
-						       &n_points,
-						       1,
-						       comm);
+                                                       (const PDM_g_num_t **) &pts_g_num,
+                                                       &n_points,
+                                                       1,
+                                                       comm);
   int *part_stride = malloc (sizeof(int) * n_points);
   int one = 1;
   PDM_block_to_part_exch (btp,
@@ -275,7 +275,7 @@ _get_candidate_elements_from_octree
   }
 
   *candidates_g_num = malloc (sizeof(PDM_g_num_t) * _candidates_idx[n_points]);
-  
+
   PDM_block_to_part_exch (btp,
                           sizeof(PDM_g_num_t),
                           PDM_STRIDE_VAR,
@@ -283,7 +283,7 @@ _get_candidate_elements_from_octree
                           (void *) block_candidates_g_num,
                           &part_stride,
                           (void **) candidates_g_num);
-  
+
   PDM_part_to_block_free (ptb);
   PDM_block_to_part_free (btp);
 
@@ -292,7 +292,7 @@ _get_candidate_elements_from_octree
   free (block_candidates_g_num);
   free (pts_coord);
   free (pts_g_num);
-  
+
   /***************************************
    * Free octree
    ***************************************/
@@ -320,7 +320,7 @@ _get_candidate_elements_from_dbbtree
   int n_ranks;
   PDM_MPI_Comm_rank (comm, &n_ranks);
 
-  
+
   /* Concatenate partitions */
   int n_points = 0;
   for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
@@ -333,7 +333,7 @@ _get_candidate_elements_from_dbbtree
   for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
     for (int ipt = 0; ipt < pcloud->n_points[ipart]; ipt++) {
       for (int idim = 0; idim < 3; idim++) {
-	pts_coord[3*idx + idim] = pcloud->coords[ipart][3*ipt + idim];
+        pts_coord[3*idx + idim] = pcloud->coords[ipart][3*ipt + idim];
       }
       pts_g_num[idx] = pcloud->gnum[ipart][ipt];
       idx++;
@@ -342,11 +342,11 @@ _get_candidate_elements_from_dbbtree
 
   /* Find candidates in dbbtree */
   PDM_dbbtree_location_boxes_get (dbbt,
-				  n_points,
-				  pts_coord,
-				  pts_g_num,
-				  candidates_idx,
-				  candidates_g_num);
+                                  n_points,
+                                  pts_coord,
+                                  pts_g_num,
+                                  candidates_idx,
+                                  candidates_g_num);
 
   free (pts_coord);
   free (pts_g_num);
@@ -376,7 +376,7 @@ PDM_mesh_location_create
  const PDM_mesh_nature_t mesh_nature,
  const int n_point_cloud,
  const PDM_MPI_Comm comm
-)
+ )
 {
   if (_locations == NULL) {
     _locations = PDM_Handles_create (4);
@@ -386,13 +386,13 @@ PDM_mesh_location_create
 
   int id = PDM_Handles_store (_locations, location);
 
- location->n_point_cloud = n_point_cloud;
- location->comm = comm;
- location->mesh_nature = mesh_nature;
+  location->n_point_cloud = n_point_cloud;
+  location->comm = comm;
+  location->mesh_nature = mesh_nature;
 
- location->shared_nodal   = 0;
- location->mesh_nodal_id  = -1;
- location->_mesh_nodal_id = -1;
+  location->shared_nodal   = 0;
+  location->mesh_nodal_id  = -1;
+  location->_mesh_nodal_id = -1;
 
   location->point_clouds =
     (_point_cloud_t*) malloc (sizeof(_point_cloud_t) * n_point_cloud);
@@ -411,33 +411,33 @@ PDM_mesh_location_create
   location->tolerance = 0.;
 
   location->method = PDM_MESH_LOCATION_OCTREE;
-  
+
   location->timer = PDM_timer_create ();
-  
+
   for (int i = 0; i < NTIMER; i++) {
     location->times_elapsed[i] = 0.;
     location->times_cpu[i]     = 0.;
     location->times_cpu_u[i]   = 0.;
     location->times_cpu_s[i]   = 0.;
   }
-  
+
   return id;
 
 }
 
 void
-PDM_mesh_location_create_cf 
+PDM_mesh_location_create_cf
 (
  const PDM_mesh_nature_t mesh_nature,
  const int n_point_cloud,
  const PDM_MPI_Fint comm,
  int *id
-)
+ )
 {
   const PDM_MPI_Comm _comm        = PDM_MPI_Comm_f2c(comm);
 
   *id = PDM_mesh_location_create (mesh_nature, n_point_cloud, _comm);
-  
+
 }
 
 
@@ -457,7 +457,7 @@ PDM_mesh_location_n_part_cloud_set
  const int          id,
  const int          i_point_cloud,
  const int          n_part
-)
+ )
 {
   _PDM_location_t *location = _get_from_id (id);
 
@@ -470,7 +470,7 @@ PDM_mesh_location_n_part_cloud_set
   location->point_clouds[i_point_cloud].gnum =
     realloc(location->point_clouds[i_point_cloud].gnum,
             n_part * sizeof(PDM_g_num_t *));
-  
+
   for (int i = 0; i < n_part; i++) {
     location->point_clouds[i_point_cloud].n_points[i] = -1;
     location->point_clouds[i_point_cloud].coords[i] = NULL;
@@ -489,7 +489,7 @@ PDM_mesh_location_n_part_cloud_set
  * \param [in]   i_part          Index of partition
  * \param [in]   n_points        Number of points
  * \param [in]   coords          Point coordinates
- * \param [in]   gnum            Point global number 
+ * \param [in]   gnum            Point global number
  *
  */
 
@@ -500,9 +500,9 @@ PDM_mesh_location_cloud_set
  const int          i_point_cloud,
  const int          i_part,
  const int          n_points,
-       double      *coords,
-       PDM_g_num_t *gnum
-)
+ double      *coords,
+ PDM_g_num_t *gnum
+ )
 {
   _PDM_location_t *location = _get_from_id (id);
 
@@ -527,10 +527,10 @@ PDM_mesh_location_shared_nodal_mesh_set
 (
  const int  id,
  const int  mesh_nodal_id
-)
+ )
 {
   _PDM_location_t *location = _get_from_id (id);
-  
+
   location->mesh_nodal_id = mesh_nodal_id;
   location->shared_nodal = 1;
 }
@@ -550,7 +550,7 @@ PDM_mesh_location_mesh_global_data_set
 (
  const int  id,
  const int  n_part
-)
+ )
 {
   _PDM_location_t *location = _get_from_id (id);
 
@@ -567,18 +567,18 @@ PDM_mesh_location_mesh_global_data_set
  * \brief Set a part of a mesh
  *
  * \param [in]   id            Identifier
- * \param [in]   i_part        Partition to define  
- * \param [in]   n_cell        Number of cells                     
+ * \param [in]   i_part        Partition to define
+ * \param [in]   n_cell        Number of cells
  * \param [in]   cell_face_idx Index in the cell -> face connectivity
  * \param [in]   cell_face     cell -> face connectivity
- * \param [in]   cell_ln_to_gn Local cell numbering to global cel numbering 
- * \param [in]   n_face        Number of faces                     
+ * \param [in]   cell_ln_to_gn Local cell numbering to global cel numbering
+ * \param [in]   n_face        Number of faces
  * \param [in]   face_vtx_idx  Index in the face -> vertex connectivity
  * \param [in]   face_vtx      face -> vertex connectivity
- * \param [in]   face_ln_to_gn Local face numbering to global face numbering 
- * \param [in]   n_vtx         Number of vertices              
- * \param [in]   coords        Coordinates       
- * \param [in]   vtx_ln_to_gn  Local vertex numbering to global vertex numbering 
+ * \param [in]   face_ln_to_gn Local face numbering to global face numbering
+ * \param [in]   n_vtx         Number of vertices
+ * \param [in]   coords        Coordinates
+ * \param [in]   vtx_ln_to_gn  Local vertex numbering to global vertex numbering
  *
  */
 
@@ -595,25 +595,25 @@ PDM_mesh_location_part_set
  const int         *face_vtx_idx,
  const int         *face_vtx,
  const PDM_g_num_t *face_ln_to_gn,
- const int          n_vtx, 
+ const int          n_vtx,
  const double      *coords,
  const PDM_g_num_t *vtx_ln_to_gn
-)
+ )
 {
   _PDM_location_t *location = _get_from_id (id);
- 
+
   /*
    * Creation de mesh nodal
    */
 
   PDM_Mesh_nodal_coord_set (location->mesh_nodal_id,
-			    i_part,
-			    n_vtx,
-			    coords,
-			    vtx_ln_to_gn);
+                            i_part,
+                            n_vtx,
+                            coords,
+                            vtx_ln_to_gn);
 
 
-  
+
   PDM_l_num_t *face_vtx_nb  = malloc (sizeof(PDM_l_num_t) * n_face);
   PDM_l_num_t *cell_face_nb = malloc (sizeof(PDM_l_num_t) * n_cell);
 
@@ -626,16 +626,16 @@ PDM_mesh_location_part_set
   }
 
   PDM_Mesh_nodal_cell3d_cellface_add (location->mesh_nodal_id,
-				      i_part,
-				      n_cell,
-				      n_face,
-				      face_vtx_idx,
-				      face_vtx_nb,
-				      face_vtx,
-				      cell_face_idx,
-				      cell_face_nb,
-				      cell_face,
-				      cell_ln_to_gn);
+                                      i_part,
+                                      n_cell,
+                                      n_face,
+                                      face_vtx_idx,
+                                      face_vtx_nb,
+                                      face_vtx,
+                                      cell_face_idx,
+                                      cell_face_nb,
+                                      cell_face,
+                                      cell_ln_to_gn);
   free (face_vtx_nb);//?
   free (cell_face_nb);//?
   /*PDM_Mesh_nodal_cell2d_celledge_add
@@ -669,7 +669,7 @@ PDM_mesh_location_tolerance_set
 (
  const int    id,
  const double tol
-)
+ )
 {
   _PDM_location_t *location = _get_from_id (id);
 
@@ -691,7 +691,7 @@ PDM_mesh_location_method_set
 (
  const int                        id,
  const PDM_mesh_location_method_t method
-)
+ )
 {
   _PDM_location_t *location = _get_from_id (id);
 
@@ -713,13 +713,13 @@ void
 PDM_mesh_location_compute
 (
  const int id
-)
+ )
 {
   const int dim = 3;
-  
+
   _PDM_location_t *location = _get_from_id (id);
 
-   int my_rank;
+  int my_rank;
   PDM_MPI_Comm_rank (location->comm, &my_rank);
 
   int n_procs;
@@ -745,18 +745,18 @@ PDM_mesh_location_compute
   b_t_cpu_u   = location->times_cpu_u[BEGIN];
   b_t_cpu_s   = location->times_cpu_s[BEGIN];
   PDM_timer_resume(location->timer);
-  
+
   /*
    * Build the bounding boxes of mesh elements
-   */  
+   */
   int n_blocks = PDM_Mesh_nodal_n_blocks_get (location->mesh_nodal_id);
   int n_parts  = PDM_Mesh_nodal_n_part_get (location->mesh_nodal_id);
   int *blocks_id = PDM_Mesh_nodal_blocks_id_get (location->mesh_nodal_id);
-  
+
   int n_boxes = 0;
   for (int ipart = 0; ipart < n_parts; ipart++) {
     n_boxes += PDM_Mesh_nodal_n_cell_get (location->mesh_nodal_id,
-					  ipart);
+                                          ipart);
   }
 
   const int n_origin = 4; // rank, part, block, lnum
@@ -766,61 +766,61 @@ PDM_mesh_location_compute
   double      *box_extents = malloc (sizeof(double)      * n_boxes * 6);
   int ibox = 0;
   for (int iblock = 0; iblock < n_blocks; iblock++) {
-    
+
     int id_block = blocks_id[iblock];
-    
+
     for (int ipart = 0; ipart < n_parts; ipart++) {
       /* get element extents */
       PDM_Mesh_nodal_compute_cell_extents (location->mesh_nodal_id,
-					   id_block,
-					   ipart,
-					   location->tolerance,
-					   (&box_extents + ibox));
+                                           id_block,
+                                           ipart,
+                                           location->tolerance,
+                                           (&box_extents + ibox));
 
       /* get elements gnum */
       PDM_g_num_t *_gnum = PDM_Mesh_nodal_g_num_get (location->mesh_nodal_id,
-						     id_block,
-						     ipart);
-      
+                                                     id_block,
+                                                     ipart);
+
       int n_elt = PDM_Mesh_nodal_block_n_elt_get (location->mesh_nodal_id,
-						  id_block,
-						  ipart);
-      
+                                                  id_block,
+                                                  ipart);
+
       for (int ielt = 0; ielt < n_elt; ielt++) {
-	box_g_num[ibox] = _gnum[ielt];
-	
-	box_origin[n_origin*ibox]   = my_rank;
-	box_origin[n_origin*ibox+1] = ipart;
-	box_origin[n_origin*ibox+2] = iblock;
-	box_origin[n_origin*ibox+3] = ielt;
-	
-	ibox++;
+        box_g_num[ibox] = _gnum[ielt];
+
+        box_origin[n_origin*ibox]   = my_rank;
+        box_origin[n_origin*ibox+1] = ipart;
+        box_origin[n_origin*ibox+2] = iblock;
+        box_origin[n_origin*ibox+3] = ielt;
+
+        ibox++;
       }
     }
   }
 
   /* Store boxes origin (i.e. rank, ipart, iblock, ielt) in block data */
   PDM_part_to_block_t *ptb = PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
-						       PDM_PART_TO_BLOCK_POST_NOTHING,
-						       1.,
-						       &box_g_num,
-						       NULL,
-						       &n_boxes,
-						       1,
-						       location->comm);
+                                                       PDM_PART_TO_BLOCK_POST_NOTHING,
+                                                       1.,
+                                                       &box_g_num,
+                                                       NULL,
+                                                       &n_boxes,
+                                                       1,
+                                                       location->comm);
 
   PDM_g_num_t *block_distrib_idx = PDM_part_to_block_distrib_index_get (ptb);
 
   int *block_stride = NULL;
   int *block_box_origin = NULL;
   PDM_part_to_block_exch (ptb,
-			  sizeof(int),
-			  PDM_STRIDE_CST,
-			  n_origin,
-			  NULL,
-			  (void **) &box_origin,
-			  &block_stride,
-			  (void **) &block_box_origin);
+                          sizeof(int),
+                          PDM_STRIDE_CST,
+                          n_origin,
+                          NULL,
+                          (void **) &box_origin,
+                          &block_stride,
+                          (void **) &block_box_origin);
   free (block_stride);
   free (box_origin);
 
@@ -842,53 +842,50 @@ PDM_mesh_location_compute
   b_t_cpu_s   = e_t_cpu_s;
 
   PDM_timer_resume(location->timer);
-  
+
 
   PDM_dbbtree_t *dbbt = NULL;
   if (location->method == PDM_MESH_LOCATION_DBBTREE) {
     dbbt = PDM_dbbtree_create (location->comm, dim);
 
     PDM_dbbtree_boxes_set (dbbt,
-			   1,//const int n_part,
-			   &n_boxes,
-			   &box_extents,
-			   &box_g_num);
+                           1,//const int n_part,
+                           &n_boxes,
+                           &box_extents,
+                           &box_g_num);
   }
-  
-  
+
+
   /*
    * Search candidates
    *   - coder localisation dans ddbtree
    */
   PDM_g_num_t *candidates_g_num = NULL;
   int         *candidates_idx   = NULL;
-  
+
   for (int icloud = 0; icloud < location->n_point_cloud; icloud++) {
     _point_cloud_t *pcloud = location->point_clouds + icloud;
-    
+
     switch (location->method) {
     case PDM_MESH_LOCATION_OCTREE:
       _get_candidate_elements_from_octree (location->comm,
-					   pcloud,
-					   n_boxes,
-					   box_extents,
-					   box_g_num,
-					   &candidates_g_num,
-					   &candidates_idx);
+                                           pcloud,
+                                           n_boxes,
+                                           box_extents,
+                                           box_g_num,
+                                           &candidates_g_num,
+                                           &candidates_idx);
       break;
-    
+
     case PDM_MESH_LOCATION_DBBTREE:
-      /*_get_candidate_elements_from_bbtree (...);*/
-      /*printf("Error: location method %d not yet implemented\n", location->method);
-	assert (1 == 0);*/
       _get_candidate_elements_from_dbbtree (location->comm,
-					    pcloud,
-					    n_boxes,
-					    dbbt,
-					    &candidates_g_num,
-					    &candidates_idx);
+                                            pcloud,
+                                            n_boxes,
+                                            dbbt,
+                                            &candidates_g_num,
+                                            &candidates_idx);
       break;
-      
+
     default:
       printf("Error: unknown location method %d\n", location->method);
       assert (1 == 0);
@@ -908,26 +905,26 @@ PDM_mesh_location_compute
     //----------->>>> Remove that as soon as location in ELEMENTS is implemented
 #if 1
     assert (pcloud->location == NULL);
-    
+
     int idx = 0;
     pcloud->location = (PDM_g_num_t **) malloc (sizeof(PDM_g_num_t *) * pcloud->n_part);
     for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
       pcloud->location[ipart] = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * pcloud->n_points[ipart]);
       for (int ipt = 0; ipt < pcloud->n_points[ipart]; ipt++) {
-	
-	assert (candidates_idx[idx+1] > candidates_idx[idx]);
-	
-	if (candidates_idx[idx+1] != candidates_idx[idx] + 1) {
-	  printf("[%d] cloud %d part %d: pt %d (%ld) has %d candidate boxes\n",
-		 my_rank,
-		 icloud,
-		 ipart,
-		 ipt,
-		 pcloud->gnum[ipart][ipt],
-		 candidates_idx[idx+1] - candidates_idx[idx]);
-	}
-	pcloud->location[ipart][ipt] = candidates_g_num[candidates_idx[idx]];
-	idx++;
+
+        assert (candidates_idx[idx+1] > candidates_idx[idx]);
+
+        if (candidates_idx[idx+1] != candidates_idx[idx] + 1) {
+          printf("[%d] cloud %d part %d: pt %d (%ld) has %d candidate boxes\n",
+                 my_rank,
+                 icloud,
+                 ipart,
+                 ipt,
+                 pcloud->gnum[ipart][ipt],
+                 candidates_idx[idx+1] - candidates_idx[idx]);
+        }
+        pcloud->location[ipart][ipt] = candidates_g_num[candidates_idx[idx]];
+        idx++;
       }
     }
 #endif
@@ -944,49 +941,49 @@ PDM_mesh_location_compute
       n_points += pcloud->n_points[ipart];
     }
 
-    
-    /* Get origin (i.e. rank, ipart, iblock, ielt) of candidate boxes from their gnum */    
+
+    /* Get origin (i.e. rank, ipart, iblock, ielt) of candidate boxes from their gnum */
     PDM_block_to_part_t *btp = PDM_block_to_part_create (block_distrib_idx,
-							 (const PDM_g_num_t **) &candidates_g_num,
-							 &(candidates_idx[n_points]),
-							 1,
-							 location->comm);
+                                                         (const PDM_g_num_t **) &candidates_g_num,
+                                                         &(candidates_idx[n_points]),
+                                                         1,
+                                                         location->comm);
 
     int *candidates_origin = malloc (sizeof(int) * n_origin * candidates_idx[n_points]);
     PDM_block_to_part_exch (btp,
-			    sizeof(int),
-			    PDM_STRIDE_CST,
-			    &n_origin,
-			    (void *) block_box_origin,
-			    NULL,
-			    (void **) &candidates_origin);
+                            sizeof(int),
+                            PDM_STRIDE_CST,
+                            &n_origin,
+                            (void *) block_box_origin,
+                            NULL,
+                            (void **) &candidates_origin);
     free (block_box_origin);
 
     ptb = PDM_part_to_block_free (ptb);
     btp = PDM_block_to_part_free (btp);
 
     /*
-    idx = 0;
-    for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
+      idx = 0;
+      for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
       printf("[%d] part %d\n", my_rank, ipart);
       for (int ipt = 0; ipt < pcloud->n_points[ipart]; ipt++) {
-	printf("[%d]  point %d\n", my_rank, ipt);
-	for (int i = candidates_idx[idx]; i < candidates_idx[idx+1]; i++) {
-	  printf("[%d]    (%ld)\t{%d, %d, %d, %d}\n",
-		 my_rank,
-		 candidates_g_num[i],
-		 candidates_origin[n_origin*i],
-		 candidates_origin[n_origin*i+1],
-		 candidates_origin[n_origin*i+2],
-		 candidates_origin[n_origin*i+3]);
-	}
-	idx++;
+      printf("[%d]  point %d\n", my_rank, ipt);
+      for (int i = candidates_idx[idx]; i < candidates_idx[idx+1]; i++) {
+      printf("[%d]    (%ld)\t{%d, %d, %d, %d}\n",
+      my_rank,
+      candidates_g_num[i],
+      candidates_origin[n_origin*i],
+      candidates_origin[n_origin*i+1],
+      candidates_origin[n_origin*i+2],
+      candidates_origin[n_origin*i+3]);
       }
-    }
+      idx++;
+      }
+      }
     */
     free (candidates_g_num);
 
-    
+
     /*
      * Distribution of elementary operations
      */
@@ -998,17 +995,17 @@ PDM_mesh_location_compute
     idx = 0;
     for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
       for (int ipt = 0; ipt < pcloud->n_points[ipart]; ipt++) {
-	for (int i = candidates_idx[idx]; i < candidates_idx[idx+1]; i++) {
-	  send_count[candidates_origin[n_origin*i]] += 3;
-	}
-	idx++;
+        for (int i = candidates_idx[idx]; i < candidates_idx[idx+1]; i++) {
+          send_count[candidates_origin[n_origin*i]] += 3;
+        }
+        idx++;
       }
     }
 
     int *recv_count = malloc (sizeof(int) * n_procs);
     PDM_MPI_Alltoall (send_count, 1, PDM_MPI_INT,
-		      recv_count, 1, PDM_MPI_INT,
-		      location->comm);
+                      recv_count, 1, PDM_MPI_INT,
+                      location->comm);
 
     int *send_shift = malloc (sizeof(int) * (n_procs + 1));
     int *recv_shift = malloc (sizeof(int) * (n_procs + 1));
@@ -1023,33 +1020,33 @@ PDM_mesh_location_compute
     //-->>
     int *send_origin = malloc (sizeof(int) * send_shift[n_procs]);
     int *recv_origin = malloc (sizeof(int) * recv_shift[n_procs]);
-    
+
     double *send_coord = malloc (sizeof(double) * send_shift[n_procs]);
     double *recv_coord = malloc (sizeof(double) * recv_shift[n_procs]);
 
     idx = 0;
     for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
       for (int ipt = 0; ipt < pcloud->n_points[ipart]; ipt++) {
-	for (int i = candidates_idx[idx]; i < candidates_idx[idx+1]; i++) {
-	  int rank = candidates_origin[n_origin*i];
-	  
-	  for (int j = 0; j < dim; j++) {
-	    send_origin[send_shift[rank] + send_count[rank]] = candidates_origin[n_origin*i+1+j];
-	    send_coord[send_shift[rank] + send_count[rank]] = pcloud->coords[ipart][dim*ipt+j];
-	    send_count[rank]++;
-	  }
-	}
-	idx++;
+        for (int i = candidates_idx[idx]; i < candidates_idx[idx+1]; i++) {
+          int rank = candidates_origin[n_origin*i];
+
+          for (int j = 0; j < dim; j++) {
+            send_origin[send_shift[rank] + send_count[rank]] = candidates_origin[n_origin*i+1+j];
+            send_coord[send_shift[rank] + send_count[rank]] = pcloud->coords[ipart][dim*ipt+j];
+            send_count[rank]++;
+          }
+        }
+        idx++;
       }
     }
 
     PDM_MPI_Alltoallv (send_origin, send_count, send_shift, PDM_MPI_INT,
-		       recv_origin, recv_count, recv_shift, PDM_MPI_INT,
-		       location->comm);
+                       recv_origin, recv_count, recv_shift, PDM_MPI_INT,
+                       location->comm);
 
     PDM_MPI_Alltoallv (send_coord, send_count, send_shift, PDM_MPI_DOUBLE,
-		       recv_coord, recv_count, recv_shift, PDM_MPI_DOUBLE,
-		       location->comm);
+                       recv_coord, recv_count, recv_shift, PDM_MPI_DOUBLE,
+                       location->comm);
 
     // CHECK
     int n_recv_pts = recv_shift[n_procs] / 3;
@@ -1061,13 +1058,13 @@ PDM_mesh_location_compute
 
       int _ibox = 0;
       for (int jblock = 0; jblock < iblock; jblock++) {
-	int id_block = blocks_id[jblock];
-	for (int jpart = 0; jpart < ipart; jpart++) {
-	  int n_elt = PDM_Mesh_nodal_block_n_elt_get (location->mesh_nodal_id,
-						      id_block,
-						      jpart);
-	  _ibox += n_elt;
-	}
+        int id_block = blocks_id[jblock];
+        for (int jpart = 0; jpart < ipart; jpart++) {
+          int n_elt = PDM_Mesh_nodal_block_n_elt_get (location->mesh_nodal_id,
+                                                      id_block,
+                                                      jpart);
+          _ibox += n_elt;
+        }
       }
       _ibox += ielt;
 
@@ -1076,10 +1073,10 @@ PDM_mesh_location_compute
       double *box_min = box_extents + 2*dim*_ibox;
       double *box_max = box_min + dim;
       for (int i = 0; i < dim; i++) {
-	if (_pt[i] < box_min[i] || _pt[i] > box_max[i]) {
-	  inside = 0;
-	  break;
-	}
+        if (_pt[i] < box_min[i] || _pt[i] > box_max[i]) {
+          inside = 0;
+          break;
+        }
       }
 
       assert (inside);
@@ -1115,7 +1112,7 @@ PDM_mesh_location_compute
     b_t_cpu_s   = e_t_cpu_s;
 
     PDM_timer_resume(location->timer);
-    
+
     /*
      * Elementary location computations
      */
@@ -1186,8 +1183,8 @@ PDM_mesh_location_get
  const int           id,
  const int           i_point_cloud,
  const int           i_part,
-       PDM_g_num_t **location_elt_gnum
-)
+ PDM_g_num_t **location_elt_gnum
+ )
 {
   _PDM_location_t *location = _get_from_id (id);
 
@@ -1207,8 +1204,8 @@ PDM_mesh_location_get
  * \brief Free a locationd mesh structure
  *
  * \param [in]  id       Identifier
- * \param [in]  partial  if partial is equal to 0, all data are removed. 
- *                       Otherwise, results are kept. 
+ * \param [in]  partial  if partial is equal to 0, all data are removed.
+ *                       Otherwise, results are kept.
  *
  */
 
@@ -1227,61 +1224,61 @@ PDM_mesh_location_free
       _point_cloud_t *pcloud = location->point_clouds + icloud;
 
       if (pcloud->n_points != NULL) {
-	free (pcloud->n_points);
+        free (pcloud->n_points);
       }
 
       if (pcloud->coords != NULL) {
-	for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
-	  if (pcloud->coords[ipart] != NULL) {
-	    free (pcloud->coords[ipart]);
-	  }
-	}
-	free (pcloud->coords);
+        for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
+          if (pcloud->coords[ipart] != NULL) {
+            free (pcloud->coords[ipart]);
+          }
+        }
+        free (pcloud->coords);
       }
 
       if (pcloud->gnum != NULL) {
-	for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
-	  if (pcloud->gnum[ipart] != NULL) {
-	    free (pcloud->gnum[ipart]);
-	  }
-	}
-	free (pcloud->gnum);
+        for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
+          if (pcloud->gnum[ipart] != NULL) {
+            free (pcloud->gnum[ipart]);
+          }
+        }
+        free (pcloud->gnum);
       }
 
       if (pcloud->location != NULL) {
-	for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
-	  if (pcloud->location[ipart] != NULL) {
-	    free (pcloud->location[ipart]);
-	  }
-	}
-	free (pcloud->location);
+        for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
+          if (pcloud->location[ipart] != NULL) {
+            free (pcloud->location[ipart]);
+          }
+        }
+        free (pcloud->location);
       }
 
       if (pcloud->uvw != NULL) {
-	for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
-	  if (pcloud->uvw[ipart] != NULL) {
-	    free (pcloud->uvw[ipart]);
-	  }
-	}
-	free (pcloud->uvw);
+        for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
+          if (pcloud->uvw[ipart] != NULL) {
+            free (pcloud->uvw[ipart]);
+          }
+        }
+        free (pcloud->uvw);
       }
 
       if (pcloud->weights_idx != NULL) {
-	for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
-	  if (pcloud->weights_idx[ipart] != NULL) {
-	    free (pcloud->weights_idx[ipart]);
-	  }
-	}
-	free (pcloud->weights_idx);
+        for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
+          if (pcloud->weights_idx[ipart] != NULL) {
+            free (pcloud->weights_idx[ipart]);
+          }
+        }
+        free (pcloud->weights_idx);
       }
 
       if (pcloud->weights != NULL) {
-	for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
-	  if (pcloud->weights[ipart] != NULL) {
-	    free (pcloud->weights[ipart]);
-	  }
-	}
-	free (pcloud->weights);
+        for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
+          if (pcloud->weights[ipart] != NULL) {
+            free (pcloud->weights[ipart]);
+          }
+        }
+        free (pcloud->weights);
       }
 
     }
@@ -1293,7 +1290,7 @@ PDM_mesh_location_free
   //PDM_Mesh_nodal_partial_free (location->mesh_nodal_id);
   PDM_Mesh_nodal_free (location->mesh_nodal_id);
 }
-  
+
 /**
  *
  * \brief  Dump elapsed an CPU time
@@ -1306,7 +1303,7 @@ void
 PDM_mesh_location_dump_times
 (
  const int id
-)
+ )
 {
   _PDM_location_t *location = _get_from_id (id);
 
@@ -1321,18 +1318,18 @@ PDM_mesh_location_dump_times
 
   double t_elaps_max[NTIMER];
   PDM_MPI_Allreduce (location->times_elapsed,
-		     t_elaps_max,
-		     NTIMER,
-		     PDM_MPI_DOUBLE,
-		     PDM_MPI_MAX,
-		     location->comm);
+                     t_elaps_max,
+                     NTIMER,
+                     PDM_MPI_DOUBLE,
+                     PDM_MPI_MAX,
+                     location->comm);
 
   double t_cpu_max[NTIMER];
   PDM_MPI_Allreduce (location->times_cpu,
-		     t_cpu_max, NTIMER,
-		     PDM_MPI_DOUBLE,
-		     PDM_MPI_MAX,
-		     location->comm);
+                     t_cpu_max, NTIMER,
+                     PDM_MPI_DOUBLE,
+                     PDM_MPI_MAX,
+                     location->comm);
 
   int rank;
   PDM_MPI_Comm_rank (location->comm, &rank);
@@ -1340,9 +1337,9 @@ PDM_mesh_location_dump_times
   if (rank == 0) {
 
     PDM_printf( "mesh_location timer : all (elapsed and cpu) :                                      "
-		" %12.5es %12.5es\n",
+                " %12.5es %12.5es\n",
                 t1max, t2max);
-    
+
     PDM_printf( "mesh_location timer : build bounding boxes (elapsed and cpu) :                     "
                 " %12.5es %12.5es\n",
                 t_elaps_max[BUILD_BOUNDING_BOXES],
