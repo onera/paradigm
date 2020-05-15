@@ -90,7 +90,7 @@ typedef struct
   const PDM_g_num_t *_dface_bound;    /*!< Distributed faces list of each
                                        boundary (size = dface_bound_idx[dn_bnd])
                                         or NULL                               */
-  const int         *_dJoinGIds;     /*!< Tuple JoinGId, JoinGIdDonnor for
+  const int         *_djoin_gids;     /*!< Tuple JoinGId, JoinGIdDonnor for
                                         each join (size = 2*dn_join) or NULL   */
   const int         *_dface_join_idx;  /*!< Index of distributed faces list of
                                         each join (size = dn_join + 1)
@@ -173,20 +173,20 @@ PDM_dmesh_create
   _pdm_dmesh_t *dmesh = (_pdm_dmesh_t *) malloc(sizeof(_pdm_dmesh_t));
   int id = PDM_Handles_store (_dmeshes, dmesh);
 
-  dmesh->dn_cell         = dn_cell;
-  dmesh->dn_face         = dn_face;
-  dmesh->dn_vtx          = dn_vtx;
-  dmesh->dn_bnd          = dn_bnd;
-  dmesh->dn_join         = dn_join;
-  dmesh->_dface_cell     = NULL;
+  dmesh->dn_cell          = dn_cell;
+  dmesh->dn_face          = dn_face;
+  dmesh->dn_vtx           = dn_vtx;
+  dmesh->dn_bnd           = dn_bnd;
+  dmesh->dn_join          = dn_join;
+  dmesh->_dface_cell      = NULL;
   dmesh->_dface_vtx_idx   = NULL;
-  dmesh->_dface_vtx      = NULL;
-  dmesh->_dvtx_coord     = NULL;
+  dmesh->_dface_vtx       = NULL;
+  dmesh->_dvtx_coord      = NULL;
   dmesh->_dface_bound_idx = NULL;
-  dmesh->_dface_bound    = NULL;
-  dmesh->_dJoinGIds     = NULL;
+  dmesh->_dface_bound     = NULL;
+  dmesh->_djoin_gids      = NULL;
   dmesh->_dface_join_idx  = NULL;
-  dmesh->_dface_join     = NULL;
+  dmesh->_dface_join      = NULL;
 
   return id;
 
@@ -234,15 +234,15 @@ PDM_dmesh_set
 {
   _pdm_dmesh_t *dmesh = _get_from_id (id);
 
-  dmesh->_dvtx_coord     = dvtx_coord;
+  dmesh->_dvtx_coord      = dvtx_coord;
   dmesh->_dface_vtx_idx   = dface_vtx_idx;
-  dmesh->_dface_vtx      = dface_vtx;
-  dmesh->_dface_cell     = dface_cell;
+  dmesh->_dface_vtx       = dface_vtx;
+  dmesh->_dface_cell      = dface_cell;
   dmesh->_dface_bound_idx = dface_bound_idx;
-  dmesh->_dface_bound    = dface_bound;
-  dmesh->_dJoinGIds     = dJoinGIds;
+  dmesh->_dface_bound     = dface_bound;
+  dmesh->_djoin_gids      = dJoinGIds;
   dmesh->_dface_join_idx  = dface_join_idx;
-  dmesh->_dface_join     = dface_join;
+  dmesh->_dface_join      = dface_join;
 
 }
 
@@ -316,7 +316,7 @@ PDM_dmesh_data_get
   *dface_cell      = dmesh->_dface_cell;
   *dface_bound_idx = dmesh->_dface_bound_idx;
   *dface_bound     = dmesh->_dface_bound;
-  *dJoinGIds       = dmesh->_dJoinGIds;
+  *dJoinGIds       = dmesh->_djoin_gids;
   *dface_join_idx  = dmesh->_dface_join_idx;
   *dface_join      = dmesh->_dface_join;
 }
@@ -348,7 +348,7 @@ PDM_dmesh_free
   dmesh->_dvtx_coord       = NULL;
   dmesh->_dface_bound_idx  = NULL;
   dmesh->_dface_bound      = NULL;
-  dmesh->_dJoinGIds        = NULL;
+  dmesh->_djoin_gids       = NULL;
   dmesh->_dface_join_idx   = NULL;
   dmesh->_dface_join       = NULL;
 

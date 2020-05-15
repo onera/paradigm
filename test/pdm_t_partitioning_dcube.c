@@ -133,9 +133,9 @@ int main(int argc, char *argv[])
    */
 
   PDM_g_num_t        n_vtx_seg = 10;
-  double             length  = 1.;
-  int                n_part   = 1;
-  int                post    = 0;
+  double             length    = 1.;
+  int                n_part    = 1;
+  int                post      = 0;
 #ifdef PDM_HAVE_PARMETIS
   PDM_partitioning_method_t method  = PDM_PARTITIONING_WITH_PARMETIS;
 #else
@@ -258,6 +258,8 @@ int main(int argc, char *argv[])
   /*
    *  Create mesh partitions
    */
+
+
 
   PDM_dcube_gen_free(id);
 
