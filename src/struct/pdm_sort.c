@@ -882,13 +882,16 @@ const void* b,
 
   PDM_user_defined_sort* us = (PDM_user_defined_sort*) ctxt;
 
+  // log_trace("PDM_operator_compare_string::  %d %d - idx -> %d %d \n",  i, j, us->idx[i], us->idx[j]);
+
   int ni = us->idx[i+1] - us->idx[i];
   int nj = us->idx[j+1] - us->idx[j];
+
+  // log_trace("PDM_operator_compare_string:: %d %d - %d %d \n", i, j, ni, nj);
 
   char* arr_i = (char *) &us->arr[us->idx[i]*sizeof(char)];
   char* arr_j = (char *) &us->arr[us->idx[j]*sizeof(char)];
 
-  // log_trace("PDM_operator_compare_string:: %d %d - %d %d \n", i, j, ni, nj);
   char* carr_i = malloc( sizeof(char) * (ni+1));
   char* carr_j = malloc( sizeof(char) * (nj+1));
   for(int k = 0; k < ni; ++k){
@@ -902,7 +905,7 @@ const void* b,
   int i_comp = strcmp(carr_i, carr_j);
   free(carr_i);
   free(carr_j);
-  if(i_comp > 0){
+  if(i_comp >= 0){
     return 0;
   } else {
     return 1;
@@ -979,41 +982,57 @@ const void* b,
 
   PDM_user_defined_sort* us = (PDM_user_defined_sort*) ctxt;
 
-  int ni = us->idx[i+1] - us->idx[i];
-  int nj = us->idx[j+1] - us->idx[j];
+  // log_trace("PDM_operator_compare_connectivity:: %d %d \n", i, j);
+  // log_trace("PDM_operator_compare_connectivity:: %d %d with key %lu %lu \n", i, j, us->key[i], us->key[j]);
 
-  // printf("PDM_operator_compare_connectivity:: %d %d - %d %d \n", i, j, ni, nj);
+  if( us->key[i] == us->key[j]){
 
-  int* arr_i = (int *) &us->arr[us->idx[i]*sizeof(int)];
-  int* arr_j = (int *) &us->arr[us->idx[j]*sizeof(int)];
+    // log_trace("PDM_operator_compare_connectivity:: %d %d \n", i, j);
+    int ni = us->idx[i+1] - us->idx[i];
+    int nj = us->idx[j+1] - us->idx[j];
 
-  if(ni < nj){
-    return 1;
-  } else if (ni == nj){
+    if(ni == nj){
 
-    /* Dans notre cas on veut sort les entiers avant de les comparers */
-    int* sort_arr_i = (int*) malloc( ni * sizeof(int));
-    int* sort_arr_j = (int*) malloc( ni * sizeof(int));
+      int* arr_i = (int *) &us->arr[us->idx[i]*sizeof(int)];
+      int* arr_j = (int *) &us->arr[us->idx[j]*sizeof(int)];
 
-    for(int k = 0; k < ni; ++k){
-      sort_arr_i[k] = arr_i[k];
-      sort_arr_j[k] = arr_j[k];
-    }
-    PDM_quick_sort_int(sort_arr_i, 0, ni-1);
-    PDM_quick_sort_int(sort_arr_j, 0, ni-1);
+      /* Dans notre cas on veut sort les entiers avant de les comparers */
+      int* sort_arr_i = (int*) malloc( ni * sizeof(int));
+      int* sort_arr_j = (int*) malloc( ni * sizeof(int));
 
-    for(int k = 0; k < ni; ++k){
-      if(sort_arr_i[k] < sort_arr_j[k]) {
-        free(sort_arr_i);
-        free(sort_arr_j);
-        return 1;
+      for(int k = 0; k < ni; ++k){
+        sort_arr_i[k] = arr_i[k];
+        sort_arr_j[k] = arr_j[k];
+        // log_trace("PDM_operator_compare_connectivity:: %d %d \n", i, j);
       }
+      PDM_quick_sort_int(sort_arr_i, 0, ni-1);
+      PDM_quick_sort_int(sort_arr_j, 0, ni-1);
+
+      // log_trace("Comparison of ::");
+      // for(int k = 0; k < ni; ++k){
+      //   log_trace(" %d %d ", sort_arr_i[k], sort_arr_j[k]);
+      // }
+      // log_trace("\n");
+
+      for(int k = 0; k < ni; ++k){
+        if(sort_arr_i[k] < sort_arr_j[k]) {
+          free(sort_arr_i);
+          free(sort_arr_j);
+          return 1;
+        } else if( sort_arr_i[k] > sort_arr_j[k] ) {
+          free(sort_arr_i);
+          free(sort_arr_j);
+          return 0;
+        }
+      }
+      free(sort_arr_i);
+      free(sort_arr_j);
+    } else {
+      return ni < nj;
     }
-
-    free(sort_arr_i);
-    free(sort_arr_j);
+  } else {
+    return us->key[i] < us->key[j];
   }
-
   return 0;
 }
 
@@ -1044,33 +1063,36 @@ const void* b,
   int* arr_i = (int*) &us->arr[us->idx[i]*sizeof(int)];
   int* arr_j = (int*) &us->arr[us->idx[j]*sizeof(int)];
 
+  if( us->key[i] == us->key[j]){
+    if(ni == nj){
 
-  if(ni != nj){
-    return 0;
-  } else if (ni == nj){
+      /* Dans notre cas on veut sort les entiers avant de les comparers */
+      int* sort_arr_i = (int*) malloc( ni * sizeof(int));
+      int* sort_arr_j = (int*) malloc( ni * sizeof(int));
 
-    /* Dans notre cas on veut sort les entiers avant de les comparers */
-    int* sort_arr_i = (int*) malloc( ni * sizeof(int));
-    int* sort_arr_j = (int*) malloc( ni * sizeof(int));
-
-    for(int k = 0; k < ni; ++k){
-      sort_arr_i[k] = arr_i[k];
-      sort_arr_j[k] = arr_j[k];
-    }
-    PDM_quick_sort_int(sort_arr_i, 0, ni-1);
-    PDM_quick_sort_int(sort_arr_j, 0, ni-1);
-
-    for(int k = 0; k < ni; ++k){
-      // printf(" \t sort_arr_i[%d] = %d | sort_arr_j[%d] = %d \n", k, sort_arr_i[k], k, sort_arr_j[k]);
-      if(sort_arr_i[k] != sort_arr_j[k]) {
-        free(sort_arr_i);
-        free(sort_arr_j);
-        return 0;
+      for(int k = 0; k < ni; ++k){
+        sort_arr_i[k] = arr_i[k];
+        sort_arr_j[k] = arr_j[k];
       }
-    }
+      PDM_quick_sort_int(sort_arr_i, 0, ni-1);
+      PDM_quick_sort_int(sort_arr_j, 0, ni-1);
 
-    free(sort_arr_i);
-    free(sort_arr_j);
+      for(int k = 0; k < ni; ++k){
+        // printf(" \t sort_arr_i[%d] = %d | sort_arr_j[%d] = %d \n", k, sort_arr_i[k], k, sort_arr_j[k]);
+        if(sort_arr_i[k] != sort_arr_j[k]) {
+          free(sort_arr_i);
+          free(sort_arr_j);
+          return 0;
+        }
+      }
+
+      free(sort_arr_i);
+      free(sort_arr_j);
+    } else {
+      return 0;
+    }
+  } else {
+    return 0;
   }
 
   return 1;
@@ -1087,9 +1109,9 @@ const void* b,
  *
  */
 void
-PDM_sort_long_special
+PDM_sort_int_special
 (
- PDM_g_num_t          *array,
+ int                  *array,
  int                   lArray,
  pdm_operator_compare  comp,
  void*                 context

@@ -61,8 +61,35 @@ extern "C" {
 #endif /* __cplusplus */
 
 /*============================================================================
+ * Macro definitions
+ *============================================================================*/
+
+#define NTIMER_HASH_VALUES 9
+
+/*============================================================================
  * Local structure definitions
  *============================================================================*/
+
+/**
+ * \enum _gnum_from_hash_values_step_t
+ *
+ */
+
+typedef enum {
+
+  BEGIN                         = 0,
+  EQUILIBRATE_DISTIBUTION       = 1,
+  FIRST_EXCHANGE_PREPARE        = 2,
+  FIRST_EXCHANGE                = 3,
+  SECOND_EXCHANGE_PREPARE       = 4,
+  SECOND_EXCHANGE               = 5,
+  BLOCK_SORT                    = 6,
+  BLOCK_EQUAL                   = 7,
+  REVERSE_EXCHANGE              = 8,
+  END                           = 9,
+
+} _gnum_from_hash_values_step_t;
+
 
 /**
  * \struct _pdm_gnum_from_hv_t
@@ -89,6 +116,16 @@ typedef struct {
   PDM_g_num_t   **g_nums;         /*!< Global numbering of elements              */
 
   size_t        *distribution;
+
+  PDM_timer_t *timer;                        /*!< Timer */
+
+  double times_elapsed[NTIMER_HASH_VALUES];  /*!< Elapsed time */
+
+  double times_cpu[NTIMER_HASH_VALUES];      /*!< CPU time */
+
+  double times_cpu_u[NTIMER_HASH_VALUES];    /*!< User CPU time */
+
+  double times_cpu_s[NTIMER_HASH_VALUES];    /*!< System CPU time */
 
 } _pdm_gnum_from_hv_t;
 
@@ -207,6 +244,7 @@ _compute_distribution
     for(int ielt = 0; ielt < _gnum_from_hv->n_elts[i_part]; ++ielt){
       max_key_loc = PDM_MAX(max_key_loc, _gnum_from_hv->part_hkeys[i_part][ielt]);
       min_key_loc = PDM_MIN(min_key_loc, _gnum_from_hv->part_hkeys[i_part][ielt]);
+
     }
   }
   int ierr;
@@ -237,13 +275,50 @@ _gnum_from_hv_compute
  _pdm_gnum_from_hv_t *_gnum_from_hv
 )
 {
+  double b_t_elapsed;
+  double b_t_cpu;
+  double b_t_cpu_u;
+  double b_t_cpu_s;
+
+  double e_t_elapsed;
+  double e_t_cpu;
+  double e_t_cpu_u;
+  double e_t_cpu_s;
+
   printf("_gnum_from_hv_compute \n");
 
+  b_t_elapsed = PDM_timer_elapsed(_gnum_from_hv->timer);
+  b_t_cpu     = PDM_timer_cpu(_gnum_from_hv->timer);
+  b_t_cpu_u   = PDM_timer_cpu_user(_gnum_from_hv->timer);
+  b_t_cpu_s   = PDM_timer_cpu_sys(_gnum_from_hv->timer);
+  PDM_timer_resume(_gnum_from_hv->timer);
+
+  /*
+   * Equilibrate the block distribution
+   */
   if(_gnum_from_hv->equilibrate) {
     _compute_distribution_equilibrate(_gnum_from_hv);
   } else {
     _compute_distribution(_gnum_from_hv);
   }
+
+  PDM_timer_hang_on(_gnum_from_hv->timer);
+  e_t_elapsed = PDM_timer_elapsed(_gnum_from_hv->timer);
+  e_t_cpu     = PDM_timer_cpu(_gnum_from_hv->timer);
+  e_t_cpu_u   = PDM_timer_cpu_user(_gnum_from_hv->timer);
+  e_t_cpu_s   = PDM_timer_cpu_sys(_gnum_from_hv->timer);
+
+  _gnum_from_hv->times_elapsed[EQUILIBRATE_DISTIBUTION] += e_t_elapsed - b_t_elapsed;
+  _gnum_from_hv->times_cpu[EQUILIBRATE_DISTIBUTION]     += e_t_cpu     - b_t_cpu;
+  _gnum_from_hv->times_cpu_u[EQUILIBRATE_DISTIBUTION]   += e_t_cpu_u   - b_t_cpu_u;
+  _gnum_from_hv->times_cpu_s[EQUILIBRATE_DISTIBUTION]   += e_t_cpu_s   - b_t_cpu_s;
+
+  /* Reset for the next step */
+  b_t_elapsed = PDM_timer_elapsed(_gnum_from_hv->timer);
+  b_t_cpu     = PDM_timer_cpu(_gnum_from_hv->timer);
+  b_t_cpu_u   = PDM_timer_cpu_user(_gnum_from_hv->timer);
+  b_t_cpu_s   = PDM_timer_cpu_sys(_gnum_from_hv->timer);
+  PDM_timer_resume(_gnum_from_hv->timer);
 
   /*
    * Remapping of partition data in block data according to the hash values distribution
@@ -265,10 +340,10 @@ _gnum_from_hv_compute
     for(int ielt = 0; ielt < _gnum_from_hv->n_elts[i_part]; ++ielt){
 
       size_t g_key = _gnum_from_hv->part_hkeys[i_part][ielt];
-      log_trace(" Search for :: %lu\n", g_key);
+      // log_trace(" Search for :: %lu\n", g_key);
       int t_rank = PDM_binary_search_gap_size_t(g_key, _gnum_from_hv->distribution, _gnum_from_hv->n_rank+1);
 
-      log_trace(" Found in t_rank :: %d\n", t_rank);
+      // log_trace(" Found in t_rank :: %d\n", t_rank);
       // n_data_send[t_rank] += _gnum_from_hv->s_data * _gnum_from_hv->part_hstri[i_part][ielt];
       n_data_send[t_rank] += _gnum_from_hv->part_hstri[i_part][ielt];
       n_key_send[t_rank]++;
@@ -277,10 +352,53 @@ _gnum_from_hv_compute
   }
 
   /*
+   * Timer
+   */
+  PDM_timer_hang_on(_gnum_from_hv->timer);
+  e_t_elapsed = PDM_timer_elapsed(_gnum_from_hv->timer);
+  e_t_cpu     = PDM_timer_cpu(_gnum_from_hv->timer);
+  e_t_cpu_u   = PDM_timer_cpu_user(_gnum_from_hv->timer);
+  e_t_cpu_s   = PDM_timer_cpu_sys(_gnum_from_hv->timer);
+
+  _gnum_from_hv->times_elapsed[FIRST_EXCHANGE_PREPARE] += e_t_elapsed - b_t_elapsed;
+  _gnum_from_hv->times_cpu[FIRST_EXCHANGE_PREPARE]     += e_t_cpu     - b_t_cpu;
+  _gnum_from_hv->times_cpu_u[FIRST_EXCHANGE_PREPARE]   += e_t_cpu_u   - b_t_cpu_u;
+  _gnum_from_hv->times_cpu_s[FIRST_EXCHANGE_PREPARE]   += e_t_cpu_s   - b_t_cpu_s;
+
+  /* Reset for the next step */
+  b_t_elapsed = PDM_timer_elapsed(_gnum_from_hv->timer);
+  b_t_cpu     = PDM_timer_cpu(_gnum_from_hv->timer);
+  b_t_cpu_u   = PDM_timer_cpu_user(_gnum_from_hv->timer);
+  b_t_cpu_s   = PDM_timer_cpu_sys(_gnum_from_hv->timer);
+  PDM_timer_resume(_gnum_from_hv->timer);
+
+  /*
    * Exchange
    */
   PDM_MPI_Alltoall(n_key_send , 1, PDM_MPI_INT, n_key_recv , 1, PDM_MPI_INT, _gnum_from_hv->comm);
   PDM_MPI_Alltoall(n_data_send, 1, PDM_MPI_INT, n_data_recv, 1, PDM_MPI_INT, _gnum_from_hv->comm);
+
+  /*
+   * Timer
+   */
+  PDM_timer_hang_on(_gnum_from_hv->timer);
+  e_t_elapsed = PDM_timer_elapsed(_gnum_from_hv->timer);
+  e_t_cpu     = PDM_timer_cpu(_gnum_from_hv->timer);
+  e_t_cpu_u   = PDM_timer_cpu_user(_gnum_from_hv->timer);
+  e_t_cpu_s   = PDM_timer_cpu_sys(_gnum_from_hv->timer);
+
+  _gnum_from_hv->times_elapsed[FIRST_EXCHANGE] += e_t_elapsed - b_t_elapsed;
+  _gnum_from_hv->times_cpu[FIRST_EXCHANGE]     += e_t_cpu     - b_t_cpu;
+  _gnum_from_hv->times_cpu_u[FIRST_EXCHANGE]   += e_t_cpu_u   - b_t_cpu_u;
+  _gnum_from_hv->times_cpu_s[FIRST_EXCHANGE]   += e_t_cpu_s   - b_t_cpu_s;
+
+  /* Reset for the next step */
+  b_t_elapsed = PDM_timer_elapsed(_gnum_from_hv->timer);
+  b_t_cpu     = PDM_timer_cpu(_gnum_from_hv->timer);
+  b_t_cpu_u   = PDM_timer_cpu_user(_gnum_from_hv->timer);
+  b_t_cpu_s   = PDM_timer_cpu_sys(_gnum_from_hv->timer);
+  PDM_timer_resume(_gnum_from_hv->timer);
+
 
   /*
    * Prepare utility array to setup the second exchange
@@ -308,8 +426,8 @@ _gnum_from_hv_compute
   int s_send_data = i_data_send[_gnum_from_hv->n_rank] * _gnum_from_hv->s_data;
   int s_recv_data = i_data_recv[_gnum_from_hv->n_rank] * _gnum_from_hv->s_data;
 
-  log_trace("s_send_keys::%d\n", s_send_keys);
-  log_trace("s_recv_keys::%d\n", s_recv_keys);
+  log_trace("s_send_keys::%d - %d \n", s_send_keys, s_send_keys/_gnum_from_hv->s_data);
+  log_trace("s_recv_keys::%d - %d \n", s_recv_keys, s_recv_keys/_gnum_from_hv->s_data);
   log_trace("s_send_data::%d\n", s_send_data);
   log_trace("s_recv_data::%d\n", s_recv_data);
   log_trace("i_data_send[_gnum_from_hv->n_rank]::%d\n", i_data_send[_gnum_from_hv->n_rank]);
@@ -339,10 +457,10 @@ _gnum_from_hv_compute
     for(int ielt = 0; ielt < _gnum_from_hv->n_elts[i_part]; ++ielt){
 
       size_t g_key = _gnum_from_hv->part_hkeys[i_part][ielt];
-      log_trace(" Search for :: %lu\n", g_key);
+      // log_trace(" Search for :: %lu\n", g_key);
       int t_rank = PDM_binary_search_gap_size_t(g_key, _gnum_from_hv->distribution, _gnum_from_hv->n_rank+1);
 
-      log_trace(" Found in t_rank :: %d\n", t_rank);
+      // log_trace(" Found in t_rank :: %d\n", t_rank);
 
       /* Send key and stride */
       int idx_send = i_key_send[t_rank]+n_key_send[t_rank]++;
@@ -352,7 +470,7 @@ _gnum_from_hv_compute
       /* Send data */
       int n_data = s_data * _gnum_from_hv->part_hstri[i_part][ielt];
       int shift  = n_data_send[t_rank];
-      log_trace(" n_data = %d | shift = %d | idx = %d \n", n_data, shift, idx);
+      // log_trace(" n_data = %d | shift = %d | idx = %d \n", n_data, shift, idx);
       for(int i_data = 0; i_data < n_data; ++i_data) {
         int shift_tot = ( i_data_send[t_rank] + shift)*s_data;
         send_buffer_data[shift_tot+i_data] = _part_data[idx*s_data+i_data];
@@ -369,12 +487,14 @@ _gnum_from_hv_compute
   // int* send_buffer_data_int = (int*) send_buffer_data;
   // PDM_log_trace_array_int(send_buffer_data_int, s_send_data/s_data, "send_buffer_data_int:: ");
 
-  log_trace("s_data %d %d \n ", s_data, s_send_data/s_data);
-  log_trace("send_buffer_data_char:: ");
-  for(int i = 0; i < s_send_data/s_data; ++i){
-    log_trace("%lu ", send_buffer_data[i]);
+  if(0 == 1){
+    log_trace("s_data %d %d \n ", s_data, s_send_data/s_data);
+    log_trace("send_buffer_data_char:: ");
+    for(int i = 0; i < s_send_data/s_data; ++i){
+      log_trace("%lu ", send_buffer_data[i]);
+    }
+    log_trace("\n");
   }
-  log_trace("\n");
 
   for(int i = 0; i < _gnum_from_hv->n_rank+1; ++i){
     i_data_send[i] = i_data_send[i] * s_data;
@@ -386,21 +506,44 @@ _gnum_from_hv_compute
   }
 
 
-  PDM_log_trace_array_int(i_key_send, _gnum_from_hv->n_rank+1, "i_key_send:: ");
-  PDM_log_trace_array_int(n_key_send, _gnum_from_hv->n_rank  , "n_key_send:: ");
-  PDM_log_trace_array_int(i_key_recv, _gnum_from_hv->n_rank+1, "i_key_recv:: ");
-  PDM_log_trace_array_int(n_key_recv, _gnum_from_hv->n_rank  , "n_key_recv:: ");
+  if(0 == 1){
+    PDM_log_trace_array_int(i_key_send, _gnum_from_hv->n_rank+1, "i_key_send:: ");
+    PDM_log_trace_array_int(n_key_send, _gnum_from_hv->n_rank  , "n_key_send:: ");
+    PDM_log_trace_array_int(i_key_recv, _gnum_from_hv->n_rank+1, "i_key_recv:: ");
+    PDM_log_trace_array_int(n_key_recv, _gnum_from_hv->n_rank  , "n_key_recv:: ");
 
-  PDM_log_trace_array_int(i_data_send, _gnum_from_hv->n_rank+1, "i_data_send:: ");
-  PDM_log_trace_array_int(n_data_send, _gnum_from_hv->n_rank  , "n_data_send:: ");
-  PDM_log_trace_array_int(i_data_recv, _gnum_from_hv->n_rank+1, "i_data_recv:: ");
-  PDM_log_trace_array_int(n_data_recv, _gnum_from_hv->n_rank  , "n_data_recv:: ");
+    PDM_log_trace_array_int(i_data_send, _gnum_from_hv->n_rank+1, "i_data_send:: ");
+    PDM_log_trace_array_int(n_data_send, _gnum_from_hv->n_rank  , "n_data_send:: ");
+    PDM_log_trace_array_int(i_data_recv, _gnum_from_hv->n_rank+1, "i_data_recv:: ");
+    PDM_log_trace_array_int(n_data_recv, _gnum_from_hv->n_rank  , "n_data_recv:: ");
+  }
+
+  /*
+   * Timer
+   */
+  PDM_timer_hang_on(_gnum_from_hv->timer);
+  e_t_elapsed = PDM_timer_elapsed(_gnum_from_hv->timer);
+  e_t_cpu     = PDM_timer_cpu(_gnum_from_hv->timer);
+  e_t_cpu_u   = PDM_timer_cpu_user(_gnum_from_hv->timer);
+  e_t_cpu_s   = PDM_timer_cpu_sys(_gnum_from_hv->timer);
+
+  _gnum_from_hv->times_elapsed[SECOND_EXCHANGE_PREPARE] += e_t_elapsed - b_t_elapsed;
+  _gnum_from_hv->times_cpu[SECOND_EXCHANGE_PREPARE]     += e_t_cpu     - b_t_cpu;
+  _gnum_from_hv->times_cpu_u[SECOND_EXCHANGE_PREPARE]   += e_t_cpu_u   - b_t_cpu_u;
+  _gnum_from_hv->times_cpu_s[SECOND_EXCHANGE_PREPARE]   += e_t_cpu_s   - b_t_cpu_s;
+
+  /* Reset for the next step */
+  b_t_elapsed = PDM_timer_elapsed(_gnum_from_hv->timer);
+  b_t_cpu     = PDM_timer_cpu(_gnum_from_hv->timer);
+  b_t_cpu_u   = PDM_timer_cpu_user(_gnum_from_hv->timer);
+  b_t_cpu_s   = PDM_timer_cpu_sys(_gnum_from_hv->timer);
+  PDM_timer_resume(_gnum_from_hv->timer);
 
   /*
    * Exchange
    */
-  assert(sizeof(unsigned long) == sizeof(size_t));
-  assert(sizeof(unsigned char) == sizeof(char  ));
+  // assert(sizeof(unsigned long) == sizeof(size_t));
+  // assert(sizeof(unsigned char) == sizeof(char  ));
   PDM_MPI_Alltoallv(send_buffer_keys, n_key_send, i_key_send, PDM_MPI_UNSIGNED_LONG,
                     recv_buffer_keys, n_key_recv, i_key_recv, PDM_MPI_UNSIGNED_LONG, _gnum_from_hv->comm);
 
@@ -411,24 +554,45 @@ _gnum_from_hv_compute
                     recv_buffer_data, n_data_recv, i_data_recv, PDM_MPI_BYTE, _gnum_from_hv->comm);
 
   /*
+   * Timer
+   */
+  PDM_timer_hang_on(_gnum_from_hv->timer);
+  e_t_elapsed = PDM_timer_elapsed(_gnum_from_hv->timer);
+  e_t_cpu     = PDM_timer_cpu(_gnum_from_hv->timer);
+  e_t_cpu_u   = PDM_timer_cpu_user(_gnum_from_hv->timer);
+  e_t_cpu_s   = PDM_timer_cpu_sys(_gnum_from_hv->timer);
+
+  _gnum_from_hv->times_elapsed[SECOND_EXCHANGE] += e_t_elapsed - b_t_elapsed;
+  _gnum_from_hv->times_cpu[SECOND_EXCHANGE]     += e_t_cpu     - b_t_cpu;
+  _gnum_from_hv->times_cpu_u[SECOND_EXCHANGE]   += e_t_cpu_u   - b_t_cpu_u;
+  _gnum_from_hv->times_cpu_s[SECOND_EXCHANGE]   += e_t_cpu_s   - b_t_cpu_s;
+
+  /* Reset for the next step */
+  b_t_elapsed = PDM_timer_elapsed(_gnum_from_hv->timer);
+  b_t_cpu     = PDM_timer_cpu(_gnum_from_hv->timer);
+  b_t_cpu_u   = PDM_timer_cpu_user(_gnum_from_hv->timer);
+  b_t_cpu_s   = PDM_timer_cpu_sys(_gnum_from_hv->timer);
+  PDM_timer_resume(_gnum_from_hv->timer);
+
+  /*
    * Verbose
    */
-
-  PDM_log_trace_array_size_t(send_buffer_keys, s_send_keys, "send_buffer_keys:: ");
-  PDM_log_trace_array_size_t(recv_buffer_keys, s_recv_keys, "recv_buffer_keys:: ");
-  PDM_log_trace_array_int(send_buffer_stri, s_send_keys, "send_buffer_stri:: ");
-  PDM_log_trace_array_int(recv_buffer_stri, s_recv_keys, "recv_buffer_stri:: ");
+  if(0 == 1){
+    PDM_log_trace_array_size_t(send_buffer_keys, s_send_keys, "send_buffer_keys:: ");
+    PDM_log_trace_array_size_t(recv_buffer_keys, s_recv_keys, "recv_buffer_keys:: ");
+    PDM_log_trace_array_int(send_buffer_stri, s_send_keys, "send_buffer_stri:: ");
+    PDM_log_trace_array_int(recv_buffer_stri, s_recv_keys, "recv_buffer_stri:: ");
+  }
 
   // int* recv_buffer_data_int = (int*) recv_buffer_data;
   // PDM_log_trace_array_int(recv_buffer_data_int, s_recv_data/s_data, "recv_buffer_data_int:: ");
+  // log_trace("s_data %d %d \n ", s_data, s_recv_data/s_data);
+  // log_trace("recv_buffer_data_char:: ");
+  // for(int i = 0; i < s_recv_data/s_data; ++i){
+  //   log_trace("%lu ", recv_buffer_data[i]);
+  // }
+  // log_trace("\n");
 
-
-  log_trace("s_data %d %d \n ", s_data, s_recv_data/s_data);
-  log_trace("recv_buffer_data_char:: ");
-  for(int i = 0; i < s_recv_data/s_data; ++i){
-    log_trace("%lu ", recv_buffer_data[i]);
-  }
-  log_trace("\n");
   /*
    * Rebuild a total stride
    */
@@ -440,21 +604,19 @@ _gnum_from_hv_compute
     tmp1 = tmp2;
   }
 
-  if(0 == 0){
-    // PDM_log_trace_array_int(recv_buffer_stri, s_recv_keys+1, "recv_buffer_stri:: ");
-
-    char* t = (char*) malloc( sizeof(char) * (s_recv_data + 1));
-    // char* t = (char* )recv_buffer_data;
-
-    for(int k = 0; k < s_recv_data; ++k){
-      t[k] = (char) recv_buffer_data[k];
-    }
-    t[s_recv_data] = '\0';
-    log_trace(" -------------- \n ");
-    log_trace("%s \n ", t);
-    log_trace(" -------------- \n ");
-    free(t);
-  }
+  // if(0 == 0){
+  //   // PDM_log_trace_array_int(recv_buffer_stri, s_recv_keys+1, "recv_buffer_stri:: ");
+  //   char* t = (char*) malloc( sizeof(char) * (s_recv_data + 1));
+  //   // char* t = (char* )recv_buffer_data;
+  //   for(int k = 0; k < s_recv_data; ++k){
+  //     t[k] = (char) recv_buffer_data[k];
+  //   }
+  //   t[s_recv_data] = '\0';
+  //   log_trace(" -------------- \n ");
+  //   log_trace("%s \n ", t);
+  //   log_trace(" -------------- \n ");
+  //   free(t);
+  // }
 
   /*
    * Generate global numbering from the block_data
@@ -470,23 +632,47 @@ _gnum_from_hv_compute
   PDM_user_defined_sort* us = (PDM_user_defined_sort *) malloc( sizeof(PDM_user_defined_sort) );
   us->idx = recv_buffer_stri;
   us->arr = recv_buffer_data;
+  us->key = recv_buffer_keys;
 
-  PDM_sort_long_special(order, s_recv_keys, _gnum_from_hv->fcompare, (void*) us);
+  // A faire avec l'autre structure pour trier les clés aussi ...
+
+  PDM_sort_int_special(order, s_recv_keys, _gnum_from_hv->fcompare, (void*) us);
+
+  /*
+   * Timer
+   */
+  PDM_timer_hang_on(_gnum_from_hv->timer);
+  e_t_elapsed = PDM_timer_elapsed(_gnum_from_hv->timer);
+  e_t_cpu     = PDM_timer_cpu(_gnum_from_hv->timer);
+  e_t_cpu_u   = PDM_timer_cpu_user(_gnum_from_hv->timer);
+  e_t_cpu_s   = PDM_timer_cpu_sys(_gnum_from_hv->timer);
+
+  _gnum_from_hv->times_elapsed[BLOCK_SORT] += e_t_elapsed - b_t_elapsed;
+  _gnum_from_hv->times_cpu[BLOCK_SORT]     += e_t_cpu     - b_t_cpu;
+  _gnum_from_hv->times_cpu_u[BLOCK_SORT]   += e_t_cpu_u   - b_t_cpu_u;
+  _gnum_from_hv->times_cpu_s[BLOCK_SORT]   += e_t_cpu_s   - b_t_cpu_s;
+
+  /* Reset for the next step */
+  b_t_elapsed = PDM_timer_elapsed(_gnum_from_hv->timer);
+  b_t_cpu     = PDM_timer_cpu(_gnum_from_hv->timer);
+  b_t_cpu_u   = PDM_timer_cpu_user(_gnum_from_hv->timer);
+  b_t_cpu_s   = PDM_timer_cpu_sys(_gnum_from_hv->timer);
+  PDM_timer_resume(_gnum_from_hv->timer);
 
   /*
    * Panic verbose
    */
-  if(0 == 0){
+  if(1 == 0){
     PDM_log_trace_array_int(order, s_recv_keys, "order:: ");
     log_trace("order = ");
-    // int* arr_tmp = (int*) us->arr;
+    int* arr_tmp = (int*) us->arr;
     for(int i = 0; i < s_recv_keys; ++i){
       log_trace("%d --> ", (int)order[i]);
-      // int j   = order[i];
-      // for(int k = us->idx[j]; k < us->idx[j+1]; ++k ){
-      //   log_trace(" %d ", arr_tmp[k]);
-      // }
-      // log_trace("\n");
+      int j   = order[i];
+      for(int k = us->idx[j]; k < us->idx[j+1]; ++k ){
+        log_trace(" %d ", arr_tmp[k]);
+      }
+      log_trace("\n");
     }
     log_trace("\n");
   }
@@ -499,14 +685,14 @@ _gnum_from_hv_compute
   PDM_g_num_t n_id    = 0;
   PDM_g_num_t last_id = -1;
   for(int i = 0; i < s_recv_keys; ++i){
-    log_trace(" generate g_id :: %d \n", i);
+    // log_trace(" generate g_id :: %d \n", i);
     if(i != 0 && _gnum_from_hv->fequal(&order[i], &last_id, (void*) us)){
-      log_trace(" \t Cas 1 :: order[%d] = %d | next_id : %d\n", i, order[i], next_id);
+      // log_trace(" \t Cas 1 :: order[%d] = %d | next_id : %d\n", i, order[i], next_id);
       blk_ln_to_gn[order[i]] = next_id;
     } else {
       next_id++;
       n_id++;
-      log_trace(" \t Cas 2 :: order[%d] = %d | next_id : %d\n", i, order[i], next_id);
+      // log_trace(" \t Cas 2 :: order[%d] = %d | next_id : %d\n", i, order[i], next_id);
       blk_ln_to_gn[order[i]] = next_id;
       last_id = order[i];
     }
@@ -529,9 +715,31 @@ _gnum_from_hv_compute
   /*
    * Panic verbose
    */
-  if(0 == 0 ){
+  if(0 == 1){
     PDM_log_trace_array_long(blk_ln_to_gn, s_recv_keys, "blk_ln_to_gn:: ");
   }
+
+  /*
+   * Timer
+   */
+  PDM_timer_hang_on(_gnum_from_hv->timer);
+  e_t_elapsed = PDM_timer_elapsed(_gnum_from_hv->timer);
+  e_t_cpu     = PDM_timer_cpu(_gnum_from_hv->timer);
+  e_t_cpu_u   = PDM_timer_cpu_user(_gnum_from_hv->timer);
+  e_t_cpu_s   = PDM_timer_cpu_sys(_gnum_from_hv->timer);
+
+  _gnum_from_hv->times_elapsed[BLOCK_EQUAL] += e_t_elapsed - b_t_elapsed;
+  _gnum_from_hv->times_cpu[BLOCK_EQUAL]     += e_t_cpu     - b_t_cpu;
+  _gnum_from_hv->times_cpu_u[BLOCK_EQUAL]   += e_t_cpu_u   - b_t_cpu_u;
+  _gnum_from_hv->times_cpu_s[BLOCK_EQUAL]   += e_t_cpu_s   - b_t_cpu_s;
+
+  /* Reset for the next step */
+  b_t_elapsed = PDM_timer_elapsed(_gnum_from_hv->timer);
+  b_t_cpu     = PDM_timer_cpu(_gnum_from_hv->timer);
+  b_t_cpu_u   = PDM_timer_cpu_user(_gnum_from_hv->timer);
+  b_t_cpu_s   = PDM_timer_cpu_sys(_gnum_from_hv->timer);
+  PDM_timer_resume(_gnum_from_hv->timer);
+
 
   /*
    * Reverse all_to_all exchange in order to remap global id on current partition
@@ -569,6 +777,28 @@ _gnum_from_hv_compute
   free(part_ln_to_gn);
   free(order);
   free(us);
+
+  /*
+   * Timer
+   */
+  PDM_timer_hang_on(_gnum_from_hv->timer);
+  e_t_elapsed = PDM_timer_elapsed(_gnum_from_hv->timer);
+  e_t_cpu     = PDM_timer_cpu(_gnum_from_hv->timer);
+  e_t_cpu_u   = PDM_timer_cpu_user(_gnum_from_hv->timer);
+  e_t_cpu_s   = PDM_timer_cpu_sys(_gnum_from_hv->timer);
+
+  _gnum_from_hv->times_elapsed[REVERSE_EXCHANGE] += e_t_elapsed - b_t_elapsed;
+  _gnum_from_hv->times_cpu[REVERSE_EXCHANGE]     += e_t_cpu     - b_t_cpu;
+  _gnum_from_hv->times_cpu_u[REVERSE_EXCHANGE]   += e_t_cpu_u   - b_t_cpu_u;
+  _gnum_from_hv->times_cpu_s[REVERSE_EXCHANGE]   += e_t_cpu_s   - b_t_cpu_s;
+
+  /* Reset for the next step */
+  b_t_elapsed = PDM_timer_elapsed(_gnum_from_hv->timer);
+  b_t_cpu     = PDM_timer_cpu(_gnum_from_hv->timer);
+  b_t_cpu_u   = PDM_timer_cpu_user(_gnum_from_hv->timer);
+  b_t_cpu_s   = PDM_timer_cpu_sys(_gnum_from_hv->timer);
+  PDM_timer_resume(_gnum_from_hv->timer);
+
 
 }
 
@@ -641,25 +871,32 @@ PDM_gnum_from_hash_values_create
 
   _gnum_from_hv->distribution = (size_t *) malloc (sizeof(size_t ) * ( n_rank + 1 ));
 
+  _gnum_from_hv->timer = PDM_timer_create();
+
+  for (int i = 0; i < NTIMER_HASH_VALUES; i++) {
+    _gnum_from_hv->times_elapsed[i] = 0.;
+    _gnum_from_hv->times_cpu[i] = 0.;
+    _gnum_from_hv->times_cpu_u[i] = 0.;
+    _gnum_from_hv->times_cpu_s[i] = 0.;
+  }
+
   return id;
 
 }
 
-void
-PROCF (pdm_gnum_from_hash_values_create, PDM_GNUM_FROM_HVALUES_CREATE)
-(
- const int          *n_part,
- const int          *equilibrate,
- const size_t       *s_data,
- const PDM_MPI_Fint *fcomm,
-       int          *id
-)
-{
-  const PDM_MPI_Comm c_comm = PDM_MPI_Comm_f2c (*fcomm);
-  abort();
-
-  // *id = PDM_gnum_from_hash_values_create (*n_part, (PDM_bool_t) *equilibrate, *s_data, c_comm);
-}
+// void
+// PROCF (pdm_gnum_from_hash_values_create, PDM_GNUM_FROM_HVALUES_CREATE)
+// (
+//  const int          *n_part,
+//  const int          *equilibrate,
+//  const size_t       *s_data,
+//  const PDM_MPI_Fint *fcomm,
+//        int          *id
+// )
+// {
+//   const PDM_MPI_Comm c_comm = PDM_MPI_Comm_f2c (*fcomm);
+//   // *id = PDM_gnum_from_hash_values_create (*n_part, (PDM_bool_t) *equilibrate, *s_data, c_comm);
+// }
 
 /**
  *
@@ -810,6 +1047,77 @@ PROCF (pdm_gnum_from_hv_get, PDM_GNUM_FROM_HV_GET)
 
 /**
  *
+ * \brief Dump elapsed an CPU time
+ *
+ * \param [in]   id           Identifier
+ *
+ */
+
+void
+PDM_gnum_from_hv_dump_times
+(
+ const int id
+)
+{
+
+  _pdm_gnum_from_hv_t *_gnum_from_hv = _get_from_id (id);
+
+  double t_elaps_max[NTIMER_HASH_VALUES];
+  PDM_MPI_Allreduce (_gnum_from_hv->times_elapsed, t_elaps_max, NTIMER_HASH_VALUES,
+                     PDM_MPI_DOUBLE, PDM_MPI_MAX, _gnum_from_hv->comm);
+
+  double t_cpu_max[NTIMER_HASH_VALUES];
+  PDM_MPI_Allreduce (_gnum_from_hv->times_cpu, t_cpu_max, NTIMER_HASH_VALUES,
+                     PDM_MPI_DOUBLE, PDM_MPI_MAX, _gnum_from_hv->comm);
+
+  int i_rank;
+  PDM_MPI_Comm_rank (_gnum_from_hv->comm, &i_rank);
+
+  if (i_rank == 0) {
+
+    // PDM_printf( "hash_values timer : all (elapsed and cpu) : %12.5es %12.5es\n",
+    //             t1max, t2max);
+    PDM_printf( "PDM_gnum_from_hv timer : Equilibrate distribution (elapsed and cpu) :"
+                " %12.5es %12.5es\n",
+                t_elaps_max[EQUILIBRATE_DISTIBUTION],
+                t_cpu_max[EQUILIBRATE_DISTIBUTION]);
+    PDM_printf( "PDM_gnum_from_hv timer : First exchange prepare (elapsed and cpu) :"
+                " %12.5es %12.5es\n",
+                t_elaps_max[FIRST_EXCHANGE_PREPARE],
+                t_cpu_max[FIRST_EXCHANGE_PREPARE]);
+    PDM_printf( "PDM_gnum_from_hv timer : First exchange (elapsed and cpu) :"
+                " %12.5es %12.5es\n",
+                t_elaps_max[FIRST_EXCHANGE],
+                t_cpu_max[FIRST_EXCHANGE]);
+    PDM_printf( "PDM_gnum_from_hv timer : Second exchange prepare (elapsed and cpu) :"
+                " %12.5es %12.5es\n",
+                t_elaps_max[SECOND_EXCHANGE_PREPARE],
+                t_cpu_max[SECOND_EXCHANGE_PREPARE]);
+    PDM_printf( "PDM_gnum_from_hv timer : Second exchange (elapsed and cpu) :"
+                " %12.5es %12.5es\n",
+                t_elaps_max[SECOND_EXCHANGE],
+                t_cpu_max[SECOND_EXCHANGE]);
+    PDM_printf( "PDM_gnum_from_hv timer : block sort (elapsed and cpu) :"
+                " %12.5es %12.5es\n",
+                t_elaps_max[BLOCK_SORT],
+                t_cpu_max[BLOCK_SORT]);
+    PDM_printf( "PDM_gnum_from_hv timer : block equal (elapsed and cpu) :"
+                " %12.5es %12.5es\n",
+                t_elaps_max[BLOCK_EQUAL],
+                t_cpu_max[BLOCK_EQUAL]);
+    PDM_printf( "PDM_gnum_from_hv timer : Reverse exchange (elapsed and cpu) :"
+                " %12.5es %12.5es\n",
+                t_elaps_max[REVERSE_EXCHANGE],
+                t_cpu_max[REVERSE_EXCHANGE]);
+    PDM_printf_flush();
+  }
+
+
+}
+
+
+/**
+ *
  * \brief Free
  *
  * \param [in]   id           Identifier
@@ -837,6 +1145,8 @@ PDM_gnum_from_hv_free
   free (_gnum_from_hv->part_hstri);
   free (_gnum_from_hv->part_hdata);
   free (_gnum_from_hv->distribution);
+
+  PDM_timer_free(_gnum_from_hv->timer);
 
   free (_gnum_from_hv);
 

@@ -77,15 +77,15 @@ PDM_gnum_from_hash_values_create
  const PDM_MPI_Comm   comm
 );
 
-void
-PROCF (pdm_gnum_from_hash_values_create, PDM_GNUM_FROM_HVALUES_CREATE)
-(
- const int          *n_part,
- const int          *equilibrate,
- const size_t       *s_data,
- const PDM_MPI_Fint *fcomm,
-       int          *id
-);
+// void
+// PROCF (pdm_gnum_from_hash_values_create, PDM_GNUM_FROM_HVALUES_CREATE)
+// (
+//  const int          *n_part,
+//  const int          *equilibrate,
+//  const size_t       *s_data,
+//  const PDM_MPI_Fint *fcomm,
+//        int          *id
+// );
 
 
 /**
@@ -172,6 +172,19 @@ PROCF (pdm_gnum_from_hv_get, PDM_GNUM_FROM_HV_GET)
  PDM_g_num_t *gnum
 );
 
+/**
+ *
+ * \brief Dump elapsed an CPU time
+ *
+ * \param [in]   id           Identifier
+ *
+ */
+
+void
+PDM_gnum_from_hv_dump_times
+(
+ const int id
+);
 
 /**
  *
@@ -195,23 +208,6 @@ PROCF (pdm_gnum_from_hv_free, PDM_GNUM_FROM_HV_FREE)
  const int *partial
 );
 
-/**
- *
- * \brief Generate global id
- *
- * \param [in] blk_size  Size of the current block
- *
- */
-// void
-// PDM_generate_global_id_from
-// (
-//  const int              n_part,
-//  const unsigned char   *blk_data,
-//  const int             *blk_stri,
-//  gnum_from_hv_compare   fcompare,
-//  gnum_from_hv_equal     fequal,
-//  PDM_g_num_t          **gnum
-// );
 
 /*----------------------------------------------------------------------------*/
 

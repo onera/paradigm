@@ -262,34 +262,3 @@ char *argv[]
   return 0;
 
 }
-
-  // int order_unique_j1[nb_ent]; // Très mauvais nom
-  // int idx        = 0;
-  // int idx_unique = 0;
-  // int last_idx   = order_j1[idx++];
-  // int last_proc  = connect_triplet_j1[3*last_idx  ];
-  // int last_part  = connect_triplet_j1[3*last_idx+1];
-  // int last_elmt  = connect_triplet_j1[3*last_idx+2];
-  // order_unique_j1[idx_unique] = 0;
-
-  // for(int i = 1; i < nb_ent; i++){
-
-  //   int curr_idx  = order_j1[idx++];
-  //   int curr_proc = connect_triplet_j1[3*curr_idx  ];
-  //   int curr_part = connect_triplet_j1[3*curr_idx+1];
-  //   int curr_elmt = connect_triplet_j1[3*curr_idx+2];
-  //   int is_same = is_same_triplet(last_proc, last_part, last_elmt,
-  //                                 curr_proc, curr_part, curr_elmt);
-  //   printf(" curr:: ( %d / %d / %d ) | last:: ( %d / %d / %d ) \n",
-  //          curr_proc, curr_part, curr_elmt,
-  //          last_proc, last_part, last_elmt);
-
-  //   if(is_same == 0){ // N'est pas le meme
-  //     idx_unique++;
-  //     last_proc = curr_proc;
-  //     last_part = curr_part;
-  //     last_elmt = curr_elmt;
-  //   }
-  //   order_unique_j1[i] = idx_unique;
-  //   printf("[%d] = %d --> %d \n", i, is_same, idx_unique);
-  // }
