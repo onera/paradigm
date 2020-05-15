@@ -6,6 +6,7 @@ add_subdirectory(mpi_wrapper)
 # Liste de tous les sources
 # -------------------------
 
+if (PDM_ENABLE_CUDA)
 file(GLOB_RECURSE SOURCES
      mesh/*.[ch]
      meshgen/*.[ch]
@@ -20,6 +21,21 @@ file(GLOB_RECURSE SOURCES
      io/pdm_logging.[hc]
      pdm.h
      pdm_priv.h)
+else ()
+file(GLOB_RECURSE SOURCES
+     mesh/*.[ch]
+     meshgen/*.[ch]
+     pario/*.[ch]
+     ppart/*.[ch]
+     ppart/*.cxx
+     struct/*.[ch]
+     util/*.[ch]
+     ext_wrapper/*.[ch]
+     mpi_wrapper/pdm_mpi_node_first_rank.[hc]
+     io/pdm_logging.[hc]
+     pdm.h
+     pdm_priv.h)
+endif ()
 
 file(GLOB_RECURSE SOURCESF
      *.[fF]
