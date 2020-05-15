@@ -1,5 +1,5 @@
-#ifndef __PDM_DMESH_PARTITIONING_H__
-#define __PDM_DMESH_PARTITIONING_H__
+#ifndef __PDM_PARA_GRAPH_DUAL_H__
+#define __PDM_PARA_GRAPH_DUAL_H__
 
 #include <stdio.h>
 #include "pdm.h"
@@ -26,18 +26,6 @@ extern "C" {
  * Type
  *============================================================================*/
 
-/**
- * \enum PDM_part_split_t
- * \brief Split method
- *
- */
-
-typedef enum {
-  PDM_PART_SPLIT_PARMETIS = 1,
-  PDM_PART_SPLIT_PTSCOTCH = 2,
-  PDM_PART_SPLIT_HILBERT  = 3
-} PDM_partitioning_method_t;
-
 /*=============================================================================
  * Static global variables
  *============================================================================*/
@@ -46,37 +34,41 @@ typedef enum {
  * Public function prototypes
  *============================================================================*/
 
-/**
- *
- * \brief Return _dmesh_partitioning_t object from it identifier
- *
- * \param [in]   Comm         MPI Communicator
- * \return       dmpartitioning_id
- */
-int
-PDM_dmesh_partitioning_create
-(
- const PDM_MPI_Comm              comm,
- const PDM_partitioning_method_t split_method
-);
-
 
 /**
  *
- * \brief Setup structure with a dmesh
- *
- * \param [in]   dmpartitioning_id        ppart identifier
+ * \brief Compute the dual graph in parallel for a face cell connectivity
  *
  */
 void
-PDM_dmesh_partitioning_set_from_dmesh
+PDM_para_graph_dual_from_face_cell
 (
- const int dmesh_partitioning_id,
- const int dmesh_id
+ const PDM_MPI_Comm     comm,
+ const PDM_g_num       *cell_distribution,
+ const PDM_g_num       *face_distribution,
+ const PDM_g_num       *dface_cell,
+       PDM_g_num      **ddual_graph,
+       PDM_g_num      **ddual_graph_idx
+);
+
+/**
+ *
+ * \brief Compute the dual graph in parallel for a cell face connectivity
+ */
+void
+PDM_para_graph_dual_from_cell_face
+(
+ const PDM_MPI_Comm     comm,
+ const PDM_g_num       *cell_distribution,
+ const PDM_g_num       *face_distribution,
+ const PDM_g_num       *dcell_face,
+       PDM_g_num      **ddual_graph,
+       PDM_g_num      **ddual_graph_idx
+
 );
 
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
 
-#endif  /* __PDM_DMESH_PARTITIONING_H__ */
+#endif  /* __PDM_PARA_GRAPH_DUAL_H__ */
