@@ -542,8 +542,6 @@ _gnum_from_hv_compute
   /*
    * Exchange
    */
-  // assert(sizeof(unsigned long) == sizeof(size_t));
-  // assert(sizeof(unsigned char) == sizeof(char  ));
   PDM_MPI_Alltoallv(send_buffer_keys, n_key_send, i_key_send, PDM_MPI_UNSIGNED_LONG,
                     recv_buffer_keys, n_key_recv, i_key_recv, PDM_MPI_UNSIGNED_LONG, _gnum_from_hv->comm);
 
@@ -662,7 +660,7 @@ _gnum_from_hv_compute
   /*
    * Panic verbose
    */
-  if(1 == 0){
+  if(0 == 1){
     PDM_log_trace_array_int(order, s_recv_keys, "order:: ");
     log_trace("order = ");
     int* arr_tmp = (int*) us->arr;
@@ -708,9 +706,23 @@ _gnum_from_hv_compute
   PDM_MPI_Scan(&n_id, &shift_g, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, _gnum_from_hv->comm);
   shift_g -= n_id;
 
+  PDM_g_num_t _max_loc = -1;
   for(int i = 0; i < s_recv_keys; ++i){
     blk_ln_to_gn[i] += shift_g;
+    _max_loc = PDM_MAX (_max_loc, blk_ln_to_gn[i]);
   }
+
+  /*
+   *  Reduce the total number of elements
+   */
+  PDM_MPI_Allreduce (&_max_loc,
+                     &_gnum_from_hv->n_g_elt,
+                     1,
+                     PDM__PDM_MPI_G_NUM,
+                     PDM_MPI_MAX,
+                     _gnum_from_hv->comm);
+
+  log_trace("_gnum_from_hv->n_g_elt:: %d \n", _gnum_from_hv->n_g_elt);
 
   /*
    * Panic verbose
