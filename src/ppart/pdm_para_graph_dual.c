@@ -95,11 +95,11 @@ void
 PDM_para_graph_dual_from_face_cell
 (
  const PDM_MPI_Comm     comm,
- const PDM_g_num       *cell_distribution,
- const PDM_g_num       *face_distribution,
- const PDM_g_num       *dface_cell,
-       PDM_g_num      **ddual_graph,
-       PDM_g_num      **ddual_graph_idx
+ const PDM_g_num_t     *cell_distribution,
+ const PDM_g_num_t     *face_distribution,
+ const PDM_g_num_t     *dface_cell,
+       PDM_g_num_t    **ddual_graph,
+       PDM_g_num_t    **ddual_graph_idx
 )
 {
   int i_rank;
@@ -120,11 +120,11 @@ void
 PDM_para_graph_dual_from_cell_face
 (
  const PDM_MPI_Comm     comm,
- const PDM_g_num       *cell_distribution,
- const PDM_g_num       *face_distribution,
- const PDM_g_num       *dcell_face,
-       PDM_g_num      **ddual_graph,
-       PDM_g_num      **ddual_graph_idx
+ const PDM_g_num_t     *cell_distribution,
+ const PDM_g_num_t     *face_distribution,
+ const PDM_g_num_t     *dcell_face,
+       PDM_g_num_t    **ddual_graph,
+       PDM_g_num_t    **ddual_graph_idx
 
 )
 {
