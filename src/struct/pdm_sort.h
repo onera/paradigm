@@ -29,9 +29,16 @@ extern "C" {
 typedef int (*pdm_operator_compare)(const void* a, const void* b, void* );
 
 typedef struct  {
-  int*  idx;
-  unsigned char* arr; /* Not void* to avoid arithmetic pointer */
+  int           *idx;
+  unsigned char *arr; /* Not void* to avoid arithmetic pointer */
+  size_t        *key;
 } PDM_user_defined_sort;
+
+// typedef struct  {
+//   int*  idx;
+//   unsigned char* arr;
+//   size_t*       hkey;
+// } PDM_user_defined_sort2;
 
 
 /*=============================================================================
@@ -234,9 +241,9 @@ const void* b,
  *
  */
 void
-PDM_sort_long_special
+PDM_sort_int_special
 (
- PDM_g_num_t          *array,
+ int                  *array,
  int                   lArray,
  pdm_operator_compare  comp,
  void*                 context
