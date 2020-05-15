@@ -1054,17 +1054,16 @@ const void* b,
 
 
   PDM_user_defined_sort* us = (PDM_user_defined_sort*) ctxt;
-
-  int ni = us->idx[i+1] - us->idx[i];
-  int nj = us->idx[j+1] - us->idx[j];
-
   // printf("PDM_operator_equal_connectivity:: %d %d - %d %d - %d %d \n", i, j, ni, nj, us->idx[i], us->idx[j]);
 
-  int* arr_i = (int*) &us->arr[us->idx[i]*sizeof(int)];
-  int* arr_j = (int*) &us->arr[us->idx[j]*sizeof(int)];
-
   if( us->key[i] == us->key[j]){
+    int ni = us->idx[i+1] - us->idx[i];
+    int nj = us->idx[j+1] - us->idx[j];
+
     if(ni == nj){
+
+      int* arr_i = (int*) &us->arr[us->idx[i]*sizeof(int)];
+      int* arr_j = (int*) &us->arr[us->idx[j]*sizeof(int)];
 
       /* Dans notre cas on veut sort les entiers avant de les comparers */
       int* sort_arr_i = (int*) malloc( ni * sizeof(int));
@@ -1151,13 +1150,13 @@ PDM_sort_int_special
     else{
       int k = (l+ir) / 2;
       _swap_long (&(array[k]), &(array[l+1]));
-      if (array[l] > array[ir]){
+      if ( comp(&array[ir], &array[l], context) ){
         _swap_long (&(array[l]), &(array[ir]));
       }
-      if (array[l+1] > array[ir]) {
+      if ( comp(&array[ir], &array[l+1], context) ) {
         _swap_long (&(array[l+1]), &(array[ir]));
       }
-      if (array[l] > array[l+1]) {
+      if ( comp(&array[l+1], &array[l], context) ) {
         _swap_long (&(array[l]), &(array[l+1]));
       }
       i = l + 1;
