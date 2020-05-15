@@ -33,9 +33,9 @@ extern "C" {
  */
 
 typedef enum {
-  PDM_PART_SPLIT_PARMETIS = 1,
-  PDM_PART_SPLIT_PTSCOTCH = 2,
-  PDM_PART_SPLIT_HILBERT  = 3
+  PDM_PARTITIONING_WITH_PARMETIS = 1,
+  PDM_PARTITIONING_WITH_PTSCOTCH = 2,
+  PDM_PARTITIONING_WITH_HILBERT  = 3
 } PDM_partitioning_method_t;
 
 /*=============================================================================
@@ -73,6 +73,19 @@ PDM_dmesh_partitioning_set_from_dmesh
 (
  const int dmesh_partitioning_id,
  const int dmesh_id
+);
+
+/**
+ *
+ * \brief Free
+ *
+ * \param [in]   id           Identifier
+ *
+ */
+void
+PDM_dmesh_partitioning_free
+(
+ const int id
 );
 
 #ifdef __cplusplus

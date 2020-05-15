@@ -160,9 +160,36 @@ PDM_dmesh_partitioning_set_from_dmesh
  const int dmesh_id
 )
 {
+  _dmesh_partitioning_t* _dmp = _get_from_id(dmesh_partitioning_id);
   // ---> Depuis l'interface du dmesh
   // Recopie
   // PDM_dmesh_dims_get(dmesh_id, &)
+}
+
+/**
+ *
+ * \brief Free
+ *
+ * \param [in]   id           Identifier
+ *
+ */
+void
+PDM_dmesh_partitioning_free
+(
+ const int id
+)
+{
+  _dmesh_partitioning_t* _dmp = _get_from_id(id);
+
+  free (_dmp);
+
+  PDM_Handles_handle_free (_dmps, id, PDM_FALSE);
+
+  const int n_dmpartitioning = PDM_Handles_n_get (_dmps);
+
+  if (n_dmpartitioning == 0) {
+    _dmps = PDM_Handles_free (_dmps);
+  }
 }
 
 

@@ -272,8 +272,8 @@ PDM_dmesh_dims_get
   _pdm_dmesh_t *dmesh = _get_from_id (id);
   *dn_cell = dmesh->dn_cell;
   *dn_face = dmesh->dn_face;
-  *dn_vtx = dmesh->dn_vtx;
-  *dn_bnd = dmesh->dn_bnd;
+  *dn_vtx  = dmesh->dn_vtx;
+  *dn_bnd  = dmesh->dn_bnd;
   *dn_join = dmesh->dn_join;
 }
 
@@ -310,15 +310,15 @@ PDM_dmesh_data_get
 {
   _pdm_dmesh_t *dmesh = _get_from_id (id);
 
-  *dvtx_coord     = dmesh->_dvtx_coord;
+  *dvtx_coord      = dmesh->_dvtx_coord;
   *dface_vtx_idx   = dmesh->_dface_vtx_idx;
-  *dface_vtx      = dmesh->_dface_vtx;
-  *dface_cell     = dmesh->_dface_cell;
+  *dface_vtx       = dmesh->_dface_vtx;
+  *dface_cell      = dmesh->_dface_cell;
   *dface_bound_idx = dmesh->_dface_bound_idx;
-  *dface_bound    = dmesh->_dface_bound;
-  *dJoinGIds     = dmesh->_dJoinGIds;
+  *dface_bound     = dmesh->_dface_bound;
+  *dJoinGIds       = dmesh->_dJoinGIds;
   *dface_join_idx  = dmesh->_dface_join_idx;
-  *dface_join     = dmesh->_dface_join;
+  *dface_join      = dmesh->_dface_join;
 }
 
 /**
@@ -337,20 +337,20 @@ PDM_dmesh_free
 {
   _pdm_dmesh_t *dmesh = _get_from_id (id);
 
-  dmesh->dn_cell   = 0;
-  dmesh->dn_face   = 0;
-  dmesh->dn_vtx    = 0;
-  dmesh->dn_bnd    = 0;
-  dmesh->dn_join   = 0;
-  dmesh->_dface_cell     = NULL;
-  dmesh->_dface_vtx_idx   = NULL;
-  dmesh->_dface_vtx      = NULL;
-  dmesh->_dvtx_coord     = NULL;
-  dmesh->_dface_bound_idx = NULL;
-  dmesh->_dface_bound    = NULL;
-  dmesh->_dJoinGIds     = NULL;
-  dmesh->_dface_join_idx  = NULL;
-  dmesh->_dface_join     = NULL;
+  dmesh->dn_cell           = 0;
+  dmesh->dn_face           = 0;
+  dmesh->dn_vtx            = 0;
+  dmesh->dn_bnd            = 0;
+  dmesh->dn_join           = 0;
+  dmesh->_dface_cell       = NULL;
+  dmesh->_dface_vtx_idx    = NULL;
+  dmesh->_dface_vtx        = NULL;
+  dmesh->_dvtx_coord       = NULL;
+  dmesh->_dface_bound_idx  = NULL;
+  dmesh->_dface_bound      = NULL;
+  dmesh->_dJoinGIds        = NULL;
+  dmesh->_dface_join_idx   = NULL;
+  dmesh->_dface_join       = NULL;
 
   free (dmesh);
 
