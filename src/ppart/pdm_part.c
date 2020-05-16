@@ -1122,8 +1122,8 @@ _distrib_cell
     }
 
     PDM_quick_sort_long2(mesh_part->face_ln_to_gn, /* tableau a trier */
-                         0,                    /* premier elt */
-                         mesh_part->n_face - 1,  /* dernier elt */
+                         0,                        /* premier elt     */
+                         mesh_part->n_face - 1,    /* dernier elt     */
                          initial_idx);
 
     /* Remove duplicate faces and build local cell face connectivity*/

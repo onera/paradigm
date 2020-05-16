@@ -40,16 +40,33 @@ extern "C" {
  * \brief Compute the dual graph in parallel for a face cell connectivity
  *
  */
+// void
+// PDM_para_graph_dual_from_face_cell
+// (
+//  const PDM_MPI_Comm     comm,
+//        PDM_g_num_t     *cell_distribution,
+//        PDM_g_num_t     *face_distribution,
+//        PDM_g_num_t     *dface_cell,
+//        PDM_g_num_t    **dual_graph,
+//        PDM_g_num_t    **dual_graph_idx
+// );
+
+/**
+ *
+ * \brief Compute the dual graph in parallel for a face cell connectivity
+ *
+ */
 void
 PDM_para_graph_dual_from_face_cell
 (
  const PDM_MPI_Comm     comm,
- const PDM_g_num_t     *cell_distribution,
- const PDM_g_num_t     *face_distribution,
- const PDM_g_num_t     *dface_cell,
-       PDM_g_num_t    **ddual_graph,
-       PDM_g_num_t    **ddual_graph_idx
+ const int              dn_cell,
+ const int              dn_face,
+       PDM_g_num_t     *dface_cell,
+       PDM_g_num_t    **dual_graph,
+       PDM_g_num_t    **dual_graph_idx
 );
+
 
 /**
  *
@@ -62,8 +79,8 @@ PDM_para_graph_dual_from_cell_face
  const PDM_g_num_t     *cell_distribution,
  const PDM_g_num_t     *face_distribution,
  const PDM_g_num_t     *dcell_face,
-       PDM_g_num_t    **ddual_graph,
-       PDM_g_num_t    **ddual_graph_idx
+       PDM_g_num_t    **dual_graph,
+       PDM_g_num_t    **dual_graph_idx
 
 );
 

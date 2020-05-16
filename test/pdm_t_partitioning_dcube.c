@@ -11,6 +11,7 @@
 #include "pdm_config.h"
 #include "pdm_mpi.h"
 #include "pdm_dmesh_partitioning.h"
+#include "pdm_para_graph_dual.h"
 #include "pdm_dcube_gen.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
@@ -258,6 +259,18 @@ int main(int argc, char *argv[])
   /*
    *  Create mesh partitions
    */
+
+  /*
+   * Compute dual
+   */
+  int* dual_graph_idx;
+  PDM_g_num_t* dual_graph;
+  PDM_para_graph_dual_from_face_cell(comm,
+                                     dn_cell,
+                                     dn_face,
+                                     dface_cell,
+                     (int        **) &dual_graph_idx,
+                     (PDM_g_num_t**) &dual_graph);
 
 
 
