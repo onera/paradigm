@@ -820,7 +820,7 @@ _distrib_data
  * \param [in]   n_part          Number of partition
  * \param [in]   comm            MPI communicator
  *
- * \return   Initialized cs_part_to_block
+ * \return   Initialized PDM_part_to_block_t
  *
  */
 
@@ -845,22 +845,22 @@ PDM_part_to_block_create
     PDM_error(__FILE__, __LINE__, 0,"PDM_part_to_block_create : weights are available only if PDM_PART_TO_BLOCK_POST_MERGE is selected\n");
   }
 
-  ptb->t_distrib        = t_distrib;    /*!< Distribution type */
-  ptb->t_post           = t_post;       /*!< Post processing type */
+  ptb->t_distrib         = t_distrib;    /*!< Distribution type */
+  ptb->t_post            = t_post;       /*!< Post processing type */
   ptb->n_active_ranks    = 0;            /*!< Number of active ranks */
   ptb->active_ranks      = NULL;         /*!< List of active ranks */
-  ptb->comm             = comm;         /*!< MSG communicator */
+  ptb->comm              = comm;         /*!< MSG communicator */
   PDM_MPI_Comm_size (comm, &(ptb->s_comm));
   PDM_MPI_Comm_rank (comm, &(ptb->i_rank));
   ptb->is_my_rank_active   = 0;              /*!< Is active current rank */
-  ptb->part_active_node   = part_active_node; /*!< Part of active nodes */
+  ptb->part_active_node    = part_active_node; /*!< Part of active nodes */
 
-  ptb->n_part            = n_part;       /*!< Number of parts */
-  ptb->n_elt             = n_elt;        /*!< Number of elements for any part */
-  ptb->n_elt_proc        = 0;            /*!< Number of elements on the current rank */
-  ptb->gnum_elt          = gnum_elt;     /*!< Global numbering of elements for any part */
-  ptb->weight            = weight;
-  ptb->dest_proc         = NULL;
+  ptb->n_part             = n_part;       /*!< Number of parts */
+  ptb->n_elt              = n_elt;        /*!< Number of elements for any part */
+  ptb->n_elt_proc         = 0;            /*!< Number of elements on the current rank */
+  ptb->gnum_elt           = gnum_elt;     /*!< Global numbering of elements for any part */
+  ptb->weight             = weight;
+  ptb->dest_proc          = NULL;
   ptb->data_distrib_index =
     (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * (ptb->s_comm + 1));   /*!< Data distribution on ranks */
 
@@ -908,7 +908,7 @@ PDM_part_to_block_create
  * \param [in]   n_part          Number of partition
  * \param [in]   comm            MPI communicator
  *
- * \return   Initialized cs_part_to_block
+ * \return   Initialized PDM_part_to_block_t
  *
  */
 

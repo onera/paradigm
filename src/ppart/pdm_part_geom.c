@@ -236,7 +236,7 @@ const double         *dvtx_coord,
  */
 
 static void
-_compute_cellCenter
+_compute_cell_center
 (
   const PDM_MPI_Comm  comm,
   const int           dn_cell,
@@ -338,7 +338,7 @@ _compute_cellCenter
   }
   free (lvtx_coord);
   free (face_vtx_idx);
-  
+
   /* Verbose */
   if(0 == 1){
     for (int iCell = 0; iCell < dn_cell; iCell++) {
@@ -411,16 +411,16 @@ PDM_part_geom
   /*
    * cell center computation
    */
-  _compute_cellCenter (comm,
-                       dn_cell,
-                       dcell_face_idx,
-                       dcell_face,
-                       dface_vtx_idx,
-                       dface_vtx,
-                       dface_proc,
-                       dvtx_coord,
-                       dvtx_proc,
-                       barycenterCoords);
+  _compute_cell_center (comm,
+                        dn_cell,
+                        dcell_face_idx,
+                        dcell_face,
+                        dface_vtx_idx,
+                        dface_vtx,
+                        dface_proc,
+                        dvtx_coord,
+                        dvtx_proc,
+                        barycenterCoords);
 
 
   /** TRAITEMENT HILBERT FVM **/

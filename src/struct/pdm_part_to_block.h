@@ -102,7 +102,7 @@ typedef struct _pdm_part_to_block_t PDM_part_to_block_t;
  * \param [in]   n_part          Number of partition
  * \param [in]   comm            MPI communicator
  *
- * \return   Initialized cs_part_to_block
+ * \return   Initialized PDM_part_to_block_t
  *
  */
 
@@ -133,7 +133,7 @@ PDM_part_to_block_create
  * \param [in]   n_part          Number of partition
  * \param [in]   comm            MPI communicator
  *
- * \return   Initialized cs_part_to_block
+ * \return   Initialized PDM_part_to_block_t
  *
  */
 
