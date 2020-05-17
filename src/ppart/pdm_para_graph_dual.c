@@ -94,7 +94,7 @@ extern "C" {
 //        PDM_g_num_t     *face_distribution,
 //        PDM_g_num_t     *dface_cell,
 //        PDM_g_num_t    **dual_graph,
-//        PDM_g_num_t    **dual_graph_idx
+//        int            **dual_graph_idx
 // )
 // {
 
@@ -159,8 +159,8 @@ PDM_para_graph_dual_from_face_cell
  const int              dn_cell,
  const int              dn_face,
        PDM_g_num_t     *dface_cell,
-       PDM_g_num_t    **dual_graph,
-       PDM_g_num_t    **dual_graph_idx
+       int            **dual_graph_idx,
+       PDM_g_num_t    **dual_graph
 )
 {
   int i_rank;
@@ -169,8 +169,8 @@ PDM_para_graph_dual_from_face_cell
   PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_size(comm, &n_rank);
 
-  printf("dn_cell : %d\n", dn_cell);
-  printf("dn_face : %d\n", dn_face);
+  // printf("dn_cell : %d\n", dn_cell);
+  // printf("dn_face : %d\n", dn_face);
 
   /*
    * We need for each cell the connectivity with other cells ( in global numbering )
@@ -207,6 +207,8 @@ PDM_para_graph_dual_from_face_cell
 
   /*
    * Initialize part_to_block for the computation of cell_cell
+   *    -> Si on force une distribution utilisateur on devra passer le cell_distribution
+   *           --> Semble necessaire pour parMetis mais pas scotch
    */
   PDM_part_to_block_t *ptb_dual =
    PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
@@ -242,6 +244,9 @@ PDM_para_graph_dual_from_face_cell
   //
   const int n_cell_block = PDM_part_to_block_n_elt_block_get (ptb_dual);
 
+  /*
+   * Panic verbose
+   */
   if( 0 == 1){
     printf("n_cell_block:: %d \n", n_cell_block);
     int idx_block = 0;
@@ -297,6 +302,12 @@ PDM_para_graph_dual_from_face_cell
     }
   }
 
+  for(int i = 0; i < n_cell_block; ++i){
+    for(int i_data = _dual_graph_idx[i]; i_data < _dual_graph_idx[i+1]; ++i_data){
+      _dual_graph[i_data] = _dual_graph[i_data] - 1;
+    }
+  }
+
   PDM_part_to_block_free (ptb_dual);
   free(cell_cell_n);
 
@@ -313,12 +324,62 @@ PDM_para_graph_dual_from_cell_face
  const PDM_g_num_t     *cell_distribution,
  const PDM_g_num_t     *face_distribution,
  const PDM_g_num_t     *dcell_face,
-       PDM_g_num_t    **dual_graph,
-       PDM_g_num_t    **dual_graph_idx
+       int            **dual_graph_idx,
+       PDM_g_num_t    **dual_graph
 
 )
 {
 }
+
+
+/**
+ * \brief   Split graph
+ */
+void
+PDM_split_graph
+(
+ const PDM_MPI_Comm  comm,
+ int                *dual_graph_idx,
+ PDM_g_num_t        *dual_graph,
+ int                *delmt_weight,
+ int                *cell_part,
+ int                 dn_elmt,
+ int                 n_part
+)
+{
+  int i_rank;
+  int n_rank;
+
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  PDM_MPI_Comm_size(comm, &n_rank);
+
+  for (int i = 0; i < dn_elmt; i++) {
+    cell_part[i] = 0;
+  }
+
+  /*
+   *  Uniquement scotch pour l'instant car l'interface est simple
+   */
+  int check = 1;
+  int *edgeWeight = NULL;
+
+  printf("PDM_SCOTCH_dpart %d | %d \n", n_part, dn_elmt);
+  PDM_SCOTCH_dpart (dn_elmt,
+                    dual_graph_idx,
+                    dual_graph,
+                    delmt_weight,
+                    edgeWeight,
+                    check,
+                    comm,
+                    n_part,
+                    cell_part);
+  printf("PDM_SCOTCH_dpart end \n");
+
+
+
+
+}
+
 
 
 #ifdef __cplusplus

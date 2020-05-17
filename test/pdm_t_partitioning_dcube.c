@@ -274,10 +274,43 @@ int main(int argc, char *argv[])
                      (PDM_g_num_t**) &dual_graph);
 
   /*
+   * Split it !!! CAUTION dn_cell can be different of the size of dual graph !!!
+   */
+  printf("PDM_split_graph\n");
+  int* cell_part    = (int *) malloc( sizeof(int) * dn_cell );
+  int* dcell_weight = (int *) malloc( sizeof(int) * dn_cell );
+  for(int i = 0; i < dn_cell; ++i){
+    dcell_weight[i] = dual_graph_idx[i+1] - dual_graph_idx[i];
+  }
+
+  if( 1 == 1 ){
+    printf("n_cell_block:: %d \n", dn_cell);
+    for(int i = 0; i < dn_cell; ++i){
+      printf(" dual_graph_idx = %d ---> \n", dual_graph_idx[i]);
+      for(int i_data = dual_graph_idx[i]; i_data < dual_graph_idx[i+1]; ++i_data){
+        // printf("%d ", dual_graph[i_data]);
+        printf("\t dual_graph[%d] = %d \n", i_data, dual_graph[i_data]);
+      }
+      printf("\n");
+    }
+  }
+
+  PDM_split_graph(comm, dual_graph_idx, dual_graph, NULL, cell_part, dn_cell, n_rank);
+  // PDM_split_graph(comm, dual_graph_idx, dual_graph, NULL, cell_part, dn_cell, n_part);
+
+  printf("cell_part::");
+  for(int i = 0; i < dn_cell; ++i){
+    printf("%d ", cell_part[i]);
+  }
+  printf("\n");
+
+  /*
    * Free
    */
   free(dual_graph_idx);
   free(dual_graph);
+  free(cell_part);
+  free(dcell_weight);
 
 
   PDM_dcube_gen_free(id);
