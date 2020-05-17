@@ -14,6 +14,7 @@
 #include "pdm_para_graph_dual.h"
 #include "pdm_dcube_gen.h"
 #include "pdm_printf.h"
+#include "pdm_sort.h"
 #include "pdm_error.h"
 
 /*============================================================================
@@ -273,10 +274,45 @@ int main(int argc, char *argv[])
                      (PDM_g_num_t**) &dual_graph);
 
 
-
   PDM_dcube_gen_free(id);
 
   PDM_MPI_Finalize();
 
   return 0;
 }
+
+
+  // Unit test ...
+  // int test_unique[10] = {10, 2, 1, 12, 31, 2, 31, 4, 5, 2};
+  // // int ns = PDM_inpace_unique_long(test_unique, 4, 10);
+  // // PDM_quick_sort_long(test_unique, 0, 9);
+  // int ns = PDM_inpace_unique_long(test_unique, 0, 9);
+  // printf("ns::%d\n", ns);
+  // printf("test_unique::");
+  // for(int i = 0; i < ns; ++i){
+  //   printf("%d ", test_unique[i]);
+  // }
+  // printf("\n");
+
+  // Unit test ...
+  // int cell_cell_n[4] = {4, 5, 3, 2};
+  // PDM_g_num_t dual_graph_test[14] = {31, 10, 5, 6,
+  //                                    8, 8, 2, 1, 4,
+  //                                    2, 3, 2,
+  //                                    91, 92 };
+  // int dual_graph_test_idx[5];
+
+  // PDM_compress_connectivity(dual_graph_test, dual_graph_test_idx, cell_cell_n, 4);
+
+
+  // if( 1 == 1 ){
+  //   // printf("n_cell_block:: %d \n", n_cell_block);
+  //   for(int i = 0; i < 4; ++i){
+  //     printf(" dual_graph_test_idx = %d ---> \n", dual_graph_test_idx[i]);
+  //     for(int i_data = dual_graph_test_idx[i]; i_data < dual_graph_test_idx[i+1]; ++i_data){
+  //       // printf("%d ", _dual_graph[i_data]);
+  //       printf("\t _dual_graph[%d] = %d \n", i_data, dual_graph_test[i_data]);
+  //     }
+  //     printf("\n");
+  //   }
+  // }

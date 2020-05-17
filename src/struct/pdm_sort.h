@@ -122,6 +122,23 @@ PDM_quick_sort_long
 
 /**
  *
+ * \brief Unique in place
+ *
+ * \param [inout]   a     Array to sort
+ * \param [in]      l     First element
+ * \param [in]      r     Last  element
+ *
+ */
+int
+PDM_inpace_unique_long
+(
+ PDM_g_num_t a[],
+ int l,
+ int r
+);
+
+/**
+ *
  * \brief Quick sort
  *
  * \param [inout]   a     Array to sort
