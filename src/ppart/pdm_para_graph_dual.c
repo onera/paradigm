@@ -255,8 +255,17 @@ PDM_para_graph_dual_from_face_cell
     }
   }
 
+  /*
+   * Exchange is done we can free direclty memory
+   */
+  free(dcell_ln_to_gn);
+  free(face_strid);
+  free(dcell_opp);
+
+  /*
+   * Allocate and setup convenient pointeur
+   */
   *dual_graph_idx = (int*        ) malloc( sizeof(int        ) * (n_cell_block+1));
-  // *dual_graph     = (PDM_g_num_t*) malloc( sizeof(PDM_g_num_t) * (s_block       ));
 
   int*         _dual_graph_idx = (int          *) *dual_graph_idx;
   PDM_g_num_t* _dual_graph     = (PDM_g_num_t  *) *dual_graph;
@@ -268,8 +277,14 @@ PDM_para_graph_dual_from_face_cell
    */
   PDM_compress_connectivity(_dual_graph, _dual_graph_idx, cell_cell_n, n_cell_block);
 
+  /*
+   * Realloc
+   */
   *dual_graph     = (PDM_g_num_t*) realloc(*dual_graph, sizeof(PDM_g_num_t) * _dual_graph_idx[n_cell_block] );
 
+  /*
+   * Panic verbose
+   */
   if( 0 == 1 ){
     printf("n_cell_block:: %d \n", n_cell_block);
     for(int i = 0; i < n_cell_block; ++i){
@@ -282,13 +297,8 @@ PDM_para_graph_dual_from_face_cell
     }
   }
 
-
   PDM_part_to_block_free (ptb_dual);
-  free(dcell_ln_to_gn);
-  free(face_strid);
   free(cell_cell_n);
-  // free(cell_cell);
-  free(dcell_opp);
 
 }
 
