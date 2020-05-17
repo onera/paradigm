@@ -855,6 +855,17 @@ _split
       int check = 0;
       int *edgeWeight = NULL;
 
+      if( 1 == 1 ){
+        printf("ppart->dn_cell:: %d \n", ppart->dn_cell);
+        for(int i = 0; i < ppart->dn_cell; ++i){
+          printf(" ppart->ddual_graph_idx = %d ---> \n", ppart->ddual_graph_idx[i]);
+          for(int i_data = ppart->ddual_graph_idx[i]; i_data < ppart->ddual_graph_idx[i+1]; ++i_data){
+            printf("\t ppart->ddual_graph[%d] = %d \n", i_data, ppart->ddual_graph[i_data]);
+          }
+          printf("\n");
+        }
+      }
+
       PDM_SCOTCH_dpart (ppart->dn_cell,
                         ppart->ddual_graph_idx,
                         ppart->ddual_graph,
@@ -2834,21 +2845,21 @@ PDM_part_create
 
   /* Local dimensions */
 
-  ppart->dn_vtx      = dn_vtx;
-  ppart->dn_cell     = dn_cell;
-  ppart->dn_face     = dn_face;
+  ppart->dn_vtx       = dn_vtx;
+  ppart->dn_cell      = dn_cell;
+  ppart->dn_face      = dn_face;
   ppart->n_face_group = n_face_group;
 
   /* Cell definitions */
 
   ppart->_dcell_face_idx = dcell_face_idx;
-  ppart->_dcell_face    = dcell_face;
-  ppart->_dcell_tag     = dcell_tag;
-  ppart->_dcell_weight  = dcell_weight;
-  ppart->_dcell_part    = dcell_part;
+  ppart->_dcell_face     = dcell_face;
+  ppart->_dcell_tag      = dcell_tag;
+  ppart->_dcell_weight   = dcell_weight;
+  ppart->_dcell_part     = dcell_part;
   ppart->dcell_face_idx  = NULL;
-  ppart->dcell_face     = NULL;
-  ppart->dface_cell     = NULL;
+  ppart->dcell_face      = NULL;
+  ppart->dface_cell      = NULL;
 
   /* Set up for renumbering */
   ppart->n_property_cell       = n_property_cell;
@@ -2891,12 +2902,12 @@ PDM_part_create
   int *dn_face_proc = (int *) malloc((n_rank) * sizeof(int));
 
   PDM_MPI_Allgather((void *) &dn_face,
-                1,
-                PDM_MPI_INT,
-                (void *) dn_face_proc,
-                1,
-                PDM_MPI_INT,
-                comm);
+                    1,
+                    PDM_MPI_INT,
+                    (void *) dn_face_proc,
+                    1,
+                    PDM_MPI_INT,
+                    comm);
   ppart->dface_proc[0] = 1;
   for (int i = 1; i < n_rank+1; i++) {
     ppart->dface_proc[i] = (PDM_g_num_t) dn_face_proc[i-1] + ppart->dface_proc[i-1];
@@ -2928,13 +2939,13 @@ PDM_part_create
 
   /* Boundaries definitions */
 
-  ppart->_dface_group_idx  = dface_group_idx;
-  ppart->_dface_group = dface_group;
+  ppart->_dface_group_idx = dface_group_idx;
+  ppart->_dface_group     = dface_group;
 
   /* Dual graph */
 
   ppart->ddual_graph_idx = NULL;
-  ppart->ddual_graph    = NULL;
+  ppart->ddual_graph     = NULL;
 
   /* Partitions */
 

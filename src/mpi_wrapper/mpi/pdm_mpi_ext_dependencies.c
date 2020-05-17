@@ -440,9 +440,9 @@ int *part
   const SCOTCH_Num _n_part = (SCOTCH_Num) n_part;
 
   ierr = SCOTCH_dgraphPart(&graph,
-                               _n_part, /* Nombre de partitions demande */
-                               &strat,
-                               _part);    /* parts[i] donne le numero */
+                           _n_part,   /* Nombre de partitions demande */
+                           &strat,
+                           _part);    /* parts[i] donne le numero */
 
   SCOTCH_stratExit(&strat);
   SCOTCH_dgraphExit(&graph);
