@@ -230,19 +230,19 @@ PDM_para_graph_dual_from_face_cell
 
   int* cell_cell_n = NULL;
 
-  int s_block = PDM_part_to_block_exch (ptb_dual,
-                                        sizeof(PDM_g_num_t),
-                                        PDM_STRIDE_VAR,
-                                        1,
-                                        &face_strid,
-                              (void **) &dcell_opp,
-                                        &cell_cell_n,
-                              (void **) &*dual_graph);
+  PDM_part_to_block_exch (ptb_dual,
+                          sizeof(PDM_g_num_t),
+                          PDM_STRIDE_VAR,
+                          1,
+                          &face_strid,
+                (void **) &dcell_opp,
+                          &cell_cell_n,
+                (void **) &*dual_graph);
 
   //
   const int n_cell_block = PDM_part_to_block_n_elt_block_get (ptb_dual);
 
-  if( 1 == 1){
+  if( 0 == 1){
     printf("n_cell_block:: %d \n", n_cell_block);
     int idx_block = 0;
     for(int i = 0; i < n_cell_block; ++i){
@@ -270,7 +270,7 @@ PDM_para_graph_dual_from_face_cell
 
   *dual_graph     = (PDM_g_num_t*) realloc(*dual_graph, sizeof(PDM_g_num_t) * _dual_graph_idx[n_cell_block] );
 
-  if( 1 == 1 ){
+  if( 0 == 1 ){
     printf("n_cell_block:: %d \n", n_cell_block);
     for(int i = 0; i < n_cell_block; ++i){
       printf(" _dual_graph_idx = %d ---> \n", _dual_graph_idx[i]);

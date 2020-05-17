@@ -273,6 +273,12 @@ int main(int argc, char *argv[])
                      (int        **) &dual_graph_idx,
                      (PDM_g_num_t**) &dual_graph);
 
+  /*
+   * Free
+   */
+  free(dual_graph_idx);
+  free(dual_graph);
+
 
   PDM_dcube_gen_free(id);
 
