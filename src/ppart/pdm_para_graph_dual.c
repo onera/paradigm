@@ -10,6 +10,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <assert.h>
 
 /*----------------------------------------------------------------------------
  *  Local headers
@@ -85,6 +86,43 @@ extern "C" {
 /*=============================================================================
  * Public function definitions
  *============================================================================*/
+
+
+int*
+PDM_compute_partitioning_mapping
+(
+ const PDM_MPI_Comm     comm,
+ const int              n_part
+)
+{
+  int i_rank;
+  int n_rank;
+
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  PDM_MPI_Comm_size(comm, &n_rank);
+
+  int* dpart_proc = (int *) malloc( (n_rank+1) * sizeof(int));
+
+  /*
+   * Exchange
+   */
+  PDM_MPI_Allgather((void *) &n_part,
+                    1,
+                    PDM_MPI_INT,
+                    (void *) (&dpart_proc[1]),
+                    1,
+                    PDM_MPI_INT,
+                    comm);
+
+  dpart_proc[0] = 0;
+  for (int i = 1; i < n_rank+1; i++) {
+    dpart_proc[i] = dpart_proc[i] + dpart_proc[i-1];
+  }
+
+  return dpart_proc;
+}
+
+
 
 // void
 // PDM_para_graph_dual_from_face_cell
@@ -287,6 +325,9 @@ PDM_para_graph_dual_from_face_cell
    */
   *dual_graph     = (PDM_g_num_t*) realloc(*dual_graph, sizeof(PDM_g_num_t) * _dual_graph_idx[n_cell_block] );
 
+  // For now we can change it later
+  assert(n_cell_block == dn_cell);
+
   /*
    * Panic verbose
    */
@@ -374,11 +415,9 @@ PDM_split_graph
                     n_part,
                     cell_part);
   printf("PDM_SCOTCH_dpart end \n");
-
-
-
-
 }
+
+
 
 
 

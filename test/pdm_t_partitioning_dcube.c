@@ -295,8 +295,10 @@ int main(int argc, char *argv[])
     }
   }
 
-  PDM_split_graph(comm, dual_graph_idx, dual_graph, NULL, cell_part, dn_cell, n_rank);
-  // PDM_split_graph(comm, dual_graph_idx, dual_graph, NULL, cell_part, dn_cell, n_part);
+  // PDM_split_graph(comm, dual_graph_idx, dual_graph, NULL, cell_part, dn_cell, n_rank);
+  PDM_split_graph(comm, dual_graph_idx, dual_graph, NULL, cell_part, dn_cell, n_part);
+  // PDM_split_graph(comm, dual_graph_idx, dual_graph, NULL, cell_part, dn_cell, n_rank);
+
 
   printf("cell_part::");
   for(int i = 0; i < dn_cell; ++i){
@@ -305,12 +307,47 @@ int main(int argc, char *argv[])
   printf("\n");
 
   /*
+   * On dispose pour chaque cellule de la partition associé : il faut retrouver le
+   *  cell_ln_to_gn
+   *    Idée : faire un part_to_block avec ln_to_gn == cell_part et distribution imposé = dpart_proc
+   *    On devrait recupérer n_part block de données avec le ln_to_gn !
+   */
+
+
+  /*
+   * On doit calculer le dcell_face car avec lui et le cell_ln_to_gn on retrouve facilement
+   *   le dcell_face sur la partition donc on n'a plus qu'a trié pour avoir le face_ln_to_gn
+   *      Une fois le face_ln_to_gn trouvé on doit avoir facilement
+   *      le dface_cell mais en numéro absolu (attention au signe ) et la on a juste à chercher
+   *      dans le cell_ln_to_gn l'index correspondant pour transformé le numero global en numéro local
+   */
+
+  /*
+   *  L'astuce de tri pour le face_cell et le meme que pour le face_vtx -->
+   *    permet d'avoir le vtx_ln_to_gn
+   */
+
+  /*
+   *  Boundary condition (face group )
+   */
+
+  /*
+   *  Edge
+   */
+
+
+  // Attention on veut garder l'orientation donc il y a un signe dans le face_cell / cell_face
+  // Reflechir sur les connectivité d'edge également ...
+
+
+  /*
    * Free
    */
   free(dual_graph_idx);
   free(dual_graph);
   free(cell_part);
   free(dcell_weight);
+
 
 
   PDM_dcube_gen_free(id);
