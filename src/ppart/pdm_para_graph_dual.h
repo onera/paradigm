@@ -34,6 +34,14 @@ extern "C" {
  * Public function prototypes
  *============================================================================*/
 
+void
+PDM_compress_connectivity
+(
+ PDM_g_num_t *dual_graph,
+ int         *dual_graph_idx,
+ int         *dual_graph_n,
+ int          dn_elt
+);
 
 /**
  *

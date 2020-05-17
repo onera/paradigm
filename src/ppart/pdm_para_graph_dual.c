@@ -103,6 +103,50 @@ extern "C" {
 
 // }
 
+void
+PDM_compress_connectivity
+(
+ PDM_g_num_t *dual_graph,
+ int         *dual_graph_idx,
+ int         *dual_graph_n,
+ int          dn_elt
+)
+{
+  int idx_comp  = 0; /* Compressed index use to fill the buffer */
+  int idx_block = 0; /* Index in the block to post-treat        */
+  dual_graph_idx[0] = 0;
+  int need_shift = 0;
+  for(int i = 0; i < dn_elt; ++i){
+    int n_cell_connect = dual_graph_n[i];
+    /* Reshift next value in compressed block to avoid create a new shift */
+    if(need_shift) {
+      int idx_new = idx_comp;
+      for(int j = idx_block; j < idx_block+n_cell_connect; ++j){
+        dual_graph[idx_new++] = dual_graph[j];
+      }
+    }
+
+    int end_connect         = idx_comp + n_cell_connect - 1;
+    // printf(" idx_comp:: %d | end_connect:: %d \n", idx_comp, end_connect);
+
+    int n_cell_connect_comp = PDM_inpace_unique_long(dual_graph, idx_comp, end_connect);
+    // printf(" n_cell_connect:: %d | n_cell_connect_comp:: %d \n", n_cell_connect, n_cell_connect_comp);
+
+    if(n_cell_connect_comp < n_cell_connect) {
+      need_shift = 1;
+    } else {
+      need_shift = 0;
+    }
+
+    dual_graph_idx[i+1] = dual_graph_idx[i] + n_cell_connect_comp;
+    idx_comp  += n_cell_connect_comp;
+    idx_block += n_cell_connect;
+
+    // printf("idx_comp : %d | idx_block : %d \n", idx_comp, idx_block);
+  }
+}
+
+
 /**
  *
  * \brief Compute the dual graph in parallel for a face cell connectivity
@@ -184,37 +228,66 @@ PDM_para_graph_dual_from_face_cell
     face_strid[i_face] = 1;
   }
 
-  int* cell_cell_idx = NULL;
-  PDM_g_num_t* cell_cell = NULL;
+  int* cell_cell_n = NULL;
 
-  PDM_part_to_block_exch (ptb_dual,
-                          sizeof(PDM_g_num_t),
-                          PDM_STRIDE_VAR,
-                          1,
-                          &face_strid,
-                (void **) &dcell_opp,
-                          &cell_cell_idx,
-                (void **) &cell_cell);
+  int s_block = PDM_part_to_block_exch (ptb_dual,
+                                        sizeof(PDM_g_num_t),
+                                        PDM_STRIDE_VAR,
+                                        1,
+                                        &face_strid,
+                              (void **) &dcell_opp,
+                                        &cell_cell_n,
+                              (void **) &*dual_graph);
 
   //
   const int n_cell_block = PDM_part_to_block_n_elt_block_get (ptb_dual);
 
-  printf("n_cell_block:: %d \n", n_cell_block);
-  int idx_block = 0;
-  for(int i = 0; i < n_cell_block; ++i){
-    printf(" cell_cell_idx = %d ---> ", cell_cell_idx[i]);
-    for(int i_data = 0; i_data < cell_cell_idx[i]; ++i_data){
-      printf("%d ", cell_cell[idx_block]);
-      idx_block++;
+  if( 1 == 1){
+    printf("n_cell_block:: %d \n", n_cell_block);
+    int idx_block = 0;
+    for(int i = 0; i < n_cell_block; ++i){
+      printf(" cell_cell_n = %d ---> ", cell_cell_n[i]);
+      for(int i_data = 0; i_data < cell_cell_n[i]; ++i_data){
+        printf("%d ", dual_graph[0][idx_block]);
+        idx_block++;
+      }
+      printf("\n");
     }
-    printf("\n");
   }
+
+  *dual_graph_idx = (int*        ) malloc( sizeof(int        ) * (n_cell_block+1));
+  // *dual_graph     = (PDM_g_num_t*) malloc( sizeof(PDM_g_num_t) * (s_block       ));
+
+  int*         _dual_graph_idx = (int          *) *dual_graph_idx;
+  PDM_g_num_t* _dual_graph     = (PDM_g_num_t  *) *dual_graph;
+
+  /*
+   * Each block can have multiple same cell, we need to compress them
+   *   We do it inplace cause unique will always have inferior size of complete array
+   *
+   */
+  PDM_compress_connectivity(_dual_graph, _dual_graph_idx, cell_cell_n, n_cell_block);
+
+  *dual_graph     = (PDM_g_num_t*) realloc(*dual_graph, sizeof(PDM_g_num_t) * _dual_graph_idx[n_cell_block] );
+
+  if( 1 == 1 ){
+    printf("n_cell_block:: %d \n", n_cell_block);
+    for(int i = 0; i < n_cell_block; ++i){
+      printf(" _dual_graph_idx = %d ---> \n", _dual_graph_idx[i]);
+      for(int i_data = _dual_graph_idx[i]; i_data < _dual_graph_idx[i+1]; ++i_data){
+        // printf("%d ", _dual_graph[i_data]);
+        printf("\t _dual_graph[%d] = %d \n", i_data, _dual_graph[i_data]);
+      }
+      printf("\n");
+    }
+  }
+
 
   PDM_part_to_block_free (ptb_dual);
   free(dcell_ln_to_gn);
   free(face_strid);
-  free(cell_cell_idx);
-  free(cell_cell);
+  free(cell_cell_n);
+  // free(cell_cell);
   free(dcell_opp);
 
 }
