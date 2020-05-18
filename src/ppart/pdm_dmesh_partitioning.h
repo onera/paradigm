@@ -92,13 +92,14 @@ PDM_dmesh_partitioning_free
 /**
  *  \brief Setup cell_ln_to_gn
  */
-void
+int
 PDM_generate_part_cell_ln_to_gn
 (
  const PDM_MPI_Comm    comm,
  PDM_g_num_t          *part_distribution,
  PDM_g_num_t          *cell_distribution,
  int                  *cell_part,
+ int                 **n_elmts,
  PDM_g_num_t        ***pcell_ln_to_gn
 );
 
