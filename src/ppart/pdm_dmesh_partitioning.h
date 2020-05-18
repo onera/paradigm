@@ -111,10 +111,11 @@ PDM_generate_part_entity_ln_to_gn
  PDM_g_num_t          *cell_distribution,
  int                  *dcell_face_idx,
  PDM_g_num_t          *dcell_face,
- int                  *cell_part,
+ int                   n_part,
+ int                  *n_elmts,
+ int                 **pcell_ln_to_gn,
  int                ***pcell_face_idx,
- int                ***pcell_face,
- PDM_g_num_t        ***pcell_ln_to_gn
+ int                ***pcell_face
 );
 
 #ifdef __cplusplus

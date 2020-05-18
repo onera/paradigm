@@ -320,8 +320,6 @@ int main(int argc, char *argv[])
    *    Idée : faire un part_to_block avec ln_to_gn == cell_part et distribution imposé = dpart_proc
    *    On devrait recupérer n_part block de données avec le ln_to_gn !
    */
-  int** pcell_face_idx;
-  int** pcell_face;
   int** pcell_ln_to_gn;
   int*  n_cell;
 
@@ -332,19 +330,27 @@ int main(int argc, char *argv[])
                                        (int ** )  &n_cell,
                                        (int ***)  &pcell_ln_to_gn);
 
+  /*
+   *  At this stage we have the cell_ln_to_gn :
+   *      --> We need to deduce the other if needed
+   *           --> face_ln_to_gn
+   *           --> vtx_ln_to_gn
+   *  We can do by the relationship of each varibles (connectivity)
+   *  For example face_ln_to_gn can be deduce with cell_face connectivity if we have cell_ln_to_gn
+   */
+  int** pcell_face_idx;
+  int** pcell_face;
 
-
-
-
-  // PDM_generate_part_cell_ln_to_gn(comm,
-  //                                 part_distribution,
-  //                                 cell_distribution,
-  //                                 dcell_face_idx,
-  //                                 dcell_face,
-  //                                 cell_part,
-  //                     (int ***)  &pcell_face_idx,
-  //                     (int ***)  &pcell_face,
-  //                     (int ***)  &pcell_ln_to_gn);
+  PDM_generate_part_entity_ln_to_gn(comm,
+                                    part_distribution,
+                                    cell_distribution,
+                                    dcell_face_idx,
+                                    dcell_face,
+                                    n_res_part,
+                                    n_cell,
+                                    pcell_ln_to_gn,
+                        (int ***)  &pcell_face_idx,
+                        (int ***)  &pcell_face);
 
 
   /*
