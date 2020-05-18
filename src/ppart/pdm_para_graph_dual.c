@@ -198,7 +198,10 @@ PDM_para_graph_dual_from_face_cell
  const int              dn_face,
        PDM_g_num_t     *dface_cell,
        int            **dual_graph_idx,
-       PDM_g_num_t    **dual_graph
+       PDM_g_num_t    **dual_graph,
+ const int              compute_dcell_face,
+       int            **dcell_face_idx,
+       PDM_g_num_t    **dcell_face
 )
 {
   int i_rank;
@@ -207,8 +210,8 @@ PDM_para_graph_dual_from_face_cell
   PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_size(comm, &n_rank);
 
-  // printf("dn_cell : %d\n", dn_cell);
-  // printf("dn_face : %d\n", dn_face);
+  printf("dn_cell : %d\n", dn_cell);
+  printf("dn_face : %d\n", dn_face);
 
   /*
    * We need for each cell the connectivity with other cells ( in global numbering )
@@ -217,31 +220,80 @@ PDM_para_graph_dual_from_face_cell
    */
   PDM_g_num_t* dcell_ln_to_gn = (PDM_g_num_t *) malloc( 2 * dn_face * sizeof(PDM_g_num_t));
   PDM_g_num_t* dcell_opp      = (PDM_g_num_t *) malloc( 2 * dn_face * sizeof(PDM_g_num_t));
+  PDM_g_num_t* dface_g;
 
-  int dn_face_int = 0;
+  int* face_strid = (int *) malloc(sizeof(int) * 2 * dn_face);
+  int* cell_strid = (int *) malloc(sizeof(int) * 2 * dn_face);
+  // for(int i_face = 0; i_face < dn_face_int; ++i_face ){
+  //   face_strid[i_face] = 1;
+  // }
+
+  if(compute_dcell_face){
+    dface_g = (PDM_g_num_t *) malloc( 2 * dn_face * sizeof(PDM_g_num_t));
+  }
+
+  int shift_face_g  = 1; //face_distribution[i_rank]; // Entre 1 et N
+  int dn_face_int   = 0;
+  int idx_data_face = 0;
+  int idx_data_cell = 0;
   for(int i_face = 0; i_face < dn_face; ++i_face){
+
     PDM_g_num_t g_cell1 = dface_cell[2*i_face  ];
     PDM_g_num_t g_cell2 = dface_cell[2*i_face+1];
 
+    dcell_ln_to_gn[dn_face_int]   = g_cell1;
+
+    if(compute_dcell_face){
+      PDM_g_num_t g_face        = shift_face_g + i_face ;
+      face_strid[dn_face_int]   = 1;
+      dface_g[idx_data_face++]  = g_face;
+    }
+
     if(g_cell2 > 0){
-      dcell_ln_to_gn[dn_face_int]   = g_cell1;
-      dcell_opp[dn_face_int++]      = g_cell2;
+      cell_strid[dn_face_int++]   = 1;
+      dcell_opp[idx_data_cell++]  = g_cell2;
 
-      dcell_ln_to_gn[dn_face_int]   = g_cell2;
-      dcell_opp[dn_face_int++]      = g_cell1;
+      if(compute_dcell_face){
+        PDM_g_num_t g_face        = shift_face_g + i_face;
+        face_strid[dn_face_int]   = 1;
+        dface_g[idx_data_face++]  = g_face;
+      }
 
+      cell_strid[dn_face_int]       = 1;
+      dcell_ln_to_gn[dn_face_int++] = g_cell2;
+      dcell_opp[idx_data_cell++]    = g_cell1;
+
+
+    } else {
+      cell_strid[dn_face_int++] = 0;
     }
 
   }
 
-  // printf("dcell_ln_to_gn::");
-  // for(int i = 0; i < dn_face_int; ++i){
-  //   printf("%d ", dcell_ln_to_gn[i]);
-  // }
-  // printf("\n");
+  printf("dcell_ln_to_gn::");
+  for(int i = 0; i < dn_face_int; ++i){
+    printf("%d ", dcell_ln_to_gn[i]);
+  }
+  printf("\n");
 
-  dcell_ln_to_gn = realloc(dcell_ln_to_gn, dn_face_int * sizeof(PDM_g_num_t) );
-  dcell_opp      = realloc(dcell_opp     , dn_face_int * sizeof(PDM_g_num_t) );
+  printf("cell_strid::");
+  for(int i = 0; i < dn_face_int; ++i){
+    printf("%d ", cell_strid[i]);
+  }
+  printf("\n");
+
+  printf("dcell_opp::");
+  for(int i = 0; i < idx_data_cell; ++i){
+    printf("%d ", dcell_opp[i]);
+  }
+  printf("\n");
+
+  printf("idx_data_cell::%d\n", idx_data_cell);
+  printf("dn_face_int  ::%d\n", dn_face_int);
+  printf("dn_face      ::%d\n", dn_face);
+
+  dcell_ln_to_gn = realloc(dcell_ln_to_gn, dn_face_int   * sizeof(PDM_g_num_t) );
+  dcell_opp      = realloc(dcell_opp     , idx_data_cell * sizeof(PDM_g_num_t) );
 
   /*
    * Initialize part_to_block for the computation of cell_cell
@@ -263,10 +315,6 @@ PDM_para_graph_dual_from_face_cell
    * We exchange the dcell_ln_to_gn
    *    NB : Eric, on pourrai faire un part_to_block stride cst --> Stride variable ?
    */
-  int* face_strid = (int *) malloc(sizeof(int) * dn_face_int);
-  for(int i_face = 0; i_face < dn_face_int; ++i_face ){
-    face_strid[i_face] = 1;
-  }
 
   int* cell_cell_n = NULL;
 
@@ -274,7 +322,7 @@ PDM_para_graph_dual_from_face_cell
                           sizeof(PDM_g_num_t),
                           PDM_STRIDE_VAR,
                           1,
-                          &face_strid,
+                          &cell_strid,
                 (void **) &dcell_opp,
                           &cell_cell_n,
                 (void **) &*dual_graph);
@@ -282,10 +330,52 @@ PDM_para_graph_dual_from_face_cell
   //
   const int n_cell_block = PDM_part_to_block_n_elt_block_get (ptb_dual);
 
+
+  if(compute_dcell_face){
+
+    int* cell_face_n = NULL;
+    PDM_part_to_block_exch (ptb_dual,
+                            sizeof(PDM_g_num_t),
+                            PDM_STRIDE_VAR,
+                            1,
+                            &face_strid,
+                  (void **) &dface_g,
+                            &cell_face_n,
+                  (void **) &*dcell_face);
+
+
+    if( 1 == 1){
+      printf("n_cell_block:: %d \n", n_cell_block);
+      int idx_block = 0;
+      for(int i = 0; i < n_cell_block; ++i){
+        printf(" cell_face_n = %d ---> ", cell_face_n[i]);
+        for(int i_data = 0; i_data < cell_face_n[i]; ++i_data){
+          printf("%d ", dcell_face[0][idx_block]);
+          idx_block++;
+        }
+        printf("\n");
+      }
+    }
+
+    /*
+     * Post treatment
+     */
+    *dcell_face_idx = (int*        ) malloc( sizeof(int        ) * (3*n_cell_block+1));
+    int* _dcell_face_idx = (int * ) *dcell_face_idx;
+
+    _dcell_face_idx[0] = 0;
+    for(int i_cell = 0; i_cell < n_cell_block; ++i_cell){
+      _dcell_face_idx[i_cell+1] = _dcell_face_idx[i_cell] + cell_face_n[i_cell];
+    }
+    free(cell_face_n);
+
+  }
+
+
   /*
    * Panic verbose
    */
-  if( 0 == 1){
+  if( 1 == 1){
     printf("n_cell_block:: %d \n", n_cell_block);
     int idx_block = 0;
     for(int i = 0; i < n_cell_block; ++i){
@@ -298,12 +388,17 @@ PDM_para_graph_dual_from_face_cell
     }
   }
 
+
   /*
    * Exchange is done we can free direclty memory
    */
   free(dcell_ln_to_gn);
   free(face_strid);
+  free(cell_strid);
   free(dcell_opp);
+  if(compute_dcell_face){
+    free(dface_g);
+  }
 
   /*
    * Allocate and setup convenient pointeur
@@ -331,7 +426,7 @@ PDM_para_graph_dual_from_face_cell
   /*
    * Panic verbose
    */
-  if( 0 == 1 ){
+  if( 1 == 1 ){
     printf("n_cell_block:: %d \n", n_cell_block);
     for(int i = 0; i < n_cell_block; ++i){
       printf(" _dual_graph_idx = %d ---> \n", _dual_graph_idx[i]);
@@ -343,6 +438,7 @@ PDM_para_graph_dual_from_face_cell
     }
   }
 
+  /* Scoth begin at 0 even if we put base value to 1 */
   for(int i = 0; i < n_cell_block; ++i){
     for(int i_data = _dual_graph_idx[i]; i_data < _dual_graph_idx[i+1]; ++i_data){
       _dual_graph[i_data] = _dual_graph[i_data] - 1;
