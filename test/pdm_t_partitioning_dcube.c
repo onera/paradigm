@@ -323,12 +323,15 @@ int main(int argc, char *argv[])
   int** pcell_face_idx;
   int** pcell_face;
   int** pcell_ln_to_gn;
+  int*  n_cell;
 
-  PDM_generate_part_cell_ln_to_gn(comm,
-                                  part_distribution,
-                                  cell_distribution,
-                                  cell_part,
-                      (int ***)  &pcell_ln_to_gn);
+  int n_res_part = PDM_generate_part_cell_ln_to_gn(comm,
+                                                   part_distribution,
+                                                   cell_distribution,
+                                                   cell_part,
+                                       (int ** )  &n_cell,
+                                       (int ***)  &pcell_ln_to_gn);
+
 
 
 
@@ -382,6 +385,11 @@ int main(int argc, char *argv[])
   free(cell_distribution);
   free(face_distribution);
   free(part_distribution);
+  for(int i_part = 0; i_part < n_res_part; ++i_part){
+    free(pcell_ln_to_gn[i_part]);
+  }
+  free(pcell_ln_to_gn);
+  free(n_cell);
 
 
 

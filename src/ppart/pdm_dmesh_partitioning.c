@@ -120,29 +120,17 @@ _get_from_id
  * Public function definitions
  *============================================================================*/
 
-// PDM_generate_part_cell_ln_to_gn
-// (
-//  const PDM_MPI_Comm    comm,
-//  PDM_g_num_t          *part_distribution,
-//  PDM_g_num_t          *face_distribution,
-//  int                  *dface_vtx_idx,
-//  PDM_g_num_t          *dface_vtx,
-//  int                  *cell_part,
-//  int                ***pface_vtx_idx,
-//  int                ***pface_vtx,
-//  int                ***pvtx_ln_to_gn
-// )
-
 /**
  *  \brief Setup cell_ln_to_gn
  */
-void
+int
 PDM_generate_part_cell_ln_to_gn
 (
  const PDM_MPI_Comm    comm,
  PDM_g_num_t          *part_distribution,
  PDM_g_num_t          *cell_distribution,
  int                  *cell_part,
+ int                 **n_elmts,
  PDM_g_num_t        ***pcell_ln_to_gn
 )
 {
@@ -221,7 +209,13 @@ PDM_generate_part_cell_ln_to_gn
   /*
    *  Post-traitement
    */
+  *n_elmts        = (int *         ) malloc( sizeof(int          ) * n_part_block);
   *pcell_ln_to_gn = (PDM_g_num_t **) malloc( sizeof(PDM_g_num_t *) * n_part_block);
+
+  /*
+   *  Shortcut
+   */
+  int*          _n_elmts       = (int *) *n_elmts;
   PDM_g_num_t** _cell_ln_to_gn = (PDM_g_num_t ** ) *pcell_ln_to_gn;
 
   int idx_part = 0;
@@ -245,6 +239,7 @@ PDM_generate_part_cell_ln_to_gn
 
     /* For cell the size is the same - No compression */
     assert(idx_new_cell ==  pcell_stri[i_part]);
+    _n_elmts[i_part] = idx_new_cell;
 
     /* Realloc */
     idx_part += pcell_stri[i_part];
@@ -268,6 +263,9 @@ PDM_generate_part_cell_ln_to_gn
   free(pcell_ln_to_gn_tmp);
   free(dpart_ln_to_gn);
   free(part_distribution_ptb);
+
+  return n_part_block;
+
 }
 
 
@@ -531,7 +529,7 @@ PDM_dmesh_partitioning_set_from_dmesh
  const int dmesh_id
 )
 {
-  _dmesh_partitioning_t* _dmp = _get_from_id(dmesh_partitioning_id);
+  // _dmesh_partitioning_t* _dmp = _get_from_id(dmesh_partitioning_id);
   // ---> Depuis l'interface du dmesh
   // Recopie
   // PDM_dmesh_dims_get(dmesh_id, &)
