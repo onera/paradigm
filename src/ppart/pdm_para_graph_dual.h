@@ -34,6 +34,21 @@ extern "C" {
  * Public function prototypes
  *============================================================================*/
 
+PDM_g_num_t*
+PDM_compute_entity_distribution_long
+(
+ const PDM_MPI_Comm     comm,
+ const int              dn_entity
+);
+
+
+int*
+PDM_compute_entity_distribution
+(
+ const PDM_MPI_Comm     comm,
+ const int              dn_entity
+);
+
 void
 PDM_compress_connectivity
 (
@@ -68,8 +83,8 @@ void
 PDM_para_graph_dual_from_face_cell
 (
  const PDM_MPI_Comm     comm,
- const int              dn_cell,
- const int              dn_face,
+       PDM_g_num_t     *cell_distribution,
+       PDM_g_num_t     *face_distribution,
        PDM_g_num_t     *dface_cell,
        int            **dual_graph_idx,
        PDM_g_num_t    **dual_graph,
