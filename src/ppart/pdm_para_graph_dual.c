@@ -466,7 +466,7 @@ PDM_para_graph_dual_from_face_cell
   /*
    * Panic verbose
    */
-  if( 1 == 1 ){
+  if( 0 == 1 ){
     printf("n_cell_block:: %d \n", n_cell_block);
     for(int i = 0; i < n_cell_block; ++i){
       printf(" _dual_graph_idx = %d ---> \n", _dual_graph_idx[i]);
