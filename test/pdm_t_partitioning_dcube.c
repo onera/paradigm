@@ -260,17 +260,20 @@ int main(int argc, char *argv[])
   /*
    *  Create mesh partitions
    */
+  PDM_g_num_t* cell_distribution = PDM_compute_entity_distribution_long(comm, dn_cell);
+  PDM_g_num_t* face_distribution = PDM_compute_entity_distribution_long(comm, dn_face);
+  PDM_g_num_t* part_distribution = PDM_compute_entity_distribution_long(comm, n_part);
 
   /*
-   * Compute dual
+   * Compute dual graph
    */
   int* dual_graph_idx;
   PDM_g_num_t* dual_graph;
   int* dcell_face_idx;
   PDM_g_num_t* dcell_face;
   PDM_para_graph_dual_from_face_cell(comm,
-                                     dn_cell,
-                                     dn_face,
+                                     cell_distribution,
+                                     face_distribution,
                                      dface_cell,
                      (int        **) &dual_graph_idx,
                      (PDM_g_num_t**) &dual_graph,
@@ -288,7 +291,7 @@ int main(int argc, char *argv[])
     dcell_weight[i] = dual_graph_idx[i+1] - dual_graph_idx[i];
   }
 
-  if( 1 == 1 ){
+  if( 0 == 1 ){
     printf("n_cell_block:: %d \n", dn_cell);
     for(int i = 0; i < dn_cell; ++i){
       printf(" dual_graph_idx = %d ---> \n", dual_graph_idx[i]);
@@ -317,6 +320,18 @@ int main(int argc, char *argv[])
    *    Idée : faire un part_to_block avec ln_to_gn == cell_part et distribution imposé = dpart_proc
    *    On devrait recupérer n_part block de données avec le ln_to_gn !
    */
+  int** pcell_face_idx;
+  int** pcell_face;
+  int** pcell_ln_to_gn;
+  PDM_generate_part_cell_ln_to_gn(comm,
+                                  part_distribution,
+                                  cell_distribution,
+                                  dcell_face_idx,
+                                  dcell_face,
+                                  cell_part,
+                      (int ***)  &pcell_face_idx,
+                      (int ***)  &pcell_face,
+                      (int ***)  &pcell_ln_to_gn);
 
 
   /*
@@ -354,6 +369,9 @@ int main(int argc, char *argv[])
   free(dcell_face);
   free(dcell_face_idx);
   free(dcell_weight);
+  free(cell_distribution);
+  free(face_distribution);
+  free(part_distribution);
 
 
 

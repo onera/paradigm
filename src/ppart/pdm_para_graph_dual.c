@@ -87,12 +87,11 @@ extern "C" {
  * Public function definitions
  *============================================================================*/
 
-
-int*
-PDM_compute_partitioning_mapping
+PDM_g_num_t*
+PDM_compute_entity_distribution_long
 (
  const PDM_MPI_Comm     comm,
- const int              n_part
+ const int              dn_entity
 )
 {
   int i_rank;
@@ -101,25 +100,61 @@ PDM_compute_partitioning_mapping
   PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_size(comm, &n_rank);
 
-  int* dpart_proc = (int *) malloc( (n_rank+1) * sizeof(int));
+  PDM_g_num_t* dentity_proc = (PDM_g_num_t *) malloc( (n_rank+1) * sizeof(PDM_g_num_t));
 
   /*
    * Exchange
    */
-  PDM_MPI_Allgather((void *) &n_part,
+  PDM_g_num_t _dn_entity = (PDM_g_num_t) dn_entity;
+  PDM_MPI_Allgather((void *) &_dn_entity,
                     1,
-                    PDM_MPI_INT,
-                    (void *) (&dpart_proc[1]),
+                    PDM__PDM_MPI_G_NUM,
+                    (void *) (&dentity_proc[1]),
                     1,
                     PDM_MPI_INT,
                     comm);
 
-  dpart_proc[0] = 0;
+  dentity_proc[0] = 1;
   for (int i = 1; i < n_rank+1; i++) {
-    dpart_proc[i] = dpart_proc[i] + dpart_proc[i-1];
+    dentity_proc[i] = dentity_proc[i] + dentity_proc[i-1];
   }
 
-  return dpart_proc;
+  return dentity_proc;
+}
+
+
+int*
+PDM_compute_entity_distribution
+(
+ const PDM_MPI_Comm     comm,
+ const int              dn_entity
+)
+{
+  int i_rank;
+  int n_rank;
+
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  PDM_MPI_Comm_size(comm, &n_rank);
+
+  int* dentity_proc = (int *) malloc( (n_rank+1) * sizeof(int));
+
+  /*
+   * Exchange
+   */
+  PDM_MPI_Allgather((void *) &dn_entity,
+                    1,
+                    PDM_MPI_INT,
+                    (void *) (&dentity_proc[1]),
+                    1,
+                    PDM_MPI_INT,
+                    comm);
+
+  dentity_proc[0] = 1;
+  for (int i = 1; i < n_rank+1; i++) {
+    dentity_proc[i] = dentity_proc[i] + dentity_proc[i-1];
+  }
+
+  return dentity_proc;
 }
 
 
@@ -194,8 +229,8 @@ void
 PDM_para_graph_dual_from_face_cell
 (
  const PDM_MPI_Comm     comm,
- const int              dn_cell,
- const int              dn_face,
+       PDM_g_num_t     *cell_distribution,
+       PDM_g_num_t     *face_distribution,
        PDM_g_num_t     *dface_cell,
        int            **dual_graph_idx,
        PDM_g_num_t    **dual_graph,
@@ -210,8 +245,10 @@ PDM_para_graph_dual_from_face_cell
   PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_size(comm, &n_rank);
 
-  printf("dn_cell : %d\n", dn_cell);
-  printf("dn_face : %d\n", dn_face);
+  int dn_face = face_distribution[i_rank+1] -  face_distribution[i_rank];
+  int dn_cell = cell_distribution[i_rank+1] -  cell_distribution[i_rank];
+  // printf("dn_cell : %d\n", dn_cell);
+  // printf("dn_face : %d\n", dn_face);
 
   /*
    * We need for each cell the connectivity with other cells ( in global numbering )
@@ -232,7 +269,7 @@ PDM_para_graph_dual_from_face_cell
     dface_g = (PDM_g_num_t *) malloc( 2 * dn_face * sizeof(PDM_g_num_t));
   }
 
-  int shift_face_g  = 1; //face_distribution[i_rank]; // Entre 1 et N
+  int shift_face_g  = face_distribution[i_rank]; // Entre 1 et N
   int dn_face_int   = 0;
   int idx_data_face = 0;
   int idx_data_cell = 0;
@@ -270,27 +307,30 @@ PDM_para_graph_dual_from_face_cell
 
   }
 
-  printf("dcell_ln_to_gn::");
-  for(int i = 0; i < dn_face_int; ++i){
-    printf("%d ", dcell_ln_to_gn[i]);
-  }
-  printf("\n");
+  if( 0 == 1){
+    printf("dcell_ln_to_gn::");
+    for(int i = 0; i < dn_face_int; ++i){
+      printf("%d ", dcell_ln_to_gn[i]);
+    }
+    printf("\n");
 
-  printf("cell_strid::");
-  for(int i = 0; i < dn_face_int; ++i){
-    printf("%d ", cell_strid[i]);
-  }
-  printf("\n");
+    printf("cell_strid::");
+    for(int i = 0; i < dn_face_int; ++i){
+      printf("%d ", cell_strid[i]);
+    }
+    printf("\n");
 
-  printf("dcell_opp::");
-  for(int i = 0; i < idx_data_cell; ++i){
-    printf("%d ", dcell_opp[i]);
-  }
-  printf("\n");
+    printf("dcell_opp::");
+    for(int i = 0; i < idx_data_cell; ++i){
+      printf("%d ", dcell_opp[i]);
+    }
+    printf("\n");
 
-  printf("idx_data_cell::%d\n", idx_data_cell);
-  printf("dn_face_int  ::%d\n", dn_face_int);
-  printf("dn_face      ::%d\n", dn_face);
+    printf("idx_data_cell::%d\n", idx_data_cell);
+    printf("dn_face_int  ::%d\n", dn_face_int);
+    printf("dn_face      ::%d\n", dn_face);
+  }
+
 
   dcell_ln_to_gn = realloc(dcell_ln_to_gn, dn_face_int   * sizeof(PDM_g_num_t) );
   dcell_opp      = realloc(dcell_opp     , idx_data_cell * sizeof(PDM_g_num_t) );
@@ -344,7 +384,7 @@ PDM_para_graph_dual_from_face_cell
                   (void **) &*dcell_face);
 
 
-    if( 1 == 1){
+    if( 0 == 1){
       printf("n_cell_block:: %d \n", n_cell_block);
       int idx_block = 0;
       for(int i = 0; i < n_cell_block; ++i){
