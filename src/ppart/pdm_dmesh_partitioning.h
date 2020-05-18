@@ -98,14 +98,23 @@ PDM_generate_part_cell_ln_to_gn
  const PDM_MPI_Comm    comm,
  PDM_g_num_t          *part_distribution,
  PDM_g_num_t          *cell_distribution,
+ int                  *cell_part,
+ PDM_g_num_t        ***pcell_ln_to_gn
+);
+
+void
+PDM_generate_part_entity_ln_to_gn
+(
+ const PDM_MPI_Comm    comm,
+ PDM_g_num_t          *part_distribution,
+ PDM_g_num_t          *cell_distribution,
  int                  *dcell_face_idx,
  PDM_g_num_t          *dcell_face,
  int                  *cell_part,
  int                ***pcell_face_idx,
  int                ***pcell_face,
- int                ***pcell_ln_to_gn
+ PDM_g_num_t        ***pcell_ln_to_gn
 );
-
 
 #ifdef __cplusplus
 }

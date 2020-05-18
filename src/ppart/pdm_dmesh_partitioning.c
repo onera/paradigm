@@ -10,6 +10,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <assert.h>
 
 /*----------------------------------------------------------------------------
  *  Local headers
@@ -119,6 +120,19 @@ _get_from_id
  * Public function definitions
  *============================================================================*/
 
+// PDM_generate_part_cell_ln_to_gn
+// (
+//  const PDM_MPI_Comm    comm,
+//  PDM_g_num_t          *part_distribution,
+//  PDM_g_num_t          *face_distribution,
+//  int                  *dface_vtx_idx,
+//  PDM_g_num_t          *dface_vtx,
+//  int                  *cell_part,
+//  int                ***pface_vtx_idx,
+//  int                ***pface_vtx,
+//  int                ***pvtx_ln_to_gn
+// )
+
 /**
  *  \brief Setup cell_ln_to_gn
  */
@@ -128,12 +142,8 @@ PDM_generate_part_cell_ln_to_gn
  const PDM_MPI_Comm    comm,
  PDM_g_num_t          *part_distribution,
  PDM_g_num_t          *cell_distribution,
- int                  *dcell_face_idx,
- PDM_g_num_t          *dcell_face,
  int                  *cell_part,
- int                ***pcell_face_idx,
- int                ***pcell_face,
- int                ***pcell_ln_to_gn
+ PDM_g_num_t        ***pcell_ln_to_gn
 )
 {
   printf("PDM_generate_part_cell_ln_to_gn\n");
@@ -150,35 +160,19 @@ PDM_generate_part_cell_ln_to_gn
    * On recréer un tableau pourtant dans scotch et metis le part est en int64 ...
    *     Il faudrait changer le ext_dependancies ..
    */
-
   PDM_g_num_t* dpart_ln_to_gn = (PDM_g_num_t * ) malloc( sizeof(PDM_g_num_t) * dn_cell );
-
   for(int i = 0; i < dn_cell; ++i){
     dpart_ln_to_gn[i] = (PDM_g_num_t) cell_part[i] + 1;
   }
 
   PDM_g_num_t* part_distribution_ptb = (PDM_g_num_t * ) malloc( sizeof(PDM_g_num_t) * (n_rank+1) );
-
   for(int i = 0; i < n_rank+1; ++i){
     part_distribution_ptb[i] = part_distribution[i] - 1;
   }
 
-  // printf("part_distribution::");
-  // for(int i = 0; i < n_rank+1; ++i){
-  //   printf("%d ", part_distribution[i]);
-  // }
-  // printf("\n");
-
-  // printf("cell_distribution::");
-  // for(int i = 0; i < n_rank+1; ++i){
-  //   printf("%d ", cell_distribution[i]);
-  // }
-  // printf("\n");
-
   /*
    * The tricks is to use part_to_block with the part_distribution to have n_part stride of data
    */
-
   PDM_part_to_block_t *ptb_partition =
    PDM_part_to_block_create2(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                              PDM_PART_TO_BLOCK_POST_MERGE,
@@ -190,10 +184,154 @@ PDM_generate_part_cell_ln_to_gn
                              comm);
 
   const int n_part_block = PDM_part_to_block_n_elt_block_get (ptb_partition);
+
+  /*
+   * Generate cell_ln_to_gn
+   */
+  int* dcell_stri = (int *) malloc( sizeof(int) * dn_cell );
+  PDM_g_num_t* dcell_ln_to_gn = (PDM_g_num_t * ) malloc( sizeof(PDM_g_num_t) * dn_cell );
+
+  PDM_g_num_t shift_g = cell_distribution[i_rank];
+  for(int i = 0; i < dn_cell; ++i){
+    dcell_stri[i] = 1;
+    dcell_ln_to_gn[i] = (PDM_g_num_t) shift_g + i;
+  }
+
+  /*
+   * Exchange
+   */
+  int*         pcell_stri         = NULL;
+  PDM_g_num_t* pcell_ln_to_gn_tmp = NULL;
+
+  PDM_part_to_block_exch (ptb_partition,
+                          sizeof(PDM_g_num_t),
+                          PDM_STRIDE_VAR,
+                          1,
+                          &dcell_stri,
+                (void **) &dcell_ln_to_gn,
+                          &pcell_stri,
+                (void **) &pcell_ln_to_gn_tmp);
+
+  /*
+   * Free
+   */
+  free(dcell_stri);
+  free(dcell_ln_to_gn);
+
+  /*
+   *  Post-traitement
+   */
+  *pcell_ln_to_gn = (PDM_g_num_t **) malloc( sizeof(PDM_g_num_t *) * n_part_block);
+  PDM_g_num_t** _cell_ln_to_gn = (PDM_g_num_t ** ) *pcell_ln_to_gn;
+
+  int idx_part = 0;
+  for(int i_part = 0; i_part < n_part_block; ++i_part){
+
+    /* Suralloc */
+    _cell_ln_to_gn[i_part] = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) * pcell_stri[i_part]);
+    PDM_g_num_t* _part_ln_to_gn = (PDM_g_num_t *) _cell_ln_to_gn[i_part];
+
+    PDM_sort_long(&pcell_ln_to_gn_tmp[idx_part], NULL, pcell_stri[i_part]);
+
+    /* Compress */
+    int idx_new_cell = 0;
+    PDM_g_num_t last_value = 0; // 0 est une bonne valeur car les numero absolu son [N, -1] - |1, N] :p !
+    for(int i_cell = 0; i_cell < pcell_stri[i_part]; ++i_cell){
+      if(last_value != pcell_ln_to_gn_tmp[idx_part+i_cell]){
+        last_value = pcell_ln_to_gn_tmp[idx_part+i_cell];
+        _part_ln_to_gn[idx_new_cell++] = last_value;
+      }
+    }
+
+    /* For cell the size is the same - No compression */
+    assert(idx_new_cell ==  pcell_stri[i_part]);
+
+    /* Realloc */
+    idx_part += pcell_stri[i_part];
+
+    /*
+     * Panic verbose
+     */
+    if(0 == 1){
+      printf(" _part_ln_to_gn = ");
+      for(int i_data = 0; i_data < idx_new_cell; ++i_data){
+        printf("%d ", _part_ln_to_gn[i_data]);
+      }
+      printf("\n");
+    }
+
+  }
+
+  PDM_part_to_block_free (ptb_partition);
+
+  free(pcell_stri);
+  free(pcell_ln_to_gn_tmp);
+  free(dpart_ln_to_gn);
+  free(part_distribution_ptb);
+}
+
+
+
+/**
+ *  \brief Setup cell_ln_to_gn
+ */
+void
+PDM_generate_part_entity_ln_to_gn
+(
+ const PDM_MPI_Comm    comm,
+ PDM_g_num_t          *part_distribution,
+ PDM_g_num_t          *cell_distribution,
+ int                  *dcell_face_idx,
+ PDM_g_num_t          *dcell_face,
+ int                  *cell_part,
+ int                ***pcell_face_idx,
+ int                ***pcell_face,
+ PDM_g_num_t        ***pcell_ln_to_gn
+)
+{
+  printf("PDM_generate_part_entity_ln_to_gn\n");
+  int i_rank;
+  int n_rank;
+
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  PDM_MPI_Comm_size(comm, &n_rank);
+
+  int dn_part = part_distribution[i_rank+1] -  part_distribution[i_rank];
+  int dn_cell = cell_distribution[i_rank+1] -  cell_distribution[i_rank];
+
+  /*
+   * On recréer un tableau pourtant dans scotch et metis le part est en int64 ...
+   *     Il faudrait changer le ext_dependancies ..
+   */
+  PDM_g_num_t* dpart_ln_to_gn = (PDM_g_num_t * ) malloc( sizeof(PDM_g_num_t) * dn_cell );
+  for(int i = 0; i < dn_cell; ++i){
+    dpart_ln_to_gn[i] = (PDM_g_num_t) cell_part[i] + 1;
+  }
+
+  PDM_g_num_t* part_distribution_ptb = (PDM_g_num_t * ) malloc( sizeof(PDM_g_num_t) * (n_rank+1) );
+  for(int i = 0; i < n_rank+1; ++i){
+    part_distribution_ptb[i] = part_distribution[i] - 1;
+  }
+
+  /*
+   * The tricks is to use part_to_block with the part_distribution to have n_part stride of data
+   */
+  PDM_part_to_block_t *ptb_partition =
+   PDM_part_to_block_create2(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                             PDM_PART_TO_BLOCK_POST_MERGE,
+                             1.,
+                             &dpart_ln_to_gn,
+                              part_distribution_ptb,
+                             &dn_cell,
+                             1,
+                             comm);
+
+  const int n_part_block = PDM_part_to_block_n_elt_block_get (ptb_partition);
+
   /*
    * cell_ln_to_gn
    */
-  int* dcell_stri = (int * ) malloc( sizeof(int) * dn_cell );
+  int* dcell_stri = (int *) malloc( sizeof(int) * dn_cell );
   PDM_g_num_t* dcell_ln_to_gn = (PDM_g_num_t * ) malloc( sizeof(PDM_g_num_t) * dn_cell );
 
   PDM_g_num_t shift_g = cell_distribution[i_rank];
@@ -216,6 +354,10 @@ PDM_generate_part_cell_ln_to_gn
   free(dcell_stri);
 
   printf("n_part_block::%d\n",n_part_block );
+
+  /*
+   * Panic verbose
+   */
   if(0 == 1){
     int idx_block = 0;
     for(int i = 0; i < n_part_block; ++i){
@@ -250,24 +392,89 @@ PDM_generate_part_cell_ln_to_gn
                 (void **) &cell_face);
   printf("PDM_part_to_block_exch end \n");
 
+  /*
+   * Panic verbose
+   */
+  // if(1 == 1){
+  //   int idx_block = 0;
+  //   for(int i = 0; i < n_part_block; ++i){
+  //     printf(" pcell_stri = %d ---> ", cell_face_n[i]);
+  //     for(int i_data = 0; i_data < cell_face_n[i]; ++i_data){
+  //       printf("%d ", cell_face[idx_block]);
+  //       idx_block++;
+  //     }
+  //     printf("\n");
+  //   }
+  // }
 
+  /*
+   * Sort receving array
+   */
   int idx_block = 0;
   for(int i = 0; i < n_part_block; ++i){
-    printf(" pcell_stri = %d ---> ", cell_face_n[i]);
-    for(int i_data = 0; i_data < cell_face_n[i]; ++i_data){
-      printf("%d ", cell_face[idx_block]);
-      idx_block++;
+    printf(" Tri %d \n", cell_face_n[i]);
+    PDM_sort_long(&cell_face[idx_block] , NULL, cell_face_n[i]);
+    idx_block += cell_face_n[i];
+  }
+
+  /*
+   * Panic verbose
+   */
+  if(1 == 1){
+    int idx_block = 0;
+    for(int i = 0; i < n_part_block; ++i){
+      printf(" pcell_stri = %d ---> ", cell_face_n[i]);
+      for(int i_data = 0; i_data < cell_face_n[i]; ++i_data){
+        printf("%d ", cell_face[idx_block]);
+        idx_block++;
+      }
+      printf("\n");
+    }
+  }
+
+  /*
+   *  In the sort cell_face we have multiple same global numbering face
+   *    We need to unique this list and create the face numbering for each part
+   *    Attention au signe si cell_face signé
+   *    La fonction pourrait en meme temps repasser en numero local et en inplace
+   */
+  PDM_g_num_t** part_face_ln_to_gn = (PDM_g_num_t **) malloc( sizeof(PDM_g_num_t *) * n_part_block);
+  idx_block = 0;
+  for(int i_part = 0; i_part < n_part_block; ++i_part){
+
+    /* Suralloc */
+    part_face_ln_to_gn[i_part] = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) * cell_face_n[i_part]);
+
+    PDM_sort_long(&cell_face[idx_block], NULL, cell_face_n[i_part]);
+
+    /* Compress */
+    int idx_new_face = 0;
+    // abort();
+    PDM_g_num_t last_value = 0; // 0 est une bonne valeur car les numero absolu son [N, -1] - |1, N] :p !
+    for(int i_face = 0; i_face < cell_face_n[i_part]; ++i_face){
+      if(last_value != cell_face[idx_block+i_face]){
+        last_value = cell_face[idx_block+i_face];
+        part_face_ln_to_gn[i_part][idx_new_face++] = last_value;
+      }
+    }
+
+    printf(" part_face_ln_to_gn = ");
+    for(int i_data = 0; i_data < idx_new_face; ++i_data){
+      printf("%d ", part_face_ln_to_gn[i_part][i_data]);
     }
     printf("\n");
+
+    /* Realloc */
+    idx_block += cell_face_n[i_part];
+
   }
+
 
   /*
    * Si besoin du cell_face on doit faire un echange pour connaitre le nombre d'element par faces
    *    --> Pas besoin du cell_face tout le temps non ?
    */
-
-
-
+  // PDM_sort_long();
 
 
   PDM_part_to_block_free (ptb_partition);
@@ -275,6 +482,10 @@ PDM_generate_part_cell_ln_to_gn
   free(dpart_ln_to_gn);
   free(dcell_face_n);
   free(part_distribution_ptb);
+  for(int i_part = 0; i_part < n_part_block; ++i_part){
+    free(part_face_ln_to_gn[i_part]);
+  }
+  free(part_face_ln_to_gn);
 }
 
 
