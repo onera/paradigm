@@ -72,7 +72,10 @@ PDM_para_graph_dual_from_face_cell
  const int              dn_face,
        PDM_g_num_t     *dface_cell,
        int            **dual_graph_idx,
-       PDM_g_num_t    **dual_graph
+       PDM_g_num_t    **dual_graph,
+ const int              compute_dcell_face,
+       int            **dcell_face_idx,
+       PDM_g_num_t    **dcell_face
 );
 
 

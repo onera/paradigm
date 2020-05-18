@@ -266,12 +266,17 @@ int main(int argc, char *argv[])
    */
   int* dual_graph_idx;
   PDM_g_num_t* dual_graph;
+  int* dcell_face_idx;
+  PDM_g_num_t* dcell_face;
   PDM_para_graph_dual_from_face_cell(comm,
                                      dn_cell,
                                      dn_face,
                                      dface_cell,
                      (int        **) &dual_graph_idx,
-                     (PDM_g_num_t**) &dual_graph);
+                     (PDM_g_num_t**) &dual_graph,
+                                     1,
+                     (int        **) &dcell_face_idx,
+                     (PDM_g_num_t**) &dcell_face);
 
   /*
    * Split it !!! CAUTION dn_cell can be different of the size of dual graph !!!
@@ -300,7 +305,7 @@ int main(int argc, char *argv[])
   // PDM_split_graph(comm, dual_graph_idx, dual_graph, NULL, cell_part, dn_cell, n_rank);
 
 
-  printf("cell_part::");
+  printf("cell_part[%d]::", dn_cell);
   for(int i = 0; i < dn_cell; ++i){
     printf("%d ", cell_part[i]);
   }
@@ -346,6 +351,8 @@ int main(int argc, char *argv[])
   free(dual_graph_idx);
   free(dual_graph);
   free(cell_part);
+  free(dcell_face);
+  free(dcell_face_idx);
   free(dcell_weight);
 
 
