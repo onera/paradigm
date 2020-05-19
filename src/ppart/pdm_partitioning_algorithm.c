@@ -33,6 +33,7 @@
 #include "pdm_handles.h"
 
 #include "pdm_partitioning_algorithm.h"
+#include "pdm_distrib.h"
 // #include "pdm_para_graph_dual.h"
 
 /*----------------------------------------------------------------------------
@@ -261,7 +262,7 @@ PDM_generate_part_face_group_ln_to_gn
 
   for(int i_group = 0; i_group < n_face_group; ++i_group) {
     int dn_face_group = dface_group_idx[i_group+1] - dface_group_idx[i_group];
-    face_group_distribution[i_group] = PDM_compute_entity_distribution_long(comm, dn_face_group);
+    face_group_distribution[i_group] = PDM_compute_entity_distribution(comm, dn_face_group);
   }
 
   /*
