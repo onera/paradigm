@@ -261,9 +261,9 @@ int main(int argc, char *argv[])
   /*
    *  Create mesh partitions
    */
-  PDM_g_num_t* cell_distribution = PDM_compute_entity_distribution_long(comm, dn_cell);
-  PDM_g_num_t* face_distribution = PDM_compute_entity_distribution_long(comm, dn_face);
-  PDM_g_num_t* part_distribution = PDM_compute_entity_distribution_long(comm, n_part);
+  PDM_g_num_t* cell_distribution = PDM_compute_entity_distribution(comm, dn_cell);
+  PDM_g_num_t* face_distribution = PDM_compute_entity_distribution(comm, dn_face);
+  PDM_g_num_t* part_distribution = PDM_compute_entity_distribution(comm, n_part);
 
   /*
    * Compute dual graph

@@ -34,21 +34,6 @@ extern "C" {
  * Public function prototypes
  *============================================================================*/
 
-PDM_g_num_t*
-PDM_compute_entity_distribution_long
-(
- const PDM_MPI_Comm     comm,
- const int              dn_entity
-);
-
-
-int*
-PDM_compute_entity_distribution
-(
- const PDM_MPI_Comm     comm,
- const int              dn_entity
-);
-
 void
 PDM_compress_connectivity
 (
@@ -57,22 +42,6 @@ PDM_compress_connectivity
  int         *dual_graph_n,
  int          dn_elt
 );
-
-/**
- *
- * \brief Compute the dual graph in parallel for a face cell connectivity
- *
- */
-// void
-// PDM_para_graph_dual_from_face_cell
-// (
-//  const PDM_MPI_Comm     comm,
-//        PDM_g_num_t     *cell_distribution,
-//        PDM_g_num_t     *face_distribution,
-//        PDM_g_num_t     *dface_cell,
-//        PDM_g_num_t    **dual_graph,
-//        int            **dual_graph_idx
-// );
 
 /**
  *
