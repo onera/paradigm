@@ -371,16 +371,18 @@ PDM_generate_part_face_group_ln_to_gn
   /*
    * Post-treatement
    */
-  int idx_face = 0;
-  for(int i_face = 0; i_face < n_face_block; ++i_face) {
-    printf("[%d] - %d | %d --> ", i_face, blk_stri[i_face], blk_gnum[i_face]);
-    for(int i_data = 0; i_data < blk_stri[i_face]; ++i_data) {
-      printf("%d ", blk_data[idx_face++]);
+  if(1 == 0){
+    int idx_face_d = 0;
+    for(int i_face = 0; i_face < n_face_block; ++i_face) {
+      printf("[%d] - %d | %d --> ", i_face, blk_stri[i_face], blk_gnum[i_face]);
+      for(int i_data = 0; i_data < blk_stri[i_face]; ++i_data) {
+        printf("%d ", blk_data[idx_face_d++]);
+      }
+      printf("\n");
     }
-    printf("\n");
+    printf("n_face_block::%d\n", n_face_block);
+    printf("idx_face_d    ::%d\n", idx_face_d/2);
   }
-  printf("n_face_block::%d\n", n_face_block);
-  printf("idx_face    ::%d\n", idx_face/2);
 
   /*
    * No choice we need to rebuild a proper blk_stri (but not blk_data)
@@ -391,10 +393,10 @@ PDM_generate_part_face_group_ln_to_gn
   }
 
   /* On remet la stri au bonne endroit */
-  idx_face = 0;
+  // int idx_face = 0;
   for(int i_face = 0; i_face < n_face_block; ++i_face) {
     int l_elmt = blk_gnum[i_face] - face_distribution[i_rank];
-    printf("[%d] --> %d \n", i_face, l_elmt);
+    // printf("[%d] --> %d \n", i_face, l_elmt);
     blk_stri_full[l_elmt] = blk_stri[i_face];
   }
   free(blk_stri);
@@ -441,15 +443,17 @@ PDM_generate_part_face_group_ln_to_gn
   /*
    * Post-Treatment
    */
-  for(int i_part = 0; i_part < n_part; ++i_part) {
-    int idx_data_fg = 0;
-    printf("[%d] part_face_group_data --> ", i_part);
-    for(int i_face = 0; i_face < n_faces[i_part]; ++i_face){
-      printf(" \t [%d] ", i_face);
-      for(int i_data = 0; i_data < part_face_group_stri[i_part][i_face]; ++i_data) {
-        printf("%d ", part_face_group_data[i_part][idx_data_fg++]);
+  if(0 == 1){
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      int idx_data_fg = 0;
+      printf("[%d] part_face_group_data --> ", i_part);
+      for(int i_face = 0; i_face < n_faces[i_part]; ++i_face){
+        printf(" \t [%d] ", i_face);
+        for(int i_data = 0; i_data < part_face_group_stri[i_part][i_face]; ++i_data) {
+          printf("%d ", part_face_group_data[i_part][idx_data_fg++]);
+        }
+        printf("\n");
       }
-      printf("\n");
     }
   }
 
@@ -538,26 +542,23 @@ PDM_generate_part_face_group_ln_to_gn
   /*
    * Panic verbose
    */
-  for(int i_part = 0; i_part < n_part; ++i_part) {
-    printf("[%d] Boundary \n", i_part);
-    for(int i_group = 0; i_group < n_face_group; ++i_group){
-      printf("\t [%d]_face_group::", i_group);
-      for(int idx = _face_group_idx[i_part][i_group]; idx < _face_group_idx[i_part][i_group+1]; ++idx){
-        printf("%d ", _face_group[i_part][idx]);
+  if(0 == 1 ){
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      printf("[%d] Boundary \n", i_part);
+      for(int i_group = 0; i_group < n_face_group; ++i_group){
+        printf("\t [%d]_face_group::", i_group);
+        for(int idx = _face_group_idx[i_part][i_group]; idx < _face_group_idx[i_part][i_group+1]; ++idx){
+          printf("%d ", _face_group[i_part][idx]);
+        }
+        printf("\n");
+        printf("\t [%d]_face_group_ln_to_gn::", i_group);
+        for(int idx = _face_group_idx[i_part][i_group]; idx < _face_group_idx[i_part][i_group+1]; ++idx){
+          printf("%d ", _face_group_ln_to_gn[i_part][idx]);
+        }
+        printf("\n");
       }
-      printf("\n");
-      printf("\t [%d]_face_group_ln_to_gn::", i_group);
-      for(int idx = _face_group_idx[i_part][i_group]; idx < _face_group_idx[i_part][i_group+1]; ++idx){
-        printf("%d ", _face_group_ln_to_gn[i_part][idx]);
-      }
-      printf("\n");
-
     }
   }
-
-
-
-
 
   free(count_fg);
   free(blk_stri_full);
@@ -565,6 +566,13 @@ PDM_generate_part_face_group_ln_to_gn
   free(part_data);
   free(part_stri);
   free(blk_data);
+
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    free(part_face_group_stri[i_part]);
+    free(part_face_group_data[i_part]);
+  }
+  free(part_face_group_stri);
+  free(part_face_group_data);
   PDM_part_to_block_free (ptb_fg);
   PDM_block_to_part_free(btp);
   for(int i_group = 0; i_group < n_face_group; ++i_group) {
