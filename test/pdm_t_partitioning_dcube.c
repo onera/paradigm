@@ -369,6 +369,22 @@ int main(int argc, char *argv[])
   /*
    *  Boundary condition (face group )
    */
+  int** pface_ln_to_gn = NULL;
+  PDM_g_num_t** pface_group_ln_to_gn;
+  int** pface_group;
+  int** pface_group_idx;
+  int* n_faces = NULL;
+  PDM_generate_part_face_group_ln_to_gn(comm,
+                                        face_distribution,
+                                        dface_group_idx,
+                                        dface_group,
+                                        n_res_part,
+                                        n_face_group,
+                                        n_faces,
+                                        pface_ln_to_gn,
+                     (PDM_g_num_t ***) &pface_group_ln_to_gn,
+                     (int         ***) &pface_group,
+                     (int         ***) &pface_group_idx);
 
   /*
    *  Edge
@@ -393,7 +409,11 @@ int main(int argc, char *argv[])
   free(part_distribution);
   for(int i_part = 0; i_part < n_res_part; ++i_part){
     free(pcell_ln_to_gn[i_part]);
+    free(pcell_face[i_part]);
+    // free(pcell_face_idx[i_part]);
   }
+  free(pcell_face);
+  // free(pcell_face_idx);
   free(pcell_ln_to_gn);
   free(n_cell);
 

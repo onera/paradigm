@@ -104,6 +104,23 @@ PDM_generate_part_cell_ln_to_gn
 );
 
 void
+PDM_generate_part_face_group_ln_to_gn
+(
+ const PDM_MPI_Comm    comm,
+ PDM_g_num_t          *face_distribution,
+ int                  *dface_group_idx,
+ PDM_g_num_t          *dface_group,
+ int                   n_part,
+ int                   n_face_group,
+ int                  *n_faces,
+ PDM_g_num_t         **pface_ln_to_gn,
+ PDM_g_num_t        ***pface_group_ln_to_gn,
+ int                ***pface_group,
+ int                ***pface_group_idx
+);
+
+
+void
 PDM_generate_part_entity_ln_to_gn
 (
  const PDM_MPI_Comm    comm,
@@ -113,7 +130,7 @@ PDM_generate_part_entity_ln_to_gn
  PDM_g_num_t          *dcell_face,
  int                   n_part,
  int                  *n_elmts,
- int                 **pcell_ln_to_gn,
+ PDM_g_num_t         **pcell_ln_to_gn,
  int                ***pcell_face_idx,
  int                ***pcell_face
 );

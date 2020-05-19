@@ -33,6 +33,7 @@
 #include "pdm_handles.h"
 
 #include "pdm_dmesh_partitioning.h"
+#include "pdm_para_graph_dual.h"
 
 /*----------------------------------------------------------------------------
  *  Optional headers
@@ -269,6 +270,140 @@ PDM_generate_part_cell_ln_to_gn
 
 }
 
+
+/**
+ *  \brief Setup cell_ln_to_gn
+ */
+void
+PDM_generate_part_face_group_ln_to_gn
+(
+ const PDM_MPI_Comm    comm,
+ PDM_g_num_t          *face_distribution,
+ int                  *dface_group_idx,
+ PDM_g_num_t          *dface_group,
+ int                   n_part,
+ int                   n_face_group,
+ int                  *n_faces,
+ PDM_g_num_t         **pface_ln_to_gn,
+ PDM_g_num_t        ***pface_group_ln_to_gn,
+ int                ***pface_group,
+ int                ***pface_group_idx
+)
+{
+  printf("PDM_generate_part_face_group_ln_to_gn\n");
+  int i_rank;
+  int n_rank;
+
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  PDM_MPI_Comm_size(comm, &n_rank);
+
+  int dn_face = face_distribution[i_rank+1] -  face_distribution[i_rank];
+  printf("dn_face::%d\n", dn_face);
+
+  PDM_g_num_t* face_distribution_ptb = (PDM_g_num_t * ) malloc( sizeof(PDM_g_num_t) * (n_rank+1) );
+  for(int i = 0; i < n_rank+1; ++i){
+    face_distribution_ptb[i] = face_distribution[i] - 1;
+  }
+
+  /*
+   * Compute the dstribution_face_group - Mandatory to have the link between rank and group
+   */
+  PDM_g_num_t** face_group_distribution = (PDM_g_num_t **) malloc( n_face_group * sizeof(PDM_g_num_t *));
+
+  for(int i_group = 0; i_group < n_face_group; ++i_group) {
+    int dn_face_group = dface_group_idx[i_group+1] - dface_group_idx[i_group];
+    face_group_distribution[i_group] = PDM_compute_entity_distribution_long(comm, dn_face_group);
+  }
+
+  /*
+   * Create exchange protocol
+   *    - dface_group contains the absolute number of faces that contains the boundary conditions -> A kind of ln_to_gn
+   */
+  // int n_face_group = -1;
+  int n_total_face_group = dface_group_idx[n_face_group];
+  PDM_part_to_block_t *ptb_fg =
+   PDM_part_to_block_create2(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                             PDM_PART_TO_BLOCK_POST_MERGE,
+                             1.,
+                             &dface_group,
+                              face_distribution_ptb,
+                             &n_total_face_group,
+                             1,
+                             comm);
+
+  /*
+   * Prepare send
+   *    Reminder :face_group have double indirection
+   *       - For each group we have a list of face
+   *       - All rank have a distribution of each group
+   * part_data should contains : ( position in distributed array + group_id )
+   */
+  int*         part_stri = (int         *) malloc( sizeof(int        )     * n_total_face_group );
+  PDM_g_num_t* part_data = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) * 2 * n_total_face_group );
+
+  int idx_data = 0;
+  int idx_stri = 0;
+  for(int i_group = 0; i_group < n_face_group; ++i_group) {
+    for(int i_face = dface_group_idx[i_group]; i_face < dface_group_idx[i_group+1]; ++i_face ) {
+      part_data[idx_data++] = i_group;
+      part_data[idx_data++] = i_face + face_group_distribution[i_group][i_rank]; /* Numero dans le tableau distribue */
+      part_stri[idx_stri++] = 2;
+    }
+  }
+
+  /*
+   * Exchange
+   */
+  const int n_face_block = PDM_part_to_block_n_elt_block_get(ptb_fg);
+  PDM_g_num_t* blk_gnum  = PDM_part_to_block_block_gnum_get(ptb_fg);
+
+  int*         blk_stri = NULL;
+  PDM_g_num_t* blk_data = NULL;
+  PDM_part_to_block_exch (ptb_fg,
+                          sizeof(PDM_g_num_t),
+                          PDM_STRIDE_VAR,
+                          1,
+                          &part_stri,
+                (void **) &part_data,
+                          &blk_stri,
+                (void **) &blk_data);
+
+  /*
+   * Post-treatement
+   */
+  int idx_face = 0;
+  for(int i_face = 0; i_face < n_face_block; ++i_face) {
+    printf("[%d] - %d | %d --> ", i_face, blk_stri[i_face], blk_gnum[i_face]);
+    for(int i_data = 0; i_data < blk_stri[i_face]; ++i_data) {
+      printf("%d ", blk_data[idx_face++]);
+    }
+    printf("\n");
+  }
+
+  /*
+   *  Maintenant on peut faire un block_to_part sur le face_ln_to_gn (le vrai) pour recuperer pour chaque partition
+   *    le face_group
+   */
+
+
+
+
+  free(face_distribution_ptb);
+  free(part_data);
+  free(part_stri);
+  free(blk_stri);
+  free(blk_data);
+  PDM_part_to_block_free (ptb_fg);
+  for(int i_group = 0; i_group < n_face_group; ++i_group) {
+    free(face_group_distribution[i_group]);
+  }
+  free(face_group_distribution);
+}
+
+
+
+
+
 /**
  *  \brief Setup cell_ln_to_gn
  */
@@ -282,7 +417,7 @@ PDM_generate_part_entity_ln_to_gn
  PDM_g_num_t          *dcell_face,
  int                   n_part,
  int                  *n_elmts,
- int                 **pcell_ln_to_gn,
+ PDM_g_num_t         **pcell_ln_to_gn,
  int                ***pcell_face_idx,
  int                ***pcell_face
 )
@@ -330,24 +465,34 @@ PDM_generate_part_entity_ln_to_gn
                           PDM_STRIDE_VAR,
                           blk_stri,
              (void *  )   dcell_face,
-             (int ***)   &cell_stri,
+             (int *** )  &cell_stri,
              (void ***) &*pcell_face);
+
+  free(blk_stri);
+  /*
+   * Panic verbose
+   */
+  if(0 == 1){
+    for(int i_part = 0; i_part < n_part; ++i_part){
+      int idx_data = 0;
+      printf("[%d] cell_face:: \n", i_part);
+      for(int i_cell = 0; i_cell < n_elmts[i_part]; ++i_cell) {
+        printf("[%d] --> ", cell_stri[i_part][i_cell]);
+        for(int i_data = 0; i_data < cell_stri[i_part][i_cell]; ++i_data ){
+          printf("%d ", (*pcell_face)[i_part][idx_data++] );
+        }
+        printf("\n");
+      }
+      printf("\n");
+    }
+  }
+
 
   /*
    * Post-treatment
    */
-  for(int i_part = 0; i_part < n_part; ++i_part){
-    int idx_data = 0;
-    printf("[%d] cell_face:: \n", i_part);
-    for(int i_cell = 0; i_cell < n_elmts[i_part]; ++i_cell) {
-      printf("[%d] --> ", cell_stri[i_part][i_cell]);
-      for(int i_data = 0; i_data < cell_stri[i_part][i_cell]; ++i_data ){
-        printf("%d ", (*pcell_face)[i_part][idx_data++] );
-      }
-      printf("\n");
-    }
-    printf("\n");
-  }
+
+
 
 
   /*
@@ -355,7 +500,10 @@ PDM_generate_part_entity_ln_to_gn
    */
   PDM_block_to_part_free(btp);
   free(cell_distribution_ptb);
-  free(blk_stri);
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    free(cell_stri[i_part]);
+  }
+  free(cell_stri);
 
 }
 
