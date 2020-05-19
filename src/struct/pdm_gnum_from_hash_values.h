@@ -87,7 +87,6 @@ PDM_gnum_from_hash_values_create
 //        int          *id
 // );
 
-
 /**
  *
  * \brief Set hash values for one partition
