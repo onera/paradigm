@@ -103,6 +103,9 @@ PDM_generate_part_cell_ln_to_gn
  PDM_g_num_t        ***pcell_ln_to_gn
 );
 
+/**
+ *  \brief Setup cell_ln_to_gn
+ */
 void
 PDM_generate_part_face_group_ln_to_gn
 (
@@ -119,7 +122,9 @@ PDM_generate_part_face_group_ln_to_gn
  int                ***pface_group_idx
 );
 
-
+/**
+ *  \brief Setup cell_ln_to_gn
+ */
 void
 PDM_generate_part_entity_ln_to_gn
 (
@@ -136,6 +141,21 @@ PDM_generate_part_entity_ln_to_gn
  int                ***pcell_face_idx,
  int                ***pcell_face
 );
+
+
+/**
+ *  \brief Setup cell_ln_to_gn
+ */
+// void
+// PDM_generate_entity_graph_comm
+// (
+//  const PDM_MPI_Comm    comm,
+//  PDM_g_num_t          *entity_distribution,
+//  int                   n_part,
+//  int                  *n_elmts,
+//  PDM_g_num_t         **pentity_ln_to_gn,
+
+// );
 
 #ifdef __cplusplus
 }

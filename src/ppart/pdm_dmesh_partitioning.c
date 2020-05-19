@@ -319,7 +319,6 @@ PDM_generate_part_face_group_ln_to_gn
    * Create exchange protocol
    *    - dface_group contains the absolute number of faces that contains the boundary conditions -> A kind of ln_to_gn
    */
-  // int n_face_group = -1;
   int n_total_face_group = dface_group_idx[n_face_group];
   PDM_part_to_block_t *ptb_fg =
    PDM_part_to_block_create2(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
@@ -419,7 +418,6 @@ PDM_generate_part_face_group_ln_to_gn
 
   /*
    * Prepare exchange protocol
-   *   Il faut changer face_distribution_ptb
    */
   PDM_block_to_part_t* btp = PDM_block_to_part_create(face_distribution_ptb,
                                (const PDM_g_num_t **) pface_ln_to_gn,
@@ -487,6 +485,7 @@ PDM_generate_part_face_group_ln_to_gn
      */
     int idx_face_bnd = 0;
     for(int i_face = 0; i_face < n_faces[i_part]; ++i_face){
+      // TODO : multiple group per face
       if(part_face_group_stri[i_part][i_face] > 0 ){
         PDM_g_num_t i_group = part_face_group_data[i_part][idx_face_bnd];
         _face_group_idx[i_part][i_group+1] += 1;
@@ -583,8 +582,6 @@ PDM_generate_part_face_group_ln_to_gn
 
 
 
-
-
 /**
  *  \brief Setup cell_ln_to_gn
  */
@@ -646,7 +643,7 @@ PDM_generate_part_entity_ln_to_gn
                           PDM_STRIDE_VAR,
                           blk_stri,
              (void *  )   dcell_face,
-             (int *** )  &cell_stri,
+             (int  ***)  &cell_stri,
              (void ***) &*pcell_face);
 
   free(blk_stri);
@@ -677,7 +674,7 @@ PDM_generate_part_entity_ln_to_gn
   *pcell_face_idx = (int         **) malloc( n_part * sizeof(int         *) );
   *n_faces        = (int          *) malloc( n_part * sizeof(int          ) );
 
-  /* Shot cut */
+  /* Shortcut */
   PDM_g_num_t** _face_ln_to_gn = *pface_ln_to_gn;
   int** _cell_face_idx         = *pcell_face_idx;
   int*  _n_faces               = *n_faces;
