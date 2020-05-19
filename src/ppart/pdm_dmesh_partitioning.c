@@ -379,21 +379,97 @@ PDM_generate_part_face_group_ln_to_gn
     }
     printf("\n");
   }
+  printf("n_face_block::%d\n", n_face_block);
+  printf("idx_face    ::%d\n", idx_face/2);
+
+  /*
+   * No choice we need to rebuild a proper blk_stri (but not blk_data)
+   */
+  int* blk_stri_full = (int *) malloc( dn_face * sizeof(int));
+  for(int i = 0; i < dn_face; ++i){
+    blk_stri_full[i] = 0;
+  }
+
+  /* On remet la stri au bonne endroit */
+  idx_face = 0;
+  for(int i_face = 0; i_face < n_face_block; ++i_face) {
+    int l_elmt = blk_gnum[i_face] - face_distribution[i_rank];
+    printf("[%d] --> %d \n", i_face, l_elmt);
+    blk_stri_full[l_elmt] = blk_stri[i_face];
+  }
+  free(blk_stri);
+
+
 
   /*
    *  Maintenant on peut faire un block_to_part sur le face_ln_to_gn (le vrai) pour recuperer pour chaque partition
    *    le face_group
    */
+  if( 0 == 1){
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      printf("[%d] pface_ln_to_gn:: ", i_part);
+      for(int i_face = 0; i_face < n_faces[i_part]; ++i_face){
+        printf("%d ", pface_ln_to_gn[i_part][i_face]);
+      }
+      printf("\n");
+    }
+  }
+
+  /*
+   * Prepare exchange protocol
+   *   Il faut changer face_distribution_ptb
+   */
+  PDM_block_to_part_t* btp = PDM_block_to_part_create(face_distribution_ptb,
+                               (const PDM_g_num_t **) pface_ln_to_gn,
+                                                      n_faces,
+                                                      n_part,
+                                                      comm);
+
+  /*
+   * Exchange
+   */
+  int**         part_face_group_stri;
+  PDM_g_num_t** part_face_group_data;
+  printf("PDM_block_to_part_exch2 \n");
+  PDM_block_to_part_exch2(btp,
+                          sizeof(PDM_g_num_t),
+                          PDM_STRIDE_VAR,
+                          blk_stri_full,
+             (void *  )   blk_data,
+             (int  ***)  &part_face_group_stri,
+             (void ***)  &part_face_group_data);
+  printf("PDM_block_to_part_exch2 end \n");
+
+  /*
+   * Post-Treatment
+   */
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    int idx_data_fg = 0;
+    printf("[%d] part_face_group_data --> ", i_part);
+    for(int i_face = 0; i_face < n_faces[i_part]; ++i_face){
+      printf(" \t [%d] ", i_face);
+      for(int i_data = 0; i_data < part_face_group_stri[i_part][i_face]; ++i_data) {
+        printf("%d ", part_face_group_data[i_part][idx_data_fg++]);
+      }
+      printf("\n");
+    }
+  }
+
+  /*
+   * Donc sur chaque partition on a dans la numerotation des faces la liste des frontières
+   * On doit maintenant recréer les tableaux identiques à pdm_part
+   */
 
 
 
 
+  free(blk_stri_full);
   free(face_distribution_ptb);
   free(part_data);
   free(part_stri);
-  free(blk_stri);
   free(blk_data);
   PDM_part_to_block_free (ptb_fg);
+  PDM_block_to_part_free(btp);
   for(int i_group = 0; i_group < n_face_group; ++i_group) {
     free(face_group_distribution[i_group]);
   }
@@ -529,7 +605,8 @@ PDM_generate_part_entity_ln_to_gn
      * Deduce ln_to_gn
      */
     printf("Sort data between : 0 and %d \n", idx_data);
-    int n_elmt_sort = PDM_inpace_unique_long(_pface_ln_to_gn , 0, idx_data);
+    int n_elmt_sort = PDM_inpace_unique_long(_pface_ln_to_gn , 0, idx_data-1);
+    // n_elmt_sort = n_elmt_sort -1;
     _n_faces[i_part] = n_elmt_sort;
 
     printf("n_elmt_sort::%d\n", n_elmt_sort);
