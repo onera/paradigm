@@ -10,6 +10,7 @@
 #include "pdm.h"
 #include "pdm_config.h"
 #include "pdm_mpi.h"
+#include "pdm_partitioning_algorithm.h"
 #include "pdm_dmesh_partitioning.h"
 #include "pdm_para_graph_dual.h"
 #include "pdm_dcube_gen.h"
