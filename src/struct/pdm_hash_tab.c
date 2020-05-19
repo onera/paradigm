@@ -329,6 +329,47 @@ PDM_hash_tab_t *ht
 
 
 /**
+ * \brief Return the number of used keys
+ *
+ * \param [in]  hash_table    Hash table to purge
+ *
+ * \return Number of used keys
+ */
+
+int
+PDM_hash_tab_n_used_keys_get
+(
+PDM_hash_tab_t *ht
+)
+{
+  _hash_tab_t *_ht = (_hash_tab_t *) ht;
+
+  return _ht->n_key_info;
+
+}
+
+/**
+ * \brief Return used keys
+ *
+ * \param [in]  hash_table    Hash table to purge
+ *
+ * \return Used keys
+ */
+
+PDM_g_num_t *
+PDM_hash_tab_used_keys_get
+(
+PDM_hash_tab_t *ht
+)
+{
+  _hash_tab_t *_ht = (_hash_tab_t *) ht;
+
+  return _ht->key_info;
+
+}
+
+
+/**
  * \brief Purge a \ref PDM_hash_table_t object
  *
  * This function empties an \ref PDM_hash_table_t object
