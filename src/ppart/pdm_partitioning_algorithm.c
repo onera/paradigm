@@ -721,6 +721,101 @@ PDM_generate_part_entity_ln_to_gn
 
 }
 
+/**
+ *  \brief
+ */
+void
+PDM_generate_entity_graph_comm
+(
+ const PDM_MPI_Comm    comm,
+ PDM_g_num_t          *entity_distribution,
+ int                   n_part,
+ int                  *n_entities,
+ int                  *entity_part,
+ PDM_g_num_t         **pentity_ln_to_gn,
+ int                ***proc_bound_idx,
+ int                ***part_bound_idx,
+ int                ***entity_bound_idx
+)
+{
+  printf("PDM_generate_part_entity_ln_to_gn\n");
+  int i_rank;
+  int n_rank;
+
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  PDM_MPI_Comm_size(comm, &n_rank);
+
+  /*
+   * First part : we put in data the triplet (iRank, iPart, iEntityLoc)
+   */
+  int** part_stri = (int ** ) malloc( n_part * sizeof(int *));
+  int** part_data = (int ** ) malloc( n_part * sizeof(int *));
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    part_stri[i_part] = (int *) malloc(     n_entities[i_part] * sizeof(int));
+    part_data[i_part] = (int *) malloc( 3 * n_entities[i_part] * sizeof(int));
+    for(int i_entity = 0; i_entity < n_entities[i_part]; ++i_entity) {
+      part_data[i_part][3*i_entity  ] = i_rank;
+      part_data[i_part][3*i_entity+1] = i_part;
+      part_data[i_part][3*i_entity+2] = i_entity;
+
+      part_stri[i_part][i_entity] = 3;
+    }
+  }
+
+  /*
+   * Setup protocol exchange
+   */
+  PDM_part_to_block_t *ptb =
+   PDM_part_to_block_create2(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                             PDM_PART_TO_BLOCK_POST_MERGE,
+                             1.,
+                             pentity_ln_to_gn,
+                             entity_distribution,
+                              n_entities,
+                              n_part,
+                              comm);
+
+   /*
+    * Exchange
+    */
+  int*         blk_stri = NULL;
+  PDM_g_num_t* blk_data = NULL;
+  PDM_part_to_block_exch (ptb,
+                          sizeof(PDM_g_num_t),
+                          PDM_STRIDE_VAR,
+                          1,
+                          part_stri,
+                (void **) part_data,
+                          &blk_stri,
+                (void **) &blk_data);
+
+  /*
+   * Free
+   */
+  PDM_part_to_block_free(ptb);
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    free(part_stri[i_part]);
+    free(part_data[i_part]);
+  }
+  free(part_stri);
+  free(part_data);
+
+  /*
+   * Post-treatment
+   */
+
+
+  /*
+   * Free
+   */
+  free(blk_data);
+  free(blk_stri);
+
+
+
+}
+
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

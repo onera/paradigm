@@ -89,17 +89,21 @@ PDM_generate_part_entity_ln_to_gn
 
 
 /**
- *  \brief Setup cell_ln_to_gn
+ *  \brief
  */
-// void
-// PDM_generate_entity_graph_comm
-// (
-//  const PDM_MPI_Comm    comm,
-//  PDM_g_num_t          *entity_distribution,
-//  int                   n_part,
-//  int                  *n_elmts,
-//  PDM_g_num_t         **pentity_ln_to_gn,
-// );
+void
+PDM_generate_entity_graph_comm
+(
+ const PDM_MPI_Comm    comm,
+ PDM_g_num_t          *entity_distribution,
+ int                   n_part,
+ int                  *n_elmts,
+ int                  *entity_part,
+ PDM_g_num_t         **pentity_ln_to_gn,
+ int                ***proc_bound_idx,
+ int                ***part_bound_idx,
+ int                ***entity_bound_idx
+);
 
 #ifdef __cplusplus
 }
