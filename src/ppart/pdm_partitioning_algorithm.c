@@ -657,7 +657,7 @@ PDM_generate_part_entity_ln_to_gn
      * Deduce ln_to_gn
      */
     printf("Sort data between : 0 and %d \n", idx_data);
-    int n_elmt_sort = PDM_inpace_unique_long(_pface_ln_to_gn , 0, idx_data-1);
+    int n_elmt_sort = PDM_inplace_unique_long(_pface_ln_to_gn , 0, idx_data-1);
     // n_elmt_sort = n_elmt_sort -1;
     _n_faces[i_part] = n_elmt_sort;
 

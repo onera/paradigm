@@ -130,7 +130,7 @@ PDM_quick_sort_long
  *
  */
 int
-PDM_inpace_unique_long
+PDM_inplace_unique_long
 (
  PDM_g_num_t a[],
  int l,
