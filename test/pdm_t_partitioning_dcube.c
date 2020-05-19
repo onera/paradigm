@@ -393,6 +393,29 @@ int main(int argc, char *argv[])
    */
 
 
+  /*
+   * Graph communication build
+   *    --> On retombe dans le même pb avec le blk_strid qui a la taille du nombre d'elmts dans le block
+   *        et pas égale au nombre total dans le block
+   *    Car sinon : Pour chaque entités on peut déduire le graphe de comm facilement
+   *       -> entity_ln_to_gn
+   *       -> pour chaque entity : on met le numero de partition + proc
+   *
+   *    Avec le part_to_block en stride variable on va avoir le lien entre tt les entités
+   *        --> Il faut donc reconstruire une stride variable de connectivité
+   *        --> Pour les faces  : stride = 1
+   *        --> Pour les vertex : stride = n_vtx_connected
+   *        --> Pour les edges  : stride = n_edge_connected
+   *    On pourrait faire aussi sur les cellules pour Niels
+   *
+   *
+   */
+
+
+
+
+
+
   // Attention on veut garder l'orientation donc il y a un signe dans le face_cell / cell_face
   // Reflechir sur les connectivité d'edge également ...
 
