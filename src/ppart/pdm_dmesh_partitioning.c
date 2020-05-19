@@ -430,7 +430,6 @@ PDM_generate_part_face_group_ln_to_gn
    */
   int**         part_face_group_stri;
   PDM_g_num_t** part_face_group_data;
-  printf("PDM_block_to_part_exch2 \n");
   PDM_block_to_part_exch2(btp,
                           sizeof(PDM_g_num_t),
                           PDM_STRIDE_VAR,
@@ -438,7 +437,6 @@ PDM_generate_part_face_group_ln_to_gn
              (void *  )   blk_data,
              (int  ***)  &part_face_group_stri,
              (void ***)  &part_face_group_data);
-  printf("PDM_block_to_part_exch2 end \n");
 
   /*
    * Post-Treatment
@@ -459,10 +457,109 @@ PDM_generate_part_face_group_ln_to_gn
    * Donc sur chaque partition on a dans la numerotation des faces la liste des frontières
    * On doit maintenant recréer les tableaux identiques à pdm_part
    */
+  *pface_group_ln_to_gn = (PDM_g_num_t **) malloc( n_part * sizeof(PDM_g_num_t *) );
+  *pface_group          = (int         **) malloc( n_part * sizeof(int         *) );
+  *pface_group_idx      = (int         **) malloc( n_part * sizeof(int         *) );
+
+  /* Shortcut */
+  PDM_g_num_t** _face_group_ln_to_gn = *pface_group_ln_to_gn;
+  int**         _face_group          = *pface_group;
+  int**         _face_group_idx      = *pface_group_idx;
+
+  int* count_fg = (int *) malloc( (n_face_group + 1) * sizeof(int));
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+
+    /*
+     * All partition allocate is own array of size n_face_group
+     */
+    _face_group_idx[i_part] = (int *) malloc( (n_face_group + 1) * sizeof(int) );
+    for(int i_group = 0; i_group < n_face_group+1; ++i_group){
+      _face_group_idx[i_part][i_group] = 0;
+      count_fg[i_group] = 0;
+    }
+
+    /*
+     * First step to count
+     */
+    int idx_face_bnd = 0;
+    for(int i_face = 0; i_face < n_faces[i_part]; ++i_face){
+      if(part_face_group_stri[i_part][i_face] > 0 ){
+        PDM_g_num_t i_group = part_face_group_data[i_part][idx_face_bnd];
+        _face_group_idx[i_part][i_group+1] += 1;
+        idx_face_bnd += 2;
+      }
+    }
+
+    /*
+     *  Deduce idx and allocate
+     */
+    for(int i_group = 0; i_group < n_face_group; ++i_group){
+      _face_group_idx[i_part][i_group+1] += _face_group_idx[i_part][i_group];
+    }
+    int n_face_bnd = _face_group_idx[i_part][n_face_group];
+
+    _face_group_ln_to_gn[i_part] = (PDM_g_num_t * ) malloc( n_face_bnd * sizeof(PDM_g_num_t));
+    _face_group[i_part]          = (int         * ) malloc( n_face_bnd * sizeof(int        ));
+
+    /*
+     * Panic verbose
+     */
+    if( 0 == 1){
+      printf("n_face_bnd::%d\n", n_face_bnd );
+      printf("[%d] _face_group_idx::\n", i_part );
+      for(int i_group = 0; i_group < n_face_group+1; ++i_group){
+        printf("%d ", _face_group_idx[i_part][i_group]);
+      }
+      printf("\n");
+    }
+
+    /*
+     * Fill data
+     */
+    idx_face_bnd = 0;
+    for(int i_face = 0; i_face < n_faces[i_part]; ++i_face){
+      if(part_face_group_stri[i_part][i_face] > 0 ){
+        PDM_g_num_t i_group = part_face_group_data[i_part][idx_face_bnd  ];
+        PDM_g_num_t g_face  = part_face_group_data[i_part][idx_face_bnd+1];
+
+        int idx = _face_group_idx[i_part][i_group] + count_fg[i_group];
+
+        _face_group         [i_part][idx] = i_face+1;
+        _face_group_ln_to_gn[i_part][idx] = g_face;
+
+        count_fg[i_group] += 1;
+        idx_face_bnd += 2;
+      }
+    }
+
+  }
+
+
+  /*
+   * Panic verbose
+   */
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    printf("[%d] Boundary \n", i_part);
+    for(int i_group = 0; i_group < n_face_group; ++i_group){
+      printf("\t [%d]_face_group::", i_group);
+      for(int idx = _face_group_idx[i_part][i_group]; idx < _face_group_idx[i_part][i_group+1]; ++idx){
+        printf("%d ", _face_group[i_part][idx]);
+      }
+      printf("\n");
+      printf("\t [%d]_face_group_ln_to_gn::", i_group);
+      for(int idx = _face_group_idx[i_part][i_group]; idx < _face_group_idx[i_part][i_group+1]; ++idx){
+        printf("%d ", _face_group_ln_to_gn[i_part][idx]);
+      }
+      printf("\n");
+
+    }
+  }
 
 
 
 
+
+  free(count_fg);
   free(blk_stri_full);
   free(face_distribution_ptb);
   free(part_data);
