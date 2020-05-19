@@ -131,6 +131,7 @@ PDM_generate_part_entity_ln_to_gn
  int                   n_part,
  int                  *n_elmts,
  PDM_g_num_t         **pcell_ln_to_gn,
+ PDM_g_num_t        ***pface_ln_to_gn,
  int                ***pcell_face_idx,
  int                ***pcell_face
 );
