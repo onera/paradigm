@@ -16,6 +16,7 @@
 #include "pdm_dcube_gen.h"
 #include "pdm_printf.h"
 #include "pdm_sort.h"
+#include "pdm_distrib.h"
 #include "pdm_error.h"
 
 /*============================================================================
@@ -464,9 +465,9 @@ int main(int argc, char *argv[])
 
   // Unit test ...
   // int test_unique[10] = {10, 2, 1, 12, 31, 2, 31, 4, 5, 2};
-  // // int ns = PDM_inpace_unique_long(test_unique, 4, 10);
+  // // int ns = PDM_inplace_unique_long(test_unique, 4, 10);
   // // PDM_quick_sort_long(test_unique, 0, 9);
-  // int ns = PDM_inpace_unique_long(test_unique, 0, 9);
+  // int ns = PDM_inplace_unique_long(test_unique, 0, 9);
   // printf("ns::%d\n", ns);
   // printf("test_unique::");
   // for(int i = 0; i < ns; ++i){

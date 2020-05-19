@@ -113,7 +113,7 @@ PDM_compress_connectivity
     int end_connect         = idx_comp + n_cell_connect - 1;
     // printf(" idx_comp:: %d | end_connect:: %d \n", idx_comp, end_connect);
 
-    int n_cell_connect_comp = PDM_inpace_unique_long(dual_graph, idx_comp, end_connect);
+    int n_cell_connect_comp = PDM_inplace_unique_long(dual_graph, idx_comp, end_connect);
     // printf(" n_cell_connect:: %d | n_cell_connect_comp:: %d \n", n_cell_connect, n_cell_connect_comp);
 
     if(n_cell_connect_comp < n_cell_connect) {
