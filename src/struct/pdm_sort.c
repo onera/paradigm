@@ -732,7 +732,10 @@ PDM_inpace_unique_long
  int r
 )
 {
-  PDM_quick_sort_long(a, l, r);
+  // PDM_quick_sort_long(a, l, r); /* Less optimal than PDM_sort_long */
+  int array_size = r - l;
+  // printf("PDM_inpace_unique_long::array_size::%d\n", array_size);
+  PDM_sort_long(&a[l], NULL, array_size);
 
   int new_size  = 1;
   int idx_write = l;

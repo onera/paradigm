@@ -418,6 +418,7 @@ PDM_generate_part_entity_ln_to_gn
  int                   n_part,
  int                  *n_elmts,
  PDM_g_num_t         **pcell_ln_to_gn,
+ PDM_g_num_t        ***pface_ln_to_gn,
  int                ***pcell_face_idx,
  int                ***pcell_face
 )
@@ -440,13 +441,11 @@ PDM_generate_part_entity_ln_to_gn
   /*
    * Prepare exchange protocol
    */
-  printf("PDM_block_to_part_create \n");
   PDM_block_to_part_t* btp = PDM_block_to_part_create(cell_distribution_ptb,
                                (const PDM_g_num_t **) pcell_ln_to_gn,
                                                       n_elmts,
                                                       n_part,
                                                       comm);
-  printf("PDM_block_to_part_create end \n");
 
   /*
    * Prepare data
@@ -469,6 +468,7 @@ PDM_generate_part_entity_ln_to_gn
              (void ***) &*pcell_face);
 
   free(blk_stri);
+
   /*
    * Panic verbose
    */
@@ -489,11 +489,91 @@ PDM_generate_part_entity_ln_to_gn
 
 
   /*
-   * Post-treatment
+   * Post-treatment - Caution the recv connectivity can be negative
    */
+  *pface_ln_to_gn = (PDM_g_num_t **) malloc( n_part * sizeof(PDM_g_num_t *) );
+  PDM_g_num_t** _face_ln_to_gn = (PDM_g_num_t **) *pface_ln_to_gn;
+
+  *pcell_face_idx = (int         **) malloc( n_part * sizeof(int         *) );
+  int** _cell_face_idx = *pcell_face_idx;
+
+  for(int i_part = 0; i_part < n_part; ++i_part){
+
+    /*
+     *  First loop to count and setup part_strid_idx
+     */
+    _cell_face_idx[i_part] = (int *) malloc( (n_elmts[i_part] + 1) * sizeof(int) );
+    _cell_face_idx[i_part][0] = 0;
+    for(int i_cell = 0; i_cell < n_elmts[i_part]; ++i_cell) {
+      _cell_face_idx[i_part][i_cell+1] = _cell_face_idx[i_part][i_cell] + cell_stri[i_part][i_cell];
+    }
+
+    /*
+     * Save array
+     */
+    _face_ln_to_gn[i_part] = (PDM_g_num_t *) malloc( _cell_face_idx[i_part][n_elmts[i_part]] * sizeof(PDM_g_num_t));
+    PDM_g_num_t* _pface_ln_to_gn = (PDM_g_num_t *) _face_ln_to_gn[i_part];
+
+    int idx_data = 0;
+    for(int i_cell = 0; i_cell < n_elmts[i_part]; ++i_cell) {
+      for(int i_data = 0; i_data < cell_stri[i_part][i_cell]; ++i_data ){
+        _pface_ln_to_gn[idx_data++] = PDM_ABS((*pcell_face)[i_part][idx_data]);
+      }
+    }
+
+    /*
+     * Deduce ln_to_gn
+     */
+    printf("Sort data between : 0 and %d \n", idx_data);
+    int n_elmt_sort = PDM_inpace_unique_long(_pface_ln_to_gn , 0, idx_data);
+
+    printf("n_elmt_sort::%d\n", n_elmt_sort);
+    printf("_pface_ln_to_gn::");
+    for(int i = 0; i < idx_data; ++i){
+      printf("%d ", _pface_ln_to_gn[i]);
+    }
+    printf("\n");
+
+    /*
+     * Realloc
+     */
+    _face_ln_to_gn[i_part] = (PDM_g_num_t *) realloc(_face_ln_to_gn[i_part], n_elmt_sort * sizeof(PDM_g_num_t) );
+    _pface_ln_to_gn = _face_ln_to_gn[i_part];
+
+    /*
+     *  We need to regenerate the connectivity and pass it in local numbering
+     */
+    idx_data = 0;
+    for(int i_cell = 0; i_cell < n_elmts[i_part]; ++i_cell) {
+      for(int i_data = 0; i_data < cell_stri[i_part][i_cell]; ++i_data ){
+        int         g_sgn  = 1;
+        PDM_g_num_t g_elmt = PDM_ABS((*pcell_face)[i_part][idx_data]);
+        int l_elmt         = PDM_binary_search_long(g_elmt, _pface_ln_to_gn, n_elmt_sort); /* In [0, n_elmt_sort-1] */
+
+        /* Overwrite the pcell_face with local numbering and reput sign on it */
+        (*pcell_face)[i_part][idx_data++] = (l_elmt + 1) * g_sgn ;
+      }
+    }
+  }
 
 
-
+  /*
+   * Panic verbose
+   */
+  if(0 == 1){
+    for(int i_part = 0; i_part < n_part; ++i_part){
+      int idx_data = 0;
+      printf("[%d] cell_face:: \n", i_part);
+      for(int i_cell = 0; i_cell < n_elmts[i_part]; ++i_cell) {
+        printf("[%d] --> ", cell_stri[i_part][i_cell]);
+        for(int i_data = 0; i_data < cell_stri[i_part][i_cell]; ++i_data ){
+          printf("%d ", (*pcell_face)[i_part][idx_data++] );
+        }
+        printf("\n");
+      }
+      printf("\n");
+    }
+  }
 
   /*
    * Free
@@ -502,8 +582,12 @@ PDM_generate_part_entity_ln_to_gn
   free(cell_distribution_ptb);
   for(int i_part = 0; i_part < n_part; ++i_part) {
     free(cell_stri[i_part]);
+    // free(unsig_connectivity[i_part]);
+    // free(part_stri_idx[i_part]);
   }
+  // free(part_stri_idx);
   free(cell_stri);
+  // free(unsig_connectivity);
 
 }
 

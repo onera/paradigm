@@ -340,6 +340,7 @@ int main(int argc, char *argv[])
    */
   int** pcell_face_idx;
   int** pcell_face;
+  PDM_g_num_t** pface_ln_to_gn = NULL;
 
   PDM_generate_part_entity_ln_to_gn(comm,
                                     part_distribution,
@@ -349,8 +350,9 @@ int main(int argc, char *argv[])
                                     n_res_part,
                                     n_cell,
                                     pcell_ln_to_gn,
-                        (int ***)  &pcell_face_idx,
-                        (int ***)  &pcell_face);
+                (PDM_g_num_t ***)  &pface_ln_to_gn,
+                (int         ***)  &pcell_face_idx,
+                (int         ***)  &pcell_face);
 
 
   /*
@@ -369,7 +371,6 @@ int main(int argc, char *argv[])
   /*
    *  Boundary condition (face group )
    */
-  int** pface_ln_to_gn = NULL;
   PDM_g_num_t** pface_group_ln_to_gn;
   int** pface_group;
   int** pface_group_idx;
@@ -408,13 +409,15 @@ int main(int argc, char *argv[])
   free(face_distribution);
   free(part_distribution);
   for(int i_part = 0; i_part < n_res_part; ++i_part){
+    free(pface_ln_to_gn[i_part]);
     free(pcell_ln_to_gn[i_part]);
     free(pcell_face[i_part]);
-    // free(pcell_face_idx[i_part]);
+    free(pcell_face_idx[i_part]);
   }
   free(pcell_face);
-  // free(pcell_face_idx);
+  free(pcell_face_idx);
   free(pcell_ln_to_gn);
+  free(pface_ln_to_gn);
   free(n_cell);
 
 
