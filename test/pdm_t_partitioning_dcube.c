@@ -321,13 +321,13 @@ int main(int argc, char *argv[])
    *    On devrait recupérer n_part block de données avec le ln_to_gn !
    */
   int** pcell_ln_to_gn;
-  int*  n_cell;
+  int*  pn_cell;
 
   int n_res_part = PDM_generate_part_cell_ln_to_gn(comm,
                                                    part_distribution,
                                                    cell_distribution,
                                                    cell_part,
-                                       (int ** )  &n_cell,
+                                       (int ** )  &pn_cell,
                                        (int ***)  &pcell_ln_to_gn);
 
   /*
@@ -340,6 +340,7 @@ int main(int argc, char *argv[])
    */
   int** pcell_face_idx;
   int** pcell_face;
+  int*  pn_faces;
   PDM_g_num_t** pface_ln_to_gn = NULL;
 
   PDM_generate_part_entity_ln_to_gn(comm,
@@ -348,8 +349,9 @@ int main(int argc, char *argv[])
                                     dcell_face_idx,
                                     dcell_face,
                                     n_res_part,
-                                    n_cell,
+                                    pn_cell,
                                     pcell_ln_to_gn,
+                (int         ** )  &pn_faces,
                 (PDM_g_num_t ***)  &pface_ln_to_gn,
                 (int         ***)  &pcell_face_idx,
                 (int         ***)  &pcell_face);
@@ -374,14 +376,13 @@ int main(int argc, char *argv[])
   PDM_g_num_t** pface_group_ln_to_gn;
   int** pface_group;
   int** pface_group_idx;
-  int* n_faces = NULL;
   PDM_generate_part_face_group_ln_to_gn(comm,
                                         face_distribution,
                                         dface_group_idx,
                                         dface_group,
                                         n_res_part,
                                         n_face_group,
-                                        n_faces,
+                                        pn_faces,
                                         pface_ln_to_gn,
                      (PDM_g_num_t ***) &pface_group_ln_to_gn,
                      (int         ***) &pface_group,
@@ -418,7 +419,8 @@ int main(int argc, char *argv[])
   free(pcell_face_idx);
   free(pcell_ln_to_gn);
   free(pface_ln_to_gn);
-  free(n_cell);
+  free(pn_cell);
+  free(pn_faces);
 
 
 
