@@ -414,6 +414,9 @@ int main(int argc, char *argv[])
     free(pcell_ln_to_gn[i_part]);
     free(pcell_face[i_part]);
     free(pcell_face_idx[i_part]);
+    free(pface_group_ln_to_gn[i_part]);
+    free(pface_group[i_part]);
+    free(pface_group_idx[i_part]);
   }
   free(pcell_face);
   free(pcell_face_idx);
@@ -421,6 +424,9 @@ int main(int argc, char *argv[])
   free(pface_ln_to_gn);
   free(pn_cell);
   free(pn_faces);
+  free(pface_group_ln_to_gn);
+  free(pface_group);
+  free(pface_group_idx);
 
 
 
