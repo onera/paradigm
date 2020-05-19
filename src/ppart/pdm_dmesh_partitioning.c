@@ -418,6 +418,7 @@ PDM_generate_part_entity_ln_to_gn
  int                   n_part,
  int                  *n_elmts,
  PDM_g_num_t         **pcell_ln_to_gn,
+ int                 **n_faces,
  PDM_g_num_t        ***pface_ln_to_gn,
  int                ***pcell_face_idx,
  int                ***pcell_face
@@ -492,10 +493,13 @@ PDM_generate_part_entity_ln_to_gn
    * Post-treatment - Caution the recv connectivity can be negative
    */
   *pface_ln_to_gn = (PDM_g_num_t **) malloc( n_part * sizeof(PDM_g_num_t *) );
-  PDM_g_num_t** _face_ln_to_gn = (PDM_g_num_t **) *pface_ln_to_gn;
-
   *pcell_face_idx = (int         **) malloc( n_part * sizeof(int         *) );
-  int** _cell_face_idx = *pcell_face_idx;
+  *n_faces        = (int          *) malloc( n_part * sizeof(int          ) );
+
+  /* Shot cut */
+  PDM_g_num_t** _face_ln_to_gn = *pface_ln_to_gn;
+  int** _cell_face_idx         = *pcell_face_idx;
+  int*  _n_faces               = *n_faces;
 
   for(int i_part = 0; i_part < n_part; ++i_part){
 
@@ -526,6 +530,7 @@ PDM_generate_part_entity_ln_to_gn
      */
     printf("Sort data between : 0 and %d \n", idx_data);
     int n_elmt_sort = PDM_inpace_unique_long(_pface_ln_to_gn , 0, idx_data);
+    _n_faces[i_part] = n_elmt_sort;
 
     printf("n_elmt_sort::%d\n", n_elmt_sort);
     printf("_pface_ln_to_gn::");
@@ -582,12 +587,8 @@ PDM_generate_part_entity_ln_to_gn
   free(cell_distribution_ptb);
   for(int i_part = 0; i_part < n_part; ++i_part) {
     free(cell_stri[i_part]);
-    // free(unsig_connectivity[i_part]);
-    // free(part_stri_idx[i_part]);
   }
-  // free(part_stri_idx);
   free(cell_stri);
-  // free(unsig_connectivity);
 
 }
 
