@@ -74,27 +74,15 @@ int          order[],
 const size_t nb_ent
 );
 
-/**
- * This function is part of Code_Saturne, a general-purpose CFD tool.
- *  Copyright (C) 1998-2014 EDF S.A.
- *
- * \brief Descend binary tree for the lexicographical ordering of a strided array
- *
- * \param [in]     number pointer to numbers of entities that should be ordered.
- * \param [in]            (if NULL, a default 1 to n numbering is considered)
- * \param [in]     stride stride of array (number of values to compare)
- * \param [in]     level  level of the binary tree to descend
- * \param [in]     nb_ent number of entities in the binary tree to descend
- * \param [in,out] order  ordering array
- */
+
+
 void
-PDM_order_lnum_descend_tree_s
+PDM_order_gnum_s
 (
-const int    number[],
-size_t       stride,
-size_t       level,
-const size_t nb_ent,
-int          order[]
+const PDM_g_num_t number[],
+size_t            stride,
+int               order[],
+const size_t      nb_ent
 );
 
 #ifdef __cplusplus
