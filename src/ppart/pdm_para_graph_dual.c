@@ -53,31 +53,13 @@ extern "C" {
  * Local macro definitions
  *============================================================================*/
 
-/**
- * \def _PDM_part_MIN(a,b)
- * Computes the minimum of \a x and \a y.
- *
- */
-
-#define _PDM_part_MIN(a,b) ((a) > (b) ? (b) : (a))
-
-/**
- * \def _PDM_part_MAX(a,b)
- * Computes the maximum of \a x and \a y.
- *
- */
-
-#define _PDM_part_MAX(a,b) ((a) < (b) ? (b) : (a))
-
 /*============================================================================
  * Type definitions
  *============================================================================*/
 
-
 /*============================================================================
  * Global variable
  *============================================================================*/
-
 
 /*============================================================================
  * Private function definitions
@@ -326,7 +308,7 @@ PDM_para_graph_dual_from_face_cell
   /*
    * Panic verbose
    */
-  if( 1 == 1){
+  if( 0 == 1){
     printf("n_cell_block:: %d \n", n_cell_block);
     int idx_block = 0;
     for(int i = 0; i < n_cell_block; ++i){
