@@ -731,7 +731,6 @@ PDM_generate_entity_graph_comm
  PDM_g_num_t          *entity_distribution,
  int                   n_part,
  int                  *n_entities,
- int                  *entity_part,
  PDM_g_num_t         **pentity_ln_to_gn,
  int                ***proc_bound_idx,
  int                ***part_bound_idx,
@@ -744,6 +743,11 @@ PDM_generate_entity_graph_comm
 
   PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_size(comm, &n_rank);
+
+  PDM_g_num_t* entity_distribution_ptb = (PDM_g_num_t * ) malloc( sizeof(PDM_g_num_t) * (n_rank+1) );
+  for(int i = 0; i < n_rank+1; ++i){
+    entity_distribution_ptb[i] = entity_distribution[i] - 1;
+  }
 
   /*
    * First part : we put in data the triplet (iRank, iPart, iEntityLoc)
@@ -770,10 +774,11 @@ PDM_generate_entity_graph_comm
                              PDM_PART_TO_BLOCK_POST_MERGE,
                              1.,
                              pentity_ln_to_gn,
-                             entity_distribution,
-                              n_entities,
-                              n_part,
-                              comm);
+                             entity_distribution_ptb,
+                             n_entities,
+                             n_part,
+                             comm);
+   const int n_entity_block = PDM_part_to_block_n_elt_block_get(ptb);
 
    /*
     * Exchange
@@ -781,7 +786,7 @@ PDM_generate_entity_graph_comm
   int*         blk_stri = NULL;
   PDM_g_num_t* blk_data = NULL;
   PDM_part_to_block_exch (ptb,
-                          sizeof(PDM_g_num_t),
+                          sizeof(int),
                           PDM_STRIDE_VAR,
                           1,
                           part_stri,
@@ -801,15 +806,130 @@ PDM_generate_entity_graph_comm
   free(part_data);
 
   /*
-   * Post-treatment
+   * Panic verbose
    */
+  if(0 == 1){
+    int idx_debug_data = 0;
+    for(int i_block = 0; i_block < n_entity_block; ++i_block){
+      printf("[%d]-blk_stri[%d]:: ", i_block, blk_stri[i_block]);
+      for(int i_data = 0; i_data < blk_stri[i_block]; ++i_data){
+        printf("%d ", blk_data[idx_debug_data++]);
+      }
+      printf("\n");
+    }
+  }
 
+  /*
+   * Post-treatment : For all non shared data we have blk_stri == 3
+   *                  And for others we have n_shared * 3 data
+   *                  In blk view we can easily remove all non shared data
+   *                  We reexchange with block_to_part only the shared data
+   */
+  int idx_comp = 0;     /* Compressed index use to fill the buffer */
+  int idx_data = 0;     /* Index in the block to post-treat        */
+
+  for(int i_block = 0; i_block < n_entity_block; ++i_block){
+
+    /* Non shared data --> Compression */
+    if(blk_stri[i_block] == 3){
+      blk_stri[i_block] = 0;
+      idx_data += 3;          /* Mv directly to the next */
+    } else {
+      for(int i_data = 0; i_data < blk_stri[i_block]; ++i_data){
+        blk_data[idx_comp++] = blk_data[idx_data++];
+      }
+    }
+  }
+
+  /*
+   * Compress data
+   */
+  blk_data = (int *) realloc(blk_data, idx_comp * sizeof(int));
+
+  /*
+   * Panic verbose
+   */
+  if(0 == 1){
+    int idx_debug_data = 0;
+    for(int i_block = 0; i_block < n_entity_block; ++i_block){
+      printf("[%d]-blk_stri[%d]:: ", i_block, blk_stri[i_block]);
+      for(int i_data = 0; i_data < blk_stri[i_block]; ++i_data){
+        printf("%d ", blk_data[idx_debug_data++]);
+      }
+      printf("\n");
+    }
+  }
+
+  /*
+   * All data is now sort we cen resend to partition
+   */
+  PDM_block_to_part_t* btp = PDM_block_to_part_create(entity_distribution_ptb,
+                               (const PDM_g_num_t **) pentity_ln_to_gn,
+                                                      n_entities,
+                                                      n_part,
+                                                      comm);
+
+  PDM_block_to_part_exch2(btp,
+                          sizeof(int),
+                          PDM_STRIDE_VAR,
+                          blk_stri,
+             (void *  )   blk_data,
+             (int  ***)  &part_stri,
+             (void ***)  &part_data);
 
   /*
    * Free
    */
   free(blk_data);
   free(blk_stri);
+
+
+  /*
+   * Interface for pdm_part is  :
+   *    - Face local number
+   *    - Connected process
+   *    - Connected partition on the connected process
+   *    - Connected face local number in the connected partition
+   */
+
+
+  /*
+   * Post-treatment in partition
+   */
+  for(int i_part = 0; i_part < n_part; ++i_part){
+
+    /* Shortcut */
+    int* _part_stri = part_stri[i_part];
+    int* _part_data = part_data[i_part];
+
+    /* First pass to count */
+    int idx_part = 0;
+    for(int i_entity = 0; i_entity < n_entities[i_part]; ++i_entity) {
+      printf("[%d] part_stri::[%d] -> ", i_entity, _part_stri[i_entity]);
+      for(int i_data = 0; i_data < _part_stri[i_entity]; ++i_data) {
+        printf("%d ", _part_data[idx_part++]);
+      }
+      printf("\n");
+    }
+
+
+  }
+
+
+
+
+
+  /*
+   * Free
+   */
+  for(int i_part = 0; i_part < n_part; ++i_part){
+    free(part_stri[i_part]);
+    free(part_data[i_part]);
+  }
+  free(part_stri);
+  free(part_data);
+  free(entity_distribution_ptb);
+  PDM_block_to_part_free(btp);
 
 
 

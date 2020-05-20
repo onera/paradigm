@@ -98,7 +98,6 @@ PDM_generate_entity_graph_comm
  PDM_g_num_t          *entity_distribution,
  int                   n_part,
  int                  *n_elmts,
- int                  *entity_part,
  PDM_g_num_t         **pentity_ln_to_gn,
  int                ***proc_bound_idx,
  int                ***part_bound_idx,
