@@ -94,7 +94,7 @@ PDM_generate_part_cell_ln_to_gn
   PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_size(comm, &n_rank);
 
-  int dn_part = part_distribution[i_rank+1] -  part_distribution[i_rank];
+  // int dn_part = part_distribution[i_rank+1] -  part_distribution[i_rank];
   int dn_cell = cell_distribution[i_rank+1] -  cell_distribution[i_rank];
 
   /*
@@ -560,7 +560,7 @@ PDM_generate_part_entity_ln_to_gn
   PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_size(comm, &n_rank);
 
-  int dn_part = part_distribution[i_rank+1] -  part_distribution[i_rank];
+  // int dn_part = part_distribution[i_rank+1] -  part_distribution[i_rank];
   int dn_cell = cell_distribution[i_rank+1] -  cell_distribution[i_rank];
 
   PDM_g_num_t* cell_distribution_ptb = (PDM_g_num_t * ) malloc( sizeof(PDM_g_num_t) * (n_rank+1) );
@@ -729,13 +729,14 @@ void
 PDM_generate_entity_graph_comm
 (
  const PDM_MPI_Comm    comm,
+ PDM_g_num_t          *part_distribution,
  PDM_g_num_t          *entity_distribution,
  int                   n_part,
  int                  *n_entities,
  PDM_g_num_t         **pentity_ln_to_gn,
- int                ***proc_bound_idx,
- int                ***part_bound_idx,
- int                ***entity_bound_idx
+ int                ***pproc_bound_idx,
+ int                ***ppart_bound_idx,
+ int                ***pentity_bound_idx
 )
 {
   printf("PDM_generate_part_entity_ln_to_gn\n");
@@ -893,6 +894,16 @@ PDM_generate_entity_graph_comm
    *    - Connected face local number in the connected partition
    */
 
+  /* Allocate */
+  *pproc_bound_idx   = (int **) malloc( ( n_part ) * sizeof(int * ));
+  *ppart_bound_idx   = (int **) malloc( ( n_part ) * sizeof(int * ));
+  *pentity_bound_idx = (int **) malloc( ( n_part ) * sizeof(int * ));
+
+  /* Shortcut */
+  int** _pproc_bound_idx   = *pproc_bound_idx;
+  int** _ppart_bound_idx   = *ppart_bound_idx;
+  int** _pentity_bound_idx = *pentity_bound_idx;
+
 
   /*
    * Post-treatment in partition
@@ -967,6 +978,47 @@ PDM_generate_entity_graph_comm
     }
     printf("\n");
 
+    /* We need to recompute for each opposite part */
+    _pproc_bound_idx[i_part]   = (int *) malloc( ( n_rank + 1                ) * sizeof(int));
+    _ppart_bound_idx[i_part]   = (int *) malloc( ( part_distribution[n_rank] ) * sizeof(int));
+    _pentity_bound_idx[i_part] = (int *) malloc( ( 4 * n_connect             ) * sizeof(int));
+
+    for(int i = 0; i < n_rank+1; ++i){
+      _pproc_bound_idx[i_part][i] = 0;
+    }
+    for(int i = 0; i < part_distribution[n_rank]; ++i){
+      _ppart_bound_idx[i_part][i] = 0;
+    }
+
+    /* Rebuild */
+    for(int i = 0; i < n_connect; ++i){
+      int idx = order[i];
+
+      int opp_proc   = connect_entity[3*idx  ];
+      int opp_part   = connect_entity[3*idx+1];
+
+      // printf(" i::%d | idx::%d \n", i, idx);
+      // printf(" opp_proc::%d | opp_part::%d \n", opp_proc, opp_part);
+      int opp_part_g = opp_part + part_distribution[opp_proc] - 1;
+
+      _pproc_bound_idx[i_part][opp_proc  +1] += 1;
+      _ppart_bound_idx[i_part][opp_part_g+1] += 1;
+
+      _pentity_bound_idx[i_part][4*i  ] = connect_info[2*idx  ];
+      _pentity_bound_idx[i_part][4*i+3] = connect_info[2*idx+1];
+
+      _pentity_bound_idx[i_part][4*i+1] = opp_proc;
+      _pentity_bound_idx[i_part][4*i+2] = opp_part;
+
+    }
+
+    /* Transform in idex */
+    for(int i = 0; i < n_rank; ++i){
+      _pproc_bound_idx[i_part][i+1] += _pproc_bound_idx[i_part][i];
+    }
+    for(int i = 0; i < part_distribution[n_rank]-1; ++i){
+      _ppart_bound_idx[i_part][i+1] +=  _ppart_bound_idx[i_part][i];
+    }
 
     free(order);
     free(connect_entity);
@@ -974,7 +1026,26 @@ PDM_generate_entity_graph_comm
 
   }
 
+  /*
+   * Panic Verbose
+   */
+  if(1 == 1){
+    for(int i_part = 0; i_part < n_part; ++i_part){
 
+      printf("[%d] _pproc_bound_idx::", i_part);
+      for(int i = 0; i < n_rank+1; ++i){
+        printf("%d ", _pproc_bound_idx[i_part][i]);
+      }
+      printf("\n");
+
+      printf("[%d] _ppart_bound_idx::", i_part);
+      for(int i = 0; i < part_distribution[n_rank]; ++i){
+        printf("%d ", _ppart_bound_idx[i_part][i]);
+      }
+      printf("\n");
+    }
+
+  }
 
 
 

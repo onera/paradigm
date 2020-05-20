@@ -416,6 +416,7 @@ int main(int argc, char *argv[])
   int** ppart_face_bound_idx;
   int** pface_bound_idx;
   PDM_generate_entity_graph_comm(comm,
+                                 part_distribution,
                                  face_distribution,
                                  n_part,
                                  pn_faces,
@@ -452,10 +453,16 @@ int main(int argc, char *argv[])
     free(pface_group_ln_to_gn[i_part]);
     free(pface_group[i_part]);
     free(pface_group_idx[i_part]);
+    free(pproc_face_bound_idx[i_part]);
+    free(ppart_face_bound_idx[i_part]);
+    free(pface_bound_idx[i_part]);
   }
   free(pcell_face);
   free(pcell_face_idx);
   free(pcell_ln_to_gn);
+  free(pproc_face_bound_idx);
+  free(ppart_face_bound_idx);
+  free(pface_bound_idx);
   free(pface_ln_to_gn);
   free(pn_cell);
   free(pn_faces);
