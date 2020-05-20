@@ -412,7 +412,17 @@ int main(int argc, char *argv[])
    *
    *
    */
-
+  int** pproc_face_bound_idx;
+  int** ppart_face_bound_idx;
+  int** pface_bound_idx;
+  PDM_generate_entity_graph_comm(comm,
+                                 face_distribution,
+                                 n_part,
+                                 pn_faces,
+                                 pface_ln_to_gn,
+                      (int ***) &pproc_face_bound_idx,
+                      (int ***) &ppart_face_bound_idx,
+                      (int ***) &pface_bound_idx);
 
 
 
