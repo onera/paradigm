@@ -1487,7 +1487,8 @@ PDM_box_set_send_data_to_origin_distrib
   int n_boxes = _local_boxes->n_boxes;
   int *origin = _local_boxes->origin;
 
-  int s_comm = PDM_MPI_Comm_rank (boxes->comm, &s_comm);
+  int s_comm;
+  PDM_MPI_Comm_size (boxes->comm, &s_comm);
 
   int *curr_count = (int *) malloc (sizeof(int) * s_comm);
   for (int i = 0; i < s_comm; i++) {
@@ -1594,7 +1595,6 @@ PDM_box_set_send_data_to_origin_distrib
       origin_distrib_stride[i_part][iElt] = orig_stride[i];
     }
 
-    free (curr_stride);
   }
 
   /*
@@ -1609,7 +1609,7 @@ PDM_box_set_send_data_to_origin_distrib
       orig_count[i] = 0;
     }
 
-    for (int i = 0; i < s_comm+1; i++) {
+    for (int i = 0; i < s_comm; i++) {
       for (int k = curr_shift[i]; k < curr_shift[i+1]; k++) {
         curr_count[i] += curr_stride[k];
       }
@@ -1680,7 +1680,7 @@ PDM_box_set_send_data_to_origin_distrib
                   orig_data, orig_count, orig_shift, PDM_MPI_UNSIGNED_CHAR,
                   boxes->comm);
 
-    int **_origin_distrib_idx = (int **) malloc (sizeof(int) * _local_boxes->n_part_orig);
+    int **_origin_distrib_idx = (int **) malloc (sizeof(int *) * _local_boxes->n_part_orig);
     for (int i = 0; i < _local_boxes->n_part_orig; i++) {
       _origin_distrib_idx[i]   = (int *) malloc (sizeof(int) * (_local_boxes->n_boxes_orig[i] + 1));
       for (int k = 0; k < _local_boxes->n_boxes_orig[i] + 1; k++) {
@@ -1798,6 +1798,9 @@ PDM_box_set_send_data_to_origin_distrib
   /*
    * Clean up
    */
+
+  if (curr_stride != NULL)
+    free (curr_stride);
 
   free (orig_count);
   free (curr_count);
