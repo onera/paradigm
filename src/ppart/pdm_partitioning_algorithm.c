@@ -34,6 +34,7 @@
 
 #include "pdm_partitioning_algorithm.h"
 #include "pdm_distrib.h"
+#include "pdm_order.h"
 // #include "pdm_para_graph_dual.h"
 
 /*----------------------------------------------------------------------------
@@ -903,15 +904,73 @@ PDM_generate_entity_graph_comm
     int* _part_data = part_data[i_part];
 
     /* First pass to count */
-    int idx_part = 0;
+    int idx_part  = 0;
+    int n_connect = 0;
     for(int i_entity = 0; i_entity < n_entities[i_part]; ++i_entity) {
       printf("[%d] part_stri::[%d] -> ", i_entity, _part_stri[i_entity]);
       for(int i_data = 0; i_data < _part_stri[i_entity]; ++i_data) {
         printf("%d ", _part_data[idx_part++]);
+        n_connect++;
       }
       printf("\n");
     }
 
+    /* Rebuild in a specific array all the information to sort properly */
+    n_connect = n_connect/3;
+    PDM_g_num_t* connect_entity = (PDM_g_num_t * ) malloc( n_connect * 3 * sizeof(PDM_g_num_t ));
+    int*         connect_info   = (int         * ) malloc( n_connect * 2 * sizeof(int         ));
+    printf("n_connect::%d\n", n_connect);
+
+    idx_part  = 0;
+    n_connect = 0;
+    for(int i_entity = 0; i_entity < n_entities[i_part]; ++i_entity) {
+      for(int i_data = 0; i_data < _part_stri[i_entity]/3; ++i_data) {
+        printf(" idx_part = %d\n", idx_part);
+        int opp_rank = _part_data[3*idx_part  ];
+        int opp_part = _part_data[3*idx_part+1];
+
+        /* On enleve de part_data les informations inutiles (car connu sur cette partition ) */
+        int is_distant_bound = 1;
+        if( opp_rank == i_rank ){
+          if( opp_part == i_part ) {
+            is_distant_bound = 0;
+          }
+        }
+
+        if( is_distant_bound ) {
+          connect_entity[3*n_connect  ] = opp_rank;
+          connect_entity[3*n_connect+1] = opp_part;
+          connect_entity[3*n_connect+2] = pentity_ln_to_gn[i_part][i_entity];
+
+          connect_info[2*n_connect  ] = i_entity;
+          connect_info[2*n_connect+1] = _part_data[3*idx_part+2];
+
+          n_connect += 1;
+        }
+        idx_part += 1;
+      }
+    }
+    printf("n_connect_sort::%d\n", n_connect);
+
+    /*
+     * Sort
+     */
+    int* order = (int *) malloc( n_connect * sizeof(int) );
+    PDM_order_gnum_s(connect_entity, 3, order, n_connect);
+
+    /*
+     * Panic verbose
+     */
+    printf("order::\n");
+    for(int i = 0; i < n_connect; ++i){
+      printf("%d ", order[i]);
+    }
+    printf("\n");
+
+
+    free(order);
+    free(connect_entity);
+    free(connect_info);
 
   }
 
