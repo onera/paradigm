@@ -255,7 +255,7 @@ int main(int argc, char *argv[])
     PDM_printf("\n");
 
   }
-  int ppart_id = 0;
+  // int ppart_id = 0;
 
   gettimeofday(&t_elaps_debut, NULL);
 
@@ -264,7 +264,13 @@ int main(int argc, char *argv[])
    */
   PDM_g_num_t* cell_distribution = PDM_compute_entity_distribution(comm, dn_cell);
   PDM_g_num_t* face_distribution = PDM_compute_entity_distribution(comm, dn_face);
-  PDM_g_num_t* part_distribution = PDM_compute_entity_distribution(comm, n_part);
+  PDM_g_num_t* part_distribution = PDM_compute_entity_distribution(comm, n_part );
+
+  // printf("part_distribution::\n");
+  // for(int i_part = 0; i_part < n_rank+1; ++i_part){
+  //   printf("%d ", part_distribution[i_part]);
+  // }
+  // printf("\n");
 
   /*
    * Compute dual graph
@@ -286,7 +292,7 @@ int main(int argc, char *argv[])
   /*
    * Split it !!! CAUTION dn_cell can be different of the size of dual graph !!!
    */
-  printf("PDM_split_graph\n");
+  // printf("PDM_split_graph\n");
   int* cell_part    = (int *) malloc( sizeof(int) * dn_cell );
   int* dcell_weight = (int *) malloc( sizeof(int) * dn_cell );
   for(int i = 0; i < dn_cell; ++i){
@@ -306,15 +312,16 @@ int main(int argc, char *argv[])
   }
 
   // PDM_split_graph(comm, dual_graph_idx, dual_graph, NULL, cell_part, dn_cell, n_rank);
-  PDM_split_graph(comm, dual_graph_idx, dual_graph, NULL, cell_part, dn_cell, n_part);
+  // PDM_split_graph(comm, dual_graph_idx, dual_graph, NULL, cell_part, dn_cell, n_part);
+  PDM_split_graph(comm, dual_graph_idx, dual_graph, NULL, cell_part, dn_cell, part_distribution[n_rank]-1);
   // PDM_split_graph(comm, dual_graph_idx, dual_graph, NULL, cell_part, dn_cell, n_rank);
 
 
-  printf("cell_part[%d]::", dn_cell);
-  for(int i = 0; i < dn_cell; ++i){
-    printf("%d ", cell_part[i]);
-  }
-  printf("\n");
+  // printf("cell_part[%d]::", dn_cell);
+  // for(int i = 0; i < dn_cell; ++i){
+  //   printf("%d ", cell_part[i]);
+  // }
+  // printf("\n");
 
   /*
    * On dispose pour chaque cellule de la partition associé : il faut retrouver le
@@ -397,20 +404,6 @@ int main(int argc, char *argv[])
 
   /*
    * Graph communication build
-   *    --> On retombe dans le même pb avec le blk_strid qui a la taille du nombre d'elmts dans le block
-   *        et pas égale au nombre total dans le block
-   *    Car sinon : Pour chaque entités on peut déduire le graphe de comm facilement
-   *       -> entity_ln_to_gn
-   *       -> pour chaque entity : on met le numero de partition + proc
-   *
-   *    Avec le part_to_block en stride variable on va avoir le lien entre tt les entités
-   *        --> Il faut donc reconstruire une stride variable de connectivité
-   *        --> Pour les faces  : stride = 1
-   *        --> Pour les vertex : stride = n_vtx_connected
-   *        --> Pour les edges  : stride = n_edge_connected
-   *    On pourrait faire aussi sur les cellules pour Niels
-   *
-   *
    */
   int** pproc_face_bound_idx;
   int** ppart_face_bound_idx;

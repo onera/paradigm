@@ -588,14 +588,15 @@ PDM_generate_part_entity_ln_to_gn
   /*
    * Exchange
    */
-  int** cell_stri;
+  int**         cell_stri;
+  PDM_g_num_t** pcell_face_tmp; /* We keep it in double precision because it contains global numbering */
   PDM_block_to_part_exch2(btp,
                           sizeof(PDM_g_num_t),
                           PDM_STRIDE_VAR,
                           blk_stri,
              (void *  )   dcell_face,
              (int  ***)  &cell_stri,
-             (void ***) &*pcell_face);
+             (void ***)  &pcell_face_tmp);
 
   free(blk_stri);
 
@@ -609,7 +610,7 @@ PDM_generate_part_entity_ln_to_gn
       for(int i_cell = 0; i_cell < n_elmts[i_part]; ++i_cell) {
         printf("[%d] --> ", cell_stri[i_part][i_cell]);
         for(int i_data = 0; i_data < cell_stri[i_part][i_cell]; ++i_data ){
-          printf("%d ", (*pcell_face)[i_part][idx_data++] );
+          printf("%d ", pcell_face_tmp[i_part][idx_data++] );
         }
         printf("\n");
       }
@@ -622,11 +623,13 @@ PDM_generate_part_entity_ln_to_gn
    * Post-treatment - Caution the recv connectivity can be negative
    */
   *pface_ln_to_gn = (PDM_g_num_t **) malloc( n_part * sizeof(PDM_g_num_t *) );
+  *pcell_face     = (int         **) malloc( n_part * sizeof(int         *) );
   *pcell_face_idx = (int         **) malloc( n_part * sizeof(int         *) );
   *n_faces        = (int          *) malloc( n_part * sizeof(int          ) );
 
   /* Shortcut */
   PDM_g_num_t** _face_ln_to_gn = *pface_ln_to_gn;
+  int** _cell_face             = *pcell_face;
   int** _cell_face_idx         = *pcell_face_idx;
   int*  _n_faces               = *n_faces;
 
@@ -641,33 +644,38 @@ PDM_generate_part_entity_ln_to_gn
       _cell_face_idx[i_part][i_cell+1] = _cell_face_idx[i_part][i_cell] + cell_stri[i_part][i_cell];
     }
 
+
     /*
      * Save array
      */
     _face_ln_to_gn[i_part] = (PDM_g_num_t *) malloc( _cell_face_idx[i_part][n_elmts[i_part]] * sizeof(PDM_g_num_t));
-    PDM_g_num_t* _pface_ln_to_gn = (PDM_g_num_t *) _face_ln_to_gn[i_part];
+    _cell_face[i_part]     = (int *        ) malloc( _cell_face_idx[i_part][n_elmts[i_part]] * sizeof(int        ));
+
+    PDM_g_num_t* _pface_ln_to_gn = _face_ln_to_gn[i_part];
+    int*         _pcell_face     = _cell_face[i_part];
 
     int idx_data = 0;
     for(int i_cell = 0; i_cell < n_elmts[i_part]; ++i_cell) {
       for(int i_data = 0; i_data < cell_stri[i_part][i_cell]; ++i_data ){
-        _pface_ln_to_gn[idx_data++] = PDM_ABS((*pcell_face)[i_part][idx_data]);
+        _pface_ln_to_gn[idx_data++] = PDM_ABS(pcell_face_tmp[i_part][idx_data]);
       }
     }
 
     /*
      * Deduce ln_to_gn
      */
-    printf("Sort data between : 0 and %d \n", idx_data);
+    // printf("Sort data between : 0 and %d \n", idx_data);
     int n_elmt_sort = PDM_inplace_unique_long(_pface_ln_to_gn , 0, idx_data-1);
-    // n_elmt_sort = n_elmt_sort -1;
     _n_faces[i_part] = n_elmt_sort;
 
-    printf("n_elmt_sort::%d\n", n_elmt_sort);
-    printf("_pface_ln_to_gn::");
-    for(int i = 0; i < idx_data; ++i){
-      printf("%d ", _pface_ln_to_gn[i]);
+    if(0 == 1){
+      printf("n_elmt_sort::%d\n", n_elmt_sort);
+      printf("_pface_ln_to_gn::");
+      for(int i = 0; i < idx_data; ++i){
+        printf("%d ", _pface_ln_to_gn[i]);
+      }
+      printf("\n");
     }
-    printf("\n");
 
     /*
      * Realloc
@@ -681,12 +689,12 @@ PDM_generate_part_entity_ln_to_gn
     idx_data = 0;
     for(int i_cell = 0; i_cell < n_elmts[i_part]; ++i_cell) {
       for(int i_data = 0; i_data < cell_stri[i_part][i_cell]; ++i_data ){
-        int         g_sgn  = PDM_SIGN((*pcell_face)[i_part][idx_data]);
-        PDM_g_num_t g_elmt = PDM_ABS ((*pcell_face)[i_part][idx_data]);
+        int         g_sgn  = PDM_SIGN(pcell_face_tmp[i_part][idx_data]);
+        PDM_g_num_t g_elmt = PDM_ABS (pcell_face_tmp[i_part][idx_data]);
         int l_elmt         = PDM_binary_search_long(g_elmt, _pface_ln_to_gn, n_elmt_sort); /* In [0, n_elmt_sort-1] */
 
         /* Overwrite the pcell_face with local numbering and reput sign on it */
-        (*pcell_face)[i_part][idx_data++] = (l_elmt + 1) * g_sgn ;
+        _pcell_face[idx_data++] = (l_elmt + 1) * g_sgn ;
       }
     }
   }
@@ -717,8 +725,10 @@ PDM_generate_part_entity_ln_to_gn
   free(cell_distribution_ptb);
   for(int i_part = 0; i_part < n_part; ++i_part) {
     free(cell_stri[i_part]);
+    free(pcell_face_tmp[i_part]);
   }
   free(cell_stri);
+  free(pcell_face_tmp);
 
 }
 
@@ -739,7 +749,6 @@ PDM_generate_entity_graph_comm
  int                ***pentity_bound_idx
 )
 {
-  printf("PDM_generate_part_entity_ln_to_gn\n");
   int i_rank;
   int n_rank;
 
@@ -918,25 +927,25 @@ PDM_generate_entity_graph_comm
     int idx_part  = 0;
     int n_connect = 0;
     for(int i_entity = 0; i_entity < n_entities[i_part]; ++i_entity) {
-      printf("[%d] part_stri::[%d] -> ", i_entity, _part_stri[i_entity]);
+      // printf("[%d] part_stri::[%d] -> ", i_entity, _part_stri[i_entity]);
       for(int i_data = 0; i_data < _part_stri[i_entity]; ++i_data) {
-        printf("%d ", _part_data[idx_part++]);
+        // printf("%d ", _part_data[idx_part++]);
         n_connect++;
       }
-      printf("\n");
+      // printf("\n");
     }
 
     /* Rebuild in a specific array all the information to sort properly */
     n_connect = n_connect/3;
     PDM_g_num_t* connect_entity = (PDM_g_num_t * ) malloc( n_connect * 3 * sizeof(PDM_g_num_t ));
     int*         connect_info   = (int         * ) malloc( n_connect * 2 * sizeof(int         ));
-    printf("n_connect::%d\n", n_connect);
+    // printf("n_connect::%d\n", n_connect);
 
     idx_part  = 0;
     n_connect = 0;
     for(int i_entity = 0; i_entity < n_entities[i_part]; ++i_entity) {
       for(int i_data = 0; i_data < _part_stri[i_entity]/3; ++i_data) {
-        printf(" idx_part = %d\n", idx_part);
+        // printf(" idx_part = %d\n", idx_part);
         int opp_rank = _part_data[3*idx_part  ];
         int opp_part = _part_data[3*idx_part+1];
 
@@ -972,11 +981,13 @@ PDM_generate_entity_graph_comm
     /*
      * Panic verbose
      */
-    printf("order::\n");
-    for(int i = 0; i < n_connect; ++i){
-      printf("%d ", order[i]);
+    if( 0 == 1){
+      printf("order::\n");
+      for(int i = 0; i < n_connect; ++i){
+        printf("%d ", order[i]);
+      }
+      printf("\n");
     }
-    printf("\n");
 
     /* We need to recompute for each opposite part */
     _pproc_bound_idx[i_part]   = (int *) malloc( ( n_rank + 1                ) * sizeof(int));
