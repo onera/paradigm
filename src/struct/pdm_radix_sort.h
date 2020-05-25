@@ -42,11 +42,7 @@ PDM_radix_sort_long
  PDM_g_num_t *array,
  int         *order,
  int          lArray
-)
-{
-
-}
-
+);
 
 #ifdef __cplusplus
 }
