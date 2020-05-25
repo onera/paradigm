@@ -1,5 +1,5 @@
-#ifndef __PDM_SORT_H__
-#define __PDM_SORT_H__
+#ifndef __PDM_RADIX_SORT_H__
+#define __PDM_RADIX_SORT_H__
 
 /*----------------------------------------------------------------------------
  * Standard C library headers
