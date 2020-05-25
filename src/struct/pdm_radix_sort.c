@@ -100,6 +100,53 @@ _counting_sort
 
 
 static inline
+int*
+_counting_sort_with_order
+(
+ PDM_g_num_t* v,
+ PDM_g_num_t* tmp,
+ int*         order,
+ int*         order_tmp,
+ int beg,
+ int end,
+ int place
+)
+{
+  /* First step - Count */
+  int n_buckets = 10;
+  int* count = malloc( (n_buckets + 1) * sizeof(int));
+
+  /* Set to zero */
+  for(int i = 0; i < n_buckets+1; ++i){
+    count[i] = 0;
+  }
+
+  /* Count */
+  for(int i = beg; i < end; ++i) {
+    count[(v[i]/place)%10]++;
+  }
+
+  /* Rebuild array of displacement */
+  for(int i = 1; i < n_buckets+1; ++i) {
+    count[i] += count[i-1];
+  }
+
+  for(int i = end-1; i >= beg; i--){
+    tmp[beg+count[(v[i]/place)%10]-1] = v[i];
+    order_tmp[beg+count[(v[i]/place)%10]-1] = order[i];
+    count[(v[i]/place)%10]--;
+  }
+
+  for(int i = beg; i < end; ++i) {
+    v[i] = tmp[i];
+    order[i] = order_tmp[i];
+  }
+
+  return count;
+}
+
+
+static inline
 void
 _cc_radix_sort
 (
@@ -120,7 +167,28 @@ _cc_radix_sort
 
 }
 
+static inline
+void
+_cc_radix_sort_with_order
+(
+ PDM_g_num_t* v,
+ PDM_g_num_t* tmp,
+ int*         order,
+ int*         order_tmp,
+ int beg,
+ int end,
+ int place
+)
+{
+  int place_init = place*10;
+  place = 1;
+  while(place < place_init){
+    int* range = _counting_sort_with_order(v, tmp, order, order_tmp, beg, end, place);
+    free(range);
+    place *= 10;
+  }
 
+}
 
 static inline
 void
@@ -149,11 +217,6 @@ _std_radix_sort
   }
 
   /* Il faut aglomerer les ranges succesives pour gagner si elle sont trop petite */
-  // int i  = 0;
-  // int i+1 = 1;
-
-  // fmt::print(" Range is : {0} \n", range);
-
   for(int i = 0; i < 11; ++i){
     // fmt::print("Manage {0} = {1} / {2}\n", i, range[i], range[i+1]);
     if( (range[i+1] - range[i]) == 0){
@@ -163,6 +226,52 @@ _std_radix_sort
     } else if( (range[i+1] - range[i]) <= cache_size) {
       // fmt::print("Case 3 :: {0} - {1} \n ", range[i], range[i+1]);
       _cc_radix_sort(v, tmp, beg+range[i], beg+range[i+1], place);
+    }
+  }
+
+  free(range);
+
+}
+
+
+static inline
+void
+_std_radix_sort_with_order
+(
+ PDM_g_num_t* v,
+ PDM_g_num_t* tmp,
+ int*         order,
+ int*         order_tmp,
+ int          beg,
+ int          end,
+ int          place
+)
+{
+  int cache_size     = 5000;
+
+  if(beg == end){
+    return;
+  }
+
+  int* range = _counting_sort_with_order(v, tmp, order, order_tmp, beg, end, place);
+
+  place /= 10;
+
+  if(place == 0) {
+    free(range);
+    return;
+  }
+
+  /* Il faut aglomerer les ranges succesives pour gagner si elle sont trop petite */
+  for(int i = 0; i < 11; ++i){
+    // fmt::print("Manage {0} = {1} / {2}\n", i, range[i], range[i+1]);
+    if( (range[i+1] - range[i]) == 0){
+    } else if( (range[i+1] - range[i]) > cache_size){
+      // fmt::print("Case 1 :: {0} - {1} \n ", range[i], range[i+1]);
+      _std_radix_sort_with_order(v, tmp, order, order_tmp, beg+range[i], beg+range[i+1] , place);
+    } else if( (range[i+1] - range[i]) <= cache_size) {
+      // fmt::print("Case 3 :: {0} - {1} \n ", range[i], range[i+1]);
+      _cc_radix_sort_with_order(v, tmp, order, order_tmp, beg+range[i], beg+range[i+1], place);
     }
   }
 
@@ -207,7 +316,16 @@ PDM_radix_sort_long
   int* tmp = (int *) malloc( lArray * sizeof(int));
 
   int place = (int) pow(10, n_step);
-  std_radix_sort(array, tmp, 0, lArray, place);
+  printf("place::%d \n", place);
+
+  if(order != NULL){
+    _std_radix_sort(array, tmp, 0, lArray, place);
+  } else {
+    int* order_tmp = (int *) malloc( lArray * sizeof(int));
+
+    _std_radix_sort_with_order(array, tmp, order, order_tmp, 0, lArray, place);
+    free(order_tmp);
+  }
 
 
   free(tmp);
