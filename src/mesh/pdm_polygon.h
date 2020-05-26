@@ -184,6 +184,42 @@ PDM_polygon_compute_barycenter
  double bary[3]
 );
 
+//--------------------
+void
+PDM_polygon_orthonormal_basis
+(
+ const int     n_vtx,
+ const double *vtx_xyz,
+ double       *tangent_u,
+ double       *tangent_v,
+ double       *normal
+ );
+
+void PDM_polygon_compute_uv_coordinates
+(
+ const int     n_pts,
+ const double *xyz,
+ const double *orig_xyz,
+ const double *tangent_u,
+ const double *tangent_v,
+ double       *uv
+ );
+
+PDM_polygon_status_t PDM_polygon_point_in_2d
+(
+ const double  uv[2],
+ const int     n_vtx,
+ const double *vtx_uv,
+ double       *bounds
+ );
+
+PDM_polygon_status_t PDM_polygon_point_in_2d_wn
+(
+ const double  uv[2],
+ const int     n_vtx,
+ const double *vtx_uv,
+ double       *bounds
+ );
 
 
 #ifdef __cplusplus

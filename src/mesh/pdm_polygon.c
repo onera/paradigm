@@ -542,8 +542,10 @@ PDM_polygon_point_in
          *    (u!=0 u!=1 v=0), (u!=0 u!=1 v=1)
          */
 
-        if ( (_POLYGON_RAY_TOL < u) && (u < 1.0 - _POLYGON_RAY_TOL) &&
-             (_POLYGON_RAY_TOL < v) && (v < 1.0 - _POLYGON_RAY_TOL) ) {
+        if ( (0. < u) && (u < 1.0) &&
+             (0. < v) && (v < 1.0) ) {
+        /* if ( (_POLYGON_RAY_TOL < u) && (u < 1.0 - _POLYGON_RAY_TOL) && */
+        /*      (_POLYGON_RAY_TOL < v) && (v < 1.0 - _POLYGON_RAY_TOL) ) { */
           numInts++;
         }
         else {
@@ -619,6 +621,372 @@ double bary[3]
     }
     bary[i] /= numPts;
   }
+}
+
+
+//--------------------
+void
+PDM_polygon_orthonormal_basis
+(
+ const int     n_vtx,
+ const double *vtx_xyz,
+ double       *tangent_u,
+ double       *tangent_v,
+ double       *normal
+ )
+{
+  const double eps = 1e-15;
+
+  /* Compute polygon normal */
+  PDM_plane_normal (n_vtx, vtx_xyz, normal);
+
+  /* Find one suitable tangent direction */
+  for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
+    double mag = 0;
+    int jvtx = (ivtx + 1) % n_vtx;
+
+    for (int idim = 0; idim < 3; idim++) {
+      tangent_u[idim] = vtx_xyz[3*jvtx + idim] - vtx_xyz[3*ivtx + idim];
+      mag += tangent_u[idim] * tangent_u[idim];
+    }
+
+    if (mag > eps) {
+      mag = 1. / sqrt(mag);
+      for (int idim = 0; idim < 3; idim++) {
+        tangent_u[idim] *= mag;
+      }
+    }
+  }
+
+  /* Complete orthonormal basis with second tangent direction */
+  PDM_CROSS_PRODUCT (tangent_v, normal, tangent_u);
+}
+
+
+
+void PDM_polygon_compute_uv_coordinates
+(
+ const int     n_pts,
+ const double *xyz,
+ const double  orig_xyz[3],
+ const double  tangent_u[3],
+ const double  tangent_v[3],
+ double       *uv
+ )
+{
+  for (int ipt = 0; ipt < n_pts; ipt++) {
+    const double *_xyz = xyz + 3 * ipt;
+    double *_uv  = uv + 2 * ipt;
+
+    _uv[0] = 0;
+    _uv[1] = 0;
+
+    for (int idim = 0; idim < 3; idim++) {
+      double d = _xyz[idim] - orig_xyz[idim];
+
+      _uv[0] += d * tangent_u[idim];
+      _uv[1] += d * tangent_v[idim];
+    }
+  }
+}
+
+
+PDM_polygon_status_t PDM_polygon_point_in_2d
+(
+ const double  uv[2],
+ const int     n_vtx,
+ const double *vtx_uv,
+ double       *bounds
+ )
+{
+
+  /*
+   * Do a quick bounds check
+   */
+  if (bounds == NULL) {
+    bounds = malloc (sizeof(double) * 4);
+
+    bounds[0] =  DBL_MAX;
+    bounds[1] = -DBL_MAX;
+    bounds[2] =  DBL_MAX;
+    bounds[3] = -DBL_MAX;
+
+    for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
+      for (int idim = 0; idim < 2; idim++) {
+        bounds[2*idim]     = PDM_MIN (bounds[2*idim],     vtx_uv[2*ivtx + idim]);
+        bounds[2*idim + 1] = PDM_MAX (bounds[2*idim + 1], vtx_uv[2*ivtx + idim]);
+      }
+    }
+  }
+
+  if ( uv[0] < bounds[0] || uv[0] > bounds[1] ||
+       uv[1] < bounds[2] || uv[1] > bounds[3]) {
+    return PDM_POLYGON_OUTSIDE;
+  }
+
+
+  /*
+   * Define a random ray
+   */
+  double scale = sqrt( (bounds[1] - bounds[0]) * (bounds[1] - bounds[0]) +
+                       (bounds[3] - bounds[2]) * (bounds[3] - bounds[2]) );
+
+  double ray[2], ray_mag;
+  do {
+    ray[0] = _randomVal(0., 1.);
+    ray[1] = _randomVal(0., 1.);
+
+    ray_mag = sqrt (ray[0] * ray[0] + ray[1] * ray[1]);
+  } while (ray_mag < 1.e-15);
+
+  scale /= ray_mag;
+  ray[0] = uv[0] + scale * ray[0];
+  ray[1] = uv[1] + scale * ray[1];
+
+  /*
+   * Count intersections between the ray and the edges of the polygon
+   */
+  int count = 0;
+
+  for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
+    int jvtx = (ivtx + 1) % n_vtx;
+
+    double t1, t2;
+    PDM_line_intersect_t stat = PDM_line_intersection_2d (uv,
+                                                          ray,
+                                                          vtx_uv + 2*ivtx,
+                                                          vtx_uv + 2*jvtx,
+                                                          &t1,
+                                                          &t2);
+    if (stat == PDM_LINE_INTERSECT_YES) {
+      count++;
+    }
+
+  }
+
+  if (count % 2 == 0) {
+    return PDM_POLYGON_OUTSIDE;
+  } else {
+    return PDM_POLYGON_INSIDE;
+  }
+}
+
+
+
+
+#if 0
+PDM_polygon_status_t PDM_polygon_point_in_3d
+(
+ const double  xyz[3],
+ const int     n_vtx,
+ const double *vtx_xyz,
+ double       *normal[3],
+ double       *bounds
+ )
+{
+  if (normal == NULL) {
+    normal = malloc (sizeof(double) * 3);
+
+    PDM_plane_normal (n_vtx,
+                      vtx_xyz,
+                      normal);
+  }
+
+
+  /*
+   * Do a quick bounds check
+   */
+  if (bounds == NULL) {
+    bounds = malloc (sizeof(double) * 6);
+
+    bounds[0] =  DBL_MAX;
+    bounds[1] = -DBL_MAX;
+    bounds[2] =  DBL_MAX;
+    bounds[3] = -DBL_MAX;
+    bounds[4] =  DBL_MAX;
+    bounds[5] = -DBL_MAX;
+
+    for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
+      for (int idim = 0; idim < 3; idim++) {
+        bounds[2*idim]     = PDM_MIN (bounds[2*idim],     vtx_xyz[3*ivtx + idim]);
+        bounds[2*idim + 1] = PDM_MAX (bounds[2*idim + 1], vtx_xyz[3*ivtx + idim]);
+      }
+    }
+  }
+
+  if ( xyz[0] < bounds[0] || xyz[0] > bounds[1] ||
+       xyz[1] < bounds[2] || xyz[1] > bounds[3] ||
+       xyz[2] < bounds[4] || xyz[2] > bounds[5]) {
+
+    return PDM_POLYGON_OUTSIDE;
+  }
+
+
+  /*
+   * Define a random ray
+   */
+  double scale = sqrt( (bounds[1] - bounds[0]) * (bounds[1] - bounds[0]) +
+                       (bounds[3] - bounds[2]) * (bounds[3] - bounds[2]) +
+                       (bounds[5] - bounds[4]) * (bounds[5] - bounds[4]));
+
+  double ray[3], ray_mag;
+  do {
+    double ray_n = 0.0;
+    for (int idim = 0; idim < 3; idim++) {
+      ray[idim] = _randomVal(0., 1.);
+      ray_n += ray[idim] * normal[idim];
+    }
+
+    double ray_mag = 0.0;
+    for (int idim = 0; idim < 3; idim++) {
+      ray[idim] -= ray_n * normal[idim];
+      ray_mag += ray[idim] * ray[idim];
+    }
+
+  } while (ray_mag < 1e-15);
+
+  scale /= sqrt (ray_mag);
+  for (int idim = 0; idim < 3; idim++) {
+    ray[idim] = xyz[idim] + scale * ray[idim];
+  }
+
+  /* ... */
+}
+#endif
+
+
+/*
+ *
+ * http://geomalgorithms.com/a03-_inclusion.html
+ */
+
+PDM_polygon_status_t PDM_polygon_point_in_2d_wn
+(
+ const double  xy[2],
+ const int     n_vtx,
+ const double *vtx_xy,
+ double       *bounds
+ )
+{
+  double eps = 1e-12;
+
+  /*
+   * Do a quick bounds check
+   */
+  if (bounds == NULL) {
+    bounds = malloc (sizeof(double) * 4);
+
+    bounds[0] =  DBL_MAX;
+    bounds[1] = -DBL_MAX;
+    bounds[2] =  DBL_MAX;
+    bounds[3] = -DBL_MAX;
+
+    for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
+      for (int idim = 0; idim < 2; idim++) {
+        bounds[2*idim]     = PDM_MIN (bounds[2*idim],     vtx_xy[2*ivtx + idim]);
+        bounds[2*idim + 1] = PDM_MAX (bounds[2*idim + 1], vtx_xy[2*ivtx + idim]);
+      }
+    }
+  }
+
+  if ( xy[0] < bounds[0] || xy[0] > bounds[1] ||
+       xy[1] < bounds[2] || xy[1] > bounds[3]) {
+    return PDM_POLYGON_OUTSIDE;
+  }
+
+  double scale = 0;
+  for (int idim = 0; idim < 2; idim++) {
+    scale = PDM_MAX (scale, bounds[2*idim + 1] - bounds[2*idim]);
+  }
+
+  if (scale > 1.0) {
+    eps *= scale;
+  }
+
+  double eps2 = eps * eps;
+
+
+  /* Compute winding number */
+  int wn = 0;
+
+  for (int i = 0; i < n_vtx; i++) {
+    int ip = (i+1) % n_vtx;
+    const double *p0 = vtx_xy + 2*i;
+    const double *p1 = vtx_xy + 2*ip;
+
+    double dx = xy[0] - p0[0];
+    double dy = xy[1] - p0[1];
+
+    //-->>
+#if 1
+    if (dx*dx + dy*dy < eps2) {
+      /* Point coincident with vertex i */
+      return PDM_POLYGON_INSIDE;
+    }
+#endif
+    //<<--
+
+    if (dy >= 0) {//
+
+      if (p1[1] > xy[1]) {
+        /* Upward crossing */
+        double ex = p1[0] - p0[0];
+        double ey = p1[1] - p0[1];
+
+        double s = ex*dy - ey*dx;
+        if (s > eps) {//if (s > 0) {
+          wn++;
+        } else if (s > -eps) {
+          double denom = ex*ex + ey*ey;
+          if (denom < eps2) {
+            /* Vertices i and ip are coincident */
+            return PDM_POLYGON_DEGENERATED;
+          } else {
+            /* Compute parameter along line (i, ip) */
+            double t = (ex*dx + ey*dy) / denom;
+            if (t > -eps && t < 1 + eps) {
+              return PDM_POLYGON_INSIDE;
+            }
+          }
+        }
+      }
+
+    } else {
+
+      if (p1[1] < xy[1]) {
+        /* Downward crossing */
+        double ex = p1[0] - p0[0];
+        double ey = p1[1] - p0[1];
+
+        double s = ex*dy - ey*dx;
+        if (s < -eps) {//if (s < 0) {
+          wn--;
+        } else if (s < eps) {
+          double denom = ex*ex + ey*ey;
+          if (denom < eps2) {
+            /* Vertices i and ip are coincident */
+            return PDM_POLYGON_DEGENERATED;
+          } else {
+            /* Compute parameter along line (i, ip) */
+            double t = (ex*dx + ey*dy) / denom;
+            if (t > -eps && t < 1 + eps) {
+              return PDM_POLYGON_INSIDE;
+            }
+          }
+        }
+
+      }
+
+    }
+  }
+
+  /* Result */
+  if (wn == 0) {
+    return PDM_POLYGON_OUTSIDE;
+  } else {
+    return PDM_POLYGON_INSIDE;
+  }
+
 }
 
 #ifdef __cplusplus

@@ -5,6 +5,7 @@
 #include <float.h>
 #include <math.h>
 #include <stdlib.h>
+#include <assert.h>
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
@@ -22,6 +23,8 @@
 #include "fvmc_triangulate.h"
 #include "fvmc_point_location.h"
 #include "fvmc_ho_basis.h"
+
+#include "pdm_mean_values.h"
 
 /*=============================================================================
  * Macro definitions
@@ -42,8 +45,7 @@ extern "C" {
  * Private function definition
  *============================================================================*/
 
-
-void
+static void
 computePolygonMeanValues(const int           n_dist_points,
                          const fvmc_lnum_t  *dist_locations,
                          const fvmc_coord_t *dist_coords,
@@ -383,7 +385,7 @@ static const double GEOM_EPS_VOL  = 1e-9; /*!< Constant value used to compute ge
 static const double GEOM_EPS_SURF = 1e-9; /*!< Constant value used to compute geomtric epsilon for surface */
 //<<--
 
-void
+static void
 compute3DMeanValuesPoly(const double point_coords[],
                         const int    n_poly_faces,
                         const int    n_poly_vertex,
@@ -884,6 +886,1085 @@ compute3DMeanValuesPoly(const double point_coords[],
 /*=============================================================================
  * Public function definition
  *============================================================================*/
+
+/**
+ * \brief Compute mean values of a list of points in a polygon
+ *
+ * \param [in]    n_pts            Number of points to locate
+ * \param [in]    pts              xyz-Coordinates of points locate
+ * \param [in]    n_vtx            Number of polygon vertices
+ * \param [in]    poly_vtx         Polygon connectivity
+ * \param [in]    mesh_vtx_coords  Coordinates of mesh vertices
+ * \param [inout] mesh_vtx_coords  Mean value coordinates of points to locate
+ *
+ *
+ */
+
+void
+PDM_mean_values_polygon_compute
+(
+ const int     n_pts,
+ const double *pts,
+ const int     n_vtx,
+ const int    *poly_vtx,
+ const double *mesh_vtx_coords,
+ double       *mean_values
+ )
+{
+  const double eps_base = 1e-10;
+
+  printf("vtx coords =\n");
+  double *vtx_coords = malloc (sizeof(double) * n_vtx * 3);
+  for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
+    for (int idim = 0; idim < 3; idim++) {
+      vtx_coords[3*ivtx + idim] = mesh_vtx_coords[3*poly_vtx[ivtx] + idim];
+      printf("%f ", vtx_coords[3*ivtx + idim]);
+    }
+    printf("\n");
+  }
+  printf("\n\n");
+
+  /* Projection onto average plane */
+  double bary[3];
+  PDM_polygon_compute_barycenter (n_vtx, vtx_coords, bary);
+  printf("polygon barycenter = (%f, %f, %f)\n", bary[0], bary[1], bary[2]);
+
+  double normal[3] = {0., 0., 1.};
+  PDM_plane_normal (n_vtx, vtx_coords, normal);
+  printf("polygon normal = (%f, %f, %f)\n", normal[0], normal[1], normal[2]);
+
+  /* PDM_plane_projection2 (coo_point_dist, bary, n, coo_point_dist); */
+
+  for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
+    double *vco = vtx_coords + 3 * ivtx;
+    PDM_plane_projection2 (vco, bary, normal, vco);
+  }
+
+  double poly_bounds[6] = {DBL_MAX, -DBL_MAX,
+                           DBL_MAX, -DBL_MAX,
+                           DBL_MAX, -DBL_MAX};
+  for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
+    poly_bounds[0] = PDM_MIN (poly_bounds[0], vtx_coords[3*ivtx]);
+    poly_bounds[1] = PDM_MAX (poly_bounds[1], vtx_coords[3*ivtx]);
+
+    poly_bounds[2] = PDM_MIN (poly_bounds[2], vtx_coords[3*ivtx + 1]);
+    poly_bounds[3] = PDM_MAX (poly_bounds[3], vtx_coords[3*ivtx + 1]);
+
+    poly_bounds[4] = PDM_MIN (poly_bounds[4], vtx_coords[3*ivtx + 2]);
+    poly_bounds[5] = PDM_MAX (poly_bounds[5], vtx_coords[3*ivtx + 2]);
+  }
+  printf("polygon bounds = [%f %f %f %f %f %f]\n\n\n",
+         poly_bounds[0],
+         poly_bounds[1],
+         poly_bounds[2],
+         poly_bounds[3],
+         poly_bounds[4],
+         poly_bounds[5]);
+  // TO DO : EXPAND BOUNDS BY EPSILON
+
+
+  /* Loop over points to locate */
+  double _pt[3];
+  double *s    = malloc (sizeof(double) * n_vtx * 3);
+  double *dist = malloc (sizeof(double) * n_vtx);
+  double *area = malloc (sizeof(double) * n_vtx);
+  double *dotp = malloc (sizeof(double) * n_vtx);
+
+  for (int ipt = 0; ipt < n_pts; ipt++) {
+
+    for (int idim = 0; idim < 3; idim++) {
+      _pt[idim] = pts[3*ipt + idim];
+    }
+
+    PDM_plane_projection2 (_pt, bary, normal, _pt);
+
+    /* Make sure the point lies inside the polygon or on its boundary */
+    if (PDM_polygon_point_in (_pt,
+                              n_vtx,
+                              vtx_coords,
+                              poly_bounds,
+                              normal) != 1) {
+
+      printf("! point %d not in polygon (%f, %f, %f)\n",
+             ipt,
+             _pt[0],
+             _pt[1],
+             _pt[2]);
+
+      double closest_point[3];
+      double dist_min = DBL_MAX;
+
+      for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
+        double *v1 = vtx_coords + 3 * ivtx;
+        double *v2 = vtx_coords + 3 * ((ivtx+1) % n_vtx);
+        double closest[3];
+        double t;
+
+        double dist2 = PDM_line_distance (_pt,
+                                          v1,
+                                          v2,
+                                          &t,
+                                          closest);
+
+        if (dist2 < dist_min) {
+          dist_min = dist2;
+
+          for (int idim = 0; idim < 3; idim++) {
+            closest_point[idim] = closest[idim];
+          }
+        }
+      }
+      for (int idim = 0; idim < 3; idim++) {
+        _pt[idim] = closest_point[idim];
+      }
+
+
+      printf("\t closest point = (%f, %f, %f), dist = %f\n",
+             _pt[0],
+             _pt[1],
+             _pt[2],
+             sqrt(dist_min));
+    }
+
+
+    /* Compute mean values */
+    double min_dist = DBL_MAX;
+    double *_mean_val = mean_values + n_vtx * ipt;
+    int is_on_edge = 0;
+    int is_vertex  = 0;
+
+    for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
+      int jvtx = (ivtx + 1) % n_vtx;
+
+      double *vect = s + 3 * ivtx;
+      for (int idim = 0; idim < 3; idim++) {
+        vect[idim] = vtx_coords[3*jvtx + idim]- vtx_coords[3*ivtx + idim];
+      }
+      double l_edge = PDM_MODULE (vect);
+      min_dist = PDM_MIN (l_edge, min_dist);
+    }
+
+    double eps = PDM_MAX (min_dist * eps_base, 1.e-30);
+
+    for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
+      double *vect = s + 3 * ivtx;
+      for (int idim = 0; idim < 3; idim++) {
+        vect[idim] = vtx_coords[3*ivtx + idim] - _pt[idim];
+      }
+
+      dist[ivtx] = PDM_MODULE (vect);
+    }
+
+    int current_vtx;
+    for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
+      int jvtx = (ivtx + 1) % n_vtx;
+      double *vect1 = s + 3 * ivtx;
+      double *vect2 = s + 3 * jvtx;
+      double crossp[3];
+
+      dotp[ivtx] = PDM_DOT_PRODUCT (vect1, vect2);
+      PDM_CROSS_PRODUCT(crossp, vect1, vect2);
+
+      double sign = PDM_DOT_PRODUCT (crossp, normal);
+      area[ivtx] = PDM_MODULE(crossp);
+
+      if (sign < 0) {
+        area[ivtx] = -area[ivtx];
+      }
+
+      if (dist[ivtx] <= eps) {
+
+        is_vertex = 1;
+        current_vtx = ivtx;
+        break;
+
+      } else if ((fabs(area[ivtx]) <= eps)  && (dotp[ivtx] < 0)) {
+
+        is_on_edge = 1;
+        current_vtx = ivtx;
+        break;
+
+      }
+    }
+
+    /* Current point is on a vertex of the polygon */
+    if (is_vertex) {
+      for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
+        _mean_val[ivtx] = 0.;
+      }
+      _mean_val[current_vtx] = 1.;
+    }
+
+    /* Current point is on an edge of the polygon */
+    else if (is_on_edge) {
+      for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
+        _mean_val[ivtx] = 0.;
+      }
+
+      int next_vtx = (current_vtx + 1) % n_vtx;
+      double frac = 1. / (dist[current_vtx] + dist[next_vtx]);
+
+      _mean_val[current_vtx] = dist[next_vtx]    * frac;
+      _mean_val[next_vtx]    = dist[current_vtx] * frac;
+    }
+
+    /* General case */
+    else {
+
+      double sigma = 0.;
+      for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
+        double coef = 0.;
+        int prev_vtx = (ivtx - 1 + n_vtx) % n_vtx;
+        int next_vtx = (ivtx + 1) % n_vtx;
+
+        if (fabs(area[prev_vtx]) > eps) {
+          coef += (dist[prev_vtx] - dotp[prev_vtx]/dist[ivtx]) / area[prev_vtx];
+        }
+
+        if (fabs(area[ivtx]) > eps) {
+          coef += (dist[next_vtx] - dotp[ivtx]/dist[ivtx]) / area[ivtx];
+        }
+
+        sigma += coef;
+        _mean_val[ivtx] = coef;
+      }
+
+      if (fabs(sigma) >= eps ) {
+
+        double inv_sigma = 1. / sigma;
+        for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
+          _mean_val[ivtx] *= inv_sigma;
+        }
+
+      } else {
+
+        double abs_sigma = fabs(sigma);
+        printf("Warning : Mise à NAN %f %f\n", abs_sigma,  eps);
+        for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
+          _mean_val[ivtx] = NAN;
+        }
+
+      }
+
+      /* Check result */
+      for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
+        if (_mean_val[ivtx] != _mean_val[ivtx] ||
+            _mean_val[ivtx] < 0. ||
+            _mean_val[ivtx] > 1.) {
+
+          double dist_min = DBL_MAX;
+          int i_min = 0;
+          double t_min;
+
+          for (int i = 0; i < n_vtx; i++) {
+            _mean_val[i] = 0.;
+          }
+
+          for (int i = 0; i < n_vtx; i++) {
+            double *v1 = vtx_coords + 3 * i;
+            double *v2 = vtx_coords + 3 * ((i+1) % n_vtx);
+            double closest[3];
+            double t;
+
+            double dist2 = PDM_line_distance (_pt,
+                                              v1,
+                                              v2,
+                                              &t,
+                                              closest);
+
+            if (dist2 < dist_min) {
+              t_min = t;
+              i_min = i;
+            }
+          }
+
+          _mean_val[i_min] = 1 - t_min;
+          _mean_val[(i_min + 1) % n_vtx] = t_min;
+
+          break;
+        }
+      }
+
+    }
+  }
+
+  free (vtx_coords);
+  free (s);
+  free (dist);
+  free (area);
+  free (dotp);
+}
+
+
+
+
+
+
+void
+PDM_mean_values_polygon_compute2
+(
+ const int     n_pts,
+ const double *pts,
+ const int     n_vtx,
+ const int    *poly_vtx,
+ const double *mesh_vtx_coords,
+ double       *mean_values
+ )
+{
+  const double eps_base = 1e-10;
+
+  double *vtx_xyz = malloc (sizeof(double) * n_vtx * 3);
+  for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
+    for (int idim = 0; idim < 3; idim++) {
+      vtx_xyz[3*ivtx + idim] = mesh_vtx_coords[3*poly_vtx[ivtx] + idim];
+    }
+  }
+
+  double tangent_u[3], tangent_v[3], normal[3];
+  const double *orig_xyz = mesh_vtx_coords + 3 * poly_vtx[0];
+
+  PDM_polygon_orthonormal_basis (n_vtx,
+                                 vtx_xyz,
+                                 tangent_u,
+                                 tangent_v,
+                                 normal);
+
+  double *vtx_uv = malloc (sizeof(double) * n_vtx * 2);
+  PDM_polygon_compute_uv_coordinates (n_vtx,
+                                      vtx_xyz,
+                                      orig_xyz,
+                                      tangent_u,
+                                      tangent_v,
+                                      vtx_uv);
+
+  double uv_bounds[4] = {DBL_MAX, -DBL_MAX,
+                         DBL_MAX, -DBL_MAX};
+
+  for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
+    uv_bounds[0] = PDM_MIN (uv_bounds[0], vtx_uv[2*ivtx]);
+    uv_bounds[1] = PDM_MAX (uv_bounds[1], vtx_uv[2*ivtx]);
+
+    uv_bounds[2] = PDM_MIN (uv_bounds[2], vtx_uv[2*ivtx + 1]);
+    uv_bounds[3] = PDM_MAX (uv_bounds[3], vtx_uv[2*ivtx + 1]);
+  }
+
+
+
+  /* Loop over points to locate */
+  double uv[2];
+  double *s    = malloc (sizeof(double) * n_vtx * 2);
+  double *dist = malloc (sizeof(double) * n_vtx);
+  double *area = malloc (sizeof(double) * n_vtx);
+  double *dotp = malloc (sizeof(double) * n_vtx);
+
+  for (int ipt = 0; ipt < n_pts; ipt++) {
+    PDM_polygon_compute_uv_coordinates (1,
+                                        pts + 3*ipt,
+                                        orig_xyz,
+                                        tangent_u,
+                                        tangent_v,
+                                        uv);
+
+    /* Make sure the point lies inside the polygon or on its boundary */
+    if (PDM_polygon_point_in_2d (uv,
+                                 n_vtx,
+                                 vtx_uv,
+                                 uv_bounds) != PDM_POLYGON_INSIDE) {
+      double uv_closest[2];
+      double dist_min = DBL_MAX;
+
+      for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
+        double t;
+        double closest[2];
+        double dist2 = PDM_line_distance_2d (uv,
+                                             vtx_uv + 2*ivtx,
+                                             vtx_uv + 2*((ivtx+1)%n_vtx),
+                                             &t,
+                                             closest);
+
+        if (dist2 < dist_min) {
+          dist_min = dist2;
+
+          for (int idim = 0; idim < 2; idim++) {
+            uv_closest[idim] = closest[idim];
+          }
+        }
+      }
+
+      for (int idim = 0; idim < 2; idim++) {
+        uv[idim] = uv_closest[idim];
+      }
+    }
+
+
+    /* Compute mean values */
+    double min_dist = DBL_MAX;
+    double *_mean_val = mean_values + n_vtx * ipt;
+    int is_on_edge = 0;
+    int is_vertex  = 0;
+
+    for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
+      int jvtx = (ivtx + 1) % n_vtx;
+
+      double *vect = s + 2 * ivtx;
+      for (int idim = 0; idim < 2; idim++) {
+        vect[idim] = vtx_uv[2*jvtx + idim] - vtx_uv[2*ivtx + idim];
+      }
+      double l_edge = sqrt (PDM_DOT_PRODUCT_2D (vect, vect));
+      min_dist = PDM_MIN (l_edge, min_dist);
+    }
+
+    double eps = PDM_MAX (min_dist * eps_base, 1.e-30);
+
+    for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
+      double *vect = s + 2 * ivtx;
+      for (int idim = 0; idim < 2; idim++) {
+        vect[idim] = vtx_uv[2*ivtx + idim] - uv[idim];
+      }
+
+      dist[ivtx] = sqrt (PDM_DOT_PRODUCT_2D (vect, vect));
+    }
+
+    int current_vtx;
+    for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
+      int jvtx = (ivtx + 1) % n_vtx;
+      double *vect1 = s + 2 * ivtx;
+      double *vect2 = s + 2 * jvtx;
+
+      dotp[ivtx] = PDM_DOT_PRODUCT_2D (vect1, vect2);
+      area[ivtx] = vect1[0] * vect2[1] - vect1[1] * vect2[0];
+
+      if (dist[ivtx] <= eps) {
+
+        is_vertex = 1;
+        current_vtx = ivtx;
+        break;
+
+      } else if ((fabs(area[ivtx]) <= eps)  && (dotp[ivtx] < 0)) {
+
+        is_on_edge = 1;
+        current_vtx = ivtx;
+        break;
+
+      }
+    }
+
+    /* Current point is on a vertex of the polygon */
+    if (is_vertex) {
+      for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
+        _mean_val[ivtx] = 0.;
+      }
+      _mean_val[current_vtx] = 1.;
+    }
+
+    /* Current point is on an edge of the polygon */
+    else if (is_on_edge) {
+      for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
+        _mean_val[ivtx] = 0.;
+      }
+
+      int next_vtx = (current_vtx + 1) % n_vtx;
+      double frac = 1. / (dist[current_vtx] + dist[next_vtx]);
+
+      _mean_val[current_vtx] = dist[next_vtx]    * frac;
+      _mean_val[next_vtx]    = dist[current_vtx] * frac;
+    }
+
+    /* General case */
+    else {
+
+      double sum = 0.;
+      for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
+        double coef = 0.;
+        int prev_vtx = (ivtx - 1 + n_vtx) % n_vtx;
+        int next_vtx = (ivtx + 1) % n_vtx;
+
+        if (fabs(area[prev_vtx]) > eps) {
+          coef += (dist[prev_vtx] - dotp[prev_vtx]/dist[ivtx]) / area[prev_vtx];
+        }
+
+        if (fabs(area[ivtx]) > eps) {
+          coef += (dist[next_vtx] - dotp[ivtx]/dist[ivtx]) / area[ivtx];
+        }
+
+        sum += coef;
+        _mean_val[ivtx] = coef;
+      }
+
+      if (fabs(sum) >= eps ) {
+
+        sum = 1. / sum;
+        for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
+          _mean_val[ivtx] *= sum;
+        }
+
+      } else {
+
+        double abs_sigma = fabs(sum);
+        printf("Warning : Mise à NAN %f %f\n", abs_sigma,  eps);
+        for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
+          _mean_val[ivtx] = NAN;
+        }
+
+      }
+
+      /* Check result */
+      for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
+        if (_mean_val[ivtx] != _mean_val[ivtx] ||
+            _mean_val[ivtx] < 0. ||
+            _mean_val[ivtx] > 1.) {
+
+          double dist_min = DBL_MAX;
+          int i_min = 0;
+          double t_min;
+
+          for (int i = 0; i < n_vtx; i++) {
+            _mean_val[i] = 0.;
+          }
+
+          for (int i = 0; i < n_vtx; i++) {
+            double *v1 = vtx_uv + 2 * i;
+            double *v2 = vtx_uv + 2 * ((i+1) % n_vtx);
+            double closest[2];
+            double t;
+
+            double dist2 = PDM_line_distance_2d (uv,
+                                                 v1,
+                                                 v2,
+                                                 &t,
+                                                 closest);
+
+            if (dist2 < dist_min) {
+              t_min = t;
+              i_min = i;
+            }
+          }
+
+          _mean_val[i_min] = 1 - t_min;
+          _mean_val[(i_min + 1) % n_vtx] = t_min;
+
+          break;
+        }
+      }
+
+    }
+  }
+
+  free (vtx_xyz);
+  free (vtx_uv);
+  free (s);
+  free (dist);
+  free (area);
+  free (dotp);
+}
+
+
+
+
+void
+PDM_mean_values_polygon_compute_2d
+(
+ const int     n_pts,
+ const double *pts_xy,
+ const int     n_vtx,
+ const double *vtx_xy,
+ double       *mean_value_coords
+ )
+{
+  /*
+    See "Mean value coordinates for arbitrary planar polygons", Kai Hormann, and Michael S. Floater. (2006)
+   */
+  const PDM_bool_t EXTEND_OUTSIDE = PDM_TRUE;
+  const double eps_base = 1e-12;
+
+  /* Compute polygon bounds */
+  double bounds[4] = {DBL_MAX, -DBL_MAX,
+                      DBL_MAX, -DBL_MAX};
+
+  for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
+    bounds[0] = PDM_MIN (bounds[0], vtx_xy[2*ivtx]);
+    bounds[1] = PDM_MAX (bounds[1], vtx_xy[2*ivtx]);
+
+    bounds[2] = PDM_MIN (bounds[2], vtx_xy[2*ivtx + 1]);
+    bounds[3] = PDM_MAX (bounds[3], vtx_xy[2*ivtx + 1]);
+  }
+
+  double diag2 = (bounds[1] - bounds[0]) * (bounds[1] - bounds[0]) + (bounds[3] - bounds[2]) * (bounds[3] - bounds[2]);
+
+  double eps_len2 = eps_base * eps_base * diag2;
+
+  double *s = malloc (sizeof(double) * n_vtx * 2);
+  double *r = malloc (sizeof(double) * n_vtx);
+  double *A = malloc (sizeof(double) * n_vtx);
+  double *D = malloc (sizeof(double) * n_vtx);
+
+  for (int ipt = 0; ipt < n_pts; ipt++) {
+    const double *xy = pts_xy + 2 * ipt;
+    double *mvc = mean_value_coords + n_vtx * ipt;
+
+    if (EXTEND_OUTSIDE == PDM_FALSE) {
+      if (PDM_polygon_point_in_2d (xy,
+                                   n_vtx,
+                                   vtx_xy,
+                                   bounds) != PDM_POLYGON_INSIDE) {
+        /* Project point on polygon boundary */
+        double dist_min = DBL_MAX;
+        int imin;
+        double tmin;
+
+        for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
+          double t;
+          double closest[2];
+          double dist2 = PDM_line_distance_2d (xy,
+                                               vtx_xy + 2*ivtx,
+                                               vtx_xy + 2*((ivtx+1)%n_vtx),
+                                               &t,
+                                               closest);
+
+          if (dist2 < dist_min) {
+            dist_min = dist2;
+            imin = ivtx;
+            tmin = t;
+          }
+        }
+
+        mvc[imin]           = 1.0 - tmin;
+        mvc[(imin+1)%n_vtx] = tmin;
+        continue;
+      }
+    }
+
+    PDM_bool_t special_case = PDM_FALSE;
+    for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
+      r[ivtx] = 0;
+      double *vec = s + 2*ivtx;
+      for (int idim = 0; idim < 2; idim++) {
+        vec[idim] = vtx_xy[2*ivtx + idim] - xy[idim];
+      }
+      r[ivtx] = PDM_DOT_PRODUCT_2D (vec, vec);
+
+      if (r[ivtx] < eps_len2) {
+        /* Point coincident with vertex */
+        for (int i = 0; i < n_vtx; i++) {
+          mvc[i] = 0.0;
+        }
+        mvc[ivtx] = 1.0;
+
+        special_case = PDM_TRUE;
+        break;
+      }
+
+      r[ivtx] = sqrt (r[ivtx]);
+    }
+
+    if (special_case == PDM_TRUE) {
+      continue;
+    }
+
+    for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
+      int jvtx = (ivtx + 1) % n_vtx;
+      double *veci = s + 2*ivtx;
+      double *vecj = s + 2*jvtx;
+
+      A[ivtx] = veci[0] * vecj[1] - veci[1] * vecj[0];
+      D[ivtx] = PDM_DOT_PRODUCT_2D (veci, vecj);
+
+      if (fabs(A[ivtx]) < eps_base && D[ivtx] < 0) {
+        /* Point on edge */
+        double vec[2];
+        vec[0] = vtx_xy[2*jvtx] - vtx_xy[2*ivtx];
+        vec[1] = vtx_xy[2*jvtx+1] - vtx_xy[2*ivtx+1];
+
+        double lvec2 = PDM_DOT_PRODUCT_2D (vec, vec);
+        double t;
+        if (lvec2 < eps_len2) {
+          /* Degenerate edge */
+          t = 0.0;
+        } else {
+          t = - PDM_DOT_PRODUCT_2D (veci, vec) / lvec2;
+          //t = r[ivtx] / sqrt(lvec2);
+
+          if (t < -eps_base || t > 1.0 + eps_base) {
+            /* Error */
+            /* ... */
+          }
+        }
+
+        //printf("Point on edge: t = %f, 1 - t = %f\n", t, 1 - t);
+
+        for (int i = 0; i < n_vtx; i++) {
+          mvc[i] = 0.0;
+        }
+        mvc[ivtx] = 1.0 - t;
+        mvc[jvtx] = t;
+
+        special_case = PDM_TRUE;
+        break;
+
+      }
+    }
+
+    if (special_case == PDM_TRUE) {
+      continue;
+    }
+
+    /* General case (point strictly inside polygon) */
+    double sum_w = 0.0;
+    for (int i = 0; i < n_vtx; i++) {
+      int ip = (i + 1) % n_vtx;
+      int im = (i - 1 + n_vtx) % n_vtx;
+
+      double w = 0.0;
+      if (fabs(A[i]) > eps_base) {
+        w += (r[ip] - D[i] / r[i]) / A[i];
+      }
+
+      if (fabs(A[im]) > eps_base) {
+        w += (r[im] - D[im] / r[i]) / A[im];
+      }
+
+      sum_w += w;
+      mvc[i] = w;
+    }
+
+    if (fabs(sum_w) > eps_base) {
+      sum_w = 1.0 / sum_w;
+      for (int i = 0; i < n_vtx; i++) {
+        mvc[i] *= sum_w;
+      }
+    }
+
+  }
+}
+
+
+
+
+void
+PDM_mean_values_polygon_compute3
+(
+ const int     n_pts,
+ const double *pts_xyz,
+ const int     n_vtx,
+ const double *vtx_xyz,
+ double       *mean_value_coords
+ )
+{
+  double tangent_u[3], tangent_v[3], normal[3];
+  const double *orig_xyz = vtx_xyz;
+
+  PDM_polygon_orthonormal_basis (n_vtx,
+                                 vtx_xyz,
+                                 tangent_u,
+                                 tangent_v,
+                                 normal);
+
+  double *vtx_uv = malloc (sizeof(double) * n_vtx * 2);
+  PDM_polygon_compute_uv_coordinates (n_vtx,
+                                      vtx_xyz,
+                                      orig_xyz,
+                                      tangent_u,
+                                      tangent_v,
+                                      vtx_uv);
+
+  double *pts_uv = malloc (sizeof(double) * n_pts * 2);
+  PDM_polygon_compute_uv_coordinates (n_pts,
+                                      pts_xyz,
+                                      orig_xyz,
+                                      tangent_u,
+                                      tangent_v,
+                                      pts_uv);
+
+  PDM_mean_values_polygon_compute_2d (n_pts,
+                                      pts_uv,
+                                      n_vtx,
+                                      vtx_uv,
+                                      mean_value_coords);
+}
+
+
+
+
+
+
+
+
+
+void
+PDM_mean_values_polyhedron
+(
+ const int     n_pts,
+ const double  pts_xyz[],
+ const int     n_vtx,
+ const double  vtx_xyz[],
+ const int     n_faces,
+ const int     face_vtx_idx[],
+ const int     face_vtx[],
+ double       *mean_value_coords
+ )
+{
+  double *vtx_xyz_o = malloc (sizeof(double) * n_vtx * 3);
+  double *mag_vtx_xyz_o = malloc (sizeof(double) * n_vtx);
+  double *vtx_s = malloc (sizeof(double) * n_vtx * 3);
+  double *nor = malloc (sizeof(double) * n_vtx * 3);
+
+  double uv_origin[2] = {0.0, 0.0};
+
+  const double epsilon = 1e-10; // Adapt to polyhedron scale?
+  const double epsilon2 = epsilon * epsilon;
+
+  for (int ipt = 0; ipt < n_pts; ipt++) {
+    const double *p_xyz = pts_xyz + 3 * ipt;
+    double *mvc = mean_value_coords + n_vtx * ipt;
+    for (int i = 0; i < n_vtx; i++) {
+      mvc[i] = 0.0;
+    }
+
+    /*printf("\n");
+    for (int k = 0; k < n_vtx; k++) {
+      printf(" %f", mvc[k]);
+    }
+    printf("\n");*/
+
+    PDM_bool_t special_case = PDM_FALSE;
+
+    /* Offset polyhedron's vertices */
+    for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
+      double *vec = vtx_xyz_o + 3 * ivtx;
+      mag_vtx_xyz_o[ivtx] = 0.;
+
+      for (int idim = 0; idim < 3; idim++) {
+        vec[idim] = vtx_xyz[3*ivtx + idim] - p_xyz[idim];
+        mag_vtx_xyz_o[ivtx] += vec[idim] * vec[idim];
+      }
+
+      if (mag_vtx_xyz_o[ivtx] < epsilon2) {
+        /* Point coincident with vertex ivtx */
+        mvc[ivtx] = 1.0;
+        special_case = PDM_TRUE;
+        printf("Point #%d on vertex %d\n", ipt, ivtx);
+
+        printf("Point #%d special case, mvc = (", ipt);
+        for (int k = 0; k < n_vtx; k++) {
+          printf(" %f", mvc[k]);
+        }
+        printf(")\n\n");
+        break; /* exit loop over vertices */
+
+      } else {
+        mag_vtx_xyz_o[ivtx] = 1.0 / sqrt(mag_vtx_xyz_o[ivtx]);
+      }
+
+    }
+
+    if (special_case == PDM_TRUE) continue; /* continue loop over points */
+
+
+    /* Project offset vertices onto unit sphere */
+    for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
+      for (int idim = 0; idim < 3; idim++) {
+        vtx_s[3*ivtx + idim] = vtx_xyz_o[3*ivtx + idim] * mag_vtx_xyz_o[ivtx];
+      }
+    }
+
+
+    /* Loop over faces */
+    for (int iface = 0; iface < n_faces; iface++) {
+      const int *f = face_vtx + face_vtx_idx[iface];
+      int n_vtx_f = face_vtx_idx[iface+1] - face_vtx_idx[iface];
+
+      /* Compute face vector vf */
+      double vf[3] = {0.0, 0.0, 0.0};
+      for (int i = 0; i < n_vtx_f; i++) {
+        int ip = (i + 1) % n_vtx_f;
+
+        double *n_i = nor + 3*i;
+        double *v_i = vtx_s + 3*f[i];
+        double *v_ip = vtx_s + 3*f[ip];
+        PDM_CROSS_PRODUCT (n_i, v_i, v_ip);
+
+        double mag_nor = PDM_DOT_PRODUCT (n_i, n_i);
+
+        if (mag_nor < epsilon2) {
+          /* Point on edge (f[i], f[ip]) */
+          double vec[3];
+          double lvec2 = 0.0;
+          for (int idim = 0; idim < 3; idim++) {
+            vec[idim] = vtx_xyz[3*f[ip] + idim] - vtx_xyz[3*f[i] + idim];
+            lvec2 += vec[idim] * vec[idim];
+          }
+
+          double t = 0.0;
+          if (lvec2 > epsilon2) {
+            double *v = vtx_xyz_o + 3*f[i];
+            t = -PDM_DOT_PRODUCT (v, vec) / lvec2;
+          }
+          for (int k = 0; k < n_vtx; k++) {
+            mvc[k] = 0.0;
+          }
+
+          mvc[f[i]] = 1.0 - t;
+          mvc[f[ip]] = t;
+          special_case = PDM_TRUE;
+          break; /* exit loop over face vertices */
+
+        } else {
+
+          for (int idim = 0; idim < 3; idim++) {
+            vf[idim] += 0.5 * n_i[idim];
+          }
+        }
+
+      } /* Loop over face vertices */
+
+      if (special_case == PDM_TRUE) break; /* exit loop over faces */
+
+
+      /* Compute generalized barycentric coords of vf in current face */
+      /*    Projection onto tangent plane */
+      double mag_vf = PDM_DOT_PRODUCT (vf, vf);
+      double p_s[3];
+
+      if (mag_vf < epsilon2) {
+        /* Error? */
+        printf("!!! |vf| << 1\n");
+        p_s[0] = 0.0;
+        p_s[1] = 0.0;
+        p_s[2] = 0.0;
+
+      } else {
+        mag_vf = 1.0 / sqrt(mag_vf);
+        for (int idim = 0; idim < 3; idim++) {
+          p_s[idim] = vf[idim] * mag_vf;
+        }
+      }
+
+      double *vtx_f_p  = malloc (sizeof(double) * n_vtx_f * 3);
+      double *mvc_f    = malloc (sizeof(double) * n_vtx_f);
+
+      for (int i = 0; i < n_vtx_f; i++) {
+        int j = f[i];
+
+        double *v = vtx_s + 3*j;
+        double denom = PDM_DOT_PRODUCT (v, p_s);
+
+        if (fabs(denom) < epsilon) {
+          /* Point on face */
+          for (int k = 0; k < n_vtx_f; k++) {
+            int ivtx = f[k];
+            for (int idim = 0; idim < 3; idim++) {
+              vtx_f_p[3*k + idim] = vtx_xyz[3*ivtx + idim];
+            }
+          }
+          PDM_mean_values_polygon_compute3 (1,
+                                            p_xyz,
+                                            n_vtx_f,
+                                            vtx_f_p,
+                                            mvc_f);
+
+          for (int k = 0; k < n_vtx; k++) {
+            mvc[k] = 0.0;
+          }
+          for (int k = 0; k < n_vtx_f; k++) {
+            int ivtx = f[k];
+            mvc[ivtx] = mvc_f[k];
+          }
+
+          special_case = PDM_TRUE;
+          break;
+        }
+        denom = 1.0 / denom;
+
+        for (int idim = 0; idim < 3; idim++) {
+          vtx_f_p[3*i + idim] = v[idim] * denom;
+        }
+      }
+
+      if (special_case == PDM_TRUE) {
+        free (vtx_f_p);
+        free (mvc_f);
+        break;
+      }
+
+      /*    Compute uv coords in tangent plane */
+      double *v0 = vtx_f_p;
+      double *v1 = vtx_f_p + 3;
+
+      double tangent_u[3], tangent_v[3];
+      double mag2 = 0;
+      for (int idim = 0; idim < 3; idim++) {
+        tangent_u[idim] = v1[idim] - v0[idim];
+        mag2 += tangent_u[idim] * tangent_u[idim];
+      }
+      mag2 = 1.0 / sqrt(mag2);
+
+      for (int idim = 0; idim < 3; idim++) {
+        tangent_u[idim] *= mag2;
+      }
+
+      PDM_CROSS_PRODUCT (tangent_v, p_s, tangent_u);
+
+      double *vtx_f_uv = malloc (sizeof(double) * n_vtx_f * 2);
+      PDM_polygon_compute_uv_coordinates (n_vtx_f,
+                                          vtx_f_p,
+                                          p_s,
+                                          tangent_u,
+                                          tangent_v,
+                                          vtx_f_uv);
+
+      /*    Compute planar mean value coords */
+      PDM_mean_values_polygon_compute_2d (1,
+                                          uv_origin,
+                                          n_vtx_f,
+                                          vtx_f_uv,
+                                          mvc_f);
+      free (vtx_f_uv);
+
+      /*    Compute generalized mean value coords and transfer weights to vertices */
+      for (int i = 0; i < n_vtx_f; i++) {
+        int j = f[i];
+        double *vsj = vtx_s + 3*j;
+        double *vpi = vtx_f_p + 3*i;
+
+        mvc_f[i] *= PDM_DOT_PRODUCT (vsj, vpi) * mag_vf * mag_vtx_xyz_o[j];
+        mvc[j] += mvc_f[i];
+      }
+      free (mvc_f);
+      free (vtx_f_p);
+
+    } /* Loop over faces */
+
+
+    if (special_case == PDM_FALSE) {
+      /* Mean value coords in polyhedron */
+      double sum_w = 0.0;
+      for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
+        sum_w += mvc[ivtx];
+      }
+
+      if (fabs(sum_w) < epsilon) {
+        /* Error? */
+        printf("Point #%d (%f %f %f) : |Sum(w)| << 1\n", ipt, p_xyz[0], p_xyz[1], p_xyz[2]);
+      } else {
+        sum_w = 1.0 / sum_w;
+
+        for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
+          mvc[ivtx] *= sum_w;
+        }
+      }
+
+    }
+
+  } /* Loop over points */
+
+  free (vtx_xyz_o);
+  free (mag_vtx_xyz_o);
+  free (vtx_s);
+  free (nor);
+}
+
+
+
 
 
 

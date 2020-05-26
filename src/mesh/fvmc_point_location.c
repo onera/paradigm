@@ -66,6 +66,8 @@
 #include "pdm_plane.h"
 #include "pdm_triangle.h"
 
+#include "pdm_mesh_nodal_priv.h"
+
 /*----------------------------------------------------------------------------
  *  Header for the current file
  *----------------------------------------------------------------------------*/
@@ -1021,6 +1023,7 @@ _compute_shapef_3d(fvmc_element_t  elt_type,
 
 }
 
+
 /*----------------------------------------------------------------------------
  * Compute hexahedron, pyramid, or prism parametric coordinates for a
  * given point.
@@ -1587,6 +1590,128 @@ fvmc_point_dist_closest_polygon(const int            dim,
   /* fvmc_nodal_section_destroy(section); */
 
 }
+
+
+
+
+
+
+#if 0
+void
+PDM_nodal_block_locate_3d
+(
+ const int          mesh_nodal_id,
+ const int          id_block,
+ const int          id_part,
+ const int         *pts_in_extents_idx,
+ const PDM_g_num_t *pts_in_extents_g_num,
+ const double      *pts_in_extents_coords,
+ double            *distance
+ )
+{
+  /*int n_parts = PDM_Mesh_nodal_n_part_get (mesh_nodal_id);
+
+  int id_elt = 0;
+  for (int ipart = 0; ipart < n_parts; ipart++) {
+    int n_elt = PDM_Mesh_nodal_block_n_elt_get (mesh_nodal_id,
+                                                id_block,
+                                                ipart);
+
+    for (int ielt = 0; ielt < n_elt; ielt++) {
+      //...
+
+      id_elt++;
+    }
+    }*/
+
+  PDM_Mesh_nodal_t *mesh = (PDM_Mesh_nodal_t *) PDM_Handles_get (mesh_handles, mesh_nodal_id);
+
+  if (mesh == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
+  }
+
+  if (id_block >= PDM_BLOCK_ID_BLOCK_POLY3D) {
+
+    int _id_block = id_block - PDM_BLOCK_ID_BLOCK_POLY3D;
+
+    PDM_Mesh_nodal_block_poly3d_t *block =
+      (PDM_Mesh_nodal_block_poly3d_t *) PDM_Handles_get (mesh->blocks_poly3d, _id_block);
+
+    if (block == NULL) {
+      PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
+    }
+
+    //...
+
+  } // Polyhedra block
+
+  else if (id_block >= PDM_BLOCK_ID_BLOCK_POLY2D) {
+  } // Polygons block
+
+  else {
+
+    int _id_block = id_block;
+
+    PDM_Mesh_nodal_block_std_t *block =
+      (PDM_Mesh_nodal_block_std_t *) PDM_Handles_get (mesh->blocks_std, _id_block);
+
+    if (block == NULL) {
+      PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
+    }
+
+    PDM_l_num_t n_elt = block->n_elt[id_part];
+
+    fvmc_element_t elt_type;
+    switch (block->t_elt) {
+      case PDM_MESH_NODAL_POINT:
+        PDM_error (__FILE__, __LINE__, 0, "Invalid FMVC element type\n");
+        break;
+      case PDM_MESH_NODAL_BAR2:
+        elt_type = FVMC_EDGE;
+        break;
+      case PDM_MESH_NODAL_TRIA3:
+        elt_type = FVMC_FACE;
+        break;
+      case PDM_MESH_NODAL_QUAD4:
+        elt_type = FVMC_FACE_QUAD;
+        break;
+      case PDM_MESH_NODAL_TETRA4:
+        elt_type = FVMC_CELL_TETRA;
+        break;
+      case PDM_MESH_NODAL_PYRAMID5:
+        elt_type = FVMC_CELL_PYRAM;
+        break;
+      case PDM_MESH_NODAL_PRISM6:
+        elt_type = FVMC_CELL_PRISM;
+        break;
+      case PDM_MESH_NODAL_HEXA8:
+        elt_type = FVMC_CELL_HEXA;
+        break;
+      default:
+        printf("Unknown standard element type %d\n", block->t_elt);
+        assert (1 == 0);
+      }
+
+    double *vtx_coords = (double *) PDM_Mesh_nodal_vertices_get (mesh_nodal_id, id_part);
+    PDM_l_num_t cell_vtx = block->_connec[id_part];
+
+
+    /*_locate_in_cell_3d (n_elt,
+      elt_type,
+      cell_vtx,
+      const fvmc_lnum_t  *parent_vertex_num,
+      vtx_coords,
+      const fvmc_coord_t  point_coords[],
+      fvmc_lnum_t         n_points_in_extents,
+      const fvmc_lnum_t   points_in_extents[],
+      double              tolerance,
+      fvmc_lnum_t         location[],
+      float               distance[]);*/
+
+  } // Standard elements block
+
+}
+#endif
 
 #ifdef __cplusplus
 }
