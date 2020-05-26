@@ -280,6 +280,112 @@ PDM_line_distance
 }
 
 
+
+
+
+
+
+PDM_line_intersect_t
+PDM_line_intersection_2d
+(
+ const double a1[2],
+ const double a2[2],
+ const double b1[2],
+ const double b2[2],
+ double *u,
+ double *v
+ )
+{
+  const double tol_uv = _eps;
+
+  double mat[2][2];
+  double sol[2];
+
+  for (int i = 0; i < 2; i++) {
+    mat[i][0] = a2[i] - a1[i];
+    mat[i][1] = b1[i] - b2[i];
+
+    sol[i] = b1[i] - a1[i];
+  }
+
+  int stat = _solve_2x2 (mat, sol);
+
+  if (stat == PDM_FALSE) {
+    *u = DBL_MAX;
+    *v = DBL_MAX;
+
+    double p = (b1[0] - a1[0]) * (b2[1] - a2[1]) - (b1[1] - a1[1]) * (b2[0] - a2[0]);
+    if (p > _eps) {
+      return PDM_LINE_INTERSECT_NO;
+    } else {
+      return PDM_LINE_INTERSECT_ON_LINE;
+    }
+
+  } else {
+
+    *u = sol[0];
+    *v = sol[1];
+
+    for (int i = 0; i < 2; i++) {
+      if (sol[i] < -tol_uv || sol[i] > 1 + tol_uv) {
+        return PDM_LINE_INTERSECT_NO;
+      }
+    }
+
+    return PDM_LINE_INTERSECT_YES;
+  }
+}
+
+
+
+
+
+double
+PDM_line_distance_2d
+(
+ const double uv[2],
+ const double p1[2],
+ const double p2[2],
+ double *t,
+ double closest_point[2]
+ )
+{
+  const double _tol_dist = 1e-5;
+
+  double vect[2];
+  vect[0] = p2[0] - p1[0];
+  vect[1] = p2[1] - p1[1];
+
+  double numer = (uv[0] - p1[0]) * vect[0] + (uv[1] - p1[1]) * vect[1];
+  double denom = PDM_DOT_PRODUCT_2D (vect, vect);
+
+  double *closest;
+  if (fabs(denom) < numer * _tol_dist) {
+    closest = (double *) p1;
+  }
+  else {
+    *t = numer / denom;
+
+    if (*t < 0.) {
+      closest = (double *) p1;
+    } else if (*t > 1.) {
+      closest = (double *) p2;
+    } else {
+      closest = vect;
+      closest[0] = p1[0] + (*t) * vect[0];
+      closest[1] = p1[1] + (*t) * vect[1];
+    }
+  }
+
+  closest_point[0] = closest[0];
+  closest_point[1] = closest[1];
+
+  vect[0] -= uv[0];
+  vect[1] -= uv[1];
+
+  return PDM_DOT_PRODUCT_2D (vect, vect);
+}
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

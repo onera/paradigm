@@ -265,6 +265,20 @@ PDM_para_octree_location_boxes_get
  int               **block_n_candidates
  );
 
+
+
+void
+PDM_para_octree_points_inside_boxes
+(
+ const int           octree_id,
+ const int           n_boxes,
+ const double       *box_extents,
+ const PDM_g_num_t  *box_g_num,
+ int         **pts_in_box_idx,
+ PDM_g_num_t **pts_in_box_g_num,
+ double      **pts_in_box_coord
+ );
+
 #ifdef	__cplusplus
 }
 #endif

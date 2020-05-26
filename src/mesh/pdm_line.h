@@ -106,6 +106,32 @@ PDM_line_distance
  );
 
 
+
+
+
+
+
+PDM_line_intersect_t
+PDM_line_intersection_2d
+(
+ const double a1[2],
+ const double a2[2],
+ const double b1[2],
+ const double b2[2],
+ double *u,
+ double *v
+ );
+
+double
+PDM_line_distance_2d
+(
+ const double uv[2],
+ const double p1[2],
+ const double p2[2],
+ double *t,
+ double closest_point[2]
+ );
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
