@@ -228,118 +228,122 @@ PDM_para_graph_dual_from_face_cell
   dcell_ln_to_gn = realloc(dcell_ln_to_gn, dn_face_int   * sizeof(PDM_g_num_t) );
   dcell_opp      = realloc(dcell_opp     , idx_data_cell * sizeof(PDM_g_num_t) );
 
+  PDM_g_num_t* cell_distribution_ptb = (PDM_g_num_t * ) malloc( sizeof(PDM_g_num_t) * (n_rank+1) );
+  for(int i = 0; i < n_rank+1; ++i){
+    cell_distribution_ptb[i] = cell_distribution[i] - 1;
+  }
+
   /*
    * Initialize part_to_block for the computation of cell_cell
    *    -> Si on force une distribution utilisateur on devra passer le cell_distribution
    *           --> Semble necessaire pour parMetis mais pas scotch
    */
   PDM_part_to_block_t *ptb_dual =
-   PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
-                             PDM_PART_TO_BLOCK_POST_MERGE,
+   PDM_part_to_block_create2(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                             PDM_PART_TO_BLOCK_POST_MERGE_UNIFORM,
                              1.,
                              &dcell_ln_to_gn,
-                              NULL,
+                              cell_distribution_ptb,
                              &dn_face_int,
                              1,
                              comm);
 
-
-  /*
-   * We exchange the dcell_ln_to_gn
-   *    NB : Eric, on pourrai faire un part_to_block stride cst --> Stride variable ?
-   */
-
-  int* cell_cell_n = NULL;
-
-  PDM_part_to_block_exch (ptb_dual,
-                          sizeof(PDM_g_num_t),
-                          PDM_STRIDE_VAR,
-                          1,
-                          &cell_strid,
-                (void **) &dcell_opp,
-                          &cell_cell_n,
-                (void **) &*dual_graph);
-
-  //
   const int n_cell_block = PDM_part_to_block_n_elt_block_get (ptb_dual);
-
-
-  if(compute_dcell_face){
-
-    int* cell_face_n = NULL;
-    PDM_part_to_block_exch (ptb_dual,
-                            sizeof(PDM_g_num_t),
-                            PDM_STRIDE_VAR,
-                            1,
-                            &face_strid,
-                  (void **) &dface_g,
-                            &cell_face_n,
-                  (void **) &*dcell_face);
-
-
-    if( 0 == 1){
-      printf("n_cell_block:: %d \n", n_cell_block);
-      int idx_block = 0;
-      for(int i = 0; i < n_cell_block; ++i){
-        printf(" cell_face_n = %d ---> ", cell_face_n[i]);
-        for(int i_data = 0; i_data < cell_face_n[i]; ++i_data){
-          printf("%d ", dcell_face[0][idx_block]);
-          idx_block++;
-        }
-        printf("\n");
-      }
-    }
-
-    /*
-     * Post treatment
-     */
-    *dcell_face_idx = (int*        ) malloc( sizeof(int        ) * (3*n_cell_block+1));
-    int* _dcell_face_idx = (int * ) *dcell_face_idx;
-
-    _dcell_face_idx[0] = 0;
-    for(int i_cell = 0; i_cell < n_cell_block; ++i_cell){
-      _dcell_face_idx[i_cell+1] = _dcell_face_idx[i_cell] + cell_face_n[i_cell];
-    }
-    free(cell_face_n);
-
-  }
-
+  const PDM_g_num_t* blk_gnum = PDM_part_to_block_block_gnum_get(ptb_dual);
 
   /*
-   * Panic verbose
+   * We exchange the dcell_ln_to_gn (almost asynchrone - send strid is synchrone )
    */
-  if( 0 == 1){
-    printf("n_cell_block:: %d \n", n_cell_block);
-    int idx_block = 0;
-    for(int i = 0; i < n_cell_block; ++i){
-      printf(" cell_cell_n = %d ---> ", cell_cell_n[i]);
-      for(int i_data = 0; i_data < cell_cell_n[i]; ++i_data){
-        printf("%d ", dual_graph[0][idx_block]);
-        idx_block++;
-      }
-      printf("\n");
-    }
-  }
+  int req_id_dual = PDM_part_to_block_async_exch(ptb_dual,
+                                                 sizeof(PDM_g_num_t),
+                                                 PDM_STRIDE_VAR,
+                                                 1,
+                                                 &cell_strid,
+                                       (void **) &dcell_opp);
 
+
+
+  int  req_id_cell_face = -1;
+  if(compute_dcell_face){
+
+    req_id_cell_face = PDM_part_to_block_async_exch(ptb_dual,
+                                                    sizeof(PDM_g_num_t),
+                                                    PDM_STRIDE_VAR,
+                                                    1,
+                                                    &face_strid,
+                                          (void **) &dface_g);
+  }
 
   /*
-   * Exchange is done we can free direclty memory
+   * Reception asynchrone
    */
-  free(dcell_ln_to_gn);
-  free(face_strid);
-  free(cell_strid);
-  free(dcell_opp);
-  if(compute_dcell_face){
-    free(dface_g);
-  }
+  // int* cell_cell_n = NULL;
+  int* recv_strid = NULL;
+  PDM_g_num_t* recv_cell_cell = NULL;
+  PDM_part_to_block_async_wait(ptb_dual, req_id_dual);
+  int n_data_recv = PDM_part_to_block_asyn_get_raw(ptb_dual,
+                                                   req_id_dual,
+                                                  &recv_strid,
+                                        (void **) &recv_cell_cell);
+
+  /*
+   * The data is recv in raw format - We need to post-treat them as int
+   */
+  *dual_graph = (PDM_g_num_t *) malloc( n_data_recv * sizeof(PDM_g_num_t));
+  PDM_g_num_t* _dual_graph     = (PDM_g_num_t  *) *dual_graph;
 
   /*
    * Allocate and setup convenient pointeur
    */
-  *dual_graph_idx = (int*        ) malloc( sizeof(int        ) * (n_cell_block+1));
+  *dual_graph_idx      = (int*        ) malloc( sizeof(int        ) * (n_cell_block+1));
+  int* _dual_graph_idx = *dual_graph_idx;
 
-  int*         _dual_graph_idx = (int          *) *dual_graph_idx;
-  PDM_g_num_t* _dual_graph     = (PDM_g_num_t  *) *dual_graph;
+  int* cell_cell_n   = (int *) malloc( (n_cell_block+1) * sizeof(int)); /* Suralloc */
+
+  /*
+   * Count - In our case we know that recv_strid == 1 or 0
+   */
+  for(int i_recv = 0; i_recv < n_cell_block+1; ++i_recv) {
+    _dual_graph_idx[i_recv] = 0;
+    cell_cell_n    [i_recv] = 0;
+  }
+
+  /* Stride can be 0 or 1 */
+  for(int i_recv = 0; i_recv < n_data_recv; ++i_recv) {
+    // if(recv_strid[i_recv] != 0){
+      int ielmt = blk_gnum[i_recv] - cell_distribution[i_rank];
+      // printf("ielmt::[%d] --> [%d]\n",blk_gnum[i_recv], ielmt );
+      _dual_graph_idx[ielmt+1] += recv_strid[i_recv];
+    // }
+  }
+
+  /* Index computation */
+  for(int i_recv = 1; i_recv < n_cell_block; ++i_recv) {
+    _dual_graph_idx[i_recv+1] += _dual_graph_idx[i_recv];
+  }
+
+  /* Panic verbose */
+  if( 0 == 1 ){
+    printf("cell_cell_idx::");
+    for(int i_recv = 0; i_recv < n_cell_block+1; ++i_recv) {
+      printf(" %d", _dual_graph_idx[i_recv]);
+    }
+    printf("\n");
+  }
+
+  /*
+   * Fill buffer
+   */
+  int idx_recv = 0;
+  for(int i_recv = 0; i_recv < n_data_recv; ++i_recv) {
+    if(recv_strid[i_recv] != 0){
+      int ielmt = blk_gnum[i_recv] - cell_distribution[i_rank];
+      _dual_graph[_dual_graph_idx[ielmt] + cell_cell_n[ielmt]++] = recv_cell_cell[idx_recv++];
+    }
+  }
+
+  free(recv_strid);
+  free(recv_cell_cell);
 
   /*
    * Each block can have multiple same cell, we need to compress them
@@ -348,12 +352,16 @@ PDM_para_graph_dual_from_face_cell
    */
   PDM_compress_connectivity(_dual_graph, _dual_graph_idx, cell_cell_n, n_cell_block);
 
+  free(cell_cell_n);
+
   /*
    * Realloc
    */
   *dual_graph     = (PDM_g_num_t*) realloc(*dual_graph, sizeof(PDM_g_num_t) * _dual_graph_idx[n_cell_block] );
 
   // For now we can change it later
+  printf("n_cell_block::%d \n", n_cell_block);
+  printf("dn_cell     ::%d \n", dn_cell);
   assert(n_cell_block == dn_cell);
 
   /*
@@ -378,9 +386,98 @@ PDM_para_graph_dual_from_face_cell
     }
   }
 
-  PDM_part_to_block_free (ptb_dual);
-  free(cell_cell_n);
+  /*
+   * Async recv for cell_face
+   */
+  if(compute_dcell_face){
 
+    int* recv_cf_strid = NULL;
+    PDM_g_num_t* recv_cell_face = NULL;
+    PDM_part_to_block_async_wait(ptb_dual, req_id_cell_face);
+    int n_data_cf_recv = PDM_part_to_block_asyn_get_raw(ptb_dual,
+                                                        req_id_cell_face,
+                                                       &recv_cf_strid,
+                                             (void **) &recv_cell_face);
+    free(recv_cf_strid); // Always 1
+
+    /*
+     * Post treatment
+     */
+    *dcell_face      = (PDM_g_num_t *) malloc(  n_data_cf_recv  * sizeof(PDM_g_num_t));
+    *dcell_face_idx  = (int*         ) malloc( (n_cell_block+1) * sizeof(int        ));
+    int* cell_face_n = (int*         ) malloc( (n_cell_block+1) * sizeof(int        ));
+
+    /* Short-cut */
+    int*         _dcell_face_idx = *dcell_face_idx;
+    PDM_g_num_t* _dcell_face     = *dcell_face;
+
+
+    for(int i = 0; i < n_cell_block+1; ++i) {
+      _dcell_face_idx[i] = 0;
+    }
+
+    for(int i_recv = 0; i_recv < n_data_cf_recv; ++i_recv) {
+      int ielmt = blk_gnum[i_recv] - cell_distribution[i_rank];
+      // printf("ielmt::[%d] --> [%d] - [%d] \n",blk_gnum[i_recv], ielmt, recv_cf_strid[i_recv]);
+      _dcell_face_idx[ielmt+1] += 1;
+    }
+
+    /* Index computation */
+    for(int i = 1; i < n_cell_block; ++i) {
+      _dcell_face_idx[i+1] += _dcell_face_idx[i];
+    }
+
+    for(int i = 0; i < n_cell_block+1; ++i){
+      cell_face_n[i] = 0;
+    }
+
+    /*
+     * Fill buffer -  Cas particulier ou recv_stride == 1
+     */
+    for(int i_recv = 0; i_recv < n_data_cf_recv; ++i_recv) {
+      int ielmt = blk_gnum[i_recv] - cell_distribution[i_rank];
+      // printf(" ielmt :: %d | i_recv :: %d | _dcell_face_idx :: %d | cell_face_n :: %d \n", ielmt, i_recv, _dcell_face_idx[ielmt], cell_face_n[ielmt]);
+      _dcell_face[_dcell_face_idx[ielmt] + cell_face_n[ielmt]++] = recv_cell_face[i_recv];
+    }
+
+    free(recv_cell_face);
+
+    if( 0 == 1 ){
+      printf("n_cell_block:: %d \n", n_cell_block);
+      int idx_block = 0;
+      for(int i = 0; i < n_cell_block; ++i){
+        printf(" cell_face_n = %d ---> ", cell_face_n[i]);
+        for(int i_data = 0; i_data < cell_face_n[i]; ++i_data){
+          printf("%d ", _dcell_face[idx_block]);
+          idx_block++;
+        }
+        printf("\n");
+      }
+    }
+
+    // _dcell_face_idx[0] = 0;
+    // for(int i_cell = 0; i_cell < n_cell_block; ++i_cell){
+    //   _dcell_face_idx[i_cell+1] = _dcell_face_idx[i_cell] + cell_face_n[i_cell];
+    // }
+    free(cell_face_n);
+
+  }
+
+  // abort();
+
+  /*
+   * Exchange is done we can free direclty memory
+   */
+  free(dcell_ln_to_gn);
+  free(face_strid);
+  free(cell_strid);
+  free(dcell_opp);
+  free(cell_distribution_ptb);
+  if(compute_dcell_face){
+    free(dface_g);
+  }
+
+  PDM_part_to_block_free (ptb_dual);
 }
 
 /**

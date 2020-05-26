@@ -365,6 +365,28 @@ int main(int argc, char *argv[])
                 (int         ***)  &pcell_face_idx,
                 (int         ***)  &pcell_face);
 
+  /*
+   * Generate vtx
+   */
+
+  int** pface_vtx_idx;
+  int** pface_vtx;
+  int*  pn_vtx;
+  PDM_g_num_t** pvtx_ln_to_gn = NULL;
+
+  PDM_generate_part_entity_ln_to_gn(comm,
+                                    part_distribution,
+                                    face_distribution,
+                                    dface_vtx_idx,
+                                    dface_vtx,
+                                    n_res_part,
+                                    pn_cell,
+                                    pcell_ln_to_gn,
+                (int         ** )  &pn_vtx,
+                (PDM_g_num_t ***)  &pvtx_ln_to_gn,
+                (int         ***)  &pface_vtx_idx,
+                (int         ***)  &pface_vtx);
+
 
   /*
    * On doit calculer le dcell_face car avec lui et le cell_ln_to_gn on retrouve facilement
@@ -425,7 +447,6 @@ int main(int argc, char *argv[])
   // Attention on veut garder l'orientation donc il y a un signe dans le face_cell / cell_face
   // Reflechir sur les connectivité d'edge également ...
 
-
   /*
    * Free
    */
@@ -441,8 +462,11 @@ int main(int argc, char *argv[])
   for(int i_part = 0; i_part < n_res_part; ++i_part){
     free(pface_ln_to_gn[i_part]);
     free(pcell_ln_to_gn[i_part]);
+    free(pvtx_ln_to_gn[i_part]);
     free(pcell_face[i_part]);
     free(pcell_face_idx[i_part]);
+    free(pface_vtx_idx[i_part]);
+    free(pface_vtx[i_part]);
     free(pface_group_ln_to_gn[i_part]);
     free(pface_group[i_part]);
     free(pface_group_idx[i_part]);
@@ -452,6 +476,9 @@ int main(int argc, char *argv[])
   }
   free(pcell_face);
   free(pcell_face_idx);
+  free(pvtx_ln_to_gn);
+  free(pface_vtx_idx);
+  free(pface_vtx);
   free(pcell_ln_to_gn);
   free(pproc_face_bound_idx);
   free(ppart_face_bound_idx);
@@ -459,6 +486,7 @@ int main(int argc, char *argv[])
   free(pface_ln_to_gn);
   free(pn_cell);
   free(pn_faces);
+  free(pn_vtx);
   free(pface_group_ln_to_gn);
   free(pface_group);
   free(pface_group_idx);
