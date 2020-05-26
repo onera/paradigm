@@ -55,6 +55,7 @@ typedef enum {
   PDM_PART_TO_BLOCK_POST_NOTHING       = 0,  /*!< No post processing     */
   PDM_PART_TO_BLOCK_POST_CLEANUP       = 1,  /*!< Cleanup multi-elements */
   PDM_PART_TO_BLOCK_POST_MERGE         = 2,  /*!< Merge multi-elements   */
+  PDM_PART_TO_BLOCK_POST_MERGE_UNIFORM = 3,  /*!< TMP   */
 
 } PDM_part_to_block_post_t;
 
@@ -266,6 +267,85 @@ PDM_part_to_block_exch
  void                     **block_data
 );
 
+
+/**
+ *
+ * \brief Initialize a data exchange
+ *
+ * \param [in]   ptb          Part to block structure
+ * \param [in]   s_data       Data size
+ * \param [in]   t_stride     Stride type
+ * \param [in]   cst_stride   Stride only for \ref PDM_writer_STRIDE_CST
+ * \param [in]   part_stride  Variable stride (size = n_part) only for \ref PDM_writer_STRIDE_VAR
+ * \param [in]   part_data    partitioned data
+ *
+ * \return       Size of highest block
+ *
+ */
+
+int
+PDM_part_to_block_async_exch
+(
+ PDM_part_to_block_t       *ptb,
+ size_t                     s_data,
+ PDM_stride_t               t_stride,
+ int                        cst_stride,
+ int                      **part_stride,
+ void                     **part_data
+);
+
+/**
+ *
+ * \brief Wait for an exchange
+ *
+ * \param [in]   ptb          Part to block structure
+ * \param [in]   request_id   Internal id of the current exchange
+ *
+ */
+void
+PDM_part_to_block_async_wait
+(
+ PDM_part_to_block_t *ptb,
+ int                  request_id
+);
+
+/**
+ *
+ * \brief Get the raw exchange buffer and stride and deallocate memory
+ *
+ * \param [in]   ptb          Part to block structure
+ * \param [in]   request_id   Internal id of the current exchange
+ * \param [out]  block_stride Block stride
+ * \param [out]  block_data   Block data
+ *
+ */
+int
+PDM_part_to_block_asyn_get_raw
+(
+ PDM_part_to_block_t *ptb,
+ int                  request_id,
+ int                **block_stride,
+ void               **block_data
+);
+
+/**
+ *
+ * \brief Get the raw exchange buffer and stride and deallocate memory
+ *
+ * \param [in]   ptb          Part to block structure
+ * \param [in]   request_id   Internal id of the current exchange
+ * \param [out]  block_stride Block stride
+ * \param [out]  block_data   Block data
+ *
+ */
+void
+PDM_part_to_block_asyn_post_treatment
+(
+ PDM_part_to_block_t *ptb,
+ int                  request_id,
+ int                **block_stride,
+ void               **block_data
+);
 
 /**
  *

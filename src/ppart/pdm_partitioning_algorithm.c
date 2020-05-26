@@ -665,13 +665,14 @@ PDM_generate_part_entity_ln_to_gn
      * Deduce ln_to_gn
      */
     // printf("Sort data between : 0 and %d \n", idx_data);
-    int n_elmt_sort = PDM_inplace_unique_long(_pface_ln_to_gn , 0, idx_data-1);
+    int* unique_order = (int *) malloc( idx_data * sizeof(int));
+    int n_elmt_sort = PDM_inplace_unique_long2(_pface_ln_to_gn, unique_order, 0, idx_data-1);
     _n_faces[i_part] = n_elmt_sort;
 
     if(0 == 1){
       printf("n_elmt_sort::%d\n", n_elmt_sort);
       printf("_pface_ln_to_gn::");
-      for(int i = 0; i < idx_data; ++i){
+      for(int i = 0; i < n_elmt_sort; ++i){
         printf("%d ", _pface_ln_to_gn[i]);
       }
       printf("\n");
@@ -685,18 +686,34 @@ PDM_generate_part_entity_ln_to_gn
 
     /*
      *  We need to regenerate the connectivity and pass it in local numbering
+     *  This one is vectorisable if we remove PDM_binary_seach and idx_data++
      */
-    idx_data = 0;
-    for(int i_cell = 0; i_cell < n_elmts[i_part]; ++i_cell) {
-      for(int i_data = 0; i_data < cell_stri[i_part][i_cell]; ++i_data ){
-        int         g_sgn  = PDM_SIGN(pcell_face_tmp[i_part][idx_data]);
-        PDM_g_num_t g_elmt = PDM_ABS (pcell_face_tmp[i_part][idx_data]);
-        int l_elmt         = PDM_binary_search_long(g_elmt, _pface_ln_to_gn, n_elmt_sort); /* In [0, n_elmt_sort-1] */
+    // idx_data = 0;
+    // for(int i_cell = 0; i_cell < n_elmts[i_part]; ++i_cell) {
+    //   for(int i_data = 0; i_data < cell_stri[i_part][i_cell]; ++i_data ){
+    //     int         g_sgn  = PDM_SIGN(pcell_face_tmp[i_part][idx_data]);
+    //     PDM_g_num_t g_elmt = PDM_ABS (pcell_face_tmp[i_part][idx_data]);
+    //     int l_elmt         = unique_order[idx_data];
+    //     int l_elmt_old     = PDM_binary_search_long(g_elmt, _pface_ln_to_gn, n_elmt_sort); /* In [0, n_elmt_sort-1] */
 
-        /* Overwrite the pcell_face with local numbering and reput sign on it */
-        _pcell_face[idx_data++] = (l_elmt + 1) * g_sgn ;
-      }
+    //     // printf("[%d] - Search [%d] --> %d | %d \n", idx_data, g_elmt, l_elmt, l_elmt_old);
+
+    //     /* Overwrite the pcell_face with local numbering and reput sign on it */
+    //     _pcell_face[idx_data++] = (l_elmt + 1) * g_sgn ;
+    //   }
+    // }
+
+    /*
+     * Overpowered loop
+     */
+    #pragma simd
+    for(int idx = 0; idx < _cell_face_idx[i_part][n_elmts[i_part]]; ++idx) {
+      int g_sgn  = PDM_SIGN(pcell_face_tmp[i_part][idx]);
+      int l_elmt = unique_order[idx];
+      _pcell_face[idx] = (l_elmt + 1) * g_sgn ;
     }
+
+    free(unique_order);
   }
 
 
@@ -1040,7 +1057,7 @@ PDM_generate_entity_graph_comm
   /*
    * Panic Verbose
    */
-  if(1 == 1){
+  if(0 == 1){
     for(int i_part = 0; i_part < n_part; ++i_part){
 
       printf("[%d] _pproc_bound_idx::", i_part);

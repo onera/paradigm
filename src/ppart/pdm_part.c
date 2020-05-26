@@ -310,7 +310,7 @@ _dual_graph_from_face_cell
 
   cell_to_send_idx  = NULL;
   cell_to_send_n    = NULL;
-  cell_to_send     = NULL;
+  cell_to_send      = NULL;
   cell_to_recv_idx  = NULL;
   cell_to_recv_n    = NULL;
 

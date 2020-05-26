@@ -182,6 +182,7 @@ _cc_radix_sort_with_order
 {
   int place_init = place*10;
   place = 1;
+  printf("_cc_radix_sort_with_order::%d --> %d\n", end-beg, place_init);
   while(place < place_init){
     int* range = _counting_sort_with_order(v, tmp, order, order_tmp, beg, end, place);
     free(range);
@@ -201,7 +202,7 @@ _std_radix_sort
  int place
 )
 {
-  int cache_size     = 5000;
+  int cache_size = 20000;
 
   if(beg == end){
     return;
@@ -217,7 +218,7 @@ _std_radix_sort
   }
 
   /* Il faut aglomerer les ranges succesives pour gagner si elle sont trop petite */
-  for(int i = 0; i < 11; ++i){
+  for(int i = 0; i < 10; ++i){
     // fmt::print("Manage {0} = {1} / {2}\n", i, range[i], range[i+1]);
     if( (range[i+1] - range[i]) == 0){
     } else if( (range[i+1] - range[i]) > cache_size){
@@ -247,7 +248,8 @@ _std_radix_sort_with_order
  int          place
 )
 {
-  int cache_size     = 5000;
+  // int cache_size = 900000;
+  int cache_size = 10000;
 
   if(beg == end){
     return;
@@ -263,7 +265,7 @@ _std_radix_sort_with_order
   }
 
   /* Il faut aglomerer les ranges succesives pour gagner si elle sont trop petite */
-  for(int i = 0; i < 11; ++i){
+  for(int i = 0; i < 10; ++i){
     // fmt::print("Manage {0} = {1} / {2}\n", i, range[i], range[i+1]);
     if( (range[i+1] - range[i]) == 0){
     } else if( (range[i+1] - range[i]) > cache_size){
@@ -272,6 +274,9 @@ _std_radix_sort_with_order
     } else if( (range[i+1] - range[i]) <= cache_size) {
       // fmt::print("Case 3 :: {0} - {1} \n ", range[i], range[i+1]);
       _cc_radix_sort_with_order(v, tmp, order, order_tmp, beg+range[i], beg+range[i+1], place);
+      // int array_size = range[i+1] - range[i];
+      // PDM_sort_long(&v[beg+range[i]], order[beg+range[i]], array_size);
+      // PDM_quick_sort_long2(v, beg+range[i], beg+range[i+1]-1, order);
     }
   }
 
@@ -313,17 +318,17 @@ PDM_radix_sort_long
 
   // Il faut trouver le max dans la base pour reprensenter le min et le max
   //  --> si beaucoup d'écart on tente la moyenne
-  int* tmp = (int *) malloc( lArray * sizeof(int));
+  int* tmp = (int *) malloc( (lArray+1) * sizeof(int));
 
   int place = (int) pow(10, n_step);
   printf("place::%d \n", place);
 
-  if(order != NULL){
+  if(order == NULL){
     _std_radix_sort(array, tmp, 0, lArray, place);
   } else {
-    int* order_tmp = (int *) malloc( lArray * sizeof(int));
-
+    int* order_tmp = (int *) malloc( (lArray+1) * sizeof(int));
     _std_radix_sort_with_order(array, tmp, order, order_tmp, 0, lArray, place);
+    // _std_radix_sort(array, tmp, 0, lArray, place);
     free(order_tmp);
   }
 
