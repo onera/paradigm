@@ -33,8 +33,16 @@ extern "C" {
 /*=============================================================================
  * Static global variables
  *============================================================================*/
-const int _radix_shift = 7;
-const int _radix_base  = 128;
+// const int _radix_shift = 7;
+// const int _radix_base  = 128;
+const int _radix_shift = 10;
+const int _radix_base  = 1024;
+// const int _radix_shift = 11;
+// const int _radix_base  = 2048;
+// const int _radix_shift = 6;
+// const int _radix_base  = 64;
+// const int _radix_shift = 8;
+// const int _radix_base  = 256;
 // const int base2_power[11] = {0, 2, 4, 8, 16, 32, 64, _radix_base, 256, 512, 1024};
 // const int _radix_base = base2_power[radix_shift];
 
@@ -175,12 +183,7 @@ _counting_sort_with_order
 
   /* Count */
   for(int i = beg; i < end; ++i) {
-
     count[(v[i] >> place_power) % _radix_base]++;
-
-    // printf("[place::%d/power::%d] - %d --> %d | %d \n",  place, place_power, v[i], ((v[i] >> 8*place_power) % _radix_base), (v[i]/place)%_radix_base);
-    // printf("[place::%d/power::%d] - %d --> %d | %d \n",  place, place_power, v[i], ((v[i] >> place_power) % _radix_base), (v[i]/place)%_radix_base);
-    // count[(v[i]/place)%_radix_base]++;
   }
 
   /* Rebuild array of displacement */
@@ -193,12 +196,6 @@ _counting_sort_with_order
     tmp[beg+count[idx]-1] = v[i];
     order_tmp[beg+count[idx]-1] = order[i];
     count[idx]--;
-    // tmp[beg+count[(v[i] >> place_power) % _radix_base]-1] = v[i];
-    // order_tmp[beg+count[(v[i] >> place_power) % _radix_base]-1] = order[i];
-    // count[(v[i] >> place_power) % _radix_base]--;
-    // tmp[beg+count[(v[i]/place)%_radix_base]-1] = v[i];
-    // order_tmp[beg+count[(v[i]/place)%_radix_base]-1] = order[i];
-    // count[(v[i]/place)%_radix_base]--;
   }
 
   for(int i = beg; i < end; ++i) {
@@ -207,6 +204,72 @@ _counting_sort_with_order
   }
 
   return count;
+}
+
+static inline
+void
+_counting_sort_with_order_recurse
+(
+ PDM_g_num_t* v,
+ PDM_g_num_t* tmp,
+ int*         order,
+ int*         order_tmp,
+ int          beg,
+ int          end,
+ int          place,
+ int          place_power,
+ int*         count_curr,
+ int*         count_next,
+ int          iteration
+)
+{
+  /* Set to zero */
+  if(iteration == 0){
+    for(int i = 0; i < _radix_base+1; ++i){
+      count_curr[i] = 0;
+      count_next[i] = 0;
+    }
+
+    /* Count */
+    for(int i = beg; i < end; ++i) {
+      count_curr[(v[i] >> place_power) % _radix_base]++;
+    }
+
+  } else {
+    for(int i = 0; i < _radix_base+1; ++i){
+      count_next[i] = 0;
+    }
+  }
+
+  /* Rebuild array of displacement */
+  for(int i = 1; i < _radix_base+1; ++i) {
+    count_curr[i] += count_curr[i-1];
+  }
+
+  // printf("count_curr[%d/%d]:: ", iteration, place_power);
+  // for(int i = 1; i < _radix_base+1; ++i) {
+  //   printf("%d ", count_curr[i]);
+  // }
+  // printf("\n");
+  int next_shift = place_power+_radix_shift;
+
+  for(int i = end-1; i >= beg; i--){
+    int idx   = (v[i] >> place_power) % _radix_base;
+    int idx_t = beg+count_curr[idx]-1;
+
+    tmp[idx_t]       = v[i];
+    order_tmp[idx_t] = order[i];
+
+    count_curr[idx]--;
+
+    /* Prepare for next step */
+    count_next[(v[i] >> next_shift ) % _radix_base]++;
+  }
+
+  for(int i = beg; i < end; ++i) {
+    v[i]     = tmp[i];
+    order[i] = order_tmp[i];
+  }
 }
 
 
@@ -232,6 +295,34 @@ _cc_radix_sort
 
 }
 
+// static inline
+// void
+// _cc_radix_sort_with_order
+// (
+//  PDM_g_num_t* v,
+//  PDM_g_num_t* tmp,
+//  int*         order,
+//  int*         order_tmp,
+//  int beg,
+//  int end,
+//  int place,
+//  int place_power
+// )
+// {
+//   int place_init = place*_radix_base;
+//   place = 1;
+//   place_power = 0;
+//   printf("_cc_radix_sort_with_order::%d --> %d :: %d \n", end-beg, place_init, place_power);
+//   while(place < place_init){
+//     int* range = _counting_sort_with_order(v, tmp, order, order_tmp, beg, end, place, place_power);
+//     free(range);
+//     place *= _radix_base;
+//     place_power += _radix_shift;
+//   }
+//   printf("_cc_radix_sort_with_order end ::%d --> %d :: %d \n", end-beg, place_init, place_power);
+
+// }
+
 static inline
 void
 _cc_radix_sort_with_order
@@ -240,24 +331,52 @@ _cc_radix_sort_with_order
  PDM_g_num_t* tmp,
  int*         order,
  int*         order_tmp,
- int beg,
- int end,
- int place,
- int place_power
+ int          beg,
+ int          end,
+ int          place,
+ int          place_power
 )
 {
   int place_init = place*_radix_base;
   place = 1;
   place_power = 0;
-  // printf("_cc_radix_sort_with_order::%d --> %d\n", end-beg, place_init);
+
+  int iteration = 0;
+
+  int* count_curr = malloc( (_radix_base + 1) * sizeof(int));
+  int* count_next = malloc( (_radix_base + 1) * sizeof(int));
+
+  int* count_tmp;
+  int* _count_curr = count_curr;
+  int* _count_next = count_next;
+
+  // printf("_cc_radix_sort_with_order::%d --> %d :: %d \n", end-beg, place_init, place_power);
   while(place < place_init){
-    int* range = _counting_sort_with_order(v, tmp, order, order_tmp, beg, end, place, place_power);
-    free(range);
-    place *= _radix_base;
+
+    // printf("_cc_radix_sort_with_order in while :: %p | %p \n", _count_curr, _count_next);
+
+    // printf("_cc_radix_sort_with_order::%d --> %d :: %d \n", end-beg, place_init, place_power);
+
+    _counting_sort_with_order_recurse(v, tmp, order, order_tmp, beg, end,
+                                      place, place_power,
+                                      _count_curr, _count_next, iteration);
+    place       *= _radix_base;
     place_power += _radix_shift;
+    iteration   += 1;
+
+    /* Swap ptr */
+    count_tmp   = _count_curr;
+    _count_curr = _count_next;
+    _count_next = count_tmp;
+
   }
+  // printf("_cc_radix_sort_with_order end ::%d --> %d :: %d \n", end-beg, place_init, place_power);
+
+  free(count_curr);
+  free(count_next);
 
 }
+
 
 static inline
 void
@@ -271,6 +390,7 @@ _std_radix_sort
 )
 {
   // int cache_size = 20000;
+  // int cache_size = -1;//(int) pow(_radix_base, 2);
   int cache_size = -1;//(int) pow(_radix_base, 2);
 
   if(beg == end){
@@ -321,7 +441,10 @@ _std_radix_sort_with_order
   // int cache_size = 900000;
   // int cache_size = (int) pow(_radix_base, 10);
   // int cache_size = (int) pow(_radix_base, 3);
-  int cache_size = (int) pow(256, 2);
+  // int cache_size = (int) pow(256, 2);
+  // int cache_size = -1;//(int) pow(_radix_base, 2);
+  // int cache_size = (int) pow(256, 3);
+  int cache_size = -1; //(int) pow(64, 2);
 
   if(beg == end){
     return;
@@ -392,8 +515,8 @@ PDM_radix_sort_long
   //  --> si beaucoup d'écart on tente la moyenne
   int* tmp = (int *) malloc( (lArray+1) * sizeof(int));
 
-  int place = (int) pow(_radix_base, n_step);
-  int place_power = _radix_shift*n_step;
+  int place = (int) pow(_radix_base, (n_step-1));
+  int place_power = _radix_shift*(n_step-1);
 
   printf("PDM_radix_sort_long::place ::%d \n", place);
   printf("PDM_radix_sort_long::max   ::%d \n", max);
