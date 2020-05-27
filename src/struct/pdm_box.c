@@ -1645,8 +1645,6 @@ PDM_box_set_send_data_to_origin_distrib
     unsigned char *curr_data = (unsigned char *) malloc (sizeof(unsigned char)
                                                          * curr_shift[s_comm]);
 
-    printf ("orig_shift[s_comm]) : %d %d\n", s_comm, orig_shift[s_comm]);
-
     unsigned char *orig_data = (unsigned char *) malloc (sizeof(unsigned char)
                                                          * orig_shift[s_comm]);
 
