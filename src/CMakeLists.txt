@@ -13,6 +13,7 @@ file(GLOB_RECURSE SOURCES
      ppart/*.[ch]
      ppart/*.cxx
      struct/*.[ch]
+     struct/*.cxx
      util/*.[ch]
      ext_wrapper/*.[ch]
      mpi_wrapper/pdm_mpi_node_first_rank.[hc]
