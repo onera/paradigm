@@ -13,7 +13,6 @@ file(GLOB_RECURSE SOURCES
      ppart/*.[ch]
      ppart/*.cxx
      struct/*.[ch]
-     struct/*.cxx
      util/*.[ch]
      ext_wrapper/*.[ch]
      mpi_wrapper/pdm_mpi_node_first_rank.[hc]
@@ -113,6 +112,7 @@ list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_handles.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_sort.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_binary_search.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_global_mean.h")
+list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_radix_sort.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/mesh/pdm_cellface_orient.h")
 if (PDM_IN_PDMA)
   list(APPEND LIST_HEADER "${CMAKE_BINARY_DIR}/pdm_config.h")

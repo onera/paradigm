@@ -13,7 +13,7 @@
 #include "pdm.h"
 #include "pdm_sort.h"
 #include "pdm_radix_sort.h"
-#include "pdm_sort_std.h"
+// #include "pdm_sort_std.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -789,7 +789,7 @@ PDM_inplace_unique_long2
     order[i] = i;
   }
   PDM_radix_sort_long(&a[l], order, array_size);
-  // PDM_sort_long_std(&a[l], order, array_size);
+  // PDM_sort_long(&a[l], order, array_size);
 
 
   int first = a[l];
