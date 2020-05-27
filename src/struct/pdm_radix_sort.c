@@ -33,6 +33,10 @@ extern "C" {
 /*=============================================================================
  * Static global variables
  *============================================================================*/
+const int _radix_shift = 7;
+const int _radix_base  = 128;
+// const int base2_power[11] = {0, 2, 4, 8, 16, 32, 64, _radix_base, 256, 512, 1024};
+// const int _radix_base = base2_power[radix_shift];
 
 /*=============================================================================
  * Static function definitions
@@ -68,7 +72,7 @@ _counting_sort
 )
 {
   /* First step - Count */
-  int n_buckets = 128;
+  int n_buckets = _radix_base;
   int* count = malloc( (n_buckets + 1) * sizeof(int));
 
   /* Set to zero */
@@ -78,7 +82,7 @@ _counting_sort
 
   /* Count */
   for(int i = beg; i < end; ++i) {
-    count[(v[i]/place)%128]++;
+    count[(v[i]/place)%_radix_base]++;
   }
 
   /* Rebuild array of displacement */
@@ -87,8 +91,8 @@ _counting_sort
   }
 
   for(int i = end-1; i >= beg; i--){
-    tmp[beg+count[(v[i]/place)%128]-1] = v[i];
-    count[(v[i]/place)%128]--;
+    tmp[beg+count[(v[i]/place)%_radix_base]-1] = v[i];
+    count[(v[i]/place)%_radix_base]--;
   }
 
   for(int i = beg; i < end; ++i) {
@@ -113,7 +117,7 @@ _counting_sort
 // )
 // {
 //   /* First step - Count */
-//   int n_buckets = 128;
+//   int n_buckets = _radix_base;
 //   int* count = malloc( (n_buckets + 1) * sizeof(int));
 
 //   /* Set to zero */
@@ -123,7 +127,7 @@ _counting_sort
 
 //   /* Count */
 //   for(int i = beg; i < end; ++i) {
-//     count[(v[i]/place)%128]++;
+//     count[(v[i]/place)%_radix_base]++;
 //   }
 
 //   /* Rebuild array of displacement */
@@ -132,9 +136,9 @@ _counting_sort
 //   }
 
 //   for(int i = end-1; i >= beg; i--){
-//     tmp[beg+count[(v[i]/place)%128]-1] = v[i];
-//     order_tmp[beg+count[(v[i]/place)%128]-1] = order[i];
-//     count[(v[i]/place)%128]--;
+//     tmp[beg+count[(v[i]/place)%_radix_base]-1] = v[i];
+//     order_tmp[beg+count[(v[i]/place)%_radix_base]-1] = order[i];
+//     count[(v[i]/place)%_radix_base]--;
 //   }
 
 //   for(int i = beg; i < end; ++i) {
@@ -161,7 +165,7 @@ _counting_sort_with_order
 )
 {
   /* First step - Count */
-  int n_buckets = 128;
+  int n_buckets = _radix_base;
   int* count = malloc( (n_buckets + 1) * sizeof(int));
 
   /* Set to zero */
@@ -172,11 +176,11 @@ _counting_sort_with_order
   /* Count */
   for(int i = beg; i < end; ++i) {
 
-    count[(v[i] >> (place_power)) % 128]++;
+    count[(v[i] >> place_power) % _radix_base]++;
 
-    // printf("[place::%d/power::%d] - %d --> %d | %d \n",  place, place_power, v[i], ((v[i] >> 8*place_power) % 128), (v[i]/place)%128);
-    // printf("[place::%d/power::%d] - %d --> %d | %d \n",  place, place_power, v[i], ((v[i] >> place_power) % 128), (v[i]/place)%128);
-    // count[(v[i]/place)%128]++;
+    // printf("[place::%d/power::%d] - %d --> %d | %d \n",  place, place_power, v[i], ((v[i] >> 8*place_power) % _radix_base), (v[i]/place)%_radix_base);
+    // printf("[place::%d/power::%d] - %d --> %d | %d \n",  place, place_power, v[i], ((v[i] >> place_power) % _radix_base), (v[i]/place)%_radix_base);
+    // count[(v[i]/place)%_radix_base]++;
   }
 
   /* Rebuild array of displacement */
@@ -185,16 +189,16 @@ _counting_sort_with_order
   }
 
   for(int i = end-1; i >= beg; i--){
-    int idx = (v[i] >> (place_power)) % 128;
+    int idx = (v[i] >> place_power) % _radix_base;
     tmp[beg+count[idx]-1] = v[i];
     order_tmp[beg+count[idx]-1] = order[i];
     count[idx]--;
-    // tmp[beg+count[(v[i] >> (place_power)) % 128]-1] = v[i];
-    // order_tmp[beg+count[(v[i] >> (place_power)) % 128]-1] = order[i];
-    // count[(v[i] >> (place_power)) % 128]--;
-    // tmp[beg+count[(v[i]/place)%128]-1] = v[i];
-    // order_tmp[beg+count[(v[i]/place)%128]-1] = order[i];
-    // count[(v[i]/place)%128]--;
+    // tmp[beg+count[(v[i] >> place_power) % _radix_base]-1] = v[i];
+    // order_tmp[beg+count[(v[i] >> place_power) % _radix_base]-1] = order[i];
+    // count[(v[i] >> place_power) % _radix_base]--;
+    // tmp[beg+count[(v[i]/place)%_radix_base]-1] = v[i];
+    // order_tmp[beg+count[(v[i]/place)%_radix_base]-1] = order[i];
+    // count[(v[i]/place)%_radix_base]--;
   }
 
   for(int i = beg; i < end; ++i) {
@@ -218,12 +222,12 @@ _cc_radix_sort
  int place
 )
 {
-  int place_init = place*128;
+  int place_init = place*_radix_base;
   place = 1;
   while(place < place_init){
     int* range = _counting_sort(v, tmp, beg, end, place);
     free(range);
-    place *= 128;
+    place *= _radix_base;
   }
 
 }
@@ -242,15 +246,15 @@ _cc_radix_sort_with_order
  int place_power
 )
 {
-  int place_init = place*128;
+  int place_init = place*_radix_base;
   place = 1;
   place_power = 0;
   // printf("_cc_radix_sort_with_order::%d --> %d\n", end-beg, place_init);
   while(place < place_init){
     int* range = _counting_sort_with_order(v, tmp, order, order_tmp, beg, end, place, place_power);
     free(range);
-    place *= 128;
-    place_power += 7;
+    place *= _radix_base;
+    place_power += _radix_shift;
   }
 
 }
@@ -267,7 +271,7 @@ _std_radix_sort
 )
 {
   // int cache_size = 20000;
-  int cache_size = -1;//(int) pow(128, 2);
+  int cache_size = -1;//(int) pow(_radix_base, 2);
 
   if(beg == end){
     return;
@@ -275,7 +279,7 @@ _std_radix_sort
 
   int* range = _counting_sort(v, tmp, beg, end, place);
 
-  place /= 128;
+  place /= _radix_base;
 
   if(place == 0) {
     free(range);
@@ -283,7 +287,7 @@ _std_radix_sort
   }
 
   /* Il faut aglomerer les ranges succesives pour gagner si elle sont trop petite */
-  for(int i = 0; i < 128; ++i){
+  for(int i = 0; i < _radix_base; ++i){
     // fmt::print("Manage {0} = {1} / {2}\n", i, range[i], range[i+1]);
     if( (range[i+1] - range[i]) == 0){
     } else if( (range[i+1] - range[i]) > cache_size){
@@ -315,8 +319,8 @@ _std_radix_sort_with_order
 )
 {
   // int cache_size = 900000;
-  // int cache_size = (int) pow(128, 10);
-  // int cache_size = (int) pow(128, 3);
+  // int cache_size = (int) pow(_radix_base, 10);
+  // int cache_size = (int) pow(_radix_base, 3);
   int cache_size = (int) pow(256, 2);
 
   if(beg == end){
@@ -326,8 +330,8 @@ _std_radix_sort_with_order
   // printf("_std_radix_sort_with_order::%d --> %d | place_power::%d\n", end-beg, place, place_power);
   int* range = _counting_sort_with_order(v, tmp, order, order_tmp, beg, end, place, place_power);
 
-  place /= 128;
-  place_power -= 7;
+  place /= _radix_base;
+  place_power -= _radix_shift;
   if(place_power < 0){
     place_power = 0;
   }
@@ -338,7 +342,7 @@ _std_radix_sort_with_order
   }
 
   /* Il faut aglomerer les ranges succesives pour gagner si elle sont trop petite */
-  for(int i = 0; i < 128; ++i){
+  for(int i = 0; i < _radix_base; ++i){
     if( (range[i+1] - range[i]) == 0){
     } else if( (range[i+1] - range[i]) > cache_size){
       _std_radix_sort_with_order(v, tmp, order, order_tmp, beg+range[i], beg+range[i+1] , place, place_power);
@@ -381,15 +385,15 @@ PDM_radix_sort_long
   int lar = max;
   while(lar > 0){
     n_step++;
-    lar /= 128;
+    lar /= _radix_base;
   }
 
   // Il faut trouver le max dans la base pour reprensenter le min et le max
   //  --> si beaucoup d'écart on tente la moyenne
   int* tmp = (int *) malloc( (lArray+1) * sizeof(int));
 
-  int place = (int) pow(128, n_step);
-  int place_power = 7*n_step;
+  int place = (int) pow(_radix_base, n_step);
+  int place_power = _radix_shift*n_step;
 
   printf("PDM_radix_sort_long::place ::%d \n", place);
   printf("PDM_radix_sort_long::max   ::%d \n", max);
