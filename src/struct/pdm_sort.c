@@ -13,6 +13,7 @@
 #include "pdm.h"
 #include "pdm_sort.h"
 #include "pdm_radix_sort.h"
+#include "pdm_sort_std.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -129,8 +130,6 @@ PDM_sort_long
   /* size of subarray sorted by straight insertion */
   const int M = 7;
   /* default size of the stack */
-  // int sizeStack = 64; /* default size of the stack */
-  // int sizeStack = 4096; /* default size of the stack */
   int sizeStack = 64; /* default size of the stack */
   int jstack = -1;
   int l = 0;
@@ -786,15 +785,27 @@ PDM_inplace_unique_long2
   // printf("PDM_inplace_unique_long::array_size::%d\n", array_size);
   int* order = (int *) malloc( (array_size) * sizeof(int));
 
-  // for(int i = 0; i < array_size; ++i){
-  //   order[i] = i;
-  // }
-  // PDM_radix_sort_long(&a[l], order, array_size);
-
   for(int i = 0; i < array_size; ++i){
     order[i] = i;
   }
-  PDM_sort_long(&a[l], order, array_size);
+  PDM_radix_sort_long(&a[l], order, array_size);
+  // PDM_sort_long_std(&a[l], order, array_size);
+
+
+  int first = a[l];
+  for(int i = 1; i < array_size; ++i ) {
+    if(a[i] < first){
+      printf("The list is not sorted : a[%d] = %d > a[%d] = %d \n", i-1, first, i, a[i]);
+      // printf("Problem with list size : %d\n", itest);
+      abort();
+    }
+    first = a[i];
+  }
+
+  // for(int i = 0; i < array_size; ++i){
+  //   order[i] = i;
+  // }
+  // PDM_sort_long(&a[l], order, array_size);
   // PDM_quick_sort_long2(&a[l], 0, array_size, order);
 
   // printf("PDM_inplace_unique_long::a::sort:: ");
