@@ -87,6 +87,7 @@ cdef extern from "pdm_mpi.h":
 @COMMENT_NOT_PDMA@
 @COMMENT_NOT_PDMA@cdef extern from "pdm_plugin.h":
 @COMMENT_NOT_PDMA@    void PDM_plugin_load ()
+# @COMMENT_NOT_PDMA@print(f"Pypdm : load plugin (PDM_plugin_load).")
 @COMMENT_NOT_PDMA@PDM_plugin_load()
 @COMMENT_NOT_PDMA@
 
