@@ -103,22 +103,6 @@ PDM_sort_double
  int         lArray
 );
 
-/**
- *
- * \brief Quick sort
- *
- * \param [inout]   a     Array to sort
- * \param [in]      l     First element
- * \param [in]      r     Last  element
- *
- */
-void
-PDM_quick_sort_long
-(
- PDM_g_num_t a[],
- int l,
- int r
-);
 
 /**
  *
@@ -153,63 +137,6 @@ PDM_inplace_unique_long2
  int unique_order[],
  int l,
  int r
-);
-
-/**
- *
- * \brief Quick sort
- *
- * \param [inout]   a     Array to sort
- * \param [in]      l     First element
- * \param [in]      r     Last  element
- *
- */
-void
-PDM_quick_sort_int
-(
- int a[],
- int l,
- int r
-);
-
-/**
- *
- * \brief Quick sort
- *
- * \param [inout]   a     Array to sort
- * \param [in]      l     First element
- * \param [in]      r     Last  element
- * \param [inout]   c     Array sorted as a
- *
- */
-
-void
-PDM_quick_sort_long2
-(
- PDM_g_num_t a[],
- int          l,
- int          r,
- int          c[]
-);
-
-/**
- *
- * \brief Quick sort
- *
- * \param [inout]   a     Array to sort
- * \param [in]      l     First element
- * \param [in]      r     Last  element
- * \param [inout]   c     Array sorted as a
- *
- */
-
-void
-PDM_quick_sort_int2
-(
- int          a[],
- int          l,
- int          r,
- int          c[]
 );
 
 /**
