@@ -66,6 +66,15 @@ extern "C" {
 typedef struct {
 
 
+  int set_flags;
+  int input_flags;
+  int query_flags;
+
+  PDM_g_num_t** p_face_ln_to_gn;
+
+  // int* ownership = NULL; // 64 et on met le code dedans
+
+
 } _dmesh_partitioning_t;
 
 /*============================================================================
@@ -163,11 +172,16 @@ PDM_dmesh_partitioning_compute
     // assert(_dmp->dface_cell != NULL);
 
     // Rebuild CELL_FACE for graph computation
+    // dual
+    // Split
 
   } else if ( PDM_HASFLAG(input_flags, PDM_PART_CELL_FACE) ) {
 
     /* Sanity check */
     // assert(_dmp->dcell_face != NULL);
+
+    // dual
+    // Split
 
 
   } else if ( PDM_HASFLAG(input_flags, PDM_PART_CELL_VTX) ) {
@@ -175,7 +189,9 @@ PDM_dmesh_partitioning_compute
     /* Sanity check */
     // assert(_dmp->dcell_vtx != NULL);
     // DG Case
-    // Il faut faire un appel a dmesh_nodal pour calculer le face_cell (ou le cell_face) pour pouvoir splitter
+    // dmesh_nodal_id
+    // Il faut faire un appel a dmesh_nodal pour calculer le
+    // face_cell (ou le cell_face) pour pouvoir splitter
 
   } else {
 
@@ -187,14 +203,30 @@ PDM_dmesh_partitioning_compute
 
 
   /* Post-treatment */
+  // D'abord ln_to_gn > connectivité > renum > graph_comm
+
+  // renum_entiies ()
+  //
+
+  // Multigrille ou uniform_refinement
+
 
   /*
    * Le probleme est qu'il faut le faire dans un ordre précis si il y a une dependances -_-
    *   - Par exemple : On doit reconstruire cell_face > face_vtx
    *     Il y a une dependances entre les demandes comment trié ?
    */
+  // if()()
+  // do_..
+  // do_..
+  // do_..
 
-
+  // while( calc < demande ){
+  // if compute alreay done
+  // demande +=1
+  // sinon
+  // Je cherche dans le truc qui correspond a ma demande
+  // }
 
 
 
@@ -221,6 +253,25 @@ PDM_dmesh_partitioning_set_from_dmesh
   // PDM_dmesh_dims_get(dmesh_id, &)
 }
 
+/**
+ *
+ * \brief Return _dmesh_partitioning_t object from it identifier
+ *
+ * \param [in]   dmpartitioning_id        ppart identifier
+ *
+ */
+// void
+// PDM_dmesh_partitioning_set
+// (
+//  const int     dmesh_partitioning_id,
+//  const int     input_field_key,
+//        void ***field
+// )
+// {
+//   // int owner      = PDM_HASFLAG  (dmm->set_flags, input_field_key);
+//   // assert(owner != 0);
+
+// }
 
 /**
  *
@@ -232,9 +283,9 @@ PDM_dmesh_partitioning_set_from_dmesh
 void
 PDM_dmesh_partitioning_get
 (
- const int   dmesh_partitioning_id,
- const int   input_field_key,
-       int **field
+ const int     dmesh_partitioning_id,
+ const int     input_field_key,
+       void ***field
 )
 {
   int field_key  = input_field_key;
@@ -276,7 +327,7 @@ PDM_dmesh_partitioning_part_get
  const int   dmesh_partitioning_id,
  const int   part_id,
  const int   input_field_key,
-       int  *field
+      void **field
 )
 {
   int field_key  = input_field_key;

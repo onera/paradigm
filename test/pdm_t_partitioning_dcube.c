@@ -261,11 +261,11 @@ int main(int argc, char *argv[])
   // printf(" PDM_PART_FACE_CELL::%d\n", PDM_PART_FACE_CELL);
   // printf(" PDM_PART_CELL_FACE::%d\n", PDM_PART_CELL_FACE);
 
-  // int flags = PDM_PART_FACE_CELL|PDM_PART_CELL_FACE;
-  // printf("PDM_HASFLAG(flags, PDM_PART_FACE_CELL) :: %d\n", PDM_HASFLAG(flags, PDM_PART_FACE_CELL) );
-  // printf("PDM_HASFLAG(flags, PDM_PART_CELL_FACE) :: %d\n", PDM_HASFLAG(flags, PDM_PART_CELL_FACE) );
-  // printf("PDM_HASFLAG(flags, PDM_PART_FACE_VTX) :: %d\n", PDM_HASFLAG(flags, PDM_PART_FACE_VTX) );
-  // printf("x::PDM_HASFLAG(flags, PDM_PART_FACE_VTX) :: %x\n", PDM_PART_FACE_VTX);
+  int flags = PDM_PART_FACE_CELL|PDM_PART_CELL_FACE;
+  printf("PDM_HASFLAG(flags, PDM_PART_FACE_CELL) :: %d\n", PDM_HASFLAG(flags, PDM_PART_FACE_CELL) );
+  printf("PDM_HASFLAG(flags, PDM_PART_CELL_FACE) :: %d\n", PDM_HASFLAG(flags, PDM_PART_CELL_FACE) );
+  printf("PDM_HASFLAG(flags, PDM_PART_FACE_VTX) :: %d\n" , PDM_HASFLAG(flags, PDM_PART_FACE_VTX) );
+  printf("x::PDM_HASFLAG(flags, PDM_PART_FACE_VTX) :: %x\n", PDM_PART_FACE_VTX);
 
 
   // PDM_dmesh_partitioning_part_get(1, 1, PDM_PART_FACE_CELL, NULL);
