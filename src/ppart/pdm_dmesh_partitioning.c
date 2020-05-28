@@ -54,22 +54,6 @@ extern "C" {
  * Local macro definitions
  *============================================================================*/
 
-/**
- * \def _PDM_part_MIN(a,b)
- * Computes the minimum of \a x and \a y.
- *
- */
-
-#define _PDM_part_MIN(a,b) ((a) > (b) ? (b) : (a))
-
-/**
- * \def _PDM_part_MAX(a,b)
- * Computes the maximum of \a x and \a y.
- *
- */
-
-#define _PDM_part_MAX(a,b) ((a) < (b) ? (b) : (a))
-
 /*============================================================================
  * Type definitions
  *============================================================================*/
@@ -154,6 +138,73 @@ PDM_dmesh_partitioning_create
  *
  * \brief Return _dmesh_partitioning_t object from it identifier
  *
+ * \param [in]   Comm         MPI Communicator
+ * \return       dmpartitioning_id
+ */
+void
+PDM_dmesh_partitioning_compute
+(
+ const int  dmesh_partitioning_id,
+ const int  input_flags,
+ const int  queries_flags
+)
+{
+  printf("PDM_dmesh_partitioning_compute::dmesh_partitioning_id :: %d \n", dmesh_partitioning_id);
+  printf("PDM_dmesh_partitioning_compute::input_flags   :: %d \n", input_flags);
+  printf("PDM_dmesh_partitioning_compute::queries_flags :: %d \n", queries_flags);
+
+  // _dmesh_partitioning_t* _dmp = _get_from_id(dmesh_partitioning_id);
+
+  /* Parse input flags - to know wich data is available to build a partiotionning */
+
+  if( PDM_HASFLAG(input_flags, PDM_PART_FACE_CELL) ) {
+
+    /* Sanity check */
+    // assert(_dmp->dface_cell != NULL);
+
+    // Rebuild CELL_FACE for graph computation
+
+  } else if ( PDM_HASFLAG(input_flags, PDM_PART_CELL_FACE) ) {
+
+    /* Sanity check */
+    // assert(_dmp->dcell_face != NULL);
+
+
+  } else if ( PDM_HASFLAG(input_flags, PDM_PART_CELL_VTX) ) {
+
+    /* Sanity check */
+    // assert(_dmp->dcell_vtx != NULL);
+    // DG Case
+    // Il faut faire un appel a dmesh_nodal pour calculer le face_cell (ou le cell_face) pour pouvoir splitter
+
+  } else {
+
+    PDM_error(__FILE__, __LINE__, 0,
+              "PDM_dmesh_partitioning_compute error : None of input data can split graph. ");
+  }
+
+  /* Compute and split */
+
+
+  /* Post-treatment */
+
+  /*
+   * Le probleme est qu'il faut le faire dans un ordre précis si il y a une dependances -_-
+   *   - Par exemple : On doit reconstruire cell_face > face_vtx
+   *     Il y a une dependances entre les demandes comment trié ?
+   */
+
+
+
+
+
+}
+
+
+/**
+ *
+ * \brief Return _dmesh_partitioning_t object from it identifier
+ *
  * \param [in]   dmpartitioning_id        ppart identifier
  *
  */
@@ -168,6 +219,90 @@ PDM_dmesh_partitioning_set_from_dmesh
   // ---> Depuis l'interface du dmesh
   // Recopie
   // PDM_dmesh_dims_get(dmesh_id, &)
+}
+
+
+/**
+ *
+ * \brief Return _dmesh_partitioning_t object from it identifier
+ *
+ * \param [in]   dmpartitioning_id        ppart identifier
+ *
+ */
+void
+PDM_dmesh_partitioning_get
+(
+ const int   dmesh_partitioning_id,
+ const int   input_field_key,
+       int **field
+)
+{
+  int field_key  = input_field_key;
+  int owner      = PDM_HASFLAG  (field_key, PDM_PART_OWNDATA);
+  int field_name = PDM_UNSETFLAG(field_key, PDM_PART_OWNDATA); // Il reste que le nom
+
+  // Search the correct field who want
+  switch (field_name) {
+    case PDM_PART_FACE_CELL:
+    {
+      printf("PDM_dmesh_partitioning_get::PDM_PART_FACE_CELL\n");
+
+      break;
+    }
+    case PDM_PART_CELL_FACE:
+    {
+      printf("PDM_dmesh_partitioning_get::PDM_PART_CELL_FACE\n");
+
+      break;
+    }
+    default:
+    {
+      printf("PDM_dmesh_partitioning_get::NOT FOUND\n");
+      break;
+    }
+  }
+}
+
+/**
+ *
+ * \brief Return _dmesh_partitioning_t object from it identifier
+ *
+ * \param [in]   dmpartitioning_id        ppart identifier
+ *
+ */
+void
+PDM_dmesh_partitioning_part_get
+(
+ const int   dmesh_partitioning_id,
+ const int   part_id,
+ const int   input_field_key,
+       int  *field
+)
+{
+  int field_key  = input_field_key;
+  int owner      = PDM_HASFLAG  (field_key, PDM_PART_OWNDATA);
+  int field_name = PDM_UNSETFLAG(field_key, PDM_PART_OWNDATA); // Il reste que le nom
+
+  // Search the correct field who want
+  switch (field_name) {
+    case PDM_PART_FACE_CELL:
+    {
+      printf("PDM_dmesh_partitioning_part_get::PDM_PART_FACE_CELL\n");
+
+      break;
+    }
+    case PDM_PART_CELL_FACE:
+    {
+      printf("PDM_dmesh_partitioning_part_get::PDM_PART_CELL_FACE\n");
+
+      break;
+    }
+    default:
+    {
+      printf("PDM_dmesh_partitioning_part_get::NOT FOUND\n");
+      break;
+    }
+  }
 }
 
 /**
