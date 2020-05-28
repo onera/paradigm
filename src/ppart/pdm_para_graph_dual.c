@@ -498,20 +498,155 @@ PDM_para_graph_dual_from_arc2node
 
 /**
  *
- * \brief Compute the dual graph in parallel for a cell face connectivity
+ * \brief Compute in parallel the dual graph of an unstructured graph represented
+ *        by its node (vertices of the graph) to arc (edges of the graph) connectivity.
+ *        Arc and edge terminology is employed to avoid confusion with geometric entities
+ *        such as vertices, edges, etc.
+ *        Usually for a CFD mesh, the nodes of the graph are the cells of the mesh
+ *        and the arcs of the graph are thus the faces of the mesh.
+ *
+ * \param [in]   comm               PDM_MPI communicator
+ * \param [in]   graph_node_distrib distribution of nodes over the procs (size=n_rank+1)
+ * \param [in]   graph_node_distrib distribution of arcs  over the procs (size=n_rank+1)
+ * \param [in]   dnode_arc_idx      Node to arc connectivity indexes (size=dn_node+1)
+ * \param [in]   dnode_arc          Node to arc connectivity (size=dnode_to_arc_idx[dn_node])
+ * \param [out]  dual_graph_idx     Node to node connectivity indexes (size=dn_node+1)
+ * \param [out]  dual_graph         Node to node connectivity (size=dual_graph_idx[dn_node])
  */
 void
-PDM_para_graph_dual_from_cell_face
+PDM_para_graph_dual_from_node2arc
 (
  const PDM_MPI_Comm     comm,
- const PDM_g_num_t     *cell_distribution,
- const PDM_g_num_t     *face_distribution,
- const PDM_g_num_t     *dcell_face,
+ const PDM_g_num_t     *graph_node_distrib,
+ const PDM_g_num_t     *graph_arc_distrib,
+ const int             *dnode_arc_idx,
+ const PDM_g_num_t     *dnode_arc,
        int            **dual_graph_idx,
        PDM_g_num_t    **dual_graph
 
 )
 {
+  int i_rank;
+  int n_rank;
+
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  PDM_MPI_Comm_size(comm, &n_rank);
+
+  int dn_arc  = graph_arc_distrib[i_rank+1]  -  graph_arc_distrib[i_rank];
+  int dn_node = graph_node_distrib[i_rank+1] -  graph_node_distrib[i_rank];
+
+  /* We reconstruct a arc_to_node connectivity from the node_to_arc input.
+  This can be done with a part_to_block where the lntogn is the node_to_arc
+  connectivity and the send value are the global number of the nodes.
+
+  Each proc will received one (boundary) or two nodes in global num for his arcs
+  and will thus be able to construct its arc_to_node
+  */
+
+  PDM_g_num_t* node_g = (PDM_g_num_t *) malloc(dnode_arc_idx[dn_node] * sizeof(PDM_g_num_t));
+
+  PDM_g_num_t shift_node_g = graph_node_distrib[i_rank]; // Entre 1 et N
+  for (int i_node = 0; i_node < dn_node; i_node++) {
+    for (int i_arc = dnode_arc_idx[i_node]; i_arc < dnode_arc_idx[i_node+1]; i_arc++) {
+      node_g[i_arc] = i_node + shift_node_g;
+    }
+  }
+
+  if(1 == 0) {
+    PDM_printf("reverted cell face :");
+    for (int i = 0; i < dnode_arc_idx[dn_node]; i++)
+      printf(" %d", node_g[i]);
+    printf("\n");
+  }
+
+  PDM_g_num_t* graph_arc_distrib_ptb = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * (n_rank+1));
+  for(int i = 0; i < n_rank+1; ++i){
+    graph_arc_distrib_ptb[i] = graph_arc_distrib[i] - 1;
+  }
+
+  PDM_part_to_block_t *ptb =
+   PDM_part_to_block_create2(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                             PDM_PART_TO_BLOCK_POST_MERGE,
+                             1.,
+        (PDM_g_num_t **)    &dnode_arc,
+                             graph_arc_distrib_ptb,
+                 (int *)    &dnode_arc_idx[dn_node],
+                             1,
+                             comm);
+
+  int* send_stride = (int *) malloc(dnode_arc_idx[dn_node] * sizeof(int));
+  for (int i = 0; i < dnode_arc_idx[dn_node]; i++) {
+    send_stride[i] = 1;
+  }
+
+  int        *recv_stride = NULL;
+  PDM_g_num_t  *recv_data = NULL;
+
+  PDM_part_to_block_exch (ptb,
+                          sizeof(PDM_g_num_t),
+                          PDM_STRIDE_VAR,
+                          1,
+                          &send_stride,
+                (void **) &node_g,
+                          &recv_stride,
+                (void **) &recv_data);
+
+  int n_recv_block = PDM_part_to_block_n_elt_block_get(ptb);
+  assert(n_recv_block == dn_arc);
+
+  if (0 == 1) {
+    int idx = 0;
+    PDM_printf("[%d]Recv stride (%d): ", i_rank, n_recv_block);
+    for (int i = 0; i < n_recv_block; i++)
+      PDM_printf(" %d", recv_stride[i]);
+    PDM_printf("\n[%d]Recv data:", i_rank);
+    for (int i = 0; i < n_recv_block; i++) {
+      for (int j = idx; j < idx + recv_stride[i]; j++)
+        PDM_printf(" %d", recv_data[j]);
+      idx += recv_stride[i];
+    }
+    PDM_printf("\n");
+  }
+
+  PDM_g_num_t *darc_to_node = (PDM_g_num_t *) malloc( 2*dn_arc * sizeof(PDM_g_num_t));
+
+  int idx_recv_data = 0;
+  for (int i_arc = 0; i_arc < dn_arc; i_arc++) {
+    darc_to_node[2*i_arc] = recv_data[idx_recv_data++];
+    if (recv_stride[i_arc] == 2) {
+      darc_to_node[2*i_arc+1] = recv_data[idx_recv_data++];
+    }
+    else {
+      darc_to_node[2*i_arc+1] = 0;
+    }
+  }
+
+  if (0 == 1) {
+  PDM_printf("[%d] Generated arc_to_node ::", i_rank);
+    for (int i = 0; i < dn_arc; i++)
+      PDM_printf(" %d %d", darc_to_node[2*i], darc_to_node[2*i+1]);
+  PDM_printf("\n");
+  }
+
+  /* Now we have a arc_to_node connectivity, we can call graph_dual_from_arc2node
+  */
+
+  PDM_para_graph_dual_from_arc2node(comm,
+                                    graph_node_distrib,
+                                    graph_arc_distrib,
+                                    darc_to_node,
+                                    dual_graph_idx,
+                                    dual_graph,
+                                    0,
+                                    NULL,
+                                    NULL);
+
+
+  PDM_part_to_block_free(ptb);
+  free(node_g);
+  free(graph_arc_distrib_ptb);
+  free(send_stride);
+  free(darc_to_node);
 }
 
 

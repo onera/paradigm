@@ -68,12 +68,13 @@ PDM_para_graph_dual_from_arc2node
  * \brief Compute the dual graph in parallel for a cell face connectivity
  */
 void
-PDM_para_graph_dual_from_cell_face
+PDM_para_graph_dual_from_node2arc
 (
  const PDM_MPI_Comm     comm,
- const PDM_g_num_t     *cell_distribution,
- const PDM_g_num_t     *face_distribution,
- const PDM_g_num_t     *dcell_face,
+ const PDM_g_num_t     *graph_node_distrib,
+ const PDM_g_num_t     *graph_arc_distrib,
+ const int             *dnode_arc_idx,
+ const PDM_g_num_t     *dnode_arc,
        int            **dual_graph_idx,
        PDM_g_num_t    **dual_graph
 

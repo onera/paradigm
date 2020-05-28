@@ -312,6 +312,39 @@ int main(int argc, char *argv[])
                     (int        **) &dcell_face_idx,
                     (PDM_g_num_t**) &dcell_face);
 
+  // Test graph creation from cell_face connectivity
+  if (0 == 0) {
+
+    if (0 == 1) {
+      printf("dcell_face_idx :");
+      for (int i =0; i < dn_cell+1; i++)
+        printf(" %d", dcell_face_idx[i]);
+      printf("\n");
+
+      printf("dcell_face:: %d \n", dn_cell);
+      for(int i = 0; i < dn_cell; ++i){
+        printf("Local cell %d :", i);
+        for(int j = dcell_face_idx[i]; j < dcell_face_idx[i+1]; ++j){
+          printf(" %d", dcell_face[j]);
+        }
+        PDM_printf("\n");
+      }
+    }
+
+    free(dual_graph_idx);
+    free(dual_graph);
+    dual_graph_idx = NULL;
+    dual_graph = NULL;
+
+    PDM_para_graph_dual_from_node2arc(comm,
+                                      cell_distribution,
+                                      face_distribution,
+                                      dcell_face_idx,
+                                      dcell_face,
+                      (int        **) &dual_graph_idx,
+                      (PDM_g_num_t**) &dual_graph);
+  }
+
   /*
    * Split it !!! CAUTION dn_cell can be different of the size of dual graph !!!
    */
