@@ -12,7 +12,9 @@
 
 #include "pdm.h"
 #include "pdm_sort.h"
+#include "pdm_quick_sort.h"
 #include "pdm_compare_operator.h"
+
 
 #ifdef __cplusplus
 extern "C" {
