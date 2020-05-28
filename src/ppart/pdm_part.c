@@ -30,7 +30,7 @@
 #include "pdm_fortran_to_c_string.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
-#include "pdm_sort.h"
+#include "pdm_quick_sort.h"
 #include "pdm_binary_search.h"
 #include "pdm_handles.h"
 
