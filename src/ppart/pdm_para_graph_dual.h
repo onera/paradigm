@@ -49,12 +49,12 @@ PDM_compress_connectivity
  *
  */
 void
-PDM_para_graph_dual_from_face_cell
+PDM_para_graph_dual_from_arc2node
 (
  const PDM_MPI_Comm     comm,
-       PDM_g_num_t     *cell_distribution,
-       PDM_g_num_t     *face_distribution,
-       PDM_g_num_t     *dface_cell,
+ const PDM_g_num_t     *cell_distribution,
+ const PDM_g_num_t     *face_distribution,
+ const PDM_g_num_t     *dface_cell,
        int            **dual_graph_idx,
        PDM_g_num_t    **dual_graph,
  const int              compute_dcell_face,

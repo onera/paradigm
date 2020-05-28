@@ -302,15 +302,15 @@ int main(int argc, char *argv[])
   PDM_g_num_t* dual_graph;
   int* dcell_face_idx;
   PDM_g_num_t* dcell_face;
-  PDM_para_graph_dual_from_face_cell(comm,
-                                     cell_distribution,
-                                     face_distribution,
-                                     dface_cell,
-                     (int        **) &dual_graph_idx,
-                     (PDM_g_num_t**) &dual_graph,
-                                     1,
-                     (int        **) &dcell_face_idx,
-                     (PDM_g_num_t**) &dcell_face);
+  PDM_para_graph_dual_from_arc2node(comm,
+                                    cell_distribution,
+                                    face_distribution,
+                                    dface_cell,
+                    (int        **) &dual_graph_idx,
+                    (PDM_g_num_t**) &dual_graph,
+                                    1,
+                    (int        **) &dcell_face_idx,
+                    (PDM_g_num_t**) &dcell_face);
 
   /*
    * Split it !!! CAUTION dn_cell can be different of the size of dual graph !!!
