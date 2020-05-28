@@ -255,6 +255,29 @@ int main(int argc, char *argv[])
     PDM_printf("\n");
 
   }
+
+  // printf(" PDM_PART_NONE::%d\n"     , PDM_PART_NONE);
+  // printf(" PDM_PART_NULL::%d\n"     , PDM_PART_NULL);
+  // printf(" PDM_PART_FACE_CELL::%d\n", PDM_PART_FACE_CELL);
+  // printf(" PDM_PART_CELL_FACE::%d\n", PDM_PART_CELL_FACE);
+
+  // int flags = PDM_PART_FACE_CELL|PDM_PART_CELL_FACE;
+  // printf("PDM_HASFLAG(flags, PDM_PART_FACE_CELL) :: %d\n", PDM_HASFLAG(flags, PDM_PART_FACE_CELL) );
+  // printf("PDM_HASFLAG(flags, PDM_PART_CELL_FACE) :: %d\n", PDM_HASFLAG(flags, PDM_PART_CELL_FACE) );
+  // printf("PDM_HASFLAG(flags, PDM_PART_FACE_VTX) :: %d\n", PDM_HASFLAG(flags, PDM_PART_FACE_VTX) );
+  // printf("x::PDM_HASFLAG(flags, PDM_PART_FACE_VTX) :: %x\n", PDM_PART_FACE_VTX);
+
+
+  // PDM_dmesh_partitioning_part_get(1, 1, PDM_PART_FACE_CELL, NULL);
+  // PDM_dmesh_partitioning_part_get(1, 1, PDM_PART_CELL_FACE, NULL);
+  // PDM_dmesh_partitioning_part_get(1, 1, PDM_PART_FACE_VTX, NULL);
+  // PDM_dmesh_partitioning_part_get(1, 1, PDM_PART_FACE_VTX|PDM_PART_FACE_CELL, NULL);
+
+  // PDM_dmesh_partitioning_get(1, PDM_PART_FACE_CELL, NULL);
+  // PDM_dmesh_partitioning_get(1, PDM_PART_CELL_FACE, NULL);
+  // PDM_dmesh_partitioning_get(1, PDM_PART_FACE_VTX, NULL);
+  // PDM_dmesh_partitioning_get(1, PDM_PART_FACE_VTX|PDM_PART_FACE_CELL, NULL);
+
   // int ppart_id = 0;
 
   gettimeofday(&t_elaps_debut, NULL);
