@@ -29,6 +29,7 @@
 #include "pdm_printf.h"
 #include "pdm_error.h"
 #include "pdm_sort.h"
+#include "pdm_unique.h"
 #include "pdm_binary_search.h"
 #include "pdm_handles.h"
 
