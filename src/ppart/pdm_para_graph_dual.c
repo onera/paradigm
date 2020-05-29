@@ -203,7 +203,7 @@ PDM_para_graph_dual_from_arc2node
 
       if(compute_dnode_to_arc){
         arc_strid[dn_arc_int]  = 1;
-        darc_g[idx_data_arc++] = shift_arc_g + i_arc;
+        darc_g[idx_data_arc++] = -1*(shift_arc_g + i_arc);
       }
 
       node_strid[dn_arc_int]          = 1;
@@ -543,12 +543,15 @@ PDM_para_graph_dual_from_node2arc
   and will thus be able to construct its arc_to_node
   */
 
-  PDM_g_num_t* node_g = (PDM_g_num_t *) malloc(dnode_arc_idx[dn_node] * sizeof(PDM_g_num_t));
+  PDM_g_num_t* node_g       = (PDM_g_num_t *) malloc(dnode_arc_idx[dn_node] * sizeof(PDM_g_num_t));
+  PDM_g_num_t* arc_ln_to_gn = (PDM_g_num_t *) malloc(dnode_arc_idx[dn_node] * sizeof(PDM_g_num_t));
 
   PDM_g_num_t shift_node_g = graph_node_distrib[i_rank]; // Entre 1 et N
   for (int i_node = 0; i_node < dn_node; i_node++) {
     for (int i_arc = dnode_arc_idx[i_node]; i_arc < dnode_arc_idx[i_node+1]; i_arc++) {
-      node_g[i_arc] = i_node + shift_node_g;
+      int g_sign = PDM_SIGN(dnode_arc[i_arc]);
+      node_g[i_arc] = g_sign * (i_node + shift_node_g);
+      arc_ln_to_gn[i_arc] = PDM_ABS(dnode_arc[i_arc]);
     }
   }
 
@@ -568,7 +571,7 @@ PDM_para_graph_dual_from_node2arc
    PDM_part_to_block_create2(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                              PDM_PART_TO_BLOCK_POST_MERGE,
                              1.,
-        (PDM_g_num_t **)    &dnode_arc,
+                            &arc_ln_to_gn,
                              graph_arc_distrib_ptb,
                  (int *)    &dnode_arc_idx[dn_node],
                              1,
@@ -615,6 +618,16 @@ PDM_para_graph_dual_from_node2arc
     darc_to_node[2*i_arc] = recv_data[idx_recv_data++];
     if (recv_stride[i_arc] == 2) {
       darc_to_node[2*i_arc+1] = recv_data[idx_recv_data++];
+      int sign_left = PDM_SIGN(darc_to_node[2*i_arc]);
+      // Swap left and right face if left face is negative
+      if (sign_left > 0) {
+        darc_to_node[2*i_arc+1] = PDM_ABS(darc_to_node[2*i_arc+1]);
+      }
+      else {
+        PDM_g_num_t tpm_face    = PDM_ABS(darc_to_node[2*i_arc  ]);
+        darc_to_node[2*i_arc  ] = PDM_ABS(darc_to_node[2*i_arc+1]); //normally useless
+        darc_to_node[2*i_arc+1] = tpm_face;
+      }
     }
     else {
       darc_to_node[2*i_arc+1] = 0;
