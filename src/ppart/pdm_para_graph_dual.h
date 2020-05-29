@@ -25,6 +25,16 @@ extern "C" {
 /*============================================================================
  * Type
  *============================================================================*/
+/**
+ * \enum PDM_part_split_t
+ * \brief Split method
+ *
+ */
+
+typedef enum {
+  PDM_SPLIT_DUAL_WITH_PARMETIS = 1,
+  PDM_SPLIT_DUAL_WITH_PTSCOTCH = 2
+} PDM_split_dual_t;
 
 /*=============================================================================
  * Static global variables
@@ -52,14 +62,14 @@ void
 PDM_para_graph_dual_from_arc2node
 (
  const PDM_MPI_Comm     comm,
- const PDM_g_num_t     *cell_distribution,
- const PDM_g_num_t     *face_distribution,
- const PDM_g_num_t     *dface_cell,
+ const PDM_g_num_t     *graph_node_distrib,
+ const PDM_g_num_t     *graph_arc_distrib,
+ const PDM_g_num_t     *darc_to_node,
        int            **dual_graph_idx,
        PDM_g_num_t    **dual_graph,
- const int              compute_dcell_face,
-       int            **dcell_face_idx,
-       PDM_g_num_t    **dcell_face
+ const int              compute_dnode_to_arc,
+       int            **dnode_to_arc_idx,
+       PDM_g_num_t    **dnode_to_arc
 );
 
 
@@ -80,17 +90,23 @@ PDM_para_graph_dual_from_node2arc
 
 );
 
-
+/**
+ *
+ * \brief Call the chosen graph partitioner to split the dual graph
+*/
 void
-PDM_split_graph
+PDM_split_dual_graph
 (
- const PDM_MPI_Comm  comm,
- int                *dual_graph_idx,
- PDM_g_num_t        *dual_graph,
- int                *delmt_weight,
- int                *cell_part,
- int                 dn_elmt,
- int                 n_part
+ const PDM_split_dual_t  split_method,
+ const PDM_g_num_t      *graph_node_distrib,
+ const int              *dual_graph_idx,
+ const PDM_g_num_t      *dual_graph,
+ const int              *node_weight,
+ const int              *arc_weight,
+ const int               n_part,
+ const double           *part_fraction,
+ int                    *node_part_id,
+ const PDM_MPI_Comm      comm
 );
 
 #ifdef __cplusplus

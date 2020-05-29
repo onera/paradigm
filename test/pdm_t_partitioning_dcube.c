@@ -61,7 +61,7 @@ _usage(int exit_code)
  * \param [inout]   length   Cube length
  * \param [inout]   n_part   Number of partitions par process
  * \param [inout]   post     Ensight outputs status
- * \param [inout]   method   Partitioner (1 ParMETIS, 2 Pt-Scotch)
+ * \param [inout]   part_method Partitioner (1 ParMETIS, 2 Pt-Scotch)
  *
  */
 
@@ -72,7 +72,7 @@ _read_args(int            argc,
            double        *length,
            int           *n_part,
            int           *post,
-           int           *method)
+           int           *part_method)
 {
   int i = 1;
 
@@ -111,10 +111,10 @@ _read_args(int            argc,
       *post = 1;
     }
     else if (strcmp(argv[i], "-pt-scotch") == 0) {
-      *method = 2;
+      *part_method = 2;
     }
     else if (strcmp(argv[i], "-parmetis") == 0) {
-      *method = 1;
+      *part_method = 1;
     }
     else
       _usage(EXIT_FAILURE);
@@ -141,10 +141,10 @@ int main(int argc, char *argv[])
   int                n_part    = 1;
   int                post      = 0;
 #ifdef PDM_HAVE_PARMETIS
-  PDM_partitioning_method_t method  = PDM_PARTITIONING_WITH_PARMETIS;
+  PDM_split_dual_t part_method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
 #else
 #ifdef PDM_HAVE_PTSCOTCH
-  PDM_partitioning_method_t method  = PDM_PARTITIONING_WITH_PTSCOTCH;
+  PDM_split_dual_t part_method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
 #endif
 #endif
 
@@ -158,7 +158,7 @@ int main(int argc, char *argv[])
              &length,
              &n_part,
              &post,
-             (int *) &method);
+     (int *) &part_method);
 
   /*
    *  Init
@@ -313,7 +313,7 @@ int main(int argc, char *argv[])
                     (PDM_g_num_t**) &dcell_face);
 
   // Test graph creation from cell_face connectivity
-  if (0 == 0) {
+  if (0 == 1) {
 
     if (0 == 1) {
       printf("dcell_face_idx :");
@@ -367,17 +367,38 @@ int main(int argc, char *argv[])
     }
   }
 
-  // PDM_split_graph(comm, dual_graph_idx, dual_graph, NULL, cell_part, dn_cell, n_rank);
-  // PDM_split_graph(comm, dual_graph_idx, dual_graph, NULL, cell_part, dn_cell, n_part);
-  PDM_split_graph(comm, dual_graph_idx, dual_graph, NULL, cell_part, dn_cell, part_distribution[n_rank]-1);
-  // PDM_split_graph(comm, dual_graph_idx, dual_graph, NULL, cell_part, dn_cell, n_rank);
+  int tn_part = part_distribution[n_rank]-1;
+
+  double *part_frac = NULL;
+  if (0 == 0) {
+  part_frac = (double *) malloc(sizeof(double) * tn_part );
+  for (int i_part = 0; i_part < tn_part-1; i_part++)
+  {
+    if (i_part % 2 == 0) part_frac[i_part] = (double) 0.5*(1./tn_part);
+    else                 part_frac[i_part] = (double) 1.5*(1./tn_part);
+  }
+  if (tn_part % 2 == 0) part_frac[tn_part-1] = (double) 1.5*(1./tn_part);
+  else                  part_frac[tn_part-1] = (double) 1.*(1./tn_part);
+  PDM_printf("Testing with heterogeneous part sizes\n");
+  }
+
+  PDM_split_dual_graph(part_method,
+                       cell_distribution,
+                       dual_graph_idx,
+                       dual_graph,
+                       NULL,
+                       NULL,
+                       tn_part,
+                       part_frac, // Or NULL for homogeneous parts
+                       cell_part,
+                       comm);
 
 
-  // printf("cell_part[%d]::", dn_cell);
-  // for(int i = 0; i < dn_cell; ++i){
-  //   printf("%d ", cell_part[i]);
-  // }
-  // printf("\n");
+  printf("cell_part[%d]::", dn_cell);
+  for(int i = 0; i < dn_cell; ++i){
+    printf("%d ", cell_part[i]);
+  }
+  printf("\n");
 
   /*
    * On dispose pour chaque cellule de la partition associé : il faut retrouver le

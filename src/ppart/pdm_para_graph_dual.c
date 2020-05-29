@@ -130,7 +130,7 @@ PDM_compress_connectivity
  *
  * \param [in]   comm               PDM_MPI communicator
  * \param [in]   graph_node_distrib distribution of nodes over the procs (size=n_rank+1)
- * \param [in]   graph_node_distrib distribution of arcs  over the procs (size=n_rank+1)
+ * \param [in]   graph_arc_distrib  distribution of arcs  over the procs (size=n_rank+1)
  * \param [in]   darc_to_node       Arc to node connectivity (size=2*dn_arc)
  * \param [out]  dual_graph_idx     Node to node connectivity indexes (size=dn_node+1)
  * \param [out]  dual_graph         Node to node connectivity (size=dual_graph_idx[dn_node])
@@ -507,7 +507,7 @@ PDM_para_graph_dual_from_arc2node
  *
  * \param [in]   comm               PDM_MPI communicator
  * \param [in]   graph_node_distrib distribution of nodes over the procs (size=n_rank+1)
- * \param [in]   graph_node_distrib distribution of arcs  over the procs (size=n_rank+1)
+ * \param [in]   graph_arc_distrib  distribution of arcs  over the procs (size=n_rank+1)
  * \param [in]   dnode_arc_idx      Node to arc connectivity indexes (size=dn_node+1)
  * \param [in]   dnode_arc          Node to arc connectivity (size=dnode_to_arc_idx[dn_node])
  * \param [out]  dual_graph_idx     Node to node connectivity indexes (size=dn_node+1)
@@ -651,18 +651,34 @@ PDM_para_graph_dual_from_node2arc
 
 
 /**
- * \brief   Split graph
+ *
+ * \brief Call the chosen graph partitioner to split the dual graph
+ *
+ * \param [in]   split_method       Choice of the graph partitioner
+ * \param [in]   graph_node_distrib distribution of nodes over the procs (size=n_rank+1)
+ * \param [in]   dual_graph_idx     Node to node connectivity indexes (size=dn_node+1)
+ * \param [in]   dual_graph         Node to node connectivity (size=dual_graph_idx[dn_node])
+ * \param [in]   node_weight        Weight associated to each node of the graph or NULL
+ * \param [in]   arc_weight         Weight associated to each arc of the graph or NULL
+ * \param [in]   n_part             Total number of partitions to produce
+ * \param [in]   part_fraction      Fraction of (weighted) vertex wanted on each part (Metis only)
+                                    or NULL for homogeneous sizes (size = n_part)
+ * \param [out]  node_part_id       Attributed partition number for each node (size=dn_node)
+ * \param [in]   comm               PDM_MPI communicator
  */
 void
-PDM_split_graph
+PDM_split_dual_graph
 (
- const PDM_MPI_Comm  comm,
- int                *dual_graph_idx,
- PDM_g_num_t        *dual_graph,
- int                *delmt_weight,
- int                *cell_part,
- int                 dn_elmt,
- int                 n_part
+ const PDM_split_dual_t  split_method,
+ const PDM_g_num_t      *graph_node_distrib,
+ const int              *dual_graph_idx,
+ const PDM_g_num_t      *dual_graph,
+ const int              *node_weight,
+ const int              *arc_weight,
+ const int               n_part,
+ const double           *part_fraction,
+ int                    *node_part_id,
+ const PDM_MPI_Comm      comm
 )
 {
   int i_rank;
@@ -671,32 +687,109 @@ PDM_split_graph
   PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_size(comm, &n_rank);
 
+  int dn_elmt = graph_node_distrib[i_rank+1] - graph_node_distrib[i_rank];
+
   for (int i = 0; i < dn_elmt; i++) {
-    cell_part[i] = 0;
+    node_part_id[i] = 0;
   }
 
-  /*
-   *  Uniquement scotch pour l'instant car l'interface est simple
-   */
-  int check = 1;
-  int *edgeWeight = NULL;
+  switch (split_method) {
 
-  printf("PDM_SCOTCH_dpart %d | %d \n", n_part, dn_elmt);
-  PDM_SCOTCH_dpart (dn_elmt,
-                    dual_graph_idx,
-                    dual_graph,
-                    delmt_weight,
-                    edgeWeight,
-                    check,
-                    comm,
-                    n_part,
-                    cell_part);
-  printf("PDM_SCOTCH_dpart end \n");
+    case PDM_SPLIT_DUAL_WITH_PARMETIS:
+    {
+      #ifndef PDM_HAVE_PARMETIS
+        PDM_printf("PPART error : ParMETIS unavailable\n");
+        exit(1);
+      #else
+      #endif
+
+        // Define metis properties
+        int numflag    = 0;   /* C or Fortran numbering (C = 0)                    */
+        int wgtflag    = 0;   /* Indicate if graph is weighted                     */
+        int ncon       = 1;   /* Number of weight to consider per vertex           */
+        double *ubvec;        /* Imbalance tolerance for vertex weights            */
+        double *tpwgts;       /* Fraction of (weighted) vertex wanted on each part */
+        int edgecut;          /* Number of edges cutted by metis                   */
+
+        ubvec = (double *) malloc(ncon * sizeof(double));
+        for (int i = 0; i < ncon; i++) {
+          ubvec[i] = 1.05;
+        }
+
+        tpwgts = (double *) malloc(ncon * n_part * sizeof(double));
+        if (part_fraction != NULL) {
+          for (int i = 0; i < n_part; i++) {
+            for (int j = 0; j < ncon; j++) {
+              tpwgts[ncon*i + j] = part_fraction[i];
+            }
+          }
+        }
+        else {
+          for (int i = 0; i < ncon * n_part; i++) {
+            tpwgts[i] = (double) (1./n_part);
+          }
+        }
+
+        PDM_g_num_t *_graph_node_distri = (PDM_g_num_t *) malloc((n_rank+1) * sizeof(PDM_g_num_t));
+        for (int i = 0; i < n_rank + 1; i++) {
+          _graph_node_distri[i] = graph_node_distrib[i] - 1;
+        }
+
+        if (arc_weight != NULL) {
+          if (node_weight != NULL) wgtflag = 3;     //Weights on both the vertices and edges
+          else wgtflag = 1;                         //Weights on the edges only
+        }
+        else if (node_weight != NULL) wgtflag = 2;  //Weights on the vertices only
+
+        printf("PDM_ParMETIS_dpart %d | %d \n", n_part, dn_elmt);
+        PDM_ParMETIS_V3_PartKway (_graph_node_distri,
+                                  dual_graph_idx,
+                                  dual_graph,
+                                  node_weight,
+                                  arc_weight,
+                                 &wgtflag,
+                                 &numflag,
+                                 &ncon,
+                                 &n_part,
+                                  tpwgts,
+                                  ubvec,
+                                 &edgecut,
+                                  node_part_id,
+                                  comm);
+
+      free(ubvec);
+      free(tpwgts);
+      free(_graph_node_distri);
+      break;
+    }
+
+    case PDM_SPLIT_DUAL_WITH_PTSCOTCH:
+    {
+      #ifndef PDM_HAVE_PTSCOTCH
+        PDM_printf("PPART error : PT-Scotch unavailable\n");
+        exit(1);
+      #else
+        int check = 1;
+        printf("PDM_SCOTCH_dpart %d | %d \n", n_part, dn_elmt);
+        PDM_SCOTCH_dpart (dn_elmt,
+                          dual_graph_idx,
+                          dual_graph,
+                          node_weight,
+                          arc_weight,
+                          check,
+                          comm,
+                          n_part,
+                          node_part_id);
+        printf("PDM_SCOTCH_dpart end \n");
+      #endif
+      break;
+    }
+
+    default:
+      PDM_printf("PPART error : unknown partioning choice '%i'\n", split_method);
+      exit(1);
+  }
 }
-
-
-
-
 
 #ifdef __cplusplus
 }
