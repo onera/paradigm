@@ -45,6 +45,7 @@ _usage(int exit_code)
      "  Usage: \n\n"
      "  -n      <level>  Number of vertices on the cube side.\n\n"
      "  -l      <level>  Cube length.\n\n"
+     "  -t      <level>  Bounding boxes tolerance.\n\n"
      "  -n_part <level>  Number of partitions par process.\n\n"
      "  -p      <level>  Number of points to locate.\n\n"
      "  -octree          Use octree-based method.\n\n"
@@ -62,13 +63,14 @@ _usage(int exit_code)
  *
  * \brief  Read arguments from the command line
  *
- * \param [in]      argc     Number of arguments
- * \param [in]      argv     Arguments
+ * \param [in]      argc       Number of arguments
+ * \param [in]      argv       Arguments
  * \param [inout]   n_vtx_seg  Number of vertices on the cube side
- * \param [inout]   length   Cube length
- * \param [inout]   n_part   Number of partitions par process
- * \param [inout]   post     Ensight outputs status
- * \param [inout]   method   Partitioner (1 ParMETIS, 2 Pt-Scotch)
+ * \param [inout]   length     Cube length
+ * \param [inout]   tolerance  Bounding boxes tolerance
+ * \param [inout]   n_part     Number of partitions par process
+ * \param [inout]   post       Ensight outputs status
+ * \param [inout]   method     Partitioner (1 ParMETIS, 2 Pt-Scotch)
  *
  */
 
@@ -77,11 +79,12 @@ _read_args(int            argc,
            char         **argv,
            PDM_g_num_t   *n_vtx_seg,
            double        *length,
+           double        *tolerance,
            int           *n_part,
-	   PDM_g_num_t   *n_pts,
+           PDM_g_num_t   *n_pts,
            int           *post,
            int           *part_method,
-	   PDM_mesh_location_method_t *loc_method)
+           PDM_mesh_location_method_t *loc_method)
 {
   int i = 1;
 
@@ -107,6 +110,13 @@ _read_args(int            argc,
         _usage(EXIT_FAILURE);
       else
         *length = atof(argv[i]);
+    }
+    else if (strcmp(argv[i], "-t") == 0) {
+      i++;
+      if (i >= argc)
+        _usage(EXIT_FAILURE);
+      else
+        *tolerance = atof(argv[i]);
     }
     else if (strcmp(argv[i], "-n_part") == 0) {
       i++;
@@ -178,7 +188,6 @@ _gen_cloud_random
 
 
 
-
 /**
  *
  * \brief  Main
@@ -194,6 +203,7 @@ int main(int argc, char *argv[])
 
   PDM_g_num_t n_vtx_seg = 10;
   double      length    = 1.;
+  double      tolerance = 1e-9;
   int         n_part    = 1;
   int         post      = 0;
 #ifdef PDM_HAVE_PARMETIS
@@ -217,11 +227,12 @@ int main(int argc, char *argv[])
              argv,
              &n_vtx_seg,
              &length,
+             &tolerance,
              &n_part,
-	     &n_pts,
+             &n_pts,
              &post,
              (int *) &part_method,
-	     &loc_method);
+             &loc_method);
 
 
   /*
@@ -249,7 +260,7 @@ int main(int argc, char *argv[])
   PDM_g_num_t *dface_group = NULL;
   int          dface_vtx_l;
   int          dface_group_l;
-  
+
   /*
    *  Create distributed cube
    */
@@ -261,8 +272,8 @@ int main(int argc, char *argv[])
   const double zmin = 0;
 
   /*const double xmax = xmin + length;
-  const double ymax = ymin + length;
-  const double zmax = zmin + length;*/
+    const double ymax = ymin + length;
+    const double zmax = zmin + length;*/
 
   if (my_rank == 0) {
     printf("-- Build cube\n");
@@ -278,20 +289,20 @@ int main(int argc, char *argv[])
                      zmin);
 
   PDM_dcube_gen_dim_get(id,
-			&n_face_group,
-			&dn_cell,
-			&dn_face,
-			&dn_vtx,
-			&dface_vtx_l,
-			&dface_group_l);
+                        &n_face_group,
+                        &dn_cell,
+                        &dn_face,
+                        &dn_vtx,
+                        &dface_vtx_l,
+                        &dface_group_l);
 
   PDM_dcube_gen_data_get(id,
-			 &dface_cell,
-			 &dface_vtx_idx,
-			 &dface_vtx,
-			 &dvtx_coord,
-			 &dface_group_idx,
-			 &dface_group);
+                         &dface_cell,
+                         &dface_vtx_idx,
+                         &dface_vtx,
+                         &dvtx_coord,
+                         &dface_group_idx,
+                         &dface_group);
   int ppart_id = 0;
 
   gettimeofday(&t_elaps_debut, NULL);
@@ -355,11 +366,11 @@ int main(int argc, char *argv[])
   int _n_pts_l;
   double *coords = NULL;
   _gen_cloud_random (n_pts,
-		     length,
-		     n_procs,
-		     my_rank,
-		     &coords,
-		     &_n_pts_l);
+                     length,
+                     n_procs,
+                     my_rank,
+                     &coords,
+                     &_n_pts_l);
 
   int id_gnum = PDM_gnum_create (3, 1, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD);
 
@@ -379,7 +390,7 @@ int main(int argc, char *argv[])
 
 
 
-  
+
   /************************
    *
    * Mesh location struct initializaiton
@@ -387,27 +398,27 @@ int main(int argc, char *argv[])
    ************************/
 
   int id_loc = PDM_mesh_location_create (PDM_MESH_NATURE_SURFACE_MESH,//???
-					 1,//const int n_point_cloud,
-					 PDM_MPI_COMM_WORLD);
+                                         1,//const int n_point_cloud,
+                                         PDM_MPI_COMM_WORLD);
 
   /* Set point cloud(s) */
   PDM_mesh_location_n_part_cloud_set (id_loc,
-				      0,//i_point_cloud,
-				      1);//n_part
-  
+                                      0,//i_point_cloud,
+                                      1);//n_part
+
   PDM_mesh_location_cloud_set (id_loc,
-			       0,//i_point_cloud,
-			       0,//i_part,
-			       _n_pts_l,
-			       coords,
-			       gnum);
+                               0,//i_point_cloud,
+                               0,//i_part,
+                               _n_pts_l,
+                               coords,
+                               gnum);
 
   PDM_mesh_location_mesh_global_data_set (id_loc,
-					  n_part);
-     
+                                          n_part);
+
   /* Set mesh */
   for (int ipart = 0; ipart < n_part; ipart++) {
-    
+
     int n_cell;
     int n_face;
     int n_face_part_bound;
@@ -420,17 +431,17 @@ int main(int argc, char *argv[])
     int n_edge_group2;
 
     PDM_part_part_dim_get(ppart_id,
-			  ipart,
-			  &n_cell,
-			  &n_face,
-			  &n_face_part_bound,
-			  &n_vtx,
-			  &n_proc,
-			  &n_t_part,
-			  &s_cell_face,
-			  &s_face_vtx,
-			  &s_face_group,
-			  &n_edge_group2);
+                          ipart,
+                          &n_cell,
+                          &n_face,
+                          &n_face_part_bound,
+                          &n_vtx,
+                          &n_proc,
+                          &n_t_part,
+                          &s_cell_face,
+                          &s_face_vtx,
+                          &s_face_group,
+                          &n_edge_group2);
 
     int         *cell_tag;
     int         *cell_face_idx;
@@ -452,39 +463,39 @@ int main(int argc, char *argv[])
     PDM_g_num_t *face_group_ln_to_gn;
 
     PDM_part_part_val_get (ppart_id,
-			   ipart,
-			   &cell_tag,
-			   &cell_face_idx,
-			   &cell_face,
-			   &cell_ln_to_gn,
-			   &face_tag,
-			   &face_cell,
-			   &face_vtx_idx,
-			   &face_vtx,
-			   &face_ln_to_gn,
-			   &face_part_boundProcIdx,
-			   &face_part_boundPartIdx,
-			   &face_part_bound,
-			   &vtx_tag,
-			   &vtx,
-			   &vtx_ln_to_gn,
-			   &face_group_idx,
-			   &face_group,
-			   &face_group_ln_to_gn);
+                           ipart,
+                           &cell_tag,
+                           &cell_face_idx,
+                           &cell_face,
+                           &cell_ln_to_gn,
+                           &face_tag,
+                           &face_cell,
+                           &face_vtx_idx,
+                           &face_vtx,
+                           &face_ln_to_gn,
+                           &face_part_boundProcIdx,
+                           &face_part_boundPartIdx,
+                           &face_part_bound,
+                           &vtx_tag,
+                           &vtx,
+                           &vtx_ln_to_gn,
+                           &face_group_idx,
+                           &face_group,
+                           &face_group_ln_to_gn);
 
     PDM_mesh_location_part_set (id_loc,
-				ipart,
-				n_cell,
-				cell_face_idx,
-				cell_face,
-				cell_ln_to_gn,
-				n_face,
-				face_vtx_idx,
-				face_vtx,
-				face_ln_to_gn,
-				n_vtx,
-				vtx,
-				vtx_ln_to_gn);
+                                ipart,
+                                n_cell,
+                                cell_face_idx,
+                                cell_face,
+                                cell_ln_to_gn,
+                                n_face,
+                                face_vtx_idx,
+                                face_vtx,
+                                face_ln_to_gn,
+                                n_vtx,
+                                vtx,
+                                vtx_ln_to_gn);
   }
 
 
@@ -501,15 +512,14 @@ int main(int argc, char *argv[])
 
 
 
-  const double tolerance = 1.e-9;
   PDM_mesh_location_tolerance_set (id_loc,
-				   tolerance);
-  
+                                   tolerance);
+
   PDM_mesh_location_method_set (id_loc,
-				loc_method);
+                                loc_method);
 
 
-  
+
 
   PDM_mesh_location_compute (id_loc);
 
@@ -517,9 +527,9 @@ int main(int argc, char *argv[])
 
   PDM_g_num_t *location_elt_gnum = NULL;
   PDM_mesh_location_get (id_loc,
-			 0,//i_point_cloud,
-			 0,//i_part,
-			 &location_elt_gnum);
+                         0,//i_point_cloud,
+                         0,//i_part,
+                         &location_elt_gnum);
 
 #if 1
   /* Check results */
@@ -530,7 +540,7 @@ int main(int argc, char *argv[])
 
   const PDM_g_num_t n_cell_seg = n_vtx_seg - 1;
   const double cell_side = length / ((double) n_cell_seg);
-  
+
   for (int ipt = 0; ipt < _n_pts_l; ipt++) {
     double *pt_coord = coords + 3*ipt;
 
@@ -546,18 +556,18 @@ int main(int argc, char *argv[])
 #endif
 
   PDM_mesh_location_free (id_loc,
-			  0);
+                          0);
 
   PDM_part_free (ppart_id);
 
   PDM_dcube_gen_free (id);
-  
+
   PDM_MPI_Finalize();
 
   if (my_rank == 0) {
     printf("-- End\n");
     fflush(stdout);
   }
-   
+
   return 0;
 }
