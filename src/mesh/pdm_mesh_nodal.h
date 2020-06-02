@@ -28,6 +28,16 @@ extern "C" {
  * Types definition
  *============================================================================*/
 
+//-->>
+typedef enum {
+
+  PDM_BLOCK_ID_BLOCK_STD    = 0,
+  PDM_BLOCK_ID_BLOCK_POLY2D = 1000000,
+  PDM_BLOCK_ID_BLOCK_POLY3D = 2000000
+
+} PDM_block_id_block_t;
+//<<--
+
 /*----------------------------------------------------------------------------
  * Geometric element type
  *----------------------------------------------------------------------------*/
@@ -932,6 +942,28 @@ void
 PDM_Mesh_nodal_reset
 (
 const int idx
+ );
+
+
+
+
+
+
+/**
+ * \brief Returns the number of vertices in an element
+ *
+ * \param [in]  elt_type   Element type
+ * \param [in]  order      Element order
+ *
+ * \return      Number of vertices in element
+ *
+ */
+
+int
+PDM_Mesh_nodal_n_vertices_element
+(
+ const PDM_Mesh_nodal_elt_t elt_type,
+ const int                  order
  );
 
 

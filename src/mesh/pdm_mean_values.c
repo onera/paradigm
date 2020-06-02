@@ -493,14 +493,22 @@ compute3DMeanValuesPoly(const double point_coords[],
       double *distBarCoordsFace = malloc (sizeof(double) * n_face_vertex);
       int face_location = iface + 1;
 
-      computePolygonMeanValues(1,
+      /*computePolygonMeanValues(1,
                                &face_location,
                                point_coords,
                                faceToVertexIdx,
                                faceToVertex,
                                vertex_coords,
                                distBarCoordsFaceIdx,
-                               distBarCoordsFace);
+                               distBarCoordsFace);*/
+      PDM_geom_elem_compute_polygon_barycentric_coordinates (1,
+                                                             &face_location,
+                                                             point_coords,
+                                                             faceToVertexIdx,
+                                                             faceToVertex,
+                                                             vertex_coords,
+                                                             distBarCoordsFaceIdx,
+                                                             distBarCoordsFace);
 
       for (int j = 0; j < n_poly_vertex; j++)
         distBarCoords[j] = 0.;
@@ -587,14 +595,22 @@ compute3DMeanValuesPoly(const double point_coords[],
       distBarCoordsFaceIdx[1] = n_face_vertex;
       double *distBarCoordsFace = malloc (sizeof(double) * n_face_vertex);
 
-      computePolygonMeanValues(1,
+      /*computePolygonMeanValues(1,
                                &face_location,
                                point_coords,
                                faceToVertexIdx,
                                faceToVertex,
                                vertex_coords,
                                distBarCoordsFaceIdx,
-                               distBarCoordsFace);
+                               distBarCoordsFace);*/
+      PDM_geom_elem_compute_polygon_barycentric_coordinates (1,
+                                                             &face_location,
+                                                             point_coords,
+                                                             faceToVertexIdx,
+                                                             faceToVertex,
+                                                             vertex_coords,
+                                                             distBarCoordsFaceIdx,
+                                                             distBarCoordsFace);
 
       for (int j = 0; j < n_poly_vertex; j++)
         distBarCoords[j] = 0.;
@@ -1536,7 +1552,6 @@ PDM_mean_values_polygon_compute_2d
 
     PDM_bool_t special_case = PDM_FALSE;
     for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
-      r[ivtx] = 0;
       double *vec = s + 2*ivtx;
       for (int idim = 0; idim < 2; idim++) {
         vec[idim] = vtx_xy[2*ivtx + idim] - xy[idim];

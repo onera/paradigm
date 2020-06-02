@@ -978,7 +978,7 @@ PDM_polygon_status_t PDM_polygon_point_in_2d_wn
       }
 
     }
-  }
+  } /* Loop over edges */
 
   /* Result */
   if (wn == 0) {
@@ -988,6 +988,159 @@ PDM_polygon_status_t PDM_polygon_point_in_2d_wn
   }
 
 }
+
+
+
+
+
+
+
+PDM_polygon_status_t PDM_polygon_point_in_3d_wn
+(
+ const double  xyz[2],
+ const int     n_vtx,
+ const double *vtx_xyz,
+ const double  normal[3],
+ const double  characteristic_length,
+ double       *bounds
+ )
+{
+  const double eps_base = 1e-12;
+
+  const double eps = eps_base * characteristic_length;
+  const double eps2 = eps * eps;
+
+  /*
+   * Do a quick bounds check
+   */
+  if (bounds != NULL) {
+    if ( xyz[0] < bounds[0] || xyz[0] > bounds[1] ||
+         xyz[1] < bounds[2] || xyz[1] > bounds[3] ||
+         xyz[2] < bounds[4] || xyz[2] > bounds[5]) {
+      return PDM_POLYGON_OUTSIDE;
+    }
+  }
+
+  double max_n = 0.0;
+  int dim_max = -1;
+
+  for (int idim = 0; idim < 3; idim++) {
+    if (-normal[idim] > max_n) {
+      max_n = -normal[idim];
+      dim_max = idim;
+    } else if (normal[idim] > max_n) {
+      max_n = normal[idim];
+      dim_max = idim;
+    }
+  }
+
+  if (max_n < eps) {
+    return PDM_POLYGON_DEGENERATED;
+  }
+
+  /* 'Project' onto cartesian plane most orthogonal to normal */
+  int dim1 = (dim_max + 1) % 3;
+  int dim2 = (dim_max + 2) % 3;
+
+  /* Compute winding number */
+  int wn = 0;
+
+  double u = xyz[dim1];
+  double v = xyz[dim2];
+
+  double u0 = vtx_xyz[dim1];
+  double v0 = vtx_xyz[dim2];
+
+  double u1, v1;
+  double du, dv, eu, ev, s, denom, t;
+
+  for (int i = 0; i < n_vtx; i++) {
+    int ip = (i+1) % n_vtx;
+
+    u1 = vtx_xyz[3*ip + dim1];
+    v1 = vtx_xyz[3*ip + dim2];
+
+    du = u - u0;
+    dv = v - v0;
+
+#if 1
+    if (du*du + dv*dv < eps2) {
+      /* Point coincident with vertex i */
+      return PDM_POLYGON_INSIDE;
+    }
+#endif
+
+    if (dv >= 0) {
+
+      if (v1 > v) {
+        /* Upward crossing */
+        eu = u1 - u0;
+        ev = v1 - v0;
+
+        s = eu*dv - ev*du;
+        if (s > eps) {
+          wn++;
+        } else if (s > -eps) {
+          denom = eu*eu + ev*ev;
+          if (denom < eps2) {
+            /* Vertices i and ip are coincident */
+            return PDM_POLYGON_DEGENERATED;
+          } else {
+            /* Compute parameter along line (i, ip) */
+            t = (eu*du + ev*dv) / denom;
+            if (t > -eps && t < 1 + eps) {
+              return PDM_POLYGON_INSIDE;
+            }
+          }
+        }
+      }
+
+    } else {
+
+      if (v1 < v) {
+        /* Downward crossing */
+        eu = u1 - u0;
+        ev = v1 - v0;
+
+        s = eu*dv - ev*du;
+        if (s < -eps) {//if (s < 0) {
+          wn--;
+        } else if (s < eps) {
+          denom = eu*eu + ev*ev;
+          if (denom < eps2) {
+            /* Vertices i and ip are coincident */
+            return PDM_POLYGON_DEGENERATED;
+          } else {
+            /* Compute parameter along line (i, ip) */
+            t = (eu*du + ev*dv) / denom;
+            if (t > -eps && t < 1 + eps) {
+              return PDM_POLYGON_INSIDE;
+            }
+          }
+        }
+
+      }
+
+    }
+
+    u0 = u1;
+    v0 = v1;
+
+  } /* Loop over edges */
+
+  /* Result */
+  if (wn == 0) {
+    return PDM_POLYGON_OUTSIDE;
+  } else {
+    return PDM_POLYGON_INSIDE;
+  }
+
+}
+
+
+
+
+
 
 #ifdef __cplusplus
 }

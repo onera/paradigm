@@ -7251,9 +7251,9 @@ PDM_para_octree_points_inside_boxes
  const int           n_boxes,
  const double       *box_extents,
  const PDM_g_num_t  *box_g_num,
- int         **pts_in_box_idx,
- PDM_g_num_t **pts_in_box_g_num,
- double      **pts_in_box_coord
+ int               **pts_in_box_idx,
+ PDM_g_num_t       **pts_in_box_g_num,
+ double            **pts_in_box_coord
  )
 {
   const int DEBUG = 0;
@@ -7290,11 +7290,9 @@ PDM_para_octree_points_inside_boxes
    * Redistribute bounding boxes
    ***************************************/
   int *send_count = malloc (sizeof(int) * n_ranks);
-
   for (int i = 0; i < n_ranks; i++) {
     send_count[i] = 0;
   }
-
 
   /* Clip box extents */
   double *_box_extents = malloc (sizeof(double) * two_dim * n_boxes);
@@ -7319,7 +7317,7 @@ PDM_para_octree_points_inside_boxes
                             d,
                             s);
 
-  size_t *box_rank = malloc (sizeof(int *) * 2*n_boxes);
+  size_t *box_rank = malloc (sizeof(int *) * 2 * n_boxes);
 
   /* Find which ranks possibly intersect each box */
   size_t start, end, tmp;
@@ -7365,8 +7363,8 @@ PDM_para_octree_points_inside_boxes
   /* Fill send buffers */
   PDM_g_num_t *send_box_g_num = malloc (sizeof(PDM_g_num_t) * send_shift[n_ranks]);
   PDM_g_num_t *recv_box_g_num = malloc (sizeof(PDM_g_num_t) * recv_shift[n_ranks]);
-  double *send_box_extents = malloc (sizeof(double) * two_dim * send_shift[n_ranks]);
-  double *recv_box_extents = malloc (sizeof(double) * two_dim * recv_shift[n_ranks]);
+  double *send_box_extents = malloc (sizeof(double) * send_shift[n_ranks] * two_dim);
+  double *recv_box_extents = malloc (sizeof(double) * recv_shift[n_ranks] * two_dim);
 
   for (int ibox = 0; ibox < n_boxes; ibox++) {
     for (size_t irank = box_rank[2*ibox]; irank < box_rank[2*ibox+1]; irank++) {
@@ -7381,7 +7379,7 @@ PDM_para_octree_points_inside_boxes
     }
   }
   free (_box_extents);
-
+  free (box_rank);
 
   /* Send boxes g_num buffer */
   PDM_MPI_Alltoallv (send_box_g_num, send_count, send_shift, PDM__PDM_MPI_G_NUM,
@@ -7399,7 +7397,6 @@ PDM_para_octree_points_inside_boxes
                      recv_box_extents, recv_count, recv_shift, PDM_MPI_DOUBLE,
                      octree->comm);
 
-  free (box_rank);
   free (send_count);
   free (recv_count);
   free (send_shift);
@@ -7411,8 +7408,10 @@ PDM_para_octree_points_inside_boxes
 
 
   /***************************************
-   * Intersect received boxes with local octree
+   * Intersect redistributed boxes with local octree
    ***************************************/
+
+  /* Encode corners of redistributed boxes */
   box_corners = malloc (sizeof(PDM_morton_code_t) * 2 * n_recv_boxes);
   PDM_morton_encode_coords (dim,
                             PDM_morton_max_level,
@@ -7423,6 +7422,7 @@ PDM_para_octree_points_inside_boxes
                             d,
                             s);
 
+  /* Root node of octree */
   PDM_morton_code_t root;
   root.L = 0;
   for (int i = 0; i < dim; i++) {
@@ -7438,6 +7438,7 @@ PDM_para_octree_points_inside_boxes
   int *box_pts_idx = malloc (sizeof(int) * (n_recv_boxes+1));
   box_pts_idx[0] = 0;
 
+  /* Loop over redistributed boxes */
   for (int ibox = 0; ibox < n_recv_boxes; ibox++) {
     n_intersect_nodes = 0;
     box_pts_n[ibox] = 0;
@@ -7541,6 +7542,8 @@ PDM_para_octree_points_inside_boxes
                                                         &n_recv_boxes,
                                                         1,
                                                         octree->comm);
+  free (recv_box_g_num);
+
   int *block_pts_in_box_n = NULL;
   PDM_g_num_t *block_pts_in_box_g_num = NULL;
   PDM_part_to_block_exch (ptb2,
@@ -7550,7 +7553,7 @@ PDM_para_octree_points_inside_boxes
                           &box_pts_n,
                           (void **) &box_pts_g_num,
                           &block_pts_in_box_n,
-                          (void **) block_pts_in_box_g_num);
+                          (void **) &block_pts_in_box_g_num);
   free (box_pts_g_num);
 
   int *box_pts_n_coord = malloc (sizeof(int) * n_recv_boxes); // overwrite box_pts_n?
@@ -7567,7 +7570,7 @@ PDM_para_octree_points_inside_boxes
                           &box_pts_n_coord,
                           (void **) &box_pts_coord,
                           &block_pts_in_box_n_coord,
-                          (void **) block_pts_in_box_coord);
+                          (void **) &block_pts_in_box_coord);
   free (box_pts_coord);
   free (box_pts_n);
   free (box_pts_n_coord);

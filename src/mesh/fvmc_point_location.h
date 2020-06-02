@@ -1,5 +1,5 @@
-#ifndef __PDM_POINT_LOCATION_H__
-#define __PDM_POINT_LOCATION_H__
+#ifndef __FVM_POINT_LOCATION_H__
+#define __FVM_POINT_LOCATION_H__
 
 /*============================================================================
  * Locate local points in a nodal representation associated with a mesh
@@ -108,4 +108,4 @@ fvmc_point_dist_closest_polygon(const int            dim,
 }
 #endif /* __cplusplus */
 
-#endif /* __PDM_POINT_LOCATION_H__ */
+#endif /* __FVM_POINT_LOCATION_H__ */

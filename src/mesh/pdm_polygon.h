@@ -221,6 +221,15 @@ PDM_polygon_status_t PDM_polygon_point_in_2d_wn
  double       *bounds
  );
 
+PDM_polygon_status_t PDM_polygon_point_in_3d_wn
+(
+ const double  xyz[2],
+ const int     n_vtx,
+ const double *vtx_xyz,
+ const double  normal[3],
+ const double  characteristic_length,
+ double       *bounds
+ );
 
 #ifdef __cplusplus
 }

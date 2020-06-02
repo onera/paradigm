@@ -51,7 +51,7 @@ extern "C" {
    );
 
   void
-  PDM_mesh_location_create_cf 
+  PDM_mesh_location_create_cf
   (
    const PDM_mesh_nature_t mesh_nature,
    const int n_point_cloud,
@@ -89,7 +89,7 @@ extern "C" {
    * \param [in]   i_part          Index of partition
    * \param [in]   n_points        Number of points
    * \param [in]   coords          Point coordinates
-   * \param [in]   gnum            Point global number 
+   * \param [in]   gnum            Point global number
    *
    */
 
@@ -147,18 +147,18 @@ extern "C" {
    * \brief Set a part of a mesh
    *
    * \param [in]   id            Identifier
-   * \param [in]   i_part        Partition to define  
-   * \param [in]   n_cell        Number of cells                     
+   * \param [in]   i_part        Partition to define
+   * \param [in]   n_cell        Number of cells
    * \param [in]   cell_face_idx Index in the cell -> face connectivity
    * \param [in]   cell_face     cell -> face connectivity
-   * \param [in]   cell_ln_to_gn Local cell numbering to global cel numbering 
-   * \param [in]   n_face        Number of faces                     
+   * \param [in]   cell_ln_to_gn Local cell numbering to global cel numbering
+   * \param [in]   n_face        Number of faces
    * \param [in]   face_vtx_idx  Index in the face -> vertex connectivity
    * \param [in]   face_vtx      face -> vertex connectivity
-   * \param [in]   face_ln_to_gn Local face numbering to global face numbering 
-   * \param [in]   n_vtx         Number of vertices              
-   * \param [in]   coords        Coordinates       
-   * \param [in]   vtx_ln_to_gn  Local vertex numbering to global vertex numbering 
+   * \param [in]   face_ln_to_gn Local face numbering to global face numbering
+   * \param [in]   n_vtx         Number of vertices
+   * \param [in]   coords        Coordinates
+   * \param [in]   vtx_ln_to_gn  Local vertex numbering to global vertex numbering
    *
    */
 
@@ -175,7 +175,7 @@ extern "C" {
    const int         *face_vtx_idx,
    const int         *face_vtx,
    const PDM_g_num_t *face_ln_to_gn,
-   const int          n_vtx, 
+   const int          n_vtx,
    const double      *coords,
    const PDM_g_num_t *vtx_ln_to_gn
    );
@@ -257,8 +257,8 @@ extern "C" {
    * \brief Free a locationd mesh structure
    *
    * \param [in]  id       Identifier
-   * \param [in]  partial  if partial is equal to 0, all data are removed. 
-   *                       Otherwise, results are kept. 
+   * \param [in]  partial  if partial is equal to 0, all data are removed.
+   *                       Otherwise, results are kept.
    *
    */
 
@@ -269,7 +269,7 @@ extern "C" {
    const int partial
    );
 
-  
+
   /**
    *
    * \brief  Dump elapsed an CPU time

@@ -30,6 +30,7 @@
 #include "pdm_timer.h"
 #include "pdm_hash_tab.h"
 #include "pdm_mesh_location.h"
+#include "pdm_point_location.h"
 
 #include "pdm_binary_search.h"
 #include "pdm_para_octree.h"
@@ -165,143 +166,6 @@ _get_from_id
 
 
 static void
-_get_candidate_elements_from_octree
-(
- const PDM_MPI_Comm   comm,
- _point_cloud_t      *pcloud,
- const int            n_boxes,
- const double        *box_extents,
- const PDM_g_num_t   *box_g_num,
- PDM_g_num_t        **candidates_g_num,
- int                **candidates_idx
- )
-{
-  int my_rank;
-  PDM_MPI_Comm_rank (comm, &my_rank);
-
-  int n_ranks;
-  PDM_MPI_Comm_rank (comm, &n_ranks);
-
-  /**************************************
-   * Build octree from point cloud
-   ***************************************/
-  const int depth_max = 15;//?
-  const int points_in_leaf_max = 1;
-  const int build_leaf_neighbours = 0;
-
-
-  /* Concatenate partitions */
-  int n_points = 0;
-  for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
-    n_points += pcloud->n_points[ipart];
-  }
-
-  double      *pts_coord = malloc (sizeof(double) *      n_points*3);
-  PDM_g_num_t *pts_g_num = malloc (sizeof(PDM_g_num_t) * n_points);
-  int idx = 0;
-  for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
-    for (int ipt = 0; ipt < pcloud->n_points[ipart]; ipt++) {
-      for (int idim = 0; idim < 3; idim++) {
-        pts_coord[3*idx + idim] = pcloud->coords[ipart][3*ipt + idim];
-      }
-      pts_g_num[idx] = pcloud->gnum[ipart][ipt];
-      idx++;
-    }
-  }
-
-  /* Create empty parallel octree structure */
-  int octree_id = PDM_para_octree_create (1,
-                                          depth_max,
-                                          points_in_leaf_max,
-                                          build_leaf_neighbours,
-                                          comm);
-
-  /* Set octree point cloud */
-  PDM_para_octree_point_cloud_set (octree_id,
-                                   0,
-                                   n_points,
-                                   pts_coord,
-                                   pts_g_num);
-
-  /* Build parallel octree */
-  PDM_para_octree_build (octree_id);
-  //PDM_para_octree_dump (octree_id);
-  PDM_para_octree_dump_times (octree_id);
-
-
-  PDM_part_to_block_t *ptb = PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
-                                                       PDM_PART_TO_BLOCK_POST_MERGE,
-                                                       1.,
-                                                       &pts_g_num,
-                                                       NULL,
-                                                       &n_points,
-                                                       1,
-                                                       comm);
-
-  PDM_g_num_t *block_distrib_idx = PDM_part_to_block_distrib_index_get (ptb);
-
-  int *block_n_candidates = NULL;
-  PDM_g_num_t *block_candidates_g_num = NULL;
-
-  PDM_para_octree_location_boxes_get (octree_id,
-                                      n_boxes,
-                                      box_extents,
-                                      box_g_num,
-                                      &block_candidates_g_num,
-                                      &block_n_candidates);
-
-  PDM_block_to_part_t *btp = PDM_block_to_part_create (block_distrib_idx,
-                                                       (const PDM_g_num_t **) &pts_g_num,
-                                                       &n_points,
-                                                       1,
-                                                       comm);
-  int *part_stride = malloc (sizeof(int) * n_points);
-  int one = 1;
-  PDM_block_to_part_exch (btp,
-                          sizeof(int),
-                          PDM_STRIDE_CST,
-                          &one,
-                          (void *) block_n_candidates,
-                          NULL,
-                          (void **) &part_stride);
-
-  *candidates_idx = malloc (sizeof(int) * (n_points+1));
-  int *_candidates_idx = *candidates_idx;
-  _candidates_idx[0] = 0;
-  for (int i = 0; i < n_points; i++) {
-    _candidates_idx[i+1] = _candidates_idx[i] + part_stride[i];
-  }
-
-  *candidates_g_num = malloc (sizeof(PDM_g_num_t) * _candidates_idx[n_points]);
-
-  PDM_block_to_part_exch (btp,
-                          sizeof(PDM_g_num_t),
-                          PDM_STRIDE_VAR,
-                          block_n_candidates,
-                          (void *) block_candidates_g_num,
-                          &part_stride,
-                          (void **) candidates_g_num);
-
-  PDM_part_to_block_free (ptb);
-  PDM_block_to_part_free (btp);
-
-  free (part_stride);
-  free (block_n_candidates);
-  free (block_candidates_g_num);
-  free (pts_coord);
-  free (pts_g_num);
-
-  /***************************************
-   * Free octree
-   ***************************************/
-  PDM_para_octree_free (octree_id);
-}
-
-
-
-
-
-static void
 _location_points_in_boxes_octree
 (
  const PDM_MPI_Comm   comm,
@@ -334,7 +198,7 @@ _location_points_in_boxes_octree
     n_points += pcloud->n_points[ipart];
   }
 
-  double      *pts_coord = malloc (sizeof(double) *      n_points*3);
+  double      *pts_coord = malloc (sizeof(double)      * n_points * 3);
   PDM_g_num_t *pts_g_num = malloc (sizeof(PDM_g_num_t) * n_points);
   int idx = 0;
   for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
@@ -346,6 +210,7 @@ _location_points_in_boxes_octree
       idx++;
     }
   }
+
 
   /* Create empty parallel octree structure */
   int octree_id = PDM_para_octree_create (1,
@@ -364,7 +229,8 @@ _location_points_in_boxes_octree
   /* Build parallel octree */
   PDM_para_octree_build (octree_id);
   //PDM_para_octree_dump (octree_id);
-  PDM_para_octree_dump_times (octree_id);
+  //PDM_para_octree_dump_times (octree_id);
+
 
   /***************************************
    * Locate points inside boxes
@@ -373,9 +239,10 @@ _location_points_in_boxes_octree
                                        n_boxes,
                                        box_extents,
                                        box_g_num,
-                                       &pts_in_box_idx,
-                                       &pts_in_box_g_num,
-                                       &pts_in_box_coord);
+                                       pts_in_box_idx,
+                                       pts_in_box_g_num,
+                                       pts_in_box_coord);
+
 
   /***************************************
    * Free octree
@@ -398,7 +265,6 @@ _get_candidate_elements_from_dbbtree
 (
  const PDM_MPI_Comm   comm,
  _point_cloud_t      *pcloud,
- const int            n_boxes,
  PDM_dbbtree_t       *dbbt,
  PDM_g_num_t        **candidates_g_num,
  int                **candidates_idx
@@ -793,470 +659,6 @@ PDM_mesh_location_method_set
 
 /**
  *
- * \brief Compute point location
- *
- * \param [in]   id  Identifier
- *
- */
-
-void
-PDM_mesh_location_compute
-(
- const int id
- )
-{
-  const int dim = 3;
-
-  _PDM_location_t *location = _get_from_id (id);
-
-  int my_rank;
-  PDM_MPI_Comm_rank (location->comm, &my_rank);
-
-  int n_procs;
-  PDM_MPI_Comm_size (location->comm, &n_procs);
-
-  double b_t_elapsed;
-  double b_t_cpu;
-  double b_t_cpu_u;
-  double b_t_cpu_s;
-
-  double e_t_elapsed;
-  double e_t_cpu;
-  double e_t_cpu_u;
-  double e_t_cpu_s;
-
-  location->times_elapsed[BEGIN] = PDM_timer_elapsed(location->timer);
-  location->times_cpu[BEGIN]     = PDM_timer_cpu(location->timer);
-  location->times_cpu_u[BEGIN]   = PDM_timer_cpu_user(location->timer);
-  location->times_cpu_s[BEGIN]   = PDM_timer_cpu_sys(location->timer);
-
-  b_t_elapsed = location->times_elapsed[BEGIN];
-  b_t_cpu     = location->times_cpu[BEGIN];
-  b_t_cpu_u   = location->times_cpu_u[BEGIN];
-  b_t_cpu_s   = location->times_cpu_s[BEGIN];
-  PDM_timer_resume(location->timer);
-
-  /*
-   * Build the bounding boxes of mesh elements
-   */
-  int n_blocks = PDM_Mesh_nodal_n_blocks_get (location->mesh_nodal_id);
-  int n_parts  = PDM_Mesh_nodal_n_part_get (location->mesh_nodal_id);
-  int *blocks_id = PDM_Mesh_nodal_blocks_id_get (location->mesh_nodal_id);
-
-  int n_boxes = 0;
-  for (int ipart = 0; ipart < n_parts; ipart++) {
-    n_boxes += PDM_Mesh_nodal_n_cell_get (location->mesh_nodal_id,
-                                          ipart);
-  }
-
-  const int n_origin = 4; // rank, part, block, lnum
-  int *box_origin = malloc (sizeof(int) * n_origin * n_boxes);
-
-  PDM_g_num_t *box_g_num   = malloc (sizeof(PDM_g_num_t) * n_boxes);
-  double      *box_extents = malloc (sizeof(double)      * n_boxes * 6);
-  int ibox = 0;
-  for (int iblock = 0; iblock < n_blocks; iblock++) {
-
-    int id_block = blocks_id[iblock];
-
-    for (int ipart = 0; ipart < n_parts; ipart++) {
-      /* get element extents */
-      PDM_Mesh_nodal_compute_cell_extents (location->mesh_nodal_id,
-                                           id_block,
-                                           ipart,
-                                           location->tolerance,
-                                           (&box_extents + ibox));
-
-      /* get elements gnum */
-      PDM_g_num_t *_gnum = PDM_Mesh_nodal_g_num_get (location->mesh_nodal_id,
-                                                     id_block,
-                                                     ipart);
-
-      int n_elt = PDM_Mesh_nodal_block_n_elt_get (location->mesh_nodal_id,
-                                                  id_block,
-                                                  ipart);
-
-      for (int ielt = 0; ielt < n_elt; ielt++) {
-        box_g_num[ibox] = _gnum[ielt];
-
-        box_origin[n_origin*ibox]   = my_rank;
-        box_origin[n_origin*ibox+1] = ipart;
-        box_origin[n_origin*ibox+2] = iblock;
-        box_origin[n_origin*ibox+3] = ielt;
-
-        ibox++;
-      }
-    }
-  }
-
-  /* Store boxes origin (i.e. rank, ipart, iblock, ielt) in block data */
-  PDM_part_to_block_t *ptb = PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
-                                                       PDM_PART_TO_BLOCK_POST_NOTHING,
-                                                       1.,
-                                                       &box_g_num,
-                                                       NULL,
-                                                       &n_boxes,
-                                                       1,
-                                                       location->comm);
-
-  PDM_g_num_t *block_distrib_idx = PDM_part_to_block_distrib_index_get (ptb);
-
-  int *block_stride = NULL;
-  int *block_box_origin = NULL;
-  PDM_part_to_block_exch (ptb,
-                          sizeof(int),
-                          PDM_STRIDE_CST,
-                          n_origin,
-                          NULL,
-                          (void **) &box_origin,
-                          &block_stride,
-                          (void **) &block_box_origin);
-  free (block_stride);
-  free (box_origin);
-
-
-  PDM_timer_hang_on(location->timer);
-  e_t_elapsed = PDM_timer_elapsed(location->timer);
-  e_t_cpu     = PDM_timer_cpu(location->timer);
-  e_t_cpu_u   = PDM_timer_cpu_user(location->timer);
-  e_t_cpu_s   = PDM_timer_cpu_sys(location->timer);
-
-  location->times_elapsed[BUILD_BOUNDING_BOXES] += e_t_elapsed - b_t_elapsed;
-  location->times_cpu[BUILD_BOUNDING_BOXES]     += e_t_cpu - b_t_cpu;
-  location->times_cpu_u[BUILD_BOUNDING_BOXES]   += e_t_cpu_u - b_t_cpu_u;
-  location->times_cpu_s[BUILD_BOUNDING_BOXES]   += e_t_cpu_s - b_t_cpu_s;
-
-  b_t_elapsed = e_t_elapsed;
-  b_t_cpu     = e_t_cpu;
-  b_t_cpu_u   = e_t_cpu_u;
-  b_t_cpu_s   = e_t_cpu_s;
-
-  PDM_timer_resume(location->timer);
-
-
-  PDM_dbbtree_t *dbbt = NULL;
-  if (location->method == PDM_MESH_LOCATION_DBBTREE) {
-    dbbt = PDM_dbbtree_create (location->comm, dim);
-
-    PDM_dbbtree_boxes_set (dbbt,
-                           1,//const int n_part,
-                           &n_boxes,
-                           &box_extents,
-                           &box_g_num);
-  }
-
-
-  /*
-   * Search candidates
-   *   - coder localisation dans ddbtree
-   */
-  PDM_g_num_t *candidates_g_num = NULL;
-  int         *candidates_idx   = NULL;
-
-  for (int icloud = 0; icloud < location->n_point_cloud; icloud++) {
-    _point_cloud_t *pcloud = location->point_clouds + icloud;
-
-    switch (location->method) {
-    case PDM_MESH_LOCATION_OCTREE:
-      _get_candidate_elements_from_octree (location->comm,
-                                           pcloud,
-                                           n_boxes,
-                                           box_extents,
-                                           box_g_num,
-                                           &candidates_g_num,
-                                           &candidates_idx);
-      break;
-
-    case PDM_MESH_LOCATION_DBBTREE:
-      _get_candidate_elements_from_dbbtree (location->comm,
-                                            pcloud,
-                                            n_boxes,
-                                            dbbt,
-                                            &candidates_g_num,
-                                            &candidates_idx);
-      break;
-
-    default:
-      printf("Error: unknown location method %d\n", location->method);
-      assert (1 == 0);
-    }
-
-    PDM_timer_hang_on(location->timer);
-    e_t_elapsed = PDM_timer_elapsed(location->timer);
-    e_t_cpu     = PDM_timer_cpu(location->timer);
-    e_t_cpu_u   = PDM_timer_cpu_user(location->timer);
-    e_t_cpu_s   = PDM_timer_cpu_sys(location->timer);
-
-    location->times_elapsed[SEARCH_CANDIDATES] += e_t_elapsed - b_t_elapsed;
-    location->times_cpu[SEARCH_CANDIDATES]     += e_t_cpu - b_t_cpu;
-    location->times_cpu_u[SEARCH_CANDIDATES]   += e_t_cpu_u - b_t_cpu_u;
-    location->times_cpu_s[SEARCH_CANDIDATES]   += e_t_cpu_s - b_t_cpu_s;
-
-    //----------->>>> Remove that as soon as location in ELEMENTS is implemented
-#if 1
-    assert (pcloud->location == NULL);
-
-    int idx = 0;
-    pcloud->location = (PDM_g_num_t **) malloc (sizeof(PDM_g_num_t *) * pcloud->n_part);
-    for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
-      pcloud->location[ipart] = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * pcloud->n_points[ipart]);
-      for (int ipt = 0; ipt < pcloud->n_points[ipart]; ipt++) {
-
-        assert (candidates_idx[idx+1] > candidates_idx[idx]);
-
-        if (candidates_idx[idx+1] != candidates_idx[idx] + 1) {
-          printf("[%d] cloud %d part %d: pt %d (%ld) has %d candidate boxes\n",
-                 my_rank,
-                 icloud,
-                 ipart,
-                 ipt,
-                 pcloud->gnum[ipart][ipt],
-                 candidates_idx[idx+1] - candidates_idx[idx]);
-        }
-        pcloud->location[ipart][ipt] = candidates_g_num[candidates_idx[idx]];
-        idx++;
-      }
-    }
-#endif
-    //<<<<-----------
-
-    b_t_elapsed = e_t_elapsed;
-    b_t_cpu     = e_t_cpu;
-    b_t_cpu_u   = e_t_cpu_u;
-    b_t_cpu_s   = e_t_cpu_s;
-    PDM_timer_resume(location->timer);
-
-    int n_points = 0;
-    for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
-      n_points += pcloud->n_points[ipart];
-    }
-
-
-    /* Get origin (i.e. rank, ipart, iblock, ielt) of candidate boxes from their gnum */
-    PDM_block_to_part_t *btp = PDM_block_to_part_create (block_distrib_idx,
-                                                         (const PDM_g_num_t **) &candidates_g_num,
-                                                         &(candidates_idx[n_points]),
-                                                         1,
-                                                         location->comm);
-
-    int *candidates_origin = malloc (sizeof(int) * n_origin * candidates_idx[n_points]);
-    PDM_block_to_part_exch (btp,
-                            sizeof(int),
-                            PDM_STRIDE_CST,
-                            &n_origin,
-                            (void *) block_box_origin,
-                            NULL,
-                            (void **) &candidates_origin);
-    free (block_box_origin);
-
-    ptb = PDM_part_to_block_free (ptb);
-    btp = PDM_block_to_part_free (btp);
-
-    /*
-      idx = 0;
-      for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
-      printf("[%d] part %d\n", my_rank, ipart);
-      for (int ipt = 0; ipt < pcloud->n_points[ipart]; ipt++) {
-      printf("[%d]  point %d\n", my_rank, ipt);
-      for (int i = candidates_idx[idx]; i < candidates_idx[idx+1]; i++) {
-      printf("[%d]    (%ld)\t{%d, %d, %d, %d}\n",
-      my_rank,
-      candidates_g_num[i],
-      candidates_origin[n_origin*i],
-      candidates_origin[n_origin*i+1],
-      candidates_origin[n_origin*i+2],
-      candidates_origin[n_origin*i+3]);
-      }
-      idx++;
-      }
-      }
-    */
-    free (candidates_g_num);
-
-
-    /*
-     * Distribution of elementary operations
-     */
-    int *send_count = malloc (sizeof(int) * n_procs);
-    for (int i = 0; i < n_procs; i++) {
-      send_count[i] = 0;
-    }
-
-    idx = 0;
-    for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
-      for (int ipt = 0; ipt < pcloud->n_points[ipart]; ipt++) {
-        for (int i = candidates_idx[idx]; i < candidates_idx[idx+1]; i++) {
-          send_count[candidates_origin[n_origin*i]] += 3;
-        }
-        idx++;
-      }
-    }
-
-    int *recv_count = malloc (sizeof(int) * n_procs);
-    PDM_MPI_Alltoall (send_count, 1, PDM_MPI_INT,
-                      recv_count, 1, PDM_MPI_INT,
-                      location->comm);
-
-    int *send_shift = malloc (sizeof(int) * (n_procs + 1));
-    int *recv_shift = malloc (sizeof(int) * (n_procs + 1));
-    send_shift[0] = 0;
-    recv_shift[0] = 0;
-    for (int i = 0; i < n_procs; i++) {
-      send_shift[i+1] = send_shift[i] + send_count[i];
-      recv_shift[i+1] = recv_shift[i] + recv_count[i];
-      send_count[i] = 0;
-    }
-
-    //-->>
-    int *send_origin = malloc (sizeof(int) * send_shift[n_procs]);
-    int *recv_origin = malloc (sizeof(int) * recv_shift[n_procs]);
-
-    double *send_coord = malloc (sizeof(double) * send_shift[n_procs]);
-    double *recv_coord = malloc (sizeof(double) * recv_shift[n_procs]);
-
-    idx = 0;
-    for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
-      for (int ipt = 0; ipt < pcloud->n_points[ipart]; ipt++) {
-        for (int i = candidates_idx[idx]; i < candidates_idx[idx+1]; i++) {
-          int rank = candidates_origin[n_origin*i];
-
-          for (int j = 0; j < dim; j++) {
-            send_origin[send_shift[rank] + send_count[rank]] = candidates_origin[n_origin*i+1+j];
-            send_coord[send_shift[rank] + send_count[rank]] = pcloud->coords[ipart][dim*ipt+j];
-            send_count[rank]++;
-          }
-        }
-        idx++;
-      }
-    }
-
-    PDM_MPI_Alltoallv (send_origin, send_count, send_shift, PDM_MPI_INT,
-                       recv_origin, recv_count, recv_shift, PDM_MPI_INT,
-                       location->comm);
-
-    PDM_MPI_Alltoallv (send_coord, send_count, send_shift, PDM_MPI_DOUBLE,
-                       recv_coord, recv_count, recv_shift, PDM_MPI_DOUBLE,
-                       location->comm);
-
-    // CHECK
-    int n_recv_pts = recv_shift[n_procs] / 3;
-    for (int ipt = 0; ipt < n_recv_pts; ipt++) {
-
-      int ipart  = recv_origin[3*ipt];
-      int iblock = recv_origin[3*ipt+1];
-      int ielt   = recv_origin[3*ipt+2];
-
-      int _ibox = 0;
-      for (int jblock = 0; jblock < iblock; jblock++) {
-        int id_block = blocks_id[jblock];
-        for (int jpart = 0; jpart < ipart; jpart++) {
-          int n_elt = PDM_Mesh_nodal_block_n_elt_get (location->mesh_nodal_id,
-                                                      id_block,
-                                                      jpart);
-          _ibox += n_elt;
-        }
-      }
-      _ibox += ielt;
-
-      int inside = 1;
-      double *_pt = recv_coord + dim*ipt;
-      double *box_min = box_extents + 2*dim*_ibox;
-      double *box_max = box_min + dim;
-      for (int i = 0; i < dim; i++) {
-        if (_pt[i] < box_min[i] || _pt[i] > box_max[i]) {
-          inside = 0;
-          break;
-        }
-      }
-
-      assert (inside);
-    }
-    //<<--
-
-    //...
-
-    free (send_count);
-    free (recv_count);
-    free (send_shift);
-    free (recv_shift);
-
-    free (send_coord);
-    free (send_origin);
-
-
-
-    PDM_timer_hang_on(location->timer);
-    e_t_elapsed = PDM_timer_elapsed(location->timer);
-    e_t_cpu     = PDM_timer_cpu(location->timer);
-    e_t_cpu_u   = PDM_timer_cpu_user(location->timer);
-    e_t_cpu_s   = PDM_timer_cpu_sys(location->timer);
-
-    location->times_elapsed[DISTRIBUTE_ELEMENTARY_OPERATIONS] += e_t_elapsed - b_t_elapsed;
-    location->times_cpu[DISTRIBUTE_ELEMENTARY_OPERATIONS]     += e_t_cpu - b_t_cpu;
-    location->times_cpu_u[DISTRIBUTE_ELEMENTARY_OPERATIONS]   += e_t_cpu_u - b_t_cpu_u;
-    location->times_cpu_s[DISTRIBUTE_ELEMENTARY_OPERATIONS]   += e_t_cpu_s - b_t_cpu_s;
-
-    b_t_elapsed = e_t_elapsed;
-    b_t_cpu     = e_t_cpu;
-    b_t_cpu_u   = e_t_cpu_u;
-    b_t_cpu_s   = e_t_cpu_s;
-
-    PDM_timer_resume(location->timer);
-
-    /*
-     * Elementary location computations
-     */
-    //..
-
-    free (candidates_idx);
-    free (candidates_origin);
-    free (recv_coord);
-    free (recv_origin);
-
-    PDM_timer_hang_on(location->timer);
-    e_t_elapsed = PDM_timer_elapsed(location->timer);
-    e_t_cpu     = PDM_timer_cpu(location->timer);
-    e_t_cpu_u   = PDM_timer_cpu_user(location->timer);
-    e_t_cpu_s   = PDM_timer_cpu_sys(location->timer);
-
-    location->times_elapsed[COMPUTE_ELEMENTARY_LOCATIONS] += e_t_elapsed - b_t_elapsed;
-    location->times_cpu[COMPUTE_ELEMENTARY_LOCATIONS]     += e_t_cpu - b_t_cpu;
-    location->times_cpu_u[COMPUTE_ELEMENTARY_LOCATIONS]   += e_t_cpu_u - b_t_cpu_u;
-    location->times_cpu_s[COMPUTE_ELEMENTARY_LOCATIONS]   += e_t_cpu_s - b_t_cpu_s;
-
-    b_t_elapsed = e_t_elapsed;
-    b_t_cpu     = e_t_cpu;
-    b_t_cpu_u   = e_t_cpu_u;
-    b_t_cpu_s   = e_t_cpu_s;
-
-    PDM_timer_resume(location->timer);
-
-  }
-  free (box_g_num);
-  free (box_extents);
-
-  if (dbbt != NULL) {
-    PDM_dbbtree_free (dbbt);
-  }
-
-
-  PDM_timer_hang_on(location->timer);
-
-  location->times_elapsed[END] = PDM_timer_elapsed(location->timer);
-  location->times_cpu[END]     = PDM_timer_cpu(location->timer);
-  location->times_cpu_u[END]   = PDM_timer_cpu_user(location->timer);
-  location->times_cpu_s[END]   = PDM_timer_cpu_sys(location->timer);
-
-  b_t_elapsed = location->times_elapsed[END];
-  b_t_cpu     = location->times_cpu[END];
-  b_t_cpu_u   = location->times_cpu_u[END];
-  b_t_cpu_s   = location->times_cpu_s[END];
-  PDM_timer_resume(location->timer);
-}
-
-
-/**
- *
  * \brief Get mesh location
  *
  * \param [in]   id                    Identifier
@@ -1467,11 +869,12 @@ PDM_mesh_location_dump_times
  */
 
 void
-PDM_mesh_location_compute2
+PDM_mesh_location_compute
 (
  const int id
  )
 {
+  const int DEBUG = 0;
   const int dim = 3;
 
   _PDM_location_t *location = _get_from_id (id);
@@ -1516,18 +919,13 @@ PDM_mesh_location_compute2
                                           ipart);
   }
 
-  /* const int n_origin = 4; // rank, part, block, lnum */
-  /* int *box_origin = malloc (sizeof(int) * n_origin * n_boxes); */
 
-  int *nodal_block_idx = malloc (sizeof(int) * (n_blocks+1));
-  nodal_block_idx[0] = 0;
 
   PDM_g_num_t *box_g_num   = malloc (sizeof(PDM_g_num_t) * n_boxes);
   double      *box_extents = malloc (sizeof(double)      * n_boxes * 6);
   int ibox = 0;
   for (int iblock = 0; iblock < n_blocks; iblock++) {
 
-    nodal_block_idx[iblock+1] = nodal_block_idx[iblock];
     int id_block = blocks_id[iblock];
 
     for (int ipart = 0; ipart < n_parts; ipart++) {
@@ -1546,20 +944,13 @@ PDM_mesh_location_compute2
       int n_elt = PDM_Mesh_nodal_block_n_elt_get (location->mesh_nodal_id,
                                                   id_block,
                                                   ipart);
-      nodal_block_idx[iblock+1] += n_elt;
 
       for (int ielt = 0; ielt < n_elt; ielt++) {
-        box_g_num[ibox] = _gnum[ielt];
-
-        /* box_origin[n_origin*ibox]   = my_rank; */
-        /* box_origin[n_origin*ibox+1] = ipart; */
-        /* box_origin[n_origin*ibox+2] = iblock; */
-        /* box_origin[n_origin*ibox+3] = ielt; */
-
-        ibox++;
+        box_g_num[ibox++] = _gnum[ielt];
       }
     }
   }
+
 
   PDM_timer_hang_on(location->timer);
   e_t_elapsed = PDM_timer_elapsed(location->timer);
@@ -1597,9 +988,9 @@ PDM_mesh_location_compute2
   /*
    * Locate points
    */
-  int         *pts_in_box_idx   = NULL;
-  PDM_g_num_t *pts_in_box_g_num = NULL;
-  double      *pts_in_box_coord = NULL;
+  int         *pts_idx   = NULL;
+  PDM_g_num_t *pts_g_num = NULL;
+  double      *pts_coord = NULL;
 
   for (int icloud = 0; icloud < location->n_point_cloud; icloud++) {
     _point_cloud_t *pcloud = location->point_clouds + icloud;
@@ -1615,15 +1006,15 @@ PDM_mesh_location_compute2
                                         n_boxes,
                                         box_extents,
                                         box_g_num,
-                                        &pts_in_box_idx,
-                                        &pts_in_box_g_num,
-                                        &pts_in_box_coord);
+                                        &pts_idx,
+                                        &pts_g_num,
+                                        &pts_coord);
 
       break;
 
     case PDM_MESH_LOCATION_DBBTREE:
       /* ... */
-      /* break; */
+      break;
 
     default:
       printf("Error: unknown location method %d\n", location->method);
@@ -1631,25 +1022,333 @@ PDM_mesh_location_compute2
     }
 
 
+    if (DEBUG) {
+      printf("--- Pts in box ---\n");
+      for (ibox = 0; ibox < n_boxes; ibox++) {
+        printf("%d: ", ibox);
+        for (int i = pts_idx[ibox]; i < pts_idx[ibox+1]; i++) {
+          printf("((%ld); %f %f %f) ",
+                 pts_g_num[i], pts_coord[3*i], pts_coord[3*i+1], pts_coord[3*i+2]);
+        }
+        printf("\n");
+      }
+      printf("------------------\n\n\n");
+    }
 
-    #if 1
-    assert (pcloud->location == NULL);
+
+
+    /*
+     * Location in elements
+     */
+    int n_pts = pts_idx[n_boxes];
+    PDM_g_num_t *pts_location = malloc (sizeof(PDM_g_num_t) * n_pts);
+    for (ibox = 0; ibox < n_boxes; ibox++) {
+      for (int i = pts_idx[ibox]; i < pts_idx[ibox+1]; i++) {
+        pts_location[i] = box_g_num[ibox];
+      }
+    }
+
+    float  *distance         = NULL;
+    double *projected_coords = NULL;
+    int    *bar_coords_idx   = NULL;
+    double *bar_coords       = NULL;
+
+    const double tolerance = 1e-6;
+    int base_element_num = 0;//???
+
+    PDM_point_location_nodal (location->mesh_nodal_id,
+                              n_pts,
+                              pts_idx,
+                              pts_coord,
+                              pts_g_num,//
+                              tolerance,
+                              base_element_num,
+                              &distance,
+                              &projected_coords,
+                              &bar_coords_idx,
+                              &bar_coords);
+
+    if (DEBUG) {
+      for (int i = 0; i < n_pts; i++) {
+        printf("Point gnum = (%ld)\n", pts_g_num[i]);
+        printf("\t  coords = (%f, %f, %f)\n", pts_coord[3*i], pts_coord[3*i+1], pts_coord[3*i+2]);
+        printf("\tlocation = (%ld)\n", pts_location[i]);
+        printf("\tdistance = %f\n", distance[i]);
+        printf("\t  bar_co =");
+        double sum = 0;
+        for (int j = bar_coords_idx[i]; j < bar_coords_idx[i+1]; j++) {
+          printf(" %f", (float) bar_coords[j]);
+          sum += bar_coords[j];
+        }
+        printf("  (sum = %f)\n\n", sum);
+      }
+    }
+    free (pts_coord);
+    free (pts_idx);
+
+    /*
+     * Merge location data of each point
+     *   part_to_block_exchange : pts_location, pts_distance, bar_coords...
+     *   (for each point, keep data linked to element with minimal distance)
+     *
+     */
+
+    PDM_part_to_block_t *ptb = PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                         PDM_PART_TO_BLOCK_POST_MERGE,
+                                                         1.,
+                                                         &pts_g_num,
+                                                         NULL,
+                                                         &n_pts,
+                                                         1,
+                                                         location->comm);
+
+    const int n_pts_block = PDM_part_to_block_n_elt_block_get (ptb);
+
+    int *block_stride = NULL;
+    PDM_g_num_t *block_location1 = NULL;
+    float       *block_distance1 = NULL;
+    double      *block_bar_coords1 = NULL;
+
+    int *stride = malloc (sizeof(int) * n_pts);
+    for (int i = 0; i < n_pts; i++) {
+      stride[i] = 1;
+    }
+
+    PDM_part_to_block_exch (ptb,
+                            sizeof(PDM_g_num_t),
+                            PDM_STRIDE_VAR,
+                            1,
+                            &stride,
+                            (void **) &pts_location,
+                            &block_stride,
+                            (void **) &block_location1);
+    free (block_stride);
+    free (pts_location);
+
+    PDM_part_to_block_exch (ptb,
+                            sizeof(float),
+                            PDM_STRIDE_VAR,
+                            1,
+                            &stride,
+                            (void **) &distance,
+                            &block_stride,
+                            (void **) &block_distance1);
+    free (block_stride);
+    free (distance);
+
+
+    int *bar_coords_stride = malloc (sizeof(int) * n_pts);
+    for (int i = 0; i < n_pts; i++) {
+      bar_coords_stride[i] = bar_coords_idx[i+1] - bar_coords_idx[i];
+    }
+    PDM_part_to_block_exch (ptb,
+                            sizeof(double),
+                            PDM_STRIDE_VAR,
+                            1,
+                            &bar_coords_stride,
+                            (void **) &bar_coords,
+                            &block_stride,
+                            (void **) &block_bar_coords1);
+    free (block_stride);
+    free (bar_coords);
+
+    int *block_n_vtx_elt1 = NULL;
+    PDM_part_to_block_exch (ptb,
+                            sizeof(int),
+                            PDM_STRIDE_VAR,
+                            1,
+                            &stride,
+                            (void **) &bar_coords_stride,
+                            &block_stride,
+                            (void **) &block_n_vtx_elt1);
+    free (bar_coords_stride);
+    free (stride);
+
+
+    /*
+     * Keep closest elements
+     */
+    int *block_idx1 = malloc (sizeof(int) * (n_pts_block + 1));
+    block_idx1[0] = 0;
+    for (int i = 0; i < n_pts_block; i++) {
+      block_idx1[i+1] = block_idx1[i] + block_stride[i];
+    }
+
+    int *block_bar_coords_idx1 = malloc (sizeof(int) * (block_idx1[n_pts_block] + 1));
+    block_bar_coords_idx1[0] = 0;
+    for (int i = 0; i < block_idx1[n_pts_block]; i++) {
+      block_bar_coords_idx1[i+1] = block_bar_coords_idx1[i] + block_n_vtx_elt1[i];
+    }
+
+    int *block_bar_coords_idx2 = malloc (sizeof(int) * (block_idx1[n_pts_block] + 1));
+    block_bar_coords_idx2[0] = 0;
+    double *block_bar_coords2 = malloc (sizeof(double) * block_bar_coords_idx1[block_idx1[n_pts_block]]);
+    free (block_idx1);
+
+    PDM_g_num_t *block_location2 = malloc (sizeof(PDM_g_num_t) * n_pts_block);
+    //float       *block_distance2 = malloc (sizeof(float)       * n_pts_block);
+
 
     int idx = 0;
-    pcloud->location = (PDM_g_num_t **) malloc (sizeof(PDM_g_num_t *) * pcloud->n_part);
-    for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
-      pcloud->location[ipart] = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * pcloud->n_points[ipart]);
+    for (int i = 0; i < n_pts_block; i++) {
+      int n_elt = block_stride[i];
 
+      assert (n_elt > 0);
 
+      int jmin = 0;
+
+      if (n_elt > 1) {
+        float min_dist = HUGE_VAL;
+        jmin = -1;
+
+        for (int j = 0; j < n_elt; j++) {
+          if (block_distance1[idx + j] < min_dist) {
+            min_dist = block_distance1[idx + j];
+            jmin = j;
+          }
+        }
+      }
+
+      jmin += idx;
+      block_location2[i] = block_location1[jmin];
+      //block_distance2[i] = block_distance1[jmin];
+
+      block_bar_coords_idx2[i+1] = block_bar_coords_idx2[i] + block_n_vtx_elt1[jmin];
+      for (int k = 0; k < block_n_vtx_elt1[jmin]; k++) {
+        block_bar_coords2[block_bar_coords_idx2[i] + k] =
+          block_bar_coords1[block_bar_coords_idx1[jmin] + k];
+      }
+
+      idx += n_elt;
     }
-    #endif
+    free (block_n_vtx_elt1);
+    free (block_bar_coords_idx1);
+    free (block_distance1);
+    free (block_location1);
 
 
+    // block_to_part_exch...
+    int n_pts_pcloud = 0;
+    for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
+      n_pts_pcloud += pcloud->n_points[ipart];
+    }
+    PDM_g_num_t *pcloud_g_num = malloc (sizeof(PDM_g_num_t) * n_pts_pcloud);
+    idx = 0;
+    for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
+      for (int ipt = 0; ipt < pcloud->n_points[ipart]; ipt++) {
+        pcloud_g_num[idx++] = pcloud->gnum[ipart][ipt];
+      }
+    }
 
-    free (pts_in_box_idx);
-    free (pts_in_box_g_num);
-    free (pts_in_box_coord);
-  }
+    PDM_part_to_block_t *ptb2 = PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                          PDM_PART_TO_BLOCK_POST_MERGE,
+                                                          1.,
+                                                          &pcloud_g_num,
+                                                          NULL,
+                                                          &n_pts_pcloud,
+                                                          1,
+                                                          location->comm);
+
+    PDM_g_num_t *block_distrib_idx2 = PDM_part_to_block_distrib_index_get (ptb2);
+
+    PDM_block_to_part_t *btp = PDM_block_to_part_create (block_distrib_idx2,
+                                                         (const PDM_g_num_t **) &pcloud_g_num,
+                                                         &n_pts_pcloud,
+                                                         1,
+                                                         location->comm);
+    free (pcloud_g_num);
+
+    int one = 1;
+
+    PDM_g_num_t *pcloud_location = malloc (sizeof(PDM_g_num_t) * n_pts_pcloud);
+    PDM_block_to_part_exch (btp,
+                            sizeof(PDM_g_num_t),
+                            PDM_STRIDE_CST,
+                            &one,
+                            block_location2,
+                            NULL,
+                            (void **) &pcloud_location);
+    free (block_location2);
+
+    int *block_bar_coords_stride2 = malloc (sizeof(int) * n_pts_block);
+    for (int i = 0; i < n_pts_block; i++) {
+      block_bar_coords_stride2[i] = block_bar_coords_idx2[i+1] - block_bar_coords_idx2[i];
+    }
+    free (block_bar_coords_idx2);
+
+    int *pcloud_weights_stride = malloc (sizeof(int) * n_pts_pcloud);
+    PDM_block_to_part_exch (btp,
+                            sizeof(int),
+                            PDM_STRIDE_CST,
+                            &one,
+                            (void *) block_bar_coords_stride2,
+                            NULL,
+                            (void **) &pcloud_weights_stride);
+
+    int *pcloud_weights_idx = malloc (sizeof(int) * (n_pts_pcloud + 1));
+    pcloud_weights_idx[0] = 0;
+    for (int i = 0; i < n_pts_pcloud; i++) {
+      pcloud_weights_idx[i+1] = pcloud_weights_idx[i] + pcloud_weights_stride[i];
+    }
+
+    double *pcloud_weights = malloc (sizeof(double) * pcloud_weights_idx[n_pts_pcloud]);
+    PDM_block_to_part_exch (btp,
+                            sizeof(double),
+                            PDM_STRIDE_VAR,
+                            block_bar_coords_stride2,
+                            (void *) block_bar_coords2,
+                            &pcloud_weights_stride,
+                            (void **) &pcloud_weights);
+    free (block_bar_coords2);
+
+    /*
+     * Conform to original partitioning of current point cloud
+     */
+    assert (pcloud->location == NULL);
+
+    pcloud->location    = malloc (sizeof(PDM_g_num_t *) * pcloud->n_part);
+    pcloud->weights_idx = malloc (sizeof(int *)         * pcloud->n_part);
+    pcloud->weights     = malloc (sizeof(double *)      * pcloud->n_part);
+
+    idx = 0;
+    for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
+      pcloud->location[ipart]    = malloc (sizeof(PDM_g_num_t) * pcloud->n_points[ipart]);
+      pcloud->weights_idx[ipart] = malloc (sizeof(int)         * (pcloud->n_points[ipart] + 1));
+
+      pcloud->weights_idx[ipart][0] = 0;
+      int idx_tmp = idx;
+      for (int ipt = 0; ipt < pcloud->n_points[ipart]; ipt++) {
+        pcloud->location[ipart][ipt] = pcloud_location[idx];
+        pcloud->weights_idx[ipart][ipt+1] = pcloud->weights_idx[ipart][ipt] + pcloud_weights_stride[idx];
+
+        idx++;
+      }
+
+      pcloud->weights[ipart] = malloc (sizeof(double) * pcloud->weights_idx[ipart][pcloud->n_points[ipart]]);
+
+      idx = idx_tmp;
+      for (int ipt = 0; ipt < pcloud->n_points[ipart]; ipt++) {
+        for (int j = 0; j < pcloud_weights_stride[idx]; j++) {
+          pcloud->weights[ipart][pcloud->weights_idx[ipart][ipt] + j] =
+            pcloud_weights[pcloud_weights_idx[idx] + j];
+        }
+        idx++;
+      }
+    }
+    free (pcloud_location);
+    free (pcloud_weights_stride);
+    free (pcloud_weights_idx);
+    free (pcloud_weights);
+
+    PDM_part_to_block_free (ptb);
+    PDM_part_to_block_free (ptb2);
+    PDM_block_to_part_free (btp);
+
+    free (pts_g_num);
+  } // Loop over point clouds
+
+  free (box_g_num);
+  free (box_extents);
 
 }
 

@@ -46,13 +46,13 @@ extern "C" {
  * Maximum number of blocks depending of block type
  *----------------------------------------------------------------------------*/
 
-typedef enum {
+/*typedef enum {
 
   PDM_BLOCK_ID_BLOCK_STD    = 0,
   PDM_BLOCK_ID_BLOCK_POLY2D = 1000000,
   PDM_BLOCK_ID_BLOCK_POLY3D = 2000000
 
-} PDM_block_id_block_t;
+  } PDM_block_id_block_t;*/ // --> moved to pdm_mesh_nodal.h
 
 /*============================================================================
  * Global variable
@@ -4892,6 +4892,72 @@ PDM_Mesh_nodal_reset
 
 
 
+
+/**
+ * \brief Returns the number of vertices in an element
+ *
+ * \param [in]  type   Element type
+ * \param [in]  order  Element order
+ *
+ * \return      Number of vertices in element
+ *
+ */
+
+int
+PDM_Mesh_nodal_n_vertices_element
+(
+ const PDM_Mesh_nodal_elt_t type,
+ const int                  order
+ )
+{
+  int n_vtx = 0;
+  int _order = order;
+  if (order == -1) {
+    _order = 1;
+  }
+
+  switch(type) {
+  case PDM_MESH_NODAL_BAR2:           /* Edge */
+    n_vtx = (_order+1);
+    break;
+  case PDM_MESH_NODAL_TRIA3:          /* Triangle */
+    n_vtx = (_order+1)*(_order+2)/2;
+    break;
+  case PDM_MESH_NODAL_QUAD4:          /* Quadrangle */
+    n_vtx = (_order+1)*(_order+1);
+    break;
+  case PDM_MESH_NODAL_POLY_2D:        /* Simple Polygon */
+    n_vtx = -1;
+    break;
+  case PDM_MESH_NODAL_TETRA4:         /* Tetrahedron */
+    n_vtx = (_order+1)*(_order+2)*(_order+3)/6;
+    break;
+  case PDM_MESH_NODAL_PYRAMID5:       /* Pyramid */
+    n_vtx = (_order+1)*(_order+2)*(2*_order+3)/6;
+    break;
+  case PDM_MESH_NODAL_PRISM6:         /* Prism (pentahedron) */
+    n_vtx = (_order+1)*(_order+1)*(_order+2)/2;
+    break;
+  case PDM_MESH_NODAL_HEXA8:          /* Hexahedron (brick) */
+    n_vtx = (_order+1)*(_order+1)*(_order+1);
+    break;
+  case PDM_MESH_NODAL_POLY_3D:        /* Simple Polyhedron (convex or quasi-convex) */
+    n_vtx = -1;
+    break;
+  default:
+    n_vtx = -1;
+  }
+
+  return n_vtx;
+}
+
+
+
+
+
+
+
+
 void
 PDM_Mesh_nodal_compute_cell_extents
 (
@@ -5005,7 +5071,26 @@ PDM_Mesh_nodal_compute_cell_extents
       cell_vtx_idx = (PDM_l_num_t *) malloc (sizeof(PDM_l_num_t) * (n_elt + 1));
       cell_vtx_idx[0] = 0;
 
-      int n_vtx = 0;
+      const int order = 1;
+      int n_vtx = PDM_Mesh_nodal_n_vertices_element (block->t_elt, order);
+
+#if 0
+      double *coords = (double *) PDM_Mesh_nodal_vertices_get (idx, id_part);
+      for (int ielt = 0; ielt < n_elt; ielt++) {
+        //printf("VTX = \n");
+        printf("id_block = %d, ipart = %d, ielt = %d, verts = ", id_block, id_part, ielt);
+        for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
+          int coord_idx = cell_vtx[n_vtx*ielt + ivtx] - 1;
+          printf("%d ", coord_idx);
+          /*for (int idim = 0; idim < 3; idim++) {
+            printf("%f ", coords[3*coord_idx + idim]);
+          }
+          printf("\n");*/
+        }
+        printf("\n");
+      }
+#endif
+        /*int n_vtx = 0;
       switch (block->t_elt) {
       case PDM_MESH_NODAL_POINT:
         n_vtx = 1;
@@ -5034,7 +5119,7 @@ PDM_Mesh_nodal_compute_cell_extents
       default:
         printf("Unknown standard element type %d\n", block->t_elt);
         assert (1 == 0);
-      }
+        }*/
 
       for (PDM_l_num_t i = 0; i < n_elt; i++) {
         cell_vtx_idx[i+1] = cell_vtx_idx[i] + n_vtx;
@@ -5088,6 +5173,10 @@ PDM_Mesh_nodal_compute_cell_extents
   }
 
 }
+
+
+
+
 
 #ifdef __cplusplus
 }
