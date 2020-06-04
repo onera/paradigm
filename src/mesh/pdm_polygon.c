@@ -632,9 +632,9 @@ PDM_polygon_orthonormal_basis
 (
  const int     n_vtx,
  const double *vtx_xyz,
- double       *tangent_u,
- double       *tangent_v,
- double       *normal
+ double        tangent_u[3],
+ double        tangent_v[3],
+ double        normal[3]
  )
 {
   const double eps = 1e-15;
@@ -1142,6 +1142,249 @@ PDM_polygon_status_t PDM_polygon_point_in_3d_wn
 
 
 
+
+
+
+/**
+ * \brief Test if a point is inside a 2d polygon using the Winding Number method
+ *        (see http://geomalgorithms.com/a03-_inclusion.html)
+ *
+ * \param [in]  xy            Point (x,y)-coordinates
+ * \param [in]  n_vtx         Number of polygon vertices
+ * \param [in]  vtx_xy        Polygon vertices (x,y)-coordinates
+ * \param [in]  char_length   Characteristic length (used to scale tolerance)
+ * \param [in]  bounds        Bounds (xmin, xmax, ymin, ymax)
+ *
+ * \return      \ref Status inside, outside or degenerated
+ *
+ */
+
+PDM_polygon_status_t PDM_polygon_point_in2d
+(
+ const double  xy[2],
+ const int     n_vtx,
+ const double *vtx_xy,
+ const double  char_length,
+ double        bounds[4]
+ )
+{
+  const double eps_base = 1e-12;
+
+  const double eps = eps_base * char_length;
+  const double eps2 = eps * eps;
+
+  /*
+   * Do a quick bounds check
+   */
+  if (bounds != NULL) {
+    if ( xy[0] < bounds[0] || xy[0] > bounds[1] ||
+         xy[1] < bounds[2] || xy[1] > bounds[3]) {
+      return PDM_POLYGON_OUTSIDE;
+    }
+  }
+
+
+  /*
+   * Compute winding number
+   */
+  int wn = 0;
+
+  /* Loop over edges */
+  for (int i = 0; i < n_vtx; i++) {
+    int ip = (i+1) % n_vtx;
+    const double *p0 = vtx_xy + 2*i;
+    const double *p1 = vtx_xy + 2*ip;
+
+    double dx = xy[0] - p0[0];
+    double dy = xy[1] - p0[1];
+
+    /* Point coincident with vertex */
+    if (dx*dx + dy*dy < eps2) {
+      return PDM_POLYGON_INSIDE;
+    }
+
+
+    if (dy >= 0) {
+
+      if (p1[1] > xy[1]) {
+        /* Upward crossing */
+        double ex = p1[0] - p0[0];
+        double ey = p1[1] - p0[1];
+
+        double s = ex*dy - ey*dx;
+        if (s > eps) {
+          wn++;
+        } else if (s > -eps) {
+          double denom = ex*ex + ey*ey;
+          if (denom < eps2) {
+            /* Vertices i and ip are coincident */
+            return PDM_POLYGON_DEGENERATED;
+          } else {
+            /* Compute parameter along edge (i, ip) */
+            double t = (ex*dx + ey*dy) / denom;
+            if (t > -eps && t < 1 + eps) {
+              return PDM_POLYGON_INSIDE;
+            }
+          }
+        }
+      }
+
+    } else {// dy < 0
+
+      if (p1[1] < xy[1]) {
+        /* Downward crossing */
+        double ex = p1[0] - p0[0];
+        double ey = p1[1] - p0[1];
+
+        double s = ex*dy - ey*dx;
+        if (s < -eps) {
+          wn--;
+        } else if (s < eps) {
+          double denom = ex*ex + ey*ey;
+          if (denom < eps2) {
+            /* Vertices i and ip are coincident */
+            return PDM_POLYGON_DEGENERATED;
+          } else {
+            /* Compute parameter along edge (i, ip) */
+            double t = (ex*dx + ey*dy) / denom;
+            if (t > -eps && t < 1 + eps) {
+              return PDM_POLYGON_INSIDE;
+            }
+          }
+        }
+
+      }
+
+    }
+  } // Loop over edges
+
+  /* Result */
+  if (wn == 0) {
+    return PDM_POLYGON_OUTSIDE;
+  } else {
+    return PDM_POLYGON_INSIDE;
+  }
+
+}
+
+
+
+/**
+ * \brief Test if a point is inside a 3d polygon using the Winding Number method
+ *        (see http://geomalgorithms.com/a03-_inclusion.html)
+ *
+ * \param [in]  xyz           Point (x,y,z)-coordinates
+ * \param [in]  n_vtx         Number of polygon vertices
+ * \param [in]  vtx_xyz       Polygon vertices (x,y,z)-coordinates
+ * \param [in]  char_length   Characteristic length (used to scale tolerance)
+ * \param [in]  bounds        Bounds (xmin, xmax, ymin, ymax, zmin, zmax)
+ *
+ * \return      \ref Status inside, outside or degenerated
+ *
+ */
+
+PDM_polygon_status_t PDM_polygon_point_in3d
+(
+ const double  xyz[3],
+ const int     n_vtx,
+ const double *vtx_xyz,
+ const double  char_length,
+ double        bounds[6],
+ double        normal[3]
+ )
+{
+  /*
+   *  Do a quick bounds check
+   */
+  if (bounds != NULL) {
+    if ( xyz[0] < bounds[0] || xyz[0] > bounds[1] ||
+         xyz[1] < bounds[2] || xyz[1] > bounds[3] ||
+         xyz[2] < bounds[4] || xyz[2] > bounds[5]) {
+      return PDM_POLYGON_OUTSIDE;
+    }
+  }
+
+
+  /*
+   *  Isometric projection onto median plane
+   */
+  /* Compute polygon barycenter */
+  double origin_xyz[3];
+  PDM_polygon_compute_barycenter (n_vtx, vtx_xyz, origin_xyz);
+
+  /* Build a suitable orthonormal frame */
+  double tangent_u[3] = {0., 0., 0.}, tangent_v[3];
+  if (normal == NULL) {
+    normal = malloc (sizeof(double) * 3);
+    PDM_plane_normal (n_vtx, vtx_xyz, normal);
+  }
+
+  /*   First tangent direction */
+  int imin = -1;
+  double nmin = HUGE_VAL;
+  for (int idim = 0; idim < 3; idim++) {
+    double nabs = fabs (normal[idim]);
+    if (nabs < nmin) {
+      imin = idim;
+      nmin = nabs;
+    }
+  }
+
+  tangent_u[imin] = 1.;
+  double mag = 0;
+  for (int idim = 0; idim < 3; idim++) {
+    tangent_u[idim] -= normal[imin] * normal[idim];
+    mag += tangent_u[idim] * tangent_u[idim];
+  }
+
+  if (mag < 1e-15) {
+    return PDM_POLYGON_DEGENERATED;
+  }
+
+  mag = 1. / sqrt(mag);
+  for (int idim = 0; idim < 3; idim++) {
+    tangent_u[idim] *= mag;
+  }
+
+  /*   Second tangent direction */
+  PDM_CROSS_PRODUCT (tangent_v, normal, tangent_u);
+
+
+
+  /* Compute coordinates in this frame */
+  double *xy = malloc (sizeof(double) * (n_vtx + 1) * 2);
+  for (int i = 0; i < n_vtx; i++) {
+    xy[2*i]   = 0.;
+    xy[2*i+1] = 0.;
+
+    for (int idim = 0; idim < 3; idim++) {
+      double d = vtx_xyz[3*i+idim] - origin_xyz[idim];
+
+      xy[2*i]   += d * tangent_u[idim];
+      xy[2*i+1] += d * tangent_v[idim];
+    }
+  }
+
+  double *p = xy + 2*n_vtx;
+  p[0] = 0.;
+  p[1] = 0.;
+  for (int idim = 0; idim < 3; idim++) {
+    double d = xyz[idim] - origin_xyz[idim];
+
+    p[0] += d * tangent_u[idim];
+    p[1] += d * tangent_v[idim];
+  }
+
+
+  /*
+   *  Perform 2D point-in-polygon test
+   */
+  return PDM_polygon_point_in2d (p,
+                                 n_vtx,
+                                 xy,
+                                 char_length,
+                                 NULL);
+}
 
 
 #ifdef __cplusplus
