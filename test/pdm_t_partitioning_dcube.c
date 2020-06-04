@@ -429,7 +429,7 @@ int main(int argc, char *argv[])
   int*  pn_faces;
   PDM_g_num_t** pface_ln_to_gn = NULL;
 
-  PDM_generate_part_entity_ln_to_gn(comm,
+  PDM_generate_part_entity_ln_to_gn_hash(comm,
                                     part_distribution,
                                     cell_distribution,
                                     dcell_face_idx,
@@ -451,7 +451,7 @@ int main(int argc, char *argv[])
   int*  pn_vtx;
   PDM_g_num_t** pvtx_ln_to_gn = NULL;
 
-  PDM_generate_part_entity_ln_to_gn(comm,
+  PDM_generate_part_entity_ln_to_gn_hash(comm,
                                     part_distribution,
                                     face_distribution,
                                     dface_vtx_idx,

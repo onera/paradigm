@@ -32,6 +32,7 @@
 #include "pdm_unique.h"
 #include "pdm_binary_search.h"
 #include "pdm_handles.h"
+#include "pdm_hash_tab.h"
 
 #include "pdm_partitioning_algorithm.h"
 #include "pdm_distrib.h"
@@ -73,6 +74,19 @@ extern "C" {
 /*=============================================================================
  * Public function definitions
  *============================================================================*/
+
+static inline int _is_prime(int num)
+{
+  if ((num & 1)==0)
+    return num == 2;
+  else {
+    for (int i = 3; i <= sqrt(num); i+=2) {
+      if (num % i == 0)
+        return 0;
+    }
+  }
+  return 1;
+}
 
 /**
  *  \brief Setup cell_ln_to_gn
@@ -538,7 +552,7 @@ PDM_generate_part_face_group_ln_to_gn
  *  \brief Setup cell_ln_to_gn
  */
 void
-PDM_generate_part_entity_ln_to_gn
+PDM_generate_part_entity_ln_to_gn_sort
 (
  const PDM_MPI_Comm    comm,
  PDM_g_num_t          *part_distribution,
@@ -670,7 +684,7 @@ PDM_generate_part_entity_ln_to_gn
     int n_elmt_sort = PDM_inplace_unique_long2(_pface_ln_to_gn, unique_order, 0, idx_data-1);
     _n_faces[i_part] = n_elmt_sort;
 
-    if(0 == 1){
+    if(0 == 1 && i_rank == 0){
       printf("n_elmt_sort::%d\n", n_elmt_sort);
       printf("_pface_ln_to_gn::");
       for(int i = 0; i < n_elmt_sort; ++i){
@@ -715,6 +729,238 @@ PDM_generate_part_entity_ln_to_gn
     }
 
     free(unique_order);
+  }
+
+
+  /*
+   * Panic verbose
+   */
+  if(0 == 1){
+    for(int i_part = 0; i_part < n_part; ++i_part){
+      int idx_data = 0;
+      printf("[%d] cell_face:: \n", i_part);
+      for(int i_cell = 0; i_cell < n_elmts[i_part]; ++i_cell) {
+        printf("[%d] --> ", cell_stri[i_part][i_cell]);
+        for(int i_data = 0; i_data < cell_stri[i_part][i_cell]; ++i_data ){
+          printf("%d ", (*pcell_face)[i_part][idx_data++] );
+        }
+        printf("\n");
+      }
+      printf("\n");
+    }
+  }
+
+  /*
+   * Free
+   */
+  PDM_block_to_part_free(btp);
+  free(cell_distribution_ptb);
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    free(cell_stri[i_part]);
+    free(pcell_face_tmp[i_part]);
+  }
+  free(cell_stri);
+  free(pcell_face_tmp);
+
+}
+
+/**
+ *  \brief Setup cell_ln_to_gn
+ */
+void
+PDM_generate_part_entity_ln_to_gn_hash
+(
+ const PDM_MPI_Comm    comm,
+ PDM_g_num_t          *part_distribution,
+ PDM_g_num_t          *cell_distribution,
+ int                  *dcell_face_idx,
+ PDM_g_num_t          *dcell_face,
+ int                   n_part,
+ int                  *n_elmts,
+ PDM_g_num_t         **pcell_ln_to_gn,
+ int                 **n_faces,
+ PDM_g_num_t        ***pface_ln_to_gn,
+ int                ***pcell_face_idx,
+ int                ***pcell_face
+)
+{
+  printf("PDM_generate_part_entity_ln_to_gn\n");
+  int i_rank;
+  int n_rank;
+
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  PDM_MPI_Comm_size(comm, &n_rank);
+
+  // int dn_part = part_distribution[i_rank+1] -  part_distribution[i_rank];
+  int dn_cell = cell_distribution[i_rank+1] -  cell_distribution[i_rank];
+
+  PDM_g_num_t* cell_distribution_ptb = (PDM_g_num_t * ) malloc( sizeof(PDM_g_num_t) * (n_rank+1) );
+  for(int i = 0; i < n_rank+1; ++i){
+    cell_distribution_ptb[i] = cell_distribution[i] - 1;
+  }
+
+  /*
+   * Prepare exchange protocol
+   */
+  PDM_block_to_part_t* btp = PDM_block_to_part_create(cell_distribution_ptb,
+                               (const PDM_g_num_t **) pcell_ln_to_gn,
+                                                      n_elmts,
+                                                      n_part,
+                                                      comm);
+
+  /*
+   * Prepare data
+   */
+  int* blk_stri = (int *) malloc( sizeof(int) * dn_cell);
+  for(int i_cell = 0; i_cell < dn_cell; ++i_cell){
+    blk_stri[i_cell] = dcell_face_idx[i_cell+1] - dcell_face_idx[i_cell];
+  }
+
+  /*
+   * Exchange
+   */
+  int**         cell_stri;
+  PDM_g_num_t** pcell_face_tmp; /* We keep it in double precision because it contains global numbering */
+  PDM_block_to_part_exch2(btp,
+                          sizeof(PDM_g_num_t),
+                          PDM_STRIDE_VAR,
+                          blk_stri,
+             (void *  )   dcell_face,
+             (int  ***)  &cell_stri,
+             (void ***)  &pcell_face_tmp);
+
+  free(blk_stri);
+
+  /*
+   * Panic verbose
+   */
+  if(0 == 1){
+    for(int i_part = 0; i_part < n_part; ++i_part){
+      int idx_data = 0;
+      printf("[%d] cell_face:: \n", i_part);
+      for(int i_cell = 0; i_cell < n_elmts[i_part]; ++i_cell) {
+        printf("[%d] --> ", cell_stri[i_part][i_cell]);
+        for(int i_data = 0; i_data < cell_stri[i_part][i_cell]; ++i_data ){
+          printf("%d ", pcell_face_tmp[i_part][idx_data++] );
+        }
+        printf("\n");
+      }
+      printf("\n");
+    }
+  }
+
+
+  /*
+   * Post-treatment - Caution the recv connectivity can be negative
+   */
+  *pface_ln_to_gn = (PDM_g_num_t **) malloc( n_part * sizeof(PDM_g_num_t *) );
+  *pcell_face     = (int         **) malloc( n_part * sizeof(int         *) );
+  *pcell_face_idx = (int         **) malloc( n_part * sizeof(int         *) );
+  *n_faces        = (int          *) malloc( n_part * sizeof(int          ) );
+
+  /* Shortcut */
+  PDM_g_num_t** _face_ln_to_gn = *pface_ln_to_gn;
+  int** _cell_face             = *pcell_face;
+  int** _cell_face_idx         = *pcell_face_idx;
+  int*  _n_faces               = *n_faces;
+
+  for(int i_part = 0; i_part < n_part; ++i_part){
+
+    int np_elmts = n_elmts[i_part];
+    /*
+     *  First loop to count and setup part_strid_idx
+     */
+    _cell_face_idx[i_part] = (int *) malloc( (np_elmts + 1) * sizeof(int) );
+    _cell_face_idx[i_part][0] = 0;
+    for(int i_cell = 0; i_cell < np_elmts; ++i_cell) {
+      _cell_face_idx[i_part][i_cell+1] = _cell_face_idx[i_part][i_cell] + cell_stri[i_part][i_cell];
+    }
+
+
+    /*
+     * Save array
+     */
+    _face_ln_to_gn[i_part] = (PDM_g_num_t *) malloc( _cell_face_idx[i_part][np_elmts] * sizeof(PDM_g_num_t));
+    _cell_face[i_part]     = (int *        ) malloc( _cell_face_idx[i_part][np_elmts] * sizeof(int        ));
+
+    PDM_g_num_t* _pface_ln_to_gn = _face_ln_to_gn[i_part];
+    int*         _pcell_face     = _cell_face[i_part];
+
+    PDM_g_num_t *_keys_and_values = (PDM_g_num_t *) malloc( 2*_cell_face_idx[i_part][np_elmts] * sizeof(PDM_g_num_t));
+
+    /* Create hash table */
+    int keymax = 1.3 * _cell_face_idx[i_part][np_elmts]; //next prime number following 1.3*nbofvalues
+    while (!_is_prime(keymax))
+      keymax++;
+    //PDM_printf("[%i] nb val is %d, choose keymax = %d\n", i_rank, _cell_face_idx[i_part][np_elmts] ,keymax);
+    PDM_hash_tab_t *hash_tab = PDM_hash_tab_create(PDM_HASH_TAB_KEY_INT, &keymax);
+
+    /* Fill & use table */
+    int idx_data = 0;
+    int nbUnique = 0;
+    for(int i_cell = 0; i_cell < np_elmts; ++i_cell) {
+      for(int i_data = 0; i_data < cell_stri[i_part][i_cell]; ++i_data ){
+
+        PDM_g_num_t key_value =  PDM_ABS(pcell_face_tmp[i_part][idx_data]);
+        int            g_sgn  = PDM_SIGN(pcell_face_tmp[i_part][idx_data]);
+        int hash_value = key_value % keymax;
+
+        /* We will store in the tab the key (to maange collisions) and the position in
+           lntogn list (to construct partioned connectivity) */
+        PDM_g_num_t *_key_and_value = _keys_and_values + 2*idx_data;
+        _key_and_value[0]   = key_value;
+        _key_and_value[1]   = (PDM_g_num_t) nbUnique;
+
+        int key_found_in_table = 0;
+        int n_in_tab = PDM_hash_tab_n_data_get(hash_tab, &hash_value);
+
+        /* If the slot exists in the tab (n_in_tab), check if the id is already registered,
+           or if it is a hash collision. */
+        if (n_in_tab > 0) {
+          //if (i_rank == 0) PDM_printf("Check uniqueness/collision before adding %d at pos %d\n", key_value, hash_value);
+          PDM_g_num_t **candidate_in_tab = (PDM_g_num_t **) PDM_hash_tab_data_get(hash_tab, &hash_value);
+          for (int j = 0; j < n_in_tab; j++) {
+            if (PDM_ABS(candidate_in_tab[j][0]) == key_value) {
+              _pcell_face[idx_data] = g_sgn*(candidate_in_tab[j][1] + 1);
+              key_found_in_table++; //The key was trully in table
+              //if (i_rank == 0) PDM_printf("  candidate key %d matches", candidate_in_tab[j][0]);
+              break;
+            }
+            //else if (i_rank == 0) PDM_printf("  candidate key %d is a collision", candidate_in_tab[j][0]);
+          }
+          //if (i_rank == 0) PDM_printf("\n");
+        }
+        /* Slot is empty *or* we just have a collision -> add key in table */
+        if (!key_found_in_table) {
+          //if (i_rank == 0) PDM_printf("Add %d in table at pos %d\n", key_value, hash_value);
+          PDM_hash_tab_data_add(hash_tab, (void *) &hash_value, _key_and_value);
+          _pcell_face[idx_data] = g_sgn*(nbUnique + 1);
+          _pface_ln_to_gn[nbUnique++] = PDM_ABS(pcell_face_tmp[i_part][idx_data]);
+        }
+        idx_data++;
+      }
+    }
+
+    PDM_hash_tab_free(hash_tab);
+    free(_keys_and_values);
+
+    _n_faces[i_part] = nbUnique;
+
+    if(0 == 1){
+      //printf("n_elmt_sort::%d\n", n_elmt_sort);
+      printf("_pface_ln_to_gn::");
+      for(int i = 0; i < nbUnique; ++i){
+        printf("%d ", _pface_ln_to_gn[i]);
+      }
+      printf("\n");
+    }
+
+    /*
+     * Realloc
+     */
+    _face_ln_to_gn[i_part] = (PDM_g_num_t *) realloc(_face_ln_to_gn[i_part], nbUnique * sizeof(PDM_g_num_t) );
+    _pface_ln_to_gn = _face_ln_to_gn[i_part];
+
   }
 
 
