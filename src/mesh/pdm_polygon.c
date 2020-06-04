@@ -529,9 +529,11 @@ PDM_polygon_point_in
        * Fire the ray and compute the number of intersections.  Be careful
        * of degenerate cases (e.g., ray intersects at vertex).
        */
-
+#if 0
       if ((status = PDM_line_intersection (x,xray,x1,x2, &u,&v)) == PDM_LINE_INTERSECT_YES) {
-
+#else
+        if ((status = PDM_line_intersection_old (x,xray,x1,x2, &u,&v)) == PDM_LINE_INTERSECT_YES) {
+#endif
         /*
          * This test checks for vertex and edge intersections
          * For example

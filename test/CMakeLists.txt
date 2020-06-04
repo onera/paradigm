@@ -71,3 +71,7 @@ test_c_create (pdm_t_par_octree ${MPIEXEC_MAX_NUMPROCS})
 test_c_create (pdm_t_closest_points ${MPIEXEC_MAX_NUMPROCS})
 test_c_create (pdm_t_mesh_location_dcube ${MPIEXEC_MAX_NUMPROCS})
 test_c_create (pdm_t_mesh_location_2 ${MPIEXEC_MAX_NUMPROCS})
+test_c_create (read_vtk_parallel ${MPIEXEC_MAX_NUMPROCS})
+
+test_c_create (validation_locate_in_tetra 1)
+test_c_create (validation_point_in_polygon 1)
