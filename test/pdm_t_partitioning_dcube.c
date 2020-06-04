@@ -442,6 +442,24 @@ int main(int argc, char *argv[])
                 (int         ***)  &pcell_face_idx,
                 (int         ***)  &pcell_face);
 
+  int **pface_cell;
+  PDM_part_reverse_pcellface(n_res_part,
+                             pn_cell,
+                             pn_faces,
+                             pcell_face_idx,
+                             pcell_face,
+              (int    ***)  &pface_cell);
+
+  if (0 == 1){
+    for (int i_part=0; i_part < n_res_part; i_part++){
+      PDM_printf("[%i] generated facecell part %i:", i_rank, i_part);
+      for (int iface=0 ; iface < pn_faces[i_part]; iface++)
+        PDM_printf(" %d %d", pface_cell[i_part][2*iface], pface_cell[i_part][2*iface+1]);
+      PDM_printf("\n");
+    }
+  }
+
+
   /*
    * Generate vtx
    */

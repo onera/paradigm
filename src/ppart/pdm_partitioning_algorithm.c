@@ -236,6 +236,64 @@ PDM_generate_part_cell_ln_to_gn
 
 }
 
+/**
+ *  \brief Construct the face->cell connectivity from the cell->face connectivity
+ *   Since we assume that a face->cell is an array of two columns, this function
+ *   can not be used to reverse other connectivities such as face->vtx.
+ *
+ *   This function respect the orientation : negative face in cell->face connectivity
+ *   indicates that cell is right in the face->cell connectivity.
+ *
+ * \param [in]   n_part             Number of partitions
+ * \param [in]   np_cell            Number of cells in each partition (size=n_part)
+ * \param [in]   np_face            Number of faces in each partition (size=n_part)
+ * \param [in]   pcell_face_idx     2d array of cell to face connectivity indexes
+ *                                  (size = n_part*np_cell[i_part])
+ * \param [in]   pcell_face         2d array of cell to face connectivity
+ *                                  (size = n_part*pcell_face_idx[i_part][np_cell+1])
+ * \param [out]  pface_face         2d array of face to cell connectivity
+ *                                  (size = n_part*2*np_face[i_part])
+*/
+void
+PDM_part_reverse_pcellface
+(
+  const int         n_part,
+  const int        *np_cell,
+  const int        *np_face,
+  const int       **pcell_face_idx,
+  const int       **pcell_face,
+        int      ***pface_cell
+)
+{
+  printf("PDM_part_reverse_pcellface\n");
+
+  *pface_cell = (int **) malloc( n_part * sizeof(int *) );
+
+  for (int i_part = 0; i_part < n_part; i_part++)
+  {
+    (*pface_cell)[i_part] = (int *) malloc( sizeof(int) * 2 * np_face[i_part]);
+    /* Shortcuts for this part */
+    const int *_pcell_face_idx = pcell_face_idx[i_part];
+    const int *_pcell_face     = pcell_face[i_part];
+          int *_pface_cell     = (*pface_cell)[i_part];
+
+    for (int i = 0; i < 2 * np_face[i_part]; i++)
+      _pface_cell[i] = 0;
+
+    for (int i_cell = 0; i_cell < np_cell[i_part]; i_cell++){
+      for (int i_data = _pcell_face_idx[i_cell]; i_data < _pcell_face_idx[i_cell+1]; i_data++){
+        int l_face =  PDM_ABS(_pcell_face[i_data])-1;
+        int sign   = PDM_SIGN(_pcell_face[i_data]);
+        if (sign > 0) {
+          _pface_cell[2*l_face  ] = i_cell+1;
+        }
+        else {
+          _pface_cell[2*l_face+1] = i_cell+1;
+        }
+      }
+    }
+  }
+}
 
 /**
  *  \brief Setup cell_ln_to_gn
