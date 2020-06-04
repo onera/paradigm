@@ -363,28 +363,33 @@ int main(int argc, char *argv[])
    * Point cloud definition
    *
    ************************/
-  int _n_pts_l;
-  double *coords = NULL;
+  if (my_rank == 0) {
+    printf("-- Point cloud\n");
+    fflush(stdout);
+  }
+
+  int n_pts_l;
+  double *pts_coords = NULL;
   _gen_cloud_random (n_pts,
                      length,
                      n_procs,
                      my_rank,
-                     &coords,
-                     &_n_pts_l);
+                     &pts_coords,
+                     &n_pts_l);
 
   int id_gnum = PDM_gnum_create (3, 1, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD);
 
-  double *char_length = malloc(sizeof(double) * _n_pts_l);
+  double *char_length = malloc(sizeof(double) * n_pts_l);
 
-  for (int i = 0; i < _n_pts_l; i++) {
+  for (int i = 0; i < n_pts_l; i++) {
     char_length[i] = length * 1.e-6;
   }
 
-  PDM_gnum_set_from_coords (id_gnum, 0, _n_pts_l, coords, char_length);
+  PDM_gnum_set_from_coords (id_gnum, 0, n_pts_l, pts_coords, char_length);
 
   PDM_gnum_compute (id_gnum);
 
-  PDM_g_num_t *gnum = PDM_gnum_get(id_gnum, 0);
+  PDM_g_num_t *pts_gnum = PDM_gnum_get(id_gnum, 0);
 
   PDM_gnum_free (id_gnum, 1);
 
@@ -409,9 +414,9 @@ int main(int argc, char *argv[])
   PDM_mesh_location_cloud_set (id_loc,
                                0,//i_point_cloud,
                                0,//i_part,
-                               _n_pts_l,
-                               coords,
-                               gnum);
+                               n_pts_l,
+                               pts_coords,
+                               pts_gnum);
 
   PDM_mesh_location_mesh_global_data_set (id_loc,
                                           n_part);
@@ -511,7 +516,7 @@ int main(int argc, char *argv[])
 
 
 
-
+  /* Set location parameters */
   PDM_mesh_location_tolerance_set (id_loc,
                                    tolerance);
 
@@ -519,8 +524,11 @@ int main(int argc, char *argv[])
                                 loc_method);
 
 
-
-
+  /* Compute location */
+  if (my_rank == 0) {
+    printf("-- Locate\n");
+    fflush(stdout);
+  }
   PDM_mesh_location_compute (id_loc);
 
   PDM_mesh_location_dump_times (id_loc);
@@ -541,12 +549,12 @@ int main(int argc, char *argv[])
   const PDM_g_num_t n_cell_seg = n_vtx_seg - 1;
   const double cell_side = length / ((double) n_cell_seg);
 
-  for (int ipt = 0; ipt < _n_pts_l; ipt++) {
-    double *pt_coord = coords + 3*ipt;
+  for (int ipt = 0; ipt < n_pts_l; ipt++) {
+    double *p = pts_coords + 3*ipt;
 
-    int i = (int) floor (pt_coord[0] / cell_side);
-    int j = (int) floor (pt_coord[1] / cell_side);
-    int k = (int) floor (pt_coord[2] / cell_side);
+    int i = (int) floor (p[0] / cell_side);
+    int j = (int) floor (p[1] / cell_side);
+    int k = (int) floor (p[2] / cell_side);
 
     PDM_g_num_t box_gnum = 1 + i + n_cell_seg*(j + n_cell_seg*k);
 

@@ -131,12 +131,14 @@ _locate_in_tetra
 (
  const double        tetra_coords[4][3],
  const double        point_coords[],
+ const PDM_g_num_t   point_g_num[],//debug only
  const int           n_points,
  const double        tolerance,
  float              *distance,
  double             *bary_coords
  )
 {
+  const int DEBUG = 0;
   //const double upper_bound = 0.5 + tolerance;
 
   double v[3][3];
@@ -147,9 +149,21 @@ _locate_in_tetra
   }
 
   //double vol6 = PDM_ABS (_determinant_3x3 (v[0], v[1], v[2]));
-  double vol6 = fabs (v[0][0] * (v[1][1]*v[2][2] - v[1][2]*v[2][1]) +
+  /*double vol6 = fabs (v[0][0] * (v[1][1]*v[2][2] - v[1][2]*v[2][1]) +
                       v[0][1] * (v[1][2]*v[2][0] - v[1][0]*v[2][2]) +
-                      v[0][2] * (v[1][0]*v[2][1] - v[1][1]*v[2][0]));
+                      v[0][2] * (v[1][0]*v[2][1] - v[1][1]*v[2][0]));*/
+  double vol6 = v[0][0] * (v[1][1]*v[2][2] - v[1][2]*v[2][1]) +
+    v[0][1] * (v[1][2]*v[2][0] - v[1][0]*v[2][2]) +
+    v[0][2] * (v[1][0]*v[2][1] - v[1][1]*v[2][0]);
+  //printf("vol = %f\n", vol6);
+
+  PDM_bool_t flip = PDM_FALSE;
+  if (vol6 > 0) {
+    flip = PDM_TRUE;
+  } else {
+    vol6 = -vol6;
+  }
+
   if (vol6 < _epsilon_denom){
     PDM_printf("warning _locate_in_tetra : Reduce _epsilon_denom criteria : %12.5e < %12.5e\n", vol6, _epsilon_denom);
     PDM_printf_flush();
@@ -166,6 +180,9 @@ _locate_in_tetra
 
     for (int idim = 0; idim < 3; idim++) {
       r[i][idim] *= vol6;
+      if (flip == PDM_TRUE) {
+        r[i][idim] = -r[i][idim];
+      }
     }
   }
 
@@ -173,6 +190,21 @@ _locate_in_tetra
   double vp0[3];
   for (int ipt = 0; ipt < n_points; ipt++) {
     const double *p = point_coords + 3*ipt;
+    if (DEBUG) {
+      printf("pt %d (%ld) : (%f %f %f)\n",
+             ipt, point_g_num[ipt], p[0], p[1], p[2]);
+
+      if (1) {//point_g_num[ipt] == 2) {
+        printf("tetra_coords =\n");
+        for (int ivtx = 0; ivtx < 4; ivtx++) {
+          for (int idim = 0; idim < 3; idim++) {
+            printf("%f ", tetra_coords[ivtx][idim]);
+          }
+          printf("\n");
+        }
+      }
+    }
+
     double *bco = bary_coords + 4*ipt;
 
     for (int idim = 0; idim < 3; idim++) {
@@ -200,17 +232,30 @@ _locate_in_tetra
     //if (max_dist > -0.25 && max_dist < upper_bound)
     distance[ipt] = (float) (2 * max_dist);
 
+    if (DEBUG) {
+      double sum = 0;
+      printf(" bco = ");
+      for (int ivtx = 0; ivtx < 4; ivtx++) {
+        printf("%f ", bco[ivtx]);
+        sum += bco[ivtx];
+      }
+      printf("  (sum = %f)\n", sum);
+      printf("dist = %f\n\n", distance[ipt]);
+    }
+
   }
 
 }
 
+#if 1
 //-->>
 void
-PDM_locate_points_in_tetra (const double  vtx_xyz[12],
-                            const int     n_pts,
-                            const double  pts_xyz[],
-                            float        *distance,
-                            double       *bary_coords)
+PDM_locate_points_in_tetra (const double       vtx_xyz[12],
+                            const int          n_pts,
+                            const double       pts_xyz[],
+                            const PDM_g_num_t  pts_g_num[],
+                            float             *distance,
+                            double            *bary_coords)
 {
   const double tolerance = 1e-6;
 
@@ -223,12 +268,14 @@ PDM_locate_points_in_tetra (const double  vtx_xyz[12],
 
   _locate_in_tetra (tetra_coords,
                     pts_xyz,
+                    pts_g_num,
                     n_pts,
                     tolerance,
                     distance,
                     bary_coords);
 }
 //<<--
+#endif
 
 /*---------------------------------------------------------------------------
  * Solve the equation "A.x = b" with Cramer's rule.
@@ -541,9 +588,7 @@ _locate_in_cell_3d
 
 
 
-
   /* Initialize local element coordinates copy */
-  //printf("vtx = \n");
   for (int ivtx = 0; ivtx < n_vertices; ivtx++) {
 
     if (parent_vertex_num == NULL) {
@@ -551,26 +596,21 @@ _locate_in_cell_3d
     } else {
       coord_idx = parent_vertex_num[element_vertex_num[ivtx] - 1] - 1;
     }
-    //printf("%d ", coord_idx);
 
     for (int idim = 0; idim < 3; idim++) {
       _vertex_coords[ivtx][idim] = vertex_coords[coord_idx * 3 + idim];
-      //printf("%f ", _vertex_coords[ivtx][idim]);
     }
-    //printf("\n");
 
   }
 
-  /*printf("%f < x < %f, %f < y < %f, %f < z = %f\n",
-         _vertex_coords[3][0], _vertex_coords[5][0],
-         _vertex_coords[3][1], _vertex_coords[5][1],
-         _vertex_coords[3][2], _vertex_coords[5][2]);*/
+
 
 
   if (elt_type == PDM_MESH_NODAL_TETRA4) {
     /* Shape functions may be computed directly with tetrahedra */
     _locate_in_tetra (_vertex_coords,
                       pts_coords,
+                      pts_g_num,//debug only
                       n_pts,
                       tolerance,
                       distance,
@@ -636,7 +676,7 @@ _locate_in_cell_3d
                                 uvw,
                                 _bco,
                                 NULL);
-            if (DEBUG) {
+            /*if (DEBUG) {
               double sum = 0;
               printf(" bco = ");
               for (int ivtx = 0; ivtx < n_vertices; ivtx++) {
@@ -644,7 +684,7 @@ _locate_in_cell_3d
                 sum += _bco[ivtx];
               }
               printf("  (sum = %f)\n", sum);
-            }
+              }*/
             //<<--
 
           }
@@ -676,9 +716,9 @@ _locate_in_cell_3d
             distance[ipt] = HUGE_VAL;
             }*/
           distance[ipt] = (float) max_dist;
-          if (DEBUG) {
+          /*if (DEBUG) {
             printf("dist = %f\n\n", distance[ipt]);
-          }
+            }*/
 
         } else {
 
@@ -692,7 +732,18 @@ _locate_in_cell_3d
 
       }
 
-    }
+      if (DEBUG) {
+        double sum = 0;
+        printf(" bco = ");
+        for (int ivtx = 0; ivtx < n_vertices; ivtx++) {
+          printf("%f ", _bco[ivtx]);
+          sum += _bco[ivtx];
+        }
+        printf("  (sum = %f)\n", sum);
+        printf("dist = %f\n\n", distance[ipt]);
+      }
+
+    } // Loop over points
   }
 }
 
@@ -713,7 +764,7 @@ _std_block_locate_3d
  double              tolerance,
  float              *distance,
  // double             *projected_coords,// high-order
- int                *bar_coords_idx,
+ //int                *bar_coords_idx,
  double             *bar_coords
  )
 {
@@ -772,11 +823,24 @@ _std_block_locate_3d
                                   ipart,
                                   &element_vertex_num);
 
+    //-->>//if (DEBUG)
+    PDM_g_num_t *_gnum = PDM_Mesh_nodal_g_num_get (mesh_nodal_id,
+                                                   id_block,
+                                                   ipart);
+
+    //<<--
+
     /* Loop over elements */
     for (int ielt = 0; ielt < n_elt; ielt++) {
       idx++;
 
       n_pts = pts_idx[idx + 1] - pts_idx[idx];
+      //-->>
+      if (DEBUG) {
+        printf("elt (%ld) : n_pts = %d\n", _gnum[ielt], n_pts);
+      }
+      //<<--
+
 
       if (n_pts < 1) {
         continue;
@@ -849,7 +913,7 @@ _std_block_locate_3d
       /* Points */
       else { // entity_dim == 0
         /*...*/
-        assert (0 == 1);
+        //assert (0 == 1);
 
       }
 
@@ -881,6 +945,7 @@ PDM_point_location_nodal
  double             **bar_coords
  )
 {
+  const int DEBUG = 0;
   const int order = 1;
 
   int idx = 0;
@@ -989,9 +1054,9 @@ PDM_point_location_nodal
     }
   }
 
+
+
   *bar_coords = malloc (sizeof(double) * ((*bar_coords_idx)[n_pts]));
-
-
 
 
   /* Loop over nodal blocks */
@@ -1016,16 +1081,20 @@ PDM_point_location_nodal
 
     /* Standard elements */
     else {
+      if (DEBUG) {
+        printf("nodal block %d (id = %d) --> _std_block_locate_3d (type = %d)\n",
+               iblock, id_block, PDM_Mesh_nodal_block_type_get(mesh_nodal_id, id_block));
+      }
       _std_block_locate_3d (mesh_nodal_id,
                             id_block,
                             pts_idx + idx,
                             pts_coords,
                             pts_g_num,
                             tolerance,
-                            *distance,
+                            *distance + pts_idx[idx],
                             //*projected_coords,
-                            *bar_coords_idx + idx,
-                            *bar_coords);
+                            //*bar_coords_idx + idx,
+                            *bar_coords + (*bar_coords_idx)[pts_idx[idx]]);
 
     }
 

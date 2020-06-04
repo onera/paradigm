@@ -54,11 +54,12 @@ PDM_point_location_nodal
 
 //-->>
 void
-PDM_locate_points_in_tetra (const double  vtx_xyz[12],
-                            const int     n_pts,
-                            const double  pts_xyz[],
-                            float        *distance,
-                            double       *bary_coords);
+PDM_locate_points_in_tetra (const double       vtx_xyz[12],
+                            const int          n_pts,
+                            const double       pts_xyz[],
+                            const PDM_g_num_t  pts_g_num[],
+                            float             *distance,
+                            double            *bary_coords);
 //<<--
 #ifdef __cplusplus
 }

@@ -973,11 +973,11 @@ PDM_Mesh_nodal_n_vertices_element
 void
 PDM_Mesh_nodal_compute_cell_extents
 (
- const int      idx,
- const int      id_block,
- const int      i_part,
- const double   tolerance,
- double       **extents
+ const int     idx,
+ const int     id_block,
+ const int     i_part,
+ const double  tolerance,
+ double       *extents
  );
 
 
