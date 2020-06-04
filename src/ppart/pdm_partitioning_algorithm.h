@@ -49,6 +49,20 @@ PDM_generate_part_cell_ln_to_gn
 );
 
 /**
+ *  \brief Construct the face->cell connectivity from the cell->face connectivity
+ */
+void
+PDM_part_reverse_pcellface
+(
+  const int         n_part,
+  const int        *n_cell,
+  const int        *n_face,
+  const int       **pcell_face_idx,
+  const int       **pcell_face,
+        int      ***pface_cell
+);
+
+/**
  *  \brief Setup cell_ln_to_gn
  */
 void
