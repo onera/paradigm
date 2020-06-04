@@ -4917,6 +4917,9 @@ PDM_Mesh_nodal_n_vertices_element
   }
 
   switch(type) {
+  case PDM_MESH_NODAL_POINT:          /* Point */
+    n_vtx = 1;
+    break;
   case PDM_MESH_NODAL_BAR2:           /* Edge */
     n_vtx = (_order+1);
     break;
@@ -4961,11 +4964,11 @@ PDM_Mesh_nodal_n_vertices_element
 void
 PDM_Mesh_nodal_compute_cell_extents
 (
- const int      idx,
- const int      id_block,
- const int      id_part,
- const double   tolerance,
- double       **extents
+ const int     idx,
+ const int     id_block,
+ const int     id_part,
+ const double  tolerance,
+ double       *extents
  )
 {
   PDM_Mesh_nodal_t *mesh = (PDM_Mesh_nodal_t *) PDM_Handles_get (mesh_handles, idx);
@@ -5075,17 +5078,11 @@ PDM_Mesh_nodal_compute_cell_extents
       int n_vtx = PDM_Mesh_nodal_n_vertices_element (block->t_elt, order);
 
 #if 0
-      double *coords = (double *) PDM_Mesh_nodal_vertices_get (idx, id_part);
       for (int ielt = 0; ielt < n_elt; ielt++) {
-        //printf("VTX = \n");
         printf("id_block = %d, ipart = %d, ielt = %d, verts = ", id_block, id_part, ielt);
         for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
           int coord_idx = cell_vtx[n_vtx*ielt + ivtx] - 1;
           printf("%d ", coord_idx);
-          /*for (int idim = 0; idim < 3; idim++) {
-            printf("%f ", coords[3*coord_idx + idim]);
-          }
-          printf("\n");*/
         }
         printf("\n");
       }
@@ -5132,10 +5129,11 @@ PDM_Mesh_nodal_compute_cell_extents
 
   double *coords = (double *) PDM_Mesh_nodal_vertices_get (idx, id_part);
 
-  double *_extents = *extents;
+  double *_extents = extents;
+  //printf("id_block = %d, ipart = %d\n", id_block, id_part);
   for (PDM_l_num_t i = 0; i < n_elt; i++) {
     for (int k = 0; k < 3; k++) {
-      _extents[k]   = HUGE_VAL;
+      _extents[k]   =  HUGE_VAL;
       _extents[3+k] = -HUGE_VAL;
     }
 
@@ -5149,7 +5147,7 @@ PDM_Mesh_nodal_compute_cell_extents
       }
     }
 
-    double delta = -HUGE_VAL;
+    double delta = 1e-12;
     for (int k = 0; k < 3; k++) {
       delta = PDM_MAX (delta, fabs(_extents[3+k] - _extents[k]));
     }
@@ -5160,6 +5158,12 @@ PDM_Mesh_nodal_compute_cell_extents
       _extents[k]   -= delta;
       _extents[3+k] += delta;
     }
+
+    /*printf("\tielt = %d, extents =", i);
+    for (int k = 0; k < 6; k++) {
+      printf(" %f", _extents[k]);
+    }
+    printf("\n");*/
 
     _extents += 6;
   }
