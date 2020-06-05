@@ -193,12 +193,26 @@ void
 PDM_dbbtree_location_boxes_get
 (
 PDM_dbbtree_t    *dbbt,
-const int        n_pts,        
+const int        n_pts,
 double           pts[],
 PDM_g_num_t      pts_g_num[],
-int             *box_index[],  
+int             *box_index[],
 PDM_g_num_t     *box_g_num[]
 );
+
+
+void PDM_dbbtree_points_inside_boxes
+(
+ PDM_dbbtree_t      *dbbt,
+ const int           n_pts,
+ PDM_g_num_t         pts_g_num[],
+ double              pts_coord[],
+ const int           n_boxes,
+ const PDM_g_num_t   box_g_num[],
+ int               **pts_in_box_idx,
+ PDM_g_num_t       **pts_in_box_g_num,
+ double            **pts_in_box_coord
+ );
 
 
 #ifdef __cplusplus

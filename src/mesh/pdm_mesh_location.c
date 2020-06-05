@@ -235,13 +235,7 @@ _location_points_in_boxes_octree
 
 
 
-
-
-
-
-
-
-
+#if 0
 static void
 _get_candidate_elements_from_dbbtree
 (
@@ -289,7 +283,7 @@ _get_candidate_elements_from_dbbtree
   free (pts_coord);
   free (pts_g_num);
 }
-
+#endif
 
 /*============================================================================
  * Public function definitions
@@ -952,9 +946,7 @@ PDM_mesh_location_compute
   PDM_timer_resume(location->timer);
 
 
-#if 1
-  assert (location->method == PDM_MESH_LOCATION_OCTREE);
-#endif
+
 
   PDM_dbbtree_t *dbbt = NULL;
   if (location->method == PDM_MESH_LOCATION_DBBTREE) {
@@ -1037,7 +1029,6 @@ PDM_mesh_location_compute
     switch (location->method) {
     case PDM_MESH_LOCATION_OCTREE:
       _location_points_in_boxes_octree (location->comm,
-                                        //pcloud,
                                         n_pts_pcloud,
                                         pcloud_g_num,
                                         pcloud_coord,
@@ -1047,11 +1038,28 @@ PDM_mesh_location_compute
                                         &pts_idx,
                                         &pts_g_num,
                                         &pts_coord);
-
       break;
 
     case PDM_MESH_LOCATION_DBBTREE:
-      /* ... */
+      /*_location_points_in_boxes_dbbtree (location->comm,
+                                         n_pts_pcloud,
+                                         pcloud_g_num,
+                                         pcloud_coord,
+                                         n_boxes,
+                                         box_g_num,
+                                         dbbt,
+                                         &pts_idx,
+                                         &pts_g_num,
+                                         &pts_coord);*/
+      PDM_dbbtree_points_inside_boxes (dbbt,
+                                       n_pts_pcloud,
+                                       pcloud_g_num,
+                                       pcloud_coord,
+                                       n_boxes,
+                                       box_g_num,
+                                       &pts_idx,
+                                       &pts_g_num,
+                                       &pts_coord);
       break;
 
     default:
@@ -1062,21 +1070,21 @@ PDM_mesh_location_compute
 
 
     if (DEBUG) {
-      printf("--- Pts in box ---\n");
+      printf("\n[%d] --- Pts in box ---\n", my_rank);
       for (ibox = 0; ibox < n_boxes; ibox++) {
 
         if (pts_idx[ibox+1] <= pts_idx[ibox]) {
           continue;
         }
 
-        printf("%d: ", ibox);
+        printf("[%d] %d (%ld): ", my_rank, ibox, box_g_num[ibox]);
         for (int i = pts_idx[ibox]; i < pts_idx[ibox+1]; i++) {
           printf("((%ld); %f %f %f) ",
                  pts_g_num[i], pts_coord[dim*i], pts_coord[dim*i+1], pts_coord[dim*i+2]);
         }
         printf("\n");
       }
-      printf("------------------\n\n\n");
+      printf("[%d] ------------------\n\n\n", my_rank);
     }
 
 
