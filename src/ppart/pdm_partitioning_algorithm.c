@@ -171,7 +171,6 @@ PDM_part_assemble_partitions
   /*
    * Exchange
    */
-  int*         pentity_stri         = NULL;
   PDM_g_num_t* pentity_ln_to_gn_tmp = NULL;
 
   PDM_part_to_block_exch (ptb_partition,
@@ -180,64 +179,40 @@ PDM_part_assemble_partitions
                           1,
                           &dentity_stri,
                 (void **) &dentity_ln_to_gn,
-                          &pentity_stri,
+                          pn_entity,
                 (void **) &pentity_ln_to_gn_tmp);
 
-  /*
-   * Free
-   */
   free(dentity_stri);
   free(dentity_ln_to_gn);
 
-  /*
-   *  Post-traitement
-   */
-  *pn_entity        = (int *         ) malloc( sizeof(int          ) * n_part_block);
+  /* Reshape pentity_ln_to_gn */
   *pentity_ln_to_gn = (PDM_g_num_t **) malloc( sizeof(PDM_g_num_t *) * n_part_block);
+  PDM_g_num_t **_pentity_ln_to_gn = *pentity_ln_to_gn;
 
-  int idx_part = 0;
+  int offset = 0;
   for(int i_part = 0; i_part < n_part_block; ++i_part){
 
-    /* Suralloc */
-    (*pentity_ln_to_gn)[i_part] = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) * pentity_stri[i_part]);
-    /* Shortcut for this part */
-    PDM_g_num_t* _pentity_ln_to_gn = (PDM_g_num_t *) (*pentity_ln_to_gn)[i_part];
+    int _pn_entity = (*pn_entity)[i_part];
+    _pentity_ln_to_gn[i_part] = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) * _pn_entity);
 
-    PDM_sort_long(&pentity_ln_to_gn_tmp[idx_part], NULL, pentity_stri[i_part]);
-
-    /* Compress */
-    int idx_new_cell = 0;
-    PDM_g_num_t last_value = 0; // 0 est une bonne valeur car les numero absolu son [N, -1] - |1, N] :p !
-    for(int i_elmt = 0; i_elmt < pentity_stri[i_part]; ++i_elmt){
-      if(last_value != pentity_ln_to_gn_tmp[idx_part+i_elmt]){
-        last_value = pentity_ln_to_gn_tmp[idx_part+i_elmt];
-        _pentity_ln_to_gn[idx_new_cell++] = last_value;
-      }
+    for(int i_elmt = 0; i_elmt < _pn_entity; ++i_elmt){
+        _pentity_ln_to_gn[i_part][i_elmt] = pentity_ln_to_gn_tmp[offset + i_elmt];
     }
 
-    /* For cell the size is the same - No compression */
-    assert(idx_new_cell ==  pentity_stri[i_part]);
-    (*pn_entity)[i_part] = idx_new_cell;
+    offset += _pn_entity;
 
-    /* Realloc */
-    idx_part += pentity_stri[i_part];
-
-    /*
-     * Panic verbose
-     */
+    /* Panic verbose */
     if(0 == 1){
       printf(" _pentity_ln_to_gn = ");
-      for(int i_data = 0; i_data < idx_new_cell; ++i_data){
-        printf("%d ", _pentity_ln_to_gn[i_data]);
+      for(int i_data = 0; i_data < _pn_entity; ++i_data){
+        printf("%d ", _pentity_ln_to_gn[i_part][i_data]);
       }
       printf("\n");
     }
-
   }
 
   PDM_part_to_block_free (ptb_partition);
 
-  free(pentity_stri);
   free(pentity_ln_to_gn_tmp);
   free(dpart_ln_to_gn);
   free(part_distribution_ptb);
