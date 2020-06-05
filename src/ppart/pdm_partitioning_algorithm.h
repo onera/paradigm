@@ -35,17 +35,19 @@ extern "C" {
  *============================================================================*/
 
 /**
- *  \brief Setup cell_ln_to_gn
- */
+ *  \brief Gather the entities splitted by the partitioner
+ *   (usually cells) to their attributed partition, using the array mapping
+ *   entities id to their assigned partition number.
+*/
 int
-PDM_generate_part_cell_ln_to_gn
+PDM_part_assemble_partitions
 (
  const PDM_MPI_Comm    comm,
- PDM_g_num_t          *part_distribution,
- PDM_g_num_t          *cell_distribution,
- int                  *cell_part,
- int                 **n_elmts,
- PDM_g_num_t        ***pcell_ln_to_gn
+ const PDM_g_num_t    *part_distribution,
+ const PDM_g_num_t    *entity_distribution,
+ const int            *dentity_to_part,
+       int           **pn_entity,
+       PDM_g_num_t  ***pentity_ln_to_gn
 );
 
 /**
