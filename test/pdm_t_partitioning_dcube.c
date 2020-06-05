@@ -409,12 +409,12 @@ int main(int argc, char *argv[])
   int** pcell_ln_to_gn;
   int*  pn_cell;
 
-  int n_res_part = PDM_generate_part_cell_ln_to_gn(comm,
-                                                   part_distribution,
-                                                   cell_distribution,
-                                                   cell_part,
-                                       (int ** )  &pn_cell,
-                                       (int ***)  &pcell_ln_to_gn);
+  int n_res_part = PDM_part_assemble_partitions(comm,
+                                                part_distribution,
+                                                cell_distribution,
+                                                cell_part,
+                                    (int ** )  &pn_cell,
+                                    (int ***)  &pcell_ln_to_gn);
 
   /*
    *  At this stage we have the cell_ln_to_gn :

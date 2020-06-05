@@ -89,36 +89,51 @@ static inline int _is_prime(int num)
 }
 
 /**
- *  \brief Setup cell_ln_to_gn
- */
+ *  \brief Gather the entities splitted by the partitioner
+ *   (usually cells) to their attributed partition, using the array mapping
+ *   entities id to their assigned partition number.
+ *   Each partition is hold by a (unique) process following the input partition
+ *   distribution. The connection between partition members and original entities
+ *   is made trought the local to global numbering computed by the function.
+ *
+ * \param [in]   comm                PDM_MPI communicator
+ * \param [in]   part_distribution   Distribution of partitions over the processes (size=n_rank+1)
+ * \param [in]   entity_distribution Distribution of entities over the processes (size=n_rank+1)
+ * \param [in]   entity_distribution Distribution of entities over the processes (size=n_rank+1)
+ * \param [in]   dentity_to_part     Id of assigned partition for each entity (size=dn_entity)
+ * \param [out]  pn_entities         Number of entities in each partition (size n_part)
+ * \param [out]  pentity_ln_to_gn    Array of local to global entity id for each partition (size n_part)
+ *
+ * \return       n_part              Number of partitions managed by this process
+*/
 int
-PDM_generate_part_cell_ln_to_gn
+PDM_part_assemble_partitions
 (
  const PDM_MPI_Comm    comm,
- PDM_g_num_t          *part_distribution,
- PDM_g_num_t          *cell_distribution,
- int                  *cell_part,
- int                 **n_elmts,
- PDM_g_num_t        ***pcell_ln_to_gn
+ const PDM_g_num_t    *part_distribution,
+ const PDM_g_num_t    *entity_distribution,
+ const int            *dentity_to_part,
+       int           **pn_entity,
+       PDM_g_num_t  ***pentity_ln_to_gn
 )
 {
-  printf("PDM_generate_part_cell_ln_to_gn\n");
+  printf("PDM_part_assemble_partitions\n");
   int i_rank;
   int n_rank;
 
   PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_size(comm, &n_rank);
 
-  // int dn_part = part_distribution[i_rank+1] -  part_distribution[i_rank];
-  int dn_cell = cell_distribution[i_rank+1] -  cell_distribution[i_rank];
+  int dn_part = part_distribution[i_rank+1] -  part_distribution[i_rank];
+  int dn_entity = entity_distribution[i_rank+1] -  entity_distribution[i_rank];
 
   /*
    * On recréer un tableau pourtant dans scotch et metis le part est en int64 ...
    *     Il faudrait changer le ext_dependancies ..
    */
-  PDM_g_num_t* dpart_ln_to_gn = (PDM_g_num_t * ) malloc( sizeof(PDM_g_num_t) * dn_cell );
-  for(int i = 0; i < dn_cell; ++i){
-    dpart_ln_to_gn[i] = (PDM_g_num_t) cell_part[i] + 1;
+  PDM_g_num_t* dpart_ln_to_gn = (PDM_g_num_t * ) malloc( sizeof(PDM_g_num_t) * dn_entity );
+  for(int i = 0; i < dn_entity; ++i){
+    dpart_ln_to_gn[i] = (PDM_g_num_t) dentity_to_part[i] + 1;
   }
 
   PDM_g_num_t* part_distribution_ptb = (PDM_g_num_t * ) malloc( sizeof(PDM_g_num_t) * (n_rank+1) );
@@ -127,7 +142,7 @@ PDM_generate_part_cell_ln_to_gn
   }
 
   /*
-   * The tricks is to use part_to_block with the part_distribution to have n_part stride of data
+   * Each proc get all the entities affected to its partitions
    */
   PDM_part_to_block_t *ptb_partition =
    PDM_part_to_block_create2(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
@@ -135,90 +150,85 @@ PDM_generate_part_cell_ln_to_gn
                              1.,
                              &dpart_ln_to_gn,
                               part_distribution_ptb,
-                             &dn_cell,
+                             &dn_entity,
                              1,
                              comm);
 
   const int n_part_block = PDM_part_to_block_n_elt_block_get (ptb_partition);
-
+  assert(n_part_block == dn_part);
   /*
-   * Generate cell_ln_to_gn
+   * Generate global numbering
    */
-  int* dcell_stri = (int *) malloc( sizeof(int) * dn_cell );
-  PDM_g_num_t* dcell_ln_to_gn = (PDM_g_num_t * ) malloc( sizeof(PDM_g_num_t) * dn_cell );
+  int*             dentity_stri = (int *)          malloc( sizeof(int)         * dn_entity );
+  PDM_g_num_t* dentity_ln_to_gn = (PDM_g_num_t * ) malloc( sizeof(PDM_g_num_t) * dn_entity );
 
-  PDM_g_num_t shift_g = cell_distribution[i_rank];
-  for(int i = 0; i < dn_cell; ++i){
-    dcell_stri[i] = 1;
-    dcell_ln_to_gn[i] = (PDM_g_num_t) shift_g + i;
+  PDM_g_num_t shift_g = entity_distribution[i_rank];
+  for(int i = 0; i < dn_entity; ++i){
+    dentity_stri[i]     = 1;
+    dentity_ln_to_gn[i] = (PDM_g_num_t) shift_g + i;
   }
 
   /*
    * Exchange
    */
-  int*         pcell_stri         = NULL;
-  PDM_g_num_t* pcell_ln_to_gn_tmp = NULL;
+  int*         pentity_stri         = NULL;
+  PDM_g_num_t* pentity_ln_to_gn_tmp = NULL;
 
   PDM_part_to_block_exch (ptb_partition,
                           sizeof(PDM_g_num_t),
                           PDM_STRIDE_VAR,
                           1,
-                          &dcell_stri,
-                (void **) &dcell_ln_to_gn,
-                          &pcell_stri,
-                (void **) &pcell_ln_to_gn_tmp);
+                          &dentity_stri,
+                (void **) &dentity_ln_to_gn,
+                          &pentity_stri,
+                (void **) &pentity_ln_to_gn_tmp);
 
   /*
    * Free
    */
-  free(dcell_stri);
-  free(dcell_ln_to_gn);
+  free(dentity_stri);
+  free(dentity_ln_to_gn);
 
   /*
    *  Post-traitement
    */
-  *n_elmts        = (int *         ) malloc( sizeof(int          ) * n_part_block);
-  *pcell_ln_to_gn = (PDM_g_num_t **) malloc( sizeof(PDM_g_num_t *) * n_part_block);
-
-  /*
-   *  Shortcut
-   */
-  int*          _n_elmts       = (int *) *n_elmts;
-  PDM_g_num_t** _cell_ln_to_gn = (PDM_g_num_t ** ) *pcell_ln_to_gn;
+  *pn_entity        = (int *         ) malloc( sizeof(int          ) * n_part_block);
+  *pentity_ln_to_gn = (PDM_g_num_t **) malloc( sizeof(PDM_g_num_t *) * n_part_block);
 
   int idx_part = 0;
   for(int i_part = 0; i_part < n_part_block; ++i_part){
 
     /* Suralloc */
-    _cell_ln_to_gn[i_part] = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) * pcell_stri[i_part]);
-    PDM_g_num_t* _part_ln_to_gn = (PDM_g_num_t *) _cell_ln_to_gn[i_part];
+    (*pentity_ln_to_gn)[i_part] = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) * pentity_stri[i_part]);
+    /* Shortcut for this part */
+    PDM_g_num_t* _pentity_ln_to_gn = (PDM_g_num_t *) (*pentity_ln_to_gn)[i_part];
 
-    PDM_sort_long(&pcell_ln_to_gn_tmp[idx_part], NULL, pcell_stri[i_part]);
+    PDM_sort_long(&pentity_ln_to_gn_tmp[idx_part], NULL, pentity_stri[i_part]);
 
     /* Compress */
     int idx_new_cell = 0;
     PDM_g_num_t last_value = 0; // 0 est une bonne valeur car les numero absolu son [N, -1] - |1, N] :p !
-    for(int i_cell = 0; i_cell < pcell_stri[i_part]; ++i_cell){
-      if(last_value != pcell_ln_to_gn_tmp[idx_part+i_cell]){
-        last_value = pcell_ln_to_gn_tmp[idx_part+i_cell];
-        _part_ln_to_gn[idx_new_cell++] = last_value;
+    for(int i_elmt = 0; i_elmt < pentity_stri[i_part]; ++i_elmt){
+      if(last_value != pentity_ln_to_gn_tmp[idx_part+i_elmt]){
+        last_value = pentity_ln_to_gn_tmp[idx_part+i_elmt];
+        _pentity_ln_to_gn[idx_new_cell++] = last_value;
       }
     }
 
     /* For cell the size is the same - No compression */
-    assert(idx_new_cell ==  pcell_stri[i_part]);
-    _n_elmts[i_part] = idx_new_cell;
+    assert(idx_new_cell ==  pentity_stri[i_part]);
+    (*pn_entity)[i_part] = idx_new_cell;
 
     /* Realloc */
-    idx_part += pcell_stri[i_part];
+    idx_part += pentity_stri[i_part];
 
     /*
      * Panic verbose
      */
     if(0 == 1){
-      printf(" _part_ln_to_gn = ");
+      printf(" _pentity_ln_to_gn = ");
       for(int i_data = 0; i_data < idx_new_cell; ++i_data){
-        printf("%d ", _part_ln_to_gn[i_data]);
+        printf("%d ", _pentity_ln_to_gn[i_data]);
       }
       printf("\n");
     }
@@ -227,8 +237,8 @@ PDM_generate_part_cell_ln_to_gn
 
   PDM_part_to_block_free (ptb_partition);
 
-  free(pcell_stri);
-  free(pcell_ln_to_gn_tmp);
+  free(pentity_stri);
+  free(pentity_ln_to_gn_tmp);
   free(dpart_ln_to_gn);
   free(part_distribution_ptb);
 
