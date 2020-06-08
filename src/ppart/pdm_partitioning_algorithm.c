@@ -352,7 +352,8 @@ PDM_generate_part_face_group_ln_to_gn
   int idx_data = 0;
   int idx_stri = 0;
   for(int i_group = 0; i_group < n_face_group; ++i_group) {
-    for(int i_face = dface_group_idx[i_group]; i_face < dface_group_idx[i_group+1]; ++i_face ) {
+    int dn_face_group = dface_group_idx[i_group+1] - dface_group_idx[i_group];
+    for(int i_face = 0; i_face < dn_face_group; ++i_face ) {
       part_data[idx_data++] = i_group;
       part_data[idx_data++] = i_face + face_group_distribution[i_group][i_rank]; /* Numero dans le tableau distribue */
       part_stri[idx_stri++] = 2;
@@ -494,8 +495,7 @@ PDM_generate_part_face_group_ln_to_gn
      */
     int idx_face_bnd = 0;
     for(int i_face = 0; i_face < n_faces[i_part]; ++i_face){
-      // TODO : multiple group per face
-      if(part_face_group_stri[i_part][i_face] > 0 ){
+      for(int j = 0; j < part_face_group_stri[i_part][i_face]; j+=2){
         PDM_g_num_t i_group = part_face_group_data[i_part][idx_face_bnd];
         _face_group_idx[i_part][i_group+1] += 1;
         idx_face_bnd += 2;
@@ -530,7 +530,7 @@ PDM_generate_part_face_group_ln_to_gn
      */
     idx_face_bnd = 0;
     for(int i_face = 0; i_face < n_faces[i_part]; ++i_face){
-      if(part_face_group_stri[i_part][i_face] > 0 ){
+      for(int j = 0; j < part_face_group_stri[i_part][i_face]; j+=2){
         PDM_g_num_t i_group = part_face_group_data[i_part][idx_face_bnd  ];
         PDM_g_num_t g_face  = part_face_group_data[i_part][idx_face_bnd+1];
 
