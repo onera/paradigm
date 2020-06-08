@@ -502,17 +502,18 @@ int main(int argc, char *argv[])
   PDM_g_num_t** pface_group_ln_to_gn;
   int** pface_group;
   int** pface_group_idx;
-  PDM_generate_part_face_group_ln_to_gn(comm,
-                                        face_distribution,
-                                        dface_group_idx,
-                                        dface_group,
-                                        n_res_part,
-                                        n_face_group,
-                                        pn_faces,
-                                        pface_ln_to_gn,
-                     (PDM_g_num_t ***) &pface_group_ln_to_gn,
-                     (int         ***) &pface_group,
-                     (int         ***) &pface_group_idx);
+
+  PDM_part_distgroup_to_partgroup(comm,
+                                  face_distribution,
+                                  n_face_group,
+                                  dface_group_idx,
+                                  dface_group,
+                                  n_res_part,
+                                  pn_faces,
+                                  pface_ln_to_gn,
+                (int         ***) &pface_group_idx,
+                (int         ***) &pface_group,
+                (PDM_g_num_t ***) &pface_group_ln_to_gn);
 
   /*
    *  Edge

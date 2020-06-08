@@ -68,19 +68,19 @@ PDM_part_reverse_pcellface
  *  \brief Setup cell_ln_to_gn
  */
 void
-PDM_generate_part_face_group_ln_to_gn
+PDM_part_distgroup_to_partgroup
 (
- const PDM_MPI_Comm    comm,
- PDM_g_num_t          *face_distribution,
- int                  *dface_group_idx,
- PDM_g_num_t          *dface_group,
- int                   n_part,
- int                   n_face_group,
- int                  *n_faces,
- PDM_g_num_t         **pface_ln_to_gn,
- PDM_g_num_t        ***pface_group_ln_to_gn,
- int                ***pface_group,
- int                ***pface_group_idx
+ const PDM_MPI_Comm      comm,
+ const PDM_g_num_t      *entity_distribution,
+ const int               n_group,
+ const int              *dgroup_idx,
+ const PDM_g_num_t      *dgroup,
+ const int               n_part,
+ const int              *pn_entity,
+ const PDM_g_num_t     **pentity_ln_to_gn,
+       int            ***pgroup_idx,
+       int            ***pgroup,
+       PDM_g_num_t    ***pgroup_ln_to_gn
 );
 
 /**
