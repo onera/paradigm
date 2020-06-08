@@ -393,12 +393,13 @@ int main(int argc, char *argv[])
                        cell_part,
                        comm);
 
-
-  printf("cell_part[%d]::", dn_cell);
-  for(int i = 0; i < dn_cell; ++i){
-    printf("%d ", cell_part[i]);
+  if (0==1){
+    printf("cell_part[%d]::", dn_cell);
+    for(int i = 0; i < dn_cell; ++i){
+      printf("%d ", cell_part[i]);
+    }
+    printf("\n");
   }
-  printf("\n");
 
   /*
    * On dispose pour chaque cellule de la partition associé : il faut retrouver le
@@ -475,8 +476,8 @@ int main(int argc, char *argv[])
                                     dface_vtx_idx,
                                     dface_vtx,
                                     n_res_part,
-                                    pn_cell,
-                                    pcell_ln_to_gn,
+                                    pn_faces,
+                                    pface_ln_to_gn,
                 (int         ** )  &pn_vtx,
                 (PDM_g_num_t ***)  &pvtx_ln_to_gn,
                 (int         ***)  &pface_vtx_idx,
