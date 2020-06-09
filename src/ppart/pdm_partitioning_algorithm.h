@@ -141,6 +141,24 @@ PDM_generate_entity_graph_comm
  int                ***pentity_bound_idx
 );
 
+/**
+ *  \brief Recover partitioned coordinates from distributed coordinates and
+ *   vertex ln_to_gn indirection.
+ *   This function basically calls PDM_block_to_part on to exchange vertex coordinates.
+ *
+ */
+void
+PDM_part_dcoordinates_to_pcoordinates
+(
+  const PDM_MPI_Comm    comm,
+  const int             n_part,
+  const int            *vertex_distribution,
+  const double         *dvtx_coord,
+  const int            *pn_vtx,
+  const int           **pvtx_ln_to_gn,
+        double       ***pvtx_coord
+);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

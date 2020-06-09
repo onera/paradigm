@@ -203,7 +203,7 @@ PDM_part_assemble_partitions
 
     /* Panic verbose */
     if(0 == 1){
-      printf(" _pentity_ln_to_gn = ");
+      printf("[%i] _pentity_ln_to_gn = ", i_rank);
       for(int i_data = 0; i_data < _pn_entity; ++i_data){
         printf("%d ", _pentity_ln_to_gn[i_part][i_data]);
       }
@@ -440,9 +440,9 @@ PDM_part_distgroup_to_partgroup
    *  Maintenant on peut faire un block_to_part sur le entity_ln_to_gn (le vrai) pour recuperer pour chaque partition
    *    le group
    */
-  if( 0 == 1){
+  if(0 == 1){
     for(int i_part = 0; i_part < n_part; ++i_part) {
-      printf("[%d] pentity_ln_to_gn:: ", i_part);
+      printf("[%i][%d] pentity_ln_to_gn:: ", i_rank, i_part);
       for(int i_elmt = 0; i_elmt < pn_entity[i_part]; ++i_elmt){
         printf("%d ", pentity_ln_to_gn[i_part][i_elmt]);
       }
@@ -542,7 +542,7 @@ PDM_part_distgroup_to_partgroup
      */
     if( 0 == 1){
       printf("pgroup_tot_size::%d\n", pgroup_tot_size );
-      printf("[%d] _group_idx::\n", i_part );
+      printf("[%d][%d] _group_idx::\n", i_rank, i_part );
       for(int i_group = 0; i_group < n_group+1; ++i_group){
         printf("%d ", _group_idx[i_part][i_group]);
       }
@@ -567,16 +567,15 @@ PDM_part_distgroup_to_partgroup
         idx_elmt += 2;
       }
     }
-
   }
 
 
   /*
    * Panic verbose
    */
-  if(0 == 1 ){
+  if( 0 == 1 ){
     for(int i_part = 0; i_part < n_part; ++i_part) {
-      printf("[%d] Boundary \n", i_part);
+      printf("[%i][%d] Groups \n", i_rank, i_part);
       for(int i_group = 0; i_group < n_group; ++i_group){
         printf("\t [%d]_group::", i_group);
         for(int idx = _group_idx[i_part][i_group]; idx < _group_idx[i_part][i_group+1]; ++idx){
@@ -1406,7 +1405,64 @@ PDM_generate_entity_graph_comm
 
 
 }
+/**
+ *  \brief Recover partitioned coordinates from distributed coordinates and
+ *   vertex ln_to_gn indirection.
+ *   This function basically calls PDM_block_to_part on to exchange vertex coordinates.
+ *
+ * \param [in]   comm                PDM_MPI communicator
+ * \param [in]   n_part              Number of partitions
+ * \param [in]   vertex_distribution Distribution of vertices over the processes (size=n_rank+1)
+ * \param [in]   dvtx_coord          Coordinates of distributed vertices (size=3*dn_vtx)
+ * \param [in]   pn_vtx              Number of vertices in each partition (size=n_part)
+ * \param [in]   pvtx_ln_to_gn       For each part, position of vertices in the global numbering
+ *                                   (size = n_part, each component size = pn_vtx[i_part])
+ * \param [out]  pvtx_coord          Coordinates of partitioned vertices for each partition
+ *                                   (size = n_part, each component size = 3*pn_vtx[i_part])
+*/
+void
+PDM_part_dcoordinates_to_pcoordinates
+(
+  const PDM_MPI_Comm    comm,
+  const int             n_part,
+  const int            *vertex_distribution,
+  const double         *dvtx_coord,
+  const int            *pn_vtx,
+  const int           **pvtx_ln_to_gn,
+        double       ***pvtx_coord
+)
+{
+  int i_rank;
+  int n_rank;
 
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  PDM_MPI_Comm_size(comm, &n_rank);
+
+  PDM_g_num_t* vtx_distribution_ptb = (PDM_g_num_t * ) malloc( sizeof(PDM_g_num_t) * (n_rank+1) );
+  for(int i = 0; i < n_rank+1; ++i){
+    vtx_distribution_ptb[i] = vertex_distribution[i] - 1;
+  }
+
+  PDM_block_to_part_t* btp = PDM_block_to_part_create(vtx_distribution_ptb,
+                               (const PDM_g_num_t **) pvtx_ln_to_gn,
+                                                      pn_vtx,
+                                                      n_part,
+                                                      comm);
+  int dn_vtx = vtx_distribution_ptb[i_rank+1] - vtx_distribution_ptb[i_rank];
+
+  int cst_stride = 3;
+  int **pvtx_stride = NULL;
+  PDM_block_to_part_exch2(btp,
+                          sizeof(double),
+                          PDM_STRIDE_CST,
+                          &cst_stride,
+             (void *  )   dvtx_coord,
+             (int  ***)  &pvtx_stride,
+             (void ***)   pvtx_coord);
+
+  PDM_block_to_part_free(btp);
+  free(vtx_distribution_ptb);
+}
 
 #ifdef __cplusplus
 }
