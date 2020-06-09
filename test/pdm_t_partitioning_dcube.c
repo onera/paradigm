@@ -430,18 +430,17 @@ int main(int argc, char *argv[])
   int*  pn_faces;
   PDM_g_num_t** pface_ln_to_gn = NULL;
 
-  PDM_generate_part_entity_ln_to_gn_hash(comm,
-                                    part_distribution,
-                                    cell_distribution,
-                                    dcell_face_idx,
-                                    dcell_face,
-                                    n_res_part,
-                                    pn_cell,
-                                    pcell_ln_to_gn,
-                (int         ** )  &pn_faces,
-                (PDM_g_num_t ***)  &pface_ln_to_gn,
-                (int         ***)  &pcell_face_idx,
-                (int         ***)  &pcell_face);
+  PDM_part_dconnectivity_to_pconnectivity_sort(comm,
+                                               cell_distribution,
+                                               dcell_face_idx,
+                                               dcell_face,
+                                               n_res_part,
+                                               pn_cell,
+                                               pcell_ln_to_gn,
+                           (int         ** )  &pn_faces,
+                           (PDM_g_num_t ***)  &pface_ln_to_gn,
+                           (int         ***)  &pcell_face_idx,
+                           (int         ***)  &pcell_face);
 
   int **pface_cell;
   PDM_part_reverse_pcellface(n_res_part,
@@ -470,18 +469,17 @@ int main(int argc, char *argv[])
   int*  pn_vtx;
   PDM_g_num_t** pvtx_ln_to_gn = NULL;
 
-  PDM_generate_part_entity_ln_to_gn_hash(comm,
-                                    part_distribution,
-                                    face_distribution,
-                                    dface_vtx_idx,
-                                    dface_vtx,
-                                    n_res_part,
-                                    pn_faces,
-                                    pface_ln_to_gn,
-                (int         ** )  &pn_vtx,
-                (PDM_g_num_t ***)  &pvtx_ln_to_gn,
-                (int         ***)  &pface_vtx_idx,
-                (int         ***)  &pface_vtx);
+  PDM_part_dconnectivity_to_pconnectivity_sort(comm,
+                                               face_distribution,
+                                               dface_vtx_idx,
+                                               dface_vtx,
+                                               n_res_part,
+                                               pn_faces,
+                                               pface_ln_to_gn,
+                           (int         ** )  &pn_vtx,
+                           (PDM_g_num_t ***)  &pvtx_ln_to_gn,
+                           (int         ***)  &pface_vtx_idx,
+                           (int         ***)  &pface_vtx);
 
   double **pvtx_coord = NULL;
   PDM_g_num_t* vtx_distribution = PDM_compute_entity_distribution(comm, dn_vtx);

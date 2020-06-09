@@ -99,7 +99,6 @@ static inline int _is_prime(int num)
  * \param [in]   comm                PDM_MPI communicator
  * \param [in]   part_distribution   Distribution of partitions over the processes (size=n_rank+1)
  * \param [in]   entity_distribution Distribution of entities over the processes (size=n_rank+1)
- * \param [in]   entity_distribution Distribution of entities over the processes (size=n_rank+1)
  * \param [in]   dentity_to_part     Id of assigned partition for each entity (size=dn_entity)
  * \param [out]  pn_entities         Number of entities in each partition (size n_part)
  * \param [out]  pentity_ln_to_gn    Array of local to global entity id for each partition (size n_part)
@@ -615,69 +614,89 @@ PDM_part_distgroup_to_partgroup
 
 
 /**
- *  \brief Setup cell_ln_to_gn
- */
+ *  \brief Generated the partitioned connectivity (entity->child_elements) associated
+ *   to the given distributed connectivity, using element distribution and element local
+ *   to global numbering. In addition, return the partitioned number of unique child_element
+ *   and the corresponding local to global numbering for the child elements.
+ *
+ *   The orientation data (ie negative index) present in the distributed connectivity,
+ *   if any, are preserved, *meaning that boundary faces can be badly oriented on partitions*.
+ *
+ * \param [in]   comm                PDM_MPI communicator
+ * \param [in]   entity_distribution Distribution of entities over the processes (size=n_rank+1)
+ * \param [in]   dconnectivity_idx   Distributed connectivity indexes (size=dn_entity+1)
+ * \param [in]   dconnectivity       Distributed connectivity (size=dconnectivity_idx[dn_entity])
+ * \param [in]   n_part              Number of partitions
+ * \param [in]   pn_entity           Number of entities in each partition (size=n_part)
+ * \param [in]   pentity_ln_to_gn    Array of local to global entity id for each partition
+ *                                   (size=n_part, each component size = pn_entities[i_part])
+ * \param [out]  pn_child_entity     Number of (unique) child elements in each partition (size=n_part)
+ * \param [out]  pchild_ln_to_gn     For each part, position of child entity in the original array
+ *                                   (size = n_part, each component size = pn_child_entity[i_part])
+ * \param [out]  pconnectivity_idx   For each part, partitioned connectivity indexes
+ *                                   (size = n_part, each component size = pn_entity[i_part])
+ * \param [out]  pconnectivity       For each part, partitioned connectivity (size = n_part,
+ *                                   each component size = pconnectivity_idx[i_part][pn_entity[i_part]])
+*/
 void
-PDM_generate_part_entity_ln_to_gn_sort
+PDM_part_dconnectivity_to_pconnectivity_sort
 (
  const PDM_MPI_Comm    comm,
- PDM_g_num_t          *part_distribution,
- PDM_g_num_t          *cell_distribution,
- int                  *dcell_face_idx,
- PDM_g_num_t          *dcell_face,
- int                   n_part,
- int                  *n_elmts,
- PDM_g_num_t         **pcell_ln_to_gn,
- int                 **n_faces,
- PDM_g_num_t        ***pface_ln_to_gn,
- int                ***pcell_face_idx,
- int                ***pcell_face
+ const PDM_g_num_t    *entity_distribution,
+ const int            *dconnectivity_idx,
+ const PDM_g_num_t    *dconnectivity,
+ const int             n_part,
+ const int            *pn_entity,
+ const PDM_g_num_t   **pentity_ln_to_gn,
+       int           **pn_child_entity,
+       PDM_g_num_t  ***pchild_ln_to_gn,
+       int          ***pconnectivity_idx,
+       int          ***pconnectivity
 )
 {
-  printf("PDM_generate_part_entity_ln_to_gn\n");
+  printf("PDM_part_dconnectivity_to_pconnectivity\n");
   int i_rank;
   int n_rank;
 
   PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_size(comm, &n_rank);
 
-  // int dn_part = part_distribution[i_rank+1] -  part_distribution[i_rank];
-  int dn_cell = cell_distribution[i_rank+1] -  cell_distribution[i_rank];
+  int dn_entity = entity_distribution[i_rank+1] - entity_distribution[i_rank];
 
-  PDM_g_num_t* cell_distribution_ptb = (PDM_g_num_t * ) malloc( sizeof(PDM_g_num_t) * (n_rank+1) );
+  PDM_g_num_t* entity_distribution_ptb = (PDM_g_num_t * ) malloc( sizeof(PDM_g_num_t) * (n_rank+1) );
   for(int i = 0; i < n_rank+1; ++i){
-    cell_distribution_ptb[i] = cell_distribution[i] - 1;
+    entity_distribution_ptb[i] = entity_distribution[i] - 1;
   }
 
   /*
    * Prepare exchange protocol
    */
-  PDM_block_to_part_t* btp = PDM_block_to_part_create(cell_distribution_ptb,
-                               (const PDM_g_num_t **) pcell_ln_to_gn,
-                                                      n_elmts,
+  PDM_block_to_part_t* btp = PDM_block_to_part_create(entity_distribution_ptb,
+                               (const PDM_g_num_t **) pentity_ln_to_gn,
+                                                      pn_entity,
                                                       n_part,
                                                       comm);
 
   /*
    * Prepare data
    */
-  int* blk_stri = (int *) malloc( sizeof(int) * dn_cell);
-  for(int i_cell = 0; i_cell < dn_cell; ++i_cell){
-    blk_stri[i_cell] = dcell_face_idx[i_cell+1] - dcell_face_idx[i_cell];
+  int* blk_stri = (int *) malloc( sizeof(int) * dn_entity);
+  for(int i_elmt = 0; i_elmt < dn_entity; ++i_elmt){
+    blk_stri[i_elmt] = dconnectivity_idx[i_elmt+1] - dconnectivity_idx[i_elmt];
   }
 
   /*
    * Exchange
    */
-  int**         cell_stri;
-  PDM_g_num_t** pcell_face_tmp; /* We keep it in double precision because it contains global numbering */
+  int**         pstride;
+  PDM_g_num_t** pconnectivity_tmp; /* We keep it in double precision because it contains global numbering */
   PDM_block_to_part_exch2(btp,
                           sizeof(PDM_g_num_t),
                           PDM_STRIDE_VAR,
                           blk_stri,
-             (void *  )   dcell_face,
-             (int  ***)  &cell_stri,
-             (void ***)  &pcell_face_tmp);
+             (void *  )   dconnectivity,
+             (int  ***)  &pstride,
+             (void ***)  &pconnectivity_tmp);
 
   free(blk_stri);
 
@@ -687,11 +706,11 @@ PDM_generate_part_entity_ln_to_gn_sort
   if(0 == 1){
     for(int i_part = 0; i_part < n_part; ++i_part){
       int idx_data = 0;
-      printf("[%d] cell_face:: \n", i_part);
-      for(int i_cell = 0; i_cell < n_elmts[i_part]; ++i_cell) {
-        printf("[%d] --> ", cell_stri[i_part][i_cell]);
-        for(int i_data = 0; i_data < cell_stri[i_part][i_cell]; ++i_data ){
-          printf("%d ", pcell_face_tmp[i_part][idx_data++] );
+      printf("[%d] pconnectivity_tmp:: \n", i_part);
+      for(int i_elmt = 0; i_elmt < pn_entity[i_part]; ++i_elmt) {
+        printf("[%d] --> ", pstride[i_part][i_elmt]);
+        for(int i_data = 0; i_data < pstride[i_part][i_elmt]; ++i_data ){
+          printf("%d ", pconnectivity_tmp[i_part][idx_data++] );
         }
         printf("\n");
       }
@@ -703,42 +722,40 @@ PDM_generate_part_entity_ln_to_gn_sort
   /*
    * Post-treatment - Caution the recv connectivity can be negative
    */
-  *pface_ln_to_gn = (PDM_g_num_t **) malloc( n_part * sizeof(PDM_g_num_t *) );
-  *pcell_face     = (int         **) malloc( n_part * sizeof(int         *) );
-  *pcell_face_idx = (int         **) malloc( n_part * sizeof(int         *) );
-  *n_faces        = (int          *) malloc( n_part * sizeof(int          ) );
+  *pchild_ln_to_gn   = (PDM_g_num_t **) malloc( n_part * sizeof(PDM_g_num_t *) );
+  *pconnectivity     = (int         **) malloc( n_part * sizeof(int         *) );
+  *pconnectivity_idx = (int         **) malloc( n_part * sizeof(int         *) );
+  *pn_child_entity   = (int          *) malloc( n_part * sizeof(int          ) );
 
   /* Shortcut */
-  PDM_g_num_t** _face_ln_to_gn = *pface_ln_to_gn;
-  int** _cell_face             = *pcell_face;
-  int** _cell_face_idx         = *pcell_face_idx;
-  int*  _n_faces               = *n_faces;
+  PDM_g_num_t** _pchild_ln_to_gn = *pchild_ln_to_gn;
+  int** _pconnectivity           = *pconnectivity;
+  int** _pconnectivity_idx       = *pconnectivity_idx;
+  int*  _pn_child_entity         = *pn_child_entity;
 
   for(int i_part = 0; i_part < n_part; ++i_part){
 
+    int n_elmts = pn_entity[i_part];
     /*
      *  First loop to count and setup part_strid_idx
      */
-    _cell_face_idx[i_part] = (int *) malloc( (n_elmts[i_part] + 1) * sizeof(int) );
-    _cell_face_idx[i_part][0] = 0;
-    for(int i_cell = 0; i_cell < n_elmts[i_part]; ++i_cell) {
-      _cell_face_idx[i_part][i_cell+1] = _cell_face_idx[i_part][i_cell] + cell_stri[i_part][i_cell];
+    _pconnectivity_idx[i_part] = (int *) malloc( (n_elmts + 1) * sizeof(int) );
+    _pconnectivity_idx[i_part][0] = 0;
+    for(int i_elmt = 0; i_elmt < n_elmts; ++i_elmt) {
+      _pconnectivity_idx[i_part][i_elmt+1] = _pconnectivity_idx[i_part][i_elmt] + pstride[i_part][i_elmt];
     }
 
 
     /*
      * Save array
      */
-    _face_ln_to_gn[i_part] = (PDM_g_num_t *) malloc( _cell_face_idx[i_part][n_elmts[i_part]] * sizeof(PDM_g_num_t));
-    _cell_face[i_part]     = (int *        ) malloc( _cell_face_idx[i_part][n_elmts[i_part]] * sizeof(int        ));
-
-    PDM_g_num_t* _pface_ln_to_gn = _face_ln_to_gn[i_part];
-    int*         _pcell_face     = _cell_face[i_part];
+    _pchild_ln_to_gn[i_part] = (PDM_g_num_t *) malloc( _pconnectivity_idx[i_part][n_elmts] * sizeof(PDM_g_num_t));
+    _pconnectivity[i_part]   = (int *        ) malloc( _pconnectivity_idx[i_part][n_elmts] * sizeof(int        ));
 
     int idx_data = 0;
-    for(int i_cell = 0; i_cell < n_elmts[i_part]; ++i_cell) {
-      for(int i_data = 0; i_data < cell_stri[i_part][i_cell]; ++i_data ){
-        _pface_ln_to_gn[idx_data++] = PDM_ABS(pcell_face_tmp[i_part][idx_data]);
+    for(int i_elmt = 0; i_elmt < n_elmts; ++i_elmt) {
+      for(int i_data = 0; i_data < pstride[i_part][i_elmt]; ++i_data ){
+        _pchild_ln_to_gn[i_part][idx_data++] = PDM_ABS(pconnectivity_tmp[i_part][idx_data]);
       }
     }
 
@@ -747,14 +764,14 @@ PDM_generate_part_entity_ln_to_gn_sort
      */
     // printf("Sort data between : 0 and %d \n", idx_data);
     int* unique_order = (int *) malloc( idx_data * sizeof(int));
-    int n_elmt_sort = PDM_inplace_unique_long2(_pface_ln_to_gn, unique_order, 0, idx_data-1);
-    _n_faces[i_part] = n_elmt_sort;
+    int n_elmt_sort = PDM_inplace_unique_long2(_pchild_ln_to_gn[i_part], unique_order, 0, idx_data-1);
+    _pn_child_entity[i_part] = n_elmt_sort;
 
     if(0 == 1 && i_rank == 0){
       printf("n_elmt_sort::%d\n", n_elmt_sort);
-      printf("_pface_ln_to_gn::");
+      printf("_pchild_ln_to_gn::");
       for(int i = 0; i < n_elmt_sort; ++i){
-        printf("%d ", _pface_ln_to_gn[i]);
+        printf("%d ", _pchild_ln_to_gn[i_part][i]);
       }
       printf("\n");
     }
@@ -762,8 +779,7 @@ PDM_generate_part_entity_ln_to_gn_sort
     /*
      * Realloc
      */
-    _face_ln_to_gn[i_part] = (PDM_g_num_t *) realloc(_face_ln_to_gn[i_part], n_elmt_sort * sizeof(PDM_g_num_t) );
-    _pface_ln_to_gn = _face_ln_to_gn[i_part];
+    _pchild_ln_to_gn[i_part] = (PDM_g_num_t *) realloc(_pchild_ln_to_gn[i_part], n_elmt_sort * sizeof(PDM_g_num_t) );
 
     /*
      *  We need to regenerate the connectivity and pass it in local numbering
@@ -775,12 +791,12 @@ PDM_generate_part_entity_ln_to_gn_sort
     //     int         g_sgn  = PDM_SIGN(pcell_face_tmp[i_part][idx_data]);
     //     PDM_g_num_t g_elmt = PDM_ABS (pcell_face_tmp[i_part][idx_data]);
     //     int l_elmt         = unique_order[idx_data];
-    //     int l_elmt_old     = PDM_binary_search_long(g_elmt, _pface_ln_to_gn, n_elmt_sort); /* In [0, n_elmt_sort-1] */
+    //     int l_elmt_old     = PDM_binary_search_long(g_elmt, _pchild_ln_to_gn[i_part], n_elmt_sort); /* In [0, n_elmt_sort-1] */
 
     //     // printf("[%d] - Search [%d] --> %d | %d \n", idx_data, g_elmt, l_elmt, l_elmt_old);
 
     //     /* Overwrite the pcell_face with local numbering and reput sign on it */
-    //     _pcell_face[idx_data++] = (l_elmt + 1) * g_sgn ;
+    //     _pconnectivity[i_part][idx_data++] = (l_elmt + 1) * g_sgn ;
     //   }
     // }
 
@@ -788,10 +804,10 @@ PDM_generate_part_entity_ln_to_gn_sort
      * Overpowered loop
      */
     #pragma simd
-    for(int idx = 0; idx < _cell_face_idx[i_part][n_elmts[i_part]]; ++idx) {
-      int g_sgn  = PDM_SIGN(pcell_face_tmp[i_part][idx]);
+    for(int idx = 0; idx < _pconnectivity_idx[i_part][n_elmts]; ++idx) {
+      int g_sgn  = PDM_SIGN(pconnectivity_tmp[i_part][idx]);
       int l_elmt = unique_order[idx];
-      _pcell_face[idx] = (l_elmt + 1) * g_sgn ;
+      _pconnectivity[i_part][idx] = (l_elmt + 1) * g_sgn ;
     }
 
     free(unique_order);
@@ -804,11 +820,11 @@ PDM_generate_part_entity_ln_to_gn_sort
   if(0 == 1){
     for(int i_part = 0; i_part < n_part; ++i_part){
       int idx_data = 0;
-      printf("[%d] cell_face:: \n", i_part);
-      for(int i_cell = 0; i_cell < n_elmts[i_part]; ++i_cell) {
-        printf("[%d] --> ", cell_stri[i_part][i_cell]);
-        for(int i_data = 0; i_data < cell_stri[i_part][i_cell]; ++i_data ){
-          printf("%d ", (*pcell_face)[i_part][idx_data++] );
+      printf("[%d] pconnectivity:: \n", i_part);
+      for(int i_cell = 0; i_cell < pn_entity[i_part]; ++i_cell) {
+        printf("[%d] --> ", pstride[i_part][i_cell]);
+        for(int i_data = 0; i_data < pstride[i_part][i_cell]; ++i_data ){
+          printf("%d ", (*pconnectivity)[i_part][idx_data++] );
         }
         printf("\n");
       }
@@ -820,80 +836,99 @@ PDM_generate_part_entity_ln_to_gn_sort
    * Free
    */
   PDM_block_to_part_free(btp);
-  free(cell_distribution_ptb);
+  free(entity_distribution_ptb);
   for(int i_part = 0; i_part < n_part; ++i_part) {
-    free(cell_stri[i_part]);
-    free(pcell_face_tmp[i_part]);
+    free(pstride[i_part]);
+    free(pconnectivity_tmp[i_part]);
   }
-  free(cell_stri);
-  free(pcell_face_tmp);
-
+  free(pstride);
+  free(pconnectivity_tmp);
 }
 
 /**
- *  \brief Setup cell_ln_to_gn
- */
+ *  \brief Generated the partitioned connectivity (entity->child_elements) associated
+ *   to the given distributed connectivity, using element distribution and element local
+ *   to global numbering. In addition, return the partitioned number of unique child_element
+ *   and the corresponding local to global numbering for the child elements.
+ *
+ *   The orientation data (ie negative index) present in the distributed connectivity,
+ *   if any, are preserved, *meaning that boundary faces can be badly oriented on partitions*.
+ *
+ * \param [in]   comm                PDM_MPI communicator
+ * \param [in]   entity_distribution Distribution of entities over the processes (size=n_rank+1)
+ * \param [in]   dconnectivity_idx   Distributed connectivity indexes (size=dn_entity+1)
+ * \param [in]   dconnectivity       Distributed connectivity (size=dconnectivity_idx[dn_entity])
+ * \param [in]   n_part              Number of partitions
+ * \param [in]   pn_entity           Number of entities in each partition (size=n_part)
+ * \param [in]   pentity_ln_to_gn    Array of local to global entity id for each partition
+ *                                   (size=n_part, each component size = pn_entities[i_part])
+ * \param [out]  pn_child_entity     Number of (unique) child elements in each partition (size=n_part)
+ * \param [out]  pchild_ln_to_gn     For each part, position of child entity in the original array
+ *                                   (size = n_part, each component size = pn_child_entity[i_part])
+ * \param [out]  pconnectivity_idx   For each part, partitioned connectivity indexes
+ *                                   (size = n_part, each component size = pn_entity[i_part])
+ * \param [out]  pconnectivity       For each part, partitioned connectivity (size = n_part,
+ *                                   each component size = pconnectivity_idx[i_part][pn_entity[i_part]])
+*/
 void
-PDM_generate_part_entity_ln_to_gn_hash
+PDM_part_dconnectivity_to_pconnectivity_hash
 (
  const PDM_MPI_Comm    comm,
- PDM_g_num_t          *part_distribution,
- PDM_g_num_t          *cell_distribution,
- int                  *dcell_face_idx,
- PDM_g_num_t          *dcell_face,
- int                   n_part,
- int                  *n_elmts,
- PDM_g_num_t         **pcell_ln_to_gn,
- int                 **n_faces,
- PDM_g_num_t        ***pface_ln_to_gn,
- int                ***pcell_face_idx,
- int                ***pcell_face
+ const PDM_g_num_t    *entity_distribution,
+ const int            *dconnectivity_idx,
+ const PDM_g_num_t    *dconnectivity,
+ const int             n_part,
+ const int            *pn_entity,
+ const PDM_g_num_t   **pentity_ln_to_gn,
+       int           **pn_child_entity,
+       PDM_g_num_t  ***pchild_ln_to_gn,
+       int          ***pconnectivity_idx,
+       int          ***pconnectivity
 )
 {
-  printf("PDM_generate_part_entity_ln_to_gn\n");
+  printf("PDM_part_dconnectivity_to_pconnectivity\n");
   int i_rank;
   int n_rank;
 
   PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_size(comm, &n_rank);
 
-  // int dn_part = part_distribution[i_rank+1] -  part_distribution[i_rank];
-  int dn_cell = cell_distribution[i_rank+1] -  cell_distribution[i_rank];
+  int dn_entity = entity_distribution[i_rank+1] - entity_distribution[i_rank];
 
-  PDM_g_num_t* cell_distribution_ptb = (PDM_g_num_t * ) malloc( sizeof(PDM_g_num_t) * (n_rank+1) );
+  PDM_g_num_t* entity_distribution_ptb = (PDM_g_num_t * ) malloc( sizeof(PDM_g_num_t) * (n_rank+1) );
   for(int i = 0; i < n_rank+1; ++i){
-    cell_distribution_ptb[i] = cell_distribution[i] - 1;
+    entity_distribution_ptb[i] = entity_distribution[i] - 1;
   }
 
   /*
    * Prepare exchange protocol
    */
-  PDM_block_to_part_t* btp = PDM_block_to_part_create(cell_distribution_ptb,
-                               (const PDM_g_num_t **) pcell_ln_to_gn,
-                                                      n_elmts,
+  PDM_block_to_part_t* btp = PDM_block_to_part_create(entity_distribution_ptb,
+                               (const PDM_g_num_t **) pentity_ln_to_gn,
+                                                      pn_entity,
                                                       n_part,
                                                       comm);
 
   /*
    * Prepare data
    */
-  int* blk_stri = (int *) malloc( sizeof(int) * dn_cell);
-  for(int i_cell = 0; i_cell < dn_cell; ++i_cell){
-    blk_stri[i_cell] = dcell_face_idx[i_cell+1] - dcell_face_idx[i_cell];
+  int* blk_stri = (int *) malloc( sizeof(int) * dn_entity);
+  for(int i_elmt = 0; i_elmt < dn_entity; ++i_elmt){
+    blk_stri[i_elmt] = dconnectivity_idx[i_elmt+1] - dconnectivity_idx[i_elmt];
   }
 
   /*
    * Exchange
    */
-  int**         cell_stri;
-  PDM_g_num_t** pcell_face_tmp; /* We keep it in double precision because it contains global numbering */
+  int**         pstride;
+  PDM_g_num_t** pconnectivity_tmp; /* We keep it in double precision because it contains global numbering */
   PDM_block_to_part_exch2(btp,
                           sizeof(PDM_g_num_t),
                           PDM_STRIDE_VAR,
                           blk_stri,
-             (void *  )   dcell_face,
-             (int  ***)  &cell_stri,
-             (void ***)  &pcell_face_tmp);
+             (void *  )   dconnectivity,
+             (int  ***)  &pstride,
+             (void ***)  &pconnectivity_tmp);
 
   free(blk_stri);
 
@@ -903,11 +938,11 @@ PDM_generate_part_entity_ln_to_gn_hash
   if(0 == 1){
     for(int i_part = 0; i_part < n_part; ++i_part){
       int idx_data = 0;
-      printf("[%d] cell_face:: \n", i_part);
-      for(int i_cell = 0; i_cell < n_elmts[i_part]; ++i_cell) {
-        printf("[%d] --> ", cell_stri[i_part][i_cell]);
-        for(int i_data = 0; i_data < cell_stri[i_part][i_cell]; ++i_data ){
-          printf("%d ", pcell_face_tmp[i_part][idx_data++] );
+      printf("[%d] pconnectivity_tmp:: \n", i_part);
+      for(int i_elmt = 0; i_elmt < pn_entity[i_part]; ++i_elmt) {
+        printf("[%d] --> ", pstride[i_part][i_elmt]);
+        for(int i_data = 0; i_data < pstride[i_part][i_elmt]; ++i_data ){
+          printf("%d ", pconnectivity_tmp[i_part][idx_data++] );
         }
         printf("\n");
       }
@@ -919,56 +954,53 @@ PDM_generate_part_entity_ln_to_gn_hash
   /*
    * Post-treatment - Caution the recv connectivity can be negative
    */
-  *pface_ln_to_gn = (PDM_g_num_t **) malloc( n_part * sizeof(PDM_g_num_t *) );
-  *pcell_face     = (int         **) malloc( n_part * sizeof(int         *) );
-  *pcell_face_idx = (int         **) malloc( n_part * sizeof(int         *) );
-  *n_faces        = (int          *) malloc( n_part * sizeof(int          ) );
+  *pchild_ln_to_gn   = (PDM_g_num_t **) malloc( n_part * sizeof(PDM_g_num_t *) );
+  *pconnectivity     = (int         **) malloc( n_part * sizeof(int         *) );
+  *pconnectivity_idx = (int         **) malloc( n_part * sizeof(int         *) );
+  *pn_child_entity   = (int          *) malloc( n_part * sizeof(int          ) );
 
   /* Shortcut */
-  PDM_g_num_t** _face_ln_to_gn = *pface_ln_to_gn;
-  int** _cell_face             = *pcell_face;
-  int** _cell_face_idx         = *pcell_face_idx;
-  int*  _n_faces               = *n_faces;
+  PDM_g_num_t** _pchild_ln_to_gn = *pchild_ln_to_gn;
+  int** _pconnectivity           = *pconnectivity;
+  int** _pconnectivity_idx       = *pconnectivity_idx;
+  int*  _pn_child_entity         = *pn_child_entity;
 
   for(int i_part = 0; i_part < n_part; ++i_part){
 
-    int np_elmts = n_elmts[i_part];
+    int n_elmts = pn_entity[i_part];
     /*
      *  First loop to count and setup part_strid_idx
      */
-    _cell_face_idx[i_part] = (int *) malloc( (np_elmts + 1) * sizeof(int) );
-    _cell_face_idx[i_part][0] = 0;
-    for(int i_cell = 0; i_cell < np_elmts; ++i_cell) {
-      _cell_face_idx[i_part][i_cell+1] = _cell_face_idx[i_part][i_cell] + cell_stri[i_part][i_cell];
+    _pconnectivity_idx[i_part] = (int *) malloc( (n_elmts + 1) * sizeof(int) );
+    _pconnectivity_idx[i_part][0] = 0;
+    for(int i_elmt = 0; i_elmt < n_elmts; ++i_elmt) {
+      _pconnectivity_idx[i_part][i_elmt+1] = _pconnectivity_idx[i_part][i_elmt] + pstride[i_part][i_elmt];
     }
 
 
     /*
      * Save array
      */
-    _face_ln_to_gn[i_part] = (PDM_g_num_t *) malloc( _cell_face_idx[i_part][np_elmts] * sizeof(PDM_g_num_t));
-    _cell_face[i_part]     = (int *        ) malloc( _cell_face_idx[i_part][np_elmts] * sizeof(int        ));
+    _pchild_ln_to_gn[i_part] = (PDM_g_num_t *) malloc( _pconnectivity_idx[i_part][n_elmts] * sizeof(PDM_g_num_t));
+    _pconnectivity[i_part]   = (int *        ) malloc( _pconnectivity_idx[i_part][n_elmts] * sizeof(int        ));
 
-    PDM_g_num_t* _pface_ln_to_gn = _face_ln_to_gn[i_part];
-    int*         _pcell_face     = _cell_face[i_part];
-
-    PDM_g_num_t *_keys_and_values = (PDM_g_num_t *) malloc( 2*_cell_face_idx[i_part][np_elmts] * sizeof(PDM_g_num_t));
+    PDM_g_num_t *_keys_and_values = (PDM_g_num_t *) malloc( 2*_pconnectivity_idx[i_part][n_elmts] * sizeof(PDM_g_num_t));
 
     /* Create hash table */
-    int keymax = 1.3 * _cell_face_idx[i_part][np_elmts]; //next prime number following 1.3*nbofvalues
+    int keymax = 1.3 * _pconnectivity_idx[i_part][n_elmts]; //next prime number following 1.3*nbofvalues
     while (!_is_prime(keymax))
       keymax++;
-    //PDM_printf("[%i] nb val is %d, choose keymax = %d\n", i_rank, _cell_face_idx[i_part][np_elmts] ,keymax);
+    //PDM_printf("[%i] nb val is %d, choose keymax = %d\n", i_rank, _pconnectivity_idx[i_part][n_elmts] ,keymax);
     PDM_hash_tab_t *hash_tab = PDM_hash_tab_create(PDM_HASH_TAB_KEY_INT, &keymax);
 
     /* Fill & use table */
     int idx_data = 0;
     int nbUnique = 0;
-    for(int i_cell = 0; i_cell < np_elmts; ++i_cell) {
-      for(int i_data = 0; i_data < cell_stri[i_part][i_cell]; ++i_data ){
+    for(int i_elmt = 0; i_elmt < n_elmts; ++i_elmt) {
+      for(int i_data = 0; i_data < pstride[i_part][i_elmt]; ++i_data ){
 
-        PDM_g_num_t key_value =  PDM_ABS(pcell_face_tmp[i_part][idx_data]);
-        int            g_sgn  = PDM_SIGN(pcell_face_tmp[i_part][idx_data]);
+        PDM_g_num_t key_value =  PDM_ABS(pconnectivity_tmp[i_part][idx_data]);
+        int            g_sgn  = PDM_SIGN(pconnectivity_tmp[i_part][idx_data]);
         int hash_value = key_value % keymax;
 
         /* We will store in the tab the key (to maange collisions) and the position in
@@ -987,7 +1019,7 @@ PDM_generate_part_entity_ln_to_gn_hash
           PDM_g_num_t **candidate_in_tab = (PDM_g_num_t **) PDM_hash_tab_data_get(hash_tab, &hash_value);
           for (int j = 0; j < n_in_tab; j++) {
             if (PDM_ABS(candidate_in_tab[j][0]) == key_value) {
-              _pcell_face[idx_data] = g_sgn*(candidate_in_tab[j][1] + 1);
+              _pconnectivity[i_part][idx_data] = g_sgn*(candidate_in_tab[j][1] + 1);
               key_found_in_table++; //The key was trully in table
               //if (i_rank == 0) PDM_printf("  candidate key %d matches", candidate_in_tab[j][0]);
               break;
@@ -1000,8 +1032,8 @@ PDM_generate_part_entity_ln_to_gn_hash
         if (!key_found_in_table) {
           //if (i_rank == 0) PDM_printf("Add %d in table at pos %d\n", key_value, hash_value);
           PDM_hash_tab_data_add(hash_tab, (void *) &hash_value, _key_and_value);
-          _pcell_face[idx_data] = g_sgn*(nbUnique + 1);
-          _pface_ln_to_gn[nbUnique++] = PDM_ABS(pcell_face_tmp[i_part][idx_data]);
+          _pconnectivity[i_part][idx_data] = g_sgn*(nbUnique + 1);
+          _pchild_ln_to_gn[i_part][nbUnique++] = PDM_ABS(pconnectivity_tmp[i_part][idx_data]);
         }
         idx_data++;
       }
@@ -1010,13 +1042,13 @@ PDM_generate_part_entity_ln_to_gn_hash
     PDM_hash_tab_free(hash_tab);
     free(_keys_and_values);
 
-    _n_faces[i_part] = nbUnique;
+    _pn_child_entity[i_part] = nbUnique;
 
     if(0 == 1){
       //printf("n_elmt_sort::%d\n", n_elmt_sort);
-      printf("_pface_ln_to_gn::");
+      printf("_pchild_ln_to_gn::");
       for(int i = 0; i < nbUnique; ++i){
-        printf("%d ", _pface_ln_to_gn[i]);
+        printf("%d ", _pchild_ln_to_gn[i_part][i]);
       }
       printf("\n");
     }
@@ -1024,9 +1056,7 @@ PDM_generate_part_entity_ln_to_gn_hash
     /*
      * Realloc
      */
-    _face_ln_to_gn[i_part] = (PDM_g_num_t *) realloc(_face_ln_to_gn[i_part], nbUnique * sizeof(PDM_g_num_t) );
-    _pface_ln_to_gn = _face_ln_to_gn[i_part];
-
+    _pchild_ln_to_gn[i_part] = (PDM_g_num_t *) realloc(_pchild_ln_to_gn[i_part], nbUnique * sizeof(PDM_g_num_t) );
   }
 
 
@@ -1036,11 +1066,11 @@ PDM_generate_part_entity_ln_to_gn_hash
   if(0 == 1){
     for(int i_part = 0; i_part < n_part; ++i_part){
       int idx_data = 0;
-      printf("[%d] cell_face:: \n", i_part);
-      for(int i_cell = 0; i_cell < n_elmts[i_part]; ++i_cell) {
-        printf("[%d] --> ", cell_stri[i_part][i_cell]);
-        for(int i_data = 0; i_data < cell_stri[i_part][i_cell]; ++i_data ){
-          printf("%d ", (*pcell_face)[i_part][idx_data++] );
+      printf("[%d] pconnectivity:: \n", i_part);
+      for(int i_cell = 0; i_cell < pn_entity[i_part]; ++i_cell) {
+        printf("[%d] --> ", pstride[i_part][i_cell]);
+        for(int i_data = 0; i_data < pstride[i_part][i_cell]; ++i_data ){
+          printf("%d ", (*pconnectivity)[i_part][idx_data++] );
         }
         printf("\n");
       }
@@ -1052,14 +1082,13 @@ PDM_generate_part_entity_ln_to_gn_hash
    * Free
    */
   PDM_block_to_part_free(btp);
-  free(cell_distribution_ptb);
+  free(entity_distribution_ptb);
   for(int i_part = 0; i_part < n_part; ++i_part) {
-    free(cell_stri[i_part]);
-    free(pcell_face_tmp[i_part]);
+    free(pstride[i_part]);
+    free(pconnectivity_tmp[i_part]);
   }
-  free(cell_stri);
-  free(pcell_face_tmp);
-
+  free(pstride);
+  free(pconnectivity_tmp);
 }
 
 /**
