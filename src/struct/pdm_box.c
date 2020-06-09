@@ -380,12 +380,12 @@ PDM_box_set_create(int                dim,
   //<<--*/
   //printf("\t-->> PDM_boxes_create\n");
   boxes->local_boxes = PDM_boxes_create (boxes->dim,
-										 n_boxes,
-										 box_gnum,
-										 box_extents,
-										 n_part_orig,
-										 n_boxes_orig,
-										 origin);
+                                         n_boxes,
+                                         box_gnum,
+                                         box_extents,
+                                         n_part_orig,
+                                         n_boxes_orig,
+                                         origin);
   //printf("\t<<-- PDM_boxes_create\n");
 
   for (i = 0; i < n_boxes; i++) {
@@ -427,6 +427,13 @@ PDM_box_set_create(int                dim,
 
     }
 
+  }
+  else {
+    for (j = 0; j < boxes->dim; j++) {
+      k = boxes->dimensions[j];
+      boxes->s[j] = 0;
+      boxes->d[j] = 1;
+    }
   }
 
   boxes->n_copied_ranks = 0;
@@ -1681,11 +1688,6 @@ PDM_box_set_send_data_to_origin_distrib
                       orig_data, orig_count, orig_shift, PDM_MPI_UNSIGNED_CHAR,
                       boxes->comm);
 
-    /* for (int i = 0; i < (curr_shift[s_comm-1]+curr_count[s_comm-1]); i++) { */
-    /*   printf("%uc", curr_data[i]); */
-    /* } */
-    /* printf("\n"); */
-
     /* for (int i = 0; i < (orig_shift[s_comm-1]+orig_count[s_comm-1]); i++) { */
     /*   printf("%uc", orig_data[i]); */
     /* } */
@@ -1716,9 +1718,8 @@ PDM_box_set_send_data_to_origin_distrib
 
       int idx   = _origin_distrib_idx[i_part][iElt];
 
-      //   int s_block = current_distrib_stride[i] * (int) data_size; // pb ici !!!!!! le i
       int s_block = (_origin_distrib_idx[i_part][iElt+1] - _origin_distrib_idx[i_part][iElt])
-        * (int) data_size; // pb ici !!!!!! le i
+        * (int) data_size;
       unsigned char *_origin_distrib_data =  origin_distrib_data[i_part];
       for (int k = 0; k < s_block; k++) {
         _origin_distrib_data[idx++] = orig_data[idx1++];
@@ -1735,8 +1736,6 @@ PDM_box_set_send_data_to_origin_distrib
     free (orig_data);
     free (curr_data);
     free (orig_stride);
-    //    free (current_distrib_idx);
-
   }
 
   else {
