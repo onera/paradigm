@@ -483,7 +483,15 @@ int main(int argc, char *argv[])
                 (int         ***)  &pface_vtx_idx,
                 (int         ***)  &pface_vtx);
 
-
+  double **pvtx_coord = NULL;
+  PDM_g_num_t* vtx_distribution = PDM_compute_entity_distribution(comm, dn_vtx);
+  PDM_part_dcoordinates_to_pcoordinates(comm,
+                                        n_part,
+                                        vtx_distribution,
+                                        dvtx_coord,
+                                        pn_vtx,
+                                        pvtx_ln_to_gn,
+                          (double ***) &pvtx_coord);
   /*
    * On doit calculer le dcell_face car avec lui et le cell_ln_to_gn on retrouve facilement
    *   le dcell_face sur la partition donc on n'a plus qu'a trié pour avoir le face_ln_to_gn
