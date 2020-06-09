@@ -84,43 +84,47 @@ PDM_part_distgroup_to_partgroup
 );
 
 /**
- *  \brief Setup cell_ln_to_gn
+ *  \brief Generated the partitioned connectivity (entity->child_elements) associated
+ *   to the given distributed connectivity, using element distribution and element local
+ *   to global numbering. In addition, return the partitioned number of unique child_element
+ *   and the corresponding local to global numbering for the child elements.
  */
 void
-PDM_generate_part_entity_ln_to_gn_sort
+PDM_part_dconnectivity_to_pconnectivity_sort
 (
  const PDM_MPI_Comm    comm,
- PDM_g_num_t          *part_distribution,
- PDM_g_num_t          *cell_distribution,
- int                  *dcell_face_idx,
- PDM_g_num_t          *dcell_face,
- int                   n_part,
- int                  *n_elmts,
- PDM_g_num_t         **pcell_ln_to_gn,
- int                 **n_faces,
- PDM_g_num_t        ***pface_ln_to_gn,
- int                ***pcell_face_idx,
- int                ***pcell_face
+ const PDM_g_num_t    *entity_distribution,
+ const int            *dconnectivity_idx,
+ const PDM_g_num_t    *dconnectivity,
+ const int             n_part,
+ const int            *pn_entity,
+ const PDM_g_num_t   **pentity_ln_to_gn,
+       int           **pn_child_entity,
+       PDM_g_num_t  ***pchild_ln_to_gn,
+       int          ***pconnectivity_idx,
+       int          ***pconnectivity
 );
 
 /**
- *  \brief Setup cell_ln_to_gn
+ *  \brief Generated the partitioned connectivity (entity->child_elements) associated
+ *   to the given distributed connectivity, using element distribution and element local
+ *   to global numbering. In addition, return the partitioned number of unique child_element
+ *   and the corresponding local to global numbering for the child elements.
  */
 void
-PDM_generate_part_entity_ln_to_gn_hash
+PDM_part_dconnectivity_to_pconnectivity_hash
 (
  const PDM_MPI_Comm    comm,
- PDM_g_num_t          *part_distribution,
- PDM_g_num_t          *cell_distribution,
- int                  *dcell_face_idx,
- PDM_g_num_t          *dcell_face,
- int                   n_part,
- int                  *n_elmts,
- PDM_g_num_t         **pcell_ln_to_gn,
- int                 **n_faces,
- PDM_g_num_t        ***pface_ln_to_gn,
- int                ***pcell_face_idx,
- int                ***pcell_face
+ const PDM_g_num_t    *entity_distribution,
+ const int            *dconnectivity_idx,
+ const PDM_g_num_t    *dconnectivity,
+ const int             n_part,
+ const int            *pn_entity,
+ const PDM_g_num_t   **pentity_ln_to_gn,
+       int           **pn_child_entity,
+       PDM_g_num_t  ***pchild_ln_to_gn,
+       int          ***pconnectivity_idx,
+       int          ***pconnectivity
 );
 
 
