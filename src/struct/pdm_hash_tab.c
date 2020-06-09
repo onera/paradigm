@@ -138,7 +138,7 @@ void           *data
 )
 {
   _hash_tab_t *_ht = (_hash_tab_t *) ht;
-  PDM_g_num_t _key = -1;;
+  PDM_g_num_t _key = -1;
 
   if (_ht->tKey == PDM_HASH_TAB_KEY_INT) {
     _key = (PDM_g_num_t) *((int *) (key));

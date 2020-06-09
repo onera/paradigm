@@ -1,3 +1,4 @@
+
 /*----------------------------------------------------------------------------
  * Standard C library headers
  *----------------------------------------------------------------------------*/
@@ -53,6 +54,23 @@ extern "C" {
 /*=============================================================================
  * Static function definitions
  *============================================================================*/
+
+/**
+ * \brief  Normalize
+ */
+
+static void
+_normalize
+(
+ _PDM_dbbtree_t *dbbt,
+ const double *pt_origin,
+ double *pt_nomalized
+ )
+{
+  for (int j = 0; j < dbbt->dim; j++) {
+    pt_nomalized[j] = (pt_origin[j] - dbbt->s[j]) / dbbt->d[j];
+  }
+}
 
 /**
  * \brief  Initialize box_tree statistics
@@ -219,6 +237,11 @@ _redistribute_boxes
  *
  * This function returns an initialized \ref PDM_dbbtree_t structure
  *
+ * \param [in]  comm             Associated communicator
+ * \param [in]  dim              boxes dimension
+ * \param [in]  global_extents   Globals of elements to storage into the tree
+ *                               (automatic computation if NULL)
+ *
  * \return      A new initialized \ref PDM_dbbtree_t structure
  *
  */
@@ -227,8 +250,9 @@ PDM_dbbtree_t *
 PDM_dbbtree_create
 (
  PDM_MPI_Comm          comm,
- const int         dim
- )
+ const int         dim,
+ double       *global_extents
+)
 {
   _PDM_dbbtree_t *_dbbt = (_PDM_dbbtree_t *) malloc(sizeof(_PDM_dbbtree_t));
 
@@ -261,6 +285,24 @@ PDM_dbbtree_create
   _dbbt->boxes                = NULL;
   _dbbt->btLoc                = NULL;
 
+  _dbbt->global_extents       = NULL;
+
+  if (global_extents != NULL) {
+    _dbbt->global_extents = malloc (sizeof(double) * dim * 2);
+    memcpy(_dbbt->global_extents, global_extents, sizeof(double) * dim * 2);
+    for (int j = 0; j < dim; j++) {
+      _dbbt->s[j] = _dbbt->global_extents[j];
+      _dbbt->d[j] = _dbbt->global_extents[j+dim] - _dbbt->global_extents[j];
+    }
+  }
+
+  else {
+    for (int j = 0; j < dim; j++) {
+      _dbbt->s[j] = 0.;
+      _dbbt->d[j] = 1.;
+    }
+  }
+
   _init_bt_statistics (&(_dbbt->btsShared));
   _init_bt_statistics (&(_dbbt->btsLoc));
   _init_bt_statistics (&(_dbbt->btsCoarse));
@@ -287,6 +329,10 @@ PDM_dbbtree_free
 
     PDM_box_set_destroy (&_dbbt->rankBoxes);
     PDM_box_set_destroy (&_dbbt->boxes);
+
+    if (_dbbt->global_extents != NULL) {
+      free (_dbbt->global_extents);
+    }
 
     free (_dbbt->usedRank);
     if (_dbbt->rankComm != PDM_MPI_COMM_NULL) {
@@ -377,8 +423,56 @@ PDM_dbbtree_boxes_set
    */
 
   //printf("  PDM_dbbtree_boxes_set -->> PDM_box_set_create (rank %d)\n", myRank);
+  if (1 == 0) {
+
+    PDM_printf ("nEltsProc : %d\n", nEltsProc);
+
+    PDM_printf ("_boxGnum :");
+    for (int i = 0; i < nEltsProc; i++) {
+      PDM_printf (" "PDM_FMT_G_NUM, _boxGnum[i]);
+    }
+    PDM_printf ("\n");
+
+    PDM_printf ("_extents m2 :\n");
+    idx1 = 0;
+    for (int i = 0; i < nEltsProc; i++) {
+      PDM_printf (" "PDM_FMT_G_NUM":", _boxGnum[i]);
+      PDM_printf (" %12.5e", _extents[idx1++]);
+      PDM_printf (" %12.5e", _extents[idx1++]);
+      PDM_printf (" %12.5e", _extents[idx1++]);
+      PDM_printf (" %12.5e", _extents[idx1++]);
+      PDM_printf (" %12.5e", _extents[idx1++]);
+      PDM_printf (" %12.5e", _extents[idx1++]);
+      PDM_printf ("\n");
+    }
+    PDM_printf ("\n");
+
+    PDM_printf ("_initLocation :");
+    idx1 = 0;
+    for (int i = 0; i < nEltsProc; i++) {
+      PDM_printf (" %d", _initLocation[idx1++]);
+      PDM_printf (" %d", _initLocation[idx1++]);
+      PDM_printf (" %d", _initLocation[idx1++]);
+      PDM_printf ("\n");
+    }
+    PDM_printf ("\n");
+  }
+
+  int ind_norm = 1;
+  if (_dbbt->global_extents != NULL) {
+    ind_norm = 0;
+    for (int i = 0; i < nEltsProc; i++) {
+      _normalize (_dbbt,
+                  _extents+2*i*_dbbt->dim,
+                  _extents+2*i*_dbbt->dim);
+      _normalize (_dbbt,
+                  _extents+(2*i+1)*_dbbt->dim,
+                  _extents+(2*i+1)*_dbbt->dim);
+    }
+  }
+
   _dbbt->boxes = PDM_box_set_create(3,
-                                    1,  // No normalization to preserve initial extents
+                                    ind_norm,  // No normalization to preserve initial extents
                                     0,  // No projection to preserve initial extents
                                     nEltsProc,
                                     _boxGnum,
@@ -387,6 +481,12 @@ PDM_dbbtree_boxes_set
                                     nElts,
                                     _initLocation,
                                     _dbbt->comm);
+
+  if (_dbbt->global_extents == NULL) {
+    memcpy (_dbbt->d, _dbbt->boxes->d, sizeof(double) * 3);
+    memcpy (_dbbt->s, _dbbt->boxes->s, sizeof(double) * 3);
+  }
+
   //printf("  PDM_dbbtree_boxes_set <<-- PDM_box_set_create (rank %d)\n", myRank);
 
   free (_boxGnum);
@@ -426,8 +526,8 @@ PDM_dbbtree_boxes_set
 
     int *allNBoxes = (int *) malloc (sizeof(int) * lComm);
     PDM_MPI_Allgather (&nBoxes, 1, PDM_MPI_INT,
-		       allNBoxes, 1, PDM_MPI_INT,
-		       _dbbt->comm);
+                       allNBoxes, 1, PDM_MPI_INT,
+                       _dbbt->comm);
 
     int nUsedRank = 0;
     for (int i = 0; i < lComm; i++) {
@@ -439,8 +539,8 @@ PDM_dbbtree_boxes_set
 
     double *allGExtents = (double *) malloc (sizeof(double) * sExtents * lComm);
     PDM_MPI_Allgather (gExtents, sExtents, PDM__PDM_MPI_REAL,
-		       allGExtents, sExtents, PDM__PDM_MPI_REAL,
-		       _dbbt->comm);
+                       allGExtents, sExtents, PDM__PDM_MPI_REAL,
+                       _dbbt->comm);
 
     /* PDM_printf ("_extents shared :"); */
     /* idx1 = 0; */
@@ -497,10 +597,10 @@ PDM_dbbtree_boxes_set
 
     //    PDM_MPI_Comm rankComm;
     PDM_MPI_Comm_split(_dbbt->comm, myRank, 0, &(_dbbt->rankComm));
-
     //printf("  PDM_dbbtree_boxes_set -->> PDM_box_set_create (rankBoxes) (rank %d)\n", myRank);
+
     _dbbt->rankBoxes = PDM_box_set_create(3,
-                                          1,  // No normalization to preserve initial extents
+                                          0,  // No normalization to preserve initial extents
                                           0,  // No projection to preserve initial extents
                                           nUsedRank,
                                           gNumProc,
@@ -624,6 +724,40 @@ PDM_dbbtree_intersect_boxes_set
     }
 
   }
+  if (1 == 0) {
+    PDM_printf ("_extents m1 :\n");
+    idx1 = 0;
+    for (int i = 0; i < nEltsProc; i++) {
+      PDM_printf (" "PDM_FMT_G_NUM":", _boxGnum[i]);
+      PDM_printf (" %12.5e", _extents[idx1++]);
+      PDM_printf (" %12.5e", _extents[idx1++]);
+      PDM_printf (" %12.5e", _extents[idx1++]);
+      PDM_printf (" %12.5e", _extents[idx1++]);
+      PDM_printf (" %12.5e", _extents[idx1++]);
+      PDM_printf (" %12.5e", _extents[idx1++]);
+      PDM_printf ("\n");
+    }
+    PDM_printf ("\n");
+
+    PDM_printf ("_initLocation :");
+    idx1 = 0;
+    for (int i = 0; i < nEltsProc; i++) {
+      PDM_printf (" %d", _initLocation[idx1++]);
+      PDM_printf (" %d", _initLocation[idx1++]);
+      PDM_printf (" %d", _initLocation[idx1++]);
+      PDM_printf ("\n");
+    }
+    PDM_printf ("\n");
+  }
+
+  for (int i = 0; i < nEltsProc; i++) {
+    _normalize (_dbbt,
+                _extents+2*i*_dbbt->boxes->dim,
+                _extents+2*i*_dbbt->boxes->dim);
+    _normalize (_dbbt,
+                _extents+(2*i+1)*_dbbt->boxes->dim,
+                _extents+(2*i+1)*_dbbt->boxes->dim);
+  }
 
   if (1 == 0) {
 
@@ -635,7 +769,7 @@ PDM_dbbtree_intersect_boxes_set
     }
     PDM_printf ("\n");
 
-    PDM_printf ("_extents :\n");
+    PDM_printf ("_extents m2 :\n");
     idx1 = 0;
     for (int i = 0; i < nEltsProc; i++) {
       PDM_printf (" "PDM_FMT_G_NUM":", _boxGnum[i]);
@@ -661,7 +795,7 @@ PDM_dbbtree_intersect_boxes_set
   }
 
   PDM_box_set_t  *boxes = PDM_box_set_create (3,
-                                              1,  // No normalization to preserve initial extents
+                                              0,  // No normalization to preserve initial extents
                                               0,  // No projection to preserve initial extents
                                               nEltsProc,
                                               _boxGnum,
@@ -804,6 +938,19 @@ PDM_dbbtree_intersect_boxes_set
   *box_index = newIndex;
 
   *box_l_num = (int *) realloc (*box_l_num, sizeof (int) * newIndex[nBoxesA]);
+
+  if (1 == 0) {
+    printf ("Intersections : %d\n", boxes->local_boxes->n_boxes);
+    for (int i = 0; i < nBoxesA; i++) {
+      printf ("A elt %ld :", _dbbt->boxes->local_boxes->g_num[i]);
+      for (int j = newIndex[i]; j < newIndex[i+1]; j++) {
+        printf (" %ld", boxes->local_boxes->g_num[(*box_l_num)[j]]);
+      }
+      printf("\n");
+    }
+  }
+
+
 
   return boxes;
 
