@@ -144,9 +144,10 @@ PDM_generate_entity_graph_comm
  const int            n_part,
  const int           *pn_entity,
  const PDM_g_num_t  **pentity_ln_to_gn,
+ const int          **pentity_hint,
        int         ***pproc_bound_idx,
        int         ***ppart_bound_idx,
-       int         ***pentity_bound_idx
+       int         ***pentity_bound
 );
 
 /**
