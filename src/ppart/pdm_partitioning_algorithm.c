@@ -1108,11 +1108,14 @@ PDM_part_dconnectivity_to_pconnectivity_hash
  * \param [in]   pn_entity           Number of entities in each partition (size=n_part)
  * \param [in]   pentity_ln_to_gn    Array of local to global entity id for each partition
  *                                   (size=n_part, each component size = pn_entity[i_part])
+ * \param [in]   pentity_hint        Can be used to indicate whether (1) or not (0) an entity is potentially
+ *                                   shared with an other partition in order to minimize exchanged data
+ *                                   (size=n_part, each component size = pn_entity[i_part]) or NULL
  * \param [out]  pproc_bound_idx     For each part, indexes of communication information related to the
  *                                   other procs (size=n_part, each component size=n_rank+1)
  * \param [out]  ppart_bound_idx     For each part, indexes of communication information related to the
  *                                   other (global id) parts (size=n_part, each component size=n_part_tot+1)
- * \param [out]  pentity_bound_idx   For each part, communication information (see abobe) (size=n_part)
+ * \param [out]  pentity_bound       For each part, communication information (see abobe) (size=n_part)
 */
 void
 PDM_generate_entity_graph_comm
@@ -1123,9 +1126,10 @@ PDM_generate_entity_graph_comm
  const int            n_part,
  const int           *pn_entity,
  const PDM_g_num_t  **pentity_ln_to_gn,
+ const int          **pentity_hint,
        int         ***pproc_bound_idx,
        int         ***ppart_bound_idx,
-       int         ***pentity_bound_idx
+       int         ***pentity_bound
 )
 {
   int i_rank;
@@ -1146,13 +1150,40 @@ PDM_generate_entity_graph_comm
   int** part_data = (int ** ) malloc( n_part * sizeof(int *));
   for(int i_part = 0; i_part < n_part; ++i_part) {
     part_stri[i_part] = (int *) malloc(     pn_entity[i_part] * sizeof(int));
-    part_data[i_part] = (int *) malloc( 3 * pn_entity[i_part] * sizeof(int));
-    for(int i_entity = 0; i_entity < pn_entity[i_part]; ++i_entity) {
-      part_data[i_part][3*i_entity  ] = i_rank;
-      part_data[i_part][3*i_entity+1] = i_part;
-      part_data[i_part][3*i_entity+2] = i_entity;
+    int idx_data = 0;
+    if (pentity_hint != NULL) {
+      //First pass to count
+      for(int i_entity = 0; i_entity < pn_entity[i_part]; ++i_entity)
+        if (pentity_hint[i_part][i_entity]==1)
+          idx_data++;
+    }
+    else
+      idx_data = pn_entity[i_part];
+    //Second pass to fill
+    part_data[i_part] = (int *) malloc( 3 * idx_data * sizeof(int));
+    if (pentity_hint != NULL){
+      idx_data = 0;
+      for(int i_entity = 0; i_entity < pn_entity[i_part]; ++i_entity) {
+        if (pentity_hint[i_part][i_entity]==1){
+          part_data[i_part][3*idx_data  ] = i_rank;
+          part_data[i_part][3*idx_data+1] = i_part;
+          part_data[i_part][3*idx_data+2] = i_entity;
 
-      part_stri[i_part][i_entity] = 3;
+          part_stri[i_part][i_entity] = 3;
+          idx_data++;
+        }
+        else
+          part_stri[i_part][i_entity] = 0;
+      }
+    }
+    else{
+      for(int i_entity = 0; i_entity < pn_entity[i_part]; ++i_entity) {
+        part_data[i_part][3*i_entity  ] = i_rank;
+        part_data[i_part][3*i_entity+1] = i_part;
+        part_data[i_part][3*i_entity+2] = i_entity;
+
+        part_stri[i_part][i_entity] = 3;
+      }
     }
   }
 
@@ -1285,12 +1316,12 @@ PDM_generate_entity_graph_comm
   /* Allocate */
   *pproc_bound_idx   = (int **) malloc( ( n_part ) * sizeof(int * ));
   *ppart_bound_idx   = (int **) malloc( ( n_part ) * sizeof(int * ));
-  *pentity_bound_idx = (int **) malloc( ( n_part ) * sizeof(int * ));
+  *pentity_bound     = (int **) malloc( ( n_part ) * sizeof(int * ));
 
   /* Shortcut */
   int** _pproc_bound_idx   = *pproc_bound_idx;
   int** _ppart_bound_idx   = *ppart_bound_idx;
-  int** _pentity_bound_idx = *pentity_bound_idx;
+  int** _pentity_bound     = *pentity_bound;
 
 
   /*
@@ -1366,7 +1397,7 @@ PDM_generate_entity_graph_comm
     /* We need to recompute for each opposite part */
     _pproc_bound_idx[i_part]   = (int *) malloc( ( n_rank + 1                ) * sizeof(int));
     _ppart_bound_idx[i_part]   = (int *) malloc( ( part_distribution[n_rank] ) * sizeof(int));
-    _pentity_bound_idx[i_part] = (int *) malloc( ( 4 * n_connect             ) * sizeof(int));
+    _pentity_bound[i_part]     = (int *) malloc( ( 4 * n_connect             ) * sizeof(int));
 
     for(int i = 0; i < n_rank+1; ++i){
       _pproc_bound_idx[i_part][i] = 0;
@@ -1389,11 +1420,11 @@ PDM_generate_entity_graph_comm
       _pproc_bound_idx[i_part][opp_proc  +1] += 1;
       _ppart_bound_idx[i_part][opp_part_g+1] += 1;
 
-      _pentity_bound_idx[i_part][4*i  ] = connect_info[2*idx  ];
-      _pentity_bound_idx[i_part][4*i+3] = connect_info[2*idx+1];
+      _pentity_bound[i_part][4*i  ] = connect_info[2*idx  ];
+      _pentity_bound[i_part][4*i+3] = connect_info[2*idx+1];
 
-      _pentity_bound_idx[i_part][4*i+1] = opp_proc;
-      _pentity_bound_idx[i_part][4*i+2] = opp_part;
+      _pentity_bound[i_part][4*i+1] = opp_proc;
+      _pentity_bound[i_part][4*i+2] = opp_part;
 
     }
 

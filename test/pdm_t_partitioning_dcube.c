@@ -532,19 +532,32 @@ int main(int argc, char *argv[])
    */
   int** pproc_face_bound_idx;
   int** ppart_face_bound_idx;
-  int** pface_bound_idx;
+  int** pface_bound;
+
+  int **face_is_bnd = (int **) malloc(n_part * sizeof(int*));
+  for (int i_part = 0; i_part < n_res_part; i_part++) {
+    face_is_bnd[i_part] = (int *) malloc(pn_faces[i_part]*sizeof(int));
+    for (int i_face = 0; i_face < pn_faces[i_part]; i_face++){
+      if (pface_cell[i_part][2*i_face] > 0 && pface_cell[i_part][2*i_face+1] > 0)
+        face_is_bnd[i_part][i_face] = 0;
+      else
+        face_is_bnd[i_part][i_face] = 1;
+    }
+  }
+
   PDM_generate_entity_graph_comm(comm,
                                  part_distribution,
                                  face_distribution,
                                  n_part,
                                  pn_faces,
                                  pface_ln_to_gn,
+                                 face_is_bnd,
                       (int ***) &pproc_face_bound_idx,
                       (int ***) &ppart_face_bound_idx,
-                      (int ***) &pface_bound_idx);
-
-
-
+                      (int ***) &pface_bound);
+  for (int i_part = 0; i_part < n_res_part; i_part++)
+    free(face_is_bnd[i_part]);
+  free(face_is_bnd);
 
 
   // Attention on veut garder l'orientation donc il y a un signe dans le face_cell / cell_face
@@ -575,7 +588,7 @@ int main(int argc, char *argv[])
     free(pface_group_idx[i_part]);
     free(pproc_face_bound_idx[i_part]);
     free(ppart_face_bound_idx[i_part]);
-    free(pface_bound_idx[i_part]);
+    free(pface_bound[i_part]);
   }
   free(pcell_face);
   free(pcell_face_idx);
@@ -585,7 +598,7 @@ int main(int argc, char *argv[])
   free(pcell_ln_to_gn);
   free(pproc_face_bound_idx);
   free(ppart_face_bound_idx);
-  free(pface_bound_idx);
+  free(pface_bound);
   free(pface_ln_to_gn);
   free(pn_cell);
   free(pn_faces);
