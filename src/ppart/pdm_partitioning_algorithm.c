@@ -71,10 +71,6 @@ extern "C" {
  * Private function definitions
  *============================================================================*/
 
-/*=============================================================================
- * Public function definitions
- *============================================================================*/
-
 static inline int _is_prime(int num)
 {
   if ((num & 1)==0)
@@ -87,6 +83,10 @@ static inline int _is_prime(int num)
   }
   return 1;
 }
+
+/*=============================================================================
+ * Public function definitions
+ *============================================================================*/
 
 /**
  *  \brief Gather the entities splitted by the partitioner
@@ -1092,20 +1092,40 @@ PDM_part_dconnectivity_to_pconnectivity_hash
 }
 
 /**
- *  \brief
- */
+ *  \brief Generated the communication information at the partition interfaces for the
+ *   given entity. The communication data associates to
+ *   each partitioned entity belonging to an (internal) interface the 4-tuple
+ *   (local id, opposite proc number, opposite part number on this proc, local id in the
+ *   opposite partition).
+ *   This list is sorted by opposite proc id, then by part id, and finally with respect
+ *   to the entity global_id. Also return the stride indexes pproc_bound_idx and ppart_bound_idx
+ *   to acces the communication information for a given opposite proc id or global part id.
+ *
+ * \param [in]   comm                PDM_MPI communicator
+ * \param [in]   part_distribution   Distribution of partitions over the processes (size=n_rank+1)
+ * \param [in]   entity_distribution Distribution of entities over the processes (size=n_rank+1)
+ * \param [in]   n_part              Number of partitions
+ * \param [in]   pn_entity           Number of entities in each partition (size=n_part)
+ * \param [in]   pentity_ln_to_gn    Array of local to global entity id for each partition
+ *                                   (size=n_part, each component size = pn_entity[i_part])
+ * \param [out]  pproc_bound_idx     For each part, indexes of communication information related to the
+ *                                   other procs (size=n_part, each component size=n_rank+1)
+ * \param [out]  ppart_bound_idx     For each part, indexes of communication information related to the
+ *                                   other (global id) parts (size=n_part, each component size=n_part_tot+1)
+ * \param [out]  pentity_bound_idx   For each part, communication information (see abobe) (size=n_part)
+*/
 void
 PDM_generate_entity_graph_comm
 (
- const PDM_MPI_Comm    comm,
- PDM_g_num_t          *part_distribution,
- PDM_g_num_t          *entity_distribution,
- int                   n_part,
- int                  *n_entities,
- PDM_g_num_t         **pentity_ln_to_gn,
- int                ***pproc_bound_idx,
- int                ***ppart_bound_idx,
- int                ***pentity_bound_idx
+ const PDM_MPI_Comm   comm,
+ const PDM_g_num_t   *part_distribution,
+ const PDM_g_num_t   *entity_distribution,
+ const int            n_part,
+ const int           *pn_entity,
+ const PDM_g_num_t  **pentity_ln_to_gn,
+       int         ***pproc_bound_idx,
+       int         ***ppart_bound_idx,
+       int         ***pentity_bound_idx
 )
 {
   int i_rank;
@@ -1125,9 +1145,9 @@ PDM_generate_entity_graph_comm
   int** part_stri = (int ** ) malloc( n_part * sizeof(int *));
   int** part_data = (int ** ) malloc( n_part * sizeof(int *));
   for(int i_part = 0; i_part < n_part; ++i_part) {
-    part_stri[i_part] = (int *) malloc(     n_entities[i_part] * sizeof(int));
-    part_data[i_part] = (int *) malloc( 3 * n_entities[i_part] * sizeof(int));
-    for(int i_entity = 0; i_entity < n_entities[i_part]; ++i_entity) {
+    part_stri[i_part] = (int *) malloc(     pn_entity[i_part] * sizeof(int));
+    part_data[i_part] = (int *) malloc( 3 * pn_entity[i_part] * sizeof(int));
+    for(int i_entity = 0; i_entity < pn_entity[i_part]; ++i_entity) {
       part_data[i_part][3*i_entity  ] = i_rank;
       part_data[i_part][3*i_entity+1] = i_part;
       part_data[i_part][3*i_entity+2] = i_entity;
@@ -1145,7 +1165,7 @@ PDM_generate_entity_graph_comm
                              1.,
                              pentity_ln_to_gn,
                              entity_distribution_ptb,
-                             n_entities,
+                             pn_entity,
                              n_part,
                              comm);
    const int n_entity_block = PDM_part_to_block_n_elt_block_get(ptb);
@@ -1235,7 +1255,7 @@ PDM_generate_entity_graph_comm
    */
   PDM_block_to_part_t* btp = PDM_block_to_part_create(entity_distribution_ptb,
                                (const PDM_g_num_t **) pentity_ln_to_gn,
-                                                      n_entities,
+                                                      pn_entity,
                                                       n_part,
                                                       comm);
 
@@ -1285,24 +1305,19 @@ PDM_generate_entity_graph_comm
     /* First pass to count */
     int idx_part  = 0;
     int n_connect = 0;
-    for(int i_entity = 0; i_entity < n_entities[i_part]; ++i_entity) {
-      // printf("[%d] part_stri::[%d] -> ", i_entity, _part_stri[i_entity]);
-      for(int i_data = 0; i_data < _part_stri[i_entity]; ++i_data) {
-        // printf("%d ", _part_data[idx_part++]);
-        n_connect++;
-      }
-      // printf("\n");
+    for(int i_entity = 0; i_entity < pn_entity[i_part]; ++i_entity) {
+      n_connect += _part_stri[i_entity];
     }
 
     /* Rebuild in a specific array all the information to sort properly */
     n_connect = n_connect/3;
     PDM_g_num_t* connect_entity = (PDM_g_num_t * ) malloc( n_connect * 3 * sizeof(PDM_g_num_t ));
     int*         connect_info   = (int         * ) malloc( n_connect * 2 * sizeof(int         ));
-    // printf("n_connect::%d\n", n_connect);
+    //printf("[%i][%i] n_connect::%d\n", i_rank, i_part, n_connect);
 
     idx_part  = 0;
     n_connect = 0;
-    for(int i_entity = 0; i_entity < n_entities[i_part]; ++i_entity) {
+    for(int i_entity = 0; i_entity < pn_entity[i_part]; ++i_entity) {
       for(int i_data = 0; i_data < _part_stri[i_entity]/3; ++i_data) {
         // printf(" idx_part = %d\n", idx_part);
         int opp_rank = _part_data[3*idx_part  ];
@@ -1340,7 +1355,7 @@ PDM_generate_entity_graph_comm
     /*
      * Panic verbose
      */
-    if( 0 == 1){
+    if(0 == 1){
       printf("order::\n");
       for(int i = 0; i < n_connect; ++i){
         printf("%d ", order[i]);
@@ -1418,7 +1433,6 @@ PDM_generate_entity_graph_comm
   }
 
 
-
   /*
    * Free
    */
@@ -1430,10 +1444,8 @@ PDM_generate_entity_graph_comm
   free(part_data);
   free(entity_distribution_ptb);
   PDM_block_to_part_free(btp);
-
-
-
 }
+
 /**
  *  \brief Recover partitioned coordinates from distributed coordinates and
  *   vertex ln_to_gn indirection.

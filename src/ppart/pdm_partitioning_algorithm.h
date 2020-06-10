@@ -129,20 +129,24 @@ PDM_part_dconnectivity_to_pconnectivity_hash
 
 
 /**
- *  \brief
+ *  \brief Generated the communication information at the partition interfaces for the
+ *   given entity. The communication data associates to
+ *   each partitioned entity belonging to an (internal) interface the 4-tuple
+ *   (local id, opposite proc number, opposite part number on this proc, local id in the
+ *   opposite partition).
  */
 void
 PDM_generate_entity_graph_comm
 (
- const PDM_MPI_Comm    comm,
- PDM_g_num_t          *part_distribution,
- PDM_g_num_t          *entity_distribution,
- int                   n_part,
- int                  *n_entities,
- PDM_g_num_t         **pentity_ln_to_gn,
- int                ***pproc_bound_idx,
- int                ***ppart_bound_idx,
- int                ***pentity_bound_idx
+ const PDM_MPI_Comm   comm,
+ const PDM_g_num_t   *part_distribution,
+ const PDM_g_num_t   *entity_distribution,
+ const int            n_part,
+ const int           *pn_entity,
+ const PDM_g_num_t  **pentity_ln_to_gn,
+       int         ***pproc_bound_idx,
+       int         ***ppart_bound_idx,
+       int         ***pentity_bound_idx
 );
 
 /**
