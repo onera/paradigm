@@ -280,6 +280,73 @@ PDM_part_reverse_pcellface
 }
 
 /**
+ *  \brief Reorient the boundary faces such that they have a outward normal for the boundary cell.
+ *   This functions only uses topological information (face->cell connectivity) to determine check
+ *   if the face must be reoriented. Thus, input face->cell and cell->face connectivities must
+ *   contain correct orientation information.
+ *
+ *
+ * \param [in]    n_part             Number of partitions
+ * \param [in]    pn_face            Number of faces in each partition (size=n_part)
+ * \param [inout] pface_face         On each part, array of face to cell connectivity
+ *                                   (size = n_part*2*np_face[i_part])
+ * \param [in]    pcell_face_idx     On each part, array of cell to face connectivity indexes
+ *                                   (size = n_part*np_cell[i_part])
+ * \param [inout] pcell_face         On each part, array of cell to face connectivity
+ *                                   (size = n_part*pcell_face_idx[i_part][np_cell+1])
+ * \param [in]    pface_vtx_idx      On each part, array of face to vertex connectivity indexes
+ *                                   (size = n_part*np_vtx[i_part])
+ * \param [inout] pface_vtx          On each part, array of face to vertex connectivity
+ *                                  (size = n_part*pface_vtx_idx[i_part][np_vtx+1])
+*/
+void
+PDM_part_reorient_bound_faces
+(
+  const int         n_part,
+  const int        *pn_face,
+        int       **pface_cell,
+  const int       **pcell_face_idx,
+        int       **pcell_face,
+  const int       **pface_vtx_idx,
+        int       **pface_vtx
+)
+{
+  printf("PDM_part_reorient_faces\n");
+
+  for (int i_part = 0; i_part < n_part; i_part++){
+    for (int i_face = 0; i_face < pn_face[i_part]; i_face++){
+      if (pface_cell[i_part][2*i_face] == 0) {
+
+        /* Swap connectivity in pface_cell */
+        pface_cell[i_part][2*i_face]   = pface_cell[i_part][2*i_face+1];
+        pface_cell[i_part][2*i_face+1] = 0;
+
+        /* Remove sign in cell_face connectivity */
+        int cell_lid = pface_cell[i_part][2*i_face]-1;
+        for (int j = pcell_face_idx[i_part][cell_lid]; j < pcell_face_idx[i_part][cell_lid+1]; j++){
+          if (pcell_face[i_part][j] == -1*(i_face+1)){
+            pcell_face[i_part][j] = (i_face+1);
+            break;
+          }
+        }
+
+        /* Reverse face->vertex connectivity */
+        int offset     = pface_vtx_idx[i_part][i_face];
+        int n_face_vtx = pface_vtx_idx[i_part][i_face+1] - pface_vtx_idx[i_part][i_face];
+        int end_index  = n_face_vtx - 1;
+        int tmp_swap;
+        for (int j = 0; j < n_face_vtx/2; j++){
+          tmp_swap = pface_vtx[i_part][offset+end_index];
+          pface_vtx[i_part][offset+end_index] = pface_vtx[i_part][offset+j];
+          pface_vtx[i_part][offset+j] = tmp_swap;
+          end_index--;
+        }
+      }
+    }
+  }
+}
+
+/**
  *  \brief Recover partitioned entity groups (cell, face, vertex) from distributed
  *   entity groups. Return the list of local element id belonging to each group,
  *   and the position of those entities in the corresponding original (distributed) group.
@@ -621,6 +688,7 @@ PDM_part_distgroup_to_partgroup
  *
  *   The orientation data (ie negative index) present in the distributed connectivity,
  *   if any, are preserved, *meaning that boundary faces can be badly oriented on partitions*.
+ *   See PDM_part_reorient_bound_faces function to correct this orientation.
  *
  * \param [in]   comm                PDM_MPI communicator
  * \param [in]   entity_distribution Distribution of entities over the processes (size=n_rank+1)
@@ -853,6 +921,7 @@ PDM_part_dconnectivity_to_pconnectivity_sort
  *
  *   The orientation data (ie negative index) present in the distributed connectivity,
  *   if any, are preserved, *meaning that boundary faces can be badly oriented on partitions*.
+ *   See PDM_part_reorient_bound_faces function to correct this orientation.
  *
  * \param [in]   comm                PDM_MPI communicator
  * \param [in]   entity_distribution Distribution of entities over the processes (size=n_rank+1)

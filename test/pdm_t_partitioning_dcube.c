@@ -522,10 +522,13 @@ int main(int argc, char *argv[])
                 (int         ***) &pface_group,
                 (PDM_g_num_t ***) &pface_group_ln_to_gn);
 
-  /*
-   *  Edge
-   */
-
+  PDM_part_reorient_bound_faces(n_part,
+                                pn_faces,
+                                pface_cell,
+                                pcell_face_idx,
+                                pcell_face,
+                                pface_vtx_idx,
+                                pface_vtx);
 
   /*
    * Graph communication build
@@ -538,7 +541,7 @@ int main(int argc, char *argv[])
   for (int i_part = 0; i_part < n_res_part; i_part++) {
     face_is_bnd[i_part] = (int *) malloc(pn_faces[i_part]*sizeof(int));
     for (int i_face = 0; i_face < pn_faces[i_part]; i_face++){
-      if (pface_cell[i_part][2*i_face] > 0 && pface_cell[i_part][2*i_face+1] > 0)
+      if (pface_cell[i_part][2*i_face+1] > 0)
         face_is_bnd[i_part][i_face] = 0;
       else
         face_is_bnd[i_part][i_face] = 1;
