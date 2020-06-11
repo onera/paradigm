@@ -65,7 +65,23 @@ PDM_part_reverse_pcellface
 );
 
 /**
- *  \brief Setup cell_ln_to_gn
+ *  \brief Reorient the boundary faces such that they have a outward normal for the boundary cell.
+ */
+void
+PDM_part_reorient_bound_faces
+(
+  const int         n_part,
+  const int        *np_face,
+        int       **pface_cell,
+  const int       **pcell_face_idx,
+        int       **pcell_face,
+  const int       **pface_vtx_idx,
+        int       **pface_vtx
+);
+
+/**
+ *  \brief Recover partitioned entity groups (cell, face, vertex) from distributed
+ *   entity groups.
  */
 void
 PDM_part_distgroup_to_partgroup
