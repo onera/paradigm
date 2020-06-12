@@ -667,6 +667,40 @@ PDM_mesh_location_get
 }
 
 
+void
+PDM_mesh_location_get2
+(
+ const int     id,
+ const int     i_point_cloud,
+ const int     i_part,
+ int          *n_points,
+ double      **coords,
+ PDM_g_num_t **gnum,
+ PDM_g_num_t **location,
+ int         **weights_idx,
+ double      **weights
+ )
+{
+  _PDM_location_t *mesh_location = _get_from_id (id);
+
+  assert (mesh_location->point_clouds != NULL);
+  assert (i_point_cloud < mesh_location->n_point_cloud);
+
+  _point_cloud_t *pcloud = mesh_location->point_clouds + i_point_cloud;
+
+  assert (i_part < pcloud->n_part);
+
+  *n_points    = pcloud->n_points[i_part];
+  *coords      = pcloud->coords[i_part];
+  *gnum        = pcloud->gnum[i_part];
+  *location    = pcloud->location[i_part];
+  *weights_idx = pcloud->weights_idx[i_part];
+  *weights     = pcloud->weights[i_part];
+}
+
+
+
+
 /**
  *
  * \brief Free a locationd mesh structure
@@ -850,6 +884,8 @@ PDM_mesh_location_compute
  const int id
  )
 {
+  const float eps_dist = 1.e-6;
+
   const int DEBUG = 0;
   const int dim = 3;
 
@@ -1079,15 +1115,14 @@ PDM_mesh_location_compute
 
         printf("[%d] %d (%ld): ", my_rank, ibox, box_g_num[ibox]);
         for (int i = pts_idx[ibox]; i < pts_idx[ibox+1]; i++) {
-          printf("((%ld); %f %f %f) ",
-                 pts_g_num[i], pts_coord[dim*i], pts_coord[dim*i+1], pts_coord[dim*i+2]);
+          /*printf("((%ld); %f %f %f) ",
+            pts_g_num[i], pts_coord[dim*i], pts_coord[dim*i+1], pts_coord[dim*i+2]);*/
+          printf("(%ld) ", pts_g_num[i]);
         }
         printf("\n");
       }
       printf("[%d] ------------------\n\n\n", my_rank);
     }
-
-
 
     PDM_timer_hang_on(location->timer);
     e_t_elapsed = PDM_timer_elapsed(location->timer);
@@ -1119,6 +1154,29 @@ PDM_mesh_location_compute
       }
     }
 
+    //-->>
+    PDM_Mesh_nodal_elt_t *pts_elt_type = malloc (sizeof(PDM_Mesh_nodal_elt_t) * n_pts);
+    ibox = 0;
+    for (int iblock = 0; iblock < n_blocks; iblock++) {
+      int id_block = blocks_id[iblock];
+
+      PDM_Mesh_nodal_elt_t elt_type = PDM_Mesh_nodal_block_type_get (location->mesh_nodal_id,
+                                                                     id_block);
+
+      for (int ipart = 0; ipart < n_parts; ipart++) {
+        int n_elt = PDM_Mesh_nodal_block_n_elt_get (location->mesh_nodal_id,
+                                                    id_block,
+                                                    ipart);
+        for (int ielt = 0; ielt < n_elt; ielt++) {
+          for (int i = pts_idx[ibox]; i < pts_idx[ibox+1]; i++) {
+            pts_elt_type[i] = elt_type;
+          }
+          ibox++;
+        }
+      }
+    }
+    //<<--
+
     float  *distance         = NULL;
     double *projected_coords = NULL;
     int    *bar_coords_idx   = NULL;
@@ -1131,7 +1189,7 @@ PDM_mesh_location_compute
                               n_pts,
                               pts_idx,
                               pts_coord,
-                              pts_g_num,//
+                              pts_g_num,//debug only
                               tolerance,
                               base_element_num,
                               &distance,
@@ -1165,12 +1223,13 @@ PDM_mesh_location_compute
     double      *pcloud_weights        = NULL;
 
     /* Multiple ranks */
-    if (1) {//n_procs > 1) {
+    if (n_procs > 1) {
 
       /*
        * Merge location data of each point
        *   part_to_block_exchange : pts_location, pts_distance, bar_coords...
-       *   (for each point, keep data linked to element with minimal distance)
+       *   (for each point, keep data linked to element with minimal distance,
+       *    if two elements are at the same distance, keep the one with smallest type)
        *
        */
 
@@ -1187,6 +1246,7 @@ PDM_mesh_location_compute
 
       int *block_stride = NULL;
       PDM_g_num_t *block_location1 = NULL;
+      PDM_Mesh_nodal_elt_t *block_elt_type1 = NULL;//
       float       *block_distance1 = NULL;
       double      *block_bar_coords1 = NULL;
 
@@ -1205,6 +1265,17 @@ PDM_mesh_location_compute
                               (void **) &block_location1);
       free (block_stride);
       free (pts_location);
+
+      PDM_part_to_block_exch (ptb,
+                              sizeof(PDM_Mesh_nodal_elt_t),
+                              PDM_STRIDE_VAR,
+                              1,
+                              &stride,
+                              (void **) &pts_elt_type,
+                              &block_stride,
+                              (void **) &block_elt_type1);
+      free (block_stride);
+      free (pts_elt_type);
 
       PDM_part_to_block_exch (ptb,
                               sizeof(float),
@@ -1269,8 +1340,6 @@ PDM_mesh_location_compute
       free (block_idx1);
 
       PDM_g_num_t *block_location2 = malloc (sizeof(PDM_g_num_t) * n_pts_block);
-      //float       *block_distance2 = malloc (sizeof(float)       * n_pts_block);
-
 
       idx = 0;
       for (int i = 0; i < n_pts_block; i++) {
@@ -1282,11 +1351,15 @@ PDM_mesh_location_compute
 
         if (n_elt > 1) {
           float min_dist = HUGE_VAL;
+          PDM_Mesh_nodal_elt_t type_min = -1;
           jmin = -1;
 
           for (int j = 0; j < n_elt; j++) {
-            if (block_distance1[idx + j] < min_dist) {
+            if (min_dist > block_distance1[idx + j] ||
+                (min_dist < block_distance1[idx + j] + eps_dist &&
+                 type_min > block_elt_type1[idx + j])) {
               min_dist = block_distance1[idx + j];
+              type_min = block_elt_type1[idx + j];
               jmin = j;
             }
           }
@@ -1294,7 +1367,6 @@ PDM_mesh_location_compute
 
         jmin += idx;
         block_location2[i] = block_location1[jmin];
-        //block_distance2[i] = block_distance1[jmin];
 
         block_bar_coords_idx2[i+1] = block_bar_coords_idx2[i] + block_n_vtx_elt1[jmin];
         for (int k = 0; k < block_n_vtx_elt1[jmin]; k++) {
@@ -1308,6 +1380,7 @@ PDM_mesh_location_compute
       free (block_n_vtx_elt1);
       free (block_bar_coords_idx1);
       free (block_distance1);
+      free (block_elt_type1);
       free (block_location1);
       free (block_bar_coords1);
 
@@ -1384,9 +1457,75 @@ PDM_mesh_location_compute
     else {
       /*
        * Keep closest elements
+       * (if two elements are at the same distance, keep the one with smallest type)
+       * !!! PB si plusieurs nuages de points (max(gnum) > n_pts_pcloud...)
        */
+      int   *idx_min  = malloc (sizeof(int)   * n_pts_pcloud);
+      float *dist_min = malloc (sizeof(float) * n_pts_pcloud);
+      PDM_Mesh_nodal_elt_t *type_min = malloc (sizeof(PDM_Mesh_nodal_elt_t) * n_pts_pcloud);
+      for (int ipt = 0; ipt < n_pts_pcloud; ipt++) {
+        dist_min[ipt] = HUGE_VAL;
+        type_min[ipt] = -1;
+      }
 
+      for (int i = 0; i < n_pts; i++) {
+        PDM_g_num_t id_pt = pts_g_num[i] - 1;
 
+        if (dist_min[id_pt] > distance[i] ||
+            (dist_min[id_pt] < distance[i] + eps_dist &&
+             type_min[id_pt] > pts_elt_type[i])) {
+          idx_min[id_pt] = i;
+          dist_min[id_pt] = distance[i];
+          type_min[id_pt] = pts_elt_type[i];
+        }
+      }
+      free (dist_min);
+      free (distance);
+      free (type_min);
+      free (pts_elt_type);
+
+      pcloud_location       = malloc (sizeof(PDM_g_num_t) * n_pts_pcloud);
+      pcloud_weights_stride = malloc (sizeof(int)         * n_pts_pcloud);
+      pcloud_weights_idx    = malloc (sizeof(int)         * (n_pts_pcloud + 1));
+      pcloud_weights_idx[0] = 0;
+
+      for (int ipt = 0; ipt < n_pts_pcloud; ipt++) {
+        PDM_g_num_t id_pt = pcloud_g_num[ipt] - 1;
+        int i = idx_min[id_pt];
+
+        pcloud_location[ipt] = pts_location[i];
+        pcloud_weights_stride[ipt] = bar_coords_idx[i+1] - bar_coords_idx[i];
+        pcloud_weights_idx[ipt+1] = pcloud_weights_idx[ipt] + pcloud_weights_stride[ipt];
+      }
+      free (pts_location);
+
+      pcloud_weights = malloc (sizeof(double) * pcloud_weights_idx[n_pts_pcloud]);
+      for (int ipt = 0; ipt < n_pts_pcloud; ipt++) {
+        PDM_g_num_t id_pt = pcloud_g_num[ipt] - 1;
+        int i = idx_min[id_pt];
+
+        for (int j = 0; j < pcloud_weights_stride[ipt]; j++) {
+          pcloud_weights[pcloud_weights_idx[ipt] + j] =
+            bar_coords[bar_coords_idx[i] + j];
+        }
+      }
+
+#if 0
+      printf("* * * * * *\n");
+      for (int ipt = 0; ipt < n_pts_pcloud; ipt++) {
+        printf("Pt (%ld), weights =", pcloud_g_num[ipt]);
+        for (int i = pcloud_weights_idx[ipt]; i < pcloud_weights_idx[ipt+1]; i++) {
+          printf(" %f", pcloud_weights[i]);
+        }
+        printf("\n");
+      }
+      printf("* * * * * *\n");
+#endif
+
+      free (idx_min);
+      free (bar_coords_idx);
+      free (bar_coords);
+      free (pcloud_g_num);
     }
 
 
@@ -1474,6 +1613,18 @@ PDM_mesh_location_compute
   b_t_cpu_s   = location->times_cpu_s[END];
   PDM_timer_resume(location->timer);
 
+}
+
+
+int
+PDM_mesh_location_mesh_nodal_id_get
+(
+ const int id
+ )
+{
+  _PDM_location_t *location = _get_from_id (id);
+
+  return location->mesh_nodal_id;
 }
 
 #ifdef	__cplusplus

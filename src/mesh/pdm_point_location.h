@@ -10,6 +10,9 @@
  *----------------------------------------------------------------------------*/
 
 #include "pdm.h"
+//-->>
+#include "pdm_mesh_nodal.h"
+//<<--
 
 /*=============================================================================
  * Macro definitions
@@ -60,6 +63,17 @@ PDM_locate_points_in_tetra (const double       vtx_xyz[12],
                             const PDM_g_num_t  pts_g_num[],
                             float             *distance,
                             double            *bary_coords);
+
+#if 1
+void PDM_point_location_distance
+(
+ const PDM_Mesh_nodal_elt_t elt_type,
+ const int                  n_pts,
+ const double               uvw[],
+ double                     shapef[],
+ double                     distance[]
+ );
+#endif
 //<<--
 #ifdef __cplusplus
 }

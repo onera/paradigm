@@ -459,8 +459,8 @@ PDM_line_distance_2d
   closest_point[0] = closest[0];
   closest_point[1] = closest[1];
 
-  vect[0] -= uv[0];
-  vect[1] -= uv[1];
+  vect[0] = uv[0] - closest[0];
+  vect[1] = uv[1] - closest[1];
 
   return PDM_DOT_PRODUCT_2D (vect, vect);
 }

@@ -7258,7 +7258,7 @@ PDM_para_octree_points_inside_boxes
 {
   const int DEBUG = 0;
 
-  const int VISU = 0;
+  const int VISU = 1;
   const int VISU_POINTS_GNUM = 1;
 
 
@@ -7680,6 +7680,8 @@ PDM_para_octree_points_inside_boxes
 
   /* Single rank */
   else {
+    free (box_pts_n);
+
     *pts_in_box_idx   = box_pts_idx;
     *pts_in_box_g_num = box_pts_g_num;
     *pts_in_box_coord = box_pts_coord;

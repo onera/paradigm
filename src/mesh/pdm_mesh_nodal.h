@@ -755,6 +755,16 @@ const int            id_part,
       PDM_l_num_t  **cellfac
 );
 
+void
+PDM_Mesh_nodal_block_poly3d_cell_vtx_connect_get
+(
+ const int            idx,
+ const int            id_block,
+ const int            id_part,
+ PDM_l_num_t  **cellvtx_idx,
+ PDM_l_num_t  **cellvtx
+ );
+
 /**
  * \brief  Add some 3D cells from cell face conectivity.
  *
@@ -980,6 +990,18 @@ PDM_Mesh_nodal_compute_cell_extents
  double       *extents
  );
 
+
+
+PDM_l_num_t
+PDM_Mesh_nodal_poly3d_cell_vtx_get
+(
+ const PDM_l_num_t   icell,
+ const PDM_l_num_t   face_vtx_idx[],
+ const PDM_l_num_t   face_vtx[],
+ const PDM_l_num_t   cell_face_idx[],
+ const PDM_l_num_t   cell_face[],
+ PDM_l_num_t       **cell_vtx
+ );
 
 #ifdef __cplusplus
 }
