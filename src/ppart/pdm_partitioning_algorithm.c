@@ -1489,11 +1489,11 @@ PDM_generate_entity_graph_comm
       _pproc_bound_idx[i_part][opp_proc  +1] += 1;
       _ppart_bound_idx[i_part][opp_part_g+1] += 1;
 
-      _pentity_bound[i_part][4*i  ] = connect_info[2*idx  ];
-      _pentity_bound[i_part][4*i+3] = connect_info[2*idx+1];
+      _pentity_bound[i_part][4*i  ] = connect_info[2*idx  ] + 1;
+      _pentity_bound[i_part][4*i+3] = connect_info[2*idx+1] + 1;
 
       _pentity_bound[i_part][4*i+1] = opp_proc;
-      _pentity_bound[i_part][4*i+2] = opp_part;
+      _pentity_bound[i_part][4*i+2] = opp_part + 1;
 
     }
 
