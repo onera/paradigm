@@ -408,12 +408,6 @@ _search_matching_joins
   PDM_MPI_Comm_rank(_multipart->comm, &i_rank);
   PDM_MPI_Comm_size(_multipart->comm, &n_rank);
 
-  int *bounds_and_joins_idx = (int *) malloc((_multipart->n_zone + 1) * sizeof(int));
-  bounds_and_joins_idx[0] = 0;
-  for (int i = 0; i < _multipart->n_zone; i++){
-    bounds_and_joins_idx[i + 1] = _multipart->n_part[i] + bounds_and_joins_idx[i];
-  }
-
   //Construction of (unique) join distribution
   int *join_to_ref_join = (int *) malloc(_multipart->n_total_joins * sizeof(int));
   int *face_in_join_distri = (int *) malloc(((_multipart->n_total_joins)/2+1) * sizeof(int));
@@ -422,10 +416,7 @@ _search_matching_joins
   //Count total nb of join_faces
   int nb_of_joins      = 0;
   for (int izone = 0 ; izone < _multipart->n_zone; izone ++) {
-    for (int i_part = 0; i_part < _multipart->n_part[izone]; i_part++) {
-      int idx = bounds_and_joins_idx[izone] + i_part; //TO CHECK
-      nb_of_joins += _multipart->pbounds_and_joins[idx]->n_join;
-    }
+    nb_of_joins += _multipart->n_part[izone] * _multipart->n_bounds_and_joins[2*izone+1];
   }
 
   // Prepare lntogn numbering and partitioned data
@@ -435,32 +426,29 @@ _search_matching_joins
 
   int ijoin_pos  = 0;
   for (int izone = 0 ; izone < _multipart->n_zone; izone ++) {
+    int n_join = _multipart->n_bounds_and_joins[2*izone+1];
+    _part_mesh_t _pmeshes = _multipart->pmeshes[izone];
     for (int i_part = 0; i_part < _multipart->n_part[izone]; i_part++) {
-      int idx = bounds_and_joins_idx[izone] + i_part; //TO CHECK
-      int  n_join           = _multipart->pbounds_and_joins[idx]->n_join;
-      int *face_join_idx    = _multipart->pbounds_and_joins[idx]->face_join_idx;
-      int *face_join        = _multipart->pbounds_and_joins[idx]->face_join;
-      int *face_join_lntogn = _multipart->pbounds_and_joins[idx]->face_join_ln_to_gn;
+      int *face_join_idx    = _pmeshes.pface_join_idx[i_part];
+      int *face_join        = _pmeshes.pface_join[i_part];
+      int *face_join_lntogn = _pmeshes.pface_join_ln_to_gn[i_part];
       for (int ijoin = 0; ijoin < n_join; ijoin++) {
         int join_size = face_join_idx[ijoin + 1] - face_join_idx[ijoin];
         nb_face_per_join[ijoin_pos] = join_size;
         PDM_g_num_t *shifted_lntogn_loc = (PDM_g_num_t *) malloc(join_size * sizeof(PDM_g_num_t));
         int         *part_data_loc      = (int *) malloc(3 * join_size * sizeof(int));
-        if (join_size != 0)
-        {
-          //Attention à la cohérence des gids, qui démarrent parfois à 1 parfois à 0... ici à 0
-          //Get shift value from join unique distribution
-          int join_gid    = _multipart->pbounds_and_joins[idx]->joins_ids[ijoin];
-          int shift_value = face_in_join_distri[join_to_ref_join[join_gid]];
-          int j = 0;
-          //Prepare partitioned data : (PL, i_rank, i_part)
-          for (int iface = face_join_idx[ijoin]; iface < face_join_idx[ijoin + 1]; iface ++) {
-            shifted_lntogn_loc[j] = (PDM_g_num_t) shift_value + face_join_lntogn[iface];
-            part_data_loc[3*j]    = face_join[4*iface];
-            part_data_loc[3*j+1]  = i_rank;
-            part_data_loc[3*j+2]  = i_part;
-            j++;
-          }
+        //Attention à la cohérence des gids, qui démarrent parfois à 1 parfois à 0... ici à 0
+        //Get shift value from join unique distribution
+        int join_gid    = _multipart->joins_ids[izone][ijoin] - 1;
+        int shift_value = face_in_join_distri[join_to_ref_join[join_gid]];
+        int j = 0;
+        //Prepare partitioned data : (PL, i_rank, i_part)
+        for (int iface = face_join_idx[ijoin]; iface < face_join_idx[ijoin + 1]; iface ++) {
+          shifted_lntogn_loc[j] = (PDM_g_num_t) shift_value + face_join_lntogn[iface];
+          part_data_loc[3*j]    = face_join[4*iface];
+          part_data_loc[3*j+1]  = i_rank;
+          part_data_loc[3*j+2]  = i_part;
+          j++;
         }
         shifted_lntogn[ijoin_pos] = shifted_lntogn_loc;
         part_data[ijoin_pos] = part_data_loc;
@@ -566,11 +554,11 @@ _search_matching_joins
   //Process received data
   ijoin_pos = 0;
   for (int izone = 0 ; izone < _multipart->n_zone; izone ++) {
+    int n_join = _multipart->n_bounds_and_joins[2*izone+1];
+    _part_mesh_t _pmeshes = _multipart->pmeshes[izone];
     for (int i_part = 0; i_part < _multipart->n_part[izone]; i_part++) {
-      int idx = bounds_and_joins_idx[izone] + i_part; //TO CHECK
-      int  n_join        = _multipart->pbounds_and_joins[idx]->n_join;
-      int *face_join_idx = _multipart->pbounds_and_joins[idx]->face_join_idx;
-      int *face_join     = _multipart->pbounds_and_joins[idx]->face_join;
+      int *face_join_idx = _pmeshes.pface_join_idx[i_part];
+      int *face_join     = _pmeshes.pface_join[i_part];
       for (int ijoin = 0; ijoin < n_join; ijoin++) {
         int join_size = face_join_idx[ijoin + 1] - face_join_idx[ijoin];
         int *part_data_loc = new_part_data[ijoin_pos];
@@ -636,7 +624,6 @@ _search_matching_joins
   free(new_part_data);
   free(face_in_join_distri);
   free(nb_face_per_join);
-  free(bounds_and_joins_idx);
 }
 
 
@@ -875,6 +862,7 @@ PDM_multipart_run_ppart
                                      &_pmeshes->pface_bound_idx,
                                      &_pmeshes->pface_bound,
                                      &_pmeshes->pface_bound_ln_to_gn);
+      int **pface_join_tmp = NULL;
       PDM_part_distgroup_to_partgroup(_multipart->comm,
                                       face_distri,
                                       n_join,
@@ -884,8 +872,20 @@ PDM_multipart_run_ppart
                                       _pmeshes->pn_face,
                                       _pmeshes->pface_ln_to_gn,
                                      &_pmeshes->pface_join_idx,
-                                     &_pmeshes->pface_join,
+                                     &pface_join_tmp,
                                      &_pmeshes->pface_join_ln_to_gn);
+      /* This function only returns local id of face in join, we have to allocate to
+         set up expected size (4*nb_face_join : store iface, opp_rank, opp_part, opp id) */
+      _pmeshes->pface_join = (int **) malloc(n_part*sizeof(int*));
+      for (int i_part = 0; i_part < n_part; i_part++){
+        int n_face_join_tot = _pmeshes->pface_join_idx[i_part][n_join];
+        _pmeshes->pface_join[i_part] = (int *) malloc(4*n_face_join_tot*sizeof(int));
+        for (int i_face = 0; i_face < n_face_join_tot; i_face++){
+          _pmeshes->pface_join[i_part][4*i_face] = pface_join_tmp[i_part][i_face];
+        }
+      }
+      free(pface_join_tmp);
+
       PDM_generate_entity_graph_comm(_multipart->comm,
                                      part_distri,
                                      face_distri,
@@ -966,7 +966,7 @@ PDM_multipart_run_ppart
       free(dface_group);
     }
     // Now separate joins and boundaries and we rebuild joins over the zones
-    _split_bounds_and_joins(_multipart);
+    //_split_bounds_and_joins(_multipart);
     _search_matching_joins(_multipart);
   }
 }
