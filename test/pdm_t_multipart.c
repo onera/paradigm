@@ -7,7 +7,7 @@
 #include "pdm.h"
 #include "pdm_config.h"
 #include "pdm_mpi.h"
-#include "pdm_part.h"
+#include "pdm_para_graph_dual.h"
 #include "pdm_multipart.h"
 #include "pdm_dcube_gen.h"
 #include "pdm_printf.h"
@@ -455,10 +455,10 @@ int main(int argc, char *argv[])
   char               *distri_dir = strdup("\0");
 
 #ifdef PDM_HAVE_PARMETIS
-  PDM_part_split_t method  = PDM_PART_SPLIT_PARMETIS;
+  PDM_split_dual_t method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
 #else
 #ifdef PDM_HAVE_PTSCOTCH
-  PDM_part_split_t method  = PDM_PART_SPLIT_PTSCOTCH;
+  PDM_split_dual_t method  = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
 #endif
 #endif
 

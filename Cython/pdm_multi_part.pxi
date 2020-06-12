@@ -1,4 +1,7 @@
-
+cdef extern from "pdm_para_graph_dual.h":
+    ctypedef enum PDM_split_dual_t:
+        PDM_SPLIT_DUAL_WITH_PARMETIS = 1
+        PDM_SPLIT_DUAL_WITH_PTSCOTCH = 2
 cdef extern from "pdm_multipart.h":
 
     # -> PPART bases functions
@@ -7,7 +10,7 @@ cdef extern from "pdm_multipart.h":
     int PDM_multipart_create(int              n_zone,
                              int*             n_part,
                              PDM_bool_t       merge_blocks,
-                             PDM_part_split_t split_method,
+                             PDM_split_dual_t split_method,
                              PDM_MPI_Comm     comm)
 
     # ------------------------------------------------------------------
@@ -96,7 +99,7 @@ cdef class MultiPart:
                   int                                           n_zone,
                   NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] n_part,
                   int                                           merge_blocks,
-                  PDM_part_split_t                              split_method,
+                  PDM_split_dual_t                              split_method,
                   MPI.Comm                                      comm):
 
         """
