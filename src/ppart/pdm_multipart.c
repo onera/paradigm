@@ -36,7 +36,6 @@
 
 #include "pdm.h"
 #include "pdm_mpi.h"
-#include "pdm_part.h"
 #include "pdm_distrib.h"
 #include "pdm_partitioning_algorithm.h"
 #include "pdm_para_graph_dual.h"
@@ -106,11 +105,9 @@ typedef struct  {
   int               n_zone;           /*!< Number of initial zones */
   const int        *n_part;          /*!< Number of partitions per proc in each zone */
   PDM_bool_t        merge_blocks;     /*!< Merge before partitionning or not */
-  PDM_part_split_t  split_method;     /*!< Partitioning method */
+  PDM_split_dual_t  split_method;     /*!< Partitioning method */
   PDM_MPI_Comm      comm;             /*!< MPI communicator */
   int               *dmeshes_ids;      /*!< Ids of distributed blocks (size = n_zone)  */
-  int               *part_ids;         /*!< Ids of partitions built on each block of this
-                                           process (size = n_zone)                    */
   _part_mesh_t      *pmeshes;
   int               *n_bounds_and_joins; /*!< Number of boundaries and joins in each zone
                                            (size = 2*n_zone, global data)             */
@@ -506,7 +503,7 @@ PDM_multipart_create
  const int              n_zone,
  const int             *n_part,
  const PDM_bool_t       merge_blocks,
- const PDM_part_split_t split_method,
+ const PDM_split_dual_t split_method,
  const PDM_MPI_Comm     comm
 )
 {
@@ -531,14 +528,12 @@ PDM_multipart_create
   _multipart->comm        = comm;
 
   _multipart->dmeshes_ids      = (int *) malloc(_multipart->n_zone * sizeof(int));
-  _multipart->part_ids         = (int *) malloc(_multipart->n_zone * sizeof(int));
   _multipart->pmeshes = (_part_mesh_t *) malloc(_multipart->n_zone * sizeof(_part_mesh_t));
   _multipart->n_bounds_and_joins = (int *) malloc(_multipart->n_zone * 2 * sizeof(int));
   _multipart->joins_ids        = (int **) malloc(_multipart->n_zone * sizeof(int*));
 
   for (int izone = 0; izone < _multipart->n_zone; izone++) {
     _multipart->dmeshes_ids[izone] = -1;
-    _multipart->part_ids   [izone] = -1;
     _multipart->n_bounds_and_joins[2*izone]   = -1;
     _multipart->n_bounds_and_joins[2*izone+1] = -1;
   }
@@ -604,7 +599,6 @@ PDM_multipart_run_ppart
     for (int zone_gid = 0; zone_gid < _multipart->n_zone; zone_gid++) {
       PDM_printf("You requested no merge : partitionning zone %d/%d \n", zone_gid+1, _multipart->n_zone);
       int block_id = _multipart->dmeshes_ids[zone_gid];
-      PDM_printf("block id for zone %d is %d\n", zone_gid, block_id);
       int dn_cell  = 0;
       int dn_face  = 0;
       int dn_vtx   = 0;
@@ -620,13 +614,16 @@ PDM_multipart_run_ppart
       const int          *dface_join_idx;
       const PDM_g_num_t  *dface_join;
 
-      int n_face_group = 0;
-      int          *dface_group_idx = NULL;
-      PDM_g_num_t  *dface_group    = NULL;
-
       PDM_dmesh_dims_get(block_id, &dn_cell, &dn_face, &dn_vtx, &n_bnd, &n_join);
       PDM_dmesh_data_get(block_id, &dvtx_coord, &dface_vtx_idx, &dface_vtx, &dface_cell,
                          &dface_bound_idx, &dface_bound, &djoin_gids, &dface_join_idx, &dface_join);
+
+      //Store number of bounds and joins in the structure
+      _multipart->n_bounds_and_joins[2*zone_gid    ] = n_bnd;
+      _multipart->n_bounds_and_joins[2*zone_gid + 1] = n_join;
+      _multipart->joins_ids[zone_gid] = (int *) malloc(n_join*sizeof(int));
+      for (int i_join = 0; i_join < n_join; i_join++)
+        _multipart->joins_ids[zone_gid][i_join] = djoin_gids[2*i_join];
 
       int n_part = _multipart->n_part[zone_gid];
       PDM_g_num_t *cell_distri = PDM_compute_entity_distribution(_multipart->comm, dn_cell);
@@ -759,67 +756,6 @@ PDM_multipart_run_ppart
       free(vtx_distri);
       free(part_distri);
 
-      //Merge face_bounds and face_joins into face_group
-      n_face_group = n_bnd + n_join;
-      dface_group_idx = (int *)         malloc((n_face_group + 1) * sizeof(int));
-      dface_group     = (PDM_g_num_t *) malloc((dface_bound_idx[n_bnd] + dface_join_idx[n_join]) * sizeof(PDM_g_num_t));
-
-      for (int i=0; i < n_bnd + 1; i++)
-        dface_group_idx[i] = dface_bound_idx[i];
-      for (int i=0; i < dface_bound_idx[n_bnd]; i++)
-        dface_group[i] = dface_bound[i];
-
-      for (int i=1; i < n_join + 1; i++)
-        dface_group_idx[n_bnd + i] = dface_bound_idx[n_bnd] + dface_join_idx[i];
-      for (int i=0; i < dface_join_idx[n_join]; i++)
-        dface_group[dface_bound_idx[n_bnd] + i] = dface_join[i];
-
-      //Store number of bounds and joins in the structure
-      _multipart->n_bounds_and_joins[2*zone_gid    ] = n_bnd;
-      _multipart->n_bounds_and_joins[2*zone_gid + 1] = n_join;
-      _multipart->joins_ids[zone_gid] = (int *) malloc(n_join*sizeof(int));
-      for (int i_join = 0; i_join < n_join; i_join++)
-        _multipart->joins_ids[zone_gid][i_join] = djoin_gids[2*i_join];
-
-      int ppart_id = 0;
-      int have_dcell_part = 0;
-      int *dcell_part = (int *) malloc(dn_cell*sizeof(int));
-      // We probably should create a subcomm to imply only the procs sharing this block
-      PDM_part_create(&ppart_id,
-                      _multipart->comm,
-                      _multipart->split_method,
-                      "PDM_PART_RENUM_CELL_NONE",
-                      "PDM_PART_RENUM_FACE_NONE",
-                      0,                          // n_property_cell
-                      NULL,                       // renum_properties_cell
-                      0,                          // n_property_face
-                      NULL,                       // renum_properties_face
-                      _multipart->n_part[zone_gid],
-                      dn_cell,
-                      dn_face,
-                      dn_vtx,
-                      n_face_group,
-                      NULL,                       // dcell_faceIdx
-                      NULL,                       // dcell_face
-                      NULL,                       // dcell_tag
-                      NULL,                       // dcell_weight
-                      have_dcell_part,
-                      dcell_part,                  // dcell_part
-                      dface_cell,
-                      dface_vtx_idx,
-                      dface_vtx,
-                      NULL,
-                      dvtx_coord,
-                      NULL,                       // dvtx_tag
-                      dface_group_idx,
-                      dface_group);
-      PDM_printf("Partitionning done, ppardId is %d \n", ppart_id);
-      //Store the partition id for future access
-      _multipart->part_ids[zone_gid] = ppart_id;
-
-      free(dcell_part);
-      free(dface_group_idx);
-      free(dface_group);
     }
     // Now separate joins and boundaries and we rebuild joins over the zones
     _search_matching_joins(_multipart);
@@ -999,10 +935,8 @@ PDM_multipart_free
 
   for (int izone = 0; izone<_multipart->n_zone; izone++)
   {
-    PDM_part_free(_multipart->part_ids[izone]);
     free(_multipart->joins_ids[izone]);
   }
-  free(_multipart->part_ids);
   free(_multipart->joins_ids);
 
   free (_multipart);
