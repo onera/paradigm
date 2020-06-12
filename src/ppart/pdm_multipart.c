@@ -81,6 +81,7 @@ typedef struct  {
 } _bounds_and_joins_t;
 
 typedef struct  {
+  int  tn_part;
   int *pn_cell;
   int *pn_face;
   int *pn_vtx;
@@ -95,10 +96,10 @@ typedef struct  {
   int **pface_vtx;
   int **pface_bound_idx;
   int **pface_bound;
-  PDM_g_num_t pface_bound_ln_to_gn;
+  PDM_g_num_t **pface_bound_ln_to_gn;
   int **pface_join_idx;
   int **pface_join;
-  PDM_g_num_t pface_join_ln_to_gn;
+  PDM_g_num_t **pface_join_ln_to_gn;
   int **pinternal_face_bound_procidx;
   int **pinternal_face_bound_partidx;
   int **pinternal_face_bound;
@@ -818,6 +819,7 @@ PDM_multipart_run_ppart
       free(dual_graph_idx);
       free(dual_graph);
       _part_mesh_t *_pmeshes = &(_multipart->pmeshes[zone_gid]);
+      _pmeshes->tn_part = tn_part;
 
       PDM_part_assemble_partitions(_multipart->comm,
                                    part_distri,
@@ -992,33 +994,24 @@ const   int  i_part,
   _pdm_multipart_t *_multipart = _get_from_id (mpart_id);
 
   assert(zone_gid < _multipart->n_zone && i_part < _multipart->n_part[zone_gid]);
-  int ppart_id = _multipart->part_ids[zone_gid];
+  _part_mesh_t _pmeshes = _multipart->pmeshes[zone_gid];
 
-  PDM_part_part_dim_get(ppart_id,
-                        i_part,
-                        n_cell,
-                        n_face,
-                        n_face_part_bound,
-                        n_vtx,
-                        n_proc,
-                        n_total_part,
-                        scell_face,
-                        sface_vtx,
-                        sface_bound,
-                        n_face_bound);
+  *n_cell = _pmeshes.pn_cell[i_part];
+  *n_face = _pmeshes.pn_face[i_part];
+  *n_vtx  = _pmeshes.pn_vtx[i_part];
 
-  // Get boundary and join data from pbounds_and_joins
-  int idx = 0;
-  for (int i = 0; i < zone_gid; i++)
-    idx += _multipart->n_part[i];
-  idx += i_part;
+  PDM_MPI_Comm_size(_multipart->comm, n_proc);
+  *n_total_part = _pmeshes.tn_part;
 
-  //Attention au cas ou pas de face de bord
-  *n_face_bound = _multipart->pbounds_and_joins[idx]->n_bound;
-  *sface_bound = _multipart->pbounds_and_joins[idx]->face_bound_idx[*n_face_bound];
-  *n_face_join  = _multipart->pbounds_and_joins[idx]->n_join;
-  *sface_join  = _multipart->pbounds_and_joins[idx]->face_join_idx[*n_face_join];
+  *scell_face = _pmeshes.pcell_face_idx[i_part][*n_cell];
+  *sface_vtx  = _pmeshes.pface_vtx_idx[i_part][*n_face];
 
+  *n_face_part_bound = _pmeshes.pinternal_face_bound_partidx[i_part][*n_total_part];
+
+  *n_face_bound = _multipart->n_bounds_and_joins[2*zone_gid]; //Number of bnd groups
+  *n_face_join  = _multipart->n_bounds_and_joins[2*zone_gid+1]; //Number of join groups
+  *sface_bound  = _pmeshes.pface_bound_idx[i_part][*n_face_bound];
+  *sface_join   = _pmeshes.pface_join_idx[i_part][*n_face_join];
 }
 
 void
@@ -1053,42 +1046,34 @@ const int            i_part,
    _pdm_multipart_t *_multipart = _get_from_id (mpart_id);
 
   assert(zone_gid < _multipart->n_zone && i_part < _multipart->n_part[zone_gid]);
-  int ppart_id = _multipart->part_ids[zone_gid];
+  _part_mesh_t _pmeshes = _multipart->pmeshes[zone_gid];
 
-  PDM_part_part_val_get(ppart_id,
-                        i_part,
-                        cell_tag,
-                        cell_face_idx,
-                        cell_face,
-                        cell_ln_to_gn,
-                        face_tag,
-                        face_cell,
-                        face_vtx_idx,
-                        face_vtx,
-                        face_ln_to_gn,
-                        face_part_bound_proc_idx,
-                        face_part_bound_part_idx,
-                        face_part_bound,
-                        vtx_tag,
-                        vtx,
-                        vtx_ln_to_gn,
-                        face_bound_idx,
-                        face_bound,
-                        face_bound_ln_to_gn
-                        );
+  *cell_tag = NULL;
+  *face_tag = NULL;
+  *vtx_tag  = NULL;
 
-  // Get boundary and join data from pbounds_and_joins
-  int idx = 0;
-  for (int i = 0; i < zone_gid; i++)
-    idx += _multipart->n_part[i];
-  idx += i_part;
-  //Attention au cas ou pas de face de bord
-  *face_bound_idx       = _multipart->pbounds_and_joins[idx]->face_bound_idx;
-  *face_bound           = _multipart->pbounds_and_joins[idx]->face_bound;
-  *face_bound_ln_to_gn  = _multipart->pbounds_and_joins[idx]->face_bound_ln_to_gn;
-  *face_join_idx        = _multipart->pbounds_and_joins[idx]->face_join_idx;
-  *face_join            = _multipart->pbounds_and_joins[idx]->face_join;
-  *face_join_ln_to_gn   = _multipart->pbounds_and_joins[idx]->face_join_ln_to_gn;
+  *cell_ln_to_gn = _pmeshes.pcell_ln_to_gn[i_part];
+  *face_ln_to_gn = _pmeshes.pface_ln_to_gn[i_part];
+  *vtx_ln_to_gn  = _pmeshes.pvtx_ln_to_gn[i_part];
+
+  *cell_face_idx = _pmeshes.pcell_face_idx[i_part];
+  *cell_face     = _pmeshes.pcell_face[i_part];
+  *face_cell     = _pmeshes.pface_cell[i_part];
+  *face_vtx_idx  = _pmeshes.pface_vtx_idx[i_part];
+  *face_vtx      = _pmeshes.pface_vtx[i_part];
+
+  *vtx           = _pmeshes.pvtx_coord[i_part];
+
+  *face_part_bound_proc_idx = _pmeshes.pinternal_face_bound_procidx[i_part];
+  *face_part_bound_part_idx = _pmeshes.pinternal_face_bound_partidx[i_part];
+  *face_part_bound          = _pmeshes.pinternal_face_bound[i_part];
+
+  *face_bound_idx       = _pmeshes.pface_bound_idx[i_part];
+  *face_bound           = _pmeshes.pface_bound[i_part];
+  *face_bound_ln_to_gn  = _pmeshes.pface_bound_ln_to_gn[i_part];
+  *face_join_idx        = _pmeshes.pface_join_idx[i_part];
+  *face_join            = _pmeshes.pface_join[i_part];
+  *face_join_ln_to_gn   = _pmeshes.pface_join_ln_to_gn[i_part];
 
 }
 
@@ -1107,14 +1092,12 @@ const int            i_part,
   _pdm_multipart_t *_multipart = _get_from_id (mpart_id);
 
   assert(zone_gid < _multipart->n_zone && i_part < _multipart->n_part[zone_gid]);
-  int ppart_id = _multipart->part_ids[zone_gid];
 
-  PDM_part_part_color_get(ppart_id,
-                          i_part,
-                          cell_color,
-                          face_color,
-                          thread_color,
-                          hyperplane_color);
+  PDM_printf("PDM_multipart_part_color_get: Not implemented\n");
+  *cell_color       = NULL;
+  *face_color       = NULL;
+  *thread_color     = NULL;
+  *hyperplane_color = NULL;
 
 }
 
@@ -1131,13 +1114,12 @@ const int       zone_gid,
 {
   _pdm_multipart_t *_multipart = _get_from_id (mpart_id);
   assert(zone_gid < _multipart->n_zone);
-  int ppart_id = _multipart->part_ids[zone_gid];
 
-  PDM_part_time_get(ppart_id,
-                    elapsed,
-                    cpu,
-                    cpu_user,
-                    cpu_sys);
+  PDM_printf("PDM_multipart_time_get: Not implemented\n");
+  *elapsed  = NULL;
+  *cpu      = NULL;
+  *cpu_user = NULL;
+  *cpu_sys  = NULL;
 
 }
 
