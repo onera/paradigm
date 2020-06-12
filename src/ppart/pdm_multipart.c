@@ -37,6 +37,9 @@
 #include "pdm.h"
 #include "pdm_mpi.h"
 #include "pdm_part.h"
+#include "pdm_distrib.h"
+#include "pdm_partitioning_algorithm.h"
+#include "pdm_para_graph_dual.h"
 #include "pdm_handles.h"
 #include "pdm_dmesh.h"
 #include "pdm_printf.h"
@@ -77,6 +80,31 @@ typedef struct  {
 
 } _bounds_and_joins_t;
 
+typedef struct  {
+  int *pn_cell;
+  int *pn_face;
+  int *pn_vtx;
+  PDM_g_num_t **pcell_ln_to_gn;
+  PDM_g_num_t **pface_ln_to_gn;
+  PDM_g_num_t **pvtx_ln_to_gn;
+  double **pvtx_coord;
+  int **pcell_face_idx;
+  int **pcell_face;
+  int **pface_cell;
+  int **pface_vtx_idx;
+  int **pface_vtx;
+  int **pface_bound_idx;
+  int **pface_bound;
+  PDM_g_num_t pface_bound_ln_to_gn;
+  int **pface_join_idx;
+  int **pface_join;
+  PDM_g_num_t pface_join_ln_to_gn;
+  int **pinternal_face_bound_procidx;
+  int **pinternal_face_bound_partidx;
+  int **pinternal_face_bound;
+
+} _part_mesh_t;
+
 /**
  * \struct _pdm_multipart_t
  * \brief  This structure describe a multipart. In addition to splitting
@@ -95,6 +123,7 @@ typedef struct  {
   int               *dmeshes_ids;      /*!< Ids of distributed blocks (size = n_zone)  */
   int               *part_ids;         /*!< Ids of partitions built on each block of this
                                            process (size = n_zone)                    */
+  _part_mesh_t      *pmeshes;
   int               *n_bounds_and_joins; /*!< Number of boundaries and joins in each zone
                                            (size = 2*n_zone, global data)             */
   int              **joins_ids;          /*!< Global Id of each join in each zone (size = n_zone,
@@ -659,6 +688,7 @@ PDM_multipart_create
 
   _multipart->dmeshes_ids      = (int *) malloc(_multipart->n_zone * sizeof(int));
   _multipart->part_ids         = (int *) malloc(_multipart->n_zone * sizeof(int));
+  _multipart->pmeshes = (_part_mesh_t *) malloc(_multipart->n_zone * sizeof(_part_mesh_t));
   _multipart->n_bounds_and_joins = (int *) malloc(_multipart->n_zone * 2 * sizeof(int));
   _multipart->joins_ids        = (int **) malloc(_multipart->n_zone * sizeof(int*));
 
@@ -753,6 +783,123 @@ PDM_multipart_run_ppart
       PDM_dmesh_dims_get(block_id, &dn_cell, &dn_face, &dn_vtx, &n_bnd, &n_join);
       PDM_dmesh_data_get(block_id, &dvtx_coord, &dface_vtx_idx, &dface_vtx, &dface_cell,
                          &dface_bound_idx, &dface_bound, &djoin_gids, &dface_join_idx, &dface_join);
+
+      int n_part = _multipart->n_part[zone_gid];
+      PDM_g_num_t *cell_distri = PDM_compute_entity_distribution(_multipart->comm, dn_cell);
+      PDM_g_num_t *face_distri = PDM_compute_entity_distribution(_multipart->comm, dn_face);
+      PDM_g_num_t *vtx_distri  = PDM_compute_entity_distribution(_multipart->comm, dn_vtx);
+      PDM_g_num_t *part_distri = PDM_compute_entity_distribution(_multipart->comm, n_part);
+
+      int *dual_graph_idx, *dcell_face_idx;
+      PDM_g_num_t *dual_graph, *dcell_face;
+
+      PDM_para_graph_dual_from_arc2node(_multipart->comm,
+                                        cell_distri,
+                                        face_distri,
+                                        dface_cell,
+                                       &dual_graph_idx,
+                                       &dual_graph,
+                                        1,
+                                       &dcell_face_idx,
+                                       &dcell_face);
+      int tn_part;
+      PDM_MPI_Allreduce(&n_part, &tn_part, 1, PDM_MPI_INT, PDM_MPI_SUM, _multipart->comm);
+      int *cell_part = (int *) malloc(dn_cell * sizeof(int));
+      PDM_split_dual_graph(_multipart->split_method,
+                           cell_distri,
+                           dual_graph_idx,
+                           dual_graph,
+                           NULL, NULL,
+                           tn_part,
+                           NULL,
+                           cell_part,
+                           _multipart->comm);
+
+      free(dual_graph_idx);
+      free(dual_graph);
+      _part_mesh_t *_pmeshes = &(_multipart->pmeshes[zone_gid]);
+
+      PDM_part_assemble_partitions(_multipart->comm,
+                                   part_distri,
+                                   cell_distri,
+                                   cell_part,
+                                  &_pmeshes->pn_cell,
+                                  &_pmeshes->pcell_ln_to_gn);
+      free(cell_part);
+      PDM_part_dconnectivity_to_pconnectivity_sort(_multipart->comm,
+                                                   cell_distri,
+                                                   dcell_face_idx,
+                                                   dcell_face,
+                                                   n_part,
+                                                   _pmeshes->pn_cell,
+                                                   _pmeshes->pcell_ln_to_gn,
+                                                  &_pmeshes->pn_face,
+                                                  &_pmeshes->pface_ln_to_gn,
+                                                  &_pmeshes->pcell_face_idx,
+                                                  &_pmeshes->pcell_face);
+      PDM_part_dconnectivity_to_pconnectivity_sort(_multipart->comm,
+                                                   face_distri,
+                                                   dface_vtx_idx,
+                                                   dface_vtx,
+                                                   n_part,
+                                                   _pmeshes->pn_face,
+                                                   _pmeshes->pface_ln_to_gn,
+                                                  &_pmeshes->pn_vtx,
+                                                  &_pmeshes->pvtx_ln_to_gn,
+                                                  &_pmeshes->pface_vtx_idx,
+                                                  &_pmeshes->pface_vtx);
+      free(dcell_face_idx);
+      free(dcell_face);
+      PDM_part_reverse_pcellface(n_part, _pmeshes->pn_cell, _pmeshes->pn_face,
+          _pmeshes->pcell_face_idx, _pmeshes->pcell_face, &_pmeshes->pface_cell);
+      PDM_part_reorient_bound_faces(n_part, _pmeshes->pn_face, _pmeshes->pface_cell,
+          _pmeshes->pcell_face_idx, _pmeshes->pcell_face, _pmeshes->pface_vtx_idx, _pmeshes->pface_vtx);
+
+      PDM_part_dcoordinates_to_pcoordinates(_multipart->comm,
+                                            n_part,
+                                            vtx_distri,
+                                            dvtx_coord,
+                                            _pmeshes->pn_vtx,
+                                            _pmeshes->pvtx_ln_to_gn,
+                                           &_pmeshes->pvtx_coord);
+      PDM_part_distgroup_to_partgroup(_multipart->comm,
+                                      face_distri,
+                                      n_bnd,
+                                      dface_bound_idx,
+                                      dface_bound,
+                                      n_part,
+                                      _pmeshes->pn_face,
+                                      _pmeshes->pface_ln_to_gn,
+                                     &_pmeshes->pface_bound_idx,
+                                     &_pmeshes->pface_bound,
+                                     &_pmeshes->pface_bound_ln_to_gn);
+      PDM_part_distgroup_to_partgroup(_multipart->comm,
+                                      face_distri,
+                                      n_join,
+                                      dface_join_idx,
+                                      dface_join,
+                                      n_part,
+                                      _pmeshes->pn_face,
+                                      _pmeshes->pface_ln_to_gn,
+                                     &_pmeshes->pface_join_idx,
+                                     &_pmeshes->pface_join,
+                                     &_pmeshes->pface_join_ln_to_gn);
+      PDM_generate_entity_graph_comm(_multipart->comm,
+                                     part_distri,
+                                     face_distri,
+                                     n_part,
+                                     _pmeshes->pn_face,
+                                     _pmeshes->pface_ln_to_gn,
+                                     NULL,
+                                    &_pmeshes->pinternal_face_bound_procidx,
+                                    &_pmeshes->pinternal_face_bound_partidx,
+                                    &_pmeshes->pinternal_face_bound);
+
+
+      free(cell_distri);
+      free(face_distri);
+      free(vtx_distri);
+      free(part_distri);
 
       //Merge face_bounds and face_joins into face_group
       n_face_group = n_bnd + n_join;
