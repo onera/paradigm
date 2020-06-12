@@ -109,6 +109,10 @@ typedef struct PDM_Mesh_nodal_block_poly3d_t{
 
   PDM_l_num_t           **_cellfac;     /*!< cell->face connectivity (Memory mapping) */
 
+  PDM_l_num_t           **_cellvtx_idx; /*!< Index of cell->vertex connectivity (Memory mapping) */
+
+  PDM_l_num_t           **_cellvtx;     /*!< cell->vertex connectivity (Memory mapping) */
+
   PDM_l_num_t           **_num_part;    /*!< Initial numbering in the partition (Memory mapping) */
 
   PDM_g_num_t           **_numabs;      /*!< Global numbering (Memory mapping) */

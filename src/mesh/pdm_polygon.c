@@ -1306,7 +1306,7 @@ PDM_polygon_status_t PDM_polygon_point_in3d
 
 
   /*
-   *  Isometric projection onto median plane
+   *  Projection onto median plane
    */
   /* Compute polygon barycenter */
   double origin_xyz[3];
@@ -1386,6 +1386,97 @@ PDM_polygon_status_t PDM_polygon_point_in3d
                                  NULL);
 }
 
+
+
+int PDM_polygon_3d_to_2d
+(
+ const int    n_vtx,
+ const double vtx_xyz[],
+ double       vtx_uv[],
+ const int    n_pts,
+ const double pts_xyz[],
+ double       pts_uv[],
+ double       normal[3]
+ )
+{
+  int idim, i;
+
+  /* Compute polygon barycenter */
+  double origin_xyz[3];
+  PDM_polygon_compute_barycenter (n_vtx, vtx_xyz, origin_xyz);
+
+  /* Build a suitable orthonormal frame */
+  double tangent_u[3] = {0., 0., 0.}, tangent_v[3];
+  if (normal == NULL) {
+    normal = malloc (sizeof(double) * 3);
+    PDM_plane_normal (n_vtx,
+                      vtx_xyz,
+                      normal);
+  }
+
+  /*   First tangent direction */
+  int imin = -1;
+  double nmin = HUGE_VAL;
+  for (idim = 0; idim < 3; idim++) {
+    if (normal[idim] < 0. && nmin > -normal[idim]) {
+      imin = idim;
+      nmin = -normal[idim];
+    } else if (normal[idim] >= 0. && nmin > normal[idim]) {
+      imin = idim;
+      nmin = normal[idim];
+    }
+  }
+
+  tangent_u[imin] = 1.;
+  double mag = 0;
+  for (idim = 0; idim < 3; idim++) {
+    tangent_u[idim] -= normal[imin] * normal[idim];
+    mag += tangent_u[idim] * tangent_u[idim];
+  }
+
+  if (mag < 1e-15) {
+    return 0;
+  }
+
+  mag = 1. / sqrt(mag);
+  for (idim = 0; idim < 3; idim++) {
+    tangent_u[idim] *= mag;
+  }
+
+  /*   Second tangent direction */
+  PDM_CROSS_PRODUCT (tangent_v, normal, tangent_u);
+
+
+  /* Compute coordinates in this frame */
+  for (i = 0; i < n_vtx; i++) {
+    double *uv = vtx_uv + 2*i;
+    uv[0] = 0.;
+    uv[1] = 0.;
+
+    for (idim = 0; idim < 3; idim++) {
+      double d = vtx_xyz[3*i + idim] - origin_xyz[idim];
+
+      uv[0] += d * tangent_u[idim];
+      uv[1] += d * tangent_v[idim];
+    }
+  }
+
+  if (pts_xyz != NULL) {
+    for (i = 0; i < n_pts; i++) {
+      double *uv = pts_uv + 2*i;
+      uv[0] = 0.;
+      uv[1] = 0.;
+
+      for (idim = 0; idim < 3; idim++) {
+        double d = pts_xyz[3*i + idim] - origin_xyz[idim];
+
+        uv[0] += d * tangent_u[idim];
+        uv[1] += d * tangent_v[idim];
+      }
+    }
+  }
+
+}
 
 #ifdef __cplusplus
 }

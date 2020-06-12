@@ -251,6 +251,19 @@ extern "C" {
    PDM_g_num_t **location_elt_gnum
    );
 
+  void
+  PDM_mesh_location_get2
+  (
+   const int     id,
+   const int     i_point_cloud,
+   const int     i_part,
+   int          *n_points,
+   double      **coords,
+   PDM_g_num_t **gnum,
+   PDM_g_num_t **location,
+   int         **weights_idx,
+   double      **weights
+   );
 
   /**
    *
@@ -280,6 +293,12 @@ extern "C" {
 
   void
   PDM_mesh_location_dump_times
+  (
+   const int id
+   );
+
+  int
+  PDM_mesh_location_mesh_nodal_id_get
   (
    const int id
    );

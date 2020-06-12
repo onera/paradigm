@@ -279,6 +279,18 @@ PDM_polygon_status_t PDM_polygon_point_in3d
  double        normal[3]
  );
 
+int PDM_polygon_3d_to_2d
+(
+ const int    n_vtx,
+ const double vtx_xyz[],
+ double       vtx_uv[],
+ const int    n_pts,
+ const double pts_xyz[],
+ double       pts_uv[],
+ double       normal[3]
+ );
+
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

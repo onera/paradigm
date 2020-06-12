@@ -99,6 +99,32 @@ PDM_mean_values_polyhedron
  double       *mean_value_coords
  );
 
+
+
+
+
+
+
+void
+PDM_mean_value_coordinates_polygon_2d
+(
+ const int    n_vtx,
+ const double vtx_coord[],
+ const int    n_pts,
+ const double pts_coord[],
+ double       mean_value_coord[]
+ );
+
+void
+PDM_mean_value_coordinates_polygon_3d
+(
+ const int    n_vtx,
+ const double vtx_coord[],
+ const int    n_pts,
+ const double pts_coord[],
+ double       mean_value_coord[]
+ );
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

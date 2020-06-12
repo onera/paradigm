@@ -5087,7 +5087,7 @@ PDM_box_tree_points_inside_boxes
   int *visited_boxes = malloc(sizeof(int) * n_boxes); // A optimiser
 
   double node_extents[2*dim];
-  int idx_box = 0;
+  //int idx_box = 0;
 
 
   /* Loop over points */
@@ -5128,7 +5128,7 @@ PDM_box_tree_points_inside_boxes
             const double *box_extents = bt->boxes->local_boxes->extents + box_id*2*dim;
 
             if (_point_inside_box (dim, box_extents, _pt)) {
-              if (idx_box >= tmp_s_boxes) {
+              if (boxes_idx[ipt+1] >= tmp_s_boxes) {
                 tmp_s_boxes *= 2;
                 boxes_l_num = realloc (boxes_l_num, sizeof(int) * tmp_s_boxes);
               }
