@@ -196,34 +196,16 @@ _build_join_uface_distribution
   for (int i = 0; i < n_unique_joins; i++)
     nb_face_in_joins[i] = 0;
 
-  for (int izone = 0; izone < _multipart->n_zone; izone++)
-  {
-    int block_id = _multipart->dmeshes_ids[izone];
-    int dn_cell  = 0;
-    int dn_face  = 0;
-    int dn_vtx   = 0;
-    int n_bnd    = 0;
-    int n_join   = 0;
-    const double       *dvtx_coord;
-    const int          *dface_vtx_idx;
-    const PDM_g_num_t  *dface_vtx;
-    const PDM_g_num_t  *dface_cell;
-    const int          *dface_bound_idx;
-    const PDM_g_num_t  *dface_bound;
-    const int          *djoin_gids;
-    const int          *dface_join_idx;
-    const PDM_g_num_t  *dface_join;
-
-    PDM_dmesh_dims_get(block_id, &dn_cell, &dn_face, &dn_vtx, &n_bnd, &n_join);
-    PDM_dmesh_data_get(block_id, &dvtx_coord, &dface_vtx_idx, &dface_vtx, &dface_cell,
-                       &dface_bound_idx, &dface_bound, &djoin_gids, &dface_join_idx, &dface_join);
-    for (int ijoin=0; ijoin < n_join; ijoin ++)
-    {
-      int join_gid = djoin_gids[2*ijoin];
-      int join_opp_gid = djoin_gids[2*ijoin + 1];
-      //Paired joins must be counted only once
-      if (join_gid < join_opp_gid)
-        nb_face_in_joins[join_to_ref_join[join_gid-1]] = dface_join_idx[ijoin+1] - dface_join_idx[ijoin];
+  for (int izone = 0; izone < _multipart->n_zone; izone++){
+    for (int i_part = 0; i_part < _multipart->n_part[izone]; i_part++){
+      int *pface_join_idx = _multipart->pmeshes[izone].pface_join_idx[i_part];
+      for (int ijoin=0; ijoin < _multipart->n_bounds_and_joins[2*izone+1]; ijoin ++){
+        int join_gid = _multipart->joins_ids[izone][ijoin];
+        int join_opp_gid = _multipart->join_to_opposite[join_gid];
+        //Paired joins must be counted only once
+        if (join_gid < join_opp_gid)
+          nb_face_in_joins[join_to_ref_join[join_gid]] += pface_join_idx[ijoin+1] - pface_join_idx[ijoin];
+      }
     }
   }
   /*
@@ -290,9 +272,8 @@ _search_matching_joins
         nb_face_per_join[ijoin_pos] = join_size;
         PDM_g_num_t *shifted_lntogn_loc = (PDM_g_num_t *) malloc(join_size * sizeof(PDM_g_num_t));
         int         *part_data_loc      = (int *) malloc(3 * join_size * sizeof(int));
-        //Attention à la cohérence des gids, qui démarrent parfois à 1 parfois à 0... ici à 0
         //Get shift value from join unique distribution
-        int join_gid    = _multipart->joins_ids[izone][ijoin] - 1;
+        int join_gid    = _multipart->joins_ids[izone][ijoin];
         int shift_value = face_in_join_distri[join_to_ref_join[join_gid]];
         int j = 0;
         //Prepare partitioned data : (PL, i_rank, i_part)
