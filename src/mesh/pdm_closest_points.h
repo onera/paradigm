@@ -154,6 +154,12 @@ PDM_closest_points_compute
  const int id
 );
 
+void
+PDM_closest_points_compute_GPU
+(
+ const int id
+);
+
 
 /**
  *

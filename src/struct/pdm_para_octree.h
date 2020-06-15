@@ -93,6 +93,16 @@ PDM_para_octree_create
  const PDM_MPI_Comm comm
 );
 
+int
+PDM_para_octree_create_GPU
+(
+ const int n_point_cloud,
+ const int depth_max,
+ const int points_in_leaf_max,
+ const int build_leaf_neighbours,
+ const PDM_MPI_Comm comm
+);
+
 /**
  *
  * \brief Free an octree structure
@@ -103,6 +113,12 @@ PDM_para_octree_create
 
 void
 PDM_para_octree_free
+(
+ const int          id
+);
+
+void
+PDM_para_octree_free_GPU
 (
  const int          id
 );
@@ -246,6 +262,17 @@ PDM_para_octree_dump_times
 (
  const int id
  );
+
+
+//test
+#ifdef __CUDACC__
+__global__
+#endif
+void
+print_from_gpu
+(
+int id
+);
 
 #ifdef	__cplusplus
 }

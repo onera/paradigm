@@ -43,6 +43,12 @@ extern "C" {
 #endif
 #endif /* __cplusplus */
 
+#ifdef __CUDACC__
+#define CUDADEV __device__
+#else
+#define CUDADEV
+#endif
+
 /*============================================================================
  * Type
  *============================================================================*/
@@ -75,7 +81,6 @@ PDM_Handles_create
 (
  const int init_size
 );
-
 
 /**
  * \brief Free handles storage
@@ -119,6 +124,15 @@ PDM_Handles_store
 
 const void *
 PDM_Handles_get
+(
+  PDM_Handles_t *handles,
+  const int handle_idx
+);
+
+extern
+CUDADEV
+const void *
+PDM_Handles_get_GPU
 (
   PDM_Handles_t *handles,
   const int handle_idx

@@ -21,7 +21,7 @@
 #include "pdm_dcube_gen.h"
 #include "pdm_geom_elem.h"
 
-
+#define GPU_ACC 0
 
 /*============================================================================
  * Type definitions
@@ -348,7 +348,13 @@ int main(int argc, char *argv[])
                                     src_gnum);
 
   /* Compute closest points */
-  PDM_closest_points_compute (id2);
+  if (GPU_ACC) {
+    PDM_closest_points_compute_GPU (id2);
+  }
+  else {
+    PDM_closest_points_compute (id2);
+  }
+  
 
   PDM_closest_points_dump_times (id2);
 

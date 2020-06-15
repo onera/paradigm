@@ -114,6 +114,8 @@ double PDM_timer_elapsed(PDM_timer_t *timer);
 
 void PDM_timer_free(PDM_timer_t *timer);
 
+void PDM_timer_free_GPU(PDM_timer_t *timer);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

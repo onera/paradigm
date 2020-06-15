@@ -32,6 +32,8 @@
  *----------------------------------------------------------------------------*/
 
 #include "pdm_printf.h"
+#include "pdm_cuda_error.h"
+#include "pdm_cuda.cuh"
 #include "pdm_error.h"
 #include "pdm.h"
 #include "pdm_priv.h"
@@ -252,7 +254,7 @@ PDM_closest_points_create_cf
  *
  */
 
-void
+/* void
 PDM_closest_points_n_part_cloud_set
 (
  const int  id,
@@ -278,7 +280,7 @@ PDM_closest_points_n_part_cloud_set
   cls->tgt_cloud->n_points = malloc (sizeof(int) * n_part_cloud_tgt);
   cls->tgt_cloud->closest_src_gnum = NULL;
   cls->tgt_cloud->closest_src_dist = NULL;
-}
+} */
 
 
 /**
@@ -349,12 +351,19 @@ PDM_closest_points_src_cloud_set
  */
 
 void
-PDM_closest_points_compute
+PDM_closest_points_compute_GPU
 (
  const int id
  )
 {
-  _PDM_closest_t *cls = _get_from_id (id);
+  _PDM_closest_t *cls = NULL;
+  int *octree_id = NULL;
+
+  //Allocate data on unified memory so it is accessible from CPU or GPU
+  gpuErrchk(cudaMallocManaged(&cls, sizeof(_PDM_closest_t)));
+  gpuErrchk(cudaMallocManaged(&octree_id, sizeof(int)));
+
+  cls = _get_from_id (id);
 
   double b_t_elapsed;
   double b_t_cpu;
@@ -377,23 +386,22 @@ PDM_closest_points_compute
   PDM_MPI_Comm_rank (cls->comm, &i_rank);
 
   //-->GPU
-  
   const int depth_max = 31;//?
   const int points_in_leaf_max = 1;//2*cls->n_closest;//?
   const int build_leaf_neighbours = 1;
 
-
   /* Create empty parallel octree structure */
-  int octree_id = PDM_para_octree_create (cls->src_cloud->n_part,
+  *octree_id = PDM_para_octree_create_GPU (cls->src_cloud->n_part,
                                           depth_max,
                                           points_in_leaf_max,
                                           build_leaf_neighbours,
                                           cls->comm);
 
+  print_from_gpu<<<1,1>>>(*octree_id);
 
   /* Set source point clouds */
   for (int i_part = 0; i_part < cls->src_cloud->n_part; i_part++) {
-    PDM_para_octree_point_cloud_set (octree_id,
+    PDM_para_octree_point_cloud_set (*octree_id,
                                      i_part,
                                      cls->src_cloud->n_points[i_part],
                                      cls->src_cloud->coords[i_part],
@@ -402,75 +410,77 @@ PDM_closest_points_compute
 
 
   /* Build parallel octree */
-  PDM_para_octree_build (octree_id);
+  PDM_para_octree_build (*octree_id);
   //PDM_para_octree_dump (octree_id);
-  PDM_para_octree_dump_times (octree_id);
+  PDM_para_octree_dump_times (*octree_id);
   //<--
 
 
-  /* Concatenate partitions */
-  int n_tgt = 0;
-  for (int i_part = 0; i_part < cls->tgt_cloud->n_part; i_part++)
-    n_tgt += cls->tgt_cloud->n_points[i_part];
+  // /* Concatenate partitions */
+  // int n_tgt = 0;
+  // for (int i_part = 0; i_part < cls->tgt_cloud->n_part; i_part++)
+  //   n_tgt += cls->tgt_cloud->n_points[i_part];
 
-  double      *tgt_coord = malloc (sizeof(double)      * n_tgt * 3);
-  PDM_g_num_t *tgt_g_num = malloc (sizeof(PDM_g_num_t) * n_tgt);
-  PDM_g_num_t *closest_src_gnum = malloc (sizeof(PDM_g_num_t) * n_tgt * cls->n_closest);
-  double      *closest_src_dist = malloc (sizeof(double)      * n_tgt * cls->n_closest);
+  // double      *tgt_coord = malloc (sizeof(double)      * n_tgt * 3);
+  // PDM_g_num_t *tgt_g_num = malloc (sizeof(PDM_g_num_t) * n_tgt);
+  // PDM_g_num_t *closest_src_gnum = malloc (sizeof(PDM_g_num_t) * n_tgt * cls->n_closest);
+  // double      *closest_src_dist = malloc (sizeof(double)      * n_tgt * cls->n_closest);
 
-  n_tgt = 0;
-  for (int i_part = 0; i_part < cls->tgt_cloud->n_part; i_part++) {
-    for (int i = 0; i < cls->tgt_cloud->n_points[i_part]; i++) {
-      for (int j = 0; j < 3; j++)
-        tgt_coord[n_tgt + 3*i + j] = cls->tgt_cloud->coords[i_part][3*i + j];
-      tgt_g_num[n_tgt + i] = cls->tgt_cloud->gnum[i_part][i];
-    }
-    n_tgt += cls->tgt_cloud->n_points[i_part];
-  }
+  // n_tgt = 0;
+  // for (int i_part = 0; i_part < cls->tgt_cloud->n_part; i_part++) {
+  //   for (int i = 0; i < cls->tgt_cloud->n_points[i_part]; i++) {
+  //     for (int j = 0; j < 3; j++)
+  //       tgt_coord[n_tgt + 3*i + j] = cls->tgt_cloud->coords[i_part][3*i + j];
+  //     tgt_g_num[n_tgt + i] = cls->tgt_cloud->gnum[i_part][i];
+  //   }
+  //   n_tgt += cls->tgt_cloud->n_points[i_part];
+  // }
+  
 
-  /* Search closest source points from target points */
-  PDM_para_octree_closest_point (octree_id,
-                                 cls->n_closest,
-                                 n_tgt,
-                                 tgt_coord,
-                                 tgt_g_num,
-                                 closest_src_gnum,
-                                 closest_src_dist);
+  // /* Search closest source points from target points */
+  // PDM_para_octree_closest_point (octree_id,
+  //                                cls->n_closest,
+  //                                n_tgt,
+  //                                tgt_coord,
+  //                                tgt_g_num,
+  //                                closest_src_gnum,
+  //                                closest_src_dist);
 
 
-  /* Restore partitions */
-  free (tgt_coord);
-  free (tgt_g_num);
-  n_tgt = 0;
+  // /* Restore partitions */
+  // free (tgt_coord);
+  // free (tgt_g_num);
+  // n_tgt = 0;
 
-  cls->tgt_cloud->closest_src_gnum = malloc (sizeof(PDM_g_num_t *) * cls->tgt_cloud->n_part);
-  cls->tgt_cloud->closest_src_dist = malloc (sizeof(double *)      * cls->tgt_cloud->n_part);
+  // cls->tgt_cloud->closest_src_gnum = malloc (sizeof(PDM_g_num_t *) * cls->tgt_cloud->n_part);
+  // cls->tgt_cloud->closest_src_dist = malloc (sizeof(double *)      * cls->tgt_cloud->n_part);
 
-  for (int i_part = 0; i_part < cls->tgt_cloud->n_part; i_part++) {
-    int s_closest_src = cls->n_closest * cls->tgt_cloud->n_points[i_part];
+  // for (int i_part = 0; i_part < cls->tgt_cloud->n_part; i_part++) {
+  //   int s_closest_src = cls->n_closest * cls->tgt_cloud->n_points[i_part];
 
-    cls->tgt_cloud->closest_src_gnum[i_part] = malloc (sizeof(PDM_g_num_t) * s_closest_src);
-    cls->tgt_cloud->closest_src_dist[i_part] = malloc (sizeof(double)      * s_closest_src);
+  //   cls->tgt_cloud->closest_src_gnum[i_part] = malloc (sizeof(PDM_g_num_t) * s_closest_src);
+  //   cls->tgt_cloud->closest_src_dist[i_part] = malloc (sizeof(double)      * s_closest_src);
 
-    for (int i = 0; i < cls->tgt_cloud->n_points[i_part]; i++) {
-      for (int j = 0; j < cls->n_closest; j++) {
-        cls->tgt_cloud->closest_src_gnum[i_part][cls->n_closest*i+j] =
-          closest_src_gnum[n_tgt + cls->n_closest*i + j];
+  //   for (int i = 0; i < cls->tgt_cloud->n_points[i_part]; i++) {
+  //     for (int j = 0; j < cls->n_closest; j++) {
+  //       cls->tgt_cloud->closest_src_gnum[i_part][cls->n_closest*i+j] =
+  //         closest_src_gnum[n_tgt + cls->n_closest*i + j];
 
-        cls->tgt_cloud->closest_src_dist[i_part][cls->n_closest*i+j] =
-          closest_src_dist[n_tgt + cls->n_closest*i + j];
-      }
-    }
-    n_tgt += cls->n_closest * cls->tgt_cloud->n_points[i_part];
-  }
-  free (closest_src_gnum);
-  free (closest_src_dist);
+  //       cls->tgt_cloud->closest_src_dist[i_part][cls->n_closest*i+j] =
+  //         closest_src_dist[n_tgt + cls->n_closest*i + j];
+  //     }
+  //   }
+  //   n_tgt += cls->n_closest * cls->tgt_cloud->n_points[i_part];
+  // }
+  // free (closest_src_gnum);
+  // free (closest_src_dist);
 
 
 
   //-->GPU
   /* Free parallel octree */
-  PDM_para_octree_free (octree_id);
+  PDM_para_octree_free_GPU (*octree_id);
+  gpuErrchk(cudaFree(octree_id));
   //<--
 
 

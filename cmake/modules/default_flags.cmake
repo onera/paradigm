@@ -136,6 +136,11 @@ mark_as_advanced (CMAKE_Fortran_FLAGS_PROFILING FORTRAN_LIBRARIES FORTRAN_LIBRAR
 # CUDA Default Flags
 #------------------------------------------------------------------------------
 
+#set(CUDA_SEPARABLE_COMPILATION ON)
+#set(CUDA_NVCC_FLAGS "-dc")
+#set(CMAKE_CUDA_FLAGS "-dc")
+#set(CMAKE_CUDA_FLAGS "-gencode=arch=compute_20,code=sm_20")
+
 #------------------------------------------------------------------------------
 # C Default Flags
 #------------------------------------------------------------------------------

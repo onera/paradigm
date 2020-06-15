@@ -9,6 +9,7 @@ add_subdirectory(mpi_wrapper)
 if (PDM_ENABLE_CUDA)
 file(GLOB_RECURSE SOURCES
      mesh/*.[ch]
+     mesh/*.cu
      meshgen/*.[ch]
      pario/*.[ch]
      ppart/*.[ch]
@@ -16,9 +17,12 @@ file(GLOB_RECURSE SOURCES
      struct/*.[ch]
      struct/*.cu
      util/*.[ch]
+     util/.cu
+     util/.cuh
      ext_wrapper/*.[ch]
      mpi_wrapper/pdm_mpi_node_first_rank.[hc]
      io/pdm_logging.[hc]
+     io/*.cu
      pdm.h
      pdm_priv.h)
 else ()
@@ -161,6 +165,14 @@ if (OPENMP_FOUND)
    set_target_properties(pdm PROPERTIES
                          COMPILE_FLAGS ${OpenMP_C_FLAGS})
 endif()
+		     
+if (CUDA_FOUND)
+  #set_target_properties(pdm PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+  target_compile_options(pdm PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-rdc=true -gencode=arch=compute_30,code=sm_30>)
+  #set_target_properties(pdm PROPERTIES CUDA_RESOLVE_DEVICE_SYMBOLS ON)
+  #target_link_libraries(pdm cudadevrt)
+  #target_link_options(pdm PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-dlink>)
+endif()
 
 # Options du link
 # ---------------
@@ -178,6 +190,7 @@ if (PDM_ENABLE_SHARED)
                           COMPILE_FLAGS ${OpenMP_C_FLAGS}
                           LINK_FLAGS ${OpenMP_C_FLAGS})
   endif()
+
   target_link_libraries(pdm_shared ${LINK_LIBRARIES} pdm_io_shared pdm_mpi_shared)
   set_target_properties(pdm_shared PROPERTIES
                             PUBLIC_HEADER "${LIST_HEADER}")
@@ -197,6 +210,12 @@ if (PDM_ENABLE_STATIC)
     set_target_properties(pdm_static PROPERTIES
                           COMPILE_FLAGS ${OpenMP_C_FLAGS}
                           LINK_FLAGS ${OpenMP_C_FLAGS})
+  endif()
+
+  if (CUDA_FOUND)
+    #target_compile_options(pdm PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-dc>)
+    #target_link_libraries(pdm cudadevrt)
+    #target_link_options(pdm PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-dlink>)
   endif()
   target_link_libraries(pdm_static ${LINK_LIBRARIES} pdm_io_static pdm_mpi_static)
   set_target_properties(pdm_static PROPERTIES
