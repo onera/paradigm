@@ -106,6 +106,9 @@ typedef struct  {
   const int        *n_part;          /*!< Number of partitions per proc in each zone */
   PDM_bool_t        merge_blocks;     /*!< Merge before partitionning or not */
   PDM_split_dual_t  split_method;     /*!< Partitioning method */
+  PDM_part_size_t   part_size_method; /*!< Homogeneous or heterogeneous partition size */
+  const double     *part_fraction;    /*Weight (in %) of each partition, in every zone
+                                        (size = sum n_part[i]) */
   PDM_MPI_Comm      comm;             /*!< MPI communicator */
   int               *dmeshes_ids;      /*!< Ids of distributed blocks (size = n_zone)  */
   _part_mesh_t      *pmeshes;
@@ -473,6 +476,8 @@ _search_matching_joins
  * \param [in]   n_part       Number of partition per proc in each zone
  * \param [in]   merge_blocks Merge or not the zones before splitting
  * \param [in]   split_method Choice of library used to split the mesh
+ * \param [in]   part_size_method Choice of homogeneous or heterogeneous partitions
+ * \param [in]   part_weight  Weight (in %) of each partition in heterogeneous case
  * \param [in]   comm         PDM_MPI communicator
  *
  * \return     Identifier
@@ -485,6 +490,8 @@ PDM_multipart_create
  const int             *n_part,
  const PDM_bool_t       merge_blocks,
  const PDM_split_dual_t split_method,
+ const PDM_part_size_t  part_size_method,
+ const double          *part_fraction,
  const PDM_MPI_Comm     comm
 )
 {
@@ -506,6 +513,8 @@ PDM_multipart_create
   _multipart->n_part      = n_part;
   _multipart->merge_blocks= merge_blocks;
   _multipart->split_method= split_method;
+  _multipart->part_size_method = part_size_method;
+  _multipart->part_fraction    = part_fraction;
   _multipart->comm        = comm;
 
   _multipart->dmeshes_ids      = (int *) malloc(_multipart->n_zone * sizeof(int));
@@ -626,6 +635,30 @@ PDM_multipart_run_ppart
                                        &dcell_face);
       int tn_part;
       PDM_MPI_Allreduce(&n_part, &tn_part, 1, PDM_MPI_INT, PDM_MPI_SUM, _multipart->comm);
+      double *part_fraction = NULL;
+      if (_multipart->part_size_method == PDM_PART_SIZE_HETEROGENEOUS){
+        int *n_part_per_rank = (int *) malloc(n_rank*sizeof(int));
+        int *displ           = (int *) malloc(n_rank*sizeof(int));
+        part_fraction = (double *) malloc(tn_part*sizeof(double));
+        int starting_part_idx = 0;
+        for (int i =0; i < n_rank; i++){
+          n_part_per_rank[i] = part_distri[i+1] - part_distri[i];
+          displ[i] = part_distri[i]-1;
+        }
+        for (int jzone = 0; jzone < zone_gid; jzone++)
+          starting_part_idx += _multipart->n_part[jzone];
+
+        PDM_MPI_Allgatherv((void*) &_multipart->part_fraction[starting_part_idx],
+                           n_part,
+                           PDM_MPI_DOUBLE,
+                           part_fraction,
+                           n_part_per_rank,
+                           displ,
+                           PDM_MPI_DOUBLE,
+                           _multipart->comm);
+        free(n_part_per_rank);
+        free(displ);
+      }
       int *cell_part = (int *) malloc(dn_cell * sizeof(int));
       PDM_split_dual_graph(_multipart->split_method,
                            cell_distri,
@@ -633,12 +666,14 @@ PDM_multipart_run_ppart
                            dual_graph,
                            NULL, NULL,
                            tn_part,
-                           NULL,
+                           part_fraction,
                            cell_part,
                            _multipart->comm);
 
       free(dual_graph_idx);
       free(dual_graph);
+      if (_multipart->part_size_method == PDM_PART_SIZE_HETEROGENEOUS)
+        free(part_fraction);
       _part_mesh_t *_pmeshes = &(_multipart->pmeshes[zone_gid]);
       _pmeshes->tn_part = tn_part;
 

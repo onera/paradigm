@@ -585,14 +585,14 @@ int main(int argc, char *argv[])
     n_part_array[k] = n_part;
   n_part_array[0] = (i_rank == 0) ? 0 : 1;
   n_part_array[1] = (i_rank == 0) ? 1 : 1;
-   mpart_id = PDM_multipart_create(multipart_size, n_part_array, PDM_FALSE, method, comm);
-   PDM_printf("From exe : created a multipart object, id is %i \n", mpart_id);
-   for (int iblock=0; iblock < nbzone; iblock++)
-   {
-    // PDM_printf("[%i] check -- iblock %i : gid %i meshid %i\n", i_rank, iblock, dblock_ids[iblock], dmesh_ids[iblock]);
-    PDM_multipart_register_block(mpart_id, dblock_ids[iblock]-1, dmesh_ids[iblock]);
-   }
-   PDM_MPI_Barrier(comm);
+  mpart_id = PDM_multipart_create(multipart_size, n_part_array, PDM_FALSE, method, 1, NULL, comm);
+  PDM_printf("From exe : created a multipart object, id is %i \n", mpart_id);
+  for (int iblock=0; iblock < nbzone; iblock++)
+  {
+   // PDM_printf("[%i] check -- iblock %i : gid %i meshid %i\n", i_rank, iblock, dblock_ids[iblock], dmesh_ids[iblock]);
+   PDM_multipart_register_block(mpart_id, dblock_ids[iblock]-1, dmesh_ids[iblock]);
+  }
+  PDM_MPI_Barrier(comm);
 
 
 
