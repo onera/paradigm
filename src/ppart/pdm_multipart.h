@@ -44,7 +44,14 @@ extern "C" {
 /*============================================================================
  * Type definitions
  *============================================================================*/
-
+/**
+ * \enum PDM_part_size_t
+ * \brief Use homogeneous or heterogeneous partition sizes
+ */
+typedef enum {
+  PDM_PART_SIZE_HOMOGENEOUS   = 1,
+  PDM_PART_SIZE_HETEROGENEOUS = 2,
+} PDM_part_size_t;
 /*=============================================================================
  * Static global variables
  *============================================================================*/
@@ -61,6 +68,8 @@ extern "C" {
  * \param [in]   n_part       Number of partition per proc in each zone
  * \param [in]   merge_blocks Merge or not the zones before splitting
  * \param [in]   split_method Choice of library used to split the mesh
+ * \param [in]   part_size_method Choice of homogeneous or heterogeneous partitions
+ * \param [in]   part_weight  Weight (in %) of each partition in heterogeneous case
  * \param [in]   comm         PDM_MPI communicator
  *
  * \return     Identifier
@@ -73,6 +82,8 @@ PDM_multipart_create
  const int             *n_part,
  const PDM_bool_t       merge_blocks,
  const PDM_split_dual_t split_method,
+ const PDM_part_size_t  part_size_method,
+ const double          *part_fraction,
  const PDM_MPI_Comm     comm
 );
 
