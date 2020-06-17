@@ -90,47 +90,46 @@ PDM_multipart_create
 
 /**
  *
- * \brief Set a block in the multipart structure
+ * \brief Set distributed mesh data for the input zone
  *
- * \param [in]   id           Identifier
- * \param [in]   i_block      Number of block to set
- * \param [in]   dface_cell    Face to cell connectivity for the block
- * TODO LIST PARAMS
- *
+ * \param [in]   mpart_id       Multipart structure id
+ * \param [in]   zone_id        Global zone id
+ * \param [in]   dmesh_id       Id of the distributed mesh structure to use
  */
 
 void PDM_multipart_register_block
 (
  const int        mpart_id,
- const int        zone_gid,
- const int        block_data_id
+ const int        zone_id,
+ const int        dmesh_id
 );
 
 
 /**
  *
- * \brief Set the global list of joins between meshes
+ * \brief Set connecting data between all the zones
  *
- * \param [in]   mpart_id            Identifier
- * \param [in]   n_total_joins       Total number of joins
- * \param [in]   matching_join_array Link join i to join j
+ * \param [in]   mpart_id          Multipart structure id
+ * \param [in]   n_total_joins     Total number of interfaces
+ * \param [in]   join_to_opposite  For each global join id, give the global id
+ *                                   of the opposite join (size = n_total_joins)
  *
+ * \note Join global id numbering must start at 0 and be continuous.
  */
 
 void PDM_multipart_register_joins
 (
  const int        mpart_id,
  const int        n_total_joins,
- int             *matching_join_array
+ const int       *join_to_opposite
 );
 
 
 /**
  *
- * \brief Call the partitionner (via PDM_part_create) on the multipart object
+ * \brief Construct the partitioned meshes on every zones
  *
- * \param [in]   id           Identifier
- *
+ * \param [in]   mpart_id          Multipart structure id
  */
 
 void
@@ -139,31 +138,39 @@ PDM_multipart_run_ppart
  const int id
 );
 
+/**
+ *
+ * \brief Returns the dimensions of a given partition
+ */
 void
 PDM_multipart_part_dim_get
 (
-const   int  mpart_id,
-const   int  zone_gid,
-const   int  i_part,
- int        *n_cell,
- int        *n_face,
- int        *n_face_part_bound,
- int        *n_vtx,
- int        *n_proc,
- int        *n_total_part,
- int        *scell_face,
- int        *sface_vtx,
- int        *sface_bound,
- int        *n_face_bound,
- int        *sface_join,
- int        *n_face_join
+const int   mpart_id,
+const int   i_zone,
+const int   i_part,
+      int  *n_cell,
+      int  *n_face,
+      int  *n_face_part_bound,
+      int  *n_vtx,
+      int  *n_proc,
+      int  *n_total_part,
+      int  *scell_face,
+      int  *sface_vtx,
+      int  *sface_bound,
+      int  *n_bound_groups,
+      int  *sface_join,
+      int  *n_join_groups
 );
 
+/**
+ *
+ * \brief Returns the data arrays of a given partition
+ */
 void
 PDM_multipart_part_val_get
 (
 const int            mpart_id,
-const int            zone_gid,
+const int            i_zone,
 const int            i_part,
       int          **cell_tag,
       int          **cell_face_idx,
@@ -192,7 +199,7 @@ void
 PDM_multipart_part_color_get
 (
 const int            mpart_id,
-const int            zone_gid,
+const int            i_zone,
 const int            i_part,
       int          **cell_color,
       int          **face_color,
@@ -204,7 +211,7 @@ void
 PDM_multipart_time_get
 (
 const int       mpart_id,
-const int       zone_gid,
+const int       i_zone,
       double  **elapsed,
       double  **cpu,
       double  **cpu_user,
@@ -214,16 +221,15 @@ const int       zone_gid,
 
 /**
  *
- * \brief Free
+ * \brief Free the structure
  *
- * \param [in]   id           Identifier
- *
+ * \param [in]   mpart_id  Multipart structure id
  */
 
 void
 PDM_multipart_free
 (
- const int id
+ const int mpart_id
 );
 
 

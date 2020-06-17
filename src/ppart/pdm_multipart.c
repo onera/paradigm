@@ -66,59 +66,79 @@ extern "C" {
  * Local structure definitions
  *============================================================================*/
 
-typedef struct  {
-  int  tn_part;
-  int  n_bounds;
-  int  n_joins;
-  int *joins_ids;
-  int *pn_cell;
-  int *pn_face;
-  int *pn_vtx;
-  PDM_g_num_t **pcell_ln_to_gn;
-  PDM_g_num_t **pface_ln_to_gn;
-  PDM_g_num_t **pvtx_ln_to_gn;
-  double **pvtx_coord;
-  int **pcell_face_idx;
-  int **pcell_face;
-  int **pface_cell;
-  int **pface_vtx_idx;
-  int **pface_vtx;
-  int **pface_bound_idx;
-  int **pface_bound;
-  PDM_g_num_t **pface_bound_ln_to_gn;
-  int **pface_join_idx;
-  int **pface_join;
-  PDM_g_num_t **pface_join_ln_to_gn;
-  int **pinternal_face_bound_procidx;
-  int **pinternal_face_bound_partidx;
-  int **pinternal_face_bound;
+/**
+ * \struct _part_mesh_t
+ * \brief  This private structure stores partionned meshes obtained on a given
+ *         zone.
+ */
+typedef struct {
+  /* Data shared between all the partitions */
+  int  tn_part;          // Total number of partitions created for this mesh
+  int  n_bounds;         // Global number of boundary groups
+  int  n_joins;          // Global number of interface groups
+  int *joins_ids;        // Global id of each interface (size=n_joins)
+
+  /* Geometric data (mesh) for each partition - all array size = n_part */
+  int  *pn_cell;         // Number of cells
+  int  *pn_face;         // Number of faces
+  int  *pn_vtx;          // Number of vertices
+  double **pvtx_coord;   // Vertex coords (size=3*pn_vtx)
+  int **pcell_face_idx;  // Cell->face connectivity indexes (size=pn_cell+1)
+  int **pcell_face;      // Cell->face connectivity (size=pcell_face_idx[pn_cell])
+  int **pface_cell;      // Face->cell connectivity (size=2*pn_face)
+  int **pface_vtx_idx;   // Face->vtx connectivity indexes (size=pn_face+1)
+  int **pface_vtx;       // Face->vtx connectivity (size=pface_vtx_idx[pn_face])
+  int **pface_bound_idx; // Offset for each original bound group (size=n_bounds+1)
+  int **pface_bound;     // Ids of boundary faces (size=pface_bound_idx[n_bounds])
+  int **pface_join_idx;  // Offset for each original join group (size=n_joins+1)
+  int **pface_join;      // For each original join face, 4-tuple
+                         //   [local id, opp proc, opp part, opp local id]
+                         //   (size=pface_join_idx[4*n_joins])
+  int **pinternal_face_bound_procidx; // Offset for created join related to a
+                                      //   given proc (size=n_rank+1)
+  int **pinternal_face_bound_partidx; // Offset for created join related to a
+                                      //   given (global) part (size=tn_part+1)
+  int **pinternal_face_bound;         // Same as pface_join but for created joins
+
+  /* Local to global numbering for each partition - all array size = n_part */
+  PDM_g_num_t **pcell_ln_to_gn;       // Position of cell in original mesh (size = pn_cell)
+  PDM_g_num_t **pface_ln_to_gn;       // Position of face in original mesh (size = pn_face)
+  PDM_g_num_t **pvtx_ln_to_gn;        // Position of vtx  in original mesh (size = pn_vtx)
+  PDM_g_num_t **pface_bound_ln_to_gn; // Position of bdn face in its original bound
+                                      // bnd group (size = pface_bound_idx[n_bounds])
+  PDM_g_num_t **pface_join_ln_to_gn;  // Position of join face in its original
+                                      // join group (size = pface_join_idx[n_joins])
 
 } _part_mesh_t;
 
 /**
  * \struct _pdm_multipart_t
- * \brief  This structure describe a multipart. In addition to splitting
- *         parameters, it stores the multiples blocks and part as well as
- *         the global numbering.
- *
+ * \brief  This structure describe a multipart.
+ *         It includes distributed meshes, partioned meshes and
+ *         partitioning parameters.
  */
 
 typedef struct  {
+  /* Multipart description */
+  int           n_zone;              // Number of initial zones
+  int          *dmeshes_ids;         // Ids of dmesh structure storing
+                                     //   distributed meshes (size = n_zone)
+  int           n_total_joins;       // Total number of joins between zones (each counts twice)
+  const int    *join_to_opposite;    // For each global joinId, give the globalId of
+                                     //   the opposite join (size = n_total_joins)
+  PDM_MPI_Comm comm;                 // MPI communicator
 
-  int               n_zone;           /*!< Number of initial zones */
-  const int        *n_part;          /*!< Number of partitions per proc in each zone */
-  PDM_bool_t        merge_blocks;     /*!< Merge before partitionning or not */
-  PDM_split_dual_t  split_method;     /*!< Partitioning method */
-  PDM_part_size_t   part_size_method; /*!< Homogeneous or heterogeneous partition size */
-  const double     *part_fraction;    /*Weight (in %) of each partition, in every zone
-                                        (size = sum n_part[i]) */
-  PDM_MPI_Comm      comm;             /*!< MPI communicator */
-  int               *dmeshes_ids;      /*!< Ids of distributed blocks (size = n_zone)  */
-  _part_mesh_t      *pmeshes;
-  int               n_total_joins;      /*Total number of joins between zones
-                                          (nb : each counts twice)                    */
-  int               *join_to_opposite;  /*For each global joinId, give the globalId of
-                                          the opposite join (size = n_total_joins)    */
+  /* Partitioning parameters */
+  PDM_bool_t       merge_blocks;     // Merge before partitionning or not
+  PDM_split_dual_t split_method;     // Partitioning method (Metis or Scotch)
+  PDM_part_size_t  part_size_method; // Procude homogeneous or heterogeneous partitions
+  const int       *n_part;           // Number of wanted partitions per proc
+                                     // in each zone (size = n_zone)
+  const double    *part_fraction;    // Weight (in %) of each partition, in each zone
+                                     //   (size = sum n_part[i]), if heterogeneous
+  /* Partitioned meshes */
+  _part_mesh_t *pmeshes;             // Partitioned meshes structures (size=n_zone)
+
 } _pdm_multipart_t;
 
 /*============================================================================
@@ -155,12 +175,24 @@ _get_from_id
   return multipart;
 }
 
+/**
+ *
+ * \brief Map each pair of (join, opposite join) to a same global id and count
+ *        the total number of faces in this unified join. Return a distribution.
+ *        Arrays are allocated in this function.
+ *
+ * \param [in]   _multipart          multipart object
+ * \param [out]  join_to_ref_join    Unique join id associated to each join
+ *                                     (size = n_total_join)
+ * \param [out]  face_in_join_distri Distribution of join faces over the ref
+ *                                   join ids (size = n_unique_joins+1)
+ */
 static void
 _build_join_uface_distribution
 (
- _pdm_multipart_t *_multipart,
- int              *join_to_ref_join,   //Size n_total_join
- int              *face_in_join_distri //Size n_unique_joins + 1
+ _pdm_multipart_t  *_multipart,
+ int              **join_to_ref_join,
+ int              **face_in_join_distri
 )
 {
 
@@ -172,6 +204,10 @@ _build_join_uface_distribution
   PDM_printf("pdm::_build_join_uface_distribution\n");
   int n_total_joins  = _multipart->n_total_joins;
   int n_unique_joins = n_total_joins/2;
+  *join_to_ref_join    = (int *) malloc(n_total_joins  * sizeof(int));
+  *face_in_join_distri = (int *) malloc(n_unique_joins+1 * sizeof(int));
+  int* _face_in_join_distri = *face_in_join_distri;
+  int* _join_to_ref_join    = *join_to_ref_join;
 
   //Build join_to_ref_join : we want the join and opposite join to have the same shift index,
   // so we take the smaller join global id as the reference
@@ -181,15 +217,15 @@ _build_join_uface_distribution
     int opp_join = _multipart->join_to_opposite[ijoin];
     if (ijoin < opp_join)
     {
-      join_to_ref_join[ijoin] = ref_join_gid;
-      join_to_ref_join[opp_join] = ref_join_gid;
+      _join_to_ref_join[ijoin] = ref_join_gid;
+      _join_to_ref_join[opp_join] = ref_join_gid;
       ref_join_gid ++;
     }
   }
   /*
   PDM_printf("Join to reference join :");
   for (int ijoin = 0; ijoin < n_total_joins; ijoin++)
-   PDM_printf(" %d ", join_to_ref_join[ijoin]);
+   PDM_printf(" %d ", _join_to_ref_join[ijoin]);
   PDM_printf("\n");
   */
 
@@ -202,11 +238,11 @@ _build_join_uface_distribution
     for (int i_part = 0; i_part < _multipart->n_part[izone]; i_part++){
       int *pface_join_idx = _multipart->pmeshes[izone].pface_join_idx[i_part];
       for (int ijoin=0; ijoin < _multipart->pmeshes[izone].n_joins; ijoin ++){
-        int join_gid = _multipart->pmeshes[izone].joins_ids[ijoin];
+        int join_gid     = _multipart->pmeshes[izone].joins_ids[ijoin];
         int join_opp_gid = _multipart->join_to_opposite[join_gid];
         //Paired joins must be counted only once
         if (join_gid < join_opp_gid)
-          nb_face_in_joins[join_to_ref_join[join_gid]] += pface_join_idx[ijoin+1] - pface_join_idx[ijoin];
+          nb_face_in_joins[_join_to_ref_join[join_gid]] += pface_join_idx[ijoin+1] - pface_join_idx[ijoin];
       }
     }
   }
@@ -218,22 +254,30 @@ _build_join_uface_distribution
   */
 
   //Sum faces and build distribution
-  PDM_MPI_Allreduce(nb_face_in_joins, &face_in_join_distri[1], n_unique_joins, PDM_MPI_INT, PDM_MPI_SUM, _multipart->comm);
+  PDM_MPI_Allreduce(nb_face_in_joins, &_face_in_join_distri[1], n_unique_joins,
+    PDM_MPI_INT, PDM_MPI_SUM, _multipart->comm);
 
-  face_in_join_distri[0] = 0;
+  _face_in_join_distri[0] = 0;
   for (int i=0; i < n_unique_joins; i++)
-    face_in_join_distri[i+1] = face_in_join_distri[i+1] + face_in_join_distri[i];
+    _face_in_join_distri[i+1] = _face_in_join_distri[i+1] + _face_in_join_distri[i];
 
   /*
-  PDM_printf("[%d] face_in_join_distri : ", i_rank);
+  PDM_printf("[%d] _face_in_join_distri : ", i_rank);
   for (int i = 0; i < n_unique_joins + 1; i++)
-    PDM_printf(" %d ", face_in_join_distri[i]);
+    PDM_printf(" %d ", _face_in_join_distri[i]);
   PDM_printf("\n");
   */
 
   free(nb_face_in_joins);
 }
 
+/**
+ *
+ * \brief Complete join data, which originally only contains face local id,
+ *        with the connecting data opp proc, opp part, opp face local id.
+ *
+ * \param [inout]   _multipart          multipart object
+ */
 static void
 _search_matching_joins
 (
@@ -246,34 +290,34 @@ _search_matching_joins
   PDM_MPI_Comm_size(_multipart->comm, &n_rank);
 
   //Construction of (unique) join distribution
-  int *join_to_ref_join = (int *) malloc(_multipart->n_total_joins * sizeof(int));
-  int *face_in_join_distri = (int *) malloc(((_multipart->n_total_joins)/2+1) * sizeof(int));
-  _build_join_uface_distribution(_multipart, join_to_ref_join, face_in_join_distri);
+  int *join_to_ref_join;
+  int *face_in_join_distri;
+  _build_join_uface_distribution(_multipart, &join_to_ref_join, &face_in_join_distri);
 
   //Count total nb of join_faces
-  int nb_of_joins      = 0;
+  int nb_of_joins = 0;
   for (int izone = 0 ; izone < _multipart->n_zone; izone ++) {
     nb_of_joins += _multipart->n_part[izone] * _multipart->pmeshes[izone].n_joins;
   }
 
   // Prepare lntogn numbering and partitioned data
   PDM_g_num_t **shifted_lntogn = (PDM_g_num_t **) malloc(nb_of_joins * sizeof(PDM_g_num_t*));
-  int              **part_data = (int **) malloc(nb_of_joins * sizeof(int *));
-  int       *nb_face_per_join  = (int *) malloc(nb_of_joins * sizeof(int));
+  int              **part_data = (int **)         malloc(nb_of_joins * sizeof(int *));
+  int        *nb_face_per_join = (int *)          malloc(nb_of_joins * sizeof(int));
 
   int ijoin_pos  = 0;
   for (int izone = 0 ; izone < _multipart->n_zone; izone ++) {
-    int n_join = _multipart->pmeshes[izone].n_joins;
+    int n_join            = _multipart->pmeshes[izone].n_joins;
     _part_mesh_t _pmeshes = _multipart->pmeshes[izone];
     for (int i_part = 0; i_part < _multipart->n_part[izone]; i_part++) {
-      int *face_join_idx    = _pmeshes.pface_join_idx[i_part];
-      int *face_join        = _pmeshes.pface_join[i_part];
-      int *face_join_lntogn = _pmeshes.pface_join_ln_to_gn[i_part];
+      int         *face_join_idx    = _pmeshes.pface_join_idx[i_part];
+      int         *face_join        = _pmeshes.pface_join[i_part];
+      PDM_g_num_t *face_join_lntogn = _pmeshes.pface_join_ln_to_gn[i_part];
       for (int ijoin = 0; ijoin < n_join; ijoin++) {
         int join_size = face_join_idx[ijoin + 1] - face_join_idx[ijoin];
         nb_face_per_join[ijoin_pos] = join_size;
         PDM_g_num_t *shifted_lntogn_loc = (PDM_g_num_t *) malloc(join_size * sizeof(PDM_g_num_t));
-        int         *part_data_loc      = (int *) malloc(3 * join_size * sizeof(int));
+        int         *part_data_loc      = (int *)         malloc(3 * join_size * sizeof(int));
         //Get shift value from join unique distribution
         int join_gid    = _multipart->pmeshes[izone].joins_ids[ijoin];
         int shift_value = face_in_join_distri[join_to_ref_join[join_gid]];
@@ -287,7 +331,7 @@ _search_matching_joins
           j++;
         }
         shifted_lntogn[ijoin_pos] = shifted_lntogn_loc;
-        part_data[ijoin_pos] = part_data_loc;
+        part_data[ijoin_pos]      = part_data_loc;
         ijoin_pos += 1;
       }
     }
@@ -341,7 +385,9 @@ _search_matching_joins
     PDM_printf("\n");
     PDM_printf("[%d] PTB data : ", i_rank);
     for (int i = 0; i < n_elt_block; i++)
-      printf(" (%d %d %d) ", block_data[3*i], block_data[3*i+1], block_data[3*i+2]);
+      printf(" (%d %d %d) ", block_data[3*i],
+                             block_data[3*i+1],
+                             block_data[3*i+2]);
     PDM_printf("\n");
   }
   */
@@ -349,14 +395,14 @@ _search_matching_joins
   // Don't free ptb now since we need the distribution and the block_data
 
   PDM_block_to_part_t *btp = PDM_block_to_part_create(distrib_index,
-                                                      (const PDM_g_num_t **) shifted_lntogn,
+                               (const PDM_g_num_t **) shifted_lntogn,
                                                       nb_face_per_join,
                                                       nb_of_joins,
                                                       _multipart->comm);
 
   int **new_part_data = (int **) malloc(nb_of_joins * sizeof(int *));
   for (int ijoin = 0; ijoin < nb_of_joins; ijoin ++){
-    new_part_data[ijoin] = (int *) malloc(6*nb_face_per_join[ijoin] * sizeof(int));
+    new_part_data[ijoin] = (int *) malloc(6*nb_face_per_join[ijoin]*sizeof(int));
   }
   int cst_stride = 6;
 
@@ -368,6 +414,8 @@ _search_matching_joins
                          NULL,
                          (void **) new_part_data);
 
+  free(block_data);
+  free(block_stride);
   PDM_part_to_block_free(ptb);
   PDM_block_to_part_free(btp);
 
@@ -379,8 +427,12 @@ _search_matching_joins
     {
       PDM_printf("  ijoin %d(%d) :", ijoin, nb_face_per_join[ijoin]);
       for (int iface = 0; iface < nb_face_per_join[ijoin]; iface++)
-        PDM_printf(" (%d %d %d %d %d %d) ", new_part_data[ijoin][6*iface], new_part_data[ijoin][6*iface+1], new_part_data[ijoin][6*iface+2],
-                                            new_part_data[ijoin][6*iface+3], new_part_data[ijoin][6*iface+4], new_part_data[ijoin][6*iface+5]);
+        PDM_printf(" (%d %d %d %d %d %d) ", new_part_data[ijoin][6*iface],
+                                            new_part_data[ijoin][6*iface+1],
+                                            new_part_data[ijoin][6*iface+2],
+                                            new_part_data[ijoin][6*iface+3],
+                                            new_part_data[ijoin][6*iface+4],
+                                            new_part_data[ijoin][6*iface+5]);
       PDM_printf("\n");
     }
   }
@@ -458,6 +510,7 @@ _search_matching_joins
   free(shifted_lntogn);
   free(part_data);
   free(new_part_data);
+  free(join_to_ref_join);
   free(face_in_join_distri);
   free(nb_face_per_join);
 }
@@ -508,58 +561,77 @@ PDM_multipart_create
   _pdm_multipart_t *_multipart = (_pdm_multipart_t *) malloc(sizeof(_pdm_multipart_t));
   int id = PDM_Handles_store (_multiparts, _multipart);
 
-  _multipart->n_zone      = n_zone;
-  _multipart->n_part      = n_part;
-  _multipart->merge_blocks= merge_blocks;
-  _multipart->split_method= split_method;
+  _multipart->n_zone           = n_zone;
+  _multipart->n_part           = n_part;
+  _multipart->merge_blocks     = merge_blocks;
+  _multipart->split_method     = split_method;
   _multipart->part_size_method = part_size_method;
   _multipart->part_fraction    = part_fraction;
-  _multipart->comm        = comm;
+  _multipart->comm             = comm;
 
-  _multipart->dmeshes_ids      = (int *) malloc(_multipart->n_zone * sizeof(int));
+  _multipart->n_total_joins    = 0;
+  _multipart->join_to_opposite = NULL;
+
+  _multipart->dmeshes_ids  = (int *) malloc(_multipart->n_zone * sizeof(int));
   _multipart->pmeshes = (_part_mesh_t *) malloc(_multipart->n_zone * sizeof(_part_mesh_t));
 
   for (int izone = 0; izone < _multipart->n_zone; izone++) {
     _multipart->dmeshes_ids[izone] = -1;
   }
 
-  _multipart->n_total_joins = 0;
-  _multipart->join_to_opposite = NULL;
-
-  PDM_printf("Created from PDM_multipart_create. You requested a multipart with %d zones \n", n_zone);
   return id;
-
 }
 
-/* TODO : copy doc of the function */
+/**
+ *
+ * \brief Set distributed mesh data for the input zone
+ *
+ * \param [in]   mpart_id       Multipart structure id
+ * \param [in]   zone_id        Global zone id
+ * \param [in]   dmesh_id       Id of the distributed mesh structure to use
+ */
 void PDM_multipart_register_block
 (
  const int        mpart_id,
- const int        zone_gid,
- const int        block_data_id
+ const int        zone_id,
+ const int        dmesh_id
 )
 {
-  PDM_printf("In multipart %d, set zone n°%d using blockdata %d \n",
-             mpart_id, zone_gid, block_data_id);
-
   _pdm_multipart_t *_multipart = _get_from_id (mpart_id);
-  assert(zone_gid < _multipart->n_zone);
-  _multipart->dmeshes_ids[zone_gid] = block_data_id;
+  assert(zone_id < _multipart->n_zone);
+  _multipart->dmeshes_ids[zone_id] = dmesh_id;
 }
 
+/**
+ *
+ * \brief Set connecting data between all the zones
+ *
+ * \param [in]   mpart_id          Multipart structure id
+ * \param [in]   n_total_joins     Total number of interfaces
+ * \param [in]   join_to_opposite  For each global join id, give the global id
+ *                                   of the opposite join (size = n_total_joins)
+ *
+ * \note Join global id numbering must start at 0 and be continuous.
+ */
 void PDM_multipart_register_joins
 (
  const int        mpart_id,
  const int        n_total_joins,
- int             *matching_join_array
+ const int       *join_to_opposite
 )
 {
   _pdm_multipart_t *_multipart = _get_from_id (mpart_id);
 
   _multipart->n_total_joins    = n_total_joins;
-  _multipart->join_to_opposite = matching_join_array;
+  _multipart->join_to_opposite = join_to_opposite;
 }
 
+/**
+ *
+ * \brief Construct the partitioned meshes on every zones
+ *
+ * \param [in]   mpart_id          Multipart structure id
+ */
 void
 PDM_multipart_run_ppart
 (
@@ -581,42 +653,48 @@ PDM_multipart_run_ppart
   else
   {
     // 2. Loop over the blocks and call the partitionner
-    for (int zone_gid = 0; zone_gid < _multipart->n_zone; zone_gid++) {
-      PDM_printf("You requested no merge : partitionning zone %d/%d \n", zone_gid+1, _multipart->n_zone);
-      int block_id = _multipart->dmeshes_ids[zone_gid];
-      int dn_cell  = 0;
-      int dn_face  = 0;
-      int dn_vtx   = 0;
-      int n_bnd    = 0;
-      int n_join   = 0;
+    for (int i_zone = 0; i_zone < _multipart->n_zone; i_zone++) {
+      PDM_printf("Partitionning zone %d/%d \n", i_zone+1, _multipart->n_zone);
+
+      // Get distributed mesh data for this zone
+      int dmesh_id = _multipart->dmeshes_ids[i_zone];
+      int dn_cell, dn_face, dn_vtx, n_bnd, n_join;
       const double       *dvtx_coord;
       const int          *dface_vtx_idx;
       const PDM_g_num_t  *dface_vtx;
       const PDM_g_num_t  *dface_cell;
       const int          *dface_bound_idx;
       const PDM_g_num_t  *dface_bound;
-      const int          *djoin_gids;
+      const int          *joins_ids;
       const int          *dface_join_idx;
       const PDM_g_num_t  *dface_join;
+      PDM_dmesh_dims_get(dmesh_id, &dn_cell, &dn_face, &dn_vtx, &n_bnd, &n_join);
+      PDM_dmesh_data_get(dmesh_id, &dvtx_coord, &dface_vtx_idx, &dface_vtx, &dface_cell,
+                         &dface_bound_idx, &dface_bound, &joins_ids, &dface_join_idx, &dface_join);
 
-      PDM_dmesh_dims_get(block_id, &dn_cell, &dn_face, &dn_vtx, &n_bnd, &n_join);
-      PDM_dmesh_data_get(block_id, &dvtx_coord, &dface_vtx_idx, &dface_vtx, &dface_cell,
-                         &dface_bound_idx, &dface_bound, &djoin_gids, &dface_join_idx, &dface_join);
+      // This will store all the partitions created by this proc on this zone
+      _part_mesh_t *_pmeshes = &(_multipart->pmeshes[i_zone]);
 
       //Copy number of bounds and joins (global data) in the part structure
-      _multipart->pmeshes[zone_gid].n_bounds = n_bnd;
-      _multipart->pmeshes[zone_gid].n_joins  = n_join;
-      _multipart->pmeshes[zone_gid].joins_ids = (int *) malloc(n_join*sizeof(int));
+      _pmeshes->n_bounds = n_bnd;
+      _pmeshes->n_joins  = n_join;
+      _pmeshes->joins_ids = (int *) malloc(n_join*sizeof(int));
       for (int i_join = 0; i_join < n_join; i_join++)
-        _multipart->pmeshes[zone_gid].joins_ids[i_join] = djoin_gids[i_join];
+        _pmeshes->joins_ids[i_join] = joins_ids[i_join];
 
-      int n_part = _multipart->n_part[zone_gid];
+      // Compute total number of partitions for this zone
+      int n_part = _multipart->n_part[i_zone];
+      int tn_part;
+      PDM_MPI_Allreduce(&n_part, &tn_part, 1, PDM_MPI_INT, PDM_MPI_SUM, _multipart->comm);
+      _pmeshes->tn_part = tn_part;
+
+      //Construct graph and split -- no interface for now, do it by hand
       PDM_g_num_t *cell_distri = PDM_compute_entity_distribution(_multipart->comm, dn_cell);
       PDM_g_num_t *face_distri = PDM_compute_entity_distribution(_multipart->comm, dn_face);
       PDM_g_num_t *vtx_distri  = PDM_compute_entity_distribution(_multipart->comm, dn_vtx);
       PDM_g_num_t *part_distri = PDM_compute_entity_distribution(_multipart->comm, n_part);
 
-      int *dual_graph_idx, *dcell_face_idx;
+      int         *dual_graph_idx, *dcell_face_idx;
       PDM_g_num_t *dual_graph, *dcell_face;
 
       PDM_para_graph_dual_from_arc2node(_multipart->comm,
@@ -628,19 +706,18 @@ PDM_multipart_run_ppart
                                         1,
                                        &dcell_face_idx,
                                        &dcell_face);
-      int tn_part;
-      PDM_MPI_Allreduce(&n_part, &tn_part, 1, PDM_MPI_INT, PDM_MPI_SUM, _multipart->comm);
+
       double *part_fraction = NULL;
       if (_multipart->part_size_method == PDM_PART_SIZE_HETEROGENEOUS){
-        int *n_part_per_rank = (int *) malloc(n_rank*sizeof(int));
-        int *displ           = (int *) malloc(n_rank*sizeof(int));
-        part_fraction = (double *) malloc(tn_part*sizeof(double));
+        int *n_part_per_rank = (int *)    malloc(n_rank * sizeof(int));
+        int *displ           = (int *)    malloc(n_rank * sizeof(int));
+        part_fraction        = (double *) malloc(tn_part * sizeof(double));
         int starting_part_idx = 0;
         for (int i =0; i < n_rank; i++){
           n_part_per_rank[i] = part_distri[i+1] - part_distri[i];
           displ[i] = part_distri[i]-1;
         }
-        for (int jzone = 0; jzone < zone_gid; jzone++)
+        for (int jzone = 0; jzone < i_zone; jzone++)
           starting_part_idx += _multipart->n_part[jzone];
 
         PDM_MPI_Allgatherv((void*) &_multipart->part_fraction[starting_part_idx],
@@ -669,8 +746,6 @@ PDM_multipart_run_ppart
       free(dual_graph);
       if (_multipart->part_size_method == PDM_PART_SIZE_HETEROGENEOUS)
         free(part_fraction);
-      _part_mesh_t *_pmeshes = &(_multipart->pmeshes[zone_gid]);
-      _pmeshes->tn_part = tn_part;
 
       PDM_part_assemble_partitions(_multipart->comm,
                                    part_distri,
@@ -703,10 +778,13 @@ PDM_multipart_run_ppart
                                                   &_pmeshes->pface_vtx);
       free(dcell_face_idx);
       free(dcell_face);
+
       PDM_part_reverse_pcellface(n_part, _pmeshes->pn_cell, _pmeshes->pn_face,
-          _pmeshes->pcell_face_idx, _pmeshes->pcell_face, &_pmeshes->pface_cell);
+                                 _pmeshes->pcell_face_idx, _pmeshes->pcell_face,
+                                &_pmeshes->pface_cell);
       PDM_part_reorient_bound_faces(n_part, _pmeshes->pn_face, _pmeshes->pface_cell,
-          _pmeshes->pcell_face_idx, _pmeshes->pcell_face, _pmeshes->pface_vtx_idx, _pmeshes->pface_vtx);
+                                    _pmeshes->pcell_face_idx, _pmeshes->pcell_face,
+                                    _pmeshes->pface_vtx_idx, _pmeshes->pface_vtx);
 
       PDM_part_dcoordinates_to_pcoordinates(_multipart->comm,
                                             n_part,
@@ -738,15 +816,16 @@ PDM_multipart_run_ppart
                                      &_pmeshes->pface_join_idx,
                                      &pface_join_tmp,
                                      &_pmeshes->pface_join_ln_to_gn);
-      /* This function only returns local id of face in join, we have to allocate to
-         set up expected size (4*nb_face_join : store iface, opp_rank, opp_part, opp id) */
+      /* This function only returns local id of face in join, we have to
+         allocate to set up expected size (4*nb_face_join) */
       _pmeshes->pface_join = (int **) malloc(n_part*sizeof(int*));
       for (int i_part = 0; i_part < n_part; i_part++){
-        int n_face_join_tot = _pmeshes->pface_join_idx[i_part][n_join];
-        _pmeshes->pface_join[i_part] = (int *) malloc(4*n_face_join_tot*sizeof(int));
-        for (int i_face = 0; i_face < n_face_join_tot; i_face++){
+        int s_face_join = _pmeshes->pface_join_idx[i_part][n_join];
+        _pmeshes->pface_join[i_part] = (int *) malloc(4*s_face_join*sizeof(int));
+        for (int i_face = 0; i_face < s_face_join; i_face++){
           _pmeshes->pface_join[i_part][4*i_face] = pface_join_tmp[i_part][i_face];
         }
+        free(pface_join_tmp[i_part]);
       }
       free(pface_join_tmp);
 
@@ -766,37 +845,40 @@ PDM_multipart_run_ppart
       free(face_distri);
       free(vtx_distri);
       free(part_distri);
-
     }
-    // Now separate joins and boundaries and we rebuild joins over the zones
+    // Now rebuild joins over the zones
     _search_matching_joins(_multipart);
   }
 }
 
+/**
+ *
+ * \brief Returns the dimensions of a given partition
+ */
 void
 PDM_multipart_part_dim_get
 (
-const   int  mpart_id,
-const   int  zone_gid,
-const   int  i_part,
- int        *n_cell,
- int        *n_face,
- int        *n_face_part_bound,
- int        *n_vtx,
- int        *n_proc,
- int        *n_total_part,
- int        *scell_face,
- int        *sface_vtx,
- int        *sface_bound,
- int        *n_face_bound,
- int        *sface_join,
- int        *n_face_join
+const int   mpart_id,
+const int   i_zone,
+const int   i_part,
+      int  *n_cell,
+      int  *n_face,
+      int  *n_face_part_bound,
+      int  *n_vtx,
+      int  *n_proc,
+      int  *n_total_part,
+      int  *scell_face,
+      int  *sface_vtx,
+      int  *sface_bound,
+      int  *n_bound_groups,
+      int  *sface_join,
+      int  *n_join_groups
 )
 {
   _pdm_multipart_t *_multipart = _get_from_id (mpart_id);
 
-  assert(zone_gid < _multipart->n_zone && i_part < _multipart->n_part[zone_gid]);
-  _part_mesh_t _pmeshes = _multipart->pmeshes[zone_gid];
+  assert(i_zone < _multipart->n_zone && i_part < _multipart->n_part[i_zone]);
+  _part_mesh_t _pmeshes = _multipart->pmeshes[i_zone];
 
   *n_cell = _pmeshes.pn_cell[i_part];
   *n_face = _pmeshes.pn_face[i_part];
@@ -810,17 +892,21 @@ const   int  i_part,
 
   *n_face_part_bound = _pmeshes.pinternal_face_bound_partidx[i_part][*n_total_part];
 
-  *n_face_bound = _pmeshes.n_bounds;  //Number of bnd groups
-  *n_face_join  = _pmeshes.n_joins;   //Number of join groups
-  *sface_bound  = _pmeshes.pface_bound_idx[i_part][*n_face_bound];
-  *sface_join   = _pmeshes.pface_join_idx[i_part][*n_face_join];
+  *n_bound_groups = _pmeshes.n_bounds;
+  *n_join_groups  = _pmeshes.n_joins;
+  *sface_bound    = _pmeshes.pface_bound_idx[i_part][*n_bound_groups];
+  *sface_join     = _pmeshes.pface_join_idx[i_part][*n_join_groups];
 }
 
+/**
+ *
+ * \brief Returns the data arrays of a given partition
+ */
 void
 PDM_multipart_part_val_get
 (
 const int            mpart_id,
-const int            zone_gid,
+const int            i_zone,
 const int            i_part,
       int          **cell_tag,
       int          **cell_face_idx,
@@ -847,8 +933,8 @@ const int            i_part,
 {
    _pdm_multipart_t *_multipart = _get_from_id (mpart_id);
 
-  assert(zone_gid < _multipart->n_zone && i_part < _multipart->n_part[zone_gid]);
-  _part_mesh_t _pmeshes = _multipart->pmeshes[zone_gid];
+  assert(i_zone < _multipart->n_zone && i_part < _multipart->n_part[i_zone]);
+  _part_mesh_t _pmeshes = _multipart->pmeshes[i_zone];
 
   *cell_tag = NULL;
   *face_tag = NULL;
@@ -883,7 +969,7 @@ void
 PDM_multipart_part_color_get
 (
 const int            mpart_id,
-const int            zone_gid,
+const int            i_zone,
 const int            i_part,
       int          **cell_color,
       int          **face_color,
@@ -893,7 +979,7 @@ const int            i_part,
 {
   _pdm_multipart_t *_multipart = _get_from_id (mpart_id);
 
-  assert(zone_gid < _multipart->n_zone && i_part < _multipart->n_part[zone_gid]);
+  assert(i_zone < _multipart->n_zone && i_part < _multipart->n_part[i_zone]);
 
   PDM_printf("PDM_multipart_part_color_get: Not implemented\n");
   *cell_color       = NULL;
@@ -907,7 +993,7 @@ void
 PDM_multipart_time_get
 (
 const int       mpart_id,
-const int       zone_gid,
+const int       i_zone,
       double  **elapsed,
       double  **cpu,
       double  **cpu_user,
@@ -915,7 +1001,7 @@ const int       zone_gid,
 )
 {
   _pdm_multipart_t *_multipart = _get_from_id (mpart_id);
-  assert(zone_gid < _multipart->n_zone);
+  assert(i_zone < _multipart->n_zone);
 
   PDM_printf("PDM_multipart_time_get: Not implemented\n");
   *elapsed  = NULL;
@@ -927,25 +1013,25 @@ const int       zone_gid,
 
 /**
  *
- * \brief Free
+ * \brief Free the structure
  *
- * \param [in]   id           Identifier
- *
+ * \param [in]   mpart_id  Multipart structure id
  */
 
 void
 PDM_multipart_free
 (
- const int id
+ const int mpart_id
 )
 {
-  _pdm_multipart_t *_multipart = _get_from_id (id);
+  _pdm_multipart_t *_multipart = _get_from_id (mpart_id);
 
   free(_multipart->dmeshes_ids);
+  free(_multipart->pmeshes);
 
   free (_multipart);
 
-  PDM_Handles_handle_free (_multiparts, id, PDM_FALSE);
+  PDM_Handles_handle_free (_multiparts, mpart_id, PDM_FALSE);
 
   const int n_multipart = PDM_Handles_n_get (_multiparts);
 
