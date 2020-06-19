@@ -57,12 +57,41 @@ PDM_point_location_nodal
 
 //-->>
 void
+PDM_locate_points_on_triangles (const int          n_tri,
+                                const PDM_l_num_t  tri_vtx[],
+                                const double       vtx_coord[],
+                                const int          n_pts,
+                                const double       pts_coord[],
+                                const PDM_g_num_t  pts_g_num[],//debug only
+                                int                location[],
+                                float              distance[],
+                                double             bar_coord[]);
+
+void
+PDM_locate_points_on_quad (const double       vtx_xyz[12],
+                           const int          n_pts,
+                           const double       pts_xyz[],
+                           const PDM_g_num_t  pts_g_num[],
+                           float             *distance,
+                           double            *bary_coords);
+
+void
 PDM_locate_points_in_tetra (const double       vtx_xyz[12],
                             const int          n_pts,
                             const double       pts_xyz[],
                             const PDM_g_num_t  pts_g_num[],
                             float             *distance,
                             double            *bary_coords);
+
+void
+PDM_locate_points_in_cell (const PDM_Mesh_nodal_elt_t  elt_type,
+                           const PDM_l_num_t           cell_vtx[],
+                           const double                vtx_coord[],
+                           const int                   n_pts,
+                           const double                pts_coord[],
+                           const PDM_g_num_t           pts_g_num[],//debug only
+                           float                      *distance,
+                           double                     *bar_coord);
 
 #if 1
 void PDM_point_location_distance
@@ -75,6 +104,24 @@ void PDM_point_location_distance
  );
 #endif
 //<<--
+
+void
+_locate_in_polyhedron
+(
+ const PDM_l_num_t n_vtx,
+ const double      vtx_coord[],
+ const PDM_l_num_t n_face,
+ const PDM_l_num_t face_vtx_idx[],
+ const PDM_l_num_t face_vtx[],
+ const int         face_orientation[],
+ const int         n_pts,
+ const double      pts_coord[],
+ const double      char_length,
+ float             distance[],
+ double            bar_coord[]
+ );
+
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

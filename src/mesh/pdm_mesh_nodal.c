@@ -2891,6 +2891,8 @@ void _compute_cell_vtx_connectivity
  PDM_l_num_t       **cell_vtx
  )
 {
+  const int DEBUG = 0;
+
   *cell_vtx_idx = malloc (sizeof(int) * (n_cell + 1));
   PDM_l_num_t *_cell_vtx_idx = *cell_vtx_idx;
 
@@ -2927,8 +2929,11 @@ void _compute_cell_vtx_connectivity
           continue;
         }
 
-        if (pos + _cell_vtx_idx[icell] >= s_cell_vtx) {
-          s_cell_vtx *= 2;
+        //if (pos + _cell_vtx_idx[icell] >= s_cell_vtx) {
+          //s_cell_vtx *= 2;
+          //s_cell_vtx = PDM_MAX (2*s_cell_vtx, pos + _cell_vtx_idx[icell]);
+        if (n_vtx_cell + _cell_vtx_idx[icell] >= s_cell_vtx) {
+          s_cell_vtx = PDM_MAX (2*s_cell_vtx, n_vtx_cell + _cell_vtx_idx[icell]);
           *cell_vtx = realloc (*cell_vtx, sizeof(PDM_l_num_t) * s_cell_vtx);
           _cell_vtx = *cell_vtx + _cell_vtx_idx[icell];
         }
@@ -2944,6 +2949,14 @@ void _compute_cell_vtx_connectivity
     } // End of loop on current cell's faces
 
     _cell_vtx_idx[icell+1] = _cell_vtx_idx[icell] + n_vtx_cell;
+
+    if (DEBUG) {
+      printf("cell #%d vtx =", icell);
+      for (int i = _cell_vtx_idx[icell]; i < _cell_vtx_idx[icell+1]; i++) {
+        printf(" %d", (*cell_vtx)[i]);
+      }
+      printf("\n");
+    }
 
   } // End of loop on cells
 
@@ -3170,6 +3183,7 @@ PDM_Mesh_nodal_cell3d_cellface_add
  const PDM_g_num_t *numabs
  )
 {
+  #define FIX_CELL_FACE 1
   int adjust = 0;
   if (n_cell > 0) {
     if (cell_face_idx[0] == 1) {
@@ -3632,6 +3646,11 @@ PDM_Mesh_nodal_cell3d_cellface_add
               PDM_l_num_t *cell_face_cell = cell_face_courant + cell_face_idx_courant[i] - adjust;
               for (int j = 0; j < cell_face_nb_courant[i]; j++) {
                 cellfac_poly[l_cellfac_poly++] = tag_face_poly3d[PDM_ABS(cell_face_cell[j]) - 1] + 1;
+#if FIX_CELL_FACE
+                if (cell_face_cell[j] < 0) {
+                  cellfac_poly[l_cellfac_poly-1] = -cellfac_poly[l_cellfac_poly-1];
+                }
+#endif
               }
               break;
             }
@@ -3712,7 +3731,7 @@ PDM_Mesh_nodal_cell3d_cellface_add
       mesh->prepa_blocks = NULL;
     }
   }
-
+#undef FIX_CELL_FACE
 }
 
 

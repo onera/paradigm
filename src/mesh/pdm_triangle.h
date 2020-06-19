@@ -97,6 +97,18 @@ PDM_triangle_compute_barycenter
 );
 
 
+
+
+PDM_triangle_status_t
+PDM_triangle_closest_point
+(
+ const double  p[3],
+ const double  v[9],
+ double       *closest_point,
+ double       *min_dist2,
+ double       *weights
+ );
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
