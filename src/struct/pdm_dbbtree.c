@@ -579,12 +579,12 @@ PDM_dbbtree_boxes_set
 
     allGExtents = (double *) realloc (allGExtents, sizeof(double) * sExtents * nUsedRank);
 
-    for (int i = 0; i < nUsedRank; i++) {
-      double *_min = allGExtents + i * sExtents;
-      double *_max = _min + 3;
-      PDM_box_set_normalize_inv (_dbbt->boxes, _min, _min);
-      PDM_box_set_normalize_inv (_dbbt->boxes, _max, _max);
-    }
+    /* for (int i = 0; i < nUsedRank; i++) { */
+    /*   double *_min = allGExtents + i * sExtents; */
+    /*   double *_max = _min + 3; */
+    /*   PDM_box_set_normalize_inv (_dbbt->boxes, _min, _min); */
+    /*   PDM_box_set_normalize_inv (_dbbt->boxes, _max, _max); */
+    /* } */
 
     // Retour espace reel pour allGExtents
 
@@ -810,6 +810,10 @@ PDM_dbbtree_intersect_boxes_set
    * Intersection boxes whith shared tree
    */
 
+  PDM_MPI_Barrier (_dbbt->comm);
+  PDM_timer_t *t = PDM_timer_create();
+  PDM_timer_resume(t);
+
   if (_dbbt->btShared != NULL) {
 
     PDM_box_tree_get_boxes_intersects (_dbbt->btShared,
@@ -863,8 +867,50 @@ PDM_dbbtree_intersect_boxes_set
      * Redistribute boxes on intersecting ranks
      */
 
-    PDM_box_set_redistribute (distrib,
-                              boxes);
+
+    /* PDM_g_num_t _n_boxes1 = boxes->local_boxes->n_boxes; */
+    /* PDM_g_num_t s_n_boxes1 = 0; */
+
+    /* PDM_MPI_Allreduce(&_n_boxes1, &s_n_boxes1, 1, */
+    /*                   PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, _dbbt->comm); */
+
+    /* PDM_box_set_redistribute (distrib, */
+    /*                           boxes); */
+
+    /* PDM_g_num_t _n_boxes2 = boxes->local_boxes->n_boxes; */
+    /* PDM_g_num_t s_n_boxes2 = 0; */
+
+    /* PDM_MPI_Allreduce(&_n_boxes2, &s_n_boxes2, 1, */
+    /*                   PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, _dbbt->comm); */
+
+    /* int *n_boxes2_procs = malloc(sizeof(int) * lComm); */
+    /* int *n_boxes1_procs = malloc(sizeof(int) * lComm); */
+
+    /* PDM_MPI_Allgather ((void *) &_n_boxes2,     1, PDM_MPI_INT, */
+    /*                    (void *) n_boxes2_procs, 1, PDM_MPI_INT, */
+    /*                    _dbbt->comm); */
+    /* PDM_MPI_Allgather ((void *) &_dbbt->boxes->local_boxes->n_boxes,     1, PDM_MPI_INT, */
+    /*                    (void *) n_boxes1_procs, 1, PDM_MPI_INT, */
+    /*                    _dbbt->comm); */
+
+    /* if (myRank == 0) { */
+    /*   printf ("Boites B : avant %ld apres %ld facteur %12.5e\n", */
+    /*           s_n_boxes1, */
+    /*           s_n_boxes2, */
+    /*           (double) s_n_boxes2/(double) s_n_boxes1); */
+    /*   printf ("nboxes 2 : "); */
+    /*   for (int i = 0; i < lComm; i++) { */
+    /*     printf (" %d", n_boxes2_procs[i]); */
+    /*   } */
+    /*   printf("\n"); */
+    /*   printf ("nboxes 1 : "); */
+    /*   for (int i = 0; i < lComm; i++) { */
+    /*     printf (" %d", n_boxes1_procs[i]); */
+    /*   } */
+    /*   printf("\n"); */
+    /* } */
+    /* free (n_boxes2_procs); */
+    /* free (n_boxes1_procs); */
 
     if (1 == 0) {
       printf ("Boxes B apres redistribution : %d\n", boxes->local_boxes->n_boxes);
@@ -885,18 +931,31 @@ PDM_dbbtree_intersect_boxes_set
 
   }
 
+  PDM_MPI_Barrier (_dbbt->comm);
+  PDM_timer_hang_on(t);
+  double t1 = PDM_timer_elapsed(t);
+  PDM_timer_resume(t);
+
   free (_boxGnum);
   free (_extents);
   free (_initLocation);
+
 
   /*
    * Intersection boxes whith local tree
    */
 
+  //PDM_box_tree_dump_statistics(_dbbt->btLoc);
+
   PDM_box_tree_get_boxes_intersects (_dbbt->btLoc,
                                      boxes,
                                      box_index,
                                      box_l_num);
+
+  PDM_MPI_Barrier (_dbbt->comm);
+  PDM_timer_hang_on(t);
+  double t2 = PDM_timer_elapsed(t);
+  PDM_timer_resume(t);
 
   /*
    * Sort boxes and remove double boxes
@@ -933,6 +992,19 @@ PDM_dbbtree_intersect_boxes_set
   for (int i = 0; i < nBoxesA; i++) {
     newIndex[i+1] += newIndex[i];
   }
+
+
+  PDM_MPI_Barrier (_dbbt->comm);
+  PDM_timer_hang_on(t);
+  double t3 = PDM_timer_elapsed(t);
+  PDM_timer_resume(t);
+
+  /* if (myRank == 0) { */
+  /*   printf("temps intersect arbre proc arbre loc tri : %12.5e %12.5e %12.5e\n", t1, t2-t1, t3-t2); */
+  /* } */
+
+  PDM_timer_hang_on(t);
+  PDM_timer_free (t);
 
   free (*box_index);
   *box_index = newIndex;
