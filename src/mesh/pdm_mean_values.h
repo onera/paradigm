@@ -125,6 +125,44 @@ PDM_mean_value_coordinates_polygon_3d
  double       mean_value_coord[]
  );
 
+void
+PDM_mean_value_coordinates_polyhedron
+(
+ const int         n_vtx,
+ const double      vtx_coord[],
+ const PDM_l_num_t n_face,
+ const PDM_l_num_t face_vtx_idx[],
+ const PDM_l_num_t face_vtx[],
+ const int         face_orientation[],
+ const double      pt_coord[],
+ double            mean_value_coord[]
+ );
+
+void
+PDM_mean_value_coordinates_polyhedron2
+(
+ const int         n_vtx,
+ const double      vtx_coord[],
+ const PDM_l_num_t n_face,
+ const PDM_l_num_t face_vtx_idx[],
+ const PDM_l_num_t face_vtx[],
+ const int         face_orientation[],
+ const double      pt_coord[],
+ double            mean_value_coord[]
+ );
+
+void
+PDM_mean_value_coordinates_polyhedron3
+(
+ const int         n_vtx,
+ const double      vtx_coord[],
+ const PDM_l_num_t n_face,
+ const PDM_l_num_t face_vtx_idx[],
+ const PDM_l_num_t face_vtx[],
+ const int         face_orientation[],
+ const double      pt_coord[],
+ double            mean_value_coord[]
+ );
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

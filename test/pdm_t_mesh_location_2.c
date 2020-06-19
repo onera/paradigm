@@ -621,6 +621,118 @@ _read_polyhedra
 
 
 
+
+/*----------------------------------------------------------------------
+ *
+ * Read mesh dimension
+ *
+ * parameters:
+ *   f                   <-- Mesh file
+ *   dimension           --> Dimension
+ *   nvertex             --> number of vertices
+ *   nElements           --> number of elements
+ *   nConnecVertex       --> size of connectivity
+ *---------------------------------------------------------------------*/
+
+static int _read_mesh_dim(FILE *f,
+                          int *dimension,
+                          int *nVertex,
+                          int *nFace,
+                          int *nElt,
+                          int *lFaceConnec,
+                          int *lCellConnec)
+
+{
+  int r;
+  r = fscanf(f, "%d %d %d %d %d %d",
+             dimension,
+             nVertex,
+             nFace,
+             nElt,
+             lFaceConnec,
+             lCellConnec);
+  if (r == EOF)
+    return 0;
+  else return 1;
+}
+
+/*----------------------------------------------------------------------
+ *
+ * Read mesh dimension
+ *
+ * parameters:
+ *   f                   <-- Mesh file
+ *   dimension           --> Dimension
+ *   nvertex             <-- number of vertices
+ *   nElements           <-- number of elements
+ *   nConnecVertex       <-- size of connectivity
+ *   coords              --> vertices coordinates
+ *   connecPointer       --> connectivity index
+ *   connec              --> connectivity
+ *---------------------------------------------------------------------*/
+
+static int _read_mesh(FILE *f,
+                      int dimension,
+                      int nVertex,
+                      int nFace,
+                      int nElt,
+                      int lFaceConnec,
+                      int lCellConnec,
+                      double *coords,
+                      int *faceVertexIdx,
+                      int *faceVertex,
+                      int *cellFaceIdx,
+                      int *cellFace)
+{
+  int i, j, r;
+
+  // Read coordinates
+  for (i = 0; i < nVertex; i++) {
+    for (j = 0; j < dimension; j++) {
+      r = fscanf(f, "%lf", coords + i * dimension + j);
+      if (r == EOF)
+        return EXIT_FAILURE;
+    }
+  }
+
+  // Read face -> vertex connectivity index
+  for (i = 0; i < nFace + 1; i++ ) {
+    r = fscanf(f, "%d", faceVertexIdx + i);
+    if (r == EOF)
+      return EXIT_FAILURE;
+  }
+
+  // Read face -> vertex connectivity
+  for (i = 0; i < lFaceConnec; i++ ) {
+    r = fscanf(f, "%d", faceVertex + i);
+    if (r == EOF)
+      return EXIT_FAILURE;
+  }
+
+  // Read cell -> face connectivity index
+  for (i = 0; i < nElt + 1; i++ ) {
+    r = fscanf(f, "%d", cellFaceIdx + i);
+    if (r == EOF)
+      return EXIT_FAILURE;
+  }
+
+  // Read cell -> face connectivity
+  for (i = 0; i < lCellConnec; i++ ) {
+    r = fscanf(f, "%d", cellFace + i);
+    if (r == EOF)
+      return EXIT_FAILURE;
+  }
+
+  return EXIT_SUCCESS;
+}
+
+
+
+
+
+
+
+
 static int
 _mesh_nodal_from_VTK_unstructured_grid
 (
@@ -891,15 +1003,21 @@ int main(int argc, char *argv[])
 
   /* Get file extension */
   char *file_extension = strrchr(filename, '.');
-  assert (file_extension != NULL);
-
 
   int n_vtx;
   PDM_g_num_t *vtx_g_num = NULL;
   double *vtx_coords = NULL;
 
+  PDM_bool_t is_VTK = PDM_FALSE, is_DAT = PDM_FALSE;
+  if (file_extension != NULL) {
+    if (strstr(file_extension, "vtk")) {
+      is_VTK = PDM_TRUE;
+    } else if (strstr(file_extension, "dat")) {
+      is_DAT = PDM_TRUE;
+    }
+  }
 
-  if (strstr(file_extension, "vtk")) {
+  if (is_VTK) {
 
     /************************
      *
@@ -1089,7 +1207,8 @@ int main(int argc, char *argv[])
 
   }
 
-  else if (strstr(file_extension, "dat")) {
+  // else if (strstr(file_extension, "dat")) {
+  else {
 
     int                   n_face;
     PDM_g_num_t          *face_g_num;
@@ -1099,6 +1218,8 @@ int main(int argc, char *argv[])
     PDM_g_num_t          *cell_g_num = NULL;
     int                  *cell_face_idx = NULL;
     int                  *cell_face = NULL;
+
+    if (is_DAT) {
 
     _read_polyhedra (filename,
                      &n_vtx,
@@ -1112,6 +1233,70 @@ int main(int argc, char *argv[])
                      &cell_g_num,
                      &cell_face_idx,
                      &cell_face);
+    }
+
+    else {
+
+      FILE *meshFile = fopen(filename, "r");
+      int dimension, lFaceConnec, lCellConnec;
+      _read_mesh_dim(meshFile,
+                     &dimension,
+                     &n_vtx,
+                     &n_face,
+                     &n_cell,
+                     &lFaceConnec,
+                     &lCellConnec);
+
+      vtx_coords    = malloc(dimension * n_vtx * sizeof(double));
+      face_vtx_idx  = malloc((n_face + 1) * sizeof(int));
+      face_vtx      = malloc(lFaceConnec * sizeof(int));
+      cell_face_idx = malloc((n_cell + 1) * sizeof(int));
+      cell_face     = malloc(lCellConnec * sizeof(int));
+
+      _read_mesh (meshFile,
+                  dimension,
+                  n_vtx,
+                  n_face,
+                  n_cell,
+                  lFaceConnec,
+                  lCellConnec,
+                  vtx_coords,
+                  face_vtx_idx,
+                  face_vtx,
+                  cell_face_idx,
+                  cell_face);
+
+      fclose(meshFile);
+
+      vtx_g_num = malloc (sizeof(PDM_g_num_t) * n_vtx);
+      for (int i = 0; i < n_vtx; i++) {
+        vtx_g_num[i] = i + 1;
+      }
+
+      face_g_num = malloc (sizeof(PDM_g_num_t) * n_face);
+      for (int i = 0; i < n_face; i++) {
+        face_g_num[i] = i + 1;
+      }
+
+      cell_g_num = malloc (sizeof(PDM_g_num_t) * n_cell);
+      for (int i = 0; i < n_cell; i++) {
+        cell_g_num[i] = i + 1;
+      }
+
+    }
+
+    if (0) {
+      printf("Polyhedra:\n");
+      printf("  face_vtx:\n");
+      for (int i = 0; i < face_vtx_idx[n_face]; i++) {
+        printf("%d ", face_vtx[i]);
+      }
+      printf("\n  cell_face:\n");
+      for (int i = 0; i < cell_face_idx[n_cell]; i++) {
+        printf("%d ", cell_face[i]);
+      }
+      printf("\n");
+    }
 
     write_vtk_polydata ("polyhedra_faces.vtk",
                         n_face,
