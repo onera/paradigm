@@ -17,6 +17,7 @@
 #include "pdm_part_to_block_priv.h"
 #include "pdm_mpi_node_first_rank.h"
 #include "pdm.h"
+#include "pdm_timer.h"
 #include "pdm_priv.h"
 #include "pdm_binary_search.h"
 #include "pdm_sort.h"
@@ -522,6 +523,7 @@ _distrib_data
 
         }
       }
+
     }
 
     else {
@@ -662,6 +664,8 @@ _distrib_data
 
     }
   } // If User
+
+
 
   /* Affichage */
 
