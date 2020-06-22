@@ -75,8 +75,8 @@ typedef int (PDM_printf_flush_proxy_t) (void);
  *   number of characters printed, not counting the trailing '\0' used
  *   to end output strings
  */
-
-extern __device__
+ 
+__device__
 int
 PDM_printf_GPU(const char  *const format,
            ...);
@@ -95,7 +95,7 @@ PDM_printf_GPU(const char  *const format,
  *   (with errno set to indicate the error).
  */
 
-extern __device__
+__device__
 int
 PDM_printf_flush_GPU(void);
 
@@ -162,6 +162,7 @@ PDM_printf_flush_proxy_set_GPU(PDM_printf_flush_proxy_t  *const fct);
  *  reallocated pointer
  */
 
+inline
 #ifdef __CUDACC__
 __host__ __device__
 #endif

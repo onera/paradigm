@@ -43,6 +43,10 @@ if (OPENMP_FOUND)
   list(APPEND LINK_LIBRARIES ${OpenMP_C_FLAGS})
 endif()
 
+if (PDM_ENABLE_CUDA)
+  list(APPEND LINK_LIBRARIES pdm_gpu)
+endif()
+
 get_target_property(PDM_INC pdm INCLUDE_DIRECTORIES)
 
 

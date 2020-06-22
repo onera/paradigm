@@ -18,10 +18,11 @@
 #include "pdm_error.h"
 #include "pdm_gnum.h"
 #include "pdm_closest_points.h"
+#include "pdm_closest_points.cuh"
 #include "pdm_dcube_gen.h"
 #include "pdm_geom_elem.h"
 
-#define GPU_ACC 0
+#define GPU_ACC 1
 
 /*============================================================================
  * Type definitions
@@ -349,7 +350,9 @@ int main(int argc, char *argv[])
 
   /* Compute closest points */
   if (GPU_ACC) {
-    PDM_closest_points_compute_GPU (id2);
+    PDM_Handles_t *closest_pts = PDM_closest_points_staticvar_transfert();
+    printf("s array = %d\n", closest_pts->s_array);
+    PDM_closest_points_compute_GPU (id2, closest_pts);
   }
   else {
     PDM_closest_points_compute (id2);

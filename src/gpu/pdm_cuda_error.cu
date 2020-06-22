@@ -26,7 +26,7 @@
 
 #include <assert.h>
 
-#include "pdm_cuda_error.h"
+#include "pdm_cuda_error.cuh"
 #include "pdm_cuda.cuh"
 #include "pdm_error.h"
 
@@ -99,18 +99,19 @@ _PDM_error_handler_default(const char     *const file_name,
                            const char     *const format,
                            va_list               arg_ptr)
 {
-  PDM_printf_flush_GPU();
+  //PDM_printf_flush_GPU();
 
-  PDM_printf_GPU("\n");
+  //PDM_printf_GPU("\n");
+  printf("\n");
 
   if (sys_error_code != 0)
-    PDM_printf_GPU("\nSystem error\n");
+    printf("\nSystem error\n");
 
-  PDM_printf_GPU("\n%s:%d: Fatal error.\n\n", file_name, line_num);
+  printf("\n%s:%d: Fatal error.\n\n", file_name, line_num);
 
-  PDM_printf_GPU(format, arg_ptr);
+  //PDM_printf_GPU(format, arg_ptr);
 
-  PDM_printf_GPU("\n\n");
+  printf("\n\n");
 
   assert(0);
 
@@ -138,6 +139,7 @@ _PDM_error_handler_default(const char     *const file_name,
  * \param [in] ...            variable arguments based on format string.
  */
 
+
 __device__
 void
 PDM_error_GPU(const char  *const file_name,
@@ -161,6 +163,7 @@ PDM_error_GPU(const char  *const file_name,
 * \return pointer to the error handler function.
 */
 
+inline
 __device__
 PDM_error_handler_t *
 PDM_error_handler_get_GPU(void)
@@ -174,6 +177,7 @@ PDM_error_handler_get_GPU(void)
 * \param [in] handler pointer to the error handler function.
 */
 
+inline
 __device__
 void
 PDM_error_handler_set_GPU(PDM_error_handler_t  *const handler)

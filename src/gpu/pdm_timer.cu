@@ -26,9 +26,10 @@
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
-#include "pdm_timer.h"
+#include "pdm_timer.cuh"
 #include "pdm_printf.h"
 #include "pdm_error.h"
+#include "pdm_cuda_error.cuh"
 
 /*----------------------------------------------------------------------------*/
 

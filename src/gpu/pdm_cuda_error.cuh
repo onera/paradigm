@@ -1,5 +1,5 @@
-#ifndef __PDM_CUDA_ERROR_H__
-#define __PDM_CUDA_ERROR_H__
+#ifndef __PDM_CUDA_ERROR_CUH__
+#define __PDM_CUDA_ERROR_CUH__
 
 /*============================================================================
  * CUDA error handling
@@ -30,7 +30,8 @@
 /* Standard C library headers */
 
 #include <stdarg.h>
-#include <iostream>
+#include <stdio.h>
+#include <stdlib.h>
 
 /* BFT library headers */
 
@@ -44,6 +45,16 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
    if (code != cudaSuccess) 
    {
       fprintf(stderr,"GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
+      if (abort) exit(code);
+   }
+}
+
+#define gpuErrchkd(ans) { gpuAssertd((ans), __FILE__, __LINE__); }
+inline void gpuAssertd(cudaError_t code, const char *file, int line, bool abort=true)
+{
+   if (code != cudaSuccess) 
+   {
+      printf("GPUassertd: %s %s %d\n", cudaGetErrorString(code), file, line);
       if (abort) exit(code);
    }
 }
@@ -86,6 +97,7 @@ typedef void (PDM_error_handler_t) (const char    *const file_name,
  *   ... :           <-- variable arguments based on format string.
  */
 
+
 __device__
 void
 PDM_error_GPU(const char  *const file_name,
@@ -101,6 +113,7 @@ PDM_error_GPU(const char  *const file_name,
  *  pointer to the error handler function.
  */
 
+inline
 __device__
 PDM_error_handler_t *
 PDM_error_handler_get_GPU(void);
@@ -112,6 +125,7 @@ PDM_error_handler_get_GPU(void);
  *   handler: <-- pointer to the error handler function.
  */
 
+inline
 __device__
 void
 PDM_error_handler_set_GPU(PDM_error_handler_t  *const handler);
@@ -122,4 +136,4 @@ PDM_error_handler_set_GPU(PDM_error_handler_t  *const handler);
 }
 #endif /* __cplusplus */
 
-#endif /* __PDM_CUDA_ERROR_H__ */
+#endif /* __PDM_CUDA_ERROR_CUH__ */

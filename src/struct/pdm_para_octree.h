@@ -64,7 +64,14 @@ typedef enum {
   PDM_UNE,
 } PDM_para_octree_child_t;
 
+
 /*  */
+
+/*============================================================================
+ * Global variable
+ *============================================================================*/
+
+ //extern MANAGED PDM_Handles_t *_octrees;
 
 /*============================================================================
  * Public function definitions
@@ -93,15 +100,6 @@ PDM_para_octree_create
  const PDM_MPI_Comm comm
 );
 
-int
-PDM_para_octree_create_GPU
-(
- const int n_point_cloud,
- const int depth_max,
- const int points_in_leaf_max,
- const int build_leaf_neighbours,
- const PDM_MPI_Comm comm
-);
 
 /**
  *
@@ -113,12 +111,6 @@ PDM_para_octree_create_GPU
 
 void
 PDM_para_octree_free
-(
- const int          id
-);
-
-void
-PDM_para_octree_free_GPU
 (
  const int          id
 );
@@ -264,15 +256,6 @@ PDM_para_octree_dump_times
  );
 
 
-//test
-#ifdef __CUDACC__
-__global__
-#endif
-void
-print_from_gpu
-(
-int id
-);
 
 #ifdef	__cplusplus
 }

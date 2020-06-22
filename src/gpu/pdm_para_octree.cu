@@ -17,13 +17,16 @@
 #include "pdm_mpi.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
-#include "pdm_cuda_error.h"
+#include "pdm_cuda_error.cuh"
 #include "pdm_cuda.cuh"
 #include "pdm_gnum.h"
 #include "pdm_morton.h"
 #include "pdm_handles.h"
+#include "pdm_handles.cuh"
 #include "pdm_para_octree.h"
+#include "pdm_para_octree.cuh"
 #include "pdm_timer.h"
+#include "pdm_timer.cuh"
 #include "pdm_part_to_block.h"
 #include "pdm_block_to_part.h"
 #include "pdm_sort.h"
@@ -119,29 +122,13 @@ typedef struct  {
 
 } _octree_t;
 
-/**
- * \struct _pdm_gnum_t
- * \brief  Define a global numberring
- *
- */
-
- struct _PDM_Handles_t {
-
-  int *idx;            /*!< list of Index */
-  int *idx_inv;        /*!< Index -> indice (1 to n_handles) */
-  const void **array;  /*!< Storage array */
-  int s_array;   /*!< Size of array */
-  int n_handles; /*!< Number of stored handles */
-
-};
-
 
 
 /*============================================================================
  * Global variable
  *============================================================================*/
 
- __managed__ _PDM_Handles_t *_octrees    = NULL;
+__managed__ static PDM_Handles_t *_octrees    = NULL;
 
 //static const double _eps_default  = 1.e-12;
 
@@ -165,7 +152,6 @@ _get_from_id
  )
 {
   _octree_t *octree = (_octree_t *) PDM_Handles_get_GPU (_octrees, id);
-
   if (octree == NULL) {
     PDM_error_GPU(__FILE__, __LINE__, 0, "PDM_octree error : Bad identifier\n");
   }
@@ -221,12 +207,12 @@ PDM_para_octree_create_GPU
 {
 
   if (_octrees == NULL) {
-    _octrees = PDM_Handles_create (4);
+    _octrees = PDM_Handles_create_GPU (4);
   }
 
   _octree_t *octree = (_octree_t *) malloc(sizeof(_octree_t));
 
-  int id = PDM_Handles_store (_octrees, octree);
+  int id = PDM_Handles_store_GPU (_octrees, octree);
 
   octree->dim = 3;
 
@@ -372,10 +358,9 @@ print_from_gpu
  int id
  )
 {
+  printf("Hello World! from thread [%d,%d] From device\n", threadIdx.x,blockIdx.x);
   _octree_t *octree = _get_from_id (id);
-
-  PDM_printf_GPU("Hello World! from thread [%d,%d] From device\n", threadIdx.x,blockIdx.x);
-  PDM_printf_GPU("Depth max from GPU : %d\n", octree->depth_max);
+  printf("Depth max from GPU : %d\n", octree->depth_max);
 }
 
 #ifdef __cplusplus

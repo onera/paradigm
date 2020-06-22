@@ -1,5 +1,5 @@
-#ifndef __PDM_HANDLES_H__
-#define __PDM_HANDLES_H__
+#ifndef __PDM_HANDLES_CUH__
+#define __PDM_HANDLES_CUH__
 
 /*
   This file is part of the ParaDiGM library.
@@ -31,6 +31,7 @@
  *----------------------------------------------------------------------------*/
 
 #include "pdm.h"
+#include "pdm_handles.h"
 
 /*=============================================================================
  * Macro definitions
@@ -43,22 +44,15 @@ extern "C" {
 #endif
 #endif /* __cplusplus */
 
+#ifdef __CUDACC__
+#define CUDADEV __device__
+#else
+#define CUDADEV
+#endif
 
 /*============================================================================
  * Type
  *============================================================================*/
-
-/**
- * \brief Handles storage
- */
-
-typedef struct _PDM_Handles_t {
-  int *idx;            /*!< list of Index */
-  int *idx_inv;        /*!< Index -> indice (1 to n_handles) */
-  const void **array;  /*!< Storage array */
-  int s_array;   /*!< Size of array */
-  int n_handles; /*!< Number of stored handles */
-} PDM_Handles_t;
 
 /*=============================================================================
  * Static global variables
@@ -67,7 +61,6 @@ typedef struct _PDM_Handles_t {
 /*=============================================================================
  * Public function prototypes
  *============================================================================*/
-
 
 /**
  * \brief Create handles storage
@@ -78,109 +71,40 @@ typedef struct _PDM_Handles_t {
  */
 
 PDM_Handles_t *
-PDM_Handles_create
+PDM_Handles_create_GPU
 (
  const int init_size
 );
 
-/**
- * \brief Free handles storage
- *
- * \param [in] handles  Current handles storage
- *
- * \return               NULL
- */
-
-PDM_Handles_t *
-PDM_Handles_free
-(
- PDM_Handles_t *handles
-);
 
 /**
  * \brief Store a new handle pointer
  *
- * \param [in] handles  Current handles storage
+ * \param [in] handles      Current handles storage
  * \param [in] handle_ptr   Handle pointer
  *
  * \return  Handle index
  */
 
 int
-PDM_Handles_store
+PDM_Handles_store_GPU
 (
  PDM_Handles_t *handles,
  const void *handle_ptr
 );
 
 
-/**
- * \brief Store a new pointer
- *
- * \param [in] handles  Current handles storage
- * \param [in] handle_idx   Handle index
- *
- * \return  Handle pointer
- */
-
+CUDADEV
 const void *
-PDM_Handles_get
+PDM_Handles_get_GPU
 (
   PDM_Handles_t *handles,
   const int handle_idx
 );
 
 
-/**
- * \brief Get handles index
- *
- * \param [in] handles  Current handles storage
- *
- * \return  Handles index
- */
-
-const int *
-PDM_Handles_idx_get
-(
- PDM_Handles_t *handles
- );
-
-
-/**
- * \brief Free a handle
- *
- * \param [in] handles      Current handles storage
- * \param [in] handle_idx   Handle index
- * \param [in] st_free_data Free data or not
- *
- * \return  Handle pointer
- */
-
-void
-PDM_Handles_handle_free
-(
- PDM_Handles_t *handles,
- const int handle_idx,
- const PDM_bool_t st_free_data
- );
-
-
-/**
- * \brief Get number of stored handles
- *
- * \param [in] handles  Current handles storage
- *
- * \return  Number of stored handles
- */
-
-int
-PDM_Handles_n_get
-(
- PDM_Handles_t *handles
-);
-
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
 
-#endif /*  __PDM_HANDLES_H__ */
+#endif /*  __PDM_HANDLES_CUH__ */

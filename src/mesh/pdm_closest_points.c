@@ -177,8 +177,6 @@ _get_from_id
 
   return closest;
 }
-
-
 /*============================================================================
  * Public function definitions
  *============================================================================*/
@@ -632,6 +630,22 @@ PDM_closest_points_dump_times
     PDM_printf( "closest_points timer : all (elapsed and cpu) : %12.5es %12.5es\n",
                 t1max, t2max);
   }
+}
+
+/**
+ *
+ * \brief  transfert _closest_pts var as it seems this static var is not readable
+ *          when we switch to the nvcc compiler
+ *
+ */
+
+PDM_Handles_t *
+PDM_closest_points_staticvar_transfert
+(
+  void
+ )
+{
+  return _closest_pts;
 }
 
 #ifdef	__cplusplus
