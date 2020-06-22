@@ -1662,7 +1662,7 @@ _split_node_3d(PDM_box_tree_t       *bt,
 
   if (n_init_nodes + 8 > next_bt->local_data->n_max_nodes) {
     assert(next_bt->local_data->n_max_nodes > 0);
-    next_bt->local_data->n_max_nodes *= 2;
+    next_bt->local_data->n_max_nodes += next_bt->local_data->n_max_nodes/3;
     next_bt->local_data->nodes = (_node_t *) realloc((void *) next_bt->local_data->nodes, next_bt->local_data->n_max_nodes * sizeof(_node_t));
     next_bt->local_data->child_ids = (int *) realloc((void *) next_bt->local_data->child_ids, next_bt->local_data->n_max_nodes*8 * sizeof(int));
 
@@ -1783,16 +1783,16 @@ _split_node_3d(PDM_box_tree_t       *bt,
     else { /* Box is included in the same octant */
 
       assert(   PDM_morton_compare(3, max_code, min_code)
-		== PDM_MORTON_EQUAL_ID);
+                == PDM_MORTON_EQUAL_ID);
 
       for (i = 0; i < 8; i++) {
 
         if (   PDM_morton_compare(3, min_code, children[i])
-	       == PDM_MORTON_EQUAL_ID) {
+               == PDM_MORTON_EQUAL_ID) {
 
           const int sub_id = n_init_nodes + i;
           const int shift =   (next_bt->local_data->nodes[sub_id]).n_boxes
-	    + (next_bt->local_data->nodes[sub_id]).start_id;
+            + (next_bt->local_data->nodes[sub_id]).start_id;
 
           next_bt->local_data->box_ids[shift] = box_id;
           (next_bt->local_data->nodes[sub_id]).n_boxes += 1;
@@ -2224,8 +2224,8 @@ _build_next_level(PDM_box_tree_t       *bt,
   else { /* if (node->is_leaf == true) */
 
     if (   cur_node->n_boxes < bt->threshold
-	   && node_id != 0                    /* Root node is always divided */
-	   && build_type == PDM_BOX_TREE_ASYNC_LEVEL) {
+           && node_id != 0                    /* Root node is always divided */
+           && build_type == PDM_BOX_TREE_ASYNC_LEVEL) {
 
       /* Copy related box_ids in the new next_ids */
 
