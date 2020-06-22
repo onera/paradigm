@@ -174,7 +174,7 @@ _redistribute_boxes
 
   PDM_box_tree_set_boxes (coarse_tree,
                           dbbt->boxes,
-                          PDM_BOX_TREE_SYNC_LEVEL);
+                          PDM_BOX_TREE_ASYNC_LEVEL);
 
   _update_bt_statistics(&(dbbt->btsCoarse), coarse_tree);
 
