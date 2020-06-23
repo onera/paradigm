@@ -268,9 +268,6 @@ _compute_shapef_3d
     //<<---
 
   default:
-    /*PDM_error(__FILE__, __LINE__, 0,
-      "_compute_shapef: unhandled element type %s\n",
-      fvmc_element_type_name[elt_type]);*/
     PDM_error (__FILE__, __LINE__, 0, "Wrong element type\n");
 
   }
@@ -813,11 +810,11 @@ _locate_on_quad_3d
     }
   }
 
-  PDM_mean_values_polygon_compute3 (n_pts,
-                                    pts_coord,
-                                    4,
-                                    quad_coord,
-                                    bar_coord);
+  PDM_mean_value_coordinates_polygon_3d (4,
+                                         quad_coord,
+                                         n_pts,
+                                         pts_coord,
+                                         bar_coord);
 
 
   for (ipt = 0; ipt < n_pts; ipt++) {
@@ -1284,7 +1281,7 @@ _locate_in_cell_3d
       else {
 
         /* Find closest face */
-        double min_dist2 = HUGE_VAL, dist2, closest_point[3], closest[3];
+        double min_dist2 = HUGE_VAL, dist2, closest[3];
         int iface_min = -1;
         for (int iface = 0; iface < n_face; iface++) {
 
@@ -1322,9 +1319,6 @@ _locate_in_cell_3d
           if (dist2 < min_dist2) {
             min_dist2 = dist2;
             iface_min = iface;
-            closest_point[0] = closest[0];
-            closest_point[1] = closest[1];
-            closest_point[2] = closest[2];
           }
         }
 
@@ -1657,7 +1651,7 @@ _std_block_locate_3d
 }
 
 
-void
+static void
 _poly2d_block_locate
 (
  const int          mesh_nodal_id,
@@ -1794,7 +1788,7 @@ _poly2d_block_locate
 
 
 
-void
+static void
 _locate_in_polyhedron
 (
  const PDM_l_num_t n_vtx,
@@ -1810,10 +1804,17 @@ _locate_in_polyhedron
  double            bar_coord[]
  )
 {
+#define LOCATE_ON_TRIANGLES 1
+#define NEW_MVC 1
+
+#if NEW_MVC
 #define LOCATE_ON_TRIANGLES 0
+#endif
 
   const int DEBUG = 0;
-  const int CHECK = 1;
+  const int CHECK = 0;
+
+  const double four_pi = 4. * PDM_PI;
 
   if (DEBUG) {
     printf("\n\n\n--- _locate_in_polyhedron ---\n");
@@ -1864,7 +1865,7 @@ _locate_in_polyhedron
     }
     const PDM_l_num_t *_face_vtx = face_vtx + face_vtx_idx[iface];
     n_vtx_face = face_vtx_idx[iface+1] - face_vtx_idx[iface];
-     if (DEBUG) {
+    if (DEBUG) {
       printf("  face_vtx =");
       for (int ivtx = 0; ivtx < n_vtx_face; ivtx++) {
         printf(" %d", _face_vtx[ivtx]);
@@ -1991,13 +1992,13 @@ _locate_in_polyhedron
         double half_angle = atan2(det_abc, denom);
 
         if ((half_angle < 0.) && (det_abc > 0)) {
-          half_angle = 2*M_PI - half_angle;
+          half_angle = 2.*PDM_PI - half_angle;
         }
         else if ((half_angle > 0.) && (det_abc < 0)){
-          half_angle = -2*M_PI + half_angle;
+          half_angle = -2.*PDM_PI + half_angle;
         }
 
-        solid_angle[ipt] += 2 * half_angle;
+        solid_angle[ipt] += 2. * half_angle;
       }
 
     } // End of loop on triangles
@@ -2078,10 +2079,14 @@ _locate_in_polyhedron
     }
 
     /* Point inside polyhedron */
-    else {
+    else if (solid_angle[ipt] > four_pi - eps_solid_angle) {
 
       /* Point on (or very close to) a face */
       if (distance[ipt] < eps_dist_face) {
+        if (0) {
+          printf("point %d very close to boundary (dist = %g)\n",
+                 ipt, distance[ipt]);
+        }
 
         for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
           _bc[ivtx] = 0.;
@@ -2119,6 +2124,13 @@ _locate_in_polyhedron
         /* Compute mean value coords in closest face */
         int iface = closest_face[ipt];
         n_vtx_face = face_vtx_idx[iface+1] - face_vtx_idx[iface];
+#if NEW_MVC
+        PDM_mean_values_polygon (n_vtx_face,
+                                 face_vtx + face_vtx_idx[iface],
+                                 vtx_coord,
+                                 _pt,
+                                 bar_coord_face);
+#else
 
         for (int ivtx = 0; ivtx < n_vtx_face; ivtx++) {
           int id_vtx = face_vtx[face_vtx_idx[iface] + ivtx] - 1;
@@ -2133,6 +2145,7 @@ _locate_in_polyhedron
                                                1,
                                                _pt,
                                                bar_coord_face);
+#endif
 
         for (int ivtx = 0; ivtx < n_vtx_face; ivtx++) {
           int id_vtx = face_vtx[face_vtx_idx[iface] + ivtx] - 1;
@@ -2143,36 +2156,52 @@ _locate_in_polyhedron
 
       /* Point strictly inside polyhedron */
       else {
-        PDM_mean_value_coordinates_polyhedron3 (n_vtx,
-                                                vtx_coord,
-                                                n_face,
-                                                face_vtx_idx,
-                                                face_vtx,
-                                                face_orientation,
-                                                _pt,
-                                                _bc);
+#if NEW_MVC
+        PDM_mean_values_polyhedron (n_vtx,
+                                    vtx_coord,
+                                    n_face,
+                                    face_vtx_idx,
+                                    face_vtx,
+                                    face_orientation,
+                                    _pt,
+                                    _bc);
+#else
+        PDM_mean_value_coordinates_polyhedron (n_vtx,
+                                               vtx_coord,
+                                               n_face,
+                                               face_vtx_idx,
+                                               face_vtx,
+                                               face_orientation,
+                                               _pt,
+                                               _bc);
+#endif
       }
 
       distance[ipt] = 0.;
 
     }
 
-    if (CHECK) {
-        double v_cp_p[3] = {_pt[0], _pt[1], _pt[2]};
-        for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
-          for (int idim = 0; idim < 3; idim++) {
-            v_cp_p[idim] -= _bc[ivtx] * vtx_coord[3*ivtx+idim];
-          }
-        }
+    else {
+      printf("!! pt (%f, %f, %f) solid_angle/PI = %g, dist = %g\n",
+             _pt[0], _pt[1], _pt[2], solid_angle[ipt]/PDM_PI, distance[ipt]);
+    }
 
-        /*printf("pt %d (%ld) : dist = %f\t ; linear precision = %f\n",
-          ipt, pts_g_num[ipt], distance[ipt], PDM_MODULE(err));*/
-        double l_cp_p = PDM_MODULE(v_cp_p);
-        double err = PDM_ABS(l_cp_p - distance[ipt]);
-        if (err > 1.e-9) {
-          printf("pt %d (%f %f %f): dist = %f\t ; linear precision = %f (err = %g)\n",
-                 ipt, _pt[0], _pt[1], _pt[2], distance[ipt], l_cp_p, err);
+    if (CHECK) {
+      double v_cp_p[3] = {_pt[0], _pt[1], _pt[2]};
+      for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
+        for (int idim = 0; idim < 3; idim++) {
+          v_cp_p[idim] -= _bc[ivtx] * vtx_coord[3*ivtx+idim];
         }
+      }
+
+      /*printf("pt %d (%ld) : dist = %f\t ; linear precision = %f\n",
+        ipt, pts_g_num[ipt], distance[ipt], PDM_MODULE(err));*/
+      double l_cp_p = PDM_MODULE(v_cp_p);
+      double err = PDM_ABS(l_cp_p - distance[ipt]);
+      if (err > 1.e-9) {
+        printf("pt %d (%f %f %f): dist = %f\t ; linear precision = %f (err = %g)\n",
+               ipt, _pt[0], _pt[1], _pt[2], distance[ipt], l_cp_p, err);
+      }
     }
 
 
@@ -2188,13 +2217,326 @@ _locate_in_polyhedron
 #endif
 
 #undef LOCATE_ON_TRIANGLES
+#undef NEW_MVC
 }
 
 
+static inline double dist_ab (const double a[3], const double b[3]) {
+  return sqrt ( (a[0] - b[0]) * (a[0] - b[0]) +
+                (a[1] - b[1]) * (a[1] - b[1]) +
+                (a[2] - b[2]) * (a[2] - b[2]) );
+}
+
+static int
+_locate_in_polyhedron2
+(
+ const PDM_l_num_t n_vtx,
+ const double      vtx_coord[],
+ const PDM_l_num_t n_face,
+ const PDM_l_num_t face_vtx_idx[],
+ const PDM_l_num_t face_vtx[],
+ const int         face_orientation[],
+ const int         n_pts,
+ const double      pts_coord[],
+ const double      char_length,
+ float             distance[],
+ double            bar_coord[]
+ )
+{
+  const double four_PI = 4. * PDM_PI;
+
+  const double eps_solid_angle = 1e-5;
+  const float eps_distance = 1e-5;
+
+  /*
+   * Identify points inside/outside polyhedron
+   */
+  double *solid_angle = malloc (sizeof(double) * n_pts);
+  for (int ipt = 0; ipt < n_pts; ipt++) {
+    solid_angle[ipt] = 0.;
+    distance[ipt] = HUGE_VAL;
+  }
+
+  /* Count max nb of vertices per face */
+  PDM_l_num_t n_vtx_face, n_vtx_face_max = 0;
+  for (int iface = 0; iface < n_face; iface++) {
+    n_vtx_face = face_vtx_idx[iface+1] - face_vtx_idx[iface];
+    if (n_vtx_face > n_vtx_face_max) {
+      n_vtx_face_max = n_vtx_face;
+    }
+  }
+
+  PDM_l_num_t n_tri;
+  double tri_coord[9];
+  PDM_l_num_t _tri_vtx[3];
+  PDM_l_num_t *tri_vtx = malloc (sizeof(PDM_l_num_t) * (n_vtx_face_max - 2)*3);
+  PDM_triangulate_state_t *state = PDM_triangulate_state_create (n_vtx_face_max);
+
+  int *closest_face = malloc (sizeof(int) * n_pts);
+  double *closest_point = malloc (sizeof(double) * n_pts * 3);
+
+  /* Loop on faces */
+  for (int iface = 0; iface < n_face; iface++) {
+
+    const PDM_l_num_t *_face_vtx = face_vtx + face_vtx_idx[iface];
+    n_vtx_face = face_vtx_idx[iface+1] - face_vtx_idx[iface];
+
+    /* Triangular face */
+    if (n_vtx_face == 3) {
+      n_tri = 1;
+      for (int ivtx = 0; ivtx < 3; ivtx++) {
+        tri_vtx[ivtx] = _face_vtx[ivtx];
+      }
+    }
+
+    /* Quadrilateral face */
+    else if (n_vtx_face == 4) {
+      n_tri = PDM_triangulate_quadrangle (3,
+                                          vtx_coord,
+                                          NULL,
+                                          _face_vtx,
+                                          tri_vtx);
+    }
+
+    /* Polygonal face */
+    else {
+      n_tri = PDM_triangulate_polygon(3,
+                                      n_vtx_face,
+                                      vtx_coord,
+                                      NULL,
+                                      _face_vtx,
+                                      PDM_TRIANGULATE_MESH_DEF,
+                                      tri_vtx,
+                                      state);
+    }
+
+    /* Loop on face triangles so as to loop on tetrahedra
+       built by joining face triangles and pseudo-center */
+    for (int itri = 0; itri < n_tri; itri++) {
+
+      for (int ivtx = 0; ivtx < 3; ivtx++) {
+        _tri_vtx[ivtx] = tri_vtx[3*itri + ivtx] - 1;
+      }
+
+      if (face_orientation[iface] < 0) {
+        PDM_l_num_t tmp = _tri_vtx[0];
+        _tri_vtx[0] = _tri_vtx[2];
+        _tri_vtx[2] = tmp;
+      }
+
+      for (int ivtx = 0; ivtx < 3; ivtx++) {
+        for (int idim = 0; idim < 3; idim++) {
+          tri_coord[3*ivtx + idim] = vtx_coord[3*_tri_vtx[ivtx] + idim];
+        }
+      }
+
+      /* Loop on points (compute solid angle and min_dist) */
+      for (int ipt = 0; ipt < n_pts; ipt++) {
+
+        const double *_pt = pts_coord + 3*ipt;
+        double *_cp = closest_point + 3*ipt;
+
+        double min_dist2, closest[3];
+        PDM_triangle_status_t error = PDM_triangle_evaluate_position ((double *) _pt,
+                                                                      tri_coord,
+                                                                      closest,
+                                                                      &min_dist2,
+                                                                      NULL);
+
+        if (error == PDM_TRIANGLE_DEGENERATED) {
+          continue;
+        }
+
+        if (distance[ipt]*distance[ipt] > min_dist2) {
+          distance[ipt] = (float) sqrt (min_dist2);
+
+          closest_face[ipt] = iface;
+          for (int idim = 0; idim < 3; idim++) {
+            _cp[idim] = closest[idim];
+          }
+
+        }
+
+        /* Solid angle */
+        double v[3][3], lv[3];
+        double denom = 1.;
+        for (int i = 0; i < 3; i++) {
+          for (int idim = 0; idim < 3; idim++) {
+            v[i][idim] = tri_coord[3*i + idim] - _pt[idim];
+          }
+          lv[i] = PDM_MODULE (v[i]);
+          denom *= lv[i];
+        }
+        double det_abc = _determinant_3x3 (v[0], v[1], v[2]);
+        for (int i = 0; i < 3; i++) {
+          int j = (i+1)%3;
+          int k = (i+2)%3;
+          double dot = PDM_DOT_PRODUCT (v[j], v[k]);
+          denom += lv[i] * dot;
+        }
+
+        double half_angle = atan2(det_abc, denom);
+
+        if ((half_angle < 0.) && (det_abc > 0)) {
+          half_angle = 2.*PDM_PI - half_angle;
+        }
+        else if ((half_angle > 0.) && (det_abc < 0)){
+          half_angle = -2.*PDM_PI + half_angle;
+        }
+
+        solid_angle[ipt] += 2. * half_angle;
+
+      } // End of loop on points
+
+    } // End of loop on triangles
+
+  } // End of loop on faces
 
 
 
 
+  /*
+   * Locate points (compute mean value coordinates)
+   */
+  double *face_coord = malloc (sizeof(double) * n_vtx_face_max * 3);//
+  double *bar_coord_face = malloc (sizeof(double) * n_vtx_face_max);
+
+  for (int ipt = 0; ipt < n_pts; ipt++) {
+
+    if (solid_angle[ipt] > eps_solid_angle &&
+        solid_angle[ipt] < four_PI - eps_solid_angle) {
+      /* Not-closed polyhedron */
+      return 0;
+    }
+
+    const double *_pt = pts_coord + 3 * ipt;
+    double       *_bc = bar_coord + n_vtx * ipt;
+
+    /* Point outside polyhedron or very close from its boundary */
+    if (solid_angle[ipt] < eps_solid_angle || distance[ipt] < eps_distance) {
+      /* Compute mean value coords in closest face */
+      for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
+        _bc[ivtx] = 0.;
+      }
+
+      int iface = closest_face[ipt];
+
+
+      n_vtx_face = face_vtx_idx[iface+1] - face_vtx_idx[iface];
+
+#if 1
+      PDM_mean_values_polygon (n_vtx_face,
+                               face_vtx + face_vtx_idx[iface],
+                               vtx_coord,
+                               closest_point + 3*ipt,//_pt,//
+                               bar_coord_face);
+#else
+      for (int ivtx = 0; ivtx < n_vtx_face; ivtx++) {
+        int _ivtx = face_vtx[face_vtx_idx[iface] + ivtx] - 1;
+
+        for (int idim = 0; idim < 3; idim++) {
+          face_coord[3*ivtx + idim] = vtx_coord[3*_ivtx + idim];
+        }
+      }
+
+      PDM_mean_value_coordinates_polygon_3d (n_vtx_face,
+                                             face_coord,
+                                             1,
+                                             closest_point + 3*ipt,//_pt,//
+                                             bar_coord_face);
+#endif
+
+      double r[3] = {0., 0., 0.};
+      for (int ivtx = 0; ivtx < n_vtx_face; ivtx++) {
+        int _ivtx = face_vtx[face_vtx_idx[iface] + ivtx] - 1;
+        _bc[_ivtx] = bar_coord_face[ivtx];
+        for (int idim = 0; idim < 3; idim++) {
+          r[idim] += bar_coord_face[ivtx] * vtx_coord[3*_ivtx + idim];
+        }
+      }
+
+      double l1 = dist_ab (r, (closest_point + 3*ipt));
+      double l2 = dist_ab (r, _pt);
+      if (l1 > 1e-6) {
+        printf("\npt %d (%f %f %f), cp = (%f, %f, %f)\n  closest face = %d\n  d = %g, |p - r| = %g, |cp - r| = %g\n",
+               ipt,
+               _pt[0], _pt[1], _pt[2],
+               closest_point[3*ipt], closest_point[3*ipt+1], closest_point[3*ipt+2],
+               closest_face[ipt],
+               distance[ipt], l2, l1);
+      }
+
+    }
+
+    /* Point strictly inside polyhedron */
+    else {
+
+      PDM_mean_values_polyhedron (n_vtx,
+                                  vtx_coord,
+                                  n_face,
+                                  face_vtx_idx,
+                                  face_vtx,
+                                  face_orientation,
+                                  _pt,
+                                  _bc);
+      distance[ipt] = 0.;
+    }
+
+
+  } // End of loop on points
+
+  free (solid_angle);
+  free (closest_face);
+  free (closest_point);
+  free (bar_coord_face);
+  free (face_coord);//
+
+  return 1;
+}
+
+
+void PDM_locate_in_polyhedron
+(
+ const PDM_l_num_t n_vtx,
+ const double      vtx_coord[],
+ const PDM_l_num_t n_face,
+ const PDM_l_num_t face_vtx_idx[],
+ const PDM_l_num_t face_vtx[],
+ const int         face_orientation[],
+ const int         n_pts,
+ const double      pts_coord[],
+ const double      char_length,
+ float             distance[],
+ double            bar_coord[]
+ )
+{
+#if 1
+  int stat = _locate_in_polyhedron2 (n_vtx,
+                                     vtx_coord,
+                                     n_face,
+                                     face_vtx_idx,
+                                     face_vtx,
+                                     face_orientation,
+                                     n_pts,
+                                     pts_coord,
+                                     char_length,
+                                     distance,
+                                     bar_coord);
+  printf("_locate_in_polyhedron stat = %d\n", stat);
+#else
+  _locate_in_polyhedron (n_vtx,
+                         vtx_coord,
+                         n_face,
+                         face_vtx_idx,
+                         face_vtx,
+                         face_orientation,
+                         n_pts,
+                         pts_coord,
+                         char_length,
+                         distance,
+                         bar_coord);
+#endif
+}
 
 static void
 _poly3d_block_locate
@@ -2425,7 +2767,6 @@ _poly3d_block_locate
   free (_face_vtx);
   free (_face_orientation);
 }
-
 
 /*============================================================================
  * Public function definitions

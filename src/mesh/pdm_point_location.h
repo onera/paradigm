@@ -106,7 +106,7 @@ void PDM_point_location_distance
 //<<--
 
 void
-_locate_in_polyhedron
+PDM_locate_in_polyhedron
 (
  const PDM_l_num_t n_vtx,
  const double      vtx_coord[],
