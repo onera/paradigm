@@ -226,51 +226,50 @@ _box_dist2_max
   int inbox = 0;
   *max_dist2 = 0.;
 
+  //  if (normalized) {
 
-  if (normalized) {
-
-    for (int i = 0; i < dim; i++) {
-      if (coords[i] > extents[i+dim]) {
-        double _max_dist2 = d[i] * (coords[i] - extents[i]);
-        *max_dist2 += _max_dist2 * _max_dist2;
-      }
-
-      else if (coords[i] < extents[i]) {
-        double _max_dist2 = d[i] * (coords[i] - extents[dim+i]);
-        *max_dist2 += _max_dist2 * _max_dist2;
-      }
-
-      else {
-        inbox += 1;
-        double val1 = d[i] * (coords[i] - extents[i]);
-        double val2 = d[i] * (coords[i] - extents[dim+i]);
-        *max_dist2 += PDM_MAX (val1 * val1, val2 * val2);
-      }
+  for (int i = 0; i < dim; i++) {
+    if (coords[i] > extents[i+dim]) {
+      double _max_dist2 = d[i] * (coords[i] - extents[i]);
+      *max_dist2 += _max_dist2 * _max_dist2;
     }
 
-  }
+    else if (coords[i] < extents[i]) {
+      double _max_dist2 = d[i] * (coords[i] - extents[dim+i]);
+      *max_dist2 += _max_dist2 * _max_dist2;
+    }
 
-  else {
-
-    for (int i = 0; i < dim; i++) {
-      if (coords[i] > extents[i+dim]) {
-        double _max_dist2 = coords[i] - extents[i];
-        *max_dist2 += _max_dist2 * _max_dist2;
-      }
-
-      else if (coords[i] < extents[i]) {
-        double _max_dist2 = coords[i] - extents[dim+i];
-        *max_dist2 += _max_dist2 * _max_dist2;
-      }
-
-      else {
-        inbox += 1;
-        double val1 = coords[i] - extents[i];
-        double val2 = coords[i] - extents[dim+i];
-        *max_dist2 += PDM_MAX (val1 * val1, val2 * val2);
-      }
+    else {
+      inbox += 1;
+      double val1 = d[i] * (coords[i] - extents[i]);
+      double val2 = d[i] * (coords[i] - extents[dim+i]);
+      *max_dist2 += PDM_MAX (val1 * val1, val2 * val2);
     }
   }
+
+  /* } */
+
+  /* else { */
+
+  /*   for (int i = 0; i < dim; i++) { */
+  /*     if (coords[i] > extents[i+dim]) { */
+  /*       double _max_dist2 = coords[i] - extents[i]; */
+  /*       *max_dist2 += _max_dist2 * _max_dist2; */
+  /*     } */
+
+  /*     else if (coords[i] < extents[i]) { */
+  /*       double _max_dist2 = coords[i] - extents[dim+i]; */
+  /*       *max_dist2 += _max_dist2 * _max_dist2; */
+  /*     } */
+
+  /*     else { */
+  /*       inbox += 1; */
+  /*       double val1 = coords[i] - extents[i]; */
+  /*       double val2 = coords[i] - extents[dim+i]; */
+  /*       *max_dist2 += PDM_MAX (val1 * val1, val2 * val2); */
+  /*     } */
+  /*   } */
+  /* } */
 
   return inbox == dim;
 
@@ -307,7 +306,7 @@ _box_dist2_min
   *min_dist2 = 0.;
 
 
-  if (normalized) {
+  /* if (normalized) { */
 
     for (int i = 0; i < dim; i++) {
       if (coords[i] > extents[i+dim]) {
@@ -325,26 +324,26 @@ _box_dist2_min
       }
     }
 
-  }
+  /* } */
 
-  else {
+  /* else { */
 
-    for (int i = 0; i < dim; i++) {
-      if (coords[i] > extents[i+dim]) {
-        double _min_dist2 = coords[i] - extents[dim+i];
-        *min_dist2 += _min_dist2 * _min_dist2;
-      }
+  /*   for (int i = 0; i < dim; i++) { */
+  /*     if (coords[i] > extents[i+dim]) { */
+  /*       double _min_dist2 = coords[i] - extents[dim+i]; */
+  /*       *min_dist2 += _min_dist2 * _min_dist2; */
+  /*     } */
 
-      else if (coords[i] < extents[i]) {
-        double _min_dist2 = coords[i] - extents[i];
-        *min_dist2 += _min_dist2 * _min_dist2;
-      }
+  /*     else if (coords[i] < extents[i]) { */
+  /*       double _min_dist2 = coords[i] - extents[i]; */
+  /*       *min_dist2 += _min_dist2 * _min_dist2; */
+  /*     } */
 
-      else {
-        inbox += 1;
-      }
-    }
-  }
+  /*     else { */
+  /*       inbox += 1; */
+  /*     } */
+  /*   } */
+  /* } */
 
   return inbox == dim;
 
@@ -4017,14 +4016,14 @@ PDM_box_tree_min_dist_max_box
   const double *d = bt->boxes->d;
 
   double *_pts = pts;
-  if (normalized) {
+  /* if (normalized) { */
     _pts = malloc (sizeof(double) * 3 * n_pts);
     for (int i = 0; i < n_pts; i++) {
       const double *_pt_origin =  pts + 3 * i;
       double *_pt        = _pts + 3 * i;
       PDM_box_set_normalize ((PDM_box_set_t *) bt->boxes, _pt_origin, _pt);
     }
-  }
+  /* } */
 
   double extents2[2*dim];
 
@@ -4157,14 +4156,14 @@ PDM_box_tree_closest_upper_bound_dist_boxes_get
   const double *d = bt->boxes->d;
 
   double *_pts = pts;
-  if (normalized) {
-    _pts = malloc (sizeof(double) * 3 * n_pts);
-    for (int i = 0; i < n_pts; i++) {
-      const double *_pt_origin = pts + 3 * i;
-      double *_pt        = _pts + 3 * i;
-      PDM_box_set_normalize ((PDM_box_set_t *)bt->boxes, _pt_origin, _pt);
-    }
+  /* if (normalized) { */
+  _pts = malloc (sizeof(double) * 3 * n_pts);
+  for (int i = 0; i < n_pts; i++) {
+    const double *_pt_origin = pts + 3 * i;
+    double *_pt        = _pts + 3 * i;
+    PDM_box_set_normalize ((PDM_box_set_t *)bt->boxes, _pt_origin, _pt);
   }
+  /* } */
 
   int s_pt_stack = ((bt->n_children - 1) * (bt->max_level - 1) + bt->n_children);
 
@@ -4341,14 +4340,14 @@ PDM_box_tree_closest_upper_bound_dist_boxes_get_v2
   const double *d = bt->boxes->d;
 
   double *_pts = pts;
-  if (normalized) {
+  /* if (normalized) { */
     _pts = malloc (sizeof(double) * 3 * n_pts);
     for (int i = 0; i < n_pts; i++) {
       const double *_pt_origin = pts + 3 * i;
       double *_pt              = _pts + 3 * i;
       PDM_box_set_normalize ((PDM_box_set_t *)bt->boxes, _pt_origin, _pt);
     }
-  }
+  /* } */
 
   int s_pt_stack = ((bt->n_children - 1) * (bt->max_level - 1) + bt->n_children);
 
@@ -4570,14 +4569,14 @@ PDM_box_tree_closest_upper_bound_dist_boxes_get_from_copied_ranks
   }
 
   double *_pts = pts;
-  if (normalized) {
+  //  if (normalized) {
     _pts = malloc (sizeof(double) * 3 * n_pts_total);
     for (int i = 0; i < n_pts_total; i++) {
       const double *_pt_origin = pts + 3 * i;
       double *_pt        = _pts + 3 * i;
       PDM_box_set_normalize ((PDM_box_set_t *)bt->boxes, _pt_origin, _pt);
     }
-  }
+  //  }
 
   int s_pt_stack = ((bt->n_children - 1) * (bt->max_level - 1) + bt->n_children);
 

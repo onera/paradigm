@@ -266,13 +266,9 @@ PDM_dbbtree_create
 
   _dbbt->maxTreeDepthShared   = 10;
   _dbbt->maxBoxRatioShared    =  6;
-  _dbbt->maxBoxesLeafShared   = 5;
+  _dbbt->maxBoxesLeafShared   =  5;
 
-  // TOSEE ERIC - Changmeent pour cas à 2 milliards
-  // _dbbt->maxTreeDepthCoarse   = 20;
-  // _dbbt->maxBoxRatioCoarse    =  4.;
-
-  _dbbt->maxTreeDepthCoarse   = 20;
+  _dbbt->maxTreeDepthCoarse   = 10;
   _dbbt->maxBoxRatioCoarse    =  4;
   _dbbt->maxBoxesLeafCoarse   = 30;
 
@@ -487,6 +483,13 @@ PDM_dbbtree_boxes_set
     memcpy (_dbbt->s, _dbbt->boxes->s, sizeof(double) * 3);
   }
 
+  printf("_dbbt->d %12.5e %12.5e %12.5e\n", _dbbt->d[0], _dbbt->d[1], _dbbt->d[2]);
+  printf("_dbbt->s %12.5e %12.5e %12.5e\n", _dbbt->s[0], _dbbt->s[1], _dbbt->s[2]);
+
+  printf("_dbbt->boxes->d %12.5e %12.5e %12.5e\n", _dbbt->boxes->d[0], _dbbt->boxes->d[1], _dbbt->boxes->d[2]);
+  printf("_dbbt->boxes->s %12.5e %12.5e %12.5e\n", _dbbt->boxes->s[0], _dbbt->boxes->s[1], _dbbt->boxes->s[2]);
+
+
   //printf("  PDM_dbbtree_boxes_set <<-- PDM_box_set_create (rank %d)\n", myRank);
 
   free (_boxGnum);
@@ -609,7 +612,14 @@ PDM_dbbtree_boxes_set
                                           &nUsedRank,
                                           initLocation_proc,
                                           _dbbt->rankComm);
-    //printf("  PDM_dbbtree_boxes_set <<-- PDM_box_set_create (rankBoxes) (rank %d)\n", myRank);
+
+    memcpy (_dbbt->rankBoxes->d, _dbbt->d, sizeof(double) * 3);
+    memcpy (_dbbt->rankBoxes->s, _dbbt->s, sizeof(double) * 3);
+
+    printf("_dbbt->rankBoxes->d %12.5e %12.5e %12.5e\n", _dbbt->rankBoxes->d[0], _dbbt->rankBoxes->d[1], _dbbt->rankBoxes->d[2]);
+    printf("_dbbt->rankBoxes->s %12.5e %12.5e %12.5e\n", _dbbt->rankBoxes->s[0], _dbbt->rankBoxes->s[1], _dbbt->rankBoxes->s[2]);
+
+  //printf("  PDM_dbbtree_boxes_set <<-- PDM_box_set_create (rankBoxes) (rank %d)\n", myRank);
 
     //printf("  PDM_dbbtree_boxes_set -->> PDM_box_set_create (btShared) (rank %d)\n", myRank);
     _dbbt->btShared = PDM_box_tree_create (_dbbt->maxTreeDepthShared,
@@ -1061,7 +1071,7 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get_OLD
   int npts_in_rank = n_pts;
 
   double *pts_in_rank =  pts;
-  double *upper_bound_dist_in_rank =  upper_bound_dist2;
+  double *upper_bound_dist_in_rank = upper_bound_dist2;
 
   assert (dbbt != NULL);
   _PDM_dbbtree_t *_dbbt = (_PDM_dbbtree_t *) dbbt;
@@ -1228,7 +1238,6 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get_OLD
   }
 
   else {
-
     /*
      * Retour des resultats (AlltoAll inverse)
      *     - Envoi du nombre de boites trouvees pour chaque point
