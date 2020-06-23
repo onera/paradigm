@@ -169,4 +169,4 @@ PDM_triangulate_quadrangle(int                dim,
 }
 #endif /* __cplusplus */
 
-#endif /* __FVMC_TRIANGULATE_H__ */
+#endif /* __PDM_TRIANGULATE_H__ */

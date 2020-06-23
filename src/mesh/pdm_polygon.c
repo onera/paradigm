@@ -1476,6 +1476,7 @@ int PDM_polygon_3d_to_2d
     }
   }
 
+  return 1;
 }
 
 #ifdef __cplusplus

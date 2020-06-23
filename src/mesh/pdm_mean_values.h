@@ -48,64 +48,6 @@ extern "C" {
  */
 
 void
-PDM_mean_values_polygon_compute
-(
- const int     n_pts,
- const double *pts,
- const int     n_vtx,
- const int    *poly_vtx,
- const double *mesh_vtx_coords,
- double       *mean_values
- );
-
-
-void
-PDM_mean_values_polygon_compute2
-(
- const int     n_pts,
- const double *pts,
- const int     n_vtx,
- const int    *poly_vtx,
- const double *mesh_vtx_coords,
- double       *mean_values
- );
-
-void
-PDM_mean_values_polygon_compute3
-(
- const int     n_pts,
- const double *pts_xyz,
- const int     n_vtx,
- const double *vtx_xyz,
- double       *mean_value_coords
- );
-
-
-
-
-
-
-
-void
-PDM_mean_values_polyhedron
-(
- const int     n_pts,
- const double  pts_xyz[],
- const int     n_vtx,
- const double  vtx_xyz[],
- const int     n_faces,
- const int     face_vtx_idx[],
- const int     face_vtx[],
- double       *mean_value_coords
- );
-
-
-
-
-
-
-
-void
 PDM_mean_value_coordinates_polygon_2d
 (
  const int    n_vtx,
@@ -125,6 +67,8 @@ PDM_mean_value_coordinates_polygon_3d
  double       mean_value_coord[]
  );
 
+
+
 void
 PDM_mean_value_coordinates_polyhedron
 (
@@ -138,8 +82,9 @@ PDM_mean_value_coordinates_polyhedron
  double            mean_value_coord[]
  );
 
+
 void
-PDM_mean_value_coordinates_polyhedron2
+PDM_mean_values_polyhedron
 (
  const int         n_vtx,
  const double      vtx_coord[],
@@ -148,21 +93,19 @@ PDM_mean_value_coordinates_polyhedron2
  const PDM_l_num_t face_vtx[],
  const int         face_orientation[],
  const double      pt_coord[],
- double            mean_value_coord[]
+ double            weights[]
  );
 
 void
-PDM_mean_value_coordinates_polyhedron3
+PDM_mean_values_polygon
 (
  const int         n_vtx,
- const double      vtx_coord[],
- const PDM_l_num_t n_face,
- const PDM_l_num_t face_vtx_idx[],
  const PDM_l_num_t face_vtx[],
- const int         face_orientation[],
+ const double      vtx_coord[],
  const double      pt_coord[],
- double            mean_value_coord[]
+ double            weights[]
  );
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
