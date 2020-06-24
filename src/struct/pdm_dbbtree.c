@@ -26,7 +26,6 @@
 #include "pdm_dbbtree_priv.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
-#include "pdm_timer.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -381,8 +380,6 @@ PDM_dbbtree_boxes_set
   int lComm;
   PDM_MPI_Comm_size (_dbbt->comm, &lComm);
 
-  //printf(" (rank %d)\n", myRank);
-
   const int nInfoLocation = 3;
   const int sExtents = _dbbt->dim * 2;
 
@@ -418,7 +415,6 @@ PDM_dbbtree_boxes_set
    * Redistribute boxes of mesh A
    */
 
-  //printf("  PDM_dbbtree_boxes_set -->> PDM_box_set_create (rank %d)\n", myRank);
   if (1 == 0) {
 
     PDM_printf ("nEltsProc : %d\n", nEltsProc);
@@ -483,23 +479,12 @@ PDM_dbbtree_boxes_set
     memcpy (_dbbt->s, _dbbt->boxes->s, sizeof(double) * 3);
   }
 
-  printf("_dbbt->d %12.5e %12.5e %12.5e\n", _dbbt->d[0], _dbbt->d[1], _dbbt->d[2]);
-  printf("_dbbt->s %12.5e %12.5e %12.5e\n", _dbbt->s[0], _dbbt->s[1], _dbbt->s[2]);
-
-  printf("_dbbt->boxes->d %12.5e %12.5e %12.5e\n", _dbbt->boxes->d[0], _dbbt->boxes->d[1], _dbbt->boxes->d[2]);
-  printf("_dbbt->boxes->s %12.5e %12.5e %12.5e\n", _dbbt->boxes->s[0], _dbbt->boxes->s[1], _dbbt->boxes->s[2]);
-
-
-  //printf("  PDM_dbbtree_boxes_set <<-- PDM_box_set_create (rank %d)\n", myRank);
-
   free (_boxGnum);
   free (_extents);
   free (_initLocation);
 
   if (lComm > 1) {
-    //printf("  PDM_dbbtree_boxes_set -->> _redistribute_boxes (rank %d)\n", myRank);
     _redistribute_boxes(_dbbt);
-    //printf("  PDM_dbbtree_boxes_set <<-- _redistribute_boxes (rank %d)\n", myRank);
 
     /*
      * Compute processus extents
@@ -545,20 +530,6 @@ PDM_dbbtree_boxes_set
                        allGExtents, sExtents, PDM__PDM_MPI_REAL,
                        _dbbt->comm);
 
-    /* PDM_printf ("_extents shared :"); */
-    /* idx1 = 0; */
-    /* for (int i = 0; i < lComm; i++) { */
-    /*   PDM_printf (" %12.5e", allGExtents[idx1++]); */
-    /*   PDM_printf (" %12.5e", allGExtents[idx1++]); */
-    /*   PDM_printf (" %12.5e", allGExtents[idx1++]); */
-    /*   PDM_printf (" %12.5e", allGExtents[idx1++]); */
-    /*   PDM_printf (" %12.5e", allGExtents[idx1++]); */
-    /*   PDM_printf (" %12.5e", allGExtents[idx1++]); */
-    /*   PDM_printf ("\n"); */
-    /* } */
-    /* PDM_printf ("\n"); */
-
-
     int *numProc = (int *) malloc (sizeof(int *) * nUsedRank);
 
     _dbbt->usedRank = numProc;
@@ -582,15 +553,6 @@ PDM_dbbtree_boxes_set
 
     allGExtents = (double *) realloc (allGExtents, sizeof(double) * sExtents * nUsedRank);
 
-    /* for (int i = 0; i < nUsedRank; i++) { */
-    /*   double *_min = allGExtents + i * sExtents; */
-    /*   double *_max = _min + 3; */
-    /*   PDM_box_set_normalize_inv (_dbbt->boxes, _min, _min); */
-    /*   PDM_box_set_normalize_inv (_dbbt->boxes, _max, _max); */
-    /* } */
-
-    // Retour espace reel pour allGExtents
-
     int *initLocation_proc = (int *) malloc (sizeof(int) * 3 * nUsedRank);
     for (int i = 0; i < 3 * nUsedRank; i++) {
       initLocation_proc[i] = 0;
@@ -598,9 +560,7 @@ PDM_dbbtree_boxes_set
 
     //TODO: Faire un PDM_box_set et PDM_box_tree_create sequentiel ! Le comm split a u n 1 proc ici : pas terrible
 
-    //    PDM_MPI_Comm rankComm;
     PDM_MPI_Comm_split(_dbbt->comm, myRank, 0, &(_dbbt->rankComm));
-    //printf("  PDM_dbbtree_boxes_set -->> PDM_box_set_create (rankBoxes) (rank %d)\n", myRank);
 
     _dbbt->rankBoxes = PDM_box_set_create(3,
                                           0,  // No normalization to preserve initial extents
@@ -616,24 +576,15 @@ PDM_dbbtree_boxes_set
     memcpy (_dbbt->rankBoxes->d, _dbbt->d, sizeof(double) * 3);
     memcpy (_dbbt->rankBoxes->s, _dbbt->s, sizeof(double) * 3);
 
-    printf("_dbbt->rankBoxes->d %12.5e %12.5e %12.5e\n", _dbbt->rankBoxes->d[0], _dbbt->rankBoxes->d[1], _dbbt->rankBoxes->d[2]);
-    printf("_dbbt->rankBoxes->s %12.5e %12.5e %12.5e\n", _dbbt->rankBoxes->s[0], _dbbt->rankBoxes->s[1], _dbbt->rankBoxes->s[2]);
-
-  //printf("  PDM_dbbtree_boxes_set <<-- PDM_box_set_create (rankBoxes) (rank %d)\n", myRank);
-
-    //printf("  PDM_dbbtree_boxes_set -->> PDM_box_set_create (btShared) (rank %d)\n", myRank);
     _dbbt->btShared = PDM_box_tree_create (_dbbt->maxTreeDepthShared,
                                            _dbbt->maxBoxesLeafShared,
                                            _dbbt->maxBoxRatioShared);
-    //printf("  PDM_dbbtree_boxes_set <<-- PDM_box_set_create (btShared) (rank %d)\n", myRank);
 
     /* Build a tree and associate boxes */
 
-    //printf("  PDM_dbbtree_boxes_set -->> PDM_box_tree_set_boxes (rank %d)\n", myRank);
     PDM_box_tree_set_boxes (_dbbt->btShared,
                             _dbbt->rankBoxes,
                             PDM_BOX_TREE_ASYNC_LEVEL);
-    //printf("  PDM_dbbtree_boxes_set -->> PDM_box_tree_set_boxes (rank %d)\n", myRank);
 
     _update_bt_statistics(&(_dbbt->btsShared), _dbbt->btShared);
 
@@ -646,18 +597,16 @@ PDM_dbbtree_boxes_set
   /*
    * Build local bt
    */
-  //printf("  PDM_dbbtree_boxes_set -->> PDM_box_tree_create (btLoc) (rank %d)\n", myRank);
+
   _dbbt->btLoc = PDM_box_tree_create (_dbbt->maxTreeDepth,
                                       _dbbt->maxBoxesLeaf,
                                       _dbbt->maxBoxRatio);
-  //printf("  PDM_dbbtree_boxes_set <<-- PDM_box_tree_create (btLoc) (rank %d)\n", myRank);
 
   /* Build a tree and associate boxes */
-  //printf("  PDM_dbbtree_boxes_set -->> PDM_box_tree_set_boxes (btLoc) (rank %d)\n", myRank);
+
   PDM_box_tree_set_boxes (_dbbt->btLoc,
                           _dbbt->boxes,
                           PDM_BOX_TREE_ASYNC_LEVEL);
-  //printf("  PDM_dbbtree_boxes_set <<-- PDM_box_tree_set_boxes (btLoc) (rank %d)\n", myRank);
 
   _update_bt_statistics(&(_dbbt->btsLoc), _dbbt->btLoc);
 
@@ -820,10 +769,6 @@ PDM_dbbtree_intersect_boxes_set
    * Intersection boxes whith shared tree
    */
 
-  PDM_MPI_Barrier (_dbbt->comm);
-  PDM_timer_t *t = PDM_timer_create();
-  PDM_timer_resume(t);
-
   if (_dbbt->btShared != NULL) {
 
     PDM_box_tree_get_boxes_intersects (_dbbt->btShared,
@@ -877,51 +822,6 @@ PDM_dbbtree_intersect_boxes_set
      * Redistribute boxes on intersecting ranks
      */
 
-
-    /* PDM_g_num_t _n_boxes1 = boxes->local_boxes->n_boxes; */
-    /* PDM_g_num_t s_n_boxes1 = 0; */
-
-    /* PDM_MPI_Allreduce(&_n_boxes1, &s_n_boxes1, 1, */
-    /*                   PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, _dbbt->comm); */
-
-    /* PDM_box_set_redistribute (distrib, */
-    /*                           boxes); */
-
-    /* PDM_g_num_t _n_boxes2 = boxes->local_boxes->n_boxes; */
-    /* PDM_g_num_t s_n_boxes2 = 0; */
-
-    /* PDM_MPI_Allreduce(&_n_boxes2, &s_n_boxes2, 1, */
-    /*                   PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, _dbbt->comm); */
-
-    /* int *n_boxes2_procs = malloc(sizeof(int) * lComm); */
-    /* int *n_boxes1_procs = malloc(sizeof(int) * lComm); */
-
-    /* PDM_MPI_Allgather ((void *) &_n_boxes2,     1, PDM_MPI_INT, */
-    /*                    (void *) n_boxes2_procs, 1, PDM_MPI_INT, */
-    /*                    _dbbt->comm); */
-    /* PDM_MPI_Allgather ((void *) &_dbbt->boxes->local_boxes->n_boxes,     1, PDM_MPI_INT, */
-    /*                    (void *) n_boxes1_procs, 1, PDM_MPI_INT, */
-    /*                    _dbbt->comm); */
-
-    /* if (myRank == 0) { */
-    /*   printf ("Boites B : avant %ld apres %ld facteur %12.5e\n", */
-    /*           s_n_boxes1, */
-    /*           s_n_boxes2, */
-    /*           (double) s_n_boxes2/(double) s_n_boxes1); */
-    /*   printf ("nboxes 2 : "); */
-    /*   for (int i = 0; i < lComm; i++) { */
-    /*     printf (" %d", n_boxes2_procs[i]); */
-    /*   } */
-    /*   printf("\n"); */
-    /*   printf ("nboxes 1 : "); */
-    /*   for (int i = 0; i < lComm; i++) { */
-    /*     printf (" %d", n_boxes1_procs[i]); */
-    /*   } */
-    /*   printf("\n"); */
-    /* } */
-    /* free (n_boxes2_procs); */
-    /* free (n_boxes1_procs); */
-
     if (1 == 0) {
       printf ("Boxes B apres redistribution : %d\n", boxes->local_boxes->n_boxes);
       for (int i = 0; i < boxes->local_boxes->n_boxes; i++) {
@@ -941,15 +841,9 @@ PDM_dbbtree_intersect_boxes_set
 
   }
 
-  PDM_MPI_Barrier (_dbbt->comm);
-  PDM_timer_hang_on(t);
-  double t1 = PDM_timer_elapsed(t);
-  PDM_timer_resume(t);
-
   free (_boxGnum);
   free (_extents);
   free (_initLocation);
-
 
   /*
    * Intersection boxes whith local tree
@@ -961,11 +855,6 @@ PDM_dbbtree_intersect_boxes_set
                                      boxes,
                                      box_index,
                                      box_l_num);
-
-  PDM_MPI_Barrier (_dbbt->comm);
-  PDM_timer_hang_on(t);
-  double t2 = PDM_timer_elapsed(t);
-  PDM_timer_resume(t);
 
   /*
    * Sort boxes and remove double boxes
@@ -1002,19 +891,6 @@ PDM_dbbtree_intersect_boxes_set
   for (int i = 0; i < nBoxesA; i++) {
     newIndex[i+1] += newIndex[i];
   }
-
-
-  PDM_MPI_Barrier (_dbbt->comm);
-  PDM_timer_hang_on(t);
-  double t3 = PDM_timer_elapsed(t);
-  PDM_timer_resume(t);
-
-  /* if (myRank == 0) { */
-  /*   printf("temps intersect arbre proc arbre loc tri : %12.5e %12.5e %12.5e\n", t1, t2-t1, t3-t2); */
-  /* } */
-
-  PDM_timer_hang_on(t);
-  PDM_timer_free (t);
 
   free (*box_index);
   *box_index = newIndex;
