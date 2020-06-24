@@ -203,7 +203,7 @@ PDM_polygon_status_t PDM_polygon_point_in2d
  const double  xy[2],
  const int     n_vtx,
  const double *vtx_xy,
- const double  char_length,
+ // const double  char_length,
  double        bounds[4]
  );
 
@@ -226,7 +226,7 @@ PDM_polygon_status_t PDM_polygon_point_in3d
  const double  xyz[3],
  const int     n_vtx,
  const double *vtx_xyz,
- const double  char_length,
+ // const double  char_length,
  double        bounds[6],
  double        normal[3]
  );

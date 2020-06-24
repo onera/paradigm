@@ -72,6 +72,17 @@ typedef enum {
  */
 
 PDM_line_intersect_t
+PDM_line_intersection2
+(
+ const double a1[3],
+ const double a2[3],
+ const double b1[3],
+ const double b2[3],
+ double *u,
+ double *v
+ );
+
+PDM_line_intersect_t
 PDM_line_intersection
 (
  const double a1[3],
