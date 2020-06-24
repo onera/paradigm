@@ -126,7 +126,7 @@ _solve_2x2
  *
  */
 PDM_line_intersect_t
-PDM_line_intersection_new_bugge
+PDM_line_intersection2
 (
  const double a1[3],
  const double a2[3],
@@ -147,56 +147,58 @@ PDM_line_intersection_new_bugge
   /*
    * Determine vectors
    */
-   a1a2[0] = a2[0] - a1[0];
-   a1a2[1] = a2[1] - a1[1];
-   a1a2[2] = a2[2] - a1[2];
-   b1b2[0] = b2[0] - b1[0];
-   b1b2[1] = b2[1] - b1[1];
-   b1b2[2] = b2[2] - b1[2];
-   a1b1[0] = b1[0] - a1[0];
-   a1b1[1] = b1[1] - a1[1];
-   a1b1[2] = b1[2] - a1[2];
+  a1a2[0] = a2[0] - a1[0];
+  a1a2[1] = a2[1] - a1[1];
+  a1a2[2] = a2[2] - a1[2];
+  b1b2[0] = b2[0] - b1[0];
+  b1b2[1] = b2[1] - b1[1];
+  b1b2[2] = b2[2] - b1[2];
+  a1b1[0] = b1[0] - a1[0];
+  a1b1[1] = b1[1] - a1[1];
+  a1b1[2] = b1[2] - a1[2];
 
-    Axy[0][0] = a1a2[0];
-	Axy[0][1] = -1.*b1b2[0];
-	Axy[1][0] = a1a2[1];
-	Axy[1][1] = -1.*b1b2[1];
-    cxy[0] = a1b1[0]; cxy[1] = a1b1[1];
+  Axy[0][0] = a1a2[0];
+  Axy[0][1] = -1.*b1b2[0];
+  Axy[1][0] = a1a2[1];
+  Axy[1][1] = -1.*b1b2[1];
+  cxy[0]    = a1b1[0];
+  cxy[1]    = a1b1[1];
 
   /*
    * Solve the system of equations
    */
-    if (_solve_2x2 (Axy, cxy) == PDM_FALSE){
-		//coplanar
-		Axz[0][0] = a1a2[0];
-		Axz[0][1] = -1.*b1b2[0];
-		Axz[1][0] = a1a2[2];
-		Axz[1][1] = -1.*b1b2[2];
-        cxz[0] = a1b1[0]; cxz[1] = a1b1[2];
-        if (_solve_2x2 (Axz, cxz) == PDM_FALSE){
-            return PDM_LINE_INTERSECT_ON_LINE;
-		}
-        else {
-            //#on verifie pour y
-            *u = cxz[0];
-			*v = cxz[1];
-            if (PDM_ABS(((*u)*a1a2[1] - (*v)*b1b2[1]) - a1b1[1]) > _eps)
-                return PDM_LINE_INTERSECT_NO;
-		}
-	}
+
+  if (_solve_2x2 (Axy, cxy) == PDM_FALSE){
+    //coplanar
+    Axz[0][0] = a1a2[0];
+    Axz[0][1] = -1.*b1b2[0];
+    Axz[1][0] = a1a2[2];
+    Axz[1][1] = -1.*b1b2[2];
+    cxz[0] = a1b1[0]; cxz[1] = a1b1[2];
+    if (_solve_2x2 (Axz, cxz) == PDM_FALSE){
+      return PDM_LINE_INTERSECT_ON_LINE;
+    }
     else {
-        //#on verifie pour z
-        *u = cxy[0];
-		*v = cxy[1];
-        if (PDM_ABS(((*u)*a1a2[2] - (*v)*b1b2[2]) - a1b1[2]) > _eps)
-            return PDM_LINE_INTERSECT_NO;
-	}
+      //#on verifie pour y
+      *u = cxz[0];
+      *v = cxz[1];
+      if (PDM_ABS(((*u)*a1a2[1] - (*v)*b1b2[1]) - a1b1[1]) > _eps)
+        return PDM_LINE_INTERSECT_NO;
+    }
+  }
+  else {
+    //#on verifie pour z
+    *u = cxy[0];
+    *v = cxy[1];
+    if (PDM_ABS(((*u)*a1a2[2] - (*v)*b1b2[2]) - a1b1[2]) > _eps)
+      return PDM_LINE_INTERSECT_NO;
+  }
 
   /*
    * Check parametric coordinates for intersection.
    */
 
-   if ( (0.0 <= *u) && (*u <= 1.0) && (0.0 <= *v) && (*v <= 1.0) ) {
+  if ( (0.0 <= *u) && (*u <= 1.0) && (0.0 <= *v) && (*v <= 1.0) ) {
     return PDM_LINE_INTERSECT_YES;
   }
   else {
