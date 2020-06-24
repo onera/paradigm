@@ -126,7 +126,7 @@ _solve_2x2
  *
  */
 PDM_line_intersect_t
-PDM_line_intersection
+PDM_line_intersection_new_bugge
 (
  const double a1[3],
  const double a2[3],
@@ -177,16 +177,16 @@ PDM_line_intersection
             return PDM_LINE_INTERSECT_ON_LINE;
 		}
         else {
-            //#on verifie pour y 
-            *u = cxz[0]; 
+            //#on verifie pour y
+            *u = cxz[0];
 			*v = cxz[1];
-            if (PDM_ABS(((*u)*a1a2[1] - (*v)*b1b2[1]) - a1b1[1]) > _eps) 
+            if (PDM_ABS(((*u)*a1a2[1] - (*v)*b1b2[1]) - a1b1[1]) > _eps)
                 return PDM_LINE_INTERSECT_NO;
 		}
 	}
     else {
-        //#on verifie pour z 
-        *u = cxy[0]; 
+        //#on verifie pour z
+        *u = cxy[0];
 		*v = cxy[1];
         if (PDM_ABS(((*u)*a1a2[2] - (*v)*b1b2[2]) - a1b1[2]) > _eps)
             return PDM_LINE_INTERSECT_NO;
@@ -206,7 +206,7 @@ PDM_line_intersection
 
 
 PDM_line_intersect_t
-PDM_line_intersection_old
+PDM_line_intersection
 (
  const double a1[3],
  const double a2[3],
@@ -216,7 +216,6 @@ PDM_line_intersection_old
  double *v
  )
 {
-
   double a21[3], b21[3], b1a1[3];
   double c[2];
   double A[2][2];
@@ -271,10 +270,10 @@ PDM_line_intersection_old
    * Check parametric coordinates for intersection.
    */
 
-   if ( (0.0 <= *u) && (*u <= 1.0) && (0.0 <= *v) && (*v <= 1.0) ) {
+  if ( (0.0 <= *u) && (*u <= 1.0) && (0.0 <= *v) && (*v <= 1.0) ) {
     return PDM_LINE_INTERSECT_YES;
   }
-  else {
+   else {
     return PDM_LINE_INTERSECT_NO;
   }
 }

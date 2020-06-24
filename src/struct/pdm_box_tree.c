@@ -46,7 +46,6 @@
 #include "pdm_printf.h"
 #include "pdm_error.h"
 #include "pdm_sort.h"
-#include "pdm_timer.h"
 
 #include "pdm_morton.h"
 
@@ -3397,13 +3396,8 @@ PDM_box_tree_get_boxes_intersects(PDM_box_tree_t       *bt,
   int         *_l_num = NULL;
   const PDM_box_set_t  *boxes = bt->boxes;
 
-
   int myRank;
   PDM_MPI_Comm_rank(bt->comm, &myRank);
-
-
-  PDM_timer_t *t = PDM_timer_create();
-  PDM_timer_resume(t);
 
   /* Build index */
 
@@ -3415,18 +3409,6 @@ PDM_box_tree_get_boxes_intersects(PDM_box_tree_t       *bt,
   int ncall=0;
   int n_boxes =0;
 
-  /* printf ("extents intersect :"); */
-  /* for (i = 0; i < boxesB->local_boxes->n_boxes; i++) { */
-  /*   printf("%12.5e < %12.5e / %12.5e < %12.5e / %12.5e < %12.5e\n", */
-  /*          boxesB->local_boxes->extents[6*i  ], */
-  /*          boxesB->local_boxes->extents[6*i+3], */
-  /*          boxesB->local_boxes->extents[6*i+1], */
-  /*          boxesB->local_boxes->extents[6*i+4], */
-  /*          boxesB->local_boxes->extents[6*i+2], */
-  /*          boxesB->local_boxes->extents[6*i+5] */
-  /*          ); */
-  /* } */
-
   for (int k = 0; k < boxesB->local_boxes->n_boxes; k++) {
     _count_boxes_intersections(bt,
                                &ncall,
@@ -3437,10 +3419,6 @@ PDM_box_tree_get_boxes_intersects(PDM_box_tree_t       *bt,
                                _index + 1);
 
   }
-
-  PDM_timer_hang_on(t);
-  double t1 = PDM_timer_elapsed(t);
-  PDM_timer_resume(t);
 
   /* Build index from counts */
 
@@ -3468,10 +3446,6 @@ PDM_box_tree_get_boxes_intersects(PDM_box_tree_t       *bt,
                              _l_num);
   }
 
-  PDM_timer_hang_on(t);
-  double t2 = PDM_timer_elapsed(t);
-  PDM_timer_resume(t);
-
   /* Remove duplicate boxes */
 
   int idx=0;
@@ -3493,10 +3467,6 @@ PDM_box_tree_get_boxes_intersects(PDM_box_tree_t       *bt,
     }
   }
 
-  PDM_timer_hang_on(t);
-  double t3 = PDM_timer_elapsed(t);
-  PDM_timer_resume(t);
-
   for (i = 0; i < boxes->local_boxes->n_boxes; i++) {
     _index[i+1] = _index[i] + counter[i];
   }
@@ -3504,17 +3474,6 @@ PDM_box_tree_get_boxes_intersects(PDM_box_tree_t       *bt,
   _l_num = realloc (_l_num, sizeof(int) * _index[boxes->local_boxes->n_boxes]);
 
   free(counter);
-
-  PDM_timer_hang_on(t);
-  double t4 = PDM_timer_elapsed(t);
-  PDM_timer_free (t);
-
-  /* printf("[%d] box_tree_intersect : t1 t2 t3 t4: %12.5e %12.5e %12.5e %12.5e\n", */
-  /*        myRank , */
-  /*        t1, */
-  /*        t2-t1, */
-  /*        t3-t2, */
-  /*        t4-t3); */
 
   /* Return pointers */
 
