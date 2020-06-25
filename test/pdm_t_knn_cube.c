@@ -350,7 +350,7 @@ int main(int argc, char *argv[])
 
   /* Compute closest points */
   if (GPU_ACC) {
-    PDM_Handles_t *closest_pts = PDM_closest_points_staticvar_transfert();
+    PDM_Handles_t *closest_pts = PDM_closest_points_closest_transfert();
     printf("s array = %d\n", closest_pts->s_array);
     PDM_closest_points_compute_GPU (id2, closest_pts);
   }

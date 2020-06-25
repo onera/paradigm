@@ -640,7 +640,7 @@ PDM_closest_points_dump_times
  */
 
 PDM_Handles_t *
-PDM_closest_points_staticvar_transfert
+PDM_closest_points_closest_transfert
 (
   void
  )
