@@ -21,12 +21,6 @@ extern "C" {
  * Macro definitions
  *============================================================================*/
 
-#ifdef __CUDACC__
-#define MANAGED __managed__
-#else
-#define MANAGED
-#endif
-
 /*============================================================================
  * Type definitions
  *============================================================================*/
@@ -81,15 +75,39 @@ PDM_para_octree_free_GPU
  const int          id
 );
 
+/**
+ *
+ * Look for closest points stored inside an octree
+ *
+ * \param [in]   id                     Identifier
+ * \param [in]   n_closest_points       Number of closest points to find
+ * \param [in]   n_pts                  Number of points
+ * \param [in]   pts                    Point Coordinates
+ * \param [in]   pts_g_num              Point global numbers
+ * \param [out]  closest_octree_pt_id   Closest points in octree global number
+ * \param [out]  closest_octree_pt_dist Closest points in octree distance
+ *
+ */
+
+__global__
+void
+PDM_para_octree_closest_point_GPU
+(
+ PDM_octree_t *octree,
+ const int    n_closest_points,
+ const int    n_pts,
+ double      *pts,
+ PDM_g_num_t *pts_g_num,
+ PDM_g_num_t *closest_octree_pt_g_num,
+ double      *closest_octree_pt_dist2
+ );
 
 //test
-#ifdef __CUDACC__
 __global__
-#endif
 void
 print_from_gpu
 (
-int id
+PDM_octree_t *octree
 );
 
 #ifdef	__cplusplus
