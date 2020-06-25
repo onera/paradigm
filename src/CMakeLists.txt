@@ -175,14 +175,6 @@ if (OPENMP_FOUND)
                          COMPILE_FLAGS ${OpenMP_C_FLAGS})
 endif()
 
-if (CUDA_FOUND)
-  #set_target_properties(pdm PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
-  #target_compile_options(pdm PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler -fPIC -dc -arch=sm_30 -gencode=arch=compute_30,code=sm_30 -gencode=arch=compute_50,code=sm_50 -gencode=arch=compute_52,code=sm_52 -gencode=arch=compute_60,code=sm_60 -gencode=arch=compute_61,code=sm_61 -gencode=arch=compute_61,code=compute_61>)
-  #set_target_properties(pdm PROPERTIES CUDA_RESOLVE_DEVICE_SYMBOLS ON)
-  #target_link_libraries(pdm cudadevrt)
-  #target_link_options(pdm PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-dlink>)
-endif()
-
 # Options du link
 # ---------------
 
