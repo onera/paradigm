@@ -53,6 +53,35 @@ typedef enum {
 
 
 /**
+ * \brief Performs intersection of two finite lines in the same plane
+ *
+ *  Performs the intersection of two lines in the same plane. This function is more robust than
+ *  PDM_line_intersection_in_3d but is unusable for any two 3D lines
+ *
+ * \param [in]  a1 Coordinates of the first line vertex of 'a'
+ * \param [in]  a2 Coordinates of the second line vertex of 'a'
+ * \param [in]  b1 Coordinates of the first line vertex of 'b'
+ * \param [in]  b2 Coordinates of the second line vertex of 'b'
+ * \param [out] u  Parameter of the intersection in line 'a' parametric coordinates
+ * \param [out] v  Parameter of the intersection in line 'b' parametric coordinates
+ *
+ * \return      \ref PDM_TRUE or \ref PDM_FALSE
+ *
+ */
+
+PDM_line_intersect_t
+PDM_line_intersection_in_3d_plane
+(
+ const double a1[3],
+ const double a2[3],
+ const double b1[3],
+ const double b2[3],
+ double *u,
+ double *v
+ );
+
+
+/**
  * \brief Performs intersection of two finite 3D lines
  *
  *  An intersection is found if the projection of the two lines onto the plane
@@ -72,18 +101,7 @@ typedef enum {
  */
 
 PDM_line_intersect_t
-PDM_line_intersection2
-(
- const double a1[3],
- const double a2[3],
- const double b1[3],
- const double b2[3],
- double *u,
- double *v
- );
-
-PDM_line_intersect_t
-PDM_line_intersection
+PDM_line_intersection_3d
 (
  const double a1[3],
  const double a2[3],
