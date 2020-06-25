@@ -7,6 +7,9 @@
 
 #include "pdm.h"
 #include "pdm_mpi.h"
+#include "pdm_handles.h"
+#include "pdm_morton.h"
+#include "pdm_timer.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -20,6 +23,8 @@ extern "C" {
 /*============================================================================
  * Macro definitions
  *============================================================================*/
+
+#define NTIMER2 11
 
 /*============================================================================
  * Type definitions
@@ -64,6 +69,80 @@ typedef enum {
   PDM_UNE,
 } PDM_para_octree_child_t;
 
+/**
+ * \struct _l_octant_t
+ * \brief  Define a list of octants
+ *
+ */
+
+typedef struct  {
+
+  int   n_nodes;                 /*!< Current number of nodes in octree */
+  int   n_nodes_max;             /*!< Maximum number of nodes in octree */
+
+  PDM_morton_code_t *codes;        /*!< Morton codes */
+
+  int  *n_points;          /*!< Number of points in octant*/
+  int  *range;             /*!< Start index of point list for each octant */
+
+  int   *neighbour_idx;
+  int   *neighbours;               /*!< rank + id_node size = 2 * n_nodes */
+  int   dim;
+
+} _l_octant_t;
+
+
+/**
+ * \struct _octree_t
+ * \brief  Define an octree
+ *
+ */
+
+typedef struct {
+
+  double  global_extents[6];     /*!< Extents of current process */
+  int     depth_max;             /*!< Maximum depth of the three */
+  int     points_in_leaf_max;    /*!< Maximum number of points in a leaf */
+  double      s[3];           /*!< Translation for the normalization */
+  double      d[3];           /*!< Dilatation for the normalization */
+
+  int     n_point_clouds;        /*!< Number of point cloud */
+
+  PDM_g_num_t        t_n_points;     /*!< total number of points */
+  int                n_points;       /*!< Number of points in each cloud */
+  double            *points;         /*!< Point coordinates */
+  int               *points_icloud;  /*!< Point cloud */
+  PDM_g_num_t       *points_gnum;    /*!< Point global number */
+  PDM_morton_code_t *points_code;    /*!< Morton codes */
+
+  PDM_morton_code_t *rank_octants_index;
+  _l_octant_t *octants;       /*!< list of octants */
+
+  PDM_MPI_Comm comm;           /*!< MPI communicator */
+  int   dim;                     /*!< Dimension */
+
+  int  n_part_boundary_elt;    /*!< Number of partitioning boundary element */
+  int *part_boundary_elt_idx; /*!< Index for part_boundary_elt (size=\ref n_part_boundary_elt + 1 */
+  int *part_boundary_elt;     /*!< Partitioning boundary elements description (proc number + element number) */
+
+  PDM_timer_t *timer; /*!< Timer */
+
+  double times_elapsed[NTIMER2]; /*!< Elapsed time */
+
+  double times_cpu[NTIMER2];     /*!< CPU time */
+
+  double times_cpu_u[NTIMER2];  /*!< User CPU time */
+
+  double times_cpu_s[NTIMER2];  /*!< System CPU time */
+
+  int neighboursToBuild;
+
+  int  n_connected;
+  int *connected_idx;
+
+} _octree_t;
+
+typedef _octree_t PDM_octree_t;
 
 /*  */
 
@@ -255,6 +334,17 @@ PDM_para_octree_dump_times
  const int id
  );
 
+/**
+ *
+ * \brief  transfert _octrees var to gpu through PDM_closest_points_compute
+ *
+ */
+
+PDM_octree_t *
+PDM_para_octree_octrees_transfert
+(
+  int id
+ );
 
 
 #ifdef	__cplusplus

@@ -37,8 +37,6 @@ extern "C"
  * Local macro definitions
  *============================================================================*/
 
-#define NTIMER 11
-
 /*============================================================================
  * Type definitions
  *============================================================================*/
@@ -82,80 +80,6 @@ typedef struct  {
   int   max_top;
 
 } _heap_t;
-
-
-/**
- * \struct _l_octant_t
- * \brief  Define a list of octants
- *
- */
-
-typedef struct  {
-
-  int   n_nodes;                 /*!< Current number of nodes in octree */
-  int   n_nodes_max;             /*!< Maximum number of nodes in octree */
-
-  PDM_morton_code_t *codes;        /*!< Morton codes */
-
-  int  *n_points;          /*!< Number of points in octant*/
-  int  *range;             /*!< Start index of point list for each octant */
-
-  int   *neighbour_idx;
-  int   *neighbours;               /*!< rank + id_node size = 2 * n_nodes */
-  int   dim;
-
-} _l_octant_t;
-
-
-/**
- * \struct _octree_t
- * \brief  Define an octree
- *
- */
-
-typedef struct  {
-
-  double  global_extents[6];     /*!< Extents of current process */
-  int     depth_max;             /*!< Maximum depth of the three */
-  int     points_in_leaf_max;    /*!< Maximum number of points in a leaf */
-  double      s[3];           /*!< Translation for the normalization */
-  double      d[3];           /*!< Dilatation for the normalization */
-
-  int     n_point_clouds;        /*!< Number of point cloud */
-
-  PDM_g_num_t        t_n_points;     /*!< total number of points */
-  int                n_points;       /*!< Number of points in each cloud */
-  double            *points;         /*!< Point coordinates */
-  int               *points_icloud;  /*!< Point cloud */
-  PDM_g_num_t       *points_gnum;    /*!< Point global number */
-  PDM_morton_code_t *points_code;    /*!< Morton codes */
-
-  PDM_morton_code_t *rank_octants_index;
-  _l_octant_t *octants;       /*!< list of octants */
-
-  PDM_MPI_Comm comm;           /*!< MPI communicator */
-  int   dim;                     /*!< Dimension */
-
-  int  n_part_boundary_elt;    /*!< Number of partitioning boundary element */
-  int *part_boundary_elt_idx; /*!< Index for part_boundary_elt (size=\ref n_part_boundary_elt + 1 */
-  int *part_boundary_elt;     /*!< Partitioning boundary elements description (proc number + element number) */
-
-  PDM_timer_t *timer; /*!< Timer */
-
-  double times_elapsed[NTIMER]; /*!< Elapsed time */
-
-  double times_cpu[NTIMER];     /*!< CPU time */
-
-  double times_cpu_u[NTIMER];  /*!< User CPU time */
-
-  double times_cpu_s[NTIMER];  /*!< System CPU time */
-
-  int neighboursToBuild;
-
-  int  n_connected;
-  int *connected_idx;
-
-} _octree_t;
 
 
 
@@ -3969,7 +3893,7 @@ PDM_para_octree_create
 
   octree->timer = PDM_timer_create ();
 
-  for (int i = 0; i < NTIMER; i++) {
+  for (int i = 0; i < NTIMER2; i++) {
     octree->times_elapsed[i] = 0.;
     octree->times_cpu[i] = 0.;
     octree->times_cpu_u[i] = 0.;
@@ -6859,11 +6783,11 @@ PDM_para_octree_dump_times
   double t2max;
   PDM_MPI_Allreduce (&t2, &t2max, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, octree->comm);
 
-  double t_elaps_max[NTIMER];
-  PDM_MPI_Allreduce (octree->times_elapsed, t_elaps_max, NTIMER, PDM_MPI_DOUBLE, PDM_MPI_MAX, octree->comm);
+  double t_elaps_max[NTIMER2];
+  PDM_MPI_Allreduce (octree->times_elapsed, t_elaps_max, NTIMER2, PDM_MPI_DOUBLE, PDM_MPI_MAX, octree->comm);
 
-  double t_cpu_max[NTIMER];
-  PDM_MPI_Allreduce (octree->times_cpu, t_cpu_max, NTIMER, PDM_MPI_DOUBLE, PDM_MPI_MAX, octree->comm);
+  double t_cpu_max[NTIMER2];
+  PDM_MPI_Allreduce (octree->times_cpu, t_cpu_max, NTIMER2, PDM_MPI_DOUBLE, PDM_MPI_MAX, octree->comm);
 
   int rank;
   PDM_MPI_Comm_rank (octree->comm, &rank);
@@ -6911,6 +6835,22 @@ PDM_para_octree_dump_times
 
   }
 
+}
+
+/**
+ *
+ * \brief  transfert _octrees var to gpu through PDM_closest_points_compute
+ *
+ */
+
+PDM_octree_t *
+PDM_para_octree_octrees_transfert
+(
+  int id
+ )
+{
+  _octree_t *octree = _get_from_id (id);
+  return octree;
 }
 
 
