@@ -530,7 +530,7 @@ PDM_polygon_point_in
        * of degenerate cases (e.g., ray intersects at vertex).
        */
 
-      if ((status = PDM_line_intersection2 (x,xray,x1,x2, &u,&v)) == PDM_LINE_INTERSECT_YES) {
+      if ((status = PDM_line_intersection_in_3d_plane (x,xray,x1,x2, &u,&v)) == PDM_LINE_INTERSECT_YES) {
 
         /*
          * This test checks for vertex and edge intersections
