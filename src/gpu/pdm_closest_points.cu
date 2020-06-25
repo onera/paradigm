@@ -31,18 +31,14 @@
  * Local headers
  *----------------------------------------------------------------------------*/
 
-#include "pdm_cuda_error.cuh"
-#include "pdm_cuda.cuh"
 #include "pdm_printf.h"
 #include "pdm_error.h"
+#include "pdm_cuda_error.cuh"
 #include "pdm.h"
 #include "pdm_priv.h"
 #include "pdm_handles.h"
-#include "pdm_handles.cuh"
 #include "pdm_mpi.h"
 #include "pdm_timer.h"
-#include "pdm_timer.cuh"
-#include "pdm_closest_points.h"
 #include "pdm_closest_points.cuh"
 #include "pdm_para_octree.h"
 #include "pdm_para_octree.cuh"
@@ -175,9 +171,6 @@ _get_from_id
  int  id
  )
 {
-  printf("before handle get\n");
-  printf("id = %d\n", id);
-  printf("s array = %d\n", _closest_pts->s_array);
   _PDM_closest_t *closest = (_PDM_closest_t *) PDM_Handles_get (_closest_pts, id);
 
   if (closest == NULL) {
@@ -186,52 +179,9 @@ _get_from_id
 
   return closest;
 }
-
-
 /*============================================================================
  * Public function definitions
  *============================================================================*/
-
-
-
-/**
- *
- * \brief Set the number of partitions of a point cloud
- *
- * \param [in]   id                Identifier
- * \param [in]   n_part_cloud_src  Number of partitions of the source cloud
- * \param [in]   n_part_cloud_tgt  Number of partitions of the target cloud
- *
- */
-
-/* void
-PDM_closest_points_n_part_cloud_set
-(
- const int  id,
- const int  n_part_cloud_src,
- const int  n_part_cloud_tgt
- )
-{
-  _PDM_closest_t *cls = _get_from_id (id);
-  assert(cls->src_cloud == NULL);
-  assert(cls->tgt_cloud == NULL);
-
-  cls->src_cloud = malloc (sizeof(_src_point_cloud_t));
-  cls->tgt_cloud = malloc (sizeof(_tgt_point_cloud_t));
-
-  cls->src_cloud->n_part = n_part_cloud_src;
-  cls->src_cloud->coords = malloc (sizeof(double *) * n_part_cloud_src);
-  cls->src_cloud->gnum = malloc (sizeof(int *) * n_part_cloud_src);
-  cls->src_cloud->n_points = malloc (sizeof(int) * n_part_cloud_src);
-
-  cls->tgt_cloud->n_part = n_part_cloud_tgt;
-  cls->tgt_cloud->coords = malloc (sizeof(double *) * n_part_cloud_tgt);
-  cls->tgt_cloud->gnum = malloc (sizeof(int *) * n_part_cloud_tgt);
-  cls->tgt_cloud->n_points = malloc (sizeof(int) * n_part_cloud_tgt);
-  cls->tgt_cloud->closest_src_gnum = NULL;
-  cls->tgt_cloud->closest_src_dist = NULL;
-} */
-
 
 /**
  *
@@ -249,18 +199,16 @@ PDM_closest_points_compute_GPU
  )
 {
   _closest_pts = var;
-  printf("s array = %d\n", _closest_pts->s_array);
   _PDM_closest_t *cls = NULL;
-  int *octree_id = NULL;
+  //int *octree_id = new int;
 
   //Allocate data on unified memory so it is accessible from CPU or GPU
   gpuErrchk(cudaMallocManaged(&cls, sizeof(_PDM_closest_t)));
-  gpuErrchk(cudaMallocManaged(&octree_id, sizeof(int)));
-  printf("After malloc\n");
+  //gpuErrchk(cudaMallocManaged(&octree_id, sizeof(int)));
 
+  printf("before get from id\n");
   cls = _get_from_id (id);
-
-  printf("after cls\n");
+  printf("n closest %d\n", cls->n_closest);
 
   double b_t_elapsed;
   double b_t_cpu;
@@ -283,26 +231,23 @@ PDM_closest_points_compute_GPU
   PDM_MPI_Comm_rank (cls->comm, &i_rank);
 
   //-->GPU
+  
   const int depth_max = 31;//?
   const int points_in_leaf_max = 1;//2*cls->n_closest;//?
   const int build_leaf_neighbours = 1;
 
-  printf("Before create\n");
+
   /* Create empty parallel octree structure */
-  *octree_id = PDM_para_octree_create_GPU (cls->src_cloud->n_part,
+  int octree_id = PDM_para_octree_create (cls->src_cloud->n_part,
                                           depth_max,
                                           points_in_leaf_max,
                                           build_leaf_neighbours,
                                           cls->comm);
 
-  printf("gpu print:\n");
-  print_from_gpu<<<1,1>>>(*octree_id);
-  cudaDeviceSynchronize();
-  printf("after gpu print\n");
 
   /* Set source point clouds */
   for (int i_part = 0; i_part < cls->src_cloud->n_part; i_part++) {
-    PDM_para_octree_point_cloud_set (*octree_id,
+    PDM_para_octree_point_cloud_set (octree_id,
                                      i_part,
                                      cls->src_cloud->n_points[i_part],
                                      cls->src_cloud->coords[i_part],
@@ -311,77 +256,109 @@ PDM_closest_points_compute_GPU
 
 
   /* Build parallel octree */
-  PDM_para_octree_build (*octree_id);
+  PDM_para_octree_build (octree_id);
   //PDM_para_octree_dump (octree_id);
-  PDM_para_octree_dump_times (*octree_id);
+  PDM_para_octree_dump_times (octree_id);
   //<--
 
 
-  // /* Concatenate partitions */
-  // int n_tgt = 0;
-  // for (int i_part = 0; i_part < cls->tgt_cloud->n_part; i_part++)
-  //   n_tgt += cls->tgt_cloud->n_points[i_part];
+  /* Concatenate partitions */
+  int n_tgt = 0;
+  for (int i_part = 0; i_part < cls->tgt_cloud->n_part; i_part++)
+    n_tgt += cls->tgt_cloud->n_points[i_part];
 
-  // double      *tgt_coord = malloc (sizeof(double)      * n_tgt * 3);
-  // PDM_g_num_t *tgt_g_num = malloc (sizeof(PDM_g_num_t) * n_tgt);
-  // PDM_g_num_t *closest_src_gnum = malloc (sizeof(PDM_g_num_t) * n_tgt * cls->n_closest);
-  // double      *closest_src_dist = malloc (sizeof(double)      * n_tgt * cls->n_closest);
+  double      *tgt_coord = (double*)malloc (sizeof(double)      * (n_tgt) * 3);
+  PDM_g_num_t *tgt_g_num = (PDM_g_num_t*)malloc (sizeof(PDM_g_num_t) * (n_tgt));
+  PDM_g_num_t *closest_src_gnum = (PDM_g_num_t*)malloc (sizeof(PDM_g_num_t) * (n_tgt) * cls->n_closest);
+  double      *closest_src_dist = (double*)malloc (sizeof(double)      * (n_tgt) * cls->n_closest);
 
-  // n_tgt = 0;
-  // for (int i_part = 0; i_part < cls->tgt_cloud->n_part; i_part++) {
-  //   for (int i = 0; i < cls->tgt_cloud->n_points[i_part]; i++) {
-  //     for (int j = 0; j < 3; j++)
-  //       tgt_coord[n_tgt + 3*i + j] = cls->tgt_cloud->coords[i_part][3*i + j];
-  //     tgt_g_num[n_tgt + i] = cls->tgt_cloud->gnum[i_part][i];
-  //   }
-  //   n_tgt += cls->tgt_cloud->n_points[i_part];
-  // }
-  
+  n_tgt = 0;
+  for (int i_part = 0; i_part < cls->tgt_cloud->n_part; i_part++) {
+    for (int i = 0; i < cls->tgt_cloud->n_points[i_part]; i++) {
+      for (int j = 0; j < 3; j++)
+        tgt_coord[n_tgt + 3*i + j] = cls->tgt_cloud->coords[i_part][3*i + j];
+      tgt_g_num[n_tgt + i] = cls->tgt_cloud->gnum[i_part][i];
+    }
+    n_tgt += cls->tgt_cloud->n_points[i_part];
+  }
 
-  // /* Search closest source points from target points */
-  // PDM_para_octree_closest_point (octree_id,
-  //                                cls->n_closest,
-  //                                n_tgt,
-  //                                tgt_coord,
-  //                                tgt_g_num,
-  //                                closest_src_gnum,
-  //                                closest_src_dist);
+  //Preparing octree copy on GPU - allocation on GPU
+  PDM_octree_t *octree = PDM_para_octree_octrees_transfert(octree_id);
+  printf("octree depth max : %d\n", octree->depth_max);
+  PDM_octree_t *d_octree = NULL;
+  gpuErrchk(cudaMalloc(&d_octree, sizeof(PDM_octree_t)));
+  //__device__ int d_n_tgt = n_tgt;
+  //int *d_n_tgt = NULL;
+  //gpuErrchk(cudaMalloc(&d_n_tgt, sizeof(int)));
+  double *d_tgt_coord = NULL;
+  gpuErrchk(cudaMalloc(&d_tgt_coord, sizeof(double)));
+  PDM_g_num_t *d_tgt_g_num = NULL;
+  gpuErrchk(cudaMalloc(&d_tgt_g_num, sizeof(PDM_g_num_t)));
+  PDM_g_num_t *d_closest_src_gnum = NULL;
+  gpuErrchk(cudaMalloc(&d_closest_src_gnum, sizeof(PDM_g_num_t)));
+  double *d_closest_src_dist = NULL;
+  gpuErrchk(cudaMalloc(&d_closest_src_dist, sizeof(double)));
+
+  //copy octree data on GPU
+  gpuErrchk(cudaMemcpy(d_octree, octree, sizeof(PDM_octree_t), cudaMemcpyHostToDevice));
+  //gpuErrchk(cudaMemcpy(d_n_tgt, n_tgt, sizeof(int), cudaMemcpyHostToDevice));
+  gpuErrchk(cudaMemcpy(d_tgt_coord, tgt_coord, sizeof(double), cudaMemcpyHostToDevice));
+  gpuErrchk(cudaMemcpy(d_tgt_g_num, tgt_g_num, sizeof(PDM_g_num_t), cudaMemcpyHostToDevice));
+  gpuErrchk(cudaMemcpy(d_closest_src_gnum, closest_src_gnum, sizeof(PDM_g_num_t), cudaMemcpyHostToDevice));
+  gpuErrchk(cudaMemcpy(d_closest_src_dist, closest_src_dist, sizeof(double), cudaMemcpyHostToDevice));
 
 
-  // /* Restore partitions */
-  // free (tgt_coord);
-  // free (tgt_g_num);
-  // n_tgt = 0;
+  printf("print from gpu\n");
+  print_from_gpu<<<1,1>>>(d_octree);
+  cudaDeviceSynchronize();
 
-  // cls->tgt_cloud->closest_src_gnum = malloc (sizeof(PDM_g_num_t *) * cls->tgt_cloud->n_part);
-  // cls->tgt_cloud->closest_src_dist = malloc (sizeof(double *)      * cls->tgt_cloud->n_part);
+  printf("Entering kernel\n");
+  /* Search closest source points from target points */
+  PDM_para_octree_closest_point_GPU<<<1,1>>> (d_octree,
+                                              cls->n_closest,
+                                              n_tgt,
+                                              d_tgt_coord,
+                                              d_tgt_g_num,
+                                              d_closest_src_gnum,
+                                              d_closest_src_dist);
+                                             
+  cudaDeviceSynchronize();
+  printf("Left kernel\n");
 
-  // for (int i_part = 0; i_part < cls->tgt_cloud->n_part; i_part++) {
-  //   int s_closest_src = cls->n_closest * cls->tgt_cloud->n_points[i_part];
 
-  //   cls->tgt_cloud->closest_src_gnum[i_part] = malloc (sizeof(PDM_g_num_t) * s_closest_src);
-  //   cls->tgt_cloud->closest_src_dist[i_part] = malloc (sizeof(double)      * s_closest_src);
+  /* Restore partitions */
+  free (tgt_coord);
+  free (tgt_g_num);
+  n_tgt = 0;
 
-  //   for (int i = 0; i < cls->tgt_cloud->n_points[i_part]; i++) {
-  //     for (int j = 0; j < cls->n_closest; j++) {
-  //       cls->tgt_cloud->closest_src_gnum[i_part][cls->n_closest*i+j] =
-  //         closest_src_gnum[n_tgt + cls->n_closest*i + j];
+  cls->tgt_cloud->closest_src_gnum = (PDM_g_num_t**)malloc (sizeof(PDM_g_num_t *) * cls->tgt_cloud->n_part);
+  cls->tgt_cloud->closest_src_dist = (double**)malloc (sizeof(double *)      * cls->tgt_cloud->n_part);
 
-  //       cls->tgt_cloud->closest_src_dist[i_part][cls->n_closest*i+j] =
-  //         closest_src_dist[n_tgt + cls->n_closest*i + j];
-  //     }
-  //   }
-  //   n_tgt += cls->n_closest * cls->tgt_cloud->n_points[i_part];
-  // }
-  // free (closest_src_gnum);
-  // free (closest_src_dist);
+  for (int i_part = 0; i_part < cls->tgt_cloud->n_part; i_part++) {
+    int s_closest_src = cls->n_closest * cls->tgt_cloud->n_points[i_part];
+
+    cls->tgt_cloud->closest_src_gnum[i_part] = (PDM_g_num_t*)malloc (sizeof(PDM_g_num_t) * s_closest_src);
+    cls->tgt_cloud->closest_src_dist[i_part] = (double*)malloc (sizeof(double)      * s_closest_src);
+
+    for (int i = 0; i < cls->tgt_cloud->n_points[i_part]; i++) {
+      for (int j = 0; j < cls->n_closest; j++) {
+        cls->tgt_cloud->closest_src_gnum[i_part][cls->n_closest*i+j] =
+          closest_src_gnum[n_tgt + cls->n_closest*i + j];
+
+        cls->tgt_cloud->closest_src_dist[i_part][cls->n_closest*i+j] =
+          closest_src_dist[n_tgt + cls->n_closest*i + j];
+      }
+    }
+    n_tgt += cls->n_closest * cls->tgt_cloud->n_points[i_part];
+  }
+  free (closest_src_gnum);
+  free (closest_src_dist);
 
 
 
   //-->GPU
   /* Free parallel octree */
-  PDM_para_octree_free_GPU (*octree_id);
-  gpuErrchk(cudaFree(octree_id));
+  PDM_para_octree_free (octree_id);
   //<--
 
 
@@ -398,7 +375,6 @@ PDM_closest_points_compute_GPU
   b_t_cpu_s   = cls->times_cpu_s[END];
   PDM_timer_resume(cls->timer);
 }
-
 
 #ifdef	__cplusplus
 }
