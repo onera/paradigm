@@ -106,13 +106,11 @@ _solve_2x2
  * Public function prototypes
  *============================================================================*/
 
-
-
 /**
- * \brief Performs intersection of two finite lines in the same plane
+ * \brief Performs intersection of two finite lines
  *
- *  Performs the intersection of two lines in the same plane. This function is more robust than
- *  PDM_line_intersection_in_3d but is unusable for any two 3D lines
+ *  Performs the intersection of two lines. This function is more robust than
+ *  PDM_line_intersection_mean_square.
  *
  * \param [in]  a1 Coordinates of the first line vertex of 'a'
  * \param [in]  a2 Coordinates of the second line vertex of 'a'
@@ -126,7 +124,7 @@ _solve_2x2
  */
 
 PDM_line_intersect_t
-PDM_line_intersection_in_3d_plane
+PDM_line_intersection
 (
  const double a1[3],
  const double a2[3],
@@ -138,8 +136,8 @@ PDM_line_intersection_in_3d_plane
 {
 
   double a1a2[3], b1b2[3], a1b1[3];
-  double cxy[2], cxz[2];
-  double Axy[2][2], Axz[2][2];
+  double cxy[2], cxz[2], cyz[2];
+  double Axy[2][2], Axz[2][2], Ayz[2][2];
 
   *u = DBL_MAX;
   *v = DBL_MAX;
@@ -161,13 +159,11 @@ PDM_line_intersection_in_3d_plane
   Axy[0][1] = -1.*b1b2[0];
   Axy[1][0] = a1a2[1];
   Axy[1][1] = -1.*b1b2[1];
-  cxy[0]    = a1b1[0];
-  cxy[1]    = a1b1[1];
+  cxy[0] = a1b1[0]; cxy[1] = a1b1[1];
 
   /*
    * Solve the system of equations
    */
-
   if (_solve_2x2 (Axy, cxy) == PDM_FALSE){
     //coplanar
     Axz[0][0] = a1a2[0];
@@ -176,7 +172,21 @@ PDM_line_intersection_in_3d_plane
     Axz[1][1] = -1.*b1b2[2];
     cxz[0] = a1b1[0]; cxz[1] = a1b1[2];
     if (_solve_2x2 (Axz, cxz) == PDM_FALSE){
-      return PDM_LINE_INTERSECT_ON_LINE;
+      Ayz[0][0] = a1a2[1];
+      Ayz[0][1] = -1.*b1b2[1];
+      Ayz[1][0] = a1a2[2];
+      Ayz[1][1] = -1.*b1b2[2];
+      cyz[0] = a1b1[1]; cyz[1] = a1b1[2];
+      if (_solve_2x2 (Ayz, cyz) == PDM_FALSE){
+        return PDM_LINE_INTERSECT_ON_LINE;
+      }
+      else {
+        //#on verifie pour x
+        *u = cyz[0];
+        *v = cyz[1];
+        if (PDM_ABS(((*u)*a1a2[0] - (*v)*b1b2[0]) - a1b1[0]) > _eps)
+          return PDM_LINE_INTERSECT_NO;
+      }
     }
     else {
       //#on verifie pour y
@@ -185,7 +195,7 @@ PDM_line_intersection_in_3d_plane
       if (PDM_ABS(((*u)*a1a2[1] - (*v)*b1b2[1]) - a1b1[1]) > _eps)
         return PDM_LINE_INTERSECT_NO;
     }
-  }
+   }
   else {
     //#on verifie pour z
     *u = cxy[0];
@@ -207,8 +217,25 @@ PDM_line_intersection_in_3d_plane
 }
 
 
+/**
+ * \brief Performs intersection of two finite lines
+ *
+ *  Performs the intersection of two lines with mean square method
+ *
+ * \param [in]  a1 Coordinates of the first line vertex of 'a'
+ * \param [in]  a2 Coordinates of the second line vertex of 'a'
+ * \param [in]  b1 Coordinates of the first line vertex of 'b'
+ * \param [in]  b2 Coordinates of the second line vertex of 'b'
+ * \param [out] u  Parameter of the intersection in line 'a' parametric coordinates
+ * \param [out] v  Parameter of the intersection in line 'b' parametric coordinates
+ *
+ * \return      \ref PDM_TRUE or \ref PDM_FALSE
+ *
+ */
+
+
 PDM_line_intersect_t
-PDM_line_intersection_3d
+PDM_line_intersection_mean_square
 (
  const double a1[3],
  const double a2[3],
