@@ -149,6 +149,11 @@ include "pdm_dmesh.pxi"
 # --------------------
 include "pdm_distant_neighbor.pxi"
 
+# PDM_gnum_location :
+# --------------------
+include "pdm_gnum_location.pxi"
+
+
 
 
 # TODO: PDM_writer, ...
