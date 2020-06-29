@@ -415,7 +415,7 @@ PDM_dbbtree_boxes_set
    * Redistribute boxes of mesh A
    */
 
-  if (1 == 0) {
+  if (1 == 1) {
 
     PDM_printf ("nEltsProc : %d\n", nEltsProc);
 
@@ -683,7 +683,7 @@ PDM_dbbtree_intersect_boxes_set
     }
 
   }
-  if (1 == 0) {
+  if (1 == 1) {
     PDM_printf ("_extents m1 :\n");
     idx1 = 0;
     for (int i = 0; i < nEltsProc; i++) {
@@ -718,7 +718,7 @@ PDM_dbbtree_intersect_boxes_set
                 _extents+(2*i+1)*_dbbt->boxes->dim);
   }
 
-  if (1 == 0) {
+  if (1 == 1) {
 
     PDM_printf ("nEltsProc : %d\n", nEltsProc);
 
@@ -783,12 +783,19 @@ PDM_dbbtree_intersect_boxes_set
      * Distribute boxes on intersection ranks
      */
 
-    if (1==0){
+    if (1==1){
       PDM_printf ("box_l_num_shared : \n");
       for (int i = 0; i < nUsedRank; i++) {
+        printf("[%d] : %12.5e %12.5e %12.5e %12.5e %12.5e %12.5e\n",
+               i, _dbbt->rankBoxes->local_boxes->extents[6*i]
+               , _dbbt->rankBoxes->local_boxes->extents[6*i+1]
+               , _dbbt->rankBoxes->local_boxes->extents[6*i+2]
+               , _dbbt->rankBoxes->local_boxes->extents[6*i+3]
+               , _dbbt->rankBoxes->local_boxes->extents[6*i+4]
+               , _dbbt->rankBoxes->local_boxes->extents[6*i+5]);
         printf("[%d] : ",i);
         for (int j = (*box_index)[i]; j < (*box_index)[i+1]; j++) {
-          PDM_printf (" %d",  (*box_l_num)[j]);
+          PDM_printf (" %ld",  boxes->local_boxes->g_num[(*box_l_num)[j]]);
         }
         PDM_printf ("\n");
       }
@@ -822,7 +829,7 @@ PDM_dbbtree_intersect_boxes_set
      * Redistribute boxes on intersecting ranks
      */
 
-    if (1 == 0) {
+    if (1 == 1) {
       printf ("Boxes B apres redistribution : %d\n", boxes->local_boxes->n_boxes);
       for (int i = 0; i < boxes->local_boxes->n_boxes; i++) {
         printf (" %ld", boxes->local_boxes->g_num[i]);
