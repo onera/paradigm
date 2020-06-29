@@ -106,6 +106,17 @@ PDM_mean_values_polygon
  double            weights[]
  );
 
+void
+PDM_mean_value_coordinates_polygon_3d_2
+(
+ const int    n_vtx,
+ const double vtx_coord[],
+ const int    n_pts,
+ const double pts_coord[],
+ const double normal[3],
+ double       mean_value_coord[]
+ );
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
