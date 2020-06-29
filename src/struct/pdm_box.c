@@ -1142,8 +1142,6 @@ PDM_box_set_recv_data_from_origin_distrib
   *current_distrib_data = NULL;
   unsigned char **_origin_distrib_data = (unsigned char **) origin_distrib_data;
 
-  long** l = (long**)origin_distrib_data;
-
   /* Send origin properties to the origin process :
    *   - Compute the number element to send for any process
    *   - Exchange -> origin these numbers all_to_all
@@ -1493,6 +1491,7 @@ PDM_box_set_send_data_to_origin_distrib
 
   int n_boxes = _local_boxes->n_boxes;
   int *origin = _local_boxes->origin;
+  int *n_boxes_orig = _local_boxes->n_boxes_orig;
 
   int s_comm;
   PDM_MPI_Comm_size (boxes->comm, &s_comm);
@@ -1597,6 +1596,13 @@ PDM_box_set_send_data_to_origin_distrib
                       boxes->comm);
 
     int n_elt = orig_shift[s_comm];
+
+    for (int i = 0; i < _local_boxes->n_part_orig; i++) {
+      for (int j = 0; j < n_boxes_orig[i]; j++) {
+        origin_distrib_stride[i][j] = 0;
+      }
+    }
+
     for (int i = 0; i < orig_shift[s_comm]; i++) {
       int i_part = orig_loc[2*i];
       int iElt  = orig_loc[2*i+1];
