@@ -886,7 +886,7 @@ PDM_mesh_location_compute
 {
   const float eps_dist = 1.e-6;
 
-  const int DEBUG = 0;
+  const int DEBUG = 1;
   const int dim = 3;
 
   _PDM_location_t *location = _get_from_id (id);
@@ -1322,11 +1322,52 @@ PDM_mesh_location_compute
       /*
        * Keep closest elements
        */
+      PDM_g_num_t *block_g_num = PDM_part_to_block_block_gnum_get (ptb);
+      PDM_g_num_t *block_distrib_idx = PDM_part_to_block_distrib_index_get (ptb);
+      PDM_g_num_t n_pts_block2 = block_distrib_idx[my_rank+1] - block_distrib_idx[my_rank];
+      PDM_g_num_t *block_location2 = malloc (sizeof(PDM_g_num_t) * n_pts_block2);
+      int *block_bar_coords_stride2 = malloc (sizeof(int) * n_pts_block2);
+      for (int i = 0; i < n_pts_block2; i++) {
+        block_location2[i] = -1;
+      }
+
       int *block_idx1 = malloc (sizeof(int) * (n_pts_block + 1));
       block_idx1[0] = 0;
       for (int i = 0; i < n_pts_block; i++) {
         block_idx1[i+1] = block_idx1[i] + block_stride[i];
       }
+
+      int *idx_min = malloc (sizeof(int) * n_pts_block2);
+      idx = 0;
+      for (int i = 0; i < n_pts_block; i++) {
+        int n_elt = block_stride[i];
+
+        idx_min[i] = idx;
+
+        if (n_elt > 1) {
+          float min_dist = HUGE_VAL;
+          PDM_Mesh_nodal_elt_t type_min = -1;
+          idx_min[i] = -1;
+
+          for (int j = idx; j < idx + n_elt; j++) {
+            if (min_dist > block_distance1[j] ||
+                (min_dist < block_distance1[j] + eps_dist &&
+                 type_min > block_elt_type1[j])) {
+              min_dist = block_distance1[j];
+              type_min = block_elt_type1[j];
+              idx_min[i] = j;
+            }
+          }
+        }
+
+        int _ipt = block_g_num[i] - 1 - block_distrib_idx[my_rank];
+        block_location2[_ipt] = block_location1[idx_min[i]];
+        block_bar_coords_stride2[_ipt] = block_n_vtx_elt1[idx_min[i]];
+
+        idx += n_elt;
+      }
+
+
 
       int *block_bar_coords_idx1 = malloc (sizeof(int) * (block_idx1[n_pts_block] + 1));
       block_bar_coords_idx1[0] = 0;
@@ -1334,48 +1375,26 @@ PDM_mesh_location_compute
         block_bar_coords_idx1[i+1] = block_bar_coords_idx1[i] + block_n_vtx_elt1[i];
       }
 
-      int *block_bar_coords_idx2 = malloc (sizeof(int) * (block_idx1[n_pts_block] + 1));
+      int *block_bar_coords_idx2 = malloc (sizeof(int) * (n_pts_block2 + 1));
       block_bar_coords_idx2[0] = 0;
-      double *block_bar_coords2 = malloc (sizeof(double) * block_bar_coords_idx1[block_idx1[n_pts_block]]);
-      free (block_idx1);
-
-      PDM_g_num_t *block_location2 = malloc (sizeof(PDM_g_num_t) * n_pts_block);
-
-      idx = 0;
-      for (int i = 0; i < n_pts_block; i++) {
-        int n_elt = block_stride[i];
-
-        assert (n_elt > 0);
-
-        int jmin = 0;
-
-        if (n_elt > 1) {
-          float min_dist = HUGE_VAL;
-          PDM_Mesh_nodal_elt_t type_min = -1;
-          jmin = -1;
-
-          for (int j = 0; j < n_elt; j++) {
-            if (min_dist > block_distance1[idx + j] ||
-                (min_dist < block_distance1[idx + j] + eps_dist &&
-                 type_min > block_elt_type1[idx + j])) {
-              min_dist = block_distance1[idx + j];
-              type_min = block_elt_type1[idx + j];
-              jmin = j;
-            }
-          }
+      for (int i = 0; i < n_pts_block2; i++) {
+        if (block_location2[i] < 0) {
+          block_bar_coords_stride2[i] = 0;
         }
 
-        jmin += idx;
-        block_location2[i] = block_location1[jmin];
-
-        block_bar_coords_idx2[i+1] = block_bar_coords_idx2[i] + block_n_vtx_elt1[jmin];
-        for (int k = 0; k < block_n_vtx_elt1[jmin]; k++) {
-          block_bar_coords2[block_bar_coords_idx2[i] + k] =
-            block_bar_coords1[block_bar_coords_idx1[jmin] + k];
-        }
-
-        idx += n_elt;
+        block_bar_coords_idx2[i+1] = block_bar_coords_idx2[i] + block_bar_coords_stride2[i];
       }
+
+      double *block_bar_coords2 = malloc (sizeof(double) * block_bar_coords_idx2[n_pts_block2]);
+      for (int i = 0; i < n_pts_block; i++) {
+        int _ipt = block_g_num[i] - 1 - block_distrib_idx[my_rank];
+
+        for (int j = 0; j < block_bar_coords_stride2[_ipt]; j++) {
+          block_bar_coords2[block_bar_coords_idx2[_ipt] + j] =
+            block_bar_coords1[block_bar_coords_idx1[idx_min[i]] + j];
+        }
+      }
+      free (idx_min);
       free (block_stride);
       free (block_n_vtx_elt1);
       free (block_bar_coords_idx1);
@@ -1383,7 +1402,7 @@ PDM_mesh_location_compute
       free (block_elt_type1);
       free (block_location1);
       free (block_bar_coords1);
-
+      free (block_bar_coords_idx2);
 
       // block_to_part_exch...
       PDM_part_to_block_t *ptb2 = PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
@@ -1407,6 +1426,11 @@ PDM_mesh_location_compute
       int one = 1;
 
       pcloud_location = malloc (sizeof(PDM_g_num_t) * n_pts_pcloud);
+      if (1) {
+        for (int i = 0; i < n_pts_pcloud; i++) {
+          pcloud_location[i] = -1;
+        }
+      }
       PDM_block_to_part_exch (btp,
                               sizeof(PDM_g_num_t),
                               PDM_STRIDE_CST,
@@ -1416,11 +1440,11 @@ PDM_mesh_location_compute
                               (void **) &pcloud_location);
       free (block_location2);
 
-      int *block_bar_coords_stride2 = malloc (sizeof(int) * n_pts_block);
+      /*int *block_bar_coords_stride2 = malloc (sizeof(int) * n_pts_block);
       for (int i = 0; i < n_pts_block; i++) {
         block_bar_coords_stride2[i] = block_bar_coords_idx2[i+1] - block_bar_coords_idx2[i];
       }
-      free (block_bar_coords_idx2);
+      free (block_bar_coords_idx2);*/
 
       pcloud_weights_stride = malloc (sizeof(int) * n_pts_pcloud);
       PDM_block_to_part_exch (btp,
@@ -1466,6 +1490,7 @@ PDM_mesh_location_compute
       for (int ipt = 0; ipt < n_pts_pcloud; ipt++) {
         dist_min[ipt] = HUGE_VAL;
         type_min[ipt] = -1;
+        idx_min[ipt] = 0;
       }
 
       for (int i = 0; i < n_pts; i++) {

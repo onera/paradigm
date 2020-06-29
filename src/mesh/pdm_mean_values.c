@@ -78,18 +78,18 @@ PDM_mean_value_coordinates_polygon_2d
   /* Compute polygon bounds */
   double bounds[4] = {DBL_MAX, -DBL_MAX,
                       DBL_MAX, -DBL_MAX};
-  double char_length = 0.;
+  double char_length = eps_base;
   for (ivtx = 0; ivtx < n_vtx; ivtx++) {
     for (idim = 0; idim < 2; idim++) {
       bounds[2*idim]   = PDM_MIN (bounds[2*idim],   vtx_coord[2*ivtx+idim]);
       bounds[2*idim+1] = PDM_MAX (bounds[2*idim+1], vtx_coord[2*ivtx+idim]);
 
-      char_length = PDM_MAX (char_length, bounds[2*idim+1] - bounds[2*idim+1]);
+      char_length = PDM_MAX (char_length, bounds[2*idim+1] - bounds[2*idim]);
     }
   }
 
-  double eps2 = eps_base * char_length;
-  eps2 *= eps2;
+  const double eps = eps_base * char_length;
+  const double eps2 = eps * eps;
 
   double *s = malloc (sizeof(double) * n_vtx * 2);
   double *r = malloc (sizeof(double) * n_vtx);
@@ -181,33 +181,14 @@ PDM_mean_value_coordinates_polygon_2d
       A[ivtx] = veci[0] * vecj[1] - veci[1] * vecj[0];
       D[ivtx] = PDM_DOT_PRODUCT_2D (veci, vecj);
 
-      /* Point on line supporting edge */
-      if (fabs(A[ivtx]) < eps_base && D[ivtx] < 0) {
+      /* Point on edge */
+      if (fabs(A[ivtx]) < eps) {
         for (int i = 0; i < n_vtx; i++) {
           _bc[i] = 0.;
         }
 
-#if 1
-        double inv_denom = 1. / (r[ivtx] + r[jvtx]);
-        _bc[ivtx] = r[jvtx] * inv_denom;
-        _bc[jvtx] = r[ivtx] * inv_denom;
-#else
-        double vec[2];
-        vec[0] = vtx_coord[2*jvtx] - vtx_coord[2*ivtx];
-        vec[1] = vtx_coord[2*jvtx+1] - vtx_coord[2*ivtx+1];
-
-        double lvec2 = PDM_DOT_PRODUCT_2D (vec, vec);
-        double t;
-        if (lvec2 < eps2) {
-          /* Degenerate edge */
-          t = 0.0;
-        } else {
-          t = - PDM_DOT_PRODUCT_2D (veci, vec) / lvec2;
-        }
-
-        _bc[ivtx] = 1. - t;
-        _bc[jvtx] =      t;
-#endif
+        _bc[ivtx] = r[jvtx] / (r[ivtx] + r[jvtx]);
+        _bc[jvtx] = r[ivtx] / (r[ivtx] + r[jvtx]);
 
         special_case = PDM_TRUE;
         break;
@@ -219,26 +200,18 @@ PDM_mean_value_coordinates_polygon_2d
     }
 
     /* General case (point strictly inside polygon) */
-    double sum_w = 0.0;
+    double sum_w = 0.;
     for (int i = 0; i < n_vtx; i++) {
       int ip = (i + 1) % n_vtx;
       int im = (i - 1 + n_vtx) % n_vtx;
 
-      double w = 0.0;
-      if (fabs(A[i]) > eps_base) {
-        w += (r[ip] - D[i] / r[i]) / A[i];
-      }
+      _bc[i] = (r[ip] - D[i]/r[i]) / A[i] + (r[im] - D[im]/r[i]) / A[im];
 
-      if (fabs(A[im]) > eps_base) {
-        w += (r[im] - D[im] / r[i]) / A[im];
-      }
-
-      sum_w += w;
-      _bc[i] = w;
+      sum_w += _bc[i];
     }
 
     if (fabs(sum_w) > eps_base) {
-      sum_w = 1.0 / sum_w;
+      sum_w = 1. / sum_w;
       for (int i = 0; i < n_vtx; i++) {
         _bc[i] *= sum_w;
       }
@@ -248,6 +221,11 @@ PDM_mean_value_coordinates_polygon_2d
       printf("!!! sum_w = %g\n", sum_w);
     }
   }
+
+  free (s);
+  free (r);
+  free (A);
+  free (D);
 }
 
 
@@ -607,7 +585,7 @@ PDM_mean_values_polyhedron
   /*printf("\n\n\nPDM_mean_values_polyhedron for pt %f %f %f\n",
     pt_coord[0], pt_coord[1], pt_coord[2]);*/
   // Begin by initializing weights.
-  int ivtx, idim, i, im;
+  int ivtx, jvtx, idim, i, im;
   double mag, l, l2;
   double *ui, *uip;
 
@@ -776,21 +754,45 @@ PDM_mean_values_polyhedron
         weights[ivtx] = 0.;
       }
 
-      if (DEBUG) {
+      if (1) {//DEBUG) {
         printf("Point lies on polygon\n");
       }
 
       // recompute theta, the theta computed previously are not robust
       for (i = 0; i < n_vtx_face; i++) {
+
+        ivtx = _face_vtx[i] - 1;
+
         if (face_orientation[iface] < 0) {
-          ui  = u + 3*(_face_vtx[i] - 1);
-          uip = u + 3*(_face_vtx[(i+n_vtx_face-1)%n_vtx_face] - 1);
+          jvtx = _face_vtx[(i + n_vtx_face - 1)%n_vtx_face] - 1;
         } else {
-          ui  = u + 3*(_face_vtx[i] - 1);
-          uip = u + 3*(_face_vtx[(i+1)%n_vtx_face] - 1);
+          jvtx = _face_vtx[(i + 1)%n_vtx_face] - 1;
         }
 
+        ui  = u + 3 * ivtx;
+        uip = u + 3 * jvtx;
+
         l2 = _distance2 (ui, uip);
+        double denom = 1.0 - 0.25 * l2;
+        if (0) {//denom < eps2) {
+          /* l = 2 <=> theta = PI <=> point on edge (i, ip) */
+          double e[3] = {vtx_coord[3*jvtx]     - vtx_coord[3*ivtx],
+                         vtx_coord[3*jvtx + 1] - vtx_coord[3*ivtx + 1],
+                         vtx_coord[3*jvtx + 2] - vtx_coord[3*ivtx + 2]};
+          double ee = PDM_DOT_PRODUCT (e, e);
+
+          double d[3] = {pt_coord[0] - vtx_coord[3*ivtx],
+                         pt_coord[1] - vtx_coord[3*ivtx + 1],
+                         pt_coord[2] - vtx_coord[3*ivtx + 2]};
+
+          double de = PDM_DOT_PRODUCT (d, e);
+
+          double t = de / ee;
+          weights[ivtx] = 1. - t;
+          weights[jvtx] = t;
+          return;
+        }
+
         tan_half_alpha[i] = 0.5 * sqrt(l2 / (1.0 - 0.25 * l2));
       }
 
@@ -868,11 +870,12 @@ PDM_mean_values_polygon
 )
 {
   int ivtx, jvtx, i, ip, j, idim;
-  const double eps = 1e-8;
+  const double eps = 1e-12;
   const double eps2 = eps * eps;
 
-  double *inv_dist = malloc (sizeof(double) * n_vtx);
+  double *dist = malloc (sizeof(double) * n_vtx);
   double *u = malloc (sizeof(double) * n_vtx * 3);
+  double barycenter[3] = {0., 0., 0.};
   for (i = 0; i < n_vtx; i++) {
     // point-to-vertex vector
     double *_u = u + 3*i;
@@ -885,6 +888,7 @@ PDM_mean_values_polygon
 
     for (idim = 0; idim < 3; idim++) {
       _u[idim] = vtx_coord[3*ivtx + idim] - pt_coord[idim];
+      barycenter[idim] += vtx_coord[3*ivtx + idim];
     }
 
     // distance
@@ -897,18 +901,55 @@ PDM_mean_values_polygon
       }
 
       weights[i] = 1.0;
-      free (inv_dist);
+      free (dist);
       free (u);
       return;
     }
 
 
     // project onto unit sphere
-    inv_dist[i] = 1. / sqrt(dist2);
+    dist[i] = sqrt(dist2);
     for (idim = 0; idim < 3; idim++) {
-      _u[idim] *= inv_dist[i];
+      _u[idim] /= dist[i];
     }
   }
+
+  for (idim = 0; idim < 3; idim++) {
+    barycenter[idim] /= (float) n_vtx;
+  }
+
+  double poly_normal[3] = {0., 0., 0.};
+  double tmp[3];
+  double *normal = malloc (sizeof(double) * 3 * n_vtx);
+  for (i = 0; i < n_vtx; i++) {
+    ip = (i+1)%n_vtx;
+
+    const double *ui  = u + 3*i;
+    const double *uip = u + 3*ip;
+    double *ni = normal + 3*i;
+
+    PDM_CROSS_PRODUCT (ni, ui, uip);
+
+    if (poly_vtx == NULL) {
+      ivtx = i;
+      jvtx = ip;
+    } else {
+      ivtx = poly_vtx[i] - 1;
+      jvtx = poly_vtx[ip] - 1;
+    }
+    double vi[3] = {vtx_coord[3*ivtx]     - barycenter[0],
+                    vtx_coord[3*ivtx + 1] - barycenter[1],
+                    vtx_coord[3*ivtx + 2] - barycenter[2]};
+    double vip[3] = {vtx_coord[3*jvtx]     - barycenter[0],
+                     vtx_coord[3*jvtx + 1] - barycenter[1],
+                     vtx_coord[3*jvtx + 2] - barycenter[2]};
+
+    PDM_CROSS_PRODUCT (tmp, vi, vip);
+    poly_normal[0] += tmp[0];
+    poly_normal[1] += tmp[1];
+    poly_normal[2] += tmp[2];
+  }
+  //printf("%f %f %f\n", poly_normal[0], poly_normal[1], poly_normal[2]);
 
   double *tan_half_theta = malloc (sizeof(double) * n_vtx);
   double l2;
@@ -918,44 +959,33 @@ PDM_mean_values_polygon
 
     l2 = _distance2 (ui, uip);
     double denom = 1.0 - 0.25 * l2;
-    if (denom < eps2) {
+    if (denom < eps) {
       //tan_half_theta[i] = 0.;
       /* l = 2 <=> theta = PI <=> point on edge (i, ip) */
       ip = (i+1)%n_vtx;
       for (j = 0; j < n_vtx; j++) {
         weights[j] = 0.;
       }
-      if (poly_vtx == NULL) {
-        ivtx = i;
-        jvtx = ip;
-      } else {
-        ivtx = poly_vtx[i] - 1;
-        jvtx = poly_vtx[ip] - 1;
-      }
-      double v[3] = {vtx_coord[3*jvtx]     - vtx_coord[3*ivtx],
-                     vtx_coord[3*jvtx + 1] - vtx_coord[3*ivtx + 1],
-                     vtx_coord[3*jvtx + 2] - vtx_coord[3*ivtx + 2]};
-      double vv = PDM_DOT_PRODUCT (v, v);
 
-      double s[3] = {pt_coord[0] - vtx_coord[3*ivtx],
-                     pt_coord[1] - vtx_coord[3*ivtx + 1],
-                     pt_coord[2] - vtx_coord[3*ivtx + 2]};
-
-      double sv = PDM_DOT_PRODUCT (s, v);
-
-      double t = sv / vv;
-      weights[i] = 1. - t;
-      weights[ip] = t;
+      weights[i] = dist[ip] / (dist[i] + dist[ip]);
+      weights[ip] = dist[i] / (dist[i] + dist[ip]);
+      free (dist);
+      free (u);
+      free (normal);
       return;
 
     } else {
       tan_half_theta[i] = 0.5 * sqrt(l2 / denom);
+      if (0) {//PDM_DOT_PRODUCT (poly_normal, (normal + 3*i)) < 0) {
+        tan_half_theta[i] = -tan_half_theta[i];
+      }
     }
   }
+  free (normal);
 
   double sum_w = 0.0;
   for (i = 0; i < n_vtx; i++) {
-    weights[i] = (tan_half_theta[(i + n_vtx - 1)%n_vtx] + tan_half_theta[i]) * inv_dist[i];
+    weights[i] = (tan_half_theta[(i + n_vtx - 1)%n_vtx] + tan_half_theta[i]) / dist[i];
     sum_w += weights[i];
   }
 
@@ -966,11 +996,210 @@ PDM_mean_values_polygon
     }
   }
 
-  free (inv_dist);
+  free (dist);
   free (u);
   free (tan_half_theta);
 }
 
+
+
+void
+PDM_mean_value_coordinates_polygon_3d_2
+(
+ const int    n_vtx,
+ const double vtx_coord[],
+ const int    n_pts,
+ const double pts_coord[],
+ const double normal[3],
+ double       mean_value_coord[]
+)
+{
+  const double eps_base = 1e-12;
+  int ipt, ivtx, jvtx, idim;
+
+  double *_normal = NULL;
+  if (normal != NULL) {
+    _normal = (double *) normal;
+  } else {
+    _normal = malloc (sizeof(double) * 3);
+    PDM_plane_normal (n_vtx,
+                      vtx_coord,
+                      _normal);
+  }
+
+  /* Compute polygon bounds */
+  double bounds[6] = {DBL_MAX, -DBL_MAX,
+                      DBL_MAX, -DBL_MAX,
+                      DBL_MAX, -DBL_MAX};
+  double char_length = eps_base;
+  for (ivtx = 0; ivtx < n_vtx; ivtx++) {
+    for (idim = 0; idim < 3; idim++) {
+      bounds[2*idim]   = PDM_MIN (bounds[2*idim],   vtx_coord[3*ivtx+idim]);
+      bounds[2*idim+1] = PDM_MAX (bounds[2*idim+1], vtx_coord[3*ivtx+idim]);
+
+      char_length = PDM_MAX (char_length, bounds[2*idim+1] - bounds[2*idim]);
+    }
+  }
+
+
+  const double eps = eps_base * char_length;
+  const double eps2 = eps * eps;
+
+  double *s = malloc (sizeof(double) * n_vtx * 3);
+  double *r = malloc (sizeof(double) * n_vtx);
+  double *A = malloc (sizeof(double) * n_vtx);
+  double *D = malloc (sizeof(double) * n_vtx);
+
+  /* Loop on points */
+  for (ipt = 0; ipt < n_pts; ipt++) {
+
+    const double *_pt = pts_coord + 3 * ipt;
+    double       *_bc = mean_value_coord + n_vtx * ipt;
+
+    /* If current point is outside the polygon,
+       consider its projection on the polygon boundary */
+    if (PDM_polygon_point_in3d (_pt,
+                                n_vtx,
+                                vtx_coord,
+                                char_length,
+                                bounds,
+                                _normal) != PDM_POLYGON_INSIDE) {
+      double dist2_min = DBL_MAX;
+      int i_min;
+      double t_min;
+
+      for (ivtx = 0; ivtx < n_vtx; ivtx++) {
+        jvtx = (ivtx + 1) % n_vtx;
+        double t;
+        double closest[3];
+        double dist2 = PDM_line_distance (_pt,
+                                          vtx_coord + 3*ivtx,
+                                          vtx_coord + 3*jvtx,
+                                          &t,
+                                          closest);
+
+        if (dist2 < dist2_min) {
+          dist2_min = dist2;
+          i_min = ivtx;
+
+          if (t < 0.) {
+            t_min = 0.;
+          } else if (t > 1.) {
+            t_min = 1.;
+          } else  {
+            t_min = t;
+          }
+        }
+      }
+
+      for (int i = 0; i < n_vtx; i++) {
+        _bc[i] = 0.;
+      }
+      _bc[i_min]           = 1.0 - t_min;
+      _bc[(i_min+1)%n_vtx] = t_min;
+      continue;
+    }
+
+
+    PDM_bool_t special_case = PDM_FALSE;
+    for (ivtx = 0; ivtx < n_vtx; ivtx++) {
+      double *vec = s + 3*ivtx;
+      for (idim = 0; idim < 3; idim++) {
+        vec[idim] = vtx_coord[3*ivtx + idim] - _pt[idim];
+      }
+      r[ivtx] = PDM_DOT_PRODUCT (vec, vec);
+
+      if (r[ivtx] < eps2) {
+        /* Point coincident with vertex */
+        for (int i = 0; i < n_vtx; i++) {
+          _bc[i] = 0.;
+        }
+        _bc[ivtx] = 1.;
+
+        special_case = PDM_TRUE;
+        break;
+      }
+
+      else {
+        r[ivtx] = sqrt (r[ivtx]);
+      }
+    }
+
+
+    if (special_case == PDM_TRUE) {
+      continue;
+    }
+
+
+    for (ivtx = 0; ivtx < n_vtx; ivtx++) {
+      jvtx = (ivtx + 1) % n_vtx;
+      double *veci = s + 3*ivtx;
+      double *vecj = s + 3*jvtx;
+
+      double vi_x_vj[3];
+      PDM_CROSS_PRODUCT (vi_x_vj, veci, vecj);
+      A[ivtx] = PDM_MODULE (vi_x_vj);
+      if (PDM_DOT_PRODUCT (vi_x_vj, _normal) < 0) {
+        A[ivtx] = -A[ivtx];
+      }
+      D[ivtx] = PDM_DOT_PRODUCT (veci, vecj);
+
+      /* Point on edge */
+      if (fabs(A[ivtx]) < eps) {
+        for (int i = 0; i < n_vtx; i++) {
+          _bc[i] = 0.;
+        }
+
+        _bc[ivtx] = r[jvtx] / (r[ivtx] + r[jvtx]);
+        _bc[jvtx] = r[ivtx] / (r[ivtx] + r[jvtx]);
+
+        special_case = PDM_TRUE;
+        break;
+      }
+    }
+
+    if (special_case == PDM_TRUE) {
+      continue;
+    }
+
+    /* General case (point strictly inside polygon) */
+    double sum_w = 0.0;
+    for (int i = 0; i < n_vtx; i++) {
+      int ip = (i + 1) % n_vtx;
+      int im = (i - 1 + n_vtx) % n_vtx;
+
+      _bc[i] = (r[ip] - D[i]/r[i]) / A[i] + (r[im] - D[im]/r[i]) / A[im];
+
+      sum_w += _bc[i];
+    }
+
+    if (fabs(sum_w) > eps_base) {
+      sum_w = 1.0 / sum_w;
+      for (int i = 0; i < n_vtx; i++) {
+        _bc[i] *= sum_w;
+      }
+    }
+
+    else {
+      printf("!!! sum_w = %g\n", sum_w);
+    }
+
+  } // End of loop on points
+
+  free (s);
+  free (r);
+  free (A);
+  free (D);
+
+  if (normal == NULL) {
+    free (_normal);
+  }
+}
+
+
+
+
 #ifdef __cplusplus
+
 }
 #endif /* __cplusplus */

@@ -80,6 +80,7 @@ _read_args(int            argc,
            PDM_g_num_t   *n_vtx_seg,
            double        *length,
            double        *tolerance,
+           double        *marge,
            int           *n_part,
            PDM_g_num_t   *n_pts,
            int           *post,
@@ -117,6 +118,13 @@ _read_args(int            argc,
         _usage(EXIT_FAILURE);
       else
         *tolerance = atof(argv[i]);
+    }
+    else if (strcmp(argv[i], "-m") == 0) {
+      i++;
+      if (i >= argc)
+        _usage(EXIT_FAILURE);
+      else
+        *marge = atof(argv[i]);
     }
     else if (strcmp(argv[i], "-n_part") == 0) {
       i++;
@@ -186,6 +194,37 @@ _gen_cloud_random
 }
 
 
+static void
+_random_cloud
+(
+ const int      n_pts,
+ const double   xyz_min[3],
+ const double   xyz_max[3],
+ const int      n_procs,
+ const int      my_rank,
+ double       **coord,
+ int           *n_pts_l
+ )
+{
+  double length[3] = {xyz_max[0] - xyz_min[0],
+                      xyz_max[1] - xyz_min[1],
+                      xyz_max[2] - xyz_min[2]};
+
+
+  *n_pts_l = (int) (n_pts/n_procs);
+  *coord = malloc (sizeof(double) * 3 * (*n_pts_l));
+  double *_coord = *coord;
+  double x;
+  int idx = 0;
+  for (PDM_g_num_t i = 0; i < n_procs*(*n_pts_l); i++) {
+    for (int idim = 0; idim < 3; idim++) {
+      x = xyz_min[idim] + length[idim] * (double) rand() / ((double) RAND_MAX);
+      if (i%n_procs == my_rank) {
+        _coord[idx++] = x;
+      }
+    }
+  }
+}
 
 
 /**
@@ -203,7 +242,8 @@ int main(int argc, char *argv[])
 
   PDM_g_num_t n_vtx_seg = 10;
   double      length    = 1.;
-  double      tolerance = 1e-9;
+  double      tolerance = 1e-6;
+  double      marge     = 0.;
   int         n_part    = 1;
   int         post      = 0;
 #ifdef PDM_HAVE_PARMETIS
@@ -228,6 +268,7 @@ int main(int argc, char *argv[])
              &n_vtx_seg,
              &length,
              &tolerance,
+             &marge,
              &n_part,
              &n_pts,
              &post,
@@ -370,12 +411,25 @@ int main(int argc, char *argv[])
 
   int n_pts_l;
   double *pts_coords = NULL;
+#if 0
   _gen_cloud_random (n_pts,
                      length,
                      n_procs,
                      my_rank,
                      &pts_coords,
                      &n_pts_l);
+#else
+  marge *= length;
+  double xyz_min[3] = {-marge, -marge, -marge};
+  double xyz_max[3] = {length + marge, length + marge, length + marge};
+  _random_cloud (n_pts,
+                 xyz_min,
+                 xyz_max,
+                 n_procs,
+                 my_rank,
+                 &pts_coords,
+                 &n_pts_l);
+#endif
 
   int id_gnum = PDM_gnum_create (3, 1, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD);
 
@@ -557,6 +611,12 @@ int main(int argc, char *argv[])
     int k = (int) floor (p[2] / cell_side);
 
     PDM_g_num_t box_gnum = 1 + i + n_cell_seg*(j + n_cell_seg*k);
+
+    if (p[0] < -tolerance || p[0] > length + tolerance ||
+        p[1] < -tolerance || p[1] > length + tolerance ||
+        p[2] < -tolerance || p[2] > length + tolerance) {
+      box_gnum = -1;
+    }
 
     //printf("%d: (%ld) | (%ld)\n", ipt, location_elt_gnum[ipt], box_gnum);
     assert (location_elt_gnum[ipt] == box_gnum);
