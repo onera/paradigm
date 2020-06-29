@@ -1722,7 +1722,7 @@ PDM_box_set_send_data_to_origin_distrib
       int i_part = orig_loc[2*i];
       int iElt  = orig_loc[2*i+1];
 
-      int idx   = _origin_distrib_idx[i_part][iElt];
+      int idx   = _origin_distrib_idx[i_part][iElt] * (int) data_size;
 
       int s_block = (_origin_distrib_idx[i_part][iElt+1] - _origin_distrib_idx[i_part][iElt])
         * (int) data_size;
@@ -1792,7 +1792,8 @@ PDM_box_set_send_data_to_origin_distrib
     }
 
     idx1  = 0;
-    for (int i = 0; i < orig_shift[s_comm]; i++) {
+    int n_elt = orig_shift[s_comm] / s_block;
+    for (int i = 0; i < n_elt; i++) {
       int i_part = orig_loc[2*i];
       int iElt  = orig_loc[2*i+1];
 
