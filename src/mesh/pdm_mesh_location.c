@@ -886,7 +886,7 @@ PDM_mesh_location_compute
 {
   const float eps_dist = 1.e-6;
 
-  const int DEBUG = 1;
+  const int DEBUG = 0;
   const int dim = 3;
 
   _PDM_location_t *location = _get_from_id (id);
@@ -1056,7 +1056,7 @@ PDM_mesh_location_compute
         idx++;
       }
     }
-
+    printf("n_pts_pcloud = %d\n", n_pts_pcloud);
 
     /*
      * Get points inside bounding boxes of elements
@@ -1179,8 +1179,8 @@ PDM_mesh_location_compute
 
     float  *distance         = NULL;
     double *projected_coords = NULL;
-    int    *bar_coords_idx   = NULL;
-    double *bar_coords       = NULL;
+    int    *weights_idx   = NULL;
+    double *weights       = NULL;
 
     const double tolerance = 1e-6;
     int base_element_num = 0;//???
@@ -1194,8 +1194,8 @@ PDM_mesh_location_compute
                               base_element_num,
                               &distance,
                               &projected_coords,
-                              &bar_coords_idx,
-                              &bar_coords);
+                              &weights_idx,
+                              &weights);
 
     if (DEBUG) {
       for (int i = 0; i < n_pts; i++) {
@@ -1203,356 +1203,252 @@ PDM_mesh_location_compute
         printf("\t  coords = (%f, %f, %f)\n", pts_coord[dim*i], pts_coord[dim*i+1], pts_coord[dim*i+2]);
         printf("\tlocation = (%ld)\n", pts_location[i]);
         printf("\tdistance = %f\n", distance[i]);
-        printf("\t  bar_co =");
-        double sum = 0;
-        for (int j = bar_coords_idx[i]; j < bar_coords_idx[i+1]; j++) {
-          printf(" %f", (float) bar_coords[j]);
-          sum += bar_coords[j];
+        printf("\t weights =");
+        for (int j = weights_idx[i]; j < weights_idx[i+1]; j++) {
+          printf(" %f", (float) weights[j]);
         }
-        printf("  (sum = %f)\n\n", sum);
+        printf("\n");
       }
     }
     free (pts_coord);
     free (pts_idx);
 
 
-
+    /*
+     * Merge location data
+     */
     PDM_g_num_t *pcloud_location       = NULL;
     int         *pcloud_weights_stride = NULL;
     int         *pcloud_weights_idx    = NULL;
     double      *pcloud_weights        = NULL;
 
-    /* Multiple ranks */
-    if (n_procs > 1) {
+    /*
+     *   1) Part-to-block
+     */
+    PDM_part_to_block_t *ptb2 = PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                          PDM_PART_TO_BLOCK_POST_MERGE,
+                                                          1.,
+                                                          &pcloud_g_num,
+                                                          NULL,
+                                                          &n_pts_pcloud,
+                                                          1,
+                                                          location->comm);
 
-      /*
-       * Merge location data of each point
-       *   part_to_block_exchange : pts_location, pts_distance, bar_coords...
-       *   (for each point, keep data linked to element with minimal distance,
-       *    if two elements are at the same distance, keep the one with smallest type)
-       *
-       */
+    PDM_g_num_t *block_g_num2 = PDM_part_to_block_block_gnum_get (ptb2);
+    PDM_g_num_t *block_distrib_idx = PDM_part_to_block_distrib_index_get (ptb2);
 
-      PDM_part_to_block_t *ptb = PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+    PDM_part_to_block_t *ptb1 = PDM_part_to_block_create2 (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                            PDM_PART_TO_BLOCK_POST_MERGE,
                                                            1.,
                                                            &pts_g_num,
-                                                           NULL,
+                                                           block_distrib_idx,
                                                            &n_pts,
                                                            1,
                                                            location->comm);
 
-      const int n_pts_block = PDM_part_to_block_n_elt_block_get (ptb);
+    const int n_pts_block1 = PDM_part_to_block_n_elt_block_get (ptb1);
 
-      int *block_stride = NULL;
-      PDM_g_num_t *block_location1 = NULL;
-      PDM_Mesh_nodal_elt_t *block_elt_type1 = NULL;//
-      float       *block_distance1 = NULL;
-      double      *block_bar_coords1 = NULL;
+    int *part_stride = malloc (sizeof(int) * n_pts);
+    for (int i = 0; i < n_pts; i++) {
+      part_stride[i] = 1;
+    }
+    int *block_stride = NULL;
 
-      int *stride = malloc (sizeof(int) * n_pts);
-      for (int i = 0; i < n_pts; i++) {
-        stride[i] = 1;
-      }
+    /* Exchange location */
+    PDM_g_num_t *block_location1 = NULL;
+    PDM_part_to_block_exch (ptb1,
+                            sizeof(PDM_g_num_t),
+                            PDM_STRIDE_VAR,
+                            1,
+                            &part_stride,
+                            (void **) &pts_location,
+                            &block_stride,
+                            (void **) &block_location1);
+    free (pts_location);
+    free (block_stride);
 
-      PDM_part_to_block_exch (ptb,
-                              sizeof(PDM_g_num_t),
-                              PDM_STRIDE_VAR,
-                              1,
-                              &stride,
-                              (void **) &pts_location,
-                              &block_stride,
-                              (void **) &block_location1);
-      free (block_stride);
-      free (pts_location);
+    /* Exchange element type */
+    PDM_Mesh_nodal_elt_t *block_elt_type = NULL;
+    PDM_part_to_block_exch (ptb1,
+                            sizeof(PDM_Mesh_nodal_elt_t),
+                            PDM_STRIDE_VAR,
+                            1,
+                            &part_stride,
+                            (void **) &pts_elt_type,
+                            &block_stride,
+                            (void **) &block_elt_type);
+    free (pts_elt_type);
+    free (block_stride);
 
-      PDM_part_to_block_exch (ptb,
-                              sizeof(PDM_Mesh_nodal_elt_t),
-                              PDM_STRIDE_VAR,
-                              1,
-                              &stride,
-                              (void **) &pts_elt_type,
-                              &block_stride,
-                              (void **) &block_elt_type1);
-      free (block_stride);
-      free (pts_elt_type);
+    /* Exchange distance */
+    float *block_distance = NULL;
+    PDM_part_to_block_exch (ptb1,
+                            sizeof(float),
+                            PDM_STRIDE_VAR,
+                            1,
+                            &part_stride,
+                            (void **) &distance,
+                            &block_stride,
+                            (void **) &block_distance);
+    free (distance);
+    free (block_stride);
 
-      PDM_part_to_block_exch (ptb,
-                              sizeof(float),
-                              PDM_STRIDE_VAR,
-                              1,
-                              &stride,
-                              (void **) &distance,
-                              &block_stride,
-                              (void **) &block_distance1);
-      free (block_stride);
-      free (distance);
+    /* Exchange weights */
+    int *weights_stride = malloc (sizeof(int) * n_pts);
+    for (int i = 0; i < n_pts; i++) {
+      weights_stride[i] = weights_idx[i+1] - weights_idx[i];
+    }
+    free (weights_idx);
 
+    double *block_weights1 = NULL;
+    PDM_part_to_block_exch (ptb1,
+                            sizeof(double),
+                            PDM_STRIDE_VAR,
+                            1,
+                            &weights_stride,
+                            (void **) &weights,
+                            &block_stride,
+                            (void **) &block_weights1);
+    free (block_stride);
+    free (weights);
 
-      int *bar_coords_stride = malloc (sizeof(int) * n_pts);
-      for (int i = 0; i < n_pts; i++) {
-        bar_coords_stride[i] = bar_coords_idx[i+1] - bar_coords_idx[i];
-      }
-      free (bar_coords_idx);
+    /* Exchange weights stride */
+    int *block_n_vtx_elt    = NULL;
+    int *block_n_candidates = NULL;
+    PDM_part_to_block_exch (ptb1,
+                            sizeof(int),
+                            PDM_STRIDE_VAR,
+                            1,
+                            &part_stride,
+                            (void **) &weights_stride,
+                            &block_n_candidates,
+                            (void **) &block_n_vtx_elt);
+    free (weights_stride);
+    free (part_stride);
 
-      PDM_part_to_block_exch (ptb,
-                              sizeof(double),
-                              PDM_STRIDE_VAR,
-                              1,
-                              &bar_coords_stride,
-                              (void **) &bar_coords,
-                              &block_stride,
-                              (void **) &block_bar_coords1);
-      free (block_stride);
-      free (bar_coords);
+    /*
+     *   2) Among candidate elements, keep closest one for each point (set location to -1 if no candidate -> unlocated point)
+     */
+    PDM_g_num_t *block_g_num1 = PDM_part_to_block_block_gnum_get (ptb1);
 
-      int *block_n_vtx_elt1 = NULL;
-      PDM_part_to_block_exch (ptb,
-                              sizeof(int),
-                              PDM_STRIDE_VAR,
-                              1,
-                              &stride,
-                              (void **) &bar_coords_stride,
-                              &block_stride,
-                              (void **) &block_n_vtx_elt1);
-      free (bar_coords_stride);
-      free (stride);
+    const int n_pts_block2 = PDM_part_to_block_n_elt_block_get (ptb2);
 
+    PDM_g_num_t *block_location2 = malloc (sizeof(PDM_g_num_t) * n_pts_block2);
+    int *block_weights_stride2 = malloc (sizeof(int) * n_pts_block2);
+    for (int i = 0; i < n_pts_block2; i++) {
+      block_location2[i] = -1;
+      block_weights_stride2[i] = 0;
+    }
 
-      /*
-       * Keep closest elements
-       */
-      PDM_g_num_t *block_g_num = PDM_part_to_block_block_gnum_get (ptb);
-      PDM_g_num_t *block_distrib_idx = PDM_part_to_block_distrib_index_get (ptb);
-      PDM_g_num_t n_pts_block2 = block_distrib_idx[my_rank+1] - block_distrib_idx[my_rank];
-      PDM_g_num_t *block_location2 = malloc (sizeof(PDM_g_num_t) * n_pts_block2);
-      int *block_bar_coords_stride2 = malloc (sizeof(int) * n_pts_block2);
-      for (int i = 0; i < n_pts_block2; i++) {
-        block_location2[i] = -1;
-      }
+    int *idx_min = malloc (sizeof(int) * n_pts_block2);
+    idx = 0;
+    size_t s_weights2 = 0;
+    for (int i = 0; i < n_pts_block1; i++) {
+      idx_min[i] = idx;
 
-      int *block_idx1 = malloc (sizeof(int) * (n_pts_block + 1));
-      block_idx1[0] = 0;
-      for (int i = 0; i < n_pts_block; i++) {
-        block_idx1[i+1] = block_idx1[i] + block_stride[i];
-      }
+      if (block_n_candidates[i] > 1) {
+        float min_dist = HUGE_VAL;
+        PDM_Mesh_nodal_elt_t type_min;
 
-      int *idx_min = malloc (sizeof(int) * n_pts_block2);
-      idx = 0;
-      for (int i = 0; i < n_pts_block; i++) {
-        int n_elt = block_stride[i];
-
-        idx_min[i] = idx;
-
-        if (n_elt > 1) {
-          float min_dist = HUGE_VAL;
-          PDM_Mesh_nodal_elt_t type_min = -1;
-          idx_min[i] = -1;
-
-          for (int j = idx; j < idx + n_elt; j++) {
-            if (min_dist > block_distance1[j] ||
-                (min_dist < block_distance1[j] + eps_dist &&
-                 type_min > block_elt_type1[j])) {
-              min_dist = block_distance1[j];
-              type_min = block_elt_type1[j];
-              idx_min[i] = j;
-            }
+        for (int j = idx; j < idx + block_n_candidates[i]; j++) {
+          if (min_dist > block_distance[j] ||
+              (min_dist < block_distance[j] + eps_dist &&
+               type_min > block_elt_type[j])) {
+            min_dist = block_distance[j];
+            type_min = block_elt_type[j];
+            idx_min[i] = j;
           }
         }
-
-        int _ipt = block_g_num[i] - 1 - block_distrib_idx[my_rank];
-        block_location2[_ipt] = block_location1[idx_min[i]];
-        block_bar_coords_stride2[_ipt] = block_n_vtx_elt1[idx_min[i]];
-
-        idx += n_elt;
       }
 
+      idx += block_n_candidates[i];
 
+      int ipt = block_g_num1[i] - 1 - block_distrib_idx[my_rank];
+      assert (block_g_num2[ipt] == block_g_num1[i]);
 
-      int *block_bar_coords_idx1 = malloc (sizeof(int) * (block_idx1[n_pts_block] + 1));
-      block_bar_coords_idx1[0] = 0;
-      for (int i = 0; i < block_idx1[n_pts_block]; i++) {
-        block_bar_coords_idx1[i+1] = block_bar_coords_idx1[i] + block_n_vtx_elt1[i];
-      }
-
-      int *block_bar_coords_idx2 = malloc (sizeof(int) * (n_pts_block2 + 1));
-      block_bar_coords_idx2[0] = 0;
-      for (int i = 0; i < n_pts_block2; i++) {
-        if (block_location2[i] < 0) {
-          block_bar_coords_stride2[i] = 0;
-        }
-
-        block_bar_coords_idx2[i+1] = block_bar_coords_idx2[i] + block_bar_coords_stride2[i];
-      }
-
-      double *block_bar_coords2 = malloc (sizeof(double) * block_bar_coords_idx2[n_pts_block2]);
-      for (int i = 0; i < n_pts_block; i++) {
-        int _ipt = block_g_num[i] - 1 - block_distrib_idx[my_rank];
-
-        for (int j = 0; j < block_bar_coords_stride2[_ipt]; j++) {
-          block_bar_coords2[block_bar_coords_idx2[_ipt] + j] =
-            block_bar_coords1[block_bar_coords_idx1[idx_min[i]] + j];
-        }
-      }
-      free (idx_min);
-      free (block_stride);
-      free (block_n_vtx_elt1);
-      free (block_bar_coords_idx1);
-      free (block_distance1);
-      free (block_elt_type1);
-      free (block_location1);
-      free (block_bar_coords1);
-      free (block_bar_coords_idx2);
-
-      // block_to_part_exch...
-      PDM_part_to_block_t *ptb2 = PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
-                                                            PDM_PART_TO_BLOCK_POST_MERGE,
-                                                            1.,
-                                                            &pcloud_g_num,
-                                                            NULL,
-                                                            &n_pts_pcloud,
-                                                            1,
-                                                            location->comm);
-
-      PDM_g_num_t *block_distrib_idx2 = PDM_part_to_block_distrib_index_get (ptb2);
-
-      PDM_block_to_part_t *btp = PDM_block_to_part_create (block_distrib_idx2,
-                                                           (const PDM_g_num_t **) &pcloud_g_num,
-                                                           &n_pts_pcloud,
-                                                           1,
-                                                           location->comm);
-      free (pcloud_g_num);
-
-      int one = 1;
-
-      pcloud_location = malloc (sizeof(PDM_g_num_t) * n_pts_pcloud);
-      if (1) {
-        for (int i = 0; i < n_pts_pcloud; i++) {
-          pcloud_location[i] = -1;
-        }
-      }
-      PDM_block_to_part_exch (btp,
-                              sizeof(PDM_g_num_t),
-                              PDM_STRIDE_CST,
-                              &one,
-                              block_location2,
-                              NULL,
-                              (void **) &pcloud_location);
-      free (block_location2);
-
-      /*int *block_bar_coords_stride2 = malloc (sizeof(int) * n_pts_block);
-      for (int i = 0; i < n_pts_block; i++) {
-        block_bar_coords_stride2[i] = block_bar_coords_idx2[i+1] - block_bar_coords_idx2[i];
-      }
-      free (block_bar_coords_idx2);*/
-
-      pcloud_weights_stride = malloc (sizeof(int) * n_pts_pcloud);
-      PDM_block_to_part_exch (btp,
-                              sizeof(int),
-                              PDM_STRIDE_CST,
-                              &one,
-                              (void *) block_bar_coords_stride2,
-                              NULL,
-                              (void **) &pcloud_weights_stride);
-
-      pcloud_weights_idx = malloc (sizeof(int) * (n_pts_pcloud + 1));
-      pcloud_weights_idx[0] = 0;
-      for (int i = 0; i < n_pts_pcloud; i++) {
-        pcloud_weights_idx[i+1] = pcloud_weights_idx[i] + pcloud_weights_stride[i];
-      }
-
-      pcloud_weights = malloc (sizeof(double) * pcloud_weights_idx[n_pts_pcloud]);
-      PDM_block_to_part_exch (btp,
-                              sizeof(double),
-                              PDM_STRIDE_VAR,
-                              block_bar_coords_stride2,
-                              (void *) block_bar_coords2,
-                              &pcloud_weights_stride,
-                              (void **) &pcloud_weights);
-      free (block_bar_coords2);
-      free (block_bar_coords_stride2);
-
-      PDM_part_to_block_free (ptb);
-      PDM_part_to_block_free (ptb2);
-      PDM_block_to_part_free (btp);
+      block_location2[ipt] = block_location1[idx_min[i]];
+      block_weights_stride2[ipt] = block_n_vtx_elt[idx_min[i]];
+      s_weights2 += block_weights_stride2[ipt];
     }
 
-    /* Single rank */
-    else {
-      /*
-       * Keep closest elements
-       * (if two elements are at the same distance, keep the one with smallest type)
-       * !!! PB si plusieurs nuages de points (max(gnum) > n_pts_pcloud...)
-       */
-      int   *idx_min  = malloc (sizeof(int)   * n_pts_pcloud);
-      float *dist_min = malloc (sizeof(float) * n_pts_pcloud);
-      PDM_Mesh_nodal_elt_t *type_min = malloc (sizeof(PDM_Mesh_nodal_elt_t) * n_pts_pcloud);
-      for (int ipt = 0; ipt < n_pts_pcloud; ipt++) {
-        dist_min[ipt] = HUGE_VAL;
-        type_min[ipt] = -1;
-        idx_min[ipt] = 0;
-      }
-
-      for (int i = 0; i < n_pts; i++) {
-        PDM_g_num_t id_pt = pts_g_num[i] - 1;
-
-        if (dist_min[id_pt] > distance[i] ||
-            (dist_min[id_pt] < distance[i] + eps_dist &&
-             type_min[id_pt] > pts_elt_type[i])) {
-          idx_min[id_pt] = i;
-          dist_min[id_pt] = distance[i];
-          type_min[id_pt] = pts_elt_type[i];
-        }
-      }
-      free (dist_min);
-      free (distance);
-      free (type_min);
-      free (pts_elt_type);
-
-      pcloud_location       = malloc (sizeof(PDM_g_num_t) * n_pts_pcloud);
-      pcloud_weights_stride = malloc (sizeof(int)         * n_pts_pcloud);
-      pcloud_weights_idx    = malloc (sizeof(int)         * (n_pts_pcloud + 1));
-      pcloud_weights_idx[0] = 0;
-
-      for (int ipt = 0; ipt < n_pts_pcloud; ipt++) {
-        PDM_g_num_t id_pt = pcloud_g_num[ipt] - 1;
-        int i = idx_min[id_pt];
-
-        pcloud_location[ipt] = pts_location[i];
-        pcloud_weights_stride[ipt] = bar_coords_idx[i+1] - bar_coords_idx[i];
-        pcloud_weights_idx[ipt+1] = pcloud_weights_idx[ipt] + pcloud_weights_stride[ipt];
-      }
-      free (pts_location);
-
-      pcloud_weights = malloc (sizeof(double) * pcloud_weights_idx[n_pts_pcloud]);
-      for (int ipt = 0; ipt < n_pts_pcloud; ipt++) {
-        PDM_g_num_t id_pt = pcloud_g_num[ipt] - 1;
-        int i = idx_min[id_pt];
-
-        for (int j = 0; j < pcloud_weights_stride[ipt]; j++) {
-          pcloud_weights[pcloud_weights_idx[ipt] + j] =
-            bar_coords[bar_coords_idx[i] + j];
-        }
-      }
-
-#if 0
-      printf("* * * * * *\n");
-      for (int ipt = 0; ipt < n_pts_pcloud; ipt++) {
-        printf("Pt (%ld), weights =", pcloud_g_num[ipt]);
-        for (int i = pcloud_weights_idx[ipt]; i < pcloud_weights_idx[ipt+1]; i++) {
-          printf(" %f", pcloud_weights[i]);
-        }
-        printf("\n");
-      }
-      printf("* * * * * *\n");
-#endif
-
-      free (idx_min);
-      free (bar_coords_idx);
-      free (bar_coords);
-      free (pcloud_g_num);
+    int *block_weights_idx1 = malloc (sizeof(int) * (idx + 1));
+    block_weights_idx1[0] = 0;
+    for (int i = 0; i < idx; i++) {
+      block_weights_idx1[i+1] = block_weights_idx1[i] + block_n_vtx_elt[i];
     }
 
+
+    double *block_weights2 = malloc (sizeof(double) * s_weights2);
+    idx = 0;
+    for (int i = 0; i < n_pts_block1; i++) {
+      int ipt = block_g_num1[i] - 1 - block_distrib_idx[my_rank];
+
+      for (int j = 0; j < block_weights_stride2[ipt]; j++) {
+        block_weights2[idx++] = block_weights1[block_weights_idx1[idx_min[i]] + j];
+      }
+    }
+    free (idx_min);
+    free (block_n_candidates);
+    free (block_n_vtx_elt);
+    free (block_weights_idx1);
+    free (block_distance);
+    free (block_elt_type);
+    free (block_location1);
+    free (block_weights1);
+
+    /*
+     *   3) Block-to-part
+     */
+    int one = 1;
+    PDM_block_to_part_t *btp = PDM_block_to_part_create (block_distrib_idx,
+                                                         (const PDM_g_num_t **) &pcloud_g_num,
+                                                         &n_pts_pcloud,
+                                                         1,
+                                                         location->comm);
+    free (pcloud_g_num);
+
+    /* Exchange location */
+    pcloud_location = malloc (sizeof(PDM_g_num_t) * n_pts_pcloud);
+    PDM_block_to_part_exch (btp,
+                            sizeof(PDM_g_num_t),
+                            PDM_STRIDE_CST,
+                            &one,
+                            block_location2,
+                            NULL,
+                            (void **) &pcloud_location);
+    free (block_location2);
+
+    /* Exchange weights stride */
+    pcloud_weights_stride = malloc (sizeof(int) * n_pts_pcloud);
+    PDM_block_to_part_exch (btp,
+                            sizeof(int),
+                            PDM_STRIDE_CST,
+                            &one,
+                            (void *) block_weights_stride2,
+                            NULL,
+                            (void **) &pcloud_weights_stride);
+
+    pcloud_weights_idx = malloc (sizeof(int) * (n_pts_pcloud + 1));
+    pcloud_weights_idx[0] = 0;
+    for (int i = 0; i < n_pts_pcloud; i++) {
+      pcloud_weights_idx[i+1] = pcloud_weights_idx[i] + pcloud_weights_stride[i];
+    }
+
+    /* Exchange weights */
+    pcloud_weights = malloc (sizeof(double) * pcloud_weights_idx[n_pts_pcloud]);
+    PDM_block_to_part_exch (btp,
+                            sizeof(double),
+                            PDM_STRIDE_VAR,
+                            block_weights_stride2,
+                            (void *) block_weights2,
+                            &pcloud_weights_stride,
+                            (void **) &pcloud_weights);
+    free (block_weights2);
+    free (block_weights_stride2);
+
+    PDM_part_to_block_free (ptb1);
+    PDM_part_to_block_free (ptb2);
+    PDM_block_to_part_free (btp);
 
 
     /*

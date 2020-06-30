@@ -87,6 +87,7 @@ _read_args(int                          argc,
            PDM_bool_t                  *grid,
            PDM_bool_t                  *surface_cloud,
            double                      *noise,
+           double                      *marge,
            int                         *post,
            int                         *part_method,
            PDM_mesh_location_method_t  *loc_method)
@@ -144,6 +145,13 @@ _read_args(int                          argc,
         _usage(EXIT_FAILURE);
       else
         *noise = atof(argv[i]);
+    }
+    else if (strcmp(argv[i], "-m") == 0) {
+      i++;
+      if (i >= argc)
+        _usage(EXIT_FAILURE);
+      else
+        *marge = atof(argv[i]);
     }
     else if (strcmp(argv[i], "-pt-scotch") == 0) {
       *part_method = PDM_PART_SPLIT_PTSCOTCH;
@@ -938,13 +946,14 @@ int main(int argc, char *argv[])
   /*
    *  Set default values
    */
-  char       *filename  = NULL;
-  double      tolerance = 1e-6;
-  PDM_bool_t  grid = PDM_FALSE;
+  char       *filename      = NULL;
+  double      tolerance     = 1e-6;
+  PDM_bool_t  grid          = PDM_FALSE;
   PDM_bool_t  surface_cloud = PDM_FALSE;
-  double      noise = 0.;
-  int         n_part    = 1;
-  int         post      = 0;
+  double      noise         = 0.;
+  double      marge         = 0.;
+  int         n_part        = 1;
+  int         post          = 0;
 #ifdef PDM_HAVE_PARMETIS
   PDM_part_split_t part_method  = PDM_PART_SPLIT_PARMETIS;
 #else
@@ -972,6 +981,7 @@ int main(int argc, char *argv[])
              &grid,
              &surface_cloud,
              &noise,
+             &marge,
              &post,
              (int *) &part_method,
              &loc_method);
@@ -1360,6 +1370,16 @@ int main(int argc, char *argv[])
     printf("%f < z < %f\n", xyz_min[2], xyz_max[2]);
   }
 
+  double length = 0.;
+  for (int idim = 0; idim < 3; idim++) {
+    length = PDM_MAX (length, xyz_max[idim] - xyz_min[idim]);
+  }
+  marge *= length;
+  for (int idim = 0; idim < 3; idim++) {
+    xyz_min[idim] -= marge;
+    xyz_max[idim] += marge;
+  }
+
   int n_pts_l;
   double *pts_coords = NULL;
   if (grid == PDM_TRUE) {
@@ -1386,11 +1406,6 @@ int main(int argc, char *argv[])
   int id_gnum = PDM_gnum_create (3, 1, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD);
 
   double *char_length = malloc(sizeof(double) * n_pts_l);
-  double length = 0;
-  for (int idim = 0; idim < 3; idim++) {
-    length = PDM_MAX (length, xyz_max[idim] - xyz_min[idim]);
-  }
-
   for (int i = 0; i < n_pts_l; i++) {
     char_length[i] = length * 1.e-6;
   }
@@ -1405,13 +1420,7 @@ int main(int argc, char *argv[])
 
   if (surface_cloud == PDM_TRUE) {
     for (int ipt = 0; ipt < n_pts_l; ipt++) {
-      /*for (int idim = 0; idim < 3; idim++) {
-        if (pts_coords[3*ipt+idim] - xyz_min[idim] > xyz_max[idim] - pts_coords[3*ipt+idim]) {
-          pts_coords[3*ipt+idim] = xyz_max[idim];
-        } else {
-          pts_coords[3*ipt+idim] = xyz_min[idim];
-        }
-        }*/
+
       int imin;
       double dmin = HUGE_VAL;
       for (int idim = 0; idim < 3; idim++) {
@@ -1431,9 +1440,9 @@ int main(int argc, char *argv[])
 
       if (imin < 0) {
         imin = -(imin+1);
-        pts_coords[3*ipt+imin] =  xyz_min[imin];
+        pts_coords[3*ipt+imin] = xyz_min[imin];
       } else {
-        pts_coords[3*ipt+imin] =  xyz_max[imin];
+        pts_coords[3*ipt+imin] = xyz_max[imin];
       }
     }
   }
@@ -1518,7 +1527,6 @@ int main(int argc, char *argv[])
            p_coords[3*ipt], p_coords[3*ipt+1], p_coords[3*ipt+2],
            p_location[ipt]);
     for (int i = p_weights_idx[ipt]; i < p_weights_idx[ipt+1]; i++) {
-      //printf(" %3.3f", p_weights[i]);
       printf(" %g", p_weights[i]);
     }
     printf("\n\n");

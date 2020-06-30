@@ -446,9 +446,16 @@ int main(int argc, char *argv[])
   PDM_g_num_t *pts_gnum = PDM_gnum_get(id_gnum, 0);
 
   PDM_gnum_free (id_gnum, 1);
+  free (char_length);
 
 
 
+#if 1
+  for (int ipt = 0; ipt < n_pts_l; ipt++) {
+    printf("[%d] (%ld) (%f, %f, %f)\n",
+           my_rank, pts_gnum[ipt], pts_coords[3*ipt], pts_coords[3*ipt+1], pts_coords[3*ipt+2]);
+  }
+#endif
 
   /************************
    *
@@ -593,6 +600,22 @@ int main(int argc, char *argv[])
                          0,//i_part,
                          &location_elt_gnum);
 
+  int p_n_points;
+  double      *p_coords      = NULL;
+  PDM_g_num_t *p_gnum        = NULL;
+  PDM_g_num_t *p_location    = NULL;
+  int         *p_weights_idx = NULL;
+  double      *p_weights     = NULL;
+  PDM_mesh_location_get2 (id_loc,
+                          0,//i_point_cloud,
+                          0,//i_part,
+                          &p_n_points,
+                          &p_coords,
+                          &p_gnum,
+                          &p_location,
+                          &p_weights_idx,
+                          &p_weights);
+
 #if 1
   /* Check results */
   if (my_rank == 0) {
@@ -619,6 +642,17 @@ int main(int argc, char *argv[])
     }
 
     //printf("%d: (%ld) | (%ld)\n", ipt, location_elt_gnum[ipt], box_gnum);
+    if (location_elt_gnum[ipt] != box_gnum) {
+      printf("%d (%ld) (%f %f %f): (%ld) | (%ld)\n",
+             ipt, pts_gnum[ipt],
+             p[0], p[1], p[2],
+             location_elt_gnum[ipt], box_gnum);
+      printf("weights =");
+      for (int l = p_weights_idx[ipt]; l < p_weights_idx[ipt+1]; l++) {
+        printf(" %f", p_weights[l]);
+      }
+      printf("\n");
+    }
     assert (location_elt_gnum[ipt] == box_gnum);
   }
 #endif
