@@ -1863,379 +1863,22 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
 
 }
 
+
 /**
  *
  * Get the location of a point cloud
  *
- *   \param [in] bt               Pointer to box tree structure
- *   \param [in] n_pts            Number of points
- *   \param [in] pts              Point coordinates (size = 3 * n_pts)
- *   \param [in] pts_g_num        Point global numbers
- *   \param [out] box_index       Index of boxes (size = n_pts + 1)
- *   \param [out] box_g_num       Global num of boxes (size = i_boxes[n_pts])
+ *   \param [in] bt                    Pointer to box tree structure
+ *   \param [in] n_pts                 Number of points
+ *   \param [in] pts_coord             Point coordinates (size = 3 * n_pts)
+ *   \param [in] pts_g_num             Point global numbers (size = n_pts)
+ *   \param [in] n_boxes               Number of boxes
+ *   \param [in] box_g_num             Global num of boxes (size = n_boxes)
+ *   \param [inout] pts_in_box_idx     Index of points in boxes (size = n_boxes+1, allocated inside function)
+ *   \param [inout] pts_in_box_g_num   Global num of points in boxes (size = pts_in_box_idx[n_boxes], allocated inside function)
+ *   \param [inout] pts_in_box_coord   Coordinates of points in boxes (size = 3*pts_in_box_idx[n_boxes], allocated inside function)
  *
  */
-
-void
-PDM_dbbtree_location_boxes_get
-(
- PDM_dbbtree_t *dbbt,
- const int      n_pts,
- double         pts[],
- PDM_g_num_t    pts_g_num[],
- int           *box_index[],
- PDM_g_num_t   *box_g_num[]
-)
-{
-  const int USE_UPPER_BOUND_DIST = 0;
-
-  int npts_in_rank = n_pts;
-  double *pts_in_rank = pts;
-
-  assert (dbbt != NULL);
-  _PDM_dbbtree_t *_dbbt = (_PDM_dbbtree_t *) dbbt;
-
-  int my_rank;
-  PDM_MPI_Comm_rank (_dbbt->comm, &my_rank);
-
-  int n_ranks;
-  PDM_MPI_Comm_size (_dbbt->comm, &n_ranks);
-
-  const int *used_ranks = _dbbt->usedRank;
-
-  /***************************************
-   * Redistribute points
-   ***************************************/
-  int *send_count = NULL;
-  int *send_shift = NULL;
-
-  int *recv_count = NULL;
-  int *recv_shift = NULL;
-
-  int *pts_ranks_idx = NULL;
-  int *pts_ranks     = NULL;
-
-  double *upper_bound_dist2 = NULL;
-
-  if (USE_UPPER_BOUND_DIST) {
-    //-->> quick and dirty solution...
-    upper_bound_dist2 = malloc (sizeof(double) * n_pts);
-    for (int ipt = 0; ipt < n_pts; ipt++) {
-      upper_bound_dist2[ipt] = 0.;
-    }
-    //<<--
-  }
-
-  if (_dbbt->btShared != NULL) {
-    if (USE_UPPER_BOUND_DIST) {
-    //-->> quick and dirty solution...
-      PDM_box_tree_closest_upper_bound_dist_boxes_get (_dbbt->btShared,
-						       n_pts,
-						       pts,
-						       upper_bound_dist2,
-						       &pts_ranks_idx,
-						       &pts_ranks);
-      //<<--
-    } else {
-      PDM_box_tree_location_boxes_get (_dbbt->btShared,
-				       n_pts,
-				       pts,
-				       &pts_ranks_idx,
-				       &pts_ranks);
-    }
-
-    /*
-     * Send points to processes
-     */
-    send_count = malloc (sizeof(int) * n_ranks);
-    send_shift = malloc (sizeof(int) * (n_ranks + 1));
-
-    recv_count = malloc (sizeof(int) * n_ranks);
-    recv_shift = malloc (sizeof(int) * (n_ranks + 1));
-
-    for (int i = 0; i < n_ranks; i++) {
-      send_count[i] = 0;
-    }
-
-    send_shift[0] = 0;
-    recv_shift[0] = 0;
-
-    for (int i = 0; i < n_pts; i++) {
-      for (int j = pts_ranks_idx[i]; j < pts_ranks_idx[i+1]; j++) {
-        send_count[used_ranks[pts_ranks[j]]]++;
-      }
-    }
-
-    PDM_MPI_Alltoall (send_count, 1, PDM_MPI_INT,
-                      recv_count, 1, PDM_MPI_INT,
-                      _dbbt->comm);
-
-    for (int i = 0; i < n_ranks; i++) {
-      send_shift[i+1] = send_shift[i] + 3 * send_count[i];
-      recv_shift[i+1] = recv_shift[i] + 3 * recv_count[i];
-      recv_count[i]  *= 3;
-    }
-
-    double *send_coord = malloc (sizeof(double) * send_shift[n_ranks]);
-    pts_in_rank = malloc (sizeof(double) * recv_shift[n_ranks]);
-
-    for (int i = 0; i < n_ranks; i++) {
-      send_count[i] = 0;
-    }
-
-    for (int i = 0; i < n_pts; i++) {
-      for (int j = pts_ranks_idx[i]; j < pts_ranks_idx[i+1]; j++) {
-        const int i_rank = used_ranks[pts_ranks[j]];
-        int idx             = send_shift[i_rank] + send_count[i_rank];
-        send_coord[idx++]   = pts[3*i];
-        send_coord[idx++]   = pts[3*i+1];
-        send_coord[idx++]   = pts[3*i+2];
-        send_count[i_rank] += 3;
-      }
-    }
-
-    PDM_MPI_Alltoallv (send_coord,  send_count, send_shift, PDM_MPI_DOUBLE,
-                       pts_in_rank, recv_count, recv_shift, PDM_MPI_DOUBLE,
-                       _dbbt->comm);
-    free (send_coord);
-
-    npts_in_rank = recv_shift[n_ranks] / 3;
-
-    if (USE_UPPER_BOUND_DIST) {
-      //-->> quick and dirty solution
-      upper_bound_dist2 = realloc (upper_bound_dist2, sizeof(double) * npts_in_rank);
-      for (int ipt = 0; ipt < npts_in_rank; ipt++) {
-	upper_bound_dist2[ipt] = 0.;
-      }
-      //<<--
-    }
-
-  }
-
-
-  /*
-   * Search candidates in local box tree
-   */
-  int *box_index_in_rank;
-  int *box_l_num_in_rank;
-
-  if (USE_UPPER_BOUND_DIST) {
-    //-->> quick and dirty solution
-    PDM_box_tree_closest_upper_bound_dist_boxes_get (_dbbt->btLoc,
-						     npts_in_rank,
-						     pts_in_rank,
-						     upper_bound_dist2,
-						     &box_index_in_rank,
-						     &box_l_num_in_rank);
-    free (upper_bound_dist2);
-    //<<--
-  } else {
-    PDM_box_tree_location_boxes_get (_dbbt->btLoc,
-				     npts_in_rank,
-				     pts_in_rank,
-				     &box_index_in_rank,
-				     &box_l_num_in_rank);
-  }
-
-  if (_dbbt->btShared == NULL) {
-    *box_index = box_index_in_rank;
-    *box_g_num = malloc (sizeof(PDM_g_num_t) * box_index_in_rank[npts_in_rank]);
-    const PDM_g_num_t *gnum_boxes = PDM_box_set_get_g_num (_dbbt->boxes);
-    for (int i = 0; i < box_index_in_rank[npts_in_rank]; i++) {
-      (*box_g_num)[i] = gnum_boxes[box_l_num_in_rank[i]];
-    }
-    free (box_l_num_in_rank);
-  }
-
-  else {
-
-    /*
-     * Retour des resultats (AlltoAll inverse)
-     *     - Envoi du nombre de boites trouvees pour chaque point
-     *     - Envoi du numero des boites en numabs
-     */
-    free (pts_in_rank);
-
-    int *n_box_l_num_in_rank = malloc (sizeof(int) * npts_in_rank);
-
-    for (int i = 0; i < npts_in_rank; i++) {
-      n_box_l_num_in_rank[i] = box_index_in_rank[i+1] - box_index_in_rank[i];
-    }
-
-    for (int i = 0; i < n_ranks; i++) {
-      send_shift[i+1] = send_shift[i+1]/3;
-      recv_shift[i+1] = recv_shift[i+1]/3;
-      send_count[i]   = send_count[i]/3;
-      recv_count[i]   = recv_count[i]/3;
-    }
-
-    int *n_box_l_num_per_pts = malloc (sizeof(int) * send_shift[n_ranks]);
-
-    PDM_MPI_Alltoallv (n_box_l_num_in_rank, recv_count, recv_shift, PDM_MPI_INT,
-                       n_box_l_num_per_pts, send_count, send_shift, PDM_MPI_INT,
-                       _dbbt->comm);
-
-    int *send_count2 = malloc (sizeof(int) * n_ranks);
-    int *send_shift2 = malloc (sizeof(int) * (n_ranks+1));
-
-    int *recv_count2 = malloc (sizeof(int) * n_ranks);
-    int *recv_shift2 = malloc (sizeof(int) * (n_ranks+1));
-
-    for (int i = 0; i < n_ranks; i++) {
-      send_count2[i] = 0;
-      recv_count2[i] = 0;
-    }
-
-    for (int i = 0; i < n_ranks; i++) {
-      for (int j = recv_shift[i]; j < recv_shift[i+1]; j++) {
-        recv_count2[i] += n_box_l_num_in_rank[j];
-      }
-      for (int j = send_shift[i]; j < send_shift[i+1]; j++) {
-        send_count2[i] += n_box_l_num_per_pts[j];
-      }
-    }
-
-    free (n_box_l_num_in_rank);
-
-    send_shift2[0] = 0;
-    recv_shift2[0] = 0;
-    for (int i = 0; i < n_ranks; i++) {
-      send_shift2[i+1] = send_shift2[i] + send_count2[i];
-      recv_shift2[i+1] = recv_shift2[i] + recv_count2[i];
-    }
-
-    PDM_g_num_t *box_g_num_in_rank =
-      malloc(sizeof(PDM_g_num_t) * box_index_in_rank[npts_in_rank]);
-
-    const PDM_g_num_t *gnum_boxes = PDM_box_set_get_g_num (_dbbt->boxes);
-
-    for (int i = 0; i < box_index_in_rank[npts_in_rank]; i++) {
-      box_g_num_in_rank[i] = gnum_boxes[box_l_num_in_rank[i]];
-    }
-
-    PDM_g_num_t *box_g_num_per_pts = malloc(sizeof(PDM_g_num_t) * send_shift2[n_ranks]);
-
-    PDM_MPI_Alltoallv (box_g_num_in_rank, recv_count2, recv_shift2, PDM__PDM_MPI_G_NUM,
-                       box_g_num_per_pts, send_count2, send_shift2, PDM__PDM_MPI_G_NUM,
-                       _dbbt->comm);
-
-    free (box_index_in_rank);
-    free (box_l_num_in_rank);
-    free (box_g_num_in_rank);
-
-    free (recv_count);
-    free (recv_shift);
-    free (recv_count2);
-    free (recv_shift2);
-
-    /*
-     * Tri du tableau de retour
-     */
-
-    *box_index = malloc(sizeof(int) * (n_pts + 1));
-    int *box_n = malloc(sizeof(int) * n_pts);
-    *box_g_num = malloc(sizeof(PDM_g_num_t) * send_shift2[n_ranks]);
-    (*box_index)[0] = 0;
-
-    for (int i = 0; i < n_pts; i++) {
-      box_n[i] = 0;
-    }
-
-    for (int i = 0; i < n_ranks; i++) {
-      send_count[i] = 0;
-    }
-
-    for (int i = 0; i < n_pts; i++) {
-      for (int j = pts_ranks_idx[i]; j < pts_ranks_idx[i+1]; j++) {
-        const int i_rank = used_ranks[pts_ranks[j]];
-        const int idx    = send_shift[i_rank] + send_count[i_rank];
-        box_n[i]        += n_box_l_num_per_pts[idx];
-        send_count[i_rank]++;
-      }
-    }
-
-    for (int i = 0; i < n_pts; i++) {
-      (*box_index)[i+1] = (*box_index)[i] +  box_n[i];
-    }
-
-    for (int i = 0; i < n_ranks; i++) {
-      send_count[i]  = 0;
-      send_count2[i] = 0;
-    }
-
-    int k1 = 0;
-
-    for (int i = 0; i < n_pts; i++) {
-      for (int j = pts_ranks_idx[i]; j < pts_ranks_idx[i+1]; j++) {
-        const int i_rank = used_ranks[pts_ranks[j]];
-        int idx  = send_shift[i_rank]  + send_count[i_rank];
-        int idx2 = send_shift2[i_rank] + send_count2[i_rank];
-        for (int k = 0; k < n_box_l_num_per_pts[idx]; k++) {
-          (*box_g_num)[k1++] = box_g_num_per_pts[idx2++];
-        }
-        send_count2[i_rank] += n_box_l_num_per_pts[idx];
-        send_count[i_rank]++;
-      }
-    }
-
-    int keyMax = 3 * n_pts;
-    PDM_hash_tab_t * ht = PDM_hash_tab_create (PDM_HASH_TAB_KEY_INT,
-                                               &keyMax);
-
-    int *box_index_tmp = malloc (sizeof(int) * (n_pts+1));
-    box_index_tmp[0] = 0;
-    int idx = 0;
-    for (int i = 0; i < n_pts; i++) {
-      box_index_tmp[i+1] = box_index_tmp[i];
-      for (int j = (*box_index)[i]; j < (*box_index)[i+1]; j++) {
-        PDM_g_num_t curr_box = (*box_g_num)[j];
-        int key = curr_box % keyMax;
-
-        int n_data = PDM_hash_tab_n_data_get (ht, &key);
-
-        int found = 0;
-
-        PDM_g_num_t **data = (PDM_g_num_t **) PDM_hash_tab_data_get (ht, &key);
-        for (int k = 0; k < n_data; k++) {
-          if (*(data[k]) == curr_box) {
-            found = 1;
-            break;
-          }
-        }
-
-        if (!found) {
-          PDM_hash_tab_data_add (ht, (void *) &key, *box_g_num + idx);
-          (*box_g_num)[idx++] = curr_box;
-          box_index_tmp[i+1]++;
-        }
-      }
-      PDM_hash_tab_purge (ht, PDM_FALSE);
-    }
-
-    PDM_hash_tab_free (ht);
-
-    free (n_box_l_num_per_pts);
-
-    free (*box_index);
-    *box_index = box_index_tmp;
-
-    *box_g_num = realloc (*box_g_num, sizeof(PDM_g_num_t) * box_index_tmp[n_pts]);
-
-    free (pts_ranks);
-    free (pts_ranks_idx);
-    free (box_g_num_per_pts);
-    free (box_n);
-
-    free (send_count);
-    free (send_shift);
-    free (send_count2);
-    free (send_shift2);
-  }
-}
-
-
-
-
 
 void
 PDM_dbbtree_points_inside_boxes
@@ -2280,27 +1923,24 @@ PDM_dbbtree_points_inside_boxes
   int *pts_ranks     = NULL;
 
   int n_recv_pts = 0;
+  PDM_g_num_t *send_g_num = NULL;
   PDM_g_num_t *recv_g_num = NULL;
+  double      *send_coord = NULL;
   double      *recv_coord = NULL;
 
   if (_dbbt->btShared != NULL) {
-    PDM_box_tree_location_boxes_get (_dbbt->btShared,
-                                     n_pts,
-                                     pts_coord,
-                                     &pts_ranks_idx,
-                                     &pts_ranks);
-
+    PDM_box_tree_points_inside_boxes (_dbbt->btShared,
+                                      n_pts,
+                                      pts_g_num,
+                                      pts_coord,
+                                      &send_shift,
+                                      &send_g_num,
+                                      &send_coord);
 
     /* Count points to send to each rank */
     send_count = malloc (sizeof(int) * n_ranks);
     for (int i = 0; i < n_ranks; i++) {
-      send_count[i] = 0;
-    }
-    for (int ipt = 0; ipt < n_pts; ipt++) {
-      for (int j = pts_ranks_idx[ipt]; j < pts_ranks_idx[ipt+1]; j++) {
-        int rank = used_ranks[pts_ranks[j]];
-        send_count[rank]++;
-      }
+      send_count[i] = send_shift[i+1] - send_shift[i];
     }
 
     recv_count = malloc (sizeof(int) * n_ranks);
@@ -2309,36 +1949,15 @@ PDM_dbbtree_points_inside_boxes
                       _dbbt->comm);
 
 
-    send_shift = malloc (sizeof(int) * (n_ranks + 1));
     recv_shift = malloc (sizeof(int) * (n_ranks + 1));
-    send_shift[0] = 0;
     recv_shift[0] = 0;
     for (int i = 0; i < n_ranks; i++) {
-      send_shift[i+1] = send_shift[i] + send_count[i];
       recv_shift[i+1] = recv_shift[i] + recv_count[i];
       send_count[i] = 0;
     }
     n_recv_pts = recv_shift[n_ranks];
 
     /* Exchange points */
-    PDM_g_num_t *send_g_num = malloc (sizeof(PDM_g_num_t) * send_shift[n_ranks]);
-    double      *send_coord = malloc (sizeof(double)      * send_shift[n_ranks] * 3);
-    for (int ipt = 0; ipt < n_pts; ipt++) {
-      for (int j = pts_ranks_idx[ipt]; j < pts_ranks_idx[ipt+1]; j++) {
-        int rank = used_ranks[pts_ranks[j]];
-        int idx  = send_shift[rank] + send_count[rank];
-
-        send_g_num[idx] = pts_g_num[ipt];
-        for (int idim = 0; idim < 3; idim++) {
-          send_coord[3*idx + idim] = pts_coord[3*ipt + idim];
-        }
-        send_count[rank]++;
-      }
-    }
-    free (pts_ranks);
-    free (pts_ranks_idx);
-
-
     recv_g_num = malloc (sizeof(PDM_g_num_t) * recv_shift[n_ranks]);
     PDM_MPI_Alltoallv (send_g_num, send_count, send_shift, PDM__PDM_MPI_G_NUM,
                        recv_g_num, recv_count, recv_shift, PDM__PDM_MPI_G_NUM,
@@ -2367,8 +1986,8 @@ PDM_dbbtree_points_inside_boxes
   /* dbbt == NULL (Single rank) */
   else {
     n_recv_pts = n_pts;
-    recv_g_num = pts_g_num;
-    recv_coord = pts_coord;
+    recv_g_num = (PDM_g_num_t *) pts_g_num;
+    recv_coord = (double *) pts_coord;
   }
 
 
@@ -2376,14 +1995,6 @@ PDM_dbbtree_points_inside_boxes
   /***************************************
    * Get list of boxes that contain each redistributed point
    ***************************************/
-  /*int *box_idx = NULL;
-  int *box_l_num = NULL;
-  PDM_box_tree_location_boxes_get (_dbbt->btLoc,
-                                   n_recv_pts,
-                                   recv_coord,
-                                   &box_idx,
-                                   &box_l_num);*/
-
   int         *pts_in_box_idx2   = NULL;
   PDM_g_num_t *pts_in_box_g_num2 = NULL;
   double      *pts_in_box_coord2 = NULL;
