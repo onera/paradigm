@@ -387,17 +387,6 @@ PDM_box_tree_copy_to_ranks
 
 
 void
-PDM_box_tree_location_boxes_get
-(
- PDM_box_tree_t  *bt,
- const int        n_pts,
- double           pts[],
- int             *i_boxes[],
- int             *boxes[]
- );
-
-
-void
 PDM_box_tree_points_inside_boxes
 (
  PDM_box_tree_t     *bt,

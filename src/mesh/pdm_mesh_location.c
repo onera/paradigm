@@ -64,8 +64,8 @@ typedef enum {
   BEGIN                            = 0,
   BUILD_BOUNDING_BOXES             = 1,
   SEARCH_CANDIDATES                = 2,
-  DISTRIBUTE_ELEMENTARY_OPERATIONS = 3,
-  COMPUTE_ELEMENTARY_LOCATIONS     = 4,
+  COMPUTE_ELEMENTARY_LOCATIONS     = 3,
+  MERGE_LOCATION_DATA              = 4,
   END                              = 5,
 
 } _ol_timer_step_t;
@@ -234,56 +234,6 @@ _location_points_in_boxes_octree
 
 
 
-
-#if 0
-static void
-_get_candidate_elements_from_dbbtree
-(
- const PDM_MPI_Comm   comm,
- _point_cloud_t      *pcloud,
- PDM_dbbtree_t       *dbbt,
- PDM_g_num_t        **candidates_g_num,
- int                **candidates_idx
- )
-{
-  int my_rank;
-  PDM_MPI_Comm_rank (comm, &my_rank);
-
-  int n_ranks;
-  PDM_MPI_Comm_rank (comm, &n_ranks);
-
-
-  /* Concatenate partitions */
-  int n_points = 0;
-  for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
-    n_points += pcloud->n_points[ipart];
-  }
-
-  double      *pts_coord = malloc (sizeof(double)      * n_points*3);
-  PDM_g_num_t *pts_g_num = malloc (sizeof(PDM_g_num_t) * n_points);
-  int idx = 0;
-  for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
-    for (int ipt = 0; ipt < pcloud->n_points[ipart]; ipt++) {
-      for (int idim = 0; idim < 3; idim++) {
-        pts_coord[3*idx + idim] = pcloud->coords[ipart][3*ipt + idim];
-      }
-      pts_g_num[idx] = pcloud->gnum[ipart][ipt];
-      idx++;
-    }
-  }
-
-  /* Find candidates in dbbtree */
-  PDM_dbbtree_location_boxes_get (dbbt,
-                                  n_points,
-                                  pts_coord,
-                                  pts_g_num,
-                                  candidates_idx,
-                                  candidates_g_num);
-
-  free (pts_coord);
-  free (pts_g_num);
-}
-#endif
 
 /*============================================================================
  * Public function definitions
@@ -838,29 +788,29 @@ PDM_mesh_location_dump_times
 
   if (rank == 0) {
 
-    PDM_printf( "mesh_location timer : all (elapsed and cpu) :                                      "
+    PDM_printf( "mesh_location timer : all (elapsed and cpu) :                                   "
                 " %12.5es %12.5es\n",
                 t1max, t2max);
 
-    PDM_printf( "mesh_location timer : build bounding boxes (elapsed and cpu) :                     "
+    PDM_printf( "mesh_location timer : build bounding boxes (elapsed and cpu) :                  "
                 " %12.5es %12.5es\n",
                 t_elaps_max[BUILD_BOUNDING_BOXES],
                 t_cpu_max[BUILD_BOUNDING_BOXES]);
 
-    PDM_printf( "mesh_location timer : build aux. struct + search candidates (elapsed and cpu) :    "
+    PDM_printf( "mesh_location timer : build aux. struct + search candidates (elapsed and cpu) : "
                 " %12.5es %12.5es\n",
                 t_elaps_max[SEARCH_CANDIDATES],
                 t_cpu_max[SEARCH_CANDIDATES]);
 
-    PDM_printf( "mesh_location timer : distribute elementary operations (+CHECK) (elapsed and cpu) :"
-                " %12.5es %12.5es\n",
-                t_elaps_max[DISTRIBUTE_ELEMENTARY_OPERATIONS],
-                t_cpu_max[DISTRIBUTE_ELEMENTARY_OPERATIONS]);
-
-    PDM_printf( "mesh_location timer : compute elementary locations (elapsed and cpu) :             "
+    PDM_printf( "mesh_location timer : compute elementary locations (elapsed and cpu) :          "
                 " %12.5es %12.5es\n",
                 t_elaps_max[COMPUTE_ELEMENTARY_LOCATIONS],
                 t_cpu_max[COMPUTE_ELEMENTARY_LOCATIONS]);
+
+    PDM_printf( "mesh_location timer : merge location data (elapsed and cpu) :                   "
+                " %12.5es %12.5es\n",
+                t_elaps_max[MERGE_LOCATION_DATA],
+                t_cpu_max[MERGE_LOCATION_DATA]);
   }
 }
 
@@ -1056,7 +1006,7 @@ PDM_mesh_location_compute
         idx++;
       }
     }
-    printf("n_pts_pcloud = %d\n", n_pts_pcloud);
+
 
     /*
      * Get points inside bounding boxes of elements
@@ -1077,16 +1027,6 @@ PDM_mesh_location_compute
       break;
 
     case PDM_MESH_LOCATION_DBBTREE:
-      /*_location_points_in_boxes_dbbtree (location->comm,
-                                         n_pts_pcloud,
-                                         pcloud_g_num,
-                                         pcloud_coord,
-                                         n_boxes,
-                                         box_g_num,
-                                         dbbt,
-                                         &pts_idx,
-                                         &pts_g_num,
-                                         &pts_coord);*/
       PDM_dbbtree_points_inside_boxes (dbbt,
                                        n_pts_pcloud,
                                        pcloud_g_num,
@@ -1154,7 +1094,6 @@ PDM_mesh_location_compute
       }
     }
 
-    //-->>
     PDM_Mesh_nodal_elt_t *pts_elt_type = malloc (sizeof(PDM_Mesh_nodal_elt_t) * n_pts);
     ibox = 0;
     for (int iblock = 0; iblock < n_blocks; iblock++) {
@@ -1175,7 +1114,6 @@ PDM_mesh_location_compute
         }
       }
     }
-    //<<--
 
     float  *distance         = NULL;
     double *projected_coords = NULL;
@@ -1212,6 +1150,25 @@ PDM_mesh_location_compute
     }
     free (pts_coord);
     free (pts_idx);
+
+
+
+    PDM_timer_hang_on(location->timer);
+    e_t_elapsed = PDM_timer_elapsed(location->timer);
+    e_t_cpu     = PDM_timer_cpu(location->timer);
+    e_t_cpu_u   = PDM_timer_cpu_user(location->timer);
+    e_t_cpu_s   = PDM_timer_cpu_sys(location->timer);
+
+    location->times_elapsed[COMPUTE_ELEMENTARY_LOCATIONS] += e_t_elapsed - b_t_elapsed;
+    location->times_cpu[COMPUTE_ELEMENTARY_LOCATIONS]     += e_t_cpu - b_t_cpu;
+    location->times_cpu_u[COMPUTE_ELEMENTARY_LOCATIONS]   += e_t_cpu_u - b_t_cpu_u;
+    location->times_cpu_s[COMPUTE_ELEMENTARY_LOCATIONS]   += e_t_cpu_s - b_t_cpu_s;
+
+    b_t_elapsed = e_t_elapsed;
+    b_t_cpu     = e_t_cpu;
+    b_t_cpu_u   = e_t_cpu_u;
+    b_t_cpu_s   = e_t_cpu_s;
+    PDM_timer_resume(location->timer);
 
 
     /*
@@ -1342,7 +1299,7 @@ PDM_mesh_location_compute
 
     int *idx_min = malloc (sizeof(int) * n_pts_block2);
     idx = 0;
-    size_t s_weights2 = 0;
+    size_t s_weights = 0;
     for (int i = 0; i < n_pts_block1; i++) {
       idx_min[i] = idx;
 
@@ -1368,7 +1325,7 @@ PDM_mesh_location_compute
 
       block_location2[ipt] = block_location1[idx_min[i]];
       block_weights_stride2[ipt] = block_n_vtx_elt[idx_min[i]];
-      s_weights2 += block_weights_stride2[ipt];
+      s_weights += block_weights_stride2[ipt];
     }
 
     int *block_weights_idx1 = malloc (sizeof(int) * (idx + 1));
@@ -1378,7 +1335,7 @@ PDM_mesh_location_compute
     }
 
 
-    double *block_weights2 = malloc (sizeof(double) * s_weights2);
+    double *block_weights2 = malloc (sizeof(double) * s_weights);
     idx = 0;
     for (int i = 0; i < n_pts_block1; i++) {
       int ipt = block_g_num1[i] - 1 - block_distrib_idx[my_rank];
@@ -1499,10 +1456,10 @@ PDM_mesh_location_compute
     e_t_cpu_u   = PDM_timer_cpu_user(location->timer);
     e_t_cpu_s   = PDM_timer_cpu_sys(location->timer);
 
-    location->times_elapsed[COMPUTE_ELEMENTARY_LOCATIONS] += e_t_elapsed - b_t_elapsed;
-    location->times_cpu[COMPUTE_ELEMENTARY_LOCATIONS]     += e_t_cpu - b_t_cpu;
-    location->times_cpu_u[COMPUTE_ELEMENTARY_LOCATIONS]   += e_t_cpu_u - b_t_cpu_u;
-    location->times_cpu_s[COMPUTE_ELEMENTARY_LOCATIONS]   += e_t_cpu_s - b_t_cpu_s;
+    location->times_elapsed[MERGE_LOCATION_DATA] += e_t_elapsed - b_t_elapsed;
+    location->times_cpu[MERGE_LOCATION_DATA]     += e_t_cpu - b_t_cpu;
+    location->times_cpu_u[MERGE_LOCATION_DATA]   += e_t_cpu_u - b_t_cpu_u;
+    location->times_cpu_s[MERGE_LOCATION_DATA]   += e_t_cpu_s - b_t_cpu_s;
 
     b_t_elapsed = e_t_elapsed;
     b_t_cpu     = e_t_cpu;

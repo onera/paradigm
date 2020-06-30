@@ -179,6 +179,10 @@ _gen_cloud_random
  )
 {
   *n_pts_l = (int) (n_pts/n_procs);
+  if (my_rank < n_pts%n_procs) {
+    *n_pts_l += 1;
+  }
+
   *coord = malloc (sizeof(double) * 3 * (*n_pts_l));
   double *_coord = *coord;
   double x;
@@ -212,6 +216,10 @@ _random_cloud
 
 
   *n_pts_l = (int) (n_pts/n_procs);
+  if (my_rank < n_pts%n_procs) {
+    *n_pts_l += 1;
+  }
+
   *coord = malloc (sizeof(double) * 3 * (*n_pts_l));
   double *_coord = *coord;
   double x;
@@ -450,7 +458,7 @@ int main(int argc, char *argv[])
 
 
 
-#if 1
+#if 0
   for (int ipt = 0; ipt < n_pts_l; ipt++) {
     printf("[%d] (%ld) (%f, %f, %f)\n",
            my_rank, pts_gnum[ipt], pts_coords[3*ipt], pts_coords[3*ipt+1], pts_coords[3*ipt+2]);

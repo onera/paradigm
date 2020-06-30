@@ -4893,146 +4893,6 @@ PDM_box_tree_copy_to_ranks
 
 
 
-
-
-
-void
-PDM_box_tree_location_boxes_get
-(
- PDM_box_tree_t  *bt,
- const int        n_pts,
- double           pts[],
- int             *i_boxes[],
- int             *boxes[]
- )
-{
-  double *_pts = pts;
-  if (bt->boxes->normalized) {
-    _pts = malloc (sizeof(double) * 3 * n_pts);
-    for (int i = 0; i < n_pts; i++) {
-      const double *_pt_origin = pts + 3 * i;
-      double *_pt        = _pts + 3 * i;
-      PDM_box_set_normalize ((PDM_box_set_t *)bt->boxes, _pt_origin, _pt);
-    }
-  }
-
-  int s_pt_stack = ((bt->n_children - 1) * (bt->max_level - 1) + bt->n_children);
-
-  *i_boxes = malloc (sizeof(int) * (n_pts + 1));
-  int *_i_boxes = *i_boxes;
-
-  for (int i = 0; i < n_pts + 1; i++) {
-    _i_boxes[i] = 0;
-  }
-
-
-  int tmp_s_boxes = 4 * n_pts;
-  *boxes = malloc (sizeof(int) * tmp_s_boxes);
-  int *_boxes = *boxes;
-
-  int *stack = malloc ((sizeof(int)) * s_pt_stack);
-
-  int pos_stack = 0;
-
-  int dim = bt->boxes->dim;
-
-  int idx_box = 0;
-
-  int n_boxes = bt->boxes->local_boxes->n_boxes;
-
-  int *is_visited_box = malloc(sizeof(int) * n_boxes);
-  for (int i = 0; i < n_boxes; i++) {
-    is_visited_box[i] = 0;
-  }
-  int n_visited_boxes = 0;
-
-  int *visited_boxes = malloc(sizeof(int) * n_boxes); // A optimiser
-
-  double node_extents[2*dim];
-
-  for (int ipt = 0; ipt < n_pts; ipt++) {
-
-    const double *_pt = _pts + 3*ipt;
-
-    /* Init stack */
-    pos_stack = 0;
-    _extents (dim, bt->local_data->nodes[0].morton_code, node_extents);
-
-    if (_point_inside_box (dim, node_extents, _pt)) {
-      stack[pos_stack++] = 0;
-    }
-
-    n_visited_boxes = 0;
-
-    while (pos_stack > 0) {
-      int node_id = stack[--pos_stack];
-
-      _node_t *node = &(bt->local_data->nodes[node_id]);
-
-      if (node->n_boxes == 0) {
-	continue;
-      }
-
-      if (!node->is_leaf) {
-        /* inspect children of current node */
-        int *child_ids = bt->local_data->child_ids + node_id*bt->n_children;
-        for (int ichild = 0; ichild < bt->n_children; ichild++) {
-          int child_id = child_ids[ichild];
-          _extents (dim, bt->local_data->nodes[child_id].morton_code, node_extents);
-
-          if (_point_inside_box (dim, node_extents, _pt)) {
-            stack[pos_stack++] = child_id;
-          }
-        }
-
-      } else {
-        /* current node is a leaf, inspect its boxes */
-        for (int ibox = 0; ibox < node->n_boxes; ibox++) {
-          int box_id = bt->local_data->box_ids[node->start_id + ibox];
-
-          if (is_visited_box[box_id] == 0) {
-            const double *box_extents = bt->boxes->local_boxes->extents + box_id*2*dim;
-
-            if (_point_inside_box (dim, box_extents, _pt)) {
-              if (idx_box >= tmp_s_boxes) {
-                tmp_s_boxes *= 2;
-                *boxes = realloc (*boxes, sizeof(int) * tmp_s_boxes);
-                _boxes = *boxes;
-              }
-              _boxes[idx_box++] = box_id;
-              _i_boxes[ipt+1]++;
-            }
-            visited_boxes[n_visited_boxes++] = box_id;
-            is_visited_box[box_id] = 1;
-          }
-        }
-
-      }
-    }
-
-    for (int ibox = 0; ibox < n_visited_boxes; ibox++) {
-      is_visited_box[visited_boxes[ibox]] = 0;
-    }
-  }
-
-  for (int i = 0; i < n_pts; i++) {
-    _i_boxes[i+1] += _i_boxes[i];
-  }
-
-  *boxes = realloc (*boxes, sizeof(int) * _i_boxes[n_pts]);
-  if (pts != _pts) {
-    free (_pts);
-  }
-
-  free (is_visited_box);
-  free (stack);
-  free (visited_boxes);
-}
-
-
-
-
-
 void
 PDM_box_tree_points_inside_boxes
 (
@@ -5057,7 +4917,7 @@ PDM_box_tree_points_inside_boxes
       PDM_box_set_normalize ((PDM_box_set_t *)bt->boxes, _pt_origin, _pt);
     }
   } else {
-    _pts_coord = pts_coord;
+    _pts_coord = (double *) pts_coord;
   }
 
 
@@ -5073,7 +4933,6 @@ PDM_box_tree_points_inside_boxes
   int *boxes_l_num = malloc (sizeof(int) * tmp_s_boxes);
 
 
-  /* ... */
   int s_stack = ((bt->n_children - 1) * (bt->max_level - 1) + bt->n_children);
   int *stack = malloc ((sizeof(int)) * s_stack);
   int pos_stack = 0;
@@ -5087,7 +4946,6 @@ PDM_box_tree_points_inside_boxes
   int *visited_boxes = malloc(sizeof(int) * n_boxes); // A optimiser
 
   double node_extents[2*dim];
-  //int idx_box = 0;
 
 
   /* Loop over points */
