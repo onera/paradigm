@@ -1720,7 +1720,7 @@ PDM_box_set_send_data_to_origin_distrib
     int idx1  = 0;
     for (int i = 0; i < n_elt; i++) {
       int i_part = orig_loc[2*i];
-      int iElt  = orig_loc[2*i+1];
+      int iElt   = orig_loc[2*i+1];
 
       int idx   = _origin_distrib_idx[i_part][iElt] * (int) data_size;
 
