@@ -829,6 +829,8 @@ PDM_dbbtree_intersect_boxes_set
      * Redistribute boxes on intersecting ranks
      */
 
+    PDM_box_set_redistribute (distrib, boxes);
+
     if (1 == 1) {
       printf ("Boxes B apres redistribution : %d\n", boxes->local_boxes->n_boxes);
       for (int i = 0; i < boxes->local_boxes->n_boxes; i++) {
