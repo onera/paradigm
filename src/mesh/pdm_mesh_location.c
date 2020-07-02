@@ -163,78 +163,6 @@ _get_from_id
 }
 
 
-
-
-static void
-_location_points_in_boxes_octree
-(
- const PDM_MPI_Comm   comm,
- const int            n_points,
- const PDM_g_num_t   *pts_g_num,
- const double        *pts_coord,
- const int            n_boxes,
- const double        *box_extents,
- const PDM_g_num_t   *box_g_num,
- int                **pts_in_box_idx,
- PDM_g_num_t        **pts_in_box_g_num,
- double             **pts_in_box_coord
- )
-{
-  int my_rank;
-  PDM_MPI_Comm_rank (comm, &my_rank);
-
-  int n_ranks;
-  PDM_MPI_Comm_rank (comm, &n_ranks);
-
-  /**************************************
-   * Build octree from point cloud
-   ***************************************/
-  const int depth_max = 15;//?
-  const int points_in_leaf_max = 1;
-  const int build_leaf_neighbours = 0;
-
-
-  /* Create empty parallel octree structure */
-  int octree_id = PDM_para_octree_create (1,
-                                          depth_max,
-                                          points_in_leaf_max,
-                                          build_leaf_neighbours,
-                                          comm);
-
-  /* Set octree point cloud */
-  PDM_para_octree_point_cloud_set (octree_id,
-                                   0,
-                                   n_points,
-                                   pts_coord,
-                                   pts_g_num);
-
-  /* Build parallel octree */
-  PDM_para_octree_build (octree_id);
-  //PDM_para_octree_dump (octree_id);
-  //PDM_para_octree_dump_times (octree_id);
-
-
-  /***************************************
-   * Locate points inside boxes
-   ***************************************/
-  PDM_para_octree_points_inside_boxes (octree_id,
-                                       n_boxes,
-                                       box_extents,
-                                       box_g_num,
-                                       pts_in_box_idx,
-                                       pts_in_box_g_num,
-                                       pts_in_box_coord);
-
-
-  /***************************************
-   * Free octree
-   ***************************************/
-  PDM_para_octree_free (octree_id);
-}
-
-
-
-
 /*============================================================================
  * Public function definitions
  *============================================================================*/
@@ -834,10 +762,16 @@ PDM_mesh_location_compute
  const int id
  )
 {
-  const float eps_dist = 1.e-6;
+  const float eps_dist = 1.e-10;
 
   const int DEBUG = 0;
   const int dim = 3;
+
+  const int octree_depth_max = 15;//?
+  const int octree_points_in_leaf_max = 1;
+  const int octree_build_leaf_neighbours = 0;
+  int octree_id;
+
 
   _PDM_location_t *location = _get_from_id (id);
 
@@ -1013,17 +947,38 @@ PDM_mesh_location_compute
      */
 
     switch (location->method) {
+
     case PDM_MESH_LOCATION_OCTREE:
-      _location_points_in_boxes_octree (location->comm,
-                                        n_pts_pcloud,
-                                        pcloud_g_num,
-                                        pcloud_coord,
-                                        n_boxes,
-                                        box_extents,
-                                        box_g_num,
-                                        &pts_idx,
-                                        &pts_g_num,
-                                        &pts_coord);
+      /* Create octree structure */
+      octree_id = PDM_para_octree_create (1,
+                                          octree_depth_max,
+                                          octree_points_in_leaf_max,
+                                          octree_build_leaf_neighbours,
+                                          location->comm);
+
+      /* Set octree point cloud */
+      PDM_para_octree_point_cloud_set (octree_id,
+                                       0,
+                                       n_pts_pcloud,
+                                       pcloud_coord,
+                                       pcloud_g_num);
+
+      /* Build parallel octree */
+      PDM_para_octree_build (octree_id);
+      //PDM_para_octree_dump (octree_id);
+      //PDM_para_octree_dump_times (octree_id);
+
+      /* Locate points inside boxes */
+      PDM_para_octree_points_inside_boxes (octree_id,
+                                           n_boxes,
+                                           box_extents,
+                                           box_g_num,
+                                           &pts_idx,
+                                           &pts_g_num,
+                                           &pts_coord);
+
+      /* Free octree */
+      PDM_para_octree_free (octree_id);
       break;
 
     case PDM_MESH_LOCATION_DBBTREE:
@@ -1041,6 +996,7 @@ PDM_mesh_location_compute
     default:
       printf("Error: unknown location method %d\n", location->method);
       assert (1 == 0);
+
     }
     free (pcloud_coord);
 
@@ -1299,6 +1255,7 @@ PDM_mesh_location_compute
 
     int *idx_min = malloc (sizeof(int) * n_pts_block2);
     idx = 0;
+    int idw = 0;
     size_t s_weights = 0;
     for (int i = 0; i < n_pts_block1; i++) {
       idx_min[i] = idx;
@@ -1308,13 +1265,16 @@ PDM_mesh_location_compute
         PDM_Mesh_nodal_elt_t type_min;
 
         for (int j = idx; j < idx + block_n_candidates[i]; j++) {
-          if (min_dist > block_distance[j] ||
-              (min_dist < block_distance[j] + eps_dist &&
-               type_min > block_elt_type[j])) {
+
+          if (block_distance[j] < min_dist - eps_dist ||
+              (block_distance[j] < min_dist + eps_dist &&
+              type_min > block_elt_type[j])) {
             min_dist = block_distance[j];
             type_min = block_elt_type[j];
             idx_min[i] = j;
           }
+
+          idw += block_n_vtx_elt[j];
         }
       }
 

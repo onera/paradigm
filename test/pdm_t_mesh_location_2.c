@@ -1191,6 +1191,8 @@ int main(int argc, char *argv[])
       }
 #endif
 
+      printf("+1 block (type = %d)\n", itype);
+
       int id_block = PDM_Mesh_nodal_block_add (mesh_nodal_id,
                                                st_free_data,
                                                itype);
