@@ -423,14 +423,15 @@ _compute_uvw
 
 
 /*----------------------------------------------------------------------------
- * Locate points on a 3d edge, and update the location[] and distance[]
+ * Locate points on an edge, and update the location[] and distance[]
  * arrays associated with the point set.
  *
  * parameters:
+ *   dim                <-- dimension (2 or 3)
  *   edge_vtx           <-- ids of edge vertices
  *   parent_vertex_num  <-- pointer to parent vertex numbers (or NULL)
  *   vtx_coord          <-- pointer to vertex coordinates
- *   pts_coord          <-- xyz-coordinates of points to locate
+ *   pts_coord          <-- coordinates of points to locate (size: n_pts * dim)
  *   n_pts              <-- number of points to locate
  *   distance           --> distance from point to edge (size: n_pts)
  *   bar_coord          --> barycentric coordinates of points projections on edge (size: 2*n_pts)
@@ -448,7 +449,7 @@ _locate_on_edge_3d
  double             bar_coord[]
  )
 {
-  const int DEBUG = 0;
+  const int DEBUG = 1;
 
   int idim, ipt;
   PDM_l_num_t id0, id1;
@@ -460,6 +461,12 @@ _locate_on_edge_3d
   if (parent_vertex_num != NULL) {
     id0 = parent_vertex_num[id0] - 1;
     id1 = parent_vertex_num[id1] - 1;
+  }
+
+  if (DEBUG) {
+    printf("_locate_on_edge (%f %f %f) ; (%f %f %f)\n",
+           vtx_coord[3*id0], vtx_coord[3*id0+1], vtx_coord[3*id0+2],
+           vtx_coord[3*id1], vtx_coord[3*id1+1], vtx_coord[3*id1+2]);
   }
 
   /* Calculate edge vector and length */
@@ -530,7 +537,125 @@ _locate_on_edge_3d
         sum += _bc[ivtx];
       }
       printf("  (sum = %f)\n", sum);
-      printf("dist = %f\n\n", distance[ipt]);
+      printf("dist = %g\n\n", distance[ipt]);
+    }
+
+  } // End of loop on points
+
+}
+
+
+
+
+static void
+_locate_on_edge
+(
+ const int          dim,
+ const PDM_l_num_t  edge_vtx[2],
+ const PDM_l_num_t *parent_vertex_num,
+ const double       vtx_coord[],
+ const int          n_pts,
+ const double       pts_coord[],
+ const PDM_g_num_t  pts_g_num[],//debug only
+ float              distance[],
+ double             bar_coord[]
+ )
+{
+  const int DEBUG = 1;
+
+  int idim, ipt;
+  PDM_l_num_t id0, id1;
+
+  /* vertex index of current edge */
+  id0 = edge_vtx[0] - 1;
+  id1 = edge_vtx[1] - 1;
+
+  if (parent_vertex_num != NULL) {
+    id0 = parent_vertex_num[id0] - 1;
+    id1 = parent_vertex_num[id1] - 1;
+  }
+
+  if (DEBUG) {
+    if (dim == 2) {
+      printf("_locate_on_edge (%f %f) ; (%f %f)\n",
+             vtx_coord[2*id0], vtx_coord[2*id0+1],
+             vtx_coord[2*id1], vtx_coord[2*id1+1]);
+    } else if (dim == 3) {
+      printf("_locate_on_edge (%f %f %f) ; (%f %f %f)\n",
+             vtx_coord[3*id0], vtx_coord[3*id0+1], vtx_coord[3*id0+2],
+             vtx_coord[3*id1], vtx_coord[3*id1+1], vtx_coord[3*id1+2]);
+    }
+  }
+
+  /* Calculate edge vector and length */
+  double u[3], uu = 0.;
+  for (idim = 0; idim < dim; idim++) {
+    u[idim] = vtx_coord[dim*id1 + idim] - vtx_coord[dim*id0 + idim];
+    uu += u[idim] * u[idim];
+  }
+
+  if (uu < _epsilon_denom){
+    PDM_printf("warning _locate_on_edge : Reduce _epsilon_denom criteria : %12.5e < %12.5e\n", uu, _epsilon_denom);
+    PDM_printf_flush();
+    return;
+  }
+
+  double inv_uu = 1. / uu;
+
+  /* Loop on points to locate on edge */
+  double v[3], uv = 0., t;
+  for (ipt = 0; ipt < n_pts; ipt++) {
+    const double *_pt = pts_coord + dim * ipt;
+    double       *_bc = bar_coord + 2 * ipt;
+
+    if (DEBUG) {
+      printf("pt %d (%ld) : (%f %f %f)\n",
+             ipt, pts_g_num[ipt], _pt[0], _pt[1], _pt[2]);
+    }
+
+    /* Calculate linear coordinates of projection of point on edge axis */
+    for (idim = 0; idim < dim; idim++) {
+      v[idim] = _pt[idim] - vtx_coord[dim*id0 + idim];
+      uv += u[idim] * v[idim];
+    }
+
+    t = uv * inv_uu;
+
+
+    /* Set v to be the vector from the point to the closest point on
+       the segment (if t < 0, v is already that vector) */
+    if (t >= 1.) {
+      for (idim = 0; idim < dim; idim++) {
+        v[idim] = _pt[idim] - vtx_coord[dim*id1 + idim];
+      }
+    }
+
+    else if (t > 0.) {
+      for (idim = 0; idim < dim; idim++) {
+        v[idim] -= t * u[idim];
+      }
+    }
+
+    /* Distance between point to locate and its projection */
+    double dist2 = 0.;
+    for (idim = 0; idim < dim; idim++) {
+      dist2 += v[idim] * v[idim];
+    }
+    distance[ipt] = (float) sqrt (dist2);
+
+    /* Barycentric coordinates */
+    _bc[0] = 1. - t;
+    _bc[1] =      t;
+
+    if (DEBUG) {
+      double sum = 0;
+      printf(" bc = ");
+      for (int ivtx = 0; ivtx < 2; ivtx++) {
+        printf("%f ", _bc[ivtx]);
+        sum += _bc[ivtx];
+      }
+      printf("  (sum = %f)\n", sum);
+      printf("dist = %g\n\n", distance[ipt]);
     }
 
   } // End of loop on points
@@ -672,7 +797,7 @@ _locate_on_triangles_3d
       double closest_point[3];
       double dist2;
       double weights[3];
-#if 0
+#if 1
       PDM_triangle_status_t stat = PDM_triangle_evaluate_position (_pt,
                                                                    tri_coord,
                                                                    closest_point,
@@ -970,25 +1095,15 @@ _locate_in_tetra
     }
 
     /* Compute 'distance' from current point to tetrahedron */
-    double max_dist = -1.;
+    double min_bc = HUGE_VAL;
     for (ivtx = 0; ivtx < 4; ivtx++) {
-      double dist = PDM_ABS (_bc[ivtx] - 0.5);
-
-      if (dist > max_dist) {
-        max_dist = dist;
-      }
+      min_bc = PDM_MIN (min_bc, _bc[ivtx]);
     }
 
-    distance[ipt] = (float) max_dist;
+    distance[ipt] = (float) (-min_bc);
 
-    /* Point inside tetrahedron */
-    if (distance[ipt] <= 0.5) {
-      //distance[ipt] = 0.;
-      distance[ipt] = -distance[ipt];
-    }
-
-    /* Point outside tetrahedron --> project on boundary */
-    else {
+    /* Point outside tetrahedron */
+    if (distance[ipt] > 0.) {
       pts_out[n_pts_out++] = ipt;
     }
 
@@ -1106,16 +1221,20 @@ _locate_in_cell_3d
  double                     *bar_coord
  )
 {
+  #define MODIF_DIST 1
   const int DEBUG = 0;
   const int CHECK = 0;
 
   double uvw[3];
   double _vtx_coord[8][3];
-  double dist, max_dist;
+  double eps_vtx2 = 1.e-6 * tolerance;
+  eps_vtx2 *= eps_vtx2;
 
   const int order = 1;
   const int n_vtx = PDM_Mesh_nodal_n_vertices_element (elt_type, order);
 
+  int *pts_out = malloc (sizeof(int) * n_pts);
+  int n_pts_out = 0;
 
   /* Initialize local element coordinates copy */
   PDM_l_num_t id_vtx;
@@ -1142,18 +1261,95 @@ _locate_in_cell_3d
                       pts_g_num,//debug only
                       distance,
                       bar_coord);
+    return;
   }
 
-  /* Other cell types */
-  else {
+  /* Other cell types -> compute shape functions iteratively */
+  for (int ipt = 0; ipt < n_pts; ipt++) {
+
+    const double *_pt = pts_coord + 3 * ipt;
+    double *_bc = bar_coord + n_vtx * ipt;
+
+    if (DEBUG) {
+      printf("pt %d (%ld) : (%f %f %f)\n",
+             ipt, pts_g_num[ipt], _pt[0], _pt[1], _pt[2]);
+    }
+
+    /* Check vertices (To avoid singularity with pyramids) */
+    PDM_bool_t on_vtx = PDM_FALSE;
+    for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
+
+      double dist2 = 0.;
+      for (int idim = 0; idim < 3; idim++) {
+        double delta = _vtx_coord[ivtx][idim] - _pt[idim];
+        dist2 += delta * delta;
+      }
+
+      if (dist2 < eps_vtx2) {
+        distance[ipt] = 0.;
+
+        for (int i = 0; i < n_vtx; i++) {
+          _bc[i] = 0.;
+        }
+        _bc[ivtx] = 1.;
+
+        on_vtx = PDM_TRUE;
+        break;
+      }
+
+    } // End loop on vertices
+
+    if (on_vtx == PDM_TRUE) {
+      continue;
+    }
+
+    /* Compute parametric coordinates */
+    PDM_bool_t stat_uvw = _compute_uvw(elt_type,
+                                       _pt,
+                                       _vtx_coord,
+                                       tolerance,
+                                       uvw);
+    if (stat_uvw == PDM_TRUE) {
+      _compute_shapef_3d (elt_type, uvw, _bc, NULL);
+
+      double min_bc = HUGE_VAL;
+      for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
+        min_bc = PDM_MIN (min_bc, _bc[ivtx]);
+      }
+
+      distance[ipt] = (float) (-min_bc);
+    }
+
+    /* Failed to compute parametric coordinates */
+    else {
+      distance[ipt] = 1.e12;
+      for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
+        _bc[ivtx] = 0.;
+      }
+
+    }
+
+    /* Point outside cell */
+    if (distance[ipt] > 0.) {
+      pts_out[n_pts_out++] = ipt;
+      distance[ipt] = HUGE_VAL;
+    }
+
+  } // End loop on points
+
+
+  /* Locate points outside cell (closest point on boundary) */
+  if (n_pts_out > 0) {
+
+    int *closest_face = malloc (sizeof(int) * n_pts_out);
+    double *closest_point = malloc (sizeof(double) * n_pts_out * 3);
 
     int n_face;
     int face_vtx_idx[7];
     int face_vtx[24];
     int _cell_vtx[8] = {1, 2, 3, 4, 5, 6, 7, 8};
-    double face_coord[12];
-    double bar_coord_face[4];
     int orientation = 0;
+    int n_vtx_face;
 
     switch (elt_type) {
     case PDM_MESH_NODAL_PYRAMID5:
@@ -1191,170 +1387,145 @@ _locate_in_cell_3d
 
     }
 
+    PDM_l_num_t n_tri;
+    double tri_coord[9];
+    PDM_l_num_t _tri_vtx[3];
+    PDM_l_num_t tri_vtx[6];
+    PDM_triangulate_state_t *state = PDM_triangulate_state_create (4);
 
-    /* Shape functions must be computed iteratively */
+    /* Find closest face/point for each point outside the cell */
+    for (int iface = 0; iface < n_face; iface++) {
+
+      const PDM_l_num_t *_face_vtx = face_vtx + face_vtx_idx[iface];
+      n_vtx_face = face_vtx_idx[iface+1] - face_vtx_idx[iface];
+
+      /* Triangular face */
+      if (n_vtx_face == 3) {
+        n_tri = 1;
+        for (int ivtx = 0; ivtx < 3; ivtx++) {
+          tri_vtx[ivtx] = _face_vtx[ivtx];
+        }
+      }
+
+      /* Quadrilateral face */
+      else {
+        n_tri = PDM_triangulate_quadrangle (3,
+                                            (double *) _vtx_coord,
+                                            NULL,
+                                            _face_vtx,
+                                            tri_vtx);
+      }
+
+      /* Loop on face triangles */
+      for (int itri = 0; itri < n_tri; itri++) {
+
+        for (int ivtx = 0; ivtx < 3; ivtx++) {
+          _tri_vtx[ivtx] = tri_vtx[3*itri + ivtx] - 1;
+        }
+
+        for (int ivtx = 0; ivtx < 3; ivtx++) {
+          for (int idim = 0; idim < 3; idim++) {
+            tri_coord[3*ivtx + idim] = _vtx_coord[_tri_vtx[ivtx]][idim];
+          }
+        }
+
+        /* Loop on points */
+        for (int ipt = 0; ipt < n_pts_out; ipt++) {
+
+          int _ipt = pts_out[ipt];
+          const double *_pt = pts_coord + 3 * _ipt;
+          double *_cp = closest_point + 3 * ipt;
+
+          double min_dist2, closest[3];
+          PDM_triangle_status_t error = PDM_triangle_evaluate_position ((double *) _pt,
+                                                                        tri_coord,
+                                                                        closest,
+                                                                        &min_dist2,
+                                                                        NULL);
+
+          if (error == PDM_TRIANGLE_DEGENERATED) {
+            continue;
+          }
+
+          if (distance[_ipt]*distance[_ipt] > min_dist2) {
+            distance[_ipt] = (float) sqrt (min_dist2);
+
+            closest_face[ipt] = iface;
+            for (int idim = 0; idim < 3; idim++) {
+              _cp[idim] = closest[idim];
+            }
+          }
+
+        } // End loop on points
+
+      } // End loop on triangles
+
+    } // End loop on faces
+
+    state = PDM_triangulate_state_destroy(state);
+
+    /* Loctate closest points on closest faces */
+    double face_coord[12];
+    double bar_coord_face[4];
+    for (int ipt = 0; ipt < n_pts_out; ipt++) {
+
+      int _ipt = pts_out[ipt];
+      double *_cp = closest_point + 3 * ipt;
+      double *_bc = bar_coord + n_vtx * _ipt;
+
+      for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
+        _bc[ivtx] = 0.;
+      }
+
+      int iface = closest_face[ipt];
+      n_vtx_face = face_vtx_idx[iface+1] - face_vtx_idx[iface];
+
+      for (int ivtx = 0; ivtx < n_vtx_face; ivtx++) {
+        int _ivtx = face_vtx[face_vtx_idx[iface] + ivtx] - 1;
+
+        for (int idim = 0; idim < 3; idim++) {
+          face_coord[3*ivtx + idim] = _vtx_coord[_ivtx][idim];
+        }
+      }
+
+      PDM_mean_value_coordinates_polygon_3d (n_vtx_face,
+                                             face_coord,
+                                             1,
+                                             _cp,
+                                             bar_coord_face);
+
+      for (int ivtx = 0; ivtx < n_vtx_face; ivtx++) {
+        int _ivtx = face_vtx[face_vtx_idx[iface] + ivtx] - 1;
+        _bc[_ivtx] = bar_coord_face[ivtx];
+      }
+
+#if 1
+      const double *_pt = pts_coord + 3 * _ipt;
+      double v_p_cp[3] = {_pt[0], _pt[1], _pt[2]};
+      for (int ivtx = 0; ivtx < n_vtx_face; ivtx++) {
+        int _ivtx = face_vtx[face_vtx_idx[iface] + ivtx] - 1;
+        for (int idim = 0; idim < 3; idim++) {
+          v_p_cp[idim] -= bar_coord_face[ivtx] * _vtx_coord[_ivtx][idim];
+        }
+      }
+
+      double min_dist2 = PDM_DOT_PRODUCT (v_p_cp, v_p_cp);
+      distance[_ipt] = (float) sqrt (min_dist2);
+#endif
+
+    }
+
+    free (closest_face);
+    free (closest_point);
+  }
+
+  free (pts_out);
+
+  if (DEBUG || CHECK) {
     for (int ipt = 0; ipt < n_pts; ipt++) {
 
       const double *_pt = pts_coord + 3 * ipt;
-      if (DEBUG) {
-        printf("pt %d (%ld) : (%f %f %f)\n",
-               ipt, pts_g_num[ipt], _pt[0], _pt[1], _pt[2]);
-      }
-
       double *_bc = bar_coord + n_vtx * ipt;
-
-      /* Check vertices (To not have a problem with pyramids) */
-      PDM_bool_t on_vtx = PDM_FALSE;
-      for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
-
-        double v[3] = {_vtx_coord[ivtx][0] - _pt[0],
-                       _vtx_coord[ivtx][1] - _pt[1],
-                       _vtx_coord[ivtx][2] - _pt[2]};
-
-        double _dist = PDM_MODULE (v);
-
-        if (_dist < 1e-6 * tolerance) {
-          //distance[ipt] = 0.;
-          distance[ipt] = -distance[ipt];
-
-          for (int i = 0; i < n_vtx; i++) {
-            _bc[i] = 0.;
-          }
-          _bc[ivtx] = 1.;
-
-          on_vtx = PDM_TRUE;
-          break;
-        }
-
-      } // End loop on vertices
-
-
-      if (on_vtx == PDM_FALSE) {
-
-        /* Compute parametric coordinates */
-        if (_compute_uvw(elt_type,
-                         _pt,
-                         _vtx_coord,
-                         tolerance,
-                         uvw) == PDM_TRUE) {
-
-          _compute_shapef_3d (elt_type, uvw, _bc, NULL);
-
-          max_dist = -1.0;
-          if (elt_type == PDM_MESH_NODAL_HEXA8) {
-            for (int i = 0; i < 3; i++){
-              dist = PDM_ABS (uvw[i] - 0.5);
-
-              if (max_dist < dist) {
-                max_dist = dist;
-              }
-            }
-          } else {
-            for (int ivtx = 0; ivtx < n_vtx; ivtx++){
-              dist = PDM_ABS (_bc[ivtx] - 0.5);
-
-              if (max_dist < dist) {
-                max_dist = dist;
-              }
-            }
-          }
-
-          distance[ipt] = (float) max_dist;
-        }
-
-
-        /* Failed to compute parametric coordinates */
-        else {
-          distance[ipt] = 1.e12;
-          for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
-            _bc[ivtx] = 0.;
-          }
-
-        }
-      }
-
-      /* Point inside cell */
-      if (distance[ipt] < 0.5) {
-        //distance[ipt] = 0.;
-        distance[ipt] = -distance[ipt];
-      }
-
-      /* Point outside cell --> project on boundary */
-      else {
-
-        /* Find closest face */
-        double min_dist2 = HUGE_VAL, dist2, closest[3];
-        int iface_min = -1;
-        for (int iface = 0; iface < n_face; iface++) {
-
-          int n_vtx_face = face_vtx_idx[iface+1] - face_vtx_idx[iface];
-          for (int ivtx = 0; ivtx < n_vtx_face; ivtx++) {
-            id_vtx = face_vtx[face_vtx_idx[iface] + ivtx] - 1;
-
-            for (int idim = 0; idim < 3; idim++) {
-              face_coord[3*ivtx + idim] = _vtx_coord[id_vtx][idim];
-            }
-          }
-
-          if (n_vtx_face == 3) {
-            PDM_triangle_evaluate_position (_pt,
-                                            face_coord,
-                                            closest,
-                                            &dist2,
-                                            NULL);
-          } else {
-            PDM_polygon_evaluate_position (_pt,
-                                           n_vtx_face,
-                                           face_coord,
-                                           closest,
-                                           &dist2);
-          }
-
-          if (dist2 < min_dist2) {
-            min_dist2 = dist2;
-            iface_min = iface;
-          }
-        }
-
-        /* Compute mean value coordinates in that face */
-        int n_vtx_face = face_vtx_idx[iface_min+1] - face_vtx_idx[iface_min];
-        for (int ivtx = 0; ivtx < n_vtx_face; ivtx++) {
-          id_vtx = face_vtx[face_vtx_idx[iface_min] + ivtx] - 1;
-
-          for (int idim = 0; idim < 3; idim++) {
-            face_coord[3*ivtx + idim] = _vtx_coord[id_vtx][idim];
-          }
-        }
-
-        PDM_mean_value_coordinates_polygon_3d (n_vtx_face,
-                                               face_coord,
-                                               1,
-                                               _pt,
-                                               bar_coord_face);
-
-        for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
-          _bc[ivtx] = 0.;
-        }
-
-        for (int ivtx = 0; ivtx < n_vtx_face; ivtx++) {
-          id_vtx = face_vtx[face_vtx_idx[iface_min] + ivtx] - 1;
-
-          _bc[id_vtx] = bar_coord_face[ivtx];
-        }
-
-#if 1
-        double v_p_cp[3] = {_pt[0], _pt[1], _pt[2]};
-        for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
-          for (int idim = 0; idim < 3; idim++) {
-            v_p_cp[idim] -= _bc[ivtx] * _vtx_coord[ivtx][idim];
-          }
-        }
-
-        min_dist2 = PDM_DOT_PRODUCT (v_p_cp, v_p_cp);
-#endif
-
-        distance[ipt] = (float) sqrt(min_dist2);
-      }
 
       if (DEBUG) {
         double sum = 0;
@@ -1378,9 +1549,7 @@ _locate_in_cell_3d
         printf("pt %d (%ld) : dist = %f\t ; linear precision = %f\n",
                ipt, pts_g_num[ipt], distance[ipt], PDM_MODULE(err));
       }
-
     } // End of loop on points
-
   }
 
 }
@@ -1588,6 +1757,7 @@ _std_block_locate_3d
 
         /* First-order elements */
         if (order == 1) {
+#if 0
           _locate_on_edge_3d (element_vertex_num + ielt * n_vtx_elt,
                               parent_vertex_num,
                               vertex_coord,
@@ -1596,6 +1766,17 @@ _std_block_locate_3d
                               pts_g_num + pts_idx[idx],//debug
                               distance + ipt,
                               bar_coord + ipt * n_vtx_elt);
+#else
+          _locate_on_edge (3,
+                           element_vertex_num + ielt * n_vtx_elt,
+                           parent_vertex_num,
+                           vertex_coord,
+                           n_pts,
+                           pts_coord + pts_idx[idx] * 3,
+                           pts_g_num + pts_idx[idx],//debug
+                           distance + ipt,
+                           bar_coord + ipt * n_vtx_elt);
+#endif
         }
 
         /* High-order elements */
@@ -1627,7 +1808,7 @@ _std_block_locate_3d
           bar_coord[ipt] = 1.;
 
           if (DEBUG) {
-            printf("\tpt (%ld) (%f %f %f) distance = %f\n",
+            printf("\tpt (%ld) (%f %f %f) distance = %g\n",
                    pts_g_num[id_pt],
                    pts_coord[3*id_pt], pts_coord[3*id_pt+1], pts_coord[3*id_pt+2],
                    distance[ipt]);
@@ -2380,6 +2561,7 @@ _locate_in_polyhedron2
 
   } // End of loop on faces
 
+  state = PDM_triangulate_state_destroy(state);
 
 
 
