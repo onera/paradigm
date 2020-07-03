@@ -205,32 +205,6 @@ void PDM_polygon_compute_uv_coordinates
  double       *uv
  );
 
-PDM_polygon_status_t PDM_polygon_point_in_2d
-(
- const double  uv[2],
- const int     n_vtx,
- const double *vtx_uv,
- double       *bounds
- );
-
-PDM_polygon_status_t PDM_polygon_point_in_2d_wn
-(
- const double  uv[2],
- const int     n_vtx,
- const double *vtx_uv,
- double       *bounds
- );
-
-PDM_polygon_status_t PDM_polygon_point_in_3d_wn
-(
- const double  xyz[2],
- const int     n_vtx,
- const double *vtx_xyz,
- const double  normal[3],
- const double  characteristic_length,
- double       *bounds
- );
-
 
 /**
  * \brief Test if a point is inside a 2d polygon using the Winding Number method
@@ -246,7 +220,7 @@ PDM_polygon_status_t PDM_polygon_point_in_3d_wn
  *
  */
 
-PDM_polygon_status_t PDM_polygon_point_in2d
+PDM_polygon_status_t PDM_polygon_point_in_2d
 (
  const double  xy[2],
  const int     n_vtx,
@@ -269,7 +243,7 @@ PDM_polygon_status_t PDM_polygon_point_in2d
  *
  */
 
-PDM_polygon_status_t PDM_polygon_point_in3d
+PDM_polygon_status_t PDM_polygon_point_in_3d
 (
  const double  xyz[3],
  const int     n_vtx,

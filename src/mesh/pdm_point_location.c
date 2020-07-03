@@ -2663,7 +2663,7 @@ _locate_in_polyhedron2
                                   face_orientation,
                                   _pt,
                                   _bc);
-      //distance[ipt] = 0.;
+
       distance[ipt] = -distance[ipt];
     }
 

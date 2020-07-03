@@ -69,7 +69,8 @@ PDM_mean_value_coordinates_polygon_2d
 )
 {
   /*
-    See "Mean value coordinates for arbitrary planar polygons", Kai Hormann, and Michael S. Floater. (2006)
+    See "Mean value coordinates for arbitrary planar polygons",
+    Kai Hormann, and Michael S. Floater. (2006)
   */
   const double eps_base = 1e-12;
 
@@ -103,11 +104,11 @@ PDM_mean_value_coordinates_polygon_2d
 
     /* If current point is outside the polygon,
        consider its projection on the polygon boundary */
-    if (PDM_polygon_point_in2d (_pt,
-                                n_vtx,
-                                vtx_coord,
-                                char_length,
-                                bounds) != PDM_POLYGON_INSIDE) {
+    if (PDM_polygon_point_in_2d (_pt,
+                                 n_vtx,
+                                 vtx_coord,
+                                 char_length,
+                                 bounds) != PDM_POLYGON_INSIDE) {
       double dist2_min = DBL_MAX;
       int i_min;
       double t_min;
@@ -283,7 +284,6 @@ _determinant_3x3
 
 /**
  * See "Mean value coordinates for closed triangular meshes", T. Ju et al. (2005)
- *
  *
  **/
 void
@@ -999,201 +999,6 @@ PDM_mean_values_polygon
   free (dist);
   free (u);
   free (tan_half_theta);
-}
-
-
-
-void
-PDM_mean_value_coordinates_polygon_3d_2
-(
- const int    n_vtx,
- const double vtx_coord[],
- const int    n_pts,
- const double pts_coord[],
- const double normal[3],
- double       mean_value_coord[]
-)
-{
-  const double eps_base = 1e-12;
-  int ipt, ivtx, jvtx, idim;
-
-  double *_normal = NULL;
-  if (normal != NULL) {
-    _normal = (double *) normal;
-  } else {
-    _normal = malloc (sizeof(double) * 3);
-    PDM_plane_normal (n_vtx,
-                      vtx_coord,
-                      _normal);
-  }
-
-  /* Compute polygon bounds */
-  double bounds[6] = {DBL_MAX, -DBL_MAX,
-                      DBL_MAX, -DBL_MAX,
-                      DBL_MAX, -DBL_MAX};
-  double char_length = eps_base;
-  for (ivtx = 0; ivtx < n_vtx; ivtx++) {
-    for (idim = 0; idim < 3; idim++) {
-      bounds[2*idim]   = PDM_MIN (bounds[2*idim],   vtx_coord[3*ivtx+idim]);
-      bounds[2*idim+1] = PDM_MAX (bounds[2*idim+1], vtx_coord[3*ivtx+idim]);
-
-      char_length = PDM_MAX (char_length, bounds[2*idim+1] - bounds[2*idim]);
-    }
-  }
-
-
-  const double eps = eps_base * char_length;
-  const double eps2 = eps * eps;
-
-  double *s = malloc (sizeof(double) * n_vtx * 3);
-  double *r = malloc (sizeof(double) * n_vtx);
-  double *A = malloc (sizeof(double) * n_vtx);
-  double *D = malloc (sizeof(double) * n_vtx);
-
-  /* Loop on points */
-  for (ipt = 0; ipt < n_pts; ipt++) {
-
-    const double *_pt = pts_coord + 3 * ipt;
-    double       *_bc = mean_value_coord + n_vtx * ipt;
-
-    /* If current point is outside the polygon,
-       consider its projection on the polygon boundary */
-    if (PDM_polygon_point_in3d (_pt,
-                                n_vtx,
-                                vtx_coord,
-                                char_length,
-                                bounds,
-                                _normal) != PDM_POLYGON_INSIDE) {
-      double dist2_min = DBL_MAX;
-      int i_min;
-      double t_min;
-
-      for (ivtx = 0; ivtx < n_vtx; ivtx++) {
-        jvtx = (ivtx + 1) % n_vtx;
-        double t;
-        double closest[3];
-        double dist2 = PDM_line_distance (_pt,
-                                          vtx_coord + 3*ivtx,
-                                          vtx_coord + 3*jvtx,
-                                          &t,
-                                          closest);
-
-        if (dist2 < dist2_min) {
-          dist2_min = dist2;
-          i_min = ivtx;
-
-          if (t < 0.) {
-            t_min = 0.;
-          } else if (t > 1.) {
-            t_min = 1.;
-          } else  {
-            t_min = t;
-          }
-        }
-      }
-
-      for (int i = 0; i < n_vtx; i++) {
-        _bc[i] = 0.;
-      }
-      _bc[i_min]           = 1.0 - t_min;
-      _bc[(i_min+1)%n_vtx] = t_min;
-      continue;
-    }
-
-
-    PDM_bool_t special_case = PDM_FALSE;
-    for (ivtx = 0; ivtx < n_vtx; ivtx++) {
-      double *vec = s + 3*ivtx;
-      for (idim = 0; idim < 3; idim++) {
-        vec[idim] = vtx_coord[3*ivtx + idim] - _pt[idim];
-      }
-      r[ivtx] = PDM_DOT_PRODUCT (vec, vec);
-
-      if (r[ivtx] < eps2) {
-        /* Point coincident with vertex */
-        for (int i = 0; i < n_vtx; i++) {
-          _bc[i] = 0.;
-        }
-        _bc[ivtx] = 1.;
-
-        special_case = PDM_TRUE;
-        break;
-      }
-
-      else {
-        r[ivtx] = sqrt (r[ivtx]);
-      }
-    }
-
-
-    if (special_case == PDM_TRUE) {
-      continue;
-    }
-
-
-    for (ivtx = 0; ivtx < n_vtx; ivtx++) {
-      jvtx = (ivtx + 1) % n_vtx;
-      double *veci = s + 3*ivtx;
-      double *vecj = s + 3*jvtx;
-
-      double vi_x_vj[3];
-      PDM_CROSS_PRODUCT (vi_x_vj, veci, vecj);
-      A[ivtx] = PDM_MODULE (vi_x_vj);
-      if (PDM_DOT_PRODUCT (vi_x_vj, _normal) < 0) {
-        A[ivtx] = -A[ivtx];
-      }
-      D[ivtx] = PDM_DOT_PRODUCT (veci, vecj);
-
-      /* Point on edge */
-      if (fabs(A[ivtx]) < eps) {
-        for (int i = 0; i < n_vtx; i++) {
-          _bc[i] = 0.;
-        }
-
-        _bc[ivtx] = r[jvtx] / (r[ivtx] + r[jvtx]);
-        _bc[jvtx] = r[ivtx] / (r[ivtx] + r[jvtx]);
-
-        special_case = PDM_TRUE;
-        break;
-      }
-    }
-
-    if (special_case == PDM_TRUE) {
-      continue;
-    }
-
-    /* General case (point strictly inside polygon) */
-    double sum_w = 0.0;
-    for (int i = 0; i < n_vtx; i++) {
-      int ip = (i + 1) % n_vtx;
-      int im = (i - 1 + n_vtx) % n_vtx;
-
-      _bc[i] = (r[ip] - D[i]/r[i]) / A[i] + (r[im] - D[im]/r[i]) / A[im];
-
-      sum_w += _bc[i];
-    }
-
-    if (fabs(sum_w) > eps_base) {
-      sum_w = 1.0 / sum_w;
-      for (int i = 0; i < n_vtx; i++) {
-        _bc[i] *= sum_w;
-      }
-    }
-
-    else {
-      printf("!!! sum_w = %g\n", sum_w);
-    }
-
-  } // End of loop on points
-
-  free (s);
-  free (r);
-  free (A);
-  free (D);
-
-  if (normal == NULL) {
-    free (_normal);
-  }
 }
 
 
