@@ -57,7 +57,8 @@ PDM_point_location_nodal
 
 //-->>
 void
-PDM_locate_points_on_triangles (const int          n_tri,
+PDM_locate_points_on_triangles (const int          dim,
+                                const int          n_tri,
                                 const PDM_l_num_t  tri_vtx[],
                                 const double       vtx_coord[],
                                 const int          n_pts,

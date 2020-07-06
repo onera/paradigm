@@ -538,6 +538,7 @@ PDM_mean_value_coordinates_polyhedron
 
   } // End of loop on faces
 
+  state = PDM_triangulate_state_destroy (state);
 
   /* Normalize */
   double sum = 0.;
