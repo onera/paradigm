@@ -530,66 +530,97 @@ PDM_surf_part_dump
 {
   if (part != NULL) {
 	  PDM_printf ("PDM_surf_part_t : \n");
-    PDM_printf ("  - edgeLnToGn :\n", part->edgeLnToGn);
+    PDM_printf ("  - edgeLnToGn :");
     if (part->edgeLnToGn != NULL) {
       for (int j=0; j<part->nEdge; j++)
-        PDM_printf ("VL2VG %d -> %d \n", j+1, part->edgeLnToGn[j]);
+        PDM_printf (" %ld", j+1, part->edgeLnToGn[j]);
     }
+    else {
+      printf(" NULL");
+    }
+    printf("\n");
 
     PDM_printf ("  - n_face : %d \n", part->n_face);
-    PDM_printf ("  - faceNormal : %d : ", part->faceNormal);
+    PDM_printf ("  - faceNormal :");
     if (part->faceNormal == NULL)
-      PDM_printf ("\n");
+      PDM_printf (" NULL\n");
     else{
       for (int j=0; j<3*part->n_face; j++)
         PDM_printf ("%d ", part->faceNormal[j]);
-      PDM_printf ("\n");}
+      PDM_printf ("\n");
+    }
     PDM_printf ("  - nGhostFace : %d \n", part->nGhostFace);
     PDM_printf ("  - nTotalFace : %d \n", part->nTotalFace);
     PDM_printf ("  - sface_vtx : %d \n", part->sface_vtx);
 		PDM_printf ("  - face_vtx : \n");
-		for (int j = 0; j <part->n_face; j++) {
-		  PDM_printf ("FG2VG %d-> ", part->face_ln_to_gn[j]);
+		for (int j = 0; j < part->n_face; j++) {
 		  for (int k = (part->face_vtx_idx)[j]; k < (part->face_vtx_idx)[j+1]; k++)
-        PDM_printf (" "PDM_FMT_G_NUM, part->vtx_ln_to_gn[part->face_vtx[k]-1]);
+        PDM_printf (" %d", part->face_vtx[k]);
 		  PDM_printf ("\n");
 		}
-		PDM_printf ("  - faceEdge : \n");
-		for (int j = 0; j <part->n_face; j++) {
-		  PDM_printf ("FG2EG %ld-> ", part->face_ln_to_gn[j]);
-		  for (int k = (part->faceEdgeIdx)[j]; k < (part->faceEdgeIdx)[j+1]; k++)
-        PDM_printf (" "PDM_FMT_G_NUM,
-                    (PDM_ABS(part->faceEdge[k])/ part->faceEdge[k])*  part->edgeLnToGn[PDM_ABS(part->faceEdge[k])-1]);
-		  PDM_printf ("\n");
-		}
-    PDM_printf ("  - face_ln_to_gn :\n");
-    for (int j=0; j<part->n_face; j++)
-      PDM_printf ("FL2FG %d -> %d\n", j+1, part->face_ln_to_gn[j]);
-    PDM_printf ("  - n_vtx : %d \n", part->n_vtx);
-    PDM_printf ("  - coords : \n");
-    for (int j=0; j<part->n_vtx; j++){
-      PDM_printf ("VL-VG %d-%d-> ", j, part->vtx_ln_to_gn[j]);
-      PDM_printf ("%f ", part->coords[3*j]);
-      PDM_printf ("%f ", part->coords[3*j+1]);
-      PDM_printf ("%f ", part->coords[3*j+2]);
-      PDM_printf ("\n");}
-    PDM_printf ("  - vtxEdge loc with  ghost edges: \n");
-    for (int j = 0; j <part->n_vtx; j++) {
-      PDM_printf ("VG2EG %ld-> ", part->vtx_ln_to_gn[j]);
-      for (int k = (part->vtxEdgeIdx[j]); k < (part->vtxEdgeIdx)[j+1]; k++)
-        PDM_printf (" %d",part->vtxEdge[k]);
-      PDM_printf ("\n");
+
+		PDM_printf ("  - face_ln_to_gn : \n");
+		for (int j = 0; j < part->n_face; j++) {
+		  PDM_printf (" "PDM_FMT_G_NUM, part->face_ln_to_gn[j]);
     }
     PDM_printf ("\n");
+
+    PDM_printf ("  - faceEdge : \n");
+    if (part->faceEdge != NULL) {
+      for (int j = 0; j <part->n_face; j++) {
+        PDM_printf ("FG2EG %ld-> ", part->face_ln_to_gn[j]);
+        for (int k = (part->faceEdgeIdx)[j]; k < (part->faceEdgeIdx)[j+1]; k++)
+          PDM_printf (" "PDM_FMT_G_NUM,
+                      (PDM_ABS(part->faceEdge[k])/ part->faceEdge[k])*  part->edgeLnToGn[PDM_ABS(part->faceEdge[k])-1]);
+        PDM_printf ("\n");
+      }
+    }
+    else {
+      printf(" NULL\n");
+    }
+
+    PDM_printf ("  - n_vtx : %d \n", part->n_vtx);
+		PDM_printf ("  - vtx_ln_to_gn : \n");
+		for (int j = 0; j < part->n_vtx; j++) {
+		  PDM_printf (" "PDM_FMT_G_NUM, part->vtx_ln_to_gn[j]);
+    }
+    PDM_printf ("\n");
+    PDM_printf ("  - coords : \n");
+    for (int j=0; j<part->n_vtx; j++){
+      PDM_printf ("%d :", j);
+      PDM_printf (" %12.5e", part->coords[3*j]);
+      PDM_printf (" %12.5e", part->coords[3*j+1]);
+      PDM_printf (" %12.5e", part->coords[3*j+2]);
+      PDM_printf ("\n");
+    }
+    PDM_printf ("  - vtxEdge loc with  ghost edges: \n");
+    if (part->vtxEdge != NULL) {
+      for (int j = 0; j <part->n_vtx; j++) {
+        PDM_printf ("VG2EG %ld-> ", part->vtx_ln_to_gn[j]);
+        for (int k = (part->vtxEdgeIdx[j]); k < (part->vtxEdgeIdx)[j+1]; k++)
+          PDM_printf (" %d",part->vtxEdge[k]);
+        PDM_printf ("\n");
+      }
+    }
+    else {
+      printf(" NULL\n");
+    }
+
     PDM_printf ("  - vtxEdge without ghost edges: \n");
-    for (int j = 0; j <part->n_vtx; j++) {
-      PDM_printf ("VG2VE %ld-> ", part->vtx_ln_to_gn[j]);
-      for (int k = (part->vtxEdgeIdx[j]); k < (part->vtxEdgeIdx)[j+1]; k++)
-        if (part->vtxEdge[k] <= part->nEdge) {
-          PDM_printf (" "PDM_FMT_G_NUM, part->edgeLnToGn[part->vtxEdge[k]-1]);
-        }
-		  PDM_printf ("\n");
-		}
+    if (part->vtxEdge != NULL) {
+      for (int j = 0; j <part->n_vtx; j++) {
+        PDM_printf ("VG2VE %ld-> ", part->vtx_ln_to_gn[j]);
+        for (int k = (part->vtxEdgeIdx[j]); k < (part->vtxEdgeIdx)[j+1]; k++)
+          if (part->vtxEdge[k] <= part->nEdge) {
+            PDM_printf (" "PDM_FMT_G_NUM, part->edgeLnToGn[part->vtxEdge[k]-1]);
+          }
+        PDM_printf ("\n");
+      }
+    }
+    else {
+      printf(" NULL\n");
+    }
+
     PDM_printf ("  - nEdge : %d \n", part->nEdge);
     PDM_printf ("  - nGhostEdge : %d \n", part->nGhostEdge);
     PDM_printf ("  - nTotalEdge : %d \n", part->nTotalEdge);
@@ -602,31 +633,47 @@ PDM_surf_part_dump
     }
     PDM_printf ("\n");
     PDM_printf ("  - edgeFace with ghost face : ");
-    for (int j=0; j<part->nEdge; j++){
-      PDM_printf ("\n%ld : ", part->edgeLnToGn[j]);
-      if (part->edgeFace[2*j] <= part->n_face) {
-        PDM_printf (" "PDM_FMT_G_NUM, part->face_ln_to_gn[part->edgeFace[2*j]-1]);
-      }
-      if (part->edgeFace[2*j+1] <= part->n_face) {
-        if (part->edgeFace[2*j+1] > 0)
-          PDM_printf (" "PDM_FMT_G_NUM, part->face_ln_to_gn[part->edgeFace[2*j+1]-1]);
+    if (part->edgeFace != NULL) {
+      for (int j=0; j<part->nEdge; j++){
+        PDM_printf ("\n%ld : ", part->edgeLnToGn[j]);
+        if (part->edgeFace[2*j] <= part->n_face) {
+          PDM_printf (" "PDM_FMT_G_NUM, part->face_ln_to_gn[part->edgeFace[2*j]-1]);
+        }
+        if (part->edgeFace[2*j+1] <= part->n_face) {
+          if (part->edgeFace[2*j+1] > 0)
+            PDM_printf (" "PDM_FMT_G_NUM, part->face_ln_to_gn[part->edgeFace[2*j+1]-1]);
+        }
       }
     }
+    else {
+      printf(" NULL\n");
+    }
+
     PDM_printf ("\n");
     PDM_printf ("  - edgeVtx loc without ghost faces : ");
-    for (int j=0; j<part->nEdge; j++){
-      PDM_printf ("\n%ld : ",  part->edgeLnToGn[j]);
-      PDM_printf (" %d", part->edgeVtx[2*j]);
-      PDM_printf (" %d", part->edgeVtx[2*j+1]);
+    if (part->edgeVtx != NULL) {
+      for (int j=0; j<part->nEdge; j++){
+        PDM_printf ("\n%ld : ",  part->edgeLnToGn[j]);
+        PDM_printf (" %d", part->edgeVtx[2*j]);
+        PDM_printf (" %d", part->edgeVtx[2*j+1]);
+      }
+      PDM_printf ("\n");
     }
-    PDM_printf ("\n");
+    else {
+      printf(" NULL\n");
+    }
     PDM_printf ("  - edgeVtx : ");
-    for (int j=0; j<part->nEdge; j++){
-      PDM_printf ("\nEG2VG %ld : ",  part->edgeLnToGn[j]);
-      PDM_printf (" "PDM_FMT_G_NUM, part->vtx_ln_to_gn[part->edgeVtx[2*j]-1]);
-      PDM_printf (" "PDM_FMT_G_NUM, part->vtx_ln_to_gn[part->edgeVtx[2*j+1]-1]);
+    if (part->edgeVtx != NULL) {
+      for (int j=0; j<part->nEdge; j++){
+        PDM_printf ("\nEG2VG %ld : ",  part->edgeLnToGn[j]);
+        PDM_printf (" "PDM_FMT_G_NUM, part->vtx_ln_to_gn[part->edgeVtx[2*j]-1]);
+        PDM_printf (" "PDM_FMT_G_NUM, part->vtx_ln_to_gn[part->edgeVtx[2*j+1]-1]);
+      }
+      PDM_printf ("\n");
     }
-    PDM_printf ("\n");
+    else {
+      printf(" NULL\n");
+    }
     PDM_printf ("  - edgePartBound : %d \n", part->edgePartBound);
     PDM_printf ("  - vtxPartBound : %d \n", part->vtxPartBound);
     PDM_printf ("  - carLgthVtx : %d : ", part->carLgthVtx);
