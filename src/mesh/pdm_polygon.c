@@ -894,6 +894,7 @@ int PDM_polygon_3d_to_2d
  )
 {
   int idim, i;
+  double *_normal = NULL;
 
   /* Compute polygon barycenter */
   double origin_xyz[3];
@@ -902,29 +903,31 @@ int PDM_polygon_3d_to_2d
   /* Build a suitable orthonormal frame */
   double tangent_u[3] = {0., 0., 0.}, tangent_v[3];
   if (normal == NULL) {
-    normal = malloc (sizeof(double) * 3);
+    _normal = malloc (sizeof(double) * 3);
     PDM_plane_normal (n_vtx,
                       vtx_xyz,
-                      normal);
+                      _normal);
+  } else {
+    _normal = normal;
   }
 
   /*   First tangent direction */
   int imin = -1;
   double nmin = HUGE_VAL;
   for (idim = 0; idim < 3; idim++) {
-    if (normal[idim] < 0. && nmin > -normal[idim]) {
+    if (_normal[idim] < 0. && nmin > -_normal[idim]) {
       imin = idim;
-      nmin = -normal[idim];
-    } else if (normal[idim] >= 0. && nmin > normal[idim]) {
+      nmin = -_normal[idim];
+    } else if (_normal[idim] >= 0. && nmin > _normal[idim]) {
       imin = idim;
-      nmin = normal[idim];
+      nmin = _normal[idim];
     }
   }
 
   tangent_u[imin] = 1.;
   double mag = 0;
   for (idim = 0; idim < 3; idim++) {
-    tangent_u[idim] -= normal[imin] * normal[idim];
+    tangent_u[idim] -= _normal[imin] * _normal[idim];
     mag += tangent_u[idim] * tangent_u[idim];
   }
 
@@ -938,7 +941,7 @@ int PDM_polygon_3d_to_2d
   }
 
   /*   Second tangent direction */
-  PDM_CROSS_PRODUCT (tangent_v, normal, tangent_u);
+  PDM_CROSS_PRODUCT (tangent_v, _normal, tangent_u);
 
 
   /* Compute coordinates in this frame */
@@ -968,6 +971,10 @@ int PDM_polygon_3d_to_2d
         uv[1] += d * tangent_v[idim];
       }
     }
+  }
+
+  if (normal == NULL) {
+    free (_normal);
   }
 
   return 1;
