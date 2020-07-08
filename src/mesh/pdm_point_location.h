@@ -44,9 +44,7 @@ PDM_point_location_nodal
  const int            n_pts,
  const int           *pts_idx,
  const double        *pts_coords,
- const PDM_g_num_t   *pts_g_num,//
  const double         tolerance,
- int                  base_element_num,//?
  float              **distance,
  double             **projected_coords,
  int                **bar_coord_idx,
@@ -63,7 +61,6 @@ PDM_locate_points_on_triangles (const int          dim,
                                 const double       vtx_coord[],
                                 const int          n_pts,
                                 const double       pts_coord[],
-                                const PDM_g_num_t  pts_g_num[],//debug only
                                 int                location[],
                                 float              distance[],
                                 double             bar_coord[]);
@@ -73,7 +70,6 @@ PDM_locate_points_on_quad (const int          dim,
                            const double       vtx_xyz[12],
                            const int          n_pts,
                            const double       pts_xyz[],
-                           const PDM_g_num_t  pts_g_num[],
                            float             *distance,
                            double            *bary_coords);
 
@@ -81,7 +77,6 @@ void
 PDM_locate_points_in_tetra (const double       vtx_xyz[12],
                             const int          n_pts,
                             const double       pts_xyz[],
-                            const PDM_g_num_t  pts_g_num[],
                             float             *distance,
                             double            *bary_coords);
 
@@ -91,7 +86,6 @@ PDM_locate_points_in_cell (const PDM_Mesh_nodal_elt_t  elt_type,
                            const double                vtx_coord[],
                            const int                   n_pts,
                            const double                pts_coord[],
-                           const PDM_g_num_t           pts_g_num[],//debug only
                            float                      *distance,
                            double                     *bar_coord);
 
