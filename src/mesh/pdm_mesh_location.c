@@ -17,11 +17,9 @@
 #include "pdm.h"
 #include "pdm_priv.h"
 #include "pdm_mpi.h"
-/* #include "pdm_mesh_dist.h" */
 #include "pdm_mesh_nodal.h"
 #include "pdm_surf_mesh.h"
 #include "pdm_handles.h"
-/* #include "pdm_octree.h" */
 #include "pdm_dbbtree.h"
 #include "pdm_part_to_block.h"
 #include "pdm_block_to_part.h"
@@ -1077,15 +1075,12 @@ PDM_mesh_location_compute
     double *weights       = NULL;
 
     const double tolerance = 1e-6;
-    int base_element_num = 0;//???
 
     PDM_point_location_nodal (location->mesh_nodal_id,
                               n_pts,
                               pts_idx,
                               pts_coord,
-                              pts_g_num,//debug only
                               tolerance,
-                              base_element_num,
                               &distance,
                               &projected_coords,
                               &weights_idx,
