@@ -741,8 +741,9 @@ _locate_on_triangles
 
 
 static void
-_locate_on_quad_3d
+_locate_on_quadrangle
 (
+ const int          dim,
  const PDM_l_num_t  quad_vtx[4],
  const PDM_l_num_t *parent_vertex_num,
  const double       vtx_coord[],
@@ -765,41 +766,66 @@ _locate_on_quad_3d
       id_vtx = parent_vertex_num[id_vtx] - 1;
     }
 
-    for (idim = 0; idim < 3; idim++) {
-      quad_coord[3*ivtx + idim] = vtx_coord[3*id_vtx + idim];
+    for (idim = 0; idim < dim; idim++) {
+      quad_coord[dim*ivtx + idim] = vtx_coord[dim*id_vtx + idim];
     }
   }
 
   if (DEBUG) {
     printf("\n\nquad_coord =\n");
     for (ivtx = 0; ivtx < 4; ivtx++) {
-      printf("  %f %f %f\n", quad_coord[3*ivtx], quad_coord[3*ivtx+1], quad_coord[3*ivtx+2]);
+      if (dim == 3) {
+        printf("  %f %f %f\n", quad_coord[3*ivtx], quad_coord[3*ivtx+1], quad_coord[3*ivtx+2]);
+      } else {
+        printf("  %f %f\n", quad_coord[2*ivtx], quad_coord[2*ivtx+1]);
+      }
     }
   }
 
-  PDM_mean_value_coordinates_polygon_3d (4,
-                                         quad_coord,
-                                         n_pts,
-                                         pts_coord,
-                                         bar_coord);
+  if (dim == 3) {
+    PDM_mean_value_coordinates_polygon_3d (4,
+                                           quad_coord,
+                                           n_pts,
+                                           pts_coord,
+                                           bar_coord);
+  } else {
+    PDM_mean_value_coordinates_polygon_2d (4,
+                                           quad_coord,
+                                           n_pts,
+                                           pts_coord,
+                                           bar_coord);
+  }
 
 
   for (ipt = 0; ipt < n_pts; ipt++) {
-    const double *_pt = pts_coord + 3 * ipt;
+    const double *_pt = pts_coord + dim * ipt;
     double *_bc = bar_coord + 4 * ipt;
 
     if (DEBUG) {
-      printf("\npt %d : (%f %f %f)\n",
-             ipt, _pt[0], _pt[1], _pt[2]);
-    }
-
-    double v_cp_p[3] = {_pt[0], _pt[1], _pt[2]};
-    for (ivtx = 0; ivtx < 4; ivtx++) {
-      for (idim = 0; idim < 3; idim++) {
-        v_cp_p[idim] -= _bc[ivtx] * quad_coord[3*ivtx+idim];
+      if (dim == 3) {
+        printf("\npt %d : (%f %f %f)\n",
+               ipt, _pt[0], _pt[1], _pt[2]);
+      } else {
+        printf("\npt %d : (%f %f)\n",
+               ipt, _pt[0], _pt[1]);
       }
     }
-    double dist2 = PDM_DOT_PRODUCT (v_cp_p, v_cp_p);
+
+    double v_cp_p[3];
+    for (idim = 0; idim < dim; idim++) {
+      v_cp_p[idim] = _pt[idim];
+    }
+
+    for (ivtx = 0; ivtx < 4; ivtx++) {
+      for (idim = 0; idim < dim; idim++) {
+        v_cp_p[idim] -= _bc[ivtx] * quad_coord[dim*ivtx+idim];
+      }
+    }
+
+    double dist2 = 0.;
+    for (idim = 0; idim < dim; idim++) {
+      dist2 += v_cp_p[idim] * v_cp_p[idim];
+    }
     distance[ipt] = (float) sqrt(dist2);
 
     if (DEBUG) {
@@ -814,10 +840,14 @@ _locate_on_quad_3d
     }
 
     if (CHECK) {
-      double err[3] = {_pt[0], _pt[1], _pt[2]};
+      double err[3];
+      for (idim = 0; idim < dim; idim++) {
+        err[idim] = _pt[idim];
+      }
+
       for (ivtx = 0; ivtx < 4; ivtx++) {
-        for (idim = 0; idim < 3; idim++) {
-          err[idim] -= _bc[ivtx] * quad_coord[3*ivtx+idim] ;
+        for (idim = 0; idim < dim; idim++) {
+          err[idim] -= _bc[ivtx] * quad_coord[dim*ivtx+idim] ;
         }
       }
 
@@ -838,7 +868,7 @@ _locate_on_quad_3d
  *   bar_coord           <-> barcyentric coordinates of closest points (size: n_pts * 4)
  *----------------------------------------------------------------------------*/
 static void
-_locate_in_tetra
+_locate_in_tetrahedron
 (
  const double        tetra_coord[4][3],
  const int           n_pts,
@@ -865,7 +895,7 @@ _locate_in_tetra
 
 
   if (fabs(vol6) < _epsilon_denom){
-    PDM_printf("warning _locate_in_tetra : Reduce _epsilon_denom criteria : %12.5e < %12.5e\n", vol6, _epsilon_denom);
+    PDM_printf("warning _locate_in_tetrahedron : Reduce _epsilon_denom criteria : %12.5e < %12.5e\n", vol6, _epsilon_denom);
     PDM_printf_flush();
     return;
   }
@@ -1030,11 +1060,11 @@ _locate_in_cell_3d
   /* Tetrahedron */
   if (elt_type == PDM_MESH_NODAL_TETRA4) {
     /* Shape functions may be computed directly */
-    _locate_in_tetra (_vtx_coord,
-                      n_pts,
-                      pts_coord,
-                      distance,
-                      bar_coord);
+    _locate_in_tetrahedron (_vtx_coord,
+                            n_pts,
+                            pts_coord,
+                            distance,
+                            bar_coord);
     return;
   }
 
@@ -1453,13 +1483,14 @@ _std_block_locate_3d
         if (order == 1) {
           /*    Quadrangles */
           if (elt_type == PDM_MESH_NODAL_QUAD4) {
-            _locate_on_quad_3d (element_vertex_num + ielt * n_vtx_elt,
-                                parent_vertex_num,
-                                vertex_coord,
-                                n_pts,
-                                pts_coord + pts_idx[idx] * 3,
-                                distance + ipt,
-                                bar_coord + ipt * n_vtx_elt);
+            _locate_on_quadrangle (3,
+                                   element_vertex_num + ielt * n_vtx_elt,
+                                   parent_vertex_num,
+                                   vertex_coord,
+                                   n_pts,
+                                   pts_coord + pts_idx[idx] * 3,
+                                   distance + ipt,
+                                   bar_coord + ipt * n_vtx_elt);
           }
 
           /*    Triangles */
@@ -2849,7 +2880,8 @@ PDM_locate_points_on_triangles (const int          dim,
 
 
 void
-PDM_locate_points_on_quad (const double       vtx_xyz[12],
+PDM_locate_points_on_quad (const int          dim,
+                           const double       vtx_xyz[12],
                            const int          n_pts,
                            const double       pts_xyz[],
                            const PDM_g_num_t  pts_g_num[],
@@ -2858,13 +2890,14 @@ PDM_locate_points_on_quad (const double       vtx_xyz[12],
 {
   const PDM_l_num_t quad_vtx[4] = {1, 2, 3, 4};
 
-  _locate_on_quad_3d (quad_vtx,
-                      NULL,
-                      vtx_xyz,
-                      n_pts,
-                      pts_xyz,
-                      distance,
-                      bary_coords);
+  _locate_on_quadrangle (dim,
+                         quad_vtx,
+                         NULL,
+                         vtx_xyz,
+                         n_pts,
+                         pts_xyz,
+                         distance,
+                         bary_coords);
 }
 
 void
@@ -2882,12 +2915,11 @@ PDM_locate_points_in_tetra (const double       vtx_xyz[12],
     }
   }
 
-  _locate_in_tetra (tetra_coords,
-                    n_pts,
-                    pts_xyz,
-                    //pts_g_num,
-                    distance,
-                    bary_coords);
+  _locate_in_tetrahedron (tetra_coords,
+                          n_pts,
+                          pts_xyz,
+                          distance,
+                          bary_coords);
 }
 
 
