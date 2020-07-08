@@ -432,7 +432,7 @@ _locate_on_edge
     for (idim = 0; idim < dim; idim++) {
       dist2 += v[idim] * v[idim];
     }
-    distance[ipt] = (float) sqrt (dist2);
+    distance[ipt] = (float) dist2;
 
     /* Barycentric coordinates */
     _bc[0] = 1. - t;
@@ -577,7 +577,7 @@ _locate_on_triangles_2d
           i = 0;
           j = 1;
           k = 2;
-          dist = sqrt(d01);
+          dist = d01;
           t = t01;
         }
 
@@ -585,7 +585,7 @@ _locate_on_triangles_2d
           i = 1;
           j = 2;
           k = 0;
-          dist = sqrt(d12);
+          dist = d12;
           t = t12;
         }
 
@@ -593,7 +593,7 @@ _locate_on_triangles_2d
           i = 2;
           j = 0;
           k = 1;
-          dist = sqrt(d20);
+          dist = d20;
           t = t20;
         }
 
@@ -686,7 +686,6 @@ _locate_on_triangles_3d
 
   PDM_l_num_t id[3];
 
-  double dist;
   double weights[3];
 
   /* Loop on triangles */
@@ -725,16 +724,14 @@ _locate_on_triangles_3d
         continue;
       }
 
-      dist = sqrt (dist2);
-
-      if (dist < distance[ipt]) {
+      if (dist2 < distance[ipt]) {
         if (bar_coord != NULL) {
           _bc[0] = weights[1];
           _bc[1] = weights[2];
           _bc[2] = weights[0];
         }
 
-        distance[ipt] = (float) dist;
+        distance[ipt] = (float) dist2;
 
         if (location != NULL) {
           location[ipt] = itri;
@@ -813,7 +810,7 @@ _locate_on_quadrangle
       dist2 += v_cp_p[idim] * v_cp_p[idim];
     }
 
-    distance[ipt] = (float) sqrt(dist2);
+    distance[ipt] = (float) dist2;
   }
 }
 
@@ -899,7 +896,10 @@ _locate_in_tetrahedron
       min_bc = PDM_MIN (min_bc, _bc[ivtx]);
     }
 
-    distance[ipt] = (float) (-min_bc);
+    distance[ipt] = (float) (min_bc * min_bc);
+      if (min_bc > 0.) {
+        distance[ipt] = -distance[ipt];
+      }
 
     /* Point outside tetrahedron */
     if (distance[ipt] > 0.) {
@@ -1072,16 +1072,15 @@ _locate_in_cell_3d
         min_bc = PDM_MIN (min_bc, _bc[ivtx]);
       }
 
-      distance[ipt] = (float) (-min_bc);
+      distance[ipt] = (float) (min_bc * min_bc);
+      if (min_bc > 0.) {
+        distance[ipt] = -distance[ipt];
+      }
     }
 
     /* Failed to compute parametric coordinates */
     else {
-      distance[ipt] = 1.e12;
-      for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
-        _bc[ivtx] = 0.;
-      }
-
+      distance[ipt] = HUGE_VAL;
     }
 
     /* Point outside cell */
@@ -1202,8 +1201,8 @@ _locate_in_cell_3d
             continue;
           }
 
-          if (distance[_ipt]*distance[_ipt] > min_dist2) {
-            distance[_ipt] = (float) sqrt (min_dist2);
+          if (distance[_ipt] > min_dist2) {
+            distance[_ipt] = (float) min_dist2;
 
             closest_face[ipt] = iface;
             for (int idim = 0; idim < 3; idim++) {
@@ -1265,7 +1264,7 @@ _locate_in_cell_3d
       }
 
       double min_dist2 = PDM_DOT_PRODUCT (v_p_cp, v_p_cp);
-      distance[_ipt] = (float) sqrt (min_dist2);
+      distance[_ipt] = (float) min_dist2;
 #endif
 
     }
@@ -1458,7 +1457,7 @@ _std_block_locate_3d
             double delta = pts_coord[3*id_pt + idim] - vtx_coord[idim];
             dist2 += delta * delta;
           }
-          distance[ipt] = (float) sqrt(dist2);
+          distance[ipt] = (float) dist2;
           bar_coord[ipt] = 1.;
         }
 
@@ -1576,7 +1575,7 @@ _poly2d_block_locate
           }
         }
         double dist2 = PDM_DOT_PRODUCT (v_cp_p, v_cp_p);
-        distance[ipt] = (float) sqrt(dist2);
+        distance[ipt] = (float) dist2;
 
         if (DEBUG) {
           double sum = 0;
@@ -1597,7 +1596,7 @@ _poly2d_block_locate
             }
           }
 
-          double lv = PDM_MODULE(v);
+          double lv = PDM_DOT_PRODUCT(v, v);
           printf("pt %d : dist = %f\t ; linear precision = %f (err = %g)\n",
                  ipt, distance[ipt], lv,
                  PDM_ABS(lv - distance[ipt]));
@@ -1632,8 +1631,8 @@ _locate_in_polyhedron
   const double four_PI = 4. * PDM_PI;
 
   const double eps_solid_angle = 1e-5;
-  const float eps_distance = 1e-5;
-  const double eps = 1e-12;
+  const float eps_distance2 = 1e-10;
+  const double eps2 = 1e-20;
 
   /*
    * Identify points inside/outside polyhedron
@@ -1720,7 +1719,7 @@ _locate_in_polyhedron
       /* Loop on points (compute solid angle and min_dist) */
       for (int ipt = 0; ipt < n_pts; ipt++) {
 
-        if (distance[ipt] < eps) {
+        if (distance[ipt] < eps2) {
           continue;
         }
 
@@ -1738,8 +1737,8 @@ _locate_in_polyhedron
           continue;
         }
 
-        if (distance[ipt]*distance[ipt] > min_dist2) {
-          distance[ipt] = (float) sqrt (min_dist2);
+        if (distance[ipt] > min_dist2) {
+          distance[ipt] = (float) min_dist2;
 
           closest_face[ipt] = iface;
           for (int idim = 0; idim < 3; idim++) {
@@ -1749,7 +1748,7 @@ _locate_in_polyhedron
         }
 
         /* Solid angle */
-        if (distance[ipt] < eps) {
+        if (distance[ipt] < eps2) {
           continue;
         }
 
@@ -1763,12 +1762,10 @@ _locate_in_polyhedron
           denom *= lv[i];
         }
         double det_abc = _determinant_3x3 (v[0], v[1], v[2]);
-        for (int i = 0; i < 3; i++) {
-          int j = (i+1)%3;
-          int k = (i+2)%3;
-          double dot = PDM_DOT_PRODUCT (v[j], v[k]);
-          denom += lv[i] * dot;
-        }
+
+        denom += lv[0] * PDM_DOT_PRODUCT (v[1], v[2]);
+        denom += lv[1] * PDM_DOT_PRODUCT (v[2], v[0]);
+        denom += lv[2] * PDM_DOT_PRODUCT (v[0], v[1]);
 
         double half_angle = atan2(det_abc, denom);
 
@@ -1807,7 +1804,7 @@ _locate_in_polyhedron
 
     if (solid_angle[ipt] > eps_solid_angle &&
         solid_angle[ipt] < four_PI - eps_solid_angle &&
-        distance[ipt] > eps_distance) {
+        distance[ipt] > eps_distance2) {
       /* Non-closed polyhedron */
       const double *_pt = pts_coord + 3 * ipt;
       printf("!! pt %d (%f, %f, %f) solid_angle/PI = %g, dist = %g\n",
@@ -1820,7 +1817,7 @@ _locate_in_polyhedron
     double       *_bc = bar_coord + n_vtx * ipt;
 
     /* Point outside polyhedron or very close from its boundary */
-    if (solid_angle[ipt] < eps_solid_angle || distance[ipt] < eps_distance) {
+    if (solid_angle[ipt] < eps_solid_angle || distance[ipt] < eps_distance2) {
       /* Compute mean value coords in closest face */
       for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
         _bc[ivtx] = 0.;
