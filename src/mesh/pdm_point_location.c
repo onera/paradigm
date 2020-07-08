@@ -269,7 +269,7 @@ _compute_uvw
 (
  const PDM_Mesh_nodal_elt_t elt_type,
  const double               point_coords[3],
- const double               vertex_coords[8][3],
+ const double               vertex_coords[],
  const double               tolerance,
  double                     uvw[3]
  )
@@ -309,14 +309,14 @@ _compute_uvw
 
     for (i = 0; i < n_elt_vertices; i++) {
 
-      b[0] += (shapef[i] * vertex_coords[i][0]);
-      b[1] += (shapef[i] * vertex_coords[i][1]);
-      b[2] += (shapef[i] * vertex_coords[i][2]);
+      b[0] += (shapef[i] * vertex_coords[3*i]);
+      b[1] += (shapef[i] * vertex_coords[3*i+1]);
+      b[2] += (shapef[i] * vertex_coords[3*i+2]);
 
       for (j = 0; j < 3; j++) {
-        a[0][j] -= (dw[i][j] * vertex_coords[i][0]);
-        a[1][j] -= (dw[i][j] * vertex_coords[i][1]);
-        a[2][j] -= (dw[i][j] * vertex_coords[i][2]);
+        a[0][j] -= (dw[i][j] * vertex_coords[3*i]);
+        a[1][j] -= (dw[i][j] * vertex_coords[3*i+1]);
+        a[2][j] -= (dw[i][j] * vertex_coords[3*i+2]);
       }
 
     }
@@ -827,7 +827,7 @@ _locate_on_quadrangle
 static void
 _locate_in_tetrahedron
 (
- const double        tetra_coord[4][3],
+ const double        tetra_coord[12],
  const int           n_pts,
  const double        pts_coord[],
  float              *distance,
@@ -842,7 +842,7 @@ _locate_in_tetrahedron
   double v[3][3];
   for (ivtx = 0; ivtx < 3; ivtx++) {
     for (idim = 0; idim < 3; idim++) {
-      v[ivtx][idim] = tetra_coord[ivtx+1][idim] - tetra_coord[0][idim];
+      v[ivtx][idim] = tetra_coord[3*(ivtx+1) + idim] - tetra_coord[idim];
     }
   }
 
@@ -880,7 +880,7 @@ _locate_in_tetrahedron
     double       *_bc = bar_coord + 4 * ipt;
 
     for (idim = 0; idim < 3; idim++) {
-      vp0[idim] = tetra_coord[0][idim] - _pt[idim];
+      vp0[idim] = tetra_coord[idim] - _pt[idim];
     }
 
     /* Compute barycentric coordinates of current point in tetrahedron */
@@ -987,7 +987,7 @@ _locate_in_cell_3d
  )
 {
   double uvw[3];
-  double _vtx_coord[8][3];
+  double _vtx_coord[24];
   double eps_vtx2 = 1.e-6 * tolerance;
   eps_vtx2 *= eps_vtx2;
 
@@ -1008,7 +1008,7 @@ _locate_in_cell_3d
     }
 
     for (int idim = 0; idim < 3; idim++) {
-      _vtx_coord[ivtx][idim] = vtx_coord[3*id_vtx + idim];
+      _vtx_coord[3*ivtx + idim] = vtx_coord[3*id_vtx + idim];
     }
   }
 
@@ -1036,7 +1036,7 @@ _locate_in_cell_3d
 
       double dist2 = 0.;
       for (int idim = 0; idim < 3; idim++) {
-        double delta = _vtx_coord[ivtx][idim] - _pt[idim];
+        double delta = _vtx_coord[3*ivtx + idim] - _pt[idim];
         dist2 += delta * delta;
       }
 
@@ -1179,7 +1179,7 @@ _locate_in_cell_3d
 
         for (int ivtx = 0; ivtx < 3; ivtx++) {
           for (int idim = 0; idim < 3; idim++) {
-            tri_coord[3*ivtx + idim] = _vtx_coord[_tri_vtx[ivtx]][idim];
+            tri_coord[3*ivtx + idim] = _vtx_coord[3*_tri_vtx[ivtx] + idim];
           }
         }
 
@@ -1238,7 +1238,7 @@ _locate_in_cell_3d
         int _ivtx = face_vtx[face_vtx_idx[iface] + ivtx] - 1;
 
         for (int idim = 0; idim < 3; idim++) {
-          face_coord[3*ivtx + idim] = _vtx_coord[_ivtx][idim];
+          face_coord[3*ivtx + idim] = _vtx_coord[3*_ivtx + idim];
         }
       }
 
@@ -1259,7 +1259,7 @@ _locate_in_cell_3d
       for (int ivtx = 0; ivtx < n_vtx_face; ivtx++) {
         int _ivtx = face_vtx[face_vtx_idx[iface] + ivtx] - 1;
         for (int idim = 0; idim < 3; idim++) {
-          v_p_cp[idim] -= bar_coord_face[ivtx] * _vtx_coord[_ivtx][idim];
+          v_p_cp[idim] -= bar_coord_face[ivtx] * _vtx_coord[3*_ivtx + idim];
         }
       }
 
