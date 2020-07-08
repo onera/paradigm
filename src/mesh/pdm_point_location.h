@@ -69,7 +69,8 @@ PDM_locate_points_on_triangles (const int          dim,
                                 double             bar_coord[]);
 
 void
-PDM_locate_points_on_quad (const double       vtx_xyz[12],
+PDM_locate_points_on_quad (const int          dim,
+                           const double       vtx_xyz[12],
                            const int          n_pts,
                            const double       pts_xyz[],
                            const PDM_g_num_t  pts_g_num[],
