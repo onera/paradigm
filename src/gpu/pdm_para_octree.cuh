@@ -89,7 +89,6 @@ PDM_para_octree_free_GPU
  *
  */
 
-__global__
 void
 PDM_para_octree_closest_point_GPU
 (
