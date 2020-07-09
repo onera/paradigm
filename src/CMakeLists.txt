@@ -38,6 +38,8 @@ if (PDM_ENABLE_CUDA)
   add_library(pdm_gpu STATIC ${SOURCESGPU})
   set_target_properties(pdm_gpu PROPERTIES
                             CUDA_SEPARABLE_COMPILATION ON)
+  set(CUDA_NVCC_FLAGS -g;-G)
+  set(CUDA_LAUNCH_BLOCKING 1)
 endif()
 
 target_include_directories(pdm
@@ -105,6 +107,7 @@ if (PDM_ENABLE_CUDA)
                               PRIVATE  ${PDM_BINARY_DIR}
                               PUBLIC  ${CMAKE_SOURCE_DIR}
                               PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}
+                              PUBLIC  /opt/tools/openmpi/4.0.1-gnu-8.3/include/
                               PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/pario
                               PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/ppart
                               PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/io 
@@ -192,9 +195,6 @@ if (PDM_ENABLE_SHARED)
                           LINK_FLAGS ${OpenMP_C_FLAGS})
   endif()
   target_link_libraries(pdm_shared ${LINK_LIBRARIES} pdm_io_shared pdm_mpi_shared)
-  # if (PDM_ENABLE_CUDA)
-  #   target_link_libraries(pdm_shared pdm_gpu)
-  # endif()
   set_target_properties(pdm_shared PROPERTIES
                             PUBLIC_HEADER "${LIST_HEADER}")
 
@@ -215,9 +215,6 @@ if (PDM_ENABLE_STATIC)
                           LINK_FLAGS ${OpenMP_C_FLAGS})
   endif()
   target_link_libraries(pdm_static ${LINK_LIBRARIES} pdm_io_static pdm_mpi_static)
-  # if (PDM_ENABLE_CUDA)
-  #   target_link_libraries(pdm_static pdm_gpu)
-  # endif()
   set_target_properties(pdm_static PROPERTIES
                              PUBLIC_HEADER "${LIST_HEADER}")
   get_target_property(PDM_INC pdm INCLUDE_DIRECTORIES)
