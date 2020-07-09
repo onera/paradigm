@@ -47,25 +47,25 @@ extern "C" {
  * Structure de mesure des temps d'execution
  *----------------------------------------------------------------------------*/
 
-struct _pdm_timer_t {
+// struct _pdm_timer_t {
 
-  double  t_cpu;                   /* Temps CPU cumule */
-  double  t_elapsed;               /* Temps elapsed cumule */
-#if defined (PDM_HAVE_GETRUSAGE)
-  double  t_cpu_u;                 /* Temps CPU utilisateur */
-  double  t_cpu_s;                 /* Temps CPU system */
-  double  t_cpu_debut;
-  double  t_cpu_u_debut;
-  double  t_cpu_s_debut;
-#else
-  clock_t t_cpu_debut;             /* Marque de debut de mesure
-                                      du temps CPU */
-#endif
-  struct timeval t_elaps_debut;    /* Marque de debut de mesure
-                                      du temps elapsed */
-  int     indic;                   /* Indique si une mesure d'une tranche
-                                      est en cours */
-};
+//   double  t_cpu;                   /* Temps CPU cumule */
+//   double  t_elapsed;               /* Temps elapsed cumule */
+// #if defined (PDM_HAVE_GETRUSAGE)
+//   double  t_cpu_u;                 /* Temps CPU utilisateur */
+//   double  t_cpu_s;                 /* Temps CPU system */
+//   double  t_cpu_debut;
+//   double  t_cpu_u_debut;
+//   double  t_cpu_s_debut;
+// #else
+//   clock_t t_cpu_debut;             /* Marque de debut de mesure
+//                                       du temps CPU */
+// #endif
+//   struct timeval t_elaps_debut;    /* Marque de debut de mesure
+//                                       du temps elapsed */
+//   int     indic;                   /* Indique si une mesure d'une tranche
+//                                       est en cours */
+// };
 
 /*============================================================================
  * Definition des fonctions locales

@@ -1,66 +1,175 @@
-/*============================================================================
- * Mesure des temps CPU et elapsed
- *============================================================================*/
+// /*============================================================================
+//  * Mesure des temps CPU et elapsed
+//  *============================================================================*/
 
-/*----------------------------------------------------------------------------
- * Standard C library headers
- *----------------------------------------------------------------------------*/
+// /*----------------------------------------------------------------------------
+//  * Standard C library headers
+//  *----------------------------------------------------------------------------*/
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <sys/time.h>
-#include <time.h>
-#include "pdm_config.h"
+// #include <stdio.h>
+// #include <stdlib.h>
+// #include <stdint.h>
+// #include <sys/time.h>
+// #include <time.h>
+// #include "pdm_config.h"
 
-#if defined (PDM_HAVE_GETRUSAGE)
-#include <sys/time.h>
-#include <sys/resource.h>
-#include <unistd.h>
-#elif defined(_POSIX_SOURCE)
-#include <sys/times.h>
-#include <unistd.h>
-#endif
+// #if defined (PDM_HAVE_GETRUSAGE)
+// #include <sys/time.h>
+// #include <sys/resource.h>
+// #include <unistd.h>
+// #elif defined(_POSIX_SOURCE)
+// #include <sys/times.h>
+// #include <unistd.h>
+// #endif
 
-/*----------------------------------------------------------------------------
- *  Header for the current file
- *----------------------------------------------------------------------------*/
+// /*----------------------------------------------------------------------------
+//  *  Header for the current file
+//  *----------------------------------------------------------------------------*/
 
-#include "pdm_timer.cuh"
-#include "pdm_printf.h"
-#include "pdm_error.h"
-#include "pdm_cuda_error.cuh"
+// #include "pdm_timer.cuh"
+// #include "pdm_printf.h"
+// #include "pdm_error.h"
+// #include "pdm_cuda_error.cuh"
 
-/*----------------------------------------------------------------------------*/
+// /*----------------------------------------------------------------------------*/
 
-#ifdef __cplusplus
-extern "C" {
-#if 0
-} /* Fake brace to force back Emacs auto-indentation back to column 0 */
-#endif
-#endif /* __cplusplus */
+// #ifdef __cplusplus
+// extern "C" {
+// #if 0
+// } /* Fake brace to force back Emacs auto-indentation back to column 0 */
+// #endif
+// #endif /* __cplusplus */
 
-/*============================================================================
- * Definition des types locaux
- *============================================================================*/
+// /*============================================================================
+//  * Definition des types locaux
+//  *============================================================================*/
 
-/*----------------------------------------------------------------------------
- * Structure de mesure des temps d'execution
- *----------------------------------------------------------------------------*/
+// /*----------------------------------------------------------------------------
+//  * Structure de mesure des temps d'execution
+//  *----------------------------------------------------------------------------*/
 
-/*============================================================================
- * Definition des fonctions locales
- *============================================================================*/
+// /*============================================================================
+//  * Definition des fonctions locales
+//  *============================================================================*/
 
-/*============================================================================
- * Definition des fonctions publiques
- *============================================================================*/
+// /*============================================================================
+//  * Definition des fonctions publiques
+//  *============================================================================*/
 
-void PDM_timer_free_GPU(PDM_timer_t *timer)
-{
-  gpuErrchk(cudaFree(timer));
-}
+// /*----------------------------------------------------------------------------
+//  * Suspend la mesure du temps ecoule et incremente le temps ecoule
+//  *
+//  * parameters :
+//  *   timer            <-- Timer
+//  * return
+//  *----------------------------------------------------------------------------*/
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+// __device__ void PDM_timer_hang_on_GPU(PDM_timer_t *timer)
+// {
+
+//   if (!timer->indic) {
+//     PDM_error_GPU(__FILE__, __LINE__, 0, "Erreur PDM_timer_suspend : \n"
+//             "La mesure de temps n'a pas ete declenchee par PDM_timer_reprise\n");
+//     __trap();
+//   }
+
+//   /* Recuperation du temps CPU et elaps courant */
+
+//   struct timeval t_elaps_fin;
+//   gettimeofday(&t_elaps_fin, NULL);
+
+//   /* Ajout de la tranche mesuree au temps cumule */
+
+//   long tranche_elapsed = (t_elaps_fin.tv_usec + 1000000 * t_elaps_fin.tv_sec) -
+//                          (timer->t_elaps_debut.tv_usec + 1000000 *
+//                           timer->t_elaps_debut.tv_sec);
+
+// #ifdef __INTEL_COMPILER
+// #pragma warning(push)
+// #pragma warning(disable:2259)
+// #endif
+//   double tranche_elapsed_max = (double) tranche_elapsed;
+//   timer->t_elapsed += tranche_elapsed_max/1000000.;
+// #ifdef __INTEL_COMPILER
+// #pragma warning(pop)
+// #endif
+
+// #if defined (PDM_HAVE_GETRUSAGE)
+//  {
+//    struct rusage  usage;
+
+//    if (getrusage(RUSAGE_SELF, &usage) == 0) {
+//      timer->t_cpu_u += usage.ru_utime.tv_sec + usage.ru_utime.tv_usec * 1.e-6 - timer->t_cpu_u_debut;
+//      timer->t_cpu_s += usage.ru_stime.tv_sec + usage.ru_stime.tv_usec * 1.e-6 - timer->t_cpu_s_debut;
+//      timer->t_cpu    = timer->t_cpu_u + timer->t_cpu_s;
+//    }
+//  }
+// #else
+//   clock_t t_cpu_fin = clock();
+//   double tranche_cpu = (double) (t_cpu_fin - timer->t_cpu_debut);
+//   double tranche_cpu_max = tranche_cpu;
+//   timer->t_cpu += tranche_cpu_max/CLOCKS_PER_SEC;
+// #endif
+//   timer->indic = 0;
+// }
+
+// /*----------------------------------------------------------------------------
+//  * Reprend la mesure du temps ecoule
+//  *
+//  * parameters :
+//  *   timer            <-- Timer
+//  * return
+//  *----------------------------------------------------------------------------*/
+
+// __device__ void PDM_timer_resume_GPU(PDM_timer_t *timer)
+// {
+//   if (timer->indic) {
+//     PDM_error(__FILE__, __LINE__, 0, "Erreur PDM_timer_reprise : \n"
+//             "La mesure d'une tranche est deja en cours\n");
+//     exit(EXIT_FAILURE);
+//   }
+// #if defined (PDM_HAVE_GETRUSAGE)
+//  {
+//    struct rusage  usage;
+
+//    if (getrusage(RUSAGE_SELF, &usage) == 0) {
+//      timer->t_cpu_u_debut = usage.ru_utime.tv_sec + usage.ru_utime.tv_usec * 1.e-6;
+//      timer->t_cpu_s_debut = usage.ru_stime.tv_sec + usage.ru_stime.tv_usec * 1.e-6;
+//      timer->t_cpu_debut   = timer->t_cpu_u_debut + timer->t_cpu_s_debut;
+//    }
+//  }
+// #else
+//   timer->t_cpu_debut = clock();
+// #endif
+//   gettimeofday(&(timer->t_elaps_debut), NULL);
+//   timer->indic = 1;
+// }
+
+// /*----------------------------------------------------------------------------
+//  * Retourne le temps elaps en secondes
+//  *
+//  * parameters :
+//  *   timer            <-- Timer
+//  * return
+//  *----------------------------------------------------------------------------*/
+
+// __device__ double PDM_timer_elapsed_GPU(PDM_timer_t *timer)
+// {
+//   if (timer->indic) {
+//     PDM_error_GPU(__FILE__, __LINE__, 0, "Erreur PDM_timer_get_elapsed : \n"
+//             "Mesure d'une tranche en cours : faire appel a PDM_timer_suspend avant "
+//             "PDM_timer_get_elapsed\n");
+//     exit(EXIT_FAILURE);
+//   }
+//   return timer->t_elapsed;
+// }
+
+
+// void PDM_timer_free_GPU(PDM_timer_t *timer)
+// {
+//   gpuErrchk(cudaFree(timer));
+// }
+
+// #ifdef __cplusplus
+// }
+// #endif /* __cplusplus */
