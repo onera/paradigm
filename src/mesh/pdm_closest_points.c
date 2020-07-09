@@ -373,8 +373,6 @@ PDM_closest_points_compute
 
   int i_rank;
   PDM_MPI_Comm_rank (cls->comm, &i_rank);
-
-  //-->GPU
   
   const int depth_max = 31;//?
   const int points_in_leaf_max = 1;//2*cls->n_closest;//?

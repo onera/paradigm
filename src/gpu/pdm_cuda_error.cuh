@@ -113,7 +113,6 @@ PDM_error_GPU(const char  *const file_name,
  *  pointer to the error handler function.
  */
 
-inline
 __device__
 PDM_error_handler_t *
 PDM_error_handler_get_GPU(void);
@@ -125,7 +124,6 @@ PDM_error_handler_get_GPU(void);
  *   handler: <-- pointer to the error handler function.
  */
 
-inline
 __device__
 void
 PDM_error_handler_set_GPU(PDM_error_handler_t  *const handler);
