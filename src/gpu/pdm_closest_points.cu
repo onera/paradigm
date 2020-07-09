@@ -199,16 +199,17 @@ PDM_closest_points_compute_GPU
  )
 {
   _closest_pts = var;
-  _PDM_closest_t *cls = NULL;
+  _PDM_closest_t *cls = _get_from_id (id);
+  //_PDM_closest_t *cls = NULL;
   //int *octree_id = new int;
 
   //Allocate data on unified memory so it is accessible from CPU or GPU
-  gpuErrchk(cudaMallocManaged(&cls, sizeof(_PDM_closest_t)));
+  //gpuErrchk(cudaMallocManaged(&cls, sizeof(_PDM_closest_t)));
   //gpuErrchk(cudaMallocManaged(&octree_id, sizeof(int)));
 
-  printf("before get from id\n");
-  cls = _get_from_id (id);
-  printf("n closest %d\n", cls->n_closest);
+
+  //cls = _get_from_id (id);
+
 
   double b_t_elapsed;
   double b_t_cpu;
@@ -229,8 +230,6 @@ PDM_closest_points_compute_GPU
 
   int i_rank;
   PDM_MPI_Comm_rank (cls->comm, &i_rank);
-
-  //-->GPU
   
   const int depth_max = 31;//?
   const int points_in_leaf_max = 1;//2*cls->n_closest;//?
@@ -282,48 +281,17 @@ PDM_closest_points_compute_GPU
     n_tgt += cls->tgt_cloud->n_points[i_part];
   }
 
-  //Preparing octree copy on GPU - allocation on GPU
+
   PDM_octree_t *octree = PDM_para_octree_octrees_transfert(octree_id);
-  printf("octree depth max : %d\n", octree->depth_max);
-  PDM_octree_t *d_octree = NULL;
-  gpuErrchk(cudaMalloc(&d_octree, sizeof(PDM_octree_t)));
-  //__device__ int d_n_tgt = n_tgt;
-  //int *d_n_tgt = NULL;
-  //gpuErrchk(cudaMalloc(&d_n_tgt, sizeof(int)));
-  double *d_tgt_coord = NULL;
-  gpuErrchk(cudaMalloc(&d_tgt_coord, sizeof(double)));
-  PDM_g_num_t *d_tgt_g_num = NULL;
-  gpuErrchk(cudaMalloc(&d_tgt_g_num, sizeof(PDM_g_num_t)));
-  PDM_g_num_t *d_closest_src_gnum = NULL;
-  gpuErrchk(cudaMalloc(&d_closest_src_gnum, sizeof(PDM_g_num_t)));
-  double *d_closest_src_dist = NULL;
-  gpuErrchk(cudaMalloc(&d_closest_src_dist, sizeof(double)));
 
-  //copy octree data on GPU
-  gpuErrchk(cudaMemcpy(d_octree, octree, sizeof(PDM_octree_t), cudaMemcpyHostToDevice));
-  //gpuErrchk(cudaMemcpy(d_n_tgt, n_tgt, sizeof(int), cudaMemcpyHostToDevice));
-  gpuErrchk(cudaMemcpy(d_tgt_coord, tgt_coord, sizeof(double), cudaMemcpyHostToDevice));
-  gpuErrchk(cudaMemcpy(d_tgt_g_num, tgt_g_num, sizeof(PDM_g_num_t), cudaMemcpyHostToDevice));
-  gpuErrchk(cudaMemcpy(d_closest_src_gnum, closest_src_gnum, sizeof(PDM_g_num_t), cudaMemcpyHostToDevice));
-  gpuErrchk(cudaMemcpy(d_closest_src_dist, closest_src_dist, sizeof(double), cudaMemcpyHostToDevice));
-
-
-  printf("print from gpu\n");
-  print_from_gpu<<<1,1>>>(d_octree);
-  cudaDeviceSynchronize();
-
-  printf("Entering kernel\n");
   /* Search closest source points from target points */
-  PDM_para_octree_closest_point_GPU<<<1,1>>> (d_octree,
-                                              cls->n_closest,
-                                              n_tgt,
-                                              d_tgt_coord,
-                                              d_tgt_g_num,
-                                              d_closest_src_gnum,
-                                              d_closest_src_dist);
-                                             
-  cudaDeviceSynchronize();
-  printf("Left kernel\n");
+  PDM_para_octree_closest_point_GPU (octree,
+                                     cls->n_closest,
+                                     n_tgt,
+                                     tgt_coord,
+                                     tgt_g_num,
+                                     closest_src_gnum,
+                                     closest_src_dist);
 
 
   /* Restore partitions */
