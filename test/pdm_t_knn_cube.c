@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+#include <mpi.h>
 
 #include "pdm.h"
 #include "pdm_priv.h"
@@ -22,7 +23,11 @@
 #include "pdm_dcube_gen.h"
 #include "pdm_geom_elem.h"
 
-#define GPU_ACC 1
+#define GPU_ACC 0 
+
+#ifdef GPU_ACC
+#include "mpi-ext.h" /* Needed for CUDA-aware check */
+#endif
 
 /*============================================================================
  * Type definitions
@@ -246,6 +251,28 @@ _gen_cube_cell_centers
 
 int main(int argc, char *argv[])
 {
+  //Check for CUDA-aware OpenMPI
+    printf("Compile time check:\n");
+  #if defined(MPIX_CUDA_AWARE_SUPPORT) && MPIX_CUDA_AWARE_SUPPORT
+    printf("This MPI library has CUDA-aware support.\n", MPIX_CUDA_AWARE_SUPPORT);
+  #elif defined(MPIX_CUDA_AWARE_SUPPORT) && !MPIX_CUDA_AWARE_SUPPORT
+    printf("This MPI library does not have CUDA-aware support.\n");
+  #else
+    printf("This MPI library cannot determine if there is CUDA-aware support.\n");
+  #endif /* MPIX_CUDA_AWARE_SUPPORT */
+
+    printf("Run time check:\n");
+  #if defined(MPIX_CUDA_AWARE_SUPPORT)
+    if (1 == MPIX_Query_cuda_support()) {
+        printf("This MPI library has CUDA-aware support.\n");
+    } else {
+        printf("This MPI library does not have CUDA-aware support.\n");
+    }
+  #else /* !defined(MPIX_CUDA_AWARE_SUPPORT) */
+    printf("This MPI library cannot determine if there is CUDA-aware support.\n");
+  #endif /* MPIX_CUDA_AWARE_SUPPORT */
+
+
   int i_rank;
   int numProcs;
 
@@ -351,7 +378,6 @@ int main(int argc, char *argv[])
   /* Compute closest points */
   if (GPU_ACC) {
     PDM_Handles_t *closest_pts = PDM_closest_points_closest_transfert();
-    printf("s array = %d\n", closest_pts->s_array);
     PDM_closest_points_compute_GPU (id2, closest_pts);
   }
   else {
