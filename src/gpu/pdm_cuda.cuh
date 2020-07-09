@@ -46,6 +46,69 @@ extern "C" {
 
 /*-----------------------------------------------------------------------------*/
 
+/*=============================================================================
+ * Macro definitions
+ *============================================================================*/
+
+
+//Kernel reduction
+#define Reduce_kernel(n_threads, n_blocks, shared_size, blockSize, length, data_in, data_out) {reduce6<<<n_blocks,n_threads,shared_size>>>(data_in, data_out, blockSize, length);}
+inline __device__ void warpReduce
+(
+  volatile int *sdata, 
+  unsigned int tid,
+  int blockSize
+  ) 
+{
+  if (blockSize >= 64) sdata[tid] += sdata[tid + 32];
+  if (blockSize >= 32) sdata[tid] += sdata[tid + 16];
+  if (blockSize >= 16) sdata[tid] += sdata[tid + 8];
+  if (blockSize >= 8) sdata[tid] += sdata[tid + 4];
+  if (blockSize >= 4) sdata[tid] += sdata[tid + 2];
+  if (blockSize >= 2) sdata[tid] += sdata[tid + 1];
+}
+
+inline __global__ void reduce6
+(
+  int *g_idata, 
+  int *g_odata,
+  int blockSize,
+  int length
+  ) 
+{
+  extern __shared__ int sdata[];
+  unsigned int tid = threadIdx.x;
+  unsigned int i = blockIdx.x*(blockDim.x*2) + threadIdx.x;
+
+  if ((i >= length))  
+  {
+    sdata[tid] = 0;
+  }
+  else if ((i + blockDim.x) >= length)
+  {
+    sdata[tid] = g_idata[i];
+  }
+  else
+  {
+    sdata[tid] = g_idata[i] + g_idata[i + blockDim.x];
+  }
+  __syncthreads();
+
+
+  if (blockSize >= 1024) { if (tid < 512) { sdata[tid] += sdata[tid + 512]; } __syncthreads(); }
+  if (blockSize >= 512) { if (tid < 256) { sdata[tid] += sdata[tid + 256]; } __syncthreads(); }
+  if (blockSize >= 256) { if (tid < 128) { sdata[tid] += sdata[tid + 128]; } __syncthreads(); }
+  if (blockSize >= 128) { if (tid < 64) { sdata[tid] += sdata[tid + 64]; } __syncthreads(); }
+
+  if (tid < 32) warpReduce(sdata, tid, blockSize);
+
+  if (tid == 0) {
+    g_odata[blockIdx.x] = sdata[0];
+    printf("sendcount = %d\n", g_odata[blockIdx.x]);
+  }
+}
+
+
 /*============================================================================
  * Public types
  *============================================================================*/
