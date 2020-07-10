@@ -323,7 +323,7 @@ PDM_dbbtree_free
     _PDM_dbbtree_t *_dbbt = (_PDM_dbbtree_t *) dbbt;
 
     PDM_box_set_destroy (&_dbbt->rankBoxes);
-    PDM_box_set_destroy (&_dbbt->boxes);
+    //PDM_box_set_destroy (&_dbbt->boxes);
 
     if (_dbbt->global_extents != NULL) {
       free (_dbbt->global_extents);
