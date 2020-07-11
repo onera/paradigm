@@ -1660,7 +1660,7 @@ _split_node_3d(PDM_box_tree_t       *bt,
 
   if (n_init_nodes + 8 > next_bt->local_data->n_max_nodes) {
     assert(next_bt->local_data->n_max_nodes > 0);
-    next_bt->local_data->n_max_nodes += next_bt->local_data->n_max_nodes/3;
+    next_bt->local_data->n_max_nodes += PDM_MAX (9, next_bt->local_data->n_max_nodes/3);
     next_bt->local_data->nodes = (_node_t *) realloc((void *) next_bt->local_data->nodes, next_bt->local_data->n_max_nodes * sizeof(_node_t));
     next_bt->local_data->child_ids = (int *) realloc((void *) next_bt->local_data->child_ids, next_bt->local_data->n_max_nodes*8 * sizeof(int));
 
@@ -1844,7 +1844,7 @@ _split_node_2d(PDM_box_tree_t       *bt,
 
   if (n_init_nodes + 4 > next_bt->local_data->n_max_nodes) {
     assert(next_bt->local_data->n_max_nodes > 0);
-    next_bt->local_data->n_max_nodes *= 2;
+    next_bt->local_data->n_max_nodes += PDM_MAX(5, next_bt->local_data->n_max_nodes/3);
     next_bt->local_data->nodes = (_node_t *) realloc((void *) next_bt->local_data->nodes, next_bt->local_data->n_max_nodes * sizeof(_node_t));
     next_bt->local_data->child_ids = (int *) realloc((void *) next_bt->local_data->child_ids, next_bt->local_data->n_max_nodes*4 * sizeof(int));
   }
@@ -2024,7 +2024,7 @@ _split_node_1d(PDM_box_tree_t       *bt,
 
   if (n_init_nodes + 2 > next_bt->local_data->n_max_nodes) {
     assert(next_bt->local_data->n_max_nodes > 0);
-    next_bt->local_data->n_max_nodes *= 2;
+    next_bt->local_data->n_max_nodes += PDM_MAX (3, next_bt->local_data->n_max_nodes/3);
     next_bt->local_data->nodes = (_node_t *) realloc((void *) next_bt->local_data->nodes, next_bt->local_data->n_max_nodes * sizeof(_node_t));
     next_bt->local_data->child_ids = (int *) realloc((void *) next_bt->local_data->child_ids, next_bt->local_data->n_max_nodes*2 * sizeof(int));
   }
@@ -4239,7 +4239,7 @@ PDM_box_tree_closest_upper_bound_dist_boxes_get
 
               if ((box_min_dist2 <= upper_bound_dist2[i]) || (inbox == 1)) {
                 if (idx_box >= tmp_s_boxes) {
-                  tmp_s_boxes *= 2;
+                  tmp_s_boxes += PDM_MAX(1, tmp_s_boxes/3);
                   *boxes = realloc (*boxes, sizeof(int) * tmp_s_boxes);
                   _boxes = *boxes;
                 }
@@ -4446,7 +4446,7 @@ PDM_box_tree_closest_upper_bound_dist_boxes_get_v2
 
               if ((box_min_dist2 <= upper_bound_dist2[i]) || (inbox == 1)) {
                 if (idx_box >= tmp_s_boxes) {
-                  tmp_s_boxes *= 2;
+                  tmp_s_boxes += PDM_MAX (1, tmp_s_boxes/3);
                   *boxes = realloc (*boxes, sizeof(int) * tmp_s_boxes);
                   _boxes = *boxes;
                 }
@@ -4661,7 +4661,7 @@ PDM_box_tree_closest_upper_bound_dist_boxes_get_from_copied_ranks
 
                 if ((box_min_dist2 <= upper_bound_dist2[i_point]) || (inbox == 1)) {
                   if (idx_box >= tmp_s_boxes) {
-                    tmp_s_boxes *= 2;
+                    tmp_s_boxes += PDM_MAX (1, tmp_s_boxes/3);
 
                     _boxes_rank[i_copied_rank] = (int *) realloc (_boxes_rank[i_copied_rank], sizeof(int) * tmp_s_boxes);
                   }
