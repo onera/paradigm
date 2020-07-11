@@ -83,7 +83,7 @@ void                     *keyMax
 )
 {
   _hash_tab_t *ht = malloc (sizeof(_hash_tab_t));
-  const int nDataDefault = 4;
+  const int nDataDefault = 0;
 
   ht->tKey = tKey;
 
@@ -154,14 +154,14 @@ void           *data
   assert ((PDM_g_num_t) _key < _ht->keyMax);
 
   if (_ht->nDataKey[_key] >= _ht->mDataKey[_key]) {
-    _ht->mDataKey[_key] *= 2;
+    _ht->mDataKey[_key] += PDM_MAX (1, _ht->mDataKey[_key]);
     _ht->data[_key] = realloc (_ht->data[_key], sizeof(void *) *
                                                 _ht->mDataKey[_key]);
   }
 
   if (_ht->nDataKey[_key] == 0) {
     if (_ht->n_key_info >= _ht->l_key_info) {
-      _ht->l_key_info *= 2;
+      _ht->l_key_info += PDM_MAX (1, _ht->l_key_info/3);
       _ht->key_info = realloc(_ht->key_info, sizeof(PDM_g_num_t) *  _ht->l_key_info);
     }
     _ht->key_info[_ht->n_key_info] = _key;
