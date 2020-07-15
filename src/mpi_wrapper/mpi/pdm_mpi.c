@@ -1832,12 +1832,18 @@ int PDM_MPI_Alltoallv_l(void *sendbuf, int *sendcounts, size_t *sdispls,
   MPI_Comm_size(_pdm_mpi_2_mpi_comm(comm), &size);
 
   INT_MAX;
+  int coeff = 4;
   int large = 0;
-  for (int i = 0; i < size; i++) {
-    if ((sdispls[i] > INT_MAX) || (rdispls[i] > INT_MAX)) {
-      large = 1;
-    }
+  //  for (int i = 0; i < size; i++) {
+  if ((sdispls[size-1] > INT_MAX/coeff) || (rdispls[size-1] > INT_MAX/coeff)) {
+    large = 1;
   }
+  //}
+
+  int s_large = 0;
+  MPI_Allreduce (&large, &s_large, 1, MPI_INT,  MPI_SUM,  _pdm_mpi_2_mpi_comm(comm));
+  large = s_large;
+
 
   if (!large) {
 
