@@ -333,6 +333,32 @@ cdef class PartToBlock:
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
     # ------------------------------------------------------------------------
+    def getBlockGnumCopy(self):
+      """
+         Return a copy of the global numbers, of element in the current process, 
+         array compute in library
+         Copy because remove of PTB object can made a core ...
+      """
+      # ************************************************************************
+      # > Declaration
+      cdef PDM_g_num_t* BlockGnum
+      cdef int          blkSize
+      # ************************************************************************
+
+      # ::::::::::::::::::::::::::::::::::::::::::::::::::
+      # > Get
+      BlockGnum = PDM_part_to_block_block_gnum_get(self.PTB)
+      # ::::::::::::::::::::::::::::::::::::::::::::::::::
+
+      # ::::::::::::::::::::::::::::::::::::::::::::::::::
+      blkSize      = PDM_part_to_block_n_elt_block_get(self.PTB);
+      dim          = <NPY.npy_intp> blkSize
+      BlockGnumNPY = NPY.PyArray_SimpleNewFromData(1, &dim, PDM_G_NUM_NPY_INT, <void *> BlockGnum)
+      # ::::::::::::::::::::::::::::::::::::::::::::::::::
+
+      return NPY.copy(BlockGnumNPY)
+
+    # ------------------------------------------------------------------------
     def getDistributionCopy(self):
       """
          Return a copy of the distrisbution array compute in library
