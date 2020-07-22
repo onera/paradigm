@@ -62,8 +62,6 @@ PDM_triangle_evaluate_position
        double *weights
 )
 {
-#define WEIGHTS_OF_CLOSEST_POINT 1
-
   double *pt1, *pt2, *pt3;
   double n[3], fabsn;
   double rhs[2], c1[2], c2[2];
@@ -189,16 +187,13 @@ PDM_triangle_evaluate_position
         if (dist_to_point < dist_to_line1) {
           *min_dist2 = dist_to_point;
           closest = pt3;
-#if WEIGHTS_OF_CLOSEST_POINT
           _weights[0] = 1.;
           _weights[1] = 0.;
           _weights[2] = 0.;
-#endif
         }
         else {
           *min_dist2 = dist_to_line1;
           closest = closest_point1;
-#if WEIGHTS_OF_CLOSEST_POINT
           if (t1 < 0.) {
             t1 = 0.;
           } else if (t1 > 1.) {
@@ -207,12 +202,10 @@ PDM_triangle_evaluate_position
           _weights[0] = t1;
           _weights[1] = 1. - t1;
           _weights[2] = 0.;
-#endif
         }
         if (dist_to_line2 < *min_dist2) {
           *min_dist2 = dist_to_line2;
           closest = closest_point2;
-#if WEIGHTS_OF_CLOSEST_POINT
           if (t2 < 0.) {
             t2 = 0.;
           } else if (t2 > 1.) {
@@ -221,7 +214,6 @@ PDM_triangle_evaluate_position
           _weights[0] = 1. - t2;
           _weights[1] = 0.;
           _weights[2] = t2;
-#endif
         }
         for (int i = 0; i < 3; i++) {
           closest_point[i] = closest[i];
@@ -239,16 +231,13 @@ PDM_triangle_evaluate_position
         if (dist_to_point < dist_to_line1) {
           *min_dist2 = dist_to_point;
           closest = pt1;
-#if WEIGHTS_OF_CLOSEST_POINT
           _weights[0] = 0.;
           _weights[1] = 1.;
           _weights[2] = 0.;
-#endif
         }
         else {
           *min_dist2 = dist_to_line1;
           closest = closest_point1;
-#if WEIGHTS_OF_CLOSEST_POINT
           if (t1 < 0.) {
             t1 = 0.;
           } else if (t1 > 1.) {
@@ -257,12 +246,10 @@ PDM_triangle_evaluate_position
           _weights[0] = t1;
           _weights[1] = 1. - t1;
           _weights[2] = 0.;
-#endif
         }
         if (dist_to_line2 < *min_dist2) {
           *min_dist2 = dist_to_line2;
           closest = closest_point2;
-#if WEIGHTS_OF_CLOSEST_POINT
            if (t2 < 0.) {
             t2 = 0.;
           } else if (t2 > 1.) {
@@ -271,7 +258,6 @@ PDM_triangle_evaluate_position
           _weights[0] = 0.;
           _weights[1] = 1. - t2;
           _weights[2] = t2;
-#endif
         }
         for (int i = 0; i < 3; i++) {
           closest_point[i] = closest[i];
@@ -289,16 +275,13 @@ PDM_triangle_evaluate_position
         if (dist_to_point < dist_to_line1) {
           *min_dist2 = dist_to_point;
           closest = pt2;
-#if WEIGHTS_OF_CLOSEST_POINT
           _weights[0] = 0.;
           _weights[1] = 0.;
           _weights[2] = 1.;
-#endif
         }
         else {
           *min_dist2 = dist_to_line1;
           closest = closest_point1;
-#if WEIGHTS_OF_CLOSEST_POINT
           if (t1 < 0.) {
             t1 = 0.;
           } else if (t1 > 1.) {
@@ -307,12 +290,10 @@ PDM_triangle_evaluate_position
           _weights[0] = t1;
           _weights[1] = 0.;
           _weights[2] = 1. - t1;
-#endif
         }
         if (dist_to_line2 < *min_dist2) {
           *min_dist2 = dist_to_line2;
           closest = closest_point2;
-#if WEIGHTS_OF_CLOSEST_POINT
            if (t2 < 0.) {
             t2 = 0.;
           } else if (t2 > 1.) {
@@ -321,7 +302,6 @@ PDM_triangle_evaluate_position
           _weights[0] = 0.;
           _weights[1] = 1. - t2;
           _weights[2] = t2;
-#endif
         }
         for (int i = 0; i < 3; i++) {
           closest_point[i] = closest[i];
@@ -330,7 +310,6 @@ PDM_triangle_evaluate_position
       }
       else if (_weights[0] < 0.0) {
         *min_dist2 = PDM_line_distance (x, pt1, pt2, &t1, closest_point);
-#if WEIGHTS_OF_CLOSEST_POINT
         if (t1 < 0.) {
             t1 = 0.;
           } else if (t1 > 1.) {
@@ -339,11 +318,9 @@ PDM_triangle_evaluate_position
           _weights[0] = 0.;
           _weights[1] = 1. - t1;
           _weights[2] = t1;
-#endif
       }
       else if (_weights[1] < 0.0) {
           *min_dist2 = PDM_line_distance (x, pt2, pt3, &t1, closest_point);
-#if WEIGHTS_OF_CLOSEST_POINT
           if (t1 < 0.) {
             t1 = 0.;
           } else if (t1 > 1.) {
@@ -352,11 +329,9 @@ PDM_triangle_evaluate_position
           _weights[0] = t1;
           _weights[1] = 0;
           _weights[2] = 1. - t1;
-#endif
         }
       else if (_weights[2] < 0.0) {
           *min_dist2 = PDM_line_distance (x, pt1, pt3, &t1, closest_point);
-#if WEIGHTS_OF_CLOSEST_POINT
           if (t1 < 0.) {
             t1 = 0.;
           } else if (t1 > 1.) {
@@ -365,13 +340,11 @@ PDM_triangle_evaluate_position
           _weights[0] = t1;
           _weights[1] = 1. - t1;
           _weights[2] = 0.;
-#endif
         }
 
         }
     return PDM_TRIANGLE_OUTSIDE;
   }
-#undef WEIGHTS_OF_CLOSEST_POINT
 }
 
 

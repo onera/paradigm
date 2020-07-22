@@ -163,6 +163,26 @@ PDM_triangulate_quadrangle(int                dim,
                            const PDM_l_num_t  quadrangle_vertices[],
                            PDM_l_num_t        triangle_vertices[]);
 
+
+int
+PDM_triangulate_pyramid (const double        coords[],
+                         const PDM_l_num_t   parent_vertex_num[],
+                         const PDM_l_num_t   pyramid_vertices[],
+                         PDM_l_num_t         tetra_vertices[]);
+
+int
+PDM_triangulate_prism (int               dim,
+                       const double      coords[],
+                       const PDM_l_num_t parent_vertex_num[],
+                       const PDM_l_num_t prism_vertices[],
+                       PDM_l_num_t       tetrahedron_vertices[]);
+
+int
+PDM_triangulate_hexahedron (int               dim,
+                            const double      coords[],
+                            const PDM_l_num_t parent_vertex_num[],
+                            const PDM_l_num_t hexa_vertices[],
+                            PDM_l_num_t       tetrahedron_vertices[]);
 /*----------------------------------------------------------------------------*/
 
 #ifdef __cplusplus

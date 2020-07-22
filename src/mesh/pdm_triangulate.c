@@ -1306,6 +1306,163 @@ PDM_triangulate_quadrangle(int                 dim,
 }
 
 
+
+
+/*----------------------------------------------------------------------------
+ * Triangulate a pyramid.
+ *
+ * A convex pyramid is divided into two tetrahedron along its shortest
+ * diagonal. A non-convex pyramid may only be divided along the diagonal
+ * which lies inside the pyramid.
+ *
+ * If the pyramid_vertices argument is NULL, 1, 2, ...,n local numbering
+ * is implied.
+ *
+ * parameters:
+ *   dim                  <-- spatial dimension (2 or 3).
+ *   coords               <-- coordinates of the triangulation's vertices.
+ *   parent_vertex_num    <-- optional indirection to vertex coordinates
+ *   pyramid_vertices  <-- polygon connectivity; size: n_vertices or empty.
+ *   tetrahedron_vertices    --> triangles connectivity; size: 2 * 4.
+ *
+ * returns:
+ *   number of resulting tetrahedron.
+ *----------------------------------------------------------------------------*/
+
+int
+PDM_triangulate_pyramid (const double        coords[],
+                         const PDM_l_num_t   parent_vertex_num[],
+                         const PDM_l_num_t   pyramid_vertices[],
+                         PDM_l_num_t         tetra_vertices[])
+{
+  /* Triangulate base (quad) */
+  PDM_l_num_t base_tri_vtx[6];
+  PDM_triangulate_quadrangle(3,
+                             coords,
+                             parent_vertex_num,
+                             pyramid_vertices,
+                             base_tri_vtx);
+
+  /* 1st tetrahedron */
+  tetra_vertices[0] = base_tri_vtx[0];
+  tetra_vertices[1] = base_tri_vtx[1];
+  tetra_vertices[2] = base_tri_vtx[2];
+  tetra_vertices[3] = pyramid_vertices[4];
+
+  /* 2nd tetrahedron */
+  tetra_vertices[4] = base_tri_vtx[3];
+  tetra_vertices[5] = base_tri_vtx[4];
+  tetra_vertices[6] = base_tri_vtx[5];
+  tetra_vertices[7] = pyramid_vertices[4];
+
+  return 2;
+}
+
+
+/*----------------------------------------------------------------------------
+ * Triangulate a prism.
+ *
+ * A convex prism is divided into three tetrahedron along its shortest
+ * diagonal. A non-convex prism may only be divided along the diagonal
+ * which lies inside the prism.
+ *
+ * If the prism_vertices argument is NULL, 1, 2, ...,n local numbering
+ * is implied.
+ *
+ * parameters:
+ *   dim                  <-- spatial dimension (2 or 3).
+ *   coords               <-- coordinates of the triangulation's vertices.
+ *   parent_vertex_num    <-- optional indirection to vertex coordinates
+ *   prism_vertices  <-- polygon connectivity; size: n_vertices or empty.
+ *   tetrahedron_vertices    --> triangles connectivity; size: 3 * 4.
+ *
+ * returns:
+ *   number of resulting tetrahedron.
+ *----------------------------------------------------------------------------*/
+
+int
+PDM_triangulate_prism (int               dim,
+                       const double      coords[],
+                       const PDM_l_num_t parent_vertex_num[],
+                       const PDM_l_num_t prism_vertices[],
+                       PDM_l_num_t       tetrahedron_vertices[])
+{
+
+  tetrahedron_vertices[ 0] = prism_vertices[0]; // 1st tetrahedron
+  tetrahedron_vertices[ 1] = prism_vertices[1];
+  tetrahedron_vertices[ 2] = prism_vertices[2];
+  tetrahedron_vertices[ 3] = prism_vertices[3];
+  tetrahedron_vertices[ 4] = prism_vertices[1]; // 2nd tetrahedron
+  tetrahedron_vertices[ 5] = prism_vertices[2];
+  tetrahedron_vertices[ 6] = prism_vertices[3];
+  tetrahedron_vertices[ 7] = prism_vertices[4];
+  tetrahedron_vertices[ 8] = prism_vertices[2]; // 3rd tetrahedron
+  tetrahedron_vertices[ 9] = prism_vertices[3];
+  tetrahedron_vertices[10] = prism_vertices[4];
+  tetrahedron_vertices[11] = prism_vertices[5];
+
+  return 3;
+
+
+}
+
+
+/*----------------------------------------------------------------------------
+ * Triangulate a hexahedron.
+ *
+ * A convex hexahedron is divided into five tetrahedron along its shortest
+ * diagonal. A non-convex hexahedron may only be divided along the diagonal
+ * which lies inside the hexahedron.
+ *
+ * If the hexahedron_vertices argument is NULL, 1, 2, ...,n local numbering
+ * is implied.
+ *
+ * parameters:
+ *   dim                  <-- spatial dimension (2 or 3).
+ *   coords               <-- coordinates of the triangulation's vertices.
+ *   parent_vertex_num    <-- optional indirection to vertex coordinates
+ *   hexahedron_vertices  <-- polygon connectivity; size: n_vertices or empty.
+ *   tetrahedron_vertices    --> triangles connectivity; size: 5 * 4.
+ *
+ * returns:
+ *   number of resulting tetrahedron.
+ *----------------------------------------------------------------------------*/
+
+int
+PDM_triangulate_hexahedron (int               dim,
+                            const double      coords[],
+                            const PDM_l_num_t parent_vertex_num[],
+                            const PDM_l_num_t hexa_vertices[],
+                            PDM_l_num_t       tetrahedron_vertices[])
+{
+
+  tetrahedron_vertices[ 0] = hexa_vertices[0]; // 1st tetrahedron
+  tetrahedron_vertices[ 1] = hexa_vertices[1];
+  tetrahedron_vertices[ 2] = hexa_vertices[2];
+  tetrahedron_vertices[ 3] = hexa_vertices[4];
+  tetrahedron_vertices[ 4] = hexa_vertices[1]; // 2nd tetrahedron
+  tetrahedron_vertices[ 5] = hexa_vertices[4];
+  tetrahedron_vertices[ 6] = hexa_vertices[5];
+  tetrahedron_vertices[ 7] = hexa_vertices[7];
+  tetrahedron_vertices[ 8] = hexa_vertices[1]; // 3rd tetrahedron
+  tetrahedron_vertices[ 9] = hexa_vertices[2];
+  tetrahedron_vertices[10] = hexa_vertices[3];
+  tetrahedron_vertices[11] = hexa_vertices[7];
+  tetrahedron_vertices[12] = hexa_vertices[2]; // 4th tetrahedron
+  tetrahedron_vertices[13] = hexa_vertices[4];
+  tetrahedron_vertices[14] = hexa_vertices[6];
+  tetrahedron_vertices[15] = hexa_vertices[7];
+  tetrahedron_vertices[16] = hexa_vertices[1]; // 5th tetrahedron
+  tetrahedron_vertices[17] = hexa_vertices[2];
+  tetrahedron_vertices[18] = hexa_vertices[4];
+  tetrahedron_vertices[19] = hexa_vertices[7];
+
+  return 5;
+
+
+}
+
+
 /*----------------------------------------------------------------------------*/
 
 #ifdef __cplusplus
