@@ -37,6 +37,12 @@ extern "C" {
  * Public function prototypes
  *============================================================================*/
 
+PDM_bool_t PDM_point_location_uvw (const PDM_Mesh_nodal_elt_t elt_type,
+                                   const double               vtx_coord[],
+                                   const double               tolerance,
+                                   const double               pt_coord[3],
+                                   double                     uvw[3]);
+
 void
 PDM_point_location_nodal
 (

@@ -26,6 +26,7 @@
 #include "pdm_mean_values.h"
 #include "pdm_geom_elem.h"
 #include "pdm_binary_search.h"
+#include "pdm_ho_location.h"
 
 #include "pdm_point_location.h"
 
@@ -217,10 +218,10 @@ _compute_shapef_3d
   case PDM_MESH_NODAL_PYRAMID5:
 
     shapef[0] = (1.0 - uvw[0]) * (1.0 - uvw[1]) * (1.0 - uvw[2]);
-    shapef[1] = uvw[0] * (1.0 - uvw[1]) * (1.0 - uvw[2]);
-    shapef[2] = uvw[0] * uvw[1] * (1.0 - uvw[2]);
-    shapef[3] = (1.0 - uvw[0]) * uvw[1] * (1.0 - uvw[2]);
-    shapef[4] = uvw[2];
+    shapef[1] =        uvw[0]  * (1.0 - uvw[1]) * (1.0 - uvw[2]);
+    shapef[2] =        uvw[0]  *        uvw[1]  * (1.0 - uvw[2]);
+    shapef[3] = (1.0 - uvw[0]) *        uvw[1]  * (1.0 - uvw[2]);
+    shapef[4] =                                          uvw[2];
 
     if (deriv != NULL) {
       deriv[0][0] = -(1.0 - uvw[1]) * (1.0 - uvw[2]);
@@ -342,6 +343,21 @@ _compute_uvw
   return PDM_FALSE;
 }
 
+
+
+PDM_bool_t PDM_point_location_uvw (const PDM_Mesh_nodal_elt_t elt_type,
+                                   const double               vtx_coord[],
+                                   const double               tolerance,
+                                   const double               pt_coord[3],
+                                   double                     uvw[3])
+{
+  PDM_bool_t stat_uvw = _compute_uvw (elt_type,
+                                      pt_coord,
+                                      vtx_coord,
+                                      tolerance,
+                                      uvw);
+  return stat_uvw;
+}
 
 
 /*----------------------------------------------------------------------------
@@ -1080,7 +1096,10 @@ _locate_in_cell_3d
 
     /* Failed to compute parametric coordinates */
     else {
-      distance[ipt] = HUGE_VAL;
+      /*
+       * ---> implement hierarchical subdivision in tetrahedra
+       */
+      distance[ipt] = HUGE_VAL;// -> point declared outside cell (possibly wrong)
     }
 
     /* Point outside cell */

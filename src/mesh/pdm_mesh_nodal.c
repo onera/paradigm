@@ -2879,7 +2879,7 @@ _binary_search
 }
 
 
-void _compute_cell_vtx_connectivity
+static void _compute_cell_vtx_connectivity
 (
  const PDM_l_num_t   n_cell,
  const PDM_l_num_t   n_face,
@@ -2952,8 +2952,8 @@ void _compute_cell_vtx_connectivity
 
     if (DEBUG) {
       printf("cell #%d vtx =", icell);
-      for (int i = _cell_vtx_idx[icell]; i < _cell_vtx_idx[icell+1]; i++) {
-        printf(" %d", (*cell_vtx)[i]);
+      for (int j = _cell_vtx_idx[icell]; j < _cell_vtx_idx[icell+1]; j++) {
+        printf(" %d", (*cell_vtx)[j]);
       }
       printf("\n");
     }
