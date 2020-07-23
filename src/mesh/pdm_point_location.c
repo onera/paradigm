@@ -26,7 +26,7 @@
 #include "pdm_mean_values.h"
 #include "pdm_geom_elem.h"
 #include "pdm_binary_search.h"
-#include "pdm_ho_location.h"
+//#include "pdm_ho_location.h"
 
 #include "pdm_point_location.h"
 
@@ -143,6 +143,111 @@ _compute_shapef_3d
  )
 {
   switch (elt_type) {
+
+
+  case PDM_MESH_NODAL_PYRAMID5: {
+
+#if 0
+    shapef[0] = (1.0 - uvw[0]) * (1.0 - uvw[1]) * (1.0 - uvw[2]);
+    shapef[1] =        uvw[0]  * (1.0 - uvw[1]) * (1.0 - uvw[2]);
+    shapef[2] =        uvw[0]  *        uvw[1]  * (1.0 - uvw[2]);
+    shapef[3] = (1.0 - uvw[0]) *        uvw[1]  * (1.0 - uvw[2]);
+    shapef[4] =                                          uvw[2];
+
+    if (deriv != NULL) {
+      deriv[0][0] = -(1.0 - uvw[1]) * (1.0 - uvw[2]);
+      deriv[0][1] = -(1.0 - uvw[0]) * (1.0 - uvw[2]);
+      deriv[0][2] = -(1.0 - uvw[0]) * (1.0 - uvw[1]);
+      deriv[1][0] =  (1.0 - uvw[1]) * (1.0 - uvw[2]);
+      deriv[1][1] = -uvw[0] * (1.0 - uvw[2]);
+      deriv[1][2] = -uvw[0] * (1.0 - uvw[1]);
+      deriv[2][0] =  uvw[1] * (1.0 - uvw[2]);
+      deriv[2][1] =  uvw[0] * (1.0 - uvw[2]);
+      deriv[2][2] = -uvw[0] * uvw[1];
+      deriv[3][0] = -uvw[1] * (1.0 - uvw[2]);
+      deriv[3][1] =  (1.0 - uvw[0]) * (1.0 - uvw[2]);
+      deriv[3][2] = -(1.0 - uvw[0]) * uvw[1];
+      deriv[4][0] =  0.0;
+      deriv[4][1] =  0.0;
+      deriv[4][2] =  1.0;
+    }
+#else
+    double u = uvw[0];
+    double v = uvw[1];
+    double w = uvw[2];
+
+    double w1 = 1. - w;
+    if (fabs(w1) > 1.e-6) {
+      w1 = 1. / w1;
+    }
+
+    shapef[0] = (1. - u - w) * (1. - v - w) * w1;
+    shapef[1] =            u * (1. - v - w) * w1;
+    shapef[3] = (1. - u - w) *            v * w1;
+    shapef[2] =            u *            v * w1;
+    shapef[4] = w;
+
+    if (deriv != NULL) {
+      deriv[0][0] = (v + w - 1.) * w1;
+      deriv[0][1] = (u + w - 1.) * w1;
+      deriv[0][2] = shapef[0]*w1 + deriv[0][0] + deriv[0][1];
+
+      deriv[1][0] = (1. - v - w) * w1;
+      deriv[1][1] = -u * w1;
+      deriv[1][2] = shapef[1]*w1 + deriv[1][1];
+
+      deriv[3][0] = -v * w1;
+      deriv[3][1] = (1. - u - w) * w1;
+      deriv[3][2] = shapef[3]*w1 + deriv[3][0];
+
+      deriv[2][0] = v * w1;
+      deriv[2][1] = u * w1;
+      deriv[2][2] = shapef[2]*w1;
+
+      deriv[4][0] = 0.;
+      deriv[4][1] = 0.;
+      deriv[4][2] = 1.;
+    }
+#endif
+
+    break;
+  }
+
+
+  case PDM_MESH_NODAL_PRISM6:
+
+    shapef[0] = (1.0 - uvw[0] - uvw[1]) * (1.0 - uvw[2]);
+    shapef[1] = uvw[0] * (1.0 - uvw[2]);
+    shapef[2] = uvw[1] * (1.0 - uvw[2]);
+    shapef[3] = (1.0 - uvw[0] - uvw[1]) * uvw[2];
+    shapef[4] = uvw[0] * uvw[2];
+    shapef[5] = uvw[1] * uvw[2];
+
+    if (deriv != NULL) {
+      deriv[0][0] = -(1.0 - uvw[2]);
+      deriv[0][1] = -(1.0 - uvw[2]);
+      deriv[0][2] = -(1.0 - uvw[0] - uvw[1]);
+      deriv[1][0] =  (1.0 - uvw[2]);
+      deriv[1][1] =  0.0;
+      deriv[1][2] = -uvw[0];
+      deriv[2][0] =  0.0;
+      deriv[2][1] =  (1.0 - uvw[2]);
+      deriv[2][2] = -uvw[1];
+      deriv[3][0] = -uvw[2];
+      deriv[3][1] = -uvw[2];
+      deriv[3][2] =  (1.0 - uvw[0] - uvw[1]);
+      deriv[4][0] =  uvw[2];
+      deriv[4][1] =  0.0;
+      deriv[4][2] =  uvw[0];
+      deriv[5][0] =  0.0;
+      deriv[5][1] =  uvw[2];
+      deriv[5][2] =  uvw[1];
+    }
+
+    break;
+
+
+
   case PDM_MESH_NODAL_HEXA8:
 
     shapef[0] = (1.0 - uvw[0]) * (1.0 - uvw[1]) * (1.0 - uvw[2]);
@@ -179,66 +284,6 @@ _compute_shapef_3d
       deriv[7][0] = -uvw[1] * uvw[2];
       deriv[7][1] =  (1.0 - uvw[0]) * uvw[2];
       deriv[7][2] =  (1.0 - uvw[0]) * uvw[1];
-    }
-
-    break;
-
-  case PDM_MESH_NODAL_PRISM6:
-
-    shapef[0] = (1.0 - uvw[0] - uvw[1]) * (1.0 - uvw[2]);
-    shapef[1] = uvw[0] * (1.0 - uvw[2]);
-    shapef[2] = uvw[1] * (1.0 - uvw[2]);
-    shapef[3] = (1.0 - uvw[0] - uvw[1]) * uvw[2];
-    shapef[4] = uvw[0] * uvw[2];
-    shapef[5] = uvw[1] * uvw[2];
-
-    if (deriv != NULL) {
-      deriv[0][0] = -(1.0 - uvw[2]);
-      deriv[0][1] = -(1.0 - uvw[2]);
-      deriv[0][2] = -(1.0 - uvw[0] - uvw[1]);
-      deriv[1][0] =  (1.0 - uvw[2]);
-      deriv[1][1] =  0.0;
-      deriv[1][2] = -uvw[0];
-      deriv[2][0] =  0.0;
-      deriv[2][1] =  (1.0 - uvw[2]);
-      deriv[2][2] = -uvw[1];
-      deriv[3][0] = -uvw[2];
-      deriv[3][1] = -uvw[2];
-      deriv[3][2] =  (1.0 - uvw[0] - uvw[1]);
-      deriv[4][0] =  uvw[2];
-      deriv[4][1] =  0.0;
-      deriv[4][2] =  uvw[0];
-      deriv[5][0] =  0.0;
-      deriv[5][1] =  uvw[2];
-      deriv[5][2] =  uvw[1];
-    }
-
-    break;
-
-  case PDM_MESH_NODAL_PYRAMID5:
-
-    shapef[0] = (1.0 - uvw[0]) * (1.0 - uvw[1]) * (1.0 - uvw[2]);
-    shapef[1] =        uvw[0]  * (1.0 - uvw[1]) * (1.0 - uvw[2]);
-    shapef[2] =        uvw[0]  *        uvw[1]  * (1.0 - uvw[2]);
-    shapef[3] = (1.0 - uvw[0]) *        uvw[1]  * (1.0 - uvw[2]);
-    shapef[4] =                                          uvw[2];
-
-    if (deriv != NULL) {
-      deriv[0][0] = -(1.0 - uvw[1]) * (1.0 - uvw[2]);
-      deriv[0][1] = -(1.0 - uvw[0]) * (1.0 - uvw[2]);
-      deriv[0][2] = -(1.0 - uvw[0]) * (1.0 - uvw[1]);
-      deriv[1][0] =  (1.0 - uvw[1]) * (1.0 - uvw[2]);
-      deriv[1][1] = -uvw[0] * (1.0 - uvw[2]);
-      deriv[1][2] = -uvw[0] * (1.0 - uvw[1]);
-      deriv[2][0] =  uvw[1] * (1.0 - uvw[2]);
-      deriv[2][1] =  uvw[0] * (1.0 - uvw[2]);
-      deriv[2][2] = -uvw[0] * uvw[1];
-      deriv[3][0] = -uvw[1] * (1.0 - uvw[2]);
-      deriv[3][1] =  (1.0 - uvw[0]) * (1.0 - uvw[2]);
-      deriv[3][2] = -(1.0 - uvw[0]) * uvw[1];
-      deriv[4][0] =  0.0;
-      deriv[4][1] =  0.0;
-      deriv[4][2] =  1.0;
     }
 
     break;

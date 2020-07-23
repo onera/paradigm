@@ -1330,10 +1330,11 @@ PDM_triangulate_quadrangle(int                 dim,
  *----------------------------------------------------------------------------*/
 
 int
-PDM_triangulate_pyramid (const double        coords[],
-                         const PDM_l_num_t   parent_vertex_num[],
-                         const PDM_l_num_t   pyramid_vertices[],
-                         PDM_l_num_t         tetra_vertices[])
+PDM_triangulate_pyramid (int               dim,
+                         const double      coords[],
+                         const PDM_l_num_t parent_vertex_num[],
+                         const PDM_l_num_t pyramid_vertices[],
+                         PDM_l_num_t       tetra_vertices[])
 {
   /* Triangulate base (quad) */
   PDM_l_num_t base_tri_vtx[6];
