@@ -324,6 +324,7 @@ PDM_line_distance
 
   double tolerance = fabs (_tol_dist * num);
   if ( fabs(denom) < tolerance ) {
+    *t = 0.;
     closest = (double *) p1;
   }
 
