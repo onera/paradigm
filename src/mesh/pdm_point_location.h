@@ -43,6 +43,17 @@ PDM_bool_t PDM_point_location_uvw (const PDM_Mesh_nodal_elt_t elt_type,
                                    const double               pt_coord[3],
                                    double                     uvw[3]);
 
+void PDM_locate_points_in_cell
+(
+ const PDM_Mesh_nodal_elt_t  elt_type,
+ const PDM_l_num_t           cell_vtx[],
+ const double                vtx_coord[],
+ const int                   n_pts,
+ const double                pts_coord[],
+ float                      *distance,
+ double                     *bar_coord
+ );
+
 void
 PDM_point_location_nodal
 (

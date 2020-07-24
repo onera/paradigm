@@ -26,7 +26,7 @@
 #include "pdm_mean_values.h"
 #include "pdm_geom_elem.h"
 #include "pdm_binary_search.h"
-//#include "pdm_ho_location.h"
+#include "pdm_ho_location.h"
 
 #include "pdm_point_location.h"
 
@@ -1085,6 +1085,48 @@ _locate_in_cell_3d
     return;
   }
 
+  double *__vtx_coord = NULL;
+  if (elt_type == PDM_MESH_NODAL_PRISM6) {
+    __vtx_coord = _vtx_coord;
+  }
+  else {
+    __vtx_coord = malloc (sizeof(double) * n_vtx * 3);
+    __vtx_coord[ 0] = _vtx_coord[ 0];
+    __vtx_coord[ 1] = _vtx_coord[ 1];
+    __vtx_coord[ 2] = _vtx_coord[ 2];
+
+    __vtx_coord[ 3] = _vtx_coord[ 6];
+    __vtx_coord[ 4] = _vtx_coord[ 7];
+    __vtx_coord[ 5] = _vtx_coord[ 8];
+
+    __vtx_coord[ 6] = _vtx_coord[ 3];
+    __vtx_coord[ 7] = _vtx_coord[ 4];
+    __vtx_coord[ 8] = _vtx_coord[ 5];
+
+    __vtx_coord[ 9] = _vtx_coord[ 9];
+    __vtx_coord[10] = _vtx_coord[10];
+    __vtx_coord[11] = _vtx_coord[11];
+
+    __vtx_coord[12] = _vtx_coord[12];
+    __vtx_coord[13] = _vtx_coord[13];
+    __vtx_coord[14] = _vtx_coord[14];
+
+    if (elt_type == PDM_MESH_NODAL_HEXA8) {
+      __vtx_coord[15] = _vtx_coord[18];
+      __vtx_coord[16] = _vtx_coord[19];
+      __vtx_coord[17] = _vtx_coord[20];
+
+      __vtx_coord[18] = _vtx_coord[15];
+      __vtx_coord[19] = _vtx_coord[16];
+      __vtx_coord[20] = _vtx_coord[17];
+
+      __vtx_coord[21] = _vtx_coord[21];
+      __vtx_coord[22] = _vtx_coord[22];
+      __vtx_coord[23] = _vtx_coord[23];
+    }
+  }
+
+
   /* Other cell types, shape functions must be computed iteratively */
   for (int ipt = 0; ipt < n_pts; ipt++) {
 
@@ -1120,11 +1162,11 @@ _locate_in_cell_3d
     }
 
     /* Compute parametric coordinates */
-    PDM_bool_t stat_uvw = _compute_uvw(elt_type,
-                                       _pt,
-                                       _vtx_coord,
-                                       tolerance,
-                                       uvw);
+    PDM_bool_t stat_uvw = _compute_uvw (elt_type,
+                                        _pt,
+                                        _vtx_coord,
+                                        tolerance,
+                                        uvw);
     if (stat_uvw == PDM_TRUE) {
       _compute_shapef_3d (elt_type, uvw, _bc, NULL);
 
@@ -1142,9 +1184,30 @@ _locate_in_cell_3d
     /* Failed to compute parametric coordinates */
     else {
       /*
-       * ---> implement hierarchical subdivision in tetrahedra
+       * Use hierarchical subdivision
        */
-      distance[ipt] = HUGE_VAL;// -> point declared outside cell (possibly wrong)
+      double proj_coord[3];
+      double dist2 = PDM_ho_location (elt_type,
+                                      order,
+                                      n_vtx,
+                                      __vtx_coord,
+                                      _pt,
+                                      proj_coord,
+                                      uvw);
+      /* Point inside */
+      if (dist2 < 1.e-12) {
+        double min_bc = HUGE_VAL;
+        for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
+          min_bc = PDM_MIN (min_bc, _bc[ivtx]);
+        }
+
+        distance[ipt] = (float) (-min_bc * min_bc);
+      }
+
+      /* Point outside */
+      else {
+        distance[ipt] = (float) dist2;
+      }
     }
 
     /* Point outside cell */
@@ -1255,7 +1318,7 @@ _locate_in_cell_3d
           double *_cp = closest_point + 3 * ipt;
 
           double min_dist2, closest[3];
-          PDM_triangle_status_t error = PDM_triangle_evaluate_position ((double *) _pt,
+          PDM_triangle_status_t error = PDM_triangle_evaluate_position (_pt,
                                                                         tri_coord,
                                                                         closest,
                                                                         &min_dist2,
@@ -1341,6 +1404,31 @@ _locate_in_cell_3d
 
 }
 
+
+void PDM_locate_points_in_cell
+(
+ const PDM_Mesh_nodal_elt_t  elt_type,
+ const PDM_l_num_t           cell_vtx[],
+ const double                vtx_coord[],
+ const int                   n_pts,
+ const double                pts_coord[],
+ float                      *distance,
+ double                     *bar_coord
+ )
+{
+  const PDM_l_num_t *parent_vertex_num = NULL;
+  const double       tolerance = 1.e-6;
+
+  _locate_in_cell_3d (elt_type,
+                      cell_vtx,
+                      parent_vertex_num,
+                      vtx_coord,
+                      n_pts,
+                      pts_coord,
+                      tolerance,
+                      distance,
+                      bar_coord);
+}
 
 static void
 _std_block_locate_3d
@@ -1791,7 +1879,7 @@ _locate_in_polyhedron
         double *_cp = closest_point + 3*ipt;
 
         double min_dist2, closest[3];
-        PDM_triangle_status_t error = PDM_triangle_evaluate_position ((double *) _pt,
+        PDM_triangle_status_t error = PDM_triangle_evaluate_position (_pt,
                                                                       tri_coord,
                                                                       closest,
                                                                       &min_dist2,
