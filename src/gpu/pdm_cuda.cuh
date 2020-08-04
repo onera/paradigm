@@ -52,7 +52,7 @@ extern "C" {
 
 
 //Kernel reduction
-#define Reduce_kernel(n_threads, n_blocks, shared_size, blockSize, length, data_in, data_out) {reduce6<<<n_blocks,n_threads,shared_size>>>(data_in, data_out, blockSize, length);}
+#define Reduce_kernel(n_threads, n_blocks, shared_size, blockSize, length, data_in, data_out) {reduce_kernel6<<<n_blocks,n_threads,shared_size>>>(data_in, data_out, blockSize, length);}
 inline __device__ void warpReduce
 (
   volatile int *sdata, 
@@ -68,7 +68,7 @@ inline __device__ void warpReduce
   if (blockSize >= 2) sdata[tid] += sdata[tid + 1];
 }
 
-inline __global__ void reduce6
+inline __global__ void reduce_kernel6
 (
   int *g_idata, 
   int *g_odata,
@@ -104,9 +104,39 @@ inline __global__ void reduce6
 
   if (tid == 0) {
     g_odata[blockIdx.x] = sdata[0];
-    printf("sendcount = %d\n", g_odata[blockIdx.x]);
   }
 }
+
+// //CUDA reallocation
+// #define cudaRealloc(ptr, oldLength, newLength)                \
+// ({                                                            \
+//   __typeof__(ptr) newptr = NULL;                              \
+//   if (newLength == 0)                                         \
+//   {                                                           \
+//     gpuErrchk(cudaFree(ptr));                                 \
+//     newptr = NULL;                                            \
+//   }                                                           \
+//   else if (!ptr)                                              \
+//   {                                                           \
+//     gpuErrchk(cudaMalloc(&ptr, sizeof(newLength)));           \
+//     newptr = ptr;                                             \
+//   }                                                           \
+//   else if (newLength <= oldLength)                            \
+//   {                                                           \
+//     newptr = ptr;                                             \
+//   }                                                           \
+//   else                                                        \
+//   {                                                           \
+//     assert((ptr) && (newLength > oldLength));                 \
+//     gpuErrchk(cudaMalloc(&newptr, sizeof(newLength)));        \
+//     if (newptr)                                               \
+//     {                                                         \
+//       memcpy(newptr, ptr, oldLength);                         \
+//       gpuErrchk(cudaFree(ptr));                               \
+//     }                                                         \
+//   }                                                           \
+//   newptr;                                                     \
+// })
 
 
 /*============================================================================
@@ -123,6 +153,20 @@ typedef int (PDM_printf_flush_proxy_t) (void);
 /*============================================================================
  * Public function prototypes
  *============================================================================*/
+
+/*!
+* \brief set dim3 value, for compatibility with intel compiler
+*
+*
+* \param [in]        x
+* \param [in]        y
+* \param [in]        z
+*
+*/
+
+dim3
+set_dim3_value(int x, int y, int z);
+
 
 /*
  * Replacement for printf() with modifiable behavior.
@@ -233,6 +277,10 @@ void*
 cudaRealloc(void* ptr, 
             size_t oldLength, 
             size_t newLength);
+
+
+void
+test_printf(void);
 
 /*----------------------------------------------------------------------------*/
 

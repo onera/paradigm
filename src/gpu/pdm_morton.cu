@@ -52,6 +52,7 @@
 #include "pdm_printf.h"
 #include "pdm_error.h"
 #include "pdm_cuda_error.cuh"
+#include "pdm_cuda.cuh"
 
 /*----------------------------------------------------------------------------*/
 
@@ -333,9 +334,9 @@ _encode_coords_3
  *   s        --> Normalization (translation component)
  *----------------------------------------------------------------------------*/
 
+__host__ __device__
 void
 PDM_morton_encode_coords_GPU(int                dim,
-                             int                n_pts,
                              PDM_morton_int_t   level,
                              const double       extents[],
                              size_t             n_coords,
@@ -376,27 +377,27 @@ PDM_morton_encode_coords_GPU(int                dim,
 
   switch(dim) {
 
-  case 3:
-    n_threads = {32, 32, 1};
-    n_blocks = {(n_coords + 31)/32, (3 + 31)/32, 1};
-    _encode_coords_1<<<n_blocks,n_threads>>>(dim, level, n_coords, d_pts, d_pts_code, d_d, d_s, d_n, refinement);
-    break;
+    case 3:
+      n_threads = set_dim3_value(32, 32, 1);
+      n_blocks = set_dim3_value((n_coords + 31)/32, (3 + 31)/32, 1);
+      _encode_coords_1<<<n_blocks,n_threads>>>(dim, level, n_coords, d_pts, d_pts_code, d_d, d_s, d_n, refinement);
+      break;
 
-  case 2:
-    n_threads = {32, 32, 1};
-    n_blocks = {(n_coords + 31)/32, (2 + 31)/32, 1};
-    _encode_coords_2<<<n_blocks,n_threads>>>(dim, level, n_coords, d_pts, d_pts_code, d_d, d_s, d_n, refinement);
-    break;
+    case 2:
+      n_threads = set_dim3_value(32, 32, 1);
+      n_blocks = set_dim3_value((n_coords + 31)/32, (2 + 31)/32, 1);
+      _encode_coords_2<<<n_blocks,n_threads>>>(dim, level, n_coords, d_pts, d_pts_code, d_d, d_s, d_n, refinement);
+      break;
 
-  case 1:
-    n_threads = {32, 32, 1};
-    n_blocks = {(n_coords + 31)/32, (1 + 31)/32, 1};
-    _encode_coords_3<<<n_blocks,n_threads>>>(dim, level, n_coords, d_pts, d_pts_code, d_d, d_s, d_n, refinement);
-    break;
+    case 1:
+      n_threads = set_dim3_value(32, 32, 1);
+      n_blocks = set_dim3_value((n_coords + 31)/32, (1 + 31)/32, 1);
+      _encode_coords_3<<<n_blocks,n_threads>>>(dim, level, n_coords, d_pts, d_pts_code, d_d, d_s, d_n, refinement);
+      break;
 
-  default:
-    assert(dim > 0 && dim < 4);
-    break;
+    default:
+      assert(dim > 0 && dim < 4);
+      break;
   }
 
   gpuErrchk(cudaMemcpy(d, d_d, 3 * sizeof(double), cudaMemcpyDeviceToHost));
@@ -445,6 +446,25 @@ PDM_morton_binary_search_GPU(int                size,
   }
 
   return start;
+}
+
+/*----------------------------------------------------------------------------
+ * Test if Morton code "a" is greater than Morton code "b"
+ *
+ * parameters:
+ *   code_a <-- first Morton code to compare
+ *   code_b <-- second Morton code to compare
+ *
+ * returns:
+ *  true or false
+ *----------------------------------------------------------------------------*/
+
+__device__
+_Bool
+PDM_morton_a_gt_b_GPU(PDM_morton_code_t  a,
+                      PDM_morton_code_t  b)
+{
+  return  _a_gt_b(a, b);
 }
 
 /*----------------------------------------------------------------------------*/

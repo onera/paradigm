@@ -324,10 +324,8 @@ PDM_closest_points_compute_GPU
 
 
 
-  //-->GPU
   /* Free parallel octree */
   PDM_para_octree_free (octree_id);
-  //<--
 
 
   PDM_timer_hang_on(cls->timer);

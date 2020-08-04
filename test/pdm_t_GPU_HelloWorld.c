@@ -7,5 +7,6 @@
 
 
 int main(void) {
+    test_printf();
     return 0;
 }

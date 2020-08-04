@@ -99,6 +99,27 @@ extern "C" {
 // * Public function definitions
 // *============================================================================*/
 
+/*!
+* \brief set dim3 value, for compatibility with intel compiler
+*
+*
+* \param [inout]     value
+* \param [in]        x
+* \param [in]        y
+* \param [in]        z
+*
+*/
+
+dim3
+set_dim3_value(int x, int y, int z)
+{
+  dim3 value;
+  value.x = x;
+  value.y = y;
+  value.z = z;
+  return value;
+}
+
 // /*!
 // * \brief Replacement for PDM_printf() with modifiable behavior.
 // *
@@ -226,57 +247,63 @@ extern "C" {
 static
 __global__
 void
-_test_realloc
+_test_printf
 (
+  void
+  )
+{
+  printf("Hello World! from thread [%d,%d] From device\n", threadIdx.x,blockIdx.x);
+}
+
+
 void
+test_printf
+(
+  void
 )
 {
-printf("Hello World! from thread [%d,%d] From device\n", threadIdx.x,blockIdx.x);
-int* A = NULL;
-*A = 5;
-printf("Before realloc: A = %d\n size = %d\n", *A, sizeof(A));
-
-A = (int*)cudaRealloc(&A, sizeof(int), sizeof(int)*2);
-printf("After realloc : A = %d\n size = %d\n", *A, sizeof(A));
+  _test_printf<<<10,1>>>();
+  cudaDeviceSynchronize();
 }
 
 //To use on a device, need compute capability >= 3.5 (so cudaMalloc and cudaFree can be called from device)
 inline
-__host__ __device__
+__device__
 void*
-cudaRealloc(void* ptr, 
-          size_t oldLength, 
-          size_t newLength)
+cudaRealloc
+(
+  void* ptr, 
+  size_t oldLength, 
+  size_t newLength
+  )
 {
 
-if (newLength == 0)
-{
-  gpuErrchkd(cudaFree(ptr));
-  return NULL;
-}
-else if (!ptr)
-{
-  gpuErrchkd(cudaMalloc(&ptr, sizeof(newLength)));
-  return ptr;
-}
-else if (newLength <= oldLength)
-{
-  return ptr;
-}
-else
-{
-  assert((ptr) && (newLength > oldLength));
-  printf("1\n");
-  void* newptr = NULL;
-  gpuErrchkd(cudaMalloc(&newptr, sizeof(newLength)));
-  printf("1\n");
-  if (newptr)
+  if (newLength == 0)
   {
-    memcpy(newptr, ptr, oldLength);
-    gpuErrchkd(cudaFree(ptr));
+    gpuErrchk(cudaFree(ptr));
+    return NULL;
   }
-  return newptr;
-}
+  else if (!ptr)
+  {
+    gpuErrchk(cudaMalloc(&ptr, sizeof(newLength)));
+    return ptr;
+  }
+  else if (newLength <= oldLength)
+  {
+    return ptr;
+  }
+  else
+  {
+    assert((ptr) && (newLength > oldLength));
+    void* newptr = NULL;
+    gpuErrchk(cudaMalloc(&newptr, sizeof(newLength)));
+    if (newptr)
+    {
+      memcpy(newptr, ptr, oldLength);
+      gpuErrchk(cudaFree(ptr));
+    }
+    return newptr;
+  }
 }
 
 /*-----------------------------------------------------------------------------*/

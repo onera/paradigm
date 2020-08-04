@@ -38,8 +38,23 @@ if (PDM_ENABLE_CUDA)
   add_library(pdm_gpu STATIC ${SOURCESGPU})
   set_target_properties(pdm_gpu PROPERTIES
                             CUDA_SEPARABLE_COMPILATION ON)
-  set(CUDA_NVCC_FLAGS -g;-G)
-  set(CUDA_LAUNCH_BLOCKING 1)
+  target_compile_options(pdm_gpu PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:
+  --ptxas-options=-v;-maxrregcount=32;-G;-g;
+  # -gencode=arch=compute_35,code=sm_35;
+  # -gencode=arch=compute_37,code=sm_37;
+  # -gencode=arch=compute_50,code=sm_50;
+  # -gencode=arch=compute_52,code=sm_52;
+  # -gencode=arch=compute_60,code=sm_60;
+  -gencode=arch=compute_61,code=sm_61;
+  # -gencode=arch=compute_70,code=sm_70;
+  # -gencode=arch=compute_75,code=sm_75;
+  # -gencode=arch=compute_75,code=compute_75;
+  >)
+  #set(CUDA_PROPAGATE_HOST_FLAGS OFF)
+  #list(APPEND CUDA_NVCC_FLAGS -gencode arch=compute_61,code=sm_51;)  
+  #set(CUDA_NVCC_FLAGS "-gencode arch=compute_60,code=sm_60")
+  #set(CUDA_LAUNCH_BLOCKING 1)
+  #set(CMAKE_C_FLAGS "-std=c17 -pedantic-errors ${CMAKE_C_FLAGS}")
 endif()
 
 target_include_directories(pdm
@@ -107,7 +122,9 @@ if (PDM_ENABLE_CUDA)
                               PRIVATE  ${PDM_BINARY_DIR}
                               PUBLIC  ${CMAKE_SOURCE_DIR}
                               PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}
-                              PUBLIC  /opt/tools/openmpi/4.0.1-gnu-8.3/include/
+                              #PUBLIC  /opt/tools/openmpi/4.0.1-gnu-8.3/include/
+                              PUBLIC  ${MPI_INCLUDE_PATH}
+                              PUBLIC  ${CUDA_INCLUDE_DIRS}
                               PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/pario
                               PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/ppart
                               PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/io 

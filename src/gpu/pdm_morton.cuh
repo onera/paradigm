@@ -77,9 +77,9 @@ extern "C" {
  *   s        --> Normalization (translation component)
  *----------------------------------------------------------------------------*/
 
+__host__ __device__
 void
 PDM_morton_encode_coords_GPU(int                dim,
-                             int                n_pts,
                              PDM_morton_int_t   level,
                              const double       extents[],
                              size_t             n_coords,
@@ -107,6 +107,23 @@ int
 PDM_morton_binary_search_GPU(int                size,
                              PDM_morton_code_t  code,
                              PDM_morton_code_t *codes);
+
+
+/*----------------------------------------------------------------------------
+ * Test if Morton code "a" is greater than Morton code "b"
+ *
+ * parameters:
+ *   code_a <-- first Morton code to compare
+ *   code_b <-- second Morton code to compare
+ *
+ * returns:
+ *  true or false
+ *----------------------------------------------------------------------------*/
+
+__device__
+_Bool
+PDM_morton_a_gt_b_GPU(PDM_morton_code_t  a,
+                      PDM_morton_code_t  b);
 
 /*----------------------------------------------------------------------------*/
 

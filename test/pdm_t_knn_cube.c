@@ -22,12 +22,12 @@
 #include "pdm_closest_points.cuh"
 #include "pdm_dcube_gen.h"
 #include "pdm_geom_elem.h"
-
-#define GPU_ACC 0 
-
-#ifdef GPU_ACC
 #include "mpi-ext.h" /* Needed for CUDA-aware check */
-#endif
+
+/*============================================================================
+ * Global Variables
+ *============================================================================*/
+int GPU_ACC = 0;
 
 /*============================================================================
  * Type definitions
@@ -54,6 +54,7 @@ _usage(int exit_code)
      "  -c      <level>  Number of closest points (default : 10).\n\n"
      "  -t      <level>  Number of Target points (default : 10).\n\n"
      "  -n_part <level>  Number of partitions par process.\n\n"
+     "  -gpu             Enable use of GPU acceleration.\n\n"
      "  -h               This message.\n\n");
 
   exit(exit_code);
@@ -93,6 +94,9 @@ _read_args(int            argc,
     if (strcmp(argv[i], "-h") == 0)
       _usage(EXIT_SUCCESS);
 
+    else if (strcmp(argv[i], "-gpu") == 0) {
+      GPU_ACC = 1;
+    }
     else if (strcmp(argv[i], "-n") == 0) {
       i++;
       if (i >= argc)
@@ -149,7 +153,7 @@ _gen_clouds_random
  const int         nPts,
  const double      length,
  const int         numProcs,
- const int         i_rank,
+ const int         myRank,
  const PDM_g_num_t n_faceSeg,
  double          **pts_coord,
  int              *nPts_l
@@ -166,7 +170,7 @@ _gen_clouds_random
   for (int i = 0; i < numProcs*(*nPts_l); i++) {
     for (int j = 0; j < 3; j++) {
       double x = offset + length2 * (double) rand() / ((double) RAND_MAX);
-      if (i%numProcs == i_rank) {
+      if (i%numProcs == myRank) {
         _pts_coord[idx++] = x;
       }
     }
@@ -189,10 +193,10 @@ _gen_cube_cell_centers
  )
 {
   int n_rank;
-  int i_rank;
+  int myRank;
 
   PDM_MPI_Comm_size(comm, &n_rank);
-  PDM_MPI_Comm_rank(comm, &i_rank);
+  PDM_MPI_Comm_rank(comm, &myRank);
 
   PDM_g_num_t *distribCell = (PDM_g_num_t *) malloc((n_rank + 1) * sizeof(PDM_g_num_t));
 
@@ -215,7 +219,7 @@ _gen_cube_cell_centers
     distribCell[i] += distribCell[i-1];
   }
 
-  PDM_g_num_t _dn_cell = distribCell[i_rank+1] - distribCell[i_rank];
+  PDM_g_num_t _dn_cell = distribCell[myRank+1] - distribCell[myRank];
 
   const double step = length / (double) n_faceSeg;
 
@@ -223,7 +227,7 @@ _gen_cube_cell_centers
   *coord = malloc (sizeof(double)      * _dn_cell * 3);
 
   int _npts = 0;
-  for (PDM_g_num_t g = distribCell[i_rank]; g < distribCell[i_rank+1]; g++) {
+  for (PDM_g_num_t g = distribCell[myRank]; g < distribCell[myRank+1]; g++) {
     PDM_g_num_t i = g % n_faceSeg;
     PDM_g_num_t j = ((g - i) % n_faceFace) / n_faceSeg;
     PDM_g_num_t k = (g - i - n_faceSeg * j) / n_faceFace;
@@ -251,33 +255,11 @@ _gen_cube_cell_centers
 
 int main(int argc, char *argv[])
 {
-  //Check for CUDA-aware OpenMPI
-    printf("Compile time check:\n");
-  #if defined(MPIX_CUDA_AWARE_SUPPORT) && MPIX_CUDA_AWARE_SUPPORT
-    printf("This MPI library has CUDA-aware support.\n", MPIX_CUDA_AWARE_SUPPORT);
-  #elif defined(MPIX_CUDA_AWARE_SUPPORT) && !MPIX_CUDA_AWARE_SUPPORT
-    printf("This MPI library does not have CUDA-aware support.\n");
-  #else
-    printf("This MPI library cannot determine if there is CUDA-aware support.\n");
-  #endif /* MPIX_CUDA_AWARE_SUPPORT */
-
-    printf("Run time check:\n");
-  #if defined(MPIX_CUDA_AWARE_SUPPORT)
-    if (1 == MPIX_Query_cuda_support()) {
-        printf("This MPI library has CUDA-aware support.\n");
-    } else {
-        printf("This MPI library does not have CUDA-aware support.\n");
-    }
-  #else /* !defined(MPIX_CUDA_AWARE_SUPPORT) */
-    printf("This MPI library cannot determine if there is CUDA-aware support.\n");
-  #endif /* MPIX_CUDA_AWARE_SUPPORT */
-
-
-  int i_rank;
+  int myRank;
   int numProcs;
 
   PDM_MPI_Init(&argc, &argv);
-  PDM_MPI_Comm_rank(PDM_MPI_COMM_WORLD, &i_rank);
+  PDM_MPI_Comm_rank(PDM_MPI_COMM_WORLD, &myRank);
   PDM_MPI_Comm_size(PDM_MPI_COMM_WORLD, &numProcs);
 
   /*
@@ -304,13 +286,34 @@ int main(int argc, char *argv[])
              &n_part);
 
 
+  //Check for CUDA-aware OpenMPI
+    printf("Compile time check:\n");
+  #if defined(MPIX_CUDA_AWARE_SUPPORT) && MPIX_CUDA_AWARE_SUPPORT
+    printf("This MPI library has CUDA-aware support.\n", MPIX_CUDA_AWARE_SUPPORT);
+  #elif defined(MPIX_CUDA_AWARE_SUPPORT) && !MPIX_CUDA_AWARE_SUPPORT
+    printf("This MPI library does not have CUDA-aware support.\n");
+  #else
+    printf("This MPI library cannot determine if there is CUDA-aware support.\n");
+  #endif /* MPIX_CUDA_AWARE_SUPPORT */
+
+    printf("Run time check:\n");
+  #if defined(MPIX_CUDA_AWARE_SUPPORT)
+    if (1 == MPIX_Query_cuda_support()) {
+        printf("This MPI library has CUDA-aware support.\n");
+    } else {
+        printf("This MPI library does not have CUDA-aware support.\n");
+    }
+  #else /* !defined(MPIX_CUDA_AWARE_SUPPORT) */
+    printf("This MPI library cannot determine if there is CUDA-aware support.\n");
+  #endif /* MPIX_CUDA_AWARE_SUPPORT */
+
   /* Define the target point cloud */
   double *tgt_coords = NULL;
   int _nTgt_l;
   _gen_clouds_random (nTgt,
                       length,
                       numProcs,
-                      i_rank,
+                      myRank,
                       n_faceSeg,
                       &tgt_coords,
                       &_nTgt_l);
@@ -395,9 +398,260 @@ int main(int argc, char *argv[])
                           &closest_src_gnum,
                           &closest_src_dist);
 
+
+#if 0
+  if (myRank >= 0) {
+    printf("\n\n============================\n\n");
+
+    for (int i = 0; i < _nTgt_l; i++) {
+      printf("Target point #%d (%ld)\n", i, tgt_gnum[i]);
+      for (int j = 0; j < n_closest_points; j++)
+        printf("\t%d:\t%ld\t%f\n",
+               j+1,
+               closest_src_gnum[n_closest_points*i + j],
+               closest_src_dist[n_closest_points*i + j]);
+      printf("\n\n");
+    }
+
+    printf("============================\n\n");
+  }
+#endif
+
+#if 1
+  /* Export as vtk */
+  char filename[9999];
+  sprintf(filename, "/stck/alafonta/workspace/knn_vtk/src_%4.4d.vtk", myRank);
+
+  FILE *f = fopen(filename, "w");
+
+  fprintf(f, "# vtk DataFile Version 2.0\n");
+  fprintf(f, "src\n");
+  fprintf(f, "ASCII\n");
+  fprintf(f, "DATASET UNSTRUCTURED_GRID\n");
+
+  fprintf(f, "POINTS %d double\n", _nSrc_l);
+  for (int i = 0; i < _nSrc_l; i++) {
+    for (int j = 0; j < 3; j++)
+      fprintf(f, "%f ", src_coords[3*i+j]);
+    fprintf(f, "\n");
+  }
+
+
+  fprintf(f, "CELLS %d %d\n", _nSrc_l, 2*_nSrc_l);
+  for (int i = 0; i < _nSrc_l; i++)
+    fprintf(f, "1 %d\n", i);
+
+  fprintf(f, "CELL_TYPES %d\n", _nSrc_l);
+  for (int i = 0; i < _nSrc_l; i++)
+    fprintf(f, "1\n");
+
+  fclose(f);
+
+
+
+
+
+
+  // send everything to rank 0
+  int *recv_src_count = malloc(sizeof(int) * numProcs);
+  PDM_MPI_Gather (&_nSrc_l,       1, PDM_MPI_INT,
+                  recv_src_count, 1, PDM_MPI_INT,
+                  0, PDM_MPI_COMM_WORLD);
+
+  int *recv_tgt_count = malloc(sizeof(int) * numProcs);
+  PDM_MPI_Gather (&_nTgt_l,       1, PDM_MPI_INT,
+                  recv_tgt_count, 1, PDM_MPI_INT,
+                  0, PDM_MPI_COMM_WORLD);
+
+  int *recv_src_g_num_shift = malloc(sizeof(int) * (numProcs+1));
+  int *recv_tgt_g_num_shift = malloc(sizeof(int) * (numProcs+1));
+  int *recv_src_coord_shift = malloc(sizeof(int) * (numProcs+1));
+  int *recv_tgt_coord_shift = malloc(sizeof(int) * (numProcs+1));
+  int *recv_closest_src_shift = malloc(sizeof(int) * (numProcs+1));
+  if (myRank == 0) {
+    recv_src_g_num_shift[0] = 0;
+    recv_tgt_g_num_shift[0] = 0;
+    recv_src_coord_shift[0] = 0;
+    recv_tgt_coord_shift[0] = 0;
+    recv_closest_src_shift[0] = 0;
+    for (int i = 0; i < numProcs; i++) {
+      recv_src_g_num_shift[i+1] = recv_src_g_num_shift[i] + recv_src_count[i];
+      recv_tgt_g_num_shift[i+1] = recv_tgt_g_num_shift[i] + recv_tgt_count[i];
+    }
+  }
+
+  PDM_g_num_t *recv_src_g_num = NULL;
+  if (myRank == 0)
+    recv_src_g_num = malloc(sizeof(PDM_g_num_t) * recv_src_g_num_shift[numProcs]);
+
+  PDM_MPI_Gatherv (src_gnum, _nSrc_l, PDM__PDM_MPI_G_NUM,
+                   recv_src_g_num, recv_src_count, recv_src_g_num_shift, PDM__PDM_MPI_G_NUM,
+                   0, PDM_MPI_COMM_WORLD);
+
+
+  PDM_g_num_t *recv_tgt_g_num = NULL;
+  if (myRank == 0)
+    recv_tgt_g_num = malloc(sizeof(PDM_g_num_t) * recv_tgt_g_num_shift[numProcs]);
+  PDM_MPI_Gatherv (tgt_gnum, _nTgt_l, PDM__PDM_MPI_G_NUM,
+                   recv_tgt_g_num, recv_tgt_count, recv_tgt_g_num_shift, PDM__PDM_MPI_G_NUM,
+                   0, PDM_MPI_COMM_WORLD);
+
+  if (myRank == 0) {
+    for (int i = 0; i < numProcs; i++) {
+      recv_src_count[i] *= 3;
+      recv_tgt_count[i] *= 3;
+      recv_src_coord_shift[i+1] = recv_src_coord_shift[i] + recv_src_count[i];
+      recv_tgt_coord_shift[i+1] = recv_tgt_coord_shift[i] + recv_tgt_count[i];
+    }
+  }
+
+  double *recv_src_coord = NULL;
+  if (myRank == 0)
+    recv_src_coord = malloc(sizeof(double) * recv_src_coord_shift[numProcs]);
+  PDM_MPI_Gatherv (src_coords, 3*_nSrc_l, PDM_MPI_DOUBLE,
+                   recv_src_coord, recv_src_count, recv_src_coord_shift, PDM_MPI_DOUBLE,
+                   0, PDM_MPI_COMM_WORLD);
+
+  double *recv_tgt_coord = NULL;
+  if (myRank == 0)
+    recv_tgt_coord = malloc(sizeof(double) * recv_tgt_coord_shift[numProcs]);
+  PDM_MPI_Gatherv (tgt_coords, 3*_nTgt_l, PDM_MPI_DOUBLE,
+                   recv_tgt_coord, recv_tgt_count, recv_tgt_coord_shift, PDM_MPI_DOUBLE,
+                   0, PDM_MPI_COMM_WORLD);
+
+  if (myRank == 0) {
+    for (int i = 0; i < numProcs; i++) {
+      recv_tgt_count[i] = (recv_tgt_count[i] / 3) * n_closest_points;
+      recv_closest_src_shift[i+1] = recv_closest_src_shift[i] + recv_tgt_count[i];
+    }
+  }
+
+  PDM_g_num_t *recv_closest_src_gnum = NULL;
+  double *recv_closest_src_dist = NULL;
+  if (myRank == 0) {
+    recv_closest_src_gnum = malloc(sizeof(PDM_g_num_t) * recv_closest_src_shift[numProcs]);
+    recv_closest_src_dist = malloc(sizeof(double) * recv_closest_src_shift[numProcs]);
+  }
+  PDM_MPI_Gatherv (closest_src_gnum, n_closest_points*_nTgt_l, PDM__PDM_MPI_G_NUM,
+                   recv_closest_src_gnum, recv_tgt_count, recv_closest_src_shift, PDM__PDM_MPI_G_NUM,
+                   0, PDM_MPI_COMM_WORLD);
+
+  PDM_MPI_Gatherv (closest_src_dist, n_closest_points*_nTgt_l, PDM_MPI_DOUBLE,
+                   recv_closest_src_dist, recv_tgt_count, recv_closest_src_shift, PDM_MPI_DOUBLE,
+                   0, PDM_MPI_COMM_WORLD);
+
+
+  if (myRank == 0) {
+    double *g_src_coord = malloc(sizeof(double) * recv_src_coord_shift[numProcs]);
+    for (int i = 0; i < recv_src_g_num_shift[numProcs]; i++) {
+      PDM_g_num_t ii = recv_src_g_num[i] - 1;
+      for (int j = 0; j < 3; j++)
+        g_src_coord[3*ii + j] = recv_src_coord[3*i + j];
+    }
+    free (recv_src_coord);
+    free (recv_src_g_num);
+
+
+    double *g_tgt_coord = malloc(sizeof(double) * recv_tgt_coord_shift[numProcs]);
+    for (int i = 0; i < recv_tgt_g_num_shift[numProcs]; i++) {
+      PDM_g_num_t ii = recv_tgt_g_num[i] - 1;
+      for (int j = 0; j < 3; j++)
+        g_tgt_coord[3*ii + j] = recv_tgt_coord[3*i + j];
+    }
+    free (recv_tgt_coord);
+
+    PDM_g_num_t *g_closest_src_gnum = malloc(sizeof(PDM_g_num_t) * recv_closest_src_shift[numProcs]);
+    double *g_closest_src_dist = malloc(sizeof(double) * recv_closest_src_shift[numProcs]);
+    for (int i = 0; i < recv_tgt_g_num_shift[numProcs]; i++) {
+      PDM_g_num_t ii = recv_tgt_g_num[i] - 1;
+      for (int j = 0; j < n_closest_points; j++) {
+        g_closest_src_gnum[n_closest_points*ii + j] = recv_closest_src_gnum[n_closest_points*i + j];
+        g_closest_src_dist[n_closest_points*ii + j] = recv_closest_src_dist[n_closest_points*i + j];
+      }
+    }
+
+    free (recv_tgt_g_num);
+
+
+    int n_g_pts = recv_src_g_num_shift[numProcs] + recv_tgt_g_num_shift[numProcs];
+
+
+
+    sprintf(filename, "/stck/alafonta/workspace/knn_vtk/valid_knn.vtk");
+
+
+    f = fopen(filename, "w");
+
+    fprintf(f, "# vtk DataFile Version 2.0\n");
+    fprintf(f, "validation_knn\n");
+    fprintf(f, "ASCII\n");
+    fprintf(f, "DATASET UNSTRUCTURED_GRID\n");
+
+    fprintf(f, "POINTS %d double\n", n_g_pts);
+    for (int i = 0; i < recv_src_g_num_shift[numProcs]; i++) {
+      for (int j = 0; j < 3; j++)
+        fprintf(f, "%f ", g_src_coord[3*i + j]);
+      fprintf(f, "\n");
+    }
+    for (int i = 0; i < recv_tgt_g_num_shift[numProcs]; i++) {
+      for (int j = 0; j < 3; j++)
+        fprintf(f, "%f ", g_tgt_coord[3*i + j]);
+      fprintf(f, "\n");
+    }
+
+    int n_edges = n_closest_points * recv_tgt_g_num_shift[numProcs];
+    int n_nodes = recv_src_g_num_shift[numProcs];
+    int n_cells = n_edges + n_nodes;
+
+    fprintf(f, "CELLS %d %d\n", n_cells, 3*n_edges + 2*n_nodes);
+    for (int i = 0; i < recv_src_g_num_shift[numProcs]; i++) {
+      fprintf(f, "1 %d\n", i);
+    }
+
+    for (int i = 0; i < recv_tgt_g_num_shift[numProcs]; i++) {
+      for (int j = 0; j < n_closest_points; j++) {
+        fprintf(f, "2 %d %ld\n",
+                i + recv_src_g_num_shift[numProcs],
+                g_closest_src_gnum[n_closest_points*i + j] - 1);
+        /* fprintf(f, "2 %d %d\n", i + recv_src_g_num_shift[numProcs], ?); */
+      }
+    }
+
+    fprintf(f, "CELL_TYPES %d\n", n_cells);
+    for (int i = 0; i < n_nodes; i++)
+      fprintf(f, "1\n");
+    for (int i = 0; i < n_edges; i++)
+      fprintf(f, "4\n");
+
+    fprintf(f, "CELL_DATA %d\n", n_cells);
+    fprintf(f, "SCALARS distance float\n LOOKUP_TABLE default\n");
+    for (int i = 0; i < recv_src_g_num_shift[numProcs]; i++) {
+      fprintf(f, "%f\n", 0.);
+    }
+    for (int i = 0; i < recv_tgt_g_num_shift[numProcs]; i++) {
+      for (int j = 0; j < n_closest_points; j++) {
+        fprintf(f, "%f\n", g_closest_src_dist[n_closest_points*i + j]);
+      }
+    }
+
+    fclose(f);
+  }
+
+  free (recv_src_count);
+  free (recv_tgt_count);
+  free (recv_src_g_num_shift);
+  free (recv_tgt_g_num_shift);
+  free (recv_src_coord_shift);
+  free (recv_tgt_coord_shift);
+
+#endif
+
+
+
+
 #if 1
   /* Check results */
-  if (i_rank == 0) {
+  if (myRank == 0) {
     printf("-- Check\n");
     fflush(stdout);
   }
@@ -416,7 +670,7 @@ int main(int argc, char *argv[])
   double cell_ctr[3];
 
   for (int itgt = 0; itgt < _nTgt_l; itgt++) {
-    /*printf("[%d] %d/%d\n", i_rank, itgt, _nTgt_l);*/
+    /*printf("[%d] %d/%d\n", myRank, itgt, _nTgt_l);*/
 
     n_tgt++;
     int wrong = 0;
@@ -501,7 +755,7 @@ int main(int argc, char *argv[])
 
       if (closest_src_dist[n_closest_points*itgt + l] > true_closest_src_dist[l]) {
         printf("[%d] (%ld) [%f %f %f]: %f / %f (relative err. = %f)\t\t%ld / %ld\n",
-               i_rank,
+               myRank,
                tgt_gnum[itgt],
                tgt_coords[3*itgt], tgt_coords[3*itgt+1], tgt_coords[3*itgt+2],
                closest_src_dist[n_closest_points*itgt + l],
@@ -526,7 +780,7 @@ int main(int argc, char *argv[])
     wrong_percentage = 100 * n_wrong / n_tgt;
   }
   printf("[%d] n_wrong = %ld / %ld (%ld%%)\n",
-         i_rank,
+         myRank,
          n_wrong,
          n_tgt,
          wrong_percentage);*/
@@ -549,7 +803,7 @@ int main(int argc, char *argv[])
                   0,
                   PDM_MPI_COMM_WORLD);
 
-  if (i_rank == 0) {
+  if (myRank == 0) {
     PDM_g_num_t wrong_percentage_total = 0;
     if (n_tgt_total > 0) {
       wrong_percentage_total = 100 * n_wrong_total / n_tgt_total;
@@ -583,7 +837,7 @@ int main(int argc, char *argv[])
 
   PDM_MPI_Finalize();
 
-  if (i_rank == 0) {
+  if (myRank == 0) {
     printf("-- End\n");
     fflush(stdout);
   }

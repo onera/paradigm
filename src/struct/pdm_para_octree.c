@@ -3247,7 +3247,8 @@ _closest_points_local
   //<<<---
 
   int *is_visited_part = malloc (sizeof(int) * octree->n_connected);
-
+  size_t size = sizeof(int) * octants->n_nodes;
+  printf("size : %d\n", size);
   int *is_visited     = malloc (sizeof(int) * octants->n_nodes);
   int *visited_leaves = malloc (sizeof(int) * octants->n_nodes);// could be smaller...
   int n_visited = 0;
@@ -3260,6 +3261,7 @@ _closest_points_local
 
   /* Min heap used to visit leaves from neighbour to neighbour */
   _min_heap_t *leaf_heap = _min_heap_create (octants->n_nodes);
+
 
   //-->> DETAIL TIMERS
   PDM_timer_hang_on(octree->timer);
@@ -3299,8 +3301,8 @@ _closest_points_local
       closest_src_gnum[j] = -1; // USEFUL ONLY FOR DEBUG
     }
 
-    double *max_src_dist = closest_src_dist + n_closest_points - 1;
 
+    double *max_src_dist = closest_src_dist + n_closest_points - 1;
 
     /* Get current target point data */
     const double *_pt = pts_coord + i_tgt * dim;
@@ -3521,8 +3523,10 @@ _closest_points_local
     int start_id;
     PDM_g_num_t unused;
     double start_dist;
+    int n = 0;
     while (_min_heap_pop (start_heap, &start_id, &unused, &start_dist)) {
-
+      // printf("n : %d\n", n);
+      // n++;
       if (DEBUG) {
         printf("tgt point (%ld) start leaf %d: dist = %f / %f  (is visited? %d)\n",
                pts_g_num[i_tgt], start_id, start_dist, *max_src_dist, is_visited[start_id]);
@@ -3549,7 +3553,6 @@ _closest_points_local
       int leaf_id;
       double leaf_dist;
       while (_min_heap_pop (leaf_heap, &leaf_id, &unused, &leaf_dist)) {
-
         if (DEBUG) {
           printf("tgt point (%ld) inspecting leaf %d: dist = %f / %f\n",
                  pts_g_num[i_tgt], leaf_id, leaf_dist, *max_src_dist);
@@ -3590,6 +3593,8 @@ _closest_points_local
 
             closest_src_gnum[j] = src_gnum;
             closest_src_dist[j] = src_dist;
+            //printf("[%d] closest src dist : %f,   closest src gnum : %ld\n", i_tgt, closest_src_dist[i_tgt], closest_src_gnum[i_tgt]);
+
 
             if (DEBUG) {
               printf("  src pt (%ld) [%f %f %f] at dist %f / %f --> insert at pos %d\n",
@@ -3637,7 +3642,8 @@ _closest_points_local
             if (ngb < 0) {
               // distant neighbour(s)
               ngb = -(ngb + 1);
-
+              printf("part boundary elt idx gpu [%d] : %d\n", ngb, octree->part_boundary_elt_idx[ngb]);
+              
               for (int j = octree->part_boundary_elt_idx[ngb];
                    j < octree->part_boundary_elt_idx[ngb+1]; j++) {
 
@@ -3704,6 +3710,9 @@ _closest_points_local
       } // end while (_min_heap_pop (leaf_heap))
 
     } // end loop over (sorted) start leaves
+
+    //printf("[%d] closest src dist : %f,   closest src gnum : %ld\n", i_tgt, closest_src_dist[i_tgt], closest_src_gnum[i_tgt]);
+
 
     for (int rank = 0; rank < lComm; rank++) {
       if (rank == myRank) continue;
