@@ -107,36 +107,36 @@ inline __global__ void reduce_kernel6
   }
 }
 
-// //CUDA reallocation
-// #define cudaRealloc(ptr, oldLength, newLength)                \
-// ({                                                            \
-//   __typeof__(ptr) newptr = NULL;                              \
-//   if (newLength == 0)                                         \
-//   {                                                           \
-//     gpuErrchk(cudaFree(ptr));                                 \
-//     newptr = NULL;                                            \
-//   }                                                           \
-//   else if (!ptr)                                              \
-//   {                                                           \
-//     gpuErrchk(cudaMalloc(&ptr, sizeof(newLength)));           \
-//     newptr = ptr;                                             \
-//   }                                                           \
-//   else if (newLength <= oldLength)                            \
-//   {                                                           \
-//     newptr = ptr;                                             \
-//   }                                                           \
-//   else                                                        \
-//   {                                                           \
-//     assert((ptr) && (newLength > oldLength));                 \
-//     gpuErrchk(cudaMalloc(&newptr, sizeof(newLength)));        \
-//     if (newptr)                                               \
-//     {                                                         \
-//       memcpy(newptr, ptr, oldLength);                         \
-//       gpuErrchk(cudaFree(ptr));                               \
-//     }                                                         \
-//   }                                                           \
-//   newptr;                                                     \
-// })
+//CUDA reallocation
+#define cudaRealloc(ptr, oldLength, newLength)                \
+({                                                            \
+  __typeof__(ptr) newptr = NULL;                              \
+  if (newLength == 0)                                         \
+  {                                                           \
+    gpuErrchk(cudaFree(ptr));                                 \
+    newptr = NULL;                                            \
+  }                                                           \
+  else if (!ptr)                                              \
+  {                                                           \
+    gpuErrchk(cudaMalloc(&ptr, sizeof(newLength)));           \
+    newptr = ptr;                                             \
+  }                                                           \
+  else if (newLength <= oldLength)                            \
+  {                                                           \
+    newptr = ptr;                                             \
+  }                                                           \
+  else                                                        \
+  {                                                           \
+    assert((ptr) && (newLength > oldLength));                 \
+    gpuErrchk(cudaMalloc(&newptr, sizeof(newLength)));        \
+    if (newptr)                                               \
+    {                                                         \
+      memcpy(newptr, ptr, oldLength);                         \
+      gpuErrchk(cudaFree(ptr));                               \
+    }                                                         \
+  }                                                           \
+  newptr;                                                     \
+})
 
 
 /*============================================================================
@@ -269,18 +269,18 @@ PDM_printf_flush_proxy_set_GPU(PDM_printf_flush_proxy_t  *const fct);
  *  reallocated pointer
  */
 
-inline
-#ifdef __CUDACC__
-__host__ __device__
-#endif
-void*
-cudaRealloc(void* ptr, 
-            size_t oldLength, 
-            size_t newLength);
+// inline
+// #ifdef __CUDACC__
+// __host__ __device__
+// #endif
+// void*
+// cudaRealloc(void* ptr, 
+//             size_t oldLength, 
+//             size_t newLength);
 
 
-void
-test_printf(void);
+// void
+// test_printf(void);
 
 /*----------------------------------------------------------------------------*/
 

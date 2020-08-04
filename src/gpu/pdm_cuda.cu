@@ -232,79 +232,79 @@ set_dim3_value(int x, int y, int z)
 
 /*-----------------------------------------------------------------------------*/
 
-/*
-* Realloc implementation for cuda allocation
-*
-* parameters:
-*  ptr:        pointer to realloc
-*  oldLength:  length of the pointer to realloc
-*  newLength:  new length to allocate
-* 
-* returns:
-*  reallocated pointer
-*/
+// /*
+// * Realloc implementation for cuda allocation
+// *
+// * parameters:
+// *  ptr:        pointer to realloc
+// *  oldLength:  length of the pointer to realloc
+// *  newLength:  new length to allocate
+// * 
+// * returns:
+// *  reallocated pointer
+// */
 
-static
-__global__
-void
-_test_printf
-(
-  void
-  )
-{
-  printf("Hello World! from thread [%d,%d] From device\n", threadIdx.x,blockIdx.x);
-}
+// static
+// __global__
+// void
+// _test_printf
+// (
+//   void
+//   )
+// {
+//   printf("Hello World! from thread [%d,%d] From device\n", threadIdx.x,blockIdx.x);
+// }
 
 
-void
-test_printf
-(
-  void
-)
-{
-  _test_printf<<<10,1>>>();
-  cudaDeviceSynchronize();
-}
+// void
+// test_printf
+// (
+//   void
+// )
+// {
+//   _test_printf<<<10,1>>>();
+//   cudaDeviceSynchronize();
+// }
 
-//To use on a device, need compute capability >= 3.5 (so cudaMalloc and cudaFree can be called from device)
-inline
-__device__
-void*
-cudaRealloc
-(
-  void* ptr, 
-  size_t oldLength, 
-  size_t newLength
-  )
-{
+// //To use on a device, need compute capability >= 3.5 (so cudaMalloc and cudaFree can be called from device)
+// inline
+// __device__
+// void*
+// cudaRealloc
+// (
+//   void* ptr, 
+//   size_t oldLength, 
+//   size_t newLength
+//   )
+// {
 
-  if (newLength == 0)
-  {
-    gpuErrchk(cudaFree(ptr));
-    return NULL;
-  }
-  else if (!ptr)
-  {
-    gpuErrchk(cudaMalloc(&ptr, sizeof(newLength)));
-    return ptr;
-  }
-  else if (newLength <= oldLength)
-  {
-    return ptr;
-  }
-  else
-  {
-    assert((ptr) && (newLength > oldLength));
-    void* newptr = NULL;
-    gpuErrchk(cudaMalloc(&newptr, sizeof(newLength)));
-    if (newptr)
-    {
-      memcpy(newptr, ptr, oldLength);
-      gpuErrchk(cudaFree(ptr));
-    }
-    return newptr;
-  }
-}
+//   if (newLength == 0)
+//   {
+//     gpuErrchk(cudaFree(ptr));
+//     return NULL;
+//   }
+//   else if (!ptr)
+//   {
+//     gpuErrchk(cudaMalloc(&ptr, sizeof(newLength)));
+//     return ptr;
+//   }
+//   else if (newLength <= oldLength)
+//   {
+//     return ptr;
+//   }
+//   else
+//   {
+//     assert((ptr) && (newLength > oldLength));
+//     void* newptr = NULL;
+//     gpuErrchk(cudaMalloc(&newptr, sizeof(newLength)));
+//     if (newptr)
+//     {
+//       memcpy(newptr, ptr, oldLength);
+//       gpuErrchk(cudaFree(ptr));
+//     }
+//     return newptr;
+//   }
+// }
 
 /*-----------------------------------------------------------------------------*/
 

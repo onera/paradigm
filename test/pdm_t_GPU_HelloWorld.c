@@ -7,6 +7,6 @@
 
 
 int main(void) {
-    test_printf();
+    //test_printf();
     return 0;
 }

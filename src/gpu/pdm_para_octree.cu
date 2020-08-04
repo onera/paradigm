@@ -1403,8 +1403,8 @@ _closest_points_local
       gpuErrchk(cudaMalloc(&d_octants_range, sizeof(int) * (octants->n_nodes_max + 1)));
       gpuErrchk(cudaMalloc(&d_octants_neighbour_idx, sizeof(int) * (n_direction * octree->octants->n_nodes + 1)));
       gpuErrchk(cudaMalloc(&d_octants_neighbours, sizeof(int) * octree->octants->neighbour_idx[n_direction * octree->octants->n_nodes]));
-    gpuErrchk(cudaMalloc(&d_octree_part_boundary_elt_idx, sizeof(int) * (octree->n_part_boundary_elt + 1)));
-    gpuErrchk(cudaMalloc(&d_octree_part_boundary_elt, sizeof(int) * 2 * 3 * octree->n_part_boundary_elt));
+    //gpuErrchk(cudaMalloc(&d_octree_part_boundary_elt_idx, sizeof(int) * (octree->n_part_boundary_elt + 1)));
+    //gpuErrchk(cudaMalloc(&d_octree_part_boundary_elt, sizeof(int) * 2 * 3 * octree->n_part_boundary_elt));
     gpuErrchk(cudaMalloc(&d_octree_connected_idx, sizeof(int) * (octree->n_connected+1)));
     //manque des allocs pour l'octree, à compléter
   gpuErrchk(cudaMalloc(&d_pts_coord, sizeof(double) * recv_shift[lComm]*dim));
@@ -1423,7 +1423,6 @@ _closest_points_local
     if (i != myRank)
     {
       gpuErrchk(cudaMalloc(&h_tmp_send_tgt_lnum[i], sizeof(int) * n_pts));
-      printf("CHECK1\n");
       gpuErrchk(cudaMalloc(&h_tmp_send_tgt_n_leaves[i], sizeof(int) * n_pts));
       gpuErrchk(cudaMalloc(&h_tmp_send_start_leaves[i], sizeof(int) * s_tmp_send_start_leaves[i]));
       gpuErrchk(cudaMalloc(&h_send_to_rank_leaves[i], sizeof(int) * 2 * s_send_to_rank_leaves[i]));
@@ -1459,8 +1458,8 @@ _closest_points_local
       gpuErrchk(cudaMemcpy(d_octants_neighbours, octants->neighbours, sizeof(int) * octree->octants->neighbour_idx[n_direction * octree->octants->n_nodes], cudaMemcpyHostToDevice));
     //gpuErrchk(cudaMemcpy(&(d_octree->part_boundary_elt_idx), &d_octree_part_boundary_elt_idx, sizeof(int*), cudaMemcpyHostToDevice));
     //gpuErrchk(cudaMemcpy(d_octree_part_boundary_elt_idx, octree->part_boundary_elt_idx, sizeof(int) * (octree->n_part_boundary_elt + 1), cudaMemcpyHostToDevice));
-    gpuErrchk(cudaMemcpy(&(d_octree->part_boundary_elt), &d_octree_part_boundary_elt, sizeof(int*), cudaMemcpyHostToDevice));
-    gpuErrchk(cudaMemcpy(d_octree_part_boundary_elt, octree->part_boundary_elt, sizeof(int) * 2 * 3 * octree->n_part_boundary_elt, cudaMemcpyHostToDevice));
+    //gpuErrchk(cudaMemcpy(&(d_octree->part_boundary_elt), &d_octree_part_boundary_elt, sizeof(int*), cudaMemcpyHostToDevice));
+    //gpuErrchk(cudaMemcpy(d_octree_part_boundary_elt, octree->part_boundary_elt, sizeof(int) * 2 * 3 * octree->n_part_boundary_elt, cudaMemcpyHostToDevice));
     gpuErrchk(cudaMemcpy(&(d_octree->connected_idx), &d_octree_connected_idx, sizeof(int*), cudaMemcpyHostToDevice));
     gpuErrchk(cudaMemcpy(d_octree_connected_idx, octree->connected_idx, sizeof(int) * (octree->n_connected+1), cudaMemcpyHostToDevice));
   gpuErrchk(cudaMemcpy(d_pts_coord, pts_coord, sizeof(double) * recv_shift[lComm]*dim, cudaMemcpyHostToDevice));
@@ -1494,7 +1493,6 @@ _closest_points_local
   dim3 n_threads;
   dim3 n_blocks;
 
-  printf("n part boundary elt cpu : %d\n", octree->n_part_boundary_elt);
   // if (points_threshold <= 110000)
   // {
     n_threads = set_dim3_value(1024, 1, 1);
@@ -1888,173 +1886,24 @@ PDM_para_octree_closest_point_GPU
   PDM_timer_resume(octree->timer);
   //<<--
 
-  // // GPU
-  // //Preparing octree copy on GPU - allocation on GPU
-  // PDM_octree_t *d_octree = NULL;
-  // gpuErrchk(cudaMalloc(&d_octree, sizeof(PDM_octree_t)));
-  // double *d_pts = NULL;
-  // gpuErrchk(cudaMalloc(&d_pts, 3*n_pts*sizeof(double)));
+  // GPU
+  //Preparing octree copy on GPU - allocation on GPU
+  PDM_octree_t *d_octree = NULL;
+  gpuErrchk(cudaMalloc(&d_octree, sizeof(PDM_octree_t)));
+  double *d_pts = NULL;
+  gpuErrchk(cudaMalloc(&d_pts, 3*n_pts*sizeof(double)));
 
 
-  // //copy octree data on GPU
-  // gpuErrchk(cudaMemcpy(d_octree, octree, sizeof(PDM_octree_t), cudaMemcpyHostToDevice));
-  // gpuErrchk(cudaMemcpy(d_pts, pts, 3*n_pts*sizeof(double), cudaMemcpyHostToDevice));
-
-  // /* /!\ /!\ /!\ Force target points inside octree extents /!\ /!\ /!\ -->> */
-  // dim3 n_threads(32, 32);
-  // dim3 n_blocks((n_pts + 31)/32, (dim + 31)/32);
-  // _force_target_points<<<n_blocks,n_threads>>>(n_pts, dim, d_pts, d_octree);
-
-  // /* <<-- */
-
-  // /* Part-to-block create (only to get block distribution) */
-  // PDM_part_to_block_t *ptb1 = PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
-  //                                                       PDM_PART_TO_BLOCK_POST_MERGE,
-  //                                                       1.,
-  //                                                       &pts_g_num,
-  //                                                       NULL,
-  //                                                       &_n_pts,
-  //                                                       1,
-  //                                                       octree->comm);
-
-  // PDM_g_num_t *block_distrib_idx1 = PDM_part_to_block_distrib_index_get (ptb1);
-  // const int n_pts_block1 = PDM_part_to_block_n_elt_block_get (ptb1);
-
-  // PDM_g_num_t *block_closest_src_gnum1 = (PDM_g_num_t*)malloc (sizeof(PDM_g_num_t) * n_pts_block1 * n_closest_points);
-  // double      *block_closest_src_dist1 = (double*)malloc (sizeof(double)      * n_pts_block1 * n_closest_points);
-  // PDM_g_num_t *d_block_closest_src_gnum1 = NULL;
-  // gpuErrchk(cudaMalloc(&d_block_closest_src_gnum1, sizeof(PDM_g_num_t) * n_pts_block1 * n_closest_points));
-  // double *d_block_closest_src_dist1 = NULL;
-  // gpuErrchk(cudaMalloc(&d_block_closest_src_dist1, sizeof(double) * n_pts_block1 * n_closest_points));
-
-
-  // n_threads = set_dim3_value(32, 32, 1);
-  // n_blocks = set_dim3_value((n_pts_block1 + 31)/32, (n_closest_points + 31)/32, 1);
-  // _closest_src_init<<<n_blocks,n_threads>>>(n_pts_block1, n_closest_points, d_block_closest_src_gnum1, d_block_closest_src_dist1);
-
-
-  // gpuErrchk(cudaMemcpy(block_closest_src_gnum1, d_block_closest_src_gnum1, sizeof(PDM_g_num_t) * n_pts_block1 * n_closest_points, cudaMemcpyDeviceToHost));
-  // gpuErrchk(cudaMemcpy(block_closest_src_dist1, d_block_closest_src_dist1, sizeof(double) * n_pts_block1 * n_closest_points, cudaMemcpyDeviceToHost));
-
-  // gpuErrchk(cudaFree(d_block_closest_src_gnum1));
-  // gpuErrchk(cudaFree(d_block_closest_src_dist1));
-
-  // /*************************************************************************
-  //  *
-  //  * Distribute the target points
-  //  *
-  //  *************************************************************************/
-  // /*   1) Encode the coordinates of every target point */
-  // PDM_morton_code_t *pts_code = (PDM_morton_code_t*)malloc (sizeof(PDM_morton_code_t) * n_pts);
-  // PDM_morton_code_t *d_pts_code = NULL;
-  // gpuErrchk(cudaMalloc(&d_pts_code, sizeof(PDM_morton_code_t) * n_pts));
-  // double d[3], s[3];
-  // PDM_morton_encode_coords_GPU (dim,
-  //                               PDM_morton_max_level,
-  //                               octree->global_extents,
-  //                               (size_t) n_pts,
-  //                               d_pts,
-  //                               d_pts_code,
-  //                               d,
-  //                               s);
-                          
-
-  // gpuErrchk(cudaMemcpy(pts, d_pts, 3 * n_pts * sizeof(double), cudaMemcpyDeviceToHost));
-
-  // gpuErrchk(cudaFree(d_pts));                        
-                           
-
-  // /*   2) Use binary search to associate each target point to the appropriate process */
-  // int *send_count = (int*)malloc (sizeof(int) * lComm);
-  // int *recv_count = (int*)malloc (sizeof(int) * lComm);
-  // for (int i = 0; i < lComm; i++) {
-  //   send_count[i] = 0;
-  // }
-
-  // int *rank_pt = (int*)malloc (sizeof(int) * n_pts);
-  // int *d_rank_pt = NULL;
-  // gpuErrchk(cudaMalloc(&d_rank_pt, sizeof(int) * n_pts));
-
-  // n_threads = set_dim3_value(1024, 1, 1);
-  // n_blocks = set_dim3_value((n_pts + 1023)/1024, 1, 1);
-  
-  // int *d_send_count_tab = NULL;
-  // gpuErrchk(cudaMalloc(&d_send_count_tab, sizeof(int) * n_pts * lComm));
-
-  // // cudaEvent_t start, stop;
-  // // gpuErrchk(cudaEventCreate(&start));
-  // // gpuErrchk(cudaEventCreate(&stop));
-
-  // // gpuErrchk(cudaEventRecord(start));
-  // _binary_search_kernel<<<n_blocks,n_threads>>>(n_pts, d_rank_pt, lComm, d_pts_code, d_octree, d_send_count_tab);
-  // //The output of this kernel is an array of size lComm*total_threads, values are 0 or 1
-  // //There is one row per thread (and one thread per point), the proc where we will send the point is the index of the 1 value
-  // //Concurrent writing is impossible, so we will reduce this array to get the send_count array by adding the values of each column (column index are proc rank)
-  // // gpuErrchk(cudaEventRecord(stop));
-  // // gpuErrchk(cudaEventSynchronize(stop));
-
-  // // float milliseconds = 0;
-  // // gpuErrchk(cudaEventElapsedTime(&milliseconds, start, stop));
-  // // printf("n points : %d\n", n_pts);
-  // // printf("kernel time : %f ms\n", milliseconds);
-
-
-  // gpuErrchk(cudaMemcpy(rank_pt, d_rank_pt, sizeof(int) * n_pts, cudaMemcpyDeviceToHost));
-  // gpuErrchk(cudaMemcpy(octree, d_octree, sizeof(PDM_octree_t), cudaMemcpyDeviceToHost));
-  // gpuErrchk(cudaMemcpy(pts_code, d_pts_code, sizeof(PDM_morton_code_t) * n_pts, cudaMemcpyDeviceToHost));
-
-
-  // gpuErrchk(cudaFree(d_octree));
-  // gpuErrchk(cudaFree(d_rank_pt));
-  // gpuErrchk(cudaFree(d_pts_code));
-
-  // //Reduce send_count tab from each thread block to one tab
-  // int *d_temp = NULL;
-  // gpuErrchk(cudaMalloc(&d_temp, sizeof(int) * n_pts));
-  // for (int k = 0; k < lComm; k++)
-  // {
-  //   n_threads = set_dim3_value(1024, 1, 1);
-  //   n_blocks = set_dim3_value((n_pts + 1023)/1024, 1, 1);
- 
-  //   //Get the column (or row) for the rank k proc
-  //   _get_row<<<n_blocks,n_threads>>>(d_send_count_tab, d_temp, k, n_pts);
-  //   //Reduce the row once using d_temp
-  //   int blockSize = n_threads.x*n_threads.y*n_threads.z;
-  //   int shared_size = blockSize*sizeof(int);
-  //   Reduce_kernel(n_threads, n_blocks, shared_size, blockSize, n_pts, d_temp, d_temp);
-
-
-
-  //   //When we need to use multiple blocks of threads to reduce, the output is an array of size n_block
-  //   //containing the reduction for each block
-  //   //To get the complete reduction, we add the results of each block
-  //   if (n_blocks.x > 1)
-  //   {
-  //     int n_temp = n_blocks.x;
-  //     n_blocks = set_dim3_value((n_blocks.x + 1023)/1024, 1, 1);
-  //     Reduce_kernel(n_threads, n_blocks, shared_size, blockSize, n_temp, d_temp, d_temp);
-  //   }
-
-  //   //Copy result on the CPU, in the send_count array
-  //   int *send_count_k = (int*)malloc(sizeof(int) * n_pts);
-  //   gpuErrchk(cudaMemcpy(send_count_k, d_temp, sizeof(int), cudaMemcpyDeviceToHost));
-  //   send_count[k] = send_count_k[0];
-  // }
-
-  // gpuErrchk(cudaFree(d_temp));
-  // gpuErrchk(cudaFree(d_send_count_tab));
-
-
+  //copy octree data on GPU
+  gpuErrchk(cudaMemcpy(d_octree, octree, sizeof(PDM_octree_t), cudaMemcpyHostToDevice));
+  gpuErrchk(cudaMemcpy(d_pts, pts, 3*n_pts*sizeof(double), cudaMemcpyHostToDevice));
 
   /* /!\ /!\ /!\ Force target points inside octree extents /!\ /!\ /!\ -->> */
-  for (int i = 0; i < n_pts; i++) {
-    for (int j = 0; j < dim; j++) {
-      pts[dim*i+j] = PDM_MAX (pts[dim*i+j], octree->global_extents[j]);
-      pts[dim*i+j] = PDM_MIN (pts[dim*i+j], octree->global_extents[dim+j]);
-    }
-  }
-  /* <<-- */
+  dim3 n_threads(32, 32);
+  dim3 n_blocks((n_pts + 31)/32, (dim + 31)/32);
+  _force_target_points<<<n_blocks,n_threads>>>(n_pts, dim, d_pts, d_octree);
 
+  /* <<-- */
 
   /* Part-to-block create (only to get block distribution) */
   PDM_part_to_block_t *ptb1 = PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
@@ -2071,15 +1920,22 @@ PDM_para_octree_closest_point_GPU
 
   PDM_g_num_t *block_closest_src_gnum1 = (PDM_g_num_t*)malloc (sizeof(PDM_g_num_t) * n_pts_block1 * n_closest_points);
   double      *block_closest_src_dist1 = (double*)malloc (sizeof(double)      * n_pts_block1 * n_closest_points);
-
-  for (int i = 0; i < n_pts_block1; i++) {
-    for (int j = 0; j < n_closest_points; j++) {
-      block_closest_src_dist1[n_closest_points*i + j] = HUGE_VAL;
-      block_closest_src_gnum1[n_closest_points*i + j] = -1; // USEFUL ONLY FOR DEBUG
-    }
-  }
+  PDM_g_num_t *d_block_closest_src_gnum1 = NULL;
+  gpuErrchk(cudaMalloc(&d_block_closest_src_gnum1, sizeof(PDM_g_num_t) * n_pts_block1 * n_closest_points));
+  double *d_block_closest_src_dist1 = NULL;
+  gpuErrchk(cudaMalloc(&d_block_closest_src_dist1, sizeof(double) * n_pts_block1 * n_closest_points));
 
 
+  n_threads = set_dim3_value(32, 32, 1);
+  n_blocks = set_dim3_value((n_pts_block1 + 31)/32, (n_closest_points + 31)/32, 1);
+  _closest_src_init<<<n_blocks,n_threads>>>(n_pts_block1, n_closest_points, d_block_closest_src_gnum1, d_block_closest_src_dist1);
+
+
+  gpuErrchk(cudaMemcpy(block_closest_src_gnum1, d_block_closest_src_gnum1, sizeof(PDM_g_num_t) * n_pts_block1 * n_closest_points, cudaMemcpyDeviceToHost));
+  gpuErrchk(cudaMemcpy(block_closest_src_dist1, d_block_closest_src_dist1, sizeof(double) * n_pts_block1 * n_closest_points, cudaMemcpyDeviceToHost));
+
+  gpuErrchk(cudaFree(d_block_closest_src_gnum1));
+  gpuErrchk(cudaFree(d_block_closest_src_dist1));
 
   /*************************************************************************
    *
@@ -2088,15 +1944,23 @@ PDM_para_octree_closest_point_GPU
    *************************************************************************/
   /*   1) Encode the coordinates of every target point */
   PDM_morton_code_t *pts_code = (PDM_morton_code_t*)malloc (sizeof(PDM_morton_code_t) * n_pts);
+  PDM_morton_code_t *d_pts_code = NULL;
+  gpuErrchk(cudaMalloc(&d_pts_code, sizeof(PDM_morton_code_t) * n_pts));
   double d[3], s[3];
-  PDM_morton_encode_coords (dim,
-                            PDM_morton_max_level,
-                            octree->global_extents,
-                            (size_t) n_pts,
-                            pts,
-                            pts_code,
-                            d,
-                            s);
+  PDM_morton_encode_coords_GPU (dim,
+                                PDM_morton_max_level,
+                                octree->global_extents,
+                                (size_t) n_pts,
+                                d_pts,
+                                d_pts_code,
+                                d,
+                                s);
+                          
+
+  gpuErrchk(cudaMemcpy(pts, d_pts, 3 * n_pts * sizeof(double), cudaMemcpyDeviceToHost));
+
+  gpuErrchk(cudaFree(d_pts));                        
+                           
 
   /*   2) Use binary search to associate each target point to the appropriate process */
   int *send_count = (int*)malloc (sizeof(int) * lComm);
@@ -2106,12 +1970,146 @@ PDM_para_octree_closest_point_GPU
   }
 
   int *rank_pt = (int*)malloc (sizeof(int) * n_pts);
-  for (int i = 0; i < n_pts; i++) {
-    rank_pt[i] = PDM_morton_binary_search (lComm,
-                                           pts_code[i],
-                                           octree->rank_octants_index);
-    send_count[rank_pt[i]]++;
+  int *d_rank_pt = NULL;
+  gpuErrchk(cudaMalloc(&d_rank_pt, sizeof(int) * n_pts));
+
+  n_threads = set_dim3_value(1024, 1, 1);
+  n_blocks = set_dim3_value((n_pts + 1023)/1024, 1, 1);
+  
+  int *d_send_count_tab = NULL;
+  gpuErrchk(cudaMalloc(&d_send_count_tab, sizeof(int) * n_pts * lComm));
+
+  // cudaEvent_t start, stop;
+  // gpuErrchk(cudaEventCreate(&start));
+  // gpuErrchk(cudaEventCreate(&stop));
+
+  // gpuErrchk(cudaEventRecord(start));
+  _binary_search_kernel<<<n_blocks,n_threads>>>(n_pts, d_rank_pt, lComm, d_pts_code, d_octree, d_send_count_tab);
+  //The output of this kernel is an array of size lComm*total_threads, values are 0 or 1
+  //There is one row per thread (and one thread per point), the proc where we will send the point is the index of the 1 value
+  //Concurrent writing is impossible, so we will reduce this array to get the send_count array by adding the values of each column (column index are proc rank)
+  // gpuErrchk(cudaEventRecord(stop));
+  // gpuErrchk(cudaEventSynchronize(stop));
+
+  // float milliseconds = 0;
+  // gpuErrchk(cudaEventElapsedTime(&milliseconds, start, stop));
+  // printf("n points : %d\n", n_pts);
+  // printf("kernel time : %f ms\n", milliseconds);
+
+
+  gpuErrchk(cudaMemcpy(rank_pt, d_rank_pt, sizeof(int) * n_pts, cudaMemcpyDeviceToHost));
+  gpuErrchk(cudaMemcpy(octree, d_octree, sizeof(PDM_octree_t), cudaMemcpyDeviceToHost));
+  gpuErrchk(cudaMemcpy(pts_code, d_pts_code, sizeof(PDM_morton_code_t) * n_pts, cudaMemcpyDeviceToHost));
+
+
+  gpuErrchk(cudaFree(d_octree));
+  gpuErrchk(cudaFree(d_rank_pt));
+  gpuErrchk(cudaFree(d_pts_code));
+
+  //Reduce send_count tab from each thread block to one tab
+  int *d_temp = NULL;
+  gpuErrchk(cudaMalloc(&d_temp, sizeof(int) * n_pts));
+  for (int k = 0; k < lComm; k++)
+  {
+    n_threads = set_dim3_value(1024, 1, 1);
+    n_blocks = set_dim3_value((n_pts + 1023)/1024, 1, 1);
+ 
+    //Get the column (or row) for the rank k proc
+    _get_row<<<n_blocks,n_threads>>>(d_send_count_tab, d_temp, k, n_pts);
+    //Reduce the row once using d_temp
+    int blockSize = n_threads.x*n_threads.y*n_threads.z;
+    int shared_size = blockSize*sizeof(int);
+    Reduce_kernel(n_threads, n_blocks, shared_size, blockSize, n_pts, d_temp, d_temp);
+
+
+
+    //When we need to use multiple blocks of threads to reduce, the output is an array of size n_block
+    //containing the reduction for each block
+    //To get the complete reduction, we add the results of each block
+    if (n_blocks.x > 1)
+    {
+      int n_temp = n_blocks.x;
+      n_blocks = set_dim3_value((n_blocks.x + 1023)/1024, 1, 1);
+      Reduce_kernel(n_threads, n_blocks, shared_size, blockSize, n_temp, d_temp, d_temp);
+    }
+
+    //Copy result on the CPU, in the send_count array
+    int *send_count_k = (int*)malloc(sizeof(int) * n_pts);
+    gpuErrchk(cudaMemcpy(send_count_k, d_temp, sizeof(int), cudaMemcpyDeviceToHost));
+    send_count[k] = send_count_k[0];
   }
+
+  gpuErrchk(cudaFree(d_temp));
+  gpuErrchk(cudaFree(d_send_count_tab));
+
+
+
+  // /* /!\ /!\ /!\ Force target points inside octree extents /!\ /!\ /!\ -->> */
+  // for (int i = 0; i < n_pts; i++) {
+  //   for (int j = 0; j < dim; j++) {
+  //     pts[dim*i+j] = PDM_MAX (pts[dim*i+j], octree->global_extents[j]);
+  //     pts[dim*i+j] = PDM_MIN (pts[dim*i+j], octree->global_extents[dim+j]);
+  //   }
+  // }
+  // /* <<-- */
+
+
+  // /* Part-to-block create (only to get block distribution) */
+  // PDM_part_to_block_t *ptb1 = PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+  //                                                       PDM_PART_TO_BLOCK_POST_MERGE,
+  //                                                       1.,
+  //                                                       &pts_g_num,
+  //                                                       NULL,
+  //                                                       &_n_pts,
+  //                                                       1,
+  //                                                       octree->comm);
+
+  // PDM_g_num_t *block_distrib_idx1 = PDM_part_to_block_distrib_index_get (ptb1);
+  // const int n_pts_block1 = PDM_part_to_block_n_elt_block_get (ptb1);
+
+  // PDM_g_num_t *block_closest_src_gnum1 = (PDM_g_num_t*)malloc (sizeof(PDM_g_num_t) * n_pts_block1 * n_closest_points);
+  // double      *block_closest_src_dist1 = (double*)malloc (sizeof(double)      * n_pts_block1 * n_closest_points);
+
+  // for (int i = 0; i < n_pts_block1; i++) {
+  //   for (int j = 0; j < n_closest_points; j++) {
+  //     block_closest_src_dist1[n_closest_points*i + j] = HUGE_VAL;
+  //     block_closest_src_gnum1[n_closest_points*i + j] = -1; // USEFUL ONLY FOR DEBUG
+  //   }
+  // }
+
+
+
+  // /*************************************************************************
+  //  *
+  //  * Distribute the target points
+  //  *
+  //  *************************************************************************/
+  // /*   1) Encode the coordinates of every target point */
+  // PDM_morton_code_t *pts_code = (PDM_morton_code_t*)malloc (sizeof(PDM_morton_code_t) * n_pts);
+  // double d[3], s[3];
+  // PDM_morton_encode_coords (dim,
+  //                           PDM_morton_max_level,
+  //                           octree->global_extents,
+  //                           (size_t) n_pts,
+  //                           pts,
+  //                           pts_code,
+  //                           d,
+  //                           s);
+
+  // /*   2) Use binary search to associate each target point to the appropriate process */
+  // int *send_count = (int*)malloc (sizeof(int) * lComm);
+  // int *recv_count = (int*)malloc (sizeof(int) * lComm);
+  // for (int i = 0; i < lComm; i++) {
+  //   send_count[i] = 0;
+  // }
+
+  // int *rank_pt = (int*)malloc (sizeof(int) * n_pts);
+  // for (int i = 0; i < n_pts; i++) {
+  //   rank_pt[i] = PDM_morton_binary_search (lComm,
+  //                                          pts_code[i],
+  //                                          octree->rank_octants_index);
+  //   send_count[rank_pt[i]]++;
+  // }
   
   free (pts_code);
 
