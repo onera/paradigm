@@ -69,6 +69,22 @@ PDM_point_location_nodal
  );
 
 
+void
+PDM_point_location_nodal2
+(
+ const int      type_idx[],
+ const int      elt_vtx_idx[],
+ const double   elt_vtx_coord[],
+ //+ elt_face_vtx for polyhedra...
+ const int      pts_idx[],
+ const double   pts_coord[],
+ const double   tolerance,
+ float        **distance,
+ double       **projected_coord,//high-order
+ int          **bar_coord_idx,
+ double       **bar_coord
+ );
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

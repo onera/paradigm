@@ -88,13 +88,15 @@ _solve_3x3(double  A[3][3],
   double det, det_inv, x0, x1, x2;
 
   det = A[0][0]*(A[1][1]*A[2][2] - A[2][1]*A[1][2])
-    - A[1][0]*(A[0][1]*A[2][2] - A[2][1]*A[0][2])
-    + A[2][0]*(A[0][1]*A[1][2] - A[1][1]*A[0][2]);
+    -   A[1][0]*(A[0][1]*A[2][2] - A[2][1]*A[0][2])
+    +   A[2][0]*(A[0][1]*A[1][2] - A[1][1]*A[0][2]);
 
   if (PDM_ABS(det) < _epsilon_denom) {
     printf("_solve_3x3: det = %e\n", det);
     return PDM_FALSE;
-  } else {
+  }
+
+  else {
     det_inv = 1./det;
   }
 
@@ -113,8 +115,9 @@ _solve_3x3(double  A[3][3],
           + A[2][0]*(A[0][1]*b[1] - A[1][1]*b[0])) * det_inv;
 
   /* Copy local variables to output */
-
-  x[0] = x0; x[1] = x1; x[2] = x2;
+  x[0] = x0;
+  x[1] = x1;
+  x[2] = x2;
 
   return PDM_TRUE;
 }
@@ -147,31 +150,6 @@ _compute_shapef_3d
 
   case PDM_MESH_NODAL_PYRAMID5: {
 
-#if 0
-    shapef[0] = (1.0 - uvw[0]) * (1.0 - uvw[1]) * (1.0 - uvw[2]);
-    shapef[1] =        uvw[0]  * (1.0 - uvw[1]) * (1.0 - uvw[2]);
-    shapef[2] =        uvw[0]  *        uvw[1]  * (1.0 - uvw[2]);
-    shapef[3] = (1.0 - uvw[0]) *        uvw[1]  * (1.0 - uvw[2]);
-    shapef[4] =                                          uvw[2];
-
-    if (deriv != NULL) {
-      deriv[0][0] = -(1.0 - uvw[1]) * (1.0 - uvw[2]);
-      deriv[0][1] = -(1.0 - uvw[0]) * (1.0 - uvw[2]);
-      deriv[0][2] = -(1.0 - uvw[0]) * (1.0 - uvw[1]);
-      deriv[1][0] =  (1.0 - uvw[1]) * (1.0 - uvw[2]);
-      deriv[1][1] = -uvw[0] * (1.0 - uvw[2]);
-      deriv[1][2] = -uvw[0] * (1.0 - uvw[1]);
-      deriv[2][0] =  uvw[1] * (1.0 - uvw[2]);
-      deriv[2][1] =  uvw[0] * (1.0 - uvw[2]);
-      deriv[2][2] = -uvw[0] * uvw[1];
-      deriv[3][0] = -uvw[1] * (1.0 - uvw[2]);
-      deriv[3][1] =  (1.0 - uvw[0]) * (1.0 - uvw[2]);
-      deriv[3][2] = -(1.0 - uvw[0]) * uvw[1];
-      deriv[4][0] =  0.0;
-      deriv[4][1] =  0.0;
-      deriv[4][2] =  1.0;
-    }
-#else
     double u = uvw[0];
     double v = uvw[1];
     double w = uvw[2];
@@ -183,8 +161,8 @@ _compute_shapef_3d
 
     shapef[0] = (1. - u - w) * (1. - v - w) * w1;
     shapef[1] =            u * (1. - v - w) * w1;
-    shapef[3] = (1. - u - w) *            v * w1;
     shapef[2] =            u *            v * w1;
+    shapef[3] = (1. - u - w) *            v * w1;
     shapef[4] = w;
 
     if (deriv != NULL) {
@@ -196,25 +174,25 @@ _compute_shapef_3d
       deriv[1][1] = -u * w1;
       deriv[1][2] = shapef[1]*w1 + deriv[1][1];
 
-      deriv[3][0] = -v * w1;
-      deriv[3][1] = (1. - u - w) * w1;
-      deriv[3][2] = shapef[3]*w1 + deriv[3][0];
-
       deriv[2][0] = v * w1;
       deriv[2][1] = u * w1;
       deriv[2][2] = shapef[2]*w1;
+
+      deriv[3][0] = -v * w1;
+      deriv[3][1] = (1. - u - w) * w1;
+      deriv[3][2] = shapef[3]*w1 + deriv[3][0];
 
       deriv[4][0] = 0.;
       deriv[4][1] = 0.;
       deriv[4][2] = 1.;
     }
-#endif
 
     break;
   }
 
 
-  case PDM_MESH_NODAL_PRISM6:
+
+  case PDM_MESH_NODAL_PRISM6: {
 
     shapef[0] = (1.0 - uvw[0] - uvw[1]) * (1.0 - uvw[2]);
     shapef[1] = uvw[0] * (1.0 - uvw[2]);
@@ -245,10 +223,11 @@ _compute_shapef_3d
     }
 
     break;
+  }
 
 
 
-  case PDM_MESH_NODAL_HEXA8:
+  case PDM_MESH_NODAL_HEXA8: {
 
     shapef[0] = (1.0 - uvw[0]) * (1.0 - uvw[1]) * (1.0 - uvw[2]);
     shapef[1] =        uvw[0]  * (1.0 - uvw[1]) * (1.0 - uvw[2]);
@@ -287,6 +266,9 @@ _compute_shapef_3d
     }
 
     break;
+  }
+
+
 
   default:
     PDM_error (__FILE__, __LINE__, 0, "Wrong element type\n");
@@ -1196,6 +1178,8 @@ _locate_in_cell_3d
                                       uvw);
       /* Point inside */
       if (dist2 < 1.e-12) {
+        _compute_shapef_3d (elt_type, uvw, _bc, NULL);
+
         double min_bc = HUGE_VAL;
         for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
           min_bc = PDM_MIN (min_bc, _bc[ivtx]);
@@ -1217,6 +1201,10 @@ _locate_in_cell_3d
     }
 
   } // End loop on points
+
+  if (elt_type != PDM_MESH_NODAL_PRISM6) {
+    free (__vtx_coord);
+  }
 
 
   /* Locate points outside cell (closest point on boundary) */
@@ -1761,6 +1749,44 @@ _poly2d_block_locate
 
   } // End of loop on parts
 }
+
+
+
+
+static void
+_locate_in_polygon
+(
+ const PDM_l_num_t n_vtx,
+ const double      vtx_coord[],
+ const int         n_pts,
+ const double      pts_coord[],
+ float             distance[],
+ double            bar_coord[]
+ )
+{
+  /* Compute mean value coordinates of closest points on polygon */
+  PDM_mean_value_coordinates_polygon_3d (n_vtx,
+                                         vtx_coord,
+                                         n_pts,
+                                         pts_coord,
+                                         bar_coord);
+
+  /* Compute distances */
+  for (int ipt = 0; ipt < n_pts; ipt++) {
+    const double *_pt = pts_coord + ipt * 3;
+    double       *_bc = bar_coord + ipt * n_vtx;
+
+    double v_cp_p[3] = {_pt[0], _pt[1], _pt[2]};
+    for (int ivtx = 0; ivtx < n_vtx; ivtx++) {
+      for (int idim = 0; idim < 3; idim++) {
+        v_cp_p[idim] -= _bc[ivtx] * vtx_coord[3*ivtx + idim];
+      }
+    }
+    double dist2 = PDM_DOT_PRODUCT (v_cp_p, v_cp_p);
+    distance[ipt] = (float) dist2;
+  }
+}
+
 
 
 
@@ -2395,6 +2421,203 @@ PDM_point_location_nodal
 
 }
 
+
+
+
+
+
+
+//--->>> NEW VERSION (FOR LOAD BALANCING)
+void
+PDM_point_location_nodal2
+(
+ const int      type_idx[],
+ const int      elt_vtx_idx[],
+ const double   elt_vtx_coord[],
+ //+ elt_face_vtx for polyhedra...
+ const int      pts_idx[],
+ const double   pts_coord[],
+ const double   tolerance,
+ float        **distance,
+ double       **projected_coord,//high-order
+ int          **bar_coord_idx,
+ double       **bar_coord
+ )
+{
+  const int order = 1;
+
+
+  int ielt = 0;
+  int ipt = 0;
+
+
+  /*
+   * Allocate memory
+   */
+  int n_elt = type_idx[PDM_MESH_NODAL_N_ELEMENT_TYPES];
+  int n_pts = pts_idx[n_elt];
+  *distance = malloc (sizeof(float) * n_pts);
+  //*projected_coord = malloc (sizeof(double) * n_pts * 3);//high-order
+  *bar_coord_idx = malloc (sizeof(int) * (n_pts+1));
+  (*bar_coord_idx)[0] = 0;
+
+  for (ielt = 0; ielt < n_elt; ielt++) {
+    int n_vtx = elt_vtx_idx[ielt+1] - elt_vtx_idx[ielt];
+
+    for (ipt = pts_idx[ielt]; ipt < pts_idx[ielt+1]; ipt++) {
+      (*bar_coord_idx)[ipt+1] = (*bar_coord_idx)[ipt] + n_vtx;
+    }
+  }
+
+  *bar_coord = malloc (sizeof(double) * ((*bar_coord_idx)[n_pts]));
+
+
+
+  /*
+   * Locate on single nodes
+   */
+  for (ielt = type_idx[0]; ielt < type_idx[PDM_MESH_NODAL_BAR2]; ielt++) {
+    const double *vtx_coord = elt_vtx_coord + 3*elt_vtx_idx[ielt];
+
+    for (ipt = pts_idx[ielt]; ipt < pts_idx[ielt+1]; ipt++) {
+      double dist2 = 0.;
+
+      for (int idim = 0; idim < 3; idim++) {
+        double delta = pts_coord[3*ipt + idim] - vtx_coord[idim];
+        dist2 += delta * delta;
+      }
+      (*distance)[ipt] = (float) dist2;
+      (*bar_coord)[ipt] = 1.;
+    }
+  }
+
+
+  const int _connec[8] = {1, 2, 3, 4, 5, 6, 7, 8};
+  /*
+   * Locate on edges
+   */
+  for (ielt = type_idx[PDM_MESH_NODAL_BAR2]; ielt < type_idx[PDM_MESH_NODAL_TRIA3]; ielt++) {
+
+    _locate_on_edge (3,
+                     _connec,
+                     NULL,
+                     elt_vtx_coord + 3*elt_vtx_idx[ielt],
+                     pts_idx[ielt+1] - pts_idx[ielt],
+                     pts_coord + pts_idx[ielt] * 3,
+                     *distance + pts_idx[ielt],
+                     *bar_coord + pts_idx[ielt] * 2);
+  }
+
+
+  /*
+   * Locate on triangles
+   */
+  for (ielt = type_idx[PDM_MESH_NODAL_TRIA3]; ielt < type_idx[PDM_MESH_NODAL_QUAD4]; ielt++) {
+
+    _locate_on_triangles_3d (1,
+                             _connec,
+                             NULL,
+                             elt_vtx_coord + 3*elt_vtx_idx[ielt],
+                             pts_idx[ielt+1] - pts_idx[ielt],
+                             pts_coord + pts_idx[ielt] * 3,
+                             NULL,
+                             *distance + pts_idx[ielt],
+                             *bar_coord + pts_idx[ielt] * 3);
+  }
+
+
+  /*
+   * Locate on quadrangles
+   */
+  for (ielt = type_idx[PDM_MESH_NODAL_QUAD4]; ielt < type_idx[PDM_MESH_NODAL_POLY_2D]; ielt++) {
+
+    _locate_on_quadrangle (3,
+                           _connec,
+                           NULL,
+                           elt_vtx_coord + 3*elt_vtx_idx[ielt],
+                           pts_idx[ielt+1] - pts_idx[ielt],
+                           pts_coord + pts_idx[ielt] * 3,
+                           *distance + pts_idx[ielt],
+                           *bar_coord + pts_idx[ielt] * 4);
+  }
+
+
+  /*
+   * Locate on polygons
+   */
+  for (ielt = type_idx[PDM_MESH_NODAL_POLY_2D]; ielt < type_idx[PDM_MESH_NODAL_TETRA4]; ielt++) {
+
+    _locate_in_polygon (elt_vtx_idx[ielt+1] - elt_vtx_idx[ielt],
+                        elt_vtx_coord + 3*elt_vtx_idx[ielt],
+                        pts_idx[ielt+1] - pts_idx[ielt],
+                        pts_coord + pts_idx[ielt] * 3,
+                        *distance + pts_idx[ielt],
+                        *bar_coord + (*bar_coord_idx)[pts_idx[ielt]]);
+  }
+
+
+
+  /*
+   * Locate in tetrahedra
+   */
+  for (ielt = type_idx[PDM_MESH_NODAL_TETRA4]; ielt < type_idx[PDM_MESH_NODAL_PYRAMID5]; ielt++) {
+
+    _locate_in_tetrahedron (elt_vtx_coord + 3*elt_vtx_idx[ielt],
+                            pts_idx[ielt+1] - pts_idx[ielt],
+                            pts_coord + pts_idx[ielt] * 3,
+                            *distance + pts_idx[ielt],
+                            *bar_coord + pts_idx[ielt] * 4);
+  }
+
+
+  /*
+   * Locate in standard cells
+   */
+  for (PDM_Mesh_nodal_elt_t type = PDM_MESH_NODAL_PYRAMID5;
+       type < PDM_MESH_NODAL_POLY_3D;
+       type++) {
+    //printf("type %d, n_elt = %d\n", type, type_idx[type+1] - type_idx[type]);
+
+    int n_vtx = PDM_Mesh_nodal_n_vertices_element (type,
+                                                   order);
+
+    for (ielt = type_idx[type]; ielt < type_idx[type+1]; ielt++) {
+      //printf("ielt = %d, points from %d to %d\n", ielt, pts_idx[ielt], pts_idx[ielt+1]);
+      _locate_in_cell_3d (type,
+                          _connec,
+                          NULL,
+                          elt_vtx_coord + 3*elt_vtx_idx[ielt],
+                          pts_idx[ielt+1] - pts_idx[ielt],
+                          pts_coord + pts_idx[ielt] * 3,
+                          tolerance,
+                          *distance + pts_idx[ielt],
+                          *bar_coord + pts_idx[ielt] * n_vtx);
+    }
+  }
+
+
+  /*
+   * Locate in polyhedra
+   */
+  /*for (ielt = type_idx[PDM_MESH_NODAL_POLY_3D]; ielt < n_elt; ielt++) {
+
+    int n_vtx = elt_vtx_idx[ielt+1] - elt_vtx_idx[ielt];
+    _locate_in_polyhedron (n_vtx,
+    elt_vtx_coord + 3*elt_vtx_idx[ielt],
+    const PDM_l_num_t n_face,
+    const PDM_l_num_t face_vtx_idx[],
+    const PDM_l_num_t face_vtx[],
+    const int         face_orientation[],
+    pts_idx[ielt+1] - pts_idx[ielt],
+    pts_coord + pts_idx[ielt] * 3,
+    const double      char_length,
+    *distance + pts_idx[ielt],
+    *bar_coord + (*bar_coord_idx)[pts_idx[ielt]]);
+    }*/
+
+
+}
+//<<<---
 
 #ifdef __cplusplus
 }

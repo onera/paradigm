@@ -229,6 +229,11 @@ extern "C" {
    const int id
    );
 
+  void
+  PDM_mesh_location_compute2
+  (
+   const int id
+   );
 
   /**
    *

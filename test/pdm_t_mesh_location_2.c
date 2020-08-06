@@ -897,7 +897,7 @@ static void write_vtk_polydata (const char   *filename,
 
   /* Points */
   fprintf(f, "POINTS %d double\n", n_vtx);
-  double *_pt = vtx_xyz;
+  const double *_pt = vtx_xyz;
   for (int i = 0; i < n_vtx; i++) {
     fprintf(f, "%lf %lf %lf\n", _pt[0], _pt[1], _pt[2]);
     _pt += 3;
@@ -1494,7 +1494,11 @@ int main(int argc, char *argv[])
    * Compute location
    *
    ************************/
+#if 0
   PDM_mesh_location_compute (location_id);
+#else
+  PDM_mesh_location_compute2 (location_id);
+#endif
 
   PDM_mesh_location_dump_times (location_id);
 
