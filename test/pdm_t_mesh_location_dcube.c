@@ -293,9 +293,9 @@ int main(int argc, char *argv[])
   int my_rank;
   int n_procs;
 
-  PDM_MPI_Init(&argc, &argv);
-  PDM_MPI_Comm_rank(PDM_MPI_COMM_WORLD, &my_rank);
-  PDM_MPI_Comm_size(PDM_MPI_COMM_WORLD, &n_procs);
+  PDM_MPI_Init (&argc, &argv);
+  PDM_MPI_Comm_rank (PDM_MPI_COMM_WORLD, &my_rank);
+  PDM_MPI_Comm_size (PDM_MPI_COMM_WORLD, &n_procs);
 
   int          dn_cell;
   int          dn_face;
@@ -598,7 +598,11 @@ int main(int argc, char *argv[])
     printf("-- Locate\n");
     fflush(stdout);
   }
+#if 0
   PDM_mesh_location_compute (id_loc);
+#else
+  PDM_mesh_location_compute2 (id_loc); // With Load Balancing
+#endif
 
   PDM_mesh_location_dump_times (id_loc);
 
