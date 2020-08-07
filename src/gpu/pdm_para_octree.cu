@@ -115,6 +115,8 @@ typedef enum {
  *
  */
 
+__device__ volatile int next_thread = 0;
+
 /*============================================================================
  * Private function definitions
  *============================================================================*/
@@ -435,11 +437,13 @@ _min_heap_push
     // h->lnum = cudaRealloc(h->lnum, old_size, h->size);
     // h->gnum = cudaRealloc(h->gnum, old_size, h->size);
     // h->priority = cudaRealloc(h->priority, old_size, h->size);
-    h->lnum =     (int *)         realloc (h->lnum,     sizeof(int)         * h->size);
-    h->gnum =     (PDM_g_num_t *) realloc (h->gnum,     sizeof(PDM_g_num_t) * h->size);
-    h->priority = (double *)      realloc (h->priority, sizeof(double)      * h->size);
-    for (i = h->count+1; i < h->size; i++)
-      h->priority[i] = HUGE_VAL;
+    printf("ERROR : too much data for heap\n");
+    assert(0);
+    // h->lnum =     (int *)         realloc (h->lnum,     sizeof(int)         * h->size);
+    // h->gnum =     (PDM_g_num_t *) realloc (h->gnum,     sizeof(PDM_g_num_t) * h->size);
+    // h->priority = (double *)      realloc (h->priority, sizeof(double)      * h->size);
+    // for (i = h->count+1; i < h->size; i++)
+    //   h->priority[i] = HUGE_VAL;
   }
 
   i = h->count;
@@ -574,18 +578,19 @@ _target_points_compute
   int           *n_tmp_send_start_leaves
  )
 {
-
   int i_tgt = points_shift + blockIdx.x * blockDim.x + threadIdx.x;
 
-  if ((i_tgt - points_shift) >= n_pts)  return;
+  if ((i_tgt - points_shift) >= n_pts)  return; 
 
-
+  printf("[%d] THREAD : %d\n", myRank, i_tgt);
+  
   const int DEBUG = 0;
   const int CHECK_FACE_DIST = 1;
   const int CHECK_CLOSEST = 1;
   const double THRESHOLD_CLOSEST = 0.75; // check closest if min_dist > threshold * upper bound
   const int CHECK_INTERSECT = 1;
   const int NORMALIZE = 1;
+  //volatile int nxt = next_thread;
 
   // //-->> DETAIL TIMERS
   // PDM_timer_hang_on(octree->timer);
@@ -596,12 +601,10 @@ _target_points_compute
   /* Init */
   const _l_octant_t *octants = octree->octants;
   const int dim = octree->dim;
-  size_t size_start_heap = 1;
 
-  _min_heap_t *start_heap = _min_heap_create(size_start_heap);
+  _min_heap_t *start_heap = _min_heap_create(start_leaves_idx[i_tgt+1]-start_leaves_idx[i_tgt]);
   _min_heap_t *leaf_heap = _min_heap_create(octants->n_nodes);
   
-  //printf("CHECK\n");
   // size_t size = sizeof(int) * octants->n_nodes;
   // printf("size : %d\n", size);
   // int *is_visited_part = new int[octree->n_connected];
@@ -855,7 +858,8 @@ _target_points_compute
       } // end loop over visited parts
     } // end if (min_start_dist >= THRESHOLD_CLOSEST * (*max_src_dist))
   } // end if (CHECK_CLOSEST && n_start_leaves > 0)
-
+  printf("[%d] CHECK\n", myRank);
+  __syncthreads();
 
   // //-->> DETAIL TIMERS
   // PDM_timer_hang_on(octree->timer);
@@ -865,15 +869,11 @@ _target_points_compute
   // PDM_timer_resume(octree->timer);
   // //<<--
 
-
   /* Loop over (sorted) start leaves */
   int start_id;
   PDM_g_num_t unused;
   double start_dist;
-  int n = 0;
   while (_min_heap_pop (start_heap, &start_id, &unused, &start_dist)) {
-      // printf("n : %d\n", n);
-      // n++;
     if (DEBUG) {
       printf("tgt point (%ld) start leaf %d: dist = %f / %f  (is visited? %d)\n",
               pts_g_num[i_tgt], start_id, start_dist, *max_src_dist, is_visited[start_id]);
@@ -902,7 +902,6 @@ _target_points_compute
     /* Visit octree leaves from neighbour to neighbour using priority queue */
     int leaf_id;
     double leaf_dist;
-    //CASSE ICI
 
     while (_min_heap_pop (leaf_heap, &leaf_id, &unused, &leaf_dist)) {
       if (DEBUG) {
@@ -986,17 +985,21 @@ _target_points_compute
             }
           }
         }
- 
+
+
         /* inspect neighbours in direction dir */
-        //GPU
         for (int i = octants->neighbour_idx[6*leaf_id + dir];
               i < octants->neighbour_idx[6*leaf_id + dir + 1]; i++) {
 
           int ngb = octants->neighbours[i];
-          //printf("ngb : %d\n", ngb);
-
-
+          __syncthreads();
           if (ngb < 0) {
+            for (int i = 0; i < i_tgt; i++)
+            {
+              printf("[%d] Thread %d is waiting...\n", myRank, (i_tgt - points_shift));
+              __syncthreads();
+              //printf("[%d] next thread : %d from thread : %d\n", myRank, next_thread, i_tgt);
+            }
             // distant neighbour(s)
             ngb = -(ngb + 1);
 
@@ -1008,14 +1011,27 @@ _target_points_compute
               int ngb_part = octree->part_boundary_elt[3*j+2];
 
               if (n_send_to_rank_leaves[ngb_rank] == 0) {
-                tmp_send_tgt_lnum[ngb_rank][send_count[ngb_rank]] = i_tgt;
-                tmp_send_tgt_n_leaves[ngb_rank][send_count[ngb_rank]] = 0;
-                send_count[ngb_rank]++;
+                atomicExch(&tmp_send_tgt_lnum[ngb_rank][send_count[ngb_rank]], i_tgt);
+                atomicExch(&tmp_send_tgt_n_leaves[ngb_rank][send_count[ngb_rank]], 0);
+                atomicAdd(&send_count[ngb_rank], 1);
+                // tmp_send_tgt_lnum[ngb_rank][send_count[ngb_rank]] = i_tgt;
+                // tmp_send_tgt_n_leaves[ngb_rank][send_count[ngb_rank]] = 0;
+                // send_count[ngb_rank]++;
               }
 
               if (s_send_to_rank_leaves[ngb_rank] <= n_send_to_rank_leaves[ngb_rank]) {
-                int old_size = s_send_to_rank_leaves[ngb_rank];
-                s_send_to_rank_leaves[ngb_rank] *= 2;
+                size_t old_size = sizeof(int) * 2 * s_send_to_rank_leaves[ngb_rank];
+                atomicExch(&s_send_to_rank_leaves[ngb_rank], s_send_to_rank_leaves[ngb_rank] * 2);
+                // s_send_to_rank_leaves[ngb_rank] *= 2;
+                // int *temp;
+                // gpuErrchk(cudaMalloc(&temp, sizeof(int) * 2 * s_send_to_rank_leaves[ngb_rank]));
+                // memcpy(temp, send_to_rank_leaves[ngb_rank], old_size);
+                // gpuErrchk(cudaFree(send_to_rank_leaves[ngb_rank]));
+                // gpuErrchk(cudaMalloc(&send_to_rank_leaves[ngb_rank], sizeof(int) * 2 * s_send_to_rank_leaves[ngb_rank]));
+                // memcpy(send_to_rank_leaves[ngb_rank], temp, old_size);
+                // send_to_rank_leaves[ngb_rank] = temp;
+                // send_to_rank_leaves[ngb_rank][old_size+10] = 0;
+                // gpuErrchk(cudaFree(temp));
                 send_to_rank_leaves[ngb_rank] = (int*)cudaRealloc (send_to_rank_leaves[ngb_rank],
                                                                old_size,
                                                                sizeof(int) * 2 * s_send_to_rank_leaves[ngb_rank]);
@@ -1024,14 +1040,26 @@ _target_points_compute
                 printf("  Send pt (%ld) to rank %d, leaf %d (part %d)\n",
                         pts_g_num[i_tgt], ngb_rank, ngb_leaf, ngb_part);
               }
-              send_to_rank_leaves[ngb_rank][2*n_send_to_rank_leaves[ngb_rank]]   = ngb_leaf;
-              send_to_rank_leaves[ngb_rank][2*n_send_to_rank_leaves[ngb_rank]+1] = ngb_part;
-              n_send_to_rank_leaves[ngb_rank]++;
+              //printf("[%d] size : %lu\n", myRank, sizeof(*send_to_rank_leaves[ngb_rank]));
+              //printf("[%d] s send : %d,    n send : %d\n", myRank, s_send_to_rank_leaves[ngb_rank], n_send_to_rank_leaves[ngb_rank]);
+              atomicExch(&send_to_rank_leaves[ngb_rank][2*n_send_to_rank_leaves[ngb_rank]], ngb_leaf);
+              atomicExch(&send_to_rank_leaves[ngb_rank][2*n_send_to_rank_leaves[ngb_rank]+1], ngb_part);
+              atomicAdd(&n_send_to_rank_leaves[ngb_rank], 1);
+              // send_to_rank_leaves[ngb_rank][2*n_send_to_rank_leaves[ngb_rank]]   = ngb_leaf;
+              // send_to_rank_leaves[ngb_rank][2*n_send_to_rank_leaves[ngb_rank]+1] = ngb_part;
+              // n_send_to_rank_leaves[ngb_rank]++;
+              printf("[%d] THREAD %d : n send to rank leaves[%d] : %d\n", myRank, i_tgt, ngb_rank, n_send_to_rank_leaves[ngb_rank]);
 
-              tmp_send_tgt_n_leaves[ngb_rank][send_count[ngb_rank]-1]++;
+              atomicAdd(&tmp_send_tgt_n_leaves[ngb_rank][send_count[ngb_rank]-1], 1);
+              // tmp_send_tgt_n_leaves[ngb_rank][send_count[ngb_rank]-1]++;
 
             } // end loop over distant neighbours (j)
-
+            for (int i = 0; i < n_pts; i++)
+            {
+              printf("[%d] THREAD PASS : %d\n", myRank, i_tgt);
+              __threadfence();
+              __syncthreads();
+            }
           } else {
             // local neighbour
             if (is_visited[ngb] == 1) continue;
@@ -1063,14 +1091,19 @@ _target_points_compute
                               0,
                               ngb_min_dist);
             }
-
           } // end if local/distant neighbour
+          
         } // end loop over neighbours in direction dir (i)
       } // end loop over directions (dir)
     } // end while (_min_heap_pop (leaf_heap))
-    //GPU
 
   } // end loop over (sorted) start leaves
+  //atomicExch((int*)&next_thread, i_tgt + 1);
+  // __syncthreads();
+  // next_thread = i_tgt + 1;
+  // printf("[%d] next thread : %d\n", myRank, next_thread);
+  //__threadfence();
+  
 
 
   for (int rank = 0; rank < lComm; rank++) {
@@ -1104,7 +1137,8 @@ _target_points_compute
 
   _min_heap_free(start_heap);
   _min_heap_free(leaf_heap);
-
+  //printf("[%d] tgt lnum [%d][1] from gpu : %d,    n pts : %d\n", myRank, (myRank+1)%2, tmp_send_tgt_lnum[(myRank+1)%2][1], n_pts);
+  printf("[%d] from GPU : n tmp 0 : %d,    s tmp 0 : %d\n", myRank, n_tmp_send_start_leaves[0], s_tmp_send_start_leaves[0]);
 }
 
 
@@ -1265,6 +1299,7 @@ _closest_points_local
  const _octree_t  *octree,
  const int         n_closest_points,
  const int         n_pts,
+ int               iteration,
  double           *pts_coord,
  PDM_g_num_t      *pts_g_num, // ONLY FOR DEBUG
  int              *start_leaves,
@@ -1281,6 +1316,7 @@ _closest_points_local
  int             **send_start_leaves_rank_shift
  )
 {
+  
   const int DEBUG = 0;
   const int CHECK_FACE_DIST = 1;
   //const int CHECK_EMPTY_START = 0;
@@ -1297,6 +1333,7 @@ _closest_points_local
   int myRank, lComm;
   PDM_MPI_Comm_rank (octree->comm, &myRank);
   PDM_MPI_Comm_size (octree->comm, &lComm);
+
 
   for (int i = 0; i < lComm; i++) {
     send_count[i] = 0;
@@ -1325,14 +1362,9 @@ _closest_points_local
   int **send_to_rank_leaves   = (int**)malloc (sizeof(int *) * lComm);
   int  *s_send_to_rank_leaves = (int*)malloc (sizeof(int) * lComm);
   for (int i = 0; i < lComm; i++) {
-    s_send_to_rank_leaves[i] = 16;// ?
+    s_send_to_rank_leaves[i] = 32;// ?
     if (i != myRank) {
-      send_to_rank_leaves[i] = (int*)malloc (sizeof(int) * 2 * s_send_to_rank_leaves[i]);
-
-      tmp_send_tgt_lnum[i] = (int*)malloc (sizeof(int) * n_pts);// could be smaller and dynamically re-alloc'ed when necessary
-      tmp_send_tgt_n_leaves[i] = (int*)malloc (sizeof(int) * n_pts);// idem
-      s_tmp_send_start_leaves[i] = 16;//?
-      tmp_send_start_leaves[i] = (int*)malloc (sizeof(int) * s_tmp_send_start_leaves[i]);
+      s_tmp_send_start_leaves[i] = 32;//?
     } else {
       s_tmp_send_start_leaves[i] = 0;
     }
@@ -1348,49 +1380,44 @@ _closest_points_local
   PDM_timer_resume(octree->timer);
   //<<--
 
-  int dversion, rversion;
-  cudaDeviceProp dprop;
   gpuErrchk(cudaSetDevice(1));
-  gpuErrchk(cudaGetDeviceProperties(&dprop, 1));
-  gpuErrchk(cudaDriverGetVersion(&dversion));
-  gpuErrchk(cudaRuntimeGetVersion(&rversion));
-  printf("driver version : %d,    runtime version : %d,   device version : %d\n", dversion, rversion, dprop.major);
-
+  gpuErrchk(cudaDeviceReset());
 
   //Allocation on device
-  _octree_t       *d_octree = NULL;
-    double              *d_octree_points = NULL;
-    int                 *d_octree_points_icloud = NULL;
-    PDM_g_num_t         *d_octree_points_gnum = NULL;
-    PDM_morton_code_t   *d_octree_points_code = NULL;
-    _l_octant_t         *d_octants = NULL;
-      PDM_morton_code_t   *d_octants_codes = NULL;
-      int                 *d_octants_n_points = NULL;
-      int                 *d_octants_range = NULL;
-      int                 *d_octants_neighbour_idx = NULL;
-      int                 *d_octants_neighbours = NULL;
-    int                 *d_octree_part_boundary_elt_idx = NULL;
-    int                 *d_octree_part_boundary_elt = NULL;
-    int                 *d_octree_connected_idx = NULL;
-  double          *d_pts_coord = NULL;
-  PDM_g_num_t     *d_pts_g_num = NULL;
-  int             *d_start_leaves = NULL;
-  int             *d_start_leaves_idx = NULL;
-  double          *d_upper_bound_dist = NULL;
-  PDM_g_num_t     *d_local_closest_src_gnum = NULL;
-  double          *d_local_closest_src_dist = NULL;
-  int             *d_send_count = NULL;
+  _octree_t       *d_octree;
+    double              *d_octree_points;
+    int                 *d_octree_points_icloud;
+    PDM_g_num_t         *d_octree_points_gnum;
+    PDM_morton_code_t   *d_octree_points_code;
+    _l_octant_t         *d_octants;
+      PDM_morton_code_t   *d_octants_codes;
+      int                 *d_octants_n_points;
+      int                 *d_octants_range;
+      int                 *d_octants_neighbour_idx;
+      int                 *d_octants_neighbours;
+    int                 *d_octree_part_boundary_elt_idx;
+    int                 *d_octree_part_boundary_elt;
+    int                 *d_octree_connected_idx;
+  double          *d_pts_coord;
+  PDM_g_num_t     *d_pts_g_num;
+  int             *d_start_leaves;
+  int             *d_start_leaves_idx;
+  double          *d_upper_bound_dist;
+  PDM_g_num_t     *d_local_closest_src_gnum;
+  double          *d_local_closest_src_dist;
+  int             *d_send_count;
   int             **h_tmp_send_tgt_lnum = (int**)malloc (sizeof(int *) * lComm);
   int             **h_tmp_send_tgt_n_leaves = (int**)malloc (sizeof(int *) * lComm);
   int             **h_tmp_send_start_leaves = (int**)malloc (sizeof(int *) * lComm);
   int             **h_send_to_rank_leaves = (int**)malloc (sizeof(int *) * lComm);
-  int             **d_tmp_send_tgt_lnum = NULL;
-  int             **d_tmp_send_tgt_n_leaves = NULL;
-  int             **d_tmp_send_start_leaves = NULL;
-  int             **d_send_to_rank_leaves = NULL;
-  int             *d_s_send_to_rank_leaves = NULL;
-  int             *d_s_tmp_send_start_leaves = NULL;
-  int             *d_n_tmp_send_start_leaves = NULL;
+  int             **d_tmp_send_tgt_lnum;
+  int             **d_tmp_send_tgt_n_leaves;
+  int             **d_tmp_send_start_leaves;
+  int             **d_send_to_rank_leaves;
+  int             *d_s_send_to_rank_leaves;
+  int             *d_s_tmp_send_start_leaves;
+  int             *d_n_tmp_send_start_leaves;
+
   
   gpuErrchk(cudaMalloc(&d_octree, sizeof(_octree_t)));
     gpuErrchk(cudaMalloc(&d_octree_points, sizeof(double) * octree->n_points * octree->dim));
@@ -1403,35 +1430,16 @@ _closest_points_local
       gpuErrchk(cudaMalloc(&d_octants_range, sizeof(int) * (octants->n_nodes_max + 1)));
       gpuErrchk(cudaMalloc(&d_octants_neighbour_idx, sizeof(int) * (n_direction * octree->octants->n_nodes + 1)));
       gpuErrchk(cudaMalloc(&d_octants_neighbours, sizeof(int) * octree->octants->neighbour_idx[n_direction * octree->octants->n_nodes]));
-    //gpuErrchk(cudaMalloc(&d_octree_part_boundary_elt_idx, sizeof(int) * (octree->n_part_boundary_elt + 1)));
-    //gpuErrchk(cudaMalloc(&d_octree_part_boundary_elt, sizeof(int) * 2 * 3 * octree->n_part_boundary_elt));
     gpuErrchk(cudaMalloc(&d_octree_connected_idx, sizeof(int) * (octree->n_connected+1)));
     //manque des allocs pour l'octree, à compléter
-  gpuErrchk(cudaMalloc(&d_pts_coord, sizeof(double) * recv_shift[lComm]*dim));
-  gpuErrchk(cudaMalloc(&d_pts_g_num, sizeof(PDM_g_num_t) * recv_shift[lComm]));
+    printf("[%d] recv shift = %d\n", myRank, recv_shift[lComm]);
+  gpuErrchk(cudaMalloc(&d_pts_coord, sizeof(double) * n_pts*dim));
+  gpuErrchk(cudaMalloc(&d_pts_g_num, sizeof(PDM_g_num_t) * n_pts));
   gpuErrchk(cudaMalloc(&d_start_leaves, sizeof(int) * n_pts));
   gpuErrchk(cudaMalloc(&d_start_leaves_idx, sizeof(int) * (n_pts + 1)));
   gpuErrchk(cudaMalloc(&d_upper_bound_dist, sizeof(double) * n_pts));
   gpuErrchk(cudaMalloc(&d_local_closest_src_gnum, sizeof(PDM_g_num_t) * n_pts * n_closest_points));
   gpuErrchk(cudaMalloc(&d_local_closest_src_dist, sizeof(double) * n_pts * n_closest_points));
-  gpuErrchk(cudaMalloc(&d_send_count, sizeof(int) * lComm));
-  gpuErrchk(cudaMalloc(&d_s_send_to_rank_leaves, sizeof(int) * lComm));
-  gpuErrchk(cudaMalloc(&d_s_tmp_send_start_leaves, sizeof(int) * lComm));
-  gpuErrchk(cudaMalloc(&d_n_tmp_send_start_leaves, sizeof(int) * lComm));
-  for (int i = 0; i < lComm; i++) 
-  {
-    if (i != myRank)
-    {
-      gpuErrchk(cudaMalloc(&h_tmp_send_tgt_lnum[i], sizeof(int) * n_pts));
-      gpuErrchk(cudaMalloc(&h_tmp_send_tgt_n_leaves[i], sizeof(int) * n_pts));
-      gpuErrchk(cudaMalloc(&h_tmp_send_start_leaves[i], sizeof(int) * s_tmp_send_start_leaves[i]));
-      gpuErrchk(cudaMalloc(&h_send_to_rank_leaves[i], sizeof(int) * 2 * s_send_to_rank_leaves[i]));
-    }
-  }
-  gpuErrchk(cudaMalloc(&d_tmp_send_tgt_lnum, sizeof(int*) * lComm));
-  gpuErrchk(cudaMalloc(&d_tmp_send_tgt_n_leaves, sizeof(int*) * lComm));
-  gpuErrchk(cudaMalloc(&d_tmp_send_start_leaves, sizeof(int*) * lComm));
-  gpuErrchk(cudaMalloc(&d_send_to_rank_leaves, sizeof(int*) * lComm));
 
 
   //Copy data on device
@@ -1456,35 +1464,66 @@ _closest_points_local
       gpuErrchk(cudaMemcpy(d_octants_neighbour_idx, octants->neighbour_idx, sizeof(int) * (n_direction * octree->octants->n_nodes + 1), cudaMemcpyHostToDevice));
       gpuErrchk(cudaMemcpy(&(d_octants->neighbours), &d_octants_neighbours, sizeof(int*), cudaMemcpyHostToDevice));
       gpuErrchk(cudaMemcpy(d_octants_neighbours, octants->neighbours, sizeof(int) * octree->octants->neighbour_idx[n_direction * octree->octants->n_nodes], cudaMemcpyHostToDevice));
-    //gpuErrchk(cudaMemcpy(&(d_octree->part_boundary_elt_idx), &d_octree_part_boundary_elt_idx, sizeof(int*), cudaMemcpyHostToDevice));
-    //gpuErrchk(cudaMemcpy(d_octree_part_boundary_elt_idx, octree->part_boundary_elt_idx, sizeof(int) * (octree->n_part_boundary_elt + 1), cudaMemcpyHostToDevice));
-    //gpuErrchk(cudaMemcpy(&(d_octree->part_boundary_elt), &d_octree_part_boundary_elt, sizeof(int*), cudaMemcpyHostToDevice));
-    //gpuErrchk(cudaMemcpy(d_octree_part_boundary_elt, octree->part_boundary_elt, sizeof(int) * 2 * 3 * octree->n_part_boundary_elt, cudaMemcpyHostToDevice));
     gpuErrchk(cudaMemcpy(&(d_octree->connected_idx), &d_octree_connected_idx, sizeof(int*), cudaMemcpyHostToDevice));
     gpuErrchk(cudaMemcpy(d_octree_connected_idx, octree->connected_idx, sizeof(int) * (octree->n_connected+1), cudaMemcpyHostToDevice));
-  gpuErrchk(cudaMemcpy(d_pts_coord, pts_coord, sizeof(double) * recv_shift[lComm]*dim, cudaMemcpyHostToDevice));
-  gpuErrchk(cudaMemcpy(d_pts_g_num, pts_g_num, sizeof(PDM_g_num_t) * recv_shift[lComm], cudaMemcpyHostToDevice));
+  gpuErrchk(cudaMemcpy(d_pts_coord, pts_coord, sizeof(double) * n_pts*dim, cudaMemcpyHostToDevice));
+  gpuErrchk(cudaMemcpy(d_pts_g_num, pts_g_num, sizeof(PDM_g_num_t) * n_pts, cudaMemcpyHostToDevice));
   gpuErrchk(cudaMemcpy(d_start_leaves, start_leaves, sizeof(int) * n_pts, cudaMemcpyHostToDevice));
   gpuErrchk(cudaMemcpy(d_start_leaves_idx, start_leaves_idx, sizeof(int) * (n_pts + 1), cudaMemcpyHostToDevice));
   gpuErrchk(cudaMemcpy(d_upper_bound_dist, upper_bound_dist, sizeof(double) * n_pts, cudaMemcpyHostToDevice));
   gpuErrchk(cudaMemcpy(d_local_closest_src_gnum, local_closest_src_gnum, sizeof(PDM_g_num_t) * n_pts * n_closest_points, cudaMemcpyHostToDevice));
   gpuErrchk(cudaMemcpy(d_local_closest_src_dist, local_closest_src_dist, sizeof(double) * n_pts * n_closest_points, cudaMemcpyHostToDevice));
-  gpuErrchk(cudaMemcpy(d_send_count, send_count, sizeof(int) * lComm, cudaMemcpyHostToDevice));
-  gpuErrchk(cudaMemcpy(d_s_send_to_rank_leaves, s_send_to_rank_leaves, sizeof(int) * lComm, cudaMemcpyHostToDevice));
-  gpuErrchk(cudaMemcpy(d_s_tmp_send_start_leaves, s_tmp_send_start_leaves, sizeof(int) * lComm, cudaMemcpyHostToDevice));
-  gpuErrchk(cudaMemcpy(d_n_tmp_send_start_leaves, n_tmp_send_start_leaves, sizeof(int) * lComm, cudaMemcpyHostToDevice));
-  gpuErrchk(cudaMemcpy(d_tmp_send_tgt_lnum, h_tmp_send_tgt_lnum, sizeof(int*) * lComm, cudaMemcpyHostToDevice));
-  gpuErrchk(cudaMemcpy(d_tmp_send_tgt_n_leaves, h_tmp_send_tgt_n_leaves, sizeof(int*) * lComm, cudaMemcpyHostToDevice));
-  gpuErrchk(cudaMemcpy(d_tmp_send_start_leaves, h_tmp_send_start_leaves, sizeof(int*) * lComm, cudaMemcpyHostToDevice));
-  gpuErrchk(cudaMemcpy(d_send_to_rank_leaves, h_send_to_rank_leaves, sizeof(int*) * lComm, cudaMemcpyHostToDevice));
+  
+  //needed ressources when using more than 1 proc
+  if (lComm > 1)
+  {
+    gpuErrchk(cudaMalloc(&d_octree_part_boundary_elt_idx, sizeof(int) * (octree->n_part_boundary_elt + 1)));
+    gpuErrchk(cudaMalloc(&d_octree_part_boundary_elt, sizeof(int) * 2 * 3 * octree->n_part_boundary_elt));
+    gpuErrchk(cudaMalloc(&d_send_count, sizeof(int) * lComm));
+    gpuErrchk(cudaMalloc(&d_s_send_to_rank_leaves, sizeof(int) * lComm));
+    gpuErrchk(cudaMalloc(&d_s_tmp_send_start_leaves, sizeof(int) * lComm));
+    gpuErrchk(cudaMalloc(&d_n_tmp_send_start_leaves, sizeof(int) * lComm));
+    for (int i = 0; i < lComm; i++) 
+    {
+      if (i != myRank)
+      {
+        gpuErrchk(cudaMalloc(&h_tmp_send_tgt_lnum[i], sizeof(int) * n_pts));
+        gpuErrchk(cudaMalloc(&h_tmp_send_tgt_n_leaves[i], sizeof(int) * n_pts));
+        gpuErrchk(cudaMalloc(&h_tmp_send_start_leaves[i], sizeof(int) * s_tmp_send_start_leaves[i]));
+        gpuErrchk(cudaMalloc(&h_send_to_rank_leaves[i], sizeof(int) * 2 * s_send_to_rank_leaves[i]));
+      }
+    }
+    gpuErrchk(cudaMalloc(&d_tmp_send_tgt_lnum, sizeof(int*) * lComm));
+    gpuErrchk(cudaMalloc(&d_tmp_send_tgt_n_leaves, sizeof(int*) * lComm));
+    gpuErrchk(cudaMalloc(&d_tmp_send_start_leaves, sizeof(int*) * lComm));
+    gpuErrchk(cudaMalloc(&d_send_to_rank_leaves, sizeof(int*) * lComm));
 
-  // Load more ressources for in-kernel malloc (or new statements)
-  size_t heap_size = 4000000000/lComm; //approximatively the max allocatable ressources after all the cudaMalloc calls
-  gpuErrchk(cudaDeviceSetLimit(cudaLimitMallocHeapSize, heap_size));
-  printf("size allocated : %lu\n", heap_size);
-  size_t heap_size2 = 0;
-  gpuErrchk(cudaDeviceGetLimit(&heap_size2, cudaLimitMallocHeapSize));
-  printf("max heap size : %lu\n", heap_size2);
+    gpuErrchk(cudaMemcpy(&(d_octree->part_boundary_elt_idx), &d_octree_part_boundary_elt_idx, sizeof(int*), cudaMemcpyHostToDevice));
+    gpuErrchk(cudaMemcpy(d_octree_part_boundary_elt_idx, octree->part_boundary_elt_idx, sizeof(int) * (octree->n_part_boundary_elt + 1), cudaMemcpyHostToDevice));
+    gpuErrchk(cudaMemcpy(&(d_octree->part_boundary_elt), &d_octree_part_boundary_elt, sizeof(int*), cudaMemcpyHostToDevice));
+    gpuErrchk(cudaMemcpy(d_octree_part_boundary_elt, octree->part_boundary_elt, sizeof(int) * 2 * 3 * octree->n_part_boundary_elt, cudaMemcpyHostToDevice));
+    gpuErrchk(cudaMemcpy(d_send_count, send_count, sizeof(int) * lComm, cudaMemcpyHostToDevice));
+    gpuErrchk(cudaMemcpy(d_s_send_to_rank_leaves, s_send_to_rank_leaves, sizeof(int) * lComm, cudaMemcpyHostToDevice));
+    gpuErrchk(cudaMemcpy(d_s_tmp_send_start_leaves, s_tmp_send_start_leaves, sizeof(int) * lComm, cudaMemcpyHostToDevice));
+    gpuErrchk(cudaMemcpy(d_n_tmp_send_start_leaves, n_tmp_send_start_leaves, sizeof(int) * lComm, cudaMemcpyHostToDevice));
+    gpuErrchk(cudaMemcpy(d_tmp_send_tgt_lnum, h_tmp_send_tgt_lnum, sizeof(int*) * lComm, cudaMemcpyHostToDevice));
+    gpuErrchk(cudaMemcpy(d_tmp_send_tgt_n_leaves, h_tmp_send_tgt_n_leaves, sizeof(int*) * lComm, cudaMemcpyHostToDevice));
+    gpuErrchk(cudaMemcpy(d_tmp_send_start_leaves, h_tmp_send_start_leaves, sizeof(int*) * lComm, cudaMemcpyHostToDevice));
+    gpuErrchk(cudaMemcpy(d_send_to_rank_leaves, h_send_to_rank_leaves, sizeof(int*) * lComm, cudaMemcpyHostToDevice));
+
+  }
+
+  if (iteration == 1)
+  {
+    // Load more ressources for in-kernel malloc (or new statements)
+    size_t heap_size = 4000000000/lComm; //approximatively the max allocatable ressources after all the cudaMalloc calls
+    gpuErrchk(cudaDeviceSetLimit(cudaLimitMallocHeapSize, heap_size));
+    printf("size allocated : %lu\n", heap_size);
+    size_t heap_size2 = 0;
+    gpuErrchk(cudaDeviceGetLimit(&heap_size2, cudaLimitMallocHeapSize));
+    printf("max heap size : %lu\n", heap_size2);
+  }
+
 
   int points_threshold = n_pts * n_closest_points;
   int points_shift = 0;
@@ -1497,8 +1536,9 @@ _closest_points_local
   // {
     n_threads = set_dim3_value(1024, 1, 1);
     n_blocks = set_dim3_value((n_pts + 1023)/1024, 1, 1);
+
     printf("entering kernel\n");
-    _target_points_compute<<<n_blocks,n_threads>>>(d_octree, 
+    _target_points_compute<<<n_blocks,n_threads>>>(d_octree,
                                                     n_pts,
                                                     n_closest_points,
                                                     myRank, 
@@ -1520,7 +1560,9 @@ _closest_points_local
                                                     d_s_send_to_rank_leaves,
                                                     d_s_tmp_send_start_leaves,
                                                     d_n_tmp_send_start_leaves);
-    printf("left kernel\n");
+    cudaDeviceSynchronize();
+    PDM_MPI_Barrier(octree->comm);
+    printf("[%d] left kernel\n", myRank);
   // }
   // else
   // {
@@ -1597,20 +1639,62 @@ _closest_points_local
   //copy result data on CPU
   gpuErrchk(cudaMemcpy(local_closest_src_gnum, d_local_closest_src_gnum, sizeof(PDM_g_num_t) * n_pts * n_closest_points, cudaMemcpyDeviceToHost));
   gpuErrchk(cudaMemcpy(local_closest_src_dist, d_local_closest_src_dist, sizeof(double) * n_pts * n_closest_points, cudaMemcpyDeviceToHost));
-  gpuErrchk(cudaMemcpy(send_count, d_send_count, sizeof(int) * lComm, cudaMemcpyDeviceToHost));
-  for (int i = 0; i < lComm; i++)
+  if (lComm > 1)
   {
-    if (i != myRank)
+    int old_length = 32;
+    gpuErrchk(cudaMemcpy(s_send_to_rank_leaves, d_s_send_to_rank_leaves, sizeof(int) * lComm, cudaMemcpyDeviceToHost));
+    gpuErrchk(cudaMemcpy(s_tmp_send_start_leaves, d_s_tmp_send_start_leaves, sizeof(int) * lComm, cudaMemcpyDeviceToHost));
+    gpuErrchk(cudaMemcpy(n_tmp_send_start_leaves, d_n_tmp_send_start_leaves, sizeof(int) * lComm, cudaMemcpyDeviceToHost));
+    printf("[%d] n tmp 0 : %d,    s tmp 0 : %d\n", myRank, n_tmp_send_start_leaves[0], s_tmp_send_start_leaves[0]);
+        printf("[%d] n tmp 1 : %d,    s tmp 1 : %d\n", myRank, n_tmp_send_start_leaves[1], s_tmp_send_start_leaves[1]);
+
+    gpuErrchk(cudaMemcpy(send_count, d_send_count, sizeof(int) * lComm, cudaMemcpyDeviceToHost));
+    for (int i = 0; i < lComm; i++) 
     {
-      gpuErrchk(cudaMemcpy(&tmp_send_tgt_lnum[i], &d_tmp_send_tgt_lnum[i], sizeof(int) * n_pts, cudaMemcpyDeviceToHost));
-      gpuErrchk(cudaMemcpy(&tmp_send_tgt_n_leaves[i], &d_tmp_send_tgt_n_leaves[i], sizeof(int) * n_pts, cudaMemcpyDeviceToHost));
-      gpuErrchk(cudaMemcpy(&tmp_send_start_leaves[i], &d_tmp_send_start_leaves[i], sizeof(int) * s_tmp_send_start_leaves[i], cudaMemcpyDeviceToHost));
+      if (i != myRank)
+      {
+        if (old_length < s_tmp_send_start_leaves[i])
+        {
+          printf("ouai\n");
+          gpuErrchk(cudaFree(h_tmp_send_start_leaves[i]));
+          gpuErrchk(cudaMalloc(&h_tmp_send_start_leaves[i], sizeof(int) * s_tmp_send_start_leaves[i]));
+        }
+
+        if (old_length < s_send_to_rank_leaves[i])
+        {
+          gpuErrchk(cudaFree(h_send_to_rank_leaves[i]));
+          gpuErrchk(cudaMalloc(&h_send_to_rank_leaves[i], sizeof(int) * 2 * s_send_to_rank_leaves[i]));
+        }
+        
+      }
     }
+
+    gpuErrchk(cudaMemcpy(h_tmp_send_tgt_lnum, d_tmp_send_tgt_lnum, sizeof(int*) * lComm, cudaMemcpyDeviceToHost));
+    gpuErrchk(cudaMemcpy(h_tmp_send_tgt_n_leaves, d_tmp_send_tgt_n_leaves, sizeof(int*) * lComm, cudaMemcpyDeviceToHost));
+    gpuErrchk(cudaMemcpy(h_tmp_send_start_leaves, d_tmp_send_start_leaves, sizeof(int*) * lComm, cudaMemcpyDeviceToHost));
+    gpuErrchk(cudaMemcpy(h_send_to_rank_leaves, d_send_to_rank_leaves, sizeof(int*) * lComm, cudaMemcpyDeviceToHost));
+
+    for (int i = 0; i < lComm; i++)
+    {
+      if (i != myRank)
+      {
+        printf("i : %d\n", i);
+        tmp_send_tgt_lnum[i] = (int*)malloc (sizeof(int) * n_pts);// could be smaller and dynamically re-alloc'ed when necessary
+        tmp_send_tgt_n_leaves[i] = (int*)malloc (sizeof(int) * n_pts);// idem
+        tmp_send_start_leaves[i] = (int*)malloc (sizeof(int) * s_tmp_send_start_leaves[i]);
+        send_to_rank_leaves[i] = (int*)malloc (sizeof(int) * 2 * s_send_to_rank_leaves[i]);
+        gpuErrchk(cudaMemcpy(tmp_send_tgt_lnum[i], h_tmp_send_tgt_lnum[i], sizeof(int) * n_pts, cudaMemcpyDeviceToHost));
+        gpuErrchk(cudaMemcpy(tmp_send_tgt_n_leaves[i], h_tmp_send_tgt_n_leaves[i], sizeof(int) * n_pts, cudaMemcpyDeviceToHost));
+        gpuErrchk(cudaMemcpy(tmp_send_start_leaves[i], h_tmp_send_start_leaves[i], sizeof(int) * s_tmp_send_start_leaves[i], cudaMemcpyDeviceToHost));
+        gpuErrchk(cudaMemcpy(send_to_rank_leaves[i], h_send_to_rank_leaves[i], sizeof(int) * 2 * s_send_to_rank_leaves[i], cudaMemcpyDeviceToHost));
+      }
+    }
+    printf("[%d] tgt lnum[%d][1] from cpu : %d,   n pts : %d\n", myRank, (myRank+1)%2, tmp_send_tgt_lnum[(myRank+1)%2][1], n_pts);
   }
-  gpuErrchk(cudaMemcpy(s_send_to_rank_leaves, d_s_send_to_rank_leaves, sizeof(int) * lComm, cudaMemcpyDeviceToHost));
-  gpuErrchk(cudaMemcpy(s_tmp_send_start_leaves, d_s_tmp_send_start_leaves, sizeof(int) * lComm, cudaMemcpyDeviceToHost));
-  gpuErrchk(cudaMemcpy(n_tmp_send_start_leaves, d_n_tmp_send_start_leaves, sizeof(int) * lComm, cudaMemcpyDeviceToHost));
+  printf("[%d] CHECK\n", myRank);
+  PDM_MPI_Barrier(octree->comm);
   printf("finished copy\n");
+
 
   //Free device memory
     gpuErrchk(cudaFree(d_octree_points));
@@ -1632,12 +1716,14 @@ _closest_points_local
   gpuErrchk(cudaFree(d_upper_bound_dist));
   gpuErrchk(cudaFree(d_local_closest_src_gnum));
   gpuErrchk(cudaFree(d_local_closest_src_dist));
-  gpuErrchk(cudaFree(d_send_count));
-  for (int i = 0; i < lComm; i++) 
+  if (lComm > 1)
   {
-    if (i != myRank)
+    gpuErrchk(cudaFree(d_octree_part_boundary_elt));
+    gpuErrchk(cudaFree(d_octree_part_boundary_elt_idx));
+    gpuErrchk(cudaFree(d_send_count));
+    for (int i = 0; i < lComm; i++) 
     {
-      for (int i = 0; i < lComm; i++) 
+      if (i != myRank)
       {
         gpuErrchk(cudaFree(h_tmp_send_tgt_lnum[i]));
         gpuErrchk(cudaFree(h_tmp_send_tgt_n_leaves[i]));
@@ -1645,14 +1731,14 @@ _closest_points_local
         gpuErrchk(cudaFree(h_send_to_rank_leaves[i]));
       }
     }
+    gpuErrchk(cudaFree(d_tmp_send_tgt_lnum));
+    gpuErrchk(cudaFree(d_tmp_send_tgt_n_leaves));
+    gpuErrchk(cudaFree(d_tmp_send_start_leaves));
+    gpuErrchk(cudaFree(d_send_to_rank_leaves));
+    gpuErrchk(cudaFree(d_s_send_to_rank_leaves));
+    gpuErrchk(cudaFree(d_s_tmp_send_start_leaves));
+    gpuErrchk(cudaFree(d_n_tmp_send_start_leaves));
   }
-  gpuErrchk(cudaFree(d_tmp_send_tgt_lnum));
-  gpuErrchk(cudaFree(d_tmp_send_tgt_n_leaves));
-  gpuErrchk(cudaFree(d_tmp_send_start_leaves));
-  gpuErrchk(cudaFree(d_send_to_rank_leaves));
-  gpuErrchk(cudaFree(d_s_send_to_rank_leaves));
-  gpuErrchk(cudaFree(d_s_tmp_send_start_leaves));
-  gpuErrchk(cudaFree(d_n_tmp_send_start_leaves));
 
 
   //-->> DETAIL TIMERS
@@ -1670,6 +1756,7 @@ _closest_points_local
   free(send_to_rank_leaves);
 
   /* Manage send_tgt_lnum buffer */
+  printf("sendcount[0] = %d,    sendcount[1] = %d\n", send_count[0], send_count[1]);
   send_shift[0] = 0;
   for (int i = 0; i < lComm; i++) {
     send_shift[i+1] = send_shift[i] + send_count[i];
@@ -1886,173 +1973,24 @@ PDM_para_octree_closest_point_GPU
   PDM_timer_resume(octree->timer);
   //<<--
 
-  // GPU
-  //Preparing octree copy on GPU - allocation on GPU
-  PDM_octree_t *d_octree = NULL;
-  gpuErrchk(cudaMalloc(&d_octree, sizeof(PDM_octree_t)));
-  double *d_pts = NULL;
-  gpuErrchk(cudaMalloc(&d_pts, 3*n_pts*sizeof(double)));
+  // // GPU
+  // //Preparing octree copy on GPU - allocation on GPU
+  // PDM_octree_t *d_octree = NULL;
+  // gpuErrchk(cudaMalloc(&d_octree, sizeof(PDM_octree_t)));
+  // double *d_pts = NULL;
+  // gpuErrchk(cudaMalloc(&d_pts, 3*n_pts*sizeof(double)));
 
 
-  //copy octree data on GPU
-  gpuErrchk(cudaMemcpy(d_octree, octree, sizeof(PDM_octree_t), cudaMemcpyHostToDevice));
-  gpuErrchk(cudaMemcpy(d_pts, pts, 3*n_pts*sizeof(double), cudaMemcpyHostToDevice));
-
-  /* /!\ /!\ /!\ Force target points inside octree extents /!\ /!\ /!\ -->> */
-  dim3 n_threads(32, 32);
-  dim3 n_blocks((n_pts + 31)/32, (dim + 31)/32);
-  _force_target_points<<<n_blocks,n_threads>>>(n_pts, dim, d_pts, d_octree);
-
-  /* <<-- */
-
-  /* Part-to-block create (only to get block distribution) */
-  PDM_part_to_block_t *ptb1 = PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
-                                                        PDM_PART_TO_BLOCK_POST_MERGE,
-                                                        1.,
-                                                        &pts_g_num,
-                                                        NULL,
-                                                        &_n_pts,
-                                                        1,
-                                                        octree->comm);
-
-  PDM_g_num_t *block_distrib_idx1 = PDM_part_to_block_distrib_index_get (ptb1);
-  const int n_pts_block1 = PDM_part_to_block_n_elt_block_get (ptb1);
-
-  PDM_g_num_t *block_closest_src_gnum1 = (PDM_g_num_t*)malloc (sizeof(PDM_g_num_t) * n_pts_block1 * n_closest_points);
-  double      *block_closest_src_dist1 = (double*)malloc (sizeof(double)      * n_pts_block1 * n_closest_points);
-  PDM_g_num_t *d_block_closest_src_gnum1 = NULL;
-  gpuErrchk(cudaMalloc(&d_block_closest_src_gnum1, sizeof(PDM_g_num_t) * n_pts_block1 * n_closest_points));
-  double *d_block_closest_src_dist1 = NULL;
-  gpuErrchk(cudaMalloc(&d_block_closest_src_dist1, sizeof(double) * n_pts_block1 * n_closest_points));
-
-
-  n_threads = set_dim3_value(32, 32, 1);
-  n_blocks = set_dim3_value((n_pts_block1 + 31)/32, (n_closest_points + 31)/32, 1);
-  _closest_src_init<<<n_blocks,n_threads>>>(n_pts_block1, n_closest_points, d_block_closest_src_gnum1, d_block_closest_src_dist1);
-
-
-  gpuErrchk(cudaMemcpy(block_closest_src_gnum1, d_block_closest_src_gnum1, sizeof(PDM_g_num_t) * n_pts_block1 * n_closest_points, cudaMemcpyDeviceToHost));
-  gpuErrchk(cudaMemcpy(block_closest_src_dist1, d_block_closest_src_dist1, sizeof(double) * n_pts_block1 * n_closest_points, cudaMemcpyDeviceToHost));
-
-  gpuErrchk(cudaFree(d_block_closest_src_gnum1));
-  gpuErrchk(cudaFree(d_block_closest_src_dist1));
-
-  /*************************************************************************
-   *
-   * Distribute the target points
-   *
-   *************************************************************************/
-  /*   1) Encode the coordinates of every target point */
-  PDM_morton_code_t *pts_code = (PDM_morton_code_t*)malloc (sizeof(PDM_morton_code_t) * n_pts);
-  PDM_morton_code_t *d_pts_code = NULL;
-  gpuErrchk(cudaMalloc(&d_pts_code, sizeof(PDM_morton_code_t) * n_pts));
-  double d[3], s[3];
-  PDM_morton_encode_coords_GPU (dim,
-                                PDM_morton_max_level,
-                                octree->global_extents,
-                                (size_t) n_pts,
-                                d_pts,
-                                d_pts_code,
-                                d,
-                                s);
-                          
-
-  gpuErrchk(cudaMemcpy(pts, d_pts, 3 * n_pts * sizeof(double), cudaMemcpyDeviceToHost));
-
-  gpuErrchk(cudaFree(d_pts));                        
-                           
-
-  /*   2) Use binary search to associate each target point to the appropriate process */
-  int *send_count = (int*)malloc (sizeof(int) * lComm);
-  int *recv_count = (int*)malloc (sizeof(int) * lComm);
-  for (int i = 0; i < lComm; i++) {
-    send_count[i] = 0;
-  }
-
-  int *rank_pt = (int*)malloc (sizeof(int) * n_pts);
-  int *d_rank_pt = NULL;
-  gpuErrchk(cudaMalloc(&d_rank_pt, sizeof(int) * n_pts));
-
-  n_threads = set_dim3_value(1024, 1, 1);
-  n_blocks = set_dim3_value((n_pts + 1023)/1024, 1, 1);
-  
-  int *d_send_count_tab = NULL;
-  gpuErrchk(cudaMalloc(&d_send_count_tab, sizeof(int) * n_pts * lComm));
-
-  // cudaEvent_t start, stop;
-  // gpuErrchk(cudaEventCreate(&start));
-  // gpuErrchk(cudaEventCreate(&stop));
-
-  // gpuErrchk(cudaEventRecord(start));
-  _binary_search_kernel<<<n_blocks,n_threads>>>(n_pts, d_rank_pt, lComm, d_pts_code, d_octree, d_send_count_tab);
-  //The output of this kernel is an array of size lComm*total_threads, values are 0 or 1
-  //There is one row per thread (and one thread per point), the proc where we will send the point is the index of the 1 value
-  //Concurrent writing is impossible, so we will reduce this array to get the send_count array by adding the values of each column (column index are proc rank)
-  // gpuErrchk(cudaEventRecord(stop));
-  // gpuErrchk(cudaEventSynchronize(stop));
-
-  // float milliseconds = 0;
-  // gpuErrchk(cudaEventElapsedTime(&milliseconds, start, stop));
-  // printf("n points : %d\n", n_pts);
-  // printf("kernel time : %f ms\n", milliseconds);
-
-
-  gpuErrchk(cudaMemcpy(rank_pt, d_rank_pt, sizeof(int) * n_pts, cudaMemcpyDeviceToHost));
-  gpuErrchk(cudaMemcpy(octree, d_octree, sizeof(PDM_octree_t), cudaMemcpyDeviceToHost));
-  gpuErrchk(cudaMemcpy(pts_code, d_pts_code, sizeof(PDM_morton_code_t) * n_pts, cudaMemcpyDeviceToHost));
-
-
-  gpuErrchk(cudaFree(d_octree));
-  gpuErrchk(cudaFree(d_rank_pt));
-  gpuErrchk(cudaFree(d_pts_code));
-
-  //Reduce send_count tab from each thread block to one tab
-  int *d_temp = NULL;
-  gpuErrchk(cudaMalloc(&d_temp, sizeof(int) * n_pts));
-  for (int k = 0; k < lComm; k++)
-  {
-    n_threads = set_dim3_value(1024, 1, 1);
-    n_blocks = set_dim3_value((n_pts + 1023)/1024, 1, 1);
- 
-    //Get the column (or row) for the rank k proc
-    _get_row<<<n_blocks,n_threads>>>(d_send_count_tab, d_temp, k, n_pts);
-    //Reduce the row once using d_temp
-    int blockSize = n_threads.x*n_threads.y*n_threads.z;
-    int shared_size = blockSize*sizeof(int);
-    Reduce_kernel(n_threads, n_blocks, shared_size, blockSize, n_pts, d_temp, d_temp);
-
-
-
-    //When we need to use multiple blocks of threads to reduce, the output is an array of size n_block
-    //containing the reduction for each block
-    //To get the complete reduction, we add the results of each block
-    if (n_blocks.x > 1)
-    {
-      int n_temp = n_blocks.x;
-      n_blocks = set_dim3_value((n_blocks.x + 1023)/1024, 1, 1);
-      Reduce_kernel(n_threads, n_blocks, shared_size, blockSize, n_temp, d_temp, d_temp);
-    }
-
-    //Copy result on the CPU, in the send_count array
-    int *send_count_k = (int*)malloc(sizeof(int) * n_pts);
-    gpuErrchk(cudaMemcpy(send_count_k, d_temp, sizeof(int), cudaMemcpyDeviceToHost));
-    send_count[k] = send_count_k[0];
-  }
-
-  gpuErrchk(cudaFree(d_temp));
-  gpuErrchk(cudaFree(d_send_count_tab));
-
-
+  // //copy octree data on GPU
+  // gpuErrchk(cudaMemcpy(d_octree, octree, sizeof(PDM_octree_t), cudaMemcpyHostToDevice));
+  // gpuErrchk(cudaMemcpy(d_pts, pts, 3*n_pts*sizeof(double), cudaMemcpyHostToDevice));
 
   // /* /!\ /!\ /!\ Force target points inside octree extents /!\ /!\ /!\ -->> */
-  // for (int i = 0; i < n_pts; i++) {
-  //   for (int j = 0; j < dim; j++) {
-  //     pts[dim*i+j] = PDM_MAX (pts[dim*i+j], octree->global_extents[j]);
-  //     pts[dim*i+j] = PDM_MIN (pts[dim*i+j], octree->global_extents[dim+j]);
-  //   }
-  // }
-  // /* <<-- */
+  // dim3 n_threads(32, 32);
+  // dim3 n_blocks((n_pts + 31)/32, (dim + 31)/32);
+  // _force_target_points<<<n_blocks,n_threads>>>(n_pts, dim, d_pts, d_octree);
 
+  // /* <<-- */
 
   // /* Part-to-block create (only to get block distribution) */
   // PDM_part_to_block_t *ptb1 = PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
@@ -2069,15 +2007,22 @@ PDM_para_octree_closest_point_GPU
 
   // PDM_g_num_t *block_closest_src_gnum1 = (PDM_g_num_t*)malloc (sizeof(PDM_g_num_t) * n_pts_block1 * n_closest_points);
   // double      *block_closest_src_dist1 = (double*)malloc (sizeof(double)      * n_pts_block1 * n_closest_points);
-
-  // for (int i = 0; i < n_pts_block1; i++) {
-  //   for (int j = 0; j < n_closest_points; j++) {
-  //     block_closest_src_dist1[n_closest_points*i + j] = HUGE_VAL;
-  //     block_closest_src_gnum1[n_closest_points*i + j] = -1; // USEFUL ONLY FOR DEBUG
-  //   }
-  // }
+  // PDM_g_num_t *d_block_closest_src_gnum1 = NULL;
+  // gpuErrchk(cudaMalloc(&d_block_closest_src_gnum1, sizeof(PDM_g_num_t) * n_pts_block1 * n_closest_points));
+  // double *d_block_closest_src_dist1 = NULL;
+  // gpuErrchk(cudaMalloc(&d_block_closest_src_dist1, sizeof(double) * n_pts_block1 * n_closest_points));
 
 
+  // n_threads = set_dim3_value(32, 32, 1);
+  // n_blocks = set_dim3_value((n_pts_block1 + 31)/32, (n_closest_points + 31)/32, 1);
+  // _closest_src_init<<<n_blocks,n_threads>>>(n_pts_block1, n_closest_points, d_block_closest_src_gnum1, d_block_closest_src_dist1);
+
+
+  // gpuErrchk(cudaMemcpy(block_closest_src_gnum1, d_block_closest_src_gnum1, sizeof(PDM_g_num_t) * n_pts_block1 * n_closest_points, cudaMemcpyDeviceToHost));
+  // gpuErrchk(cudaMemcpy(block_closest_src_dist1, d_block_closest_src_dist1, sizeof(double) * n_pts_block1 * n_closest_points, cudaMemcpyDeviceToHost));
+
+  // gpuErrchk(cudaFree(d_block_closest_src_gnum1));
+  // gpuErrchk(cudaFree(d_block_closest_src_dist1));
 
   // /*************************************************************************
   //  *
@@ -2086,15 +2031,23 @@ PDM_para_octree_closest_point_GPU
   //  *************************************************************************/
   // /*   1) Encode the coordinates of every target point */
   // PDM_morton_code_t *pts_code = (PDM_morton_code_t*)malloc (sizeof(PDM_morton_code_t) * n_pts);
+  // PDM_morton_code_t *d_pts_code = NULL;
+  // gpuErrchk(cudaMalloc(&d_pts_code, sizeof(PDM_morton_code_t) * n_pts));
   // double d[3], s[3];
-  // PDM_morton_encode_coords (dim,
-  //                           PDM_morton_max_level,
-  //                           octree->global_extents,
-  //                           (size_t) n_pts,
-  //                           pts,
-  //                           pts_code,
-  //                           d,
-  //                           s);
+  // PDM_morton_encode_coords_GPU (dim,
+  //                               PDM_morton_max_level,
+  //                               octree->global_extents,
+  //                               (size_t) n_pts,
+  //                               d_pts,
+  //                               d_pts_code,
+  //                               d,
+  //                               s);
+                          
+
+  // gpuErrchk(cudaMemcpy(pts, d_pts, 3 * n_pts * sizeof(double), cudaMemcpyDeviceToHost));
+
+  // gpuErrchk(cudaFree(d_pts));                        
+                           
 
   // /*   2) Use binary search to associate each target point to the appropriate process */
   // int *send_count = (int*)malloc (sizeof(int) * lComm);
@@ -2104,12 +2057,146 @@ PDM_para_octree_closest_point_GPU
   // }
 
   // int *rank_pt = (int*)malloc (sizeof(int) * n_pts);
-  // for (int i = 0; i < n_pts; i++) {
-  //   rank_pt[i] = PDM_morton_binary_search (lComm,
-  //                                          pts_code[i],
-  //                                          octree->rank_octants_index);
-  //   send_count[rank_pt[i]]++;
+  // int *d_rank_pt = NULL;
+  // gpuErrchk(cudaMalloc(&d_rank_pt, sizeof(int) * n_pts));
+
+  // n_threads = set_dim3_value(1024, 1, 1);
+  // n_blocks = set_dim3_value((n_pts + 1023)/1024, 1, 1);
+  
+  // int *d_send_count_tab = NULL;
+  // gpuErrchk(cudaMalloc(&d_send_count_tab, sizeof(int) * n_pts * lComm));
+
+  // // cudaEvent_t start, stop;
+  // // gpuErrchk(cudaEventCreate(&start));
+  // // gpuErrchk(cudaEventCreate(&stop));
+
+  // // gpuErrchk(cudaEventRecord(start));
+  // _binary_search_kernel<<<n_blocks,n_threads>>>(n_pts, d_rank_pt, lComm, d_pts_code, d_octree, d_send_count_tab);
+  // //The output of this kernel is an array of size lComm*total_threads, values are 0 or 1
+  // //There is one row per thread (and one thread per point), the proc where we will send the point is the index of the 1 value
+  // //Concurrent writing is impossible, so we will reduce this array to get the send_count array by adding the values of each column (column index are proc rank)
+  // // gpuErrchk(cudaEventRecord(stop));
+  // // gpuErrchk(cudaEventSynchronize(stop));
+
+  // // float milliseconds = 0;
+  // // gpuErrchk(cudaEventElapsedTime(&milliseconds, start, stop));
+  // // printf("n points : %d\n", n_pts);
+  // // printf("kernel time : %f ms\n", milliseconds);
+
+
+  // gpuErrchk(cudaMemcpy(rank_pt, d_rank_pt, sizeof(int) * n_pts, cudaMemcpyDeviceToHost));
+  // gpuErrchk(cudaMemcpy(octree, d_octree, sizeof(PDM_octree_t), cudaMemcpyDeviceToHost));
+  // gpuErrchk(cudaMemcpy(pts_code, d_pts_code, sizeof(PDM_morton_code_t) * n_pts, cudaMemcpyDeviceToHost));
+
+
+  // gpuErrchk(cudaFree(d_octree));
+  // gpuErrchk(cudaFree(d_rank_pt));
+  // gpuErrchk(cudaFree(d_pts_code));
+
+  // //Reduce send_count tab from each thread block to one tab
+  // int *d_temp = NULL;
+  // gpuErrchk(cudaMalloc(&d_temp, sizeof(int) * n_pts));
+  // for (int k = 0; k < lComm; k++)
+  // {
+  //   n_threads = set_dim3_value(1024, 1, 1);
+  //   n_blocks = set_dim3_value((n_pts + 1023)/1024, 1, 1);
+ 
+  //   //Get the column (or row) for the rank k proc
+  //   _get_row<<<n_blocks,n_threads>>>(d_send_count_tab, d_temp, k, n_pts);
+  //   //Reduce the row once using d_temp
+  //   int blockSize = n_threads.x*n_threads.y*n_threads.z;
+  //   int shared_size = blockSize*sizeof(int);
+  //   Reduce_kernel(n_threads, n_blocks, shared_size, blockSize, n_pts, d_temp, d_temp);
+
+
+
+  //   //When we need to use multiple blocks of threads to reduce, the output is an array of size n_block
+  //   //containing the reduction for each block
+  //   //To get the complete reduction, we add the results of each block
+  //   if (n_blocks.x > 1)
+  //   {
+  //     int n_temp = n_blocks.x;
+  //     n_blocks = set_dim3_value((n_blocks.x + 1023)/1024, 1, 1);
+  //     Reduce_kernel(n_threads, n_blocks, shared_size, blockSize, n_temp, d_temp, d_temp);
+  //   }
+
+  //   //Copy result on the CPU, in the send_count array
+  //   int *send_count_k = (int*)malloc(sizeof(int) * n_pts);
+  //   gpuErrchk(cudaMemcpy(send_count_k, d_temp, sizeof(int), cudaMemcpyDeviceToHost));
+  //   send_count[k] = send_count_k[0];
   // }
+
+  // gpuErrchk(cudaFree(d_temp));
+  // gpuErrchk(cudaFree(d_send_count_tab));
+
+
+
+  /* /!\ /!\ /!\ Force target points inside octree extents /!\ /!\ /!\ -->> */
+  for (int i = 0; i < n_pts; i++) {
+    for (int j = 0; j < dim; j++) {
+      pts[dim*i+j] = PDM_MAX (pts[dim*i+j], octree->global_extents[j]);
+      pts[dim*i+j] = PDM_MIN (pts[dim*i+j], octree->global_extents[dim+j]);
+    }
+  }
+  /* <<-- */
+
+
+  /* Part-to-block create (only to get block distribution) */
+  PDM_part_to_block_t *ptb1 = PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                        PDM_PART_TO_BLOCK_POST_MERGE,
+                                                        1.,
+                                                        &pts_g_num,
+                                                        NULL,
+                                                        &_n_pts,
+                                                        1,
+                                                        octree->comm);
+
+  PDM_g_num_t *block_distrib_idx1 = PDM_part_to_block_distrib_index_get (ptb1);
+  const int n_pts_block1 = PDM_part_to_block_n_elt_block_get (ptb1);
+
+  PDM_g_num_t *block_closest_src_gnum1 = (PDM_g_num_t*)malloc (sizeof(PDM_g_num_t) * n_pts_block1 * n_closest_points);
+  double      *block_closest_src_dist1 = (double*)malloc (sizeof(double)      * n_pts_block1 * n_closest_points);
+
+  for (int i = 0; i < n_pts_block1; i++) {
+    for (int j = 0; j < n_closest_points; j++) {
+      block_closest_src_dist1[n_closest_points*i + j] = HUGE_VAL;
+      block_closest_src_gnum1[n_closest_points*i + j] = -1; // USEFUL ONLY FOR DEBUG
+    }
+  }
+
+
+
+  /*************************************************************************
+   *
+   * Distribute the target points
+   *
+   *************************************************************************/
+  /*   1) Encode the coordinates of every target point */
+  PDM_morton_code_t *pts_code = (PDM_morton_code_t*)malloc (sizeof(PDM_morton_code_t) * n_pts);
+  double d[3], s[3];
+  PDM_morton_encode_coords (dim,
+                            PDM_morton_max_level,
+                            octree->global_extents,
+                            (size_t) n_pts,
+                            pts,
+                            pts_code,
+                            d,
+                            s);
+
+  /*   2) Use binary search to associate each target point to the appropriate process */
+  int *send_count = (int*)malloc (sizeof(int) * lComm);
+  int *recv_count = (int*)malloc (sizeof(int) * lComm);
+  for (int i = 0; i < lComm; i++) {
+    send_count[i] = 0;
+  }
+
+  int *rank_pt = (int*)malloc (sizeof(int) * n_pts);
+  for (int i = 0; i < n_pts; i++) {
+    rank_pt[i] = PDM_morton_binary_search (lComm,
+                                           pts_code[i],
+                                           octree->rank_octants_index);
+    send_count[rank_pt[i]]++;
+  }
   
   free (pts_code);
 
@@ -2235,6 +2322,7 @@ PDM_para_octree_closest_point_GPU
                                                 pts_code[i],
                                                 octants->codes);
   }
+
   free (pts_code);
 
   int *start_leaves_idx = (int*)malloc (sizeof(int) * (n_recv_pts+1));
@@ -2253,6 +2341,8 @@ PDM_para_octree_closest_point_GPU
     }*/
   int *s_processed_tgt = (int*)malloc (sizeof(int) * octree->n_connected);
   int *n_processed_tgt = (int*)malloc (sizeof(int) * octree->n_connected);
+
+
   PDM_g_num_t **processed_tgt = (PDM_g_num_t**)malloc (sizeof(PDM_g_num_t*) * octree->n_connected);
   for (int i = 0; i < octree->n_connected; i++) {
     s_processed_tgt[i] = PDM_MAX (128, 2 * n_recv_pts);//?
@@ -2354,7 +2444,6 @@ PDM_para_octree_closest_point_GPU
       printf(" ]\n\n\n");
     }
     //<<<---
-
     if (iteration == 1) {
       // at this point, there is exactly one start leaf per tgt point
       for (int i = 0; i < n_recv_pts; i++) {
@@ -2424,6 +2513,8 @@ PDM_para_octree_closest_point_GPU
         for (int i_start = start_leaves_idx[i_tgt];
              i_start < start_leaves_idx[i_tgt+1]; i_start++) {
           int leaf_id = start_leaves[i_start];
+          printf("[%d] start leaves idx : %d,   i tgt : %d\n", myRank, i_start, i_tgt);
+          printf("[%d] leaf id : %d,     octants nodes : %d\n", myRank, leaf_id, octree->octants->n_nodes);
           int leaf_part = _get_octant_part_id (octree,
                                                leaf_id);
           if (DEBUG && DEBUG_FILTER) {
@@ -2507,6 +2598,7 @@ PDM_para_octree_closest_point_GPU
       start_leaves_idx[0] = 0;
       for (int i = 0; i < tmp_n; i++) {
         if (n_tmp_start_leaves[i] > 0) {
+
           start_leaves_idx[k+1] = start_leaves_idx[k] + n_tmp_start_leaves[i];
 
           recv_g_num[k] = tmp_g_num[i];
@@ -2519,6 +2611,7 @@ PDM_para_octree_closest_point_GPU
           k++;
         }
       }
+      
 
       if (k < n_recv_pts) {
         recv_g_num       = (PDM_g_num_t*)realloc (recv_g_num,       sizeof(PDM_g_num_t) * k);
@@ -2626,6 +2719,7 @@ PDM_para_octree_closest_point_GPU
     _closest_points_local (octree,
                            n_closest_points,
                            n_recv_pts,
+                           iteration,
                            recv_coord,
                            recv_g_num, // ONLY FOR DEBUG
                            start_leaves,
@@ -2640,9 +2734,8 @@ PDM_para_octree_closest_point_GPU
                            &send_start_leaves,
                            &send_start_leaves_count,
                            &send_start_leaves_rank_shift);
+    printf("[%d] send start leaves count 0 : %d\n", myRank, send_start_leaves_count[2]);
 
-    //printf("Exit program\n");
-    //exit(1); 
 
     //-->> DETAIL TIMERS
     PDM_timer_hang_on(octree->timer);
@@ -2882,7 +2975,9 @@ PDM_para_octree_closest_point_GPU
       //<<--
       break;
     }
-
+    printf("iteration %d done\n", iteration);
+    PDM_MPI_Barrier(octree->comm);
+    //break;
 
     // send g_num
     send_g_num = (PDM_g_num_t*)realloc (send_g_num, sizeof(PDM_g_num_t) * send_shift[lComm]);
@@ -2925,7 +3020,10 @@ PDM_para_octree_closest_point_GPU
         recv_start_leaves_rank_shift[i] + recv_start_leaves_rank_count[i];
     }
 
+    printf("[%d] AAA start leaves 20 : %d,    size : %d\n", myRank, start_leaves[20], recv_start_leaves_rank_shift[lComm]);
+
     start_leaves = (int*)realloc (start_leaves, sizeof(int) * recv_start_leaves_rank_shift[lComm]);
+    printf("[%d] AAA start leaves 20 : %d,    size : %d\n", myRank, start_leaves[20], recv_start_leaves_rank_shift[lComm]);
     PDM_MPI_Alltoallv (send_start_leaves,
                        send_start_leaves_rank_count,
                        send_start_leaves_rank_shift,
@@ -2955,6 +3053,7 @@ PDM_para_octree_closest_point_GPU
     for (int i = 0; i < recv_shift[lComm]; i++) {
       start_leaves_idx[i+1] = start_leaves_idx[i] + recv_start_leaves_count[i];
     }
+    printf("[%d] BBB size : %d\n", myRank, start_leaves_idx[recv_shift[lComm]]);
 
 
     free (send_start_leaves_rank_count);

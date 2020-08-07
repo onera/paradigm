@@ -110,6 +110,7 @@ extern "C" {
 *
 */
 
+__host__ __device__
 dim3
 set_dim3_value(int x, int y, int z)
 {
@@ -267,6 +268,7 @@ set_dim3_value(int x, int y, int z)
 // }
 
 // //To use on a device, need compute capability >= 3.5 (so cudaMalloc and cudaFree can be called from device)
+// //Broken function as is, DO NOT use it in the code, or all cuda API calls will return error 999: unknown error
 // inline
 // __device__
 // void*

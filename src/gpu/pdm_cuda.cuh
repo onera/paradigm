@@ -128,16 +128,15 @@ inline __global__ void reduce_kernel6
   else                                                        \
   {                                                           \
     assert((ptr) && (newLength > oldLength));                 \
-    gpuErrchk(cudaMalloc(&newptr, sizeof(newLength)));        \
+    gpuErrchk(cudaMalloc(&newptr, newLength));                \
     if (newptr)                                               \
     {                                                         \
       memcpy(newptr, ptr, oldLength);                         \
-      gpuErrchk(cudaFree(ptr));                               \
+      /*gpuErrchk(cudaFree(ptr));*/                           \
     }                                                         \
   }                                                           \
   newptr;                                                     \
 })
-
 
 /*============================================================================
  * Public types
@@ -164,6 +163,7 @@ typedef int (PDM_printf_flush_proxy_t) (void);
 *
 */
 
+__host__ __device__
 dim3
 set_dim3_value(int x, int y, int z);
 
