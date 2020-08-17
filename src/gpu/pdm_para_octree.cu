@@ -555,6 +555,7 @@ void
 _target_points_compute
 (
   _octree_t     *octree,
+  int           *lock,
   int           n_pts,
   int           n_closest_points,
   int           myRank,
@@ -568,14 +569,14 @@ _target_points_compute
   double        *upper_bound_dist,
   PDM_g_num_t   *local_closest_src_gnum,
   double        *local_closest_src_dist,
-  int           *send_count,
+  volatile int           *send_count,
   int           **tmp_send_tgt_lnum,
   int           **tmp_send_tgt_n_leaves,
   int           **tmp_send_start_leaves,
   int           **send_to_rank_leaves,
   int           *s_send_to_rank_leaves,
   int           *s_tmp_send_start_leaves,
-  int           *n_tmp_send_start_leaves
+  volatile int           *n_tmp_send_start_leaves
  )
 {
   int i_tgt = points_shift + blockIdx.x * blockDim.x + threadIdx.x;
@@ -586,11 +587,13 @@ _target_points_compute
   
   const int DEBUG = 0;
   const int CHECK_FACE_DIST = 1;
-  const int CHECK_CLOSEST = 1;
+  const int CHECK_CLOSEST = 0;
   const double THRESHOLD_CLOSEST = 0.75; // check closest if min_dist > threshold * upper bound
   const int CHECK_INTERSECT = 1;
   const int NORMALIZE = 1;
   //volatile int nxt = next_thread;
+  bool leaveLoop = false;
+  *lock = 0;
 
   // //-->> DETAIL TIMERS
   // PDM_timer_hang_on(octree->timer);
@@ -614,7 +617,7 @@ _target_points_compute
   int *is_visited_part = (int*)malloc (sizeof(int) * octree->n_connected);
   int *is_visited     = (int*)malloc (sizeof(int) * octants->n_nodes);
   int *visited_leaves = (int*)malloc (sizeof(int) * octants->n_nodes);// could be smaller...
-  int *n_send_to_rank_leaves = (int*)malloc (sizeof(int) * lComm);
+  volatile int *n_send_to_rank_leaves = (int*)malloc (sizeof(int) * lComm);
   int n_visited = 0;
 
   for (int i = 0; i < octants->n_nodes; i++) {
@@ -729,6 +732,8 @@ _target_points_compute
   // b_timer = e_timer;
   // PDM_timer_resume(octree->timer);
   // //<<--
+  printf("[%d] CHECK 0\n", myRank);
+  __syncthreads();
 
   /* Check whether start_heap is empty */
   //if (CHECK_EMPTY_START) {
@@ -795,7 +800,7 @@ _target_points_compute
             double side = 1. / pow (2.0, (double)code->L);
 
             for (int j = 0; j < dim; j++) {
-              min_octant[j] = octree->s[j] + octree-> d[j] * side * code->X[j];
+              min_octant[j] = octree->s[j] + octree->d[j] * side * code->X[j];
               max_octant[j] = min_octant[j] + octree->d[j] * side;
 
               if (max_octant[j] < box[j] || min_octant[j] > box[dim + j]) {
@@ -994,72 +999,85 @@ _target_points_compute
           int ngb = octants->neighbours[i];
           __syncthreads();
           if (ngb < 0) {
-            for (int i = 0; i < i_tgt; i++)
+            // for (int i = 0; i < i_tgt; i++)
+            // {
+            //   printf("[%d] Thread %d is waiting...\n", myRank, (i_tgt - points_shift));
+            //   __syncthreads();
+            //   //printf("[%d] next thread : %d from thread : %d\n", myRank, next_thread, i_tgt);
+            // }
+            leaveLoop = false;
+            while (!leaveLoop)
             {
-              printf("[%d] Thread %d is waiting...\n", myRank, (i_tgt - points_shift));
-              __syncthreads();
-              //printf("[%d] next thread : %d from thread : %d\n", myRank, next_thread, i_tgt);
+              if (atomicExch(lock, 1) == 0)
+              {
+                // distant neighbour(s)
+                ngb = -(ngb + 1);
+
+                for (int j = octree->part_boundary_elt_idx[ngb];
+                      j < octree->part_boundary_elt_idx[ngb+1]; j++) {
+
+                  int ngb_rank = octree->part_boundary_elt[3*j];
+                  int ngb_leaf = octree->part_boundary_elt[3*j+1];
+                  int ngb_part = octree->part_boundary_elt[3*j+2];
+
+                  if (n_send_to_rank_leaves[ngb_rank] == 0) {
+                    atomicExch(&(tmp_send_tgt_lnum[ngb_rank][send_count[ngb_rank]]), i_tgt);
+                    atomicExch(&(tmp_send_tgt_n_leaves[ngb_rank][send_count[ngb_rank]]), 0);
+                    atomicAdd((int*)&(send_count[ngb_rank]), 1);
+                    // tmp_send_tgt_lnum[ngb_rank][send_count[ngb_rank]] = i_tgt;
+                    // tmp_send_tgt_n_leaves[ngb_rank][send_count[ngb_rank]] = 0;
+                    // send_count[ngb_rank]++;
+                  }
+
+                  // if (s_send_to_rank_leaves[ngb_rank] <= n_send_to_rank_leaves[ngb_rank]) {
+                  //   size_t old_size = sizeof(int) * 2 * s_send_to_rank_leaves[ngb_rank];
+                  //   atomicExch(&(s_send_to_rank_leaves[ngb_rank]), s_send_to_rank_leaves[ngb_rank] * 2);
+                  //   // s_send_to_rank_leaves[ngb_rank] *= 2;
+                  //   // int *temp;
+                  //   // gpuErrchk(cudaMalloc(&temp, sizeof(int) * 2 * s_send_to_rank_leaves[ngb_rank]));
+                  //   // memcpy(temp, send_to_rank_leaves[ngb_rank], old_size);
+                  //   // gpuErrchk(cudaFree(send_to_rank_leaves[ngb_rank]));
+                  //   // gpuErrchk(cudaMalloc(&send_to_rank_leaves[ngb_rank], sizeof(int) * 2 * s_send_to_rank_leaves[ngb_rank]));
+                  //   // memcpy(send_to_rank_leaves[ngb_rank], temp, old_size);
+                  //   // send_to_rank_leaves[ngb_rank] = temp;
+                  //   // send_to_rank_leaves[ngb_rank][old_size+10] = 0;
+                  //   // gpuErrchk(cudaFree(temp));
+                  //   send_to_rank_leaves[ngb_rank] = (int*)cudaRealloc (send_to_rank_leaves[ngb_rank],
+                  //                                                 old_size,
+                  //                                                 sizeof(int) * 2 * s_send_to_rank_leaves[ngb_rank]);
+                  // }
+                  if (DEBUG) {
+                    printf("  Send pt (%ld) to rank %d, leaf %d (part %d)\n",
+                            pts_g_num[i_tgt], ngb_rank, ngb_leaf, ngb_part);
+                  }
+                  //printf("[%d] size : %lu\n", myRank, sizeof(*send_to_rank_leaves[ngb_rank]));
+                  //printf("[%d] s send : %d,    n send : %d\n", myRank, s_send_to_rank_leaves[ngb_rank], n_send_to_rank_leaves[ngb_rank]);
+                  atomicExch(&(send_to_rank_leaves[ngb_rank][2*n_send_to_rank_leaves[ngb_rank]]), ngb_leaf);
+                  atomicExch(&(send_to_rank_leaves[ngb_rank][2*n_send_to_rank_leaves[ngb_rank]+1]), ngb_part);
+                  atomicAdd((int*)&(n_send_to_rank_leaves[ngb_rank]), 1);
+                  // send_to_rank_leaves[ngb_rank][2*n_send_to_rank_leaves[ngb_rank]]   = ngb_leaf;
+                  // send_to_rank_leaves[ngb_rank][2*n_send_to_rank_leaves[ngb_rank]+1] = ngb_part;
+                  // n_send_to_rank_leaves[ngb_rank]++;
+                  printf("[%d] THREAD %d : n send to rank leaves[%d] : %d\n", myRank, i_tgt, ngb_rank, n_send_to_rank_leaves[ngb_rank]);
+
+                  atomicAdd(&(tmp_send_tgt_n_leaves[ngb_rank][send_count[ngb_rank]-1]), 1);
+                  // tmp_send_tgt_n_leaves[ngb_rank][send_count[ngb_rank]-1]++;
+
+                } // end loop over distant neighbours (j)
+                leaveLoop = true;
+                printf("[%d] A lock : %d\n", myRank, *lock);
+                atomicExch(lock, 0);
+                printf("[%d] B lock : %d\n", myRank, *lock);
+              
+              }
             }
-            // distant neighbour(s)
-            ngb = -(ngb + 1);
 
-            for (int j = octree->part_boundary_elt_idx[ngb];
-                  j < octree->part_boundary_elt_idx[ngb+1]; j++) {
-
-              int ngb_rank = octree->part_boundary_elt[3*j];
-              int ngb_leaf = octree->part_boundary_elt[3*j+1];
-              int ngb_part = octree->part_boundary_elt[3*j+2];
-
-              if (n_send_to_rank_leaves[ngb_rank] == 0) {
-                atomicExch(&tmp_send_tgt_lnum[ngb_rank][send_count[ngb_rank]], i_tgt);
-                atomicExch(&tmp_send_tgt_n_leaves[ngb_rank][send_count[ngb_rank]], 0);
-                atomicAdd(&send_count[ngb_rank], 1);
-                // tmp_send_tgt_lnum[ngb_rank][send_count[ngb_rank]] = i_tgt;
-                // tmp_send_tgt_n_leaves[ngb_rank][send_count[ngb_rank]] = 0;
-                // send_count[ngb_rank]++;
-              }
-
-              if (s_send_to_rank_leaves[ngb_rank] <= n_send_to_rank_leaves[ngb_rank]) {
-                size_t old_size = sizeof(int) * 2 * s_send_to_rank_leaves[ngb_rank];
-                atomicExch(&s_send_to_rank_leaves[ngb_rank], s_send_to_rank_leaves[ngb_rank] * 2);
-                // s_send_to_rank_leaves[ngb_rank] *= 2;
-                // int *temp;
-                // gpuErrchk(cudaMalloc(&temp, sizeof(int) * 2 * s_send_to_rank_leaves[ngb_rank]));
-                // memcpy(temp, send_to_rank_leaves[ngb_rank], old_size);
-                // gpuErrchk(cudaFree(send_to_rank_leaves[ngb_rank]));
-                // gpuErrchk(cudaMalloc(&send_to_rank_leaves[ngb_rank], sizeof(int) * 2 * s_send_to_rank_leaves[ngb_rank]));
-                // memcpy(send_to_rank_leaves[ngb_rank], temp, old_size);
-                // send_to_rank_leaves[ngb_rank] = temp;
-                // send_to_rank_leaves[ngb_rank][old_size+10] = 0;
-                // gpuErrchk(cudaFree(temp));
-                send_to_rank_leaves[ngb_rank] = (int*)cudaRealloc (send_to_rank_leaves[ngb_rank],
-                                                               old_size,
-                                                               sizeof(int) * 2 * s_send_to_rank_leaves[ngb_rank]);
-              }
-              if (DEBUG) {
-                printf("  Send pt (%ld) to rank %d, leaf %d (part %d)\n",
-                        pts_g_num[i_tgt], ngb_rank, ngb_leaf, ngb_part);
-              }
-              //printf("[%d] size : %lu\n", myRank, sizeof(*send_to_rank_leaves[ngb_rank]));
-              //printf("[%d] s send : %d,    n send : %d\n", myRank, s_send_to_rank_leaves[ngb_rank], n_send_to_rank_leaves[ngb_rank]);
-              atomicExch(&send_to_rank_leaves[ngb_rank][2*n_send_to_rank_leaves[ngb_rank]], ngb_leaf);
-              atomicExch(&send_to_rank_leaves[ngb_rank][2*n_send_to_rank_leaves[ngb_rank]+1], ngb_part);
-              atomicAdd(&n_send_to_rank_leaves[ngb_rank], 1);
-              // send_to_rank_leaves[ngb_rank][2*n_send_to_rank_leaves[ngb_rank]]   = ngb_leaf;
-              // send_to_rank_leaves[ngb_rank][2*n_send_to_rank_leaves[ngb_rank]+1] = ngb_part;
-              // n_send_to_rank_leaves[ngb_rank]++;
-              printf("[%d] THREAD %d : n send to rank leaves[%d] : %d\n", myRank, i_tgt, ngb_rank, n_send_to_rank_leaves[ngb_rank]);
-
-              atomicAdd(&tmp_send_tgt_n_leaves[ngb_rank][send_count[ngb_rank]-1], 1);
-              // tmp_send_tgt_n_leaves[ngb_rank][send_count[ngb_rank]-1]++;
-
-            } // end loop over distant neighbours (j)
-            for (int i = 0; i < n_pts; i++)
-            {
-              printf("[%d] THREAD PASS : %d\n", myRank, i_tgt);
-              __threadfence();
-              __syncthreads();
-            }
+            // for (int i = 0; i < n_pts; i++)
+            // {
+            //   printf("[%d] THREAD PASS : %d\n", myRank, i_tgt);
+            //   __threadfence();
+            //   __syncthreads();
+            // }
           } else {
             // local neighbour
             if (is_visited[ngb] == 1) continue;
@@ -1092,7 +1110,6 @@ _target_points_compute
                               ngb_min_dist);
             }
           } // end if local/distant neighbour
-          
         } // end loop over neighbours in direction dir (i)
       } // end loop over directions (dir)
     } // end while (_min_heap_pop (leaf_heap))
@@ -1109,17 +1126,19 @@ _target_points_compute
   for (int rank = 0; rank < lComm; rank++) {
     if (rank == myRank) continue;
 
-    if (s_tmp_send_start_leaves[rank] <= n_tmp_send_start_leaves[rank] + n_send_to_rank_leaves[rank]) {
-      int old_size = s_tmp_send_start_leaves[rank];
-      s_tmp_send_start_leaves[rank] = PDM_MAX (2 * s_tmp_send_start_leaves[rank],
-                                                n_tmp_send_start_leaves[rank] + n_send_to_rank_leaves[rank]);
-      tmp_send_start_leaves[rank] = (int*)cudaRealloc (tmp_send_start_leaves[rank],
-                                                   old_size,
-                                                   sizeof(int) * s_tmp_send_start_leaves[rank]);
-    }
+    // if (s_tmp_send_start_leaves[rank] <= n_tmp_send_start_leaves[rank] + n_send_to_rank_leaves[rank]) {
+    //   int old_size = s_tmp_send_start_leaves[rank];
+    //   s_tmp_send_start_leaves[rank] = PDM_MAX (2 * s_tmp_send_start_leaves[rank],
+    //                                             n_tmp_send_start_leaves[rank] + n_send_to_rank_leaves[rank]);
+    //   tmp_send_start_leaves[rank] = (int*)cudaRealloc (tmp_send_start_leaves[rank],
+    //                                                old_size,
+    //                                                sizeof(int) * s_tmp_send_start_leaves[rank]);
+    // }
 
     for (int i = 0; i < n_send_to_rank_leaves[rank]; i++) {
-      tmp_send_start_leaves[rank][n_tmp_send_start_leaves[rank]++] = send_to_rank_leaves[rank][2*i];
+      atomicExch(&(tmp_send_start_leaves[rank][n_tmp_send_start_leaves[rank]]), send_to_rank_leaves[rank][2*i]);
+      atomicAdd((int*)&(n_tmp_send_start_leaves[rank]), 1);
+      // tmp_send_start_leaves[rank][n_tmp_send_start_leaves[rank]] = send_to_rank_leaves[rank][2*i];
     }
   }
 
@@ -1133,12 +1152,12 @@ _target_points_compute
   free(is_visited_part);
   free(is_visited);
   free(visited_leaves);
-  free(n_send_to_rank_leaves);
+  free((void*)n_send_to_rank_leaves);
 
   _min_heap_free(start_heap);
   _min_heap_free(leaf_heap);
   //printf("[%d] tgt lnum [%d][1] from gpu : %d,    n pts : %d\n", myRank, (myRank+1)%2, tmp_send_tgt_lnum[(myRank+1)%2][1], n_pts);
-  printf("[%d] from GPU : n tmp 0 : %d,    s tmp 0 : %d\n", myRank, n_tmp_send_start_leaves[0], s_tmp_send_start_leaves[0]);
+  //printf("[%d] from GPU : n tmp 0 : %d,    s tmp 0 : %d\n", myRank, n_tmp_send_start_leaves[0], s_tmp_send_start_leaves[0]);
 }
 
 
@@ -1398,6 +1417,7 @@ _closest_points_local
     int                 *d_octree_part_boundary_elt_idx;
     int                 *d_octree_part_boundary_elt;
     int                 *d_octree_connected_idx;
+  int             *d_lock;
   double          *d_pts_coord;
   PDM_g_num_t     *d_pts_g_num;
   int             *d_start_leaves;
@@ -1433,6 +1453,7 @@ _closest_points_local
     gpuErrchk(cudaMalloc(&d_octree_connected_idx, sizeof(int) * (octree->n_connected+1)));
     //manque des allocs pour l'octree, à compléter
     printf("[%d] recv shift = %d\n", myRank, recv_shift[lComm]);
+  gpuErrchk(cudaMalloc(&d_lock, sizeof(int)));
   gpuErrchk(cudaMalloc(&d_pts_coord, sizeof(double) * n_pts*dim));
   gpuErrchk(cudaMalloc(&d_pts_g_num, sizeof(PDM_g_num_t) * n_pts));
   gpuErrchk(cudaMalloc(&d_start_leaves, sizeof(int) * n_pts));
@@ -1537,8 +1558,9 @@ _closest_points_local
     n_threads = set_dim3_value(1024, 1, 1);
     n_blocks = set_dim3_value((n_pts + 1023)/1024, 1, 1);
 
-    printf("entering kernel\n");
+    printf("[%d] entering kernel\n", myRank);
     _target_points_compute<<<n_blocks,n_threads>>>(d_octree,
+                                                    d_lock,
                                                     n_pts,
                                                     n_closest_points,
                                                     myRank, 
