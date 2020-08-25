@@ -698,25 +698,23 @@ PDM_cuthill_checkbandwidth
 )
 {
 
+  /** Do a copy since graph seems to be modified (?) **/
+  int *dual_graph_idx_tmp = (int *) malloc((n_elm + 1) * sizeof(int));
+  int *dual_graph_tmp     = (int *) malloc(dual_graph_idx[n_elm] * sizeof(int));
+
   /** Offset Graph and Arr **/
   for (int i = 0; i < n_elm; i++){
-    dual_graph_idx[i] = dual_graph_idx[i]+1;
+    dual_graph_idx_tmp[i] = dual_graph_idx[i]+1;
   }
+  dual_graph_idx_tmp[n_elm] = dual_graph_idx[n_elm];
   for (int i = 0; i < dual_graph_idx[n_elm]; i++){
-    dual_graph[i] = dual_graph[i]+1;
+    dual_graph_tmp[i] = dual_graph[i]+1;
   }
 
-  int dualBandWidth = _adj_bandwidth(dual_graph_idx[n_elm], dual_graph_idx, dual_graph);
+  int dualBandWidth = _adj_bandwidth(dual_graph_idx_tmp[n_elm], dual_graph_idx_tmp, dual_graph_tmp);
 
-  /** Offset Graph and Arr **/
-  for (int i = 0; i < n_elm; i++)
-  {
-    dual_graph_idx[i] = dual_graph_idx[i]-1;
-  }
-  for (int i = 0; i < dual_graph_idx[n_elm]; i++){
-    dual_graph[i] = dual_graph[i]-1;
-  }
-
+  free(dual_graph_idx_tmp);
+  free(dual_graph_tmp);
   return dualBandWidth;
 }
 
@@ -741,25 +739,26 @@ PDM_cuthill_generate
 )
 {
 
+  /** Do a copy since graph seems to be modified (?) **/
+  int *dual_graph_idx_tmp = (int *) malloc((n_elm + 1) * sizeof(int));
+  int *dual_graph_tmp     = (int *) malloc(dual_graph_idx[n_elm] * sizeof(int));
+
   /** Offset Graph and Arr **/
   for (int i = 0; i < n_elm; i++){
-    dual_graph_idx[i] = dual_graph_idx[i]+1;
+    dual_graph_idx_tmp[i] = dual_graph_idx[i]+1;
   }
+  dual_graph_idx_tmp[n_elm] = dual_graph_idx[n_elm];
   for (int i = 0; i < dual_graph_idx[n_elm]; i++){
-    dual_graph[i] = dual_graph[i]+1;
+    dual_graph_tmp[i] = dual_graph[i]+1;
   }
 
   /** Apply rcm to current Graph **/
-  PDM_genrcm(n_elm, dual_graph_idx, dual_graph, perm);
+  PDM_genrcm(n_elm, dual_graph_idx_tmp, dual_graph_tmp, perm);
 
   /** Offset Permutation and Graph arrays **/
   for (int i = 0; i < n_elm; i++)
   {
     perm[i] = perm[i]-1;
-    dual_graph_idx[i] = dual_graph_idx[i]-1;
-  }
-  for (int i = 0; i < dual_graph_idx[n_elm]; i++){
-    dual_graph[i] = dual_graph[i]-1;
   }
 
   /** Verbose **/
@@ -770,6 +769,9 @@ PDM_cuthill_generate
     }
     PDM_printf("\n");
   }
+  /** Free **/
+  free(dual_graph_idx_tmp);
+  free(dual_graph_tmp);
 }
 
 #ifdef  __cplusplus
