@@ -1241,6 +1241,624 @@ _redistribute_elementary_location
 
 
   PDM_part_to_block_free (ptb);
+
+
+
+
+#if 1
+  /*
+   * Sort elements by type
+   */
+
+  int type_count[PDM_MESH_NODAL_N_ELEMENT_TYPES] = {0};
+  for (ielt = 0; ielt < *block_n_elt; ielt++) {
+    type_count[(*block_elt_type)[ielt]]++;
+  }
+
+  block_type_idx[PDM_MESH_NODAL_POINT] = 0;
+  for (PDM_Mesh_nodal_elt_t type = PDM_MESH_NODAL_POINT;
+       type < PDM_MESH_NODAL_N_ELEMENT_TYPES;
+       type++) {
+    block_type_idx[type+1] = block_type_idx[type] + type_count[type];
+    type_count[type] = 0;
+  }
+
+
+
+
+#endif
+}
+
+
+
+
+
+
+static void
+_redistribute_elementary_location2
+(
+ _PDM_location_t       *location,
+ int                    n_elt,
+ PDM_g_num_t            elt_g_num[],
+ const int              pts_idx[],
+ const PDM_g_num_t      pts_g_num[],
+ const double           pts_coord[],
+ int                   *r_n_elt,
+ int                    r_type_idx[],
+ PDM_g_num_t          **r_elt_g_num,
+ int                  **r_vtx_idx,
+ double               **r_vtx_coord,
+ int                  **r_pts_idx,
+ PDM_g_num_t          **r_pts_g_num,
+ double               **r_pts_coord/*,
+ PDM_l_num_t          **r_poly3d_face_idx,
+ PDM_l_num_t          **r_face_vtx_idx,
+ PDM_l_num_t          **r_face_vtx,
+ int                  **r_face_orientation,
+ double               **r_poly3d_char_length*/
+ )
+{
+  const int order = 1;
+
+  int n_blocks   = PDM_Mesh_nodal_n_blocks_get (location->mesh_nodal_id);
+  int n_parts    = PDM_Mesh_nodal_n_part_get (location->mesh_nodal_id);
+  int *blocks_id = PDM_Mesh_nodal_blocks_id_get (location->mesh_nodal_id);
+
+
+  int my_rank, n_ranks;
+  PDM_MPI_Comm_rank (location->comm, &my_rank);
+  PDM_MPI_Comm_size (location->comm, &n_ranks);
+
+  /*
+   * Get element type and number of points to locate per element
+   */
+  PDM_Mesh_nodal_elt_t *elt_type = malloc (sizeof(PDM_Mesh_nodal_elt_t) * n_elt);
+  int *n_pts_per_elt = malloc (sizeof(int) * n_elt);
+  int n_poly3d = 0;
+
+  int ielt = 0;
+  for (int iblock = 0; iblock < n_blocks; iblock++) {
+    int id_block = blocks_id[iblock];
+    PDM_Mesh_nodal_elt_t block_type = PDM_Mesh_nodal_block_type_get (location->mesh_nodal_id,
+                                                                     id_block);
+
+    for (int ipart = 0; ipart < n_parts; ipart++) {
+      int n_elt_part = PDM_Mesh_nodal_block_n_elt_get (location->mesh_nodal_id,
+                                                       id_block,
+                                                       ipart);
+      if (id_block >= PDM_BLOCK_ID_BLOCK_POLY3D) {
+        n_poly3d += n_elt_part;
+      }
+
+      for (int i = 0; i < n_elt_part; i++) {
+        elt_type[ielt] = block_type;
+        n_pts_per_elt[ielt] = pts_idx[ielt+1] - pts_idx[ielt];
+        ielt++;
+      }
+    } // End of loop on parts
+  } // End of loop on nodal blocks
+
+
+  /*
+   * Get number of vertices per element and face connectivity for polyhedra
+   */
+  ielt = 0;
+  int *n_vtx_per_elt = malloc (sizeof(int) * n_elt);
+  int *n_face_per_elt = malloc (sizeof(int) * n_poly3d);
+
+  PDM_l_num_t *connec_idx = NULL;
+  PDM_l_num_t *connec     = NULL;
+
+  PDM_l_num_t  n_face;
+  PDM_l_num_t *face_vtx_idx  = NULL;
+  PDM_l_num_t *face_vtx      = NULL;
+  PDM_l_num_t *cell_face_idx = NULL;
+  PDM_l_num_t *cell_face     = NULL;
+
+  int ipoly = 0;
+  for (int iblock = 0; iblock < n_blocks; iblock++) {
+    int id_block = blocks_id[iblock];
+
+    /* Polyhedra */
+    if (id_block >= PDM_BLOCK_ID_BLOCK_POLY3D) {
+
+      for (int ipart = 0; ipart < n_parts; ipart++) {
+        int n_elt_part = PDM_Mesh_nodal_block_n_elt_get (location->mesh_nodal_id,
+                                                         id_block,
+                                                         ipart);
+
+        PDM_Mesh_nodal_block_poly3d_cell_vtx_connect_get (location->mesh_nodal_id,
+                                                          id_block,
+                                                          ipart,
+                                                          &connec_idx,
+                                                          &connec);
+
+        PDM_Mesh_nodal_block_poly3d_get (location->mesh_nodal_id,
+                                         id_block,
+                                         ipart,
+                                         &n_face,
+                                         &face_vtx_idx,
+                                         &face_vtx,
+                                         &cell_face_idx,
+                                         &cell_face);
+
+        for (int i = 0; i < n_elt_part; i++) {
+          n_vtx_per_elt[ielt++] = connec_idx[i+1] - connec_idx[i];
+          n_face_per_elt[ipoly++] = cell_face_idx[i+1] - cell_face_idx[i];
+        }
+      }
+    }
+
+    /* Polygons */
+    else if (id_block >= PDM_BLOCK_ID_BLOCK_POLY2D) {
+
+      for (int ipart = 0; ipart < n_parts; ipart++) {
+        int n_elt_part = PDM_Mesh_nodal_block_n_elt_get (location->mesh_nodal_id,
+                                                         id_block,
+                                                         ipart);
+        PDM_Mesh_nodal_block_poly2d_get (location->mesh_nodal_id,
+                                         id_block,
+                                         ipart,
+                                         &connec_idx,
+                                         &connec);
+
+        for (int i = 0; i < n_elt_part; i++) {
+          n_vtx_per_elt[ielt++] = connec_idx[i+1] - connec_idx[i];
+        }
+      }
+    }
+
+    /* Standard elements */
+    else {
+      PDM_Mesh_nodal_elt_t std_type = PDM_Mesh_nodal_block_type_get (location->mesh_nodal_id,
+                                                                     id_block);
+      int n_vtx = PDM_Mesh_nodal_n_vertices_element (std_type,
+                                                     order);
+
+      for (int ipart = 0; ipart < n_parts; ipart++) {
+        int n_elt_part = PDM_Mesh_nodal_block_n_elt_get (location->mesh_nodal_id,
+                                                         id_block,
+                                                         ipart);
+
+        for (int i = 0; i < n_elt_part; i++) {
+          n_vtx_per_elt[ielt++] = n_vtx;
+        }
+      }
+    }
+
+  } // End of loop on nodal blocks
+
+
+
+  /*
+   * Get local face-vtx connectivity of polyhedra
+   */
+  PDM_l_num_t *local_face_vtx   = NULL;
+  int         *n_vtx_per_face   = NULL;
+  int         *face_orientation = NULL;
+  if (n_poly3d > 0) {
+    /* Total number of faces */
+    int n_face_tot = 0;
+    int n_face_max = 0;
+    for (ipoly = 0; ipoly < n_poly3d; ipoly++) {
+      n_face_tot += n_face_per_elt[ipoly];
+      n_face_max = PDM_MAX (n_face_max, n_face_per_elt[ipoly]);
+    }
+
+    local_face_vtx = malloc (sizeof(PDM_l_num_t) * n_face_tot);
+    face_orientation = malloc (sizeof(int) * n_face_tot);
+    n_vtx_per_face = malloc (sizeof(int) * n_face_tot);
+
+    PDM_l_num_t *_local_face_vtx = local_face_vtx;
+
+    int idx_face = 0;
+    for (int iblock = 0; iblock < n_blocks; iblock++) {
+      int id_block = blocks_id[iblock];
+
+      /* Polyhedra */
+      if (id_block >= PDM_BLOCK_ID_BLOCK_POLY3D) {
+        for (int ipart = 0; ipart < n_parts; ipart++) {
+          int n_elt_part = PDM_Mesh_nodal_block_n_elt_get (location->mesh_nodal_id,
+                                                           id_block,
+                                                           ipart);
+
+          PDM_Mesh_nodal_block_poly3d_get (location->mesh_nodal_id,
+                                           id_block,
+                                           ipart,
+                                           &n_face,
+                                           &face_vtx_idx,
+                                           &face_vtx,
+                                           &cell_face_idx,
+                                           &cell_face);
+
+          PDM_Mesh_nodal_block_poly3d_cell_vtx_connect_get (location->mesh_nodal_id,
+                                                            id_block,
+                                                            ipart,
+                                                            &connec_idx,
+                                                            &connec);
+
+          for (int i = 0; i < n_elt_part; i++) {
+            int _n_vtx = connec_idx[i+1] - connec_idx[i];
+            int _n_face = cell_face_idx[i+1] - cell_face_idx[i];
+
+            for (int iface = 0; iface < _n_face; iface++) {
+              int _iface = cell_face[cell_face_idx[i] + iface];
+
+              if (_iface < 0) {
+                _iface = -_iface - 1;
+                face_orientation[idx_face] = -1;
+              } else {
+                _iface = _iface - 1;
+                face_orientation[idx_face] = 1;
+              }
+
+              int n_vtx_face = face_vtx_idx[_iface+1] - face_vtx_idx[_iface];
+
+              for (int ivtx = 0; ivtx < n_vtx_face; ivtx++) {
+                int _ivtx = PDM_binary_search_int (face_vtx[face_vtx_idx[_iface] + ivtx],
+                                                   connec + connec_idx[i],
+                                                   _n_vtx);
+                assert (_ivtx >= 0);
+
+                _local_face_vtx[ivtx] = _ivtx + 1;
+              }
+
+              _local_face_vtx += n_vtx_face;
+              n_vtx_per_face[idx_face++] = n_vtx_face;
+            }
+
+          } // End of loop on elements of current part
+
+        } // End of loop on parts
+      }
+    } // End of loop on nodal blocks
+  }
+
+
+
+  /*
+   * Get vertex coordinates
+   */
+  /* Total number of vertices */
+  int n_vtx_tot = 0;
+  for (ielt = 0; ielt < n_elt; ielt++) {
+    n_vtx_tot += n_vtx_per_elt[ielt];
+  }
+
+  double *vtx_coord = malloc (sizeof(double) * 3 * n_vtx_tot);
+  double *_vtx_coord = vtx_coord;
+
+  for (int iblock = 0; iblock < n_blocks; iblock++) {
+    int id_block = blocks_id[iblock];
+
+    /* Polyhedra */
+    if (id_block >= PDM_BLOCK_ID_BLOCK_POLY3D) {
+
+      for (int ipart = 0; ipart < n_parts; ipart++) {
+        int n_elt_part = PDM_Mesh_nodal_block_n_elt_get (location->mesh_nodal_id,
+                                                         id_block,
+                                                         ipart);
+
+        const double *vtx_coord_part = PDM_Mesh_nodal_vertices_get (location->mesh_nodal_id,
+                                                                    ipart);
+
+        PDM_Mesh_nodal_block_poly3d_cell_vtx_connect_get (location->mesh_nodal_id,
+                                                          id_block,
+                                                          ipart,
+                                                          &connec_idx,
+                                                          &connec);
+
+        for (int i = 0; i < n_elt_part; i++) {
+          for (int j = connec_idx[i]; j < connec_idx[i+1]; j++) {
+            int ivtx = connec[j] - 1;
+            for (int k = 0; k < 3; k++) {
+              _vtx_coord[k] = vtx_coord_part[3*ivtx + k];
+            }
+            _vtx_coord += 3;
+          }
+        }
+      } // End of loop on parts
+
+    }
+
+    /* Polygons */
+    else if (id_block >= PDM_BLOCK_ID_BLOCK_POLY2D) {
+
+      for (int ipart = 0; ipart < n_parts; ipart++) {
+        int n_elt_part = PDM_Mesh_nodal_block_n_elt_get (location->mesh_nodal_id,
+                                                         id_block,
+                                                         ipart);
+
+        const double *vtx_coord_part = PDM_Mesh_nodal_vertices_get (location->mesh_nodal_id,
+                                                                    ipart);
+
+        PDM_Mesh_nodal_block_poly2d_get (location->mesh_nodal_id,
+                                         id_block,
+                                         ipart,
+                                         &connec_idx,
+                                         &connec);
+
+        for (int i = 0; i < n_elt_part; i++) {
+          for (int j = connec_idx[i]; j < connec_idx[i+1]; j++) {
+            int ivtx = connec[j] - 1;
+            for (int k = 0; k < 3; k++) {
+              _vtx_coord[k] = vtx_coord_part[3*ivtx + k];
+            }
+            _vtx_coord += 3;
+          }
+        }
+      } // End of loop on parts
+
+    }
+
+    /* Standard elements */
+    else {
+
+      PDM_Mesh_nodal_elt_t std_type = PDM_Mesh_nodal_block_type_get (location->mesh_nodal_id,
+                                                                     id_block);
+      int n_vtx = PDM_Mesh_nodal_n_vertices_element (std_type,
+                                                     order);
+
+
+      for (int ipart = 0; ipart < n_parts; ipart++) {
+        int n_elt_part = PDM_Mesh_nodal_block_n_elt_get (location->mesh_nodal_id,
+                                                         id_block,
+                                                         ipart);
+
+        const double *vtx_coord_part = PDM_Mesh_nodal_vertices_get (location->mesh_nodal_id,
+                                                                    ipart);
+
+        PDM_Mesh_nodal_block_std_get (location->mesh_nodal_id,
+                                      id_block,
+                                      ipart,
+                                      &connec);
+
+        for (int i = 0; i < n_elt_part; i++) {
+          for (int j = 0; j < n_vtx; j++) {
+            int ivtx = connec[n_vtx*i + j] - 1;
+            for (int k = 0; k < 3; k++) {
+              _vtx_coord[k] = vtx_coord_part[3*ivtx + k];
+            }
+            _vtx_coord += 3;
+          }
+        }
+      } // End of loop on parts
+
+    }
+
+  } // End of loop on nodal blocks
+
+
+
+  /* Compute elements weights for an even redistribution */
+  double *elt_weight = malloc (sizeof(double) * n_elt);
+  for (ielt = 0; ielt < n_elt; ielt++) {
+    //elt_weight[ielt] = (double) n_pts_per_elt[ielt];
+    elt_weight[ielt] = (double) n_pts_per_elt[ielt] * n_vtx_per_elt[ielt];
+  }
+
+  PDM_part_to_block_t *ptb = PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                       PDM_PART_TO_BLOCK_POST_MERGE,
+                                                       1.,
+                                                       &elt_g_num,
+                                                       &elt_weight,
+                                                       &n_elt,
+                                                       1,
+                                                       location->comm);
+  free (elt_weight);
+
+  *r_n_elt = PDM_part_to_block_n_elt_block_get (ptb);
+
+
+
+  /*
+   * Exchange points to locate
+   */
+
+  /* Global number */
+  int *block_n_pts_per_elt = NULL;
+  PDM_g_num_t *block_pts_g_num = NULL;
+  PDM_part_to_block_exch (ptb,
+                          sizeof(PDM_g_num_t),
+                          PDM_STRIDE_VAR,
+                          1,
+                          &n_pts_per_elt,
+                          (void **) &pts_g_num,
+                          &block_n_pts_per_elt,
+                          (void **) &block_pts_g_num);
+
+
+  /* Coordinates */
+  for (ielt = 0; ielt < n_elt; ielt++) {
+    n_pts_per_elt[ielt] *= 3;
+  }
+
+  int *block_stride = NULL;
+  double *block_pts_coord = NULL;
+  PDM_part_to_block_exch (ptb,
+                          sizeof(double),
+                          PDM_STRIDE_VAR,
+                          1,
+                          &n_pts_per_elt,
+                          (void **) &pts_coord,
+                          &block_stride,
+                          (void **) &block_pts_coord);
+  free (block_stride);
+  free (n_pts_per_elt);
+
+
+
+  /*
+   * Exchange elements
+   */
+  int *part_stride = malloc (sizeof(int) * n_elt);
+  for (ielt = 0; ielt < n_elt; ielt++) {
+    part_stride[ielt] = 1;
+  }
+
+  /* Type */
+  PDM_Mesh_nodal_elt_t *block_elt_type = NULL;
+  PDM_part_to_block_exch (ptb,
+                          sizeof(PDM_Mesh_nodal_elt_t),
+                          PDM_STRIDE_VAR,
+                          1,
+                          &part_stride,
+                          (void **) &elt_type,
+                          &block_stride,
+                          (void **) &block_elt_type);
+  free (block_stride);
+  free (elt_type);
+
+  /* Global number */
+  PDM_g_num_t *block_elt_g_num = NULL;
+  PDM_part_to_block_exch (ptb,
+                          sizeof(PDM_g_num_t),
+                          PDM_STRIDE_VAR,
+                          1,
+                          &part_stride,
+                          (void **) &elt_g_num,
+                          &block_stride,
+                          (void **) &block_elt_g_num);
+  free (block_stride);
+  free (part_stride);
+
+  /* Coordinates of vertices */
+  for (ielt = 0; ielt < n_elt; ielt++) {
+    n_vtx_per_elt[ielt] *= 3;
+  }
+
+  int *block_n_vtx_per_elt = NULL;
+  double *block_vtx_coord = NULL;
+  PDM_part_to_block_exch (ptb,
+                          sizeof(double),
+                          PDM_STRIDE_VAR,
+                          1,
+                          &n_vtx_per_elt,
+                          (void **) &vtx_coord,
+                          &block_n_vtx_per_elt,
+                          (void **) &block_vtx_coord);
+  free (vtx_coord);
+  free (n_vtx_per_elt);
+
+  for (ielt = 0; ielt < *r_n_elt; ielt++) {
+    block_n_vtx_per_elt[ielt] /= 3;
+  }
+
+  /*
+   * TO DO: faces for polyhedra...
+   */
+
+
+  PDM_part_to_block_free (ptb);
+
+
+
+  /* Sort elements by type */
+  int type_count[PDM_MESH_NODAL_N_ELEMENT_TYPES] = {0};
+  for (ielt = 0; ielt < *r_n_elt; ielt++) {
+    type_count[block_elt_type[ielt]]++;
+  }
+
+#if 0
+  /* Count elements of each type */
+  printf("[%d] #POINTS:   %d\n", my_rank, type_count[PDM_MESH_NODAL_POINT]);
+  printf("[%d] #BARS:     %d\n", my_rank, type_count[PDM_MESH_NODAL_BAR2]);
+  printf("[%d] #TRIAS:    %d\n", my_rank, type_count[PDM_MESH_NODAL_TRIA3]);
+  printf("[%d] #QUADS:    %d\n", my_rank, type_count[PDM_MESH_NODAL_QUAD4]);
+  printf("[%d] #POLY_2D:  %d\n", my_rank, type_count[PDM_MESH_NODAL_POLY_2D]);
+  printf("[%d] #TETRAS:   %d\n", my_rank, type_count[PDM_MESH_NODAL_TETRA4]);
+  printf("[%d] #PYRAMIDS: %d\n", my_rank, type_count[PDM_MESH_NODAL_PYRAMID5]);
+  printf("[%d] #PRISMS:   %d\n", my_rank, type_count[PDM_MESH_NODAL_PRISM6]);
+  printf("[%d] #HEXAS:    %d\n", my_rank, type_count[PDM_MESH_NODAL_HEXA8]);
+  printf("[%d] #POLY_3D:  %d\n", my_rank, type_count[PDM_MESH_NODAL_POLY_3D]);
+#endif
+
+  r_type_idx[PDM_MESH_NODAL_POINT] = 0;
+  for (PDM_Mesh_nodal_elt_t type = PDM_MESH_NODAL_POINT;
+       type < PDM_MESH_NODAL_N_ELEMENT_TYPES;
+       type++) {
+    r_type_idx[type+1] = r_type_idx[type] + type_count[type];
+    type_count[type] = 0;
+  }
+
+
+  *r_elt_g_num = malloc (sizeof(PDM_g_num_t) * (*r_n_elt));
+  *r_vtx_idx = malloc (sizeof(int) * (*r_n_elt + 1));
+  (*r_vtx_idx)[0] = 0;
+  *r_pts_idx = malloc (sizeof(int) * (*r_n_elt + 1));
+  (*r_pts_idx)[0] = 0;
+
+  for (ielt = 0; ielt < *r_n_elt; ielt++) {
+    PDM_Mesh_nodal_elt_t type = block_elt_type[ielt];
+    int _ielt = r_type_idx[type] + type_count[type]++;
+
+    (*r_elt_g_num)[_ielt] = block_elt_g_num[ielt];
+    (*r_vtx_idx)[_ielt+1] = block_n_vtx_per_elt[ielt];
+    (*r_pts_idx)[_ielt+1] = block_n_pts_per_elt[ielt];
+  }
+  free (block_elt_g_num);
+
+  for (ielt = 0; ielt < *r_n_elt; ielt++) {
+    (*r_vtx_idx)[ielt+1] += (*r_vtx_idx)[ielt];
+    (*r_pts_idx)[ielt+1] += (*r_pts_idx)[ielt];
+  }
+
+
+  for (PDM_Mesh_nodal_elt_t type = PDM_MESH_NODAL_POINT;
+       type < PDM_MESH_NODAL_N_ELEMENT_TYPES;
+       type++) {
+    type_count[type] = 0;
+  }
+
+
+  *r_vtx_coord = malloc (sizeof(double) * (*r_vtx_idx)[*r_n_elt] * 3);
+  *r_pts_coord = malloc (sizeof(double) * (*r_pts_idx)[*r_n_elt] * 3);
+  *r_pts_g_num = malloc (sizeof(PDM_g_num_t) * (*r_pts_idx)[*r_n_elt]);
+
+  int idx_vtx = 0;
+  int idx_pts = 0;
+  for (ielt = 0; ielt < *r_n_elt; ielt++) {
+    PDM_Mesh_nodal_elt_t type = block_elt_type[ielt];
+    int _ielt = r_type_idx[type] + type_count[type]++;
+
+    for (int i = 0; i < block_n_vtx_per_elt[ielt]; i++) {
+      int ipt = (*r_vtx_idx)[_ielt] + i;
+      for (int j = 0; j < 3; j++) {
+        (*r_vtx_coord)[3*ipt + j] = block_vtx_coord[3*idx_vtx + j];
+      }
+      idx_vtx++;
+    }
+
+    for (int i = 0; i < block_n_pts_per_elt[ielt]; i++) {
+      int ipt = (*r_pts_idx)[_ielt] + i;
+      (*r_pts_g_num)[ipt] = block_pts_g_num[idx_pts];
+      for (int j = 0; j < 3; j++) {
+        (*r_pts_coord)[3*ipt + j] = block_pts_coord[3*idx_pts + j];
+      }
+      idx_pts++;
+    }
+  }
+
+  free (block_n_vtx_per_elt);
+  free (block_n_pts_per_elt);
+  free (block_vtx_coord);
+  free (block_pts_g_num);
+  free (block_pts_coord);
+
+
+  printf("[%d] r_type_idx = %d %d %d %d %d %d %d %d %d %d %d\n",
+         my_rank,
+         r_type_idx[PDM_MESH_NODAL_POINT],
+         r_type_idx[PDM_MESH_NODAL_BAR2],
+         r_type_idx[PDM_MESH_NODAL_TRIA3],
+         r_type_idx[PDM_MESH_NODAL_QUAD4],
+         r_type_idx[PDM_MESH_NODAL_POLY_2D],
+         r_type_idx[PDM_MESH_NODAL_TETRA4],
+         r_type_idx[PDM_MESH_NODAL_PYRAMID5],
+         r_type_idx[PDM_MESH_NODAL_PRISM6],
+         r_type_idx[PDM_MESH_NODAL_HEXA8],
+         r_type_idx[PDM_MESH_NODAL_POLY_3D],
+         r_type_idx[PDM_MESH_NODAL_N_ELEMENT_TYPES]);
 }
 
 /**
@@ -2253,6 +2871,7 @@ PDM_mesh_location_compute2
     double               *redistrib_pts_coord = NULL;
     int redistrib_type_idx[PDM_MESH_NODAL_N_ELEMENT_TYPES + 1];
 
+#if 0
     _redistribute_elementary_location (location,
                                        n_boxes,
                                        box_g_num,
@@ -2268,38 +2887,26 @@ PDM_mesh_location_compute2
                                        &redistrib_pts_idx,
                                        &redistrib_pts_g_num,
                                        &redistrib_pts_coord);
+#else
+    _redistribute_elementary_location2 (location,
+                                        n_boxes,
+                                        box_g_num,
+                                        pts_idx,
+                                        pts_g_num,
+                                        pts_coord,
+                                        &redistrib_n_elt,
+                                        redistrib_type_idx,
+                                        &redistrib_elt_g_num,
+                                        &redistrib_vtx_idx,
+                                        &redistrib_vtx_coord,
+                                        &redistrib_pts_idx,
+                                        &redistrib_pts_g_num,
+                                        &redistrib_pts_coord);
+#endif
     free (pts_idx);
     free (pts_g_num);
     free (pts_coord);
 
-    //-->> only if full hexa
-    /*redistrib_type_idx[PDM_MESH_NODAL_POINT]           = 0;
-    redistrib_type_idx[PDM_MESH_NODAL_BAR2]            = 0;
-    redistrib_type_idx[PDM_MESH_NODAL_TRIA3]           = 0;
-    redistrib_type_idx[PDM_MESH_NODAL_QUAD4]           = 0;
-    redistrib_type_idx[PDM_MESH_NODAL_POLY_2D]         = 0;
-    redistrib_type_idx[PDM_MESH_NODAL_TETRA4]          = 0;
-    redistrib_type_idx[PDM_MESH_NODAL_PYRAMID5]        = 0;
-    redistrib_type_idx[PDM_MESH_NODAL_PRISM6]          = 0;
-    redistrib_type_idx[PDM_MESH_NODAL_HEXA8]           = 0;
-    redistrib_type_idx[PDM_MESH_NODAL_POLY_3D]         = redistrib_n_elt;
-    redistrib_type_idx[PDM_MESH_NODAL_N_ELEMENT_TYPES] = redistrib_n_elt;*/
-    //<<--
-    /*
-    printf("[%d] n_elt = %d, type_idx = %d %d %d %d %d %d %d %d %d %d %d\n",
-           my_rank, redistrib_n_elt,
-           redistrib_type_idx[PDM_MESH_NODAL_POINT],
-           redistrib_type_idx[PDM_MESH_NODAL_BAR2],
-           redistrib_type_idx[PDM_MESH_NODAL_TRIA3],
-           redistrib_type_idx[PDM_MESH_NODAL_QUAD4],
-           redistrib_type_idx[PDM_MESH_NODAL_POLY_2D],
-           redistrib_type_idx[PDM_MESH_NODAL_TETRA4],
-           redistrib_type_idx[PDM_MESH_NODAL_PYRAMID5],
-           redistrib_type_idx[PDM_MESH_NODAL_PRISM6],
-           redistrib_type_idx[PDM_MESH_NODAL_HEXA8],
-           redistrib_type_idx[PDM_MESH_NODAL_POLY_3D],
-           redistrib_type_idx[PDM_MESH_NODAL_N_ELEMENT_TYPES]);
-    */
 
     PDM_timer_hang_on(location->timer);
     e_t_elapsed = PDM_timer_elapsed(location->timer);
