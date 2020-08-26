@@ -1809,7 +1809,7 @@ _locate_in_polyhedron
   const double four_PI = 4. * PDM_PI;
 
   const double eps_solid_angle = 1e-5;
-  const float eps_distance2 = 1e-10;
+  const float eps_distance2 = 1e-10;//char_length...
   const double eps2 = 1e-20;
 
   /*
@@ -2501,11 +2501,11 @@ PDM_point_location_nodal2
     _locate_on_edge (3,
                      _connec,
                      NULL,
-                     elt_vtx_coord + 3*elt_vtx_idx[ielt],
+                     elt_vtx_coord + elt_vtx_idx[ielt] * 3,
                      pts_idx[ielt+1] - pts_idx[ielt],
                      pts_coord + pts_idx[ielt] * 3,
                      *distance + pts_idx[ielt],
-                     *bar_coord + pts_idx[ielt] * 2);
+                     *bar_coord + (*bar_coord_idx)[pts_idx[ielt]]);
   }
 
 
@@ -2517,12 +2517,12 @@ PDM_point_location_nodal2
     _locate_on_triangles_3d (1,
                              _connec,
                              NULL,
-                             elt_vtx_coord + 3*elt_vtx_idx[ielt],
+                             elt_vtx_coord + elt_vtx_idx[ielt] * 3,
                              pts_idx[ielt+1] - pts_idx[ielt],
                              pts_coord + pts_idx[ielt] * 3,
                              NULL,
                              *distance + pts_idx[ielt],
-                             *bar_coord + pts_idx[ielt] * 3);
+                             *bar_coord + (*bar_coord_idx)[pts_idx[ielt]]);
   }
 
 
@@ -2534,11 +2534,11 @@ PDM_point_location_nodal2
     _locate_on_quadrangle (3,
                            _connec,
                            NULL,
-                           elt_vtx_coord + 3*elt_vtx_idx[ielt],
+                           elt_vtx_coord + elt_vtx_idx[ielt] * 3,
                            pts_idx[ielt+1] - pts_idx[ielt],
                            pts_coord + pts_idx[ielt] * 3,
                            *distance + pts_idx[ielt],
-                           *bar_coord + pts_idx[ielt] * 4);
+                           *bar_coord + (*bar_coord_idx)[pts_idx[ielt]]);
   }
 
 
@@ -2548,7 +2548,7 @@ PDM_point_location_nodal2
   for (ielt = type_idx[PDM_MESH_NODAL_POLY_2D]; ielt < type_idx[PDM_MESH_NODAL_TETRA4]; ielt++) {
 
     _locate_in_polygon (elt_vtx_idx[ielt+1] - elt_vtx_idx[ielt],
-                        elt_vtx_coord + 3*elt_vtx_idx[ielt],
+                        elt_vtx_coord + elt_vtx_idx[ielt] * 3,
                         pts_idx[ielt+1] - pts_idx[ielt],
                         pts_coord + pts_idx[ielt] * 3,
                         *distance + pts_idx[ielt],
@@ -2562,11 +2562,11 @@ PDM_point_location_nodal2
    */
   for (ielt = type_idx[PDM_MESH_NODAL_TETRA4]; ielt < type_idx[PDM_MESH_NODAL_PYRAMID5]; ielt++) {
 
-    _locate_in_tetrahedron (elt_vtx_coord + 3*elt_vtx_idx[ielt],
+    _locate_in_tetrahedron (elt_vtx_coord + elt_vtx_idx[ielt] * 3,
                             pts_idx[ielt+1] - pts_idx[ielt],
                             pts_coord + pts_idx[ielt] * 3,
                             *distance + pts_idx[ielt],
-                            *bar_coord + pts_idx[ielt] * 4);
+                            *bar_coord + (*bar_coord_idx)[pts_idx[ielt]]);
   }
 
 
@@ -2576,22 +2576,18 @@ PDM_point_location_nodal2
   for (PDM_Mesh_nodal_elt_t type = PDM_MESH_NODAL_PYRAMID5;
        type < PDM_MESH_NODAL_POLY_3D;
        type++) {
-    //printf("type %d, n_elt = %d\n", type, type_idx[type+1] - type_idx[type]);
-
-    int n_vtx = PDM_Mesh_nodal_n_vertices_element (type,
-                                                   order);
 
     for (ielt = type_idx[type]; ielt < type_idx[type+1]; ielt++) {
-      //printf("ielt = %d, points from %d to %d\n", ielt, pts_idx[ielt], pts_idx[ielt+1]);
+
       _locate_in_cell_3d (type,
                           _connec,
                           NULL,
-                          elt_vtx_coord + 3*elt_vtx_idx[ielt],
+                          elt_vtx_coord + elt_vtx_idx[ielt] * 3,
                           pts_idx[ielt+1] - pts_idx[ielt],
                           pts_coord + pts_idx[ielt] * 3,
                           tolerance,
                           *distance + pts_idx[ielt],
-                          *bar_coord + pts_idx[ielt] * n_vtx);
+                          *bar_coord + (*bar_coord_idx)[pts_idx[ielt]]);
     }
   }
 
@@ -2599,11 +2595,13 @@ PDM_point_location_nodal2
   /*
    * Locate in polyhedra
    */
-  /*for (ielt = type_idx[PDM_MESH_NODAL_POLY_3D]; ielt < n_elt; ielt++) {
+  /*
+    int ipoly3d = 0;
+    for (ielt = type_idx[PDM_MESH_NODAL_POLY_3D]; ielt < n_elt; ielt++) {
 
     int n_vtx = elt_vtx_idx[ielt+1] - elt_vtx_idx[ielt];
     _locate_in_polyhedron (n_vtx,
-    elt_vtx_coord + 3*elt_vtx_idx[ielt],
+    elt_vtx_coord + elt_vtx_idx[ielt] * 3,
     const PDM_l_num_t n_face,
     const PDM_l_num_t face_vtx_idx[],
     const PDM_l_num_t face_vtx[],
@@ -2613,6 +2611,8 @@ PDM_point_location_nodal2
     const double      char_length,
     *distance + pts_idx[ielt],
     *bar_coord + (*bar_coord_idx)[pts_idx[ielt]]);
+
+    ipoly3d++;
     }*/
 
 
