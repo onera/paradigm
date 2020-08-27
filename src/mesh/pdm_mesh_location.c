@@ -1290,12 +1290,12 @@ _redistribute_elementary_location2
  double               **r_vtx_coord,
  int                  **r_pts_idx,
  PDM_g_num_t          **r_pts_g_num,
- double               **r_pts_coord/*,
+ double               **r_pts_coord,
  PDM_l_num_t          **r_poly3d_face_idx,
  PDM_l_num_t          **r_face_vtx_idx,
  PDM_l_num_t          **r_face_vtx,
  int                  **r_face_orientation,
- double               **r_poly3d_char_length*/
+ double               **r_poly3d_char_length
  )
 {
   const int order = 1;
@@ -1345,6 +1345,8 @@ _redistribute_elementary_location2
   ielt = 0;
   int *n_vtx_per_elt = malloc (sizeof(int) * n_elt);
   int *n_face_per_elt = malloc (sizeof(int) * n_poly3d);
+  PDM_g_num_t *poly3d_g_num = malloc (sizeof(PDM_g_num_t) * n_poly3d);
+  double *poly3d_char_length = malloc (sizeof(double) * n_poly3d);
 
   PDM_l_num_t *connec_idx = NULL;
   PDM_l_num_t *connec     = NULL;
@@ -1383,6 +1385,7 @@ _redistribute_elementary_location2
                                          &cell_face);
 
         for (int i = 0; i < n_elt_part; i++) {
+          poly3d_g_num[ipoly] = elt_g_num[ielt];
           n_vtx_per_elt[ielt++] = connec_idx[i+1] - connec_idx[i];
           n_face_per_elt[ipoly++] = cell_face_idx[i+1] - cell_face_idx[i];
         }
@@ -1445,13 +1448,15 @@ _redistribute_elementary_location2
       n_face_max = PDM_MAX (n_face_max, n_face_per_elt[ipoly]);
     }
 
-    local_face_vtx = malloc (sizeof(PDM_l_num_t) * n_face_tot);
+    size_t s_local_face_vtx = 5 * n_face_tot;
+    local_face_vtx = malloc (sizeof(PDM_l_num_t) * s_local_face_vtx);
     face_orientation = malloc (sizeof(int) * n_face_tot);
     n_vtx_per_face = malloc (sizeof(int) * n_face_tot);
 
-    PDM_l_num_t *_local_face_vtx = local_face_vtx;
 
     int idx_face = 0;
+    int idx_vtx = 0;
+    ipoly = 0;
     for (int iblock = 0; iblock < n_blocks; iblock++) {
       int id_block = blocks_id[iblock];
 
@@ -1500,18 +1505,27 @@ _redistribute_elementary_location2
                                                    _n_vtx);
                 assert (_ivtx >= 0);
 
-                _local_face_vtx[ivtx] = _ivtx + 1;
+                if (s_local_face_vtx <= idx_vtx) {
+                  s_local_face_vtx = PDM_MAX (2*s_local_face_vtx, idx_vtx);
+                  local_face_vtx = realloc (local_face_vtx,
+                                            sizeof(PDM_l_num_t) * s_local_face_vtx);
+                }
+                local_face_vtx[idx_vtx++] = _ivtx + 1;
               }
 
-              _local_face_vtx += n_vtx_face;
               n_vtx_per_face[idx_face++] = n_vtx_face;
             }
 
+            ipoly++;
           } // End of loop on elements of current part
 
         } // End of loop on parts
       }
     } // End of loop on nodal blocks
+
+    if (idx_vtx < s_local_face_vtx) {
+      local_face_vtx = realloc (local_face_vtx, sizeof(PDM_l_num_t) * idx_vtx);
+    }
   }
 
 
@@ -1528,6 +1542,7 @@ _redistribute_elementary_location2
   double *vtx_coord = malloc (sizeof(double) * 3 * n_vtx_tot);
   double *_vtx_coord = vtx_coord;
 
+  ipoly = 0;
   for (int iblock = 0; iblock < n_blocks; iblock++) {
     int id_block = blocks_id[iblock];
 
@@ -1549,13 +1564,29 @@ _redistribute_elementary_location2
                                                           &connec);
 
         for (int i = 0; i < n_elt_part; i++) {
+          double xyz_min[3] = {HUGE_VAL,
+                               HUGE_VAL,
+                               HUGE_VAL};
+
+          double xyz_max[3] = {-HUGE_VAL,
+                               -HUGE_VAL,
+                               -HUGE_VAL};
+
           for (int j = connec_idx[i]; j < connec_idx[i+1]; j++) {
             int ivtx = connec[j] - 1;
             for (int k = 0; k < 3; k++) {
               _vtx_coord[k] = vtx_coord_part[3*ivtx + k];
+              xyz_min[k] = PDM_MIN (xyz_min[k], _vtx_coord[k]);
+              xyz_max[k] = PDM_MAX (xyz_max[k], _vtx_coord[k]);
             }
             _vtx_coord += 3;
           }
+
+          double _char_length = 0.;
+          for (int k = 0; k < 3; k++) {
+            _char_length = PDM_MAX (_char_length, xyz_max[k] - xyz_min[k]);
+          }
+          poly3d_char_length[ipoly++] = _char_length;
         }
       } // End of loop on parts
 
@@ -1630,6 +1661,7 @@ _redistribute_elementary_location2
 
 
 
+
   /* Compute elements weights for an even redistribution */
   double *elt_weight = malloc (sizeof(double) * n_elt);
   for (ielt = 0; ielt < n_elt; ielt++) {
@@ -1648,7 +1680,7 @@ _redistribute_elementary_location2
   free (elt_weight);
 
   *r_n_elt = PDM_part_to_block_n_elt_block_get (ptb);
-
+  PDM_g_num_t *block_distrib_idx = PDM_part_to_block_distrib_index_get (ptb);
 
 
   /*
@@ -1738,18 +1770,130 @@ _redistribute_elementary_location2
                           &block_n_vtx_per_elt,
                           (void **) &block_vtx_coord);
   free (vtx_coord);
-  free (n_vtx_per_elt);
+  //free (n_vtx_per_elt);
 
   for (ielt = 0; ielt < *r_n_elt; ielt++) {
     block_n_vtx_per_elt[ielt] /= 3;
   }
 
   /*
-   * TO DO: faces for polyhedra...
+   * Polyhedra
    */
 
+  PDM_part_to_block_t *ptb_poly3d = PDM_part_to_block_create2 (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                               PDM_PART_TO_BLOCK_POST_MERGE,
+                                                               1.,
+                                                               &poly3d_g_num,
+                                                               block_distrib_idx,
+                                                               &n_poly3d,
+                                                               1,
+                                                               location->comm);
 
+  int r_n_poly3d = PDM_part_to_block_n_elt_block_get (ptb_poly3d);
+
+  /* Characteristic length */
+  part_stride = malloc (sizeof(int) * n_poly3d);
+  for (ipoly = 0; ipoly < n_poly3d; ipoly++) {
+    part_stride[ipoly] = 1;
+  }
+
+  PDM_part_to_block_exch (ptb_poly3d,
+                          sizeof(double),
+                          PDM_STRIDE_VAR,
+                          1,
+                          &part_stride,
+                          (void **) &poly3d_char_length,
+                          &block_stride,
+                          (void **) r_poly3d_char_length);
+  free (block_stride);
+  free (poly3d_char_length);
+
+  /* Number of faces per polyhedron */
+  int *r_n_face_per_elt = NULL;
+  PDM_part_to_block_exch (ptb_poly3d,
+                          sizeof(int),
+                          PDM_STRIDE_VAR,
+                          1,
+                          &part_stride,
+                          (void **) &n_face_per_elt,
+                          &block_stride,
+                          (void **) &r_n_face_per_elt);
+  free (part_stride);
+  free (block_stride);
+
+  *r_poly3d_face_idx = malloc (sizeof(PDM_l_num_t) * (r_n_poly3d + 1));
+  (*r_poly3d_face_idx)[0] = 0;
+  for (ipoly = 0; ipoly < r_n_poly3d; ipoly++) {
+    (*r_poly3d_face_idx)[ipoly+1] = (*r_poly3d_face_idx)[ipoly] + r_n_face_per_elt[ipoly];
+  }
+  free (r_n_face_per_elt);
+
+  int r_n_face = (*r_poly3d_face_idx)[r_n_poly3d];
+
+  /* Face orientation */
+  PDM_part_to_block_exch (ptb_poly3d,
+                          sizeof(int),
+                          PDM_STRIDE_VAR,
+                          1,
+                          &n_face_per_elt,
+                          (void **) &face_orientation,
+                          &block_stride,
+                          (void **) r_face_orientation);
+  free (block_stride);
+  free (face_orientation);
+
+
+
+
+
+  /* Number of vertices per face */
+  int *r_n_vtx_per_face = NULL;
+  PDM_part_to_block_exch (ptb_poly3d,
+                          sizeof(int),
+                          PDM_STRIDE_VAR,
+                          1,
+                          &n_face_per_elt,
+                          (void **) &n_vtx_per_face,
+                          &block_stride,
+                          (void **) &r_n_vtx_per_face);
+  free (block_stride);
+
+
+  /* Face-vtx connectivity */
+  *r_face_vtx_idx = malloc (sizeof(PDM_l_num_t) * (r_n_face + 1));
+  (*r_face_vtx_idx)[0] = 0;
+  for (int iface = 0; iface < r_n_face; iface++) {
+    (*r_face_vtx_idx)[iface+1] = (*r_face_vtx_idx)[iface] + r_n_vtx_per_face[iface];
+  }
+  free (r_n_vtx_per_face);
+
+  int idx_face = 0;
+  for (ipoly = 0; ipoly < n_poly3d; ipoly++) {
+    n_vtx_per_elt[ipoly] = 0;
+
+    for (int iface = 0; iface < n_face_per_elt[ipoly]; iface++) {
+      n_vtx_per_elt[ipoly] += n_vtx_per_face[idx_face++];
+    }
+  }
+  free (n_vtx_per_face);
+  free (n_face_per_elt);
+
+  PDM_part_to_block_exch (ptb_poly3d,
+                          sizeof(PDM_l_num_t),
+                          PDM_STRIDE_VAR,
+                          1,
+                          &n_vtx_per_elt,
+                          (void **) &local_face_vtx,
+                          &block_stride,
+                          (void **) r_face_vtx);
+  free (block_stride);
+  free (n_vtx_per_elt);
+  free (local_face_vtx);
+
+  free (poly3d_g_num);
   PDM_part_to_block_free (ptb);
+  PDM_part_to_block_free (ptb_poly3d);
+
 
 
 
@@ -1758,6 +1902,8 @@ _redistribute_elementary_location2
   for (ielt = 0; ielt < *r_n_elt; ielt++) {
     type_count[block_elt_type[ielt]]++;
   }
+
+  assert (r_n_poly3d == type_count[PDM_MESH_NODAL_POLY_3D]);//
 
 #if 0
   /* Count elements of each type */
@@ -1844,6 +1990,7 @@ _redistribute_elementary_location2
   free (block_vtx_coord);
   free (block_pts_g_num);
   free (block_pts_coord);
+  free (block_elt_type);
 
 
   printf("[%d] r_type_idx = %d %d %d %d %d %d %d %d %d %d %d\n",
@@ -2862,13 +3009,19 @@ PDM_mesh_location_compute2
      * Load balancing: redistribute evenly elementary location operations
      */
     int                   redistrib_n_elt = 0;
-    PDM_Mesh_nodal_elt_t *redistrib_elt_type = NULL;
+    PDM_Mesh_nodal_elt_t *redistrib_elt_type  = NULL;
     PDM_g_num_t          *redistrib_elt_g_num = NULL;
-    int                  *redistrib_vtx_idx = NULL;
+    int                  *redistrib_vtx_idx   = NULL;
     double               *redistrib_vtx_coord = NULL;
-    int                  *redistrib_pts_idx = NULL;
+    int                  *redistrib_pts_idx   = NULL;
     PDM_g_num_t          *redistrib_pts_g_num = NULL;
     double               *redistrib_pts_coord = NULL;
+    PDM_l_num_t *redistrib_poly3d_face_idx    = NULL;
+    PDM_l_num_t *redistrib_face_vtx_idx       = NULL;
+    PDM_l_num_t *redistrib_face_vtx           = NULL;
+    int         *redistrib_face_orientation   = NULL;
+    double      *redistrib_poly3d_char_length = NULL;
+
     int redistrib_type_idx[PDM_MESH_NODAL_N_ELEMENT_TYPES + 1];
 
 #if 0
@@ -2888,6 +3041,7 @@ PDM_mesh_location_compute2
                                        &redistrib_pts_g_num,
                                        &redistrib_pts_coord);
 #else
+
     _redistribute_elementary_location2 (location,
                                         n_boxes,
                                         box_g_num,
@@ -2901,7 +3055,12 @@ PDM_mesh_location_compute2
                                         &redistrib_vtx_coord,
                                         &redistrib_pts_idx,
                                         &redistrib_pts_g_num,
-                                        &redistrib_pts_coord);
+                                        &redistrib_pts_coord,
+                                        &redistrib_poly3d_face_idx,
+                                        &redistrib_face_vtx_idx,
+                                        &redistrib_face_vtx,
+                                        &redistrib_face_orientation,
+                                        &redistrib_poly3d_char_length);
 #endif
     free (pts_idx);
     free (pts_g_num);
@@ -2938,7 +3097,7 @@ PDM_mesh_location_compute2
         //redistrib_pts_elt_type[i] = redistrib_elt_type[ibox];
       }
     }
-    free (redistrib_elt_g_num);
+    //free (redistrib_elt_g_num);
     free (redistrib_elt_type);
 
     PDM_Mesh_nodal_elt_t *redistrib_pts_elt_type = malloc (sizeof(PDM_Mesh_nodal_elt_t) * n_pts);
@@ -2958,8 +3117,14 @@ PDM_mesh_location_compute2
     double *weights         = NULL;
 
     PDM_point_location_nodal2 (redistrib_type_idx,
+                               redistrib_elt_g_num,
                                redistrib_vtx_idx,
                                redistrib_vtx_coord,
+                               redistrib_poly3d_face_idx,
+                               redistrib_face_vtx_idx,
+                               redistrib_face_vtx,
+                               redistrib_face_orientation,
+                               redistrib_poly3d_char_length,
                                redistrib_pts_idx,
                                redistrib_pts_coord,
                                tolerance,
@@ -2984,10 +3149,16 @@ PDM_mesh_location_compute2
         printf("\n");
       }
     }
+    free (redistrib_elt_g_num);
     free (redistrib_vtx_coord);
     free (redistrib_vtx_idx);
     free (redistrib_pts_coord);
     free (redistrib_pts_idx);
+    free (redistrib_poly3d_face_idx);
+    free (redistrib_face_vtx_idx);
+    free (redistrib_face_vtx);
+    free (redistrib_face_orientation);
+    free (redistrib_poly3d_char_length);
 
     PDM_timer_hang_on(location->timer);
     e_t_elapsed = PDM_timer_elapsed(location->timer);

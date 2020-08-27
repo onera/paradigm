@@ -1790,9 +1790,57 @@ _locate_in_polygon
 
 
 
+static void _debug_locate_in_polyhedron
+(
+ const PDM_l_num_t n_vtx,
+ const double      vtx_coord[],
+ const PDM_l_num_t n_face,
+ const PDM_l_num_t face_vtx_idx[],
+ const PDM_l_num_t face_vtx[],
+ const int         face_orientation[]
+ )
+{
+  FILE *f = fopen("/stck/bandrieu/workspace/paradigma-dev/test/location/debug_locate_in_poly3d_2.vtk", "w");
+
+  fprintf(f, "# vtk DataFile Version 2.0\n");
+  fprintf(f, "Grid\n");
+  fprintf(f, "ASCII\n");
+  fprintf(f, "DATASET POLYDATA\n");
+
+  /* Points */
+  fprintf(f, "POINTS %d double\n", n_vtx);
+  const double *_pt = vtx_coord;
+  for (int i = 0; i < n_vtx; i++) {
+    fprintf(f, "%lf %lf %lf\n", _pt[0], _pt[1], _pt[2]);
+    _pt += 3;
+  }
+
+  /* Polygons */
+  fprintf(f, "POLYGONS %d %d\n", n_face, n_face + face_vtx_idx[n_face] - face_vtx_idx[0]);
+  for (int iface = 0; iface < n_face; iface++) {
+    fprintf(f, "%d", face_vtx_idx[iface+1] - face_vtx_idx[iface]);
+    for (int i = face_vtx_idx[iface]; i < face_vtx_idx[iface+1]; i++) {
+      fprintf(f, " %d", face_vtx[i] - 1);
+    }
+    fprintf(f, "\n");
+  }
+
+  /* Cell data */
+  fprintf(f, "CELL_DATA %d\n", n_face);
+  fprintf(f, "SCALARS orientation int 1\n");
+  fprintf(f, "LOOKUP_TABLE default\n");
+  for (int iface = 0; iface < n_face; iface++) {
+    fprintf(f, " %d\n", face_orientation[iface]);
+  }
+
+  fclose(f);
+}
+
+
 static int
 _locate_in_polyhedron
 (
+ const PDM_g_num_t elt_g_num,
  const PDM_l_num_t n_vtx,
  const double      vtx_coord[],
  const PDM_l_num_t n_face,
@@ -1985,9 +2033,19 @@ _locate_in_polyhedron
         distance[ipt] > eps_distance2) {
       /* Non-closed polyhedron */
       const double *_pt = pts_coord + 3 * ipt;
-      printf("!! pt %d (%f, %f, %f) solid_angle/PI = %g, dist = %g\n",
-             ipt, _pt[0], _pt[1], _pt[2], solid_angle[ipt]/PDM_PI, distance[ipt]);
+      printf("!! pt %d (%f, %f, %f) solid_angle/PI = %g, dist = %g (polyhedron g_num = %ld)\n",
+             ipt, _pt[0], _pt[1], _pt[2], solid_angle[ipt]/PDM_PI, distance[ipt], elt_g_num);
       stat = 0;
+
+      if (1 == 1) {
+        _debug_locate_in_polyhedron (n_vtx,
+                                     vtx_coord,
+                                     n_face,
+                                     face_vtx_idx,
+                                     face_vtx,
+                                     face_orientation);
+        abort();
+      }
       continue;
     }
 
@@ -2222,7 +2280,8 @@ _poly3d_block_locate
 
       }
 
-      _locate_in_polyhedron (_n_vtx,
+      _locate_in_polyhedron ((PDM_g_num_t) 1,//
+                             _n_vtx,
                              _vtx_coord,
                              _n_face,
                              _face_vtx_idx,
@@ -2431,17 +2490,22 @@ PDM_point_location_nodal
 void
 PDM_point_location_nodal2
 (
- const int      type_idx[],
- const int      elt_vtx_idx[],
- const double   elt_vtx_coord[],
- //+ elt_face_vtx for polyhedra...
- const int      pts_idx[],
- const double   pts_coord[],
- const double   tolerance,
- float        **distance,
- double       **projected_coord,//high-order
- int          **bar_coord_idx,
- double       **bar_coord
+ const int         type_idx[],
+ const PDM_g_num_t elt_g_num[],
+ const int         elt_vtx_idx[],
+ const double      elt_vtx_coord[],
+ const PDM_l_num_t poly3d_face_idx[],
+ const PDM_l_num_t face_vtx_idx[],
+ const PDM_l_num_t face_vtx[],
+ const int         face_orientation[],
+ const double      poly3d_char_length[],
+ const int         pts_idx[],
+ const double      pts_coord[],
+ const double      tolerance,
+ float           **distance,
+ double          **projected_coord,//high-order
+ int             **bar_coord_idx,
+ double          **bar_coord
  )
 {
   const int order = 1;
@@ -2595,25 +2659,26 @@ PDM_point_location_nodal2
   /*
    * Locate in polyhedra
    */
-  /*
-    int ipoly3d = 0;
-    for (ielt = type_idx[PDM_MESH_NODAL_POLY_3D]; ielt < n_elt; ielt++) {
+
+  int ipoly = 0;
+  for (ielt = type_idx[PDM_MESH_NODAL_POLY_3D]; ielt < n_elt; ielt++) {
 
     int n_vtx = elt_vtx_idx[ielt+1] - elt_vtx_idx[ielt];
-    _locate_in_polyhedron (n_vtx,
-    elt_vtx_coord + elt_vtx_idx[ielt] * 3,
-    const PDM_l_num_t n_face,
-    const PDM_l_num_t face_vtx_idx[],
-    const PDM_l_num_t face_vtx[],
-    const int         face_orientation[],
-    pts_idx[ielt+1] - pts_idx[ielt],
-    pts_coord + pts_idx[ielt] * 3,
-    const double      char_length,
-    *distance + pts_idx[ielt],
-    *bar_coord + (*bar_coord_idx)[pts_idx[ielt]]);
+    _locate_in_polyhedron (elt_g_num[ielt],
+                           n_vtx,
+                           elt_vtx_coord + elt_vtx_idx[ielt] * 3,
+                           poly3d_face_idx[ipoly+1] - poly3d_face_idx[ipoly],
+                           face_vtx_idx + poly3d_face_idx[ipoly],
+                           face_vtx,
+                           face_orientation + poly3d_face_idx[ipoly],
+                           pts_idx[ielt+1] - pts_idx[ielt],
+                           pts_coord + pts_idx[ielt] * 3,
+                           poly3d_char_length[ipoly],
+                           *distance + pts_idx[ielt],
+                           *bar_coord + (*bar_coord_idx)[pts_idx[ielt]]);
 
-    ipoly3d++;
-    }*/
+    ipoly++;
+  }
 
 
 }

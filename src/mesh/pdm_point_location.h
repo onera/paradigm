@@ -72,17 +72,22 @@ PDM_point_location_nodal
 void
 PDM_point_location_nodal2
 (
- const int      type_idx[],
- const int      elt_vtx_idx[],
- const double   elt_vtx_coord[],
- //+ elt_face_vtx for polyhedra...
- const int      pts_idx[],
- const double   pts_coord[],
- const double   tolerance,
- float        **distance,
- double       **projected_coord,//high-order
- int          **bar_coord_idx,
- double       **bar_coord
+ const int         type_idx[],
+ const PDM_g_num_t elt_g_num[],
+ const int         elt_vtx_idx[],
+ const double      elt_vtx_coord[],
+ const PDM_l_num_t poly3d_face_idx[],
+ const PDM_l_num_t face_vtx_idx[],
+ const PDM_l_num_t face_vtx[],
+ const int         face_orientation[],
+ const double      poly3d_char_length[],
+ const int         pts_idx[],
+ const double      pts_coord[],
+ const double      tolerance,
+ float           **distance,
+ double          **projected_coord,//high-order
+ int             **bar_coord_idx,
+ double          **bar_coord
  );
 
 #ifdef __cplusplus
