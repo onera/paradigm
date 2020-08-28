@@ -53,41 +53,40 @@ typedef struct  _subpartlayout_t {
  */
 
 typedef struct  _part_t {
+  //Dimensions
   int           n_vtx;               /*!< Number of vertices                   */
   int           n_cell;              /*!< Number of cells                      */
   int           n_face;              /*!< Number of faces                      */
   int           n_face_part_bound;   /*!< Number of partitioning boundary faces*/
   int           n_face_group;        /*!< Number of boundary faces             */
 
-  int          *cell_face_idx;        /*!< Cell face connectivity index
+  //Geometry and connectivities
+  double       *vtx;                 /*!< Vertex coordinates (size = 3*n_vtx)  */
+  int          *face_vtx_idx;        /*!< Face vertex connectivity index
+                                      (size = n_face + 1)                      */
+  int          *face_vtx;            /*!< Face vertex connectivity
+                                      (size = face_vtx_idx[n_face])            */
+  PDM_g_num_t  *gface_vtx;           /*!< Global numbering face vtx connectivity
+                                      (size = face_vtx_idx[n_face])            */
+  int          *cell_face_idx;       /*!< Cell face connectivity index
                                       (size = n_cell + 1)                      */
-  PDM_g_num_t *gcell_face;           /*!< Global numbering cell face connectivity
-                                      (size = cell_face_idx[n_cell])           */
   int          *cell_face;           /*!< Cell face connectivity
-                                      (size = cell_face_idx[n_cell])             */
-  PDM_g_num_t *cell_ln_to_gn;         /*!< Local to global cell numbering
-                                      (size = n_cell)                          */
-  int          *cell_tag;            /*!< Cell tag
-                                      (size = n_cell)                          */
-
+                                      (size = cell_face_idx[n_cell])           */
+  PDM_g_num_t  *gcell_face;          /*!< Global numbering cell face connectivity
+                                      (size = cell_face_idx[n_cell])           */
   int          *face_cell;           /*!< Face cell connectivity
                                       (size = 2 * n_face)                      */
-  int          *face_vtx_idx;         /*!< Face vertex connectivity index
-                                      (size = n_face + 1)                      */
-  PDM_g_num_t  *gface_vtx;           /*!< Global numbering face vtx connectivity
-                                      (size = face_vtx_idx[n_face])              */
-  int          *face_vtx;            /*!< Face vertex connectivity
-                                      (size = face_vtx_idx[n_face])              */
-  PDM_g_num_t *face_ln_to_gn ;         /*!< Local to global cell numbering
-                                      (size = n_face)                          */
-  int          *face_tag;            /*!< Tag face connectivity index
-                                      (size = n_face)                          */
 
-  int          *face_part_bound_proc_idx;   /*!< Partitioning boundary bloc distribution
+  //Boundaries
+  int          *face_group_idx;      /*!< Face group index
+                                      (size = n_face_group + 1)                */
+  int          *face_group;          /*!< Face group index
+                                     (size = face_group_idx[n_face_group])     */
+  int   *face_part_bound_proc_idx;   /*!< Partitioning boundary bloc distribution
                                       (size = n_ranks + 1)                     */
-  int          *face_part_bound_part_idx;   /*!< Partitioning boundary bloc distribution
+  int   *face_part_bound_part_idx;   /*!< Partitioning boundary bloc distribution
                                       (size = n_partTotal + 1)                 */
-  int          *face_part_bound;      /*!< Partitioning boundary faces sorted by
+  int          *face_part_bound;     /*!< Partitioning boundary faces sorted by
                                          proc, sorted by part in the proc, and
                                          sorted by absolute face number in the part
                                          For each face :
@@ -97,44 +96,52 @@ typedef struct  _part_t {
                                             on the connected process
                                           - Connected face local number
                                             in the connected partition
-                                      (size = 4* n_face_part_bound)              */
+                                      (size = 4* n_face_part_bound)            */
+  //New interface differs boundary groups and interface groups
+  int          *face_bound_idx;      /*!< Indices of original boundary groups
+                                      (size = n_bounds + 1)                    */
+  int          *face_bound;          /*!< Original boundary groups faces
+                                      (size = face_bound_idx[n_bounds])        */
+  int          *face_join_idx;       /*!< Indices of original interface groups
+                                      (size = n_joins + 1)                     */
+  int          *face_join;           /*!< Original interface groups faces with
+                                      connecting data (see face_part_bound)
+                                      (size = 4*face_join_idx[n_joins])         */
 
-  int          *face_group_idx;       /*!< Face group index
-                                      (size = n_face_group + 1)                     */
-  int          *face_group;          /*!< Face group index
-                                      (size = face_group_idx[n_face_group])       */
-
-  PDM_g_num_t *face_group_ln_to_gn;    /*!< Local to global boundary face numbering
-                                      (size = face_group_idx[n_face_group])           */
-
-  double       *vtx;                /*!< Vertex coordinates
-                                      (size = 3 * n_vtx)                           */
-  PDM_g_num_t *vtx_ln_to_gn;          /*!< Local to global vertex numbering
+  //Local to global numbering
+  PDM_g_num_t *face_ln_to_gn ;       /*!< Local to global cell numbering
+                                      (size = n_face)                          */
+  PDM_g_num_t *cell_ln_to_gn;        /*!< Local to global cell numbering
+                                      (size = n_cell)                          */
+  PDM_g_num_t *vtx_ln_to_gn;         /*!< Local to global vertex numbering
                                       (size = n_vtx)                           */
-  int          *vtx_tag;             /*!< Tag vertex
-                                      (size = n_vtx)                           */
+  PDM_g_num_t *face_group_ln_to_gn;  /*!< Local to global boundary face numbering
+                                      (size = face_group_idx[n_face_group])    */
+  //New interface differs boundary groups and interface groups
+  PDM_g_num_t *face_bound_ln_to_gn;  /*!< Local to global boundary face numbering
+                                      (size = face_bound_idx[n_bounds])        */
+  PDM_g_num_t *face_join_ln_to_gn;   /*!< Local to global join face numbering
+                                      (size = face_join_idx[n_joins])          */
 
+  //Tags -- integer fields on mesh entities
+  int         *cell_tag;             /*!< Cell tag (size = n_cell)             */
+  int         *face_tag;             /*!< Face tag (size = n_face)             */
+  int         *vtx_tag;              /*!< Vertex tag (size = n_face)           */
 
-  const int          *cell_weight;             /*!< Cell weight - For coarse mesh
-                                            (size = n_cell)                           */
-  const int          *face_weight;             /*!< Face weight - For coarse mesh
-                                            (size = nFac)                           */
+  //Coarse mesh data
+  const int   *cell_weight;          /*!< For coarse mesh (size = n_cell)      */
+  const int   *face_weight;          /*!< For coarse mesh (size = n_face)      */
 
-  int          *cell_color;             /*!< Cell color - For cache blocking
-                                            (size = n_cell)                           */
-  int          *face_color;             /*!< Face color - For cache blocking
-                                            (size = nFac)                           */
-  int          *thread_color;             /*!< Thread color - For cache blocking
-                                            (size = nThread)                        */
-  int          *hyperplane_color;         /*!< Thread color - For cache blocking
-                                            (size = nThread)                         */
+  // Cache blocking data
+  int         *cell_color;           /*!< For cache blocking (size = n_cell)   */
+  int         *face_color;           /*!< For cache blocking (size = n_face)   */
+  int         *thread_color;         /*!< For cache blocking (size = nThread)  */
+  int         *hyperplane_color;     /*!< For cache blocking (size = nThread?) */
 
-  int          *new_to_old_order_cell;   /*!< Cell reordering
-                                         (size = n_cell)                           */
-  int          *new_to_old_order_face;   /*!< Face reordering
-                                            (size = nFac)                        */
+  int         *new_to_old_order_cell;    /*!< Cell reordering (size = n_cell)  */
+  int         *new_to_old_order_face;    /*!< Face reordering (size = n_face)  */
 
-  _subpartlayout_t *subpartlayout;    /*!< Layouts of subdomain                     */
+  _subpartlayout_t *subpartlayout;       /*!< Layouts of subdomain             */
 
 } _part_t;
 
@@ -311,26 +318,35 @@ void
   part->n_cell = 0;
   part->n_face = 0;
   part->n_face_part_bound = 0;
-  part->cell_face_idx = NULL;
-  part->gcell_face = NULL;
-  part->cell_face = NULL;
-  part->cell_ln_to_gn = NULL;
-  part->cell_tag = NULL;
-  part->face_cell = NULL;
+  part->n_face_group = 0;
+  part->vtx = NULL;
   part->face_vtx_idx = NULL;
-  part->gface_vtx = NULL;
   part->face_vtx = NULL;
-  part->face_ln_to_gn = NULL;
-  part->face_tag = NULL;
+  part->gface_vtx = NULL;
+  part->cell_face_idx = NULL;
+  part->cell_face = NULL;
+  part->gcell_face = NULL;
+  part->face_cell = NULL;
+  part->face_group_idx = NULL;
+  part->face_group = NULL;
   part->face_part_bound_proc_idx = NULL;
   part->face_part_bound_part_idx = NULL;
   part->face_part_bound = NULL;
-  part->face_group_idx = NULL;
-  part->face_group = NULL;
-  part->face_group_ln_to_gn = NULL;
-  part->vtx = NULL;
+  part->face_bound_idx = NULL;
+  part->face_bound = NULL;
+  part->face_join_idx = NULL;
+  part->face_join = NULL;
+  part->face_ln_to_gn  = NULL;
+  part->cell_ln_to_gn = NULL;
   part->vtx_ln_to_gn = NULL;
+  part->face_group_ln_to_gn = NULL;
+  part->face_bound_ln_to_gn = NULL;
+  part->face_join_ln_to_gn = NULL;
+  part->cell_tag = NULL;
+  part->face_tag = NULL;
   part->vtx_tag = NULL;
+  part->cell_weight = NULL;
+  part->face_weight = NULL;
   part->cell_color = NULL;
   part->face_color = NULL;
   part->thread_color = NULL;
