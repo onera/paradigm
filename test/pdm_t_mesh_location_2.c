@@ -1494,11 +1494,7 @@ int main(int argc, char *argv[])
    * Compute location
    *
    ************************/
-#if 0
   PDM_mesh_location_compute (location_id);
-#else
-  PDM_mesh_location_compute2 (location_id);
-#endif
 
   PDM_mesh_location_dump_times (location_id);
 

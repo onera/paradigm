@@ -598,11 +598,8 @@ int main(int argc, char *argv[])
     printf("-- Locate\n");
     fflush(stdout);
   }
-#if 0
+
   PDM_mesh_location_compute (id_loc);
-#else
-  PDM_mesh_location_compute2 (id_loc); // With Load Balancing
-#endif
 
   PDM_mesh_location_dump_times (id_loc);
 

@@ -1948,12 +1948,10 @@ PDM_dbbtree_points_inside_boxes
                       recv_count, 1, PDM_MPI_INT,
                       _dbbt->comm);
 
-
     recv_shift = malloc (sizeof(int) * (n_ranks + 1));
     recv_shift[0] = 0;
     for (int i = 0; i < n_ranks; i++) {
       recv_shift[i+1] = recv_shift[i] + recv_count[i];
-      send_count[i] = 0;
     }
     n_recv_pts = recv_shift[n_ranks];
 
@@ -1976,6 +1974,7 @@ PDM_dbbtree_points_inside_boxes
     PDM_MPI_Alltoallv (send_coord, send_count, send_shift, PDM_MPI_DOUBLE,
                        recv_coord, recv_count, recv_shift, PDM_MPI_DOUBLE,
                        _dbbt->comm);
+
     free (send_coord);
     free (send_count);
     free (send_shift);
