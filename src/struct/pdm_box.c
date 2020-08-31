@@ -380,12 +380,12 @@ PDM_box_set_create(int                dim,
   //<<--*/
   //printf("\t-->> PDM_boxes_create\n");
   boxes->local_boxes = PDM_boxes_create (boxes->dim,
-										 n_boxes,
-										 box_gnum,
-										 box_extents,
-										 n_part_orig,
-										 n_boxes_orig,
-										 origin);
+                                         n_boxes,
+                                         box_gnum,
+                                         box_extents,
+                                         n_part_orig,
+                                         n_boxes_orig,
+                                         origin);
   //printf("\t<<-- PDM_boxes_create\n");
 
   for (i = 0; i < n_boxes; i++) {
@@ -427,6 +427,13 @@ PDM_box_set_create(int                dim,
 
     }
 
+  }
+  else {
+    for (j = 0; j < boxes->dim; j++) {
+      k = boxes->dimensions[j];
+      boxes->s[j] = 0;
+      boxes->d[j] = 1;
+    }
   }
 
   boxes->n_copied_ranks = 0;
@@ -1135,8 +1142,6 @@ PDM_box_set_recv_data_from_origin_distrib
   *current_distrib_data = NULL;
   unsigned char **_origin_distrib_data = (unsigned char **) origin_distrib_data;
 
-  long** l = (long**)origin_distrib_data;
-
   /* Send origin properties to the origin process :
    *   - Compute the number element to send for any process
    *   - Exchange -> origin these numbers all_to_all
@@ -1410,8 +1415,8 @@ PDM_box_set_recv_data_from_origin_distrib
     }
 
     PDM_MPI_Alltoallv(orig_data, orig_count, orig_shift, PDM_MPI_UNSIGNED_CHAR,
-                  curr_data, curr_count, curr_shift, PDM_MPI_UNSIGNED_CHAR,
-                  boxes->comm);
+                      curr_data, curr_count, curr_shift, PDM_MPI_UNSIGNED_CHAR,
+                      boxes->comm);
 
     unsigned char *_current_distrib_data = (unsigned char *) malloc (sizeof(unsigned char)
                                                                      * curr_shift[s_comm]
@@ -1486,8 +1491,10 @@ PDM_box_set_send_data_to_origin_distrib
 
   int n_boxes = _local_boxes->n_boxes;
   int *origin = _local_boxes->origin;
+  int *n_boxes_orig = _local_boxes->n_boxes_orig;
 
-  int s_comm = PDM_MPI_Comm_rank (boxes->comm, &s_comm);
+  int s_comm;
+  PDM_MPI_Comm_size (boxes->comm, &s_comm);
 
   int *curr_count = (int *) malloc (sizeof(int) * s_comm);
   for (int i = 0; i < s_comm; i++) {
@@ -1500,7 +1507,7 @@ PDM_box_set_send_data_to_origin_distrib
 
   int *orig_count = (int *) malloc (sizeof(int) * s_comm);
   PDM_MPI_Alltoall(curr_count, 1, PDM_MPI_INT,
-               orig_count, 1, PDM_MPI_INT, boxes->comm);
+                   orig_count, 1, PDM_MPI_INT, boxes->comm);
 
   int *curr_shift = (int *) malloc (sizeof(int) * (s_comm + 1));
   int *orig_shift = (int *) malloc (sizeof(int) * (s_comm + 1));
@@ -1544,8 +1551,8 @@ PDM_box_set_send_data_to_origin_distrib
   }
 
   PDM_MPI_Alltoallv(curr_loc, curr_count, curr_shift, PDM_MPI_INT,
-                orig_loc, orig_count, orig_shift, PDM_MPI_INT,
-                boxes->comm);
+                    orig_loc, orig_count, orig_shift, PDM_MPI_INT,
+                    boxes->comm);
 
   free (curr_loc);
 
@@ -1585,8 +1592,16 @@ PDM_box_set_send_data_to_origin_distrib
     }
 
     PDM_MPI_Alltoallv(curr_stride, curr_count, curr_shift, PDM_MPI_INT,
-                  orig_stride, orig_count, orig_shift, PDM_MPI_INT,
-                  boxes->comm);
+                      orig_stride, orig_count, orig_shift, PDM_MPI_INT,
+                      boxes->comm);
+
+    int n_elt = orig_shift[s_comm];
+
+    for (int i = 0; i < _local_boxes->n_part_orig; i++) {
+      for (int j = 0; j < n_boxes_orig[i]; j++) {
+        origin_distrib_stride[i][j] = 0;
+      }
+    }
 
     for (int i = 0; i < orig_shift[s_comm]; i++) {
       int i_part = orig_loc[2*i];
@@ -1594,22 +1609,17 @@ PDM_box_set_send_data_to_origin_distrib
       origin_distrib_stride[i_part][iElt] = orig_stride[i];
     }
 
-    free (curr_stride);
-  }
-
-  /*
-   * Send data to current distribution
-   *   - Exhange -> origin : data
-   */
-
-  if (t_stride == PDM_STRIDE_VAR) {
+    /*
+     * Send data to current distribution
+     *   - Exhange -> origin : data
+     */
 
     for (int i = 0; i < s_comm; i++) {
       curr_count[i] = 0;
       orig_count[i] = 0;
     }
 
-    for (int i = 0; i < s_comm+1; i++) {
+    for (int i = 0; i < s_comm; i++) {
       for (int k = curr_shift[i]; k < curr_shift[i+1]; k++) {
         curr_count[i] += curr_stride[k];
       }
@@ -1661,6 +1671,10 @@ PDM_box_set_send_data_to_origin_distrib
     }
 
     unsigned char *_current_distrib_data = (unsigned char *) current_distrib_data;
+    /* for (int i = 0; i <  current_distrib_idx[_local_boxes->n_boxes]; i++) { */
+    /*   printf("%uc", _current_distrib_data[i]); */
+    /* } */
+    /* printf("\n"); */
 
     for (int i = 0; i < n_boxes; i++) {
       int iProc = origin[3*i    ];
@@ -1677,10 +1691,15 @@ PDM_box_set_send_data_to_origin_distrib
     free (current_distrib_idx);
 
     PDM_MPI_Alltoallv(curr_data, curr_count, curr_shift, PDM_MPI_UNSIGNED_CHAR,
-                  orig_data, orig_count, orig_shift, PDM_MPI_UNSIGNED_CHAR,
-                  boxes->comm);
+                      orig_data, orig_count, orig_shift, PDM_MPI_UNSIGNED_CHAR,
+                      boxes->comm);
 
-    int **_origin_distrib_idx = (int **) malloc (sizeof(int) * _local_boxes->n_part_orig);
+    /* for (int i = 0; i < (orig_shift[s_comm-1]+orig_count[s_comm-1]); i++) { */
+    /*   printf("%uc", orig_data[i]); */
+    /* } */
+    /* printf("\n"); */
+
+    int **_origin_distrib_idx = (int **) malloc (sizeof(int *) * _local_boxes->n_part_orig);
     for (int i = 0; i < _local_boxes->n_part_orig; i++) {
       _origin_distrib_idx[i]   = (int *) malloc (sizeof(int) * (_local_boxes->n_boxes_orig[i] + 1));
       for (int k = 0; k < _local_boxes->n_boxes_orig[i] + 1; k++) {
@@ -1694,18 +1713,19 @@ PDM_box_set_send_data_to_origin_distrib
     for (int i = 0; i < _local_boxes->n_part_orig; i++) {
       unsigned char *_origin_distrib_data =
         (unsigned char *) malloc (sizeof(unsigned char)
-                                  * _origin_distrib_idx[i][_local_boxes->n_boxes_orig[i]]);
+                                  * _origin_distrib_idx[i][_local_boxes->n_boxes_orig[i]] * data_size);
       origin_distrib_data[i] = (void *) _origin_distrib_data;
     }
 
     int idx1  = 0;
-    for (int i = 0; i < orig_shift[s_comm]; i++) {
+    for (int i = 0; i < n_elt; i++) {
       int i_part = orig_loc[2*i];
-      int iElt  = orig_loc[2*i+1];
+      int iElt   = orig_loc[2*i+1];
 
-      int idx   = _origin_distrib_idx[i_part][iElt];
+      int idx   = _origin_distrib_idx[i_part][iElt] * (int) data_size;
 
-      int s_block = current_distrib_stride[i] * (int) data_size;
+      int s_block = (_origin_distrib_idx[i_part][iElt+1] - _origin_distrib_idx[i_part][iElt])
+        * (int) data_size;
       unsigned char *_origin_distrib_data =  origin_distrib_data[i_part];
       for (int k = 0; k < s_block; k++) {
         _origin_distrib_data[idx++] = orig_data[idx1++];
@@ -1722,8 +1742,6 @@ PDM_box_set_send_data_to_origin_distrib
     free (orig_data);
     free (curr_data);
     free (orig_stride);
-    free (current_distrib_idx);
-
   }
 
   else {
@@ -1762,8 +1780,8 @@ PDM_box_set_send_data_to_origin_distrib
     }
 
     PDM_MPI_Alltoallv(curr_data, curr_count, curr_shift, PDM_MPI_UNSIGNED_CHAR,
-                  orig_data, orig_count, orig_shift, PDM_MPI_UNSIGNED_CHAR,
-                  boxes->comm);
+                      orig_data, orig_count, orig_shift, PDM_MPI_UNSIGNED_CHAR,
+                      boxes->comm);
 
 
     for (int i = 0; i < _local_boxes->n_part_orig; i++) {
@@ -1774,7 +1792,8 @@ PDM_box_set_send_data_to_origin_distrib
     }
 
     idx1  = 0;
-    for (int i = 0; i < orig_shift[s_comm]; i++) {
+    int n_elt = orig_shift[s_comm] / s_block;
+    for (int i = 0; i < n_elt; i++) {
       int i_part = orig_loc[2*i];
       int iElt  = orig_loc[2*i+1];
 
@@ -1799,11 +1818,13 @@ PDM_box_set_send_data_to_origin_distrib
    * Clean up
    */
 
+  if (curr_stride != NULL)
+    free (curr_stride);
+
   free (orig_count);
   free (curr_count);
   free (orig_shift);
   free (curr_shift);
-  free (curr_loc);
   free (orig_loc);
 
 }

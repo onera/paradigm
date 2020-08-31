@@ -5,6 +5,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
@@ -81,10 +82,8 @@ const PDM_hash_tab_key_t  tKey,
 void                     *keyMax
 )
 {
-int vb = 0;
-if (vb == 1)   PDM_printf ("==== PDM_hash_tab_create ====\n");
   _hash_tab_t *ht = malloc (sizeof(_hash_tab_t));
-  const int nDataDefault = 4;
+  const int nDataDefault = 0;
 
   ht->tKey = tKey;
 
@@ -110,10 +109,10 @@ if (vb == 1)   PDM_printf ("==== PDM_hash_tab_create ====\n");
     ht->nDataKey[i] = 0;
     ht->mDataKey[i] = nDataDefault;
     ht->data[i] = malloc (sizeof(void *) * nDataDefault);
-	for (int j = 0; j < nDataDefault; j++) ht->data[i][j] = NULL;
+    for (int j = 0; j < nDataDefault; j++) {
+      ht->data[i][j] = NULL;
+    }
   }
-
-if (vb == 1)   PDM_printf ("==== PDM_hash_tab_create ==== terminated ====\n");
 
   return (PDM_hash_tab_t *) ht;
 }
@@ -138,10 +137,8 @@ void           *key,
 void           *data
 )
 {
-int vb = 0;
-if (vb == 1)   PDM_printf ("==== PDM_hash_tab_data_add ====\n");
   _hash_tab_t *_ht = (_hash_tab_t *) ht;
-  PDM_g_num_t _key = -1;;
+  PDM_g_num_t _key = -1;
 
   if (_ht->tKey == PDM_HASH_TAB_KEY_INT) {
     _key = (PDM_g_num_t) *((int *) (key));
@@ -154,24 +151,25 @@ if (vb == 1)   PDM_printf ("==== PDM_hash_tab_data_add ====\n");
 		abort();
 	}
 
+  assert ((PDM_g_num_t) _key < _ht->keyMax);
+
   if (_ht->nDataKey[_key] >= _ht->mDataKey[_key]) {
-    _ht->mDataKey[_key] *= 2;
+    _ht->mDataKey[_key] += PDM_MAX (1, _ht->mDataKey[_key]);
     _ht->data[_key] = realloc (_ht->data[_key], sizeof(void *) *
                                                 _ht->mDataKey[_key]);
   }
 
   if (_ht->nDataKey[_key] == 0) {
     if (_ht->n_key_info >= _ht->l_key_info) {
-      _ht->l_key_info *= 2;
+      _ht->l_key_info += PDM_MAX (1, _ht->l_key_info/3);
       _ht->key_info = realloc(_ht->key_info, sizeof(PDM_g_num_t) *  _ht->l_key_info);
     }
     _ht->key_info[_ht->n_key_info] = _key;
     _ht->n_key_info += 1;
   }
-//PDM_printf ("_key : %d     _ht->nDataKey[_key] : %d\n", _key, _ht->nDataKey[_key]);
+
   _ht->data[_key][_ht->nDataKey[_key]++] = data;
 
-  if (vb == 1)   PDM_printf ("==== PDM_hash_tab_data_add ==== terminated ====\n");
 }
 
 
@@ -206,6 +204,8 @@ void           *key
 		abort();
 	}
 
+  assert ((PDM_g_num_t) _key < _ht->keyMax);
+
   for (int i = 0; i < _ht->nDataKey[_key]; i++) {
     if (_ht->data[_key][i] != NULL) {
       free (_ht->data[_key][i]);
@@ -237,10 +237,8 @@ PDM_hash_tab_t *ht,
 void           *key
 )
 {
-int vb = 0;
-if (vb == 1)   PDM_printf ("==== PDM_hash_tab_n_data_get ====\n");
   _hash_tab_t *_ht = (_hash_tab_t *) ht;
-//if (vb == 1)  PDM_printf ("_ht = %d ", _ht);
+
   PDM_g_num_t _key = -1;
 
   if (_ht->tKey == PDM_HASH_TAB_KEY_INT) {
@@ -253,13 +251,9 @@ if (vb == 1)   PDM_printf ("==== PDM_hash_tab_n_data_get ====\n");
 	  PDM_error(__FILE__, __LINE__, 0, "PDM_hash_tab_data_get error : unknown PDM_hash_tab_key_t\n");
 		abort();
 	}
-if (vb == 1) {
- PDM_printf ("_key = %d ", _key);
- PDM_printf ("_ht->nDataKey = %d, _ht->nDataKey[0] = %d \n", _ht->nDataKey, _ht->nDataKey[0]);
- for (int i=0; i<=_key; i++)
- PDM_printf ("_ht->nDataKey[%d] = %d \n", i , _ht->nDataKey[i]);
-	PDM_printf ("==== PDM_hash_tab_n_data_get ==== terminated ====\n");
-}
+
+  assert ((PDM_g_num_t) _key < _ht->keyMax);
+
   return _ht->nDataKey[_key];
 }
 
@@ -283,8 +277,6 @@ PDM_hash_tab_t *ht,
 void           *key
 )
 {
-int vb = 0;
-if (vb == 1)   PDM_printf ("==== PDM_hash_tab_data_get ====\n");
   _hash_tab_t *_ht = (_hash_tab_t *) ht;
   PDM_g_num_t _key = -1;
 
@@ -298,15 +290,7 @@ if (vb == 1)   PDM_printf ("==== PDM_hash_tab_data_get ====\n");
 	  PDM_error(__FILE__, __LINE__, 0, "PDM_hash_tab_data_get error : unknown PDM_hash_tab_key_t\n");
 		abort();
 	}
-if (vb == 1) {
- PDM_printf ("_key = %d ", _key);
- PDM_printf ("_ht->data = %d, _ht->data[0] = %d, _ht->data[0][0] = %d, _ht->data[0][1] = %d \n", _ht->data, _ht->data[0], _ht->data[0][0], _ht->data[0][1]);
- for (int i=0; i<=_key; i++)
-   PDM_printf ("_ht->data[%d] = %d \n", i , _ht->data[i]);
- PDM_printf ("_ht->data[_key][0] = %d \n", _ht->data[_key][0]);
-PDM_printf ("_ht->data[_key][1] = %d \n", _ht->data[_key][1]);
-	PDM_printf ("==== PDM_hash_tab_data_get ==== terminated ====\n");
-}
+  assert ((PDM_g_num_t) _key < _ht->keyMax);
   return _ht->data[_key];
 }
 
@@ -341,6 +325,47 @@ PDM_hash_tab_t *ht
   free (_ht);
 
   return NULL;
+}
+
+
+/**
+ * \brief Return the number of used keys
+ *
+ * \param [in]  hash_table    Hash table to purge
+ *
+ * \return Number of used keys
+ */
+
+int
+PDM_hash_tab_n_used_keys_get
+(
+PDM_hash_tab_t *ht
+)
+{
+  _hash_tab_t *_ht = (_hash_tab_t *) ht;
+
+  return _ht->n_key_info;
+
+}
+
+/**
+ * \brief Return used keys
+ *
+ * \param [in]  hash_table    Hash table to purge
+ *
+ * \return Used keys
+ */
+
+PDM_g_num_t *
+PDM_hash_tab_used_keys_get
+(
+PDM_hash_tab_t *ht
+)
+{
+  _hash_tab_t *_ht = (_hash_tab_t *) ht;
+
+  return _ht->key_info;
+
 }
 
 

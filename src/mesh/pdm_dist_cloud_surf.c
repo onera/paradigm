@@ -698,7 +698,7 @@ PDM_dist_cloud_surf_compute
     b_t_cpu_s   = PDM_timer_cpu_sys(dist->timer);
     PDM_timer_resume(dist->timer);
 
-    PDM_dbbtree_t *dbbt = PDM_dbbtree_create (dist->comm, 3);
+    PDM_dbbtree_t *dbbt = PDM_dbbtree_create (dist->comm, 3, NULL);
 
     int          *nElts   = malloc (sizeof(int) * n_part_mesh);
     const double      **extents = malloc (sizeof(double *) * n_part_mesh);
@@ -873,7 +873,7 @@ PDM_dist_cloud_surf_compute
     free (closest_vertices_dist2);
 
     PDM_dbbtree_free (dbbt);
-
+    PDM_boxes_destroy (surf_mesh_boxes);
 
     free (nElts);
     free (gNum);

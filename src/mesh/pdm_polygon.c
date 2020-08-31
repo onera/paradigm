@@ -542,8 +542,10 @@ PDM_polygon_point_in
          *    (u!=0 u!=1 v=0), (u!=0 u!=1 v=1)
          */
 
-        if ( (_POLYGON_RAY_TOL < u) && (u < 1.0 - _POLYGON_RAY_TOL) &&
-             (_POLYGON_RAY_TOL < v) && (v < 1.0 - _POLYGON_RAY_TOL) ) {
+        if ( (0. < u) && (u < 1.0) &&
+             (0. < v) && (v < 1.0) ) {
+        /* if ( (_POLYGON_RAY_TOL < u) && (u < 1.0 - _POLYGON_RAY_TOL) && */
+        /*      (_POLYGON_RAY_TOL < v) && (v < 1.0 - _POLYGON_RAY_TOL) ) { */
           numInts++;
         }
         else {
@@ -641,14 +643,16 @@ PDM_polygon_status_t PDM_polygon_point_in2d
  const double  xy[2],
  const int     n_vtx,
  const double *vtx_xy,
- const double  char_length,
+ // const double  char_length,
  double        bounds[4]
  )
 {
-  const double eps_base = 1e-12;
+  const double eps_base = 1e-16;
 
-  const double eps = eps_base * char_length;
-  const double eps2 = eps * eps;
+  //  const double eps = eps_base * char_length;
+  //const double eps2 = eps * eps;
+  const double eps = 1e-16;
+  const double eps2 = 1e-16;
 
   /*
    * Do a quick bounds check
@@ -765,7 +769,7 @@ PDM_polygon_status_t PDM_polygon_point_in3d
  const double  xyz[3],
  const int     n_vtx,
  const double *vtx_xyz,
- const double  char_length,
+ // const double  char_length,
  double        bounds[6],
  double        normal[3]
  )
@@ -859,7 +863,7 @@ PDM_polygon_status_t PDM_polygon_point_in3d
   return PDM_polygon_point_in2d (p,
                                  n_vtx,
                                  xy,
-                                 char_length,
+                                 //                                 char_length,
                                  NULL);
 }
 
