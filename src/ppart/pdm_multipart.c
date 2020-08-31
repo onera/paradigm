@@ -40,6 +40,7 @@
 #include "pdm_partitioning_algorithm.h"
 #include "pdm_para_graph_dual.h"
 #include "pdm_part_priv.h"
+#include "pdm_part_renum.h"
 #include "pdm_handles.h"
 #include "pdm_dmesh.h"
 #include "pdm_printf.h"
@@ -81,6 +82,9 @@ typedef struct {
 
   /* Partitions -- see pdm_part_priv.h for struct definition */
   _part_t  **parts;
+  int        renum_cell_method;     // Choice of renumbering method for cells
+  const int *renum_cell_properties; // Parameters used by some renumbering methods
+  int        renum_face_method;     // Choice of renumbering method for faces
 } _part_mesh_t;
 
 /**
@@ -547,8 +551,13 @@ PDM_multipart_create
   _multipart->dmeshes_ids  = (int *) malloc(_multipart->n_zone * sizeof(int));
   _multipart->pmeshes = (_part_mesh_t *) malloc(_multipart->n_zone * sizeof(_part_mesh_t));
 
+  int _renum_cell_method = PDM_part_renum_method_cell_idx_get("PDM_PART_RENUM_CELL_NONE");
+  int _renum_face_method = PDM_part_renum_method_face_idx_get("PDM_PART_RENUM_FACE_NONE");
   for (int izone = 0; izone < _multipart->n_zone; izone++) {
     _multipart->dmeshes_ids[izone] = -1;
+    _multipart->pmeshes[izone].renum_cell_method = _renum_cell_method;
+    _multipart->pmeshes[izone].renum_face_method = _renum_face_method;
+    _multipart->pmeshes[izone].renum_cell_properties = NULL;
   }
 
   return id;
@@ -596,6 +605,54 @@ void PDM_multipart_register_joins
 
   _multipart->n_total_joins    = n_total_joins;
   _multipart->join_to_opposite = join_to_opposite;
+}
+
+/**
+ *
+ * \brief Set the reordering methods to be used after partitioning
+ *
+ * \param [in]   mpart_id           Multipart structure id
+ * \param [in]   i_zone             Id of zone which parameters apply (or -1 for all zones)
+ * \param [in]   renum_cell_method  Choice of renumbering method for cells
+ * \param [in]   renum_cell_properties Parameters used by cacheblocking method :
+ *                                     [n_cell_per_cache_wanted, is_asynchrone, is_vectorisation,
+                                        n_vect_face, split_method]
+ * \param [in]   renum_face_method  Choice of renumbering method for faces
+ *
+ */
+void PDM_multipart_set_reordering_options
+(
+ const int        mpart_id,
+ const int        i_zone,
+ const char      *renum_cell_method,
+ const int       *renum_cell_properties,
+ const char      *renum_face_method
+ )
+{
+  _pdm_multipart_t *_multipart = _get_from_id (mpart_id);
+
+  int _renum_cell_method = PDM_part_renum_method_cell_idx_get(renum_cell_method);
+  int _renum_face_method = PDM_part_renum_method_face_idx_get(renum_face_method);
+  if (_renum_cell_method == -1) {
+    PDM_error (__FILE__, __LINE__, 0, "'%s' is an unknown renumbering cell method\n", renum_cell_method);
+  }
+  if (_renum_face_method == -1) {
+    PDM_error (__FILE__, __LINE__, 0, "'%s' is an unknown renumbering face method\n", renum_face_method);
+  }
+
+  if(i_zone < 0) {
+    for (int izone = 0; izone < _multipart->n_zone; izone++) {
+      _multipart->pmeshes[izone].renum_cell_method = _renum_cell_method;
+      _multipart->pmeshes[izone].renum_face_method = _renum_face_method;
+      _multipart->pmeshes[izone].renum_cell_properties = renum_cell_properties;
+    }
+  }
+  else {
+    assert(i_zone < _multipart->n_zone);
+    _multipart->pmeshes[i_zone].renum_cell_method = _renum_cell_method;
+    _multipart->pmeshes[i_zone].renum_face_method = _renum_face_method;
+    _multipart->pmeshes[i_zone].renum_cell_properties = renum_cell_properties;
+  }
 }
 
 /**
@@ -814,19 +871,6 @@ PDM_multipart_run_ppart
                                      &pface_join_ln_to_gn);
 
 
-
-
-      PDM_generate_entity_graph_comm(_multipart->comm,
-                                     part_distri,
-                                     face_distri,
-                                     n_part,
-                                     pn_face,
-                                     (const PDM_g_num_t **) pface_ln_to_gn,
-                                     NULL,
-                                    &pinternal_face_bound_procidx,
-                                    &pinternal_face_bound_partidx,
-                                    &pinternal_face_bound);
-
       //Fill _part_t structures with temporary arrays
       _pmeshes->parts = (_part_t **) malloc(_pmeshes->tn_part*sizeof(_part_t*));
       for (int ipart = 0; ipart < n_part; ipart++)
@@ -853,10 +897,6 @@ PDM_multipart_run_ppart
         _pmeshes->parts[ipart]->face_bound_idx = pface_bound_idx[ipart];
         _pmeshes->parts[ipart]->face_bound = pface_bound[ipart];
 
-        _pmeshes->parts[ipart]->face_part_bound_proc_idx = pinternal_face_bound_procidx[ipart];
-        _pmeshes->parts[ipart]->face_part_bound_part_idx = pinternal_face_bound_partidx[ipart];
-        _pmeshes->parts[ipart]->face_part_bound = pinternal_face_bound[ipart];
-
         /* For face_join, the function only returns local id of face in join, we have to
          allocate to set up expected size (4*nb_face_join) */
         _pmeshes->parts[ipart]->face_join_idx = pface_join_idx[ipart];
@@ -867,6 +907,33 @@ PDM_multipart_run_ppart
         }
         free(pface_join_tmp[ipart]);
       }
+
+      //Use the structure to call renumbering procedures
+      PDM_part_renum_cell(_pmeshes->parts, n_part, _pmeshes->renum_cell_method,
+                          (void *) _pmeshes->renum_cell_properties);
+      PDM_part_renum_face(_pmeshes->parts, n_part, _pmeshes->renum_face_method, NULL);
+      //Now genererate comm data -- we need update pface_ln_to_gn which has been modified
+      for (int ipart = 0; ipart < n_part; ipart++) {
+        pface_ln_to_gn[ipart] = _pmeshes->parts[ipart]->face_ln_to_gn;
+      }
+      PDM_generate_entity_graph_comm(_multipart->comm,
+                                     part_distri,
+                                     face_distri,
+                                     n_part,
+                                     pn_face,
+                                     (const PDM_g_num_t **) pface_ln_to_gn,
+                                     NULL,
+                                    &pinternal_face_bound_procidx,
+                                    &pinternal_face_bound_partidx,
+                                    &pinternal_face_bound);
+      //Finally complete parts structure with internal join data
+      for (int ipart = 0; ipart < n_part; ipart++)
+      {
+        _pmeshes->parts[ipart]->face_part_bound_proc_idx = pinternal_face_bound_procidx[ipart];
+        _pmeshes->parts[ipart]->face_part_bound_part_idx = pinternal_face_bound_partidx[ipart];
+        _pmeshes->parts[ipart]->face_part_bound = pinternal_face_bound[ipart];
+      }
+
       //Free temporary arrays (top-level)
       free(pn_vtx);
       free(pn_cell);
