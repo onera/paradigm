@@ -632,6 +632,8 @@ int main(int argc, char *argv[])
     fflush(stdout);
   }
 
+  const double location_tolerance = 1.e-6;
+
   const PDM_g_num_t n_cell_seg = n_vtx_seg - 1;
   const double cell_side = length / ((double) n_cell_seg);
 
@@ -652,7 +654,7 @@ int main(int argc, char *argv[])
 
     //printf("%d: (%ld) | (%ld)\n", ipt, location_elt_gnum[ipt], box_gnum);
     if (location_elt_gnum[ipt] != box_gnum) {
-      printf("%d (%ld) (%f %f %f): (%ld) | (%ld)\n",
+      printf("%d (%ld) (%.15lf %.15lf %.15lf): (%ld) | (%ld)\n",
              ipt, pts_gnum[ipt],
              p[0], p[1], p[2],
              location_elt_gnum[ipt], box_gnum);
@@ -661,8 +663,25 @@ int main(int argc, char *argv[])
         printf(" %f", p_weights[l]);
       }
       printf("\n");
+
+      //-->>
+      double cell_min[3] = {cell_side * i,     cell_side * j,     cell_side * k};
+      double cell_max[3] = {cell_side * (i+1), cell_side * (j+1), cell_side * (k+1)};
+      /*printf("cell min = (%.15lf %.15lf %.15lf)\ncell max = (%.15lf %.15lf %.15lf)\n",
+             cell_min[0], cell_min[1], cell_min[2],
+             cell_max[0], cell_max[1], cell_max[2]);*/
+
+      double dist = HUGE_VAL;
+      for (int idim = 0; idim < 3; idim++) {
+        double _dist1 = PDM_ABS (p[idim] - cell_min[idim]);
+        double _dist2 = PDM_ABS (p[idim] - cell_max[idim]);
+        double _dist = PDM_MIN (_dist1, _dist2);
+        dist = PDM_MIN (dist, _dist);
+      }
+      printf("distance = %e\n\n", dist);
+      assert (dist < location_tolerance);
+      //<<--
     }
-    assert (location_elt_gnum[ipt] == box_gnum);
   }
 #endif
 
