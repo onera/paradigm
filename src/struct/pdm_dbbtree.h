@@ -45,8 +45,10 @@ typedef struct _PDM_dbbtree_t PDM_dbbtree_t;
  *
  * This function returns an initialized \ref PDM_dbbtree_t structure
  *
- * \param [in]  comm  Associated communicator
- * \param [in]  dim   boxes dimension
+ * \param [in]  comm             Associated communicator
+ * \param [in]  dim              boxes dimension
+ * \param [in]  global_extents   Globals of elements to storage into the tree
+ *                               (automatic computation if NULL)
  *
  * \return      A new initialized \ref PDM_dbbtree_t structure
  *
@@ -56,7 +58,8 @@ PDM_dbbtree_t *
 PDM_dbbtree_create
 (
  PDM_MPI_Comm  comm,
- int           dim
+ int           dim,
+ double       *global_extents
  );
 
 

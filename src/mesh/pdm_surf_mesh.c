@@ -425,9 +425,9 @@ PDM_surf_mesh_build_edges_gn_and_edge_part_bound
   PDM_g_num_t _nKeyProc = gKeyMax / lComm;
   int nKeyProc = (int) _nKeyProc;
 
-  for (int i = 0; i < lComm; i++)
+  for (int i = 0; i < lComm; i++) {
     nKeyProcs[i+1] = nKeyProc;
-
+  }
 
   PDM_g_num_t _rest = gKeyMax % lComm;
   int rest = (int ) _rest;

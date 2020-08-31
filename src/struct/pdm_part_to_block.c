@@ -17,6 +17,7 @@
 #include "pdm_part_to_block_priv.h"
 #include "pdm_mpi_node_first_rank.h"
 #include "pdm.h"
+#include "pdm_timer.h"
 #include "pdm_priv.h"
 #include "pdm_binary_search.h"
 #include "pdm_sort.h"
@@ -522,6 +523,7 @@ _distrib_data
 
         }
       }
+
     }
 
     else {
@@ -662,6 +664,8 @@ _distrib_data
 
     }
   } // If User
+
+
 
   /* Affichage */
 
@@ -1153,6 +1157,8 @@ PDM_part_to_block_exch
     }
 
     recv_stride = (int *) malloc (sizeof(int) * _ptb->tn_recv_data);
+    assert (send_stride != NULL);
+    assert (recv_stride != NULL);
 
     PDM_MPI_Alltoallv (send_stride,
                        _ptb->n_send_data,
@@ -1216,11 +1222,10 @@ PDM_part_to_block_exch
       n_recv_buffer[i] = _ptb->n_recv_data[i] * cst_stride * (int) s_data;
 
     }
-    fflush(stdout);
   }
 
-  int s_send_buffer = i_send_buffer[_ptb->s_comm - 1] + n_send_buffer[_ptb->s_comm -1];
-  int s_recv_buffer = i_recv_buffer[_ptb->s_comm - 1] + n_recv_buffer[_ptb->s_comm -1];
+  size_t s_send_buffer = i_send_buffer[_ptb->s_comm - 1] + n_send_buffer[_ptb->s_comm -1];
+  size_t s_recv_buffer = i_recv_buffer[_ptb->s_comm - 1] + n_recv_buffer[_ptb->s_comm -1];
 
   /*
    * Data exchange
@@ -1228,6 +1233,9 @@ PDM_part_to_block_exch
 
   unsigned char *send_buffer = (unsigned char *) malloc(sizeof(unsigned char) * s_send_buffer);
   unsigned char *recv_buffer = (unsigned char *) malloc(sizeof(unsigned char) * s_recv_buffer);
+
+  assert (send_buffer != NULL);
+  assert (recv_buffer != NULL);
 
   unsigned char **_part_data = (unsigned char **) part_data;
 
@@ -1238,19 +1246,20 @@ PDM_part_to_block_exch
   int idx = -1;
   for (int i = 0; i < _ptb->n_part; i++) {
 
-    int *i_part = NULL;
+    size_t *i_part = NULL;
     if (t_stride == PDM_STRIDE_VAR) {
-      i_part = (int *) malloc (sizeof(int) * (_ptb->n_elt[i] + 1));
+      i_part = (size_t *) malloc (sizeof(size_t) * (_ptb->n_elt[i] + 1));
+      assert (i_part != NULL);
 
-      i_part[0] = 0;
+    i_part[0] = 0;
       for (int j = 1; j < _ptb->n_elt[i] + 1; j++)
-        i_part[j] = i_part[j-1] + (part_stride[i][j-1] * (int) s_data);
+        i_part[j] = i_part[j-1] + ((size_t) part_stride[i][j-1] * s_data);
     }
 
     for (int j = 0; j < _ptb->n_elt[i]; j++) {
       int iproc = _ptb->dest_proc[++idx];
-      int s_octet_elt = 0;
-      int i_part_elt = 0;
+      size_t s_octet_elt = 0;
+      size_t i_part_elt = 0;
 
       if (t_stride == PDM_STRIDE_CST) {
         s_octet_elt = cst_stride * (int) s_data;
@@ -1289,6 +1298,8 @@ PDM_part_to_block_exch
   free(i_recv_buffer);
 
   unsigned char *_block_data = malloc(sizeof(unsigned char) * s_recv_buffer);
+  assert(_block_data != NULL);
+
   *block_data = _block_data;
   *block_stride = NULL;
   int *i_recv_stride = NULL;
