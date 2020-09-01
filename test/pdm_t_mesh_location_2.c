@@ -1510,15 +1510,15 @@ int main(int argc, char *argv[])
   PDM_g_num_t *p_location    = NULL;
   int         *p_weights_idx = NULL;
   double      *p_weights     = NULL;
-  PDM_mesh_location_get2 (location_id,
-                          0,//i_point_cloud,
-                          0,//i_part,
-                          &p_n_points,
-                          &p_coords,
-                          &p_gnum,
-                          &p_location,
-                          &p_weights_idx,
-                          &p_weights);
+  PDM_mesh_location_get (location_id,
+                         0,//i_point_cloud,
+                         0,//i_part,
+                         &p_n_points,
+                         &p_coords,
+                         &p_gnum,
+                         &p_location,
+                         &p_weights_idx,
+                         &p_weights);
 
   if (my_rank == 0) {
     printf("--- Results ---\n");

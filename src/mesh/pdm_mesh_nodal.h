@@ -756,14 +756,25 @@ const int            id_part,
       PDM_l_num_t  **cellfac
 );
 
+/**
+ * \brief Get the cell-vertex connectivity of a polyhedra block
+ *
+ * \param [in]  idx            Nodal mesh handle
+ * \param [in]  id_block       Block identifier
+ * \param [in]  id_part        Partition identifier
+ * \param [out] cellvtx_idx    Index of cell vertex connectivity
+ * \param [out] cellvtx        Cell vertex connectivity
+ *
+ */
+
 void
 PDM_Mesh_nodal_block_poly3d_cell_vtx_connect_get
 (
- const int            idx,
- const int            id_block,
- const int            id_part,
- PDM_l_num_t  **cellvtx_idx,
- PDM_l_num_t  **cellvtx
+ const int     idx,
+ const int     id_block,
+ const int     id_part,
+ PDM_l_num_t **cellvtx_idx,
+ PDM_l_num_t **cellvtx
  );
 
 /**

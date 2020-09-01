@@ -2841,6 +2841,7 @@ PDM_Mesh_nodal_block_poly2d_get
 }
 
 
+
 static int
 _binary_search
 (
@@ -2867,11 +2868,15 @@ _binary_search
       l = m;
   }
 
+
+
   if (array[l] == elem) {
     *in_array = PDM_TRUE;
     return l;
 
-  } else if (array[l] < elem)
+  }
+
+  else if (array[l] < elem)
     return l + 1;
 
   else
@@ -2920,18 +2925,15 @@ static void _compute_cell_vtx_connectivity
       for (ivtx = face_vtx_idx[id_face]; ivtx < face_vtx_idx[id_face+1]; ivtx++) {
         id_vtx = face_vtx[ivtx];
 
-        pos =_binary_search (id_vtx,
-                             _cell_vtx,
-                             n_vtx_cell,
+        pos = _binary_search (id_vtx,
+                              _cell_vtx,
+                              n_vtx_cell,
                              &already_in_cell);
 
         if (already_in_cell == PDM_TRUE) {
           continue;
         }
 
-        //if (pos + _cell_vtx_idx[icell] >= s_cell_vtx) {
-          //s_cell_vtx *= 2;
-          //s_cell_vtx = PDM_MAX (2*s_cell_vtx, pos + _cell_vtx_idx[icell]);
         if (n_vtx_cell + _cell_vtx_idx[icell] >= s_cell_vtx) {
           s_cell_vtx = PDM_MAX (2*s_cell_vtx, n_vtx_cell + _cell_vtx_idx[icell]);
           *cell_vtx = realloc (*cell_vtx, sizeof(PDM_l_num_t) * s_cell_vtx);
@@ -3101,7 +3103,7 @@ PDM_Mesh_nodal_block_poly3d_get
     PDM_error(__FILE__, __LINE__, 0, "Partition identifier too big\n");
   }
 
-  *n_face     = block->n_face[id_part];
+  *n_face      = block->n_face[id_part];
   *facvtx_idx  = block->_facvtx_idx[id_part];
   *facvtx      = block->_facvtx[id_part];
   *cellfac_idx = block->_cellfac_idx[id_part];
@@ -3110,14 +3112,25 @@ PDM_Mesh_nodal_block_poly3d_get
 }
 
 
+/**
+ * \brief Get the cell-vertex connectivity of a polyhedra block
+ *
+ * \param [in]  idx            Nodal mesh handle
+ * \param [in]  id_block       Block identifier
+ * \param [in]  id_part        Partition identifier
+ * \param [out] cellvtx_idx    Index of cell vertex connectivity
+ * \param [out] cellvtx        Cell vertex connectivity
+ *
+ */
+
 void
 PDM_Mesh_nodal_block_poly3d_cell_vtx_connect_get
 (
- const int            idx,
- const int            id_block,
- const int            id_part,
- PDM_l_num_t  **cellvtx_idx,
- PDM_l_num_t  **cellvtx
+ const int     idx,
+ const int     id_block,
+ const int     id_part,
+ PDM_l_num_t **cellvtx_idx,
+ PDM_l_num_t **cellvtx
  )
 {
     PDM_Mesh_nodal_t *mesh = (PDM_Mesh_nodal_t *) PDM_Handles_get (mesh_handles, idx);
