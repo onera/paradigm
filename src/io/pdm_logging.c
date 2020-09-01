@@ -77,7 +77,7 @@ free_logging_file
 
 static struct {
   void *udata;
-  log_LockFn lock;
+  log_lock_fn lock;
   FILE *fp;
   int level;
   int quiet;
@@ -114,7 +114,7 @@ void log_set_udata(void *udata) {
 }
 
 
-void log_set_lock(log_LockFn fn) {
+void log_set_lock(log_lock_fn fn) {
   L.lock = fn;
 }
 
@@ -228,6 +228,54 @@ void log_log(int level, const char *file, int line, const char *fmt, ...) {
 //   /* Release lock */
 //   unlock();
 // }
+
+
+
+void
+PDM_log_trace_array_int
+(
+ int* array,
+ int  larray,
+ const char* header
+)
+{
+  log_trace(header);
+  for(int i = 0; i < larray; ++i){
+    log_trace("%d ", array[i]);
+  }
+  log_trace("\n");
+}
+
+void
+PDM_log_trace_array_long
+(
+ PDM_g_num_t* array,
+ int          larray,
+ const char*  header
+)
+{
+  log_trace(header);
+  for(int i = 0; i < larray; ++i){
+    log_trace(PDM_FMT_G_NUM" ", array[i]);
+  }
+  log_trace("\n");
+}
+
+void
+PDM_log_trace_array_size_t
+(
+ size_t      *array,
+ int          larray,
+ const char  *header
+)
+{
+  log_trace(header);
+  for(int i = 0; i < larray; ++i){
+    log_trace("%lu ", array[i]);
+  }
+  log_trace("\n");
+}
+
 
 #ifdef __cplusplus
 }

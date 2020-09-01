@@ -30,7 +30,7 @@
 #include "pdm_fortran_to_c_string.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
-#include "pdm_sort.h"
+#include "pdm_quick_sort.h"
 #include "pdm_binary_search.h"
 #include "pdm_handles.h"
 
@@ -310,7 +310,7 @@ _dual_graph_from_face_cell
 
   cell_to_send_idx  = NULL;
   cell_to_send_n    = NULL;
-  cell_to_send     = NULL;
+  cell_to_send      = NULL;
   cell_to_recv_idx  = NULL;
   cell_to_recv_n    = NULL;
 
@@ -951,9 +951,9 @@ _distrib_cell
     int rank_to_send = ppart->gpart_to_lproc_part[2*_part];
     int nbfac      = ppart->_dcell_face_idx[i+1] - ppart->_dcell_face_idx[i];
     face_to_send_idx[rank_to_send+1]  += n_data + nbfac; /* Num cell,
-                                                      Partition locale
-                                                      nbFac,
-                                                      liste des faces */
+                                                            Partition locale
+                                                            nbFac,
+                                                            liste des faces */
   }
 
   face_to_send_idx[0] = 0;
@@ -998,9 +998,9 @@ _distrib_cell
     }
   }
 
-  PDM_g_num_t *face_to_recv    = NULL;
-  int          *face_to_recv_n   = (int *) malloc(n_rank * sizeof(int));
-  int          *face_to_recv_idx = (int *) malloc((n_rank + 1) * sizeof(int));
+  PDM_g_num_t *face_to_recv     = NULL;
+  int         *face_to_recv_n   = (int *) malloc(n_rank * sizeof(int));
+  int         *face_to_recv_idx = (int *) malloc((n_rank + 1) * sizeof(int));
 
   _alltoall(face_to_send,
             face_to_send_n,
@@ -1058,8 +1058,8 @@ _distrib_cell
 
     mesh_part->cell_face_idx    = (int *)          malloc((mesh_part->n_cell + 1) * sizeof(int));
     mesh_part->cell_face_idx[0] = 0;
-    mesh_part->gcell_face      = (PDM_g_num_t *) malloc(mesh_part->n_face * sizeof(PDM_g_num_t));
-    mesh_part->cell_ln_to_gn     = (PDM_g_num_t *) malloc(mesh_part->n_cell * sizeof(PDM_g_num_t));
+    mesh_part->gcell_face       = (PDM_g_num_t *) malloc(mesh_part->n_face * sizeof(PDM_g_num_t));
+    mesh_part->cell_ln_to_gn    = (PDM_g_num_t *) malloc(mesh_part->n_cell * sizeof(PDM_g_num_t));
     if (ppart->_dcell_tag != NULL)
       mesh_part->cell_tag      = (int *)          malloc(mesh_part->n_cell * sizeof(int));
 
@@ -1122,8 +1122,8 @@ _distrib_cell
     }
 
     PDM_quick_sort_long2(mesh_part->face_ln_to_gn, /* tableau a trier */
-                         0,                    /* premier elt */
-                         mesh_part->n_face - 1,  /* dernier elt */
+                         0,                        /* premier elt     */
+                         mesh_part->n_face - 1,    /* dernier elt     */
                          initial_idx);
 
     /* Remove duplicate faces and build local cell face connectivity*/
@@ -1430,9 +1430,9 @@ _distrib_face
 
       /* Sort face_ln_to_gn */
 
-      PDM_quick_sort_long2(mesh_part->vtx_ln_to_gn,                       /* Array to sort */
-                           0,                                         /* First face */
-                           mesh_part->face_vtx_idx[mesh_part->n_face] - 1, /* Latest face */
+      PDM_quick_sort_long2(mesh_part->vtx_ln_to_gn,                        /* Array to sort */
+                           0,                                              /* First face    */
+                           mesh_part->face_vtx_idx[mesh_part->n_face] - 1, /* Latest face   */
                            initial_idx);
 
       /* Remove duplicate Vertex and build local face vertex connectivity*/
@@ -2834,21 +2834,21 @@ PDM_part_create
 
   /* Local dimensions */
 
-  ppart->dn_vtx      = dn_vtx;
-  ppart->dn_cell     = dn_cell;
-  ppart->dn_face     = dn_face;
+  ppart->dn_vtx       = dn_vtx;
+  ppart->dn_cell      = dn_cell;
+  ppart->dn_face      = dn_face;
   ppart->n_face_group = n_face_group;
 
   /* Cell definitions */
 
   ppart->_dcell_face_idx = dcell_face_idx;
-  ppart->_dcell_face    = dcell_face;
-  ppart->_dcell_tag     = dcell_tag;
-  ppart->_dcell_weight  = dcell_weight;
-  ppart->_dcell_part    = dcell_part;
+  ppart->_dcell_face     = dcell_face;
+  ppart->_dcell_tag      = dcell_tag;
+  ppart->_dcell_weight   = dcell_weight;
+  ppart->_dcell_part     = dcell_part;
   ppart->dcell_face_idx  = NULL;
-  ppart->dcell_face     = NULL;
-  ppart->dface_cell     = NULL;
+  ppart->dcell_face      = NULL;
+  ppart->dface_cell      = NULL;
 
   /* Set up for renumbering */
   ppart->n_property_cell       = n_property_cell;
@@ -2891,12 +2891,12 @@ PDM_part_create
   int *dn_face_proc = (int *) malloc((n_rank) * sizeof(int));
 
   PDM_MPI_Allgather((void *) &dn_face,
-                1,
-                PDM_MPI_INT,
-                (void *) dn_face_proc,
-                1,
-                PDM_MPI_INT,
-                comm);
+                    1,
+                    PDM_MPI_INT,
+                    (void *) dn_face_proc,
+                    1,
+                    PDM_MPI_INT,
+                    comm);
   ppart->dface_proc[0] = 1;
   for (int i = 1; i < n_rank+1; i++) {
     ppart->dface_proc[i] = (PDM_g_num_t) dn_face_proc[i-1] + ppart->dface_proc[i-1];
@@ -2928,13 +2928,13 @@ PDM_part_create
 
   /* Boundaries definitions */
 
-  ppart->_dface_group_idx  = dface_group_idx;
-  ppart->_dface_group = dface_group;
+  ppart->_dface_group_idx = dface_group_idx;
+  ppart->_dface_group     = dface_group;
 
   /* Dual graph */
 
   ppart->ddual_graph_idx = NULL;
-  ppart->ddual_graph    = NULL;
+  ppart->ddual_graph     = NULL;
 
   /* Partitions */
 
@@ -3738,8 +3738,6 @@ PDM_part_free
   ppart->mesh_parts = NULL;
 
   free (ppart);
-
-  PDM_part_renum_method_purge();
 
   PDM_Handles_handle_free (_pparts, ppart_id, PDM_FALSE);
 

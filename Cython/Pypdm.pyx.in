@@ -39,8 +39,6 @@ npy_pdm_gnum_dtype = @PYX_NPY_G_NUM_DTYPE@
 ctypedef @PYX_G_NUM@ PDM_g_num_t
 ctypedef @PYX_L_NUM@ PDM_l_num_t
 
-ctypedef int PDM_MPI_Comm
-
 ctypedef enum PDM_g_num_npy_t:
   PDM_G_NUM_NPY_INT = @PDM_G_NUM_NPY_INT@
 
@@ -87,6 +85,7 @@ cdef extern from "pdm_mpi.h":
 @COMMENT_NOT_PDMA@
 @COMMENT_NOT_PDMA@cdef extern from "pdm_plugin.h":
 @COMMENT_NOT_PDMA@    void PDM_plugin_load ()
+# @COMMENT_NOT_PDMA@print(f"Pypdm : load plugin (PDM_plugin_load).")
 @COMMENT_NOT_PDMA@PDM_plugin_load()
 @COMMENT_NOT_PDMA@
 
@@ -143,5 +142,18 @@ include "pdm_points_merge.pxi"
 # PDM_dmesh :
 # --------------------
 include "pdm_dmesh.pxi"
+
+# PDM_distant_neighbor :
+# --------------------
+include "pdm_distant_neighbor.pxi"
+
+# PDM_gnum_location :
+# --------------------
+include "pdm_gnum_location.pxi"
+
+# PDM_gnum :
+# --------------------
+include "pdm_gnum.pxi"
+
 
 # TODO: PDM_writer, ...

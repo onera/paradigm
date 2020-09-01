@@ -1,5 +1,11 @@
-
+cdef extern from "pdm_para_graph_dual.h":
+    ctypedef enum PDM_split_dual_t:
+        PDM_SPLIT_DUAL_WITH_PARMETIS = 1
+        PDM_SPLIT_DUAL_WITH_PTSCOTCH = 2
 cdef extern from "pdm_multipart.h":
+    ctypedef enum PDM_part_size_t:
+        PDM_PART_SIZE_HOMONEGEOUS   = 1
+        PDM_PART_SIZE_HETEROGENEOUS = 2
 
     # -> PPART bases functions
     # ------------------------------------------------------------------
@@ -7,13 +13,20 @@ cdef extern from "pdm_multipart.h":
     int PDM_multipart_create(int              n_zone,
                              int*             n_part,
                              PDM_bool_t       merge_blocks,
-                             PDM_part_split_t split_method,
+                             PDM_split_dual_t split_method,
+                             PDM_part_size_t  part_size_method,
+                             double*          part_fraction,
                              PDM_MPI_Comm     comm)
 
     # ------------------------------------------------------------------
     void PDM_multipart_register_block(int        mpart_id,
                                       int        zoneGId,
                                       int        block_data_id)
+
+    # ------------------------------------------------------------------
+    void PDM_multipart_register_joins(int        mpart_id,
+                                      int        n_total_joins,
+                                      int*       matching_join_array)
 
     # ------------------------------------------------------------------
     void PDM_multipart_run_ppart(int id);
@@ -91,25 +104,34 @@ cdef class MultiPart:
                   int                                           n_zone,
                   NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] n_part,
                   int                                           merge_blocks,
-                  PDM_part_split_t                              split_method,
+                  PDM_split_dual_t                              split_method,
+                  PDM_part_size_t                               part_size_method,
+                  NPY.ndarray[NPY.double_t  , mode='c', ndim=1] part_fraction,
                   MPI.Comm                                      comm):
 
         """
         """
         # ~> Communicator Mpi
         cdef MPI.MPI_Comm c_comm = comm.ob_mpi
+        cdef double* part_fraction_data
 
         # print("MultiPart::n_zone -->", n_zone)
         # print("MultiPart::n_part -->", n_part)
         # print("MultiPart::merge_blocks -->", merge_blocks)
         # print("MultiPart::split_method -->", split_method)
 
+        if part_fraction is None:
+          part_fraction_data = NULL
+        else:
+          part_fraction_data = <double *> part_fraction.data
+
         # -> Create PPART
-        # DM_multipart_create(&_mpart_id,
         self._mpart_id = PDM_multipart_create(n_zone,
                                               <int*> n_part.data,
                                               <PDM_bool_t> merge_blocks,
                                               split_method,
+                                              part_size_method,
+                                              part_fraction_data,
                                               PDM_MPI_mpi_2_pdm_mpi_comm (<void *> &c_comm))
         print("MultiPart::end ")
 
@@ -120,7 +142,7 @@ cdef class MultiPart:
 
     # ------------------------------------------------------------------
     def __dealloc__(self):
-        print '__dealloc__ MultiPart '
+        print('__dealloc__ MultiPart ')
         PDM_multipart_free(self._mpart_id)
 
     # ------------------------------------------------------------------
@@ -129,6 +151,15 @@ cdef class MultiPart:
         """
         """
         PDM_multipart_register_block(self._mpart_id, zoneGId, block_data_id)
+
+    # ------------------------------------------------------------------
+    def multipart_register_joins(self, int n_total_joins,
+                                 NPY.ndarray[NPY.int32_t, mode='c', ndim=1] matching_join):
+        """
+        """
+        PDM_multipart_register_joins(       self._mpart_id,
+                                            n_total_joins,
+                                     <int*> matching_join.data)
 
     # ------------------------------------------------------------------
     def multipart_run_ppart(self):
@@ -448,7 +479,7 @@ cdef class MultiPart:
         if (faceJoin == NULL) :
             npFaceJoin = None
         else :
-            dim = <NPY.npy_intp> dims['sFaceJoin']
+            dim = <NPY.npy_intp> (4 * dims['sFaceJoin'])
             npFaceJoin = NPY.PyArray_SimpleNewFromData(1,
                                                       &dim,
                                                       NPY.NPY_INT32,

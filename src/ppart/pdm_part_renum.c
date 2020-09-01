@@ -786,6 +786,7 @@ PDM_part_renum_method_purge
 )
 {
   if (face_methods != NULL) {
+    // printf("PDM_part_renum_method_purge: face_methods\n");
 
     const int *index =  PDM_Handles_idx_get (face_methods);
     int n_methods = PDM_Handles_n_get (face_methods);
@@ -805,6 +806,7 @@ PDM_part_renum_method_purge
 
   if (cell_methods != NULL) {
 
+    // printf("PDM_part_renum_method_purge: cell_methods\n");
     const int *index =  PDM_Handles_idx_get (cell_methods);
     int n_methods = PDM_Handles_n_get (cell_methods);
 

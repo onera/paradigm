@@ -9,8 +9,8 @@ cdef extern from "pdm_dmesh.h":
     int PDM_dmesh_create(int          dNCell,
                          int          dNFace,
                          int          dNVtx,
-                         int          dNBnd,
-                         int          dNJoin);
+                         int          NBnd,
+                         int          NJoin);
 
     void PDM_dmesh_set(int           id,
                        double       *dVtxCoord,
@@ -19,7 +19,7 @@ cdef extern from "pdm_dmesh.h":
                        PDM_g_num_t  *dFaceCell,
                        int          *dFaceBoundIdx,
                        PDM_g_num_t  *dFaceBound,
-                       int          *dJoinGIds,
+                       int          *JoinGIds,
                        int          *dFaceJoinIdx,
                        PDM_g_num_t  *dFaceJoin);
 
@@ -27,8 +27,8 @@ cdef extern from "pdm_dmesh.h":
                             int        *dNCell,
                             int        *dNFace,
                             int        *dNVtx,
-                            int        *dNBnd,
-                            int        *dNJoins);
+                            int        *NBnd,
+                            int        *NJoins);
 
     void PDM_dmesh_data_get(int            id,
                             double       **dVtxCoord,
@@ -37,7 +37,7 @@ cdef extern from "pdm_dmesh.h":
                             PDM_g_num_t  **dFaceCell,
                             int          **dFaceBoundIdx,
                             PDM_g_num_t  **dFaceBound,
-                            int          **dJoinGIds,
+                            int          **JoinGIds,
                             int          **dFaceJoinIdx,
                             PDM_g_num_t  **dFaceJoin);
 
@@ -58,8 +58,8 @@ cdef class DistributedMesh:
   def __init__(self, dNCell,
                      dNFace,
                      dNVtx,
-                     dNBnd,
-                     dNJoin):
+                     NBnd,
+                     NJoin):
     """
     TODOUX
     """
@@ -68,7 +68,7 @@ cdef class DistributedMesh:
     # ************************************************************************
 
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
-    self._id = PDM_dmesh_create(dNCell, dNFace, dNVtx, dNBnd, dNJoin)
+    self._id = PDM_dmesh_create(dNCell, dNFace, dNVtx, NBnd, NJoin)
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
   # ------------------------------------------------------------------------
@@ -78,7 +78,7 @@ cdef class DistributedMesh:
                       NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] dFaceCell,
                       NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] dFaceBoundIdx,
                       NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] dFaceBound,
-                      NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] dJoinGIds,
+                      NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] JoinGIds,
                       NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] dFaceJoinIdx,
                       NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] dFaceJoin):
     """
@@ -91,7 +91,7 @@ cdef class DistributedMesh:
                   <PDM_g_num_t*> dFaceCell.data,
                   <int*>         dFaceBoundIdx.data,
                   <PDM_g_num_t*> dFaceBound.data,
-                  <int*>         dJoinGIds.data,
+                  <int*>         JoinGIds.data,
                   <int*>         dFaceJoinIdx.data,
                   <PDM_g_num_t*> dFaceJoin.data)
 
@@ -104,6 +104,6 @@ cdef class DistributedMesh:
     # ************************************************************************
     # > Declaration
     # ************************************************************************
-    print 'PDM_dmesh_free'
+    print('PDM_dmesh_free')
     PDM_dmesh_free(self._id)
 

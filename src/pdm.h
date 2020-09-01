@@ -31,6 +31,30 @@
 
 #define PDM_MAX_CHAR_LENGTH 100
 
+/**
+ * \brief Interface to for hexa manipulation
+ * \param [in]       Hex config flags
+ * \param [in]       Flag to test
+ * \param [out]      An integer, 1 if the flag is set, 0 if unset
+ */
+
+#define PDM_HASFLAG( config, flag )   ((config & flag) == flag)
+/**
+ * \brief Interface to for hexa manipulation
+ * \param Arg:       Hex config flags
+ * \param Arg:       Flag to test
+ * \param [out]      The flags as integer
+ */
+#define PDM_SETFLAG( config, flag )   ( config |= flag)
+
+/*
+ * \brief Interface to for hexa manipulation
+ * \param [in]       Hex config flags
+ * \param [in]       flag to test
+ * \param [out]      The flags as integer
+ */
+#define PDM_UNSETFLAG( config, flag ) ( config &= ~flag)
+
 #ifdef __cplusplus
 extern "C" {
 #if 0

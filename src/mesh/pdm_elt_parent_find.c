@@ -21,7 +21,7 @@
 #include "pdm_elt_parent_find.h"
 #include "pdm_part_to_block.h"
 #include "pdm_block_to_block.h"
-#include "pdm_sort.h"
+#include "pdm_quick_sort.h"
 
 #ifdef __cplusplus
 extern "C" {

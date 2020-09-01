@@ -1,16 +1,17 @@
-#ifndef __PDM_ORDER_H__
-#define __PDM_ORDER_H__
+#ifndef __PDM_UNIQUE_H__
+#define __PDM_UNIQUE_H__
 
 /*----------------------------------------------------------------------------
  * Standard C library headers
  *----------------------------------------------------------------------------*/
-
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
 #include "pdm.h"
+#include "pdm_sort.h"
+#include "pdm_quick_sort.h"
 
 /*=============================================================================
  * Macro definitions
@@ -36,57 +37,42 @@ extern "C" {
  *============================================================================*/
 
 /**
- * \brief Order an array
  *
- * \param [in]      size_array       Number of elements
- * \param [in]      new_to_old_order New order (size = \ref nElt
- * \param [in, out] Array            Array to renumber
+ * \brief Unique in place
+ *
+ * \param [inout]   a     Array to sort
+ * \param [in]      l     First element
+ * \param [in]      r     Last  element
  *
  */
-
-void
-PDM_order_array
+int
+PDM_inplace_unique_long
 (
-const int     size_array,
-const size_t  elt_size,
-const int    *new_to_old_order,
-void         *array
+ PDM_g_num_t a[],
+ int l,
+ int r
 );
 
 /**
- * This function is part of Code_Saturne, a general-purpose CFD tool.
- *  Copyright (C) 1998-2014 EDF S.A.
  *
- * \brief Order a strided array of global numbers lexicographically.
+ * \brief Unique in place
  *
- * \param [in]     number array of entity numbers (if NULL, a default 1 to n numbering is considered)
- * \param [in]     stride stride of array (number of values to compare)
- * \param [in,out] order  pre-allocated ordering table
- * \param [in]     nb_ent number of entities considered
+ * \param [inout]   a     Array to sort
+ * \param [in]      l     First element
+ * \param [in]      r     Last  element
+ *
  */
-
-void
-PDM_order_lnum_s
+int
+PDM_inplace_unique_long2
 (
-const int    number[],
-size_t       stride,
-int          order[],
-const size_t nb_ent
-);
-
-
-
-void
-PDM_order_gnum_s
-(
-const PDM_g_num_t number[],
-size_t            stride,
-int               order[],
-const size_t      nb_ent
+ PDM_g_num_t a[],
+ int unique_order[],
+ int l,
+ int r
 );
 
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
 
-#endif /*  __PDM_BINARY_SEARCH_H__ */
+#endif /*  __PDM_SORT_H__ */
