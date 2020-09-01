@@ -212,7 +212,9 @@ int       *array
   }
 
   for (int i = 0; i < sizeArray; ++i) {
-    array[i] = olToNewOrder[oldArray[i]-1] + 1;
+    int old_idx = PDM_ABS(oldArray[i]);
+    int sign    = PDM_SIGN(oldArray[i]);
+    array[i] = sign * (olToNewOrder[old_idx-1] + 1);
   }
 
   free(oldArray);
