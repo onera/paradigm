@@ -236,7 +236,10 @@ extern "C" {
    * \param [in]   id                    Identifier
    * \param [in]   i_point_cloud         Current cloud
    * \param [in]   i_part                Index of partition of the cloud
-   * \param [out]  location_elt_g_num    The global number of the closest element if the point is located,
+   * \param [out]  n_points              Number of points in point cloud
+   * \param [out]  coord                 Coordinates of points in point cloud
+   * \param [out]  g_num                 Global numbers of points in point cloud
+   * \param [out]  location              The global number of the closest element if the point is located,
    *                                     -1 otherwise
    *
    */
@@ -244,21 +247,12 @@ extern "C" {
   void
   PDM_mesh_location_get
   (
-   const int          id,
-   const int          i_point_cloud,
-   const int          i_part,
-   PDM_g_num_t **location_elt_gnum
-   );
-
-  void
-  PDM_mesh_location_get2
-  (
    const int     id,
    const int     i_point_cloud,
    const int     i_part,
    int          *n_points,
-   double      **coords,
-   PDM_g_num_t **gnum,
+   double      **coord,
+   PDM_g_num_t **g_num,
    PDM_g_num_t **location,
    int         **weights_idx,
    double      **weights

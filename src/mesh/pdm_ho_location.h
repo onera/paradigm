@@ -96,11 +96,10 @@ PDM_ho_location
 
 /* Put in other file... */
 int PDM_edge_evaluate_position (const double  x[3],
-                                const double *pts,
-                                double       *closestPoint,
-                                double        closestPointpcoords[1],
+                                const double *vtx_coord,
+                                double       *closest_point,
                                 double       *dist2,
-                                double        closestPointweights[2]);
+                                double        closest_point_weights[2]);
 
 int PDM_tetrahedron_evaluate_position
 (

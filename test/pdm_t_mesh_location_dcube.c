@@ -603,11 +603,6 @@ int main(int argc, char *argv[])
 
   PDM_mesh_location_dump_times (id_loc);
 
-  PDM_g_num_t *location_elt_gnum = NULL;
-  PDM_mesh_location_get (id_loc,
-                         0,//i_point_cloud,
-                         0,//i_part,
-                         &location_elt_gnum);
 
   int p_n_points;
   double      *p_coords      = NULL;
@@ -615,17 +610,17 @@ int main(int argc, char *argv[])
   PDM_g_num_t *p_location    = NULL;
   int         *p_weights_idx = NULL;
   double      *p_weights     = NULL;
-  PDM_mesh_location_get2 (id_loc,
-                          0,//i_point_cloud,
-                          0,//i_part,
-                          &p_n_points,
-                          &p_coords,
-                          &p_gnum,
-                          &p_location,
-                          &p_weights_idx,
-                          &p_weights);
+  PDM_mesh_location_get (id_loc,
+                         0,//i_point_cloud,
+                         0,//i_part,
+                         &p_n_points,
+                         &p_coords,
+                         &p_gnum,
+                         &p_location,
+                         &p_weights_idx,
+                         &p_weights);
 
-#if 1
+
   /* Check results */
   if (my_rank == 0) {
     printf("-- Check\n");
@@ -652,12 +647,12 @@ int main(int argc, char *argv[])
       box_gnum = -1;
     }
 
-    //printf("%d: (%ld) | (%ld)\n", ipt, location_elt_gnum[ipt], box_gnum);
-    if (location_elt_gnum[ipt] != box_gnum) {
+    //printf("%d: (%ld) | (%ld)\n", ipt, p_location[ipt], box_gnum);
+    if (p_location[ipt] != box_gnum) {
       printf("%d (%ld) (%.15lf %.15lf %.15lf): (%ld) | (%ld)\n",
              ipt, pts_gnum[ipt],
              p[0], p[1], p[2],
-             location_elt_gnum[ipt], box_gnum);
+             p_location[ipt], box_gnum);
       printf("weights =");
       for (int l = p_weights_idx[ipt]; l < p_weights_idx[ipt+1]; l++) {
         printf(" %f", p_weights[l]);
@@ -683,7 +678,7 @@ int main(int argc, char *argv[])
       //<<--
     }
   }
-#endif
+
 
   PDM_mesh_location_free (id_loc,
                           0);
