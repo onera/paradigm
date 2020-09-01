@@ -473,12 +473,36 @@ _distrib_data
   PDM_g_num_t _id_max_max = 0;
 
   ptb->n_elt_proc= 0;
+  //for (int i = 0; i < ptb->n_part; i++) {
+  //  ptb->n_elt_proc+= ptb->n_elt[i];
+  //  for (int j = 0; j < ptb->n_elt[i]; j++) {
+  //    _id_max = _MAX (_id_max, ptb->gnum_elt[i][j]);
+  //  }
+  //}
+
+  fflush(stdout);
   for (int i = 0; i < ptb->n_part; i++) {
+    
     ptb->n_elt_proc+= ptb->n_elt[i];
+    if( ptb->i_rank==0 ){
+      printf("line 488 PDM_part_to_block_create line 487 ptb->n_part=%d ptb->n_elt[%d]=%d\n",i,ptb->n_part,ptb->n_elt[i]);
+      fflush(stdout);
+    }
+
     for (int j = 0; j < ptb->n_elt[i]; j++) {
+
+      if( ptb->i_rank==0 ){
+        printf("\tPDM_part_to_block_create ptb->gnum_elt[%d][%d]=%d\n", i,j,ptb->gnum_elt[i][j]);
+        fflush(stdout);
+      }
+
       _id_max = _MAX (_id_max, ptb->gnum_elt[i][j]);
+      //printf("\t\ttoto _id_max=%d\n", _id_max);
+      fflush(stdout);
     }
   }
+
+
 
   if(user_distrib == 0) {
 
@@ -1153,12 +1177,35 @@ PDM_part_to_block_exch
 )
 {
   _pdm_part_to_block_t *_ptb = (_pdm_part_to_block_t *) ptb;
+  
+  if ( _ptb->i_rank==0 )printf("line 1181 PDM_part_to_block_exch s_data=%d\n",s_data);
+  fflush(stdout);
+  if ( _ptb->i_rank==0 )printf("line 1183 PDM_part_to_block_exch cst_stride=%d\n",cst_stride);
+  fflush(stdout);
+  
+  if ( _ptb->i_rank==0 )printf("line 1186 PDM_part_to_block_exch _ptb->n_elt[0]=%d\n",_ptb->n_elt[0]);
+
+  //*
+  if ( _ptb->i_rank==0 ){
+    //for (int i = 0; i < _ptb->n_part; i++) {
+      for (int j = 0; j < _ptb->n_elt[0]; j++) {
+        printf("line 1191 PDM_part_to_block_exch part_data[%d]==%d\n",j,part_data[j]);
+        fflush(stdout);
+      }
+    //}
+  }
+  //*/
+
 
   if ((_ptb->t_post == PDM_PART_TO_BLOCK_POST_MERGE) &&
       (t_stride ==  PDM_STRIDE_CST)) {
     PDM_error(__FILE__, __LINE__, 0,"PDM_part_to_block_exch : PDM_writer_STRIDE_CST is not compatible PDM_writer_POST_MERGE post\n");
     abort ();
   }
+  
+  if ( _ptb->i_rank==0 )printf("line 1201 PDM_part_to_block_exch\n");
+  fflush(stdout);
+
 
   size_t *i_send_buffer = (size_t *) malloc (sizeof(size_t) * _ptb->s_comm);
   size_t *i_recv_buffer = (size_t *) malloc (sizeof(size_t) * _ptb->s_comm);
@@ -1203,6 +1250,10 @@ PDM_part_to_block_exch
     /*
      * Build buffers
      */
+
+  printf("line 1251 PDM_part_to_block_exch\n");
+  fflush(stdout);
+
 
     for (int i = 0; i < _ptb->s_comm; i++) {
       int ibeg = _ptb->i_send_data[i];
@@ -1261,6 +1312,10 @@ PDM_part_to_block_exch
   /*
    * Data exchange
    */
+  
+  printf("line 1313 PDM_part_to_block_exch Data exchange\n");
+  fflush(stdout);
+
 
   unsigned char *send_buffer = (unsigned char *) malloc(sizeof(unsigned char) * s_send_buffer);
   unsigned char *recv_buffer = (unsigned char *) malloc(sizeof(unsigned char) * s_recv_buffer);
