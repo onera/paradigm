@@ -332,7 +332,7 @@ PDM_gnum_location_compute
     _gloc->location_idx[i] = malloc (sizeof(int) * (_gloc->n_elts_out[i] + 1));
     _gloc->location_idx[i][0] = 0;
     for (int j = 0; j < _gloc->n_elts_out[i]; j++) {
-      _gloc->location_idx[i][j+1] = _gloc->location_idx[i][j] + part_stride[i][j];;
+      _gloc->location_idx[i][j+1] = _gloc->location_idx[i][j] + part_stride[i][j];
     }
   }
   free (block_stride);
@@ -356,7 +356,7 @@ PDM_gnum_location_compute
  *
  * \param [in]    id             Identifier
  * \param [in]    i_part_out     Current partition
- * \param [out]   location_idx   Index in the location arrays (size = 3 * \ref n_elts + 1)
+ * \param [out]   location_idx   Index in the location arrays (size = \ref n_elts + 1)
  * \param [out]   location       Locations of each element
  *                                (Three informations : process, partition, element)
  *
@@ -393,7 +393,7 @@ PDM_gnum_location_free
 )
 {
   _pdm_gnum_location_t *_gloc = _get_from_id (id);
-
+  
   free (_gloc->n_elts_in);
   free (_gloc->g_nums_in);
 

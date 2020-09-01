@@ -87,6 +87,22 @@ typedef struct {
                                                          reveived data (size = block_n_elt) */
 
 
+  /* Asynchrone */
+  int              max_exch_request;
+  int              next_request;
+  size_t*          s_data;
+  PDM_stride_t*    t_stride;
+  int*             cst_stride;
+  int*             wait_status; /* 0 - Send / 1 - Is recv / 2 - Is treated */
+  PDM_MPI_Request* request_mpi;
+  unsigned char**  send_buffer;
+  unsigned char**  recv_buffer;
+  int**            recv_stride;
+  int**            n_send_buffer; // TODO -> size_t if long
+  int**            i_send_buffer;
+  int**            n_recv_buffer;
+  int**            i_recv_buffer;
+
 } _pdm_part_to_block_t;
 
 /*=============================================================================

@@ -36,6 +36,135 @@ extern "C" {
  * Static function definitions
  *============================================================================*/
 
+
+/**
+ * This function is part of Code_Saturne, a general-purpose CFD tool.
+ *  Copyright (C) 1998-2014 EDF S.A.
+ *
+ * \brief Descend binary tree for the lexicographical ordering of a strided array
+ *
+ * \param [in]     number pointer to numbers of entities that should be ordered.
+ * \param [in]            (if NULL, a default 1 to n numbering is considered)
+ * \param [in]     stride stride of array (number of values to compare)
+ * \param [in]     level  level of the binary tree to descend
+ * \param [in]     nb_ent number of entities in the binary tree to descend
+ * \param [in,out] order  ordering array
+ */
+
+static inline void
+_order_lnum_descend_tree_s
+(
+const int    number[],
+size_t       stride,
+size_t       level,
+const size_t nb_ent,
+int          order[]
+)
+{
+  size_t i_save, i1, i2, j, lv_cur;
+
+  i_save = (size_t)(order[level]);
+
+  while (level <= (nb_ent/2)) {
+
+    lv_cur = (2*level) + 1;
+
+    if (lv_cur < nb_ent - 1) {
+
+      i1 = (size_t)(order[lv_cur+1]);
+      i2 = (size_t)(order[lv_cur]);
+
+      for (j = 0; j < stride; j++) {
+        if (number[i1*stride + j] != number[i2*stride + j])
+          break;
+      }
+
+      if (j < stride) {
+        if (number[i1*stride + j] > number[i2*stride + j])
+          lv_cur++;
+      }
+
+    }
+
+    if (lv_cur >= nb_ent) break;
+
+    i1 = i_save;
+    i2 = (size_t)(order[lv_cur]);
+
+    for (j = 0; j < stride; j++) {
+      if (number[i1*stride + j] != number[i2*stride + j])
+        break;
+    }
+
+    if (j == stride) break;
+    if (number[i1*stride + j] >= number[i2*stride + j]) break;
+
+    order[level] = order[lv_cur];
+    level = lv_cur;
+
+  }
+
+  order[level] = (int) i_save;
+}
+
+
+
+static inline void
+_order_gnum_descend_tree_s
+(
+const PDM_g_num_t number[],
+size_t            stride,
+size_t            level,
+const size_t      nb_ent,
+int               order[]
+)
+{
+  size_t i_save, i1, i2, j, lv_cur;
+
+  i_save = (size_t)(order[level]);
+
+  while (level <= (nb_ent/2)) {
+
+    lv_cur = (2*level) + 1;
+
+    if (lv_cur < nb_ent - 1) {
+
+      i1 = (size_t)(order[lv_cur+1]);
+      i2 = (size_t)(order[lv_cur]);
+
+      for (j = 0; j < stride; j++) {
+        if (number[i1*stride + j] != number[i2*stride + j])
+          break;
+      }
+
+      if (j < stride) {
+        if (number[i1*stride + j] > number[i2*stride + j])
+          lv_cur++;
+      }
+
+    }
+
+    if (lv_cur >= nb_ent) break;
+
+    i1 = i_save;
+    i2 = (size_t)(order[lv_cur]);
+
+    for (j = 0; j < stride; j++) {
+      if (number[i1*stride + j] != number[i2*stride + j])
+        break;
+    }
+
+    if (j == stride) break;
+    if (number[i1*stride + j] >= number[i2*stride + j]) break;
+
+    order[level] = order[lv_cur];
+    level = lv_cur;
+
+  }
+
+  order[level] = (int) i_save;
+}
+
 /*=============================================================================
  * Public function definitions
  *============================================================================*/
@@ -113,7 +242,7 @@ const size_t nb_ent
   i = (nb_ent / 2) ;
   do {
     i--;
-    PDM_order_lnum_descend_tree_s(number, stride, i, nb_ent, order);
+    _order_lnum_descend_tree_s(number, stride, i, nb_ent, order);
   } while (i > 0);
 
   /* Sort binary tree */
@@ -122,79 +251,61 @@ const size_t nb_ent
     o_save   = order[0];
     order[0] = order[i];
     order[i] = o_save;
-    PDM_order_lnum_descend_tree_s(number, stride, 0, i, order);
+    _order_lnum_descend_tree_s(number, stride, 0, i, order);
   }
 }
+
+
 
 
 /**
  * This function is part of Code_Saturne, a general-purpose CFD tool.
  *  Copyright (C) 1998-2014 EDF S.A.
  *
- * \brief Descend binary tree for the lexicographical ordering of a strided array
+ * \brief Order a strided array of global numbers lexicographically.
  *
- * \param [in]     number pointer to numbers of entities that should be ordered.
- * \param [in]            (if NULL, a default 1 to n numbering is considered)
+ * \param [in]     number array of entity numbers (if NULL, a default 1 to n numbering is considered)
  * \param [in]     stride stride of array (number of values to compare)
- * \param [in]     level  level of the binary tree to descend
- * \param [in]     nb_ent number of entities in the binary tree to descend
- * \param [in,out] order  ordering array
+ * \param [in,out] order  pre-allocated ordering table
+ * \param [in]     nb_ent number of entities considered
  */
 
 void
-PDM_order_lnum_descend_tree_s
+PDM_order_gnum_s
 (
-const int    number[],
-size_t       stride,
-size_t       level,
-const size_t nb_ent,
-int          order[]
+const PDM_g_num_t number[],
+size_t            stride,
+int               order[],
+const size_t      nb_ent
 )
 {
-  size_t i_save, i1, i2, j, lv_cur;
+  size_t i;
+  int o_save;
 
-  i_save = (size_t)(order[level]);
+  /* Initialize ordering array */
 
-  while (level <= (nb_ent/2)) {
+  for (i = 0 ; i < nb_ent ; i++)
+    order[i] = (int) i;
 
-    lv_cur = (2*level) + 1;
+  if (nb_ent < 2)
+    return;
 
-    if (lv_cur < nb_ent - 1) {
+  /* Create binary tree */
 
-      i1 = (size_t)(order[lv_cur+1]);
-      i2 = (size_t)(order[lv_cur]);
+  i = (nb_ent / 2) ;
+  do {
+    i--;
+    _order_gnum_descend_tree_s(number, stride, i, nb_ent, order);
+  } while (i > 0);
 
-      for (j = 0; j < stride; j++) {
-        if (number[i1*stride + j] != number[i2*stride + j])
-          break;
-      }
+  /* Sort binary tree */
 
-      if (j < stride) {
-        if (number[i1*stride + j] > number[i2*stride + j])
-          lv_cur++;
-      }
-
-    }
-
-    if (lv_cur >= nb_ent) break;
-
-    i1 = i_save;
-    i2 = (size_t)(order[lv_cur]);
-
-    for (j = 0; j < stride; j++) {
-      if (number[i1*stride + j] != number[i2*stride + j])
-        break;
-    }
-
-    if (j == stride) break;
-    if (number[i1*stride + j] >= number[i2*stride + j]) break;
-
-    order[level] = order[lv_cur];
-    level = lv_cur;
-
+  for (i = nb_ent - 1 ; i > 0 ; i--) {
+    o_save   = order[0];
+    order[0] = order[i];
+    order[i] = o_save;
+    _order_gnum_descend_tree_s(number, stride, 0, i, order);
   }
-
-  order[level] = (int) i_save;
 }
 
 

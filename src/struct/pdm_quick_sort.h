@@ -1,5 +1,5 @@
-#ifndef __PDM_ORDER_H__
-#define __PDM_ORDER_H__
+#ifndef __PDM_QUICK_SORT_H__
+#define __PDM_QUICK_SORT_H__
 
 /*----------------------------------------------------------------------------
  * Standard C library headers
@@ -27,6 +27,7 @@ extern "C" {
  * Type
  *============================================================================*/
 
+
 /*=============================================================================
  * Static global variables
  *============================================================================*/
@@ -36,57 +37,83 @@ extern "C" {
  *============================================================================*/
 
 /**
- * \brief Order an array
  *
- * \param [in]      size_array       Number of elements
- * \param [in]      new_to_old_order New order (size = \ref nElt
- * \param [in, out] Array            Array to renumber
+ * \brief Quick sort
+ *
+ * \param [inout]   a     Array to sort
+ * \param [in]      l     First element
+ * \param [in]      r     Last  element
  *
  */
-
 void
-PDM_order_array
+PDM_quick_sort_long
 (
-const int     size_array,
-const size_t  elt_size,
-const int    *new_to_old_order,
-void         *array
+ PDM_g_num_t a[],
+ int l,
+ int r
+);
+
+
+/**
+ *
+ * \brief Quick sort
+ *
+ * \param [inout]   a     Array to sort
+ * \param [in]      l     First element
+ * \param [in]      r     Last  element
+ *
+ */
+void
+PDM_quick_sort_int
+(
+ int a[],
+ int l,
+ int r
 );
 
 /**
- * This function is part of Code_Saturne, a general-purpose CFD tool.
- *  Copyright (C) 1998-2014 EDF S.A.
  *
- * \brief Order a strided array of global numbers lexicographically.
+ * \brief Quick sort
  *
- * \param [in]     number array of entity numbers (if NULL, a default 1 to n numbering is considered)
- * \param [in]     stride stride of array (number of values to compare)
- * \param [in,out] order  pre-allocated ordering table
- * \param [in]     nb_ent number of entities considered
+ * \param [inout]   a     Array to sort
+ * \param [in]      l     First element
+ * \param [in]      r     Last  element
+ * \param [inout]   c     Array sorted as a
+ *
  */
 
 void
-PDM_order_lnum_s
+PDM_quick_sort_long2
 (
-const int    number[],
-size_t       stride,
-int          order[],
-const size_t nb_ent
+ PDM_g_num_t a[],
+ int          l,
+ int          r,
+ int          c[]
 );
 
-
+/**
+ *
+ * \brief Quick sort
+ *
+ * \param [inout]   a     Array to sort
+ * \param [in]      l     First element
+ * \param [in]      r     Last  element
+ * \param [inout]   c     Array sorted as a
+ *
+ */
 
 void
-PDM_order_gnum_s
+PDM_quick_sort_int2
 (
-const PDM_g_num_t number[],
-size_t            stride,
-int               order[],
-const size_t      nb_ent
+ int          a[],
+ int          l,
+ int          r,
+ int          c[]
 );
+
 
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
 
-#endif /*  __PDM_BINARY_SEARCH_H__ */
+#endif /*  __PDM_QUICK_SORT_H__ */

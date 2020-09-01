@@ -24,21 +24,21 @@
 
 typedef struct  _subpartlayout_t {
 
-  int           n_sdom;                  /*!< Number of subDomain                     */
+  int           n_sdom;                   /*!< Number of subDomain                     */
   int           n_face_int;               /*!< Number of Interior face                 */
   int           n_face_ext;               /*!< Number of Exterior face                 */
 
   /* Idx array of displacement */
   int*          cell_tile_idx;           /*!< Cell Tile Index     (Size = n_sdom + 1)   */
   int*          face_tile_idx;           /*!< Face Tile Index     (Size = n_sdom + 1)   */
-  int*          face_bnd_tile_idx;        /*!< Face Bnd Tile Index (Size = n_sdom + 1)   */
+  int*          face_bnd_tile_idx;       /*!< Face Bnd Tile Index (Size = n_sdom + 1)   */
 
   /* Idx array of displacement */
   int*          mask_tile_idx;           /*!< Mask Tile Index   (Size = n_sdom + 1)     */
-  int*          cell_vect_tile_idx;       /*!< Cell Tile Index   (Size = n_sdom + 1)     */
+  int*          cell_vect_tile_idx;      /*!< Cell Tile Index   (Size = n_sdom + 1)     */
   int*          mask_tile_n;             /*!< Mask Tile number  (Size = n_sdom + 1)     */
-  int*          cell_vect_tile_n;         /*!< Cell Tile number  (Size = n_sdom + 1)     */
-  int*          mask_tile;              /*!< Mask Tile number                         */
+  int*          cell_vect_tile_n;        /*!< Cell Tile number  (Size = n_sdom + 1)     */
+  int*          mask_tile;               /*!< Mask Tile number                          */
 
 
 } _subpartlayout_t;
@@ -56,13 +56,13 @@ typedef struct  _part_t {
   int           n_vtx;               /*!< Number of vertices                   */
   int           n_cell;              /*!< Number of cells                      */
   int           n_face;              /*!< Number of faces                      */
-  int           n_face_part_bound;     /*!< Number of partitioning boundary faces*/
-  int           n_face_group;         /*!< Number of boundary faces             */
+  int           n_face_part_bound;   /*!< Number of partitioning boundary faces*/
+  int           n_face_group;        /*!< Number of boundary faces             */
 
   int          *cell_face_idx;        /*!< Cell face connectivity index
                                       (size = n_cell + 1)                      */
-  PDM_g_num_t *gcell_face;          /*!< Global numbering cell face connectivity
-                                      (size = cell_face_idx[n_cell])             */
+  PDM_g_num_t *gcell_face;           /*!< Global numbering cell face connectivity
+                                      (size = cell_face_idx[n_cell])           */
   int          *cell_face;           /*!< Cell face connectivity
                                       (size = cell_face_idx[n_cell])             */
   PDM_g_num_t *cell_ln_to_gn;         /*!< Local to global cell numbering

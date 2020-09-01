@@ -90,22 +90,29 @@ char *argv[]
                                 // Second
                                 0, 0, 1,
                                 0, 0, 2};
+  // Cas avec croisement to check order in recv_data
+  // int connect_triplet_j2[12] = {// First
+  //                               0, 0, 1,
+  //                               0, 0, 2,
+  //                               // Second
+  //                               0, 0, 0,
+  //                               0, 0, 1};
 
   /*
    * Data
    */
   // Test with stride = 1
-  // int stride = 1;
-  // int point_list_j1[3] = {101, 201, 301};
-  // int point_list_j2[2] = {102, 202};
+  int stride = 1;
+  int point_list_j1[3] = {101, 201, 301};
+  int point_list_j2[2] = {102, 202};
 
   // Test with stride = 2
-  int stride = 2;
-  int point_list_j1[6] = {101, 1010,
-                          201, 2010,
-                          301, 3010};
-  int point_list_j2[4] = {102, 1020,
-                          202, 2020};
+  // int stride = 2;
+  // int point_list_j1[6] = {101, 1010,
+  //                         201, 2010,
+  //                         301, 3010};
+  // int point_list_j2[4] = {102, 1020,
+  //                         202, 2020};
 
   // Test 1 :
   // int point_list_var_j1[6] = {101, 1010,
@@ -208,7 +215,8 @@ char *argv[]
    * Constant stride test
    */
   int** recv_entity_data = NULL;
-  PDM_distant_neighbor_exch(pdn_id,
+  // PDM_distant_neighbor_exch(pdn_id,
+  PDM_distant_neighbor_exch_int(pdn_id,
                             sizeof(int),
                             PDM_STRIDE_CST,
                             stride,
@@ -230,6 +238,7 @@ char *argv[]
       log_trace("\n");
     }
   }
+  return;
 
   /*
    * Variable stride test
@@ -253,7 +262,8 @@ char *argv[]
 
   int** recv_entity_var_stri = NULL;
   int** recv_entity_var_data = NULL;
-  PDM_distant_neighbor_exch(pdn_id,
+  // PDM_distant_neighbor_exch(pdn_id,
+  PDM_distant_neighbor_exch_int(pdn_id,
                             sizeof(int),
                             PDM_STRIDE_VAR,
                             -1,

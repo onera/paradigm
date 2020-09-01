@@ -45,6 +45,12 @@ enum {X, Y, Z};
 #define PDM_MAX(a,b)   ((a) > (b) ?  (a) : (b))
 
 /**
+ * Sign of value
+ */
+
+#define PDM_SIGN(a)  (a > 0) ? 1 : ((a < 0) ? -1 : 0)
+
+/**
  * Dot product
  */
 

@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
@@ -11,6 +12,9 @@
 
 #include "pdm.h"
 #include "pdm_sort.h"
+#include "pdm_quick_sort.h"
+#include "pdm_radix_sort.h"
+// #include "pdm_sort_std.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -105,8 +109,6 @@ double *b
 /*=============================================================================
  * Public function definitions
  *============================================================================*/
-
-
 
 /**
  *
@@ -673,197 +675,111 @@ PDM_sort_double
   return;
 }
 
-/**
- *
- * \brief Quick sort
- *
- * \param [inout]   a     Array to sort
- * \param [in]      l     First element
- * \param [in]      r     Last  element
- *
- */
-void
-PDM_quick_sort_long
-(
- PDM_g_num_t a[],
- int l,
- int r
-)
-{
-  if (l < r) {
-    int j = r+1;
-    PDM_g_num_t t;
-    PDM_g_num_t pivot = a[l];
-    int i = l;
-
-    while(1) {
-      do ++i; while (a[i] <= pivot && i < r);
-      do --j; while (a[j] > pivot);
-      if (i >= j) break;
-
-      t    = a[i];
-      a[i] = a[j];
-      a[j] = t;
-
-    }
-    t    = a[l];
-    a[l] = a[j];
-    a[j] = t;
-
-    PDM_quick_sort_long(a, l  , j-1);
-    PDM_quick_sort_long(a, j+1,   r);
-  }
-}
-
 
 /**
  *
- * \brief Quick sort
+ * \brief Indirect sort of structure according to a user comparison function
  *
- * \param [inout]   a     Array to sort
- * \param [in]      l     First element
- * \param [in]      r     Last  element
- *
- */
-void
-PDM_quick_sort_int
-(
- int a[],
- int l,
- int r
-)
-{
-  if (l < r) {
-    int j = r+1;
-    int t;
-    int pivot = a[l];
-    int i = l;
-
-    while(1) {
-      do ++i; while (a[i] <= pivot && i < r);
-      do --j; while (a[j] > pivot);
-      if (i >= j) break;
-
-      t    = a[i];
-      a[i] = a[j];
-      a[j] = t;
-
-    }
-    t    = a[l];
-    a[l] = a[j];
-    a[j] = t;
-
-    PDM_quick_sort_int(a, l  , j-1);
-    PDM_quick_sort_int(a, j+1,   r);
-  }
-}
-
-/**
- *
- * \brief Quick sort 2
- *
- * \param [inout]   a     Array to sort
- * \param [in]      l     First element
- * \param [in]      r     Last  element
- * \param [inout]   c     Array sorted as a
+ * \param [inout] array        Array to sort
+ * \param [in]    lArray       Array length
+ * \param [in]    lArray       User compare function (return int )
+ * \param [in]    lArray       Context anonymous pointer to a struct to perfomr user compare
  *
  */
 void
-PDM_quick_sort_int2
+PDM_sort_int_special
 (
- int          a[],
- int          l,
- int          r,
- int          c[]
+ int                  *array,
+ int                   lArray,
+ pdm_operator_compare  comp,
+ void*                 context
 )
 {
-  if (l < r) {
-    int j = r+1;
-    int  t, v;
-    int pivot = a[l];
-    int i = l;
+  /* size of subarray sorted by straight insertion */
+  const int M = 7;
+  /* default size of the stack */
+  int sizeStack = 64; /* default size of the stack */
+  int jstack = -1;
+  int l = 0;
+  int i;
+  int j;
+  int ir = lArray - 1;
+  PDM_g_num_t a;
+  // int        b;
+  int *istack = (int *) malloc (sizeof(int) * sizeStack);
 
-    while(1) {
-      do ++i; while (a[i] <= pivot && i < r);
-      do --j; while (a[j] > pivot);
-      if (i >= j) break;
-
-      t    = a[i];
-      a[i] = a[j];
-      a[j] = t;
-
-      v    = c[i];
-      c[i] = c[j];
-      c[j] = v;
+  for (;;) {
+    if ( ir-l < M ) {
+      for (j = l+1; j <= ir; ++j) {
+        a = array[j];
+        for(i = j-1; i >= l; --i) {
+          if (comp(&array[i], &a       , context)) {
+            break;
+          }
+          array[i+1] = array[i];
+        }
+        array[i+1] = a;
+      }
+      if (jstack < 0) {
+        break;
+      }
+      ir = istack[jstack--];
+      l  = istack[jstack--];
     }
-    t    = a[l];
-    a[l] = a[j];
-    a[j] = t;
+    else{
+      int k = (l+ir) / 2;
+      _swap_long (&(array[k]), &(array[l+1]));
+      if ( comp(&array[ir], &array[l], context) ){
+        _swap_long (&(array[l]), &(array[ir]));
+      }
+      if ( comp(&array[ir], &array[l+1], context) ) {
+        _swap_long (&(array[l+1]), &(array[ir]));
+      }
+      if ( comp(&array[l+1], &array[l], context) ) {
+        _swap_long (&(array[l]), &(array[l+1]));
+      }
+      i = l + 1;
+      j = ir;
+      a = array[l+1];
+      for (;;) {
+        do {
+          ++i;
+        } while (comp(&array[i], &a       , context));
+        do {
+          --j;
+        } while (comp(&a       , &array[j], context));
 
-    v    = c[l];
-    c[l] = c[j];
-    c[j] = v;
+        if (j < i) {
+          break;
+        }
+        _swap_long (&(array[i]), &(array[j]));
+      }
 
-    PDM_quick_sort_int2(a, l  , j-1, c);
-    PDM_quick_sort_int2(a, j+1,   r, c);
-  }
-}
+      array[l+1] = array[j];
+      array[j] = a;
+      jstack += 2;
 
-/**
- *
- * \brief Quick sort
- *
- * \param [inout]   a     Array to sort
- * \param [in]      l     First element
- * \param [in]      r     Last  element
- * \param [inout]   c     Array sorted as a
- *
- */
+      if (jstack >= sizeStack) {
+        sizeStack *= 2;
+        istack = (int *) realloc (istack, sizeof(int) * sizeStack);
+      }
 
-void
-PDM_quick_sort_long2
-(
- PDM_g_num_t a[],
- int          l,
- int          r,
- int          c[]
-)
-{
-  if (l < r) {
-    int j = r+1;
-
-    PDM_g_num_t t;
-    int v;
-    PDM_g_num_t pivot = a[l];
-    int i = l;
-
-    while(1) {
-      do ++i; while (a[i] <= pivot && i < r);
-      do --j; while (a[j] > pivot);
-      if (i >= j) break;
-
-      t    = a[i];
-      a[i] = a[j];
-      a[j] = t;
-
-      v    = c[i];
-      c[i] = c[j];
-      c[j] = v;
+      if (ir-i+1 >= j-1) {
+        istack[jstack  ] = ir;
+        istack[jstack-1] = i;
+        ir = j -1;
+      }
+      else {
+        istack[jstack  ] = j -1;
+        istack[jstack-1] = l;
+        l = i;
+      }
     }
-    t    = a[l];
-    a[l] = a[j];
-    a[j] = t;
-
-    v    = c[l];
-    c[l] = c[j];
-    c[j] = v;
-
-    PDM_quick_sort_long2(a, l  , j-1, c);
-    PDM_quick_sort_long2(a, j+1,   r, c);
   }
+  free (istack);
+  return;
+
 }
-
-
 
 #ifdef __cplusplus
 }

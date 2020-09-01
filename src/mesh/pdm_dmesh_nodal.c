@@ -21,7 +21,7 @@
 #include "pdm_printf.h"
 #include "pdm_error.h"
 #include "pdm_gnum.h"
-#include "pdm_sort.h"
+#include "pdm_quick_sort.h"
 #include "pdm_geom_elem.h"
 
 #ifdef __cplusplus
