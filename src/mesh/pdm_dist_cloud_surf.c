@@ -873,7 +873,7 @@ PDM_dist_cloud_surf_compute
     free (closest_vertices_dist2);
 
     PDM_dbbtree_free (dbbt);
-    PDM_boxes_destroy (surf_mesh_boxes);
+    PDM_box_set_destroy (&surf_mesh_boxes);
 
     free (nElts);
     free (gNum);

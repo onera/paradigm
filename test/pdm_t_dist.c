@@ -791,6 +791,13 @@ int main(int argc, char *argv[])
     }
   }
 
+  for (int i_part = 0; i_part < n_part; i_part++) {
+    free (cell_center[i_part]);
+    free (cell_volume[i_part]);
+  }
+  free (cell_center);
+  free (cell_volume);
+
   PDM_part_free(ppart_id);
 
   PDM_dcube_gen_free(id);
