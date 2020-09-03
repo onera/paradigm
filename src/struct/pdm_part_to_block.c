@@ -1331,6 +1331,14 @@ PDM_part_to_block_exch
       for (int j = 1; j < _ptb->n_elt[i] + 1; j++)
         i_part[j] = i_part[j-1] + (part_stride[i][j-1] * (int) s_data);
     }
+    
+    if ( _ptb->i_rank==0 ){
+      printf("line %d PDM_part_to_block_exch  _ptb->dest_proc[%d]=%d\n",__LINE__,idx,_ptb->dest_proc[idx]);
+      fflush(stdout);
+      //printf("line %d PDM_part_to_block_exch s_octet_elt=%d\n",__LINE__,s_octet_elt);
+      //fflush(stdout);
+    }
+
 
     for (int j = 0; j < _ptb->n_elt[i]; j++) {
       int iproc = _ptb->dest_proc[++idx];
