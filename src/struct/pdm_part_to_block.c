@@ -1178,18 +1178,21 @@ PDM_part_to_block_exch
 {
   _pdm_part_to_block_t *_ptb = (_pdm_part_to_block_t *) ptb;
   
-  if ( _ptb->i_rank==0 )printf("line 1181 PDM_part_to_block_exch s_data=%d\n",s_data);
-  fflush(stdout);
-  if ( _ptb->i_rank==0 )printf("line 1183 PDM_part_to_block_exch cst_stride=%d\n",cst_stride);
-  fflush(stdout);
-  
+  if ( _ptb->i_rank==0 ){
+    printf("line 1181 PDM_part_to_block_exch s_data=%lu\n",s_data);
+    fflush(stdout);
+  }
+  if ( _ptb->i_rank==0 ){
+    printf("line 1183 PDM_part_to_block_exch cst_stride=%d\n",cst_stride);
+    fflush(stdout);
+  }
   if ( _ptb->i_rank==0 )printf("line 1186 PDM_part_to_block_exch _ptb->n_elt[0]=%d\n",_ptb->n_elt[0]);
 
   //*
   if ( _ptb->i_rank==0 ){
     //for (int i = 0; i < _ptb->n_part; i++) {
       for (int j = 0; j < _ptb->n_elt[0]; j++) {
-        printf("line 1191 PDM_part_to_block_exch part_data[%d]==%d\n",j,part_data[j]);
+        printf("line 1191 PDM_part_to_block_exch part_data[%d]==%d\n",j,(( int **) part_data)[0][j]);
         fflush(stdout);
       }
     //}
@@ -1353,15 +1356,31 @@ PDM_part_to_block_exch
         i_part_elt  = i_part[j];
       }
 
+
+  if ( _ptb->i_rank==0 ){
+    printf("line 361 PDM_part_to_block_exch s_octet_elt=%d\n",s_octet_elt);
+    fflush(stdout);
+  }
+
+
       for (int k = 0; k < s_octet_elt; k++) {
         send_buffer[i_send_buffer[iproc] + n_send_buffer[iproc]++] =
           _part_data[i][i_part_elt + k];
       }
     }
 
+
+
     if (i_part != NULL)
       free (i_part);
   }
+
+  if ( _ptb->i_rank==0 ){
+    printf("line 1379 PDM_part_to_block_exch\n");
+    fflush(stdout);
+  }
+
+
 
   PDM_MPI_Alltoallv_l(send_buffer,
                       n_send_buffer,
