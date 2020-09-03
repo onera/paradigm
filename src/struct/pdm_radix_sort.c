@@ -513,13 +513,13 @@ PDM_radix_sort_long
 
   // Il faut trouver le max dans la base pour reprensenter le min et le max
   //  --> si beaucoup d'écart on tente la moyenne
-  int* tmp = (int *) malloc( (lArray+1) * sizeof(int));
+  PDM_g_num_t* tmp = (PDM_g_num_t *) malloc( (lArray+1) * sizeof(PDM_g_num_t));
 
   int place = (int) pow(_radix_base, (n_step-1));
   int place_power = _radix_shift*(n_step-1);
 
   printf("PDM_radix_sort_long::place ::%d \n", place);
-  printf("PDM_radix_sort_long::max   ::%d \n", max);
+  printf("PDM_radix_sort_long::max   ::"PDM_FMT_G_NUM" \n", max);
   printf("PDM_radix_sort_long::n_step::%d \n", n_step);
   // abort();
 

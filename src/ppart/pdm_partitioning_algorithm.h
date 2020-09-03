@@ -177,10 +177,10 @@ PDM_part_dcoordinates_to_pcoordinates
 (
   const PDM_MPI_Comm    comm,
   const int             n_part,
-  const int            *vertex_distribution,
+  const PDM_g_num_t    *vertex_distribution,
   const double         *dvtx_coord,
   const int            *pn_vtx,
-  const int           **pvtx_ln_to_gn,
+  const PDM_g_num_t   **pvtx_ln_to_gn,
         double       ***pvtx_coord
 );
 

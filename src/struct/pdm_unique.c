@@ -120,7 +120,7 @@ PDM_inplace_unique_long2
   int first = a[l];
   for(int i = 1; i < array_size; ++i ) {
     if(a[i] < first){
-      printf("The list is not sorted : a[%d] = %d > a[%d] = %d \n", i-1, first, i, a[i]);
+      printf("The list is not sorted : a[%d] = %d > a[%d] = "PDM_FMT_G_NUM" \n", i-1, first, i, a[i]);
       // printf("Problem with list size : %d\n", itest);
       abort();
     }

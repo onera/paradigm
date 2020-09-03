@@ -221,9 +221,9 @@ char *argv[]
                             PDM_STRIDE_CST,
                             stride,
                             NULL,
-                 (void**)   send_entity_data,
+                            send_entity_data,
                             NULL,
-                 (void***) &recv_entity_data);
+                           &recv_entity_data);
 
   if(1 == 1){
     log_trace(" Constant strid exchange results ---- \n");
@@ -238,7 +238,7 @@ char *argv[]
       log_trace("\n");
     }
   }
-  return;
+  return 0;
 
   /*
    * Variable stride test
@@ -268,9 +268,9 @@ char *argv[]
                             PDM_STRIDE_VAR,
                             -1,
                             send_entity_var_stri,
-                 (void**)   send_entity_var_data,
+                           send_entity_var_data,
                  (int***) &recv_entity_var_stri,
-                 (void***)&recv_entity_var_data);
+                          &recv_entity_var_data);
 
   log_trace(" Variable strid exchange results ---- \n");
   if(1 == 1){
@@ -313,4 +313,3 @@ char *argv[]
   return 0;
 
 }
-

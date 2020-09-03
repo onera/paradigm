@@ -45,10 +45,10 @@ typedef enum {
  *============================================================================*/
 
 void
-PDM_compress_connectivity
+PDM_para_graph_compress_connectivity
 (
  PDM_g_num_t *dual_graph,
- int         *dual_graph_idx,
+ PDM_g_num_t *dual_graph_idx,
  int         *dual_graph_n,
  int          dn_elt
 );
@@ -65,7 +65,7 @@ PDM_para_graph_dual_from_arc2node
  const PDM_g_num_t     *graph_node_distrib,
  const PDM_g_num_t     *graph_arc_distrib,
  const PDM_g_num_t     *darc_to_node,
-       int            **dual_graph_idx,
+       PDM_g_num_t    **dual_graph_idx,
        PDM_g_num_t    **dual_graph,
  const int              compute_dnode_to_arc,
        int            **dnode_to_arc_idx,
@@ -85,7 +85,7 @@ PDM_para_graph_dual_from_node2arc
  const PDM_g_num_t     *graph_arc_distrib,
  const int             *dnode_arc_idx,
  const PDM_g_num_t     *dnode_arc,
-       int            **dual_graph_idx,
+       PDM_g_num_t    **dual_graph_idx,
        PDM_g_num_t    **dual_graph
 
 );
@@ -95,11 +95,11 @@ PDM_para_graph_dual_from_node2arc
  * \brief Call the chosen graph partitioner to split the dual graph
 */
 void
-PDM_split_dual_graph
+PDM_para_graph_split
 (
  const PDM_split_dual_t  split_method,
  const PDM_g_num_t      *graph_node_distrib,
- const int              *dual_graph_idx,
+ const PDM_g_num_t      *dual_graph_idx,
  const PDM_g_num_t      *dual_graph,
  const int              *node_weight,
  const int              *arc_weight,

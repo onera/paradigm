@@ -255,7 +255,7 @@ _build_join_uface_distribution
 
   //Sum faces and build distribution
   PDM_MPI_Allreduce(nb_face_in_joins, &_face_in_join_distri[1], n_unique_joins,
-    PDM_MPI_INT, PDM_MPI_SUM, _multipart->comm);
+                    PDM_MPI_INT, PDM_MPI_SUM, _multipart->comm);
 
   _face_in_join_distri[0] = 0;
   for (int i=0; i < n_unique_joins; i++)
@@ -694,7 +694,8 @@ PDM_multipart_run_ppart
       PDM_g_num_t *vtx_distri  = PDM_compute_entity_distribution(_multipart->comm, dn_vtx);
       PDM_g_num_t *part_distri = PDM_compute_entity_distribution(_multipart->comm, n_part);
 
-      int         *dual_graph_idx, *dcell_face_idx;
+      PDM_g_num_t *dual_graph_idx;
+      int         *dcell_face_idx;
       PDM_g_num_t *dual_graph, *dcell_face;
 
       PDM_para_graph_dual_from_arc2node(_multipart->comm,
@@ -732,15 +733,15 @@ PDM_multipart_run_ppart
         free(displ);
       }
       int *cell_part = (int *) malloc(dn_cell * sizeof(int));
-      PDM_split_dual_graph(_multipart->split_method,
-                           cell_distri,
-                           dual_graph_idx,
-                           dual_graph,
-                           NULL, NULL,
-                           tn_part,
-                           part_fraction,
-                           cell_part,
-                           _multipart->comm);
+      PDM_para_graph_split (_multipart->split_method,
+                            cell_distri,
+                            dual_graph_idx,
+                            dual_graph,
+                            NULL, NULL,
+                            tn_part,
+                            part_fraction,
+                            cell_part,
+                            _multipart->comm);
 
       free(dual_graph_idx);
       free(dual_graph);
@@ -760,7 +761,7 @@ PDM_multipart_run_ppart
                                                    dcell_face,
                                                    n_part,
                                                    _pmeshes->pn_cell,
-                                                   _pmeshes->pcell_ln_to_gn,
+                                                   (const PDM_g_num_t **) _pmeshes->pcell_ln_to_gn,
                                                   &_pmeshes->pn_face,
                                                   &_pmeshes->pface_ln_to_gn,
                                                   &_pmeshes->pcell_face_idx,
@@ -771,7 +772,7 @@ PDM_multipart_run_ppart
                                                    dface_vtx,
                                                    n_part,
                                                    _pmeshes->pn_face,
-                                                   _pmeshes->pface_ln_to_gn,
+                                                   (const PDM_g_num_t **) _pmeshes->pface_ln_to_gn,
                                                   &_pmeshes->pn_vtx,
                                                   &_pmeshes->pvtx_ln_to_gn,
                                                   &_pmeshes->pface_vtx_idx,
@@ -780,18 +781,19 @@ PDM_multipart_run_ppart
       free(dcell_face);
 
       PDM_part_reverse_pcellface(n_part, _pmeshes->pn_cell, _pmeshes->pn_face,
-                                 _pmeshes->pcell_face_idx, _pmeshes->pcell_face,
+                                 (const int **) _pmeshes->pcell_face_idx,
+                                 (const int **) _pmeshes->pcell_face,
                                 &_pmeshes->pface_cell);
       PDM_part_reorient_bound_faces(n_part, _pmeshes->pn_face, _pmeshes->pface_cell,
-                                    _pmeshes->pcell_face_idx, _pmeshes->pcell_face,
-                                    _pmeshes->pface_vtx_idx, _pmeshes->pface_vtx);
+                                    (const int **) _pmeshes->pcell_face_idx, _pmeshes->pcell_face,
+                                    (const int **) _pmeshes->pface_vtx_idx, _pmeshes->pface_vtx);
 
       PDM_part_dcoordinates_to_pcoordinates(_multipart->comm,
                                             n_part,
                                             vtx_distri,
                                             dvtx_coord,
                                             _pmeshes->pn_vtx,
-                                            _pmeshes->pvtx_ln_to_gn,
+                                           (const PDM_g_num_t **) _pmeshes->pvtx_ln_to_gn,
                                            &_pmeshes->pvtx_coord);
       PDM_part_distgroup_to_partgroup(_multipart->comm,
                                       face_distri,
@@ -800,7 +802,7 @@ PDM_multipart_run_ppart
                                       dface_bound,
                                       n_part,
                                       _pmeshes->pn_face,
-                                      _pmeshes->pface_ln_to_gn,
+                                     (const PDM_g_num_t **) _pmeshes->pface_ln_to_gn,
                                      &_pmeshes->pface_bound_idx,
                                      &_pmeshes->pface_bound,
                                      &_pmeshes->pface_bound_ln_to_gn);
@@ -812,7 +814,7 @@ PDM_multipart_run_ppart
                                       dface_join,
                                       n_part,
                                       _pmeshes->pn_face,
-                                      _pmeshes->pface_ln_to_gn,
+                                     (const PDM_g_num_t **) _pmeshes->pface_ln_to_gn,
                                      &_pmeshes->pface_join_idx,
                                      &pface_join_tmp,
                                      &_pmeshes->pface_join_ln_to_gn);
@@ -834,7 +836,7 @@ PDM_multipart_run_ppart
                                      face_distri,
                                      n_part,
                                      _pmeshes->pn_face,
-                                     _pmeshes->pface_ln_to_gn,
+                                     (const PDM_g_num_t **) _pmeshes->pface_ln_to_gn,
                                      NULL,
                                     &_pmeshes->pinternal_face_bound_procidx,
                                     &_pmeshes->pinternal_face_bound_partidx,

@@ -70,10 +70,10 @@ extern "C" {
  *============================================================================*/
 
 void
-PDM_compress_connectivity
+PDM_para_graph_compress_connectivity
 (
  PDM_g_num_t *dual_graph,
- int         *dual_graph_idx,
+ PDM_g_num_t *dual_graph_idx,
  int         *dual_graph_n,
  int          dn_elt
 )
@@ -146,7 +146,7 @@ PDM_para_graph_dual_from_arc2node
  const PDM_g_num_t     *graph_node_distrib,
  const PDM_g_num_t     *graph_arc_distrib,
  const PDM_g_num_t     *darc_to_node,
-       int            **dual_graph_idx,
+       PDM_g_num_t    **dual_graph_idx,
        PDM_g_num_t    **dual_graph,
  const int              compute_dnode_to_arc,
        int            **dnode_to_arc_idx,
@@ -219,7 +219,7 @@ PDM_para_graph_dual_from_arc2node
   if( 0 == 1){
     printf("dnode_ln_to_gn::");
     for(int i = 0; i < dn_arc_int; ++i){
-      printf("%d ", dnode_ln_to_gn[i]);
+      printf(PDM_FMT_G_NUM" ", dnode_ln_to_gn[i]);
     }
     printf("\n");
 
@@ -231,7 +231,7 @@ PDM_para_graph_dual_from_arc2node
 
     printf("dopposite_node::");
     for(int i = 0; i < idx_data_node ; ++i){
-      printf("%d ", dopposite_node[i]);
+      printf(PDM_FMT_G_NUM" ", dopposite_node[i]);
     }
     printf("\n");
 
@@ -311,8 +311,9 @@ PDM_para_graph_dual_from_arc2node
   /*
    * Allocate and setup convenient pointeur
    */
-  *dual_graph_idx      = (int* ) malloc( sizeof(int) * (n_node_block+1));
-  int* _dual_graph_idx = *dual_graph_idx;
+
+  *dual_graph_idx      = (PDM_g_num_t * ) malloc( sizeof(PDM_g_num_t) * (n_node_block+1));
+  PDM_g_num_t* _dual_graph_idx = *dual_graph_idx;
 
   int* node_node_n   = (int *) malloc( (n_node_block+1) * sizeof(int)); /* Suralloc */
 
@@ -342,7 +343,7 @@ PDM_para_graph_dual_from_arc2node
   if( 0 == 1 ){
     printf("node_node_idx::");
     for(int i_recv = 0; i_recv < n_node_block+1; ++i_recv) {
-      printf(" %d", _dual_graph_idx[i_recv]);
+      printf(" "PDM_FMT_G_NUM, _dual_graph_idx[i_recv]);
     }
     printf("\n");
   }
@@ -366,7 +367,8 @@ PDM_para_graph_dual_from_arc2node
    *   We do it inplace cause unique will always have inferior size of complete array
    *
    */
-  PDM_compress_connectivity(_dual_graph, _dual_graph_idx, node_node_n, n_node_block);
+
+  PDM_para_graph_compress_connectivity(_dual_graph, _dual_graph_idx, node_node_n, n_node_block);
 
   free(node_node_n);
 
@@ -374,6 +376,7 @@ PDM_para_graph_dual_from_arc2node
    * Realloc
    */
   *dual_graph     = (PDM_g_num_t*) realloc(*dual_graph, sizeof(PDM_g_num_t) * _dual_graph_idx[n_node_block] );
+  _dual_graph     = (PDM_g_num_t  *) *dual_graph;
 
   // For now we can change it later
   printf("n_node_block::%d \n", n_node_block);
@@ -386,10 +389,10 @@ PDM_para_graph_dual_from_arc2node
   if( 0 == 1 ){
     printf("n_node_block:: %d \n", n_node_block);
     for(int i = 0; i < n_node_block; ++i){
-      printf(" _dual_graph_idx = %d ---> \n", _dual_graph_idx[i]);
+      printf(" _dual_graph_idx = "PDM_FMT_G_NUM" ---> \n", _dual_graph_idx[i]);
       for(int i_data = _dual_graph_idx[i]; i_data < _dual_graph_idx[i+1]; ++i_data){
         // printf("%d ", _dual_graph[i_data]);
-        printf("\t _dual_graph[%d] = %d \n", i_data, _dual_graph[i_data]);
+        printf("\t _dual_graph[%d] = "PDM_FMT_G_NUM" \n", i_data, _dual_graph[i_data]);
       }
       printf("\n");
     }
@@ -464,7 +467,7 @@ PDM_para_graph_dual_from_arc2node
       for(int i = 0; i < n_node_block; ++i){
         printf(" node_to_arc_n = %d ---> ", node_to_arc_n[i]);
         for(int i_data = 0; i_data < node_to_arc_n[i]; ++i_data){
-          printf("%d ", _dnode_to_arc[idx_block]);
+          printf(PDM_FMT_G_NUM" ", _dnode_to_arc[idx_block]);
           idx_block++;
         }
         printf("\n");
@@ -521,7 +524,7 @@ PDM_para_graph_dual_from_node2arc
  const PDM_g_num_t     *graph_arc_distrib,
  const int             *dnode_arc_idx,
  const PDM_g_num_t     *dnode_arc,
-       int            **dual_graph_idx,
+       PDM_g_num_t    **dual_graph_idx,
        PDM_g_num_t    **dual_graph
 
 )
@@ -558,7 +561,7 @@ PDM_para_graph_dual_from_node2arc
   if(1 == 0) {
     PDM_printf("reverted cell face :");
     for (int i = 0; i < dnode_arc_idx[dn_node]; i++)
-      printf(" %d", node_g[i]);
+      printf(" "PDM_FMT_G_NUM, node_g[i]);
     printf("\n");
   }
 
@@ -680,11 +683,11 @@ PDM_para_graph_dual_from_node2arc
  * \param [in]   comm               PDM_MPI communicator
  */
 void
-PDM_split_dual_graph
+PDM_para_graph_split
 (
  const PDM_split_dual_t  split_method,
  const PDM_g_num_t      *graph_node_distrib,
- const int              *dual_graph_idx,
+ const PDM_g_num_t      *dual_graph_idx,
  const PDM_g_num_t      *dual_graph,
  const int              *node_weight,
  const int              *arc_weight,

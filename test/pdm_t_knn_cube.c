@@ -443,7 +443,7 @@ int main(int argc, char *argv[])
 
     // check
     for (int l = 0; l < n_closest_points; l++) {
-      /*printf("(%ld) %d/%d : %ld\t%f\n",
+      /*printf("("PDM_FMT_G_NUM") %d/%d : "PDM_FMT_G_NUM"\t%f\n",
              tgt_gnum[itgt],
              l+1,
              n_closest_points,
@@ -452,7 +452,7 @@ int main(int argc, char *argv[])
 
       //if (closest_src_gnum[n_closest_points*itgt + l] != true_closest_src_gnum[l]) {
       /*if (closest_src_dist[n_closest_points*itgt + l] > true_closest_src_dist[l]) {
-        printf("*** ERROR (%ld) [%f %f %f]: %f / %f (relative err. = %f)\t\t%ld / %ld\n",
+        printf("*** ERROR ("PDM_FMT_G_NUM") [%f %f %f]: %f / %f (relative err. = %f)\t\t"PDM_FMT_G_NUM" / "PDM_FMT_G_NUM"\n",
         tgt_gnum[itgt],
         tgt_coords[3*itgt], tgt_coords[3*itgt+1], tgt_coords[3*itgt+2],
         closest_src_dist[n_closest_points*itgt + l],
@@ -465,7 +465,7 @@ int main(int argc, char *argv[])
       //assert (closest_src_dist[n_closest_points*itgt + l] <= true_closest_src_dist[l]);
 
       if (closest_src_dist[n_closest_points*itgt + l] > true_closest_src_dist[l]) {
-        printf("[%d] (%ld) [%f %f %f]: %f / %f (relative err. = %f)\t\t%ld / %ld\n",
+        printf("[%d] ("PDM_FMT_G_NUM") [%f %f %f]: %f / %f (relative err. = %f)\t\t"PDM_FMT_G_NUM" / "PDM_FMT_G_NUM"\n",
                i_rank,
                tgt_gnum[itgt],
                tgt_coords[3*itgt], tgt_coords[3*itgt+1], tgt_coords[3*itgt+2],
@@ -490,7 +490,7 @@ int main(int argc, char *argv[])
   if (n_tgt > 0) {
     wrong_percentage = 100 * n_wrong / n_tgt;
   }
-  printf("[%d] n_wrong = %ld / %ld (%ld%%)\n",
+  printf("[%d] n_wrong = "PDM_FMT_G_NUM" / "PDM_FMT_G_NUM" ("PDM_FMT_G_NUM"%%)\n",
          i_rank,
          n_wrong,
          n_tgt,
@@ -519,7 +519,7 @@ int main(int argc, char *argv[])
     if (n_tgt_total > 0) {
       wrong_percentage_total = 100 * n_wrong_total / n_tgt_total;
     }
-    printf("n_wrong = %ld / %ld (%ld%%)\n",
+    printf("n_wrong = "PDM_FMT_G_NUM" / "PDM_FMT_G_NUM" ("PDM_FMT_G_NUM"%%)\n",
            n_wrong_total,
            n_tgt_total,
            wrong_percentage_total);

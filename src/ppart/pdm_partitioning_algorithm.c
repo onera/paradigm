@@ -204,7 +204,7 @@ PDM_part_assemble_partitions
     if(0 == 1){
       printf("[%i] _pentity_ln_to_gn = ", i_rank);
       for(int i_data = 0; i_data < _pn_entity; ++i_data){
-        printf("%d ", _pentity_ln_to_gn[i_part][i_data]);
+        printf(PDM_FMT_G_NUM" ", _pentity_ln_to_gn[i_part][i_data]);
       }
       printf("\n");
     }
@@ -423,7 +423,7 @@ PDM_part_distgroup_to_partgroup
    PDM_part_to_block_create2(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                              PDM_PART_TO_BLOCK_POST_MERGE,
                              1.,
-                             &dgroup,
+                             (PDM_g_num_t **) & dgroup,
                              entity_distribution_ptb,
                              &dgroup_tot_size,
                              1,
@@ -473,9 +473,9 @@ PDM_part_distgroup_to_partgroup
   if(1 == 0){
     int idx_elmt_d = 0;
     for(int i_elmt = 0; i_elmt < n_entity_block; ++i_elmt) {
-      printf("[%d] - %d | %d --> ", i_elmt, blk_stri[i_elmt], blk_gnum[i_elmt]);
+      printf("[%d] - %d | "PDM_FMT_G_NUM" --> ", i_elmt, blk_stri[i_elmt], blk_gnum[i_elmt]);
       for(int i_data = 0; i_data < blk_stri[i_elmt]; ++i_data) {
-        printf("%d ", blk_data[idx_elmt_d++]);
+        printf(PDM_FMT_G_NUM" ", blk_data[idx_elmt_d++]);
       }
       printf("\n");
     }
@@ -510,7 +510,7 @@ PDM_part_distgroup_to_partgroup
     for(int i_part = 0; i_part < n_part; ++i_part) {
       printf("[%i][%d] pentity_ln_to_gn:: ", i_rank, i_part);
       for(int i_elmt = 0; i_elmt < pn_entity[i_part]; ++i_elmt){
-        printf("%d ", pentity_ln_to_gn[i_part][i_elmt]);
+        printf(PDM_FMT_G_NUM" ", pentity_ln_to_gn[i_part][i_elmt]);
       }
       printf("\n");
     }
@@ -548,7 +548,7 @@ PDM_part_distgroup_to_partgroup
       for(int i_elmt = 0; i_elmt < pn_entity[i_part]; ++i_elmt){
         printf(" \t [%d] ", i_elmt);
         for(int i_data = 0; i_data < part_group_stri[i_part][i_elmt]; ++i_data) {
-          printf("%d ", part_group_data[i_part][idx_data_g++]);
+          printf(PDM_FMT_G_NUM" ", part_group_data[i_part][idx_data_g++]);
         }
         printf("\n");
       }
@@ -650,7 +650,7 @@ PDM_part_distgroup_to_partgroup
         printf("\n");
         printf("\t [%d]_group_ln_to_gn::", i_group);
         for(int idx = _group_idx[i_part][i_group]; idx < _group_idx[i_part][i_group+1]; ++idx){
-          printf("%d ", _group_ln_to_gn[i_part][idx]);
+          printf(PDM_FMT_G_NUM" ", _group_ln_to_gn[i_part][idx]);
         }
         printf("\n");
       }
@@ -778,7 +778,7 @@ PDM_part_dconnectivity_to_pconnectivity_sort
       for(int i_elmt = 0; i_elmt < pn_entity[i_part]; ++i_elmt) {
         printf("[%d] --> ", pstride[i_part][i_elmt]);
         for(int i_data = 0; i_data < pstride[i_part][i_elmt]; ++i_data ){
-          printf("%d ", pconnectivity_tmp[i_part][idx_data++] );
+          printf(PDM_FMT_G_NUM" ", pconnectivity_tmp[i_part][idx_data++] );
         }
         printf("\n");
       }
@@ -839,7 +839,7 @@ PDM_part_dconnectivity_to_pconnectivity_sort
       printf("n_elmt_sort::%d\n", n_elmt_sort);
       printf("_pchild_ln_to_gn::");
       for(int i = 0; i < n_elmt_sort; ++i){
-        printf("%d ", _pchild_ln_to_gn[i_part][i]);
+        printf(PDM_FMT_G_NUM" ", _pchild_ln_to_gn[i_part][i]);
       }
       printf("\n");
     }
@@ -1011,7 +1011,7 @@ PDM_part_dconnectivity_to_pconnectivity_hash
       for(int i_elmt = 0; i_elmt < pn_entity[i_part]; ++i_elmt) {
         printf("[%d] --> ", pstride[i_part][i_elmt]);
         for(int i_data = 0; i_data < pstride[i_part][i_elmt]; ++i_data ){
-          printf("%d ", pconnectivity_tmp[i_part][idx_data++] );
+          printf(PDM_FMT_G_NUM" ", pconnectivity_tmp[i_part][idx_data++] );
         }
         printf("\n");
       }
@@ -1056,7 +1056,7 @@ PDM_part_dconnectivity_to_pconnectivity_hash
     PDM_g_num_t *_keys_and_values = (PDM_g_num_t *) malloc( 2*_pconnectivity_idx[i_part][n_elmts] * sizeof(PDM_g_num_t));
 
     /* Create hash table */
-    int keymax = 1.3 * _pconnectivity_idx[i_part][n_elmts]; //next prime number following 1.3*nbofvalues
+    int keymax = (int) (1.3 * _pconnectivity_idx[i_part][n_elmts]); //next prime number following 1.3*nbofvalues
     while (!_is_prime(keymax))
       keymax++;
     //PDM_printf("[%i] nb val is %d, choose keymax = %d\n", i_rank, _pconnectivity_idx[i_part][n_elmts] ,keymax);
@@ -1117,7 +1117,7 @@ PDM_part_dconnectivity_to_pconnectivity_hash
       //printf("n_elmt_sort::%d\n", n_elmt_sort);
       printf("_pchild_ln_to_gn::");
       for(int i = 0; i < nbUnique; ++i){
-        printf("%d ", _pchild_ln_to_gn[i_part][i]);
+        printf(PDM_FMT_G_NUM" ", _pchild_ln_to_gn[i_part][i]);
       }
       printf("\n");
     }
@@ -1263,9 +1263,9 @@ PDM_generate_entity_graph_comm
    PDM_part_to_block_create2(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                              PDM_PART_TO_BLOCK_POST_MERGE,
                              1.,
-                             pentity_ln_to_gn,
+                             (PDM_g_num_t **) pentity_ln_to_gn,
                              entity_distribution_ptb,
-                             pn_entity,
+                             (int *) pn_entity,
                              n_part,
                              comm);
    const int n_entity_block = PDM_part_to_block_n_elt_block_get(ptb);
@@ -1303,7 +1303,7 @@ PDM_generate_entity_graph_comm
     for(int i_block = 0; i_block < n_entity_block; ++i_block){
       printf("[%d]-blk_stri[%d]:: ", i_block, blk_stri[i_block]);
       for(int i_data = 0; i_data < blk_stri[i_block]; ++i_data){
-        printf("%d ", blk_data[idx_debug_data++]);
+        printf(PDM_FMT_G_NUM" ", blk_data[idx_debug_data++]);
       }
       printf("\n");
     }
@@ -1334,7 +1334,7 @@ PDM_generate_entity_graph_comm
   /*
    * Compress data
    */
-  blk_data = (int *) realloc(blk_data, idx_comp * sizeof(int));
+  blk_data = (PDM_g_num_t *) realloc(blk_data, idx_comp * sizeof(PDM_g_num_t));
 
   /*
    * Panic verbose
@@ -1344,7 +1344,7 @@ PDM_generate_entity_graph_comm
     for(int i_block = 0; i_block < n_entity_block; ++i_block){
       printf("[%d]-blk_stri[%d]:: ", i_block, blk_stri[i_block]);
       for(int i_data = 0; i_data < blk_stri[i_block]; ++i_data){
-        printf("%d ", blk_data[idx_debug_data++]);
+        printf(PDM_FMT_G_NUM" ", blk_data[idx_debug_data++]);
       }
       printf("\n");
     }
@@ -1566,10 +1566,10 @@ PDM_part_dcoordinates_to_pcoordinates
 (
   const PDM_MPI_Comm    comm,
   const int             n_part,
-  const int            *vertex_distribution,
+  const PDM_g_num_t    *vertex_distribution,
   const double         *dvtx_coord,
   const int            *pn_vtx,
-  const int           **pvtx_ln_to_gn,
+  const PDM_g_num_t   **pvtx_ln_to_gn,
         double       ***pvtx_coord
 )
 {
@@ -1589,7 +1589,6 @@ PDM_part_dcoordinates_to_pcoordinates
                                                       pn_vtx,
                                                       n_part,
                                                       comm);
-  int dn_vtx = vtx_distribution_ptb[i_rank+1] - vtx_distribution_ptb[i_rank];
 
   int cst_stride = 3;
   int **pvtx_stride = NULL;

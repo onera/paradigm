@@ -625,6 +625,8 @@ double bary[3]
 
 
 /**
+ * Warning : unstable function (Rather use PDM_polygon_point_in )
+ *
  * \brief Test if a point is inside a 2d polygon using the Winding Number method
  *        (see http://geomalgorithms.com/a03-_inclusion.html)
  *
@@ -647,7 +649,7 @@ PDM_polygon_status_t PDM_polygon_point_in2d
  double        bounds[4]
  )
 {
-  const double eps_base = 1e-16;
+  //const double eps_base = 1e-16;
 
   //  const double eps = eps_base * char_length;
   //const double eps2 = eps * eps;
@@ -751,6 +753,8 @@ PDM_polygon_status_t PDM_polygon_point_in2d
 
 
 /**
+ * Warning : unstable function (Rather use PDM_polygon_point_in )
+ *
  * \brief Test if a point is inside a 3d polygon using the Winding Number method
  *        (see http://geomalgorithms.com/a03-_inclusion.html)
  *
