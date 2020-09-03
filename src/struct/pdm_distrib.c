@@ -118,13 +118,14 @@ PDM_compute_entity_distribution
   /*
    * Exchange
    */
+
   PDM_g_num_t _dn_entity = (PDM_g_num_t) dn_entity;
   PDM_MPI_Allgather((void *) &_dn_entity,
                     1,
                     PDM__PDM_MPI_G_NUM,
                     (void *) (&dentity_proc[1]),
                     1,
-                    PDM_MPI_INT,
+                    PDM__PDM_MPI_G_NUM,
                     comm);
 
   dentity_proc[0] = 1;

@@ -728,15 +728,15 @@ PDM_sort_int_special
     }
     else{
       int k = (l+ir) / 2;
-      _swap_long (&(array[k]), &(array[l+1]));
+      _swap_int (&(array[k]), &(array[l+1]));
       if ( comp(&array[ir], &array[l], context) ){
-        _swap_long (&(array[l]), &(array[ir]));
+        _swap_int (&(array[l]), &(array[ir]));
       }
       if ( comp(&array[ir], &array[l+1], context) ) {
-        _swap_long (&(array[l+1]), &(array[ir]));
+        _swap_int (&(array[l+1]), &(array[ir]));
       }
       if ( comp(&array[l+1], &array[l], context) ) {
-        _swap_long (&(array[l]), &(array[l+1]));
+        _swap_int (&(array[l]), &(array[l+1]));
       }
       i = l + 1;
       j = ir;
@@ -752,7 +752,7 @@ PDM_sort_int_special
         if (j < i) {
           break;
         }
-        _swap_long (&(array[i]), &(array[j]));
+        _swap_int (&(array[i]), &(array[j]));
       }
 
       array[l+1] = array[j];

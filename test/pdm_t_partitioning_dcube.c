@@ -298,7 +298,7 @@ int main(int argc, char *argv[])
   /*
    * Compute dual graph
    */
-  int* dual_graph_idx;
+  PDM_g_num_t* dual_graph_idx;
   PDM_g_num_t* dual_graph;
   int* dcell_face_idx;
   PDM_g_num_t* dcell_face;
@@ -306,7 +306,7 @@ int main(int argc, char *argv[])
                                     cell_distribution,
                                     face_distribution,
                                     dface_cell,
-                    (int        **) &dual_graph_idx,
+                    (PDM_g_num_t**) &dual_graph_idx,
                     (PDM_g_num_t**) &dual_graph,
                                     1,
                     (int        **) &dcell_face_idx,
@@ -325,7 +325,7 @@ int main(int argc, char *argv[])
       for(int i = 0; i < dn_cell; ++i){
         printf("Local cell %d :", i);
         for(int j = dcell_face_idx[i]; j < dcell_face_idx[i+1]; ++j){
-          printf(" %d", dcell_face[j]);
+          printf(" "PDM_FMT_G_NUM"", dcell_face[j]);
         }
         PDM_printf("\n");
       }
@@ -341,7 +341,7 @@ int main(int argc, char *argv[])
                                       face_distribution,
                                       dcell_face_idx,
                                       dcell_face,
-                      (int        **) &dual_graph_idx,
+                      (PDM_g_num_t**) &dual_graph_idx,
                       (PDM_g_num_t**) &dual_graph);
   }
 
@@ -358,10 +358,10 @@ int main(int argc, char *argv[])
   if( 0 == 1 ){
     printf("n_cell_block:: %d \n", dn_cell);
     for(int i = 0; i < dn_cell; ++i){
-      printf(" dual_graph_idx = %d ---> \n", dual_graph_idx[i]);
+      printf(" dual_graph_idx = "PDM_FMT_G_NUM" ---> \n", dual_graph_idx[i]);
       for(int i_data = dual_graph_idx[i]; i_data < dual_graph_idx[i+1]; ++i_data){
         // printf("%d ", dual_graph[i_data]);
-        printf("\t dual_graph[%d] = %d \n", i_data, dual_graph[i_data]);
+        printf("\t dual_graph[%d] = "PDM_FMT_G_NUM" \n", i_data, dual_graph[i_data]);
       }
       printf("\n");
     }
@@ -382,16 +382,16 @@ int main(int argc, char *argv[])
   PDM_printf("Testing with heterogeneous part sizes\n");
   }
 
-  PDM_split_dual_graph(part_method,
-                       cell_distribution,
-                       dual_graph_idx,
-                       dual_graph,
-                       NULL,
-                       NULL,
-                       tn_part,
-                       part_frac, // Or NULL for homogeneous parts
-                       cell_part,
-                       comm);
+  PDM_para_graph_split (part_method,
+                        cell_distribution,
+                        dual_graph_idx,
+                        dual_graph,
+                        NULL,
+                        NULL,
+                        tn_part,
+                        part_frac, // Or NULL for homogeneous parts
+                        cell_part,
+                        comm);
 
   if (0==1){
     printf("cell_part[%d]::", dn_cell);
@@ -415,7 +415,7 @@ int main(int argc, char *argv[])
                                                 cell_distribution,
                                                 cell_part,
                                     (int ** )  &pn_cell,
-                                    (int ***)  &pcell_ln_to_gn);
+                                    (PDM_g_num_t ***)  &pcell_ln_to_gn);
 
   /*
    *  At this stage we have the cell_ln_to_gn :
@@ -436,7 +436,7 @@ int main(int argc, char *argv[])
                                                dcell_face,
                                                n_res_part,
                                                pn_cell,
-                                               pcell_ln_to_gn,
+                           (const PDM_g_num_t ** )  pcell_ln_to_gn,
                            (int         ** )  &pn_faces,
                            (PDM_g_num_t ***)  &pface_ln_to_gn,
                            (int         ***)  &pcell_face_idx,
@@ -446,8 +446,8 @@ int main(int argc, char *argv[])
   PDM_part_reverse_pcellface(n_res_part,
                              pn_cell,
                              pn_faces,
-                             pcell_face_idx,
-                             pcell_face,
+            (const int **)   pcell_face_idx,
+             (const int **)  pcell_face,
               (int    ***)  &pface_cell);
 
   if (0 == 1){
@@ -475,7 +475,7 @@ int main(int argc, char *argv[])
                                                dface_vtx,
                                                n_res_part,
                                                pn_faces,
-                                               pface_ln_to_gn,
+                        (const PDM_g_num_t **) pface_ln_to_gn,
                            (int         ** )  &pn_vtx,
                            (PDM_g_num_t ***)  &pvtx_ln_to_gn,
                            (int         ***)  &pface_vtx_idx,
@@ -488,7 +488,7 @@ int main(int argc, char *argv[])
                                         vtx_distribution,
                                         dvtx_coord,
                                         pn_vtx,
-                                        pvtx_ln_to_gn,
+                (const PDM_g_num_t **)  pvtx_ln_to_gn,
                           (double ***) &pvtx_coord);
   /*
    * On doit calculer le dcell_face car avec lui et le cell_ln_to_gn on retrouve facilement
@@ -517,7 +517,7 @@ int main(int argc, char *argv[])
                                   dface_group,
                                   n_res_part,
                                   pn_faces,
-                                  pface_ln_to_gn,
+           (const PDM_g_num_t **) pface_ln_to_gn,
                 (int         ***) &pface_group_idx,
                 (int         ***) &pface_group,
                 (PDM_g_num_t ***) &pface_group_ln_to_gn);
@@ -525,10 +525,10 @@ int main(int argc, char *argv[])
   PDM_part_reorient_bound_faces(n_part,
                                 pn_faces,
                                 pface_cell,
-                                pcell_face_idx,
-                                pcell_face,
-                                pface_vtx_idx,
-                                pface_vtx);
+                 (const int **) pcell_face_idx,
+                      ( int **) pcell_face,
+                 (const int **) pface_vtx_idx,
+                       (int **) pface_vtx);
 
   /*
    * Graph communication build
@@ -553,8 +553,8 @@ int main(int argc, char *argv[])
                                  face_distribution,
                                  n_part,
                                  pn_faces,
-                                 pface_ln_to_gn,
-                                 face_is_bnd,
+         (const PDM_g_num_t **)  pface_ln_to_gn,
+         (const int **)          face_is_bnd,
                       (int ***) &pproc_face_bound_idx,
                       (int ***) &ppart_face_bound_idx,
                       (int ***) &pface_bound);

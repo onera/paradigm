@@ -289,7 +289,7 @@ PDM_dmesh_partitioning_get
 )
 {
   int field_key  = input_field_key;
-  int owner      = PDM_HASFLAG  (field_key, PDM_PART_OWNDATA);
+  //int owner      = PDM_HASFLAG  (field_key, PDM_PART_OWNDATA);
   int field_name = PDM_UNSETFLAG(field_key, PDM_PART_OWNDATA); // Il reste que le nom
 
   // Search the correct field who want
@@ -331,7 +331,7 @@ PDM_dmesh_partitioning_part_get
 )
 {
   int field_key  = input_field_key;
-  int owner      = PDM_HASFLAG  (field_key, PDM_PART_OWNDATA);
+  //  int owner      = PDM_HASFLAG  (field_key, PDM_PART_OWNDATA);
   int field_name = PDM_UNSETFLAG(field_key, PDM_PART_OWNDATA); // Il reste que le nom
 
   // Search the correct field who want

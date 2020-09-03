@@ -2961,188 +2961,186 @@ _compute_neighbours
   PDM_timer_resume(octree->timer);
 }
 
+/* FIXME: _check_neighbours_area a supprimer ? */
+  /* static void */
+/* _check_neighbours_area */
+/* ( */
+/*  const _octree_t *octree */
+/*  ) */
+/* { */
+/*   int myRank, lComm; */
+/*   PDM_MPI_Comm_rank (octree->comm, &myRank); */
+/*   PDM_MPI_Comm_size (octree->comm, &lComm); */
+
+
+/*   _l_octant_t *octants = octree->octants; */
+/*   double *area = malloc (sizeof(double) * octants->n_nodes); */
+
+/*   int *rank_ngb_n = malloc (sizeof(double) * lComm); */
+/*   for (int i = 0; i < lComm; i++) */
+/*     rank_ngb_n[i] = 0; */
+
+/*   for (int i = 0; i < octants->n_nodes; i++) { */
+/*     PDM_morton_code_t code = octants->codes[i]; */
+
+/*     /\* check neighbours of current octant *\/ */
+/*     area[i] = 0; */
+/*     for (int j = 0; j < 6; j++) { */
+/*       for (int k = octants->neighbour_idx[6*i+j]; */
+/*            k < octants->neighbour_idx[6*i+j+1]; k++) { */
+/*         int ingb = octants->neighbours[k]; */
+
+/*         if (ingb < 0) { */
+/*           // distant neighbour */
+/*           ingb = -(ingb + 1); */
+/*           for (int l = octree->part_boundary_elt_idx[ingb]; */
+/*                l < octree->part_boundary_elt_idx[ingb+1]; l++) { */
+/*             int ngb_rank = octree->part_boundary_elt[3*l]; */
+/*             rank_ngb_n[ngb_rank]++; */
+/*           } */
+
+/*         } else { */
+/*           // local neighbour */
+/*           PDM_morton_code_t ngb_code = octants->codes[ingb]; */
+/*           double side = 1./pow(2, PDM_MAX(code.L, ngb_code.L)); */
+/*           area[i] += side * side; */
+/*         } */
+/*       } */
+/*     } */
+/*   } */
+
+/*   // MPI communications to check distant neighbours */
+/*   int *rank_ngb_idx = NULL; */
+/*   int *rank_ngb_id_level = NULL; */
+/*   int *recv_rank_ngb_n = NULL; */
+/*   int *recv_rank_ngb_idx = NULL; */
+/*   int *recv_rank_ngb_id_level = NULL; */
+
+/*   if (lComm > 1) { */
+/*     rank_ngb_idx = malloc (sizeof(int) * (lComm + 1)); */
+/*     rank_ngb_idx[0] = 0; */
+/*     for (int i = 0; i < lComm; i++) { */
+/*       rank_ngb_idx[i+1] = rank_ngb_idx[i] + 2*rank_ngb_n[i]; */
+/*       rank_ngb_n[i] = 0; */
+/*     } */
+/*     rank_ngb_id_level = malloc (sizeof(int) * rank_ngb_idx[lComm]); */
+
+/*     for (int i = 0; i < octants->n_nodes; i++) { */
+/*       for (int j = 0; j < 6; j++) { */
+/*         for (int k = octants->neighbour_idx[6*i+j]; */
+/*              k < octants->neighbour_idx[6*i+j+1]; k++) { */
+/*           int ingb = octants->neighbours[k]; */
+
+/*           if (ingb < 0) { */
+/*             ingb = -(ingb + 1); */
+
+/*             for (int l = octree->part_boundary_elt_idx[ingb]; */
+/*                  l < octree->part_boundary_elt_idx[ingb+1]; l++) { */
+/*               int ngb_rank = octree->part_boundary_elt[3*l]; */
+/*               int ngb_id = octree->part_boundary_elt[3*l+1]; */
+/*               int idx = rank_ngb_idx[ngb_rank] + rank_ngb_n[ngb_rank]; */
+/*               rank_ngb_id_level[idx++] = ngb_id; */
+/*               rank_ngb_id_level[idx++] = (int) octants->codes[i].L; */
+/*               rank_ngb_n[ngb_rank] += 2; */
+/*             } */
+/*           } */
+/*         } */
+/*       } */
+/*     } */
+
+/*     recv_rank_ngb_n = malloc (sizeof(int) * lComm); */
+/*     PDM_MPI_Alltoall (rank_ngb_n, 1, PDM_MPI_INT, */
+/*                       recv_rank_ngb_n, 1, PDM_MPI_INT, */
+/*                       octree->comm); */
+
+/*     recv_rank_ngb_idx = malloc (sizeof(int) * (lComm + 1)); */
+/*     recv_rank_ngb_idx[0] = 0; */
+/*     for (int i = 0; i < lComm; i++) { */
+/*       recv_rank_ngb_idx[i+1] = recv_rank_ngb_idx[i] + recv_rank_ngb_n[i]; */
+/*     } */
+
+/*     recv_rank_ngb_id_level = malloc (sizeof(int) * recv_rank_ngb_idx[lComm]); */
+/*     PDM_MPI_Alltoallv (rank_ngb_id_level, rank_ngb_n, rank_ngb_idx, PDM_MPI_INT, */
+/*                        recv_rank_ngb_id_level, recv_rank_ngb_n, recv_rank_ngb_idx, PDM_MPI_INT, */
+/*                        octree->comm); */
+
+/*     free (rank_ngb_id_level); */
+/*     free (rank_ngb_n); */
+/*     free (rank_ngb_idx); */
+
+
+/*     for (int i = 0; i < lComm; i++) { */
+/*       recv_rank_ngb_n[i] /= 2; */
+/*       recv_rank_ngb_idx[i+1] /= 2; */
+/*     } */
+/*     for (int i = 0; i < lComm; i++) { */
+/*       for (int j = recv_rank_ngb_idx[i]; j < recv_rank_ngb_idx[i+1]; j++) { */
+/*         int id = recv_rank_ngb_id_level[2*j]; */
+/*         PDM_morton_int_t level = (PDM_morton_int_t) recv_rank_ngb_id_level[2*j+1]; */
+/*         double side = 1./pow(2, PDM_MAX (level, octants->codes[id].L)); */
+
+/*         area[id] += side * side; */
+/*       } */
+/*     } */
+
+/*     free (recv_rank_ngb_id_level); */
+/*     free (recv_rank_ngb_n); */
+/*     free (recv_rank_ngb_idx); */
+/*   } */
 
 
 
-static void
-_check_neighbours_area
-(
- const _octree_t *octree
- )
-{
-  int myRank, lComm;
-  PDM_MPI_Comm_rank (octree->comm, &myRank);
-  PDM_MPI_Comm_size (octree->comm, &lComm);
+/*   for (int i = 0; i < octants->n_nodes; i++) { */
+/*     /\* compute exact interior surface area of current octant *\/ */
+/*     PDM_morton_code_t code = octants->codes[i]; */
+/*     double side = 1./pow(2, code.L); */
+/*     int ndir = 0; */
+/*     for (int j = 0; j < 6; j++) { */
+/*       if (_neighbour (code, (PDM_para_octree_direction_t) j) != NULL) */
+/*         ndir++; */
+/*     } */
+/*     double exact_area = ndir * side * side; */
 
+/*     /\* compare with actual area *\/ */
+/*     /\*printf("node #%d: exact area = %f, actual area = %f, err = %f\n", */
+/*       i, */
+/*       exact_area, */
+/*       area[i], */
+/*       PDM_ABS(area[i]/exact_area - 1));*\/ */
+/*     //-->> */
+/*     /\*if (PDM_ABS(area[i]/exact_area - 1) > 1e-15) { */
+/*       printf("[%d] node %d, level %u, area = %f, exact = %f, relative area error = %f\n", */
+/*       myRank, i, octants->codes[i].L, area[i], exact_area, area[i]/exact_area - 1); */
+/*       printf("\tneighbours (rank, node_id):\n"); */
+/*       for (int j = 0; j < 6; j++) { */
+/*       printf("\t\tdirection %d:", j); */
+/*       for (int k = octants->neighbour_idx[6*i+j]; */
+/*       k < octants->neighbour_idx[6*i+j+1]; k++) { */
+/*       int ingb = octants->neighbours[k]; */
+/*       if (ingb < 0) { */
+/*       ingb = -(ingb + 1); */
 
-  _l_octant_t *octants = octree->octants;
-  double *area = malloc (sizeof(double) * octants->n_nodes);
+/*       for (int l = octree->part_boundary_elt_idx[ingb]; */
+/*       l < octree->part_boundary_elt_idx[ingb+1]; l++) { */
+/*       int ngb_rank = octree->part_boundary_elt[2*l]; */
+/*       int ngb_id = octree->part_boundary_elt[2*l+1]; */
+/*       printf(" (%d, %d)", ngb_rank, ngb_id); */
+/*       } */
+/*       } else { */
+/*       printf(" (%d, %d)", myRank, ingb); */
+/*       } */
+/*       } */
+/*       printf("\n"); */
+/*       } */
+/*       printf("\n"); */
+/*       }*\/ */
+/*     //<<-- */
+/*     //assert (PDM_ABS(area[i]/exact_area - 1) < 1e-15); */
+/*     assert (PDM_ABS(area[i] - exact_area) <= 1e-15 * exact_area); */
+/*   } */
 
-  int *rank_ngb_n = malloc (sizeof(double) * lComm);
-  for (int i = 0; i < lComm; i++)
-    rank_ngb_n[i] = 0;
-
-  for (int i = 0; i < octants->n_nodes; i++) {
-    PDM_morton_code_t code = octants->codes[i];
-
-    /* check neighbours of current octant */
-    area[i] = 0;
-    for (int j = 0; j < 6; j++) {
-      for (int k = octants->neighbour_idx[6*i+j];
-           k < octants->neighbour_idx[6*i+j+1]; k++) {
-        int ingb = octants->neighbours[k];
-
-        if (ingb < 0) {
-          // distant neighbour
-          ingb = -(ingb + 1);
-          for (int l = octree->part_boundary_elt_idx[ingb];
-               l < octree->part_boundary_elt_idx[ingb+1]; l++) {
-            int ngb_rank = octree->part_boundary_elt[3*l];
-            rank_ngb_n[ngb_rank]++;
-          }
-
-        } else {
-          // local neighbour
-          PDM_morton_code_t ngb_code = octants->codes[ingb];
-          double side = 1./pow(2, PDM_MAX(code.L, ngb_code.L));
-          area[i] += side * side;
-        }
-      }
-    }
-  }
-
-  // MPI communications to check distant neighbours
-  int *rank_ngb_idx = NULL;
-  int *rank_ngb_id_level = NULL;
-  int *recv_rank_ngb_n = NULL;
-  int *recv_rank_ngb_idx = NULL;
-  int *recv_rank_ngb_id_level = NULL;
-
-  if (lComm > 1) {
-    rank_ngb_idx = malloc (sizeof(int) * (lComm + 1));
-    rank_ngb_idx[0] = 0;
-    for (int i = 0; i < lComm; i++) {
-      rank_ngb_idx[i+1] = rank_ngb_idx[i] + 2*rank_ngb_n[i];
-      rank_ngb_n[i] = 0;
-    }
-    rank_ngb_id_level = malloc (sizeof(int) * rank_ngb_idx[lComm]);
-
-    for (int i = 0; i < octants->n_nodes; i++) {
-      for (int j = 0; j < 6; j++) {
-        for (int k = octants->neighbour_idx[6*i+j];
-             k < octants->neighbour_idx[6*i+j+1]; k++) {
-          int ingb = octants->neighbours[k];
-
-          if (ingb < 0) {
-            ingb = -(ingb + 1);
-
-            for (int l = octree->part_boundary_elt_idx[ingb];
-                 l < octree->part_boundary_elt_idx[ingb+1]; l++) {
-              int ngb_rank = octree->part_boundary_elt[3*l];
-              int ngb_id = octree->part_boundary_elt[3*l+1];
-              int idx = rank_ngb_idx[ngb_rank] + rank_ngb_n[ngb_rank];
-              rank_ngb_id_level[idx++] = ngb_id;
-              rank_ngb_id_level[idx++] = (int) octants->codes[i].L;
-              rank_ngb_n[ngb_rank] += 2;
-            }
-          }
-        }
-      }
-    }
-
-    recv_rank_ngb_n = malloc (sizeof(int) * lComm);
-    PDM_MPI_Alltoall (rank_ngb_n, 1, PDM_MPI_INT,
-                      recv_rank_ngb_n, 1, PDM_MPI_INT,
-                      octree->comm);
-
-    recv_rank_ngb_idx = malloc (sizeof(int) * (lComm + 1));
-    recv_rank_ngb_idx[0] = 0;
-    for (int i = 0; i < lComm; i++) {
-      recv_rank_ngb_idx[i+1] = recv_rank_ngb_idx[i] + recv_rank_ngb_n[i];
-    }
-
-    recv_rank_ngb_id_level = malloc (sizeof(int) * recv_rank_ngb_idx[lComm]);
-    PDM_MPI_Alltoallv (rank_ngb_id_level, rank_ngb_n, rank_ngb_idx, PDM_MPI_INT,
-                       recv_rank_ngb_id_level, recv_rank_ngb_n, recv_rank_ngb_idx, PDM_MPI_INT,
-                       octree->comm);
-
-    free (rank_ngb_id_level);
-    free (rank_ngb_n);
-    free (rank_ngb_idx);
-
-
-    for (int i = 0; i < lComm; i++) {
-      recv_rank_ngb_n[i] /= 2;
-      recv_rank_ngb_idx[i+1] /= 2;
-    }
-    for (int i = 0; i < lComm; i++) {
-      for (int j = recv_rank_ngb_idx[i]; j < recv_rank_ngb_idx[i+1]; j++) {
-        int id = recv_rank_ngb_id_level[2*j];
-        PDM_morton_int_t level = (PDM_morton_int_t) recv_rank_ngb_id_level[2*j+1];
-        double side = 1./pow(2, PDM_MAX (level, octants->codes[id].L));
-
-        area[id] += side * side;
-      }
-    }
-
-    free (recv_rank_ngb_id_level);
-    free (recv_rank_ngb_n);
-    free (recv_rank_ngb_idx);
-  }
-
-
-
-  for (int i = 0; i < octants->n_nodes; i++) {
-    /* compute exact interior surface area of current octant */
-    PDM_morton_code_t code = octants->codes[i];
-    double side = 1./pow(2, code.L);
-    int ndir = 0;
-    for (int j = 0; j < 6; j++) {
-      if (_neighbour (code, (PDM_para_octree_direction_t) j) != NULL)
-        ndir++;
-    }
-    double exact_area = ndir * side * side;
-
-    /* compare with actual area */
-    /*printf("node #%d: exact area = %f, actual area = %f, err = %f\n",
-      i,
-      exact_area,
-      area[i],
-      PDM_ABS(area[i]/exact_area - 1));*/
-    //-->>
-    /*if (PDM_ABS(area[i]/exact_area - 1) > 1e-15) {
-      printf("[%d] node %d, level %u, area = %f, exact = %f, relative area error = %f\n",
-      myRank, i, octants->codes[i].L, area[i], exact_area, area[i]/exact_area - 1);
-      printf("\tneighbours (rank, node_id):\n");
-      for (int j = 0; j < 6; j++) {
-      printf("\t\tdirection %d:", j);
-      for (int k = octants->neighbour_idx[6*i+j];
-      k < octants->neighbour_idx[6*i+j+1]; k++) {
-      int ingb = octants->neighbours[k];
-      if (ingb < 0) {
-      ingb = -(ingb + 1);
-
-      for (int l = octree->part_boundary_elt_idx[ingb];
-      l < octree->part_boundary_elt_idx[ingb+1]; l++) {
-      int ngb_rank = octree->part_boundary_elt[2*l];
-      int ngb_id = octree->part_boundary_elt[2*l+1];
-      printf(" (%d, %d)", ngb_rank, ngb_id);
-      }
-      } else {
-      printf(" (%d, %d)", myRank, ingb);
-      }
-      }
-      printf("\n");
-      }
-      printf("\n");
-      }*/
-    //<<--
-    //assert (PDM_ABS(area[i]/exact_area - 1) < 1e-15);
-    assert (PDM_ABS(area[i] - exact_area) <= 1e-15 * exact_area);
-  }
-
-  free (area);
-}
+/*   free (area); */
+/* } */
 
 
 
@@ -3325,7 +3323,7 @@ _closest_points_local
 
     int n_start_leaves = start_leaves_idx[i_tgt+1] - start_leaves_idx[i_tgt];
     if (DEBUG) {
-      printf("\n=== pt (%ld) (upper_bound_dist = %f) ===\nstart leaves (%d):\n",
+      printf("\n=== pt ("PDM_FMT_G_NUM") (upper_bound_dist = %f) ===\nstart leaves (%d):\n",
              pts_g_num[i_tgt], upper_bound_dist[i_tgt], n_start_leaves);
     }
 
@@ -3512,7 +3510,7 @@ _closest_points_local
     while (_min_heap_pop (start_heap, &start_id, &unused, &start_dist)) {
 
       if (DEBUG) {
-        printf("tgt point (%ld) start leaf %d: dist = %f / %f  (is visited? %d)\n",
+        printf("tgt point ("PDM_FMT_G_NUM") start leaf %d: dist = %f / %f  (is visited? %d)\n",
                pts_g_num[i_tgt], start_id, start_dist, *max_src_dist, is_visited[start_id]);
       }
 
@@ -3539,7 +3537,7 @@ _closest_points_local
       while (_min_heap_pop (leaf_heap, &leaf_id, &unused, &leaf_dist)) {
 
         if (DEBUG) {
-          printf("tgt point (%ld) inspecting leaf %d: dist = %f / %f\n",
+          printf("tgt point ("PDM_FMT_G_NUM") inspecting leaf %d: dist = %f / %f\n",
                  pts_g_num[i_tgt], leaf_id, leaf_dist, *max_src_dist);
         }
 
@@ -3563,7 +3561,7 @@ _closest_points_local
           }
 
           if (DEBUG && pts_g_num[i_tgt] == 38) {
-            printf("  src pt (%ld) [%f %f %f] at dist %f / %f\n",
+            printf("  src pt ("PDM_FMT_G_NUM") [%f %f %f] at dist %f / %f\n",
                    src_gnum, src_pt[0], src_pt[1], src_pt[2], src_dist, *max_src_dist);
           }
 
@@ -3580,7 +3578,7 @@ _closest_points_local
             closest_src_dist[j] = src_dist;
 
             if (DEBUG) {
-              printf("  src pt (%ld) [%f %f %f] at dist %f / %f --> insert at pos %d\n",
+              printf("  src pt ("PDM_FMT_G_NUM") [%f %f %f] at dist %f / %f --> insert at pos %d\n",
                      src_gnum, src_pt[0], src_pt[1], src_pt[2], src_dist, *max_src_dist, j);
             }
           }
@@ -3645,7 +3643,7 @@ _closest_points_local
                                                            sizeof(int) * 2 * s_send_to_rank_leaves[ngb_rank]);
                 }
                 if (DEBUG) {
-                  printf("  Send pt (%ld) to rank %d, leaf %d (part %d)\n",
+                  printf("  Send pt ("PDM_FMT_G_NUM") to rank %d, leaf %d (part %d)\n",
                          pts_g_num[i_tgt], ngb_rank, ngb_leaf, ngb_part);
                 }
                 send_to_rank_leaves[ngb_rank][2*n_send_to_rank_leaves[ngb_rank]]   = ngb_leaf;
@@ -4912,7 +4910,7 @@ PDM_para_octree_closest_point
       for (int i = 0; i < octree->n_connected; i++) {
         printf("\tpart %d:", i);
         for (int j = 0; j < n_processed_tgt[i]; j++) {
-          printf(" %ld", processed_tgt[i][j]);
+          printf(" "PDM_FMT_G_NUM"", processed_tgt[i][j]);
         }
         printf("\n");
       }
@@ -4922,7 +4920,7 @@ PDM_para_octree_closest_point
       for (int i = 0; i < lComm; i++) {
         printf("\t{rank %d:", i);
         for (int j = recv_shift[i]/dim; j < recv_shift[i+1]/dim; j++) {
-          printf(" %ld", recv_g_num[j]);
+          printf(" "PDM_FMT_G_NUM"", recv_g_num[j]);
         }
         printf(" }\n");
       }
@@ -4931,7 +4929,7 @@ PDM_para_octree_closest_point
 
       printf("\n[%d] start_leaves = [\n", myRank);
       for (int i = 0; i < n_recv_pts; i++) {
-        printf("  (%ld) : {", recv_g_num[i]);
+        printf("  ("PDM_FMT_G_NUM") : {", recv_g_num[i]);
         for (int j = start_leaves_idx[i]; j < start_leaves_idx[i+1]; j++) {
           printf(" %d", start_leaves[j]);
         }
@@ -4978,7 +4976,7 @@ PDM_para_octree_closest_point
       for (int i_tgt = 0; i_tgt < n_recv_pts; i_tgt++) {
         PDM_g_num_t tgt_gnum = recv_g_num[i_tgt];
         if (DEBUG && DEBUG_FILTER) {
-          printf("\nFilter: recv pt (%ld)\n", tgt_gnum);
+          printf("\nFilter: recv pt ("PDM_FMT_G_NUM")\n", tgt_gnum);
         }
 
         // check whether that tgt point has already been added to tmp_* arrays
@@ -5173,7 +5171,7 @@ PDM_para_octree_closest_point
       for (int i = 0; i < octree->n_connected; i++) {
         printf("\tpart %d:", i);
         for (int j = 0; j < n_processed_tgt[i]; j++) {
-          printf(" %ld", processed_tgt[i][j]);
+          printf(" "PDM_FMT_G_NUM"", processed_tgt[i][j]);
         }
         printf("\n");
       }
@@ -5181,14 +5179,14 @@ PDM_para_octree_closest_point
 
       printf("\n[%d] recv_g_num = [", myRank);
       for (int i = 0; i < n_recv_pts; i++) {
-        printf(" %ld", recv_g_num[i]);
+        printf(" "PDM_FMT_G_NUM"", recv_g_num[i]);
       }
       printf(" ]\n");
 
 
       printf("\n[%d] start_leaves = [\n", myRank);
       for (int i = 0; i < n_recv_pts; i++) {
-        printf("  (%ld) : {", recv_g_num[i]);
+        printf("  ("PDM_FMT_G_NUM") : {", recv_g_num[i]);
         for (int j = start_leaves_idx[i]; j < start_leaves_idx[i+1]; j++) {
           printf(" %d", start_leaves[j]);
         }
@@ -5268,10 +5266,10 @@ PDM_para_octree_closest_point
       int id_block1 = (int) n_closest_points * (block_tgt_gnum2[i]-1 - block_distrib_idx1[myRank]);
 
       if (DEBUG && DEBUG_MERGE) {
-        /*printf("\nblock2 i = %d (%ld) <%d>\n", i, block_tgt_gnum2[i],
+        /*printf("\nblock2 i = %d ("PDM_FMT_G_NUM") <%d>\n", i, block_tgt_gnum2[i],
           (int) (block_tgt_gnum2[i]-1 - block_distrib_idx1[myRank]));
           printf("id_block1 = %d / %d\n", id_block1, n_pts_block1*n_closest_points);*/
-        printf("\npoint (%ld)\n", block_tgt_gnum2[i]);
+        printf("\npoint ("PDM_FMT_G_NUM")\n", block_tgt_gnum2[i]);
       }
 
       int n_procs_pt = block_stride2[i] / n_closest_points;
@@ -5286,7 +5284,7 @@ PDM_para_octree_closest_point
       }
 
       if (DEBUG && DEBUG_MERGE) {
-        printf("\tj = %d: (%ld, %f)\n",
+        printf("\tj = %d: ("PDM_FMT_G_NUM", %f)\n",
                -1, tmp_closest_src_gnum[0], tmp_closest_src_dist[0]);
       }
 
@@ -5301,7 +5299,7 @@ PDM_para_octree_closest_point
         int k = block_idx2[i] + j*n_closest_points;
 
         if (DEBUG && DEBUG_MERGE) {
-          printf("\tj =  %d: (%ld, %f)\n",
+          printf("\tj =  %d: ("PDM_FMT_G_NUM", %f)\n",
                  j, block_closest_src_gnum2[k], block_closest_src_dist2[k]);
         }
 
@@ -5323,7 +5321,7 @@ PDM_para_octree_closest_point
                                     &_dist);
         assert (popped);
         if (DEBUG && DEBUG_MERGE) {
-          printf("\tpopped: %ld %f \t / %f\n", _gnum, _dist, block_closest_src_dist1[id_block1 + j]);
+          printf("\tpopped: "PDM_FMT_G_NUM" %f \t / %f\n", _gnum, _dist, block_closest_src_dist1[id_block1 + j]);
         }
 
         if (_dist >= block_closest_src_dist1[id_block1 + n_closest_points - 1]) break;
@@ -5332,7 +5330,7 @@ PDM_para_octree_closest_point
         block_closest_src_gnum1[id_block1 + j] = _gnum;
 
         if (DEBUG && DEBUG_MERGE) {
-          printf("\t\t%d/%d: %ld, %f\n",
+          printf("\t\t%d/%d: "PDM_FMT_G_NUM", %f\n",
                  j+1, n_closest_points,
                  block_closest_src_gnum1[id_block1 + j], block_closest_src_dist1[id_block1 + j]);
         }
@@ -5679,7 +5677,7 @@ _local_search1
     while (_min_heap_pop (leaf_heap, &leaf_id, &unused, &leaf_dist)) {
 
       if (DEBUG) {
-        printf("tgt point (%ld) inspecting leaf %d: dist = %f / %f\n",
+        printf("tgt point ("PDM_FMT_G_NUM") inspecting leaf %d: dist = %f / %f\n",
                pts_g_num[i_tgt], leaf_id, leaf_dist, *max_src_dist);
       }
 
@@ -5703,7 +5701,7 @@ _local_search1
         }
 
         if (DEBUG && pts_g_num[i_tgt] == 38) {
-          printf("  src pt (%ld) [%f %f %f] at dist %f / %f\n",
+          printf("  src pt ("PDM_FMT_G_NUM") [%f %f %f] at dist %f / %f\n",
                  src_gnum, src_pt[0], src_pt[1], src_pt[2], src_dist, *max_src_dist);
         }
 
@@ -5720,7 +5718,7 @@ _local_search1
           closest_src_dist[j] = src_dist;
 
           if (DEBUG) {
-            printf("  src pt (%ld) [%f %f %f] at dist %f / %f --> insert at pos %d\n",
+            printf("  src pt ("PDM_FMT_G_NUM") [%f %f %f] at dist %f / %f --> insert at pos %d\n",
                    src_gnum, src_pt[0], src_pt[1], src_pt[2], src_dist, *max_src_dist, j);
           }
         }
@@ -5950,7 +5948,7 @@ _local_search2
         }
 
         if (DEBUG && pts_g_num[i_tgt] == 38) {
-          printf("  src pt (%ld) [%f %f %f] at dist %f / %f\n",
+          printf("  src pt ("PDM_FMT_G_NUM") [%f %f %f] at dist %f / %f\n",
                  src_gnum, src_pt[0], src_pt[1], src_pt[2], src_dist, *max_src_dist);
         }
 
@@ -5967,7 +5965,7 @@ _local_search2
           closest_src_dist[j] = src_dist;
 
           if (DEBUG) {
-            printf("  src pt (%ld) [%f %f %f] at dist %f / %f --> insert at pos %d\n",
+            printf("  src pt ("PDM_FMT_G_NUM") [%f %f %f] at dist %f / %f --> insert at pos %d\n",
                    src_gnum, src_pt[0], src_pt[1], src_pt[2], src_dist, *max_src_dist, j);
           }
         }
@@ -6429,7 +6427,7 @@ PDM_para_octree_closest_point2
     int id_block1 = (int) n_closest_points * (block_tgt_gnum3[i]-1 - block_distrib_idx1[myRank]);
 
     if (DEBUG && DEBUG_MERGE) {
-      printf("\npoint (%ld)\n", block_tgt_gnum3[i]);
+      printf("\npoint ("PDM_FMT_G_NUM")\n", block_tgt_gnum3[i]);
     }
 
     int n_procs_pt = block_stride3[i] / n_closest_points;
@@ -6444,7 +6442,7 @@ PDM_para_octree_closest_point2
     }
 
     if (DEBUG && DEBUG_MERGE) {
-      printf("\tj = %d: (%ld, %f)\n",
+      printf("\tj = %d: ("PDM_FMT_G_NUM", %f)\n",
              -1, tmp_closest_src_gnum[0], tmp_closest_src_dist[0]);
     }
 
@@ -6459,7 +6457,7 @@ PDM_para_octree_closest_point2
       int k = block_idx3[i] + j*n_closest_points;
 
       if (DEBUG && DEBUG_MERGE) {
-        printf("\tj =  %d: (%ld, %f)\n",
+        printf("\tj =  %d: ("PDM_FMT_G_NUM", %f)\n",
                j, block_closest_src_gnum3[k], block_closest_src_dist3[k]);
       }
 
@@ -6481,7 +6479,7 @@ PDM_para_octree_closest_point2
                                   &_dist);
       assert (popped);
       if (DEBUG && DEBUG_MERGE) {
-        printf("\tpopped: %ld %f \t / %f\n", _gnum, _dist, block_closest_src_dist1[id_block1 + j]);
+        printf("\tpopped: "PDM_FMT_G_NUM" %f \t / %f\n", _gnum, _dist, block_closest_src_dist1[id_block1 + j]);
       }
 
       if (_dist >= block_closest_src_dist1[id_block1 + n_closest_points - 1]) break;
@@ -6490,7 +6488,7 @@ PDM_para_octree_closest_point2
       block_closest_src_gnum1[id_block1 + j] = _gnum;
 
       if (DEBUG && DEBUG_MERGE) {
-        printf("\t\t%d/%d: %ld, %f\n",
+        printf("\t\t%d/%d: "PDM_FMT_G_NUM", %f\n",
                j+1, n_closest_points,
                block_closest_src_gnum1[id_block1 + j], block_closest_src_dist1[id_block1 + j]);
       }

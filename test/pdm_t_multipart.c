@@ -174,7 +174,8 @@ int main(int argc, char *argv[])
   for (int i_zone = 0; i_zone < n_zone; i_zone++){
     n_part_zones[i_zone] = n_part;
   }
-  int mpart_id = PDM_multipart_create(n_zone, n_part_zones, PDM_FALSE, method, 1, NULL, comm);
+  int mpart_id = PDM_multipart_create(n_zone, n_part_zones, PDM_FALSE,
+                                      method, PDM_PART_SIZE_HOMOGENEOUS, NULL, comm);
 
   /* Generate mesh */
   int *dcube_ids = (int *) malloc(n_zone*sizeof(int));
@@ -246,8 +247,8 @@ int main(int argc, char *argv[])
       dface_join_idx[i_zone][i+1] = dface_join_idx[i_zone][i+1] + dface_join_idx[i_zone][i];
 
     // Second pass to copy
-    dface_bnd[i_zone]  = (int *) malloc(dface_bnd_idx[i_zone][n_bnd] * sizeof(int));
-    dface_join[i_zone] = (int *) malloc(dface_join_idx[i_zone][n_jn] * sizeof(int));
+    dface_bnd[i_zone]  = (PDM_g_num_t *) malloc(dface_bnd_idx[i_zone][n_bnd] * sizeof(PDM_g_num_t));
+    dface_join[i_zone] = (PDM_g_num_t *) malloc(dface_join_idx[i_zone][n_jn] * sizeof(PDM_g_num_t));
     i_bnd = 0;
     i_jn  = 0;
     for (int igroup = 0; igroup < n_face_group[i_zone]; igroup++)
@@ -449,7 +450,7 @@ int main(int argc, char *argv[])
     PDM_writer_geom_write(id_cs, geom_ids[i_zone]);
     }
     /* Write data */
-    int *partzoneshift = PDM_compute_entity_distribution(comm, tn_part_proc);
+    PDM_g_num_t *partzoneshift = PDM_compute_entity_distribution(comm, tn_part_proc);
 
     ipartzone = 0;
     for (int i_zone = 0; i_zone < n_zone; i_zone++){
@@ -460,7 +461,7 @@ int main(int argc, char *argv[])
         PDM_real_t *val_oppprocid = (PDM_real_t *) malloc(sizeof(PDM_real_t) * pn_vtx[ipartzone]);
         PDM_real_t *val_opppartid = (PDM_real_t *) malloc(sizeof(PDM_real_t) * pn_vtx[ipartzone]);
         for (int i=0; i < pn_cell[ipartzone]; i++) {
-          val_gpartid[i] = partzoneshift[i_rank] + ipartzone;
+          val_gpartid[i] = (PDM_real_t) (partzoneshift[i_rank] + ipartzone);
           val_lpartid[i] = i_part;
           val_procid[i]  = i_rank;
         }

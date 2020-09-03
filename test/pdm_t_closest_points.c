@@ -221,33 +221,34 @@ _gen_clouds_random2
 }
 
 
-static void
-_gen_clouds_random
-(
- const int      nSrc_l,
- const int      nTgt_l,
- const double   radius,
- double       **src_coord,
- double       **tgt_coord
- )
-{
+/* FIXME: _gen_clouds_random a conserver ? */
+   /* static void */
+/* _gen_clouds_random */
+/* ( */
+/*  const int      nSrc_l, */
+/*  const int      nTgt_l, */
+/*  const double   radius, */
+/*  double       **src_coord, */
+/*  double       **tgt_coord */
+/*  ) */
+/* { */
 
-  *src_coord = malloc (sizeof(double) * 3 * nSrc_l);
-  double *_src_coord = *src_coord;
-  for (int i = 0; i < nSrc_l; i++) {
-    for (int j = 0; j < 3; j++) {
-      _src_coord[3*i+j] = _random01() * radius;
-    }
-  }
+/*   *src_coord = malloc (sizeof(double) * 3 * nSrc_l); */
+/*   double *_src_coord = *src_coord; */
+/*   for (int i = 0; i < nSrc_l; i++) { */
+/*     for (int j = 0; j < 3; j++) { */
+/*       _src_coord[3*i+j] = _random01() * radius; */
+/*     } */
+/*   } */
 
-  *tgt_coord = malloc (sizeof(double) * 3 * nTgt_l);
-  double *_tgt_coord = *tgt_coord;
-  for (int i = 0; i < nTgt_l; i++) {
-    for (int j = 0; j < 3; j++) {
-      _tgt_coord[3*i+j] = _random01() * radius;
-    }
-  }
-}
+/*   *tgt_coord = malloc (sizeof(double) * 3 * nTgt_l); */
+/*   double *_tgt_coord = *tgt_coord; */
+/*   for (int i = 0; i < nTgt_l; i++) { */
+/*     for (int j = 0; j < 3; j++) { */
+/*       _tgt_coord[3*i+j] = _random01() * radius; */
+/*     } */
+/*   } */
+/* } */
 
 
 
@@ -494,10 +495,10 @@ main
   printf("\n\n============================\n\n");
 
   for (int i = 0; i < _nTgt_l; i++) {
-    printf("Target point #%d (%ld) [%f, %f, %f]\n", i, tgt_gnum[i],
+    printf("Target point #%d ("PDM_FMT_G_NUM") [%f, %f, %f]\n", i, tgt_gnum[i],
            tgt_coords[3*i], tgt_coords[3*i+1], tgt_coords[3*i+2]);
     for (int j = 0; j < n_closest_points; j++)
-      printf("\t%d:\t%ld\t%f\n",
+      printf("\t%d:\t"PDM_FMT_G_NUM"\t%f\n",
              j+1,
              closest_src_gnum[n_closest_points*i + j],
              closest_src_dist[n_closest_points*i + j]);

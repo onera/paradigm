@@ -782,8 +782,8 @@ _distrib_data
   {
     ptb->n_elt_block = ptb->data_distrib_index[ptb->i_rank+1] - ptb->data_distrib_index[ptb->i_rank];
     printf("ptb->n_elt_block::%d \n", ptb->n_elt_block);
-    printf(" ptb->data_distrib_index[ptb->i_rank+1]::%d \n", ptb->data_distrib_index[ptb->i_rank+1]);
-    printf(" ptb->data_distrib_index[ptb->i_rank]::%d \n", ptb->data_distrib_index[ptb->i_rank]);
+    printf(" ptb->data_distrib_index[ptb->i_rank+1]::"PDM_FMT_G_NUM" \n", ptb->data_distrib_index[ptb->i_rank+1]);
+    printf(" ptb->data_distrib_index[ptb->i_rank]::"PDM_FMT_G_NUM" \n", ptb->data_distrib_index[ptb->i_rank]);
   }
 
   /*

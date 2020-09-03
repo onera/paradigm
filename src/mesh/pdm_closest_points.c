@@ -149,7 +149,7 @@ typedef struct {
 
 static PDM_Handles_t *_closest_pts   = NULL;
 
-static int idebug = 0;
+//static int idebug = 0;
 
 /*=============================================================================
  * Private function definitions
@@ -356,20 +356,11 @@ PDM_closest_points_compute
 {
   _PDM_closest_t *cls = _get_from_id (id);
 
-  double b_t_elapsed;
-  double b_t_cpu;
-  double b_t_cpu_u;
-  double b_t_cpu_s;
-
   cls->times_elapsed[BEGIN] = PDM_timer_elapsed(cls->timer);
   cls->times_cpu[BEGIN]     = PDM_timer_cpu(cls->timer);
   cls->times_cpu_u[BEGIN]   = PDM_timer_cpu_user(cls->timer);
   cls->times_cpu_s[BEGIN]   = PDM_timer_cpu_sys(cls->timer);
 
-  b_t_elapsed = cls->times_elapsed[BEGIN];
-  b_t_cpu     = cls->times_cpu[BEGIN];
-  b_t_cpu_u   = cls->times_cpu_u[BEGIN];
-  b_t_cpu_s   = cls->times_cpu_s[BEGIN];
   PDM_timer_resume(cls->timer);
 
 
@@ -478,10 +469,6 @@ PDM_closest_points_compute
   cls->times_cpu_u[END]   = PDM_timer_cpu_user(cls->timer);
   cls->times_cpu_s[END]   = PDM_timer_cpu_sys(cls->timer);
 
-  b_t_elapsed = cls->times_elapsed[END];
-  b_t_cpu     = cls->times_cpu[END];
-  b_t_cpu_u   = cls->times_cpu_u[END];
-  b_t_cpu_s   = cls->times_cpu_s[END];
   PDM_timer_resume(cls->timer);
 }
 

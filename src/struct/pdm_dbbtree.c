@@ -795,7 +795,7 @@ PDM_dbbtree_intersect_boxes_set
                , _dbbt->rankBoxes->local_boxes->extents[6*i+5]);
         printf("[%d] : ",i);
         for (int j = (*box_index)[i]; j < (*box_index)[i+1]; j++) {
-          PDM_printf (" %ld",  boxes->local_boxes->g_num[(*box_l_num)[j]]);
+          PDM_printf (" "PDM_FMT_G_NUM"",  boxes->local_boxes->g_num[(*box_l_num)[j]]);
         }
         PDM_printf ("\n");
       }
@@ -834,7 +834,7 @@ PDM_dbbtree_intersect_boxes_set
     if (1 == 0) {
       printf ("Boxes B apres redistribution : %d\n", boxes->local_boxes->n_boxes);
       for (int i = 0; i < boxes->local_boxes->n_boxes; i++) {
-        printf (" %ld", boxes->local_boxes->g_num[i]);
+        printf (" "PDM_FMT_G_NUM"", boxes->local_boxes->g_num[i]);
       }
       printf("\n");
     }
@@ -909,9 +909,9 @@ PDM_dbbtree_intersect_boxes_set
   if (1 == 0) {
     printf ("Intersections : %d\n", boxes->local_boxes->n_boxes);
     for (int i = 0; i < nBoxesA; i++) {
-      printf ("A elt %ld :", _dbbt->boxes->local_boxes->g_num[i]);
+      printf ("A elt "PDM_FMT_G_NUM" :", _dbbt->boxes->local_boxes->g_num[i]);
       for (int j = newIndex[i]; j < newIndex[i+1]; j++) {
-        printf (" %ld", boxes->local_boxes->g_num[(*box_l_num)[j]]);
+        printf (" "PDM_FMT_G_NUM"", boxes->local_boxes->g_num[(*box_l_num)[j]]);
       }
       printf("\n");
     }
