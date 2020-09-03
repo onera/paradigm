@@ -200,15 +200,6 @@ PDM_closest_points_compute_GPU
 {
   _closest_pts = var;
   _PDM_closest_t *cls = _get_from_id (id);
-  //_PDM_closest_t *cls = NULL;
-  //int *octree_id = new int;
-
-  //Allocate data on unified memory so it is accessible from CPU or GPU
-  //gpuErrchk(cudaMallocManaged(&cls, sizeof(_PDM_closest_t)));
-  //gpuErrchk(cudaMallocManaged(&octree_id, sizeof(int)));
-
-
-  //cls = _get_from_id (id);
 
 
   double b_t_elapsed;

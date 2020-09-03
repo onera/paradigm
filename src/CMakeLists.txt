@@ -39,7 +39,7 @@ if (PDM_ENABLE_CUDA)
   set_target_properties(pdm_gpu PROPERTIES
                             CUDA_SEPARABLE_COMPILATION ON)
   target_compile_options(pdm_gpu PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:
-  -maxrregcount=32;-G;-g;
+  -maxrregcount=32;--fmad=false;#-G;-g;
   # -gencode=arch=compute_35,code=sm_35;
   # -gencode=arch=compute_37,code=sm_37;
   # -gencode=arch=compute_50,code=sm_50;

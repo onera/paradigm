@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
+#include <time.h>
 
 /*----------------------------------------------------------------------------
  *  Local headers
@@ -3246,26 +3247,9 @@ _closest_points_local
   }
   //<<<---
 
-      printf("[%d] 0 part boundary elt idx : %d,  neighbours : %d,  neighbours idx : %d\n", myRank, 
-    octree->part_boundary_elt_idx[0], octree->octants->neighbours[0], octree->octants->neighbour_idx[0]);
-        printf("[%d] 1 part boundary elt idx : %d,  neighbours : %d,  neighbours idx : %d\n", myRank, 
-    octree->part_boundary_elt_idx[1], octree->octants->neighbours[1], octree->octants->neighbour_idx[1]);
-        printf("[%d] 2 part boundary elt idx : %d,  neighbours : %d,  neighbours idx : %d\n", myRank, 
-    octree->part_boundary_elt_idx[2], octree->octants->neighbours[2], octree->octants->neighbour_idx[2]);
-        printf("[%d] 3 part boundary elt idx : %d,  neighbours : %d,  neighbours idx : %d\n", myRank, 
-    octree->part_boundary_elt_idx[3], octree->octants->neighbours[3], octree->octants->neighbour_idx[3]);
-        printf("[%d] 4 part boundary elt idx : %d,  neighbours : %d,  neighbours idx : %d\n", myRank, 
-    octree->part_boundary_elt_idx[4], octree->octants->neighbours[4], octree->octants->neighbour_idx[4]);
-        printf("[%d] 5 part boundary elt idx : %d,  neighbours : %d,  neighbours idx : %d\n", myRank, 
-    octree->part_boundary_elt_idx[5], octree->octants->neighbours[5], octree->octants->neighbour_idx[5]);
-        printf("[%d] 6 part boundary elt idx : %d,  neighbours : %d,  neighbours idx : %d\n", myRank, 
-    octree->part_boundary_elt_idx[6], octree->octants->neighbours[6], octree->octants->neighbour_idx[6]);
-        printf("[%d] 140 part boundary elt idx : %d,  neighbours : %d,  neighbours idx : %d\n", myRank, 
-    octree->part_boundary_elt_idx[140], octree->octants->neighbours[140], octree->octants->neighbour_idx[140]);
 
   int *is_visited_part = malloc (sizeof(int) * octree->n_connected);
   size_t size = sizeof(int) * octants->n_nodes;
-  printf("size : %d\n", size);
   int *is_visited     = malloc (sizeof(int) * octants->n_nodes);
   int *visited_leaves = malloc (sizeof(int) * octants->n_nodes);// could be smaller...
   int n_visited = 0;
@@ -3286,7 +3270,6 @@ _closest_points_local
   timer_ls[LS_INIT] = e_timer - b_timer;
   PDM_timer_resume(octree->timer);
   //<<--
-
 
   /* Loop over target points */
   for (int i_tgt = 0; i_tgt < n_pts; i_tgt++) {
@@ -3610,8 +3593,6 @@ _closest_points_local
 
             closest_src_gnum[j] = src_gnum;
             closest_src_dist[j] = src_dist;
-            //printf("[%d] closest src dist : %f,   closest src gnum : %ld\n", i_tgt, closest_src_dist[i_tgt], closest_src_gnum[i_tgt]);
-
 
             if (DEBUG) {
               printf("  src pt (%ld) [%f %f %f] at dist %f / %f --> insert at pos %d\n",
@@ -3657,9 +3638,7 @@ _closest_points_local
 
             if (ngb < 0) {
               // distant neighbour(s)
-              ngb = -(ngb + 1);
-              printf("part boundary elt idx gpu [%d] : %d\n", ngb, octree->part_boundary_elt_idx[ngb]);
-              
+              ngb = -(ngb + 1);              
               for (int j = octree->part_boundary_elt_idx[ngb];
                    j < octree->part_boundary_elt_idx[ngb+1]; j++) {
 
@@ -3685,7 +3664,6 @@ _closest_points_local
                 send_to_rank_leaves[ngb_rank][2*n_send_to_rank_leaves[ngb_rank]]   = ngb_leaf;
                 send_to_rank_leaves[ngb_rank][2*n_send_to_rank_leaves[ngb_rank]+1] = ngb_part;
                 n_send_to_rank_leaves[ngb_rank]++;
-                printf("[%d] n send to rank leaves[%d] : %d\n", myRank, ngb_rank, n_send_to_rank_leaves[ngb_rank]);
                 tmp_send_tgt_n_leaves[ngb_rank][send_count[ngb_rank]-1]++;
 
               } // end loop over distant neighbours (j)
@@ -3727,7 +3705,6 @@ _closest_points_local
 
     } // end loop over (sorted) start leaves
 
-    //printf("[%d] closest src dist : %f,   closest src gnum : %ld\n", i_tgt, closest_src_dist[i_tgt], closest_src_gnum[i_tgt]);
 
 
     for (int rank = 0; rank < lComm; rank++) {
@@ -3753,14 +3730,11 @@ _closest_points_local
     //<<--
 
   } // end loop over target points (i_tgt)
+
   free (is_visited);
   free (visited_leaves);
   _min_heap_free (start_heap);
   _min_heap_free (leaf_heap);
-
-      printf("[%d] n tmp 0 : %d,    s tmp 0 : %d\n", myRank, n_tmp_send_start_leaves[0], s_tmp_send_start_leaves[0]);
-        printf("[%d] n tmp 1 : %d,    s tmp 1 : %d\n", myRank, n_tmp_send_start_leaves[1], s_tmp_send_start_leaves[1]);
-
 
 
   //-->> DETAIL TIMERS
@@ -5659,10 +5633,8 @@ PDM_para_octree_closest_point
       recv_start_leaves_rank_shift[i+1] =
         recv_start_leaves_rank_shift[i] + recv_start_leaves_rank_count[i];
     }
-    printf("[%d] AAA start leaves 20 : %d,    size : %d\n", myRank, start_leaves[20], recv_start_leaves_rank_shift[lComm]);
 
     start_leaves = realloc (start_leaves, sizeof(int) * recv_start_leaves_rank_shift[lComm]);
-        printf("[%d] AAA start leaves 20 : %d,    size : %d\n", myRank, start_leaves[20], recv_start_leaves_rank_shift[lComm]);
 
     PDM_MPI_Alltoallv (send_start_leaves,
                        send_start_leaves_rank_count,

@@ -77,9 +77,8 @@ extern "C" {
  *   s        --> Normalization (translation component)
  *----------------------------------------------------------------------------*/
 
-__host__ __device__
 void
-PDM_morton_encode_coords_GPU(int                dim,
+PDM_morton_encode_coords_CPU(int                dim,
                              PDM_morton_int_t   level,
                              const double       extents[],
                              size_t             n_coords,
@@ -87,6 +86,17 @@ PDM_morton_encode_coords_GPU(int                dim,
                              PDM_morton_code_t  pts_code[],
                              double             d[3],
                              double             s[3]);
+
+__device__
+void
+PDM_morton_encode_coords_GPU(int                dim,
+                         PDM_morton_int_t   level,
+                         const double       extents[],
+                         size_t             n_coords,
+                         const double       coords[],
+                         PDM_morton_code_t  m_code[],
+                         double             d[3],
+                         double             s[3]);                            
 
 /*----------------------------------------------------------------------------
  * Get the index associated to a Morton code using a binary search.

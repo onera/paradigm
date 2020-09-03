@@ -15,7 +15,6 @@
 #include "pdm.h"
 #include "pdm_priv.h"
 #include "pdm_mpi.h"
-#include "pdm_mpi.cuh"
 #include "pdm_printf.h"
 #include "pdm_error.h"
 #include "pdm_cuda_error.cuh"
@@ -24,11 +23,9 @@
 #include "pdm_morton.h"
 #include "pdm_morton.cuh"
 #include "pdm_handles.h"
-#include "pdm_handles.cuh"
 #include "pdm_para_octree.h"
 #include "pdm_para_octree.cuh"
 #include "pdm_timer.h"
-#include "pdm_timer.cuh"
 #include "pdm_part_to_block.h"
 #include "pdm_block_to_part.h"
 #include "pdm_sort.h"
@@ -114,8 +111,6 @@ typedef enum {
  * \param [in]      octree           Octree structure
  *
  */
-
-__device__ volatile int next_thread = 0;
 
 /*============================================================================
  * Private function definitions
@@ -373,15 +368,15 @@ _octant_min_dist2
 
   for (int i = 0; i < dim; i++) {
     double x = coords[i];
-    double xmin = s[i] + d[i] * side * code.X[i];
-    double xmax = xmin + d[i] * side;
+    double xmin = s[i] + (d[i] * side * code.X[i]);
+    double xmax = xmin + (d[i] * side);
 
     if (x > xmax) {
       delta = x - xmax;
-      min_dist2 += delta * delta;
+      min_dist2 += (delta * delta);
     } else if (x < xmin) {
       delta = x - xmin;
-      min_dist2 += delta * delta;
+      min_dist2 += (delta * delta);
     }
   }
 
@@ -410,10 +405,10 @@ _octant_min_dist2_normalized
 
     if (x > xmax) {
       delta = d[i] * (x - xmax);
-      min_dist2 += delta * delta;
+      min_dist2 += (delta * delta);
     } else if (x < xmin) {
       delta = d[i] * (x - xmin);
-      min_dist2 += delta * delta;
+      min_dist2 += (delta * delta);
     }
   }
 
@@ -490,7 +485,7 @@ _maximal_intersecting_range
   // get left bound (included)
   size_t _l = 0;
   size_t _r = n_codes;
-  while (_l < _r - 1) {
+  while (_l < (_r - 1)) {
     size_t m = _l + (_r - _l) / 2;
     if (PDM_morton_a_gt_b_GPU (codes[m], lo)) {
       _r = m;
@@ -504,7 +499,7 @@ _maximal_intersecting_range
   // get right bound (excluded)
   _l = _l - 1;
   _r = n_codes - 1;
-  while (_l < _r - 1) {
+  while (_l < (_r - 1)) {
     size_t m = _r - (_r - _l) / 2;
     if (PDM_morton_a_gt_b_GPU (hi, codes[m])) {
       _l = m;
@@ -516,7 +511,6 @@ _maximal_intersecting_range
   *r = _r + 1;
 }
 
-__host__ __device__
 static _min_heap_t *
 _min_heap_create
 (
@@ -535,6 +529,7 @@ _min_heap_create
 
   return h;
 }
+
 
 __host__ __device__
 static void
@@ -555,37 +550,41 @@ static
 void
 _target_points_compute
 (
-  _octree_t     *octree,
-  int           iteration,
+  _octree_t              *octree,
+  int                    iteration,
   unsigned int           *lock,
-  int           n_pts,
-  int           n_closest_points,
-  int           myRank,
-  int           lComm,
-  int           points_shift,
+  int                    **start_heap_lnum,
+  PDM_g_num_t            **start_heap_gnum,
+  double                 **start_heap_priority,
+  int                    **leaf_heap_lnum,
+  PDM_g_num_t            **leaf_heap_gnum,
+  double                 **leaf_heap_priority,
+  int                    n_pts,
+  int                    n_closest_points,
+  int                    myRank,
+  int                    lComm,
+  int                    points_shift,
   const PDM_morton_int_t PDM_morton_max_level,
-  double        *pts_coord,
-  PDM_g_num_t   *pts_g_num,
-  int           *start_leaves,
-  int           *start_leaves_idx,
-  double        *upper_bound_dist,
-  PDM_g_num_t   *local_closest_src_gnum,
-  double        *local_closest_src_dist,
+  double                 *pts_coord,
+  PDM_g_num_t            *pts_g_num,
+  int                    *start_leaves,
+  int                    *start_leaves_idx,
+  double                 *upper_bound_dist,
+  PDM_g_num_t            *local_closest_src_gnum,
+  double                 *local_closest_src_dist,
   volatile int           *send_count,
-  int           **tmp_send_tgt_lnum,
-  int           **tmp_send_tgt_n_leaves,
-  int           **tmp_send_start_leaves,
-  int           **send_to_rank_leaves,
-  int           *s_send_to_rank_leaves,
-  int           *s_tmp_send_start_leaves,
+  int                    **tmp_send_tgt_lnum,
+  int                    **tmp_send_tgt_n_leaves,
+  int                    **tmp_send_start_leaves,
+  int                    **send_to_rank_leaves,
+  int                    *s_send_to_rank_leaves,
+  int                    *s_tmp_send_start_leaves,
   volatile int           *n_tmp_send_start_leaves
  )
 {
   int i_tgt = points_shift + blockIdx.x * blockDim.x + threadIdx.x;
 
   if ((i_tgt - points_shift) >= n_pts)  return; 
-
-  //printf("[%d] THREAD : %d\n", myRank, i_tgt);
   
   const int DEBUG = 0;
   const int CHECK_FACE_DIST = 1;
@@ -593,7 +592,6 @@ _target_points_compute
   const double THRESHOLD_CLOSEST = 0.75; // check closest if min_dist > threshold * upper bound
   const int CHECK_INTERSECT = 1;
   const int NORMALIZE = 1;
-  //volatile int nxt = next_thread;
   bool leaveLoop = false;
   *lock = 0;
 
@@ -608,19 +606,53 @@ _target_points_compute
   const int dim = octree->dim;
 
   // _min_heap_t *start_heap = _min_heap_create(start_leaves_idx[i_tgt+1]-start_leaves_idx[i_tgt]);
-  _min_heap_t *start_heap = _min_heap_create(1);
-  _min_heap_t *leaf_heap = _min_heap_create(octants->n_nodes);
+  // _min_heap_t *start_heap = _min_heap_create(1);
+  // _min_heap_t *leaf_heap = _min_heap_create(octants->n_nodes);
+  _min_heap_t *start_heap;
+  _min_heap_t *leaf_heap;
+  gpuErrchk(cudaMalloc(&start_heap, sizeof(_min_heap_t)));
+  gpuErrchk(cudaMalloc(&leaf_heap, sizeof(_min_heap_t)));
+
+  if (lComm == 1)
+  {
+    start_heap->size = 1;
+  }
+  else
+  {
+    start_heap->size = start_leaves_idx[i_tgt+1] - start_leaves_idx[i_tgt];
+  }
+  leaf_heap->size = octants->n_nodes/10;
+
+  gpuErrchk(cudaMalloc(&(start_heap->lnum), sizeof(int) * start_heap->size));
+  gpuErrchk(cudaMalloc(&(start_heap->gnum), sizeof(PDM_g_num_t) * start_heap->size));
+  gpuErrchk(cudaMalloc(&(start_heap->priority), sizeof(double) * start_heap->size));
+  gpuErrchk(cudaMalloc(&(leaf_heap->lnum), sizeof(int) * leaf_heap->size));
+  gpuErrchk(cudaMalloc(&(leaf_heap->gnum), sizeof(PDM_g_num_t) * leaf_heap->size));
+  gpuErrchk(cudaMalloc(&(leaf_heap->priority), sizeof(double) * leaf_heap->size));
+
   
-  // size_t size = sizeof(int) * octants->n_nodes;
-  // printf("size : %d\n", size);
   // int *is_visited_part = new int[octree->n_connected];
   // int *is_visited     = new int[octants->n_nodes];
   // int *visited_leaves = new int[octants->n_nodes];// could be smaller...
   // int *n_send_to_rank_leaves = new int[lComm];
-  int *is_visited_part = (int*)malloc (sizeof(int) * octree->n_connected);
-  int *is_visited     = (int*)malloc (sizeof(int) * octants->n_nodes);
-  int *visited_leaves = (int*)malloc (sizeof(int) * octants->n_nodes);// could be smaller...
-  volatile int *n_send_to_rank_leaves = (int*)malloc (sizeof(int) * lComm);
+  // int *is_visited_part = (int*)malloc (sizeof(int) * octree->n_connected);
+  // int *is_visited     = (int*)malloc (sizeof(int) * octants->n_nodes);
+  // int *visited_leaves = (int*)malloc (sizeof(int) * octants->n_nodes);// could be smaller...
+  // volatile int *n_send_to_rank_leaves = (int*)malloc (sizeof(int) * lComm);
+
+  int *is_visited_part;
+  int *is_visited;
+  int *visited_leaves;
+  volatile int *n_send_to_rank_leaves;
+
+  gpuErrchk(cudaMalloc(&is_visited_part, sizeof(int) * octree->n_connected));
+  //bool
+  gpuErrchk(cudaMalloc(&is_visited, sizeof(int) * octants->n_nodes));
+  //start_leaves*10
+  gpuErrchk(cudaMalloc(&visited_leaves, sizeof(int) * octants->n_nodes));
+  //gpuErrchk(cudaMalloc(&visited_leaves, sizeof(int) * start_heap->size * 10));
+  gpuErrchk(cudaMalloc(&n_send_to_rank_leaves, sizeof(volatile int) * lComm));
+
   int n_visited = 0;
 
   for (int i = 0; i < octants->n_nodes; i++) {
@@ -649,8 +681,6 @@ _target_points_compute
 
   double *max_src_dist = closest_src_dist + n_closest_points - 1;
 
-  // __syncthreads();
-  // printf("[%d] CHECK 0\n", myRank);
   /* Get current target point data */
   const double *_pt = pts_coord + i_tgt * dim;
   double _ptn[3];
@@ -876,8 +906,6 @@ _target_points_compute
       free(box);
     } // end if (min_start_dist >= THRESHOLD_CLOSEST * (*max_src_dist))
   } // end if (CHECK_CLOSEST && n_start_leaves > 0)
-  // __syncthreads();
-  // printf("[%d] CHECK\n", myRank);
 
   // //-->> DETAIL TIMERS
   // PDM_timer_hang_on(octree->timer);
@@ -912,11 +940,8 @@ _target_points_compute
                     0,
                     start_dist);
     is_visited[start_id] = 1;
-    // printf("start id : %d\n", start_id);
     visited_leaves[n_visited++] = start_id;
 
-
-    //GPU
     /* Visit octree leaves from neighbour to neighbour using priority queue */
     int leaf_id;
     double leaf_dist;
@@ -927,8 +952,6 @@ _target_points_compute
                 pts_g_num[i_tgt], leaf_id, leaf_dist, *max_src_dist);
       }
 
-      // printf("leaf dist : %d\n", leaf_dist);
-      // printf("max src dist : %d\n", *max_src_dist);
       if (leaf_dist >= *max_src_dist) {
         break;
       }
@@ -937,14 +960,14 @@ _target_points_compute
       for (int i = 0; i < octants->n_points[leaf_id]; i++) {
         // get source point coords and gnum
         int i_src = octants->range[leaf_id] + i;
-        double *src_pt = octree->points + i_src * dim;
+        double *src_pt = octree->points + (i_src * dim);
         PDM_g_num_t src_gnum = octree->points_gnum[i_src];
 
         // compute (squared) distance from target point
         double src_dist = 0;
         for (int j = 0; j < dim; j++) {
           double delta = _pt[j] - src_pt[j];
-          src_dist += delta * delta;
+          src_dist += (delta * delta);
         }
 
         if (DEBUG && pts_g_num[i_tgt] == 38) {
@@ -963,7 +986,6 @@ _target_points_compute
 
           closest_src_gnum[j] = src_gnum;
           closest_src_dist[j] = src_dist;
-          //printf("[%d from gpu] closest src dist : %f,   closest src gnum : %ld\n", i_tgt, closest_src_dist[i_tgt], closest_src_gnum[i_tgt]);
 
           if (DEBUG) {
             printf("  src pt (%ld) [%f %f %f] at dist %f / %f --> insert at pos %d\n",
@@ -976,15 +998,13 @@ _target_points_compute
       /* inspect neighbours of popped leaf */
       double side = 1./pow(2.0, (double)octants->codes[leaf_id].L);
       int check_dist;
-      //PDM_para_octree_direction_t dir2 = PDM_UP;
-      //GPU
       for (int dir = 0; dir < 6; dir++) {
         if (CHECK_FACE_DIST) {
           /* coarse test to discard neighbours that are clearly beyond the current search radius */
           int i_dim = dir / 2;
           int sign = dir % 2;
 
-          double x_face = octree->s[i_dim] + octree->d[i_dim] * side * (octants->codes[leaf_id].X[i_dim] + sign);
+          double x_face = octree->s[i_dim] + (octree->d[i_dim] * side * (octants->codes[leaf_id].X[i_dim] + sign));
 
           if (sign == 0) {
             check_dist = _pt[i_dim] > x_face;
@@ -1010,12 +1030,6 @@ _target_points_compute
 
           int ngb = octants->neighbours[i];
           if (ngb < 0) {
-            // for (int i = 0; i < i_tgt; i++)
-            // {
-            //   printf("[%d] Thread %d is waiting...\n", myRank, (i_tgt - points_shift));
-            //   __syncthreads();
-            //   //printf("[%d] next thread : %d from thread : %d\n", myRank, next_thread, i_tgt);
-            // }
             leaveLoop = false;
             while (!leaveLoop)
             {
@@ -1063,15 +1077,13 @@ _target_points_compute
                     printf("  Send pt (%ld) to rank %d, leaf %d (part %d)\n",
                             pts_g_num[i_tgt], ngb_rank, ngb_leaf, ngb_part);
                   }
-                  //printf("[%d] size : %lu\n", myRank, sizeof(*send_to_rank_leaves[ngb_rank]));
-                  //printf("[%d] s send : %d,    n send : %d\n", myRank, s_send_to_rank_leaves[ngb_rank], n_send_to_rank_leaves[ngb_rank]);
+
                   atomicExch(&(send_to_rank_leaves[ngb_rank][2*n_send_to_rank_leaves[ngb_rank]]), ngb_leaf);
                   atomicExch(&(send_to_rank_leaves[ngb_rank][2*n_send_to_rank_leaves[ngb_rank]+1]), ngb_part);
                   atomicAdd((int*)&(n_send_to_rank_leaves[ngb_rank]), 1);
                   // send_to_rank_leaves[ngb_rank][2*n_send_to_rank_leaves[ngb_rank]]   = ngb_leaf;
                   // send_to_rank_leaves[ngb_rank][2*n_send_to_rank_leaves[ngb_rank]+1] = ngb_part;
                   // n_send_to_rank_leaves[ngb_rank]++;
-                  //printf("[%d] THREAD %d : n send to rank leaves[%d] : %d\n", myRank, i_tgt, ngb_rank, n_send_to_rank_leaves[ngb_rank]);
 
                   atomicAdd(&(tmp_send_tgt_n_leaves[ngb_rank][send_count[ngb_rank]-1]), 1);
                   // tmp_send_tgt_n_leaves[ngb_rank][send_count[ngb_rank]-1]++;
@@ -1081,13 +1093,6 @@ _target_points_compute
                 atomicExch(lock, 0);
               }
             }
-
-            // for (int i = 0; i < n_pts; i++)
-            // {
-            //   printf("[%d] THREAD PASS : %d\n", myRank, i_tgt);
-            //   __threadfence();
-            //   __syncthreads();
-            // }
           } else {
             // local neighbour
             if (is_visited[ngb] == 1) continue;
@@ -1124,11 +1129,6 @@ _target_points_compute
     } // end while (_min_heap_pop (leaf_heap))
 
   } // end loop over (sorted) start leaves
-  //atomicExch((int*)&next_thread, i_tgt + 1);
-  // __syncthreads();
-  // next_thread = i_tgt + 1;
-  // printf("[%d] next thread : %d\n", myRank, next_thread);
-  //__threadfence();
 
   for (int rank = 0; rank < lComm; rank++) {
     if (rank == myRank) continue;
@@ -1156,21 +1156,20 @@ _target_points_compute
   // timer_ls[LS_TRAVERSAL] += e_timer - b_timer;
   // PDM_timer_resume(octree->timer);
   // //<<--
-  free(is_visited_part);
-  free(is_visited);
-  free(visited_leaves);
-  free((void*)n_send_to_rank_leaves);
 
-  _min_heap_free(start_heap);
-  _min_heap_free(leaf_heap);
-  //printf("[%d] tgt lnum [%d][1] from gpu : %d,    n pts : %d\n", myRank, (myRank+1)%2, tmp_send_tgt_lnum[(myRank+1)%2][1], n_pts);
-  //printf("[%d] from GPU : n tmp 0 : %d,    s tmp 0 : %d\n", myRank, n_tmp_send_start_leaves[0], s_tmp_send_start_leaves[0]);
+  gpuErrchk(cudaFree(is_visited_part));
+  gpuErrchk(cudaFree(is_visited));
+  gpuErrchk(cudaFree(visited_leaves));
+  gpuErrchk(cudaFree((void*)n_send_to_rank_leaves));
+  gpuErrchk(cudaFree(start_heap->lnum));
+  gpuErrchk(cudaFree(start_heap->gnum));
+  gpuErrchk(cudaFree(start_heap->priority));
+  gpuErrchk(cudaFree(start_heap));
+  gpuErrchk(cudaFree(leaf_heap->lnum));
+  gpuErrchk(cudaFree(leaf_heap->gnum));
+  gpuErrchk(cudaFree(leaf_heap->priority));
+  gpuErrchk(cudaFree(leaf_heap));
 }
-
-
-
-
-
 
 static int
 _binary_search
@@ -1388,9 +1387,9 @@ _closest_points_local
   int **send_to_rank_leaves   = (int**)malloc (sizeof(int *) * lComm);
   int  *s_send_to_rank_leaves = (int*)malloc (sizeof(int) * lComm);
   for (int i = 0; i < lComm; i++) {
-    s_send_to_rank_leaves[i] = 16;// ?
+    s_send_to_rank_leaves[i] = 100000;// ?
     if (i != myRank) {
-      s_tmp_send_start_leaves[i] = 16;//?
+      s_tmp_send_start_leaves[i] = 100000;//?
     } else {
       s_tmp_send_start_leaves[i] = 0;
     }
@@ -1406,39 +1405,21 @@ _closest_points_local
   PDM_timer_resume(octree->timer);
   //<<--
 
-  // if (myRank == 0)
-  // {
-  //   gpuErrchk(cudaSetDevice(0));
-  //   gpuErrchk(cudaDeviceReset());
-  // }
-  // else if (myRank == 1)
-  // {
-  //   gpuErrchk(cudaSetDevice(1));
-  //   gpuErrchk(cudaDeviceReset());
-  // }
-  // else
-  // {
-  //   printf("Too few CUDA devices for this number of processes\n");
-  //   exit(1);
-  // }
-  
-    float free_m,total_m,used_m;
-
-  size_t free_to,total_to;
-
-  cudaMemGetInfo(&free_to,&total_to);
-
-  free_m =(uint)free_to/1048576.0 ;
-
-  total_m=(uint)total_to/1048576.0;
-
-  used_m=total_m-free_m;
-
-  printf ( "  mem free %d .... %f MB mem total %d....%f MB mem used %f MB\n",free_to,free_m,total_to,total_m,used_m);
-
-  gpuErrchk(cudaSetDevice(1));
-  gpuErrchk(cudaDeviceReset());
-
+  if (myRank == 0)
+  {
+    gpuErrchk(cudaSetDevice(0));
+    gpuErrchk(cudaDeviceReset());
+  }
+  else if (myRank == 1)
+  {
+    gpuErrchk(cudaSetDevice(1));
+    gpuErrchk(cudaDeviceReset());
+  }
+  else
+  {
+    printf("Too few CUDA devices for this number of processes\n");
+    exit(1);
+  }
 
   //Allocation on device
   _octree_t       *d_octree;
@@ -1475,7 +1456,18 @@ _closest_points_local
   int             *d_s_send_to_rank_leaves;
   int             *d_s_tmp_send_start_leaves;
   int             *d_n_tmp_send_start_leaves;
-
+  int             **h_start_heap_lnum = (int**)malloc(sizeof(int*) * n_pts);
+  PDM_g_num_t     **h_start_heap_gnum = (PDM_g_num_t**)malloc(sizeof(PDM_g_num_t*) * n_pts);
+  double          **h_start_heap_priority = (double**)malloc(sizeof(double*) * n_pts);
+  int             **h_leaf_heap_lnum = (int**)malloc(sizeof(int*) * n_pts);
+  PDM_g_num_t     **h_leaf_heap_gnum = (PDM_g_num_t**)malloc(sizeof(PDM_g_num_t*) * n_pts);
+  double          **h_leaf_heap_priority = (double**)malloc(sizeof(double*) * n_pts);
+  int             **d_start_heap_lnum;
+  PDM_g_num_t     **d_start_heap_gnum;
+  double          **d_start_heap_priority;
+  int             **d_leaf_heap_lnum;
+  PDM_g_num_t     **d_leaf_heap_gnum;
+  double          **d_leaf_heap_priority;
   
   gpuErrchk(cudaMalloc(&d_octree, sizeof(_octree_t)));
     gpuErrchk(cudaMalloc(&d_octree_points, sizeof(double) * octree->n_points * octree->dim));
@@ -1489,7 +1481,6 @@ _closest_points_local
       gpuErrchk(cudaMalloc(&d_octants_neighbour_idx, sizeof(int) * (n_direction * octree->octants->n_nodes + 1)));
       gpuErrchk(cudaMalloc(&d_octants_neighbours, sizeof(int) * octree->octants->neighbour_idx[n_direction * octree->octants->n_nodes]));
     gpuErrchk(cudaMalloc(&d_octree_connected_idx, sizeof(int) * (octree->n_connected+1)));
-    //manque des allocs pour l'octree, à compléter
   gpuErrchk(cudaMalloc(&d_lock, sizeof(unsigned int)));
   gpuErrchk(cudaMalloc(&d_pts_coord, sizeof(double) * n_pts*dim));
   gpuErrchk(cudaMalloc(&d_pts_g_num, sizeof(PDM_g_num_t) * n_pts));
@@ -1531,7 +1522,7 @@ _closest_points_local
   gpuErrchk(cudaMemcpy(d_upper_bound_dist, upper_bound_dist, sizeof(double) * n_pts, cudaMemcpyHostToDevice));
   gpuErrchk(cudaMemcpy(d_local_closest_src_gnum, local_closest_src_gnum, sizeof(PDM_g_num_t) * n_pts * n_closest_points, cudaMemcpyHostToDevice));
   gpuErrchk(cudaMemcpy(d_local_closest_src_dist, local_closest_src_dist, sizeof(double) * n_pts * n_closest_points, cudaMemcpyHostToDevice));
-  
+
   //needed ressources when using more than 1 proc
   if (lComm > 1)
   {
@@ -1568,20 +1559,26 @@ _closest_points_local
     gpuErrchk(cudaMemcpy(d_tmp_send_tgt_n_leaves, h_tmp_send_tgt_n_leaves, sizeof(int*) * lComm, cudaMemcpyHostToDevice));
     gpuErrchk(cudaMemcpy(d_tmp_send_start_leaves, h_tmp_send_start_leaves, sizeof(int*) * lComm, cudaMemcpyHostToDevice));
     gpuErrchk(cudaMemcpy(d_send_to_rank_leaves, h_send_to_rank_leaves, sizeof(int*) * lComm, cudaMemcpyHostToDevice));
-
   }
+
+  // cudaMemGetInfo(&free_to,&total_to);
+
+  // free_m =(long)free_to/1048576.0 ;
+
+  // total_m=(long)total_to/1048576.0;
+
+  // used_m=total_m-free_m;
+
+  // printf ( "  mem free %d .... %lf MB mem total %d....%lf MB mem used %lf MB\n",free_to,free_m,total_to,total_m,used_m);
 
 
   // Load more ressources for in-kernel malloc (or new statements)
-  size_t heap_size = 4000000000/lComm;
+  size_t heap_size = 1000000000/lComm;
   gpuErrchk(cudaDeviceSetLimit(cudaLimitMallocHeapSize, heap_size));
   printf("size allocated : %lu\n", heap_size);
   size_t heap_size2 = 0;
   gpuErrchk(cudaDeviceGetLimit(&heap_size2, cudaLimitMallocHeapSize));
   printf("max heap size : %lu\n", heap_size2);
-
-
-
 
   int points_nb = n_pts;
   int points_shift = 0;
@@ -1590,20 +1587,21 @@ _closest_points_local
   dim3 n_threads;
   dim3 n_blocks;
 
-  // cudaEvent_t start, stop;
-  // gpuErrchk(cudaEventCreate(&start));
-  // gpuErrchk(cudaEventCreate(&stop));
-
   if (points_nb <= points_limit)
   {
     n_threads = set_dim3_value(1024, 1, 1);
     n_blocks = set_dim3_value((n_pts + 1023)/1024, 1, 1);
-    printf("Points number within limit (limit = 2000000)\n");
+    //printf("Points number within limit (limit = 2000000)\n");
     printf("[%d] Launch kernel\n", myRank);
-    // gpuErrchk(cudaEventRecord(start));
     _target_points_compute<<<n_blocks,n_threads>>>(d_octree,
                                                     iteration,
                                                     d_lock,
+                                                    d_start_heap_lnum,
+                                                    d_start_heap_gnum,
+                                                    d_start_heap_priority,
+                                                    d_leaf_heap_lnum,
+                                                    d_leaf_heap_gnum,
+                                                    d_leaf_heap_priority,
                                                     n_pts,
                                                     n_closest_points,
                                                     myRank, 
@@ -1625,26 +1623,26 @@ _closest_points_local
                                                     d_s_send_to_rank_leaves,
                                                     d_s_tmp_send_start_leaves,
                                                     d_n_tmp_send_start_leaves);
-    // gpuErrchk(cudaEventRecord(stop));
-    // cudaDeviceSynchronize();
-    // PDM_MPI_Barrier(octree->comm);
   }
   else
   {
-    printf("Points number above limit (limit = 2000000)\n");
+    //printf("Points number above limit (limit = 2000000)\n");
     int n_it = 1;
     while (points_nb > points_limit)
     {
       printf("Kernel launch : %d  -   %d/%d points\n", n_it, (n_it*points_limit), n_pts);
-      // printf("size start heap : %lu\n", start_leaves_idx[points_limit - points_shift]);
-      // printf("size leaf heap : %lu\n", octants->n_nodes*(sizeof(int) + sizeof(double) + sizeof(PDM_g_num_t)) + sizeof(_min_heap_t));
-
       n_threads = set_dim3_value(1024, 1, 1);
       n_blocks = set_dim3_value((points_limit + 1023)/1024, 1, 1);
       printf("Launch kernel\n");
       _target_points_compute<<<n_blocks,n_threads>>>(d_octree, 
                                                       iteration,
                                                       d_lock,
+                                                      d_start_heap_lnum,
+                                                      d_start_heap_gnum,
+                                                      d_start_heap_priority,
+                                                      d_leaf_heap_lnum,
+                                                      d_leaf_heap_gnum,
+                                                      d_leaf_heap_priority,
                                                       points_limit,
                                                       n_closest_points,
                                                       myRank, 
@@ -1666,8 +1664,6 @@ _closest_points_local
                                                       d_s_send_to_rank_leaves,
                                                       d_s_tmp_send_start_leaves,
                                                       d_n_tmp_send_start_leaves);
-
-      printf("left kernel\n");
       cudaDeviceSynchronize();
       points_shift += points_limit;
       points_nb -= points_limit;
@@ -1680,6 +1676,12 @@ _closest_points_local
     _target_points_compute<<<n_blocks,n_threads>>>(d_octree, 
                                                     iteration,
                                                     d_lock,
+                                                    d_start_heap_lnum,
+                                                    d_start_heap_gnum,
+                                                    d_start_heap_priority,
+                                                    d_leaf_heap_lnum,
+                                                    d_leaf_heap_gnum,
+                                                    d_leaf_heap_priority,
                                                     points_nb,
                                                     n_closest_points,
                                                     myRank, 
@@ -1702,12 +1704,6 @@ _closest_points_local
                                                     d_s_tmp_send_start_leaves,
                                                     d_n_tmp_send_start_leaves);
   }
-
-
-  // gpuErrchk(cudaEventSynchronize(stop));
-  // float msec = 0;
-  // gpuErrchk(cudaEventElapsedTime(&msec, start, stop));
-  // printf("Kernel elapsed time : %f milliseconds (10-3)\n", msec);
   
 
   //copy result data on CPU
@@ -1760,9 +1756,7 @@ _closest_points_local
       }
     }
   }
-  //PDM_MPI_Barrier(octree->comm);
   printf("finished copy\n");
-
 
   //Free device memory
     gpuErrchk(cudaFree(d_octree_points));
@@ -3329,41 +3323,6 @@ PDM_para_octree_closest_point_GPU
 //     _octrees = PDM_Handles_free (_octrees);
 //   }
 // }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//test
-__global__
-void
-print_from_gpu
-(
- PDM_octree_t *octree
- )
-{
-  printf("Hello World! from thread [%d,%d] From device\n", threadIdx.x,blockIdx.x);
-  //const _octree_t *octree = (_octree_t*)octrees->array[0];
-  printf("octree %p\n", octree);
-  printf("Depth max from GPU : %d\n", octree->depth_max);
-}
 
 #ifdef __cplusplus
 }

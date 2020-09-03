@@ -169,7 +169,6 @@ _encode_coords_1
 )
 {
   int i = blockIdx.x * blockDim.x + threadIdx.x;
-  int j = blockIdx.y * blockDim.y + threadIdx.y;
 
   if (i >= n_coords)
   {
@@ -334,9 +333,9 @@ _encode_coords_3
  *   s        --> Normalization (translation component)
  *----------------------------------------------------------------------------*/
 
-__host__ __device__
+
 void
-PDM_morton_encode_coords_GPU(int                dim,
+PDM_morton_encode_coords_CPU(int                dim,
                              PDM_morton_int_t   level,
                              const double       extents[],
                              size_t             n_coords,
@@ -345,8 +344,7 @@ PDM_morton_encode_coords_GPU(int                dim,
                              double             d[3],
                              double             s[3])
 {
-  size_t i, j;
-  double n[3];
+  size_t i;
   double d_max = 0.0;
 
   PDM_morton_int_t  refinement = 1u << level;
@@ -406,6 +404,73 @@ PDM_morton_encode_coords_GPU(int                dim,
   gpuErrchk(cudaFree(d_d));
   gpuErrchk(cudaFree(d_s));
   gpuErrchk(cudaFree(d_n));
+}
+
+__device__
+void
+PDM_morton_encode_coords_GPU(int                dim,
+                             PDM_morton_int_t   level,
+                             const double       extents[],
+                             size_t             n_coords,
+                             const double       coords[],
+                             PDM_morton_code_t  m_code[],
+                             double             d[3],
+                             double             s[3])
+{
+  size_t i, j;
+  double n[3];
+  double d_max = 0.0;
+
+  PDM_morton_int_t  refinement = 1u << level;
+
+  for (i = 0; i < (size_t)dim; i++) {
+    s[i] = extents[i];
+    d[i] = extents[i+dim] - extents[i];
+    d_max = PDM_MAX(d_max, d[i]);
+  }
+
+  for (i = 0; i < (size_t)dim; i++) { /* Reduce effective dimension */
+    if (d[i] < d_max * 1e-10)
+      d[i] = d_max * 1e-10;
+  }
+
+  switch(dim) {
+
+  case 3:
+    for (i = 0; i < n_coords; i++) {
+      m_code[i].L = level;
+      for (j = 0; j < 3; j++) {
+        n[j] = (coords[i*dim + j] - s[j]) / d[j];
+        m_code[i].X[j] = (PDM_morton_int_t) PDM_MIN(floor(n[j]*refinement), refinement - 1);
+      }
+    }
+    break;
+
+  case 2:
+    for (i = 0; i < n_coords; i++) {
+      m_code[i].L = level;
+      for (j = 0; j < 2; j++) {
+        n[j] = (coords[i*dim + j] - s[j]) / d[j];
+        m_code[i].X[j] = (PDM_morton_int_t) PDM_MIN(floor(n[j]*refinement), refinement - 1);
+      }
+      m_code[i].X[2] = 0;
+    }
+    break;
+
+  case 1:
+    for (i = 0; i < n_coords; i++) {
+      m_code[i].L = level;
+      n[0] = (coords[i] - s[0]) / d[0];
+      m_code[i].X[0] = (PDM_morton_int_t) PDM_MIN(floor(n[0]*refinement), refinement - 1);
+      m_code[i].X[1] = 0;
+      m_code[i].X[2] = 0;
+    }
+    break;
+
+  default:
+    assert(dim > 0 && dim < 4);
+    break;
+  }
 }
 
 /*----------------------------------------------------------------------------
