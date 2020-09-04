@@ -1187,7 +1187,7 @@ PDM_part_dconnectivity_to_pconnectivity_hash
  * \param [out]  pentity_bound       For each part, communication information (see abobe) (size=n_part)
 */
 void
-PDM_generate_entity_graph_comm
+PDM_part_generate_entity_graph_comm
 (
  const PDM_MPI_Comm   comm,
  const PDM_g_num_t   *part_distribution,

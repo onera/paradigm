@@ -916,16 +916,16 @@ PDM_multipart_run_ppart
       for (int ipart = 0; ipart < n_part; ipart++) {
         pface_ln_to_gn[ipart] = _pmeshes->parts[ipart]->face_ln_to_gn;
       }
-      PDM_generate_entity_graph_comm(_multipart->comm,
-                                     part_distri,
-                                     face_distri,
-                                     n_part,
-                                     pn_face,
-                                     (const PDM_g_num_t **) pface_ln_to_gn,
-                                     NULL,
-                                    &pinternal_face_bound_procidx,
-                                    &pinternal_face_bound_partidx,
-                                    &pinternal_face_bound);
+      PDM_part_generate_entity_graph_comm(_multipart->comm,
+                                          part_distri,
+                                          face_distri,
+                                          n_part,
+                                          pn_face,
+                                          (const PDM_g_num_t **) pface_ln_to_gn,
+                                          NULL,
+                                         &pinternal_face_bound_procidx,
+                                         &pinternal_face_bound_partidx,
+                                         &pinternal_face_bound);
       //Finally complete parts structure with internal join data
       for (int ipart = 0; ipart < n_part; ipart++)
       {
