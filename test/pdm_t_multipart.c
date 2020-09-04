@@ -174,8 +174,8 @@ int main(int argc, char *argv[])
   for (int i_zone = 0; i_zone < n_zone; i_zone++){
     n_part_zones[i_zone] = n_part;
   }
-  int mpart_id  PDM_multipart_create(n_zone, n_part_zones, PDM_FALSE,
-                                     method, PDM_PART_SIZE_HOMOGENEOUS, NULL, comm);           
+  int mpart_id = PDM_multipart_create(n_zone, n_part_zones, PDM_FALSE,
+                                      method, PDM_PART_SIZE_HOMOGENEOUS, NULL, comm);
   PDM_multipart_set_reordering_options(mpart_id, -1, "PDM_PART_RENUM_CELL_CUTHILL", NULL, "PDM_PART_RENUM_FACE_NONE");
   if (n_zone > 1)
     PDM_multipart_set_reordering_options(mpart_id,  1, "PDM_PART_RENUM_CELL_NONE", NULL, "PDM_PART_RENUM_FACE_NONE");
