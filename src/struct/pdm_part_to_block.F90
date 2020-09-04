@@ -79,6 +79,46 @@ module pdm_part_to_block
       integer(c_int), value :: n_part
       integer(c_int), value :: fComm
       type (c_ptr) :: ptrC
+      
+      !> La routine qui appelle cette interface doit disposer des modules 
+      !> use iso_c_binding
+      !> use pdm_part_to_block
+      
+      !> La routine qui appelle cette interface doit de la variable 
+      !> type(c_ptr)              :: PDM_part_to_block_t
+      
+      !> Les petits trucs:
+      !> type (c_ptr), value :: gnum_elt
+      !>   passer tableau local2Global(:)-> gnum_elt
+      !>   integer                  :: iCell
+      !>   integer    , pointer     :: local2Global(:)
+      !>   type(c_ptr), pointer     :: gnum_elt(:,:)=>null()
+      !> 
+      !>   allocate( gnum_elt(1:size(local2Global),1:1) )      
+      !>   do iCell=1,size(local2Global)
+      !>     gnum_elt(iCell,1)=c_loc( local2Global(iCell))
+      !>   enddo
+      !>
+      !> type (c_ptr), value :: n_elt
+      !>   passer nCellDomain -> n_elt
+      !>   type (c_ptr), value :: n_elt
+      !>   integer                 :: nCellDomain
+      !>   integer(c_int), pointer :: n_elt(:)
+      !>   
+      !>   allocate(n_elt(1:1))
+      !>   n_elt(1)=int(nCellDomain,kind=c_int)
+      !>
+      !> Appel fonction PDM_part_to_block_create
+      !>   PDM_part_to_block_t = PDM_part_to_block_create( &
+      !>   &    t_distrib=int(0,kind=c_int)               ,& !> 0
+      !>   &    t_post=PDM_PART_TO_BLOCK_POST_CLEANUP     ,& !> 0
+      !>   &    part_active_node=real(0,kind=c_double)    ,& !> 0
+      !>   &    gnum_elt=c_loc(gnum_elt)                  ,& !> localToGlobal
+      !>   &    weight=C_NULL_PTR                         ,& !> null
+      !>   &    n_elt=c_loc(n_elt)                        ,& !> nombre element de ma partition
+      !>   &    n_part=int(1,kind=c_int)                  ,& !> 1
+      !>   &    fcomm=commSpace                            ) !> communicateur fortran
+
 
     end function PDM_part_to_block_create
 
