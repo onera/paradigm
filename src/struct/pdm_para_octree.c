@@ -39,7 +39,9 @@ extern "C"
  *============================================================================*/
 
 #define NTIMER 11
-#define NGB_ON_THE_FLY 1
+//#define NGB_ON_THE_FLY 1
+
+const int NGB_ON_THE_FLY = 1;
 
 /*============================================================================
  * Type definitions
@@ -197,7 +199,6 @@ typedef struct {
 
 
 
-#if NGB_ON_THE_FLY
 /*static const int _2d_sibling_neighbours[4][4] = {{-1, 2,-1, 1},
 						 {-1, 3, 0,-1},
 						 { 0,-1,-1, 3},
@@ -211,7 +212,6 @@ static const int _3d_sibling_neighbours[8][6] = {{-1, 4,-1, 2,-1, 1},
 						 { 1,-1,-1, 7, 4,-1},
 						 { 2,-1, 4,-1,-1, 7},
 						 { 3,-1, 5,-1, 6,-1}};
-#endif
 
 /*============================================================================
  * Global variable
@@ -3077,37 +3077,37 @@ _finalize_neighbours
 
     /* Premiere boucle pour compter */
     for (int i = 0; i < octree->octants->n_nodes; i++) {
-      for (PDM_para_octree_direction_t dir = 0; dir < n_direction; dir++) {
+      for (PDM_para_octree_direction_t dir = PDM_BOTTOM; dir < n_direction; dir++) {
 
-	PDM_morton_code_t *neighbour_code = _neighbour (octree->octants->codes[i], dir);
-	if (neighbour_code == NULL) {
-	  continue;
-	}
+        PDM_morton_code_t *neighbour_code = _neighbour (octree->octants->codes[i], dir);
+        if (neighbour_code == NULL) {
+          continue;
+        }
 
-	// single neighbour with inferior or equal level?...
+        // single neighbour with inferior or equal level?...
 
-	size_t start, end;
-	PDM_morton_quantile_intersect (n_ranks,
-				       *neighbour_code,
-				       octree->rank_octants_index,
-				       &start,
-				       &end);
+        size_t start, end;
+        PDM_morton_quantile_intersect (n_ranks,
+                                       *neighbour_code,
+                                       octree->rank_octants_index,
+                                       &start,
+                                       &end);
 
-	for (int neighbour_rank = start; neighbour_rank < end; neighbour_rank++) {
+        for (int neighbour_rank = start; neighbour_rank < end; neighbour_rank++) {
 
-	  if (neighbour_rank == rank) {
-	    continue;
-	  }
+          if (neighbour_rank == rank) {
+            continue;
+          }
 
-	  if (neighbours_tmp[i].n_neighbour[dir] >= neighbours_tmp[i].s_neighbour[dir]) {
-	    neighbours_tmp[i].s_neighbour[dir] *= 2;
-	    neighbours_tmp[i].neighbours[dir] = realloc (neighbours_tmp[i].neighbours[dir],
-							 sizeof(int) * neighbours_tmp[i].s_neighbour[dir]);
-	  }
-	  neighbours_tmp[i].neighbours[dir][neighbours_tmp[i].n_neighbour[dir]++] = - (neighbour_rank + 1);
-	  neighbour_rank_n[neighbour_rank*n_direction + dir]++;
-	}
-	free (neighbour_code);
+          if (neighbours_tmp[i].n_neighbour[dir] >= neighbours_tmp[i].s_neighbour[dir]) {
+            neighbours_tmp[i].s_neighbour[dir] *= 2;
+            neighbours_tmp[i].neighbours[dir] = realloc (neighbours_tmp[i].neighbours[dir],
+                                                         sizeof(int) * neighbours_tmp[i].s_neighbour[dir]);
+          }
+          neighbours_tmp[i].neighbours[dir][neighbours_tmp[i].n_neighbour[dir]++] = - (neighbour_rank + 1);
+          neighbour_rank_n[neighbour_rank*n_direction + dir]++;
+        }
+        free (neighbour_code);
       }
     }
 
@@ -3364,7 +3364,7 @@ _finalize_neighbours
                k < neighbour_rank_idx[i * n_direction + j + 1]; k++) {
             PDM_morton_code_t *neighbour_code = _neighbour (neighbour_rank_code[k], j);
 
-	    size_t start_intersect, end_intersect;
+            size_t start_intersect, end_intersect;
             PDM_morton_list_intersect (n_candidate,
                                        *neighbour_code,
                                        recv_neighbour_rank_code + idx_candidate,
@@ -4972,32 +4972,33 @@ PDM_para_octree_build
   int  size = octree->depth_max * 8;
 
   //long mem = 0;
-#if NGB_ON_THE_FLY
+  _neighbours_tmp_t *ngb_octree = NULL;
+  _neighbours_tmp_t *ngb_heap   = NULL;
+  const int n_coarse = octree->octants->n_nodes;
   const int init_s = 1;
   _neighbours_tmp_t parent_ngb;
-  _neighbours_tmp_t *ngb_heap   = NULL;
-  _neighbours_tmp_t *ngb_octree = NULL;
+
   size_t s_ngb_octree;
-  const int n_coarse = octree->octants->n_nodes;
+  if (NGB_ON_THE_FLY) {
 
-  if (octree->neighboursToBuild) {
-    for (PDM_para_octree_direction_t dir = 0; dir < 6; dir++) {
-      parent_ngb.n_neighbour[dir] = 0;
-      parent_ngb.s_neighbour[dir] = init_s;
-      parent_ngb.neighbours[dir] = malloc (sizeof(int) * parent_ngb.s_neighbour[dir]);
-    }
-
-    ngb_heap = malloc (sizeof(_neighbours_tmp_t) * size);
-    for (int i = 0; i < size; i++) {
-      for (PDM_para_octree_direction_t dir = 0; dir < 6; dir++) {
-	ngb_heap[i].neighbours[dir] = NULL;
+    if (octree->neighboursToBuild) {
+      for (PDM_para_octree_direction_t dir = PDM_BOTTOM; dir < 6; dir++) {
+        parent_ngb.n_neighbour[dir] = 0;
+        parent_ngb.s_neighbour[dir] = init_s;
+        parent_ngb.neighbours[dir] = malloc (sizeof(int) * parent_ngb.s_neighbour[dir]);
       }
-    }
 
-    s_ngb_octree = octree->octants->n_nodes_max;
-    ngb_octree = malloc (sizeof(_neighbours_tmp_t) * s_ngb_octree);
+      ngb_heap = malloc (sizeof(_neighbours_tmp_t) * size);
+      for (int i = 0; i < size; i++) {
+        for (PDM_para_octree_direction_t dir = PDM_BOTTOM; dir < 6; dir++) {
+          ngb_heap[i].neighbours[dir] = NULL;
+        }
+      }
+
+      s_ngb_octree = octree->octants->n_nodes_max;
+      ngb_octree = malloc (sizeof(_neighbours_tmp_t) * s_ngb_octree);
+    }
   }
-#endif
 
   _heap_t *heap = _heap_create (size);
   for (int i = octree->octants->n_nodes - 1; i >= 0; i--) {
@@ -5010,78 +5011,78 @@ PDM_para_octree_build
       exit(1);
     }
 
-#if NGB_ON_THE_FLY
-    if (octree->neighboursToBuild) {
-      int h = heap->top - 1;
+    if (NGB_ON_THE_FLY) {
+      if (octree->neighboursToBuild) {
+        int h = heap->top - 1;
 
-      /* init ngb_heap[h] */
-      for (PDM_para_octree_direction_t dir = 0; dir < 6; dir++) {
-	ngb_heap[h].n_neighbour[dir] = 0;
-	ngb_heap[h].s_neighbour[dir] = init_s;
-	ngb_heap[h].neighbours[dir] = malloc (sizeof(int) * ngb_heap[h].s_neighbour[dir]);
-      }
+        /* init ngb_heap[h] */
+        for (PDM_para_octree_direction_t dir = PDM_BOTTOM; dir < 6; dir++) {
+          ngb_heap[h].n_neighbour[dir] = 0;
+          ngb_heap[h].s_neighbour[dir] = init_s;
+          ngb_heap[h].neighbours[dir] = malloc (sizeof(int) * ngb_heap[h].s_neighbour[dir]);
+        }
 
-      if (h == 0) {
-	continue;
-      }
+        if (h == 0) {
+          continue;
+        }
 
-      for (PDM_para_octree_direction_t dir = 1; dir < 6; dir+=2) {
-	PDM_para_octree_direction_t inv_dir = _inv_direction (dir);
+        for (PDM_para_octree_direction_t dir = PDM_UP; dir < 6; dir+= (PDM_para_octree_direction_t)2) {
+          PDM_para_octree_direction_t inv_dir = _inv_direction (dir);
 
-	PDM_morton_code_t *ngb_code = _neighbour (heap->codes[h],
-						  dir);
-	if (ngb_code == NULL) {
-	  continue;
-	}
+          PDM_morton_code_t *ngb_code = _neighbour (heap->codes[h],
+                                                    dir);
+          if (ngb_code == NULL) {
+            continue;
+          }
 
-	size_t start, end;
-	PDM_morton_list_intersect (n_coarse - (i+1),
-				   *ngb_code,
-				   octree->octants->codes + (i+1),
-				   &start,
-				   &end);
-	free (ngb_code);
+          size_t start, end;
+          PDM_morton_list_intersect (n_coarse - (i+1),
+                                     *ngb_code,
+                                     octree->octants->codes + (i+1),
+                                     &start,
+                                     &end);
+          free (ngb_code);
 
-	if (start >= end) {
-	  continue;
-	}
+          if (start >= end) {
+            continue;
+          }
 
-	start += i+1;
-	end   += i+1;
+          start += i+1;
+          end   += i+1;
 
-	size_t tmp = start;
-	start = n_coarse - end;
-	end = n_coarse - tmp;
+          size_t tmp = start;
+          start = n_coarse - end;
+          end = n_coarse - tmp;
 
-	for (int j = start; j < end; j++) {
-	  PDM_morton_code_t *ngb_ngb_code = _neighbour (heap->codes[j], inv_dir);
-	  assert (ngb_ngb_code != NULL);
+          for (int j = start; j < end; j++) {
+            PDM_morton_code_t *ngb_ngb_code = _neighbour (heap->codes[j], inv_dir);
+            assert (ngb_ngb_code != NULL);
 
-	  if (PDM_morton_ancestor_is (heap->codes[h], *ngb_ngb_code) ||
-	      PDM_morton_ancestor_is (*ngb_ngb_code, heap->codes[h])) {
-	    /* add -(j+1) to ngb_heap[h].neighbours[dir] */
-	    if (ngb_heap[h].n_neighbour[dir] >= ngb_heap[h].s_neighbour[dir]) {
-	      ngb_heap[h].s_neighbour[dir] = PDM_MAX (2*ngb_heap[h].s_neighbour[dir],
-						      ngb_heap[h].n_neighbour[dir] + 1);
-	      ngb_heap[h].neighbours[dir] = realloc (ngb_heap[h].neighbours[dir],
-						     sizeof(int) * ngb_heap[h].s_neighbour[dir]);
-	    }
-	    ngb_heap[h].neighbours[dir][ngb_heap[h].n_neighbour[dir]++] = -(j+1);
+            if (PDM_morton_ancestor_is (heap->codes[h], *ngb_ngb_code) ||
+                PDM_morton_ancestor_is (*ngb_ngb_code, heap->codes[h])) {
+              /* add -(j+1) to ngb_heap[h].neighbours[dir] */
+              if (ngb_heap[h].n_neighbour[dir] >= ngb_heap[h].s_neighbour[dir]) {
+                ngb_heap[h].s_neighbour[dir] = PDM_MAX (2*ngb_heap[h].s_neighbour[dir],
+                                                        ngb_heap[h].n_neighbour[dir] + 1);
+                ngb_heap[h].neighbours[dir] = realloc (ngb_heap[h].neighbours[dir],
+                                                       sizeof(int) * ngb_heap[h].s_neighbour[dir]);
+              }
+              ngb_heap[h].neighbours[dir][ngb_heap[h].n_neighbour[dir]++] = -(j+1);
 
-	    /* add -(h+1) to ngb_heap[j].neighbours[inv_dir] */
-	    if (ngb_heap[j].n_neighbour[inv_dir] >= ngb_heap[j].s_neighbour[inv_dir]) {
-	      ngb_heap[j].s_neighbour[inv_dir] = PDM_MAX (2*ngb_heap[j].s_neighbour[inv_dir],
-							  ngb_heap[j].n_neighbour[inv_dir] + 1);
-	      ngb_heap[j].neighbours[inv_dir] = realloc (ngb_heap[j].neighbours[inv_dir],
-							 sizeof(int) * ngb_heap[j].s_neighbour[inv_dir]);
-	    }
-	    ngb_heap[j].neighbours[inv_dir][ngb_heap[j].n_neighbour[inv_dir]++] = -(h+1);
-	  }
-	  free (ngb_ngb_code);
-	}
+              /* add -(h+1) to ngb_heap[j].neighbours[inv_dir] */
+              if (ngb_heap[j].n_neighbour[inv_dir] >= ngb_heap[j].s_neighbour[inv_dir]) {
+                ngb_heap[j].s_neighbour[inv_dir] = PDM_MAX (2*ngb_heap[j].s_neighbour[inv_dir],
+                                                            ngb_heap[j].n_neighbour[inv_dir] + 1);
+                ngb_heap[j].neighbours[inv_dir] = realloc (ngb_heap[j].neighbours[inv_dir],
+                                                           sizeof(int) * ngb_heap[j].s_neighbour[inv_dir]);
+              }
+              ngb_heap[j].neighbours[inv_dir][ngb_heap[j].n_neighbour[inv_dir]++] = -(h+1);
+            }
+            free (ngb_ngb_code);
+          }
+        }
       }
     }
-#endif
   }
 
 
@@ -5098,61 +5099,61 @@ PDM_para_octree_build
     if ((code.L < max_morton_level) && (code.L < max_level) &&
         (n_points > octree->points_in_leaf_max)) {
 
-#if NGB_ON_THE_FLY
-      if (octree->neighboursToBuild) {
-	int h_parent = heap->top;
+      if (NGB_ON_THE_FLY) {
+        if (octree->neighboursToBuild) {
+          int h_parent = heap->top;
 
-	/* copy ngb_heap[h_parent] into parent_ngb
-	   and remove references to -(h_parent+1) from all neighbours of parent */
-	for (PDM_para_octree_direction_t dir = 0; dir < 6; dir++) {
-	  /* copy ngb_heap[h_parent].neighbours[dir] into parent_ngb.neighbours[dir] */
-	  parent_ngb.n_neighbour[dir] = ngb_heap[h_parent].n_neighbour[dir];
-	  if (parent_ngb.n_neighbour[dir] >= parent_ngb.s_neighbour[dir]) {
-	    /*parent_ngb.s_neighbour[dir] = PDM_MAX (2*parent_ngb.s_neighbour[dir],
-	      parent_ngb.n_neighbour[dir]);*/
-	    parent_ngb.s_neighbour[dir] = parent_ngb.n_neighbour[dir];
+          /* copy ngb_heap[h_parent] into parent_ngb
+             and remove references to -(h_parent+1) from all neighbours of parent */
+          for (PDM_para_octree_direction_t dir = PDM_BOTTOM; dir < 6; dir++) {
+            /* copy ngb_heap[h_parent].neighbours[dir] into parent_ngb.neighbours[dir] */
+            parent_ngb.n_neighbour[dir] = ngb_heap[h_parent].n_neighbour[dir];
+            if (parent_ngb.n_neighbour[dir] >= parent_ngb.s_neighbour[dir]) {
+              /*parent_ngb.s_neighbour[dir] = PDM_MAX (2*parent_ngb.s_neighbour[dir],
+                parent_ngb.n_neighbour[dir]);*/
+              parent_ngb.s_neighbour[dir] = parent_ngb.n_neighbour[dir];
 
-	    parent_ngb.neighbours[dir] = realloc (parent_ngb.neighbours[dir],
-						  sizeof(int) * parent_ngb.s_neighbour[dir]);
-	  }
-	  for (int j = 0; j < parent_ngb.n_neighbour[dir]; j++) {
-	    parent_ngb.neighbours[dir][j] = ngb_heap[h_parent].neighbours[dir][j];
-	  }
+              parent_ngb.neighbours[dir] = realloc (parent_ngb.neighbours[dir],
+                                                    sizeof(int) * parent_ngb.s_neighbour[dir]);
+            }
+            for (int j = 0; j < parent_ngb.n_neighbour[dir]; j++) {
+              parent_ngb.neighbours[dir][j] = ngb_heap[h_parent].neighbours[dir][j];
+            }
 
-	  /* remove all references to -(h_parent+1) from all neighbours of parent */
-	  PDM_para_octree_direction_t inv_dir = _inv_direction (dir);
-	  _neighbours_tmp_t *ngb = NULL;
-	  for (int j = 0; j < parent_ngb.n_neighbour[dir]; j++) {
-	    int ingb = parent_ngb.neighbours[dir][j];
+            /* remove all references to -(h_parent+1) from all neighbours of parent */
+            PDM_para_octree_direction_t inv_dir = _inv_direction (dir);
+            _neighbours_tmp_t *ngb = NULL;
+            for (int j = 0; j < parent_ngb.n_neighbour[dir]; j++) {
+              int ingb = parent_ngb.neighbours[dir][j];
 
-	    if (ingb < 0) {
-	      // neighbour in heap
-	      ngb = ngb_heap - (ingb+1);
-	    } else {
-	      // neighbour in octree
-	      ngb = ngb_octree + ingb;
-	    }
+              if (ingb < 0) {
+                // neighbour in heap
+                ngb = ngb_heap - (ingb+1);
+              } else {
+                // neighbour in octree
+                ngb = ngb_octree + ingb;
+              }
 
-	    int found = 0;
-	    int pos;
-	    for (pos = 0; pos < ngb->n_neighbour[inv_dir]; pos++) {
-	      if (ngb->neighbours[inv_dir][pos] == -(h_parent+1)) {
-		found = 1;
-		break;
-	      }
-	    }
+              int found = 0;
+              int pos;
+              for (pos = 0; pos < ngb->n_neighbour[inv_dir]; pos++) {
+                if (ngb->neighbours[inv_dir][pos] == -(h_parent+1)) {
+                  found = 1;
+                  break;
+                }
+              }
 
-	    assert (found);
+              assert (found);
 
-	    ngb->n_neighbour[inv_dir]--;
-	    if (pos != ngb->n_neighbour[inv_dir]) {
-	      ngb->neighbours[inv_dir][pos] = ngb->neighbours[inv_dir][ngb->n_neighbour[inv_dir]];
-	    }
+              ngb->n_neighbour[inv_dir]--;
+              if (pos != ngb->n_neighbour[inv_dir]) {
+                ngb->neighbours[inv_dir][pos] = ngb->neighbours[inv_dir][ngb->n_neighbour[inv_dir]];
+              }
 
-	  }
-	}
+            }
+          }
+        }
       }
-#endif
 
       PDM_morton_code_t children[n_child];
       PDM_morton_get_children(dim,
@@ -5196,85 +5197,84 @@ PDM_para_octree_build
           exit(1);
         }
 
-#if NGB_ON_THE_FLY
-	if (octree->neighboursToBuild) {
-	  int h_child = heap->top - 1;
+        if (NGB_ON_THE_FLY) {
+          if (octree->neighboursToBuild) {
+            int h_child = heap->top - 1;
 
-	  for (PDM_para_octree_direction_t dir = 0; dir < 6; dir++) {
-	    /* reset ngb_heap[h_child].neighbours[dir] */
-	    ngb_heap[h_child].n_neighbour[dir] = 0;
-	    if (ngb_heap[h_child].neighbours[dir] == NULL) {
-	      ngb_heap[h_child].s_neighbour[dir] = PDM_MAX (init_s,
-							    parent_ngb.n_neighbour[dir]);
-	      ngb_heap[h_child].neighbours[dir] = malloc (sizeof(int) * ngb_heap[h_child].s_neighbour[dir]);
-	    } else {
-	      if (parent_ngb.n_neighbour[dir] >= ngb_heap[h_child].s_neighbour[dir]) {
-		/*ngb_heap[h_child].s_neighbour[dir] = PDM_MAX (2*ngb_heap[h_child].s_neighbour[dir],
-		  parent_ngb.n_neighbour[dir]);*/
-		ngb_heap[h_child].s_neighbour[dir] = parent_ngb.n_neighbour[dir];
+            for (PDM_para_octree_direction_t dir = PDM_BOTTOM; dir < 6; dir++) {
+              /* reset ngb_heap[h_child].neighbours[dir] */
+              ngb_heap[h_child].n_neighbour[dir] = 0;
+              if (ngb_heap[h_child].neighbours[dir] == NULL) {
+                ngb_heap[h_child].s_neighbour[dir] = PDM_MAX (init_s,
+                                                              parent_ngb.n_neighbour[dir]);
+                ngb_heap[h_child].neighbours[dir] = malloc (sizeof(int) * ngb_heap[h_child].s_neighbour[dir]);
+              } else {
+                if (parent_ngb.n_neighbour[dir] >= ngb_heap[h_child].s_neighbour[dir]) {
+                  /*ngb_heap[h_child].s_neighbour[dir] = PDM_MAX (2*ngb_heap[h_child].s_neighbour[dir],
+                    parent_ngb.n_neighbour[dir]);*/
+                  ngb_heap[h_child].s_neighbour[dir] = parent_ngb.n_neighbour[dir];
 
-		ngb_heap[h_child].neighbours[dir] = realloc (ngb_heap[h_child].neighbours[dir],
-							     sizeof(int) * ngb_heap[h_child].s_neighbour[dir]);
-	      }
-	    }
+                  ngb_heap[h_child].neighbours[dir] = realloc (ngb_heap[h_child].neighbours[dir],
+                                                               sizeof(int) * ngb_heap[h_child].s_neighbour[dir]);
+                }
+              }
 
 
-	    /* set neighbours */
-	    int i_sibling = _3d_sibling_neighbours[i][dir];
+              /* set neighbours */
+              int i_sibling = _3d_sibling_neighbours[i][dir];
 
-	    if (i_sibling < 0) {
-	      /* inherit neighbours from parent */
-	      PDM_para_octree_direction_t inv_dir = _inv_direction (dir);
-	      _neighbours_tmp_t *ngb = NULL;
-	      PDM_morton_code_t *ngb_code = NULL;
-	      for (int j = 0; j < parent_ngb.n_neighbour[dir]; j++) {
-		int ingb = parent_ngb.neighbours[dir][j];
+              if (i_sibling < 0) {
+                /* inherit neighbours from parent */
+                PDM_para_octree_direction_t inv_dir = _inv_direction (dir);
+                _neighbours_tmp_t *ngb = NULL;
+                PDM_morton_code_t *ngb_code = NULL;
+                for (int j = 0; j < parent_ngb.n_neighbour[dir]; j++) {
+                  int ingb = parent_ngb.neighbours[dir][j];
 
-		if (ingb < 0) {
-		  // neighbour in heap
-		  ngb = ngb_heap - (ingb+1);
-		  ngb_code = heap->codes - (ingb+1);
-		} else {
-		  // neighbour in octree
-		  ngb = ngb_octree + ingb;
-		  ngb_code = octree->octants->codes + ingb;
-		}
+                  if (ingb < 0) {
+                    // neighbour in heap
+                    ngb = ngb_heap - (ingb+1);
+                    ngb_code = heap->codes - (ingb+1);
+                  } else {
+                    // neighbour in octree
+                    ngb = ngb_octree + ingb;
+                    ngb_code = octree->octants->codes + ingb;
+                  }
 
-		/* check if current neighbour of parent is also a neighbour of current child */
-		PDM_morton_code_t *ngb_ngb_code = _neighbour (*ngb_code, inv_dir);
-		assert (ngb_ngb_code != NULL);
+                  /* check if current neighbour of parent is also a neighbour of current child */
+                  PDM_morton_code_t *ngb_ngb_code = _neighbour (*ngb_code, inv_dir);
+                  assert (ngb_ngb_code != NULL);
 
-		if (PDM_morton_ancestor_is (children[i], *ngb_ngb_code) ||
-		    PDM_morton_ancestor_is (*ngb_ngb_code, children[i])) {
-		  /* add ingb to ngb_heap[h_child].neighbours[dir] */
-		  ngb_heap[h_child].neighbours[dir][ngb_heap[h_child].n_neighbour[dir]++] = ingb;
-		  //printf("[%d] append %d to ngb_heap[%d].neighbours[%d] (neighbour of parent)\n", rank, ingb, h_child, dir);
+                  if (PDM_morton_ancestor_is (children[i], *ngb_ngb_code) ||
+                      PDM_morton_ancestor_is (*ngb_ngb_code, children[i])) {
+                    /* add ingb to ngb_heap[h_child].neighbours[dir] */
+                    ngb_heap[h_child].neighbours[dir][ngb_heap[h_child].n_neighbour[dir]++] = ingb;
+                    //printf("[%d] append %d to ngb_heap[%d].neighbours[%d] (neighbour of parent)\n", rank, ingb, h_child, dir);
 
-		  /* add -(h_child+1) to ngb->neighbours[inv_dir] */
-		  if (ngb->n_neighbour[inv_dir] >= ngb->s_neighbour[inv_dir]) {
-		    /*ngb->s_neighbour[inv_dir] = PDM_MAX (2*ngb->s_neighbour[inv_dir],
-		      ngb->n_neighbour[inv_dir]);*/
-		    ngb->s_neighbour[inv_dir] = ngb->n_neighbour[inv_dir] + 1;
+                    /* add -(h_child+1) to ngb->neighbours[inv_dir] */
+                    if (ngb->n_neighbour[inv_dir] >= ngb->s_neighbour[inv_dir]) {
+                      /*ngb->s_neighbour[inv_dir] = PDM_MAX (2*ngb->s_neighbour[inv_dir],
+                        ngb->n_neighbour[inv_dir]);*/
+                      ngb->s_neighbour[inv_dir] = ngb->n_neighbour[inv_dir] + 1;
 
-		    ngb->neighbours[inv_dir] = realloc (ngb->neighbours[inv_dir],
-							sizeof(int) * ngb->s_neighbour[inv_dir]);
-		  }
-		  ngb->neighbours[inv_dir][ngb->n_neighbour[inv_dir]++] = -(h_child+1);
-		}
-		free (ngb_ngb_code);
-	      }
-	    }
-	    else {
-	      /* add sibling neighbour */
-	      int h_sibling = h_child + i - i_sibling;
-	      ngb_heap[h_child].neighbours[dir][ngb_heap[h_child].n_neighbour[dir]++] = -(h_sibling+1);
-	    }
+                      ngb->neighbours[inv_dir] = realloc (ngb->neighbours[inv_dir],
+                                                          sizeof(int) * ngb->s_neighbour[inv_dir]);
+                    }
+                    ngb->neighbours[inv_dir][ngb->n_neighbour[inv_dir]++] = -(h_child+1);
+                  }
+                  free (ngb_ngb_code);
+                }
+              }
+              else {
+                /* add sibling neighbour */
+                int h_sibling = h_child + i - i_sibling;
+                ngb_heap[h_child].neighbours[dir][ngb_heap[h_child].n_neighbour[dir]++] = -(h_sibling+1);
+              }
 
-	  }
-	}
-#endif
+            }
+          }
+        }
       }
-
     }
 
     /* Store the leaf */
@@ -5282,85 +5282,82 @@ PDM_para_octree_build
     else {
       _octants_push_back (octree->octants, code, n_points, range);
 
-#if NGB_ON_THE_FLY
-      if (octree->neighboursToBuild) {
-	int i = octree->octants->n_nodes - 1;
-	int h = heap->top;
+      if (NGB_ON_THE_FLY) {
+        if (octree->neighboursToBuild) {
+          int i = octree->octants->n_nodes - 1;
+          int h = heap->top;
 
-	if (i >= s_ngb_octree) {
-	  s_ngb_octree = PDM_MAX (2*s_ngb_octree,
-				  octree->octants->n_nodes_max);
-	  ngb_octree = realloc (ngb_octree, sizeof(_neighbours_tmp_t) * s_ngb_octree);
-	}
+          if (i >= s_ngb_octree) {
+            s_ngb_octree = PDM_MAX (2*s_ngb_octree,
+                                    octree->octants->n_nodes_max);
+            ngb_octree = realloc (ngb_octree, sizeof(_neighbours_tmp_t) * s_ngb_octree);
+          }
 
-	/* copy ngb_heap[h] into ngb_octree[i],
-	   and change references to -(h+1) into i for all neighbours */
-	for (PDM_para_octree_direction_t dir = 0; dir < 6; dir++) {
-	  /* copy ngb_heap[h].neighbours[dir] into ngb_octree[i].neighbours[dir] */
-	  ngb_octree[i].n_neighbour[dir] = ngb_heap[h].n_neighbour[dir];
-	  //ngb_octree[i].s_neighbour[dir] = ngb_heap[h].s_neighbour[dir];
-	  ngb_octree[i].s_neighbour[dir] = PDM_MAX (init_s,
-						    ngb_heap[h].n_neighbour[dir]);
+          /* copy ngb_heap[h] into ngb_octree[i],
+             and change references to -(h+1) into i for all neighbours */
+          for (PDM_para_octree_direction_t dir = PDM_BOTTOM; dir < 6; dir++) {
+            /* copy ngb_heap[h].neighbours[dir] into ngb_octree[i].neighbours[dir] */
+            ngb_octree[i].n_neighbour[dir] = ngb_heap[h].n_neighbour[dir];
+            //ngb_octree[i].s_neighbour[dir] = ngb_heap[h].s_neighbour[dir];
+            ngb_octree[i].s_neighbour[dir] = PDM_MAX (init_s,
+                                                      ngb_heap[h].n_neighbour[dir]);
 
-	  ngb_octree[i].neighbours[dir] = malloc (sizeof(int) * ngb_octree[i].s_neighbour[dir]);
-	  for (int j = 0; j < ngb_heap[h].n_neighbour[dir]; j++) {
-	    ngb_octree[i].neighbours[dir][j] = ngb_heap[h].neighbours[dir][j];
-	  }
+            ngb_octree[i].neighbours[dir] = malloc (sizeof(int) * ngb_octree[i].s_neighbour[dir]);
+            for (int j = 0; j < ngb_heap[h].n_neighbour[dir]; j++) {
+              ngb_octree[i].neighbours[dir][j] = ngb_heap[h].neighbours[dir][j];
+            }
 
-	  /* change references to -(h+1) into i for all neighbours */
-	  PDM_para_octree_direction_t inv_dir = _inv_direction (dir);
-	  _neighbours_tmp_t *ngb = NULL;
-	  for (int j = 0; j < ngb_octree[i].n_neighbour[dir]; j++) {
-	    int ingb = ngb_octree[i].neighbours[dir][j];
+            /* change references to -(h+1) into i for all neighbours */
+            PDM_para_octree_direction_t inv_dir = _inv_direction (dir);
+            _neighbours_tmp_t *ngb = NULL;
+            for (int j = 0; j < ngb_octree[i].n_neighbour[dir]; j++) {
+              int ingb = ngb_octree[i].neighbours[dir][j];
 
-	    if (ingb < 0) {
-	      // neighbour in heap
-	      ngb = ngb_heap - (ingb+1);
-	    } else {
-	      // neighbour in octree
-	      ngb = ngb_octree + ingb;
-	    }
+              if (ingb < 0) {
+                // neighbour in heap
+                ngb = ngb_heap - (ingb+1);
+              } else {
+                // neighbour in octree
+                ngb = ngb_octree + ingb;
+              }
 
-	    int found = 0;
-	    int pos;
-	    for (pos = 0; pos < ngb->n_neighbour[inv_dir]; pos++) {
-	      if (ngb->neighbours[inv_dir][pos] == -(h+1)) {
-		found = 1;
-		break;
-	      }
-	    }
+              int found = 0;
+              int pos;
+              for (pos = 0; pos < ngb->n_neighbour[inv_dir]; pos++) {
+                if (ngb->neighbours[inv_dir][pos] == -(h+1)) {
+                  found = 1;
+                  break;
+                }
+              }
 
-	    assert (found);
+              assert (found);
 
-	    ngb->neighbours[inv_dir][pos] = i;
-	  }
-	}
-      }
-#endif
-    }
-
-  }
-
-
-#if NGB_ON_THE_FLY
-  if (octree->neighboursToBuild) {
-    ngb_octree = realloc (ngb_octree, sizeof(_neighbours_tmp_t) * octree->octants->n_nodes);
-
-    for (PDM_para_octree_direction_t dir = 0; dir < 6; dir++) {
-      free (parent_ngb.neighbours[dir]);
-    }
-
-    for (int i = 0; i < heap->max_top; i++) {
-      for (PDM_para_octree_direction_t dir = 0; dir < 6; dir++) {
-	if (ngb_heap[i].neighbours[dir] != NULL) {
-	  free (ngb_heap[i].neighbours[dir]);
-	}
+              ngb->neighbours[inv_dir][pos] = i;
+            }
+          }
+        }
       }
     }
-    free (ngb_heap);
   }
-#endif
 
+  if (NGB_ON_THE_FLY) {
+    if (octree->neighboursToBuild) {
+      ngb_octree = realloc (ngb_octree, sizeof(_neighbours_tmp_t) * octree->octants->n_nodes);
+
+      for (PDM_para_octree_direction_t dir = PDM_BOTTOM; dir < 6; dir++) {
+        free (parent_ngb.neighbours[dir]);
+      }
+
+      for (int i = 0; i < heap->max_top; i++) {
+        for (PDM_para_octree_direction_t dir = PDM_BOTTOM; dir < 6; dir++) {
+          if (ngb_heap[i].neighbours[dir] != NULL) {
+            free (ngb_heap[i].neighbours[dir]);
+          }
+        }
+      }
+      free (ngb_heap);
+    }
+  }
 
   double vol = 0;
   for (int i = 0; i < octree->octants->n_nodes; i++) {
@@ -5370,7 +5367,6 @@ PDM_para_octree_build
   PDM_MPI_Allreduce(&vol, &total_vol, 1, PDM_MPI_DOUBLE, PDM_MPI_SUM, octree->comm);
 
   assert (PDM_ABS(total_vol - 1.) < 1e-15);
-
 
   heap = _heap_free (heap);
 
@@ -5400,20 +5396,21 @@ PDM_para_octree_build
    *
    *************************************************************************/
   if (octree->neighboursToBuild) {
-#if NGB_ON_THE_FLY
-    _finalize_neighbours (octree,
-			  &ngb_octree,
-			  b_t_elapsed,
-			  b_t_cpu,
-			  b_t_cpu_u,
-			  b_t_cpu_s);
-#else
-    _compute_neighbours (octree,
-                         b_t_elapsed,
-                         b_t_cpu,
-                         b_t_cpu_u,
-                         b_t_cpu_s);
-#endif
+    if (NGB_ON_THE_FLY) {
+      _finalize_neighbours (octree,
+                            &ngb_octree,
+                            b_t_elapsed,
+                            b_t_cpu,
+                            b_t_cpu_u,
+                            b_t_cpu_s);
+    }
+    else {
+      _compute_neighbours (octree,
+        b_t_elapsed,
+        b_t_cpu,
+        b_t_cpu_u,
+        b_t_cpu_s);
+    }
 
     if (1 == 0) {
       _check_neighbours_area (octree);
@@ -7515,17 +7512,17 @@ _my_dump_times
 	     octree->times_elapsed[BUILD_BLOCK_PARTITION],
 	     (int) (100 * octree->times_elapsed[BUILD_BLOCK_PARTITION] / tot));
 
-#if 1
-  PDM_printf("[%d]   local nodes        = %12.5es (%d%%)\n",
-	     rank,
-	     octree->times_elapsed[BUILD_LOCAL_NODES],
-	     (int) (100 * octree->times_elapsed[BUILD_LOCAL_NODES] / tot));
+  if (1 == 0) {
+    PDM_printf("[%d]   local nodes        = %12.5es (%d%%)\n",
+               rank,
+               octree->times_elapsed[BUILD_LOCAL_NODES],
+               (int) (100 * octree->times_elapsed[BUILD_LOCAL_NODES] / tot));
 
-  PDM_printf("[%d]   local neighbours   = %12.5es (%d%%)\n",
-	     rank,
-	     octree->times_elapsed[BUILD_LOCAL_NEIGHBOURS],
+    PDM_printf("[%d]   local neighbours   = %12.5es (%d%%)\n",
+               rank,
+               octree->times_elapsed[BUILD_LOCAL_NEIGHBOURS],
 	     (int) (100 * octree->times_elapsed[BUILD_LOCAL_NEIGHBOURS] / tot));
-#endif
+  }
   double t = octree->times_elapsed[BUILD_LOCAL_NODES] + octree->times_elapsed[BUILD_LOCAL_NEIGHBOURS];
   PDM_printf("[%d]   local nodes + ngbs = %12.5es (%d%%)\n",
 	     rank,
@@ -7534,21 +7531,10 @@ _my_dump_times
   //#endif
 
   PDM_printf("[%d]   distant neighbours = %12.5es (%d%%)\n",
-	     rank,
-	     octree->times_elapsed[BUILD_DISTANT_NEIGHBOURS],
-	     (int) (100 * octree->times_elapsed[BUILD_DISTANT_NEIGHBOURS] / tot));
+    rank,
+    octree->times_elapsed[BUILD_DISTANT_NEIGHBOURS],
+    (int) (100 * octree->times_elapsed[BUILD_DISTANT_NEIGHBOURS] / tot));
 }
-
-
-
-
-
-
-
-
-
-
-
 
 /**
  *
@@ -7561,14 +7547,14 @@ _my_dump_times
 void
 PDM_para_octree_dump_times
 (
- const int id
- )
+  const int id
+)
 {
   _octree_t *octree = _get_from_id (id);
-#if 0
-  _my_dump_times (octree);
-  return;
-#endif
+  if (1 == 0) {
+    _my_dump_times (octree);
+    return;
+  }
 
   double t1 = octree->times_elapsed[END] - octree->times_elapsed[BEGIN];
   double t2 = octree->times_cpu[END] - octree->times_cpu[BEGIN];
@@ -7630,7 +7616,7 @@ PDM_para_octree_dump_times
                 t_elaps_max[BUILD_DISTANT_NEIGHBOURS],
                 t_cpu_max[BUILD_DISTANT_NEIGHBOURS]);
 
-  }
+}
 
 }
 
