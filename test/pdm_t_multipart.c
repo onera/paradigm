@@ -325,6 +325,8 @@ int main(int argc, char *argv[])
                                                 PDM_WRITER_OFF,
                                                 n_part_zones[i_zone]); //total nb of part for this proc/zone
     }
+    // Cell local id
+    int id_var_cellId = PDM_writer_var_create(id_cs, PDM_WRITER_OFF, PDM_WRITER_VAR_SCALAIRE, PDM_WRITER_VAR_ELEMENTS, "cellId");
     // Global partition Id (ordred by proc / zone), staring at 1
     int id_var_gpartId = PDM_writer_var_create(id_cs, PDM_WRITER_OFF, PDM_WRITER_VAR_SCALAIRE, PDM_WRITER_VAR_ELEMENTS, "gpartId");
     // Local partition Id on the proc / zone, starting at 0
@@ -458,12 +460,14 @@ int main(int argc, char *argv[])
     ipartzone = 0;
     for (int i_zone = 0; i_zone < n_zone; i_zone++){
       for (int i_part = 0; i_part < n_part_zones[i_zone]; i_part++){
+        PDM_real_t *val_cellid = (PDM_real_t *) malloc(sizeof(PDM_real_t) * pn_cell[ipartzone]);
         PDM_real_t *val_gpartid = (PDM_real_t *) malloc(sizeof(PDM_real_t) * pn_cell[ipartzone]);
         PDM_real_t *val_lpartid = (PDM_real_t *) malloc(sizeof(PDM_real_t) * pn_cell[ipartzone]);
         PDM_real_t *val_procid = (PDM_real_t *) malloc(sizeof(PDM_real_t) * pn_cell[ipartzone]);
         PDM_real_t *val_oppprocid = (PDM_real_t *) malloc(sizeof(PDM_real_t) * pn_vtx[ipartzone]);
         PDM_real_t *val_opppartid = (PDM_real_t *) malloc(sizeof(PDM_real_t) * pn_vtx[ipartzone]);
         for (int i=0; i < pn_cell[ipartzone]; i++) {
+          val_cellid[i] = i;
           val_gpartid[i] = (PDM_real_t) (partzoneshift[i_rank] + ipartzone);
           val_lpartid[i] = i_part;
           val_procid[i]  = i_rank;
@@ -472,11 +476,13 @@ int main(int argc, char *argv[])
           val_oppprocid[i] = commVisu[ipartzone][2*i];
           val_opppartid[i] = commVisu[ipartzone][2*i+1];
         }
+        PDM_writer_var_set(id_cs, id_var_cellId, geom_ids[i_zone], i_part, val_cellid);
         PDM_writer_var_set(id_cs, id_var_gpartId, geom_ids[i_zone], i_part, val_gpartid);
         PDM_writer_var_set(id_cs, id_var_lpartId, geom_ids[i_zone], i_part, val_lpartid);
         PDM_writer_var_set(id_cs, id_var_procId, geom_ids[i_zone], i_part, val_procid);
         PDM_writer_var_set(id_cs, id_var_oppProcId, geom_ids[i_zone], i_part, val_oppprocid);
         PDM_writer_var_set(id_cs, id_var_oppPartId, geom_ids[i_zone], i_part, val_opppartid);
+        free(val_cellid);
         free(val_gpartid);
         free(val_lpartid);
         free(val_procid);
@@ -488,6 +494,8 @@ int main(int argc, char *argv[])
     free(partzoneshift);
 
     if (i_rank==0) PDM_printf("Write variables\n");
+    PDM_writer_var_write(id_cs, id_var_cellId);
+    PDM_writer_var_free(id_cs,  id_var_cellId);
     PDM_writer_var_write(id_cs, id_var_gpartId);
     PDM_writer_var_free(id_cs,  id_var_gpartId);
     PDM_writer_var_write(id_cs, id_var_lpartId);
