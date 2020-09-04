@@ -548,16 +548,16 @@ int main(int argc, char *argv[])
     }
   }
 
-  PDM_generate_entity_graph_comm(comm,
-                                 part_distribution,
-                                 face_distribution,
-                                 n_part,
-                                 pn_faces,
-         (const PDM_g_num_t **)  pface_ln_to_gn,
-         (const int **)          face_is_bnd,
-                      (int ***) &pproc_face_bound_idx,
-                      (int ***) &ppart_face_bound_idx,
-                      (int ***) &pface_bound);
+  PDM_part_generate_entity_graph_comm(comm,
+                                      part_distribution,
+                                      face_distribution,
+                                      n_part,
+                                      pn_faces,
+              (const PDM_g_num_t **)  pface_ln_to_gn,
+              (const int **)          face_is_bnd,
+                           (int ***) &pproc_face_bound_idx,
+                           (int ***) &ppart_face_bound_idx,
+                           (int ***) &pface_bound);
   for (int i_part = 0; i_part < n_res_part; i_part++)
     free(face_is_bnd[i_part]);
   free(face_is_bnd);

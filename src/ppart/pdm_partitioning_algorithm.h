@@ -152,7 +152,7 @@ PDM_part_dconnectivity_to_pconnectivity_hash
  *   opposite partition).
  */
 void
-PDM_generate_entity_graph_comm
+PDM_part_generate_entity_graph_comm
 (
  const PDM_MPI_Comm   comm,
  const PDM_g_num_t   *part_distribution,

@@ -69,20 +69,31 @@ extern "C" {
  * Public function definitions
  *============================================================================*/
 
+/**
+ *
+ * \brief Compress the connectivity of a graph, ie remove the multiple arcs connecting 
+ *        the same two nodes (if any).
+ *
+ * \param [in]    n_node            (local) number of nodes in the graph
+ * \param [inout] dual_graph_idx    Node to node connectivity indexes (size=n_node+1)
+ * \param [in] dual_graph_n         Original number of connected nodes (size=n_node)
+ * \param [inout] dual_graph        Node to node connectivity (size=dual_graph_idx[n_node])
+ *
+ */
 void
 PDM_para_graph_compress_connectivity
 (
- PDM_g_num_t *dual_graph,
+ int          n_node,
  PDM_g_num_t *dual_graph_idx,
- int         *dual_graph_n,
- int          dn_elt
+ const int   *dual_graph_n,
+ PDM_g_num_t *dual_graph
 )
 {
   int idx_comp  = 0; /* Compressed index use to fill the buffer */
   int idx_block = 0; /* Index in the block to post-treat        */
   dual_graph_idx[0] = 0;
   int need_shift = 0;
-  for(int i = 0; i < dn_elt; ++i){
+  for(int i = 0; i < n_node; ++i){
     int n_cell_connect = dual_graph_n[i];
     /* Reshift next value in compressed block to avoid create a new shift */
     if(need_shift) {
@@ -368,7 +379,7 @@ PDM_para_graph_dual_from_arc2node
    *
    */
 
-  PDM_para_graph_compress_connectivity(_dual_graph, _dual_graph_idx, node_node_n, n_node_block);
+  PDM_para_graph_compress_connectivity(n_node_block, _dual_graph_idx, node_node_n, _dual_graph);
 
   free(node_node_n);
 
