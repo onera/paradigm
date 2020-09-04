@@ -435,21 +435,6 @@ int main(int argc, char *argv[])
         pn_cell[ipartzone] = n_cell;
         pn_vtx[ipartzone]  = n_vtx;
         ipartzone++;
-        // Carefull, do not free data required by PDM_writer (?)
-        free(face_cell);
-        free(face_bound_idx);
-        free(face_bound);
-        free(face_join_idx);
-        free(face_join);
-        free(face_part_bound_proc_idx);
-        free(face_part_bound_part_idx);
-        free(face_part_bound);
-        free(face_ln_to_gn);
-        free(face_bound_ln_to_gn);
-        free(face_join_ln_to_gn);
-        free(cell_tag);
-        free(face_tag);
-        free(vtx_tag);
       }
     if (i_rank==0) PDM_printf("Write geometry for zone %i\n", i_zone);
     PDM_writer_geom_write(id_cs, geom_ids[i_zone]);
@@ -516,6 +501,7 @@ int main(int argc, char *argv[])
     free(geom_ids);
     PDM_writer_free(id_cs);
     for (int i_part = 0; i_part < tn_part_proc; i_part++){
+      free(commVisu[i_part]);
       free(pface_vtxNb[i_part]);
       free(pcell_faceNb[i_part]);
     }
@@ -558,8 +544,9 @@ int main(int argc, char *argv[])
   free(djoins_ids);
   free(join_to_opposite);
 
-  free(n_part_zones);
   PDM_multipart_free(mpart_id);
+  free(dmesh_ids);
+  free(n_part_zones);
 
   if (i_rank==0) PDM_printf("pdm_t_multipart run finalized\n");
   PDM_MPI_Finalize();
