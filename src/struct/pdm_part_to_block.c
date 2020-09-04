@@ -484,17 +484,17 @@ _distrib_data
   for (int i = 0; i < ptb->n_part; i++) {
     
     ptb->n_elt_proc+= ptb->n_elt[i];
-    if( ptb->i_rank==0 ){
-      printf("line 488 PDM_part_to_block_create line 487 ptb->n_part=%d ptb->n_elt[%d]=%d\n",i,ptb->n_part,ptb->n_elt[i]);
-      fflush(stdout);
-    }
+    //if( ptb->i_rank==0 ){
+    //  printf("line %d PDM_part_to_block_create ptb->n_part=%d ptb->n_elt[%d]=%d\n",__LINE__,i,ptb->n_part,ptb->n_elt[i]);
+    //  fflush(stdout);
+    //}
 
     for (int j = 0; j < ptb->n_elt[i]; j++) {
 
-      if( ptb->i_rank==0 ){
-        printf("\tPDM_part_to_block_create ptb->gnum_elt[%d][%d]=%d\n", i,j,ptb->gnum_elt[i][j]);
-        fflush(stdout);
-      }
+      //if( ptb->i_rank==0 ){
+      //  printf("\tPDM_part_to_block_create ptb->gnum_elt[%d][%d]=%d\n", i,j,ptb->gnum_elt[i][j]);
+      //  fflush(stdout);
+      //}
 
       _id_max = _MAX (_id_max, ptb->gnum_elt[i][j]);
       //printf("\t\ttoto _id_max=%d\n", _id_max);
@@ -1178,24 +1178,22 @@ PDM_part_to_block_exch
 {
   _pdm_part_to_block_t *_ptb = (_pdm_part_to_block_t *) ptb;
   
-  if ( _ptb->i_rank==0 ){
-    printf("line %d PDM_part_to_block_exch s_data=%lu\n",__LINE__,s_data);
-    fflush(stdout);
-    printf("line %d PDM_part_to_block_exch t_stride=%d\n",__LINE__,t_stride);
-    fflush(stdout);
-    printf("line %d PDM_part_to_block_exch cst_stride=%d\n",__LINE__,cst_stride);
-    fflush(stdout);
-    printf("line %d PDM_part_to_block_exch _ptb->n_elt[0]=%d\n",__LINE__,_ptb->n_elt[0]);
-    fflush(stdout);
-    if ( _ptb->i_rank==0 ){
-      //for (int i = 0; i < _ptb->n_part; i++) {
-        for (int j = 0; j < _ptb->n_elt[0]; j++) {
-          printf("line %d PDM_part_to_block_exch part_data[%d]==%d\n",__LINE__,j,(( int **) part_data)[0][j]);
-          fflush(stdout);
-        }
-      //}
-    }
-  }
+  //if ( _ptb->i_rank==0 ){
+  //  printf("line %d PDM_part_to_block_exch s_data=%lu\n",__LINE__,s_data);
+  //  fflush(stdout);
+  //  printf("line %d PDM_part_to_block_exch t_stride=%d\n",__LINE__,t_stride);
+  //  fflush(stdout);
+  //  printf("line %d PDM_part_to_block_exch cst_stride=%d\n",__LINE__,cst_stride);
+  //  fflush(stdout);
+  //  printf("line %d PDM_part_to_block_exch _ptb->n_elt[0]=%d\n",__LINE__,_ptb->n_elt[0]);
+  //  fflush(stdout);
+  //  //for (int i = 0; i < _ptb->n_part; i++) {
+  //  //for (int j = 0; j < _ptb->n_elt[0]; j++) {
+  //  //  printf("line %d PDM_part_to_block_exch part_data[%d]==%d\n",__LINE__,j,(( int **) part_data)[0][j]);
+  //  //  fflush(stdout);
+  //  //}
+  //  //}
+  //}
 
   //*
   //*/
@@ -1332,12 +1330,12 @@ PDM_part_to_block_exch
         i_part[j] = i_part[j-1] + (part_stride[i][j-1] * (int) s_data);
     }
     
-    if ( _ptb->i_rank==0 ){
-      printf("line %d PDM_part_to_block_exch  _ptb->dest_proc[%d]=%d\n",__LINE__,idx,_ptb->dest_proc[idx]);
-      fflush(stdout);
-      //printf("line %d PDM_part_to_block_exch s_octet_elt=%d\n",__LINE__,s_octet_elt);
-      //fflush(stdout);
-    }
+    //if ( _ptb->i_rank==0 ){
+    //  printf("line %d PDM_part_to_block_exch  _ptb->dest_proc[%d]=%d\n",__LINE__,idx,_ptb->dest_proc[idx]);
+    //  fflush(stdout);
+    //  //printf("line %d PDM_part_to_block_exch s_octet_elt=%d\n",__LINE__,s_octet_elt);
+    //  //fflush(stdout);
+    //}
 
 
     for (int j = 0; j < _ptb->n_elt[i]; j++) {
@@ -1355,13 +1353,12 @@ PDM_part_to_block_exch
         i_part_elt  = i_part[j];
       }
 
-
-      if ( _ptb->i_rank==0 ){
-        printf("line %d PDM_part_to_block_exch i_part_elt=%d\n",__LINE__,i_part_elt);
-        fflush(stdout);
-        //printf("line %d PDM_part_to_block_exch s_octet_elt=%d\n",__LINE__,s_octet_elt);
-        //fflush(stdout);
-      }
+      //if ( _ptb->i_rank==0 ){
+      //  printf("line %d PDM_part_to_block_exch i_part_elt=%d\n",__LINE__,i_part_elt);
+      //  fflush(stdout);
+      //  printf("line %d PDM_part_to_block_exch s_octet_elt=%d\n",__LINE__,s_octet_elt);
+      //  fflush(stdout);
+      //}
 
 
       for (int k = 0; k < s_octet_elt; k++) {
@@ -1372,10 +1369,10 @@ PDM_part_to_block_exch
 
     }
 
-    if ( _ptb->i_rank==0 ){
-      printf("line %d PDM_part_to_block_exch\n",__LINE__);
-      fflush(stdout);
-    }  
+    //if ( _ptb->i_rank==0 ){
+    //  printf("line %d PDM_part_to_block_exch\n",__LINE__);
+    //  fflush(stdout);
+    //}  
 
 
     if (i_part != NULL)
