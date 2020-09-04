@@ -466,6 +466,99 @@ PDM_line_distance_2d
   return PDM_DOT_PRODUCT_2D (vect, vect);
 }
 
+
+
+
+/**
+ * \brief Evaluates the position on an line segment
+ *
+ * \param [in]  x               Point coordinates to evaluate position
+ * \param [in]  vtx_coord       Line segment vertices coordinates
+ * \param [out] closest_point   Closest Point on Line segment or NULL
+ * \param [out] min_dist2       Square of the distance
+ * \param [out] weights         Vertices weights or NULL
+ *
+ * \return      -1 if the line segment is degenerate, 0 else
+ *
+ */
+
+int PDM_line_evaluate_position
+(
+ const double  x[3],
+ const double *vtx_coord,
+ double       *closest_point,
+ double       *dist2,
+ double        weights[2]
+ )
+{
+  double proj, norm_edge, norm_edge2;
+  double p1x[3], p1p2[3], p1p2n[3];
+
+  double weights_local[2];
+  double *_weights = weights_local;
+  if (weights != NULL) {
+    _weights = weights;
+  }
+
+  double cp_local[3];
+  double *_closest_point = cp_local;
+  if (closest_point != NULL) {
+    _closest_point = closest_point;
+  }
+
+  const double *pt1 = vtx_coord;
+  const double *pt2 = vtx_coord +3;
+
+
+  p1x[0] = -pt1[0] + x[0];
+  p1x[1] = -pt1[1] + x[1];
+  p1x[2] = -pt1[2] + x[2];
+
+
+  p1p2[0] = -pt1[0] + pt2[0];
+  p1p2[1] = -pt1[1] + pt2[1];
+  p1p2[2] = -pt1[2] + pt2[2];
+
+  norm_edge2 = PDM_DOT_PRODUCT (p1p2, p1p2);
+  if (norm_edge2 < 1.e-12) {
+    return -1;
+  }
+  norm_edge = sqrt (norm_edge2);
+
+  p1p2n[0] = p1p2[0] / norm_edge;
+  p1p2n[1] = p1p2[1] / norm_edge;
+  p1p2n[2] = p1p2[2] / norm_edge;
+
+  proj = PDM_DOT_PRODUCT (p1x, p1p2n);
+
+  if (proj <= 0.0){
+    _closest_point[0] = pt1[0];
+    _closest_point[1] = pt1[1];
+    _closest_point[2] = pt1[2];
+    proj = 0;
+  }
+  if (proj >= norm_edge){
+    _closest_point[0] = pt2[0];
+    _closest_point[1] = pt2[1];
+    _closest_point[2] = pt2[2];
+    proj = norm_edge;
+  }
+  else {
+    _closest_point[0] = pt1[0] + proj * p1p2[0] / norm_edge;
+    _closest_point[1] = pt1[1] + proj * p1p2[1] / norm_edge;
+    _closest_point[2] = pt1[2] + proj * p1p2[2] / norm_edge;
+  }
+
+  double t = proj / norm_edge;
+
+  *dist2 = PDM_DOT_PRODUCT (p1x, p1x) - (proj * proj);
+
+  _weights[0] = 1. - t;
+  _weights[1] =      t;
+
+  return 0;
+}
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

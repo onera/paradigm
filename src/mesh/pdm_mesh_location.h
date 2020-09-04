@@ -180,6 +180,43 @@ extern "C" {
    const PDM_g_num_t *vtx_ln_to_gn
    );
 
+  /**
+ *
+ * \brief Set a part of a mesh (2d version)
+ *
+ * \param [in]   id            Identifier
+ * \param [in]   i_part        Partition to define
+ * \param [in]   n_cell        Number of cells
+ * \param [in]   cell_edge_idx Index in the cell -> edge connectivity
+ * \param [in]   cell_edge     cell -> edge connectivity
+ * \param [in]   cell_ln_to_gn Local cell numbering to global cel numbering
+ * \param [in]   n_edge        Number of edges
+ * \param [in]   edge_vtx_idx  Index in the edge -> vertex connectivity
+ * \param [in]   edge_vtx      edge -> vertex connectivity
+ * \param [in]   edge_ln_to_gn Local edge numbering to global edge numbering
+ * \param [in]   n_vtx         Number of vertices
+ * \param [in]   coords        Coordinates
+ * \param [in]   vtx_ln_to_gn  Local vertex numbering to global vertex numbering
+ *
+ */
+
+void
+PDM_mesh_location_part_set_2d
+(
+ const int          id,
+ const int          i_part,
+ const int          n_cell,
+ const int         *cell_edge_idx,
+ const int         *cell_edge,
+ const PDM_g_num_t *cell_ln_to_gn,
+ const int          n_edge,
+ const int         *edge_vtx_idx,
+ const int         *edge_vtx,
+ const PDM_g_num_t *edge_ln_to_gn,
+ const int          n_vtx,
+ const double      *coords,
+ const PDM_g_num_t *vtx_ln_to_gn
+ );
 
   /**
    *

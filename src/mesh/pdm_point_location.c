@@ -375,7 +375,6 @@ _compute_uvw
  * Locate points on an edge.
  *
  * parameters:
- *   dim                <-- dimension (2 or 3)
  *   edge_vtx           <-- ids of edge vertices
  *   parent_vertex_num  <-- pointer to parent vertex numbers (or NULL)
  *   vtx_coord          <-- pointer to vertex coordinates
@@ -387,7 +386,6 @@ _compute_uvw
 static void
 _locate_on_edge
 (
- const int          dim,
  const double       vtx_coord[],
  const int          n_pts,
  const double       pts_coord[],
@@ -399,8 +397,8 @@ _locate_on_edge
 
   /* Calculate edge vector and length */
   double u[3], uu = 0.;
-  for (idim = 0; idim < dim; idim++) {
-    u[idim] = vtx_coord[dim + idim] - vtx_coord[idim];
+  for (idim = 0; idim < 3; idim++) {
+    u[idim] = vtx_coord[3 + idim] - vtx_coord[idim];
     uu += u[idim] * u[idim];
   }
 
@@ -416,11 +414,11 @@ _locate_on_edge
   double v[3], uv = 0., t;
   for (ipt = 0; ipt < n_pts; ipt++) {
 
-    const double *_pt = pts_coord + dim * ipt;
+    const double *_pt = pts_coord + 3 * ipt;
     double       *_bc = bar_coord + 2 * ipt;
 
     /* Calculate linear coordinates of projection of point on edge axis */
-    for (idim = 0; idim < dim; idim++) {
+    for (idim = 0; idim < 3; idim++) {
       v[idim] = _pt[idim] - vtx_coord[idim];
       uv += u[idim] * v[idim];
     }
@@ -431,20 +429,20 @@ _locate_on_edge
     /* Set v to be the vector from the point to the closest point on
        the segment (if t < 0, v is already that vector) */
     if (t >= 1.) {
-      for (idim = 0; idim < dim; idim++) {
-        v[idim] = _pt[idim] - vtx_coord[dim + idim];
+      for (idim = 0; idim < 3; idim++) {
+        v[idim] = _pt[idim] - vtx_coord[3 + idim];
       }
     }
 
     else if (t > 0.) {
-      for (idim = 0; idim < dim; idim++) {
+      for (idim = 0; idim < 3; idim++) {
         v[idim] -= t * u[idim];
       }
     }
 
     /* Distance between point to locate and its projection */
     double dist2 = 0.;
-    for (idim = 0; idim < dim; idim++) {
+    for (idim = 0; idim < 3; idim++) {
       dist2 += v[idim] * v[idim];
     }
     distance[ipt] = (float) dist2;
@@ -457,198 +455,8 @@ _locate_on_edge
 
 }
 
-
-
-
-
 /*----------------------------------------------------------------------------
- * Locate points in a given set of 2d triangles.
- *
- * This function is called for sets of triangles belonging to the subdivision
- * of a given 3d face. Barycentric coordinates are used to locate the
- * projection of points.
- *
- * parameters:
- *   n_tri               <-- number of triangles
- *   tri_vtx             <-- triangles connectivity (size: 2 * 3)
- *   parent_vertex_num   <-- pointer to parent vertex numbers (or NULL)
- *   vtx_coord           <-- pointer to vertex coordinates (size: 6)
- *   n_pts               <-- number of points to locate
- *   pts_coord           <-- point coordinates (size: 2 * n_pts)
- *   location            <-> lnum of element containing or closest to each point (size: n_pts)
- *   distance            <-> distance from point to element (size: n_pts)
- *   bar_coord           <-> barcyentric coordinates of closest points (size: n_pts * 3)
- *----------------------------------------------------------------------------*/
-
-static void
-_locate_on_triangles_2d
-(
- const int          n_tri,
- const PDM_l_num_t  tri_vtx[],
- const PDM_l_num_t *parent_vertex_num,
- const double       vtx_coord[],
- const int          n_pts,
- const double       pts_coord[],
- int                location[],
- float              distance[],
- double             bar_coord[]
- )
-{
-  int itri, ipt, ivtx, idim;
-
-  /* Initialize distance of points to locate */
-  for (ipt = 0; ipt < n_pts; ipt++) {
-    distance[ipt] = HUGE_VAL;
-  }
-
-  if (location != NULL) {
-    for (ipt = 0; ipt < n_pts; ipt++) {
-      location[ipt] = -1;
-    }
-  }
-
-  /* const int _order = 1;
-     const int n_vtx_tri = (_order+1)*(_order+2)/2;*/
-  const int n_vtx_tri = 3;
-
-  double tri_coord[6];
-  double *vtx0 = tri_coord;
-  double *vtx1 = tri_coord + 2;
-  double *vtx2 = tri_coord + 4;
-
-  double u[2], v[2], w[2];
-  double det;
-  PDM_l_num_t id[3];
-
-  double dist;
-  double weights[3];
-
-  /* Loop on triangles */
-  for (itri = 0; itri < n_tri; itri++) {
-
-    /* vertex index of current triangle */
-    for (ivtx = 0; ivtx < 3; ivtx++) {
-      id[ivtx] = tri_vtx[itri*n_vtx_tri + ivtx] - 1;
-      if (parent_vertex_num != NULL) {
-        id[ivtx] = parent_vertex_num[id[ivtx]] - 1;
-      }
-    }
-
-    /* Calculate triangle-constant values for barycentric coordinates */
-    for (ivtx = 0; ivtx < 3; ivtx++) {
-      for (idim = 0; idim < 2; idim++) {
-        tri_coord[2*ivtx + idim] = vtx_coord[2*id[ivtx] + idim];
-      }
-    }
-
-    for (idim = 0; idim < 2; idim++) {
-      u[idim] = vtx1[idim] - vtx0[idim];
-      v[idim] = vtx2[idim] - vtx0[idim];
-    }
-
-    det = u[0]*v[1] - u[1]*v[0];
-
-    if (det < _epsilon_denom) {
-      PDM_printf("warning _locate_on_triangles_2d : Reduce _epsilon_denom criteria : %12.5e < %12.5e\n", det, _epsilon_denom);
-      PDM_printf_flush();
-      continue;
-    }
-
-
-    /* Loop on points to locate */
-    for (ipt = 0; ipt < n_pts; ipt++) {
-
-      const double *_pt = pts_coord + 2 * ipt;
-      double       *_bc = bar_coord + 3 * ipt;
-
-      w[0] = _pt[0] - vtx0[0];
-      w[1] = _pt[1] - vtx0[1];
-
-      double isop_0 = (w[0]*v[1] - w[1]*v[0]) / det;
-      double isop_1 = (w[1]*u[0] - w[0]*u[1]) / det;
-
-      weights[1] = 1. - isop_0 - isop_1;
-      weights[2] =      isop_0;
-      weights[0] =               isop_1;
-
-      dist = HUGE_VAL;
-      for (ivtx = 0; ivtx < 3; ivtx++) {
-        dist = PDM_MIN (dist, weights[ivtx]);
-      }
-
-      dist = -dist;
-
-      /* Point outside triangle --> find closest point on boundary */
-      if (dist > 0.) {
-        double t01, t12, t20, d01, d12, d20, c01[3], c12[3], c20[3];
-
-        int i, j, k;
-        double t;
-        d01 = PDM_line_distance_2d (_pt, vtx0, vtx1, &t01, c01);
-        d12 = PDM_line_distance_2d (_pt, vtx1, vtx2, &t12, c12);
-        d20 = PDM_line_distance_2d (_pt, vtx2, vtx0, &t20, c20);
-
-        if (d01 <= d12 && d01 <= d20) {
-          i = 0;
-          j = 1;
-          k = 2;
-          dist = d01;
-          t = t01;
-        }
-
-        else if (d12 <= d01 && d12 <= d20) {
-          i = 1;
-          j = 2;
-          k = 0;
-          dist = d12;
-          t = t12;
-        }
-
-        else {
-          i = 2;
-          j = 0;
-          k = 1;
-          dist = d20;
-          t = t20;
-        }
-
-        if (t < 0.) {
-          t = 0.;
-        } else if (t > 1.) {
-          t = 1.;
-        }
-
-        weights[i] = 0.;
-        weights[j] = 1. - t;
-        weights[k] = t;
-      }
-
-
-
-      if (dist < distance[ipt]) {
-        if (bar_coord != NULL) {
-          _bc[0] = weights[1];
-          _bc[1] = weights[2];
-          _bc[2] = weights[0];
-        }
-
-        distance[ipt] = (float) dist;
-
-        if (location != NULL) {
-          location[ipt] = itri;
-        }
-      }
-
-    } // End of loop on points
-
-  } // End of loop on triangles
-}
-
-
-
-
-/*----------------------------------------------------------------------------
- * Locate points in a given set of 3d triangles.
+ * Locate points in a given set of triangles.
  *
  * This function is called for sets of triangles belonging to the subdivision
  * of a given 3d face. Barycentric coordinates are used to locate the
@@ -667,7 +475,7 @@ _locate_on_triangles_2d
  *----------------------------------------------------------------------------*/
 
 static void
-_locate_on_triangles_3d
+_locate_on_triangles
 (
  const int          n_tri,
  const PDM_l_num_t  tri_vtx[],
@@ -756,12 +564,11 @@ _locate_on_triangles_3d
 
 
 /*----------------------------------------------------------------------------
- * Locate points in a given 2d or 3d quadrangle.
+ * Locate points in a given quadrangle.
  *
  * Barycentric coordinates are used to locate the projection of points.
  *
  * parameters:
- *   dim                 <-- dimension (2 or 3)
  *   quad_vtx            <-- quadrangle connectivity (size: 4)
  *   parent_vertex_num   <-- pointer to parent vertex numbers (or NULL)
  *   vtx_coord           <-- pointer to vertex coordinates (size: dim * 4)
@@ -773,7 +580,6 @@ _locate_on_triangles_3d
 static void
 _locate_on_quadrangle
 (
- const int          dim,
  const double       quad_coord[],
  const int          n_pts,
  const double       pts_coord[],
@@ -783,39 +589,32 @@ _locate_on_quadrangle
 {
   int ipt, ivtx, idim;
 
-  if (dim == 3) {
-    PDM_mean_value_coordinates_polygon_3d (4,
-                                           quad_coord,
-                                           n_pts,
-                                           pts_coord,
-                                           bar_coord);
-  } else {
-    PDM_mean_value_coordinates_polygon_2d (4,
-                                           quad_coord,
-                                           n_pts,
-                                           pts_coord,
-                                           bar_coord);
-  }
+
+  PDM_mean_value_coordinates_polygon_3d (4,
+                                         quad_coord,
+                                         n_pts,
+                                         pts_coord,
+                                         bar_coord);
 
 
   for (ipt = 0; ipt < n_pts; ipt++) {
 
-    const double *_pt = pts_coord + dim * ipt;
+    const double *_pt = pts_coord + 3 * ipt;
     double *_bc = bar_coord + 4 * ipt;
 
     double v_cp_p[3];
-    for (idim = 0; idim < dim; idim++) {
+    for (idim = 0; idim < 3; idim++) {
       v_cp_p[idim] = _pt[idim];
     }
 
     for (ivtx = 0; ivtx < 4; ivtx++) {
-      for (idim = 0; idim < dim; idim++) {
-        v_cp_p[idim] -= _bc[ivtx] * quad_coord[dim*ivtx + idim];
+      for (idim = 0; idim < 3; idim++) {
+        v_cp_p[idim] -= _bc[ivtx] * quad_coord[3*ivtx + idim];
       }
     }
 
     double dist2 = 0.;
-    for (idim = 0; idim < dim; idim++) {
+    for (idim = 0; idim < 3; idim++) {
       dist2 += v_cp_p[idim] * v_cp_p[idim];
     }
 
@@ -947,14 +746,14 @@ _locate_in_tetrahedron
   int *id_face = malloc (sizeof(int) * n_pts_out);
   double *bar_coord_face = malloc (sizeof(double) * n_pts_out * 3);
   float *distance_face = malloc (sizeof(float) * n_pts_out);
-  _locate_on_triangles_3d (4,
-                           face_vtx,
-                           tetra_coord,
-                           n_pts_out,
-                           pts_out_coord,
-                           id_face,
-                           distance_face,
-                           bar_coord_face);
+  _locate_on_triangles (4,
+                        face_vtx,
+                        tetra_coord,
+                        n_pts_out,
+                        pts_out_coord,
+                        id_face,
+                        distance_face,
+                        bar_coord_face);
 
   for (ipt = 0; ipt < n_pts_out; ipt++) {
     int id_pt = pts_out[ipt];
@@ -1764,8 +1563,7 @@ PDM_point_location_nodal
    */
   for (ielt = type_idx[PDM_MESH_NODAL_BAR2]; ielt < type_idx[PDM_MESH_NODAL_TRIA3]; ielt++) {
 
-    _locate_on_edge (3,
-                     elt_vtx_coord + elt_vtx_idx[ielt] * 3,
+    _locate_on_edge (elt_vtx_coord + elt_vtx_idx[ielt] * 3,
                      pts_idx[ielt+1] - pts_idx[ielt],
                      pts_coord + pts_idx[ielt] * 3,
                      *distance + pts_idx[ielt],
@@ -1779,14 +1577,14 @@ PDM_point_location_nodal
   const int _connec[3] = {1, 2, 3};
   for (ielt = type_idx[PDM_MESH_NODAL_TRIA3]; ielt < type_idx[PDM_MESH_NODAL_QUAD4]; ielt++) {
 
-    _locate_on_triangles_3d (1,
-                             _connec,
-                             elt_vtx_coord + elt_vtx_idx[ielt] * 3,
-                             pts_idx[ielt+1] - pts_idx[ielt],
-                             pts_coord + pts_idx[ielt] * 3,
-                             NULL,
-                             *distance + pts_idx[ielt],
-                             *bar_coord + (*bar_coord_idx)[pts_idx[ielt]]);
+    _locate_on_triangles (1,
+                          _connec,
+                          elt_vtx_coord + elt_vtx_idx[ielt] * 3,
+                          pts_idx[ielt+1] - pts_idx[ielt],
+                          pts_coord + pts_idx[ielt] * 3,
+                          NULL,
+                          *distance + pts_idx[ielt],
+                          *bar_coord + (*bar_coord_idx)[pts_idx[ielt]]);
   }
 
 
@@ -1795,8 +1593,7 @@ PDM_point_location_nodal
    */
   for (ielt = type_idx[PDM_MESH_NODAL_QUAD4]; ielt < type_idx[PDM_MESH_NODAL_POLY_2D]; ielt++) {
 
-    _locate_on_quadrangle (3,
-                           elt_vtx_coord + elt_vtx_idx[ielt] * 3,
+    _locate_on_quadrangle (elt_vtx_coord + elt_vtx_idx[ielt] * 3,
                            pts_idx[ielt+1] - pts_idx[ielt],
                            pts_coord + pts_idx[ielt] * 3,
                            *distance + pts_idx[ielt],

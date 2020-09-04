@@ -1155,8 +1155,6 @@ PDM_mesh_location_part_set
                                       cell_face_nb,
                                       cell_face,
                                       cell_ln_to_gn);
-  free (face_vtx_nb);
-  free (cell_face_nb);
 }
 
 
@@ -1235,8 +1233,6 @@ PDM_mesh_location_part_set_2d
                                       cell_edge_nb,
                                       cell_edge,
                                       cell_ln_to_gn);
-  free (edge_vtx_nb);
-  free (cell_edge_nb);
 }
 
 
@@ -1607,7 +1603,6 @@ PDM_mesh_location_compute
       }
     }
   }
-
 
   PDM_timer_hang_on(location->timer);
   e_t_elapsed = PDM_timer_elapsed(location->timer);
