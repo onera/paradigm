@@ -836,8 +836,8 @@ PDM_multipart_run_ppart
                                  (const int **) pcell_face_idx, (const int **) pcell_face,
                                 &pface_cell);
       PDM_part_reorient_bound_faces(n_part, pn_face, pface_cell,
-                                    (const int **) pcell_face_idx, (const int **) pcell_face,
-                                    pface_vtx_idx, pface_vtx);
+                                    (const int **) pcell_face_idx, pcell_face,
+                                    (const int **) pface_vtx_idx, pface_vtx);
 
       PDM_part_dcoordinates_to_pcoordinates(_multipart->comm,
                                             n_part,
