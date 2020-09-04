@@ -181,7 +181,7 @@ _build_join_uface_distribution
   int n_total_joins  = _multipart->n_total_joins;
   int n_unique_joins = n_total_joins/2;
   *join_to_ref_join    = (int *) malloc(n_total_joins  * sizeof(int));
-  *face_in_join_distri = (int *) malloc(n_unique_joins+1 * sizeof(int));
+  *face_in_join_distri = (int *) malloc((n_unique_joins+1) * sizeof(int));
   int* _face_in_join_distri = *face_in_join_distri;
   int* _join_to_ref_join    = *join_to_ref_join;
 
@@ -490,6 +490,171 @@ _search_matching_joins
   free(face_in_join_distri);
   free(nb_face_per_join);
 }
+
+/**
+ *
+ * \brief Free the memory occuped by a partition structure
+ *
+ * \param [inout]   part          _part_t object
+ */
+static void
+_part_free
+(
+ _part_t *part
+)
+{
+  if (part->vtx != NULL)
+    free(part->vtx);
+  part->vtx = NULL;
+
+  if (part->face_vtx_idx != NULL)
+    free(part->face_vtx_idx);
+  part->face_vtx_idx = NULL;
+
+  if (part->face_vtx != NULL)
+    free(part->face_vtx);
+  part->face_vtx = NULL;
+
+  if (part->gface_vtx != NULL)
+    free(part->gface_vtx);
+  part->gface_vtx = NULL;
+
+  if (part->cell_face_idx != NULL)
+    free(part->cell_face_idx);
+  part->cell_face_idx = NULL;
+
+  if (part->cell_face != NULL)
+    free(part->cell_face);
+  part->cell_face = NULL;
+
+  if (part->gcell_face != NULL)
+    free(part->gcell_face);
+  part->gcell_face = NULL;
+
+  if (part->face_cell != NULL)
+    free(part->face_cell);
+  part->face_cell = NULL;
+
+  if (part->face_group_idx != NULL)
+    free(part->face_group_idx);
+  part->face_group_idx = NULL;
+
+  if (part->face_group != NULL)
+    free(part->face_group);
+  part->face_group = NULL;
+
+  if (part->face_part_bound_proc_idx != NULL)
+    free(part->face_part_bound_proc_idx);
+  part->face_part_bound_proc_idx = NULL;
+
+  if (part->face_part_bound_part_idx != NULL)
+    free(part->face_part_bound_part_idx);
+  part->face_part_bound_part_idx = NULL;
+
+  if (part->face_part_bound != NULL)
+    free(part->face_part_bound);
+  part->face_part_bound = NULL;
+
+  if (part->face_bound_idx != NULL)
+    free(part->face_bound_idx);
+  part->face_bound_idx = NULL;
+
+  if (part->face_bound != NULL)
+    free(part->face_bound);
+  part->face_bound = NULL;
+
+  if (part->face_join_idx != NULL)
+    free(part->face_join_idx);
+  part->face_join_idx = NULL;
+
+  if (part->face_join != NULL)
+    free(part->face_join);
+  part->face_join = NULL;
+
+  if (part->vtx_ln_to_gn != NULL)
+    free(part->vtx_ln_to_gn);
+  part->vtx_ln_to_gn = NULL;
+
+  if (part->face_ln_to_gn != NULL)
+    free(part->face_ln_to_gn);
+  part->face_ln_to_gn = NULL;
+
+  if (part->cell_ln_to_gn != NULL)
+    free(part->cell_ln_to_gn);
+  part->cell_ln_to_gn = NULL;
+
+  if (part->face_group_ln_to_gn != NULL)
+    free(part->face_group_ln_to_gn);
+  part->face_group_ln_to_gn = NULL;
+
+  if (part->face_bound_ln_to_gn != NULL)
+    free(part->face_bound_ln_to_gn);
+  part->face_bound_ln_to_gn = NULL;
+
+  if (part->face_join_ln_to_gn != NULL)
+    free(part->face_join_ln_to_gn);
+  part->face_join_ln_to_gn = NULL;
+
+  if (part->cell_tag != NULL)
+    free(part->cell_tag);
+  part->cell_tag = NULL;
+
+  if (part->face_tag != NULL)
+  free(part->face_tag);
+  part->face_tag = NULL;
+
+  if (part->vtx_tag != NULL)
+    free(part->vtx_tag);
+  part->vtx_tag = NULL;
+
+  if (part->cell_color != NULL)
+    free(part->cell_color);
+  part->cell_color = NULL;
+
+  if (part->face_color != NULL)
+    free(part->face_color);
+  part->face_color = NULL;
+
+  if (part->thread_color != NULL)
+    free(part->thread_color);
+  part->thread_color = NULL;
+
+  if (part->hyperplane_color != NULL)
+    free(part->hyperplane_color);
+  part->hyperplane_color = NULL;
+
+  if (part->new_to_old_order_cell != NULL)
+    free(part->new_to_old_order_cell);
+  part->new_to_old_order_cell = NULL;
+
+  if (part->new_to_old_order_face != NULL)
+    free(part->new_to_old_order_face);
+  part->new_to_old_order_face = NULL;
+
+  if(part->subpartlayout != NULL){
+    if(part->subpartlayout->cell_tile_idx!= NULL)
+      free(part->subpartlayout->cell_tile_idx);
+    if(part->subpartlayout->face_tile_idx!= NULL)
+      free(part->subpartlayout->face_tile_idx);
+    if(part->subpartlayout->face_bnd_tile_idx!= NULL)
+      free(part->subpartlayout->face_bnd_tile_idx);
+    if(part->subpartlayout->mask_tile_idx!= NULL)
+      free(part->subpartlayout->mask_tile_idx);
+    if(part->subpartlayout->cell_vect_tile_idx!= NULL)
+      free(part->subpartlayout->cell_vect_tile_idx);
+    if(part->subpartlayout->mask_tile_n!= NULL)
+      free(part->subpartlayout->mask_tile_n);
+    if(part->subpartlayout->cell_vect_tile_n!= NULL)
+      free(part->subpartlayout->cell_vect_tile_n);
+    if(part->subpartlayout->mask_tile!= NULL)
+      free(part->subpartlayout->mask_tile);
+    free(part->subpartlayout);
+  }
+
+
+  free(part);
+}
+
 
 
 /*=============================================================================
@@ -1143,8 +1308,15 @@ PDM_multipart_free
   _pdm_multipart_t *_multipart = _get_from_id (mpart_id);
 
   free(_multipart->dmeshes_ids);
+  for (int izone = 0; izone < _multipart->n_zone; izone++) {
+    free(_multipart->pmeshes[izone].joins_ids);
+    for (int ipart = 0; ipart < _multipart->n_part[izone]; ipart++)
+      _part_free(_multipart->pmeshes[izone].parts[ipart]);
+    free(_multipart->pmeshes[izone].parts);
+  }
   free(_multipart->pmeshes);
 
+  PDM_part_renum_method_purge();
   free (_multipart);
 
   PDM_Handles_handle_free (_multiparts, mpart_id, PDM_FALSE);
