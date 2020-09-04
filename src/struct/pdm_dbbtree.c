@@ -1894,8 +1894,6 @@ PDM_dbbtree_points_inside_boxes
  double            **pts_in_box_coord
  )
 {
-  const int DEBUG = 0;
-
   assert (dbbt != NULL);
   _PDM_dbbtree_t *_dbbt = (_PDM_dbbtree_t *) dbbt;
 
@@ -1907,8 +1905,7 @@ PDM_dbbtree_points_inside_boxes
   int n_ranks;
   PDM_MPI_Comm_size (_dbbt->comm, &n_ranks);
 
-  const int *used_ranks = _dbbt->usedRank;
-
+  //const int *used_ranks = _dbbt->usedRank;
 
   /***************************************
    * Redistribute points
@@ -1918,9 +1915,6 @@ PDM_dbbtree_points_inside_boxes
 
   int *recv_count = NULL;
   int *recv_shift = NULL;
-
-  int *pts_ranks_idx = NULL;
-  int *pts_ranks     = NULL;
 
   int n_recv_pts = 0;
   PDM_g_num_t *send_g_num = NULL;

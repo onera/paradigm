@@ -144,6 +144,30 @@ PDM_line_distance_2d
  double closest_point[2]
  );
 
+
+/**
+ * \brief Evaluates the position on an line segment
+ *
+ * \param [in]  x               Point coordinates to evaluate position
+ * \param [in]  vtx_coord       Line segment vertices coordinates
+ * \param [out] closest_point   Closest Point on Line segment or NULL
+ * \param [out] min_dist2       Square of the distance
+ * \param [out] weights         Vertices weights or NULL
+ *
+ * \return      -1 if the line segment is degenerate, 0 else
+ *
+ */
+
+int PDM_line_evaluate_position
+(
+ const double  x[3],
+ const double *vtx_coord,
+ double       *closest_point,
+ double       *dist2,
+ double        weights[2]
+ );
+
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

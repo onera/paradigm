@@ -755,7 +755,7 @@ PDM_mean_values_polyhedron
         weights[ivtx] = 0.;
       }
 
-      if (1) {//DEBUG) {
+      if (DEBUG) {
         printf("Point lies on polygon\n");
       }
 
@@ -774,26 +774,6 @@ PDM_mean_values_polyhedron
         uip = u + 3 * jvtx;
 
         l2 = _distance2 (ui, uip);
-        double denom = 1.0 - 0.25 * l2;
-        if (0) {//denom < eps2) {
-          /* l = 2 <=> theta = PI <=> point on edge (i, ip) */
-          double e[3] = {vtx_coord[3*jvtx]     - vtx_coord[3*ivtx],
-                         vtx_coord[3*jvtx + 1] - vtx_coord[3*ivtx + 1],
-                         vtx_coord[3*jvtx + 2] - vtx_coord[3*ivtx + 2]};
-          double ee = PDM_DOT_PRODUCT (e, e);
-
-          double d[3] = {pt_coord[0] - vtx_coord[3*ivtx],
-                         pt_coord[1] - vtx_coord[3*ivtx + 1],
-                         pt_coord[2] - vtx_coord[3*ivtx + 2]};
-
-          double de = PDM_DOT_PRODUCT (d, e);
-
-          double t = de / ee;
-          weights[ivtx] = 1. - t;
-          weights[jvtx] = t;
-          return;
-        }
-
         tan_half_alpha[i] = 0.5 * sqrt(l2 / (1.0 - 0.25 * l2));
       }
 

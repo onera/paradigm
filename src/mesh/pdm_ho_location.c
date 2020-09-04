@@ -50,9 +50,10 @@
 #include "pdm_mesh_nodal.h"
 #include "pdm_ho_basis.h"
 #include "pdm_geom_elem.h"
+#include "pdm_line.h"
 #include "pdm_triangle.h"
 #include "pdm_triangulate.h"
-
+#include "pdm_tetrahedron.h"
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
@@ -857,7 +858,7 @@ _heap_fill_pn_sub_edge
     double _dist2;
 
 
-    int is_degenerate = PDM_edge_evaluate_position (point_coords,
+    int is_degenerate = PDM_line_evaluate_position (point_coords,
                                                     __vertex_coords,
                                                     _closest_pointP1,
                                                     &_dist2,
@@ -985,7 +986,7 @@ _insert_subedge
     double _dist2_child = 0.;
     double _closest_pt_weights_child[2];
 
-    int is_degenerate = PDM_edge_evaluate_position (point_coords,
+    int is_degenerate = PDM_line_evaluate_position (point_coords,
                                                     _vtx_edge_child,
                                                     _closest_pt_child,
                                                     &_dist2_child,
@@ -5710,275 +5711,6 @@ PDM_ho_location
 
   return HUGE_VAL;
 }
-
-
-/* Put in other file... */
-/**
- * \brief Evaluates the position on an edge (line segment)
- *
- * \param [in]  x               Point coordinates to evaluate position
- * \param [in]  vtx_coord       Edge vertices coordinates
- * \param [out] closest_point   Closest Point on Edge or NULL
- * \param [out] min_dist2       Square of the distance
- * \param [out] weights         Vertices weights or NULL
- *
- * \return      -1 if the edge is degenerate, 0 else
- *
- */
-int PDM_edge_evaluate_position (const double  x[3],
-                                const double *vtx_coord,
-                                double       *closest_point,
-                                double       *dist2,
-                                double        closest_point_weights[2])
-{
-  double proj, norm_edge, norm_edge2;
-  double p1x[3], p1p2[3], p1p2n[3];
-
-  double weights_local[2];
-  double *_weights = weights_local;
-  if (closest_point_weights != NULL) {
-    _weights = closest_point_weights;
-  }
-
-  double cp_local[3];
-  double *_closest_point = cp_local;
-  if (closest_point != NULL) {
-    _closest_point = closest_point;
-  }
-
-  const double *pt1 = vtx_coord;
-  const double *pt2 = vtx_coord +3;
-
-
-  p1x[0] = -pt1[0] + x[0];
-  p1x[1] = -pt1[1] + x[1];
-  p1x[2] = -pt1[2] + x[2];
-
-
-  p1p2[0] = -pt1[0] + pt2[0];
-  p1p2[1] = -pt1[1] + pt2[1];
-  p1p2[2] = -pt1[2] + pt2[2];
-
-  norm_edge2 = PDM_DOT_PRODUCT (p1p2, p1p2);
-  if (norm_edge2 < 1.e-12) {
-    return -1;
-  }
-  norm_edge = sqrt (norm_edge2);
-
-  p1p2n[0] = p1p2[0] / norm_edge;
-  p1p2n[1] = p1p2[1] / norm_edge;
-  p1p2n[2] = p1p2[2] / norm_edge;
-
-  proj = PDM_DOT_PRODUCT (p1x, p1p2n);
-
-  if (proj <= 0.0){
-    _closest_point[0] = pt1[0];
-    _closest_point[1] = pt1[1];
-    _closest_point[2] = pt1[2];
-    proj = 0;
-  }
-  if (proj >= norm_edge){
-    _closest_point[0] = pt2[0];
-    _closest_point[1] = pt2[1];
-    _closest_point[2] = pt2[2];
-    proj = norm_edge;
-  }
-  else {
-    _closest_point[0] = pt1[0] + proj * p1p2[0] / norm_edge;
-    _closest_point[1] = pt1[1] + proj * p1p2[1] / norm_edge;
-    _closest_point[2] = pt1[2] + proj * p1p2[2] / norm_edge;
-  }
-
-  double t = proj / norm_edge;
-
-  *dist2 = PDM_DOT_PRODUCT (p1x, p1x) - (proj * proj);
-
-  _weights[0] = 1. - t;
-  _weights[1] =      t;
-
-  return 0;
-}
-
-
-/* Put in other file... */
-/**
- * \brief Evaluates the position in a tetrahedron
- *
- * \param [in]  x               Point coordinates to evaluate position
- * \param [in]  vtx_coord       Tetrahedron vertices coordinates
- * \param [out] closest_point   Closest Point in Tetrahedron or NULL
- * \param [out] min_dist2       Square of the distance
- * \param [out] weights         Vertices weights or NULL
- *
- * \return      -1 if the tetrahedron is degenerate, 0 else
- *
- */
-int PDM_tetrahedron_evaluate_position
-(
- const double  x[3],
- const double  vtx_coord[12],
- double        closest_point[3],
- double       *closest_point_dist2,
- double        closest_point_weights[4]
- )
-{
-  int i, j, k;
-
-  double weights_local[4];
-  double *_weights = weights_local;
-  if (closest_point_weights != NULL) {
-    _weights = closest_point_weights;
-  }
-
-  double cp_local[3];
-  double *_closest_point = cp_local;
-  if (closest_point != NULL) {
-    _closest_point = closest_point;
-  }
-
-  double v[3][3];
-  for (i = 0; i < 3; i++) {
-    for (j = 0; j < 3; j++) {
-      v[i][j] = vtx_coord[3*(i+1) + j] - vtx_coord[j];
-    }
-  }
-
-  double vol6 =
-    v[0][0] * (v[1][1]*v[2][2] - v[1][2]*v[2][1]) +
-    v[0][1] * (v[1][2]*v[2][0] - v[1][0]*v[2][2]) +
-    v[0][2] * (v[1][0]*v[2][1] - v[1][1]*v[2][0]);
-
-  if (fabs(vol6) < 1e-16){
-    return -1;
-  }
-
-  double r[3][3];
-  PDM_CROSS_PRODUCT (r[0], v[2], v[1]);
-  PDM_CROSS_PRODUCT (r[1], v[0], v[2]);
-  PDM_CROSS_PRODUCT (r[2], v[1], v[0]);
-
-  for (i = 0; i < 3; i++) {
-    for (j = 0; j < 3; j++) {
-      r[i][j] /= vol6;
-    }
-  }
-
-  double xv0[3] = {vtx_coord[0] - x[0],
-                   vtx_coord[1] - x[1],
-                   vtx_coord[2] - x[2]};
-
-  double uvw[3], s = 1.;
-  for (i = 0; i < 3; i++) {
-    uvw[i] = PDM_DOT_PRODUCT (xv0, r[i]);
-    s -= uvw[i];
-  }
-
-  /* Point inside tetrahedron */
-  if (s      >= 0. &&
-      uvw[0] >= 0. &&
-      uvw[1] >= 0. &&
-      uvw[2] >= 0.) {
-
-    _weights[0] = s;
-    for (j = 0; j < 3; j++) {
-      _closest_point[j] = x[j];
-      _weights[j+1] = uvw[j];
-    }
-
-    *closest_point_dist2 = 0.;
-  }
-
-  /* Point inside tetrahedron */
-  else {
-
-    *closest_point_dist2 = HUGE_VAL;
-
-    int orientation = vol6 > 0.;
-    const int tetra_vtx[4] = {0, 1, 2, 3};
-    int tri_vtx_idx[5], tri_vtx[12];
-    PDM_geom_elem_tetra_faces (1,
-                               orientation,
-                               tetra_vtx,
-                               tri_vtx_idx,
-                               tri_vtx);
-
-    int *_tri_vtx = NULL;
-    double tri_coord[9];
-    double tri_weights[3];
-    double tri_closest_point[3];
-    double tri_dist2;
-
-    for (i = 0; i < 3; i++) {
-
-      if (uvw[i] < 0.) {
-
-        _tri_vtx = tri_vtx + 3*(2-i);
-
-        for (j = 0; j < 3; j++) {
-          for (k = 0; k < 3; k++) {
-            tri_coord[3*j + k] = vtx_coord[3*_tri_vtx[j] + k];
-          }
-        }
-
-        PDM_triangle_evaluate_position (x,
-                                        tri_coord,
-                                        tri_closest_point,
-                                        &tri_dist2,
-                                        tri_weights);
-
-        if (*closest_point_dist2 > tri_dist2) {
-          *closest_point_dist2 = tri_dist2;
-
-          for (j = 0; j < 3; j++) {
-            _closest_point[j] = x[j];
-          }
-
-
-          _weights[i+1] = 0.;
-          _weights[_tri_vtx[0]] = tri_weights[1];
-          _weights[_tri_vtx[1]] = tri_weights[2];
-          _weights[_tri_vtx[2]] = tri_weights[0];
-        }
-
-      }
-    }
-
-
-    if (s < 0.) {
-
-      _tri_vtx = tri_vtx + 9;
-
-      for (j = 0; j < 3; j++) {
-        for (k = 0; k < 3; k++) {
-          tri_coord[3*j + k] = vtx_coord[3*_tri_vtx[j] + k];
-        }
-      }
-
-      PDM_triangle_evaluate_position (x,
-                                      tri_coord,
-                                      tri_closest_point,
-                                      &tri_dist2,
-                                      tri_weights);
-
-      if (*closest_point_dist2 > tri_dist2) {
-        *closest_point_dist2 = tri_dist2;
-
-        for (j = 0; j < 3; j++) {
-          _closest_point[j] = x[j];
-        }
-
-        _weights[0] = 0.;
-        _weights[_tri_vtx[0]] = tri_weights[1];
-        _weights[_tri_vtx[1]] = tri_weights[2];
-        _weights[_tri_vtx[2]] = tri_weights[0];
-      }
-
-    }
-  }
-
-  return 0;
-}
-
 
 #ifdef __cplusplus
 }

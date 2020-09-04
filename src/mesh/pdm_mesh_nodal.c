@@ -5214,7 +5214,7 @@ PDM_Mesh_nodal_compute_cell_extents
 
     n_elt = block->n_elt[id_part];
     cell_vtx_idx = block->_cellvtx_idx[id_part];
-    cell_vtx = block->_cellvtx[id_part];
+    cell_vtx     = block->_cellvtx[id_part];
   }
 
   /* Polygons */
@@ -5269,7 +5269,7 @@ PDM_Mesh_nodal_compute_cell_extents
     }
 
 
-    if (id_block > PDM_BLOCK_ID_BLOCK_POLY2D) {
+    if (id_block >= PDM_BLOCK_ID_BLOCK_POLY2D) {
       idx = cell_vtx_idx[ielt];
       n_vtx_elt = cell_vtx_idx[ielt+1] - cell_vtx_idx[ielt];
     }
@@ -5310,7 +5310,6 @@ PDM_Mesh_nodal_compute_cell_extents
       _extents[idim]   -= delta;
       _extents[3+idim] += delta;
     }
-
   } // End of loop on elements
 
 }
