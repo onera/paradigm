@@ -760,7 +760,7 @@ static PDM_MPI_Datatype _mpi_2_pdm_mpi_datatype(MPI_Datatype datatype)
  * PDM_MPI_File -> MPI_File
  *----------------------------------------------------------------------------*/
 
-static PDM_MPI_File _pdm_mpi_file_create()
+static PDM_MPI_File _pdm_mpi_file_create(void)
 {
 
   /* Si non trouve, on cree un nouveau fichier MSG */
@@ -1100,7 +1100,7 @@ int PDM_MPI_File_get_position(PDM_MPI_File fh, PDM_MPI_Offset *offset)
  *----------------------------------------------------------------------------*/
 
 int PDM_MPI_File_set_view(PDM_MPI_File fh, PDM_MPI_Offset disp, PDM_MPI_Datatype etype,
-	              PDM_MPI_Datatype filetype, char *datarep)
+	              PDM_MPI_Datatype filetype, const char *datarep)
 {
   int code = MPI_File_set_view(_pdm_mpi_2_mpi_file(fh),
                                (MPI_Offset) disp,

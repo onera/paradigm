@@ -67,9 +67,7 @@ static FILE* logging_file = NULL;
 
 static
 void
-free_logging_file
-(
-)
+free_logging_file(void)
 {
   if(logging_file != NULL)
     fclose(logging_file);
@@ -138,6 +136,10 @@ void log_log(int level, const char *file, int line, const char *fmt, ...) {
   if (level < L.level) {
     return;
   }
+
+  // Supress unused warning
+  (void)(file);
+  (void)(line);
 
   if(logging_file == NULL){
     char filename[50];

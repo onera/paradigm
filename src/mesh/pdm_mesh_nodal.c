@@ -1268,7 +1268,7 @@ PDM_Mesh_nodal_n_part_get
 const int   idx
 )
 {
-  PDM_Mesh_nodal_t * mesh = (PDM_Mesh_nodal_t *) PDM_Handles_get (mesh_handles, idx);
+  const PDM_Mesh_nodal_t* mesh = (const PDM_Mesh_nodal_t *) PDM_Handles_get (mesh_handles, idx);
 
   if (mesh == NULL) {
     PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
@@ -4649,6 +4649,9 @@ const int         i_part
                                     block->cell_centers[i_part],
                                     characteristicLength[i_part],
                                     isDegenerated[i_part]);
+      break;
+    case PDM_MESH_NODAL_POLY_2D:
+    case PDM_MESH_NODAL_POLY_3D:
       break;
     }//end switch t_elt
 

@@ -869,6 +869,7 @@ PDM_distant_neighbor_exch_int
  int         ***recv_entity_data
 )
 {
+  PDM_UNUSED(s_data);
   // log_trace(" PDM_distant_neighbor_exch_int \n");
 
   _distant_neighbor_t *pdn = _get_from_id (id);

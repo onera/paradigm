@@ -823,7 +823,8 @@ PDM_part_dconnectivity_to_pconnectivity_sort
     int idx_data = 0;
     for(int i_elmt = 0; i_elmt < n_elmts; ++i_elmt) {
       for(int i_data = 0; i_data < pstride[i_part][i_elmt]; ++i_data ){
-        _pchild_ln_to_gn[i_part][idx_data++] = PDM_ABS(pconnectivity_tmp[i_part][idx_data]);
+        _pchild_ln_to_gn[i_part][idx_data] = PDM_ABS(pconnectivity_tmp[i_part][idx_data]);
+        idx_data++;
       }
     }
 
@@ -871,7 +872,6 @@ PDM_part_dconnectivity_to_pconnectivity_sort
     /*
      * Overpowered loop
      */
-    #pragma simd
     for(int idx = 0; idx < _pconnectivity_idx[i_part][n_elmts]; ++idx) {
       int g_sgn  = PDM_SIGN(pconnectivity_tmp[i_part][idx]);
       int l_elmt = unique_order[idx];
