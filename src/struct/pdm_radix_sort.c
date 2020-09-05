@@ -172,6 +172,7 @@ _counting_sort_with_order
  int place_power
 )
 {
+  PDM_UNUSED(place);
   /* First step - Count */
   int n_buckets = _radix_base;
   int* count = malloc( (n_buckets + 1) * sizeof(int));
@@ -223,6 +224,7 @@ _counting_sort_with_order_recurse
  int          iteration
 )
 {
+  PDM_UNUSED(place);
   /* Set to zero */
   if(iteration == 0){
     for(int i = 0; i < _radix_base+1; ++i){
