@@ -168,6 +168,7 @@ _read_args
 static double
 _random01
 (
+ void
 )
 {
   int sign;

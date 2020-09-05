@@ -1778,6 +1778,8 @@ PDM_morton_ordered_build_rank_index
  PDM_MPI_Comm             comm
 )
 {
+  PDM_UNUSED(dim);
+  PDM_UNUSED(gmax_level);
 
   PDM_g_num_t *_weight = malloc(sizeof(PDM_g_num_t) * n_codes);
 

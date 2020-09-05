@@ -1843,6 +1843,9 @@ PDM_part_to_block_asyn_post_treatment
  void               **block_data
 )
 {
+  PDM_UNUSED(block_stride);
+  PDM_UNUSED(block_data);
+
   _pdm_part_to_block_t *_ptb = (_pdm_part_to_block_t *) ptb;
   assert(_ptb->wait_status[request_id] == 1);
 

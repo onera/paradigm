@@ -501,6 +501,7 @@ _renum_cells_hilbert
  void     *specific_data
 )
 {
+  PDM_UNUSED(specific_data);
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
     _part_t *part = mesh_parts[i_part];
@@ -565,6 +566,7 @@ _renum_cells_cuthill
  void     *specific_data
 )
 {
+  PDM_UNUSED(specific_data);
 
   /** Loop over all part of the current process **/
   for(int i_part = 0; i_part < n_part; ++i_part) {
@@ -627,6 +629,8 @@ _renum_cells_random
  void     *specific_data
 )
 {
+  PDM_UNUSED(specific_data);
+
   for(int i_part = 0; i_part < n_part; ++i_part) {
     _part_t *part = mesh_parts[i_part];
     const int n_cell = part->n_cell;
@@ -677,6 +681,8 @@ _renum_faces_random
 #pragma warning(push)
 #pragma warning(disable:869)
 #endif
+  PDM_UNUSED(specific_data);
+
   for(int i_part = 0; i_part < n_part; ++i_part) {
     _part_t *part = mesh_parts[i_part];
     const int n_face = part->n_face;
@@ -722,6 +728,8 @@ _renum_faces_lexicographic
  void     *specific_data
 )
 {
+  PDM_UNUSED(specific_data);
+
   for(int i_part = 0; i_part < n_part; ++i_part) {
     _part_t *part = mesh_parts[i_part];
     const int n_face = part->n_face;

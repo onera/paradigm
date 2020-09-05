@@ -212,6 +212,8 @@ PDM_boxes_create(const int          dim,
 {
   int i, j;
 
+  PDM_UNUSED(box_extents);
+
   /* Allocate boxes structure and initialize it */
   PDM_boxes_t *boxes = malloc(sizeof(PDM_boxes_t));
   boxes->n_boxes  = n_boxes;

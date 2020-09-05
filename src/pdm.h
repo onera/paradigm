@@ -31,6 +31,8 @@
 
 #define PDM_MAX_CHAR_LENGTH 100
 
+#define PDM_UNUSED(x) (void)(x)
+
 /**
  * \brief Interface to for hexa manipulation
  * \param [in]       Hex config flags

@@ -952,6 +952,7 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get_OLD
   /*
    * Initialization
    */
+  PDM_UNUSED(pts_g_num);
 
   int npts_in_rank = n_pts;
 
@@ -1321,6 +1322,7 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
  PDM_g_num_t     *box_g_num[]
  )
 {
+  PDM_UNUSED(pts_g_num);
   /*
    * RANK DATA COPY PARAMETERS
    */

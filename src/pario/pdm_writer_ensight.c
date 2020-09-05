@@ -1092,8 +1092,8 @@ PDM_writer_ensight_geom_write
                 _ensight_type_name[t_elt]);
 
 
-    if (   (t_elt != PDM_MESH_NODAL_POLY_2D)
-        && (t_elt != PDM_MESH_NODAL_POLY_3D)) {
+    if (   (t_elt != PDM_WRITER_POLY_2D)
+        && (t_elt != PDM_WRITER_POLY_3D)) {
 
       PDM_g_num_t max_loc = 0;
       PDM_g_num_t max_abs = 0;
@@ -1197,7 +1197,7 @@ PDM_writer_ensight_geom_write
 
     }
 
-    else if (t_elt == PDM_MESH_NODAL_POLY_2D) {
+    else if (t_elt == PDM_WRITER_POLY_2D) {
 
       PDM_g_num_t max_loc = 0;
       PDM_g_num_t max_abs = 0;

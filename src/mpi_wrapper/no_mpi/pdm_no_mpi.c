@@ -188,7 +188,7 @@ int PDM_MPI_File_get_position(PDM_MPI_File fh, PDM_MPI_Offset *offset)
  *----------------------------------------------------------------------------*/
 
 int PDM_MPI_File_set_view(PDM_MPI_File fh, PDM_MPI_Offset disp, PDM_MPI_Datatype etype,
-	              PDM_MPI_Datatype filetype, char *datarep)
+	              PDM_MPI_Datatype filetype, const char *datarep)
 {
   fh;
   disp;

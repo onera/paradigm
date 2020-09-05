@@ -225,6 +225,8 @@ _box_dist2_max
   int inbox = 0;
   *max_dist2 = 0.;
 
+  PDM_UNUSED(normalized);
+
   //  if (normalized) {
 
   for (int i = 0; i < dim; i++) {
@@ -304,6 +306,7 @@ _box_dist2_min
   int inbox = 0;
   *min_dist2 = 0.;
 
+  PDM_UNUSED(normalized);
 
   /* if (normalized) { */
 
@@ -368,8 +371,8 @@ _push_child_in_stack_v0
 (
  PDM_box_tree_t *bt,
  const int       dim,
- const int              normalized,
- const double          *restrict d,
+ const int        normalized,
+ const double    *restrict d,
  const int       id_curr_node,
  const double    upper_bound,
  const double    *restrict pt,
@@ -381,6 +384,8 @@ _push_child_in_stack_v0
  int             sorted
  )
 {
+  PDM_UNUSED(flag);
+
   PDM_box_tree_data_t *_local_data = bt->local_data;
   int sort_child[bt->n_children];
   double dist_child[bt->n_children];
@@ -499,6 +504,8 @@ _push_child_in_stack_v2
  int             sorted
  )
 {
+  PDM_UNUSED(flag);
+
   PDM_box_tree_data_t *_tree_data = NULL;
   if ( i_rank < 0 ) {
     _tree_data = bt->local_data;
@@ -847,11 +854,11 @@ _get_grid_coords_2d(PDM_morton_int_t  level,
 inline static void
 _get_grid_coords_1d(PDM_morton_int_t  level,
                     const double      coords[1],
-                    double            X[])
+                    double            x_tmp[])
 {
   PDM_morton_int_t  refinement = 1 << level;
 
-  X[0] = coords[0] * refinement;
+  x_tmp[0] = coords[0] * refinement;
 }
 
 /*----------------------------------------------------------------------------
