@@ -335,7 +335,7 @@ PDM_line_distance
   const double _tol_dist = 1e-5;
 
   double p21[3], denom, num;
-  double *closest;
+  const double *closest;
 
   /*
    * Determine appropriate vectors
@@ -354,7 +354,7 @@ PDM_line_distance
 
   double tolerance = fabs (_tol_dist * num);
   if ( fabs(denom) < tolerance ) {
-    closest = (double *) p1;
+    closest = p1;
   }
 
   /*
@@ -363,11 +363,11 @@ PDM_line_distance
    */
 
   else if ( denom <= 0.0 || (*t=num/denom) < 0.0 ) {
-    closest = (double *) p1;
+    closest = p1;
   }
 
   else if ( *t > 1.0 ) {
-    closest = (double *) p2;
+    closest = p2;
   }
 
   else {
