@@ -133,7 +133,7 @@ int    *part
 
   }
 
-  int *_vsize = NULL;
+  idx_t *_vsize = NULL;
 
   idx_t *__xadj, *_xadj;
   idx_t *__adjncy, *_adjncy;
@@ -328,7 +328,7 @@ int    *part
 
   }
 
-  int *_vsize = NULL;
+  idx_t *_vsize = NULL;
 
   idx_t *__xadj, *_xadj;
   idx_t *__adjncy, *_adjncy;
