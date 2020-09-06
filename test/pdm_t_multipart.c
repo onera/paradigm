@@ -176,6 +176,9 @@ int main(int argc, char *argv[])
   }
   int mpart_id = PDM_multipart_create(n_zone, n_part_zones, PDM_FALSE,
                                       method, PDM_PART_SIZE_HOMOGENEOUS, NULL, comm);
+  PDM_multipart_set_reordering_options(mpart_id, -1, "PDM_PART_RENUM_CELL_CUTHILL", NULL, "PDM_PART_RENUM_FACE_NONE");
+  if (n_zone > 1)
+    PDM_multipart_set_reordering_options(mpart_id,  1, "PDM_PART_RENUM_CELL_NONE", NULL, "PDM_PART_RENUM_FACE_NONE");
 
   /* Generate mesh */
   int *dcube_ids = (int *) malloc(n_zone*sizeof(int));
@@ -322,6 +325,8 @@ int main(int argc, char *argv[])
                                                 PDM_WRITER_OFF,
                                                 n_part_zones[i_zone]); //total nb of part for this proc/zone
     }
+    // Cell local id
+    int id_var_cellId = PDM_writer_var_create(id_cs, PDM_WRITER_OFF, PDM_WRITER_VAR_SCALAIRE, PDM_WRITER_VAR_ELEMENTS, "cellId");
     // Global partition Id (ordred by proc / zone), staring at 1
     int id_var_gpartId = PDM_writer_var_create(id_cs, PDM_WRITER_OFF, PDM_WRITER_VAR_SCALAIRE, PDM_WRITER_VAR_ELEMENTS, "gpartId");
     // Local partition Id on the proc / zone, starting at 0
@@ -430,21 +435,6 @@ int main(int argc, char *argv[])
         pn_cell[ipartzone] = n_cell;
         pn_vtx[ipartzone]  = n_vtx;
         ipartzone++;
-        // Carefull, do not free data required by PDM_writer (?)
-        free(face_cell);
-        free(face_bound_idx);
-        free(face_bound);
-        free(face_join_idx);
-        free(face_join);
-        free(face_part_bound_proc_idx);
-        free(face_part_bound_part_idx);
-        free(face_part_bound);
-        free(face_ln_to_gn);
-        free(face_bound_ln_to_gn);
-        free(face_join_ln_to_gn);
-        free(cell_tag);
-        free(face_tag);
-        free(vtx_tag);
       }
     if (i_rank==0) PDM_printf("Write geometry for zone %i\n", i_zone);
     PDM_writer_geom_write(id_cs, geom_ids[i_zone]);
@@ -455,12 +445,14 @@ int main(int argc, char *argv[])
     ipartzone = 0;
     for (int i_zone = 0; i_zone < n_zone; i_zone++){
       for (int i_part = 0; i_part < n_part_zones[i_zone]; i_part++){
+        PDM_real_t *val_cellid = (PDM_real_t *) malloc(sizeof(PDM_real_t) * pn_cell[ipartzone]);
         PDM_real_t *val_gpartid = (PDM_real_t *) malloc(sizeof(PDM_real_t) * pn_cell[ipartzone]);
         PDM_real_t *val_lpartid = (PDM_real_t *) malloc(sizeof(PDM_real_t) * pn_cell[ipartzone]);
         PDM_real_t *val_procid = (PDM_real_t *) malloc(sizeof(PDM_real_t) * pn_cell[ipartzone]);
         PDM_real_t *val_oppprocid = (PDM_real_t *) malloc(sizeof(PDM_real_t) * pn_vtx[ipartzone]);
         PDM_real_t *val_opppartid = (PDM_real_t *) malloc(sizeof(PDM_real_t) * pn_vtx[ipartzone]);
         for (int i=0; i < pn_cell[ipartzone]; i++) {
+          val_cellid[i] = i;
           val_gpartid[i] = (PDM_real_t) (partzoneshift[i_rank] + ipartzone);
           val_lpartid[i] = i_part;
           val_procid[i]  = i_rank;
@@ -469,11 +461,13 @@ int main(int argc, char *argv[])
           val_oppprocid[i] = commVisu[ipartzone][2*i];
           val_opppartid[i] = commVisu[ipartzone][2*i+1];
         }
+        PDM_writer_var_set(id_cs, id_var_cellId, geom_ids[i_zone], i_part, val_cellid);
         PDM_writer_var_set(id_cs, id_var_gpartId, geom_ids[i_zone], i_part, val_gpartid);
         PDM_writer_var_set(id_cs, id_var_lpartId, geom_ids[i_zone], i_part, val_lpartid);
         PDM_writer_var_set(id_cs, id_var_procId, geom_ids[i_zone], i_part, val_procid);
         PDM_writer_var_set(id_cs, id_var_oppProcId, geom_ids[i_zone], i_part, val_oppprocid);
         PDM_writer_var_set(id_cs, id_var_oppPartId, geom_ids[i_zone], i_part, val_opppartid);
+        free(val_cellid);
         free(val_gpartid);
         free(val_lpartid);
         free(val_procid);
@@ -485,6 +479,8 @@ int main(int argc, char *argv[])
     free(partzoneshift);
 
     if (i_rank==0) PDM_printf("Write variables\n");
+    PDM_writer_var_write(id_cs, id_var_cellId);
+    PDM_writer_var_free(id_cs,  id_var_cellId);
     PDM_writer_var_write(id_cs, id_var_gpartId);
     PDM_writer_var_free(id_cs,  id_var_gpartId);
     PDM_writer_var_write(id_cs, id_var_lpartId);
@@ -505,6 +501,7 @@ int main(int argc, char *argv[])
     free(geom_ids);
     PDM_writer_free(id_cs);
     for (int i_part = 0; i_part < tn_part_proc; i_part++){
+      free(commVisu[i_part]);
       free(pface_vtxNb[i_part]);
       free(pcell_faceNb[i_part]);
     }
@@ -547,8 +544,9 @@ int main(int argc, char *argv[])
   free(djoins_ids);
   free(join_to_opposite);
 
-  free(n_part_zones);
   PDM_multipart_free(mpart_id);
+  free(dmesh_ids);
+  free(n_part_zones);
 
   if (i_rank==0) PDM_printf("pdm_t_multipart run finalized\n");
   PDM_MPI_Finalize();

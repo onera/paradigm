@@ -124,6 +124,27 @@ void PDM_multipart_register_joins
  const int       *join_to_opposite
 );
 
+/**
+ *
+ * \brief Set the reordering methods to be used after partitioning
+ *
+ * \param [in]   mpart_id           Multipart structure id
+ * \param [in]   i_zone             Id of zone which parameters apply (or -1 for all zones)
+ * \param [in]   renum_cell_method  Choice of renumbering method for cells
+ * \param [in]   renum_cell_properties Parameters used by cacheblocking method :
+ *                                     [n_cell_per_cache_wanted, is_asynchrone, is_vectorisation,
+                                        n_vect_face, split_method]
+ * \param [in]   renum_face_method  Choice of renumbering method for faces
+ *
+ */
+void PDM_multipart_set_reordering_options
+(
+ const int        mpart_id,
+ const int        i_zone,
+ const char      *renum_cell_method,
+ const int       *renum_cell_properties,
+ const char      *renum_face_method
+ );
 
 /**
  *
