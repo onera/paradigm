@@ -29,6 +29,13 @@ cdef extern from "pdm_multipart.h":
                                       int*       matching_join_array)
 
     # ------------------------------------------------------------------
+    void PDM_multipart_set_reordering_options(const int   mpart_id,
+                                              const int   i_zone,
+                                              const char *renum_cell_method,
+                                              const int  *renum_cell_properties,
+                                              const char *renum_face_method)
+
+    # ------------------------------------------------------------------
     void PDM_multipart_run_ppart(int id);
 
     # ------------------------------------------------------------------
@@ -160,7 +167,22 @@ cdef class MultiPart:
         PDM_multipart_register_joins(       self._mpart_id,
                                             n_total_joins,
                                      <int*> matching_join.data)
-
+    # ------------------------------------------------------------------
+    def multipart_set_reordering(self, int i_zone,
+                                 char *renum_cell_method, char *renum_face_method,
+                                 NPY.ndarray[NPY.int32_t, mode='c', ndim=1] renum_properties_cell):
+      """
+      """
+      cdef int *renum_properties_cell_data
+      if (renum_properties_cell is None):
+        renum_properties_cell_data = NULL
+      else:
+        renum_properties_cell_data = <int *> renum_properties_cell.data
+      PDM_multipart_set_reordering_options(self._mpart_id,
+                                           i_zone,
+                                           renum_cell_method,
+                                           renum_properties_cell_data,
+                                           renum_face_method)
     # ------------------------------------------------------------------
     def multipart_run_ppart(self):
         """

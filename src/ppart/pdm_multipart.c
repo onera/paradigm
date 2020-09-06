@@ -39,6 +39,8 @@
 #include "pdm_distrib.h"
 #include "pdm_partitioning_algorithm.h"
 #include "pdm_para_graph_dual.h"
+#include "pdm_part_priv.h"
+#include "pdm_part_renum.h"
 #include "pdm_handles.h"
 #include "pdm_dmesh.h"
 #include "pdm_printf.h"
@@ -78,37 +80,11 @@ typedef struct {
   int  n_joins;          // Global number of interface groups
   int *joins_ids;        // Global id of each interface (size=n_joins)
 
-  /* Geometric data (mesh) for each partition - all array size = n_part */
-  int  *pn_cell;         // Number of cells
-  int  *pn_face;         // Number of faces
-  int  *pn_vtx;          // Number of vertices
-  double **pvtx_coord;   // Vertex coords (size=3*pn_vtx)
-  int **pcell_face_idx;  // Cell->face connectivity indexes (size=pn_cell+1)
-  int **pcell_face;      // Cell->face connectivity (size=pcell_face_idx[pn_cell])
-  int **pface_cell;      // Face->cell connectivity (size=2*pn_face)
-  int **pface_vtx_idx;   // Face->vtx connectivity indexes (size=pn_face+1)
-  int **pface_vtx;       // Face->vtx connectivity (size=pface_vtx_idx[pn_face])
-  int **pface_bound_idx; // Offset for each original bound group (size=n_bounds+1)
-  int **pface_bound;     // Ids of boundary faces (size=pface_bound_idx[n_bounds])
-  int **pface_join_idx;  // Offset for each original join group (size=n_joins+1)
-  int **pface_join;      // For each original join face, 4-tuple
-                         //   [local id, opp proc, opp part, opp local id]
-                         //   (size=pface_join_idx[4*n_joins])
-  int **pinternal_face_bound_procidx; // Offset for created join related to a
-                                      //   given proc (size=n_rank+1)
-  int **pinternal_face_bound_partidx; // Offset for created join related to a
-                                      //   given (global) part (size=tn_part+1)
-  int **pinternal_face_bound;         // Same as pface_join but for created joins
-
-  /* Local to global numbering for each partition - all array size = n_part */
-  PDM_g_num_t **pcell_ln_to_gn;       // Position of cell in original mesh (size = pn_cell)
-  PDM_g_num_t **pface_ln_to_gn;       // Position of face in original mesh (size = pn_face)
-  PDM_g_num_t **pvtx_ln_to_gn;        // Position of vtx  in original mesh (size = pn_vtx)
-  PDM_g_num_t **pface_bound_ln_to_gn; // Position of bdn face in its original bound
-                                      // bnd group (size = pface_bound_idx[n_bounds])
-  PDM_g_num_t **pface_join_ln_to_gn;  // Position of join face in its original
-                                      // join group (size = pface_join_idx[n_joins])
-
+  /* Partitions -- see pdm_part_priv.h for struct definition */
+  _part_t  **parts;
+  int        renum_cell_method;     // Choice of renumbering method for cells
+  const int *renum_cell_properties; // Parameters used by some renumbering methods
+  int        renum_face_method;     // Choice of renumbering method for faces
 } _part_mesh_t;
 
 /**
@@ -205,7 +181,7 @@ _build_join_uface_distribution
   int n_total_joins  = _multipart->n_total_joins;
   int n_unique_joins = n_total_joins/2;
   *join_to_ref_join    = (int *) malloc(n_total_joins  * sizeof(int));
-  *face_in_join_distri = (int *) malloc(n_unique_joins+1 * sizeof(int));
+  *face_in_join_distri = (int *) malloc((n_unique_joins+1) * sizeof(int));
   int* _face_in_join_distri = *face_in_join_distri;
   int* _join_to_ref_join    = *join_to_ref_join;
 
@@ -236,7 +212,7 @@ _build_join_uface_distribution
 
   for (int izone = 0; izone < _multipart->n_zone; izone++){
     for (int i_part = 0; i_part < _multipart->n_part[izone]; i_part++){
-      int *pface_join_idx = _multipart->pmeshes[izone].pface_join_idx[i_part];
+      int *pface_join_idx = _multipart->pmeshes[izone].parts[i_part]->face_join_idx;
       for (int ijoin=0; ijoin < _multipart->pmeshes[izone].n_joins; ijoin ++){
         int join_gid     = _multipart->pmeshes[izone].joins_ids[ijoin];
         int join_opp_gid = _multipart->join_to_opposite[join_gid];
@@ -310,9 +286,9 @@ _search_matching_joins
     int n_join            = _multipart->pmeshes[izone].n_joins;
     _part_mesh_t _pmeshes = _multipart->pmeshes[izone];
     for (int i_part = 0; i_part < _multipart->n_part[izone]; i_part++) {
-      int         *face_join_idx    = _pmeshes.pface_join_idx[i_part];
-      int         *face_join        = _pmeshes.pface_join[i_part];
-      PDM_g_num_t *face_join_lntogn = _pmeshes.pface_join_ln_to_gn[i_part];
+      int         *face_join_idx    = _pmeshes.parts[i_part]->face_join_idx;
+      int         *face_join        = _pmeshes.parts[i_part]->face_join;
+      PDM_g_num_t *face_join_lntogn = _pmeshes.parts[i_part]->face_join_ln_to_gn;
       for (int ijoin = 0; ijoin < n_join; ijoin++) {
         int join_size = face_join_idx[ijoin + 1] - face_join_idx[ijoin];
         nb_face_per_join[ijoin_pos] = join_size;
@@ -445,8 +421,8 @@ _search_matching_joins
     int n_join = _multipart->pmeshes[izone].n_joins;
     _part_mesh_t _pmeshes = _multipart->pmeshes[izone];
     for (int i_part = 0; i_part < _multipart->n_part[izone]; i_part++) {
-      int *face_join_idx = _pmeshes.pface_join_idx[i_part];
-      int *face_join     = _pmeshes.pface_join[i_part];
+      int *face_join_idx = _pmeshes.parts[i_part]->face_join_idx;
+      int *face_join     = _pmeshes.parts[i_part]->face_join;
       for (int ijoin = 0; ijoin < n_join; ijoin++) {
         int join_size = face_join_idx[ijoin + 1] - face_join_idx[ijoin];
         int *part_data_loc = new_part_data[ijoin_pos];
@@ -515,6 +491,171 @@ _search_matching_joins
   free(nb_face_per_join);
 }
 
+/**
+ *
+ * \brief Free the memory occuped by a partition structure
+ *
+ * \param [inout]   part          _part_t object
+ */
+static void
+_part_free
+(
+ _part_t *part
+)
+{
+  if (part->vtx != NULL)
+    free(part->vtx);
+  part->vtx = NULL;
+
+  if (part->face_vtx_idx != NULL)
+    free(part->face_vtx_idx);
+  part->face_vtx_idx = NULL;
+
+  if (part->face_vtx != NULL)
+    free(part->face_vtx);
+  part->face_vtx = NULL;
+
+  if (part->gface_vtx != NULL)
+    free(part->gface_vtx);
+  part->gface_vtx = NULL;
+
+  if (part->cell_face_idx != NULL)
+    free(part->cell_face_idx);
+  part->cell_face_idx = NULL;
+
+  if (part->cell_face != NULL)
+    free(part->cell_face);
+  part->cell_face = NULL;
+
+  if (part->gcell_face != NULL)
+    free(part->gcell_face);
+  part->gcell_face = NULL;
+
+  if (part->face_cell != NULL)
+    free(part->face_cell);
+  part->face_cell = NULL;
+
+  if (part->face_group_idx != NULL)
+    free(part->face_group_idx);
+  part->face_group_idx = NULL;
+
+  if (part->face_group != NULL)
+    free(part->face_group);
+  part->face_group = NULL;
+
+  if (part->face_part_bound_proc_idx != NULL)
+    free(part->face_part_bound_proc_idx);
+  part->face_part_bound_proc_idx = NULL;
+
+  if (part->face_part_bound_part_idx != NULL)
+    free(part->face_part_bound_part_idx);
+  part->face_part_bound_part_idx = NULL;
+
+  if (part->face_part_bound != NULL)
+    free(part->face_part_bound);
+  part->face_part_bound = NULL;
+
+  if (part->face_bound_idx != NULL)
+    free(part->face_bound_idx);
+  part->face_bound_idx = NULL;
+
+  if (part->face_bound != NULL)
+    free(part->face_bound);
+  part->face_bound = NULL;
+
+  if (part->face_join_idx != NULL)
+    free(part->face_join_idx);
+  part->face_join_idx = NULL;
+
+  if (part->face_join != NULL)
+    free(part->face_join);
+  part->face_join = NULL;
+
+  if (part->vtx_ln_to_gn != NULL)
+    free(part->vtx_ln_to_gn);
+  part->vtx_ln_to_gn = NULL;
+
+  if (part->face_ln_to_gn != NULL)
+    free(part->face_ln_to_gn);
+  part->face_ln_to_gn = NULL;
+
+  if (part->cell_ln_to_gn != NULL)
+    free(part->cell_ln_to_gn);
+  part->cell_ln_to_gn = NULL;
+
+  if (part->face_group_ln_to_gn != NULL)
+    free(part->face_group_ln_to_gn);
+  part->face_group_ln_to_gn = NULL;
+
+  if (part->face_bound_ln_to_gn != NULL)
+    free(part->face_bound_ln_to_gn);
+  part->face_bound_ln_to_gn = NULL;
+
+  if (part->face_join_ln_to_gn != NULL)
+    free(part->face_join_ln_to_gn);
+  part->face_join_ln_to_gn = NULL;
+
+  if (part->cell_tag != NULL)
+    free(part->cell_tag);
+  part->cell_tag = NULL;
+
+  if (part->face_tag != NULL)
+  free(part->face_tag);
+  part->face_tag = NULL;
+
+  if (part->vtx_tag != NULL)
+    free(part->vtx_tag);
+  part->vtx_tag = NULL;
+
+  if (part->cell_color != NULL)
+    free(part->cell_color);
+  part->cell_color = NULL;
+
+  if (part->face_color != NULL)
+    free(part->face_color);
+  part->face_color = NULL;
+
+  if (part->thread_color != NULL)
+    free(part->thread_color);
+  part->thread_color = NULL;
+
+  if (part->hyperplane_color != NULL)
+    free(part->hyperplane_color);
+  part->hyperplane_color = NULL;
+
+  if (part->new_to_old_order_cell != NULL)
+    free(part->new_to_old_order_cell);
+  part->new_to_old_order_cell = NULL;
+
+  if (part->new_to_old_order_face != NULL)
+    free(part->new_to_old_order_face);
+  part->new_to_old_order_face = NULL;
+
+  if(part->subpartlayout != NULL){
+    if(part->subpartlayout->cell_tile_idx!= NULL)
+      free(part->subpartlayout->cell_tile_idx);
+    if(part->subpartlayout->face_tile_idx!= NULL)
+      free(part->subpartlayout->face_tile_idx);
+    if(part->subpartlayout->face_bnd_tile_idx!= NULL)
+      free(part->subpartlayout->face_bnd_tile_idx);
+    if(part->subpartlayout->mask_tile_idx!= NULL)
+      free(part->subpartlayout->mask_tile_idx);
+    if(part->subpartlayout->cell_vect_tile_idx!= NULL)
+      free(part->subpartlayout->cell_vect_tile_idx);
+    if(part->subpartlayout->mask_tile_n!= NULL)
+      free(part->subpartlayout->mask_tile_n);
+    if(part->subpartlayout->cell_vect_tile_n!= NULL)
+      free(part->subpartlayout->cell_vect_tile_n);
+    if(part->subpartlayout->mask_tile!= NULL)
+      free(part->subpartlayout->mask_tile);
+    free(part->subpartlayout);
+  }
+
+
+  free(part);
+}
+
+
 
 /*=============================================================================
  * Public function definitions
@@ -575,8 +716,13 @@ PDM_multipart_create
   _multipart->dmeshes_ids  = (int *) malloc(_multipart->n_zone * sizeof(int));
   _multipart->pmeshes = (_part_mesh_t *) malloc(_multipart->n_zone * sizeof(_part_mesh_t));
 
+  int _renum_cell_method = PDM_part_renum_method_cell_idx_get("PDM_PART_RENUM_CELL_NONE");
+  int _renum_face_method = PDM_part_renum_method_face_idx_get("PDM_PART_RENUM_FACE_NONE");
   for (int izone = 0; izone < _multipart->n_zone; izone++) {
     _multipart->dmeshes_ids[izone] = -1;
+    _multipart->pmeshes[izone].renum_cell_method = _renum_cell_method;
+    _multipart->pmeshes[izone].renum_face_method = _renum_face_method;
+    _multipart->pmeshes[izone].renum_cell_properties = NULL;
   }
 
   return id;
@@ -624,6 +770,54 @@ void PDM_multipart_register_joins
 
   _multipart->n_total_joins    = n_total_joins;
   _multipart->join_to_opposite = join_to_opposite;
+}
+
+/**
+ *
+ * \brief Set the reordering methods to be used after partitioning
+ *
+ * \param [in]   mpart_id           Multipart structure id
+ * \param [in]   i_zone             Id of zone which parameters apply (or -1 for all zones)
+ * \param [in]   renum_cell_method  Choice of renumbering method for cells
+ * \param [in]   renum_cell_properties Parameters used by cacheblocking method :
+ *                                     [n_cell_per_cache_wanted, is_asynchrone, is_vectorisation,
+                                        n_vect_face, split_method]
+ * \param [in]   renum_face_method  Choice of renumbering method for faces
+ *
+ */
+void PDM_multipart_set_reordering_options
+(
+ const int        mpart_id,
+ const int        i_zone,
+ const char      *renum_cell_method,
+ const int       *renum_cell_properties,
+ const char      *renum_face_method
+ )
+{
+  _pdm_multipart_t *_multipart = _get_from_id (mpart_id);
+
+  int _renum_cell_method = PDM_part_renum_method_cell_idx_get(renum_cell_method);
+  int _renum_face_method = PDM_part_renum_method_face_idx_get(renum_face_method);
+  if (_renum_cell_method == -1) {
+    PDM_error (__FILE__, __LINE__, 0, "'%s' is an unknown renumbering cell method\n", renum_cell_method);
+  }
+  if (_renum_face_method == -1) {
+    PDM_error (__FILE__, __LINE__, 0, "'%s' is an unknown renumbering face method\n", renum_face_method);
+  }
+
+  if(i_zone < 0) {
+    for (int izone = 0; izone < _multipart->n_zone; izone++) {
+      _multipart->pmeshes[izone].renum_cell_method = _renum_cell_method;
+      _multipart->pmeshes[izone].renum_face_method = _renum_face_method;
+      _multipart->pmeshes[izone].renum_cell_properties = renum_cell_properties;
+    }
+  }
+  else {
+    assert(i_zone < _multipart->n_zone);
+    _multipart->pmeshes[i_zone].renum_cell_method = _renum_cell_method;
+    _multipart->pmeshes[i_zone].renum_face_method = _renum_face_method;
+    _multipart->pmeshes[i_zone].renum_cell_properties = renum_cell_properties;
+  }
 }
 
 /**
@@ -748,64 +942,86 @@ PDM_multipart_run_ppart
       if (_multipart->part_size_method == PDM_PART_SIZE_HETEROGENEOUS)
         free(part_fraction);
 
+      //Partitioning algorithm except to work on 2d arrays (external size = n_part) whereas
+      //_part_t struture stores n_part * 1d arrays so we have to use tmp pointers
+      int          *pn_vtx                       = NULL;
+      int          *pn_cell                      = NULL;
+      int          *pn_face                      = NULL;
+      double      **pvtx_coord                   = NULL;
+      int         **pface_vtx_idx                = NULL;
+      int         **pface_vtx                    = NULL;
+      int         **pcell_face_idx               = NULL;
+      int         **pcell_face                   = NULL;
+      int         **pface_cell                   = NULL;
+      int         **pface_bound_idx              = NULL;
+      int         **pface_bound                  = NULL;
+      int         **pface_join_idx               = NULL;
+      int         **pinternal_face_bound_procidx = NULL;
+      int         **pinternal_face_bound_partidx = NULL;
+      int         **pinternal_face_bound         = NULL;
+      PDM_g_num_t **pcell_ln_to_gn               = NULL;
+      PDM_g_num_t **pface_ln_to_gn               = NULL;
+      PDM_g_num_t **pvtx_ln_to_gn                = NULL;
+      PDM_g_num_t **pface_bound_ln_to_gn         = NULL;
+      PDM_g_num_t **pface_join_ln_to_gn          = NULL;
+
       PDM_part_assemble_partitions(_multipart->comm,
                                    part_distri,
                                    cell_distri,
                                    cell_part,
-                                  &_pmeshes->pn_cell,
-                                  &_pmeshes->pcell_ln_to_gn);
+                                  &pn_cell,
+                                  &pcell_ln_to_gn);
       free(cell_part);
       PDM_part_dconnectivity_to_pconnectivity_sort(_multipart->comm,
                                                    cell_distri,
                                                    dcell_face_idx,
                                                    dcell_face,
                                                    n_part,
-                                                   _pmeshes->pn_cell,
-                                                   (const PDM_g_num_t **) _pmeshes->pcell_ln_to_gn,
-                                                  &_pmeshes->pn_face,
-                                                  &_pmeshes->pface_ln_to_gn,
-                                                  &_pmeshes->pcell_face_idx,
-                                                  &_pmeshes->pcell_face);
+                                                   pn_cell,
+                                                   (const PDM_g_num_t **) pcell_ln_to_gn,
+                                                  &pn_face,
+                                                  &pface_ln_to_gn,
+                                                  &pcell_face_idx,
+                                                  &pcell_face);
       PDM_part_dconnectivity_to_pconnectivity_sort(_multipart->comm,
                                                    face_distri,
                                                    dface_vtx_idx,
                                                    dface_vtx,
                                                    n_part,
-                                                   _pmeshes->pn_face,
-                                                   (const PDM_g_num_t **) _pmeshes->pface_ln_to_gn,
-                                                  &_pmeshes->pn_vtx,
-                                                  &_pmeshes->pvtx_ln_to_gn,
-                                                  &_pmeshes->pface_vtx_idx,
-                                                  &_pmeshes->pface_vtx);
+                                                   pn_face,
+                                                   (const PDM_g_num_t **) pface_ln_to_gn,
+                                                  &pn_vtx,
+                                                  &pvtx_ln_to_gn,
+                                                  &pface_vtx_idx,
+                                                  &pface_vtx);
       free(dcell_face_idx);
       free(dcell_face);
 
-      PDM_part_reverse_pcellface(n_part, _pmeshes->pn_cell, _pmeshes->pn_face,
-                                 (const int **) _pmeshes->pcell_face_idx,
-                                 (const int **) _pmeshes->pcell_face,
-                                &_pmeshes->pface_cell);
-      PDM_part_reorient_bound_faces(n_part, _pmeshes->pn_face, _pmeshes->pface_cell,
-                                    (const int **) _pmeshes->pcell_face_idx, _pmeshes->pcell_face,
-                                    (const int **) _pmeshes->pface_vtx_idx, _pmeshes->pface_vtx);
+      PDM_part_reverse_pcellface(n_part, pn_cell, pn_face,
+                                 (const int **) pcell_face_idx, (const int **) pcell_face,
+                                &pface_cell);
+      PDM_part_reorient_bound_faces(n_part, pn_face, pface_cell,
+                                    (const int **) pcell_face_idx, pcell_face,
+                                    (const int **) pface_vtx_idx, pface_vtx);
 
       PDM_part_dcoordinates_to_pcoordinates(_multipart->comm,
                                             n_part,
                                             vtx_distri,
                                             dvtx_coord,
-                                            _pmeshes->pn_vtx,
-                                           (const PDM_g_num_t **) _pmeshes->pvtx_ln_to_gn,
-                                           &_pmeshes->pvtx_coord);
+                                            pn_vtx,
+                                            (const PDM_g_num_t **) pvtx_ln_to_gn,
+                                           &pvtx_coord);
       PDM_part_distgroup_to_partgroup(_multipart->comm,
                                       face_distri,
                                       n_bnd,
                                       dface_bound_idx,
                                       dface_bound,
                                       n_part,
-                                      _pmeshes->pn_face,
-                                     (const PDM_g_num_t **) _pmeshes->pface_ln_to_gn,
-                                     &_pmeshes->pface_bound_idx,
-                                     &_pmeshes->pface_bound,
-                                     &_pmeshes->pface_bound_ln_to_gn);
+                                      pn_face,
+                                      (const PDM_g_num_t **) pface_ln_to_gn,
+                                     &pface_bound_idx,
+                                     &pface_bound,
+                                     &pface_bound_ln_to_gn);
       int **pface_join_tmp = NULL;
       PDM_part_distgroup_to_partgroup(_multipart->comm,
                                       face_distri,
@@ -813,36 +1029,99 @@ PDM_multipart_run_ppart
                                       dface_join_idx,
                                       dface_join,
                                       n_part,
-                                      _pmeshes->pn_face,
-                                     (const PDM_g_num_t **) _pmeshes->pface_ln_to_gn,
-                                     &_pmeshes->pface_join_idx,
+                                      pn_face,
+                                      (const PDM_g_num_t **) pface_ln_to_gn,
+                                     &pface_join_idx,
                                      &pface_join_tmp,
-                                     &_pmeshes->pface_join_ln_to_gn);
-      /* This function only returns local id of face in join, we have to
+                                     &pface_join_ln_to_gn);
+
+
+      //Fill _part_t structures with temporary arrays
+      _pmeshes->parts = (_part_t **) malloc(_pmeshes->tn_part*sizeof(_part_t*));
+      for (int ipart = 0; ipart < n_part; ipart++)
+      {
+        _pmeshes->parts[ipart] = _part_create();
+
+        _pmeshes->parts[ipart]->n_cell = pn_cell[ipart];
+        _pmeshes->parts[ipart]->n_face = pn_face[ipart];
+        _pmeshes->parts[ipart]->n_vtx    = pn_vtx[ipart];
+
+        _pmeshes->parts[ipart]->vtx      = pvtx_coord[ipart];
+        _pmeshes->parts[ipart]->face_vtx_idx = pface_vtx_idx[ipart];
+        _pmeshes->parts[ipart]->face_vtx = pface_vtx[ipart];
+        _pmeshes->parts[ipart]->cell_face_idx = pcell_face_idx[ipart];
+        _pmeshes->parts[ipart]->cell_face = pcell_face[ipart];
+        _pmeshes->parts[ipart]->face_cell = pface_cell[ipart];
+
+        _pmeshes->parts[ipart]->cell_ln_to_gn = pcell_ln_to_gn[ipart];
+        _pmeshes->parts[ipart]->face_ln_to_gn = pface_ln_to_gn[ipart];
+        _pmeshes->parts[ipart]->vtx_ln_to_gn = pvtx_ln_to_gn[ipart];
+        _pmeshes->parts[ipart]->face_bound_ln_to_gn = pface_bound_ln_to_gn[ipart];
+        _pmeshes->parts[ipart]->face_join_ln_to_gn = pface_join_ln_to_gn[ipart];
+
+        _pmeshes->parts[ipart]->face_bound_idx = pface_bound_idx[ipart];
+        _pmeshes->parts[ipart]->face_bound = pface_bound[ipart];
+
+        /* For face_join, the function only returns local id of face in join, we have to
          allocate to set up expected size (4*nb_face_join) */
-      _pmeshes->pface_join = (int **) malloc(n_part*sizeof(int*));
-      for (int i_part = 0; i_part < n_part; i_part++){
-        int s_face_join = _pmeshes->pface_join_idx[i_part][n_join];
-        _pmeshes->pface_join[i_part] = (int *) malloc(4*s_face_join*sizeof(int));
+        _pmeshes->parts[ipart]->face_join_idx = pface_join_idx[ipart];
+        int s_face_join = _pmeshes->parts[ipart]->face_join_idx[n_join];
+        _pmeshes->parts[ipart]->face_join = (int *) malloc(4*s_face_join*sizeof(int));
         for (int i_face = 0; i_face < s_face_join; i_face++){
-          _pmeshes->pface_join[i_part][4*i_face] = pface_join_tmp[i_part][i_face];
+          _pmeshes->parts[ipart]->face_join[4*i_face] = pface_join_tmp[ipart][i_face];
         }
-        free(pface_join_tmp[i_part]);
+        free(pface_join_tmp[ipart]);
       }
+
+      //Use the structure to call renumbering procedures
+      PDM_part_renum_cell(_pmeshes->parts, n_part, _pmeshes->renum_cell_method,
+                          (void *) _pmeshes->renum_cell_properties);
+      PDM_part_renum_face(_pmeshes->parts, n_part, _pmeshes->renum_face_method, NULL);
+      //Now genererate comm data -- we need update pface_ln_to_gn which has been modified
+      for (int ipart = 0; ipart < n_part; ipart++) {
+        pface_ln_to_gn[ipart] = _pmeshes->parts[ipart]->face_ln_to_gn;
+      }
+      PDM_part_generate_entity_graph_comm(_multipart->comm,
+                                          part_distri,
+                                          face_distri,
+                                          n_part,
+                                          pn_face,
+                                          (const PDM_g_num_t **) pface_ln_to_gn,
+                                          NULL,
+                                         &pinternal_face_bound_procidx,
+                                         &pinternal_face_bound_partidx,
+                                         &pinternal_face_bound);
+      //Finally complete parts structure with internal join data
+      for (int ipart = 0; ipart < n_part; ipart++)
+      {
+        _pmeshes->parts[ipart]->face_part_bound_proc_idx = pinternal_face_bound_procidx[ipart];
+        _pmeshes->parts[ipart]->face_part_bound_part_idx = pinternal_face_bound_partidx[ipart];
+        _pmeshes->parts[ipart]->face_part_bound = pinternal_face_bound[ipart];
+      }
+
+      //Free temporary arrays (top-level)
+      free(pn_vtx);
+      free(pn_cell);
+      free(pn_face);
+      free(pvtx_coord);
+      free(pface_vtx_idx);
+      free(pface_vtx);
+      free(pcell_face_idx);
+      free(pcell_face);
+      free(pface_cell);
+      free(pface_bound_idx);
+      free(pface_bound);
+      free(pface_join_idx);
+      free(pinternal_face_bound_procidx);
+      free(pinternal_face_bound_partidx);
+      free(pinternal_face_bound);
+      free(pcell_ln_to_gn);
+      free(pface_ln_to_gn);
+      free(pvtx_ln_to_gn);
+      free(pface_bound_ln_to_gn);
+      free(pface_join_ln_to_gn);
+
       free(pface_join_tmp);
-
-      PDM_generate_entity_graph_comm(_multipart->comm,
-                                     part_distri,
-                                     face_distri,
-                                     n_part,
-                                     _pmeshes->pn_face,
-                                     (const PDM_g_num_t **) _pmeshes->pface_ln_to_gn,
-                                     NULL,
-                                    &_pmeshes->pinternal_face_bound_procidx,
-                                    &_pmeshes->pinternal_face_bound_partidx,
-                                    &_pmeshes->pinternal_face_bound);
-
-
       free(cell_distri);
       free(face_distri);
       free(vtx_distri);
@@ -882,22 +1161,22 @@ const int   i_part,
   assert(i_zone < _multipart->n_zone && i_part < _multipart->n_part[i_zone]);
   _part_mesh_t _pmeshes = _multipart->pmeshes[i_zone];
 
-  *n_cell = _pmeshes.pn_cell[i_part];
-  *n_face = _pmeshes.pn_face[i_part];
-  *n_vtx  = _pmeshes.pn_vtx[i_part];
+  *n_cell = _pmeshes.parts[i_part]->n_cell;
+  *n_face = _pmeshes.parts[i_part]->n_face;
+  *n_vtx  = _pmeshes.parts[i_part]->n_vtx;
 
   PDM_MPI_Comm_size(_multipart->comm, n_proc);
   *n_total_part = _pmeshes.tn_part;
 
-  *scell_face = _pmeshes.pcell_face_idx[i_part][*n_cell];
-  *sface_vtx  = _pmeshes.pface_vtx_idx[i_part][*n_face];
+  *scell_face = _pmeshes.parts[i_part]->cell_face_idx[*n_cell];
+  *sface_vtx  = _pmeshes.parts[i_part]->face_vtx_idx[*n_face];
 
-  *n_face_part_bound = _pmeshes.pinternal_face_bound_partidx[i_part][*n_total_part];
+  *n_face_part_bound = _pmeshes.parts[i_part]->face_part_bound_part_idx[*n_total_part];
 
   *n_bound_groups = _pmeshes.n_bounds;
   *n_join_groups  = _pmeshes.n_joins;
-  *sface_bound    = _pmeshes.pface_bound_idx[i_part][*n_bound_groups];
-  *sface_join     = _pmeshes.pface_join_idx[i_part][*n_join_groups];
+  *sface_bound    = _pmeshes.parts[i_part]->face_bound_idx[*n_bound_groups];
+  *sface_join     = _pmeshes.parts[i_part]->face_join_idx[*n_join_groups];
 }
 
 /**
@@ -942,28 +1221,28 @@ const int            i_part,
   *face_tag = NULL;
   *vtx_tag  = NULL;
 
-  *cell_ln_to_gn = _pmeshes.pcell_ln_to_gn[i_part];
-  *face_ln_to_gn = _pmeshes.pface_ln_to_gn[i_part];
-  *vtx_ln_to_gn  = _pmeshes.pvtx_ln_to_gn[i_part];
+  *cell_ln_to_gn = _pmeshes.parts[i_part]->cell_ln_to_gn;
+  *face_ln_to_gn = _pmeshes.parts[i_part]->face_ln_to_gn;
+  *vtx_ln_to_gn  = _pmeshes.parts[i_part]->vtx_ln_to_gn;
 
-  *cell_face_idx = _pmeshes.pcell_face_idx[i_part];
-  *cell_face     = _pmeshes.pcell_face[i_part];
-  *face_cell     = _pmeshes.pface_cell[i_part];
-  *face_vtx_idx  = _pmeshes.pface_vtx_idx[i_part];
-  *face_vtx      = _pmeshes.pface_vtx[i_part];
+  *cell_face_idx = _pmeshes.parts[i_part]->cell_face_idx;
+  *cell_face     = _pmeshes.parts[i_part]->cell_face;
+  *face_cell     = _pmeshes.parts[i_part]->face_cell;
+  *face_vtx_idx  = _pmeshes.parts[i_part]->face_vtx_idx;
+  *face_vtx      = _pmeshes.parts[i_part]->face_vtx;
 
-  *vtx           = _pmeshes.pvtx_coord[i_part];
+  *vtx           = _pmeshes.parts[i_part]->vtx;
 
-  *face_part_bound_proc_idx = _pmeshes.pinternal_face_bound_procidx[i_part];
-  *face_part_bound_part_idx = _pmeshes.pinternal_face_bound_partidx[i_part];
-  *face_part_bound          = _pmeshes.pinternal_face_bound[i_part];
+  *face_part_bound_proc_idx = _pmeshes.parts[i_part]->face_part_bound_proc_idx;
+  *face_part_bound_part_idx = _pmeshes.parts[i_part]->face_part_bound_part_idx;
+  *face_part_bound          = _pmeshes.parts[i_part]->face_part_bound;
 
-  *face_bound_idx       = _pmeshes.pface_bound_idx[i_part];
-  *face_bound           = _pmeshes.pface_bound[i_part];
-  *face_bound_ln_to_gn  = _pmeshes.pface_bound_ln_to_gn[i_part];
-  *face_join_idx        = _pmeshes.pface_join_idx[i_part];
-  *face_join            = _pmeshes.pface_join[i_part];
-  *face_join_ln_to_gn   = _pmeshes.pface_join_ln_to_gn[i_part];
+  *face_bound_idx       = _pmeshes.parts[i_part]->face_bound_idx;
+  *face_bound           = _pmeshes.parts[i_part]->face_bound;
+  *face_bound_ln_to_gn  = _pmeshes.parts[i_part]->face_bound_ln_to_gn;
+  *face_join_idx        = _pmeshes.parts[i_part]->face_join_idx;
+  *face_join            = _pmeshes.parts[i_part]->face_join;
+  *face_join_ln_to_gn   = _pmeshes.parts[i_part]->face_join_ln_to_gn;
 
 }
 
@@ -1029,8 +1308,15 @@ PDM_multipart_free
   _pdm_multipart_t *_multipart = _get_from_id (mpart_id);
 
   free(_multipart->dmeshes_ids);
+  for (int izone = 0; izone < _multipart->n_zone; izone++) {
+    free(_multipart->pmeshes[izone].joins_ids);
+    for (int ipart = 0; ipart < _multipart->n_part[izone]; ipart++)
+      _part_free(_multipart->pmeshes[izone].parts[ipart]);
+    free(_multipart->pmeshes[izone].parts);
+  }
   free(_multipart->pmeshes);
 
+  PDM_part_renum_method_purge();
   free (_multipart);
 
   PDM_Handles_handle_free (_multiparts, mpart_id, PDM_FALSE);
