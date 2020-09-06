@@ -1222,12 +1222,14 @@ PDM_part_generate_entity_graph_comm
     int idx_data = 0;
     if (pentity_hint != NULL) {
       //First pass to count
-      for(int i_entity = 0; i_entity < pn_entity[i_part]; ++i_entity)
-        if (pentity_hint[i_part][i_entity]==1)
+      for(int i_entity = 0; i_entity < pn_entity[i_part]; ++i_entity){
+        if (pentity_hint[i_part][i_entity]==1){
           idx_data++;
-    }
-    else
+        }
+      }
+    } else {
       idx_data = pn_entity[i_part];
+    }
     //Second pass to fill
     part_data[i_part] = (int *) malloc( 3 * idx_data * sizeof(int));
     if (pentity_hint != NULL){
@@ -1240,12 +1242,11 @@ PDM_part_generate_entity_graph_comm
 
           part_stri[i_part][i_entity] = 3;
           idx_data++;
-        }
-        else
+        } else{
           part_stri[i_part][i_entity] = 0;
+        }
       }
-    }
-    else{
+    } else {
       for(int i_entity = 0; i_entity < pn_entity[i_part]; ++i_entity) {
         part_data[i_part][3*i_entity  ] = i_rank;
         part_data[i_part][3*i_entity+1] = i_part;
@@ -1273,8 +1274,8 @@ PDM_part_generate_entity_graph_comm
    /*
     * Exchange
     */
-  int*         blk_stri = NULL;
-  PDM_g_num_t* blk_data = NULL;
+  int* blk_stri = NULL;
+  int* blk_data = NULL;
   PDM_part_to_block_exch (ptb,
                           sizeof(int),
                           PDM_STRIDE_VAR,
@@ -1303,7 +1304,7 @@ PDM_part_generate_entity_graph_comm
     for(int i_block = 0; i_block < n_entity_block; ++i_block){
       printf("[%d]-blk_stri[%d]:: ", i_block, blk_stri[i_block]);
       for(int i_data = 0; i_data < blk_stri[i_block]; ++i_data){
-        printf(PDM_FMT_G_NUM" ", blk_data[idx_debug_data++]);
+        printf("%i ", blk_data[idx_debug_data++]);
       }
       printf("\n");
     }
@@ -1334,7 +1335,7 @@ PDM_part_generate_entity_graph_comm
   /*
    * Compress data
    */
-  blk_data = (PDM_g_num_t *) realloc(blk_data, idx_comp * sizeof(PDM_g_num_t));
+  blk_data = (int *) realloc(blk_data, idx_comp * sizeof(int));
 
   /*
    * Panic verbose
@@ -1344,7 +1345,7 @@ PDM_part_generate_entity_graph_comm
     for(int i_block = 0; i_block < n_entity_block; ++i_block){
       printf("[%d]-blk_stri[%d]:: ", i_block, blk_stri[i_block]);
       for(int i_data = 0; i_data < blk_stri[i_block]; ++i_data){
-        printf(PDM_FMT_G_NUM" ", blk_data[idx_debug_data++]);
+        printf("%i ", blk_data[idx_debug_data++]);
       }
       printf("\n");
     }
