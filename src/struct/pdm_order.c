@@ -191,13 +191,13 @@ void         *array
   unsigned char *_array    = (unsigned char *) array;
 
   for (int i = 0; i < size_array; ++i) {
-    for (int j = 0; j < elt_size; ++j) {
+    for (int j = 0; j < (int) elt_size; ++j) {
       old_array[elt_size * i + j] = _array[elt_size * i + j];
     }
   }
 
   for (int i = 0; i < size_array; ++i) {
-    for (int j = 0; j < elt_size; ++j) {
+    for (int j = 0; j < (int) elt_size; ++j) {
       _array[elt_size * i + j] = old_array[elt_size * new_to_old_order[i] +j];
     }
   }
