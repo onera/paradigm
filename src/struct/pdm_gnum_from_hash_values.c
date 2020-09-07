@@ -176,6 +176,7 @@ _compute_distribution_equilibrate
  _pdm_gnum_from_hv_t *_gnum
 )
 {
+  PDM_UNUSED(_gnum);
   printf("_gnum_from_hv_compute_equilibrate Not implemented \n");
   abort();
 
@@ -199,7 +200,7 @@ setup_distribution_from_min_max
   assert(nelmt > 0);
 
   size_t quotient  = nelmt/n_dist;
-  size_t remainder = nelmt%n_dist;
+  int    remainder = nelmt%n_dist;
 
   // printf(PDM_FMT_G_NUM"\n", quotient);
   // printf(PDM_FMT_G_NUM"\n", remainder);
