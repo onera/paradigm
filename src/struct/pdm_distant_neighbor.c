@@ -102,7 +102,7 @@ _compute_unique_idx
  int order[],
  int order_unique[],
  int connect_triplet[],
- const size_t nb_ent
+ const int nb_ent
 )
 {
   int idx_unique = -1;
@@ -678,7 +678,7 @@ PDM_distant_neighbor_exch
     for (int i = 0; i < s_distributed_data; i++) {
       int i_part = pdn->distributed_data[2*i  ];
       int ienty = pdn->distributed_data[2*i+1];
-      for(int idata = 0; idata < send_entity_stride[i_part][ienty] * s_data ; idata++){
+      for(int idata = 0; idata < send_entity_stride[i_part][ienty] * (int) s_data ; idata++){
         int idxdata = stride_idx[i_part][ienty] * s_data + idata;
         // log_trace("send[%d/%d] --> [%d,%d] -> %d \n", idx1, s_distributed_data, i_part, ienty, _send_entity_data[i_part][idxdata]);
         send_buffer[idx1++] = _send_entity_data[i_part][idxdata];
@@ -798,7 +798,7 @@ PDM_distant_neighbor_exch
         int s_entity = pdn->order[i_part][i_entity]; // On doit remettre dans l'ordre initiale !
         int idx      = recv_stride_idx[u_enty] * s_data;
 
-        for(int idata = 0; idata < _recv_entity_stride[i_part][i_entity] * s_data; idata++){
+        for(int idata = 0; idata < _recv_entity_stride[i_part][i_entity] * (int) s_data; idata++){
           int idxdata = _recv_entity_stride_idx[i_part][s_entity] * s_data + idata;
           // log_trace("_recv_entity_data[%d,%d] = %d \n", i_part, idxdata, recv_buffer[idx+idata]);
           _recv_entity_data[i_part][idxdata] = recv_buffer[idx+idata];

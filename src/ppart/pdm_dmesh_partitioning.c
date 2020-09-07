@@ -129,6 +129,8 @@ PDM_dmesh_partitioning_create
  const PDM_partitioning_method_t split_method
 )
 {
+  PDM_UNUSED(comm);
+  PDM_UNUSED(split_method);
   /*
    * Search a gnum_from_hash_values free id
    */
@@ -158,6 +160,10 @@ PDM_dmesh_partitioning_compute
  const int  queries_flags
 )
 {
+  PDM_UNUSED(queries_flags);
+  PDM_UNUSED(input_flags);
+  PDM_UNUSED(dmesh_partitioning_id);
+
   printf("PDM_dmesh_partitioning_compute::dmesh_partitioning_id :: %d \n", dmesh_partitioning_id);
   printf("PDM_dmesh_partitioning_compute::input_flags   :: %d \n", input_flags);
   printf("PDM_dmesh_partitioning_compute::queries_flags :: %d \n", queries_flags);
@@ -247,6 +253,8 @@ PDM_dmesh_partitioning_set_from_dmesh
  const int dmesh_id
 )
 {
+  PDM_UNUSED(dmesh_partitioning_id);
+  PDM_UNUSED(dmesh_id);
   // _dmesh_partitioning_t* _dmp = _get_from_id(dmesh_partitioning_id);
   // ---> Depuis l'interface du dmesh
   // Recopie
@@ -288,6 +296,8 @@ PDM_dmesh_partitioning_get
        void ***field
 )
 {
+  PDM_UNUSED(dmesh_partitioning_id);
+  PDM_UNUSED(field);
   int field_key  = input_field_key;
   //int owner      = PDM_HASFLAG  (field_key, PDM_PART_OWNDATA);
   int field_name = PDM_UNSETFLAG(field_key, PDM_PART_OWNDATA); // Il reste que le nom
@@ -330,6 +340,9 @@ PDM_dmesh_partitioning_part_get
       void **field
 )
 {
+  PDM_UNUSED(dmesh_partitioning_id);
+  PDM_UNUSED(part_id);
+  PDM_UNUSED(field);
   int field_key  = input_field_key;
   //  int owner      = PDM_HASFLAG  (field_key, PDM_PART_OWNDATA);
   int field_name = PDM_UNSETFLAG(field_key, PDM_PART_OWNDATA); // Il reste que le nom
