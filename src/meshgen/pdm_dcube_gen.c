@@ -285,9 +285,11 @@ PDM_dcube_gen_init
   b2 = r1 / n_faceSeg;
   b3 = r1 % n_faceSeg;
 
-  switch (iSerie) {
 
-  case 0 :
+  if (iSerie == 0) {
+  /* switch (iSerie) { */
+
+  /* case 0 : */
 
     //
     // Faces zmin -> zmax
@@ -327,15 +329,16 @@ PDM_dcube_gen_init
       if (cpt == dcube->dn_face)
         break;
     }
+  }
 
-    b1 = 0;
-    b2 = 0;
-    b3 = 0;
+  b1 = 0;
+  b2 = 0;
+  b3 = 0;
 
-    if (cpt == dcube->dn_face)
-      break;
+  /* if (cpt == dcube->dn_face) */
+  /*     break; */
 
-  case 1 :
+  if ((iSerie == 1) || ((iSerie == 0) &&  (cpt != dcube->dn_face))) {
 
     //
     // Faces xmin -> xmax
@@ -377,15 +380,17 @@ PDM_dcube_gen_init
       if (cpt == dcube->dn_face)
         break;
     }
+  }
 
-    b1 = 0;
-    b2 = 0;
-    b3 = 0;
+  b1 = 0;
+  b2 = 0;
+  b3 = 0;
 
-    if (cpt == dcube->dn_face)
-      break;
+  /* if (cpt == dcube->dn_face) */
+  /*   break; */
 
-  case 2 :
+  if ((iSerie == 2) || ((iSerie == 1 || iSerie == 0) && (cpt != dcube->dn_face))) {
+    /* case 2 : */
 
     //
     // Faces ymin -> ymax
@@ -445,9 +450,12 @@ PDM_dcube_gen_init
   for (int i = 0; i < dcube->n_face_group + 1; i++)
     _dface_group_idx[i] = 0;
 
-  switch (iSerie) {
 
-  case 0 :
+  //  switch (iSerie) {
+
+  if (iSerie == 0) {
+
+    // case 0 :
 
     //
     // Faces zmin
@@ -466,9 +474,9 @@ PDM_dcube_gen_init
         if (!firstGroup || (firstGroup && ((cpt3 - 1)  >= rSerie))) {
           _dface_group[cpt] = bFace + j * n_faceSeg + i + 1;
           cpt += 1;
-	  if (cpt == dn_faceLim)
-	    break;
-	}
+          if (cpt == dn_faceLim)
+            break;
+        }
       }
       if (cpt == dn_faceLim)
         break;
@@ -476,12 +484,14 @@ PDM_dcube_gen_init
 
     _dface_group_idx[1] = cpt - cpt1;
 
-    if (cpt == dn_faceLim)
-      break;
+    /* if (cpt == dn_faceLim) */
+    /*   break; */
+  }
 
-    firstGroup = 0;
+  firstGroup = 0;
 
-  case 1 :
+  if ((iSerie == 1) || ((iSerie == 0) && (cpt != dn_faceLim))) {
+    //  case 1 :
 
     //
     // Faces zmax
@@ -509,13 +519,14 @@ PDM_dcube_gen_init
     }
 
     _dface_group_idx[2] = cpt - cpt1;
+  }
+    /* if (cpt == dn_faceLim) */
+    /*   break; */
 
-    if (cpt == dn_faceLim)
-      break;
+  firstGroup = 0;
 
-    firstGroup = 0;
-
-  case 2 :
+  if ((iSerie == 2) || (((iSerie == 0) || (iSerie == 1)) && (cpt != dn_faceLim))) {
+    //  case 2 :
 
     //
     // Faces xmin
@@ -543,13 +554,14 @@ PDM_dcube_gen_init
     }
 
     _dface_group_idx[3] = cpt - cpt1;
+  }
+    /* if (cpt == dn_faceLim) */
+    /*   break; */
 
-    if (cpt == dn_faceLim)
-      break;
+  firstGroup = 0;
 
-    firstGroup = 0;
-
-  case 3 :
+  if ((iSerie == 3) || (((iSerie == 0) || (iSerie == 1)  || (iSerie == 2)) && (cpt != dn_faceLim))) {
+    //  case 3 :
 
     //
     // Faces xmax
@@ -577,13 +589,14 @@ PDM_dcube_gen_init
     }
 
     _dface_group_idx[4] = cpt - cpt1;
+  }
+    /* if (cpt == dn_faceLim) */
+    /*   break; */
 
-    if (cpt == dn_faceLim)
-      break;
+  firstGroup = 0;
 
-    firstGroup = 0;
-
-  case 4 :
+  if ((iSerie == 4) || (((iSerie == 0) || (iSerie == 1)  || (iSerie == 2) || (iSerie == 3)) && (cpt != dn_faceLim))) {
+    //  case 4 :
 
     //
     // Faces ymin
@@ -611,13 +624,15 @@ PDM_dcube_gen_init
     }
 
     _dface_group_idx[5] = cpt - cpt1;
+  }
 
-    if (cpt == dn_faceLim)
-      break;
+    /* if (cpt == dn_faceLim) */
+    /*   break; */
 
-    firstGroup = 0;
+  firstGroup = 0;
 
-  case 5 :
+  if ((iSerie == 5) || (((iSerie == 0) || (iSerie == 1)  || (iSerie == 2) || (iSerie == 3) || (iSerie == 4)) && (cpt != dn_faceLim))) {
+  /* case 5 : */
 
     //
     // Faces ymax
@@ -646,12 +661,9 @@ PDM_dcube_gen_init
 
     _dface_group_idx[6] = cpt - cpt1;
 
-    if (cpt == dn_faceLim)
-      break;
-
-    firstGroup = 0;
-
   }
+
+  firstGroup = 0;
 
   for (int i = 1; i < dcube->n_face_group + 1; i++)
     _dface_group_idx[i] += _dface_group_idx[i-1];
