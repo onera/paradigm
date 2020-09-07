@@ -1167,11 +1167,10 @@ int PDM_geom_elem_compute_polygon_barycentric_coordinates(const int           nP
       }
 
       /* Check Result */
-
       for (int isom = 0; isom <  n_sommets; isom++) {
-        if ( _localBaryCoords[isom] != _localBaryCoords[isom] ||
-             _localBaryCoords[isom] < 0. ||
-             _localBaryCoords[isom] > 1. ) {
+        if ( isnan(_localBaryCoords[isom])     ||
+                   _localBaryCoords[isom] < 0. ||
+                   _localBaryCoords[isom] > 1. ) {
 
           convergence = 0;
   /*        double dist_min = DBL_MAX;
