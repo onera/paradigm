@@ -16,11 +16,6 @@
 #include "pdm_printf.h"
 #include "pdm_error.h"
 
-#if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-value"
-#endif
-
 /*=============================================================================
  * Macro definitions
  *============================================================================*/
@@ -70,20 +65,20 @@ int *part,
 const PDM_MPI_Comm comm
 )
 {
-  vtxdist;
-  xadj;
-  adjncy;
-  vwgt;
-  adjwgt;
-  wgtflag;
-  numflag;
-  ncon;
-  n_parts;
-  tpwgts;
-  ubvec;
-  edgecut;
-  part;
-  comm;
+  PDM_UNUSED(vtxdist);
+  PDM_UNUSED(xadj);
+  PDM_UNUSED(adjncy);
+  PDM_UNUSED(vwgt);
+  PDM_UNUSED(adjwgt);
+  PDM_UNUSED(wgtflag);
+  PDM_UNUSED(numflag);
+  PDM_UNUSED(ncon);
+  PDM_UNUSED(n_parts);
+  PDM_UNUSED(tpwgts);
+  PDM_UNUSED(ubvec);
+  PDM_UNUSED(edgecut);
+  PDM_UNUSED(part);
+  PDM_UNUSED(comm);
 
   PDM_error(__FILE__, __LINE__, 0,"PDM_ParMETIS_V3_PartKway : Unavailable function with pdm_no_mpi library\n" );
   abort();
@@ -109,15 +104,15 @@ const int n_part,
 int *part
 )
 {
-  dn_cell;
-  ddual_graph_idx;
-  ddual_graph;
-  cell_weight;
-  edgeWeight;
-  check;
-  comm;
-  n_part;
-  part;
+  PDM_UNUSED(dn_cell);
+  PDM_UNUSED(ddual_graph_idx);
+  PDM_UNUSED(ddual_graph);
+  PDM_UNUSED(cell_weight);
+  PDM_UNUSED(edgeWeight);
+  PDM_UNUSED(check);
+  PDM_UNUSED(comm);
+  PDM_UNUSED(n_part);
+  PDM_UNUSED(part);
 
   PDM_error(__FILE__, __LINE__, 0,"PDM_SCOTCH_dpart : Unavailable function with pdm_no_mpi library\n" );
   abort();
@@ -131,7 +126,3 @@ int *part
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-
-#if defined(__clang__)
-#pragma clang diagnostic pop
-#endif
