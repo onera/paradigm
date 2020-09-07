@@ -1835,7 +1835,7 @@ int PDM_MPI_Alltoallv_l(void *sendbuf, int *sendcounts, size_t *sdispls,
   int coeff = 4;
   int large = 0;
   //  for (int i = 0; i < size; i++) {
-  if ((sdispls[size-1] > INT_MAX/coeff) || (rdispls[size-1] > INT_MAX/coeff)) {
+  if ((sdispls[size-1] > (size_t) (INT_MAX/coeff)) || (rdispls[size-1] > (size_t) (INT_MAX/coeff))) {
     large = 1;
   }
   //}
