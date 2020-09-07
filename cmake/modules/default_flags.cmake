@@ -248,7 +248,7 @@ mark_as_advanced (CMAKE_C_FLAGS_PROFILING)
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 
-  set (CMAKE_CXX_FLAGS "-std=c++11 -fPIC -funsigned-char -W -Wall -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -Wunused -Wno-long-long -Wfloat-equal -Wno-unused-dummy-argument")
+  set (CMAKE_CXX_FLAGS "-std=c++11 -fPIC -funsigned-char -W -Wall -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -Wunused -Wno-long-long -Wfloat-equal ")
 
   set (CMAKE_CXX_FLAGS_RELEASE         "-O3")
   set (CMAKE_CXX_FLAGS_DEBUG           "-O0 -g")
