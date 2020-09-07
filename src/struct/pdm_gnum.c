@@ -459,7 +459,7 @@ _gnum_from_coords_compute
 //    PDM_l_num_t j;
     PDM_l_num_t shift;
 
-    size_t n_block_ents = 0;
+    int n_block_ents = 0;
     PDM_g_num_t current_global_num = 0, global_num_shift = 0;
 
     int *c_rank = NULL;
