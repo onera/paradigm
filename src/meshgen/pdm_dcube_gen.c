@@ -329,11 +329,11 @@ PDM_dcube_gen_init
       if (cpt == dcube->dn_face)
         break;
     }
+    b1 = 0;
+    b2 = 0;
+    b3 = 0;
   }
 
-  b1 = 0;
-  b2 = 0;
-  b3 = 0;
 
   /* if (cpt == dcube->dn_face) */
   /*     break; */
@@ -380,11 +380,11 @@ PDM_dcube_gen_init
       if (cpt == dcube->dn_face)
         break;
     }
+    b1 = 0;
+    b2 = 0;
+    b3 = 0;
   }
 
-  b1 = 0;
-  b2 = 0;
-  b3 = 0;
 
   /* if (cpt == dcube->dn_face) */
   /*   break; */
@@ -486,9 +486,9 @@ PDM_dcube_gen_init
 
     /* if (cpt == dn_faceLim) */
     /*   break; */
+    firstGroup = 0;
   }
 
-  firstGroup = 0;
 
   if ((iSerie == 1) || ((iSerie == 0) && (cpt != dn_faceLim))) {
     //  case 1 :
@@ -519,11 +519,11 @@ PDM_dcube_gen_init
     }
 
     _dface_group_idx[2] = cpt - cpt1;
+     firstGroup = 0;
   }
     /* if (cpt == dn_faceLim) */
     /*   break; */
 
-  firstGroup = 0;
 
   if ((iSerie == 2) || (((iSerie == 0) || (iSerie == 1)) && (cpt != dn_faceLim))) {
     //  case 2 :
@@ -554,11 +554,11 @@ PDM_dcube_gen_init
     }
 
     _dface_group_idx[3] = cpt - cpt1;
+     firstGroup = 0;
   }
     /* if (cpt == dn_faceLim) */
     /*   break; */
 
-  firstGroup = 0;
 
   if ((iSerie == 3) || (((iSerie == 0) || (iSerie == 1)  || (iSerie == 2)) && (cpt != dn_faceLim))) {
     //  case 3 :
@@ -589,11 +589,11 @@ PDM_dcube_gen_init
     }
 
     _dface_group_idx[4] = cpt - cpt1;
+    firstGroup = 0;
   }
     /* if (cpt == dn_faceLim) */
     /*   break; */
 
-  firstGroup = 0;
 
   if ((iSerie == 4) || (((iSerie == 0) || (iSerie == 1)  || (iSerie == 2) || (iSerie == 3)) && (cpt != dn_faceLim))) {
     //  case 4 :
@@ -624,12 +624,12 @@ PDM_dcube_gen_init
     }
 
     _dface_group_idx[5] = cpt - cpt1;
+    firstGroup = 0;
   }
 
     /* if (cpt == dn_faceLim) */
     /*   break; */
 
-  firstGroup = 0;
 
   if ((iSerie == 5) || (((iSerie == 0) || (iSerie == 1)  || (iSerie == 2) || (iSerie == 3) || (iSerie == 4)) && (cpt != dn_faceLim))) {
   /* case 5 : */
@@ -659,11 +659,11 @@ PDM_dcube_gen_init
         break;
     }
 
-    _dface_group_idx[6] = cpt - cpt1;
+  _dface_group_idx[6] = cpt - cpt1;
+  firstGroup = 0;
 
   }
 
-  firstGroup = 0;
 
   for (int i = 1; i < dcube->n_face_group + 1; i++)
     _dface_group_idx[i] += _dface_group_idx[i-1];
