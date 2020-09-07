@@ -761,7 +761,7 @@ void PDM_io_open
   /*  if ((acces == PDM_IO_ACCES_SEQ) && (nouveau_fichier->n_rangs > 1)) {*/
   if (suff_t == PDM_IO_SUFF_AUTO) {
     if (acces == PDM_IO_ACCES_SEQ) {
-      char format[8];
+      char format[9];
       int ncharint = 0;
       double _n_rangs = nouveau_fichier->n_rangs;
       while (_n_rangs >= 1.) {
@@ -3328,7 +3328,7 @@ void PDM_io_ecr_par_entrelacee
           if (fichier->fmt_t == PDM_IO_FMT_TXT) {
             l_s_buffer = (max_l_blocs_alltoall / taille_donnee) * (fichier->n_char_fmt + 1) + 1;
             s_buffer = (char *) malloc(sizeof(char) * l_s_buffer);
-            for (int i = 0; i < l_s_buffer; i++)
+            for (size_t i = 0; i < l_s_buffer; i++)
               s_buffer[i] = '\0';
           }
         }
@@ -3338,7 +3338,7 @@ void PDM_io_ecr_par_entrelacee
           if (fichier->fmt_t == PDM_IO_FMT_TXT) {
             l_s_buffer = (l_blocs_alltoall / taille_donnee) * (fichier->n_char_fmt + 1) + 1;
             s_buffer = (char *) malloc(sizeof(char) * l_s_buffer);
-            for (int i = 0; i < l_s_buffer; i++)
+            for (size_t i = 0; i < l_s_buffer; i++)
               s_buffer[i] = '\0';
           }
         }
