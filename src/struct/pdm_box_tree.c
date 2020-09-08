@@ -3696,7 +3696,7 @@ PDM_box_tree_get_stats(const PDM_box_tree_t  *bt,
       for (i = 1; i < 7; i++) {
         s_mean[i] = s_g_sum[i] + s_g_sum[i+7]/n_ranks;
         /* Round to nearest integer, and not floor */
-        if (s_g_sum[i+7]%n_ranks >= (PDM_g_num_t)n_ranks/2)
+        if ((PDM_g_num_t)(s_g_sum[i+7]%n_ranks) >= (PDM_g_num_t) (n_ranks/2))
           s_mean[i] += 1;
       }
     }

@@ -539,7 +539,7 @@ _calcul_numabs_face_poly3d
                                                          d_elt_proc,
                                                          n_procs+1);
 
-#ifdef __INTEL_COMPILER
+#ifdef __INTEL_COMPILER_
 #pragma warning(push)
 #pragma warning(disable:2312)
 #endif
@@ -1682,7 +1682,7 @@ PDM_writer_ensight_var_write
         }
 
         PDM_writer_statut_t s_ecr_n_val = PDM_WRITER_OFF ;
-        for (int k = 0; k < var->dim; k++) {
+        for (int k = 0; k < (int) var->dim; k++) {
           s_ecr_n_val = PDM_WRITER_OFF;
           n_som_proc = 0;
           int comp_a_ecrire;
@@ -1777,7 +1777,7 @@ PDM_writer_ensight_var_write
 
           PDM_writer_statut_t s_ecr_n_val = PDM_WRITER_OFF;
 
-          for (int k = 0; k < var->dim; k++) {
+          for (int k = 0; k < (int) var->dim; k++) {
             n_val_buff = 0;
             int comp_a_ecrire;
             comp_a_ecrire = k;

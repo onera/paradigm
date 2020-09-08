@@ -1335,7 +1335,7 @@ PDM_part_to_block_exch
         i_part_elt  = i_part[j];
       }
 
-      for (int k = 0; k < s_octet_elt; k++) {
+      for (int k = 0; k < (int) s_octet_elt; k++) {
         send_buffer[i_send_buffer[iproc] + n_send_buffer[iproc]++] =
           _part_data[i][i_part_elt + k];
       }

@@ -71,7 +71,7 @@ extern "C" {
 
 /**
  *
- * \brief Compress the connectivity of a graph, ie remove the multiple arcs connecting 
+ * \brief Compress the connectivity of a graph, ie remove the multiple arcs connecting
  *        the same two nodes (if any).
  *
  * \param [in]    n_node            (local) number of nodes in the graph
@@ -728,7 +728,6 @@ PDM_para_graph_split
         PDM_printf("PPART error : ParMETIS unavailable\n");
         exit(1);
       #else
-      #endif
 
         // Define metis properties
         int numflag    = 0;   /* C or Fortran numbering (C = 0)                    */
@@ -784,10 +783,11 @@ PDM_para_graph_split
                                   node_part_id,
                                   comm);
 
-      free(ubvec);
-      free(tpwgts);
-      free(_graph_node_distri);
-      break;
+        free(ubvec);
+        free(tpwgts);
+        free(_graph_node_distri);
+      #endif
+        break;
     }
 
     case PDM_SPLIT_DUAL_WITH_PTSCOTCH:

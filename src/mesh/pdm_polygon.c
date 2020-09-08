@@ -306,10 +306,14 @@ PDM_polygon_parameterize
    * Determine lengths of edges
    */
 
+PDM_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wfloat-equal")
+
   if ( ((*l10)= PDM_DOT_PRODUCT(p10,p10)) == 0.0
     || ((*l20)= PDM_DOT_PRODUCT(p20,p20)) == 0.0 ) {
     return PDM_FALSE;
   }
+
+PDM_GCC_SUPPRESS_WARNING_POP
 
   /*
    *  Now evalute all polygon points to determine min/max parametric

@@ -38,6 +38,7 @@ typedef enum {
   PDM_NORTH,
   PDM_WEST,
   PDM_EAST,
+  PDM_N_DIRECTION,
 } PDM_para_octree_direction_t;
 
 /**
