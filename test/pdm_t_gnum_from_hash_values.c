@@ -74,11 +74,11 @@ char *argv[]
   /*
    * SetUp
    */
-  int     n_part;
-  int    *n_elmts;
-  int    **part_stri;
-  int    **part_data;
-  size_t **part_key;
+  int     n_part = 0;
+  int    *n_elmts = NULL;
+  int    **part_stri = NULL;
+  int    **part_data = NULL;
+  size_t **part_key = NULL;
   if(n_rank == 1){
     n_part = 2;
     n_elmts   = (int *     ) malloc( n_part * sizeof(int    ));

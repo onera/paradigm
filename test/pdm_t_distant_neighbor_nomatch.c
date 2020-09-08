@@ -62,8 +62,8 @@ char *argv[]
   /* Connection de join1 avec join2 */
   int connect_idx_j1[4] = {0, 1, 3, 4};
 
-  int oppRank;
-  int oppPart;
+  int oppRank = 0;
+  int oppPart = 0;
   if(n_rank == 1){
     oppRank = 0;
     oppPart = 1;
@@ -151,10 +151,10 @@ char *argv[]
    * Begin
    */
 
-  int n_cloud;
-  int *n_entity;
-  int **candidates_idx;
-  int **candidates_desc;
+  int n_cloud = 0;
+  int *n_entity = NULL;
+  int **candidates_idx = NULL;
+  int **candidates_desc = NULL;
   if(n_rank == 1){
     n_cloud = 2;
     candidates_idx  = (int **) malloc( n_cloud * sizeof(int**));
@@ -184,6 +184,7 @@ char *argv[]
     }
 
   } else {
+    
     PDM_error(__FILE__, __LINE__, 0, "pdm_t_distant_neighbor error : Bad number of process for test cases \n");
   }
 
