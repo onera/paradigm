@@ -1282,11 +1282,11 @@ char *argv[]
   int           post    = 0;
 #ifdef PDM_HAVE_PTSCOTCH
  PDM_part_split_t  method  = PDM_PART_SPLIT_PTSCOTCH;
-  char *agglo_method = "PDM_COARSE_MESH_SCOTCH";
+  const char *agglo_method = "PDM_COARSE_MESH_SCOTCH";
 #else
 #ifdef PDM_HAVE_PARMETIS
   PDM_part_split_t method  =  PDM_PART_SPLIT_PARMETIS;
-  char *agglo_method = "PDM_COARSE_MESH_METIS";
+  const char *agglo_method = "PDM_COARSE_MESH_METIS";
 #endif
 #endif
 

@@ -134,11 +134,15 @@ PDM_triangle_evaluate_position
     c2[i] = pt2[indices[i]] - pt3[indices[i]];
   }
 
+PDM_GCC_SUPPRESS_WARNING_WITH_PUSH("-Wfloat-equal")
+
   if ((det = PDM_DETERMINANT2X2(c1,c2)) == 0.0) {
     pcoords[0] = 0.0;
     pcoords[1] = 0.0;
     return PDM_TRIANGLE_DEGENERATED;
   }
+
+PDM_GCC_SUPPRESS_WARNING_POP
 
   pcoords[0] = PDM_DETERMINANT2X2(rhs,c2) / det;
   pcoords[1] = PDM_DETERMINANT2X2(c1,rhs) / det;
@@ -301,4 +305,3 @@ PDM_triangle_compute_barycenter
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-

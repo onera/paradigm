@@ -59,7 +59,7 @@ compute_unique_idx
   int last_elmt  = connect_triplet[3*last_idx+2];
   order_unique[idx_unique] = 0;
 
-  for(int i = 1; i < nb_ent; i++){
+  for(int i = 1; i < (int) nb_ent; i++){
 
     int curr_idx  = order[idx++];
     int curr_proc = connect_triplet[3*curr_idx  ];
@@ -84,7 +84,7 @@ compute_unique_idx
 
   if(1 == 1){
     printf("order_unique:: \n");
-    for(int i = 0; i < nb_ent; i++){
+    for(int i = 0; i < (int) nb_ent; i++){
       printf(" -------------------------- \n");
       // int pos_unique = order_unique_j1[i];
       // int curr_idx   = order_j1[pos_unique];
@@ -120,7 +120,7 @@ compute_unique_idx2
   int last_part  = -1;
   int last_elmt  = -1;
 
-  for(int i = 0; i < nb_ent; i++){
+  for(int i = 0; i < (int) nb_ent; i++){
 
     int old_order = order[i];
     int curr_proc = connect_triplet[3*old_order  ];
@@ -145,7 +145,7 @@ compute_unique_idx2
 
   if(1 == 1){
     printf("order_unique:: \n");
-    for(int i = 0; i < nb_ent; i++){
+    for(int i = 0; i < (int) nb_ent; i++){
       printf(" -------------------------- \n");
       // int pos_unique = order_unique_j1[i];
       // int curr_idx   = order_j1[pos_unique];

@@ -1320,8 +1320,8 @@ _distribute_octants
   _octants_purge (L);
   _octants_init (L, _dim, recv_shift[n_ranks]/(_dim + 1));
 
-  int idx = 0;
-  for (int i = 0; i < recv_shift[n_ranks]/4; i++) {
+  size_t idx = 0;
+  for (size_t i = 0; i < recv_shift[n_ranks]/4; i++) {
     PDM_morton_code_t _code;
     _code.L = recv_codes[idx++];
     for (int j = 0; j < L->dim; j++) {
@@ -1921,8 +1921,8 @@ _block_partition
 
     if (T !=NULL) {
       for (int i = 0; i < T->n_nodes; i++) {
-        max_level = PDM_MAX (T->codes[i].L, max_level);
-        min_level = PDM_MIN (T->codes[i].L, min_level);
+        max_level = PDM_MAX ((int) T->codes[i].L, max_level);
+        min_level = PDM_MIN ((int) T->codes[i].L, min_level);
       }
     }
   }
@@ -1953,7 +1953,7 @@ _block_partition
 
     for (int i = 0; i < T->n_nodes; i++) {
 
-      if (T->codes[i].L <= min_level) {
+      if ( (int) T->codes[i].L <= min_level) {
         _octants_push_back (C,
                             T->codes[i],
                             T->n_points[i],
@@ -2256,7 +2256,7 @@ _compute_connected_parts
  _neighbours_tmp_t *neighbours
  )
 {
-  const int n_direction = 6;
+  const int n_direction = (int) PDM_N_DIRECTION;
 
   int s_connected = 3;
   octree->connected_idx = malloc (sizeof(int) * s_connected);
@@ -2342,7 +2342,7 @@ _compute_neighbours
   double   e_t_cpu_u;
   double   e_t_cpu_s;
 
-  const int n_direction = 6;
+  const int n_direction = (int) PDM_N_DIRECTION;
 
   int n_ranks;
   PDM_MPI_Comm_size (octree->comm, &n_ranks);
@@ -2387,7 +2387,7 @@ _compute_neighbours
         }
 
         for (int neighbour_rank = start_intersect_quantile;
-             neighbour_rank < end_intersect_quantile; neighbour_rank++) {
+             neighbour_rank < (int) end_intersect_quantile; neighbour_rank++) {
 
           if (neighbour_rank == rank) {
 
@@ -2397,7 +2397,7 @@ _compute_neighbours
                                        &start_intersect,
                                        &end_intersect);
 
-            for (int k = start_intersect; k < end_intersect; k++) {
+            for (int k = start_intersect; k < (int) end_intersect; k++) {
               int idx = k + i + 1;
               PDM_morton_code_t *neighbour_neighbour_code =
                 _neighbour (octree->octants->codes[idx], inv_j);
@@ -2484,7 +2484,7 @@ _compute_neighbours
         }
 
         for (int neighbour_rank = start_intersect_quantile;
-             neighbour_rank < end_intersect_quantile; neighbour_rank++) {
+             neighbour_rank < (int) end_intersect_quantile; neighbour_rank++) {
 
           if (neighbour_rank != rank) {
             if (neighbours_tmp[i].n_neighbour[j] >= neighbours_tmp[i].s_neighbour[j]) {
@@ -2797,7 +2797,7 @@ _compute_neighbours
 
 
     for (int i = 0; i < n_ranks; i++ ) {
-      for (PDM_para_octree_direction_t j = PDM_BOTTOM; j < n_direction; j++) {
+      for (PDM_para_octree_direction_t j = PDM_BOTTOM; j < PDM_N_DIRECTION; j++) {
         PDM_para_octree_direction_t inv_j = _inv_direction(j);
 
         int idx_recv = n_direction * i + inv_j;
@@ -2820,7 +2820,7 @@ _compute_neighbours
             int n_intersect_neighbours = 0;
 
             if (end_intersect > start_intersect) {
-              for (int k1 = start_intersect; k1 < end_intersect; k1++) {
+              for (int k1 = start_intersect; k1 < (int) end_intersect; k1++) {
                 int k2 = idx_candidate + k1;
 
                 PDM_morton_code_t *neighbour_neighbour_code =
@@ -3019,7 +3019,7 @@ _finalize_neighbours
   double   e_t_cpu_u;
   double   e_t_cpu_s;
 
-  const int n_direction = 6;
+  const int n_direction = (int) PDM_N_DIRECTION;
 
   int n_ranks;
   PDM_MPI_Comm_size (octree->comm, &n_ranks);
@@ -3077,7 +3077,7 @@ _finalize_neighbours
 
     /* Premiere boucle pour compter */
     for (int i = 0; i < octree->octants->n_nodes; i++) {
-      for (PDM_para_octree_direction_t dir = PDM_BOTTOM; dir < n_direction; dir++) {
+      for (PDM_para_octree_direction_t dir = PDM_BOTTOM; dir < PDM_N_DIRECTION; dir++) {
 
         PDM_morton_code_t *neighbour_code = _neighbour (octree->octants->codes[i], dir);
         if (neighbour_code == NULL) {
@@ -3093,7 +3093,7 @@ _finalize_neighbours
                                        &start,
                                        &end);
 
-        for (int neighbour_rank = start; neighbour_rank < end; neighbour_rank++) {
+        for (int neighbour_rank = start; neighbour_rank < (int) end; neighbour_rank++) {
 
           if (neighbour_rank == rank) {
             continue;
@@ -3350,7 +3350,7 @@ _finalize_neighbours
 
 
     for (int i = 0; i < n_ranks; i++ ) {
-      for (PDM_para_octree_direction_t j = PDM_BOTTOM; j < n_direction; j++) {
+      for (PDM_para_octree_direction_t j = PDM_BOTTOM; j < PDM_N_DIRECTION; j++) {
         PDM_para_octree_direction_t inv_j = _inv_direction(j);
 
         int idx_recv = n_direction * i + inv_j;
@@ -3374,7 +3374,7 @@ _finalize_neighbours
             int n_intersect_neighbours = 0;
 
             if (end_intersect > start_intersect) {
-              for (int k1 = start_intersect; k1 < end_intersect; k1++) {
+              for (int k1 = start_intersect; k1 < (int )end_intersect; k1++) {
                 int k2 = idx_candidate + k1;
 
                 PDM_morton_code_t *neighbour_neighbour_code =
@@ -4027,7 +4027,7 @@ _closest_points_local
           int    closest_id = -1;
           double min_dist = *max_src_dist;
           double dist;
-          for (int i = l; i < r; i++) {
+          for (int i = l; i < (int) r; i++) {
 
             if (CHECK_INTERSECT) {
               /* make sure leaf intersects search box so it's worth computing min distance */
@@ -4967,7 +4967,7 @@ PDM_para_octree_build
    *
    *************************************************************************/
   const int n_child = 8;
-  //const int n_direction = 6;
+  //const int n_direction = (int) PDM_N_DIRECTION;
 
   int  size = octree->depth_max * 8;
 
@@ -5054,7 +5054,7 @@ PDM_para_octree_build
           start = n_coarse - end;
           end = n_coarse - tmp;
 
-          for (int j = start; j < end; j++) {
+          for (int j = start; j < (int) end; j++) {
             PDM_morton_code_t *ngb_ngb_code = _neighbour (heap->codes[j], inv_dir);
             assert (ngb_ngb_code != NULL);
 
@@ -5287,9 +5287,9 @@ PDM_para_octree_build
           int i = octree->octants->n_nodes - 1;
           int h = heap->top;
 
-          if (i >= s_ngb_octree) {
+          if (i >= (int) s_ngb_octree) {
             s_ngb_octree = PDM_MAX (2*s_ngb_octree,
-                                    octree->octants->n_nodes_max);
+                                    (size_t) octree->octants->n_nodes_max);
             ngb_octree = realloc (ngb_octree, sizeof(_neighbours_tmp_t) * s_ngb_octree);
           }
 
@@ -6801,7 +6801,7 @@ _local_search2
 
     /*   2) Perform intersection test */
     _min_heap_reset (leaf_heap);
-    for (int i = l; i < r; i++) {
+    for (int i = l; i < (int) r; i++) {
       int intersect = 1;
       PDM_morton_code_t *code = octants->codes + i;
 
@@ -7183,7 +7183,7 @@ PDM_para_octree_closest_point2
                                    &unused,
                                    &r);
 
-    for (int i_rank = l; i_rank < r; i_rank++) {
+    for (int i_rank = l; i_rank < (int) r; i_rank++) {
       if (i_rank == myRank && !send_to_self) {
         continue;
       }

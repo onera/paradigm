@@ -486,12 +486,12 @@ int *part
   SCOTCH_Num *_part, *__part;
 
   if (sizeof(int) == sizeof(SCOTCH_Num)) {
-    _verttab = dualGraphIdx;
-    _vendtab = dualGraphIdx + 1;
-    _edgetab = dualGraph;
-    _velotab = cell_weight;
-    _edlotab = edgeWeight;
-    _part = part;
+    _verttab = (SCOTCH_Num *) dualGraphIdx;
+    _vendtab = (SCOTCH_Num *) dualGraphIdx + 1;
+    _edgetab = (SCOTCH_Num *) dualGraph;
+    _velotab = (SCOTCH_Num *) cell_weight;
+    _edlotab = (SCOTCH_Num *) edgeWeight;
+    _part = (SCOTCH_Num *) part;
 
     __verttab = NULL;
     __vendtab = NULL;

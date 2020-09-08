@@ -234,7 +234,8 @@ _load_intern_fmt (void)
   /* Ensight */
 
   PDM_writer_fmt_t *fmt = malloc (sizeof(PDM_writer_fmt_t));
-  fmt->name = "Ensight";
+  fmt->name = malloc (sizeof(int) * 8);
+  strcpy (fmt->name, "Ensight");
   fmt->create_fct       = PDM_writer_ensight_create;
   fmt->free_fct         = PDM_writer_ensight_free;
   fmt->beg_step_fct     = PDM_writer_ensight_step_beg;
@@ -2085,20 +2086,20 @@ const PDM_real_t *val
     val_geom[id_part] = (double *) malloc(sizeof(double) * var->dim * n_cell);
     if (num_cell_parent_to_local != NULL) {
       for (int i = 0; i < n_cell; i++) {
-        for (int j = 0; j < var->dim; j++)
+        for (int j = 0; j < (int) var->dim; j++)
           val_geom[id_part][var->dim * num_cell_parent_to_local[i]+j] = val[i*var->dim + j];
       }
     }
     else {
       for (int i = 0; i < n_cell; i++) {
-        for (int j = 0; j < var->dim; j++)
+        for (int j = 0; j < (int) var->dim; j++)
           val_geom[id_part][var->dim * i+j] = val[i*var->dim + j];
       }
     }
   }
   else {
     val_geom[id_part] = (double *) malloc(sizeof(double) * var->dim * n_som);
-    for (int i = 0; i < n_som * var->dim; i++) {
+    for (int i = 0; i < n_som * (int) var->dim; i++) {
       val_geom[id_part][i] = val[i];
     }
   }
