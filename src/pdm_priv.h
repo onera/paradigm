@@ -61,6 +61,8 @@ extern "C" {
 #define PDM_GCC_SUPPRESS_WARNING_WITH_PUSH(w)
 #endif // DOCTEST_GCC
 
+PDM_GCC_SUPPRESS_WARNING("-Wcast-qual")
+
 
 /*============================================================================
  * Type
