@@ -709,11 +709,6 @@ _dual_graph_firstrank
  * \param [in,out]  ppart    Current PPART structure
  *
  */
-#ifdef __INTEL_COMPILER
-#pragma warning(push)
-#pragma warning(disable:869)
-#endif
-
 static void
 _renum_cells_hilbert
 (
@@ -763,9 +758,6 @@ _renum_cells_hilbert
 
   }
 }
-#ifdef __INTEL_COMPILER
-#pragma warning(pop)
-#endif
 
 /**
  *
@@ -774,11 +766,6 @@ _renum_cells_hilbert
  * \param [in,out]  ppart    Current PPART structure
  *
  */
-#ifdef __INTEL_COMPILER
-#pragma warning(push)
-#pragma warning(disable:869)
-#endif
-
 static void
 _renum_cells_cuthill
 (
@@ -835,9 +822,6 @@ _renum_cells_cuthill
     free(dualGraph);
   }
 }
-#ifdef __INTEL_COMPILER
-#pragma warning(pop)
-#endif
 
 /**
  *
@@ -846,12 +830,6 @@ _renum_cells_cuthill
  * \param [in,out]  ppart    Current PPART structure
  *
  */
-
-#ifdef __INTEL_COMPILER
-#pragma warning(push)
-#pragma warning(disable:869)
-#endif
-
 static void
 _renum_cells_random
 (
@@ -883,9 +861,6 @@ _renum_cells_random
     free (order);
   }
 }
-#ifdef __INTEL_COMPILER
-#pragma warning(pop)
-#endif
 
 /**
  *
@@ -895,11 +870,6 @@ _renum_cells_random
  *
  */
 
-#ifdef __INTEL_COMPILER
-#pragma warning(push)
-#pragma warning(disable:869)
-#endif
-
 static void
 _renum_faces_random
 (
@@ -908,10 +878,6 @@ _renum_faces_random
  void     *specific_data
 )
 {
-#ifdef __INTEL_COMPILER
-#pragma warning(push)
-#pragma warning(disable:869)
-#endif
   PDM_UNUSED(specific_data);
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
@@ -935,9 +901,6 @@ _renum_faces_random
     free (order);
   }
 }
-#ifdef __INTEL_COMPILER
-#pragma warning(pop)
-#endif
 
 /**
  *
@@ -946,11 +909,6 @@ _renum_faces_random
  * \param [in,out]  ppart    Current PPART structure
  *
  */
-#ifdef __INTEL_COMPILER
-#pragma warning(push)
-#pragma warning(disable:869)
-#endif
-
 static void
 _renum_faces_lexicographic
 (
@@ -1003,10 +961,6 @@ _renum_faces_lexicographic
     free (faceCellTmp);
   }
 }
-#ifdef __INTEL_COMPILER
-#pragma warning(pop)
-#endif
-
 
 /*=============================================================================
  * Public function definitions
