@@ -2046,14 +2046,14 @@ _search_part_bound_face
     int *work_array  = (int *) malloc(mesh_part->n_face_part_bound * sizeof(int));
     PDM_g_num_t *work_array2;
     if (sizeof(PDM_g_num_t) == sizeof(int)) {
-#ifdef __INTEL_COMPILER
-#pragma warning(push)
-#pragma warning(disable:2312)
-#endif
+// #ifdef __INTEL_COMPILER
+// #pragma warning(push)
+// #pragma warning(disable:2312)
+// #endif
       work_array2 = (PDM_g_num_t *) work_array;
-#ifdef __INTEL_COMPILER
-#pragma warning(pop)
-#endif
+// #ifdef __INTEL_COMPILER
+// #pragma warning(pop)
+// #endif
     }
     else {
       work_array2  = (PDM_g_num_t *) malloc(mesh_part->n_face_part_bound * sizeof(PDM_g_num_t));
