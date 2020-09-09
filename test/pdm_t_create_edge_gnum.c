@@ -336,14 +336,7 @@ int main(int argc, char *argv[])
                          (t_elaps_debut.tv_usec + 1000000 *
                           t_elaps_debut.tv_sec);
   long tranche_elapsed_max = tranche_elapsed;
-#if defined(__INTEL_COMPILER)
-#pragma warning(push)
-#pragma warning(disable:2259)
-#endif
   double t_elapsed = (double) tranche_elapsed_max/1000000.;
-#if defined(__INTEL_COMPILER)
-#pragma warning(pop)
-#endif
 
   PDM_printf("[%i]   - TEMPS DANS PART_CUBE  : %12.5e\n", i_rank,  t_elapsed);
 
