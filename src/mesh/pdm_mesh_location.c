@@ -398,8 +398,8 @@ _redistribute_elementary_location
                                                    _n_vtx);
                 assert (_ivtx >= 0);
 
-                if (s_local_face_vtx <= idx_vtx) {
-                  s_local_face_vtx = PDM_MAX (2*s_local_face_vtx, idx_vtx);
+                if ((int) s_local_face_vtx <= idx_vtx) {
+                  s_local_face_vtx = PDM_MAX ((int) (2*s_local_face_vtx), idx_vtx);
                   local_face_vtx = realloc (local_face_vtx,
                                             sizeof(PDM_l_num_t) * s_local_face_vtx);
                 }
@@ -416,7 +416,7 @@ _redistribute_elementary_location
       }
     } // End of loop on nodal blocks
 
-    if (idx_vtx < s_local_face_vtx) {
+    if (idx_vtx < (int) s_local_face_vtx) {
       local_face_vtx = realloc (local_face_vtx, sizeof(PDM_l_num_t) * idx_vtx);
     }
   }

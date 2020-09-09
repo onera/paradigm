@@ -21,6 +21,7 @@
 #include "pdm_writer_ensight_case.h"
 #include "pdm_io.h"
 #include "pdm.h"
+#include "pdm_priv.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
 #include "pdm_handles.h"

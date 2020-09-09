@@ -18,6 +18,7 @@
 #include "pdm_handles.h"
 #include "pdm_mpi.h"
 #include "pdm_order.h"
+#include "pdm_priv.h"
 
 #ifdef __cplusplus
 extern "C" {

@@ -26,6 +26,7 @@
 #include "pdm_dbbtree_priv.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
+#include "pdm_priv.h"
 
 #include "pdm_part_to_block.h"
 #include "pdm_block_to_part.h"

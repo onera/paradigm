@@ -19,6 +19,7 @@
 #include "pdm_mpi.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
+#include "pdm_priv.h"
 
 #include <mpi.h>
 
