@@ -627,7 +627,6 @@ double bary[3]
   }
 }
 
-
 /**
  * Warning : unstable function (Rather use PDM_polygon_point_in )
  *
@@ -644,7 +643,7 @@ double bary[3]
  *
  */
 
-PDM_polygon_status_t PDM_polygon_point_in2d
+PDM_polygon_status_t PDM_polygon_point_in_2d
 (
  const double  xy[2],
  const int     n_vtx,
@@ -772,7 +771,7 @@ PDM_polygon_status_t PDM_polygon_point_in2d
  *
  */
 
-PDM_polygon_status_t PDM_polygon_point_in3d
+PDM_polygon_status_t PDM_polygon_point_in_3d
 (
  const double  xyz[3],
  const int     n_vtx,
@@ -795,8 +794,48 @@ PDM_polygon_status_t PDM_polygon_point_in3d
 
 
   /*
-   *  Isometric projection onto median plane
+   *  Projection onto median plane
    */
+  double *xy = malloc (sizeof(double) * (n_vtx + 1) * 2);
+  double *p = xy + 2*n_vtx;
+  PDM_polygon_3d_to_2d (n_vtx,
+                        vtx_xyz,
+                        xy,
+                        1,
+                        xyz,
+                        p,
+                        normal);
+
+  /*
+   *  Perform 2D point-in-polygon test
+   */
+
+  //double char_length = 1e-6;
+
+  PDM_polygon_status_t stat = PDM_polygon_point_in_2d (p,
+                                                       n_vtx,
+                                                       xy,
+                                                       //char_length,
+                                                       NULL);
+
+  free (xy);
+  return stat;
+}
+
+int PDM_polygon_3d_to_2d
+(
+ const int    n_vtx,
+ const double vtx_xyz[],
+ double       vtx_uv[],
+ const int    n_pts,
+ const double pts_xyz[],
+ double       pts_uv[],
+ double       normal[3]
+ )
+{
+  int idim, i;
+  double *_normal = NULL;
+
   /* Compute polygon barycenter */
   double origin_xyz[3];
   PDM_polygon_compute_barycenter (n_vtx, vtx_xyz, origin_xyz);
@@ -804,75 +843,81 @@ PDM_polygon_status_t PDM_polygon_point_in3d
   /* Build a suitable orthonormal frame */
   double tangent_u[3] = {0., 0., 0.}, tangent_v[3];
   if (normal == NULL) {
-    normal = malloc (sizeof(double) * 3);
-    PDM_plane_normal (n_vtx, vtx_xyz, normal);
+    _normal = malloc (sizeof(double) * 3);
+    PDM_plane_normal (n_vtx,
+                      vtx_xyz,
+                      _normal);
+  } else {
+    _normal = normal;
   }
 
   /*   First tangent direction */
   int imin = -1;
   double nmin = HUGE_VAL;
-  for (int idim = 0; idim < 3; idim++) {
-    double nabs = fabs (normal[idim]);
-    if (nabs < nmin) {
+  for (idim = 0; idim < 3; idim++) {
+    if (_normal[idim] < 0. && nmin > -_normal[idim]) {
       imin = idim;
-      nmin = nabs;
+      nmin = -_normal[idim];
+    } else if (_normal[idim] >= 0. && nmin > _normal[idim]) {
+      imin = idim;
+      nmin = _normal[idim];
     }
   }
 
   tangent_u[imin] = 1.;
   double mag = 0;
-  for (int idim = 0; idim < 3; idim++) {
-    tangent_u[idim] -= normal[imin] * normal[idim];
+  for (idim = 0; idim < 3; idim++) {
+    tangent_u[idim] -= _normal[imin] * _normal[idim];
     mag += tangent_u[idim] * tangent_u[idim];
   }
 
   if (mag < 1e-15) {
-    return PDM_POLYGON_DEGENERATED;
+    return 0;
   }
 
   mag = 1. / sqrt(mag);
-  for (int idim = 0; idim < 3; idim++) {
+  for (idim = 0; idim < 3; idim++) {
     tangent_u[idim] *= mag;
   }
 
   /*   Second tangent direction */
-  PDM_CROSS_PRODUCT (tangent_v, normal, tangent_u);
-
+  PDM_CROSS_PRODUCT (tangent_v, _normal, tangent_u);
 
 
   /* Compute coordinates in this frame */
-  double *xy = malloc (sizeof(double) * (n_vtx + 1) * 2);
-  for (int i = 0; i < n_vtx; i++) {
-    xy[2*i]   = 0.;
-    xy[2*i+1] = 0.;
+  for (i = 0; i < n_vtx; i++) {
+    double *uv = vtx_uv + 2*i;
+    uv[0] = 0.;
+    uv[1] = 0.;
 
-    for (int idim = 0; idim < 3; idim++) {
-      double d = vtx_xyz[3*i+idim] - origin_xyz[idim];
+    for (idim = 0; idim < 3; idim++) {
+      double d = vtx_xyz[3*i + idim] - origin_xyz[idim];
 
-      xy[2*i]   += d * tangent_u[idim];
-      xy[2*i+1] += d * tangent_v[idim];
+      uv[0] += d * tangent_u[idim];
+      uv[1] += d * tangent_v[idim];
     }
   }
 
-  double *p = xy + 2*n_vtx;
-  p[0] = 0.;
-  p[1] = 0.;
-  for (int idim = 0; idim < 3; idim++) {
-    double d = xyz[idim] - origin_xyz[idim];
+  if (pts_xyz != NULL) {
+    for (i = 0; i < n_pts; i++) {
+      double *uv = pts_uv + 2*i;
+      uv[0] = 0.;
+      uv[1] = 0.;
 
-    p[0] += d * tangent_u[idim];
-    p[1] += d * tangent_v[idim];
+      for (idim = 0; idim < 3; idim++) {
+        double d = pts_xyz[3*i + idim] - origin_xyz[idim];
+
+        uv[0] += d * tangent_u[idim];
+        uv[1] += d * tangent_v[idim];
+      }
+    }
   }
 
+  if (normal == NULL) {
+    free (_normal);
+  }
 
-  /*
-   *  Perform 2D point-in-polygon test
-   */
-  return PDM_polygon_point_in2d (p,
-                                 n_vtx,
-                                 xy,
-                                 //                                 char_length,
-                                 NULL);
+  return 1;
 }
 
 #ifdef __cplusplus

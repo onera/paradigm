@@ -381,7 +381,8 @@ PDM_gnum_location_get
  *
  * \brief Free
  *
- * \param [in]   id           Identifier
+ * \param [in]   id            Identifier
+ * \param [in]   keep_results  Keep location results
  *
  */
 
@@ -389,7 +390,7 @@ void
 PDM_gnum_location_free
 (
  const int id,
- const int partial
+ const int keep_results
 )
 {
   _pdm_gnum_location_t *_gloc = _get_from_id (id);
@@ -400,7 +401,7 @@ PDM_gnum_location_free
   free (_gloc->n_elts_out);
   free (_gloc->g_nums_out);
 
-  if (partial != 1) {
+  if (keep_results != 1) {//if (partial != 1) {
     for (int i = 0; i < _gloc->n_part_out; i++) {
       free (_gloc->location_idx[i]);
     }

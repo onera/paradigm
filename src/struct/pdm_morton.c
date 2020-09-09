@@ -2109,6 +2109,181 @@ PDM_morton_ancestor_is (PDM_morton_code_t  a,
   return status;
 }
 
+
+
+static int
+_intersect_node_box
+(
+ const int                dim,
+ const PDM_morton_code_t  node,
+ const PDM_morton_code_t  box_min,
+ const PDM_morton_code_t  box_max,
+ int                     *inside
+ )
+{
+  const int DEBUG = 0;
+  *inside = 1;
+  
+  assert (box_min.L >= node.L);
+      
+  const PDM_morton_int_t level_diff = box_min.L - node.L;
+
+  const PDM_morton_int_t side = 1 << level_diff;
+
+  for (int i = 0; i < dim; i++) {
+    PDM_morton_int_t xmin = side * node.X[i];
+    PDM_morton_int_t xmax = side * (node.X[i]+1);
+
+    if (xmin > box_max.X[i]+1 || xmax < box_min.X[i]) {
+      if (DEBUG) {
+	printf("\t not intersecting\n");
+      }
+      return 0;
+    } else if (xmin > box_min.X[i] || xmax > box_max.X[i]+1) {
+      *inside = 0;
+    };
+  }
+
+  if (DEBUG) {
+    printf("\t intersecting\n");
+  }
+
+  return 1;
+}
+
+
+const size_t N_BRUTE_FORCE = 10;
+void
+PDM_morton_intersect_box
+(
+ const int                dim,
+ const PDM_morton_code_t  node,
+ const PDM_morton_code_t  box_min,
+ const PDM_morton_code_t  box_max,
+ const PDM_morton_code_t  nodes[],
+ const size_t             start,
+ const size_t             end,
+ size_t                  *n_intersect,
+ int                     *intersect
+ )
+{
+  int inside;
+
+#if 0
+  printf("PDM_morton_intersect_box: node.L = %u (side = %f) \tstart = %zu, end = %zu\n",
+	 node.L, 1./pow(2.,node.L), start, end);
+  PDM_morton_dump (dim, node);
+#endif
+  
+  /* If current range contains few octants, go brute force */
+  if (end - start < N_BRUTE_FORCE) {
+    
+    for (size_t i = start; i < end; i++) {
+      if (_intersect_node_box (dim,
+			       nodes[i],
+			       box_min,
+			       box_max,
+			       &inside)) {
+	intersect[(*n_intersect)++] = i;
+      }
+    }
+    
+  } else {
+
+    if (_intersect_node_box (dim,
+			     node,
+			     box_min,
+			     box_max,
+			     &inside)) {
+
+      if (inside) {
+	/* Every descendant must intersect the box */
+	for (size_t i = start; i < end; i++) {
+	  intersect[(*n_intersect)++] = i;
+	}
+      
+      } else {
+	/* Some descendants may intersect the box */
+	const size_t n_children = 1 << dim;
+	PDM_morton_code_t *children = malloc (sizeof(PDM_morton_code_t) * n_children);
+	PDM_morton_get_children (dim,
+				 node,
+				 children);
+
+	size_t new_start, new_end;
+	size_t prev_end = start;
+	for (size_t ichild = 0; ichild < n_children; ichild++) {
+
+	  /* get start and end of range in list of nodes covered by current child */
+	  /* new_start <-- first descendant of child in list */
+	  //printf("previous child's end of range = %zu\n", prev_end);
+	  new_start = prev_end; // end of previous child's range
+#if 1
+	  // linear search
+	  while (new_start < end) {
+	    if (PDM_morton_ancestor_is (children[ichild], nodes[new_start])) {
+	      break;
+	    } else if (_a_gt_b(nodes[new_start], children[ichild])) {
+	      /* all the following nodes are clearly not descendants of current child */
+	      new_start = end+1;
+	      break;
+	    }
+	    new_start++;
+	  }
+
+	  if (new_start > end) {
+	    /* no need to go further for that child 
+	       because it has no descendants in the node list */
+	    continue;
+	  }
+#else
+	  // binary search
+	  //?
+#endif
+	  
+	  /* new_end <-- next of last descendant of child in list */
+#if 0
+	  // linear search
+	  for (new_end = end; new_end > new_start; new_end--) {
+	    if (PDM_morton_ancestor_is (children[ichild], nodes[new_end-1])) {
+	      break;
+	    }
+	  }
+#else
+	  // binary search
+	  size_t l = new_start;
+	  new_end = end;
+	  while (new_end > l + 1) {
+	    size_t m = l + (new_end - l) / 2;
+	    if (PDM_morton_ancestor_is (children[ichild], nodes[m])) {
+	      l = m;
+	    } else {
+	      new_end = m;
+	    }
+	  }
+#endif
+
+	  prev_end = new_end;
+	  
+	  /* Carry on recursion */
+	  //printf("\n--> child #%d\n", ichild);
+	  PDM_morton_intersect_box (dim,
+				    children[ichild],
+				    box_min,
+				    box_max,
+				    nodes,
+				    new_start,
+				    new_end,
+				    n_intersect,
+				    intersect);
+	}
+
+	free (children);
+      }
+    }
+  }
+}
+
 /*----------------------------------------------------------------------------*/
 
 #ifdef __cplusplus

@@ -183,6 +183,26 @@ PDM_polygon_compute_barycenter
  const double *pts,
  double bary[3]
 );
+void
+PDM_polygon_orthonormal_basis
+(
+ const int     n_vtx,
+ const double *vtx_xyz,
+ double        tangent_u[3],
+ double        tangent_v[3],
+ double        normal[3]
+ );
+
+void PDM_polygon_compute_uv_coordinates
+(
+ const int     n_pts,
+ const double *xyz,
+ const double *orig_xyz,
+ const double *tangent_u,
+ const double *tangent_v,
+ double       *uv
+ );
+
 
 /**
  * \brief Test if a point is inside a 2d polygon using the Winding Number method
@@ -198,7 +218,8 @@ PDM_polygon_compute_barycenter
  *
  */
 
-PDM_polygon_status_t PDM_polygon_point_in2d
+
+PDM_polygon_status_t PDM_polygon_point_in_2d
 (
  const double  xy[2],
  const int     n_vtx,
@@ -221,7 +242,7 @@ PDM_polygon_status_t PDM_polygon_point_in2d
  *
  */
 
-PDM_polygon_status_t PDM_polygon_point_in3d
+PDM_polygon_status_t PDM_polygon_point_in_3d
 (
  const double  xyz[3],
  const int     n_vtx,
@@ -229,6 +250,17 @@ PDM_polygon_status_t PDM_polygon_point_in3d
  // const double  char_length,
  double        bounds[6],
  double        normal[3]
+ );
+
+int PDM_polygon_3d_to_2d
+(
+ const int    n_vtx,
+ const double vtx_xyz[],
+ double       vtx_uv[],
+ const int    n_pts,
+ const double pts_xyz[],
+ double       pts_uv[],
+ double       normal[3]
  );
 
 #ifdef __cplusplus

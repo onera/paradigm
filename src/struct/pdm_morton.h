@@ -472,6 +472,24 @@ void
 PDM_morton_dump(int                 dim,
                 PDM_morton_code_t   code);
 
+
+
+
+
+
+void
+PDM_morton_intersect_box
+(
+ const int                dim,
+ const PDM_morton_code_t  node,
+ const PDM_morton_code_t  box_min,
+ const PDM_morton_code_t  box_max,
+ const PDM_morton_code_t  nodes[],
+ const size_t             start,
+ const size_t             end,
+ size_t                  *n_intersect,
+ int                     *intersect
+ );
 /*----------------------------------------------------------------------------*/
 
 #ifdef __cplusplus
