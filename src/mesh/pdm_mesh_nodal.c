@@ -1954,7 +1954,7 @@ PDM_Mesh_nodal_block_add
     PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
   }
 
-  int id_block;
+  int id_block = -1;
 
   switch (t_elt) {
 
@@ -2109,6 +2109,7 @@ PDM_Mesh_nodal_block_add
 
   default :
     PDM_error(__FILE__, __LINE__, 0, "Unknown element type\n");
+    break;
 
   }
 

@@ -431,7 +431,7 @@ PDM_mean_value_coordinates_polyhedron
         sint[i] = sin(theta[i]);
       }
 
-      if (M_PI - h < eps) {
+      if (PDM_PI - h < eps) {
         /*
          *  point lies on current tirangle, use 2D barycentric coordinates
          */
@@ -494,7 +494,7 @@ PDM_mean_value_coordinates_polyhedron
         free (tri_vtx);
 
         if (DEBUG) {
-          printf("point located on face %d (M_PI - h = %g)\n", iface, M_PI - h);
+          printf("point located on face %d (PDM_PI - h = %g)\n", iface, PDM_PI - h);
         }
         return;
       }
