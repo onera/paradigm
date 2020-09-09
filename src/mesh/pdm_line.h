@@ -53,9 +53,13 @@ typedef enum {
 
 
 /**
- * \brief Performs intersection of two finite lines
+ * \brief Performs intersection of two finite 3D lines
  *
- *  Performs the intersection of two lines. This function is more robust than
+ *  An intersection is found if the projection of the two lines onto the plane
+ *  perpendicular to the cross product of the two lines intersect.
+ *  The parameters (u,v) are the parametric coordinates of the lines at the
+ *  position of closest approach
+ *  This function is more robust than
  *  PDM_line_intersection_mean_square.
  *
  * \param [in]  a1 Coordinates of the first line vertex of 'a'
@@ -130,6 +134,51 @@ PDM_line_distance
  const double p2[3],
  double *t,
  double closestPoint[3]
+ );
+
+
+PDM_line_intersect_t
+PDM_line_intersection_2d
+(
+ const double a1[2],
+ const double a2[2],
+ const double b1[2],
+ const double b2[2],
+ double *u,
+ double *v
+ );
+
+double
+PDM_line_distance_2d
+(
+ const double uv[2],
+ const double p1[2],
+ const double p2[2],
+ double *t,
+ double closest_point[2]
+ );
+
+
+/**
+ * \brief Evaluates the position on an line segment
+ *
+ * \param [in]  x               Point coordinates to evaluate position
+ * \param [in]  vtx_coord       Line segment vertices coordinates
+ * \param [out] closest_point   Closest Point on Line segment or NULL
+ * \param [out] min_dist2       Square of the distance
+ * \param [out] weights         Vertices weights or NULL
+ *
+ * \return      -1 if the line segment is degenerate, 0 else
+ *
+ */
+
+int PDM_line_evaluate_position
+(
+ const double  x[3],
+ const double *vtx_coord,
+ double       *closest_point,
+ double       *dist2,
+ double        weights[2]
  );
 
 

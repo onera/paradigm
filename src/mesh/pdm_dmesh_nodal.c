@@ -47,13 +47,13 @@ extern "C" {
  * Maximum number of sections depending of section type
  *----------------------------------------------------------------------------*/
 
-typedef enum {
+/*typedef enum {
 
   PDM_BLOCK_ID_BLOCK_STD    = 0,
   PDM_BLOCK_ID_BLOCK_POLY2D = 1000000,
   PDM_BLOCK_ID_BLOCK_POLY3D = 2000000
 
-} PDM_section_id_section_t;
+  } PDM_section_id_section_t;*/ // --> moved to pdm_mesh_nodal.h
 
 /*============================================================================
  * Global variable
@@ -3030,4 +3030,3 @@ PDM_DMesh_nodal_distrib_face_get
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-

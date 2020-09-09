@@ -1,4 +1,3 @@
-
 /*----------------------------------------------------------------------------
  * Standard C library headers
  *----------------------------------------------------------------------------*/
@@ -64,7 +63,6 @@ _det_2x2
  double d
 )
 {
-
   return (a * d - b * c);
 }
 
@@ -106,10 +104,15 @@ _solve_2x2
  * Public function prototypes
  *============================================================================*/
 
+
 /**
- * \brief Performs intersection of two finite lines
+ * \brief Performs intersection of two finite 3D lines
  *
- *  Performs the intersection of two lines. This function is more robust than
+ *  An intersection is found if the projection of the two lines onto the plane
+ *  perpendicular to the cross product of the two lines intersect.
+ *  The parameters (u,v) are the parametric coordinates of the lines at the
+ *  position of closest approach
+ *  This function is more robust than
  *  PDM_line_intersection_mean_square.
  *
  * \param [in]  a1 Coordinates of the first line vertex of 'a'
@@ -282,6 +285,7 @@ PDM_line_intersection_mean_square
    */
 
   c[0] = PDM_DOT_PRODUCT( a21, b1a1 );
+
   c[1] = - PDM_DOT_PRODUCT( b21, b1a1 );
 
   /*
@@ -299,10 +303,10 @@ PDM_line_intersection_mean_square
    * Check parametric coordinates for intersection.
    */
 
-  if ( (0.0 <= *u) && (*u <= 1.0) && (0.0 <= *v) && (*v <= 1.0) ) {
+   if ( (0.0 <= *u) && (*u <= 1.0) && (0.0 <= *v) && (*v <= 1.0) ) {
     return PDM_LINE_INTERSECT_YES;
   }
-   else {
+  else {
     return PDM_LINE_INTERSECT_NO;
   }
 }
@@ -388,6 +392,205 @@ PDM_line_distance
   return  PDM_DOT_PRODUCT(v,v);
 }
 
+
+
+
+
+
+
+PDM_line_intersect_t
+PDM_line_intersection_2d
+(
+ const double a1[2],
+ const double a2[2],
+ const double b1[2],
+ const double b2[2],
+ double *u,
+ double *v
+ )
+{
+  const double tol_uv = _eps;
+
+  double mat[2][2];
+  double sol[2];
+
+  for (int i = 0; i < 2; i++) {
+    mat[i][0] = a2[i] - a1[i];
+    mat[i][1] = b1[i] - b2[i];
+
+    sol[i] = b1[i] - a1[i];
+  }
+
+  int stat = _solve_2x2 (mat, sol);
+
+  if (stat == PDM_FALSE) {
+    *u = DBL_MAX;
+    *v = DBL_MAX;
+
+    double p = (b1[0] - a1[0]) * (b2[1] - a2[1]) - (b1[1] - a1[1]) * (b2[0] - a2[0]);
+    if (p > _eps) {
+      return PDM_LINE_INTERSECT_NO;
+    } else {
+      return PDM_LINE_INTERSECT_ON_LINE;
+    }
+
+  } else {
+
+    *u = sol[0];
+    *v = sol[1];
+
+    for (int i = 0; i < 2; i++) {
+      if (sol[i] < -tol_uv || sol[i] > 1 + tol_uv) {
+        return PDM_LINE_INTERSECT_NO;
+      }
+    }
+
+    return PDM_LINE_INTERSECT_YES;
+  }
+}
+
+
+
+
+
+double
+PDM_line_distance_2d
+(
+ const double uv[2],
+ const double p1[2],
+ const double p2[2],
+ double *t,
+ double closest_point[2]
+ )
+{
+  const double _tol_dist = 1e-5;
+
+  double vect[2];
+  vect[0] = p2[0] - p1[0];
+  vect[1] = p2[1] - p1[1];
+
+  double numer = (uv[0] - p1[0]) * vect[0] + (uv[1] - p1[1]) * vect[1];
+  double denom = PDM_DOT_PRODUCT_2D (vect, vect);
+
+  double *closest;
+  if (fabs(denom) < numer * _tol_dist) {
+    closest = (double *) p1;
+  }
+  else {
+    *t = numer / denom;
+
+    if (*t < 0.) {
+      closest = (double *) p1;
+    } else if (*t > 1.) {
+      closest = (double *) p2;
+    } else {
+      closest = vect;
+      closest[0] = p1[0] + (*t) * vect[0];
+      closest[1] = p1[1] + (*t) * vect[1];
+    }
+  }
+
+  closest_point[0] = closest[0];
+  closest_point[1] = closest[1];
+
+  vect[0] = uv[0] - closest[0];
+  vect[1] = uv[1] - closest[1];
+
+  return PDM_DOT_PRODUCT_2D (vect, vect);
+}
+
+
+
+
+/**
+ * \brief Evaluates the position on an line segment
+ *
+ * \param [in]  x               Point coordinates to evaluate position
+ * \param [in]  vtx_coord       Line segment vertices coordinates
+ * \param [out] closest_point   Closest Point on Line segment or NULL
+ * \param [out] min_dist2       Square of the distance
+ * \param [out] weights         Vertices weights or NULL
+ *
+ * \return      -1 if the line segment is degenerate, 0 else
+ *
+ */
+
+int PDM_line_evaluate_position
+(
+ const double  x[3],
+ const double *vtx_coord,
+ double       *closest_point,
+ double       *dist2,
+ double        weights[2]
+ )
+{
+  double proj, norm_edge, norm_edge2;
+  double p1x[3], p1p2[3], p1p2n[3];
+
+  double weights_local[2];
+  double *_weights = weights_local;
+  if (weights != NULL) {
+    _weights = weights;
+  }
+
+  double cp_local[3];
+  double *_closest_point = cp_local;
+  if (closest_point != NULL) {
+    _closest_point = closest_point;
+  }
+
+  const double *pt1 = vtx_coord;
+  const double *pt2 = vtx_coord +3;
+
+
+  p1x[0] = -pt1[0] + x[0];
+  p1x[1] = -pt1[1] + x[1];
+  p1x[2] = -pt1[2] + x[2];
+
+
+  p1p2[0] = -pt1[0] + pt2[0];
+  p1p2[1] = -pt1[1] + pt2[1];
+  p1p2[2] = -pt1[2] + pt2[2];
+
+  norm_edge2 = PDM_DOT_PRODUCT (p1p2, p1p2);
+  if (norm_edge2 < 1.e-12) {
+    return -1;
+  }
+  norm_edge = sqrt (norm_edge2);
+
+  p1p2n[0] = p1p2[0] / norm_edge;
+  p1p2n[1] = p1p2[1] / norm_edge;
+  p1p2n[2] = p1p2[2] / norm_edge;
+
+  proj = PDM_DOT_PRODUCT (p1x, p1p2n);
+
+  if (proj <= 0.0){
+    _closest_point[0] = pt1[0];
+    _closest_point[1] = pt1[1];
+    _closest_point[2] = pt1[2];
+    proj = 0;
+  }
+  if (proj >= norm_edge){
+    _closest_point[0] = pt2[0];
+    _closest_point[1] = pt2[1];
+    _closest_point[2] = pt2[2];
+    proj = norm_edge;
+  }
+  else {
+    _closest_point[0] = pt1[0] + proj * p1p2[0] / norm_edge;
+    _closest_point[1] = pt1[1] + proj * p1p2[1] / norm_edge;
+    _closest_point[2] = pt1[2] + proj * p1p2[2] / norm_edge;
+  }
+
+  double t = proj / norm_edge;
+
+  *dist2 = PDM_DOT_PRODUCT (p1x, p1x) - (proj * proj);
+
+  _weights[0] = 1. - t;
+  _weights[1] =      t;
+
+  return 0;
+}
 
 #ifdef __cplusplus
 }

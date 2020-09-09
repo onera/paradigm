@@ -179,6 +179,36 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
  );
 
 
+/**
+ *
+ * Get the location of a point cloud
+ *
+ *   \param [in] bt                    Pointer to box tree structure
+ *   \param [in] n_pts                 Number of points
+ *   \param [in] pts_coord             Point coordinates (size = 3 * n_pts)
+ *   \param [in] pts_g_num             Point global numbers (size = n_pts)
+ *   \param [in] n_boxes               Number of boxes
+ *   \param [in] box_g_num             Global num of boxes (size = n_boxes)
+ *   \param [inout] pts_in_box_idx     Index of points in boxes (size = n_boxes+1, allocated inside function)
+ *   \param [inout] pts_in_box_g_num   Global num of points in boxes (size = pts_in_box_idx[n_boxes], allocated inside function)
+ *   \param [inout] pts_in_box_coord   Coordinates of points in boxes (size = 3*pts_in_box_idx[n_boxes], allocated inside function)
+ *
+ */
+
+void PDM_dbbtree_points_inside_boxes
+(
+ PDM_dbbtree_t      *dbbt,
+ const int           n_pts,
+ PDM_g_num_t         pts_g_num[],
+ double              pts_coord[],
+ const int           n_boxes,
+ const PDM_g_num_t   box_g_num[],
+ int               **pts_in_box_idx,
+ PDM_g_num_t       **pts_in_box_g_num,
+ double            **pts_in_box_coord
+ );
+
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
