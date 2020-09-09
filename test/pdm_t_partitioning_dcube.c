@@ -18,6 +18,7 @@
 #include "pdm_sort.h"
 #include "pdm_distrib.h"
 #include "pdm_error.h"
+#include "pdm_priv.h"
 
 /*============================================================================
  * Type definitions

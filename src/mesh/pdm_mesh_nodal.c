@@ -2936,8 +2936,8 @@ static void _compute_cell_vtx_connectivity
           continue;
         }
 
-        if (n_vtx_cell + _cell_vtx_idx[icell] >= s_cell_vtx) {
-          s_cell_vtx = PDM_MAX (2*s_cell_vtx, n_vtx_cell + _cell_vtx_idx[icell]);
+        if (n_vtx_cell + _cell_vtx_idx[icell] >= (int) s_cell_vtx) {
+          s_cell_vtx = PDM_MAX ((int) (2*s_cell_vtx), n_vtx_cell + _cell_vtx_idx[icell]);
           *cell_vtx = realloc (*cell_vtx, sizeof(PDM_l_num_t) * s_cell_vtx);
           _cell_vtx = *cell_vtx + _cell_vtx_idx[icell];
         }
@@ -4869,6 +4869,8 @@ PDM_Mesh_nodal_cell_centers_compute
       break;
     case PDM_MESH_NODAL_POLY_2D:
     case PDM_MESH_NODAL_POLY_3D:
+      break;
+    default:
       break;
     }//end switch t_elt
 

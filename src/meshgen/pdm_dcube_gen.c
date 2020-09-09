@@ -10,6 +10,7 @@
 #include "pdm_printf.h"
 #include "pdm_error.h"
 #include "pdm_handles.h"
+#include "pdm_priv.h"
 
 
 /*============================================================================

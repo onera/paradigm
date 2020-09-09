@@ -8127,7 +8127,7 @@ PDM_para_octree_points_inside_boxes
 
     if (DEBUG) {
       printf("[%d]\tbox %d (%ld) nodes:", my_rank, ibox, recv_box_g_num[ibox]);
-      for (int j = 0; j < n_intersect_nodes; j++) {
+      for (int j = 0; j < (int) n_intersect_nodes; j++) {
         printf(" %d", intersect_nodes[j]);
       }
       printf("\n");

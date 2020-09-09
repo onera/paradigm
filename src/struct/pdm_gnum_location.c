@@ -45,6 +45,7 @@
 #include "pdm_error.h"
 #include "pdm_handles.h"
 #include "pdm_gnum_location.h"
+#include "pdm_priv.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -394,7 +395,7 @@ PDM_gnum_location_free
 )
 {
   _pdm_gnum_location_t *_gloc = _get_from_id (id);
-  
+
   free (_gloc->n_elts_in);
   free (_gloc->g_nums_in);
 
