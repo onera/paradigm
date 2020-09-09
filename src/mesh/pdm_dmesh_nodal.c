@@ -1549,6 +1549,7 @@ const PDM_Mesh_nodal_elt_t   t_elt
 
   default :
     PDM_error(__FILE__, __LINE__, 0, "Unknown element type\n");
+    break;
 
   }
 

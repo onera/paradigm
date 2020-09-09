@@ -976,7 +976,7 @@ _locate_in_cell_3d
     int    *closest_face  = malloc (sizeof(int)    * n_pts_out);
     double *closest_point = malloc (sizeof(double) * n_pts_out * 3);
 
-    int n_face;
+    int n_face = -1;
     int face_vtx_idx[7];
     int face_vtx[24];
     int _cell_vtx[8] = {1, 2, 3, 4, 5, 6, 7, 8};
@@ -1016,6 +1016,7 @@ _locate_in_cell_3d
 
     default:
       PDM_error (__FILE__, __LINE__, 0, "Wrong standard element type\n");
+      break;
 
     }
 
