@@ -7750,7 +7750,7 @@ void write_octree_points
   if (use_gnum) {
     fprintf(f, "SCALARS gnum int\n LOOKUP_TABLE default\n");
     for (int i = 0; i < octree->n_points; i++) {
-      fprintf(f, "%ld\n", octree->points_gnum[i]);
+      fprintf(f, ""PDM_FMT_G_NUM"\n", octree->points_gnum[i]);
     }
   } else {
     fprintf(f, "SCALARS lnum int\n LOOKUP_TABLE default\n");
@@ -7842,26 +7842,11 @@ void write_boxes
   fprintf(f, "CELL_DATA %d\n", n_boxes);
   fprintf(f, "SCALARS box_gnum int\n LOOKUP_TABLE default\n");
   for (int i = 0; i < n_boxes; i++) {
-    fprintf(f, "%ld\n", boxes_g_num[i]);
+    fprintf(f, ""PDM_FMT_G_NUM"\n", boxes_g_num[i]);
   }
 
   fclose(f);
 }
-//<<<----
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /**
  *
@@ -7886,14 +7871,11 @@ PDM_para_octree_points_inside_boxes
   const int VISU = 0;
   const int VISU_POINTS_GNUM = 1;
 
-
-
-
   int n_recv_boxes = 0;
   PDM_morton_code_t *box_corners = NULL;
   double *recv_box_extents       = NULL;
   const PDM_g_num_t *recv_box_g_num;
-  PDM_g_num_t *_recv_box_g_num    = NULL;
+  PDM_g_num_t *_recv_box_g_num   = NULL;
   PDM_part_to_block_t *ptb1      = NULL;
   PDM_g_num_t *block_distrib_idx = NULL;
   double s[3], d[3];
@@ -8126,7 +8108,7 @@ PDM_para_octree_points_inside_boxes
                               intersect_nodes);
 
     if (DEBUG) {
-      printf("[%d]\tbox %d (%ld) nodes:", my_rank, ibox, recv_box_g_num[ibox]);
+      printf("[%d]\tbox %d ("PDM_FMT_G_NUM") nodes:", my_rank, ibox, recv_box_g_num[ibox]);
       for (int j = 0; j < (int) n_intersect_nodes; j++) {
         printf(" %d", intersect_nodes[j]);
       }
@@ -8169,7 +8151,7 @@ PDM_para_octree_points_inside_boxes
     }
 
     if (DEBUG) {
-      printf("[%d]\tbox %d (%ld) pts:", my_rank, ibox, recv_box_g_num[ibox]);
+      printf("[%d]\tbox %d ("PDM_FMT_G_NUM") pts:", my_rank, ibox, recv_box_g_num[ibox]);
       for (int j = box_pts_idx[ibox]; j < box_pts_idx[ibox+1]; j++) {
         printf(" %d", box_pts[j]);
       }

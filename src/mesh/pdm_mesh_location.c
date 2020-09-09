@@ -1769,11 +1769,11 @@ PDM_mesh_location_compute
           continue;
         }
 
-        printf("[%d] %d (%ld): ", my_rank, ibox, box_g_num[ibox]);
+        printf("[%d] %d ("PDM_FMT_G_NUM"): ", my_rank, ibox, box_g_num[ibox]);
         for (int i = pts_idx[ibox]; i < pts_idx[ibox+1]; i++) {
           /*printf("((%ld); %f %f %f) ",
             pts_g_num[i], pts_coord[dim*i], pts_coord[dim*i+1], pts_coord[dim*i+2]);*/
-          printf("(%ld) ", pts_g_num[i]);
+          printf("("PDM_FMT_G_NUM") ", pts_g_num[i]);
         }
         printf("\n");
       }
@@ -1909,12 +1909,12 @@ PDM_mesh_location_compute
 
     if (DEBUG) {
       for (int i = 0; i < n_pts; i++) {
-        printf("Point gnum = (%ld)\n", redistrib_pts_g_num[i]);
+        printf("Point gnum = ("PDM_FMT_G_NUM")\n", redistrib_pts_g_num[i]);
         printf("\t  coords = (%f, %f, %f)\n",
                redistrib_pts_coord[dim*i],
                redistrib_pts_coord[dim*i+1],
                redistrib_pts_coord[dim*i+2]);
-        printf("\tlocation = (%ld)\n", redistrib_pts_location[i]);
+        printf("\tlocation = ("PDM_FMT_G_NUM")\n", redistrib_pts_location[i]);
         printf("\tdistance = %f\n", distance[i]);
         printf("\t weights =");
         for (int j = weights_idx[i]; j < weights_idx[i+1]; j++) {
