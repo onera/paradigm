@@ -143,14 +143,7 @@ PDM_dcube_gen_init
   PDM_g_num_t n_faceFace = n_faceSeg * n_faceSeg;
   PDM_g_num_t n_vtx_face  = n_vtx_seg * n_vtx_seg;
   PDM_g_num_t n_faceLim  = 6 * n_faceFace;
-#ifdef __INTEL_COMPILER
-#pragma warning(push)
-#pragma warning(disable:2259)
-#endif
   double step = length / (double) n_faceSeg;
-#ifdef __INTEL_COMPILER
-#pragma warning(pop)
-#endif
   PDM_g_num_t *distribVtx     = (PDM_g_num_t *) malloc((n_rank + 1) * sizeof(PDM_g_num_t));
   PDM_g_num_t *distribFace    = (PDM_g_num_t *) malloc((n_rank + 1) * sizeof(PDM_g_num_t));
   PDM_g_num_t *distribCell    = (PDM_g_num_t *) malloc((n_rank + 1) * sizeof(PDM_g_num_t));

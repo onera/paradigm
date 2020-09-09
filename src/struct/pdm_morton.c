@@ -643,16 +643,9 @@ _define_rank_distrib(int                      dim,
   /* Define the cumulative frequency related to g_distribution */
 
   cfreq[0] = 0.;
-#ifdef __INTEL_COMPILER
-#pragma warning(push)
-#pragma warning(disable:2259)
-#endif
   for (id = 0; id < n_samples; id++)
     cfreq[id+1] = cfreq[id] + (double)g_distrib[id]/(double)gsum_weight;
   cfreq[n_samples] = 1.0;
-#ifdef __INTEL_COMPILER
-#pragma warning(pop)
-#endif
 
 #if 0 && defined(DEBUG) && !defined(DEBUG) /* For debugging purpose only */
 
@@ -853,14 +846,7 @@ _bucket_sampling(int                      dim,
 
   PDM_MPI_Allreduce(&lsum_weight, &gsum_weight, 1,  PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, comm);
 
-#ifdef __INTEL_COMPILER
-#pragma warning(push)
-#pragma warning(disable:2259)
-#endif
   optim = (double)gsum_weight / (double)n_ranks;
-#ifdef __INTEL_COMPILER
-#pragma warning(pop)
-#endif
 
   /* Define a naive sampling (uniform distribution) */
 
@@ -2074,14 +2060,7 @@ PDM_morton_dump(int                dim,
   double  coord[3];
 
   const unsigned long   n = 1u << code.L;
-#ifdef __INTEL_COMPILER
-#pragma warning(push)
-#pragma warning(disable:2259)
-#endif
   const double  stride = 1/(double)n;
-#ifdef __INTEL_COMPILER
-#pragma warning(pop)
-#endif
 
   for (i = 0; i < dim; i++)
     coord[i] = stride * code.X[i];

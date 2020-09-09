@@ -662,15 +662,8 @@ _define_rank_distrib(int                       dim,
 
   cfreq[0] = 0.;
   for (id = 0; id < n_samples; id++) {
-// #ifdef __INTEL_COMPILER
-// #pragma warning(push)
-// #pragma warning(disable:2259)
-// #endif
     double _g_distrib  = (double)g_distrib[id];
     double _gsum_weight = (double)gsum_weight;
-// #ifdef __INTEL_COMPILER
-// #pragma warning(pop)
-// #endif
     cfreq[id+1] = cfreq[id] + _g_distrib/_gsum_weight;
   }
   cfreq[n_samples] = 1.0;
@@ -870,16 +863,9 @@ _bucket_sampling(int                       dim,
 
   PDM_MPI_Allreduce(&lsum_weight, &gsum_weight, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, comm);
 
-#ifdef __INTEL_COMPILER
-#pragma warning(push)
-#pragma warning(disable:2259)
-#endif
   double _gsum_weight = (double)gsum_weight;
   double _n_ranks = (double)n_ranks;
   optim = _gsum_weight / _n_ranks;
-#ifdef __INTEL_COMPILER
-#pragma warning(pop)
-#endif
 
   /* Define a naive sampling (uniform distribution) */
 

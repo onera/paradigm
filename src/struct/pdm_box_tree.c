@@ -3814,16 +3814,9 @@ PDM_box_tree_dump_statistics(const PDM_box_tree_t  *bt)
 
   /* Redefine final statistics */
 
-#ifdef __INTEL_COMPILER
-#pragma warning(push)
-#pragma warning(disable:2259)
-#endif
   double _n_g_linked_boxes = (double) n_g_linked_boxes;
   double _n_g_leaves = (double) n_g_leaves;
   double _n_g_boxes = (double) n_g_boxes;
-#ifdef __INTEL_COMPILER
-#pragma warning(pop)
-#endif
 
   mean_linked_boxes = _n_g_linked_boxes / _n_g_leaves;
   box_ratio = _n_g_linked_boxes / _n_g_boxes;

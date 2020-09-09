@@ -177,15 +177,8 @@ _define_rank_distrib( _pdm_part_to_block_t *ptb,
 
   cfreq[0] = 0.;
   for (id = 0; id < n_samples; id++) {
-#ifdef __INTEL_COMPILER
-#pragma warning(push)
-#pragma warning(disable:2259)
-#endif
     double _g_distrib  = (double)g_distrib[id];
     double _gsum_weight = (double)gsum_weight;
-#ifdef __INTEL_COMPILER
-#pragma warning(pop)
-#endif
     cfreq[id+1] = cfreq[id] + _g_distrib/_gsum_weight;
   }
   cfreq[n_samples] = 1.0;
