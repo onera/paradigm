@@ -11,6 +11,7 @@
  *----------------------------------------------------------------------------*/
 
 #include "pdm.h"
+#include "pdm_priv.h"
 #include "pdm_config.h"
 #include "pdm_mpi.h"
 #include "pdm_mpi_ext_dependencies.h"
@@ -146,16 +147,12 @@ const PDM_MPI_Comm comm
   idx_t *__adjncy, *_adjncy;
 
   if (sizeof(PDM_g_num_t) == sizeof(idx_t)) {
-#ifdef __INTEL_COMPILER
-#pragma warning(push)
-#pragma warning(disable:3189)
-#endif
+
+PDM_INTEL_SUPPRESS_WARNING(3189);
     _vtxdist = (idx_t *) vtxdist;
     _xadj    = (idx_t *) xadj;
     _adjncy  = (idx_t *) adjncy;
-#ifdef __INTEL_COMPILER
-#pragma warning(pop)
-#endif
+PDM_INTEL_SUPPRESS_WARNING_POP;
     __vtxdist = NULL;
     __xadj    = NULL;
     __adjncy  = NULL;
@@ -329,16 +326,12 @@ int *part
   SCOTCH_Num *_part, *__part;
 
   if (sizeof(PDM_g_num_t) == sizeof(SCOTCH_Num)) {
-#ifdef __INTEL_COMPILER
-#pragma warning(push)
-#pragma warning(disable:3189)
-#endif
+
+PDM_INTEL_SUPPRESS_WARNING(3189);
     _vertloctab = (SCOTCH_Num *) ddual_graph_idx;
     _vendloctab = (SCOTCH_Num *) ddual_graph_idx + 1;
     _edgeloctab = (SCOTCH_Num *) ddual_graph;
-#ifdef __INTEL_COMPILER
-#pragma warning(pop)
-#endif
+PDM_INTEL_SUPPRESS_WARNING_POP;
     __vertloctab = NULL;
     __vendloctab = NULL;
     __edgeloctab = NULL;
