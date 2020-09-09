@@ -1903,17 +1903,10 @@ _coarse_grid_mesh_input
   part_ini->vtx = (double *) vtxCoord;
   part_ini->vtx_tag = (int *) vtx_tag;
 
-#ifdef __INTEL_COMPILER
-#pragma warning(push)
-#pragma warning(disable:2312)
-#endif
-  part_ini->cell_ln_to_gn = (PDM_g_num_t *) cell_ln_to_gn;
-  part_ini->face_ln_to_gn = (PDM_g_num_t *) face_ln_to_gn;
+  part_ini->cell_ln_to_gn       = (PDM_g_num_t *) cell_ln_to_gn;
+  part_ini->face_ln_to_gn       = (PDM_g_num_t *) face_ln_to_gn;
   part_ini->face_group_ln_to_gn = (PDM_g_num_t *) face_group_ln_to_gn;
-  part_ini->vtx_ln_to_gn = (PDM_g_num_t *) vtx_ln_to_gn;
-#ifdef __INTEL_COMPILER
-#pragma warning(pop)
-#endif
+  part_ini->vtx_ln_to_gn        = (PDM_g_num_t *) vtx_ln_to_gn;
 
   part_res->n_coarse_cell_wanted = n_coarse_cell_wanted;
 
@@ -3945,14 +3938,7 @@ PROCF (pdm_part_coarse_mesh_input, PDM_PART_COARSE_MESH_INPUT)
   int *_face_weight = (int *) face_weight;
   int *_faceGroupIdx = (int *) face_group_idx;
   int *_faceGroup = (int *) face_group;
-#ifdef __INTEL_COMPILER
-#pragma warning(push)
-#pragma warning(disable:2312)
-#endif
   PDM_g_num_t *_faceGroupLNToGN = (PDM_g_num_t *) face_group_ln_to_gn;
-#ifdef __INTEL_COMPILER
-#pragma warning(pop)
-#endif
 
   if (*have_cell_tag == 0) {
     _cell_tag = NULL;
