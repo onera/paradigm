@@ -539,16 +539,9 @@ _calcul_numabs_face_poly3d
                                                          d_elt_proc,
                                                          n_procs+1);
 
-#ifdef __INTEL_COMPILER_
-#pragma warning(push)
-#pragma warning(disable:2312)
-#endif
       PDM_g_num_t *currentDataLong =
         (PDM_g_num_t *) (currentData + sendBuffIdx[i_elt_proc] + sendBuffN[i_elt_proc]);
       *currentDataLong = numabs_block[k];
-#ifdef __INTEL_COMPILER
-#pragma warning(pop)
-#endif
       int *currentDataInt =
         (int *) (currentData + sendBuffIdx[i_elt_proc] + sendBuffN[i_elt_proc] + sizeof(PDM_g_num_t));
       *currentDataInt = cellfac_idx[k+1] - cellfac_idx[k];
@@ -578,14 +571,7 @@ _calcul_numabs_face_poly3d
   face_abs[0] = 0;
   int current_octet = 0;
   for (int i = 0; i < n_elt_recv; i++) {
-#ifdef __INTEL_COMPILER
-#pragma warning(push)
-#pragma warning(disable:2312)
-#endif
     PDM_g_num_t *recvBuffDataLong = (PDM_g_num_t *) (recvBuffData + current_octet);
-#ifdef __INTEL_COMPILER
-#pragma warning(pop)
-#endif
     int       *recvBuffDataInt = (int *) (recvBuffData + current_octet + sizeof(PDM_g_num_t));
     PDM_g_num_t  gCel  = *recvBuffDataLong;
     PDM_g_num_t _lCel  = gCel - d_elt_proc[i_proc]; // local numbering
@@ -632,14 +618,7 @@ _calcul_numabs_face_poly3d
 
   current_octet = 0;
   for (int i = 0; i < n_elt_recv; i++) {
-#ifdef __INTEL_COMPILER
-#pragma warning(push)
-#pragma warning(disable:2312)
-#endif
     PDM_g_num_t *recvBuffDataLong = (PDM_g_num_t *) (recvBuffData + current_octet);
-#ifdef __INTEL_COMPILER
-#pragma warning(pop)
-#endif
     int       *recvBuffDataInt = (int *) (recvBuffData + current_octet + sizeof(PDM_g_num_t));
     PDM_g_num_t  gCel  = *recvBuffDataLong;
     PDM_g_num_t _lCel = gCel - d_elt_proc[i_proc];
@@ -681,15 +660,8 @@ _calcul_numabs_face_poly3d
                                                          d_elt_proc,
                                                          n_procs+1);
 
-#ifdef __INTEL_COMPILER
-#pragma warning(push)
-#pragma warning(disable:2312)
-#endif
       PDM_g_num_t *currentDataLong =
         (PDM_g_num_t *) (currentData + sendBuffIdx[i_elt_proc] + sendBuffN[i_elt_proc]);
-#ifdef __INTEL_COMPILER
-#pragma warning(pop)
-#endif
       numabs_face[j][k] = (PDM_g_num_t) *currentDataLong;
       sendBuffN[i_elt_proc] += n_octet_exch;
     }
