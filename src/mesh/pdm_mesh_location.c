@@ -1522,7 +1522,7 @@ PDM_mesh_location_compute
  const int id
  )
 {
-  const float eps_dist = 1.e-10;
+  const double eps_dist = 1.e-10;
   const double tolerance = 1e-6;
 
   const int DEBUG = 0;
@@ -1886,7 +1886,7 @@ PDM_mesh_location_compute
       }
     }
 
-    float  *distance        = NULL;
+    double *distance        = NULL;
     double *projected_coord = NULL;
     int    *weights_idx     = NULL;
     double *weights         = NULL;
@@ -2018,9 +2018,9 @@ PDM_mesh_location_compute
     free (block_stride);
 
     /* Exchange distance */
-    float *block_distance = NULL;
+    double *block_distance = NULL;
     PDM_part_to_block_exch (ptb1,
-                            sizeof(float),
+                            sizeof(double),
                             PDM_STRIDE_VAR,
                             1,
                             &part_stride,
@@ -2086,7 +2086,7 @@ PDM_mesh_location_compute
       idx_min[i] = idx;
 
       if (block_n_candidates[i] > 1) {
-        float min_dist = HUGE_VAL;
+        double min_dist = HUGE_VAL;
         PDM_Mesh_nodal_elt_t type_min = PDM_MESH_NODAL_N_ELEMENT_TYPES;
 
         for (int j = idx; j < idx + block_n_candidates[i]; j++) {
