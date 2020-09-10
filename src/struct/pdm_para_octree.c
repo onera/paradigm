@@ -471,7 +471,8 @@ _octant_min_dist2
  )
 {
   double min_dist2 = 0., delta = 0.;
-  double side = 1./pow(2, code.L);
+  //  double side = 1./pow(2, code.L);
+  double side = 1./(double)(1 << code.L);
 
   for (int i = 0; i < dim; i++) {
     double x = coords[i];
@@ -501,7 +502,8 @@ _octant_min_dist2_normalized
  )
 {
   double min_dist2 = 0., delta = 0.;
-  double side = 1./pow(2, code.L);
+  //  double side = 1./pow(2, code.L);
+  double side = 1./(double)(1 << code.L);
 
   for (int i = 0; i < dim; i++) {
     double x = coords[i];
@@ -722,7 +724,7 @@ _neighbour
 
   PDM_morton_code_t *neighbour = NULL;
 
-  if (((_direction > 0) && (code.X[dim] < (pow(2,code.L) - 1))) ||
+  if (((_direction > 0) && (code.X[dim] < ((1 << code.L) - 1))) ||
       ((_direction < 0) && (code.X[dim] > 0))) {
 
     neighbour = malloc(sizeof(PDM_morton_code_t));
@@ -1979,7 +1981,8 @@ _block_partition
 
   double vol = 0;
   for (int i = 0; i < G->n_nodes; i++) {
-    vol += pow(1./pow(2, G->codes[i].L),3);
+    double _side = 1. / (double) (1 << G->codes[i].L);
+    vol += _side*_side*_side;
     G->range[i+1] =
       G->range[i] +
       G->n_points[i];
@@ -3599,7 +3602,8 @@ _check_neighbours_area
         } else {
           // local neighbour
           PDM_morton_code_t ngb_code = octants->codes[ingb];
-          double side = 1./pow(2, PDM_MAX(code.L, ngb_code.L));
+          //          double side = 1./pow(2, PDM_MAX(code.L, ngb_code.L));
+          double side = 1./(double)(1 << PDM_MAX(code.L, ngb_code.L));
           area[i] += side * side;
         }
       }
@@ -3674,7 +3678,7 @@ _check_neighbours_area
       for (int j = recv_rank_ngb_idx[i]; j < recv_rank_ngb_idx[i+1]; j++) {
         int id = recv_rank_ngb_id_level[2*j];
         PDM_morton_int_t level = (PDM_morton_int_t) recv_rank_ngb_id_level[2*j+1];
-        double side = 1./pow(2, PDM_MAX (level, octants->codes[id].L));
+        double side = 1./(double) (1 << PDM_MAX (level, octants->codes[id].L));
 
         area[id] += side * side;
       }
@@ -3690,13 +3694,13 @@ _check_neighbours_area
   for (int i = 0; i < octants->n_nodes; i++) {
     /* compute exact interior surface area of current octant */
     PDM_morton_code_t code = octants->codes[i];
-    double side = 1./pow(2, code.L);
+    double side = 1./ (double) (1 << code.L);
     int ndir = 0;
     for (int j = 0; j < 6; j++) {
       PDM_morton_code_t *ngb_code = _neighbour (code, (PDM_para_octree_direction_t) j);
       if (ngb_code != NULL) {
         ndir++;
-	free (ngb_code);
+        free (ngb_code);
       }
     }
     double exact_area = ndir * side * side;
@@ -4036,7 +4040,7 @@ _closest_points_local
 
               double min_octant[dim];
               double max_octant[dim];
-              double side = 1. / pow (2., code->L);
+              double side = 1. / (double) (1 << code->L);
 
               for (int j = 0; j < dim; j++) {
                 min_octant[j] = octree->s[j] + octree-> d[j] * side * code->X[j];
@@ -4186,7 +4190,7 @@ _closest_points_local
 
 
         /* inspect neighbours of popped leaf */
-        double side = 1./pow(2., octants->codes[leaf_id].L);
+        double side = 1./(double) (1 << octants->codes[leaf_id].L);
         int check_dist;
         for (PDM_para_octree_direction_t dir = PDM_BOTTOM; dir < 6; dir++) {
           if (CHECK_FACE_DIST) {
@@ -4903,7 +4907,8 @@ PDM_para_octree_build
 
     double vol = 0;
     for (int i = 0; i < octree->octants->n_nodes; i++) {
-      vol += pow(1./pow(2, octree->octants->codes[i].L),3);
+      double side = 1./(double) (1 << octree->octants->codes[i].L);
+      vol += (side * side * side);
       octree->octants->range[i+1] =
         octree->octants->range[i] +
         octree->octants->n_points[i];
@@ -5361,7 +5366,8 @@ PDM_para_octree_build
 
   double vol = 0;
   for (int i = 0; i < octree->octants->n_nodes; i++) {
-    vol += pow(1./pow(2, octree->octants->codes[i].L),3);
+    double _side = 1./ (double) (1 << octree->octants->codes[i].L);
+    vol += (_side * _side * _side);
   }
   double total_vol;
   PDM_MPI_Allreduce(&vol, &total_vol, 1, PDM_MPI_DOUBLE, PDM_MPI_SUM, octree->comm);
@@ -6644,7 +6650,7 @@ _local_search1
 
 
       /* inspect neighbours of popped leaf */
-      double side = 1./pow(2., octants->codes[leaf_id].L);
+      double side = 1./(double) (1 << octants->codes[leaf_id].L);
       int check_dist;
       for (PDM_para_octree_direction_t dir = PDM_BOTTOM; dir < 6; dir++) {
         if (CHECK_FACE_DIST) {
@@ -6803,7 +6809,7 @@ _local_search2
       int intersect = 1;
       PDM_morton_code_t *code = octants->codes + i;
 
-      double side = 1. / pow (2., code->L);
+      double side = 1. / (double) (1 << code->L);
 
       for (int j = 0; j < dim; j++) {
         extents[j]       = octree->s[j] + octree-> d[j] * side * code->X[j];
@@ -7650,7 +7656,7 @@ void write_octree_octants
   double ext[6];
   int ii = 0;
   for (int inode = 0; inode < octants->n_nodes; inode++) {
-    double side = 1./pow(2, octants->codes[inode].L);
+    double side = 1./ (double) (1 << octants->codes[inode].L);
     for (int idim = 0; idim < 3; idim++) {
       double co = octants->codes[inode].X[idim];
       ext[idim] = octree->s[idim] + octree->d[idim]*co*side;

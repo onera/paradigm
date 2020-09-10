@@ -2123,9 +2123,9 @@ _intersect_node_box
 {
   const int DEBUG = 0;
   *inside = 1;
-  
+
   assert (box_min.L >= node.L);
-      
+
   const PDM_morton_int_t level_diff = box_min.L - node.L;
 
   const PDM_morton_int_t side = 1 << level_diff;
@@ -2171,13 +2171,13 @@ PDM_morton_intersect_box
 
 #if 0
   printf("PDM_morton_intersect_box: node.L = %u (side = %f) \tstart = %zu, end = %zu\n",
-	 node.L, 1./pow(2.,node.L), start, end);
+         node.L, 1./(double) (1 << node.L), start, end);
   PDM_morton_dump (dim, node);
 #endif
-  
+
   /* If current range contains few octants, go brute force */
   if (end - start < N_BRUTE_FORCE) {
-    
+
     for (size_t i = start; i < end; i++) {
       if (_intersect_node_box (dim,
 			       nodes[i],
@@ -2187,7 +2187,7 @@ PDM_morton_intersect_box
 	intersect[(*n_intersect)++] = i;
       }
     }
-    
+
   } else {
 
     if (_intersect_node_box (dim,
@@ -2201,7 +2201,7 @@ PDM_morton_intersect_box
 	for (size_t i = start; i < end; i++) {
 	  intersect[(*n_intersect)++] = i;
 	}
-      
+
       } else {
 	/* Some descendants may intersect the box */
 	const size_t n_children = 1 << dim;
@@ -2232,7 +2232,7 @@ PDM_morton_intersect_box
 	  }
 
 	  if (new_start > end) {
-	    /* no need to go further for that child 
+	    /* no need to go further for that child
 	       because it has no descendants in the node list */
 	    continue;
 	  }
@@ -2240,7 +2240,7 @@ PDM_morton_intersect_box
 	  // binary search
 	  //?
 #endif
-	  
+
 	  /* new_end <-- next of last descendant of child in list */
 #if 0
 	  // linear search
@@ -2264,7 +2264,7 @@ PDM_morton_intersect_box
 #endif
 
 	  prev_end = new_end;
-	  
+
 	  /* Carry on recursion */
 	  //printf("\n--> child #%d\n", ichild);
 	  PDM_morton_intersect_box (dim,
