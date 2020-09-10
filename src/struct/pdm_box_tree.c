@@ -191,8 +191,8 @@ _extents
  )
 {
   for (int i = 0; i < dim; i++) {
-    extents[i] = (double) code.X[i]/(double) pow(2,code.L);
-    extents[dim + i] = ((double) code.X[i] + 1)/(double) pow(2,code.L);
+    extents[i] = (double) code.X[i]/(double) (1 << code.L);
+    extents[dim + i] = ((double) code.X[i] + 1)/(double) (1 << code.L);
   }
 }
 
