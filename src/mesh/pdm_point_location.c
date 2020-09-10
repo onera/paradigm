@@ -389,7 +389,7 @@ _locate_on_edge
  const double       vtx_coord[],
  const int          n_pts,
  const double       pts_coord[],
- float              distance[],
+ double             distance[],
  double             bar_coord[]
  )
 {
@@ -441,11 +441,10 @@ _locate_on_edge
     }
 
     /* Distance between point to locate and its projection */
-    double dist2 = 0.;
+    distance[ipt] = 0.;
     for (idim = 0; idim < 3; idim++) {
-      dist2 += v[idim] * v[idim];
+      distance[ipt] += v[idim] * v[idim];
     }
-    distance[ipt] = (float) dist2;
 
     /* Barycentric coordinates */
     _bc[0] = 1. - t;
@@ -483,7 +482,7 @@ _locate_on_triangles
  const int          n_pts,
  const double       pts_coord[],
  int                location[],
- float              distance[],
+ double             distance[],
  double             bar_coord[]
  )
 {
@@ -550,7 +549,7 @@ _locate_on_triangles
           _bc[2] = weights[0];
         }
 
-        distance[ipt] = (float) dist2;
+        distance[ipt] = dist2;
 
         if (location != NULL) {
           location[ipt] = itri;
@@ -583,7 +582,7 @@ _locate_on_quadrangle
  const double       quad_coord[],
  const int          n_pts,
  const double       pts_coord[],
- float              distance[],
+ double             distance[],
  double             bar_coord[]
  )
 {
@@ -618,7 +617,7 @@ _locate_on_quadrangle
       dist2 += v_cp_p[idim] * v_cp_p[idim];
     }
 
-    distance[ipt] = (float) dist2;
+    distance[ipt] = dist2;
   }
 }
 
@@ -638,7 +637,7 @@ _locate_in_tetrahedron
  const double        tetra_coord[12],
  const int           n_pts,
  const double        pts_coord[],
- float              *distance,
+ double             *distance,
  double             *bar_coord
  )
 {
@@ -704,7 +703,7 @@ _locate_in_tetrahedron
       min_bc = PDM_MIN (min_bc, _bc[ivtx]);
     }
 
-    distance[ipt] = (float) (min_bc * min_bc);
+    distance[ipt] = min_bc * min_bc;
       if (min_bc > 0.) {
         distance[ipt] = -distance[ipt];
       }
@@ -745,7 +744,7 @@ _locate_in_tetrahedron
 
   int *id_face = malloc (sizeof(int) * n_pts_out);
   double *bar_coord_face = malloc (sizeof(double) * n_pts_out * 3);
-  float *distance_face = malloc (sizeof(float) * n_pts_out);
+  double *distance_face = malloc (sizeof(double) * n_pts_out);
   _locate_on_triangles (4,
                         face_vtx,
                         tetra_coord,
@@ -803,7 +802,7 @@ _locate_in_cell_3d
  const int                   n_pts,
  const double                pts_coord[],
  const double                tolerance,
- float                      *distance,
+ double                     *distance,
  double                     *bar_coord
  )
 {
@@ -920,7 +919,7 @@ _locate_in_cell_3d
         min_bc = PDM_MIN (min_bc, _bc[ivtx]);
       }
 
-      distance[ipt] = (float) (min_bc * min_bc);
+      distance[ipt] = min_bc * min_bc;
       if (min_bc > 0.) {
         distance[ipt] = -distance[ipt];
       }
@@ -948,12 +947,12 @@ _locate_in_cell_3d
           min_bc = PDM_MIN (min_bc, _bc[ivtx]);
         }
 
-        distance[ipt] = (float) (-min_bc * min_bc);
+        distance[ipt] = -min_bc * min_bc;
       }
 
       /* Point outside */
       else {
-        distance[ipt] = (float) dist2;
+        distance[ipt] = dist2;
       }
     }
 
@@ -1080,7 +1079,7 @@ _locate_in_cell_3d
           }
 
           if (distance[_ipt] > min_dist2) {
-            distance[_ipt] = (float) min_dist2;
+            distance[_ipt] = min_dist2;
 
             closest_face[ipt] = iface;
             for (int idim = 0; idim < 3; idim++) {
@@ -1140,8 +1139,7 @@ _locate_in_cell_3d
         }
       }
 
-      double min_dist2 = PDM_DOT_PRODUCT (v_p_cp, v_p_cp);
-      distance[_ipt] = (float) min_dist2;
+      distance[_ipt] = PDM_DOT_PRODUCT (v_p_cp, v_p_cp);
     }
 
     free (closest_face);
@@ -1174,7 +1172,7 @@ _locate_in_polygon
  const double      vtx_coord[],
  const int         n_pts,
  const double      pts_coord[],
- float             distance[],
+ double            distance[],
  double            bar_coord[]
  )
 {
@@ -1196,8 +1194,7 @@ _locate_in_polygon
         v_cp_p[idim] -= _bc[ivtx] * vtx_coord[3*ivtx + idim];
       }
     }
-    double dist2 = PDM_DOT_PRODUCT (v_cp_p, v_cp_p);
-    distance[ipt] = (float) dist2;
+    distance[ipt] = PDM_DOT_PRODUCT (v_cp_p, v_cp_p);
   }
 }
 
@@ -1214,7 +1211,6 @@ _locate_in_polygon
  *   face_orientation    <-- orientation of faces in current polyhedron (size: n_face)
  *   n_pts               <-- number of points to locate
  *   pts_coord           <-- point coordinates (size: 3 * n_pts)
- *   char_length         <-- characteristic length of polyhedron
  *   distance            <-> distance from point to element (size: n_pts)
  *   bar_coord           <-> barcyentric coordinates of closest points (size: n_pts * n_vtx)
  *----------------------------------------------------------------------------*/
@@ -1229,14 +1225,14 @@ _locate_in_polyhedron
  const int         face_orientation[],
  const int         n_pts,
  const double      pts_coord[],
- float             distance[],
+ double            distance[],
  double            bar_coord[]
  )
 {
   const double four_PI = 4. * PDM_PI;
 
   const double eps_solid_angle = 1e-5;
-  const float eps_distance2 = 1e-10;//char_length...
+  const double eps_distance2 = 1e-10;
   const double eps2 = 1e-20;
 
   /*
@@ -1343,7 +1339,7 @@ _locate_in_polyhedron
         }
 
         if (distance[ipt] > min_dist2) {
-          distance[ipt] = (float) min_dist2;
+          distance[ipt] = min_dist2;
 
           closest_face[ipt] = iface;
           for (int idim = 0; idim < 3; idim++) {
@@ -1497,7 +1493,7 @@ PDM_point_location_nodal
  const int           pts_idx[],
  const double        pts_coord[],
  const double        tolerance,
- float             **distance,
+ double            **distance,
  double            **projected_coord,
  int               **bar_coord_idx,
  double            **bar_coord
@@ -1518,7 +1514,7 @@ PDM_point_location_nodal
    */
   int n_elt = type_idx[PDM_MESH_NODAL_N_ELEMENT_TYPES];
   int n_pts = pts_idx[n_elt];
-  *distance = malloc (sizeof(float) * n_pts);
+  *distance = malloc (sizeof(double) * n_pts);
   *projected_coord = malloc (sizeof(double) * n_pts * 3);
   *bar_coord_idx = malloc (sizeof(int) * (n_pts+1));
   (*bar_coord_idx)[0] = 0;
@@ -1551,7 +1547,7 @@ PDM_point_location_nodal
         double delta = pts_coord[3*ipt + idim] - vtx_coord[idim];
         dist2 += delta * delta;
       }
-      (*distance)[ipt] = (float) dist2;
+      (*distance)[ipt] = dist2;
       (*bar_coord)[ipt] = 1.;
     }
   }
