@@ -273,9 +273,9 @@ _check_morton_ordering
 (
 int                      dim,
 size_t                   n_entities,
-const double        coords[],
+const double             coords[],
 const PDM_morton_code_t  m_code[],
-PDM_l_num_t               order[]
+PDM_l_num_t              order[]
 )
 {
   size_t  i_prev = 0, i = 1;
@@ -937,11 +937,11 @@ _gnum_from_parent_compute
   PDM_MPI_Comm_rank(_gnum->comm,
                 &i_proc);
 
-  int *sendBuffN   = (int *) malloc(sizeof(int) * n_procs);
-  int *sendBuffIdx = (int *) malloc(sizeof(int) * n_procs);
+  int *send_buff_n   = (int *) malloc(sizeof(int) * n_procs);
+  int *send_buff_idx = (int *) malloc(sizeof(int) * n_procs);
 
-  int *recvBuffN   = (int *) malloc(sizeof(int) * n_procs);
-  int *recvBuffIdx = (int *) malloc(sizeof(int) * n_procs);
+  int *recv_buff_n   = (int *) malloc(sizeof(int) * n_procs);
+  int *recv_buff_idx = (int *) malloc(sizeof(int) * n_procs);
 
   /* Calcul du nombre total d'elements du bloc */
 
@@ -962,10 +962,10 @@ _gnum_from_parent_compute
   /* Comptage du nombre d'elements a envoyer a chaque processus */
 
   for (int j = 0; j < n_procs; j++) {
-    sendBuffN[j] = 0;
-    sendBuffIdx[j] = 0;
-    recvBuffN[j] = 0;
-    recvBuffIdx[j] = 0;
+    send_buff_n[j]   = 0;
+    send_buff_idx[j] = 0;
+    recv_buff_n[j]   = 0;
+    recv_buff_idx[j] = 0;
   }
 
   PDM_g_num_t *d_elt_proc =
@@ -992,28 +992,28 @@ _gnum_from_parent_compute
       const int i_elt_proc = PDM_binary_search_gap_long (_gnum->parent[j][k],
                                                          d_elt_proc,
                                                          n_procs + 1);
-      sendBuffN[i_elt_proc] += 1;
+      send_buff_n[i_elt_proc] += 1;
     }
   }
 
-  sendBuffIdx[0] = 0;
+  send_buff_idx[0] = 0;
   for (int j = 1; j < n_procs; j++) {
-    sendBuffIdx[j] = sendBuffIdx[j-1] + sendBuffN[j-1];
+    send_buff_idx[j] = send_buff_idx[j-1] + send_buff_n[j-1];
   }
 
   /* Determination du nombre d'elements recu de chaque processus */
 
-  PDM_MPI_Alltoall(sendBuffN,
+  PDM_MPI_Alltoall(send_buff_n,
                1,
                PDM_MPI_INT,
-               recvBuffN,
+               recv_buff_n,
                1,
                PDM_MPI_INT,
                _gnum->comm);
 
-  recvBuffIdx[0] = 0;
+  recv_buff_idx[0] = 0;
   for(int j = 1; j < n_procs; j++) {
-    recvBuffIdx[j] = recvBuffIdx[j-1] + recvBuffN[j-1];
+    recv_buff_idx[j] = recv_buff_idx[j-1] + recv_buff_n[j-1];
   }
 
   /* Transmission des numeros absolus  */
@@ -1024,14 +1024,14 @@ _gnum_from_parent_compute
 
   PDM_g_num_t *n_elt_stocke_procs = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * (n_procs+1));
 
-  PDM_g_num_t *sendBuffNumabs = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) *
+  PDM_g_num_t *send_buff_numabs = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) *
                                                        n_elt_loc_total);
-  PDM_g_num_t *recvBuffNumabs = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) *
-                                                      (recvBuffIdx[n_procs - 1] +
-                                                       recvBuffN[n_procs - 1]));
+  PDM_g_num_t *recv_buff_numabs = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) *
+                                                      (recv_buff_idx[n_procs - 1] +
+                                                       recv_buff_n[n_procs - 1]));
 
   for (int j = 0; j < n_procs; j++) {
-    sendBuffN[j] = 0;
+    send_buff_n[j] = 0;
   }
 
   for (int j = 0; j < _gnum->n_part; j++) {
@@ -1039,25 +1039,25 @@ _gnum_from_parent_compute
       const int i_elt_proc = PDM_binary_search_gap_long(_gnum->parent[j][k],
                                                         d_elt_proc,
                                                         n_procs+1);
-      sendBuffNumabs[sendBuffIdx[i_elt_proc] + sendBuffN[i_elt_proc]] = _gnum->parent[j][k];
-      sendBuffN[i_elt_proc] += 1;
+      send_buff_numabs[send_buff_idx[i_elt_proc] + send_buff_n[i_elt_proc]] = _gnum->parent[j][k];
+      send_buff_n[i_elt_proc] += 1;
     }
   }
 
-  PDM_MPI_Alltoallv((void *) sendBuffNumabs,
-                sendBuffN,
-                sendBuffIdx,
+  PDM_MPI_Alltoallv((void *) send_buff_numabs,
+                send_buff_n,
+                send_buff_idx,
                 PDM__PDM_MPI_G_NUM,
-                (void *) recvBuffNumabs,
-                recvBuffN,
-                recvBuffIdx,
+                (void *) recv_buff_numabs,
+                recv_buff_n,
+                recv_buff_idx,
                 PDM__PDM_MPI_G_NUM,
                 _gnum->comm);
 
   /* Echange du nombre d'elements stockes sur chaque processus */
 
   const PDM_g_num_t n_elt_stocke =
-    (PDM_g_num_t) (recvBuffIdx[n_procs - 1] + recvBuffN[n_procs - 1]);
+    (PDM_g_num_t) (recv_buff_idx[n_procs - 1] + recv_buff_n[n_procs - 1]);
 
   PDM_MPI_Allgather((void *) &n_elt_stocke,
                 1,
@@ -1081,12 +1081,12 @@ _gnum_from_parent_compute
 
   for (int j = 0; j < n_procs; j++) {
 
-    const int ideb = recvBuffIdx[j];
-    const int ifin = recvBuffIdx[j] + recvBuffN[j];
+    const int ideb = recv_buff_idx[j];
+    const int ifin = recv_buff_idx[j] + recv_buff_n[j];
 
     for (int k = ideb; k < ifin; k++) {
 
-      PDM_g_num_t _idx = recvBuffNumabs[k] - d_elt_proc[i_proc];
+      PDM_g_num_t _idx = recv_buff_numabs[k] - d_elt_proc[i_proc];
       const int idx = (int) _idx;
       assert((idx < l_numabs_tmp) && (idx >= 0));
 
@@ -1133,34 +1133,34 @@ _gnum_from_parent_compute
   cpt_elt_proc = 0;
   for (int j = 0; j < n_procs; j++) {
 
-    const int ideb = recvBuffIdx[j];
-    const int ifin = recvBuffIdx[j] + recvBuffN[j];
+    const int ideb = recv_buff_idx[j];
+    const int ifin = recv_buff_idx[j] + recv_buff_n[j];
 
     for (int k = ideb; k < ifin; k++) {
 
-      PDM_g_num_t _idx = recvBuffNumabs[k] - d_elt_proc[i_proc];
+      PDM_g_num_t _idx = recv_buff_numabs[k] - d_elt_proc[i_proc];
       const int idx = (int) _idx;
 
-      recvBuffNumabs[cpt_elt_proc] = numabs_tmp[idx];
+      recv_buff_numabs[cpt_elt_proc] = numabs_tmp[idx];
 
       cpt_elt_proc += 1;
     }
   }
 
-  PDM_MPI_Alltoallv((void *) recvBuffNumabs,
-                    recvBuffN,
-                    recvBuffIdx,
+  PDM_MPI_Alltoallv((void *) recv_buff_numabs,
+                    recv_buff_n,
+                    recv_buff_idx,
                     PDM__PDM_MPI_G_NUM,
-                    (void *) sendBuffNumabs,
-                    sendBuffN,
-                    sendBuffIdx,
+                    (void *) send_buff_numabs,
+                    send_buff_n,
+                    send_buff_idx,
                     PDM__PDM_MPI_G_NUM,
                     _gnum->comm);
 
   /* On Stocke l'information recue */
 
   for (int j = 0; j < n_procs; j++) {
-    sendBuffN[j] = 0;
+    send_buff_n[j] = 0;
   }
 
   for (int j = 0; j < _gnum->n_part; j++) {
@@ -1171,19 +1171,19 @@ _gnum_from_parent_compute
       const int i_elt_proc = PDM_binary_search_gap_long(_gnum->parent[j][k],
                                                         d_elt_proc,
                                                         n_procs+1);
-      _gnum->g_nums[j][k] = sendBuffNumabs[sendBuffIdx[i_elt_proc] + sendBuffN[i_elt_proc]];
-      sendBuffN[i_elt_proc] += 1;
+      _gnum->g_nums[j][k] = send_buff_numabs[send_buff_idx[i_elt_proc] + send_buff_n[i_elt_proc]];
+      send_buff_n[i_elt_proc] += 1;
     }
   }
 
   /* Liberation memoire */
 
-  free(sendBuffIdx);
-  free(sendBuffN);
-  free(recvBuffIdx);
-  free(recvBuffN);
-  free(sendBuffNumabs);
-  free(recvBuffNumabs);
+  free(send_buff_idx);
+  free(send_buff_n);
+  free(recv_buff_idx);
+  free(recv_buff_n);
+  free(send_buff_numabs);
+  free(recv_buff_numabs);
   free(d_elt_proc);
   free(numabs_tmp);
   free(n_elt_stocke_procs);
@@ -1288,9 +1288,9 @@ PROCF (pdm_gnum_create, PDM_GNUM_CREATE)
 void
 PDM_gnum_set_from_coords
 (
- const int id,
- const int i_part,
- const int n_elts,
+ const int     id,
+ const int     i_part,
+ const int     n_elts,
  const double *coords,
  const double *char_length
 )
@@ -1347,9 +1347,9 @@ PROCF (pdm_gnum_set_from_coords, PDM_GNUM_SET_FROM_COORDS)
 void
 PDM_gnum_set_from_parents
 (
- const int id,
- const int i_part,
- const int n_elts,
+ const int          id,
+ const int          i_part,
+ const int          n_elts,
  const PDM_g_num_t *parent_gnum
 )
 {
@@ -1371,9 +1371,9 @@ PDM_gnum_set_from_parents
 void
 PROCF (pdm_gnum_set_from_parents, PDM_GNUM_SET_FROM_PARENTS)
 (
- const int *id,
- const int *i_part,
- const int *n_elts,
+ const int         *id,
+ const int         *i_part,
+ const int         *n_elts,
  const PDM_g_num_t *parent_gnum
 )
 {
@@ -1444,8 +1444,8 @@ PDM_gnum_get
 void
 PROCF (pdm_gnum_get, PDM_GNUM_GET)
 (
- const int *id,
- const int *i_part,
+ const int   *id,
+ const int   *i_part,
  PDM_g_num_t *gnum
 )
 {
