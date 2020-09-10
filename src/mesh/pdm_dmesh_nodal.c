@@ -1442,7 +1442,7 @@ const PDM_Mesh_nodal_elt_t   t_elt
     PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
   }
 
-  int id_section;
+  int id_section = -1;
 
   switch (t_elt) {
 
