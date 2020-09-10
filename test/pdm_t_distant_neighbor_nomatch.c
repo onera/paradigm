@@ -239,7 +239,6 @@ char *argv[]
       log_trace("\n");
     }
   }
-  return 0;
 
   /*
    * Variable stride test
