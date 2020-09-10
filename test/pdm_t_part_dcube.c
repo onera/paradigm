@@ -521,7 +521,7 @@ int main(int argc, char *argv[])
     PDM_printf("       * max                : %i\n", bound_part_faces_max);
     PDM_printf("       * total              : %i\n", bound_part_faces_sum);
   }
-
+  free(dcell_part);
   PDM_part_free(ppart_id);
 
   PDM_dcube_gen_free(id);
