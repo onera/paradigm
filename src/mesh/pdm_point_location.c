@@ -1663,7 +1663,6 @@ PDM_point_location_nodal
                            face_orientation + poly3d_face_idx[ipoly],
                            pts_idx[ielt+1] - pts_idx[ielt],
                            pts_coord + pts_idx[ielt] * 3,
-                           //                           poly3d_char_length[ipoly],
                            *distance + pts_idx[ielt],
                            *bar_coord + (*bar_coord_idx)[pts_idx[ielt]]);
 
