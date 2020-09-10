@@ -433,7 +433,7 @@ int main(int argc, char *argv[])
 
 #if 0
   for (int ipt = 0; ipt < n_pts_l; ipt++) {
-    printf("[%d] (%ld) (%f, %f, %f)\n",
+    printf("[%d] ("PDM_FMT_G_NUM") (%f, %f, %f)\n",
            my_rank, pts_gnum[ipt], pts_coords[3*ipt], pts_coords[3*ipt+1], pts_coords[3*ipt+2]);
   }
 #endif
@@ -620,9 +620,9 @@ int main(int argc, char *argv[])
       box_gnum = -1;
     }
 
-    //printf("%d: (%ld) | (%ld)\n", ipt, p_location[ipt], box_gnum);
+    //printf("%d: ("PDM_FMT_G_NUM") | ("PDM_FMT_G_NUM")\n", ipt, p_location[ipt], box_gnum);
     if (p_location[ipt] != box_gnum) {
-      printf("%d (%ld) (%.15lf %.15lf %.15lf): (%ld) | (%ld)\n",
+      printf("%d ("PDM_FMT_G_NUM") (%.15lf %.15lf %.15lf): ("PDM_FMT_G_NUM") | ("PDM_FMT_G_NUM")\n",
              ipt, pts_gnum[ipt],
              p[0], p[1], p[2],
              p_location[ipt], box_gnum);
