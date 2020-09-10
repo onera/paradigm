@@ -630,7 +630,7 @@ int main(int argc, char *argv[])
                          &p_weights);
   if (0) {
     for (int ipt = 0; ipt < n_pts_l; ipt++) {
-      printf("Point (%ld) (%f %f %f), location = (%ld), weights =",
+      printf("Point ("PDM_FMT_G_NUM") (%f %f %f), location = ("PDM_FMT_G_NUM"), weights =",
              p_gnum[ipt], p_coords[3*ipt], p_coords[3*ipt+1], p_coords[3*ipt+2], p_location[ipt]);
       for (int i = p_weights_idx[ipt]; i < p_weights_idx[ipt+1]; i++) {
         printf(" %f", p_weights[i]);
