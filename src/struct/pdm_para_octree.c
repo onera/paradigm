@@ -4312,6 +4312,7 @@ _closest_points_local
 
   } // end loop over target points (i_tgt)
   free (is_visited);
+  free (is_visited_part);
   free (visited_leaves);
   _min_heap_free (start_heap);
   _min_heap_free (leaf_heap);
@@ -5819,8 +5820,9 @@ PDM_para_octree_closest_point
     iteration++;
     if (DEBUG) {
       printf("\n\n\n[%d] iteration %d\n", myRank, iteration);
-    } else {
-      if (myRank == 0)
+    }
+    else {
+      if (1== 0 && myRank == 0)
         printf("\n\n\niteration %d\n", iteration);
     }
     if (iteration > 10*lComm) break; // emergency exit
@@ -6331,9 +6333,6 @@ PDM_para_octree_closest_point
                        PDM_MPI_INT, PDM_MPI_MAX, octree->comm);
 
     if (max_n_recv_pts == 0) {
-      if (myRank == 0)
-        printf("*** max_n_recv_pts = 0 --> DONE :-)\n");
-
       free (send_tgt_lnum);
       free (send_start_leaves);
       free (send_start_leaves_count);
