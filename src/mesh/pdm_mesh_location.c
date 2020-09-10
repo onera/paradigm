@@ -106,6 +106,8 @@ typedef struct {
   int  shared_nodal;   /*!< 1 if mesh nodal is shared, 0 otherwise */
   int  mesh_nodal_id;  /*!< Mesh identifier */
   int _mesh_nodal_id;
+  PDM_l_num_t **face_vtx_n; /* Mandatory to build mesh nodal */
+  PDM_l_num_t **cell_face_n; /* Mandatory to build mesh nodal */
 
   _point_cloud_t *point_clouds; /*!< Point clouds */
 
@@ -1076,6 +1078,10 @@ PDM_mesh_location_mesh_global_data_set
   }
 
   location->mesh_nodal_id = PDM_Mesh_nodal_create (n_part, location->comm);
+
+  location->face_vtx_n = malloc(sizeof(PDM_l_num_t *) * n_part);
+  location->cell_face_n = malloc(sizeof(PDM_l_num_t *) * n_part);
+
 }
 
 
@@ -1133,15 +1139,15 @@ PDM_mesh_location_part_set
 
 
 
-  PDM_l_num_t *face_vtx_nb  = malloc (sizeof(PDM_l_num_t) * n_face);
-  PDM_l_num_t *cell_face_nb = malloc (sizeof(PDM_l_num_t) * n_cell);
+  location->face_vtx_n[i_part]  = malloc (sizeof(PDM_l_num_t) * n_face);
+  location->cell_face_n[i_part] = malloc (sizeof(PDM_l_num_t) * n_cell);
 
   for (int i = 0; i < n_face; i++) {
-    face_vtx_nb[i] = face_vtx_idx[i+1] - face_vtx_idx[i];
+    location->face_vtx_n[i_part][i] = face_vtx_idx[i+1] - face_vtx_idx[i];
   }
 
   for (int i = 0; i < n_cell; i++) {
-    cell_face_nb[i] = cell_face_idx[i+1] - cell_face_idx[i];
+    location->cell_face_n[i_part][i] = cell_face_idx[i+1] - cell_face_idx[i];
   }
 
   PDM_Mesh_nodal_cell3d_cellface_add (location->mesh_nodal_id,
@@ -1149,10 +1155,10 @@ PDM_mesh_location_part_set
                                       n_cell,
                                       n_face,
                                       face_vtx_idx,
-                                      face_vtx_nb,
+                                      location->face_vtx_n[i_part],
                                       face_vtx,
                                       cell_face_idx,
-                                      cell_face_nb,
+                                      location->cell_face_n[i_part],
                                       cell_face,
                                       cell_ln_to_gn);
 }
@@ -1426,7 +1432,22 @@ PDM_mesh_location_free
 
   /* Free mesh nodal */
   //PDM_Mesh_nodal_partial_free (location->mesh_nodal_id);?
-  PDM_Mesh_nodal_free (location->mesh_nodal_id);
+
+  if (!location->shared_nodal) {
+
+    int _n_part = PDM_Mesh_nodal_n_part_get(location->mesh_nodal_id);
+
+    PDM_Mesh_nodal_free (location->mesh_nodal_id);
+
+    for (int i = 0; i< _n_part; i++) {
+      free(location->cell_face_n[i]);
+      free(location->face_vtx_n[i]);
+    }
+
+    free (location->cell_face_n);
+    free (location->face_vtx_n);
+
+  }
 }
 
 /**
@@ -2089,7 +2110,7 @@ PDM_mesh_location_compute
 
       if (block_n_candidates[i] > 1) {
         float min_dist = HUGE_VAL;
-        PDM_Mesh_nodal_elt_t type_min;
+        PDM_Mesh_nodal_elt_t type_min = PDM_MESH_NODAL_N_ELEMENT_TYPES;
 
         for (int j = idx; j < idx + block_n_candidates[i]; j++) {
 
@@ -2235,6 +2256,7 @@ PDM_mesh_location_compute
     free (pcloud_weights_idx);
     free (pcloud_weights);
 
+    free (projected_coord); // Attention tableau a mettre dans la structure (voir requete redmine)
 
 
     PDM_timer_hang_on(location->timer);

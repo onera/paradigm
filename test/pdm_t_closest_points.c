@@ -492,24 +492,23 @@ main
                           &closest_src_dist);
 
 
-#if 1
-  printf("\n\n============================\n\n");
+  if (0 == 1) {
+    printf("\n\n============================\n\n");
 
-  for (int i = 0; i < _nTgt_l; i++) {
-    printf("Target point #%d ("PDM_FMT_G_NUM") [%f, %f, %f]\n", i, tgt_gnum[i],
-           tgt_coords[3*i], tgt_coords[3*i+1], tgt_coords[3*i+2]);
-    for (int j = 0; j < n_closest_points; j++)
-      printf("\t%d:\t"PDM_FMT_G_NUM"\t%f\n",
-             j+1,
-             closest_src_gnum[n_closest_points*i + j],
-             closest_src_dist[n_closest_points*i + j]);
-    printf("\n\n");
+    for (int i = 0; i < _nTgt_l; i++) {
+      printf("Target point #%d ("PDM_FMT_G_NUM") [%f, %f, %f]\n", i, tgt_gnum[i],
+             tgt_coords[3*i], tgt_coords[3*i+1], tgt_coords[3*i+2]);
+      for (int j = 0; j < n_closest_points; j++)
+        printf("\t%d:\t"PDM_FMT_G_NUM"\t%f\n",
+               j+1,
+               closest_src_gnum[n_closest_points*i + j],
+               closest_src_dist[n_closest_points*i + j]);
+      printf("\n\n");
+    }
+
+
+    printf("============================\n\n");
   }
-
-  printf("============================\n\n");
-#endif
-
-
 
   PDM_closest_points_free (id2,
                            0);
