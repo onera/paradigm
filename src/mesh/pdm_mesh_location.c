@@ -86,6 +86,7 @@ typedef struct {
   double      **uvw;
   int         **weights_idx;
   double      **weights; /*!< Barycentric coordinates */
+  double      **projected_coords;
 
 } _point_cloud_t;
 
@@ -1299,7 +1300,8 @@ PDM_mesh_location_get
  PDM_g_num_t **g_num,
  PDM_g_num_t **location,
  int         **weights_idx,
- double      **weights
+ double      **weights,
+ double      **projected_coord
  )
 {
   _PDM_location_t *mesh_location = _get_from_id (id);
@@ -1311,12 +1313,13 @@ PDM_mesh_location_get
 
   assert (i_part < pcloud->n_part);
 
-  *n_points    = pcloud->n_points[i_part];
-  *coord       = pcloud->coords[i_part];
-  *g_num       = pcloud->gnum[i_part];
-  *location    = pcloud->location[i_part];
-  *weights_idx = pcloud->weights_idx[i_part];
-  *weights     = pcloud->weights[i_part];
+  *n_points        = pcloud->n_points[i_part];
+  *coord           = pcloud->coords[i_part];
+  *g_num           = pcloud->gnum[i_part];
+  *location        = pcloud->location[i_part];
+  *weights_idx     = pcloud->weights_idx[i_part];
+  *weights         = pcloud->weights[i_part];
+  *projected_coord = pcloud->projected_coords[i_part];
 }
 
 
@@ -1404,6 +1407,15 @@ PDM_mesh_location_free
           }
         }
         free (pcloud->weights);
+      }
+
+      if (pcloud->projected_coords != NULL) {
+        for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
+          if (pcloud->projected_coords[ipart] != NULL) {
+            free (pcloud->projected_coords[ipart]);
+          }
+        }
+        free (pcloud->projected_coords);
       }
 
     }
@@ -1909,11 +1921,15 @@ PDM_mesh_location_compute
     if (DEBUG) {
       for (int i = 0; i < n_pts; i++) {
         printf("Point gnum = ("PDM_FMT_G_NUM")\n", redistrib_pts_g_num[i]);
-        printf("\t  coords = (%f, %f, %f)\n",
+        printf("\t        coords = (%f, %f, %f)\n",
                redistrib_pts_coord[dim*i],
                redistrib_pts_coord[dim*i+1],
                redistrib_pts_coord[dim*i+2]);
         printf("\tlocation = ("PDM_FMT_G_NUM")\n", redistrib_pts_location[i]);
+        printf("\t  proj. coords = (%f, %f, %f)\n",
+               projected_coord[dim*i],
+               projected_coord[dim*i+1],
+               projected_coord[dim*i+2]);
         printf("\tdistance = %f\n", distance[i]);
         printf("\t weights =");
         for (int j = weights_idx[i]; j < weights_idx[i+1]; j++) {
@@ -1957,6 +1973,7 @@ PDM_mesh_location_compute
     int         *pcloud_weights_stride = NULL;
     int         *pcloud_weights_idx    = NULL;
     double      *pcloud_weights        = NULL;
+    double      *pcloud_proj_coord     = NULL;
 
     /*
      *   1) Part-to-block
@@ -2030,6 +2047,7 @@ PDM_mesh_location_compute
     free (distance);
     free (block_stride);
 
+
     /* Exchange weights */
     int *weights_stride = malloc (sizeof(int) * n_pts);
     for (int i = 0; i < n_pts; i++) {
@@ -2061,6 +2079,22 @@ PDM_mesh_location_compute
                             &block_n_candidates,
                             (void **) &block_n_vtx_elt);
     free (weights_stride);
+
+    /* Exchange projected coords */
+    for (int i = 0; i < n_pts; i++) {
+      part_stride[i] = 3;
+    }
+    double *block_proj_coord1 = NULL;
+    PDM_part_to_block_exch (ptb1,
+                            sizeof(double),
+                            PDM_STRIDE_VAR,
+                            1,
+                            &part_stride,
+                            (void **) &projected_coord,
+                            &block_stride,
+                            (void **) &block_proj_coord1);
+    free (projected_coord);
+    free (block_stride);
     free (part_stride);
 
 
@@ -2072,10 +2106,14 @@ PDM_mesh_location_compute
     const int n_pts_block2 = PDM_part_to_block_n_elt_block_get (ptb2);
 
     PDM_g_num_t *block_location2 = malloc (sizeof(PDM_g_num_t) * n_pts_block2);
+    double *block_proj_coord2 = malloc (sizeof(double) * n_pts_block2 * 3);
     int *block_weights_stride2 = malloc (sizeof(int) * n_pts_block2);
     for (int i = 0; i < n_pts_block2; i++) {
       block_location2[i] = -1;
       block_weights_stride2[i] = 0;
+    }
+    for (int i = 0; i < 3*n_pts_block2; i++) {
+      block_proj_coord2[i] = 0.;
     }
 
     int *idx_min = malloc (sizeof(int) * n_pts_block2);
@@ -2110,6 +2148,9 @@ PDM_mesh_location_compute
 
       block_location2[ipt] = block_location1[idx_min[i]];
       block_weights_stride2[ipt] = block_n_vtx_elt[idx_min[i]];
+      for (int j = 0; j < 3; j++) {
+        block_proj_coord2[3*ipt + j] = block_proj_coord1[3*idx_min[i] + j];
+      }
       s_weights += block_weights_stride2[ipt];
     }
 
@@ -2137,12 +2178,13 @@ PDM_mesh_location_compute
     free (block_elt_type);
     free (block_location1);
     free (block_weights1);
-
+    free (block_proj_coord1);
 
     /*
      *   3) Block-to-part
      */
     int one = 1;
+    int three = 3;
     PDM_block_to_part_t *btp = PDM_block_to_part_create (block_distrib_idx,
                                                          (const PDM_g_num_t **) &pcloud_g_num,
                                                          &n_pts_pcloud,
@@ -2160,6 +2202,17 @@ PDM_mesh_location_compute
                             NULL,
                             (void **) &pcloud_location);
     free (block_location2);
+
+    /* Exchange projected coords */
+    pcloud_proj_coord = malloc (sizeof(double) * n_pts_pcloud * 3);
+    PDM_block_to_part_exch (btp,
+                            sizeof(double),
+                            PDM_STRIDE_CST,
+                            &three,
+                            block_proj_coord2,
+                            NULL,
+                            (void **) &pcloud_proj_coord);
+    free (block_proj_coord2);
 
     /* Exchange weights stride */
     pcloud_weights_stride = malloc (sizeof(int) * n_pts_pcloud);
@@ -2199,19 +2252,26 @@ PDM_mesh_location_compute
      */
     assert (pcloud->location == NULL);
 
-    pcloud->location    = malloc (sizeof(PDM_g_num_t *) * pcloud->n_part);
-    pcloud->weights_idx = malloc (sizeof(int *)         * pcloud->n_part);
-    pcloud->weights     = malloc (sizeof(double *)      * pcloud->n_part);
+    pcloud->location         = malloc (sizeof(PDM_g_num_t *) * pcloud->n_part);
+    pcloud->weights_idx      = malloc (sizeof(int *)         * pcloud->n_part);
+    pcloud->weights          = malloc (sizeof(double *)      * pcloud->n_part);
+    pcloud->projected_coords = malloc (sizeof(double *)      * pcloud->n_part);
 
     idx = 0;
     for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
-      pcloud->location[ipart]    = malloc (sizeof(PDM_g_num_t) * pcloud->n_points[ipart]);
-      pcloud->weights_idx[ipart] = malloc (sizeof(int)         * (pcloud->n_points[ipart] + 1));
+      pcloud->location[ipart]         = malloc (sizeof(PDM_g_num_t) * pcloud->n_points[ipart]);
+      pcloud->projected_coords[ipart] = malloc (sizeof(double) * pcloud->n_points[ipart] * 3);
+      pcloud->weights_idx[ipart]      = malloc (sizeof(int) * (pcloud->n_points[ipart] + 1));
 
       pcloud->weights_idx[ipart][0] = 0;
       int idx_tmp = idx;
       for (int ipt = 0; ipt < pcloud->n_points[ipart]; ipt++) {
         pcloud->location[ipart][ipt] = pcloud_location[idx];
+
+        for (int j = 0; j < 3; j++) {
+          pcloud->projected_coords[ipart][3*ipt + j] = pcloud_proj_coord[3*idx + j];
+        }
+
         pcloud->weights_idx[ipart][ipt+1] = pcloud->weights_idx[ipart][ipt] + pcloud_weights_stride[idx];
 
         idx++;
@@ -2232,8 +2292,7 @@ PDM_mesh_location_compute
     free (pcloud_weights_stride);
     free (pcloud_weights_idx);
     free (pcloud_weights);
-
-    free (projected_coord); // Attention tableau a mettre dans la structure (voir requete redmine)
+    free (pcloud_proj_coord);
 
 
     PDM_timer_hang_on(location->timer);
