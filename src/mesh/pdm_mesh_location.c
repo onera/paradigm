@@ -189,8 +189,7 @@ _redistribute_elementary_location
  PDM_l_num_t          **r_poly3d_face_idx,
  PDM_l_num_t          **r_face_vtx_idx,
  PDM_l_num_t          **r_face_vtx,
- int                  **r_face_orientation,
- double               **r_poly3d_char_length
+ int                  **r_face_orientation
  )
 {
   const int order = 1;
@@ -241,7 +240,6 @@ _redistribute_elementary_location
   int *n_vtx_per_elt = malloc (sizeof(int) * n_elt);
   int *n_face_per_elt = malloc (sizeof(int) * n_poly3d);
   PDM_g_num_t *poly3d_g_num = malloc (sizeof(PDM_g_num_t) * n_poly3d);
-  double *poly3d_char_length = malloc (sizeof(double) * n_poly3d);
 
   PDM_l_num_t *connec_idx = NULL;
   PDM_l_num_t *connec     = NULL;
@@ -476,12 +474,6 @@ _redistribute_elementary_location
             }
             _vtx_coord += 3;
           }
-
-          double _char_length = 0.;
-          for (int k = 0; k < 3; k++) {
-            _char_length = PDM_MAX (_char_length, xyz_max[k] - xyz_min[k]);
-          }
-          poly3d_char_length[ipoly++] = _char_length;
         }
       } // End of loop on parts
 
@@ -685,24 +677,12 @@ _redistribute_elementary_location
 
   int r_n_poly3d = PDM_part_to_block_n_elt_block_get (ptb_poly3d);
 
-  /* Characteristic length */
+  /* Number of faces per polyhedron */
   part_stride = malloc (sizeof(int) * n_poly3d);
   for (ipoly = 0; ipoly < n_poly3d; ipoly++) {
     part_stride[ipoly] = 1;
   }
 
-  PDM_part_to_block_exch (ptb_poly3d,
-                          sizeof(double),
-                          PDM_STRIDE_VAR,
-                          1,
-                          &part_stride,
-                          (void **) &poly3d_char_length,
-                          &block_stride,
-                          (void **) r_poly3d_char_length);
-  free (block_stride);
-  free (poly3d_char_length);
-
-  /* Number of faces per polyhedron */
   int *r_n_face_per_elt = NULL;
   PDM_part_to_block_exch (ptb_poly3d,
                           sizeof(int),
@@ -1838,7 +1818,6 @@ PDM_mesh_location_compute
     PDM_l_num_t *redistrib_face_vtx_idx       = NULL;
     PDM_l_num_t *redistrib_face_vtx           = NULL;
     int         *redistrib_face_orientation   = NULL;
-    double      *redistrib_poly3d_char_length = NULL;
 
     int redistrib_type_idx[PDM_MESH_NODAL_N_ELEMENT_TYPES + 1];
 
@@ -1859,8 +1838,7 @@ PDM_mesh_location_compute
                                        &redistrib_poly3d_face_idx,
                                        &redistrib_face_vtx_idx,
                                        &redistrib_face_vtx,
-                                       &redistrib_face_orientation,
-                                       &redistrib_poly3d_char_length);
+                                       &redistrib_face_orientation);
     free (pts_idx);
     free (pts_g_num);
     free (pts_coord);
@@ -1952,7 +1930,6 @@ PDM_mesh_location_compute
     free (redistrib_face_vtx_idx);
     free (redistrib_face_vtx);
     free (redistrib_face_orientation);
-    free (redistrib_poly3d_char_length);
 
     PDM_timer_hang_on(location->timer);
     e_t_elapsed = PDM_timer_elapsed(location->timer);
