@@ -147,8 +147,8 @@ char *argv[]
 
   } else if ( n_rank == 2){
     n_cloud = 1;
-    coords      = (double **) malloc( n_cloud * sizeof(double **));
-    char_lenght = (double **) malloc( n_cloud * sizeof(double **));
+    coords      = (double **) malloc( n_cloud * sizeof(double*));
+    char_lenght = (double **) malloc( n_cloud * sizeof(double*));
     if(i_rank == 0){
       coords     [0] = xyz_j1;
       char_lenght[0] = cln_j1;
@@ -184,9 +184,9 @@ char *argv[]
   /*
    * Get resulting points_merge
    */
-  int  *n_entity        = (int * ) malloc( n_cloud * sizeof(int* ));
-  int **candidates_idx  = (int **) malloc( n_cloud * sizeof(int**));
-  int **candidates_desc = (int **) malloc( n_cloud * sizeof(int**));
+  int  *n_entity        = (int * ) malloc( n_cloud * sizeof(int ));
+  int **candidates_idx  = (int **) malloc( n_cloud * sizeof(int*));
+  int **candidates_desc = (int **) malloc( n_cloud * sizeof(int*));
   for(int i_cloud = 0; i_cloud < n_cloud; i_cloud++){
     int n_cloud_points = -1;
     int n_desc   = -1;
@@ -226,7 +226,7 @@ char *argv[]
   /*
    *  SetUp exchange
    */
-  int** send_entity_data = (int **) malloc( n_cloud * sizeof(int**));
+  int** send_entity_data = (int **) malloc( n_cloud * sizeof(int*));
   if(n_rank == 1){
     send_entity_data[0] = point_list_j1;
     send_entity_data[1] = point_list_j2;
@@ -255,8 +255,8 @@ char *argv[]
   /*
    * Variable stride test
    */
-  int** send_entity_var_data = (int **) malloc( n_cloud * sizeof(int**));
-  int** send_entity_var_stri = (int **) malloc( n_cloud * sizeof(int**));
+  int** send_entity_var_data = (int **) malloc( n_cloud * sizeof(int*));
+  int** send_entity_var_stri = (int **) malloc( n_cloud * sizeof(int*));
   if(n_rank == 1){
     send_entity_var_data[0] = point_list_var_j1;
     send_entity_var_stri[0] = point_list_var_stri_j1;
