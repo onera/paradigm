@@ -107,6 +107,7 @@ char *argv[]
   free (weights_sum_procs);
   free (stride);
   free (block_stride);
+  free (block_weights);
 
   PDM_MPI_Finalize ();
 
