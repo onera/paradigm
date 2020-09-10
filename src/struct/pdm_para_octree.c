@@ -6454,6 +6454,7 @@ PDM_para_octree_closest_point
   free (start_leaves_idx);
   free (local_closest_src_gnum);
   free (local_closest_src_dist);
+  free (upper_bound_dist);
 
   free (send_coord);
   free (send_g_num);
