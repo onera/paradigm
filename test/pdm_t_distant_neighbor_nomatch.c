@@ -157,9 +157,9 @@ char *argv[]
   int **candidates_desc = NULL;
   if(n_rank == 1){
     n_cloud = 2;
-    candidates_idx  = (int **) malloc( n_cloud * sizeof(int**));
-    candidates_desc = (int **) malloc( n_cloud * sizeof(int**));
-    n_entity        = (int * ) malloc( n_cloud * sizeof(int* ));
+    candidates_idx  = (int **) malloc( n_cloud * sizeof(int*));
+    candidates_desc = (int **) malloc( n_cloud * sizeof(int*));
+    n_entity        = (int * ) malloc( n_cloud * sizeof(int ));
 
     n_entity[0] = 3;
     candidates_idx[0]  = connect_idx_j1;
@@ -170,9 +170,9 @@ char *argv[]
     candidates_desc[1] = connect_triplet_j2;
   } else if ( n_rank == 2){
     n_cloud = 1;
-    candidates_idx  = (int **) malloc( n_cloud * sizeof(int**));
-    candidates_desc = (int **) malloc( n_cloud * sizeof(int**));
-    n_entity        = (int * ) malloc( n_cloud * sizeof(int* ));
+    candidates_idx  = (int **) malloc( n_cloud * sizeof(int*));
+    candidates_desc = (int **) malloc( n_cloud * sizeof(int*));
+    n_entity        = (int * ) malloc( n_cloud * sizeof(int ));
     if(i_rank == 0){
       n_entity[0]        = 3;
       candidates_idx[0]  = connect_idx_j1;
@@ -184,7 +184,7 @@ char *argv[]
     }
 
   } else {
-    
+
     PDM_error(__FILE__, __LINE__, 0, "pdm_t_distant_neighbor error : Bad number of process for test cases \n");
   }
 
@@ -200,7 +200,7 @@ char *argv[]
   /*
    *  SetUp exchange
    */
-  int** send_entity_data = (int **) malloc( n_cloud * sizeof(int**));
+  int** send_entity_data = (int **) malloc( n_cloud * sizeof(int* ));
   if(n_rank == 1){
     send_entity_data[0] = point_list_j1;
     send_entity_data[1] = point_list_j2;
@@ -244,8 +244,8 @@ char *argv[]
   /*
    * Variable stride test
    */
-  int** send_entity_var_data = (int **) malloc( n_cloud * sizeof(int**));
-  int** send_entity_var_stri = (int **) malloc( n_cloud * sizeof(int**));
+  int** send_entity_var_data = (int **) malloc( n_cloud * sizeof(int *));
+  int** send_entity_var_stri = (int **) malloc( n_cloud * sizeof(int *));
   if(n_rank == 1){
     send_entity_var_data[0] = point_list_var_j1;
     send_entity_var_stri[0] = point_list_var_stri_j1;
