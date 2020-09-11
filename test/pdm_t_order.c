@@ -258,6 +258,7 @@ char *argv[]
   compute_unique_idx2(order_j2, order_unique_j2, connect_triplet_j2, nb_ent);
 
   PDM_printf ("\nfin Test\n");
+  PDM_MPI_Finalize ();
 
   return 0;
 
