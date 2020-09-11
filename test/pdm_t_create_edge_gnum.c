@@ -677,6 +677,7 @@ int main(int argc, char *argv[])
   free(edge_data);
   free(edge_stri);
   free(edge_hkey);
+  free(dcell_part);
 
   PDM_part_free(ppart_id);
 
