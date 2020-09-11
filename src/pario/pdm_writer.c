@@ -563,14 +563,8 @@ const int   id_cs
 
     cs_tab = PDM_Handles_free (cs_tab);
     int n_fmt_tab = PDM_Handles_n_get (fmt_tab);
-    const int *fmt_index = PDM_Handles_idx_get(fmt_tab);
     if (n_intern_fmt == n_fmt_tab) {
-      while (n_fmt_tab > 0) {
-        int idx = fmt_index[0];
-        PDM_Handles_handle_free (fmt_tab, idx, PDM_TRUE);
-        n_fmt_tab = PDM_Handles_n_get (fmt_tab);
-      }
-      fmt_tab = PDM_Handles_free (fmt_tab);
+      PDM_writer_fmt_free();
     }
   }
 
