@@ -252,6 +252,8 @@ PDM_part_split_t           method,
       PDM_printf (" - %d %d %d\n", location[3*k], location[3*k+1], location[3*k+2]);
     }
   }
+  free(location_idx);
+  free(location);
 
   PDM_gnum_location_free (id, 1);
 

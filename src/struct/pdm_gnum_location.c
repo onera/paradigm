@@ -406,14 +406,16 @@ PDM_gnum_location_free
     for (int i = 0; i < _gloc->n_part_out; i++) {
       free (_gloc->location_idx[i]);
     }
-    free (_gloc->location_idx);
+    // free (_gloc->location_idx);
 
     for (int i = 0; i < _gloc->n_part_out; i++) {
       free (_gloc->location[i]);
     }
-    free (_gloc->location);
-
+    // free (_gloc->location);
   }
+
+  free (_gloc->location_idx);
+  free (_gloc->location);
 
   free (_gloc);
 
