@@ -701,6 +701,7 @@ int main(int argc, char *argv[])
   free (local_weight);
   free (global_mean_field_ptr);
   free (cellVtxGN);
+  free (dcell_part);
 
   PDM_part_free(ppart_id);
 
