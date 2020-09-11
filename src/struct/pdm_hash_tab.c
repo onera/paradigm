@@ -44,14 +44,14 @@ extern "C" {
 
 typedef struct {
 
-  PDM_hash_tab_key_t   tKey;    /*!< Type of key */
-  int                 *nDataKey;/*!< Number of data for each key */
-  PDM_g_num_t           keyMax;  /*!< Key max */
-  void              ***data;    /*!< Data */
-  int                 *mDataKey;/*!< Max data for each key */
+  PDM_hash_tab_key_t   tKey;       /*!< Type of key */
+  int                 *nDataKey;   /*!< Number of data for each key */
+  PDM_g_num_t          keyMax;     /*!< Key max */
+  void              ***data;       /*!< Data */
+  int                 *mDataKey;   /*!< Max data for each key */
   int                  n_key_info; /*!< Number keys with information */
   int                  l_key_info; /*!< Size of \ref key_info*/
-  PDM_g_num_t         *key_info; /*!< list of Keys with info */
+  PDM_g_num_t         *key_info;   /*!< list of Keys with info */
 
 } _hash_tab_t;
 
@@ -460,19 +460,20 @@ PDM_hash_tab_t *ht
  PDM_printf ("==== PDM_hash_tab_dump ==== \n");
  _hash_tab_t *_ht = (_hash_tab_t *) ht;
   for (int i=0; i <_ht->keyMax; i++){
-	PDM_printf ("_ht->nDataKey[%d] : %d\n", i, _ht->nDataKey[i]);
+	  PDM_printf ("_ht->nDataKey[%d] : %d\n", i, _ht->nDataKey[i]);
   }
   PDM_printf ("_ht->data = %d\n", _ht->data);
-  for (int i=0; i <_ht->keyMax; i++){
-	  PDM_printf ("_ht->data[%d] = %d, ",i, _ht->data[i]);
-	  PDM_printf ("_ht->data[%d][0] = %d, ", i, _ht->data[i][0]);
-	  PDM_printf ("_ht->data[%d][1] = %d, ", i, _ht->data[i][1]);
-	  PDM_printf ("_ht->data[%d][2] = %d, ", i, _ht->data[i][2]);
-	  PDM_printf ("_ht->data[%d][3] = %d \n", i, _ht->data[i][3]);
+  for (int key=0; key < _ht->keyMax; key++){
+    PDM_printf ("_ht->data[%d] = %d, ",key, _ht->data[key]);
+    int n_data_in_key = PDM_hash_tab_n_data_get(ht, &key );
+    for(int i_data = 0; i_data < n_data_in_key; ++i_data){
+      PDM_printf ("_ht->data[%d][%i] = %d, ", key, i_data, _ht->data[key][i_data]);
+    }
+    PDM_printf ("\n");
   }
 
- PDM_printf ("==== PDM_hash_tab_dump ==== terminated ====\n");
- }
+  PDM_printf ("==== PDM_hash_tab_dump ==== terminated ====\n");
+}
 
 
 
