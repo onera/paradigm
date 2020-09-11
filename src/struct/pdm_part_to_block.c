@@ -466,7 +466,16 @@ _distrib_data
   PDM_g_num_t _id_max_max = 0;
 
   ptb->n_elt_proc= 0;
+  //for (int i = 0; i < ptb->n_part; i++) {
+  //  ptb->n_elt_proc+= ptb->n_elt[i];
+  //  for (int j = 0; j < ptb->n_elt[i]; j++) {
+  //    _id_max = _MAX (_id_max, ptb->gnum_elt[i][j]);
+  //  }
+  //}
+
+  fflush(stdout);
   for (int i = 0; i < ptb->n_part; i++) {
+    
     ptb->n_elt_proc+= ptb->n_elt[i];
     if(user_distrib == 0) {
       for (int j = 0; j < ptb->n_elt[i]; j++) {
@@ -474,6 +483,8 @@ _distrib_data
       }
     }
   }
+
+
 
   if(user_distrib == 0) {
 
@@ -834,6 +845,24 @@ _distrib_data
  */
 
 PDM_part_to_block_t *
+PDM_part_to_block_create_cf
+(
+ PDM_part_to_block_distrib_t   t_distrib,
+ PDM_part_to_block_post_t      t_post,
+ double                        part_active_node,
+ PDM_g_num_t                 **gnum_elt,
+ double                      **weight,
+ int                          *n_elt,
+ int                           n_part,
+ PDM_MPI_Fint                  fcomm
+)
+{
+  const PDM_MPI_Comm _comm        = PDM_MPI_Comm_f2c(fcomm);
+  return PDM_part_to_block_create (t_distrib, t_post, part_active_node,
+                                   gnum_elt, weight, n_elt, n_part, _comm);
+}
+
+PDM_part_to_block_t *
 PDM_part_to_block_create
 (
  PDM_part_to_block_distrib_t   t_distrib,
@@ -948,11 +977,30 @@ PDM_part_to_block_create
  */
 
 PDM_part_to_block_t *
+PDM_part_to_block_create2_cf
+(
+ PDM_part_to_block_distrib_t   t_distrib,
+ PDM_part_to_block_post_t      t_post,
+ double                        part_active_node,
+ PDM_g_num_t                 **gnum_elt,
+ PDM_g_num_t                  *data_distrib_index,
+ int                          *n_elt,
+ int                           n_part,
+ PDM_MPI_Fint                  fcomm
+)
+{
+  const PDM_MPI_Comm _comm        = PDM_MPI_Comm_f2c(fcomm);
+  return PDM_part_to_block_create2 (t_distrib, t_post, part_active_node,
+                                    gnum_elt, data_distrib_index,
+                                    n_elt, n_part, _comm);
+}
+
+PDM_part_to_block_t *
 PDM_part_to_block_create2
 (
  PDM_part_to_block_distrib_t   t_distrib,
  PDM_part_to_block_post_t      t_post,
- float                         part_active_node,
+ double                         part_active_node,
  PDM_g_num_t                 **gnum_elt,
  PDM_g_num_t                  *data_distrib_index,
  int                          *n_elt,
@@ -963,7 +1011,6 @@ PDM_part_to_block_create2
 
   _pdm_part_to_block_t *ptb =
     (_pdm_part_to_block_t *) malloc (sizeof(_pdm_part_to_block_t));
-
 
   ptb->t_distrib         = t_distrib;    /*!< Distribution type */
   ptb->t_post            = t_post;       /*!< Post processing type */
@@ -1178,12 +1225,34 @@ PDM_part_to_block_exch
 )
 {
   _pdm_part_to_block_t *_ptb = (_pdm_part_to_block_t *) ptb;
+  
+  //if ( _ptb->i_rank==0 ){
+  //  printf("line %d PDM_part_to_block_exch s_data=%lu\n",__LINE__,s_data);
+  //  fflush(stdout);
+  //  printf("line %d PDM_part_to_block_exch t_stride=%d\n",__LINE__,t_stride);
+  //  fflush(stdout);
+  //  printf("line %d PDM_part_to_block_exch cst_stride=%d\n",__LINE__,cst_stride);
+  //  fflush(stdout);
+  //  printf("line %d PDM_part_to_block_exch _ptb->n_elt[0]=%d\n",__LINE__,_ptb->n_elt[0]);
+  //  fflush(stdout);
+  //  //for (int i = 0; i < _ptb->n_part; i++) {
+  //  //for (int j = 0; j < _ptb->n_elt[0]; j++) {
+  //  //  printf("line %d PDM_part_to_block_exch part_data[%d]==%d\n",__LINE__,j,(( int **) part_data)[0][j]);
+  //  //  fflush(stdout);
+  //  //}
+  //  //}
+  //}
+
+  //*
+  //*/
+
 
   if ((_ptb->t_post == PDM_PART_TO_BLOCK_POST_MERGE) &&
       (t_stride ==  PDM_STRIDE_CST)) {
     PDM_error(__FILE__, __LINE__, 0,"PDM_part_to_block_exch : PDM_writer_STRIDE_CST is not compatible PDM_writer_POST_MERGE post\n");
     abort ();
   }
+  
 
   size_t *i_send_buffer = (size_t *) malloc (sizeof(size_t) * _ptb->s_comm);
   size_t *i_recv_buffer = (size_t *) malloc (sizeof(size_t) * _ptb->s_comm);
@@ -1287,6 +1356,7 @@ PDM_part_to_block_exch
   /*
    * Data exchange
    */
+  
 
   unsigned char *send_buffer = (unsigned char *) malloc(sizeof(unsigned char) * s_send_buffer);
   unsigned char *recv_buffer = (unsigned char *) malloc(sizeof(unsigned char) * s_recv_buffer);
@@ -1312,6 +1382,14 @@ PDM_part_to_block_exch
       for (int j = 1; j < _ptb->n_elt[i] + 1; j++)
         i_part[j] = i_part[j-1] + ((size_t) part_stride[i][j-1] * s_data);
     }
+    
+    //if ( _ptb->i_rank==0 ){
+    //  printf("line %d PDM_part_to_block_exch  _ptb->dest_proc[%d]=%d\n",__LINE__,idx,_ptb->dest_proc[idx]);
+    //  fflush(stdout);
+    //  //printf("line %d PDM_part_to_block_exch s_octet_elt=%d\n",__LINE__,s_octet_elt);
+    //  //fflush(stdout);
+    //}
+
 
     for (int j = 0; j < _ptb->n_elt[i]; j++) {
       int iproc = _ptb->dest_proc[++idx];
@@ -1332,11 +1410,16 @@ PDM_part_to_block_exch
         send_buffer[i_send_buffer[iproc] + n_send_buffer[iproc]++] =
           _part_data[i][i_part_elt + k];
       }
+
+
     }
 
     if (i_part != NULL)
       free (i_part);
   }
+
+
+
 
   PDM_MPI_Alltoallv_l(send_buffer,
                       n_send_buffer,
