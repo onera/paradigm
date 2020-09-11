@@ -1079,8 +1079,13 @@ PDM_mesh_location_mesh_global_data_set
 
   location->mesh_nodal_id = PDM_Mesh_nodal_create (n_part, location->comm);
 
-  location->face_vtx_n = malloc(sizeof(PDM_l_num_t *) * n_part);
+  location->face_vtx_n  = malloc(sizeof(PDM_l_num_t *) * n_part);
   location->cell_face_n = malloc(sizeof(PDM_l_num_t *) * n_part);
+
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    location->face_vtx_n [i_part] = NULL;
+    location->cell_face_n[i_part] = NULL;
+  }
 
 }
 
@@ -1221,6 +1226,9 @@ PDM_mesh_location_part_set_2d
 
   PDM_l_num_t *edge_vtx_nb  = malloc (sizeof(PDM_l_num_t) * n_edge);
   PDM_l_num_t *cell_edge_nb = malloc (sizeof(PDM_l_num_t) * n_cell);
+
+  location->cell_face_n = NULL;
+  location->face_vtx_n  = NULL;
 
   for (int i = 0; i < n_edge; i++) {
     edge_vtx_nb[i] = edge_vtx_idx[i+1] - edge_vtx_idx[i];
@@ -1439,14 +1447,23 @@ PDM_mesh_location_free
 
     PDM_Mesh_nodal_free (location->mesh_nodal_id);
 
-    for (int i = 0; i< _n_part; i++) {
-      free(location->cell_face_n[i]);
-      free(location->face_vtx_n[i]);
+    if(location->cell_face_n != NULL){
+      for (int i = 0; i< _n_part; i++) {
+        if(location->cell_face_n[i] == NULL) {
+          free(location->cell_face_n[i]);
+        }
+      }
+      free (location->cell_face_n);
     }
 
-    free (location->cell_face_n);
-    free (location->face_vtx_n);
-
+    if(location->face_vtx_n != NULL){
+      for (int i = 0; i< _n_part; i++) {
+        if(location->face_vtx_n[i] == NULL) {
+          free(location->face_vtx_n[i]);
+        }
+      }
+      free (location->face_vtx_n);
+    }
   }
 }
 
