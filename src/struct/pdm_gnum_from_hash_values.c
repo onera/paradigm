@@ -218,7 +218,7 @@ setup_distribution_from_min_max
     distribution[i+1] += distribution[i];
   }
 
-  PDM_log_trace_array_size_t(distribution, n_dist+1, "distribution:: ");
+  // PDM_log_trace_array_size_t(distribution, n_dist+1, "distribution:: ");
 }
 
 /**
@@ -286,7 +286,7 @@ _gnum_from_hv_compute
   double e_t_cpu_u;
   double e_t_cpu_s;
 
-  printf("_gnum_from_hv_compute \n");
+  // printf("_gnum_from_hv_compute \n");
 
   b_t_elapsed = PDM_timer_elapsed(_gnum_from_hv->timer);
   b_t_cpu     = PDM_timer_cpu(_gnum_from_hv->timer);
@@ -337,12 +337,15 @@ _gnum_from_hv_compute
   /*
    * Prepare send
    */
+  int** elmt_to_proc = (int **) malloc(_gnum_from_hv->n_part * sizeof(int*));
   for(int i_part = 0; i_part < _gnum_from_hv->n_part; ++i_part){
+    elmt_to_proc[i_part] = (int *) malloc( _gnum_from_hv->n_elts[i_part] * sizeof(int));
     for(int ielt = 0; ielt < _gnum_from_hv->n_elts[i_part]; ++ielt){
 
       size_t g_key = _gnum_from_hv->part_hkeys[i_part][ielt];
       // log_trace(" Search for :: %lu\n", g_key);
       int t_rank = PDM_binary_search_gap_size_t(g_key, _gnum_from_hv->distribution, _gnum_from_hv->n_rank+1);
+      elmt_to_proc[i_part][ielt] = t_rank;
 
       // log_trace(" Found in t_rank :: %d\n", t_rank);
       // n_data_send[t_rank] += _gnum_from_hv->s_data * _gnum_from_hv->part_hstri[i_part][ielt];
@@ -427,12 +430,14 @@ _gnum_from_hv_compute
   int s_send_data = i_data_send[_gnum_from_hv->n_rank] * _gnum_from_hv->s_data;
   int s_recv_data = i_data_recv[_gnum_from_hv->n_rank] * _gnum_from_hv->s_data;
 
-  log_trace("s_send_keys::%d - %d \n", s_send_keys, s_send_keys/_gnum_from_hv->s_data);
-  log_trace("s_recv_keys::%d - %d \n", s_recv_keys, s_recv_keys/_gnum_from_hv->s_data);
-  log_trace("s_send_data::%d\n", s_send_data);
-  log_trace("s_recv_data::%d\n", s_recv_data);
-  log_trace("i_data_send[_gnum_from_hv->n_rank]::%d\n", i_data_send[_gnum_from_hv->n_rank]);
-  log_trace("i_data_recv[_gnum_from_hv->n_rank]::%d\n", i_data_recv[_gnum_from_hv->n_rank]);
+  if(0 == 1) {
+    log_trace("s_send_keys::%d - %d \n", s_send_keys, s_send_keys/_gnum_from_hv->s_data);
+    log_trace("s_recv_keys::%d - %d \n", s_recv_keys, s_recv_keys/_gnum_from_hv->s_data);
+    log_trace("s_send_data::%d\n", s_send_data);
+    log_trace("s_recv_data::%d\n", s_recv_data);
+    log_trace("i_data_send[_gnum_from_hv->n_rank]::%d\n", i_data_send[_gnum_from_hv->n_rank]);
+    log_trace("i_data_recv[_gnum_from_hv->n_rank]::%d\n", i_data_recv[_gnum_from_hv->n_rank]);
+  }
 
   /*
    * Allocate
@@ -459,7 +464,8 @@ _gnum_from_hv_compute
 
       size_t g_key = _gnum_from_hv->part_hkeys[i_part][ielt];
       // log_trace(" Search for :: %lu\n", g_key);
-      int t_rank = PDM_binary_search_gap_size_t(g_key, _gnum_from_hv->distribution, _gnum_from_hv->n_rank+1);
+      // int t_rank = PDM_binary_search_gap_size_t(g_key, _gnum_from_hv->distribution, _gnum_from_hv->n_rank+1);
+      int t_rank = elmt_to_proc[i_part][ielt];
 
       // log_trace(" Found in t_rank :: %d\n", t_rank);
 
@@ -697,8 +703,8 @@ _gnum_from_hv_compute
     }
   }
 
-  log_trace("n_id   :: %d \n", n_id);
-  log_trace("next_id:: %d \n", next_id);
+  // log_trace("n_id   :: %d \n", n_id);
+  // log_trace("next_id:: %d \n", next_id);
 
   /*
    *  Rebuild the global numbering
@@ -723,7 +729,7 @@ _gnum_from_hv_compute
                      PDM_MPI_MAX,
                      _gnum_from_hv->comm);
 
-  log_trace("_gnum_from_hv->n_g_elt:: %d \n", _gnum_from_hv->n_g_elt);
+  // log_trace("_gnum_from_hv->n_g_elt:: %d \n", _gnum_from_hv->n_g_elt);
 
   /*
    * Panic verbose
@@ -765,10 +771,15 @@ _gnum_from_hv_compute
   /*
    *  Remise en place dans chaque partition
    */
-  int idx = 0;
+  for(int i = 0; i < _gnum_from_hv->n_rank; ++i){
+    n_key_send[i]  = 0;
+  }
+
   for(int i_part = 0; i_part < _gnum_from_hv->n_part; ++i_part){
     for(int ielt = 0; ielt < _gnum_from_hv->n_elts[i_part]; ++ielt){
-      _gnum_from_hv->g_nums[i_part][ielt] = part_ln_to_gn[idx++];
+      int t_rank   = elmt_to_proc[i_part][ielt];
+      int idx_send = i_key_send[t_rank] + n_key_send[t_rank]++;
+      _gnum_from_hv->g_nums[i_part][ielt] = part_ln_to_gn[idx_send];
     }
   }
 
@@ -788,6 +799,10 @@ _gnum_from_hv_compute
   free(recv_buffer_stri);
   free(blk_ln_to_gn);
   free(part_ln_to_gn);
+  for(int i_part = 0; i_part < _gnum_from_hv->n_part; ++i_part){
+    free(elmt_to_proc[i_part]);
+  }
+  free(elmt_to_proc);
   free(order);
   free(us);
 
@@ -844,10 +859,10 @@ PDM_gnum_from_hash_values_create
 )
 {
   int i_rank;
-  PDM_MPI_Comm_rank (PDM_MPI_COMM_WORLD, &i_rank);
+  PDM_MPI_Comm_rank (comm, &i_rank);
 
   int n_rank;
-  PDM_MPI_Comm_size (PDM_MPI_COMM_WORLD, &n_rank);
+  PDM_MPI_Comm_size (comm, &n_rank);
 
   /*
    * Search a gnum_from_hash_values free id
