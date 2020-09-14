@@ -71,6 +71,9 @@ char *argv[]
                         6, 2};
   int edge_str_p1[4] = {2, 2, 2, 2};
 
+  PDM_g_num_t expected_ln_to_gn_p0[4] = {1, 5, 7, 2};
+  PDM_g_num_t expected_ln_to_gn_p1[4] = {3, 1, 4, 6};
+
   /*
    * SetUp
    */
@@ -161,6 +164,30 @@ char *argv[]
     ln_to_gn[i_part] = PDM_gnum_from_hv_get(gnum_fhv_id, i_part);
     PDM_log_trace_array_long(ln_to_gn[i_part], n_elmts[i_part], "ln_to_gn::");
   }
+
+  // Check results : independant of the parallelisme
+  if(n_rank == 1){
+    for(int ielmt = 0; ielmt < n_elmts[0]; ++ielmt) {
+      assert(ln_to_gn[0][ielmt] == expected_ln_to_gn_p0[ielmt]);
+    }
+    for(int ielmt = 0; ielmt < n_elmts[1]; ++ielmt) {
+      assert(ln_to_gn[1][ielmt] == expected_ln_to_gn_p1[ielmt]);
+    }
+  } else {
+    if( i_rank == 0) {
+      for(int ielmt = 0; ielmt < n_elmts[0]; ++ielmt) {
+        assert(ln_to_gn[0][ielmt] == expected_ln_to_gn_p0[ielmt]);
+      }
+    } else if (i_rank == 1) {
+      for(int ielmt = 0; ielmt < n_elmts[0]; ++ielmt) {
+        assert(ln_to_gn[0][ielmt] == expected_ln_to_gn_p1[ielmt]);
+      }
+    }
+  }
+
+
+
+
 
   /*
    * Free
