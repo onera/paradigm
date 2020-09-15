@@ -4,8 +4,8 @@ cdef extern from "pdm_mesh_location.h":
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
   # > Wrapping for C
   ctypedef enum PDM_mesh_location_method_t:
-    PDM_MESH_LOCATION_OCTREE  = 1
-    PDM_MESH_LOCATION_DBBTREE = 2
+    PDM_MESH_LOCATION_OCTREE  = 0
+    PDM_MESH_LOCATION_DBBTREE = 1
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -286,18 +286,24 @@ cdef class MeshLocation:
 
     # > Build numpy capsule
     dim = <NPY.npy_intp> n_points + 1
-    np_g_num = NPY.PyArray_SimpleNewFromData(1,
-                                             &dim,
-                                             NPY.NPY_INT32,
-                                             <void *> weights_idx)
+    np_weights_idx = NPY.PyArray_SimpleNewFromData(1,
+                                              &dim,
+                                              NPY.NPY_INT32,
+                                              <void *> weights_idx)
     # PyArray_ENABLEFLAGS(np_g_num, NPY.NPY_OWNDATA)
 
     dim = <NPY.npy_intp> weights_idx[n_points]
-    np_location = NPY.PyArray_SimpleNewFromData(1,
+    np_weights = NPY.PyArray_SimpleNewFromData(1,
                                                 &dim,
                                                 NPY.NPY_DOUBLE,
                                                 <void *> weights)
     # PyArray_ENABLEFLAGS(np_location, NPY.NPY_OWNDATA)
+
+    return {'g_num'       : np_g_num,
+            'location'    : np_location,
+            'weights_idx' : np_weights_idx,
+            'weights'     : np_weights
+            }
 
   # ------------------------------------------------------------------------
   def compute(self):
