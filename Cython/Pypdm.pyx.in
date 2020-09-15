@@ -155,5 +155,9 @@ include "pdm_gnum_location.pxi"
 # --------------------
 include "pdm_gnum.pxi"
 
+# PDM_gnum :
+# --------------------
+include "pdm_mesh_location.pxi"
+
 
 # TODO: PDM_writer, ...
