@@ -243,3 +243,87 @@ cdef class MeshLocation:
     """
     """
     PDM_mesh_location_method_set(self._id, method);
+
+  # ------------------------------------------------------------------------
+  def method_set(self, int i_point_cloud,
+                       int i_part):
+    """
+    """
+    # ************************************************************************
+    # > Declaration
+    cdef int           n_points
+    cdef double       *coord
+    cdef PDM_g_num_t  *g_num
+    cdef PDM_g_num_t  *location
+    cdef int          *weights_idx
+    cdef double       *weights
+    # ************************************************************************
+
+    PDM_mesh_location_get(self._id,
+                          i_point_cloud,
+                          i_part,
+                          &n_points,
+                          &coord,
+                          &g_num,
+                          &location,
+                          &weights_idx,
+                          &weights);
+
+    cdef NPY.npy_intp dim
+    # > Build numpy capsule
+    dim = <NPY.npy_intp> n_points
+    np_g_num = NPY.PyArray_SimpleNewFromData(1,
+                                             &dim,
+                                             PDM_G_NUM_NPY_INT,
+                                             <void *> g_num)
+    # PyArray_ENABLEFLAGS(np_g_num, NPY.NPY_OWNDATA)
+
+    np_location = NPY.PyArray_SimpleNewFromData(1,
+                                             &dim,
+                                             PDM_G_NUM_NPY_INT,
+                                             <void *> location)
+    # PyArray_ENABLEFLAGS(np_location, NPY.NPY_OWNDATA)
+
+    # > Build numpy capsule
+    dim = <NPY.npy_intp> n_points + 1
+    np_g_num = NPY.PyArray_SimpleNewFromData(1,
+                                             &dim,
+                                             NPY.NPY_INT32,
+                                             <void *> weights_idx)
+    # PyArray_ENABLEFLAGS(np_g_num, NPY.NPY_OWNDATA)
+
+    dim = <NPY.npy_intp> weights_idx[n_points]
+    np_location = NPY.PyArray_SimpleNewFromData(1,
+                                                &dim,
+                                                NPY.NPY_DOUBLE,
+                                                <void *> weights)
+    # PyArray_ENABLEFLAGS(np_location, NPY.NPY_OWNDATA)
+
+  # ------------------------------------------------------------------------
+  def compute(self):
+    """
+    """
+    # ************************************************************************
+    # > Declaration
+    # ************************************************************************
+    PDM_mesh_location_compute(self._id)
+
+  # ------------------------------------------------------------------------
+  def dump_times(self):
+    """
+    """
+    # ************************************************************************
+    # > Declaration
+    # ************************************************************************
+    PDM_mesh_location_dump_times(self._id)
+
+  # ------------------------------------------------------------------------
+  def __dealloc__(self):
+    """
+       Use the free method of PDM Lib
+    """
+    # ************************************************************************
+    # > Declaration
+    # ************************************************************************
+    print('PDM_mesh_location_free')
+    PDM_mesh_location_free(self._id, 0)
