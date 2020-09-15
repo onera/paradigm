@@ -96,10 +96,10 @@ PDM_mesh_location_n_part_cloud_set
 void
 PDM_mesh_location_cloud_set
 (
- const int          id,
- const int          i_point_cloud,
- const int          i_part,
- const int          n_points,
+ const int    id,
+ const int    i_point_cloud,
+ const int    i_part,
+ const int    n_points,
  double      *coords,
  PDM_g_num_t *gnum
 );
