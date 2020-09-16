@@ -245,8 +245,8 @@ cdef class MeshLocation:
     PDM_mesh_location_method_set(self._id, method);
 
   # ------------------------------------------------------------------------
-  def method_set(self, int i_point_cloud,
-                       int i_part):
+  def location_get(self, int i_point_cloud,
+                         int i_part):
     """
     """
     # ************************************************************************
