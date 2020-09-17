@@ -292,7 +292,8 @@ PDM_mesh_location_get
  PDM_g_num_t **g_num,
  PDM_g_num_t **location,
  int         **weights_idx,
- double      **weights
+ double      **weights,
+ double      **projected_coord
 );
 
 /**
