@@ -167,7 +167,8 @@ include "pdm_closest_points.pxi"
 # --------------------
 @COMMENT_NOT_PDMA@include "../../Cython/pdm_overlay.pxi"
 
-
-
+# PDM_dcube_gen :
+# --------------------
+include "pdm_dcube_gen.pxi"
 
 # TODO: PDM_writer, ...
