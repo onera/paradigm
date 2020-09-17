@@ -87,7 +87,8 @@ cdef extern from "pdm_mesh_location.h":
                              PDM_g_num_t **g_num,
                              PDM_g_num_t **location,
                              int         **weights_idx,
-                             double      **weights);
+                             double      **weights,
+                             double      **projected_coord);
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -257,6 +258,7 @@ cdef class MeshLocation:
     cdef PDM_g_num_t  *location
     cdef int          *weights_idx
     cdef double       *weights
+    cdef double       *p_proj_coord
     # ************************************************************************
 
     PDM_mesh_location_get(self._id,
@@ -267,7 +269,8 @@ cdef class MeshLocation:
                           &g_num,
                           &location,
                           &weights_idx,
-                          &weights);
+                          &weights,
+                          &p_proj_coord);
 
     cdef NPY.npy_intp dim
     # > Build numpy capsule
@@ -297,12 +300,19 @@ cdef class MeshLocation:
                                                 &dim,
                                                 NPY.NPY_DOUBLE,
                                                 <void *> weights)
+    # > Build numpy capsule
+    dim = <NPY.npy_intp> 3*n_points
+    np_p_proj_coord = NPY.PyArray_SimpleNewFromData(1,
+                                              &dim,
+                                              NPY.NPY_INT32,
+                                              <void *> p_proj_coord)
     # PyArray_ENABLEFLAGS(np_location, NPY.NPY_OWNDATA)
 
-    return {'g_num'       : np_g_num,
-            'location'    : np_location,
-            'weights_idx' : np_weights_idx,
-            'weights'     : np_weights
+    return {'g_num'        : np_g_num,
+            'location'     : np_location,
+            'weights_idx'  : np_weights_idx,
+            'weights'      : np_weights,
+            'p_proj_coord' : np_p_proj_coord
             }
 
   # ------------------------------------------------------------------------

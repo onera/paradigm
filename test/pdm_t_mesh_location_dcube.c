@@ -545,19 +545,6 @@ int main(int argc, char *argv[])
                                 vtx_ln_to_gn);
   }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
   /* Set location parameters */
   PDM_mesh_location_tolerance_set (id_loc,
                                    tolerance);
