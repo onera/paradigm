@@ -159,6 +159,10 @@ include "pdm_gnum.pxi"
 # --------------------
 include "pdm_mesh_location.pxi"
 
+# PDM_mesh_location :
+# --------------------
+include "pdm_closest_points.pxi"
+
 # PDM_overlay :
 # --------------------
 @COMMENT_NOT_PDMA@include "../../Cython/pdm_overlay.pxi"
