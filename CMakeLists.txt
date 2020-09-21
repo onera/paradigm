@@ -380,31 +380,6 @@ if(PDM_ENABLE_UNIT_TEST)
     FetchContent_Populate(doctest)
     add_subdirectory(${doctest_SOURCE_DIR} ${doctest_BINARY_DIR})
   endif()
-  # message("${CMAKE_CURRENT_SOURCE_DIR}::" ${CMAKE_CURRENT_SOURCE_DIR})
-  # file(GLOB_RECURSE __test_files
-  #      CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.test.cpp")
-  # foreach(__test_file ${__test_files})
-  #   message("__test_file::" ${__test_file})
-  # endforeach()
-
-  # set(unit_test_main ${CMAKE_CURRENT_SOURCE_DIR}/test/pdm_t_unit_test.cpp)
-  # add_executable(paradigm_unit_tests
-  #   ${__test_files}
-  #   ${unit_test_main}
-  # )
-  # target_link_libraries(paradigm_unit_tests
-  #   PUBLIC
-  #     ${PROJECT_NAME}
-  #   PRIVATE
-  #     doctest::doctest
-  # )
-  # target_link_libraries(paradigm_unit_tests
-  #   PUBLIC
-  #     ${PROJECT_NAME}
-  #   PRIVATE
-  #     MPI::MPI
-  # )
-  # add_test(NAME paradigm_unit_tests COMMAND paradigm_unit_tests)
 endif()
 #------------------------------------------------------------------------------
 
