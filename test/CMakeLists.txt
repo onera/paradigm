@@ -51,6 +51,12 @@ get_target_property(PDM_INC pdm INCLUDE_DIRECTORIES)
 
 include(TestCreate)
 
+if(PDM_ENABLE_UNIT_TEST)
+  file(GLOB_RECURSE __test_files
+       CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/../src/*.test.cpp")
+  test_cpp_unit_create(pdm_t_unit_test ${MPIEXEC_MAX_NUMPROCS} SOURCES ${__test_files} )
+endif()
+
 if (PDM_HAVE_PARMETIS OR PDM_HAVE_PTSCOTCH)
   test_c_create (pdm_t_part_dcube ${MPIEXEC_MAX_NUMPROCS})
   test_c_create (pdm_t_partitioning_dcube ${MPIEXEC_MAX_NUMPROCS})

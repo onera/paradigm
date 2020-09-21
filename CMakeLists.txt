@@ -91,6 +91,10 @@ if (NOT (PDM_IN_PDMA OR PDM_IN_CWP))
       set(PDM_ENABLE_SHARED_Fortran_INTERFACE ON)
    endif ()
 
+   # Unit test mpi with doctect
+   # ------
+   option(PDM_ENABLE_UNIT_TEST "Enable unit test " OFF)
+
 elseif (PDM_IN_CWP)
 
   # OpenMP
@@ -362,6 +366,47 @@ if (PDM_ENABLE_PYTHON_BINDINGS)
   add_subdirectory(Cython)
 endif()
 add_subdirectory(test)
+
+#------------------------------------------------------------------------------
+if(PDM_ENABLE_UNIT_TEST)
+  include(FetchContent)
+  FetchContent_Declare(
+    doctest
+    GIT_REPOSITORY https://github.com/BerengerBerthoul/doctest.git
+    GIT_TAG        339ec122bece7c45bd2892ea4701e0b6f491fb59
+  )
+  FetchContent_GetProperties(doctest)
+  if(NOT doctest_POPULATED)
+    FetchContent_Populate(doctest)
+    add_subdirectory(${doctest_SOURCE_DIR} ${doctest_BINARY_DIR})
+  endif()
+  # message("${CMAKE_CURRENT_SOURCE_DIR}::" ${CMAKE_CURRENT_SOURCE_DIR})
+  # file(GLOB_RECURSE __test_files
+  #      CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.test.cpp")
+  # foreach(__test_file ${__test_files})
+  #   message("__test_file::" ${__test_file})
+  # endforeach()
+
+  # set(unit_test_main ${CMAKE_CURRENT_SOURCE_DIR}/test/pdm_t_unit_test.cpp)
+  # add_executable(paradigm_unit_tests
+  #   ${__test_files}
+  #   ${unit_test_main}
+  # )
+  # target_link_libraries(paradigm_unit_tests
+  #   PUBLIC
+  #     ${PROJECT_NAME}
+  #   PRIVATE
+  #     doctest::doctest
+  # )
+  # target_link_libraries(paradigm_unit_tests
+  #   PUBLIC
+  #     ${PROJECT_NAME}
+  #   PRIVATE
+  #     MPI::MPI
+  # )
+  # add_test(NAME paradigm_unit_tests COMMAND paradigm_unit_tests)
+endif()
+#------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
 # Affichage du message de fin d'installation

@@ -53,3 +53,32 @@ function(test_python_create name n_proc)
             ${MPIEXEC_POSTFLAGS})
 
 endfunction()
+
+function(test_cpp_unit_create name n_proc)
+  set(options)
+  set(one_value_args)
+  set(multi_value_args SOURCES)
+  cmake_parse_arguments(ARGS "${options}" "${one_value_args}" "${multi_value_args}" ${ARGN})
+
+  add_executable(${name} "${name}.cpp" ${ARGS_SOURCES})
+  foreach( test_file ${ARGS_SOURCES} )
+    message("test_file" ${test_file})
+  endforeach()
+
+   if ((NOT MPI_CXX_COMPILER) AND MPI_CXX_COMPILE_FLAGS)
+     set_target_properties(${name}
+                           PROPERTIES
+                           COMPILE_FLAGS ${MPI_C_COMPILE_FLAGS})
+   endif()
+   target_include_directories(${name} PRIVATE ${CMAKE_SOURCE_DIR}
+                                      PRIVATE ${CMAKE_BINARY_DIR}
+                                      PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+   target_include_directories(${name} PRIVATE ${TEST_INC})
+   target_link_libraries(${name} doctest::doctest)
+   target_link_libraries(${name} ${LINK_LIBRARIES})
+   install(TARGETS ${name} RUNTIME DESTINATION bin)
+   add_test (${name} ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${n_proc}
+             ${MPIEXEC_PREFLAGS}
+             ${CMAKE_CURRENT_BINARY_DIR}/${name}
+             ${MPIEXEC_POSTFLAGS})
+endfunction()
