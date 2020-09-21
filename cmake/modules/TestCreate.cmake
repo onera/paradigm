@@ -61,9 +61,10 @@ function(test_cpp_unit_create name n_proc)
   cmake_parse_arguments(ARGS "${options}" "${one_value_args}" "${multi_value_args}" ${ARGN})
 
   add_executable(${name} "${name}.cpp" ${ARGS_SOURCES})
-  foreach( test_file ${ARGS_SOURCES} )
-    message("test_file" ${test_file})
-  endforeach()
+
+  # foreach( test_file ${ARGS_SOURCES} )
+  #   message("test_file" ${test_file})
+  # endforeach()
 
    if ((NOT MPI_CXX_COMPILER) AND MPI_CXX_COMPILE_FLAGS)
      set_target_properties(${name}

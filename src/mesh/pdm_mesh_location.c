@@ -1441,7 +1441,7 @@ PDM_mesh_location_free
 
     if(location->cell_face_n != NULL){
       for (int i = 0; i< _n_part; i++) {
-        if(location->cell_face_n[i] == NULL) {
+        if(location->cell_face_n[i] != NULL) {
           free(location->cell_face_n[i]);
         }
       }
@@ -1450,7 +1450,7 @@ PDM_mesh_location_free
 
     if(location->face_vtx_n != NULL){
       for (int i = 0; i< _n_part; i++) {
-        if(location->face_vtx_n[i] == NULL) {
+        if(location->face_vtx_n[i] != NULL) {
           free(location->face_vtx_n[i]);
         }
       }
