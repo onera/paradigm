@@ -1969,7 +1969,7 @@ PDM_surf_mesh_is_plane_surface
   }
 
 
-  printf("plane : %12.5e  %12.5e  %12.5e  %12.5e\n",
+  printf("plane %d : %12.5e  %12.5e  %12.5e  %12.5e\n",isPlane,
          planeEquation[0],
          planeEquation[1],
          planeEquation[2] ,
