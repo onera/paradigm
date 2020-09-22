@@ -1204,13 +1204,11 @@ PDM_mesh_location_part_set_2d
                             coords,
                             vtx_ln_to_gn);
 
+  location->face_vtx_n[i_part]  = malloc (sizeof(PDM_l_num_t) * n_edge);
+  location->cell_face_n[i_part] = malloc (sizeof(PDM_l_num_t) * n_cell);
 
-
-  PDM_l_num_t *edge_vtx_nb  = malloc (sizeof(PDM_l_num_t) * n_edge);
-  PDM_l_num_t *cell_edge_nb = malloc (sizeof(PDM_l_num_t) * n_cell);
-
-  location->cell_face_n = NULL;
-  location->face_vtx_n  = NULL;
+  PDM_l_num_t *edge_vtx_nb  = location->face_vtx_n[i_part];
+  PDM_l_num_t *cell_edge_nb = location->cell_face_n[i_part];
 
   for (int i = 0; i < n_edge; i++) {
     edge_vtx_nb[i] = edge_vtx_idx[i+1] - edge_vtx_idx[i];
@@ -1219,6 +1217,7 @@ PDM_mesh_location_part_set_2d
   for (int i = 0; i < n_cell; i++) {
     cell_edge_nb[i] = cell_edge_idx[i+1] - cell_edge_idx[i];
   }
+
 
   PDM_Mesh_nodal_cell2d_celledge_add (location->mesh_nodal_id,
                                       i_part,
