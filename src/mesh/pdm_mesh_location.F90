@@ -19,9 +19,10 @@
 
 #include "pdm_configf.h"
 
-module pdm_mesh_loaction
+module pdm_mesh_location
 
   use pdm
+  use iso_c_binding
 
   implicit none
 
@@ -338,7 +339,6 @@ module pdm_mesh_loaction
       implicit none
 
       integer(c_int), value :: id
-      integer(c_int), value :: method
 
     end subroutine PDM_mesh_location_compute
 
@@ -379,7 +379,6 @@ module pdm_mesh_loaction
       integer(c_int)        :: n_points
       type(c_ptr)           :: coord
       type(c_ptr)           :: g_num
-      type(c_ptr)           :: coord
       type(c_ptr)           :: location
       type(c_ptr)           :: weights_idx
       type(c_ptr)           :: weights
@@ -447,4 +446,4 @@ module pdm_mesh_loaction
 
   end interface
 
-end module pdm_mesh_loaction
+end module pdm_mesh_location

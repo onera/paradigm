@@ -79,22 +79,22 @@ module pdm_part_to_block
       integer(c_int), value :: n_part
       integer(c_int), value :: fComm
       type (c_ptr) :: ptrC
-      
-      !> La routine qui appelle cette interface doit disposer des modules 
+
+      !> La routine qui appelle cette interface doit disposer des modules
       !> use iso_c_binding
       !> use pdm_part_to_block
-      
-      !> La routine qui appelle cette interface doit de la variable 
+
+      !> La routine qui appelle cette interface doit de la variable
       !> type(c_ptr)              :: PDM_part_to_block_t
-      
+
       !> Les petits trucs:
       !> type (c_ptr), value :: gnum_elt
       !>   passer tableau local2Global(:)-> gnum_elt
       !>   integer                  :: iCell
       !>   integer    , pointer     :: local2Global(:)
       !>   type(c_ptr), pointer     :: gnum_elt(:,:)=>null()
-      !> 
-      !>   allocate( gnum_elt(1:size(local2Global),1:1) )      
+      !>
+      !>   allocate( gnum_elt(1:size(local2Global),1:1) )
       !>   do iCell=1,size(local2Global)
       !>     gnum_elt(iCell,1)=c_loc( local2Global(iCell))
       !>   enddo
@@ -104,7 +104,7 @@ module pdm_part_to_block
       !>   type (c_ptr), value :: n_elt
       !>   integer                 :: nCellDomain
       !>   integer(c_int), pointer :: n_elt(:)
-      !>   
+      !>
       !>   allocate(n_elt(1:1))
       !>   n_elt(1)=int(nCellDomain,kind=c_int)
       !>
