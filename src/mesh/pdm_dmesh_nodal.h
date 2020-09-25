@@ -29,32 +29,11 @@ extern "C" {
  * Types definition
  *============================================================================*/
 
-///*----------------------------------------------------------------------------
-// * Geometric element type
-// *----------------------------------------------------------------------------*/
-//
-//typedef enum {
-//
-//  PDM_MESH_NODAL_POINT,
-//  PDM_MESH_NODAL_BAR2,
-//  PDM_MESH_NODAL_TRIA3,
-//  PDM_MESH_NODAL_QUAD4,
-//  PDM_MESH_NODAL_POLY_2D,
-//  PDM_MESH_NODAL_TETRA4,
-//  PDM_MESH_NODAL_PYRAMID5,
-//  PDM_MESH_NODAL_PRISM6,
-//  PDM_MESH_NODAL_HEXA8,
-//  PDM_MESH_NODAL_POLY_3D
-//
-//} PDM_Mesh_nodal_elt_t;
-
-
 typedef struct _PDM_DMesh_nodal_t PDM_DMesh_nodal_t;
 
 /*=============================================================================
  * Global variables
  *============================================================================*/
-
 
 /*=============================================================================
  * Static global variables
