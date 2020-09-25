@@ -16,6 +16,47 @@ extern "C" {
 #endif
 #endif /* __cplusplus */
 
+/**
+ * \brief Return for standard elements the number of face that build this element
+ *
+ */
+int
+PDM_n_face_elt_per_elmt
+(
+  PDM_Mesh_nodal_elt_t t_elt
+);
+
+/**
+ * \brief Return for standard elements the number of edge that build this element
+ *
+ */
+int
+PDM_n_nedge_elt_per_elmt
+(
+  PDM_Mesh_nodal_elt_t t_elt
+);
+
+/**
+ * \brief Return for standard elements the total number of face vtx connectivity that build this element
+ *
+ */
+int
+PDM_n_sum_vtx_face_per_elmt
+(
+  PDM_Mesh_nodal_elt_t t_elt
+);
+
+
+/**
+ * \brief Return for standard elements the total number of edge vtx connectivity that build this element
+ *
+ */
+int
+PDM_n_sum_vtx_edge_per_elmt
+(
+  PDM_Mesh_nodal_elt_t t_elt
+);
+
 
 void
 PDM_hexa_section_decompose_elemt_to_face
@@ -27,6 +68,7 @@ const PDM_g_num_t *elmt_vtx,
       PDM_g_num_t *elmt_face_cell,
       PDM_g_num_t *elmt_cell_face
 );
+
 
 
 #ifdef __cplusplus
