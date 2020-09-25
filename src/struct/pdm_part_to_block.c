@@ -475,7 +475,7 @@ _distrib_data
 
   fflush(stdout);
   for (int i = 0; i < ptb->n_part; i++) {
-    
+
     ptb->n_elt_proc+= ptb->n_elt[i];
     if(user_distrib == 0) {
       for (int j = 0; j < ptb->n_elt[i]; j++) {
@@ -1225,7 +1225,7 @@ PDM_part_to_block_exch
 )
 {
   _pdm_part_to_block_t *_ptb = (_pdm_part_to_block_t *) ptb;
-  
+
   //if ( _ptb->i_rank==0 ){
   //  printf("line %d PDM_part_to_block_exch s_data=%lu\n",__LINE__,s_data);
   //  fflush(stdout);
@@ -1252,7 +1252,7 @@ PDM_part_to_block_exch
     PDM_error(__FILE__, __LINE__, 0,"PDM_part_to_block_exch : PDM_writer_STRIDE_CST is not compatible PDM_writer_POST_MERGE post\n");
     abort ();
   }
-  
+
 
   size_t *i_send_buffer = (size_t *) malloc (sizeof(size_t) * _ptb->s_comm);
   size_t *i_recv_buffer = (size_t *) malloc (sizeof(size_t) * _ptb->s_comm);
@@ -1356,7 +1356,7 @@ PDM_part_to_block_exch
   /*
    * Data exchange
    */
-  
+
 
   unsigned char *send_buffer = (unsigned char *) malloc(sizeof(unsigned char) * s_send_buffer);
   unsigned char *recv_buffer = (unsigned char *) malloc(sizeof(unsigned char) * s_recv_buffer);
@@ -1382,7 +1382,7 @@ PDM_part_to_block_exch
       for (int j = 1; j < _ptb->n_elt[i] + 1; j++)
         i_part[j] = i_part[j-1] + ((size_t) part_stride[i][j-1] * s_data);
     }
-    
+
     //if ( _ptb->i_rank==0 ){
     //  printf("line %d PDM_part_to_block_exch  _ptb->dest_proc[%d]=%d\n",__LINE__,idx,_ptb->dest_proc[idx]);
     //  fflush(stdout);

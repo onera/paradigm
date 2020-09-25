@@ -386,8 +386,8 @@ PDM_para_graph_dual_from_arc2node
   /*
    * Realloc
    */
-  *dual_graph     = (PDM_g_num_t*) realloc(*dual_graph, sizeof(PDM_g_num_t) * _dual_graph_idx[n_node_block] );
-  _dual_graph     = (PDM_g_num_t  *) *dual_graph;
+  *dual_graph     = (PDM_g_num_t *) realloc(*dual_graph, sizeof(PDM_g_num_t) * _dual_graph_idx[n_node_block] );
+  _dual_graph     = (PDM_g_num_t *) *dual_graph;
 
   // For now we can change it later
   printf("n_node_block::%d \n", n_node_block);

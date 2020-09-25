@@ -2237,6 +2237,58 @@ const int  hdl
 }
 
 
+void
+PDM_DMesh_nodal_cell_face_compute2
+(
+const int   hdl
+)
+{
+  /* Rq to see with Eric :
+   *    1) Treat all section as a partition
+   *    2) Remove coordinates -> Useless
+   *    3) Pas besoin d'approximation en faite !!! On doit pourvoire calculer la taille exacte
+   *        en prenant exactement la decompostion d'un elements en faces
+   *        Pour les polyhedres il suffit de compter
+   *    4) Ordre elevé
+   *    5) L'ideal serai d'avoir une fonction qui traite la decomposition de l'élements en
+   *       face (Et qui calcul la clé sous option ? ) --> _section_elt_faces_add
+   *    6) Faire test unitaire 2D et 3D
+   *    7) D'ailleurs il faut prévoir le cas d'un maillage 2D de QUAD par exemple !
+   *               --> Comment qu'on fait ?
+   *               --> Parce que dans un cas le QUAD = FACE
+   *               --> Dans l'autre le QUAD = decomposition de ligne
+   *    8) Interface public pour _get_size_of_element / _get_nbface_per_element / _get_elmt_info ?
+   *               --> Attaché à dmesh_nodal
+   *    9) Pour l'algo de génération de faces --> Mise sous option du calcul de dcell_face
+   *       généralement c'est l'autre qui nous interesses
+   */
+
+  /* Get current structure to treat */
+  PDM_DMesh_nodal_t *mesh = (PDM_DMesh_nodal_t *) PDM_Handles_get (mesh_handles, hdl);
+
+  /* Creation of element distribution among all sections */
+  mesh->section_distribution    = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * (mesh->n_sections + 1));
+  mesh->section_distribution[0] = 0;
+
+  for (int i_section = 0; i_section < mesh->n_sections; i_section++) {
+    PDM_DMesh_nodal_section_std_t *section_std = (PDM_DMesh_nodal_section_std_t *) PDM_Handles_get (mesh->sections_std, i_section);
+    mesh->section_distribution[i_section+1] = section_std->distrib[mesh->n_proc];
+  }
+  for (int i_section = 1; i_section < mesh->n_sections + 1; i_section++) {
+    mesh->section_distribution[i_section] +=  mesh->section_distribution[i_section-1];
+  }
+
+  // Attention il faut compter la partie polyhédrique également
+  int n_sections_std = PDM_Handles_n_get (mesh->sections_std);
+  /* Build an approximate number of faces for current processor */
+  PDM_g_num_t dn_elmt_tot  = 0;
+  for (int i_section = 0; i_section < mesh->n_sections; i_section++) {
+    PDM_DMesh_nodal_section_std_t *section_std = (PDM_DMesh_nodal_section_std_t *) PDM_Handles_get (mesh->sections_std, i_section);
+    dn_elmt_tot += ( section_std->distrib[mesh->i_proc+1] - section_std->distrib[mesh->i_proc] );
+  }
+
+}
+
 /**
  * \brief  Compute cell->face connectivity
  *
@@ -2320,7 +2372,6 @@ const int   hdl
   {
     PDM_printf("n_fac_approx : %i  \n ", n_fac_approx);
   }
-
 
   /*
    * Allocate Disctribute Hash Key
@@ -2424,9 +2475,9 @@ const int   hdl
   /*
    * Re-Allocate Array
    */
-  ln_to_gn    = (PDM_g_num_t *) realloc((ln_to_gn   ), n_face * sizeof(PDM_g_num_t * ));
-  part_stri = (int *) realloc((part_stri), n_face * sizeof(int * ));
-  part_data = (int *) realloc((part_data), n_data * sizeof(int * ));
+  ln_to_gn  = (PDM_g_num_t *) realloc((ln_to_gn ), n_face * sizeof(PDM_g_num_t));
+  part_stri = (int         *) realloc((part_stri), n_face * sizeof(int        ));
+  part_data = (int         *) realloc((part_data), n_data * sizeof(int        ));
 
   /*
    * Verbose
@@ -2500,7 +2551,7 @@ const int   hdl
    * Allocate Memory - face_vtx - face_cell
    */
   mesh->_dface_vtx     = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t *) * data_size/2); /* Not stupid at all */
-  mesh->_dface_vtx_idx  = (int *) malloc( sizeof(int *) * data_size/2); /* Surdim as Hell */
+  mesh->_dface_vtx_idx = (int *) malloc( sizeof(int *) * data_size/2);                 /* Surdim as Hell */
   mesh->_dface_cell    = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t *) * data_size/2); /* Surdim as Hell */
 
   /*
@@ -2899,7 +2950,6 @@ PDM_DMesh_nodal_distrib_vtx_get
   return vtx->distrib;
 
 }
-
 
 /**
  * \brief  Return section distribution
