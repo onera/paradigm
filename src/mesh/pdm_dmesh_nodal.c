@@ -1934,6 +1934,13 @@ const int   hdl
 
   // Count the size of the merge connectivity
 
+  // Fonction du choix on génére la bonne table
+  // if(GENERATE_EDGE_GLOBAL_NUMBERING)
+  // else (GENERATE_FACE_GLOBAL_NUMBERING)
+
+  int n_face_elt_tot     = 0;
+  int n_sum_vtx_face_tot = 0;
+
   int n_sections_std = PDM_Handles_n_get (mesh->sections_std);
   for (int i_section = 0; i_section < n_sections_std; i_section++) {
 
@@ -1942,7 +1949,26 @@ const int   hdl
     int n_face_elt     = PDM_n_face_elt_per_elmt(section_std->t_elt);
     int n_sum_vtx_face = PDM_n_sum_vtx_face_per_elmt(section_std->t_elt);
 
+    int dn_elmt = ( section_std->distrib[mesh->i_proc+1] - section_std->distrib[mesh->i_proc] );
+    n_face_elt_tot     += dn_elmt*n_face_elt;
+    n_sum_vtx_face_tot += dn_elmt*n_sum_vtx_face;
+
   }
+
+  // int n_edge_elt_tot     = 0;
+  // int n_sum_vtx_edge_tot = 0;
+
+  printf("n_face_elt_tot     ::%i\n", n_face_elt_tot   );
+  printf("n_sum_vtx_face_tot::%i\n", n_sum_vtx_face_tot);
+
+  PDM_g_num_t* delmt_face_cell    = (PDM_g_num_t*) malloc( n_face_elt_tot     * sizeof(PDM_g_num_t));
+  int*         dcell_face_vtx_idx = (int        *) malloc( n_face_elt_tot     * sizeof(int        ));
+  PDM_g_num_t* dcell_face_vtx     = (PDM_g_num_t*) malloc( n_sum_vtx_face_tot * sizeof(PDM_g_num_t));
+
+
+  free(delmt_face_cell);
+  free(dcell_face_vtx_idx);
+  free(dcell_face_vtx);
 
   // Test decomposition
   for (int i_section = 0; i_section < mesh->n_sections; i_section++) {
