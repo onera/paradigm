@@ -23,6 +23,7 @@
 #include "pdm_gnum.h"
 #include "pdm_quick_sort.h"
 #include "pdm_geom_elem.h"
+#include "pdm_dmesh_nodal_elements_utils.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -1932,8 +1933,14 @@ const int   hdl
   PDM_DMesh_nodal_t *mesh = (PDM_DMesh_nodal_t *) PDM_Handles_get (mesh_handles, hdl);
 
   // Count the size of the merge connectivity
-  for (int i_section = 0; i_section < mesh->n_sections; i_section++) {
 
+  int n_sections_std = PDM_Handles_n_get (mesh->sections_std);
+  for (int i_section = 0; i_section < n_sections_std; i_section++) {
+
+    PDM_DMesh_nodal_section_std_t* section_std = (PDM_DMesh_nodal_section_std_t *) PDM_Handles_get (mesh->sections_std, i_section);
+
+    int n_face_elt     = PDM_n_face_elt_per_elmt(section_std->t_elt);
+    int n_sum_vtx_face = PDM_n_sum_vtx_face_per_elmt(section_std->t_elt);
 
   }
 
