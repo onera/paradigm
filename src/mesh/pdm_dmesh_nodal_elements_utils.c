@@ -14,8 +14,7 @@
 
 #include "pdm.h"
 #include "pdm_priv.h"
-#include "pdm_mpi.h"
-#include "pdm_dmesh_nodal.h"
+#include "pdm_error.h"
 #include "pdm_dmesh_nodal_priv.h"
 #include "pdm_dmesh_nodal_elements_utils.h"
 
@@ -63,10 +62,10 @@ extern "C" {
 static int
 _section_size_elt_faces_get
 (
-     PDM_DMesh_nodal_t *mesh,
-     int               *s_elt_face_vtx_idx,
-     int               *s_elt_face_vtx,
-     int               *s_elt_face_cell
+  PDM_DMesh_nodal_t *mesh,
+  int               *s_elt_face_vtx_idx,
+  int               *s_elt_face_vtx,
+  int               *s_elt_face_cell
 )
 {
 
@@ -427,6 +426,9 @@ const int                id_section,
 
      }
      break;
+
+     default:
+       break;
    }
  }
 
@@ -480,76 +482,166 @@ const int                id_section,
  * Public function definitions
  *============================================================================*/
 
+/**
+ * \brief Return for standard elements the number of face that build this element
+ *
+ */
+int
+PDM_n_face_elt_per_elmt
+(
+  PDM_Mesh_nodal_elt_t t_elt
+)
+{
+  int n_face_elt = -1;
+  switch (t_elt) {
+   case PDM_MESH_NODAL_TRIA3:
+     n_face_elt = 1;
+     break;
+   case PDM_MESH_NODAL_TETRA4:
+     n_face_elt = 4;
+     break;
+   case PDM_MESH_NODAL_QUAD4:
+     n_face_elt = 4;
+     break;
+   case PDM_MESH_NODAL_HEXA8:
+     n_face_elt = 6;
+     break;
+   case PDM_MESH_NODAL_PYRAMID5:
+     n_face_elt = 5;
+     break;
+   case PDM_MESH_NODAL_PRISM6:
+     n_face_elt = 5;
+     break;
+   default:
+     n_face_elt = -1;
+     PDM_error(__FILE__, __LINE__, 0, "Error PDM_n_face_elt_per_elmt : Element type is not taking int account\n");
+  }
+  return n_face_elt;
+}
+
+/**
+ * \brief Return for standard elements the number of edge that build this element
+ *
+ */
+int
+PDM_n_nedge_elt_per_elmt
+(
+  PDM_Mesh_nodal_elt_t t_elt
+)
+{
+  int n_nedge_elt = -1;
+  switch (t_elt) {
+   case PDM_MESH_NODAL_POINT:
+     n_nedge_elt = 0;
+     break;
+   case PDM_MESH_NODAL_BAR2:
+     n_nedge_elt = 1;
+     break;
+   case PDM_MESH_NODAL_TRIA3:
+     n_nedge_elt = 3;
+     break;
+   case PDM_MESH_NODAL_QUAD4:
+     n_nedge_elt = 4;
+     break;
+   case PDM_MESH_NODAL_TETRA4:
+     n_nedge_elt = 6;
+     break;
+   case PDM_MESH_NODAL_PYRAMID5:
+     n_nedge_elt = 8;
+     break;
+   case PDM_MESH_NODAL_PRISM6:
+     n_nedge_elt = 9;
+     break;
+   case PDM_MESH_NODAL_HEXA8:
+     n_nedge_elt = 12;
+     break;
+   default:
+     n_nedge_elt = -1;
+     PDM_error(__FILE__, __LINE__, 0, "Error PDM_n_face_elt_per_elmt : Element type is not taking int account\n");
+  }
+  return n_nedge_elt;
+}
+
+/**
+ * \brief Return for standard elements the total number of face vtx connectivity that build this element
+ *
+ */
 int
 PDM_n_sum_vtx_face_per_elmt
 (
   PDM_Mesh_nodal_elt_t t_elt
 )
 {
-
- switch (t_elt) {
-
-  //  case PDM_MESH_NODAL_TRIA3:
-  //    n_face_elt = 3;
-  //    n_sum_vtx_face = 6;
-  //    break;
-  //  case PDM_MESH_NODAL_TETRA4:
-  //    n_face_elt = 4;
-  //    n_sum_vtx_face = 12;
-  //    break;
-  //  case PDM_MESH_NODAL_QUAD4:
-  //    n_face_elt = 4;
-  //    n_sum_vtx_face = 8;
-  //    break;
-  //  case PDM_MESH_NODAL_HEXA8:
-  //    n_face_elt = 6;
-  //    n_sum_vtx_face = 24;
-  //    break;
-  //  case PDM_MESH_NODAL_PYRAMID5:
-  //    n_face_elt = 5;
-  //    n_sum_vtx_face = 16;
-  //    break;
-  //  case PDM_MESH_NODAL_PRISM6:
-  //    n_face_elt = 5;
-  //    n_sum_vtx_face = 18;
-  //    break;
-  //  default:
-  //    PDM_error(__FILE__, __LINE__, 0, "Error _section_size_elt_faces_get : Element type is not taking int account\n");
-  //    exit(EXIT_FAILURE);
-
+  int n_sum_vtx_face = -1;
+  switch (t_elt) {
+   case PDM_MESH_NODAL_TRIA3:
+     n_sum_vtx_face = 3;
+     break;
+   case PDM_MESH_NODAL_TETRA4:
+     n_sum_vtx_face = 12;
+     break;
+   case PDM_MESH_NODAL_QUAD4:
+     n_sum_vtx_face = 8;
+     break;
+   case PDM_MESH_NODAL_HEXA8:
+     n_sum_vtx_face = 24;
+     break;
+   case PDM_MESH_NODAL_PYRAMID5:
+     n_sum_vtx_face = 16;
+     break;
+   case PDM_MESH_NODAL_PRISM6:
+     n_sum_vtx_face = 18;
+     break;
+   default:
+     n_sum_vtx_face = -1;
+     PDM_error(__FILE__, __LINE__, 0, "Error PDM_n_sum_vtx_face_per_elmt : Element type is not taking int account\n");
   }
-
-
-}
-
-/**
- * \brief  Return the number of faces for one elmt
- *
- * \param [in]   hdl              Distributed nodal mesh handle
- *
- */
-int
-PDM_hexa_n_face_per_elmt()
-{
-  const int n_face_elt     = 6;
-  return n_face_elt;
-}
-
-int
-PDM_hexa_n_sum_vtx_face_per_elmt()
-{
-  const int n_sum_vtx_face = 24;
   return n_sum_vtx_face;
 }
 
-// Attnetion si HO
-int
-PDM_hexa_n_vtx_face_per_elmt()
-{
-  const int n_sum_vtx_elt  = 8;
-  return n_sum_vtx_elt;
-}
 
+/**
+ * \brief Return for standard elements the total number of edge vtx connectivity that build this element
+ *
+ */
+int
+PDM_n_sum_vtx_edge_per_elmt
+(
+  PDM_Mesh_nodal_elt_t t_elt
+)
+{
+  int n_sum_vtx_edge = -1;
+  switch (t_elt) {
+   case PDM_MESH_NODAL_POINT:
+     n_sum_vtx_edge = 0;
+     break;
+   case PDM_MESH_NODAL_BAR2:
+     n_sum_vtx_edge = 2;
+     break;
+   case PDM_MESH_NODAL_TRIA3:
+     n_sum_vtx_edge = 6;
+     break;
+   case PDM_MESH_NODAL_QUAD4:
+     n_sum_vtx_edge = 8;
+     break;
+   case PDM_MESH_NODAL_TETRA4:
+     n_sum_vtx_edge = 12;
+     break;
+   case PDM_MESH_NODAL_PYRAMID5:
+     n_sum_vtx_edge = 16;
+     break;
+   case PDM_MESH_NODAL_PRISM6:
+     n_sum_vtx_edge = 18;
+     break;
+   case PDM_MESH_NODAL_HEXA8:
+     n_sum_vtx_edge = 24;
+     break;
+   default:
+     n_sum_vtx_edge = -1;
+     PDM_error(__FILE__, __LINE__, 0, "Error PDM_n_sum_vtx_edge_per_elmt : Element type is not taking int account\n");
+  }
+  return n_sum_vtx_edge;
+}
 
 void
 PDM_hexa_section_decompose_elemt_to_face
@@ -572,9 +664,6 @@ const PDM_g_num_t *elmt_vtx,
   const int n_face_elt     = 6;
   const int n_sum_vtx_face = 24;
   const int n_sum_vtx_elt  = 8;
-
-
-
 
 
 
