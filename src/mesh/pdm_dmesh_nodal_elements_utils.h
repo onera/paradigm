@@ -118,6 +118,40 @@ PDM_sections_decompose_edges
   PDM_g_num_t       *elmt_cell_edge
 );
 
+/**
+*
+* \brief Decompose tetra cell_vtx connectivity to a flatten view of faces
+*/
+void
+PDM_tetra_decomposes_faces
+(
+       int          n_elt,
+ const PDM_g_num_t *connectivity_elmt_vtx,
+       int         *elmt_face_vtx_idx,
+       PDM_g_num_t *elmt_face_vtx,
+       PDM_g_num_t *elmt_face_cell,
+       PDM_g_num_t *elmt_cell_face
+
+);
+
+/**
+*
+* \brief Decompose hexa cell_vtx connectivity to a flatten view of faces
+*/
+void
+PDM_hexa_decomposes_faces
+(
+       int          n_elt,
+ const PDM_g_num_t *connectivity_elmt_vtx,
+       int         *elmt_face_vtx_idx,
+       PDM_g_num_t *elmt_face_vtx,
+       PDM_g_num_t *elmt_face_cell,
+       PDM_g_num_t *elmt_cell_face
+
+);
+
+
+
 void
 PDM_hexa_section_decompose_elemt_to_face
 (
