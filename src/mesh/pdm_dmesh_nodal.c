@@ -1969,6 +1969,14 @@ const int   hdl
   free(dcell_face_vtx_idx);
   free(dcell_face_vtx);
 
+  PDM_sections_decompose_faces(mesh,
+                               dcell_face_vtx_idx,
+                               dcell_face_vtx,
+                               delmt_face_cell,
+                               NULL);
+
+
+
   // Test decomposition
   for (int i_section = 0; i_section < mesh->n_sections; i_section++) {
 
