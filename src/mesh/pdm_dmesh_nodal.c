@@ -428,6 +428,7 @@ const PDM_MPI_Comm comm,
 
   mesh->vtx                      = malloc(sizeof(PDM_DMesh_nodal_vtx_t ));
   mesh->vtx->_coords             = NULL;
+  mesh->vtx->distrib             = NULL;
   mesh->vtx->n_vtx               = 0;
 
   mesh->sections_std             = NULL;
