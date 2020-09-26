@@ -45,9 +45,6 @@ extern "C" {
  * Private function definitions
  *============================================================================*/
 
-
-
-
 /**
 *
 * \brief _section_elt_faces_get
@@ -71,7 +68,6 @@ _section_size_elt_faces_get
 
  int _s_elt_face_vtx_idx = 0;
  int _s_elt_face_vtx = 0;
-
 
  int n_sections_std = PDM_Handles_n_get (mesh->sections_std);
  const int *list_ind = PDM_Handles_idx_get (mesh->sections_std);
@@ -145,7 +141,6 @@ _section_size_elt_faces_get
 
 }
 
-
 /**
 *
 * \brief _section_elt_faces_get
@@ -161,7 +156,7 @@ static void
 _section_elt_faces_add
 (
      PDM_DMesh_nodal_t *mesh,
-const int                id_section,
+const int               id_section,
      int               *n_elt_current,
      int               *n_face_current,
      int               *elt_face_vtx_idx,
@@ -773,6 +768,70 @@ PDM_n_sum_vtx_edge_per_elmt
   }
   return n_sum_vtx_edge;
 }
+
+/**
+*
+* \brief PDM_sections_decompose_faces
+*
+* \param [in]     mesh               Current mesh
+* \param [inout]  elt_face_vtx_idx   Index of element faces connectivity (preallocated)
+* \param [inout]  elt_face_vtx       Element faces connectivity (preallocated)
+* \param [inout]  elmt_face_cell     Element faces connectivity (preallocated or NULL )
+* \param [inout]  elmt_cell_face     Element faces connectivity (preallocated or NULL )
+*
+*/
+void
+PDM_sections_decompose_faces
+(
+  PDM_DMesh_nodal_t *mesh,
+  int               *elmt_face_vtx_idx,
+  PDM_g_num_t       *elmt_face_vtx,
+  PDM_g_num_t       *elmt_face_cell,
+  PDM_g_num_t       *elmt_cell_face
+)
+{
+  PDM_UNUSED(mesh);
+  PDM_UNUSED(elmt_face_vtx_idx);
+  PDM_UNUSED(elmt_face_vtx);
+  PDM_UNUSED(elmt_face_cell);
+  PDM_UNUSED(elmt_cell_face);
+
+
+
+}
+
+/**
+*
+* \brief PDM_sections_decompose_faces
+*
+* \param [in]     mesh               Current mesh
+* \param [inout]  elmt_edge_vtx_idx  Index of element faces connectivity (preallocated)
+* \param [inout]  elmt_edge_vtx      Element faces connectivity (preallocated)
+* \param [inout]  elmt_edge_cell     Element faces connectivity (preallocated or NULL )
+* \param [inout]  elmt_cell_edge     Element faces connectivity (preallocated or NULL )
+*
+*/
+void
+PDM_sections_decompose_edges
+(
+  PDM_DMesh_nodal_t *mesh,
+  int               *elmt_edge_vtx_idx,
+  PDM_g_num_t       *elmt_edge_vtx,
+  PDM_g_num_t       *elmt_edge_cell,
+  PDM_g_num_t       *elmt_cell_edge
+)
+{
+  PDM_UNUSED(mesh);
+  PDM_UNUSED(elmt_edge_vtx_idx);
+  PDM_UNUSED(elmt_edge_vtx);
+  PDM_UNUSED(elmt_edge_cell);
+  PDM_UNUSED(elmt_cell_edge);
+
+
+
+}
+
+
 
 void
 PDM_hexa_section_decompose_elemt_to_face
