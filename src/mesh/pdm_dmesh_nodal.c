@@ -1949,9 +1949,8 @@ const int   hdl
     int n_face_elt     = PDM_n_face_elt_per_elmt(section_std->t_elt);
     int n_sum_vtx_face = PDM_n_sum_vtx_face_per_elmt(section_std->t_elt);
 
-    int dn_elmt = ( section_std->distrib[mesh->i_proc+1] - section_std->distrib[mesh->i_proc] );
-    n_face_elt_tot     += dn_elmt*n_face_elt;
-    n_sum_vtx_face_tot += dn_elmt*n_sum_vtx_face;
+    n_face_elt_tot     += section_std->n_elt*n_face_elt;
+    n_sum_vtx_face_tot += section_std->n_elt*n_sum_vtx_face;
 
   }
 

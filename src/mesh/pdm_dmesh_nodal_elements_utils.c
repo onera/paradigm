@@ -483,6 +483,75 @@ const int                id_section,
  *============================================================================*/
 
 /**
+*
+* \brief PDM_section_size_elt_faces_get
+*
+* \param [in]     mesh               Current mesh
+* \param [in]     id_section         Section identifier
+* \param [inout]  elt_face_vtx_idx   Index of element faces connectivity (preallocated)
+* \param [inout]  elt_face_vtx       Element faces connectivity (preallocated)
+*
+*/
+int
+PDM_section_size_elt_faces_get
+(
+  PDM_DMesh_nodal_t *mesh,
+  int               *s_elt_face_vtx_idx,
+  int               *s_elt_face_vtx,
+  int               *s_elt_face_cell
+)
+{
+
+ int _s_elt_face_vtx_idx = 0;
+ int _s_elt_face_vtx = 0;
+
+
+ int n_sections_std = PDM_Handles_n_get (mesh->sections_std);
+ const int *list_ind = PDM_Handles_idx_get (mesh->sections_std);
+
+ for (int i = 0; i < n_sections_std; i++) {
+   PDM_DMesh_nodal_section_std_t *section =
+     (PDM_DMesh_nodal_section_std_t *) PDM_Handles_get (mesh->sections_std, list_ind[i]);
+   int n_face_elt     = PDM_n_face_elt_per_elmt(section->t_elt);
+   int n_sum_vtx_face = PDM_n_sum_vtx_face_per_elmt(section->t_elt);
+
+   _s_elt_face_vtx_idx += section->n_elt * n_face_elt;
+   _s_elt_face_vtx     += section->n_elt * n_sum_vtx_face;
+ }
+
+ int n_sections_poly2d = PDM_Handles_n_get (mesh->sections_poly2d);
+ list_ind = PDM_Handles_idx_get (mesh->sections_poly2d);
+
+ for (int i = 0; i < n_sections_poly2d; i++) {
+   PDM_DMesh_nodal_section_poly2d_t *section =
+     (PDM_DMesh_nodal_section_poly2d_t *) PDM_Handles_get (mesh->sections_poly2d, list_ind[i]);
+   _s_elt_face_vtx_idx += section->_connec_idx[section->n_elt];
+   _s_elt_face_vtx += 2 * section->_connec_idx[section->n_elt];
+ }
+
+ int n_sections_poly3d = PDM_Handles_n_get (mesh->sections_poly3d);
+ list_ind = PDM_Handles_idx_get (mesh->sections_poly3d);
+
+ for (int i = 0; i < n_sections_poly3d; i++) {
+   PDM_DMesh_nodal_section_poly3d_t *section =
+     (PDM_DMesh_nodal_section_poly3d_t *) PDM_Handles_get (mesh->sections_poly3d, list_ind[i]);
+   _s_elt_face_vtx_idx += section->n_face;
+   _s_elt_face_vtx += section->_facvtx[section->_facvtx_idx[section->n_face]];
+ }
+
+ *s_elt_face_cell    = _s_elt_face_vtx_idx;
+ *s_elt_face_vtx_idx = _s_elt_face_vtx_idx + 1;
+ *s_elt_face_vtx     = _s_elt_face_vtx + 1;
+
+
+ return *s_elt_face_vtx - 1;
+
+}
+
+
+
+
+/**
  * \brief Return for standard elements the number of face that build this element
  *
  */
@@ -495,7 +564,7 @@ PDM_n_face_elt_per_elmt
   int n_face_elt = -1;
   switch (t_elt) {
    case PDM_MESH_NODAL_TRIA3:
-     n_face_elt = 1;
+     n_face_elt = 1;  // TODO Eric have initialy 3
      break;
    case PDM_MESH_NODAL_TETRA4:
      n_face_elt = 4;
