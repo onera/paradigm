@@ -1965,9 +1965,6 @@ const int   hdl
   PDM_g_num_t* dcell_face_vtx     = (PDM_g_num_t*) malloc( n_sum_vtx_face_tot * sizeof(PDM_g_num_t));
 
 
-  free(delmt_face_cell);
-  free(dcell_face_vtx_idx);
-  free(dcell_face_vtx);
 
   PDM_sections_decompose_faces(mesh,
                                dcell_face_vtx_idx,
@@ -1975,6 +1972,9 @@ const int   hdl
                                delmt_face_cell,
                                NULL);
 
+  free(delmt_face_cell);
+  free(dcell_face_vtx_idx);
+  free(dcell_face_vtx);
 
 
   // Test decomposition

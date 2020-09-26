@@ -866,19 +866,26 @@ PDM_sections_decompose_faces
    PDM_DMesh_nodal_section_std_t *section = (PDM_DMesh_nodal_section_std_t *) PDM_Handles_get (mesh->sections_std, list_ind[i]);
    switch (section->t_elt) {
     case PDM_MESH_NODAL_POINT:
+      abort();
       break;
     case PDM_MESH_NODAL_BAR2:
+      abort();
       break;
     case PDM_MESH_NODAL_TRIA3:
+      abort();
       break;
     case PDM_MESH_NODAL_QUAD4:
+      abort();
       break;
     case PDM_MESH_NODAL_TETRA4:
       PDM_tetra_decomposes_faces(section->n_elt, section->_connec, elmt_face_vtx_idx, elmt_face_vtx, elmt_face_cell, elmt_cell_face);
       break;
+      abort();
     case PDM_MESH_NODAL_PYRAMID5:
+      abort();
       break;
     case PDM_MESH_NODAL_PRISM6:
+      abort();
       break;
     case PDM_MESH_NODAL_HEXA8:
       PDM_hexa_decomposes_faces(section->n_elt, section->_connec, elmt_face_vtx_idx, elmt_face_vtx, elmt_face_cell, elmt_cell_face);
