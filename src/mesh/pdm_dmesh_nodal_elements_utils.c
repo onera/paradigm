@@ -69,7 +69,7 @@ _section_size_elt_faces_get
  int _s_elt_face_vtx_idx = 0;
  int _s_elt_face_vtx = 0;
 
- int n_sections_std = PDM_Handles_n_get (mesh->sections_std);
+ int n_sections_std  = PDM_Handles_n_get (mesh->sections_std);
  const int *list_ind = PDM_Handles_idx_get (mesh->sections_std);
 
  for (int i = 0; i < n_sections_std; i++) {
@@ -155,13 +155,13 @@ _section_size_elt_faces_get
 static void
 _section_elt_faces_add
 (
-     PDM_DMesh_nodal_t *mesh,
-const int               id_section,
-     int               *n_elt_current,
-     int               *n_face_current,
-     int               *elt_face_vtx_idx,
-     PDM_g_num_t       *elt_face_vtx,
-     PDM_g_num_t       *elt_face_cell
+      PDM_DMesh_nodal_t *mesh,
+const int                id_section,
+      int               *n_elt_current,
+      int               *n_face_current,
+      int               *elt_face_vtx_idx,
+      PDM_g_num_t       *elt_face_vtx,
+      PDM_g_num_t       *elt_face_cell
 )
 {
  int _n_face_current = *n_face_current;
@@ -769,6 +769,70 @@ PDM_n_sum_vtx_edge_per_elmt
   return n_sum_vtx_edge;
 }
 
+
+/**
+*
+* \brief Decompose tetra cell_vtx connectivity to a flatten view of faces
+*/
+void
+PDM_tetra_decomposes_faces
+(
+       int          n_elt,
+ const PDM_g_num_t *connectivity_elmt_vtx,
+       int         *elmt_face_vtx_idx,
+       PDM_g_num_t *elmt_face_vtx,
+       PDM_g_num_t *elmt_face_cell,
+       PDM_g_num_t *elmt_cell_face
+
+)
+{
+  const int n_face_elt        = 3;
+  const int n_sum_vtx_face    = 6;
+  const int n_sum_vtx_elt     = 3;
+
+  /*
+   * For each element we flaten all connectivities in one array
+   */
+  for (int ielt = 0; ielt < n_elt; ielt++) {
+
+
+  }
+
+}
+
+
+/**
+*
+* \brief Decompose hexa cell_vtx connectivity to a flatten view of faces
+*/
+void
+PDM_hexa_decomposes_faces
+(
+       int          n_elt,
+ const PDM_g_num_t *connectivity_elmt_vtx,
+       int         *elmt_face_vtx_idx,
+       PDM_g_num_t *elmt_face_vtx,
+       PDM_g_num_t *elmt_face_cell,
+       PDM_g_num_t *elmt_cell_face
+
+)
+{
+  const int n_face_elt        = 6;
+  const int n_sum_vtx_face    = 24;
+  const int n_sum_vtx_elt     = 8;
+
+
+  /*
+   * For each element we flaten all connectivities in one array
+   */
+  for (int ielt = 0; ielt < n_elt; ielt++) {
+
+
+  }
+
+}
+
+
 /**
 *
 * \brief PDM_sections_decompose_faces
@@ -796,8 +860,34 @@ PDM_sections_decompose_faces
   PDM_UNUSED(elmt_face_cell);
   PDM_UNUSED(elmt_cell_face);
 
+  int n_sections_std  = PDM_Handles_n_get  (mesh->sections_std);
+  const int *list_ind = PDM_Handles_idx_get(mesh->sections_std);
 
-
+ for (int i = 0; i < n_sections_std; i++) {
+   PDM_DMesh_nodal_section_std_t *section = (PDM_DMesh_nodal_section_std_t *) PDM_Handles_get (mesh->sections_std, list_ind[i]);
+   switch (section->t_elt) {
+    case PDM_MESH_NODAL_POINT:
+      break;
+    case PDM_MESH_NODAL_BAR2:
+      break;
+    case PDM_MESH_NODAL_TRIA3:
+      break;
+    case PDM_MESH_NODAL_QUAD4:
+      break;
+    case PDM_MESH_NODAL_TETRA4:
+      PDM_tetra_decomposes_faces(section->n_elt, section->_connec, elmt_face_vtx_idx, elmt_face_vtx, elmt_face_cell, elmt_cell_face);
+      break;
+    case PDM_MESH_NODAL_PYRAMID5:
+      break;
+    case PDM_MESH_NODAL_PRISM6:
+      break;
+    case PDM_MESH_NODAL_HEXA8:
+      PDM_hexa_decomposes_faces(section->n_elt, section->_connec, elmt_face_vtx_idx, elmt_face_vtx, elmt_face_cell, elmt_cell_face);
+      break;
+    default:
+      PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_faces : Element type is not taking int account\n");
+   }
+  }
 }
 
 /**
@@ -826,9 +916,7 @@ PDM_sections_decompose_edges
   PDM_UNUSED(elmt_edge_vtx);
   PDM_UNUSED(elmt_edge_cell);
   PDM_UNUSED(elmt_cell_edge);
-
-
-
+  assert(0 == 1);
 }
 
 
