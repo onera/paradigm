@@ -826,8 +826,7 @@ PDM_hexa_decomposes_faces
    * For each element we flaten all connectivities in one array
    */
   for (int ielt = 0; ielt < n_elt; ielt++) {
-
-
+    printf("ielt = %i \n", ielt);
   }
 
 }
