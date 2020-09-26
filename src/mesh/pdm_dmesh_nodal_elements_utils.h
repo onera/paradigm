@@ -35,6 +35,27 @@ PDM_section_size_elt_faces_get
   int               *s_elt_face_cell
 );
 
+
+/**
+*
+* \brief PDM_section_size_elt_edges_get
+*
+* \param [in]     mesh               Current mesh
+* \param [in]     id_section         Section identifier
+* \param [inout]  elt_edge_vtx_idx   Index of element faces connectivity (preallocated)
+* \param [inout]  elt_edge_vtx       Element faces connectivity (preallocated)
+*
+*/
+int
+PDM_section_size_elt_edges_get
+(
+  PDM_DMesh_nodal_t *mesh,
+  int               *s_elt_edge_vtx_idx,
+  int               *s_elt_edge_vtx,
+  int               *s_elt_edge_cell
+);
+
+
 /**
  * \brief Return for standard elements the number of face that build this element
  *

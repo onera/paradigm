@@ -503,10 +503,9 @@ PDM_section_size_elt_faces_get
 {
 
  int _s_elt_face_vtx_idx = 0;
- int _s_elt_face_vtx = 0;
+ int _s_elt_face_vtx     = 0;
 
-
- int n_sections_std = PDM_Handles_n_get (mesh->sections_std);
+ int n_sections_std  = PDM_Handles_n_get (mesh->sections_std);
  const int *list_ind = PDM_Handles_idx_get (mesh->sections_std);
 
  for (int i = 0; i < n_sections_std; i++) {
@@ -525,8 +524,8 @@ PDM_section_size_elt_faces_get
  for (int i = 0; i < n_sections_poly2d; i++) {
    PDM_DMesh_nodal_section_poly2d_t *section =
      (PDM_DMesh_nodal_section_poly2d_t *) PDM_Handles_get (mesh->sections_poly2d, list_ind[i]);
-   _s_elt_face_vtx_idx += section->_connec_idx[section->n_elt];
-   _s_elt_face_vtx += 2 * section->_connec_idx[section->n_elt];
+   _s_elt_face_vtx_idx +=     section->_connec_idx[section->n_elt];
+   _s_elt_face_vtx     += 2 * section->_connec_idx[section->n_elt];
  }
 
  int n_sections_poly3d = PDM_Handles_n_get (mesh->sections_poly3d);
@@ -536,18 +535,81 @@ PDM_section_size_elt_faces_get
    PDM_DMesh_nodal_section_poly3d_t *section =
      (PDM_DMesh_nodal_section_poly3d_t *) PDM_Handles_get (mesh->sections_poly3d, list_ind[i]);
    _s_elt_face_vtx_idx += section->n_face;
-   _s_elt_face_vtx += section->_facvtx[section->_facvtx_idx[section->n_face]];
+   _s_elt_face_vtx     += section->_facvtx[section->_facvtx_idx[section->n_face]];
  }
 
  *s_elt_face_cell    = _s_elt_face_vtx_idx;
  *s_elt_face_vtx_idx = _s_elt_face_vtx_idx + 1;
- *s_elt_face_vtx     = _s_elt_face_vtx + 1;
-
+ *s_elt_face_vtx     = _s_elt_face_vtx     + 1;
 
  return *s_elt_face_vtx - 1;
-
 }
 
+
+/**
+*
+* \brief PDM_section_size_elt_edges_get
+*
+* \param [in]     mesh               Current mesh
+* \param [in]     id_section         Section identifier
+* \param [inout]  elt_edge_vtx_idx   Index of element faces connectivity (preallocated)
+* \param [inout]  elt_edge_vtx       Element faces connectivity (preallocated)
+*
+*/
+int
+PDM_section_size_elt_edges_get
+(
+  PDM_DMesh_nodal_t *mesh,
+  int               *s_elt_edge_vtx_idx,
+  int               *s_elt_edge_vtx,
+  int               *s_elt_edge_cell
+)
+{
+
+ int _s_elt_edge_vtx_idx = 0;
+ int _s_elt_edge_vtx     = 0;
+
+ int n_sections_std  = PDM_Handles_n_get (mesh->sections_std);
+ const int *list_ind = PDM_Handles_idx_get (mesh->sections_std);
+
+ for (int i = 0; i < n_sections_std; i++) {
+   PDM_DMesh_nodal_section_std_t *section =
+     (PDM_DMesh_nodal_section_std_t *) PDM_Handles_get (mesh->sections_std, list_ind[i]);
+   int n_edge_elt     = PDM_n_nedge_elt_per_elmt(section->t_elt);
+   int n_sum_vtx_edge = PDM_n_sum_vtx_edge_per_elmt(section->t_elt);
+
+   _s_elt_edge_vtx_idx += section->n_elt * n_edge_elt;
+   _s_elt_edge_vtx     += section->n_elt * n_sum_vtx_edge;
+ }
+
+ int n_sections_poly2d = PDM_Handles_n_get (mesh->sections_poly2d);
+ // list_ind = PDM_Handles_idx_get (mesh->sections_poly2d);
+ assert(n_sections_poly2d == 0); // Not implemented
+
+ // for (int i = 0; i < n_sections_poly2d; i++) {
+ //   PDM_DMesh_nodal_section_poly2d_t *section =
+ //     (PDM_DMesh_nodal_section_poly2d_t *) PDM_Handles_get (mesh->sections_poly2d, list_ind[i]);
+ //   _s_elt_edge_vtx_idx +=     section->_connec_idx[section->n_elt];
+ //   _s_elt_edge_vtx     += 2 * section->_connec_idx[section->n_elt];
+ // }
+
+ int n_sections_poly3d = PDM_Handles_n_get (mesh->sections_poly3d);
+ // list_ind = PDM_Handles_idx_get (mesh->sections_poly3d);
+ assert(n_sections_poly3d == 0); // Not implemented
+
+ // for (int i = 0; i < n_sections_poly3d; i++) {
+ //   PDM_DMesh_nodal_section_poly3d_t *section =
+ //     (PDM_DMesh_nodal_section_poly3d_t *) PDM_Handles_get (mesh->sections_poly3d, list_ind[i]);
+ //   _s_elt_edge_vtx_idx += section->n_face;
+ //   _s_elt_edge_vtx     += section->_facvtx[section->_facvtx_idx[section->n_face]];
+ // }
+
+ *s_elt_edge_cell    = _s_elt_edge_vtx_idx;
+ *s_elt_edge_vtx_idx = _s_elt_edge_vtx_idx + 1;
+ *s_elt_edge_vtx     = _s_elt_edge_vtx     + 1;
+
+ return *s_elt_edge_vtx - 1;
+}
 
 
 
@@ -626,7 +688,7 @@ PDM_n_nedge_elt_per_elmt
      break;
    default:
      n_nedge_elt = -1;
-     PDM_error(__FILE__, __LINE__, 0, "Error PDM_n_face_elt_per_elmt : Element type is not taking int account\n");
+     PDM_error(__FILE__, __LINE__, 0, "Error PDM_n_nedge_elt_per_elmt : Element type is not taking int account\n");
   }
   return n_nedge_elt;
 }
