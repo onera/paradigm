@@ -1956,6 +1956,34 @@ PDM_dmesh_nodal_decompose_faces_get_size
   printf("n_sum_vtx_face_tot::%i\n" , *n_sum_vtx_face_tot);
 }
 
+
+/**
+*
+* \brief PDM_sections_decompose_faces
+*
+* \param [in]     hdl                Distributed nodal mesh handle
+* \param [inout]  elt_face_vtx_idx   Index of element faces connectivity (preallocated)
+* \param [inout]  elt_face_vtx       Element faces connectivity (preallocated)
+* \param [inout]  elmt_face_cell     Element faces connectivity (preallocated or NULL )
+* \param [inout]  elmt_cell_face     Element faces connectivity (preallocated or NULL )
+*
+*/
+void
+PDM_dmesh_nodal_decompose_faces
+(
+  const int                hdl,
+        int               *elmt_face_vtx_idx,
+        PDM_g_num_t       *elmt_face_vtx,
+        PDM_g_num_t       *elmt_face_cell,
+        PDM_g_num_t       *elmt_cell_face
+)
+{
+  /* Get current structure to treat */
+  PDM_DMesh_nodal_t *mesh = (PDM_DMesh_nodal_t *) PDM_Handles_get (mesh_handles, hdl);
+  PDM_sections_decompose_faces(mesh, elmt_face_vtx_idx, elmt_face_vtx, elmt_face_cell, elmt_cell_face);
+
+}
+
 /**
  * \brief  Compute cell->face connectivity
  *
@@ -1985,18 +2013,7 @@ const int   hdl
   int n_face_elt_tot     = 0;
   int n_sum_vtx_face_tot = 0;
 
-  int n_sections_std = PDM_Handles_n_get (mesh->sections_std);
-  for (int i_section = 0; i_section < n_sections_std; i_section++) {
-
-    PDM_DMesh_nodal_section_std_t* section_std = (PDM_DMesh_nodal_section_std_t *) PDM_Handles_get (mesh->sections_std, i_section);
-
-    int n_face_elt     = PDM_n_face_elt_per_elmt(section_std->t_elt);
-    int n_sum_vtx_face = PDM_n_sum_vtx_face_per_elmt(section_std->t_elt);
-
-    n_face_elt_tot     += section_std->n_elt*n_face_elt;
-    n_sum_vtx_face_tot += section_std->n_elt*n_sum_vtx_face;
-
-  }
+  PDM_dmesh_nodal_decompose_faces_get_size(hdl, &n_face_elt_tot, &n_sum_vtx_face_tot);
 
   // int n_edge_elt_tot     = 0;
   // int n_sum_vtx_edge_tot = 0;
@@ -2004,11 +2021,9 @@ const int   hdl
   printf("n_face_elt_tot     ::%i\n", n_face_elt_tot   );
   printf("n_sum_vtx_face_tot::%i\n", n_sum_vtx_face_tot);
 
-  PDM_g_num_t* delmt_face_cell    = (PDM_g_num_t*) malloc( n_face_elt_tot     * sizeof(PDM_g_num_t));
-  int*         dcell_face_vtx_idx = (int        *) malloc( n_face_elt_tot     * sizeof(int        ));
-  PDM_g_num_t* dcell_face_vtx     = (PDM_g_num_t*) malloc( n_sum_vtx_face_tot * sizeof(PDM_g_num_t));
-
-
+  PDM_g_num_t* delmt_face_cell    = (PDM_g_num_t*) malloc(  n_face_elt_tot     * sizeof(PDM_g_num_t));
+  int*         dcell_face_vtx_idx = (int        *) malloc( (n_face_elt_tot +1) * sizeof(int        ));
+  PDM_g_num_t* dcell_face_vtx     = (PDM_g_num_t*) malloc(  n_sum_vtx_face_tot * sizeof(PDM_g_num_t));
 
   PDM_sections_decompose_faces(mesh,
                                dcell_face_vtx_idx,
