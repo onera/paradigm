@@ -2086,14 +2086,54 @@ const int   hdl
 
       if(already_treat[i_face] != 1) {
 
-        // int n_vtx_face_1 = blk_face_vtx_n[idx+i_face];
-        // for(int j = 0; j < n_vtx_face_1; ++j) {
-        //   loc_face_vtx_1[j] = blk_tot_face_vtx[]
-        // }
+        int n_vtx_face_1 = blk_face_vtx_n[idx+i_face];
+        int beg_1 = blk_face_vtx_idx[idx+i_face];
+        PDM_g_num_t key_1 = 0;
+        for(int j = 0; j < n_vtx_face_1; ++j) {
+          loc_face_vtx_1[j] = blk_tot_face_vtx[beg_1+j];
+          key_1 += loc_face_vtx_1[j];
+        }
+        PDM_quick_sort_long(loc_face_vtx_1, 0, n_vtx_face_1-1);
 
-      }
+        for(int i_face_next = i_face+1; i_face_next < n_conflict_faces; ++i_face_next) {
 
-    }
+          int n_vtx_face_2 = blk_face_vtx_n[idx+i_face_next];
+
+          if(n_vtx_face_1 == n_vtx_face_2 ) {
+
+            int beg_2 = blk_face_vtx_idx[idx+i_face_next];
+            PDM_g_num_t key_2 = 0;
+            for(int j = 0; j < n_vtx_face_1; ++j) {
+              loc_face_vtx_2[j] = blk_tot_face_vtx[beg_2+j];
+              key_2 += loc_face_vtx_2[j];
+            }
+            PDM_quick_sort_long(loc_face_vtx_2, 0, n_vtx_face_2-1);
+
+            assert(key_1 == key_2);
+
+            int is_same_face = 1;
+
+            for(int i_vtx = 0; i_vtx < n_vtx_face_1; ++i_vtx) {
+              if(loc_face_vtx_1[i_vtx] != loc_face_vtx_2[i_vtx]) {
+                is_same_face = -1;
+                break;
+              }
+            }
+
+            if(is_same_face == 1 ){
+              printf(" It's a match ! \n");
+            }
+
+
+          } /* End if same number of vertex */
+
+
+        } /* End loop next face */
+
+
+      } /* End loop already treated */
+
+    } /* End loop face in conflict */
 
     idx += n_conflict_faces;
 
