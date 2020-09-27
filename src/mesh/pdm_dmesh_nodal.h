@@ -1015,6 +1015,27 @@ PDM_dmesh_nodal_decompose_faces_get_size
 );
 
 /**
+*
+* \brief PDM_sections_decompose_faces
+*
+* \param [in]     hdl                Distributed nodal mesh handle
+* \param [inout]  elt_face_vtx_idx   Index of element faces connectivity (preallocated)
+* \param [inout]  elt_face_vtx       Element faces connectivity (preallocated)
+* \param [inout]  elmt_face_cell     Element faces connectivity (preallocated or NULL )
+* \param [inout]  elmt_cell_face     Element faces connectivity (preallocated or NULL )
+*
+*/
+void
+PDM_dmesh_nodal_decompose_faces
+(
+  const int                hdl,
+        int               *elmt_face_vtx_idx,
+        PDM_g_num_t       *elmt_face_vtx,
+        PDM_g_num_t       *elmt_face_cell,
+        PDM_g_num_t       *elmt_cell_face
+);
+
+/**
  * \brief  Compute cell->face connectivity
  *
  * \param [in]   hdl              Distributed nodal mesh handle

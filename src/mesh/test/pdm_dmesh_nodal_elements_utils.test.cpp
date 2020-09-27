@@ -34,5 +34,19 @@ MPI_TEST_CASE("decomposes hexa ",1) {
   CHECK( n_face_elt_tot     == 12 );
   CHECK( n_sum_vtx_face_tot == 48 );
 
+  PDM_g_num_t* delmt_face_cell    = (PDM_g_num_t*) malloc(  n_face_elt_tot     * sizeof(PDM_g_num_t));
+  int*         dcell_face_vtx_idx = (int        *) malloc( (n_face_elt_tot +1) * sizeof(int        ));
+  PDM_g_num_t* dcell_face_vtx     = (PDM_g_num_t*) malloc(  n_sum_vtx_face_tot * sizeof(PDM_g_num_t));
+
+  PDM_dmesh_nodal_decompose_faces(dmesh_nodal_id,
+                                  delmt_face_cell,
+                                  dcell_face_vtx_idx,
+                                  dcell_face_vtx,
+                                  NULL);
+
+  free(delmt_face_cell);
+  free(dcell_face_vtx_idx);
+  free(dcell_face_vtx);
+
   PDM_DMesh_nodal_free(dmesh_nodal_id);
 }
