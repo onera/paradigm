@@ -2019,8 +2019,6 @@ const int   hdl
                                                  (void **) &delmt_face_cell,
                                                            &blk_elmt_face_cell_stri,
                                                  (void **) &blk_elmt_face_cell);
-  free(blk_elmt_face_cell_stri); // Same as blk_n_face_per_key
-  free(blk_tot_face_vtx_n);
 
   /*
    *  Get the size of the current process bloc
@@ -2039,6 +2037,8 @@ const int   hdl
 
   PDM_part_to_block_free(ptb);
   free(stride_one);
+  free(blk_elmt_face_cell_stri); // Same as blk_n_face_per_key
+  free(blk_tot_face_vtx_n);
 
   /*
    * Get the max number of vertex of faces
@@ -2069,7 +2069,24 @@ const int   hdl
   PDM_g_num_t* loc_face_vtx_1 = (PDM_g_num_t *) malloc( n_max_vtx          * sizeof(PDM_g_num_t) );
   PDM_g_num_t* loc_face_vtx_2 = (PDM_g_num_t *) malloc( n_max_vtx          * sizeof(PDM_g_num_t) );
   int*         already_treat  = (int         *) malloc( n_max_face_per_key * sizeof(int        ) );
+
+  /*
+   * Allocate Memory - face_vtx - face_cell
+   */
+  mesh->_dface_vtx     = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) *  blk_tot_face_vtx_size  );
+  mesh->_dface_vtx_idx = (int         *) malloc( sizeof(int        ) * (blk_face_vtx_n_size+1 ));
+  mesh->_dface_cell    = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) *  blk_face_cell_size * 2 );
+
+  printf("blk_face_cell_size::%i\n", blk_face_cell_size);
+
+  /*
+   * Init global numbering
+   */
+  int i_abs_face = 0;
+  mesh->_dface_vtx_idx[0] = 0;
+
   int idx = 0;
+  int idx_face_vtx = 0;
   for(int i_key = 0; i_key < blk_size; ++i_key) {
     printf("Number of conflicting keys :: %i \n", blk_n_face_per_key[i_key]);
 
@@ -2084,9 +2101,9 @@ const int   hdl
     for(int i_face = 0; i_face < n_conflict_faces; ++i_face) {
       printf("Number of vtx on faces %i :: %i with index [%i] \n", i_face, blk_face_vtx_n[idx+i_face], idx+i_face);
 
+      int n_vtx_face_1 = blk_face_vtx_n[idx+i_face];
       if(already_treat[i_face] != 1) {
 
-        int n_vtx_face_1 = blk_face_vtx_n[idx+i_face];
         int beg_1 = blk_face_vtx_idx[idx+i_face];
         PDM_g_num_t key_1 = 0;
         for(int j = 0; j < n_vtx_face_1; ++j) {
@@ -2122,16 +2139,40 @@ const int   hdl
 
             if(is_same_face == 1 ){
               printf(" It's a match ! \n");
+
+              mesh->_dface_cell[2*i_abs_face  ] = blk_elmt_face_cell[i_face     ];
+              mesh->_dface_cell[2*i_abs_face+1] = blk_elmt_face_cell[i_face_next];
+
+              for(int i_vtx = 0; i_vtx < n_vtx_face_1; ++i_vtx) {
+                mesh->_dface_vtx[idx_face_vtx++] = loc_face_vtx_1[i_vtx];
+              }
+              mesh->_dface_vtx_idx[i_abs_face+1] = mesh->_dface_vtx_idx[i_abs_face] + n_vtx_face_1;
+              i_abs_face++;
+
+              already_treat[i_face]      = 1;
+              already_treat[i_face_next] = 1;
             }
 
 
           } /* End if same number of vertex */
-
-
         } /* End loop next face */
-
-
       } /* End loop already treated */
+
+      /* If a face is not found a match inside the pool, it's a boundary condition */
+      if(already_treat[i_face] != 1) {
+
+        mesh->_dface_cell[2*i_abs_face  ] = blk_elmt_face_cell[i_face     ];
+        mesh->_dface_cell[2*i_abs_face+1] = 0;
+
+        for(int i_vtx = 0; i_vtx < n_vtx_face_1; ++i_vtx) {
+          mesh->_dface_vtx[idx_face_vtx++] = loc_face_vtx_1[i_vtx];
+        }
+        mesh->_dface_vtx_idx[i_abs_face+1] = mesh->_dface_vtx_idx[i_abs_face] + n_vtx_face_1;
+        i_abs_face++;
+
+        already_treat[i_face]      = 1;
+
+      }
 
     } /* End loop face in conflict */
 
@@ -2139,7 +2180,33 @@ const int   hdl
 
   }
 
+  if( 1 == 1 ){
+    printf("i_abs_face::%i \n", i_abs_face);
+    PDM_log_trace_array_int(mesh->_dface_vtx_idx, blk_face_vtx_n_size             , "mesh->_dface_vtx_idx:: ");
+    PDM_log_trace_array_long(mesh->_dface_vtx   , mesh->_dface_vtx_idx[i_abs_face], "_dface_vtx:: ");
+    PDM_log_trace_array_long(mesh->_dface_cell  , 2*i_abs_face                    , "_dface_cell:: ");
+  }
 
+  /*
+   * Fill up structure
+   */
+  mesh->dn_face = i_abs_face;
+
+  /*
+   * Realloc -> TODOUX
+   */
+  mesh->_dface_vtx_idx = (int *        ) realloc((mesh->_dface_vtx_idx), (mesh->dn_face + 1) * sizeof(int * ) );
+  mesh->_dface_vtx     = (PDM_g_num_t *) realloc((mesh->_dface_vtx    ), mesh->_dface_vtx_idx[mesh->dn_face] * sizeof(PDM_g_num_t * ));
+  mesh->_dface_cell    = (PDM_g_num_t *) realloc((mesh->_dface_cell   ), mesh->dn_face * 2 * sizeof(PDM_g_num_t * ));
+
+  /*
+   * Generate absolute numerotation of faces
+   */
+  _make_absolute_face_numbering(mesh);
+
+  /*
+   * Free all unused structure
+   */
   free(loc_face_vtx_1);
   free(loc_face_vtx_2);
   free(already_treat);
@@ -2151,6 +2218,11 @@ const int   hdl
   free(blk_n_face_per_key);
   free(blk_face_vtx_n);
   free(blk_elmt_face_cell);
+
+  /*
+   * Rebuild cell face
+   */
+
 
 
 }
@@ -2417,9 +2489,9 @@ const int   hdl
   /*
    * Allocate Memory - face_vtx - face_cell
    */
-  mesh->_dface_vtx     = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t *) * data_size/2); /* Not stupid at all */
-  mesh->_dface_vtx_idx = (int *) malloc( sizeof(int *) * data_size/2);                 /* Surdim as Hell */
-  mesh->_dface_cell    = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t *) * data_size/2); /* Surdim as Hell */
+  mesh->_dface_vtx     = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t ) * data_size/2); /* Not stupid at all */
+  mesh->_dface_vtx_idx = (int *) malloc( sizeof(int ) * data_size/2);                 /* Surdim as Hell */
+  mesh->_dface_cell    = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t ) * data_size/2); /* Surdim as Hell */
 
   /*
    * Init AbsNumerotation
