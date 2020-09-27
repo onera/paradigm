@@ -1980,7 +1980,11 @@ PDM_dmesh_nodal_decompose_faces
 {
   /* Get current structure to treat */
   PDM_DMesh_nodal_t *mesh = (PDM_DMesh_nodal_t *) PDM_Handles_get (mesh_handles, hdl);
-  PDM_sections_decompose_faces(mesh, elmt_face_vtx_idx, elmt_face_vtx, elmt_face_cell, elmt_cell_face);
+  PDM_sections_decompose_faces(mesh,
+                               elmt_face_vtx_idx,
+                               elmt_face_vtx,
+                               elmt_face_cell,
+                               elmt_cell_face);
 
 }
 

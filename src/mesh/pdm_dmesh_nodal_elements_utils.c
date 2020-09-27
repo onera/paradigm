@@ -166,9 +166,9 @@ const int                id_section,
 {
  int _n_face_current = *n_face_current;
 
- int         *_current_elt_face_vtx_idx = elt_face_vtx_idx + _n_face_current;
- PDM_g_num_t *_current_elt_face_vtx     = elt_face_vtx + elt_face_vtx_idx[_n_face_current];
- PDM_g_num_t *_current_elt_face_cell    = elt_face_cell +_n_face_current;
+ int         *_current_elmt_face_vtx_idx = elt_face_vtx_idx + _n_face_current;
+ PDM_g_num_t *_current_elmt_face_vtx     = elt_face_vtx + elt_face_vtx_idx[_n_face_current];
+ PDM_g_num_t *_current_elmt_face_cell    = elt_face_cell + _n_face_current;
 
  if (id_section < PDM_BLOCK_ID_BLOCK_POLY2D) {
 
@@ -189,19 +189,19 @@ const int                id_section,
 
        for (int ielt = 0; ielt < section->n_elt; ielt++) {
          for (int i_face = 0; i_face < n_face_elt; i_face++) {
-           _current_elt_face_vtx_idx[ielt * n_face_elt + i_face + 1] =
-             _current_elt_face_vtx_idx[ielt * n_face_elt + i_face] + 3;
-           _current_elt_face_cell[ielt * n_face_elt + i_face    ] = *n_elt_current + ielt + 1;
+           _current_elmt_face_vtx_idx[ielt * n_face_elt + i_face + 1] =
+             _current_elmt_face_vtx_idx[ielt * n_face_elt + i_face] + 3;
+           _current_elmt_face_cell[ielt * n_face_elt + i_face    ] = *n_elt_current + ielt + 1;
          }
 
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 0] = section->_connec[n_sum_vtx_elt * ielt    ];
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 1] = section->_connec[n_sum_vtx_elt * ielt + 1];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 0] = section->_connec[n_sum_vtx_elt * ielt    ];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 1] = section->_connec[n_sum_vtx_elt * ielt + 1];
 
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 2] = section->_connec[n_sum_vtx_elt * ielt + 1];
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 3] = section->_connec[n_sum_vtx_elt * ielt + 2];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 2] = section->_connec[n_sum_vtx_elt * ielt + 1];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 3] = section->_connec[n_sum_vtx_elt * ielt + 2];
 
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 4] = section->_connec[n_sum_vtx_elt * ielt + 2];
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 5] = section->_connec[n_sum_vtx_elt * ielt + 3];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 4] = section->_connec[n_sum_vtx_elt * ielt + 2];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 5] = section->_connec[n_sum_vtx_elt * ielt + 3];
        }
 
        *n_elt_current += section->n_elt;
@@ -217,26 +217,26 @@ const int                id_section,
 
        for (int ielt = 0; ielt < section->n_elt; ielt++) {
          for (int i_face = 0; i_face < n_face_elt; i_face++) {
-           _current_elt_face_vtx_idx[ielt * n_face_elt + i_face + 1] =
-             _current_elt_face_vtx_idx[ielt * n_face_elt + i_face] + 3;
-           _current_elt_face_cell[ielt * n_face_elt + i_face    ] = *n_elt_current + ielt + 1;
+           _current_elmt_face_vtx_idx[ielt * n_face_elt + i_face + 1] =
+             _current_elmt_face_vtx_idx[ielt * n_face_elt + i_face] + 3;
+           _current_elmt_face_cell[ielt * n_face_elt + i_face    ] = *n_elt_current + ielt + 1;
          }
 
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 0]  = section->_connec[n_sum_vtx_elt * ielt    ];
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 1]  = section->_connec[n_sum_vtx_elt * ielt + 1];
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 2]  = section->_connec[n_sum_vtx_elt * ielt + 2];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 0]  = section->_connec[n_sum_vtx_elt * ielt    ];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 1]  = section->_connec[n_sum_vtx_elt * ielt + 1];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 2]  = section->_connec[n_sum_vtx_elt * ielt + 2];
 
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 3]  = section->_connec[n_sum_vtx_elt * ielt    ];
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 4]  = section->_connec[n_sum_vtx_elt * ielt + 3];
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 5]  = section->_connec[n_sum_vtx_elt * ielt + 1];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 3]  = section->_connec[n_sum_vtx_elt * ielt    ];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 4]  = section->_connec[n_sum_vtx_elt * ielt + 3];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 5]  = section->_connec[n_sum_vtx_elt * ielt + 1];
 
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 6]  = section->_connec[n_sum_vtx_elt * ielt    ];
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 7]  = section->_connec[n_sum_vtx_elt * ielt + 2];
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 8]  = section->_connec[n_sum_vtx_elt * ielt + 3];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 6]  = section->_connec[n_sum_vtx_elt * ielt    ];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 7]  = section->_connec[n_sum_vtx_elt * ielt + 2];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 8]  = section->_connec[n_sum_vtx_elt * ielt + 3];
 
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 9]  = section->_connec[n_sum_vtx_elt * ielt + 1];
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 10] = section->_connec[n_sum_vtx_elt * ielt + 3];
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 11] = section->_connec[n_sum_vtx_elt * ielt + 2];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 9]  = section->_connec[n_sum_vtx_elt * ielt + 1];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 10] = section->_connec[n_sum_vtx_elt * ielt + 3];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 11] = section->_connec[n_sum_vtx_elt * ielt + 2];
 
        }
 
@@ -253,19 +253,19 @@ const int                id_section,
 
        for (int ielt = 0; ielt < section->n_elt; ielt++) {
          for (int i_face = 0; i_face < n_face_elt; i_face++) {
-           _current_elt_face_vtx_idx[ielt * n_face_elt + i_face + 1] =
-             _current_elt_face_vtx_idx[ielt * n_face_elt + i_face] + 3;
-           _current_elt_face_cell[ielt * n_face_elt + i_face    ] = *n_elt_current + ielt + 1;
+           _current_elmt_face_vtx_idx[ielt * n_face_elt + i_face + 1] =
+             _current_elmt_face_vtx_idx[ielt * n_face_elt + i_face] + 3;
+           _current_elmt_face_cell[ielt * n_face_elt + i_face    ] = *n_elt_current + ielt + 1;
          }
 
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 0] = section->_connec[n_sum_vtx_elt * ielt    ];
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 1] = section->_connec[n_sum_vtx_elt * ielt + 1];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 0] = section->_connec[n_sum_vtx_elt * ielt    ];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 1] = section->_connec[n_sum_vtx_elt * ielt + 1];
 
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 2] = section->_connec[n_sum_vtx_elt * ielt + 1];
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 3] = section->_connec[n_sum_vtx_elt * ielt + 2];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 2] = section->_connec[n_sum_vtx_elt * ielt + 1];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 3] = section->_connec[n_sum_vtx_elt * ielt + 2];
 
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 4] = section->_connec[n_sum_vtx_elt * ielt + 2];
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 5] = section->_connec[n_sum_vtx_elt * ielt + 3];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 4] = section->_connec[n_sum_vtx_elt * ielt + 2];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 5] = section->_connec[n_sum_vtx_elt * ielt + 3];
        }
 
        *n_elt_current  += section->n_elt;
@@ -282,40 +282,40 @@ const int                id_section,
 
        for (int ielt = 0; ielt < section->n_elt; ielt++) {
          for (int i_face = 0; i_face < n_face_elt; i_face++) {
-           _current_elt_face_vtx_idx[ielt * n_face_elt + i_face + 1] =
-             _current_elt_face_vtx_idx[ielt * n_face_elt + i_face] + 4;
-           _current_elt_face_cell[ielt * n_face_elt + i_face    ] = *n_elt_current + ielt + 1;
+           _current_elmt_face_vtx_idx[ielt * n_face_elt + i_face + 1] =
+             _current_elmt_face_vtx_idx[ielt * n_face_elt + i_face] + 4;
+           _current_elmt_face_cell[ielt * n_face_elt + i_face    ] = *n_elt_current + ielt + 1;
          }
 
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 0]  = section->_connec[n_sum_vtx_elt * ielt + 3];
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 1]  = section->_connec[n_sum_vtx_elt * ielt + 2];
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 2]  = section->_connec[n_sum_vtx_elt * ielt + 1];
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 3]  = section->_connec[n_sum_vtx_elt * ielt    ];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 0]  = section->_connec[n_sum_vtx_elt * ielt + 3];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 1]  = section->_connec[n_sum_vtx_elt * ielt + 2];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 2]  = section->_connec[n_sum_vtx_elt * ielt + 1];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 3]  = section->_connec[n_sum_vtx_elt * ielt    ];
 
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 4]  = section->_connec[n_sum_vtx_elt * ielt + 6];
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 5]  = section->_connec[n_sum_vtx_elt * ielt + 7];
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 6]  = section->_connec[n_sum_vtx_elt * ielt + 4];
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 7]  = section->_connec[n_sum_vtx_elt * ielt + 5];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 4]  = section->_connec[n_sum_vtx_elt * ielt + 6];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 5]  = section->_connec[n_sum_vtx_elt * ielt + 7];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 6]  = section->_connec[n_sum_vtx_elt * ielt + 4];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 7]  = section->_connec[n_sum_vtx_elt * ielt + 5];
 
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 8]  = section->_connec[n_sum_vtx_elt * ielt + 4];
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 9]  = section->_connec[n_sum_vtx_elt * ielt + 7];
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 10] = section->_connec[n_sum_vtx_elt * ielt + 3];
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 11] = section->_connec[n_sum_vtx_elt * ielt    ];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 8]  = section->_connec[n_sum_vtx_elt * ielt + 4];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 9]  = section->_connec[n_sum_vtx_elt * ielt + 7];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 10] = section->_connec[n_sum_vtx_elt * ielt + 3];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 11] = section->_connec[n_sum_vtx_elt * ielt    ];
 
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 12] = section->_connec[n_sum_vtx_elt * ielt + 7];
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 13] = section->_connec[n_sum_vtx_elt * ielt + 6];
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 14] = section->_connec[n_sum_vtx_elt * ielt + 2];
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 15] = section->_connec[n_sum_vtx_elt * ielt + 3];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 12] = section->_connec[n_sum_vtx_elt * ielt + 7];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 13] = section->_connec[n_sum_vtx_elt * ielt + 6];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 14] = section->_connec[n_sum_vtx_elt * ielt + 2];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 15] = section->_connec[n_sum_vtx_elt * ielt + 3];
 
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 16] = section->_connec[n_sum_vtx_elt * ielt + 2];
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 17] = section->_connec[n_sum_vtx_elt * ielt + 6];
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 18] = section->_connec[n_sum_vtx_elt * ielt + 5];
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 19] = section->_connec[n_sum_vtx_elt * ielt + 1];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 16] = section->_connec[n_sum_vtx_elt * ielt + 2];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 17] = section->_connec[n_sum_vtx_elt * ielt + 6];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 18] = section->_connec[n_sum_vtx_elt * ielt + 5];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 19] = section->_connec[n_sum_vtx_elt * ielt + 1];
 
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 20] = section->_connec[n_sum_vtx_elt * ielt + 1];
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 21] = section->_connec[n_sum_vtx_elt * ielt + 5];
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 22] = section->_connec[n_sum_vtx_elt * ielt + 4];
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 23] = section->_connec[n_sum_vtx_elt * ielt + 0];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 20] = section->_connec[n_sum_vtx_elt * ielt + 1];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 21] = section->_connec[n_sum_vtx_elt * ielt + 5];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 22] = section->_connec[n_sum_vtx_elt * ielt + 4];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 23] = section->_connec[n_sum_vtx_elt * ielt + 0];
        }
 
        *n_elt_current  += section->n_elt;
@@ -335,35 +335,35 @@ const int                id_section,
        for (int ielt = 0; ielt < section->n_elt; ielt++) {
 
          for (int i_face = 0; i_face < n_face_elt; i_face++) {
-           _current_elt_face_cell[ielt * n_face_elt + i_face    ] = *n_elt_current + ielt + 1;
+           _current_elmt_face_cell[ielt * n_face_elt + i_face    ] = *n_elt_current + ielt + 1;
          }
 
-         _current_elt_face_vtx_idx[ielt * n_face_elt + 1]  = elt_face_vtx_idx[ielt * n_face_elt    ] + 4;
-         _current_elt_face_vtx_idx[ielt * n_face_elt + 2]  = elt_face_vtx_idx[ielt * n_face_elt + 1] + 3;
-         _current_elt_face_vtx_idx[ielt * n_face_elt + 3]  = elt_face_vtx_idx[ielt * n_face_elt + 2] + 3;
-         _current_elt_face_vtx_idx[ielt * n_face_elt + 4]  = elt_face_vtx_idx[ielt * n_face_elt + 3] + 3;
-         _current_elt_face_vtx_idx[ielt * n_face_elt + 5]  = elt_face_vtx_idx[ielt * n_face_elt + 4] + 3;
+         _current_elmt_face_vtx_idx[ielt * n_face_elt + 1]  = elt_face_vtx_idx[ielt * n_face_elt    ] + 4;
+         _current_elmt_face_vtx_idx[ielt * n_face_elt + 2]  = elt_face_vtx_idx[ielt * n_face_elt + 1] + 3;
+         _current_elmt_face_vtx_idx[ielt * n_face_elt + 3]  = elt_face_vtx_idx[ielt * n_face_elt + 2] + 3;
+         _current_elmt_face_vtx_idx[ielt * n_face_elt + 4]  = elt_face_vtx_idx[ielt * n_face_elt + 3] + 3;
+         _current_elmt_face_vtx_idx[ielt * n_face_elt + 5]  = elt_face_vtx_idx[ielt * n_face_elt + 4] + 3;
 
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 0]  = section->_connec[n_sum_vtx_elt * ielt + 3];
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 1]  = section->_connec[n_sum_vtx_elt * ielt + 2];
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 2]  = section->_connec[n_sum_vtx_elt * ielt + 1];
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 3]  = section->_connec[n_sum_vtx_elt * ielt    ];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 0]  = section->_connec[n_sum_vtx_elt * ielt + 3];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 1]  = section->_connec[n_sum_vtx_elt * ielt + 2];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 2]  = section->_connec[n_sum_vtx_elt * ielt + 1];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 3]  = section->_connec[n_sum_vtx_elt * ielt    ];
 
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 4]  = section->_connec[n_sum_vtx_elt * ielt + 4];
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 5]  = section->_connec[n_sum_vtx_elt * ielt    ];
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 6]  = section->_connec[n_sum_vtx_elt * ielt + 1];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 4]  = section->_connec[n_sum_vtx_elt * ielt + 4];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 5]  = section->_connec[n_sum_vtx_elt * ielt    ];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 6]  = section->_connec[n_sum_vtx_elt * ielt + 1];
 
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 7]  = section->_connec[n_sum_vtx_elt * ielt + 4];
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 8]  = section->_connec[n_sum_vtx_elt * ielt + 1];
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 9]  = section->_connec[n_sum_vtx_elt * ielt + 2];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 7]  = section->_connec[n_sum_vtx_elt * ielt + 4];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 8]  = section->_connec[n_sum_vtx_elt * ielt + 1];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 9]  = section->_connec[n_sum_vtx_elt * ielt + 2];
 
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 10] = section->_connec[n_sum_vtx_elt * ielt + 4];
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 11] = section->_connec[n_sum_vtx_elt * ielt + 2];
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 12] = section->_connec[n_sum_vtx_elt * ielt + 3];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 10] = section->_connec[n_sum_vtx_elt * ielt + 4];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 11] = section->_connec[n_sum_vtx_elt * ielt + 2];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 12] = section->_connec[n_sum_vtx_elt * ielt + 3];
 
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 13] = section->_connec[n_sum_vtx_elt * ielt + 4];
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 14] = section->_connec[n_sum_vtx_elt * ielt + 3];
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 15] = section->_connec[n_sum_vtx_elt * ielt    ];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 13] = section->_connec[n_sum_vtx_elt * ielt + 4];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 14] = section->_connec[n_sum_vtx_elt * ielt + 3];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 15] = section->_connec[n_sum_vtx_elt * ielt    ];
 
        }
 
@@ -382,37 +382,37 @@ const int                id_section,
        for (int ielt = 0; ielt < section->n_elt; ielt++) {
 
          for (int i_face = 0; i_face < n_face_elt; i_face++) {
-           _current_elt_face_cell[ielt * n_face_elt + i_face    ] = *n_elt_current + ielt + 1;
+           _current_elmt_face_cell[ielt * n_face_elt + i_face    ] = *n_elt_current + ielt + 1;
          }
 
-         _current_elt_face_vtx_idx[ielt * n_face_elt + 1]  = elt_face_vtx_idx[ielt * n_face_elt    ] + 3;
-         _current_elt_face_vtx_idx[ielt * n_face_elt + 2]  = elt_face_vtx_idx[ielt * n_face_elt + 1] + 3;
-         _current_elt_face_vtx_idx[ielt * n_face_elt + 3]  = elt_face_vtx_idx[ielt * n_face_elt + 2] + 4;
-         _current_elt_face_vtx_idx[ielt * n_face_elt + 4]  = elt_face_vtx_idx[ielt * n_face_elt + 3] + 4;
-         _current_elt_face_vtx_idx[ielt * n_face_elt + 5]  = elt_face_vtx_idx[ielt * n_face_elt + 4] + 4;
+         _current_elmt_face_vtx_idx[ielt * n_face_elt + 1]  = elt_face_vtx_idx[ielt * n_face_elt    ] + 3;
+         _current_elmt_face_vtx_idx[ielt * n_face_elt + 2]  = elt_face_vtx_idx[ielt * n_face_elt + 1] + 3;
+         _current_elmt_face_vtx_idx[ielt * n_face_elt + 3]  = elt_face_vtx_idx[ielt * n_face_elt + 2] + 4;
+         _current_elmt_face_vtx_idx[ielt * n_face_elt + 4]  = elt_face_vtx_idx[ielt * n_face_elt + 3] + 4;
+         _current_elmt_face_vtx_idx[ielt * n_face_elt + 5]  = elt_face_vtx_idx[ielt * n_face_elt + 4] + 4;
 
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 0]  = section->_connec[n_sum_vtx_elt * ielt + 2];
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 1]  = section->_connec[n_sum_vtx_elt * ielt + 1];
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 2]  = section->_connec[n_sum_vtx_elt * ielt    ];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 0]  = section->_connec[n_sum_vtx_elt * ielt + 2];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 1]  = section->_connec[n_sum_vtx_elt * ielt + 1];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 2]  = section->_connec[n_sum_vtx_elt * ielt    ];
 
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 3]  = section->_connec[n_sum_vtx_elt * ielt + 4];
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 4]  = section->_connec[n_sum_vtx_elt * ielt + 5];
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 5]  = section->_connec[n_sum_vtx_elt * ielt + 3];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 3]  = section->_connec[n_sum_vtx_elt * ielt + 4];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 4]  = section->_connec[n_sum_vtx_elt * ielt + 5];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 5]  = section->_connec[n_sum_vtx_elt * ielt + 3];
 
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 6]  = section->_connec[n_sum_vtx_elt * ielt + 5];
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 7]  = section->_connec[n_sum_vtx_elt * ielt + 4];
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 8]  = section->_connec[n_sum_vtx_elt * ielt + 1];
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 9]  = section->_connec[n_sum_vtx_elt * ielt + 2];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 6]  = section->_connec[n_sum_vtx_elt * ielt + 5];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 7]  = section->_connec[n_sum_vtx_elt * ielt + 4];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 8]  = section->_connec[n_sum_vtx_elt * ielt + 1];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 9]  = section->_connec[n_sum_vtx_elt * ielt + 2];
 
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 10] = section->_connec[n_sum_vtx_elt * ielt + 4];
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 11] = section->_connec[n_sum_vtx_elt * ielt + 3];
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 12] = section->_connec[n_sum_vtx_elt * ielt    ];
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 13] = section->_connec[n_sum_vtx_elt * ielt + 1];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 10] = section->_connec[n_sum_vtx_elt * ielt + 4];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 11] = section->_connec[n_sum_vtx_elt * ielt + 3];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 12] = section->_connec[n_sum_vtx_elt * ielt    ];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 13] = section->_connec[n_sum_vtx_elt * ielt + 1];
 
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 14] = section->_connec[n_sum_vtx_elt * ielt + 3];
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 15] = section->_connec[n_sum_vtx_elt * ielt + 5];
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 16] = section->_connec[n_sum_vtx_elt * ielt + 2];
-         _current_elt_face_vtx[n_sum_vtx_face * ielt + 17] = section->_connec[n_sum_vtx_elt * ielt    ];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 14] = section->_connec[n_sum_vtx_elt * ielt + 3];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 15] = section->_connec[n_sum_vtx_elt * ielt + 5];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 16] = section->_connec[n_sum_vtx_elt * ielt + 2];
+         _current_elmt_face_vtx[n_sum_vtx_face * ielt + 17] = section->_connec[n_sum_vtx_elt * ielt    ];
 
        }
 
@@ -444,11 +444,11 @@ const int                id_section,
      *n_face_current += n_face_elt;
      int idx2 = section->_connec_idx[ielt];
      for (int i_face = 0; i_face < n_face_elt; i_face++) {
-       _current_elt_face_vtx_idx[idx + 1]  = _current_elt_face_vtx_idx[idx] + 2;
+       _current_elmt_face_vtx_idx[idx + 1]  = _current_elmt_face_vtx_idx[idx] + 2;
        int inext = (i_face + 1) % n_face_elt;
-       _current_elt_face_vtx[2 * idx    ]  = section->_connec[idx2 + i_face];
-       _current_elt_face_vtx[2 * idx + 1]  = section->_connec[idx2 + inext];
-       _current_elt_face_cell[idx   ]  = *n_elt_current + ielt + 1;
+       _current_elmt_face_vtx[2 * idx    ]  = section->_connec[idx2 + i_face];
+       _current_elmt_face_vtx[2 * idx + 1]  = section->_connec[idx2 + inext];
+       _current_elmt_face_cell[idx   ]  = *n_elt_current + ielt + 1;
        idx += 1;
      }
    }
@@ -778,12 +778,13 @@ void
 PDM_tetra_decomposes_faces
 (
        int          n_elt,
+       int         *n_elt_current,
+       int         *n_face_current,
  const PDM_g_num_t *connectivity_elmt_vtx,
        int         *elmt_face_vtx_idx,
        PDM_g_num_t *elmt_face_vtx,
        PDM_g_num_t *elmt_face_cell,
        PDM_g_num_t *elmt_cell_face
-
 )
 {
   const int n_face_elt        = 3;
@@ -809,6 +810,8 @@ void
 PDM_hexa_decomposes_faces
 (
        int          n_elt,
+       int         *n_elt_current,
+       int         *n_face_current,
  const PDM_g_num_t *connectivity_elmt_vtx,
        int         *elmt_face_vtx_idx,
        PDM_g_num_t *elmt_face_vtx,
@@ -817,17 +820,66 @@ PDM_hexa_decomposes_faces
 
 )
 {
+  PDM_UNUSED(elmt_cell_face);
+
   const int n_face_elt        = 6;
   const int n_sum_vtx_face    = 24;
   const int n_sum_vtx_elt     = 8;
 
+  int _n_face_current = *n_face_current;
+  int         *_current_elmt_face_vtx_idx = elmt_face_vtx_idx + _n_face_current;
+  PDM_g_num_t *_current_elmt_face_vtx     = elmt_face_vtx + elmt_face_vtx_idx[_n_face_current];
+  PDM_g_num_t *_current_elmt_face_cell    = elmt_face_cell +_n_face_current;
 
+
+ printf("_n_face_current:: %i %s\n", _n_face_current);
+ printf("elt_face_vtx_idx[%i]:: %i \n", _n_face_current, elmt_face_vtx_idx[_n_face_current]);
   /*
    * For each element we flaten all connectivities in one array
    */
   for (int ielt = 0; ielt < n_elt; ielt++) {
+
+    /* Store the face_cell */
+   for (int i_face = 0; i_face < n_face_elt; i_face++) {
+     _current_elmt_face_vtx_idx[ielt * n_face_elt + i_face + 1] = _current_elmt_face_vtx_idx[ielt * n_face_elt + i_face] + 4;
+     _current_elmt_face_cell   [ielt * n_face_elt + i_face    ] = *n_elt_current + ielt + 1;
+   }
+
+   _current_elmt_face_vtx[n_sum_vtx_face * ielt + 0]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + 3];
+   _current_elmt_face_vtx[n_sum_vtx_face * ielt + 1]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + 2];
+   _current_elmt_face_vtx[n_sum_vtx_face * ielt + 2]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + 1];
+   _current_elmt_face_vtx[n_sum_vtx_face * ielt + 3]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt    ];
+
+   _current_elmt_face_vtx[n_sum_vtx_face * ielt + 4]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + 6];
+   _current_elmt_face_vtx[n_sum_vtx_face * ielt + 5]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + 7];
+   _current_elmt_face_vtx[n_sum_vtx_face * ielt + 6]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + 4];
+   _current_elmt_face_vtx[n_sum_vtx_face * ielt + 7]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + 5];
+
+   _current_elmt_face_vtx[n_sum_vtx_face * ielt + 8]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + 4];
+   _current_elmt_face_vtx[n_sum_vtx_face * ielt + 9]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + 7];
+   _current_elmt_face_vtx[n_sum_vtx_face * ielt + 10] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + 3];
+   _current_elmt_face_vtx[n_sum_vtx_face * ielt + 11] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt    ];
+
+   _current_elmt_face_vtx[n_sum_vtx_face * ielt + 12] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + 7];
+   _current_elmt_face_vtx[n_sum_vtx_face * ielt + 13] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + 6];
+   _current_elmt_face_vtx[n_sum_vtx_face * ielt + 14] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + 2];
+   _current_elmt_face_vtx[n_sum_vtx_face * ielt + 15] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + 3];
+
+   _current_elmt_face_vtx[n_sum_vtx_face * ielt + 16] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + 2];
+   _current_elmt_face_vtx[n_sum_vtx_face * ielt + 17] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + 6];
+   _current_elmt_face_vtx[n_sum_vtx_face * ielt + 18] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + 5];
+   _current_elmt_face_vtx[n_sum_vtx_face * ielt + 19] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + 1];
+
+   _current_elmt_face_vtx[n_sum_vtx_face * ielt + 20] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + 1];
+   _current_elmt_face_vtx[n_sum_vtx_face * ielt + 21] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + 5];
+   _current_elmt_face_vtx[n_sum_vtx_face * ielt + 22] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + 4];
+   _current_elmt_face_vtx[n_sum_vtx_face * ielt + 23] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + 0];
+
     printf("ielt = %i \n", ielt);
   }
+
+ *n_elt_current  += n_elt;
+ *n_face_current += n_elt * n_face_elt;
 
 }
 
@@ -861,6 +913,9 @@ PDM_sections_decompose_faces
   int n_sections_std  = PDM_Handles_n_get  (mesh->sections_std);
   const int *list_ind = PDM_Handles_idx_get(mesh->sections_std);
 
+  int n_elt_current  = 0;
+  int n_face_current = 0;
+
  for (int i = 0; i < n_sections_std; i++) {
    PDM_DMesh_nodal_section_std_t *section = (PDM_DMesh_nodal_section_std_t *) PDM_Handles_get (mesh->sections_std, list_ind[i]);
    switch (section->t_elt) {
@@ -877,7 +932,14 @@ PDM_sections_decompose_faces
       abort();
       break;
     case PDM_MESH_NODAL_TETRA4:
-      PDM_tetra_decomposes_faces(section->n_elt, section->_connec, elmt_face_vtx_idx, elmt_face_vtx, elmt_face_cell, elmt_cell_face);
+      PDM_tetra_decomposes_faces(section->n_elt,
+                                 &n_elt_current,
+                                 &n_face_current,
+                                 section->_connec,
+                                 elmt_face_vtx_idx,
+                                 elmt_face_vtx,
+                                 elmt_face_cell,
+                                 elmt_cell_face);
       break;
       abort();
     case PDM_MESH_NODAL_PYRAMID5:
@@ -887,7 +949,14 @@ PDM_sections_decompose_faces
       abort();
       break;
     case PDM_MESH_NODAL_HEXA8:
-      PDM_hexa_decomposes_faces(section->n_elt, section->_connec, elmt_face_vtx_idx, elmt_face_vtx, elmt_face_cell, elmt_cell_face);
+      PDM_hexa_decomposes_faces(section->n_elt,
+                                &n_elt_current,
+                                &n_face_current,
+                                section->_connec,
+                                elmt_face_vtx_idx,
+                                elmt_face_vtx,
+                                elmt_face_cell,
+                                elmt_cell_face);
       break;
     default:
       PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_faces : Element type is not taking int account\n");
@@ -926,28 +995,28 @@ PDM_sections_decompose_edges
 
 
 
-void
-PDM_hexa_section_decompose_elemt_to_face
-(
-      PDM_g_num_t  n_elmt,
-const PDM_g_num_t *elmt_vtx,
-      int         *elmt_face_vtx_idx,
-      PDM_g_num_t *elmt_face_vtx,
-      PDM_g_num_t *elmt_face_cell,
-      PDM_g_num_t *elmt_cell_face
-)
-{
-  PDM_UNUSED(n_elmt);
-  PDM_UNUSED(elmt_vtx);
-  PDM_UNUSED(elmt_face_vtx_idx);
-  PDM_UNUSED(elmt_face_vtx);
-  PDM_UNUSED(elmt_face_cell);
-  PDM_UNUSED(elmt_cell_face);
+// void
+// PDM_hexa_section_decompose_elemt_to_face
+// (
+//       PDM_g_num_t  n_elmt,
+// const PDM_g_num_t *elmt_vtx,
+//       int         *elmt_face_vtx_idx,
+//       PDM_g_num_t *elmt_face_vtx,
+//       PDM_g_num_t *elmt_face_cell,
+//       PDM_g_num_t *elmt_cell_face
+// )
+// {
+//   PDM_UNUSED(n_elmt);
+//   PDM_UNUSED(elmt_vtx);
+//   PDM_UNUSED(elmt_face_vtx_idx);
+//   PDM_UNUSED(elmt_face_vtx);
+//   PDM_UNUSED(elmt_face_cell);
+//   PDM_UNUSED(elmt_cell_face);
 
-  const int n_face_elt     = 6;
-  const int n_sum_vtx_face = 24;
-  const int n_sum_vtx_elt  = 8;
+//   const int n_face_elt     = 6;
+//   const int n_sum_vtx_face = 24;
+//   const int n_sum_vtx_elt  = 8;
 
 
 
-}
+// }
