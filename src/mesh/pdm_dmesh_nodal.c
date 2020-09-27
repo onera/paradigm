@@ -408,10 +408,10 @@ _vtx_free
 static void
 _mesh_init
 (
-PDM_DMesh_nodal_t *mesh,
-const PDM_MPI_Comm comm,
-      PDM_g_num_t  n_vtx,
-      PDM_g_num_t  n_cell
+      PDM_DMesh_nodal_t *mesh,
+const PDM_MPI_Comm       comm,
+      PDM_g_num_t        n_vtx,
+      PDM_g_num_t        n_cell
 )
 {
   int n_proc;
@@ -1911,6 +1911,49 @@ const int   hdl
     dn_elmt_tot += ( section_std->distrib[mesh->i_proc+1] - section_std->distrib[mesh->i_proc] );
   }
 
+}
+
+
+
+
+/**
+*
+* \brief PDM_sections_decompose_faces
+*
+* \param [in]     hdl                Distributed nodal mesh handle
+* \param [inout]  n_face_elt_tot     Number of faces
+* \param [inout]  n_sum_vtx_face_tot Number of vtx for all faces (cumulative)
+*
+*/
+void
+PDM_dmesh_nodal_decompose_faces_get_size
+(
+  const int   hdl,
+        int  *n_face_elt_tot,
+        int  *n_sum_vtx_face_tot
+)
+{
+  /* Get current structure to treat */
+  PDM_DMesh_nodal_t *mesh = (PDM_DMesh_nodal_t *) PDM_Handles_get (mesh_handles, hdl);
+
+  *n_face_elt_tot     = 0;
+  *n_sum_vtx_face_tot = 0;
+
+  int n_sections_std = PDM_Handles_n_get (mesh->sections_std);
+  for (int i_section = 0; i_section < n_sections_std; i_section++) {
+
+    PDM_DMesh_nodal_section_std_t* section_std = (PDM_DMesh_nodal_section_std_t *) PDM_Handles_get (mesh->sections_std, i_section);
+
+    int n_face_elt     = PDM_n_face_elt_per_elmt(section_std->t_elt);
+    int n_sum_vtx_face = PDM_n_sum_vtx_face_per_elmt(section_std->t_elt);
+
+    *n_face_elt_tot     += section_std->n_elt*n_face_elt;
+    *n_sum_vtx_face_tot += section_std->n_elt*n_sum_vtx_face;
+
+  }
+
+  printf("n_face_elt_tot     ::%i\n", *n_face_elt_tot   );
+  printf("n_sum_vtx_face_tot::%i\n" , *n_sum_vtx_face_tot);
 }
 
 /**

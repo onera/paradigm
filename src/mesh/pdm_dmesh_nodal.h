@@ -998,6 +998,23 @@ const int  hdl
 
 
 /**
+*
+* \brief PDM_sections_decompose_faces
+*
+* \param [in]     hdl                Distributed nodal mesh handle
+* \param [inout]  n_face_elt_tot     Number of faces
+* \param [inout]  n_sum_vtx_face_tot Number of vtx for all faces (cumulative)
+*
+*/
+void
+PDM_dmesh_nodal_decompose_faces_get_size
+(
+  const int   hdl,
+        int  *n_face_elt_tot,
+        int  *n_sum_vtx_face_tot
+);
+
+/**
  * \brief  Compute cell->face connectivity
  *
  * \param [in]   hdl              Distributed nodal mesh handle

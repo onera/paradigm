@@ -831,7 +831,6 @@ PDM_hexa_decomposes_faces
 
 }
 
-
 /**
 *
 * \brief PDM_sections_decompose_faces
