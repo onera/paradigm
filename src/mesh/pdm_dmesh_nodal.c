@@ -19,6 +19,7 @@
 #include "pdm_dmesh_nodal_priv.h"
 #include "pdm_part_to_block.h"
 #include "pdm_printf.h"
+#include "pdm_logging.h"
 #include "pdm_error.h"
 #include "pdm_gnum.h"
 #include "pdm_quick_sort.h"
@@ -148,9 +149,9 @@ const int  nFac,
   /*
    * Make array of already treated face
    */
-  int *AlreadyTreat = (int * ) malloc( sizeof(int *) * nFac);
+  int *already_treat = (int * ) malloc( sizeof(int *) * nFac);
   for(int i=0; i < nFac; i++){
-    AlreadyTreat[i] = -1;
+    already_treat[i] = -1;
   }
 
   /*
@@ -169,7 +170,7 @@ const int  nFac,
     /*
      * Face deja traité ??
      */
-    if(AlreadyTreat[iPos] != 1){
+    if(already_treat[iPos] != 1){
 
       int curFac = idx_face[iPos ];
       int n_vtx1  = data[curFac+2];
@@ -298,8 +299,8 @@ const int  nFac,
             /*
              * Flags the two faces as treated
              */
-            AlreadyTreat[iPos] = 1;
-            AlreadyTreat[iNex] = 1;
+            already_treat[iPos] = 1;
+            already_treat[iNex] = 1;
 
           } /** End if (isSameFace) **/
 
@@ -312,10 +313,10 @@ const int  nFac,
       /** Free current ElemCon **/
       free(ElmCon1);
 
-    } /** End If alreadyTreat **/
+    } /** End If already_treat **/
 
     /* Boundary management **/
-    if(AlreadyTreat[iPos] != 1){
+    if(already_treat[iPos] != 1){
 
       // printf("i_abs_face : %d \n", i_abs_face);
       // printf("iPos : %d \n", iPos);
@@ -344,7 +345,7 @@ const int  nFac,
 
 
   /** Free **/
-  free(AlreadyTreat);
+  free(already_treat);
 
   return i_abs_face;
 }
@@ -1998,14 +1999,14 @@ const int   hdl
 
   int* blk_n_face_per_key = NULL;
   int* blk_face_vtx_n     = NULL;
-  int blk_face_vtx_size = PDM_part_to_block_exch(         ptb,
-                                                          sizeof(int),
-                                                          PDM_STRIDE_VAR,
-                                                          -1,
-                                                          &stride_one,
-                                                (void **) &dcell_face_vtx_n,
-                                                          &blk_n_face_per_key,
-                                                (void **) &blk_face_vtx_n);
+  int blk_face_vtx_n_size = PDM_part_to_block_exch(         ptb,
+                                                            sizeof(int),
+                                                            PDM_STRIDE_VAR,
+                                                            -1,
+                                                            &stride_one,
+                                                  (void **) &dcell_face_vtx_n,
+                                                            &blk_n_face_per_key,
+                                                  (void **) &blk_face_vtx_n);
   free(dcell_face_vtx_n);
 
   int*         blk_elmt_face_cell_stri = NULL;
@@ -2019,28 +2020,93 @@ const int   hdl
                                                            &blk_elmt_face_cell_stri,
                                                  (void **) &blk_elmt_face_cell);
   free(blk_elmt_face_cell_stri); // Same as blk_n_face_per_key
+  free(blk_tot_face_vtx_n);
 
   /*
    *  Get the size of the current process bloc
    */
   int blk_size = PDM_part_to_block_n_elt_block_get(ptb);
 
-  PDM_log_trace_array_long(blk_tot_face_vtx_n, blk_size         , "blk_tot_face_vtx_n:: ");
-  PDM_log_trace_array_long(blk_tot_face_vtx  , blk_face_vtx_size, "blk_tot_face_vtx:: ");
+  if( 1 == 1 ) {
+    PDM_log_trace_array_int(blk_tot_face_vtx_n, blk_size             , "blk_tot_face_vtx_n:: ");
+    PDM_log_trace_array_long(blk_tot_face_vtx , blk_tot_face_vtx_size, "blk_tot_face_vtx:: "  );
 
-  PDM_log_trace_array_long(blk_n_face_per_key, blk_size         , "blk_n_face_per_key:: ");
-  PDM_log_trace_array_long(blk_face_vtx_n    , blk_face_vtx_size, "blk_face_vtx_n:: ");
+    PDM_log_trace_array_int(blk_n_face_per_key, blk_size         , "blk_n_face_per_key:: ");
+    PDM_log_trace_array_int(blk_face_vtx_n    , blk_face_vtx_n_size, "blk_face_vtx_n:: ");
 
-  PDM_log_trace_array_long(blk_elmt_face_cell, blk_face_cell_size, "blk_elmt_face_cell:: ");
+    PDM_log_trace_array_long(blk_elmt_face_cell, blk_face_cell_size, "blk_elmt_face_cell:: ");
+  }
 
   PDM_part_to_block_free(ptb);
+  free(stride_one);
 
+  /*
+   * Get the max number of vertex of faces
+   */
+  int* blk_face_vtx_idx  = (int        *) malloc( (blk_face_vtx_n_size+1) * sizeof(int        ));
+  int n_max_face_per_key = -1;
+  for(int i_face = 0; i_face < blk_size; ++i_face) {
+    n_max_face_per_key = PDM_MAX(n_max_face_per_key, blk_n_face_per_key[i_face]);
+  }
+
+  int n_max_vtx       = -1;
+  blk_face_vtx_idx[0] = 0;
+  for(int i_face = 0; i_face < blk_face_vtx_n_size; ++i_face) {
+    n_max_vtx          = PDM_MAX(n_max_vtx         , blk_face_vtx_n    [i_face]);
+    blk_face_vtx_idx[i_face+1] = blk_face_vtx_idx[i_face] + blk_face_vtx_n[i_face];
+  }
+
+  PDM_log_trace_array_long(blk_face_vtx_idx, blk_face_vtx_n_size, "blk_face_vtx_idx:: ");
+  /*
+   * We need to identify each uniques faces :
+   *      - We have multiple packet to treat
+   *      - The connectivity can be sorted in place
+   *      - Multiple case can occur :
+   *           - Alone face normaly boundary
+   *           - Multiple faces
+   *           - Same face, we remove and replace by the first
+   */
+  PDM_g_num_t* loc_face_vtx_1 = (PDM_g_num_t *) malloc( n_max_vtx          * sizeof(PDM_g_num_t) );
+  PDM_g_num_t* loc_face_vtx_2 = (PDM_g_num_t *) malloc( n_max_vtx          * sizeof(PDM_g_num_t) );
+  int*         already_treat  = (int         *) malloc( n_max_face_per_key * sizeof(int        ) );
+  int idx = 0;
+  for(int i_key = 0; i_key < blk_size; ++i_key) {
+    printf("Number of conflicting keys :: %i \n", blk_n_face_per_key[i_key]);
+
+    int n_conflict_faces = blk_n_face_per_key[i_key];
+
+    /* Reset */
+    for(int j = 0; j < n_conflict_faces; ++j) {
+      already_treat[j] = -1;
+    }
+
+    /* Loop over all faces in conflict */
+    for(int i_face = 0; i_face < n_conflict_faces; ++i_face) {
+      printf("Number of vtx on faces %i :: %i with index [%i] \n", i_face, blk_face_vtx_n[idx+i_face], idx+i_face);
+
+      if(already_treat[i_face] != 1) {
+
+        // int n_vtx_face_1 = blk_face_vtx_n[idx+i_face];
+        // for(int j = 0; j < n_vtx_face_1; ++j) {
+        //   loc_face_vtx_1[j] = blk_tot_face_vtx[]
+        // }
+
+      }
+
+    }
+
+    idx += n_conflict_faces;
+
+  }
+
+
+  free(loc_face_vtx_1);
+  free(loc_face_vtx_2);
+  free(already_treat);
   free(delmt_face_cell);
   free(dcell_face_vtx_idx);
   free(dcell_face_vtx);
   free(ln_to_gn);
-  free(stride_one);
-  free(blk_tot_face_vtx_n);
   free(blk_tot_face_vtx);
   free(blk_n_face_per_key);
   free(blk_face_vtx_n);
