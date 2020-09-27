@@ -119,9 +119,9 @@ PDM_sections_decompose_edges
 );
 
 /**
-*
-* \brief Decompose tetra cell_vtx connectivity to a flatten view of faces
-*/
+ *
+ * \brief Decompose tetra cell_vtx connectivity to a flatten view of faces
+ */
 void
 PDM_tetra_decomposes_faces
 (
@@ -136,9 +136,9 @@ PDM_tetra_decomposes_faces
 );
 
 /**
-*
-* \brief Decompose hexa cell_vtx connectivity to a flatten view of faces
-*/
+ *
+ * \brief Decompose hexa cell_vtx connectivity to a flatten view of faces
+ */
 void
 PDM_hexa_decomposes_faces
 (
