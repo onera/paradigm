@@ -1963,8 +1963,10 @@ const int   hdl
    * Prepare exchange by computing stride
    */
   int* dcell_face_vtx_n = (int        *) malloc( n_face_elt_tot * sizeof(int        ));
+  int* stride_one       = (int        *) malloc( n_face_elt_tot * sizeof(int        ));
   for(int i_face = 0; i_face < n_face_elt_tot; ++i_face) {
     dcell_face_vtx_n[i_face] = dcell_face_vtx_idx[i_face+1] - dcell_face_vtx_idx[i_face];
+    stride_one[i_face]       = 1;
   }
 
   /*
@@ -1980,37 +1982,71 @@ const int   hdl
                                                       mesh->pdm_mpi_comm);
 
   /*
-   * Exchange data in one call ( better do multiple -> Eric ??)
+   * Exchange data
    */
-  int *blk_stri = NULL;
-  int *blk_data = NULL;
+  int*         blk_tot_face_vtx_n = NULL;
+  PDM_g_num_t* blk_tot_face_vtx   = NULL;
 
-  int data_size = PDM_part_to_block_exch(         ptb,
-                                                  sizeof(PDM_g_num_t),
-                                                  PDM_STRIDE_VAR,
-                                                  -1,
-                                                  &dcell_face_vtx_n,
-                                        (void **) &dcell_face_vtx,
-                                                  &blk_stri,
-                                        (void **) &blk_data);
+  int blk_tot_face_vtx_size = PDM_part_to_block_exch(         ptb,
+                                                              sizeof(PDM_g_num_t),
+                                                              PDM_STRIDE_VAR,
+                                                              -1,
+                                                              &dcell_face_vtx_n,
+                                                    (void **) &dcell_face_vtx,
+                                                              &blk_tot_face_vtx_n,
+                                                    (void **) &blk_tot_face_vtx);
+
+  int* blk_n_face_per_key = NULL;
+  int* blk_face_vtx_n     = NULL;
+  int blk_face_vtx_size = PDM_part_to_block_exch(         ptb,
+                                                          sizeof(int),
+                                                          PDM_STRIDE_VAR,
+                                                          -1,
+                                                          &stride_one,
+                                                (void **) &dcell_face_vtx_n,
+                                                          &blk_n_face_per_key,
+                                                (void **) &blk_face_vtx_n);
   free(dcell_face_vtx_n);
+
+  int*         blk_elmt_face_cell_stri = NULL;
+  PDM_g_num_t* blk_elmt_face_cell      = NULL;
+  int blk_face_cell_size = PDM_part_to_block_exch(         ptb,
+                                                           sizeof(PDM_g_num_t),
+                                                           PDM_STRIDE_VAR,
+                                                           -1,
+                                                           &stride_one,
+                                                 (void **) &delmt_face_cell,
+                                                           &blk_elmt_face_cell_stri,
+                                                 (void **) &blk_elmt_face_cell);
+  free(blk_elmt_face_cell_stri); // Same as blk_n_face_per_key
 
   /*
    *  Get the size of the current process bloc
    */
   int blk_size = PDM_part_to_block_n_elt_block_get(ptb);
 
-  PDM_log_trace_array_long(blk_stri, blk_size , "blk_stri:: ");
-  PDM_log_trace_array_long(blk_data, data_size, "blk_data:: ");
+  PDM_log_trace_array_long(blk_tot_face_vtx_n, blk_size         , "blk_tot_face_vtx_n:: ");
+  PDM_log_trace_array_long(blk_tot_face_vtx  , blk_face_vtx_size, "blk_tot_face_vtx:: ");
+
+  PDM_log_trace_array_long(blk_n_face_per_key, blk_size         , "blk_n_face_per_key:: ");
+  PDM_log_trace_array_long(blk_face_vtx_n    , blk_face_vtx_size, "blk_face_vtx_n:: ");
+
+  PDM_log_trace_array_long(blk_elmt_face_cell, blk_face_cell_size, "blk_elmt_face_cell:: ");
 
   PDM_part_to_block_free(ptb);
-  free(blk_stri);
-  free(blk_data);
 
   free(delmt_face_cell);
   free(dcell_face_vtx_idx);
   free(dcell_face_vtx);
   free(ln_to_gn);
+  free(stride_one);
+  free(blk_tot_face_vtx_n);
+  free(blk_tot_face_vtx);
+  free(blk_n_face_per_key);
+  free(blk_face_vtx_n);
+  free(blk_elmt_face_cell);
+
+
 }
 
 
