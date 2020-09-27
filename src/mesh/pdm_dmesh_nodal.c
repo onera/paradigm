@@ -72,6 +72,28 @@ static PDM_Handles_t *mesh_handles = NULL;
  *============================================================================*/
 
 /**
+ * \def _compute_keys
+ */
+static
+void
+_compute_keys
+(
+const int          n_face_elt_tot,
+const int         *dcell_face_vtx_idx,
+const PDM_g_num_t *dcell_face_vtx,
+      PDM_g_num_t *ln_to_gn
+)
+{
+  for(int i_face = 0; i_face < n_face_elt_tot; ++i_face ) {
+    PDM_g_num_t key = 0;
+    for(int idx = dcell_face_vtx_idx[i_face]; idx < dcell_face_vtx_idx[i_face+1]; ++idx) {
+      key += dcell_face_vtx[idx];
+    }
+    ln_to_gn[i_face] = key;
+  }
+}
+
+/**
  * \def _find_pairs
  * Search common faces in a distribution
  *
@@ -900,9 +922,7 @@ PDM_DMesh_nodal_n_sections_get
     PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
   }
 
-
   return mesh->n_sections;
-
 }
 
 
@@ -929,7 +949,6 @@ const int   hdl
   }
 
   return mesh->sections_id;
-
 }
 
 
@@ -985,7 +1004,6 @@ const int   id_section
   }
 
   return t_elt;
-
 }
 
 
@@ -1811,111 +1829,6 @@ const int  hdl
 }
 
 
-void
-PDM_DMesh_nodal_cell_face_compute2
-(
-const int   hdl
-)
-{
-  /* Rq to see with Eric :
-   *    1) Treat all section as a partition
-   *    2) Remove coordinates -> Useless
-   *    3) Pas besoin d'approximation en faite !!! On doit pourvoire calculer la taille exacte
-   *        en prenant exactement la decompostion d'un elements en faces
-   *        Pour les polyhedres il suffit de compter
-   *    4) Ordre elevé
-   *    5) L'ideal serai d'avoir une fonction qui traite la decomposition de l'élements en
-   *       face (Et qui calcul la clé sous option ? ) --> _section_elt_faces_add
-   *    6) Faire test unitaire 2D et 3D
-   *    7) D'ailleurs il faut prévoir le cas d'un maillage 2D de QUAD par exemple !
-   *               --> Comment qu'on fait ?
-   *               --> Parce que dans un cas le QUAD = FACE
-   *               --> Dans l'autre le QUAD = decomposition de ligne
-   *    8) Interface public pour _get_size_of_element / _get_nbface_per_element / _get_elmt_info ?
-   *               --> Attaché à dmesh_nodal
-   *    9) Pour l'algo de génération de faces --> Mise sous option du calcul de dcell_face
-   *       généralement c'est l'autre qui nous interesses
-   *   10) On rajoute qqchose qui gère par exemple les blocs structuré ? --> Permet à la volé
-   *       de faire des maillages simplement puis de les convertir en NGon --> Que des HEXA
-   *       Function qui prends im, jm, km et qui converti en block hexa ? On pourrai également
-   *       proposer le même service qui passe en tetra ? --> (i,j,k) --> adrcell(i,j,k) n = i + im*j + im*jm*k
-   *   11) _find_pairs à revoir --> Il faut enlever les allocations dynamiques
-   */
-
-  // decompose_elemt :
-  //    --> [par face --> list des faces + list de vtx pour chaque face ] + face_cell ou cell_face
-  //    --> [par edge --> list de edge + list de vtx pour chaque edge   ] + face_cell ou cell_face
-
-   // void PDM_tetrahedron_decompose_elmt_with_face_cell(bool        is_3D,
-   //                                                    int          n_elmts,
-   //                                                    int         *n_face_current,
-   //                                                    int         *elt_face_vtx_idx,
-   //                                                    PDM_g_num_t *elt_face_vtx,
-   //                                                    PDM_g_num_t *elt_face_cell);
-
-   // void PDM_tetrahedron_decompose_elmt_with_cell_face(int          n_elmts,
-   //                                                    int         *n_face_current,
-   //                                                    int         *elt_face_vtx_idx,
-   //                                                    PDM_g_num_t *elt_face_vtx,
-   //                                                    PDM_g_num_t *elt_cell_face,
-   //                                                    int         *elt_cell_face_idx);
-
-
-  /*
-   *  Algo Eric :
-   *     1) sections --> delmt_face, delmt_face_idx
-   *     Parcours block par block :
-   *            On demare à 1, MPI_Scan pour determiner le nombre de faces pour chaque section
-   *                           On demare à partir du MPI_Scan
-   *              -> Tetra : dcell_face = [[ 1, 2, 3, 4 ], [5, 6, 7, 8]]
-   *              en même temps on construit le delemt_face_vtx, delemt_face_vtx_idx, delemt_face_vtx_n concaténé sur les sections
-   *     2) On a des faces en doubles donc on doit rechercher tt les doublons avec la table de hashage il faut appliquer l'indirection resultante
-   *     3) dcell_face, dface_vtx, dface_vtx_idx --> OK
-   *     4) para_graph --> dcell_face
-   *
-   */
-
-  /*
-   *  1) Ecriture d'un algo qui prend les sections du dmesh_nodal et qui flatten l'ensemble des connectivités + decompose en face
-   *     + Cohérence //
-   *      ---> Chaque section a un type d'elements et on delegue à une autre fonction public propre à chaque type
-   *           d'éléments :
-   *                PDM_flat_ ( pdm_triangle, pdm_quad, pdm_tetra, ... )
-   *
-   */
-
-
-
-
-  /* Get current structure to treat */
-  PDM_DMesh_nodal_t *mesh = (PDM_DMesh_nodal_t *) PDM_Handles_get (mesh_handles, hdl);
-
-  /* Creation of element distribution among all sections */
-  mesh->section_distribution    = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * (mesh->n_sections + 1));
-  mesh->section_distribution[0] = 0;
-
-  for (int i_section = 0; i_section < mesh->n_sections; i_section++) {
-    PDM_DMesh_nodal_section_std_t *section_std = (PDM_DMesh_nodal_section_std_t *) PDM_Handles_get (mesh->sections_std, i_section);
-    mesh->section_distribution[i_section+1] = section_std->distrib[mesh->n_proc];
-  }
-  for (int i_section = 1; i_section < mesh->n_sections + 1; i_section++) {
-    mesh->section_distribution[i_section] +=  mesh->section_distribution[i_section-1];
-  }
-
-  // Attention il faut compter la partie polyhédrique également
-  int n_sections_std = PDM_Handles_n_get (mesh->sections_std);
-  /* Build an approximate number of faces for current processor */
-  PDM_g_num_t dn_elmt_tot  = 0;
-  for (int i_section = 0; i_section < mesh->n_sections; i_section++) {
-    PDM_DMesh_nodal_section_std_t *section_std = (PDM_DMesh_nodal_section_std_t *) PDM_Handles_get (mesh->sections_std, i_section);
-    dn_elmt_tot += ( section_std->distrib[mesh->i_proc+1] - section_std->distrib[mesh->i_proc] );
-  }
-
-}
-
-
-
-
 /**
 *
 * \brief PDM_sections_decompose_faces
@@ -1988,22 +1901,21 @@ PDM_dmesh_nodal_decompose_faces
 
 }
 
+
 /**
  * \brief  Compute cell->face connectivity
  *
  * \param [in]   hdl              Distributed nodal mesh handle
  *
  */
-
 void
-PDM_DMesh_nodal_cell_face_compute
+PDM_DMesh_nodal_cell_face_compute2
 (
 const int   hdl
 )
 {
 
-
-  PDM_printf("PDM_DMesh_nodal_cell_face_compute \n ");
+  PDM_printf("PDM_DMesh_nodal_cell_face_compute2 \n ");
 
   /* Get current structure to treat */
   PDM_DMesh_nodal_t *mesh = (PDM_DMesh_nodal_t *) PDM_Handles_get (mesh_handles, hdl);
@@ -2029,34 +1941,99 @@ const int   hdl
   int*         dcell_face_vtx_idx = (int        *) malloc( (n_face_elt_tot +1) * sizeof(int        ));
   PDM_g_num_t* dcell_face_vtx     = (PDM_g_num_t*) malloc(  n_sum_vtx_face_tot * sizeof(PDM_g_num_t));
 
+  dcell_face_vtx_idx[0] = 0;
   PDM_sections_decompose_faces(mesh,
                                dcell_face_vtx_idx,
                                dcell_face_vtx,
                                delmt_face_cell,
                                NULL);
 
+  /*
+   * We are now all information flatten - we only need to compute hash_keys for each faces
+   */
+  PDM_g_num_t* ln_to_gn = (PDM_g_num_t*) malloc( n_face_elt_tot * sizeof(PDM_g_num_t));
+  _compute_keys(n_face_elt_tot,
+                dcell_face_vtx_idx,
+                dcell_face_vtx,
+                ln_to_gn);
+
+  PDM_log_trace_array_long(ln_to_gn, n_face_elt_tot , "ln_to_gn:: ");
+
+  /*
+   * Prepare exchange by computing stride
+   */
+  int* dcell_face_vtx_n = (int        *) malloc( n_face_elt_tot * sizeof(int        ));
+  for(int i_face = 0; i_face < n_face_elt_tot; ++i_face) {
+    dcell_face_vtx_n[i_face] = dcell_face_vtx_idx[i_face+1] - dcell_face_vtx_idx[i_face];
+  }
+
+  /*
+   * Setup part_to_block to filter all keys
+   */
+  PDM_part_to_block_t *ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                      PDM_PART_TO_BLOCK_POST_MERGE,
+                                                      1.,
+                                                      &ln_to_gn,
+                                                      NULL,
+                                                      &n_face_elt_tot,
+                                                      1,
+                                                      mesh->pdm_mpi_comm);
+
+  /*
+   * Exchange data in one call ( better do multiple -> Eric ??)
+   */
+  int *blk_stri = NULL;
+  int *blk_data = NULL;
+
+  int data_size = PDM_part_to_block_exch(         ptb,
+                                                  sizeof(PDM_g_num_t),
+                                                  PDM_STRIDE_VAR,
+                                                  -1,
+                                                  &dcell_face_vtx_n,
+                                        (void **) &dcell_face_vtx,
+                                                  &blk_stri,
+                                        (void **) &blk_data);
+  free(dcell_face_vtx_n);
+
+  /*
+   *  Get the size of the current process bloc
+   */
+  int blk_size = PDM_part_to_block_n_elt_block_get(ptb);
+
+  PDM_log_trace_array_long(blk_stri, blk_size , "blk_stri:: ");
+  PDM_log_trace_array_long(blk_data, data_size, "blk_data:: ");
+
+  PDM_part_to_block_free(ptb);
+  free(blk_stri);
+  free(blk_data);
+
   free(delmt_face_cell);
   free(dcell_face_vtx_idx);
   free(dcell_face_vtx);
+  free(ln_to_gn);
+}
 
 
-  // Test decomposition
-  for (int i_section = 0; i_section < mesh->n_sections; i_section++) {
 
-    /* Get current section */
-    PDM_DMesh_nodal_section_std_t* section_std = (PDM_DMesh_nodal_section_std_t *) PDM_Handles_get (mesh->sections_std, i_section);
 
-    switch(section_std->t_elt){
-      case PDM_MESH_NODAL_HEXA8:
-        // PDM_hexa_section_decompose_elemt_to_face();
-        printf("PDM_MESH_NODAL_HEXA8 \n");
-        break;
-      default:
-        break;
+/**
+ * \brief  Compute cell->face connectivity
+ *
+ * \param [in]   hdl              Distributed nodal mesh handle
+ *
+ */
+void
+PDM_DMesh_nodal_cell_face_compute
+(
+const int   hdl
+)
+{
 
-    }
+  PDM_DMesh_nodal_cell_face_compute2(hdl);
+  return;
 
-  }
+  /* Get current structure to treat */
+  PDM_DMesh_nodal_t *mesh = (PDM_DMesh_nodal_t *) PDM_Handles_get (mesh_handles, hdl);
 
   /* Verbose */
   if(1 == 0)
@@ -2825,6 +2802,96 @@ PDM_DMesh_nodal_distrib_face_get
 
 }
 
+  // /* Rq to see with Eric :
+  //  *    1) Treat all section as a partition
+  //  *    2) Remove coordinates -> Useless
+  //  *    3) Pas besoin d'approximation en faite !!! On doit pourvoire calculer la taille exacte
+  //  *        en prenant exactement la decompostion d'un elements en faces
+  //  *        Pour les polyhedres il suffit de compter
+  //  *    4) Ordre elevé
+  //  *    5) L'ideal serai d'avoir une fonction qui traite la decomposition de l'élements en
+  //  *       face (Et qui calcul la clé sous option ? ) --> _section_elt_faces_add
+  //  *    6) Faire test unitaire 2D et 3D
+  //  *    7) D'ailleurs il faut prévoir le cas d'un maillage 2D de QUAD par exemple !
+  //  *               --> Comment qu'on fait ?
+  //  *               --> Parce que dans un cas le QUAD = FACE
+  //  *               --> Dans l'autre le QUAD = decomposition de ligne
+  //  *    8) Interface public pour _get_size_of_element / _get_nbface_per_element / _get_elmt_info ?
+  //  *               --> Attaché à dmesh_nodal
+  //  *    9) Pour l'algo de génération de faces --> Mise sous option du calcul de dcell_face
+  //  *       généralement c'est l'autre qui nous interesses
+  //  *   10) On rajoute qqchose qui gère par exemple les blocs structuré ? --> Permet à la volé
+  //  *       de faire des maillages simplement puis de les convertir en NGon --> Que des HEXA
+  //  *       Function qui prends im, jm, km et qui converti en block hexa ? On pourrai également
+  //  *       proposer le même service qui passe en tetra ? --> (i,j,k) --> adrcell(i,j,k) n = i + im*j + im*jm*k
+  //  *   11) _find_pairs à revoir --> Il faut enlever les allocations dynamiques
+  //  */
+
+  // // decompose_elemt :
+  // //    --> [par face --> list des faces + list de vtx pour chaque face ] + face_cell ou cell_face
+  // //    --> [par edge --> list de edge + list de vtx pour chaque edge   ] + face_cell ou cell_face
+
+  //  // void PDM_tetrahedron_decompose_elmt_with_face_cell(bool        is_3D,
+  //  //                                                    int          n_elmts,
+  //  //                                                    int         *n_face_current,
+  //  //                                                    int         *elt_face_vtx_idx,
+  //  //                                                    PDM_g_num_t *elt_face_vtx,
+  //  //                                                    PDM_g_num_t *elt_face_cell);
+
+  //  // void PDM_tetrahedron_decompose_elmt_with_cell_face(int          n_elmts,
+  //  //                                                    int         *n_face_current,
+  //  //                                                    int         *elt_face_vtx_idx,
+  //  //                                                    PDM_g_num_t *elt_face_vtx,
+  //  //                                                    PDM_g_num_t *elt_cell_face,
+  //  //                                                    int         *elt_cell_face_idx);
+
+
+  // /*
+  //  *  Algo Eric :
+  //  *     1) sections --> delmt_face, delmt_face_idx
+  //  *     Parcours block par block :
+  //  *            On demare à 1, MPI_Scan pour determiner le nombre de faces pour chaque section
+  //  *                           On demare à partir du MPI_Scan
+  //  *              -> Tetra : dcell_face = [[ 1, 2, 3, 4 ], [5, 6, 7, 8]]
+  //  *              en même temps on construit le delemt_face_vtx, delemt_face_vtx_idx, delemt_face_vtx_n concaténé sur les sections
+  //  *     2) On a des faces en doubles donc on doit rechercher tt les doublons avec la table de hashage il faut appliquer l'indirection resultante
+  //  *     3) dcell_face, dface_vtx, dface_vtx_idx --> OK
+  //  *     4) para_graph --> dcell_face
+  //  *
+  //  */
+
+  // /*
+  //  *  1) Ecriture d'un algo qui prend les sections du dmesh_nodal et qui flatten l'ensemble des connectivités + decompose en face
+  //  *     + Cohérence //
+  //  *      ---> Chaque section a un type d'elements et on delegue à une autre fonction public propre à chaque type
+  //  *           d'éléments :
+  //  *                PDM_flat_ ( pdm_triangle, pdm_quad, pdm_tetra, ... )
+  //  *
+  //  */
+
+  // /* Get current structure to treat */
+  // PDM_DMesh_nodal_t *mesh = (PDM_DMesh_nodal_t *) PDM_Handles_get (mesh_handles, hdl);
+
+  // /* Creation of element distribution among all sections */
+  // mesh->section_distribution    = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * (mesh->n_sections + 1));
+  // mesh->section_distribution[0] = 0;
+
+  // for (int i_section = 0; i_section < mesh->n_sections; i_section++) {
+  //   PDM_DMesh_nodal_section_std_t *section_std = (PDM_DMesh_nodal_section_std_t *) PDM_Handles_get (mesh->sections_std, i_section);
+  //   mesh->section_distribution[i_section+1] = section_std->distrib[mesh->n_proc];
+  // }
+  // for (int i_section = 1; i_section < mesh->n_sections + 1; i_section++) {
+  //   mesh->section_distribution[i_section] +=  mesh->section_distribution[i_section-1];
+  // }
+
+  // // Attention il faut compter la partie polyhédrique également
+  // int n_sections_std = PDM_Handles_n_get (mesh->sections_std);
+  // /* Build an approximate number of faces for current processor */
+  // PDM_g_num_t dn_elmt_tot  = 0;
+  // for (int i_section = 0; i_section < mesh->n_sections; i_section++) {
+  //   PDM_DMesh_nodal_section_std_t *section_std = (PDM_DMesh_nodal_section_std_t *) PDM_Handles_get (mesh->sections_std, i_section);
+  //   dn_elmt_tot += ( section_std->distrib[mesh->i_proc+1] - section_std->distrib[mesh->i_proc] );
+  // }
 
 #ifdef __cplusplus
 }

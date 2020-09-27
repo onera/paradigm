@@ -39,9 +39,9 @@ MPI_TEST_CASE("decomposes hexa ",1) {
   // int*         dcell_face_vtx_idx = (int        *) malloc( (n_face_elt_tot +1) * sizeof(int        ));
   // PDM_g_num_t* dcell_face_vtx     = (PDM_g_num_t*) malloc(  n_sum_vtx_face_tot * sizeof(PDM_g_num_t));
 
-  std::vector<PDM_g_num_t> delmt_face_cell(n_face_elt_tot);
   std::vector<int>         dcell_face_vtx_idx(n_face_elt_tot +1);
   std::vector<PDM_g_num_t> dcell_face_vtx(n_sum_vtx_face_tot);
+  std::vector<PDM_g_num_t> delmt_face_cell(n_face_elt_tot);
 
   dcell_face_vtx_idx[0] = 0;
   PDM_dmesh_nodal_decompose_faces(dmesh_nodal_id,
@@ -49,6 +49,12 @@ MPI_TEST_CASE("decomposes hexa ",1) {
                                   dcell_face_vtx.data(),
                                   delmt_face_cell.data(),
                                   NULL);
+  // dcell_face_vtx_idx[0] = 0;
+  // PDM_dmesh_nodal_decompose_faces(dmesh_nodal_id,
+  //                                 dcell_face_vtx_idx,
+  //                                 dcell_face_vtx,
+  //                                 delmt_face_cell,
+  //                                 NULL);
 
   // PDM_log_trace_array_long(delmt_face_cell, n_face_elt_tot, "delmt_face_cell:: ");
   // PDM_log_trace_array_int(dcell_face_vtx_idx, n_face_elt_tot+1, "dcell_face_vtx_idx:: ");
@@ -67,6 +73,7 @@ MPI_TEST_CASE("decomposes hexa ",1) {
   CHECK( dcell_face_vtx_idx == dcell_face_vtx_idx_expected);
   CHECK( dcell_face_vtx     == dcell_face_vtx_expected);
 
+  PDM_DMesh_nodal_cell_face_compute(dmesh_nodal_id);
 
   // free(delmt_face_cell);
   // free(dcell_face_vtx_idx);

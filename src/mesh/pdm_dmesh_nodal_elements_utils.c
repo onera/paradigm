@@ -832,7 +832,7 @@ PDM_hexa_decomposes_faces
   PDM_g_num_t *_current_elmt_face_cell    = elmt_face_cell +_n_face_current;
 
 
- printf("_n_face_current:: %i %s\n", _n_face_current);
+ printf("_n_face_current:: %i\n", _n_face_current);
  printf("elt_face_vtx_idx[%i]:: %i \n", _n_face_current, elmt_face_vtx_idx[_n_face_current]);
   /*
    * For each element we flaten all connectivities in one array
