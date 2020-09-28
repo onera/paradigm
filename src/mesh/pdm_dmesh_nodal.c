@@ -658,29 +658,36 @@ _generate_distribution
   mesh->section_distribution    = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * (mesh->n_sections + 1));
   mesh->section_distribution[0] = 0;
 
-
+  int shift = 0;
   if (mesh->sections_std != NULL) {
-    int n_sections_std = PDM_Handles_n_get (mesh->sections_std);
+    int n_sections_std  = PDM_Handles_n_get  (mesh->sections_std);
+    const int *list_ind = PDM_Handles_idx_get(mesh->sections_std);
     for (int i_section = 0; i_section < n_sections_std; i_section++) {
-      PDM_DMesh_nodal_section_std_t *section_std = (PDM_DMesh_nodal_section_std_t *) PDM_Handles_get (mesh->sections_std, i_section);
+      PDM_DMesh_nodal_section_std_t *section_std = (PDM_DMesh_nodal_section_std_t *) PDM_Handles_get (mesh->sections_std, list_ind[i_section]);
       mesh->section_distribution[i_section+1] = section_std->distrib[mesh->n_proc];
     }
+    shift += n_sections_std;
   }
 
+
   if (mesh->sections_poly2d != NULL) {
-    int n_sections_poly2d = PDM_Handles_n_get (mesh->sections_poly2d);
+    int n_sections_poly2d = PDM_Handles_n_get  (mesh->sections_poly2d);
+    const int *list_ind   = PDM_Handles_idx_get(mesh->sections_poly2d);
     for (int i_section = 0; i_section < n_sections_poly2d; i_section++) {
-      PDM_DMesh_nodal_section_poly2d_t *section_poly2d = (PDM_DMesh_nodal_section_poly2d_t *) PDM_Handles_get (mesh->sections_std, i_section);
-      mesh->section_distribution[i_section+1] = section_poly2d->distrib[mesh->n_proc];
+      PDM_DMesh_nodal_section_poly2d_t *section_poly2d = (PDM_DMesh_nodal_section_poly2d_t *) PDM_Handles_get (mesh->sections_std, list_ind[i_section]);
+      mesh->section_distribution[i_section+shift+1] = section_poly2d->distrib[mesh->n_proc];
     }
+    shift += n_sections_poly2d;
   }
 
   if (mesh->sections_poly3d != NULL) {
-    int n_sections_poly3d = PDM_Handles_n_get (mesh->sections_poly3d);
+    int n_sections_poly3d = PDM_Handles_n_get  (mesh->sections_poly3d);
+    const int *list_ind   = PDM_Handles_idx_get(mesh->sections_poly3d);
     for (int i_section = 0; i_section < n_sections_poly3d; i_section++) {
-      PDM_DMesh_nodal_section_poly3d_t *section_poly3d = (PDM_DMesh_nodal_section_poly3d_t *) PDM_Handles_get (mesh->sections_std, i_section);
-      mesh->section_distribution[i_section+1] = section_poly3d->distrib[mesh->n_proc];
+      PDM_DMesh_nodal_section_poly3d_t *section_poly3d = (PDM_DMesh_nodal_section_poly3d_t *) PDM_Handles_get (mesh->sections_std, list_ind[i_section]);
+      mesh->section_distribution[i_section+shift+1] = section_poly3d->distrib[mesh->n_proc];
     }
+    shift += n_sections_poly3d;
   }
 
   for (int i_section = 1; i_section < mesh->n_sections + 1; i_section++) {
