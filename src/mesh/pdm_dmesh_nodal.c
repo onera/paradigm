@@ -1927,7 +1927,7 @@ PDM_dmesh_nodal_decompose_faces_get_size
 
     PDM_DMesh_nodal_section_std_t* section_std = (PDM_DMesh_nodal_section_std_t *) PDM_Handles_get (mesh->sections_std, i_section);
 
-    int n_face_elt     = PDM_n_face_elt_per_elmt(section_std->t_elt);
+    int n_face_elt     = PDM_n_face_elt_per_elmt    (section_std->t_elt);
     int n_sum_vtx_face = PDM_n_sum_vtx_face_per_elmt(section_std->t_elt);
 
     *n_face_elt_tot     += section_std->n_elt*n_face_elt;
@@ -2812,14 +2812,14 @@ const int   hdl
     idx_g++;
     if(mesh->_dface_cell[2*idx+1] != 0){
       dface_cell_tmp[idx_g] = mesh->_dface_cell[2*idx+1];
-      ln_to_gn_elem[idx_g  ] = i+1;
+      ln_to_gn_elem[idx_g ] = i+1;
       part_stri2[idx_g] = 1;
       idx_g++;
     }
     else
     {
       dface_cell_tmp[idx_g] = mesh->_dface_cell[2*idx];
-      ln_to_gn_elem[idx_g  ] = i+1;
+      ln_to_gn_elem[idx_g ] = i+1;
       part_stri2[idx_g] = 0;
       idx_g++;
     }
