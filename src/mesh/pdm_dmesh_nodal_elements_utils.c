@@ -918,6 +918,8 @@ PDM_sections_decompose_faces
 
   for (int i = 0; i < n_sections_std; i++) {
     PDM_DMesh_nodal_section_std_t *section = (PDM_DMesh_nodal_section_std_t *) PDM_Handles_get (mesh->sections_std, list_ind[i]);
+
+    // PDM_g_num_t beg_elmt_gnum = section_std->distrib[mesh->i_proc] + mesh->section_distribution[i_section];
     switch (section->t_elt) {
      case PDM_MESH_NODAL_POINT:
        abort();
@@ -962,6 +964,22 @@ PDM_sections_decompose_faces
        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_faces : Element type is not taking int account\n");
     }
   }
+
+  /* Not implemented */
+  if (mesh->sections_poly2d != NULL) {
+    // int n_sections_poly2d = PDM_Handles_n_get  (mesh->sections_poly2d);
+    // const int *list_ind   = PDM_Handles_idx_get(mesh->sections_poly2d);
+    abort();
+  }
+
+  if (mesh->sections_poly3d != NULL) {
+    // int n_sections_poly3d = PDM_Handles_n_get  (mesh->sections_poly3d);
+    // const int *list_ind   = PDM_Handles_idx_get(mesh->sections_poly3d);
+    abort();
+  }
+
+
+
 }
 
 /**
