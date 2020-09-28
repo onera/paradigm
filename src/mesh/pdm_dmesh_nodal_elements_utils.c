@@ -623,20 +623,20 @@ PDM_n_face_elt_per_elmt
    case PDM_MESH_NODAL_TRIA3:
      n_face_elt = 1;  // TODO Eric have initialy 3
      break;
+   case PDM_MESH_NODAL_QUAD4:
+     n_face_elt = 1;
+     break;
    case PDM_MESH_NODAL_TETRA4:
      n_face_elt = 4;
-     break;
-   case PDM_MESH_NODAL_QUAD4:
-     n_face_elt = 4;
-     break;
-   case PDM_MESH_NODAL_HEXA8:
-     n_face_elt = 6;
      break;
    case PDM_MESH_NODAL_PYRAMID5:
      n_face_elt = 5;
      break;
    case PDM_MESH_NODAL_PRISM6:
      n_face_elt = 5;
+     break;
+   case PDM_MESH_NODAL_HEXA8:
+     n_face_elt = 6;
      break;
    default:
      n_face_elt = -1;
@@ -703,20 +703,20 @@ PDM_n_sum_vtx_face_per_elmt
    case PDM_MESH_NODAL_TRIA3:
      n_sum_vtx_face = 3;
      break;
+   case PDM_MESH_NODAL_QUAD4:
+     n_sum_vtx_face = 4;
+     break;
    case PDM_MESH_NODAL_TETRA4:
      n_sum_vtx_face = 12;
-     break;
-   case PDM_MESH_NODAL_QUAD4:
-     n_sum_vtx_face = 8;
-     break;
-   case PDM_MESH_NODAL_HEXA8:
-     n_sum_vtx_face = 24;
      break;
    case PDM_MESH_NODAL_PYRAMID5:
      n_sum_vtx_face = 16;
      break;
    case PDM_MESH_NODAL_PRISM6:
      n_sum_vtx_face = 18;
+     break;
+   case PDM_MESH_NODAL_HEXA8:
+     n_sum_vtx_face = 24;
      break;
    default:
      n_sum_vtx_face = -1;
@@ -789,9 +789,9 @@ PDM_tetra_decomposes_faces
 {
   PDM_UNUSED(elmt_cell_face);
 
-  const int n_face_elt        = 3;
-  const int n_sum_vtx_face    = 6;
-  const int n_sum_vtx_elt     = 3;
+  const int n_face_elt        = 4;
+  const int n_sum_vtx_face    = 12;
+  const int n_sum_vtx_elt     = 4;
 
   int _n_face_current = *n_face_current;
   int         *_current_elmt_face_vtx_idx = elmt_face_vtx_idx + _n_face_current;
