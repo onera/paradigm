@@ -916,23 +916,40 @@ PDM_sections_decompose_faces
   int n_elt_current  = 0;
   int n_face_current = 0;
 
- for (int i = 0; i < n_sections_std; i++) {
-   PDM_DMesh_nodal_section_std_t *section = (PDM_DMesh_nodal_section_std_t *) PDM_Handles_get (mesh->sections_std, list_ind[i]);
-   switch (section->t_elt) {
-    case PDM_MESH_NODAL_POINT:
-      abort();
-      break;
-    case PDM_MESH_NODAL_BAR2:
-      abort();
-      break;
-    case PDM_MESH_NODAL_TRIA3:
-      abort();
-      break;
-    case PDM_MESH_NODAL_QUAD4:
-      abort();
-      break;
-    case PDM_MESH_NODAL_TETRA4:
-      PDM_tetra_decomposes_faces(section->n_elt,
+  for (int i = 0; i < n_sections_std; i++) {
+    PDM_DMesh_nodal_section_std_t *section = (PDM_DMesh_nodal_section_std_t *) PDM_Handles_get (mesh->sections_std, list_ind[i]);
+    switch (section->t_elt) {
+     case PDM_MESH_NODAL_POINT:
+       abort();
+       break;
+     case PDM_MESH_NODAL_BAR2:
+       abort();
+       break;
+     case PDM_MESH_NODAL_TRIA3:
+       abort();
+       break;
+     case PDM_MESH_NODAL_QUAD4:
+       abort();
+       break;
+     case PDM_MESH_NODAL_TETRA4:
+       PDM_tetra_decomposes_faces(section->n_elt,
+                                  &n_elt_current,
+                                  &n_face_current,
+                                  section->_connec,
+                                  elmt_face_vtx_idx,
+                                  elmt_face_vtx,
+                                  elmt_face_cell,
+                                  elmt_cell_face);
+       break;
+       abort();
+     case PDM_MESH_NODAL_PYRAMID5:
+       abort();
+       break;
+     case PDM_MESH_NODAL_PRISM6:
+       abort();
+       break;
+     case PDM_MESH_NODAL_HEXA8:
+       PDM_hexa_decomposes_faces(section->n_elt,
                                  &n_elt_current,
                                  &n_face_current,
                                  section->_connec,
@@ -940,27 +957,10 @@ PDM_sections_decompose_faces
                                  elmt_face_vtx,
                                  elmt_face_cell,
                                  elmt_cell_face);
-      break;
-      abort();
-    case PDM_MESH_NODAL_PYRAMID5:
-      abort();
-      break;
-    case PDM_MESH_NODAL_PRISM6:
-      abort();
-      break;
-    case PDM_MESH_NODAL_HEXA8:
-      PDM_hexa_decomposes_faces(section->n_elt,
-                                &n_elt_current,
-                                &n_face_current,
-                                section->_connec,
-                                elmt_face_vtx_idx,
-                                elmt_face_vtx,
-                                elmt_face_cell,
-                                elmt_cell_face);
-      break;
-    default:
-      PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_faces : Element type is not taking int account\n");
-   }
+       break;
+     default:
+       PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_faces : Element type is not taking int account\n");
+    }
   }
 }
 

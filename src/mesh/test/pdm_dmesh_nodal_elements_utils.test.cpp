@@ -10,7 +10,7 @@
 // double coord_z[n_vtx] = {0., 0., 0., 0., 0., 0., 1., 1., 1., 1., 1., 1};
 
 MPI_TEST_CASE("decomposes hexa ",1) {
-  const PDM_g_num_t n_vtx            = 10;
+  const PDM_g_num_t n_vtx            = 12;
   const PDM_g_num_t n_cell           = 2;
   const int         n_hexa_section_1 = 2;
   PDM_g_num_t connec_hexa_1[16] = {1, 2, 5, 4, 7, 8, 11, 10, // First
