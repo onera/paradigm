@@ -462,6 +462,7 @@ const PDM_MPI_Comm       comm,
   mesh->pdm_mpi_comm             = comm;
   mesh->sections_id              = NULL;
   mesh->n_sections               = 0;
+  mesh->section_distribution     = NULL;
 
   mesh->n_dcell                  = -1;
   mesh->dcell_face               = NULL;
@@ -636,6 +637,66 @@ PDM_DMesh_nodal_section_poly3d_t *_section_poly3d
 
 }
 
+/**
+ *
+ * \brief Setup global distribution of all elements register in current structure
+ *
+ * \param [inout]  mesh
+ *
+ * \return         Null
+ *
+ */
+static void
+_generate_distribution
+(
+ PDM_DMesh_nodal_t* mesh
+)
+{
+  assert(mesh->section_distribution == NULL);
+
+  /* Creation of element distribution among all sections */
+  mesh->section_distribution    = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * (mesh->n_sections + 1));
+  mesh->section_distribution[0] = 0;
+
+
+  if (mesh->sections_std != NULL) {
+    int n_sections_std = PDM_Handles_n_get (mesh->sections_std);
+    for (int i_section = 0; i_section < n_sections_std; i_section++) {
+      PDM_DMesh_nodal_section_std_t *section_std = (PDM_DMesh_nodal_section_std_t *) PDM_Handles_get (mesh->sections_std, i_section);
+      mesh->section_distribution[i_section+1] = section_std->distrib[mesh->n_proc];
+    }
+  }
+
+  if (mesh->sections_poly2d != NULL) {
+    int n_sections_poly2d = PDM_Handles_n_get (mesh->sections_poly2d);
+    for (int i_section = 0; i_section < n_sections_poly2d; i_section++) {
+      PDM_DMesh_nodal_section_poly2d_t *section_poly2d = (PDM_DMesh_nodal_section_poly2d_t *) PDM_Handles_get (mesh->sections_std, i_section);
+      mesh->section_distribution[i_section+1] = section_poly2d->distrib[mesh->n_proc];
+    }
+  }
+
+  if (mesh->sections_poly3d != NULL) {
+    int n_sections_poly3d = PDM_Handles_n_get (mesh->sections_poly3d);
+    for (int i_section = 0; i_section < n_sections_poly3d; i_section++) {
+      PDM_DMesh_nodal_section_poly3d_t *section_poly3d = (PDM_DMesh_nodal_section_poly3d_t *) PDM_Handles_get (mesh->sections_std, i_section);
+      mesh->section_distribution[i_section+1] = section_poly3d->distrib[mesh->n_proc];
+    }
+  }
+
+  for (int i_section = 1; i_section < mesh->n_sections + 1; i_section++) {
+    mesh->section_distribution[i_section] +=  mesh->section_distribution[i_section-1];
+  }
+
+  /* Verbose */
+  if(1 == 1)
+  {
+    PDM_printf(" ------------------------------ \n ");
+    for(int i_section=0; i_section < mesh->n_sections+1; i_section++){
+      PDM_printf("%i ", mesh->section_distribution[i_section]);
+    }
+  }
+
+}
 
 /*=============================================================================
  * Public function definitions
@@ -2341,9 +2402,6 @@ const int   hdl
 
 }
 
-
-
-
 /**
  * \brief  Compute cell->face connectivity
  *
@@ -2356,12 +2414,13 @@ PDM_DMesh_nodal_cell_face_compute
 const int   hdl
 )
 {
-
-  PDM_DMesh_nodal_cell_face_compute2(hdl);
-  return;
-
   /* Get current structure to treat */
   PDM_DMesh_nodal_t *mesh = (PDM_DMesh_nodal_t *) PDM_Handles_get (mesh_handles, hdl);
+  _generate_distribution(mesh);
+  PDM_DMesh_nodal_cell_face_compute2(hdl);
+
+  return;
+
 
   /* Verbose */
   if(1 == 0)
@@ -2390,28 +2449,6 @@ const int   hdl
     }
 
   }
-
-  /* Creation of element distribution among all sections */
-  mesh->section_distribution    = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * (mesh->n_sections + 1));
-  mesh->section_distribution[0] = 0;
-
-  for (int i_section = 0; i_section < mesh->n_sections; i_section++) {
-    PDM_DMesh_nodal_section_std_t *section_std = (PDM_DMesh_nodal_section_std_t *) PDM_Handles_get (mesh->sections_std, i_section);
-    mesh->section_distribution[i_section+1] = section_std->distrib[mesh->n_proc];
-  }
-  for (int i_section = 1; i_section < mesh->n_sections + 1; i_section++) {
-    mesh->section_distribution[i_section] +=  mesh->section_distribution[i_section-1];
-  }
-
-  /* Verbose */
-  if(1 == 0)
-  {
-    PDM_printf(" ------------------------------ \n ");
-    for(int i_section=0; i_section < mesh->n_sections+1; i_section++){
-      PDM_printf("%i ", mesh->section_distribution[i_section]);
-    }
-  }
-
 
   /* Build an approximate number of faces for current processor */
   PDM_g_num_t dnElemTot  = 0;
