@@ -2028,6 +2028,8 @@ const int   hdl
                 ln_to_gn);
 
   PDM_log_trace_array_long(ln_to_gn, n_face_elt_tot , "ln_to_gn:: ");
+  PDM_log_trace_array_long(dcell_face_vtx_idx  , n_face_elt_tot , "dcell_face_vtx_idx:: ");
+  PDM_log_trace_array_long(dcell_face_vtx, dcell_face_vtx_idx[n_face_elt_tot] , "dcell_face_vtx:: ");
 
   /*
    * Prepare exchange by computing stride
@@ -2251,7 +2253,7 @@ const int   hdl
 
   if( 1 == 1 ){
     printf("i_abs_face::%i \n", i_abs_face);
-    PDM_log_trace_array_int(mesh->_dface_vtx_idx, blk_face_vtx_n_size             , "mesh->_dface_vtx_idx:: ");
+    PDM_log_trace_array_int(mesh->_dface_vtx_idx, i_abs_face+1                    , "mesh->_dface_vtx_idx:: ");
     PDM_log_trace_array_long(mesh->_dface_vtx   , mesh->_dface_vtx_idx[i_abs_face], "_dface_vtx:: ");
     PDM_log_trace_array_long(mesh->_dface_cell  , 2*i_abs_face                    , "_dface_cell:: ");
   }
