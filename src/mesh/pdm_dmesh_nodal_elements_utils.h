@@ -137,10 +137,27 @@ PDM_tetra_decomposes_faces
 
 /**
  *
- * \brief Decompose tetra cell_vtx connectivity to a flatten view of faces
+ * \brief Decompose pyra cell_vtx connectivity to a flatten view of faces
  */
 void
 PDM_pyra_decomposes_faces
+(
+       int          n_elt,
+       int         *n_elt_current,
+       int         *n_face_current,
+ const PDM_g_num_t *connectivity_elmt_vtx,
+       int         *elmt_face_vtx_idx,
+       PDM_g_num_t *elmt_face_vtx,
+       PDM_g_num_t *elmt_face_cell,
+       PDM_g_num_t *elmt_cell_face
+);
+
+/**
+ *
+ * \brief Decompose prism cell_vtx connectivity to a flatten view of faces
+ */
+void
+PDM_prism_decomposes_faces
 (
        int          n_elt,
        int         *n_elt_current,
