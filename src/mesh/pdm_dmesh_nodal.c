@@ -2264,7 +2264,7 @@ const int   hdl
   mesh->dn_face = i_abs_face;
 
   /*
-   * Realloc -> TODOUX
+   * Realloc
    */
   mesh->_dface_vtx_idx = (int *        ) realloc((mesh->_dface_vtx_idx), (mesh->dn_face + 1) * sizeof(int * ) );
   mesh->_dface_vtx     = (PDM_g_num_t *) realloc((mesh->_dface_vtx    ), mesh->_dface_vtx_idx[mesh->dn_face] * sizeof(PDM_g_num_t * ));
