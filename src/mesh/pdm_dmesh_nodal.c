@@ -2229,19 +2229,6 @@ const int   hdl
   PDM_g_num_t* dface_cell_tmp      = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) * n_face_cell );
   PDM_g_num_t* ln_to_gn_elem       = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) * n_face_cell );
 
-  // for (PDM_g_num_t i = mesh->face_distrib[mesh->i_proc]; i < mesh->face_distrib[mesh->i_proc+1]; i++) {
-  //   int idx = (int) (i-mesh->face_distrib[mesh->i_proc]);
-  //   ln_to_gn_elem[2*idx  ] = i+1;
-  //   ln_to_gn_elem[2*idx+1] = i+1;
-  // }
-
-  // for (PDM_g_num_t i = mesh->face_distrib[mesh->i_proc]; i < mesh->face_distrib[mesh->i_proc+1]; i++) {
-  //   int idx = (int) (i-mesh->face_distrib[mesh->i_proc]);
-  //   ln_to_gn_elem[2*idx  ] = i+1;
-  //   ln_to_gn_elem[2*idx+1] = i+1;
-  // }
-
-
   int idx_g = 0;
   assert( mesh->dn_face == mesh->face_distrib[mesh->i_proc+1] - mesh->face_distrib[mesh->i_proc]);
   // for (int i = mesh->face_distrib[mesh->i_proc]; i < mesh->face_distrib[mesh->i_proc+1]; i++) {
@@ -2267,10 +2254,12 @@ const int   hdl
   }
   n_face_cell = idx_g; // Adapt size
 
-  printf("n_face_cell::%i\n", n_face_cell);
-  PDM_log_trace_array_int(part_stri_face_cell, n_face_cell, "part_stri_face_cell:: ");
-  PDM_log_trace_array_long(ln_to_gn_elem     , n_face_cell, "ln_to_gn_elem:: ");
-  PDM_log_trace_array_long(dface_cell_tmp    , n_face_cell, "dface_cell_tmp:: ");
+  if(0 == 1 ){
+    printf("n_face_cell::%i\n", n_face_cell);
+    PDM_log_trace_array_int(part_stri_face_cell, n_face_cell, "part_stri_face_cell:: ");
+    PDM_log_trace_array_long(ln_to_gn_elem     , n_face_cell, "ln_to_gn_elem:: ");
+    PDM_log_trace_array_long(dface_cell_tmp    , n_face_cell, "dface_cell_tmp:: ");
+  }
 
   /*
    *  Use part_to_block with the cell numbering
@@ -2327,7 +2316,6 @@ const int   hdl
   assert(mesh->dcell_face == NULL);
   mesh->dcell_face = blk_cell_face;
 
-  printf("mesh->n_dcell ::%i\n", mesh->n_dcell );
 
   /* Compress connectivity in place */
   PDM_para_graph_compress_connectivity(mesh->n_dcell,
@@ -2337,10 +2325,16 @@ const int   hdl
 
 
   if( 1 == 1 ){
-    printf("i_abs_face::%i \n", i_abs_face);
+    printf("mesh->n_dcell ::%i\n", mesh->n_dcell );
     PDM_log_trace_array_int(mesh->dcell_face_idx, mesh->n_dcell+1                    , "mesh->dcell_face_idx:: ");
     PDM_log_trace_array_long(mesh->dcell_face   , mesh->dcell_face_idx[mesh->n_dcell], "dcell_face:: ");
   }
+
+  /*
+   *  Realloc
+   */
+  mesh->dcell_face = (PDM_g_num_t *) realloc( mesh->dcell_face, mesh->dcell_face_idx[mesh->n_dcell] * sizeof(PDM_g_num_t));
+
 
   free(blk_cell_face_n);
 
