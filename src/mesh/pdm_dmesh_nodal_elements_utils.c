@@ -834,7 +834,7 @@ PDM_tetra_decomposes_faces
 
 /**
 *
-* \brief Decompose tetra cell_vtx connectivity to a flatten view of faces
+* \brief Decompose pyra cell_vtx connectivity to a flatten view of faces
 */
 void
 PDM_pyra_decomposes_faces
@@ -901,6 +901,84 @@ PDM_pyra_decomposes_faces
   *n_face_current += n_elt * n_face_elt;
 
 }
+
+
+
+/**
+*
+* \brief Decompose tetra cell_vtx connectivity to a flatten view of faces
+*/
+void
+PDM_prism_decomposes_faces
+(
+       int          n_elt,
+       int         *n_elt_current,
+       int         *n_face_current,
+ const PDM_g_num_t *connectivity_elmt_vtx,
+       int         *elmt_face_vtx_idx,
+       PDM_g_num_t *elmt_face_vtx,
+       PDM_g_num_t *elmt_face_cell,
+       PDM_g_num_t *elmt_cell_face
+)
+{
+  PDM_UNUSED(elmt_cell_face);
+
+  const int n_face_elt        = 5;
+  const int n_sum_vtx_face    = 3*4 + 2*3;
+  const int n_sum_vtx_elt     = 6;
+
+  int _n_face_current = *n_face_current;
+  int         *_current_elmt_face_vtx_idx = elmt_face_vtx_idx + _n_face_current;
+  PDM_g_num_t *_current_elmt_face_vtx     = elmt_face_vtx + elmt_face_vtx_idx[_n_face_current];
+  PDM_g_num_t *_current_elmt_face_cell    = elmt_face_cell + _n_face_current;
+
+  /*
+   * For each element we flaten all connectivities in one array
+   */
+  for (int ielt = 0; ielt < n_elt; ielt++) {
+
+    for (int i_face = 0; i_face < n_face_elt; i_face++) {
+      _current_elmt_face_cell[ielt * n_face_elt + i_face    ] = *n_elt_current + ielt + 1;
+    }
+
+    _current_elmt_face_vtx_idx[ielt * n_face_elt + 1]  = elmt_face_vtx_idx[ielt * n_face_elt    ] + 3;
+    _current_elmt_face_vtx_idx[ielt * n_face_elt + 2]  = elmt_face_vtx_idx[ielt * n_face_elt + 1] + 3;
+    _current_elmt_face_vtx_idx[ielt * n_face_elt + 3]  = elmt_face_vtx_idx[ielt * n_face_elt + 2] + 4;
+    _current_elmt_face_vtx_idx[ielt * n_face_elt + 4]  = elmt_face_vtx_idx[ielt * n_face_elt + 3] + 4;
+    _current_elmt_face_vtx_idx[ielt * n_face_elt + 5]  = elmt_face_vtx_idx[ielt * n_face_elt + 4] + 4;
+
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 0]  = elmt_face_vtx[n_sum_vtx_elt * ielt + 2];
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 1]  = elmt_face_vtx[n_sum_vtx_elt * ielt + 1];
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 2]  = elmt_face_vtx[n_sum_vtx_elt * ielt    ];
+
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 3]  = elmt_face_vtx[n_sum_vtx_elt * ielt + 4];
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 4]  = elmt_face_vtx[n_sum_vtx_elt * ielt + 5];
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 5]  = elmt_face_vtx[n_sum_vtx_elt * ielt + 3];
+
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 6]  = elmt_face_vtx[n_sum_vtx_elt * ielt + 5];
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 7]  = elmt_face_vtx[n_sum_vtx_elt * ielt + 4];
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 8]  = elmt_face_vtx[n_sum_vtx_elt * ielt + 1];
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 9]  = elmt_face_vtx[n_sum_vtx_elt * ielt + 2];
+
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 10] = elmt_face_vtx[n_sum_vtx_elt * ielt + 4];
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 11] = elmt_face_vtx[n_sum_vtx_elt * ielt + 3];
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 12] = elmt_face_vtx[n_sum_vtx_elt * ielt    ];
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 13] = elmt_face_vtx[n_sum_vtx_elt * ielt + 1];
+
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 14] = elmt_face_vtx[n_sum_vtx_elt * ielt + 3];
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 15] = elmt_face_vtx[n_sum_vtx_elt * ielt + 5];
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 16] = elmt_face_vtx[n_sum_vtx_elt * ielt + 2];
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 17] = elmt_face_vtx[n_sum_vtx_elt * ielt    ];
+
+  }
+
+  *n_elt_current  += n_elt;
+  *n_face_current += n_elt * n_face_elt;
+
+}
+
+
+
 /**
 *
 * \brief Decompose hexa cell_vtx connectivity to a flatten view of faces
@@ -1042,7 +1120,6 @@ PDM_sections_decompose_faces
                                   elmt_face_cell,
                                   elmt_cell_face);
        break;
-       abort();
      case PDM_MESH_NODAL_PYRAMID5:
        PDM_pyra_decomposes_faces(section->n_elt,
                                  &n_elt_current,
@@ -1054,7 +1131,14 @@ PDM_sections_decompose_faces
                                  elmt_cell_face);
        break;
      case PDM_MESH_NODAL_PRISM6:
-       abort();
+       PDM_prism_decomposes_faces(section->n_elt,
+                                  &n_elt_current,
+                                  &n_face_current,
+                                  section->_connec,
+                                  elmt_face_vtx_idx,
+                                  elmt_face_vtx,
+                                  elmt_face_cell,
+                                  elmt_cell_face);
        break;
      case PDM_MESH_NODAL_HEXA8:
        PDM_hexa_decomposes_faces(section->n_elt,
