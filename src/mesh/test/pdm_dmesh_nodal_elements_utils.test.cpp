@@ -78,6 +78,27 @@ MPI_TEST_CASE("decomposes hexa ",1) {
   // free(delmt_face_cell);
   // free(dcell_face_vtx_idx);
   // free(dcell_face_vtx);
+  PDM_g_num_t* dface_cell;
+  PDM_g_num_t* dface_vtx;
+  int*         dface_vtx_idx;
+  int dn_face = PDM_DMesh_nodal_face_cell_get(dmesh_nodal_id, &dface_cell);
+  PDM_DMesh_nodal_face_vtx_get(dmesh_nodal_id, &dface_vtx_idx, &dface_vtx);
+
+  CHECK( dn_face == 11);
+
+  PDM_g_num_t dface_cell_expected[22]    = {1, 0, 2, 0, 1, 0, 2, 0, 1, 0, 2, 1, 2, 0, 1, 0, 2, 0, 1, 0, 2, 0 };
+  int         dface_vtx_idx_expected[12] = {0, 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44};
+  PDM_g_num_t dface_vtx_expected[44]     = {4, 5, 2, 1, 5, 6, 3, 2, 2, 8, 7, 1, 3, 9, 8, 2, 7, 10, 4, 1, 8, 11,
+                                            5, 2, 6, 12, 9, 3, 10, 11, 5, 4, 11, 12, 6, 5, 11, 10, 7, 8, 12, 11, 8, 9};
+
+  MPI_CHECK_EQ_C_ARRAY(0, dface_cell   , dface_cell_expected   , 2*dn_face             );
+  MPI_CHECK_EQ_C_ARRAY(0, dface_vtx_idx, dface_vtx_idx_expected, dn_face+1             );
+  MPI_CHECK_EQ_C_ARRAY(0, dface_vtx    , dface_vtx_expected    , dface_vtx_idx[dn_face]);
+
+  // printf(" dface_vtx_idx[dn_face]::%i\n",  dface_vtx_idx[dn_face]);
+  // PDM_log_trace_array_long(dface_cell, 2*dn_face, "dface_cell:: ");
+  // PDM_log_trace_array_int(dface_vtx_idx, dn_face+1, "dface_vtx_idx:: ");
+  // PDM_log_trace_array_long(dface_vtx, dface_vtx_idx[dn_face], "dface_vtx:: ");
 
   PDM_DMesh_nodal_free(dmesh_nodal_id);
 }
