@@ -2103,9 +2103,9 @@ const int   hdl
       printf("Number of vtx on faces %i :: %i with index [%i] \n", i_face, blk_face_vtx_n[idx+i_face], idx+i_face);
 
       int n_vtx_face_1 = blk_face_vtx_n[idx+i_face];
+      int beg_1        = blk_face_vtx_idx[idx+i_face];
       if(already_treat[i_face] != 1) {
 
-        int beg_1 = blk_face_vtx_idx[idx+i_face];
         PDM_g_num_t key_1 = 0;
         for(int j = 0; j < n_vtx_face_1; ++j) {
           loc_face_vtx_1[j] = blk_tot_face_vtx[beg_1+j];
@@ -2145,7 +2145,7 @@ const int   hdl
               mesh->_dface_cell[2*i_abs_face+1] = blk_elmt_face_cell[idx+i_face_next];
 
               for(int i_vtx = 0; i_vtx < n_vtx_face_1; ++i_vtx) {
-                mesh->_dface_vtx[idx_face_vtx++] = loc_face_vtx_1[i_vtx];
+                mesh->_dface_vtx[idx_face_vtx++] = blk_tot_face_vtx[beg_1+i_vtx];
               }
               mesh->_dface_vtx_idx[i_abs_face+1] = mesh->_dface_vtx_idx[i_abs_face] + n_vtx_face_1;
               i_abs_face++;
@@ -2166,7 +2166,7 @@ const int   hdl
         mesh->_dface_cell[2*i_abs_face+1] = 0;
 
         for(int i_vtx = 0; i_vtx < n_vtx_face_1; ++i_vtx) {
-          mesh->_dface_vtx[idx_face_vtx++] = loc_face_vtx_1[i_vtx];
+          mesh->_dface_vtx[idx_face_vtx++] = blk_tot_face_vtx[beg_1+i_vtx];
         }
         mesh->_dface_vtx_idx[i_abs_face+1] = mesh->_dface_vtx_idx[i_abs_face] + n_vtx_face_1;
         i_abs_face++;
