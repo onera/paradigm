@@ -25,6 +25,7 @@
 #include "pdm_quick_sort.h"
 #include "pdm_geom_elem.h"
 #include "pdm_dmesh_nodal_elements_utils.h"
+#include "pdm_para_graph_dual.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -2222,7 +2223,119 @@ const int   hdl
   /*
    * Rebuild cell face
    */
+  int n_face_cell = 2*mesh->dn_face;
 
+  int*         part_stri_face_cell = (int         *) malloc( sizeof(int        ) * n_face_cell );
+  PDM_g_num_t* dface_cell_tmp      = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) * n_face_cell );
+  PDM_g_num_t *ln_to_gn_elem       = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) * n_face_cell );
+
+  // for (PDM_g_num_t i = mesh->face_distrib[mesh->i_proc]; i < mesh->face_distrib[mesh->i_proc+1]; i++) {
+  //   int idx = (int) (i-mesh->face_distrib[mesh->i_proc]);
+  //   ln_to_gn_elem[2*idx  ] = i+1;
+  //   ln_to_gn_elem[2*idx+1] = i+1;
+  // }
+
+  int idx_g = 0;
+  assert( mesh->dn_face == mesh->face_distrib[mesh->i_proc+1] - mesh->face_distrib[mesh->i_proc]);
+  // for (int i = mesh->face_distrib[mesh->i_proc]; i < mesh->face_distrib[mesh->i_proc+1]; i++) {
+  for (int i_face = 0; i_face < mesh->dn_face; i_face++) {
+
+    PDM_g_num_t g_num_face = (PDM_g_num_t) i_face + mesh->face_distrib[mesh->i_proc] + 1;
+
+    dface_cell_tmp[idx_g] = mesh->_dface_cell[2*i_face];
+    ln_to_gn_elem [idx_g] = g_num_face;
+    part_stri_face_cell[idx_g] = 1;
+    idx_g++;
+    if(mesh->_dface_cell[2*i_face+1] != 0){
+      dface_cell_tmp[idx_g] = mesh->_dface_cell[2*i_face+1];
+      ln_to_gn_elem [idx_g] = g_num_face;
+      part_stri_face_cell[idx_g] = 1;
+      idx_g++;
+    } else {
+      dface_cell_tmp[idx_g] = mesh->_dface_cell[2*i_face];
+      ln_to_gn_elem [idx_g] = g_num_face;
+      part_stri_face_cell[idx_g] = 0;
+      idx_g++;
+    }
+  }
+  n_face_cell = idx_g; // Adapt size
+
+  printf("n_face_cell::%i\n", n_face_cell);
+  PDM_log_trace_array_int(part_stri_face_cell, n_face_cell, "part_stri_face_cell:: ");
+  PDM_log_trace_array_long(ln_to_gn_elem     , n_face_cell, "ln_to_gn_elem:: ");
+  PDM_log_trace_array_long(dface_cell_tmp    , n_face_cell, "dface_cell_tmp:: ");
+
+  /*
+   *  Use part_to_block with the cell numbering
+   */
+  PDM_part_to_block_t *ptb2 = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                       PDM_PART_TO_BLOCK_POST_MERGE,
+                                                       1.,
+                                                       &dface_cell_tmp,
+                                                       NULL,
+                                                       &n_face_cell,
+                                                       1,
+                                                       mesh->pdm_mpi_comm);
+
+  int         *blk_cell_face_n = NULL;
+  PDM_g_num_t *blk_cell_face   = NULL;
+
+  int blk_cell_face_size = PDM_part_to_block_exch(          ptb2,
+                                                            sizeof(PDM_g_num_t),
+                                                            PDM_STRIDE_VAR,
+                                                            -1,
+                                                            &part_stri_face_cell,
+                                                  (void **) &ln_to_gn_elem,
+                                                            &blk_cell_face_n,
+                                                  (void **) &blk_cell_face);
+
+  /*
+   *  Get the size of the current process bloc
+   */
+  int delmt_tot = PDM_part_to_block_n_elt_block_get(ptb2); /* Volumic and surfacic */
+  mesh->n_dcell = delmt_tot;
+
+  /*
+   * Free
+   */
+  PDM_part_to_block_free(ptb2);
+  free(part_stri_face_cell);
+  free(dface_cell_tmp     );
+  free(ln_to_gn_elem      );
+
+  /*
+   * Allcoate
+   */
+  assert(mesh->dcell_face_idx == NULL);
+  mesh->dcell_face_idx = (int * ) malloc( (delmt_tot + 1) * sizeof(int) );
+
+  mesh->dcell_face_idx[0] = 0;
+  for(int i = 0; i < delmt_tot; i++){
+    mesh->dcell_face_idx[i+1] = mesh->dcell_face_idx[i] + blk_cell_face_n[i];
+  }
+
+  PDM_log_trace_array_int (blk_cell_face_n, delmt_tot         , "blk_cell_face_n:: ");
+  PDM_log_trace_array_long(blk_cell_face  , blk_cell_face_size, "blk_cell_face:: ");
+
+  assert(mesh->dcell_face == NULL);
+  mesh->dcell_face = blk_cell_face;
+
+  printf("mesh->n_dcell ::%i\n", mesh->n_dcell );
+
+  /* Compress connectivity in place */
+  PDM_para_graph_compress_connectivity(mesh->n_dcell,
+                                       mesh->dcell_face_idx,
+                                       blk_cell_face_n,
+                                       mesh->dcell_face);
+
+
+  if( 1 == 1 ){
+    printf("i_abs_face::%i \n", i_abs_face);
+    PDM_log_trace_array_int(mesh->dcell_face_idx, mesh->n_dcell+1                    , "mesh->dcell_face_idx:: ");
+    PDM_log_trace_array_long(mesh->dcell_face   , mesh->dcell_face_idx[mesh->n_dcell], "dcell_face:: ");
+  }
+
+  free(blk_cell_face_n);
 
 
 }
