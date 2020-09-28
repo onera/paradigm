@@ -163,13 +163,17 @@ MPI_TEST_CASE("decomposes tetra ",1) {
   //                                 delmt_face_cell,
   //                                 NULL);
 
-  // PDM_log_trace_array_long(delmt_face_cell, n_face_elt_tot, "delmt_face_cell:: ");
-  // PDM_log_trace_array_int(dcell_face_vtx_idx, n_face_elt_tot+1, "dcell_face_vtx_idx:: ");
-  // PDM_log_trace_array_long(dcell_face_vtx, n_sum_vtx_face_tot, "dcell_face_vtx:: ");
+  PDM_log_trace_array_long(delmt_face_cell.data(), n_face_elt_tot, "delmt_face_cell:: ");
+  PDM_log_trace_array_int(dcell_face_vtx_idx.data(), n_face_elt_tot+1, "dcell_face_vtx_idx:: ");
+  PDM_log_trace_array_long(dcell_face_vtx.data(), n_sum_vtx_face_tot, "dcell_face_vtx:: ");
 
-  // CHECK( delmt_face_cell    == delmt_face_cell_expected);
-  // CHECK( dcell_face_vtx_idx == dcell_face_vtx_idx_expected);
-  // CHECK( dcell_face_vtx     == dcell_face_vtx_expected);
+  std::vector<PDM_g_num_t> delmt_face_cell_expected    = {1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 8, 9, 9, 9, 9, 10, 10, 10, 10};
+  std::vector<int>         dcell_face_vtx_idx_expected = {0, 3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39, 42, 45, 48, 51, 54, 57, 60, 63, 66, 69, 72, 75, 78, 81, 84, 87, 90, 93, 96, 99, 102, 105, 108, 111, 114, 117, 120};
+  std::vector<PDM_g_num_t> dcell_face_vtx_expected     = {1, 2, 4, 1, 7, 2, 1, 4, 7, 2, 7, 4, 2, 5, 4, 2, 11, 5, 2, 4, 11, 5, 11, 4, 4, 7, 11, 4, 10, 7, 4, 11, 10, 7, 10, 11, 2, 7, 8, 2, 11, 7, 2, 8, 11, 7, 11, 8, 2, 4, 7, 2, 11, 4, 2, 7, 11, 4, 11, 7, 2, 6, 5, 2, 11, 6, 2, 5, 11, 6, 11, 5, 2, 9, 3, 2, 6, 9, 2, 3, 6, 9, 6, 3, 11, 12, 9, 11, 6, 12, 11, 9, 6, 12, 6, 9, 9, 11, 2, 9, 8, 11, 9, 2, 8, 11, 8, 2, 9, 2, 11, 9, 6, 2, 9, 11, 6, 2, 6, 11};
+
+  CHECK( delmt_face_cell    == delmt_face_cell_expected);
+  CHECK( dcell_face_vtx_idx == dcell_face_vtx_idx_expected);
+  CHECK( dcell_face_vtx     == dcell_face_vtx_expected);
 
   PDM_DMesh_nodal_cell_face_compute(dmesh_nodal_id);
 
@@ -183,10 +187,7 @@ MPI_TEST_CASE("decomposes tetra ",1) {
   PDM_DMesh_nodal_face_vtx_get(dmesh_nodal_id, &dface_vtx_idx, &dface_vtx);
 
   CHECK( dn_face == 30);
-     // 10 mesh->_dface_vtx_idx:: 0 3 6 9 12 15 18 21 24 27 30 33 36 39 42 45 48 51 54 57 60 63 66 69 72 75 78 81 84 87 90
-     // 11 _dface_vtx:: 1 2 4 1 7 2 2 5 4 2 3 6 1 4 7 2 4 7 2 6 5 2 9 3 9 6 2 2 11 4 2 7 8 2 5 11 9 6 3 9 2 8 2 11 6 2 7 11 5 11 4 2 8 11 4 10 7 9 11 2 4 7 11 6 11 5 4 11 10 11 9 6 7 11 8 12 6 9 7 10 11 9 8 11 11 6 12 11 12 9
-     // 12 _dface_cell:: 1 0 1 0 2 0 7 0 1 0 5 1 6 0 7 0 10 7 5 2 4 0 6 2 7 0 9 0 6 10 5 4 2 0 4 9 3 0 9 10 3 5 6 0 3 0 8 10 4 0 8 0 3 0 9 0 8 0 8 0
-     // 13
+
   PDM_g_num_t dface_cell_expected[60]   = {1, 0, 1, 0, 2, 0, 7, 0, 1, 0, 5, 1, 6, 0, 7, 0, 10, 7, 5, 2, 4, 0, 6, 2, 7, 0, 9, 0, 6, 10, 5, 4, 2, 0, 4, 9, 3, 0, 9, 10, 3, 5, 6, 0, 3, 0, 8, 10, 4, 0, 8, 0, 3, 0, 9, 0, 8, 0, 8, 0};
   int         dface_vtx_idx_expected[61] = {0, 3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39, 42, 45, 48, 51, 54, 57, 60, 63, 66, 69, 72, 75, 78, 81, 84, 87, 90};
   PDM_g_num_t dface_vtx_expected[90]     = {1, 2, 4, 1, 7, 2, 2, 5, 4, 2, 3, 6, 1, 4, 7, 2, 4, 7, 2, 6, 5, 2, 9, 3, 9, 6, 2, 2, 11, 4, 2, 7, 8, 2, 5, 11, 9, 6, 3, 9, 2, 8, 2, 11, 6, 2, 7, 11, 5, 11, 4, 2, 8, 11, 4, 10, 7, 9, 11, 2, 4, 7, 11, 6, 11, 5, 4, 11, 10, 11, 9, 6, 7, 11, 8, 12, 6, 9, 7, 10, 11, 9, 8, 11, 11, 6, 12, 11, 12, 9};
