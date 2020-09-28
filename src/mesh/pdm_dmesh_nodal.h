@@ -1016,6 +1016,23 @@ PDM_dmesh_nodal_decompose_faces_get_size
 
 /**
 *
+* \brief PDM_dmesh_nodal_decompose_edges_get_size
+*
+* \param [in]     hdl                Distributed nodal mesh handle
+* \param [inout]  n_edge_elt_tot     Number of edges
+* \param [inout]  n_sum_vtx_edge_tot Number of vtx for all edges (cumulative)
+*
+*/
+void
+PDM_dmesh_nodal_decompose_edges_get_size
+(
+  const int   hdl,
+        int  *n_edge_elt_tot,
+        int  *n_sum_vtx_edge_tot
+);
+
+/**
+*
 * \brief PDM_sections_decompose_faces
 *
 * \param [in]     hdl                Distributed nodal mesh handle

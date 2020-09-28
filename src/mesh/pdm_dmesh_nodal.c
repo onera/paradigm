@@ -1939,6 +1939,46 @@ PDM_dmesh_nodal_decompose_faces_get_size
   printf("n_sum_vtx_face_tot::%i\n" , *n_sum_vtx_face_tot);
 }
 
+/**
+*
+* \brief PDM_dmesh_nodal_decompose_edges_get_size
+*
+* \param [in]     hdl                Distributed nodal mesh handle
+* \param [inout]  n_edge_elt_tot     Number of edges
+* \param [inout]  n_sum_vtx_edge_tot Number of vtx for all edges (cumulative)
+*
+*/
+void
+PDM_dmesh_nodal_decompose_edges_get_size
+(
+  const int   hdl,
+        int  *n_edge_elt_tot,
+        int  *n_sum_vtx_edge_tot
+)
+{
+  /* Get current structure to treat */
+  PDM_DMesh_nodal_t *mesh = (PDM_DMesh_nodal_t *) PDM_Handles_get (mesh_handles, hdl);
+
+  *n_edge_elt_tot     = 0;
+  *n_sum_vtx_edge_tot = 0;
+
+  int n_sections_std = PDM_Handles_n_get (mesh->sections_std);
+  for (int i_section = 0; i_section < n_sections_std; i_section++) {
+
+    PDM_DMesh_nodal_section_std_t* section_std = (PDM_DMesh_nodal_section_std_t *) PDM_Handles_get (mesh->sections_std, i_section);
+
+    int n_edge_elt     = PDM_n_nedge_elt_per_elmt   (section_std->t_elt);
+    int n_sum_vtx_edge = PDM_n_sum_vtx_edge_per_elmt(section_std->t_elt);
+
+    *n_edge_elt_tot     += section_std->n_elt*n_edge_elt;
+    *n_sum_vtx_edge_tot += section_std->n_elt*n_sum_vtx_edge;
+
+  }
+
+  printf("n_edge_elt_tot     ::%i\n", *n_edge_elt_tot   );
+  printf("n_sum_vtx_edge_tot::%i\n" , *n_sum_vtx_edge_tot);
+}
+
 
 /**
 *
