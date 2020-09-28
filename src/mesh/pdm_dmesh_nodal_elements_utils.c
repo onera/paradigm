@@ -941,34 +941,34 @@ PDM_prism_decomposes_faces
       _current_elmt_face_cell[ielt * n_face_elt + i_face    ] = *n_elt_current + ielt + 1;
     }
 
-    _current_elmt_face_vtx_idx[ielt * n_face_elt + 1]  = elmt_face_vtx_idx[ielt * n_face_elt    ] + 3;
-    _current_elmt_face_vtx_idx[ielt * n_face_elt + 2]  = elmt_face_vtx_idx[ielt * n_face_elt + 1] + 3;
-    _current_elmt_face_vtx_idx[ielt * n_face_elt + 3]  = elmt_face_vtx_idx[ielt * n_face_elt + 2] + 4;
-    _current_elmt_face_vtx_idx[ielt * n_face_elt + 4]  = elmt_face_vtx_idx[ielt * n_face_elt + 3] + 4;
-    _current_elmt_face_vtx_idx[ielt * n_face_elt + 5]  = elmt_face_vtx_idx[ielt * n_face_elt + 4] + 4;
+    _current_elmt_face_vtx_idx[ielt * n_face_elt + 1]  = _current_elmt_face_vtx_idx[ielt * n_face_elt    ] + 3;
+    _current_elmt_face_vtx_idx[ielt * n_face_elt + 2]  = _current_elmt_face_vtx_idx[ielt * n_face_elt + 1] + 3;
+    _current_elmt_face_vtx_idx[ielt * n_face_elt + 3]  = _current_elmt_face_vtx_idx[ielt * n_face_elt + 2] + 4;
+    _current_elmt_face_vtx_idx[ielt * n_face_elt + 4]  = _current_elmt_face_vtx_idx[ielt * n_face_elt + 3] + 4;
+    _current_elmt_face_vtx_idx[ielt * n_face_elt + 5]  = _current_elmt_face_vtx_idx[ielt * n_face_elt + 4] + 4;
 
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 0]  = elmt_face_vtx[n_sum_vtx_elt * ielt + 2];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 1]  = elmt_face_vtx[n_sum_vtx_elt * ielt + 1];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 2]  = elmt_face_vtx[n_sum_vtx_elt * ielt    ];
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 0]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + 2];
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 1]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + 1];
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 2]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt    ];
 
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 3]  = elmt_face_vtx[n_sum_vtx_elt * ielt + 4];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 4]  = elmt_face_vtx[n_sum_vtx_elt * ielt + 5];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 5]  = elmt_face_vtx[n_sum_vtx_elt * ielt + 3];
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 3]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + 4];
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 4]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + 5];
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 5]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + 3];
 
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 6]  = elmt_face_vtx[n_sum_vtx_elt * ielt + 5];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 7]  = elmt_face_vtx[n_sum_vtx_elt * ielt + 4];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 8]  = elmt_face_vtx[n_sum_vtx_elt * ielt + 1];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 9]  = elmt_face_vtx[n_sum_vtx_elt * ielt + 2];
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 6]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + 5];
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 7]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + 4];
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 8]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + 1];
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 9]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + 2];
 
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 10] = elmt_face_vtx[n_sum_vtx_elt * ielt + 4];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 11] = elmt_face_vtx[n_sum_vtx_elt * ielt + 3];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 12] = elmt_face_vtx[n_sum_vtx_elt * ielt    ];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 13] = elmt_face_vtx[n_sum_vtx_elt * ielt + 1];
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 10] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + 4];
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 11] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + 3];
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 12] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt    ];
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 13] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + 1];
 
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 14] = elmt_face_vtx[n_sum_vtx_elt * ielt + 3];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 15] = elmt_face_vtx[n_sum_vtx_elt * ielt + 5];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 16] = elmt_face_vtx[n_sum_vtx_elt * ielt + 2];
-    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 17] = elmt_face_vtx[n_sum_vtx_elt * ielt    ];
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 14] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + 3];
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 15] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + 5];
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 16] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + 2];
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 17] = connectivity_elmt_vtx[n_sum_vtx_elt * ielt    ];
 
   }
 
