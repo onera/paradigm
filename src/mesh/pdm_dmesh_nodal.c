@@ -2141,8 +2141,8 @@ const int   hdl
             if(is_same_face == 1 ){
               printf(" It's a match ! \n");
 
-              mesh->_dface_cell[2*i_abs_face  ] = blk_elmt_face_cell[i_face     ];
-              mesh->_dface_cell[2*i_abs_face+1] = blk_elmt_face_cell[i_face_next];
+              mesh->_dface_cell[2*i_abs_face  ] = blk_elmt_face_cell[idx+i_face     ];
+              mesh->_dface_cell[2*i_abs_face+1] = blk_elmt_face_cell[idx+i_face_next];
 
               for(int i_vtx = 0; i_vtx < n_vtx_face_1; ++i_vtx) {
                 mesh->_dface_vtx[idx_face_vtx++] = loc_face_vtx_1[i_vtx];
@@ -2162,7 +2162,7 @@ const int   hdl
       /* If a face is not found a match inside the pool, it's a boundary condition */
       if(already_treat[i_face] != 1) {
 
-        mesh->_dface_cell[2*i_abs_face  ] = blk_elmt_face_cell[i_face     ];
+        mesh->_dface_cell[2*i_abs_face  ] = blk_elmt_face_cell[idx+i_face];
         mesh->_dface_cell[2*i_abs_face+1] = 0;
 
         for(int i_vtx = 0; i_vtx < n_vtx_face_1; ++i_vtx) {
@@ -2227,7 +2227,7 @@ const int   hdl
 
   int*         part_stri_face_cell = (int         *) malloc( sizeof(int        ) * n_face_cell );
   PDM_g_num_t* dface_cell_tmp      = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) * n_face_cell );
-  PDM_g_num_t *ln_to_gn_elem       = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) * n_face_cell );
+  PDM_g_num_t* ln_to_gn_elem       = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) * n_face_cell );
 
   // for (PDM_g_num_t i = mesh->face_distrib[mesh->i_proc]; i < mesh->face_distrib[mesh->i_proc+1]; i++) {
   //   int idx = (int) (i-mesh->face_distrib[mesh->i_proc]);
@@ -2235,10 +2235,17 @@ const int   hdl
   //   ln_to_gn_elem[2*idx+1] = i+1;
   // }
 
+  // for (PDM_g_num_t i = mesh->face_distrib[mesh->i_proc]; i < mesh->face_distrib[mesh->i_proc+1]; i++) {
+  //   int idx = (int) (i-mesh->face_distrib[mesh->i_proc]);
+  //   ln_to_gn_elem[2*idx  ] = i+1;
+  //   ln_to_gn_elem[2*idx+1] = i+1;
+  // }
+
+
   int idx_g = 0;
   assert( mesh->dn_face == mesh->face_distrib[mesh->i_proc+1] - mesh->face_distrib[mesh->i_proc]);
   // for (int i = mesh->face_distrib[mesh->i_proc]; i < mesh->face_distrib[mesh->i_proc+1]; i++) {
-  for (int i_face = 0; i_face < mesh->dn_face; i_face++) {
+  for (int i_face = 0; i_face < mesh->dn_face; ++i_face) {
 
     PDM_g_num_t g_num_face = (PDM_g_num_t) i_face + mesh->face_distrib[mesh->i_proc] + 1;
 
@@ -2292,7 +2299,7 @@ const int   hdl
   /*
    *  Get the size of the current process bloc
    */
-  int delmt_tot = PDM_part_to_block_n_elt_block_get(ptb2); /* Volumic and surfacic */
+  int delmt_tot = PDM_part_to_block_n_elt_block_get(ptb2);
   mesh->n_dcell = delmt_tot;
 
   /*
