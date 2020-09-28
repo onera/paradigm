@@ -854,7 +854,7 @@ const int hdl
       free (mesh->face_distrib);
     }
 
-     free(mesh);
+    free(mesh);
 
     PDM_Handles_handle_free (mesh_handles, hdl, PDM_FALSE);
 
