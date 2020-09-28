@@ -55,7 +55,7 @@ module pdm_closest_points
 
 
     end subroutine PDM_closest_points_create
-    
+
     !>
     !!
     !! \brief Set the number of partitions of a point cloud
@@ -110,7 +110,7 @@ module pdm_closest_points
 
       integer(c_int), value :: i_part
       integer(c_int), value :: n_points
-      
+
       type(c_ptr), value    :: coords
       type(c_ptr), value    :: gnum
 
@@ -144,7 +144,7 @@ module pdm_closest_points
 
       integer(c_int), value :: i_part
       integer(c_int), value :: n_points
-      
+
       type(c_ptr), value    :: coords
       type(c_ptr), value    :: gnum
 
@@ -160,7 +160,7 @@ module pdm_closest_points
     !!
 
     subroutine PDM_closest_points_compute (id) &
-      bind (c, name = 'PDM_mesh_location_compute')
+      bind (c, name = 'PDM_closest_points_compute')
 
       use iso_c_binding
 
@@ -194,7 +194,7 @@ module pdm_closest_points
       integer(c_int), value :: id
 
       integer(c_int), value :: i_part_tgt
-      
+
       type(c_ptr)      :: closest_src_gnum
       type(c_ptr)      :: closest_src_distance
 
