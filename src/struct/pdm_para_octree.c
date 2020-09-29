@@ -4677,7 +4677,7 @@ PDM_para_octree_build
   for (int i = 0; i < dim; i++) {
     double range = octree->global_extents[i+dim] - octree->global_extents[i];
     double epsilon = PDM_MAX (EPS_double, range * EPS_range);
-    octree->global_extents[i]     -= epsilon;
+    octree->global_extents[i]     -= 1.1*epsilon; // On casse la symetrie !
     octree->global_extents[i+dim] += epsilon;
   }
 
