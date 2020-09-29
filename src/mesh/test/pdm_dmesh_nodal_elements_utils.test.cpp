@@ -26,6 +26,8 @@ MPI_TEST_CASE("decomposes hexa ",1) {
                                   hexa_section_1,
                                   n_hexa_section_1,
                                   connec_hexa_1);
+  PDM_dmesh_nodal_generate_distribution(dmesh_nodal_id);
+
   int n_face_elt_tot     = -1;
   int n_sum_vtx_face_tot = -1;
   PDM_dmesh_nodal_decompose_faces_get_size(dmesh_nodal_id, &n_face_elt_tot, &n_sum_vtx_face_tot);
@@ -49,13 +51,13 @@ MPI_TEST_CASE("decomposes hexa ",1) {
                                   dcell_face_vtx_idx.data(),
                                   dcell_face_vtx.data(),
                                   delmt_face_cell.data(),
-                                  NULL);
+                                  NULL, NULL);
   // dcell_face_vtx_idx[0] = 0;
   // PDM_dmesh_nodal_decompose_faces(dmesh_nodal_id,
   //                                 dcell_face_vtx_idx,
   //                                 dcell_face_vtx,
   //                                 delmt_face_cell,
-  //                                 NULL);
+  //                                 NULL, NULL);
 
   // PDM_log_trace_array_long(delmt_face_cell, n_face_elt_tot, "delmt_face_cell:: ");
   // PDM_log_trace_array_int(dcell_face_vtx_idx, n_face_elt_tot+1, "dcell_face_vtx_idx:: ");
@@ -133,6 +135,8 @@ MPI_TEST_CASE("decomposes tetra ",1) {
                                   tetra_section_1,
                                   n_tetra_section_1,
                                   connec_tetra_1);
+  PDM_dmesh_nodal_generate_distribution(dmesh_nodal_id);
+
   int n_face_elt_tot     = -1;
   int n_sum_vtx_face_tot = -1;
   PDM_dmesh_nodal_decompose_faces_get_size(dmesh_nodal_id, &n_face_elt_tot, &n_sum_vtx_face_tot);
@@ -156,13 +160,13 @@ MPI_TEST_CASE("decomposes tetra ",1) {
                                   dcell_face_vtx_idx.data(),
                                   dcell_face_vtx.data(),
                                   delmt_face_cell.data(),
-                                  NULL);
+                                  NULL, NULL);
   // dcell_face_vtx_idx[0] = 0;
   // PDM_dmesh_nodal_decompose_faces(dmesh_nodal_id,
   //                                 dcell_face_vtx_idx,
   //                                 dcell_face_vtx,
   //                                 delmt_face_cell,
-  //                                 NULL);
+  //                                 NULL, NULL);
 
   PDM_log_trace_array_long(delmt_face_cell.data(), n_face_elt_tot, "delmt_face_cell:: ");
   PDM_log_trace_array_int(dcell_face_vtx_idx.data(), n_face_elt_tot+1, "dcell_face_vtx_idx:: ");
@@ -230,6 +234,8 @@ MPI_TEST_CASE("decomposes pyra ",1) {
                                   pyra_section_1,
                                   n_pyra_section_1,
                                   connec_pyra_1);
+  PDM_dmesh_nodal_generate_distribution(dmesh_nodal_id);
+
   int n_face_elt_tot     = -1;
   int n_sum_vtx_face_tot = -1;
   PDM_dmesh_nodal_decompose_faces_get_size(dmesh_nodal_id, &n_face_elt_tot, &n_sum_vtx_face_tot);
@@ -253,13 +259,13 @@ MPI_TEST_CASE("decomposes pyra ",1) {
                                   dcell_face_vtx_idx.data(),
                                   dcell_face_vtx.data(),
                                   delmt_face_cell.data(),
-                                  NULL);
+                                  NULL, NULL);
   // dcell_face_vtx_idx[0] = 0;
   // PDM_dmesh_nodal_decompose_faces(dmesh_nodal_id,
   //                                 dcell_face_vtx_idx,
   //                                 dcell_face_vtx,
   //                                 delmt_face_cell,
-  //                                 NULL);
+  //                                 NULL, NULL);
 
   PDM_log_trace_array_long(delmt_face_cell.data()  , n_face_elt_tot    , "delmt_face_cell:: ");
   PDM_log_trace_array_int(dcell_face_vtx_idx.data(), n_face_elt_tot+1  , "dcell_face_vtx_idx:: ");
@@ -325,6 +331,8 @@ MPI_TEST_CASE("decomposes prism ",1) {
                                   prism_section_1,
                                   n_prism_section_1,
                                   connec_prism_1);
+  PDM_dmesh_nodal_generate_distribution(dmesh_nodal_id);
+
   int n_face_elt_tot     = -1;
   int n_sum_vtx_face_tot = -1;
   PDM_dmesh_nodal_decompose_faces_get_size(dmesh_nodal_id, &n_face_elt_tot, &n_sum_vtx_face_tot);
@@ -348,13 +356,13 @@ MPI_TEST_CASE("decomposes prism ",1) {
                                   dcell_face_vtx_idx.data(),
                                   dcell_face_vtx.data(),
                                   delmt_face_cell.data(),
-                                  NULL);
+                                  NULL, NULL);
   // dcell_face_vtx_idx[0] = 0;
   // PDM_dmesh_nodal_decompose_faces(dmesh_nodal_id,
   //                                 dcell_face_vtx_idx,
   //                                 dcell_face_vtx,
   //                                 delmt_face_cell,
-  //                                 NULL);
+  //                                 NULL, NULL);
 
   PDM_log_trace_array_long(delmt_face_cell.data()  , n_face_elt_tot    , "delmt_face_cell:: ");
   PDM_log_trace_array_int(dcell_face_vtx_idx.data(), n_face_elt_tot+1  , "dcell_face_vtx_idx:: ");
@@ -421,6 +429,8 @@ MPI_TEST_CASE("decomposes quad ",1) {
                                   quad_section_1,
                                   n_quad_section_1,
                                   connec_quad_1);
+  PDM_dmesh_nodal_generate_distribution(dmesh_nodal_id);
+
   int n_edge_elt_tot     = -1;
   int n_sum_vtx_edge_tot = -1;
   PDM_dmesh_nodal_decompose_edges_get_size(dmesh_nodal_id, &n_edge_elt_tot, &n_sum_vtx_edge_tot);
@@ -444,13 +454,13 @@ MPI_TEST_CASE("decomposes quad ",1) {
                                   dcell_edge_vtx_idx.data(),
                                   dcell_edge_vtx.data(),
                                   delmt_edge_cell.data(),
-                                  NULL);
+                                  NULL, NULL);
   // // dcell_edge_vtx_idx[0] = 0;
   // // PDM_dmesh_nodal_decompose_edges(dmesh_nodal_id,
   // //                                 dcell_edge_vtx_idx,
   // //                                 dcell_edge_vtx,
   // //                                 delmt_edge_cell,
-  // //                                 NULL);
+  // //                                 NULL, NULL);
 
   PDM_log_trace_array_long(delmt_edge_cell.data()  , n_edge_elt_tot    , "delmt_edge_cell:: ");
   PDM_log_trace_array_int(dcell_edge_vtx_idx.data(), n_edge_elt_tot+1  , "dcell_edge_vtx_idx:: ");
@@ -522,6 +532,8 @@ MPI_TEST_CASE("decomposes tri ",1) {
                                   tri_section_1,
                                   n_tri_section_1,
                                   connec_tri_1);
+  PDM_dmesh_nodal_generate_distribution(dmesh_nodal_id);
+
   int n_edge_elt_tot     = -1;
   int n_sum_vtx_edge_tot = -1;
   PDM_dmesh_nodal_decompose_edges_get_size(dmesh_nodal_id, &n_edge_elt_tot, &n_sum_vtx_edge_tot);
@@ -545,13 +557,13 @@ MPI_TEST_CASE("decomposes tri ",1) {
                                   dcell_edge_vtx_idx.data(),
                                   dcell_edge_vtx.data(),
                                   delmt_edge_cell.data(),
-                                  NULL);
+                                  NULL, NULL);
   // // dcell_edge_vtx_idx[0] = 0;
   // // PDM_dmesh_nodal_decompose_edges(dmesh_nodal_id,
   // //                                 dcell_edge_vtx_idx,
   // //                                 dcell_edge_vtx,
   // //                                 delmt_edge_cell,
-  // //                                 NULL);
+  // //                                 NULL, NULL);
 
   PDM_log_trace_array_long(delmt_edge_cell.data()  , n_edge_elt_tot    , "delmt_edge_cell:: ");
   PDM_log_trace_array_int(dcell_edge_vtx_idx.data(), n_edge_elt_tot+1  , "dcell_edge_vtx_idx:: ");

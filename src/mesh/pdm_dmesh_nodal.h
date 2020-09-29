@@ -998,6 +998,21 @@ const int  hdl
 
 
 /**
+ *
+ * \brief Setup global distribution of all elements register in current structure
+ *
+ * \param [inout]  mesh
+ *
+ * \return         Null
+ *
+ */
+void
+PDM_dmesh_nodal_generate_distribution
+(
+  const int   hdl
+);
+
+/**
 *
 * \brief PDM_sections_decompose_faces
 *
@@ -1049,6 +1064,7 @@ PDM_dmesh_nodal_decompose_faces
         int               *elmt_face_vtx_idx,
         PDM_g_num_t       *elmt_face_vtx,
         PDM_g_num_t       *elmt_face_cell,
+        int               *elmt_cell_face_idx,
         PDM_g_num_t       *elmt_cell_face
 );
 
@@ -1070,6 +1086,7 @@ PDM_dmesh_nodal_decompose_edges
         int               *elmt_edge_vtx_idx,
         PDM_g_num_t       *elmt_edge_vtx,
         PDM_g_num_t       *elmt_edge_cell,
+        int               *elmt_cell_edge_idx,
         PDM_g_num_t       *elmt_cell_edge
 );
 
