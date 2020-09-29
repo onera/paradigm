@@ -123,6 +123,59 @@ PDM_para_graph_compress_connectivity
   }
 }
 
+/**
+ *
+ * \brief Compress the connectivity of a graph, ie remove the multiple arcs connecting
+ *        the same two nodes (if any).
+ *
+ * \param [in]    n_node            (local) number of nodes in the graph
+ * \param [inout] dual_graph_idx    Node to node connectivity indexes (size=n_node+1)
+ * \param [in] dual_graph_n         Original number of connected nodes (size=n_node)
+ * \param [inout] dual_graph        Node to node connectivity (size=dual_graph_idx[n_node])
+ *
+ */
+void
+PDM_para_graph_compress_connectivity2
+(
+ int          n_node,
+ int         *dual_graph_idx,
+ const int   *dual_graph_n,
+ PDM_g_num_t *dual_graph
+)
+{
+  int idx_comp  = 0; /* Compressed index use to fill the buffer */
+  int idx_block = 0; /* Index in the block to post-treat        */
+  dual_graph_idx[0] = 0;
+  int need_shift = 0;
+  for(int i = 0; i < n_node; ++i){
+    int n_cell_connect = dual_graph_n[i];
+    /* Reshift next value in compressed block to avoid create a new shift */
+    if(need_shift) {
+      int idx_new = idx_comp;
+      for(int j = idx_block; j < idx_block+n_cell_connect; ++j){
+        dual_graph[idx_new++] = dual_graph[j];
+      }
+    }
+
+    int end_connect         = idx_comp + n_cell_connect - 1;
+    // printf(" idx_comp:: %d | end_connect:: %d \n", idx_comp, end_connect);
+
+    int n_cell_connect_comp = PDM_inplace_unique_long(dual_graph, idx_comp, end_connect);
+    // printf(" n_cell_connect:: %d | n_cell_connect_comp:: %d \n", n_cell_connect, n_cell_connect_comp);
+
+    if(n_cell_connect_comp < n_cell_connect) {
+      need_shift = 1;
+    } else {
+      need_shift = 0;
+    }
+
+    dual_graph_idx[i+1] = dual_graph_idx[i] + n_cell_connect_comp;
+    idx_comp  += n_cell_connect_comp;
+    idx_block += n_cell_connect;
+
+    // printf("idx_comp : %d | idx_block : %d \n", idx_comp, idx_block);
+  }
+}
 
 /**
  *

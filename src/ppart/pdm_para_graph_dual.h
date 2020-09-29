@@ -46,7 +46,7 @@ typedef enum {
 
 /**
  *
- * \brief Compress the connectivity of a graph, ie remove the multiple arcs connecting 
+ * \brief Compress the connectivity of a graph, ie remove the multiple arcs connecting
  *        the same two nodes (if any).
  *
  * \param [in]    n_node            (local) number of nodes in the graph
@@ -60,6 +60,26 @@ PDM_para_graph_compress_connectivity
 (
  int          n_node,
  PDM_g_num_t *dual_graph_idx,
+ const int   *dual_graph_n,
+ PDM_g_num_t *dual_graph
+);
+
+/**
+ *
+ * \brief Compress the connectivity of a graph, ie remove the multiple arcs connecting
+ *        the same two nodes (if any).
+ *
+ * \param [in]    n_node            (local) number of nodes in the graph
+ * \param [inout] dual_graph_idx    Node to node connectivity indexes (size=n_node+1)
+ * \param [in] dual_graph_n         Original number of connected nodes (size=n_node)
+ * \param [inout] dual_graph        Node to node connectivity (size=dual_graph_idx[n_node])
+ *
+ */
+void
+PDM_para_graph_compress_connectivity2
+(
+ int          n_node,
+ int         *dual_graph_idx,
  const int   *dual_graph_n,
  PDM_g_num_t *dual_graph
 );

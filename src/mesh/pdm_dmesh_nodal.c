@@ -2479,7 +2479,7 @@ const int   hdl
    * Allcoate
    */
   assert(mesh->dcell_face_idx == NULL);
-  mesh->dcell_face_idx = (PDM_g_num_t * ) malloc( (delmt_tot + 1) * sizeof(PDM_g_num_t) );
+  mesh->dcell_face_idx = (int * ) malloc( (delmt_tot + 1) * sizeof(int) );
 
   mesh->dcell_face_idx[0] = 0;
   for(int i = 0; i < delmt_tot; i++){
@@ -2494,15 +2494,15 @@ const int   hdl
 
 
   /* Compress connectivity in place */
-  PDM_para_graph_compress_connectivity(mesh->n_dcell,
-                                       mesh->dcell_face_idx,
-                                       blk_cell_face_n,
-                                       mesh->dcell_face);
+  PDM_para_graph_compress_connectivity2(mesh->n_dcell,
+                                        mesh->dcell_face_idx,
+                                        blk_cell_face_n,
+                                        mesh->dcell_face);
 
 
   if( 1 == 1 ){
     printf("mesh->n_dcell ::%i\n", mesh->n_dcell );
-    PDM_log_trace_array_long(mesh->dcell_face_idx, mesh->n_dcell+1                    , "mesh->dcell_face_idx:: ");
+    PDM_log_trace_array_int(mesh->dcell_face_idx, mesh->n_dcell+1                    , "mesh->dcell_face_idx:: ");
     PDM_log_trace_array_long(mesh->dcell_face   , mesh->dcell_face_idx[mesh->n_dcell], "dcell_face:: ");
   }
 
@@ -2984,7 +2984,7 @@ const int   hdl
     }
   }
 
-  mesh->dcell_face_idx = (PDM_g_num_t * ) malloc( (delmt_tot + 1) * sizeof(PDM_g_num_t * ) );
+  mesh->dcell_face_idx = (int * ) malloc( (delmt_tot + 1) * sizeof(int * ) );
 
   mesh->dcell_face_idx[0] = 0;
   for(int i = 0; i < delmt_tot; i++){
@@ -3048,7 +3048,7 @@ int
 PDM_DMesh_nodal_cell_face_get
 (
 const int     hdl,
-PDM_g_num_t **dcell_face_idx,
+int         **dcell_face_idx,
 PDM_g_num_t **dcell_face
 )
 {
