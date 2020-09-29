@@ -1119,7 +1119,7 @@ int
 PDM_DMesh_nodal_cell_face_get
 (
 const int     hdl,
-PDM_g_num_t **dcell_faceIdx,
+int         **dcell_faceIdx,
 PDM_g_num_t **dcell_face
 );
 
