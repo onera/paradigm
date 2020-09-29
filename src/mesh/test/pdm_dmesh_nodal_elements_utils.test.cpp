@@ -10,10 +10,6 @@
 // double coord_z[n_vtx] = {0., 0., 0., 0., 0., 0., 1., 1., 1., 1., 1., 1};
 
 MPI_TEST_CASE("decomposes hexa ",1) {
-  PDM_UNUSED(test_rank);
-  PDM_UNUSED(test_nb_procs);
-  PDM_UNUSED(test_comm);
-  PDM_UNUSED(test_nb_procs_as_int_constant);
 
   const PDM_g_num_t n_vtx            = 12;
   const PDM_g_num_t n_cell           = 2;
@@ -114,10 +110,6 @@ MPI_TEST_CASE("decomposes hexa ",1) {
 // double coord_tetra_z[n_vtx] = {0., 0., 0., 0., 0., 0., 1., 1., 1., 1., 1., 1};
 
 MPI_TEST_CASE("decomposes tetra ",1) {
-  PDM_UNUSED(test_rank);
-  PDM_UNUSED(test_nb_procs);
-  PDM_UNUSED(test_comm);
-  PDM_UNUSED(test_nb_procs_as_int_constant);
   const PDM_g_num_t n_vtx             = 12;
   const PDM_g_num_t n_cell            = 10;
   const int         n_tetra_section_1 = 10;
@@ -219,10 +211,6 @@ MPI_TEST_CASE("decomposes tetra ",1) {
 // double coord_pyra_z[9] = {0., 0., 0., 0., 1., 1., 1., 1., 0.5};
 
 MPI_TEST_CASE("decomposes pyra ",1) {
-  PDM_UNUSED(test_rank);
-  PDM_UNUSED(test_nb_procs);
-  PDM_UNUSED(test_comm);
-  PDM_UNUSED(test_nb_procs_as_int_constant);
   const PDM_g_num_t n_vtx            = 9;
   const PDM_g_num_t n_cell           = 6;
   const int         n_pyra_section_1 = 6;
@@ -320,10 +308,6 @@ MPI_TEST_CASE("decomposes pyra ",1) {
 // double coord_prism_z[12] = {0., 0., 0., 0., 0., 0., 1., 1., 1., 1., 1., 1}
 
 MPI_TEST_CASE("decomposes prism ",1) {
-  PDM_UNUSED(test_rank);
-  PDM_UNUSED(test_nb_procs);
-  PDM_UNUSED(test_comm);
-  PDM_UNUSED(test_nb_procs_as_int_constant);
   const PDM_g_num_t n_vtx             = 12;
   const PDM_g_num_t n_cell            = 4;
   const int         n_prism_section_1 = 4;
@@ -420,10 +404,6 @@ MPI_TEST_CASE("decomposes prism ",1) {
 // double coord_quad_z[9] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
 MPI_TEST_CASE("decomposes quad ",1) {
-  PDM_UNUSED(test_rank);
-  PDM_UNUSED(test_nb_procs);
-  PDM_UNUSED(test_comm);
-  PDM_UNUSED(test_nb_procs_as_int_constant);
   const PDM_g_num_t n_vtx            = 9;
   const PDM_g_num_t n_cell           = 4;
   const int         n_quad_section_1 = 4;
@@ -521,10 +501,6 @@ MPI_TEST_CASE("decomposes quad ",1) {
 // double coord_tri_z[9] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
 MPI_TEST_CASE("decomposes tri ",1) {
-  PDM_UNUSED(test_rank);
-  PDM_UNUSED(test_nb_procs);
-  PDM_UNUSED(test_comm);
-  PDM_UNUSED(test_nb_procs_as_int_constant);
   const PDM_g_num_t n_vtx            = 9;
   const PDM_g_num_t n_cell           = 8;
   const int         n_tri_section_1  = 8;

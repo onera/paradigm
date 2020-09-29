@@ -373,7 +373,7 @@ if(PDM_ENABLE_UNIT_TEST)
   FetchContent_Declare(
     doctest
     GIT_REPOSITORY https://github.com/BerengerBerthoul/doctest.git
-    GIT_TAG        339ec122bece7c45bd2892ea4701e0b6f491fb59
+    GIT_TAG        f13a00607463ce211004be23b5aa0bdf24d3ab61
   )
   FetchContent_GetProperties(doctest)
   if(NOT doctest_POPULATED)
