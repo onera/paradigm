@@ -520,9 +520,9 @@ PDM_radix_sort_long
   int place = (int) pow(_radix_base, (n_step-1));
   int place_power = _radix_shift*(n_step-1);
 
-  printf("PDM_radix_sort_long::place ::%d \n", place);
-  printf("PDM_radix_sort_long::max   ::"PDM_FMT_G_NUM" \n", max);
-  printf("PDM_radix_sort_long::n_step::%d \n", n_step);
+  // printf("PDM_radix_sort_long::place ::%d \n", place);
+  // printf("PDM_radix_sort_long::max   ::"PDM_FMT_G_NUM" \n", max);
+  // printf("PDM_radix_sort_long::n_step::%d \n", n_step);
   // abort();
 
   if(order == NULL){

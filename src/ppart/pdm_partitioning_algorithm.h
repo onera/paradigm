@@ -184,6 +184,23 @@ PDM_part_dcoordinates_to_pcoordinates
         double       ***pvtx_coord
 );
 
+
+void
+PDM_extend_mesh
+(
+ const PDM_MPI_Comm    comm,
+ const PDM_g_num_t    *part_distribution,
+ const PDM_g_num_t    *entity_distribution,
+ const int            *dentity_to_part,
+ const int             n_part,
+ const int            *dual_graph_idx,
+ const PDM_g_num_t    *dual_graph,
+ const int            *pn_entity,
+       PDM_g_num_t   **pentity_ln_to_gn,
+       int           **pn_entity_extented,
+       PDM_g_num_t  ***pentity_ln_to_gn_extended
+);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
