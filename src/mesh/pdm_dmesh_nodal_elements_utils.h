@@ -193,6 +193,23 @@ PDM_hexa_decomposes_faces
 * \brief Decompose quad cell_vtx connectivity to a flatten view of edges
 */
 void
+PDM_tri_decomposes_edges
+(
+       int          n_elt,
+       int         *n_elt_current,
+       int         *n_edge_current,
+ const PDM_g_num_t *connectivity_elmt_vtx,
+       int         *elmt_edge_vtx_idx,
+       PDM_g_num_t *elmt_edge_vtx,
+       PDM_g_num_t *elmt_edge_cell,
+       PDM_g_num_t *elmt_cell_edge
+);
+
+/**
+*
+* \brief Decompose quad cell_vtx connectivity to a flatten view of edges
+*/
+void
 PDM_quad_decomposes_edges
 (
        int          n_elt,
