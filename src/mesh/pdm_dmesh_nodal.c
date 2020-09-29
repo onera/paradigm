@@ -729,14 +729,6 @@ const PDM_MPI_Comm comm,
 {
   PDM_DMesh_nodal_t *mesh = (PDM_DMesh_nodal_t *) malloc (sizeof(PDM_DMesh_nodal_t));
 
-   if (sizeof(int) != sizeof(PDM_g_num_t)) {
-
-
-    printf("PDM_DMesh_nodal : Erreur : Cette fontion ne fonctionne pas en 64bit\n");
-    exit(1);
-
-  }
-
   _mesh_init (mesh, comm, n_vtx, n_cell);
 
   if (mesh_handles == NULL) {
@@ -2105,7 +2097,7 @@ const int   hdl
                 ln_to_gn);
 
   PDM_log_trace_array_long(ln_to_gn, n_face_elt_tot , "ln_to_gn:: ");
-  PDM_log_trace_array_long(dcell_face_vtx_idx  , n_face_elt_tot , "dcell_face_vtx_idx:: ");
+  PDM_log_trace_array_int(dcell_face_vtx_idx  , n_face_elt_tot , "dcell_face_vtx_idx:: ");
   PDM_log_trace_array_long(dcell_face_vtx, dcell_face_vtx_idx[n_face_elt_tot] , "dcell_face_vtx:: ");
 
   /*
@@ -2204,7 +2196,7 @@ const int   hdl
     blk_face_vtx_idx[i_face+1] = blk_face_vtx_idx[i_face] + blk_face_vtx_n[i_face];
   }
 
-  PDM_log_trace_array_long(blk_face_vtx_idx, blk_face_vtx_n_size, "blk_face_vtx_idx:: ");
+  PDM_log_trace_array_int(blk_face_vtx_idx, blk_face_vtx_n_size, "blk_face_vtx_idx:: ");
   /*
    * We need to identify each uniques faces :
    *      - We have multiple packet to treat
@@ -2450,7 +2442,7 @@ const int   hdl
    * Allcoate
    */
   assert(mesh->dcell_face_idx == NULL);
-  mesh->dcell_face_idx = (int * ) malloc( (delmt_tot + 1) * sizeof(int) );
+  mesh->dcell_face_idx = (PDM_g_num_t * ) malloc( (delmt_tot + 1) * sizeof(PDM_g_num_t) );
 
   mesh->dcell_face_idx[0] = 0;
   for(int i = 0; i < delmt_tot; i++){
@@ -2473,7 +2465,7 @@ const int   hdl
 
   if( 1 == 1 ){
     printf("mesh->n_dcell ::%i\n", mesh->n_dcell );
-    PDM_log_trace_array_int(mesh->dcell_face_idx, mesh->n_dcell+1                    , "mesh->dcell_face_idx:: ");
+    PDM_log_trace_array_long(mesh->dcell_face_idx, mesh->n_dcell+1                    , "mesh->dcell_face_idx:: ");
     PDM_log_trace_array_long(mesh->dcell_face   , mesh->dcell_face_idx[mesh->n_dcell], "dcell_face:: ");
   }
 
@@ -2953,7 +2945,7 @@ const int   hdl
     }
   }
 
-  mesh->dcell_face_idx = (PDM_l_num_t * ) malloc( (delmt_tot + 1) * sizeof(PDM_l_num_t * ) );
+  mesh->dcell_face_idx = (PDM_g_num_t * ) malloc( (delmt_tot + 1) * sizeof(PDM_g_num_t * ) );
 
   mesh->dcell_face_idx[0] = 0;
   for(int i = 0; i < delmt_tot; i++){
@@ -3016,8 +3008,8 @@ const int   hdl
 int
 PDM_DMesh_nodal_cell_face_get
 (
-const int   hdl,
-      int   **dcell_face_idx,
+const int     hdl,
+PDM_g_num_t **dcell_face_idx,
 PDM_g_num_t **dcell_face
 )
 {
