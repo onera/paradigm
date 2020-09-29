@@ -308,9 +308,6 @@ PDM_closest_points_tgt_cloud_set
   cls->tgt_cloud->n_points[i_part] = n_points;
   cls->tgt_cloud->coords[i_part] = coords;
   cls->tgt_cloud->gnum[i_part] = gnum;
-  for (int i = 0; i < n_points; i++) {
-    printf("coords tgt %ld : %12.5e  %12.5e %12.5e\n",  gnum[i], coords[3*i], coords[3*i+1], coords[3*i+2]);
-  }
 }
 
 
@@ -341,9 +338,6 @@ PDM_closest_points_src_cloud_set
   cls->src_cloud->n_points[i_part] = n_points;
   cls->src_cloud->coords[i_part] = coords;
   cls->src_cloud->gnum[i_part] = gnum;
-  for (int i = 0; i < n_points; i++) {
-    printf("coords src %ld : %12.5e  %12.5e %12.5e\n",  gnum[i], coords[3*i], coords[3*i+1], coords[3*i+2]);
-  }
 }
 
 /**
@@ -506,17 +500,6 @@ PDM_closest_points_get
 
   *closest_src_gnum = cls->tgt_cloud->closest_src_gnum[i_part_tgt];
   *closest_src_distance = cls->tgt_cloud->closest_src_dist[i_part_tgt];
-
-  for (int i = 0; i < cls->tgt_cloud->n_points[0]; i++) {
-    printf ("closest for %ld :", cls->tgt_cloud->gnum[0][i]);
-    for (int j = 0; j < cls->n_closest; j++) {
-      printf (" %ld/%12.5e",
-              (*closest_src_gnum)[i*cls->n_closest+j],
-              (*closest_src_distance)[i*cls->n_closest+j]);
-    }
-    printf("\n");
-  }
-
 }
 
 
