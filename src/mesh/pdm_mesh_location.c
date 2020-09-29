@@ -1754,7 +1754,8 @@ PDM_mesh_location_compute
                                        pcloud_g_num);
 
       /* Build parallel octree */
-      PDM_para_octree_build (octree_id);
+      double *global_extents = NULL;// --> global extents of mesh + points to locate?
+      PDM_para_octree_build (octree_id, global_extents);
       //PDM_para_octree_dump (octree_id);
       //PDM_para_octree_dump_times (octree_id);
 
