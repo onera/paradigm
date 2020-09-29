@@ -444,7 +444,7 @@ int main(int argc, char *argv[])
    *
    ************************/
 
-  int id_loc = PDM_mesh_location_create (PDM_MESH_NATURE_SURFACE_MESH,//???
+  int id_loc = PDM_mesh_location_create (PDM_MESH_NATURE_MESH_SETTED,//???
                                          1,//const int n_point_cloud,
                                          PDM_MPI_COMM_WORLD);
 

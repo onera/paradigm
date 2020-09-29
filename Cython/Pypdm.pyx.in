@@ -59,8 +59,8 @@ cdef extern from "pdm.h":
         PDM_STRIDE_VAR
 
     ctypedef enum PDM_mesh_nature_t:
-        PDM_MESH_NATURE_NODAL
-        PDM_MESH_NATURE_SURFACE_MESH
+        PDM_MESH_NATURE_NODAL_SHARED
+        PDM_MESH_NATURE_MESH_SETTED
 
     ctypedef enum PDM_mesh_entities_t:
         PDM_MESH_ENTITY_CELL
@@ -171,13 +171,3 @@ include "pdm_closest_points.pxi"
 
 
 # TODO: PDM_writer, ...
-
-
-
-
-
-
-
-
-
-
