@@ -49,20 +49,20 @@ program testf
   integer, parameter :: n_part_mesh = 1
 
   integer, parameter :: n_cell = 2
-  integer (c_int), pointer :: cell_face_idx
-  integer (c_int), pointer :: cell_face
-  integer (kind = pdm_g_num_s), pointer :: cell_ln_to_gn
+  integer (c_int), pointer :: cell_face_idx(:)
+  integer (c_int), pointer :: cell_face(:)
+  integer (kind = pdm_g_num_s), pointer :: gnum_cell(:)
   type(c_ptr)  :: cptr_cell_face_idx
   type(c_ptr)  :: cptr_cell_face
-  type(c_ptr)  :: cptr_cell_ln_to_gn
+  type(c_ptr)  :: cptr_gnum_cell
 
   integer, parameter :: n_face = 11
-  integer (c_int), pointer :: face_vtx_idx
-  integer (c_int), pointer :: face_vtx
-  integer (kind = pdm_g_num_s), pointer :: face_ln_to_gn
+  integer (c_int), pointer :: face_vtx_idx(:)
+  integer (c_int), pointer :: face_vtx(:)
+  integer (kind = pdm_g_num_s), pointer :: gnum_face(:)
   type(c_ptr)  :: cptr_face_vtx_idx
   type(c_ptr)  :: cptr_face_vtx
-  type(c_ptr)  :: cptr_face_ln_to_gn
+  type(c_ptr)  :: cptr_gnum_face
 
   integer, parameter :: n_vtx = 12
   double precision, pointer :: coords_vtx(:) ! pointer or allocatble, target
@@ -71,13 +71,50 @@ program testf
   type(c_ptr)  :: cptr_gnum_vtx
 
   integer :: i
+  integer, parameter :: i_part = 0
 
   integer :: id
 
   integer, parameter :: partial = 0 ! Put 1 to keep results when the subroutine closest_points_free is
 
+  integer :: code
+  integer :: i_rank
+  integer :: n_rank
+
   !
-  ! Set point cloud
+  ! results
+  !
+
+  integer (c_int) :: n_points_cpy
+
+  type(c_ptr) :: cptr_coord_cpy
+  type(c_ptr) :: cptr_g_num_cpy
+  type(c_ptr) :: cptr_location
+  type(c_ptr) :: cptr_weights_idx
+  type(c_ptr) :: cptr_weights
+  type(c_ptr) :: cptr_projected_coords
+
+  integer (kind = pdm_g_num_s), pointer :: location(:)
+  integer (c_int), pointer :: weights_idx(:)
+  double precision, pointer :: weights(:)
+  double precision, pointer :: projected_coords(:)
+
+  !
+  ! Init
+  !
+
+  call mpi_init(code)
+  call mpi_comm_rank(mpi_comm_world, i_rank, code)
+  call mpi_comm_size(mpi_comm_world, n_rank, code)
+
+  if (n_rank .ne. 1) then
+    print *,'Error : 1 MPI process is mandatory'
+    call mpi_finalize(code)
+    stop
+  end if
+
+  !
+  ! Set point cloud : 2 points
   !
 
   allocate(coords_cloud(3*n_points_into_cloud))
@@ -99,7 +136,7 @@ program testf
   cptr_gnum_cloud = c_loc (gnum_cloud)
 
   !
-  ! Set mesh
+  ! Set mesh : 2 hexa
   !
 
   allocate(coords_vtx(3*n_vtx))
@@ -185,7 +222,7 @@ program testf
   face_vtx(11) = 8
   face_vtx(12) = 4
 
-  face_vtx(13) = 6 ! face milieu
+  face_vtx(13) = 6
   face_vtx(14) = 2
   face_vtx(15) = 3
   face_vtx(16) = 7
@@ -269,114 +306,10 @@ program testf
   cptr_gnum_cell = c_loc (gnum_cell)
 
 
-
-
-
-
-  integer (kind = pdm_g_num_s), parameter :: n_g_points_src = 10
-  integer (kind = pdm_g_num_s), parameter :: n_g_points_tgt = 10
-
-  integer, parameter :: n_part_cloud_src = 1
-  integer, parameter :: n_part_cloud_tgt = 1
-
-
-
-
-  integer, parameter :: n_local_points_src = 5
-  integer, parameter :: n_local_points_tgt = 5
-
-  integer, parameter :: n_closest = 2
-
-  double precision, pointer :: coords_src(:) ! pointer or allocatble, target
-  double precision, pointer :: coords_tgt(:) ! pointer or allocatble, target
-
-  type(c_ptr), pointer    :: cptr_coords_src(:)
-  type(c_ptr), pointer    :: cptr_coords_tgt(:)
-
-  integer :: code
-  integer :: i_rank
-  integer :: n_rank
-
-  integer (kind = pdm_g_num_s), pointer :: gnum_src(:) ! pointer or allocatble, target
-  integer (kind = pdm_g_num_s), pointer :: gnum_tgt(:) ! pointer or allocatble, target
-
-  type(c_ptr), pointer    :: cptr_gnum_src(:)
-  type(c_ptr), pointer    :: cptr_gnum_tgt(:)
-
-  type(c_ptr)     :: cptr_closest_src_gnum
-  type(c_ptr)     :: cptr_closest_src_distance
-
-  integer (kind = pdm_g_num_s), pointer :: closest_src_gnum(:)
-  double precision, pointer :: closest_src_distance(:)
-
-  integer :: i
-
-  integer :: id
-
-  integer, parameter :: partial = 0 ! Put 1 to keep results when the subroutine closest_points_free is called
-
-
-  call mpi_init(code)
-  call mpi_comm_rank(mpi_comm_world, i_rank, code)
-  call mpi_comm_size(mpi_comm_world, n_rank, code)
-
-  if (n_rank .ne. 1) then
-    print *,'Error : 1 MPI process is mandatory'
-    call mpi_finalize(code)
-    stop
-  end if
-
-  allocate (coords_src(3*n_local_points_src))
-  allocate (coords_tgt(3*n_local_points_tgt))
-  allocate (gnum_src(n_local_points_src))
-  allocate (gnum_tgt(n_local_points_tgt))
-
-  if (i_rank .eq. 0) then
-    do i = 1, n_local_points_src
-      coords_src(3*(i-1)+1) = 0. + i - 1
-      coords_src(3*(i-1)+2) = 0. + i - 1
-      coords_src(3*(i-1)+3) = 0. + i - 1
-      gnum_src(i) = 2*(i-1) + 1
-    end do
-    do i = 1, n_local_points_tgt
-      coords_tgt(3*(i-1)+1) = n_local_points_tgt + i - 1
-      coords_tgt(3*(i-1)+2) = n_local_points_tgt + i - 1
-      coords_tgt(3*(i-1)+3) = n_local_points_tgt + i - 1
-      gnum_tgt(i) = 2*(i-1) + 2
-    end do
-  else
-    do i = 1, n_local_points_src
-      coords_src(3*(i-1)+1) = n_local_points_tgt + i - 1
-      coords_src(3*(i-1)+2) = n_local_points_tgt + i - 1
-      coords_src(3*(i-1)+3) = n_local_points_tgt + i - 1
-      gnum_src(i) = 2*(i-1) + 2
-    end do
-    do i = 1, n_local_points_tgt
-      coords_tgt(3*(i-1)+1) = 0. + i - 1
-      coords_tgt(3*(i-1)+2) = 0. + i - 1
-      coords_tgt(3*(i-1)+3) = 0. + i - 1
-      gnum_tgt(i) = 2*(i-1) + 1
-    end do
-  endif
-
-
-  do i = 1, n_local_points_tgt
-    coords_tgt(3*(i-1)+1) = coords_tgt(3*(i-1)+1) / 10.
-    coords_tgt(3*(i-1)+2) = coords_tgt(3*(i-1)+2) / 10.
-    coords_tgt(3*(i-1)+3) = coords_tgt(3*(i-1)+3) / 10.
-  enddo
-
-  do i = 1, n_local_points_src
-    coords_src(3*(i-1)+1) = coords_src(3*(i-1)+1) / 10.
-    coords_src(3*(i-1)+2) = coords_src(3*(i-1)+2) / 10.
-    coords_src(3*(i-1)+3) = coords_src(3*(i-1)+3) / 10.
-  enddo
-
   !
   ! Create a new PDM_mesh_location structure
   !   The MPI communicator and the number of point cloud are setted
   !
-
 
   call PDM_mesh_location_create (PDM_MESH_NATURE_MESH_SETTED, &
                                  n_point_cloud, &
@@ -389,8 +322,7 @@ program testf
 
   call PDM_mesh_location_n_part_cloud_set (id, &
                                            i_point_cloud, &
-                                           n_part_cloud) &
-
+                                           n_part_cloud)
 
   !
   ! Set point properties for any partition of point cloud
@@ -399,103 +331,84 @@ program testf
   call PDM_mesh_location_cloud_set (id, &
                                     i_point_cloud, &
                                     i_part, &
-                                    n_points, &
-                                    coords, &
-                                    gnum) &
+                                    n_points_into_cloud, &
+                                    cptr_coords_cloud, &
+                                    cptr_gnum_cloud)
+
+  !
+  ! Set mesh
+  !
+
+  call PDM_mesh_location_mesh_global_data_set (id, &
+                                               n_part_mesh)
+
+  call PDM_mesh_location_part_set (id, &
+                                   i_part, &
+                                   n_cell, &
+                                   cptr_cell_face_idx, &
+                                   cptr_cell_face, &
+                                   cptr_gnum_cell, &
+                                   n_face, &
+                                   cptr_face_vtx_idx, &
+                                   cptr_face_vtx, &
+                                   cptr_gnum_face, &
+                                   n_vtx, &
+                                   cptr_coords_vtx, &
+                                   cptr_gnum_vtx)
 
 
   !
-  ! Set the point coordinates and the global numbering for any partition of the source
+  ! Set options
   !
 
-  allocate (cptr_gnum_src(n_part_cloud_src))
-  allocate (cptr_coords_src(n_part_cloud_src))
+  call PDM_mesh_location_tolerance_set (id, 1.d-4)
 
-  if (n_part_cloud_src .ne. 1) then
-    print *, "For this test, n_part_cloud_src must be equal to 1"
-    stop
-  end if
-
-  do i = 1, n_part_cloud_src
-    cptr_gnum_src = c_loc(gnum_src)
-    cptr_coords_src = c_loc(coords_src)
-    call PDM_closest_points_src_cloud_set (id, &
-                                           i-1, & !!! ipart : 0 -> n_part-1 !!!
-                                           n_local_points_src, &
-                                           cptr_coords_src(i), &
-                                           cptr_gnum_src(i))
-  end do
+  call PDM_mesh_location_method_set (id, PDM_MESH_LOCATION_OCTREE) ! or PDM_MESH_LOCATION_DBBTREE
 
   !
-  ! Set the point coordinates and the global numbering for any partition of the target
+  ! Compute
   !
 
-  allocate (cptr_gnum_tgt(n_part_cloud_tgt))
-  allocate (cptr_coords_tgt(n_part_cloud_tgt))
-
-  if (n_part_cloud_tgt .ne. 1) then
-    print *, "For this test, n_part_cloud_tgt must be equal to 1"
-    stop
-  end if
-
-  do i = 1, n_part_cloud_tgt
-    cptr_gnum_tgt(i) = c_loc(gnum_tgt)
-    cptr_coords_tgt(i) = c_loc(coords_tgt)
-    call PDM_closest_points_tgt_cloud_set (id, &
-                                           i-1, &  !!! ipart : 0 -> n_part-1 !!!
-                                           n_local_points_tgt, &
-                                           cptr_coords_tgt(i), &
-                                           cptr_gnum_tgt(i))
-  end do
-
+  call PDM_mesh_location_compute (id)
 
   !
-  ! Compute the 'n' closest neighbors into the source point cloud for any taget point
+  ! Get results
   !
 
-  call PDM_closest_points_compute (id)
+  call PDM_mesh_location_get (id, &
+                              i_point_cloud, &
+                              i_part, &
+                              n_points_cpy, &
+                              cptr_coord_cpy, &
+                              cptr_g_num_cpy, &
+                              cptr_location, &
+                              cptr_weights_idx, &
+                              cptr_weights, &
+                              cptr_projected_coords)
 
-  !
-  ! Dump the time used to compute
-  !
-
-  call PDM_closest_points_dump_times (id)
-
-  !
-  ! Get the 'n' closest neighbors into the source point cloud for any taget point
-  !
-
-
-  do i = 1, n_part_cloud_tgt
-    call PDM_closest_points_get (id, &
-                                 i-1, & !!! ipart : 0 -> n_part-1 !!!
-                                 cptr_closest_src_gnum, &
-                                 cptr_closest_src_distance)
-    call c_f_pointer(cptr_closest_src_gnum, closest_src_gnum, [n_closest * n_local_points_tgt])
-    call c_f_pointer(cptr_closest_src_distance, closest_src_distance, [n_closest * n_local_points_tgt])
-  end do
+  call c_f_pointer(cptr_location, location, [n_points_into_cloud])
+  call c_f_pointer(cptr_weights_idx, weights_idx, [n_points_into_cloud+1])
+  call c_f_pointer(cptr_weights, weights, [weights_idx(n_points_into_cloud+1)])
+  call c_f_pointer(cptr_projected_coords, projected_coords, [3*n_points_into_cloud])
 
 
-  do i = 1, n_local_points_tgt
-    print *, "Closest points for ", gnum_tgt(i), ":", closest_src_gnum(2*(i-1)+1),"/", closest_src_distance(2*(i-1)+1), " and ", closest_src_gnum(2*(i-1)+2),"/", closest_src_distance(2*(i-1)+2)
+  call PDM_mesh_location_dump_times (id)
 
-  end do
+  call PDM_mesh_location_free (id, 0)
 
-  !
-  ! Free the current cloest_point structure
-  !
+  deallocate(coords_cloud)
+  deallocate(gnum_cloud)
 
-  call PDM_closest_points_free (id, partial)
+  deallocate(cell_face_idx)
+  deallocate(cell_face)
+  deallocate(gnum_cell)
 
-  deallocate (coords_src)
-  deallocate (coords_tgt)
-  deallocate (gnum_src)
-  deallocate (gnum_tgt)
-  deallocate (cptr_gnum_src)
-  deallocate (cptr_coords_src)
-  deallocate (cptr_gnum_tgt)
-  deallocate (cptr_coords_tgt)
+  deallocate(face_vtx_idx)
+  deallocate(face_vtx)
+  deallocate(gnum_face)
 
+  deallocate(gnum_vtx)
+  deallocate(coords_vtx)
 
   call mpi_finalize(code)
 
