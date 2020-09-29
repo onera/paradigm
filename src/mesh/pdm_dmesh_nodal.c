@@ -83,7 +83,8 @@ _compute_keys
 const int          n_face_elt_tot,
 const int         *dcell_face_vtx_idx,
 const PDM_g_num_t *dcell_face_vtx,
-      PDM_g_num_t *ln_to_gn
+      PDM_g_num_t *ln_to_gn,
+      PDM_g_num_t  key_mod
 )
 {
   for(int i_face = 0; i_face < n_face_elt_tot; ++i_face ) {
@@ -91,7 +92,8 @@ const PDM_g_num_t *dcell_face_vtx,
     for(int idx = dcell_face_vtx_idx[i_face]; idx < dcell_face_vtx_idx[i_face+1]; ++idx) {
       key += dcell_face_vtx[idx];
     }
-    ln_to_gn[i_face] = key;
+    // min_vtx =
+    ln_to_gn[i_face] = key % key_mod;
   }
 }
 
@@ -634,74 +636,6 @@ PDM_DMesh_nodal_section_poly3d_t *_section_poly3d
   free(_section_poly3d);
 
   return NULL;
-
-}
-
-/**
- *
- * \brief Setup global distribution of all elements register in current structure
- *
- * \param [inout]  mesh
- *
- * \return         Null
- *
- */
-static void
-_generate_distribution
-(
- PDM_DMesh_nodal_t* mesh
-)
-{
-  assert(mesh->section_distribution == NULL);
-
-  /* Creation of element distribution among all sections */
-  mesh->section_distribution    = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * (mesh->n_sections + 1));
-  mesh->section_distribution[0] = 0;
-
-  int shift = 0;
-  if (mesh->sections_std != NULL) {
-    int n_sections_std  = PDM_Handles_n_get  (mesh->sections_std);
-    const int *list_ind = PDM_Handles_idx_get(mesh->sections_std);
-    for (int i_section = 0; i_section < n_sections_std; i_section++) {
-      PDM_DMesh_nodal_section_std_t *section_std = (PDM_DMesh_nodal_section_std_t *) PDM_Handles_get (mesh->sections_std, list_ind[i_section]);
-      mesh->section_distribution[i_section+1] = section_std->distrib[mesh->n_proc];
-    }
-    shift += n_sections_std;
-  }
-
-
-  if (mesh->sections_poly2d != NULL) {
-    int n_sections_poly2d = PDM_Handles_n_get  (mesh->sections_poly2d);
-    const int *list_ind   = PDM_Handles_idx_get(mesh->sections_poly2d);
-    for (int i_section = 0; i_section < n_sections_poly2d; i_section++) {
-      PDM_DMesh_nodal_section_poly2d_t *section_poly2d = (PDM_DMesh_nodal_section_poly2d_t *) PDM_Handles_get (mesh->sections_std, list_ind[i_section]);
-      mesh->section_distribution[i_section+shift+1] = section_poly2d->distrib[mesh->n_proc];
-    }
-    shift += n_sections_poly2d;
-  }
-
-  if (mesh->sections_poly3d != NULL) {
-    int n_sections_poly3d = PDM_Handles_n_get  (mesh->sections_poly3d);
-    const int *list_ind   = PDM_Handles_idx_get(mesh->sections_poly3d);
-    for (int i_section = 0; i_section < n_sections_poly3d; i_section++) {
-      PDM_DMesh_nodal_section_poly3d_t *section_poly3d = (PDM_DMesh_nodal_section_poly3d_t *) PDM_Handles_get (mesh->sections_std, list_ind[i_section]);
-      mesh->section_distribution[i_section+shift+1] = section_poly3d->distrib[mesh->n_proc];
-    }
-    shift += n_sections_poly3d;
-  }
-
-  for (int i_section = 1; i_section < mesh->n_sections + 1; i_section++) {
-    mesh->section_distribution[i_section] +=  mesh->section_distribution[i_section-1];
-  }
-
-  /* Verbose */
-  if(1 == 1)
-  {
-    PDM_printf(" ------------------------------ \n ");
-    for(int i_section=0; i_section < mesh->n_sections+1; i_section++){
-      PDM_printf("%i ", mesh->section_distribution[i_section]);
-    }
-  }
 
 }
 
@@ -1932,6 +1866,77 @@ PDM_dmesh_nodal_decompose_faces_get_size
 }
 
 /**
+ *
+ * \brief Setup global distribution of all elements register in current structure
+ *
+ * \param [inout]  mesh
+ *
+ * \return         Null
+ *
+ */
+void
+PDM_dmesh_nodal_generate_distribution
+(
+  const int   hdl
+)
+{
+  /* Get current structure to treat */
+  PDM_DMesh_nodal_t *mesh = (PDM_DMesh_nodal_t *) PDM_Handles_get (mesh_handles, hdl);
+
+  assert(mesh->section_distribution == NULL);
+
+  /* Creation of element distribution among all sections */
+  mesh->section_distribution    = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * (mesh->n_sections + 1));
+  mesh->section_distribution[0] = 0;
+
+  int shift = 0;
+  if (mesh->sections_std != NULL) {
+    int n_sections_std  = PDM_Handles_n_get  (mesh->sections_std);
+    const int *list_ind = PDM_Handles_idx_get(mesh->sections_std);
+    for (int i_section = 0; i_section < n_sections_std; i_section++) {
+      PDM_DMesh_nodal_section_std_t *section_std = (PDM_DMesh_nodal_section_std_t *) PDM_Handles_get (mesh->sections_std, list_ind[i_section]);
+      mesh->section_distribution[i_section+1] = section_std->distrib[mesh->n_proc];
+    }
+    shift += n_sections_std;
+  }
+
+
+  if (mesh->sections_poly2d != NULL) {
+    int n_sections_poly2d = PDM_Handles_n_get  (mesh->sections_poly2d);
+    const int *list_ind   = PDM_Handles_idx_get(mesh->sections_poly2d);
+    for (int i_section = 0; i_section < n_sections_poly2d; i_section++) {
+      PDM_DMesh_nodal_section_poly2d_t *section_poly2d = (PDM_DMesh_nodal_section_poly2d_t *) PDM_Handles_get (mesh->sections_std, list_ind[i_section]);
+      mesh->section_distribution[i_section+shift+1] = section_poly2d->distrib[mesh->n_proc];
+    }
+    shift += n_sections_poly2d;
+  }
+
+  if (mesh->sections_poly3d != NULL) {
+    int n_sections_poly3d = PDM_Handles_n_get  (mesh->sections_poly3d);
+    const int *list_ind   = PDM_Handles_idx_get(mesh->sections_poly3d);
+    for (int i_section = 0; i_section < n_sections_poly3d; i_section++) {
+      PDM_DMesh_nodal_section_poly3d_t *section_poly3d = (PDM_DMesh_nodal_section_poly3d_t *) PDM_Handles_get (mesh->sections_std, list_ind[i_section]);
+      mesh->section_distribution[i_section+shift+1] = section_poly3d->distrib[mesh->n_proc];
+    }
+    shift += n_sections_poly3d;
+  }
+
+  for (int i_section = 1; i_section < mesh->n_sections + 1; i_section++) {
+    mesh->section_distribution[i_section] +=  mesh->section_distribution[i_section-1];
+  }
+
+  /* Verbose */
+  if(1 == 1)
+  {
+    PDM_printf(" ------------------------------ \n ");
+    for(int i_section=0; i_section < mesh->n_sections+1; i_section++){
+      PDM_printf("%i ", mesh->section_distribution[i_section]);
+    }
+  }
+
+}
+
+/**
 *
 * \brief PDM_dmesh_nodal_decompose_edges_get_size
 *
@@ -1990,6 +1995,7 @@ PDM_dmesh_nodal_decompose_faces
         int               *elmt_face_vtx_idx,
         PDM_g_num_t       *elmt_face_vtx,
         PDM_g_num_t       *elmt_face_cell,
+        int               *elmt_cell_face_idx,
         PDM_g_num_t       *elmt_cell_face
 )
 {
@@ -1999,6 +2005,7 @@ PDM_dmesh_nodal_decompose_faces
                                elmt_face_vtx_idx,
                                elmt_face_vtx,
                                elmt_face_cell,
+                               elmt_cell_face_idx,
                                elmt_cell_face);
 
 }
@@ -2022,6 +2029,7 @@ PDM_dmesh_nodal_decompose_edges
         int               *elmt_edge_vtx_idx,
         PDM_g_num_t       *elmt_edge_vtx,
         PDM_g_num_t       *elmt_edge_cell,
+        int               *elmt_cell_edge_idx,
         PDM_g_num_t       *elmt_cell_edge
 )
 {
@@ -2031,6 +2039,7 @@ PDM_dmesh_nodal_decompose_edges
                                elmt_edge_vtx_idx,
                                elmt_edge_vtx,
                                elmt_edge_cell,
+                               elmt_cell_edge_idx,
                                elmt_cell_edge);
 
 }
@@ -2059,6 +2068,21 @@ const int   hdl
   // if(GENERATE_EDGE_GLOBAL_NUMBERING)
   // else (GENERATE_FACE_GLOBAL_NUMBERING)
 
+  // cell_vtx : ??? cell_face / face_edge / edge_vtx
+
+  // Option  : (dface_cell oriente)/(ou pas) / cell_face en option
+  // if(GENERATE_EDGE_GLOBAL_NUMBERING)
+  //    -->
+  //    -->
+  //    -->
+  //    -->
+  // else (GENERATE_FACE_GLOBAL_NUMBERING)
+  //    --> (option) face_cell
+  //    --> face_vtx
+  //    --> face_vtx_idx
+  //    --> (option) cell_face
+
+
   int n_face_elt_tot     = 0;
   int n_sum_vtx_face_tot = 0;
 
@@ -2085,16 +2109,24 @@ const int   hdl
                                dcell_face_vtx_idx,
                                dcell_face_vtx,
                                delmt_face_cell,
-                               NULL);
+                               NULL, NULL);
+
+  // Begin the rotation by the plus petit - connectity
+  // PDM_connectivity_order_by_min_and_sens (delmt_face_cell, dcell_face_vtx_idx, dcell_face_vtx) // inplace
 
   /*
    * We are now all information flatten - we only need to compute hash_keys for each faces
    */
   PDM_g_num_t* ln_to_gn = (PDM_g_num_t*) malloc( n_face_elt_tot * sizeof(PDM_g_num_t));
+  PDM_g_num_t key_mod = 4 * mesh->n_som_abs;
+  printf("key_mod::%i \n", key_mod);
+
+  // Option des clés
   _compute_keys(n_face_elt_tot,
                 dcell_face_vtx_idx,
                 dcell_face_vtx,
-                ln_to_gn);
+                ln_to_gn,
+                key_mod);
 
   PDM_log_trace_array_long(ln_to_gn, n_face_elt_tot , "ln_to_gn:: ");
   PDM_log_trace_array_int(dcell_face_vtx_idx  , n_face_elt_tot , "dcell_face_vtx_idx:: ");
@@ -2109,19 +2141,25 @@ const int   hdl
     dcell_face_vtx_n[i_face] = dcell_face_vtx_idx[i_face+1] - dcell_face_vtx_idx[i_face];
     stride_one[i_face]       = 1;
   }
+  free(dcell_face_vtx_idx);
 
   /*
    * Setup part_to_block to filter all keys
    */
+  double* weight = (double *) malloc( n_face_elt_tot * sizeof(double));
+  for(int i = 0; i < n_face_elt_tot; ++i) {
+    weight[i] = 1.;
+  }
+
   PDM_part_to_block_t *ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                       PDM_PART_TO_BLOCK_POST_MERGE,
                                                       1.,
                                                       &ln_to_gn,
-                                                      NULL,
+                                                      &weight,
                                                       &n_face_elt_tot,
                                                       1,
                                                       mesh->pdm_mpi_comm);
-
+  free(weight);
   /*
    * Exchange data
    */
@@ -2351,7 +2389,6 @@ const int   hdl
   free(loc_face_vtx_2);
   free(already_treat);
   free(delmt_face_cell);
-  free(dcell_face_vtx_idx);
   free(dcell_face_vtx);
   free(ln_to_gn);
   free(blk_tot_face_vtx);
@@ -2494,7 +2531,9 @@ const int   hdl
 {
   /* Get current structure to treat */
   PDM_DMesh_nodal_t *mesh = (PDM_DMesh_nodal_t *) PDM_Handles_get (mesh_handles, hdl);
-  _generate_distribution(mesh);
+  if(mesh->section_distribution == NULL) {
+    PDM_dmesh_nodal_generate_distribution(hdl);
+  }
   PDM_DMesh_nodal_cell_face_compute2(hdl);
 
   return;
