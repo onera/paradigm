@@ -51,7 +51,7 @@ cdef extern from "pdm_dmesh_nodal.h":
     PDM_g_num_t PDM_DMesh_nodal_total_n_face_get(int handle)
     PDM_g_num_t PDM_DMesh_nodal_total_n_vtx_get(int handle)
     void PDM_DMesh_nodal_cell_face_compute(int handle)
-    int PDM_DMesh_nodal_cell_face_get(int handle, int** cell_face_idx, PDM_g_num_t **cell_face)
+    int PDM_DMesh_nodal_cell_face_get(int handle, PDM_g_num_t** cell_face_idx, PDM_g_num_t **cell_face)
     int PDM_DMesh_nodal_face_cell_get(int handle, PDM_g_num_t** face_cell)
     int PDM_DMesh_nodal_face_vtx_get(int handle, int** dface_vtx_idx, PDM_g_num_t **dface_vtx)
 
@@ -230,7 +230,7 @@ cdef class DistributedMeshNodal:
         dim = <NPY.npy_intp> dNCell + 1
         npCellFaceIdx = NPY.PyArray_SimpleNewFromData(1,
                                                       &dim,
-                                                      NPY.NPY_INT32,
+                                                      PDM_G_NUM_NPY_INT,
                                                       <void *> CellFaceIdx)
 
         dim = <NPY.npy_intp> npCellFaceIdx[npCellFaceIdx.shape[0]-1]

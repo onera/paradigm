@@ -130,7 +130,7 @@ struct _PDM_DMesh_nodal_t {
   PDM_g_num_t           *section_distribution;     /*!< Element distribution  */
 
   PDM_l_num_t            n_dcell;                  /*!< Local number of cells in the local block */
-  PDM_l_num_t           *dcell_face_idx;           /*!< Index of the cell to face connectivity
+  PDM_g_num_t           *dcell_face_idx;           /*!< Index of the cell to face connectivity
                                                     * (size = \ref n_dcell) */
   PDM_g_num_t           *dcell_face;               /*!< Cell to face connectivity
                                                     * (size = \ref dcell_face_idx[\ref n_dcell] */
