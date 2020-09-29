@@ -195,7 +195,7 @@ PDM_part_assemble_partitions
     _pentity_ln_to_gn[i_part] = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) * _pn_entity);
 
     for(int i_elmt = 0; i_elmt < _pn_entity; ++i_elmt){
-        _pentity_ln_to_gn[i_part][i_elmt] = pentity_ln_to_gn_tmp[offset + i_elmt];
+      _pentity_ln_to_gn[i_part][i_elmt] = pentity_ln_to_gn_tmp[offset + i_elmt];
     }
 
     offset += _pn_entity;
@@ -1603,6 +1603,181 @@ PDM_part_dcoordinates_to_pcoordinates
 
   PDM_block_to_part_free(btp);
   free(vtx_distribution_ptb);
+}
+
+
+/**
+ *  \brief Extend an existing ln_to_gn from a connectivity
+ *
+ * \param [in]   comm                PDM_MPI communicator
+ * \param [in]   part_distribution   Distribution of partitions over the processes (size=n_rank+1)
+ * \param [in]   entity_distribution Distribution of entities over the processes (size=n_rank+1)
+ * \param [in]   dentity_to_part     Id of assigned partition for each entity (size=dn_entity)
+ * \param [out]  pn_entities         Number of entities in each partition (size n_part)
+ * \param [out]  pentity_ln_to_gn    Array of local to global entity id for each partition (size n_part)
+ *
+ * \return       n_part              Number of partitions managed by this process
+ */
+void
+PDM_extend_mesh
+(
+ const PDM_MPI_Comm    comm,
+ const PDM_g_num_t    *part_distribution,
+ const PDM_g_num_t    *entity_distribution,
+ const int            *dentity_to_part,
+ const int             n_part,
+ const int            *dual_graph_idx,
+ const PDM_g_num_t    *dual_graph,
+ const int            *pn_entity,
+       PDM_g_num_t   **pentity_ln_to_gn,
+       int           **pn_entity_extented,
+       PDM_g_num_t  ***pentity_ln_to_gn_extended
+)
+{
+  PDM_UNUSED(comm);
+  PDM_UNUSED(part_distribution);
+  PDM_UNUSED(entity_distribution);
+  PDM_UNUSED(dentity_to_part);
+  PDM_UNUSED(n_part);
+  PDM_UNUSED(dual_graph_idx);
+  PDM_UNUSED(dual_graph);
+  PDM_UNUSED(pn_entity);
+  PDM_UNUSED(pentity_ln_to_gn);
+  PDM_UNUSED(pn_entity_extented);
+  PDM_UNUSED(pentity_ln_to_gn_extended);
+
+  int i_rank;
+  int n_rank;
+
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  PDM_MPI_Comm_size(comm, &n_rank);
+
+  PDM_g_num_t* entity_distribution_ptb = (PDM_g_num_t * ) malloc( sizeof(PDM_g_num_t) * (n_rank+1) );
+  for(int i = 0; i < n_rank+1; ++i){
+    entity_distribution_ptb[i] = entity_distribution[i] - 1;
+  }
+
+  int dn_arc  = entity_distribution[i_rank+1]  -  entity_distribution[i_rank];
+
+  /*
+   * We search to extended the partition with the dual graph
+   *     - We begin by get the dual_graph for each partition
+   *
+   */
+
+  /*
+   * Prepare exchange protocol
+   */
+  PDM_block_to_part_t* btp = PDM_block_to_part_create(entity_distribution_ptb,
+                               (const PDM_g_num_t **) pentity_ln_to_gn,
+                                                      pn_entity,
+                                                      n_part,
+                                                      comm);
+
+  int* dual_graph_n = (int *) malloc( dn_arc * sizeof(int));
+  for(int i = 0; i < dn_arc; ++i){
+    dual_graph_n[i] = dual_graph_idx[i+1] - dual_graph_idx[i];
+  }
+
+  PDM_log_trace_array_int(dual_graph_idx, dn_arc+1, "dual_graph_idx::");
+  PDM_log_trace_array_long(dual_graph, dual_graph_idx[dn_arc], "dual_graph::");
+
+  /*
+   * Exchange
+   */
+  int**         part_dual_graph_n;
+  PDM_g_num_t** part_dual_graph;
+  PDM_block_to_part_exch2(btp,
+                          sizeof(PDM_g_num_t),
+                          PDM_STRIDE_VAR,
+                          dual_graph_n,
+             (void *  )   dual_graph,
+             (int  ***)  &part_dual_graph_n,
+             (void ***)  &part_dual_graph);
+  free(dual_graph_n);
+
+  int** part_dual_graph_idx = (int ** ) malloc( n_part * sizeof(int*));
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    part_dual_graph_idx[i_part] = (int *) malloc( (pn_entity[i_part]+1) * sizeof(int));
+    part_dual_graph_idx[i_part][0] = 0;
+    for(int i_entity = 0; i_entity < pn_entity[i_part]; ++i_entity) {
+      part_dual_graph_idx[i_part][i_entity+1] = part_dual_graph_idx[i_part][i_entity] + part_dual_graph_n[i_part][i_entity];
+    }
+    PDM_log_trace_array_int(part_dual_graph_n[i_part], pn_entity[i_part], "part_dual_graph_n[i_part]::");
+    PDM_log_trace_array_int(part_dual_graph_idx[i_part], pn_entity[i_part]+1, "part_dual_graph_idx[i_part]::");
+    PDM_log_trace_array_long(part_dual_graph[i_part], part_dual_graph_idx[i_part][pn_entity[i_part]], "part_dual_graph[i_part]::");
+  }
+
+  /*
+   * Each partition have now for each cells the neighbour cells (via dual_graph )
+   *     - Sort / Unique
+   *     - We collect all boundary cells
+   *     - we append to the older ln_to_gn all new entitiy
+   */
+  *pn_entity_extented = (int *) malloc( sizeof(int) * n_part);
+  int* _pn_entity_extented = *pn_entity_extented;
+
+  *pentity_ln_to_gn_extended = (PDM_g_num_t **) malloc( sizeof(PDM_g_num_t *) * n_part);
+  PDM_g_num_t** _pentity_ln_to_gn_extended = *pentity_ln_to_gn_extended;
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+
+    int new_size = PDM_inplace_unique_long(part_dual_graph[i_part], 0, part_dual_graph_idx[i_part][pn_entity[i_part]]-1);
+    printf(" new_size         :: %i \n", new_size);
+    printf(" pn_entity[i_part]:: %i \n", pn_entity[i_part]);
+
+    _pentity_ln_to_gn_extended[i_part] = (PDM_g_num_t *) malloc( new_size * sizeof(PDM_g_num_t));
+
+    for(int i_entity = 0; i_entity < pn_entity[i_part]; ++i_entity ) {
+      _pentity_ln_to_gn_extended[i_part][i_entity] = pentity_ln_to_gn[i_part][i_entity];
+    }
+
+    PDM_sort_long(_pentity_ln_to_gn_extended[i_part], NULL, pn_entity[i_part]);
+
+    int n_new_cell = pn_entity[i_part];
+    for(int i_entity = 0; i_entity < new_size; ++i_entity) {
+      /*
+       * Si non existant on rajoute au bout
+       */
+      int ipos = PDM_binary_search_long(part_dual_graph[i_part][i_entity]+1,
+                                        _pentity_ln_to_gn_extended[i_part],
+                                        pn_entity[i_part]);
+
+      // printf("ipos = %i | %i \n", ipos, part_dual_graph[i_part][i_entity]+1);
+
+      // Append at end of the array
+      if(ipos == -1) {
+        _pentity_ln_to_gn_extended[i_part][n_new_cell++] = part_dual_graph[i_part][i_entity]+1;
+      }
+    }
+
+    /*
+     * Compress
+     */
+    for(int i_entity = 0; i_entity < pn_entity[i_part]; ++i_entity ) {
+      _pentity_ln_to_gn_extended[i_part][i_entity] = pentity_ln_to_gn[i_part][i_entity];
+    }
+
+    printf("n_new_cell::%i\n", n_new_cell);
+    PDM_log_trace_array_long(pentity_ln_to_gn[i_part], pn_entity[i_part], "_pentity_ln_to_gn[i_part]::");
+    PDM_log_trace_array_long(_pentity_ln_to_gn_extended[i_part], n_new_cell, "_pentity_ln_to_gn_extended[i_part]::");
+
+    // Realloc and setup size
+    _pn_entity_extented[i_part] = n_new_cell;
+    _pentity_ln_to_gn_extended[i_part] = (PDM_g_num_t *) realloc( _pentity_ln_to_gn_extended[i_part], n_new_cell * sizeof(PDM_g_num_t));
+
+  }
+
+  PDM_block_to_part_free(btp);
+  free(entity_distribution_ptb);
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    free(part_dual_graph_n[i_part]);
+    free(part_dual_graph_idx[i_part]);
+    free(part_dual_graph[i_part]);
+  }
+  free(part_dual_graph_n);
+  free(part_dual_graph_idx);
+  free(part_dual_graph);
+  printf("PDM_extend_mesh  \n");
 }
 
 #ifdef __cplusplus

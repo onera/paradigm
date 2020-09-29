@@ -410,7 +410,7 @@ int main(int argc, char *argv[])
    *    Idée : faire un part_to_block avec ln_to_gn == cell_part et distribution imposé = dpart_proc
    *    On devrait recupérer n_part block de données avec le ln_to_gn !
    */
-  int** pcell_ln_to_gn;
+  PDM_g_num_t** pcell_ln_to_gn;
   int*  pn_cell;
 
   int n_res_part = PDM_part_assemble_partitions(comm,
@@ -418,8 +418,28 @@ int main(int argc, char *argv[])
                                                 cell_distribution,
                                                 cell_part,
                                     (int ** )  &pn_cell,
-                                    (PDM_g_num_t ***)  &pcell_ln_to_gn);
+                            (PDM_g_num_t ***)  &pcell_ln_to_gn);
 
+  /*
+   * Tentative extented partition
+   */
+  PDM_g_num_t** pcell_ln_to_gn_extented;
+  int*  pn_cell_extented;
+
+  PDM_extend_mesh(comm,
+                  part_distribution,
+                  cell_distribution,
+                  cell_part,
+                  n_res_part,
+                  dual_graph_idx,
+                  dual_graph,
+                  pn_cell,
+                  pcell_ln_to_gn,
+                 &pn_cell_extented,
+                 &pcell_ln_to_gn_extented);
+
+  // pn_cell        = pn_cell_extented;
+  // pcell_ln_to_gn = pcell_ln_to_gn_extented;
   /*
    *  At this stage we have the cell_ln_to_gn :
    *      --> We need to deduce the other if needed
@@ -439,11 +459,11 @@ int main(int argc, char *argv[])
                                                dcell_face,
                                                n_res_part,
                                                pn_cell,
-                           (const PDM_g_num_t ** )  pcell_ln_to_gn,
-                           (int         ** )  &pn_faces,
-                           (PDM_g_num_t ***)  &pface_ln_to_gn,
-                           (int         ***)  &pcell_face_idx,
-                           (int         ***)  &pcell_face);
+                      (const PDM_g_num_t ** )  pcell_ln_to_gn,
+                            (int         ** ) &pn_faces,
+                            (PDM_g_num_t ***) &pface_ln_to_gn,
+                            (int         ***) &pcell_face_idx,
+                            (int         ***) &pcell_face);
 
   int **pface_cell;
   PDM_part_reverse_pcellface(n_res_part,
@@ -453,9 +473,9 @@ int main(int argc, char *argv[])
              (const int **)  pcell_face,
               (int    ***)  &pface_cell);
 
-  if (0 == 1){
+  if (1 == 1){
     for (int i_part=0; i_part < n_res_part; i_part++){
-      PDM_printf("[%i] generated facecell part %i:", i_rank, i_part);
+      PDM_printf("[%i] generated facecell part %i [%i]:", i_rank, i_part, pn_faces[i_part]);
       for (int iface=0 ; iface < pn_faces[i_part]; iface++)
         PDM_printf(" %d %d", pface_cell[i_part][2*iface], pface_cell[i_part][2*iface+1]);
       PDM_printf("\n");
@@ -585,6 +605,7 @@ int main(int argc, char *argv[])
   for(int i_part = 0; i_part < n_res_part; ++i_part){
     free(pface_ln_to_gn[i_part]);
     free(pcell_ln_to_gn[i_part]);
+    free(pcell_ln_to_gn_extented[i_part]);
     free(pvtx_ln_to_gn[i_part]);
     free(pcell_face[i_part]);
     free(pcell_face_idx[i_part]);
@@ -605,11 +626,13 @@ int main(int argc, char *argv[])
   free(pface_vtx_idx);
   free(pface_vtx);
   free(pcell_ln_to_gn);
+  free(pcell_ln_to_gn_extented);
   free(pproc_face_bound_idx);
   free(ppart_face_bound_idx);
   free(pface_bound);
   free(pface_ln_to_gn);
   free(pn_cell);
+  free(pn_cell_extented);
   free(pn_faces);
   free(pn_vtx);
   free(pface_group_ln_to_gn);
