@@ -391,7 +391,8 @@ PDM_closest_points_compute
 
 
   /* Build parallel octree */
-  PDM_para_octree_build (octree_id);
+  double *global_extents = NULL;// --> compute global extents of src and tgt point clouds
+  PDM_para_octree_build (octree_id, global_extents);
   //PDM_para_octree_dump (octree_id);
   PDM_para_octree_dump_times (octree_id);
 
