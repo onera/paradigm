@@ -2070,7 +2070,8 @@ const int   hdl
   int n_face_elt_tot     = 0;
   int n_sum_vtx_face_tot = 0;
 
-  PDM_dmesh_nodal_decompose_faces_get_size(hdl, &n_face_elt_tot, &n_sum_vtx_face_tot);
+  // PDM_dmesh_nodal_decompose_faces_get_size(hdl, &n_face_elt_tot, &n_sum_vtx_face_tot);
+  PDM_dmesh_nodal_decompose_edges_get_size(hdl, &n_face_elt_tot, &n_sum_vtx_face_tot);
 
   // int n_edge_elt_tot     = 0;
   // int n_sum_vtx_edge_tot = 0;
@@ -2083,7 +2084,12 @@ const int   hdl
   PDM_g_num_t* dcell_face_vtx     = (PDM_g_num_t*) malloc(  n_sum_vtx_face_tot * sizeof(PDM_g_num_t));
 
   dcell_face_vtx_idx[0] = 0;
-  PDM_sections_decompose_faces(mesh,
+  // PDM_sections_decompose_faces(mesh,
+  //                              dcell_face_vtx_idx,
+  //                              dcell_face_vtx,
+  //                              delmt_face_cell,
+  //                              NULL);
+  PDM_sections_decompose_edges(mesh,
                                dcell_face_vtx_idx,
                                dcell_face_vtx,
                                delmt_face_cell,
