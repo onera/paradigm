@@ -775,7 +775,7 @@ PDM_para_graph_dual_from_combine_connectivity
                                   dcell_face_idx,
                                   dcell_face,
                                   dface_vtx_idx,
-                                  dface_vtx_idx,
+                                  dface_vtx,
                 ( int         **) &dcell_vtx_idx,
                 ( PDM_g_num_t **) &dcell_vtx);
 
