@@ -318,9 +318,13 @@ PDM_deduce_dual_connectivity
   printf("*dentity2_entity1_idx[dn_entity2_recv]       ::%i\n", _dentity2_entity1_idx[dn_entity2_recv]       );
 
   *dentity2_entity1 = recv_data;
+  PDM_g_num_t* _dentity2_entity1 = *dentity2_entity1;
+
   /*
    * Realloc
    */
+  _dentity2_entity1 = realloc(_dentity2_entity1, _dentity2_entity1_idx[dn_entity2_recv] * sizeof(PDM_g_num_t));
+
   PDM_log_trace_array_int (_dentity2_entity1_idx, dn_entity2_recv+1         , "_dentity2_entity1_idx::");
   PDM_log_trace_array_long(recv_data, _dentity2_entity1_idx[dn_entity2_recv], "recv_data::");
 

@@ -347,6 +347,12 @@ int main(int argc, char *argv[])
                       (PDM_g_num_t**) &dual_graph);
   }
 
+  PDM_log_trace_array_int (dual_graph_idx, dn_cell+1              , "pdm_t_partitioning_dcube::dual_graph_idx::");
+  PDM_log_trace_array_long(dual_graph    , dual_graph_idx[dn_cell], "pdm_t_partitioning_dcube::dual_graph::");
+
+  free(dual_graph_idx);
+  free(dual_graph);
+
   PDM_para_graph_dual_from_combine_connectivity(comm,
                                                 cell_distribution,
                                                 face_distribution,
@@ -436,19 +442,19 @@ int main(int argc, char *argv[])
    * Tentative extented partition
    */
   PDM_g_num_t** pcell_ln_to_gn_extented;
-  int*  pn_cell_extented;
+  int*          pn_cell_extented;
 
-  PDM_extend_mesh(comm,
-                  part_distribution,
-                  cell_distribution,
-                  cell_part,
-                  n_res_part,
-                  dual_graph_idx,
-                  dual_graph,
-                  pn_cell,
-                  pcell_ln_to_gn,
-                 &pn_cell_extented,
-                 &pcell_ln_to_gn_extented);
+  // PDM_extend_mesh(comm,
+  //                 part_distribution,
+  //                 cell_distribution,
+  //                 cell_part,
+  //                 n_res_part,
+  //                 dual_graph_idx,
+  //                 dual_graph,
+  //                 pn_cell,
+  //                 pcell_ln_to_gn,
+  //                &pn_cell_extented,
+  //                &pcell_ln_to_gn_extented);
 
   // pn_cell        = pn_cell_extented;
   // pcell_ln_to_gn = pcell_ln_to_gn_extented;
@@ -616,7 +622,7 @@ int main(int argc, char *argv[])
   for(int i_part = 0; i_part < n_res_part; ++i_part){
     free(pface_ln_to_gn[i_part]);
     free(pcell_ln_to_gn[i_part]);
-    free(pcell_ln_to_gn_extented[i_part]);
+    // free(pcell_ln_to_gn_extented[i_part]);
     free(pvtx_ln_to_gn[i_part]);
     free(pcell_face[i_part]);
     free(pcell_face_idx[i_part]);
@@ -637,13 +643,13 @@ int main(int argc, char *argv[])
   free(pface_vtx_idx);
   free(pface_vtx);
   free(pcell_ln_to_gn);
-  free(pcell_ln_to_gn_extented);
+  // free(pcell_ln_to_gn_extented);
   free(pproc_face_bound_idx);
   free(ppart_face_bound_idx);
   free(pface_bound);
   free(pface_ln_to_gn);
   free(pn_cell);
-  free(pn_cell_extented);
+  // free(pn_cell_extented);
   free(pn_faces);
   free(pn_vtx);
   free(pface_group_ln_to_gn);
