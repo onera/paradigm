@@ -623,7 +623,7 @@ PDM_para_graph_dual_from_node2arc
     }
   }
 
-  if(1 == 0) {
+  if(1 == 1) {
     PDM_printf("reverted cell face :");
     for (int i = 0; i < dnode_arc_idx[dn_node]; i++)
       printf(" "PDM_FMT_G_NUM, node_g[i]);
@@ -665,7 +665,7 @@ PDM_para_graph_dual_from_node2arc
   int n_recv_block = PDM_part_to_block_n_elt_block_get(ptb);
   assert(n_recv_block == dn_arc);
 
-  if (0 == 1) {
+  if (1 == 1) {
     int idx = 0;
     PDM_printf("[%d]Recv stride (%d): ", i_rank, n_recv_block);
     for (int i = 0; i < n_recv_block; i++)
@@ -702,7 +702,7 @@ PDM_para_graph_dual_from_node2arc
     }
   }
 
-  if (0 == 1) {
+  if (1 == 1) {
   PDM_printf("[%d] Generated arc_to_node ::", i_rank);
     for (int i = 0; i < dn_arc; i++)
       PDM_printf(" %d %d", darc_to_node[2*i], darc_to_node[2*i+1]);
@@ -763,7 +763,7 @@ PDM_para_graph_dual_from_combine_connectivity
        PDM_g_num_t    **dual_graph
 )
 {
-  int* dcell_vtx_idx;
+  int*         dcell_vtx_idx;
   PDM_g_num_t* dcell_vtx;
 
   /*
@@ -782,17 +782,24 @@ PDM_para_graph_dual_from_combine_connectivity
   /*
    * Call the standard fonction : arc = vtx , node = cell
    */
-  // PDM_para_graph_dual_from_arc2node(comm,
-  //                                   graph_node_distrib,
-  //                                   vtx_distrib,
-  //                                   darc_to_node,
-  //                                   dual_graph_idx,
-  //                                   dual_graph,
-  //                                   0,
-  //                                   NULL,
-  //                                   NULL);
+  PDM_para_graph_dual_from_node2arc(comm,
+                                    cell_distrib,
+                                    vtx_distrib,
+                                    dcell_vtx_idx,
+                                    dcell_vtx,
+                                    dual_graph_idx,
+                                    dual_graph);
 
+  int i_rank;
+  int n_rank;
 
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  PDM_MPI_Comm_size(comm, &n_rank);
+
+  int dn_cell = cell_distrib[i_rank+1] - cell_distrib[i_rank];
+  int dn_face = face_distrib[i_rank+1] - face_distrib[i_rank];
+  PDM_log_trace_array_int (dual_graph_idx[0], dn_cell+1              , "dual_graph_idx::");
+  PDM_log_trace_array_long(dual_graph    [0], dual_graph_idx[dn_cell], "dual_graph::");
 
   free(dcell_vtx);
   free(dcell_vtx_idx);
