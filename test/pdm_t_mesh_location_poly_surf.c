@@ -668,6 +668,9 @@ int main(int argc, char *argv[])
   free (dEdgeGroup);
   free (dEdgeVtxIdx);
 
+  free (pts_coords);
+  free (pts_gnum);
+
   PDM_MPI_Finalize();
 
   if (my_rank == 0) {

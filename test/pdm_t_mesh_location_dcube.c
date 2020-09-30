@@ -649,6 +649,9 @@ int main(int argc, char *argv[])
 
   PDM_part_free (ppart_id);
 
+  free (pts_coords);
+  free (pts_gnum);
+
   PDM_dcube_gen_free (id);
 
   PDM_MPI_Finalize();

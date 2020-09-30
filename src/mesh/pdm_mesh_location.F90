@@ -202,7 +202,7 @@ module pdm_mesh_location
                                            n_vtx, &
                                            coords, &
                                            vtx_ln_to_gn) &
-     bind (c, name = 'PDM_mesh_location_cloud_set')
+     bind (c, name = 'PDM_mesh_location_part_set')
 
       use iso_c_binding
 

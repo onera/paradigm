@@ -1352,8 +1352,6 @@ PDM_mesh_location_free
 {
   _PDM_location_t *location = _get_from_id (id);
 
-  PDM_UNUSED(partial);
-
   /* Free point clouds */
   if (location->point_clouds != NULL) {
     for (int icloud = 0; icloud < location->n_point_cloud; icloud++) {
@@ -1364,27 +1362,19 @@ PDM_mesh_location_free
       }
 
       if (pcloud->coords != NULL) {
-        for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
-          if (pcloud->coords[ipart] != NULL) {
-            free (pcloud->coords[ipart]);
-          }
-        }
         free (pcloud->coords);
       }
 
       if (pcloud->gnum != NULL) {
-        for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
-          if (pcloud->gnum[ipart] != NULL) {
-            free (pcloud->gnum[ipart]);
-          }
-        }
         free (pcloud->gnum);
       }
 
       if (pcloud->location != NULL) {
         for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
-          if (pcloud->location[ipart] != NULL) {
-            free (pcloud->location[ipart]);
+          if (!partial) {
+            if (pcloud->location[ipart] != NULL) {
+              free (pcloud->location[ipart]);
+            }
           }
         }
         free (pcloud->location);
@@ -1392,8 +1382,10 @@ PDM_mesh_location_free
 
       if (pcloud->uvw != NULL) {
         for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
-          if (pcloud->uvw[ipart] != NULL) {
-            free (pcloud->uvw[ipart]);
+          if (!partial) {
+            if (pcloud->uvw[ipart] != NULL) {
+              free (pcloud->uvw[ipart]);
+            }
           }
         }
         free (pcloud->uvw);
@@ -1401,8 +1393,10 @@ PDM_mesh_location_free
 
       if (pcloud->weights_idx != NULL) {
         for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
-          if (pcloud->weights_idx[ipart] != NULL) {
-            free (pcloud->weights_idx[ipart]);
+          if (!partial) {
+            if (pcloud->weights_idx[ipart] != NULL) {
+              free (pcloud->weights_idx[ipart]);
+            }
           }
         }
         free (pcloud->weights_idx);
@@ -1410,8 +1404,10 @@ PDM_mesh_location_free
 
       if (pcloud->weights != NULL) {
         for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
-          if (pcloud->weights[ipart] != NULL) {
-            free (pcloud->weights[ipart]);
+          if (!partial) {
+            if (pcloud->weights[ipart] != NULL) {
+              free (pcloud->weights[ipart]);
+            }
           }
         }
         free (pcloud->weights);
@@ -1419,8 +1415,10 @@ PDM_mesh_location_free
 
       if (pcloud->projected_coords != NULL) {
         for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
-          if (pcloud->projected_coords[ipart] != NULL) {
-            free (pcloud->projected_coords[ipart]);
+          if (!partial) {
+            if (pcloud->projected_coords[ipart] != NULL) {
+              free (pcloud->projected_coords[ipart]);
+            }
           }
         }
         free (pcloud->projected_coords);
