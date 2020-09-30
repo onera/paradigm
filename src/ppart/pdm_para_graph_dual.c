@@ -763,6 +763,15 @@ PDM_para_graph_dual_from_combine_connectivity
        PDM_g_num_t    **dual_graph
 )
 {
+  int i_rank;
+  int n_rank;
+
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  PDM_MPI_Comm_size(comm, &n_rank);
+
+  int dn_cell = cell_distrib[i_rank+1] - cell_distrib[i_rank];
+  // int dn_face = face_distrib[i_rank+1] - face_distrib[i_rank];
+
   int*         dcell_vtx_idx;
   PDM_g_num_t* dcell_vtx;
 
@@ -779,30 +788,50 @@ PDM_para_graph_dual_from_combine_connectivity
                 ( int         **) &dcell_vtx_idx,
                 ( PDM_g_num_t **) &dcell_vtx);
 
+  PDM_log_trace_array_int (dcell_vtx_idx, dn_cell+1             , "dcell_vtx_idx::");
+  PDM_log_trace_array_long(dcell_vtx    , dcell_vtx_idx[dn_cell], "dcell_vtx::");
+
+  int*         dvtx_cell_idx;
+  PDM_g_num_t* dvtx_cell;
+  PDM_deduce_dual_connectivity(comm,
+                               cell_distrib,
+                               vtx_distrib,
+                               dcell_vtx_idx,
+                               dcell_vtx,
+                               0,
+                               &dvtx_cell_idx,
+                               &dvtx_cell);
+
+  int dn_vtx = vtx_distrib[i_rank+1] - vtx_distrib[i_rank];
+  PDM_log_trace_array_int (dvtx_cell_idx, dn_vtx+1             , "dvtx_cell_idx::");
+  PDM_log_trace_array_long(dvtx_cell    , dvtx_cell_idx[dn_vtx], "dvtx_cell::");
+
   /*
    * Call the standard fonction : arc = vtx , node = cell
    */
-  PDM_para_graph_dual_from_node2arc(comm,
-                                    cell_distrib,
-                                    vtx_distrib,
-                                    dcell_vtx_idx,
-                                    dcell_vtx,
-                                    dual_graph_idx,
-                                    dual_graph);
-
-  int i_rank;
-  int n_rank;
-
-  PDM_MPI_Comm_rank(comm, &i_rank);
-  PDM_MPI_Comm_size(comm, &n_rank);
-
-  int dn_cell = cell_distrib[i_rank+1] - cell_distrib[i_rank];
-  int dn_face = face_distrib[i_rank+1] - face_distrib[i_rank];
-  PDM_log_trace_array_int (dual_graph_idx[0], dn_cell+1              , "dual_graph_idx::");
-  PDM_log_trace_array_long(dual_graph    [0], dual_graph_idx[dn_cell], "dual_graph::");
+  PDM_deduce_combine_connectivity(comm,
+                                  cell_distrib,
+                                  vtx_distrib,
+                                  dcell_vtx_idx,
+                                  dcell_vtx,
+                                  dvtx_cell_idx,
+                                  dvtx_cell,
+                                  dual_graph_idx,
+                                  dual_graph);
 
   free(dcell_vtx);
   free(dcell_vtx_idx);
+
+  // -> Shift by one
+  PDM_g_num_t* _dual_graph_idx = *dual_graph_idx;
+  PDM_g_num_t* _dual_graph     = *dual_graph;
+  for(int i_entity = 0; i_entity < _dual_graph_idx[dn_cell]; ++i_entity) {
+    _dual_graph[i_entity] = _dual_graph[i_entity] - 1;
+  }
+
+  PDM_log_trace_array_int (_dual_graph_idx, dn_cell+1               , "PDM_para_graph_dual_from_combine_connectivity::dual_graph_idx::");
+  PDM_log_trace_array_long(_dual_graph    , _dual_graph_idx[dn_cell], "PDM_para_graph_dual_from_combine_connectivity::dual_graph::");
+
 }
 
 /**
