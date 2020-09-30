@@ -16,5 +16,5 @@
   integer, parameter :: PDM_MESH_ENTITY_EDGE    = 2  !< Edge entity
   integer, parameter :: PDM_MESH_ENTITY_VERTEX  = 3   !< Vertex entity
 
-  integer, parameter :: PDM_MESH_NATURE_NODAL          = 0  !< PDM_mesh_nodal
-  integer, parameter :: PDM_MESH_NATURE_SURFACE_MESH   = 1  !< PDm_surface_mesh
+  integer, parameter :: PDM_MESH_NATURE_NODAL_SHARED   = 0  !< PDM_mesh_nodal
+  integer, parameter :: PDM_MESH_NATURE_MESH_SETTED    = 1  !< PDm_surface_mesh

@@ -5568,6 +5568,7 @@ PDM_para_octree_closest_point
   const int DEBUG_MERGE = 0;
 
   const int COMPUTE_FIRST_UPPER_BOUND = 1;
+  const double eps_upper_bound_dist = 1.e-6;
 
   const _octree_t *octree = _get_from_id (id);
   const _l_octant_t *octants = octree->octants;
@@ -5748,7 +5749,7 @@ PDM_para_octree_closest_point
         max_dist = PDM_MAX (max_dist, src_dist);
       }
 
-      upper_bound_dist[i] = max_dist;
+      upper_bound_dist[i] = max_dist + eps_upper_bound_dist;
     }
 
   } else {

@@ -295,7 +295,7 @@ int main(int argc, char *argv[])
   /* free (dface_group); */
 
   int n_point_cloud = 1;
-  int id_dist = PDM_dist_cloud_surf_create (PDM_MESH_NATURE_SURFACE_MESH,
+  int id_dist = PDM_dist_cloud_surf_create (PDM_MESH_NATURE_MESH_SETTED,
                                       n_point_cloud,
                                       PDM_MPI_COMM_WORLD);
 
