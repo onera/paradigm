@@ -2266,7 +2266,7 @@ const int   hdl
   int idx = 0;
   int idx_face_vtx = 0;
   for(int i_key = 0; i_key < blk_size; ++i_key) {
-    printf("Number of conflicting keys :: %i \n", blk_n_face_per_key[i_key]);
+    // printf("Number of conflicting keys :: %i \n", blk_n_face_per_key[i_key]);
 
     int n_conflict_faces = blk_n_face_per_key[i_key];
 
@@ -2277,7 +2277,7 @@ const int   hdl
 
     /* Loop over all faces in conflict */
     for(int i_face = 0; i_face < n_conflict_faces; ++i_face) {
-      printf("Number of vtx on faces %i :: %i with index [%i] \n", i_face, blk_face_vtx_n[idx+i_face], idx+i_face);
+      // printf("Number of vtx on faces %i :: %i with index [%i] \n", i_face, blk_face_vtx_n[idx+i_face], idx+i_face);
 
       int n_vtx_face_1 = blk_face_vtx_n[idx+i_face];
       int beg_1        = blk_face_vtx_idx[idx+i_face];
@@ -2316,7 +2316,7 @@ const int   hdl
             }
 
             if(is_same_face == 1 ){
-              printf(" It's a match ! \n");
+              // printf(" It's a match ! \n");
 
               mesh->_dface_cell[2*i_abs_face  ] = blk_elmt_face_cell[idx+i_face     ];
               mesh->_dface_cell[2*i_abs_face+1] = blk_elmt_face_cell[idx+i_face_next];
@@ -2358,6 +2358,20 @@ const int   hdl
 
   }
 
+  /*
+   * Free all unused structure
+   */
+  free(loc_face_vtx_1);
+  free(loc_face_vtx_2);
+  free(already_treat);
+  free(delmt_face_cell);
+  free(dcell_face_vtx);
+  free(ln_to_gn);
+  free(blk_tot_face_vtx);
+  free(blk_n_face_per_key);
+  free(blk_face_vtx_n);
+  free(blk_elmt_face_cell);
+
   if( 1 == 1 ){
     printf("i_abs_face::%i \n", i_abs_face);
     PDM_log_trace_array_int(mesh->_dface_vtx_idx, i_abs_face+1                    , "mesh->_dface_vtx_idx:: ");
@@ -2381,20 +2395,6 @@ const int   hdl
    * Generate absolute numerotation of faces
    */
   _make_absolute_face_numbering(mesh);
-
-  /*
-   * Free all unused structure
-   */
-  free(loc_face_vtx_1);
-  free(loc_face_vtx_2);
-  free(already_treat);
-  free(delmt_face_cell);
-  free(dcell_face_vtx);
-  free(ln_to_gn);
-  free(blk_tot_face_vtx);
-  free(blk_n_face_per_key);
-  free(blk_face_vtx_n);
-  free(blk_elmt_face_cell);
 
   /*
    * Rebuild cell face
