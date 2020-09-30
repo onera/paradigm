@@ -946,7 +946,7 @@ _gnum_from_parent_compute
   /* Calcul du nombre total d'elements du bloc */
 
   PDM_l_num_t n_elt_loc_total = 0;
-  PDM_g_num_t l_max_parent = -1;
+  PDM_g_num_t l_max_parent = 0;
 
   for (int j = 0; j < _gnum->n_part; j++) {
     n_elt_loc_total += _gnum->n_elts[j];
@@ -1020,6 +1020,7 @@ _gnum_from_parent_compute
 
   PDM_g_num_t _l_numabs_tmp = d_elt_proc[i_proc+1] - d_elt_proc[i_proc];
   int l_numabs_tmp = (int) _l_numabs_tmp;
+
   PDM_g_num_t *numabs_tmp = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * l_numabs_tmp);
 
   PDM_g_num_t *n_elt_stocke_procs = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * (n_procs+1));
