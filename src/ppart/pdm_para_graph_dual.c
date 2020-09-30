@@ -30,8 +30,9 @@
 #include "pdm_binary_search.h"
 #include "pdm_handles.h"
 #include "pdm_part_to_block.h"
-
+#include "pdm_block_to_part.h"
 #include "pdm_para_graph_dual.h"
+#include "pdm_dconnectivity_transform.h"
 
 
 /*----------------------------------------------------------------------------
@@ -708,6 +709,11 @@ PDM_para_graph_dual_from_node2arc
   PDM_printf("\n");
   }
 
+  PDM_part_to_block_free(ptb);
+  free(node_g);
+  free(graph_arc_distrib_ptb);
+  free(send_stride);
+
   /* Now we have a arc_to_node connectivity, we can call graph_dual_from_arc2node
   */
 
@@ -722,13 +728,75 @@ PDM_para_graph_dual_from_node2arc
                                     NULL);
 
 
-  PDM_part_to_block_free(ptb);
-  free(node_g);
-  free(graph_arc_distrib_ptb);
-  free(send_stride);
   free(darc_to_node);
 }
 
+/**
+ *
+ * \brief Compute in parallel the dual graph of an unstructured graph represented
+ *        by its node (vertices of the graph) to arc (edges of the graph) connectivity.
+ *        Arc and edge terminology is employed to avoid confusion with geometric entities
+ *        such as vertices, edges, etc.
+ *        Usually for a CFD mesh, the nodes of the graph are the cells of the mesh
+ *        and the arcs of the graph are thus the faces of the mesh.
+ *
+ * \param [in]   comm               PDM_MPI communicator
+ * \param [in]   graph_node_distrib distribution of nodes over the procs (size=n_rank+1)
+ * \param [in]   graph_arc_distrib  distribution of arcs  over the procs (size=n_rank+1)
+ * \param [in]   dnode_arc_idx      Node to arc connectivity indexes (size=dn_node+1)
+ * \param [in]   dnode_arc          Node to arc connectivity (size=dnode_to_arc_idx[dn_node])
+ * \param [out]  dual_graph_idx     Node to node connectivity indexes (size=dn_node+1)
+ * \param [out]  dual_graph         Node to node connectivity (size=dual_graph_idx[dn_node])
+ */
+void
+PDM_para_graph_dual_from_combine_connectivity
+(
+ const PDM_MPI_Comm     comm,
+ const PDM_g_num_t     *cell_distrib,
+ const PDM_g_num_t     *face_distrib,
+ const PDM_g_num_t     *vtx_distrib,
+ const int             *dcell_face_idx,
+ const PDM_g_num_t     *dcell_face,
+ const int             *dface_vtx_idx,
+ const PDM_g_num_t     *dface_vtx,
+       PDM_g_num_t    **dual_graph_idx,
+       PDM_g_num_t    **dual_graph
+)
+{
+  int* dcell_vtx_idx;
+  PDM_g_num_t* dcell_vtx;
+
+  /*
+   *  Call generic function to deduce the induce connectivity
+   */
+  PDM_deduce_combine_connectivity(comm,
+                                  cell_distrib,
+                                  face_distrib,
+                                  dcell_face_idx,
+                                  dcell_face,
+                                  dface_vtx_idx,
+                                  dface_vtx_idx,
+                ( int         **) &dcell_vtx_idx,
+                ( PDM_g_num_t **) &dcell_vtx);
+
+  /*
+   * Call the standard fonction : arc = vtx , node = cell
+   */
+  // PDM_para_graph_dual_from_arc2node(comm,
+  //                                   graph_node_distrib,
+  //                                   vtx_distrib,
+  //                                   darc_to_node,
+  //                                   dual_graph_idx,
+  //                                   dual_graph,
+  //                                   0,
+  //                                   NULL,
+  //                                   NULL);
+
+
+
+  free(dcell_vtx);
+  free(dcell_vtx_idx);
+}
 
 /**
  *

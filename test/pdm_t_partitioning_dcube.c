@@ -289,6 +289,7 @@ int main(int argc, char *argv[])
   PDM_g_num_t* cell_distribution = PDM_compute_entity_distribution(comm, dn_cell);
   PDM_g_num_t* face_distribution = PDM_compute_entity_distribution(comm, dn_face);
   PDM_g_num_t* part_distribution = PDM_compute_entity_distribution(comm, n_part );
+  PDM_g_num_t* vtx_distribution  = PDM_compute_entity_distribution(comm, dn_vtx );
 
   // printf("part_distribution::\n");
   // for(int i_part = 0; i_part < n_rank+1; ++i_part){
@@ -345,6 +346,17 @@ int main(int argc, char *argv[])
                       (PDM_g_num_t**) &dual_graph_idx,
                       (PDM_g_num_t**) &dual_graph);
   }
+
+  PDM_para_graph_dual_from_combine_connectivity(comm,
+                                                cell_distribution,
+                                                face_distribution,
+                                                vtx_distribution,
+                                                dcell_face_idx,
+                                                dcell_face,
+                                                dface_vtx_idx,
+                                                dface_vtx,
+                               (PDM_g_num_t**) &dual_graph_idx,
+                               (PDM_g_num_t**) &dual_graph);
 
   /*
    * Split it !!! CAUTION dn_cell can be different of the size of dual graph !!!
@@ -505,7 +517,6 @@ int main(int argc, char *argv[])
                            (int         ***)  &pface_vtx);
 
   double **pvtx_coord = NULL;
-  PDM_g_num_t* vtx_distribution = PDM_compute_entity_distribution(comm, dn_vtx);
   PDM_part_dcoordinates_to_pcoordinates(comm,
                                         n_part,
                                         vtx_distribution,
