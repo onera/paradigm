@@ -202,7 +202,7 @@ program testf
   allocate(face_vtx_idx(n_face+1))
   allocate(face_vtx(4*n_face))
 
-  face_vtx_idx(0) = 0
+  face_vtx_idx(1) = 0
   do i = 1, n_face
     face_vtx_idx(i+1) = face_vtx_idx(i) + 4
   end do
@@ -276,7 +276,7 @@ program testf
   allocate(cell_face_idx(n_cell+1))
   allocate(cell_face(6*n_cell))
 
-  cell_face_idx(0) = 0
+  cell_face_idx(1) = 0
   do i = 1, n_cell
     cell_face_idx(i+1) = cell_face_idx(i) + 6
   end do
