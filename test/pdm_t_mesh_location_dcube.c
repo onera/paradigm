@@ -564,9 +564,9 @@ int main(int argc, char *argv[])
   PDM_mesh_location_dump_times (id_loc);
 
 
-  int p_n_points;
-  double      *p_coords      = NULL;
-  PDM_g_num_t *p_gnum        = NULL;
+  /* int p_n_points; */
+  /* double      *p_coords      = NULL; */
+  /* PDM_g_num_t *p_gnum        = NULL; */
   PDM_g_num_t *p_location    = NULL;
   int         *p_weights_idx = NULL;
   double      *p_weights     = NULL;
@@ -574,9 +574,9 @@ int main(int argc, char *argv[])
   PDM_mesh_location_get (id_loc,
                          0,//i_point_cloud,
                          0,//i_part,
-                         &p_n_points,
-                         &p_coords,
-                         &p_gnum,
+                         /* &p_n_points, */
+                         /* &p_coords, */
+                         /* &p_gnum, */
                          &p_location,
                          &p_weights_idx,
                          &p_weights,
@@ -594,8 +594,8 @@ int main(int argc, char *argv[])
   const PDM_g_num_t n_cell_seg = n_vtx_seg - 1;
   const double cell_side = length / ((double) n_cell_seg);
 
-  for (int ipt = 0; ipt < p_n_points; ipt++) {
-    double *p = p_coords + 3*ipt;
+  for (int ipt = 0; ipt < n_pts_l; ipt++) {
+    double *p = pts_coords + 3*ipt;
 
     int i = (int) floor (p[0] / cell_side);
     int j = (int) floor (p[1] / cell_side);

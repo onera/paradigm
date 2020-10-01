@@ -125,6 +125,40 @@ module pdm_mesh_location
 
     end subroutine PDM_mesh_location_cloud_set
 
+        !>
+    !!
+    !! \brief Set a point cloud
+    !!
+    !! \param [in]   id              Identifier
+    !! \param [in]   i_point_cloud   Index of point cloud
+    !! \param [in]   i_part          Index of partition
+    !! \param [in]   n_points        Number of points
+    !! \param [in]   coords          Point coordinates
+    !! \param [in]   gnum            Point global number
+    !!
+    !!
+
+    subroutine PDM_mesh_location_cloud_get (id, &
+                                            i_point_cloud, &
+                                            i_part, &
+                                            n_points, &
+                                            coords, &
+                                            gnum) &
+     bind (c, name = 'PDM_mesh_location_cloud_get')
+
+      use iso_c_binding
+
+      implicit none
+
+      integer(c_int), value :: id
+      integer(c_int), value :: i_point_cloud
+      integer(c_int), value :: i_part
+      integer(c_int), value :: n_points
+      type(c_ptr)           :: coords
+      type(c_ptr)           :: gnum
+
+    end subroutine PDM_mesh_location_cloud_get
+
     !>
     !!
     !! \brief Set the mesh nodal
@@ -360,9 +394,6 @@ module pdm_mesh_location
     subroutine PDM_mesh_location_get (id, &
                                       i_point_cloud, &
                                       i_part, &
-                                      n_points, &
-                                      coord, &
-                                      g_num, &
                                       location, &
                                       weights_idx, &
                                       weights, &
@@ -376,9 +407,6 @@ module pdm_mesh_location
       integer(c_int), value :: id
       integer(c_int), value :: i_point_cloud
       integer(c_int), value :: i_part
-      integer(c_int)        :: n_points
-      type(c_ptr)           :: coord
-      type(c_ptr)           :: g_num
       type(c_ptr)           :: location
       type(c_ptr)           :: weights_idx
       type(c_ptr)           :: weights

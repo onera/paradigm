@@ -27,6 +27,14 @@ cdef extern from "pdm_mesh_location.h":
                                    int          n_points,
                                    double      *coords,
                                    PDM_g_num_t *gnum);
+
+  void PDM_mesh_location_cloud_get (int           id,
+                                    int           i_point_cloud,
+                                    int           i_part,
+                                    int          *n_points,
+                                    double      **coords,
+                                    PDM_g_num_t **gnum);
+
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -82,9 +90,6 @@ cdef extern from "pdm_mesh_location.h":
   void PDM_mesh_location_get(int           id,
                              int           i_point_cloud,
                              int           i_part,
-                             int          *n_points,
-                             double      **coord,
-                             PDM_g_num_t **g_num,
                              PDM_g_num_t **location,
                              int         **weights_idx,
                              double      **weights,
@@ -253,20 +258,25 @@ cdef class MeshLocation:
     # ************************************************************************
     # > Declaration
     cdef int           n_points
-    cdef double       *coord
-    cdef PDM_g_num_t  *g_num
+    cdef double       *coords
+    cdef PDM_g_num_t  *gnum
     cdef PDM_g_num_t  *location
     cdef int          *weights_idx
     cdef double       *weights
     cdef double       *p_proj_coord
     # ************************************************************************
 
+
+    PDM_mesh_location_cloud_get (self._id,
+                                 i_point_cloud,
+                                 i_part,
+                                 &n_points,
+                                 &coords,
+                                 &gnum);
+
     PDM_mesh_location_get(self._id,
                           i_point_cloud,
                           i_part,
-                          &n_points,
-                          &coord,
-                          &g_num,
                           &location,
                           &weights_idx,
                           &weights,
@@ -278,7 +288,7 @@ cdef class MeshLocation:
     np_g_num = NPY.PyArray_SimpleNewFromData(1,
                                              &dim,
                                              PDM_G_NUM_NPY_INT,
-                                             <void *> g_num)
+                                             <void *> gnum)
     # PyArray_ENABLEFLAGS(np_g_num, NPY.NPY_OWNDATA)
 
     np_location = NPY.PyArray_SimpleNewFromData(1,

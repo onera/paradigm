@@ -613,9 +613,9 @@ int main(int argc, char *argv[])
     fflush(stdout);
   }
 
-  int p_n_points;
-  double      *p_coords      = NULL;
-  PDM_g_num_t *p_gnum        = NULL;
+  /* int p_n_points; */
+  /* double      *p_coords      = NULL; */
+  /* PDM_g_num_t *p_gnum        = NULL; */
   PDM_g_num_t *p_location    = NULL;
   int         *p_weights_idx = NULL;
   double      *p_weights     = NULL;
@@ -624,9 +624,9 @@ int main(int argc, char *argv[])
   PDM_mesh_location_get (id_loc,
                          0,//i_point_cloud,
                          0,//i_part,
-                         &p_n_points,
-                         &p_coords,
-                         &p_gnum,
+                         /* &p_n_points, */
+                         /* &p_coords, */
+                         /* &p_gnum, */
                          &p_location,
                          &p_weights_idx,
                          &p_weights,
@@ -634,8 +634,8 @@ int main(int argc, char *argv[])
   if (0) {
     for (int ipt = 0; ipt < n_pts_l; ipt++) {
       printf("Point ("PDM_FMT_G_NUM") (%f %f %f), location = ("PDM_FMT_G_NUM"), proj = (%f %f %f), weights =",
-             p_gnum[ipt],
-             p_coords[3*ipt], p_coords[3*ipt+1], p_coords[3*ipt+2],
+             pts_gnum[ipt],
+             pts_coords[3*ipt], pts_coords[3*ipt+1], pts_coords[3*ipt+2],
              p_location[ipt],
              p_proj_coord[3*ipt], p_proj_coord[3*ipt+1], p_proj_coord[3*ipt+2]);
       for (int i = p_weights_idx[ipt]; i < p_weights_idx[ipt+1]; i++) {

@@ -85,10 +85,6 @@ program testf
   ! results
   !
 
-  integer (c_int) :: n_points_cpy
-
-  type(c_ptr) :: cptr_coord_cpy
-  type(c_ptr) :: cptr_g_num_cpy
   type(c_ptr) :: cptr_location
   type(c_ptr) :: cptr_weights_idx
   type(c_ptr) :: cptr_weights
@@ -378,9 +374,6 @@ program testf
   call PDM_mesh_location_get (id, &
                               i_point_cloud, &
                               i_part, &
-                              n_points_cpy, &
-                              cptr_coord_cpy, &
-                              cptr_g_num_cpy, &
                               cptr_location, &
                               cptr_weights_idx, &
                               cptr_weights, &
