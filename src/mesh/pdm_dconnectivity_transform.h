@@ -36,14 +36,15 @@ void
 PDM_deduce_combine_connectivity
 (
  const PDM_MPI_Comm     comm,
- const PDM_g_num_t     *cell_distrib,
- const PDM_g_num_t     *face_distrib,
- const int             *dcell_face_idx,
- const PDM_g_num_t     *dcell_face,
- const int             *dface_vtx_idx,
- const PDM_g_num_t     *dface_vtx,
-       int            **dcell_vtx_idx,
-       PDM_g_num_t    **dcell_vtx
+ const PDM_g_num_t     *entity1_distrib,
+ const PDM_g_num_t     *entity2_distrib,
+ const int             *dentity1_entity2_idx,
+ const PDM_g_num_t     *dentity1_entity2,
+ const int             *dentity2_entity3_idx,
+ const PDM_g_num_t     *dentity2_entity3,
+ const int              is_signed,
+       int            **dentity1_entity3_idx,
+       PDM_g_num_t    **dentity1_entity3
 );
 
 
