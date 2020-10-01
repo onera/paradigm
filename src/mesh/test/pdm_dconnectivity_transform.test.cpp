@@ -29,6 +29,7 @@ MPI_TEST_CASE("[1p] pdm_dconnectivity_transform dcell_face + dface_vtx = dcell_v
                                   dcell_face,
                                   dface_vtx_idx,
                                   dface_vtx,
+                                  1,
                                   &dcell_vtx_idx,
                                   &dcell_vtx);
 
@@ -118,6 +119,7 @@ MPI_TEST_CASE("[2p] pdm_dconnectivity_transform dcell_face + dface_vtx = dcell_v
                                   dcell_face,
                                   dface_vtx_idx,
                                   dface_vtx,
+                                  1,
                                   &dcell_vtx_idx,
                                   &dcell_vtx);
 
