@@ -47,6 +47,19 @@ PDM_deduce_combine_connectivity
 );
 
 
+/**
+ *
+ * \brief Compute the dual connectivty of entity1
+ *
+ * \param [in]   comm                  PDM_MPI communicator
+ * \param [in]   entity1_distrib       distribution of entity1 over the procs (size=n_rank+1)
+ * \param [in]   entity2_distrib       distribution of entity2 over the procs (size=n_rank+1)
+ * \param [in]   dentity1_entity2_idx
+ * \param [in]   dentity1_entity2
+ * \param [in]   dentity1_entity2      is array is signed
+ * \param [in]   dentity2_entity1_idx
+ * \param [in]   dentity2_entity1
+ */
 void
 PDM_deduce_dual_connectivity
 (
