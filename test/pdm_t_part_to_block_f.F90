@@ -41,13 +41,17 @@ program testf
 
   real(c_double), parameter :: part_active_node = 1.d0
 
+  integer (kind = pdm_g_num_s), pointer :: gnum_elt(:)
   type(c_ptr), pointer     :: cptr_gnum_elt(:)
   type(c_ptr)              :: cptr_cptr_gnum_elt
-  type(c_ptr), pointer     :: cptr_weight(:)
-  type(c_ptr)              :: cptr_cptr_weight
+
+  !type(c_ptr), pointer     :: cptr_weight(:)
+  type(c_ptr)              :: cptr_cptr_weight ! Without weight for this case
+
   integer(c_int), pointer   :: n_elt(:)
   type(c_ptr)              :: cptr_n_elt
 
+  integer(c_int), parameter :: n_elt_case = 5
   integer(c_int), parameter :: n_part = 1
   integer(c_int), parameter :: fComm = MPI_COMM_WORLD
   type(c_ptr)              :: ptb
@@ -72,6 +76,7 @@ program testf
   type(c_ptr)          :: cptr_block_stride !  c_ptr of C array containing block stride
                                             ! (NULL for this case)
   type(c_ptr)          :: cptr_block_data  ! c_ptr of C array containing block data
+  integer(c_int), pointer :: block_data(:)
 
   integer(c_int)            :: size_highest_block
 
@@ -89,6 +94,23 @@ program testf
     stop
   end if
 
+  allocate(cptr_gnum_elt(n_part))
+  allocate(gnum_elt(n_elt_case))
+  gnum_elt(1) = 3
+  gnum_elt(2) = 5
+  gnum_elt(3) = 2
+  gnum_elt(4) = 4
+  gnum_elt(5) = 1
+
+  cptr_gnum_elt(1) = c_loc(gnum_elt)
+  cptr_cptr_gnum_elt = c_loc(cptr_gnum_elt)
+
+  cptr_cptr_weight = C_NULL_PTR
+
+  allocate(n_elt(n_part))
+  n_elt(1) = n_elt_case
+  cptr_n_elt = c_loc(n_elt)
+
   ptb = PDM_part_to_block_create(t_distrib, &
                                  t_post, &
                                  part_active_node,&
@@ -104,9 +126,17 @@ program testf
   cptr_block_stride = C_NULL_PTR
   cptr_block_data = C_NULL_PTR
 
-  part_data => NULL()
-  cptr_part_data => NULL()
+  allocate(part_data(n_elt_case))
+  part_data(1) = 13
+  part_data(2) = 15
+  part_data(3) = 12
+  part_data(4) = 14
+  part_data(5) = 11
 
+  allocate(cptr_part_data(n_part))
+  cptr_part_data(1) = c_loc(part_data)
+
+  cptr_cptr_part_data = c_loc(cptr_part_data)
 
   size_highest_block = PDM_part_to_block_exch (ptb,&
                                                s_data, &
@@ -117,7 +147,16 @@ program testf
                                                cptr_block_stride, &
                                                cptr_block_data)
 
+  call c_f_pointer(cptr_block_data, block_data, [n_elt_case])
+  print *, block_data(1), block_data(2), block_data(3), block_data(4), block_data(5)
+
   ptb = PDM_part_to_block_free (ptb)
+
+  deallocate(cptr_part_data)
+  deallocate(part_data)
+  deallocate(n_elt)
+  deallocate(cptr_gnum_elt)
+  deallocate(gnum_elt)
 
   call mpi_finalize(code)
 
