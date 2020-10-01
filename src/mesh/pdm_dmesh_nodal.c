@@ -2494,7 +2494,7 @@ const int   hdl
 
 
   /* Compress connectivity in place */
-  PDM_para_graph_compress_connectivity2(mesh->n_dcell,
+  PDM_para_graph_compress_connectivity(mesh->n_dcell,
                                         mesh->dcell_face_idx,
                                         blk_cell_face_n,
                                         mesh->dcell_face);

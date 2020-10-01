@@ -43,7 +43,7 @@ MPI_TEST_CASE("[1p] pdm_dconnectivity_transform dcell_face + dface_vtx = dcell_v
 
   int*         dvtx_cell_idx;
   PDM_g_num_t* dvtx_cell;
-  PDM_deduce_dual_connectivity(pdm_comm,
+  PDM_dconnectivity_transpose(pdm_comm,
                                cell_distrib,
                                vtx_distrib,
                                dcell_vtx_idx,
@@ -54,7 +54,7 @@ MPI_TEST_CASE("[1p] pdm_dconnectivity_transform dcell_face + dface_vtx = dcell_v
 
   // int*         dcell_vtx_idx_2;
   // PDM_g_num_t* dcell_vtx_2;
-  // PDM_deduce_dual_connectivity(pdm_comm,
+  // PDM_dconnectivity_transpose(pdm_comm,
   //                              vtx_distrib,
   //                              cell_distrib,
   //                              dvtx_cell_idx,
@@ -139,7 +139,7 @@ MPI_TEST_CASE("[2p] pdm_dconnectivity_transform dcell_face + dface_vtx = dcell_v
 
   // int*         dvtx_cell_idx;
   // PDM_g_num_t* dvtx_cell;
-  // PDM_deduce_dual_connectivity(pdm_comm,
+  // PDM_dconnectivity_transpose(pdm_comm,
   //                              cell_distrib,
   //                              vtx_distrib,
   //                              dcell_vtx_idx,

@@ -142,6 +142,9 @@ _deduce_combine_connectivity_impl
              (void ***)  &pentity2_vtx);
   free(dentity2_entity3_n);
 
+  /*
+   * Panic Verbose
+   */
   // int* pentity2_vtx_idx = (int*) malloc( (dentity1_entity2_idx[dn_entity1] + 1) * sizeof(int));
   // pentity2_vtx_idx[0] = 0;
   // for(int i = 0; i < dentity1_entity2_idx[dn_entity1]; ++i) {
@@ -171,8 +174,6 @@ _deduce_combine_connectivity_impl
   free(pentity2_vtx_n);
 
 }
-
-
 
 /*=============================================================================
  * Public function definitions
@@ -260,7 +261,7 @@ PDM_deduce_combine_connectivity
   // PDM_log_trace_array_int(_dentity1_entity3_idx, dn_entity1+1, "_dentity1_entity3_idx::");
   // PDM_log_trace_array_int(dentity1_entity3_n  , dn_entity1  , "dentity1_entity3_n::");
 
-  PDM_para_graph_compress_connectivity2(dn_entity1, _dentity1_entity3_idx, dentity1_entity3_n, _dentity1_entity3);
+  PDM_para_graph_compress_connectivity(dn_entity1, _dentity1_entity3_idx, dentity1_entity3_n, _dentity1_entity3);
 
   /*
    * Realloc
@@ -271,20 +272,115 @@ PDM_deduce_combine_connectivity
   // PDM_log_trace_array_int (dentity1_entity3_n   , dn_entity1                , "after -> dentity1_entity3_n::");
   // PDM_log_trace_array_long(_dentity1_entity3    , _dentity1_entity3_idx[dn_entity1], "after -> dentity1_entity3::");
 
-  // /*
-  //  * Free
-  //  */
-  // free(pentity2_vtx_n[0]);
-  // free(pentity2_vtx_n);
-  // free(dentity1_entity3_n);
-  // free(pentity2_vtx_idx);
-  // free(pentity2_vtx);
-
+  /*
+   * Free
+   */
   free(dentity1_entity3_n);
-
-  // *dentity1_entity3 = _dentity1_entity3;
 }
 
+
+/**
+ *
+ * \brief Compute the combine connectivty of entity1 with entity2 to entity3
+ *
+ * \param [in]   comm                  PDM_MPI communicator
+ * \param [in]   entity1_distrib       distribution of entity1 over the procs (size=n_rank+1)
+ * \param [in]   entity2_distrib       distribution of entity2 over the procs (size=n_rank+1)
+ * \param [in]   dentity1_entity2_idx
+ * \param [in]   dentity1_entity2
+ * \param [in]   dentity1_entity2      is array is signed
+ * \param [in]   dentity2_entity1_idx
+ * \param [in]   dentity2_entity1
+ * \param [in]   dentity1_entity3_idx
+ * \param [in]   dentity1_entity3
+ */
+void
+PDM_deduce_combine_connectivity_dual
+(
+ const PDM_MPI_Comm     comm,
+ const PDM_g_num_t     *entity1_distrib,
+ const PDM_g_num_t     *entity2_distrib,
+ const int             *dentity1_entity2_idx,
+ const PDM_g_num_t     *dentity1_entity2,
+ const int             *dentity2_entity3_idx,
+ const PDM_g_num_t     *dentity2_entity3,
+ const int              is_signed,
+       PDM_g_num_t    **dentity1_entity3_idx,
+       PDM_g_num_t    **dentity1_entity3
+)
+{
+  int* pentity1_entity3_n;
+  _deduce_combine_connectivity_impl(comm,
+                                    entity1_distrib,
+                                    entity2_distrib,
+                                    dentity1_entity2_idx,
+                                    dentity1_entity2,
+                                    dentity2_entity3_idx,
+                                    dentity2_entity3,
+                                    is_signed,
+                                    &pentity1_entity3_n,
+                                    dentity1_entity3);
+
+  PDM_g_num_t* _dentity1_entity3 = *dentity1_entity3;
+
+  int i_rank, n_rank;
+
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  PDM_MPI_Comm_size(comm, &n_rank);
+
+  int dn_entity1 = entity1_distrib[i_rank+1] - entity1_distrib[i_rank];
+
+  /*
+   * Post-treat
+   */
+  *dentity1_entity3_idx = (PDM_g_num_t*) malloc( (dn_entity1 + 1) * sizeof(PDM_g_num_t));
+  int* _dentity1_entity3_idx = *dentity1_entity3_idx;
+  int*  dentity1_entity3_n   = (PDM_g_num_t*) malloc( (dn_entity1    ) * sizeof(PDM_g_num_t));
+
+  int idx = 0;
+  _dentity1_entity3_idx[0] = 0;
+  for(int i_entity1 = 0; i_entity1 < dn_entity1; ++i_entity1) {
+
+    dentity1_entity3_n   [i_entity1  ] = 0;
+    _dentity1_entity3_idx[i_entity1+1] = _dentity1_entity3_idx[i_entity1];
+
+    int n_entity2_per_entity1 = dentity1_entity2_idx[i_entity1+1] - dentity1_entity2_idx[i_entity1];
+    // printf("n_entity2_per_entity1::%i\n", n_entity2_per_entity1);
+
+    for(int i_entity2 = 0; i_entity2 < n_entity2_per_entity1; ++i_entity2) {
+      _dentity1_entity3_idx[i_entity1+1] += (PDM_g_num_t) pentity1_entity3_n[idx];
+      dentity1_entity3_n[i_entity1]      += (PDM_g_num_t) pentity1_entity3_n[idx++];
+    }
+  }
+  // printf("idx::%i\n", idx);
+  // printf("dentity1_entity2_idx[dn_entity1]::%i\n", dentity1_entity2_idx[dn_entity1]);
+
+  assert(idx == dentity1_entity2_idx[dn_entity1]);
+  free(pentity1_entity3_n);
+
+  // PDM_log_trace_array_int(_dentity1_entity3_idx, dn_entity1+1, "_dentity1_entity3_idx::");
+  // PDM_log_trace_array_int(dentity1_entity3_n  , dn_entity1  , "dentity1_entity3_n::");
+
+  PDM_para_graph_compress_connectivity_dual(dn_entity1,
+                                            entity1_distrib[i_rank],
+                                            _dentity1_entity3_idx,
+                                            dentity1_entity3_n,
+                                            _dentity1_entity3);
+
+  /*
+   * Realloc
+   */
+  _dentity1_entity3 = (PDM_g_num_t *) realloc(_dentity1_entity3, sizeof(PDM_g_num_t) * _dentity1_entity3_idx[dn_entity1] );
+
+  // PDM_log_trace_array_int (_dentity1_entity3_idx, dn_entity1+1              , "after -> _dentity1_entity3_idx::");
+  // PDM_log_trace_array_int (dentity1_entity3_n   , dn_entity1                , "after -> dentity1_entity3_n::");
+  // PDM_log_trace_array_long(_dentity1_entity3    , _dentity1_entity3_idx[dn_entity1], "after -> dentity1_entity3::");
+
+  /*
+   * Free
+   */
+  free(dentity1_entity3_n);
+}
 
 /**
  *
@@ -300,7 +396,7 @@ PDM_deduce_combine_connectivity
  * \param [in]   dentity2_entity1
  */
 void
-PDM_deduce_dual_connectivity
+PDM_dconnectivity_transpose
 (
  const PDM_MPI_Comm     comm,
  const PDM_g_num_t     *entity1_distrib,
@@ -408,7 +504,7 @@ PDM_deduce_dual_connectivity
   // PDM_log_trace_array_long(dentity2_entity1_n, dn_entity2_recv, "Before : dentity2_entity1_n::");
   // PDM_log_trace_array_long(recv_data, blk_size, "Before : recv_data::");
 
-  PDM_para_graph_compress_connectivity2(dn_entity2_recv,
+  PDM_para_graph_compress_connectivity(dn_entity2_recv,
                                         _dentity2_entity1_idx,
                                         dentity2_entity1_n,
                                         recv_data);

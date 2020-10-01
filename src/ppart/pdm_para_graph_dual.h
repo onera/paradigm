@@ -56,12 +56,13 @@ typedef enum {
  *
  */
 void
-PDM_para_graph_compress_connectivity
+PDM_para_graph_compress_connectivity_dual
 (
- int          n_node,
- PDM_g_num_t *dual_graph_idx,
- const int   *dual_graph_n,
- PDM_g_num_t *dual_graph
+      int          n_node,
+      PDM_g_num_t  shift_rank,
+      PDM_g_num_t *dual_graph_idx,
+const int         *dual_graph_n,
+      PDM_g_num_t *dual_graph
 );
 
 /**
@@ -76,12 +77,12 @@ PDM_para_graph_compress_connectivity
  *
  */
 void
-PDM_para_graph_compress_connectivity2
+PDM_para_graph_compress_connectivity
 (
- int          n_node,
- int         *dual_graph_idx,
- const int   *dual_graph_n,
- PDM_g_num_t *dual_graph
+      int          n_node,
+      int         *dual_graph_idx,
+const int         *dual_graph_n,
+      PDM_g_num_t *dual_graph
 );
 
 /**
@@ -113,15 +114,15 @@ PDM_para_graph_compress_connectivity2
 void
 PDM_para_graph_dual_from_arc2node
 (
- const PDM_MPI_Comm     comm,
- const PDM_g_num_t     *graph_node_distrib,
- const PDM_g_num_t     *graph_arc_distrib,
- const PDM_g_num_t     *darc_to_node,
-       PDM_g_num_t    **dual_graph_idx,
-       PDM_g_num_t    **dual_graph,
- const int              compute_dnode_to_arc,
-       int            **dnode_to_arc_idx,
-       PDM_g_num_t    **dnode_to_arc
+const PDM_MPI_Comm     comm,
+const PDM_g_num_t     *graph_node_distrib,
+const PDM_g_num_t     *graph_arc_distrib,
+const PDM_g_num_t     *darc_to_node,
+      PDM_g_num_t    **dual_graph_idx,
+      PDM_g_num_t    **dual_graph,
+const int              compute_dnode_to_arc,
+      int            **dnode_to_arc_idx,
+      PDM_g_num_t    **dnode_to_arc
 );
 
 
@@ -145,14 +146,13 @@ PDM_para_graph_dual_from_arc2node
 void
 PDM_para_graph_dual_from_node2arc
 (
- const PDM_MPI_Comm     comm,
- const PDM_g_num_t     *graph_node_distrib,
- const PDM_g_num_t     *graph_arc_distrib,
- const int             *dnode_arc_idx,
- const PDM_g_num_t     *dnode_arc,
-       PDM_g_num_t    **dual_graph_idx,
-       PDM_g_num_t    **dual_graph
-
+const PDM_MPI_Comm     comm,
+const PDM_g_num_t     *graph_node_distrib,
+const PDM_g_num_t     *graph_arc_distrib,
+const int             *dnode_arc_idx,
+const PDM_g_num_t     *dnode_arc,
+      PDM_g_num_t    **dual_graph_idx,
+      PDM_g_num_t    **dual_graph
 );
 
 /**
@@ -174,31 +174,31 @@ PDM_para_graph_dual_from_node2arc
 void
 PDM_para_graph_split
 (
- const PDM_split_dual_t  split_method,
- const PDM_g_num_t      *graph_node_distrib,
- const PDM_g_num_t      *dual_graph_idx,
- const PDM_g_num_t      *dual_graph,
- const int              *node_weight,
- const int              *arc_weight,
- const int               n_part,
- const double           *part_fraction,
- int                    *node_part_id,
- const PDM_MPI_Comm      comm
+const PDM_split_dual_t  split_method,
+const PDM_g_num_t      *graph_node_distrib,
+const PDM_g_num_t      *dual_graph_idx,
+const PDM_g_num_t      *dual_graph,
+const int              *node_weight,
+const int              *arc_weight,
+const int               n_part,
+const double           *part_fraction,
+      int              *node_part_id,
+const PDM_MPI_Comm      comm
 );
 
 void
 PDM_para_graph_dual_from_combine_connectivity
 (
- const PDM_MPI_Comm     comm,
- const PDM_g_num_t     *cell_distrib,
- const PDM_g_num_t     *face_distrib,
- const PDM_g_num_t     *vtx_distrib,
- const int             *dcell_face_idx,
- const PDM_g_num_t     *dcell_face,
- const int             *dface_vtx_idx,
- const PDM_g_num_t     *dface_vtx,
-       PDM_g_num_t    **dual_graph_idx,
-       PDM_g_num_t    **dual_graph
+const PDM_MPI_Comm     comm,
+const PDM_g_num_t     *cell_distrib,
+const PDM_g_num_t     *face_distrib,
+const PDM_g_num_t     *vtx_distrib,
+const int             *dcell_face_idx,
+const PDM_g_num_t     *dcell_face,
+const int             *dface_vtx_idx,
+const PDM_g_num_t     *dface_vtx,
+      PDM_g_num_t    **dual_graph_idx,
+      PDM_g_num_t    **dual_graph
 );
 
 #ifdef __cplusplus

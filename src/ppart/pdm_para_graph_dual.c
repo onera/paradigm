@@ -73,7 +73,7 @@ extern "C" {
 /**
  *
  * \brief Compress the connectivity of a graph, ie remove the multiple arcs connecting
- *        the same two nodes (if any).
+ *        the same two nodes (if any) and remove occurence of the current line
  *
  * \param [in]    n_node            (local) number of nodes in the graph
  * \param [inout] dual_graph_idx    Node to node connectivity indexes (size=n_node+1)
@@ -82,12 +82,13 @@ extern "C" {
  *
  */
 void
-PDM_para_graph_compress_connectivity
+PDM_para_graph_compress_connectivity_dual
 (
- int          n_node,
- PDM_g_num_t *dual_graph_idx,
- const int   *dual_graph_n,
- PDM_g_num_t *dual_graph
+      int          n_node,
+      PDM_g_num_t  shift_rank,
+      PDM_g_num_t *dual_graph_idx,
+const int         *dual_graph_n,
+      PDM_g_num_t *dual_graph
 )
 {
   int idx_comp  = 0; /* Compressed index use to fill the buffer */
@@ -109,6 +110,16 @@ PDM_para_graph_compress_connectivity
 
     int n_cell_connect_comp = PDM_inplace_unique_long(dual_graph, idx_comp, end_connect);
     // printf(" n_cell_connect:: %d | n_cell_connect_comp:: %d \n", n_cell_connect, n_cell_connect_comp);
+
+    PDM_g_num_t g_num = i + shift_rank;
+    int ipos = PDM_binary_search_long(g_num, &dual_graph[idx_comp], n_cell_connect_comp);
+    // printf("g_num : "PDM_FMT_G_NUM" | --> ipos::%i\n", g_num, ipos);
+
+    if( ipos != -1 ) { /* So the global number of current line appears */
+      // printf(" Suppress : "PDM_FMT_G_NUM"\n", dual_graph[idx_comp+ipos]);
+      dual_graph[idx_comp+ipos] = dual_graph[idx_comp+n_cell_connect_comp-1];
+      n_cell_connect_comp--;
+    }
 
     if(n_cell_connect_comp < n_cell_connect) {
       need_shift = 1;
@@ -136,12 +147,12 @@ PDM_para_graph_compress_connectivity
  *
  */
 void
-PDM_para_graph_compress_connectivity2
+PDM_para_graph_compress_connectivity
 (
- int          n_node,
- int         *dual_graph_idx,
- const int   *dual_graph_n,
- PDM_g_num_t *dual_graph
+      int          n_node,
+      int         *dual_graph_idx,
+const int         *dual_graph_n,
+      PDM_g_num_t *dual_graph
 )
 {
   int idx_comp  = 0; /* Compressed index use to fill the buffer */
@@ -207,15 +218,15 @@ PDM_para_graph_compress_connectivity2
 void
 PDM_para_graph_dual_from_arc2node
 (
- const PDM_MPI_Comm     comm,
- const PDM_g_num_t     *graph_node_distrib,
- const PDM_g_num_t     *graph_arc_distrib,
- const PDM_g_num_t     *darc_to_node,
-       PDM_g_num_t    **dual_graph_idx,
-       PDM_g_num_t    **dual_graph,
- const int              compute_dnode_to_arc,
-       int            **dnode_to_arc_idx,
-       PDM_g_num_t    **dnode_to_arc
+const PDM_MPI_Comm     comm,
+const PDM_g_num_t     *graph_node_distrib,
+const PDM_g_num_t     *graph_arc_distrib,
+const PDM_g_num_t     *darc_to_node,
+      PDM_g_num_t    **dual_graph_idx,
+      PDM_g_num_t    **dual_graph,
+const int              compute_dnode_to_arc,
+      int            **dnode_to_arc_idx,
+      PDM_g_num_t    **dnode_to_arc
 )
 {
   int i_rank;
@@ -432,16 +443,19 @@ PDM_para_graph_dual_from_arc2node
    *   We do it inplace cause unique will always have inferior size of complete array
    *
    */
-
-  PDM_para_graph_compress_connectivity(n_node_block, _dual_graph_idx, node_node_n, _dual_graph);
+  PDM_para_graph_compress_connectivity_dual(n_node_block,
+                                            graph_node_distrib[i_rank],
+                                            _dual_graph_idx,
+                                            node_node_n,
+                                            _dual_graph);
 
   free(node_node_n);
 
   /*
    * Realloc
    */
-  *dual_graph     = (PDM_g_num_t *) realloc(*dual_graph, sizeof(PDM_g_num_t) * _dual_graph_idx[n_node_block] );
-  _dual_graph     = (PDM_g_num_t *) *dual_graph;
+  *dual_graph = (PDM_g_num_t *) realloc(*dual_graph, sizeof(PDM_g_num_t) * _dual_graph_idx[n_node_block] );
+  _dual_graph = (PDM_g_num_t *) *dual_graph;
 
   // For now we can change it later
   printf("n_node_block::%d \n", n_node_block);
@@ -584,14 +598,13 @@ PDM_para_graph_dual_from_arc2node
 void
 PDM_para_graph_dual_from_node2arc
 (
- const PDM_MPI_Comm     comm,
- const PDM_g_num_t     *graph_node_distrib,
- const PDM_g_num_t     *graph_arc_distrib,
- const int             *dnode_arc_idx,
- const PDM_g_num_t     *dnode_arc,
-       PDM_g_num_t    **dual_graph_idx,
-       PDM_g_num_t    **dual_graph
-
+const PDM_MPI_Comm     comm,
+const PDM_g_num_t     *graph_node_distrib,
+const PDM_g_num_t     *graph_arc_distrib,
+const int             *dnode_arc_idx,
+const PDM_g_num_t     *dnode_arc,
+      PDM_g_num_t    **dual_graph_idx,
+      PDM_g_num_t    **dual_graph
 )
 {
   int i_rank;
@@ -751,16 +764,16 @@ PDM_para_graph_dual_from_node2arc
 void
 PDM_para_graph_dual_from_combine_connectivity
 (
- const PDM_MPI_Comm     comm,
- const PDM_g_num_t     *cell_distrib,
- const PDM_g_num_t     *face_distrib,
- const PDM_g_num_t     *vtx_distrib,
- const int             *dcell_face_idx,
- const PDM_g_num_t     *dcell_face,
- const int             *dface_vtx_idx,
- const PDM_g_num_t     *dface_vtx,
-       PDM_g_num_t    **dual_graph_idx,
-       PDM_g_num_t    **dual_graph
+const PDM_MPI_Comm   comm,
+const PDM_g_num_t   *cell_distrib,
+const PDM_g_num_t   *face_distrib,
+const PDM_g_num_t   *vtx_distrib,
+const int           *dcell_face_idx,
+const PDM_g_num_t   *dcell_face,
+const int           *dface_vtx_idx,
+const PDM_g_num_t   *dface_vtx,
+      PDM_g_num_t  **dual_graph_idx,
+      PDM_g_num_t  **dual_graph
 )
 {
   int i_rank;
@@ -801,7 +814,7 @@ PDM_para_graph_dual_from_combine_connectivity
 
   int*         dvtx_cell_idx;
   PDM_g_num_t* dvtx_cell;
-  PDM_deduce_dual_connectivity(comm,
+  PDM_dconnectivity_transpose(comm,
                                cell_distrib,
                                vtx_distrib,
                                dcell_vtx_idx,
@@ -823,16 +836,16 @@ PDM_para_graph_dual_from_combine_connectivity
   /*
    * Call the standard fonction : arc = vtx , node = cell
    */
-  PDM_deduce_combine_connectivity(comm,
-                                  cell_distrib,
-                                  vtx_distrib,
-                                  dcell_vtx_idx,
-                                  dcell_vtx,
-                                  dvtx_cell_idx,
-                                  dvtx_cell,
-                                  0,
-                                  dual_graph_idx,
-                                  dual_graph);
+  PDM_deduce_combine_connectivity_dual(comm,
+                                       cell_distrib,
+                                       vtx_distrib,
+                                       dcell_vtx_idx,
+                                       dcell_vtx,
+                                       dvtx_cell_idx,
+                                       dvtx_cell,
+                                       0,
+                                       dual_graph_idx,
+                                       dual_graph);
 
   free(dcell_vtx);
   free(dcell_vtx_idx);
@@ -857,34 +870,34 @@ PDM_para_graph_dual_from_combine_connectivity
   /*
    * Patch
    */
-  int* _dual_comp_graph_idx = (int *) malloc( dn_cell * sizeof(int));
-  PDM_g_num_t* _dual_comp_graph = (PDM_g_num_t *) malloc( _dual_graph_idx[dn_cell] * sizeof(PDM_g_num_t));
+  // int* _dual_comp_graph_idx = (int *) malloc( dn_cell * sizeof(int));
+  // PDM_g_num_t* _dual_comp_graph = (PDM_g_num_t *) malloc( _dual_graph_idx[dn_cell] * sizeof(PDM_g_num_t));
 
-  _dual_comp_graph_idx[0] = 0;
-  for(int i_entity = 0; i_entity < dn_cell; ++i_entity) {
-    PDM_g_num_t g_num = i_entity + cell_distrib[i_rank];
-    _dual_comp_graph_idx[i_entity+1] = _dual_comp_graph_idx[i_entity];
-    for(int j = _dual_graph_idx[i_entity]; j < _dual_graph_idx[i_entity+1]; ++j) {
-      if(_dual_graph[j] != g_num-1) {
-        _dual_comp_graph[_dual_comp_graph_idx[i_entity+1]++] = _dual_graph[j];
-      }
-    }
-  }
+  // _dual_comp_graph_idx[0] = 0;
+  // for(int i_entity = 0; i_entity < dn_cell; ++i_entity) {
+  //   PDM_g_num_t g_num = i_entity + cell_distrib[i_rank];
+  //   _dual_comp_graph_idx[i_entity+1] = _dual_comp_graph_idx[i_entity];
+  //   for(int j = _dual_graph_idx[i_entity]; j < _dual_graph_idx[i_entity+1]; ++j) {
+  //     if(_dual_graph[j] != g_num-1) {
+  //       _dual_comp_graph[_dual_comp_graph_idx[i_entity+1]++] = _dual_graph[j];
+  //     }
+  //   }
+  // }
 
   // PDM_log_trace_array_int (_dual_graph_n  , dn_cell                 , "PDM_para_graph_dual_from_combine_connectivity::_dual_graph_n::");
-  PDM_log_trace_array_int (_dual_comp_graph_idx, dn_cell+1               , "PDM_para_graph_dual_from_combine_connectivity::_dual_comp_graph_idx::");
-  PDM_log_trace_array_long(_dual_comp_graph    , _dual_comp_graph_idx[dn_cell], "PDM_para_graph_dual_from_combine_connectivity::_dual_comp_graph::");
+  // PDM_log_trace_array_int (_dual_comp_graph_idx, dn_cell+1               , "PDM_para_graph_dual_from_combine_connectivity::_dual_comp_graph_idx::");
+  // PDM_log_trace_array_long(_dual_comp_graph    , _dual_comp_graph_idx[dn_cell], "PDM_para_graph_dual_from_combine_connectivity::_dual_comp_graph::");
 
   /*
    * Realloc
    */
-  free(_dual_graph);
-  free(_dual_graph_idx);
+  // free(_dual_graph);
+  // free(_dual_graph_idx);
 
-  _dual_comp_graph = (int *) realloc(_dual_comp_graph, _dual_comp_graph_idx[dn_cell] * sizeof(PDM_g_num_t));
+  // _dual_comp_graph = (int *) realloc(_dual_comp_graph, _dual_comp_graph_idx[dn_cell] * sizeof(PDM_g_num_t));
 
-  *dual_graph_idx = _dual_comp_graph_idx;
-  *dual_graph     = _dual_comp_graph;
+  // *dual_graph_idx = _dual_comp_graph_idx;
+  // *dual_graph     = _dual_comp_graph;
 
 
   free(_dual_graph_n);
@@ -909,16 +922,16 @@ PDM_para_graph_dual_from_combine_connectivity
 void
 PDM_para_graph_split
 (
- const PDM_split_dual_t  split_method,
- const PDM_g_num_t      *graph_node_distrib,
- const PDM_g_num_t      *dual_graph_idx,
- const PDM_g_num_t      *dual_graph,
- const int              *node_weight,
- const int              *arc_weight,
- const int               n_part,
- const double           *part_fraction,
- int                    *node_part_id,
- const PDM_MPI_Comm      comm
+const PDM_split_dual_t  split_method,
+const PDM_g_num_t      *graph_node_distrib,
+const PDM_g_num_t      *dual_graph_idx,
+const PDM_g_num_t      *dual_graph,
+const int              *node_weight,
+const int              *arc_weight,
+const int               n_part,
+const double           *part_fraction,
+      int              *node_part_id,
+const PDM_MPI_Comm      comm
 )
 {
   int i_rank;
