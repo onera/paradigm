@@ -215,7 +215,9 @@ program testf
 
 
   do i = 1, n_local_points_tgt
-    print *, "Closest points for ", gnum_tgt(i), ":", closest_src_gnum(2*(i-1)+1),"/", closest_src_distance(2*(i-1)+1), " and ", closest_src_gnum(2*(i-1)+2),"/", closest_src_distance(2*(i-1)+2)
+    print *, "Closest points for ", gnum_tgt(i), ":", closest_src_gnum(2*(i-1)+1),&
+         "/", closest_src_distance(2*(i-1)+1), " and ", closest_src_gnum(2*(i-1)+2)&
+         ,"/", closest_src_distance(2*(i-1)+2)
 
   end do
 

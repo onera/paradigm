@@ -725,7 +725,7 @@ _neighbour
 
   PDM_morton_code_t *neighbour = NULL;
 
-  if (((_direction > 0) && (code.X[dim] < ((1 << code.L) - 1))) ||
+  if (((_direction > 0) && (code.X[dim] < (unsigned int) ((1 << code.L) - 1))) ||
       ((_direction < 0) && (code.X[dim] > 0))) {
 
     neighbour = malloc(sizeof(PDM_morton_code_t));
