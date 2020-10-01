@@ -1015,6 +1015,46 @@ PDM_mesh_location_cloud_set
 
 /**
  *
+ * \brief Get a point cloud
+ *
+ * \param [in]   id              Identifier
+ * \param [in]   i_point_cloud   Index of point cloud
+ * \param [in]   i_part          Index of partition
+ * \param [out]   n_points        Number of points
+ * \param [out]   coords          Point coordinates
+ * \param [out]   gnum            Point global number
+ *
+ */
+
+void
+PDM_mesh_location_cloud_get
+(
+ const int           id,
+ const int           i_point_cloud,
+ const int           i_part,
+       int          *n_points,
+       double      **coords,
+       PDM_g_num_t **gnum
+)
+{
+  _PDM_location_t *mesh_location = _get_from_id (id);
+
+  assert (mesh_location->point_clouds != NULL);
+  assert (i_point_cloud < mesh_location->n_point_cloud);
+
+  _point_cloud_t *pcloud = mesh_location->point_clouds + i_point_cloud;
+
+  assert (i_part < pcloud->n_part);
+
+  *n_points        = pcloud->n_points[i_part];
+  *coords          = pcloud->coords[i_part];
+  *gnum            = pcloud->gnum[i_part];
+}
+
+
+
+/**
+ *
  * \brief Set the mesh nodal
  *
  * \param [in]   id             Identifier
@@ -1303,9 +1343,6 @@ PDM_mesh_location_get
  const int     id,
  const int     i_point_cloud,
  const int     i_part,
- int          *n_points,
- double      **coord,
- PDM_g_num_t **g_num,
  PDM_g_num_t **location,
  int         **weights_idx,
  double      **weights,
@@ -1321,9 +1358,6 @@ PDM_mesh_location_get
 
   assert (i_part < pcloud->n_part);
 
-  *n_points        = pcloud->n_points[i_part];
-  *coord           = pcloud->coords[i_part];
-  *g_num           = pcloud->gnum[i_part];
   *location        = pcloud->location[i_part];
   *weights_idx     = pcloud->weights_idx[i_part];
   *weights         = pcloud->weights[i_part];
@@ -1734,6 +1768,8 @@ PDM_mesh_location_compute
      * Get points inside bounding boxes of elements
      */
 
+    double *global_extents = NULL;// --> global extents of mesh + points to locate?
+
     switch (location->method) {
 
     case PDM_MESH_LOCATION_OCTREE:
@@ -1752,7 +1788,6 @@ PDM_mesh_location_compute
                                        pcloud_g_num);
 
       /* Build parallel octree */
-      double *global_extents = NULL;// --> global extents of mesh + points to locate?
       PDM_para_octree_build (octree_id, global_extents);
       //PDM_para_octree_dump (octree_id);
       //PDM_para_octree_dump_times (octree_id);

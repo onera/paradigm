@@ -107,6 +107,31 @@ PDM_mesh_location_cloud_set
 
 /**
  *
+ * \brief Get a point cloud
+ *
+ * \param [in]   id              Identifier
+ * \param [in]   i_point_cloud   Index of point cloud
+ * \param [in]   i_part          Index of partition
+ * \param [out]   n_points        Number of points
+ * \param [out]   coords          Point coordinates
+ * \param [out]   gnum            Point global number
+ *
+ */
+
+void
+PDM_mesh_location_cloud_get
+(
+ const int           id,
+ const int           i_point_cloud,
+ const int           i_part,
+       int          *n_points,
+       double      **coords,
+       PDM_g_num_t **gnum
+);
+
+
+/**
+ *
  * \brief Set the mesh nodal
  *
  * \param [in]   id             Identifier
@@ -287,9 +312,6 @@ PDM_mesh_location_get
  const int     id,
  const int     i_point_cloud,
  const int     i_part,
- int          *n_points,
- double      **coord,
- PDM_g_num_t **g_num,
  PDM_g_num_t **location,
  int         **weights_idx,
  double      **weights,
