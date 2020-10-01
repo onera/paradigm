@@ -902,6 +902,19 @@ PDM_multipart_run_ppart
                                        &dcell_face_idx,
                                        &dcell_face);
 
+      // free(dual_graph_idx);
+      // free(dual_graph);
+      // PDM_para_graph_dual_from_combine_connectivity(_multipart->comm,
+      //                                               cell_distri,
+      //                                               face_distri,
+      //                                               vtx_distri,
+      //                                               dcell_face_idx,
+      //                                               dcell_face,
+      //                                               dface_vtx_idx,
+      //                                               dface_vtx,
+      //                              (PDM_g_num_t**) &dual_graph_idx,
+      //                              (PDM_g_num_t**) &dual_graph);
+
       double *part_fraction = NULL;
       if (_multipart->part_size_method == PDM_PART_SIZE_HETEROGENEOUS){
         int *n_part_per_rank = (int *)    malloc(n_rank * sizeof(int));

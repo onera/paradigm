@@ -352,7 +352,7 @@ int main(int argc, char *argv[])
 
   free(dual_graph_idx);
   free(dual_graph);
-
+  // mpirun -np 2 ./paradigm/test/pdm_t_partitioning_dcube -n 23 -n_part 1 -parmetis
   PDM_para_graph_dual_from_combine_connectivity(comm,
                                                 cell_distribution,
                                                 face_distribution,
@@ -491,7 +491,7 @@ int main(int argc, char *argv[])
              (const int **)  pcell_face,
               (int    ***)  &pface_cell);
 
-  if (1 == 1){
+  if (0 == 1){
     for (int i_part=0; i_part < n_res_part; i_part++){
       PDM_printf("[%i] generated facecell part %i [%i]:", i_rank, i_part, pn_faces[i_part]);
       for (int iface=0 ; iface < pn_faces[i_part]; iface++)

@@ -70,6 +70,7 @@ MPI_TEST_CASE("[1p] pdm_dconnectivity_transform dcell_face + dface_vtx = dcell_v
 MPI_TEST_CASE("[2p] pdm_dconnectivity_transform dcell_face + dface_vtx = dcell_vtx ",2) {
 
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
+  PDM_g_num_t vtx_distrib[3]    = {1, 14, 28};
 
   std::vector<PDM_g_num_t> cell_distrib_p0   = {1, 5, 9};
   std::vector<PDM_g_num_t> face_distrib_p0   = {1, 19, 37};
@@ -133,6 +134,19 @@ MPI_TEST_CASE("[2p] pdm_dconnectivity_transform dcell_face + dface_vtx = dcell_v
 
   MPI_CHECK_EQ_C_ARRAY(1, dcell_vtx_idx, dcell_vtx_idx_expected_p1, dn_cell+1                         );
   MPI_CHECK_EQ_C_ARRAY(1, dcell_vtx    , dcell_vtx_expected_p1    , dcell_vtx_idx_expected_p1[dn_cell]);
+
+  // int*         dvtx_cell_idx;
+  // PDM_g_num_t* dvtx_cell;
+  // PDM_deduce_dual_connectivity(pdm_comm,
+  //                              cell_distrib,
+  //                              vtx_distrib,
+  //                              dcell_vtx_idx,
+  //                              dcell_vtx,
+  //                              0,
+  //                              &dvtx_cell_idx,
+  //                              &dvtx_cell);
+  // free(dvtx_cell_idx);
+  // free(dvtx_cell);
 
   free(dcell_vtx_idx);
   free(dcell_vtx);
