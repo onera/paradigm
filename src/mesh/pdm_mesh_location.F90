@@ -331,7 +331,7 @@ module pdm_mesh_location
       implicit none
 
       integer(c_int), value :: id
-      integer(c_double), value :: tol
+      real(c_double), value :: tol
 
     end subroutine PDM_mesh_location_tolerance_set
 
