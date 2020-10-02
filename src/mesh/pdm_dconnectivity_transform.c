@@ -266,7 +266,8 @@ PDM_deduce_combine_connectivity
   /*
    * Realloc
    */
-  _dentity1_entity3 = (PDM_g_num_t *) realloc(_dentity1_entity3, sizeof(PDM_g_num_t) * _dentity1_entity3_idx[dn_entity1] );
+  *dentity1_entity3 = (PDM_g_num_t *) realloc(*dentity1_entity3, sizeof(PDM_g_num_t) * _dentity1_entity3_idx[dn_entity1] );
+  _dentity1_entity3 = *dentity1_entity3;
 
   // PDM_log_trace_array_int (_dentity1_entity3_idx, dn_entity1+1              , "after -> _dentity1_entity3_idx::");
   // PDM_log_trace_array_int (dentity1_entity3_n   , dn_entity1                , "after -> dentity1_entity3_n::");
@@ -370,7 +371,7 @@ PDM_deduce_combine_connectivity_dual
   /*
    * Realloc
    */
-  _dentity1_entity3 = (PDM_g_num_t *) realloc(_dentity1_entity3, sizeof(PDM_g_num_t) * _dentity1_entity3_idx[dn_entity1] );
+  *dentity1_entity3 = (PDM_g_num_t *) realloc(*dentity1_entity3, sizeof(PDM_g_num_t) * _dentity1_entity3_idx[dn_entity1] );
 
   // PDM_log_trace_array_int (_dentity1_entity3_idx, dn_entity1+1              , "after -> _dentity1_entity3_idx::");
   // PDM_log_trace_array_int (dentity1_entity3_n   , dn_entity1                , "after -> dentity1_entity3_n::");
@@ -466,9 +467,9 @@ PDM_dconnectivity_transpose
     send_stri[i] = 1;
   }
 
-  if(is_signed) {
-    free(ln_to_gn);
-  }
+  // if(is_signed) {
+  //   free(ln_to_gn);
+  // }
 
   int         *dentity2_entity1_n = NULL;
   PDM_g_num_t *recv_data          = NULL;
@@ -511,12 +512,12 @@ PDM_dconnectivity_transpose
   // printf("*dentity2_entity1_idx[dn_entity2_recv]       ::%i\n", _dentity2_entity1_idx[dn_entity2_recv]       );
 
   *dentity2_entity1 = recv_data;
-  PDM_g_num_t* _dentity2_entity1 = *dentity2_entity1;
 
   /*
    * Realloc
    */
-  _dentity2_entity1 = realloc(_dentity2_entity1, _dentity2_entity1_idx[dn_entity2_recv] * sizeof(PDM_g_num_t));
+  *dentity2_entity1 = realloc(*dentity2_entity1, _dentity2_entity1_idx[dn_entity2_recv] * sizeof(PDM_g_num_t));
+  // PDM_g_num_t* _dentity2_entity1 = *dentity2_entity1;
 
   // PDM_log_trace_array_int (_dentity2_entity1_idx, dn_entity2_recv+1         , "_dentity2_entity1_idx::");
   // PDM_log_trace_array_long(recv_data, _dentity2_entity1_idx[dn_entity2_recv], "recv_data::");

@@ -851,11 +851,12 @@ const PDM_g_num_t   *dface_vtx,
   free(dvtx_cell_idx);
   free(dvtx_cell);
 
-  PDM_g_num_t* _dual_graph_idx = *dual_graph_idx;
-  PDM_g_num_t* _dual_graph     = *dual_graph;
 
   // Realloc
-  _dual_graph = (PDM_g_num_t *) realloc(_dual_graph, _dual_graph_idx[dn_cell] * sizeof(PDM_g_num_t));
+  *dual_graph = (PDM_g_num_t *) realloc(*dual_graph, (*dual_graph_idx)[dn_cell] * sizeof(PDM_g_num_t));
+
+  PDM_g_num_t* _dual_graph_idx = *dual_graph_idx;
+  PDM_g_num_t* _dual_graph     = *dual_graph;
 
   // -> Shift by one
   for(int i_entity = 0; i_entity < _dual_graph_idx[dn_cell]; ++i_entity) {
