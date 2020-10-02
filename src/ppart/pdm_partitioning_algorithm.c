@@ -1679,8 +1679,8 @@ PDM_extend_mesh
     dual_graph_n[i] = dual_graph_idx[i+1] - dual_graph_idx[i];
   }
 
-  PDM_log_trace_array_int(dual_graph_idx, dn_arc+1, "dual_graph_idx::");
-  PDM_log_trace_array_long(dual_graph, dual_graph_idx[dn_arc], "dual_graph::");
+  // PDM_log_trace_array_int(dual_graph_idx, dn_arc+1, "dual_graph_idx::");
+  // PDM_log_trace_array_long(dual_graph, dual_graph_idx[dn_arc], "dual_graph::");
 
   /*
    * Exchange
@@ -1703,9 +1703,9 @@ PDM_extend_mesh
     for(int i_entity = 0; i_entity < pn_entity[i_part]; ++i_entity) {
       part_dual_graph_idx[i_part][i_entity+1] = part_dual_graph_idx[i_part][i_entity] + part_dual_graph_n[i_part][i_entity];
     }
-    PDM_log_trace_array_int(part_dual_graph_n[i_part], pn_entity[i_part], "part_dual_graph_n[i_part]::");
-    PDM_log_trace_array_int(part_dual_graph_idx[i_part], pn_entity[i_part]+1, "part_dual_graph_idx[i_part]::");
-    PDM_log_trace_array_long(part_dual_graph[i_part], part_dual_graph_idx[i_part][pn_entity[i_part]], "part_dual_graph[i_part]::");
+    // PDM_log_trace_array_int(part_dual_graph_n[i_part], pn_entity[i_part], "part_dual_graph_n[i_part]::");
+    // PDM_log_trace_array_int(part_dual_graph_idx[i_part], pn_entity[i_part]+1, "part_dual_graph_idx[i_part]::");
+    // PDM_log_trace_array_long(part_dual_graph[i_part], part_dual_graph_idx[i_part][pn_entity[i_part]], "part_dual_graph[i_part]::");
   }
 
   /*
@@ -1722,8 +1722,8 @@ PDM_extend_mesh
   for(int i_part = 0; i_part < n_part; ++i_part) {
 
     int new_size = PDM_inplace_unique_long(part_dual_graph[i_part], 0, part_dual_graph_idx[i_part][pn_entity[i_part]]-1);
-    printf(" new_size         :: %i \n", new_size);
-    printf(" pn_entity[i_part]:: %i \n", pn_entity[i_part]);
+    // printf(" new_size         :: %i \n", new_size);
+    // printf(" pn_entity[i_part]:: %i \n", pn_entity[i_part]);
 
     _pentity_ln_to_gn_extended[i_part] = (PDM_g_num_t *) malloc( new_size * sizeof(PDM_g_num_t));
 
@@ -1757,9 +1757,9 @@ PDM_extend_mesh
       _pentity_ln_to_gn_extended[i_part][i_entity] = pentity_ln_to_gn[i_part][i_entity];
     }
 
-    printf("n_new_cell::%i\n", n_new_cell);
-    PDM_log_trace_array_long(pentity_ln_to_gn[i_part], pn_entity[i_part], "_pentity_ln_to_gn[i_part]::");
-    PDM_log_trace_array_long(_pentity_ln_to_gn_extended[i_part], n_new_cell, "_pentity_ln_to_gn_extended[i_part]::");
+    // printf("n_new_cell::%i\n", n_new_cell);
+    // PDM_log_trace_array_long(pentity_ln_to_gn[i_part], pn_entity[i_part], "_pentity_ln_to_gn[i_part]::");
+    // PDM_log_trace_array_long(_pentity_ln_to_gn_extended[i_part], n_new_cell, "_pentity_ln_to_gn_extended[i_part]::");
 
     // Realloc and setup size
     _pn_entity_extented[i_part] = n_new_cell;
@@ -1777,7 +1777,6 @@ PDM_extend_mesh
   free(part_dual_graph_n);
   free(part_dual_graph_idx);
   free(part_dual_graph);
-  printf("PDM_extend_mesh  \n");
 }
 
 #ifdef __cplusplus

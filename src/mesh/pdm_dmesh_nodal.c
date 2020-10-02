@@ -98,6 +98,443 @@ const PDM_g_num_t *dcell_face_vtx,
 }
 
 /**
+ * \def _get_index_of_face_node_tri
+ * Face from Hexa (CGNS/Ensight manner)
+ *
+ */
+static
+void
+_get_index_of_face_node_tri
+(
+  const int  iface,
+        int* idx,
+        int  offset
+)
+{
+  switch(iface) {
+
+    case 0:        /* F1 -> N1,N2,N3  */
+      idx[0] = 0+offset;
+      idx[1] = 1+offset;
+      idx[2] = 2+offset;
+      break;
+  }
+}
+
+/**
+ * \def _get_index_of_face_node_quad
+ * Face from Hexa (CGNS/Ensight manner)
+ *
+ */
+static
+void
+_get_index_of_face_node_quad
+(
+  const int  iface,
+        int* idx,
+        int  offset
+)
+{
+  switch(iface) {
+
+    case 0:        /* F1 -> N1,N2,N3,N4 */
+      idx[0] = 0+offset;
+      idx[1] = 1+offset;
+      idx[2] = 2+offset;
+      idx[3] = 3+offset;
+      break;
+  }
+}
+
+
+/**
+ * \def _get_index_of_face_node_tetra4
+ * Face from Hexa (CGNS/Ensight manner)
+ *
+ */
+static
+void
+_get_index_of_face_node_tetra4
+(
+  const int  iface,
+        int* idx,
+        int  offset
+)
+{
+  switch(iface) {
+
+    case 0:        /* F1 -> N1,N3,N2  */
+      idx[0] = 0+offset;
+      idx[1] = 2+offset;
+      idx[2] = 1+offset;
+      break;
+
+    case 1:       /* F2 -> N1,N2,N4 */
+      idx[0] = 0+offset;
+      idx[1] = 1+offset;
+      idx[2] = 3+offset;
+      break;
+
+    case 2:       /* F3 -> N2,N3,N4  */
+      idx[0] = 1+offset;
+      idx[1] = 2+offset;
+      idx[2] = 3+offset;
+      break;
+
+    case 3:       /* F4 -> N3,N1,N4  */
+      idx[0] = 2+offset;
+      idx[1] = 0+offset;
+      idx[2] = 3+offset;
+      break;
+
+   default :
+      exit(1);
+  }
+
+}
+
+/**
+ * \def _get_index_of_face_node_pyra5
+ * Face from Hexa (CGNS/Ensight manner)
+ *
+ */
+static
+void
+_get_index_of_face_node_pyra5
+(
+  const int  iface,
+        int* idx,
+        int  offset
+)
+{
+  switch(iface) {
+
+    case 0:        /* F1 -> N1,N4,N3,N2  */
+      idx[0] = 0+offset;
+      idx[1] = 3+offset;
+      idx[2] = 2+offset;
+      idx[3] = 1+offset;
+      break;
+
+    case 1:       /* F2 -> N1,N2,N5 */
+      idx[0] = 0+offset;
+      idx[1] = 1+offset;
+      idx[2] = 4+offset;
+      break;
+
+    case 2:       /* F3 -> N2,N3,N5  */
+      idx[0] = 1+offset;
+      idx[1] = 2+offset;
+      idx[2] = 4+offset;
+      break;
+
+    case 3:       /* F4 -> N3,N4,N5  */
+      idx[0] = 2+offset;
+      idx[1] = 3+offset;
+      idx[2] = 4+offset;
+      break;
+
+    case 4:       /* F5 -> N4,N1,N5   */
+      idx[0] = 3+offset;
+      idx[1] = 0+offset;
+      idx[2] = 4+offset;
+      break;
+
+   default :
+      exit(1);
+  }
+
+}
+
+/**
+ * \def _get_index_of_face_node_penta6
+ * Face from Hexa (CGNS/Ensight manner)
+ *
+ */
+static
+void
+_get_index_of_face_node_penta6
+(
+  const int  iface,
+        int* idx,
+        int  offset
+)
+{
+  switch(iface) {
+
+    case 0:        /* F1 -> N1,N2,N5,N4  */
+      idx[0] = 0+offset;
+      idx[1] = 1+offset;
+      idx[2] = 4+offset;
+      idx[3] = 3+offset;
+      break;
+
+    case 1:       /* F2 -> N2,N3,N6,N5 */
+      idx[0] = 1+offset;
+      idx[1] = 2+offset;
+      idx[2] = 5+offset;
+      idx[3] = 4+offset;
+      break;
+
+    case 2:       /* F3 -> N3,N1,N4,N6   */
+      idx[0] = 2+offset;
+      idx[1] = 0+offset;
+      idx[2] = 3+offset;
+      idx[3] = 5+offset;
+      break;
+
+    case 3:       /* F4 -> N1,N3,N2  */
+      idx[0] = 0+offset;
+      idx[1] = 2+offset;
+      idx[2] = 1+offset;
+      break;
+
+    case 4:       /* F5 -> N4,N5,N6   */
+      idx[0] = 3+offset;
+      idx[1] = 4+offset;
+      idx[2] = 5+offset;
+      break;
+
+   default :
+      exit(1);
+  }
+
+}
+/**
+ * \def _get_index_of_face_node_hexa8
+ * Face from Hexa (CGNS/Ensight manner)
+ *
+ */
+static
+void
+_get_index_of_face_node_hexa8
+(
+  const int  iface,
+        int* idx,
+        int  offset
+)
+{
+  switch(iface) {
+
+    case 0:        /* F1 -> N1,N4,N3,N2  */
+      idx[0] = 0+offset;
+      idx[1] = 3+offset;
+      idx[2] = 2+offset;
+      idx[3] = 1+offset;
+      break;
+
+    case 1:       /* F2 -> N1,N2,N6,N5 */
+      idx[0] = 0+offset;
+      idx[1] = 1+offset;
+      idx[2] = 5+offset;
+      idx[3] = 4+offset;
+      break;
+
+    case 2:       /* F3 -> N2,N3,N7,N6  */
+      idx[0] = 1+offset;
+      idx[1] = 2+offset;
+      idx[2] = 6+offset;
+      idx[3] = 5+offset;
+      break;
+
+    case 3:       /* F4 -> N3,N4,N8,N7  */
+      idx[0] = 2+offset;
+      idx[1] = 3+offset;
+      idx[2] = 7+offset;
+      idx[3] = 6+offset;
+      break;
+
+    case 4:       /* F5 -> N1,N5,N8,N4   */
+      idx[0] = 0+offset;
+      idx[1] = 4+offset;
+      idx[2] = 7+offset;
+      idx[3] = 3+offset;
+      break;
+
+    case 5:       /* F6 -> N5,N6,N7,N8  */
+      idx[0] = 4+offset;
+      idx[1] = 5+offset;
+      idx[2] = 6+offset;
+      idx[3] = 7+offset;
+      break;
+
+   default :
+      exit(1);
+  }
+
+}
+
+/**
+ * \def _get_size_of_element
+ * Return the number of coordinnates to define elements
+ *
+ */
+static
+int
+_get_size_of_element
+(
+  const PDM_Mesh_nodal_elt_t   t_elt
+)
+{
+  switch(t_elt) {
+    case PDM_MESH_NODAL_TRIA3:      /* Tri3   */
+      return 3;
+      break;
+    case PDM_MESH_NODAL_QUAD4:      /* Quad4  */
+      return 4;
+      break;
+    case PDM_MESH_NODAL_TETRA4:     /* Tetra4 */
+      return 4;
+      break;
+    case PDM_MESH_NODAL_PYRAMID5:   /* Pyra5  */
+      return 5;
+      break;
+    case PDM_MESH_NODAL_PRISM6:    /* Penta6 */
+      return 6;
+      break;
+    case PDM_MESH_NODAL_HEXA8:     /* Hexa8  */
+      return 8;
+      break;
+   default :
+      exit(1);
+  }
+}
+
+/**
+ * \def _get_nbface_per_element
+ * Return the number of face to define elements
+ *
+ */
+static
+int
+_get_nbface_per_element
+(
+  const PDM_Mesh_nodal_elt_t t_elt
+)
+{
+  switch(t_elt) {
+    case PDM_MESH_NODAL_TRIA3:
+      return 1;  /* Tri3   */
+      break;
+    case PDM_MESH_NODAL_QUAD4:
+      return 1;  /* Quad4  */
+      break;
+    case PDM_MESH_NODAL_TETRA4:
+      return 4;  /* Tetra4 */
+      break;
+    case PDM_MESH_NODAL_PYRAMID5:
+      return 5;  /* Pyra5  */
+      break;
+    case PDM_MESH_NODAL_PRISM6:     /* Penta6 */
+      return 5;
+      break;
+    case PDM_MESH_NODAL_HEXA8:     /* Hexa8  */
+      return 6;
+      break;
+   default :
+      exit(1);
+  }
+}
+
+/**
+ * \def _get_elmt_info
+ * Return the number of coordinnates to define elements
+ *
+ */
+static
+void _get_elmt_info
+(
+  const PDM_Mesh_nodal_elt_t    t_elt,
+        int                  *  n_vtxpFac,
+        int                  ** tabFacVtx
+)
+{
+  int nFacPerElmt = _get_nbface_per_element(t_elt);
+  switch(t_elt) {
+    case PDM_MESH_NODAL_TRIA3:      /* Tri3   */
+      n_vtxpFac[0] = 3;
+      for(int i=0; i < nFacPerElmt; i++){
+          tabFacVtx[i] = (int *) malloc( sizeof(int *) * n_vtxpFac[i]);
+          _get_index_of_face_node_tri(i, tabFacVtx[i], 0);
+      }
+      break;
+    case PDM_MESH_NODAL_QUAD4:      /* Quad4  */
+      n_vtxpFac[0] = 4;
+      for(int i=0; i < nFacPerElmt; i++){
+          tabFacVtx[i] = (int *) malloc( sizeof(int *) * n_vtxpFac[i]);
+          _get_index_of_face_node_quad(i, tabFacVtx[i], 0);
+      }
+      break;
+    case PDM_MESH_NODAL_TETRA4:     /* Tetra4 */
+      n_vtxpFac[0] = 3;
+      n_vtxpFac[1] = 3;
+      n_vtxpFac[2] = 3;
+      n_vtxpFac[3] = 3;
+      for(int i=0; i < nFacPerElmt; i++){
+          tabFacVtx[i] = (int *) malloc( sizeof(int *) * n_vtxpFac[i]);
+          _get_index_of_face_node_tetra4(i, tabFacVtx[i], 0);
+      }
+      break;
+    case PDM_MESH_NODAL_PYRAMID5:    /* Pyra5  */
+      n_vtxpFac[0] = 4;
+      n_vtxpFac[1] = 3;
+      n_vtxpFac[2] = 3;
+      n_vtxpFac[3] = 3;
+      n_vtxpFac[4] = 3;
+      for(int i=0; i < nFacPerElmt; i++){
+          tabFacVtx[i] = (int *) malloc( sizeof(int *) * n_vtxpFac[i]);
+          _get_index_of_face_node_pyra5(i, tabFacVtx[i], 0);
+      }
+      break;
+    case PDM_MESH_NODAL_PRISM6:     /* Penta6 */
+      n_vtxpFac[0] = 4;
+      n_vtxpFac[1] = 4;
+      n_vtxpFac[2] = 4;
+      n_vtxpFac[3] = 3;
+      n_vtxpFac[4] = 3;
+      for(int i=0; i < nFacPerElmt; i++){
+          tabFacVtx[i] = (int *) malloc( sizeof(int *) * n_vtxpFac[i]);
+          _get_index_of_face_node_penta6(i, tabFacVtx[i], 0);
+      }
+      break;
+    case PDM_MESH_NODAL_HEXA8:     /* Hexa8  */
+      n_vtxpFac[0] = 4;
+      n_vtxpFac[1] = 4;
+      n_vtxpFac[2] = 4;
+      n_vtxpFac[3] = 4;
+      n_vtxpFac[4] = 4;
+      n_vtxpFac[5] = 4;
+      for(int i=0; i < nFacPerElmt; i++){
+          tabFacVtx[i] = (int *) malloc( sizeof(int *) * n_vtxpFac[i]);
+          _get_index_of_face_node_hexa8(i, tabFacVtx[i], 0);
+      }
+      break;
+   default :
+      exit(1);
+  }
+}
+
+/**
+ * \def _get_index_of_face_node_hexa8
+ * Compute Key from idx
+ *
+ */
+static int
+_compute_key
+(
+  PDM_g_num_t* conn,
+  int* lidx,
+  int  begin,
+  int  n_vtx
+)
+{
+  int tKey = 0;
+  for(int iVtx=0; iVtx<n_vtx; iVtx++){
+    tKey += conn[begin+lidx[iVtx]];
+  }
+  return tKey;
+}
+/**
  * \def _find_pairs
  * Search common faces in a distribution
  *

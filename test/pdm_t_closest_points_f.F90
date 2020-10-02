@@ -27,8 +27,8 @@ program testf
 
   implicit none
 
-  integer (kind = pdm_g_num_s), parameter :: n_g_points_src = 10
-  integer (kind = pdm_g_num_s), parameter :: n_g_points_tgt = 10
+  ! integer (kind = pdm_g_num_s), parameter :: n_g_points_src = 10
+  ! integer (kind = pdm_g_num_s), parameter :: n_g_points_tgt = 10
 
   integer, parameter :: n_part_cloud_src = 1
   integer, parameter :: n_part_cloud_tgt = 1
