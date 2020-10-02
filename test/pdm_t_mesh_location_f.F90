@@ -75,7 +75,7 @@ program testf
 
   integer :: id
 
-  integer, parameter :: partial = 0 ! Put 1 to keep results when the subroutine closest_points_free is
+  ! integer, parameter :: partial = 0 ! Put 1 to keep results when the subroutine closest_points_free is
 
   integer :: code
   integer :: i_rank

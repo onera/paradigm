@@ -71,7 +71,7 @@ MPI_TEST_CASE("[1p] pdm_dconnectivity_transform dcell_face + dface_vtx = dcell_v
 MPI_TEST_CASE("[2p] pdm_dconnectivity_transform dcell_face + dface_vtx = dcell_vtx ",2) {
 
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
-  PDM_g_num_t vtx_distrib[3]    = {1, 14, 28};
+  // PDM_g_num_t vtx_distrib[3]    = {1, 14, 28};
 
   std::vector<PDM_g_num_t> cell_distrib_p0   = {1, 5, 9};
   std::vector<PDM_g_num_t> face_distrib_p0   = {1, 19, 37};

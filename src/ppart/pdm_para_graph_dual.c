@@ -802,15 +802,14 @@ const PDM_g_num_t   *dface_vtx,
                 ( int         **) &dcell_vtx_idx,
                 ( PDM_g_num_t **) &dcell_vtx);
 
-  int* dcell_vtx_n = (int *) malloc( dn_cell * sizeof(int));
-  for(int i_entity = 0; i_entity < dn_cell; ++i_entity) {
-    dcell_vtx_n[i_entity] = dcell_vtx_idx[i_entity+1] - dcell_vtx_idx[i_entity];
-  }
-
-  PDM_log_trace_array_int (dcell_vtx_n  , dn_cell               , "dcell_vtx_n::");
-  PDM_log_trace_array_int (dcell_vtx_idx, dn_cell+1             , "dcell_vtx_idx::");
-  PDM_log_trace_array_long(dcell_vtx    , dcell_vtx_idx[dn_cell], "dcell_vtx::");
-  free(dcell_vtx_n);
+  // int* dcell_vtx_n = (int *) malloc( dn_cell * sizeof(int));
+  // for(int i_entity = 0; i_entity < dn_cell; ++i_entity) {
+  //   dcell_vtx_n[i_entity] = dcell_vtx_idx[i_entity+1] - dcell_vtx_idx[i_entity];
+  // }
+  // PDM_log_trace_array_int (dcell_vtx_n  , dn_cell               , "dcell_vtx_n::");
+  // PDM_log_trace_array_int (dcell_vtx_idx, dn_cell+1             , "dcell_vtx_idx::");
+  // PDM_log_trace_array_long(dcell_vtx    , dcell_vtx_idx[dn_cell], "dcell_vtx::");
+  // free(dcell_vtx_n);
 
   int*         dvtx_cell_idx;
   PDM_g_num_t* dvtx_cell;
@@ -823,15 +822,15 @@ const PDM_g_num_t   *dface_vtx,
                                &dvtx_cell_idx,
                                &dvtx_cell);
 
-  int dn_vtx = vtx_distrib[i_rank+1] - vtx_distrib[i_rank];
-  int* dvtx_cell_n = (int *) malloc( dn_vtx * sizeof(int));
-  for(int i_entity = 0; i_entity < dn_vtx; ++i_entity) {
-    dvtx_cell_n[i_entity] = dvtx_cell_idx[i_entity+1] - dvtx_cell_idx[i_entity];
-  }
-  PDM_log_trace_array_int (dvtx_cell_n  , dn_vtx               , "dvtx_cell_n::");
-  PDM_log_trace_array_int (dvtx_cell_idx, dn_vtx+1             , "dvtx_cell_idx::");
-  PDM_log_trace_array_long(dvtx_cell    , dvtx_cell_idx[dn_vtx], "dvtx_cell::");
-  free(dvtx_cell_n);
+  // int dn_vtx = vtx_distrib[i_rank+1] - vtx_distrib[i_rank];
+  // int* dvtx_cell_n = (int *) malloc( dn_vtx * sizeof(int));
+  // for(int i_entity = 0; i_entity < dn_vtx; ++i_entity) {
+  //   dvtx_cell_n[i_entity] = dvtx_cell_idx[i_entity+1] - dvtx_cell_idx[i_entity];
+  // }
+  // PDM_log_trace_array_int (dvtx_cell_n  , dn_vtx               , "dvtx_cell_n::");
+  // PDM_log_trace_array_int (dvtx_cell_idx, dn_vtx+1             , "dvtx_cell_idx::");
+  // PDM_log_trace_array_long(dvtx_cell    , dvtx_cell_idx[dn_vtx], "dvtx_cell::");
+  // free(dvtx_cell_n);
 
   /*
    * Call the standard fonction : arc = vtx , node = cell
@@ -849,23 +848,29 @@ const PDM_g_num_t   *dface_vtx,
 
   free(dcell_vtx);
   free(dcell_vtx_idx);
+  free(dvtx_cell_idx);
+  free(dvtx_cell);
 
-  // -> Shift by one
   PDM_g_num_t* _dual_graph_idx = *dual_graph_idx;
   PDM_g_num_t* _dual_graph     = *dual_graph;
+
+  // Realloc
+  _dual_graph = (PDM_g_num_t *) realloc(_dual_graph, _dual_graph_idx[dn_cell] * sizeof(PDM_g_num_t));
+
+  // -> Shift by one
   for(int i_entity = 0; i_entity < _dual_graph_idx[dn_cell]; ++i_entity) {
     _dual_graph[i_entity] = _dual_graph[i_entity] - 1;
-    assert(_dual_graph[i_entity] >= 0);
-    assert(_dual_graph[i_entity] <  cell_distrib[n_rank]-1);
+    // assert(_dual_graph[i_entity] >= 0);
+    // assert(_dual_graph[i_entity] <  cell_distrib[n_rank]-1);
   }
-  int* _dual_graph_n = (int *) malloc( dn_cell * sizeof(int));
-  for(int i_entity = 0; i_entity < dn_cell; ++i_entity) {
-    _dual_graph_n[i_entity] = _dual_graph_idx[i_entity+1] - _dual_graph_idx[i_entity];
-  }
+  // int* _dual_graph_n = (int *) malloc( dn_cell * sizeof(int));
+  // for(int i_entity = 0; i_entity < dn_cell; ++i_entity) {
+  //   _dual_graph_n[i_entity] = _dual_graph_idx[i_entity+1] - _dual_graph_idx[i_entity];
+  // }
 
-  PDM_log_trace_array_int (_dual_graph_n  , dn_cell                 , "PDM_para_graph_dual_from_combine_connectivity::_dual_graph_n::");
-  PDM_log_trace_array_int (_dual_graph_idx, dn_cell+1               , "PDM_para_graph_dual_from_combine_connectivity::dual_graph_idx::");
-  PDM_log_trace_array_long(_dual_graph    , _dual_graph_idx[dn_cell], "PDM_para_graph_dual_from_combine_connectivity::dual_graph::");
+  // PDM_log_trace_array_int (_dual_graph_n  , dn_cell                 , "PDM_para_graph_dual_from_combine_connectivity::_dual_graph_n::");
+  // PDM_log_trace_array_int (_dual_graph_idx, dn_cell+1               , "PDM_para_graph_dual_from_combine_connectivity::dual_graph_idx::");
+  // PDM_log_trace_array_long(_dual_graph    , _dual_graph_idx[dn_cell], "PDM_para_graph_dual_from_combine_connectivity::dual_graph::");
 
   /*
    * Patch
@@ -894,13 +899,13 @@ const PDM_g_num_t   *dface_vtx,
   // free(_dual_graph);
   // free(_dual_graph_idx);
 
-  // _dual_comp_graph = (int *) realloc(_dual_comp_graph, _dual_comp_graph_idx[dn_cell] * sizeof(PDM_g_num_t));
+  // _dual_comp_graph = (PDM_g_num_t *) realloc(_dual_comp_graph, _dual_comp_graph_idx[dn_cell] * sizeof(PDM_g_num_t));
 
   // *dual_graph_idx = _dual_comp_graph_idx;
   // *dual_graph     = _dual_comp_graph;
 
 
-  free(_dual_graph_n);
+  // free(_dual_graph_n);
 }
 
 /**

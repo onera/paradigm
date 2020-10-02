@@ -347,8 +347,8 @@ int main(int argc, char *argv[])
                       (PDM_g_num_t**) &dual_graph);
   }
 
-  PDM_log_trace_array_int (dual_graph_idx, dn_cell+1              , "pdm_t_partitioning_dcube::dual_graph_idx::");
-  PDM_log_trace_array_long(dual_graph    , dual_graph_idx[dn_cell], "pdm_t_partitioning_dcube::dual_graph::");
+  // PDM_log_trace_array_long(dual_graph_idx, dn_cell+1              , "pdm_t_partitioning_dcube::dual_graph_idx::");
+  // PDM_log_trace_array_long(dual_graph    , dual_graph_idx[dn_cell], "pdm_t_partitioning_dcube::dual_graph::");
 
   free(dual_graph_idx);
   free(dual_graph);
@@ -441,8 +441,8 @@ int main(int argc, char *argv[])
   /*
    * Tentative extented partition
    */
-  PDM_g_num_t** pcell_ln_to_gn_extented;
-  int*          pn_cell_extented;
+  // PDM_g_num_t** pcell_ln_to_gn_extented;
+  // int*          pn_cell_extented;
 
   // PDM_extend_mesh(comm,
   //                 part_distribution,
