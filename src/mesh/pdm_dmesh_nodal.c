@@ -2556,7 +2556,7 @@ const int   hdl
    */
   PDM_g_num_t* ln_to_gn = (PDM_g_num_t*) malloc( n_face_elt_tot * sizeof(PDM_g_num_t));
   PDM_g_num_t key_mod = 4 * mesh->n_som_abs;
-  printf("key_mod::%i \n", key_mod);
+  // printf("key_mod::%i \n", key_mod);
 
   // Option des clés
   _compute_keys(n_face_elt_tot,

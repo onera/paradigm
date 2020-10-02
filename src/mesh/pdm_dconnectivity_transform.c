@@ -335,8 +335,8 @@ PDM_deduce_combine_connectivity_dual
    * Post-treat
    */
   *dentity1_entity3_idx = (PDM_g_num_t*) malloc( (dn_entity1 + 1) * sizeof(PDM_g_num_t));
-  int* _dentity1_entity3_idx = *dentity1_entity3_idx;
-  int*  dentity1_entity3_n   = (PDM_g_num_t*) malloc( (dn_entity1    ) * sizeof(PDM_g_num_t));
+  PDM_g_num_t* _dentity1_entity3_idx = *dentity1_entity3_idx;
+  int*  dentity1_entity3_n   = (int*) malloc( (dn_entity1    ) * sizeof(int));
 
   int idx = 0;
   _dentity1_entity3_idx[0] = 0;
