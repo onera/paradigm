@@ -152,6 +152,8 @@ program testf
 
   ptb = PDM_part_to_block_free (ptb)
 
+  call pdm_fortran_free_c (cptr_block_data)
+
   deallocate(cptr_part_data)
   deallocate(part_data)
   deallocate(n_elt)
