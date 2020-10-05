@@ -1,7 +1,7 @@
 !-----------------------------------------------------------------------------
 ! This file is part of the ParaDiGM library.
 !
-! Copyright (C) 2019  ONERA
+! Copyright (C) 2020  ONERA
 !
 ! This library is free software; you can redistribute it and/or
 ! modify it under the terms of the GNU Lesser General Public
@@ -48,7 +48,7 @@ module pdm_block_to_part
                                        n_part, &
                                        fcomm) &
                                        result (btp) &
-      bind (c, name = 'PDM_block_to_part_create_cf') 
+      bind (c, name = 'PDM_block_to_part_create_cf')
 
       use iso_c_binding
 
@@ -62,20 +62,20 @@ module pdm_block_to_part
 
       type (c_ptr) :: btp
 
-      !> A l'appel : 
+      !> A l'appel :
       !>   integer (kind = pdm_g_num_s), pointer  :: n_elt(n_rank + 1) Index de distribution des blocs
-      !>   type(c_ptr), pointer     :: gnum_elt(n_part) 
+      !>   type(c_ptr), pointer     :: gnum_elt(n_part)
       !>   allocate(gnum_elt(n_part) ) Tableau de d'adresses C contenant l'adresse de chaque tableau de numerotation
-      !>                               globale de chaque partition      
+      !>                               globale de chaque partition
       !>   do i=1,n_part
       !>     gnum_elt(i)=c_loc(gnum_elt_fortran_i_part)  (Attention les tableaux gnum_elt_fortran_i_part contiennent
-      !<                                                  des entiers de taille pdm_g_num_s) 
+      !<                                                  des entiers de taille pdm_g_num_s)
       !>   enddo
       !>   integer (c_int), pointer  :: n_elt(n_part)
       !>
-      
-    end function PDM_block_to_part_create 
-         
+
+    end function PDM_block_to_part_create
+
     !>
     !!
     !! \brief Exchange data from blocks to partitions (part_stride and part_data are allocated by user)
@@ -94,13 +94,13 @@ module pdm_block_to_part
     !!
 
     subroutine PDM_block_to_part_exch (btp, &
-                                       s_data, & 
+                                       s_data, &
                                        t_stride, &
                                        block_stride, &
                                        block_data, &
                                        part_stride, &
                                        part_data) &
-      bind (c, name = 'PDM_block_to_part_exch') 
+      bind (c, name = 'PDM_block_to_part_exch')
 
       use iso_c_binding
 
@@ -116,11 +116,11 @@ module pdm_block_to_part
       !> A l'appel : part_stride n'est pas utilise si PDM_STRIDE_CST. A allouer comme gnum_elt dans PDM_block_to_part_create
       !>  (tableau d'adresses C)
       !> part_data a allouer comme gnum_elt dans PDM_block_to_part_create
-      !>  (tableau d'adresses C)  
-    
+      !>  (tableau d'adresses C)
+
     end subroutine PDM_block_to_part_exch
 
-    
+
     !>
     !!
     !! \brief Initialize an exchange
@@ -144,7 +144,7 @@ module pdm_block_to_part
                                         block_data, &
                                         part_stride, &
                                         part_data) &
-      bind (c, name = 'PDM_block_to_part_exch2') 
+      bind (c, name = 'PDM_block_to_part_exch2')
 
       use iso_c_binding
 
@@ -161,7 +161,7 @@ module pdm_block_to_part
 
 
     !>
-    !! 
+    !!
     !! \brief Free a block to part structure
     !!
     !! \param [inout] btp  Block to part structure
@@ -180,7 +180,7 @@ module pdm_block_to_part
       type (c_ptr) :: ptr_null
 
     end function PDM_block_to_part_free
-    
+
     !>
     !!
     !! \brief Return index in the block for a gnum
@@ -205,11 +205,11 @@ module pdm_block_to_part
       integer (c_long),  value :: gnum
 #else
       integer (c_int),  value :: gnum
-#endif      
+#endif
       integer (c_int)     :: index
-      
+
     end function PDM_block_to_part_gnum_idx_get
-    
+
   end interface
 
 end module pdm_block_to_part
