@@ -23,6 +23,7 @@ program testf
   use mpi
   use pdm_part_to_block
   use iso_c_binding
+  use pdm_fortran
 
   implicit none
 
