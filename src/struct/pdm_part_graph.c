@@ -140,233 +140,238 @@ PDM_part_graph_split
     (*cell_part)[i] = 0;
   }
 
-  switch(method) {
-  case 1:
-    {
+  if (n_part > 1) {
+    switch(method) {
+    case 1:
+      {
 #ifdef PDM_HAVE_PARMETIS
-      //            Define Metis properties
+        //            Define Metis properties
 
-      //          int flag_weights = 0; //0 = False -> weights are unused
+        //          int flag_weights = 0; //0 = False -> weights are unused
 
-      int flag_weights = 0; //0 = False -> weights are unused
+        int flag_weights = 0; //0 = False -> weights are unused
 
-      int ncon = 1; //The number of balancing constraints
+        int ncon = 1; //The number of balancing constraints
 
-      int *vwgt = cell_weight; //Weights of the vertices of the graph (NULL if unused)
+        int *vwgt = cell_weight; //Weights of the vertices of the graph (NULL if unused)
 
-      int *adjwgt = face_weight; //Weights of the edges of the graph (NULL if unused)
+        int *adjwgt = face_weight; //Weights of the edges of the graph (NULL if unused)
 
-      double *tpwgts = NULL;
-      if (flag_weights != 0) {
-        tpwgts = (double *) malloc(ncon * n_part * sizeof(double));
-        for (int i = 0; i < ncon * n_part; i++){
-          tpwgts[i] = (double) (1./n_part);
-        }
-      }
-
-      double *ubvec = NULL;
-      if (flag_weights != 0) {
-        ubvec = (double *) malloc(ncon * sizeof(double));
-        for (int i = 0; i < ncon; i++) {
-          ubvec[i] = 1.05;
-        }
-      }
-
-      //TO ADD: USE OF ADJWGT IN AN IF STATEMENT
-
-      //This value is solely a memory space to be filled by METIS
-
-      int edgecut;
-      printf("PDM_part_graph_split \n");
-      if (n_part < 8) {
-
-        PDM_METIS_PartGraphRecursive (&(part_ini->n_cell),
-                                      &ncon,
-                                      cell_cell_idx,
-                                      cell_cell,
-                                      vwgt,
-                                      adjwgt,
-                                      &n_part,
-                                      tpwgts,
-                                      ubvec,
-                                      &edgecut,
-                                      *cell_part);
-      }
-
-      else {
-
-        PDM_METIS_PartGraphKway (&(part_ini->n_cell),
-                                 &ncon,
-                                 cell_cell_idx,
-                                 cell_cell,
-                                 vwgt,
-                                 adjwgt,
-                                 &n_part,
-                                 tpwgts,
-                                 ubvec,
-                                 &edgecut,
-                                 *cell_part);
-      }
-      // double inbalance = 0.03;
-      // double balance   = 0;
-      // edgecut   = 0;
-      // // bool   suppress_output = False;
-      // // bool   graph_partitioned = False;
-      // int time_limit = 0;
-      // int seed  = 0;
-      // int mode = 2;
-      // PDM_kaffpa(&(part_ini->n_cell),
-      //            NULL,
-      //            cell_cell_idx,
-      //            NULL,
-      //            cell_cell,
-      //            &n_part,
-      //             &inbalance,
-      //             seed,
-      //             mode,
-      //             &edgecut,
-      //             *cell_part );
-
-      if (0 == 1) {
-        PDM_printf("\n Contenu de cell_part : \n");
-        for (int i = 0; i < part_ini->n_cell; i++) {
-          PDM_printf(" %d ", (*cell_part)[i]);
-        }
-        PDM_printf("\n");
-      }
-
-      if (flag_weights != 0) {
-        if(ubvec!= NULL)
-          free(ubvec);
-        if(tpwgts!= NULL)
-          free(tpwgts);
-        // if(adjwgt!= NULL)
-        //   free(adjwgt);
-      }
-
-#else
-      PDM_printf("PDM_part error : METIS unavailable\n");
-      exit(1);
-
-#endif
-      break;
-    }
-  case 2:
-    {
-#ifdef PDM_HAVE_PTSCOTCH
-
-      int check = 0;
-
-      PDM_SCOTCH_part (part_ini->n_cell,
-                       cell_cell_idx,
-                       cell_cell,
-                       cell_weight,
-                       face_weight,
-                       check,
-                       n_part,
-                       *cell_part);
-
-#else
-      PDM_printf("PDM_part error : Scotch unavailable\n");
-      exit(1);
-#endif
-
-      break;
-    }
-    case 3:
-    {
-
-      // To see with eric ...
-      // abort();
-      /* Allocation */
-      double *cellCenter = (double *) malloc (part_ini->n_cell * 3 * sizeof(double ));
-
-      PDM_hilbert_code_t *hilbert_codes = (PDM_hilbert_code_t *) malloc (part_ini->n_cell * sizeof(PDM_hilbert_code_t));
-
-      /** Barycentre computation **/
-
-      /* Allocate */
-      double *cellPond = (double *) malloc (part_ini->n_cell * sizeof(double));
-
-      /* Nulliffy cellCenterArray */
-      for(int iCell = 0; iCell < part_ini->n_cell; iCell++) {
-        cellCenter[3*iCell  ] = 0.;
-        cellCenter[3*iCell+1] = 0.;
-        cellCenter[3*iCell+2] = 0.;
-        cellPond[iCell]     = 0.;
-      }
-
-      /* Compute */
-      for(int iCell = 0; iCell < part_ini->n_cell; iCell++) {
-
-        /* Cellule composé de n_face */
-        int aFac = part_ini->cell_face_idx[iCell];
-        int nFac = part_ini->cell_face_idx[iCell+1] - aFac;
-
-        for(int iFac = 0; iFac < nFac; iFac++) {
-
-          /* Face composé de n_vtx */
-          int lFac = PDM_ABS(part_ini->cell_face[aFac + iFac]) - 1;
-
-          int aVtx = part_ini->face_vtx_idx[lFac];
-          int n_vtx = part_ini->face_vtx_idx[lFac+1] - aVtx;
-
-          for(int iVtx = 0; iVtx < n_vtx; iVtx++) {
-
-            /* Face composé de n_vtx */
-            int lVtx = part_ini->face_vtx[aVtx + iVtx] - 1;
-
-            /* Add to current cell and stack weight */
-            cellCenter[3*iCell  ] += part_ini->vtx[3*lVtx  ];
-            cellCenter[3*iCell+1] += part_ini->vtx[3*lVtx+1];
-            cellCenter[3*iCell+2] += part_ini->vtx[3*lVtx+2];
-
-            cellPond[iCell] += 1.;
+        double *tpwgts = NULL;
+        if (flag_weights != 0) {
+          tpwgts = (double *) malloc(ncon * n_part * sizeof(double));
+          for (int i = 0; i < ncon * n_part; i++){
+            tpwgts[i] = (double) (1./n_part);
           }
         }
+
+        double *ubvec = NULL;
+        if (flag_weights != 0) {
+          ubvec = (double *) malloc(ncon * sizeof(double));
+          for (int i = 0; i < ncon; i++) {
+            ubvec[i] = 1.05;
+          }
+        }
+
+        //TO ADD: USE OF ADJWGT IN AN IF STATEMENT
+
+        //This value is solely a memory space to be filled by METIS
+
+        int edgecut;
+        printf("PDM_part_graph_split \n");
+        if (n_part < 8) {
+
+          PDM_METIS_PartGraphRecursive (&(part_ini->n_cell),
+                                        &ncon,
+                                        cell_cell_idx,
+                                        cell_cell,
+                                        vwgt,
+                                        adjwgt,
+                                        &n_part,
+                                        tpwgts,
+                                        ubvec,
+                                        &edgecut,
+                                        *cell_part);
+        }
+
+        else {
+
+          PDM_METIS_PartGraphKway (&(part_ini->n_cell),
+                                   &ncon,
+                                   cell_cell_idx,
+                                   cell_cell,
+                                   vwgt,
+                                   adjwgt,
+                                   &n_part,
+                                   tpwgts,
+                                   ubvec,
+                                   &edgecut,
+                                   *cell_part);
+        }
+        // double inbalance = 0.03;
+        // double balance   = 0;
+        // edgecut   = 0;
+        // // bool   suppress_output = False;
+        // // bool   graph_partitioned = False;
+        // int time_limit = 0;
+        // int seed  = 0;
+        // int mode = 2;
+        // PDM_kaffpa(&(part_ini->n_cell),
+        //            NULL,
+        //            cell_cell_idx,
+        //            NULL,
+        //            cell_cell,
+        //            &n_part,
+        //             &inbalance,
+        //             seed,
+        //             mode,
+        //             &edgecut,
+        //             *cell_part );
+
+        if (0 == 1) {
+          PDM_printf("\n Contenu de cell_part : \n");
+          for (int i = 0; i < part_ini->n_cell; i++) {
+            PDM_printf(" %d ", (*cell_part)[i]);
+          }
+          PDM_printf("\n");
+        }
+
+        if (flag_weights != 0) {
+          if(ubvec!= NULL)
+            free(ubvec);
+          if(tpwgts!= NULL)
+            free(tpwgts);
+          // if(adjwgt!= NULL)
+          //   free(adjwgt);
+        }
+
+#else
+        PDM_printf("PDM_part error : METIS unavailable\n");
+        exit(1);
+
+#endif
+        break;
       }
+    case 2:
+      {
+#ifdef PDM_HAVE_PTSCOTCH
 
-      /* Nulliffy cellCenterArray */
-      for(int iCell = 0; iCell < part_ini->n_cell; iCell++) {
-        cellCenter[3*iCell  ] = cellCenter[3*iCell  ]/cellPond[iCell];
-        cellCenter[3*iCell+1] = cellCenter[3*iCell+1]/cellPond[iCell];
-        cellCenter[3*iCell+2] = cellCenter[3*iCell+2]/cellPond[iCell];
+        int check = 0;
+
+        PDM_SCOTCH_part (part_ini->n_cell,
+                         cell_cell_idx,
+                         cell_cell,
+                         cell_weight,
+                         face_weight,
+                         check,
+                         n_part,
+                         *cell_part);
+
+#else
+        PDM_printf("PDM_part error : Scotch unavailable\n");
+        exit(1);
+#endif
+
+        break;
       }
+      case 3:
+      {
+
+        // To see with eric ...
+        // abort();
+        /* Allocation */
+        double *cellCenter = (double *) malloc (part_ini->n_cell * 3 * sizeof(double ));
+
+        PDM_hilbert_code_t *hilbert_codes = (PDM_hilbert_code_t *) malloc (part_ini->n_cell * sizeof(PDM_hilbert_code_t));
+
+        /** Barycentre computation **/
+
+        /* Allocate */
+        double *cellPond = (double *) malloc (part_ini->n_cell * sizeof(double));
+
+        /* Nulliffy cellCenterArray */
+        for(int iCell = 0; iCell < part_ini->n_cell; iCell++) {
+          cellCenter[3*iCell  ] = 0.;
+          cellCenter[3*iCell+1] = 0.;
+          cellCenter[3*iCell+2] = 0.;
+          cellPond[iCell]     = 0.;
+        }
+
+        /* Compute */
+        for(int iCell = 0; iCell < part_ini->n_cell; iCell++) {
+
+          /* Cellule composé de n_face */
+          int aFac = part_ini->cell_face_idx[iCell];
+          int nFac = part_ini->cell_face_idx[iCell+1] - aFac;
+
+          for(int iFac = 0; iFac < nFac; iFac++) {
+
+            /* Face composé de n_vtx */
+            int lFac = PDM_ABS(part_ini->cell_face[aFac + iFac]) - 1;
+
+            int aVtx = part_ini->face_vtx_idx[lFac];
+            int n_vtx = part_ini->face_vtx_idx[lFac+1] - aVtx;
+
+            for(int iVtx = 0; iVtx < n_vtx; iVtx++) {
+
+              /* Face composé de n_vtx */
+              int lVtx = part_ini->face_vtx[aVtx + iVtx] - 1;
+
+              /* Add to current cell and stack weight */
+              cellCenter[3*iCell  ] += part_ini->vtx[3*lVtx  ];
+              cellCenter[3*iCell+1] += part_ini->vtx[3*lVtx+1];
+              cellCenter[3*iCell+2] += part_ini->vtx[3*lVtx+2];
+
+              cellPond[iCell] += 1.;
+            }
+          }
+        }
+
+        /* Nulliffy cellCenterArray */
+        for(int iCell = 0; iCell < part_ini->n_cell; iCell++) {
+          cellCenter[3*iCell  ] = cellCenter[3*iCell  ]/cellPond[iCell];
+          cellCenter[3*iCell+1] = cellCenter[3*iCell+1]/cellPond[iCell];
+          cellCenter[3*iCell+2] = cellCenter[3*iCell+2]/cellPond[iCell];
+        }
 
 
-      double extents[3 * 2];
+        double extents[3 * 2];
 
-      /** Get EXTENTS LOCAL **/
+        /** Get EXTENTS LOCAL **/
 
-      PDM_hilbert_get_coord_extents_seq(3, part_ini->n_cell, cellCenter, extents);
+        PDM_hilbert_get_coord_extents_seq(3, part_ini->n_cell, cellCenter, extents);
 
-      /** Hilbert Coordinates Computation **/
+        /** Hilbert Coordinates Computation **/
 
-      PDM_hilbert_encode_coords(3, PDM_HILBERT_CS, extents, part_ini->n_cell, cellCenter, hilbert_codes);
+        PDM_hilbert_encode_coords(3, PDM_HILBERT_CS, extents, part_ini->n_cell, cellCenter, hilbert_codes);
 
-      /** CHECK H_CODES **/
+        /** CHECK H_CODES **/
 
-      free(cellCenter);
-      free(cellPond);
+        free(cellCenter);
+        free(cellPond);
 
-      int *newToOldOrder = (int *) malloc (part_ini->n_cell * sizeof(int));
-      for(int i = 0; i < part_ini->n_cell; ++i) {
-        newToOldOrder [i] = i;
+        int *newToOldOrder = (int *) malloc (part_ini->n_cell * sizeof(int));
+        for(int i = 0; i < part_ini->n_cell; ++i) {
+          newToOldOrder [i] = i;
+        }
+
+        PDM_sort_double (hilbert_codes, *cell_part, part_ini->n_cell);
+
+        /* Free */
+        free (hilbert_codes);
+        free (newToOldOrder);
+
+        break;
       }
-
-      PDM_sort_double (hilbert_codes, *cell_part, part_ini->n_cell);
-
-      /* Free */
-      free (hilbert_codes);
-      free (newToOldOrder);
-
-      break;
+    default:
+      PDM_printf("PART error : '%i' unknown partitioning method\n", method);
+      exit(1);
     }
-  default:
-    PDM_printf("PART error : '%i' unknown partitioning method\n", method);
+  }
+  else if (n_part < 0) {
+    PDM_printf("PART error : n_part must be > 0\n");
     exit(1);
   }
-
 }
 
 
