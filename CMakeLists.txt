@@ -24,9 +24,13 @@ if (NOT (PDM_IN_PDMA))
    set(PDM_IN_PDMA_BOOL 0)
 endif()
 
+# ----------------------------------------------------------------------
+find_program( MEMORYCHECK_COMMAND valgrind )
+set( MEMORYCHECK_COMMAND_OPTIONS "--trace-children=yes --leak-check=full" )
+# ----------------------------------------------------------------------
+
+include(CTest)
 enable_testing ()
-
-
 
 #------------------------------------------------------------------------------
 # User option Definition
@@ -86,6 +90,10 @@ if (NOT (PDM_IN_PDMA OR PDM_IN_CWP))
    if (PDM_ENABLE_SHARED AND PDM_ENABLE_Fortran)
       set(PDM_ENABLE_SHARED_Fortran_INTERFACE ON)
    endif ()
+
+   # Unit test mpi with doctect
+   # ------
+   option(PDM_ENABLE_UNIT_TEST "Enable unit test " OFF)
 
 elseif (PDM_IN_CWP)
 
@@ -358,6 +366,22 @@ if (PDM_ENABLE_PYTHON_BINDINGS)
   add_subdirectory(Cython)
 endif()
 add_subdirectory(test)
+
+#------------------------------------------------------------------------------
+if(PDM_ENABLE_UNIT_TEST)
+  include(FetchContent)
+  FetchContent_Declare(
+    doctest
+    GIT_REPOSITORY https://github.com/BerengerBerthoul/doctest.git
+    GIT_TAG        f13a00607463ce211004be23b5aa0bdf24d3ab61
+  )
+  FetchContent_GetProperties(doctest)
+  if(NOT doctest_POPULATED)
+    FetchContent_Populate(doctest)
+    add_subdirectory(${doctest_SOURCE_DIR} ${doctest_BINARY_DIR})
+  endif()
+endif()
+#------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
 # Affichage du message de fin d'installation

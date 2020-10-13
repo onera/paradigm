@@ -54,6 +54,7 @@ _computeBary
  double bary[3]
 )
 {
+
   bary[0] = 0.;
   bary[1] = 0.;
   bary[2] = 0.;
@@ -72,6 +73,26 @@ _computeBary
  * Public function definitions
  *============================================================================*/
 
+
+/**
+ * \brief Computes barycenter
+ *
+ * \param [in]   numPts  Number of polygon vertices
+ * \param [in]   pts     Polygon vertices coordinates
+ * \param [out]  bary    Barycenter
+ *
+ */
+
+void
+PDM_plane_barycenter
+(
+ const int     numPts,
+ const double *pts,
+ double        n[3]
+)
+{
+  _computeBary (numPts, pts, n);
+}
 
 /**
  * \brief Computes normal
@@ -118,11 +139,10 @@ PDM_plane_normal
   } //over all points
 
   length = sqrt (n[0] * n[0] + n[1] * n[1] + n[2] * n[2]);
-  if (length != 0.0) {
+  if (length > 0.0) {
     n[0] /= length;
     n[1] /= length;
     n[2] /= length;
-
   }
 }
 
@@ -194,4 +214,3 @@ const double n[3],
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-
