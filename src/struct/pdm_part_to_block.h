@@ -1,5 +1,5 @@
-#ifndef __PDM_writer_PART_TO_BLOCK_H__
-#define __PDM_writer_PART_TO_BLOCK_H__
+#ifndef __PDM_PART_TO_BLOCK_H__
+#define __PDM_PART_TO_BLOCK_H__
 
 /*----------------------------------------------------------------------------
  * Standard C library headers
@@ -10,7 +10,6 @@
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
-#include "pdm_writer.h"
 #include "pdm.h"
 #include "pdm_mpi.h"
 
