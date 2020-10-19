@@ -1332,7 +1332,7 @@ PDM_multipart_free
   }
   free(_multipart->pmeshes);
 
-  PDM_part_renum_method_purge();
+  //PDM_part_renum_method_purge();
   free (_multipart);
 
   PDM_Handles_handle_free (_multiparts, mpart_id, PDM_FALSE);
