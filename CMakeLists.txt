@@ -384,6 +384,19 @@ endif()
 #------------------------------------------------------------------------------
 
 #------------------------------------------------------------------------------
+# Création d'un package pdmConfig.cmake pour importer facilement paradigm
+# pour les clients utilisant CMake
+#------------------------------------------------------------------------------
+configure_file(
+  "${CMAKE_SOURCE_DIR}/paradigm/cmake/templates/pdmConfig.cmake.in"
+  pdmConfig.cmake
+  @ONLY
+)
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/pdmConfig.cmake"
+  DESTINATION lib/cmake
+)
+
+#------------------------------------------------------------------------------
 # Affichage du message de fin d'installation
 #------------------------------------------------------------------------------
 
