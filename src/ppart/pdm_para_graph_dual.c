@@ -121,10 +121,9 @@ const int         *dual_graph_n,
       n_cell_connect_comp--;
     }
 
+    //Once a shift is needed, need_shift must stay at one
     if(n_cell_connect_comp < n_cell_connect) {
       need_shift = 1;
-    } else {
-      need_shift = 0;
     }
 
     dual_graph_idx[i+1] = dual_graph_idx[i] + n_cell_connect_comp;
@@ -175,10 +174,9 @@ const int         *dual_graph_n,
     int n_cell_connect_comp = PDM_inplace_unique_long(dual_graph, idx_comp, end_connect);
     // printf(" n_cell_connect:: %d | n_cell_connect_comp:: %d \n", n_cell_connect, n_cell_connect_comp);
 
+    //Once a shift is needed, need_shift must stay at one
     if(n_cell_connect_comp < n_cell_connect) {
       need_shift = 1;
-    } else {
-      need_shift = 0;
     }
 
     dual_graph_idx[i+1] = dual_graph_idx[i] + n_cell_connect_comp;
@@ -317,6 +315,7 @@ const int              compute_dnode_to_arc,
   }
 
 
+  node_strid     = realloc(node_strid,     dn_arc_int    * sizeof(int)         );
   dnode_ln_to_gn = realloc(dnode_ln_to_gn, dn_arc_int    * sizeof(PDM_g_num_t) );
   dopposite_node = realloc(dopposite_node, idx_data_node * sizeof(PDM_g_num_t) );
 
