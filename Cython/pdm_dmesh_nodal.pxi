@@ -21,7 +21,7 @@ cdef extern from "pdm_dmesh_nodal.h":
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     # > Wrapping of function
     int PDM_DMesh_nodal_create(PDM_MPI_Comm comm, PDM_g_num_t nCel, PDM_g_num_t nVtx)
-    void PDM_DMesh_nodal_free(int handle)
+    void PDM_DMesh_nodal_free(int handle, int partial)
 
     void PDM_DMesh_nodal_coord_set(int handle, int n_vtx, double* coords)
 
@@ -97,11 +97,10 @@ cdef class DistributedMeshNodal:
     # ************************************************************************
     # > Class attributes
     cdef int idmesh
-    cdef int Size
-    cdef int Rank
+    cdef int n_rank
     # ************************************************************************
     # ------------------------------------------------------------------------
-    def __init__(self, MPI.Comm    comm,
+    def __cinit__(self, MPI.Comm    comm,
                        PDM_g_num_t nVtx,
                        PDM_g_num_t nCel):
         """
@@ -116,8 +115,7 @@ cdef class DistributedMeshNodal:
         # ************************************************************************
 
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
-        self.Rank = comm.Get_rank()
-        self.Size = comm.Get_size()
+        self.n_rank = comm.Get_size()
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -131,7 +129,7 @@ cdef class DistributedMeshNodal:
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
     # ------------------------------------------------------------------------
-    def SetCoordinnates(self, NPY.ndarray[NPY.double_t  , mode='c', ndim=1] dVtxCoord):
+    def set_coordinnates(self, NPY.ndarray[NPY.double_t  , mode='c', ndim=1] dvtx_coord):
         """
         """
         # ************************************************************************
@@ -140,36 +138,36 @@ cdef class DistributedMeshNodal:
         # ************************************************************************
 
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
-        nVtx = dVtxCoord.shape[0]
-        PDM_DMesh_nodal_coord_set(self.idmesh, nVtx, <double *> dVtxCoord.data)
+        nVtx = dvtx_coord.shape[0]
+        PDM_DMesh_nodal_coord_set(self.idmesh, nVtx, <double *> dvtx_coord.data)
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
     # ------------------------------------------------------------------------
-    def SetSections(self, list ElmtList,
-                          NPY.ndarray[NPY.int32_t, mode='c', ndim=1] ElmtsTyp,
-                          NPY.ndarray[NPY.int32_t, mode='c', ndim=1] nElemts):
+    def set_sections(self, list elmt_list,
+                     NPY.ndarray[NPY.int32_t, mode='c', ndim=1] elmts_type,
+                     NPY.ndarray[NPY.int32_t, mode='c', ndim=1] n_elemts):
         """
            TODO : Split function as PDM
         """
         # ************************************************************************
         # > Declaration
         cdef int nVtx
-        cdef NPY.ndarray[npy_pdm_gnum_t, ndim=1, mode='fortran'] Connect
+        cdef NPY.ndarray[npy_pdm_gnum_t, ndim=1, mode='fortran'] connect
         # ************************************************************************
 
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
         # > Panic assert
-        assert(len(ElmtList) == ElmtsTyp.shape[0])
+        assert(len(elmt_list) == elmts_type.shape[0])
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
-        for iElmt, Connect in enumerate(ElmtList):
-          id_section = PDM_DMesh_nodal_section_add(self.idmesh, <PDM_Mesh_nodal_elt_t> ElmtsTyp[iElmt])
-          PDM_DMesh_nodal_section_std_set(self.idmesh, id_section, nElemts[iElmt], <PDM_g_num_t *> Connect.data)
+        for i_elmt, connect in enumerate(elmt_list):
+          id_section = PDM_DMesh_nodal_section_add(self.idmesh, <PDM_Mesh_nodal_elt_t> elmts_type[i_elmt])
+          PDM_DMesh_nodal_section_std_set(self.idmesh, id_section, n_elemts[i_elmt], <PDM_g_num_t *> connect.data)
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
     # ------------------------------------------------------------------------
-    def Compute(self):
+    def compute(self):
         """
         """
         # ************************************************************************
@@ -178,129 +176,134 @@ cdef class DistributedMeshNodal:
         PDM_DMesh_nodal_cell_face_compute(self.idmesh)
 
     # ------------------------------------------------------------------------
-    def getFaceCell(self):
+    def get_face_cell(self):
         """
         """
         # ************************************************************************
         # > Declaration
-        cdef PDM_g_num_t *faceCell
-        cdef PDM_g_num_t nFace
-        cdef PDM_g_num_t dNface
+        cdef PDM_g_num_t *face_cell
+        cdef PDM_g_num_t n_face
+        cdef PDM_g_num_t dn_face
         cdef NPY.npy_intp dim
         # ************************************************************************
 
         # > Get Size
-        nFace  = PDM_DMesh_nodal_total_n_face_get(self.idmesh)
+        n_face  = PDM_DMesh_nodal_total_n_face_get(self.idmesh)
 
         # > Get array
-        dNface = PDM_DMesh_nodal_face_cell_get(self.idmesh, &faceCell)
+        dn_face = PDM_DMesh_nodal_face_cell_get(self.idmesh, &face_cell)
 
         # > Build numpy capsule
-        dim = <NPY.npy_intp> 2 * dNface
-        npFaceCell = NPY.PyArray_SimpleNewFromData(1,
+        dim = <NPY.npy_intp> 2 * dn_face
+        np_face_cell = NPY.PyArray_SimpleNewFromData(1,
                                                    &dim,
                                                    PDM_G_NUM_NPY_INT,
-                                                   <void *> faceCell)
+                                                   <void *> face_cell)
 
-        return {'sFace'        : nFace,
-                 'dNFace'      : dNface,
-                 'npdFaceCell' : npFaceCell}
+        return {'n_face'        : n_face,
+                'dn_face'       : dn_face,
+                'np_dface_cell' : np_face_cell}
 
     # ------------------------------------------------------------------------
-    def getCellFace(self):
+    def get_cell_face(self):
         """
         """
         # ************************************************************************
         # > Declaration
-        cdef PDM_g_num_t *CellFace
-        cdef PDM_l_num_t *CellFaceIdx
-        cdef PDM_g_num_t nFace
-        cdef PDM_g_num_t dNface
+        cdef PDM_g_num_t *cell_face
+        cdef PDM_l_num_t *cell_face_idx
+        cdef PDM_g_num_t n_face
+        cdef PDM_g_num_t dn_face
         cdef NPY.npy_intp dim
         # ************************************************************************
 
         # > Get Size
-        # nCell  = PDM_DMesh_nodal_total_n_cell_get(self.idmesh)
-        nCell  = 0
+        n_cell  = PDM_DMesh_nodal_total_n_cell_get(self.idmesh)
+        # n_cell  = 0
 
         # > Get array
-        dNCell = PDM_DMesh_nodal_cell_face_get(self.idmesh,  &CellFaceIdx, &CellFace)
+        dn_cell = PDM_DMesh_nodal_cell_face_get(self.idmesh,  &cell_face_idx, &cell_face)
 
         # > Build numpy capsule
-        dim = <NPY.npy_intp> dNCell + 1
-        npCellFaceIdx = NPY.PyArray_SimpleNewFromData(1,
-                                                      &dim,
-                                                      NPY.NPY_INT32,
-                                                      <void *> CellFaceIdx)
+        dim = <NPY.npy_intp> dn_cell + 1
+        np_cell_face_idx = NPY.PyArray_SimpleNewFromData(1,
+                                                         &dim,
+                                                         NPY.NPY_INT32,
+                                                         <void *> cell_face_idx)
+        PyArray_ENABLEFLAGS(np_cell_face_idx, NPY.NPY_OWNDATA);
 
-        dim = <NPY.npy_intp> npCellFaceIdx[npCellFaceIdx.shape[0]-1]
-        npCellFace = NPY.PyArray_SimpleNewFromData(1,
-                                                   &dim,
-                                                   PDM_G_NUM_NPY_INT,
-                                                   <void *> CellFace)
+        dim = <NPY.npy_intp> np_cell_face_idx[np_cell_face_idx.shape[0]-1]
+        np_cell_face = NPY.PyArray_SimpleNewFromData(1,
+                                                     &dim,
+                                                     PDM_G_NUM_NPY_INT,
+                                                     <void *> cell_face)
+        PyArray_ENABLEFLAGS(np_cell_face, NPY.NPY_OWNDATA);
 
-        return {'sCell'           : nCell,
-                'dNCell'          : dNCell,
-                'npdCellFaceIdx'  : npCellFaceIdx,
-                'npdCellFace'     : npCellFace}
+        return {'n_cell'            : n_cell,
+                'dn_cell'           : dn_cell,
+                'npdcell_face_idx'  : np_cell_face_idx,
+                'npdcell_face'      : np_cell_face}
 
     # ------------------------------------------------------------------------
-    def getFaceVtx(self):
+    def get_face_vtx(self):
         """
         """
         # ************************************************************************
         # > Declaration
-        cdef PDM_g_num_t *faceVtx
-        cdef PDM_l_num_t *faceVtxIdx
-        cdef PDM_g_num_t nFace
-        cdef PDM_g_num_t dNface
+        cdef PDM_g_num_t *dface_vtx
+        cdef PDM_l_num_t *dface_vtx_idx
+        cdef PDM_g_num_t n_face
+        cdef PDM_g_num_t dn_face
         cdef NPY.npy_intp dim
         # ************************************************************************
 
         # > Get Size
-        nFace  = PDM_DMesh_nodal_total_n_face_get(self.idmesh)
+        n_face  = PDM_DMesh_nodal_total_n_face_get(self.idmesh)
 
         # > Get array
-        dNface = PDM_DMesh_nodal_face_vtx_get(self.idmesh, &faceVtxIdx, &faceVtx)
+        dn_face = PDM_DMesh_nodal_face_vtx_get(self.idmesh, &dface_vtx_idx, &dface_vtx)
 
         # > Build numpy capsule
-        dim = <NPY.npy_intp> dNface + 1
-        npfaceVtxIdx = NPY.PyArray_SimpleNewFromData(1,
-                                                   &dim,
-                                                   PDM_G_NUM_NPY_INT,
-                                                   <void *> faceVtxIdx)
+        dim = <NPY.npy_intp> dn_face + 1
+        np_dface_vtx_idx = NPY.PyArray_SimpleNewFromData(1,
+                                                         &dim,
+                                                         PDM_G_NUM_NPY_INT,
+                                                         <void *> dface_vtx_idx)
+        PyArray_ENABLEFLAGS(np_dface_vtx_idx, NPY.NPY_OWNDATA);
 
-        dim = <NPY.npy_intp> npfaceVtxIdx[npfaceVtxIdx.shape[0]-1]
-        npfaceVtx = NPY.PyArray_SimpleNewFromData(1,
-                                                   &dim,
-                                                   PDM_G_NUM_NPY_INT,
-                                                   <void *> faceVtx)
+        dim = <NPY.npy_intp> np_dface_vtx_idx[np_dface_vtx_idx.shape[0]-1]
+        np_face_vtx = NPY.PyArray_SimpleNewFromData(1,
+                                                    &dim,
+                                                    PDM_G_NUM_NPY_INT,
+                                                    <void *> dface_vtx)
+        PyArray_ENABLEFLAGS(np_face_vtx, NPY.NPY_OWNDATA);
 
-        return {'sFace'         : nFace,
-                 'npdFaceVtxIdx' : npfaceVtxIdx,
-                 'npdFaceVtx'    : npfaceVtx}
+        return {'n_face'           : n_face,
+                'np_dface_vtx_idx' : np_dface_vtx_idx,
+                'np_dface_vtx'     : np_face_vtx}
 
     # ------------------------------------------------------------------------
-    def getDistribFace(self):
+    def get_distrib_face(self):
         """
         """
         # ************************************************************************
         # > Declaration
-        cdef PDM_g_num_t *faceDistrib
+        cdef PDM_g_num_t *face_distrib
         cdef NPY.npy_intp dim
         # ************************************************************************
 
         # > Get array
-        faceDistrib = PDM_DMesh_nodal_distrib_face_get(self.idmesh)
+        face_distrib = PDM_DMesh_nodal_distrib_face_get(self.idmesh)
 
         # > Build numpy capsule
-        dim = <NPY.npy_intp> self.Rank + 1
-        npDistribFace = NPY.PyArray_SimpleNewFromData(1,
-                                                      &dim,
-                                                      PDM_G_NUM_NPY_INT,
-                                                      <void *> faceDistrib)
+        dim = <NPY.npy_intp> self.n_rank + 1
+        np_distrib_face = NPY.PyArray_SimpleNewFromData(1,
+                                                        &dim,
+                                                        PDM_G_NUM_NPY_INT,
+                                                        <void *> face_distrib)
+        PyArray_ENABLEFLAGS(np_distrib_face, NPY.NPY_OWNDATA);
 
-        return npDistribFace
+        return np_distrib_face
 
     # ------------------------------------------------------------------------
     def __dealloc__(self):
@@ -310,10 +313,9 @@ cdef class DistributedMeshNodal:
       # ************************************************************************
       # > Declaration
       # ************************************************************************
-
       # > Free Ppart Structure
       print('PDM_DMesh_nodal_free')
-      PDM_DMesh_nodal_free(self.idmesh)
+      PDM_DMesh_nodal_free(self.idmesh, 1)
 
 
 

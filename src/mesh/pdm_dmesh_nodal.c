@@ -1113,7 +1113,9 @@ const PDM_MPI_Comm comm,
 /**
  * \brief Free a nodal mesh structure
  *
- * \param [in]  idx   Nodal mesh handle
+ * \param [in]  idx      Nodal mesh handle
+ * \param [in]  partial  if partial is equal to 0, all data are removed.
+ *                       Otherwise, results are kept.
  *
  * \return      NULL
  *
@@ -1122,10 +1124,11 @@ const PDM_MPI_Comm comm,
 void
 PDM_DMesh_nodal_free
 (
-const int hdl
+const int hdl,
+const int partial
 )
 {
-
+  printf("void PDM_DMesh_nodal_free \n");
   PDM_DMesh_nodal_t * mesh = (PDM_DMesh_nodal_t *) PDM_Handles_get (mesh_handles, hdl);
 
   if (mesh != NULL) {
@@ -1193,28 +1196,30 @@ const int hdl
       free (mesh->sections_id);
     }
 
-    if (mesh->dcell_face_idx != NULL) {
-      free (mesh->dcell_face_idx);
-    }
+    if(partial == 0){
+      if (mesh->dcell_face_idx != NULL) {
+        free (mesh->dcell_face_idx);
+      }
 
-    if (mesh->dcell_face != NULL) {
-      free (mesh->dcell_face);
-    }
+      if (mesh->dcell_face != NULL) {
+        free (mesh->dcell_face);
+      }
 
-    if (mesh->cell_distrib != NULL) {
-      free (mesh->cell_distrib);
-    }
+      if (mesh->cell_distrib != NULL) {
+        free (mesh->cell_distrib);
+      }
 
-    if (mesh->_dface_vtx_idx != NULL) {
-      free (mesh->_dface_vtx_idx);
-    }
+      if (mesh->_dface_vtx_idx != NULL) {
+        free (mesh->_dface_vtx_idx);
+      }
 
-    if (mesh->_dface_vtx != NULL) {
-      free (mesh->_dface_vtx);
-    }
+      if (mesh->_dface_vtx != NULL) {
+        free (mesh->_dface_vtx);
+      }
 
-    if (mesh->face_distrib != NULL) {
-      free (mesh->face_distrib);
+      if (mesh->face_distrib != NULL) {
+        free (mesh->face_distrib);
+      }
     }
 
     free(mesh);
@@ -2170,32 +2175,39 @@ const int  hdl
   }
 
   PDM_g_num_t total_n_cell = 0;
+  const int *list_ind = NULL;
 
-  int n_sections_std = PDM_Handles_n_get (mesh->sections_std);
-  const int *list_ind = PDM_Handles_idx_get (mesh->sections_std);
+  if (mesh->sections_std != NULL) {
+    int n_sections_std = PDM_Handles_n_get (mesh->sections_std);
+    list_ind = PDM_Handles_idx_get (mesh->sections_std);
 
-  for (int i = 0; i < n_sections_std; i++) {
-    PDM_DMesh_nodal_section_std_t *_section_std =
-      (PDM_DMesh_nodal_section_std_t *) PDM_Handles_get (mesh->sections_std, list_ind[i]);
-    total_n_cell += _section_std->distrib[mesh->n_proc];
+    for (int i = 0; i < n_sections_std; i++) {
+      PDM_DMesh_nodal_section_std_t *_section_std =
+        (PDM_DMesh_nodal_section_std_t *) PDM_Handles_get (mesh->sections_std, list_ind[i]);
+      total_n_cell += _section_std->distrib[mesh->n_proc];
+    }
   }
 
-  int n_sections_poly2d = PDM_Handles_n_get (mesh->sections_poly2d);
-  list_ind = PDM_Handles_idx_get (mesh->sections_poly2d);
+  if (mesh->sections_poly2d != NULL) {
+    int n_sections_poly2d = PDM_Handles_n_get (mesh->sections_poly2d);
+    list_ind = PDM_Handles_idx_get (mesh->sections_poly2d);
 
-  for (int i = 0; i < n_sections_poly2d; i++) {
-    PDM_DMesh_nodal_section_poly2d_t *_section_poly2d =
-      (PDM_DMesh_nodal_section_poly2d_t *) PDM_Handles_get (mesh->sections_poly2d, list_ind[i]);
-    total_n_cell += _section_poly2d->distrib[mesh->n_proc];
+    for (int i = 0; i < n_sections_poly2d; i++) {
+      PDM_DMesh_nodal_section_poly2d_t *_section_poly2d =
+        (PDM_DMesh_nodal_section_poly2d_t *) PDM_Handles_get (mesh->sections_poly2d, list_ind[i]);
+      total_n_cell += _section_poly2d->distrib[mesh->n_proc];
+    }
   }
 
-  int n_sections_poly3d = PDM_Handles_n_get (mesh->sections_poly3d);
-  list_ind = PDM_Handles_idx_get (mesh->sections_poly3d);
+  if (mesh->sections_poly3d != NULL) {
+    int n_sections_poly3d = PDM_Handles_n_get (mesh->sections_poly3d);
+    list_ind = PDM_Handles_idx_get (mesh->sections_poly3d);
 
-  for (int i = 0; i < n_sections_poly3d; i++) {
-    PDM_DMesh_nodal_section_poly3d_t *_section_poly3d =
-      (PDM_DMesh_nodal_section_poly3d_t *) PDM_Handles_get (mesh->sections_poly3d, list_ind[i]);
-    total_n_cell += _section_poly3d->distrib[mesh->n_proc];
+    for (int i = 0; i < n_sections_poly3d; i++) {
+      PDM_DMesh_nodal_section_poly3d_t *_section_poly3d =
+        (PDM_DMesh_nodal_section_poly3d_t *) PDM_Handles_get (mesh->sections_poly3d, list_ind[i]);
+      total_n_cell += _section_poly3d->distrib[mesh->n_proc];
+    }
   }
 
   return total_n_cell;

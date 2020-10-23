@@ -103,7 +103,7 @@ MPI_TEST_CASE("decomposes hexa ",1) {
   // PDM_log_trace_array_int(dface_vtx_idx, dn_face+1, "dface_vtx_idx:: ");
   // PDM_log_trace_array_long(dface_vtx, dface_vtx_idx[dn_face], "dface_vtx:: ");
 
-  PDM_DMesh_nodal_free(dmesh_nodal_id);
+  PDM_DMesh_nodal_free(dmesh_nodal_id, 0);
 }
 
 
@@ -206,7 +206,7 @@ MPI_TEST_CASE("decomposes tetra ",1) {
   // PDM_log_trace_array_int(dface_vtx_idx, dn_face+1, "dface_vtx_idx:: ");
   // PDM_log_trace_array_long(dface_vtx, dface_vtx_idx[dn_face], "dface_vtx:: ");
 
-  PDM_DMesh_nodal_free(dmesh_nodal_id);
+  PDM_DMesh_nodal_free(dmesh_nodal_id, 0);
 }
 
 
@@ -305,7 +305,7 @@ MPI_TEST_CASE("decomposes pyra ",1) {
   // PDM_log_trace_array_int(dface_vtx_idx, dn_face+1, "dface_vtx_idx:: ");
   // PDM_log_trace_array_long(dface_vtx, dface_vtx_idx[dn_face], "dface_vtx:: ");
 
-  PDM_DMesh_nodal_free(dmesh_nodal_id);
+  PDM_DMesh_nodal_free(dmesh_nodal_id, 0);
 }
 
 
@@ -402,7 +402,7 @@ MPI_TEST_CASE("decomposes prism ",1) {
   // PDM_log_trace_array_int(dface_vtx_idx, dn_face+1, "dface_vtx_idx:: ");
   // PDM_log_trace_array_long(dface_vtx, dface_vtx_idx[dn_face], "dface_vtx:: ");
 
-  PDM_DMesh_nodal_free(dmesh_nodal_id);
+  PDM_DMesh_nodal_free(dmesh_nodal_id, 0);
 }
 
 
@@ -500,7 +500,7 @@ MPI_TEST_CASE("decomposes prism ",1) {
 //   PDM_log_trace_array_int(dface_vtx_idx, dn_face+1, "dface_vtx_idx:: ");
 //   PDM_log_trace_array_long(dface_vtx, dface_vtx_idx[dn_face], "dface_vtx:: ");
 
-//   PDM_DMesh_nodal_free(dmesh_nodal_id);
+//   PDM_DMesh_nodal_free(dmesh_nodal_id, 0);
 // }
 
 
@@ -603,7 +603,7 @@ MPI_TEST_CASE("decomposes prism ",1) {
 //   // PDM_log_trace_array_int(dface_vtx_idx, dn_face+1, "dface_vtx_idx:: ");
 //   // PDM_log_trace_array_long(dface_vtx, dface_vtx_idx[dn_face], "dface_vtx:: ");
 
-//   PDM_DMesh_nodal_free(dmesh_nodal_id);
+//   PDM_DMesh_nodal_free(dmesh_nodal_id, 0);
 // }
 
 

@@ -64,7 +64,8 @@ const PDM_MPI_Comm comm,
 void
 PDM_DMesh_nodal_free
 (
-const int hdl
+const int hdl,
+const int partial
 );
 
 /**
