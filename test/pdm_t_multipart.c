@@ -514,15 +514,14 @@ int main(int argc, char *argv[])
   }
 
   /* Free memory */
-  for (int i_zone = 0; i_zone < n_zone; i_zone++)
-  {
+  for (int i_zone = 0; i_zone < n_zone; i_zone++) {
     free(dface_bnd_idx[i_zone]);
     free(dface_bnd[i_zone]);
     free(dface_join_idx[i_zone]);
     free(dface_join[i_zone]);
     free(djoins_ids[i_zone]);
     PDM_dmesh_free(dmesh_ids[i_zone]);
-    PDM_dcube_gen_free(dcube_ids[i_zone]);
+    PDM_dcube_gen_free(dcube_ids[i_zone], 0);
   }
   free(dcube_ids);
   free(dn_cell);

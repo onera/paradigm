@@ -66,11 +66,11 @@ PROCF (pdm_dcube_gen_init, PDM_DCUBE_GEN_INIT)
  *
  * \param [in]   id          dcube identifier
  * \param [out]  n_face_group  Number of faces groups
- * \param [out]  dn_cell      Number of cells stored in this process
- * \param [out]  dn_face      Number of faces stored in this process
- * \param [out]  dn_vtx       Number of vertices stored in this process
- * \param [out]  dface_vtxL   Length of dface_vtx array
- * \param [out]  dFacegroupL Length of dface_group array
+ * \param [out]  dn_cell       Number of cells stored in this process
+ * \param [out]  dn_face       Number of faces stored in this process
+ * \param [out]  dn_vtx        Number of vertices stored in this process
+ * \param [out]  sface_vtx     Length of dface_vtx array
+ * \param [out]  sface_group   Length of dface_group array
  *
  */
 
@@ -82,8 +82,8 @@ PDM_dcube_gen_dim_get
  int                *dn_cell,
  int                *dn_face,
  int                *dn_vtx,
- int                *dface_vtxL,
- int                *dFacegrouL
+ int                *sface_vtx,
+ int                *sface_group
 );
 
 
@@ -95,8 +95,8 @@ PROCF(pdm_dcube_gen_dim_get, PDM_DCUBE_GEN_DIM_GET)
  int                *dn_cell,
  int                *dn_face,
  int                *dn_vtx,
- int                *dface_vtxL,
- int                *dFacegroupL
+ int                *sface_vtx,
+ int                *sface_group
 );
 
 
@@ -104,25 +104,25 @@ PROCF(pdm_dcube_gen_dim_get, PDM_DCUBE_GEN_DIM_GET)
  *
  * \brief Return distributed cube data
  *
- * \param [in]  id            dcube identifier
- * \param [out] dface_cell     Faces from cells connectivity (size = 2 * dn_face)
+ * \param [in]  id              dcube identifier
+ * \param [out] dface_cell      Faces from cells connectivity (size = 2 * dn_face)
  * \param [out] dface_vtx_idx   Faces from vertices connectivity index (size = dn_face + 1)
- * \param [out] dface_vtx      Faces from vertices connectivity (size = dface_vtxL)
- * \param [out] dvtx_coord     Vertices coordinates (size = 3 * dn_vtx)
+ * \param [out] dface_vtx       Faces from vertices connectivity (size = dface_vtxL)
+ * \param [out] dvtx_coord      Vertices coordinates (size = 3 * dn_vtx)
  * \param [out] dface_group_idx Faces groups index (size = n_face_group + 1)
- * \param [out] dface_group    Faces groups (size = dFacegroupL)
+ * \param [out] dface_group     Faces groups (size = dFacegroupL)
  *
  */
 
 void
 PDM_dcube_gen_data_get
 (
- int                 id,
+ int                id,
  PDM_g_num_t      **dface_cell,
- int               **dface_vtx_idx,
+ int              **dface_vtx_idx,
  PDM_g_num_t      **dface_vtx,
- double            **dvtx_coord,
- int               **dface_group_idx,
+ double           **dvtx_coord,
+ int              **dface_group_idx,
  PDM_g_num_t      **dface_group
 );
 
@@ -130,12 +130,12 @@ PDM_dcube_gen_data_get
 void
 PROCF (pdm_dcube_gen_data_get, PDM_DCUBE_GEN_DATA_GET)
 (
- int               *id,
+ int              *id,
  PDM_g_num_t      *dface_cell,
- int               *dface_vtx_idx,
+ int              *dface_vtx_idx,
  PDM_g_num_t      *dface_vtx,
- double            *dvtx_coord,
- int               *dface_group_idx,
+ double           *dvtx_coord,
+ int              *dface_group_idx,
  PDM_g_num_t      *dface_group
 );
 
@@ -151,14 +151,16 @@ PROCF (pdm_dcube_gen_data_get, PDM_DCUBE_GEN_DATA_GET)
 void
 PDM_dcube_gen_free
 (
- int  id
- );
+const int id,
+const int partial
+);
 
 void
 PROCF (pdm_dcube_gen_free, PDM_DCUBE_GEN_FREE)
 (
- int  *id
- );
+int  *id,
+int  *partial
+);
 
 #ifdef __cplusplus
 }

@@ -660,7 +660,7 @@ int main(int argc, char *argv[])
 
 
 
-  PDM_dcube_gen_free(id);
+  PDM_dcube_gen_free(id, 0);
 
   PDM_MPI_Finalize();
 

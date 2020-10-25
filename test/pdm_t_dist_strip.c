@@ -863,7 +863,7 @@ int main(int argc, char *argv[])
 
   PDM_part_free(ppart_id);
 
-  PDM_dcube_gen_free(id);
+  PDM_dcube_gen_free(id, 0);
   PDM_dist_cloud_surf_dump_times(id_dist);
   int partial = 0;
   PDM_dist_cloud_surf_free (id_dist, partial);

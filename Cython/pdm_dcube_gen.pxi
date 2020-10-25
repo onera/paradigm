@@ -14,8 +14,8 @@ cdef extern from "pdm_dcube_gen.h":
                                int                *dn_cell,
                                int                *dn_face,
                                int                *dn_vtx,
-                               int                *dface_vtxL,
-                               int                *dFacegroupL)
+                               int                *sface_vtx,
+                               int                *sface_group)
 
     # ------------------------------------------------------------------
     void PDM_dcube_gen_data_get(int                 id,
@@ -27,7 +27,7 @@ cdef extern from "pdm_dcube_gen.h":
                                 PDM_g_num_t       **dface_group)
 
     # ------------------------------------------------------------------
-    void PDM_dcube_gen_free(int  id)
+    void PDM_dcube_gen_free(int  id, int partial)
     # ------------------------------------------------------------------
 
 # ------------------------------------------------------------------
@@ -63,7 +63,7 @@ cdef class DCubeGenerator:
 
     # ------------------------------------------------------------------
     def __dealloc__(self):
-        PDM_dcube_gen_free(self._dcube_id)
+        PDM_dcube_gen_free(self._dcube_id, 1)
 
     # ------------------------------------------------------------------
     def dcube_dim_get(self):
@@ -76,8 +76,8 @@ cdef class DCubeGenerator:
         cdef int dn_cell
         cdef int dn_face
         cdef int dn_vtx
-        cdef int dface_vtxL
-        cdef int dFacegroupL
+        cdef int sface_vtx
+        cdef int sface_group
         # ************************************************************************
 
         PDM_dcube_gen_dim_get(self._dcube_id,
@@ -85,15 +85,15 @@ cdef class DCubeGenerator:
                               &dn_cell,
                               &dn_face,
                               &dn_vtx,
-                              &dface_vtxL,
-                              &dFacegroupL)
+                              &sface_vtx,
+                              &sface_group)
 
-        return {'nFaceGroup'    : n_face_group,
-                'dnCell'        : dn_cell,
-                'dnFace'        : dn_face,
-                'dnVtx'         : dn_vtx,
-                'dFaceVtxL'     : dface_vtxL,
-                'dFaceGroupL'   : dFacegroupL}
+        return {'n_face_group' : n_face_group,
+                'dn_cell'      : dn_cell,
+                'dn_face'      : dn_face,
+                'dn_vtx'       : dn_vtx,
+                'sface_vtx'    : sface_vtx,
+                'sface_group'  : sface_group}
 
     # ------------------------------------------------------------------
     def dcube_val_get(self):
@@ -122,50 +122,56 @@ cdef class DCubeGenerator:
                                &dface_group)
 
         # \param [out]  dface_cell            Face to cell connectivity (size = 2*nFace)
-        dim = <NPY.npy_intp> 2*dims['dnFace']
-        npFaceCell = NPY.PyArray_SimpleNewFromData(1,
+        dim = <NPY.npy_intp> 2*dims['dn_face']
+        np_dface_cell = NPY.PyArray_SimpleNewFromData(1,
                                                    &dim,
                                                    PDM_G_NUM_NPY_INT,
                                                    <void *> dface_cell)
+        PyArray_ENABLEFLAGS(np_dface_cell, NPY.NPY_OWNDATA);
 
         # \param [out]  dface_vtx_idx        Face to vtx connectivity indexes (size = nFace+1)
-        dim = <NPY.npy_intp> (dims['dnFace'] + 1)
-        npFaceVtxIdx = NPY.PyArray_SimpleNewFromData(1,
+        dim = <NPY.npy_intp> (dims['dn_face'] + 1)
+        np_dface_vtx_idx = NPY.PyArray_SimpleNewFromData(1,
                                                      &dim,
                                                      NPY.NPY_INT32,
                                                      <void *> dface_vtx_idx)
+        PyArray_ENABLEFLAGS(np_dface_vtx_idx, NPY.NPY_OWNDATA);
 
         # \param [out]  dface_vtx            Face to vtx connectivity (size = dface_vtx_idx[nFace])
-        dim = <NPY.npy_intp> dims['dFaceVtxL']
-        npFaceVtx = NPY.PyArray_SimpleNewFromData(1,
+        dim = <NPY.npy_intp> dims['sface_vtx']
+        np_dface_vtx = NPY.PyArray_SimpleNewFromData(1,
                                                   &dim,
                                                   PDM_G_NUM_NPY_INT,
                                                   <void *> dface_vtx)
+        PyArray_ENABLEFLAGS(np_dface_vtx, NPY.NPY_OWNDATA);
 
         # \param [out]  dvtx_coords          Vertices coordinates (size = 3*nVtx)
-        dim = <NPY.npy_intp> 3*dims['dnVtx']
-        npVtxCoord = NPY.PyArray_SimpleNewFromData(1,
+        dim = <NPY.npy_intp> 3*dims['dn_vtx']
+        np_dtx_coord = NPY.PyArray_SimpleNewFromData(1,
                                                    &dim,
                                                    NPY.NPY_DOUBLE,
                                                    <void *> dvtx_coord)
+        PyArray_ENABLEFLAGS(np_dtx_coord, NPY.NPY_OWNDATA);
 
-        # \param [out]  dface_group_idx       Face group indexes (size = nFaceGroup + 1)
-        dim = <NPY.npy_intp> (dims['nFaceGroup'] + 1)
-        npFaceGroupIdx = NPY.PyArray_SimpleNewFromData(1,
+        # \param [out]  dface_group_idx       Face group indexes (size = n_face_group + 1)
+        dim = <NPY.npy_intp> (dims['n_face_group'] + 1)
+        np_dface_group_idx = NPY.PyArray_SimpleNewFromData(1,
                                                        &dim,
                                                        NPY.NPY_INT32,
                                                        <void *> dface_group_idx)
+        PyArray_ENABLEFLAGS(np_dface_group_idx, NPY.NPY_OWNDATA);
 
-        # \param [out]  dface_group          Face group (size = dface_group_idx[nFaceGroup])
-        dim = <NPY.npy_intp> dims['dFaceGroupL']
-        npFaceGroup = NPY.PyArray_SimpleNewFromData(1,
+        # \param [out]  dface_group          Face group (size = dface_group_idx[n_face_group])
+        dim = <NPY.npy_intp> dims['sface_group']
+        np_dface_group = NPY.PyArray_SimpleNewFromData(1,
                                                     &dim,
                                                     PDM_G_NUM_NPY_INT,
                                                     <void *> dface_group)
+        PyArray_ENABLEFLAGS(np_dface_group, NPY.NPY_OWNDATA);
 
-        return {'dFaceCell'              : npFaceCell,
-                'dFaceVtxIdx'            : npFaceVtxIdx,
-                'dFaceVtx'               : npFaceVtx,
-                'dVtxCoord'              : npVtxCoord,
-                'dFaceGroupIdx'          : npFaceGroupIdx,
-                'dFaceGroup'             : npFaceGroup}
+        return {'dface_cell'      : np_dface_cell,
+                'dface_vtx_idx'   : np_dface_vtx_idx,
+                'dface_vtx'       : np_dface_vtx,
+                'dvtx_coord'      : np_dtx_coord,
+                'dface_group_idx' : np_dface_group_idx,
+                'dface_group'     : np_dface_group}
