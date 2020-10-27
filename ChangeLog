@@ -11,17 +11,17 @@
   - PDM_ho_basis : High order basis for tetrahedron, hexahedron, prism, pyramid, triangle and quadrangle
   - PDM_ho_location : Point location into a high order curved element
   - PDM_logging : Managing a logging file
-  - PDM_dconnectivity_transform : ??
+  - PDM_dconnectivity_transform : Set of function to perform distributed operation on connectivity (combine, transform, reverse)
   - PDM_dmesh_nodal_elements_utils : Operations about a dmesh_nodal mesh
   - PDM_point_location : Point location in a PDM_mesh_nodal
   - PDM_tetrahedron : Elementary functions about tetrahedron
   - PDM_triangulate : Polygon triangulation
   - PDM_para_graph_dual : Parallel building of a dual graph mesh
   - PDM_partitioning_algorithm : Steps of the partitioning algorithm called from PDM_dmesh_partitioning
-  - PDM_compare_operator : ??
+  - PDM_compare_operator : Implementation of comparaison operator for string and connectivity (useful for PDM_gnum_from_hash_values)
   - PDM_dmesh : Distributed mesh defined from a top-down connectivity
-  - PDM_equal_operator : ??
-  - PDM_gnum_from_hash_values : ??
+  - PDM_equal_operator : Implementation of equal operator for string and connectivity (useful for PDM_gnum_from_hash_values)
+  - PDM_gnum_from_hash_values : Structure to build a global numbering from keys, useful to building edge global numebring or face global numbering. The idea is to use a distribution of key for each rank, sort locally and resend to original distribution
 - Fortran interface : pdm_closest_points,
                       pdm_mesh_location,
                       pdm_block_to_part,
