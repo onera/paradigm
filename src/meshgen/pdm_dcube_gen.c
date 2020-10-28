@@ -231,8 +231,8 @@ PDM_dcube_gen_init
   const PDM_g_num_t b_vtx_y = r_vtx_z / n_vtx_seg;
   const PDM_g_num_t b_vtx_x = r_vtx_z % n_vtx_seg;
 
-  int iVtx = 0;
-  int cpt  = 0;
+  int i_vtx = 0;
+  int cpt   = 0;
 
   for(PDM_g_num_t k = b_vtx_z; k < n_vtx_seg; k++) {
     PDM_g_num_t _b_vtx_y = 0;
@@ -243,11 +243,11 @@ PDM_dcube_gen_init
       if ((k == b_vtx_z) && (j == b_vtx_y))
         _b_vtx_x = b_vtx_x;
       for(PDM_g_num_t i = _b_vtx_x; i < n_vtx_seg; i++) {
-        _dvtx_coord[3 * iVtx    ] = i * step + zero_x;
-        _dvtx_coord[3 * iVtx + 1] = j * step + zero_y;
-        _dvtx_coord[3 * iVtx + 2] = k * step + zero_z;
-        cpt += 1;
-        iVtx += 1;
+        _dvtx_coord[3 * i_vtx    ] = i * step + zero_x;
+        _dvtx_coord[3 * i_vtx + 1] = j * step + zero_y;
+        _dvtx_coord[3 * i_vtx + 2] = k * step + zero_z;
+        cpt   += 1;
+        i_vtx += 1;
         if (cpt == dcube->dn_vtx)
           break;
       }
@@ -432,12 +432,12 @@ PDM_dcube_gen_init
   // Faces limite
 
   cpt = 0;
-  PDM_g_num_t bFace;
+  PDM_g_num_t b_face;
   int cpt1 = 0;
   int cpt3 = 0;
   int first_group = 0;
 
-  serie  = n_face_lim / dcube->n_face_group;
+  serie   = n_face_lim / dcube->n_face_group;
   i_serie = distrib_face_lim[i_rank] / serie;
   r_serie = distrib_face_lim[i_rank] % serie;
 
@@ -459,14 +459,14 @@ PDM_dcube_gen_init
 
     cpt1 = cpt;
 
-    bFace = 0;
+    b_face = 0;
 
     cpt3 = 0;
     for(PDM_g_num_t j = 0; j < n_face_seg; j++) {
       for(PDM_g_num_t i = 0; i < n_face_seg; i++) {
         cpt3 += 1;
         if (!first_group || (first_group && ((cpt3 - 1)  >= r_serie))) {
-          _dface_group[cpt] = bFace + j * n_face_seg + i + 1;
+          _dface_group[cpt] = b_face + j * n_face_seg + i + 1;
           cpt += 1;
           if (cpt == dn_face_lim)
             break;
@@ -495,14 +495,14 @@ PDM_dcube_gen_init
 
     cpt1 = cpt;
 
-    bFace = n_face_seg * n_face_seg * n_face_seg;
+    b_face = n_face_seg * n_face_seg * n_face_seg;
 
     cpt3 = 0;
     for(PDM_g_num_t j = 0; j < n_face_seg; j++) {
       for(PDM_g_num_t i = 0; i < n_face_seg; i++) {
         cpt3 += 1;
         if (!first_group || (first_group && ((cpt3 - 1)  >= r_serie))) {
-          _dface_group[cpt] = bFace + j * n_face_seg + i + 1;
+          _dface_group[cpt] = b_face + j * n_face_seg + i + 1;
           cpt += 1;
           if (cpt == dn_face_lim)
             break;
@@ -530,14 +530,14 @@ PDM_dcube_gen_init
 
     cpt1 = cpt;
 
-    bFace = n_face_seg * n_face_seg * n_vtx_seg;
+    b_face = n_face_seg * n_face_seg * n_vtx_seg;
 
     cpt3 = 0;
     for(PDM_g_num_t j = 0; j < n_face_seg; j++) {
       for(PDM_g_num_t i = 0; i < n_face_seg; i++) {
         cpt3 += 1;
         if (!first_group || (first_group && ((cpt3 - 1)  >= r_serie))) {
-          _dface_group[cpt] = bFace + j * n_face_seg + i + 1;
+          _dface_group[cpt] = b_face + j * n_face_seg + i + 1;
           cpt += 1;
           if (cpt == dn_face_lim)
             break;
@@ -565,14 +565,14 @@ PDM_dcube_gen_init
 
     cpt1 = cpt;
 
-    bFace = n_face_seg * n_face_seg * (n_vtx_seg + n_face_seg);
+    b_face = n_face_seg * n_face_seg * (n_vtx_seg + n_face_seg);
 
     cpt3 = 0;
     for(PDM_g_num_t j = 0; j < n_face_seg; j++) {
       for(PDM_g_num_t i = 0; i < n_face_seg; i++) {
         cpt3 += 1;
         if (!first_group || (first_group && ((cpt3 - 1)  >= r_serie))) {
-          _dface_group[cpt] = bFace + j * n_face_seg + i + 1;
+          _dface_group[cpt] = b_face + j * n_face_seg + i + 1;
           cpt += 1;
           if (cpt == dn_face_lim)
             break;
@@ -600,14 +600,14 @@ PDM_dcube_gen_init
 
     cpt1 = cpt;
 
-    bFace = n_face_seg * n_face_seg * (n_vtx_seg + n_vtx_seg);
+    b_face = n_face_seg * n_face_seg * (n_vtx_seg + n_vtx_seg);
 
     cpt3 = 0;
     for(PDM_g_num_t j = 0; j < n_face_seg; j++) {
       for(PDM_g_num_t i = 0; i < n_face_seg; i++) {
         cpt3 += 1;
         if (!first_group || (first_group && ((cpt3 - 1)  >= r_serie))) {
-          _dface_group[cpt] = bFace + j * n_face_seg + i + 1;
+          _dface_group[cpt] = b_face + j * n_face_seg + i + 1;
           cpt += 1;
           if (cpt == dn_face_lim)
             break;
@@ -636,14 +636,14 @@ PDM_dcube_gen_init
 
     cpt1 = cpt;
 
-    bFace = n_face_seg * n_face_seg * (n_vtx_seg + n_vtx_seg + n_face_seg);
+    b_face = n_face_seg * n_face_seg * (n_vtx_seg + n_vtx_seg + n_face_seg);
 
     cpt3 = 0;
     for(PDM_g_num_t j = 0; j < n_face_seg; j++) {
       for(PDM_g_num_t i = 0; i < n_face_seg; i++) {
         cpt3 += 1;
         if (!first_group || (first_group && ((cpt3 - 1)  >= r_serie))) {
-          _dface_group[cpt] = bFace + j * n_face_seg + i + 1;
+          _dface_group[cpt] = b_face + j * n_face_seg + i + 1;
           cpt += 1;
           if (cpt == dn_face_lim)
             break;
@@ -700,7 +700,7 @@ PROCF (pdm_dcube_gen_init, PDM_DCUBE_GEN_INIT)
  *
  * \brief Return distributed cube size
  *
- * \param [in]   id          dcube identifier
+ * \param [in]   id            dcube identifier
  * \param [out]  n_face_group  Number of faces groups
  * \param [out]  dn_cell       Number of cells stored in this process
  * \param [out]  dn_face       Number of faces stored in this process
@@ -759,13 +759,13 @@ PROCF(pdm_dcube_gen_dim_get, PDM_DCUBE_GEN_DIM_GET)
  *
  * \brief Return distributed cube data
  *
- * \param [in]  id            dcube identifier
- * \param [out] dface_cell     Faces from cells connectivity (size = 2 * dn_face)
- * \param [out] dface_vtx_idx   Faces from vertices connectivity index (size = dn_face + 1)
- * \param [out] dface_vtx      Faces from vertices connectivity (size = sface_vtx)
- * \param [out] dvtx_coord     Vertices coordinates (size = 3 * dn_vtx)
+ * \param [in]  id              dcube identifier
+ * \param [out] dface_cell      Faces from cells connectivity (size = 2 * dn_face)
+ * \param [out] dface_vtx_idx    Faces from vertices connectivity index (size = dn_face + 1)
+ * \param [out] dface_vtx       Faces from vertices connectivity (size = sface_vtx)
+ * \param [out] dvtx_coord      Vertices coordinates (size = 3 * dn_vtx)
  * \param [out] dface_group_idx Faces groups index (size = n_face_group + 1)
- * \param [out] dface_group    Faces groups (size = sface_group)
+ * \param [out] dface_group     Faces groups (size = sface_group)
  *
  */
 
