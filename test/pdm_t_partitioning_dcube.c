@@ -200,7 +200,8 @@ int main(int argc, char *argv[])
                       length,
             		      0.,
 		                  0.,
-		                  0.);
+		                  0.,
+                      PDM_OWNERSHIP_KEEP);
 
   PDM_dcube_gen_dim_get(id,
                          &n_face_group,
@@ -660,7 +661,7 @@ int main(int argc, char *argv[])
 
 
 
-  PDM_dcube_gen_free(id, 0);
+  PDM_dcube_gen_free(id);
 
   PDM_MPI_Finalize();
 

@@ -174,6 +174,20 @@ typedef enum {
 } PDM_mesh_nature_t;
 
 
+/**
+ * \enum PDM_ownership_t
+ * \brief Bool type
+ *
+ */
+
+typedef enum {
+
+  PDM_OWNERSHIP_KEEP = 0, /*!< paradigm will free results */
+  PDM_OWNERSHIP_USER = 1  /*!< Ownership is give          */
+
+} PDM_ownership_t;
+
+
 /*=============================================================================
  * Public function prototypes
  *============================================================================*/

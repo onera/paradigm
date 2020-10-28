@@ -217,7 +217,8 @@ int main(int argc, char *argv[])
                      length,
                      xmin,
                      ymin,
-                     zmin);
+                     zmin,
+                     PDM_OWNERSHIP_KEEP);
 
   PDM_dcube_gen_dim_get(id,
                       &n_face_group,
@@ -800,7 +801,7 @@ int main(int argc, char *argv[])
 
   PDM_part_free(ppart_id);
 
-  PDM_dcube_gen_free(id, 0);
+  PDM_dcube_gen_free(id);
   PDM_dist_cloud_surf_dump_times(id_dist);
   int partial = 0;
   PDM_dist_cloud_surf_free (id_dist, partial);

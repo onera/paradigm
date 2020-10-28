@@ -6,7 +6,8 @@ cdef extern from "pdm_dcube_gen.h":
                             const double        length,
                             const double        zero_x,
                             const double        zero_y,
-                            const double        zero_z)
+                            const double        zero_z,
+                            PDM_ownership_t     owner)
 
     # ------------------------------------------------------------------
     void PDM_dcube_gen_dim_get(int                id,
@@ -27,7 +28,7 @@ cdef extern from "pdm_dcube_gen.h":
                                 PDM_g_num_t       **dface_group)
 
     # ------------------------------------------------------------------
-    void PDM_dcube_gen_free(int  id, int partial)
+    void PDM_dcube_gen_free(int  id)
     # ------------------------------------------------------------------
 
 # ------------------------------------------------------------------
@@ -58,12 +59,13 @@ cdef class DCubeGenerator:
                            length,
                            zero_x,
                            zero_y,
-                           zero_z)
+                           zero_z,
+                           PDM_OWNERSHIP_USER) # Python take owership
 
 
     # ------------------------------------------------------------------
     def __dealloc__(self):
-        PDM_dcube_gen_free(self._dcube_id, 1)
+        PDM_dcube_gen_free(self._dcube_id)
 
     # ------------------------------------------------------------------
     def dcube_dim_get(self):

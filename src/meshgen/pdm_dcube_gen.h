@@ -38,25 +38,27 @@ extern "C" {
 void
 PDM_dcube_gen_init
 (
- int                *id,
- PDM_MPI_Comm        comm,
- const PDM_g_num_t   n_vtx_seg,
- const double        length,
- const double        zero_x,
- const double        zero_y,
- const double        zero_z
- );
+      int             *id,
+      PDM_MPI_Comm     comm,
+const PDM_g_num_t      n_vtx_seg,
+const double           length,
+const double           zero_x,
+const double           zero_y,
+const double           zero_z,
+      PDM_ownership_t  owner
+);
 
 void
 PROCF (pdm_dcube_gen_init, PDM_DCUBE_GEN_INIT)
 (
- int                *id,
- const PDM_MPI_Fint *comm,
- const PDM_g_num_t  *n_vtx_seg,
- const double       *length,
- const double       *zero_x,
- const double       *zero_y,
- const double       *zero_z
+      int             *id,
+const PDM_MPI_Fint    *comm,
+const PDM_g_num_t     *n_vtx_seg,
+const double          *length,
+const double          *zero_x,
+const double          *zero_y,
+const double          *zero_z,
+      PDM_ownership_t *owner
 );
 
 
@@ -151,15 +153,13 @@ PROCF (pdm_dcube_gen_data_get, PDM_DCUBE_GEN_DATA_GET)
 void
 PDM_dcube_gen_free
 (
-const int id,
-const int partial
+const int id
 );
 
 void
 PROCF (pdm_dcube_gen_free, PDM_DCUBE_GEN_FREE)
 (
-int  *id,
-int  *partial
+int  *id
 );
 
 #ifdef __cplusplus

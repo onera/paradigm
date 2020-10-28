@@ -199,10 +199,11 @@ int main(int argc, char *argv[])
   PDM_dcube_gen_init(&id,
                       PDM_MPI_COMM_WORLD,
                       n_vtx_seg,
-		      length,
-		      0.,
-		      0.,
-		      0.);
+                      length,
+                      0.,
+                      0.,
+                      0.,
+                      PDM_OWNERSHIP_KEEP);
 
   PDM_dcube_gen_dim_get(id,
                       &n_face_group,
@@ -678,7 +679,7 @@ int main(int argc, char *argv[])
 
   PDM_part_free(ppart_id);
 
-  PDM_dcube_gen_free(id, 0);
+  PDM_dcube_gen_free(id);
 
   PDM_MPI_Finalize();
 

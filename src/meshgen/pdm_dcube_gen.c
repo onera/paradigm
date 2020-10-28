@@ -26,22 +26,23 @@
  */
 
 typedef struct  {
-  PDM_MPI_Comm   comm;            /*!< MPI communicator                          */
-  PDM_g_num_t    n_vtx_seg;       /*!< Number of vertices in segments            */
-  double         length;          /*!< Segment length                            */
-  double         zero_x;          /*!< Coordinates of the origin                 */
-  double         zero_y;          /*!< Coordinates of the origin                 */
-  double         zero_z;          /*!< Coordinates of the origin                 */
-  int            n_face_group;    /*!< Number of faces groups                    */
-  int            dn_cell;         /*!< Number of cells stored in this process    */
-  int            dn_face;         /*!< Number of faces stored in this process    */
-  int            dn_vtx;          /*!< Number of vertices stored in this process */
-  PDM_g_num_t   *dface_cell;      /*!< Faces from cells connectivity             */
-  int           *dface_vtx_idx;   /*!< Faces from vertices connectivity index    */
-  PDM_g_num_t   *dface_vtx;       /*!< Faces from vertices connectivity          */
-  double        *dvtx_coord;      /*!< Vertices coordinates                      */
-  int           *dface_group_idx; /*!< Faces groups index                        */
-  PDM_g_num_t   *dface_group;     /*!< Faces groups                              */
+  PDM_MPI_Comm     comm;            /*!< MPI communicator                          */
+  PDM_g_num_t      n_vtx_seg;       /*!< Number of vertices in segments            */
+  double           length;          /*!< Segment length                            */
+  double           zero_x;          /*!< Coordinates of the origin                 */
+  double           zero_y;          /*!< Coordinates of the origin                 */
+  double           zero_z;          /*!< Coordinates of the origin                 */
+  int              n_face_group;    /*!< Number of faces groups                    */
+  int              dn_cell;         /*!< Number of cells stored in this process    */
+  int              dn_face;         /*!< Number of faces stored in this process    */
+  int              dn_vtx;          /*!< Number of vertices stored in this process */
+  PDM_g_num_t     *dface_cell;      /*!< Faces from cells connectivity             */
+  int             *dface_vtx_idx;   /*!< Faces from vertices connectivity index    */
+  PDM_g_num_t     *dface_vtx;       /*!< Faces from vertices connectivity          */
+  double          *dvtx_coord;      /*!< Vertices coordinates                      */
+  int             *dface_group_idx; /*!< Faces groups index                        */
+  PDM_g_num_t     *dface_group;     /*!< Faces groups                              */
+  PDM_ownership_t  owner;           /*!< Which have the responsabilities of results*/
 } _dcube_t;
 
 /*============================================================================
@@ -98,13 +99,14 @@ _get_from_id
 void
 PDM_dcube_gen_init
 (
- int                *id,
- PDM_MPI_Comm        comm,
- const PDM_g_num_t   n_vtx_seg,
- const double        length,
- const double        zero_x,
- const double        zero_y,
- const double        zero_z
+      int             *id,
+      PDM_MPI_Comm     comm,
+const PDM_g_num_t      n_vtx_seg,
+const double           length,
+const double           zero_x,
+const double           zero_y,
+const double           zero_z,
+      PDM_ownership_t  owner
 )
 {
 
@@ -136,6 +138,7 @@ PDM_dcube_gen_init
   dcube->zero_x    = zero_x;
   dcube->zero_y    = zero_y;
   dcube->zero_z    = zero_z;
+  dcube->owner     = owner;
 
   PDM_g_num_t n_vtx       = n_vtx_seg * n_vtx_seg * n_vtx_seg;
   PDM_g_num_t n_face_seg  = n_vtx_seg - 1;
@@ -672,13 +675,14 @@ PDM_dcube_gen_init
 void
 PROCF (pdm_dcube_gen_init, PDM_DCUBE_GEN_INIT)
 (
- int                *id,
- const PDM_MPI_Fint *comm,
- const PDM_g_num_t  *n_vtx_seg,
- const double       *length,
- const double       *zero_x,
- const double       *zero_y,
- const double       *zero_z
+      int             *id,
+const PDM_MPI_Fint    *comm,
+const PDM_g_num_t     *n_vtx_seg,
+const double          *length,
+const double          *zero_x,
+const double          *zero_y,
+const double          *zero_z,
+      PDM_ownership_t *owner
 )
 {
 
@@ -692,7 +696,8 @@ PROCF (pdm_dcube_gen_init, PDM_DCUBE_GEN_INIT)
                       *length,
                       *zero_x,
                       *zero_y,
-                      *zero_z);
+                      *zero_z,
+                      *owner);
 }
 
 
@@ -837,13 +842,12 @@ PROCF (pdm_dcube_gen_data_get, PDM_DCUBE_GEN_DATA_GET)
 void
 PDM_dcube_gen_free
 (
-const int id,
-const int partial
+const int id
 )
 {
   _dcube_t *dcube = _get_from_id(id);
 
-  if(partial == 0) {
+  if(dcube->owner == PDM_OWNERSHIP_KEEP) {
     if (dcube->dface_cell  != NULL)
       free(dcube->dface_cell);
 
@@ -879,9 +883,8 @@ const int partial
 void
 PROCF (pdm_dcube_gen_free, PDM_DCUBE_GEN_FREE)
 (
-int *id,
-int *partial
+int *id
 )
 {
-  PDM_dcube_gen_free (*id, *partial);
+  PDM_dcube_gen_free (*id);
 }

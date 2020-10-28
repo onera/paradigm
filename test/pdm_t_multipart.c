@@ -187,7 +187,7 @@ int main(int argc, char *argv[])
   {
     // Create a cube for this zone
     if (i_rank == 0) PDM_printf("Creating dcube for zone %d\n", i_zone);
-    PDM_dcube_gen_init(&dcube_ids[i_zone], comm, n_vtx_seg, length, i_zone, 0., 0.);
+    PDM_dcube_gen_init(&dcube_ids[i_zone], comm, n_vtx_seg, length, i_zone, 0., 0., PDM_OWNERSHIP_KEEP);
     PDM_dcube_gen_dim_get(dcube_ids[i_zone],
                          &n_face_group[i_zone],
                          &dn_cell[i_zone],
@@ -521,7 +521,7 @@ int main(int argc, char *argv[])
     free(dface_join[i_zone]);
     free(djoins_ids[i_zone]);
     PDM_dmesh_free(dmesh_ids[i_zone]);
-    PDM_dcube_gen_free(dcube_ids[i_zone], 0);
+    PDM_dcube_gen_free(dcube_ids[i_zone]);
   }
   free(dcube_ids);
   free(dn_cell);

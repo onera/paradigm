@@ -72,10 +72,14 @@ cdef extern from "pdm.h":
         PDM_FALSE = 0
         PDM_TRUE  = 1
 
+    ctypedef enum PDM_ownership_t:
+        PDM_OWNERSHIP_KEEP = 0
+        PDM_OWNERSHIP_USER = 1
+
     void PDM_Finalize ()
 
 def Finalize ():
-    PDM_Finalize
+    PDM_Finalize()
 
 cdef extern from "pdm_mpi.h":
     ctypedef int PDM_MPI_Comm
