@@ -1,4 +1,4 @@
-## [1.12.0] - 2020-10-13
+## [1.12.0] - 2020-10-27
 ### Added
 - API :
   - PDM_closest_points     : Parallel knn algorithm
