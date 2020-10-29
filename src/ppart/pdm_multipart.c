@@ -102,7 +102,9 @@ typedef struct  {
   int           n_total_joins;       // Total number of joins between zones (each counts twice)
   const int    *join_to_opposite;    // For each global joinId, give the globalId of
                                      //   the opposite join (size = n_total_joins)
-  PDM_MPI_Comm comm;                 // MPI communicator
+
+  PDM_MPI_Comm     comm;             // MPI communicator
+  PDM_ownership_t  owner;            // Which have the responsabilities of results
 
   /* Partitioning parameters */
   PDM_bool_t       merge_blocks;     // Merge before partitionning or not
@@ -500,129 +502,134 @@ _search_matching_joins
 static void
 _part_free
 (
- _part_t *part
+ _part_t         *part,
+ PDM_ownership_t  owner
 )
 {
-  if (part->vtx != NULL)
-    free(part->vtx);
-  part->vtx = NULL;
+  if(owner == PDM_OWNERSHIP_KEEP){
+    if (part->vtx != NULL)
+      free(part->vtx);
+    part->vtx = NULL;
 
-  if (part->face_vtx_idx != NULL)
-    free(part->face_vtx_idx);
-  part->face_vtx_idx = NULL;
+    if (part->face_vtx_idx != NULL)
+      free(part->face_vtx_idx);
+    part->face_vtx_idx = NULL;
 
-  if (part->face_vtx != NULL)
-    free(part->face_vtx);
-  part->face_vtx = NULL;
+    if (part->face_vtx != NULL)
+      free(part->face_vtx);
+    part->face_vtx = NULL;
 
-  if (part->gface_vtx != NULL)
-    free(part->gface_vtx);
-  part->gface_vtx = NULL;
+    if (part->gface_vtx != NULL)
+      free(part->gface_vtx);
+    part->gface_vtx = NULL;
 
-  if (part->cell_face_idx != NULL)
-    free(part->cell_face_idx);
-  part->cell_face_idx = NULL;
+    if (part->cell_face_idx != NULL)
+      free(part->cell_face_idx);
+    part->cell_face_idx = NULL;
 
-  if (part->cell_face != NULL)
-    free(part->cell_face);
-  part->cell_face = NULL;
+    if (part->cell_face != NULL)
+      free(part->cell_face);
+    part->cell_face = NULL;
 
-  if (part->gcell_face != NULL)
-    free(part->gcell_face);
-  part->gcell_face = NULL;
+    if (part->gcell_face != NULL)
+      free(part->gcell_face);
+    part->gcell_face = NULL;
 
-  if (part->face_cell != NULL)
-    free(part->face_cell);
-  part->face_cell = NULL;
+    if (part->face_cell != NULL)
+      free(part->face_cell);
+    part->face_cell = NULL;
 
-  if (part->face_group_idx != NULL)
-    free(part->face_group_idx);
-  part->face_group_idx = NULL;
+    if (part->face_group_idx != NULL)
+      free(part->face_group_idx);
+    part->face_group_idx = NULL;
 
-  if (part->face_group != NULL)
-    free(part->face_group);
-  part->face_group = NULL;
+    if (part->face_group != NULL)
+      free(part->face_group);
+    part->face_group = NULL;
 
-  if (part->face_part_bound_proc_idx != NULL)
-    free(part->face_part_bound_proc_idx);
-  part->face_part_bound_proc_idx = NULL;
+    if (part->face_part_bound_proc_idx != NULL)
+      free(part->face_part_bound_proc_idx);
+    part->face_part_bound_proc_idx = NULL;
 
-  if (part->face_part_bound_part_idx != NULL)
-    free(part->face_part_bound_part_idx);
-  part->face_part_bound_part_idx = NULL;
+    if (part->face_part_bound_part_idx != NULL)
+      free(part->face_part_bound_part_idx);
+    part->face_part_bound_part_idx = NULL;
 
-  if (part->face_part_bound != NULL)
-    free(part->face_part_bound);
-  part->face_part_bound = NULL;
+    if (part->face_part_bound != NULL)
+      free(part->face_part_bound);
+    part->face_part_bound = NULL;
 
-  if (part->face_bound_idx != NULL)
-    free(part->face_bound_idx);
-  part->face_bound_idx = NULL;
+    if (part->face_bound_idx != NULL)
+      free(part->face_bound_idx);
+    part->face_bound_idx = NULL;
 
-  if (part->face_bound != NULL)
-    free(part->face_bound);
-  part->face_bound = NULL;
+    if (part->face_bound != NULL)
+      free(part->face_bound);
+    part->face_bound = NULL;
 
-  if (part->face_join_idx != NULL)
-    free(part->face_join_idx);
-  part->face_join_idx = NULL;
+    if (part->face_join_idx != NULL)
+      free(part->face_join_idx);
+    part->face_join_idx = NULL;
 
-  if (part->face_join != NULL)
-    free(part->face_join);
-  part->face_join = NULL;
+    if (part->face_join != NULL)
+      free(part->face_join);
+    part->face_join = NULL;
 
-  if (part->vtx_ln_to_gn != NULL)
-    free(part->vtx_ln_to_gn);
-  part->vtx_ln_to_gn = NULL;
+    if (part->vtx_ln_to_gn != NULL)
+      free(part->vtx_ln_to_gn);
+    part->vtx_ln_to_gn = NULL;
 
-  if (part->face_ln_to_gn != NULL)
-    free(part->face_ln_to_gn);
-  part->face_ln_to_gn = NULL;
+    if (part->face_ln_to_gn != NULL)
+      free(part->face_ln_to_gn);
+    part->face_ln_to_gn = NULL;
 
-  if (part->cell_ln_to_gn != NULL)
-    free(part->cell_ln_to_gn);
-  part->cell_ln_to_gn = NULL;
+    if (part->cell_ln_to_gn != NULL)
+      free(part->cell_ln_to_gn);
+    part->cell_ln_to_gn = NULL;
 
-  if (part->face_group_ln_to_gn != NULL)
-    free(part->face_group_ln_to_gn);
-  part->face_group_ln_to_gn = NULL;
+    if (part->face_group_ln_to_gn != NULL)
+      free(part->face_group_ln_to_gn);
+    part->face_group_ln_to_gn = NULL;
 
-  if (part->face_bound_ln_to_gn != NULL)
-    free(part->face_bound_ln_to_gn);
-  part->face_bound_ln_to_gn = NULL;
+    if (part->face_bound_ln_to_gn != NULL)
+      free(part->face_bound_ln_to_gn);
+    part->face_bound_ln_to_gn = NULL;
 
-  if (part->face_join_ln_to_gn != NULL)
-    free(part->face_join_ln_to_gn);
-  part->face_join_ln_to_gn = NULL;
+    if (part->face_join_ln_to_gn != NULL)
+      free(part->face_join_ln_to_gn);
+    part->face_join_ln_to_gn = NULL;
 
-  if (part->cell_tag != NULL)
-    free(part->cell_tag);
-  part->cell_tag = NULL;
+    if (part->cell_tag != NULL)
+      free(part->cell_tag);
+    part->cell_tag = NULL;
 
-  if (part->face_tag != NULL)
-  free(part->face_tag);
-  part->face_tag = NULL;
+    if (part->face_tag != NULL)
+    free(part->face_tag);
+    part->face_tag = NULL;
 
-  if (part->vtx_tag != NULL)
-    free(part->vtx_tag);
-  part->vtx_tag = NULL;
+    if (part->vtx_tag != NULL)
+      free(part->vtx_tag);
+    part->vtx_tag = NULL;
 
-  if (part->cell_color != NULL)
-    free(part->cell_color);
-  part->cell_color = NULL;
+    if (part->cell_color != NULL)
+      free(part->cell_color);
+    part->cell_color = NULL;
 
-  if (part->face_color != NULL)
-    free(part->face_color);
-  part->face_color = NULL;
+    if (part->face_color != NULL)
+      free(part->face_color);
+    part->face_color = NULL;
 
-  if (part->thread_color != NULL)
-    free(part->thread_color);
-  part->thread_color = NULL;
+    if (part->thread_color != NULL)
+      free(part->thread_color);
+    part->thread_color = NULL;
 
-  if (part->hyperplane_color != NULL)
-    free(part->hyperplane_color);
-  part->hyperplane_color = NULL;
+    if (part->hyperplane_color != NULL)
+      free(part->hyperplane_color);
+    part->hyperplane_color = NULL;
 
+  } /* End owner */
+
+  /* Following is not results but internal array */
   if (part->new_to_old_order_cell != NULL)
     free(part->new_to_old_order_cell);
   part->new_to_old_order_cell = NULL;
@@ -685,7 +692,8 @@ PDM_multipart_create
  const PDM_split_dual_t split_method,
  const PDM_part_size_t  part_size_method,
  const double          *part_fraction,
- const PDM_MPI_Comm     comm
+ const PDM_MPI_Comm     comm,
+ const PDM_ownership_t  owner
 )
 {
   printf("PDM_multipart_create::n_zone:: %d \n", n_zone);
@@ -709,6 +717,7 @@ PDM_multipart_create
   _multipart->part_size_method = part_size_method;
   _multipart->part_fraction    = part_fraction;
   _multipart->comm             = comm;
+  _multipart->owner            = owner;
 
   _multipart->n_total_joins    = 0;
   _multipart->join_to_opposite = NULL;
@@ -1164,11 +1173,11 @@ const int   i_part,
       int  *n_vtx,
       int  *n_proc,
       int  *n_total_part,
-      int  *scell_face,
-      int  *sface_vtx,
-      int  *sface_bound,
+      int  *s_cell_face,
+      int  *s_face_vtx,
+      int  *s_face_bound,
       int  *n_bound_groups,
-      int  *sface_join,
+      int  *s_face_join,
       int  *n_join_groups
 )
 {
@@ -1184,15 +1193,15 @@ const int   i_part,
   PDM_MPI_Comm_size(_multipart->comm, n_proc);
   *n_total_part = _pmeshes.tn_part;
 
-  *scell_face = _pmeshes.parts[i_part]->cell_face_idx[*n_cell];
-  *sface_vtx  = _pmeshes.parts[i_part]->face_vtx_idx[*n_face];
+  *s_cell_face = _pmeshes.parts[i_part]->cell_face_idx[*n_cell];
+  *s_face_vtx  = _pmeshes.parts[i_part]->face_vtx_idx[*n_face];
 
   *n_face_part_bound = _pmeshes.parts[i_part]->face_part_bound_part_idx[*n_total_part];
 
   *n_bound_groups = _pmeshes.n_bounds;
   *n_join_groups  = _pmeshes.n_joins;
-  *sface_bound    = _pmeshes.parts[i_part]->face_bound_idx[*n_bound_groups];
-  *sface_join     = _pmeshes.parts[i_part]->face_join_idx[*n_join_groups];
+  *s_face_bound    = _pmeshes.parts[i_part]->face_bound_idx[*n_bound_groups];
+  *s_face_join     = _pmeshes.parts[i_part]->face_join_idx[*n_join_groups];
 }
 
 /**
@@ -1327,7 +1336,7 @@ PDM_multipart_free
   for (int izone = 0; izone < _multipart->n_zone; izone++) {
     free(_multipart->pmeshes[izone].joins_ids);
     for (int ipart = 0; ipart < _multipart->n_part[izone]; ipart++)
-      _part_free(_multipart->pmeshes[izone].parts[ipart]);
+      _part_free(_multipart->pmeshes[izone].parts[ipart], _multipart->owner);
     free(_multipart->pmeshes[izone].parts);
   }
   free(_multipart->pmeshes);

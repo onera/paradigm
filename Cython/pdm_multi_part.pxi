@@ -16,11 +16,12 @@ cdef extern from "pdm_multipart.h":
                              PDM_split_dual_t split_method,
                              PDM_part_size_t  part_size_method,
                              double*          part_fraction,
-                             PDM_MPI_Comm     comm)
+                             PDM_MPI_Comm     comm,
+                             PDM_ownership_t  owner)
 
     # ------------------------------------------------------------------
     void PDM_multipart_register_block(int        mpart_id,
-                                      int        zoneGId,
+                                      int        zone_gid,
                                       int        block_data_id)
 
     # ------------------------------------------------------------------
@@ -39,59 +40,59 @@ cdef extern from "pdm_multipart.h":
     void PDM_multipart_run_ppart(int id);
 
     # ------------------------------------------------------------------
-    void PDM_multipart_part_dim_get(int  mpartId,
-                                    int  zoneGId,
+    void PDM_multipart_part_dim_get(int  mpart_id,
+                                    int  zone_gid,
                                     int  ipart,
-                                    int *nCell,
-                                    int *nFace,
-                                    int *nFacePartBound,
+                                    int *n_cell,
+                                    int *n_face,
+                                    int *n_face_part_bound,
                                     int *nVtx,
-                                    int *nProc,
-                                    int *nTPart,
-                                    int *sCellFace,
-                                    int *sFaceVtx,
-                                    int *sFaceBound,
-                                    int *nFaceBound,
-                                    int *sFaceJoin,
-                                    int *nFaceJoin);
+                                    int *n_proc,
+                                    int *nt_part,
+                                    int *scell_face,
+                                    int *sface_vtx,
+                                    int *s_face_bound,
+                                    int *n_face_bound,
+                                    int *s_face_join,
+                                    int *n_face_join);
 
     # ------------------------------------------------------------------
-    void PDM_multipart_part_val_get(int            mpartId,
-                                    int            zoneGId,
+    void PDM_multipart_part_val_get(int            mpart_id,
+                                    int            zone_gid,
                                     int            ipart,
-                                    int          **cellTag,
-                                    int          **cellFaceIdx,
-                                    int          **cellFace,
-                                    PDM_g_num_t  **cellLNToGN,
-                                    int          **faceTag,
-                                    int          **faceCell,
-                                    int          **faceVtxIdx,
-                                    int          **faceVtx,
-                                    PDM_g_num_t  **faceLNToGN,
-                                    int          **facePartBoundProcIdx,
-                                    int          **facePartBoundPartIdx,
-                                    int          **facePartBound,
-                                    int          **vtxTag,
+                                    int          **cell_tag,
+                                    int          **cell_face_idx,
+                                    int          **cell_face,
+                                    PDM_g_num_t  **cell_ln_to_gn,
+                                    int          **face_tag,
+                                    int          **face_cell,
+                                    int          **face_vtx_idx,
+                                    int          **face_vtx,
+                                    PDM_g_num_t  **face_ln_to_gn,
+                                    int          **face_part_bound_proc_idx,
+                                    int          **face_part_bound_part_idx,
+                                    int          **face_part_bound,
+                                    int          **vtx_tag,
                                     double       **vtx,
-                                    PDM_g_num_t  **vtxLNToGN,
-                                    int          **faceBoundIdx,
-                                    int          **faceBound,
-                                    PDM_g_num_t  **faceBoundLNToGN,
-                                    int          **faceJoinIdx,
-                                    int          **faceJoin,
-                                    PDM_g_num_t  **faceJoinLNToGN)
+                                    PDM_g_num_t  **vtx_ln_to_gn,
+                                    int          **face_bound_idx,
+                                    int          **face_bound,
+                                    PDM_g_num_t  **face_bound_ln_to_gn,
+                                    int          **face_join_idx,
+                                    int          **face_join,
+                                    PDM_g_num_t  **face_join_ln_to_gn)
     # ------------------------------------------------------------------
-    void PDM_multipart_part_color_get(int            mpartId,
-                                      int            zoneGId,
+    void PDM_multipart_part_color_get(int            mpart_id,
+                                      int            zone_gid,
                                       int            ipart,
-                                      int          **cellColor,
-                                      int          **faceColor,
-                                      int          **threadColor,
-                                      int          **hyperPlaneColor)
+                                      int          **cell_color,
+                                      int          **face_color,
+                                      int          **thread_color,
+                                      int          **hyper_plane_color)
 
     # ------------------------------------------------------------------
-    void PDM_multipart_time_get(int       mpartId,
-                                int       zoneGId,
+    void PDM_multipart_time_get(int       mpart_id,
+                                int       zone_gid,
                                 double  **elapsed,
                                 double  **cpu,
                                 double  **cpu_user,
@@ -139,25 +140,20 @@ cdef class MultiPart:
                                               split_method,
                                               part_size_method,
                                               part_fraction_data,
-                                              PDM_MPI_mpi_2_pdm_mpi_comm (<void *> &c_comm))
+                                              PDM_MPI_mpi_2_pdm_mpi_comm (<void *> &c_comm),
+                                              PDM_OWNERSHIP_USER) # Python take ownership
         print("MultiPart::end ")
 
     # ------------------------------------------------------------------
-    # def multi_part_partial_free(self):
-    #     print 'multi_part_partial_free MultiPart'
-    #     PDM_multipart_partial_free(self._mpart_id)
-
-    # ------------------------------------------------------------------
     def __dealloc__(self):
-        print('__dealloc__ MultiPart ')
         PDM_multipart_free(self._mpart_id)
 
     # ------------------------------------------------------------------
-    def multipart_register_block(self, int zoneGId,
+    def multipart_register_block(self, int zone_gid,
                                        int block_data_id):
         """
         """
-        PDM_multipart_register_block(self._mpart_id, zoneGId, block_data_id)
+        PDM_multipart_register_block(self._mpart_id, zone_gid, block_data_id)
 
     # ------------------------------------------------------------------
     def multipart_register_joins(self, int n_total_joins,
@@ -169,7 +165,8 @@ cdef class MultiPart:
                                      <int*> matching_join.data)
     # ------------------------------------------------------------------
     def multipart_set_reordering(self, int i_zone,
-                                 char *renum_cell_method, char *renum_face_method,
+                                 char *renum_cell_method,
+                                 char *renum_face_method,
                                  NPY.ndarray[NPY.int32_t, mode='c', ndim=1] renum_properties_cell):
       """
       """
@@ -190,427 +187,450 @@ cdef class MultiPart:
         PDM_multipart_run_ppart(self._mpart_id)
 
     # ------------------------------------------------------------------
-    def multipart_dim_get(self, int ipart, int zoneGId):
+    def multipart_dim_get(self, int ipart, int zone_gid):
         """
            Get partition dimensions
         """
         # ************************************************************************
         # > Declaration
-        cdef int nCell
-        cdef int nProc
-        cdef int nTPart
-        cdef int nFace
-        cdef int nFacePartBound
-        cdef int nVertex
-        cdef int sCellFace
-        cdef int sFaceVertex
-        cdef int sFaceBound
-        cdef int nFaceBound
-        cdef int sFaceJoin
-        cdef int nFaceJoin
+        cdef int n_cell
+        cdef int n_proc
+        cdef int nt_part
+        cdef int n_face
+        cdef int n_face_part_bound
+        cdef int n_vtx
+        cdef int scell_face
+        cdef int s_face_vtx
+        cdef int s_face_bound
+        cdef int n_face_bound
+        cdef int s_face_join
+        cdef int n_face_join
         # ************************************************************************
 
         PDM_multipart_part_dim_get(self._mpart_id,
-                                   zoneGId,
+                                   zone_gid,
                                    ipart,
-                                   &nCell,
-                                   &nFace,
-                                   &nFacePartBound,
-                                   &nVertex,
-                                   &nProc,
-                                   &nTPart,
-                                   &sCellFace,
-                                   &sFaceVertex,
-                                   &sFaceBound,
-                                   &nFaceBound,
-                                   &sFaceJoin,
-                                   &nFaceJoin)
+                                   &n_cell,
+                                   &n_face,
+                                   &n_face_part_bound,
+                                   &n_vtx,
+                                   &n_proc,
+                                   &nt_part,
+                                   &scell_face,
+                                   &s_face_vtx,
+                                   &s_face_bound,
+                                   &n_face_bound,
+                                   &s_face_join,
+                                   &n_face_join)
 
-        return {'nCell'          :nCell,
-                'ipart'          :ipart,
-                'nFace'          :nFace,
-                'nTPart'         :nTPart,
-                'nProc'          :nProc,
-                'nFacePartBound' :nFacePartBound,
-                'nVertex'        :nVertex,
-                'sCellFace'      :sCellFace,
-                'sFaceVertex'    :sFaceVertex,
-                'sFaceBound'     :sFaceBound,
-                'nFaceBound'     :nFaceBound,
-                'sFaceJoin'      :sFaceJoin,
-                'nFaceJoin'      :nFaceJoin}
+        return {'n_cell'            : n_cell,
+                'ipart'             : ipart,
+                'n_face'            : n_face,
+                'nt_part'           : nt_part,
+                'n_proc'            : n_proc,
+                'n_face_part_bound' : n_face_part_bound,
+                'n_vtx'             : n_vtx,
+                'scell_face'        : scell_face,
+                's_face_vtx'        : s_face_vtx,
+                's_face_bound'      : s_face_bound,
+                'n_face_bound'      : n_face_bound,
+                's_face_join'       : s_face_join,
+                'n_face_join'       : n_face_join}
 
     # ------------------------------------------------------------------
-    def multipart_val_get(self, int ipart, int zoneGId):
+    def multipart_val_get(self, int ipart, int zone_gid):
         """
            Get partition dimensions
         """
         # ************************************************************************
         # > Declaration
-        cdef int          *cellTag,
-        cdef int          *cellFaceIdx,
-        cdef int          *cellFace,
-        cdef PDM_g_num_t  *cellLNToGN,
-        cdef int          *faceTag,
-        cdef int          *faceCell,
-        cdef int          *faceVertexIdx,
-        cdef int          *faceVertex,
-        cdef PDM_g_num_t  *faceLNToGN,
-        cdef int          *facePartBound,
-        cdef int          *facePartBoundProcIdx,
-        cdef int          *facePartBoundPartIdx,
-        cdef int          *vertexTag,
-        cdef double       *vertex,
-        cdef PDM_g_num_t  *vertexLNToGN,
-        cdef int          *faceBoundIdx,
-        cdef int          *faceBound,
-        cdef PDM_g_num_t  *faceBoundLNToGN,
-        cdef int          *faceJoinIdx,
-        cdef int          *faceJoin,
-        cdef PDM_g_num_t  *faceJoinLNToGN
+        cdef int          *cell_tag,
+        cdef int          *cell_face_idx,
+        cdef int          *cell_face,
+        cdef PDM_g_num_t  *cell_ln_to_gn,
+        cdef int          *face_tag,
+        cdef int          *face_cell,
+        cdef int          *face_vtx_idx,
+        cdef int          *face_vtx,
+        cdef PDM_g_num_t  *face_ln_to_gn,
+        cdef int          *face_part_bound,
+        cdef int          *face_part_bound_proc_idx,
+        cdef int          *face_part_bound_part_idx,
+        cdef int          *vtx_tag,
+        cdef double       *vtx_coord,
+        cdef PDM_g_num_t  *vtx_ln_to_gn,
+        cdef int          *face_bound_idx,
+        cdef int          *face_bound,
+        cdef PDM_g_num_t  *face_bound_ln_to_gn,
+        cdef int          *face_join_idx,
+        cdef int          *face_join,
+        cdef PDM_g_num_t  *face_join_ln_to_gn
         # ************************************************************************
 
         # dims = self.part_dim_get(self._mpart_id, ipart)
-        dims = self.multipart_dim_get(ipart, zoneGId)
+        dims = self.multipart_dim_get(ipart, zone_gid)
 
         # -> Call PPART to get info
         PDM_multipart_part_val_get(self._mpart_id,
-                                   zoneGId,
+                                   zone_gid,
                                    ipart,
-                                   &cellTag,
-                                   &cellFaceIdx,
-                                   &cellFace,
-                                   &cellLNToGN,
-                                   &faceTag,
-                                   &faceCell,
-                                   &faceVertexIdx,
-                                   &faceVertex,
-                                   &faceLNToGN,
-                                   &facePartBoundProcIdx,
-                                   &facePartBoundPartIdx,
-                                   &facePartBound,
-                                   &vertexTag,
-                                   &vertex,
-                                   &vertexLNToGN,
-                                   &faceBoundIdx,
-                                   &faceBound,
-                                   &faceBoundLNToGN,
-                                   &faceJoinIdx,
-                                   &faceJoin,
-                                   &faceJoinLNToGN)
+                                   &cell_tag,
+                                   &cell_face_idx,
+                                   &cell_face,
+                                   &cell_ln_to_gn,
+                                   &face_tag,
+                                   &face_cell,
+                                   &face_vtx_idx,
+                                   &face_vtx,
+                                   &face_ln_to_gn,
+                                   &face_part_bound_proc_idx,
+                                   &face_part_bound_part_idx,
+                                   &face_part_bound,
+                                   &vtx_tag,
+                                   &vtx_coord,
+                                   &vtx_ln_to_gn,
+                                   &face_bound_idx,
+                                   &face_bound,
+                                   &face_bound_ln_to_gn,
+                                   &face_join_idx,
+                                   &face_join,
+                                   &face_join_ln_to_gn)
         # -> Begin
         cdef NPY.npy_intp dim
 
-        # \param [out]  cellTag            Cell tag (size = nCell)
-        if (cellTag == NULL) :
-            npCellTag = None
+        # \param [out]  cell_tag            Cell tag (size = n_cell)
+        if (cell_tag == NULL) :
+            np_cell_tag = None
         else :
-            dim = <NPY.npy_intp> dims['nCell']
-            npCellTag = NPY.PyArray_SimpleNewFromData(1,
+            dim = <NPY.npy_intp> dims['n_cell']
+            np_cell_tag = NPY.PyArray_SimpleNewFromData(1,
                                                      &dim,
                                                      NPY.NPY_INT32,
-                                                     <void *> cellTag)
+                                                     <void *> cell_tag)
+        PyArray_ENABLEFLAGS(np_cell_tag, NPY.NPY_OWNDATA);
 
-        # \param [out]  cellFaceIdx        Cell to face connectivity index (size = nCell + 1)
-        if (cellFaceIdx == NULL) :
-            npCellFaceIdx = None
+        # \param [out]  cell_face_idx        Cell to face connectivity index (size = n_cell + 1)
+        if (cell_face_idx == NULL) :
+            np_cell_face_idx = None
         else :
-            dim = <NPY.npy_intp> (dims['nCell'] + 1)
-            npCellFaceIdx = NPY.PyArray_SimpleNewFromData(1,
+            dim = <NPY.npy_intp> (dims['n_cell'] + 1)
+            np_cell_face_idx = NPY.PyArray_SimpleNewFromData(1,
                                                          &dim,
                                                          NPY.NPY_INT32,
-                                                         <void *> cellFaceIdx)
+                                                         <void *> cell_face_idx)
+        PyArray_ENABLEFLAGS(np_cell_face_idx, NPY.NPY_OWNDATA);
 
-        # \param [out]  cellFace           Cell to face connectivity (size = cellFaceIdx[nCell] = lCellFace)
-        if (cellFace == NULL) :
-            npCellFace = None
+        # \param [out]  cell_face           Cell to face connectivity (size = cell_face_idx[n_cell] = lcell_face)
+        if (cell_face == NULL) :
+            np_cell_face = None
         else :
-            dim = <NPY.npy_intp> dims['sCellFace']
-            npCellFace = NPY.PyArray_SimpleNewFromData(1,
+            dim = <NPY.npy_intp> dims['scell_face']
+            np_cell_face = NPY.PyArray_SimpleNewFromData(1,
                                                       &dim,
                                                       NPY.NPY_INT32,
-                                                      <void *> cellFace)
+                                                      <void *> cell_face)
+        PyArray_ENABLEFLAGS(np_cell_face, NPY.NPY_OWNDATA);
 
-        # \param [out]  cellLNToGN         Cell local numbering to global numbering (size = nCell)
-        # dim = <NPY.npy_intp> dims['nCell']
-        if (cellLNToGN == NULL) :
-            npCellLNToGN = None
+        # \param [out]  cell_ln_to_gn         Cell local numbering to global numbering (size = n_cell)
+        # dim = <NPY.npy_intp> dims['n_cell']
+        if (cell_ln_to_gn == NULL) :
+            np_cell_ln_to_gn = None
         else :
-            dim = <NPY.npy_intp> dims['nCell']
-            npCellLNToGN = NPY.PyArray_SimpleNewFromData(1,
+            dim = <NPY.npy_intp> dims['n_cell']
+            np_cell_ln_to_gn = NPY.PyArray_SimpleNewFromData(1,
                                                         &dim,
                                                         PDM_G_NUM_NPY_INT,
-                                                        <void *> cellLNToGN)
+                                                        <void *> cell_ln_to_gn)
+        PyArray_ENABLEFLAGS(np_cell_ln_to_gn, NPY.NPY_OWNDATA);
 
-        # \param [out]  faceTag            Face tag (size = nFace)
-        if (faceTag == NULL) :
-            npFaceTag = None
+        # \param [out]  face_tag            Face tag (size = n_face)
+        if (face_tag == NULL) :
+            np_face_tag = None
         else :
-            dim = <NPY.npy_intp> dims['nFace']
-            npFaceTag = NPY.PyArray_SimpleNewFromData(1,
+            dim = <NPY.npy_intp> dims['n_face']
+            np_face_tag = NPY.PyArray_SimpleNewFromData(1,
                                                      &dim,
                                                      NPY.NPY_INT32,
-                                                     <void *> faceTag)
+                                                     <void *> face_tag)
+        PyArray_ENABLEFLAGS(np_face_tag, NPY.NPY_OWNDATA);
 
-        # \param [out]  faceCell           Face to cell connectivity  (size = 2 * nFace)
-        if (faceCell == NULL) :
-            npFaceCell = None
+        # \param [out]  face_cell           Face to cell connectivity  (size = 2 * n_face)
+        if (face_cell == NULL) :
+            np_face_cell = None
         else :
-            dim = <NPY.npy_intp> (2 * dims['nFace'])
-            npFaceCell = NPY.PyArray_SimpleNewFromData(1,
+            dim = <NPY.npy_intp> (2 * dims['n_face'])
+            np_face_cell = NPY.PyArray_SimpleNewFromData(1,
                                                       &dim,
                                                       NPY.NPY_INT32,
-                                                      <void *> faceCell)
+                                                      <void *> face_cell)
+        PyArray_ENABLEFLAGS(np_face_cell, NPY.NPY_OWNDATA);
 
-        # \param [out]  faceVtxIdx         Face to Vertex connectivity index (size = nFace + 1)
-        if (faceVertexIdx == NULL) :
-            npFaceVertexIdx = None
+        # \param [out]  face_vtx_idx         Face to vtx_coord connectivity index (size = n_face + 1)
+        if (face_vtx_idx == NULL) :
+            np_face_vtx_idx = None
         else :
-            dim = <NPY.npy_intp> (dims['nFace'] + 1)
-            npFaceVertexIdx = NPY.PyArray_SimpleNewFromData(1,
+            dim = <NPY.npy_intp> (dims['n_face'] + 1)
+            np_face_vtx_idx = NPY.PyArray_SimpleNewFromData(1,
                                                            &dim,
                                                            NPY.NPY_INT32,
-                                                           <void *> faceVertexIdx)
+                                                           <void *> face_vtx_idx)
+        PyArray_ENABLEFLAGS(np_face_vtx_idx, NPY.NPY_OWNDATA);
 
-        # \param [out]  faceVtx            Face to Vertex connectivity (size = faceVtxIdx[nFace])
-        cdef NPY.ndarray[NPY.int32_t, ndim=1] npFaceVertex
-        if (faceVertex == NULL) :
-            npFaceVertex = None
+        # \param [out]  face_vtx            Face to vtx_coord connectivity (size = face_vtx_idx[n_face])
+        cdef NPY.ndarray[NPY.int32_t, ndim=1] np_face_vtx
+        if (face_vtx == NULL) :
+            np_face_vtx = None
         else :
-            dim = <NPY.npy_intp> dims['sFaceVertex']
-            npFaceVertex  = NPY.PyArray_SimpleNewFromData(1,
+            dim = <NPY.npy_intp> dims['s_face_vtx']
+            np_face_vtx  = NPY.PyArray_SimpleNewFromData(1,
                                                          &dim,
                                                          NPY.NPY_INT32,
-                                                         <void *> faceVertex)
-            # PyArray_ENABLEFLAGS(npFaceVertex, NPY.NPY_OWNDATA)
-            # print '*'*1000
-            # print 'Take ownership'
-            # print '*'*1000
+                                                         <void *> face_vtx)
+        PyArray_ENABLEFLAGS(np_face_vtx, NPY.NPY_OWNDATA);
 
-        # \param [out]  faceLNToGN         Face local numbering to global numbering (size = nFace)
-        if (faceLNToGN == NULL) :
-            npFaceLNToGN = None
+        # \param [out]  face_ln_to_gn         Face local numbering to global numbering (size = n_face)
+        if (face_ln_to_gn == NULL) :
+            np_face_ln_to_gn = None
         else :
-            dim = <NPY.npy_intp> dims['nFace']
-            npFaceLNToGN   = NPY.PyArray_SimpleNewFromData(1,
+            dim = <NPY.npy_intp> dims['n_face']
+            np_face_ln_to_gn   = NPY.PyArray_SimpleNewFromData(1,
                                                           &dim,
                                                           PDM_G_NUM_NPY_INT,
-                                                          <void *> faceLNToGN)
+                                                          <void *> face_ln_to_gn)
+        PyArray_ENABLEFLAGS(np_face_ln_to_gn, NPY.NPY_OWNDATA);
 
-        # \param [out]  facePartBound      Partitioning boundary faces
-        if (facePartBound == NULL) :
-            npFacePartBound = None
+        # \param [out]  face_part_bound      Partitioning boundary faces
+        if (face_part_bound == NULL) :
+            np_face_part_bound = None
         else :
-            dim = <NPY.npy_intp> (4 * dims['nFacePartBound'])
-            npFacePartBound   = NPY.PyArray_SimpleNewFromData(1,
+            dim = <NPY.npy_intp> (4 * dims['n_face_part_bound'])
+            np_face_part_bound   = NPY.PyArray_SimpleNewFromData(1,
                                                              &dim,
                                                              NPY.NPY_INT32,
-                                                             <void *> facePartBound)
+                                                             <void *> face_part_bound)
+        PyArray_ENABLEFLAGS(np_face_part_bound, NPY.NPY_OWNDATA);
 
-        # \param [out]  facePartBoundProcIdx  Partitioning boundary faces block distribution from processus (size = nProc + 1)
-        if (facePartBoundProcIdx == NULL) :
-            npfacePartBoundProcIdx = None
+        # \param [out]  face_part_bound_proc_idx  Partitioning boundary faces block distribution from processus (size = n_proc + 1)
+        if (face_part_bound_proc_idx == NULL) :
+            np_face_part_bound_proc_idx = None
         else :
-            dim = <NPY.npy_intp> ( dims['nProc'] + 1)
-            npfacePartBoundProcIdx   = NPY.PyArray_SimpleNewFromData(1,
+            dim = <NPY.npy_intp> ( dims['n_proc'] + 1)
+            np_face_part_bound_proc_idx   = NPY.PyArray_SimpleNewFromData(1,
                                                              &dim,
                                                              NPY.NPY_INT32,
-                                                             <void *> facePartBoundProcIdx)
+                                                             <void *> face_part_bound_proc_idx)
+        PyArray_ENABLEFLAGS(np_face_part_bound_proc_idx, NPY.NPY_OWNDATA);
 
-        # \param [out]  facePartBoundPartIdx  Partitioning boundary faces block distribution from partition (size = nTPart + 1)
-        if (facePartBoundPartIdx == NULL) :
-            npfacePartBoundPartIdx = None
+        # \param [out]  face_part_bound_part_idx  Partitioning boundary faces block distribution from partition (size = nt_part + 1)
+        if (face_part_bound_part_idx == NULL) :
+            np_face_part_bound_part_idx = None
         else :
-            dim = <NPY.npy_intp> ( dims['nTPart'] + 1)
-            npfacePartBoundPartIdx   = NPY.PyArray_SimpleNewFromData(1,
+            dim = <NPY.npy_intp> ( dims['nt_part'] + 1)
+            np_face_part_bound_part_idx   = NPY.PyArray_SimpleNewFromData(1,
                                                              &dim,
                                                              NPY.NPY_INT32,
-                                                             <void *> facePartBoundPartIdx)
+                                                             <void *> face_part_bound_part_idx)
+        PyArray_ENABLEFLAGS(np_face_part_bound_part_idx, NPY.NPY_OWNDATA);
 
-        # \param [out]  vtxTag             Vertex tag (size = nVtx)
-        if (vertexTag == NULL) :
-            npVertexTag = None
+        # \param [out]  vtx_tag             vtx_coord tag (size = nVtx)
+        if (vtx_tag == NULL) :
+            np_vtx_tag = None
         else :
-            dim = <NPY.npy_intp> dims['nVertex']
-            npVertexTag   = NPY.PyArray_SimpleNewFromData(1,
+            dim = <NPY.npy_intp> dims['n_vtx']
+            np_vtx_tag   = NPY.PyArray_SimpleNewFromData(1,
                                                          &dim,
                                                          NPY.NPY_INT32,
-                                                         <void *> vertexTag)
+                                                         <void *> vtx_tag)
+        PyArray_ENABLEFLAGS(np_vtx_tag, NPY.NPY_OWNDATA);
 
-        # \param [out]  vtx                Vertex coordinates (size = 3 * nVtx)
-        if (vertex == NULL) :
-            npVertex = None
+        # \param [out]  vtx                vtx_coord coordinates (size = 3 * nVtx)
+        if (vtx_coord == NULL) :
+            np_vtx_coord = None
         else :
-            dim = <NPY.npy_intp> (3 * dims['nVertex'])
-            npVertex  = NPY.PyArray_SimpleNewFromData(1,
+            dim = <NPY.npy_intp> (3 * dims['n_vtx'])
+            np_vtx_coord  = NPY.PyArray_SimpleNewFromData(1,
                                                      &dim,
                                                      NPY.NPY_DOUBLE,
-                                                     <void *> vertex)
+                                                     <void *> vtx_coord)
+        PyArray_ENABLEFLAGS(np_vtx_coord, NPY.NPY_OWNDATA);
 
-        # \param [out]  vtxLNToGN          Vertex local numbering to global numbering (size = nVtx)
-        if (vertexLNToGN == NULL) :
-            npVertexLNToGN = None
+        # \param [out]  vtx_ln_to_gn          vtx_coord local numbering to global numbering (size = nVtx)
+        if (vtx_ln_to_gn == NULL) :
+            np_vtx_ln_to_gn = None
         else :
-            dim = <NPY.npy_intp> dims['nVertex']
-            npVertexLNToGN  = NPY.PyArray_SimpleNewFromData(1,
+            dim = <NPY.npy_intp> dims['n_vtx']
+            np_vtx_ln_to_gn  = NPY.PyArray_SimpleNewFromData(1,
                                                            &dim,
                                                            PDM_G_NUM_NPY_INT,
-                                                           <void *> vertexLNToGN)
+                                                           <void *> vtx_ln_to_gn)
+        PyArray_ENABLEFLAGS(np_vtx_ln_to_gn, NPY.NPY_OWNDATA);
 
-        # \param [out]  faceBoundIdx       face group index (size = nFaceBound + 1)
-        if (faceBoundIdx == NULL) :
-            npFaceBoundIdx = None
+        # \param [out]  face_bound_idx       face group index (size = n_face_bound + 1)
+        if (face_bound_idx == NULL) :
+            np_face_bound_idx = None
         else :
-            dim = <NPY.npy_intp> dims['nFaceBound'] + 1
-            npFaceBoundIdx  = NPY.PyArray_SimpleNewFromData(1,
+            dim = <NPY.npy_intp> dims['n_face_bound'] + 1
+            np_face_bound_idx  = NPY.PyArray_SimpleNewFromData(1,
                                                            &dim,
                                                            NPY.NPY_INT32,
-                                                           <void *> faceBoundIdx)
+                                                           <void *> face_bound_idx)
+        PyArray_ENABLEFLAGS(np_face_bound_idx, NPY.NPY_OWNDATA);
 
-        # \param [out]  faceBound          faces for each group (size = faceBoundIdx[nFaceBound] = lFaceBound)
-        if (faceBound == NULL) :
-            npFaceBound = None
+        # \param [out]  face_bound          faces for each group (size = face_bound_idx[n_face_bound] = lFace_bound)
+        if (face_bound == NULL) :
+            np_face_bound = None
         else :
-            dim = <NPY.npy_intp> dims['sFaceBound']
-            npFaceBound = NPY.PyArray_SimpleNewFromData(1,
+            dim = <NPY.npy_intp> dims['s_face_bound']
+            np_face_bound = NPY.PyArray_SimpleNewFromData(1,
                                                        &dim,
                                                        NPY.NPY_INT32,
-                                                       <void *> faceBound)
+                                                       <void *> face_bound)
+        PyArray_ENABLEFLAGS(np_face_bound, NPY.NPY_OWNDATA);
 
-        # \param [out]  faceBoundLNToGN    faces global numbering for each group (size = faceBoundIdx[nFaceBound] = lFaceBound)
-        if (faceBoundLNToGN == NULL) :
-            npFaceBoundLNToGN = None
+        # \param [out]  face_bound_ln_to_gn    faces global numbering for each group (size = face_bound_idx[n_face_bound] = lFace_bound)
+        if (face_bound_ln_to_gn == NULL) :
+            np_face_bound_ln_to_gn = None
         else :
-            dim = <NPY.npy_intp> dims['sFaceBound']
-            npFaceBoundLNToGN = NPY.PyArray_SimpleNewFromData(1,
+            dim = <NPY.npy_intp> dims['s_face_bound']
+            np_face_bound_ln_to_gn = NPY.PyArray_SimpleNewFromData(1,
                                                              &dim,
                                                              PDM_G_NUM_NPY_INT,
-                                                             <void *> faceBoundLNToGN)
+                                                             <void *> face_bound_ln_to_gn)
+        PyArray_ENABLEFLAGS(np_face_bound_ln_to_gn, NPY.NPY_OWNDATA);
 
-        # \param [out]  faceJoinIdx       face group index (size = nFaceJoin + 1)
-        if (faceJoinIdx == NULL) :
-            npFaceJoinIdx = None
+        # \param [out]  face_join_idx       face group index (size = n_face_join + 1)
+        if (face_join_idx == NULL) :
+            np_face_join_idx = None
         else :
-            dim = <NPY.npy_intp> dims['nFaceJoin'] + 1
-            npFaceJoinIdx  = NPY.PyArray_SimpleNewFromData(1,
+            dim = <NPY.npy_intp> dims['n_face_join'] + 1
+            np_face_join_idx  = NPY.PyArray_SimpleNewFromData(1,
                                                           &dim,
                                                           NPY.NPY_INT32,
-                                                          <void *> faceJoinIdx)
+                                                          <void *> face_join_idx)
+        PyArray_ENABLEFLAGS(np_face_join_idx, NPY.NPY_OWNDATA);
 
-        # \param [out]  faceJoin          faces for each group (size = faceJoinIdx[nFaceJoin] = lFaceJoin)
-        if (faceJoin == NULL) :
-            npFaceJoin = None
+        # \param [out]  face_join          faces for each group (size = face_join_idx[n_face_join] = lFace_join)
+        if (face_join == NULL) :
+            np_face_join = None
         else :
-            dim = <NPY.npy_intp> (4 * dims['sFaceJoin'])
-            npFaceJoin = NPY.PyArray_SimpleNewFromData(1,
+            dim = <NPY.npy_intp> (4 * dims['s_face_join'])
+            np_face_join = NPY.PyArray_SimpleNewFromData(1,
                                                       &dim,
                                                       NPY.NPY_INT32,
-                                                      <void *> faceJoin)
+                                                      <void *> face_join)
+        PyArray_ENABLEFLAGS(np_face_join, NPY.NPY_OWNDATA);
 
-        # \param [out]  faceJoinLNToGN    faces global numbering for each group (size = faceJoinIdx[nFaceJoin] = lFaceJoin)
-        if (faceJoinLNToGN == NULL) :
-            npFaceJoinLNToGN = None
+        # \param [out]  face_join_ln_to_gn    faces global numbering for each group (size = face_join_idx[n_face_join] = lFace_join)
+        if (face_join_ln_to_gn == NULL) :
+            np_face_join_ln_to_gn = None
         else :
-            dim = <NPY.npy_intp> dims['sFaceJoin']
-            npFaceJoinLNToGN = NPY.PyArray_SimpleNewFromData(1,
+            dim = <NPY.npy_intp> dims['s_face_join']
+            np_face_join_ln_to_gn = NPY.PyArray_SimpleNewFromData(1,
                                                              &dim,
                                                              PDM_G_NUM_NPY_INT,
-                                                             <void *> faceJoinLNToGN)
+                                                             <void *> face_join_ln_to_gn)
+        PyArray_ENABLEFLAGS(np_face_join_ln_to_gn, NPY.NPY_OWNDATA);
 
-        return {'npCellTag'                  : npCellTag,
-                'npCellFaceIdx'              : npCellFaceIdx,
-                'npCellFace'                 : npCellFace,
-                'npCellLNToGN'               : npCellLNToGN,
-                'npFaceTag'                  : npFaceTag,
-                'npFaceCell'                 : npFaceCell,
-                'npFaceVertexIdx'            : npFaceVertexIdx,
-                'npFaceVertex'               : npFaceVertex,
-                'npFaceLNToGN'               : npFaceLNToGN,
-                'npfacePartBoundProcIdx'     : npfacePartBoundProcIdx,
-                'npfacePartBoundPartIdx'     : npfacePartBoundPartIdx,
-                'npFacePartBound'            : npFacePartBound,
-                'npVertexTag'                : npVertexTag,
-                'npVertex'                   : npVertex,
-                'npVertexLNToGN'             : npVertexLNToGN,
-                'npFaceBoundIdx'             : npFaceBoundIdx,
-                'npFaceBound'                : npFaceBound,
-                'npFaceBoundLNToGN'          : npFaceBoundLNToGN,
-                'npFaceJoinIdx'              : npFaceJoinIdx,
-                'npFaceJoin'                 : npFaceJoin,
-                'npFaceJoinLNToGN'           : npFaceJoinLNToGN}
+        return {'np_cell_tag'                  : np_cell_tag,
+                'np_cell_face_idx'             : np_cell_face_idx,
+                'np_cell_face'                 : np_cell_face,
+                'np_cell_ln_to_gn'             : np_cell_ln_to_gn,
+                'np_face_tag'                  : np_face_tag,
+                'np_face_cell'                 : np_face_cell,
+                'np_face_vtx_idx'              : np_face_vtx_idx,
+                'np_face_vtx'                  : np_face_vtx,
+                'np_face_ln_to_gn'             : np_face_ln_to_gn,
+                'np_face_part_bound_proc_idx'  : np_face_part_bound_proc_idx,
+                'np_face_part_bound_part_idx'  : np_face_part_bound_part_idx,
+                'np_face_part_bound'           : np_face_part_bound,
+                'np_vtx_tag'                   : np_vtx_tag,
+                'np_vtx_coord'                 : np_vtx_coord,
+                'np_vtx_ln_to_gn'              : np_vtx_ln_to_gn,
+                'np_face_bound_idx'            : np_face_bound_idx,
+                'np_face_bound'                : np_face_bound,
+                'np_face_bound_ln_to_gn'       : np_face_bound_ln_to_gn,
+                'np_face_join_idx'             : np_face_join_idx,
+                'np_face_join'                 : np_face_join,
+                'np_face_join_ln_to_gn'        : np_face_join_ln_to_gn}
 
     # ------------------------------------------------------------------
-    def multipart_color_get(self, int ipart, int zoneGId):
+    def multipart_color_get(self, int ipart, int zone_gid):
         """
            Get partition dimensions
         """
         # ************************************************************************
         # > Declaration
-        cdef int          *cellColor,
-        cdef int          *faceColor
-        cdef int          *threadColor
-        cdef int          *hyperPlaneColor
+        cdef int          *cell_color,
+        cdef int          *face_color
+        cdef int          *thread_color
+        cdef int          *hyper_plane_color
         # ************************************************************************
 
         # dims = self.part_dim_get(self._mpart_id, ipart)
-        dims = self.multipart_dim_get(ipart, zoneGId)
+        dims = self.multipart_dim_get(ipart, zone_gid)
 
         # -> Call PPART to get info
         PDM_multipart_part_color_get(self._mpart_id,
-                                     zoneGId,
+                                     zone_gid,
                                      ipart,
-                                     &cellColor,
-                                     &faceColor,
-                                     &threadColor,
-                                     &hyperPlaneColor)
+                                     &cell_color,
+                                     &face_color,
+                                     &thread_color,
+                                     &hyper_plane_color)
         # -> Begin
         cdef NPY.npy_intp dim
 
-        # \param [out]  cellColor            Cell tag (size = nCell)
-        if (cellColor == NULL):
-            npCellColor = None
+        # \param [out]  cell_color            Cell tag (size = n_cell)
+        if (cell_color == NULL):
+            np_cell_color = None
         else :
-            dim = <NPY.npy_intp> dims['nCell']
-            npCellColor = NPY.PyArray_SimpleNewFromData(1,
+            dim = <NPY.npy_intp> dims['n_cell']
+            np_cell_color = NPY.PyArray_SimpleNewFromData(1,
                                                         &dim,
                                                         NPY.NPY_INT32,
-                                                        <void *> cellColor)
-        # \param [out]  faceColor            Cell tag (size = nFace)
-        if (faceColor == NULL):
-            npFaceColor = None
-        else :
-            dim = <NPY.npy_intp> dims['nFace']
-            npFaceColor = NPY.PyArray_SimpleNewFromData(1,
-                                                        &dim,
-                                                        NPY.NPY_INT32,
-                                                        <void *> faceColor)
+                                                        <void *> cell_color)
+        PyArray_ENABLEFLAGS(np_cell_color, NPY.NPY_OWNDATA);
 
-        # \param [out]  threadColor            Cell tag (size = nCell)
-        if (threadColor == NULL):
-            npThreadColor = None
+        # \param [out]  face_color            Cell tag (size = n_face)
+        if (face_color == NULL):
+            np_face_color = None
         else :
-            dim = <NPY.npy_intp> dims['nCell']
-            npThreadColor = NPY.PyArray_SimpleNewFromData(1,
+            dim = <NPY.npy_intp> dims['n_face']
+            np_face_color = NPY.PyArray_SimpleNewFromData(1,
+                                                        &dim,
+                                                        NPY.NPY_INT32,
+                                                        <void *> face_color)
+        PyArray_ENABLEFLAGS(np_face_color, NPY.NPY_OWNDATA);
+
+        # \param [out]  thread_color            Cell tag (size = n_cell)
+        if (thread_color == NULL):
+            np_thread_color = None
+        else :
+            dim = <NPY.npy_intp> dims['n_cell']
+            np_thread_color = NPY.PyArray_SimpleNewFromData(1,
                                                           &dim,
                                                           NPY.NPY_INT32,
-                                                          <void *> threadColor)
+                                                          <void *> thread_color)
+        PyArray_ENABLEFLAGS(np_thread_color, NPY.NPY_OWNDATA);
 
-        # \param [out]  hyperPlaneColor            Cell tag (size = nCell)
-        if (hyperPlaneColor == NULL):
-            npHyperPlaneColor = None
+        # \param [out]  hyper_plane_color            Cell tag (size = n_cell)
+        if (hyper_plane_color == NULL):
+            np_hyper_plane_color = None
         else :
-            dim = <NPY.npy_intp> dims['nCell']
-            npHyperPlaneColor = NPY.PyArray_SimpleNewFromData(1,
+            dim = <NPY.npy_intp> dims['n_cell']
+            np_hyper_plane_color = NPY.PyArray_SimpleNewFromData(1,
                                                               &dim,
                                                               NPY.NPY_INT32,
-                                                              <void *> hyperPlaneColor)
-        return {'npCellColor'       : npCellColor,
-                'npFaceColor'       : npFaceColor,
-                'npThreadColor'     : npThreadColor,
-                'npHyperPlaneColor' : npHyperPlaneColor}
+                                                              <void *> hyper_plane_color)
+        PyArray_ENABLEFLAGS(np_hyper_plane_color, NPY.NPY_OWNDATA);
+
+        return {'np_cell_color'        : np_cell_color,
+                'np_face_color'        : np_face_color,
+                'np_thread_color'      : np_thread_color,
+                'np_hyper_plane_color' : np_hyper_plane_color}
 
     # ------------------------------------------------------------------
-    def multipart_time_get(self, int zoneGId):
+    def multipart_time_get(self, int zone_gid):
         """
         Get times
         """
@@ -622,7 +642,7 @@ cdef class MultiPart:
         cdef double *cpu_sys
         # ************************************************************************
 
-        PDM_multipart_time_get(self._mpart_id, zoneGId, &elapsed, &cpu, &cpu_user, &cpu_sys)
+        PDM_multipart_time_get(self._mpart_id, zone_gid, &elapsed, &cpu, &cpu_user, &cpu_sys)
 
         d_elapsed = {'total'              : elapsed[0],
                      'building graph'     : elapsed[1],
@@ -648,7 +668,7 @@ cdef class MultiPart:
 
 
     # ------------------------------------------------------------------
-    # def multipart_stat_get(self, int zoneGId):
+    # def multipart_stat_get(self, int zone_gid):
     #     """
     #     Get statistics
     #     """
@@ -668,7 +688,7 @@ cdef class MultiPart:
     #     # ************************************************************************
 
     #     PDM_multipart_stat_get(self._mpart_id,
-    #                            zoneGId,
+    #                            zone_gid,
     #                            &cells_average,
     #                            &cells_median,
     #                            &cells_std_deviation,

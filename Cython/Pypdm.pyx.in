@@ -79,7 +79,7 @@ cdef extern from "pdm.h":
     void PDM_Finalize ()
 
 def Finalize ():
-    PDM_Finalize()
+    PDM_Finalize
 
 cdef extern from "pdm_mpi.h":
     ctypedef int PDM_MPI_Comm
@@ -174,6 +174,12 @@ include "pdm_closest_points.pxi"
 # PDM_dcube_gen :
 # --------------------
 include "pdm_dcube_gen.pxi"
+
+
+
+
+
+
 
 # TODO: PDM_writer, ...
 

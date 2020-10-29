@@ -84,7 +84,8 @@ PDM_multipart_create
  const PDM_split_dual_t split_method,
  const PDM_part_size_t  part_size_method,
  const double          *part_fraction,
- const PDM_MPI_Comm     comm
+ const PDM_MPI_Comm     comm,
+ const PDM_ownership_t  owner
 );
 
 
@@ -175,11 +176,11 @@ const int   i_part,
       int  *n_vtx,
       int  *n_proc,
       int  *n_total_part,
-      int  *scell_face,
-      int  *sface_vtx,
-      int  *sface_bound,
+      int  *s_cell_face,
+      int  *s_face_vtx,
+      int  *s_face_bound,
       int  *n_bound_groups,
-      int  *sface_join,
+      int  *s_face_join,
       int  *n_join_groups
 );
 
