@@ -145,7 +145,7 @@ void PDM_multipart_set_reordering_options
  const char      *renum_cell_method,
  const int       *renum_cell_properties,
  const char      *renum_face_method
- );
+);
 
 /**
  *
@@ -159,6 +159,18 @@ PDM_multipart_run_ppart
 (
  const int id
 );
+
+/**
+ *
+ * \brief Construct the partitioned meshes on every zones
+ *
+ * \param [in]   mpart_id          Multipart structure id
+ */
+// void
+// PDM_multipart_vtx_graph_comm_compute
+// (
+//  const int id
+// );
 
 /**
  *
@@ -182,6 +194,19 @@ const int   i_part,
       int  *n_bound_groups,
       int  *s_face_join,
       int  *n_join_groups
+);
+
+/**
+ *
+ * \brief Returns the dimensions of a given partition
+ */
+void
+PDM_multipart_part_graph_comm_vtx_dim_get
+(
+ const int   mpart_id,
+ const int   i_zone,
+ const int   i_part,
+       int  *n_vtx_part_bound
 );
 
 /**
@@ -215,6 +240,17 @@ const int            i_part,
       int          **face_join_idx,
       int          **face_join,
       PDM_g_num_t  **face_join_ln_to_gn
+);
+
+void
+PDM_multipart_part_graph_comm_vtx_data_get
+(
+const int            mpart_id,
+const int            i_zone,
+const int            i_part,
+      int          **vtx_part_bound_proc_idx,
+      int          **vtx_part_bound_part_idx,
+      int          **vtx_part_bound
 );
 
 void

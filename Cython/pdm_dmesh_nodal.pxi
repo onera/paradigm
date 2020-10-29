@@ -267,7 +267,7 @@ cdef class DistributedMeshNodal:
         dim = <NPY.npy_intp> dn_face + 1
         np_dface_vtx_idx = NPY.PyArray_SimpleNewFromData(1,
                                                          &dim,
-                                                         PDM_G_NUM_NPY_INT,
+                                                         NPY.NPY_INT32,
                                                          <void *> dface_vtx_idx)
         PyArray_ENABLEFLAGS(np_dface_vtx_idx, NPY.NPY_OWNDATA);
 

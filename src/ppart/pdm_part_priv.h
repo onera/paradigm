@@ -58,6 +58,7 @@ typedef struct  _part_t {
   int           n_cell;              /*!< Number of cells                      */
   int           n_face;              /*!< Number of faces                      */
   int           n_face_part_bound;   /*!< Number of partitioning boundary faces*/
+  int           n_vtx_part_bound;    /*!< Number of partitioning boundary vtx  */
   int           n_face_group;        /*!< Number of boundary faces             */
 
   //Geometry and connectivities
@@ -97,6 +98,21 @@ typedef struct  _part_t {
                                           - Connected face local number
                                             in the connected partition
                                       (size = 4* n_face_part_bound)            */
+  int   *vtx_part_bound_proc_idx;   /*!< Partitioning boundary bloc distribution
+                                      (size = n_ranks + 1)                     */
+  int   *vtx_part_bound_part_idx;   /*!< Partitioning boundary bloc distribution
+                                      (size = n_partTotal + 1)                 */
+  int          *vtx_part_bound;     /*!< Partitioning boundary vertex sorted by
+                                         proc, sorted by part in the proc, and
+                                         sorted by absolute vtx number in the part
+                                         For each vtx :
+                                          - Vertex local number
+                                          - Connected process
+                                          - Connected Partition
+                                            on the connected process
+                                          - Connected Vertex local number
+                                            in the connected partition
+                                      (size = 4* n_vtx_part_bound)            */
   //New interface differs boundary groups and interface groups
   int          *face_bound_idx;      /*!< Indices of original boundary groups
                                       (size = n_bounds + 1)                    */
@@ -317,43 +333,47 @@ void
   part->n_vtx = 0;
   part->n_cell = 0;
   part->n_face = 0;
-  part->n_face_part_bound = 0;
-  part->n_face_group = 0;
-  part->vtx = NULL;
-  part->face_vtx_idx = NULL;
-  part->face_vtx = NULL;
-  part->gface_vtx = NULL;
-  part->cell_face_idx = NULL;
-  part->cell_face = NULL;
-  part->gcell_face = NULL;
-  part->face_cell = NULL;
-  part->face_group_idx = NULL;
-  part->face_group = NULL;
+  part->n_face_part_bound        = 0;
+  part->n_vtx_part_bound         = 0;
+  part->n_face_group             = 0;
+  part->vtx                      = NULL;
+  part->face_vtx_idx             = NULL;
+  part->face_vtx                 = NULL;
+  part->gface_vtx                = NULL;
+  part->cell_face_idx            = NULL;
+  part->cell_face                = NULL;
+  part->gcell_face               = NULL;
+  part->face_cell                = NULL;
+  part->face_group_idx           = NULL;
+  part->face_group               = NULL;
   part->face_part_bound_proc_idx = NULL;
   part->face_part_bound_part_idx = NULL;
-  part->face_part_bound = NULL;
-  part->face_bound_idx = NULL;
-  part->face_bound = NULL;
-  part->face_join_idx = NULL;
-  part->face_join = NULL;
-  part->face_ln_to_gn  = NULL;
-  part->cell_ln_to_gn = NULL;
-  part->vtx_ln_to_gn = NULL;
-  part->face_group_ln_to_gn = NULL;
-  part->face_bound_ln_to_gn = NULL;
-  part->face_join_ln_to_gn = NULL;
-  part->cell_tag = NULL;
-  part->face_tag = NULL;
-  part->vtx_tag = NULL;
-  part->cell_weight = NULL;
-  part->face_weight = NULL;
-  part->cell_color = NULL;
-  part->face_color = NULL;
-  part->thread_color = NULL;
-  part->hyperplane_color = NULL;
-  part->new_to_old_order_cell = NULL;
-  part->new_to_old_order_face = NULL;
-  part->subpartlayout = NULL;
+  part->face_part_bound          = NULL;
+  part->vtx_part_bound_proc_idx  = NULL;
+  part->vtx_part_bound_part_idx  = NULL;
+  part->vtx_part_bound           = NULL;
+  part->face_bound_idx           = NULL;
+  part->face_bound               = NULL;
+  part->face_join_idx            = NULL;
+  part->face_join                = NULL;
+  part->face_ln_to_gn            = NULL;
+  part->cell_ln_to_gn            = NULL;
+  part->vtx_ln_to_gn             = NULL;
+  part->face_group_ln_to_gn      = NULL;
+  part->face_bound_ln_to_gn      = NULL;
+  part->face_join_ln_to_gn       = NULL;
+  part->cell_tag                 = NULL;
+  part->face_tag                 = NULL;
+  part->vtx_tag                  = NULL;
+  part->cell_weight              = NULL;
+  part->face_weight              = NULL;
+  part->cell_color               = NULL;
+  part->face_color               = NULL;
+  part->thread_color             = NULL;
+  part->hyperplane_color         = NULL;
+  part->new_to_old_order_cell    = NULL;
+  part->new_to_old_order_face    = NULL;
+  part->subpartlayout            = NULL;
   return part;
 }
 

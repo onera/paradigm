@@ -1185,7 +1185,7 @@ PDM_part_dconnectivity_to_pconnectivity_hash
  * \param [out]  ppart_bound_idx     For each part, indexes of communication information related to the
  *                                   other (global id) parts (size=n_part, each component size=n_part_tot+1)
  * \param [out]  pentity_bound       For each part, communication information (see abobe) (size=n_part)
-*/
+ */
 void
 PDM_part_generate_entity_graph_comm
 (
@@ -1218,12 +1218,12 @@ PDM_part_generate_entity_graph_comm
   int** part_stri = (int ** ) malloc( n_part * sizeof(int *));
   int** part_data = (int ** ) malloc( n_part * sizeof(int *));
   for(int i_part = 0; i_part < n_part; ++i_part) {
-    part_stri[i_part] = (int *) malloc(     pn_entity[i_part] * sizeof(int));
+    part_stri[i_part] = (int *) malloc( pn_entity[i_part] * sizeof(int));
     int idx_data = 0;
     if (pentity_hint != NULL) {
       //First pass to count
       for(int i_entity = 0; i_entity < pn_entity[i_part]; ++i_entity){
-        if (pentity_hint[i_part][i_entity]==1){
+        if (pentity_hint[i_part][i_entity] == 1){
           idx_data++;
         }
       }
@@ -1445,7 +1445,7 @@ PDM_part_generate_entity_graph_comm
         idx_part += 1;
       }
     }
-    printf("n_connect_sort::%d\n", n_connect);
+    // printf("n_connect_sort::%d\n", n_connect);
 
     /*
      * Sort
@@ -1533,7 +1533,6 @@ PDM_part_generate_entity_graph_comm
 
   }
 
-
   /*
    * Free
    */
@@ -1561,7 +1560,7 @@ PDM_part_generate_entity_graph_comm
  *                                   (size = n_part, each component size = pn_vtx[i_part])
  * \param [out]  pvtx_coord          Coordinates of partitioned vertices for each partition
  *                                   (size = n_part, each component size = 3*pn_vtx[i_part])
-*/
+ */
 void
 PDM_part_dcoordinates_to_pcoordinates
 (

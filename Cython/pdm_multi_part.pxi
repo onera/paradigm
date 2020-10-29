@@ -81,6 +81,21 @@ cdef extern from "pdm_multipart.h":
                                     int          **face_join_idx,
                                     int          **face_join,
                                     PDM_g_num_t  **face_join_ln_to_gn)
+
+    # ------------------------------------------------------------------
+    void PDM_multipart_part_graph_comm_vtx_dim_get(int   mpart_id,
+                                                   int   i_zone,
+                                                   int   i_part,
+                                                   int  *n_vtx_part_bound)
+
+    # ------------------------------------------------------------------
+    void PDM_multipart_part_graph_comm_vtx_data_get(int            mpart_id,
+                                                    int            i_zone,
+                                                    int            i_part,
+                                                    int          **vtx_part_bound_proc_idx,
+                                                    int          **vtx_part_bound_part_idx,
+                                                    int          **vtx_part_bound);
+
     # ------------------------------------------------------------------
     void PDM_multipart_part_color_get(int            mpart_id,
                                       int            zone_gid,
@@ -552,6 +567,87 @@ cdef class MultiPart:
                 'np_face_join_idx'             : np_face_join_idx,
                 'np_face_join'                 : np_face_join,
                 'np_face_join_ln_to_gn'        : np_face_join_ln_to_gn}
+
+
+    # ------------------------------------------------------------------
+    def multipart_graph_comm_vtx_dim_get(self, int ipart, int zone_gid):
+        """
+           Get partition dimensions
+        """
+        # ************************************************************************
+        # > Declaration
+        cdef int n_vtx_part_bound
+        # ************************************************************************
+
+        PDM_multipart_part_graph_comm_vtx_dim_get(self._mpart_id,
+                                                  zone_gid,
+                                                  ipart,
+                                                  &n_vtx_part_bound)
+
+        return {'n_vtx_part_bound' : n_vtx_part_bound}
+
+    # ------------------------------------------------------------------
+    def multipart_graph_comm_vtx_val_get(self, int ipart, int zone_gid):
+        """
+           Get partition dimensions
+        """
+        # ************************************************************************
+        # > Declaration
+        cdef int          *vtx_part_bound
+        cdef int          *vtx_part_bound_proc_idx
+        cdef int          *vtx_part_bound_part_idx
+        # ************************************************************************
+
+        # dims = self.part_dim_get(self._mpart_id, ipart)
+        dims    = self.multipart_dim_get(ipart, zone_gid)
+        dims_gc = self.multipart_graph_comm_vtx_dim_get(ipart, zone_gid)
+
+        # -> Call PPART to get info
+        PDM_multipart_part_graph_comm_vtx_data_get(self._mpart_id,
+                                                   zone_gid,
+                                                   ipart,
+                                                   &vtx_part_bound_proc_idx,
+                                                   &vtx_part_bound_part_idx,
+                                                   &vtx_part_bound)
+        # -> Begin
+        cdef NPY.npy_intp dim
+
+        # \param [out]  vtx_part_bound      Partitioning boundary vtxs
+        if (vtx_part_bound == NULL) :
+            np_vtx_part_bound = None
+        else :
+            dim = <NPY.npy_intp> (4 * dims_gc['n_vtx_part_bound'])
+            np_vtx_part_bound   = NPY.PyArray_SimpleNewFromData(1,
+                                                                &dim,
+                                                                NPY.NPY_INT32,
+                                                                <void *> vtx_part_bound)
+        PyArray_ENABLEFLAGS(np_vtx_part_bound, NPY.NPY_OWNDATA);
+
+        # \param [out]  vtx_part_bound_proc_idx  Partitioning boundary vtxs block distribution from processus (size = n_proc + 1)
+        if (vtx_part_bound_proc_idx == NULL) :
+            np_vtx_part_bound_proc_idx = None
+        else :
+            dim = <NPY.npy_intp> ( dims['n_proc'] + 1)
+            np_vtx_part_bound_proc_idx = NPY.PyArray_SimpleNewFromData(1,
+                                                                       &dim,
+                                                                       NPY.NPY_INT32,
+                                                                       <void *> vtx_part_bound_proc_idx)
+        PyArray_ENABLEFLAGS(np_vtx_part_bound_proc_idx, NPY.NPY_OWNDATA);
+
+        # \param [out]  vtx_part_bound_part_idx  Partitioning boundary vtxs block distribution from partition (size = nt_part + 1)
+        if (vtx_part_bound_part_idx == NULL) :
+            np_vtx_part_bound_part_idx = None
+        else :
+            dim = <NPY.npy_intp> ( dims['nt_part'] + 1)
+            np_vtx_part_bound_part_idx = NPY.PyArray_SimpleNewFromData(1,
+                                                                       &dim,
+                                                                       NPY.NPY_INT32,
+                                                                       <void *> vtx_part_bound_part_idx)
+        PyArray_ENABLEFLAGS(np_vtx_part_bound_part_idx, NPY.NPY_OWNDATA);
+
+        return {'np_vtx_part_bound_proc_idx'  : np_vtx_part_bound_proc_idx,
+                'np_vtx_part_bound_part_idx'  : np_vtx_part_bound_part_idx,
+                'np_vtx_part_bound'           : np_vtx_part_bound}
 
     # ------------------------------------------------------------------
     def multipart_color_get(self, int ipart, int zone_gid):
