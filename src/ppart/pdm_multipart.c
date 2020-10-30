@@ -650,6 +650,10 @@ _part_free
     free(part->new_to_old_order_face);
   part->new_to_old_order_face = NULL;
 
+  if (part->new_to_old_order_vtx != NULL)
+    free(part->new_to_old_order_vtx);
+  part->new_to_old_order_vtx = NULL;
+
   if(part->subpartlayout != NULL){
     if(part->subpartlayout->cell_tile_idx!= NULL)
       free(part->subpartlayout->cell_tile_idx);
@@ -1078,6 +1082,7 @@ PDM_multipart_run_ppart
       PDM_part_renum_cell(_pmeshes->parts, n_part, _pmeshes->renum_cell_method,
                           (void *) _pmeshes->renum_cell_properties);
       PDM_part_renum_face(_pmeshes->parts, n_part, _pmeshes->renum_face_method, NULL);
+      PDM_part_renum_vtx(_pmeshes->parts, n_part, 1, NULL);
 
       //Now genererate bounds and comm data -- we need update pface_ln_to_gn which has been modified
       for (int ipart = 0; ipart < n_part; ipart++) {

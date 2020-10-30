@@ -73,6 +73,22 @@ PDM_part_renum_method_face_add
 
 /**
  *
+ * \brief Add a new method for face renumbering
+ *
+ * \param [in]      name           Mesh entity to renumber
+ * \param [in]      renum_fct      Renumbering function
+ *
+ */
+
+int
+PDM_part_renum_method_vtx_add
+(
+ const char                 *name,     /*!< Name          */
+ const PDM_part_renum_fct_t  renum_fct /*!< Customize \ref PDM_part_renum_face function for the format */
+);
+
+/**
+ *
  * \brief Get index of a renumbering cell method
  *
  * \param [in]  name   Name of the method
@@ -304,6 +320,25 @@ PDM_part_renum_face
  void     *specific_data
 );
 
+
+/**
+ *
+ * \brief Perform vtx renumbering
+ *
+ * \param [in,out]  part       part structure
+ *
+ */
+
+void
+PDM_part_renum_vtx
+(
+ _part_t **part,
+ int       n_part,
+ int       renum_vtx_method,
+ void     *specific_data
+);
+
+
 /**
  *
  * \brief Perform cells renumbering from a new order
@@ -311,7 +346,7 @@ PDM_part_renum_face
  *        Connectivities/cell_tag/cell_color/cell_ln_to_gn
  *
  * \param [in,out]  part        Current partition
- * \param [in]      newToOldOrder    NewOrder
+ * \param [in]      new_to_old_order    NewOrder
  *
  */
 
@@ -319,7 +354,7 @@ void
 PDM_part_reorder_cell
 (
  _part_t *part,
- int     *newToOldOrder
+ int     *new_to_old_order
 );
 
 
@@ -330,7 +365,7 @@ PDM_part_reorder_cell
  *        Connectivities/face_tag/face_color/face_ln_to_gn
  *
  * \param [in,out]  part        Current partition
- * \param [in]      newToOldOrder    NewOrder
+ * \param [in]      new_to_old_order    NewOrder
  *
  */
 
@@ -338,7 +373,25 @@ void
 PDM_part_reorder_face
 (
  _part_t *part,
- int     *newToOldOrder
+ int     *new_to_old_order
+);
+
+/**
+ *
+ * \brief Perform vtx renumbering from a new order
+ *        Actualise all faces array according to the new numbering
+ *        Connectivities/face_tag/face_color/face_ln_to_gn
+ *
+ * \param [in,out]  part        Current partition
+ * \param [in]      new_to_old_order    NewOrder
+ *
+ */
+
+void
+PDM_part_reorder_vtx
+(
+ _part_t *part,
+ int     *new_to_old_order
 );
 
 
@@ -349,7 +402,7 @@ PDM_part_reorder_face
  *        Connectivities/face_tag/face_color/face_ln_to_gn
  *
  * \param [in,out]  part        Current partition
- * \param [in]      newToOldOrder    NewOrder
+ * \param [in]      new_to_old_order    NewOrder
  *
  */
 
@@ -357,7 +410,7 @@ void
 PDM_part_renum_connectivities
 (
   const int nElt,
-  const int *newToOldOrder,
+  const int *new_to_old_order,
   int       *connectivityIdx,
   int       *connectivities
 );
@@ -366,7 +419,7 @@ PDM_part_renum_connectivities
  * \brief Order an array
  *
  * \param [in]      sizeArray       Number of elements
- * \param [in]      newToOldOrder        New order (size = \ref nElt
+ * \param [in]      new_to_old_order        New order (size = \ref nElt
  * \param [in, out] Array           Array to renumber
  *
  */
@@ -383,7 +436,7 @@ int       *array
  * \brief Order an array for face_cell
  *
  * \param [in]      sizeArray       Number of elements
- * \param [in]      newToOldOrder        New order (size = \ref nElt
+ * \param [in]      new_to_old_order        New order (size = \ref nElt
  * \param [in, out] Array           Array to renumber
  *
  */

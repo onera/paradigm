@@ -89,6 +89,12 @@ static PDM_Handles_t *face_methods = NULL;
 
 static PDM_Handles_t *cell_methods = NULL;
 
+/**
+ * Storage of vtx renumbering methods
+ */
+
+static PDM_Handles_t *vtx_methods = NULL;
+
 /*============================================================================
  * Private function definitions
  *============================================================================*/
@@ -139,20 +145,20 @@ _renum_faceCell
 const int  n_cell,
 const int  n_face,
       int *face_cell,
-      int *newToOldOrder
+      int *new_to_old_order
 )
 {
 
-  int *oldToNewOrder = (int *) malloc (n_cell * sizeof(int));
+  int *old_to_new_order = (int *) malloc (n_cell * sizeof(int));
 
   for(int i = 0; i < n_cell; i++) {
-   oldToNewOrder[newToOldOrder[i]] = i;
+   old_to_new_order[new_to_old_order[i]] = i;
   }
 
   PDM_part_renum_array_face_cell (n_face,
-                                  oldToNewOrder,
+                                  old_to_new_order,
                                   face_cell);
-  free (oldToNewOrder);
+  free (old_to_new_order);
 
 }
 
@@ -160,7 +166,7 @@ const int  n_face,
  * \brief Order face_cell array
  *
  * \param [in]      sizeArray       Number of elements
- * \param [in]      newToOldOrder   New order (size = \ref nElt
+ * \param [in]      new_to_old_order   New order (size = \ref nElt
  * \param [in, out] face_cell        Array to order
  *
  */
@@ -169,7 +175,7 @@ static void
 _order_faceCell
 (
 int          n_face,
-int         *newToOldOrder,
+int         *new_to_old_order,
 int         *face_cell
 )
 {
@@ -180,8 +186,8 @@ int         *face_cell
   }
 
   for(int i = 0; i < n_face; ++i) {
-    face_cell[i*2+0] = oldface_cell[newToOldOrder[i]*2+0];
-    face_cell[i*2+1] = oldface_cell[newToOldOrder[i]*2+1];
+    face_cell[i*2+0] = oldface_cell[new_to_old_order[i]*2+0];
+    face_cell[i*2+1] = oldface_cell[new_to_old_order[i]*2+1];
   }
 
   free(oldface_cell);
@@ -192,7 +198,7 @@ int         *face_cell
  * \brief Order an array
  *
  * \param [in]      sizeArray       Number of elements
- * \param [in]      newToOldOrder        New order (size = \ref nElt
+ * \param [in]      new_to_old_order        New order (size = \ref nElt
  * \param [in, out] Array         	Array to renumber
  *
  */
@@ -225,7 +231,7 @@ int       *array
  * \brief Order an array
  *
  * \param [in]      sizeArray       Number of elements
- * \param [in]      newToOldOrder   New order (size = \ref nElt
+ * \param [in]      new_to_old_order   New order (size = \ref nElt
  * \param [in, out] Array           Array to renumber
  *
  */
@@ -265,7 +271,7 @@ int       *array
  * \brief Renumber connectivities
  *
  * \param [in]      nElt            Number of elements
- * \param [in]      newToOldOrder        New order (size = \ref nElt
+ * \param [in]      new_to_old_order        New order (size = \ref nElt
  * \param [in, out] connectivityIdx	Connectivity index
  * \param [in, out] connectivities	Element connectivities
  *
@@ -275,7 +281,7 @@ void
 PDM_part_renum_connectivities
 (
 const int nElt,
-const int *newToOldOrder,
+const int *new_to_old_order,
 int       *connectivityIdx,
 int       *connectivities
 )
@@ -294,7 +300,7 @@ int       *connectivities
   }
 
   for (int elem = 0; elem < nElt; ++elem) {
-    int nbSSElem = oldConnectivityIdx[newToOldOrder[elem] + 1] - oldConnectivityIdx[newToOldOrder[elem]];
+    int nbSSElem = oldConnectivityIdx[new_to_old_order[elem] + 1] - oldConnectivityIdx[new_to_old_order[elem]];
     connectivityIdx[elem+1] = nbSSElem;
   }
 
@@ -304,10 +310,10 @@ int       *connectivities
   }
 
   for (int elem = 0; elem < nElt; ++elem) {
-    int nbSSElem = oldConnectivityIdx[newToOldOrder[elem] + 1] - oldConnectivityIdx[newToOldOrder[elem]];
+    int nbSSElem = oldConnectivityIdx[new_to_old_order[elem] + 1] - oldConnectivityIdx[new_to_old_order[elem]];
 
     for (int ssElem = 0; ssElem < nbSSElem; ++ssElem) {
-      connectivities[connectivityIdx[elem] + ssElem] = oldConnectivities[oldConnectivityIdx[newToOldOrder[elem]]+ssElem];
+      connectivities[connectivityIdx[elem] + ssElem] = oldConnectivities[oldConnectivityIdx[new_to_old_order[elem]]+ssElem];
     }
   }
 
@@ -744,17 +750,17 @@ _renum_cells_hilbert
 
     free(cellCenter);
 
-    int *newToOldOrder = (int *) malloc (part->n_cell * sizeof(int));
+    int *new_to_old_order = (int *) malloc (part->n_cell * sizeof(int));
     for(int i = 0; i < part->n_cell; ++i) {
-      newToOldOrder [i] = i;
+      new_to_old_order [i] = i;
     }
 
-    PDM_sort_double (hilbert_codes, newToOldOrder, part->n_cell);
+    PDM_sort_double (hilbert_codes, new_to_old_order, part->n_cell);
 
-    PDM_part_reorder_cell (part, newToOldOrder);
+    PDM_part_reorder_cell (part, new_to_old_order);
 
     free (hilbert_codes);
-    free (newToOldOrder);
+    free (new_to_old_order);
 
   }
 }
@@ -961,6 +967,41 @@ _renum_faces_lexicographic
     free (faceCellTmp);
   }
 }
+
+
+static void
+_renum_vtx_sort_int_ext
+(
+ _part_t **mesh_parts,
+ int       n_part,
+ void     *specific_data
+)
+{
+  PDM_UNUSED(specific_data);
+
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    _part_t *part = mesh_parts[i_part];
+    const int n_vtx = part->n_vtx;
+
+    int *order = (int *) malloc (sizeof(int) * n_vtx);
+
+    _random_order (n_vtx, order);
+
+    PDM_part_reorder_vtx (part, order);
+
+    /* Copy in partition */
+    if(part->new_to_old_order_vtx == NULL){
+      part->new_to_old_order_vtx = (int *) malloc (sizeof(int) * n_vtx);
+      for (int i = 0; i < n_vtx; i++){
+        part->new_to_old_order_vtx[i] = order[i];
+      }
+    }
+
+    free (order);
+  }
+}
+
+
 
 /*=============================================================================
  * Public function definitions
@@ -1300,6 +1341,38 @@ PDM_part_renum_method_face_add
   return idx;
 }
 
+/**
+ *
+ * \brief Add a new method for face renumbering
+ *
+ * \param [in]      name           Mesh entity to renumber
+ * \param [in]      renum_fct      Renumbering function
+ *
+ */
+
+int
+PDM_part_renum_method_vtx_add
+(
+ const char                 *name,     /*!< Name          */
+ const PDM_part_renum_fct_t  renum_fct /*!< Customize \ref PDM_part_renum_face function for the format */
+)
+{
+  if (vtx_methods == NULL) {
+    PDM_part_renum_method_load_local ();
+  }
+
+  _renum_method_t *method_ptr = malloc (sizeof(_renum_method_t));
+
+  int idx = PDM_Handles_store  (vtx_methods, method_ptr);
+
+  method_ptr->name = malloc (sizeof(char) * (strlen(name) + 1));
+  strcpy (method_ptr->name, name);
+
+  method_ptr->fct = renum_fct;
+
+  return idx;
+}
+
 
 /**
  *
@@ -1338,6 +1411,16 @@ void
                                     _renum_faces_random);
     PDM_part_renum_method_face_add ("PDM_PART_RENUM_FACE_LEXICOGRAPHIC",
                                     _renum_faces_lexicographic);
+  }
+
+  if (vtx_methods == NULL)  {
+    const int n_default_methods = 2;
+    vtx_methods = PDM_Handles_create (n_default_methods);
+
+    PDM_part_renum_method_vtx_add ("PDM_PART_RENUM_VTX_NONE",
+                                    NULL);
+    PDM_part_renum_method_vtx_add ("PDM_PART_RENUM_VTX_SORT_INT_EXT",
+                                    _renum_vtx_sort_int_ext);
   }
 
 }
@@ -1466,17 +1549,49 @@ PDM_part_renum_face
 
 /**
  *
+ * \brief Perform mesh entities renumbering
+ *
+ * \param [in,out]  part       part structure
+ *
+ */
+
+void
+PDM_part_renum_vtx
+(
+ _part_t **mesh_parts,
+ int       n_part,
+ int       renum_vtx_method,
+ void     *specific_data
+)
+{
+  if (vtx_methods == NULL)  {
+    PDM_part_renum_method_load_local ();
+  }
+
+  const _renum_method_t *method_ptr = (const _renum_method_t *)
+                                      PDM_Handles_get (vtx_methods, renum_vtx_method);
+
+  PDM_part_renum_fct_t fct = method_ptr->fct;
+
+  if (fct != NULL) {
+    (fct) (mesh_parts, n_part, specific_data);
+  }
+}
+
+
+/**
+ *
  * \brief Perform cells renumbering from a new order
  *
  * \param [in,out]  part        Current partition
- * \param [in]      newToOldOrder    NewOrder
+ * \param [in]      new_to_old_order    NewOrder
  *
  */
 void
 PDM_part_reorder_cell
 (
  _part_t *part,
- int     *newToOldOrder
+ int     *new_to_old_order
 )
 {
   /*
@@ -1484,35 +1599,35 @@ PDM_part_reorder_cell
    */
 
   PDM_part_renum_connectivities (part->n_cell,
-                                 newToOldOrder,
+                                 new_to_old_order,
                                  part->cell_face_idx,
                                  part->cell_face);
 
   if (part->cell_tag != NULL) {
     PDM_order_array (part->n_cell,
                      sizeof(int),
-                     newToOldOrder,
+                     new_to_old_order,
                      part->cell_tag);
   }
 
   if (part->cell_color != NULL) {
     PDM_order_array (part->n_cell,
                      sizeof(int),
-                     newToOldOrder,
+                     new_to_old_order,
                      part->cell_color);
   }
 
   if (part->thread_color != NULL) {
     PDM_order_array (part->n_cell,
                      sizeof(int),
-                     newToOldOrder,
+                     new_to_old_order,
                      part->thread_color);
   }
 
   if (part->hyperplane_color != NULL) {
     PDM_order_array (part->n_cell,
                      sizeof(int),
-                     newToOldOrder,
+                     new_to_old_order,
                      part->hyperplane_color);
   }
 
@@ -1520,19 +1635,19 @@ PDM_part_reorder_cell
     // printf("PDM_order_array :new_to_old_order_cell \n");
     PDM_order_array (part->n_cell,
                      sizeof(int),
-                     newToOldOrder,
+                     new_to_old_order,
                      part->new_to_old_order_cell);
   }
 
   PDM_order_array (part->n_cell,
                    sizeof(PDM_g_num_t),
-                   newToOldOrder,
+                   new_to_old_order,
                    part->cell_ln_to_gn);
 
   _renum_faceCell (part->n_cell,
                    part->n_face,
                    part->face_cell,
-                   newToOldOrder);
+                   new_to_old_order);
 
 }
 
@@ -1542,38 +1657,38 @@ PDM_part_reorder_cell
  * \brief Perform faces renumbering from a new order
  *
  * \param [in,out]  part        Current partition
- * \param [in]      newToOldOrder    NewOrder
+ * \param [in]      new_to_old_order    NewOrder
  *
  */
 void
 PDM_part_reorder_face
 (
 _part_t *part,
-int     *newToOldOrder
+int     *new_to_old_order
 )
 {
 
   /** Renum face_vtx / face_vtx_idx **/
   PDM_part_renum_connectivities (part->n_face,
-                                 newToOldOrder,
+                                 new_to_old_order,
                                  part->face_vtx_idx,
                                  part->face_vtx);
 
   /** cell_face **/
-  int *oldToNewOrder = (int *) malloc (part->n_face * sizeof(int));
+  int *old_to_new_order = (int *) malloc (part->n_face * sizeof(int));
   for(int i = 0; i < part->n_face; i++) {
-   oldToNewOrder[newToOldOrder[i]] = i;
+   old_to_new_order[new_to_old_order[i]] = i;
   }
 
   PDM_part_renum_array (part->cell_face_idx[part->n_cell],
-                        oldToNewOrder,
+                        old_to_new_order,
                         part->cell_face);
 
   /** face_tag **/
   if (part->face_tag != NULL) {
     PDM_order_array (part->n_face,
                      sizeof(int),
-                     newToOldOrder,
+                     new_to_old_order,
                      part->face_tag);
   }
 
@@ -1581,7 +1696,7 @@ int     *newToOldOrder
   if (part->face_color != NULL) {
     PDM_order_array (part->n_face,
                      sizeof(int),
-                     newToOldOrder,
+                     new_to_old_order,
                      part->face_color);
   }
 
@@ -1590,30 +1705,98 @@ int     *newToOldOrder
     // printf("PDM_order_array :new_to_old_order_face \n");
     PDM_order_array (part->n_face,
                      sizeof(int),
-                     newToOldOrder,
+                     new_to_old_order,
                      part->new_to_old_order_face);
   }
 
    /** face_ln_to_gn **/
   PDM_order_array (part->n_face,
                    sizeof(PDM_g_num_t),
-                   newToOldOrder,
+                   new_to_old_order,
                    part->face_ln_to_gn); // OK
 
   /** face_group **/
   if (part->face_group != NULL) {
     PDM_part_renum_array (part->face_group_idx[part->n_face_group],
-                          oldToNewOrder,
+                          old_to_new_order,
                           part->face_group); // OK
   }
 
   /** face_cell Face **/
   _order_faceCell (part->n_face,
-                   newToOldOrder,
+                   new_to_old_order,
                    part->face_cell);
 
   /* Free */
-  free (oldToNewOrder);
+  free (old_to_new_order);
+
+}
+
+
+/**
+ *
+ * \brief Perform vtx renumbering from a new order
+ *
+ * \param [in,out]  part        Current partition
+ * \param [in]      new_to_old_order    NewOrder
+ *
+ */
+void
+PDM_part_reorder_vtx
+(
+_part_t *part,
+int     *new_to_old_order
+)
+{
+  /** face_vtx **/
+  int *old_to_new_order = (int *) malloc (part->n_vtx * sizeof(int));
+  for(int i = 0; i < part->n_vtx; i++) {
+   old_to_new_order[new_to_old_order[i]] = i;
+  }
+
+  PDM_part_renum_array (part->face_vtx_idx[part->n_face],
+                        old_to_new_order,
+                        part->face_vtx);
+
+  /** vtx **/
+  PDM_order_array (part->n_vtx,
+                   3*sizeof(double),
+                   new_to_old_order,
+                   part->vtx);
+
+  /** vtx_tag **/
+  if (part->vtx_tag != NULL) {
+    PDM_order_array (part->n_vtx,
+                     sizeof(int),
+                     new_to_old_order,
+                     part->vtx_tag);
+  }
+
+  /** vtx_color **/
+  // if (part->vtx_color != NULL) {
+  //   PDM_order_array (part->n_vtx,
+  //                    sizeof(int),
+  //                    new_to_old_order,
+  //                    part->vtx_color);
+  // }
+
+  /** face_color **/
+  if (part->new_to_old_order_vtx != NULL) {
+    // printf("PDM_order_array :new_to_old_order_vtx \n");
+    PDM_order_array (part->n_vtx,
+                     sizeof(int),
+                     new_to_old_order,
+                     part->new_to_old_order_vtx);
+  }
+
+   /** vtx_ln_to_gn **/
+  PDM_order_array (part->n_vtx,
+                   sizeof(PDM_g_num_t),
+                   new_to_old_order,
+                   part->vtx_ln_to_gn); // OK
+
+  /* Free */
+  free (old_to_new_order);
 
 }
 

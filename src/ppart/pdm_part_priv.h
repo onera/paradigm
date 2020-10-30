@@ -156,6 +156,7 @@ typedef struct  _part_t {
 
   int         *new_to_old_order_cell;    /*!< Cell reordering (size = n_cell)  */
   int         *new_to_old_order_face;    /*!< Face reordering (size = n_face)  */
+  int         *new_to_old_order_vtx;     /*!< Face reordering (size = n_face)  */
 
   _subpartlayout_t *subpartlayout;       /*!< Layouts of subdomain             */
 
@@ -373,6 +374,7 @@ void
   part->hyperplane_color         = NULL;
   part->new_to_old_order_cell    = NULL;
   part->new_to_old_order_face    = NULL;
+  part->new_to_old_order_vtx     = NULL;
   part->subpartlayout            = NULL;
   return part;
 }
