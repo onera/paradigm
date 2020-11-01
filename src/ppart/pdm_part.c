@@ -627,11 +627,41 @@ _dual_graph_from_cell_face
       else if (ppart->dface_cell[2*lface + 1] == 0)
         ppart->dface_cell[2*lface + 1] = gcell;
       else {
+        printf("[%i] Failed on %i with gcell = %i and gface = %i --> %i %i \n", i, lface, gcell, gface, ppart->dface_cell[2*lface], ppart->dface_cell[2*lface+1]);
+
+        double xf = 0.;
+        double yf = 0.;
+        double zf = 0.;
+        double count = 0.;
+        for(int idx_vtx = ppart->_dface_vtx_idx[lface]; idx_vtx < ppart->_dface_vtx_idx[lface+1]; ++idx_vtx ){
+          int ivtx = ppart->_dface_vtx[idx_vtx]-1;
+          xf += ppart->_dvtx_coord[3*ivtx  ];
+          yf += ppart->_dvtx_coord[3*ivtx+1];
+          zf += ppart->_dvtx_coord[3*ivtx+2];
+          count += 1;
+        }
+        xf = xf / count;
+        yf = yf / count;
+        zf = zf / count;
+        printf("Face barycenter = %12.5e  %12.5e  %12.5e %12.5e \n", xf, yf, zf, count);
+
         PDM_printf("PPART internal error : Face already defined in ppart->dface_cell connectivity\n");
         exit(1);
       }
+      printf("[%i] ppart->dface_cell[%i, %i] = %i, %i \n", i, 2*lface, 2*lface+1, ppart->dface_cell[2*lface  ],
+                                                              ppart->dface_cell[2*lface+1]);
+
     }
     ppart->_dface_cell = ppart->dface_cell;
+  }
+
+
+    PDM_printf ("- dface_cell : \n");
+  for (int i = 0; i < ppart->dn_face; i++) {
+    PDM_printf ("%d-> ", i);
+    PDM_printf (" "PDM_FMT_G_NUM, ppart->dface_cell[2*i]);
+    PDM_printf (" "PDM_FMT_G_NUM, ppart->dface_cell[2*i+1]);
+    PDM_printf ("\n");
   }
 
   /*
@@ -1201,6 +1231,10 @@ _distrib_cell
     mesh_part->new_to_old_order_face = (int *) malloc (sizeof(int) * mesh_part->n_face);
     for (int i1 = 0; i1 < mesh_part->n_face; i1++){
       mesh_part->new_to_old_order_face[i1] = i1;
+    }
+    mesh_part->new_to_old_order_vtx = (int *) malloc (sizeof(int) * mesh_part->n_vtx);
+    for (int i1 = 0; i1 < mesh_part->n_vtx; i1++){
+      mesh_part->new_to_old_order_vtx[i1] = i1;
     }
 
     /* Free */
@@ -2636,6 +2670,10 @@ _part_free
     free(part->new_to_old_order_face);
   part->new_to_old_order_face = NULL;
 
+  if (part->new_to_old_order_vtx != NULL)
+    free(part->new_to_old_order_vtx);
+  part->new_to_old_order_vtx = NULL;
+
   if(part->subpartlayout != NULL){
     if(part->subpartlayout->cell_tile_idx!= NULL)
       free(part->subpartlayout->cell_tile_idx);
@@ -2713,6 +2751,10 @@ _part_partial_free
   if (part->new_to_old_order_face != NULL)
     free(part->new_to_old_order_face);
   part->new_to_old_order_face = NULL;
+
+  if (part->new_to_old_order_vtx != NULL)
+    free(part->new_to_old_order_vtx);
+  part->new_to_old_order_vtx = NULL;
 }
 
 
@@ -3330,21 +3372,21 @@ PDM_part_part_dim_get
 (
 const   int  ppart_id,
 const   int  i_part,
- int        *n_cell,
- int        *n_face,
- int        *n_face_part_bound,
- int        *n_vtx,
- int        *n_proc,
- int        *n_total_part,
- int        *scell_face,
- int        *sface_vtx,
- int        *sface_group,
- int        *n_face_group
+        int *n_cell,
+        int *n_face,
+        int *n_face_part_bound,
+        int *n_vtx,
+        int *n_proc,
+        int *n_total_part,
+        int *scell_face,
+        int *sface_vtx,
+        int *sface_group,
+        int *n_face_group
 )
 {
   _PDM_part_t *ppart = _get_from_id(ppart_id);
-  int numProcs;
-  PDM_MPI_Comm_size(ppart->comm, &numProcs);
+  int n_rank;
+  PDM_MPI_Comm_size(ppart->comm, &n_rank);
 
   _part_t *mesh_part = NULL;
   if (i_part < ppart->n_part)
@@ -3355,15 +3397,15 @@ const   int  i_part,
     exit(1);
   }
 
-  *n_cell           = mesh_part->n_cell;
-  *n_face           = mesh_part->n_face;
-  *n_face_part_bound  = mesh_part->n_face_part_bound;
-  *n_proc           = numProcs;
-  *n_total_part          = ppart->tn_part;
-  *n_vtx            = mesh_part->n_vtx;
-  *scell_face       = mesh_part->cell_face_idx[*n_cell];
-  *sface_vtx        = mesh_part->face_vtx_idx[*n_face];
-  *sface_group      = 0;
+  *n_cell            = mesh_part->n_cell;
+  *n_face            = mesh_part->n_face;
+  *n_face_part_bound = mesh_part->n_face_part_bound;
+  *n_proc            = n_rank;
+  *n_total_part      = ppart->tn_part;
+  *n_vtx             = mesh_part->n_vtx;
+  *scell_face        = mesh_part->cell_face_idx[*n_cell];
+  *sface_vtx         = mesh_part->face_vtx_idx[*n_face];
+  *sface_group       = 0;
   if (ppart->n_face_group > 0)
     *sface_group    = mesh_part->face_group_idx[ppart->n_face_group];
   *n_face_group    = ppart->n_face_group;
@@ -3517,8 +3559,8 @@ PROCF (pdm_part_part_val_get, PDM_PART_PART_VAL_GET)
 )
 {
   _PDM_part_t *ppart = _get_from_id(*ppart_id);
-  int numProcs;
-  PDM_MPI_Comm_size(ppart->comm, &numProcs);
+  int n_rank;
+  PDM_MPI_Comm_size(ppart->comm, &n_rank);
 
   _part_t *mesh_part = NULL;
   if (*i_part < ppart->n_part)
@@ -3560,7 +3602,7 @@ PROCF (pdm_part_part_val_get, PDM_PART_PART_VAL_GET)
   for (int i = 0; i < 4 * mesh_part->n_face_part_bound; i++)
     face_part_bound[i] = mesh_part->face_part_bound[i];
 
-  for (int i = 0; i < numProcs + 1; i++)
+  for (int i = 0; i < n_rank + 1; i++)
     face_part_bound_proc_idx[i] = mesh_part->face_part_bound_proc_idx[i];
 
   for (int i = 0; i < ppart->tn_part + 1; i++)
@@ -3635,8 +3677,8 @@ PROCF (pdm_part_part_color_get, PDM_PART_PART_COLOR_GET)
 )
 {
   _PDM_part_t *ppart = _get_from_id(*ppart_id);
-  int numProcs;
-  PDM_MPI_Comm_size(ppart->comm, &numProcs);
+  int n_rank;
+  PDM_MPI_Comm_size(ppart->comm, &n_rank);
 
   _part_t *mesh_part = NULL;
   if (*i_part < ppart->n_part)
@@ -3852,21 +3894,21 @@ const int       ppart_id,
 )
 {
   _PDM_part_t *ppart = _get_from_id(ppart_id);
-  int numProcs;
-  PDM_MPI_Comm_size(ppart->comm, &numProcs);
+  int n_rank;
+  PDM_MPI_Comm_size(ppart->comm, &n_rank);
 
   int *n_loc = (int *) malloc(ppart->n_part * sizeof(int));
-  int *n_tot = (int *) malloc(ppart->dpart_proc[numProcs] * sizeof(int));
+  int *n_tot = (int *) malloc(ppart->dpart_proc[n_rank] * sizeof(int));
 
   int *s_loc = (int *) malloc(ppart->n_part * sizeof(int));
-  int *s_tot = (int *) malloc(ppart->dpart_proc[numProcs] * sizeof(int));
+  int *s_tot = (int *) malloc(ppart->dpart_proc[n_rank] * sizeof(int));
 
   for (int i = 0; i < ppart->n_part; i++) {
     n_loc[i] = 0;
     s_loc[i] = 0;
   }
 
-  for (int i = 0; i < ppart->dpart_proc[numProcs]; i++) {
+  for (int i = 0; i < ppart->dpart_proc[n_rank]; i++) {
     n_tot[i] = 0;
     s_tot[i] = 0;
   }
@@ -3876,9 +3918,9 @@ const int       ppart_id,
     s_loc[i] = ppart->mesh_parts[i]->n_face_part_bound;
   }
 
-  int *n_partProc = (int *) malloc((numProcs) * sizeof(int));
+  int *n_partProc = (int *) malloc((n_rank) * sizeof(int));
 
-  for (int i = 0; i < numProcs; i++) {
+  for (int i = 0; i < n_rank; i++) {
     n_partProc[i] = ppart->dpart_proc[i+1] - ppart->dpart_proc[i];
   }
 
@@ -3900,8 +3942,8 @@ const int       ppart_id,
                      PDM_MPI_INT,
                      ppart->comm);
 
-  PDM_quick_sort_int(s_tot, 0, ppart->dpart_proc[numProcs]-1);
-  PDM_quick_sort_int(n_tot, 0, ppart->dpart_proc[numProcs]-1);
+  PDM_quick_sort_int(s_tot, 0, ppart->dpart_proc[n_rank]-1);
+  PDM_quick_sort_int(n_tot, 0, ppart->dpart_proc[n_rank]-1);
 
   double   _cells_average;
 
@@ -3914,7 +3956,7 @@ const int       ppart_id,
   _cells_average = 0;
   _bound_part_faces_average = 0;
 
-  for (int i = 0; i < ppart->dpart_proc[numProcs]; i++) {
+  for (int i = 0; i < ppart->dpart_proc[n_rank]; i++) {
     if (*bound_part_faces_min < 0)
       *bound_part_faces_min = s_tot[i];
     else
@@ -3936,28 +3978,28 @@ const int       ppart_id,
     _bound_part_faces_average += s_tot[i];
   }
 
-  _cells_average = (_cells_average/((double) ppart->dpart_proc[numProcs]));
+  _cells_average = (_cells_average/((double) ppart->dpart_proc[n_rank]));
   *bound_part_faces_sum = (int) _bound_part_faces_average;
   _bound_part_faces_average =
-    _bound_part_faces_average/((double) ppart->dpart_proc[numProcs]);
+    _bound_part_faces_average/((double) ppart->dpart_proc[n_rank]);
 
   *cells_average = (int) round(_cells_average);
   *bound_part_faces_average = (int) round(_bound_part_faces_average);
 
   *cells_std_deviation = 0.;
   *bound_part_faces_std_deviation = 0.;
-  for (int i = 0; i < ppart->dpart_proc[numProcs]; i++) {
+  for (int i = 0; i < ppart->dpart_proc[n_rank]; i++) {
     *cells_std_deviation += (n_tot[i] - _cells_average) * (n_tot[i] - _cells_average);
     *bound_part_faces_std_deviation += (s_tot[i] - _bound_part_faces_average) *
                                       (s_tot[i] - _bound_part_faces_average);
   }
 
-  *cells_std_deviation = sqrt(*cells_std_deviation/ppart->dpart_proc[numProcs]);
+  *cells_std_deviation = sqrt(*cells_std_deviation/ppart->dpart_proc[n_rank]);
   *bound_part_faces_std_deviation =
-    sqrt(*bound_part_faces_std_deviation/ppart->dpart_proc[numProcs]);
+    sqrt(*bound_part_faces_std_deviation/ppart->dpart_proc[n_rank]);
 
-  int mid = ppart->dpart_proc[numProcs]/2;
-  if (ppart->dpart_proc[numProcs] % 2 == 1) {
+  int mid = ppart->dpart_proc[n_rank]/2;
+  if (ppart->dpart_proc[n_rank] % 2 == 1) {
     *cells_median = n_tot[mid];
     *bound_part_faces_median = s_tot[mid];
   }

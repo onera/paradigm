@@ -979,14 +979,77 @@ _renum_vtx_sort_int_ext
 {
   PDM_UNUSED(specific_data);
 
+  assert(specific_data != NULL);
+
+  /* Specific data in this context is a array for each part of priority give by graph_comm */
+  int** pvtx_priority = (int ** ) specific_data;
+
   for(int i_part = 0; i_part < n_part; ++i_part) {
     _part_t *part = mesh_parts[i_part];
     const int n_vtx = part->n_vtx;
 
-    int *order = (int *) malloc (sizeof(int) * n_vtx);
+    int *order    = (int *) malloc (sizeof(int) * n_vtx);
 
-    _random_order (n_vtx, order);
+    // _random_order (n_vtx, order);
 
+    /* By default the partition own all vertex */
+    int n_kind = 3;
+    int* type_idx = (int * ) malloc( (n_kind+1) * sizeof(int));
+    int* type_n   = (int * ) malloc( (n_kind+1) * sizeof(int));
+    for (int i = 0; i < n_kind + 1; i++){
+      type_idx[i] = 0;
+      type_n  [i] = 0;
+    }
+
+    for (int i = 0; i < n_vtx; i++){
+      type_idx[pvtx_priority[i_part][i]+1]++;
+    }
+
+    for (int i = 0; i < n_kind; i++){
+      type_idx[i+1] += type_idx[i];
+      printf(" type_idx[%i] = %i\n", i+1, type_idx[i+1]);
+    }
+
+    /* Setup reordering */
+    for (int i = 0; i < n_vtx; i++){
+      int priority = pvtx_priority[i_part][i];
+      int idx = type_idx[priority] + type_n[priority];
+      order[idx] = i;
+      type_n[priority]++;
+    }
+    free(type_n);
+    free(type_idx);
+
+    /*
+     * Verbose
+     */
+    if(0 == 1) {
+      printf(" vtx_order : ");
+      for (int i = 0; i < n_vtx; i++){
+         printf(" %i", order[i]);
+      }
+      printf("\n");
+    }
+
+    // /* Use the commumication graph to choose only shared */
+    // for(int i_join = 0; i_join < part->n_total_part; ++i_join) {
+    //   int beg = part->vtx_part_bound_part_idx[i_join  ];
+    //   int end = part->vtx_part_bound_part_idx[i_join+1];
+    //   int nc  = end - beg;
+
+    //   for(int idx = part->vtx_part_bound_part_idx[i_join  ];
+    //           idx < part->vtx_part_bound_part_idx[i_join+1]; ++idx){
+    //     int i_vtx_cur  = part->vtx_part_bound[4*idx  ];
+    //     int i_proc_opp = part->vtx_part_bound[4*idx+1];
+    //     int i_part_opp = part->vtx_part_bound[4*idx+2];
+    //   }
+    //   // rang_min --> Prend la première moitié
+    //   // rang_max --> Prend la deuxième moitié
+    //   // if(rang_max == rang_min){
+    //   //   part_min ....
+    //   // }
+    //   // --> Rang pas général car 2 partiione
+    // }
     PDM_part_reorder_vtx (part, order);
 
     /* Copy in partition */
@@ -997,7 +1060,7 @@ _renum_vtx_sort_int_ext
       }
     }
 
-    free (order);
+    free (order   );
   }
 }
 
@@ -1780,7 +1843,7 @@ int     *new_to_old_order
   //                    part->vtx_color);
   // }
 
-  /** face_color **/
+  /** vtx_color **/
   if (part->new_to_old_order_vtx != NULL) {
     // printf("PDM_order_array :new_to_old_order_vtx \n");
     PDM_order_array (part->n_vtx,

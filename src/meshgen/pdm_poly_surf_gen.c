@@ -571,10 +571,14 @@ PDM_g_num_t **dEdgeGroup
       (*dface_vtx)[ideb+1] = n6;
       (*dface_vtx)[ideb+2] = n5;
       (*dFaceEdge)[ideb]     = dNEdgeAbs + 1;
-      if (itri == nbLi - 1)
+      if (itri == nbLi - 1){
         (*dFaceEdge)[ideb+1]   = nTri + 4 + (6 * nxPoly + 1) * (itri + 1) + (7 * nxPoly + 1) - 6;
-      else
+        printf(" Cas 1 : dFaceEdge)[%i] :: %i \n", ideb+1, (*dFaceEdge)[ideb+1]);
+      }
+      else{
         (*dFaceEdge)[ideb+1]   = nTri + 4 + (6 * nxPoly + 1) * (itri+2) + 2;
+        printf(" Cas 2 : dFaceEdge)[%i] :: %i \n", ideb+1, (*dFaceEdge)[ideb+1]);
+      }
       (*dFaceEdge)[ideb+2]   = nTri + 4 + (6 * nxPoly + 1) * (itri + 1) - 3;
       dn_faceTmp += 1;
       (*dface_vtx_idx)[dn_faceTmp] = ideb + 3;
@@ -934,7 +938,7 @@ PDM_g_num_t **dEdgeGroup
     ++dNEdgeGroupAbs;
   }
 
-  int vb = 0;
+  int vb = 1;
 	if (vb==1){
 		PDM_printf ("- dface_vtx_idx : \n");
 		for (int i=0; i<(*dn_face)+1; i++)

@@ -488,9 +488,9 @@ int main(int argc, char *argv[])
   PDM_part_reverse_pcellface(n_res_part,
                              pn_cell,
                              pn_faces,
-            (const int **)   pcell_face_idx,
-             (const int **)  pcell_face,
-              (int    ***)  &pface_cell);
+            (const int ** )  pcell_face_idx,
+            (const int ** )  pcell_face,
+            (      int ***) &pface_cell);
 
   if (0 == 1){
     for (int i_part=0; i_part < n_res_part; i_part++){
@@ -598,7 +598,8 @@ int main(int argc, char *argv[])
               (const int **)          face_is_bnd,
                            (int ***) &pproc_face_bound_idx,
                            (int ***) &ppart_face_bound_idx,
-                           (int ***) &pface_bound);
+                           (int ***) &pface_bound,
+                                      NULL);
   for (int i_part = 0; i_part < n_res_part; i_part++)
     free(face_is_bnd[i_part]);
   free(face_is_bnd);

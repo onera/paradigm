@@ -106,6 +106,12 @@ cdef extern from "pdm_multipart.h":
                                       int          **hyper_plane_color)
 
     # ------------------------------------------------------------------
+    void PDM_multipart_part_ghost_infomation_get(int            mpart_id,
+                                                 int            zone_gid,
+                                                 int            ipart,
+                                                 int          **vtx_ghost_information)
+
+    # ------------------------------------------------------------------
     void PDM_multipart_time_get(int       mpart_id,
                                 int       zone_gid,
                                 double  **elapsed,
@@ -724,6 +730,41 @@ cdef class MultiPart:
                 'np_face_color'        : np_face_color,
                 'np_thread_color'      : np_thread_color,
                 'np_hyper_plane_color' : np_hyper_plane_color}
+
+
+    # ------------------------------------------------------------------
+    def multipart_ghost_information_get(self, int ipart, int zone_gid):
+        """
+           Get partition ghost information
+        """
+        # ************************************************************************
+        # > Declaration
+        cdef int          *vtx_ghost_information
+        # ************************************************************************
+
+        # dims = self.part_dim_get(self._mpart_id, ipart)
+        dims = self.multipart_dim_get(ipart, zone_gid)
+
+        # -> Call PPART to get info
+        PDM_multipart_part_ghost_infomation_get(self._mpart_id,
+                                                zone_gid,
+                                                ipart,
+                                                &vtx_ghost_information)
+        # -> Begin
+        cdef NPY.npy_intp dim
+
+        # \param [out]  cell_color            Cell tag (size = n_cell)
+        if (vtx_ghost_information == NULL):
+            np_vtx_ghost_information = None
+        else :
+            dim = <NPY.npy_intp> dims['n_vtx']
+            np_vtx_ghost_information = NPY.PyArray_SimpleNewFromData(1,
+                                                                     &dim,
+                                                                     NPY.NPY_INT32,
+                                                                     <void *> vtx_ghost_information)
+        PyArray_ENABLEFLAGS(np_vtx_ghost_information, NPY.NPY_OWNDATA);
+        return {'np_vtx_ghost_information' : np_vtx_ghost_information}
+
 
     # ------------------------------------------------------------------
     def multipart_time_get(self, int zone_gid):

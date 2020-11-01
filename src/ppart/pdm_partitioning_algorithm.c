@@ -1198,7 +1198,8 @@ PDM_part_generate_entity_graph_comm
  const int          **pentity_hint,
        int         ***pproc_bound_idx,
        int         ***ppart_bound_idx,
-       int         ***pentity_bound
+       int         ***pentity_bound,
+       int         ***pentity_priority
 )
 {
   int i_rank;
@@ -1206,6 +1207,15 @@ PDM_part_generate_entity_graph_comm
 
   PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_size(comm, &n_rank);
+
+  int setup_priority = 0; // False
+  if(pentity_priority == NULL){
+    // printf(" pentity_priority not defined \n");
+  } else {
+    setup_priority = 1;
+    assert(pentity_hint == NULL);
+    // printf(" pentity_priority : %p \n", pentity_priority);
+  }
 
   PDM_g_num_t* entity_distribution_ptb = (PDM_g_num_t * ) malloc( sizeof(PDM_g_num_t) * (n_rank+1) );
   for(int i = 0; i < n_rank+1; ++i){
@@ -1315,19 +1325,36 @@ PDM_part_generate_entity_graph_comm
    *                  And for others we have n_shared * 3 data
    *                  In blk view we can easily remove all non shared data
    *                  We reexchange with block_to_part only the shared data
+   * If priority is query an equilbrate choice is made up
    */
+  int* blk_priority_data;
+  if(setup_priority == 1){
+    blk_priority_data = (int * ) malloc( n_entity_block * sizeof(int));
+  }
+
   int idx_comp = 0;     /* Compressed index use to fill the buffer */
   int idx_data = 0;     /* Index in the block to post-treat        */
 
+  int next_selected_rank = 0;
   for(int i_block = 0; i_block < n_entity_block; ++i_block){
 
     /* Non shared data --> Compression */
     if(blk_stri[i_block] == 3){
       blk_stri[i_block] = 0;
       idx_data += 3;          /* Mv directly to the next */
+      if(setup_priority == 1){
+        blk_priority_data[i_block] = -1;
+      }
+
     } else {
       for(int i_data = 0; i_data < blk_stri[i_block]; ++i_data){
         blk_data[idx_comp++] = blk_data[idx_data++];
+      }
+      /* Fill up entity priority */
+      if(setup_priority == 1){
+        blk_priority_data[i_block] = next_selected_rank;
+        next_selected_rank += 1;
+        next_selected_rank = next_selected_rank % n_rank;
       }
     }
   }
@@ -1368,12 +1395,25 @@ PDM_part_generate_entity_graph_comm
              (int  ***)  &part_stri,
              (void ***)  &part_data);
 
+  if(setup_priority == 1 ){
+    printf(" eachange : %p \n", pentity_priority);
+    int stride_one = 1;
+    PDM_block_to_part_exch2(btp,
+                            sizeof(int),
+                            PDM_STRIDE_CST,
+                            &stride_one,
+               (void *  )   blk_priority_data,
+                            NULL,
+               (void ***)   pentity_priority);
+    printf(" eachange end : %p \n", pentity_priority);
+    free(blk_priority_data);
+  }
+
   /*
    * Free
    */
   free(blk_data);
   free(blk_stri);
-
 
   /*
    * Interface for pdm_part is  :
@@ -1392,7 +1432,6 @@ PDM_part_generate_entity_graph_comm
   int** _pproc_bound_idx   = *pproc_bound_idx;
   int** _ppart_bound_idx   = *ppart_bound_idx;
   int** _pentity_bound     = *pentity_bound;
-
 
   /*
    * Post-treatment in partition

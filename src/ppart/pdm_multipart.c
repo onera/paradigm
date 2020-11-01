@@ -93,7 +93,6 @@ typedef struct {
  *         It includes distributed meshes, partioned meshes and
  *         partitioning parameters.
  */
-
 typedef struct  {
   /* Multipart description */
   int           n_zone;              // Number of initial zones
@@ -236,8 +235,9 @@ _build_join_uface_distribution
                     PDM_MPI_INT, PDM_MPI_SUM, _multipart->comm);
 
   _face_in_join_distri[0] = 0;
-  for (int i=0; i < n_unique_joins; i++)
+  for (int i=0; i < n_unique_joins; i++) {
     _face_in_join_distri[i+1] = _face_in_join_distri[i+1] + _face_in_join_distri[i];
+  }
 
   /*
   PDM_printf("[%d] _face_in_join_distri : ", i_rank);
@@ -571,6 +571,10 @@ _part_free
       free(part->vtx_part_bound);
     part->vtx_part_bound = NULL;
 
+    if(part->vtx_ghost_information != NULL)
+      free(part->vtx_ghost_information);
+    part->vtx_ghost_information = NULL;
+
     if (part->face_bound_idx != NULL)
       free(part->face_bound_idx);
     part->face_bound_idx = NULL;
@@ -678,6 +682,29 @@ _part_free
   free(part);
 }
 
+
+static void
+_setup_ghost_information
+(
+const int   i_rank,
+const int   n_part,
+const int  *pn_vtx,
+      int **pinternal_vtx_priority
+)
+{
+  /* 0 : Interior / 1 : owner join (at least one) / 2 : not owner */
+  for (int ipart = 0; ipart < n_part; ipart++) {
+    for(int ivtx = 0; ivtx < pn_vtx[ipart]; ++ivtx) {
+      if(pinternal_vtx_priority[ipart][ivtx] == i_rank){
+        pinternal_vtx_priority[ipart][ivtx] = 1;
+      } else if(pinternal_vtx_priority[ipart][ivtx] == -1) {
+        pinternal_vtx_priority[ipart][ivtx] = 0;
+      } else { /* Pas owner / pas interieur donc sur 1 autre proc */
+         pinternal_vtx_priority[ipart][ivtx] = 2;
+      }
+    }
+  }
+}
 
 
 /*=============================================================================
@@ -894,7 +921,7 @@ PDM_multipart_run_ppart
       // This will store all the partitions created by this proc on this zone
       _part_mesh_t *_pmeshes = &(_multipart->pmeshes[i_zone]);
 
-      //Copy number of bounds and joins (global data) in the part structure
+      // Copy number of bounds and joins (global data) in the part structure
       _pmeshes->n_bounds  = n_bnd;
       _pmeshes->n_joins   = n_join;
       _pmeshes->joins_ids = (int *) malloc(n_join * sizeof(int));
@@ -1002,6 +1029,7 @@ PDM_multipart_run_ppart
       int         **pinternal_vtx_bound_proc_idx  = NULL;
       int         **pinternal_vtx_bound_part_idx  = NULL;
       int         **pinternal_vtx_bound           = NULL;
+      int         **pinternal_vtx_priority        = NULL;
       PDM_g_num_t **pcell_ln_to_gn                = NULL;
       PDM_g_num_t **pface_ln_to_gn                = NULL;
       PDM_g_num_t **pvtx_ln_to_gn                 = NULL;
@@ -1078,13 +1106,39 @@ PDM_multipart_run_ppart
         _pmeshes->parts[ipart]->vtx_ln_to_gn  = pvtx_ln_to_gn[ipart];
       }
 
-      //Use the structure to call renumbering procedures
+      // Use the structure to call renumbering procedures
       PDM_part_renum_cell(_pmeshes->parts, n_part, _pmeshes->renum_cell_method,
                           (void *) _pmeshes->renum_cell_properties);
       PDM_part_renum_face(_pmeshes->parts, n_part, _pmeshes->renum_face_method, NULL);
-      PDM_part_renum_vtx(_pmeshes->parts, n_part, 1, NULL);
 
-      //Now genererate bounds and comm data -- we need update pface_ln_to_gn which has been modified
+      /* Let's call graph communication to do the reordering - Temporary  */
+      PDM_part_generate_entity_graph_comm(_multipart->comm,
+                                          part_distri,
+                                          vtx_distri,
+                                          n_part,
+                                          pn_vtx,
+                   (const PDM_g_num_t **) pvtx_ln_to_gn,
+                                          NULL,
+                                         &pinternal_vtx_bound_proc_idx,
+                                         &pinternal_vtx_bound_part_idx,
+                                         &pinternal_vtx_bound,
+                                         &pinternal_vtx_priority);
+
+      _setup_ghost_information(i_rank, n_part, pn_vtx, pinternal_vtx_priority);
+      PDM_part_renum_vtx(_pmeshes->parts, n_part, 1, (void *) pinternal_vtx_priority);
+
+      /* Free in order to be correclty */
+      for (int ipart = 0; ipart < n_part; ipart++) {
+        free(pinternal_vtx_bound_proc_idx[ipart]);
+        free(pinternal_vtx_bound_part_idx[ipart]);
+        free(pinternal_vtx_bound[ipart]);
+      }
+      free(pinternal_vtx_bound_proc_idx);
+      free(pinternal_vtx_bound_part_idx);
+      free(pinternal_vtx_bound);
+
+
+      // Now genererate bounds and comm data -- we need update pface_ln_to_gn which has been modified
       for (int ipart = 0; ipart < n_part; ipart++) {
         pface_ln_to_gn[ipart] = _pmeshes->parts[ipart]->face_ln_to_gn;
       }
@@ -1122,7 +1176,8 @@ PDM_multipart_run_ppart
                                           NULL,
                                          &pinternal_face_bound_proc_idx,
                                          &pinternal_face_bound_part_idx,
-                                         &pinternal_face_bound);
+                                         &pinternal_face_bound,
+                                          NULL);
 
       PDM_part_generate_entity_graph_comm(_multipart->comm,
                                           part_distri,
@@ -1133,7 +1188,11 @@ PDM_multipart_run_ppart
                                           NULL,
                                          &pinternal_vtx_bound_proc_idx,
                                          &pinternal_vtx_bound_part_idx,
-                                         &pinternal_vtx_bound);
+                                         &pinternal_vtx_bound,
+                                         &pinternal_vtx_priority); // Egalemet possible de permeuter dans PMD_part_renum
+
+      // Re setup the array properlly to have the good output
+      _setup_ghost_information(i_rank, n_part, pn_vtx, pinternal_vtx_priority);
 
       // Finally complete parts structure with internal join data and bounds
       for (int ipart = 0; ipart < n_part; ipart++) {
@@ -1160,6 +1219,7 @@ PDM_multipart_run_ppart
         _pmeshes->parts[ipart]->vtx_part_bound_part_idx = pinternal_vtx_bound_part_idx[ipart];
         _pmeshes->parts[ipart]->vtx_part_bound          = pinternal_vtx_bound[ipart];
 
+        _pmeshes->parts[ipart]->vtx_ghost_information   = pinternal_vtx_priority[ipart];
       }
 
       // Free temporary arrays (top-level)
@@ -1186,7 +1246,7 @@ PDM_multipart_run_ppart
       free(pvtx_ln_to_gn);
       free(pface_bound_ln_to_gn);
       free(pface_join_ln_to_gn);
-
+      free(pinternal_vtx_priority);
       free(pface_join_tmp);
       free(cell_distri);
       free(face_distri);
@@ -1375,6 +1435,23 @@ const int            i_part,
   *thread_color     = NULL;
   *hyperplane_color = NULL;
 
+}
+
+void
+PDM_multipart_part_ghost_infomation_get
+(
+const int            mpart_id,
+const int            i_zone,
+const int            i_part,
+      int          **vtx_ghost_information
+)
+{
+  _pdm_multipart_t *_multipart = _get_from_id (mpart_id);
+
+  assert(i_zone < _multipart->n_zone && i_part < _multipart->n_part[i_zone]);
+  _part_mesh_t _pmeshes = _multipart->pmeshes[i_zone];
+
+  *vtx_ghost_information = _pmeshes.parts[i_part]->vtx_ghost_information;
 }
 
 void

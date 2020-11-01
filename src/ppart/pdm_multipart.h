@@ -266,6 +266,15 @@ const int            i_part,
 );
 
 void
+PDM_multipart_part_ghost_infomation_get
+(
+const int            mpart_id,
+const int            i_zone,
+const int            i_part,
+      int          **vtx_ghost_information
+);
+
+void
 PDM_multipart_time_get
 (
 const int       mpart_id,
