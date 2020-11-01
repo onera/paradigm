@@ -1396,7 +1396,6 @@ PDM_part_generate_entity_graph_comm
              (void ***)  &part_data);
 
   if(setup_priority == 1 ){
-    printf(" eachange : %p \n", pentity_priority);
     int stride_one = 1;
     PDM_block_to_part_exch2(btp,
                             sizeof(int),
@@ -1405,7 +1404,6 @@ PDM_part_generate_entity_graph_comm
                (void *  )   blk_priority_data,
                             NULL,
                (void ***)   pentity_priority);
-    printf(" eachange end : %p \n", pentity_priority);
     free(blk_priority_data);
   }
 

@@ -1132,10 +1132,12 @@ PDM_multipart_run_ppart
         free(pinternal_vtx_bound_proc_idx[ipart]);
         free(pinternal_vtx_bound_part_idx[ipart]);
         free(pinternal_vtx_bound[ipart]);
+        free(pinternal_vtx_priority[ipart]);
       }
       free(pinternal_vtx_bound_proc_idx);
       free(pinternal_vtx_bound_part_idx);
       free(pinternal_vtx_bound);
+      free(pinternal_vtx_priority);
 
 
       // Now genererate bounds and comm data -- we need update pface_ln_to_gn which has been modified
