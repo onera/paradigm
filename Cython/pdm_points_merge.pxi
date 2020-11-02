@@ -82,18 +82,11 @@ cdef class PointsMerge:
         # ************************************************************************
 
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
-        print("coords::", coords)
-        print("char_length::", char_length)
         PDM_points_merge_cloud_set(self._id,
                                    i_point_cloud,
                                    n_points,
                                    <double *> coords.data,
                                    <double *> char_length.data)
-        # PDM_points_merge_cloud_set(self._id,
-        #                            i_point_cloud,
-        #                            n_points,
-        #                            <double *> coords.data,
-        #                            NULL)
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
     # ------------------------------------------------------------------------
@@ -157,6 +150,6 @@ cdef class PointsMerge:
       # ************************************************************************
       # > Declaration
       # ************************************************************************
-      print('PDM_points_merge_free')
+      print('PDM_points_merge_free, TODO change owneship')
       PDM_points_merge_free(self._id)
 
