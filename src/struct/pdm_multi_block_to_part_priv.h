@@ -1,12 +1,12 @@
 /*
  * File:   pdm_block_to_part_priv.h
- * Author: equemera
+ * Author: bmaugars
  *
- * Created on April 14, 2016, 8:16 AM
+ * Created on November 06, 2020, 6:43 AM
  */
 
-#ifndef PDM_BLOCK_TO_PART_PRIV_H
-#define	PDM_BLOCK_TO_PART_PRIV_H
+#ifndef PDM_MULTI_BLOCK_TO_PART_PRIV_H
+#define	PDM_MULTI_BLOCK_TO_PART_PRIV_H
 
 /*----------------------------------------------------------------------------
  * Standard C library headers
@@ -33,7 +33,7 @@ extern "C" {
 
 
 /**
- * \struct _PDM_block_to_part_t
+ * \struct _PDM_multi_block_to_part_t
  *
  * \brief  Data transfer from blocks to partitions
  *
@@ -61,7 +61,7 @@ typedef struct {
                                              +requestd_data_n[n_rank - 1] ) */
   int           pttopt_comm;          /*!< Use point to point communication if pttopt_comm == 1 */
 
-} _pdm_block_to_part_t;
+} _pdm_multi_block_to_part_t;
 
 /*=============================================================================
  * Static global variables
@@ -71,4 +71,4 @@ typedef struct {
 }
 #endif
 
-#endif	/* PDM_BLOCK_TO_PART_PRIV_H */
+#endif	/* PDM_MULTI_BLOCK_TO_PART_PRIV_H */

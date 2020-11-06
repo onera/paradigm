@@ -1393,6 +1393,23 @@ const int            i_part,
 }
 
 
+// void PDM_multipart_part_get
+// (
+//  const int            mpart_id,
+//  const int            i_zone,
+//  const int            i_part,
+//  const result_type    res,
+//                    **vtx_part_bound
+// )
+// {
+//   if(res == VTX_COMM_GRAPH)
+//   {
+//     *vtx_part_bound_proc_idx = _pmeshes.parts[i_part]->vtx_part_bound_proc_idx;
+//     *vtx_part_bound_part_idx = _pmeshes.parts[i_part]->vtx_part_bound_part_idx;
+//     *vtx_part_bound          = _pmeshes.parts[i_part]->vtx_part_bound;
+//   }
+// }
+
 void
 PDM_multipart_part_graph_comm_vtx_data_get
 (
@@ -1405,6 +1422,8 @@ const int            i_part,
 )
 {
    _pdm_multipart_t *_multipart = _get_from_id (mpart_id);
+
+   // table_res[] = is_getted;
 
   assert(i_zone < _multipart->n_zone && i_part < _multipart->n_part[i_zone]);
   _part_mesh_t _pmeshes = _multipart->pmeshes[i_zone];

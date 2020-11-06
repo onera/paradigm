@@ -118,9 +118,28 @@ struct _PDM_DMesh_nodal_t {
   PDM_g_num_t            n_som_abs;                /*!< Global number of vertices */
   PDM_g_num_t            n_cell_abs;               /*!< Global number of elements */
   PDM_g_num_t           *n_face_abs;
+
+
   PDM_DMesh_nodal_vtx_t *vtx;                      /*!< Description des sommmets de chaque partition */
+
   PDM_Handles_t         *sections_std;             /*!< Standard sections */
   PDM_Handles_t         *sections_poly2d;          /*!< Polygon sections */
+
+  PDM_Handles_t         *sections_std_descending;    /*!< Standard sections */
+  PDM_Handles_t         *sections_poly2d_descending; /*!< Polygon sections */
+
+  PDM_Handles_t         *sections_std_descendingnmoins2;    /*!< Standard sections */
+
+  // IN :
+  // Pour chaque sections (au sens large) on prévoit un tag pour chaque entité (lien avec fdsm)
+  // delmt_group  ---> Le lien entre les conditions limites et les "sous-zone" avec les sections
+
+  // Resultats de la translation entre les group
+  // PDM_g_num_t* delmt_group_descending;
+  // PDM_g_num_t* delmt_group_descending_moins2;
+  // PDM_g_num_t* delmt_group_descending_vtx;
+
+
   PDM_Handles_t         *sections_poly3d;          /*!< Polyhedron sections */
   PDM_MPI_Comm           pdm_mpi_comm;             /*!< MPI Communicator */
   int                    n_proc;                   /*!< Number of processes */
