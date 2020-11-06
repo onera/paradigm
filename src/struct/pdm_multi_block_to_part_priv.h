@@ -40,7 +40,10 @@ extern "C" {
  */
 
 typedef struct {
-  PDM_g_num_t   *block_distrib_idx;   /*!< Block distribution
+  PDM_g_num_t   *multi_distrib_idx;   /*!< Multiple distribution
+                                       * (size : \ref size of \ref comm + 1) */
+  int n_block;                        /*!< Number of blocks */
+  PDM_g_num_t   **block_distrib_idx;  /*!< Block distribution
                                        * (size : \ref size of \ref comm + 1) */
   PDM_MPI_Comm   comm;                /*!< MSG communicator */
   int            n_rank;              /*!< Communicator size */

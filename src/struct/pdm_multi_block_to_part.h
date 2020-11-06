@@ -64,11 +64,29 @@ typedef struct _pdm_multi_block_to_part_t PDM_multi_block_to_part_t;
 PDM_multi_block_to_part_t *
 PDM_multi_block_to_part_create
 (
- const PDM_g_num_t   *blockDistribIdx,
+ const PDM_g_num_t   *multi_distrib_idx,
+ const int            n_block,
+ const PDM_g_num_t  **block_distrib_idx,
  const PDM_g_num_t  **gnum_elt,
  const int           *n_elt,
  const int            n_part,
  const PDM_MPI_Comm   comm
+);
+
+
+/**
+ *
+ * \brief Free a block to part structure
+ *
+ * \param [inout] btp  Block to part structure
+ *
+ * \return       NULL
+ */
+
+PDM_multi_block_to_part_t *
+PDM_multi_block_to_part_free
+(
+ PDM_multi_block_to_part_t *btp
 );
 
 #ifdef  __cplusplus
