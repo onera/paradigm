@@ -165,6 +165,7 @@ PDM_multi_block_to_part_create
       PDM_g_num_t _requested_data = _gnum_elt[j] - 1 - _mshift;
 
       requested_data[idx] = (int) _requested_data;
+      // requested_data[i_block][idx] = (int) _requested_data;
 
     }
   }
@@ -203,6 +204,40 @@ PDM_multi_block_to_part_create
   return (PDM_multi_block_to_part_t *) mbtp;
 }
 
+/**
+ *
+ * \brief Initialize an exchange
+ * (part_stride and part_data are allocated in function)
+ *
+ * \param [in]   btp          Block to part structure
+ * \param [in]   s_data       Data size
+ * \param [in]   t_stride     Stride type
+ * \param [in]   block_stride Stride for each block element for \ref PDM_STRIDE_VAR
+ *                            Constant stride for \ref PDM_STRIDE_VAR
+ * \param [in]   block_data   Block data
+ * \param [out]  part_stride  Partition stride or NULL
+ * \param [out]  part_data    Partition data
+ *
+ */
+
+void
+PDM_multi_block_to_part_exch2
+(
+ PDM_multi_block_to_part_t   *mbtp,
+ size_t                       s_data,
+ PDM_stride_t                 t_stride,
+ int                        **block_stride,
+ void                       **block_data,
+ int                       ***part_stride,
+ void                      ***part_data
+)
+{
+  _pdm_multi_block_to_part_t *_mbtp = (_pdm_multi_block_to_part_t *) mbtp;
+
+
+
+
+}
 
 
 /**
@@ -233,6 +268,9 @@ PDM_multi_block_to_part_free
   free (_mbtp->ind);
 
   free (_mbtp->n_elt);
+  free (_mbtp->distributed_data);
+  free (_mbtp->distributed_data_idx);
+  free (_mbtp->distributed_data_n);
   free (_mbtp->requested_data_idx);
   free (_mbtp->requested_data_n);
 
