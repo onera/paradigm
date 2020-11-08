@@ -438,13 +438,14 @@ PDM_multi_block_to_part_exch2
 
     for (int i = 0; i < _mbtp->n_rank; i++) {
       for(int i_block = 0; i_block < _mbtp->n_block; ++i_block) {
+        int idx = i_block + i*_mbtp->n_block;
         int cst_stride   = block_stride[i_block][0];
         int s_block_unit = cst_stride * (int) s_data;
-        i_send_buffer[i+1] += _mbtp->distributed_block_n[i_block] * s_block_unit;
-        i_recv_buffer[i+1] += _mbtp->requested_block_n  [i_block] * s_block_unit;
+        i_send_buffer[i+1] += _mbtp->distributed_block_n[idx] * s_block_unit;
+        i_recv_buffer[i+1] += _mbtp->requested_block_n  [idx] * s_block_unit;
 
-        n_send_buffer[i] += _mbtp->distributed_block_n[i_block] * s_block_unit;
-        n_recv_buffer[i] += _mbtp->requested_block_n  [i_block] * s_block_unit;
+        n_send_buffer[i] += _mbtp->distributed_block_n[idx] * s_block_unit;
+        n_recv_buffer[i] += _mbtp->requested_block_n  [idx] * s_block_unit;
       }
     }
 
@@ -484,7 +485,6 @@ PDM_multi_block_to_part_exch2
   /*
    * Data exchange
    */
-
   PDM_MPI_Alltoallv_l(send_buffer,
                       n_send_buffer,
                       i_send_buffer,

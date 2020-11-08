@@ -173,9 +173,9 @@ MPI_TEST_CASE("[3p] dual from arc2node", 3) {
    }
 
   if(dual_graph_idx != NULL) free(dual_graph_idx);
-  if(dual_graph != NULL) free(dual_graph);
-  if (dcell_face_idx != NULL) free(dcell_face_idx);
-  if (dcell_face != NULL) free(dcell_face);
+  if(dual_graph     != NULL) free(dual_graph    );
+  if(dcell_face_idx != NULL) free(dcell_face_idx);
+  if(dcell_face     != NULL) free(dcell_face    );
 }
 
 
