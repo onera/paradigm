@@ -129,7 +129,7 @@ extern "C" {
 //    PDM_DMesh_nodal_section_poly3d_t *section =
 //      (PDM_DMesh_nodal_section_poly3d_t *) PDM_Handles_get (mesh->sections_poly3d, list_ind[i]);
 //    _s_elt_face_vtx_idx += section->n_face;
-//    _s_elt_face_vtx += section->_facvtx[section->_facvtx_idx[section->n_face]];
+//    _s_elt_face_vtx += section->_face_vtx[section->_face_vtx_idx[section->n_face]];
 //  }
 
 //  *s_elt_face_cell    =  _s_elt_face_vtx_idx;
@@ -530,7 +530,7 @@ PDM_section_size_elt_faces_get
    PDM_DMesh_nodal_section_poly3d_t *section =
      (PDM_DMesh_nodal_section_poly3d_t *) PDM_Handles_get (mesh->sections_poly3d, list_ind[i]);
    _s_elt_face_vtx_idx += section->n_face;
-   _s_elt_face_vtx     += section->_facvtx[section->_facvtx_idx[section->n_face]];
+   _s_elt_face_vtx     += section->_face_vtx[section->_face_vtx_idx[section->n_face]];
  }
 
  *s_elt_face_cell    = _s_elt_face_vtx_idx;
@@ -596,7 +596,7 @@ PDM_section_size_elt_edges_get
  //   PDM_DMesh_nodal_section_poly3d_t *section =
  //     (PDM_DMesh_nodal_section_poly3d_t *) PDM_Handles_get (mesh->sections_poly3d, list_ind[i]);
  //   _s_elt_edge_vtx_idx += section->n_face;
- //   _s_elt_edge_vtx     += section->_facvtx[section->_facvtx_idx[section->n_face]];
+ //   _s_elt_edge_vtx     += section->_face_vtx[section->_face_vtx_idx[section->n_face]];
  // }
 
  *s_elt_edge_cell    = _s_elt_edge_vtx_idx;
@@ -1248,7 +1248,7 @@ PDM_sections_decompose_faces
   for (int i_section = 0; i_section < n_sections_std; i_section++) {
     PDM_DMesh_nodal_section_std_t *section = (PDM_DMesh_nodal_section_std_t *) PDM_Handles_get (mesh->sections_std, list_ind[i_section]);
 
-    PDM_g_num_t beg_elmt_gnum = section->distrib[mesh->i_proc] + mesh->section_distribution[i_section];
+    PDM_g_num_t beg_elmt_gnum = section->distrib[mesh->i_rank] + mesh->section_distribution[i_section];
     PDM_g_num_t beg_face_gnum = 0; // Useless in this context
     switch (section->t_elt) {
      case PDM_MESH_NODAL_POINT:
@@ -1372,7 +1372,7 @@ PDM_sections_decompose_edges
   for (int i_section = 0; i_section < n_sections_std; i_section++) {
     PDM_DMesh_nodal_section_std_t *section = (PDM_DMesh_nodal_section_std_t *) PDM_Handles_get (mesh->sections_std, list_ind[i_section]);
 
-    PDM_g_num_t beg_elmt_gnum = section->distrib[mesh->i_proc] + mesh->section_distribution[i_section];
+    PDM_g_num_t beg_elmt_gnum = section->distrib[mesh->i_rank] + mesh->section_distribution[i_section];
     PDM_g_num_t beg_edge_gnum = 0; // Useless in this context
 
     switch (section->t_elt) {

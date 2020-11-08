@@ -57,7 +57,9 @@ PDM_DMesh_nodal_create
 (
 const PDM_MPI_Comm comm,
       PDM_g_num_t  n_vtx,
-      PDM_g_num_t  n_cell
+      PDM_g_num_t  n_cell,
+      PDM_g_num_t  n_face,
+      PDM_g_num_t  n_edge
 );
 
 

@@ -43,7 +43,7 @@ struct PDM_DMesh_nodal_vtx_t {
   const PDM_real_t *_coords;        /*!< Coordinates
                                        * (Memory mapping) (size = 3 * \ref n_vtx) */
   PDM_g_num_t      *distrib;        /*!< Distribution on the processes
-                                     * (size = \ref n_proc + 1) */
+                                     * (size = \ref n_rank + 1) */
 };
 
 /**
@@ -58,7 +58,7 @@ typedef struct PDM_DMesh_nodal_section_std_t {
   PDM_l_num_t             n_elt;   /*!< Number elements */
   PDM_g_num_t            *_connec; /*!< Connectivity (Memory mapping)
                                     *   (size = Number of vertices per element * \ref n_elt)  */
-  PDM_g_num_t            *distrib; /*!< Distribution on the processes (size = \ref n_proc + 1) */
+  PDM_g_num_t            *distrib; /*!< Distribution on the processes (size = \ref n_rank + 1) */
 
 } PDM_DMesh_nodal_section_std_t;
 
@@ -76,7 +76,7 @@ typedef struct PDM_DMesh_nodal_section_poly2d_t {
                                *  (Memory mapping) (size = \ref n_elt + 1) */
   PDM_g_num_t  *_connec;      /*!< Elements connectivity
                                * (Memory mapping) (size = \ref connec_idx[\ref n_elt]) */
-  PDM_g_num_t  *distrib;      /*!< Distribution on the processes (size = \ref n_proc + 1) */
+  PDM_g_num_t  *distrib;      /*!< Distribution on the processes (size = \ref n_rank + 1) */
 
 } PDM_DMesh_nodal_section_poly2d_t;
 
@@ -89,19 +89,19 @@ typedef struct PDM_DMesh_nodal_section_poly2d_t {
 
 typedef struct PDM_DMesh_nodal_section_poly3d_t{
 
-  PDM_l_num_t  n_elt;        /*!< Number of elements */
-  PDM_l_num_t  n_face;       /*!< Number of faces */
-  PDM_l_num_t  *_facvtx_idx; /*!< Index of faces connectivity
-                              * (Memory mapping) (Size = \ref n_face + 1) */
+  PDM_l_num_t  n_elt;          /*!< Number of elements */
+  PDM_l_num_t  n_face;         /*!< Number of faces */
+  PDM_l_num_t  *_face_vtx_idx; /*!< Index of faces connectivity
+                                * (Memory mapping) (Size = \ref n_face + 1) */
 
-  PDM_g_num_t  *_facvtx;      /*!< Faces connectivity
-                               * (Memory mapping) (Size = \ref _facvtx_idx[\ref n_face])*/
-  PDM_l_num_t  *_cellfac_idx; /*!< Index of cell->face connectivity
-                               * (Memory mapping) (Size = \ref n_cell + 1) */
+  PDM_g_num_t  *_face_vtx;      /*!< Faces connectivity
+                                 * (Memory mapping) (Size = \ref _face_vtx_idx[\ref n_face])*/
+  PDM_l_num_t  *_cell_face_idx; /*!< Index of cell->face connectivity
+                                 * (Memory mapping) (Size = \ref n_cell + 1) */
 
-  PDM_g_num_t  *_cellfac;     /*!< cell->face connectivity
-                               * (Memory mapping) (Size = \ref _cellfac[\ref n_cell]) */
-  PDM_g_num_t  *distrib;      /*!< Distribution on the processes (size = \ref n_proc + 1) */
+  PDM_g_num_t  *_cell_face;     /*!< cell->face connectivity
+                                 * (Memory mapping) (Size = \ref _cell_face_idx[\ref n_cell]) */
+  PDM_g_num_t  *distrib;        /*!< Distribution on the processes (size = \ref n_rank + 1) */
 
 } PDM_DMesh_nodal_section_poly3d_t;
 
@@ -115,9 +115,19 @@ typedef struct PDM_DMesh_nodal_section_poly3d_t{
 
 struct _PDM_DMesh_nodal_t {
 
-  PDM_g_num_t            n_som_abs;                /*!< Global number of vertices */
+  int mesh_dimesion;                               /*! Principal dimension of meshes */
+
   PDM_g_num_t            n_cell_abs;               /*!< Global number of elements */
-  PDM_g_num_t           *n_face_abs;
+  PDM_g_num_t            n_face_abs;               /*!< Global number of faces    */
+  PDM_g_num_t            n_edge_abs;               /*!< Global number of edges    */
+  PDM_g_num_t            n_vtx_abs;                /*!< Global number of vertices */
+
+
+  // On doit faire des checks fonctions des dimensions !
+  // --> Faire une fonction check_coherency
+  // Il faut faire conditions limites + raccords
+  // Attention pour les raccords on va avoir besoin des ids !!!
+  //
 
 
   PDM_DMesh_nodal_vtx_t *vtx;                      /*!< Description des sommmets de chaque partition */
@@ -142,8 +152,8 @@ struct _PDM_DMesh_nodal_t {
 
 
   PDM_MPI_Comm           pdm_mpi_comm;             /*!< MPI Communicator */
-  int                    n_proc;                   /*!< Number of processes */
-  int                    i_proc;                   /*!< Number of processes */
+  int                    n_rank;                   /*!< Number of processes */
+  int                    i_rank;                   /*!< Number of processes */
   int                   *sections_id;              /*!< Blocks identifier */
   int                    n_sections;               /*!< Total number of sections */
   PDM_g_num_t           *section_distribution;     /*!< Element distribution  */

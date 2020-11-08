@@ -18,7 +18,7 @@ MPI_TEST_CASE("decomposes hexa ",1) {
                                    2, 3, 6, 5, 8, 9, 12, 11};
 
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
-  int dmesh_nodal_id = PDM_DMesh_nodal_create(pdm_comm, n_vtx, n_cell);
+  int dmesh_nodal_id = PDM_DMesh_nodal_create(pdm_comm, n_vtx, n_cell, -1, -1);
 
   int hexa_section_1 = PDM_DMesh_nodal_section_add(dmesh_nodal_id, PDM_MESH_NODAL_HEXA8);
 
@@ -127,7 +127,7 @@ MPI_TEST_CASE("decomposes tetra ",1) {
                                     9, 2, 11, 6};
 
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
-  int dmesh_nodal_id = PDM_DMesh_nodal_create(pdm_comm, n_vtx, n_cell);
+  int dmesh_nodal_id = PDM_DMesh_nodal_create(pdm_comm, n_vtx, n_cell, -1, -1);
 
   int tetra_section_1 = PDM_DMesh_nodal_section_add(dmesh_nodal_id, PDM_MESH_NODAL_TETRA4);
 
@@ -226,7 +226,7 @@ MPI_TEST_CASE("decomposes pyra ",1) {
                                    3, 4, 8, 7, 9};
 
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
-  int dmesh_nodal_id = PDM_DMesh_nodal_create(pdm_comm, n_vtx, n_cell);
+  int dmesh_nodal_id = PDM_DMesh_nodal_create(pdm_comm, n_vtx, n_cell, -1, -1);
 
   int pyra_section_1 = PDM_DMesh_nodal_section_add(dmesh_nodal_id, PDM_MESH_NODAL_PYRAMID5);
 
@@ -323,7 +323,7 @@ MPI_TEST_CASE("decomposes prism ",1) {
                                     2, 3, 6, 8, 9, 12};
 
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
-  int dmesh_nodal_id = PDM_DMesh_nodal_create(pdm_comm, n_vtx, n_cell);
+  int dmesh_nodal_id = PDM_DMesh_nodal_create(pdm_comm, n_vtx, n_cell, -1, -1);
 
   int prism_section_1 = PDM_DMesh_nodal_section_add(dmesh_nodal_id, PDM_MESH_NODAL_PRISM6);
 
@@ -421,7 +421,7 @@ MPI_TEST_CASE("decomposes prism ",1) {
 //                                    5, 6, 9, 8,};
 
 //   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
-//   int dmesh_nodal_id = PDM_DMesh_nodal_create(pdm_comm, n_vtx, n_cell);
+//   int dmesh_nodal_id = PDM_DMesh_nodal_create(pdm_comm, n_vtx, n_cell, -1, -1);
 
 //   int quad_section_1 = PDM_DMesh_nodal_section_add(dmesh_nodal_id, PDM_MESH_NODAL_QUAD4);
 
@@ -524,7 +524,7 @@ MPI_TEST_CASE("decomposes prism ",1) {
 //                                   5, 9, 8};
 
 //   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
-//   int dmesh_nodal_id = PDM_DMesh_nodal_create(pdm_comm, n_vtx, n_cell);
+//   int dmesh_nodal_id = PDM_DMesh_nodal_create(pdm_comm, n_vtx, n_cell, -1, -1);
 
 //   int tri_section_1 = PDM_DMesh_nodal_section_add(dmesh_nodal_id, PDM_MESH_NODAL_TRIA3);
 

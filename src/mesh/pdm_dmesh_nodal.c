@@ -110,7 +110,7 @@ _make_absolute_face_numbering(PDM_DMesh_nodal_t* mesh)
 
 
   /** Compute the distribution of elements amont proc **/
-  mesh->face_distrib = (PDM_g_num_t *) malloc((mesh->n_proc+1) * sizeof(PDM_g_num_t));
+  mesh->face_distrib = (PDM_g_num_t *) malloc((mesh->n_rank+1) * sizeof(PDM_g_num_t));
   PDM_g_num_t _dn_face = (PDM_g_num_t) mesh->dn_face;
   PDM_MPI_Allgather((void *) &_dn_face,
                     1,
@@ -123,14 +123,14 @@ _make_absolute_face_numbering(PDM_DMesh_nodal_t* mesh)
   // mesh->face_distrib[0] = 1;
   mesh->face_distrib[0] = 0;
 
-  for (int i = 1; i < mesh->n_proc+1; i++) {
+  for (int i = 1; i < mesh->n_rank+1; i++) {
     mesh->face_distrib[i] +=  mesh->face_distrib[i-1];
   }
 
   if (0 == 1) {
     printf("beg_NumAbs::Face : "PDM_FMT_G_NUM" \n", beg_NumAbs);
     printf("mesh->face_distrib : "PDM_FMT_G_NUM,  mesh->face_distrib[0]);
-    for (int i = 1; i < mesh->n_proc+1; i++) {
+    for (int i = 1; i < mesh->n_rank+1; i++) {
       printf(" "PDM_FMT_G_NUM, mesh->face_distrib[i]);
     }
     printf("\n");
@@ -182,20 +182,24 @@ _mesh_init
       PDM_DMesh_nodal_t *mesh,
 const PDM_MPI_Comm       comm,
       PDM_g_num_t        n_vtx,
-      PDM_g_num_t        n_cell
+      PDM_g_num_t        n_cell,
+      PDM_g_num_t        n_face,
+      PDM_g_num_t        n_edge
 )
 {
-  int n_proc;
-  int i_proc;
+  int n_rank;
+  int i_rank;
 
-  PDM_MPI_Comm_size (comm, &n_proc);
-  PDM_MPI_Comm_rank (comm, &i_proc);
+  PDM_MPI_Comm_size (comm, &n_rank);
+  PDM_MPI_Comm_rank (comm, &i_rank);
 
-  mesh->n_proc                   = n_proc;
-  mesh->i_proc                   = i_proc;
+  mesh->n_rank                   = n_rank;
+  mesh->i_rank                   = i_rank;
 
-  mesh->n_som_abs                = n_vtx;
   mesh->n_cell_abs               = n_cell;
+  mesh->n_face_abs               = n_face;
+  mesh->n_edge_abs               = n_edge;
+  mesh->n_vtx_abs                = n_vtx;
 
   mesh->vtx                      = malloc(sizeof(PDM_DMesh_nodal_vtx_t ));
   mesh->vtx->_coords             = NULL;
@@ -403,12 +407,14 @@ PDM_DMesh_nodal_create
 (
 const PDM_MPI_Comm comm,
       PDM_g_num_t  n_vtx,
-      PDM_g_num_t  n_cell
+      PDM_g_num_t  n_cell,
+      PDM_g_num_t  n_face,
+      PDM_g_num_t  n_edge
 )
 {
   PDM_DMesh_nodal_t *mesh = (PDM_DMesh_nodal_t *) malloc (sizeof(PDM_DMesh_nodal_t));
 
-  _mesh_init (mesh, comm, n_vtx, n_cell);
+  _mesh_init (mesh, comm, n_vtx, n_cell, n_face, n_edge);
 
   if (mesh_handles == NULL) {
     mesh_handles = PDM_Handles_create (4);
@@ -577,7 +583,7 @@ PDM_DMesh_nodal_coord_set
   vtx->n_vtx   = n_vtx;
   vtx->_coords = coords;
 
-  vtx->distrib = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * (mesh->n_proc + 1));
+  vtx->distrib = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * (mesh->n_rank + 1));
 
   PDM_g_num_t *_distrib = vtx->distrib + 1;
   _distrib[0] = 0;
@@ -871,13 +877,13 @@ const PDM_Mesh_nodal_elt_t   t_elt
 
       /* Intialisation du bloc */
 
-      section_poly3d->n_elt        = -1;
-      section_poly3d->n_face       = -1;
-      section_poly3d->_facvtx_idx  = NULL;
-      section_poly3d->_facvtx      = NULL;
-      section_poly3d->_cellfac_idx = NULL;
-      section_poly3d->_cellfac     = NULL;
-      section_poly3d->distrib      = NULL;
+      section_poly3d->n_elt          = -1;
+      section_poly3d->n_face         = -1;
+      section_poly3d->_face_vtx_idx  = NULL;
+      section_poly3d->_face_vtx      = NULL;
+      section_poly3d->_cell_face_idx = NULL;
+      section_poly3d->_cell_face     = NULL;
+      section_poly3d->distrib        = NULL;
 
       id_section += PDM_BLOCK_ID_BLOCK_POLY3D;
 
@@ -939,7 +945,7 @@ const int          n_elt,
   section->n_elt   = n_elt;
   section->_connec = connec;
 
-  section->distrib = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * (mesh->n_proc + 1));
+  section->distrib = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * (mesh->n_rank + 1));
 
   /* Creation of distribution */
   PDM_g_num_t begNumAbs;
@@ -958,7 +964,7 @@ const int          n_elt,
                     mesh->pdm_mpi_comm);
 
   section->distrib[0] = 0;
-  for (int i = 1; i < mesh->n_proc + 1; i++) {
+  for (int i = 1; i < mesh->n_rank + 1; i++) {
     section->distrib[i] +=  section->distrib[i-1];
   }
 
@@ -1130,7 +1136,7 @@ const PDM_l_num_t    n_elt,
   section->_connec_idx = connec_idx;
   section->_connec     = connec;
 
-  section->distrib = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * (mesh->n_proc + 1));
+  section->distrib = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * (mesh->n_rank + 1));
 
   /* Creation of distribution */
   PDM_g_num_t begNumAbs;
@@ -1149,7 +1155,7 @@ const PDM_l_num_t    n_elt,
                     mesh->pdm_mpi_comm);
 
   section->distrib[0] = 0;
-  for (int i = 1; i < mesh->n_proc + 1; i++) {
+  for (int i = 1; i < mesh->n_rank + 1; i++) {
     section->distrib[i] +=  section->distrib[i-1];
   }
 
@@ -1241,12 +1247,12 @@ const PDM_l_num_t    n_face,
 
   section->n_elt        = n_elt;
   section->n_face       = n_face;
-  section->_facvtx_idx  = facvtx_idx;
-  section->_facvtx      = facvtx;
-  section->_cellfac_idx = cellfac_idx;
-  section->_cellfac     = cellfac;
+  section->_face_vtx_idx  = facvtx_idx;
+  section->_face_vtx      = facvtx;
+  section->_cell_face_idx = cellfac_idx;
+  section->_cell_face     = cellfac;
 
-  section->distrib = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * (mesh->n_proc + 1));
+  section->distrib = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * (mesh->n_rank + 1));
 
   /* Creation of distribution */
   PDM_g_num_t begNumAbs;
@@ -1265,7 +1271,7 @@ const PDM_l_num_t    n_face,
                     mesh->pdm_mpi_comm);
 
   section->distrib[0] = 0;
-  for (int i = 1; i < mesh->n_proc + 1; i++) {
+  for (int i = 1; i < mesh->n_rank + 1; i++) {
     section->distrib[i] +=  section->distrib[i-1];
   }
 
@@ -1315,10 +1321,10 @@ const int            id_section,
   }
 
   *n_face      = section->n_face;
-  *facvtx_idx  = section->_facvtx_idx;
-  *facvtx      = section->_facvtx;
-  *cellfac_idx = section->_cellfac_idx;
-  *cellfac     = section->_cellfac;
+  *facvtx_idx  = section->_face_vtx_idx;
+  *facvtx      = section->_face_vtx;
+  *cellfac_idx = section->_cell_face_idx;
+  *cellfac     = section->_cell_face;
 
 }
 
@@ -1355,7 +1361,7 @@ const int  hdl
     for (int i = 0; i < n_sections_std; i++) {
       PDM_DMesh_nodal_section_std_t *_section_std =
         (PDM_DMesh_nodal_section_std_t *) PDM_Handles_get (mesh->sections_std, list_ind[i]);
-      total_n_cell += _section_std->distrib[mesh->n_proc];
+      total_n_cell += _section_std->distrib[mesh->n_rank];
     }
   }
 
@@ -1366,7 +1372,7 @@ const int  hdl
     for (int i = 0; i < n_sections_poly2d; i++) {
       PDM_DMesh_nodal_section_poly2d_t *_section_poly2d =
         (PDM_DMesh_nodal_section_poly2d_t *) PDM_Handles_get (mesh->sections_poly2d, list_ind[i]);
-      total_n_cell += _section_poly2d->distrib[mesh->n_proc];
+      total_n_cell += _section_poly2d->distrib[mesh->n_rank];
     }
   }
 
@@ -1377,7 +1383,7 @@ const int  hdl
     for (int i = 0; i < n_sections_poly3d; i++) {
       PDM_DMesh_nodal_section_poly3d_t *_section_poly3d =
         (PDM_DMesh_nodal_section_poly3d_t *) PDM_Handles_get (mesh->sections_poly3d, list_ind[i]);
-      total_n_cell += _section_poly3d->distrib[mesh->n_proc];
+      total_n_cell += _section_poly3d->distrib[mesh->n_rank];
     }
   }
 
@@ -1412,7 +1418,7 @@ const int  hdl
   //   PDM_error (__FILE__, __LINE__, 0, "Not implemented yet\n");
   // }
 
-  return mesh->face_distrib[mesh->n_proc];
+  return mesh->face_distrib[mesh->n_rank];
 
 }
 
@@ -1441,7 +1447,7 @@ const int  hdl
 
   PDM_DMesh_nodal_vtx_t *vtx = mesh->vtx;
 
-  return vtx->distrib[mesh->n_proc];
+  return vtx->distrib[mesh->n_rank];
 }
 
 
@@ -1515,7 +1521,7 @@ PDM_dmesh_nodal_generate_distribution
     const int *list_ind = PDM_Handles_idx_get(mesh->sections_std);
     for (int i_section = 0; i_section < n_sections_std; i_section++) {
       PDM_DMesh_nodal_section_std_t *section_std = (PDM_DMesh_nodal_section_std_t *) PDM_Handles_get (mesh->sections_std, list_ind[i_section]);
-      mesh->section_distribution[i_section+1] = section_std->distrib[mesh->n_proc];
+      mesh->section_distribution[i_section+1] = section_std->distrib[mesh->n_rank];
     }
     shift += n_sections_std;
   }
@@ -1526,7 +1532,7 @@ PDM_dmesh_nodal_generate_distribution
     const int *list_ind   = PDM_Handles_idx_get(mesh->sections_poly2d);
     for (int i_section = 0; i_section < n_sections_poly2d; i_section++) {
       PDM_DMesh_nodal_section_poly2d_t *section_poly2d = (PDM_DMesh_nodal_section_poly2d_t *) PDM_Handles_get (mesh->sections_std, list_ind[i_section]);
-      mesh->section_distribution[i_section+shift+1] = section_poly2d->distrib[mesh->n_proc];
+      mesh->section_distribution[i_section+shift+1] = section_poly2d->distrib[mesh->n_rank];
     }
     shift += n_sections_poly2d;
   }
@@ -1536,7 +1542,7 @@ PDM_dmesh_nodal_generate_distribution
     const int *list_ind   = PDM_Handles_idx_get(mesh->sections_poly3d);
     for (int i_section = 0; i_section < n_sections_poly3d; i_section++) {
       PDM_DMesh_nodal_section_poly3d_t *section_poly3d = (PDM_DMesh_nodal_section_poly3d_t *) PDM_Handles_get (mesh->sections_std, list_ind[i_section]);
-      mesh->section_distribution[i_section+shift+1] = section_poly3d->distrib[mesh->n_proc];
+      mesh->section_distribution[i_section+shift+1] = section_poly3d->distrib[mesh->n_rank];
     }
     shift += n_sections_poly3d;
   }
@@ -1738,7 +1744,7 @@ const int   hdl
    * We are now all information flatten - we only need to compute hash_keys for each faces
    */
   PDM_g_num_t* ln_to_gn = (PDM_g_num_t*) malloc( n_face_elt_tot * sizeof(PDM_g_num_t));
-  PDM_g_num_t key_mod = 4 * mesh->n_som_abs;
+  PDM_g_num_t key_mod = 4 * mesh->n_vtx_abs;
   // printf("key_mod::%i \n", key_mod);
 
   // Option des clés
@@ -2026,11 +2032,11 @@ const int   hdl
   PDM_g_num_t* ln_to_gn_elem       = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) * n_face_cell );
 
   int idx_g = 0;
-  assert( mesh->dn_face == mesh->face_distrib[mesh->i_proc+1] - mesh->face_distrib[mesh->i_proc]);
-  // for (int i = mesh->face_distrib[mesh->i_proc]; i < mesh->face_distrib[mesh->i_proc+1]; i++) {
+  assert( mesh->dn_face == mesh->face_distrib[mesh->i_rank+1] - mesh->face_distrib[mesh->i_rank]);
+  // for (int i = mesh->face_distrib[mesh->i_rank]; i < mesh->face_distrib[mesh->i_rank+1]; i++) {
   for (int i_face = 0; i_face < mesh->dn_face; ++i_face) {
 
-    PDM_g_num_t g_num_face = (PDM_g_num_t) i_face + mesh->face_distrib[mesh->i_proc] + 1;
+    PDM_g_num_t g_num_face = (PDM_g_num_t) i_face + mesh->face_distrib[mesh->i_rank] + 1;
 
     dface_cell_tmp[idx_g] = mesh->_dface_cell[2*i_face];
     ln_to_gn_elem [idx_g] = g_num_face;
@@ -2261,7 +2267,7 @@ PDM_g_num_t **_dface_vtx
  *
  * \param [in]  hdl  Distributed nodal mesh handle
  *
- * \return  A array of size \ref n_procs + 1
+ * \return  A array of size \ref n_ranks + 1
  *
  */
 
@@ -2290,7 +2296,7 @@ PDM_DMesh_nodal_distrib_vtx_get
  * \param [in]  hdl        Distributed nodal mesh handle
  * \param [in]  id_section   Block identifier
  *
- * \return  A array of size \ref n_procs + 1
+ * \return  A array of size \ref n_ranks + 1
  *
  */
 
@@ -2362,7 +2368,7 @@ PDM_DMesh_nodal_distrib_section_get
  *
  * \param [in]  hdl  Distributed nodal mesh handle
  *
- * \return  A array of size \ref n_procs + 1
+ * \return  A array of size \ref n_ranks + 1
  *
  */
 
@@ -2389,7 +2395,7 @@ PDM_DMesh_nodal_distrib_cell_get
  *
  * \param [in]  hdl  Distributed nodal mesh handle
  *
- * \return  A array of size \ref n_procs + 1
+ * \return  A array of size \ref n_ranks + 1
  *
  */
 
@@ -2486,7 +2492,7 @@ PDM_DMesh_nodal_distrib_face_get
 
   // for (int i_section = 0; i_section < mesh->n_sections; i_section++) {
   //   PDM_DMesh_nodal_section_std_t *section_std = (PDM_DMesh_nodal_section_std_t *) PDM_Handles_get (mesh->sections_std, i_section);
-  //   mesh->section_distribution[i_section+1] = section_std->distrib[mesh->n_proc];
+  //   mesh->section_distribution[i_section+1] = section_std->distrib[mesh->n_rank];
   // }
   // for (int i_section = 1; i_section < mesh->n_sections + 1; i_section++) {
   //   mesh->section_distribution[i_section] +=  mesh->section_distribution[i_section-1];
@@ -2498,7 +2504,7 @@ PDM_DMesh_nodal_distrib_face_get
   // PDM_g_num_t dn_elmt_tot  = 0;
   // for (int i_section = 0; i_section < mesh->n_sections; i_section++) {
   //   PDM_DMesh_nodal_section_std_t *section_std = (PDM_DMesh_nodal_section_std_t *) PDM_Handles_get (mesh->sections_std, i_section);
-  //   dn_elmt_tot += ( section_std->distrib[mesh->i_proc+1] - section_std->distrib[mesh->i_proc] );
+  //   dn_elmt_tot += ( section_std->distrib[mesh->i_rank+1] - section_std->distrib[mesh->i_rank] );
   // }
 
 #ifdef __cplusplus

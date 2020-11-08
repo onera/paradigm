@@ -20,7 +20,11 @@ cdef extern from "pdm_dmesh_nodal.h":
 
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     # > Wrapping of function
-    int PDM_DMesh_nodal_create(PDM_MPI_Comm comm, PDM_g_num_t nCel, PDM_g_num_t nVtx)
+    int PDM_DMesh_nodal_create(PDM_MPI_Comm comm,
+                               PDM_g_num_t n_vtx,
+                               PDM_g_num_t n_cell,
+                               PDM_g_num_t n_face,
+                               PDM_g_num_t n_edge)
     void PDM_DMesh_nodal_free(int handle, int partial)
 
     void PDM_DMesh_nodal_coord_set(int handle, int n_vtx, double* coords)
@@ -101,8 +105,10 @@ cdef class DistributedMeshNodal:
     # ************************************************************************
     # ------------------------------------------------------------------------
     def __cinit__(self, MPI.Comm    comm,
-                       PDM_g_num_t nVtx,
-                       PDM_g_num_t nCel):
+                        PDM_g_num_t n_vtx,
+                        PDM_g_num_t n_cell,
+                        PDM_g_num_t n_face = -1,
+                        PDM_g_num_t n_edge = -1):
         """
         TODOUX
         """
@@ -125,7 +131,7 @@ cdef class DistributedMeshNodal:
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
-        self.idmesh = PDM_DMesh_nodal_create(PDMC, nVtx, nCel)
+        self.idmesh = PDM_DMesh_nodal_create(PDMC, n_vtx, n_cell, n_face, n_edge)
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
     # ------------------------------------------------------------------------
@@ -134,12 +140,12 @@ cdef class DistributedMeshNodal:
         """
         # ************************************************************************
         # > Declaration
-        cdef int nVtx
+        cdef int n_vtx
         # ************************************************************************
 
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
-        nVtx = dvtx_coord.shape[0]
-        PDM_DMesh_nodal_coord_set(self.idmesh, nVtx, <double *> dvtx_coord.data)
+        n_vtx = dvtx_coord.shape[0]
+        PDM_DMesh_nodal_coord_set(self.idmesh, n_vtx, <double *> dvtx_coord.data)
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
     # ------------------------------------------------------------------------
@@ -151,7 +157,7 @@ cdef class DistributedMeshNodal:
         """
         # ************************************************************************
         # > Declaration
-        cdef int nVtx
+        cdef int n_vtx
         cdef NPY.ndarray[npy_pdm_gnum_t, ndim=1, mode='fortran'] connect
         # ************************************************************************
 
