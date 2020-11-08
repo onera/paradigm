@@ -117,8 +117,8 @@ PDM_block_to_part_create
     btp->requested_data_n[i] = 0;
   }
 
-  btp->n_elt = malloc (sizeof(int) * n_part);
-  btp->ind = malloc (sizeof(int *) * n_part);
+  btp->n_elt = malloc (sizeof(int  ) * n_part);
+  btp->ind   = malloc (sizeof(int *) * n_part);
 
   for (int i = 0; i < n_part; i++) {
 
@@ -138,12 +138,11 @@ PDM_block_to_part_create
   }
 
   for (int i = 0; i < btp->n_rank; i++) {
-    btp->requested_data_idx[i+1] = btp->requested_data_idx[i] +
-                                   btp->requested_data_n[i];
+    btp->requested_data_idx[i+1] = btp->requested_data_idx[i] + btp->requested_data_n  [i];
   }
 
   int s_requested_data = btp->requested_data_idx[btp->n_rank - 1]
-                       + btp->requested_data_n[btp->n_rank - 1];
+                       + btp->requested_data_n  [btp->n_rank - 1];
 
   int *requested_data = malloc (sizeof(int) *  s_requested_data);
 
@@ -794,11 +793,11 @@ PDM_block_to_part_exch2
     send_buffer = (unsigned char *) malloc(sizeof(unsigned char) * s_send_buffer);
     recv_buffer = (unsigned char *) malloc(sizeof(unsigned char) * s_recv_buffer);
 
-    int *send_stride_idx = (int *) malloc(sizeof(int) * (s_distributed_data+1));
-    send_stride_idx[0] = 0;
-    for (int i = 0; i < s_distributed_data; i++) {
-      send_stride_idx[i+1] = send_stride_idx[i] + send_stride[i];
-    }
+    // int *send_stride_idx = (int *) malloc(sizeof(int) * (s_distributed_data+1));
+    // send_stride_idx[0] = 0;
+    // for (int i = 0; i < s_distributed_data; i++) {
+    //   send_stride_idx[i+1] = send_stride_idx[i] + send_stride[i];
+    // }
 
     int idx1 = 0;
 
@@ -821,7 +820,7 @@ PDM_block_to_part_exch2
       }
     }
     free(send_stride);
-    free(send_stride_idx);
+    // free(send_stride_idx);
     free(block_stride_idx);
 
   }

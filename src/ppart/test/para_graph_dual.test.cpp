@@ -377,7 +377,7 @@ MPI_TEST_CASE("[3p] Split graph with PARMetis", 3) {
                             NULL,
                             cell_part,
                             pdm_comm);
-      
+
       // Check
       if (test_rank == 0) {
         static PDM_g_num_t expc_cell_part[3] = {0, 0, 0};
