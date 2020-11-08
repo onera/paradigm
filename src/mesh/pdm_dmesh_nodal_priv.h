@@ -124,6 +124,7 @@ struct _PDM_DMesh_nodal_t {
 
   PDM_Handles_t         *sections_std;             /*!< Standard sections */
   PDM_Handles_t         *sections_poly2d;          /*!< Polygon sections */
+  PDM_Handles_t         *sections_poly3d;          /*!< Polyhedron sections */
 
   PDM_Handles_t         *sections_std_descending;    /*!< Standard sections */
   PDM_Handles_t         *sections_poly2d_descending; /*!< Polygon sections */
@@ -140,7 +141,6 @@ struct _PDM_DMesh_nodal_t {
   // PDM_g_num_t* delmt_group_descending_vtx;
 
 
-  PDM_Handles_t         *sections_poly3d;          /*!< Polyhedron sections */
   PDM_MPI_Comm           pdm_mpi_comm;             /*!< MPI Communicator */
   int                    n_proc;                   /*!< Number of processes */
   int                    i_proc;                   /*!< Number of processes */
