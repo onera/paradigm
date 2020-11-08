@@ -389,6 +389,9 @@ PDM_multi_block_to_part_exch2
   free(n_recv_buffer);
   free(i_recv_buffer);
 
+  *part_data = malloc(sizeof(unsigned char *) * _mbtp->n_part);
+  _part_data = (*(unsigned char ***) part_data);
+
   if (t_stride == PDM_STRIDE_VAR) {
     abort();
   } else if (t_stride == PDM_STRIDE_CST) {
@@ -399,21 +402,22 @@ PDM_multi_block_to_part_exch2
     PDM_log_trace_array_int(recv_buffer_int, s_recv_buffer/sizeof(int), "recv_buffer_int:: ");
     // const int cst_stride = *block_stride;
     // const int s_block_unit = cst_stride * (int) s_data;
+    const int s_block_unit = 1 * (int) s_data;
 
-    // for (int i = 0; i < _btp->n_part; i++) {
+    for (int i = 0; i < _mbtp->n_part; i++) {
 
-    //   _part_data[i] = malloc(sizeof(unsigned char) * s_block_unit * _btp->n_elt[i]);
+      _part_data[i] = malloc(sizeof(unsigned char) * s_block_unit * _mbtp->n_elt[i]);
 
-    //   for (int j = 0; j < _mbtp->n_elt[i]; j++) {
+      for (int j = 0; j < _mbtp->n_elt[i]; j++) {
 
-    //     int idx1  = j * s_block_unit;
-    //     int idx2 = _btp->ind[i][j] * s_block_unit;
+        int idx1  = j * s_block_unit;
+        int idx2 = _mbtp->ind[i][j] * s_block_unit;
 
-    //     for (int k = 0; k < s_block_unit; k++) {
-    //        _part_data[i][idx1+k] = recv_buffer[idx2+k];
-    //     }
-    //   }
-    // }
+        for (int k = 0; k < s_block_unit; k++) {
+           _part_data[i][idx1+k] = recv_buffer[idx2+k];
+        }
+      }
+    }
   }
 
   free(recv_buffer);
