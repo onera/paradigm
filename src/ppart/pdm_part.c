@@ -885,21 +885,21 @@ _split
     {
 #ifdef PDM_HAVE_PTSCOTCH
       int check = 0;
-      printf("chech : %i \n", check);
+      // printf("chech : %i \n", check);
       int *edgeWeight = NULL;
 
-      int* dual_graph_n = (int*) malloc( sizeof(int) * ppart->dn_cell);
-      for(int i_entity = 0; i_entity < ppart->dn_cell; ++i_entity) {
-        dual_graph_n[i_entity] = ppart->ddual_graph_idx[i_entity+1] - ppart->ddual_graph_idx[i_entity];
-      }
-      log_trace("ppart->ddual_graph_idx[ppart->dn_cell]:: %i \n ", ppart->ddual_graph_idx[ppart->dn_cell]);
+      // int* dual_graph_n = (int*) malloc( sizeof(int) * ppart->dn_cell);
+      // for(int i_entity = 0; i_entity < ppart->dn_cell; ++i_entity) {
+      //   dual_graph_n[i_entity] = ppart->ddual_graph_idx[i_entity+1] - ppart->ddual_graph_idx[i_entity];
+      // }
+      // log_trace("ppart->ddual_graph_idx[ppart->dn_cell]:: %i \n ", ppart->ddual_graph_idx[ppart->dn_cell]);
 
-      PDM_para_graph_compress_connectivity(ppart->dn_cell, ppart->ddual_graph_idx, dual_graph_n, ppart->ddual_graph);
+      // PDM_para_graph_compress_connectivity(ppart->dn_cell, ppart->ddual_graph_idx, dual_graph_n, ppart->ddual_graph);
       // PDM_log_trace_array_long(ppart->ddual_graph_idx, ppart->dn_cell+1, "ddual_graph_idx:: ");
       // log_trace("------------------------- ");
       // PDM_log_trace_array_long(ppart->ddual_graph, ppart->ddual_graph_idx[ppart->dn_cell], "ddual_graph:: ");
 
-      log_trace("After ppart->ddual_graph_idx[ppart->dn_cell]:: %i \n ", ppart->ddual_graph_idx[ppart->dn_cell]);
+      // log_trace("After ppart->ddual_graph_idx[ppart->dn_cell]:: %i \n ", ppart->ddual_graph_idx[ppart->dn_cell]);
 
       PDM_SCOTCH_dpart (ppart->dn_cell,
                         ppart->ddual_graph_idx,
@@ -910,7 +910,7 @@ _split
                         ppart->comm,
                         ppart->tn_part,
                         cell_part);
-      free(dual_graph_n);
+      // free(dual_graph_n);
 
 #else
       if(i_rank == 0) {
