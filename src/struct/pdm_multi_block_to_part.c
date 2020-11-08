@@ -180,7 +180,7 @@ PDM_multi_block_to_part_create
       // les requested_block + idx de deuxieme niveau !!! Car ce sera l'ordre d'arrvié !!!
 
       // Very important here to shift twice !!!
-      PDM_g_num_t _mshift         = mbtp->block_distrib_idx[idx_block][idx_rank] - mbtp->multi_distrib_idx[idx_block];
+      PDM_g_num_t _mshift         = mbtp->block_distrib_idx[idx_block][idx_rank]; // - mbtp->multi_distrib_idx[idx_block];
       PDM_g_num_t _requested_data = _gnum_elt[j] - 1 - _mshift;
 
       // Dans le requested data il faut soit rajouter les indices de demandes de chaque bloc
@@ -287,8 +287,8 @@ PDM_multi_block_to_part_exch2
 
   printf("PDM_multi_block_to_part_exch2\n");
 
-  size_t *i_send_buffer = (size_t *) malloc (sizeof(size_t) * _mbtp->n_rank);
-  size_t *i_recv_buffer = (size_t *) malloc (sizeof(size_t) * _mbtp->n_rank);
+  size_t *i_send_buffer = (size_t *) malloc (sizeof(size_t) * (_mbtp->n_rank + 1));
+  size_t *i_recv_buffer = (size_t *) malloc (sizeof(size_t) * (_mbtp->n_rank + 1));
   int *n_send_buffer = (int *) malloc (sizeof(int) * _mbtp->n_rank);
   int *n_recv_buffer = (int *) malloc (sizeof(int) * _mbtp->n_rank);
 
@@ -298,6 +298,8 @@ PDM_multi_block_to_part_exch2
     i_send_buffer[i] = 0;
     i_recv_buffer[i] = 0;
   }
+  i_send_buffer[_mbtp->n_rank] = 0;
+  i_recv_buffer[_mbtp->n_rank] = 0;
 
   unsigned char *send_buffer = NULL;
   unsigned char *recv_buffer = NULL;
@@ -315,30 +317,24 @@ PDM_multi_block_to_part_exch2
   if (t_stride == PDM_STRIDE_VAR) {
     abort();
   } else if (t_stride == PDM_STRIDE_CST) {
-    int cst_stride = -1;
-    for(int i_block = 0; i_block < _mbtp->n_block; ++i_block) {
-      if(cst_stride == -1){
-        cst_stride = block_stride[i_block][0];
-        printf("cst_stride   = %i \n", cst_stride  );
-      } else {
-        printf("block_stride[%i] = %i \n", i_block,  block_stride[i_block][0] );
 
-        assert( cst_stride == block_stride[i_block][0]);
+    for (int i = 0; i < _mbtp->n_rank; i++) {
+      // int ind          = i*mbtp->n_block;
+      for(int i_block = 0; i_block < _mbtp->n_block; ++i_block) {
+        int cst_stride   = block_stride[i_block][0];
+        int s_block_unit = cst_stride * (int) s_data;
+        i_send_buffer[i+1] += _mbtp->distributed_block_n[i_block] * s_block_unit;
+        i_recv_buffer[i+1] += _mbtp->requested_block_n  [i_block] * s_block_unit;
+
+        n_send_buffer[i] += _mbtp->distributed_block_n[i_block] * s_block_unit;
+        n_recv_buffer[i] += _mbtp->requested_block_n  [i_block] * s_block_unit;
       }
     }
 
-    int s_block_unit = cst_stride * (int) s_data;
-    printf("cst_stride   = %i \n", cst_stride  );
-    printf("s_block_unit = %i \n", s_block_unit);
-
-    for (int i = 0; i < _mbtp->n_rank; i++) {
-
-      i_send_buffer[i] = _mbtp->distributed_data_idx[i] * s_block_unit;
-      i_recv_buffer[i] = _mbtp->requested_data_idx  [i] * s_block_unit;
-
-      n_send_buffer[i] = _mbtp->distributed_data_n[i] * s_block_unit;
-      n_recv_buffer[i] = _mbtp->requested_data_n  [i] * s_block_unit;
-    }
+    PDM_log_trace_array_size_t(i_send_buffer, _mbtp->n_rank+1, "i_send_buffer:: ");
+    PDM_log_trace_array_size_t(i_recv_buffer, _mbtp->n_rank+1, "i_recv_buffer:: ");
+    PDM_log_trace_array_int(n_send_buffer, _mbtp->n_rank  , "n_send_buffer:: ");
+    PDM_log_trace_array_int(n_recv_buffer, _mbtp->n_rank  , "n_recv_buffer:: ");
 
     s_send_buffer = i_send_buffer[n_rank1] + n_send_buffer[n_rank1];
     s_recv_buffer = i_recv_buffer[n_rank1] + n_recv_buffer[n_rank1];
@@ -346,25 +342,31 @@ PDM_multi_block_to_part_exch2
     send_buffer = (unsigned char *) malloc(sizeof(unsigned char) * s_send_buffer);
     recv_buffer = (unsigned char *) malloc(sizeof(unsigned char) * s_recv_buffer);
 
-    // int idx1 = 0;
-    // for (int i = 0; i < s_distributed_data; i++) {
-    //   int ind = _btp->distributed_data[i]; /* List des indices que le rang opposé souhaité recupérer */
-    //   unsigned char *_block_data_deb = _block_data + ind * cst_stride * (int) s_data;
-    //   for (int k = 0; k < s_block_unit; k++) {
-    //     send_buffer[idx1++] = _block_data_deb[k];
-    //   }
-    // }
+    int idx1 = 0;
+    for (int i = 0; i < _mbtp->n_rank; i++) {
 
+      for(int i_block = 0; i_block < _mbtp->n_block; ++i_block) {
 
-    // for(int i_block = 0; i_block < _mbtp->n_block; ++i_block) {
-    //   unsigned char* _block_data = (unsigned char *) block_data[i_block];
-    //   int* ind_block = &distribute_data[distributed_data_idx[i_block]];
-    //   for(int i = 0; i < s_distributed_data[i_block]; ++i) {
-    //      int ind = ind_block[i];
-    //
-    //   }
-    // }
+        unsigned char* _block_data = (unsigned char *) block_data[i_block];
+        int idx = i_block + i*_mbtp->n_block;
 
+        int cst_stride   = block_stride[i_block][0];
+        int s_block_unit = cst_stride * (int) s_data;
+
+        for(int ielt = _mbtp->distributed_block_idx[idx]; ielt < _mbtp->distributed_block_idx[idx+1]; ++ielt) {
+          int ind = _mbtp->distributed_data[ielt]*s_block_unit;
+          // printf("[%i] with ind = %i \n", i_block, ind);
+          for(int i_data = 0; i_data < s_block_unit; ++i_data) {
+            send_buffer[idx1++] = _block_data[ind+i_data];
+          }
+        }
+      }
+    }
+
+    int* send_buffer_int = (int*) send_buffer;
+
+    // printf("idx1 = %i\n", idx1);
+    PDM_log_trace_array_int(send_buffer_int, s_send_buffer/sizeof(int), "send_buffer_int:: ");
 
   }
 
@@ -391,6 +393,10 @@ PDM_multi_block_to_part_exch2
     abort();
   } else if (t_stride == PDM_STRIDE_CST) {
 
+    int* recv_buffer_int = (int*) recv_buffer;
+
+    // printf("idx1 = %i\n", idx1);
+    PDM_log_trace_array_int(recv_buffer_int, s_recv_buffer/sizeof(int), "recv_buffer_int:: ");
     // const int cst_stride = *block_stride;
     // const int s_block_unit = cst_stride * (int) s_data;
 
