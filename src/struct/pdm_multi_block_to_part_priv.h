@@ -48,6 +48,7 @@ typedef struct {
   PDM_MPI_Comm   comm;                /*!< MSG communicator */
   int            n_rank;              /*!< Communicator size */
   int            i_rank;              /*!< Current rank in comm */
+  int            n_data_block;        /*!< Total number of blocks */
   int            n_part;              /*!< Number of partitions */
   int           *n_elt;               /*!< Number of elements for each partition */
   int          **ind;                 /*!< Ind for each element partition in distributed_data */
@@ -62,6 +63,14 @@ typedef struct {
   int           *distributed_data;    /*!< Distributed data for each process
                                        * (size : requestd_data_idx[n_rank - 1]
                                              +requestd_data_n[n_rank - 1] ) */
+  int           *requested_block_n;    /*!< Numer of requested block for each process index
+                                       * (size : n_block*n_rank) */
+  int           *requested_block_idx;  /*!< Requested block for each process index
+                                       * (size : n_block*n_rank) */
+  int           *distributed_block_n;  /*!< Numer of distributed block for each process index
+                                       * (size : n_block*n_rank) */
+  int           *distributed_block_idx;/*!< Distributed block for each process index
+                                       * (size : n_block*n_rank) */
   int           pttopt_comm;          /*!< Use point to point communication if pttopt_comm == 1 */
 
 } _pdm_multi_block_to_part_t;
