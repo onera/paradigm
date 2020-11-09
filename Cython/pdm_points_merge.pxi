@@ -133,14 +133,14 @@ cdef class PointsMerge:
                                                    &dim,
                                                    NPY.NPY_INT32,
                                                    <void *> candidates_idx)
+        PyArray_ENABLEFLAGS(np_candidates_idx, NPY.NPY_OWNDATA);
 
         dim = <NPY.npy_intp> 3 * candidates_idx[n_point_cloud]
         np_candidates_desc = NPY.PyArray_SimpleNewFromData(1,
                                                            &dim,
                                                            NPY.NPY_INT32,
                                                            <void *> candidates_desc)
-        # np_candidates_idx  = None
-        # np_candidates_desc = None
+        PyArray_ENABLEFLAGS(np_candidates_desc, NPY.NPY_OWNDATA);
 
         return {'candidates_idx'  : np_candidates_idx,
                 'candidates_desc' : np_candidates_desc
@@ -151,9 +151,5 @@ cdef class PointsMerge:
       """
          Use the free method of PDM Lib
       """
-      # ************************************************************************
-      # > Declaration
-      # ************************************************************************
-      print('PDM_points_merge_free, TODO change owneship')
       PDM_points_merge_free(self._id)
 
