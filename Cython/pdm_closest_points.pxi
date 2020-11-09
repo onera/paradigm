@@ -1,8 +1,9 @@
 
 cdef extern from "pdm_closest_points.h":
 
-  int PDM_closest_points_create(PDM_MPI_Comm comm,
-                                int          n_closest);
+  int PDM_closest_points_create(PDM_MPI_Comm    comm,
+                                int             n_closest,
+                                PDM_ownership_t owner);
 
   void PDM_closest_points_n_part_cloud_set(int  id,
                                            int  n_part_cloud_src,
@@ -27,7 +28,7 @@ cdef extern from "pdm_closest_points.h":
                               PDM_g_num_t **closest_src_gnum,
                               double      **closest_src_distance);
 
-  void PDM_closest_points_free(int id, int partial)
+  void PDM_closest_points_free(int id)
 
   void PDM_closest_points_dump_times(int id);
 
@@ -66,7 +67,7 @@ cdef class ClosestPoints:
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
-    self._id = PDM_closest_points_create(PDMC, n_closest)
+    self._id = PDM_closest_points_create(PDMC, n_closest, PDM_OWNERSHIP_USER) # Python take ownership
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
   # ------------------------------------------------------------------------
@@ -137,11 +138,17 @@ cdef class ClosestPoints:
                                                         &dim,
                                                         PDM_G_NUM_NPY_INT,
                                                         <void *> closest_src_gnum)
+    PyArray_ENABLEFLAGS(np_closest_src_gnum, NPY.NPY_OWNDATA);
 
     np_closest_src_distance = NPY.PyArray_SimpleNewFromData(1,
                                                             &dim,
                                                             NPY.NPY_DOUBLE,
                                                             <void *> closest_src_distance)
+    PyArray_ENABLEFLAGS(np_closest_src_distance, NPY.NPY_OWNDATA);
+
+    return {'closest_src_gnum'  : np_closest_src_gnum,
+            'closest_src_distance' : np_closest_src_distance
+            }
 
   # ------------------------------------------------------------------------
   def dump_times(self):
@@ -154,4 +161,4 @@ cdef class ClosestPoints:
     """
     """
     free(self.tgt_n_points)
-    PDM_closest_points_free(self._id, 0)
+    PDM_closest_points_free(self._id)

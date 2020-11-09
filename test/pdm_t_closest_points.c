@@ -459,7 +459,8 @@ main
 
 
   int id2 = PDM_closest_points_create (PDM_MPI_COMM_WORLD,
-                                       n_closest_points);
+                                       n_closest_points,
+                                       PDM_OWNERSHIP_KEEP);
 
   PDM_closest_points_n_part_cloud_set (id2,
                                        1,
@@ -510,8 +511,7 @@ main
     printf("============================\n\n");
   }
 
-  PDM_closest_points_free (id2,
-                           0);
+  PDM_closest_points_free (id2);
 
 
 

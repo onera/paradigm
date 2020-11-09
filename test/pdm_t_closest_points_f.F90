@@ -131,6 +131,7 @@ program testf
 
   call PDM_closest_points_create (MPI_COMM_WORLD, &
                                   n_closest, &
+                                  PDM_OWNERSHIP_KEEP, &
                                   id)
 
 
@@ -225,7 +226,7 @@ program testf
   ! Free the current cloest_point structure
   !
 
-  call PDM_closest_points_free (id, partial)
+  call PDM_closest_points_free (id)
 
   deallocate (coords_src)
   deallocate (coords_tgt)

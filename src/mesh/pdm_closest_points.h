@@ -63,16 +63,18 @@ extern "C" {
 int
 PDM_closest_points_create
 (
- const PDM_MPI_Comm comm,
- const int          n_closest
+ const PDM_MPI_Comm    comm,
+ const int             n_closest,
+ const PDM_ownership_t owner
 );
 
 void
 PDM_closest_points_create_cf
 (
- const PDM_MPI_Fint comm,
- const int          n_closest,
- int *id
+ const PDM_MPI_Fint     comm,
+ const int              n_closest,
+ const PDM_ownership_t  owner,
+       int             *id
 );
 
 
@@ -189,8 +191,7 @@ PDM_closest_points_get
 void
 PDM_closest_points_free
 (
- const int id,
- const int partial
+ const int id
 );
 
 

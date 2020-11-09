@@ -39,8 +39,9 @@ module pdm_closest_points
     !!
     !!
 
-    subroutine PDM_closest_points_create (fcomm, &
+    subroutine PDM_closest_points_create (fcomm,     &
                                           n_closest, &
+                                          owner,     &
                                           id) &
       bind (c, name = 'PDM_closest_points_create_cf')
 
@@ -50,6 +51,7 @@ module pdm_closest_points
 
       integer(c_int), value :: fComm
       integer(c_int), value :: n_closest
+      integer(c_int), value :: owner
 
       integer(c_int)        :: id
 
@@ -211,8 +213,7 @@ module pdm_closest_points
     !!
     !!
 
-    subroutine PDM_closest_points_free (id, &
-                                       partial) &
+    subroutine PDM_closest_points_free (id) &
      bind (c, name = 'PDM_closest_points_free')
 
       use iso_c_binding
@@ -220,7 +221,6 @@ module pdm_closest_points
       implicit none
 
       integer(c_int), value :: id
-      integer(c_int), value :: partial
 
     end subroutine PDM_closest_points_free
 
