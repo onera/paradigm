@@ -216,7 +216,7 @@ char *argv[]
     }
   }
 
-  int id = PDM_gnum_create (3, 1, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD);
+  int id = PDM_gnum_create (3, 1, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD, PDM_OWNERSHIP_USER);
 
   double *char_length = malloc(sizeof(double) * _nPts_l);
 
@@ -230,7 +230,7 @@ char *argv[]
 
   PDM_g_num_t *gnum = PDM_gnum_get(id, 0);
 
-  PDM_gnum_free (id, 1);
+  PDM_gnum_free (id);
 
   /* Parallel octree */
 

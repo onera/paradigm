@@ -89,18 +89,20 @@ extern "C" {
 
 typedef struct  {
 
-  int          n_part;      /*!< Number of partitions */
-  int          dim;         /*!< Spatial dimension */
-  PDM_bool_t   merge;       /*!< Merge double point status */
-  double       tolerance;   /*!< Geometric tolerance */
-  PDM_MPI_Comm comm;        /*!< MPI communicator */
-  PDM_g_num_t  n_g_elt;     /*!< Global number of elements */
-  int          *n_elts;     /*!< Number of elements in partitions */
-  PDM_g_num_t **g_nums;     /*!< Global numbering of elements */
-  double      **coords;     /*!< Coordinates of elements */
-  double      **char_length;/*!< Characteristic length */
-  int         **index;      /*!< Index : used if merge is activated */
-  PDM_g_num_t **parent;     /*!< Global n */
+  PDM_MPI_Comm     comm;              /*!< MPI communicator */
+  PDM_ownership_t  owner;             /*!< Which have the responsabilities of results */
+  PDM_bool_t       results_is_getted; /*!< Flags to indicate if result is getted      */
+  int              n_part;            /*!< Number of partitions */
+  int              dim;               /*!< Spatial dimension */
+  PDM_bool_t       merge;             /*!< Merge double point status */
+  double           tolerance;         /*!< Geometric tolerance */
+  PDM_g_num_t      n_g_elt;           /*!< Global number of elements */
+  int              *n_elts;           /*!< Number of elements in partitions */
+  PDM_g_num_t     **g_nums;           /*!< Global numbering of elements */
+  double          **coords;           /*!< Coordinates of elements */
+  double          **char_length;      /*!< Characteristic length */
+  int             **index;            /*!< Index : used if merge is activated */
+  PDM_g_num_t     **parent;           /*!< Global n */
 
 } _pdm_gnum_t;
 
@@ -1211,11 +1213,12 @@ _gnum_from_parent_compute
 int
 PDM_gnum_create
 (
- const int          dim,
- const int          n_part,
- const PDM_bool_t   merge,
- const double       tolerance,
- const PDM_MPI_Comm comm
+ const int             dim,
+ const int             n_part,
+ const PDM_bool_t      merge,
+ const double          tolerance,
+ const PDM_MPI_Comm    comm,
+ const PDM_ownership_t owner
 )
 {
 
@@ -1230,11 +1233,14 @@ PDM_gnum_create
   _pdm_gnum_t *_gnum = (_pdm_gnum_t *) malloc(sizeof(_pdm_gnum_t));
   int id = PDM_Handles_store (_gnums, _gnum);
 
+  _gnum->comm              = comm;
+  _gnum->owner             = owner;
+  _gnum->results_is_getted = PDM_FALSE;
+
   _gnum->n_part      = n_part;
   _gnum->dim         = dim;
   _gnum->merge       = merge;
   _gnum->tolerance   = tolerance;
-  _gnum->comm        = comm;
   _gnum->n_g_elt     = -1;
   _gnum->g_nums      = (PDM_g_num_t **) malloc (sizeof(PDM_g_num_t * ) * n_part);
   _gnum->coords      = NULL;
@@ -1259,12 +1265,13 @@ PROCF (pdm_gnum_create, PDM_GNUM_CREATE)
  const int          *merge,
  const double       *tolerance,
  const PDM_MPI_Fint *fcomm,
+ const int          *owner,
        int          *id
 )
 {
   const PDM_MPI_Comm c_comm = PDM_MPI_Comm_f2c (*fcomm);
 
-  *id = PDM_gnum_create (*dim, *n_part, (PDM_bool_t) *merge, *tolerance, c_comm);
+  *id = PDM_gnum_create (*dim, *n_part, (PDM_bool_t) *merge, *tolerance, c_comm, *owner);
 }
 
 
@@ -1438,6 +1445,7 @@ PDM_gnum_get
 )
 {
   _pdm_gnum_t *_gnum = _get_from_id (id);
+  _gnum->results_is_getted = PDM_TRUE;
 
   return _gnum->g_nums[i_part];
 }
@@ -1456,6 +1464,7 @@ PROCF (pdm_gnum_get, PDM_GNUM_GET)
   for (int i = 0; i < _gnum->n_elts[*i_part]; i++) {
     gnum[i] = tmp[i];
   }
+  _gnum->results_is_getted = PDM_TRUE;
 }
 
 
@@ -1470,8 +1479,7 @@ PROCF (pdm_gnum_get, PDM_GNUM_GET)
 void
 PDM_gnum_free
 (
- const int id,
- const int partial
+ const int id
 )
 {
   _pdm_gnum_t *_gnum = _get_from_id (id);
@@ -1488,7 +1496,8 @@ PDM_gnum_free
     free (_gnum->parent);
   }
 
-  if (partial != 1) {
+  if(( _gnum->owner == PDM_OWNERSHIP_KEEP ) ||
+     ( _gnum->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !_gnum->results_is_getted)){
     for (int i = 0; i < _gnum->n_part; i++) {
       free (_gnum->g_nums[i]);
     }
@@ -1512,11 +1521,10 @@ PDM_gnum_free
 void
 PROCF (pdm_gnum_free, PDM_GNUM_FREE)
 (
- const int *id,
- const int *partial
+ const int *id
 )
 {
-  PDM_gnum_free (*id, *partial);
+  PDM_gnum_free (*id);
 }
 
 /*----------------------------------------------------------------------------*/

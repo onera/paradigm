@@ -69,11 +69,12 @@ extern "C" {
 int
 PDM_gnum_create
 (
- const int          dim,
- const int          n_part,
- const PDM_bool_t   merge,
- const double       tolerance,
- const PDM_MPI_Comm comm
+ const int             dim,
+ const int             n_part,
+ const PDM_bool_t      merge,
+ const double          tolerance,
+ const PDM_MPI_Comm    comm,
+ const PDM_ownership_t owner
 );
 
 void
@@ -84,6 +85,7 @@ PROCF (pdm_gnum_create, PDM_GNUM_CREATE)
  const int          *merge,
  const double       *tolerance,
  const PDM_MPI_Fint *fcomm,
+ const int          *owner,
        int          *id
 );
 
@@ -214,15 +216,13 @@ PROCF (pdm_gnum_get, PDM_GNUM_GET)
 void
 PDM_gnum_free
 (
- const int id,
- const int partial
+ const int id
 );
 
 void
 PROCF (pdm_gnum_free, PDM_GNUM_FREE)
 (
- const int *id,
- const int *partial
+ const int *id
 );
 
 /*----------------------------------------------------------------------------*/

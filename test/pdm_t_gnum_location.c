@@ -210,7 +210,7 @@ PDM_part_split_t           method,
                      &dEdgeGroup);
 
   // validation
-  int id = PDM_gnum_create (3, 1, PDM_TRUE, 1e-3, pdm_mpi_comm);
+  int id = PDM_gnum_create (3, 1, PDM_TRUE, 1e-3, pdm_mpi_comm, PDM_OWNERSHIP_KEEP);
   // fin validation
 
   double *char_size = malloc (sizeof(double) *   dn_vtx);
@@ -260,7 +260,7 @@ PDM_part_split_t           method,
   free (_numabs2);
   free (char_size);
 
-  PDM_gnum_free (id, 0);
+  PDM_gnum_free (id);
 
   struct timeval t_elaps_fin;
 

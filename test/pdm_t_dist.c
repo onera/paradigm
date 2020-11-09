@@ -315,8 +315,8 @@ int main(int argc, char *argv[])
   const PDM_g_num_t **surface_face_gnum = malloc (sizeof(PDM_g_num_t *) * n_part);
   const PDM_g_num_t **surface_vtx_gnum = malloc (sizeof(PDM_g_num_t *) * n_part);
 
-  int id_gnum_face = PDM_gnum_create (3, n_part, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD);
-  int id_gnum_vtx = PDM_gnum_create (3, n_part, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD);
+  int id_gnum_face = PDM_gnum_create (3, n_part, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD, PDM_OWNERSHIP_KEEP);
+  int id_gnum_vtx  = PDM_gnum_create (3, n_part, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD, PDM_OWNERSHIP_KEEP);
 
   double **cell_volume = malloc (sizeof(double *) * n_part);
   double **cell_center = malloc (sizeof(double *) * n_part);
@@ -835,8 +835,8 @@ int main(int argc, char *argv[])
   free (surface_face_gnum);
   free (surface_vtx_gnum);
 
-  PDM_gnum_free(id_gnum_face, 0);
-  PDM_gnum_free(id_gnum_vtx, 0);
+  PDM_gnum_free(id_gnum_face);
+  PDM_gnum_free(id_gnum_vtx);
 
   PDM_MPI_Finalize();
 

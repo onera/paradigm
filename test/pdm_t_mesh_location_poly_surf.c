@@ -447,7 +447,7 @@ int main(int argc, char *argv[])
 
 
   /* Point cloud global numbering */
-  int id_gnum = PDM_gnum_create (3, 1, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD);
+  int id_gnum = PDM_gnum_create (3, 1, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD, PDM_OWNERSHIP_USER);
 
   double *char_length = malloc(sizeof(double) * n_pts_l);
 
@@ -461,15 +461,8 @@ int main(int argc, char *argv[])
 
   PDM_g_num_t *pts_gnum = PDM_gnum_get(id_gnum, 0);
 
-  PDM_gnum_free (id_gnum, 1);
+  PDM_gnum_free (id_gnum);
   free (char_length);
-
-
-
-
-
-
-
 
   /************************
    *

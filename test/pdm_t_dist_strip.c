@@ -325,8 +325,8 @@ int main(int argc, char *argv[])
   const PDM_g_num_t **surface_face_gnum = malloc (sizeof(PDM_g_num_t *) * n_part);
   const PDM_g_num_t **surface_vtx_gnum = malloc (sizeof(PDM_g_num_t *) * n_part);
 
-  int id_gnum_face = PDM_gnum_create (3, n_part, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD);
-  int id_gnum_vtx = PDM_gnum_create (3, n_part, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD);
+  int id_gnum_face = PDM_gnum_create (3, n_part, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD, PDM_OWNERSHIP_KEEP);
+  int id_gnum_vtx  = PDM_gnum_create (3, n_part, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD, PDM_OWNERSHIP_KEEP);
 
 
   if (i_rank == 0) {
@@ -419,7 +419,7 @@ int main(int argc, char *argv[])
 
   }
 
-  int id_gnum_pts = PDM_gnum_create (3, n_part, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD);
+  int id_gnum_pts = PDM_gnum_create (3, n_part, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD, PDM_OWNERSHIP_KEEP);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
     PDM_gnum_set_from_coords (id_gnum_pts, i_part, n_pts, pts_coords[i_part], char_length[i_part]);
@@ -904,9 +904,9 @@ int main(int argc, char *argv[])
   free (surface_face_gnum);
   free (surface_vtx_gnum);
 
-  PDM_gnum_free(id_gnum_face, 0);
-  PDM_gnum_free(id_gnum_vtx, 0);
-  PDM_gnum_free(id_gnum_pts, 0);
+  PDM_gnum_free(id_gnum_face);
+  PDM_gnum_free(id_gnum_vtx);
+  PDM_gnum_free(id_gnum_pts);
 
   PDM_MPI_Finalize();
 

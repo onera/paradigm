@@ -540,6 +540,8 @@ PDM_closest_points_get
 
   *closest_src_gnum = cls->tgt_cloud->closest_src_gnum[i_part_tgt];
   *closest_src_distance = cls->tgt_cloud->closest_src_dist[i_part_tgt];
+
+  cls->results_is_getted = PDM_TRUE;
 }
 
 

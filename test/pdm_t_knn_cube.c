@@ -287,7 +287,7 @@ int main(int argc, char *argv[])
                       &tgt_coords,
                       &_nTgt_l);
 
-  int id = PDM_gnum_create (3, 1, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD);
+  int id = PDM_gnum_create (3, 1, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD, PDM_OWNERSHIP_USER);
 
   double *tgt_char_length = malloc(sizeof(double) * _nTgt_l);
 
@@ -301,7 +301,7 @@ int main(int argc, char *argv[])
 
   PDM_g_num_t *tgt_gnum = PDM_gnum_get(id, 0);
 
-  PDM_gnum_free (id, 1);
+  PDM_gnum_free (id);
 
 
 
