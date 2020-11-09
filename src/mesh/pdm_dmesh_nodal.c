@@ -2086,6 +2086,7 @@ const int   hdl
                                                   (void **) &ln_to_gn_elem,
                                                             &blk_cell_face_n,
                                                   (void **) &blk_cell_face);
+  PDM_UNUSED(blk_cell_face_size);
 
   /*
    *  Get the size of the current process bloc
