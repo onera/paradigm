@@ -215,7 +215,7 @@ const PDM_MPI_Comm       comm,
   mesh->n_sections               = 0;
   mesh->section_distribution     = NULL;
 
-  mesh->n_dcell                  = -1;
+  mesh->dn_cell                  = -1;
   mesh->dcell_face               = NULL;
   mesh->dcell_face_idx           = NULL;
   mesh->cell_distrib             = NULL;
@@ -1829,7 +1829,7 @@ const int   hdl
    */
   int blk_size = PDM_part_to_block_n_elt_block_get(ptb);
 
-  if( 1 == 1 ) {
+  if( 0 == 1 ) {
     PDM_log_trace_array_int(blk_tot_face_vtx_n, blk_size             , "blk_tot_face_vtx_n:: ");
     PDM_log_trace_array_long(blk_tot_face_vtx , blk_tot_face_vtx_size, "blk_tot_face_vtx:: "  );
 
@@ -1860,7 +1860,7 @@ const int   hdl
     blk_face_vtx_idx[i_face+1] = blk_face_vtx_idx[i_face] + blk_face_vtx_n[i_face];
   }
 
-  PDM_log_trace_array_int(blk_face_vtx_idx, blk_face_vtx_n_size, "blk_face_vtx_idx:: ");
+  // PDM_log_trace_array_int(blk_face_vtx_idx, blk_face_vtx_n_size, "blk_face_vtx_idx:: ");
   /*
    * We need to identify each uniques faces :
    *      - We have multiple packet to treat
@@ -1998,7 +1998,7 @@ const int   hdl
   free(blk_face_vtx_n);
   free(blk_elmt_face_cell);
 
-  if( 1 == 1 ){
+  if( 0 == 1 ){
     printf("i_abs_face::%i \n", i_abs_face);
     PDM_log_trace_array_int(mesh->_dface_vtx_idx, i_abs_face+1                    , "mesh->_dface_vtx_idx:: ");
     PDM_log_trace_array_long(mesh->_dface_vtx   , mesh->_dface_vtx_idx[i_abs_face], "_dface_vtx:: ");
@@ -2091,7 +2091,7 @@ const int   hdl
    *  Get the size of the current process bloc
    */
   int delmt_tot = PDM_part_to_block_n_elt_block_get(ptb2);
-  mesh->n_dcell = delmt_tot;
+  mesh->dn_cell = delmt_tot;
 
   /*
    * Free
@@ -2112,35 +2112,33 @@ const int   hdl
     mesh->dcell_face_idx[i+1] = mesh->dcell_face_idx[i] + blk_cell_face_n[i];
   }
 
-  PDM_log_trace_array_int (blk_cell_face_n, delmt_tot         , "blk_cell_face_n:: ");
-  PDM_log_trace_array_long(blk_cell_face  , blk_cell_face_size, "blk_cell_face:: ");
+  // PDM_log_trace_array_int (blk_cell_face_n, delmt_tot         , "blk_cell_face_n:: ");
+  // PDM_log_trace_array_long(blk_cell_face  , blk_cell_face_size, "blk_cell_face:: ");
 
   assert(mesh->dcell_face == NULL);
   mesh->dcell_face = blk_cell_face;
 
 
   /* Compress connectivity in place */
-  PDM_para_graph_compress_connectivity(mesh->n_dcell,
-                                        mesh->dcell_face_idx,
-                                        blk_cell_face_n,
-                                        mesh->dcell_face);
+  PDM_para_graph_compress_connectivity(mesh->dn_cell,
+                                       mesh->dcell_face_idx,
+                                       blk_cell_face_n,
+                                       mesh->dcell_face);
 
 
-  if( 1 == 1 ){
-    printf("mesh->n_dcell ::%i\n", mesh->n_dcell );
-    PDM_log_trace_array_int(mesh->dcell_face_idx, mesh->n_dcell+1                    , "mesh->dcell_face_idx:: ");
-    PDM_log_trace_array_long(mesh->dcell_face   , mesh->dcell_face_idx[mesh->n_dcell], "dcell_face:: ");
+  if( 0 == 1 ){
+    printf("mesh->dn_cell ::%i\n", mesh->dn_cell );
+    PDM_log_trace_array_int(mesh->dcell_face_idx, mesh->dn_cell+1                    , "mesh->dcell_face_idx:: ");
+    PDM_log_trace_array_long(mesh->dcell_face   , mesh->dcell_face_idx[mesh->dn_cell], "dcell_face:: ");
   }
 
   /*
    *  Realloc
    */
-  mesh->dcell_face = (PDM_g_num_t *) realloc( mesh->dcell_face, mesh->dcell_face_idx[mesh->n_dcell] * sizeof(PDM_g_num_t));
+  mesh->dcell_face = (PDM_g_num_t *) realloc( mesh->dcell_face, mesh->dcell_face_idx[mesh->dn_cell] * sizeof(PDM_g_num_t));
 
 
   free(blk_cell_face_n);
-
-
 }
 
 /**
@@ -2194,7 +2192,7 @@ PDM_g_num_t **dcell_face
   *dcell_face_idx = mesh->dcell_face_idx;
   *dcell_face = mesh->dcell_face;
 
-  return mesh->n_dcell;
+  return mesh->dn_cell;
 
 }
 

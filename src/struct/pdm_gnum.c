@@ -368,7 +368,7 @@ _gnum_from_coords_compute
 
     _gnum->index = malloc (sizeof(int *) * _gnum->n_part);
 
-    id_pm = PDM_points_merge_create (_gnum->n_part, _gnum->tolerance, _gnum->comm);
+    id_pm = PDM_points_merge_create (_gnum->n_part, _gnum->tolerance, _gnum->comm, PDM_OWNERSHIP_KEEP);
 
     for (int i_part = 0; i_part < _gnum->n_part; i_part++) {
       _gnum->index[i_part] = malloc (sizeof(int) * _gnum->n_elts[i_part]);

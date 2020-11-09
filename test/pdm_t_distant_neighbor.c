@@ -166,7 +166,7 @@ char *argv[]
    * Call pdm_points_merge to find match between the two block
    */
   double tolerance = 0.1;
-  int pm_id = PDM_points_merge_create(n_cloud, tolerance, PDM_MPI_COMM_WORLD);
+  int pm_id = PDM_points_merge_create(n_cloud, tolerance, PDM_MPI_COMM_WORLD, PDM_OWNERSHIP_KEEP);
 
   if(n_rank == 1){
     PDM_points_merge_cloud_set(pm_id, 0, n_points, coords[0], char_lenght[0]);

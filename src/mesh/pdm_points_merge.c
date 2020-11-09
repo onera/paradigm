@@ -54,19 +54,21 @@ extern "C" {
 
 typedef struct  {
 
-  PDM_MPI_Comm   comm;                    /*!< MPI communicator */
-  double         tolerance;               /*!< Relative geometric tolerance */
-  int            n_point_clouds;          /*!< Number of point cloud */
-  int            depth_max;               /*!< Maximum depth of internal octrees */
-  int            points_in_leaf_max;      /*!< Maximum number of point in a leaf
-                                           *   of internal octrees */
-  int           *n_points;                /*!< Number of points in each cloud */
-  int            max_n_points;            /*!< Maximum number of points in each cloud */
-  const double **point_clouds;            /*!< points cloud */
-  const double **char_length;             /*!< Characteristic length of points (optionnal) */
-  int            octree_id;               /*!< Octree identifier */
-  int          **candidates_idx;          /*!< Candidates indexes for each cloud */
-  int          **candidates_desc;         /*!< Candidates description for each cloud */
+  PDM_MPI_Comm    comm;                    /*!< MPI communicator                           */
+  PDM_ownership_t owner;                   /*!< Which have the responsabilities of results */
+  PDM_bool_t      results_is_getted;       /*!< Flags to indicate if result is getted      */
+  double          tolerance;               /*!< Relative geometric tolerance               */
+  int             n_point_clouds;          /*!< Number of point cloud                      */
+  int             depth_max;               /*!< Maximum depth of internal octrees          */
+  int             points_in_leaf_max;      /*!< Maximum number of point in a leaf
+                                            *   of internal octrees                        */
+  int            *n_points;                /*!< Number of points in each cloud             */
+  int             max_n_points;            /*!< Maximum number of points in each cloud     */
+  const double  **point_clouds;            /*!< points cloud                               */
+  const double  **char_length;             /*!< Characteristic length of points (optionnal)*/
+  int             octree_id;               /*!< Octree identifier                          */
+  int           **candidates_idx;          /*!< Candidates indexes for each cloud          */
+  int           **candidates_desc;         /*!< Candidates description for each cloud      */
 
 } _point_merge_t;
 
@@ -464,9 +466,10 @@ const double   tolerance
 int
 PDM_points_merge_create
 (
- const int n_point_cloud,
- const double tolerance,
- const PDM_MPI_Comm comm
+ const int             n_point_cloud,
+ const double          tolerance,
+ const PDM_MPI_Comm    comm,
+ const PDM_ownership_t owner
 )
 {
   if (_ppms == NULL) {
@@ -477,15 +480,17 @@ PDM_points_merge_create
 
   int id = PDM_Handles_store (_ppms, ppm);
 
-  ppm->comm            = comm;
-  ppm->tolerance       = tolerance;
-  ppm->n_point_clouds  = n_point_cloud;
-  ppm->n_points        = malloc (sizeof(int     ) * n_point_cloud);
-  ppm->point_clouds    = malloc (sizeof(double *) * n_point_cloud);
-  ppm->char_length     = malloc (sizeof(double *) * n_point_cloud);
-  ppm->octree_id       = -1;
-  ppm->candidates_idx  = malloc (sizeof(int *) * n_point_cloud);
-  ppm->candidates_desc = malloc (sizeof(int *) * n_point_cloud);
+  ppm->comm              = comm;
+  ppm->owner             = owner;
+  ppm->results_is_getted = PDM_FALSE;
+  ppm->tolerance         = tolerance;
+  ppm->n_point_clouds    = n_point_cloud;
+  ppm->n_points          = malloc (sizeof(int     ) * n_point_cloud);
+  ppm->point_clouds      = malloc (sizeof(double *) * n_point_cloud);
+  ppm->char_length       = malloc (sizeof(double *) * n_point_cloud);
+  ppm->octree_id         = -1;
+  ppm->candidates_idx    = malloc (sizeof(int *) * n_point_cloud);
+  ppm->candidates_desc   = malloc (sizeof(int *) * n_point_cloud);
 
   for (int i = 0; i < n_point_cloud; i++) {
     ppm->candidates_idx[i]  = NULL;
@@ -521,12 +526,15 @@ PDM_points_merge_free
 {
   _point_merge_t *ppm = _get_from_id (id);
 
-  for (int i = 0; i < ppm->n_point_clouds; i++) {
-    if (ppm->candidates_idx[i] != NULL) {
-      free (ppm->candidates_idx[i]);
-    }
-    if (ppm->candidates_desc[i] != NULL) {
-      free (ppm->candidates_desc[i]);
+  if(( ppm->owner == PDM_OWNERSHIP_KEEP ) ||
+     ( ppm->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !ppm->results_is_getted)){
+    for (int i = 0; i < ppm->n_point_clouds; i++) {
+      if (ppm->candidates_idx[i] != NULL) {
+        free (ppm->candidates_idx[i]);
+      }
+      if (ppm->candidates_desc[i] != NULL) {
+        free (ppm->candidates_desc[i]);
+      }
     }
   }
 
@@ -1045,17 +1053,19 @@ PDM_points_merge_candidates_get
 (
  const int     id,
  const int     i_point_cloud,
-       int    **candidates_idx,
-       int    **candidates_desc
+       int   **candidates_idx,
+       int   **candidates_desc
 )
 {
   _point_merge_t *ppm = _get_from_id (id);
 
-  assert(ppm->candidates_idx != NULL);
+  assert(ppm->candidates_idx  != NULL);
   assert(ppm->candidates_desc != NULL);
 
-  *candidates_idx  = ppm->candidates_idx[i_point_cloud];
+  *candidates_idx  = ppm->candidates_idx [i_point_cloud];
   *candidates_desc = ppm->candidates_desc[i_point_cloud];
+
+  ppm->results_is_getted = PDM_TRUE;
 
   if (0 == 1) {
     printf("candidates : \n");

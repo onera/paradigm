@@ -122,24 +122,42 @@ struct _PDM_DMesh_nodal_t {
   PDM_g_num_t            n_edge_abs;               /*!< Global number of edges    */
   PDM_g_num_t            n_vtx_abs;                /*!< Global number of vertices */
 
+  // PDM_DMesh_nodal_cell_face_compute --> Nom pas général !!!!
+  // PDM_DMesh_nodal_cell_edge_compute --> Nom pas général !!!!
+  // PDM_DMesh_nodal_face_edge_compute --> Nom pas général !!!!
+  // PDM_DMesh_nodal_edge_vtx_compute --> Nom pas général !!!!
 
   // On doit faire des checks fonctions des dimensions !
   // --> Faire une fonction check_coherency
   // Il faut faire conditions limites + raccords
   // Attention pour les raccords on va avoir besoin des ids !!!
-  //
+  // Pour transformer des descriptions par elements vers de nouveau elements
+  // See delmt_group_descending
+  // Je me demande si c'est pas plutot une fonction avec en parametre le parent
+  // L'idée serait de pouvoir changer de représentation
+  //    Description par elemt surfacique --> face, edge, vtx (3 variantes CGNS d'ailleurs)
+  //    Description par elemt linéique --> edge, vtx
+  // Il faut preconditioné la recherche si possible avec que les élements fronitières
+  //   --> Necessaite le face_cell
+  // compute_child_elemt_group( .... )
+  // distrib_entitiy +
+  int         *delmt_group_idx;
+  PDM_g_num_t *delmt_group;
 
 
-  PDM_DMesh_nodal_vtx_t *vtx;                      /*!< Description des sommmets de chaque partition */
+  PDM_DMesh_nodal_vtx_t *vtx;                   /*!< Description des sommmets de chaque partition */
 
-  PDM_Handles_t         *sections_std;             /*!< Standard sections */
-  PDM_Handles_t         *sections_poly2d;          /*!< Polygon sections */
-  PDM_Handles_t         *sections_poly3d;          /*!< Polyhedron sections */
+  // L'ordre est important / On rentre d'abord les 3D puis 2D puis 1D ?
+  // Il suivent pas forcement la numérotation CGNS mais ce qui compte c'est que chaque section soit bien
+  // Continue
+  PDM_Handles_t         *sections_std;          /*!< Standard sections   */
+  PDM_Handles_t         *sections_poly2d;       /*!< Polygon sections    */
+  PDM_Handles_t         *sections_poly3d;       /*!< Polyhedron sections */
 
-  PDM_Handles_t         *sections_std_descending;    /*!< Standard sections */
-  PDM_Handles_t         *sections_poly2d_descending; /*!< Polygon sections */
+  PDM_Handles_t         *sections_std_l1;       /*!< Standard sections */
+  PDM_Handles_t         *sections_poly2d_l1;    /*!< Polygon sections  */
 
-  PDM_Handles_t         *sections_std_descendingnmoins2;    /*!< Standard sections */
+  PDM_Handles_t         *sections_std_l2;       /*!< Standard sections */
 
   // IN :
   // Pour chaque sections (au sens large) on prévoit un tag pour chaque entité (lien avec fdsm)
@@ -158,19 +176,19 @@ struct _PDM_DMesh_nodal_t {
   int                    n_sections;               /*!< Total number of sections */
   PDM_g_num_t           *section_distribution;     /*!< Element distribution  */
 
-  PDM_l_num_t            n_dcell;                  /*!< Local number of cells in the local block */
+  PDM_l_num_t            dn_cell;                  /*!< Local number of cells in the local block */
   PDM_l_num_t           *dcell_face_idx;           /*!< Index of the cell to face connectivity
-                                                    * (size = \ref n_dcell) */
+                                                    * (size = \ref dn_cell) */
   PDM_g_num_t           *dcell_face;               /*!< Cell to face connectivity
-                                                    * (size = \ref dcell_face_idx[\ref n_dcell] */
+                                                    * (size = \ref dcell_face_idx[\ref dn_cell] */
   PDM_g_num_t           *_dface_cell;              /*!< Face to cell connectivity
-                                                    * (size = \ref dcell_face_idx[\ref n_dcell] */
+                                                    * (size = \ref dcell_face_idx[\ref dn_cell] */
   PDM_g_num_t           *cell_distrib;             /*!< Distribution of cells (size = number of processes + 1) */
   PDM_l_num_t            dn_face;                  /*!< Local number of faces in the local block */
   PDM_l_num_t           *_dface_vtx_idx;           /*!< Index of the cell to face connectivity
-                                                    * (size = \ref n_dcell) */
+                                                    * (size = \ref dn_cell) */
   PDM_g_num_t           *_dface_vtx;               /*!< Cell to face connectivity
-                                                    * (size = \ref dcell_face_idx[\ref n_dcell] */
+                                                    * (size = \ref dcell_face_idx[\ref dn_cell] */
   PDM_g_num_t           *face_distrib;             /*!< Distribution of faces (size = number of processes + 1) */
 
 } ;
