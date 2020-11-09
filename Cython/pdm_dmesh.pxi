@@ -6,40 +6,40 @@ cdef extern from "pdm_dmesh.h":
 
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     # > Wrapping of function
-    int PDM_dmesh_create(int          dNCell,
-                         int          dNFace,
-                         int          dNVtx,
-                         int          NBnd,
-                         int          NJoin);
+    int PDM_dmesh_create(int          dn_cell,
+                         int          dn_face,
+                         int          dn_vtx,
+                         int          n_bnd,
+                         int          n_join);
 
     void PDM_dmesh_set(int           id,
-                       double       *dVtxCoord,
-                       int          *dFaceVtxIdx,
-                       PDM_g_num_t  *dFaceVtx,
-                       PDM_g_num_t  *dFaceCell,
-                       int          *dFaceBoundIdx,
-                       PDM_g_num_t  *dFaceBound,
-                       int          *JoinGIds,
-                       int          *dFaceJoinIdx,
-                       PDM_g_num_t  *dFaceJoin);
+                       double       *dvtx_coord,
+                       int          *dface_vtx_idx,
+                       PDM_g_num_t  *dface_vtx,
+                       PDM_g_num_t  *dface_cell,
+                       int          *dface_bound_idx,
+                       PDM_g_num_t  *dface_bound,
+                       int          *join_g_ids,
+                       int          *dface_join_idx,
+                       PDM_g_num_t  *dface_join);
 
     void PDM_dmesh_dims_get(int   id,
-                            int        *dNCell,
-                            int        *dNFace,
-                            int        *dNVtx,
-                            int        *NBnd,
-                            int        *NJoins);
+                            int        *dn_cell,
+                            int        *dn_face,
+                            int        *dn_vtx,
+                            int        *n_bnd,
+                            int        *n_joins);
 
     void PDM_dmesh_data_get(int            id,
-                            double       **dVtxCoord,
-                            int          **dFaceVtxIdx,
-                            PDM_g_num_t  **dFaceVtx,
-                            PDM_g_num_t  **dFaceCell,
-                            int          **dFaceBoundIdx,
-                            PDM_g_num_t  **dFaceBound,
-                            int          **JoinGIds,
-                            int          **dFaceJoinIdx,
-                            PDM_g_num_t  **dFaceJoin);
+                            double       **dvtx_coord,
+                            int          **dface_vtx_idx,
+                            PDM_g_num_t  **dface_vtx,
+                            PDM_g_num_t  **dface_cell,
+                            int          **dface_bound_idx,
+                            PDM_g_num_t  **dface_bound,
+                            int          **join_g_ids,
+                            int          **dface_join_idx,
+                            PDM_g_num_t  **dface_join);
 
     void PDM_dmesh_free(int id);
 
@@ -55,11 +55,11 @@ cdef class DistributedMesh:
   cdef public int _id
   # ************************************************************************
   # ------------------------------------------------------------------------
-  def __init__(self, dNCell,
-                     dNFace,
-                     dNVtx,
-                     NBnd,
-                     NJoin):
+  def __init__(self, dn_cell,
+                     dn_face,
+                     dn_vtx,
+                     n_bnd,
+                     n_join):
     """
     TODOUX
     """
@@ -68,32 +68,32 @@ cdef class DistributedMesh:
     # ************************************************************************
 
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
-    self._id = PDM_dmesh_create(dNCell, dNFace, dNVtx, NBnd, NJoin)
+    self._id = PDM_dmesh_create(dn_cell, dn_face, dn_vtx, n_bnd, n_join)
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
   # ------------------------------------------------------------------------
-  def dmesh_set(self, NPY.ndarray[NPY.double_t  , mode='c', ndim=1] dVtxCoord   not None,
-                      NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] dFaceVtxIdx,
-                      NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] dFaceVtx    not None,
-                      NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] dFaceCell,
-                      NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] dFaceBoundIdx,
-                      NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] dFaceBound,
-                      NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] JoinGIds,
-                      NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] dFaceJoinIdx,
-                      NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] dFaceJoin):
+  def dmesh_set(self, NPY.ndarray[NPY.double_t  , mode='c', ndim=1] dvtx_coord   not None,
+                      NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] dface_vtx_idx,
+                      NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] dface_vtx    not None,
+                      NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] dface_cell,
+                      NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] dface_bound_idx,
+                      NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] dface_bound,
+                      NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] join_g_ids,
+                      NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] dface_join_idx,
+                      NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] dface_join):
     """
     """
 
     PDM_dmesh_set(self._id,
-                  <double*>      dVtxCoord.data,
-                  <int*>         dFaceVtxIdx.data,
-                  <PDM_g_num_t*> dFaceVtx.data,
-                  <PDM_g_num_t*> dFaceCell.data,
-                  <int*>         dFaceBoundIdx.data,
-                  <PDM_g_num_t*> dFaceBound.data,
-                  <int*>         JoinGIds.data,
-                  <int*>         dFaceJoinIdx.data,
-                  <PDM_g_num_t*> dFaceJoin.data)
+                  <double*>      dvtx_coord.data,
+                  <int*>         dface_vtx_idx.data,
+                  <PDM_g_num_t*> dface_vtx.data,
+                  <PDM_g_num_t*> dface_cell.data,
+                  <int*>         dface_bound_idx.data,
+                  <PDM_g_num_t*> dface_bound.data,
+                  <int*>         join_g_ids.data,
+                  <int*>         dface_join_idx.data,
+                  <PDM_g_num_t*> dface_join.data)
 
 
   # ------------------------------------------------------------------------
@@ -104,6 +104,5 @@ cdef class DistributedMesh:
     # ************************************************************************
     # > Declaration
     # ************************************************************************
-    print('PDM_dmesh_free')
     PDM_dmesh_free(self._id)
 
