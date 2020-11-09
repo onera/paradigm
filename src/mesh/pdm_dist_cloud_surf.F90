@@ -36,7 +36,7 @@ module pdm_dist_cloud_surf
     !! \param [inout] id             Identifier
     !!
 
-    subroutine pdm_dist_cloud_surf_create (mesh_nature, n_point_cloud, fComm, id) &
+    subroutine pdm_dist_cloud_surf_create (mesh_nature, n_point_cloud, fComm, owner, id) &
          bind (c, name = 'PDM_dist_cloud_surf_create_cf')
 
       use iso_c_binding
@@ -46,6 +46,7 @@ module pdm_dist_cloud_surf
       integer(c_int), value :: mesh_nature
       integer(c_int), value :: n_point_cloud
       integer(c_int), value :: fComm
+      integer(c_int), value :: owner
 
       integer(c_int)        :: id
 

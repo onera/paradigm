@@ -143,9 +143,9 @@ int main(int argc, char *argv[])
    */
 
   PDM_g_num_t  n_vtx_seg  = 3;
-  double        length  = 1.;
-  int           n_part   = 1;
-  int           post    = 0;
+  double        length    = 1.;
+  int           n_part    = 1;
+  int           post      = 0;
 #ifdef PDM_HAVE_PTSCOTCH
   PDM_part_split_t method  = PDM_PART_SPLIT_PTSCOTCH;
 #else
@@ -173,22 +173,22 @@ int main(int argc, char *argv[])
   struct timeval t_elaps_debut;
 
   int i_rank;
-  int numProcs;
+  int n_rank;
 
   PDM_MPI_Init(&argc, &argv);
   PDM_MPI_Comm_rank(PDM_MPI_COMM_WORLD, &i_rank);
-  PDM_MPI_Comm_size(PDM_MPI_COMM_WORLD, &numProcs);
+  PDM_MPI_Comm_size(PDM_MPI_COMM_WORLD, &n_rank);
 
   int           dn_cell;
   int           dn_face;
   int           dn_vtx;
   int           n_face_group;
-  PDM_g_num_t *dface_cell = NULL;
-  int          *dface_vtx_idx = NULL;
-  PDM_g_num_t *dface_vtx = NULL;
-  double       *dvtx_coord = NULL;
+  PDM_g_num_t  *dface_cell      = NULL;
+  int          *dface_vtx_idx   = NULL;
+  PDM_g_num_t  *dface_vtx       = NULL;
+  double       *dvtx_coord      = NULL;
   int          *dface_group_idx = NULL;
-  PDM_g_num_t *dface_group = NULL;
+  PDM_g_num_t  *dface_group     = NULL;
   int           dface_vtxL;
   int           dFaceGroupL;
 
@@ -297,13 +297,14 @@ int main(int argc, char *argv[])
 
   int n_point_cloud = 1;
   int id_dist = PDM_dist_cloud_surf_create (PDM_MESH_NATURE_MESH_SETTED,
-                                      n_point_cloud,
-                                      PDM_MPI_COMM_WORLD);
+                                            n_point_cloud,
+                                            PDM_MPI_COMM_WORLD,
+                                            PDM_OWNERSHIP_KEEP);
 
-  int **select_face = malloc (sizeof(int *) * n_part);
-  int *n_select_face = malloc (sizeof(int) * n_part);
-  int **select_vtx = malloc (sizeof(int *) * n_part);
-  int *n_select_vtx = malloc (sizeof(int) * n_part);
+  int **select_face   = malloc (sizeof(int *) * n_part);
+  int  *n_select_face = malloc (sizeof(int  ) * n_part);
+  int **select_vtx    = malloc (sizeof(int *) * n_part);
+  int  *n_select_vtx  = malloc (sizeof(int  ) * n_part);
 
   int **surface_face_vtx_idx =  malloc (sizeof(int *) * n_part);
   int **surface_face_vtx =  malloc (sizeof(int *) * n_part);
@@ -416,7 +417,7 @@ int main(int argc, char *argv[])
       }
     }
 
-    for (int i = 0; i < face_part_bound_proc_idx[numProcs]; i++) {
+    for (int i = 0; i < face_part_bound_proc_idx[n_rank]; i++) {
       select_face[i_part][face_part_bound[4*i]-1] = 0;
     }
 
@@ -803,8 +804,7 @@ int main(int argc, char *argv[])
 
   PDM_dcube_gen_free(id);
   PDM_dist_cloud_surf_dump_times(id_dist);
-  int partial = 0;
-  PDM_dist_cloud_surf_free (id_dist, partial);
+  PDM_dist_cloud_surf_free (id_dist);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
     free (select_face[i_part]);

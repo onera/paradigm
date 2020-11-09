@@ -44,17 +44,19 @@ int
 PDM_dist_cloud_surf_create
 (
  const PDM_mesh_nature_t mesh_nature,
- const int n_point_cloud,
- const PDM_MPI_Comm comm
+ const int               n_point_cloud,
+ const PDM_MPI_Comm      comm,
+ const PDM_ownership_t   owner
 );
 
 void
 PDM_dist_cloud_surf_create_cf
 (
- const PDM_mesh_nature_t mesh_nature,
- const int n_point_cloud,
- const PDM_MPI_Fint comm,
- int *id
+ const PDM_mesh_nature_t  mesh_nature,
+ const int                n_point_cloud,
+ const PDM_MPI_Fint       comm,
+ const PDM_ownership_t    owner,
+       int               *id
 );
 
 
@@ -74,7 +76,7 @@ PDM_dist_cloud_surf_n_part_cloud_set
  const int          id,
  const int          i_point_cloud,
  const int          n_part
- );
+);
 
 
 /**
@@ -99,7 +101,7 @@ PDM_dist_cloud_surf_cloud_set
  const int          n_points,
        double      *coords,
        PDM_g_num_t *gnum
- );
+);
 
 
 
@@ -117,7 +119,7 @@ PDM_dist_cloud_surf_nodal_mesh_set
 (
  const int  id,
  const int  mesh_nodal_id
- );
+);
 
 /**
  *
@@ -219,13 +221,13 @@ PDM_dist_cloud_surf_compute
 void
 PDM_dist_cloud_surf_get
 (
- const int          id,
- const int          i_point_cloud,
- const int          i_part,
+ const int           id,
+ const int           i_point_cloud,
+ const int           i_part,
        double      **closest_elt_distance,
        double      **closest_elt_projected,
        PDM_g_num_t **closest_elt_gnum
- );
+);
 
 
 /**
@@ -241,9 +243,8 @@ PDM_dist_cloud_surf_get
 void
 PDM_dist_cloud_surf_free
 (
- const int id,
- const int partial
- );
+ const int id
+);
 
 
 /**
@@ -258,7 +259,7 @@ void
 PDM_dist_cloud_surf_dump_times
 (
  const int id
- );
+);
 
 #ifdef	__cplusplus
 }

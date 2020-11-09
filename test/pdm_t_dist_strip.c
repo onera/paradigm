@@ -188,11 +188,11 @@ int main(int argc, char *argv[])
   struct timeval t_elaps_debut;
 
   int i_rank;
-  int numProcs;
+  int n_rank;
 
   PDM_MPI_Init(&argc, &argv);
   PDM_MPI_Comm_rank(PDM_MPI_COMM_WORLD, &i_rank);
-  PDM_MPI_Comm_size(PDM_MPI_COMM_WORLD, &numProcs);
+  PDM_MPI_Comm_size(PDM_MPI_COMM_WORLD, &n_rank);
 
   srand(i_rank);
 
@@ -200,12 +200,12 @@ int main(int argc, char *argv[])
   int           dn_face;
   int           dn_vtx;
   int           n_face_group;
-  PDM_g_num_t *dface_cell = NULL;
-  int          *dface_vtx_idx = NULL;
-  PDM_g_num_t *dface_vtx = NULL;
-  double       *dvtx_coord = NULL;
+  PDM_g_num_t  *dface_cell      = NULL;
+  int          *dface_vtx_idx   = NULL;
+  PDM_g_num_t  *dface_vtx       = NULL;
+  double       *dvtx_coord      = NULL;
   int          *dface_group_idx = NULL;
-  PDM_g_num_t *dface_group = NULL;
+  PDM_g_num_t  *dface_group     = NULL;
   int           dface_vtxL;
   int           dFaceGroupL;
 
@@ -307,8 +307,9 @@ int main(int argc, char *argv[])
 
   int n_point_cloud = 1;
   int id_dist = PDM_dist_cloud_surf_create (PDM_MESH_NATURE_MESH_SETTED,
-                                      n_point_cloud,
-                                      PDM_MPI_COMM_WORLD);
+                                            n_point_cloud,
+                                            PDM_MPI_COMM_WORLD,
+                                            PDM_OWNERSHIP_KEEP);
 
   int **select_face = malloc (sizeof(int *) * n_part);
   int *n_select_face = malloc (sizeof(int) * n_part);
@@ -339,7 +340,7 @@ int main(int argc, char *argv[])
   double **pts_coords = malloc (sizeof(double *) * n_part);
   double **char_length = malloc (sizeof(double *) * n_part);
 
-  int n_pts   = ((n_vtx_seg * n_vtx_seg * n_vtx_seg) / numProcs) / n_part;
+  int n_pts   = ((n_vtx_seg * n_vtx_seg * n_vtx_seg) / n_rank) / n_part;
   int n_pts_x = (int) (n_pts/(1.+(1.-4.*strip)+(1.-4.*strip) * (1.-4.*strip)));
   int n_pts_y = (int) ((1.-4.*strip) * n_pts);
   int n_pts_z = (int) ((1.-4.*strip) * (1.-4.*strip) * n_pts);
@@ -517,7 +518,7 @@ int main(int argc, char *argv[])
       }
     }
 
-    for (int i = 0; i < face_part_bound_proc_idx[numProcs]; i++) {
+    for (int i = 0; i < face_part_bound_proc_idx[n_rank]; i++) {
       select_face[i_part][face_part_bound[4*i]-1] = 0;
     }
 
@@ -857,7 +858,7 @@ int main(int argc, char *argv[])
 
     if (i_rank == 0) {
       printf ("elements surfaciques : "PDM_FMT_G_NUM"\n", 6*(n_vtx_seg-1)*(n_vtx_seg-1));
-      printf ("nombre de points     : %d\n", n_pts*n_part*numProcs);
+      printf ("nombre de points     : %d\n", n_pts*n_part*n_rank);
       fflush(stdout);
     }
   }
@@ -866,8 +867,7 @@ int main(int argc, char *argv[])
 
   PDM_dcube_gen_free(id);
   PDM_dist_cloud_surf_dump_times(id_dist);
-  int partial = 0;
-  PDM_dist_cloud_surf_free (id_dist, partial);
+  PDM_dist_cloud_surf_free (id_dist);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
     free (select_face[i_part]);
