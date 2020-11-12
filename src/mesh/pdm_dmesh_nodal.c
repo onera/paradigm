@@ -50,14 +50,6 @@ extern "C" {
  * Maximum number of sections depending of section type
  *----------------------------------------------------------------------------*/
 
-/*typedef enum {
-
-  PDM_BLOCK_ID_BLOCK_STD    = 0,
-  PDM_BLOCK_ID_BLOCK_POLY2D = 1000000,
-  PDM_BLOCK_ID_BLOCK_POLY3D = 2000000
-
-  } PDM_section_id_section_t;*/ // --> moved to pdm_mesh_nodal.h
-
 /*============================================================================
  * Global variable
  *============================================================================*/
@@ -102,12 +94,11 @@ static void
 _make_absolute_face_numbering(PDM_DMesh_nodal_t* mesh)
 {
 
-  PDM_g_num_t n_faceProc = mesh->dn_face;
-  PDM_g_num_t beg_NumAbs;
+  PDM_g_num_t n_face_proc = mesh->dn_face;
+  PDM_g_num_t beg_num_abs;
 
-  PDM_MPI_Scan(&n_faceProc, &beg_NumAbs, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, mesh->pdm_mpi_comm);
-  beg_NumAbs -= n_faceProc;
-
+  PDM_MPI_Scan(&n_face_proc, &beg_num_abs, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, mesh->pdm_mpi_comm);
+  beg_num_abs -= n_face_proc;
 
   /** Compute the distribution of elements amont proc **/
   mesh->face_distrib = (PDM_g_num_t *) malloc((mesh->n_rank+1) * sizeof(PDM_g_num_t));
@@ -128,7 +119,7 @@ _make_absolute_face_numbering(PDM_DMesh_nodal_t* mesh)
   }
 
   if (0 == 1) {
-    printf("beg_NumAbs::Face : "PDM_FMT_G_NUM" \n", beg_NumAbs);
+    printf("beg_num_abs::Face : "PDM_FMT_G_NUM" \n", beg_num_abs);
     printf("mesh->face_distrib : "PDM_FMT_G_NUM,  mesh->face_distrib[0]);
     for (int i = 1; i < mesh->n_rank+1; i++) {
       printf(" "PDM_FMT_G_NUM, mesh->face_distrib[i]);
@@ -759,6 +750,17 @@ const int   id_section
 }
 
 
+// Function prive
+// int
+// _dmesh_nodal_section_add
+// (
+// PDM_Handles_t              *section_hdl,
+// const PDM_Mesh_nodal_elt_t  t_elt,
+// )
+// {
+
+// }
+
 /**
  * \brief  Add a new section to the current mesh
  *
@@ -785,6 +787,9 @@ const PDM_Mesh_nodal_elt_t   t_elt
   if (mesh == NULL) {
     PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
   }
+
+  // > Le rangement depend de mesh_dimension !
+  //   L'ordre importe
 
   int id_section = -1;
 
@@ -912,6 +917,16 @@ const PDM_Mesh_nodal_elt_t   t_elt
  * \param [in]  connect        Connectivity
  *
  */
+// void
+// PDM_DMesh_nodal_section_std_set
+// (
+// const int          hdl,
+// const int          id_section,
+// const int          n_elt,
+//       PDM_g_num_t *connec,
+//       PDM_g_num_t  index_parent_gnum   /* -1 si implicite - else give a shift apply for all element in block
+//                                           the numbering inside block behave implicit */
+// );
 
 void
 PDM_DMesh_nodal_section_std_set

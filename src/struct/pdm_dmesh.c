@@ -60,6 +60,27 @@ extern "C" {
  *============================================================================*/
 
 
+// typedef enum {
+//   PDM_CONNECTIVITY_CELL_CELL  = 1,
+//   PDM_CONNECTIVITY_CELL_FACE  = 2,
+//   PDM_CONNECTIVITY_CELL_EDGE  = 3,
+//   PDM_CONNECTIVITY_CELL_VTX   = 4,
+//   PDM_CONNECTIVITY_FACE_CELL  = 5,
+//   PDM_CONNECTIVITY_FACE_FACE  = 6,
+//   PDM_CONNECTIVITY_FACE_EDGE  = 7,
+//   PDM_CONNECTIVITY_FACE_VTX   = 8,
+//   PDM_CONNECTIVITY_EDGE_CELL  = 9,
+//   PDM_CONNECTIVITY_EDGE_FACE  = 10,
+//   PDM_CONNECTIVITY_EDGE_EDGE  = 11,
+//   PDM_CONNECTIVITY_EDGE_VTX   = 12,
+//   PDM_CONNECTIVITY_VTX_CELL   = 13,
+//   PDM_CONNECTIVITY_VTX_FACE   = 14,
+//   PDM_CONNECTIVITY_VTX_EDGE   = 15,
+//   PDM_CONNECTIVITY_VTX_VTX    = 16
+// } PDM_connectivity_type_t;
+// Reflexion similaire pour les group
+
+
 /**
  * \struct _pdm_dmesh_t
  * \brief  Define a distributed mesh. Arrays are shared: this structure does not

@@ -112,6 +112,7 @@ typedef struct PDM_DMesh_nodal_section_poly3d_t{
  * \brief   Used to build sections from cell to face face to edge connectivity
  *
  */
+// A faire --> Multiblock / multidomain
 
 struct _PDM_DMesh_nodal_t {
 
@@ -122,6 +123,24 @@ struct _PDM_DMesh_nodal_t {
   PDM_g_num_t            n_edge_abs;               /*!< Global number of edges    */
   PDM_g_num_t            n_vtx_abs;                /*!< Global number of vertices */
 
+  PDM_g_num_t            n_elmt_tot;
+  PDM_g_num_t            n_elmt;
+  PDM_g_num_t            n_elmt_l1;
+  PDM_g_num_t            n_elmt_l2;
+
+
+  // PDM_dmesh_nodal_to_dmesh(int* dmesh_nodal_id, SOURCE_CONNECTIVITY,
+  //                                               TARGET_CONNECTIVITIES | clé hexa)
+  //                                               TARGET_GROUP_CONNECTIVITIES | clé hexa)
+  //                                               TARGET_JOIN_CONNECTIVITIES | clé hexa)
+  // A faire en multiblock !!
+  // Check mesh à realiser en préambule
+  // PDM_update_elmt_group(TARGET_VTX)
+  // PDM_get
+
+  // Generate cell_face + face_cell
+
+  //
   // PDM_DMesh_nodal_cell_face_compute --> Nom pas général !!!!
   // PDM_DMesh_nodal_cell_edge_compute --> Nom pas général !!!!
   // PDM_DMesh_nodal_face_edge_compute --> Nom pas général !!!!
@@ -143,6 +162,10 @@ struct _PDM_DMesh_nodal_t {
   // distrib_entitiy +
   int         *delmt_group_idx;
   PDM_g_num_t *delmt_group;
+
+  // A gere dans la function chapeau - Lien a faire au dessus - Optionel
+  // int         *delmt_join_idx;
+  // PDM_g_num_t *delmt_join;
 
 
   PDM_DMesh_nodal_vtx_t *vtx;                   /*!< Description des sommmets de chaque partition */
@@ -176,6 +199,7 @@ struct _PDM_DMesh_nodal_t {
   int                    n_sections;               /*!< Total number of sections */
   PDM_g_num_t           *section_distribution;     /*!< Element distribution  */
 
+  // To move in pdm_dmesh
   PDM_l_num_t            dn_cell;                  /*!< Local number of cells in the local block */
   PDM_l_num_t           *dcell_face_idx;           /*!< Index of the cell to face connectivity
                                                     * (size = \ref dn_cell) */
@@ -191,7 +215,10 @@ struct _PDM_DMesh_nodal_t {
                                                     * (size = \ref dcell_face_idx[\ref dn_cell] */
   PDM_g_num_t           *face_distrib;             /*!< Distribution of faces (size = number of processes + 1) */
 
+
+
 } ;
+
 
 #ifdef __cplusplus
 }
