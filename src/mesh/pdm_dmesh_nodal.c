@@ -339,9 +339,7 @@ PDM_DMesh_nodal_section_poly2d_t *_section_poly2d
     _section_poly2d->distrib = NULL;
   }
 
-
   free(_section_poly2d);
-
   return NULL;
 }
 
@@ -372,11 +370,8 @@ PDM_DMesh_nodal_section_poly3d_t *_section_poly3d
     _section_poly3d->distrib = NULL;
   }
 
-
   free(_section_poly3d);
-
   return NULL;
-
 }
 
 /*=============================================================================

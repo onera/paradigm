@@ -173,14 +173,22 @@ struct _PDM_DMesh_nodal_t {
   // L'ordre est important / On rentre d'abord les 3D puis 2D puis 1D ?
   // Il suivent pas forcement la numérotation CGNS mais ce qui compte c'est que chaque section soit bien
   // Continue
-  PDM_Handles_t         *sections_std;          /*!< Standard sections   */
-  PDM_Handles_t         *sections_poly2d;       /*!< Polygon sections    */
-  PDM_Handles_t         *sections_poly3d;       /*!< Polyhedron sections */
+  int                    n_sections_tot;        /*!< Total number of sections */
 
-  PDM_Handles_t         *sections_std_l1;       /*!< Standard sections */
-  PDM_Handles_t         *sections_poly2d_l1;    /*!< Polygon sections  */
+  int                    n_sections;            /*!< Total number of sections */
+  int                   *sections_id;           /*!< Blocks identifier        */
+  PDM_Handles_t         *sections_std;          /*!< Standard sections        */
+  PDM_Handles_t         *sections_poly2d;       /*!< Polygon sections         */
+  PDM_Handles_t         *sections_poly3d;       /*!< Polyhedron sections      */
 
-  PDM_Handles_t         *sections_std_l2;       /*!< Standard sections */
+  int                    n_sections_l1;         /*!< Total number of sections */
+  int                   *sections_id_l1;        /*!< Blocks identifier        */
+  PDM_Handles_t         *sections_std_l1;       /*!< Standard sections        */
+  PDM_Handles_t         *sections_poly2d_l1;    /*!< Polygon sections         */
+
+  int                    n_sections_l2;         /*!< Total number of sections */
+  int                   *sections_id_l2;        /*!< Blocks identifier        */
+  PDM_Handles_t         *sections_std_l2;       /*!< Standard sections        */
 
   // IN :
   // Pour chaque sections (au sens large) on prévoit un tag pour chaque entité (lien avec fdsm)
@@ -195,8 +203,6 @@ struct _PDM_DMesh_nodal_t {
   PDM_MPI_Comm           pdm_mpi_comm;             /*!< MPI Communicator */
   int                    n_rank;                   /*!< Number of processes */
   int                    i_rank;                   /*!< Number of processes */
-  int                   *sections_id;              /*!< Blocks identifier */
-  int                    n_sections;               /*!< Total number of sections */
   PDM_g_num_t           *section_distribution;     /*!< Element distribution  */
 
   // To move in pdm_dmesh
