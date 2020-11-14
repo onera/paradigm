@@ -1450,10 +1450,12 @@ PDM_DMesh_nodal_t  *dmesh_nodal
   for(int i_section = 0; i_section < mesh->n_section_std; ++i_section){
     total_n_cell += mesh->sections_std[i_section].distrib[mesh->n_rank];
   }
-  for(int i_section = 0; i_section < mesh->n_section_std; ++i_section){
+
+  for(int i_section = 0; i_section < mesh->n_section_poly2d; ++i_section){
     total_n_cell += mesh->sections_poly2d[i_section].distrib[mesh->n_rank];
   }
-  for(int i_section = 0; i_section < mesh->n_section_std; ++i_section){
+
+  for(int i_section = 0; i_section < mesh->n_section_poly3d; ++i_section){
     total_n_cell += mesh->sections_poly3d[i_section].distrib[mesh->n_rank];
   }
 
