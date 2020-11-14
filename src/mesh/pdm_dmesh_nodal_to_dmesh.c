@@ -15,6 +15,7 @@
 #include "pdm.h"
 #include "pdm_priv.h"
 #include "pdm_error.h"
+#include "pdm_dmesh_nodal_to_dmesh_priv.h"
 #include "pdm_dmesh_nodal_priv.h"
 #include "pdm_dmesh_nodal_to_dmesh.h"
 #include "pdm_dmesh.h"
@@ -38,61 +39,15 @@ extern "C" {
  * Type definitions
  *============================================================================*/
 
-/**
- * \struct _PDM_Dist_t
- * \brief  Distance to a mesh surface structure
- *
- */
-
-typedef struct {
-
-  PDM_MPI_Comm      comm;                    /*!< MPI communicator */
-  PDM_ownership_t   owner;                   /*!< Which have the responsabilities of results */
-  PDM_bool_t        results_is_getted;       /*!< Flags to indicate if result is getted      */
-
-  int               n_mesh;                  /*!< Number of meshes to manages                */
-
-  int              *dmesh_nodal_ids;         /*!< Identifier list of dmesh_nodal struture
-                                              *   (size = n_mesh )                           */
-
-  int              *dmesh_ids;               /*!< Identifier list of dmesh structure
-                                              *   (size = n_mesh)                            */
-
-} _PDM_dmesh_nodal_to_dmesh;
-
 
 /*============================================================================
  * Global variable
  *============================================================================*/
 
-static PDM_Handles_t *dmn_to_dm_handles = NULL;
 
 /*============================================================================
  * Private function definitions
  *============================================================================*/
-
-/**
- *
- * \brief Return dmn_to_dm object from it identifier
- *
- * \param [in]   id        dmn_to_dm identifier
- *
- */
-static _PDM_dmesh_nodal_to_dmesh *
-_get_from_id
-(
- int  id
-)
-{
-  _PDM_dmesh_nodal_to_dmesh *dmn_to_dm = (_PDM_dmesh_nodal_to_dmesh *) PDM_Handles_get (dmn_to_dm_handles, id);
-
-  if (dmn_to_dm == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_dmesh_nodal_to_dmesh error : Bad identifier\n");
-  }
-
-  return dmn_to_dm;
-}
-
 
 static
 int
@@ -123,21 +78,15 @@ _generate_edges_from_dmesh_nodal
  * Public function definitions
  *============================================================================*/
 
-int
+PDM_dmesh_nodal_to_dmesh_t*
 PDM_dmesh_nodal_to_dmesh_create
 (
-      int             n_mesh,
+const int             n_mesh,
 const PDM_MPI_Comm    comm,
 const PDM_ownership_t owner
 )
 {
-  if (dmn_to_dm_handles == NULL) {
-    dmn_to_dm_handles = PDM_Handles_create (4);
-  }
-
-  _PDM_dmesh_nodal_to_dmesh *dmn_to_dm = (_PDM_dmesh_nodal_to_dmesh *) malloc(sizeof(_PDM_dmesh_nodal_to_dmesh));
-
-  int id = PDM_Handles_store (dmn_to_dm_handles, dmn_to_dm);
+  _pdm_dmesh_nodal_to_dmesh_t *dmn_to_dm = (_pdm_dmesh_nodal_to_dmesh_t *) malloc(sizeof(_pdm_dmesh_nodal_to_dmesh_t));
 
   dmn_to_dm->comm              = comm;
   dmn_to_dm->owner             = owner;
@@ -147,39 +96,39 @@ const PDM_ownership_t owner
   dmn_to_dm->dmesh_nodal_ids = (int *) malloc(sizeof(int));
   dmn_to_dm->dmesh_ids       = (int *) malloc(sizeof(int));
 
-  return id;
+  return (PDM_dmesh_nodal_to_dmesh_t *) dmn_to_dm;
 }
 
 void
 PDM_dmesh_nodal_to_dmesh_add_dmesh_nodal
 (
-  const int hdl,
-  const int i_mesh,
-  const int dmesh_nodal_id
+  PDM_dmesh_nodal_to_dmesh_t* dmn_to_dm,
+  const int                   i_mesh,
+  const int                   dmesh_nodal_id
 )
 {
-  _PDM_dmesh_nodal_to_dmesh* dmn_to_dm = _get_from_id(hdl);
-  dmn_to_dm->dmesh_nodal_ids[i_mesh] = dmesh_nodal_id;
+  _pdm_dmesh_nodal_to_dmesh_t* _dmn_to_dm = (_pdm_dmesh_nodal_to_dmesh_t *) dmn_to_dm;
+  _dmn_to_dm->dmesh_nodal_ids[i_mesh] = dmesh_nodal_id;
 }
 
 void
 PDM_dmesh_nodal_to_dmesh_free
 (
-const int hdl
+  PDM_dmesh_nodal_to_dmesh_t* dmn_to_dm
 )
 {
-  _PDM_dmesh_nodal_to_dmesh* dmn_to_dm = _get_from_id(hdl);
+  _pdm_dmesh_nodal_to_dmesh_t* _dmn_to_dm = (_pdm_dmesh_nodal_to_dmesh_t *) dmn_to_dm;
 
-  if(( dmn_to_dm->owner == PDM_OWNERSHIP_KEEP ) ||
-     ( dmn_to_dm->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !dmn_to_dm->results_is_getted)){
+  if(( _dmn_to_dm->owner == PDM_OWNERSHIP_KEEP ) ||
+     ( _dmn_to_dm->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !_dmn_to_dm->results_is_getted)){
 
-    for(int i_mesh = 0; i_mesh < dmn_to_dm->n_mesh; ++i_mesh) {
-      PDM_dmesh_free(dmn_to_dm->dmesh_ids[i_mesh]);
+    for(int i_mesh = 0; i_mesh < _dmn_to_dm->n_mesh; ++i_mesh) {
+      PDM_dmesh_free(_dmn_to_dm->dmesh_ids[i_mesh]);
     }
   }
 
-  free(dmn_to_dm->dmesh_nodal_ids);
-  free(dmn_to_dm->dmesh_ids);
+  free(_dmn_to_dm->dmesh_nodal_ids);
+  free(_dmn_to_dm->dmesh_ids);
 }
 
 
@@ -187,27 +136,27 @@ const int hdl
 void
 PDM_dmesh_nodal_to_dmesh_compute
 (
-  const int                                  hdl,
+  PDM_dmesh_nodal_to_dmesh_t*                dmn_to_dm,
   const PDM_dmesh_nodal_to_dmesh_transform_t transform_kind
 )
 {
-  _PDM_dmesh_nodal_to_dmesh* dmn_to_dm = _get_from_id(hdl);
+  _pdm_dmesh_nodal_to_dmesh_t* _dmn_to_dm = (_pdm_dmesh_nodal_to_dmesh_t *) dmn_to_dm;
 
-  for(int i_mesh = 0; i_mesh < dmn_to_dm->n_mesh; ++i_mesh) {
+  for(int i_mesh = 0; i_mesh < _dmn_to_dm->n_mesh; ++i_mesh) {
 
     switch (transform_kind) {
 
       case PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_FACE:
         {
-          int dmesh_id = _generate_faces_from_dmesh_nodal(dmn_to_dm->dmesh_nodal_ids[i_mesh]);
-          dmn_to_dm->dmesh_ids[i_mesh] = dmesh_id;
+          int dmesh_id = _generate_faces_from_dmesh_nodal(_dmn_to_dm->dmesh_nodal_ids[i_mesh]);
+          _dmn_to_dm->dmesh_ids[i_mesh] = dmesh_id;
         }
         break;
 
       case PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_EDGE:
         {
-          int dmesh_id = _generate_edges_from_dmesh_nodal(dmn_to_dm->dmesh_nodal_ids[i_mesh]);
-          dmn_to_dm->dmesh_ids[i_mesh] = dmesh_id;
+          int dmesh_id = _generate_edges_from_dmesh_nodal(_dmn_to_dm->dmesh_nodal_ids[i_mesh]);
+          _dmn_to_dm->dmesh_ids[i_mesh] = dmesh_id;
         }
         break;
     }

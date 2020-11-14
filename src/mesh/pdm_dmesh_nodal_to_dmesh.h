@@ -29,7 +29,7 @@ extern "C" {
  * Types definition
  *============================================================================*/
 
-// typedef struct _PDM_DMesh_nodal_t PDM_DMesh_nodal_t;
+typedef struct _pdm_dmesh_nodal_to_dmesh_t PDM_dmesh_nodal_to_dmesh_t;
 
 
 typedef enum {
@@ -57,10 +57,10 @@ typedef enum {
  * \return       New mesh nodal handle
  *
  */
-int
+PDM_dmesh_nodal_to_dmesh_t*
 PDM_dmesh_nodal_to_dmesh_create
 (
-      int             n_mesh,
+const int             n_mesh,
 const PDM_MPI_Comm    comm,
 const PDM_ownership_t owner
 );
@@ -69,22 +69,22 @@ const PDM_ownership_t owner
 void
 PDM_dmesh_nodal_to_dmesh_add_dmesh_nodal
 (
-  const int hdl,
-  const int i_mesh,
-  const int dmesh_nodal_id
+        PDM_dmesh_nodal_to_dmesh_t* dmn_to_dm,
+  const int                         i_mesh,
+  const int                         dmesh_nodal_id
 );
 
 void
 PDM_dmesh_nodal_to_dmesh_compute
 (
-  const int                                  hdl,
+  PDM_dmesh_nodal_to_dmesh_t*                dmn_to_dm,
   const PDM_dmesh_nodal_to_dmesh_transform_t transform_kind
 );
 
 void
 PDM_dmesh_nodal_to_dmesh_free
 (
-const int hdl
+  PDM_dmesh_nodal_to_dmesh_t* dmn_to_dm
 );
 
 
