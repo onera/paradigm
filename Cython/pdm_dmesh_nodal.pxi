@@ -21,10 +21,11 @@ cdef extern from "pdm_dmesh_nodal.h":
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     # > Wrapping of function
     int PDM_DMesh_nodal_create(PDM_MPI_Comm comm,
-                               PDM_g_num_t n_vtx,
-                               PDM_g_num_t n_cell,
-                               PDM_g_num_t n_face,
-                               PDM_g_num_t n_edge)
+                               int          mesh_dimension,
+                               PDM_g_num_t  n_vtx,
+                               PDM_g_num_t  n_cell,
+                               PDM_g_num_t  n_face,
+                               PDM_g_num_t  n_edge)
     void PDM_DMesh_nodal_free(int handle, int partial)
 
     void PDM_DMesh_nodal_coord_set(int handle, int n_vtx, double* coords)
@@ -108,7 +109,8 @@ cdef class DistributedMeshNodal:
                         PDM_g_num_t n_vtx,
                         PDM_g_num_t n_cell,
                         PDM_g_num_t n_face = -1,
-                        PDM_g_num_t n_edge = -1):
+                        PDM_g_num_t n_edge = -1,
+                        int         mesh_dimension = 3):
         """
         TODOUX
         """
@@ -131,7 +133,7 @@ cdef class DistributedMeshNodal:
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
-        self.idmesh = PDM_DMesh_nodal_create(PDMC, n_vtx, n_cell, n_face, n_edge)
+        self.idmesh = PDM_DMesh_nodal_create(PDMC, mesh_dimension, n_vtx, n_cell, n_face, n_edge)
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
     # ------------------------------------------------------------------------

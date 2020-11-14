@@ -30,6 +30,18 @@ extern "C" {
  * Type
  *============================================================================*/
 
+//-->>
+typedef enum {
+
+  PDM_SECTION_TYPE_STD3D  = 0,
+  PDM_SECTION_TYPE_STD2D  = 1,
+  PDM_SECTION_TYPE_STD1D  = 2,
+  PDM_SECTION_TYPE_POLY2D = 3,
+  PDM_SECTION_TYPE_POLY3D = 4
+
+} PDM_section_type_t;
+//<<--
+
 /**
  * \struct PDM_Mesh_nodal_som_t
  * \brief  Vertices of a mesh partition
@@ -116,7 +128,7 @@ typedef struct PDM_DMesh_nodal_section_poly3d_t{
 
 struct _PDM_DMesh_nodal_t {
 
-  int mesh_dimesion;                               /*! Principal dimension of meshes */
+  int mesh_dimension;                               /*! Principal dimension of meshes */
 
   PDM_g_num_t            n_cell_abs;               /*!< Global number of elements */
   PDM_g_num_t            n_face_abs;               /*!< Global number of faces    */
@@ -173,22 +185,42 @@ struct _PDM_DMesh_nodal_t {
   // L'ordre est important / On rentre d'abord les 3D puis 2D puis 1D ?
   // Il suivent pas forcement la numérotation CGNS mais ce qui compte c'est que chaque section soit bien
   // Continue
-  int                    n_sections_tot;        /*!< Total number of sections */
 
-  int                    n_sections;            /*!< Total number of sections */
-  int                   *sections_id;           /*!< Blocks identifier        */
-  PDM_Handles_t         *sections_std;          /*!< Standard sections        */
-  PDM_Handles_t         *sections_poly2d;       /*!< Polygon sections         */
-  PDM_Handles_t         *sections_poly3d;       /*!< Polyhedron sections      */
+  // Pas général car on peut pas intercaler section poly et std
+  PDM_section_type_t    *section_type;
+  int                   *section_idx;
+  int                    n_section_tot;                       /*!< Total number of sections */
 
-  int                    n_sections_l1;         /*!< Total number of sections */
-  int                   *sections_id_l1;        /*!< Blocks identifier        */
-  PDM_Handles_t         *sections_std_l1;       /*!< Standard sections        */
-  PDM_Handles_t         *sections_poly2d_l1;    /*!< Polygon sections         */
+  int                    n_section;                           /*!< Total number of sections           */
 
-  int                    n_sections_l2;         /*!< Total number of sections */
-  int                   *sections_id_l2;        /*!< Blocks identifier        */
-  PDM_Handles_t         *sections_std_l2;       /*!< Standard sections        */
+  int                    n_section_std;                       /*!< Total number of standard sections  */
+  int                    n_section_poly2d;                    /*!< Total number of polygon sections   */
+  int                    n_section_poly3d;                    /*!< Total number of olyhedron sections */
+
+  // int                   *sections_id;                         /*!< Blocks identifier                  */
+
+  PDM_DMesh_nodal_section_std_t    *sections_std;             /*!< Standard sections                  */
+  PDM_DMesh_nodal_section_poly2d_t *sections_poly2d;          /*!< Polygon sections                   */
+  PDM_DMesh_nodal_section_poly3d_t *sections_poly3d;          /*!< Polyhedron sections                */
+  PDM_g_num_t                      *section_distribution;     /*!< Element distribution               */
+
+  int                               n_section_l1;             /*!< Total number of sections           */
+  int                               n_section_std_l1;         /*!< Total number of standard sections  */
+  int                               n_section_poly2d_l1;      /*!< Total number of polygon sections   */
+  PDM_g_num_t                      *section_distribution_l1;  /*!< Element distribution               */
+
+  // int                              *sections_id_l1;           /*!< Blocks identifier                  */
+
+  PDM_DMesh_nodal_section_std_t    *sections_std_l1;          /*!< Standard sections                  */
+  PDM_DMesh_nodal_section_poly2d_t *sections_poly2d_l1;       /*!< Polygon sections                   */
+
+  int                               n_section_l2;             /*!< Total number of sections           */
+  int                               n_section_std_l2;         /*!< Total number of standard sections  */
+  PDM_g_num_t                      *section_distribution_l2;  /*!< Element distribution               */
+
+  // int                              *sections_id_l2;        /*!< Blocks identifier                  */
+
+  PDM_DMesh_nodal_section_std_t    *sections_std_l2;       /*!< Standard sections                  */
 
   // IN :
   // Pour chaque sections (au sens large) on prévoit un tag pour chaque entité (lien avec fdsm)
@@ -203,7 +235,6 @@ struct _PDM_DMesh_nodal_t {
   PDM_MPI_Comm           pdm_mpi_comm;             /*!< MPI Communicator */
   int                    n_rank;                   /*!< Number of processes */
   int                    i_rank;                   /*!< Number of processes */
-  PDM_g_num_t           *section_distribution;     /*!< Element distribution  */
 
   // To move in pdm_dmesh
   PDM_l_num_t            dn_cell;                  /*!< Local number of cells in the local block */

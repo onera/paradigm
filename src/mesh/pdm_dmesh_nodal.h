@@ -56,6 +56,7 @@ int
 PDM_DMesh_nodal_create
 (
 const PDM_MPI_Comm comm,
+      int          mesh_dimension,
       PDM_g_num_t  n_vtx,
       PDM_g_num_t  n_cell,
       PDM_g_num_t  n_face,
@@ -114,12 +115,12 @@ PDM_DMesh_nodal_distrib_vtx_get
  *
  */
 
-const PDM_g_num_t *
-PDM_DMesh_nodal_distrib_section_get
-(
- const int   hdl,
- const int   id_section
-);
+// const PDM_g_num_t *
+// PDM_DMesh_nodal_distrib_section_get
+// (
+//  const int   hdl,
+//  const int   id_section
+// );
 
 
 /**
@@ -164,7 +165,7 @@ PDM_DMesh_nodal_vtx_get
  */
 
 int
-PDM_DMesh_nodal_n_sections_get
+PDM_DMesh_nodal_n_section_get
 (
 const int   hdl
 );
@@ -179,11 +180,11 @@ const int   hdl
  *
  */
 
-int *
-PDM_DMesh_nodal_sections_id_get
-(
-const int   hdl
-);
+// int *
+// PDM_DMesh_nodal_sections_id_get
+// (
+// const int   hdl
+// );
 
 
 /**
