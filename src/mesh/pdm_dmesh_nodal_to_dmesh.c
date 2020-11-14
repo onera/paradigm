@@ -56,7 +56,7 @@ _generate_faces_from_dmesh_nodal
   int dmesh_nodal_id
 )
 {
-
+  PDM_UNUSED(dmesh_nodal_id);
 
   return -1;
 }
@@ -70,6 +70,7 @@ _generate_edges_from_dmesh_nodal
   int dmesh_nodal_id
 )
 {
+  PDM_UNUSED(dmesh_nodal_id);
 
   return -1;
 }
@@ -96,6 +97,7 @@ const PDM_ownership_t owner
   dmn_to_dm->dmesh_nodal_ids = (int                 *) malloc(sizeof(int                 ));
   dmn_to_dm->dmesh_ids       = (int                 *) malloc(sizeof(int                 ));
   dmn_to_dm->dmesh_nodal     = (_pdm_dmesh_nodal_t **) malloc(sizeof(_pdm_dmesh_nodal_t *));
+  dmn_to_dm->dmesh           = (_pdm_dmesh_t       **) malloc(sizeof(_pdm_dmesh_t       *));
 
   return (PDM_dmesh_nodal_to_dmesh_t *) dmn_to_dm;
 }
@@ -131,10 +133,12 @@ PDM_dmesh_nodal_to_dmesh_free
      ( _dmn_to_dm->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !_dmn_to_dm->results_is_getted)){
 
     for(int i_mesh = 0; i_mesh < _dmn_to_dm->n_mesh; ++i_mesh) {
-      PDM_dmesh_free(_dmn_to_dm->dmesh_ids[i_mesh]);
+      PDM_dmesh_free( (PDM_dmesh_t*)_dmn_to_dm->dmesh[i_mesh]);
     }
   }
 
+  free(_dmn_to_dm->dmesh_nodal);
+  free(_dmn_to_dm->dmesh);
   free(_dmn_to_dm->dmesh_nodal_ids);
   free(_dmn_to_dm->dmesh_ids);
 }

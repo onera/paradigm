@@ -27,6 +27,7 @@
 
 #include "pdm.h"
 #include "pdm_mpi.h"
+#include "pdm_dmesh.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -100,9 +101,9 @@ PDM_multipart_create
 
 void PDM_multipart_register_block
 (
- const int        mpart_id,
- const int        zone_id,
- const int        dmesh_id
+ const int          mpart_id,
+ const int          zone_id,
+       PDM_dmesh_t *dmesh
 );
 
 

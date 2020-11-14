@@ -45,6 +45,29 @@ extern "C" {
  * Type definitions
  *============================================================================*/
 
+typedef struct _pdm_dmesh_t PDM_dmesh_t;
+
+// typedef enum {
+//   PDM_CONNECTIVITY_CELL_CELL  = 1,
+//   PDM_CONNECTIVITY_CELL_FACE  = 2,
+//   PDM_CONNECTIVITY_CELL_EDGE  = 3,
+//   PDM_CONNECTIVITY_CELL_VTX   = 4,
+//   PDM_CONNECTIVITY_FACE_CELL  = 5,
+//   PDM_CONNECTIVITY_FACE_FACE  = 6,
+//   PDM_CONNECTIVITY_FACE_EDGE  = 7,
+//   PDM_CONNECTIVITY_FACE_VTX   = 8,
+//   PDM_CONNECTIVITY_EDGE_CELL  = 9,
+//   PDM_CONNECTIVITY_EDGE_FACE  = 10,
+//   PDM_CONNECTIVITY_EDGE_EDGE  = 11,
+//   PDM_CONNECTIVITY_EDGE_VTX   = 12,
+//   PDM_CONNECTIVITY_VTX_CELL   = 13,
+//   PDM_CONNECTIVITY_VTX_FACE   = 14,
+//   PDM_CONNECTIVITY_VTX_EDGE   = 15,
+//   PDM_CONNECTIVITY_VTX_VTX    = 16
+// } PDM_connectivity_type_t;
+// Reflexion similaire pour les group
+
+
 /*=============================================================================
  * Static global variables
  *============================================================================*/
@@ -66,7 +89,7 @@ extern "C" {
  * \return     Identifier
  */
 
-int
+PDM_dmesh_t*
 PDM_dmesh_create
 (
  const int          dn_cell,
@@ -103,7 +126,7 @@ PDM_dmesh_create
 void
 PDM_dmesh_set
 (
- const int           id,
+ PDM_dmesh_t        *dm,
  const double       *dvtx_coord,
  const int          *dface_vtx_idx,
  const PDM_g_num_t  *dface_vtx,
@@ -130,12 +153,12 @@ PDM_dmesh_set
 void
 PDM_dmesh_dims_get
 (
- const int   id,
- int        *dn_cell,
- int        *dn_face,
- int        *dn_vtx,
- int        *dn_bnd,
- int        *n_joins
+ PDM_dmesh_t *dm,
+ int         *dn_cell,
+ int         *dn_face,
+ int         *dn_vtx,
+ int         *dn_bnd,
+ int         *n_joins
 );
 
 /**
@@ -157,7 +180,7 @@ PDM_dmesh_dims_get
 void
 PDM_dmesh_data_get
 (
- const int           id,
+ PDM_dmesh_t         *dm,
  const double       **dvtx_coord,
  const int          **dface_vtx_idx,
  const PDM_g_num_t  **dface_vtx,
@@ -180,7 +203,7 @@ PDM_dmesh_data_get
 void
 PDM_dmesh_free
 (
- const int id
+ PDM_dmesh_t        *dm
 );
 
 

@@ -35,9 +35,9 @@
 
 #include "pdm.h"
 #include "pdm_mpi.h"
-#include "pdm_handles.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
+#include "pdm_dmesh_priv.h"
 #include "pdm_priv.h"
 
 /*----------------------------------------------------------------------------
@@ -59,103 +59,13 @@ extern "C" {
  * Local structure definitions
  *============================================================================*/
 
-
-// typedef enum {
-//   PDM_CONNECTIVITY_CELL_CELL  = 1,
-//   PDM_CONNECTIVITY_CELL_FACE  = 2,
-//   PDM_CONNECTIVITY_CELL_EDGE  = 3,
-//   PDM_CONNECTIVITY_CELL_VTX   = 4,
-//   PDM_CONNECTIVITY_FACE_CELL  = 5,
-//   PDM_CONNECTIVITY_FACE_FACE  = 6,
-//   PDM_CONNECTIVITY_FACE_EDGE  = 7,
-//   PDM_CONNECTIVITY_FACE_VTX   = 8,
-//   PDM_CONNECTIVITY_EDGE_CELL  = 9,
-//   PDM_CONNECTIVITY_EDGE_FACE  = 10,
-//   PDM_CONNECTIVITY_EDGE_EDGE  = 11,
-//   PDM_CONNECTIVITY_EDGE_VTX   = 12,
-//   PDM_CONNECTIVITY_VTX_CELL   = 13,
-//   PDM_CONNECTIVITY_VTX_FACE   = 14,
-//   PDM_CONNECTIVITY_VTX_EDGE   = 15,
-//   PDM_CONNECTIVITY_VTX_VTX    = 16
-// } PDM_connectivity_type_t;
-// Reflexion similaire pour les group
-
-
-/**
- * \struct _pdm_dmesh_t
- * \brief  Define a distributed mesh. Arrays are shared: this structure does not
- *         holds the data.
- *
- */
-
-typedef struct
-{
-  int               dn_cell;          /*!< Number of distributed cells         */
-  int               dn_face;          /*!< Number of distributed faces         */
-  int               dn_vtx;           /*!< Number of distributed vertices      */
-  int               n_bnd;            /*!< Number of boundaries                */
-  int               n_join;           /*!< Number of interfaces with other zone*/
-  const PDM_g_num_t *_dface_cell;     /*!< Face-cell connectivity of distributed
-                                        faces (size = 2 * dn_face)
-                                        if iface is a boundary face,
-                                        _dface_cell[2*iface + 1] = 0           */
-  const int         *_dface_vtx_idx;   /*!< Face-vertex connectivity index of
-                                        distributed faces (size = dn_face + 1) */
-  const PDM_g_num_t *_dface_vtx;      /*!< Face-vertex connectivity of
-                                        distributed faces (size = dface_vtx_idx[
-                                        dn_face])                              */
-  const double      *_dvtx_coord;     /*!< Coordinates of ditributed vertices
-                                        (size = 3 * dn_vtx)                    */
-  const int         *_dface_bound_idx; /*!< Index of distributed faces list of
-                                        each boundary (size = n_bnd + 1)
-                                        or NULL                               */
-  const PDM_g_num_t *_dface_bound;    /*!< Distributed faces list of each
-                                       boundary (size = dface_bound_idx[n_bnd])
-                                        or NULL                               */
-  const int         *_joins_glob_id;  /*!< Global id of each joi (size=n_join)
-                                           or NULL. Same data for all procs   */
-  const int         *_dface_join_idx;  /*!< Index of distributed faces list of
-                                        each join (size = n_join + 1)
-                                        or NULL                               */
-  const PDM_g_num_t *_dface_join;     /*!< Distributed faces list of each
-                                       join (size = dface_join_idx[n_join])
-                                        or NULL                               */
-} _pdm_dmesh_t;
-
 /*============================================================================
  * Global variable
  *============================================================================*/
 
-static PDM_Handles_t *_dmeshes   = NULL;
-
 /*=============================================================================
  * Private function definitions
  *============================================================================*/
-
-/**
- *
- * \brief Return ppart object from it identifier
- *
- * \param [in]   ppart_id        ppart identifier
- *
- */
-
-static _pdm_dmesh_t *
-_get_from_id
-(
- int  id
-)
-{
-
-  _pdm_dmesh_t *dmesh = (_pdm_dmesh_t *) PDM_Handles_get (_dmeshes, id);
-
-  if (dmesh == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_dmesh error : Bad identifier\n");
-  }
-
-  return dmesh;
-}
-
 
 /*=============================================================================
  * Public function definitions
@@ -174,7 +84,7 @@ _get_from_id
  * \return     Identifier
  */
 
-int
+PDM_dmesh_t*
 PDM_dmesh_create
 (
  const int          dn_cell,
@@ -184,16 +94,7 @@ PDM_dmesh_create
  const int          n_join
 )
 {
-
-  /*
-   * Search a ppart free id
-   */
-  if (_dmeshes == NULL) {
-    _dmeshes = PDM_Handles_create (4);
-  }
-
   _pdm_dmesh_t *dmesh = (_pdm_dmesh_t *) malloc(sizeof(_pdm_dmesh_t));
-  int id = PDM_Handles_store (_dmeshes, dmesh);
 
   dmesh->dn_cell          = dn_cell;
   dmesh->dn_face          = dn_face;
@@ -210,7 +111,7 @@ PDM_dmesh_create
   dmesh->_dface_join_idx  = NULL;
   dmesh->_dface_join      = NULL;
 
-  return id;
+  return (PDM_dmesh_t *) dmesh;
 
 }
 
@@ -241,7 +142,7 @@ PDM_dmesh_create
 void
 PDM_dmesh_set
 (
- const int           id,
+ PDM_dmesh_t        *dm,
  const double       *dvtx_coord,
  const int          *dface_vtx_idx,
  const PDM_g_num_t  *dface_vtx,
@@ -253,7 +154,7 @@ PDM_dmesh_set
  const PDM_g_num_t  *dface_join
 )
 {
-  _pdm_dmesh_t *dmesh = _get_from_id (id);
+  _pdm_dmesh_t *dmesh = (_pdm_dmesh_t *) dm;
 
   dmesh->_dvtx_coord      = dvtx_coord;
   dmesh->_dface_vtx_idx   = dface_vtx_idx;
@@ -282,15 +183,16 @@ PDM_dmesh_set
 void
 PDM_dmesh_dims_get
 (
- const int   id,
- int        *dn_cell,
- int        *dn_face,
- int        *dn_vtx,
- int        *n_bnd,
- int        *n_join
+ PDM_dmesh_t *dm,
+ int         *dn_cell,
+ int         *dn_face,
+ int         *dn_vtx,
+ int         *n_bnd,
+ int         *n_join
 )
 {
-  _pdm_dmesh_t *dmesh = _get_from_id (id);
+  _pdm_dmesh_t *dmesh = (_pdm_dmesh_t *) dm;
+
   *dn_cell = dmesh->dn_cell;
   *dn_face = dmesh->dn_face;
   *dn_vtx  = dmesh->dn_vtx;
@@ -317,7 +219,7 @@ PDM_dmesh_dims_get
 void
 PDM_dmesh_data_get
 (
- const int          id,
+ PDM_dmesh_t         *dm,
  const double       **dvtx_coord,
  const int          **dface_vtx_idx,
  const PDM_g_num_t  **dface_vtx,
@@ -329,7 +231,7 @@ PDM_dmesh_data_get
  const PDM_g_num_t  **dface_join
 )
 {
-  _pdm_dmesh_t *dmesh = _get_from_id (id);
+  _pdm_dmesh_t *dmesh = (_pdm_dmesh_t *) dm;
 
   *dvtx_coord      = dmesh->_dvtx_coord;
   *dface_vtx_idx   = dmesh->_dface_vtx_idx;
@@ -353,10 +255,10 @@ PDM_dmesh_data_get
 void
 PDM_dmesh_free
 (
- const int id
+ PDM_dmesh_t         *dm
 )
 {
-  _pdm_dmesh_t *dmesh = _get_from_id (id);
+  _pdm_dmesh_t *dmesh = (_pdm_dmesh_t *) dm;
 
   dmesh->dn_cell           = 0;
   dmesh->dn_face           = 0;
@@ -374,14 +276,6 @@ PDM_dmesh_free
   dmesh->_dface_join       = NULL;
 
   free (dmesh);
-
-  PDM_Handles_handle_free (_dmeshes, id, PDM_FALSE);
-
-  const int n_dmesh = PDM_Handles_n_get (_dmeshes);
-
-  if (n_dmesh == 0) {
-    _dmeshes = PDM_Handles_free (_dmeshes);
-  }
 
 }
 

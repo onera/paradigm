@@ -11,6 +11,7 @@
 
 #include "pdm.h"
 #include "pdm_dmesh_nodal_priv.h"
+#include "pdm_dmesh_priv.h"
 
 /*=============================================================================
  * Macro definitions
@@ -45,6 +46,7 @@ typedef struct {
                                                  *   (size = n_mesh)                            */
 
   _pdm_dmesh_nodal_t **dmesh_nodal;
+  _pdm_dmesh_t       **dmesh;
 
 } _pdm_dmesh_nodal_to_dmesh_t;
 

@@ -20,9 +20,9 @@ cdef extern from "pdm_multipart.h":
                              PDM_ownership_t  owner)
 
     # ------------------------------------------------------------------
-    void PDM_multipart_register_block(int        mpart_id,
-                                      int        zone_gid,
-                                      int        block_data_id)
+    void PDM_multipart_register_block(int          mpart_id,
+                                      int          zone_gid,
+                                      PDM_dmesh_t *dmesh)
 
     # ------------------------------------------------------------------
     void PDM_multipart_register_joins(int        mpart_id,
@@ -171,10 +171,12 @@ cdef class MultiPart:
 
     # ------------------------------------------------------------------
     def multipart_register_block(self, int zone_gid,
-                                       int block_data_id):
+                                       DistributedMesh dm):
         """
         """
-        PDM_multipart_register_block(self._mpart_id, zone_gid, block_data_id)
+        PDM_multipart_register_block(self._mpart_id,
+                                     zone_gid,
+                                     dm._dm)
 
     # ------------------------------------------------------------------
     def multipart_register_joins(self, int n_total_joins,
