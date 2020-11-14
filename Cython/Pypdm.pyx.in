@@ -100,6 +100,18 @@ cdef extern from "numpy/arrayobject.h":
     void PyArray_ENABLEFLAGS(NPY.ndarray arr, int flags)
 # -----------------------------------------------------------------
 
+# PDM_dmesh :
+# --------------------
+include "pdm_dmesh.pxi"
+
+# PDM_dmesh_nodal :
+# ----------------
+include "pdm_dmesh_nodal.pxi"
+
+# PDM_dmesh_nodal :
+# ----------------
+include "pdm_dmesh_nodal_to_dmesh.pxi"
+
 # PDM_part :
 # ----------
 include "pdm_part.pxi"
@@ -128,9 +140,6 @@ include "pdm_block_to_block.pxi"
 # --------------------
 include "pdm_cellface_orient.pxi"
 
-# PDM_dmesh_nodal :
-# ----------------
-include "pdm_dmesh_nodal.pxi"
 
 # PDM_dist_cloud_surf :
 # --------------------
@@ -143,10 +152,6 @@ include "pdm_dist_cloud_surf.pxi"
 # PDM_points_merge :
 # --------------------
 include "pdm_points_merge.pxi"
-
-# PDM_dmesh :
-# --------------------
-include "pdm_dmesh.pxi"
 
 # PDM_distant_neighbor :
 # --------------------

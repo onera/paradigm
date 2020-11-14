@@ -10,6 +10,7 @@
  *----------------------------------------------------------------------------*/
 
 #include "pdm.h"
+#include "pdm_dmesh_nodal_priv.h"
 
 /*=============================================================================
  * Macro definitions
@@ -31,17 +32,19 @@ extern "C" {
 
 typedef struct {
 
-  PDM_MPI_Comm      comm;                    /*!< MPI communicator */
-  PDM_ownership_t   owner;                   /*!< Which have the responsabilities of results */
-  PDM_bool_t        results_is_getted;       /*!< Flags to indicate if result is getted      */
+  PDM_MPI_Comm         comm;                    /*!< MPI communicator */
+  PDM_ownership_t      owner;                   /*!< Which have the responsabilities of results */
+  PDM_bool_t           results_is_getted;       /*!< Flags to indicate if result is getted      */
 
-  int               n_mesh;                  /*!< Number of meshes to manages                */
+  int                  n_mesh;                  /*!< Number of meshes to manages                */
 
-  int              *dmesh_nodal_ids;         /*!< Identifier list of dmesh_nodal struture
-                                              *   (size = n_mesh )                           */
+  int                 *dmesh_nodal_ids;         /*!< Identifier list of dmesh_nodal struture
+                                                 *   (size = n_mesh )                           */
 
-  int              *dmesh_ids;               /*!< Identifier list of dmesh structure
-                                              *   (size = n_mesh)                            */
+  int                 *dmesh_ids;               /*!< Identifier list of dmesh structure
+                                                 *   (size = n_mesh)                            */
+
+  _pdm_dmesh_nodal_t **dmesh_nodal;
 
 } _pdm_dmesh_nodal_to_dmesh_t;
 

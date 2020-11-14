@@ -11,6 +11,7 @@
 
 #include "pdm.h"
 #include "pdm_mpi.h"
+#include "pdm_dmesh_nodal.h"
 
 /*=============================================================================
  * Macro definition
@@ -69,15 +70,15 @@ const PDM_ownership_t owner
 void
 PDM_dmesh_nodal_to_dmesh_add_dmesh_nodal
 (
-        PDM_dmesh_nodal_to_dmesh_t* dmn_to_dm,
+        PDM_dmesh_nodal_to_dmesh_t *dmn_to_dm,
   const int                         i_mesh,
-  const int                         dmesh_nodal_id
+        PDM_DMesh_nodal_t          *dmn
 );
 
 void
 PDM_dmesh_nodal_to_dmesh_compute
 (
-  PDM_dmesh_nodal_to_dmesh_t*                dmn_to_dm,
+        PDM_dmesh_nodal_to_dmesh_t*          dmn_to_dm,
   const PDM_dmesh_nodal_to_dmesh_transform_t transform_kind
 );
 

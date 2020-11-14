@@ -93,8 +93,9 @@ const PDM_ownership_t owner
   dmn_to_dm->results_is_getted = PDM_FALSE;
   dmn_to_dm->n_mesh            = n_mesh;
 
-  dmn_to_dm->dmesh_nodal_ids = (int *) malloc(sizeof(int));
-  dmn_to_dm->dmesh_ids       = (int *) malloc(sizeof(int));
+  dmn_to_dm->dmesh_nodal_ids = (int                 *) malloc(sizeof(int                 ));
+  dmn_to_dm->dmesh_ids       = (int                 *) malloc(sizeof(int                 ));
+  dmn_to_dm->dmesh_nodal     = (_pdm_dmesh_nodal_t **) malloc(sizeof(_pdm_dmesh_nodal_t *));
 
   return (PDM_dmesh_nodal_to_dmesh_t *) dmn_to_dm;
 }
@@ -105,13 +106,14 @@ const PDM_ownership_t owner
 void
 PDM_dmesh_nodal_to_dmesh_add_dmesh_nodal
 (
-  PDM_dmesh_nodal_to_dmesh_t* dmn_to_dm,
-  const int                   i_mesh,
-  const int                   dmesh_nodal_id
+        PDM_dmesh_nodal_to_dmesh_t *dmn_to_dm,
+  const int                         i_mesh,
+        PDM_DMesh_nodal_t          *dmn
 )
 {
   _pdm_dmesh_nodal_to_dmesh_t* _dmn_to_dm = (_pdm_dmesh_nodal_to_dmesh_t *) dmn_to_dm;
-  _dmn_to_dm->dmesh_nodal_ids[i_mesh] = dmesh_nodal_id;
+  // _dmn_to_dm->dmesh_nodal_ids[i_mesh] = dmesh_nodal_id;
+  _dmn_to_dm->dmesh_nodal[i_mesh] = (_pdm_dmesh_nodal_t*) dmn;
 }
 
 /**
