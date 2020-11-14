@@ -29,7 +29,7 @@ extern "C" {
 int
 PDM_section_size_elt_faces_get
 (
-  PDM_DMesh_nodal_t *mesh,
+  PDM_DMesh_nodal_t *mesh_nodal,
   int               *s_elt_face_vtx_idx,
   int               *s_elt_face_vtx,
   int               *s_elt_face_cell
@@ -49,7 +49,7 @@ PDM_section_size_elt_faces_get
 int
 PDM_section_size_elt_edges_get
 (
-  PDM_DMesh_nodal_t *mesh,
+  PDM_DMesh_nodal_t *mesh_nodal,
   int               *s_elt_edge_vtx_idx,
   int               *s_elt_edge_vtx,
   int               *s_elt_edge_cell
@@ -101,7 +101,7 @@ PDM_n_sum_vtx_edge_per_elmt
 void
 PDM_sections_decompose_faces
 (
-  PDM_DMesh_nodal_t *mesh,
+  PDM_DMesh_nodal_t *mesh_nodal,
   int               *elmt_face_vtx_idx,
   PDM_g_num_t       *elmt_face_vtx,
   PDM_g_num_t       *elmt_face_cell,
@@ -112,7 +112,7 @@ PDM_sections_decompose_faces
 void
 PDM_sections_decompose_edges
 (
-  PDM_DMesh_nodal_t *mesh,
+  PDM_DMesh_nodal_t *mesh_nodal,
   int               *elmt_edge_vtx_idx,
   PDM_g_num_t       *elmt_edge_vtx,
   PDM_g_num_t       *elmt_edge_cell,

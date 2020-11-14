@@ -99,6 +99,9 @@ const PDM_ownership_t owner
   return (PDM_dmesh_nodal_to_dmesh_t *) dmn_to_dm;
 }
 
+/**
+ * \brief  Add dmesh_nodal
+ */
 void
 PDM_dmesh_nodal_to_dmesh_add_dmesh_nodal
 (
@@ -111,6 +114,9 @@ PDM_dmesh_nodal_to_dmesh_add_dmesh_nodal
   _dmn_to_dm->dmesh_nodal_ids[i_mesh] = dmesh_nodal_id;
 }
 
+/**
+ * \brief  Free
+ */
 void
 PDM_dmesh_nodal_to_dmesh_free
 (
