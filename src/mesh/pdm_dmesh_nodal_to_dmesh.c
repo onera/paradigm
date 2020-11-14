@@ -93,6 +93,32 @@ _get_from_id
   return dmn_to_dm;
 }
 
+
+static
+int
+_generate_faces_from_dmesh_nodal
+(
+  int dmesh_nodal_id
+)
+{
+
+
+  return -1;
+}
+
+
+
+static
+int
+_generate_edges_from_dmesh_nodal
+(
+  int dmesh_nodal_id
+)
+{
+
+  return -1;
+}
+
 /*=============================================================================
  * Public function definitions
  *============================================================================*/
@@ -124,6 +150,17 @@ const PDM_ownership_t owner
   return id;
 }
 
+void
+PDM_dmesh_nodal_to_dmesh_add_dmesh_nodal
+(
+  const int hdl,
+  const int i_mesh,
+  const int dmesh_nodal_id
+)
+{
+  _PDM_dmesh_nodal_to_dmesh* dmn_to_dm = _get_from_id(hdl);
+  dmn_to_dm->dmesh_nodal_ids[i_mesh] = dmesh_nodal_id;
+}
 
 void
 PDM_dmesh_nodal_to_dmesh_free
@@ -145,3 +182,40 @@ const int hdl
   free(dmn_to_dm->dmesh_ids);
 }
 
+
+
+void
+PDM_dmesh_nodal_to_dmesh_compute
+(
+  const int                                  hdl,
+  const PDM_dmesh_nodal_to_dmesh_transform_t transform_kind
+)
+{
+  _PDM_dmesh_nodal_to_dmesh* dmn_to_dm = _get_from_id(hdl);
+
+  for(int i_mesh = 0; i_mesh < dmn_to_dm->n_mesh; ++i_mesh) {
+
+    switch (transform_kind) {
+
+      case PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_FACE:
+        {
+          int dmesh_id = _generate_faces_from_dmesh_nodal(dmn_to_dm->dmesh_nodal_ids[i_mesh]);
+          dmn_to_dm->dmesh_ids[i_mesh] = dmesh_id;
+        }
+        break;
+
+      case PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_EDGE:
+        {
+          int dmesh_id = _generate_edges_from_dmesh_nodal(dmn_to_dm->dmesh_nodal_ids[i_mesh]);
+          dmn_to_dm->dmesh_ids[i_mesh] = dmesh_id;
+        }
+        break;
+    }
+  }
+
+  // Boundary management
+
+  // Join management
+
+
+}
