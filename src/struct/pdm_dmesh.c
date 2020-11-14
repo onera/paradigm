@@ -294,8 +294,8 @@ PDM_dmesh_dims_get
   *dn_cell = dmesh->dn_cell;
   *dn_face = dmesh->dn_face;
   *dn_vtx  = dmesh->dn_vtx;
-  *n_bnd  = dmesh->n_bnd;
-  *n_join = dmesh->n_join;
+  *n_bnd   = dmesh->n_bnd;
+  *n_join  = dmesh->n_join;
 }
 
 /**
