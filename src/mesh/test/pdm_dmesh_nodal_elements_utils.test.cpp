@@ -9,6 +9,7 @@
 // double coord_y[n_vtx] = {0., 0., 0., 1., 1., 1., 0., 0., 0., 1., 1., 1};
 // double coord_z[n_vtx] = {0., 0., 0., 0., 0., 0., 1., 1., 1., 1., 1., 1};
 
+
 MPI_TEST_CASE("decomposes hexa ",1) {
 
   const PDM_g_num_t n_vtx            = 12;
@@ -47,13 +48,13 @@ MPI_TEST_CASE("decomposes hexa ",1) {
   std::vector<PDM_g_num_t> delmt_face_cell(n_face_elt_tot);
 
   dcell_face_vtx_idx[0] = 0;
-  PDM_dmesh_nodal_decompose_faces(dmn,
+  PDM_sections_decompose_faces(dmn,
                                   dcell_face_vtx_idx.data(),
                                   dcell_face_vtx.data(),
                                   delmt_face_cell.data(),
                                   NULL, NULL);
   // dcell_face_vtx_idx[0] = 0;
-  // PDM_dmesh_nodal_decompose_faces(dmn,
+  // PDM_sections_decompose_faces(dmn,
   //                                 dcell_face_vtx_idx,
   //                                 dcell_face_vtx,
   //                                 delmt_face_cell,
@@ -156,13 +157,13 @@ MPI_TEST_CASE("decomposes tetra ",1) {
   std::vector<PDM_g_num_t> delmt_face_cell(n_face_elt_tot);
 
   dcell_face_vtx_idx[0] = 0;
-  PDM_dmesh_nodal_decompose_faces(dmn,
+  PDM_sections_decompose_faces(dmn,
                                   dcell_face_vtx_idx.data(),
                                   dcell_face_vtx.data(),
                                   delmt_face_cell.data(),
                                   NULL, NULL);
   // dcell_face_vtx_idx[0] = 0;
-  // PDM_dmesh_nodal_decompose_faces(dmn,
+  // PDM_sections_decompose_faces(dmn,
   //                                 dcell_face_vtx_idx,
   //                                 dcell_face_vtx,
   //                                 delmt_face_cell,
@@ -255,13 +256,13 @@ MPI_TEST_CASE("decomposes pyra ",1) {
   std::vector<PDM_g_num_t> delmt_face_cell(n_face_elt_tot);
 
   dcell_face_vtx_idx[0] = 0;
-  PDM_dmesh_nodal_decompose_faces(dmn,
+  PDM_sections_decompose_faces(dmn,
                                   dcell_face_vtx_idx.data(),
                                   dcell_face_vtx.data(),
                                   delmt_face_cell.data(),
                                   NULL, NULL);
   // dcell_face_vtx_idx[0] = 0;
-  // PDM_dmesh_nodal_decompose_faces(dmn,
+  // PDM_sections_decompose_faces(dmn,
   //                                 dcell_face_vtx_idx,
   //                                 dcell_face_vtx,
   //                                 delmt_face_cell,
@@ -352,13 +353,13 @@ MPI_TEST_CASE("decomposes prism ",1) {
   std::vector<PDM_g_num_t> delmt_face_cell(n_face_elt_tot);
 
   dcell_face_vtx_idx[0] = 0;
-  PDM_dmesh_nodal_decompose_faces(dmn,
+  PDM_sections_decompose_faces(dmn,
                                   dcell_face_vtx_idx.data(),
                                   dcell_face_vtx.data(),
                                   delmt_face_cell.data(),
                                   NULL, NULL);
   // dcell_face_vtx_idx[0] = 0;
-  // PDM_dmesh_nodal_decompose_faces(dmn,
+  // PDM_sections_decompose_faces(dmn,
   //                                 dcell_face_vtx_idx,
   //                                 dcell_face_vtx,
   //                                 delmt_face_cell,

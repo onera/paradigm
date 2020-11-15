@@ -21,7 +21,6 @@
 #include "pdm_printf.h"
 #include "pdm_logging.h"
 #include "pdm_error.h"
-#include "pdm_gnum.h"
 #include "pdm_quick_sort.h"
 #include "pdm_geom_elem.h"
 #include "pdm_dmesh_nodal_elements_utils.h"
@@ -394,15 +393,15 @@ const PDM_MPI_Comm        comm,
  * \param [inout]  mesh        Mesh
  */
 
-static void
-_update_sections_id
-(
-_pdm_dmesh_nodal_t *mesh
-)
-{
-  // TODO : I think this function is useless, we never use section_id
-  PDM_UNUSED(mesh);
-  abort();
+// static void
+// _update_sections_id
+// (
+// _pdm_dmesh_nodal_t *mesh
+// )
+// {
+//   // TODO : I think this function is useless, we never use section_id
+//   PDM_UNUSED(mesh);
+//   abort();
   // int n_sections = 0;
 
   // if (mesh->sections_std != NULL) {
@@ -447,8 +446,7 @@ _pdm_dmesh_nodal_t *mesh
   // }
 
   // mesh->n_section = n_sections;
-
-}
+// }
 
 /*=============================================================================
  * Public function definitions
@@ -1589,8 +1587,6 @@ PDM_dmesh_nodal_generate_distribution
 
   PDM_g_num_t shift = 0;
   for(int i_section = 0; i_section < mesh->n_section_std; ++i_section){
-    printf("mesh->sections_std[i_section].n_elt = %i \n", mesh->sections_std[i_section].n_elt);
-    printf("mesh->sections_std[i_section].distrib = %p \n", mesh->sections_std[i_section].distrib);
     mesh->section_distribution[i_section+1] = mesh->sections_std[i_section].distrib[mesh->n_rank];
   }
   shift += mesh->n_section_std;
@@ -1718,70 +1714,6 @@ int               *n_sum_vtx_edge_tot
 
   printf("n_edge_elt_tot     ::%i\n", *n_edge_elt_tot   );
   printf("n_sum_vtx_edge_tot::%i\n" , *n_sum_vtx_edge_tot);
-}
-
-
-/**
-*
-* \brief PDM_sections_decompose_faces
-*
-* \param [in]     hdl                Distributed nodal mesh handle
-* \param [inout]  elt_face_vtx_idx   Index of element faces connectivity (preallocated)
-* \param [inout]  elt_face_vtx       Element faces connectivity (preallocated)
-* \param [inout]  elmt_face_cell     Element faces connectivity (preallocated or NULL )
-* \param [inout]  elmt_cell_face     Element faces connectivity (preallocated or NULL )
-*
-*/
-void
-PDM_dmesh_nodal_decompose_faces
-(
-PDM_DMesh_nodal_t *dmesh_nodal,
-int               *elmt_face_vtx_idx,
-PDM_g_num_t       *elmt_face_vtx,
-PDM_g_num_t       *elmt_face_cell,
-int               *elmt_cell_face_idx,
-PDM_g_num_t       *elmt_cell_face
-)
-{
-  PDM_sections_decompose_faces(dmesh_nodal,
-                               elmt_face_vtx_idx,
-                               elmt_face_vtx,
-                               elmt_face_cell,
-                               elmt_cell_face_idx,
-                               elmt_cell_face);
-
-}
-
-
-/**
-*
-* \brief PDM_sections_decompose_edges
-*
-* \param [in]     hdl                Distributed nodal mesh handle
-* \param [inout]  elt_edge_vtx_idx   Index of element edges connectivity (preallocated)
-* \param [inout]  elt_edge_vtx       Element edges connectivity (preallocated)
-* \param [inout]  elmt_edge_cell     Element edges connectivity (preallocated or NULL )
-* \param [inout]  elmt_cell_edge     Element edges connectivity (preallocated or NULL )
-*
-*/
-void
-PDM_dmesh_nodal_decompose_edges
-(
-PDM_DMesh_nodal_t *dmesh_nodal,
-int               *elmt_edge_vtx_idx,
-PDM_g_num_t       *elmt_edge_vtx,
-PDM_g_num_t       *elmt_edge_cell,
-int               *elmt_cell_edge_idx,
-PDM_g_num_t       *elmt_cell_edge
-)
-{
-  PDM_sections_decompose_edges(dmesh_nodal,
-                               elmt_edge_vtx_idx,
-                               elmt_edge_vtx,
-                               elmt_edge_cell,
-                               elmt_cell_edge_idx,
-                               elmt_cell_edge);
-
 }
 
 /**

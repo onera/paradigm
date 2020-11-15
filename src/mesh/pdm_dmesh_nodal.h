@@ -610,49 +610,6 @@ int               *n_edge_elt_tot,
 int               *n_sum_vtx_edge_tot
 );
 
-/**
-*
-* \brief PDM_sections_decompose_faces
-*
-* \param [in]     hdl                Distributed nodal mesh handle
-* \param [inout]  elt_face_vtx_idx   Index of element faces connectivity (preallocated)
-* \param [inout]  elt_face_vtx       Element faces connectivity (preallocated)
-* \param [inout]  elmt_face_cell     Element faces connectivity (preallocated or NULL )
-* \param [inout]  elmt_cell_face     Element faces connectivity (preallocated or NULL )
-*
-*/
-void
-PDM_dmesh_nodal_decompose_faces
-(
-PDM_DMesh_nodal_t *dmesh_nodal,
-int               *elmt_face_vtx_idx,
-PDM_g_num_t       *elmt_face_vtx,
-PDM_g_num_t       *elmt_face_cell,
-int               *elmt_cell_face_idx,
-PDM_g_num_t       *elmt_cell_face
-);
-
-/**
-*
-* \brief PDM_sections_decompose_edges
-*
-* \param [in]     hdl                Distributed nodal mesh handle
-* \param [inout]  elt_edge_vtx_idx   Index of element edges connectivity (preallocated)
-* \param [inout]  elt_edge_vtx       Element edges connectivity (preallocated)
-* \param [inout]  elmt_edge_cell     Element edges connectivity (preallocated or NULL )
-* \param [inout]  elmt_cell_edge     Element edges connectivity (preallocated or NULL )
-*
-*/
-void
-PDM_dmesh_nodal_decompose_edges
-(
-PDM_DMesh_nodal_t *dmesh_nodal,
-int               *elmt_edge_vtx_idx,
-PDM_g_num_t       *elmt_edge_vtx,
-PDM_g_num_t       *elmt_edge_cell,
-int               *elmt_cell_edge_idx,
-PDM_g_num_t       *elmt_cell_edge
-);
 
 /**
  * \brief  Compute cell->face connectivity
