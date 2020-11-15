@@ -50,29 +50,29 @@ extern "C" {
  *============================================================================*/
 
 static
-int
+_pdm_dmesh_t*
 _generate_faces_from_dmesh_nodal
 (
-  int dmesh_nodal_id
+  _pdm_dmesh_nodal_t *dmesh_nodal
 )
 {
-  PDM_UNUSED(dmesh_nodal_id);
+  PDM_UNUSED(dmesh_nodal);
 
-  return -1;
+  return NULL;
 }
 
 
 
 static
-int
+_pdm_dmesh_t*
 _generate_edges_from_dmesh_nodal
 (
-  int dmesh_nodal_id
+  _pdm_dmesh_nodal_t *dmesh_nodal
 )
 {
-  PDM_UNUSED(dmesh_nodal_id);
+  PDM_UNUSED(dmesh_nodal);
 
-  return -1;
+  return NULL;
 }
 
 /*=============================================================================
@@ -94,8 +94,6 @@ const PDM_ownership_t owner
   dmn_to_dm->results_is_getted = PDM_FALSE;
   dmn_to_dm->n_mesh            = n_mesh;
 
-  dmn_to_dm->dmesh_nodal_ids = (int                 *) malloc(sizeof(int                 ));
-  dmn_to_dm->dmesh_ids       = (int                 *) malloc(sizeof(int                 ));
   dmn_to_dm->dmesh_nodal     = (_pdm_dmesh_nodal_t **) malloc(sizeof(_pdm_dmesh_nodal_t *));
   dmn_to_dm->dmesh           = (_pdm_dmesh_t       **) malloc(sizeof(_pdm_dmesh_t       *));
 
@@ -114,7 +112,6 @@ PDM_dmesh_nodal_to_dmesh_add_dmesh_nodal
 )
 {
   _pdm_dmesh_nodal_to_dmesh_t* _dmn_to_dm = (_pdm_dmesh_nodal_to_dmesh_t *) dmn_to_dm;
-  // _dmn_to_dm->dmesh_nodal_ids[i_mesh] = dmesh_nodal_id;
   _dmn_to_dm->dmesh_nodal[i_mesh] = (_pdm_dmesh_nodal_t*) dmn;
 }
 
@@ -156,8 +153,6 @@ PDM_dmesh_nodal_to_dmesh_free
 
   free(_dmn_to_dm->dmesh_nodal);
   free(_dmn_to_dm->dmesh);
-  free(_dmn_to_dm->dmesh_nodal_ids);
-  free(_dmn_to_dm->dmesh_ids);
 }
 
 
@@ -177,15 +172,13 @@ PDM_dmesh_nodal_to_dmesh_compute
 
       case PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_FACE:
         {
-          int dmesh_id = _generate_faces_from_dmesh_nodal(_dmn_to_dm->dmesh_nodal_ids[i_mesh]);
-          _dmn_to_dm->dmesh_ids[i_mesh] = dmesh_id;
+          _dmn_to_dm->dmesh[i_mesh] = _generate_faces_from_dmesh_nodal(_dmn_to_dm->dmesh_nodal[i_mesh]);
         }
         break;
 
       case PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_EDGE:
         {
-          int dmesh_id = _generate_edges_from_dmesh_nodal(_dmn_to_dm->dmesh_nodal_ids[i_mesh]);
-          _dmn_to_dm->dmesh_ids[i_mesh] = dmesh_id;
+          _dmn_to_dm->dmesh[i_mesh] = _generate_edges_from_dmesh_nodal(_dmn_to_dm->dmesh_nodal[i_mesh]);
         }
         break;
     }

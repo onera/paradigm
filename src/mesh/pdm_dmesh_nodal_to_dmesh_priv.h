@@ -39,12 +39,6 @@ typedef struct {
 
   int                  n_mesh;                  /*!< Number of meshes to manages                */
 
-  int                 *dmesh_nodal_ids;         /*!< Identifier list of dmesh_nodal struture
-                                                 *   (size = n_mesh )                           */
-
-  int                 *dmesh_ids;               /*!< Identifier list of dmesh structure
-                                                 *   (size = n_mesh)                            */
-
   _pdm_dmesh_nodal_t **dmesh_nodal;
   _pdm_dmesh_t       **dmesh;
 
