@@ -1270,9 +1270,9 @@ PDM_multipart_run_ppart
   else
   {
     int n_zone = _multipart->n_zone;
-    int* starting_part_idx = (int *) malloc(n_zone+1 * sizeof(int));
+    int* starting_part_idx = (int *) malloc( (n_zone+1) * sizeof(int));
     starting_part_idx[0] = 0;
-    for (int i=0; i<n_zone; ++i) {
+    for (int i = 0; i < n_zone; ++i) {
       starting_part_idx[i+1] = starting_part_idx[i] + _multipart->n_part[i];
     }
 
@@ -1284,7 +1284,7 @@ PDM_multipart_run_ppart
       PDM_split_dual_t split_method = _multipart->split_method;
       PDM_part_size_t part_size_method = _multipart->part_size_method;
       const double* part_fraction = &_multipart->part_fraction[starting_part_idx[i_zone]];
-      // int dmesh_id = _multipart->dmeshes_ids[i_zone];
+
       PDM_dmesh_t*  _dmeshes = _multipart->dmeshes[i_zone];
       _part_mesh_t* _pmeshes = &(_multipart->pmeshes[i_zone]);
       int n_part = _multipart->n_part[i_zone];
@@ -1292,6 +1292,7 @@ PDM_multipart_run_ppart
       _run_ppart_zone(_dmeshes, _pmeshes, n_part, split_method, part_size_method, part_fraction, comm);
 
     }
+    free(starting_part_idx);
     // Now rebuild joins over the zones
     _search_matching_joins(_multipart);
   }
