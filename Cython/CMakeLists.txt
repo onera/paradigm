@@ -3,6 +3,10 @@ if (MPI_C_COMPILER)
   set(CMAKE_C_COMPILER ${MPI_C_COMPILER})
 endif()
 
+if (MPI_CXX_COMPILER)
+  set(CMAKE_CXX_COMPILER ${MPI_CXX_COMPILER})
+endif()
+
 if (MPI_Fortran_COMPILER)
   set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
 endif(MPI_Fortran_COMPILER)
@@ -46,14 +50,16 @@ else ()
 endif()
 
 include(UseCython)
+set(_pyx_file "${CMAKE_CURRENT_BINARY_DIR}/Pypdm.pyx")
+set_source_files_properties(${_pyx_file} PROPERTIES CYTHON_IS_CXX TRUE)
 if (PDM_IN_PDMA)
 cython_add_module (Pypdm
-                   PYX_SOURCES "${CMAKE_CURRENT_BINARY_DIR}/Pypdm.pyx"
+                   PYX_SOURCES "${_pyx_file}"
                    OTHER_SOURCES $<TARGET_OBJECTS:pdm> $<TARGET_OBJECTS:pdma>
                    INCLUDE_DIRECTORIES ${include_dirs})
 else ()
 cython_add_module (Pypdm
-                   PYX_SOURCES "${CMAKE_CURRENT_BINARY_DIR}/Pypdm.pyx"
+                   PYX_SOURCES "${_pyx_file}"
                    OTHER_SOURCES $<TARGET_OBJECTS:pdm>
                    INCLUDE_DIRECTORIES ${include_dirs})
 endif()
@@ -80,6 +86,10 @@ target_link_libraries(Pypdm ${LINK_LIBRARIES} pdm_mpi_shared)
 if ((NOT MPI_C_COMPILER) AND MPI_C_COMPILE_FLAGS)
    set_target_properties(Pypdm PROPERTIES
                               COMPILE_FLAGS ${MPI_C_COMPILE_FLAGS})
+endif()
+if ((NOT MPI_CXX_COMPILER) AND MPI_CXX_COMPILE_FLAGS)
+   set_target_properties(Pypdm PROPERTIES
+                              COMPILE_FLAGS ${MPI_CXX_COMPILE_FLAGS})
 endif()
 
 set(SETUP_PY    "${CMAKE_CURRENT_BINARY_DIR}/setup.py")

@@ -118,6 +118,23 @@ PDM_dmesh_nodal_to_dmesh_add_dmesh_nodal
   _dmn_to_dm->dmesh_nodal[i_mesh] = (_pdm_dmesh_nodal_t*) dmn;
 }
 
+
+void
+PDM_dmesh_nodal_to_dmesh_get_dmesh
+(
+        PDM_dmesh_nodal_to_dmesh_t  *dmn_to_dm,
+  const int                          i_mesh,
+        PDM_dmesh_t                **dm
+)
+{
+  _pdm_dmesh_nodal_to_dmesh_t* _dmn_to_dm = (_pdm_dmesh_nodal_to_dmesh_t *) dmn_to_dm;
+
+  *dm = (PDM_dmesh_t *) _dmn_to_dm->dmesh[i_mesh];
+
+  _dmn_to_dm->results_is_getted = PDM_TRUE;
+}
+
+
 /**
  * \brief  Free
  */

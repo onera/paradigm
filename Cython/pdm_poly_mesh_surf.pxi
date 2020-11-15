@@ -1,5 +1,5 @@
 
-cdef extern from "pdm_dmesh_nodal.h":
+cdef extern from "pdm_poly_surf_gen.h":
     # ------------------------------------------------------------------
     void PDM_poly_surf_gen(PDM_MPI_Comm  localComm,
                            double        xmin,

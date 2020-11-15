@@ -123,7 +123,7 @@ cdef class BlockToPart:
         # > Create
         # self.BTP = PDM_block_to_part_create(self.BlkDistribIdx, self.LNToGN,
         self.BTP = PDM_block_to_part_create(<PDM_g_num_t *> Distrib.data,
-                                            self.LNToGN,
+                     <const PDM_g_num_t **> self.LNToGN,
                                             self.NbElmts,
                                             self.partN,
                                             PDMC)

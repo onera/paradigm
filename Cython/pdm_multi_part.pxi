@@ -171,7 +171,7 @@ cdef class MultiPart:
 
     # ------------------------------------------------------------------
     def multipart_register_block(self, int zone_gid,
-                                       DistributedMesh dm):
+                                       DMesh dm): # DMesh = DistributedMeshCaspule or DistributedMesh
         """
         """
         PDM_multipart_register_block(self._mpart_id,

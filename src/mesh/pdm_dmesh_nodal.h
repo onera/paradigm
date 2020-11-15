@@ -747,7 +747,7 @@ PDM_g_num_t       **dface_vtx
  *
  */
 
-const PDM_g_num_t *
+PDM_g_num_t *
 PDM_DMesh_nodal_distrib_cell_get
 (
 PDM_DMesh_nodal_t  *dmesh_nodal
@@ -763,7 +763,7 @@ PDM_DMesh_nodal_t  *dmesh_nodal
  *
  */
 
-const PDM_g_num_t *
+PDM_g_num_t *
 PDM_DMesh_nodal_distrib_face_get
 (
 PDM_DMesh_nodal_t  *dmesh_nodal

@@ -1,5 +1,5 @@
 
-cdef extern from "pdm_part_to_block.h":
+cdef extern from "pdm_distant_neighbor.h":
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     # > Wrapping of function
     int PDM_distant_neighbor_create(PDM_MPI_Comm   comm,

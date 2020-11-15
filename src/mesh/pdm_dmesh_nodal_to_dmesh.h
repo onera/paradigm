@@ -11,6 +11,7 @@
 
 #include "pdm.h"
 #include "pdm_mpi.h"
+#include "pdm_dmesh.h"
 #include "pdm_dmesh_nodal.h"
 
 /*=============================================================================
@@ -34,15 +35,15 @@ typedef struct _pdm_dmesh_nodal_to_dmesh_t PDM_dmesh_nodal_to_dmesh_t;
 
 
 typedef enum {
-  PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_FACE = 1,
-  PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_EDGE = 2,
+  PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_FACE = 0,
+  PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_EDGE = 1,
 } PDM_dmesh_nodal_to_dmesh_transform_t;
 
 
 typedef enum {
-  PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_FACE = 1,
-  PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_EDGE = 2,
-  PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_VTX  = 3,
+  PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_FACE = 0,
+  PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_EDGE = 1,
+  PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_VTX  = 2,
 } PDM_dmesh_nodal_to_dmesh_translate_group_t;
 
 
@@ -80,6 +81,14 @@ PDM_dmesh_nodal_to_dmesh_compute
 (
         PDM_dmesh_nodal_to_dmesh_t*          dmn_to_dm,
   const PDM_dmesh_nodal_to_dmesh_transform_t transform_kind
+);
+
+void
+PDM_dmesh_nodal_to_dmesh_get_dmesh
+(
+        PDM_dmesh_nodal_to_dmesh_t  *dmn_to_dm,
+  const int                          i_mesh,
+        PDM_dmesh_t                **dm
 );
 
 void

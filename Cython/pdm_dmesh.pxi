@@ -48,6 +48,36 @@ cdef extern from "pdm_dmesh.h":
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 # ------------------------------------------------------------------
+# cdef void PDM_pydmesh_free(object caps):
+#   # print("PDM_pydmesh_free", PyCapsule_GetName(caps))
+#   cdef PDM_dmesh_t* dm = <PDM_dmesh_t *> PyCapsule_GetPointer(caps, <const char*> PyCapsule_GetName(caps))
+#   PDM_dmesh_free(dm);
+
+# ------------------------------------------------------------------
+cdef class DistributedMeshCaspule:
+  """
+  """
+  # ************************************************************************
+  # > Class attributes
+  cdef PDM_dmesh_t* _dm
+  # ************************************************************************
+  # ------------------------------------------------------------------------
+  def __cinit__(self, object caps):
+    """
+    """
+    # print("DistributedMeshCaspule", PyCapsule_GetName(caps))
+    cdef PDM_dmesh_t* dm = <PDM_dmesh_t *> PyCapsule_GetPointer(caps, NULL)
+    self._dm = dm;
+
+  # ------------------------------------------------------------------------
+  def __dealloc__(self):
+    """
+       Use the free method of PDM Lib
+    """
+    print("DistributedMeshCaspule::__dealloc__")
+    PDM_dmesh_free(self._dm)
+
+# ------------------------------------------------------------------
 cdef class DistributedMesh:
   """
      DistributedMesh: Distributed mesh structure

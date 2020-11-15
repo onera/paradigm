@@ -1,22 +1,12 @@
-#!python
-#cython: language_level=2
-##cython: boundscheck=False
-#cython: boundscheck=True
-#cython: cdivision=True
-#cython: wraparound=False
-#cython: profile=True
-###cython: embedsignature=False
-# See : https://cython.readthedocs.io/en/latest/src/reference/compilation.html#compiler-directives
-
 # Import Section (Python) :
 # ------------------------
-import logging   as LOG
 import numpy     as NPY
 
 # Import Section (Cython) :
 # ------------------------
 from    libc.stdlib cimport malloc, free
 from    cpython.ref cimport PyObject, Py_INCREF, Py_DECREF, Py_XDECREF
+from    cpython.pycapsule cimport PyCapsule_New, PyCapsule_GetPointer, PyCapsule_IsValid, PyCapsule_GetName
 cimport cython
 cimport numpy       as      NPY
 
@@ -107,6 +97,10 @@ include "pdm_dmesh.pxi"
 # PDM_dmesh_nodal :
 # ----------------
 include "pdm_dmesh_nodal.pxi"
+
+ctypedef fused DMesh:
+  DistributedMesh
+  DistributedMeshCaspule
 
 # PDM_dmesh_nodal :
 # ----------------
