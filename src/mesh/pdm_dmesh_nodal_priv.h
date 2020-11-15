@@ -237,6 +237,7 @@ typedef struct {
   int                    i_rank;                   /*!< Number of processes */
 
   // To move in pdm_dmesh
+  PDM_l_num_t            dn_elmt;                  /*!< Local number of cells in the local block */
   PDM_l_num_t            dn_cell;                  /*!< Local number of cells in the local block */
   PDM_l_num_t           *dcell_face_idx;           /*!< Index of the cell to face connectivity
                                                     * (size = \ref dn_cell) */

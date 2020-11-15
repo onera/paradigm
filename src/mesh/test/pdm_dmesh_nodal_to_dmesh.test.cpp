@@ -35,6 +35,9 @@ MPI_TEST_CASE("[pdm_dmesh_nodal_to_dmesh] decomposes hexa ",1) {
 
   PDM_dmesh_nodal_to_dmesh_compute(dmntodm, PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_FACE);
 
+  // Plante car on a pas implementer la decomposition en edge des Hexa
+  // PDM_dmesh_nodal_to_dmesh_compute(dmntodm, PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_EDGE);
+
 
   PDM_dmesh_nodal_to_dmesh_free(dmntodm);
   PDM_DMesh_nodal_free(dmn, 0);
