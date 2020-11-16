@@ -80,13 +80,13 @@ PDM_gnum_create
 void
 PROCF (pdm_gnum_create, PDM_GNUM_CREATE)
 (
- const int          *dim,
- const int          *n_part,
- const int          *merge,
- const double       *tolerance,
- const PDM_MPI_Fint *fcomm,
- const int          *owner,
-       int          *id
+ const int             *dim,
+ const int             *n_part,
+ const int             *merge,
+ const double          *tolerance,
+ const PDM_MPI_Fint    *fcomm,
+ const PDM_ownership_t *owner,
+       int             *id
 );
 
 
