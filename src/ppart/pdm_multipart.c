@@ -1287,6 +1287,21 @@ PDM_multipart_run_ppart
   PDM_MPI_Comm_rank(_multipart->comm, &i_rank);
   PDM_MPI_Comm_size(_multipart->comm, &n_rank);
 
+  // TODO : Hooks for Bérenger (tmp)
+  for (int i_zone = 0; i_zone < _multipart->n_zone; ++i_zone) {
+    if(_multipart->dmeshes_nodal[i_zone] != NULL) {
+
+      PDM_g_num_t       *dual_graph_idx;
+      PDM_g_num_t       *dual_graph;
+      int dim = 3;
+      PDM_dmesh_nodal_dual_graph(_multipart->dmeshes_nodal[i_zone],
+                                 &dual_graph_idx,
+                                 &dual_graph,
+                                 dim);
+    }
+  }
+
+
   if (_multipart->merge_blocks)
   {
     // 1. Generate global numerotation using all blocks
@@ -1306,12 +1321,15 @@ PDM_multipart_run_ppart
       PDM_printf("Partitionning zone %d/%d \n", i_zone+1, _multipart->n_zone);
 
       PDM_MPI_Comm comm = _multipart->comm;
-      PDM_split_dual_t split_method = _multipart->split_method;
+
+      PDM_split_dual_t split_method    = _multipart->split_method;
       PDM_part_size_t part_size_method = _multipart->part_size_method;
+
       const double* part_fraction = &_multipart->part_fraction[starting_part_idx[i_zone]];
 
-      PDM_dmesh_t*  _dmeshes = _multipart->dmeshes[i_zone];
-      _part_mesh_t* _pmeshes = &(_multipart->pmeshes[i_zone]);
+      PDM_dmesh_t  *_dmeshes = _multipart->dmeshes[i_zone];
+      _part_mesh_t *_pmeshes = &(_multipart->pmeshes[i_zone]);
+
       int n_part = _multipart->n_part[i_zone];
 
       _run_ppart_zone(_dmeshes, _pmeshes, n_part, split_method, part_size_method, part_fraction, comm);

@@ -625,6 +625,21 @@ PDM_dmesh_nodal_t *dmesh_nodal
 );
 
 /**
+ * \brief  Compute cell->cell connectivity
+ *
+ * \param [in]   hdl              Distributed nodal mesh handle
+ *
+ */
+void
+PDM_dmesh_nodal_dual_graph
+(
+PDM_dmesh_nodal_t  *dmesh_nodal,
+PDM_g_num_t       **dual_graph_idx,
+PDM_g_num_t       **dual_graph,
+int                 dim
+);
+
+/**
  * \brief  Compute cell->face connectivity
  *
  * \param [in]   hdl              Distributed nodal mesh handle

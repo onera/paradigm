@@ -1716,6 +1716,40 @@ int               *n_sum_vtx_edge_tot
   printf("n_sum_vtx_edge_tot::%i\n" , *n_sum_vtx_edge_tot);
 }
 
+
+
+/**
+ * \brief  Compute cell->cell connectivity
+ *
+ * \param [in]   hdl              Distributed nodal mesh handle
+ *
+ */
+void
+PDM_dmesh_nodal_dual_graph
+(
+PDM_dmesh_nodal_t  *dmesh_nodal,
+PDM_g_num_t       **dual_graph_idx,
+PDM_g_num_t       **dual_graph,
+int                 dim
+)
+{
+  assert(dim == 3); /* dim if for dispatching 2D/3D */
+  PDM_UNUSED(dmesh_nodal);
+  PDM_UNUSED(dual_graph_idx);
+  PDM_UNUSED(dual_graph);
+
+  // Pour Bérenger :
+  //     --> On doit concatener les multiple block pour faire un seul cell_vtx
+  //         pdm_multi_block_to_part avec parnN = 1 et ln_to_gn = [1, 2, 3, ...., N]
+  //     Et on met tout les blocks de données d'entrés :
+  //     Une fois ok --> on a le dcell_vtx + dcell_vtx_idx
+  //     On calcul la transpose : PDM_dconnectivity_transpose --> dvtx_cell + dvtx_cell_idx
+  //     Puis le dual : PDM_deduce_combine_connectivity_dual
+  //     See : pdm_dconnectivity_transform.c
+
+
+}
+
 /**
  * \brief  Compute cell->face connectivity
  *
