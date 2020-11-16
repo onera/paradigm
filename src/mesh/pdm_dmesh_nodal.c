@@ -462,7 +462,7 @@ const PDM_MPI_Comm        comm,
  *
  */
 
-PDM_DMesh_nodal_t*
+PDM_dmesh_nodal_t*
 PDM_DMesh_nodal_create
 (
 const PDM_MPI_Comm comm,
@@ -477,7 +477,7 @@ const PDM_MPI_Comm comm,
 
   _mesh_init (mesh, comm, mesh_dimension, n_vtx, n_cell, n_face, n_edge);
 
-  return (PDM_DMesh_nodal_t *) mesh;
+  return (PDM_dmesh_nodal_t *) mesh;
 }
 
 
@@ -495,7 +495,7 @@ const PDM_MPI_Comm comm,
 void
 PDM_DMesh_nodal_free
 (
-      PDM_DMesh_nodal_t *dmesh_nodal,
+      PDM_dmesh_nodal_t *dmesh_nodal,
 const int                partial
 )
 {
@@ -621,7 +621,7 @@ const int                partial
 void
 PDM_DMesh_nodal_coord_set
 (
-       PDM_DMesh_nodal_t *dmesh_nodal,
+       PDM_dmesh_nodal_t *dmesh_nodal,
  const int                n_vtx,
  const PDM_real_t        *coords
 )
@@ -668,7 +668,7 @@ PDM_DMesh_nodal_coord_set
 int
 PDM_DMesh_nodal_n_vtx_get
 (
-  PDM_DMesh_nodal_t *dmesh_nodal
+  PDM_dmesh_nodal_t *dmesh_nodal
 )
 {
   _pdm_dmesh_nodal_t* mesh = (_pdm_dmesh_nodal_t *) dmesh_nodal;
@@ -695,7 +695,7 @@ PDM_DMesh_nodal_n_vtx_get
 const double *
 PDM_DMesh_nodal_vtx_get
 (
-PDM_DMesh_nodal_t  *dmesh_nodal
+PDM_dmesh_nodal_t  *dmesh_nodal
 )
 {
   _pdm_dmesh_nodal_t* mesh = (_pdm_dmesh_nodal_t *) dmesh_nodal;
@@ -722,7 +722,7 @@ PDM_DMesh_nodal_t  *dmesh_nodal
 int
 PDM_DMesh_nodal_n_section_get
 (
-PDM_DMesh_nodal_t  *dmesh_nodal
+PDM_dmesh_nodal_t  *dmesh_nodal
 )
 {
 
@@ -747,11 +747,11 @@ PDM_DMesh_nodal_t  *dmesh_nodal
 // int *
 // PDM_DMesh_nodal_sections_id_get
 // (
-//PDM_DMesh_nodal_t  *dmesh_nodal
+//PDM_dmesh_nodal_t  *dmesh_nodal
 // )
 // {
-//   PDM_DMesh_nodal_t * mesh =
-//           (PDM_DMesh_nodal_t *) PDM_Handles_get (mesh_handles, hdl);
+//   PDM_dmesh_nodal_t * mesh =
+//           (PDM_dmesh_nodal_t *) PDM_Handles_get (mesh_handles, hdl);
 
 //   if (mesh == NULL) {
 //     PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
@@ -774,7 +774,7 @@ PDM_DMesh_nodal_t  *dmesh_nodal
 PDM_Mesh_nodal_elt_t
 PDM_DMesh_nodal_section_type_get
 (
-PDM_DMesh_nodal_t  *dmesh_nodal,
+PDM_dmesh_nodal_t  *dmesh_nodal,
 const int   id_section
 )
 {
@@ -782,8 +782,8 @@ const int   id_section
   PDM_UNUSED(id_section);
   abort();
 
-  // PDM_DMesh_nodal_t *mesh =
-  //         (PDM_DMesh_nodal_t *) PDM_Handles_get (mesh_handles, hdl);
+  // PDM_dmesh_nodal_t *mesh =
+  //         (PDM_dmesh_nodal_t *) PDM_Handles_get (mesh_handles, hdl);
 
   PDM_Mesh_nodal_elt_t t_elt = PDM_MESH_NODAL_POLY_3D;
 
@@ -834,7 +834,7 @@ const int   id_section
 int
 PDM_DMesh_nodal_section_add
 (
-      PDM_DMesh_nodal_t    *dmesh_nodal,
+      PDM_dmesh_nodal_t    *dmesh_nodal,
 const PDM_Mesh_nodal_elt_t  t_elt
 )
 {
@@ -986,7 +986,7 @@ const PDM_Mesh_nodal_elt_t  t_elt
 // void
 // PDM_DMesh_nodal_section_std_set
 // (
-//PDM_DMesh_nodal_t  *dmesh_nodal,
+//PDM_dmesh_nodal_t  *dmesh_nodal,
 // const int          id_section,
 // const int          n_elt,
 //       PDM_g_num_t *connec,
@@ -997,7 +997,7 @@ const PDM_Mesh_nodal_elt_t  t_elt
 void
 PDM_DMesh_nodal_section_std_set
 (
-PDM_DMesh_nodal_t  *dmesh_nodal,
+PDM_dmesh_nodal_t  *dmesh_nodal,
 const int           id_section,
 const int           n_elt,
       PDM_g_num_t  *connec
@@ -1066,7 +1066,7 @@ const int           n_elt,
 PDM_g_num_t *
 PDM_DMesh_nodal_section_std_get
 (
-      PDM_DMesh_nodal_t *dmesh_nodal,
+      PDM_dmesh_nodal_t *dmesh_nodal,
 const int                id_section
 )
 {
@@ -1074,8 +1074,8 @@ const int                id_section
   PDM_UNUSED(dmesh_nodal);
   PDM_UNUSED(id_section);
   return NULL;
-  // PDM_DMesh_nodal_t *mesh =
-  //         (PDM_DMesh_nodal_t *) PDM_Handles_get (mesh_handles, hdl);
+  // PDM_dmesh_nodal_t *mesh =
+  //         (PDM_dmesh_nodal_t *) PDM_Handles_get (mesh_handles, hdl);
 
   // if (mesh == NULL) {
   //   PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
@@ -1106,7 +1106,7 @@ const int                id_section
 int
 PDM_DMesh_nodal_section_n_elt_get
 (
-      PDM_DMesh_nodal_t *dmesh_nodal,
+      PDM_dmesh_nodal_t *dmesh_nodal,
 const int                id_section
 )
 {
@@ -1114,8 +1114,8 @@ const int                id_section
   PDM_UNUSED(dmesh_nodal);
   PDM_UNUSED(id_section);
   return -10000;
-  // PDM_DMesh_nodal_t *mesh =
-  //         (PDM_DMesh_nodal_t *) PDM_Handles_get (mesh_handles, hdl);
+  // PDM_dmesh_nodal_t *mesh =
+  //         (PDM_dmesh_nodal_t *) PDM_Handles_get (mesh_handles, hdl);
 
   // if (mesh == NULL) {
   //   PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
@@ -1185,7 +1185,7 @@ const int                id_section
 void
 PDM_DMesh_nodal_section_poly2d_set
 (
-      PDM_DMesh_nodal_t *dmesh_nodal,
+      PDM_dmesh_nodal_t *dmesh_nodal,
 const int                id_section,
 const PDM_l_num_t        n_elt,
       PDM_l_num_t       *connec_idx,
@@ -1199,8 +1199,8 @@ const PDM_l_num_t        n_elt,
   PDM_UNUSED(connec);
   abort();
 
-  // PDM_DMesh_nodal_t *mesh =
-  //         (PDM_DMesh_nodal_t *) PDM_Handles_get (mesh_handles, hdl);
+  // PDM_dmesh_nodal_t *mesh =
+  //         (PDM_dmesh_nodal_t *) PDM_Handles_get (mesh_handles, hdl);
 
   // if (mesh == NULL) {
   //   PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
@@ -1260,7 +1260,7 @@ const PDM_l_num_t        n_elt,
 void
 PDM_DMesh_nodal_section_poly2d_get
 (
-      PDM_DMesh_nodal_t  *dmesh_nodal,
+      PDM_dmesh_nodal_t  *dmesh_nodal,
 const int                 id_section,
       PDM_l_num_t       **connec_idx,
       PDM_g_num_t       **connec
@@ -1268,8 +1268,8 @@ const int                 id_section,
 {
   PDM_UNUSED(dmesh_nodal);
   PDM_UNUSED(id_section);
-  // PDM_DMesh_nodal_t *mesh =
-  //         (PDM_DMesh_nodal_t *) PDM_Handles_get (mesh_handles, hdl);
+  // PDM_dmesh_nodal_t *mesh =
+  //         (PDM_dmesh_nodal_t *) PDM_Handles_get (mesh_handles, hdl);
 
   abort();
   PDM_DMesh_nodal_section_poly2d_t *section = NULL;
@@ -1301,7 +1301,7 @@ const int                 id_section,
 void
 PDM_DMesh_nodal_section_poly3d_set
 (
-      PDM_DMesh_nodal_t  *dmesh_nodal,
+      PDM_dmesh_nodal_t  *dmesh_nodal,
 const int                 id_section,
 const PDM_l_num_t         n_elt,
 const PDM_l_num_t         n_face,
@@ -1378,7 +1378,7 @@ const PDM_l_num_t         n_face,
 void
 PDM_DMesh_nodal_section_poly3d_get
 (
-      PDM_DMesh_nodal_t  *dmesh_nodal,
+      PDM_dmesh_nodal_t  *dmesh_nodal,
 const int                 id_section,
       PDM_l_num_t        *n_face,
       PDM_l_num_t       **facvtx_idx,
@@ -1425,9 +1425,9 @@ const int                 id_section,
  */
 
 PDM_g_num_t
-PDM_DMesh_nodal_total_n_cell_get
+PDM_dmesh_nodal_total_n_cell_get
 (
-PDM_DMesh_nodal_t  *dmesh_nodal
+PDM_dmesh_nodal_t  *dmesh_nodal
 )
 {
 
@@ -1438,7 +1438,7 @@ PDM_DMesh_nodal_t  *dmesh_nodal
   }
 
   if(mesh->mesh_dimension != 3){
-    PDM_error(__FILE__, __LINE__, 0, "You cannot compute cell number if you have mesh dimension != 3 PDM_DMesh_nodal_total_n_cell_get %d\n",
+    PDM_error(__FILE__, __LINE__, 0, "You cannot compute cell number if you have mesh dimension != 3 PDM_dmesh_nodal_total_n_cell_get %d\n",
               mesh->mesh_dimension);
     abort();
   }
@@ -1471,9 +1471,9 @@ PDM_DMesh_nodal_t  *dmesh_nodal
  */
 
 PDM_g_num_t
-PDM_DMesh_nodal_total_n_face_get
+PDM_dmesh_nodal_total_n_face_get
 (
-PDM_DMesh_nodal_t  *dmesh_nodal
+PDM_dmesh_nodal_t  *dmesh_nodal
 )
 {
 
@@ -1502,9 +1502,9 @@ PDM_DMesh_nodal_t  *dmesh_nodal
  */
 
 PDM_g_num_t
-PDM_DMesh_nodal_total_n_vtx_get
+PDM_dmesh_nodal_total_n_vtx_get
 (
-PDM_DMesh_nodal_t  *dmesh_nodal
+PDM_dmesh_nodal_t  *dmesh_nodal
 )
 {
 
@@ -1532,7 +1532,7 @@ PDM_DMesh_nodal_t  *dmesh_nodal
 void
 PDM_dmesh_nodal_decompose_faces_get_size
 (
-PDM_DMesh_nodal_t *dmesh_nodal,
+PDM_dmesh_nodal_t *dmesh_nodal,
 int               *n_face_elt_tot,
 int               *n_sum_vtx_face_tot
 )
@@ -1570,7 +1570,7 @@ int               *n_sum_vtx_face_tot
 void
 PDM_dmesh_nodal_generate_distribution
 (
- PDM_DMesh_nodal_t  *dmesh_nodal
+ PDM_dmesh_nodal_t  *dmesh_nodal
 )
 {
   /* Get current structure to treat */
@@ -1692,7 +1692,7 @@ PDM_dmesh_nodal_generate_distribution
 void
 PDM_dmesh_nodal_decompose_edges_get_size
 (
-PDM_DMesh_nodal_t *dmesh_nodal,
+PDM_dmesh_nodal_t *dmesh_nodal,
 int               *n_edge_elt_tot,
 int               *n_sum_vtx_edge_tot
 )
@@ -1725,7 +1725,7 @@ int               *n_sum_vtx_edge_tot
 void
 PDM_DMesh_nodal_cell_face_compute2
 (
-PDM_DMesh_nodal_t  *dmesh_nodal
+PDM_dmesh_nodal_t  *dmesh_nodal
 )
 {
 
@@ -2200,7 +2200,7 @@ PDM_DMesh_nodal_t  *dmesh_nodal
 void
 PDM_DMesh_nodal_cell_face_compute
 (
-PDM_DMesh_nodal_t  *dmesh_nodal
+PDM_dmesh_nodal_t  *dmesh_nodal
 )
 {
   /* Get current structure to treat */
@@ -2228,7 +2228,7 @@ PDM_DMesh_nodal_t  *dmesh_nodal
 int
 PDM_DMesh_nodal_cell_face_get
 (
-PDM_DMesh_nodal_t  *dmesh_nodal,
+PDM_dmesh_nodal_t  *dmesh_nodal,
 int               **dcell_face_idx,
 PDM_g_num_t       **dcell_face
 )
@@ -2259,7 +2259,7 @@ PDM_g_num_t       **dcell_face
 int
 PDM_DMesh_nodal_face_cell_get
 (
-PDM_DMesh_nodal_t  *dmesh_nodal,
+PDM_dmesh_nodal_t  *dmesh_nodal,
 PDM_g_num_t       **dface_cell
 )
 {
@@ -2292,7 +2292,7 @@ PDM_g_num_t       **dface_cell
 int
 PDM_DMesh_nodal_face_vtx_get
 (
-PDM_DMesh_nodal_t  *dmesh_nodal,
+PDM_dmesh_nodal_t  *dmesh_nodal,
 int               **_dface_vtx_idx,
 PDM_g_num_t       **_dface_vtx
 )
@@ -2323,7 +2323,7 @@ PDM_g_num_t       **_dface_vtx
 const PDM_g_num_t *
 PDM_DMesh_nodal_distrib_vtx_get
 (
-PDM_DMesh_nodal_t  *dmesh_nodal
+PDM_dmesh_nodal_t  *dmesh_nodal
 )
 {
 
@@ -2352,12 +2352,12 @@ PDM_DMesh_nodal_t  *dmesh_nodal
 // const PDM_g_num_t *
 // PDM_DMesh_nodal_distrib_section_get
 // (
-// PDM_DMesh_nodal_t  *dmesh_nodal,
+// PDM_dmesh_nodal_t  *dmesh_nodal,
 //  const int   id_section
 // )
 // {
-//   PDM_DMesh_nodal_t *mesh =
-//           (PDM_DMesh_nodal_t *) PDM_Handles_get (mesh_handles, hdl);
+//   PDM_dmesh_nodal_t *mesh =
+//           (PDM_dmesh_nodal_t *) PDM_Handles_get (mesh_handles, hdl);
 
 //   if (mesh == NULL) {
 //     PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
@@ -2424,7 +2424,7 @@ PDM_DMesh_nodal_t  *dmesh_nodal
 PDM_g_num_t *
 PDM_DMesh_nodal_distrib_cell_get
 (
-PDM_DMesh_nodal_t  *dmesh_nodal
+PDM_dmesh_nodal_t  *dmesh_nodal
 )
 {
   _pdm_dmesh_nodal_t* mesh = (_pdm_dmesh_nodal_t *) dmesh_nodal;
@@ -2450,7 +2450,7 @@ PDM_DMesh_nodal_t  *dmesh_nodal
 PDM_g_num_t *
 PDM_DMesh_nodal_distrib_face_get
 (
-PDM_DMesh_nodal_t  *dmesh_nodal
+PDM_dmesh_nodal_t  *dmesh_nodal
 )
 {
   _pdm_dmesh_nodal_t* mesh = (_pdm_dmesh_nodal_t *) dmesh_nodal;

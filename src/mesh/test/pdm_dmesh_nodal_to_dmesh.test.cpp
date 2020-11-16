@@ -10,7 +10,7 @@
 // double coord_y[n_vtx] = {0., 0., 0., 1., 1., 1., 0., 0., 0., 1., 1., 1};
 // double coord_z[n_vtx] = {0., 0., 0., 0., 0., 0., 1., 1., 1., 1., 1., 1};
 
-MPI_TEST_CASE("[pdm_dmesh_nodal_to_dmesh] decomposes hexa ",1) {
+MPI_TEST_CASE("[PDM_dmesh_nodal_to_dmesh] decomposes hexa ",1) {
 
   const PDM_g_num_t n_vtx            = 12;
   const PDM_g_num_t n_cell           = 2;
@@ -19,7 +19,7 @@ MPI_TEST_CASE("[pdm_dmesh_nodal_to_dmesh] decomposes hexa ",1) {
                                    2, 3, 6, 5, 8, 9, 12, 11};
 
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
-  PDM_DMesh_nodal_t* dmn = PDM_DMesh_nodal_create(pdm_comm, 3, n_vtx, n_cell, -1, -1);
+  PDM_dmesh_nodal_t* dmn = PDM_DMesh_nodal_create(pdm_comm, 3, n_vtx, n_cell, -1, -1);
 
   int hexa_section_1 = PDM_DMesh_nodal_section_add(dmn, PDM_MESH_NODAL_HEXA8);
 
@@ -33,10 +33,10 @@ MPI_TEST_CASE("[pdm_dmesh_nodal_to_dmesh] decomposes hexa ",1) {
 
   PDM_dmesh_nodal_to_dmesh_add_dmesh_nodal(dmntodm, 0, dmn);
 
-  PDM_dmesh_nodal_to_dmesh_compute(dmntodm, PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_FACE);
+  PDM_dmesh_nodal_to_dmesh_compute(dmntodm, PDM_dmesh_nodal_tO_DMESH_TRANSFORM_TO_FACE);
 
   // Plante car on a pas implementer la decomposition en edge des Hexa
-  // PDM_dmesh_nodal_to_dmesh_compute(dmntodm, PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_EDGE);
+  // PDM_dmesh_nodal_to_dmesh_compute(dmntodm, PDM_dmesh_nodal_tO_DMESH_TRANSFORM_TO_EDGE);
 
 
   PDM_dmesh_nodal_to_dmesh_free(dmntodm);

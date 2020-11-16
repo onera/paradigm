@@ -28,6 +28,7 @@
 #include "pdm.h"
 #include "pdm_mpi.h"
 #include "pdm_dmesh.h"
+#include "pdm_dmesh_nodal.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -104,6 +105,22 @@ void PDM_multipart_register_block
  const int          mpart_id,
  const int          zone_id,
        PDM_dmesh_t *dmesh
+);
+
+/**
+ *
+ * \brief Set distributed mesh data for the input zone
+ *
+ * \param [in]   mpart_id       Multipart structure id
+ * \param [in]   zone_id        Global zone id
+ * \param [in]   dmesh_id       Id of the distributed mesh structure to use
+ */
+
+void PDM_multipart_register_dmesh_nodal
+(
+ const int                mpart_id,
+ const int                zone_id,
+       PDM_dmesh_nodal_t *dmesh_nodal
 );
 
 

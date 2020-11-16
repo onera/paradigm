@@ -8,15 +8,15 @@ cdef extern from "pdm_dmesh_nodal_to_dmesh.h":
 
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     ctypedef enum PDM_dmesh_nodal_to_dmesh_transform_t:
-      PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_FACE = 0
-      PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_EDGE = 1
+      PDM_dmesh_nodal_tO_DMESH_TRANSFORM_TO_FACE = 0
+      PDM_dmesh_nodal_tO_DMESH_TRANSFORM_TO_EDGE = 1
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     ctypedef enum PDM_dmesh_nodal_to_dmesh_translate_group_t:
-      PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_FACE = 0
-      PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_EDGE = 1
-      PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_VTX  = 2
+      PDM_dmesh_nodal_tO_DMESH_TRANSLATE_GROUP_TO_FACE = 0
+      PDM_dmesh_nodal_tO_DMESH_TRANSLATE_GROUP_TO_EDGE = 1
+      PDM_dmesh_nodal_tO_DMESH_TRANSLATE_GROUP_TO_VTX  = 2
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -27,7 +27,7 @@ cdef extern from "pdm_dmesh_nodal_to_dmesh.h":
 
     void PDM_dmesh_nodal_to_dmesh_add_dmesh_nodal(PDM_dmesh_nodal_to_dmesh_t *dmn_to_dm,
                                                   int                         i_mesh,
-                                                  PDM_DMesh_nodal_t          *dmn)
+                                                  PDM_dmesh_nodal_t          *dmn)
 
     void PDM_dmesh_nodal_to_dmesh_compute(PDM_dmesh_nodal_to_dmesh_t*          dmn_to_dm,
                                           PDM_dmesh_nodal_to_dmesh_transform_t transform_kind);

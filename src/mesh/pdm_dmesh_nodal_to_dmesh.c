@@ -568,7 +568,7 @@ _generate_faces_from_dmesh_nodal
 )
 {
 
-  PDM_DMesh_nodal_t* dmn = (PDM_DMesh_nodal_t *) dmesh_nodal;
+  PDM_dmesh_nodal_t* dmn = (PDM_dmesh_nodal_t *) dmesh_nodal;
   PDM_UNUSED(dmesh_nodal);
 
   int n_face_elt_tot     = 0;
@@ -622,7 +622,7 @@ _generate_edges_from_dmesh_nodal
   _pdm_dmesh_nodal_t *dmesh_nodal
 )
 {
-  PDM_DMesh_nodal_t* dmn = (PDM_DMesh_nodal_t *) dmesh_nodal;
+  PDM_dmesh_nodal_t* dmn = (PDM_dmesh_nodal_t *) dmesh_nodal;
 
   int n_edge_elt_tot     = 0;
   int n_sum_vtx_edge_tot = 0;
@@ -694,7 +694,7 @@ PDM_dmesh_nodal_to_dmesh_add_dmesh_nodal
 (
         PDM_dmesh_nodal_to_dmesh_t *dmn_to_dm,
   const int                         i_mesh,
-        PDM_DMesh_nodal_t          *dmn
+        PDM_dmesh_nodal_t          *dmn
 )
 {
   _pdm_dmesh_nodal_to_dmesh_t* _dmn_to_dm = (_pdm_dmesh_nodal_to_dmesh_t *) dmn_to_dm;
@@ -757,13 +757,13 @@ PDM_dmesh_nodal_to_dmesh_compute
 
     switch (transform_kind) {
 
-      case PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_FACE:
+      case PDM_dmesh_nodal_tO_DMESH_TRANSFORM_TO_FACE:
         {
           _dmn_to_dm->dmesh[i_mesh] = _generate_faces_from_dmesh_nodal(_dmn_to_dm->dmesh_nodal[i_mesh]);
         }
         break;
 
-      case PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_EDGE:
+      case PDM_dmesh_nodal_tO_DMESH_TRANSFORM_TO_EDGE:
         {
           _dmn_to_dm->dmesh[i_mesh] = _generate_edges_from_dmesh_nodal(_dmn_to_dm->dmesh_nodal[i_mesh]);
         }

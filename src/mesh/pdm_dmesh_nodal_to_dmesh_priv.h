@@ -1,5 +1,5 @@
-#ifndef __PDM_DMESH_NODAL_TO_DMESH_PRIV_H__
-#define __PDM_DMESH_NODAL_TO_DMESH_PRIV_H__
+#ifndef __pdm_dmesh_nodal_tO_DMESH_PRIV_H__
+#define __pdm_dmesh_nodal_tO_DMESH_PRIV_H__
 
 /*----------------------------------------------------------------------------
  * Standard C library headers
@@ -48,4 +48,4 @@ typedef struct {
 }
 #endif
 
-#endif  /* __PDM_DMESH_NODAL_TO_DMESH_PRIV_H__ */
+#endif  /* __pdm_dmesh_nodal_tO_DMESH_PRIV_H__ */

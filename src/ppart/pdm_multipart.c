@@ -44,6 +44,8 @@
 #include "pdm_handles.h"
 #include "pdm_dmesh.h"
 #include "pdm_dmesh_priv.h"
+#include "pdm_dmesh_nodal.h"
+#include "pdm_dmesh_nodal_priv.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
 #include "pdm_binary_search.h"
@@ -100,7 +102,7 @@ typedef struct  {
 
   PDM_dmesh_t **dmeshes;             // Ids of dmesh structure storing
                                      // distributed meshes (size = n_zone)
-  // int          *dmeshes_ids;      // Ids of dmesh structure storing
+  PDM_dmesh_nodal_t **dmeshes_nodal;
 
   int           n_total_joins;       // Total number of joins between zones (each counts twice)
   const int    *join_to_opposite;    // For each global joinId, give the globalId of
@@ -771,8 +773,10 @@ PDM_multipart_create
 
   // _multipart->dmeshes_ids = (int *) malloc(_multipart->n_zone * sizeof(int));
 
-  _multipart->dmeshes     = (PDM_dmesh_t **) malloc(_multipart->n_zone * sizeof(PDM_dmesh_t *));
-  _multipart->pmeshes     = (_part_mesh_t *) malloc(_multipart->n_zone * sizeof(_part_mesh_t ));
+  _multipart->dmeshes       = (PDM_dmesh_t       **) malloc(_multipart->n_zone * sizeof(PDM_dmesh_t       *));
+  _multipart->dmeshes_nodal = (PDM_dmesh_nodal_t **) malloc(_multipart->n_zone * sizeof(PDM_dmesh_nodal_t *));
+
+  _multipart->pmeshes       = (_part_mesh_t *) malloc(_multipart->n_zone * sizeof(_part_mesh_t ));
 
   int _renum_cell_method = PDM_part_renum_method_cell_idx_get("PDM_PART_RENUM_CELL_NONE");
   int _renum_face_method = PDM_part_renum_method_face_idx_get("PDM_PART_RENUM_FACE_NONE");
@@ -805,6 +809,27 @@ void PDM_multipart_register_block
   _pdm_multipart_t *_multipart = _get_from_id (mpart_id);
   assert(zone_id < _multipart->n_zone);
   _multipart->dmeshes[zone_id] = dmesh;
+}
+
+/**
+ *
+ * \brief Set distributed mesh data for the input zone
+ *
+ * \param [in]   mpart_id       Multipart structure id
+ * \param [in]   zone_id        Global zone id
+ * \param [in]   dmesh_id       Id of the distributed mesh structure to use
+ */
+void PDM_multipart_register_dmesh_nodal
+(
+ const int                mpart_id,
+ const int                zone_id,
+       PDM_dmesh_nodal_t *dmesh_nodal
+)
+{
+  _pdm_multipart_t *_multipart = _get_from_id (mpart_id);
+  assert(zone_id < _multipart->n_zone);
+  assert(_multipart->dmeshes_nodal[zone_id] == NULL);
+  _multipart->dmeshes_nodal[zone_id] = dmesh_nodal;
 }
 
 /**
@@ -1559,6 +1584,7 @@ PDM_multipart_free
   }
   free(_multipart->pmeshes);
   free(_multipart->dmeshes);
+  free(_multipart->dmeshes_nodal);
 
   //PDM_part_renum_method_purge();
   free (_multipart);

@@ -2,7 +2,7 @@
 cdef extern from "pdm_dmesh_nodal.h":
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     # > Wrapping of Ppart Structure
-    ctypedef struct PDM_DMesh_nodal_t:
+    ctypedef struct PDM_dmesh_nodal_t:
       pass
 
     ctypedef enum PDM_Mesh_nodal_elt_t:
@@ -20,48 +20,48 @@ cdef extern from "pdm_dmesh_nodal.h":
 
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     # > Wrapping of function
-    PDM_DMesh_nodal_t* PDM_DMesh_nodal_create(PDM_MPI_Comm comm,
+    PDM_dmesh_nodal_t* PDM_DMesh_nodal_create(PDM_MPI_Comm comm,
                                               int          mesh_dimension,
                                               PDM_g_num_t  n_vtx,
                                               PDM_g_num_t  n_cell,
                                               PDM_g_num_t  n_face,
                                               PDM_g_num_t  n_edge)
-    void PDM_DMesh_nodal_free(PDM_DMesh_nodal_t* dmn, int partial)
+    void PDM_DMesh_nodal_free(PDM_dmesh_nodal_t* dmn, int partial)
 
-    void PDM_DMesh_nodal_coord_set(PDM_DMesh_nodal_t* dmn, int n_vtx, double* coords)
+    void PDM_DMesh_nodal_coord_set(PDM_dmesh_nodal_t* dmn, int n_vtx, double* coords)
 
-    # PDM_g_num_t *PDM_DMesh_nodal_distrib_vtx_get(PDM_DMesh_nodal_t* dmn)
-    # PDM_g_num_t *PDM_DMesh_nodal_distrib_section_get(PDM_DMesh_nodal_t* dmn, int id_section)
+    # PDM_g_num_t *PDM_DMesh_nodal_distrib_vtx_get(PDM_dmesh_nodal_t* dmn)
+    # PDM_g_num_t *PDM_DMesh_nodal_distrib_section_get(PDM_dmesh_nodal_t* dmn, int id_section)
 
-    # int                  PDM_DMesh_nodal_n_vtx_get(PDM_DMesh_nodal_t* dmn)
-    # int                  PDM_DMesh_nodal_n_sections_get(PDM_DMesh_nodal_t* dmn)
-    # int*                 PDM_DMesh_nodal_sections_id_get(PDM_DMesh_nodal_t* dmn)
-    # PDM_Mesh_nodal_elt_t PDM_DMesh_nodal_section_type_get(PDM_DMesh_nodal_t* dmn, int id_section)
-    # double*              PDM_DMesh_nodal_vtx_get(PDM_DMesh_nodal_t* dmn)
+    # int                  PDM_DMesh_nodal_n_vtx_get(PDM_dmesh_nodal_t* dmn)
+    # int                  PDM_DMesh_nodal_n_sections_get(PDM_dmesh_nodal_t* dmn)
+    # int*                 PDM_DMesh_nodal_sections_id_get(PDM_dmesh_nodal_t* dmn)
+    # PDM_Mesh_nodal_elt_t PDM_DMesh_nodal_section_type_get(PDM_dmesh_nodal_t* dmn, int id_section)
+    # double*              PDM_DMesh_nodal_vtx_get(PDM_dmesh_nodal_t* dmn)
 
-    int                  PDM_DMesh_nodal_section_add(PDM_DMesh_nodal_t* dmn, PDM_Mesh_nodal_elt_t t_elt)
-    void                 PDM_DMesh_nodal_section_std_set(PDM_DMesh_nodal_t* dmn,
+    int                  PDM_DMesh_nodal_section_add(PDM_dmesh_nodal_t* dmn, PDM_Mesh_nodal_elt_t t_elt)
+    void                 PDM_DMesh_nodal_section_std_set(PDM_dmesh_nodal_t* dmn,
                                                         int          id_section,
                                                         int          n_elmts,
                                                         PDM_g_num_t* connec)
 
-    PDM_g_num_t* PDM_DMesh_nodal_section_std_get(PDM_DMesh_nodal_t* dmn, int id_section)
-    int PDM_DMesh_nodal_section_n_elt_get(PDM_DMesh_nodal_t* dmn, int id_section)
+    PDM_g_num_t* PDM_DMesh_nodal_section_std_get(PDM_dmesh_nodal_t* dmn, int id_section)
+    int PDM_DMesh_nodal_section_n_elt_get(PDM_dmesh_nodal_t* dmn, int id_section)
 
-    void PDM_DMesh_nodal_section_poly2d_set(PDM_DMesh_nodal_t* dmn, int id_section, PDM_l_num_t n_elt,
+    void PDM_DMesh_nodal_section_poly2d_set(PDM_dmesh_nodal_t* dmn, int id_section, PDM_l_num_t n_elt,
                                             PDM_l_num_t* connec_idx,
                                             PDM_g_num_t   *connec)
 
-    PDM_g_num_t PDM_DMesh_nodal_total_n_cell_get(PDM_DMesh_nodal_t* dmn)
-    PDM_g_num_t PDM_DMesh_nodal_total_n_face_get(PDM_DMesh_nodal_t* dmn)
-    PDM_g_num_t PDM_DMesh_nodal_total_n_vtx_get(PDM_DMesh_nodal_t* dmn)
-    void PDM_DMesh_nodal_cell_face_compute(PDM_DMesh_nodal_t* dmn)
-    int PDM_DMesh_nodal_cell_face_get(PDM_DMesh_nodal_t* dmn, PDM_l_num_t** cell_face_idx, PDM_g_num_t **cell_face)
-    int PDM_DMesh_nodal_face_cell_get(PDM_DMesh_nodal_t* dmn, PDM_g_num_t** face_cell)
-    int PDM_DMesh_nodal_face_vtx_get(PDM_DMesh_nodal_t* dmn, int** dface_vtx_idx, PDM_g_num_t **dface_vtx)
+    PDM_g_num_t PDM_dmesh_nodal_total_n_cell_get(PDM_dmesh_nodal_t* dmn)
+    PDM_g_num_t PDM_dmesh_nodal_total_n_face_get(PDM_dmesh_nodal_t* dmn)
+    PDM_g_num_t PDM_dmesh_nodal_total_n_vtx_get(PDM_dmesh_nodal_t* dmn)
+    void PDM_DMesh_nodal_cell_face_compute(PDM_dmesh_nodal_t* dmn)
+    int PDM_DMesh_nodal_cell_face_get(PDM_dmesh_nodal_t* dmn, PDM_l_num_t** cell_face_idx, PDM_g_num_t **cell_face)
+    int PDM_DMesh_nodal_face_cell_get(PDM_dmesh_nodal_t* dmn, PDM_g_num_t** face_cell)
+    int PDM_DMesh_nodal_face_vtx_get(PDM_dmesh_nodal_t* dmn, int** dface_vtx_idx, PDM_g_num_t **dface_vtx)
 
-    PDM_g_num_t* PDM_DMesh_nodal_distrib_cell_get(PDM_DMesh_nodal_t* dmn)
-    PDM_g_num_t* PDM_DMesh_nodal_distrib_face_get(PDM_DMesh_nodal_t* dmn)
+    PDM_g_num_t* PDM_DMesh_nodal_distrib_cell_get(PDM_dmesh_nodal_t* dmn)
+    PDM_g_num_t* PDM_DMesh_nodal_distrib_face_get(PDM_dmesh_nodal_t* dmn)
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 cdef extern from "pdm_elt_parent_find.h":
@@ -101,7 +101,7 @@ cdef class DistributedMeshNodal:
     """
     # ************************************************************************
     # > Class attributes
-    cdef PDM_DMesh_nodal_t *dmn
+    cdef PDM_dmesh_nodal_t *dmn
     # cdef int idmesh
     cdef int n_rank
     # ************************************************************************
@@ -197,7 +197,7 @@ cdef class DistributedMeshNodal:
         # ************************************************************************
 
         # > Get Size
-        n_face  = PDM_DMesh_nodal_total_n_face_get(self.dmn)
+        n_face  = PDM_dmesh_nodal_total_n_face_get(self.dmn)
 
         # > Get array
         dn_face = PDM_DMesh_nodal_face_cell_get(self.dmn, &face_cell)
@@ -227,7 +227,7 @@ cdef class DistributedMeshNodal:
         # ************************************************************************
 
         # > Get Size
-        n_cell  = PDM_DMesh_nodal_total_n_cell_get(self.dmn)
+        n_cell  = PDM_dmesh_nodal_total_n_cell_get(self.dmn)
         # n_cell  = 0
 
         # > Get array
@@ -267,7 +267,7 @@ cdef class DistributedMeshNodal:
         # ************************************************************************
 
         # > Get Size
-        n_face  = PDM_DMesh_nodal_total_n_face_get(self.dmn)
+        n_face  = PDM_dmesh_nodal_total_n_face_get(self.dmn)
 
         # > Get array
         dn_face = PDM_DMesh_nodal_face_vtx_get(self.dmn, &dface_vtx_idx, &dface_vtx)
