@@ -362,7 +362,7 @@ const int                n_elt,
  *      //    | /
  *   1 x-------x 2
  *
- *  - PDM_MESH_NODAL_PRSIM6 :
+ *  - PDM_MESH_NODAL_PRISM6 :
  *
  *   4 x-------x 6
  *     |\     /|
@@ -633,10 +633,11 @@ PDM_dmesh_nodal_t *dmesh_nodal
 void
 PDM_dmesh_nodal_dual_graph
 (
-PDM_dmesh_nodal_t  *dmesh_nodal,
-PDM_g_num_t       **dual_graph_idx,
-PDM_g_num_t       **dual_graph,
-int                 dim
+  PDM_dmesh_nodal_t  *dmesh_nodal,
+  PDM_g_num_t       **dual_graph_idx,
+  PDM_g_num_t       **dual_graph,
+  int                 dim,
+  PDM_MPI_Comm        comm
 );
 
 /**

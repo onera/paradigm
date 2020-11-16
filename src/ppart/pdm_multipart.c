@@ -1289,17 +1289,20 @@ PDM_multipart_run_ppart
 
   // TODO : Hooks for Bérenger (tmp)
   for (int i_zone = 0; i_zone < _multipart->n_zone; ++i_zone) {
-    if(_multipart->dmeshes_nodal[i_zone] != NULL) {
+    PDM_dmesh_nodal_t* dmesh_nodal = _multipart->dmeshes_nodal[i_zone];
+    if(dmesh_nodal != NULL) {
 
       PDM_g_num_t       *dual_graph_idx;
       PDM_g_num_t       *dual_graph;
       int dim = 3;
-      PDM_dmesh_nodal_dual_graph(_multipart->dmeshes_nodal[i_zone],
+      PDM_dmesh_nodal_dual_graph(dmesh_nodal,
                                  &dual_graph_idx,
                                  &dual_graph,
-                                 dim);
+                                 dim,
+                                 _multipart->comm);
     }
   }
+  return;
 
 
   if (_multipart->merge_blocks)

@@ -1716,22 +1716,27 @@ int               *n_sum_vtx_edge_tot
 /**
  * \brief  Compute cell->cell connectivity
  *
- * \param [in]   hdl              Distributed nodal mesh handle
+ * \param [in]   dmesh_nodal Distributed nodal mesh handle
+ * \param [out]  dual_graph_idx
+ * \param [out]  dual_graph
+ * \param [in]   dim Distributed nodal mesh handle
  *
  */
 void
 PDM_dmesh_nodal_dual_graph
 (
-PDM_dmesh_nodal_t  *dmesh_nodal,
-PDM_g_num_t       **dual_graph_idx,
-PDM_g_num_t       **dual_graph,
-int                 dim
+  PDM_dmesh_nodal_t  *dmesh_nodal,
+  PDM_g_num_t       **dual_graph_idx,
+  PDM_g_num_t       **dual_graph,
+  int                 dim,
+  PDM_MPI_Comm        comm
 )
 {
   assert(dim == 3); /* dim if for dispatching 2D/3D */
-  PDM_UNUSED(dmesh_nodal);
-  PDM_UNUSED(dual_graph_idx);
-  PDM_UNUSED(dual_graph);
+  int i_rank;
+  int n_rank;
+  PDM_MPI_Comm_rank(_multipart->comm, &i_rank);
+  PDM_MPI_Comm_size(_multipart->comm, &n_rank);
 
   // Pour Bérenger :
   //     --> On doit concatener les multiple block pour faire un seul cell_vtx
@@ -1742,6 +1747,59 @@ int                 dim
   //     Puis le dual : PDM_deduce_combine_connectivity_dual
   //     See : pdm_dconnectivity_transform.c
 
+  int n_section = PDM_DMesh_nodal_n_section_get(dmesh_nodal);
+  
+  int n_elt_vtx = 0;
+  for (int i=0; i<n_section; ++i) {
+    int n_elt_section = PDM_DMesh_nodal_section_n_elt_get(dmesh_nodal,i);
+    PDM_DMesh_nodal_section_type_get
+    PDM_Mesh_nodal_n_vertices_element
+  }
+
+  PDM_g_num_t* cat_dcell_vtx = (PDM_g_num_t *) malloc( n_elt * sizeof(PDM_g_num_t));
+  int pos = 0;
+  for (int i=0; i<n_section; ++i) {
+    dn_elt += PDM_DMesh_nodal_section_n_elt_get(dmesh_nodal,i);
+    PDM_g_num_t* d_elts = PDM_DMesh_nodal_section_std_get(dmesh_nodal,i);
+    for (int j=0; j<dn_elt; ++j) {
+      d_elts
+    }
+  }
+
+
+
+  //int n_block = PDM_DMesh_nodal_n_section_get(dmesh_nodal);
+  //int n_part = 1;
+  //
+  //// n_elt
+  //int n_elt = 0;
+  //for (int i=0; i<n_block; ++i) {
+  //  n_elt += PDM_DMesh_nodal_section_n_elt_get(dmesh_nodal,i);
+  //}
+
+  //// block_distrib_idx
+  //PDM_g_num_t** block_distrib_idx = (PDM_g_num_t **) malloc( n_block * sizeof(PDM_g_num_t*));
+  //for (int i=0; i<n_block; ++i) {
+  //  dn_elmts += PDM_DMesh_nodal_section_n_elt_get(dmesh_nodal,i);
+  //  block_distrib_idx[i] = (PDM_g_num_t *) malloc( n_rank+1 * sizeof(PDM_g_num_t*));
+
+  //  PDM_g_num_t* dist_elt_section = PDM_compute_entity_distribution(comm, dn_elmts);
+  //  for (int j=0; j<n_rank+1; ++j) {
+  //    block_distrib_idx[i][j] = dist_elt_section[j]-1;
+  //  }
+  //  free(dist_elt_section);
+  //}
+
+  //PDM_g_num_t** ln_to_gn = (PDM_g_num_t **) malloc( n_block * sizeof(PDM_g_num_t*));
+
+  //PDM_multi_block_to_part_t* mbtp =
+  //  PDM_multi_block_to_part_create(multi_distrib_idx,
+  //                                 n_block,
+  //        (const PDM_g_num_t**)    block_distrib_idx,
+  //        (const PDM_g_num_t**)    ln_to_gn,
+  //                                 &n_elt,
+  //                                 n_part,
+  //                                 comm);
 
 }
 
