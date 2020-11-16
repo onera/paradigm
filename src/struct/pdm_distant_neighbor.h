@@ -27,6 +27,8 @@ extern "C" {
  * Type definitions
  *============================================================================*/
 
+typedef struct _pdm_distant_neighbor_t PDM_distant_neighbor_t;
+
 /*=============================================================================
  * Static global variables
  *============================================================================*/
@@ -53,7 +55,7 @@ extern "C" {
  *
  */
 
-int
+PDM_distant_neighbor_t*
 PDM_distant_neighbor_create
 (
 const PDM_MPI_Comm   comm,
@@ -74,7 +76,7 @@ const int           *n_entity,
 void
 PDM_distant_neighbor_free
 (
- const int          id
+ PDM_distant_neighbor_t* dn
 );
 
 /**
@@ -86,14 +88,14 @@ PDM_distant_neighbor_free
 void
 PDM_distant_neighbor_exch
 (
- const int      id,
- size_t         s_data,
- PDM_stride_t   t_stride,
- int            cst_stride,
- int          **send_entity_stride,
- void         **send_entity_data,
- int         ***recv_entity_stride,
- void        ***recv_entity_data
+ PDM_distant_neighbor_t   *dn,
+ size_t                    s_data,
+ PDM_stride_t              t_stride,
+ int                       cst_stride,
+ int                     **send_entity_stride,
+ void                    **send_entity_data,
+ int                    ***recv_entity_stride,
+ void                   ***recv_entity_data
 );
 
 /**
@@ -105,14 +107,14 @@ PDM_distant_neighbor_exch
 void
 PDM_distant_neighbor_exch_int
 (
- const int      id,
- size_t         s_data,
- PDM_stride_t   t_stride,
- int            cst_stride,
- int          **send_entity_stride,
- int          **send_entity_data,
- int         ***recv_entity_stride,
- int         ***recv_entity_data
+ PDM_distant_neighbor_t    *dn,
+ size_t                    s_data,
+ PDM_stride_t              t_stride,
+ int                       cst_stride,
+ int                     **send_entity_stride,
+ int                     **send_entity_data,
+ int                    ***recv_entity_stride,
+ int                    ***recv_entity_data
 );
 
 

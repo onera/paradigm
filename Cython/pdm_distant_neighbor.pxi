@@ -1,23 +1,30 @@
 
 cdef extern from "pdm_distant_neighbor.h":
+
+    # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    # > Wrapping of Ppart Structure
+    ctypedef struct PDM_distant_neighbor_t:
+      pass
+    # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     # > Wrapping of function
-    int PDM_distant_neighbor_create(PDM_MPI_Comm   comm,
-                                    int            n_part,
-                                    int           *n_entity,
-                                    int          **neighbor_idx,
-                                    int          **neighbor_desc)
+    PDM_distant_neighbor_t* PDM_distant_neighbor_create(PDM_MPI_Comm   comm,
+                                                        int            n_part,
+                                                        int           *n_entity,
+                                                        int          **neighbor_idx,
+                                                        int          **neighbor_desc)
 
-    void PDM_distant_neighbor_free(int id)
+    void PDM_distant_neighbor_free(PDM_distant_neighbor_t *dn)
 
-    void PDM_distant_neighbor_exch(int      id,
-                                   size_t         s_data,
-                                   PDM_stride_t   t_stride,
-                                   int            cst_stride,
-                                   int          **send_entity_stride,
-                                   void         **send_entity_data,
-                                   int         ***recv_entity_stride,
-                                   void        ***recv_entity_data);
+    void PDM_distant_neighbor_exch(PDM_distant_neighbor_t   *dn,
+                                   size_t                    s_data,
+                                   PDM_stride_t              t_stride,
+                                   int                       cst_stride,
+                                   int                     **send_entity_stride,
+                                   void                    **send_entity_data,
+                                   int                    ***recv_entity_stride,
+                                   void                   ***recv_entity_data);
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
@@ -28,7 +35,7 @@ cdef class DistantNeighbor:
     """
     # ************************************************************************
     # > Class attributes
-    cdef int   _dnid
+    cdef PDM_distant_neighbor_t *_dn
     cdef int   _n_part
     cdef int  *_n_entity
     cdef int **_neighbor_idx
@@ -84,7 +91,7 @@ cdef class DistantNeighbor:
 
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
         # > Create
-        self._dnid = PDM_distant_neighbor_create(PDMC,
+        self._dn = PDM_distant_neighbor_create(PDMC,
                                                  n_part,
                                                  self._n_entity,
                                                  self._neighbor_idx,
@@ -153,7 +160,7 @@ cdef class DistantNeighbor:
         #  = <PDM_stride_t> (0),
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
         # print(" ----> flag 3 :: PDM_distant_neighbor_exch")
-        PDM_distant_neighbor_exch(self._dnid, s_data, t_stride,
+        PDM_distant_neighbor_exch(self._dn, s_data, t_stride,
                                   cst_stride,
                                   send_entity_stri,
                                   send_entity_data,
@@ -203,7 +210,7 @@ cdef class DistantNeighbor:
       # ************************************************************************
 
       # > Free Ppart Structure
-      PDM_distant_neighbor_free(self._dnid)
+      PDM_distant_neighbor_free(self._dn)
 
       free(self._n_entity)
       free(self._neighbor_idx)

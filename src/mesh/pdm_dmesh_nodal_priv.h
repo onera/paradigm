@@ -13,7 +13,6 @@
 #include "pdm.h"
 #include "pdm_mesh_nodal.h"
 #include "pdm_dmesh_nodal.h"
-#include "pdm_handles.h"
 
 #ifdef __cplusplus
 extern "C" {

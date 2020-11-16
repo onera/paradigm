@@ -134,7 +134,6 @@ include "pdm_block_to_block.pxi"
 # --------------------
 include "pdm_cellface_orient.pxi"
 
-
 # PDM_dist_cloud_surf :
 # --------------------
 include "pdm_dist_cloud_surf.pxi"
@@ -179,8 +178,5 @@ include "pdm_dcube_gen.pxi"
 # --------------------
 include "pdm_poly_mesh_surf.pxi"
 
+
 # TODO: PDM_writer, ...
-
-
-
-

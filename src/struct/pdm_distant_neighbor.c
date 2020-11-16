@@ -11,14 +11,14 @@
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
-#include "pdm_distant_neighbor.h"
-#include "pdm_printf.h"
-#include "pdm_logging.h"
-#include "pdm_error.h"
-#include "pdm_handles.h"
-#include "pdm_mpi.h"
-#include "pdm_order.h"
 #include "pdm_priv.h"
+#include "pdm_mpi.h"
+#include "pdm_logging.h"
+#include "pdm_printf.h"
+#include "pdm_distant_neighbor_priv.h"
+#include "pdm_distant_neighbor.h"
+#include "pdm_error.h"
+#include "pdm_order.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -35,43 +35,9 @@ extern "C" {
  * Local structure definitions
  *============================================================================*/
 
-/**
- * \struct _distant_neighbor_t
- * \brief  Define a point merge structures
- *
- */
-typedef struct  {
-  PDM_MPI_Comm comm;                  /*!< MPI communicator */
-  int          n_part;                /*!< Number of partitions */
-  const int   *n_entity;              /*!< Number of entities for each partition */
-  int        **neighbor_idx;          /*!< Indexes of candidate for each current part point
-                                       *   (size = number of entities in the current part + 1) */
-  int        **neighbor_desc;         /*!< Candidates description (process,
-                                       *                           part in the process,
-                                       *                           entitiy number in the part) */
-  int**        order;
-  int**        order_unique;
-  int         *requested_data_n;      /*!< Numer of requested data for each process index
-                                       * (size : s_comm) */
-  int         *requested_data_idx;    /*!< Requested data for each process index
-                                       * (size : s_comm) */
-  int         *distributed_data_n;    /*!< Numer of distributed data for each process index
-                                       * (size : s_comm) */
-  int         *distributed_data_idx;  /*!< Distributed data for each process index
-                                       * (size : s_comm) */
-  int         *distributed_data;      /*!< Distributed data for each process
-                                       * (size : requestd_data_idx[s_comm - 1] */
-  int         *distributed_part_n;
-  int         *distributed_part_idx; /*!< For each part the shift to apply on recv buffer
-                                       * (size : n_partà )*/
-
-} _distant_neighbor_t;
-
 /*=============================================================================
  * Static global variables
  *============================================================================*/
-
-static PDM_Handles_t *_pdns   = NULL;
 
 /*=============================================================================
  * Static function definitions
@@ -156,38 +122,14 @@ _compute_unique_idx
   }
 }
 
-/**
- *
- * \brief Return ppart object from it identifier
- *
- * \param [in]   ppart_id        ppart identifier
- *
- */
-static _distant_neighbor_t *
-_get_from_id
-(
- int  id
-)
-{
-  _distant_neighbor_t *pdn = (_distant_neighbor_t *) PDM_Handles_get (_pdns, id);
-
-  if (pdn == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_distant_neighbor error : Bad identifier\n");
-  }
-
-  return pdn;
-}
-
-
 /*=============================================================================
  * Public function definitions
  *============================================================================*/
 
-
 /**
- * \brief Return an initialized \ref _distant_neighbor_t structure
+ * \brief Return an initialized \ref _pdm_distant_neighbor_t structure
  *
- * This function returns an initialized \ref _distant_neighbor_t structure
+ * This function returns an initialized \ref _pdm_distant_neighbor_t structure
  *
  * \param [in]   comm          MPI communicator
  * \param [in]   n_part        Number of partitions
@@ -201,7 +143,7 @@ _get_from_id
  * \return      A new initialized \ref PDM_distant_neighbor structure
  *
  */
-int
+PDM_distant_neighbor_t*
 PDM_distant_neighbor_create
 (
 const PDM_MPI_Comm   comm,
@@ -211,15 +153,7 @@ const int           *n_entity,
       int          **neighbor_desc
 )
 {
-  // log_trace(" PDM_distant_neighbor_create \n");
-
-  if (_pdns == NULL) {
-    _pdns = PDM_Handles_create (4);
-  }
-
-  _distant_neighbor_t *pdn = (_distant_neighbor_t *) malloc(sizeof(_distant_neighbor_t));
-
-  int id = PDM_Handles_store (_pdns, pdn);
+  _pdm_distant_neighbor_t *pdn = (_pdm_distant_neighbor_t *) malloc(sizeof(_pdm_distant_neighbor_t));
 
   pdn->comm          = comm;
 
@@ -228,23 +162,23 @@ const int           *n_entity,
   PDM_MPI_Comm_rank(pdn->comm, &i_rank);
   PDM_MPI_Comm_size(pdn->comm, &n_rank);
 
-  pdn->n_part                 = n_part;
-  pdn->n_entity               = n_entity;
-  pdn->neighbor_idx           = neighbor_idx;
-  pdn->neighbor_desc          = neighbor_desc;
-  pdn->order                  = (int **) malloc(   pdn->n_part       * sizeof(int **));
-  pdn->order_unique           = (int **) malloc(   pdn->n_part       * sizeof(int **));
-  pdn->requested_data_n       = (int * ) malloc( ( n_rank           ) * sizeof(int * ));
-  pdn->requested_data_idx     = (int * ) malloc( ( n_rank + 1       ) * sizeof(int * ));
-  pdn->distributed_part_n     = (int * ) malloc( ( pdn->n_part     ) * sizeof(int * ));
-  pdn->distributed_part_idx   = (int * ) malloc( ( pdn->n_part + 1 ) * sizeof(int * ));
+  pdn->n_part               = n_part;
+  pdn->n_entity             = n_entity;
+  pdn->neighbor_idx         = neighbor_idx;
+  pdn->neighbor_desc        = neighbor_desc;
+  pdn->order                = (int **) malloc(   pdn->n_part       * sizeof(int **));
+  pdn->order_unique         = (int **) malloc(   pdn->n_part       * sizeof(int **));
+  pdn->requested_data_n     = (int * ) malloc( ( n_rank          ) * sizeof(int * ));
+  pdn->requested_data_idx   = (int * ) malloc( ( n_rank + 1      ) * sizeof(int * ));
+  pdn->distributed_part_n   = (int * ) malloc( ( pdn->n_part     ) * sizeof(int * ));
+  pdn->distributed_part_idx = (int * ) malloc( ( pdn->n_part + 1 ) * sizeof(int * ));
 
   /*
    * Init the requested counter
    */
   for (int i = 0; i < n_rank; i++) {
     pdn->requested_data_idx[i] = 0;
-    pdn->requested_data_n[i] = 0;
+    pdn->requested_data_n  [i] = 0;
   }
 
   /*
@@ -260,7 +194,7 @@ const int           *n_entity,
 
   for(int i_part = 0; i_part < pdn->n_part; i_part++){
 
-    int *_part_neighbor_idx  = pdn->neighbor_idx[i_part];
+    int *_part_neighbor_idx  = pdn->neighbor_idx [i_part];
     int *_part_neighbor_desc = pdn->neighbor_desc[i_part];
 
     // printf("[%i] - n_entity:: %d\n", i_part, n_entity[i_part]);
@@ -493,12 +427,12 @@ const int           *n_entity,
    */
   free(requested_data);
 
-  return id;
+  return (PDM_distant_neighbor_t* ) pdn;
 }
 
 
 /**
- * \brief Exchange data between \ref _distant_neighbor_t structure
+ * \brief Exchange data between \ref _pdm_distant_neighbor_t structure
  * \param [in]   id          identifier of internal structre
  *  NB : On va commencer par des entiers en stride constantes
  *
@@ -506,19 +440,18 @@ const int           *n_entity,
 void
 PDM_distant_neighbor_exch
 (
- const int      id,
- size_t         s_data,
- PDM_stride_t   t_stride,
- int            cst_stride,
- int          **send_entity_stride,
- void         **send_entity_data,
- int         ***recv_entity_stride,
- void        ***recv_entity_data
+ PDM_distant_neighbor_t   *dn,
+ size_t                    s_data,
+ PDM_stride_t              t_stride,
+ int                       cst_stride,
+ int                     **send_entity_stride,
+ void                    **send_entity_data,
+ int                    ***recv_entity_stride,
+ void                   ***recv_entity_data
 )
 {
   // log_trace(" PDM_distant_neighbor_exch \n");
-
-  _distant_neighbor_t *pdn = _get_from_id (id);
+  _pdm_distant_neighbor_t *pdn = (_pdm_distant_neighbor_t *) dn;
 
   int i_rank;
   int n_rank;
@@ -852,7 +785,7 @@ PDM_distant_neighbor_exch
 
 
 /**
- * \brief Exchange data between \ref _distant_neighbor_t structure
+ * \brief Exchange data between \ref _pdm_distant_neighbor_t structure
  * \param [in]   id          identifier of internal structre
  *  NB : On va commencer par des entiers en stride constantes
  *
@@ -860,20 +793,19 @@ PDM_distant_neighbor_exch
 void
 PDM_distant_neighbor_exch_int
 (
- const int      id,
- size_t         s_data,
- PDM_stride_t   t_stride,
- int            cst_stride,
- int          **send_entity_stride,
- int          **send_entity_data,
- int         ***recv_entity_stride,
- int         ***recv_entity_data
+ PDM_distant_neighbor_t    *dn,
+ size_t                    s_data,
+ PDM_stride_t              t_stride,
+ int                       cst_stride,
+ int                     **send_entity_stride,
+ int                     **send_entity_data,
+ int                    ***recv_entity_stride,
+ int                    ***recv_entity_data
 )
 {
   PDM_UNUSED(s_data);
   // log_trace(" PDM_distant_neighbor_exch_int \n");
-
-  _distant_neighbor_t *pdn = _get_from_id (id);
+  _pdm_distant_neighbor_t *pdn = (_pdm_distant_neighbor_t *) dn;
 
   int i_rank;
   int n_rank;
@@ -1247,10 +1179,10 @@ PDM_distant_neighbor_exch_int
 void
 PDM_distant_neighbor_free
 (
- const int          id
+ PDM_distant_neighbor_t* dn
 )
 {
-  _distant_neighbor_t *pdn = _get_from_id (id);
+  _pdm_distant_neighbor_t *pdn = (_pdm_distant_neighbor_t *) dn;
 
   for(int i_part = 0; i_part < pdn->n_part; i_part++){
     free(pdn->order[i_part]);
@@ -1269,14 +1201,6 @@ PDM_distant_neighbor_free
   free(pdn->distributed_data_idx);
 
   free (pdn);
-
-  PDM_Handles_handle_free (_pdns, id, PDM_FALSE);
-
-  const int n_ppm = PDM_Handles_n_get (_pdns);
-
-  if (n_ppm == 0) {
-    _pdns = PDM_Handles_free (_pdns);
-  }
 
 }
 
