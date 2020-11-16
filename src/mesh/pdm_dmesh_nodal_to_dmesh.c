@@ -143,6 +143,8 @@ PDM_g_num_t       **delmt_entity_out,
 PDM_g_num_t       **dentity_elmt
 )
 {
+  // PDM_g_num_t       **dentity_elmt_idx --> face : dface_elemt :
+  // PDM_g_num_t       **dentity_elmt_idx --> edge : dedge_elemt : --> Il faut un idx
   /*
    * We are now all information flatten - we only need to compute hash_keys for each entitys
    */
@@ -748,7 +750,7 @@ void
 PDM_dmesh_nodal_to_dmesh_compute
 (
   PDM_dmesh_nodal_to_dmesh_t*                dmn_to_dm,
-  const PDM_dmesh_nodal_to_dmesh_transform_t transform_kind
+  const PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_t transform_kind
 )
 {
   _pdm_dmesh_nodal_to_dmesh_t* _dmn_to_dm = (_pdm_dmesh_nodal_to_dmesh_t *) dmn_to_dm;
@@ -757,13 +759,13 @@ PDM_dmesh_nodal_to_dmesh_compute
 
     switch (transform_kind) {
 
-      case PDM_dmesh_nodal_tO_DMESH_TRANSFORM_TO_FACE:
+      case PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_FACE:
         {
           _dmn_to_dm->dmesh[i_mesh] = _generate_faces_from_dmesh_nodal(_dmn_to_dm->dmesh_nodal[i_mesh]);
         }
         break;
 
-      case PDM_dmesh_nodal_tO_DMESH_TRANSFORM_TO_EDGE:
+      case PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_EDGE:
         {
           _dmn_to_dm->dmesh[i_mesh] = _generate_edges_from_dmesh_nodal(_dmn_to_dm->dmesh_nodal[i_mesh]);
         }

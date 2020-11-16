@@ -7,9 +7,9 @@ cdef extern from "pdm_dmesh_nodal_to_dmesh.h":
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-    ctypedef enum PDM_dmesh_nodal_to_dmesh_transform_t:
-      PDM_dmesh_nodal_tO_DMESH_TRANSFORM_TO_FACE = 0
-      PDM_dmesh_nodal_tO_DMESH_TRANSFORM_TO_EDGE = 1
+    ctypedef enum PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_t:
+      PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_FACE = 0
+      PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_EDGE = 1
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -30,7 +30,7 @@ cdef extern from "pdm_dmesh_nodal_to_dmesh.h":
                                                   PDM_dmesh_nodal_t          *dmn)
 
     void PDM_dmesh_nodal_to_dmesh_compute(PDM_dmesh_nodal_to_dmesh_t*          dmn_to_dm,
-                                          PDM_dmesh_nodal_to_dmesh_transform_t transform_kind);
+                                          PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_t transform_kind);
 
     void PDM_dmesh_nodal_to_dmesh_get_dmesh(PDM_dmesh_nodal_to_dmesh_t  *dmn_to_dm,
                                             int                          i_mesh,
@@ -72,7 +72,7 @@ cdef class DMeshNodalToDMesh:
                                              dmn.dmn)
 
   # ------------------------------------------------------------------------
-  def compute(self, PDM_dmesh_nodal_to_dmesh_transform_t transform_kind):
+  def compute(self, PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_t transform_kind):
     """
     """
     PDM_dmesh_nodal_to_dmesh_compute(self.dmn_to_dm, transform_kind)

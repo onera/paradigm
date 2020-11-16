@@ -25,6 +25,11 @@ cdef extern from "pdm_multipart.h":
                                       PDM_dmesh_t *dmesh)
 
     # ------------------------------------------------------------------
+    void PDM_multipart_register_dmesh_nodal(int          mpart_id,
+                                            int          zone_gid,
+                                            PDM_dmesh_nodal_t *dmesh)
+
+    # ------------------------------------------------------------------
     void PDM_multipart_register_joins(int        mpart_id,
                                       int        n_total_joins,
                                       int*       matching_join_array)
@@ -177,6 +182,15 @@ cdef class MultiPart:
         PDM_multipart_register_block(self._mpart_id,
                                      zone_gid,
                                      dm._dm)
+
+    # ------------------------------------------------------------------
+    def multipart_register_dmesh_nodal(self, int zone_gid,
+                                       DistributedMeshNodal dmn): # DMesh = DistributedMeshCaspule or DistributedMesh
+        """
+        """
+        PDM_multipart_register_dmesh_nodal(self._mpart_id,
+                                           zone_gid,
+                                           dmn.dmn)
 
     # ------------------------------------------------------------------
     def multipart_register_joins(self, int n_total_joins,

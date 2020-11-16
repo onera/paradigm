@@ -35,9 +35,9 @@ typedef struct _pdm_dmesh_nodal_to_dmesh_t PDM_dmesh_nodal_to_dmesh_t;
 
 
 typedef enum {
-  PDM_dmesh_nodal_tO_DMESH_TRANSFORM_TO_FACE = 0,
-  PDM_dmesh_nodal_tO_DMESH_TRANSFORM_TO_EDGE = 1,
-} PDM_dmesh_nodal_to_dmesh_transform_t;
+  PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_FACE = 0,
+  PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_EDGE = 1,
+} PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_t;
 
 
 typedef enum {
@@ -80,7 +80,7 @@ void
 PDM_dmesh_nodal_to_dmesh_compute
 (
         PDM_dmesh_nodal_to_dmesh_t*          dmn_to_dm,
-  const PDM_dmesh_nodal_to_dmesh_transform_t transform_kind
+  const PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_t transform_kind
 );
 
 void
