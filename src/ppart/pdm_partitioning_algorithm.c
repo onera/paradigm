@@ -281,7 +281,7 @@ PDM_part_reverse_pcellface
 
 /**
  *  \brief Reorient the boundary faces such that they have a outward normal for the boundary cell.
- *   This functions only uses topological information (face->cell connectivity) to determine check
+ *   This functions only uses topological information (face->cell connectivity) to determine
  *   if the face must be reoriented. Thus, input face->cell and cell->face connectivities must
  *   contain correct orientation information.
  *
@@ -326,13 +326,12 @@ PDM_part_reorient_bound_faces
         for (int j = pcell_face_idx[i_part][cell_lid]; j < pcell_face_idx[i_part][cell_lid+1]; j++){
           if (pcell_face[i_part][j] == -1*(i_face+1)){
             pcell_face[i_part][j] = (i_face+1);
-            break;
           }
         }
 
-        /* Reverse face->vertex connectivity */
-        int offset     = pface_vtx_idx[i_part][i_face];
-        int n_face_vtx = pface_vtx_idx[i_part][i_face+1] - pface_vtx_idx[i_part][i_face];
+        /* Reverse face->vertex connectivity : start from same vtx but reverse array*/
+        int offset     = pface_vtx_idx[i_part][i_face] + 1;
+        int n_face_vtx = pface_vtx_idx[i_part][i_face+1] - pface_vtx_idx[i_part][i_face] - 1;
         int end_index  = n_face_vtx - 1;
         int tmp_swap;
         for (int j = 0; j < n_face_vtx/2; j++){
