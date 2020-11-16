@@ -58,8 +58,8 @@ PDM_deduce_combine_connectivity
  * \param [in]   dentity1_entity2_idx
  * \param [in]   dentity1_entity2
  * \param [in]   dentity1_entity2      is array is signed
- * \param [in]   dentity2_entity1_idx
- * \param [in]   dentity2_entity1
+ * \param [out]   dentity2_entity1_idx
+ * \param [out]   dentity2_entity1
  */
 void
 PDM_dconnectivity_transpose

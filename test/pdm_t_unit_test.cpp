@@ -27,6 +27,7 @@ int main(int argc, char** argv) {
   ctx.setOption("force-colors", true);
   ctx.applyCommandLine(argc, argv);
 
+  ctx.addFilter("test-case", "part by elt");
   int test_result = ctx.run();
 
   MPI_Finalize();

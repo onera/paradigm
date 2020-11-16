@@ -775,6 +775,9 @@ PDM_multipart_create
 
   _multipart->dmeshes       = (PDM_dmesh_t       **) malloc(_multipart->n_zone * sizeof(PDM_dmesh_t       *));
   _multipart->dmeshes_nodal = (PDM_dmesh_nodal_t **) malloc(_multipart->n_zone * sizeof(PDM_dmesh_nodal_t *));
+  for (int i=0; i<_multipart->n_zone; ++i) {
+    _multipart->dmeshes_nodal[i] = NULL;
+  }
 
   _multipart->pmeshes       = (_part_mesh_t *) malloc(_multipart->n_zone * sizeof(_part_mesh_t ));
 

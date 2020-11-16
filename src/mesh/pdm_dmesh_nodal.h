@@ -188,6 +188,23 @@ PDM_DMesh_nodal_n_section_get
 
 
 /**
+ * \brief  Return type of element of section
+ *
+ * \param [in]  hdl        Distributed nodal mesh handle
+ * \param [in]  id_section   Block identifier
+ *
+ * \return  Type of section
+ *
+ */
+PDM_Mesh_nodal_elt_t
+PDM_DMesh_nodal_section_elt_type_get
+(
+  PDM_dmesh_nodal_t  *dmesh_nodal,
+  const int   id_section
+);
+
+
+/**
  * \brief  Return type of section
  *
  * \param [in]  hdl        Distributed nodal mesh handle
@@ -196,7 +213,6 @@ PDM_DMesh_nodal_n_section_get
  * \return  Type of section
  *
  */
-
 PDM_Mesh_nodal_elt_t
 PDM_DMesh_nodal_section_type_get
 (
