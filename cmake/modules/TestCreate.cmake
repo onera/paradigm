@@ -79,7 +79,7 @@ function(test_cpp_unit_create name n_proc)
                                       PRIVATE ${CMAKE_BINARY_DIR}
                                       PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
    target_include_directories(${name} PRIVATE ${TEST_INC})
-   target_link_libraries(${name} doctest::doctest)
+   target_link_libraries(${name} doctest::doctest std_e::std_e)
    target_link_libraries(${name} ${LINK_LIBRARIES})
    install(TARGETS ${name} RUNTIME DESTINATION bin)
    add_test (${name} ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${n_proc}

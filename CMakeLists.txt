@@ -16,6 +16,35 @@ if (NOT (PDM_IN_PDMA OR PDM_IN_CWP))
    set(CMAKE_MODULE_PATH "${PDM_CMAKE_DIR}/modules")
 endif()
 
+### C++ begin
+set(CMAKE_CXX_STANDARD          17 )
+set(CMAKE_CXX_EXTENSIONS        OFF)
+set(CMAKE_CXX_STANDARD_REQUIRED ON )
+
+if(NOT DEFINED PROJECT_ROOT)
+  set(PROJECT_ROOT ${CMAKE_SOURCE_DIR} CACHE PATH "Root directory, where the submodules are populated")
+endif()
+
+macro(check_sub_repo_exists sub_repo_name)
+  set(sub_repo_path "${PROJECT_ROOT}/external/${sub_repo_name}")
+  file(GLOB sub_repo_files ${sub_repo_path}/*)
+  list(LENGTH sub_repo_files sub_repo_nb_files)
+  if(sub_repo_nb_files EQUAL 0)
+    message(FATAL_ERROR
+      "${PROJECT_ROOT}/external/${sub_repo_name} is empty. Maybe you forgot to initialize it with \"git submodule update --init\""
+    )
+  endif()
+endmacro()
+
+check_sub_repo_exists(project_utils)
+set(PROJECT_UTILS_DIR ${PROJECT_ROOT}/external/project_utils)
+# Load commands target_add_dependency, target_add_thirdparty_dependency and target_install
+include(${PROJECT_UTILS_DIR}/scripts/cmake/target_add_dependency.cmake)
+check_sub_repo_exists(std_e)
+set(STD_E_ENABLE_MPI ON CACHE BOOL "Maia requires MPI" FORCE)
+target_add_dependency(${PROJECT_NAME} std_e)
+### C++ end
+
 include(${CMAKE_MODULE_PATH}/version.cmake)
 project(PDM VERSION ${PDM_DEF_VERSION} LANGUAGES C CXX Fortran)
 
