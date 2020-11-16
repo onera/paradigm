@@ -85,15 +85,16 @@ PDM_section_size_elt_faces_get
     _s_elt_face_vtx     += mesh->sections_std[i].n_elt * n_sum_vtx_face;
   }
 
-  for (int i = 0; i < mesh->n_section_poly2d; i++) {
-    _s_elt_face_vtx_idx +=     mesh->sections_poly2d[i]._connec_idx[mesh->sections_poly2d[i].n_elt];
-    _s_elt_face_vtx     += 2 * mesh->sections_poly2d[i]._connec_idx[mesh->sections_poly2d[i].n_elt];
-  }
-
   for (int i = 0; i < mesh->n_section_poly3d; i++) {
     _s_elt_face_vtx_idx += mesh->sections_poly3d[i].n_face;
     _s_elt_face_vtx     += mesh->sections_poly3d[i]._face_vtx[mesh->sections_poly3d[i]._face_vtx_idx[mesh->sections_poly3d[i].n_face]];
   }
+
+  for (int i = 0; i < mesh->n_section_poly2d_l1; i++) {
+    _s_elt_face_vtx_idx +=     mesh->sections_poly2d_l1[i]._connec_idx[mesh->sections_poly2d_l1[i].n_elt];
+    _s_elt_face_vtx     += 2 * mesh->sections_poly2d_l1[i]._connec_idx[mesh->sections_poly2d_l1[i].n_elt];
+  }
+
 
   *s_elt_face_cell    = _s_elt_face_vtx_idx;
   *s_elt_face_vtx_idx = _s_elt_face_vtx_idx + 1;
@@ -137,7 +138,7 @@ PDM_section_size_elt_edges_get
   }
 
   // list_ind = PDM_Handles_idx_get (mesh->sections_poly2d);
-  assert(mesh->n_section_poly2d == 0); // Not implemented
+  assert(mesh->n_section_poly2d_l1 == 0); // Not implemented
 
   // for (int i = 0; i < n_section_poly2d; i++) {
   //   PDM_DMesh_nodal_section_poly2d_t *section =
@@ -874,7 +875,7 @@ PDM_sections_decompose_faces
   }
 
   /* Not implemented */
-  if (mesh->n_section_poly2d != 0) {
+  if (mesh->n_section_poly2d_l1 != 0) {
     // int n_section_poly2d = PDM_Handles_n_get  (mesh->sections_poly2d);
     // const int *list_ind   = PDM_Handles_idx_get(mesh->sections_poly2d);
     abort();
@@ -1008,7 +1009,7 @@ PDM_sections_decompose_edges
   }
 
   /* Not implemented */
-  if (mesh->n_section_poly2d != 0) {
+  if (mesh->n_section_poly2d_l1 != 0) {
     // int n_section_poly2d = PDM_Handles_n_get  (mesh->sections_poly2d);
     // const int *list_ind   = PDM_Handles_idx_get(mesh->sections_poly2d);
     abort();

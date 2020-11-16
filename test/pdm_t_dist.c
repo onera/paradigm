@@ -196,8 +196,6 @@ int main(int argc, char *argv[])
    *  Create distributed cube
    */
 
-  int          id;
-
   const double xmin = 0;
   const double ymin = 0;
   const double zmin = 0;
@@ -211,16 +209,15 @@ int main(int argc, char *argv[])
     fflush(stdout);
   }
 
-  PDM_dcube_gen_init(&id,
-                     PDM_MPI_COMM_WORLD,
-                     n_vtx_seg,
-                     length,
-                     xmin,
-                     ymin,
-                     zmin,
-                     PDM_OWNERSHIP_KEEP);
+  PDM_dcube_t* dcube = PDM_dcube_gen_init(PDM_MPI_COMM_WORLD,
+                                          n_vtx_seg,
+                                          length,
+                                          xmin,
+                                          ymin,
+                                          zmin,
+                                          PDM_OWNERSHIP_KEEP);
 
-  PDM_dcube_gen_dim_get(id,
+  PDM_dcube_gen_dim_get(dcube,
                       &n_face_group,
                       &dn_cell,
                       &dn_face,
@@ -228,7 +225,7 @@ int main(int argc, char *argv[])
                       &dface_vtxL,
                       &dFaceGroupL);
 
-  PDM_dcube_gen_data_get(id,
+  PDM_dcube_gen_data_get(dcube,
                        &dface_cell,
                        &dface_vtx_idx,
                        &dface_vtx,
@@ -802,7 +799,7 @@ int main(int argc, char *argv[])
 
   PDM_part_free(ppart_id);
 
-  PDM_dcube_gen_free(id);
+  PDM_dcube_gen_free(dcube);
   PDM_dist_cloud_surf_dump_times(id_dist);
   PDM_dist_cloud_surf_free (id_dist);
 

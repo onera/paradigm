@@ -21,6 +21,20 @@ extern "C" {
 #endif
 #endif /* __cplusplus */
 
+/*============================================================================
+ * Type definitions
+ *============================================================================*/
+
+typedef struct _pdm_dcube_t PDM_dcube_t;
+
+/*=============================================================================
+ * Static global variables
+ *============================================================================*/
+
+/*=============================================================================
+ * Public function prototypes
+ *============================================================================*/
+
 /**
  *
  * \brief Create a distributed cube
@@ -35,10 +49,9 @@ extern "C" {
  *
  */
 
-void
+PDM_dcube_t*
 PDM_dcube_gen_init
 (
-      int             *id,
       PDM_MPI_Comm     comm,
 const PDM_g_num_t      n_vtx_seg,
 const double           length,
@@ -48,19 +61,18 @@ const double           zero_z,
       PDM_ownership_t  owner
 );
 
-void
-PROCF (pdm_dcube_gen_init, PDM_DCUBE_GEN_INIT)
-(
-      int             *id,
-const PDM_MPI_Fint    *comm,
-const PDM_g_num_t     *n_vtx_seg,
-const double          *length,
-const double          *zero_x,
-const double          *zero_y,
-const double          *zero_z,
-      PDM_ownership_t *owner
-);
 
+PDM_dcube_t*
+PDM_dcube_gen_init_cf
+(
+const PDM_MPI_Fint     fcomm,
+const PDM_g_num_t      n_vtx_seg,
+const double           length,
+const double           zero_x,
+const double           zero_y,
+const double           zero_z,
+      PDM_ownership_t  owner
+);
 
 /**
  *
@@ -79,7 +91,7 @@ const double          *zero_z,
 void
 PDM_dcube_gen_dim_get
 (
- int                id,
+ PDM_dcube_t        *pdm_dcube,
  int                *n_face_group,
  int                *dn_cell,
  int                *dn_face,
@@ -87,20 +99,6 @@ PDM_dcube_gen_dim_get
  int                *sface_vtx,
  int                *sface_group
 );
-
-
-void
-PROCF(pdm_dcube_gen_dim_get, PDM_DCUBE_GEN_DIM_GET)
-(
- int                *id,
- int                *n_face_group,
- int                *dn_cell,
- int                *dn_face,
- int                *dn_vtx,
- int                *sface_vtx,
- int                *sface_group
-);
-
 
 /**
  *
@@ -119,7 +117,7 @@ PROCF(pdm_dcube_gen_dim_get, PDM_DCUBE_GEN_DIM_GET)
 void
 PDM_dcube_gen_data_get
 (
- int                id,
+ PDM_dcube_t       *pdm_dcube,
  PDM_g_num_t      **dface_cell,
  int              **dface_vtx_idx,
  PDM_g_num_t      **dface_vtx,
@@ -127,20 +125,6 @@ PDM_dcube_gen_data_get
  int              **dface_group_idx,
  PDM_g_num_t      **dface_group
 );
-
-
-void
-PROCF (pdm_dcube_gen_data_get, PDM_DCUBE_GEN_DATA_GET)
-(
- int              *id,
- PDM_g_num_t      *dface_cell,
- int              *dface_vtx_idx,
- PDM_g_num_t      *dface_vtx,
- double           *dvtx_coord,
- int              *dface_group_idx,
- PDM_g_num_t      *dface_group
-);
-
 
 /**
  *
@@ -153,13 +137,7 @@ PROCF (pdm_dcube_gen_data_get, PDM_DCUBE_GEN_DATA_GET)
 void
 PDM_dcube_gen_free
 (
-const int id
-);
-
-void
-PROCF (pdm_dcube_gen_free, PDM_DCUBE_GEN_FREE)
-(
-int  *id
+ PDM_dcube_t       *pdm_dcube
 );
 
 #ifdef __cplusplus

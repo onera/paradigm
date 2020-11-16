@@ -1,16 +1,21 @@
 cdef extern from "pdm_dcube_gen.h":
-    # ------------------------------------------------------------------
-    void PDM_dcube_gen_init(int                *id,
-                            PDM_MPI_Comm        comm,
-                            const PDM_g_num_t   n_vtx_seg,
-                            const double        length,
-                            const double        zero_x,
-                            const double        zero_y,
-                            const double        zero_z,
-                            PDM_ownership_t     owner)
+    # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+    # > Wrapping of Ppart Structure
+    ctypedef struct PDM_dcube_t:
+      pass
+    # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
     # ------------------------------------------------------------------
-    void PDM_dcube_gen_dim_get(int                id,
+    PDM_dcube_t* PDM_dcube_gen_init(PDM_MPI_Comm        comm,
+                                    const PDM_g_num_t   n_vtx_seg,
+                                    const double        length,
+                                    const double        zero_x,
+                                    const double        zero_y,
+                                    const double        zero_z,
+                                    PDM_ownership_t     owner)
+
+    # ------------------------------------------------------------------
+    void PDM_dcube_gen_dim_get(PDM_dcube_t        *pdm_dcube,
                                int                *n_face_group,
                                int                *dn_cell,
                                int                *dn_face,
@@ -19,7 +24,7 @@ cdef extern from "pdm_dcube_gen.h":
                                int                *sface_group)
 
     # ------------------------------------------------------------------
-    void PDM_dcube_gen_data_get(int                 id,
+    void PDM_dcube_gen_data_get(PDM_dcube_t        *pdm_dcube,
                                 PDM_g_num_t       **dface_cell,
                                 int               **dface_vtx_idx,
                                 PDM_g_num_t       **dface_vtx,
@@ -28,7 +33,7 @@ cdef extern from "pdm_dcube_gen.h":
                                 PDM_g_num_t       **dface_group)
 
     # ------------------------------------------------------------------
-    void PDM_dcube_gen_free(int  id)
+    void PDM_dcube_gen_free(PDM_dcube_t        *pdm_dcube)
     # ------------------------------------------------------------------
 
 # ------------------------------------------------------------------
@@ -37,7 +42,7 @@ cdef class DCubeGenerator:
        DCubeGenerator
     """
     # > For Ppart
-    cdef int _dcube_id
+    cdef PDM_dcube_t* _dcube
     # ------------------------------------------------------------------
     def __cinit__(self,
                   npy_pdm_gnum_t                         n_vtx_seg,
@@ -53,19 +58,17 @@ cdef class DCubeGenerator:
         cdef MPI.MPI_Comm c_comm = comm.ob_mpi
 
         # -> Create dcube
-        PDM_dcube_gen_init(&self._dcube_id,
-                           PDM_MPI_mpi_2_pdm_mpi_comm (<void *> &c_comm),
-                           n_vtx_seg,
-                           length,
-                           zero_x,
-                           zero_y,
-                           zero_z,
-                           PDM_OWNERSHIP_USER) # Python take owership
-
+        self._dcube = PDM_dcube_gen_init(PDM_MPI_mpi_2_pdm_mpi_comm (<void *> &c_comm),
+                                         n_vtx_seg,
+                                         length,
+                                         zero_x,
+                                         zero_y,
+                                         zero_z,
+                                         PDM_OWNERSHIP_USER) # Python take owership
 
     # ------------------------------------------------------------------
     def __dealloc__(self):
-        PDM_dcube_gen_free(self._dcube_id)
+        PDM_dcube_gen_free(self._dcube)
 
     # ------------------------------------------------------------------
     def dcube_dim_get(self):
@@ -82,7 +85,7 @@ cdef class DCubeGenerator:
         cdef int sface_group
         # ************************************************************************
 
-        PDM_dcube_gen_dim_get(self._dcube_id,
+        PDM_dcube_gen_dim_get(self._dcube,
                               &n_face_group,
                               &dn_cell,
                               &dn_face,
@@ -115,7 +118,7 @@ cdef class DCubeGenerator:
 
         dims = self.dcube_dim_get()
 
-        PDM_dcube_gen_data_get(self._dcube_id,
+        PDM_dcube_gen_data_get(self._dcube,
                                &dface_cell,
                                &dface_vtx_idx,
                                &dface_vtx,

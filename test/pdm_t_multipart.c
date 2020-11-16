@@ -182,21 +182,22 @@ int main(int argc, char *argv[])
     PDM_multipart_set_reordering_options(mpart_id,  1, "PDM_PART_RENUM_CELL_NONE", NULL, "PDM_PART_RENUM_FACE_NONE");
 
   /* Generate mesh */
-  int          *dcube_ids = (int          *) malloc(n_zone * sizeof(int          ));
-  PDM_dmesh_t **dmesh     = (PDM_dmesh_t **) malloc(n_zone * sizeof(PDM_dmesh_t *));
+  PDM_dcube_t **dcube = (PDM_dcube_t **) malloc(n_zone * sizeof(PDM_dcube_t *));
+  PDM_dmesh_t **dmesh = (PDM_dmesh_t **) malloc(n_zone * sizeof(PDM_dmesh_t *));
   for (int i_zone = 0; i_zone < n_zone; i_zone++)
   {
     // Create a cube for this zone
     if (i_rank == 0) PDM_printf("Creating dcube for zone %d\n", i_zone);
-    PDM_dcube_gen_init(&dcube_ids[i_zone], comm, n_vtx_seg, length, i_zone, 0., 0., PDM_OWNERSHIP_KEEP);
-    PDM_dcube_gen_dim_get(dcube_ids[i_zone],
+
+    dcube[i_zone] = PDM_dcube_gen_init(comm, n_vtx_seg, length, i_zone, 0., 0., PDM_OWNERSHIP_KEEP);
+    PDM_dcube_gen_dim_get(dcube[i_zone],
                          &n_face_group[i_zone],
                          &dn_cell[i_zone],
                          &dn_face[i_zone],
                          &dn_vtx[i_zone],
                          &dface_vtx_s[i_zone],
                          &dface_group_s[i_zone]);
-    PDM_dcube_gen_data_get(dcube_ids[i_zone],
+    PDM_dcube_gen_data_get(dcube[i_zone],
                           &dface_cell[i_zone],
                           &dface_vtx_idx[i_zone],
                           &dface_vtx[i_zone],
@@ -522,9 +523,9 @@ int main(int argc, char *argv[])
     free(dface_join[i_zone]);
     free(djoins_ids[i_zone]);
     PDM_dmesh_free(dmesh[i_zone]);
-    PDM_dcube_gen_free(dcube_ids[i_zone]);
+    PDM_dcube_gen_free(dcube[i_zone]);
   }
-  free(dcube_ids);
+  free(dcube);
   free(dn_cell);
   free(dn_face);
   free(dn_vtx);

@@ -129,18 +129,18 @@ static
 void
 _generate_entitiy_connectivity
 (
-_pdm_dmesh_nodal_t *mesh,
-int                 n_entity_elt_tot,
-PDM_g_num_t        *delmt_entity,
-int                *delmt_entity_vtx_idx,
-PDM_g_num_t        *delmt_entity_vtx,
-int                *dn_entity,
-PDM_g_num_t       **entity_distrib,
-int               **dentity_vtx_idx,
-PDM_g_num_t       **dentity_vtx,
-int               **delmt_entity_out_idx,
-PDM_g_num_t       **delmt_entity_out,
-PDM_g_num_t       **dentity_elmt
+_pdm_dmesh_nodal_t  *mesh,
+int                  n_entity_elt_tot,
+PDM_g_num_t         *delmt_entity,
+int                 *delmt_entity_vtx_idx,
+PDM_g_num_t         *delmt_entity_vtx,
+int                 *dn_entity,
+PDM_g_num_t        **entity_distrib,
+int                **dentity_vtx_idx,
+PDM_g_num_t        **dentity_vtx,
+int                **delmt_entity_out_idx,
+PDM_g_num_t        **delmt_entity_out,
+PDM_g_num_t        **dentity_elmt
 )
 {
   // PDM_g_num_t       **dentity_elmt_idx --> face : dface_elemt :
@@ -571,7 +571,6 @@ _generate_faces_from_dmesh_nodal
 {
 
   PDM_dmesh_nodal_t* dmn = (PDM_dmesh_nodal_t *) dmesh_nodal;
-  PDM_UNUSED(dmesh_nodal);
 
   int n_face_elt_tot     = 0;
   int n_sum_vtx_face_tot = 0;

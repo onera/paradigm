@@ -351,12 +351,10 @@ const PDM_MPI_Comm        comm,
 
   mesh->n_section                = 0;
   mesh->n_section_std            = 0;
-  mesh->n_section_poly2d         = 0;
   mesh->n_section_poly3d         = 0;
 
   // mesh->sections_id              = NULL;
   mesh->sections_std             = NULL;
-  mesh->sections_poly2d          = NULL;
   mesh->sections_poly3d          = NULL;
 
   // mesh->sections_id_l1           = NULL;
@@ -513,7 +511,6 @@ const int                partial
      _vtx_free(mesh->vtx);
 
      _sections_std_free   (mesh->sections_std   , mesh->n_section_std   );
-     _sections_poly2d_free(mesh->sections_poly2d, mesh->n_section_poly2d);
      _sections_poly3d_free(mesh->sections_poly3d, mesh->n_section_poly3d);
 
      _sections_std_free   (mesh->sections_std_l1   , mesh->n_section_std_l1   );
@@ -918,18 +915,23 @@ const PDM_Mesh_nodal_elt_t  t_elt
 
   case PDM_MESH_NODAL_POLY_2D  :
     {
+      if(mesh->mesh_dimension != 2){
+        PDM_error(__FILE__, __LINE__, 0, "You cannot specify a 2D polygon elements if your meshes not 2D %d\n",
+                  mesh->mesh_dimension);
+        abort();
+      }
       // Comment faire pour disserner 2D/Volume s?
       mesh->section_type[mesh->n_section_tot-1] = PDM_SECTION_TYPE_POLY2D;
-      mesh->section_idx [mesh->n_section_tot-1] = mesh->n_section_poly2d;
+      mesh->section_idx [mesh->n_section_tot-1] = mesh->n_section_poly2d_l1;
 
       mesh->n_section++;
-      mesh->n_section_poly2d++;
+      mesh->n_section_poly2d_l1++;
 
-      mesh->sections_poly2d = realloc(mesh->sections_poly2d, mesh->n_section_poly2d * sizeof(PDM_DMesh_nodal_section_std_t));
-      mesh->sections_poly2d[mesh->n_section_poly2d-1].n_elt       = -1;
-      mesh->sections_poly2d[mesh->n_section_poly2d-1]._connec     = NULL;
-      mesh->sections_poly2d[mesh->n_section_poly2d-1]._connec_idx = NULL;
-      mesh->sections_poly2d[mesh->n_section_poly2d-1].distrib     = NULL;
+      mesh->sections_poly2d_l1 = realloc(mesh->sections_poly2d_l1, mesh->n_section_poly2d_l1 * sizeof(PDM_DMesh_nodal_section_std_t));
+      mesh->sections_poly2d_l1[mesh->n_section_poly2d_l1-1].n_elt       = -1;
+      mesh->sections_poly2d_l1[mesh->n_section_poly2d_l1-1]._connec     = NULL;
+      mesh->sections_poly2d_l1[mesh->n_section_poly2d_l1-1]._connec_idx = NULL;
+      mesh->sections_poly2d_l1[mesh->n_section_poly2d_l1-1].distrib     = NULL;
 
     }
 
@@ -955,9 +957,9 @@ const PDM_Mesh_nodal_elt_t  t_elt
       mesh->sections_poly3d[mesh->n_section_poly3d-1].n_face         = -1;
       mesh->sections_poly3d[mesh->n_section_poly3d-1]._face_vtx_idx  = NULL;
       mesh->sections_poly3d[mesh->n_section_poly3d-1]._face_vtx      = NULL;
-      mesh->sections_poly3d[mesh->n_section_poly2d-1]._cell_face_idx = NULL;
-      mesh->sections_poly3d[mesh->n_section_poly2d-1]._cell_face     = NULL;
-      mesh->sections_poly3d[mesh->n_section_poly2d-1].distrib        = NULL;
+      mesh->sections_poly3d[mesh->n_section_poly3d-1]._cell_face_idx = NULL;
+      mesh->sections_poly3d[mesh->n_section_poly3d-1]._cell_face     = NULL;
+      mesh->sections_poly3d[mesh->n_section_poly3d-1].distrib        = NULL;
 
     }
 
@@ -1449,10 +1451,6 @@ PDM_dmesh_nodal_t  *dmesh_nodal
     total_n_cell += mesh->sections_std[i_section].distrib[mesh->n_rank];
   }
 
-  for(int i_section = 0; i_section < mesh->n_section_poly2d; ++i_section){
-    total_n_cell += mesh->sections_poly2d[i_section].distrib[mesh->n_rank];
-  }
-
   for(int i_section = 0; i_section < mesh->n_section_poly3d; ++i_section){
     total_n_cell += mesh->sections_poly3d[i_section].distrib[mesh->n_rank];
   }
@@ -1590,10 +1588,7 @@ PDM_dmesh_nodal_generate_distribution
     mesh->section_distribution[i_section+1] = mesh->sections_std[i_section].distrib[mesh->n_rank];
   }
   shift += mesh->n_section_std;
-  for(int i_section = 0; i_section < mesh->n_section_poly2d; ++i_section){
-    mesh->section_distribution[shift+i_section+1] = mesh->sections_poly2d[i_section].distrib[mesh->n_rank];
-  }
-  shift += mesh->n_section_poly2d;
+
   for(int i_section = 0; i_section < mesh->n_section_poly3d; ++i_section){
     mesh->section_distribution[shift+i_section+1] = mesh->sections_poly3d[i_section].distrib[mesh->n_rank];
   }
@@ -1611,10 +1606,10 @@ PDM_dmesh_nodal_generate_distribution
     mesh->section_distribution_l1[i_section+1] = mesh->sections_std_l1[i_section].distrib[mesh->n_rank];
   }
   shift += mesh->n_section_std_l1;
-  for(int i_section = 0; i_section < mesh->n_section_poly2d; ++i_section){
+  for(int i_section = 0; i_section < mesh->n_section_poly2d_l1; ++i_section){
     mesh->section_distribution_l1[shift+i_section+1] = mesh->sections_poly2d_l1[i_section].distrib[mesh->n_rank];
   }
-  shift += mesh->n_section_poly2d;
+  shift += mesh->n_section_poly2d_l1;
 
   for (int i_section = 1; i_section < mesh->n_section_l1 + 1; i_section++) {
     mesh->section_distribution_l1[i_section] +=  mesh->section_distribution_l1[i_section-1];

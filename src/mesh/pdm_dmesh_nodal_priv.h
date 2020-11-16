@@ -193,13 +193,11 @@ typedef struct {
   int                    n_section;                           /*!< Total number of sections           */
 
   int                    n_section_std;                       /*!< Total number of standard sections  */
-  int                    n_section_poly2d;                    /*!< Total number of polygon sections   */
   int                    n_section_poly3d;                    /*!< Total number of olyhedron sections */
 
   // int                   *sections_id;                         /*!< Blocks identifier                  */
 
   PDM_DMesh_nodal_section_std_t    *sections_std;             /*!< Standard sections                  */
-  PDM_DMesh_nodal_section_poly2d_t *sections_poly2d;          /*!< Polygon sections                   */
   PDM_DMesh_nodal_section_poly3d_t *sections_poly3d;          /*!< Polyhedron sections                */
   PDM_g_num_t                      *section_distribution;     /*!< Element distribution               */
 

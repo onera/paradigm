@@ -112,7 +112,6 @@ PDM_dmesh_create
   dmesh->_dface_join      = NULL;
 
   return (PDM_dmesh_t *) dmesh;
-
 }
 
 /**
