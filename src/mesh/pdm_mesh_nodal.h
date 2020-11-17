@@ -79,7 +79,7 @@ typedef struct _PDM_Mesh_nodal_t PDM_Mesh_nodal_t;
  *
  */
 
-int
+PDM_Mesh_nodal_t*
 PDM_Mesh_nodal_create
 (
 const int     n_part,
@@ -98,7 +98,7 @@ const PDM_MPI_Comm comm
 void
 PDM_Mesh_nodal_partial_free
 (
-const int idx
+PDM_Mesh_nodal_t *mesh
 );
 
 /**
@@ -113,7 +113,7 @@ const int idx
 void
 PDM_Mesh_nodal_free
 (
-const int idx
+PDM_Mesh_nodal_t *mesh
 );
 
 /**
@@ -130,11 +130,11 @@ const int idx
 void
 PDM_Mesh_nodal_coord_set
 (
- const int          idx,
- const int          id_part,
- const int          n_vtx,
- const PDM_real_t  *coords,
- const PDM_g_num_t *numabs
+       PDM_Mesh_nodal_t *mesh,
+ const int               id_part,
+ const int               n_vtx,
+ const PDM_real_t       *coords,
+ const PDM_g_num_t      *numabs
 );
 
 
@@ -151,8 +151,8 @@ PDM_Mesh_nodal_coord_set
 int
 PDM_Mesh_nodal_n_vertices_get
 (
- const int          idx,
- const int          id_part
+       PDM_Mesh_nodal_t *mesh,
+ const int               id_part
 );
 
 
@@ -169,8 +169,8 @@ PDM_Mesh_nodal_n_vertices_get
 const double *
 PDM_Mesh_nodal_vertices_get
 (
- const int          idx,
- const int          id_part
+       PDM_Mesh_nodal_t *mesh,
+ const int               id_part
 );
 
 
@@ -188,9 +188,9 @@ PDM_Mesh_nodal_vertices_get
 const double *
 PDM_Mesh_cell_centers_get
 (
- const int          idx,
- const int          id_block,
- const int          id_part
+       PDM_Mesh_nodal_t *mesh,
+ const int               id_block,
+ const int               id_part
 );
 
 
@@ -206,8 +206,8 @@ PDM_Mesh_cell_centers_get
 const int *
 PDM_Mesh_nodal_vertices_parent_get
 (
- const int          idx,
- const int          id_part
+       PDM_Mesh_nodal_t *mesh,
+ const int               id_part
  );
 
 
@@ -224,8 +224,8 @@ PDM_Mesh_nodal_vertices_parent_get
 const PDM_g_num_t *
 PDM_Mesh_nodal_vertices_g_num_get
 (
- const int          idx,
- const int          id_part
+       PDM_Mesh_nodal_t *mesh,
+ const int               id_part
 );
 
 
@@ -240,8 +240,8 @@ PDM_Mesh_nodal_vertices_g_num_get
 int
 PDM_Mesh_nodal_is_set_coord_from_parent
 (
- const int          idx
- );
+ PDM_Mesh_nodal_t *mesh
+);
 
 
 /**
@@ -261,14 +261,14 @@ PDM_Mesh_nodal_is_set_coord_from_parent
 void
 PDM_Mesh_nodal_coord_from_parent_set
 (
- const int          idx,
- const int          id_part,
- const int          n_vtx,
- const int          n_vtx_parent,
- const PDM_g_num_t *numabs,
- const int         *num_parent,
- const PDM_real_t  *coords_parent,
- const PDM_g_num_t *numabs_parent
+       PDM_Mesh_nodal_t *mesh,
+ const int               id_part,
+ const int               n_vtx,
+ const int               n_vtx_parent,
+ const PDM_g_num_t      *numabs,
+ const int              *num_parent,
+ const PDM_real_t       *coords_parent,
+ const PDM_g_num_t      *numabs_parent
 );
 
 
@@ -284,7 +284,7 @@ PDM_Mesh_nodal_coord_from_parent_set
 int
 PDM_Mesh_nodal_n_blocks_get
 (
-const int   idx
+ PDM_Mesh_nodal_t *mesh
 );
 
 
@@ -300,7 +300,7 @@ const int   idx
 int *
 PDM_Mesh_nodal_blocks_id_get
 (
-const int   idx
+ PDM_Mesh_nodal_t *mesh
 );
 
 
@@ -316,7 +316,7 @@ const int   idx
 int
 PDM_Mesh_nodal_n_part_get
 (
-const int   idx
+ PDM_Mesh_nodal_t *mesh
 );
 
 
@@ -333,8 +333,8 @@ const int   idx
 PDM_Mesh_nodal_elt_t
 PDM_Mesh_nodal_block_type_get
 (
-const int   idx,
-const int   id_block
+      PDM_Mesh_nodal_t *mesh,
+const int               id_block
 );
 
 
@@ -353,9 +353,9 @@ const int   id_block
 int
 PDM_Mesh_nodal_block_add
 (
-const int                    idx,
-PDM_bool_t                   st_free_data,
-const PDM_Mesh_nodal_elt_t   t_elt
+      PDM_Mesh_nodal_t     *mesh,
+      PDM_bool_t            st_free_data,
+const PDM_Mesh_nodal_elt_t  t_elt
 );
 
 
@@ -443,13 +443,13 @@ const PDM_Mesh_nodal_elt_t   t_elt
 void
 PDM_Mesh_nodal_block_std_set
 (
-const int          idx,
-const int            id_block,
-const int            id_part,
-const int            n_elt,
-const PDM_l_num_t   *connec,
-const PDM_g_num_t   *numabs,
-const PDM_l_num_t   *parent_num
+      PDM_Mesh_nodal_t *mesh,
+const int               id_block,
+const int               id_part,
+const int               n_elt,
+const PDM_l_num_t      *connec,
+const PDM_g_num_t      *numabs,
+const PDM_l_num_t      *parent_num
 );
 
 
@@ -534,10 +534,10 @@ const PDM_l_num_t   *parent_num
 void
 PDM_Mesh_nodal_block_std_get
 (
-const int            idx,
-const int            id_block,
-const int            id_part,
-      PDM_l_num_t  **connec
+      PDM_Mesh_nodal_t  *mesh,
+const int                id_block,
+const int                id_part,
+      PDM_l_num_t      **connec
 );
 
 
@@ -555,9 +555,9 @@ const int            id_part,
 int
 PDM_Mesh_nodal_block_n_elt_get
 (
-const int            idx,
-const int            id_block,
-const int            id_part
+      PDM_Mesh_nodal_t *mesh,
+const int               id_block,
+const int               id_part
 );
 
 /**
@@ -574,9 +574,9 @@ const int            id_part
 PDM_g_num_t *
 PDM_Mesh_nodal_block_g_num_get
 (
-const int            idx,
-const int            id_block,
-const int            id_part
+      PDM_Mesh_nodal_t *mesh,
+const int               id_block,
+const int               id_part
 );
 
 /**
@@ -593,9 +593,9 @@ const int            id_part
 PDM_g_num_t *
 PDM_Mesh_nodal_g_num_get
 (
-const int            idx,
-const int            id_block,
-const int            id_part
+      PDM_Mesh_nodal_t *mesh,
+const int               id_block,
+const int               id_part
 );
 
 
@@ -611,9 +611,9 @@ const int            id_part
 void
 PDM_Mesh_nodal_cell_centers_compute
 (
-const int         idx,
-const int         id_block,
-const int         i_part
+      PDM_Mesh_nodal_t *mesh,
+const int               id_block,
+const int               i_part
 );
 
 
@@ -631,9 +631,9 @@ const int         i_part
 int *
 PDM_Mesh_nodal_block_parent_num_get
 (
-const int            idx,
-const int            id_block,
-const int            id_part
+      PDM_Mesh_nodal_t *mesh,
+const int               id_block,
+const int               id_part
 );
 
 
@@ -654,14 +654,14 @@ const int            id_part
 void
 PDM_Mesh_nodal_block_poly2d_set
 (
-const int            idx,
-const int            id_block,
-const int            id_part,
-const PDM_l_num_t    n_elt,
-const PDM_l_num_t   *connec_idx,
-const PDM_l_num_t   *connec,
-const PDM_g_num_t   *numabs,
-const PDM_l_num_t   *parent_num
+      PDM_Mesh_nodal_t *mesh,
+const int               id_block,
+const int               id_part,
+const PDM_l_num_t       n_elt,
+const PDM_l_num_t      *connec_idx,
+const PDM_l_num_t      *connec,
+const PDM_g_num_t      *numabs,
+const PDM_l_num_t      *parent_num
 );
 
 
@@ -683,11 +683,11 @@ const PDM_l_num_t   *parent_num
 void
 PDM_Mesh_nodal_block_poly2d_get
 (
- const int          idx,
- const int          id_block,
- const int          id_part,
-       PDM_l_num_t  **connec_idx,
-       PDM_l_num_t  **connec
+      PDM_Mesh_nodal_t  *mesh,
+ const int               id_block,
+ const int               id_part,
+       PDM_l_num_t     **connec_idx,
+       PDM_l_num_t     **connec
 );
 
 
@@ -700,16 +700,16 @@ PDM_Mesh_nodal_block_poly2d_get
  * \param [in]  id_part        Partition identifier
  *
  * \return      Return global inside numbering of block elements
- *  
+ *
  */
 
 PDM_g_num_t *
-PDM_Mesh_nodal_block_inside_g_num_get 
-(   
-const int            idx,
-const int            id_block,     
-const int            id_part 
-) ;
+PDM_Mesh_nodal_block_inside_g_num_get
+(
+      PDM_Mesh_nodal_t *mesh,
+const int               id_block,
+const int               id_part
+);
 
 
 
@@ -733,17 +733,17 @@ const int            id_part
 void
 PDM_Mesh_nodal_block_poly3d_set
 (
-const int            idx,
-const int            id_block,
-const int            id_part,
-const PDM_l_num_t    n_elt,
-const PDM_l_num_t    n_face,
-const PDM_l_num_t   *facvtx_idx,
-const PDM_l_num_t   *facvtx,
-const PDM_l_num_t   *cellfac_idx,
-const PDM_l_num_t   *cellfac,
-const PDM_g_num_t   *numabs,
-const PDM_l_num_t   *parent_num
+      PDM_Mesh_nodal_t *mesh,
+const int               id_block,
+const int               id_part,
+const PDM_l_num_t       n_elt,
+const PDM_l_num_t       n_face,
+const PDM_l_num_t      *facvtx_idx,
+const PDM_l_num_t      *facvtx,
+const PDM_l_num_t      *cellfac_idx,
+const PDM_l_num_t      *cellfac,
+const PDM_g_num_t      *numabs,
+const PDM_l_num_t      *parent_num
 );
 
 
@@ -768,14 +768,14 @@ const PDM_l_num_t   *parent_num
 void
 PDM_Mesh_nodal_block_poly3d_get
 (
-const int            idx,
-const int            id_block,
-const int            id_part,
-      PDM_l_num_t   *n_face,
-      PDM_l_num_t  **facvtx_idx,
-      PDM_l_num_t  **facvtx,
-      PDM_l_num_t  **cellfac_idx,
-      PDM_l_num_t  **cellfac
+      PDM_Mesh_nodal_t  *mesh,
+const int                id_block,
+const int                id_part,
+      PDM_l_num_t       *n_face,
+      PDM_l_num_t      **facvtx_idx,
+      PDM_l_num_t      **facvtx,
+      PDM_l_num_t      **cellfac_idx,
+      PDM_l_num_t      **cellfac
 );
 
 /**
@@ -792,12 +792,12 @@ const int            id_part,
 void
 PDM_Mesh_nodal_block_poly3d_cell_vtx_connect_get
 (
- const int     idx,
- const int     id_block,
- const int     id_part,
- PDM_l_num_t **cellvtx_idx,
- PDM_l_num_t **cellvtx
- );
+      PDM_Mesh_nodal_t  *mesh,
+ const int               id_block,
+ const int               id_part,
+ PDM_l_num_t           **cellvtx_idx,
+ PDM_l_num_t           **cellvtx
+);
 
 /**
  * \brief  Add some 3D cells from cell face conectivity.
@@ -823,17 +823,17 @@ PDM_Mesh_nodal_block_poly3d_cell_vtx_connect_get
 void
 PDM_Mesh_nodal_cell3d_cellface_add
 (
-const int          idx,
-const int          id_part,
-const int          n_elt,
-const int          n_face,
-const PDM_l_num_t *face_vtx_idx,
-const PDM_l_num_t *face_vtx_nb,
-const PDM_l_num_t *face_vtx,
-const PDM_l_num_t *cell_face_idx,
-const PDM_l_num_t *cell_face_nb,
-const PDM_l_num_t *cell_face,
-const PDM_g_num_t *numabs
+      PDM_Mesh_nodal_t *mesh,
+const int               id_part,
+const int               n_elt,
+const int               n_face,
+const PDM_l_num_t      *face_vtx_idx,
+const PDM_l_num_t      *face_vtx_nb,
+const PDM_l_num_t      *face_vtx,
+const PDM_l_num_t      *cell_face_idx,
+const PDM_l_num_t      *cell_face_nb,
+const PDM_l_num_t      *cell_face,
+const PDM_g_num_t      *numabs
 );
 
 
@@ -861,17 +861,17 @@ const PDM_g_num_t *numabs
 void
 PDM_Mesh_nodal_cell2d_celledge_add
 (
-const int          idx,
-const int          id_part,
-const int          n_elt,
-const int          n_edge,
-const PDM_l_num_t *edge_vtx_idx,
-const PDM_l_num_t *edge_vtx_nb,
-const PDM_l_num_t *edge_vtx,
-const PDM_l_num_t *cell_edge_idx,
-const PDM_l_num_t *cell_edge_nb,
-const PDM_l_num_t *cell_edge,
-const PDM_g_num_t *numabs
+      PDM_Mesh_nodal_t *mesh,
+const int               id_part,
+const int               n_elt,
+const int               n_edge,
+const PDM_l_num_t      *edge_vtx_idx,
+const PDM_l_num_t      *edge_vtx_nb,
+const PDM_l_num_t      *edge_vtx,
+const PDM_l_num_t      *cell_edge_idx,
+const PDM_l_num_t      *cell_edge_nb,
+const PDM_l_num_t      *cell_edge,
+const PDM_g_num_t      *numabs
 );
 
 
@@ -895,13 +895,13 @@ const PDM_g_num_t *numabs
 void
 PDM_Mesh_nodal_faces_facevtx_add
 (
-const int          idx,
-const int          id_part,
-const int          n_face,
-const PDM_l_num_t *face_vtx_idx,
-const PDM_l_num_t *face_vtx_nb,
-const PDM_l_num_t *face_vtx,
-const PDM_g_num_t *numabs
+      PDM_Mesh_nodal_t *mesh,
+const int               id_part,
+const int               n_face,
+const PDM_l_num_t      *face_vtx_idx,
+const PDM_l_num_t      *face_vtx_nb,
+const PDM_l_num_t      *face_vtx,
+const PDM_g_num_t      *numabs
 );
 
 
@@ -916,8 +916,8 @@ const PDM_g_num_t *numabs
 void
 PDM_Mesh_nodal_g_num_in_block_compute
 (
-const int         idx,
-const int         id_block
+      PDM_Mesh_nodal_t *mesh,
+const int               id_block
 );
 
 
@@ -934,8 +934,8 @@ const int         id_block
 int *
 PDM_Mesh_nodal_num_cell_parent_to_local_get
 (
-const int  idx,
-const int  id_part
+      PDM_Mesh_nodal_t *mesh,
+const int               id_part
 );
 
 
@@ -952,8 +952,8 @@ const int  id_part
 int
 PDM_Mesh_nodal_n_cell_get
 (
-const int  idx,
-const int  id_part
+      PDM_Mesh_nodal_t *mesh,
+const int               id_part
 );
 
 
@@ -969,8 +969,8 @@ const int  id_part
 const PDM_g_num_t *
 PDM_Mesh_nodal_vertices_g_num_parent_get
 (
- const int          idx,
- const int          id_part
+       PDM_Mesh_nodal_t *mesh,
+ const int               id_part
 );
 
 /**
@@ -985,13 +985,8 @@ PDM_Mesh_nodal_vertices_g_num_parent_get
 void
 PDM_Mesh_nodal_reset
 (
-const int idx
- );
-
-
-
-
-
+ PDM_Mesh_nodal_t *mesh
+);
 
 /**
  * \brief Returns the number of vertices in an element
@@ -1008,7 +1003,7 @@ PDM_Mesh_nodal_n_vertices_element
 (
  const PDM_Mesh_nodal_elt_t elt_type,
  const int                  order
- );
+);
 
 
 
@@ -1017,12 +1012,12 @@ PDM_Mesh_nodal_n_vertices_element
 void
 PDM_Mesh_nodal_compute_cell_extents
 (
- const int     idx,
- const int     id_block,
- const int     i_part,
- const double  tolerance,
- double       *extents
- );
+       PDM_Mesh_nodal_t *mesh,
+ const int               id_block,
+ const int               i_part,
+ const double            tolerance,
+       double           *extents
+);
 
 
 
@@ -1034,8 +1029,8 @@ PDM_Mesh_nodal_poly3d_cell_vtx_get
  const PDM_l_num_t   face_vtx[],
  const PDM_l_num_t   cell_face_idx[],
  const PDM_l_num_t   cell_face[],
- PDM_l_num_t       **cell_vtx
- );
+       PDM_l_num_t **cell_vtx
+);
 
 #ifdef __cplusplus
 }

@@ -391,12 +391,12 @@ _calcul_numabs_face_poly3d
   PDM_g_num_t max_abs = 0;
   PDM_l_num_t n_elt_proc = 0;
 
-  const int n_part = PDM_Mesh_nodal_n_part_get (geom->idx_mesh);
+  const int n_part = PDM_Mesh_nodal_n_part_get (geom->mesh_nodal);
 
   for (int i = 0; i < n_part; i++) {
 
-    int n_elt = PDM_Mesh_nodal_block_n_elt_get (geom->idx_mesh, iblock, i);
-    PDM_g_num_t *numabs_block = PDM_Mesh_nodal_block_g_num_get (geom->idx_mesh,
+    int n_elt = PDM_Mesh_nodal_block_n_elt_get (geom->mesh_nodal, iblock, i);
+    PDM_g_num_t *numabs_block = PDM_Mesh_nodal_block_g_num_get (geom->mesh_nodal,
                                                                  iblock,
                                                                  i);
 
@@ -442,7 +442,7 @@ _calcul_numabs_face_poly3d
 
   for (int j = 0; j < n_part; j++) {
 
-    int n_elt = PDM_Mesh_nodal_block_n_elt_get (geom->idx_mesh, iblock, j);
+    int n_elt = PDM_Mesh_nodal_block_n_elt_get (geom->mesh_nodal, iblock, j);
 
     n_elt_loc_total += n_elt;
   }
@@ -458,8 +458,8 @@ _calcul_numabs_face_poly3d
 
   for (int j = 0; j < n_part; j++) {
 
-    int n_elt = PDM_Mesh_nodal_block_n_elt_get (geom->idx_mesh, iblock, j);
-    PDM_g_num_t *numabs_block = PDM_Mesh_nodal_block_g_num_get (geom->idx_mesh,
+    int n_elt = PDM_Mesh_nodal_block_n_elt_get (geom->mesh_nodal, iblock, j);
+    PDM_g_num_t *numabs_block = PDM_Mesh_nodal_block_g_num_get (geom->mesh_nodal,
                                                                  iblock,
                                                                  j);
 
@@ -516,8 +516,8 @@ _calcul_numabs_face_poly3d
 
   unsigned char *current_data = send_buff_data;
   for (int j = 0; j < n_part; j++) {
-      int n_elt = PDM_Mesh_nodal_block_n_elt_get (geom->idx_mesh, iblock, j);
-      PDM_g_num_t *numabs_block = PDM_Mesh_nodal_block_g_num_get (geom->idx_mesh,
+      int n_elt = PDM_Mesh_nodal_block_n_elt_get (geom->mesh_nodal, iblock, j);
+      PDM_g_num_t *numabs_block = PDM_Mesh_nodal_block_g_num_get (geom->mesh_nodal,
                                                                    iblock,
                                                                    j);
 
@@ -527,7 +527,7 @@ _calcul_numabs_face_poly3d
       PDM_l_num_t  *cellfac_idx;
       PDM_l_num_t  *cellfac;
 
-      PDM_Mesh_nodal_block_poly3d_get  (geom->idx_mesh,
+      PDM_Mesh_nodal_block_poly3d_get  (geom->mesh_nodal,
                                         iblock,
                                         j,
                                         &n_face,
@@ -650,8 +650,8 @@ _calcul_numabs_face_poly3d
   current_data = send_buff_data;
   for (int j = 0; j < n_part; j++) {
 
-    int n_elt = PDM_Mesh_nodal_block_n_elt_get (geom->idx_mesh, iblock, j);
-    PDM_g_num_t *numabs_block = PDM_Mesh_nodal_block_g_num_get (geom->idx_mesh,
+    int n_elt = PDM_Mesh_nodal_block_n_elt_get (geom->mesh_nodal, iblock, j);
+    PDM_g_num_t *numabs_block = PDM_Mesh_nodal_block_g_num_get (geom->mesh_nodal,
                                                                  iblock,
                                                                  j);
 
@@ -995,10 +995,10 @@ PDM_writer_ensight_geom_write
 
   int n_som_proc = 0;
 
-  const int n_part = PDM_Mesh_nodal_n_part_get (geom->idx_mesh);
+  const int n_part = PDM_Mesh_nodal_n_part_get (geom->mesh_nodal);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
-    const int n_vtx = PDM_Mesh_nodal_n_vertices_get (geom->idx_mesh, i_part);
+    const int n_vtx = PDM_Mesh_nodal_n_vertices_get (geom->mesh_nodal, i_part);
     n_som_proc += n_vtx;
   }
 
@@ -1019,10 +1019,10 @@ PDM_writer_ensight_geom_write
 
     for (int i_part = 0; i_part < n_part; i_part++) {
 
-      const int n_vtx = PDM_Mesh_nodal_n_vertices_get (geom->idx_mesh, i_part);
-      const double *vtx = PDM_Mesh_nodal_vertices_get (geom->idx_mesh, i_part);
+      const int n_vtx = PDM_Mesh_nodal_n_vertices_get (geom->mesh_nodal, i_part);
+      const double *vtx = PDM_Mesh_nodal_vertices_get (geom->mesh_nodal, i_part);
       const PDM_g_num_t *numabs =
-                    PDM_Mesh_nodal_vertices_g_num_get (geom->idx_mesh, i_part);
+                    PDM_Mesh_nodal_vertices_g_num_get (geom->mesh_nodal, i_part);
 
       for (int i = 0; i < n_vtx; i++) {
         coord_tmp[n_som_proc+i] = (float) vtx[3*i+idim];
@@ -1048,13 +1048,13 @@ PDM_writer_ensight_geom_write
 
   /* Ecriture des blocs standard */
 
-  const int n_blocks = PDM_Mesh_nodal_n_blocks_get (geom->idx_mesh);
-  const int *blocks_id = PDM_Mesh_nodal_blocks_id_get (geom->idx_mesh);
+  const int n_blocks = PDM_Mesh_nodal_n_blocks_get (geom->mesh_nodal);
+  const int *blocks_id = PDM_Mesh_nodal_blocks_id_get (geom->mesh_nodal);
 
   for (int ibloc = 0; ibloc < n_blocks; ibloc++) {
 
     PDM_writer_elt_geom_t t_elt =
-            (PDM_writer_elt_geom_t) PDM_Mesh_nodal_block_type_get (geom->idx_mesh, blocks_id[ibloc]);
+            (PDM_writer_elt_geom_t) PDM_Mesh_nodal_block_type_get (geom->mesh_nodal, blocks_id[ibloc]);
 
     /* Type de bloc */
 
@@ -1072,8 +1072,8 @@ PDM_writer_ensight_geom_write
       PDM_l_num_t n_elt_proc = 0;
 
       for (int i = 0; i < n_part; i++) {
-        int n_elt = PDM_Mesh_nodal_block_n_elt_get (geom->idx_mesh, blocks_id[ibloc], i);
-        PDM_g_num_t *numabs_block = PDM_Mesh_nodal_block_g_num_get (geom->idx_mesh,
+        int n_elt = PDM_Mesh_nodal_block_n_elt_get (geom->mesh_nodal, blocks_id[ibloc], i);
+        PDM_g_num_t *numabs_block = PDM_Mesh_nodal_block_g_num_get (geom->mesh_nodal,
                                                                      blocks_id[ibloc],
                                                                      i);
         n_elt_proc += n_elt;
@@ -1127,19 +1127,19 @@ PDM_writer_ensight_geom_write
 
       n_elt_proc = 0;
       for (int i = 0; i < n_part; i++) {
-        int n_elt = PDM_Mesh_nodal_block_n_elt_get (geom->idx_mesh, blocks_id[ibloc], i);
-        PDM_g_num_t *numabs_block = PDM_Mesh_nodal_block_g_num_get (geom->idx_mesh,
+        int n_elt = PDM_Mesh_nodal_block_n_elt_get (geom->mesh_nodal, blocks_id[ibloc], i);
+        PDM_g_num_t *numabs_block = PDM_Mesh_nodal_block_g_num_get (geom->mesh_nodal,
                                                                      blocks_id[ibloc],
                                                                      i);
 
         PDM_l_num_t  *connec;
 
-        PDM_Mesh_nodal_block_std_get (geom->idx_mesh,
+        PDM_Mesh_nodal_block_std_get (geom->mesh_nodal,
                                       blocks_id[ibloc],
                                       i,
                                       &connec);
 
-        const PDM_g_num_t *g_num_vtx = PDM_Mesh_nodal_vertices_g_num_get (geom->idx_mesh,
+        const PDM_g_num_t *g_num_vtx = PDM_Mesh_nodal_vertices_g_num_get (geom->mesh_nodal,
                                                                           i);
         for (int j = 0; j < n_elt; j++) {
           numabs_tmp[n_elt_proc] = numabs_block[j];
@@ -1178,15 +1178,15 @@ PDM_writer_ensight_geom_write
 
       for (int i = 0; i < n_part; i++) {
 
-        int n_elt = PDM_Mesh_nodal_block_n_elt_get (geom->idx_mesh, blocks_id[ibloc], i);
-        PDM_g_num_t *numabs_block = PDM_Mesh_nodal_block_g_num_get (geom->idx_mesh,
+        int n_elt = PDM_Mesh_nodal_block_n_elt_get (geom->mesh_nodal, blocks_id[ibloc], i);
+        PDM_g_num_t *numabs_block = PDM_Mesh_nodal_block_g_num_get (geom->mesh_nodal,
                                                                      blocks_id[ibloc],
                                                                      i);
 
         PDM_l_num_t  *connec_idx;
         PDM_l_num_t  *connec;
 
-        PDM_Mesh_nodal_block_poly2d_get (geom->idx_mesh,
+        PDM_Mesh_nodal_block_poly2d_get (geom->mesh_nodal,
                                          blocks_id[ibloc],
                                          i,
                                          &connec_idx,
@@ -1222,22 +1222,22 @@ PDM_writer_ensight_geom_write
 
       for (int i = 0; i < n_part; i++) {
 
-        int n_elt = PDM_Mesh_nodal_block_n_elt_get (geom->idx_mesh, blocks_id[ibloc], i);
-        PDM_g_num_t *numabs_block = PDM_Mesh_nodal_block_g_num_get (geom->idx_mesh,
+        int n_elt = PDM_Mesh_nodal_block_n_elt_get (geom->mesh_nodal, blocks_id[ibloc], i);
+        PDM_g_num_t *numabs_block = PDM_Mesh_nodal_block_g_num_get (geom->mesh_nodal,
                                                                      blocks_id[ibloc],
                                                                      i);
 
         PDM_l_num_t  *connec_idx;
         PDM_l_num_t  *connec;
 
-        PDM_Mesh_nodal_block_poly2d_get (geom->idx_mesh,
+        PDM_Mesh_nodal_block_poly2d_get (geom->mesh_nodal,
                                          blocks_id[ibloc],
                                          i,
                                          &connec_idx,
                                          &connec);
 
         const PDM_g_num_t *g_num_vtx =
-              PDM_Mesh_nodal_vertices_g_num_get (geom->idx_mesh, i);
+              PDM_Mesh_nodal_vertices_g_num_get (geom->mesh_nodal, i);
 
         for (int j = 0; j < n_elt; j++) {
           numabs_tmp[n_elt_proc] = (PDM_g_num_t) numabs_block[j];
@@ -1301,8 +1301,8 @@ PDM_writer_ensight_geom_write
       int l_connec = 0;
       for (int i = 0; i < n_part; i++) {
 
-        int n_elt = PDM_Mesh_nodal_block_n_elt_get (geom->idx_mesh, blocks_id[ibloc], i);
-        PDM_g_num_t *numabs_block = PDM_Mesh_nodal_block_g_num_get (geom->idx_mesh,
+        int n_elt = PDM_Mesh_nodal_block_n_elt_get (geom->mesh_nodal, blocks_id[ibloc], i);
+        PDM_g_num_t *numabs_block = PDM_Mesh_nodal_block_g_num_get (geom->mesh_nodal,
                                                                      blocks_id[ibloc],
                                                                      i);
 
@@ -1312,7 +1312,7 @@ PDM_writer_ensight_geom_write
         PDM_l_num_t  *cellfac_idx;
         PDM_l_num_t  *cellfac;
 
-        PDM_Mesh_nodal_block_poly3d_get  (geom->idx_mesh,
+        PDM_Mesh_nodal_block_poly3d_get  (geom->mesh_nodal,
                                           blocks_id[ibloc],
                                           i,
                                           &n_face,
@@ -1351,8 +1351,8 @@ PDM_writer_ensight_geom_write
       n_elt_proc = 0;
       for (int i = 0; i < n_part; i++) {
 
-        int n_elt = PDM_Mesh_nodal_block_n_elt_get (geom->idx_mesh, blocks_id[ibloc], i);
-        PDM_g_num_t *numabs_block = PDM_Mesh_nodal_block_g_num_get (geom->idx_mesh,
+        int n_elt = PDM_Mesh_nodal_block_n_elt_get (geom->mesh_nodal, blocks_id[ibloc], i);
+        PDM_g_num_t *numabs_block = PDM_Mesh_nodal_block_g_num_get (geom->mesh_nodal,
                                                                      blocks_id[ibloc],
                                                                      i);
 
@@ -1362,7 +1362,7 @@ PDM_writer_ensight_geom_write
         PDM_l_num_t  *cellfac_idx;
         PDM_l_num_t  *cellfac;
 
-        PDM_Mesh_nodal_block_poly3d_get  (geom->idx_mesh,
+        PDM_Mesh_nodal_block_poly3d_get  (geom->mesh_nodal,
                                           blocks_id[ibloc],
                                           i,
                                           &n_face,
@@ -1393,7 +1393,7 @@ PDM_writer_ensight_geom_write
         (PDM_g_num_t **) malloc(sizeof(PDM_g_num_t *) * n_part);
       for (int i = 0; i < n_part; i++) {
 
-        int n_elt = PDM_Mesh_nodal_block_n_elt_get (geom->idx_mesh, blocks_id[ibloc], i);
+        int n_elt = PDM_Mesh_nodal_block_n_elt_get (geom->mesh_nodal, blocks_id[ibloc], i);
 
         numabs_face[i] = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * n_elt);
       }
@@ -1407,7 +1407,7 @@ PDM_writer_ensight_geom_write
       n_face_proc = 0;
       for (int i = 0; i < n_part; i++) {
 
-        int n_elt = PDM_Mesh_nodal_block_n_elt_get (geom->idx_mesh, blocks_id[ibloc], i);
+        int n_elt = PDM_Mesh_nodal_block_n_elt_get (geom->mesh_nodal, blocks_id[ibloc], i);
 
         PDM_l_num_t   n_face;
         PDM_l_num_t  *facvtx_idx;
@@ -1415,7 +1415,7 @@ PDM_writer_ensight_geom_write
         PDM_l_num_t  *cellfac_idx;
         PDM_l_num_t  *cellfac;
 
-        PDM_Mesh_nodal_block_poly3d_get  (geom->idx_mesh,
+        PDM_Mesh_nodal_block_poly3d_get  (geom->mesh_nodal,
                                           blocks_id[ibloc],
                                           i,
                                           &n_face,
@@ -1460,7 +1460,7 @@ PDM_writer_ensight_geom_write
       l_connec = 0;
       for (int i = 0; i < n_part; i++) {
 
-        int n_elt = PDM_Mesh_nodal_block_n_elt_get (geom->idx_mesh, blocks_id[ibloc], i);
+        int n_elt = PDM_Mesh_nodal_block_n_elt_get (geom->mesh_nodal, blocks_id[ibloc], i);
 
         PDM_l_num_t   n_face;
         PDM_l_num_t  *facvtx_idx;
@@ -1468,7 +1468,7 @@ PDM_writer_ensight_geom_write
         PDM_l_num_t  *cellfac_idx;
         PDM_l_num_t  *cellfac;
 
-        PDM_Mesh_nodal_block_poly3d_get  (geom->idx_mesh,
+        PDM_Mesh_nodal_block_poly3d_get  (geom->mesh_nodal,
                                           blocks_id[ibloc],
                                           i,
                                           &n_face,
@@ -1478,7 +1478,7 @@ PDM_writer_ensight_geom_write
                                           &cellfac);
 
         const PDM_g_num_t *g_num_vtx =
-              PDM_Mesh_nodal_vertices_g_num_get (geom->idx_mesh, i);
+              PDM_Mesh_nodal_vertices_g_num_get (geom->mesh_nodal, i);
 
         for (int k = 0; k < n_elt; k++) {
           for (int j = cellfac_idx[k]; j < cellfac_idx[k+1]; j++) {
@@ -1615,7 +1615,7 @@ PDM_writer_ensight_var_write
 
     PDM_writer_geom_t *geom = (PDM_writer_geom_t *) PDM_Handles_get (cs->geom_tab, igeom);
 
-    const int n_part = PDM_Mesh_nodal_n_part_get (geom->idx_mesh);
+    const int n_part = PDM_Mesh_nodal_n_part_get (geom->mesh_nodal);
 
     if ((geom != NULL) && (var->_val[igeom] != NULL)) {
       PDM_writer_geom_ensight_t *_geom_ensight = (PDM_writer_geom_ensight_t *) geom->geom_fmt;
@@ -1636,7 +1636,7 @@ PDM_writer_ensight_var_write
 
        int n_som_proc = 0;
         for (int i = 0; i < n_part; i++) {
-          const int n_vertices = PDM_Mesh_nodal_n_vertices_get (geom->idx_mesh, i);
+          const int n_vertices = PDM_Mesh_nodal_n_vertices_get (geom->mesh_nodal, i);
           n_som_proc += n_vertices;
         }
 
@@ -1645,8 +1645,8 @@ PDM_writer_ensight_var_write
 
         n_som_proc = 0;
         for (int i = 0; i < n_part; i++) {
-          const int n_vertices = PDM_Mesh_nodal_n_vertices_get (geom->idx_mesh, i);
-          const PDM_g_num_t *gnum = PDM_Mesh_nodal_vertices_g_num_get (geom->idx_mesh, i);
+          const int n_vertices = PDM_Mesh_nodal_n_vertices_get (geom->mesh_nodal, i);
+          const PDM_g_num_t *gnum = PDM_Mesh_nodal_vertices_g_num_get (geom->mesh_nodal, i);
           for (int j = 0; j < n_vertices; j++) {
             numabs[n_som_proc++] = (PDM_g_num_t) gnum[j];
           }
@@ -1663,7 +1663,7 @@ PDM_writer_ensight_var_write
 
 
           for (int i = 0; i < n_part; i++) {
-            const int n_vertices = PDM_Mesh_nodal_n_vertices_get (geom->idx_mesh, i);
+            const int n_vertices = PDM_Mesh_nodal_n_vertices_get (geom->mesh_nodal, i);
             for (int j = 0; j < n_vertices; j++) {
               buff[n_som_proc++] = (float) var->_val[igeom][i][j*var->dim + comp_a_ecrire];
             }
@@ -1690,8 +1690,8 @@ PDM_writer_ensight_var_write
 
         /* Allocation du buffer */
 
-        const int n_blocks = PDM_Mesh_nodal_n_blocks_get (geom->idx_mesh);
-        const int *blocks_id = PDM_Mesh_nodal_blocks_id_get (geom->idx_mesh);
+        const int n_blocks = PDM_Mesh_nodal_n_blocks_get (geom->mesh_nodal);
+        const int *blocks_id = PDM_Mesh_nodal_blocks_id_get (geom->mesh_nodal);
 
         int n_elt_max_bloc = 0;
 
@@ -1700,7 +1700,7 @@ PDM_writer_ensight_var_write
           int n_elt_bloc = 0;
           for (int i = 0; i < n_part; i++) {
 
-            int n_elt = PDM_Mesh_nodal_block_n_elt_get (geom->idx_mesh,
+            int n_elt = PDM_Mesh_nodal_block_n_elt_get (geom->mesh_nodal,
                                                     blocks_id[iblock],
                                                     i);
             n_elt_bloc += n_elt;
@@ -1721,7 +1721,7 @@ PDM_writer_ensight_var_write
 
         for (int iblock = 0; iblock < n_blocks; iblock++) {
 
-          PDM_writer_elt_geom_t t_elt = (PDM_writer_elt_geom_t) PDM_Mesh_nodal_block_type_get (geom->idx_mesh, blocks_id[iblock]);
+          PDM_writer_elt_geom_t t_elt = (PDM_writer_elt_geom_t) PDM_Mesh_nodal_block_type_get (geom->mesh_nodal, blocks_id[iblock]);
 
           /* Ecriture du Type de bloc */
 
@@ -1733,12 +1733,12 @@ PDM_writer_ensight_var_write
 
           int n_val_buff = 0;
           for (int i = 0; i < n_part; i++) {
-            int           n_elt = PDM_Mesh_nodal_block_n_elt_get (geom->idx_mesh,
+            int           n_elt = PDM_Mesh_nodal_block_n_elt_get (geom->mesh_nodal,
                                                                   blocks_id[iblock],
                                                                   i);
 
             PDM_g_num_t  *numabs_block =
-                    PDM_Mesh_nodal_block_g_num_get (geom->idx_mesh,
+                    PDM_Mesh_nodal_block_g_num_get (geom->mesh_nodal,
                                                     blocks_id[iblock],
                                                     i);
             for (int j = 0; j < n_elt; j++) {
@@ -1755,7 +1755,7 @@ PDM_writer_ensight_var_write
             if (var->dim == 9)
               comp_a_ecrire = 3 * (k % 3) + k / 3;
             for (int i = 0; i < n_part; i++) {
-              int           n_elt = PDM_Mesh_nodal_block_n_elt_get (geom->idx_mesh,
+              int           n_elt = PDM_Mesh_nodal_block_n_elt_get (geom->mesh_nodal,
                                             blocks_id[iblock],
                                             i);
 
@@ -1777,7 +1777,7 @@ PDM_writer_ensight_var_write
           }
           for (int i = 0; i < n_part; i++) {
 
-            ideb[i] += PDM_Mesh_nodal_block_n_elt_get (geom->idx_mesh,
+            ideb[i] += PDM_Mesh_nodal_block_n_elt_get (geom->mesh_nodal,
                                                   blocks_id[iblock],
                                                   i);
           }

@@ -105,8 +105,8 @@ typedef struct {
   PDM_mesh_nature_t mesh_nature;  /*!< Nature of the mesh */
 
   int  shared_nodal;   /*!< 1 if mesh nodal is shared, 0 otherwise */
-  int  mesh_nodal_id;  /*!< Mesh identifier */
-  int _mesh_nodal_id;
+  PDM_Mesh_nodal_t*  mesh_nodal;  /*!< Mesh identifier */
+  PDM_Mesh_nodal_t* _mesh_nodal;
   PDM_l_num_t **face_vtx_n; /* Mandatory to build mesh nodal */
   PDM_l_num_t **cell_face_n; /* Mandatory to build mesh nodal */
 
@@ -195,9 +195,9 @@ _redistribute_elementary_location
 {
   const int order = 1;
 
-  int n_blocks   = PDM_Mesh_nodal_n_blocks_get (location->mesh_nodal_id);
-  int n_parts    = PDM_Mesh_nodal_n_part_get (location->mesh_nodal_id);
-  int *blocks_id = PDM_Mesh_nodal_blocks_id_get (location->mesh_nodal_id);
+  int n_blocks   = PDM_Mesh_nodal_n_blocks_get (location->mesh_nodal);
+  int n_parts    = PDM_Mesh_nodal_n_part_get   (location->mesh_nodal);
+  int *blocks_id = PDM_Mesh_nodal_blocks_id_get(location->mesh_nodal);
 
 
   int my_rank, n_ranks;
@@ -214,11 +214,11 @@ _redistribute_elementary_location
   int ielt = 0;
   for (int iblock = 0; iblock < n_blocks; iblock++) {
     int id_block = blocks_id[iblock];
-    PDM_Mesh_nodal_elt_t block_type = PDM_Mesh_nodal_block_type_get (location->mesh_nodal_id,
+    PDM_Mesh_nodal_elt_t block_type = PDM_Mesh_nodal_block_type_get (location->mesh_nodal,
                                                                      id_block);
 
     for (int ipart = 0; ipart < n_parts; ipart++) {
-      int n_elt_part = PDM_Mesh_nodal_block_n_elt_get (location->mesh_nodal_id,
+      int n_elt_part = PDM_Mesh_nodal_block_n_elt_get (location->mesh_nodal,
                                                        id_block,
                                                        ipart);
       if (id_block >= PDM_BLOCK_ID_BLOCK_POLY3D) {
@@ -259,17 +259,17 @@ _redistribute_elementary_location
     if (id_block >= PDM_BLOCK_ID_BLOCK_POLY3D) {
 
       for (int ipart = 0; ipart < n_parts; ipart++) {
-        int n_elt_part = PDM_Mesh_nodal_block_n_elt_get (location->mesh_nodal_id,
+        int n_elt_part = PDM_Mesh_nodal_block_n_elt_get (location->mesh_nodal,
                                                          id_block,
                                                          ipart);
 
-        PDM_Mesh_nodal_block_poly3d_cell_vtx_connect_get (location->mesh_nodal_id,
+        PDM_Mesh_nodal_block_poly3d_cell_vtx_connect_get (location->mesh_nodal,
                                                           id_block,
                                                           ipart,
                                                           &connec_idx,
                                                           &connec);
 
-        PDM_Mesh_nodal_block_poly3d_get (location->mesh_nodal_id,
+        PDM_Mesh_nodal_block_poly3d_get (location->mesh_nodal,
                                          id_block,
                                          ipart,
                                          &n_face,
@@ -290,10 +290,10 @@ _redistribute_elementary_location
     else if (id_block >= PDM_BLOCK_ID_BLOCK_POLY2D) {
 
       for (int ipart = 0; ipart < n_parts; ipart++) {
-        int n_elt_part = PDM_Mesh_nodal_block_n_elt_get (location->mesh_nodal_id,
+        int n_elt_part = PDM_Mesh_nodal_block_n_elt_get (location->mesh_nodal,
                                                          id_block,
                                                          ipart);
-        PDM_Mesh_nodal_block_poly2d_get (location->mesh_nodal_id,
+        PDM_Mesh_nodal_block_poly2d_get (location->mesh_nodal,
                                          id_block,
                                          ipart,
                                          &connec_idx,
@@ -307,13 +307,13 @@ _redistribute_elementary_location
 
     /* Standard elements */
     else {
-      PDM_Mesh_nodal_elt_t std_type = PDM_Mesh_nodal_block_type_get (location->mesh_nodal_id,
+      PDM_Mesh_nodal_elt_t std_type = PDM_Mesh_nodal_block_type_get (location->mesh_nodal,
                                                                      id_block);
       int n_vtx = PDM_Mesh_nodal_n_vertices_element (std_type,
                                                      order);
 
       for (int ipart = 0; ipart < n_parts; ipart++) {
-        int n_elt_part = PDM_Mesh_nodal_block_n_elt_get (location->mesh_nodal_id,
+        int n_elt_part = PDM_Mesh_nodal_block_n_elt_get (location->mesh_nodal,
                                                          id_block,
                                                          ipart);
 
@@ -357,11 +357,11 @@ _redistribute_elementary_location
       /* Polyhedra */
       if (id_block >= PDM_BLOCK_ID_BLOCK_POLY3D) {
         for (int ipart = 0; ipart < n_parts; ipart++) {
-          int n_elt_part = PDM_Mesh_nodal_block_n_elt_get (location->mesh_nodal_id,
+          int n_elt_part = PDM_Mesh_nodal_block_n_elt_get (location->mesh_nodal,
                                                            id_block,
                                                            ipart);
 
-          PDM_Mesh_nodal_block_poly3d_get (location->mesh_nodal_id,
+          PDM_Mesh_nodal_block_poly3d_get (location->mesh_nodal,
                                            id_block,
                                            ipart,
                                            &n_face,
@@ -370,7 +370,7 @@ _redistribute_elementary_location
                                            &cell_face_idx,
                                            &cell_face);
 
-          PDM_Mesh_nodal_block_poly3d_cell_vtx_connect_get (location->mesh_nodal_id,
+          PDM_Mesh_nodal_block_poly3d_cell_vtx_connect_get (location->mesh_nodal,
                                                             id_block,
                                                             ipart,
                                                             &connec_idx,
@@ -444,14 +444,14 @@ _redistribute_elementary_location
     if (id_block >= PDM_BLOCK_ID_BLOCK_POLY3D) {
 
       for (int ipart = 0; ipart < n_parts; ipart++) {
-        int n_elt_part = PDM_Mesh_nodal_block_n_elt_get (location->mesh_nodal_id,
+        int n_elt_part = PDM_Mesh_nodal_block_n_elt_get (location->mesh_nodal,
                                                          id_block,
                                                          ipart);
 
-        const double *vtx_coord_part = PDM_Mesh_nodal_vertices_get (location->mesh_nodal_id,
+        const double *vtx_coord_part = PDM_Mesh_nodal_vertices_get (location->mesh_nodal,
                                                                     ipart);
 
-        PDM_Mesh_nodal_block_poly3d_cell_vtx_connect_get (location->mesh_nodal_id,
+        PDM_Mesh_nodal_block_poly3d_cell_vtx_connect_get (location->mesh_nodal,
                                                           id_block,
                                                           ipart,
                                                           &connec_idx,
@@ -484,14 +484,14 @@ _redistribute_elementary_location
     else if (id_block >= PDM_BLOCK_ID_BLOCK_POLY2D) {
 
       for (int ipart = 0; ipart < n_parts; ipart++) {
-        int n_elt_part = PDM_Mesh_nodal_block_n_elt_get (location->mesh_nodal_id,
+        int n_elt_part = PDM_Mesh_nodal_block_n_elt_get (location->mesh_nodal,
                                                          id_block,
                                                          ipart);
 
-        const double *vtx_coord_part = PDM_Mesh_nodal_vertices_get (location->mesh_nodal_id,
+        const double *vtx_coord_part = PDM_Mesh_nodal_vertices_get (location->mesh_nodal,
                                                                     ipart);
 
-        PDM_Mesh_nodal_block_poly2d_get (location->mesh_nodal_id,
+        PDM_Mesh_nodal_block_poly2d_get (location->mesh_nodal,
                                          id_block,
                                          ipart,
                                          &connec_idx,
@@ -513,21 +513,21 @@ _redistribute_elementary_location
     /* Standard elements */
     else {
 
-      PDM_Mesh_nodal_elt_t std_type = PDM_Mesh_nodal_block_type_get (location->mesh_nodal_id,
+      PDM_Mesh_nodal_elt_t std_type = PDM_Mesh_nodal_block_type_get (location->mesh_nodal,
                                                                      id_block);
       int n_vtx = PDM_Mesh_nodal_n_vertices_element (std_type,
                                                      order);
 
 
       for (int ipart = 0; ipart < n_parts; ipart++) {
-        int n_elt_part = PDM_Mesh_nodal_block_n_elt_get (location->mesh_nodal_id,
+        int n_elt_part = PDM_Mesh_nodal_block_n_elt_get (location->mesh_nodal,
                                                          id_block,
                                                          ipart);
 
-        const double *vtx_coord_part = PDM_Mesh_nodal_vertices_get (location->mesh_nodal_id,
+        const double *vtx_coord_part = PDM_Mesh_nodal_vertices_get (location->mesh_nodal,
                                                                     ipart);
 
-        PDM_Mesh_nodal_block_std_get (location->mesh_nodal_id,
+        PDM_Mesh_nodal_block_std_get (location->mesh_nodal,
                                       id_block,
                                       ipart,
                                       &connec);
@@ -890,9 +890,9 @@ PDM_mesh_location_create
   location->comm = comm;
   location->mesh_nature = mesh_nature;
 
-  location->shared_nodal   = 0;
-  location->mesh_nodal_id  = -1;
-  location->_mesh_nodal_id = -1;
+  location->shared_nodal = 0;
+  location->mesh_nodal   = NULL;
+  location->_mesh_nodal  = NULL;
 
   location->point_clouds =
     (_point_cloud_t*) malloc (sizeof(_point_cloud_t) * n_point_cloud);
@@ -1058,20 +1058,20 @@ PDM_mesh_location_cloud_get
  * \brief Set the mesh nodal
  *
  * \param [in]   id             Identifier
- * \param [in]   mesh_nodal_id  Mesh nodal identifier
+ * \param [in]   mesh_nodal  Mesh nodal identifier
  *
  */
 
 void
 PDM_mesh_location_shared_nodal_mesh_set
 (
- const int  id,
- const int  mesh_nodal_id
- )
+ const int               id,
+       PDM_Mesh_nodal_t *mesh_nodal
+)
 {
   _PDM_location_t *location = _get_from_id (id);
 
-  location->mesh_nodal_id = mesh_nodal_id;
+  location->mesh_nodal = mesh_nodal;
   location->shared_nodal = 1;
 }
 
@@ -1094,11 +1094,11 @@ PDM_mesh_location_mesh_global_data_set
 {
   _PDM_location_t *location = _get_from_id (id);
 
-  if ((location->shared_nodal == 0) && (location->mesh_nodal_id != -1)) {
-    PDM_Mesh_nodal_free (location->mesh_nodal_id);
+  if ((location->shared_nodal == 0) && (location->mesh_nodal != NULL)) {
+    PDM_Mesh_nodal_free (location->mesh_nodal);
   }
 
-  location->mesh_nodal_id = PDM_Mesh_nodal_create (n_part, location->comm);
+  location->mesh_nodal = PDM_Mesh_nodal_create (n_part, location->comm);
 
   location->face_vtx_n  = malloc(sizeof(PDM_l_num_t *) * n_part);
   location->cell_face_n = malloc(sizeof(PDM_l_num_t *) * n_part);
@@ -1158,7 +1158,7 @@ PDM_mesh_location_part_set
    * Creation de mesh nodal
    */
 
-  PDM_Mesh_nodal_coord_set (location->mesh_nodal_id,
+  PDM_Mesh_nodal_coord_set (location->mesh_nodal,
                             i_part,
                             n_vtx,
                             coords,
@@ -1177,7 +1177,7 @@ PDM_mesh_location_part_set
     location->cell_face_n[i_part][i] = cell_face_idx[i+1] - cell_face_idx[i];
   }
 
-  PDM_Mesh_nodal_cell3d_cellface_add (location->mesh_nodal_id,
+  PDM_Mesh_nodal_cell3d_cellface_add (location->mesh_nodal,
                                       i_part,
                                       n_cell,
                                       n_face,
@@ -1238,7 +1238,7 @@ PDM_mesh_location_part_set_2d
    * Creation de mesh nodal
    */
 
-  PDM_Mesh_nodal_coord_set (location->mesh_nodal_id,
+  PDM_Mesh_nodal_coord_set (location->mesh_nodal,
                             i_part,
                             n_vtx,
                             coords,
@@ -1259,7 +1259,7 @@ PDM_mesh_location_part_set_2d
   }
 
 
-  PDM_Mesh_nodal_cell2d_celledge_add (location->mesh_nodal_id,
+  PDM_Mesh_nodal_cell2d_celledge_add (location->mesh_nodal,
                                       i_part,
                                       n_cell,
                                       n_edge,
@@ -1463,13 +1463,13 @@ PDM_mesh_location_free
   }
 
   /* Free mesh nodal */
-  //PDM_Mesh_nodal_partial_free (location->mesh_nodal_id);?
+  //PDM_Mesh_nodal_partial_free (location->mesh_nodal);?
 
   if (!location->shared_nodal) {
 
-    int _n_part = PDM_Mesh_nodal_n_part_get(location->mesh_nodal_id);
+    int _n_part = PDM_Mesh_nodal_n_part_get(location->mesh_nodal);
 
-    PDM_Mesh_nodal_free (location->mesh_nodal_id);
+    PDM_Mesh_nodal_free (location->mesh_nodal);
 
     if(location->cell_face_n != NULL){
       for (int i = 0; i< _n_part; i++) {
@@ -1626,13 +1626,13 @@ PDM_mesh_location_compute
   /*
    * Build the bounding boxes of mesh elements
    */
-  int n_blocks = PDM_Mesh_nodal_n_blocks_get (location->mesh_nodal_id);
-  int n_parts  = PDM_Mesh_nodal_n_part_get (location->mesh_nodal_id);
-  int *blocks_id = PDM_Mesh_nodal_blocks_id_get (location->mesh_nodal_id);
+  int n_blocks = PDM_Mesh_nodal_n_blocks_get (location->mesh_nodal);
+  int n_parts  = PDM_Mesh_nodal_n_part_get (location->mesh_nodal);
+  int *blocks_id = PDM_Mesh_nodal_blocks_id_get (location->mesh_nodal);
 
   int n_boxes = 0;
   for (int ipart = 0; ipart < n_parts; ipart++) {
-    n_boxes += PDM_Mesh_nodal_n_cell_get (location->mesh_nodal_id,
+    n_boxes += PDM_Mesh_nodal_n_cell_get (location->mesh_nodal,
                                           ipart);
   }
 
@@ -1648,18 +1648,18 @@ PDM_mesh_location_compute
 
     for (int ipart = 0; ipart < n_parts; ipart++) {
       /* get element extents */
-      PDM_Mesh_nodal_compute_cell_extents (location->mesh_nodal_id,
+      PDM_Mesh_nodal_compute_cell_extents (location->mesh_nodal,
                                            id_block,
                                            ipart,
                                            location->tolerance,
                                            box_extents + 6*ibox);
 
       /* get elements gnum */
-      PDM_g_num_t *_gnum = PDM_Mesh_nodal_g_num_get (location->mesh_nodal_id,
+      PDM_g_num_t *_gnum = PDM_Mesh_nodal_g_num_get (location->mesh_nodal,
                                                      id_block,
                                                      ipart);
 
-      int n_elt = PDM_Mesh_nodal_block_n_elt_get (location->mesh_nodal_id,
+      int n_elt = PDM_Mesh_nodal_block_n_elt_get (location->mesh_nodal,
                                                   id_block,
                                                   ipart);
 
@@ -2390,16 +2390,16 @@ PDM_mesh_location_compute
 
 
 
-int
-PDM_mesh_location_mesh_nodal_id_get
-(
- const int id
- )
-{
-  _PDM_location_t *location = _get_from_id (id);
+// PDM_Mesh_nodal_t*
+// PDM_mesh_location_mesh_nodal_get
+// (
+//  const int id
+// )
+// {
+//   _PDM_location_t *location = _get_from_id (id);
 
-  return location->mesh_nodal_id;
-}
+//   return location->mesh_nodal;
+// }
 
 #ifdef	__cplusplus
 }

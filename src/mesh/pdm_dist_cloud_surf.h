@@ -8,6 +8,7 @@
 #include "pdm.h"
 #include "pdm_mpi.h"
 #include "pdm_surf_mesh.h"
+#include "pdm_mesh_nodal.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -117,8 +118,8 @@ PDM_dist_cloud_surf_cloud_set
 void
 PDM_dist_cloud_surf_nodal_mesh_set
 (
- const int  id,
- const int  mesh_nodal_id
+ const int               id,
+       PDM_Mesh_nodal_t *mesh_nodal
 );
 
 /**

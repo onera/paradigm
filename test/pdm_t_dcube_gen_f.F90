@@ -70,7 +70,6 @@ program testf
 
   integer (kind = pdm_l_num_s), pointer :: dface_group_idx(:)
   integer (kind = pdm_g_num_s), pointer :: dface_group(:)
-  integer (c_int), pointer :: weights_idx(:)
 
   n_face_group = -1
   dn_cell = -1
@@ -110,14 +109,19 @@ program testf
 
   call c_f_pointer(cptr_dface_cell     , dface_cell     , [2*dn_face])
 
+  write(*,*) dface_cell(1), dface_cell(2)
 
   call c_f_pointer(cptr_dface_vtx_idx  , dface_vtx_idx  , [dn_face+1])
+  write(*,*) dface_vtx_idx(1), dface_vtx_idx(2)
   call c_f_pointer(cptr_dface_vtx      , dface_vtx      , [dface_vtx_idx(dn_face+1)])
+  write(*,*) dface_vtx(1), dface_vtx(2)
   call c_f_pointer(cptr_dvtx_coord     , dvtx_coord     , [3*dn_vtx])
-  call c_f_pointer(cptr_dface_group_idx, dface_group_idx, [sface_group+1])
-  call c_f_pointer(cptr_dface_group    , dface_group    , [dface_group_idx(sface_group+1)])
+  write(*,*) dvtx_coord(1), dvtx_coord(2)
 
-  write(*,*) dface_cell(1), dface_cell(2)
+  call c_f_pointer(cptr_dface_group_idx, dface_group_idx, [n_face_group+1])
+  write(*,*) "dface_group_idx(sface_group+1)  = ", dface_group_idx(n_face_group+1)
+  call c_f_pointer(cptr_dface_group    , dface_group    , [dface_group_idx(n_face_group+1)])
+
 
   call pdm_dcube_gen_free(dcube)
 
