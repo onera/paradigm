@@ -19,7 +19,7 @@
 
 #include "pdm_configf.h"
 
-module pdm_dcube
+module pdm_dcube_gen
 
   use pdm
 
@@ -111,4 +111,4 @@ module pdm_dcube
 
   end interface
 
-end module pdm_dcube
+end module pdm_dcube_gen
