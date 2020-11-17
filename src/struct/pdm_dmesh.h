@@ -126,7 +126,7 @@ PDM_dmesh_create
 void
 PDM_dmesh_set
 (
- PDM_dmesh_t        *dm,
+ PDM_dmesh_t        *dmeshm,
  const double       *dvtx_coord,
  const int          *dface_vtx_idx,
  const PDM_g_num_t  *dface_vtx,
@@ -153,7 +153,7 @@ PDM_dmesh_set
 void
 PDM_dmesh_dims_get
 (
- PDM_dmesh_t *dm,
+ PDM_dmesh_t *dmeshm,
  int         *dn_cell,
  int         *dn_face,
  int         *dn_vtx,
@@ -180,7 +180,7 @@ PDM_dmesh_dims_get
 void
 PDM_dmesh_data_get
 (
- PDM_dmesh_t         *dm,
+ PDM_dmesh_t         *dmeshm,
  const double       **dvtx_coord,
  const int          **dface_vtx_idx,
  const PDM_g_num_t  **dface_vtx,
@@ -203,7 +203,7 @@ PDM_dmesh_data_get
 void
 PDM_dmesh_free
 (
- PDM_dmesh_t        *dm
+ PDM_dmesh_t        *dmesh
 );
 
 

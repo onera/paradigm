@@ -682,7 +682,7 @@ const PDM_ownership_t owner
   dmn_to_dm->n_mesh            = n_mesh;
 
   dmn_to_dm->dmesh_nodal     = (PDM_dmesh_nodal_t **) malloc(sizeof(PDM_dmesh_nodal_t *));
-  dmn_to_dm->dmesh           = (PDM_dmesh_t       **) malloc(sizeof(_pdm_dmesh_t       *));
+  dmn_to_dm->dmesh           = (PDM_dmesh_t       **) malloc(sizeof(PDM_dmesh_t       *));
 
   return (PDM_dmesh_nodal_to_dmesh_t *) dmn_to_dm;
 }
