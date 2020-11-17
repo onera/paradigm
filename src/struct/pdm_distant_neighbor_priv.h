@@ -31,7 +31,7 @@ extern "C" {
  * \brief  Define a point merge structures
  *
  */
-typedef struct  {
+struct _pdm_distant_neighbor_t {
   PDM_MPI_Comm   comm;                  /*!< MPI communicator */
   int            n_part;                /*!< Number of partitions */
   const int     *n_entity;              /*!< Number of entities for each partition */
@@ -56,7 +56,7 @@ typedef struct  {
   int           *distributed_part_idx; /*!< For each part the shift to apply on recv buffer
                                        * (size : n_partà )*/
 
-} _pdm_distant_neighbor_t;
+};
 
 /*=============================================================================
  * Static global variables
