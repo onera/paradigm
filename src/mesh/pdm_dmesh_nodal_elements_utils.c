@@ -77,21 +77,21 @@ PDM_section_size_elt_faces_get
   int _s_elt_face_vtx     = 0;
 
   for (int i = 0; i < dmesh_nodal->n_section_std; i++) {
-    int n_face_elt     = PDM_n_face_elt_per_elmt    (dmesh_nodal->sections_std[i].t_elt);
-    int n_sum_vtx_face = PDM_n_sum_vtx_face_per_elmt(dmesh_nodal->sections_std[i].t_elt);
+    int n_face_elt     = PDM_n_face_elt_per_elmt    (dmesh_nodal->sections_std[i]->t_elt);
+    int n_sum_vtx_face = PDM_n_sum_vtx_face_per_elmt(dmesh_nodal->sections_std[i]->t_elt);
 
-    _s_elt_face_vtx_idx += dmesh_nodal->sections_std[i].n_elt * n_face_elt;
-    _s_elt_face_vtx     += dmesh_nodal->sections_std[i].n_elt * n_sum_vtx_face;
+    _s_elt_face_vtx_idx += dmesh_nodal->sections_std[i]->n_elt * n_face_elt;
+    _s_elt_face_vtx     += dmesh_nodal->sections_std[i]->n_elt * n_sum_vtx_face;
   }
 
   for (int i = 0; i < dmesh_nodal->n_section_poly3d; i++) {
-    _s_elt_face_vtx_idx += dmesh_nodal->sections_poly3d[i].n_face;
-    _s_elt_face_vtx     += dmesh_nodal->sections_poly3d[i]._face_vtx[dmesh_nodal->sections_poly3d[i]._face_vtx_idx[dmesh_nodal->sections_poly3d[i].n_face]];
+    _s_elt_face_vtx_idx += dmesh_nodal->sections_poly3d[i]->n_face;
+    _s_elt_face_vtx     += dmesh_nodal->sections_poly3d[i]->_face_vtx[dmesh_nodal->sections_poly3d[i]->_face_vtx_idx[dmesh_nodal->sections_poly3d[i]->n_face]];
   }
 
   for (int i = 0; i < dmesh_nodal->n_section_poly2d_l1; i++) {
-    _s_elt_face_vtx_idx +=     dmesh_nodal->sections_poly2d_l1[i]._connec_idx[dmesh_nodal->sections_poly2d_l1[i].n_elt];
-    _s_elt_face_vtx     += 2 * dmesh_nodal->sections_poly2d_l1[i]._connec_idx[dmesh_nodal->sections_poly2d_l1[i].n_elt];
+    _s_elt_face_vtx_idx +=     dmesh_nodal->sections_poly2d_l1[i]->_connec_idx[dmesh_nodal->sections_poly2d_l1[i]->n_elt];
+    _s_elt_face_vtx     += 2 * dmesh_nodal->sections_poly2d_l1[i]->_connec_idx[dmesh_nodal->sections_poly2d_l1[i]->n_elt];
   }
 
 
@@ -128,11 +128,11 @@ PDM_section_size_elt_edges_get
   int _s_elt_edge_vtx     = 0;
 
   for (int i = 0; i < dmesh_nodal->n_section_std; i++) {
-    int n_edge_elt     = PDM_n_nedge_elt_per_elmt   (dmesh_nodal->sections_std[i].t_elt);
-    int n_sum_vtx_edge = PDM_n_sum_vtx_edge_per_elmt(dmesh_nodal->sections_std[i].t_elt);
+    int n_edge_elt     = PDM_n_nedge_elt_per_elmt   (dmesh_nodal->sections_std[i]->t_elt);
+    int n_sum_vtx_edge = PDM_n_sum_vtx_edge_per_elmt(dmesh_nodal->sections_std[i]->t_elt);
 
-    _s_elt_edge_vtx_idx += dmesh_nodal->sections_std[i].n_elt * n_edge_elt;
-    _s_elt_edge_vtx     += dmesh_nodal->sections_std[i].n_elt * n_sum_vtx_edge;
+    _s_elt_edge_vtx_idx += dmesh_nodal->sections_std[i]->n_elt * n_edge_elt;
+    _s_elt_edge_vtx     += dmesh_nodal->sections_std[i]->n_elt * n_sum_vtx_edge;
   }
 
   // list_ind = PDM_Handles_idx_get (dmesh_nodal->sections_poly2d);
@@ -799,9 +799,9 @@ PDM_sections_decompose_faces
 
   for (int i_section = 0; i_section < dmesh_nodal->n_section_std; i_section++) {
 
-    PDM_g_num_t beg_elmt_gnum = dmesh_nodal->sections_std[i_section].distrib[dmesh_nodal->i_rank] + dmesh_nodal->section_distribution[i_section];
+    PDM_g_num_t beg_elmt_gnum = dmesh_nodal->sections_std[i_section]->distrib[dmesh_nodal->i_rank] + dmesh_nodal->section_distribution[i_section];
     PDM_g_num_t beg_face_gnum = 0; // Useless in this context
-    switch (dmesh_nodal->sections_std[i_section].t_elt) {
+    switch (dmesh_nodal->sections_std[i_section]->t_elt) {
      case PDM_MESH_NODAL_POINT:
        abort();
        break;
@@ -815,12 +815,12 @@ PDM_sections_decompose_faces
        abort();
        break;
      case PDM_MESH_NODAL_TETRA4:
-       PDM_tetra_decomposes_faces(dmesh_nodal->sections_std[i_section].n_elt,
+       PDM_tetra_decomposes_faces(dmesh_nodal->sections_std[i_section]->n_elt,
                                   &n_elt_current,
                                   &n_face_current,
                                   beg_elmt_gnum,
                                   beg_face_gnum,
-                                  dmesh_nodal->sections_std[i_section]._connec,
+                                  dmesh_nodal->sections_std[i_section]->_connec,
                                   elmt_face_vtx_idx,
                                   elmt_face_vtx,
                                   elmt_face_cell,
@@ -828,12 +828,12 @@ PDM_sections_decompose_faces
                                   elmt_cell_face);
        break;
      case PDM_MESH_NODAL_PYRAMID5:
-       PDM_pyra_decomposes_faces(dmesh_nodal->sections_std[i_section].n_elt,
+       PDM_pyra_decomposes_faces(dmesh_nodal->sections_std[i_section]->n_elt,
                                  &n_elt_current,
                                  &n_face_current,
                                  beg_elmt_gnum,
                                  beg_face_gnum,
-                                 dmesh_nodal->sections_std[i_section]._connec,
+                                 dmesh_nodal->sections_std[i_section]->_connec,
                                  elmt_face_vtx_idx,
                                  elmt_face_vtx,
                                  elmt_face_cell,
@@ -841,12 +841,12 @@ PDM_sections_decompose_faces
                                  elmt_cell_face);
        break;
      case PDM_MESH_NODAL_PRISM6:
-       PDM_prism_decomposes_faces(dmesh_nodal->sections_std[i_section].n_elt,
+       PDM_prism_decomposes_faces(dmesh_nodal->sections_std[i_section]->n_elt,
                                   &n_elt_current,
                                   &n_face_current,
                                   beg_elmt_gnum,
                                   beg_face_gnum,
-                                  dmesh_nodal->sections_std[i_section]._connec,
+                                  dmesh_nodal->sections_std[i_section]->_connec,
                                   elmt_face_vtx_idx,
                                   elmt_face_vtx,
                                   elmt_face_cell,
@@ -854,12 +854,12 @@ PDM_sections_decompose_faces
                                   elmt_cell_face);
        break;
      case PDM_MESH_NODAL_HEXA8:
-       PDM_hexa_decomposes_faces(dmesh_nodal->sections_std[i_section].n_elt,
+       PDM_hexa_decomposes_faces(dmesh_nodal->sections_std[i_section]->n_elt,
                                  &n_elt_current,
                                  &n_face_current,
                                  beg_elmt_gnum,
                                  beg_face_gnum,
-                                 dmesh_nodal->sections_std[i_section]._connec,
+                                 dmesh_nodal->sections_std[i_section]->_connec,
                                  elmt_face_vtx_idx,
                                  elmt_face_vtx,
                                  elmt_face_cell,
@@ -919,10 +919,10 @@ PDM_sections_decompose_edges
 
   for (int i_section = 0; i_section < dmesh_nodal->n_section_std; i_section++) {
 
-    PDM_g_num_t beg_elmt_gnum = dmesh_nodal->sections_std[i_section].distrib[dmesh_nodal->i_rank] + dmesh_nodal->section_distribution[i_section];
+    PDM_g_num_t beg_elmt_gnum = dmesh_nodal->sections_std[i_section]->distrib[dmesh_nodal->i_rank] + dmesh_nodal->section_distribution[i_section];
     PDM_g_num_t beg_edge_gnum = 0; // Useless in this context
 
-    switch (dmesh_nodal->sections_std[i_section].t_elt) {
+    switch (dmesh_nodal->sections_std[i_section]->t_elt) {
      case PDM_MESH_NODAL_POINT:
        abort();
        break;
@@ -930,12 +930,12 @@ PDM_sections_decompose_edges
        abort();
        break;
      case PDM_MESH_NODAL_TRIA3:
-       PDM_tri_decomposes_edges(dmesh_nodal->sections_std[i_section].n_elt,
+       PDM_tri_decomposes_edges(dmesh_nodal->sections_std[i_section]->n_elt,
                                  &n_elt_current,
                                  &n_dedge_current,
                                  beg_elmt_gnum,
                                  beg_edge_gnum,
-                                 dmesh_nodal->sections_std[i_section]._connec,
+                                 dmesh_nodal->sections_std[i_section]->_connec,
                                  elmt_edge_vtx_idx,
                                  elmt_edge_vtx,
                                  elmt_edge_cell,
@@ -943,12 +943,12 @@ PDM_sections_decompose_edges
                                  elmt_cell_edge);
        break;
      case PDM_MESH_NODAL_QUAD4:
-       PDM_quad_decomposes_edges(dmesh_nodal->sections_std[i_section].n_elt,
+       PDM_quad_decomposes_edges(dmesh_nodal->sections_std[i_section]->n_elt,
                                  &n_elt_current,
                                  &n_dedge_current,
                                  beg_elmt_gnum,
                                  beg_edge_gnum,
-                                 dmesh_nodal->sections_std[i_section]._connec,
+                                 dmesh_nodal->sections_std[i_section]->_connec,
                                  elmt_edge_vtx_idx,
                                  elmt_edge_vtx,
                                  elmt_edge_cell,
@@ -956,10 +956,10 @@ PDM_sections_decompose_edges
                                  elmt_cell_edge);
        break;
      case PDM_MESH_NODAL_TETRA4:
-       // PDM_tetra_decomposes_edges(dmesh_nodal->sections_std[i_section].n_elt,
+       // PDM_tetra_decomposes_edges(dmesh_nodal->sections_std[i_section]->n_elt,
        //                            &n_elt_current,
        //                            &n_dedge_current,
-       //                            dmesh_nodal->sections_std[i_section]._connec,
+       //                            dmesh_nodal->sections_std[i_section]->_connec,
        //                            elmt_edge_vtx_idx,
        //                            elmt_edge_vtx,
        //                            elmt_edge_cell,
@@ -967,10 +967,10 @@ PDM_sections_decompose_edges
        abort();
        break;
      case PDM_MESH_NODAL_PYRAMID5:
-       // PDM_pyra_decomposes_edges(dmesh_nodal->sections_std[i_section].n_elt,
+       // PDM_pyra_decomposes_edges(dmesh_nodal->sections_std[i_section]->n_elt,
        //                           &n_elt_current,
        //                           &n_dedge_current,
-       //                           dmesh_nodal->sections_std[i_section]._connec,
+       //                           dmesh_nodal->sections_std[i_section]->_connec,
        //                           elmt_edge_vtx_idx,
        //                           elmt_edge_vtx,
        //                           elmt_edge_cell,
@@ -978,10 +978,10 @@ PDM_sections_decompose_edges
        abort();
        break;
      case PDM_MESH_NODAL_PRISM6:
-       // PDM_prism_decomposes_edges(dmesh_nodal->sections_std[i_section].n_elt,
+       // PDM_prism_decomposes_edges(dmesh_nodal->sections_std[i_section]->n_elt,
        //                            &n_elt_current,
        //                            &n_dedge_current,
-       //                            dmesh_nodal->sections_std[i_section]._connec,
+       //                            dmesh_nodal->sections_std[i_section]->_connec,
        //                            elmt_edge_vtx_idx,
        //                            elmt_edge_vtx,
        //                            elmt_edge_cell,
@@ -989,10 +989,10 @@ PDM_sections_decompose_edges
        abort();
        break;
      case PDM_MESH_NODAL_HEXA8:
-       // PDM_hexa_decomposes_edges(dmesh_nodal->sections_std[i_section].n_elt,
+       // PDM_hexa_decomposes_edges(dmesh_nodal->sections_std[i_section]->n_elt,
        //                           &n_elt_current,
        //                           &n_dedge_current,
-       //                           dmesh_nodal->sections_std[i_section]._connec,
+       //                           dmesh_nodal->sections_std[i_section]->_connec,
        //                           elmt_edge_vtx_idx,
        //                           elmt_edge_vtx,
        //                           elmt_edge_cell,

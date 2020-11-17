@@ -242,12 +242,12 @@ static
 void
 _sections_std_free
 (
- PDM_DMesh_nodal_section_std_t *sections,
- int                            n_sections
+ PDM_DMesh_nodal_section_std_t **sections,
+ int                             n_sections
 )
 {
   for(int i_section = 0; i_section < n_sections; ++i_section) {
-    _section_std_free(&sections[i_section]);
+    _section_std_free(sections[i_section]);
   }
   if(sections != NULL){
     free(sections);
@@ -266,12 +266,12 @@ static
 void
 _sections_poly2d_free
 (
- PDM_DMesh_nodal_section_poly2d_t *sections,
- int                               n_sections
+ PDM_DMesh_nodal_section_poly2d_t **sections,
+ int                                n_sections
 )
 {
   for(int i_section = 0; i_section < n_sections; ++i_section) {
-    _section_poly2d_free(&sections[i_section]);
+    _section_poly2d_free(sections[i_section]);
   }
   if(sections != NULL){
     free(sections);
@@ -291,12 +291,12 @@ static
 void
 _sections_poly3d_free
 (
- PDM_DMesh_nodal_section_poly3d_t *sections,
- int                               n_sections
+ PDM_DMesh_nodal_section_poly3d_t **sections,
+ int                                n_sections
 )
 {
   for(int i_section = 0; i_section < n_sections; ++i_section) {
-    _section_poly3d_free(&sections[i_section]);
+    _section_poly3d_free(sections[i_section]);
   }
   if(sections != NULL){
     free(sections);
@@ -856,10 +856,11 @@ const PDM_Mesh_nodal_elt_t  t_elt
       dmesh_nodal->n_section_std_l2++;
 
       dmesh_nodal->sections_std_l2 = realloc(dmesh_nodal->sections_std_l2, dmesh_nodal->n_section_std_l2 * sizeof(PDM_DMesh_nodal_section_std_t));
-      dmesh_nodal->sections_std_l2[dmesh_nodal->n_section_std_l2-1].t_elt   = t_elt;
-      dmesh_nodal->sections_std_l2[dmesh_nodal->n_section_std_l2-1].n_elt   = -1;
-      dmesh_nodal->sections_std_l2[dmesh_nodal->n_section_std_l2-1]._connec = NULL;
-      dmesh_nodal->sections_std_l2[dmesh_nodal->n_section_std_l2-1].distrib = NULL;
+      dmesh_nodal->sections_std_l2[dmesh_nodal->n_section_std_l2-1] = malloc( sizeof(PDM_DMesh_nodal_section_std_t) );
+      dmesh_nodal->sections_std_l2[dmesh_nodal->n_section_std_l2-1]->t_elt   = t_elt;
+      dmesh_nodal->sections_std_l2[dmesh_nodal->n_section_std_l2-1]->n_elt   = -1;
+      dmesh_nodal->sections_std_l2[dmesh_nodal->n_section_std_l2-1]->_connec = NULL;
+      dmesh_nodal->sections_std_l2[dmesh_nodal->n_section_std_l2-1]->distrib = NULL;
 
     }
     break;
@@ -874,10 +875,11 @@ const PDM_Mesh_nodal_elt_t  t_elt
       dmesh_nodal->n_section_std_l1++;
 
       dmesh_nodal->sections_std_l1 = realloc(dmesh_nodal->sections_std_l1, dmesh_nodal->n_section_std_l1 * sizeof(PDM_DMesh_nodal_section_std_t));
-      dmesh_nodal->sections_std_l1[dmesh_nodal->n_section_std_l1-1].t_elt   = t_elt;
-      dmesh_nodal->sections_std_l1[dmesh_nodal->n_section_std_l1-1].n_elt   = -1;
-      dmesh_nodal->sections_std_l1[dmesh_nodal->n_section_std_l1-1]._connec = NULL;
-      dmesh_nodal->sections_std_l1[dmesh_nodal->n_section_std_l1-1].distrib = NULL;
+      dmesh_nodal->sections_std_l1[dmesh_nodal->n_section_std_l1-1] = malloc( sizeof(PDM_DMesh_nodal_section_std_t) );
+      dmesh_nodal->sections_std_l1[dmesh_nodal->n_section_std_l1-1]->t_elt   = t_elt;
+      dmesh_nodal->sections_std_l1[dmesh_nodal->n_section_std_l1-1]->n_elt   = -1;
+      dmesh_nodal->sections_std_l1[dmesh_nodal->n_section_std_l1-1]->_connec = NULL;
+      dmesh_nodal->sections_std_l1[dmesh_nodal->n_section_std_l1-1]->distrib = NULL;
 
     }
     break;
@@ -899,10 +901,11 @@ const PDM_Mesh_nodal_elt_t  t_elt
       dmesh_nodal->n_section_std++;
 
       dmesh_nodal->sections_std = realloc(dmesh_nodal->sections_std, dmesh_nodal->n_section_std * sizeof(PDM_DMesh_nodal_section_std_t));
-      dmesh_nodal->sections_std[dmesh_nodal->n_section_std-1].t_elt   = t_elt;
-      dmesh_nodal->sections_std[dmesh_nodal->n_section_std-1].n_elt   = -1;
-      dmesh_nodal->sections_std[dmesh_nodal->n_section_std-1]._connec = NULL;
-      dmesh_nodal->sections_std[dmesh_nodal->n_section_std-1].distrib = NULL;
+      dmesh_nodal->sections_std[dmesh_nodal->n_section_std-1] = malloc( sizeof(PDM_DMesh_nodal_section_std_t) );
+      dmesh_nodal->sections_std[dmesh_nodal->n_section_std-1]->t_elt   = t_elt;
+      dmesh_nodal->sections_std[dmesh_nodal->n_section_std-1]->n_elt   = -1;
+      dmesh_nodal->sections_std[dmesh_nodal->n_section_std-1]->_connec = NULL;
+      dmesh_nodal->sections_std[dmesh_nodal->n_section_std-1]->distrib = NULL;
 
     }
     break;
@@ -921,11 +924,12 @@ const PDM_Mesh_nodal_elt_t  t_elt
       dmesh_nodal->n_section++;
       dmesh_nodal->n_section_poly2d_l1++;
 
-      dmesh_nodal->sections_poly2d_l1 = realloc(dmesh_nodal->sections_poly2d_l1, dmesh_nodal->n_section_poly2d_l1 * sizeof(PDM_DMesh_nodal_section_std_t));
-      dmesh_nodal->sections_poly2d_l1[dmesh_nodal->n_section_poly2d_l1-1].n_elt       = -1;
-      dmesh_nodal->sections_poly2d_l1[dmesh_nodal->n_section_poly2d_l1-1]._connec     = NULL;
-      dmesh_nodal->sections_poly2d_l1[dmesh_nodal->n_section_poly2d_l1-1]._connec_idx = NULL;
-      dmesh_nodal->sections_poly2d_l1[dmesh_nodal->n_section_poly2d_l1-1].distrib     = NULL;
+      dmesh_nodal->sections_poly2d_l1 = realloc(dmesh_nodal->sections_poly2d_l1, dmesh_nodal->n_section_poly2d_l1 * sizeof(PDM_DMesh_nodal_section_poly2d_t));
+      dmesh_nodal->sections_poly2d_l1[dmesh_nodal->n_section_poly2d_l1-1] = malloc( sizeof(PDM_DMesh_nodal_section_poly2d_t) );
+      dmesh_nodal->sections_poly2d_l1[dmesh_nodal->n_section_poly2d_l1-1]->n_elt       = -1;
+      dmesh_nodal->sections_poly2d_l1[dmesh_nodal->n_section_poly2d_l1-1]->_connec     = NULL;
+      dmesh_nodal->sections_poly2d_l1[dmesh_nodal->n_section_poly2d_l1-1]->_connec_idx = NULL;
+      dmesh_nodal->sections_poly2d_l1[dmesh_nodal->n_section_poly2d_l1-1]->distrib     = NULL;
 
     }
 
@@ -946,14 +950,15 @@ const PDM_Mesh_nodal_elt_t  t_elt
       dmesh_nodal->n_section++;
       dmesh_nodal->n_section_poly3d++;
 
-      dmesh_nodal->sections_poly3d = realloc(dmesh_nodal->sections_poly3d, dmesh_nodal->n_section_poly3d * sizeof(PDM_DMesh_nodal_section_std_t));
-      dmesh_nodal->sections_poly3d[dmesh_nodal->n_section_poly3d-1].n_elt          = -1;
-      dmesh_nodal->sections_poly3d[dmesh_nodal->n_section_poly3d-1].n_face         = -1;
-      dmesh_nodal->sections_poly3d[dmesh_nodal->n_section_poly3d-1]._face_vtx_idx  = NULL;
-      dmesh_nodal->sections_poly3d[dmesh_nodal->n_section_poly3d-1]._face_vtx      = NULL;
-      dmesh_nodal->sections_poly3d[dmesh_nodal->n_section_poly3d-1]._cell_face_idx = NULL;
-      dmesh_nodal->sections_poly3d[dmesh_nodal->n_section_poly3d-1]._cell_face     = NULL;
-      dmesh_nodal->sections_poly3d[dmesh_nodal->n_section_poly3d-1].distrib        = NULL;
+      dmesh_nodal->sections_poly3d = realloc(dmesh_nodal->sections_poly3d, dmesh_nodal->n_section_poly3d * sizeof(PDM_DMesh_nodal_section_poly3d_t));
+      dmesh_nodal->sections_poly3d[dmesh_nodal->n_section_poly3d-1]                =  malloc( sizeof(PDM_DMesh_nodal_section_poly3d_t) );
+      dmesh_nodal->sections_poly3d[dmesh_nodal->n_section_poly3d-1]->n_elt          = -1;
+      dmesh_nodal->sections_poly3d[dmesh_nodal->n_section_poly3d-1]->n_face         = -1;
+      dmesh_nodal->sections_poly3d[dmesh_nodal->n_section_poly3d-1]->_face_vtx_idx  = NULL;
+      dmesh_nodal->sections_poly3d[dmesh_nodal->n_section_poly3d-1]->_face_vtx      = NULL;
+      dmesh_nodal->sections_poly3d[dmesh_nodal->n_section_poly3d-1]->_cell_face_idx = NULL;
+      dmesh_nodal->sections_poly3d[dmesh_nodal->n_section_poly3d-1]->_cell_face     = NULL;
+      dmesh_nodal->sections_poly3d[dmesh_nodal->n_section_poly3d-1]->distrib        = NULL;
 
     }
 
@@ -1009,11 +1014,11 @@ const int           n_elt,
 
   PDM_DMesh_nodal_section_std_t* section;
   if(dmesh_nodal->section_type[id_section] == PDM_SECTION_TYPE_STD3D){
-    section = &dmesh_nodal->sections_std[dmesh_nodal->section_idx[id_section]];
+    section = dmesh_nodal->sections_std[dmesh_nodal->section_idx[id_section]];
   } else if(dmesh_nodal->section_type[id_section] == PDM_SECTION_TYPE_STD2D){
-    section = &dmesh_nodal->sections_std_l1[dmesh_nodal->section_idx[id_section]];
+    section = dmesh_nodal->sections_std_l1[dmesh_nodal->section_idx[id_section]];
   } else if(dmesh_nodal->section_type[id_section] == PDM_SECTION_TYPE_STD1D){
-    section = &dmesh_nodal->sections_std_l2[dmesh_nodal->section_idx[id_section]];
+    section = dmesh_nodal->sections_std_l2[dmesh_nodal->section_idx[id_section]];
   }
 
   PDM_printf(" PDM_Mesh_nodal_section_std_set - _id_section : %i  \n ", _id_section);
@@ -1437,11 +1442,11 @@ PDM_dmesh_nodal_t  *dmesh_nodal
 
   PDM_g_num_t total_n_cell = 0;
   for(int i_section = 0; i_section < dmesh_nodal->n_section_std; ++i_section){
-    total_n_cell += dmesh_nodal->sections_std[i_section].distrib[dmesh_nodal->n_rank];
+    total_n_cell += dmesh_nodal->sections_std[i_section]->distrib[dmesh_nodal->n_rank];
   }
 
   for(int i_section = 0; i_section < dmesh_nodal->n_section_poly3d; ++i_section){
-    total_n_cell += dmesh_nodal->sections_poly3d[i_section].distrib[dmesh_nodal->n_rank];
+    total_n_cell += dmesh_nodal->sections_poly3d[i_section]->distrib[dmesh_nodal->n_rank];
   }
 
   return total_n_cell;
@@ -1530,11 +1535,11 @@ int               *n_sum_vtx_face_tot
 
   for (int i_section = 0; i_section < dmesh_nodal->n_section_std; i_section++) {
 
-    int n_face_elt     = PDM_n_face_elt_per_elmt    (dmesh_nodal->sections_std[i_section].t_elt);
-    int n_sum_vtx_face = PDM_n_sum_vtx_face_per_elmt(dmesh_nodal->sections_std[i_section].t_elt);
+    int n_face_elt     = PDM_n_face_elt_per_elmt    (dmesh_nodal->sections_std[i_section]->t_elt);
+    int n_sum_vtx_face = PDM_n_sum_vtx_face_per_elmt(dmesh_nodal->sections_std[i_section]->t_elt);
 
-    *n_face_elt_tot     += dmesh_nodal->sections_std[i_section].n_elt*n_face_elt;
-    *n_sum_vtx_face_tot += dmesh_nodal->sections_std[i_section].n_elt*n_sum_vtx_face;
+    *n_face_elt_tot     += dmesh_nodal->sections_std[i_section]->n_elt*n_face_elt;
+    *n_sum_vtx_face_tot += dmesh_nodal->sections_std[i_section]->n_elt*n_sum_vtx_face;
 
   }
 
@@ -1570,12 +1575,12 @@ PDM_dmesh_nodal_generate_distribution
 
   PDM_g_num_t shift = 0;
   for(int i_section = 0; i_section < dmesh_nodal->n_section_std; ++i_section){
-    dmesh_nodal->section_distribution[i_section+1] = dmesh_nodal->sections_std[i_section].distrib[dmesh_nodal->n_rank];
+    dmesh_nodal->section_distribution[i_section+1] = dmesh_nodal->sections_std[i_section]->distrib[dmesh_nodal->n_rank];
   }
   shift += dmesh_nodal->n_section_std;
 
   for(int i_section = 0; i_section < dmesh_nodal->n_section_poly3d; ++i_section){
-    dmesh_nodal->section_distribution[shift+i_section+1] = dmesh_nodal->sections_poly3d[i_section].distrib[dmesh_nodal->n_rank];
+    dmesh_nodal->section_distribution[shift+i_section+1] = dmesh_nodal->sections_poly3d[i_section]->distrib[dmesh_nodal->n_rank];
   }
   // shift += dmesh_nodal->n_section_poly3d;
 
@@ -1588,11 +1593,11 @@ PDM_dmesh_nodal_generate_distribution
   dmesh_nodal->section_distribution_l1[0] = 0;
   shift = 0;
   for(int i_section = 0; i_section < dmesh_nodal->n_section_std_l1; ++i_section){
-    dmesh_nodal->section_distribution_l1[i_section+1] = dmesh_nodal->sections_std_l1[i_section].distrib[dmesh_nodal->n_rank];
+    dmesh_nodal->section_distribution_l1[i_section+1] = dmesh_nodal->sections_std_l1[i_section]->distrib[dmesh_nodal->n_rank];
   }
   shift += dmesh_nodal->n_section_std_l1;
   for(int i_section = 0; i_section < dmesh_nodal->n_section_poly2d_l1; ++i_section){
-    dmesh_nodal->section_distribution_l1[shift+i_section+1] = dmesh_nodal->sections_poly2d_l1[i_section].distrib[dmesh_nodal->n_rank];
+    dmesh_nodal->section_distribution_l1[shift+i_section+1] = dmesh_nodal->sections_poly2d_l1[i_section]->distrib[dmesh_nodal->n_rank];
   }
   shift += dmesh_nodal->n_section_poly2d_l1;
 
@@ -1605,7 +1610,7 @@ PDM_dmesh_nodal_generate_distribution
   dmesh_nodal->section_distribution_l2[0] = 0;
   shift = 0;
   for(int i_section = 0; i_section < dmesh_nodal->n_section_std_l2; ++i_section){
-    dmesh_nodal->section_distribution_l2[i_section+1] = dmesh_nodal->sections_std_l2[i_section].distrib[dmesh_nodal->n_rank];
+    dmesh_nodal->section_distribution_l2[i_section+1] = dmesh_nodal->sections_std_l2[i_section]->distrib[dmesh_nodal->n_rank];
   }
   shift += dmesh_nodal->n_section_std_l2;
 
@@ -1683,11 +1688,11 @@ int               *n_sum_vtx_edge_tot
 
   for (int i_section = 0; i_section < dmesh_nodal->n_section_std; i_section++) {
 
-    int n_edge_elt     = PDM_n_nedge_elt_per_elmt   (dmesh_nodal->sections_std[i_section].t_elt);
-    int n_sum_vtx_edge = PDM_n_sum_vtx_edge_per_elmt(dmesh_nodal->sections_std[i_section].t_elt);
+    int n_edge_elt     = PDM_n_nedge_elt_per_elmt   (dmesh_nodal->sections_std[i_section]->t_elt);
+    int n_sum_vtx_edge = PDM_n_sum_vtx_edge_per_elmt(dmesh_nodal->sections_std[i_section]->t_elt);
 
-    *n_edge_elt_tot     += dmesh_nodal->sections_std[i_section].n_elt*n_edge_elt;
-    *n_sum_vtx_edge_tot += dmesh_nodal->sections_std[i_section].n_elt*n_sum_vtx_edge;
+    *n_edge_elt_tot     += dmesh_nodal->sections_std[i_section]->n_elt*n_edge_elt;
+    *n_sum_vtx_edge_tot += dmesh_nodal->sections_std[i_section]->n_elt*n_sum_vtx_edge;
 
   }
 
