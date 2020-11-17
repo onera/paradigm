@@ -129,7 +129,7 @@ static
 void
 _generate_entitiy_connectivity
 (
-_pdm_dmesh_nodal_t  *mesh,
+PDM_dmesh_nodal_t   *mesh,
 int                  n_entity_elt_tot,
 PDM_g_num_t         *delmt_entity,
 int                 *delmt_entity_vtx_idx,
@@ -563,10 +563,10 @@ PDM_g_num_t        **dentity_elmt
 
 
 static
-_pdm_dmesh_t*
+PDM_dmesh_t*
 _generate_faces_from_dmesh_nodal
 (
-  _pdm_dmesh_nodal_t *dmesh_nodal
+  PDM_dmesh_nodal_t *dmesh_nodal
 )
 {
 
@@ -611,16 +611,16 @@ _generate_faces_from_dmesh_nodal
                                  &dmesh_nodal->_dface_cell);
   printf("_generate_query_entitiy end \n");
 
-  return (_pdm_dmesh_t *) dm;
+  return dm;
 }
 
 
 
 static
-_pdm_dmesh_t*
+PDM_dmesh_t*
 _generate_edges_from_dmesh_nodal
 (
-  _pdm_dmesh_nodal_t *dmesh_nodal
+  PDM_dmesh_nodal_t *dmesh_nodal
 )
 {
   PDM_dmesh_nodal_t* dmn = (PDM_dmesh_nodal_t *) dmesh_nodal;
@@ -659,7 +659,7 @@ _generate_edges_from_dmesh_nodal
                                  &dmesh_nodal->dcell_face,
                                  &dmesh_nodal->_dface_cell);
 
-  return (_pdm_dmesh_t *) dm;
+  return dm;
 }
 
 /*=============================================================================
@@ -674,15 +674,15 @@ const PDM_MPI_Comm    comm,
 const PDM_ownership_t owner
 )
 {
-  _pdm_dmesh_nodal_to_dmesh_t *dmn_to_dm = (_pdm_dmesh_nodal_to_dmesh_t *) malloc(sizeof(_pdm_dmesh_nodal_to_dmesh_t));
+  PDM_dmesh_nodal_to_dmesh_t *dmn_to_dm = (PDM_dmesh_nodal_to_dmesh_t *) malloc(sizeof(PDM_dmesh_nodal_to_dmesh_t));
 
   dmn_to_dm->comm              = comm;
   dmn_to_dm->owner             = owner;
   dmn_to_dm->results_is_getted = PDM_FALSE;
   dmn_to_dm->n_mesh            = n_mesh;
 
-  dmn_to_dm->dmesh_nodal     = (_pdm_dmesh_nodal_t **) malloc(sizeof(_pdm_dmesh_nodal_t *));
-  dmn_to_dm->dmesh           = (_pdm_dmesh_t       **) malloc(sizeof(_pdm_dmesh_t       *));
+  dmn_to_dm->dmesh_nodal     = (PDM_dmesh_nodal_t **) malloc(sizeof(PDM_dmesh_nodal_t *));
+  dmn_to_dm->dmesh           = (PDM_dmesh_t       **) malloc(sizeof(_pdm_dmesh_t       *));
 
   return (PDM_dmesh_nodal_to_dmesh_t *) dmn_to_dm;
 }
@@ -698,8 +698,7 @@ PDM_dmesh_nodal_to_dmesh_add_dmesh_nodal
         PDM_dmesh_nodal_t          *dmn
 )
 {
-  _pdm_dmesh_nodal_to_dmesh_t* _dmn_to_dm = (_pdm_dmesh_nodal_to_dmesh_t *) dmn_to_dm;
-  _dmn_to_dm->dmesh_nodal[i_mesh] = (_pdm_dmesh_nodal_t*) dmn;
+  dmn_to_dm->dmesh_nodal[i_mesh] = dmn;
 }
 
 
@@ -711,11 +710,8 @@ PDM_dmesh_nodal_to_dmesh_get_dmesh
         PDM_dmesh_t                **dm
 )
 {
-  _pdm_dmesh_nodal_to_dmesh_t* _dmn_to_dm = (_pdm_dmesh_nodal_to_dmesh_t *) dmn_to_dm;
-
-  *dm = (PDM_dmesh_t *) _dmn_to_dm->dmesh[i_mesh];
-
-  _dmn_to_dm->results_is_getted = PDM_TRUE;
+  *dm = dmn_to_dm->dmesh[i_mesh];
+  dmn_to_dm->results_is_getted = PDM_TRUE;
 }
 
 
@@ -729,18 +725,17 @@ PDM_dmesh_nodal_to_dmesh_free
 )
 {
   printf("PDM_dmesh_nodal_to_dmesh_free\n");
-  _pdm_dmesh_nodal_to_dmesh_t* _dmn_to_dm = (_pdm_dmesh_nodal_to_dmesh_t *) dmn_to_dm;
 
-  if(( _dmn_to_dm->owner == PDM_OWNERSHIP_KEEP ) ||
-     ( _dmn_to_dm->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !_dmn_to_dm->results_is_getted)){
+  if(( dmn_to_dm->owner == PDM_OWNERSHIP_KEEP ) ||
+     ( dmn_to_dm->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !dmn_to_dm->results_is_getted)){
 
-    for(int i_mesh = 0; i_mesh < _dmn_to_dm->n_mesh; ++i_mesh) {
-      PDM_dmesh_free( (PDM_dmesh_t*)_dmn_to_dm->dmesh[i_mesh]);
+    for(int i_mesh = 0; i_mesh < dmn_to_dm->n_mesh; ++i_mesh) {
+      PDM_dmesh_free( (PDM_dmesh_t*)dmn_to_dm->dmesh[i_mesh]);
     }
   }
 
-  free(_dmn_to_dm->dmesh_nodal);
-  free(_dmn_to_dm->dmesh);
+  free(dmn_to_dm->dmesh_nodal);
+  free(dmn_to_dm->dmesh);
 }
 
 
@@ -752,21 +747,20 @@ PDM_dmesh_nodal_to_dmesh_compute
   const PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_t transform_kind
 )
 {
-  _pdm_dmesh_nodal_to_dmesh_t* _dmn_to_dm = (_pdm_dmesh_nodal_to_dmesh_t *) dmn_to_dm;
 
-  for(int i_mesh = 0; i_mesh < _dmn_to_dm->n_mesh; ++i_mesh) {
+  for(int i_mesh = 0; i_mesh < dmn_to_dm->n_mesh; ++i_mesh) {
 
     switch (transform_kind) {
 
       case PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_FACE:
         {
-          _dmn_to_dm->dmesh[i_mesh] = _generate_faces_from_dmesh_nodal(_dmn_to_dm->dmesh_nodal[i_mesh]);
+          dmn_to_dm->dmesh[i_mesh] = _generate_faces_from_dmesh_nodal(dmn_to_dm->dmesh_nodal[i_mesh]);
         }
         break;
 
       case PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_EDGE:
         {
-          _dmn_to_dm->dmesh[i_mesh] = _generate_edges_from_dmesh_nodal(_dmn_to_dm->dmesh_nodal[i_mesh]);
+          dmn_to_dm->dmesh[i_mesh] = _generate_edges_from_dmesh_nodal(dmn_to_dm->dmesh_nodal[i_mesh]);
         }
         break;
     }

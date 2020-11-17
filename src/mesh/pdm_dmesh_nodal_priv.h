@@ -125,7 +125,7 @@ typedef struct PDM_DMesh_nodal_section_poly3d_t{
  */
 // A faire --> Multiblock / multidomain
 
-typedef struct {
+struct _pdm_dmesh_nodal_t {
 
   int mesh_dimension;                               /*! Principal dimension of meshes */
 
@@ -252,7 +252,7 @@ typedef struct {
 
 
 
-} _pdm_dmesh_nodal_t;
+};
 
 
 #ifdef __cplusplus
