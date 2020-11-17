@@ -34,7 +34,7 @@ extern "C" {
  *
  */
 
-typedef struct  {
+struct _pdm_dcube_t {
   PDM_MPI_Comm     comm;            /*!< MPI communicator                          */
   PDM_ownership_t  owner;           /*!< Which have the responsabilities of results*/
   PDM_g_num_t      n_vtx_seg;       /*!< Number of vertices in segments            */
@@ -52,7 +52,7 @@ typedef struct  {
   double          *dvtx_coord;      /*!< Vertices coordinates                      */
   int             *dface_group_idx; /*!< Faces groups index                        */
   PDM_g_num_t     *dface_group;     /*!< Faces groups                              */
-} _pdm_dcube_t;
+} ;
 
 
 #ifdef __cplusplus

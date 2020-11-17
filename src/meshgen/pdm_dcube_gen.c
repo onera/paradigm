@@ -62,7 +62,7 @@ const double           zero_z,
   PDM_MPI_Comm_size(comm, &n_rank);
   PDM_MPI_Comm_rank(comm, &i_rank);
 
-  _pdm_dcube_t *dcube = (_pdm_dcube_t *) malloc(sizeof(_pdm_dcube_t));
+  PDM_dcube_t *dcube = (PDM_dcube_t *) malloc(sizeof(PDM_dcube_t));
 
   /*
    * Build dcube structure
@@ -643,7 +643,7 @@ const double           zero_z,
 void
 PDM_dcube_gen_dim_get
 (
- PDM_dcube_t        *pdm_dcube,
+ PDM_dcube_t        *dcube,
  int                *n_face_group,
  int                *dn_cell,
  int                *dn_face,
@@ -652,7 +652,7 @@ PDM_dcube_gen_dim_get
  int                *sface_group
 )
 {
-  _pdm_dcube_t *dcube = (_pdm_dcube_t *) pdm_dcube;
+  // _pdm_dcube_t *dcube = (_pdm_dcube_t *) pdm_dcube;
 
   *n_face_group = dcube->n_face_group;
   *dn_cell      = dcube->dn_cell;
@@ -661,29 +661,6 @@ PDM_dcube_gen_dim_get
   *sface_vtx    = dcube->dface_vtx_idx[dcube->dn_face];
   *sface_group  = dcube->dface_group_idx[dcube->n_face_group];
 }
-
-
-// void
-// PROCF(pdm_dcube_gen_dim_get, PDM_DCUBE_GEN_DIM_GET)
-// (
-//  int                *id,
-//  int                *n_face_group,
-//  int                *dn_cell,
-//  int                *dn_face,
-//  int                *dn_vtx,
-//  int                *sface_vtx,
-//  int                *sface_group
-// )
-// {
-//   PDM_dcube_gen_dim_get (*id,
-//                          n_face_group,
-//                          dn_cell,
-//                          dn_face,
-//                          dn_vtx,
-//                          sface_vtx,
-//                          sface_group);
-
-// }
 
 /**
  *
@@ -702,7 +679,7 @@ PDM_dcube_gen_dim_get
 void
 PDM_dcube_gen_data_get
 (
- PDM_dcube_t        *pdm_dcube,
+ PDM_dcube_t        *dcube,
  PDM_g_num_t       **dface_cell,
  int               **dface_vtx_idx,
  PDM_g_num_t       **dface_vtx,
@@ -711,7 +688,7 @@ PDM_dcube_gen_data_get
  PDM_g_num_t       **dface_group
 )
 {
-  _pdm_dcube_t *dcube = (_pdm_dcube_t *) pdm_dcube;
+  // _pdm_dcube_t *dcube = (_pdm_dcube_t *) pdm_dcube;
 
   *dface_cell      = dcube->dface_cell;
   *dface_vtx_idx   = dcube->dface_vtx_idx;
@@ -720,41 +697,6 @@ PDM_dcube_gen_data_get
   *dface_group_idx = dcube->dface_group_idx;
   *dface_group     = dcube->dface_group;
 }
-
-
-// void
-// PROCF (pdm_dcube_gen_data_get, PDM_DCUBE_GEN_DATA_GET)
-// (
-//  int              *id,
-//  PDM_g_num_t      *dface_cell,
-//  int              *dface_vtx_idx,
-//  PDM_g_num_t      *dface_vtx,
-//  double           *dvtx_coord,
-//  int              *dface_group_idx,
-//  PDM_g_num_t      *dface_group
-// )
-// {
-//   _pdm_dcube_t *dcube = (_pdm_dcube_t *) pdm_dcube;
-
-//   for (int i = 0; i < 2 * dcube->dn_face; i++)
-//     dface_cell[i] = dcube->dface_cell[i];
-
-//   for (int i = 0; i < dcube->dn_face + 1 ; i++)
-//     dface_vtx_idx[i] = dcube->dface_vtx_idx[i];
-
-//   for (int i = 0; i < dcube->dface_vtx_idx[dcube->dn_face] ; i++)
-//     dface_vtx[i] = dcube->dface_vtx[i];
-
-//   for (int i = 0; i < 3 * dcube->dn_vtx; i++)
-//     dvtx_coord[i] = dcube->dvtx_coord[i];
-
-//   for (int i = 0; i < dcube->n_face_group + 1; i++)
-//     dface_group_idx[i] = dcube->dface_group_idx[i];
-
-//   for (int i = 0; i < dcube->dface_group_idx[dcube->n_face_group]; i++)
-//     dface_group[i] = dcube->dface_group[i];
-// }
-
 
 /**
  *
@@ -767,10 +709,10 @@ PDM_dcube_gen_data_get
 void
 PDM_dcube_gen_free
 (
-PDM_dcube_t        *pdm_dcube
+PDM_dcube_t        *dcube
 )
 {
-  _pdm_dcube_t *dcube = (_pdm_dcube_t *) pdm_dcube;
+  // _pdm_dcube_t *dcube = (_pdm_dcube_t *) pdm_dcube;
 
   if(dcube->owner == PDM_OWNERSHIP_KEEP) {
     if (dcube->dface_cell  != NULL)
@@ -795,13 +737,3 @@ PDM_dcube_t        *pdm_dcube
   free(dcube);
 
 }
-
-
-// void
-// PROCF (pdm_dcube_gen_free, PDM_DCUBE_GEN_FREE)
-// (
-// int *id
-// )
-// {
-//   PDM_dcube_gen_free (*id);
-// }
