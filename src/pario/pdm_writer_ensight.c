@@ -1056,6 +1056,8 @@ PDM_writer_ensight_geom_write
     PDM_writer_elt_geom_t t_elt =
             (PDM_writer_elt_geom_t) PDM_Mesh_nodal_block_type_get (geom->mesh_nodal, blocks_id[ibloc]);
 
+    printf("t_elt = %i \n", t_elt);
+
     /* Type de bloc */
 
     _ecr_string(_cs,
