@@ -1295,14 +1295,41 @@ PDM_multipart_run_ppart
     PDM_dmesh_nodal_t* dmesh_nodal = _multipart->dmeshes_nodal[i_zone];
     if(dmesh_nodal != NULL) {
 
-      PDM_g_num_t       *dual_graph_idx;
-      PDM_g_num_t       *dual_graph;
+      PDM_g_num_t       *cell_cell_idx;
+      PDM_g_num_t       *cell_cell;
       int dim = 3;
       PDM_dmesh_nodal_dual_graph(dmesh_nodal,
-                                 &dual_graph_idx,
-                                 &dual_graph,
+                                 &cell_cell_idx,
+                                 &cell_cell,
                                  dim,
                                  _multipart->comm);
+
+      //PDM_split_dual_t split_method = _multipart->split_method;
+      //int tn_part = n_rank; // TODO gen
+      //double *part_fractions = NULL; // TODO gen
+      //int *cell_part = (int *) malloc(dn_cell * sizeof(int));
+      //int *cell_part = (int *) malloc(dn_cell * sizeof(int));
+      //PDM_para_graph_split(split_method,
+      //                     cell_distri,
+      //                     cell_cell_idx,
+      //                     cell_cell,
+      //                     NULL, NULL,
+      //                     tn_part,
+      //                     part_fractions,
+      //                     cell_part,
+      //                     comm);
+
+      //PDM_MPI_Comm comm = _multipart->comm;
+
+      //PDM_part_size_t part_size_method = _multipart->part_size_method;
+
+      //const double* part_fraction = &_multipart->part_fraction[starting_part_idx[i_zone]];
+
+      //_part_mesh_t *_pmeshes = &(_multipart->pmeshes[i_zone]);
+
+      //int n_part = _multipart->n_part[i_zone];
+
+      //_run_ppart_zone(_dmeshes, _pmeshes, n_part, split_method, part_size_method, part_fraction, comm);
     }
   }
   return;

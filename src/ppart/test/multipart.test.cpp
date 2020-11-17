@@ -1,7 +1,8 @@
+#include "std_e/unit_test/doctest.hpp"
 #include "doctest/extensions/doctest_mpi.h"
 
 #include "pdm_para_graph_dual.h"
-#include "pdm_multipart.h"
+#include "pdm_dmesh_nodal.h"
 #include "std_e/utils/concatenate.hpp"
 #include "std_e/future/span.hpp"
 #include "std_e/algorithm/algorithm.hpp"
@@ -37,6 +38,11 @@ struct simple_mesh2_for_test {
                \ |//  
                  10
 */
+                              // 0 ,1 ,2 ,3 ,4 ,5 ,6 ,7 ,8 ,9 ,10,11,12,13,14,15
+  std::vector<double> coord_X = {0.,1.,0.,1.,0.,1.,0.,1.,2.,2.,1., 2., 1., 0., 0., 1.};
+  std::vector<double> coord_Y = {0.,0.,1.,1.,0.,0.,1.,1.,0.,0.,0., 0., 0., 0., 1., 1.};
+  std::vector<double> coord_Z = {0.,0.,0.,0.,1.,1.,1.,1.,0.,1.,2.,-1.,-1.,-1.,-1.,-1.};
+
   std::vector<PDM_g_num_t> hex = {
      0, 1, 3, 2, 4, 5, 7, 6,
      13,12,15,14, 0, 1, 3, 2
@@ -56,17 +62,7 @@ struct simple_mesh2_for_test {
 
 
 MPI_TEST_CASE("part by elt", 1) {
-  // create multipart
-  int n_zone = 1;
-  std::vector<int> n_part_per_zone = {1};
-  PDM_bool_t merge_block = PDM_FALSE; 
-  PDM_split_dual_t split_method = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
-  PDM_part_size_t part_weight_method = PDM_PART_SIZE_HOMOGENEOUS;
-  double* part_weight = nullptr;
-  PDM_ownership_t ownership = PDM_OWNERSHIP_USER;
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
-  int multi_part_id = PDM_multipart_create(n_zone, n_part_per_zone.data(), merge_block, split_method, part_weight_method, part_weight, pdm_comm, ownership);
-
   // create dmesh
   // 0. mesh construction {
   simple_mesh2_for_test m;
@@ -78,11 +74,12 @@ MPI_TEST_CASE("part by elt", 1) {
   // 1. mesh distribution {
   int n_vtx = 16;
   int n_cell = 6;
+  auto vtx_coord = std_e::concatenate(m.coord_X,m.coord_Y,m.coord_Z);
   // 1. mesh distribution }
 
   // 2. dmesh_nodal creation {
   PDM_dmesh_nodal_t* dmesh_nodal = PDM_DMesh_nodal_create(pdm_comm,3,n_vtx,n_cell,0,0); // 3: dim, 0: n_faces, 0: n_edge
-  //PDM_DMesh_nodal_coord_set(dmesh_nodal, dn_vtx, dvtx_coord.data());
+  PDM_DMesh_nodal_coord_set(dmesh_nodal, n_vtx, vtx_coord.data());
   int id_tet_section   = PDM_DMesh_nodal_section_add(dmesh_nodal,PDM_MESH_NODAL_TETRA4  );
   int id_pyra_section  = PDM_DMesh_nodal_section_add(dmesh_nodal,PDM_MESH_NODAL_PYRAMID5);
   int id_prism_section = PDM_DMesh_nodal_section_add(dmesh_nodal,PDM_MESH_NODAL_PRISM6  );
@@ -93,20 +90,21 @@ MPI_TEST_CASE("part by elt", 1) {
   PDM_DMesh_nodal_section_std_set(dmesh_nodal,id_hex_section  ,2,m.hex.data()  );
   // 2. dmesh_nodal creation }
 
-  // populate multipart with dmesh_nodal
-  int zone_id = 0;
-  PDM_multipart_register_dmesh_nodal(multi_part_id, zone_id, dmesh_nodal);
+  PDM_g_num_t* cell_cell_idx;
+  PDM_g_num_t* cell_cell;
+  PDM_dmesh_nodal_dual_graph(dmesh_nodal,&cell_cell_idx,&cell_cell,3,pdm_comm);
 
-  //int* renum_properties_cell_data = nullptr;
-  //const char* renum_cell_method = "PDM_PART_RENUM_CELL_NONE";
-  //const char* renum_face_method = "PDM_PART_RENUM_FACE_NONE";
-  //PDM_multipart_set_reordering_options(multi_part_id,
-  //                                     -1, // -1: all zones
-  //                                     renum_cell_method,
-  //                                     renum_properties_cell_data,
-  //                                     renum_face_method);
-  PDM_multipart_run_ppart(multi_part_id);
+  auto cc_idx = std_e::make_span(cell_cell_idx,n_cell+1);
+  auto cc = std_e::make_span(cell_cell,cc_idx.back());
 
+  std::vector<int> cc_idx_expected     = {0      , 3      , 6            ,11      ,14            ,19      , 22};
+  std::vector<PDM_g_num_t> cc_expected = {5, 2, 3, 1, 5, 3, 1, 2, 6, 4, 5, 3, 6, 5, 1, 2, 3, 4, 6, 3, 4, 5,};
+
+  CHECK( cc_idx == cc_idx_expected );
+  CHECK( cc == cc_expected );
+
+  free(cell_cell_idx);
+  free(cell_cell);
   PDM_DMesh_nodal_free(dmesh_nodal,0);
 }
 

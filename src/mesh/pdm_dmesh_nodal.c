@@ -644,7 +644,7 @@ PDM_DMesh_nodal_coord_set
 
   vtx->distrib = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * (mesh->n_rank + 1));
 
-  PDM_g_num_t *_distrib = vtx->distrib + 1;
+  PDM_g_num_t *_distrib = vtx->distrib + 1 + mesh->i_rank;
   _distrib[0] = 0;
   PDM_g_num_t _n_vtx = n_vtx;
 
@@ -1712,13 +1712,12 @@ void
 PDM_dmesh_nodal_dual_graph
 (
   PDM_dmesh_nodal_t  *dmesh_nodal,
-  PDM_g_num_t       **dual_graph_idx,
+  PDM_g_num_t       **dual_graph_idx, // TODO int ?
   PDM_g_num_t       **dual_graph,
   int                 dim,
   PDM_MPI_Comm        comm
 )
 {
-  printf("=========PDM_dmesh_nodal_dual_graph================\n");
   _pdm_dmesh_nodal_t* mesh = (_pdm_dmesh_nodal_t *) dmesh_nodal;
   assert(dim == 3); /* dim if for dispatching 2D/3D */
   int i_rank;
@@ -1780,35 +1779,31 @@ PDM_dmesh_nodal_dual_graph
   free(n_elt_by_section);
   free(n_vtx_by_elt_by_section);
   free(n_elt_vtx_by_section);
-  printf("cat_dcell_vtx = ");
-  for (int i=0; i<dn_elt_vtx; ++i) {
-    printf("%i, ",cat_dcell_vtx[i]);
-  }
-  printf("\n");
-  printf("cat_dcell_vtx_idx = ");
-  for (int i=0; i<dn_elt+1; ++i) {
-    printf("%i, ",cat_dcell_vtx_idx[i]);
-  }
-  printf("\n");
+  //printf("cat_dcell_vtx = ");
+  //for (int i=0; i<dn_elt_vtx; ++i) {
+  //  printf("%i, ",cat_dcell_vtx[i]);
+  //}
+  //printf("\n");
+  //printf("cat_dcell_vtx_idx = ");
+  //for (int i=0; i<dn_elt+1; ++i) {
+  //  printf("%i, ",cat_dcell_vtx_idx[i]);
+  //}
+  //printf("\n");
 
   // 4. transpose
   int* dvtx_cell_idx;
   PDM_g_num_t* dvtx_cell;
 
   PDM_g_num_t* elt_dist = PDM_compute_entity_distribution(comm, dn_elt);
-  printf("elt_dist[0] = %i\n",elt_dist[0]);
-  printf("elt_dist[1] = %i\n",elt_dist[1]);
+  //printf("elt_dist[0] = %i\n",elt_dist[0]);
+  //printf("elt_dist[1] = %i\n",elt_dist[1]);
   PDM_g_num_t n_vtx = mesh->n_vtx_abs;
-  PDM_g_num_t* vtx_dist = (PDM_g_num_t*)malloc((n_rank+1)* sizeof(PDM_g_num_t));
-  for (int i=0; i<n_rank; ++i) {
-    vtx_dist[i] = i * (n_vtx/n_rank);
-  }
-  vtx_dist[n_rank] = n_vtx;
+  PDM_g_num_t* vtx_dist = mesh->vtx->distrib;
   for (int i=0; i<n_rank+1; ++i) {
     vtx_dist[i]++;
   }
-  printf("vtx_dist[0] = %i\n",vtx_dist[0]);
-  printf("vtx_dist[1] = %i\n",vtx_dist[1]);
+  //printf("vtx_dist[0] = %i\n",vtx_dist[0]);
+  //printf("vtx_dist[1] = %i\n",vtx_dist[1]);
 
   PDM_dconnectivity_transpose(
     comm,
@@ -1819,19 +1814,43 @@ PDM_dmesh_nodal_dual_graph
   );
 
   int dn_vtx = vtx_dist[i_rank+1] - vtx_dist[i_rank];
-  printf("dn_vtx = %i\n",dn_vtx);
+  //printf("dn_vtx = %i\n",dn_vtx);
 
 
-  printf("dvtx_cell_idx = ");
-  for (int i=0; i<dn_vtx+1; ++i) {
-    printf("%i, ",dvtx_cell_idx[i]);
-  }
-  printf("\n");
-  printf("dvtx_cell = ");
-  for (int i=0; i<dvtx_cell_idx[dn_vtx]; ++i) {
-    printf("%i, ",dvtx_cell[i]);
-  }
-  printf("\n");
+  //printf("dvtx_cell_idx = ");
+  //for (int i=0; i<dn_vtx+1; ++i) {
+  //  printf("%i, ",dvtx_cell_idx[i]);
+  //}
+  //printf("\n");
+  //printf("dvtx_cell = ");
+  //for (int i=0; i<dvtx_cell_idx[dn_vtx]; ++i) {
+  //  printf("%i, ",dvtx_cell[i]);
+  //}
+  //printf("\n");
+
+  // 5. dual
+  int* dcell_cell_idx;
+  PDM_g_num_t* dcell_cell;
+  PDM_deduce_combine_connectivity_dual(
+    comm,
+    elt_dist, vtx_dist,
+    cat_dcell_vtx_idx,cat_dcell_vtx,
+    dvtx_cell_idx,dvtx_cell,
+    0, // not signed
+    dual_graph_idx,
+    dual_graph
+  );
+
+  //printf("dual_graph_idx= ");
+  //for (int i=0; i<dn_elt+1; ++i) {
+  //  printf("%i, ",(*dual_graph_idx)[i]);
+  //}
+  //printf("\n");
+  //printf("dcell_cell= ");
+  //for (int i=0; i<(*dual_graph_idx)[dn_elt]; ++i) {
+  //  printf("%i, ",(*dual_graph)[i]);
+  //}
+  //printf("\n");
 
 
   //int n_block = PDM_DMesh_nodal_n_section_get(dmesh_nodal);
