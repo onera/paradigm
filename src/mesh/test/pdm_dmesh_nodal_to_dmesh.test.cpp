@@ -82,21 +82,22 @@ MPI_TEST_CASE("[PDM_dmesh_nodal_to_dmesh] decomposes hexa ",1) {
 
   SUBCASE("transform to faces ")
   {
-
     PDM_dmesh_nodal_to_dmesh_compute(dmntodm,
                                      PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_FACE,
                                      PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_FACE);
-
   }
 
   // SUBCASE("transform to edges  ")
   // {
   //   // Plante car on a pas implementer la decomposition en edge des Hexa
-  //   // PDM_dmesh_nodal_to_dmesh_compute(dmntodm, PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_EDGE);
+  //   PDM_dmesh_nodal_to_dmesh_compute(dmntodm,
+  //                                    PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_EDGE,
+  //                                    PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_EDGE);
   // }
 
   PDM_dmesh_nodal_to_dmesh_free(dmntodm);
   PDM_DMesh_nodal_free(dmn, 0);
+
 }
 
   // int n_face_elt_tot     = -1;

@@ -151,7 +151,7 @@ PDM_g_num_t        **dentity_elmt
    */
   PDM_g_num_t* ln_to_gn = (PDM_g_num_t*) malloc( n_entity_elt_tot * sizeof(PDM_g_num_t));
   PDM_g_num_t key_mod = 4 * mesh->n_vtx_abs;
-  // printf("key_mod::%i \n", key_mod);
+  printf("key_mod::%i \n", key_mod);
 
   // Option des clés
   _compute_keys(n_entity_elt_tot,
@@ -160,7 +160,7 @@ PDM_g_num_t        **dentity_elmt
                 ln_to_gn,
                 key_mod);
 
-  if(0 == 1) {
+  if(1 == 1) {
     PDM_log_trace_array_long(ln_to_gn, n_entity_elt_tot , "ln_to_gn:: ");
     PDM_log_trace_array_int(delmt_entity_vtx_idx  , n_entity_elt_tot , "delmt_entity_vtx_idx:: ");
     PDM_log_trace_array_long(delmt_entity_vtx, delmt_entity_vtx_idx[n_entity_elt_tot] , "delmt_entity_vtx:: ");

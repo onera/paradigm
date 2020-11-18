@@ -142,6 +142,26 @@ PDM_tetra_decomposes_faces
 
 /**
  *
+ * \brief Decompose tetra cell_vtx connectivity to a flatten view of faces
+ */
+void
+PDM_tetra_decomposes_edges
+(
+       int          n_elt,
+       int         *n_elt_current,
+       int         *n_edge_current,
+       PDM_g_num_t  beg_gnum_elt_current,
+       PDM_g_num_t  beg_gnum_edge_current,
+ const PDM_g_num_t *connectivity_elmt_vtx,
+       int         *elmt_edge_vtx_idx,
+       PDM_g_num_t *elmt_edge_vtx,
+       PDM_g_num_t *elmt_edge_cell,
+       int         *elmt_cell_edge_idx,
+       PDM_g_num_t *elmt_cell_edge
+);
+
+/**
+ *
  * \brief Decompose pyra cell_vtx connectivity to a flatten view of faces
  */
 void
@@ -158,6 +178,26 @@ PDM_pyra_decomposes_faces
        PDM_g_num_t *elmt_face_cell,
        int         *elmt_cell_face_idx,
        PDM_g_num_t *elmt_cell_face
+);
+
+/**
+ *
+ * \brief Decompose pyra cell_vtx connectivity to a flatten view of faces
+ */
+void
+PDM_pyra_decomposes_edges
+(
+       int          n_elt,
+       int         *n_elt_current,
+       int         *n_edge_current,
+       PDM_g_num_t  beg_gnum_elt_current,
+       PDM_g_num_t  beg_gnum_edge_current,
+ const PDM_g_num_t *connectivity_elmt_vtx,
+       int         *elmt_edge_vtx_idx,
+       PDM_g_num_t *elmt_edge_vtx,
+       PDM_g_num_t *elmt_edge_cell,
+       int         *elmt_cell_edge_idx,
+       PDM_g_num_t *elmt_cell_edge
 );
 
 /**
@@ -182,6 +222,26 @@ PDM_prism_decomposes_faces
 
 /**
  *
+ * \brief Decompose prism cell_vtx connectivity to a flatten view of faces
+ */
+void
+PDM_prism_decomposes_edges
+(
+       int          n_elt,
+       int         *n_elt_current,
+       int         *n_edge_current,
+       PDM_g_num_t  beg_gnum_elt_current,
+       PDM_g_num_t  beg_gnum_edge_current,
+ const PDM_g_num_t *connectivity_elmt_vtx,
+       int         *elmt_edge_vtx_idx,
+       PDM_g_num_t *elmt_edge_vtx,
+       PDM_g_num_t *elmt_edge_cell,
+       int         *elmt_cell_edge_idx,
+       PDM_g_num_t *elmt_cell_edge
+);
+
+/**
+ *
  * \brief Decompose hexa cell_vtx connectivity to a flatten view of faces
  */
 void
@@ -200,6 +260,41 @@ PDM_hexa_decomposes_faces
        PDM_g_num_t *elmt_cell_face
 );
 
+/**
+ *
+ * \brief Decompose hexa cell_vtx connectivity to a flatten view of faces
+ */
+void
+PDM_hexa_decomposes_edges
+(
+       int          n_elt,
+       int         *n_elt_current,
+       int         *n_edge_current,
+       PDM_g_num_t  beg_gnum_elt_current,
+       PDM_g_num_t  beg_gnum_face_current,
+ const PDM_g_num_t *connectivity_elmt_vtx,
+       int         *elmt_edge_vtx_idx,
+       PDM_g_num_t *elmt_edge_vtx,
+       PDM_g_num_t *elmt_edge_cell,
+       int         *elmt_cell_edge_idx,
+       PDM_g_num_t *elmt_cell_edge
+);
+
+void
+PDM_bar_decomposes_edges
+(
+       int          n_elt,
+       int         *n_elt_current,
+       int         *n_edge_current,
+       PDM_g_num_t  beg_gnum_elt_current,
+       PDM_g_num_t  beg_gnum_face_current,
+ const PDM_g_num_t *connectivity_elmt_vtx,
+       int         *elmt_edge_vtx_idx,
+       PDM_g_num_t *elmt_edge_vtx,
+       PDM_g_num_t *elmt_edge_cell,
+       int         *elmt_cell_edge_idx,
+       PDM_g_num_t *elmt_cell_edge
+);
 
 /**
 *
