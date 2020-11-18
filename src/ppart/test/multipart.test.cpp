@@ -3,6 +3,7 @@
 
 #include "pdm_para_graph_dual.h"
 #include "pdm_dmesh_nodal.h"
+#include "pdm_multipart.h"
 #include "std_e/utils/concatenate.hpp"
 #include "std_e/future/span.hpp"
 #include "std_e/algorithm/algorithm.hpp"
@@ -90,21 +91,30 @@ MPI_TEST_CASE("part by elt", 1) {
   PDM_DMesh_nodal_section_std_set(dmesh_nodal,id_hex_section  ,2,m.hex.data()  );
   // 2. dmesh_nodal creation }
 
-  PDM_g_num_t* cell_cell_idx;
-  PDM_g_num_t* cell_cell;
-  PDM_dmesh_nodal_dual_graph(dmesh_nodal,&cell_cell_idx,&cell_cell,3,pdm_comm);
+  //SUBCASE("dual graph") {
+  //  PDM_g_num_t* cell_cell_idx;
+  //  PDM_g_num_t* cell_cell;
+  //  PDM_g_num_t* cell_dist;
+  //  PDM_dmesh_nodal_dual_graph(dmesh_nodal,&cell_cell_idx,&cell_cell,3,pdm_comm,&cell_dist);
 
-  auto cc_idx = std_e::make_span(cell_cell_idx,n_cell+1);
-  auto cc = std_e::make_span(cell_cell,cc_idx.back());
+  //  auto cc_idx = std_e::make_span(cell_cell_idx,n_cell+1);
+  //  auto cc = std_e::make_span(cell_cell,cc_idx.back());
 
-  std::vector<int> cc_idx_expected     = {0      , 3      , 6            ,11      ,14            ,19      , 22};
-  std::vector<PDM_g_num_t> cc_expected = {5, 2, 3, 1, 5, 3, 1, 2, 6, 4, 5, 3, 6, 5, 1, 2, 3, 4, 6, 3, 4, 5,};
+  //  std::vector<int> cc_idx_expected     = {0      , 3      , 6            ,11      ,14            ,19      , 22};
+  //  std::vector<PDM_g_num_t> cc_expected = {5, 2, 3, 1, 5, 3, 1, 2, 6, 4, 5, 3, 6, 5, 1, 2, 3, 4, 6, 3, 4, 5,};
 
-  CHECK( cc_idx == cc_idx_expected );
-  CHECK( cc == cc_expected );
+  //  CHECK( cc_idx == cc_idx_expected );
+  //  CHECK( cc == cc_expected );
 
-  free(cell_cell_idx);
-  free(cell_cell);
+  //  free(cell_cell_idx);
+  //  free(cell_cell);
+  //  free(cell_dist);
+  //}
+
+  SUBCASE("run ppart") {
+    _run_ppart_zone_nodal(dmesh_nodal,PDM_SPLIT_DUAL_WITH_PTSCOTCH,pdm_comm);
+  }
+
   PDM_DMesh_nodal_free(dmesh_nodal,0);
 }
 

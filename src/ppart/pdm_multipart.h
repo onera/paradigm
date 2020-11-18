@@ -165,13 +165,21 @@ void PDM_multipart_set_reordering_options
  const char      *renum_face_method
 );
 
+// TODO move to priv
+void
+_run_ppart_zone_nodal
+(
+  PDM_dmesh_nodal_t* dmesh_nodal,
+  PDM_split_dual_t split_method,
+  PDM_MPI_Comm comm
+);
+
 /**
  *
  * \brief Construct the partitioned meshes on every zones
  *
  * \param [in]   mpart_id          Multipart structure id
  */
-
 void
 PDM_multipart_run_ppart
 (

@@ -1715,7 +1715,8 @@ PDM_dmesh_nodal_dual_graph
   PDM_g_num_t       **dual_graph_idx, // TODO int ?
   PDM_g_num_t       **dual_graph,
   int                 dim,
-  PDM_MPI_Comm        comm
+  PDM_MPI_Comm        comm,
+  PDM_g_num_t       **cell_dist
 )
 {
   _pdm_dmesh_nodal_t* mesh = (_pdm_dmesh_nodal_t *) dmesh_nodal;
@@ -1794,9 +1795,9 @@ PDM_dmesh_nodal_dual_graph
   int* dvtx_cell_idx;
   PDM_g_num_t* dvtx_cell;
 
-  PDM_g_num_t* elt_dist = PDM_compute_entity_distribution(comm, dn_elt);
-  //printf("elt_dist[0] = %i\n",elt_dist[0]);
-  //printf("elt_dist[1] = %i\n",elt_dist[1]);
+  *cell_dist = PDM_compute_entity_distribution(comm, dn_elt);
+  //printf("cell_dist[0] = %i\n",cell_dist[0]);
+  //printf("cell_dist[1] = %i\n",cell_dist[1]);
   PDM_g_num_t n_vtx = mesh->n_vtx_abs;
   PDM_g_num_t* vtx_dist = mesh->vtx->distrib;
   for (int i=0; i<n_rank+1; ++i) {
@@ -1807,7 +1808,7 @@ PDM_dmesh_nodal_dual_graph
 
   PDM_dconnectivity_transpose(
     comm,
-    elt_dist, vtx_dist,
+    *cell_dist, vtx_dist,
     cat_dcell_vtx_idx,cat_dcell_vtx,
     0, // not signed
     &dvtx_cell_idx,&dvtx_cell
@@ -1833,7 +1834,7 @@ PDM_dmesh_nodal_dual_graph
   PDM_g_num_t* dcell_cell;
   PDM_deduce_combine_connectivity_dual(
     comm,
-    elt_dist, vtx_dist,
+    *cell_dist, vtx_dist,
     cat_dcell_vtx_idx,cat_dcell_vtx,
     dvtx_cell_idx,dvtx_cell,
     0, // not signed

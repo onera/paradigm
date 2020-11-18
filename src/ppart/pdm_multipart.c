@@ -1271,8 +1271,80 @@ PDM_MPI_Comm      comm
   free(part_distri);
 }
 
+void
+_run_ppart_zone_nodal
+(
+  PDM_dmesh_nodal_t* dmesh_nodal,
+  PDM_split_dual_t split_method,
+  PDM_MPI_Comm comm
+) {
+  int i_rank;
+  int n_rank;
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  PDM_MPI_Comm_size(comm, &n_rank);
+
+  PDM_g_num_t       *cell_cell_idx;
+  PDM_g_num_t       *cell_cell;
+  PDM_g_num_t       *cell_dist;
+  int dim = 3;
+  PDM_dmesh_nodal_dual_graph(dmesh_nodal,
+                             &cell_cell_idx,
+                             &cell_cell,
+                             dim,
+                             comm,
+                             &cell_dist);
+
+  int tn_part = n_rank; // TODO gen
+  double *part_fractions = NULL; // TODO gen
+  int dn_cell = cell_dist[i_rank+1] - cell_dist[i_rank];
+  int *cell_part = (int *) malloc(dn_cell * sizeof(int));
+  for (int i=0; i<cell_cell_idx[dn_cell]; ++i) {
+    cell_cell[i]--;
+  }
+  PDM_para_graph_split(split_method,
+                       cell_dist,
+                       cell_cell_idx,
+                       cell_cell,
+                       NULL, NULL,
+                       tn_part,
+                       part_fractions,
+                       cell_part,
+                       comm);
+  printf("cell_part= ");
+  for (int i=0; i<dn_cell; ++i) {
+    printf("%i, ",cell_part[i]);
+  }
+  printf("\n");
+
+
+  
+  // 2. Récupération des éléments sur les partitions
+  // entrés
+  //   possibilité 1 : dmesh_nodal
+  //   possibilité 2 : dcell_vtx 
+  // sorties: pcell_vtx, type -> reconstruire le dmesh_nodal
+  //PDM_part_dconnectivity_to_pconnectivity_sort(comm,
+  //PDM_part_dconnectivity_to_pconnectivity_sort(comm,
+  //                                             face_distri,
+  //                                             dface_vtx_idx,
+  //                                             dface_vtx,
+  //                                             n_part,
+  //                                             pn_face,
+  //                                             (const PDM_g_num_t **) pface_ln_to_gn,
+  //                                            &pn_vtx,
+  //                                            &pvtx_ln_to_gn,
+  //                                            &pface_vtx_idx,
+  //                                            &pface_vtx);
+ 
+  // 3. calculer tous les ln_to_gn, graphes de comm, conditions au limites
+  // elements (2D, 3D), vtx       |      vtx       |     elements 2D
+  // PDM_multipart_part_graph_comm_vtx_data_get
+
+  // après cette fonction: Coordinates, FlowSolution, 
+}
+
 /**
- *
+ 
  * \brief Construct the partitioned meshes on every zones
  *
  * \param [in]   mpart_id          Multipart structure id
@@ -1294,32 +1366,10 @@ PDM_multipart_run_ppart
   for (int i_zone = 0; i_zone < _multipart->n_zone; ++i_zone) {
     PDM_dmesh_nodal_t* dmesh_nodal = _multipart->dmeshes_nodal[i_zone];
     if(dmesh_nodal != NULL) {
+      PDM_MPI_Comm comm = _multipart->comm;
+      PDM_split_dual_t split_method = _multipart->split_method;
 
-      PDM_g_num_t       *cell_cell_idx;
-      PDM_g_num_t       *cell_cell;
-      int dim = 3;
-      PDM_dmesh_nodal_dual_graph(dmesh_nodal,
-                                 &cell_cell_idx,
-                                 &cell_cell,
-                                 dim,
-                                 _multipart->comm);
-
-      //PDM_split_dual_t split_method = _multipart->split_method;
-      //int tn_part = n_rank; // TODO gen
-      //double *part_fractions = NULL; // TODO gen
-      //int *cell_part = (int *) malloc(dn_cell * sizeof(int));
-      //int *cell_part = (int *) malloc(dn_cell * sizeof(int));
-      //PDM_para_graph_split(split_method,
-      //                     cell_distri,
-      //                     cell_cell_idx,
-      //                     cell_cell,
-      //                     NULL, NULL,
-      //                     tn_part,
-      //                     part_fractions,
-      //                     cell_part,
-      //                     comm);
-
-      //PDM_MPI_Comm comm = _multipart->comm;
+      _run_ppart_zone_nodal(dmesh_nodal,split_method,comm);
 
       //PDM_part_size_t part_size_method = _multipart->part_size_method;
 

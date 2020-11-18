@@ -653,7 +653,8 @@ PDM_dmesh_nodal_dual_graph
   PDM_g_num_t       **dual_graph_idx,
   PDM_g_num_t       **dual_graph,
   int                 dim,
-  PDM_MPI_Comm        comm
+  PDM_MPI_Comm        comm,
+  PDM_g_num_t       **cell_dist
 );
 
 /**
