@@ -671,8 +671,8 @@ _translate_element_group_to_faces
 {
 
   printf("_translate_element_group_to_faces \n");
-  assert(dmesh_nodal == NULL);
-  assert(dm          == NULL);
+  assert(dmesh_nodal != NULL);
+  assert(dm          != NULL);
 
 }
 
