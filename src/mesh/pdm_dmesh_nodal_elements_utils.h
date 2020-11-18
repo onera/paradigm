@@ -241,6 +241,45 @@ PDM_quad_decomposes_edges
        PDM_g_num_t *elmt_cell_edge
 );
 
+/**
+*
+* \brief Decompose quad cell_vtx connectivity to a flatten view of edges
+*/
+void
+PDM_tri_decomposes_faces
+(
+       int          n_elt,
+       int         *n_elt_current,
+       int         *n_face_current,
+       PDM_g_num_t  beg_gnum_elt_current,
+       PDM_g_num_t  beg_gnum_face_current,
+ const PDM_g_num_t *connectivity_elmt_vtx,
+       int         *elmt_face_vtx_idx,
+       PDM_g_num_t *elmt_face_vtx,
+       PDM_g_num_t *elmt_face_cell,
+       int         *elmt_cell_face_idx,
+       PDM_g_num_t *elmt_cell_face
+);
+
+/**
+*
+* \brief Decompose quad cell_vtx connectivity to a flatten view of edges
+*/
+void
+PDM_quad_decomposes_faces
+(
+       int          n_elt,
+       int         *n_elt_current,
+       int         *n_face_current,
+       PDM_g_num_t  beg_gnum_elt_current,
+       PDM_g_num_t  beg_gnum_face_current,
+ const PDM_g_num_t *connectivity_elmt_vtx,
+       int         *elmt_face_vtx_idx,
+       PDM_g_num_t *elmt_face_vtx,
+       PDM_g_num_t *elmt_face_cell,
+       int         *elmt_cell_face_idx,
+       PDM_g_num_t *elmt_cell_face
+);
 
 #ifdef __cplusplus
 }

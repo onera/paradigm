@@ -1543,6 +1543,20 @@ int               *n_sum_vtx_face_tot
 
   }
 
+  for (int i_section = 0; i_section < dmesh_nodal->n_section_l1; i_section++) {
+
+    int n_face_elt     = PDM_n_face_elt_per_elmt    (dmesh_nodal->sections_std_l1[i_section]->t_elt);
+    int n_sum_vtx_face = PDM_n_sum_vtx_face_per_elmt(dmesh_nodal->sections_std_l1[i_section]->t_elt);
+
+    *n_face_elt_tot     += dmesh_nodal->sections_std_l1[i_section]->n_elt*n_face_elt;
+    *n_sum_vtx_face_tot += dmesh_nodal->sections_std_l1[i_section]->n_elt*n_sum_vtx_face;
+
+  }
+
+  assert(dmesh_nodal->n_section_poly3d    == 0); // Not implemented
+  assert(dmesh_nodal->n_section_poly2d_l1 == 0); // Not implemented
+  assert(dmesh_nodal->n_section_l2        == 0); // Not implemented
+
   printf("n_face_elt_tot     ::%i\n", *n_face_elt_tot   );
   printf("n_sum_vtx_face_tot::%i\n" , *n_sum_vtx_face_tot);
 }
@@ -1563,8 +1577,6 @@ PDM_dmesh_nodal_generate_distribution
 )
 {
   /* Get current structure to treat */
-
-
   assert(dmesh_nodal->section_distribution == NULL);
 
   /* Creation of element distribution among all sections */
@@ -1582,7 +1594,7 @@ PDM_dmesh_nodal_generate_distribution
   for(int i_section = 0; i_section < dmesh_nodal->n_section_poly3d; ++i_section){
     dmesh_nodal->section_distribution[shift+i_section+1] = dmesh_nodal->sections_poly3d[i_section]->distrib[dmesh_nodal->n_rank];
   }
-  // shift += dmesh_nodal->n_section_poly3d;
+  shift += dmesh_nodal->n_section_poly3d;
 
   for (int i_section = 1; i_section < dmesh_nodal->n_section + 1; i_section++) {
     dmesh_nodal->section_distribution[i_section] +=  dmesh_nodal->section_distribution[i_section-1];
@@ -1590,7 +1602,7 @@ PDM_dmesh_nodal_generate_distribution
 
   /* Creation of element distribution among all sections */
   dmesh_nodal->section_distribution_l1    = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * (dmesh_nodal->n_section_l1 + 1));
-  dmesh_nodal->section_distribution_l1[0] = 0;
+  dmesh_nodal->section_distribution_l1[0] = dmesh_nodal->section_distribution[dmesh_nodal->n_section];
   shift = 0;
   for(int i_section = 0; i_section < dmesh_nodal->n_section_std_l1; ++i_section){
     dmesh_nodal->section_distribution_l1[i_section+1] = dmesh_nodal->sections_std_l1[i_section]->distrib[dmesh_nodal->n_rank];
@@ -1607,7 +1619,7 @@ PDM_dmesh_nodal_generate_distribution
 
   /* Creation of element distribution among all sections */
   dmesh_nodal->section_distribution_l2    = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * (dmesh_nodal->n_section_l2 + 1));
-  dmesh_nodal->section_distribution_l2[0] = 0;
+  dmesh_nodal->section_distribution_l2[0] = dmesh_nodal->section_distribution_l1[dmesh_nodal->n_section];;
   shift = 0;
   for(int i_section = 0; i_section < dmesh_nodal->n_section_std_l2; ++i_section){
     dmesh_nodal->section_distribution_l2[i_section+1] = dmesh_nodal->sections_std_l2[i_section]->distrib[dmesh_nodal->n_rank];
@@ -1617,42 +1629,6 @@ PDM_dmesh_nodal_generate_distribution
   for (int i_section = 1; i_section < dmesh_nodal->n_section_l2 + 1; i_section++) {
     dmesh_nodal->section_distribution_l2[i_section] +=  dmesh_nodal->section_distribution_l2[i_section-1];
   }
-
-  // int shift = 0;
-  // if (dmesh_nodal->sections_std != NULL) {
-  //   int n_section_std  = PDM_Handles_n_get  (dmesh_nodal->sections_std);
-  //   const int *list_ind = PDM_Handles_idx_get(dmesh_nodal->sections_std);
-  //   for (int i_section = 0; i_section < n_section_std; i_section++) {
-  //     PDM_DMesh_nodal_section_std_t *section_std = (PDM_DMesh_nodal_section_std_t *) PDM_Handles_get (dmesh_nodal->sections_std, list_ind[i_section]);
-  //     dmesh_nodal->section_distribution[i_section+1] = section_std->distrib[dmesh_nodal->n_rank];
-  //   }
-  //   shift += n_section_std;
-  // }
-
-
-  // if (dmesh_nodal->sections_poly2d != NULL) {
-  //   int n_section_poly2d = PDM_Handles_n_get  (dmesh_nodal->sections_poly2d);
-  //   const int *list_ind   = PDM_Handles_idx_get(dmesh_nodal->sections_poly2d);
-  //   for (int i_section = 0; i_section < n_section_poly2d; i_section++) {
-  //     PDM_DMesh_nodal_section_poly2d_t *section_poly2d = (PDM_DMesh_nodal_section_poly2d_t *) PDM_Handles_get (dmesh_nodal->sections_std, list_ind[i_section]);
-  //     dmesh_nodal->section_distribution[i_section+shift+1] = section_poly2d->distrib[dmesh_nodal->n_rank];
-  //   }
-  //   shift += n_section_poly2d;
-  // }
-
-  // if (dmesh_nodal->sections_poly3d != NULL) {
-  //   int n_section_poly3d = PDM_Handles_n_get  (dmesh_nodal->sections_poly3d);
-  //   const int *list_ind   = PDM_Handles_idx_get(dmesh_nodal->sections_poly3d);
-  //   for (int i_section = 0; i_section < n_section_poly3d; i_section++) {
-  //     PDM_DMesh_nodal_section_poly3d_t *section_poly3d = (PDM_DMesh_nodal_section_poly3d_t *) PDM_Handles_get (dmesh_nodal->sections_std, list_ind[i_section]);
-  //     dmesh_nodal->section_distribution[i_section+shift+1] = section_poly3d->distrib[dmesh_nodal->n_rank];
-  //   }
-  //   shift += n_section_poly3d;
-  // }
-
-  // for (int i_section = 1; i_section < dmesh_nodal->n_section + 1; i_section++) {
-  //   dmesh_nodal->section_distribution[i_section] +=  dmesh_nodal->section_distribution[i_section-1];
-  // }
 
   /* Verbose */
   if(1 == 1)
@@ -1695,6 +1671,20 @@ int               *n_sum_vtx_edge_tot
     *n_sum_vtx_edge_tot += dmesh_nodal->sections_std[i_section]->n_elt*n_sum_vtx_edge;
 
   }
+
+  for (int i_section = 0; i_section < dmesh_nodal->n_section_l1; i_section++) {
+
+    int n_edge_elt     = PDM_n_nedge_elt_per_elmt   (dmesh_nodal->sections_std_l1[i_section]->t_elt);
+    int n_sum_vtx_edge = PDM_n_sum_vtx_edge_per_elmt(dmesh_nodal->sections_std_l1[i_section]->t_elt);
+
+    *n_edge_elt_tot     += dmesh_nodal->sections_std_l1[i_section]->n_elt*n_edge_elt;
+    *n_sum_vtx_edge_tot += dmesh_nodal->sections_std_l1[i_section]->n_elt*n_sum_vtx_edge;
+
+  }
+
+  assert(dmesh_nodal->n_section_poly3d    == 0); // Not implemented
+  assert(dmesh_nodal->n_section_poly2d_l1 == 0); // Not implemented
+  assert(dmesh_nodal->n_section_l2        == 0); // Not implemented
 
   printf("n_edge_elt_tot     ::%i\n", *n_edge_elt_tot   );
   printf("n_sum_vtx_edge_tot::%i\n" , *n_sum_vtx_edge_tot);

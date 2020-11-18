@@ -557,7 +557,6 @@ PDM_g_num_t        **dentity_elmt
    */
   *delmt_entity_out = (PDM_g_num_t *) realloc( *delmt_entity_out, _delmt_entity_out_idx[mesh->dn_elmt] * sizeof(PDM_g_num_t));
 
-
   free(blk_elmt_entity_n);
 }
 

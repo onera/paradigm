@@ -177,7 +177,7 @@ PDM_n_face_elt_per_elmt
   int n_face_elt = -1;
   switch (t_elt) {
    case PDM_MESH_NODAL_TRIA3:
-     n_face_elt = 1;  // TODO Eric have initialy 3
+     n_face_elt = 1;
      break;
    case PDM_MESH_NODAL_QUAD4:
      n_face_elt = 1;
@@ -445,6 +445,113 @@ PDM_quad_decomposes_edges
   *n_elt_current  += n_elt;
   *n_edge_current += n_elt * n_edge_elt;
 
+}
+
+/**
+*
+* \brief Decompose quad cell_vtx connectivity to a flatten view of edges
+*/
+void
+PDM_tri_decomposes_faces
+(
+       int          n_elt,
+       int         *n_elt_current,
+       int         *n_face_current,
+       PDM_g_num_t  beg_gnum_elt_current,
+       PDM_g_num_t  beg_gnum_face_current,
+ const PDM_g_num_t *connectivity_elmt_vtx,
+       int         *elmt_face_vtx_idx,
+       PDM_g_num_t *elmt_face_vtx,
+       PDM_g_num_t *elmt_face_cell,
+       int         *elmt_cell_face_idx,
+       PDM_g_num_t *elmt_cell_face
+)
+{
+  PDM_UNUSED(elmt_cell_face_idx);
+  PDM_UNUSED(elmt_cell_face);
+  PDM_UNUSED(beg_gnum_face_current);
+
+  const int n_face_elt        = 1;
+  const int n_sum_vtx_face    = 3;
+  const int n_sum_vtx_elt     = 3;
+
+  int _n_face_current = *n_face_current;
+  int         *_current_elmt_face_vtx_idx = elmt_face_vtx_idx + _n_face_current;
+  PDM_g_num_t *_current_elmt_face_vtx     = elmt_face_vtx + elmt_face_vtx_idx[_n_face_current];
+  PDM_g_num_t *_current_elmt_face_cell    = elmt_face_cell + _n_face_current;
+
+  /*
+   * For each element we flaten all connectivities in one array
+   */
+  for (int ielt = 0; ielt < n_elt; ielt++) {
+
+    for (int i_face = 0; i_face < n_face_elt; i_face++) {
+      _current_elmt_face_vtx_idx[ielt * n_face_elt + i_face + 1] = _current_elmt_face_vtx_idx[ielt * n_face_elt + i_face] + 3;
+      _current_elmt_face_cell   [ielt * n_face_elt + i_face    ] = beg_gnum_elt_current + ielt + 1;
+    }
+
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 0]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt    ];
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 1]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + 1];
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 2]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + 2];
+
+  }
+
+  *n_elt_current  += n_elt;
+  *n_face_current += n_elt * n_face_elt;
+}
+
+/**
+*
+* \brief Decompose quad cell_vtx connectivity to a flatten view of edges
+*/
+void
+PDM_quad_decomposes_faces
+(
+       int          n_elt,
+       int         *n_elt_current,
+       int         *n_face_current,
+       PDM_g_num_t  beg_gnum_elt_current,
+       PDM_g_num_t  beg_gnum_face_current,
+ const PDM_g_num_t *connectivity_elmt_vtx,
+       int         *elmt_face_vtx_idx,
+       PDM_g_num_t *elmt_face_vtx,
+       PDM_g_num_t *elmt_face_cell,
+       int         *elmt_cell_face_idx,
+       PDM_g_num_t *elmt_cell_face
+)
+{
+  PDM_UNUSED(elmt_cell_face_idx);
+  PDM_UNUSED(elmt_cell_face);
+  PDM_UNUSED(beg_gnum_face_current);
+
+  const int n_face_elt        = 1;
+  const int n_sum_vtx_face    = 4;
+  const int n_sum_vtx_elt     = 4;
+
+  int _n_face_current = *n_face_current;
+  int         *_current_elmt_face_vtx_idx = elmt_face_vtx_idx + _n_face_current;
+  PDM_g_num_t *_current_elmt_face_vtx     = elmt_face_vtx + elmt_face_vtx_idx[_n_face_current];
+  PDM_g_num_t *_current_elmt_face_cell    = elmt_face_cell + _n_face_current;
+
+  /*
+   * For each element we flaten all connectivities in one array
+   */
+  for (int ielt = 0; ielt < n_elt; ielt++) {
+
+    for (int i_face = 0; i_face < n_face_elt; i_face++) {
+      _current_elmt_face_vtx_idx[ielt * n_face_elt + i_face + 1] = _current_elmt_face_vtx_idx[ielt * n_face_elt + i_face] + 4;
+      _current_elmt_face_cell   [ielt * n_face_elt + i_face    ] = beg_gnum_elt_current + ielt + 1;
+    }
+
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 0]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt    ];
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 1]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + 1];
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 2]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + 2];
+    _current_elmt_face_vtx[n_sum_vtx_face * ielt + 3]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + 3];
+
+  }
+
+  *n_elt_current  += n_elt;
+  *n_face_current += n_elt * n_face_elt;
 }
 
 /**
@@ -789,14 +896,11 @@ PDM_sections_decompose_faces
   PDM_g_num_t       *elmt_cell_face
 )
 {
-  PDM_UNUSED(elmt_face_vtx_idx);
-  PDM_UNUSED(elmt_face_vtx);
-  PDM_UNUSED(elmt_face_cell);
-  PDM_UNUSED(elmt_cell_face);
 
   int n_elt_current  = 0;
   int n_face_current = 0;
 
+  // The order of all following matter : following the global numebring
   for (int i_section = 0; i_section < dmesh_nodal->n_section_std; i_section++) {
 
     PDM_g_num_t beg_elmt_gnum = dmesh_nodal->sections_std[i_section]->distrib[dmesh_nodal->i_rank] + dmesh_nodal->section_distribution[i_section];
@@ -867,6 +971,60 @@ PDM_sections_decompose_faces
                                  elmt_cell_face);
        break;
      default:
+       PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_faces : Element type is not taking int account\n");
+    }
+  }
+
+  // The order of all following matter : following the global numebring
+  for (int i_section = 0; i_section < dmesh_nodal->n_section_std_l1; i_section++) {
+
+    PDM_g_num_t beg_elmt_gnum = dmesh_nodal->sections_std_l1[i_section]->distrib[dmesh_nodal->i_rank] + dmesh_nodal->section_distribution_l1[i_section];
+    PDM_g_num_t beg_face_gnum = 0; // Useless in this context
+    printf("section_std_l1 --> beg_elmt_gnum : "PDM_FMT_G_NUM" \n", beg_elmt_gnum);
+    switch (dmesh_nodal->sections_std_l1[i_section]->t_elt) {
+     case PDM_MESH_NODAL_TRIA3:
+       PDM_tri_decomposes_faces(dmesh_nodal->sections_std_l1[i_section]->n_elt,
+                                &n_elt_current,
+                                &n_face_current,
+                                beg_elmt_gnum,
+                                beg_face_gnum,
+                                dmesh_nodal->sections_std_l1[i_section]->_connec,
+                                elmt_face_vtx_idx,
+                                elmt_face_vtx,
+                                elmt_face_cell,
+                                elmt_cell_face_idx,
+                                elmt_cell_face);
+       break;
+     case PDM_MESH_NODAL_QUAD4:
+       PDM_quad_decomposes_faces(dmesh_nodal->sections_std_l1[i_section]->n_elt,
+                                  &n_elt_current,
+                                  &n_face_current,
+                                  beg_elmt_gnum,
+                                  beg_face_gnum,
+                                  dmesh_nodal->sections_std_l1[i_section]->_connec,
+                                  elmt_face_vtx_idx,
+                                  elmt_face_vtx,
+                                  elmt_face_cell,
+                                  elmt_cell_face_idx,
+                                  elmt_cell_face);
+       break;
+     default:
+       PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_faces : Element type is not taking int account\n");
+    }
+  }
+
+  // The order of all following matter : following the global numebring
+  for (int i_section = 0; i_section < dmesh_nodal->n_section_std_l2; i_section++) {
+    PDM_g_num_t beg_elmt_gnum = dmesh_nodal->sections_std_l2[i_section]->distrib[dmesh_nodal->i_rank] + dmesh_nodal->section_distribution[i_section];
+    PDM_g_num_t beg_face_gnum = 0; // Useless in this context
+    printf("section_std_l2 --> beg_elmt_gnum : "PDM_FMT_G_NUM" \n", beg_elmt_gnum);
+    switch (dmesh_nodal->sections_std_l2[i_section]->t_elt) {
+     case PDM_MESH_NODAL_POINT:
+       abort();
+       break;
+     case PDM_MESH_NODAL_BAR2:
+       abort();
+       break;     default:
        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_faces : Element type is not taking int account\n");
     }
   }
