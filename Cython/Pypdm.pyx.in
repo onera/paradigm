@@ -33,7 +33,6 @@ ctypedef enum PDM_g_num_npy_t:
   PDM_G_NUM_NPY_INT = @PDM_G_NUM_NPY_INT@
 
 # -----------------------------------------------------------------
-
 cdef extern from "pdm_config.h":
     cdef int PDM_IN_PDMA_BOOL
 

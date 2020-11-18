@@ -661,6 +661,22 @@ _generate_edges_from_dmesh_nodal
   return dm;
 }
 
+static
+void
+_translate_element_group_to_faces
+(
+  PDM_dmesh_nodal_t *dmesh_nodal,
+  PDM_dmesh_t       *dm
+)
+{
+
+  printf("_translate_element_group_to_faces \n");
+  assert(dmesh_nodal == NULL);
+  assert(dm          == NULL);
+
+}
+
+
 /*=============================================================================
  * Public function definitions
  *============================================================================*/
@@ -742,8 +758,9 @@ PDM_dmesh_nodal_to_dmesh_free
 void
 PDM_dmesh_nodal_to_dmesh_compute
 (
-  PDM_dmesh_nodal_to_dmesh_t*                dmn_to_dm,
-  const PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_t transform_kind
+        PDM_dmesh_nodal_to_dmesh_t                 *dmn_to_dm,
+  const PDM_dmesh_nodal_to_dmesh_transform_t        transform_kind,
+  const PDM_dmesh_nodal_to_dmesh_translate_group_t  transform_group_kind
 )
 {
 
@@ -766,6 +783,17 @@ PDM_dmesh_nodal_to_dmesh_compute
   }
 
   // Boundary management
+  for(int i_mesh = 0; i_mesh < dmn_to_dm->n_mesh; ++i_mesh) {
+
+    switch (transform_group_kind) {
+      case PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_FACE:
+        {
+          assert(transform_kind == PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_FACE);
+          _translate_element_group_to_faces(dmn_to_dm->dmesh_nodal[i_mesh], dmn_to_dm->dmesh[i_mesh]);
+        }
+        break;
+    }
+  }
 
   // Join management
 
