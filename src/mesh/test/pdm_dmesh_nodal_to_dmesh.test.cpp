@@ -41,12 +41,19 @@ MPI_TEST_CASE("[PDM_dmesh_nodal_to_dmesh] decomposes hexa ",1) {
                                    9, 11, 12, 10,
                                    11, 9, 17, 18};
 
-  // PDM_g_num_t elemt_group[16] = {5, 6, 7, 8,      // Bottom_1
-  //                                9, 10,           // Left_1
-  //                                11, 12, 13, 14,  // Top_1
-  //                                15, 16,          // Right_1
-  //                                17, 18,          // Inlet_1
-  //                                19, 20};         // Outlet_1
+  int n_elmt_group = 6;
+  PDM_g_num_t delmt_group_idx[7] = {0, 4,      // Bottom_1
+                                    6,         // Left_1
+                                    10,        // Top_1
+                                    12,          // Right_1
+                                    14,          // Inlet_1
+                                    16};         // Outlet_1
+  PDM_g_num_t delmt_group[16] = {5, 6, 7, 8,      // Bottom_1
+                                 9, 10,           // Left_1
+                                 11, 12, 13, 14,  // Top_1
+                                 15, 16,          // Right_1
+                                 17, 18,          // Inlet_1
+                                 19, 20};         // Outlet_1
 
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
   PDM_dmesh_nodal_t* dmn = PDM_DMesh_nodal_create(pdm_comm, 3, n_vtx, n_cell, -1, -1);
@@ -64,6 +71,8 @@ MPI_TEST_CASE("[PDM_dmesh_nodal_to_dmesh] decomposes hexa ",1) {
                                   quad_section_1,
                                   n_quad_section_1,
                                   connec_quad_1);
+
+  PDM_DMesh_nodal_section_elmt_group_set(dmn, n_elmt_group, delmt_group_idx, delmt_group);
 
   PDM_dmesh_nodal_generate_distribution(dmn);
 

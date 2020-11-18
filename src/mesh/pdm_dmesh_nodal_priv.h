@@ -137,6 +137,7 @@ struct _pdm_dmesh_nodal_t {
   PDM_g_num_t            n_elmt_l1;
   PDM_g_num_t            n_elmt_l2;
 
+  int          n_elmt_group;
   int         *delmt_group_idx;
   PDM_g_num_t *delmt_group;
 

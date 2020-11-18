@@ -312,6 +312,14 @@ const int                n_elt,
       PDM_g_num_t       *connec
 );
 
+void
+PDM_DMesh_nodal_section_elmt_group_set
+(
+PDM_dmesh_nodal_t  *dmesh_nodal,
+const int           n_elmt_group,
+      int          *delmt_group_idx,
+      PDM_g_num_t  *delmt_group
+);
 
 /**
  * \brief Return standard section description

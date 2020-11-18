@@ -345,6 +345,10 @@ const PDM_MPI_Comm        comm,
   dmesh_nodal->vtx->distrib             = NULL;
   dmesh_nodal->vtx->n_vtx               = 0;
 
+  dmesh_nodal->n_elmt_group             = 0;
+  dmesh_nodal->delmt_group_idx          = NULL;
+  dmesh_nodal->delmt_group              = NULL;
+
   dmesh_nodal->n_section_tot            = 0;
   dmesh_nodal->section_type             = NULL;
   dmesh_nodal->section_idx              = NULL;
@@ -1053,6 +1057,19 @@ const int           n_elt,
 
 }
 
+void
+PDM_DMesh_nodal_section_elmt_group_set
+(
+PDM_dmesh_nodal_t  *dmesh_nodal,
+const int           n_elmt_group,
+      int          *delmt_group_idx,
+      PDM_g_num_t  *delmt_group
+)
+{
+  dmesh_nodal->n_elmt_group    = n_elmt_group;
+  dmesh_nodal->delmt_group_idx = delmt_group_idx;
+  dmesh_nodal->delmt_group     = delmt_group;
+}
 
 /**
  * \brief Return standard section description
