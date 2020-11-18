@@ -1283,38 +1283,36 @@ _run_ppart_zone_nodal
   PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_size(comm, &n_rank);
 
-  PDM_g_num_t       *cell_cell_idx;
-  PDM_g_num_t       *cell_cell;
-  PDM_g_num_t       *cell_dist;
-  int dim = 3;
-  PDM_dmesh_nodal_dual_graph(dmesh_nodal,
-                             &cell_cell_idx,
-                             &cell_cell,
-                             dim,
-                             comm,
-                             &cell_dist);
+  //PDM_g_num_t       *cell_cell_idx;
+  //PDM_g_num_t       *cell_cell;
+  //PDM_g_num_t       *cell_dist;
+  //PDM_dmesh_nodal_dual_graph(dmesh_nodal,
+  //                           &cell_cell_idx,
+  //                           &cell_cell,
+  //                           comm,
+  //                           &cell_dist);
 
-  int tn_part = n_rank; // TODO gen
-  double *part_fractions = NULL; // TODO gen
-  int dn_cell = cell_dist[i_rank+1] - cell_dist[i_rank];
-  int *cell_part = (int *) malloc(dn_cell * sizeof(int));
-  for (int i=0; i<cell_cell_idx[dn_cell]; ++i) {
-    cell_cell[i]--;
-  }
-  PDM_para_graph_split(split_method,
-                       cell_dist,
-                       cell_cell_idx,
-                       cell_cell,
-                       NULL, NULL,
-                       tn_part,
-                       part_fractions,
-                       cell_part,
-                       comm);
-  printf("cell_part= ");
-  for (int i=0; i<dn_cell; ++i) {
-    printf("%i, ",cell_part[i]);
-  }
-  printf("\n");
+  //int tn_part = n_rank; // TODO gen
+  //double *part_fractions = NULL; // TODO gen
+  //int dn_cell = cell_dist[i_rank+1] - cell_dist[i_rank];
+  //int *cell_part = (int *) malloc(dn_cell * sizeof(int));
+  //for (int i=0; i<cell_cell_idx[dn_cell]; ++i) {
+  //  cell_cell[i]--;
+  //}
+  //PDM_para_graph_split(split_method,
+  //                     cell_dist,
+  //                     cell_cell_idx,
+  //                     cell_cell,
+  //                     NULL, NULL,
+  //                     tn_part,
+  //                     part_fractions,
+  //                     cell_part,
+  //                     comm);
+  //printf("cell_part= ");
+  //for (int i=0; i<dn_cell; ++i) {
+  //  printf("%i, ",cell_part[i]);
+  //}
+  //printf("\n");
 
 
   

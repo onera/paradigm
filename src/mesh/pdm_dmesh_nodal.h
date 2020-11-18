@@ -562,14 +562,28 @@ PDM_dmesh_nodal_t *dmesh_nodal
 
 
 /**
+ * \brief  Return vtx distribution of a distributed mesh
+ *
+ * \param [in]  dmesh_nodal
+ *
+ * \return  Return vtx distribution
+ *
+ */
+PDM_g_num_t*
+PDM_dmesh_nodal_vtx_distrib_get
+(
+  PDM_dmesh_nodal_t  *dmesh_nodal
+);
+
+
+/**
  * \brief  Return total number of vertices of a distributed mesh
  *
- * \param [in]  hdl       Distributed nodal mesh handle
+ * \param [in]  dmesh_nodal
  *
  * \return  Return total number of vertices
  *
  */
-
 PDM_g_num_t
 PDM_dmesh_nodal_total_n_vtx_get
 (
@@ -640,6 +654,24 @@ PDM_DMesh_nodal_cell_face_compute
 PDM_dmesh_nodal_t *dmesh_nodal
 );
 
+
+/**
+*
+* \brief PDM_dmesh_nodal_decompose_edges_get_size
+*
+* \param [in]     dmesh_nodal
+* \param [out]  cat_dcell_vtx_idx
+* \param [out]  
+*
+ * \return     Number sections
+*/
+int PDM_concat_elt_sections(
+  PDM_dmesh_nodal_t  *dmesh_nodal,
+  int** section_idx,
+  int** cat_delt_vtx_idx,
+  PDM_g_num_t** cat_dcell_vtx
+);
+
 /**
  * \brief  Compute cell->cell connectivity
  *
@@ -649,12 +681,13 @@ PDM_dmesh_nodal_t *dmesh_nodal
 void
 PDM_dmesh_nodal_dual_graph
 (
-  PDM_dmesh_nodal_t  *dmesh_nodal,
-  PDM_g_num_t       **dual_graph_idx,
-  PDM_g_num_t       **dual_graph,
-  int                 dim,
-  PDM_MPI_Comm        comm,
-  PDM_g_num_t       **cell_dist
+  PDM_g_num_t*   vtx_dist,
+  PDM_g_num_t*   elt_dist,
+  int           *delt_vtx_idx,
+  PDM_g_num_t   *delt_vtx,
+  PDM_g_num_t  **dual_graph_idx,
+  PDM_g_num_t  **dual_graph,
+  PDM_MPI_Comm   comm
 );
 
 /**
