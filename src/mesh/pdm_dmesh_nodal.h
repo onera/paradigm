@@ -313,12 +313,12 @@ const int                n_elt,
 );
 
 void
-PDM_DMesh_nodal_section_elmt_group_set
+PDM_DMesh_nodal_section_group_elmt_set
 (
 PDM_dmesh_nodal_t  *dmesh_nodal,
-const int           n_elmt_group,
-      int          *delmt_group_idx,
-      PDM_g_num_t  *delmt_group
+const int           n_group_elmt,
+      int          *dgroup_elmt_idx,
+      PDM_g_num_t  *dgroup_elmt
 );
 
 /**

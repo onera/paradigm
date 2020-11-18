@@ -345,9 +345,9 @@ const PDM_MPI_Comm        comm,
   dmesh_nodal->vtx->distrib             = NULL;
   dmesh_nodal->vtx->n_vtx               = 0;
 
-  dmesh_nodal->n_elmt_group             = 0;
-  dmesh_nodal->delmt_group_idx          = NULL;
-  dmesh_nodal->delmt_group              = NULL;
+  dmesh_nodal->n_group_elmt             = 0;
+  dmesh_nodal->dgroup_elmt_idx          = NULL;
+  dmesh_nodal->dgroup_elmt              = NULL;
 
   dmesh_nodal->n_section_tot            = 0;
   dmesh_nodal->section_type             = NULL;
@@ -1058,17 +1058,17 @@ const int           n_elt,
 }
 
 void
-PDM_DMesh_nodal_section_elmt_group_set
+PDM_DMesh_nodal_section_group_elmt_set
 (
 PDM_dmesh_nodal_t  *dmesh_nodal,
-const int           n_elmt_group,
-      int          *delmt_group_idx,
-      PDM_g_num_t  *delmt_group
+const int           n_group_elmt,
+      int          *dgroup_elmt_idx,
+      PDM_g_num_t  *dgroup_elmt
 )
 {
-  dmesh_nodal->n_elmt_group    = n_elmt_group;
-  dmesh_nodal->delmt_group_idx = delmt_group_idx;
-  dmesh_nodal->delmt_group     = delmt_group;
+  dmesh_nodal->n_group_elmt    = n_group_elmt;
+  dmesh_nodal->dgroup_elmt_idx = dgroup_elmt_idx;
+  dmesh_nodal->dgroup_elmt     = dgroup_elmt;
 }
 
 /**
@@ -1636,7 +1636,7 @@ PDM_dmesh_nodal_generate_distribution
 
   /* Creation of element distribution among all sections */
   dmesh_nodal->section_distribution_l2    = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * (dmesh_nodal->n_section_l2 + 1));
-  dmesh_nodal->section_distribution_l2[0] = dmesh_nodal->section_distribution_l1[dmesh_nodal->n_section];;
+  dmesh_nodal->section_distribution_l2[0] = dmesh_nodal->section_distribution_l1[dmesh_nodal->n_section_std_l1];
   shift = 0;
   for(int i_section = 0; i_section < dmesh_nodal->n_section_std_l2; ++i_section){
     dmesh_nodal->section_distribution_l2[i_section+1] = dmesh_nodal->sections_std_l2[i_section]->distrib[dmesh_nodal->n_rank];

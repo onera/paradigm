@@ -20,6 +20,7 @@
 #include "pdm_dmesh_nodal_to_dmesh.h"
 #include "pdm_dmesh_nodal_elements_utils.h"
 #include "pdm_part_to_block.h"
+#include "pdm_block_to_part.h"
 #include "pdm_logging.h"
 #include "pdm_dmesh.h"
 #include "pdm_quick_sort.h"
@@ -524,9 +525,9 @@ PDM_g_num_t        **dentity_elmt
   /*
    * Allcoate
    */
+  assert(*delmt_entity_out_idx == NULL);
+  *delmt_entity_out_idx = (int * ) malloc( (delmt_tot + 1) * sizeof(int) );
   int* _delmt_entity_out_idx = *delmt_entity_out_idx;
-  assert(_delmt_entity_out_idx == NULL);
-  _delmt_entity_out_idx = (int * ) malloc( (delmt_tot + 1) * sizeof(int) );
 
   _delmt_entity_out_idx[0] = 0;
   for(int i = 0; i < delmt_tot; i++){
@@ -674,6 +675,84 @@ _translate_element_group_to_faces
   assert(dmesh_nodal != NULL);
   assert(dm          != NULL);
 
+  // Ok we have :
+  //     -> delmt_entity
+  //     -> delmt_entity_idx
+  //     -> dgroup_elmt
+  //     -> dgroup_elmt_idx
+  // We need : dentity_group and dentity_group_idx
+  // In order to apply in parallel the table delmt_enitiy we need to have
+  // a block_data by elmt
+
+  /*
+   * Prepare exchange protocol
+   */
+  PDM_block_to_part_t* btp = PDM_block_to_part_create(dmesh_nodal->face_distrib,
+                               (const PDM_g_num_t **) &dmesh_nodal->dgroup_elmt,
+                                                      &dmesh_nodal->dgroup_elmt_idx[dmesh_nodal->n_group_elmt],
+                                                      1,
+                                                      dmesh_nodal->pdm_mpi_comm);
+
+  /*
+   * Exchange
+   */
+  int dn_face = dmesh_nodal->face_distrib[dmesh_nodal->i_rank+1] - dmesh_nodal->face_distrib[dmesh_nodal->i_rank];
+  int* dcell_face_n = (int *) malloc( dn_face * sizeof(int));
+  for(int i = 0; i < dn_face; ++i) {
+    dcell_face_n[i] = dmesh_nodal->dcell_face_idx[i+1] - dmesh_nodal->dcell_face_idx[i];
+  }
+
+  int**         part_group_stri;
+  PDM_g_num_t** part_group_data;
+  PDM_block_to_part_exch2(btp,
+                          sizeof(PDM_g_num_t),
+                          PDM_STRIDE_VAR,
+                          dcell_face_n,
+             (void *  )   dmesh_nodal->dcell_face,
+             (int  ***)  &part_group_stri,
+             (void ***)  &part_group_data);
+  free(dcell_face_n);
+
+  int*         _part_group_stri = part_group_stri[0];
+  PDM_g_num_t* _part_group_data = part_group_data[0];
+
+  // int idx_data = 0;
+  // for(int i = 0; i < dmesh_nodal->dgroup_elmt_idx[dmesh_nodal->n_group_elmt]; ++i) {
+  //   printf("_part_group_stri[%i] = %i \n", i, _part_group_stri[i]);
+  //   for(int i_data = 0; i_data < _part_group_stri[i]; ++i_data) {
+  //     printf("  -> _part_group_data[%i] = "PDM_FMT_G_NUM" \n", i, _part_group_data[idx_data++]);
+  //   }
+  // }
+
+  assert(dm->_dface_bound     == NULL);
+  assert(dm->_dface_bound_idx == NULL);
+
+  // dm->n_bnd = dmesh_nodal->n_group_elmt;
+  // dm->_dface_bound_idx = (int * ) malloc( (dm->n_bnd+1) * sizeof(int) );
+
+  // int idx_stri = 0;
+  // dm->_dface_bound_idx[0] = 0;
+  // for(int i_group = 0; i_group < dm->n_bnd; ++i_group) {
+  //   dm->_dface_bound_idx[i_group+1] = dm->_dface_bound_idx[i_group];
+  //   for(int ielmt = dmesh_nodal->dgroup_elmt_idx[i_group]; ielmt < dmesh_nodal->dgroup_elmt_idx[i_group+1]; ++ielmt) {
+  //     dm->_dface_bound_idx[i_group+1] += _part_group_stri[idx_stri++];
+  //   }
+  // }
+
+  printf("_translate_element_group_to_faces is done but not transfer to dmesh = Leaks or no results !!! \n");
+  // dm->_dface_bound = _part_group_data;
+
+  // if(1 == 1) {
+  //   PDM_log_trace_array_int (dm->_dface_bound_idx, dm->n_bnd+1                    , "dm->_dface_bound_idx:: ");
+  //   PDM_log_trace_array_long(dm->_dface_bound    , dm->_dface_bound_idx[dm->n_bnd], "dm->_dface_bound:: ");
+  // }
+
+  free(part_group_stri);
+  free(_part_group_stri);
+  free(part_group_data);
+  free(_part_group_data); // TO Remove when dmesh is OK
+
+  PDM_block_to_part_free(btp);
 }
 
 
