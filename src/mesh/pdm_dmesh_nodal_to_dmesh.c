@@ -786,10 +786,22 @@ PDM_dmesh_nodal_to_dmesh_compute
   for(int i_mesh = 0; i_mesh < dmn_to_dm->n_mesh; ++i_mesh) {
 
     switch (transform_group_kind) {
+      case PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_NONE:
+        break;
       case PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_FACE:
         {
           assert(transform_kind == PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_FACE);
           _translate_element_group_to_faces(dmn_to_dm->dmesh_nodal[i_mesh], dmn_to_dm->dmesh[i_mesh]);
+        }
+        break;
+      case PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_EDGE:
+        {
+          PDM_error (__FILE__, __LINE__, 0, "PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_EDGE not implemented \n");
+        }
+        break;
+      case PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_VTX:
+        {
+          PDM_error (__FILE__, __LINE__, 0, "PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_EDGE not implemented \n");
         }
         break;
     }
