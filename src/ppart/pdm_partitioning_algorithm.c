@@ -678,6 +678,103 @@ PDM_part_distgroup_to_partgroup
 }
 
 
+static
+void
+_dconnectivity_to_pconnectivity_abs
+(
+ const PDM_MPI_Comm    comm,
+ const PDM_g_num_t    *entity_distribution,
+ const int            *dconnectivity_idx,
+ const PDM_g_num_t    *dconnectivity,
+ const int             n_part,
+ const int            *pn_entity,
+ const PDM_g_num_t   **pentity_ln_to_gn,
+       int          ***pconnectivity_idx,
+       PDM_g_num_t  ***pconnectivity_abs
+) {
+  int i_rank;
+  int n_rank;
+
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  PDM_MPI_Comm_size(comm, &n_rank);
+
+  int dn_entity = entity_distribution[i_rank+1] - entity_distribution[i_rank];
+
+  PDM_g_num_t* entity_distribution_ptb = (PDM_g_num_t * ) malloc( sizeof(PDM_g_num_t) * (n_rank+1) );
+  for(int i = 0; i < n_rank+1; ++i){
+    entity_distribution_ptb[i] = entity_distribution[i] - 1;
+  }
+
+  /*
+   * Prepare exchange protocol
+   */
+  PDM_block_to_part_t* btp = PDM_block_to_part_create(entity_distribution_ptb,
+                               (const PDM_g_num_t **) pentity_ln_to_gn,
+                                                      pn_entity,
+                                                      n_part,
+                                                      comm);
+
+  /*
+   * Prepare data
+   */
+  int* blk_stri = (int *) malloc( sizeof(int) * dn_entity);
+  for(int i_elmt = 0; i_elmt < dn_entity; ++i_elmt){
+    blk_stri[i_elmt] = dconnectivity_idx[i_elmt+1] - dconnectivity_idx[i_elmt];
+  }
+
+  /*
+   * Exchange
+   */
+  int**         pstride;
+  PDM_block_to_part_exch2(btp,
+                          sizeof(PDM_g_num_t),
+                          PDM_STRIDE_VAR,
+                          blk_stri,
+             (void *  )   dconnectivity,
+             (int  ***)  &pstride,
+             (void ***)   pconnectivity_abs);
+
+  free(blk_stri);
+
+  /*
+   * Panic verbose
+   */
+  if(0 == 1){
+    for(int i_part = 0; i_part < n_part; ++i_part){
+      int idx_data = 0;
+      printf("[%d] pconnectivity_abs:: \n", i_part);
+      for(int i_elmt = 0; i_elmt < pn_entity[i_part]; ++i_elmt) {
+        printf("[%d] --> ", pstride[i_part][i_elmt]);
+        for(int i_data = 0; i_data < pstride[i_part][i_elmt]; ++i_data ){
+          printf(PDM_FMT_G_NUM" ", *pconnectivity_abs[i_part][idx_data++] );
+        }
+        printf("\n");
+      }
+      printf("\n");
+    }
+  }
+
+  *pconnectivity_idx = (int         **) malloc( n_part * sizeof(int         *) );
+  int** _pconnectivity_idx       = *pconnectivity_idx;
+
+  for(int i_part = 0; i_part < n_part; ++i_part){
+    int n_elmts = pn_entity[i_part];
+
+    _pconnectivity_idx[i_part] = (int *) malloc( (n_elmts + 1) * sizeof(int) );
+    _pconnectivity_idx[i_part][0] = 0;
+    for(int i_elmt = 0; i_elmt < n_elmts; ++i_elmt) {
+      _pconnectivity_idx[i_part][i_elmt+1] = _pconnectivity_idx[i_part][i_elmt] + pstride[i_part][i_elmt];
+    }
+  }
+
+  // free
+  free(entity_distribution_ptb);
+  PDM_block_to_part_free(btp);
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    free(pstride[i_part]);
+  }
+  free(pstride);
+}
 
 /**
  *  \brief Generated the partitioned connectivity (entity->child_elements) associated
@@ -724,94 +821,37 @@ PDM_part_dconnectivity_to_pconnectivity_sort
   printf("PDM_part_dconnectivity_to_pconnectivity\n");
   int i_rank;
   int n_rank;
-
   PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_size(comm, &n_rank);
 
-  int dn_entity = entity_distribution[i_rank+1] - entity_distribution[i_rank];
-
-  PDM_g_num_t* entity_distribution_ptb = (PDM_g_num_t * ) malloc( sizeof(PDM_g_num_t) * (n_rank+1) );
-  for(int i = 0; i < n_rank+1; ++i){
-    entity_distribution_ptb[i] = entity_distribution[i] - 1;
-  }
-
-  /*
-   * Prepare exchange protocol
-   */
-  PDM_block_to_part_t* btp = PDM_block_to_part_create(entity_distribution_ptb,
-                               (const PDM_g_num_t **) pentity_ln_to_gn,
-                                                      pn_entity,
-                                                      n_part,
-                                                      comm);
-
-  /*
-   * Prepare data
-   */
-  int* blk_stri = (int *) malloc( sizeof(int) * dn_entity);
-  for(int i_elmt = 0; i_elmt < dn_entity; ++i_elmt){
-    blk_stri[i_elmt] = dconnectivity_idx[i_elmt+1] - dconnectivity_idx[i_elmt];
-  }
-
-  /*
-   * Exchange
-   */
-  int**         pstride;
-  PDM_g_num_t** pconnectivity_tmp; /* We keep it in double precision because it contains global numbering */
-  PDM_block_to_part_exch2(btp,
-                          sizeof(PDM_g_num_t),
-                          PDM_STRIDE_VAR,
-                          blk_stri,
-             (void *  )   dconnectivity,
-             (int  ***)  &pstride,
-             (void ***)  &pconnectivity_tmp);
-
-  free(blk_stri);
-
-  /*
-   * Panic verbose
-   */
-  if(0 == 1){
-    for(int i_part = 0; i_part < n_part; ++i_part){
-      int idx_data = 0;
-      printf("[%d] pconnectivity_tmp:: \n", i_part);
-      for(int i_elmt = 0; i_elmt < pn_entity[i_part]; ++i_elmt) {
-        printf("[%d] --> ", pstride[i_part][i_elmt]);
-        for(int i_data = 0; i_data < pstride[i_part][i_elmt]; ++i_data ){
-          printf(PDM_FMT_G_NUM" ", pconnectivity_tmp[i_part][idx_data++] );
-        }
-        printf("\n");
-      }
-      printf("\n");
-    }
-  }
-
+  PDM_g_num_t** pconnectivity_abs;
+  _dconnectivity_to_pconnectivity_abs(
+    comm,
+    entity_distribution,
+    dconnectivity_idx,
+    dconnectivity,
+    n_part,
+    pn_entity,
+    pentity_ln_to_gn,
+    pconnectivity_idx,&pconnectivity_abs
+  );
+  int** _pconnectivity_idx       = *pconnectivity_idx;
 
   /*
    * Post-treatment - Caution the recv connectivity can be negative
    */
-  *pchild_ln_to_gn   = (PDM_g_num_t **) malloc( n_part * sizeof(PDM_g_num_t *) );
   *pconnectivity     = (int         **) malloc( n_part * sizeof(int         *) );
-  *pconnectivity_idx = (int         **) malloc( n_part * sizeof(int         *) );
-  *pn_child_entity   = (int          *) malloc( n_part * sizeof(int          ) );
 
   /* Shortcut */
-  PDM_g_num_t** _pchild_ln_to_gn = *pchild_ln_to_gn;
   int** _pconnectivity           = *pconnectivity;
-  int** _pconnectivity_idx       = *pconnectivity_idx;
-  int*  _pn_child_entity         = *pn_child_entity;
 
+  *pn_child_entity   = (int          *) malloc( n_part * sizeof(int          ) );
+  *pchild_ln_to_gn   = (PDM_g_num_t **) malloc( n_part * sizeof(PDM_g_num_t *) );
+  int*  _pn_child_entity         = *pn_child_entity;
+  PDM_g_num_t** _pchild_ln_to_gn = *pchild_ln_to_gn;
   for(int i_part = 0; i_part < n_part; ++i_part){
 
     int n_elmts = pn_entity[i_part];
-    /*
-     *  First loop to count and setup part_strid_idx
-     */
-    _pconnectivity_idx[i_part] = (int *) malloc( (n_elmts + 1) * sizeof(int) );
-    _pconnectivity_idx[i_part][0] = 0;
-    for(int i_elmt = 0; i_elmt < n_elmts; ++i_elmt) {
-      _pconnectivity_idx[i_part][i_elmt+1] = _pconnectivity_idx[i_part][i_elmt] + pstride[i_part][i_elmt];
-    }
-
 
     /*
      * Save array
@@ -821,8 +861,9 @@ PDM_part_dconnectivity_to_pconnectivity_sort
 
     int idx_data = 0;
     for(int i_elmt = 0; i_elmt < n_elmts; ++i_elmt) {
-      for(int i_data = 0; i_data < pstride[i_part][i_elmt]; ++i_data ){
-        _pchild_ln_to_gn[i_part][idx_data] = PDM_ABS(pconnectivity_tmp[i_part][idx_data]);
+      int stride = _pconnectivity_idx[i_part][i_elmt+1] - _pconnectivity_idx[i_part][i_elmt];
+      for(int i_data = 0; i_data < stride; ++i_data ){
+        _pchild_ln_to_gn[i_part][idx_data] = PDM_ABS(pconnectivity_abs[i_part][idx_data]);
         idx_data++;
       }
     }
@@ -872,7 +913,7 @@ PDM_part_dconnectivity_to_pconnectivity_sort
      * Overpowered loop
      */
     for(int idx = 0; idx < _pconnectivity_idx[i_part][n_elmts]; ++idx) {
-      int g_sgn  = PDM_SIGN(pconnectivity_tmp[i_part][idx]);
+      int g_sgn  = PDM_SIGN(pconnectivity_abs[i_part][idx]);
       int l_elmt = unique_order[idx];
       _pconnectivity[i_part][idx] = (l_elmt + 1) * g_sgn ;
     }
@@ -889,8 +930,9 @@ PDM_part_dconnectivity_to_pconnectivity_sort
       int idx_data = 0;
       printf("[%d] pconnectivity:: \n", i_part);
       for(int i_cell = 0; i_cell < pn_entity[i_part]; ++i_cell) {
-        printf("[%d] --> ", pstride[i_part][i_cell]);
-        for(int i_data = 0; i_data < pstride[i_part][i_cell]; ++i_data ){
+        int stride = _pconnectivity_idx[i_part][i_cell+1] - _pconnectivity_idx[i_part][i_cell];
+        printf("[%d] --> ", stride);
+        for(int i_data = 0; i_data < stride; ++i_data ){
           printf("%d ", (*pconnectivity)[i_part][idx_data++] );
         }
         printf("\n");
@@ -902,14 +944,10 @@ PDM_part_dconnectivity_to_pconnectivity_sort
   /*
    * Free
    */
-  PDM_block_to_part_free(btp);
-  free(entity_distribution_ptb);
   for(int i_part = 0; i_part < n_part; ++i_part) {
-    free(pstride[i_part]);
-    free(pconnectivity_tmp[i_part]);
+    free(pconnectivity_abs[i_part]);
   }
-  free(pstride);
-  free(pconnectivity_tmp);
+  free(pconnectivity_abs);
 }
 
 /**

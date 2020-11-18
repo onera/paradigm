@@ -113,46 +113,51 @@ MPI_TEST_CASE("part by elt", 1) {
   //  free(delt_vtx);
   //}
 
-  SUBCASE("dual graph") {
-    int n_rank = test_nb_procs;
+  //SUBCASE("dual graph") {
+  //  int n_rank = test_nb_procs;
 
-    int* section_idx;
-    int* delt_vtx_idx;
-    PDM_g_num_t* delt_vtx;
-    int n_section = PDM_concat_elt_sections(dmesh_nodal,&section_idx,&delt_vtx_idx,&delt_vtx);
+  //  int* section_idx;
+  //  int* delt_vtx_idx;
+  //  PDM_g_num_t* delt_vtx;
+  //  int n_section = PDM_concat_elt_sections(dmesh_nodal,&section_idx,&delt_vtx_idx,&delt_vtx);
 
 
-    PDM_g_num_t* mesh_vtx_dist = PDM_dmesh_nodal_vtx_distrib_get(dmesh_nodal);
-    PDM_g_num_t*  vtx_dist = (PDM_g_num_t*) malloc(n_rank+1 * sizeof(PDM_g_num_t));
-    for (int i=0; i<n_rank+1; ++i) {
-      vtx_dist[i] = mesh_vtx_dist[i]+1;
-    }
+  //  PDM_g_num_t* mesh_vtx_dist = PDM_dmesh_nodal_vtx_distrib_get(dmesh_nodal);
+  //  PDM_g_num_t*  vtx_dist = (PDM_g_num_t*) malloc(n_rank+1 * sizeof(PDM_g_num_t));
+  //  for (int i=0; i<n_rank+1; ++i) {
+  //    vtx_dist[i] = mesh_vtx_dist[i]+1;
+  //  }
 
-    int dn_elt = section_idx[n_section];
-    PDM_g_num_t* elt_dist = PDM_compute_entity_distribution(pdm_comm, dn_elt);
+  //  int dn_elt = section_idx[n_section];
+  //  PDM_g_num_t* elt_dist = PDM_compute_entity_distribution(pdm_comm, dn_elt);
 
-    PDM_g_num_t* elt_elt_idx;
-    PDM_g_num_t* elt_elt;
-    PDM_dmesh_nodal_dual_graph(vtx_dist,elt_dist,delt_vtx_idx,delt_vtx,&elt_elt_idx,&elt_elt,pdm_comm);
+  //  PDM_g_num_t* elt_elt_idx;
+  //  PDM_g_num_t* elt_elt;
+  //  PDM_dmesh_nodal_dual_graph(vtx_dist,elt_dist,delt_vtx_idx,delt_vtx,&elt_elt_idx,&elt_elt,pdm_comm);
 
-    auto ee_idx = std_e::make_span(elt_elt_idx,n_elt+1);
-    auto ee = std_e::make_span(elt_elt,ee_idx.back());
+  //  auto ee_idx = std_e::make_span(elt_elt_idx,n_elt+1);
+  //  auto ee = std_e::make_span(elt_elt,ee_idx.back());
 
-    std::vector<int> ee_idx_expected     = {0      , 3      , 6            ,11      ,14            ,19      , 22};
-    std::vector<PDM_g_num_t> ee_expected = {5, 2, 3, 1, 5, 3, 1, 2, 6, 4, 5, 3, 6, 5, 1, 2, 3, 4, 6, 3, 4, 5,};
+  //  std::vector<int> ee_idx_expected     = {0      , 3      , 6            ,11      ,14            ,19      , 22};
+  //  std::vector<PDM_g_num_t> ee_expected = {5, 2, 3, 1, 5, 3, 1, 2, 6, 4, 5, 3, 6, 5, 1, 2, 3, 4, 6, 3, 4, 5,};
 
-    CHECK( ee_idx == ee_idx_expected );
-    CHECK( ee == ee_expected );
+  //  CHECK( ee_idx == ee_idx_expected );
+  //  CHECK( ee == ee_expected );
 
-    free(elt_dist);
-    free(vtx_dist);
-    free(elt_elt_idx);
-    free(elt_elt);
-  }
+  //  free(section_idx);
+  //  free(delt_vtx_idx);
+  //  free(delt_vtx);
 
-  //SUBCASE("run ppart") {
-  //  _run_ppart_zone_nodal(dmesh_nodal,PDM_SPLIT_DUAL_WITH_PTSCOTCH,pdm_comm);
+  //  free(elt_dist);
+  //  free(vtx_dist);
+  //  free(elt_elt_idx);
+  //  free(elt_elt);
   //}
+
+  SUBCASE("run ppart") {
+    int dn_part = 1;
+    _run_ppart_zone_nodal(dmesh_nodal,PDM_SPLIT_DUAL_WITH_PTSCOTCH,dn_part,pdm_comm);
+  }
 
   PDM_DMesh_nodal_free(dmesh_nodal,0);
 }

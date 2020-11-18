@@ -220,6 +220,22 @@ PDM_DMesh_nodal_section_type_get
 const int                id_section
 );
 
+/**
+ * \brief  Return distri of section
+ *
+ * \param [in] dmesh_nodal
+ * \param [in]  id_section   Block identifier
+ *
+ * \return  distri
+ *
+ */
+PDM_g_num_t*
+PDM_DMesh_nodal_section_distri_std_get
+(
+  PDM_dmesh_nodal_t  *dmesh_nodal,
+  const int   id_section
+);
+
 
 /**
  * \brief  Add a new section to the current mesh

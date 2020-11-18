@@ -833,6 +833,30 @@ PDM_DMesh_nodal_section_type_get
 }
 
 /**
+ * \brief  Return distri of section
+ *
+ * \param [in] dmesh_nodal
+ * \param [in] id_section   Block identifier
+ *
+ * \return  distri
+ *
+ */
+PDM_g_num_t*
+PDM_DMesh_nodal_section_distri_std_get
+(
+  PDM_dmesh_nodal_t *dmesh_nodal,
+  const int          id_section
+)
+{
+  _pdm_dmesh_nodal_t* mesh = (_pdm_dmesh_nodal_t*)dmesh_nodal;
+  if (id_section <= PDM_BLOCK_ID_BLOCK_POLY2D) { // std
+    int _id_section = id_section - PDM_BLOCK_ID_BLOCK_STD;
+    return mesh->sections_std[id_section].distrib;
+  }
+  assert(0); // only useful for std elements
+}
+
+/**
  * \brief  Add a new section to the current mesh
  *
  * \param [in]  hdl            Distributed nodal mesh handle

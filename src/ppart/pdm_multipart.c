@@ -51,6 +51,7 @@
 #include "pdm_binary_search.h"
 #include "pdm_part_to_block.h"
 #include "pdm_block_to_part.h"
+#include "pdm_distrib.h"
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
@@ -1274,46 +1275,89 @@ PDM_MPI_Comm      comm
 void
 _run_ppart_zone_nodal
 (
-  PDM_dmesh_nodal_t* dmesh_nodal,
-  PDM_split_dual_t split_method,
-  PDM_MPI_Comm comm
+  PDM_dmesh_nodal_t *dmesh_nodal,
+  PDM_split_dual_t   split_method,
+  int                dn_part, 
+  PDM_MPI_Comm       comm
 ) {
   int i_rank;
   int n_rank;
   PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_size(comm, &n_rank);
 
-  //PDM_g_num_t       *cell_cell_idx;
-  //PDM_g_num_t       *cell_cell;
-  //PDM_g_num_t       *cell_dist;
-  //PDM_dmesh_nodal_dual_graph(dmesh_nodal,
-  //                           &cell_cell_idx,
-  //                           &cell_cell,
-  //                           comm,
-  //                           &cell_dist);
+  // 0. concat sections
+  int* section_idx;
+  int* delt_vtx_idx;
+  PDM_g_num_t* delt_vtx;
+  int n_section = PDM_concat_elt_sections(dmesh_nodal,&section_idx,&delt_vtx_idx,&delt_vtx);
 
-  //int tn_part = n_rank; // TODO gen
-  //double *part_fractions = NULL; // TODO gen
-  //int dn_cell = cell_dist[i_rank+1] - cell_dist[i_rank];
-  //int *cell_part = (int *) malloc(dn_cell * sizeof(int));
-  //for (int i=0; i<cell_cell_idx[dn_cell]; ++i) {
-  //  cell_cell[i]--;
-  //}
-  //PDM_para_graph_split(split_method,
-  //                     cell_dist,
-  //                     cell_cell_idx,
-  //                     cell_cell,
-  //                     NULL, NULL,
-  //                     tn_part,
-  //                     part_fractions,
-  //                     cell_part,
-  //                     comm);
-  //printf("cell_part= ");
-  //for (int i=0; i<dn_cell; ++i) {
-  //  printf("%i, ",cell_part[i]);
-  //}
-  //printf("\n");
+  // 1. distributions
+  PDM_g_num_t* mesh_vtx_dist = PDM_dmesh_nodal_vtx_distrib_get(dmesh_nodal);
+  PDM_g_num_t* vtx_dist = (PDM_g_num_t*) malloc(n_rank+1 * sizeof(PDM_g_num_t));
+  for (int i=0; i<n_rank+1; ++i) {
+    vtx_dist[i] = mesh_vtx_dist[i]+1;
+  }
 
+  int dn_elt = section_idx[n_section];
+  PDM_g_num_t* elt_dist = PDM_compute_entity_distribution(comm, dn_elt);
+
+  // 2. elt_elt graph
+  PDM_g_num_t* elt_elt_idx;
+  PDM_g_num_t* elt_elt;
+  PDM_dmesh_nodal_dual_graph(vtx_dist,elt_dist,delt_vtx_idx,delt_vtx,&elt_elt_idx,&elt_elt,comm);
+
+  // 3. partitioning
+  double* part_fractions = NULL; // TODO gen
+  int* elt_part = (int*) malloc(dn_elt * sizeof(int));
+  for (int i=0; i<elt_elt_idx[dn_elt]; ++i) {
+    elt_elt[i]--;
+  }
+  PDM_para_graph_split(split_method,
+                       elt_dist,
+                       elt_elt_idx,
+                       elt_elt,
+                       NULL, NULL,
+                       dn_part,
+                       part_fractions,
+                       elt_part,
+                       comm);
+
+  // 4. reconstruct elts on partitions
+  PDM_g_num_t* part_distri = PDM_compute_entity_distribution(comm, dn_part );
+  int n_part = part_distri[n_rank]-1;
+  for (int i_section=0; i_section<n_section; ++i_section) {
+    PDM_g_num_t *elt_section_distri = PDM_DMesh_nodal_section_distri_std_get(dmesh_nodal,i_section);
+    int* elt_section_part = elt_part + section_idx[i_section];
+
+    int* pn_elt_section = NULL;
+    PDM_g_num_t** pelt_section_ln_to_gn = NULL;
+    PDM_part_assemble_partitions(comm,
+                                 part_distri,
+                                 elt_section_distri,
+                                 elt_section_part,
+                                &pn_elt_section,
+                                &pelt_section_ln_to_gn);
+
+    int* delt_section_vtx_idx = delt_vtx_idx + section_idx[i_section];
+    PDM_g_num_t* delt_section_vtx = delt_vtx + delt_section_vtx_idx[0];
+
+    //   int           **pn_child_entity,
+    //   PDM_g_num_t  ***pchild_ln_to_gn,
+    //   int          ***pconnectivity_idx,
+    //   int          ***pconnectivity
+    //PDM_part_dconnectivity_to_pconnectivity_sort(comm,
+    //                                             elt_section_distri,
+    //                                             delt_section_vtx_idx,
+    //                                             delt_section_vtx,
+    //                                             dn_part,
+    //                                             pn_elt_section,
+    //                                             (const PDM_g_num_t **) pelt_section_ln_to_gn,
+    //                                            &pn_vtx,
+    //                                            &pvtx_ln_to_gn,
+    //                                            &pface_vtx_idx,
+    //                                            &pface_vtx);
+  }
+  free(elt_part);
 
   
   // 2. Récupération des éléments sur les partitions
@@ -1321,24 +1365,21 @@ _run_ppart_zone_nodal
   //   possibilité 1 : dmesh_nodal
   //   possibilité 2 : dcell_vtx 
   // sorties: pcell_vtx, type -> reconstruire le dmesh_nodal
-  //PDM_part_dconnectivity_to_pconnectivity_sort(comm,
-  //PDM_part_dconnectivity_to_pconnectivity_sort(comm,
-  //                                             face_distri,
-  //                                             dface_vtx_idx,
-  //                                             dface_vtx,
-  //                                             n_part,
-  //                                             pn_face,
-  //                                             (const PDM_g_num_t **) pface_ln_to_gn,
-  //                                            &pn_vtx,
-  //                                            &pvtx_ln_to_gn,
-  //                                            &pface_vtx_idx,
-  //                                            &pface_vtx);
  
   // 3. calculer tous les ln_to_gn, graphes de comm, conditions au limites
   // elements (2D, 3D), vtx       |      vtx       |     elements 2D
   // PDM_multipart_part_graph_comm_vtx_data_get
 
   // après cette fonction: Coordinates, FlowSolution, 
+
+  free(section_idx);
+  free(delt_vtx_idx);
+  free(delt_vtx);
+
+  free(elt_dist);
+  free(vtx_dist);
+  free(elt_elt_idx);
+  free(elt_elt);
 }
 
 /**
@@ -1366,8 +1407,9 @@ PDM_multipart_run_ppart
     if(dmesh_nodal != NULL) {
       PDM_MPI_Comm comm = _multipart->comm;
       PDM_split_dual_t split_method = _multipart->split_method;
+      int dn_part = 1;
 
-      _run_ppart_zone_nodal(dmesh_nodal,split_method,comm);
+      _run_ppart_zone_nodal(dmesh_nodal,split_method,dn_part,comm);
 
       //PDM_part_size_t part_size_method = _multipart->part_size_method;
 
@@ -1380,7 +1422,6 @@ PDM_multipart_run_ppart
       //_run_ppart_zone(_dmeshes, _pmeshes, n_part, split_method, part_size_method, part_fraction, comm);
     }
   }
-  return;
 
 
   if (_multipart->merge_blocks)

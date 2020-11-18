@@ -170,8 +170,9 @@ void
 _run_ppart_zone_nodal
 (
   PDM_dmesh_nodal_t* dmesh_nodal,
-  PDM_split_dual_t split_method,
-  PDM_MPI_Comm comm
+  PDM_split_dual_t   split_method,
+  int                dn_part, 
+  PDM_MPI_Comm       comm
 );
 
 /**
