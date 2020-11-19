@@ -1023,13 +1023,47 @@ PDM_part_multi_dconnectivity_to_pconnectivity_sort
   printf("\n");
 
   // 2. create pconnectivity with local numbering
-  //_pconnectivity_with_local_num(
-  //  n_part,
-  //  pn_vtx,
-  //  pconnectivity_abs_cat,
-  //  unique_order,
-  //  pconnectivity
-  //);
+  int** pconnectivity_cat = (int**)malloc(n_part * sizeof(int*));
+  for (int i_part=0; i_part<n_part; ++i_part) {
+    pconnectivity_cat[i_part] = (int*)malloc(pn_vtx[i_part] * sizeof(int));
+  }
+  _pconnectivity_with_local_num(
+    n_part,
+    pn_vtx,
+    pconnectivity_abs_cat,
+    unique_order,
+    &pconnectivity_cat
+  );
+  int pos = 0;
+  *pconnectivity = (int***)malloc(n_section * sizeof(int**));
+  for (int i_section=0; i_section<n_section; ++i_section) {
+    (*pconnectivity)[i_section] = (int**)malloc(n_part * sizeof(int*));
+    assert(n_part==1); // TODOUX
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      int n_elmts = pn_entity[i_section][i_part];
+      int n_vtx_section = (*pconnectivity_idx)[i_section][i_part][n_elmts];
+
+      (*pconnectivity)[i_section][i_part] = (int*)malloc(n_vtx_section * sizeof(int));
+      for (int i=0; i<n_vtx_section; ++i) {
+        (*pconnectivity)[i_section][i_part][i] = pconnectivity_cat[i_part][pos];
+        ++pos;
+      }
+    }
+  }
+
+  for (int i_section=0; i_section<n_section; ++i_section) {
+    assert(n_part==1); // TODOUX
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      int n_elmts = pn_entity[i_section][i_part];
+      int n_vtx_section = (*pconnectivity_idx)[i_section][i_part][n_elmts];
+
+      printf("section = %i\n",i_section);
+      printf("pconnectivity:");
+      for (int i = 0; i < n_vtx_section; ++i)
+        printf(" %d ", (*pconnectivity)[i_section][i_part][i]);
+      printf("\n");
+    }
+  }
 
   ///*
   // * Free
