@@ -1324,22 +1324,46 @@ _run_ppart_zone_nodal
 
   // 4. reconstruct elts on partitions
   PDM_g_num_t* part_distri = PDM_compute_entity_distribution(comm, dn_part );
-  int n_part = part_distri[n_rank]-1;
+  //int n_part = part_distri[n_rank]-1;
+  int** pn_elt_section = (int**)malloc(n_section * sizeof(int*));
+  PDM_g_num_t*** pelt_section_ln_to_gn = (PDM_g_num_t***)malloc(n_section * sizeof(PDM_g_num_t**));
+  PDM_g_num_t** elt_section_distri = (PDM_g_num_t**)malloc(n_section * sizeof(PDM_g_num_t*));
   for (int i_section=0; i_section<n_section; ++i_section) {
-    PDM_g_num_t *elt_section_distri = PDM_DMesh_nodal_section_distri_std_get(dmesh_nodal,i_section);
+    elt_section_distri[i_section] = PDM_DMesh_nodal_section_distri_std_get(dmesh_nodal,i_section);
+  }
+
+  for (int i_section=0; i_section<n_section; ++i_section) {
     int* elt_section_part = elt_part + section_idx[i_section];
 
-    int* pn_elt_section = NULL;
-    PDM_g_num_t** pelt_section_ln_to_gn = NULL;
     PDM_part_assemble_partitions(comm,
                                  part_distri,
-                                 elt_section_distri,
+                                 elt_section_distri[i_section],
                                  elt_section_part,
-                                &pn_elt_section,
-                                &pelt_section_ln_to_gn);
+                                &pn_elt_section[i_section],
+                                &pelt_section_ln_to_gn[i_section]);
+    //printf("\npelt_section_ln_to_gn:");
+    //for (int i = 0; i < pn_elt_section[i_section][0]; i++)
+    //  printf(" %d ", pelt_section_ln_to_gn[i_section][0][i]);
+    //printf("\n");
+  }
 
-    int* delt_section_vtx_idx = delt_vtx_idx + section_idx[i_section];
-    PDM_g_num_t* delt_section_vtx = delt_vtx + delt_section_vtx_idx[0];
+  int* pn_vtx;
+  int** pvtx_ln_to_gn;
+  int*** pelt_vtx_idx;
+  int*** pelt_vtx;
+  PDM_part_multi_dconnectivity_to_pconnectivity_sort(comm,
+                                                     dn_part,
+                                                     n_section,
+                                                     section_idx,
+                                                     elt_section_distri,
+                                                     delt_vtx_idx,
+                                                     delt_vtx,
+                                                     pn_elt_section,
+                                                     pelt_section_ln_to_gn,
+                                                    &pn_vtx,
+                                                    &pvtx_ln_to_gn,
+                                                    &pelt_vtx_idx,
+                                                    &pelt_vtx);
 
     //   int           **pn_child_entity,
     //   PDM_g_num_t  ***pchild_ln_to_gn,
@@ -1356,7 +1380,6 @@ _run_ppart_zone_nodal
     //                                            &pvtx_ln_to_gn,
     //                                            &pface_vtx_idx,
     //                                            &pface_vtx);
-  }
   free(elt_part);
 
   

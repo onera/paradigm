@@ -794,8 +794,7 @@ _dconnectivity_to_pconnectivity_abs
 /**
  *  \brief Computes a local numbering from connectivities with children in gn
  *
- * \param [in]  pconnectivity_idx   For each part, partitioned connectivity indexes
- *                                   (size = n_part, each component size = pn_entity[i_part])
+ * \param [in]  pn_vtx              For each part, n_vtx over connectivity (hence, non-unique)
  * \param [in]  pconnectivity_abs   For each part, partitioned connectivity in global numbering (size = n_part,
  *                                   each component size = pconnectivity_idx[i_part][pn_entity[i_part]])
  * \param [out]  pn_child_entity     Number of (unique) child elements in each partition (size=n_part)
@@ -808,7 +807,7 @@ void
 _create_pchild_local_num(
   const int      n_part,
   const int     *pn_entity,
-  int          **_pconnectivity_idx,
+  int           *pn_vtx,
   PDM_g_num_t  **pconnectivity_abs,
   int          **pn_child_entity,
   PDM_g_num_t ***pchild_ln_to_gn,
@@ -822,28 +821,22 @@ _create_pchild_local_num(
   *unique_order_ptr = (int**) malloc(n_part * sizeof(int*));
   int** unique_order = *unique_order_ptr;
   for(int i_part = 0; i_part < n_part; ++i_part){
-    int n_elmts = pn_entity[i_part];
-
     /*
      * Save array
      */
-    _pchild_ln_to_gn[i_part] = (PDM_g_num_t *) malloc( _pconnectivity_idx[i_part][n_elmts] * sizeof(PDM_g_num_t));
+    int n_vtx = pn_vtx[i_part];
+    _pchild_ln_to_gn[i_part] = (PDM_g_num_t *) malloc( n_vtx * sizeof(PDM_g_num_t));
 
-    int idx_data = 0;
-    for(int i_elmt = 0; i_elmt < n_elmts; ++i_elmt) {
-      int stride = _pconnectivity_idx[i_part][i_elmt+1] - _pconnectivity_idx[i_part][i_elmt];
-      for(int i_data = 0; i_data < stride; ++i_data ){
-        _pchild_ln_to_gn[i_part][idx_data] = PDM_ABS(pconnectivity_abs[i_part][idx_data]);
-        idx_data++;
-      }
+    for(int i_vtx = 0; i_vtx < n_vtx; ++i_vtx) {
+      _pchild_ln_to_gn[i_part][i_vtx] = PDM_ABS(pconnectivity_abs[i_part][i_vtx]);
     }
 
     /*
      * Deduce ln_to_gn
      */
-    // printf("Sort data between : 0 and %d \n", idx_data);
-    unique_order[i_part] = (int *) malloc( idx_data * sizeof(int));
-    int n_elmt_sort = PDM_inplace_unique_long2(_pchild_ln_to_gn[i_part], unique_order[i_part], 0, idx_data-1);
+    // printf("Sort data between : 0 and %d \n", n_vtx);
+    unique_order[i_part] = (int *) malloc( n_vtx* sizeof(int));
+    int n_elmt_sort = PDM_inplace_unique_long2(_pchild_ln_to_gn[i_part], unique_order[i_part], 0, n_vtx-1);
     _pn_child_entity[i_part] = n_elmt_sort;
 
     //if(0 == 1 && i_rank == 0){
@@ -917,6 +910,114 @@ _pconnectivity_with_local_num(
   }
 }
 
+
+void
+PDM_part_multi_dconnectivity_to_pconnectivity_sort
+(
+ const PDM_MPI_Comm    comm,
+ const int             n_part,
+ const int             n_section,
+ const int            *section_idx,
+       PDM_g_num_t   **entity_distribution,
+       int            *dconnectivity_idx,
+       PDM_g_num_t    *dconnectivity,
+       int           **pn_entity,
+       PDM_g_num_t  ***pentity_ln_to_gn,
+       int           **pn_child_entity,
+       PDM_g_num_t  ***pchild_ln_to_gn,
+       int         ****pconnectivity_idx,
+       int         ****pconnectivity
+)
+{
+  printf("PDM_part_dconnectivity_to_pconnectivity\n");
+  int i_rank;
+  int n_rank;
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  PDM_MPI_Comm_size(comm, &n_rank);
+
+  *pconnectivity_idx = (int***) malloc(n_section * sizeof(int**));
+  for (int i_section=0; i_section<n_section; ++i_section) {
+    int* dconnectivity_section_idx = dconnectivity_idx + section_idx[i_section];
+    int dn_entity = entity_distribution[i_section][i_rank+1] - entity_distribution[i_section][i_rank];
+    int* dconnectivity_section_idx_at_0 = (int*)malloc((dn_entity+1) * sizeof(int));
+    for (int i=0; i<dn_entity+1; ++i) {
+      dconnectivity_section_idx_at_0[i] = dconnectivity_section_idx[i] - dconnectivity_section_idx[0];
+    }
+    PDM_g_num_t* dconnectivity_section = dconnectivity + dconnectivity_section_idx[0];
+
+    //printf("\ni_section = %i\n",i_section);
+    //printf("dn_entity= %i\n",dn_entity);
+    //printf("pn_entity= %i\n",pn_entity[i_section][0]);
+    //printf("entity_distribution[i_section] = %i\n",entity_distribution[i_section][i_rank+1]);
+    //printf("dconnectivity_section_idx_at_0:");
+    //for (int i = 0; i < dn_entity+1; i++)
+    //  printf(" %d ", dconnectivity_section_idx_at_0[i]);
+    //printf("\n");
+    //printf("dconnectivity_section:");
+    //for (int i = 0; i < dconnectivity_section_idx_at_0[dn_entity]; i++)
+    //  printf(" %d ", dconnectivity_section[i]);
+    //printf("\n");
+
+    // 0. create pconnectivity with global numbering
+    int** _pconnectivity_idx = (*pconnectivity_idx)[i_section];
+    PDM_g_num_t** pconnectivity_abs_section;
+    _dconnectivity_to_pconnectivity_abs(
+      comm,
+      entity_distribution[i_section],
+      dconnectivity_section_idx_at_0,
+      dconnectivity_section,
+      n_part,
+      pn_entity[i_section],
+      (const PDM_g_num_t**) pentity_ln_to_gn[i_section],
+      &_pconnectivity_idx,&pconnectivity_abs_section
+    );
+ 
+    printf("pconnectivity_idx:");
+    for (int i = 0; i < pn_entity[i_section][0]+1; i++)
+      printf(" %d ", _pconnectivity_idx[0][i]);
+    printf("\n");
+    printf("pconnectivity_abs_section:");
+    for (int i = 0; i < _pconnectivity_idx[0][pn_entity[i_section][0]]; i++)
+      printf(" %d ", pconnectivity_abs_section[0][i]);
+    printf("\n");
+  }
+
+
+
+  //// 1. Create local numbering
+  //// Caution the recv connectivity can be negative
+  //int** unique_order;
+  //_create_pchild_local_num(
+  //  n_part,
+  //  pn_entity,
+  //  _pconnectivity_idx,
+  //  pconnectivity_abs,
+  //  pn_child_entity,
+  //  pchild_ln_to_gn,
+  //  &unique_order
+  //);
+
+  //// 2. create pconnectivity with local numbering
+  //_pconnectivity_with_local_num(
+  //  n_part,
+  //  pn_entity,
+  //  _pconnectivity_idx,
+  //  pconnectivity_abs,
+  //  unique_order,
+  //  pconnectivity
+  //);
+
+  ///*
+  // * Free
+  // */
+  //for(int i_part = 0; i_part < n_part; ++i_part) {
+  //  free(pconnectivity_abs[i_part]);
+  //  free(unique_order[i_part]);
+  //}
+  //free(pconnectivity_abs);
+  //free(unique_order);
+}
+
 /**
  *  \brief Generated the partitioned connectivity (entity->child_elements) associated
  *   to the given distributed connectivity, using element distribution and element local
@@ -982,10 +1083,15 @@ PDM_part_dconnectivity_to_pconnectivity_sort
   // 1. Create local numbering
   // Caution the recv connectivity can be negative
   int** unique_order;
+  int* pn_vtx = (int*)malloc(n_part * sizeof(int));
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    int n_elmts = pn_entity[i_part];
+    pn_vtx[i_part] = _pconnectivity_idx[i_part][n_elmts];
+  }
   _create_pchild_local_num(
     n_part,
     pn_entity,
-    _pconnectivity_idx,
+    pn_vtx,
     pconnectivity_abs,
     pn_child_entity,
     pchild_ln_to_gn,
