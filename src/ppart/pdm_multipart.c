@@ -1335,6 +1335,17 @@ _run_ppart_zone_nodal
   for (int i_section=0; i_section<n_section; ++i_section) {
     int* elt_section_part = elt_part + section_idx[i_section];
 
+    // 2D elements must go to the partition of their 3D parent
+    //PDM_Mesh_nodal_elt_t type = PDM_DMesh_nodal_section_elt_type_get(dmesh_nodal,i_section);
+    //if (type==PDM_MESH_NODAL_TRIA3 || type==PDM_MESH_NODAL_QUAD4) {
+    //  int n_elt = section_idx[i_section+1] - section_idx[i_section];
+    //  for (int i=0; i<n_elt; ++i) {
+    //    elt_idx = section_idx[i_section] + i;
+    //    elt_elt
+    //    elt_section_part[i]
+    //  }
+    //}
+
     PDM_part_assemble_partitions(comm,
                                  part_distri,
                                  elt_section_distri[i_section],
@@ -1364,22 +1375,6 @@ _run_ppart_zone_nodal
                                                     &pvtx_ln_to_gn,
                                                     &pelt_vtx_idx,
                                                     &pelt_vtx);
-
-    //   int           **pn_child_entity,
-    //   PDM_g_num_t  ***pchild_ln_to_gn,
-    //   int          ***pconnectivity_idx,
-    //   int          ***pconnectivity
-    //PDM_part_dconnectivity_to_pconnectivity_sort(comm,
-    //                                             elt_section_distri,
-    //                                             delt_section_vtx_idx,
-    //                                             delt_section_vtx,
-    //                                             dn_part,
-    //                                             pn_elt_section,
-    //                                             (const PDM_g_num_t **) pelt_section_ln_to_gn,
-    //                                            &pn_vtx,
-    //                                            &pvtx_ln_to_gn,
-    //                                            &pface_vtx_idx,
-    //                                            &pface_vtx);
   free(elt_part);
 
   
