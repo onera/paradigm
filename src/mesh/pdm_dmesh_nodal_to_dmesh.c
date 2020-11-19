@@ -91,11 +91,11 @@ _make_absolute_entity_numbering
 
   PDM_MPI_Comm_size(comm, &n_rank);
 
-  PDM_g_num_t n_face_proc = dn_entity;
+  PDM_g_num_t n_entity_proc = dn_entity;
   PDM_g_num_t beg_num_abs;
 
-  PDM_MPI_Scan(&n_face_proc, &beg_num_abs, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, comm);
-  beg_num_abs -= n_face_proc;
+  PDM_MPI_Scan(&n_entity_proc, &beg_num_abs, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, comm);
+  beg_num_abs -= n_entity_proc;
 
   /** Compute the distribution of elements amont proc **/
   PDM_g_num_t *entity_distrib = (PDM_g_num_t *) malloc((n_rank+1) * sizeof(PDM_g_num_t));
@@ -141,7 +141,8 @@ int                **dentity_vtx_idx,
 PDM_g_num_t        **dentity_vtx,
 int                **delmt_entity_out_idx,
 PDM_g_num_t        **delmt_entity_out,
-PDM_g_num_t        **dentity_elmt
+PDM_g_num_t        **dentity_elmt,
+int                **dentity_elmt_idx
 )
 {
   // PDM_g_num_t       **dentity_elmt_idx --> face : dface_elemt :
@@ -256,8 +257,10 @@ PDM_g_num_t        **dentity_elmt
    */
   int* blk_entity_vtx_idx  = (int        *) malloc( (blk_entity_vtx_n_size+1) * sizeof(int        ));
   int n_max_entity_per_key = -1;
+  int n_tot_entity_per_key = 0;
   for(int i_entity = 0; i_entity < blk_size; ++i_entity) {
     n_max_entity_per_key = PDM_MAX(n_max_entity_per_key, blk_n_entity_per_key[i_entity]);
+    n_tot_entity_per_key += blk_n_entity_per_key[i_entity];
   }
 
   int n_max_vtx       = -1;
@@ -277,23 +280,28 @@ PDM_g_num_t        **dentity_elmt
    *           - Multiple entitys
    *           - Same entity, we remove and replace by the first
    */
-  PDM_g_num_t* loc_entity_vtx_1 = (PDM_g_num_t *) malloc( n_max_vtx            * sizeof(PDM_g_num_t) );
-  PDM_g_num_t* loc_entity_vtx_2 = (PDM_g_num_t *) malloc( n_max_vtx            * sizeof(PDM_g_num_t) );
-  int*         already_treat    = (int         *) malloc( n_max_entity_per_key * sizeof(int        ) );
+  PDM_g_num_t* loc_entity_vtx_1 = (PDM_g_num_t *) malloc(  n_max_vtx               * sizeof(PDM_g_num_t) );
+  PDM_g_num_t* loc_entity_vtx_2 = (PDM_g_num_t *) malloc(  n_max_vtx               * sizeof(PDM_g_num_t) );
+  int*         already_treat    = (int         *) malloc(  n_max_entity_per_key    * sizeof(int        ) );
+  int*         same_entity_idx  = (int         *) malloc( (n_max_entity_per_key+1) * sizeof(int        ) );
+  int*         sens_entity      = (int         *) malloc(  n_max_entity_per_key    * sizeof(int        ) );
 
   /*
    * Allocate Memory - entity_vtx - entity_elmt
    */
-  *dentity_vtx     = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) *  blk_tot_entity_vtx_size  );
-  *dentity_vtx_idx = (int         *) malloc( sizeof(int        ) * (blk_entity_vtx_n_size+1 ));
-  *dentity_elmt    = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) *  blk_entity_elmt_size * 2 );
+  *dentity_vtx      = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) *  blk_tot_entity_vtx_size  );
+  *dentity_vtx_idx  = (int         *) malloc( sizeof(int        ) * (blk_entity_vtx_n_size+1 ));
+  // *dentity_elmt     = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) *  blk_entity_elmt_size * 2 );
+  *dentity_elmt     = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) *  n_tot_entity_per_key );
+  *dentity_elmt_idx = (int         *) malloc( sizeof(int)         * (blk_entity_elmt_size+1)  );
 
-  PDM_g_num_t *_dentity_vtx     = *dentity_vtx;
-  int         *_dentity_vtx_idx = *dentity_vtx_idx;
-  PDM_g_num_t *_dentity_elmt    = *dentity_elmt;
-
+  PDM_g_num_t *_dentity_vtx      = *dentity_vtx;
+  int         *_dentity_vtx_idx  = *dentity_vtx_idx;
+  PDM_g_num_t *_dentity_elmt     = *dentity_elmt;
+  int         *_dentity_elmt_idx = *dentity_elmt_idx;
 
   printf("blk_entity_elmt_size::%i\n", blk_entity_elmt_size);
+  printf("n_tot_entity_per_key::%i\n", n_tot_entity_per_key);
 
   /*
    * Init global numbering
@@ -303,8 +311,9 @@ PDM_g_num_t        **dentity_elmt
 
   int idx = 0;
   int idx_entity_vtx = 0;
+  _dentity_elmt_idx[0] = 0;
   for(int i_key = 0; i_key < blk_size; ++i_key) {
-    // printf("Number of conflicting keys :: %i \n", blk_n_entity_per_key[i_key]);
+    // printf(" --- Number of conflicting keys :: %i \n", blk_n_entity_per_key[i_key]);
 
     int n_conflict_entitys = blk_n_entity_per_key[i_key];
 
@@ -317,8 +326,12 @@ PDM_g_num_t        **dentity_elmt
     for(int i_entity = 0; i_entity < n_conflict_entitys; ++i_entity) {
       // printf("Number of vtx on entitys %i :: %i with index [%i] \n", i_entity, blk_entity_vtx_n[idx+i_entity], idx+i_entity);
 
-      int n_vtx_entity_1 = blk_entity_vtx_n[idx+i_entity];
-      int beg_1        = blk_entity_vtx_idx[idx+i_entity];
+      int n_vtx_entity_1 = blk_entity_vtx_n  [idx+i_entity];
+      int beg_1          = blk_entity_vtx_idx[idx+i_entity];
+      int idx_next_same_entity = 0;
+      same_entity_idx[idx_next_same_entity++] = i_entity;
+      sens_entity[idx_next_same_entity] = 1;
+
       if(already_treat[i_entity] != 1) {
 
         PDM_g_num_t key_1 = 0;
@@ -345,7 +358,6 @@ PDM_g_num_t        **dentity_elmt
             assert(key_1 == key_2);
 
             int is_same_entity = 1;
-
             for(int i_vtx = 0; i_vtx < n_vtx_entity_1; ++i_vtx) {
               if(loc_entity_vtx_1[i_vtx] != loc_entity_vtx_2[i_vtx]) {
                 is_same_entity = -1;
@@ -354,41 +366,36 @@ PDM_g_num_t        **dentity_elmt
             }
 
             if(is_same_entity == 1 ){
-              // printf(" It's a match ! \n");
-
-              _dentity_elmt[2*i_abs_entity  ] = blk_elmt_entity_elmt[idx+i_entity     ];
-              _dentity_elmt[2*i_abs_entity+1] = blk_elmt_entity_elmt[idx+i_entity_next];
-
-              for(int i_vtx = 0; i_vtx < n_vtx_entity_1; ++i_vtx) {
-                _dentity_vtx[idx_entity_vtx++] = blk_tot_entity_vtx[beg_1+i_vtx];
-              }
-              _dentity_vtx_idx[i_abs_entity+1] = _dentity_vtx_idx[i_abs_entity] + n_vtx_entity_1;
-              i_abs_entity++;
-
-              already_treat[i_entity]      = 1;
-              already_treat[i_entity_next] = 1;
+              // Check if same sens
+              sens_entity[idx_next_same_entity] = 1;
+              same_entity_idx[idx_next_same_entity++] = i_entity_next;
             }
-
-
           } /* End if same number of vertex */
         } /* End loop next entity */
-      } /* End loop already treated */
 
-      /* If a entity is not found a match inside the pool, it's a boundary condition */
-      if(already_treat[i_entity] != 1) {
+         // printf("[%i] - same_entity_idx::", idx_next_same_entity);
+         // for(int ii = 0; ii < idx_next_same_entity; ++ii) {
+         //   printf(" %i", same_entity_idx[ii]);
+         // }
+         // printf("\n");
 
-        _dentity_elmt[2*i_abs_entity  ] = blk_elmt_entity_elmt[idx+i_entity];
-        _dentity_elmt[2*i_abs_entity+1] = 0;
-
+        _dentity_vtx_idx[i_abs_entity+1] = _dentity_vtx_idx[i_abs_entity] + n_vtx_entity_1;
         for(int i_vtx = 0; i_vtx < n_vtx_entity_1; ++i_vtx) {
           _dentity_vtx[idx_entity_vtx++] = blk_tot_entity_vtx[beg_1+i_vtx];
         }
-        _dentity_vtx_idx[i_abs_entity+1] = _dentity_vtx_idx[i_abs_entity] + n_vtx_entity_1;
+
+        _dentity_elmt_idx[i_abs_entity+1] = _dentity_elmt_idx[i_abs_entity];
+        for(int i = 0; i < idx_next_same_entity; ++i) {
+          int i_same_entity = same_entity_idx[i];
+
+          _dentity_elmt[_dentity_elmt_idx[i_abs_entity+1]++] = blk_elmt_entity_elmt[idx+i_same_entity];
+
+          already_treat[i_same_entity] = 1;
+
+        }
         i_abs_entity++;
 
-        already_treat[i_entity]      = 1;
-
-      }
+      } /* End loop already treated */
 
     } /* End loop entity in conflict */
 
@@ -396,12 +403,18 @@ PDM_g_num_t        **dentity_elmt
 
   }
 
+  // printf(" realloc dentity_elmt : %i --> %i \n", n_tot_entity_per_key, _dentity_elmt_idx[i_abs_entity]);
+  *dentity_elmt = realloc(*dentity_elmt, sizeof(PDM_g_num_t) *  _dentity_elmt_idx[i_abs_entity] );
+  _dentity_elmt = *dentity_elmt;
+
   /*
    * Free all unused structure
    */
   free(loc_entity_vtx_1);
   free(loc_entity_vtx_2);
   free(already_treat);
+  free(same_entity_idx);
+  free(sens_entity);
   free(delmt_entity);
   free(delmt_entity_vtx);
   free(ln_to_gn);
@@ -411,10 +424,12 @@ PDM_g_num_t        **dentity_elmt
   free(blk_elmt_entity_elmt);
 
   if( 0 == 1 ){
-    printf("i_abs_entity::%i \n", i_abs_entity);
+    printf("i_abs_entity::%i \n", i_abs_entity+1);
     PDM_log_trace_array_int(_dentity_vtx_idx, i_abs_entity+1                    , "_dentity_vtx_idx:: ");
     PDM_log_trace_array_long(_dentity_vtx   , _dentity_vtx_idx[i_abs_entity], "_dentity_vtx:: ");
-    PDM_log_trace_array_long(_dentity_elmt  , 2*i_abs_entity                    , "_dentity_elmt:: ");
+    // PDM_log_trace_array_long(_dentity_elmt  , 2*i_abs_entity                    , "_dentity_elmt:: ");
+    PDM_log_trace_array_int(_dentity_elmt_idx, i_abs_entity+1                   , "_dentity_elmt_idx:: ");
+    PDM_log_trace_array_long(_dentity_elmt    , _dentity_elmt_idx[i_abs_entity], "_dentity_elmt:: ");
   }
 
   /*
@@ -444,42 +459,28 @@ PDM_g_num_t        **dentity_elmt
   /*
    * Rebuild elmt entity
    */
-  int n_entity_elmt = 2*_dn_entity;
+  // int n_entity_elmt = 2*_dn_entity;
+  int n_entity_elmt = _dentity_elmt_idx[_dn_entity];
+  // int n_entity_elmt = _dn_entity;
 
   int*         part_stri_entity_elmt = (int         *) malloc( sizeof(int        ) * n_entity_elmt );
-  PDM_g_num_t* dentity_elmt_tmp      = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) * n_entity_elmt );
-  PDM_g_num_t* ln_to_gn_elem       = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) * n_entity_elmt );
+  PDM_g_num_t* ln_to_gn_elem         = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) * n_entity_elmt );
 
-  int idx_g = 0;
   assert( _dn_entity == _entity_distrib[mesh->i_rank+1] - _entity_distrib[mesh->i_rank]);
 
   for (int i_entity = 0; i_entity < _dn_entity; ++i_entity) {
-
-    PDM_g_num_t g_num_entity = (PDM_g_num_t) i_entity + _entity_distrib[mesh->i_rank] + 1;
-
-    dentity_elmt_tmp[idx_g] = _dentity_elmt[2*i_entity];
-    ln_to_gn_elem [idx_g] = g_num_entity;
-    part_stri_entity_elmt[idx_g] = 1;
-    idx_g++;
-    if(_dentity_elmt[2*i_entity+1] != 0){
-      dentity_elmt_tmp[idx_g] = _dentity_elmt[2*i_entity+1];
-      ln_to_gn_elem [idx_g] = g_num_entity;
-      part_stri_entity_elmt[idx_g] = 1;
-      idx_g++;
-    } else {
-      dentity_elmt_tmp[idx_g] = _dentity_elmt[2*i_entity];
-      ln_to_gn_elem [idx_g] = g_num_entity;
-      part_stri_entity_elmt[idx_g] = 0;
-      idx_g++;
+    for(int i_data = _dentity_elmt_idx[i_entity]; i_data < _dentity_elmt_idx[i_entity+1]; ++i_data) {
+      PDM_g_num_t g_num_entity = (PDM_g_num_t) i_entity + _entity_distrib[mesh->i_rank] + 1;
+      ln_to_gn_elem        [i_data] = g_num_entity;
+      part_stri_entity_elmt[i_data] = 1;
     }
   }
-  n_entity_elmt = idx_g; // Adapt size
 
   if(0 == 1 ){
     printf("n_entity_elmt::%i\n", n_entity_elmt);
     PDM_log_trace_array_int(part_stri_entity_elmt, n_entity_elmt, "part_stri_entity_elmt:: ");
-    PDM_log_trace_array_long(ln_to_gn_elem     , n_entity_elmt, "ln_to_gn_elem:: ");
-    PDM_log_trace_array_long(dentity_elmt_tmp    , n_entity_elmt, "dentity_elmt_tmp:: ");
+    PDM_log_trace_array_long(ln_to_gn_elem       , n_entity_elmt, "ln_to_gn_elem:: ");
+    PDM_log_trace_array_long(_dentity_elmt       , n_entity_elmt, "_dentity_elmt:: ");
   }
 
   /*
@@ -488,7 +489,7 @@ PDM_g_num_t        **dentity_elmt
   PDM_part_to_block_t *ptb2 = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                        PDM_PART_TO_BLOCK_POST_MERGE,
                                                        1.,
-                                                       &dentity_elmt_tmp,
+                                                       &_dentity_elmt,
                                                        NULL,
                                                        &n_entity_elmt,
                                                        1,
@@ -518,7 +519,6 @@ PDM_g_num_t        **dentity_elmt
    */
   PDM_part_to_block_free(ptb2);
   free(part_stri_entity_elmt);
-  free(dentity_elmt_tmp     );
   free(ln_to_gn_elem      );
 
   /*
@@ -592,10 +592,7 @@ _generate_faces_from_dmesh_nodal
    */
   PDM_dmesh_t* dm = PDM_dmesh_create(-1, -1, -1, -1, -1);
 
-// PDM_g_num_t       **dentity_vtx,
-// int               **dentity_vtx_idx,
-// PDM_g_num_t       **dentity_elmt
-  printf("_generate_query_entitiy \n");
+  int               *dentity_elmt_idx;
   _generate_entitiy_connectivity(dmesh_nodal,
                                  n_face_elt_tot,
                                  delmt_face,
@@ -607,8 +604,9 @@ _generate_faces_from_dmesh_nodal
                                  &dmesh_nodal->_dface_vtx,
                                  &dmesh_nodal->dcell_face_idx,
                                  &dmesh_nodal->dcell_face,
-                                 &dmesh_nodal->_dface_cell);
-  printf("_generate_query_entitiy end \n");
+                                 &dmesh_nodal->_dface_cell,
+                                 &dentity_elmt_idx);
+  free(dentity_elmt_idx);
 
   return dm;
 }
@@ -645,6 +643,7 @@ _generate_edges_from_dmesh_nodal
    */
   PDM_dmesh_t* dm = PDM_dmesh_create(-1, -1, -1, -1, -1);
 
+  int               *dentity_elmt_idx;
   _generate_entitiy_connectivity(dmesh_nodal,
                                  n_edge_elt_tot,
                                  delmt_edge,
@@ -656,7 +655,9 @@ _generate_edges_from_dmesh_nodal
                                  &dmesh_nodal->_dface_vtx,
                                  &dmesh_nodal->dcell_face_idx,
                                  &dmesh_nodal->dcell_face,
-                                 &dmesh_nodal->_dface_cell);
+                                 &dmesh_nodal->_dface_cell,
+                                 &dentity_elmt_idx);
+  free(dentity_elmt_idx);
 
   return dm;
 }
@@ -862,30 +863,67 @@ PDM_dmesh_nodal_to_dmesh_compute
 
   // Boundary management
   for(int i_mesh = 0; i_mesh < dmn_to_dm->n_mesh; ++i_mesh) {
-
-    switch (transform_group_kind) {
-      case PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_NONE:
-        break;
-      case PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_FACE:
-        {
-          assert(transform_kind == PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_FACE);
-          _translate_element_group_to_faces(dmn_to_dm->dmesh_nodal[i_mesh], dmn_to_dm->dmesh[i_mesh]);
-        }
-        break;
-      case PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_EDGE:
-        {
-          PDM_error (__FILE__, __LINE__, 0, "PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_EDGE not implemented \n");
-        }
-        break;
-      case PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_VTX:
-        {
-          PDM_error (__FILE__, __LINE__, 0, "PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_EDGE not implemented \n");
-        }
-        break;
+    if(dmn_to_dm->dmesh_nodal[i_mesh]->dgroup_elmt != NULL) {
+      switch (transform_group_kind) {
+        case PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_NONE:
+          break;
+        case PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_FACE:
+          {
+            assert(transform_kind == PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_FACE);
+            _translate_element_group_to_faces(dmn_to_dm->dmesh_nodal[i_mesh], dmn_to_dm->dmesh[i_mesh]);
+          }
+          break;
+        case PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_EDGE:
+          {
+            PDM_error (__FILE__, __LINE__, 0, "PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_EDGE not implemented \n");
+          }
+          break;
+        case PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_VTX:
+          {
+            PDM_error (__FILE__, __LINE__, 0, "PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_EDGE not implemented \n");
+          }
+          break;
+      }
     }
   }
 
   // Join management
+
+  // _check_mesh();
+  //    --> Sur option
+  //    --> Missing boundary faces connected to elements
+  //    --> Missing join
+  //    --> Other idea
+  //
+  // Here we have all connectivity for elmt :
+  // translate_for_3d_elements = cells so replace face_elmt by face_cell, elmt_face by cell_face ...
+  // translate_for_2d_elements = faces etc ...
+  // Comment faire avec les const du dmesh ???
+  // Quid de l'orientation pour les edges ? edges_cell est orienté ???
+
+  //            |
+  //         1  |   2
+  //     ------ . -----
+  //         3  |   4
+  //            |
+  //  dedge_cell = (1 2 3 4) =! (1 2 4 3)
+  //  dcell_face + dface_edge + dedge_cell
+
+  // face puis edge ---> face --> ???? --> edge_face
+  //
+  // Face d'abord
+
+  // Il faut eviter de skipper
+  // cell_face + face_edge + edge_vtx ---> Il faut aussi déduire le face_vtx -> PDM_deduce_combine_connectivity
+
+  // Si on veut faire un volume de controle autour des edges il faut qu'il soit dans le bon sens non ??
+  // En fait il y a l'orientation ET le sens qui importe
+  // Comme pour le face_vtx le sens du edge_cell me semble important
+
+
+  // 1er etape --> Tous les connectivité descendatnes elmnt_***
+  // 2eme etape --> dmesh_  --> delmnt_face --> delmt_cell
+  //
 
 
 }
