@@ -60,19 +60,19 @@ MPI_TEST_CASE("[PDM_dmesh_nodal_to_dmesh] decomposes hexa ",1) {
 
   // The order of call is important for global numbering
   int hexa_section_1 = PDM_DMesh_nodal_section_add(dmn, PDM_MESH_NODAL_HEXA8);
-  // int quad_section_1 = PDM_DMesh_nodal_section_add(dmn, PDM_MESH_NODAL_QUAD4);
+  int quad_section_1 = PDM_DMesh_nodal_section_add(dmn, PDM_MESH_NODAL_QUAD4);
 
   PDM_DMesh_nodal_section_std_set(dmn,
                                   hexa_section_1,
                                   n_hexa_section_1,
                                   connec_hexa_1);
 
-  // PDM_DMesh_nodal_section_std_set(dmn,
-  //                                 quad_section_1,
-  //                                 n_quad_section_1,
-  //                                 connec_quad_1);
+  PDM_DMesh_nodal_section_std_set(dmn,
+                                  quad_section_1,
+                                  n_quad_section_1,
+                                  connec_quad_1);
 
-  // PDM_DMesh_nodal_section_group_elmt_set(dmn, n_group_elmt, dgroup_elmt_idx, dgroup_elmt);
+  PDM_DMesh_nodal_section_group_elmt_set(dmn, n_group_elmt, dgroup_elmt_idx, dgroup_elmt);
 
   PDM_dmesh_nodal_generate_distribution(dmn);
 

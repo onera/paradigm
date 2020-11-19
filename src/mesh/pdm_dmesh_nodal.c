@@ -609,6 +609,31 @@ const int                partial
       if (dmesh_nodal->face_distrib != NULL) {
         free (dmesh_nodal->face_distrib);
       }
+
+      if (dmesh_nodal->edge_distrib != NULL) {
+        free (dmesh_nodal->edge_distrib);
+      }
+
+      if (dmesh_nodal->_dedge_vtx_idx != NULL) {
+        free (dmesh_nodal->_dedge_vtx_idx);
+      }
+
+      if (dmesh_nodal->_dedge_vtx != NULL) {
+        free (dmesh_nodal->_dedge_vtx);
+      }
+
+      if (dmesh_nodal->dface_edge_idx != NULL) {
+        free (dmesh_nodal->dface_edge_idx);
+      }
+
+      if (dmesh_nodal->dface_edge != NULL) {
+        free (dmesh_nodal->dface_edge);
+      }
+
+      if (dmesh_nodal->_dedge_face != NULL) {
+        free (dmesh_nodal->_dedge_face);
+      }
+
     }
 
     free(dmesh_nodal);

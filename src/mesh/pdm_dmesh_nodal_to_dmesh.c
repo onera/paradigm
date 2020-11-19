@@ -391,17 +391,18 @@ int                **dentity_elmt_idx
               // printf(" \n");
 
               // Determine the sens
-              int i1 = blk_tot_entity_vtx[beg_1 +  idx_min_1                    ];
-              int i2 = blk_tot_entity_vtx[beg_1 + (idx_min_1+1) % n_vtx_entity_1];
+              PDM_g_num_t i1 = blk_tot_entity_vtx[beg_1 +  idx_min_1                    ];
+              PDM_g_num_t i2 = blk_tot_entity_vtx[beg_1 + (idx_min_1+1) % n_vtx_entity_1];
 
-              int j1 = blk_tot_entity_vtx[beg_2 +  idx_min_2                    ];
-              int j2 = blk_tot_entity_vtx[beg_2 + (idx_min_2+1) % n_vtx_entity_1];
+              PDM_g_num_t j1 = blk_tot_entity_vtx[beg_2 +  idx_min_2                    ];
+              PDM_g_num_t j2 = blk_tot_entity_vtx[beg_2 + (idx_min_2+1) % n_vtx_entity_1];
 
               sens_entity[idx_next_same_entity] = 1;
               assert(i1 == j1); // Panic
               if(i2 != j2) {
                 sens_entity[idx_next_same_entity] = -1;
-                int i3 = blk_tot_entity_vtx[beg_1 + (idx_min_1-1) % n_vtx_entity_1];
+                // printf(" idx3 = %i \n", (idx_min_1+n_vtx_entity_1) % n_vtx_entity_1);
+                PDM_g_num_t i3 = blk_tot_entity_vtx[beg_1 + (idx_min_1+n_vtx_entity_1-1) % n_vtx_entity_1];
                 // printf(" i1 = %i | i2 = %i | i3 = %i | j1 = %i | j2 = %i\n", i1, i2, i3, j1, j2);
                 assert(i3 == j2);
               } else {
