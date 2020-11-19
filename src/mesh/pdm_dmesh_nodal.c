@@ -386,6 +386,14 @@ const PDM_MPI_Comm        comm,
   dmesh_nodal->_dface_cell              = NULL;
   dmesh_nodal->face_distrib             = NULL;
 
+  dmesh_nodal->dn_edge                  = 0;
+  dmesh_nodal->edge_distrib             = NULL;
+  dmesh_nodal->_dedge_vtx_idx           = NULL;
+  dmesh_nodal->_dedge_vtx               = NULL;
+  dmesh_nodal->dface_edge_idx           = NULL;
+  dmesh_nodal->dface_edge               = NULL;
+  dmesh_nodal->_dedge_face              = NULL;
+
 }
 
 /**

@@ -196,6 +196,24 @@ struct _pdm_dmesh_nodal_t {
                                                     * (size = \ref dcell_face_idx[\ref dn_cell] */
   PDM_g_num_t           *face_distrib;             /*!< Distribution of faces (size = number of processes + 1) */
 
+
+  PDM_g_num_t           *edge_distrib;             /*!< Distribution of cells (size = number of processes + 1) */
+  PDM_l_num_t            dn_edge;                  /*!< Local number of faces in the local block */
+  PDM_l_num_t           *_dedge_vtx_idx;           /*!< Index of the cell to face connectivity
+                                                    * (size = \ref dn_cell) */
+  PDM_g_num_t           *_dedge_vtx;               /*!< Cell to face connectivity
+                                                    * (size = \ref dcell_face_idx[\ref dn_cell] */
+  PDM_l_num_t           *dface_edge_idx;           /*!< Index of the cell to face connectivity
+                                                    * (size = \ref dn_cell) */
+  PDM_g_num_t           *dface_edge;               /*!< Cell to face connectivity
+                                                    * (size = \ref dcell_face_idx[\ref dn_cell] */
+  PDM_g_num_t           *_dedge_face;              /*!< Cell to face connectivity
+                                                    * (size = \ref dcell_face_idx[\ref dn_cell] */
+
+
+
+
+
 };
 
 
