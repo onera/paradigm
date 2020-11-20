@@ -160,110 +160,110 @@ MPI_TEST_CASE("part by elt", 1) {
   //  free(elt_elt);
   //}
 
-  // 0. concat sections
-  SUBCASE("PDM_part_multi_dconnectivity_to_pconnectivity_sort") {
-    auto split_method = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
-    int dn_part = 1;
-
-    int* section_idx;
-    int* delt_vtx_idx;
-    PDM_g_num_t* delt_vtx;
-    int n_section = PDM_concat_elt_sections(dmesh_nodal,&section_idx,&delt_vtx_idx,&delt_vtx);
-
-    // 1. distributions
-    PDM_g_num_t* mesh_vtx_dist = PDM_dmesh_nodal_vtx_distrib_get(dmesh_nodal);
-    PDM_g_num_t* vtx_dist = (PDM_g_num_t*) malloc(n_rank+1 * sizeof(PDM_g_num_t));
-    for (int i=0; i<n_rank+1; ++i) {
-      vtx_dist[i] = mesh_vtx_dist[i]+1;
-    }
-
-    int dn_elt = section_idx[n_section];
-    PDM_g_num_t* elt_dist = PDM_compute_entity_distribution(comm, dn_elt);
-
-    // 2. elt_elt graph
-    PDM_g_num_t* elt_elt_idx;
-    PDM_g_num_t* elt_elt;
-    PDM_dmesh_nodal_dual_graph(vtx_dist,elt_dist,delt_vtx_idx,delt_vtx,&elt_elt_idx,&elt_elt,comm);
-
-    // 3. partitioning
-    double* part_fractions = NULL; // TODO gen
-    int* elt_part = (int*) malloc(dn_elt * sizeof(int));
-    for (int i=0; i<elt_elt_idx[dn_elt]; ++i) {
-      elt_elt[i]--;
-    }
-    PDM_para_graph_split(split_method,
-                         elt_dist,
-                         elt_elt_idx,
-                         elt_elt,
-                         NULL, NULL,
-                         dn_part,
-                         part_fractions,
-                         elt_part,
-                         comm);
-
-    // 4. reconstruct elts on partitions
-    PDM_g_num_t* part_distri = PDM_compute_entity_distribution(comm, dn_part );
-    //int n_part = part_distri[n_rank]-1;
-    int** pn_elt_section = (int**)malloc(n_section * sizeof(int*));
-    PDM_g_num_t*** pelt_section_ln_to_gn = (PDM_g_num_t***)malloc(n_section * sizeof(PDM_g_num_t**));
-    PDM_g_num_t** elt_section_distri = (PDM_g_num_t**)malloc(n_section * sizeof(PDM_g_num_t*));
-    for (int i_section=0; i_section<n_section; ++i_section) {
-      elt_section_distri[i_section] = PDM_DMesh_nodal_section_distri_std_get(dmesh_nodal,i_section);
-    }
-
-    for (int i_section=0; i_section<n_section; ++i_section) {
-      int* elt_section_part = elt_part + section_idx[i_section];
-
-      PDM_part_assemble_partitions(comm,
-                                   part_distri,
-                                   elt_section_distri[i_section],
-                                   elt_section_part,
-                                  &pn_elt_section[i_section],
-                                  &pelt_section_ln_to_gn[i_section]);
-      //printf("\npelt_section_ln_to_gn:");
-      //for (int i = 0; i < pn_elt_section[i_section][0]; i++)
-      //  printf(" %d ", pelt_section_ln_to_gn[i_section][0][i]);
-      //printf("\n");
-    }
-
-    int* pn_vtx;
-    int** pvtx_ln_to_gn;
-    int*** pelt_vtx_idx;
-    int*** pelt_vtx;
-    PDM_part_multi_dconnectivity_to_pconnectivity_sort(comm,
-                                                       dn_part,
-                                                       n_section,
-                                                       section_idx,
-                                                       elt_section_distri,
-                                                       delt_vtx_idx,
-                                                       delt_vtx,
-                                                       pn_elt_section,
-                                                       pelt_section_ln_to_gn,
-                                                      &pn_vtx,
-                                                      &pvtx_ln_to_gn,
-                                                      &pelt_vtx_idx,
-                                                      &pelt_vtx);
-    // the [0] are there because only one partition
-    CHECK( pn_vtx[0] == 16 );
-
-    auto _pvtx_ln_to_gn = std_e::make_span(pvtx_ln_to_gn[0],pn_vtx[0]);
-    CHECK( _pvtx_ln_to_gn == std::vector{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16} );
-
-    auto _ptet_vtx_idx = std_e::make_span(pelt_vtx_idx[0][0],n_tet+1);
-    auto _ptet_vtx = std_e::make_span(pelt_vtx[0][0],_ptet_vtx_idx.back());
-    CHECK( _ptet_vtx_idx == std::vector{0,4} );
-    CHECK( _ptet_vtx == std::vector{6,10,8,11} );
-
-    auto _phex_vtx_idx = std_e::make_span(pelt_vtx_idx[3][0],n_hex+1);
-    auto _phex_vtx = std_e::make_span(pelt_vtx[3][0],_phex_vtx_idx.back());
-    CHECK( _phex_vtx_idx == std::vector{0,8,16} );
-    CHECK( _phex_vtx == std::vector{1, 2, 4, 3, 5, 6, 8, 7,  14,13,16,15, 1, 2, 4, 3} );
-  }
-     
-  //SUBCASE("run ppart") {
+  //// 0. concat sections
+  //SUBCASE("PDM_part_multi_dconnectivity_to_pconnectivity_sort") {
+  //  auto split_method = PDM_SPLIT_DUAL_WITH_PTSCOTCH;
   //  int dn_part = 1;
-  //  _run_ppart_zone_nodal(dmesh_nodal,PDM_SPLIT_DUAL_WITH_PTSCOTCH,dn_part,comm);
+
+  //  int* section_idx;
+  //  int* delt_vtx_idx;
+  //  PDM_g_num_t* delt_vtx;
+  //  int n_section = PDM_concat_elt_sections(dmesh_nodal,&section_idx,&delt_vtx_idx,&delt_vtx);
+
+  //  // 1. distributions
+  //  PDM_g_num_t* mesh_vtx_dist = PDM_dmesh_nodal_vtx_distrib_get(dmesh_nodal);
+  //  PDM_g_num_t* vtx_dist = (PDM_g_num_t*) malloc(n_rank+1 * sizeof(PDM_g_num_t));
+  //  for (int i=0; i<n_rank+1; ++i) {
+  //    vtx_dist[i] = mesh_vtx_dist[i]+1;
+  //  }
+
+  //  int dn_elt = section_idx[n_section];
+  //  PDM_g_num_t* elt_dist = PDM_compute_entity_distribution(comm, dn_elt);
+
+  //  // 2. elt_elt graph
+  //  PDM_g_num_t* elt_elt_idx;
+  //  PDM_g_num_t* elt_elt;
+  //  PDM_dmesh_nodal_dual_graph(vtx_dist,elt_dist,delt_vtx_idx,delt_vtx,&elt_elt_idx,&elt_elt,comm);
+
+  //  // 3. partitioning
+  //  double* part_fractions = NULL; // TODO gen
+  //  int* elt_part = (int*) malloc(dn_elt * sizeof(int));
+  //  for (int i=0; i<elt_elt_idx[dn_elt]; ++i) {
+  //    elt_elt[i]--;
+  //  }
+  //  PDM_para_graph_split(split_method,
+  //                       elt_dist,
+  //                       elt_elt_idx,
+  //                       elt_elt,
+  //                       NULL, NULL,
+  //                       dn_part,
+  //                       part_fractions,
+  //                       elt_part,
+  //                       comm);
+
+  //  // 4. reconstruct elts on partitions
+  //  PDM_g_num_t* part_distri = PDM_compute_entity_distribution(comm, dn_part );
+  //  //int n_part = part_distri[n_rank]-1;
+  //  int** pn_elt_section = (int**)malloc(n_section * sizeof(int*));
+  //  PDM_g_num_t*** pelt_section_ln_to_gn = (PDM_g_num_t***)malloc(n_section * sizeof(PDM_g_num_t**));
+  //  PDM_g_num_t** elt_section_distri = (PDM_g_num_t**)malloc(n_section * sizeof(PDM_g_num_t*));
+  //  for (int i_section=0; i_section<n_section; ++i_section) {
+  //    elt_section_distri[i_section] = PDM_DMesh_nodal_section_distri_std_get(dmesh_nodal,i_section);
+  //  }
+
+  //  for (int i_section=0; i_section<n_section; ++i_section) {
+  //    int* elt_section_part = elt_part + section_idx[i_section];
+
+  //    PDM_part_assemble_partitions(comm,
+  //                                 part_distri,
+  //                                 elt_section_distri[i_section],
+  //                                 elt_section_part,
+  //                                &pn_elt_section[i_section],
+  //                                &pelt_section_ln_to_gn[i_section]);
+  //    //printf("\npelt_section_ln_to_gn:");
+  //    //for (int i = 0; i < pn_elt_section[i_section][0]; i++)
+  //    //  printf(" %d ", pelt_section_ln_to_gn[i_section][0][i]);
+  //    //printf("\n");
+  //  }
+
+  //  int* pn_vtx;
+  //  int** pvtx_ln_to_gn;
+  //  int*** pelt_vtx_idx;
+  //  int*** pelt_vtx;
+  //  PDM_part_multi_dconnectivity_to_pconnectivity_sort(comm,
+  //                                                     dn_part,
+  //                                                     n_section,
+  //                                                     section_idx,
+  //                                                     elt_section_distri,
+  //                                                     delt_vtx_idx,
+  //                                                     delt_vtx,
+  //                                                     pn_elt_section,
+  //                                                     pelt_section_ln_to_gn,
+  //                                                    &pn_vtx,
+  //                                                    &pvtx_ln_to_gn,
+  //                                                    &pelt_vtx_idx,
+  //                                                    &pelt_vtx);
+  //  // the [0] are there because only one partition
+  //  CHECK( pn_vtx[0] == 16 );
+
+  //  auto _pvtx_ln_to_gn = std_e::make_span(pvtx_ln_to_gn[0],pn_vtx[0]);
+  //  CHECK( _pvtx_ln_to_gn == std::vector{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16} );
+
+  //  auto _ptet_vtx_idx = std_e::make_span(pelt_vtx_idx[0][0],n_tet+1);
+  //  auto _ptet_vtx = std_e::make_span(pelt_vtx[0][0],_ptet_vtx_idx.back());
+  //  CHECK( _ptet_vtx_idx == std::vector{0,4} );
+  //  CHECK( _ptet_vtx == std::vector{6,10,8,11} );
+
+  //  auto _phex_vtx_idx = std_e::make_span(pelt_vtx_idx[3][0],n_hex+1);
+  //  auto _phex_vtx = std_e::make_span(pelt_vtx[3][0],_phex_vtx_idx.back());
+  //  CHECK( _phex_vtx_idx == std::vector{0,8,16} );
+  //  CHECK( _phex_vtx == std::vector{1, 2, 4, 3, 5, 6, 8, 7,  14,13,16,15, 1, 2, 4, 3} );
   //}
+     
+  SUBCASE("run ppart") {
+    int dn_part = 1;
+    _run_ppart_zone_nodal(dmesh_nodal,PDM_SPLIT_DUAL_WITH_PTSCOTCH,dn_part,comm);
+  }
 
   PDM_DMesh_nodal_free(dmesh_nodal,0);
 }

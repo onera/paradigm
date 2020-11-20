@@ -1802,6 +1802,109 @@ int PDM_concat_elt_sections(
   return n_section;
 }
 
+//int PDM_concat_elt_sections(
+//  PDM_dmesh_nodal_t  *dmesh_nodal,
+//  int** section_idx,
+//  int** cat_delt_vtx_idx,
+//  PDM_g_num_t** cat_delt_vtx,
+//  PDM_MPI_Comm comm
+//)
+//{
+//  int i_rank;
+//  int n_rank;
+//  PDM_MPI_Comm_rank(comm, &i_rank);
+//  PDM_MPI_Comm_size(comm, &n_rank);
+//
+//  int n_section = PDM_DMesh_nodal_n_section_get(dmesh_nodal);
+//
+//  PDM_g_num_t** block_distrib_idx = (PDM_g_num_t**) malloc(n_section * sizeof(PDM_g_num_t*));
+//  for (int i_section=0; i_section<n_section; ++i_section) {
+//    int n_elt_by_section = PDM_DMesh_nodal_section_n_elt_get(dmesh_nodal,i_section);
+//    PDM_g_num_t* elt_section_dist = PDM_compute_entity_distribution(comm, n_elt_by_section);
+//    block_distrib_idx[i_section] = (PDM_g_num_t*) malloc((n_rank+1) * sizeof(PDM_g_num_t));
+//    for (int i_rank=0; i_rank<n_rank+1; ++i_rank) {
+//      block_distrib_idx[i_section][i_rank] = elt_section_dist[i_rank]-1;
+//    }
+//  }
+//
+//  PDM_g_num_t* multi_distrib_idx = (PDM_g_num_t*) malloc((n_section+1) * sizeof(PDM_g_num_t));
+//  multi_distrib_idx[0] = 0;
+//  for (int i_section=0; i_section<n_section+1; ++i_section) {
+//    multi_distrib_idx[i_section+1] = block_distrib_idx[i_section][n_rank];
+//  }
+//  for (int i_section=0; i_section<n_section+1; ++i_section) {
+//    multi_distrib_idx[i_section+1] += multi_distrib_idx[i_section];
+//  }
+//
+//
+//  int n_elt_tot = multi_distrib_idx[n_section];
+//
+//
+//  int n_part = 1;
+//  int* n_elmts  = (int*) malloc(n_part * sizeof(int));
+//  n_elmts
+//  PDM_multi_block_to_part_t* mbtp =
+//    PDM_multi_block_to_part_create(multi_distrib_idx,
+//                                   n_section,
+//          (const PDM_g_num_t**)    block_distrib_idx,
+//          (const PDM_g_num_t**)    ln_to_gn,
+//                                   n_elmts,
+//                                   n_part,
+//                                   comm);
+//  
+//  // 0. sizes
+//  int n_section = PDM_DMesh_nodal_n_section_get(dmesh_nodal);
+//  int dn_elt_vtx = 0;
+//  *section_idx = (int*) malloc((n_section+1) * sizeof(int));
+//  int* _section_idx = *section_idx;
+//  int* n_vtx_by_elt_by_section = (int*) malloc(n_section * sizeof(int));
+//  _section_idx[0] = 0;
+//  int* n_elt_vtx_by_section = (int*) malloc(n_section * sizeof(int));
+//  for (int i=0; i<n_section; ++i) {
+//    int n_elt_by_section = PDM_DMesh_nodal_section_n_elt_get(dmesh_nodal,i);
+//    _section_idx[i+1] += _section_idx[i] + n_elt_by_section;
+//    PDM_Mesh_nodal_elt_t type = PDM_DMesh_nodal_section_elt_type_get(dmesh_nodal,i);
+//    n_vtx_by_elt_by_section[i] = PDM_Mesh_nodal_n_vertices_element(type,1); // 1: elements of order 1
+//    n_elt_vtx_by_section[i] = n_elt_by_section*n_vtx_by_elt_by_section[i];
+//    dn_elt_vtx += n_elt_vtx_by_section[i];
+//  }
+//
+//  // 1. cat_delt_vtx_idx
+//  int dn_elt = _section_idx[n_section];
+//  *cat_delt_vtx_idx = (int*) malloc((dn_elt+1)* sizeof(int));
+//  int* _cat_delt_vtx_idx = *cat_delt_vtx_idx;
+//  _cat_delt_vtx_idx[0] = 0;
+//  int pos_idx = 1;
+//  for (int i=0; i<n_section; ++i) {
+//    int n_elt_by_section = _section_idx[i+1] - _section_idx[i];
+//    for (int j=0; j<n_elt_by_section; ++j) {
+//      _cat_delt_vtx_idx[pos_idx+j] = n_vtx_by_elt_by_section[i];
+//    }
+//    pos_idx += n_elt_by_section;
+//  }
+//  for (int i=1; i<dn_elt+1; ++i) {
+//    _cat_delt_vtx_idx[i] += _cat_delt_vtx_idx[i-1];
+//  }
+//
+//  // 2. cat_delt_vtx
+//  *cat_delt_vtx = (PDM_g_num_t *) malloc(dn_elt_vtx * sizeof(PDM_g_num_t));
+//  PDM_g_num_t* _cat_delt_vtx = *cat_delt_vtx;
+//  int pos = 0;
+//  for (int i=0; i<n_section; ++i) {
+//    PDM_g_num_t* delt_vtx = PDM_DMesh_nodal_section_std_get(dmesh_nodal,i);
+//    for (int j=0; j<n_elt_vtx_by_section[i]; ++j) {
+//      _cat_delt_vtx[pos+j] = delt_vtx[j];
+//    }
+//    pos += n_elt_vtx_by_section[i];
+//  }
+//
+//  // 3. free
+//  free(n_elt_vtx_by_section);
+//  free(n_vtx_by_elt_by_section);
+//
+//  return n_section;
+//}
+
 /**
  * \brief  Compute elt->elt connectivity
  *

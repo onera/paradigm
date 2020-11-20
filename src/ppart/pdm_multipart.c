@@ -1321,31 +1321,49 @@ _run_ppart_zone_nodal
                        part_fractions,
                        elt_part,
                        comm);
+ 
+  // 2D elements must go to the partition of their 3D parent
+  for (int i_section=0; i_section<n_section; ++i_section) {
+    int* elt_section_part = elt_part + section_idx[i_section];
 
-  // 4. reconstruct elts on partitions
+    PDM_Mesh_nodal_elt_t type = PDM_DMesh_nodal_section_elt_type_get(dmesh_nodal,i_section);
+    if (type==PDM_MESH_NODAL_TRIA3 || type==PDM_MESH_NODAL_QUAD4) {
+      printf("elt_part 2D (untested)\n");
+      int n_elt = section_idx[i_section+1] - section_idx[i_section];
+      PDM_g_num_t* parent = (PDM_g_num_t*) malloc (n_elt * sizeof(PDM_g_num_t));
+      for (int i=0; i<n_elt; ++i) {
+        int elt_idx = section_idx[i_section] + i;
+        assert(elt_elt_idx[elt_idx+1]-elt_elt_idx[elt_idx]); // 2D element can only have one parent
+        parent[i] = elt_elt[elt_elt_idx[elt_idx]]+1; // +1 because block_to_part uses 1-indexed ln_to_gn
+      }
+
+      int stride_one = 1;
+      int* block_data = elt_part;
+      int** part_data;
+      PDM_block_to_part_t* btp = PDM_block_to_part_create(elt_dist,(const PDM_g_num_t**)&parent,&n_elt,1,comm);
+      PDM_block_to_part_exch2(btp,sizeof(int),PDM_STRIDE_CST,&stride_one,block_data,NULL,(void***)&part_data);
+      free(parent);
+      for (int i=0; i<n_elt; ++i) {
+        elt_section_part[i] = part_data[0][i];
+      }
+      free(part_data[0]);
+      free(part_data);
+      printf("end elt_part 2D\n");
+    }
+  }
+
+  // 4. ln_to_gn for elt sections and cells
   PDM_g_num_t* part_distri = PDM_compute_entity_distribution(comm, dn_part );
-  //int n_part = part_distri[n_rank]-1;
+  // 
   int** pn_elt_section = (int**)malloc(n_section * sizeof(int*));
   PDM_g_num_t*** pelt_section_ln_to_gn = (PDM_g_num_t***)malloc(n_section * sizeof(PDM_g_num_t**));
   PDM_g_num_t** elt_section_distri = (PDM_g_num_t**)malloc(n_section * sizeof(PDM_g_num_t*));
   for (int i_section=0; i_section<n_section; ++i_section) {
     elt_section_distri[i_section] = PDM_DMesh_nodal_section_distri_std_get(dmesh_nodal,i_section);
   }
-
+  // 4.0 ln_to_gn for elt sections
   for (int i_section=0; i_section<n_section; ++i_section) {
     int* elt_section_part = elt_part + section_idx[i_section];
-
-    // 2D elements must go to the partition of their 3D parent
-    //PDM_Mesh_nodal_elt_t type = PDM_DMesh_nodal_section_elt_type_get(dmesh_nodal,i_section);
-    //if (type==PDM_MESH_NODAL_TRIA3 || type==PDM_MESH_NODAL_QUAD4) {
-    //  int n_elt = section_idx[i_section+1] - section_idx[i_section];
-    //  for (int i=0; i<n_elt; ++i) {
-    //    elt_idx = section_idx[i_section] + i;
-    //    elt_elt
-    //    elt_section_part[i]
-    //  }
-    //}
-
     PDM_part_assemble_partitions(comm,
                                  part_distri,
                                  elt_section_distri[i_section],
@@ -1358,6 +1376,39 @@ _run_ppart_zone_nodal
     //printf("\n");
   }
 
+  // 4.1 ln_to_gn for cells
+  int* pn_cell = (int*)malloc(dn_part * sizeof(int));
+  for (int i_part=0; i_part<dn_part; ++i_part) {
+    pn_cell[i_part] = 0;
+    for (int i_section=0; i_section<n_section; ++i_section) {
+      PDM_Mesh_nodal_elt_t type = PDM_DMesh_nodal_section_elt_type_get(dmesh_nodal,i_section);
+      if (type!=PDM_MESH_NODAL_TRIA3 && type!=PDM_MESH_NODAL_QUAD4) { // only counting cells
+        pn_cell[i_part] += pn_elt_section[i_section][i_part];
+      }
+    }
+  }
+  PDM_g_num_t** pcell_ln_to_gn = (PDM_g_num_t**)malloc(dn_part * sizeof(PDM_g_num_t*));
+  for (int i_part=0; i_part<dn_part; ++i_part) {
+    pcell_ln_to_gn[i_part] = (PDM_g_num_t*)malloc(pn_cell[i_part]* sizeof(PDM_g_num_t));
+  }
+  for (int i_part=0; i_part<dn_part; ++i_part) {
+    int pos = 0;
+    int offset = 0;
+    for (int i_section=0; i_section<n_section; ++i_section) {
+      PDM_Mesh_nodal_elt_t type = PDM_DMesh_nodal_section_elt_type_get(dmesh_nodal,i_section);
+      if (type!=PDM_MESH_NODAL_TRIA3 && type!=PDM_MESH_NODAL_QUAD4) { // only counting cells
+        int pn_elt = pn_elt_section[i_section][i_part];
+        for (int i=0; i<pn_elt; ++i) {
+          pcell_ln_to_gn[i_part][pos] = pelt_section_ln_to_gn[i_section][i_part][i] + offset;
+          ++pos;
+        }
+        int n_elt_section = elt_section_distri[i_section][n_rank];
+        offset += n_elt_section;
+      }
+    }
+  }
+
+  // 5. reconstruct elts on partitions
   int* pn_vtx;
   int** pvtx_ln_to_gn;
   int*** pelt_vtx_idx;
@@ -1376,6 +1427,8 @@ _run_ppart_zone_nodal
                                                     &pelt_vtx_idx,
                                                     &pelt_vtx);
   free(elt_part);
+
+  // 4. reconstruct elts on partitions
 
   
   // 2. Récupération des éléments sur les partitions
