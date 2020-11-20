@@ -6,41 +6,98 @@
 #include "pdm_dmesh_nodal_to_dmesh.h"
 #include "pdm_logging.h"
 
-// double coord_x[n_vtx] = {0., 1., 2., 0., 1., 2., 0., 1., 2., 0., 1., 2};
-// double coord_y[n_vtx] = {0., 0., 0., 1., 1., 1., 0., 0., 0., 1., 1., 1};
-// double coord_z[n_vtx] = {0., 0., 0., 0., 0., 0., 1., 1., 1., 1., 1., 1};
+// n_vtx = 18
+// double coord_x[n_vtx] = {0.000499536, 0.000499536, -1.65387e-06, -1.65387e-06, 0.000499536, 0.000499536, -1.65387e-06, -1.65387e-06, 0.00100073, 0.00100073, 0.00100073, 0.00100073, 0.000499536, -1.65387e-06, 0.000499536, -1.65387e-06, 0.00100073, 0.00100073};
+// double coord_y[n_vtx] = {0.000498807, -2.38663e-06, -2.38663e-06, 0.000498807, 0.000501645, 4.5126e-07, 4.5126e-07, 0.000501645, 0.000498807, -2.38663e-06, 0.000501645, 4.5126e-07, 0.001, 0.001, 0.00100284, 0.00100284, 0.001, 0.00100284};
+// double coord_z[n_vtx] = {0.000999549, 0.000999549, 0.000999549, 0.000999549, 0., 0., 0., 0., 0.000999549, 0.000999549, 0., 0., 0.000999549, 0.000999549, 0., 0., 0.000999549, 0.};
+
+// Cas simple EMMA : /stck2/stck2.3/bmaugars/dev/dev-Tools/maia/unit_tests_case/EMMA/cube_simple/Cube_ANSA_hexa_separated.cgns
 
 MPI_TEST_CASE("[PDM_dmesh_nodal_to_dmesh] decomposes hexa ",1) {
 
-  const PDM_g_num_t n_vtx            = 12;
-  const PDM_g_num_t n_cell           = 2;
-  const int         n_hexa_section_1 = 2;
-  PDM_g_num_t connec_hexa_1[16] = {1, 2, 5, 4, 7, 8, 11, 10, // First
-                                   2, 3, 6, 5, 8, 9, 12, 11};
+  const PDM_g_num_t n_vtx            = 18;
+  const PDM_g_num_t n_cell           = 4;
+  const int         n_hexa_section_1 = 4;
+  const int         n_quad_section_1 = 16;
+  PDM_g_num_t connec_hexa_1[32] = {1,2,3,4,5,6,7,8,
+                                   9,10,2,1,11,12,6,5,
+                                   13,1,4,14,15,5,8,16,
+                                   17,9,1,13,18,11,5,15};
+
+  PDM_g_num_t connec_quad_1[64] = {6, 5, 8, 7,
+                                   12, 11, 5, 6,
+                                   5, 15, 16, 8,
+                                   11, 18, 15, 5,
+                                   15, 13, 14, 16,
+                                   13, 15, 18, 17,
+                                   1, 2, 3, 4,
+                                   9, 10, 2, 1,
+                                   13, 1, 4, 14,
+                                   17, 9, 1, 13,
+                                   2, 6, 7, 3,
+                                   6, 2, 10, 12,
+                                   8, 4, 3, 7,
+                                   4, 8, 16, 14,
+                                   9, 11, 12, 10,
+                                   11, 9, 17, 18};
+
+  int n_group_elmt = 6;
+  int dgroup_elmt_idx[7] = {0, 4,      // Bottom_1
+                            6,         // Left_1
+                            10,        // Top_1
+                            12,          // Right_1
+                            14,          // Inlet_1
+                            16};         // Outlet_1
+  PDM_g_num_t dgroup_elmt[16] = {5, 6, 7, 8,      // Bottom_1
+                                 9, 10,           // Left_1
+                                 11, 12, 13, 14,  // Top_1
+                                 15, 16,          // Right_1
+                                 17, 18,          // Inlet_1
+                                 19, 20};         // Outlet_1
 
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
   PDM_dmesh_nodal_t* dmn = PDM_DMesh_nodal_create(pdm_comm, 3, n_vtx, n_cell, -1, -1);
 
+  // The order of call is important for global numbering
   int hexa_section_1 = PDM_DMesh_nodal_section_add(dmn, PDM_MESH_NODAL_HEXA8);
+  int quad_section_1 = PDM_DMesh_nodal_section_add(dmn, PDM_MESH_NODAL_QUAD4);
 
   PDM_DMesh_nodal_section_std_set(dmn,
                                   hexa_section_1,
                                   n_hexa_section_1,
                                   connec_hexa_1);
+
+  PDM_DMesh_nodal_section_std_set(dmn,
+                                  quad_section_1,
+                                  n_quad_section_1,
+                                  connec_quad_1);
+
+  PDM_DMesh_nodal_section_group_elmt_set(dmn, n_group_elmt, dgroup_elmt_idx, dgroup_elmt);
+
   PDM_dmesh_nodal_generate_distribution(dmn);
 
   PDM_dmesh_nodal_to_dmesh_t* dmntodm = PDM_dmesh_nodal_to_dmesh_create(1, pdm_comm, PDM_OWNERSHIP_KEEP);
 
   PDM_dmesh_nodal_to_dmesh_add_dmesh_nodal(dmntodm, 0, dmn);
 
-  PDM_dmesh_nodal_to_dmesh_compute(dmntodm, PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_FACE);
+  SUBCASE("transform to faces ")
+  {
+    PDM_dmesh_nodal_to_dmesh_compute(dmntodm,
+                                     PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_FACE,
+                                     PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_FACE);
+  }
 
-  // Plante car on a pas implementer la decomposition en edge des Hexa
-  // PDM_dmesh_nodal_to_dmesh_compute(dmntodm, PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_EDGE);
-
+  // SUBCASE("transform to edges  ")
+  // {
+  //   // Plante car on a pas implementer la decomposition en edge des Hexa
+  //   PDM_dmesh_nodal_to_dmesh_compute(dmntodm,
+  //                                    PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_EDGE,
+  //                                    PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_EDGE);
+  // }
 
   PDM_dmesh_nodal_to_dmesh_free(dmntodm);
   PDM_DMesh_nodal_free(dmn, 0);
+
 }
 
   // int n_face_elt_tot     = -1;

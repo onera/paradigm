@@ -39,7 +39,7 @@ extern "C" {
  *
  */
 
-typedef struct {
+struct _pdm_block_to_part_t {
   PDM_g_num_t   *block_distrib_idx;   /*!< Block distribution
                                        * (size : \ref size of \ref comm + 1) */
   PDM_MPI_Comm   comm;                /*!< MSG communicator */
@@ -61,7 +61,7 @@ typedef struct {
                                              +requestd_data_n[n_rank - 1] ) */
   int           pttopt_comm;          /*!< Use point to point communication if pttopt_comm == 1 */
 
-} _pdm_block_to_part_t;
+} ;
 
 /*=============================================================================
  * Static global variables

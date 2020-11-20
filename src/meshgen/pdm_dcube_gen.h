@@ -1,18 +1,11 @@
 #ifndef __PDM_DCUBE_GEN_H__
 #define __PDM_DCUBE_GEN_H__
 
-
 #include "pdm.h"
 
 /*=============================================================================
  * Macro definitions
  *============================================================================*/
-
-#if !defined (__hpux) && !defined (_AIX)
-#define PROCF(x, y) x##_
-#else
-#define PROCF(x, y) x
-#endif
 
 #ifdef __cplusplus
 extern "C" {

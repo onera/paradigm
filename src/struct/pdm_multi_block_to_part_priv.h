@@ -39,7 +39,7 @@ extern "C" {
  *
  */
 
-typedef struct {
+struct _pdm_multi_block_to_part_t {
   PDM_g_num_t   *multi_distrib_idx;   /*!< Multiple distribution
                                        * (size : \ref size of \ref comm + 1) */
   int n_block;                        /*!< Number of blocks */

@@ -52,7 +52,7 @@ extern "C" {
  *
  */
 
-typedef struct
+struct _pdm_dmesh_t
 {
   int               dn_cell;          /*!< Number of distributed cells         */
   int               dn_face;          /*!< Number of distributed faces         */
@@ -84,7 +84,7 @@ typedef struct
   const PDM_g_num_t *_dface_join;     /*!< Distributed faces list of each
                                        join (size = dface_join_idx[n_join])
                                         or NULL                               */
-} _pdm_dmesh_t;
+};
 
 
 #ifdef __cplusplus

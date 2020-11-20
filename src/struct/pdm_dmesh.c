@@ -94,7 +94,7 @@ PDM_dmesh_create
  const int          n_join
 )
 {
-  _pdm_dmesh_t *dmesh = (_pdm_dmesh_t *) malloc(sizeof(_pdm_dmesh_t));
+  PDM_dmesh_t *dmesh = (PDM_dmesh_t *) malloc(sizeof(PDM_dmesh_t));
 
   dmesh->dn_cell          = dn_cell;
   dmesh->dn_face          = dn_face;
@@ -111,7 +111,7 @@ PDM_dmesh_create
   dmesh->_dface_join_idx  = NULL;
   dmesh->_dface_join      = NULL;
 
-  return (PDM_dmesh_t *) dmesh;
+  return dmesh;
 }
 
 /**
@@ -141,7 +141,7 @@ PDM_dmesh_create
 void
 PDM_dmesh_set
 (
- PDM_dmesh_t        *dm,
+ PDM_dmesh_t        *dmesh,
  const double       *dvtx_coord,
  const int          *dface_vtx_idx,
  const PDM_g_num_t  *dface_vtx,
@@ -153,8 +153,6 @@ PDM_dmesh_set
  const PDM_g_num_t  *dface_join
 )
 {
-  _pdm_dmesh_t *dmesh = (_pdm_dmesh_t *) dm;
-
   dmesh->_dvtx_coord      = dvtx_coord;
   dmesh->_dface_vtx_idx   = dface_vtx_idx;
   dmesh->_dface_vtx       = dface_vtx;
@@ -182,7 +180,7 @@ PDM_dmesh_set
 void
 PDM_dmesh_dims_get
 (
- PDM_dmesh_t *dm,
+ PDM_dmesh_t *dmesh,
  int         *dn_cell,
  int         *dn_face,
  int         *dn_vtx,
@@ -190,7 +188,6 @@ PDM_dmesh_dims_get
  int         *n_join
 )
 {
-  _pdm_dmesh_t *dmesh = (_pdm_dmesh_t *) dm;
 
   *dn_cell = dmesh->dn_cell;
   *dn_face = dmesh->dn_face;
@@ -218,7 +215,7 @@ PDM_dmesh_dims_get
 void
 PDM_dmesh_data_get
 (
- PDM_dmesh_t         *dm,
+ PDM_dmesh_t         *dmesh,
  const double       **dvtx_coord,
  const int          **dface_vtx_idx,
  const PDM_g_num_t  **dface_vtx,
@@ -230,7 +227,6 @@ PDM_dmesh_data_get
  const PDM_g_num_t  **dface_join
 )
 {
-  _pdm_dmesh_t *dmesh = (_pdm_dmesh_t *) dm;
 
   *dvtx_coord      = dmesh->_dvtx_coord;
   *dface_vtx_idx   = dmesh->_dface_vtx_idx;
@@ -254,10 +250,9 @@ PDM_dmesh_data_get
 void
 PDM_dmesh_free
 (
- PDM_dmesh_t         *dm
+ PDM_dmesh_t         *dmesh
 )
 {
-  _pdm_dmesh_t *dmesh = (_pdm_dmesh_t *) dm;
 
   dmesh->dn_cell           = 0;
   dmesh->dn_face           = 0;

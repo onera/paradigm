@@ -10,6 +10,8 @@
  *----------------------------------------------------------------------------*/
 
 #include "pdm.h"
+#include "pdm_dmesh_nodal.h"
+#include "pdm_dmesh.h"
 #include "pdm_dmesh_nodal_priv.h"
 #include "pdm_dmesh_priv.h"
 
@@ -31,7 +33,7 @@ extern "C" {
  *
  */
 
-typedef struct {
+struct _pdm_dmesh_nodal_to_dmesh_t {
 
   PDM_MPI_Comm         comm;                    /*!< MPI communicator */
   PDM_ownership_t      owner;                   /*!< Which have the responsabilities of results */
@@ -39,10 +41,10 @@ typedef struct {
 
   int                  n_mesh;                  /*!< Number of meshes to manages                */
 
-  _pdm_dmesh_nodal_t **dmesh_nodal;
-  _pdm_dmesh_t       **dmesh;
+  PDM_dmesh_nodal_t **dmesh_nodal;
+  PDM_dmesh_t       **dmesh;
 
-} _pdm_dmesh_nodal_to_dmesh_t;
+};
 
 #ifdef  __cplusplus
 }

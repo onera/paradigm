@@ -64,9 +64,6 @@ program testf
 
   integer :: id
 
-  integer, parameter :: partial = 0 ! Put 1 to keep results when the subroutine closest_points_free is called
-
-
   call mpi_init(code)
   call mpi_comm_rank(mpi_comm_world, i_rank, code)
   call mpi_comm_size(mpi_comm_world, n_rank, code)

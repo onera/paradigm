@@ -38,7 +38,7 @@ cdef extern from "pdm_mesh_location.h":
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-  void PDM_mesh_location_shared_nodal_mesh_set(int  id, int  mesh_nodal_id);
+  # void PDM_mesh_location_shared_nodal_mesh_set(int  id, PDM_Mesh_nodal_t *mesh_nodal);
   void PDM_mesh_location_mesh_global_data_set (int  id, int  n_part);
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
@@ -169,10 +169,10 @@ cdef class MeshLocation:
                  <PDM_g_num_t*> gnum.data);
 
   # ------------------------------------------------------------------------
-  def nodal_mesh_set(self, int mesh_nodal_id):
-    """
-    """
-    PDM_mesh_location_shared_nodal_mesh_set(self._id, mesh_nodal_id);
+  # def nodal_mesh_set(self, MeshNodal mesh_nodal):
+  #   """
+  #   """
+  #   PDM_mesh_location_shared_nodal_mesh_set(self._id, mesh_nodal.mn);
 
   # ------------------------------------------------------------------------
   def mesh_global_data_set(self, int n_part):

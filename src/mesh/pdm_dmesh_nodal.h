@@ -344,6 +344,14 @@ const int                n_elt,
       PDM_g_num_t       *connec
 );
 
+void
+PDM_DMesh_nodal_section_group_elmt_set
+(
+PDM_dmesh_nodal_t  *dmesh_nodal,
+const int           n_group_elmt,
+      int          *dgroup_elmt_idx,
+      PDM_g_num_t  *dgroup_elmt
+);
 
 /**
  * \brief Return standard section description

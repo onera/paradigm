@@ -123,9 +123,7 @@ typedef struct PDM_DMesh_nodal_section_poly3d_t{
  * \brief   Used to build sections from cell to face face to edge connectivity
  *
  */
-// A faire --> Multiblock / multidomain
-
-typedef struct {
+struct _pdm_dmesh_nodal_t {
 
   int mesh_dimension;                               /*! Principal dimension of meshes */
 
@@ -139,40 +137,9 @@ typedef struct {
   PDM_g_num_t            n_elmt_l1;
   PDM_g_num_t            n_elmt_l2;
 
-
-  // PDM_dmesh_nodal_to_dmesh(int* dmesh_nodal_id, SOURCE_CONNECTIVITY,
-  //                                               TARGET_CONNECTIVITIES | clé hexa)
-  //                                               TARGET_GROUP_CONNECTIVITIES | clé hexa)
-  //                                               TARGET_JOIN_CONNECTIVITIES | clé hexa)
-  // A faire en multiblock !!
-  // Check mesh à realiser en préambule
-  // PDM_update_elmt_group(TARGET_VTX)
-  // PDM_get
-
-  // Generate cell_face + face_cell
-
-  //
-  // PDM_DMesh_nodal_cell_face_compute --> Nom pas général !!!!
-  // PDM_DMesh_nodal_cell_edge_compute --> Nom pas général !!!!
-  // PDM_DMesh_nodal_face_edge_compute --> Nom pas général !!!!
-  // PDM_DMesh_nodal_edge_vtx_compute --> Nom pas général !!!!
-
-  // On doit faire des checks fonctions des dimensions !
-  // --> Faire une fonction check_coherency
-  // Il faut faire conditions limites + raccords
-  // Attention pour les raccords on va avoir besoin des ids !!!
-  // Pour transformer des descriptions par elements vers de nouveau elements
-  // See delmt_group_descending
-  // Je me demande si c'est pas plutot une fonction avec en parametre le parent
-  // L'idée serait de pouvoir changer de représentation
-  //    Description par elemt surfacique --> face, edge, vtx (3 variantes CGNS d'ailleurs)
-  //    Description par elemt linéique --> edge, vtx
-  // Il faut preconditioné la recherche si possible avec que les élements fronitières
-  //   --> Necessaite le face_cell
-  // compute_child_elemt_group( .... )
-  // distrib_entitiy +
-  int         *delmt_group_idx;
-  PDM_g_num_t *delmt_group;
+  int          n_group_elmt;
+  int         *dgroup_elmt_idx;
+  PDM_g_num_t *dgroup_elmt;
 
   // A gere dans la function chapeau - Lien a faire au dessus - Optionel
   // int         *delmt_join_idx;
@@ -181,11 +148,6 @@ typedef struct {
 
   PDM_DMesh_nodal_vtx_t *vtx;                   /*!< Description des sommmets de chaque partition */
 
-  // L'ordre est important / On rentre d'abord les 3D puis 2D puis 1D ?
-  // Il suivent pas forcement la numérotation CGNS mais ce qui compte c'est que chaque section soit bien
-  // Continue
-
-  // Pas général car on peut pas intercaler section poly et std
   PDM_section_type_t    *section_type;
   int                   *section_idx;
   int                    n_section_tot;                       /*!< Total number of sections */
@@ -195,39 +157,23 @@ typedef struct {
   int                    n_section_std;                       /*!< Total number of standard sections  */
   int                    n_section_poly3d;                    /*!< Total number of olyhedron sections */
 
-  // int                   *sections_id;                         /*!< Blocks identifier                  */
+  PDM_DMesh_nodal_section_std_t    **sections_std;             /*!< Standard sections                  */
+  PDM_DMesh_nodal_section_poly3d_t **sections_poly3d;          /*!< Polyhedron sections                */
+  PDM_g_num_t                       *section_distribution;     /*!< Element distribution               */
 
-  PDM_DMesh_nodal_section_std_t    *sections_std;             /*!< Standard sections                  */
-  PDM_DMesh_nodal_section_poly3d_t *sections_poly3d;          /*!< Polyhedron sections                */
-  PDM_g_num_t                      *section_distribution;     /*!< Element distribution               */
+  int                                n_section_l1;             /*!< Total number of sections           */
+  int                                n_section_std_l1;         /*!< Total number of standard sections  */
+  int                                n_section_poly2d_l1;      /*!< Total number of polygon sections   */
+  PDM_g_num_t                       *section_distribution_l1;  /*!< Element distribution               */
 
-  int                               n_section_l1;             /*!< Total number of sections           */
-  int                               n_section_std_l1;         /*!< Total number of standard sections  */
-  int                               n_section_poly2d_l1;      /*!< Total number of polygon sections   */
-  PDM_g_num_t                      *section_distribution_l1;  /*!< Element distribution               */
+  PDM_DMesh_nodal_section_std_t    **sections_std_l1;          /*!< Standard sections                  */
+  PDM_DMesh_nodal_section_poly2d_t **sections_poly2d_l1;       /*!< Polygon sections                   */
 
-  // int                              *sections_id_l1;           /*!< Blocks identifier                  */
+  int                                n_section_l2;             /*!< Total number of sections           */
+  int                                n_section_std_l2;         /*!< Total number of standard sections  */
+  PDM_g_num_t                       *section_distribution_l2;  /*!< Element distribution               */
 
-  PDM_DMesh_nodal_section_std_t    *sections_std_l1;          /*!< Standard sections                  */
-  PDM_DMesh_nodal_section_poly2d_t *sections_poly2d_l1;       /*!< Polygon sections                   */
-
-  int                               n_section_l2;             /*!< Total number of sections           */
-  int                               n_section_std_l2;         /*!< Total number of standard sections  */
-  PDM_g_num_t                      *section_distribution_l2;  /*!< Element distribution               */
-
-  // int                              *sections_id_l2;        /*!< Blocks identifier                  */
-
-  PDM_DMesh_nodal_section_std_t    *sections_std_l2;       /*!< Standard sections                  */
-
-  // IN :
-  // Pour chaque sections (au sens large) on prévoit un tag pour chaque entité (lien avec fdsm)
-  // delmt_group  ---> Le lien entre les conditions limites et les "sous-zone" avec les sections
-
-  // Resultats de la translation entre les group
-  // PDM_g_num_t* delmt_group_descending;
-  // PDM_g_num_t* delmt_group_descending_moins2;
-  // PDM_g_num_t* delmt_group_descending_vtx;
-
+  PDM_DMesh_nodal_section_std_t    **sections_std_l2;          /*!< Standard sections                  */
 
   PDM_MPI_Comm           pdm_mpi_comm;             /*!< MPI Communicator */
   int                    n_rank;                   /*!< Number of processes */
@@ -251,8 +197,24 @@ typedef struct {
   PDM_g_num_t           *face_distrib;             /*!< Distribution of faces (size = number of processes + 1) */
 
 
+  PDM_g_num_t           *edge_distrib;             /*!< Distribution of cells (size = number of processes + 1) */
+  PDM_l_num_t            dn_edge;                  /*!< Local number of faces in the local block */
+  PDM_l_num_t           *_dedge_vtx_idx;           /*!< Index of the cell to face connectivity
+                                                    * (size = \ref dn_cell) */
+  PDM_g_num_t           *_dedge_vtx;               /*!< Cell to face connectivity
+                                                    * (size = \ref dcell_face_idx[\ref dn_cell] */
+  PDM_l_num_t           *dface_edge_idx;           /*!< Index of the cell to face connectivity
+                                                    * (size = \ref dn_cell) */
+  PDM_g_num_t           *dface_edge;               /*!< Cell to face connectivity
+                                                    * (size = \ref dcell_face_idx[\ref dn_cell] */
+  PDM_g_num_t           *_dedge_face;              /*!< Cell to face connectivity
+                                                    * (size = \ref dcell_face_idx[\ref dn_cell] */
 
-} _pdm_dmesh_nodal_t;
+
+
+
+
+};
 
 
 #ifdef __cplusplus
