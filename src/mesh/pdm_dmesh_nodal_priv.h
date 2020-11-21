@@ -29,18 +29,6 @@ extern "C" {
  * Type
  *============================================================================*/
 
-//-->>
-// typedef enum {
-
-//   PDM_SECTION_TYPE_STD3D  = 0,
-//   PDM_SECTION_TYPE_STD2D  = 1,
-//   PDM_SECTION_TYPE_STD1D  = 2,
-//   PDM_SECTION_TYPE_POLY2D = 3,
-//   PDM_SECTION_TYPE_POLY3D = 4
-
-// } PDM_section_type_t;
-//<<--
-
 /**
  * \struct PDM_Mesh_nodal_som_t
  * \brief  Vertices of a mesh partition
@@ -132,11 +120,6 @@ struct _pdm_dmesh_nodal_t {
   PDM_g_num_t            n_edge_abs;               /*!< Global number of edges    */
   PDM_g_num_t            n_vtx_abs;                /*!< Global number of vertices */
 
-  PDM_g_num_t            n_elmt_tot;
-  PDM_g_num_t            n_elmt;
-  PDM_g_num_t            n_elmt_l1;
-  PDM_g_num_t            n_elmt_l2;
-
   int          n_group_elmt;
   int         *dgroup_elmt_idx;
   PDM_g_num_t *dgroup_elmt;
@@ -163,19 +146,11 @@ struct _pdm_dmesh_nodal_t {
   PDM_DMesh_nodal_section_poly3d_t **sections_poly3d;          /*!< Polyhedron sections                */
   PDM_DMesh_nodal_section_poly2d_t **sections_poly2d;          /*!< Polygon sections                   */
 
-  // int                                n_section_l1;             /*!< Total number of sections           */
-  // int                                n_section_std_l1;         /*!< Total number of standard sections  */
-  // int                                n_section_poly2d_l1;      /*!< Total number of polygon sections   */
-  // PDM_g_num_t                       *section_distribution_l1;  /*!< Element distribution               */
-  // PDM_DMesh_nodal_section_std_t    **sections_std_l1;          /*!< Standard sections                  */
-  // int                                n_section_l2;             /*!< Total number of sections           */
-  // int                                n_section_std_l2;         /*!< Total number of standard sections  */
-  // PDM_g_num_t                       *section_distribution_l2;  /*!< Element distribution               */
-  // PDM_DMesh_nodal_section_std_t    **sections_std_l2;          /*!< Standard sections                  */
-
   PDM_MPI_Comm           pdm_mpi_comm;             /*!< MPI Communicator */
   int                    n_rank;                   /*!< Number of processes */
   int                    i_rank;                   /*!< Number of processes */
+
+  // int                    elmt_follow_cell;
 
   // To move in pdm_dmesh
   PDM_l_num_t            dn_elmt;                  /*!< Local number of cells in the local block */
@@ -207,10 +182,6 @@ struct _pdm_dmesh_nodal_t {
                                                     * (size = \ref dcell_face_idx[\ref dn_cell] */
   PDM_g_num_t           *_dedge_face;              /*!< Cell to face connectivity
                                                     * (size = \ref dcell_face_idx[\ref dn_cell] */
-
-
-
-
 
 };
 

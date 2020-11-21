@@ -401,7 +401,7 @@ PDM_dconnectivity_transpose
 (
  const PDM_MPI_Comm     comm,
  const PDM_g_num_t     *entity1_distrib,
- const PDM_g_num_t     *entity2_distrib,
+       PDM_g_num_t     *entity2_distrib,
  const int             *dentity1_entity2_idx,
  const PDM_g_num_t     *dentity1_entity2,
        int              is_signed,
@@ -442,34 +442,50 @@ PDM_dconnectivity_transpose
     }
   }
 
-  PDM_g_num_t* entity2_distrib_ptb = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * (n_rank+1));
-  for(int i = 0; i < n_rank+1; ++i){
-    entity2_distrib_ptb[i] = entity2_distrib[i] - 1;
-  }
-
   // PDM_log_trace_array_long(ln_to_gn, dentity1_entity2_idx[dn_entity1], "ln_to_gn::");
   // PDM_log_trace_array_long(gnum,  dentity1_entity2_idx[dn_entity1], "gnum::");
   /*
    * In order to revert the conncectivty we use the global numbering property
    */
-  PDM_part_to_block_t *ptb =
-   PDM_part_to_block_create2(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
-                             PDM_PART_TO_BLOCK_POST_MERGE,
-                             1.,
-                            &ln_to_gn,
-                             entity2_distrib_ptb,
-                 (int *)    &dentity1_entity2_idx[dn_entity1],
-                             1,
-                             comm);
+  PDM_part_to_block_t *ptb = NULL;
+
+  int save_entity_distrib = 0;
+  PDM_g_num_t* entity2_distrib_ptb = NULL;
+  if(entity2_distrib != NULL && entity2_distrib[0] != -1) {
+
+    entity2_distrib_ptb = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * (n_rank+1));
+    for(int i = 0; i < n_rank+1; ++i){
+      entity2_distrib_ptb[i] = entity2_distrib[i] - 1;
+    }
+
+    ptb = PDM_part_to_block_create2(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                    PDM_PART_TO_BLOCK_POST_MERGE,
+                                    1.,
+                                    &ln_to_gn,
+                                    entity2_distrib_ptb,
+                         (int *)    &dentity1_entity2_idx[dn_entity1],
+                                     1,
+                                     comm);
+  } else {
+    save_entity_distrib = 1;
+    ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                   PDM_PART_TO_BLOCK_POST_MERGE,
+                                   1.,
+                                   &ln_to_gn,
+                                   NULL,
+                         (int *)   &dentity1_entity2_idx[dn_entity1],
+                                    1,
+                                    comm);
+  }
 
   int* send_stri = (int *) malloc(dentity1_entity2_idx[dn_entity1] * sizeof(int));
   for (int i = 0; i < dentity1_entity2_idx[dn_entity1]; i++) {
     send_stri[i] = 1;
   }
 
-  // if(is_signed) {
-  //   free(ln_to_gn);
-  // }
+  if(is_signed) {
+    free(ln_to_gn);
+  }
 
   int         *dentity2_entity1_n = NULL;
   PDM_g_num_t *recv_data          = NULL;
@@ -482,14 +498,25 @@ PDM_dconnectivity_transpose
                                (void **) &gnum,
                                          &dentity2_entity1_n,
                                (void **) &recv_data);
+  PDM_UNUSED(blk_size);
 
   int dn_entity2_recv = PDM_part_to_block_n_elt_block_get(ptb);
+
+  if(save_entity_distrib == 1) {
+    // Update distrib
+    PDM_g_num_t* ptb_distrib = PDM_part_to_block_distrib_index_get(ptb);
+    for(int i = 0; i < n_rank+1; ++i) {
+      entity2_distrib[i] = ptb_distrib[i];
+    }
+  }
 
   /*
    * Free
    */
   PDM_part_to_block_free(ptb);
-  free(entity2_distrib_ptb);
+  if(entity2_distrib != NULL) {
+    free(entity2_distrib_ptb);
+  }
   free(gnum);
   free(send_stri);
 
@@ -499,8 +526,8 @@ PDM_dconnectivity_transpose
   *dentity2_entity1_idx = (int *) malloc( (dn_entity2_recv + 1) * sizeof(int));
   int* _dentity2_entity1_idx = *dentity2_entity1_idx;
 
-  printf("blk_size       ::%i\n", blk_size       );
-  printf("dn_entity2_recv::%i\n", dn_entity2_recv);
+  // printf("blk_size       ::%i\n", blk_size       );
+  // printf("dn_entity2_recv::%i\n", dn_entity2_recv);
 
   // PDM_log_trace_array_long(dentity2_entity1_n, dn_entity2_recv, "Before : dentity2_entity1_n::");
   // PDM_log_trace_array_long(recv_data, blk_size, "Before : recv_data::");
