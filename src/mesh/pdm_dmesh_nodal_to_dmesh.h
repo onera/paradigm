@@ -99,6 +99,12 @@ PDM_dmesh_nodal_to_dmesh_free
   PDM_dmesh_nodal_to_dmesh_t* dmn_to_dm
 );
 
+void
+PDM_dmesh_nodal_to_dmesh_transform_to_coherent_dmesh
+(
+        PDM_dmesh_nodal_to_dmesh_t *dmn_to_dm,
+  const int                         extract_dim
+);
 
 #ifdef __cplusplus
 }

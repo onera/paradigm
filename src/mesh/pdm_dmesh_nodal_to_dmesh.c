@@ -15,6 +15,7 @@
 #include "pdm.h"
 #include "pdm_priv.h"
 #include "pdm_error.h"
+#include "pdm_binary_search.h"
 #include "pdm_dmesh_nodal_to_dmesh_priv.h"
 #include "pdm_dmesh_nodal_priv.h"
 #include "pdm_dmesh_nodal_to_dmesh.h"
@@ -397,7 +398,6 @@ int                **dentity_elmt_idx
               PDM_g_num_t j1 = blk_tot_entity_vtx[beg_2 +  idx_min_2                    ];
               PDM_g_num_t j2 = blk_tot_entity_vtx[beg_2 + (idx_min_2+1) % n_vtx_entity_1];
 
-              sens_entity[idx_next_same_entity] = 1;
               assert(i1 == j1); // Panic
               if(i2 != j2) {
                 sens_entity[idx_next_same_entity] = -1;
@@ -425,6 +425,8 @@ int                **dentity_elmt_idx
         _dentity_vtx_idx[i_abs_entity+1] = _dentity_vtx_idx[i_abs_entity] + n_vtx_entity_1;
         for(int i_vtx = 0; i_vtx < n_vtx_entity_1; ++i_vtx) {
           _dentity_vtx[idx_entity_vtx++] = blk_tot_entity_vtx[beg_1+i_vtx];
+          // Ecriture à partir du minumun
+          // _dentity_vtx[idx_entity_vtx++] = blk_tot_entity_vtx[beg_1+i_vtx];
         }
 
         _dentity_elmt_idx[i_abs_entity+1] = _dentity_elmt_idx[i_abs_entity];
@@ -692,7 +694,6 @@ _generate_faces_from_dmesh_nodal
                                  &dmesh_nodal->_dedge_face,
                                  &dedge_face_idx);
 
-
   if( 1 == 1 ){
     printf("dmesh_nodal->dn_edge ::%i\n", dmesh_nodal->dn_edge );
     PDM_log_trace_array_int (dmesh_nodal->_dedge_vtx_idx, dmesh_nodal->dn_edge+1                           , "dmesh_nodal->_dedge_vtx_idx:: ");
@@ -709,6 +710,7 @@ _generate_faces_from_dmesh_nodal
   // free(dface_edge_vtx_idx);
   // free(dface_edge_vtx);
   // free(dface_edge);
+  free(dedge_face_idx);
   // dedge_face + dface_cell -> dedge_cell
 
   return dm;
@@ -946,7 +948,12 @@ PDM_dmesh_nodal_to_dmesh_compute
 )
 {
 
+
   for(int i_mesh = 0; i_mesh < dmn_to_dm->n_mesh; ++i_mesh) {
+
+    if(dmn_to_dm->dmesh_nodal[i_mesh]->mesh_dimension == 2) {
+      assert(transform_kind != PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_FACE);
+    }
 
     switch (transform_kind) {
 
@@ -1027,6 +1034,96 @@ PDM_dmesh_nodal_to_dmesh_compute
   // 1er etape --> Tous les connectivité descendatnes elmnt_***
   // 2eme etape --> dmesh_  --> delmnt_face --> delmt_cell
   //
+
+  // Post-treatment
+  // PDM_dmesh_nodal_to_dmesh_transform_to_coherent_dmesh();
+
+
+}
+
+
+void
+PDM_dmesh_nodal_to_dmesh_transform_to_coherent_dmesh
+(
+        PDM_dmesh_nodal_to_dmesh_t *dmn_to_dm,
+  const int                         extract_dim
+)
+{
+  assert(extract_dim >= 2);
+
+  for(int i_mesh = 0; i_mesh < dmn_to_dm->n_mesh; ++i_mesh) {
+
+    // PDM_dmesh_nodal_t* dmnl = dmn_to_dm->dmesh_nodal[i_mesh];
+
+    // 1. delmt_face --> dcell_face
+    // PDM_g_num_t* dcell_face = (PDM_g_num_t * ) malloc( dmnl->dcell_face_idx[dmnl->dn_elmt] ) * sizeof(PDM_g_num_t));
+
+    // Find out in dmesh_nodal where the last element of current proc
+    // PDM_g_num_t first_elmt = -1;
+    // PDM_g_num_t last_elmt  = -1;
+    // int first_section = PDM_binary_search_gap_long(first_elmt, dmnl->section_distribution, dmnl->n_rank+1);
+    // int last_section  = PDM_binary_search_gap_long(last_elmt , dmnl->section_distribution, dmnl->n_rank+1);
+
+    // // Ok anyway for std is you pack them, it's simple, but for poly3d the pb is the same !
+    // // for(int i_section = 0; i_section < dmnl->n_section_tot; ++i_section) {
+    // int idx   = 0;
+    // int icell = 0;
+    // dcell_face_idx[0] = 0;
+    // for(int i_section = first_section; i_section < last_section; ++i_section) {
+
+    //   PDM_section_type_t section_type = dmnl->section_type[i_section];
+    //   PDM_g_num_t *section_distrib = NULL; // Faire une foncion du type d'emlt (std/poly2d/poly3d) --> PDM_DMesh_nodal_distrib_section_get
+
+    //   // idem on cherche le premier elmt dans la distribtuion de rank
+    //   //
+    //   if(section_type == PDM_SECTION_TYPE_STD3D ||
+    //      section_type == PDM_SECTION_TYPE_POLY3D )
+    //   {
+    //     int beg = PDM_MAX(dmnl->section_distribution[i_section  ] - dmnl->elmt_distrib[dmnl->i_rank  ], 0);
+    //     int end = PDM_MIN(dmnl->section_distribution[i_section+1], dmnl->elmt_distrib[dmnl->i_rank+1]) - dmnl->section_distribution[i_section  ]; // Impossible d'aller plus loin que la section
+    //     // int end = PDM_MIN(dmnl->section_distribution[i_section+1], dmnl->elmt_distrib[dmnl->i_rank+1]) - dmnl->elmt_distrib[i_section  ]; // Impossible d'aller plus loin que la section
+
+    //     // Attention il faut bien l'indice du block elemt
+    //     for( int ielmt = beg; ielmt < end; ++ielmt ) {
+    //       dcell_face_idx[icell+1] += dcell_face_idx[icell];
+    //       for(int iface = delmt_face_idx[ielmt]; iface < delmt_face_idx[ielmt+1]; ++iface ){
+    //         dcell_face[idx++] = delmt_face[iface];
+    //       }
+    //       icell += 1;
+    //     }
+    //   }
+
+
+      // for(int ielmt = 0; ielmt < dmnl->dn_elmt; ++ielmt) {
+
+      // }
+
+      // ---------------------------------------
+      // 1        10     20       30
+      // |  HEXA |  TRI  |  TETRA |
+
+      // ---------------------------------------
+      // 1       10       20
+      // |  HEXA |  TETRA |
+
+      // face_elmt = [ 1 30 ] --> face_cell = [1 20 ]
+
+      // Si la section est 2D on shift
+      // parent_gnum = elmt_to_cell
+
+      // Si 3D on garde ...
+      // On construit les cellules suprimée ??? dans un tableau qu'on tri
+      // On peut supprimer par range
+      // Tout les elements entre x et y doivent être supprimé --> binary_search_gap ?
+    // }
+
+    // Optimisation 1 : si tout les elements 2D sont au bout on realloc juste le tableau
+
+    // 2. dface_elmt --> dface_cell
+    // Caution : if face_cell is in the bad sens we need to adapt face_vtx (see partitioning with flip)
+    // binary_search ???? Pour enlever les cellules pas ???
+
+  }
 
 
 }
