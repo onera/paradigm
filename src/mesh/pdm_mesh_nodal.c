@@ -204,7 +204,7 @@ void
 _block_std_free_partial
 (
  PDM_Mesh_nodal_block_std_t *_block_std
- )
+)
 {
 
   if (_block_std == NULL) {
@@ -938,7 +938,7 @@ _connec_hexa
  PDM_Mesh_nodal_vtx_t *vtx,
  PDM_l_num_t *quad_vtx,
  PDM_l_num_t hexa_vtx[]
- )
+)
 {
 
   /* Initialization */
@@ -1132,7 +1132,7 @@ _type_cell_3D
  const PDM_l_num_t    *face_vtx,
  PDM_l_num_t           tria_vtx[],
  PDM_l_num_t           quad_vtx[]
- )
+)
 {
   int adjust = 0;
   if (face_vtx_idx[0] == 1) {
@@ -1241,7 +1241,7 @@ PDM_Mesh_nodal_create
 (
  const int     n_part,
  const PDM_MPI_Comm comm
- )
+)
 {
   PDM_Mesh_nodal_t *mesh = (PDM_Mesh_nodal_t *) malloc (sizeof(PDM_Mesh_nodal_t));
 

@@ -30,15 +30,15 @@ extern "C" {
  *============================================================================*/
 
 //-->>
-typedef enum {
+// typedef enum {
 
-  PDM_SECTION_TYPE_STD3D  = 0,
-  PDM_SECTION_TYPE_STD2D  = 1,
-  PDM_SECTION_TYPE_STD1D  = 2,
-  PDM_SECTION_TYPE_POLY2D = 3,
-  PDM_SECTION_TYPE_POLY3D = 4
+//   PDM_SECTION_TYPE_STD3D  = 0,
+//   PDM_SECTION_TYPE_STD2D  = 1,
+//   PDM_SECTION_TYPE_STD1D  = 2,
+//   PDM_SECTION_TYPE_POLY2D = 3,
+//   PDM_SECTION_TYPE_POLY3D = 4
 
-} PDM_section_type_t;
+// } PDM_section_type_t;
 //<<--
 
 /**
@@ -148,32 +148,30 @@ struct _pdm_dmesh_nodal_t {
 
   PDM_DMesh_nodal_vtx_t *vtx;                   /*!< Description des sommmets de chaque partition */
 
-  PDM_section_type_t    *section_type;
-  int                   *section_idx;
+  int                   *sections_id;
   int                    n_section_tot;                       /*!< Total number of sections */
 
   int                    n_section;                           /*!< Total number of sections           */
 
   int                    n_section_std;                       /*!< Total number of standard sections  */
   int                    n_section_poly3d;                    /*!< Total number of olyhedron sections */
+  int                    n_section_poly2d;                    /*!< Total number of olyhedron sections */
+
+  PDM_g_num_t                       *section_distribution;     /*!< Element distribution               */
 
   PDM_DMesh_nodal_section_std_t    **sections_std;             /*!< Standard sections                  */
   PDM_DMesh_nodal_section_poly3d_t **sections_poly3d;          /*!< Polyhedron sections                */
-  PDM_g_num_t                       *section_distribution;     /*!< Element distribution               */
+  PDM_DMesh_nodal_section_poly2d_t **sections_poly2d;          /*!< Polygon sections                   */
 
-  int                                n_section_l1;             /*!< Total number of sections           */
-  int                                n_section_std_l1;         /*!< Total number of standard sections  */
-  int                                n_section_poly2d_l1;      /*!< Total number of polygon sections   */
-  PDM_g_num_t                       *section_distribution_l1;  /*!< Element distribution               */
-
-  PDM_DMesh_nodal_section_std_t    **sections_std_l1;          /*!< Standard sections                  */
-  PDM_DMesh_nodal_section_poly2d_t **sections_poly2d_l1;       /*!< Polygon sections                   */
-
-  int                                n_section_l2;             /*!< Total number of sections           */
-  int                                n_section_std_l2;         /*!< Total number of standard sections  */
-  PDM_g_num_t                       *section_distribution_l2;  /*!< Element distribution               */
-
-  PDM_DMesh_nodal_section_std_t    **sections_std_l2;          /*!< Standard sections                  */
+  // int                                n_section_l1;             /*!< Total number of sections           */
+  // int                                n_section_std_l1;         /*!< Total number of standard sections  */
+  // int                                n_section_poly2d_l1;      /*!< Total number of polygon sections   */
+  // PDM_g_num_t                       *section_distribution_l1;  /*!< Element distribution               */
+  // PDM_DMesh_nodal_section_std_t    **sections_std_l1;          /*!< Standard sections                  */
+  // int                                n_section_l2;             /*!< Total number of sections           */
+  // int                                n_section_std_l2;         /*!< Total number of standard sections  */
+  // PDM_g_num_t                       *section_distribution_l2;  /*!< Element distribution               */
+  // PDM_DMesh_nodal_section_std_t    **sections_std_l2;          /*!< Standard sections                  */
 
   PDM_MPI_Comm           pdm_mpi_comm;             /*!< MPI Communicator */
   int                    n_rank;                   /*!< Number of processes */
