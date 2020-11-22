@@ -136,6 +136,8 @@ PDM_dmesh_create
 
   for(int i = 0; i < PDM_CONNECTIVITY_TYPE_MAX; ++i) {
     dmesh->is_owner_connectivity[i] = PDM_FALSE;
+    dmesh->dconnectivity        [i] = NULL;
+    dmesh->dconnectivity_idx    [i] = NULL;
   }
 
   return dmesh;
@@ -265,6 +267,29 @@ PDM_dmesh_data_get
   *dface_join_idx  = dmesh->_dface_join_idx;
   *dface_join      = dmesh->_dface_join;
 }
+
+
+void
+PDM_dmesh_connectivity_get
+(
+ PDM_dmesh_t              *dmesh,
+ PDM_connectivity_type_t   connectivity_type,
+ PDM_g_num_t             **connect,
+ int                     **connect_idx,
+ PDM_ownership_t           ownership
+)
+{
+  assert(dmesh != NULL);
+
+  assert(dmesh->dconnectivity[connectivity_type] != NULL);
+
+  *connect     = dmesh->dconnectivity    [connectivity_type];
+  *connect_idx = dmesh->dconnectivity_idx[connectivity_type];
+
+}
+
+
+
 
 /**
  *

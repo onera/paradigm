@@ -205,6 +205,16 @@ PDM_dmesh_data_get
  const PDM_g_num_t  **dface_join
 );
 
+void
+PDM_dmesh_connectivity_get
+(
+ PDM_dmesh_t              *dmesh,
+ PDM_connectivity_type_t   connectivity_type,
+ PDM_g_num_t             **connect,
+ int                     **connect_idx,
+ PDM_ownership_t           ownership
+);
+
 /**
  *
  * \brief Free

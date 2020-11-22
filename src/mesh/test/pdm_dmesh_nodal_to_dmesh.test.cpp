@@ -86,6 +86,44 @@ MPI_TEST_CASE("[PDM_dmesh_nodal_to_dmesh] decomposes hexa ",1) {
                                      PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_FACE,
                                      PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_FACE);
     PDM_dmesh_nodal_to_dmesh_transform_to_coherent_dmesh(dmntodm, 3);
+
+    PDM_dmesh_t* dm;
+    PDM_dmesh_nodal_to_dmesh_get_dmesh(dmntodm, 0, &dm);
+
+    int dn_cell, dn_face, dn_vtx, dn_edge, n_bnd, n_join;
+    PDM_dmesh_dims_get(dm, &dn_cell, &dn_face, &dn_edge, &dn_vtx, &n_bnd, &n_join);
+
+    CHECK( dn_cell == 4 );
+    CHECK( dn_face == 20);
+    // CHECK( dn_vtx  == 18);
+
+    PDM_g_num_t *dface_cell;
+    int         *dface_cell_idx;
+    PDM_dmesh_connectivity_get(dm, PDM_CONNECTIVITY_TYPE_FACE_CELL,
+                               &dface_cell, &dface_cell_idx, PDM_OWNERSHIP_KEEP);
+
+    // PDM_log_trace_array_long(dface_cell, 2*dn_face, "dface_cell:: ");
+
+    PDM_g_num_t dface_cell_expected[40] = {1,0,2,1,1,0,3,1,1,0,2,0,4,2,1,0,2,0,3,0,
+                                           2,0,4,3,4,0,3,0,2,0,3,0,4,0,4,0,3,0,4,0};
+
+    CHECK_EQ_C_ARRAY(dface_cell   , dface_cell_expected   , 2*dn_face             );
+
+    PDM_g_num_t *dcell_face;
+    int         *dcell_face_idx;
+    PDM_dmesh_connectivity_get(dm, PDM_CONNECTIVITY_TYPE_CELL_FACE,
+                               &dcell_face, &dcell_face_idx, PDM_OWNERSHIP_KEEP);
+
+    int         dcell_face_idx_expected[7] = {0, 6, 12, 18, 24};
+    PDM_g_num_t dcell_face_expected[24]    = {-5,-3,1,2,4,8,-6,-2,7,9,11,15,-19,-16,-14,-4,10,12,-20,-12,-7,13,17,18};
+
+    CHECK_EQ_C_ARRAY(dcell_face_idx, dcell_face_idx_expected, dn_cell+1              );
+    CHECK_EQ_C_ARRAY(dcell_face    , dcell_face_expected    , dcell_face_idx[dn_cell]);
+
+    // PDM_log_trace_array_int (dcell_face_idx, dn_cell+1, "dcell_face_idx:: ");
+    // PDM_log_trace_array_long(dcell_face, dcell_face_idx[dn_cell], "dcell_face:: ");
+
+
   }
 
   // SUBCASE("transform to edges  ")
