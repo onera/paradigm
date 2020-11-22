@@ -85,6 +85,7 @@ MPI_TEST_CASE("[PDM_dmesh_nodal_to_dmesh] decomposes hexa ",1) {
     PDM_dmesh_nodal_to_dmesh_compute(dmntodm,
                                      PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_FACE,
                                      PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_FACE);
+    PDM_dmesh_nodal_to_dmesh_transform_to_coherent_dmesh(dmntodm, 3);
   }
 
   // SUBCASE("transform to edges  ")

@@ -1436,19 +1436,13 @@ PDM_dmesh_nodal_generate_distribution
 
   printf("dmesh_nodal->n_section : %i \n", dmesh_nodal->n_section);
 
-  PDM_g_num_t shift = 0;
-  for(int i_section = 0; i_section < dmesh_nodal->n_section_std; ++i_section){
-    dmesh_nodal->section_distribution[i_section+1] = dmesh_nodal->sections_std[i_section]->distrib[dmesh_nodal->n_rank];
-  }
-  shift += dmesh_nodal->n_section_std;
+  for(int i_section = 0; i_section < dmesh_nodal->n_section; ++i_section) {
 
-  for(int i_section = 0; i_section < dmesh_nodal->n_section_poly3d; ++i_section){
-    dmesh_nodal->section_distribution[shift+i_section+1] = dmesh_nodal->sections_poly3d[i_section]->distrib[dmesh_nodal->n_rank];
-  }
-  shift += dmesh_nodal->n_section_poly3d;
+    int id_section = dmesh_nodal->sections_id[i_section];
+    const PDM_g_num_t* distrib = PDM_DMesh_nodal_distrib_section_get(dmesh_nodal, id_section);
 
-  for (int i_section = 1; i_section < dmesh_nodal->n_section + 1; i_section++) {
-    dmesh_nodal->section_distribution[i_section] +=  dmesh_nodal->section_distribution[i_section-1];
+    dmesh_nodal->section_distribution[i_section+1] = dmesh_nodal->section_distribution[i_section] + distrib[dmesh_nodal->n_rank];
+
   }
 
   /* Verbose */
