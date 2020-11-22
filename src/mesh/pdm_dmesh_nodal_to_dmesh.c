@@ -823,6 +823,119 @@ _translate_element_group_to_faces
 }
 
 static
+void
+_to_coherent_2d
+(
+ PDM_MPI_Comm                      comm,
+ _pdm_link_dmesh_nodal_to_dmesh_t *link,
+ PDM_dmesh_nodal_t                *dmesh_nodal,
+ PDM_dmesh_t                      *dmesh
+)
+{
+  int n_rank;
+  int i_rank;
+
+  PDM_MPI_Comm_size (comm, &n_rank);
+  PDM_MPI_Comm_rank (comm, &i_rank);
+  PDM_UNUSED(comm);
+  PDM_UNUSED(link);
+  PDM_UNUSED(dmesh_nodal);
+  PDM_UNUSED(dmesh);
+  abort();
+}
+
+static
+void
+_to_coherent_3d
+(
+ PDM_MPI_Comm                      comm,
+ _pdm_link_dmesh_nodal_to_dmesh_t *link,
+ PDM_dmesh_nodal_t                *dmesh_nodal,
+ PDM_dmesh_t                      *dmesh
+)
+{
+  int n_rank;
+  int i_rank;
+
+  PDM_MPI_Comm_size (comm, &n_rank);
+  PDM_MPI_Comm_rank (comm, &i_rank);
+
+
+  PDM_g_num_t *section_distribution = dmesh_nodal->section_distribution;
+
+  // 1. delmt_face --> dcell_face
+  PDM_g_num_t *dcell_face     = (PDM_g_num_t *) malloc( link->_delmt_face_idx[link->dn_elmt] * sizeof(PDM_g_num_t));
+  int         *dcell_face_idx = (int         *) malloc( (link->dn_elmt + 1 )                 * sizeof(int        ));
+
+  if( 1 == 0 ){
+    PDM_log_trace_array_long(link->elmt_distrib , n_rank+1, "link->elmt_distrib");
+    PDM_log_trace_array_long(dmesh->face_distrib, n_rank+1, "link->face_distrib");
+    PDM_log_trace_array_long(section_distribution, dmesh_nodal->n_section_tot+1, "section_distribution");
+  }
+
+  // Find out in dmesh_nodal where the last element of current proc
+  PDM_g_num_t first_elmt = link->elmt_distrib[i_rank  ];
+  PDM_g_num_t last_elmt  = link->elmt_distrib[i_rank+1]-1;
+  int first_section = PDM_binary_search_gap_long(first_elmt, section_distribution, dmesh_nodal->n_section_tot+1);
+  int last_section  = PDM_binary_search_gap_long(last_elmt , section_distribution, dmesh_nodal->n_section_tot+1);
+
+  // printf("first_section = %i \n", first_section);
+  // printf("last_section  = %i \n", last_section);
+
+  int idx   = 0;
+  int dn_cell = 0;
+  dcell_face_idx[0] = 0;
+  for(int i_section = first_section; i_section < last_section; ++i_section) {
+
+    int id_section = dmesh_nodal->sections_id[i_section];
+    PDM_Mesh_nodal_elt_t t_elt   = PDM_DMesh_nodal_section_type_get   (dmesh_nodal, id_section);
+    // const PDM_g_num_t*   distrib = PDM_DMesh_nodal_distrib_section_get(dmesh_nodal, id_section);
+
+    if( _is_a_3d_elment(t_elt) ){
+
+      printf(" filter cell \n");
+
+      int beg_elmt = PDM_MAX(section_distribution[i_section  ] - link->elmt_distrib[dmesh_nodal->i_rank], 0);
+      int end_elmt = PDM_MIN(section_distribution[i_section+1], link->elmt_distrib[dmesh_nodal->i_rank+1])
+                   - section_distribution[i_section];
+
+      printf("[%i] - beg_elmt = %i | end_elmt = %i \n", i_rank, beg_elmt, end_elmt);
+
+      for( int ielmt = beg_elmt; ielmt < end_elmt; ++ielmt ) {
+        // dcell_elmt[dn_cell] = ielmt;
+        dcell_face_idx[dn_cell+1] = dcell_face_idx[dn_cell];
+        for(int iface = link->_delmt_face_idx[ielmt]; iface < link->_delmt_face_idx[ielmt+1]; ++iface ){
+          dcell_face[idx++] = link->_delmt_face[iface];
+          dcell_face_idx[dn_cell+1]++;
+        }
+        dn_cell += 1;
+      }
+    }
+  }
+
+  printf(" dn_cell = %i\n", dn_cell);
+  dcell_face_idx = (int         *) realloc(dcell_face_idx, dn_cell                 * sizeof(int        ));
+  dcell_face     = (PDM_g_num_t *) realloc(dcell_face    , dcell_face_idx[dn_cell] * sizeof(PDM_g_num_t));
+
+  if(1 == 0) {
+    PDM_log_trace_array_int (dcell_face_idx, dn_cell+1              , "dcell_face_idx");
+    PDM_log_trace_array_long(dcell_face    , dcell_face_idx[dn_cell], "dcell_face");
+  }
+
+  assert(dmesh->dn_cell == -1);
+  dmesh->dn_cell = dn_cell;
+
+  dmesh->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_CELL_FACE] = PDM_TRUE;
+  dmesh->dconnectivity_idx    [PDM_CONNECTIVITY_TYPE_CELL_FACE] = dcell_face_idx;
+  dmesh->dconnectivity        [PDM_CONNECTIVITY_TYPE_CELL_FACE] = dcell_face;
+
+  // 2. dface_elmt --> dface_cell
+  // Caution : if face_cell is in the bad sens we need to adapt face_vtx (see partitioning with flip)
+
+}
+
+
+static
 _pdm_link_dmesh_nodal_to_dmesh_t*
 _link_dmesh_nodal_to_dmesh_init
 (
@@ -1097,95 +1210,19 @@ PDM_dmesh_nodal_to_dmesh_transform_to_coherent_dmesh
   assert(extract_dim >= 2);
   assert(extract_dim == 3); // Not implemented
 
-  int n_rank;
-  int i_rank;
-
-  PDM_MPI_Comm_size (dmesh_nodal_to_dm->comm, &n_rank);
-  PDM_MPI_Comm_rank (dmesh_nodal_to_dm->comm, &i_rank);
-
   for(int i_mesh = 0; i_mesh < dmesh_nodal_to_dm->n_mesh; ++i_mesh) {
 
     _pdm_link_dmesh_nodal_to_dmesh_t *link        = dmesh_nodal_to_dm->link[i_mesh];
     PDM_dmesh_nodal_t                *dmesh_nodal = link->dmesh_nodal;
     PDM_dmesh_t                      *dmesh       = link->dmesh;
 
-    PDM_g_num_t *section_distribution = dmesh_nodal->section_distribution;
-
-    // 1. delmt_face --> dcell_face
-    PDM_g_num_t *dcell_face     = (PDM_g_num_t *) malloc( link->_delmt_face_idx[link->dn_elmt] * sizeof(PDM_g_num_t));
-    int         *dcell_face_idx = (int         *) malloc( (link->dn_elmt + 1 )                 * sizeof(int        ));
-
-    if( 1 == 0 ){
-      PDM_log_trace_array_long(link->elmt_distrib , n_rank+1, "link->elmt_distrib");
-      PDM_log_trace_array_long(dmesh->face_distrib, n_rank+1, "link->face_distrib");
-      PDM_log_trace_array_long(section_distribution, dmesh_nodal->n_section_tot+1, "section_distribution");
+    if(extract_dim == 3) {
+      _to_coherent_3d(dmesh_nodal_to_dm->comm, link, dmesh_nodal, dmesh);
+    } else if (extract_dim == 2) {
+      _to_coherent_2d(dmesh_nodal_to_dm->comm, link, dmesh_nodal, dmesh);
     }
-
-    // Find out in dmesh_nodal where the last element of current proc
-    PDM_g_num_t first_elmt = link->elmt_distrib[i_rank  ];
-    PDM_g_num_t last_elmt  = link->elmt_distrib[i_rank+1]-1;
-    int first_section = PDM_binary_search_gap_long(first_elmt, section_distribution, dmesh_nodal->n_section_tot+1);
-    int last_section  = PDM_binary_search_gap_long(last_elmt , section_distribution, dmesh_nodal->n_section_tot+1);
-
-    // printf("first_section = %i \n", first_section);
-    // printf("last_section  = %i \n", last_section);
-
-    int idx   = 0;
-    int icell = 0;
-    dcell_face_idx[0] = 0;
-    for(int i_section = first_section; i_section < last_section; ++i_section) {
-
-      int id_section = dmesh_nodal->sections_id[i_section];
-      PDM_Mesh_nodal_elt_t t_elt   = PDM_DMesh_nodal_section_type_get   (dmesh_nodal, id_section);
-      // const PDM_g_num_t*   distrib = PDM_DMesh_nodal_distrib_section_get(dmesh_nodal, id_section);
-
-      if( _is_a_3d_elment(t_elt) ){
-
-        printf(" filter cell \n");
-
-        int beg_elmt = PDM_MAX(section_distribution[i_section  ] - link->elmt_distrib[dmesh_nodal->i_rank], 0);
-        int end_elmt = PDM_MIN(section_distribution[i_section+1], link->elmt_distrib[dmesh_nodal->i_rank+1])
-                     - section_distribution[i_section];
-
-        printf("[%i] - beg_elmt = %i | end_elmt = %i \n", i_rank, beg_elmt, end_elmt);
-
-        for( int ielmt = beg_elmt; ielmt < end_elmt; ++ielmt ) {
-          dcell_face_idx[icell+1] = dcell_face_idx[icell];
-          for(int iface = link->_delmt_face_idx[ielmt]; iface < link->_delmt_face_idx[ielmt+1]; ++iface ){
-            dcell_face[idx++] = link->_delmt_face[iface];
-            dcell_face_idx[icell+1]++;
-          }
-          icell += 1;
-        }
-      }
-    }
-
-    int dn_cell = icell;
-
-    printf(" dn_cell = %i\n", dn_cell);
-    dcell_face_idx = (int         *) realloc(dcell_face_idx, dn_cell                 * sizeof(PDM_g_num_t));
-    dcell_face     = (PDM_g_num_t *) realloc(dcell_face    , dcell_face_idx[dn_cell] * sizeof(PDM_g_num_t));
-
-    if(1 == 0) {
-      PDM_log_trace_array_int (dcell_face_idx, dn_cell+1              , "dcell_face_idx");
-      PDM_log_trace_array_long(dcell_face    , dcell_face_idx[dn_cell], "dcell_face");
-    }
-
-    assert(dmesh->dn_cell == 0);
-    dmesh->dn_cell = dn_cell;
-
-    dmesh->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_CELL_FACE] = PDM_TRUE;
-    dmesh->dconnectivity_idx    [PDM_CONNECTIVITY_TYPE_CELL_FACE] = dcell_face_idx;
-    dmesh->dconnectivity        [PDM_CONNECTIVITY_TYPE_CELL_FACE] = dcell_face;
-
-    // 2. dface_elmt --> dface_cell
-    // Caution : if face_cell is in the bad sens we need to adapt face_vtx (see partitioning with flip)
-
-
-
 
   }
-
 
 }
 
