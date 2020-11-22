@@ -1,5 +1,5 @@
-#ifndef __pdm_dmesh_nodal_tO_DMESH_H__
-#define __pdm_dmesh_nodal_tO_DMESH_H__
+#ifndef __PDM_DMESH_NODAL_TO_DMESH_H__
+#define __PDM_DMESH_NODAL_TO_DMESH_H__
 
 /*----------------------------------------------------------------------------
  * Standard C library headers

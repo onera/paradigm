@@ -153,7 +153,6 @@ struct _pdm_dmesh_nodal_t {
   // int                    elmt_follow_cell;
 
   // To move in pdm_dmesh
-  PDM_l_num_t            dn_elmt;                  /*!< Local number of cells in the local block */
   PDM_l_num_t            dn_cell;                  /*!< Local number of cells in the local block */
   PDM_l_num_t           *dcell_face_idx;           /*!< Index of the cell to face connectivity
                                                     * (size = \ref dn_cell) */
@@ -170,18 +169,33 @@ struct _pdm_dmesh_nodal_t {
   PDM_g_num_t           *face_distrib;             /*!< Distribution of faces (size = number of processes + 1) */
 
 
-  PDM_g_num_t           *edge_distrib;             /*!< Distribution of cells (size = number of processes + 1) */
-  PDM_l_num_t            dn_edge;                  /*!< Local number of faces in the local block */
-  PDM_l_num_t           *_dedge_vtx_idx;           /*!< Index of the cell to face connectivity
-                                                    * (size = \ref dn_cell) */
-  PDM_g_num_t           *_dedge_vtx;               /*!< Cell to face connectivity
-                                                    * (size = \ref dcell_face_idx[\ref dn_cell] */
-  PDM_l_num_t           *dface_edge_idx;           /*!< Index of the cell to face connectivity
-                                                    * (size = \ref dn_cell) */
-  PDM_g_num_t           *dface_edge;               /*!< Cell to face connectivity
-                                                    * (size = \ref dcell_face_idx[\ref dn_cell] */
-  PDM_g_num_t           *_dedge_face;              /*!< Cell to face connectivity
-                                                    * (size = \ref dcell_face_idx[\ref dn_cell] */
+  // PDM_g_num_t           *edge_distrib;             /*!< Distribution of cells (size = number of processes + 1) */
+  // PDM_l_num_t            dn_edge;                  /*!< Local number of faces in the local block */
+  // PDM_l_num_t           *_dedge_vtx_idx;           /*!< Index of the cell to face connectivity
+  //                                                   * (size = \ref dn_cell) */
+  // PDM_g_num_t           *_dedge_vtx;               /*!< Cell to face connectivity
+  //                                                   * (size = \ref dcell_face_idx[\ref dn_cell] */
+  // PDM_l_num_t           *dface_edge_idx;           /*!< Index of the cell to face connectivity
+  //                                                   * (size = \ref dn_cell) */
+  // PDM_g_num_t           *dface_edge;               /*!< Cell to face connectivity
+  //                                                   * (size = \ref dcell_face_idx[\ref dn_cell] */
+  // PDM_g_num_t           *_dedge_face;              /*!< Cell to face connectivity
+  //                                                   * (size = \ref dcell_face_idx[\ref dn_cell] */
+
+  // /* We need to keep link between elemt and entity form group and dmesh_nodal_to_pmesh_nodal */
+
+  // PDM_g_num_t           *elmt_distrib;             /*!< Distribution of cells (size = number of processes + 1) */
+  // PDM_l_num_t            dn_elmt;                  /*!< Local number of faces in the local block */
+
+  // PDM_g_num_t           *_dface_elmt;              /*!< Face to cell connectivity
+  //                                                   * (size = \ref dcell_face_idx[\ref dn_cell] */
+  // PDM_l_num_t           *_dface_elmt_idx;          /*!< Index of the cell to face connectivity
+  //                                                   * (size = \ref dn_cell) */
+
+  // PDM_g_num_t           *_dedge_elmt;              /*!< Face to cell connectivity
+  //                                                   * (size = \ref dcell_face_idx[\ref dn_cell] */
+  // PDM_l_num_t           *_dedge_elmt_idx;          /*!< Index of the cell to face connectivity
+  //                                                   * (size = \ref dn_cell) */
 
 };
 

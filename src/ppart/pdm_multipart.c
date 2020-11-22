@@ -748,6 +748,7 @@ PDM_multipart_create
   printf("PDM_multipart_create::n_zone:: %d \n", n_zone);
   printf("PDM_multipart_create::n_part:: %d \n", n_part[0]);
   printf("PDM_multipart_create::split_method:: %d \n", split_method);
+
   /*
    * Search a ppart free id
    */
@@ -923,7 +924,7 @@ PDM_MPI_Comm      comm
   PDM_MPI_Comm_size(comm, &n_rank);
 
   // Get distributed mesh data for this zone
-  int dn_cell, dn_face, dn_vtx, n_bnd, n_join;
+  int dn_cell, dn_face, dn_vtx, dn_edge, n_bnd, n_join;
   const double       *dvtx_coord;
   const int          *dface_vtx_idx;
   const PDM_g_num_t  *dface_vtx;
@@ -933,7 +934,7 @@ PDM_MPI_Comm      comm
   const int          *joins_ids;
   const int          *dface_join_idx;
   const PDM_g_num_t  *dface_join;
-  PDM_dmesh_dims_get(dmesh, &dn_cell, &dn_face, &dn_vtx, &n_bnd, &n_join);
+  PDM_dmesh_dims_get(dmesh, &dn_cell, &dn_face, &dn_edge, &dn_vtx, &n_bnd, &n_join);
   PDM_dmesh_data_get(dmesh, &dvtx_coord, &dface_vtx_idx, &dface_vtx, &dface_cell,
                      &dface_bound_idx, &dface_bound, &joins_ids, &dface_join_idx, &dface_join);
 
@@ -988,7 +989,7 @@ PDM_MPI_Comm      comm
   if (part_size_method == PDM_PART_SIZE_HETEROGENEOUS){
     int *n_part_per_rank = (int    *) malloc( n_rank * sizeof(int   ));
     int *displ           = (int    *) malloc( n_rank * sizeof(int   ));
-    part_fractions        = (double *) malloc(tn_part * sizeof(double));
+    part_fractions       = (double *) malloc(tn_part * sizeof(double));
     for (int i =0; i < n_rank; i++){
       n_part_per_rank[i] = part_distri[i+1] - part_distri[i];
       displ[i] = part_distri[i]-1;
@@ -1061,7 +1062,7 @@ PDM_MPI_Comm      comm
                                                dcell_face,
                                                n_part,
                                                pn_cell,
-                                               (const PDM_g_num_t **) pcell_ln_to_gn,
+                        (const PDM_g_num_t **) pcell_ln_to_gn,
                                               &pn_face,
                                               &pface_ln_to_gn,
                                               &pcell_face_idx,
@@ -1073,7 +1074,7 @@ PDM_MPI_Comm      comm
                                                dface_vtx,
                                                n_part,
                                                pn_face,
-                                               (const PDM_g_num_t **) pface_ln_to_gn,
+                        (const PDM_g_num_t **) pface_ln_to_gn,
                                               &pn_vtx,
                                               &pvtx_ln_to_gn,
                                               &pface_vtx_idx,
@@ -1094,10 +1095,10 @@ PDM_MPI_Comm      comm
                                         vtx_distri,
                                         dvtx_coord,
                                         pn_vtx,
-                                        (const PDM_g_num_t **) pvtx_ln_to_gn,
+                 (const PDM_g_num_t **) pvtx_ln_to_gn,
                                        &pvtx_coord);
 
-  //Fill _part_t structures with temporary arrays
+  // Fill _part_t structures with temporary arrays
   pmeshes->parts = (_part_t **) malloc(pmeshes->tn_part*sizeof(_part_t*));
   for (int ipart = 0; ipart < n_part; ipart++) {
     pmeshes->parts[ipart] = _part_create();

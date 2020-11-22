@@ -538,12 +538,12 @@ PDM_dconnectivity_transpose
                                         recv_data);
   // printf("*dentity2_entity1_idx[dn_entity2_recv]       ::%i\n", _dentity2_entity1_idx[dn_entity2_recv]       );
 
-  *dentity2_entity1 = recv_data;
+  // *dentity2_entity1 = recv_data;
 
   /*
    * Realloc
    */
-  *dentity2_entity1 = realloc(*dentity2_entity1, _dentity2_entity1_idx[dn_entity2_recv] * sizeof(PDM_g_num_t));
+  *dentity2_entity1 = realloc(recv_data, _dentity2_entity1_idx[dn_entity2_recv] * sizeof(PDM_g_num_t));
   // PDM_g_num_t* _dentity2_entity1 = *dentity2_entity1;
 
   // PDM_log_trace_array_int (_dentity2_entity1_idx, dn_entity2_recv+1         , "_dentity2_entity1_idx::");

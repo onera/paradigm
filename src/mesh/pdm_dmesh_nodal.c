@@ -225,6 +225,8 @@ PDM_DMesh_nodal_section_std_t *_section_std
     free (_section_std->distrib);
     _section_std->distrib = NULL;
   }
+
+  free(_section_std);
 }
 
 
@@ -255,6 +257,7 @@ PDM_DMesh_nodal_section_poly2d_t *_section_poly2d
     _section_poly2d->distrib = NULL;
   }
 
+  free(_section_poly2d);
 }
 
 /**
@@ -281,6 +284,8 @@ PDM_DMesh_nodal_section_poly3d_t *_section_poly3d
     free (_section_poly3d->distrib);
     _section_poly3d->distrib = NULL;
   }
+
+  free(_section_poly3d);
 }
 
 
@@ -426,13 +431,20 @@ const PDM_MPI_Comm        comm,
   dmesh_nodal->_dface_cell              = NULL;
   dmesh_nodal->face_distrib             = NULL;
 
-  dmesh_nodal->dn_edge                  = 0;
-  dmesh_nodal->edge_distrib             = NULL;
-  dmesh_nodal->_dedge_vtx_idx           = NULL;
-  dmesh_nodal->_dedge_vtx               = NULL;
-  dmesh_nodal->dface_edge_idx           = NULL;
-  dmesh_nodal->dface_edge               = NULL;
-  dmesh_nodal->_dedge_face              = NULL;
+  // dmesh_nodal->dn_edge                  = 0;
+  // dmesh_nodal->edge_distrib             = NULL;
+  // dmesh_nodal->_dedge_vtx_idx           = NULL;
+  // dmesh_nodal->_dedge_vtx               = NULL;
+  // dmesh_nodal->dface_edge_idx           = NULL;
+  // dmesh_nodal->dface_edge               = NULL;
+  // dmesh_nodal->_dedge_face              = NULL;
+
+  // dmesh_nodal->dn_elmt                  = 0;
+  // dmesh_nodal->elmt_distrib             = NULL;
+  // dmesh_nodal->_dface_elmt              = NULL;
+  // dmesh_nodal->_dface_elmt_idx          = NULL;
+  // dmesh_nodal->_dedge_elmt              = NULL;
+  // dmesh_nodal->_dedge_elmt_idx          = NULL;
 
 }
 
@@ -494,10 +506,14 @@ const int                partial
     if (dmesh_nodal->sections_id != NULL) {
       free (dmesh_nodal->sections_id);
     }
-
     dmesh_nodal->sections_id = NULL;
 
-     _vtx_free(dmesh_nodal->vtx);
+    if(dmesh_nodal->section_distribution != NULL) {
+      free (dmesh_nodal->section_distribution);
+    }
+    dmesh_nodal->section_distribution = NULL;
+
+    _vtx_free(dmesh_nodal->vtx);
 
     _sections_std_free   (dmesh_nodal->sections_std   , dmesh_nodal->n_section_std   );
     _sections_poly3d_free(dmesh_nodal->sections_poly3d, dmesh_nodal->n_section_poly3d);
@@ -528,29 +544,49 @@ const int                partial
         free (dmesh_nodal->face_distrib);
       }
 
-      if (dmesh_nodal->edge_distrib != NULL) {
-        free (dmesh_nodal->edge_distrib);
-      }
+      // if (dmesh_nodal->edge_distrib != NULL) {
+      //   free (dmesh_nodal->edge_distrib);
+      // }
 
-      if (dmesh_nodal->_dedge_vtx_idx != NULL) {
-        free (dmesh_nodal->_dedge_vtx_idx);
-      }
+      // if (dmesh_nodal->_dedge_vtx_idx != NULL) {
+      //   free (dmesh_nodal->_dedge_vtx_idx);
+      // }
 
-      if (dmesh_nodal->_dedge_vtx != NULL) {
-        free (dmesh_nodal->_dedge_vtx);
-      }
+      // if (dmesh_nodal->_dedge_vtx != NULL) {
+      //   free (dmesh_nodal->_dedge_vtx);
+      // }
 
-      if (dmesh_nodal->dface_edge_idx != NULL) {
-        free (dmesh_nodal->dface_edge_idx);
-      }
+      // if (dmesh_nodal->dface_edge_idx != NULL) {
+      //   free (dmesh_nodal->dface_edge_idx);
+      // }
 
-      if (dmesh_nodal->dface_edge != NULL) {
-        free (dmesh_nodal->dface_edge);
-      }
+      // if (dmesh_nodal->dface_edge != NULL) {
+      //   free (dmesh_nodal->dface_edge);
+      // }
 
-      if (dmesh_nodal->_dedge_face != NULL) {
-        free (dmesh_nodal->_dedge_face);
-      }
+      // if (dmesh_nodal->_dedge_face != NULL) {
+      //   free (dmesh_nodal->_dedge_face);
+      // }
+
+      // if (dmesh_nodal->elmt_distrib != NULL) {
+      //   free (dmesh_nodal->elmt_distrib);
+      // }
+
+      // if (dmesh_nodal->_dface_elmt != NULL) {
+      //   free (dmesh_nodal->_dface_elmt);
+      // }
+
+      // if (dmesh_nodal->_dface_elmt_idx != NULL) {
+      //   free (dmesh_nodal->_dface_elmt_idx);
+      // }
+
+      // if (dmesh_nodal->_dedge_elmt != NULL) {
+      //   free (dmesh_nodal->_dedge_elmt);
+      // }
+
+      // if (dmesh_nodal->_dedge_elmt_idx != NULL) {
+      //   free (dmesh_nodal->_dedge_elmt_idx);
+      // }
 
     }
 
