@@ -1025,7 +1025,6 @@ PDM_pyra_decomposes_edges
   const int n_edge_elt        = 8;
   const int n_sum_vtx_edge    = 16;
   const int n_sum_vtx_elt     = 5;
-  abort();
 
   int _n_edge_current = *n_edge_current;
   int         *_current_elmt_edge_vtx_idx = elmt_edge_vtx_idx + _n_edge_current;
@@ -1653,7 +1652,17 @@ PDM_sections_decompose_edges
        abort();
        break;
      case PDM_MESH_NODAL_BAR2:
-       abort();
+       PDM_bar_decomposes_edges(dmesh_nodal->sections_std[i_section]->n_elt,
+                                &n_elt_current,
+                                &n_dedge_current,
+                                beg_elmt_gnum,
+                                beg_edge_gnum,
+                                dmesh_nodal->sections_std[i_section]->_connec,
+                                elmt_edge_vtx_idx,
+                                elmt_edge_vtx,
+                                elmt_edge_cell,
+                                elmt_cell_edge_idx,
+                                elmt_cell_edge);
        break;
      case PDM_MESH_NODAL_TRIA3:
        PDM_tri_decomposes_edges(dmesh_nodal->sections_std[i_section]->n_elt,

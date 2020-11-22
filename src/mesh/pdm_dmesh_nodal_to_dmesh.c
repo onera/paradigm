@@ -1293,7 +1293,7 @@ PDM_dmesh_nodal_to_dmesh_transform_to_coherent_dmesh
 )
 {
   assert(extract_dim >= 2);
-  assert(extract_dim == 3); // Not implemented
+  // assert(extract_dim == 3); // Not implemented
 
   for(int i_mesh = 0; i_mesh < dmesh_nodal_to_dm->n_mesh; ++i_mesh) {
 

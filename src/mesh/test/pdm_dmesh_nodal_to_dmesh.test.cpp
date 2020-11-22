@@ -139,6 +139,90 @@ MPI_TEST_CASE("[PDM_dmesh_nodal_to_dmesh] decomposes hexa ",1) {
 
 }
 
+
+MPI_TEST_CASE("[PDM_dmesh_nodal_to_dmesh] decomposes tri ",1) {
+
+  const PDM_g_num_t n_vtx            = 21;
+  const PDM_g_num_t n_face           = 28;
+  const int         n_tri_section_1  = 28;
+  const int         n_bar_section_1  = 9;
+
+  PDM_g_num_t connec_tri_1[84] = {16, 15, 21,
+                                  16, 21, 20,
+                                  16, 20, 9,
+                                  16, 10, 11,
+                                  15, 13, 18,
+                                  13, 15, 12,
+                                  8, 20, 17,
+                                  19, 17, 20,
+                                  20, 21, 19,
+                                  18, 19, 21,
+                                  15, 11, 12,
+                                  18, 21, 15,
+                                  1, 13, 12,
+                                  13, 2, 18,
+                                  7, 17, 6,
+                                  9, 10, 16,
+                                  14, 5, 19,
+                                  14, 3, 4,
+                                  3, 18, 2,
+                                  6, 19, 5,
+                                  19, 6, 17,
+                                  9, 20, 8,
+                                  19, 18, 14,
+                                  18, 3, 14,
+                                  7, 8, 17,
+                                  11, 15, 16,
+                                  14, 4, 5,
+                                  1, 2, 13};
+
+  PDM_g_num_t connec_bar_1[18] = {6 , 7,
+                                  5 , 6,
+                                  4 , 5,
+                                  9 , 10,
+                                  8 , 9,
+                                  7 , 8,
+                                  12 , 1,
+                                  11 , 12,
+                                  10 , 11};
+
+  PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
+  PDM_dmesh_nodal_t* dmn = PDM_DMesh_nodal_create(pdm_comm, 3, n_vtx, -1, n_face, -1);
+
+  // The order of call is important for global numbering
+  int tri_section_1 = PDM_DMesh_nodal_section_add(dmn, PDM_MESH_NODAL_TRIA3);
+  int bar_section_1 = PDM_DMesh_nodal_section_add(dmn, PDM_MESH_NODAL_BAR2);
+
+  PDM_DMesh_nodal_section_std_set(dmn,
+                                  tri_section_1,
+                                  n_tri_section_1,
+                                  connec_tri_1);
+
+  PDM_DMesh_nodal_section_std_set(dmn,
+                                  bar_section_1,
+                                  n_bar_section_1,
+                                  connec_bar_1);
+
+  // PDM_DMesh_nodal_section_group_elmt_set(dmn, n_group_elmt, dgroup_elmt_idx, dgroup_elmt);
+
+  PDM_dmesh_nodal_generate_distribution(dmn);
+
+  PDM_dmesh_nodal_to_dmesh_t* dmntodm = PDM_dmesh_nodal_to_dmesh_create(1, pdm_comm, PDM_OWNERSHIP_KEEP);
+
+  PDM_dmesh_nodal_to_dmesh_add_dmesh_nodal(dmntodm, 0, dmn);
+
+  PDM_dmesh_nodal_to_dmesh_compute(dmntodm,
+                                   PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_EDGE,
+                                   PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_EDGE);
+
+  // PDM_dmesh_nodal_to_dmesh_transform_to_coherent_dmesh(dmntodm, 2);
+
+  // PDM_dmesh_t* dm;
+  // PDM_dmesh_nodal_to_dmesh_get_dmesh(dmntodm, 0, &dm);
+
+}
+
+
   // int n_face_elt_tot     = -1;
   // int n_sum_vtx_face_tot = -1;
   // PDM_dmesh_nodal_decompose_faces_get_size(dmn, &n_face_elt_tot, &n_sum_vtx_face_tot);
