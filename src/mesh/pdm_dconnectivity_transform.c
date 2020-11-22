@@ -422,6 +422,9 @@ PDM_dconnectivity_transpose
   PDM_g_num_t* gnum = (PDM_g_num_t * ) malloc( dentity1_entity2_idx[dn_entity1] * sizeof(PDM_g_num_t));
 
   PDM_g_num_t shift_g = entity1_distrib[i_rank]; // Entre 1 et N
+  if(entity1_distrib[0] == 0) {
+    shift_g += 1;
+  }
 
   if(is_signed) {
     ln_to_gn = (PDM_g_num_t * ) malloc( dentity1_entity2_idx[dn_entity1] * sizeof(PDM_g_num_t));
@@ -454,8 +457,9 @@ PDM_dconnectivity_transpose
   if(entity2_distrib != NULL && entity2_distrib[0] != -1) {
 
     entity2_distrib_ptb = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * (n_rank+1));
+    int shift = entity2_distrib[0];
     for(int i = 0; i < n_rank+1; ++i){
-      entity2_distrib_ptb[i] = entity2_distrib[i] - 1;
+      entity2_distrib_ptb[i] = entity2_distrib[i] - shift; // Si 0 on decale pas
     }
 
     ptb = PDM_part_to_block_create2(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
@@ -547,7 +551,7 @@ PDM_dconnectivity_transpose
   // PDM_g_num_t* _dentity2_entity1 = *dentity2_entity1;
 
   // PDM_log_trace_array_int (_dentity2_entity1_idx, dn_entity2_recv+1         , "_dentity2_entity1_idx::");
-  // PDM_log_trace_array_long(recv_data, _dentity2_entity1_idx[dn_entity2_recv], "recv_data::");
+  // PDM_log_trace_array_long(*dentity2_entity1, _dentity2_entity1_idx[dn_entity2_recv], "recv_data::");
 
   free(dentity2_entity1_n);
 }

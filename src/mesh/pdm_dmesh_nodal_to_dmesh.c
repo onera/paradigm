@@ -25,6 +25,7 @@
 #include "pdm_block_to_part.h"
 #include "pdm_logging.h"
 #include "pdm_dmesh.h"
+#include "pdm_distrib.h"
 #include "pdm_quick_sort.h"
 #include "pdm_para_graph_dual.h"
 
@@ -168,18 +169,18 @@ static
 void
 _generate_entitiy_connectivity
 (
-PDM_MPI_Comm         comm,
-PDM_g_num_t          n_vtx_abs,
-int                  n_entity_elt_tot,
-PDM_g_num_t         *delmt_entity,
-int                 *delmt_entity_vtx_idx,
-PDM_g_num_t         *delmt_entity_vtx,
-int                 *dn_entity,
-PDM_g_num_t        **entity_distrib,
-int                **dentity_vtx_idx,
-PDM_g_num_t        **dentity_vtx,
-int                **dentity_elmt_idx,
-PDM_g_num_t        **dentity_elmt
+PDM_MPI_Comm   comm,
+PDM_g_num_t    n_vtx_abs,
+int            n_entity_elt_tot,
+PDM_g_num_t   *delmt_entity,
+int           *delmt_entity_vtx_idx,
+PDM_g_num_t   *delmt_entity_vtx,
+int           *dn_entity,
+PDM_g_num_t  **entity_distrib,
+int          **dentity_vtx_idx,
+PDM_g_num_t  **dentity_vtx,
+int          **dentity_elmt_idx,
+PDM_g_num_t  **dentity_elmt
 )
 {
   // PDM_g_num_t       **dentity_elmt_idx --> face : dface_elemt :
@@ -467,7 +468,7 @@ PDM_g_num_t        **dentity_elmt
         _dentity_elmt_idx[i_abs_entity+1] = _dentity_elmt_idx[i_abs_entity];
         for(int i = 0; i < idx_next_same_entity; ++i) {
           int i_same_entity = same_entity_idx[i];
-          int sign = 1; // sens_entity[i];
+          int sign = sens_entity[i];
           // Signe à faire
           _dentity_elmt[_dentity_elmt_idx[i_abs_entity+1]++] = sign*blk_elmt_entity_elmt[idx+i_same_entity];
           already_treat[i_same_entity] = 1;
@@ -491,6 +492,7 @@ PDM_g_num_t        **dentity_elmt
    */
   free(loc_entity_vtx_1);
   free(loc_entity_vtx_2);
+  free(blk_entity_vtx_idx);
   free(already_treat);
   free(same_entity_idx);
   free(sens_entity);
@@ -582,7 +584,7 @@ _generate_faces_from_dmesh_nodal
   dm->dconnectivity_idx    [PDM_CONNECTIVITY_TYPE_FACE_VTX] = dm->_dface_vtx_idx;
   dm->dconnectivity        [PDM_CONNECTIVITY_TYPE_FACE_VTX] = dm->_dface_vtx;
 
-  int is_signed = 0;
+  int is_signed = 1;
   assert(link->elmt_distrib == NULL);
   link->elmt_distrib = (PDM_g_num_t * ) malloc( (dmesh_nodal->n_rank + 1 ) * sizeof(PDM_g_num_t));
   link->elmt_distrib[0] = -1;
@@ -914,10 +916,10 @@ _to_coherent_3d
   }
 
   printf(" dn_cell = %i\n", dn_cell);
-  dcell_face_idx = (int         *) realloc(dcell_face_idx, dn_cell                 * sizeof(int        ));
+  dcell_face_idx = (int         *) realloc(dcell_face_idx, (dn_cell+1)             * sizeof(int        ));
   dcell_face     = (PDM_g_num_t *) realloc(dcell_face    , dcell_face_idx[dn_cell] * sizeof(PDM_g_num_t));
 
-  if(1 == 0) {
+  if(1 == 1) {
     PDM_log_trace_array_int (dcell_face_idx, dn_cell+1              , "dcell_face_idx");
     PDM_log_trace_array_long(dcell_face    , dcell_face_idx[dn_cell], "dcell_face");
   }
@@ -931,6 +933,84 @@ _to_coherent_3d
 
   // 2. dface_elmt --> dface_cell
   // Caution : if face_cell is in the bad sens we need to adapt face_vtx (see partitioning with flip)
+  int         *face_cell_idx;
+  PDM_g_num_t *face_cell_tmp;
+  dmesh->cell_distrib = PDM_compute_entity_distribution(comm, dn_cell); // Begin a 1
+  PDM_log_trace_array_long(dmesh->cell_distrib, n_rank+1, "dmesh->cell_distrib::");
+  PDM_log_trace_array_long(dmesh->face_distrib, n_rank+1, "dmesh->face_distrib::");
+  PDM_dconnectivity_transpose(dmesh_nodal->pdm_mpi_comm,
+                              dmesh->cell_distrib,
+                              dmesh->face_distrib,
+                              dcell_face_idx,
+                              dcell_face,
+                              1, // is_signed
+                              &face_cell_idx,
+                              &face_cell_tmp);
+  int dn_face = dmesh->face_distrib[i_rank+1] - dmesh->face_distrib[i_rank];
+  assert(dn_face == dmesh->dn_face);
+  if(1 == 1) {
+    PDM_log_trace_array_int (face_cell_idx, dn_face+1             , "face_cell_idx::");
+    PDM_log_trace_array_long(face_cell_tmp, face_cell_idx[dn_face], "face_cell_tmp::");
+  }
+
+  // Post_treat
+  PDM_g_num_t *face_cell = (PDM_g_num_t *) malloc( 2 * dn_face * sizeof(PDM_g_num_t));;
+  for(int i_face = 0; i_face < dn_face; ++i_face) {
+
+    int beg = face_cell_idx[i_face];
+    int n_connect_cell = face_cell_idx[i_face+1] - beg;
+    if(n_connect_cell == 1) {
+      face_cell[2*i_face  ] = PDM_ABS(face_cell_tmp[beg]); // Attention on peut être retourner !!!!
+      face_cell[2*i_face+1] = 0;
+    } else {
+      assert(n_connect_cell == 2);
+      face_cell[2*i_face  ] = PDM_ABS(face_cell_tmp[beg  ]);
+      face_cell[2*i_face+1] = PDM_ABS(face_cell_tmp[beg+1]);
+    }
+
+    // Flip if the face is in the other sens
+    if( PDM_SIGN(face_cell_tmp[beg]) == -1 ) {
+      int beg_face_vtx = dmesh->_dface_vtx_idx[i_face  ];
+      int end_face_vtx = dmesh->_dface_vtx_idx[i_face+1];
+
+      // printf("before :: ");
+      // for(int i = beg_face_vtx; i < end_face_vtx; ++i) {
+      //   printf(" %i", (int) dmesh->_dface_vtx[i]);
+      // }
+      // printf("\n");
+
+      int offset = beg_face_vtx + 1;
+      int n_vtx_on_face = end_face_vtx - beg_face_vtx - 1;
+      int end_index = n_vtx_on_face - 1;
+      PDM_g_num_t tmp_swap;
+      for(int i_vtx = 0; i_vtx < n_vtx_on_face/2; ++i_vtx) {
+        tmp_swap = dmesh->_dface_vtx[offset+end_index];
+        dmesh->_dface_vtx[offset+end_index] = dmesh->_dface_vtx[offset+i_vtx];
+        dmesh->_dface_vtx[offset+i_vtx] = tmp_swap;
+        end_index--;
+
+      }
+
+      // printf("after :: ");
+      // for(int i = beg_face_vtx; i < end_face_vtx; ++i) {
+      //   printf(" %i", (int) dmesh->_dface_vtx[i]);
+      // }
+      // printf("\n");
+
+    }
+  }
+
+  free(face_cell_tmp);
+  free(face_cell_idx);
+
+  dmesh->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_FACE_CELL] = PDM_TRUE;
+  dmesh->dconnectivity_idx    [PDM_CONNECTIVITY_TYPE_FACE_CELL] = NULL;
+  dmesh->dconnectivity        [PDM_CONNECTIVITY_TYPE_FACE_CELL] = face_cell;
+
+  if(1 == 1) {
+    PDM_log_trace_array_long(face_cell, 2 * dn_face, "face_cell::");
+  }
+
 
 }
 
@@ -1011,6 +1091,8 @@ _link_dmesh_nodal_to_dmesh_free
     free(link->_dedge_elmt_idx);
     link->_dedge_elmt_idx = NULL;
   }
+
+  free(link);
 
 }
 
@@ -1093,6 +1175,9 @@ PDM_dmesh_nodal_to_dmesh_free
   }
 
   free(dmesh_nodal_to_dm->link);
+
+  free(dmesh_nodal_to_dm);
+
 }
 
 
