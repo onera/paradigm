@@ -142,49 +142,32 @@ MPI_TEST_CASE("[PDM_dmesh_nodal_to_dmesh] decomposes hexa ",1) {
 
 MPI_TEST_CASE("[PDM_dmesh_nodal_to_dmesh] decomposes tri ",1) {
 
-  const PDM_g_num_t n_vtx            = 21;
-  const PDM_g_num_t n_face           = 28;
-  const int         n_tri_section_1  = 28;
-  const int         n_bar_section_1  = 9;
+  const PDM_g_num_t n_vtx            = 9;
+  const PDM_g_num_t n_face           = 8;
+  const int         n_tri_section_1  = 8;
+  const int         n_bar_section_1  = 8;
 
-  PDM_g_num_t connec_tri_1[84] = {16, 15, 21,
-                                  16, 21, 20,
-                                  16, 20, 9,
-                                  16, 10, 11,
-                                  15, 13, 18,
-                                  13, 15, 12,
-                                  8, 20, 17,
-                                  19, 17, 20,
-                                  20, 21, 19,
-                                  18, 19, 21,
-                                  15, 11, 12,
-                                  18, 21, 15,
-                                  1, 13, 12,
-                                  13, 2, 18,
-                                  7, 17, 6,
-                                  9, 10, 16,
-                                  14, 5, 19,
-                                  14, 3, 4,
-                                  3, 18, 2,
-                                  6, 19, 5,
-                                  19, 6, 17,
-                                  9, 20, 8,
-                                  19, 18, 14,
-                                  18, 3, 14,
-                                  7, 8, 17,
-                                  11, 15, 16,
-                                  14, 4, 5,
-                                  1, 2, 13};
+  PDM_g_num_t connec_tri_1[24] = {6, 8, 9,
+                                  9, 5, 6,
+                                  2, 8, 1,
+                                  9, 3, 4,
+                                  6, 7, 8,
+                                  9, 4, 5,
+                                  2, 9, 8,
+                                  9, 2, 3};
 
-  PDM_g_num_t connec_bar_1[18] = {6 , 7,
-                                  5 , 6,
-                                  4 , 5,
-                                  9 , 10,
-                                  8 , 9,
-                                  7 , 8,
-                                  12 , 1,
-                                  11 , 12,
-                                  10 , 11};
+  PDM_g_num_t connec_bar_1[16] = {1, 2,
+                                  2, 3,
+                                  4, 5,
+                                  3, 4,
+                                  6, 7,
+                                  5, 6,
+                                  8, 1,
+                                  7, 8};
+
+  int n_group_elmt = 1;
+  int dgroup_elmt_idx[2] = {0, 8};
+  PDM_g_num_t dgroup_elmt[8] = {9, 10, 11, 12, 13, 14, 15, 16};
 
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
   PDM_dmesh_nodal_t* dmn = PDM_DMesh_nodal_create(pdm_comm, 3, n_vtx, -1, n_face, -1);
@@ -215,7 +198,7 @@ MPI_TEST_CASE("[PDM_dmesh_nodal_to_dmesh] decomposes tri ",1) {
                                    PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_EDGE,
                                    PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_EDGE);
 
-  // PDM_dmesh_nodal_to_dmesh_transform_to_coherent_dmesh(dmntodm, 2);
+  PDM_dmesh_nodal_to_dmesh_transform_to_coherent_dmesh(dmntodm, 2);
 
   // PDM_dmesh_t* dm;
   // PDM_dmesh_nodal_to_dmesh_get_dmesh(dmntodm, 0, &dm);
