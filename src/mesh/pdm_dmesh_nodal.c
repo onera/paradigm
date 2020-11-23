@@ -883,7 +883,7 @@ PDM_DMesh_nodal_section_distri_std_get
   PDM_dmesh_nodal_t* mesh = (PDM_dmesh_nodal_t*)dmesh_nodal;
   if (id_section <= PDM_BLOCK_ID_BLOCK_POLY2D) { // std
     int _id_section = id_section - PDM_BLOCK_ID_BLOCK_STD;
-    return mesh->sections_std[id_section]->distrib;
+    return mesh->sections_std[_id_section]->distrib;
   }
   assert(0); // only useful for std elements
 }
@@ -907,9 +907,6 @@ PDM_DMesh_nodal_section_add
 const PDM_Mesh_nodal_elt_t  t_elt
 )
 {
-
-
-
   if (dmesh_nodal == NULL) {
     PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
   }

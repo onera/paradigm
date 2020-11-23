@@ -82,7 +82,7 @@ MPI_TEST_CASE("part by elt", 1) {
   int n_prism = m.prism.size()/6;
   int n_hex   = m.hex.size()/8;
   int n_elt = n_tet + n_pyra + n_prism + n_hex;
-  auto vtx_coord = std_e::concatenate(m.coord_X,m.coord_Y,m.coord_Z);
+  auto vtx_coord = std_e::concatenate(m.coord_X,m.coord_Y,m.coord_Z); // TODO interleave
   // 1. mesh distribution }
 
   // 2. dmesh_nodal creation {
