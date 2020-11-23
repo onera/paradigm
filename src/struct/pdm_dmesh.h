@@ -75,7 +75,14 @@ typedef enum {
   PDM_CONNECTIVITY_TYPE_MAX         = 24
 } PDM_connectivity_type_t;
 
-// Reflexion similaire pour les group
+typedef enum {
+  PDM_BOUND_TYPE_ELMT   = 0,
+  PDM_BOUND_TYPE_CELL   = 1,
+  PDM_BOUND_TYPE_FACE   = 2,
+  PDM_BOUND_TYPE_EDGE   = 3,
+  PDM_BOUND_TYPE_VTX    = 4,
+  PDM_BOUND_TYPE_MAX    = 5,
+} PDM_bound_type_t;
 
 
 /*=============================================================================
@@ -213,6 +220,17 @@ PDM_dmesh_connectivity_get
  PDM_g_num_t             **connect,
  int                     **connect_idx,
  PDM_ownership_t           ownership
+);
+
+
+void
+PDM_dmesh_bound_get
+(
+ PDM_dmesh_t       *dmesh,
+ PDM_bound_type_t   bound_type,
+ PDM_g_num_t      **connect,
+ int              **connect_idx,
+ PDM_ownership_t    ownership
 );
 
 /**
