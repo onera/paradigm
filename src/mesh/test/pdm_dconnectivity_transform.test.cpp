@@ -44,13 +44,13 @@ MPI_TEST_CASE("[1p] pdm_dconnectivity_transform dcell_face + dface_vtx = dcell_v
   int*         dvtx_cell_idx;
   PDM_g_num_t* dvtx_cell;
   PDM_dconnectivity_transpose(pdm_comm,
-                               cell_distrib,
-                               vtx_distrib,
-                               dcell_vtx_idx,
-                               dcell_vtx,
-                               0,
-                               &dvtx_cell_idx,
-                               &dvtx_cell);
+                              cell_distrib,
+                              vtx_distrib,
+                              dcell_vtx_idx,
+                              dcell_vtx,
+                              0,
+                              &dvtx_cell_idx,
+                              &dvtx_cell);
 
   // int*         dcell_vtx_idx_2;
   // PDM_g_num_t* dcell_vtx_2;
@@ -65,6 +65,8 @@ MPI_TEST_CASE("[1p] pdm_dconnectivity_transform dcell_face + dface_vtx = dcell_v
 
   free(dcell_vtx_idx);
   free(dcell_vtx);
+  free(dvtx_cell_idx);
+  free(dvtx_cell);
 
 }
 

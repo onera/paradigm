@@ -47,24 +47,34 @@ extern "C" {
 
 typedef struct _pdm_dmesh_t PDM_dmesh_t;
 
-// typedef enum {
-//   PDM_CONNECTIVITY_CELL_CELL  = 1,
-//   PDM_CONNECTIVITY_CELL_FACE  = 2,
-//   PDM_CONNECTIVITY_CELL_EDGE  = 3,
-//   PDM_CONNECTIVITY_CELL_VTX   = 4,
-//   PDM_CONNECTIVITY_FACE_CELL  = 5,
-//   PDM_CONNECTIVITY_FACE_FACE  = 6,
-//   PDM_CONNECTIVITY_FACE_EDGE  = 7,
-//   PDM_CONNECTIVITY_FACE_VTX   = 8,
-//   PDM_CONNECTIVITY_EDGE_CELL  = 9,
-//   PDM_CONNECTIVITY_EDGE_FACE  = 10,
-//   PDM_CONNECTIVITY_EDGE_EDGE  = 11,
-//   PDM_CONNECTIVITY_EDGE_VTX   = 12,
-//   PDM_CONNECTIVITY_VTX_CELL   = 13,
-//   PDM_CONNECTIVITY_VTX_FACE   = 14,
-//   PDM_CONNECTIVITY_VTX_EDGE   = 15,
-//   PDM_CONNECTIVITY_VTX_VTX    = 16
-// } PDM_connectivity_type_t;
+typedef enum {
+  PDM_CONNECTIVITY_TYPE_CELL_ELMT   = 0,
+  PDM_CONNECTIVITY_TYPE_CELL_CELL   = 1,
+  PDM_CONNECTIVITY_TYPE_CELL_FACE   = 2,
+  PDM_CONNECTIVITY_TYPE_CELL_EDGE   = 3,
+  PDM_CONNECTIVITY_TYPE_CELL_VTX    = 4,
+  PDM_CONNECTIVITY_TYPE_FACE_ELMT   = 5,
+  PDM_CONNECTIVITY_TYPE_FACE_CELL   = 6,
+  PDM_CONNECTIVITY_TYPE_FACE_FACE   = 7,
+  PDM_CONNECTIVITY_TYPE_FACE_EDGE   = 8,
+  PDM_CONNECTIVITY_TYPE_FACE_VTX    = 9,
+  PDM_CONNECTIVITY_TYPE_EDGE_ELMT   = 10,
+  PDM_CONNECTIVITY_TYPE_EDGE_CELL   = 11,
+  PDM_CONNECTIVITY_TYPE_EDGE_FACE   = 12,
+  PDM_CONNECTIVITY_TYPE_EDGE_EDGE   = 13,
+  PDM_CONNECTIVITY_TYPE_EDGE_VTX    = 14,
+  PDM_CONNECTIVITY_TYPE_VTX_ELMT    = 15,
+  PDM_CONNECTIVITY_TYPE_VTX_CELL    = 16,
+  PDM_CONNECTIVITY_TYPE_VTX_FACE    = 17,
+  PDM_CONNECTIVITY_TYPE_VTX_EDGE    = 18,
+  PDM_CONNECTIVITY_TYPE_VTX_VTX     = 19,
+  PDM_CONNECTIVITY_TYPE_ELMT_CELL   = 20,
+  PDM_CONNECTIVITY_TYPE_ELMT_FACE   = 21,
+  PDM_CONNECTIVITY_TYPE_ELMT_EDGE   = 22,
+  PDM_CONNECTIVITY_TYPE_ELMT_VTX    = 23,
+  PDM_CONNECTIVITY_TYPE_MAX         = 24
+} PDM_connectivity_type_t;
+
 // Reflexion similaire pour les group
 
 
@@ -92,11 +102,13 @@ typedef struct _pdm_dmesh_t PDM_dmesh_t;
 PDM_dmesh_t*
 PDM_dmesh_create
 (
- const int          dn_cell,
- const int          dn_face,
- const int          dn_vtx,
- const int          dn_bnd,
- const int          n_join
+       PDM_ownership_t owner,
+ const int             dn_cell,
+ const int             dn_face,
+ const int             dn_edge,
+ const int             dn_vtx,
+ const int             n_bnd,
+ const int             n_join
 );
 
 /**
@@ -156,6 +168,7 @@ PDM_dmesh_dims_get
  PDM_dmesh_t *dmeshm,
  int         *dn_cell,
  int         *dn_face,
+ int         *dn_edge,
  int         *dn_vtx,
  int         *dn_bnd,
  int         *n_joins
@@ -190,6 +203,16 @@ PDM_dmesh_data_get
  const int          **joins_glob_id,
  const int          **dface_join_idx,
  const PDM_g_num_t  **dface_join
+);
+
+void
+PDM_dmesh_connectivity_get
+(
+ PDM_dmesh_t              *dmesh,
+ PDM_connectivity_type_t   connectivity_type,
+ PDM_g_num_t             **connect,
+ int                     **connect_idx,
+ PDM_ownership_t           ownership
 );
 
 /**

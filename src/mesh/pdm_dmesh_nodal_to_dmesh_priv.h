@@ -28,10 +28,33 @@ extern "C" {
  *============================================================================*/
 
 /**
- * \struct _PDM_Dist_t
- * \brief  Distance to a mesh surface structure
+ * \struct _pdm_dmesh_nodal_to_dmesh_t
+ * \brief  link between dmesh_nodal and dmesh
  *
  */
+
+typedef struct _pdm_link_dmesh_nodal_to_dmesh_t {
+
+  PDM_dmesh_nodal_t *dmesh_nodal;
+  PDM_dmesh_t       *dmesh;
+
+  /* We keep the link between the dmesh_nodal and dmesh */
+  int           dn_elmt;
+  PDM_g_num_t  *elmt_distrib;
+  PDM_g_num_t  *_delmt_face;
+  int          *_delmt_face_idx;
+
+  PDM_g_num_t  *_dface_elmt;
+  int          *_dface_elmt_idx;
+
+  PDM_g_num_t  *_delmt_edge;
+  int          *_delmt_edge_idx;
+
+  PDM_g_num_t  *_dedge_elmt;
+  int          *_dedge_elmt_idx;
+
+} _pdm_link_dmesh_nodal_to_dmesh_t;
+
 
 struct _pdm_dmesh_nodal_to_dmesh_t {
 
@@ -41,8 +64,7 @@ struct _pdm_dmesh_nodal_to_dmesh_t {
 
   int                  n_mesh;                  /*!< Number of meshes to manages                */
 
-  PDM_dmesh_nodal_t **dmesh_nodal;
-  PDM_dmesh_t       **dmesh;
+  _pdm_link_dmesh_nodal_to_dmesh_t **link;
 
 };
 

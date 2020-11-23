@@ -599,6 +599,7 @@ PDM_multi_block_to_part_free
     free (mbtp->block_distrib_idx[i_block]);
   }
   free(mbtp->block_distrib_idx);
+  free(mbtp->multi_distrib_idx);
 
   for (int i = 0; i < mbtp->n_part; i++) {
     free (mbtp->ind[i]);

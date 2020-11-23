@@ -1,5 +1,5 @@
-#ifndef __pdm_dmesh_nodal_tO_DMESH_H__
-#define __pdm_dmesh_nodal_tO_DMESH_H__
+#ifndef __PDM_DMESH_NODAL_TO_DMESH_H__
+#define __PDM_DMESH_NODAL_TO_DMESH_H__
 
 /*----------------------------------------------------------------------------
  * Standard C library headers
@@ -99,6 +99,12 @@ PDM_dmesh_nodal_to_dmesh_free
   PDM_dmesh_nodal_to_dmesh_t* dmn_to_dm
 );
 
+void
+PDM_dmesh_nodal_to_dmesh_transform_to_coherent_dmesh
+(
+        PDM_dmesh_nodal_to_dmesh_t *dmn_to_dm,
+  const int                         extract_dim
+);
 
 #ifdef __cplusplus
 }

@@ -66,7 +66,7 @@ PDM_dconnectivity_transpose
 (
  const PDM_MPI_Comm     comm,
  const PDM_g_num_t     *entity1_distrib,
- const PDM_g_num_t     *entity2_distrib,
+       PDM_g_num_t     *entity2_distrib,
  const int             *dentity1_entity2_idx,
  const PDM_g_num_t     *dentity1_entity2,
        int              is_signed,

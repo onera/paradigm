@@ -661,6 +661,7 @@ const PDM_g_num_t     *dnode_arc,
   for (int i = 0; i < dnode_arc_idx[dn_node]; i++) {
     send_stride[i] = 1;
   }
+  free(arc_ln_to_gn);
 
   int        *recv_stride = NULL;
   PDM_g_num_t  *recv_data = NULL;
@@ -725,6 +726,8 @@ const PDM_g_num_t     *dnode_arc,
   free(node_g);
   free(graph_arc_distrib_ptb);
   free(send_stride);
+  free(recv_stride);
+  free(recv_data);
 
   /* Now we have a arc_to_node connectivity, we can call graph_dual_from_arc2node
   */
@@ -738,8 +741,6 @@ const PDM_g_num_t     *dnode_arc,
                                     0,
                                     NULL,
                                     NULL);
-
-
   free(darc_to_node);
 }
 
@@ -766,7 +767,7 @@ PDM_para_graph_dual_from_combine_connectivity
 const PDM_MPI_Comm   comm,
 const PDM_g_num_t   *cell_distrib,
 const PDM_g_num_t   *face_distrib,
-const PDM_g_num_t   *vtx_distrib,
+      PDM_g_num_t   *vtx_distrib,
 const int           *dcell_face_idx,
 const PDM_g_num_t   *dcell_face,
 const int           *dface_vtx_idx,

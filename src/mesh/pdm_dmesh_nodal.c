@@ -59,6 +59,59 @@ extern "C" {
  *============================================================================*/
 
 /**
+ *
+ * \brief Update blocks identifier list
+ *
+ * \param [inout]  mesh        Mesh
+ */
+
+static void
+_update_sections_id
+(
+ PDM_dmesh_nodal_t *dmesh_nodal
+)
+{
+  int n_section = 0;
+
+  if (dmesh_nodal->sections_std != NULL) {
+    n_section += dmesh_nodal->n_section_std;
+  }
+
+  if (dmesh_nodal->sections_poly2d != NULL) {
+    n_section += dmesh_nodal->n_section_poly2d;
+  }
+
+  if (dmesh_nodal->sections_poly3d != NULL) {
+    n_section += dmesh_nodal->n_section_poly3d;
+  }
+
+  if (dmesh_nodal->n_section < n_section) {
+    dmesh_nodal->sections_id = (int *) realloc(dmesh_nodal->sections_id, sizeof(int) * n_section);
+  }
+
+  int k = 0;
+  if (dmesh_nodal->sections_std != NULL) {
+    for (int i = 0; i < dmesh_nodal->n_section_std; i++) {
+      dmesh_nodal->sections_id[k++] = i + PDM_BLOCK_ID_BLOCK_STD;
+    }
+  }
+
+  if (dmesh_nodal->sections_poly2d != NULL) {
+    for (int i = 0; i < dmesh_nodal->n_section_poly2d; i++) {
+      dmesh_nodal->sections_id[k++] = i + PDM_BLOCK_ID_BLOCK_POLY2D;
+    }
+  }
+
+  if (dmesh_nodal->sections_poly3d != NULL) {
+    for (int i = 0; i < dmesh_nodal->n_section_poly3d; i++) {
+      dmesh_nodal->sections_id[k++] = i + PDM_BLOCK_ID_BLOCK_POLY3D;
+    }
+  }
+
+  dmesh_nodal->n_section = n_section;
+
+}
+/**
  * \def _compute_keys
  */
 static
@@ -173,6 +226,8 @@ PDM_DMesh_nodal_section_std_t *_section_std
     free (_section_std->distrib);
     _section_std->distrib = NULL;
   }
+
+  free(_section_std);
 }
 
 
@@ -203,6 +258,7 @@ PDM_DMesh_nodal_section_poly2d_t *_section_poly2d
     _section_poly2d->distrib = NULL;
   }
 
+  free(_section_poly2d);
 }
 
 /**
@@ -229,6 +285,8 @@ PDM_DMesh_nodal_section_poly3d_t *_section_poly3d
     free (_section_poly3d->distrib);
     _section_poly3d->distrib = NULL;
   }
+
+  free(_section_poly3d);
 }
 
 
@@ -351,29 +409,16 @@ const PDM_MPI_Comm        comm,
   dmesh_nodal->dgroup_elmt              = NULL;
 
   dmesh_nodal->n_section_tot            = 0;
-  dmesh_nodal->section_type             = NULL;
-  dmesh_nodal->section_idx              = NULL;
 
   dmesh_nodal->n_section                = 0;
   dmesh_nodal->n_section_std            = 0;
+  dmesh_nodal->n_section_poly2d         = 0;
   dmesh_nodal->n_section_poly3d         = 0;
 
-  // dmesh_nodal->sections_id              = NULL;
+  dmesh_nodal->sections_id              = NULL;
   dmesh_nodal->sections_std             = NULL;
   dmesh_nodal->sections_poly3d          = NULL;
-
-  // dmesh_nodal->sections_id_l1           = NULL;
-  dmesh_nodal->n_section_l1             = 0;
-  dmesh_nodal->n_section_std_l1         = 0;
-  dmesh_nodal->n_section_poly2d_l1      = 0;
-  dmesh_nodal->sections_std_l1          = NULL;
-  dmesh_nodal->sections_poly2d_l1       = NULL;
-
-  // dmesh_nodal->sections_id_l2           = NULL;
-  dmesh_nodal->n_section_l2             = 0;
-  dmesh_nodal->n_section_std_l2         = 0;
-  dmesh_nodal->sections_std_l2          = NULL;
-
+  dmesh_nodal->sections_poly2d          = NULL;
   dmesh_nodal->section_distribution     = NULL;
 
   dmesh_nodal->dn_cell                  = -1;
@@ -387,77 +432,22 @@ const PDM_MPI_Comm        comm,
   dmesh_nodal->_dface_cell              = NULL;
   dmesh_nodal->face_distrib             = NULL;
 
-  dmesh_nodal->dn_edge                  = 0;
-  dmesh_nodal->edge_distrib             = NULL;
-  dmesh_nodal->_dedge_vtx_idx           = NULL;
-  dmesh_nodal->_dedge_vtx               = NULL;
-  dmesh_nodal->dface_edge_idx           = NULL;
-  dmesh_nodal->dface_edge               = NULL;
-  dmesh_nodal->_dedge_face              = NULL;
+  // dmesh_nodal->dn_edge                  = 0;
+  // dmesh_nodal->edge_distrib             = NULL;
+  // dmesh_nodal->_dedge_vtx_idx           = NULL;
+  // dmesh_nodal->_dedge_vtx               = NULL;
+  // dmesh_nodal->dface_edge_idx           = NULL;
+  // dmesh_nodal->dface_edge               = NULL;
+  // dmesh_nodal->_dedge_face              = NULL;
+
+  // dmesh_nodal->dn_elmt                  = 0;
+  // dmesh_nodal->elmt_distrib             = NULL;
+  // dmesh_nodal->_dface_elmt              = NULL;
+  // dmesh_nodal->_dface_elmt_idx          = NULL;
+  // dmesh_nodal->_dedge_elmt              = NULL;
+  // dmesh_nodal->_dedge_elmt_idx          = NULL;
 
 }
-
-/**
- *
- * \brief Update sections identifier list
- *
- * \param [inout]  mesh        Mesh
- */
-
-// static void
-// _update_sections_id
-// (
-// PDM_dmesh_nodal_t *mesh
-// )
-// {
-//   // TODO : I think this function is useless, we never use section_id
-//   PDM_UNUSED(mesh);
-//   abort();
-  // int n_sections = 0;
-
-  // if (dmesh_nodal->sections_std != NULL) {
-  //   n_sections += PDM_Handles_n_get (dmesh_nodal->sections_std);
-  // }
-
-  // if (dmesh_nodal->sections_poly2d != NULL) {
-  //   n_sections += PDM_Handles_n_get (dmesh_nodal->sections_poly2d);
-  // }
-
-  // if (dmesh_nodal->sections_poly3d != NULL) {
-  //   n_sections += PDM_Handles_n_get (dmesh_nodal->sections_poly3d);
-  // }
-
-  // if (dmesh_nodal->n_section < n_sections) {
-  //   dmesh_nodal->sections_id = (int *) realloc(dmesh_nodal->sections_id, sizeof(int) * n_sections);
-  // }
-
-  // int k = 0;
-  // if (dmesh_nodal->sections_std != NULL) {
-  //   const int *id1 = PDM_Handles_idx_get (dmesh_nodal->sections_std);
-  //   int n = PDM_Handles_n_get (dmesh_nodal->sections_std);
-  //   for (int i = 0; i < n; i++) {
-  //     dmesh_nodal->sections_id[k++] = id1[i] + PDM_BLOCK_ID_BLOCK_STD;
-  //   }
-  // }
-
-  // if (dmesh_nodal->sections_poly2d != NULL) {
-  //   const int *id1 = PDM_Handles_idx_get (dmesh_nodal->sections_poly2d);
-  //   int n = PDM_Handles_n_get (dmesh_nodal->sections_poly2d);
-  //   for (int i = 0; i < n; i++) {
-  //     dmesh_nodal->sections_id[k++] = id1[i] + PDM_BLOCK_ID_BLOCK_POLY2D;
-  //   }
-  // }
-
-  // if (dmesh_nodal->sections_poly3d != NULL) {
-  //   const int *id1 = PDM_Handles_idx_get (dmesh_nodal->sections_poly3d);
-  //   int n = PDM_Handles_n_get (dmesh_nodal->sections_poly3d);
-  //   for (int i = 0; i < n; i++) {
-  //     dmesh_nodal->sections_id[k++] = id1[i] + PDM_BLOCK_ID_BLOCK_POLY3D;
-  //   }
-  // }
-
-  // dmesh_nodal->n_section = n_sections;
-// }
 
 /*=============================================================================
  * Public function definitions
@@ -514,77 +504,21 @@ const int                partial
 
   if (dmesh_nodal != NULL) {
 
-    // if (dmesh_nodal->sections_id != NULL) {
-    //   free (dmesh_nodal->sections_id);
-    // }
+    if (dmesh_nodal->sections_id != NULL) {
+      free (dmesh_nodal->sections_id);
+    }
+    dmesh_nodal->sections_id = NULL;
 
-    // dmesh_nodal->sections_id = NULL;
+    if(dmesh_nodal->section_distribution != NULL) {
+      free (dmesh_nodal->section_distribution);
+    }
+    dmesh_nodal->section_distribution = NULL;
 
-     _vtx_free(dmesh_nodal->vtx);
+    _vtx_free(dmesh_nodal->vtx);
 
-     _sections_std_free   (dmesh_nodal->sections_std   , dmesh_nodal->n_section_std   );
-     _sections_poly3d_free(dmesh_nodal->sections_poly3d, dmesh_nodal->n_section_poly3d);
-
-     _sections_std_free   (dmesh_nodal->sections_std_l1   , dmesh_nodal->n_section_std_l1   );
-     _sections_poly2d_free(dmesh_nodal->sections_poly2d_l1, dmesh_nodal->n_section_poly2d_l1);
-
-     _sections_std_free   (dmesh_nodal->sections_std_l2   , dmesh_nodal->n_section_std_l2   );
-
-
-    /* free standard sections */
-
-    // if (dmesh_nodal->sections_std != NULL) {
-    //   int n_section_std = PDM_Handles_n_get (dmesh_nodal->sections_std);
-    //   const int *list_ind = PDM_Handles_idx_get (dmesh_nodal->sections_std);
-
-    //   while (n_section_std > 0) {
-    //     PDM_DMesh_nodal_section_std_t *_bloc_std =
-    //       (PDM_DMesh_nodal_section_std_t *) PDM_Handles_get (dmesh_nodal->sections_std, list_ind[0]);
-    //     _section_std_free(_bloc_std);
-    //     PDM_Handles_handle_free (dmesh_nodal->sections_std, list_ind[0], PDM_FALSE);
-    //     n_section_std = PDM_Handles_n_get (dmesh_nodal->sections_std);
-    //   }
-
-    //   dmesh_nodal->sections_std = PDM_Handles_free (dmesh_nodal->sections_std);
-    // }
-
-    // /* Free polygon sections */
-
-    // if (dmesh_nodal->sections_poly2d != NULL) {
-    //   int n_section_poly2d = PDM_Handles_n_get (dmesh_nodal->sections_poly2d);
-    //   const int *list_ind = PDM_Handles_idx_get (dmesh_nodal->sections_poly2d);
-
-    //   while (n_section_poly2d > 0) {
-    //     PDM_DMesh_nodal_section_poly2d_t *_bloc_poly2d =
-    //       (PDM_DMesh_nodal_section_poly2d_t *) PDM_Handles_get (dmesh_nodal->sections_poly2d, list_ind[0]);
-    //     _section_poly2d_free(_bloc_poly2d);
-    //     PDM_Handles_handle_free (dmesh_nodal->sections_poly2d, list_ind[0], PDM_FALSE);
-    //     n_section_poly2d = PDM_Handles_n_get (dmesh_nodal->sections_poly2d);
-    //   }
-
-    //   dmesh_nodal->sections_poly2d = PDM_Handles_free (dmesh_nodal->sections_poly2d);
-    // }
-
-    // /* Free polyhedron sections */
-
-    // if (dmesh_nodal->sections_poly3d != NULL) {
-    //   int n_section_poly3d = PDM_Handles_n_get (dmesh_nodal->sections_poly3d);
-    //   const int *list_ind = PDM_Handles_idx_get (dmesh_nodal->sections_poly3d);
-
-    //   while (n_section_poly3d > 0) {
-    //     PDM_DMesh_nodal_section_poly3d_t *_bloc_poly3d =
-    //       (PDM_DMesh_nodal_section_poly3d_t *) PDM_Handles_get (dmesh_nodal->sections_poly3d, list_ind[0]);
-    //     _section_poly3d_free(_bloc_poly3d);
-    //     PDM_Handles_handle_free (dmesh_nodal->sections_poly3d, list_ind[0], PDM_FALSE);
-    //     n_section_poly3d = PDM_Handles_n_get (dmesh_nodal->sections_poly3d);
-    //   }
-
-    //   dmesh_nodal->sections_poly3d = PDM_Handles_free (dmesh_nodal->sections_poly3d);
-    // }
-
-    // if (dmesh_nodal->sections_id != NULL) {
-    //   free (dmesh_nodal->sections_id);
-    // }
+    _sections_std_free   (dmesh_nodal->sections_std   , dmesh_nodal->n_section_std   );
+    _sections_poly3d_free(dmesh_nodal->sections_poly3d, dmesh_nodal->n_section_poly3d);
+    _sections_poly2d_free(dmesh_nodal->sections_poly2d, dmesh_nodal->n_section_poly2d);
 
     if(partial == 0){
       if (dmesh_nodal->dcell_face_idx != NULL) {
@@ -611,29 +545,49 @@ const int                partial
         free (dmesh_nodal->face_distrib);
       }
 
-      if (dmesh_nodal->edge_distrib != NULL) {
-        free (dmesh_nodal->edge_distrib);
-      }
+      // if (dmesh_nodal->edge_distrib != NULL) {
+      //   free (dmesh_nodal->edge_distrib);
+      // }
 
-      if (dmesh_nodal->_dedge_vtx_idx != NULL) {
-        free (dmesh_nodal->_dedge_vtx_idx);
-      }
+      // if (dmesh_nodal->_dedge_vtx_idx != NULL) {
+      //   free (dmesh_nodal->_dedge_vtx_idx);
+      // }
 
-      if (dmesh_nodal->_dedge_vtx != NULL) {
-        free (dmesh_nodal->_dedge_vtx);
-      }
+      // if (dmesh_nodal->_dedge_vtx != NULL) {
+      //   free (dmesh_nodal->_dedge_vtx);
+      // }
 
-      if (dmesh_nodal->dface_edge_idx != NULL) {
-        free (dmesh_nodal->dface_edge_idx);
-      }
+      // if (dmesh_nodal->dface_edge_idx != NULL) {
+      //   free (dmesh_nodal->dface_edge_idx);
+      // }
 
-      if (dmesh_nodal->dface_edge != NULL) {
-        free (dmesh_nodal->dface_edge);
-      }
+      // if (dmesh_nodal->dface_edge != NULL) {
+      //   free (dmesh_nodal->dface_edge);
+      // }
 
-      if (dmesh_nodal->_dedge_face != NULL) {
-        free (dmesh_nodal->_dedge_face);
-      }
+      // if (dmesh_nodal->_dedge_face != NULL) {
+      //   free (dmesh_nodal->_dedge_face);
+      // }
+
+      // if (dmesh_nodal->elmt_distrib != NULL) {
+      //   free (dmesh_nodal->elmt_distrib);
+      // }
+
+      // if (dmesh_nodal->_dface_elmt != NULL) {
+      //   free (dmesh_nodal->_dface_elmt);
+      // }
+
+      // if (dmesh_nodal->_dface_elmt_idx != NULL) {
+      //   free (dmesh_nodal->_dface_elmt_idx);
+      // }
+
+      // if (dmesh_nodal->_dedge_elmt != NULL) {
+      //   free (dmesh_nodal->_dedge_elmt);
+      // }
+
+      // if (dmesh_nodal->_dedge_elmt_idx != NULL) {
+      //   free (dmesh_nodal->_dedge_elmt_idx);
+      // }
 
     }
 
@@ -817,51 +771,42 @@ PDM_DMesh_nodal_section_elt_type_get
 PDM_Mesh_nodal_elt_t
 PDM_DMesh_nodal_section_type_get
 (
-  PDM_dmesh_nodal_t  *dmesh_nodal,
-  const int   id_section
+      PDM_dmesh_nodal_t *dmesh_nodal,
+const int                id_section
 )
 {
-  PDM_dmesh_nodal_t* mesh = (PDM_dmesh_nodal_t*)dmesh_nodal;
-  return mesh->section_type[id_section];
-  //PDM_UNUSED(dmesh_nodal);
-  //PDM_UNUSED(id_section);
-  //abort();
+  if (dmesh_nodal == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
+  }
 
-  //// PDM_dmesh_nodal_t *mesh =
-  ////         (PDM_dmesh_nodal_t *) PDM_Handles_get (mesh_handles, hdl);
+  PDM_Mesh_nodal_elt_t t_elt = PDM_MESH_NODAL_POLY_3D;
 
-  //PDM_Mesh_nodal_elt_t t_elt = PDM_MESH_NODAL_POLY_3D;
+  if (id_section < PDM_BLOCK_ID_BLOCK_POLY2D) {
 
-  //// if (mesh == NULL) {
-  ////   PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
-  //// }
+    t_elt = PDM_MESH_NODAL_POLY_3D;
+    int _id_section = id_section - PDM_BLOCK_ID_BLOCK_STD;
+    PDM_DMesh_nodal_section_std_t *section = dmesh_nodal->sections_std[_id_section];
 
-  //// if (id_section < PDM_BLOCK_ID_BLOCK_POLY2D) {
+    if (section == NULL) {
+      PDM_error (__FILE__, __LINE__, 0, "Bad section identifier\n");
+    }
 
-  ////   t_elt = PDM_MESH_NODAL_POLY_3D;
-  ////   PDM_DMesh_nodal_section_std_t *section =
-  ////           (PDM_DMesh_nodal_section_std_t *) PDM_Handles_get (mesh->sections_std, id_section);
+    t_elt = section->t_elt;
+  }
 
-  ////   if (section == NULL) {
-  ////     PDM_error (__FILE__, __LINE__, 0, "Bad section identifier\n");
-  ////   }
+  else if (id_section < PDM_BLOCK_ID_BLOCK_POLY3D) {
 
-  ////   t_elt = section->t_elt;
-  //// }
+    t_elt = PDM_MESH_NODAL_POLY_2D;
 
-  //// else if (id_section < PDM_BLOCK_ID_BLOCK_POLY3D) {
+  }
 
-  ////   t_elt = PDM_MESH_NODAL_POLY_2D;
+  else {
 
-  //// }
+    t_elt = PDM_MESH_NODAL_POLY_3D;
 
-  //// else {
+  }
 
-  ////   t_elt = PDM_MESH_NODAL_POLY_3D;
-
-  //// }
-
-  //return t_elt;
+  return t_elt;
 }
 
 /**
@@ -911,99 +856,49 @@ const PDM_Mesh_nodal_elt_t  t_elt
     PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
   }
 
-  // > Le rangement depend de mesh_dimension -> L'ordre importe
+  int id_block = -1;
+  dmesh_nodal->n_section_tot++;
 
-  int id_section = dmesh_nodal->n_section_tot++;
-
-  dmesh_nodal->section_type = realloc(dmesh_nodal->section_type, sizeof(PDM_section_type_t) * dmesh_nodal->n_section_tot);
-  dmesh_nodal->section_idx  = realloc(dmesh_nodal->section_idx , sizeof(int               ) * dmesh_nodal->n_section_tot);
+  dmesh_nodal->sections_id  = realloc(dmesh_nodal->sections_id , sizeof(int               ) * dmesh_nodal->n_section_tot);
 
   switch (t_elt) {
 
   case PDM_MESH_NODAL_POINT    :
   case PDM_MESH_NODAL_BAR2     :
-    {
-      dmesh_nodal->section_type[dmesh_nodal->n_section_tot-1] = PDM_SECTION_TYPE_STD1D;
-      dmesh_nodal->section_idx [dmesh_nodal->n_section_tot-1] = dmesh_nodal->n_section_std_l2;
-
-      dmesh_nodal->n_section_l2++;
-      dmesh_nodal->n_section_std_l2++;
-
-      dmesh_nodal->sections_std_l2 = realloc(dmesh_nodal->sections_std_l2, dmesh_nodal->n_section_std_l2 * sizeof(PDM_DMesh_nodal_section_std_t));
-      dmesh_nodal->sections_std_l2[dmesh_nodal->n_section_std_l2-1] = malloc( sizeof(PDM_DMesh_nodal_section_std_t) );
-      dmesh_nodal->sections_std_l2[dmesh_nodal->n_section_std_l2-1]->t_elt   = t_elt;
-      dmesh_nodal->sections_std_l2[dmesh_nodal->n_section_std_l2-1]->n_elt   = -1;
-      dmesh_nodal->sections_std_l2[dmesh_nodal->n_section_std_l2-1]->_connec = NULL;
-      dmesh_nodal->sections_std_l2[dmesh_nodal->n_section_std_l2-1]->distrib = NULL;
-
-    }
-    break;
-
   case PDM_MESH_NODAL_TRIA3    :
   case PDM_MESH_NODAL_QUAD4    :
-    {
-      dmesh_nodal->section_type[dmesh_nodal->n_section_tot-1] = PDM_SECTION_TYPE_STD2D;
-      dmesh_nodal->section_idx [dmesh_nodal->n_section_tot-1] = dmesh_nodal->n_section_std_l1;
-
-      dmesh_nodal->n_section_l1++;
-      dmesh_nodal->n_section_std_l1++;
-
-      dmesh_nodal->sections_std_l1 = realloc(dmesh_nodal->sections_std_l1, dmesh_nodal->n_section_std_l1 * sizeof(PDM_DMesh_nodal_section_std_t));
-      dmesh_nodal->sections_std_l1[dmesh_nodal->n_section_std_l1-1] = malloc( sizeof(PDM_DMesh_nodal_section_std_t) );
-      dmesh_nodal->sections_std_l1[dmesh_nodal->n_section_std_l1-1]->t_elt   = t_elt;
-      dmesh_nodal->sections_std_l1[dmesh_nodal->n_section_std_l1-1]->n_elt   = -1;
-      dmesh_nodal->sections_std_l1[dmesh_nodal->n_section_std_l1-1]->_connec = NULL;
-      dmesh_nodal->sections_std_l1[dmesh_nodal->n_section_std_l1-1]->distrib = NULL;
-
-    }
-    break;
-
   case PDM_MESH_NODAL_TETRA4   :
   case PDM_MESH_NODAL_PYRAMID5 :
   case PDM_MESH_NODAL_PRISM6   :
   case PDM_MESH_NODAL_HEXA8    :
     {
-      if(dmesh_nodal->mesh_dimension != 3){
-        PDM_error(__FILE__, __LINE__, 0, "You cannot specify a 3D standard elements if your meshes not 3D %d\n",
-                  dmesh_nodal->mesh_dimension);
-        abort();
-      }
-      dmesh_nodal->section_type[dmesh_nodal->n_section_tot-1] = PDM_SECTION_TYPE_STD3D;
-      dmesh_nodal->section_idx [dmesh_nodal->n_section_tot-1] = dmesh_nodal->n_section_std;
-
       dmesh_nodal->n_section++;
-      dmesh_nodal->n_section_std++;
+      id_block = dmesh_nodal->n_section_std++;
 
-      dmesh_nodal->sections_std = realloc(dmesh_nodal->sections_std, dmesh_nodal->n_section_std * sizeof(PDM_DMesh_nodal_section_std_t));
-      dmesh_nodal->sections_std[dmesh_nodal->n_section_std-1] = malloc( sizeof(PDM_DMesh_nodal_section_std_t) );
-      dmesh_nodal->sections_std[dmesh_nodal->n_section_std-1]->t_elt   = t_elt;
-      dmesh_nodal->sections_std[dmesh_nodal->n_section_std-1]->n_elt   = -1;
-      dmesh_nodal->sections_std[dmesh_nodal->n_section_std-1]->_connec = NULL;
-      dmesh_nodal->sections_std[dmesh_nodal->n_section_std-1]->distrib = NULL;
+      dmesh_nodal->sections_std = realloc(dmesh_nodal->sections_std, dmesh_nodal->n_section_std * sizeof(PDM_DMesh_nodal_section_std_t * ));
+      dmesh_nodal->sections_std[id_block] = malloc( sizeof(PDM_DMesh_nodal_section_std_t) );
+      dmesh_nodal->sections_std[id_block]->t_elt   = t_elt;
+      dmesh_nodal->sections_std[id_block]->n_elt   = -1;
+      dmesh_nodal->sections_std[id_block]->_connec = NULL;
+      dmesh_nodal->sections_std[id_block]->distrib = NULL;
 
+      id_block += PDM_BLOCK_ID_BLOCK_STD;
     }
     break;
 
   case PDM_MESH_NODAL_POLY_2D  :
     {
-      if(dmesh_nodal->mesh_dimension != 2){
-        PDM_error(__FILE__, __LINE__, 0, "You cannot specify a 2D polygon elements if your meshes not 2D %d\n",
-                  dmesh_nodal->mesh_dimension);
-        abort();
-      }
-      // Comment faire pour disserner 2D/Volume s?
-      dmesh_nodal->section_type[dmesh_nodal->n_section_tot-1] = PDM_SECTION_TYPE_POLY2D;
-      dmesh_nodal->section_idx [dmesh_nodal->n_section_tot-1] = dmesh_nodal->n_section_poly2d_l1;
-
       dmesh_nodal->n_section++;
-      dmesh_nodal->n_section_poly2d_l1++;
+      id_block = dmesh_nodal->n_section_poly2d++;
 
-      dmesh_nodal->sections_poly2d_l1 = realloc(dmesh_nodal->sections_poly2d_l1, dmesh_nodal->n_section_poly2d_l1 * sizeof(PDM_DMesh_nodal_section_poly2d_t));
-      dmesh_nodal->sections_poly2d_l1[dmesh_nodal->n_section_poly2d_l1-1] = malloc( sizeof(PDM_DMesh_nodal_section_poly2d_t) );
-      dmesh_nodal->sections_poly2d_l1[dmesh_nodal->n_section_poly2d_l1-1]->n_elt       = -1;
-      dmesh_nodal->sections_poly2d_l1[dmesh_nodal->n_section_poly2d_l1-1]->_connec     = NULL;
-      dmesh_nodal->sections_poly2d_l1[dmesh_nodal->n_section_poly2d_l1-1]->_connec_idx = NULL;
-      dmesh_nodal->sections_poly2d_l1[dmesh_nodal->n_section_poly2d_l1-1]->distrib     = NULL;
+      dmesh_nodal->sections_poly2d = realloc(dmesh_nodal->sections_poly2d, dmesh_nodal->n_section_poly2d * sizeof(PDM_DMesh_nodal_section_poly2d_t *));
+      dmesh_nodal->sections_poly2d[id_block] = malloc( sizeof(PDM_DMesh_nodal_section_poly2d_t) );
+      dmesh_nodal->sections_poly2d[id_block]->n_elt       = -1;
+      dmesh_nodal->sections_poly2d[id_block]->_connec     = NULL;
+      dmesh_nodal->sections_poly2d[id_block]->_connec_idx = NULL;
+      dmesh_nodal->sections_poly2d[id_block]->distrib     = NULL;
+
+      id_block += PDM_BLOCK_ID_BLOCK_POLY2D;
 
     }
 
@@ -1011,28 +906,20 @@ const PDM_Mesh_nodal_elt_t  t_elt
 
   case PDM_MESH_NODAL_POLY_3D  :
     {
-      if(dmesh_nodal->mesh_dimension != 3){
-        PDM_error(__FILE__, __LINE__, 0, "You cannot specify a 3D polyhedral elements if your meshes not 3D %d\n",
-                  dmesh_nodal->mesh_dimension);
-        abort();
-      }
-      assert(dmesh_nodal->mesh_dimension == 3);
-
-      dmesh_nodal->section_type[dmesh_nodal->n_section_tot-1] = PDM_SECTION_TYPE_POLY3D;
-      dmesh_nodal->section_idx [dmesh_nodal->n_section_tot-1] = dmesh_nodal->n_section_poly3d;
-
       dmesh_nodal->n_section++;
-      dmesh_nodal->n_section_poly3d++;
+      id_block = dmesh_nodal->n_section_poly3d++;
 
-      dmesh_nodal->sections_poly3d = realloc(dmesh_nodal->sections_poly3d, dmesh_nodal->n_section_poly3d * sizeof(PDM_DMesh_nodal_section_poly3d_t));
-      dmesh_nodal->sections_poly3d[dmesh_nodal->n_section_poly3d-1]                =  malloc( sizeof(PDM_DMesh_nodal_section_poly3d_t) );
-      dmesh_nodal->sections_poly3d[dmesh_nodal->n_section_poly3d-1]->n_elt          = -1;
-      dmesh_nodal->sections_poly3d[dmesh_nodal->n_section_poly3d-1]->n_face         = -1;
-      dmesh_nodal->sections_poly3d[dmesh_nodal->n_section_poly3d-1]->_face_vtx_idx  = NULL;
-      dmesh_nodal->sections_poly3d[dmesh_nodal->n_section_poly3d-1]->_face_vtx      = NULL;
-      dmesh_nodal->sections_poly3d[dmesh_nodal->n_section_poly3d-1]->_cell_face_idx = NULL;
-      dmesh_nodal->sections_poly3d[dmesh_nodal->n_section_poly3d-1]->_cell_face     = NULL;
-      dmesh_nodal->sections_poly3d[dmesh_nodal->n_section_poly3d-1]->distrib        = NULL;
+      dmesh_nodal->sections_poly3d = realloc(dmesh_nodal->sections_poly3d, dmesh_nodal->n_section_poly3d * sizeof(PDM_DMesh_nodal_section_poly3d_t *));
+      dmesh_nodal->sections_poly3d[id_block]                 = malloc( sizeof(PDM_DMesh_nodal_section_poly3d_t) );
+      dmesh_nodal->sections_poly3d[id_block]->n_elt          = -1;
+      dmesh_nodal->sections_poly3d[id_block]->n_face         = -1;
+      dmesh_nodal->sections_poly3d[id_block]->_face_vtx_idx  = NULL;
+      dmesh_nodal->sections_poly3d[id_block]->_face_vtx      = NULL;
+      dmesh_nodal->sections_poly3d[id_block]->_cell_face_idx = NULL;
+      dmesh_nodal->sections_poly3d[id_block]->_cell_face     = NULL;
+      dmesh_nodal->sections_poly3d[id_block]->distrib        = NULL;
+
+      id_block += PDM_BLOCK_ID_BLOCK_POLY3D;
 
     }
 
@@ -1044,8 +931,8 @@ const PDM_Mesh_nodal_elt_t  t_elt
 
   }
 
-  // _update_sections_id (mesh);
-  return id_section ;
+  _update_sections_id(dmesh_nodal);
+  return id_block ;
 }
 
 
@@ -1058,17 +945,6 @@ const PDM_Mesh_nodal_elt_t  t_elt
  * \param [in]  connect        Connectivity
  *
  */
-// void
-// PDM_DMesh_nodal_section_std_set
-// (
-//PDM_dmesh_nodal_t  *dmesh_nodal,
-// const int          id_section,
-// const int          n_elt,
-//       PDM_g_num_t *connec,
-//       PDM_g_num_t  index_parent_gnum   /* -1 si implicite - else give a shift apply for all element in block
-//                                           the numbering inside block behave implicit */
-// );
-
 void
 PDM_DMesh_nodal_section_std_set
 (
@@ -1078,21 +954,15 @@ const int           n_elt,
       PDM_g_num_t  *connec
 )
 {
-
-
   if (dmesh_nodal == NULL) {
     PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
   }
 
   int _id_section = id_section - PDM_BLOCK_ID_BLOCK_STD;
+  PDM_DMesh_nodal_section_std_t *section = dmesh_nodal->sections_std[_id_section];
 
-  PDM_DMesh_nodal_section_std_t* section;
-  if(dmesh_nodal->section_type[id_section] == PDM_SECTION_TYPE_STD3D){
-    section = dmesh_nodal->sections_std[dmesh_nodal->section_idx[id_section]];
-  } else if(dmesh_nodal->section_type[id_section] == PDM_SECTION_TYPE_STD2D){
-    section = dmesh_nodal->sections_std_l1[dmesh_nodal->section_idx[id_section]];
-  } else if(dmesh_nodal->section_type[id_section] == PDM_SECTION_TYPE_STD1D){
-    section = dmesh_nodal->sections_std_l2[dmesh_nodal->section_idx[id_section]];
+  if (section == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
   }
 
   PDM_printf(" PDM_Mesh_nodal_section_std_set - _id_section : %i  \n ", _id_section);
@@ -1157,10 +1027,13 @@ PDM_DMesh_nodal_section_std_get
 const int                id_section
 )
 {
-  PDM_dmesh_nodal_t* mesh = (PDM_dmesh_nodal_t*)dmesh_nodal;
+  if (dmesh_nodal == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
+  }
+
   int _id_section = id_section - PDM_BLOCK_ID_BLOCK_STD;
 
-  const PDM_DMesh_nodal_section_std_t *section = mesh->sections_std[_id_section];
+  PDM_DMesh_nodal_section_std_t *section = dmesh_nodal->sections_std[_id_section];
 
   if (section == NULL) {
     PDM_error (__FILE__, __LINE__, 0, "Bad standard section identifier\n");
@@ -1186,39 +1059,42 @@ PDM_DMesh_nodal_section_n_elt_get
 const int                id_section
 )
 {
-  PDM_dmesh_nodal_t* mesh = (PDM_dmesh_nodal_t*)dmesh_nodal;
-
-  if (mesh == NULL) {
-    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
-  }
-
   int _id_section;
 
   if (id_section >= PDM_BLOCK_ID_BLOCK_POLY3D) {
 
     _id_section = id_section - PDM_BLOCK_ID_BLOCK_POLY3D;
 
-    const PDM_DMesh_nodal_section_poly3d_t *section = mesh->sections_poly3d[_id_section];
+    PDM_DMesh_nodal_section_poly3d_t *section = dmesh_nodal->sections_poly3d[_id_section];
 
     if (section == NULL) {
-      PDM_error (__FILE__, __LINE__, 0, "Bad polyhedron section identifier\n");
+      PDM_error (__FILE__, __LINE__, 0, "Bad standard section identifier\n");
     }
 
     return section->n_elt;
   }
 
   else if (id_section >= PDM_BLOCK_ID_BLOCK_POLY2D) {
-    assert(0);
+
+    _id_section = id_section - PDM_BLOCK_ID_BLOCK_POLY2D;
+
+    PDM_DMesh_nodal_section_poly2d_t *section = dmesh_nodal->sections_poly2d[_id_section];
+
+    if (section == NULL) {
+      PDM_error (__FILE__, __LINE__, 0, "Bad polygon section identifier\n");
+    }
+
+    return section->n_elt;
   }
 
   else {
 
     _id_section = id_section - PDM_BLOCK_ID_BLOCK_STD;
 
-    const PDM_DMesh_nodal_section_std_t *section = mesh->sections_std[_id_section];
+    PDM_DMesh_nodal_section_std_t *section = dmesh_nodal->sections_std[_id_section];
 
     if (section == NULL) {
-      PDM_error (__FILE__, __LINE__, 0, "Bad standard section identifier\n");
+      PDM_error (__FILE__, __LINE__, 0, "Bad polyhedron section identifier\n");
     }
 
     return section->n_elt;
@@ -1248,57 +1124,42 @@ const PDM_l_num_t        n_elt,
       PDM_g_num_t       *connec
 )
 {
-  PDM_UNUSED(dmesh_nodal);
-  PDM_UNUSED(id_section);
-  PDM_UNUSED(n_elt);
-  PDM_UNUSED(connec_idx);
-  PDM_UNUSED(connec);
-  abort();
+  int _id_section = id_section - PDM_BLOCK_ID_BLOCK_POLY2D;
 
-  // PDM_dmesh_nodal_t *mesh =
-  //         (PDM_dmesh_nodal_t *) PDM_Handles_get (mesh_handles, hdl);
+  PDM_DMesh_nodal_section_poly2d_t *section = dmesh_nodal->sections_poly2d[_id_section];
 
-  // if (dmesh_nodal == NULL) {
-  //   PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
-  // }
+  if (section == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad standard section identifier\n");
+  }
 
-  // int _id_section = id_section - PDM_BLOCK_ID_BLOCK_POLY2D;
+  /* Mapping */
 
-  // PDM_DMesh_nodal_section_poly2d_t *section =
-  //         (PDM_DMesh_nodal_section_poly2d_t *) PDM_Handles_get (dmesh_nodal->sections_poly2d, _id_section);
+  section->n_elt       = n_elt;
+  section->_connec_idx = connec_idx;
+  section->_connec     = connec;
 
-  // if (section == NULL) {
-  //   PDM_error (__FILE__, __LINE__, 0, "Bad standard section identifier\n");
-  // }
+  section->distrib = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * (dmesh_nodal->n_rank + 1));
 
-  // /* Mapping */
+  /* Creation of distribution */
+  PDM_g_num_t beg_num_abs;
+  PDM_g_num_t _n_elt = n_elt;
 
-  // section->n_elt       = n_elt;
-  // section->_connec_idx = connec_idx;
-  // section->_connec     = connec;
+  PDM_MPI_Scan (&_n_elt, &beg_num_abs, 1, PDM__PDM_MPI_G_NUM,
+                PDM_MPI_SUM, dmesh_nodal->pdm_mpi_comm);
+  beg_num_abs -= _n_elt;
 
-  // section->distrib = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * (dmesh_nodal->n_rank + 1));
+  PDM_MPI_Allgather((void *) &_n_elt,
+                    1,
+                    PDM__PDM_MPI_G_NUM,
+                    (void *) (&section->distrib[1]),
+                    1,
+                    PDM__PDM_MPI_G_NUM,
+                    dmesh_nodal->pdm_mpi_comm);
 
-  // /* Creation of distribution */
-  // PDM_g_num_t beg_num_abs;
-  // PDM_g_num_t _n_elt = n_elt;
-
-  // PDM_MPI_Scan (&_n_elt, &beg_num_abs, 1, PDM__PDM_MPI_G_NUM,
-  //               PDM_MPI_SUM, dmesh_nodal->pdm_mpi_comm);
-  // beg_num_abs -= _n_elt;
-
-  // PDM_MPI_Allgather((void *) &_n_elt,
-  //                   1,
-  //                   PDM__PDM_MPI_G_NUM,
-  //                   (void *) (&section->distrib[1]),
-  //                   1,
-  //                   PDM__PDM_MPI_G_NUM,
-  //                   dmesh_nodal->pdm_mpi_comm);
-
-  // section->distrib[0] = 0;
-  // for (int i = 1; i < dmesh_nodal->n_rank + 1; i++) {
-  //   section->distrib[i] +=  section->distrib[i-1];
-  // }
+  section->distrib[0] = 0;
+  for (int i = 1; i < dmesh_nodal->n_rank + 1; i++) {
+    section->distrib[i] +=  section->distrib[i-1];
+  }
 
 }
 
@@ -1322,13 +1183,8 @@ const int                 id_section,
       PDM_g_num_t       **connec
 )
 {
-  PDM_UNUSED(dmesh_nodal);
-  PDM_UNUSED(id_section);
-  // PDM_dmesh_nodal_t *mesh =
-  //         (PDM_dmesh_nodal_t *) PDM_Handles_get (mesh_handles, hdl);
-
-  abort();
-  PDM_DMesh_nodal_section_poly2d_t *section = NULL;
+  int _id_section = id_section - PDM_BLOCK_ID_BLOCK_POLY2D;
+  PDM_DMesh_nodal_section_poly2d_t *section = dmesh_nodal->sections_poly2d[_id_section];
 
   if (section == NULL) {
     PDM_error (__FILE__, __LINE__, 0, "Bad standard section identifier\n");
@@ -1336,7 +1192,6 @@ const int                 id_section,
 
   *connec_idx = section->_connec_idx;
   *connec     = section->_connec;
-
 }
 
 
@@ -1367,17 +1222,13 @@ const PDM_l_num_t         n_face,
       PDM_g_num_t        *cellfac
 )
 {
-
-
   if (dmesh_nodal == NULL) {
     PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
   }
 
-  PDM_UNUSED(id_section);
-  // int _id_section = id_section - PDM_BLOCK_ID_BLOCK_POLY2D;
+  int _id_section = id_section - PDM_BLOCK_ID_BLOCK_POLY3D;
 
-  PDM_DMesh_nodal_section_poly3d_t *section = NULL;
-  abort();
+  PDM_DMesh_nodal_section_poly3d_t *section = dmesh_nodal->sections_poly3d[_id_section];
 
   if (section == NULL) {
     PDM_error (__FILE__, __LINE__, 0, "Bad standard section identifier\n");
@@ -1442,18 +1293,13 @@ const int                 id_section,
       PDM_g_num_t       **cellfac
 )
 {
-
-
   if (dmesh_nodal == NULL) {
     PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
   }
 
-  // int _id_section = id_section - PDM_BLOCK_ID_BLOCK_POLY2D;
+  int _id_section = id_section - PDM_BLOCK_ID_BLOCK_POLY3D;
 
-  PDM_DMesh_nodal_section_poly3d_t *section = NULL;
-  PDM_UNUSED(dmesh_nodal);
-  PDM_UNUSED(id_section);
-  abort();
+  PDM_DMesh_nodal_section_poly3d_t *section = dmesh_nodal->sections_poly3d[_id_section];
 
   if (section == NULL) {
     PDM_error (__FILE__, __LINE__, 0, "Bad standard section identifier\n");
@@ -1483,8 +1329,6 @@ PDM_dmesh_nodal_total_n_cell_get
 PDM_dmesh_nodal_t  *dmesh_nodal
 )
 {
-
-
   if (dmesh_nodal == NULL) {
     PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
   }
@@ -1524,18 +1368,11 @@ PDM_dmesh_nodal_total_n_face_get
 PDM_dmesh_nodal_t  *dmesh_nodal
 )
 {
-
-
   if (dmesh_nodal == NULL) {
     PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
   }
 
-  // if (dmesh_nodal->dcell_face == NULL) {
-  //   PDM_error (__FILE__, __LINE__, 0, "Not implemented yet\n");
-  // }
-
   return dmesh_nodal->face_distrib[dmesh_nodal->n_rank];
-
 }
 
 
@@ -1564,8 +1401,6 @@ PDM_dmesh_nodal_total_n_vtx_get
 PDM_dmesh_nodal_t  *dmesh_nodal
 )
 {
-
-
   if (dmesh_nodal == NULL) {
     PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
   }
@@ -1594,8 +1429,6 @@ int               *n_sum_vtx_face_tot
 )
 {
   /* Get current structure to treat */
-
-
   *n_face_elt_tot     = 0;
   *n_sum_vtx_face_tot = 0;
 
@@ -1609,19 +1442,19 @@ int               *n_sum_vtx_face_tot
 
   }
 
-  for (int i_section = 0; i_section < dmesh_nodal->n_section_l1; i_section++) {
-
-    int n_face_elt     = PDM_n_face_elt_per_elmt    (dmesh_nodal->sections_std_l1[i_section]->t_elt);
-    int n_sum_vtx_face = PDM_n_sum_vtx_face_per_elmt(dmesh_nodal->sections_std_l1[i_section]->t_elt);
-
-    *n_face_elt_tot     += dmesh_nodal->sections_std_l1[i_section]->n_elt*n_face_elt;
-    *n_sum_vtx_face_tot += dmesh_nodal->sections_std_l1[i_section]->n_elt*n_sum_vtx_face;
-
+  for (int i = 0; i < dmesh_nodal->n_section_poly3d; i++) {
+    int _n_face = dmesh_nodal->sections_poly3d[i]->n_face;
+    *n_face_elt_tot     += _n_face;
+    *n_sum_vtx_face_tot += dmesh_nodal->sections_poly3d[i]->_face_vtx[dmesh_nodal->sections_poly3d[i]->_face_vtx_idx[_n_face]];
   }
 
-  assert(dmesh_nodal->n_section_poly3d    == 0); // Not implemented
-  assert(dmesh_nodal->n_section_poly2d_l1 == 0); // Not implemented
-  assert(dmesh_nodal->n_section_l2        == 0); // Not implemented
+  for (int i = 0; i < dmesh_nodal->n_section_poly2d; i++) {
+    *n_face_elt_tot     += dmesh_nodal->sections_poly2d[i]->n_elt;
+    *n_sum_vtx_face_tot += dmesh_nodal->sections_poly2d[i]->_connec_idx[dmesh_nodal->sections_poly2d[i]->n_elt];
+  }
+
+  assert(dmesh_nodal->n_section_poly3d == 0); // Not implemented
+  assert(dmesh_nodal->n_section_poly2d == 0); // Not implemented
 
   printf("n_face_elt_tot     ::%i\n", *n_face_elt_tot   );
   printf("n_sum_vtx_face_tot::%i\n" , *n_sum_vtx_face_tot);
@@ -1651,49 +1484,13 @@ PDM_dmesh_nodal_generate_distribution
 
   printf("dmesh_nodal->n_section : %i \n", dmesh_nodal->n_section);
 
-  PDM_g_num_t shift = 0;
-  for(int i_section = 0; i_section < dmesh_nodal->n_section_std; ++i_section){
-    dmesh_nodal->section_distribution[i_section+1] = dmesh_nodal->sections_std[i_section]->distrib[dmesh_nodal->n_rank];
-  }
-  shift += dmesh_nodal->n_section_std;
+  for(int i_section = 0; i_section < dmesh_nodal->n_section; ++i_section) {
 
-  for(int i_section = 0; i_section < dmesh_nodal->n_section_poly3d; ++i_section){
-    dmesh_nodal->section_distribution[shift+i_section+1] = dmesh_nodal->sections_poly3d[i_section]->distrib[dmesh_nodal->n_rank];
-  }
-  shift += dmesh_nodal->n_section_poly3d;
+    int id_section = dmesh_nodal->sections_id[i_section];
+    const PDM_g_num_t* distrib = PDM_DMesh_nodal_distrib_section_get(dmesh_nodal, id_section);
 
-  for (int i_section = 1; i_section < dmesh_nodal->n_section + 1; i_section++) {
-    dmesh_nodal->section_distribution[i_section] +=  dmesh_nodal->section_distribution[i_section-1];
-  }
+    dmesh_nodal->section_distribution[i_section+1] = dmesh_nodal->section_distribution[i_section] + distrib[dmesh_nodal->n_rank];
 
-  /* Creation of element distribution among all sections */
-  dmesh_nodal->section_distribution_l1    = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * (dmesh_nodal->n_section_l1 + 1));
-  dmesh_nodal->section_distribution_l1[0] = dmesh_nodal->section_distribution[dmesh_nodal->n_section];
-  shift = 0;
-  for(int i_section = 0; i_section < dmesh_nodal->n_section_std_l1; ++i_section){
-    dmesh_nodal->section_distribution_l1[i_section+1] = dmesh_nodal->sections_std_l1[i_section]->distrib[dmesh_nodal->n_rank];
-  }
-  shift += dmesh_nodal->n_section_std_l1;
-  for(int i_section = 0; i_section < dmesh_nodal->n_section_poly2d_l1; ++i_section){
-    dmesh_nodal->section_distribution_l1[shift+i_section+1] = dmesh_nodal->sections_poly2d_l1[i_section]->distrib[dmesh_nodal->n_rank];
-  }
-  shift += dmesh_nodal->n_section_poly2d_l1;
-
-  for (int i_section = 1; i_section < dmesh_nodal->n_section_l1 + 1; i_section++) {
-    dmesh_nodal->section_distribution_l1[i_section] +=  dmesh_nodal->section_distribution_l1[i_section-1];
-  }
-
-  /* Creation of element distribution among all sections */
-  dmesh_nodal->section_distribution_l2    = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * (dmesh_nodal->n_section_l2 + 1));
-  dmesh_nodal->section_distribution_l2[0] = dmesh_nodal->section_distribution_l1[dmesh_nodal->n_section_std_l1];
-  shift = 0;
-  for(int i_section = 0; i_section < dmesh_nodal->n_section_std_l2; ++i_section){
-    dmesh_nodal->section_distribution_l2[i_section+1] = dmesh_nodal->sections_std_l2[i_section]->distrib[dmesh_nodal->n_rank];
-  }
-  shift += dmesh_nodal->n_section_std_l2;
-
-  for (int i_section = 1; i_section < dmesh_nodal->n_section_l2 + 1; i_section++) {
-    dmesh_nodal->section_distribution_l2[i_section] +=  dmesh_nodal->section_distribution_l2[i_section-1];
   }
 
   /* Verbose */
@@ -1738,19 +1535,19 @@ int               *n_sum_vtx_edge_tot
 
   }
 
-  for (int i_section = 0; i_section < dmesh_nodal->n_section_l1; i_section++) {
-
-    int n_edge_elt     = PDM_n_nedge_elt_per_elmt   (dmesh_nodal->sections_std_l1[i_section]->t_elt);
-    int n_sum_vtx_edge = PDM_n_sum_vtx_edge_per_elmt(dmesh_nodal->sections_std_l1[i_section]->t_elt);
-
-    *n_edge_elt_tot     += dmesh_nodal->sections_std_l1[i_section]->n_elt*n_edge_elt;
-    *n_sum_vtx_edge_tot += dmesh_nodal->sections_std_l1[i_section]->n_elt*n_sum_vtx_edge;
-
+  for (int i = 0; i < dmesh_nodal->n_section_poly3d; i++) {
+    int _n_face = dmesh_nodal->sections_poly3d[i]->n_face;
+    *n_edge_elt_tot     +=     dmesh_nodal->sections_poly3d[i]->_face_vtx[dmesh_nodal->sections_poly3d[i]->_face_vtx_idx[_n_face]];
+    *n_sum_vtx_edge_tot += 2 * dmesh_nodal->sections_poly3d[i]->_face_vtx[dmesh_nodal->sections_poly3d[i]->_face_vtx_idx[_n_face]];
   }
 
-  assert(dmesh_nodal->n_section_poly3d    == 0); // Not implemented
-  assert(dmesh_nodal->n_section_poly2d_l1 == 0); // Not implemented
-  assert(dmesh_nodal->n_section_l2        == 0); // Not implemented
+  for (int i = 0; i < dmesh_nodal->n_section_poly2d; i++) {
+    *n_edge_elt_tot     +=     dmesh_nodal->sections_poly2d[i]->_connec_idx[dmesh_nodal->sections_poly2d[i]->n_elt];
+    *n_sum_vtx_edge_tot += 2 * dmesh_nodal->sections_poly2d[i]->_connec_idx[dmesh_nodal->sections_poly2d[i]->n_elt];
+  }
+
+  // assert(dmesh_nodal->n_section_poly3d == 0); // Not implemented
+  // assert(dmesh_nodal->n_section_poly2d == 0); // Not implemented
 
   printf("n_edge_elt_tot     ::%i\n", *n_edge_elt_tot   );
   printf("n_sum_vtx_edge_tot::%i\n" , *n_sum_vtx_edge_tot);
@@ -2030,29 +1827,6 @@ PDM_dmesh_nodal_t  *dmesh_nodal
   PDM_printf("PDM_DMesh_nodal_cell_face_compute2 \n ");
 
   /* Get current structure to treat */
-
-
-  // Count the size of the merge connectivity
-
-  // Fonction du choix on génére la bonne table
-  // if(GENERATE_EDGE_GLOBAL_NUMBERING)
-  // else (GENERATE_FACE_GLOBAL_NUMBERING)
-
-  // cell_vtx : ??? cell_face / face_edge / edge_vtx
-
-  // Option  : (dface_cell oriente)/(ou pas) / cell_face en option
-  // if(GENERATE_EDGE_GLOBAL_NUMBERING)
-  //    -->
-  //    -->
-  //    -->
-  //    -->
-  // else (GENERATE_FACE_GLOBAL_NUMBERING)
-  //    --> (option) face_cell
-  //    --> face_vtx
-  //    --> face_vtx_idx
-  //    --> (option) cell_face
-
-
   int n_face_elt_tot     = 0;
   int n_sum_vtx_face_tot = 0;
 
@@ -2529,17 +2303,14 @@ int               **dcell_face_idx,
 PDM_g_num_t       **dcell_face
 )
 {
-
-
   if (dmesh_nodal == NULL) {
     PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
   }
 
   *dcell_face_idx = dmesh_nodal->dcell_face_idx;
-  *dcell_face = dmesh_nodal->dcell_face;
+  *dcell_face     = dmesh_nodal->dcell_face;
 
   return dmesh_nodal->dn_cell;
-
 }
 
 /**
@@ -2558,8 +2329,6 @@ PDM_dmesh_nodal_t  *dmesh_nodal,
 PDM_g_num_t       **dface_cell
 )
 {
-
-
   if (dmesh_nodal == NULL) {
     PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
   }
@@ -2567,7 +2336,6 @@ PDM_g_num_t       **dface_cell
   *dface_cell = dmesh_nodal->_dface_cell;
 
   return dmesh_nodal->dn_face;
-
 }
 
 
@@ -2591,8 +2359,6 @@ int               **_dface_vtx_idx,
 PDM_g_num_t       **_dface_vtx
 )
 {
-
-
   if (dmesh_nodal == NULL) {
     PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
   }
@@ -2601,7 +2367,6 @@ PDM_g_num_t       **_dface_vtx
   *_dface_vtx     = dmesh_nodal->_dface_vtx;
 
   return dmesh_nodal->dn_face;
-
 }
 
 /**
@@ -2619,8 +2384,6 @@ PDM_DMesh_nodal_distrib_vtx_get
 PDM_dmesh_nodal_t  *dmesh_nodal
 )
 {
-
-
   if (dmesh_nodal == NULL) {
     PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
   }
@@ -2628,7 +2391,6 @@ PDM_dmesh_nodal_t  *dmesh_nodal
   PDM_DMesh_nodal_vtx_t *vtx = dmesh_nodal->vtx;
 
   return vtx->distrib;
-
 }
 
 /**
@@ -2641,67 +2403,58 @@ PDM_dmesh_nodal_t  *dmesh_nodal
  *
  */
 
-// const PDM_g_num_t *
-// PDM_DMesh_nodal_distrib_section_get
-// (
-// PDM_dmesh_nodal_t  *dmesh_nodal,
-//  const int   id_section
-// )
-// {
-//   PDM_dmesh_nodal_t *mesh =
-//           (PDM_dmesh_nodal_t *) PDM_Handles_get (mesh_handles, hdl);
+const PDM_g_num_t *
+PDM_DMesh_nodal_distrib_section_get
+(
+      PDM_dmesh_nodal_t *dmesh_nodal,
+const int                id_section
+)
+{
+  if (dmesh_nodal == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
+  }
 
-//   if (dmesh_nodal == NULL) {
-//     PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
-//   }
+  int _id_section;
 
-//   int _id_section;
+  if (id_section >= PDM_BLOCK_ID_BLOCK_POLY3D) {
 
-//   if (id_section >= PDM_BLOCK_ID_BLOCK_POLY3D) {
+    _id_section = id_section - PDM_BLOCK_ID_BLOCK_POLY3D;
 
-//     _id_section = id_section - PDM_BLOCK_ID_BLOCK_POLY3D;
+    PDM_DMesh_nodal_section_poly3d_t *section = dmesh_nodal->sections_poly3d[_id_section];
 
-//     const PDM_DMesh_nodal_section_poly3d_t *section =
-//     (const PDM_DMesh_nodal_section_poly3d_t *)
-//      PDM_Handles_get (dmesh_nodal->sections_poly3d, _id_section);
+    if (section == NULL) {
+      PDM_error (__FILE__, __LINE__, 0, "Bad standard section identifier\n");
+    }
 
-//     if (section == NULL) {
-//       PDM_error (__FILE__, __LINE__, 0, "Bad standard section identifier\n");
-//     }
+    return section->distrib;
+  }
 
-//     return section->distrib;
-//   }
+  else if (id_section >= PDM_BLOCK_ID_BLOCK_POLY2D) {
 
-//   else if (id_section >= PDM_BLOCK_ID_BLOCK_POLY2D) {
+    _id_section = id_section - PDM_BLOCK_ID_BLOCK_POLY2D;
 
-//     _id_section = id_section - PDM_BLOCK_ID_BLOCK_POLY2D;
+    PDM_DMesh_nodal_section_poly2d_t *section = dmesh_nodal->sections_poly2d[_id_section];
 
-//     const PDM_DMesh_nodal_section_poly2d_t *section =
-//     (const PDM_DMesh_nodal_section_poly2d_t *)
-//      PDM_Handles_get (dmesh_nodal->sections_poly2d, _id_section);
+    if (section == NULL) {
+      PDM_error (__FILE__, __LINE__, 0, "Bad polygon section identifier\n");
+    }
 
-//     if (section == NULL) {
-//       PDM_error (__FILE__, __LINE__, 0, "Bad polygon section identifier\n");
-//     }
+    return section->distrib;
+  }
 
-//     return section->distrib;
-//   }
+  else {
 
-//   else {
+    _id_section = id_section - PDM_BLOCK_ID_BLOCK_STD;
 
-//     _id_section = id_section - PDM_BLOCK_ID_BLOCK_STD;
+    PDM_DMesh_nodal_section_std_t *section = dmesh_nodal->sections_std[_id_section];
 
-//     const PDM_DMesh_nodal_section_std_t *section =
-//     (const PDM_DMesh_nodal_section_std_t *)
-//      PDM_Handles_get (dmesh_nodal->sections_std, _id_section);
+    if (section == NULL) {
+      PDM_error (__FILE__, __LINE__, 0, "Bad polyhedron section identifier\n");
+    }
 
-//     if (section == NULL) {
-//       PDM_error (__FILE__, __LINE__, 0, "Bad polyhedron section identifier\n");
-//     }
-
-//     return section->distrib;
-//   }
-// }
+    return section->distrib;
+  }
+}
 
 
 /**
@@ -2719,13 +2472,11 @@ PDM_DMesh_nodal_distrib_cell_get
 PDM_dmesh_nodal_t  *dmesh_nodal
 )
 {
-
   if (dmesh_nodal == NULL) {
     PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
   }
 
   return dmesh_nodal->cell_distrib;
-
 }
 
 
@@ -2744,7 +2495,6 @@ PDM_DMesh_nodal_distrib_face_get
 PDM_dmesh_nodal_t  *dmesh_nodal
 )
 {
-
   if (dmesh_nodal == NULL) {
     PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
   }

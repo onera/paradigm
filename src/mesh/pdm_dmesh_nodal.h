@@ -115,12 +115,12 @@ PDM_dmesh_nodal_t *dmesh_nodal
  *
  */
 
-// const PDM_g_num_t *
-// PDM_DMesh_nodal_distrib_section_get
-// (
-//  const int   hdl,
-//  const int   id_section
-// );
+const PDM_g_num_t *
+PDM_DMesh_nodal_distrib_section_get
+(
+      PDM_dmesh_nodal_t *dmesh_nodal,
+const int                id_section
+);
 
 
 /**

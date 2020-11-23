@@ -270,8 +270,10 @@ int main(int argc, char *argv[])
     }
 
     // Store it in dmesh struct
-    dmesh[i_zone] = PDM_dmesh_create(dn_cell[i_zone],
+    dmesh[i_zone] = PDM_dmesh_create(PDM_OWNERSHIP_KEEP,
+                                     dn_cell[i_zone],
                                      dn_face[i_zone],
+                                     -1, // dn_edge
                                      dn_vtx[i_zone],
                                      n_bnd,
                                      n_jn);

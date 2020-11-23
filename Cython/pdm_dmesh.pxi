@@ -8,11 +8,13 @@ cdef extern from "pdm_dmesh.h":
 
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     # > Wrapping of function
-    PDM_dmesh_t* PDM_dmesh_create(int          dn_cell,
-                                  int          dn_face,
-                                  int          dn_vtx,
-                                  int          n_bnd,
-                                  int          n_join);
+    PDM_dmesh_t* PDM_dmesh_create(PDM_ownership_t owner,
+                                  int             dn_cell,
+                                  int             dn_face,
+                                  int             dn_edge,
+                                  int             dn_vtx,
+                                  int             n_bnd,
+                                  int             n_join);
 
     void PDM_dmesh_set(PDM_dmesh_t  *dm,
                        double       *dvtx_coord,
@@ -28,6 +30,7 @@ cdef extern from "pdm_dmesh.h":
     void PDM_dmesh_dims_get(PDM_dmesh_t *dm,
                             int         *dn_cell,
                             int         *dn_face,
+                            int         *dn_edge,
                             int         *dn_vtx,
                             int         *n_bnd,
                             int         *n_joins);
@@ -91,7 +94,8 @@ cdef class DistributedMesh:
                       dn_face,
                       dn_vtx,
                       n_bnd,
-                      n_join):
+                      n_join,
+                      dn_edge = -1):
     """
     TODOUX
     """
@@ -100,7 +104,13 @@ cdef class DistributedMesh:
     # ************************************************************************
 
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
-    self._dm = PDM_dmesh_create(dn_cell, dn_face, dn_vtx, n_bnd, n_join)
+    self._dm = PDM_dmesh_create(PDM_OWNERSHIP_UNGET_RESULT_IS_FREE,
+                                dn_cell,
+                                dn_face,
+                                dn_edge,
+                                dn_vtx,
+                                n_bnd,
+                                n_join)
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
   # ------------------------------------------------------------------------
