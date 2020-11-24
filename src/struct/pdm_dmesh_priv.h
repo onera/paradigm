@@ -54,6 +54,7 @@ extern "C" {
 
 struct _pdm_dmesh_t
 {
+  PDM_MPI_Comm         comm;
   PDM_ownership_t      owner;                   /*!< Which have the responsabilities of results */
   PDM_bool_t          *results_is_getted;       /*!< Flags to indicate if result is getted      */
 

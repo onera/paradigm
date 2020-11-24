@@ -276,7 +276,8 @@ int main(int argc, char *argv[])
                                      -1, // dn_edge
                                      dn_vtx[i_zone],
                                      n_bnd,
-                                     n_jn);
+                                     n_jn,
+                                     comm);
     PDM_dmesh_set(dmesh[i_zone],
                   dvtx_coord[i_zone],
                   dface_vtx_idx[i_zone],

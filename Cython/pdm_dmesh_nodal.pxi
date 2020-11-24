@@ -55,6 +55,7 @@ cdef extern from "pdm_dmesh_nodal.h":
     PDM_g_num_t PDM_dmesh_nodal_total_n_cell_get(PDM_dmesh_nodal_t* dmn)
     PDM_g_num_t PDM_dmesh_nodal_total_n_face_get(PDM_dmesh_nodal_t* dmn)
     PDM_g_num_t PDM_dmesh_nodal_total_n_vtx_get(PDM_dmesh_nodal_t* dmn)
+    void PDM_dmesh_nodal_generate_distribution(PDM_dmesh_nodal_t* dmn)
     void PDM_DMesh_nodal_cell_face_compute(PDM_dmesh_nodal_t* dmn)
     int PDM_DMesh_nodal_cell_face_get(PDM_dmesh_nodal_t* dmn, PDM_l_num_t** cell_face_idx, PDM_g_num_t **cell_face)
     int PDM_DMesh_nodal_face_cell_get(PDM_dmesh_nodal_t* dmn, PDM_g_num_t** face_cell)
@@ -174,6 +175,15 @@ cdef class DistributedMeshNodal:
           id_section = PDM_DMesh_nodal_section_add(self.dmn, <PDM_Mesh_nodal_elt_t> elmts_type[i_elmt])
           PDM_DMesh_nodal_section_std_set(self.dmn, id_section, n_elemts[i_elmt], <PDM_g_num_t *> connect.data)
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
+
+    # ------------------------------------------------------------------------
+    def generate_distribution(self):
+        """
+        """
+        # ************************************************************************
+        # > Declaration
+        # ************************************************************************
+        PDM_dmesh_nodal_generate_distribution(self.dmn)
 
     # ------------------------------------------------------------------------
     def compute(self):

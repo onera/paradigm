@@ -178,9 +178,6 @@ MPI_TEST_CASE("[PDM_dmesh_nodal_to_dmesh] decomposes tri ",1) {
   int n_group_elmt = 1;
   int dgroup_elmt_idx[2] = {0, 8};
   PDM_g_num_t dgroup_elmt[8] = {9, 10, 11, 12, 13, 14, 15, 16};
-  PDM_UNUSED(n_group_elmt);
-  PDM_UNUSED(dgroup_elmt_idx);
-  PDM_UNUSED(dgroup_elmt);
 
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
   PDM_dmesh_nodal_t* dmn = PDM_DMesh_nodal_create(pdm_comm, 3, n_vtx, -1, n_face, -1);
@@ -213,8 +210,8 @@ MPI_TEST_CASE("[PDM_dmesh_nodal_to_dmesh] decomposes tri ",1) {
 
   PDM_dmesh_nodal_to_dmesh_transform_to_coherent_dmesh(dmntodm, 2);
 
-  // PDM_dmesh_t* dm;
-  // PDM_dmesh_nodal_to_dmesh_get_dmesh(dmntodm, 0, &dm);
+  PDM_dmesh_nodal_to_dmesh_free(dmntodm);
+  PDM_DMesh_nodal_free(dmn, 0);
 
 }
 

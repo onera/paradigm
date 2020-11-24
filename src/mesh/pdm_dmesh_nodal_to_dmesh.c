@@ -554,7 +554,7 @@ PDM_g_num_t  **dentity_elmt
   free(blk_entity_vtx_n);
   free(blk_elmt_entity_elmt);
 
-  if( 1 == 1 ){
+  if( 0 == 1 ){
     printf("i_abs_entity::%i \n", i_abs_entity+1);
     PDM_log_trace_array_int(_dentity_vtx_idx, i_abs_entity+1                   , "_dentity_vtx_idx:: " );
     PDM_log_trace_array_long(_dentity_vtx   , _dentity_vtx_idx[i_abs_entity]   , "_dentity_vtx:: "     );
@@ -613,7 +613,7 @@ _generate_faces_from_dmesh_nodal
   /*
    *  Create empty dmesh
    */
-  PDM_dmesh_t* dm = PDM_dmesh_create(PDM_OWNERSHIP_KEEP, -1, -1, -1, -1, -1, -1);
+  PDM_dmesh_t* dm = PDM_dmesh_create(link->owner, -1, -1, -1, -1, -1, -1, dmesh_nodal->pdm_mpi_comm);
   assert(link->dmesh == NULL);
   link->dmesh = dm;
 
@@ -652,7 +652,7 @@ _generate_faces_from_dmesh_nodal
   int dn_elmt = link->elmt_distrib[dmesh_nodal->i_rank+1] - link->elmt_distrib[dmesh_nodal->i_rank];
   link->dn_elmt = dn_elmt;
 
-  if( 1 == 1 ){
+  if( 0 == 1 ){
     printf("dn_elmt ::%i\n", dn_elmt );
     PDM_log_trace_array_int (link->_delmt_face_idx, dn_elmt+1                     , "link->_delmt_face_idx:: ");
     PDM_log_trace_array_long(link->_delmt_face    , link->_delmt_face_idx[dn_elmt], "link->_delmt_face:: ");
@@ -683,7 +683,7 @@ _generate_faces_from_dmesh_nodal
     }
   }
 
-  if( 1 == 1 ){
+  if( 0 == 1 ){
     printf("n_edge_elt_tot ::%i\n", n_edge_elt_tot );
     PDM_log_trace_array_int (dface_edge_vtx_idx, n_edge_elt_tot+1              , "dface_edge_vtx_idx:: ");
     PDM_log_trace_array_long(dface_edge_vtx    , dface_edge_vtx_idx[n_edge_elt_tot], "dface_edge_vtx:: ");
@@ -712,7 +712,7 @@ _generate_faces_from_dmesh_nodal
 
   // &dmesh_nodal->dface_edge_idx,
   // &dmesh_nodal->dface_edge,
-  if( 1 == 1 ){
+  if( 0 == 1 ){
     printf("dmesh_nodal->dn_edge ::%i\n", dm->dn_edge );
     PDM_log_trace_array_int (dm->_dedge_vtx_idx, dm->dn_edge+1                  , "dm->_dedge_vtx_idx:: ");
     PDM_log_trace_array_long(dm->_dedge_vtx    , dm->_dedge_vtx_idx[dm->dn_edge], "dm->_dedge_vtx:: ");
@@ -757,7 +757,7 @@ _generate_edges_from_dmesh_nodal
   /*
    *  Create empty dmesh
    */
-  PDM_dmesh_t* dm = PDM_dmesh_create(PDM_OWNERSHIP_KEEP, -1, -1, -1, -1, -1, -1);
+  PDM_dmesh_t* dm = PDM_dmesh_create(link->owner, -1, -1, -1, -1, -1, -1, dmesh_nodal->pdm_mpi_comm);
   assert(link->dmesh == NULL);
   link->dmesh = dm;
 
@@ -794,7 +794,7 @@ _generate_edges_from_dmesh_nodal
   int dn_elmt = link->elmt_distrib[dmesh_nodal->i_rank+1] - link->elmt_distrib[dmesh_nodal->i_rank];
   link->dn_elmt = dn_elmt;
 
-  if( 1 == 1 ){
+  if( 0 == 1 ){
     printf("dn_elmt ::%i\n", dn_elmt );
     PDM_log_trace_array_int (link->_delmt_edge_idx, dn_elmt+1                     , "link->_delmt_edge_idx:: ");
     PDM_log_trace_array_long(link->_delmt_edge    , link->_delmt_edge_idx[dn_elmt], "link->_delmt_edge:: ");
@@ -1007,7 +1007,7 @@ _to_coherent_2d
     }
   }
 
-  printf(" dn_face = %i\n", dn_face);
+  // printf(" dn_face = %i\n", dn_face);
   dface_edge_idx = (int         *) realloc(dface_edge_idx, (dn_face+1)             * sizeof(int        ));
   dface_edge     = (PDM_g_num_t *) realloc(dface_edge    , dface_edge_idx[dn_face] * sizeof(PDM_g_num_t));
 
@@ -1028,8 +1028,10 @@ _to_coherent_2d
   int         *edge_face_idx;
   PDM_g_num_t *edge_face_tmp;
   dmesh->face_distrib = PDM_compute_entity_distribution(comm, dn_face); // Begin a 1
-  PDM_log_trace_array_long(dmesh->face_distrib, n_rank+1, "dmesh->face_distrib::");
-  PDM_log_trace_array_long(dmesh->edge_distrib, n_rank+1, "dmesh->edge_distrib::");
+  if( 0 == 1 ){
+    PDM_log_trace_array_long(dmesh->face_distrib, n_rank+1, "dmesh->face_distrib::");
+    PDM_log_trace_array_long(dmesh->edge_distrib, n_rank+1, "dmesh->edge_distrib::");
+  }
   PDM_dconnectivity_transpose(dmesh_nodal->pdm_mpi_comm,
                               dmesh->face_distrib,
                               dmesh->edge_distrib,
@@ -1168,7 +1170,7 @@ _to_coherent_3d
     }
   }
 
-  printf(" dn_cell = %i\n", dn_cell);
+  // printf(" dn_cell = %i\n", dn_cell);
   dcell_face_idx = (int         *) realloc(dcell_face_idx, (dn_cell+1)             * sizeof(int        ));
   dcell_face     = (PDM_g_num_t *) realloc(dcell_face    , dcell_face_idx[dn_cell] * sizeof(PDM_g_num_t));
 
@@ -1272,28 +1274,31 @@ static
 _pdm_link_dmesh_nodal_to_dmesh_t*
 _link_dmesh_nodal_to_dmesh_init
 (
- void
+ PDM_ownership_t owner
 )
 {
   _pdm_link_dmesh_nodal_to_dmesh_t* link = malloc( sizeof(_pdm_link_dmesh_nodal_to_dmesh_t));
 
-  link->dmesh_nodal      = NULL;
-  link->dmesh            = NULL;
+  link->dmesh_nodal       = NULL;
+  link->dmesh             = NULL;
 
-  link->dn_elmt          = 0;
-  link->elmt_distrib     = NULL;
+  link->owner             = owner;
+  link->results_is_getted = PDM_FALSE;
 
-  link->_delmt_face      = NULL;
-  link->_delmt_face_idx  = NULL;
+  link->dn_elmt           = 0;
+  link->elmt_distrib      = NULL;
 
-  link->_dface_elmt      = NULL;
-  link->_dface_elmt_idx  = NULL;
+  link->_delmt_face       = NULL;
+  link->_delmt_face_idx   = NULL;
 
-  link->_delmt_edge      = NULL;
-  link->_delmt_edge_idx  = NULL;
+  link->_dface_elmt       = NULL;
+  link->_dface_elmt_idx   = NULL;
 
-  link->_dedge_elmt      = NULL;
-  link->_dedge_elmt_idx  = NULL;
+  link->_delmt_edge       = NULL;
+  link->_delmt_edge_idx   = NULL;
+
+  link->_dedge_elmt       = NULL;
+  link->_dedge_elmt_idx   = NULL;
 
   return link;
 }
@@ -1308,7 +1313,10 @@ _link_dmesh_nodal_to_dmesh_free
 {
   link->dmesh_nodal      = NULL; /* On a pas l'onwership de cette structure */
 
-  PDM_dmesh_free(link->dmesh);
+  if(( link->owner == PDM_OWNERSHIP_KEEP ) ||
+     ( link->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !link->results_is_getted)){
+    PDM_dmesh_free(link->dmesh);
+  }
 
   if(link->elmt_distrib != NULL) {
     free(link->elmt_distrib);
@@ -1369,7 +1377,7 @@ const PDM_ownership_t owner
   dmesh_nodal_to_dm->n_mesh            = n_mesh;
   dmesh_nodal_to_dm->link              = malloc( n_mesh * sizeof(_pdm_link_dmesh_nodal_to_dmesh_t*) );
   for(int i_mesh = 0; i_mesh < n_mesh; ++i_mesh) {
-    dmesh_nodal_to_dm->link[i_mesh] = _link_dmesh_nodal_to_dmesh_init();
+    dmesh_nodal_to_dm->link[i_mesh] = _link_dmesh_nodal_to_dmesh_init(owner);
   }
 
   return (PDM_dmesh_nodal_to_dmesh_t *) dmesh_nodal_to_dm;
@@ -1412,7 +1420,7 @@ PDM_dmesh_nodal_to_dmesh_free
   PDM_dmesh_nodal_to_dmesh_t* dmesh_nodal_to_dm
 )
 {
-  printf("PDM_dmesh_nodal_to_dmesh_free\n");
+  // printf("PDM_dmesh_nodal_to_dmesh_free\n");
 
   if(( dmesh_nodal_to_dm->owner == PDM_OWNERSHIP_KEEP ) ||
      ( dmesh_nodal_to_dm->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !dmesh_nodal_to_dm->results_is_getted)){
@@ -1421,7 +1429,6 @@ PDM_dmesh_nodal_to_dmesh_free
       _link_dmesh_nodal_to_dmesh_free(dmesh_nodal_to_dm->link[i_mesh]);
     }
   } else {
-    // TODO IMPLEMENT PARTIAL with ownership
     for(int i_mesh = 0; i_mesh < dmesh_nodal_to_dm->n_mesh; ++i_mesh) {
       _link_dmesh_nodal_to_dmesh_free(dmesh_nodal_to_dm->link[i_mesh]);
     }
@@ -1431,6 +1438,7 @@ PDM_dmesh_nodal_to_dmesh_free
 
   free(dmesh_nodal_to_dm);
 
+  // printf("PDM_dmesh_nodal_to_dmesh_free end \n");
 }
 
 

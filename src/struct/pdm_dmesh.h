@@ -47,44 +47,6 @@ extern "C" {
 
 typedef struct _pdm_dmesh_t PDM_dmesh_t;
 
-typedef enum {
-  PDM_CONNECTIVITY_TYPE_CELL_ELMT   = 0,
-  PDM_CONNECTIVITY_TYPE_CELL_CELL   = 1,
-  PDM_CONNECTIVITY_TYPE_CELL_FACE   = 2,
-  PDM_CONNECTIVITY_TYPE_CELL_EDGE   = 3,
-  PDM_CONNECTIVITY_TYPE_CELL_VTX    = 4,
-  PDM_CONNECTIVITY_TYPE_FACE_ELMT   = 5,
-  PDM_CONNECTIVITY_TYPE_FACE_CELL   = 6,
-  PDM_CONNECTIVITY_TYPE_FACE_FACE   = 7,
-  PDM_CONNECTIVITY_TYPE_FACE_EDGE   = 8,
-  PDM_CONNECTIVITY_TYPE_FACE_VTX    = 9,
-  PDM_CONNECTIVITY_TYPE_EDGE_ELMT   = 10,
-  PDM_CONNECTIVITY_TYPE_EDGE_CELL   = 11,
-  PDM_CONNECTIVITY_TYPE_EDGE_FACE   = 12,
-  PDM_CONNECTIVITY_TYPE_EDGE_EDGE   = 13,
-  PDM_CONNECTIVITY_TYPE_EDGE_VTX    = 14,
-  PDM_CONNECTIVITY_TYPE_VTX_ELMT    = 15,
-  PDM_CONNECTIVITY_TYPE_VTX_CELL    = 16,
-  PDM_CONNECTIVITY_TYPE_VTX_FACE    = 17,
-  PDM_CONNECTIVITY_TYPE_VTX_EDGE    = 18,
-  PDM_CONNECTIVITY_TYPE_VTX_VTX     = 19,
-  PDM_CONNECTIVITY_TYPE_ELMT_CELL   = 20,
-  PDM_CONNECTIVITY_TYPE_ELMT_FACE   = 21,
-  PDM_CONNECTIVITY_TYPE_ELMT_EDGE   = 22,
-  PDM_CONNECTIVITY_TYPE_ELMT_VTX    = 23,
-  PDM_CONNECTIVITY_TYPE_MAX         = 24
-} PDM_connectivity_type_t;
-
-typedef enum {
-  PDM_BOUND_TYPE_ELMT   = 0,
-  PDM_BOUND_TYPE_CELL   = 1,
-  PDM_BOUND_TYPE_FACE   = 2,
-  PDM_BOUND_TYPE_EDGE   = 3,
-  PDM_BOUND_TYPE_VTX    = 4,
-  PDM_BOUND_TYPE_MAX    = 5,
-} PDM_bound_type_t;
-
-
 /*=============================================================================
  * Static global variables
  *============================================================================*/
@@ -115,7 +77,8 @@ PDM_dmesh_create
  const int             dn_edge,
  const int             dn_vtx,
  const int             n_bnd,
- const int             n_join
+ const int             n_join,
+       PDM_MPI_Comm    comm
 );
 
 /**
@@ -212,7 +175,7 @@ PDM_dmesh_data_get
  const PDM_g_num_t  **dface_join
 );
 
-void
+int
 PDM_dmesh_connectivity_get
 (
  PDM_dmesh_t              *dmesh,
@@ -222,7 +185,6 @@ PDM_dmesh_connectivity_get
  PDM_ownership_t           ownership
 );
 
-
 void
 PDM_dmesh_bound_get
 (
@@ -231,6 +193,14 @@ PDM_dmesh_bound_get
  PDM_g_num_t      **connect,
  int              **connect_idx,
  PDM_ownership_t    ownership
+);
+
+int
+PDM_dmesh_distrib_get
+(
+ PDM_dmesh_t              *dmesh,
+ PDM_mesh_entities_t       entity_type,
+ PDM_g_num_t             **distrib
 );
 
 /**
