@@ -19,13 +19,13 @@ cdef extern from "pdm_dmesh.h":
 
     void PDM_dmesh_set(PDM_dmesh_t  *dm,
                        double       *dvtx_coord,
-                       int          *dface_vtx_dmx,
+                       int          *dface_vtx_idx,
                        PDM_g_num_t  *dface_vtx,
                        PDM_g_num_t  *dface_cell,
-                       int          *dface_bound_dmx,
+                       int          *dface_bound_idx,
                        PDM_g_num_t  *dface_bound,
                        int          *join_g_dms,
-                       int          *dface_join_dmx,
+                       int          *dface_join_idx,
                        PDM_g_num_t  *dface_join);
 
     void PDM_dmesh_dims_get(PDM_dmesh_t *dm,
@@ -38,13 +38,13 @@ cdef extern from "pdm_dmesh.h":
 
     void PDM_dmesh_data_get(PDM_dmesh_t   *dm,
                             double       **dvtx_coord,
-                            int          **dface_vtx_dmx,
+                            int          **dface_vtx_idx,
                             PDM_g_num_t  **dface_vtx,
                             PDM_g_num_t  **dface_cell,
-                            int          **dface_bound_dmx,
+                            int          **dface_bound_idx,
                             PDM_g_num_t  **dface_bound,
                             int          **join_g_dms,
-                            int          **dface_join_dmx,
+                            int          **dface_join_idx,
                             PDM_g_num_t  **dface_join);
     int PDM_dmesh_connectivity_get(PDM_dmesh_t              *dmesh,
                                    PDM_connectivity_type_t   connectivity_type,
@@ -81,29 +81,6 @@ cdef class DistributedMeshCaspule:
     self._dm = dm;
 
   # ------------------------------------------------------------------------
-  def dmesh_distrib_get(self, PDM_mesh_entities_t entity_type):
-    """
-    """
-    # ************************************************************************
-    # > Declaration
-    cdef PDM_g_num_t  *distrib
-    cdef NPY.npy_intp  dim
-    cdef int size
-    # ************************************************************************
-
-    size = PDM_dmesh_distrib_get(self._dm, entity_type, &distrib)
-
-    if (distrib == NULL) :
-        np_distrib = None
-    else :
-        dim = <NPY.npy_intp> size + 1
-        np_distrib = NPY.PyArray_SimpleNewFromData(1,
-                                                   &dim,
-                                                   PDM_G_NUM_NPY_INT,
-                                                   <void *> distrib)
-    # PyArray_ENABLEFLAGS(np_distrib, NPY.NPY_OWNDATA);
-    return np_distrib
-  # ------------------------------------------------------------------------
   def dmesh_connectivity_get(self, PDM_connectivity_type_t connectivity_type):
     """
     """
@@ -113,7 +90,7 @@ cdef class DistributedMeshCaspule:
   def dmesh_distrib_get(self, PDM_mesh_entities_t entity_type):
     """
     """
-    return dmesh_connectivity_get(self, entity_type)
+    return dmesh_distrib_get(self, entity_type)
 
   # ------------------------------------------------------------------------
   def __dealloc__(self):
@@ -122,6 +99,7 @@ cdef class DistributedMeshCaspule:
     """
     print("DistributedMeshCaspule::__dealloc__")
     PDM_dmesh_free(self._dm)
+    print("DistributedMeshCaspule::__dealloc__ end z")
 
 # ------------------------------------------------------------------
 cdef class DistributedMesh:
@@ -162,26 +140,32 @@ cdef class DistributedMesh:
 
   # ------------------------------------------------------------------------
   def dmesh_set(self, NPY.ndarray[NPY.double_t  , mode='c', ndim=1] dvtx_coord   not None,
-                      NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] dface_vtx_dmx,
+                      NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] dface_vtx_idx,
                       NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] dface_vtx    not None,
                       NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] dface_cell,
-                      NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] dface_bound_dmx,
+                      NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] dface_bound_idx,
                       NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] dface_bound,
                       NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] join_g_dms,
-                      NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] dface_join_dmx,
+                      NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] dface_join_idx,
                       NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] dface_join):
     """
     """
+    # print("dvtx_coord", dvtx_coord)
+    # print("dface_vtx_idx", dface_vtx_idx)
+    # print("dface_vtx", dface_vtx)
+    # print("dface_cell", dface_cell)
+    # print("dface_bound_idx", dface_bound_idx)
+    # print("dface_bound", dface_bound)
 
     PDM_dmesh_set(self._dm,
                   <double*>      dvtx_coord.data,
-                  <int*>         dface_vtx_dmx.data,
+                  <int*>         dface_vtx_idx.data,
                   <PDM_g_num_t*> dface_vtx.data,
                   <PDM_g_num_t*> dface_cell.data,
-                  <int*>         dface_bound_dmx.data,
+                  <int*>         dface_bound_idx.data,
                   <PDM_g_num_t*> dface_bound.data,
                   <int*>         join_g_dms.data,
-                  <int*>         dface_join_dmx.data,
+                  <int*>         dface_join_idx.data,
                   <PDM_g_num_t*> dface_join.data)
   # ------------------------------------------------------------------------
   def dmesh_connectivity_get(self, PDM_connectivity_type_t connectivity_type):
@@ -203,7 +187,9 @@ cdef class DistributedMesh:
     # ************************************************************************
     # > Declaration
     # ************************************************************************
+    print("DistributedMesh::__dealloc__")
     PDM_dmesh_free(self._dm)
+    print("DistributedMesh::__dealloc__")
 
 ctypedef fused DMesh:
   DistributedMesh
@@ -234,6 +220,7 @@ def dmesh_connectivity_get(DMesh pydm, PDM_connectivity_type_t connectivity_type
                                                      NPY.NPY_INT32,
                                                      <void *> connect_idx)
   PyArray_ENABLEFLAGS(np_connect_idx, NPY.NPY_OWNDATA);
+
   if (connect == NULL) :
       np_connect = None
   else :

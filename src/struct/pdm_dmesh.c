@@ -410,7 +410,7 @@ PDM_dmesh_free
  PDM_dmesh_t         *dmesh
 )
 {
-
+  printf("PDM_dmesh_free :: %p \n", (void*)dmesh);
   dmesh->dn_cell           = 0;
   dmesh->dn_face           = 0;
   dmesh->dn_edge           = 0;
@@ -501,6 +501,7 @@ PDM_dmesh_free
     dmesh->vtx_distrib = NULL;
   }
 
+  printf("PDM_dmesh_free end ... %p \n", (void*)dmesh);
   free (dmesh);
 }
 

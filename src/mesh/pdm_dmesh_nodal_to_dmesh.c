@@ -1159,7 +1159,7 @@ _to_coherent_3d
       printf("[%i] - beg_elmt = %i | end_elmt = %i \n", i_rank, beg_elmt, end_elmt);
 
       for( int ielmt = beg_elmt; ielmt < end_elmt; ++ielmt ) {
-        // dcell_elmt[dn_cell] = ielmt;
+        // dcell_elmt[dn_cell] = (PDM_g_num_t) section_distribution[i_section] + ielmt;
         dcell_face_idx[dn_cell+1] = dcell_face_idx[dn_cell];
         for(int iface = link->_delmt_face_idx[ielmt]; iface < link->_delmt_face_idx[ielmt+1]; ++iface ){
           dcell_face[idx++] = link->_delmt_face[iface];
@@ -1169,6 +1169,9 @@ _to_coherent_3d
       }
     }
   }
+
+  // dface_elmnt
+  // dedge_elmt
 
   // printf(" dn_cell = %i\n", dn_cell);
   dcell_face_idx = (int         *) realloc(dcell_face_idx, (dn_cell+1)             * sizeof(int        ));
@@ -1315,7 +1318,9 @@ _link_dmesh_nodal_to_dmesh_free
 
   if(( link->owner == PDM_OWNERSHIP_KEEP ) ||
      ( link->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !link->results_is_getted)){
+    printf("_link_dmesh_nodal_to_dmesh_free::PDM_dmesh_free\n");
     PDM_dmesh_free(link->dmesh);
+    printf("_link_dmesh_nodal_to_dmesh_free::PDM_dmesh_free end\n");
   }
 
   if(link->elmt_distrib != NULL) {
@@ -1546,6 +1551,7 @@ PDM_dmesh_nodal_to_dmesh_compute
 }
 
 
+// API change : PDM_dmesh_nodal_to_dmesh_transform_extract_dmesh
 void
 PDM_dmesh_nodal_to_dmesh_transform_to_coherent_dmesh
 (
