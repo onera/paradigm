@@ -297,7 +297,7 @@ PDM_dmesh_connectivity_get
   PDM_UNUSED(ownership);
   assert(dmesh != NULL);
 
-  assert(dmesh->dconnectivity[connectivity_type] != NULL);
+  // assert(dmesh->dconnectivity[connectivity_type] != NULL);
 
   *connect     = dmesh->dconnectivity    [connectivity_type];
   *connect_idx = dmesh->dconnectivity_idx[connectivity_type];
