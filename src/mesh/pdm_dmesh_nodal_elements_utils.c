@@ -407,6 +407,7 @@ PDM_tri_decomposes_edges
   /*
    * For each element we flaten all connectivities in one array
    */
+  printf(" n_elt = %i \n", n_elt);
   for (int ielt = 0; ielt < n_elt; ielt++) {
 
     for (int i_edge = 0; i_edge < n_edge_elt; i_edge++) {

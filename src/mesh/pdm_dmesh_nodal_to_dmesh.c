@@ -554,7 +554,7 @@ PDM_g_num_t  **dentity_elmt
   free(blk_entity_vtx_n);
   free(blk_elmt_entity_elmt);
 
-  if( 0 == 1 ){
+  if( 1 == 1 ){
     printf("i_abs_entity::%i \n", i_abs_entity+1);
     PDM_log_trace_array_int(_dentity_vtx_idx, i_abs_entity+1                   , "_dentity_vtx_idx:: " );
     PDM_log_trace_array_long(_dentity_vtx   , _dentity_vtx_idx[i_abs_entity]   , "_dentity_vtx:: "     );
@@ -794,7 +794,7 @@ _generate_edges_from_dmesh_nodal
   int dn_elmt = link->elmt_distrib[dmesh_nodal->i_rank+1] - link->elmt_distrib[dmesh_nodal->i_rank];
   link->dn_elmt = dn_elmt;
 
-  if( 0 == 1 ){
+  if( 1 == 1 ){
     printf("dn_elmt ::%i\n", dn_elmt );
     PDM_log_trace_array_int (link->_delmt_edge_idx, dn_elmt+1                     , "link->_delmt_edge_idx:: ");
     PDM_log_trace_array_long(link->_delmt_edge    , link->_delmt_edge_idx[dn_elmt], "link->_delmt_edge:: ");
@@ -964,7 +964,7 @@ _to_coherent_2d
   PDM_g_num_t *dface_edge     = (PDM_g_num_t *) malloc( link->_delmt_edge_idx[link->dn_elmt] * sizeof(PDM_g_num_t));
   int         *dface_edge_idx = (int         *) malloc( (link->dn_elmt + 1 )                 * sizeof(int        ));
 
-  if( 1 == 0 ){
+  if( 1 == 1 ){
     PDM_log_trace_array_long(link->elmt_distrib , n_rank+1, "link->elmt_distrib");
     PDM_log_trace_array_long(dmesh->edge_distrib, n_rank+1, "link->edge_distrib");
     PDM_log_trace_array_long(section_distribution, dmesh_nodal->n_section_tot+1, "section_distribution");
@@ -976,10 +976,13 @@ _to_coherent_2d
   int first_section = PDM_binary_search_gap_long(first_elmt, section_distribution, dmesh_nodal->n_section_tot+1);
   int last_section  = PDM_binary_search_gap_long(last_elmt , section_distribution, dmesh_nodal->n_section_tot+1);
 
+  printf("[%i] first_section = %i \n", i_rank, first_section);
+  printf("[%i] last_section  = %i \n", i_rank, last_section );
+
   int idx   = 0;
   int dn_face = 0;
   dface_edge_idx[0] = 0;
-  for(int i_section = first_section; i_section < last_section; ++i_section) {
+  for(int i_section = first_section; i_section <= last_section; ++i_section) {
 
     int id_section = dmesh_nodal->sections_id[i_section];
     PDM_Mesh_nodal_elt_t t_elt   = PDM_DMesh_nodal_section_type_get   (dmesh_nodal, id_section);
@@ -1011,9 +1014,10 @@ _to_coherent_2d
   dface_edge_idx = (int         *) realloc(dface_edge_idx, (dn_face+1)             * sizeof(int        ));
   dface_edge     = (PDM_g_num_t *) realloc(dface_edge    , dface_edge_idx[dn_face] * sizeof(PDM_g_num_t));
 
-  if(0 == 1) {
+  if(1 == 1) {
     PDM_log_trace_array_int (dface_edge_idx, dn_face+1              , "dface_edge_idx");
     PDM_log_trace_array_long(dface_edge    , dface_edge_idx[dn_face], "dface_edge");
+    log_trace("dn_face::%i --> %p", dn_face, dface_edge);
   }
 
   assert(dmesh->dn_face == -1);
@@ -1028,7 +1032,7 @@ _to_coherent_2d
   int         *edge_face_idx;
   PDM_g_num_t *edge_face_tmp;
   dmesh->face_distrib = PDM_compute_entity_distribution(comm, dn_face); // Begin a 1
-  if( 0 == 1 ){
+  if( 1 == 1 ){
     PDM_log_trace_array_long(dmesh->face_distrib, n_rank+1, "dmesh->face_distrib::");
     PDM_log_trace_array_long(dmesh->edge_distrib, n_rank+1, "dmesh->edge_distrib::");
   }
@@ -1043,7 +1047,7 @@ _to_coherent_2d
   int dn_edge = dmesh->edge_distrib[i_rank+1] - dmesh->edge_distrib[i_rank];
   assert(dn_edge == dmesh->dn_edge);
 
-  if(0 == 1) {
+  if(1 == 1) {
     PDM_log_trace_array_int (edge_face_idx, dn_edge+1             , "edge_face_idx::");
     PDM_log_trace_array_long(edge_face_tmp, edge_face_idx[dn_edge], "edge_face_tmp::");
   }

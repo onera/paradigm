@@ -410,7 +410,6 @@ PDM_dmesh_free
  PDM_dmesh_t         *dmesh
 )
 {
-  printf("PDM_dmesh_free :: %p \n", (void*)dmesh);
   dmesh->dn_cell           = 0;
   dmesh->dn_face           = 0;
   dmesh->dn_edge           = 0;
@@ -442,9 +441,9 @@ PDM_dmesh_free
 
       if(dmesh->is_owner_connectivity[i] == PDM_TRUE) {
 
-        printf(" dmesh_free :: %i \n", i);
-        assert(dmesh->dconnectivity[i] != NULL);
-        free(dmesh->dconnectivity[i]);
+        if(dmesh->dconnectivity[i] != NULL){
+          free(dmesh->dconnectivity[i]);
+        }
         if(dmesh->dconnectivity_idx[i] != NULL){
           free(dmesh->dconnectivity_idx[i]);
         }
@@ -501,7 +500,6 @@ PDM_dmesh_free
     dmesh->vtx_distrib = NULL;
   }
 
-  printf("PDM_dmesh_free end ... %p \n", (void*)dmesh);
   free (dmesh);
 }
 
