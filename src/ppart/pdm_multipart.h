@@ -165,16 +165,6 @@ void PDM_multipart_set_reordering_options
  const char      *renum_face_method
 );
 
-// TODO move to priv
-void
-_run_ppart_zone_nodal
-(
-  PDM_dmesh_nodal_t* dmesh_nodal,
-  PDM_split_dual_t   split_method,
-  int                dn_part, 
-  PDM_MPI_Comm       comm
-);
-
 /**
  *
  * \brief Construct the partitioned meshes on every zones
@@ -209,6 +199,8 @@ PDM_multipart_part_dim_get
 const int   mpart_id,
 const int   i_zone,
 const int   i_part,
+      int  *n_section,
+      int **n_elt,
       int  *n_cell,
       int  *n_face,
       int  *n_face_part_bound,
@@ -246,6 +238,8 @@ PDM_multipart_part_val_get
 const int            mpart_id,
 const int            i_zone,
 const int            i_part,
+      int         ***elt_vtx_idx,
+      int         ***elt_vtx,
       int          **cell_tag,
       int          **cell_face_idx,
       int          **cell_face,

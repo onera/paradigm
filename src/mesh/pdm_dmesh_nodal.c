@@ -1582,7 +1582,7 @@ int PDM_concat_elt_sections(
   int* n_elt_vtx_by_section = (int*) malloc(n_section * sizeof(int));
   for (int i=0; i<n_section; ++i) {
     int n_elt_by_section = PDM_DMesh_nodal_section_n_elt_get(dmesh_nodal,i);
-    _section_idx[i+1] += _section_idx[i] + n_elt_by_section;
+    _section_idx[i+1] = _section_idx[i] + n_elt_by_section;
     PDM_Mesh_nodal_elt_t type = PDM_DMesh_nodal_section_elt_type_get(dmesh_nodal,i);
     n_vtx_by_elt_by_section[i] = PDM_Mesh_nodal_n_vertices_element(type,1); // 1: elements of order 1
     n_elt_vtx_by_section[i] = n_elt_by_section*n_vtx_by_elt_by_section[i];
@@ -1757,6 +1757,20 @@ PDM_dmesh_nodal_dual_graph
   int* dvtx_elt_idx;
   PDM_g_num_t* dvtx_elt;
 
+  printf("lulu01\n");
+  printf("elt_dist0 = %i\n",elt_dist[0]);
+  printf("vtx_dist0 = %i\n",vtx_dist[0]);
+  printf("elt_dist1 = %i\n",elt_dist[1]);
+  printf("vtx_dist1 = %i\n",vtx_dist[1]);
+  printf("delt_vtx_idx: ");
+  for (int i = 0; i < vtx_dist[1]; ++i)
+    printf("%i, ", delt_vtx_idx[i]);
+  printf("\n");
+  printf("delt_vtx: ");
+  for (int i = 0; i < delt_vtx_idx[vtx_dist[1]]; ++i)
+    printf("%i, ", delt_vtx[i]);
+  printf("\n");
+
   PDM_dconnectivity_transpose(
     comm,
     elt_dist, vtx_dist,
@@ -1766,6 +1780,7 @@ PDM_dmesh_nodal_dual_graph
   );
 
   // 1. dual
+  printf("lulu02\n");
   PDM_deduce_combine_connectivity_dual(
     comm,
     elt_dist, vtx_dist,
@@ -1775,40 +1790,7 @@ PDM_dmesh_nodal_dual_graph
     delt_elt_idx,
     delt_elt
   );
-
-  //int n_block = PDM_DMesh_nodal_n_section_get(dmesh_nodal);
-  //int n_part = 1;
-  //
-  //// n_elt
-  //int n_elt = 0;
-  //for (int i=0; i<n_block; ++i) {
-  //  n_elt += PDM_DMesh_nodal_section_n_elt_get(dmesh_nodal,i);
-  //}
-
-  //// block_distrib_idx
-  //PDM_g_num_t** block_distrib_idx = (PDM_g_num_t **) malloc( n_block * sizeof(PDM_g_num_t*));
-  //for (int i=0; i<n_block; ++i) {
-  //  dn_elmts += PDM_DMesh_nodal_section_n_elt_get(dmesh_nodal,i);
-  //  block_distrib_idx[i] = (PDM_g_num_t *) malloc( n_rank+1 * sizeof(PDM_g_num_t*));
-
-  //  PDM_g_num_t* dist_elt_section = PDM_compute_entity_distribution(comm, dn_elmts);
-  //  for (int j=0; j<n_rank+1; ++j) {
-  //    block_distrib_idx[i][j] = dist_elt_section[j]-1;
-  //  }
-  //  free(dist_elt_section);
-  //}
-
-  //PDM_g_num_t** ln_to_gn = (PDM_g_num_t **) malloc( n_block * sizeof(PDM_g_num_t*));
-
-  //PDM_multi_block_to_part_t* mbtp =
-  //  PDM_multi_block_to_part_create(multi_distrib_idx,
-  //                                 n_block,
-  //        (const PDM_g_num_t**)    block_distrib_idx,
-  //        (const PDM_g_num_t**)    ln_to_gn,
-  //                                 &n_elt,
-  //                                 n_part,
-  //                                 comm);
-
+  printf("lulu03\n");
 }
 
 /**

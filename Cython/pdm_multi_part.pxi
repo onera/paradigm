@@ -48,6 +48,8 @@ cdef extern from "pdm_multipart.h":
     void PDM_multipart_part_dim_get(int  mpart_id,
                                     int  zone_gid,
                                     int  ipart,
+                                    int *n_section,
+                                    int**n_elt,
                                     int *n_cell,
                                     int *n_face,
                                     int *n_face_part_bound,
@@ -65,6 +67,8 @@ cdef extern from "pdm_multipart.h":
     void PDM_multipart_part_val_get(int            mpart_id,
                                     int            zone_gid,
                                     int            ipart,
+                                    int         ***elt_vtx_idx,
+                                    int         ***elt_vtx,
                                     int          **cell_tag,
                                     int          **cell_face_idx,
                                     int          **cell_face,
@@ -126,6 +130,13 @@ cdef extern from "pdm_multipart.h":
     # ------------------------------------------------------------------
     void PDM_multipart_free(int id);
 
+    void run_ppart_zone_nodal(
+      PDM_dmesh_nodal_t *dmesh_nodal,
+      PDM_split_dual_t   split_method,
+      int                dn_part, 
+      PDM_MPI_Comm       comm
+    );
+
 # ------------------------------------------------------------------
 cdef class MultiPart:
     """
@@ -172,7 +183,8 @@ cdef class MultiPart:
 
     # ------------------------------------------------------------------
     def __dealloc__(self):
-        PDM_multipart_free(self._mpart_id)
+      #PDM_multipart_free(self._mpart_id)
+      pass
 
     # ------------------------------------------------------------------
     def multipart_register_block(self, int zone_gid,
@@ -242,11 +254,16 @@ cdef class MultiPart:
         cdef int n_face_bound
         cdef int s_face_join
         cdef int n_face_join
+
+        cdef int *n_elt
+        cdef int n_section
         # ************************************************************************
 
         PDM_multipart_part_dim_get(self._mpart_id,
                                    zone_gid,
                                    ipart,
+                                   &n_section,
+                                   &n_elt,
                                    &n_cell,
                                    &n_face,
                                    &n_face_part_bound,
@@ -260,7 +277,20 @@ cdef class MultiPart:
                                    &s_face_join,
                                    &n_face_join)
 
+        cdef NPY.npy_intp dim
+        if (n_elt == NULL) :
+            np_n_elt = None
+        else :
+            dim = n_section
+            np_n_elt = NPY.PyArray_SimpleNewFromData(1,
+                                                     &dim,
+                                                     NPY.NPY_INT32,
+                                                     <void *> n_elt)
+            ##PyArray_ENABLEFLAGS(np_n_elt, NPY.NPY_OWNDATA); # well it should be there if PDM_multipart_part_dim_get were to be called once
+
         return {'n_cell'            : n_cell,
+                'n_section'         : n_section,
+                'n_elt'             : np_n_elt,
                 'ipart'             : ipart,
                 'n_face'            : n_face,
                 'nt_part'           : nt_part,
@@ -302,6 +332,8 @@ cdef class MultiPart:
         cdef int          *face_join_idx,
         cdef int          *face_join,
         cdef PDM_g_num_t  *face_join_ln_to_gn
+        cdef int         **elt_vtx_idx
+        cdef int         **elt_vtx
         # ************************************************************************
 
         # dims = self.part_dim_get(self._mpart_id, ipart)
@@ -311,6 +343,8 @@ cdef class MultiPart:
         PDM_multipart_part_val_get(self._mpart_id,
                                    zone_gid,
                                    ipart,
+                                   &elt_vtx_idx,
+                                   &elt_vtx,
                                    &cell_tag,
                                    &cell_face_idx,
                                    &cell_face,
@@ -332,6 +366,29 @@ cdef class MultiPart:
                                    &face_join_idx,
                                    &face_join,
                                    &face_join_ln_to_gn)
+        # elt sections
+        cdef NPY.npy_intp n_section = <NPY.npy_intp> dims['n_section']
+        cdef list np_elt_vtx_idx = []
+        cdef list np_elt_vtx = []
+        cdef NPY.npy_intp dim_idx 
+        for i_section in range(n_section):
+            dim_idx = dims['n_elt'][i_section] + 1 
+            np_elt_vtx_idx_i_section = NPY.PyArray_SimpleNewFromData(1,
+                                                     &dim_idx,
+                                                     NPY.NPY_INT32,
+                                                     <void *> elt_vtx_idx[i_section])
+            dim_elt = <NPY.npy_intp> np_elt_vtx_idx_i_section[-1]
+            np_elt_vtx_i_section = NPY.PyArray_SimpleNewFromData(1,
+                                                     &dim_elt,
+                                                     NPY.NPY_INT32,
+                                                     <void *> elt_vtx[i_section])
+
+            #PyArray_ENABLEFLAGS(np_elt_vtx_idx_i_section, NPY.NPY_OWNDATA);
+            #PyArray_ENABLEFLAGS(np_elt_vtx_i_section, NPY.NPY_OWNDATA);
+
+            np_elt_vtx_idx.append(np_elt_vtx_idx_i_section)
+            np_elt_vtx.append(np_elt_vtx_i_section)
+
         # -> Begin
         cdef NPY.npy_intp dim
 
@@ -344,7 +401,7 @@ cdef class MultiPart:
                                                      &dim,
                                                      NPY.NPY_INT32,
                                                      <void *> cell_tag)
-        PyArray_ENABLEFLAGS(np_cell_tag, NPY.NPY_OWNDATA);
+            #PyArray_ENABLEFLAGS(np_cell_tag, NPY.NPY_OWNDATA);
 
         # \param [out]  cell_face_idx        Cell to face connectivity index (size = n_cell + 1)
         if (cell_face_idx == NULL) :
@@ -355,7 +412,7 @@ cdef class MultiPart:
                                                          &dim,
                                                          NPY.NPY_INT32,
                                                          <void *> cell_face_idx)
-        PyArray_ENABLEFLAGS(np_cell_face_idx, NPY.NPY_OWNDATA);
+            #PyArray_ENABLEFLAGS(np_cell_face_idx, NPY.NPY_OWNDATA);
 
         # \param [out]  cell_face           Cell to face connectivity (size = cell_face_idx[n_cell] = lcell_face)
         if (cell_face == NULL) :
@@ -366,7 +423,7 @@ cdef class MultiPart:
                                                       &dim,
                                                       NPY.NPY_INT32,
                                                       <void *> cell_face)
-        PyArray_ENABLEFLAGS(np_cell_face, NPY.NPY_OWNDATA);
+            #PyArray_ENABLEFLAGS(np_cell_face, NPY.NPY_OWNDATA);
 
         # \param [out]  cell_ln_to_gn         Cell local numbering to global numbering (size = n_cell)
         # dim = <NPY.npy_intp> dims['n_cell']
@@ -378,7 +435,7 @@ cdef class MultiPart:
                                                         &dim,
                                                         PDM_G_NUM_NPY_INT,
                                                         <void *> cell_ln_to_gn)
-        PyArray_ENABLEFLAGS(np_cell_ln_to_gn, NPY.NPY_OWNDATA);
+            #PyArray_ENABLEFLAGS(np_cell_ln_to_gn, NPY.NPY_OWNDATA);
 
         # \param [out]  face_tag            Face tag (size = n_face)
         if (face_tag == NULL) :
@@ -389,7 +446,7 @@ cdef class MultiPart:
                                                      &dim,
                                                      NPY.NPY_INT32,
                                                      <void *> face_tag)
-        PyArray_ENABLEFLAGS(np_face_tag, NPY.NPY_OWNDATA);
+            #PyArray_ENABLEFLAGS(np_face_tag, NPY.NPY_OWNDATA);
 
         # \param [out]  face_cell           Face to cell connectivity  (size = 2 * n_face)
         if (face_cell == NULL) :
@@ -400,7 +457,7 @@ cdef class MultiPart:
                                                       &dim,
                                                       NPY.NPY_INT32,
                                                       <void *> face_cell)
-        PyArray_ENABLEFLAGS(np_face_cell, NPY.NPY_OWNDATA);
+            #PyArray_ENABLEFLAGS(np_face_cell, NPY.NPY_OWNDATA);
 
         # \param [out]  face_vtx_idx         Face to vtx_coord connectivity index (size = n_face + 1)
         if (face_vtx_idx == NULL) :
@@ -411,7 +468,7 @@ cdef class MultiPart:
                                                            &dim,
                                                            NPY.NPY_INT32,
                                                            <void *> face_vtx_idx)
-        PyArray_ENABLEFLAGS(np_face_vtx_idx, NPY.NPY_OWNDATA);
+            #PyArray_ENABLEFLAGS(np_face_vtx_idx, NPY.NPY_OWNDATA);
 
         # \param [out]  face_vtx            Face to vtx_coord connectivity (size = face_vtx_idx[n_face])
         cdef NPY.ndarray[NPY.int32_t, ndim=1] np_face_vtx
@@ -423,7 +480,7 @@ cdef class MultiPart:
                                                          &dim,
                                                          NPY.NPY_INT32,
                                                          <void *> face_vtx)
-        PyArray_ENABLEFLAGS(np_face_vtx, NPY.NPY_OWNDATA);
+            #PyArray_ENABLEFLAGS(np_face_vtx, NPY.NPY_OWNDATA);
 
         # \param [out]  face_ln_to_gn         Face local numbering to global numbering (size = n_face)
         if (face_ln_to_gn == NULL) :
@@ -434,7 +491,7 @@ cdef class MultiPart:
                                                           &dim,
                                                           PDM_G_NUM_NPY_INT,
                                                           <void *> face_ln_to_gn)
-        PyArray_ENABLEFLAGS(np_face_ln_to_gn, NPY.NPY_OWNDATA);
+            #PyArray_ENABLEFLAGS(np_face_ln_to_gn, NPY.NPY_OWNDATA);
 
         # \param [out]  face_part_bound      Partitioning boundary faces
         if (face_part_bound == NULL) :
@@ -445,7 +502,7 @@ cdef class MultiPart:
                                                              &dim,
                                                              NPY.NPY_INT32,
                                                              <void *> face_part_bound)
-        PyArray_ENABLEFLAGS(np_face_part_bound, NPY.NPY_OWNDATA);
+            #PyArray_ENABLEFLAGS(np_face_part_bound, NPY.NPY_OWNDATA);
 
         # \param [out]  face_part_bound_proc_idx  Partitioning boundary faces block distribution from processus (size = n_proc + 1)
         if (face_part_bound_proc_idx == NULL) :
@@ -456,7 +513,7 @@ cdef class MultiPart:
                                                              &dim,
                                                              NPY.NPY_INT32,
                                                              <void *> face_part_bound_proc_idx)
-        PyArray_ENABLEFLAGS(np_face_part_bound_proc_idx, NPY.NPY_OWNDATA);
+            #PyArray_ENABLEFLAGS(np_face_part_bound_proc_idx, NPY.NPY_OWNDATA);
 
         # \param [out]  face_part_bound_part_idx  Partitioning boundary faces block distribution from partition (size = nt_part + 1)
         if (face_part_bound_part_idx == NULL) :
@@ -467,7 +524,7 @@ cdef class MultiPart:
                                                              &dim,
                                                              NPY.NPY_INT32,
                                                              <void *> face_part_bound_part_idx)
-        PyArray_ENABLEFLAGS(np_face_part_bound_part_idx, NPY.NPY_OWNDATA);
+            #PyArray_ENABLEFLAGS(np_face_part_bound_part_idx, NPY.NPY_OWNDATA);
 
         # \param [out]  vtx_tag             vtx_coord tag (size = nVtx)
         if (vtx_tag == NULL) :
@@ -478,7 +535,7 @@ cdef class MultiPart:
                                                          &dim,
                                                          NPY.NPY_INT32,
                                                          <void *> vtx_tag)
-        PyArray_ENABLEFLAGS(np_vtx_tag, NPY.NPY_OWNDATA);
+            #PyArray_ENABLEFLAGS(np_vtx_tag, NPY.NPY_OWNDATA);
 
         # \param [out]  vtx                vtx_coord coordinates (size = 3 * nVtx)
         if (vtx_coord == NULL) :
@@ -489,7 +546,7 @@ cdef class MultiPart:
                                                      &dim,
                                                      NPY.NPY_DOUBLE,
                                                      <void *> vtx_coord)
-        PyArray_ENABLEFLAGS(np_vtx_coord, NPY.NPY_OWNDATA);
+            #PyArray_ENABLEFLAGS(np_vtx_coord, NPY.NPY_OWNDATA);
 
         # \param [out]  vtx_ln_to_gn          vtx_coord local numbering to global numbering (size = nVtx)
         if (vtx_ln_to_gn == NULL) :
@@ -500,7 +557,7 @@ cdef class MultiPart:
                                                            &dim,
                                                            PDM_G_NUM_NPY_INT,
                                                            <void *> vtx_ln_to_gn)
-        PyArray_ENABLEFLAGS(np_vtx_ln_to_gn, NPY.NPY_OWNDATA);
+            #PyArray_ENABLEFLAGS(np_vtx_ln_to_gn, NPY.NPY_OWNDATA);
 
         # \param [out]  face_bound_idx       face group index (size = n_face_bound + 1)
         if (face_bound_idx == NULL) :
@@ -511,7 +568,7 @@ cdef class MultiPart:
                                                            &dim,
                                                            NPY.NPY_INT32,
                                                            <void *> face_bound_idx)
-        PyArray_ENABLEFLAGS(np_face_bound_idx, NPY.NPY_OWNDATA);
+            #PyArray_ENABLEFLAGS(np_face_bound_idx, NPY.NPY_OWNDATA);
 
         # \param [out]  face_bound          faces for each group (size = face_bound_idx[n_face_bound] = lFace_bound)
         if (face_bound == NULL) :
@@ -522,7 +579,7 @@ cdef class MultiPart:
                                                        &dim,
                                                        NPY.NPY_INT32,
                                                        <void *> face_bound)
-        PyArray_ENABLEFLAGS(np_face_bound, NPY.NPY_OWNDATA);
+            #PyArray_ENABLEFLAGS(np_face_bound, NPY.NPY_OWNDATA);
 
         # \param [out]  face_bound_ln_to_gn    faces global numbering for each group (size = face_bound_idx[n_face_bound] = lFace_bound)
         if (face_bound_ln_to_gn == NULL) :
@@ -533,7 +590,7 @@ cdef class MultiPart:
                                                              &dim,
                                                              PDM_G_NUM_NPY_INT,
                                                              <void *> face_bound_ln_to_gn)
-        PyArray_ENABLEFLAGS(np_face_bound_ln_to_gn, NPY.NPY_OWNDATA);
+            #PyArray_ENABLEFLAGS(np_face_bound_ln_to_gn, NPY.NPY_OWNDATA);
 
         # \param [out]  face_join_idx       face group index (size = n_face_join + 1)
         if (face_join_idx == NULL) :
@@ -544,7 +601,7 @@ cdef class MultiPart:
                                                           &dim,
                                                           NPY.NPY_INT32,
                                                           <void *> face_join_idx)
-        PyArray_ENABLEFLAGS(np_face_join_idx, NPY.NPY_OWNDATA);
+            #PyArray_ENABLEFLAGS(np_face_join_idx, NPY.NPY_OWNDATA);
 
         # \param [out]  face_join          faces for each group (size = face_join_idx[n_face_join] = lFace_join)
         if (face_join == NULL) :
@@ -555,7 +612,7 @@ cdef class MultiPart:
                                                       &dim,
                                                       NPY.NPY_INT32,
                                                       <void *> face_join)
-        PyArray_ENABLEFLAGS(np_face_join, NPY.NPY_OWNDATA);
+            #PyArray_ENABLEFLAGS(np_face_join, NPY.NPY_OWNDATA);
 
         # \param [out]  face_join_ln_to_gn    faces global numbering for each group (size = face_join_idx[n_face_join] = lFace_join)
         if (face_join_ln_to_gn == NULL) :
@@ -566,7 +623,7 @@ cdef class MultiPart:
                                                              &dim,
                                                              PDM_G_NUM_NPY_INT,
                                                              <void *> face_join_ln_to_gn)
-        PyArray_ENABLEFLAGS(np_face_join_ln_to_gn, NPY.NPY_OWNDATA);
+            #PyArray_ENABLEFLAGS(np_face_join_ln_to_gn, NPY.NPY_OWNDATA);
 
         return {'np_cell_tag'                  : np_cell_tag,
                 'np_cell_face_idx'             : np_cell_face_idx,
@@ -574,6 +631,8 @@ cdef class MultiPart:
                 'np_cell_ln_to_gn'             : np_cell_ln_to_gn,
                 'np_face_tag'                  : np_face_tag,
                 'np_face_cell'                 : np_face_cell,
+                'np_elt_vtx_idx'               : np_elt_vtx_idx,
+                'np_elt_vtx'                   : np_elt_vtx,
                 'np_face_vtx_idx'              : np_face_vtx_idx,
                 'np_face_vtx'                  : np_face_vtx,
                 'np_face_ln_to_gn'             : np_face_ln_to_gn,
@@ -643,7 +702,7 @@ cdef class MultiPart:
                                                                 &dim,
                                                                 NPY.NPY_INT32,
                                                                 <void *> vtx_part_bound)
-        PyArray_ENABLEFLAGS(np_vtx_part_bound, NPY.NPY_OWNDATA);
+            #PyArray_ENABLEFLAGS(np_vtx_part_bound, NPY.NPY_OWNDATA);
 
         # \param [out]  vtx_part_bound_proc_idx  Partitioning boundary vtxs block distribution from processus (size = n_proc + 1)
         if (vtx_part_bound_proc_idx == NULL) :
@@ -654,7 +713,7 @@ cdef class MultiPart:
                                                                        &dim,
                                                                        NPY.NPY_INT32,
                                                                        <void *> vtx_part_bound_proc_idx)
-        PyArray_ENABLEFLAGS(np_vtx_part_bound_proc_idx, NPY.NPY_OWNDATA);
+            #PyArray_ENABLEFLAGS(np_vtx_part_bound_proc_idx, NPY.NPY_OWNDATA);
 
         # \param [out]  vtx_part_bound_part_idx  Partitioning boundary vtxs block distribution from partition (size = nt_part + 1)
         if (vtx_part_bound_part_idx == NULL) :
@@ -665,7 +724,7 @@ cdef class MultiPart:
                                                                        &dim,
                                                                        NPY.NPY_INT32,
                                                                        <void *> vtx_part_bound_part_idx)
-        PyArray_ENABLEFLAGS(np_vtx_part_bound_part_idx, NPY.NPY_OWNDATA);
+            #PyArray_ENABLEFLAGS(np_vtx_part_bound_part_idx, NPY.NPY_OWNDATA);
 
         return {'np_vtx_part_bound_proc_idx'  : np_vtx_part_bound_proc_idx,
                 'np_vtx_part_bound_part_idx'  : np_vtx_part_bound_part_idx,
@@ -707,7 +766,7 @@ cdef class MultiPart:
                                                         &dim,
                                                         NPY.NPY_INT32,
                                                         <void *> cell_color)
-        PyArray_ENABLEFLAGS(np_cell_color, NPY.NPY_OWNDATA);
+            #PyArray_ENABLEFLAGS(np_cell_color, NPY.NPY_OWNDATA);
 
         # \param [out]  face_color            Cell tag (size = n_face)
         if (face_color == NULL):
@@ -718,7 +777,7 @@ cdef class MultiPart:
                                                         &dim,
                                                         NPY.NPY_INT32,
                                                         <void *> face_color)
-        PyArray_ENABLEFLAGS(np_face_color, NPY.NPY_OWNDATA);
+            #PyArray_ENABLEFLAGS(np_face_color, NPY.NPY_OWNDATA);
 
         # \param [out]  thread_color            Cell tag (size = n_cell)
         if (thread_color == NULL):
@@ -729,7 +788,7 @@ cdef class MultiPart:
                                                           &dim,
                                                           NPY.NPY_INT32,
                                                           <void *> thread_color)
-        PyArray_ENABLEFLAGS(np_thread_color, NPY.NPY_OWNDATA);
+            #PyArray_ENABLEFLAGS(np_thread_color, NPY.NPY_OWNDATA);
 
         # \param [out]  hyper_plane_color            Cell tag (size = n_cell)
         if (hyper_plane_color == NULL):
@@ -740,7 +799,7 @@ cdef class MultiPart:
                                                               &dim,
                                                               NPY.NPY_INT32,
                                                               <void *> hyper_plane_color)
-        PyArray_ENABLEFLAGS(np_hyper_plane_color, NPY.NPY_OWNDATA);
+            #PyArray_ENABLEFLAGS(np_hyper_plane_color, NPY.NPY_OWNDATA);
 
         return {'np_cell_color'        : np_cell_color,
                 'np_face_color'        : np_face_color,
@@ -778,7 +837,7 @@ cdef class MultiPart:
                                                                      &dim,
                                                                      NPY.NPY_INT32,
                                                                      <void *> vtx_ghost_information)
-        PyArray_ENABLEFLAGS(np_vtx_ghost_information, NPY.NPY_OWNDATA);
+            #PyArray_ENABLEFLAGS(np_vtx_ghost_information, NPY.NPY_OWNDATA);
         return {'np_vtx_ghost_information' : np_vtx_ghost_information}
 
 
@@ -865,3 +924,11 @@ cdef class MultiPart:
     #             'bound_part_faces_min'           : bound_part_faces_min,
     #             'bound_part_faces_max'           : bound_part_faces_max,
     #             'bound_part_faces_sum'           : bound_part_faces_sum}
+
+#def pdm_run_ppart_zone_nodal(DistributedMeshNodal dmn, PDM_split_dual_t split_method, int n_part, MPI.Comm comm):
+#    print("Cython run_ppart_zone_nodal")
+#
+#    cdef MPI.MPI_Comm c_comm = comm.ob_mpi
+#
+#    run_ppart_zone_nodal(dmn.dmn,split_method,n_part,PDM_MPI_mpi_2_pdm_mpi_comm (<void *> &c_comm))
+#                                              
