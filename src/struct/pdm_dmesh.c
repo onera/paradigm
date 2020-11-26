@@ -347,7 +347,7 @@ PDM_dmesh_connectivity_get
 }
 
 
-void
+int
 PDM_dmesh_bound_get
 (
  PDM_dmesh_t       *dmesh,
@@ -360,11 +360,12 @@ PDM_dmesh_bound_get
   PDM_UNUSED(ownership);
   assert(dmesh != NULL);
 
-  assert(dmesh->dbound[bound_type] != NULL);
+  // assert(dmesh->dbound[bound_type] != NULL);
 
   *connect     = dmesh->dbound    [bound_type];
   *connect_idx = dmesh->dbound_idx[bound_type];
 
+  return dmesh->n_bnd;
 }
 
 

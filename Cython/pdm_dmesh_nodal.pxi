@@ -51,6 +51,10 @@ cdef extern from "pdm_dmesh_nodal.h":
     void PDM_DMesh_nodal_section_poly2d_set(PDM_dmesh_nodal_t* dmn, int id_section, PDM_l_num_t n_elt,
                                             PDM_l_num_t* connec_idx,
                                             PDM_g_num_t   *connec)
+    void PDM_DMesh_nodal_section_group_elmt_set(PDM_dmesh_nodal_t  *dmesh_nodal,
+                                                int                 n_group_elmt,
+                                                int                *dgroup_elmt_idx,
+                                                PDM_g_num_t        *dgroup_elmt)
 
     PDM_g_num_t PDM_dmesh_nodal_total_n_cell_get(PDM_dmesh_nodal_t* dmn)
     PDM_g_num_t PDM_dmesh_nodal_total_n_face_get(PDM_dmesh_nodal_t* dmn)
@@ -175,6 +179,23 @@ cdef class DistributedMeshNodal:
           id_section = PDM_DMesh_nodal_section_add(self.dmn, <PDM_Mesh_nodal_elt_t> elmts_type[i_elmt])
           PDM_DMesh_nodal_section_std_set(self.dmn, id_section, n_elemts[i_elmt], <PDM_g_num_t *> connect.data)
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
+
+    # ------------------------------------------------------------------------
+    def set_group_elmt(self, n_group_elmt,
+                       NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] dgroup_elmt_idx,
+                       NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] dgroup_elmt):
+        """
+           TODO : Split function as PDM
+        """
+        if(dgroup_elmt_idx is None):
+          PDM_DMesh_nodal_section_group_elmt_set(self.dmn,
+                                                 n_group_elmt,
+                                                 NULL, NULL)
+        else:
+          PDM_DMesh_nodal_section_group_elmt_set(self.dmn,
+                                                 n_group_elmt,
+                                          <int*> dgroup_elmt_idx.data,
+                                  <PDM_g_num_t*> dgroup_elmt.data)
 
     # ------------------------------------------------------------------------
     def generate_distribution(self):

@@ -54,7 +54,11 @@ cdef extern from "pdm_dmesh.h":
     int PDM_dmesh_distrib_get(PDM_dmesh_t              *dmesh,
                                PDM_mesh_entities_t       entity,
                                PDM_g_num_t             **distrib)
-
+    int  PDM_dmesh_bound_get(PDM_dmesh_t       *dmesh,
+                             PDM_bound_type_t   bound_type,
+                             PDM_g_num_t      **connect,
+                             int              **connect_idx,
+                             PDM_ownership_t    ownership)
     void PDM_dmesh_free(PDM_dmesh_t   *dm);
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
@@ -91,6 +95,12 @@ cdef class DistributedMeshCaspule:
     """
     """
     return dmesh_distrib_get(self, entity_type)
+
+  # ------------------------------------------------------------------------
+  def dmesh_bound_get(self, PDM_bound_type_t bound_type):
+    """
+    """
+    return dmesh_bound_get(self, bound_type)
 
   # ------------------------------------------------------------------------
   def __dealloc__(self):
@@ -178,6 +188,11 @@ cdef class DistributedMesh:
     """
     """
     return dmesh_connectivity_get(self, entity_type)
+  # ------------------------------------------------------------------------
+  def dmesh_bound_get(self, PDM_bound_type_t bound_type):
+    """
+    """
+    return dmesh_bound_get(self, bound_type)
 
   # ------------------------------------------------------------------------
   def __dealloc__(self):
@@ -257,3 +272,42 @@ def dmesh_distrib_get(DMesh pydm, PDM_mesh_entities_t entity_type):
                                                  <void *> distrib)
   # PyArray_ENABLEFLAGS(np_distrib, NPY.NPY_OWNDATA);
   return np_distrib
+
+# ------------------------------------------------------------------------
+def dmesh_bound_get(DMesh pydm, PDM_bound_type_t bound_type):
+  """
+  """
+  # ************************************************************************
+  # > Declaration
+  cdef int          *connect_idx
+  cdef PDM_g_num_t  *connect
+  cdef int           dn_entity
+  cdef NPY.npy_intp  dim
+  cdef int           n_bnd
+  # ************************************************************************
+  n_bnd = PDM_dmesh_bound_get(pydm._dm,
+                              bound_type,
+                              &connect,
+                              &connect_idx,
+                              PDM_OWNERSHIP_USER)
+
+  if (connect_idx == NULL) :
+      np_connect_idx = None
+  else :
+      dim = <NPY.npy_intp> n_bnd + 1
+      np_connect_idx = NPY.PyArray_SimpleNewFromData(1,
+                                                     &dim,
+                                                     NPY.NPY_INT32,
+                                                     <void *> connect_idx)
+  PyArray_ENABLEFLAGS(np_connect_idx, NPY.NPY_OWNDATA);
+
+  if (connect == NULL) :
+      np_connect = None
+  else :
+      dim = <NPY.npy_intp> connect_idx[n_bnd]
+      np_connect = NPY.PyArray_SimpleNewFromData(1,
+                                                 &dim,
+                                                 PDM_G_NUM_NPY_INT,
+                                                 <void *> connect)
+  PyArray_ENABLEFLAGS(np_connect, NPY.NPY_OWNDATA);
+  return (np_connect_idx, np_connect)

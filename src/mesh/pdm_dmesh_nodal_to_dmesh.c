@@ -820,7 +820,13 @@ _translate_element_group_to_entity
 {
   int i_rank;
   PDM_MPI_Comm_rank (comm, &i_rank);
+  int n_rank;
+  PDM_MPI_Comm_size (comm, &n_rank);
 
+  if(1 == 1) {
+    PDM_log_trace_array_int (dgroup_elmt_idx, n_group_elmt+1         , "dgroup_elmt_idx:: ");
+    PDM_log_trace_array_long(dgroup_elmt    , dgroup_elmt_idx[n_group_elmt], "dgroup_elmt:: ");
+  }
   /*
    * Prepare exchange protocol
    */
@@ -838,6 +844,9 @@ _translate_element_group_to_entity
   for(int i = 0; i < dn_entity; ++i) {
     delmt_entity_n[i] = delmt_entity_idx[i+1] - delmt_entity_idx[i];
   }
+  PDM_log_trace_array_long (entity_distrib, n_rank+1, "entity_distrib:: ");
+  PDM_log_trace_array_int (delmt_entity_n, dn_entity, "delmt_entity_n:: ");
+  PDM_log_trace_array_long(delmt_entity  , delmt_entity_idx[dn_entity], "delmt_entity:: ");
 
   int**         part_group_stri;
   PDM_g_num_t** part_group_data;
@@ -895,7 +904,7 @@ _translate_element_group_to_faces
   int         *dface_bound_idx;
 
   _translate_element_group_to_entity(dmesh_nodal->pdm_mpi_comm,
-                                     dm->face_distrib,
+                                     link->elmt_distrib,
                                      dmesh_nodal->dgroup_elmt,
                                      dmesh_nodal->dgroup_elmt_idx,
                                      dmesh_nodal->n_group_elmt,
@@ -907,6 +916,7 @@ _translate_element_group_to_faces
   dm->is_owner_bound[PDM_BOUND_TYPE_FACE] = PDM_TRUE;
   dm->dbound_idx    [PDM_BOUND_TYPE_FACE] = dface_bound_idx;
   dm->dbound        [PDM_BOUND_TYPE_FACE] = dface_bound;
+  dm->n_bnd                               = dmesh_nodal->n_group_elmt;
 
   // Par recursion on peut avoir les group de vertex ou de edge
 
@@ -926,7 +936,7 @@ _translate_element_group_to_edges
   int         *dedge_bound_idx;
 
   _translate_element_group_to_entity(dmesh_nodal->pdm_mpi_comm,
-                                     dm->edge_distrib,
+                                     link->elmt_distrib,
                                      dmesh_nodal->dgroup_elmt,
                                      dmesh_nodal->dgroup_elmt_idx,
                                      dmesh_nodal->n_group_elmt,
@@ -934,9 +944,11 @@ _translate_element_group_to_edges
                                      link->_delmt_edge_idx,
                                      &dedge_bound,
                                      &dedge_bound_idx);
+
   dm->is_owner_bound[PDM_BOUND_TYPE_EDGE] = PDM_TRUE;
   dm->dbound_idx    [PDM_BOUND_TYPE_EDGE] = dedge_bound_idx;
   dm->dbound        [PDM_BOUND_TYPE_EDGE] = dedge_bound;
+  dm->n_bnd                               = dmesh_nodal->n_group_elmt;
 
   // Par recursion on peut avoir les group de vertex
 
@@ -982,6 +994,7 @@ _to_coherent_2d
   int idx   = 0;
   int dn_face = 0;
   dface_edge_idx[0] = 0;
+  PDM_g_num_t cur_elmt = link->elmt_distrib[dmesh_nodal->i_rank];
   for(int i_section = first_section; i_section <= last_section; ++i_section) {
 
     int id_section = dmesh_nodal->sections_id[i_section];
@@ -992,20 +1005,29 @@ _to_coherent_2d
 
       printf(" filter face \n");
 
-      int beg_elmt = PDM_MAX(section_distribution[i_section  ] - link->elmt_distrib[dmesh_nodal->i_rank], 0);
-      int end_elmt = PDM_MIN(section_distribution[i_section+1], link->elmt_distrib[dmesh_nodal->i_rank+1])
-                   - section_distribution[i_section];
+      // log_trace("section_distribution[%i] = %i \n", i_section, section_distribution[i_section  ]);
+      // log_trace("section_distribution[%i] = %i \n", i_section+1, section_distribution[i_section+1]);
+      // log_trace("elmt_distrib[%i] = %i \n", dmesh_nodal->i_rank, link->elmt_distrib[dmesh_nodal->i_rank]);
+      // log_trace("elmt_distrib[%i] = %i \n", dmesh_nodal->i_rank+1,  link->elmt_distrib[dmesh_nodal->i_rank+1]);
 
-      printf("[%i] - beg_elmt = %i | end_elmt = %i \n", i_rank, beg_elmt, end_elmt);
+      int beg_elmt = PDM_MAX(section_distribution[i_section  ] - link->elmt_distrib[dmesh_nodal->i_rank], 0);
+      int end_elmt = PDM_MIN(section_distribution[i_section+1], link->elmt_distrib[dmesh_nodal->i_rank+1]) - cur_elmt;
+
+      // printf("[%i] - beg_elmt = %i | end_elmt = %i \n", i_rank, beg_elmt, end_elmt);
+      // log_trace(" ---------------------  \n");
+      // log_trace("beg_elmt::%i | end_elmt::%i \n", beg_elmt, end_elmt);
 
       for( int ielmt = beg_elmt; ielmt < end_elmt; ++ielmt ) {
         // dcell_elmt[dn_face] = ielmt;
+        log_trace("ielmt::%i --> ", ielmt);
+        log_trace("idxedge = %i -> %i \n ", link->_delmt_edge_idx[ielmt], link->_delmt_edge_idx[ielmt+1]);
         dface_edge_idx[dn_face+1] = dface_edge_idx[dn_face];
         for(int iedge = link->_delmt_edge_idx[ielmt]; iedge < link->_delmt_edge_idx[ielmt+1]; ++iedge ){
           dface_edge[idx++] = link->_delmt_edge[iedge];
           dface_edge_idx[dn_face+1]++;
         }
-        dn_face += 1;
+        dn_face  += 1;
+        cur_elmt += 1;
       }
     }
   }

@@ -185,7 +185,7 @@ PDM_dmesh_connectivity_get
  PDM_ownership_t           ownership
 );
 
-void
+int
 PDM_dmesh_bound_get
 (
  PDM_dmesh_t       *dmesh,
