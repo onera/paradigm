@@ -1352,6 +1352,10 @@ _run_ppart_zone_nodal
                        part_fractions,
                        elt_part,
                        comm);
+  printf("irank: %i | elt_part:",i_rank);
+  for (int i = 0; i < dn_elt; ++i)
+    printf(" %d ", elt_part[i]);
+  printf("\n");
  
   printf("lala3.1\n");
   // OK
@@ -1392,6 +1396,10 @@ _run_ppart_zone_nodal
       for (int i=0; i<n_elt; ++i) {
         elt_section_part[i] = part_data[0][i];
       }
+      printf("irank: %i | elt_section_part %i:",i_rank,i_section);
+      for (int i = 0; i < n_elt; ++i)
+        printf(" %d ", elt_section_part[i]);
+      printf("\n");
       //free(part_data[0]);
       free(part_data);
       printf("end elt_part 2D\n");
@@ -1419,7 +1427,15 @@ _run_ppart_zone_nodal
                                  elt_section_part,
                                 &pn_elt_section[i_section],
                                 &pelt_section_ln_to_gn[i_section]);
-    //printf("\npelt_section_ln_to_gn:");
+    printf("lala4.0.1\n");
+    for (int i_part=0; i_part<dn_part; ++i_part) {
+      for (int i=0; i < pn_elt_section[i_section][i_part]; ++i) {
+        pelt_section_ln_to_gn[i_section][i_part][i]++;
+      }
+    }
+    printf("lala4.0.2\n");
+    //printf("\n");
+    //printf("pelt_section_ln_to_gn:");
     //for (int i = 0; i < pn_elt_section[i_section][0]; i++)
     //  printf(" %d ", pelt_section_ln_to_gn[i_section][0][i]);
     //printf("\n");

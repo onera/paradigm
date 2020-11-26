@@ -638,8 +638,6 @@ PDM_DMesh_nodal_coord_set
 
   PDM_MPI_Scan (&_n_vtx, _distrib, 1, PDM__PDM_MPI_G_NUM,
                 PDM_MPI_SUM, dmesh_nodal->pdm_mpi_comm);
-
-
 }
 
 

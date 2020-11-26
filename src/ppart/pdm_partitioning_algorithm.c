@@ -154,7 +154,9 @@ PDM_part_assemble_partitions
                              comm);
 
   const int n_part_block = PDM_part_to_block_n_elt_block_get (ptb_partition);
-  assert(n_part_block == dn_part);
+  printf("rank = %i | n_part_block = %i\n",i_rank,n_part_block);
+  printf("rank = %i | dn_part = %i\n",i_rank,dn_part);
+  assert(n_part_block == dn_part || n_part_block==0);
   /*
    * Generate global numbering
    */
@@ -207,6 +209,14 @@ PDM_part_assemble_partitions
         printf(PDM_FMT_G_NUM" ", _pentity_ln_to_gn[i_part][i_data]);
       }
       printf("\n");
+    }
+  }
+
+  if (n_part_block==0) { // in this case, the ln_to_gn is empty, but the size (i.e. 0) still needs to be there
+    free(*pn_entity);
+    *pn_entity = (int)malloc(dn_part * sizeof(int));
+    for (int i_part=0; i_part<dn_part; ++i_part) {
+      (*pn_entity)[i_part] = 0;
     }
   }
 
@@ -715,15 +725,18 @@ _dconnectivity_to_pconnectivity_abs
 
   int dn_entity = entity_distribution[i_rank+1] - entity_distribution[i_rank];
 
-  PDM_g_num_t* entity_distribution_ptb = (PDM_g_num_t * ) malloc( sizeof(PDM_g_num_t) * (n_rank+1) );
-  for(int i = 0; i < n_rank+1; ++i){
-    entity_distribution_ptb[i] = entity_distribution[i] - 1;
-  }
-
   /*
    * Prepare exchange protocol
    */
-  PDM_block_to_part_t* btp = PDM_block_to_part_create(entity_distribution_ptb,
+  printf("rank: %i | lala5.3.0\n",i_rank);
+  printf("rank: %i | n_part = %i\n",i_rank,n_part);
+  printf("rank: %i | entity_distribution= %i,%i,%i\n",i_rank,entity_distribution[0],entity_distribution[1],entity_distribution[2]);
+  printf("rank: %i | pn_entity = %i\n",i_rank,pn_entity[0]);
+  printf("rank: %i | pentity_ln_to_gn:",i_rank);
+  for (int i = 0; i < pn_entity[0]; i++)
+    printf("%i, ", pentity_ln_to_gn[0][i]);
+  printf("\n");
+  PDM_block_to_part_t* btp = PDM_block_to_part_create(entity_distribution,
                                (const PDM_g_num_t **) pentity_ln_to_gn,
                                                       pn_entity,
                                                       n_part,
@@ -732,6 +745,7 @@ _dconnectivity_to_pconnectivity_abs
   /*
    * Prepare data
    */
+    printf("lala5.3.1\n");
   int* blk_stri = (int *) malloc( sizeof(int) * dn_entity);
   for(int i_elmt = 0; i_elmt < dn_entity; ++i_elmt){
     blk_stri[i_elmt] = dconnectivity_idx[i_elmt+1] - dconnectivity_idx[i_elmt];
@@ -740,6 +754,7 @@ _dconnectivity_to_pconnectivity_abs
   /*
    * Exchange
    */
+    printf("lala5.3.2\n");
   int**         pstride;
   PDM_block_to_part_exch2(btp,
                           sizeof(PDM_g_num_t),
@@ -754,6 +769,7 @@ _dconnectivity_to_pconnectivity_abs
   /*
    * Panic verbose
    */
+    printf("lala5.3.3\n");
   if(0 == 1){
     for(int i_part = 0; i_part < n_part; ++i_part){
       int idx_data = 0;
@@ -772,6 +788,7 @@ _dconnectivity_to_pconnectivity_abs
   *pconnectivity_idx = (int         **) malloc( n_part * sizeof(int         *) );
   int** _pconnectivity_idx       = *pconnectivity_idx;
 
+    printf("lala5.3.4\n");
   for(int i_part = 0; i_part < n_part; ++i_part){
     int n_elmts = pn_entity[i_part];
 
@@ -783,7 +800,6 @@ _dconnectivity_to_pconnectivity_abs
   }
 
   // free
-  free(entity_distribution_ptb);
   PDM_block_to_part_free(btp);
   for(int i_part = 0; i_part < n_part; ++i_part) {
     free(pstride[i_part]);
@@ -931,11 +947,13 @@ PDM_part_multi_dconnectivity_to_pconnectivity_sort
   PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_size(comm, &n_rank);
 
+  printf("lala5.1\n");
   *pconnectivity_idx = (int***) malloc(n_section * sizeof(int**));
   int* pn_vtx = (int*)malloc(n_part * sizeof(int));
   for (int i=0; i<n_part; ++i) pn_vtx[i]=0;
   PDM_g_num_t*** pconnectivity_abs = (PDM_g_num_t***) malloc(n_section * sizeof(PDM_g_num_t**));
 
+  printf("lala5.2\n");
   for (int i_section=0; i_section<n_section; ++i_section) {
     int* dconnectivity_section_idx = dconnectivity_idx + section_idx[i_section];
     int dn_entity = entity_distribution[i_section][i_rank+1] - entity_distribution[i_section][i_rank];
@@ -959,6 +977,7 @@ PDM_part_multi_dconnectivity_to_pconnectivity_sort
     //printf("\n");
 
     // 0. create pconnectivity with global numbering
+    printf("lala5.3\n");
     _dconnectivity_to_pconnectivity_abs(
       comm,
       entity_distribution[i_section],
@@ -969,6 +988,7 @@ PDM_part_multi_dconnectivity_to_pconnectivity_sort
       (const PDM_g_num_t**) pentity_ln_to_gn[i_section],
       &(*pconnectivity_idx)[i_section],&pconnectivity_abs[i_section]
     );
+    printf("lala5.4\n");
  
     //int** _pconnectivity_idx = (*pconnectivity_idx)[i_section];
     //printf("pconnectivity_idx:");
@@ -989,6 +1009,7 @@ PDM_part_multi_dconnectivity_to_pconnectivity_sort
 
   // 1. Create local numbering
   // Caution the recv connectivity can be negative
+    printf("lala5.5\n");
   PDM_g_num_t** pconnectivity_abs_cat = (PDM_g_num_t**)malloc( n_part *sizeof(PDM_g_num_t*));
   for (int i_part=0; i_part<n_part; ++i_part) {
     pconnectivity_abs_cat[i_part] = (PDM_g_num_t*)malloc( pn_vtx[i_part] *sizeof(PDM_g_num_t));
@@ -1007,6 +1028,7 @@ PDM_part_multi_dconnectivity_to_pconnectivity_sort
     //  printf(" %d ", pconnectivity_abs_cat[i_part][i]);
     //printf("\n");
   }
+    printf("lala5.6\n");
   int** unique_order;
   _create_pchild_local_num(
     n_part,
@@ -1022,6 +1044,7 @@ PDM_part_multi_dconnectivity_to_pconnectivity_sort
     printf(" %d ", (*pchild_ln_to_gn)[0][i]);
   printf("\n");
 
+    printf("lala5.7\n");
   // 2. create pconnectivity with local numbering
   int** pconnectivity_cat = (int**)malloc(n_part * sizeof(int*));
   for (int i_part=0; i_part<n_part; ++i_part) {
@@ -1036,6 +1059,7 @@ PDM_part_multi_dconnectivity_to_pconnectivity_sort
   );
   int pos = 0;
   *pconnectivity = (int***)malloc(n_section * sizeof(int**));
+    printf("lala5.8\n");
   for (int i_section=0; i_section<n_section; ++i_section) {
     (*pconnectivity)[i_section] = (int**)malloc(n_part * sizeof(int*));
     assert(n_part==1); // TODOUX
@@ -1051,6 +1075,7 @@ PDM_part_multi_dconnectivity_to_pconnectivity_sort
     }
   }
 
+    printf("lala5.9\n");
   for (int i_section=0; i_section<n_section; ++i_section) {
     assert(n_part==1); // TODOUX
     for(int i_part = 0; i_part < n_part; ++i_part) {
@@ -1132,11 +1157,16 @@ PDM_part_dconnectivity_to_pconnectivity_sort
   PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_size(comm, &n_rank);
 
+  PDM_g_num_t* entity_distribution_ptb = (PDM_g_num_t * ) malloc( sizeof(PDM_g_num_t) * (n_rank+1) );
+  for(int i = 0; i < n_rank+1; ++i){
+    entity_distribution_ptb[i] = entity_distribution[i] - 1;
+  }
+
   // 0. create pconnectivity with global numbering
   PDM_g_num_t** pconnectivity_abs;
   _dconnectivity_to_pconnectivity_abs(
     comm,
-    entity_distribution,
+    entity_distribution_ptb,
     dconnectivity_idx,
     dconnectivity,
     n_part,
