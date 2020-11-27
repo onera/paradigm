@@ -229,6 +229,7 @@ MPI_TEST_CASE("[PDM_dmesh_nodal_to_dmesh] decomposes tri ",1) {
   PDM_dmesh_connectivity_get(dm, PDM_CONNECTIVITY_TYPE_EDGE_FACE,
                              &edge_face, &edge_face_idx, PDM_OWNERSHIP_KEEP);
 
+  PDM_log_trace_array_long (edge_face, 2 * dn_edge, "edge_face:: ");
   // MPI_CHECK_EQ_C_ARRAY(0, edge_face, edge_face_expected_p0, 2 * dn_edge);
 
   PDM_dmesh_nodal_to_dmesh_free(dmntodm);
@@ -310,10 +311,8 @@ MPI_TEST_CASE("[PDM_dmesh_nodal_to_dmesh] decomposes tri 2p ",2) {
   PDM_dmesh_t* dm;
   PDM_dmesh_nodal_to_dmesh_get_dmesh(dmntodm, 0, &dm);
 
-  // int         edge_face_idx_expected_p0[9] = {0, 1, 2, 3, 4, 5, 7, 9, 10 };
   PDM_g_num_t edge_face_expected_p0[16]    = {3, 0, 8, 0, 4, 0, 3, 0, 6, 0, 7, 3, 8, 7, 2, 0};
 
-  // int         edge_face_idx_expected_p1[9] = {0, 2, 4, 5, 7, 9, 10, 12, 14};
   PDM_g_num_t edge_face_expected_p1[16]    = {4, 8, 6, 4, 5, 0, 2, 6, 1, 5, 5, 0, 1, 2, 7, 1};
 
   int dn_cell, dn_face, dn_vtx, dn_edge, n_bnd, n_join;
@@ -330,12 +329,10 @@ MPI_TEST_CASE("[PDM_dmesh_nodal_to_dmesh] decomposes tri 2p ",2) {
   PDM_dmesh_connectivity_get(dm, PDM_CONNECTIVITY_TYPE_EDGE_FACE,
                              &edge_face, &edge_face_idx, PDM_OWNERSHIP_KEEP);
 
-  // MPI_CHECK_EQ_C_ARRAY(0, edge_face_idx, edge_face_idx_expected_p0, dn_edge+1);
-  // MPI_CHECK_EQ_C_ARRAY(1, edge_face_idx, edge_face_idx_expected_p1, dn_edge+1);
 
+  // PDM_log_trace_array_long (edge_face, 2 * dn_edge, "edge_face:: ");
   MPI_CHECK_EQ_C_ARRAY(0, edge_face, edge_face_expected_p0, 2 * dn_edge);
   MPI_CHECK_EQ_C_ARRAY(1, edge_face, edge_face_expected_p1, 2 * dn_edge);
-
 
   PDM_dmesh_nodal_to_dmesh_free(dmntodm);
   PDM_DMesh_nodal_free(dmn, 0);
