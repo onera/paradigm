@@ -954,7 +954,7 @@ int main(int argc, char *argv[])
     fflush(stdout);
   }
 
-  PDM_MPI_Comm mesh_comm;
+  PDM_MPI_Comm mesh_comm = PDM_MPI_COMM_WORLD;
   int current_rank_has_mesh = _set_rank_has_mesh (PDM_MPI_COMM_WORLD,
                                                   n_proc_data,
                                                   &mesh_comm);
