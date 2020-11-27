@@ -148,7 +148,7 @@ const PDM_g_num_t *delmt_face_vtx,
       key += delmt_face_vtx[idx];
     }
     // min_vtx =
-    ln_to_gn[i_face] = key % key_mod;
+    ln_to_gn[i_face] = key % key_mod + 1;
   }
 }
 
@@ -232,9 +232,13 @@ PDM_g_num_t  **dentity_elmt
                 ln_to_gn,
                 key_mod);
 
-  if(1 == 1) {
+  if(0 == 1) {
+    log_trace("n_entity_elt_tot = %i \n", n_entity_elt_tot);
+    for(int i = 0; i < n_entity_elt_tot; ++i) {
+      assert(ln_to_gn[i] >= 1);
+    }
     PDM_log_trace_array_long(ln_to_gn, n_entity_elt_tot , "ln_to_gn:: ");
-    PDM_log_trace_array_int(delmt_entity_vtx_idx  , n_entity_elt_tot , "delmt_entity_vtx_idx:: ");
+    PDM_log_trace_array_int(delmt_entity_vtx_idx  , n_entity_elt_tot+1 , "delmt_entity_vtx_idx:: ");
     PDM_log_trace_array_long(delmt_entity_vtx, delmt_entity_vtx_idx[n_entity_elt_tot] , "delmt_entity_vtx:: ");
   }
 
@@ -249,6 +253,11 @@ PDM_g_num_t  **dentity_elmt
   }
   free(delmt_entity_vtx_idx);
 
+  // PDM_log_trace_array_int(delmt_entity_vtx_n  , n_entity_elt_tot , "delmt_entity_vtx_n:: ");
+
+  // for(int i = 0; i < n_entity_elt_tot; ++i) {
+  //   log_trace("delmt_entity_vtx_n[%i] = %i \n", i, delmt_entity_vtx_n[i]);
+  // }
   /*
    * Setup part_to_block to filter all keys
    */
@@ -823,10 +832,10 @@ _translate_element_group_to_entity
   int n_rank;
   PDM_MPI_Comm_size (comm, &n_rank);
 
-  if(1 == 1) {
-    PDM_log_trace_array_int (dgroup_elmt_idx, n_group_elmt+1         , "dgroup_elmt_idx:: ");
-    PDM_log_trace_array_long(dgroup_elmt    , dgroup_elmt_idx[n_group_elmt], "dgroup_elmt:: ");
-  }
+  // if(1 == 1) {
+  //   PDM_log_trace_array_int (dgroup_elmt_idx, n_group_elmt+1         , "dgroup_elmt_idx:: ");
+  //   PDM_log_trace_array_long(dgroup_elmt    , dgroup_elmt_idx[n_group_elmt], "dgroup_elmt:: ");
+  // }
   /*
    * Prepare exchange protocol
    */
@@ -865,12 +874,15 @@ _translate_element_group_to_entity
   *dentity_bound_idx = (int * ) malloc( (n_group_elmt+1) * sizeof(int) );
   int* _dentity_bound_idx = *dentity_bound_idx;
 
+  int idx_data = 0;
   int idx_stri = 0;
   _dentity_bound_idx[0] = 0;
   for(int i_group = 0; i_group < n_group_elmt; ++i_group) {
     _dentity_bound_idx[i_group+1] = _dentity_bound_idx[i_group];
     for(int ielmt = dgroup_elmt_idx[i_group]; ielmt < dgroup_elmt_idx[i_group+1]; ++ielmt) {
       _dentity_bound_idx[i_group+1] += _part_group_stri[idx_stri++];
+      _part_group_data[idx_data] = PDM_ABS(_part_group_data[idx_data]);
+      idx_data++;
     }
   }
   *dentity_bound = _part_group_data;
@@ -1010,8 +1022,24 @@ _to_coherent_2d
       // log_trace("elmt_distrib[%i] = %i \n", dmesh_nodal->i_rank, link->elmt_distrib[dmesh_nodal->i_rank]);
       // log_trace("elmt_distrib[%i] = %i \n", dmesh_nodal->i_rank+1,  link->elmt_distrib[dmesh_nodal->i_rank+1]);
 
-      int beg_elmt = PDM_MAX(section_distribution[i_section  ] - link->elmt_distrib[dmesh_nodal->i_rank], 0);
-      int end_elmt = PDM_MIN(section_distribution[i_section+1], link->elmt_distrib[dmesh_nodal->i_rank+1]) - cur_elmt;
+      int beg_elmt = -1;
+      int end_elmt = -1;
+
+      if( section_distribution[i_section] < link->elmt_distrib[dmesh_nodal->i_rank]) {
+        // log_trace("[begin] cas 1 : section_distribution[i_section] < link->elmt_distrib[dmesh_nodal->i_rank] \n");
+        beg_elmt = 0; // On est dans la section mais on commence
+      } else if( section_distribution[i_section] == cur_elmt ) {
+        // log_trace("[begin] cas 2 : section_distribution[i_section] == cur_elmt \n");
+        beg_elmt = dn_face; // On continue car c'est la suite
+      }
+
+      if( section_distribution[i_section+1] > link->elmt_distrib[dmesh_nodal->i_rank+1]) {
+        // log_trace("[end] cas 1 : section_distribution[i_section+1] > link->elmt_distrib[dmesh_nodal->i_rank+1] \n");
+        end_elmt = link->elmt_distrib[dmesh_nodal->i_rank+1] - link->elmt_distrib[dmesh_nodal->i_rank]; // Si section trop grande on s'arrete à cell du proca
+      } else {
+        // log_trace("[end] cas 2 : %i ->  %i \n",section_distribution[i_section+1], link->elmt_distrib[dmesh_nodal->i_rank] );
+        end_elmt = section_distribution[i_section+1] - link->elmt_distrib[dmesh_nodal->i_rank];
+      }
 
       // printf("[%i] - beg_elmt = %i | end_elmt = %i \n", i_rank, beg_elmt, end_elmt);
       // log_trace(" ---------------------  \n");
@@ -1143,14 +1171,13 @@ _to_coherent_3d
   PDM_MPI_Comm_size (comm, &n_rank);
   PDM_MPI_Comm_rank (comm, &i_rank);
 
-
   PDM_g_num_t *section_distribution = dmesh_nodal->section_distribution;
 
   // 1. delmt_face --> dcell_face
   PDM_g_num_t *dcell_face     = (PDM_g_num_t *) malloc( link->_delmt_face_idx[link->dn_elmt] * sizeof(PDM_g_num_t));
   int         *dcell_face_idx = (int         *) malloc( (link->dn_elmt + 1 )                 * sizeof(int        ));
 
-  if( 1 == 0 ){
+  if( 1 == 1 ){
     PDM_log_trace_array_long(link->elmt_distrib , n_rank+1, "link->elmt_distrib");
     PDM_log_trace_array_long(dmesh->face_distrib, n_rank+1, "link->face_distrib");
     PDM_log_trace_array_long(section_distribution, dmesh_nodal->n_section_tot+1, "section_distribution");
@@ -1165,10 +1192,11 @@ _to_coherent_3d
   // printf("first_section = %i \n", first_section);
   // printf("last_section  = %i \n", last_section);
 
-  int idx   = 0;
+  int idx     = 0;
   int dn_cell = 0;
   dcell_face_idx[0] = 0;
-  for(int i_section = first_section; i_section < last_section; ++i_section) {
+  PDM_g_num_t cur_elmt = link->elmt_distrib[dmesh_nodal->i_rank];
+  for(int i_section = first_section; i_section <= last_section; ++i_section) {
 
     int id_section = dmesh_nodal->sections_id[i_section];
     PDM_Mesh_nodal_elt_t t_elt   = PDM_DMesh_nodal_section_type_get   (dmesh_nodal, id_section);
@@ -1178,13 +1206,43 @@ _to_coherent_3d
 
       printf(" filter cell \n");
 
-      int beg_elmt = PDM_MAX(section_distribution[i_section  ] - link->elmt_distrib[dmesh_nodal->i_rank], 0);
-      int end_elmt = PDM_MIN(section_distribution[i_section+1], link->elmt_distrib[dmesh_nodal->i_rank+1])
-                   - section_distribution[i_section];
+      // log_trace("section_distribution[%i] = %i \n", i_section, section_distribution[i_section  ]);
+      // log_trace("section_distribution[%i] = %i \n", i_section+1, section_distribution[i_section+1]);
+      // log_trace("elmt_distrib[%i] = %i \n", dmesh_nodal->i_rank, link->elmt_distrib[dmesh_nodal->i_rank]);
+      // log_trace("elmt_distrib[%i] = %i \n", dmesh_nodal->i_rank+1,  link->elmt_distrib[dmesh_nodal->i_rank+1]);
 
-      printf("[%i] - beg_elmt = %i | end_elmt = %i \n", i_rank, beg_elmt, end_elmt);
+      int beg_elmt = -1;
+      int end_elmt = -1;
+
+      if( section_distribution[i_section] < link->elmt_distrib[dmesh_nodal->i_rank]) {
+        // log_trace("[begin] cas 1 : section_distribution[i_section] < link->elmt_distrib[dmesh_nodal->i_rank] \n");
+        beg_elmt = 0; // On est dans la section mais on commence
+      } else if( section_distribution[i_section] == cur_elmt ) {
+        // log_trace("[begin] cas 2 : section_distribution[i_section] == cur_elmt \n");
+        beg_elmt = dn_cell; // On continue car c'est la suite
+      }
+
+      if( section_distribution[i_section+1] > link->elmt_distrib[dmesh_nodal->i_rank+1]) {
+        // log_trace("[end] cas 1 : section_distribution[i_section+1] > link->elmt_distrib[dmesh_nodal->i_rank+1] \n");
+        end_elmt = link->elmt_distrib[dmesh_nodal->i_rank+1] - link->elmt_distrib[dmesh_nodal->i_rank]; // Si section trop grande on s'arrete à cell du proc
+      } else {
+        // log_trace("[end] cas 2 : %i ->  %i \n",section_distribution[i_section+1], link->elmt_distrib[dmesh_nodal->i_rank] );
+        end_elmt = section_distribution[i_section+1] - link->elmt_distrib[dmesh_nodal->i_rank];
+      }
+
+      // int beg_elmt = PDM_MAX(section_distribution[i_section  ] - link->elmt_distrib[dmesh_nodal->i_rank], 0);
+      // int beg_elmt = section_distribution[i_section]+link->elmt_distrib[dmesh_nodal->i_rank]-cur_elmt;
+      // int beg_elmt = section_distribution[i_section]-cur_elmt;
+      // int end_elmt = PDM_MIN(section_distribution[i_section+1], link->elmt_distrib[dmesh_nodal->i_rank+1]) - cur_elmt;
+
+      // log_trace("PDM_MIN(section_distribution[i_section  ], link->elmt_distrib[dmesh_nodal->i_rank  ]) :: %i \n", PDM_MIN(section_distribution[i_section ], link->elmt_distrib[dmesh_nodal->i_rank]));
+      // log_trace("PDM_MIN(section_distribution[i_section+1], link->elmt_distrib[dmesh_nodal->i_rank+1]) :: %i \n", PDM_MIN(section_distribution[i_section+1], link->elmt_distrib[dmesh_nodal->i_rank+1]));
+      // log_trace("cur_elmt :: %i \n", cur_elmt);
+      // log_trace("[%i] - beg_elmt = %i | end_elmt = %i \n", i_rank, beg_elmt, end_elmt);
+      // printf("[%i] - beg_elmt = %i | end_elmt = %i \n", i_rank, beg_elmt, end_elmt);
 
       for( int ielmt = beg_elmt; ielmt < end_elmt; ++ielmt ) {
+        // log_trace("ielmt::%i \n", ielmt);
         // dcell_elmt[dn_cell] = (PDM_g_num_t) section_distribution[i_section] + ielmt;
         dcell_face_idx[dn_cell+1] = dcell_face_idx[dn_cell];
         for(int iface = link->_delmt_face_idx[ielmt]; iface < link->_delmt_face_idx[ielmt+1]; ++iface ){
@@ -1192,14 +1250,12 @@ _to_coherent_3d
           dcell_face_idx[dn_cell+1]++;
         }
         dn_cell += 1;
+        cur_elmt += 1;
       }
     }
   }
 
-  // dface_elmnt
-  // dedge_elmt
-
-  // printf(" dn_cell = %i\n", dn_cell);
+  printf(" dn_cell = %i\n", dn_cell);
   dcell_face_idx = (int         *) realloc(dcell_face_idx, (dn_cell+1)             * sizeof(int        ));
   dcell_face     = (PDM_g_num_t *) realloc(dcell_face    , dcell_face_idx[dn_cell] * sizeof(PDM_g_num_t));
 
@@ -1257,12 +1313,6 @@ _to_coherent_3d
       int beg_face_vtx = dmesh->_dface_vtx_idx[i_face  ];
       int end_face_vtx = dmesh->_dface_vtx_idx[i_face+1];
 
-      // printf("before :: ");
-      // for(int i = beg_face_vtx; i < end_face_vtx; ++i) {
-      //   printf(" %i", (int) dmesh->_dface_vtx[i]);
-      // }
-      // printf("\n");
-
       int offset = beg_face_vtx + 1;
       int n_vtx_on_face = end_face_vtx - beg_face_vtx - 1;
       int end_index = n_vtx_on_face - 1;
@@ -1274,12 +1324,6 @@ _to_coherent_3d
         end_index--;
 
       }
-
-      // printf("after :: ");
-      // for(int i = beg_face_vtx; i < end_face_vtx; ++i) {
-      //   printf(" %i", (int) dmesh->_dface_vtx[i]);
-      // }
-      // printf("\n");
 
     }
   }
@@ -1534,44 +1578,8 @@ PDM_dmesh_nodal_to_dmesh_compute
 
   // Join management
 
-  // _check_mesh();
-  //    --> Sur option
-  //    --> Missing boundary faces connected to elements
-  //    --> Missing join
-  //    --> Other idea
-  //
-  // Here we have all connectivity for elmt :
-  // translate_for_3d_elements = cells so replace face_elmt by face_cell, elmt_face by cell_face ...
-  // translate_for_2d_elements = faces etc ...
-  // Comment faire avec les const du dmesh ???
-  // Quid de l'orientation pour les edges ? edges_cell est orienté ???
 
-  //            |
-  //         1  |   2
-  //     ------ . -----
-  //         3  |   4
-  //            |
-  //  dedge_cell = (1 2 3 4) =! (1 2 4 3)
-  //  dcell_face + dface_edge + dedge_cell
-
-  // face puis edge ---> face --> ???? --> edge_face
-  //
-  // Face d'abord
-
-  // Il faut eviter de skipper
-  // cell_face + face_edge + edge_vtx ---> Il faut aussi déduire le face_vtx -> PDM_deduce_combine_connectivity
-
-  // Si on veut faire un volume de controle autour des edges il faut qu'il soit dans le bon sens non ??
-  // En fait il y a l'orientation ET le sens qui importe
-  // Comme pour le face_vtx le sens du edge_cell me semble important
-
-
-  // 1er etape --> Tous les connectivité descendatnes elmnt_***
-  // 2eme etape --> dmesh_  --> delmnt_face --> delmt_cell
-  //
-
-  // Post-treatment
-  // PDM_dmesh_nodal_to_dmesh_transform_to_coherent_dmesh();
+  // Keep all link between elements and generated entity
 
 
 }
