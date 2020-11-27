@@ -1254,12 +1254,6 @@ _distribute_octants
                                              L->codes[i],
                                              morton_index + irank + 1);
     }
-    //DBG-->>
-    if (irank < 0 || irank >= n_ranks) {
-      PDM_morton_dump (3, L->codes[i]);
-      printf("i = %d, irank = %d\n\n\n", i, irank);
-    }
-    //<<--
     send_count[irank] += L->dim + 1;
   }
 
