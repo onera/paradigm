@@ -2198,6 +2198,7 @@ PDM_morton_intersect_box
 	for (size_t i = start; i < end; i++) {
 	  intersect[(*n_intersect)++] = i;
 	}
+      }
 
       else {
         /* Some descendants may intersect the box */
