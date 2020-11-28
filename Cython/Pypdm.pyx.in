@@ -247,4 +247,8 @@ include "pdm_dcube_gen.pxi"
 # --------------------
 include "pdm_poly_mesh_surf.pxi"
 
+# PDM_poly_mesh_surf :
+# --------------------
+include "pdm_partitioning_algorithm.pxi"
+
 # TODO: PDM_writer, ...
