@@ -1,14 +1,14 @@
 
 cdef extern from "pdm_partitioning_algorithm.h":
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-    void PDM_part_distgroup_to_partgroup(const PDM_MPI_Comm      comm,
-                                         const PDM_g_num_t      *entity_distribution,
-                                         const int               n_group,
-                                         const int              *dgroup_idx,
-                                         const PDM_g_num_t      *dgroup,
-                                         const int               n_part,
-                                         const int              *pn_entity,
-                                         const PDM_g_num_t     **pentity_ln_to_gn,
+    void PDM_part_distgroup_to_partgroup(PDM_MPI_Comm      comm,
+                                         PDM_g_num_t      *entity_distribution,
+                                         int               n_group,
+                                         int              *dgroup_idx,
+                                         PDM_g_num_t      *dgroup,
+                                         int               n_part,
+                                         int              *pn_entity,
+                                         PDM_g_num_t     **pentity_ln_to_gn,
                                          int            ***pgroup_idx,
                                          int            ***pgroup,
                                          PDM_g_num_t    ***pgroup_ln_to_gn)
@@ -88,7 +88,7 @@ def part_distgroup_to_partgroup(MPI.Comm                                      co
                                     dgroup_data,
                                     _n_part,
                                     _pn_entity,
-                                    LNToGN,
+             <const PDM_g_num_t **> LNToGN,
                                     &_pgroup_idx,
                                     &_pgroup,
                                     &_pgroup_ln_to_gn
