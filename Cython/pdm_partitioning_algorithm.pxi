@@ -31,11 +31,11 @@ def part_distgroup_to_partgroup(MPI.Comm                                      co
     cdef PDM_MPI_Comm PDMC   = PDM_MPI_mpi_2_pdm_mpi_comm(&c_comm)
 
     # ~> \param [in]   entity_distribution   Distributed entity
-    cdef int * entity_distribution_data
+    cdef PDM_g_num_t * entity_distribution_data
     if (entity_distribution is None):
         entity_distribution_data = NULL
     else:
-        entity_distribution_data = <int *> entity_distribution.data
+        entity_distribution_data = <PDM_g_num_t *> entity_distribution.data
 
     # ~> \param [in]   n_goupe
     cdef int _n_group = n_group
@@ -48,11 +48,11 @@ def part_distgroup_to_partgroup(MPI.Comm                                      co
         dgroup_idx_data = <int *> dgroup_idx.data
 
     # ~> \param [in]   distributed group
-    cdef int * dgroup_data
+    cdef PDM_g_num_t * dgroup_data
     if (dgroup is None):
         dgroup_data = NULL
     else:
-        dgroup_data = <int *> dgroup.data
+        dgroup_data = <PDM_g_num_t *> dgroup.data
 
     # ~> \param [in]   Npart
     cdef int _n_part = n_part
