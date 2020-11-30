@@ -18,8 +18,7 @@
 #include "pdm_mesh_location.h"
 #include "pdm_geom_elem.h"
 #include "pdm_gnum.h"
-
-#include "pdm_writer.h"
+#include "pdm_mpi_node_first_rank.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
 
@@ -75,19 +74,23 @@ _usage(int exit_code)
  */
 
 static void
-_read_args(int            argc,
-           char         **argv,
-           PDM_g_num_t   *n_vtx_seg,
-           double        *length,
-           double        *tolerance,
-           double        *marge,
-           int           *n_part,
-           PDM_g_num_t   *n_pts,
-           int           *post,
-           int           *have_random,
-           int           *init_random,
-           int           *part_method,
-           PDM_mesh_location_method_t *loc_method)
+_read_args(int                         argc,
+           char                      **argv,
+           PDM_g_num_t                *n_vtx_seg,
+           double                     *length,
+           double                     *depth,
+           int                        *rotation,
+           double                     *tolerance,
+           double                     *marge,
+           int                        *n_part,
+           PDM_g_num_t                *n_pts,
+           int                        *n_proc_data,
+           int                        *post,
+           int                        *have_random,
+           int                        *init_random,
+           int                        *part_method,
+           PDM_mesh_location_method_t *loc_method,
+           int                        *use_mesh_vtx)
 {
   int i = 1;
   PDM_UNUSED (post);
@@ -113,6 +116,16 @@ _read_args(int            argc,
         _usage(EXIT_FAILURE);
       else
         *length = atof(argv[i]);
+    }
+    else if (strcmp(argv[i], "-d") == 0) {
+      i++;
+      if (i >= argc)
+        _usage(EXIT_FAILURE);
+      else
+        *depth = atof(argv[i]);
+    }
+    else if (strcmp (argv[i], "-rot") == 0) {
+      *rotation = 1;
     }
     else if (strcmp(argv[i], "-t") == 0) {
       i++;
@@ -150,6 +163,10 @@ _read_args(int            argc,
       *have_random = 0;
     }
 
+    else if (strcmp (argv[i], "-use_vtx") == 0) {
+      *use_mesh_vtx = 1;
+    }
+
     else if (strcmp (argv[i], "-random_init") == 0) {
       i++;
       if (i >= argc) {
@@ -157,6 +174,15 @@ _read_args(int            argc,
       }
       else {
         *init_random = atoi(argv[i]);
+      }
+    }
+
+    else if (strcmp (argv[i], "-n_proc_data") == 0) {
+      i++;
+      if (i >= argc)
+        _usage (EXIT_FAILURE);
+      else {
+        *n_proc_data = atoi(argv[i]);
       }
     }
 
@@ -219,19 +245,631 @@ _random_cloud
 }
 
 
-
-
-static void _z_elevation (const int  n_pts,
-                          double    *coord)
+static void
+_point_cloud_from_mesh_vtx
+(
+ PDM_MPI_Comm   pdm_mpi_comm,
+ double         xmin,
+ double         ymin,
+ PDM_g_num_t    nVtxSeg,
+ double         length,
+ int            haveRandom,
+ int            initRandom,
+ double       **coord,
+ int           *n_pts_l
+ )
 {
+  int i_rank;
+  int numProcs;
+
+  PDM_MPI_Comm_rank (pdm_mpi_comm, &i_rank);
+  PDM_MPI_Comm_size (pdm_mpi_comm, &numProcs);
+
+  double       xmax = xmin + length;
+  double       ymax = ymin + length;
+  PDM_g_num_t  nx = nVtxSeg;
+  PDM_g_num_t  ny = nVtxSeg;
+
+  int          dNFace;
+  int          dNVtx;
+  int          dNEdge;
+  int         *dFaceVtxIdx;
+  PDM_g_num_t *dFaceVtx;
+  double      *dVtxCoord;
+  PDM_g_num_t *dFaceEdge;
+  PDM_g_num_t *dEdgeVtx;
+  PDM_g_num_t *dEdgeFace;
+  int          nEdgeGroup;
+  int         *dEdgeGroupIdx;
+  PDM_g_num_t *dEdgeGroup;
+
+  /*
+   *  Create mesh
+   */
+  PDM_g_num_t nGFace;
+  PDM_g_num_t nGEdge;
+  PDM_g_num_t nGVtx;
+
+  PDM_poly_surf_gen (pdm_mpi_comm,
+                     xmin,
+                     xmax,
+                     ymin,
+                     ymax,
+                     haveRandom,
+                     initRandom,
+                     nx,
+                     ny,
+                     &nGFace,
+                     &nGVtx,
+                     &nGEdge,
+                     &dNVtx,
+                     &dVtxCoord,
+                     &dNFace,
+                     &dFaceVtxIdx,
+                     &dFaceVtx,
+                     &dFaceEdge,
+                     &dNEdge,
+                     &dEdgeVtx,
+                     &dEdgeFace,
+                     &nEdgeGroup,
+                     &dEdgeGroupIdx,
+                     &dEdgeGroup);
+
+  *n_pts_l = dNVtx;
+  *coord   = dVtxCoord;
+
+  free (dFaceVtxIdx);
+  free (dFaceVtx);
+  free (dEdgeVtx);
+  free (dEdgeFace);
+  free (dEdgeGroupIdx);
+  free (dEdgeGroup);
+}
+
+
+static void _add_depth (const int     n_pts,
+                        const double  length,
+                        const double  depth,
+                        double       *coord)
+{
+  double inv_length = 1.;
+  if (length != 0) inv_length = length;
+
   for (int i = 0; i < n_pts; i++) {
-    double x = coord[3*i] - 0.5;
-    double y = coord[3*i+1] - 0.5;
-    double r = sqrt (x*x + y*y);
-    PDM_UNUSED (r);
-    coord[3*i+2] = 0.;//0.2 * cos(12*r) * exp(-5*r*r) + 0.3*(y + x);
+    double x = 2.*coord[3*i]   * inv_length;
+    double y = 2.*coord[3*i+1] * inv_length;
+    coord[3*i+2] = 0.5*depth*(1. - (x*x + y*y));
   }
 }
+
+
+static void _rotate (const int  n_pts,
+                     double    *coord)
+{
+  double R[3][3] = {{0.9362934, -0.2896295, 0.1986693},
+                    {0.3129918,  0.9447025, -0.0978434},
+                    {-0.1593451,  0.1537920,  0.9751703}};
+
+  for (int i = 0; i < n_pts; i++) {
+    double x = coord[3*i];
+    double y = coord[3*i+1];
+    double z = coord[3*i+2];
+
+    for (int j = 0; j < 3; j++) {
+      coord[3*i+j] = R[j][0]*x + R[j][1]*y + R[j][2]*z;
+    }
+  }
+}
+
+
+static int _set_rank_has_mesh
+(
+ const PDM_MPI_Comm  comm,
+ const int           nProcData,
+ PDM_MPI_Comm       *meshComm
+ )
+{
+  int current_rank_has_mesh = 1;
+
+  int rank;
+  int commSize;
+
+  PDM_MPI_Comm_rank (comm, &rank);
+  PDM_MPI_Comm_size (comm, &commSize);
+
+  if (nProcData > 0 && nProcData < commSize) {
+
+    int rankInNode = PDM_io_mpi_node_rank (comm);
+
+    int nNode = 0;
+    int iNode = -1;
+    int masterRank = (rankInNode == 0);
+
+    int *rankInNodes = malloc(sizeof(int) * commSize);
+
+    PDM_MPI_Allreduce (&masterRank, &nNode, 1, PDM_MPI_INT, PDM_MPI_SUM, comm);
+    PDM_MPI_Allgather (&rankInNode, 1, PDM_MPI_INT, rankInNodes, 1, PDM_MPI_INT, comm);
+
+    current_rank_has_mesh = 0;
+
+    for (int i = 0; i < rank; i++) {
+      if (rankInNodes[i] == 0) {
+        iNode += 1;
+      }
+    }
+
+    if (nProcData <= nNode) {
+      if (iNode < nProcData && masterRank) {
+        current_rank_has_mesh = 1;
+      }
+    }
+
+    else {
+
+      if (rankInNode < (nProcData / nNode)) {
+        current_rank_has_mesh = 1;
+      }
+      if ((rankInNode == (nProcData / nNode)) && (iNode < (nProcData % nNode))) {
+        current_rank_has_mesh = 1;
+      }
+
+    }
+
+    PDM_MPI_Comm_split (comm,
+                        current_rank_has_mesh,
+                        rank,
+                        meshComm);
+    free (rankInNodes);
+  }
+
+  return current_rank_has_mesh;
+}
+
+
+static void
+_get_connectivity
+(
+ int            ppartId,
+ int            n_part,
+ int          **nFace,
+ int         ***faceEdgeIdx,
+ int         ***faceEdge,
+ int         ***faceVtxIdx,
+ int         ***faceVtx,
+ PDM_g_num_t ***faceLNToGN,
+ int          **nEdge,
+ int         ***edgeVtxIdx,
+ int         ***edgeVtx,
+ int          **nVtx,
+ double      ***vtxCoord,
+ PDM_g_num_t ***vtxLNToGN
+ )
+{
+  *nFace = (int *) malloc(sizeof(int) * n_part);
+  *faceEdgeIdx = (int **) malloc(sizeof(int *) * n_part);
+  *faceEdge = (int **) malloc(sizeof(int *) * n_part);
+  *faceVtxIdx = (int **) malloc(sizeof(int *) * n_part);
+  *faceVtx = (int **) malloc(sizeof(int *) * n_part);
+  *faceLNToGN = (PDM_g_num_t **) malloc(sizeof(PDM_g_num_t *) * n_part);
+
+  *nEdge = (int *) malloc(sizeof(int) * n_part);
+  *edgeVtxIdx = (int **) malloc(sizeof(int *) * n_part);
+  *edgeVtx = (int **) malloc(sizeof(int *) * n_part);
+
+  *nVtx = (int *) malloc(sizeof(int) * n_part);
+  *vtxCoord = (double **) malloc(sizeof(double *) * n_part);
+  *vtxLNToGN = (PDM_g_num_t **) malloc(sizeof(PDM_g_num_t *) * n_part);
+
+   int id_ppart = ppartId;
+
+  for (int ipart = 0; ipart < n_part; ipart++) {
+
+    int _nFace;
+    int _nEdge;
+    int _nEdgePartBound;
+    int _nVtx;
+    int _nProc;
+    int _nTPart;
+    int _sFaceEdge;
+    int _sEdgeVtx;
+    int _sEdgeGroup;
+    int _nEdgeGroup2;
+
+    PDM_part_part_dim_get (id_ppart,
+                           ipart,
+                           &_nFace,
+                           &_nEdge,
+                           &_nEdgePartBound,
+                           &_nVtx,
+                           &_nProc,
+                           &_nTPart,
+                           &_sFaceEdge,
+                           &_sEdgeVtx,
+                           &_sEdgeGroup,
+                           &_nEdgeGroup2);
+
+    int         *_faceTag;
+    int         *_faceEdgeIdx;
+    int         *_faceEdge;
+    PDM_g_num_t *_faceLNToGN;
+    int         *_edgeTag;
+    int         *_edgeFace;
+    int         *_edgeVtxIdx;
+    int         *_edgeVtx;
+    PDM_g_num_t *_edgeLNToGN;
+    int         *_edgePartBoundProcIdx;
+    int         *_edgePartBoundPartIdx;
+    int         *_edgePartBound;
+    int         *_vtxTag;
+    double      *_vtx;
+    PDM_g_num_t *_vtxLNToGN;
+    int         *_edgeGroupIdx;
+    int         *_edgeGroup;
+    PDM_g_num_t *_edgeGroupLNToGN;
+
+    PDM_part_part_val_get (id_ppart,
+                           ipart,
+                           &_faceTag,
+                           &_faceEdgeIdx,
+                           &_faceEdge,
+                           &_faceLNToGN,
+                           &_edgeTag,
+                           &_edgeFace,
+                           &_edgeVtxIdx,
+                           &_edgeVtx,
+                           &_edgeLNToGN,
+                           &_edgePartBoundProcIdx,
+                           &_edgePartBoundPartIdx,
+                           &_edgePartBound,
+                           &_vtxTag,
+                           &_vtx,
+                           &_vtxLNToGN,
+                           &_edgeGroupIdx,
+                           &_edgeGroup,
+                           &_edgeGroupLNToGN);
+
+    /* Faces */
+    (*nFace)[ipart] = _nFace;
+    (*faceEdgeIdx)[ipart] = (int *) malloc(sizeof(int) * (_nFace + 1));
+    (*faceEdge)[ipart] = (int *) malloc(sizeof(int) * _sFaceEdge);
+    (*faceVtxIdx)[ipart] = (int *) malloc(sizeof(int) * (_nFace + 1));
+    (*faceVtx)[ipart] = (int *) malloc(sizeof(int) * _sFaceEdge);
+    (*faceLNToGN)[ipart] = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * _nFace);
+
+    memcpy ((*faceEdgeIdx)[ipart], _faceEdgeIdx, (_nFace + 1) * sizeof(int));
+    memcpy ((*faceEdge)[ipart], _faceEdge, _sFaceEdge * sizeof(int));
+    memcpy ((*faceVtxIdx)[ipart], _faceEdgeIdx, (_nFace + 1) * sizeof(int));
+    memcpy ((*faceLNToGN)[ipart], _faceLNToGN, _nFace * sizeof(PDM_g_num_t));
+
+    /* Edges */
+    (*nEdge)[ipart] = _nEdge;
+    (*edgeVtxIdx) [ipart] = (int *) malloc(sizeof(int) * (_nEdge + 1));
+    (*edgeVtx)[ipart] = (int *) malloc(sizeof(int) * _sEdgeVtx);
+
+    memcpy ((*edgeVtxIdx)[ipart], _edgeVtxIdx, (_nEdge + 1) * sizeof(int));
+    memcpy ((*edgeVtx)[ipart], _edgeVtx, _sEdgeVtx * sizeof(int));
+
+    /* Vertices */
+    (*nVtx)[ipart] = _nVtx;
+    (*vtxCoord)[ipart] = (double *) malloc(sizeof(double) * (3 * _nVtx));
+    (*vtxLNToGN)[ipart] = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * _nVtx);
+
+    memcpy ((*vtxCoord)[ipart], _vtx, 3 *_nVtx * sizeof(double));
+    memcpy ((*vtxLNToGN)[ipart], _vtxLNToGN, _nVtx * sizeof(PDM_g_num_t));
+
+
+    /* Compute face-vtx connectivity */
+    int *_faceVtx = (*faceVtx)[ipart];
+
+    int *vtxEdgeIdx = (int *) malloc(sizeof(int) * (_nVtx + 1));
+
+    for (int i = 0; i < _nVtx + 1; i++) {
+      vtxEdgeIdx[i] = 0;
+    }
+
+    for (int i = 0; i < _nEdge; i++) {
+      int ivtx1 = _edgeVtx[2*i];
+      int ivtx2 = _edgeVtx[2*i + 1];
+
+      vtxEdgeIdx[ivtx1] += 1;
+      vtxEdgeIdx[ivtx2] += 1;
+    }
+
+    for (int i = 1; i < _nVtx + 1; i++) {
+      vtxEdgeIdx[i] = vtxEdgeIdx[i] + vtxEdgeIdx[i-1];
+    }
+
+    int *vtxEdge = (int *) malloc(sizeof(int) * vtxEdgeIdx[_nVtx]);
+    int *vtxEdgeN = (int *) malloc(sizeof(int) * _nVtx);
+    for (int i = 0; i < _nVtx; i++) {
+      vtxEdgeN[i] = 0;
+    }
+
+    for (int i = 0; i < _nEdge; i++) {
+      int ivtx1 = _edgeVtx[2*i] - 1;
+      int ivtx2 = _edgeVtx[2*i + 1] - 1;
+      int iedge = i + 1;
+
+      vtxEdge[vtxEdgeIdx[ivtx1] + vtxEdgeN[ivtx1]] = iedge;
+      vtxEdge[vtxEdgeIdx[ivtx2] + vtxEdgeN[ivtx2]] = iedge;
+      vtxEdgeN[ivtx1] += 1;
+      vtxEdgeN[ivtx2] += 1;
+    }
+    free(vtxEdgeN);
+
+    for (int i = 0; i < _nFace; i++) {
+      int idx = _faceEdgeIdx[i];
+      int __nEdge = _faceEdgeIdx[i+1] - idx;
+      int *_edges = _faceEdge + idx;
+      int *_vertices = _faceVtx + idx;
+
+      int edge_cur = _edges[0];
+      int vtx_deb =  _edgeVtx[2*(edge_cur - 1)];
+      _vertices[0] = vtx_deb;
+      int vtx_cur =  _edgeVtx[2*(edge_cur - 1) + 1];
+      int idxVtx = 0;
+
+      while (vtx_deb != vtx_cur) {
+        _vertices[++idxVtx] = vtx_cur;
+        int find_vtx = 0;
+
+        for (int j = vtxEdgeIdx[vtx_cur - 1]; j <  vtxEdgeIdx[vtx_cur]; j++) {
+          for (int k = 0; k < __nEdge; k++) {
+            if ((_edges[k] == vtxEdge[j]) && (_edges[k] != edge_cur)) {
+              edge_cur = _edges[k];
+              if (_edgeVtx[2*(_edges[k]-1)] == vtx_cur) {
+                vtx_cur = _edgeVtx[2*(_edges[k]-1) + 1];
+              }
+              else {
+                vtx_cur = _edgeVtx[2*(_edges[k]-1)];
+              }
+              find_vtx = 1;
+              break;
+            }
+          }
+          if (find_vtx)
+            break;
+        }
+        if (!find_vtx) {
+          PDM_error(__FILE__, __LINE__, 0,"Error to compute vtxedge !!!!\n");
+          abort();
+        }
+      }
+    }
+
+    free (vtxEdge);
+    free (vtxEdgeIdx);
+
+  }
+}
+
+
+static void
+_create_split_mesh
+(
+ int                 activeRank,
+ PDM_MPI_Comm        pdm_mpi_comm,
+ double              xmin,
+ double              ymin,
+ PDM_g_num_t         nVtxSeg,
+ double              length,
+ double              depth,
+ int                 rotation,
+ int                 n_part,
+ PDM_part_split_t    method,
+ int                 haveRandom,
+ int                 initRandom,
+ PDM_g_num_t        *nGFace,
+ PDM_g_num_t        *nGVtx,
+ int               **nFace,
+ int              ***faceEdgeIdx,
+ int              ***faceEdge,
+ int              ***faceVtxIdx,
+ int              ***faceVtx,
+ PDM_g_num_t      ***faceLNToGN,
+ int               **nEdge,
+ int              ***edgeVtxIdx,
+ int              ***edgeVtx,
+ int               **nVtx,
+ double           ***vtxCoord,
+ PDM_g_num_t      ***vtxLNToGN
+ )
+{
+  int i_rank;
+  int numProcs;
+
+  if (activeRank) {
+
+    PDM_MPI_Comm_rank (pdm_mpi_comm, &i_rank);
+    PDM_MPI_Comm_size (pdm_mpi_comm, &numProcs);
+
+    double       xmax = xmin + length;
+    double       ymax = ymin + length;
+    PDM_g_num_t  nx = nVtxSeg;
+    PDM_g_num_t  ny = nVtxSeg;
+
+    int          dNFace;
+    int          dNVtx;
+    int          dNEdge;
+    int         *dFaceVtxIdx;
+    PDM_g_num_t *dFaceVtx;
+    double      *dVtxCoord;
+    PDM_g_num_t *dFaceEdge;
+    PDM_g_num_t *dEdgeVtx;
+    PDM_g_num_t *dEdgeFace;
+    int          nEdgeGroup;
+    int         *dEdgeGroupIdx;
+    PDM_g_num_t *dEdgeGroup;
+
+    /*
+     *  Create mesh
+     */
+    PDM_g_num_t nGEdge;
+
+    PDM_poly_surf_gen (pdm_mpi_comm,
+                       xmin,
+                       xmax,
+                       ymin,
+                       ymax,
+                       haveRandom,
+                       initRandom,
+                       nx,
+                       ny,
+                       nGFace,
+                       nGVtx,
+                       &nGEdge,
+                       &dNVtx,
+                       &dVtxCoord,
+                       &dNFace,
+                       &dFaceVtxIdx,
+                       &dFaceVtx,
+                       &dFaceEdge,
+                       &dNEdge,
+                       &dEdgeVtx,
+                       &dEdgeFace,
+                       &nEdgeGroup,
+                       &dEdgeGroupIdx,
+                       &dEdgeGroup);
+
+    _add_depth (dNVtx,
+                length,
+                depth,
+                dVtxCoord);
+
+    if (rotation) {
+      _rotate (dNVtx,
+               dVtxCoord);
+    }
+
+    /*
+     *  Create mesh partitions
+     */
+    int have_dCellPart = 0;
+
+    int *dCellPart   = (int *) malloc (dNFace * sizeof(int));
+    int *dEdgeVtxIdx = (int *) malloc ((dNEdge + 1) * sizeof(int));
+
+    dEdgeVtxIdx[0] = 0;
+    for (int i = 0; i < dNEdge; i++) {
+      dEdgeVtxIdx[i+1] = 2 + dEdgeVtxIdx[i];
+    }
+
+    /*
+     *  Split mesh
+     */
+    int ppartId;
+
+    int nPropertyCell = 0;
+    int *renum_properties_cell = NULL;
+    int nPropertyFace = 0;
+    int *renum_properties_face = NULL;
+
+    PDM_part_create (&ppartId,
+                     pdm_mpi_comm,
+                     method,
+                     "PDM_PART_RENUM_CELL_NONE",
+                     "PDM_PART_RENUM_FACE_NONE",
+                     nPropertyCell,
+                     renum_properties_cell,
+                     nPropertyFace,
+                     renum_properties_face,
+                     n_part,
+                     dNFace,
+                     dNEdge,
+                     dNVtx,
+                     nEdgeGroup,
+                     NULL,
+                     NULL,
+                     NULL,
+                     NULL,
+                     have_dCellPart,
+                     dCellPart,
+                     dEdgeFace,
+                     dEdgeVtxIdx,
+                     dEdgeVtx,
+                     NULL,
+                     dVtxCoord,
+                     NULL,
+                     dEdgeGroupIdx,
+                     dEdgeGroup);
+
+    free (dCellPart);
+
+    free (dVtxCoord);
+    free (dFaceVtxIdx);
+    free (dFaceVtx);
+    free (dFaceEdge);
+    free (dEdgeVtxIdx);
+    free (dEdgeVtx);
+    free (dEdgeFace);
+    free (dEdgeGroupIdx);
+    free (dEdgeGroup);
+
+    _get_connectivity (ppartId,
+                       n_part,
+                       nFace,
+                       faceEdgeIdx,
+                       faceEdge,
+                       faceVtxIdx,
+                       faceVtx,
+                       faceLNToGN,
+                       nEdge,
+                       edgeVtxIdx,
+                       edgeVtx,
+                       nVtx,
+                       vtxCoord,
+                       vtxLNToGN);
+
+    PDM_part_free (ppartId);
+  }
+
+  else {
+    *nFace = (int *) malloc(sizeof(int) * n_part);
+    *faceEdgeIdx = (int **) malloc(sizeof(int *) * n_part);
+    *faceEdge = (int **) malloc(sizeof(int *) * n_part);
+    *faceVtxIdx = (int **) malloc(sizeof(int *) * n_part);
+    *faceVtx = (int **) malloc(sizeof(int *) * n_part);
+    *faceLNToGN = (PDM_g_num_t **) malloc(sizeof(PDM_g_num_t *) * n_part);
+
+    *nEdge = (int *) malloc(sizeof(int) * n_part);
+    *edgeVtxIdx = (int **) malloc(sizeof(int *) * n_part);
+    *edgeVtx = (int **) malloc(sizeof(int *) * n_part);
+
+    *nVtx = (int *) malloc(sizeof(int) * n_part);
+    *vtxCoord = (double **) malloc(sizeof(double *) * n_part);
+    *vtxLNToGN = (PDM_g_num_t **) malloc(sizeof(PDM_g_num_t *) * n_part);
+
+    for (int ipart = 0; ipart < n_part; ipart++) {
+      int _nFace = 0;
+      int _sFaceEdge = 0;
+      (*nFace)[ipart] = _nFace;
+      (*faceEdgeIdx)[ipart] = (int *) malloc(sizeof(int) * (_nFace + 1));
+      (*faceEdgeIdx)[ipart][0] = 0;
+      (*faceEdge)[ipart] = (int *) malloc(sizeof(int) * _sFaceEdge);
+      (*faceVtxIdx)[ipart] = (int *) malloc(sizeof(int) * (_nFace + 1));
+      (*faceVtxIdx)[ipart][0] = 0;
+      (*faceVtx)[ipart] = (int *) malloc(sizeof(int) * _sFaceEdge);
+      (*faceLNToGN)[ipart] = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * _nFace);
+
+      int _nEdge = 0;
+      int _sEdgeVtx = 0;
+      (*nEdge)[ipart] = _nEdge;
+      (*edgeVtxIdx)[ipart] = (int *) malloc(sizeof(int) * (_nEdge + 1));
+      (*edgeVtxIdx)[ipart][0] = 0;
+      (*edgeVtx)[ipart] = (int *) malloc(sizeof(int) * _sEdgeVtx);
+
+      int _nVtx = 0;
+      (*nVtx)[ipart] = _nVtx;
+      (*vtxCoord)[ipart] = (double *) malloc(sizeof(double) * (3 * _nVtx));
+      (*vtxLNToGN)[ipart] = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * _nVtx);
+    }
+  }
+
+  PDM_MPI_Bcast (nGFace, 1, PDM__PDM_MPI_G_NUM, 0, PDM_MPI_COMM_WORLD);
+  PDM_MPI_Bcast (nGVtx, 1, PDM__PDM_MPI_G_NUM, 0, PDM_MPI_COMM_WORLD);
+}
+
+
 
 /**
  *
@@ -248,12 +886,15 @@ int main(int argc, char *argv[])
 
   PDM_g_num_t n_vtx_seg   = 10;
   double      length      = 1.;
+  double      depth       = 0.;
+  int         rotation    = 0;
   double      tolerance   = 1e-6;
   double      marge       = 0.;
   int         n_part      = 1;
   int         post        = 0;
   int         have_random = 1;
   int         init_random = 0;
+  int         n_proc_data = -1;
 #ifdef PDM_HAVE_PARMETIS
   PDM_part_split_t part_method  = PDM_PART_SPLIT_PARMETIS;
 #else
@@ -267,6 +908,8 @@ int main(int argc, char *argv[])
   PDM_g_num_t n_pts = 10;
   PDM_mesh_location_method_t loc_method = PDM_MESH_LOCATION_OCTREE;
 
+  int use_vtx = 0;
+
   /*
    *  Read args
    */
@@ -275,15 +918,19 @@ int main(int argc, char *argv[])
               argv,
               &n_vtx_seg,
               &length,
+              &depth,
+              &rotation,
               &tolerance,
               &marge,
               &n_part,
               &n_pts,
+              &n_proc_data,
               &post,
               &have_random,
               &init_random,
               (int *) &part_method,
-              &loc_method);
+              &loc_method,
+              &use_vtx);
 
 
   /*
@@ -299,7 +946,7 @@ int main(int argc, char *argv[])
 
 
   /*
-   *  Create distributed surface mesh
+   *  Create partitionned surface mesh
    */
 
   if (my_rank == 0) {
@@ -307,115 +954,55 @@ int main(int argc, char *argv[])
     fflush(stdout);
   }
 
-  const double xmin = 0.;
-  const double ymin = 0.;
-  const double xmax = xmin + length;
-  const double ymax = ymin + length;
+  PDM_MPI_Comm mesh_comm = PDM_MPI_COMM_WORLD;
+  int current_rank_has_mesh = _set_rank_has_mesh (PDM_MPI_COMM_WORLD,
+                                                  n_proc_data,
+                                                  &mesh_comm);
 
-  const PDM_g_num_t nx = n_vtx_seg;
-  const PDM_g_num_t ny = n_vtx_seg;
+  const double xmin = -0.5*length;
+  const double ymin = -0.5*length;
 
+  PDM_g_num_t   nGFace;
+  PDM_g_num_t   nGVtx;
+  int          *nFace       = NULL;
+  PDM_g_num_t **faceLNToGN  = NULL;
+  int         **faceEdgeIdx = NULL;
+  int         **faceEdge    = NULL;
+  int         **faceVtxIdx  = NULL;
+  int         **faceVtx     = NULL;
+  int          *nEdge       = NULL;
+  int         **edgeVtxIdx  = NULL;
+  int         **edgeVtx     = NULL;
+  int          *nVtx        = NULL;
+  double      **vtxCoord    = NULL;
+  PDM_g_num_t **vtxLNToGN   = NULL;
 
-  PDM_g_num_t  nGFace;
-  PDM_g_num_t  nGVtx;
-  PDM_g_num_t  nGEdge;
-  int          dn_vtx;
-  double      *dvtx_coord    = NULL;
-  int          dn_face;
-  int         *dface_vtx_idx = NULL;
-  PDM_g_num_t *dface_vtx     = NULL;
-  PDM_g_num_t *dFaceEdge     = NULL;
-  int          dNEdge;
-  PDM_g_num_t *dEdgeVtx      = NULL;
-  PDM_g_num_t *dEdgeFace     = NULL;
-  int          nEdgeGroup;
-  int         *dEdgeGroupIdx = NULL;
-  PDM_g_num_t *dEdgeGroup    = NULL;
-
-  PDM_poly_surf_gen (PDM_MPI_COMM_WORLD,
-                     xmin,
-                     xmax,
-                     ymin,
-                     ymax,
-                     have_random,
-                     init_random,
-                     nx,
-                     ny,
-                     &nGFace,
-                     &nGVtx,
-                     &nGEdge,
-                     &dn_vtx,
-                     &dvtx_coord,
-                     &dn_face,
-                     &dface_vtx_idx,
-                     &dface_vtx,
-                     &dFaceEdge,
-                     &dNEdge,
-                     &dEdgeVtx,
-                     &dEdgeFace,
-                     &nEdgeGroup,
-                     &dEdgeGroupIdx,
-                     &dEdgeGroup);
-
-  _z_elevation (dn_vtx,
-                dvtx_coord);
-
-  /*
-   *  Create mesh partitions
-   */
-
-  if (my_rank == 0) {
-    printf("-- Part\n");
-    fflush(stdout);
-  }
-
-  int have_dcell_part = 0;
-
-  int *dcell_part = (int *) malloc (dn_face*sizeof(int));
-  int *dEdgeVtxIdx = (int *) malloc ((dNEdge+1)*sizeof(int));
-
-  dEdgeVtxIdx[0] = 0;
-  for (int i = 0; i < dNEdge; i++) {
-    dEdgeVtxIdx[i+1] = 2 + dEdgeVtxIdx[i];
-  }
-
-  int ppart_id;
-  int *renum_properties_cell = NULL;
-  int *renum_properties_face = NULL;
-  int n_property_cell = 0;
-  int n_property_face = 0;
-
-  PDM_part_create (&ppart_id,
-                   PDM_MPI_COMM_WORLD,
-                   part_method,
-                   "PDM_PART_RENUM_CELL_NONE",
-                   "PDM_PART_RENUM_FACE_NONE",
-                   n_property_cell,
-                   renum_properties_cell,
-                   n_property_face,
-                   renum_properties_face,
-                   n_part,
-                   dn_face,
-                   dNEdge,
-                   dn_vtx,
-                   nEdgeGroup,
-                   NULL,
-                   NULL,
-                   NULL,
-                   NULL,
-                   have_dcell_part,
-                   dcell_part,
-                   dEdgeFace,
-                   dEdgeVtxIdx,
-                   dEdgeVtx,
-                   NULL,
-                   dvtx_coord,
-                   NULL,
-                   dEdgeGroupIdx,
-                   dEdgeGroup);
-
-  free (dcell_part);
-
+  _create_split_mesh (current_rank_has_mesh,
+                      mesh_comm,
+                      xmin,
+                      ymin,
+                      n_vtx_seg,
+                      length,
+                      depth,
+                      rotation,
+                      n_part,
+                      part_method,
+                      have_random,
+                      init_random,
+                      &nGFace,
+                      &nGVtx,
+                      &nFace,
+                      &faceEdgeIdx,
+                      &faceEdge,
+                      &faceVtxIdx,
+                      &faceVtx,
+                      &faceLNToGN,
+                      &nEdge,
+                      &edgeVtxIdx,
+                      &edgeVtx,
+                      &nVtx,
+                      &vtxCoord,
+                      &vtxLNToGN);
 
 
   /************************
@@ -432,18 +1019,36 @@ int main(int argc, char *argv[])
   double *pts_coords = NULL;
 
   marge *= length;
-  double xyz_min[3] = {-marge, -marge, -marge};
-  double xyz_max[3] = {length + marge, length + marge, marge};
-  _random_cloud (n_pts,
-                 xyz_min,
-                 xyz_max,
-                 n_ranks,
-                 my_rank,
-                 &pts_coords,
-                 &n_pts_l);
+  double _min = -0.5*length - marge;
+  double _max = -_min;
+  double xyz_min[3] = {_min, _min, _min};
+  double xyz_max[3] = {_max, _max, _max};
 
-  _z_elevation (n_pts_l,
-                pts_coords);
+  if (use_vtx) {
+    _point_cloud_from_mesh_vtx (PDM_MPI_COMM_WORLD,
+                                _min,
+                                _min,
+                                n_pts,
+                                length + 2.*marge,
+                                have_random,
+                                init_random + 1,
+                                &pts_coords,
+                                &n_pts_l);
+  }
+  else {
+    _random_cloud (n_pts,
+                   xyz_min,
+                   xyz_max,
+                   n_ranks,
+                   my_rank,
+                   &pts_coords,
+                   &n_pts_l);
+  }
+
+  _add_depth (n_pts_l,
+              length,
+              depth,
+              pts_coords);
 
 
   /* Point cloud global numbering */
@@ -498,84 +1103,19 @@ int main(int argc, char *argv[])
 
   /* Set mesh */
   for (int ipart = 0; ipart < n_part; ipart++) {
-
-    int n_face;
-    int n_edge;
-    int n_edge_part_bound;
-    int n_vtx;
-    int n_proc;
-    int n_t_part;
-    int s_face_edge;
-    int s_edge_vtx;
-    int s_edge_group;
-    int n_edge_group2;
-
-    PDM_part_part_dim_get (ppart_id,
-                          ipart,
-                          &n_face,
-                          &n_edge,
-                          &n_edge_part_bound,
-                          &n_vtx,
-                          &n_proc,
-                          &n_t_part,
-                          &s_face_edge,
-                          &s_edge_vtx,
-                          &s_edge_group,
-                          &n_edge_group2);
-
-    int         *face_tag;
-    int         *face_edge_idx;
-    int         *face_edge;
-    PDM_g_num_t *face_ln_to_gn;
-    int         *edge_tag;
-    int         *edge_face;
-    int         *edge_vtx_idx;
-    int         *edge_vtx;
-    PDM_g_num_t *edge_ln_to_gn;
-    int         *edge_part_boundProcIdx;
-    int         *edge_part_boundPartIdx;
-    int         *edge_part_bound;
-    int         *vtx_tag;
-    double      *vtx;
-    PDM_g_num_t *vtx_ln_to_gn;
-    int         *edge_group_idx;
-    int         *edge_group;
-    PDM_g_num_t *edge_group_ln_to_gn;
-
-    PDM_part_part_val_get (ppart_id,
-                           ipart,
-                           &face_tag,
-                           &face_edge_idx,
-                           &face_edge,
-                           &face_ln_to_gn,
-                           &edge_tag,
-                           &edge_face,
-                           &edge_vtx_idx,
-                           &edge_vtx,
-                           &edge_ln_to_gn,
-                           &edge_part_boundProcIdx,
-                           &edge_part_boundPartIdx,
-                           &edge_part_bound,
-                           &vtx_tag,
-                           &vtx,
-                           &vtx_ln_to_gn,
-                           &edge_group_idx,
-                           &edge_group,
-                           &edge_group_ln_to_gn);
-
     PDM_mesh_location_part_set_2d (id_loc,
                                    ipart,
-                                   n_face,
-                                   face_edge_idx,
-                                   face_edge,
-                                   face_ln_to_gn,
-                                   n_edge,
-                                   edge_vtx_idx,
-                                   edge_vtx,
-                                   edge_ln_to_gn,
-                                   n_vtx,
-                                   vtx,
-                                   vtx_ln_to_gn);
+                                   nFace[ipart],
+                                   faceEdgeIdx[ipart],
+                                   faceEdge[ipart],
+                                   faceLNToGN[ipart],
+                                   nEdge[ipart],
+                                   edgeVtxIdx[ipart],
+                                   edgeVtx[ipart],
+                                   NULL,//edgeLNToGN[ipart],
+                                   nVtx[ipart],
+                                   vtxCoord[ipart],
+                                   vtxLNToGN[ipart]);
   }
 
 
@@ -614,8 +1154,6 @@ int main(int argc, char *argv[])
   }
 
   /* int p_n_points; */
-  /* double      *p_coords      = NULL; */
-  /* PDM_g_num_t *p_gnum        = NULL; */
   PDM_g_num_t *p_location    = NULL;
   int         *p_weights_idx = NULL;
   double      *p_weights     = NULL;
@@ -624,9 +1162,6 @@ int main(int argc, char *argv[])
   PDM_mesh_location_get (id_loc,
                          0,//i_point_cloud,
                          0,//i_part,
-                         /* &p_n_points, */
-                         /* &p_coords, */
-                         /* &p_gnum, */
                          &p_location,
                          &p_weights_idx,
                          &p_weights,
@@ -655,7 +1190,7 @@ int main(int argc, char *argv[])
   PDM_mesh_location_free (id_loc,
                           0);
 
-  PDM_part_free (ppart_id);
+  /*PDM_part_free (ppart_id);
 
 
   free (dvtx_coord);
@@ -666,7 +1201,7 @@ int main(int argc, char *argv[])
   free (dEdgeFace);
   free (dEdgeGroupIdx);
   free (dEdgeGroup);
-  free (dEdgeVtxIdx);
+  free (dEdgeVtxIdx);*/
 
   free (pts_coords);
   free (pts_gnum);

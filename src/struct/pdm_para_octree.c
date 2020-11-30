@@ -1254,12 +1254,6 @@ _distribute_octants
                                              L->codes[i],
                                              morton_index + irank + 1);
     }
-    //DBG-->>
-    if (irank < 0 || irank >= n_ranks) {
-      PDM_morton_dump (3, L->codes[i]);
-      printf("i = %d, irank = %d\n\n\n", i, irank);
-    }
-    //<<--
     send_count[irank] += L->dim + 1;
   }
 
@@ -4674,19 +4668,22 @@ PDM_para_octree_build
                                  octree->points,
                                  octree->global_extents,
                                  octree->comm);
-  }
 
-  /*
-   * Dilate extents
-   */
-  const double EPS_range  = 1.e-6;
-  const double EPS_double = 1.e-12;
+    /*
+     * Dilate extents
+     */
+    double max_range = 0.;
+    for (int i = 0; i < dim; i++) {
+      max_range = PDM_MAX (max_range,
+                           octree->global_extents[i+dim] - octree->global_extents[i]);
+    }
 
-  for (int i = 0; i < dim; i++) {
-    double range = octree->global_extents[i+dim] - octree->global_extents[i];
-    double epsilon = PDM_MAX (EPS_double, range * EPS_range);
-    octree->global_extents[i]     -= 1.1*epsilon; // On casse la symetrie !
-    octree->global_extents[i+dim] += epsilon;
+    const double epsilon = 1.e-3 * max_range;
+
+    for (int i = 0; i < dim; i++) {
+      octree->global_extents[i]     -= 1.1 * epsilon; // On casse la symetrie !
+      octree->global_extents[i+dim] +=       epsilon;
+    }
   }
 
   /*
@@ -7927,13 +7924,13 @@ PDM_para_octree_points_inside_boxes
                  filename);
   }
 
-  /* Clip box extents */
+  /* Clip box extents (ensure Morton codes of box corners are properly computed) */
   double *_box_extents = malloc (sizeof(double) * two_dim * n_boxes);
   for (int ibox = 0; ibox < n_boxes; ibox++) {
     for (int idim = 0; idim < dim; idim++) {
-      _box_extents[two_dim*ibox + idim]       = PDM_MAX (octree->s[idim],
+      _box_extents[two_dim*ibox + idim]       = PDM_MAX (octree->global_extents[idim],
                                                          box_extents[two_dim*ibox + idim]);
-      _box_extents[two_dim*ibox + dim + idim] = PDM_MIN (octree->s[idim] + octree->d[idim],
+      _box_extents[two_dim*ibox + dim + idim] = PDM_MIN (octree->global_extents[idim + dim],
                                                          box_extents[two_dim*ibox + dim + idim]);
     }
   }
@@ -8040,7 +8037,7 @@ PDM_para_octree_points_inside_boxes
     free (box_rank);
 
     /* Send boxes g_num buffer */
-    PDM_MPI_Alltoallv (send_box_g_num, send_count, send_shift, PDM__PDM_MPI_G_NUM,
+    PDM_MPI_Alltoallv (send_box_g_num,  send_count, send_shift, PDM__PDM_MPI_G_NUM,
                        _recv_box_g_num, recv_count, recv_shift, PDM__PDM_MPI_G_NUM,
                        octree->comm);
 
@@ -8073,6 +8070,17 @@ PDM_para_octree_points_inside_boxes
 
 
 
+  if (VISU) {
+    char filename[999];
+
+    sprintf(filename, "recv_boxes_%3.3d.vtk", my_rank);
+    write_boxes (octree->comm,
+                 n_recv_boxes,
+                 recv_box_extents,
+                 recv_box_g_num,
+                 filename);
+  }
+
   /***************************************
    * Intersect redistributed boxes with local octree
    ***************************************/
@@ -8090,10 +8098,9 @@ PDM_para_octree_points_inside_boxes
 
   /* Root node of octree */
   PDM_morton_code_t root;
-  root.L = 0;
-  for (int i = 0; i < dim; i++) {
-    root.X[i] = 0;
-  }
+  PDM_morton_nearest_common_ancestor (octants->codes[0],
+                                      octants->codes[octants->n_nodes - 1],
+                                      &root);
 
   int *intersect_nodes = malloc (sizeof(int) * octants->n_nodes);
   size_t n_intersect_nodes;

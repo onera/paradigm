@@ -398,9 +398,12 @@ _gnum_from_coords_compute
           int idx = j;
           int distant_proc = candidates_desc[3*idx    ];
           int distant_part = candidates_desc[3*idx + 1];
-//          int distant_pt = candidates_desc[3*idx + 2];
+          int distant_pt = candidates_desc[3*idx + 2];
 
-          if ((distant_proc < iproc) || ((distant_proc == iproc) && (distant_part < i_part))) {
+          if ((distant_proc < iproc) ||
+              ((distant_proc == iproc) && (distant_part < i_part)) ||
+              ((distant_proc == iproc) && (distant_part == i_part)
+               && (distant_pt < i))) {
             _gnum->index[i_part][i] = -1;
           }
         }
