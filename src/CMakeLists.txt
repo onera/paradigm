@@ -46,6 +46,7 @@ target_include_directories(pdm
   PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/meshgen>
   PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/struct>
   PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/util>
+  PUBLIC    $<INSTALL_INTERFACE:include/>
 )
 
 if (PDM_IN_PDMA)
@@ -71,6 +72,7 @@ if (PDM_ENABLE_STATIC_Fortran_INTERFACE OR PDM_ENABLE_SHARED_Fortran_INTERFACE)
     PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/meshgen>
     PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/struct>
     PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/util>
+    PUBLIC    $<INSTALL_INTERFACE:include/>
   )
     if (PDM_IN_PDMA)
       target_include_directories(pdmf
@@ -119,6 +121,10 @@ list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_radix_sort.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/mesh/pdm_cellface_orient.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/mesh/pdm_dmesh_nodal.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/mesh/pdm_dconnectivity_transform.h")
+list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/mesh/pdm_overlay.h")
+list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/mesh/pdm_edges_intersect.h")
+list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/mesh/pdm_overlayf.h")
+list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/mesh/pdm_poly_clipp.h")
 if (PDM_IN_PDMA)
   list(APPEND LIST_HEADER "${CMAKE_BINARY_DIR}/pdm_config.h")
 else()
@@ -155,6 +161,8 @@ if (PDM_ENABLE_STATIC_Fortran_INTERFACE OR PDM_ENABLE_SHARED_Fortran_INTERFACE)
   list(APPEND LIST_HEADERF "${CMAKE_CURRENT_SOURCE_DIR}/mesh/pdm_mesh_location.F90")
   list(APPEND LIST_HEADERF "${CMAKE_CURRENT_BINARY_DIR}/pdm_closest_points.mod")
   list(APPEND LIST_HEADERF "${CMAKE_CURRENT_SOURCE_DIR}/mesh/pdm_closest_points.F90")
+  list(APPEND LIST_HEADERF "${CMAKE_CURRENT_BINARY_DIR}/pdm_overlay.mod")
+  list(APPEND LIST_HEADERF "${CMAKE_CURRENT_SOURCE_DIR}/mesh/mod_overlay.F90")
 endif ()
 
 if (OPENMP_FOUND)

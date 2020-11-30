@@ -423,6 +423,21 @@ PDM_closest_points_compute
   PDM_MPI_Allreduce(local_min, global_extents,     3, PDM_MPI_DOUBLE, PDM_MPI_MIN, cls->comm);
   PDM_MPI_Allreduce(local_max, global_extents + 3, 3, PDM_MPI_DOUBLE, PDM_MPI_MAX, cls->comm);
 
+  /*
+   * Dilate extents
+   */
+  double max_range = 0.;
+  for (int i = 0; i < 3; i++) {
+    max_range = PDM_MAX (max_range,
+                         global_extents[i+3] - global_extents[i]);
+  }
+
+  const double epsilon = 1.e-3 * max_range;
+  for (int i = 0; i < 3; i++) {
+    global_extents[i]   -= 1.1 * epsilon; // On casse la symetrie !
+    global_extents[i+3] +=       epsilon;
+  }
+
   /* Build parallel octree */
   PDM_para_octree_build (octree_id, global_extents);
   //PDM_para_octree_dump (octree_id);
