@@ -21,9 +21,6 @@ else ()
    set(PYX_L_NUM int)
 endif ()
 
-configure_file(Pypdm.pyx.in Pypdm.pyx)
-configure_file(pdm_part_coarse.pxi.in pdm_part_coarse.pxi)
-
 file ( COPY . DESTINATION "${CMAKE_CURRENT_BINARY_DIR}" FILES_MATCHING PATTERN "*.pxi")
 file ( COPY . DESTINATION "${CMAKE_CURRENT_BINARY_DIR}" FILES_MATCHING PATTERN "*.py")
 
@@ -42,8 +39,11 @@ if (PDM_IN_PDMA)
   list (APPEND include_dirs ${PDMA_SOURCE_DIR}/src/overlay)
   list (APPEND include_dirs ${PDMA_SOURCE_DIR}/src/plugins)
 else ()
-  set(COMMENT_NOT_PDMA \#)
+  set(COMMENT_NOT_PDMA "\#")
 endif()
+
+configure_file(Pypdm.pyx.in Pypdm.pyx)
+configure_file(pdm_part_coarse.pxi.in pdm_part_coarse.pxi)
 
 include(UseCython)
 if (PDM_IN_PDMA)
