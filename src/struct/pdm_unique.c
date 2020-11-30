@@ -51,6 +51,41 @@ extern "C" {
  *
  */
 int
+PDM_inplace_unique
+(
+ int a[],
+ int l,
+ int r
+)
+{
+  int array_size = r - l + 1;
+  PDM_sort_int(&a[l], NULL, array_size);
+
+  int new_size  = 1;
+  int idx_write = l;
+  PDM_g_num_t last_value = a[l];
+  a[idx_write++] = last_value;
+  for (int idx = l+1; idx <= r; idx++) {
+    if(last_value != a[idx]){
+      last_value = a[idx];
+      a[idx_write++] = a[idx];
+      new_size++;
+    }
+  }
+
+  return new_size;
+}
+
+/**
+ *
+ * \brief Unique
+ *
+ * \param [inout]   a     Array to sort
+ * \param [in]      l     First element
+ * \param [in]      r     Last  element
+ *
+ */
+int
 PDM_inplace_unique_long
 (
  PDM_g_num_t a[],
