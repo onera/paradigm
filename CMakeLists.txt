@@ -388,7 +388,7 @@ endif()
 # pour les clients utilisant CMake
 #------------------------------------------------------------------------------
 configure_file(
-  "${CMAKE_SOURCE_DIR}/paradigm/cmake/templates/pdmConfig.cmake.in"
+  "${CMAKE_CURRENT_SOURCE_DIR}/cmake/templates/pdmConfig.cmake.in"
   pdmConfig.cmake
   @ONLY
 )
