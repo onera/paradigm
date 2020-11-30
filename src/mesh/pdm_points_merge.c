@@ -54,19 +54,19 @@ extern "C" {
 
 typedef struct  {
 
-  PDM_MPI_Comm comm;             /*!< MPI communicator */
-  double tolerance;              /*!< Relative geometric tolerance */
-  int   n_point_clouds;          /*!< Number of point cloud */
-  int  depth_max;                /*!< Maximum depth of internal octrees */
-  int  points_in_leaf_max;       /*!< Maximum number of point in a leaf
-                                  *   of internal octrees */
-  int   *n_points;               /*!< Number of points in each cloud */
-  int  max_n_points;             /*!< Maximum number of points in each cloud */
-  const double **point_clouds;   /*!< points cloud */
-  const double **char_length;    /*!< Characteristic length of points (optionnal) */
-  int   octree_id;               /*!< Octree identifier */
-  int   **candidates_idx;        /*!< Candidates indexes for each cloud */
-  int   **candidates_desc;       /*!< Candidates description for each cloud */
+  PDM_MPI_Comm   comm;                    /*!< MPI communicator */
+  double         tolerance;               /*!< Relative geometric tolerance */
+  int            n_point_clouds;          /*!< Number of point cloud */
+  int            depth_max;               /*!< Maximum depth of internal octrees */
+  int            points_in_leaf_max;      /*!< Maximum number of point in a leaf
+                                           *   of internal octrees */
+  int           *n_points;                /*!< Number of points in each cloud */
+  int            max_n_points;            /*!< Maximum number of points in each cloud */
+  const double **point_clouds;            /*!< points cloud */
+  const double **char_length;             /*!< Characteristic length of points (optionnal) */
+  int            octree_id;               /*!< Octree identifier */
+  int          **candidates_idx;          /*!< Candidates indexes for each cloud */
+  int          **candidates_desc;         /*!< Candidates description for each cloud */
 
 } _point_merge_t;
 
@@ -86,7 +86,7 @@ static const double _default_eps = 1e-9;
  *
  * \brief Return ppart object from it identifier
  *
- * \param [in]   ppartId        ppart identifier
+ * \param [in]   ppart_id        ppart identifier
  *
  */
 
@@ -99,7 +99,7 @@ _get_from_id
   _point_merge_t *ppm = (_point_merge_t *) PDM_Handles_get (_ppms, id);
 
   if (ppm == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_octree error : Bad identifier\n");
+    PDM_error(__FILE__, __LINE__, 0, "PDM_points_merge error : Bad identifier\n");
   }
 
   return ppm;
@@ -110,7 +110,7 @@ _get_from_id
  *
  * \brief Search a point
  *
- * \param [in]   ppartId        ppart identifier
+ * \param [in]   ppart_id        ppart identifier
  *
  */
 
@@ -146,7 +146,7 @@ const double *second_extents
  *
  * \brief Search a point in local partitions
  *
- * \param [in]   ppartId        ppart identifier
+ * \param [in]   ppart_id        ppart identifier
  *
  */
 
@@ -180,7 +180,6 @@ const double tolerance
     int n_candidates = PDM_octree_seq_n_points_get (octree_id, node_id);
     PDM_octree_seq_points_get (octree_id, node_id,
                                &points_clouds_id, &point_indexes);
-
 
     for (int i = 0; i < n_candidates; i++) {
       double dist2;
@@ -228,14 +227,17 @@ const double tolerance
 
         int _n_couple = *n_couple;
         int *_local_couple = *local_couple;
-        _local_couple[4*_n_couple]   = search_cloud;
-        _local_couple[4*_n_couple+1] = point_indexes[i];
-        _local_couple[4*_n_couple+2] = point_cloud;
-        _local_couple[4*_n_couple+3] = point_idx;
-        *n_couple += 1;
 
+        if (!((search_cloud == point_cloud) && (point_indexes[i] == point_idx))) {
+          _local_couple[4*_n_couple]   = search_cloud;
+          _local_couple[4*_n_couple+1] = point_indexes[i];
+          _local_couple[4*_n_couple+2] = point_cloud;
+          _local_couple[4*_n_couple+3] = point_idx;
+          *n_couple += 1;
+        }
       }
     }
+
   }
 
   else {
@@ -279,7 +281,7 @@ const double tolerance
  *
  * \brief Search a point in distant partitions
  *
- * \param [in]   ppartId        ppart identifier
+ * \param [in]   ppart_id        ppart identifier
  *
  */
 
@@ -469,6 +471,7 @@ PDM_points_merge_create
  const PDM_MPI_Comm comm
 )
 {
+
   if (_ppms == NULL) {
     _ppms = PDM_Handles_create (4);
   }
@@ -571,6 +574,7 @@ PDM_points_merge_cloud_set
  const double      *char_length
 )
 {
+
   _point_merge_t *ppm = _get_from_id (id);
 
   ppm->char_length[i_point_cloud] = char_length;
@@ -601,11 +605,11 @@ PDM_points_merge_process
 
   PDM_octree_build (ppm->octree_id);
 
-  int n_proc;
-  PDM_MPI_Comm_size(ppm->comm , &n_proc);
+  int n_rank;
+  PDM_MPI_Comm_size(ppm->comm , &n_rank);
 
-  int i_proc;
-  PDM_MPI_Comm_rank(ppm->comm , &i_proc);
+  int i_rank;
+  PDM_MPI_Comm_rank(ppm->comm , &i_rank);
 
   int *local_couple = NULL;
   int n_local_couple = 0;
@@ -643,7 +647,9 @@ PDM_points_merge_process
       _char_length = ppm->char_length[i];
     }
 
-    for (int j = i + 1; j < ppm->n_point_clouds; j++) {
+    for (int j = i; j < ppm->n_point_clouds; j++) {
+
+
       for (int k = 0; k < ppm->n_points[j]; k++) {
         const double *_coord = ppm->point_clouds[j] + 3 * k;
         if (point_box != NULL) {
@@ -658,9 +664,9 @@ PDM_points_merge_process
         }
 
         _search_local_couple (&local_couple, &n_local_couple, &s_local_couple,
-                        j, k, _coord, point_box, i, octree_seq_id,
-                        root_id, ppm->point_clouds[i], _char_length,
-                        ppm->tolerance);
+                              j, k, _coord, point_box, i, octree_seq_id,
+                              root_id, ppm->point_clouds[i], _char_length,
+                              ppm->tolerance);
 
       }
     }
@@ -679,7 +685,8 @@ PDM_points_merge_process
   double *extents_proc;
   int    *used_ranks;
 
-  const int n_used_ranks = PDM_octree_processes_extents_get (ppm->octree_id, &used_ranks, &extents_proc);
+  const int n_used_ranks = PDM_octree_processes_extents_get (ppm->octree_id,
+                                                             &used_ranks, &extents_proc);
 
   int s_tmp_store = sizeof(int) * ppm->max_n_points;
   int n_tmp_store = 0;
@@ -687,7 +694,7 @@ PDM_points_merge_process
   int *tmp_store = malloc (sizeof(int) * s_tmp_store * 3);
 
 //  printf ("Extents proc \n");
-//  for (int k = 0; k < n_proc ; k++) {
+//  for (int k = 0; k < n_rank ; k++) {
 //    const double *_extents_proc = extents_proc + k * 6;
 //    printf("%d %12.5e %12.5e %12.5e %12.5e %12.5e %12.5e\n",k, _extents_proc[0],
 //            _extents_proc[1],
@@ -725,7 +732,7 @@ PDM_points_merge_process
       for (int k = 0; k < n_used_ranks ; k++) {
         const int curr_rank  = used_ranks[k];
         const double *_extents_proc = extents_proc + k * 6;
-        if (curr_rank != i_proc) {
+        if (curr_rank != i_rank) {
 
           if (_intersect_extents(box, _extents_proc)) {
             if (n_tmp_store >= s_tmp_store) {
@@ -742,9 +749,9 @@ PDM_points_merge_process
     }
   }
 
-  int *val_send_n = malloc(sizeof(int)*n_proc);
+  int *val_send_n = malloc(sizeof(int)*n_rank);
 
-  for (int i = 0; i < n_proc; i++) {
+  for (int i = 0; i < n_rank; i++) {
     val_send_n[i] = 0;
   }
 
@@ -752,36 +759,36 @@ PDM_points_merge_process
     val_send_n[tmp_store[3*i]]++;
   }
 
-  int *val_recv_n = malloc (sizeof(int)*n_proc);
+  int *val_recv_n = malloc (sizeof(int)*n_rank);
   PDM_MPI_Alltoall (val_send_n, 1, PDM_MPI_INT, val_recv_n, 1, PDM_MPI_INT, ppm->comm);
 
   // Envoi des points + char length en option sur les autres procs (test bounding box)
 
-  int *val_send_idx = malloc (sizeof(int)*(n_proc+1));
-  int *val_recv_idx = malloc (sizeof(int)*(n_proc+1));
+  int *val_send_idx = malloc (sizeof(int)*(n_rank+1));
+  int *val_recv_idx = malloc (sizeof(int)*(n_rank+1));
 
   int _stride = 3 * 8 + 4 + 4; /* Coords + icloud + ipoint */
   if (ppm->char_length != NULL) {
     _stride += 8; /* char_length */
   }
 
-  for (int i = 0; i < n_proc; i++) {
+  for (int i = 0; i < n_rank; i++) {
     val_send_n[i] *= _stride;
     val_recv_n[i] *= _stride;
   }
 
   val_send_idx[0] = 0;
   val_recv_idx[0] = 0;
-  for (int i = 0; i < n_proc; i++) {
+  for (int i = 0; i < n_rank; i++) {
     val_send_idx[i+1] = val_send_idx[i] + val_send_n[i];
     val_recv_idx[i+1] = val_recv_idx[i] + val_recv_n[i];
     val_send_n[i] = 0;
   }
 
   unsigned char *val_send =
-        malloc (sizeof(unsigned char) * val_send_idx[n_proc]);
+        malloc (sizeof(unsigned char) * val_send_idx[n_rank]);
   unsigned char *val_recv =
-        malloc (sizeof(unsigned char) * val_recv_idx[n_proc]);
+        malloc (sizeof(unsigned char) * val_recv_idx[n_rank]);
 
   for (int i = 0; i < n_tmp_store; i++) {
     int iproc   = tmp_store[3*i];
@@ -823,7 +830,7 @@ PDM_points_merge_process
 
   int *n_fusion_from_proc = val_send_n;
 
-  for (int i = 0; i < n_proc; i++) {
+  for (int i = 0; i < n_rank; i++) {
     n_fusion_from_proc[i] = 0;
   }
 
@@ -835,7 +842,7 @@ PDM_points_merge_process
 
   unsigned char *_tmp_recv = val_recv;
 
-  for (int i = 0; i < n_proc; i++) {
+  for (int i = 0; i < n_rank; i++) {
     int _deb = val_recv_idx[i] / _stride;
     int _end = _deb + val_recv_n[i] / _stride;
 
@@ -897,7 +904,7 @@ PDM_points_merge_process
                     n_fusion_with_proc, 1, PDM_MPI_INT,
                     ppm->comm);
 
-  for (int i = 0; i < n_proc; i++) {
+  for (int i = 0; i < n_rank; i++) {
     assert (n_fusion_with_proc[i] == n_fusion_from_proc[i]);
   }
 
@@ -1073,4 +1080,33 @@ PDM_points_merge_candidates_get
       }
     }
   }
+}
+
+/**
+ *
+ * \brief Get size of the resulting array
+ *
+ * \param [in]   id                Identifier
+ * \param [in]   i_point_cloud     Current cloud
+ * \param [out]  n_point_cloud     Number of points in the current cloud
+ * \param [out]  n_candidates_desc Size of candidates_desc = candidates_idx[n_point_cloud+1]
+ *
+ */
+void
+PDM_points_merge_candidates_size_get
+(
+ const int     id,
+ const int     i_point_cloud,
+       int    *n_point_cloud,
+       int    *n_candidates_desc
+)
+{
+  _point_merge_t *ppm = _get_from_id (id);
+
+  assert(ppm->candidates_idx  != NULL);
+  assert(ppm->candidates_desc != NULL);
+
+  *n_point_cloud     = ppm->n_points[i_point_cloud];
+  *n_candidates_desc = ppm->candidates_idx[i_point_cloud][ppm->n_points[i_point_cloud]]; // ou x3 ?
+
 }

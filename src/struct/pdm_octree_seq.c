@@ -1,4 +1,3 @@
-
 /*----------------------------------------------------------------------------
  * Standard C library headers
  *----------------------------------------------------------------------------*/
@@ -175,7 +174,7 @@ double                *restrict min_dist2
  *
  * \brief Return ppart object from it identifier
  *
- * \param [in]   ppartId        ppart identifier
+ * \param [in]   ppart_id        ppart identifier
  *
  */
 
@@ -523,10 +522,15 @@ _octree_seq_t *octree
     }
   }
 
+  double delta = -1;
   for (int i = 0; i < 3; i++) {
-    double delta = PDM_MAX (octree->tolerance * (octree->extents[i + 3] - octree->extents[i]),
-                            _eps_default);
-    octree->extents[i] += -delta;
+    delta = PDM_MAX (octree->tolerance * (octree->extents[i + 3] - octree->extents[i]),
+                     delta);
+  }
+  delta = PDM_MAX (delta,_eps_default);
+
+  for (int i = 0; i < 3; i++) {
+    octree->extents[i] += -1.01*delta;
     octree->extents[i + 3] += delta;;
   }
 
@@ -535,6 +539,7 @@ _octree_seq_t *octree
 
   int *point_ids_tmp = malloc (sizeof(int) * octree->t_n_points);
   int *point_icloud_tmp = malloc (sizeof(int) * octree->t_n_points);
+
 
   _build_octree_seq_leaves(-1,
                        (PDM_octree_seq_child_t) 0,
