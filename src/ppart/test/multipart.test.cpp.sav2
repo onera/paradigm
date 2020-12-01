@@ -20,38 +20,47 @@ struct simple_mesh2_for_test {
 
 
               ________________
-             / 3              /\4 
+             /14              /\15
             / |              /|  \
            /_______________ /      \
-          /8  |           9/\ |      \
+          /2  |           3/\ |      \
          /                /|  \        \
-        /__|__|________14/ |  | \        \
-      13|               |\ |      \        \
-        |  |  | _ _ _ _ |_ \_ |_ _ _\ _ _ _ _\
-        |      0        |  | \ 1      \      / 2
+        /__|__|_________7/ |  | \        \
+       6|\             /|\ |      \        \
+        |  |  | _ _ _ _ |_ \_ |_ _ _\ _ _ _ _\ 11
+        |  \   13     / |    \ 12     \      /
         |  |  /         |  | / \        \   /
-        |   _ _ _ _ _ _ | _|_ _ _\_ _ _ _ \/
-        |   5           |   6      \      /7
-        | /             | /          \   /
-        |_______________|______________\/12
-         10             11
+        |   _\_ _ _ _/_ | _|_ _ _\_ _ _ _ \/
+        |   0           |   1      \      /8
+        | /   \     /   | /          \   /
+        |______________5| _____________\/9
+       4 \     \   /    /             /
+          \            /           /
+           \    \ /   /         / 
+            \        /      /
+             \   /  /   /
+              \    / /
+               \ |//  
+                 10
 */
-                              // 0 ,1 ,2 ,3 ,4 , 5 ,6 ,7 ,8 ,9 ,10,11,12,13,14
-  std::vector<double> coord_X = {0.,1.,2.,0.,1., 0.,1.,2.,0.,1., 0.,1.,2.,0.,1.};
-  std::vector<double> coord_Y = {0.,0.,0.,1.,1., 0.,0.,0.,1.,1., 0.,0.,0.,1.,1.};
-  std::vector<double> coord_Z = {0.,0.,0.,0.,0., 1.,1.,1.,1.,1., 2.,2.,2.,2.,2.};
+                              // 0 ,1 ,2 ,3 ,4 ,5 ,6 ,7 ,8 ,9 ,10,11,12,13,14,15
+  std::vector<double> coord_X = {0.,1.,0.,1.,0.,1.,0.,1.,2.,2.,1., 2., 1., 0., 0., 1.};
+  std::vector<double> coord_Y = {0.,0.,1.,1.,0.,0.,1.,1.,0.,0.,0., 0., 0., 0., 1., 1.};
+  std::vector<double> coord_Z = {0.,0.,0.,0.,1.,1.,1.,1.,0.,1.,2.,-1.,-1.,-1.,-1.,-1.};
 
+  std::vector<PDM_g_num_t> tet = {
+     5,9,7,10
+  };
+  std::vector<PDM_g_num_t> pyra = {
+     4,5,7,6,10
+  };
   std::vector<PDM_g_num_t> prism = {
-      1, 2, 4, 6, 7, 9,
-      6, 7, 9,11,12,14
+      1, 8, 3,5,9,7,
+     12,11,15,1,8,3
   };
   std::vector<PDM_g_num_t> hex = {
-     0, 1, 4, 3, 5, 6, 9, 8,
-     5, 6, 9, 8,10,11,14,13
-  };
-  std::vector<PDM_g_num_t> quad = {
-    0,3,8,5, 2,4,9,7,
-    5,8,13,10, 7,9,14,12
+     0, 1, 3, 2, 4, 5, 7, 6,
+     13,12,15,14, 0, 1, 3, 2
   };
 
 };
@@ -65,26 +74,30 @@ MPI_TEST_CASE("part by elt", 1) {
   simple_mesh2_for_test m;
   std_e::offset(m.hex,1);
   std_e::offset(m.prism,1);
-  std_e::offset(m.quad,1);
+  std_e::offset(m.pyra,1);
+  std_e::offset(m.tet,1);
 
   // 1. mesh distribution {
-  int n_vtx = m.coord_X.size();
+  int n_vtx = 16;
+  int n_tet   = m.tet.size()/4;
+  int n_pyra  = m.pyra.size()/5;
   int n_prism = m.prism.size()/6;
   int n_hex   = m.hex.size()/8;
-  int n_quad  = m.quad.size()/4;
-  int n_elt = n_prism + n_hex + n_quad;
+  int n_elt = n_tet + n_pyra + n_prism + n_hex;
   auto vtx_coord = std_e::concatenate(m.coord_X,m.coord_Y,m.coord_Z); // TODO interleave
   // 1. mesh distribution }
 
   // 2. dmesh_nodal creation {
   PDM_dmesh_nodal_t* dmesh_nodal = PDM_DMesh_nodal_create(comm,3,n_vtx,n_elt,0,0); // 3: dim, 0: n_faces, 0: n_edge
   PDM_DMesh_nodal_coord_set(dmesh_nodal, n_vtx, vtx_coord.data());
+  int id_tet_section   = PDM_DMesh_nodal_section_add(dmesh_nodal,PDM_MESH_NODAL_TETRA4  );
+  int id_pyra_section  = PDM_DMesh_nodal_section_add(dmesh_nodal,PDM_MESH_NODAL_PYRAMID5);
   int id_prism_section = PDM_DMesh_nodal_section_add(dmesh_nodal,PDM_MESH_NODAL_PRISM6  );
   int id_hex_section   = PDM_DMesh_nodal_section_add(dmesh_nodal,PDM_MESH_NODAL_HEXA8   );
-  int id_quad_section  = PDM_DMesh_nodal_section_add(dmesh_nodal,PDM_MESH_NODAL_QUAD4   );
+  PDM_DMesh_nodal_section_std_set(dmesh_nodal,id_tet_section  ,n_tet  ,m.tet.data()  );
+  PDM_DMesh_nodal_section_std_set(dmesh_nodal,id_pyra_section ,n_pyra ,m.pyra.data() );
   PDM_DMesh_nodal_section_std_set(dmesh_nodal,id_prism_section,n_prism,m.prism.data());
   PDM_DMesh_nodal_section_std_set(dmesh_nodal,id_hex_section  ,n_hex  ,m.hex.data()  );
-  PDM_DMesh_nodal_section_std_set(dmesh_nodal,id_quad_section ,n_quad ,m.quad.data()  );
   // 2. dmesh_nodal creation }
 
   //SUBCASE("concat_elt_sections") {
@@ -255,6 +268,30 @@ MPI_TEST_CASE("part by elt", 1) {
     _run_ppart_zone_nodal(dmesh_nodal,&pmesh,PDM_SPLIT_DUAL_WITH_PTSCOTCH,dn_part,comm);
   }
   
+  //SUBCASE("test test") {
+  //  int entity_distribution_ptb[2] = {-1,63};
+  //  PDM_g_num_t pentity_ln_to_gn_[64] = {0, 41, 46, 45, 44, 43, 42, 40, 48, 39, 38, 37, 36, 35, 47, 49, 33, 57, 62, 61, 60, 59, 58, 56, 50, 55, 54, 53, 52, 51, 34, 31, 32, 1, 8, 13, 12, 11, 10, 9, 7, 15, 6, 5, 4, 3, 2, 14, 16, 30, 24, 29, 28, 27, 26, 25, 23, 17, 22, 21, 20, 19, 18, 63};
+  //  int pn_entity = 64;
+  //  int n_part = 1;
+  //  PDM_g_num_t* pentity_ln_to_gn = pentity_ln_to_gn_;
+  //  PDM_block_to_part_t* btp = PDM_block_to_part_create(entity_distribution_ptb,
+  //                                (const PDM_g_num_t**) &pentity_ln_to_gn,
+  //                                                      &pn_entity,
+  //                                                      n_part,
+  //                                                      comm);
+  //  int blk_stri[64] = {8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8};
+  //  PDM_g_num_t dconnectivity[64*8] = {1, 2, 3, 4, 5, 6, 7, 8, 5, 6, 7, 8, 9, 10, 11, 12, 9, 10, 11, 12, 13, 14, 15, 16, 13, 14, 15, 16, 17, 18, 19, 20, 4, 3, 21, 22, 8, 7, 23, 24, 8, 7, 23, 24, 12, 11, 25, 26, 12, 11, 25, 26, 16, 15, 27, 28, 16, 15, 27, 28, 20, 19, 29, 30, 22, 21, 31, 32, 24, 23, 33, 34, 24, 23, 33, 34, 26, 25, 35, 36, 26, 25, 35, 36, 28, 27, 37, 38, 28, 27, 37, 38, 30, 29, 39, 40, 32, 31, 41, 42, 34, 33, 43, 44, 34, 33, 43, 44, 36, 35, 45, 46, 36, 35, 45, 46, 38, 37, 47, 48, 38, 37, 47, 48, 40, 39, 49, 50, 2, 51, 52, 3, 6, 53, 54, 7, 6, 53, 54, 7, 10, 55, 56, 11, 10, 55, 56, 11, 14, 57, 58, 15, 14, 57, 58, 15, 18, 59, 60, 19, 3, 52, 61, 21, 7, 54, 62, 23, 63, 64, 65, 66, 67, 68, 69, 70, 67, 68, 69, 70, 71, 72, 73, 74, 15, 58, 75, 27, 19, 60, 76, 29, 21, 61, 77, 31, 23, 62, 78, 33, 71, 72, 73, 74, 79, 80, 81, 82, 79, 80, 81, 82, 83, 84, 85, 86, 27, 75, 87, 37, 29, 76, 88, 39, 31, 77, 89, 41, 33, 78, 90, 43, 33, 78, 90, 43, 35, 91, 92, 45, 35, 91, 92, 45, 37, 87, 93, 47, 37, 87, 93, 47, 39, 88, 94, 49, 51, 95, 96, 52, 53, 97, 98, 54, 53, 97, 98, 54, 55, 99, 100, 56, 55, 99, 100, 56, 57, 101, 102, 58, 57, 101, 102, 58, 59, 103, 104, 60, 52, 96, 63, 61, 54, 98, 67, 62, 66, 65, 105, 106, 70, 69, 107, 108, 70, 69, 107, 108, 74, 73, 109, 110, 58, 102, 79, 75, 60, 104, 83, 76, 61, 63, 66, 77, 62, 67, 70, 78, 74, 73, 109, 110, 82, 81, 111, 112, 82, 81, 111, 112, 86, 85, 113, 114, 75, 79, 82, 87, 76, 83, 86, 88, 77, 66, 106, 89, 78, 70, 108, 90, 78, 70, 108, 90, 91, 74, 110, 92, 91, 74, 110, 92, 87, 82, 112, 93, 87, 82, 112, 93, 88, 86, 114, 94, 95, 115, 116, 96, 97, 117, 118, 98, 97, 117, 118, 98, 99, 119, 120, 100, 99, 119, 120, 100, 101, 121, 122, 102, 101, 121, 122, 102, 103, 123, 124, 104, 96, 116, 64, 63, 98, 118, 68, 67, 98, 118, 68, 67, 100, 120, 72, 71, 100, 120, 72, 71, 102, 122, 80, 79, 102, 122, 80, 79, 104, 124, 84, 83, 125, 71, 74, 91, 75, 79, 82, 87, 62, 67, 70, 78, 125, 71, 74, 91, 56, 100, 71, 125, 58, 102, 79, 75, 54, 98, 67, 62, 56, 100, 71, 125, 25, 125, 91, 35, 27, 75, 87, 37, 23, 62, 78, 33, 25, 125, 91, 35, 11, 56, 125, 25, 15, 58, 75, 27, 7, 54, 62, 23, 11, 56, 125, 25};
+  //  int** pstride;
+  //  int** pconnectivity_abs;
+  //  PDM_block_to_part_exch2(btp,
+  //                          sizeof(PDM_g_num_t),
+  //                          PDM_STRIDE_VAR,
+  //                          blk_stri,
+  //             (void *  )   dconnectivity,
+  //             (int  ***)  &pstride,
+  //             (void ***)  &pconnectivity_abs);
+  //}
+
   PDM_DMesh_nodal_free(dmesh_nodal,0);
 }
 

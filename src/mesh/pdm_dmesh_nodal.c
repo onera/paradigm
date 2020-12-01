@@ -1755,19 +1755,19 @@ PDM_dmesh_nodal_dual_graph
   int* dvtx_elt_idx;
   PDM_g_num_t* dvtx_elt;
 
-  printf("lulu01\n");
-  printf("elt_dist0 = %i\n",elt_dist[0]);
-  printf("vtx_dist0 = %i\n",vtx_dist[0]);
-  printf("elt_dist1 = %i\n",elt_dist[1]);
-  printf("vtx_dist1 = %i\n",vtx_dist[1]);
-  printf("delt_vtx_idx: ");
-  for (int i = 0; i < vtx_dist[1]; ++i)
-    printf("%i, ", delt_vtx_idx[i]);
-  printf("\n");
-  printf("delt_vtx: ");
-  for (int i = 0; i < delt_vtx_idx[vtx_dist[1]]; ++i)
-    printf("%i, ", delt_vtx[i]);
-  printf("\n");
+  //printf("lulu01\n");
+  //printf("elt_dist0 = %i\n",elt_dist[0]);
+  //printf("vtx_dist0 = %i\n",vtx_dist[0]);
+  //printf("elt_dist1 = %i\n",elt_dist[1]);
+  //printf("vtx_dist1 = %i\n",vtx_dist[1]);
+  //printf("delt_vtx_idx: ");
+  //for (int i = 0; i < elt_dist[1]; ++i)
+  //  printf("%i, ", delt_vtx_idx[i]);
+  //printf("\n");
+  //printf("delt_vtx: ");
+  //for (int i = 0; i < delt_vtx_idx[elt_dist[1]-1]; ++i)
+  //  printf("%i, ", delt_vtx[i]);
+  //printf("\n");
 
   PDM_dconnectivity_transpose(
     comm,

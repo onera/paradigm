@@ -39,13 +39,10 @@
 #include "pdm_distrib.h"
 #include "pdm_partitioning_algorithm.h"
 #include "pdm_para_graph_dual.h"
-#include "pdm_part_priv.h"
 #include "pdm_part_renum.h"
 #include "pdm_handles.h"
 #include "pdm_dmesh.h"
-#include "pdm_dmesh_priv.h"
 #include "pdm_dmesh_nodal.h"
-#include "pdm_dmesh_nodal_priv.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
 #include "pdm_binary_search.h"
@@ -57,7 +54,7 @@
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
-#include "pdm_multipart.h"
+#include "pdm_multipart_priv.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -71,59 +68,6 @@ extern "C" {
 /*============================================================================
  * Local structure definitions
  *============================================================================*/
-
-/**
- * \struct _part_mesh_t
- * \brief  This private structure stores partionned meshes obtained on a given
- *         zone.
- */
-typedef struct {
-  /* Data shared between all the partitions */
-  int  tn_part;          // Total number of partitions created for this mesh
-  int  n_bounds;         // Global number of boundary groups
-  int  n_joins;          // Global number of interface groups
-  int *joins_ids;        // Global id of each interface (size=n_joins)
-
-  /* Partitions -- see pdm_part_priv.h for struct definition */
-  _part_t  **parts;
-  int        renum_cell_method;     // Choice of renumbering method for cells
-  const int *renum_cell_properties; // Parameters used by some renumbering methods
-  int        renum_face_method;     // Choice of renumbering method for faces
-} _part_mesh_t;
-
-/**
- * \struct _pdm_multipart_t
- * \brief  This structure describe a multipart.
- *         It includes distributed meshes, partioned meshes and
- *         partitioning parameters.
- */
-typedef struct  {
-  /* Multipart description */
-  int           n_zone;              // Number of initial zones
-
-  PDM_dmesh_t **dmeshes;             // Ids of dmesh structure storing
-                                     // distributed meshes (size = n_zone)
-  PDM_dmesh_nodal_t **dmeshes_nodal;
-
-  int           n_total_joins;       // Total number of joins between zones (each counts twice)
-  const int    *join_to_opposite;    // For each global joinId, give the globalId of
-                                     //   the opposite join (size = n_total_joins)
-
-  PDM_MPI_Comm     comm;             // MPI communicator
-  PDM_ownership_t  owner;            // Which have the responsabilities of results
-
-  /* Partitioning parameters */
-  PDM_bool_t       merge_blocks;     // Merge before partitionning or not
-  PDM_split_dual_t split_method;     // Partitioning method (Metis or Scotch)
-  PDM_part_size_t  part_size_method; // Procude homogeneous or heterogeneous partitions
-  const int       *n_part;           // Number of wanted partitions per proc
-                                     // in each zone (size = n_zone)
-  const double    *part_fraction;    // Weight (in %) of each partition, in each zone
-                                     //   (size = sum n_part[i]), if heterogeneous
-  /* Partitioned meshes */
-  _part_mesh_t *pmeshes;             // Partitioned meshes structures (size=n_zone)
-
-} _pdm_multipart_t;
 
 /*============================================================================
  * Global variable
@@ -1273,7 +1217,182 @@ PDM_MPI_Comm      comm
   free(part_distri);
 }
 
+int vtx_in_connectivity(
+  PDM_g_num_t  vtx,
+  PDM_g_num_t *first_vtx,
+  int          n_vtx
+)
+{
+  for (int i=0; i<n_vtx; ++i) {
+    if (first_vtx[i]==vtx) return 1;
+  }
+  return 0;
+}
+
+int is_parent(
+  PDM_g_num_t *first_vtx,
+  int          n_vtx,
+  PDM_g_num_t *first_face_vtx,
+  int          n_face_vtx
+)
+{
+  // WARNING: quadratic but n_face_vtx should be 3 or 4
+  for (int i=0; i<n_face_vtx; ++i) {
+    if (!(vtx_in_connectivity(first_face_vtx[i],first_vtx,n_vtx)))
+      return 0;
+  }
+  return 1;
+}
+/*
+ * \brief give the elt_part of a 2d element as the one of its parent
+ *
+ * \param [in]  n_elt    number of elements
+ * \param [in]  elt_part partition number for each element
+ * \param [out] elt_part partition number for face of the section
+ */
 static
+void
+face_part_from_parent(
+  int           n_elt,
+  int           dn_elt,
+  int           section_idx,
+  PDM_g_num_t  *elt_dist,
+  int          *elt_part,
+  int          *delt_vtx_idx,
+  int          *delt_vtx,
+  int          *elt_elt_idx,
+  int          *elt_elt,
+  int          *elt2d_part,
+  PDM_MPI_Comm  comm
+)
+{
+  int i_rank;
+  int n_rank;
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  PDM_MPI_Comm_size(comm, &n_rank);
+
+  printf("n_elt =%i\n",n_elt);
+  printf("section_idx =%i\n",section_idx);
+  PDM_g_num_t* face_neighbors_idx = (PDM_g_num_t*) malloc ((n_elt+1) * sizeof(PDM_g_num_t));
+  int pos = 0;
+  for (int i=0; i<n_elt; ++i) {
+    int elt_idx = section_idx + i;
+    int n_neighbor = elt_elt_idx[elt_idx+1]-elt_elt_idx[elt_idx];
+    face_neighbors_idx[i] = pos;
+    pos += n_neighbor;
+  }
+  face_neighbors_idx[n_elt] = pos;
+  printf("face_neighbors_idx:");
+  for (int i = 0; i < n_elt+1; ++i)
+    printf(" %d ", face_neighbors_idx[i]);
+  printf("\n");
+
+  int n_face_neighbor = face_neighbors_idx[n_elt];
+  PDM_g_num_t* face_neighbors = (PDM_g_num_t*) malloc (n_face_neighbor * sizeof(PDM_g_num_t));
+  for (int i=0; i<n_elt; ++i) {
+    int elt_idx = section_idx + i;
+    int n_neighbor = elt_elt_idx[elt_idx+1]-elt_elt_idx[elt_idx];
+    for (int j=0; j<n_neighbor; ++j) {
+      face_neighbors[face_neighbors_idx[i]+j] = elt_elt[elt_elt_idx[elt_idx]+j]+1; // +1 because block_to_part uses 1-indexed ln_to_gn
+    }
+  }
+  printf("n_face_neighbor =%i\n",n_face_neighbor);
+  printf("face_neighbors: ");
+  for (int i = 0; i < n_face_neighbor; ++i)
+    printf("%i, ",face_neighbors[i]);
+  printf("\n");
+
+  PDM_g_num_t* elt_dist_0 = (PDM_g_num_t*) malloc ((n_rank+1)* sizeof(PDM_g_num_t));
+  for (int i=0; i<n_rank+1; ++i) {
+    elt_dist_0[i] = elt_dist[i]-1;
+  }
+  PDM_block_to_part_t* btp = PDM_block_to_part_create(elt_dist_0,(const PDM_g_num_t**)&face_neighbors,&n_face_neighbor,1,comm);
+
+  printf("lilili01\n");
+  int stride_one = 1;
+  int* block_data1 = elt_part;
+  int** neighbor_part;
+  PDM_block_to_part_exch2(btp,sizeof(int),PDM_STRIDE_CST,&stride_one,block_data1,NULL,(void***)&neighbor_part);
+
+  printf("lilili02\n");
+  int* block_idx2 = malloc(dn_elt * sizeof(int));
+  for (int i=0; i<dn_elt; ++i) {
+    block_idx2[i] = delt_vtx_idx[i+1] - delt_vtx_idx[i];
+  }
+  int* block_data2 = delt_vtx;
+  int** neighbor_vtx_stri;
+  int** neighbor_vtx;
+  PDM_block_to_part_exch2(btp,sizeof(int),PDM_STRIDE_VAR,block_idx2,block_data2,&neighbor_vtx_stri,(void***)&neighbor_vtx);
+
+  //PDM_g_num_t* parent = (PDM_g_num_t*) malloc (n_elt * sizeof(PDM_g_num_t));
+  printf("neighbor_part:");
+  for (int i = 0; i < n_face_neighbor; ++i)
+    printf(" %d ", neighbor_part[0][i]);
+  printf("\n");
+  printf("neighbor_vtx_stri:");
+  for (int i = 0; i < n_face_neighbor; ++i)
+    printf(" %d ", neighbor_vtx_stri[0][i]);
+  printf("\n");
+  printf("neighbor_vtx:");
+  for (int i = 0; i < 8+8+4+6; ++i)
+    printf(" %d ", neighbor_vtx[0][i]);
+  printf("\n");
+  printf("lilili03\n");
+  int pos2 = 0;
+  int neighbor_vtx_cur_idx = 0;
+  for (int i=0; i<n_elt; ++i) {
+    //printf("lilili04\n");
+    int face_vtx_idx = delt_vtx_idx[section_idx+i];
+    //printf("lilili05\n");
+    int n_face_vtx = delt_vtx_idx[section_idx+i+1] - delt_vtx_idx[section_idx+i];
+    //printf("lilili06\n");
+    int* first_face_vtx = delt_vtx+face_vtx_idx;
+    //printf("lilili07\n");
+
+    printf("i=%i\n",i);
+    int n_neighbor = face_neighbors_idx[i+1] - face_neighbors_idx[i];
+    int parent_found = 0;
+    for (int j=0; j<n_neighbor; ++j) {
+      //printf("tata01\n");
+      int n_vtx = neighbor_vtx_stri[0][pos2];
+      int* first_vtx = neighbor_vtx[0] + neighbor_vtx_cur_idx;
+      neighbor_vtx_cur_idx += n_vtx;
+      //printf("tata02\n");
+      printf("n_vtx= %i\n",n_vtx);
+      printf("n_face_vtx= %i\n",n_face_vtx);
+      //printf("first_vtx:");
+      //for (int k = 0; k < n_vtx; ++k)
+      //  printf(" %d ", first_vtx[k]);
+      //printf("\n");
+      //printf("first_face_vtx:");
+      //for (int k = 0; k < n_face_vtx; ++k)
+      //  printf(" %d ", first_face_vtx[k]);
+      //printf("\n");
+      if (is_parent(first_vtx,n_vtx,first_face_vtx,n_face_vtx)) {
+        printf("is_parent\n");
+        elt2d_part[i] = neighbor_part[0][pos2];
+        parent_found = 1;
+      }
+      ++pos2;
+    }
+    assert(parent_found);
+  }
+
+  free(face_neighbors);
+
+  printf("elt2d_part:");
+  for (int i = 0; i < n_elt; ++i)
+    printf(" %d ", elt2d_part[i]);
+  printf("\n");
+
+  //for (int i=0; i<n_elt; ++i) {
+  //  elt2d_part[i] = neighbor_part[0][i];
+  //}
+  ////free(part_data[0]);
+  //free(part_data);
+  printf("end elt_part 2D\n");
+}
+
 void
 _run_ppart_zone_nodal
 (
@@ -1319,7 +1438,7 @@ _run_ppart_zone_nodal
   //  vtx_dist[i] = mesh_vtx_dist[i]+1;
   //}
   int dn_vtx = dmesh_nodal->vtx->n_vtx;
-  printf("dn_vtx= %i\n",dn_vtx);
+  //printf("dn_vtx= %i\n",dn_vtx);
   PDM_g_num_t* vtx_dist = PDM_compute_entity_distribution(comm, dn_vtx);
 
   printf("section_idx: ");
@@ -1327,7 +1446,7 @@ _run_ppart_zone_nodal
     printf("%i, ", section_idx[i]);
   printf("\n");
   int dn_elt = section_idx[n_section];
-  printf("dn_elt= %i\n",dn_elt);
+  //printf("dn_elt= %i\n",dn_elt);
   PDM_g_num_t* elt_dist = PDM_compute_entity_distribution(comm, dn_elt);
 
   // 2. elt_elt graph
@@ -1352,10 +1471,10 @@ _run_ppart_zone_nodal
                        part_fractions,
                        elt_part,
                        comm);
-  printf("irank: %i | elt_part:",i_rank);
-  for (int i = 0; i < dn_elt; ++i)
-    printf(" %d ", elt_part[i]);
-  printf("\n");
+  //printf("irank: %i | elt_part:",i_rank);
+  //for (int i = 0; i < dn_elt; ++i)
+  //  printf(" %d ", elt_part[i]);
+  //printf("\n");
  
   printf("lala3.1\n");
   // OK
@@ -1363,47 +1482,26 @@ _run_ppart_zone_nodal
   for (int i_section=0; i_section<n_section; ++i_section) {
     int* elt_section_part = elt_part + section_idx[i_section];
 
+    printf("i_section= %i\t",i_section);
     PDM_Mesh_nodal_elt_t type = PDM_DMesh_nodal_section_elt_type_get(dmesh_nodal,i_section);
     if (type==PDM_MESH_NODAL_TRIA3 || type==PDM_MESH_NODAL_QUAD4) {
-      printf("elt_part 2D (untested)\n");
       int n_elt = section_idx[i_section+1] - section_idx[i_section];
-      PDM_g_num_t* parent = (PDM_g_num_t*) malloc (n_elt * sizeof(PDM_g_num_t));
-      for (int i=0; i<n_elt; ++i) {
-        int elt_idx = section_idx[i_section] + i;
-        assert(elt_elt_idx[elt_idx+1]-elt_elt_idx[elt_idx]); // 2D element can only have one parent
-        parent[i] = elt_elt[elt_elt_idx[elt_idx]]+1; // +1 because block_to_part uses 1-indexed ln_to_gn
-      }
-
-      int stride_one = 1;
-      int* block_data = elt_part;
-      int** part_data;
-      //printf("n_elt =%i\n",n_elt);
-      //printf("parent:");
-      //for (int i = 0; i < n_elt; ++i)
-      //  printf(" %d ", parent[i]);
-      //printf("\n");
-      //printf("elt_dist:");
-      //for (int i = 0; i < n_rank+1; ++i)
-      //  printf(" %d ", elt_dist[i]);
-      //printf("\n");
-      PDM_g_num_t* elt_dist_0 = (PDM_g_num_t*) malloc ((n_rank+1)* sizeof(PDM_g_num_t));
-      for (int i=0; i<n_rank+1; ++i) {
-        elt_dist_0[i] = elt_dist[i]-1;
-      }
-      PDM_block_to_part_t* btp = PDM_block_to_part_create(elt_dist_0,(const PDM_g_num_t**)&parent,&n_elt,1,comm);
-      PDM_block_to_part_exch2(btp,sizeof(int),PDM_STRIDE_CST,&stride_one,block_data,NULL,(void***)&part_data);
-      free(parent);
-      for (int i=0; i<n_elt; ++i) {
-        elt_section_part[i] = part_data[0][i];
-      }
-      printf("irank: %i | elt_section_part %i:",i_rank,i_section);
-      for (int i = 0; i < n_elt; ++i)
-        printf(" %d ", elt_section_part[i]);
-      printf("\n");
-      //free(part_data[0]);
-      free(part_data);
-      printf("end elt_part 2D\n");
+      printf("n_elt = %i\t",n_elt);
+      face_part_from_parent(
+        n_elt,
+        dn_elt,
+        section_idx[i_section],
+        elt_dist,
+        elt_part,
+        delt_vtx_idx,
+        delt_vtx,
+        elt_elt_idx,
+        elt_elt,
+        elt_section_part,
+        comm
+      );
     }
+    printf("\n");
   }
 
   // 4. ln_to_gn for elt sections and cells
@@ -1533,20 +1631,139 @@ _run_ppart_zone_nodal
   }
 
   printf("lala8\n");
-  // 4. reconstruct elts on partitions
-
-  
-  // 2. Récupération des éléments sur les partitions
-  // entrés
-  //   possibilité 1 : dmesh_nodal
-  //   possibilité 2 : dcell_vtx 
-  // sorties: pcell_vtx, type -> reconstruire le dmesh_nodal
  
   // 3. calculer tous les ln_to_gn, graphes de comm, conditions au limites
   // elements (2D, 3D), vtx       |      vtx       |     elements 2D
   // PDM_multipart_part_graph_comm_vtx_data_get
 
-  // après cette fonction: Coordinates, FlowSolution, 
+  /* Let's call graph communication to do the reordering - Temporary  */
+  int         **pinternal_vtx_bound_proc_idx  = NULL;
+  int         **pinternal_vtx_bound_part_idx  = NULL;
+  int         **pinternal_vtx_bound           = NULL;
+  int         **pinternal_vtx_priority        = NULL;
+  PDM_part_generate_entity_graph_comm(comm,
+                                      part_distri,
+                                      vtx_dist,
+                                      dn_part,
+                                      pn_vtx,
+               (const PDM_g_num_t **) pvtx_ln_to_gn,
+                                      NULL,
+                                     &pinternal_vtx_bound_proc_idx,
+                                     &pinternal_vtx_bound_part_idx,
+                                     &pinternal_vtx_bound,
+                                     &pinternal_vtx_priority);
+
+  _setup_ghost_information(i_rank, dn_part, pn_vtx, pinternal_vtx_priority);
+  //PDM_part_renum_vtx(pmesh->parts, dn_part, 1, (void *) pinternal_vtx_priority);
+
+  ///* Free in order to be correct */
+  //for (int ipart = 0; ipart < n_part; ipart++) {
+  //  free(pinternal_vtx_bound_proc_idx[ipart]);
+  //  free(pinternal_vtx_bound_part_idx[ipart]);
+  //  free(pinternal_vtx_bound[ipart]);
+  //  free(pinternal_vtx_priority[ipart]);
+  //}
+  //free(pinternal_vtx_bound_proc_idx);
+  //free(pinternal_vtx_bound_part_idx);
+  //free(pinternal_vtx_bound);
+  //free(pinternal_vtx_priority);
+
+
+  //// Now genererate bounds and comm data -- we need update pface_ln_to_gn which has been modified
+  //for (int ipart = 0; ipart < n_part; ipart++) {
+  //  pface_ln_to_gn[ipart] = pmeshes->parts[ipart]->face_ln_to_gn;
+  //}
+
+  //PDM_part_distgroup_to_partgroup(comm,
+  //                                face_distri,
+  //                                n_bnd,
+  //                                dface_bound_idx,
+  //                                dface_bound,
+  //                                n_part,
+  //                                pn_face,
+  //         (const PDM_g_num_t **) pface_ln_to_gn,
+  //                               &pface_bound_idx,
+  //                               &pface_bound,
+  //                               &pface_bound_ln_to_gn);
+  //int **pface_join_tmp = NULL;
+  //PDM_part_distgroup_to_partgroup(comm,
+  //                                face_distri,
+  //                                n_join,
+  //                                dface_join_idx,
+  //                                dface_join,
+  //                                n_part,
+  //                                pn_face,
+  //         (const PDM_g_num_t **) pface_ln_to_gn,
+  //                               &pface_join_idx,
+  //                               &pface_join_tmp,
+  //                               &pface_join_ln_to_gn);
+
+  //PDM_part_generate_entity_graph_comm(comm,
+  //                                    part_distri,
+  //                                    face_distri,
+  //                                    n_part,
+  //                                    pn_face,
+  //             (const PDM_g_num_t **) pface_ln_to_gn,
+  //                                    NULL,
+  //                                   &pinternal_face_bound_proc_idx,
+  //                                   &pinternal_face_bound_part_idx,
+  //                                   &pinternal_face_bound,
+  //                                    NULL);
+
+  //PDM_part_generate_entity_graph_comm(comm,
+  //                                    part_distri,
+  //                                    vtx_distri,
+  //                                    n_part,
+  //                                    pn_vtx,
+  //             (const PDM_g_num_t **) pvtx_ln_to_gn,
+  //                                    NULL,
+  //                                   &pinternal_vtx_bound_proc_idx,
+  //                                   &pinternal_vtx_bound_part_idx,
+  //                                   &pinternal_vtx_bound,
+  //                                   &pinternal_vtx_priority); // Egalemet possible de permeuter dans PMD_part_renum
+
+  //// Re setup the array properly to have the good output
+  //_setup_ghost_information(i_rank, n_part, pn_vtx, pinternal_vtx_priority);
+
+  // Finally complete parts structure with internal join data and bounds
+  //for (int ipart = 0; ipart < dn_part; ipart++) {
+  //  //pmesh->parts[ipart]->face_bound_idx      = pface_bound_idx[ipart];
+  //  //pmesh->parts[ipart]->face_bound          = pface_bound[ipart];
+  //  //pmesh->parts[ipart]->face_bound_ln_to_gn = pface_bound_ln_to_gn[ipart];
+
+  //  ///* For face_join, the function only returns local id of face in join, we have to
+  //  //   allocate to set up expected size (4*nb_face_join) */
+  //  //pmesh->parts[ipart]->face_join_idx = pface_join_idx[ipart];
+  //  //int s_face_join   pmesh->parts[ipart]->face_join_idx[n_join];
+  //  //pmesh->parts[ipart]->face_join = (int *) malloc( 4 * s_face_join * sizeof(int));
+  //  //for (int i_face = 0; i_face < s_face_join; i_face++){
+  //  //  pmesh->parts[ipart]->face_join[4*i_face] = pface_join_tmp[ipart][i_face];
+  //  //}
+  //  //pmesh->parts[ipart]->face_join_ln_to_gn = pface_join_ln_to_gn[ipart];
+  //  //free(pface_join_tmp[ipart]);
+
+  //  //pmesh->parts[ipart]->face_part_bound_proc_idx = pinternal_face_bound_proc_idx[ipart];
+  //  //pmesh->parts[ipart]->face_part_bound_part_idx = pinternal_face_bound_part_idx[ipart];
+  //  //pmesh->parts[ipart]->face_part_bound          = pinternal_face_bound[ipart];
+
+  //  pmesh->parts[ipart]->vtx_part_bound_proc_idx = pinternal_vtx_bound_proc_idx[ipart];
+  //  pmesh->parts[ipart]->vtx_part_bound_part_idx = pinternal_vtx_bound_part_idx[ipart];
+  //  pmesh->parts[ipart]->vtx_part_bound          = pinternal_vtx_bound[ipart];
+
+  //  pmesh->parts[ipart]->vtx_ghost_information   = pinternal_vtx_priority[ipart];
+  //}
+
+  ///* Free in order to be correct */
+  //for (int ipart = 0; ipart < dn_part; ipart++) {
+  //  free(pinternal_vtx_bound_proc_idx[ipart]);
+  //  free(pinternal_vtx_bound_part_idx[ipart]);
+  //  free(pinternal_vtx_bound[ipart]);
+  //  free(pinternal_vtx_priority[ipart]);
+  //}
+  //free(pinternal_vtx_bound_proc_idx);
+  //free(pinternal_vtx_bound_part_idx);
+  //free(pinternal_vtx_bound);
+  //free(pinternal_vtx_priority);
   
 
   free(section_idx);
