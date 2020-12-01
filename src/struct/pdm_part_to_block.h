@@ -38,7 +38,7 @@ typedef enum {
 
   PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC          = 0,  /*!< Distribute block on all processes */
   PDM_PART_TO_BLOCK_DISTRIB_ONE_PROC_PER_NODE = 1,  /*!< Distribute block on one processe pere node */
-  PDM_PART_TO_BLOCK_DISTRIB_PART_OF_NODE      = 2,  /*!< Distribute block on part of nodes */
+  PDM_PART_TO_BLOCK_DISTRIB_PART_OF_NODE      = 2   /*!< Distribute block on part of nodes */
 
 } PDM_part_to_block_distrib_t;
 
@@ -54,7 +54,7 @@ typedef enum {
   PDM_PART_TO_BLOCK_POST_NOTHING       = 0,  /*!< No post processing     */
   PDM_PART_TO_BLOCK_POST_CLEANUP       = 1,  /*!< Cleanup multi-elements */
   PDM_PART_TO_BLOCK_POST_MERGE         = 2,  /*!< Merge multi-elements   */
-  PDM_PART_TO_BLOCK_POST_MERGE_UNIFORM = 3,  /*!< TMP   */
+  PDM_PART_TO_BLOCK_POST_MERGE_UNIFORM = 3   /*!< TMP   */
 
 } PDM_part_to_block_post_t;
 
@@ -64,12 +64,12 @@ typedef enum {
  *
  */
 
-//typedef enum {
-//
-//  PDM_PART_TO_BLOCK_STRIDE_CST = 0,  /*!< Constant stride element */
-//  PDM_PART_TO_BLOCK_STRIDE_VAR = 1,  /*!< Variable stride element */
-//
-//} PDM_part_to_block_stride_t;
+/* typedef enum {
+
+ PDM_PART_TO_BLOCK_STRIDE_CST = 0, */  /*!< Constant stride element */
+ /* PDM_PART_TO_BLOCK_STRIDE_VAR = 1, */  /*!< Variable stride element */
+
+/* } PDM_part_to_block_stride_t; */
 
 
 /**
