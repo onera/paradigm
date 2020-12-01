@@ -1470,6 +1470,8 @@ PDM_sections_decompose_faces
 )
 {
 
+  // A faire : local_num_in_parent_element
+
   int n_elt_current  = 0;
   int n_face_current = 0;
 
