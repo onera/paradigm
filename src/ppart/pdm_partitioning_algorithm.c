@@ -1483,7 +1483,7 @@ PDM_part_dconnectivity_to_pconnectivity_hash
  *  \brief Generates the communication information at the partition interfaces for the
  *   given entity. The communication data associates to
  *   each partitioned entity belonging to an (internal) interface the 4-tuple
- *   (local id, opposite proc number, opposite part number on this proc, local id in the
+ *   (local id, opposite proc number, opposite part number on opposite proc, local id in the
  *   opposite partition).
  *   This list is sorted by opposite proc id, then by part id, and finally with respect
  *   to the entity global_id. Also return the stride indices pproc_bound_idx and ppart_bound_idx

@@ -1271,8 +1271,8 @@ face_part_from_parent(
   PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_size(comm, &n_rank);
 
-  printf("n_elt =%i\n",n_elt);
-  printf("section_idx =%i\n",section_idx);
+  //printf("n_elt =%i\n",n_elt);
+  //printf("section_idx =%i\n",section_idx);
   PDM_g_num_t* face_neighbors_idx = (PDM_g_num_t*) malloc ((n_elt+1) * sizeof(PDM_g_num_t));
   int pos = 0;
   for (int i=0; i<n_elt; ++i) {
@@ -1282,10 +1282,10 @@ face_part_from_parent(
     pos += n_neighbor;
   }
   face_neighbors_idx[n_elt] = pos;
-  printf("face_neighbors_idx:");
-  for (int i = 0; i < n_elt+1; ++i)
-    printf(" %d ", face_neighbors_idx[i]);
-  printf("\n");
+  //printf("face_neighbors_idx:");
+  //for (int i = 0; i < n_elt+1; ++i)
+  //  printf(" %d ", face_neighbors_idx[i]);
+  //printf("\n");
 
   int n_face_neighbor = face_neighbors_idx[n_elt];
   PDM_g_num_t* face_neighbors = (PDM_g_num_t*) malloc (n_face_neighbor * sizeof(PDM_g_num_t));
@@ -1296,11 +1296,11 @@ face_part_from_parent(
       face_neighbors[face_neighbors_idx[i]+j] = elt_elt[elt_elt_idx[elt_idx]+j]+1; // +1 because block_to_part uses 1-indexed ln_to_gn
     }
   }
-  printf("n_face_neighbor =%i\n",n_face_neighbor);
-  printf("face_neighbors: ");
-  for (int i = 0; i < n_face_neighbor; ++i)
-    printf("%i, ",face_neighbors[i]);
-  printf("\n");
+  //printf("n_face_neighbor =%i\n",n_face_neighbor);
+  //printf("face_neighbors: ");
+  //for (int i = 0; i < n_face_neighbor; ++i)
+  //  printf("%i, ",face_neighbors[i]);
+  //printf("\n");
 
   PDM_g_num_t* elt_dist_0 = (PDM_g_num_t*) malloc ((n_rank+1)* sizeof(PDM_g_num_t));
   for (int i=0; i<n_rank+1; ++i) {
@@ -1308,13 +1308,13 @@ face_part_from_parent(
   }
   PDM_block_to_part_t* btp = PDM_block_to_part_create(elt_dist_0,(const PDM_g_num_t**)&face_neighbors,&n_face_neighbor,1,comm);
 
-  printf("lilili01\n");
+  //printf("lilili01\n");
   int stride_one = 1;
   int* block_data1 = elt_part;
   int** neighbor_part;
   PDM_block_to_part_exch2(btp,sizeof(int),PDM_STRIDE_CST,&stride_one,block_data1,NULL,(void***)&neighbor_part);
 
-  printf("lilili02\n");
+  //printf("lilili02\n");
   int* block_idx2 = malloc(dn_elt * sizeof(int));
   for (int i=0; i<dn_elt; ++i) {
     block_idx2[i] = delt_vtx_idx[i+1] - delt_vtx_idx[i];
@@ -1325,19 +1325,19 @@ face_part_from_parent(
   PDM_block_to_part_exch2(btp,sizeof(int),PDM_STRIDE_VAR,block_idx2,block_data2,&neighbor_vtx_stri,(void***)&neighbor_vtx);
 
   //PDM_g_num_t* parent = (PDM_g_num_t*) malloc (n_elt * sizeof(PDM_g_num_t));
-  printf("neighbor_part:");
-  for (int i = 0; i < n_face_neighbor; ++i)
-    printf(" %d ", neighbor_part[0][i]);
-  printf("\n");
-  printf("neighbor_vtx_stri:");
-  for (int i = 0; i < n_face_neighbor; ++i)
-    printf(" %d ", neighbor_vtx_stri[0][i]);
-  printf("\n");
-  printf("neighbor_vtx:");
-  for (int i = 0; i < 8+8+4+6; ++i)
-    printf(" %d ", neighbor_vtx[0][i]);
-  printf("\n");
-  printf("lilili03\n");
+  //printf("neighbor_part:");
+  //for (int i = 0; i < n_face_neighbor; ++i)
+  //  printf(" %d ", neighbor_part[0][i]);
+  //printf("\n");
+  //printf("neighbor_vtx_stri:");
+  //for (int i = 0; i < n_face_neighbor; ++i)
+  //  printf(" %d ", neighbor_vtx_stri[0][i]);
+  //printf("\n");
+  //printf("neighbor_vtx:");
+  //for (int i = 0; i < 8+8+4+6; ++i)
+  //  printf(" %d ", neighbor_vtx[0][i]);
+  //printf("\n");
+  //printf("lilili03\n");
   int pos2 = 0;
   int neighbor_vtx_cur_idx = 0;
   for (int i=0; i<n_elt; ++i) {
@@ -1349,7 +1349,7 @@ face_part_from_parent(
     int* first_face_vtx = delt_vtx+face_vtx_idx;
     //printf("lilili07\n");
 
-    printf("i=%i\n",i);
+    //printf("i=%i\n",i);
     int n_neighbor = face_neighbors_idx[i+1] - face_neighbors_idx[i];
     int parent_found = 0;
     for (int j=0; j<n_neighbor; ++j) {
@@ -1358,8 +1358,8 @@ face_part_from_parent(
       int* first_vtx = neighbor_vtx[0] + neighbor_vtx_cur_idx;
       neighbor_vtx_cur_idx += n_vtx;
       //printf("tata02\n");
-      printf("n_vtx= %i\n",n_vtx);
-      printf("n_face_vtx= %i\n",n_face_vtx);
+      //printf("n_vtx= %i\n",n_vtx);
+      //printf("n_face_vtx= %i\n",n_face_vtx);
       //printf("first_vtx:");
       //for (int k = 0; k < n_vtx; ++k)
       //  printf(" %d ", first_vtx[k]);
@@ -1369,7 +1369,6 @@ face_part_from_parent(
       //  printf(" %d ", first_face_vtx[k]);
       //printf("\n");
       if (is_parent(first_vtx,n_vtx,first_face_vtx,n_face_vtx)) {
-        printf("is_parent\n");
         elt2d_part[i] = neighbor_part[0][pos2];
         parent_found = 1;
       }
@@ -1380,16 +1379,10 @@ face_part_from_parent(
 
   free(face_neighbors);
 
-  printf("elt2d_part:");
-  for (int i = 0; i < n_elt; ++i)
-    printf(" %d ", elt2d_part[i]);
-  printf("\n");
-
-  //for (int i=0; i<n_elt; ++i) {
-  //  elt2d_part[i] = neighbor_part[0][i];
-  //}
-  ////free(part_data[0]);
-  //free(part_data);
+  //printf("elt2d_part:");
+  //for (int i = 0; i < n_elt; ++i)
+  //  printf(" %d ", elt2d_part[i]);
+  //printf("\n");
   printf("end elt_part 2D\n");
 }
 
@@ -1637,10 +1630,10 @@ _run_ppart_zone_nodal
   // PDM_multipart_part_graph_comm_vtx_data_get
 
   /* Let's call graph communication to do the reordering - Temporary  */
-  int         **pinternal_vtx_bound_proc_idx  = NULL;
-  int         **pinternal_vtx_bound_part_idx  = NULL;
-  int         **pinternal_vtx_bound           = NULL;
-  int         **pinternal_vtx_priority        = NULL;
+  int** pinternal_vtx_bound_proc_idx  = NULL;
+  int** pinternal_vtx_bound_part_idx  = NULL;
+  int** pinternal_vtx_bound           = NULL;
+  int** pinternal_vtx_priority        = NULL;
   PDM_part_generate_entity_graph_comm(comm,
                                       part_distri,
                                       vtx_dist,
@@ -1654,19 +1647,24 @@ _run_ppart_zone_nodal
                                      &pinternal_vtx_priority);
 
   _setup_ghost_information(i_rank, dn_part, pn_vtx, pinternal_vtx_priority);
-  //PDM_part_renum_vtx(pmesh->parts, dn_part, 1, (void *) pinternal_vtx_priority);
+  PDM_part_renum_vtx(pmesh->parts, dn_part, 1, (void *) pinternal_vtx_priority);
+  printf("LALA pinternal_vtx_priority: ");
+  for (int i = 0; i < 75; ++i)
+    printf("%d, ", pinternal_vtx_priority[0][i]);
+  printf("\n");
+  printf("\n");
 
-  ///* Free in order to be correct */
-  //for (int ipart = 0; ipart < n_part; ipart++) {
-  //  free(pinternal_vtx_bound_proc_idx[ipart]);
-  //  free(pinternal_vtx_bound_part_idx[ipart]);
-  //  free(pinternal_vtx_bound[ipart]);
-  //  free(pinternal_vtx_priority[ipart]);
-  //}
-  //free(pinternal_vtx_bound_proc_idx);
-  //free(pinternal_vtx_bound_part_idx);
-  //free(pinternal_vtx_bound);
-  //free(pinternal_vtx_priority);
+  /* Free in order to be correct */
+  for (int ipart = 0; ipart < dn_part; ipart++) {
+    free(pinternal_vtx_bound_proc_idx[ipart]);
+    free(pinternal_vtx_bound_part_idx[ipart]);
+    free(pinternal_vtx_bound[ipart]);
+    free(pinternal_vtx_priority[ipart]);
+  }
+  free(pinternal_vtx_bound_proc_idx);
+  free(pinternal_vtx_bound_part_idx);
+  free(pinternal_vtx_bound);
+  free(pinternal_vtx_priority);
 
 
   //// Now genererate bounds and comm data -- we need update pface_ln_to_gn which has been modified
@@ -1709,62 +1707,67 @@ _run_ppart_zone_nodal
   //                                   &pinternal_face_bound_part_idx,
   //                                   &pinternal_face_bound,
   //                                    NULL);
+  PDM_part_generate_entity_graph_comm(comm,
+                                      part_distri,
+                                      vtx_dist,
+                                      dn_part,
+                                      pn_vtx,
+               (const PDM_g_num_t **) pvtx_ln_to_gn,
+                                      NULL,
+                                     &pinternal_vtx_bound_proc_idx,
+                                     &pinternal_vtx_bound_part_idx,
+                                     &pinternal_vtx_bound,
+                                     &pinternal_vtx_priority);
 
-  //PDM_part_generate_entity_graph_comm(comm,
-  //                                    part_distri,
-  //                                    vtx_distri,
-  //                                    n_part,
-  //                                    pn_vtx,
-  //             (const PDM_g_num_t **) pvtx_ln_to_gn,
-  //                                    NULL,
-  //                                   &pinternal_vtx_bound_proc_idx,
-  //                                   &pinternal_vtx_bound_part_idx,
-  //                                   &pinternal_vtx_bound,
-  //                                   &pinternal_vtx_priority); // Egalemet possible de permeuter dans PMD_part_renum
-
-  //// Re setup the array properly to have the good output
-  //_setup_ghost_information(i_rank, n_part, pn_vtx, pinternal_vtx_priority);
+  // Re setup the array properly to have the good output
+  _setup_ghost_information(i_rank, dn_part, pn_vtx, pinternal_vtx_priority);
 
   // Finally complete parts structure with internal join data and bounds
-  //for (int ipart = 0; ipart < dn_part; ipart++) {
-  //  //pmesh->parts[ipart]->face_bound_idx      = pface_bound_idx[ipart];
-  //  //pmesh->parts[ipart]->face_bound          = pface_bound[ipart];
-  //  //pmesh->parts[ipart]->face_bound_ln_to_gn = pface_bound_ln_to_gn[ipart];
+  for (int ipart = 0; ipart < dn_part; ipart++) {
+    //pmesh->parts[ipart]->face_bound_idx      = pface_bound_idx[ipart];
+    //pmesh->parts[ipart]->face_bound          = pface_bound[ipart];
+    //pmesh->parts[ipart]->face_bound_ln_to_gn = pface_bound_ln_to_gn[ipart];
 
-  //  ///* For face_join, the function only returns local id of face in join, we have to
-  //  //   allocate to set up expected size (4*nb_face_join) */
-  //  //pmesh->parts[ipart]->face_join_idx = pface_join_idx[ipart];
-  //  //int s_face_join   pmesh->parts[ipart]->face_join_idx[n_join];
-  //  //pmesh->parts[ipart]->face_join = (int *) malloc( 4 * s_face_join * sizeof(int));
-  //  //for (int i_face = 0; i_face < s_face_join; i_face++){
-  //  //  pmesh->parts[ipart]->face_join[4*i_face] = pface_join_tmp[ipart][i_face];
-  //  //}
-  //  //pmesh->parts[ipart]->face_join_ln_to_gn = pface_join_ln_to_gn[ipart];
-  //  //free(pface_join_tmp[ipart]);
+    ///* For face_join, the function only returns local id of face in join, we have to
+    //   allocate to set up expected size (4*nb_face_join) */
+    //pmesh->parts[ipart]->face_join_idx = pface_join_idx[ipart];
+    //int s_face_join   pmesh->parts[ipart]->face_join_idx[n_join];
+    //pmesh->parts[ipart]->face_join = (int *) malloc( 4 * s_face_join * sizeof(int));
+    //for (int i_face = 0; i_face < s_face_join; i_face++){
+    //  pmesh->parts[ipart]->face_join[4*i_face] = pface_join_tmp[ipart][i_face];
+    //}
+    //pmesh->parts[ipart]->face_join_ln_to_gn = pface_join_ln_to_gn[ipart];
+    //free(pface_join_tmp[ipart]);
 
-  //  //pmesh->parts[ipart]->face_part_bound_proc_idx = pinternal_face_bound_proc_idx[ipart];
-  //  //pmesh->parts[ipart]->face_part_bound_part_idx = pinternal_face_bound_part_idx[ipart];
-  //  //pmesh->parts[ipart]->face_part_bound          = pinternal_face_bound[ipart];
+    //pmesh->parts[ipart]->face_part_bound_proc_idx = pinternal_face_bound_proc_idx[ipart];
+    //pmesh->parts[ipart]->face_part_bound_part_idx = pinternal_face_bound_part_idx[ipart];
+    //pmesh->parts[ipart]->face_part_bound          = pinternal_face_bound[ipart];
 
-  //  pmesh->parts[ipart]->vtx_part_bound_proc_idx = pinternal_vtx_bound_proc_idx[ipart];
-  //  pmesh->parts[ipart]->vtx_part_bound_part_idx = pinternal_vtx_bound_part_idx[ipart];
-  //  pmesh->parts[ipart]->vtx_part_bound          = pinternal_vtx_bound[ipart];
+    pmesh->parts[ipart]->vtx_part_bound_proc_idx = pinternal_vtx_bound_proc_idx[ipart];
+    pmesh->parts[ipart]->vtx_part_bound_part_idx = pinternal_vtx_bound_part_idx[ipart];
+    pmesh->parts[ipart]->vtx_part_bound          = pinternal_vtx_bound[ipart];
 
-  //  pmesh->parts[ipart]->vtx_ghost_information   = pinternal_vtx_priority[ipart];
-  //}
-
-  ///* Free in order to be correct */
-  //for (int ipart = 0; ipart < dn_part; ipart++) {
-  //  free(pinternal_vtx_bound_proc_idx[ipart]);
-  //  free(pinternal_vtx_bound_part_idx[ipart]);
-  //  free(pinternal_vtx_bound[ipart]);
-  //  free(pinternal_vtx_priority[ipart]);
-  //}
-  //free(pinternal_vtx_bound_proc_idx);
-  //free(pinternal_vtx_bound_part_idx);
-  //free(pinternal_vtx_bound);
-  //free(pinternal_vtx_priority);
-  
+    pmesh->parts[ipart]->vtx_ghost_information   = pinternal_vtx_priority[ipart];
+  }
+  //printf("vtx_part_bound_proc_idx: ");
+  //for (int i = 0; i < n_rank+1; ++i)
+  //  printf("%d, ", pmesh->parts[0]->vtx_part_bound_proc_idx[i]);
+  //printf("\n");
+  //printf("vtx_part_bound_part_idx: ");
+  //for (int i = 0; i < n_rank+1; ++i)
+  //  printf("%d, ", pmesh->parts[0]->vtx_part_bound_part_idx[i]);
+  //printf("\n");
+  //int nb_gc_vtx = pmesh->parts[0]->vtx_part_bound_part_idx[n_rank];
+  //printf("nb_gc_vtx: %i\n",nb_gc_vtx);
+  //printf("vtx_part_bound: ");
+  //for (int i = 0; i < nb_gc_vtx*4; ++i)
+  //  printf("%d, ", pmesh->parts[0]->vtx_part_bound[i]);
+  //printf("\n");
+  //printf("n_vtx part: %i\n",pn_vtx[0]);
+  //printf("vtx_ghost_information: ");
+  //for (int i = 0; i < pn_vtx[0]; ++i)
+  //  printf("%d, ", pmesh->parts[0]->vtx_ghost_information[i]);
+  //printf("\n");
 
   free(section_idx);
   free(delt_vtx_idx);
@@ -2036,6 +2039,7 @@ const int            i_part,
   *vtx_part_bound_proc_idx = _pmeshes.parts[i_part]->vtx_part_bound_proc_idx;
   *vtx_part_bound_part_idx = _pmeshes.parts[i_part]->vtx_part_bound_part_idx;
   *vtx_part_bound          = _pmeshes.parts[i_part]->vtx_part_bound;
+  int n_rank = 2;
 }
 
 
