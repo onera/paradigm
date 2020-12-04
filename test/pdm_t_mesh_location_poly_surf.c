@@ -1183,6 +1183,29 @@ int main(int argc, char *argv[])
   PDM_mesh_location_free (id_loc,
                           0);
 
+  for (int ipart = 0; ipart < n_part; ipart++) {
+    free(faceEdgeIdx[ipart]);
+    free(faceEdge[ipart]);
+    free(faceVtxIdx[ipart]);
+    free(faceVtx[ipart]);
+    free(faceLNToGN[ipart]);
+    free(edgeVtxIdx[ipart]);
+    free(edgeVtx[ipart]);
+    free(vtxCoord[ipart]);
+    free(vtxLNToGN[ipart]);
+  }
+  free(faceVtxIdx);
+  free(faceVtx);
+  free(nFace);
+  free(faceEdgeIdx);
+  free(faceEdge);
+  free(faceLNToGN);
+  free(nEdge);
+  free(edgeVtxIdx);
+  free(edgeVtx);
+  free(nVtx);
+  free(vtxCoord);
+  free(vtxLNToGN);
   /*PDM_part_free (ppart_id);
 
 
