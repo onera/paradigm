@@ -18,6 +18,7 @@
 #include "pdm_error.h"
 #include "pdm_gnum.h"
 #include "pdm_closest_points.h"
+#include "pdm_version.h"
 
 /*============================================================================
  * Macro definitions
@@ -337,6 +338,12 @@ main
 
   int numProcs;
   PDM_MPI_Comm_size (PDM_MPI_COMM_WORLD, &numProcs);
+
+
+  char *version = PDM_version_get();
+
+  printf("Version de ParaDiGM : %s\n", version);
+  free(version);
 
   int n_closest_points = 10;
   PDM_g_num_t nSrc = 10;
