@@ -166,7 +166,7 @@ char *argv[]
    * Call pdm_points_merge to find match between the two block
    */
   double tolerance = 0.1;
-  int pm_id = PDM_points_merge_create(n_cloud, tolerance, PDM_MPI_COMM_WORLD);
+  int pm_id = PDM_points_merge_create(n_cloud, tolerance, PDM_MPI_COMM_WORLD, PDM_OWNERSHIP_KEEP);
 
   if(n_rank == 1){
     PDM_points_merge_cloud_set(pm_id, 0, n_points, coords[0], char_lenght[0]);
@@ -217,11 +217,11 @@ char *argv[]
    *  We need to find out the connection in the partition (not in the cloud )
    *  To do that we setup an exchange with distant neighbor with the local face of each partition
    */
-  int pdn_id = PDM_distant_neighbor_create(PDM_MPI_COMM_WORLD,
-                                           n_cloud,
-                                           n_entity,
-                                           candidates_idx,
-                                           candidates_desc);
+  PDM_distant_neighbor_t* dn = PDM_distant_neighbor_create(PDM_MPI_COMM_WORLD,
+                                                           n_cloud,
+                                                           n_entity,
+                                                           candidates_idx,
+                                                           candidates_desc);
 
   /*
    *  SetUp exchange
@@ -243,7 +243,7 @@ char *argv[]
    */
   int stride = 1;
   int** recv_entity_data = NULL;
-  PDM_distant_neighbor_exch(pdn_id,
+  PDM_distant_neighbor_exch(dn,
                             sizeof(int),
                             PDM_STRIDE_CST,
                             stride,
@@ -274,7 +274,7 @@ char *argv[]
 
   int** recv_entity_var_stri = NULL;
   int** recv_entity_var_data = NULL;
-  PDM_distant_neighbor_exch(pdn_id,
+  PDM_distant_neighbor_exch(dn,
                             sizeof(int),
                             PDM_STRIDE_VAR,
                             -1,
@@ -302,7 +302,7 @@ char *argv[]
   /*
    * Free
    */
-  PDM_distant_neighbor_free(pdn_id);
+  PDM_distant_neighbor_free(dn);
   PDM_points_merge_free(pm_id);
   free(coords);
   free(char_lenght);

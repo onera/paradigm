@@ -48,9 +48,10 @@ extern "C" {
 int
 PDM_points_merge_create
 (
- const int n_point_cloud,
- const double tolerance,
- const PDM_MPI_Comm comm
+ const int             n_point_cloud,
+ const double          tolerance,
+ const PDM_MPI_Comm    comm,
+ const PDM_ownership_t owner
 );
 
 

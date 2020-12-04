@@ -120,24 +120,26 @@ typedef struct {
 
 typedef struct {
 
-  PDM_MPI_Comm comm;  /*!< MPI communicator */
+  PDM_MPI_Comm    comm;                    /*!< MPI communicator */
+  PDM_ownership_t owner;                   /*!< Which have the responsabilities of results */
+  PDM_bool_t      results_is_getted;       /*!< Flags to indicate if result is getted      */
 
-  int n_closest;  /*!< Number of closest source points to find for each
-                    target point  */
+  int n_closest;                           /*!< Number of closest source points to find for each
+                                             target point  */
 
-  _src_point_cloud_t *src_cloud; /*!< Source point cloud */
+  _src_point_cloud_t *src_cloud;           /*!< Source point cloud */
 
-  _tgt_point_cloud_t *tgt_cloud; /*!< Target point cloud */
+  _tgt_point_cloud_t *tgt_cloud;           /*!< Target point cloud */
 
-  PDM_timer_t *timer; /*!< Timer */
+  PDM_timer_t *timer;                      /*!< Timer */
 
-  double times_elapsed[NTIMER]; /*!< Elapsed time */
+  double times_elapsed[NTIMER];            /*!< Elapsed time */
 
-  double times_cpu[NTIMER];     /*!< CPU time */
+  double times_cpu[NTIMER];                /*!< CPU time */
 
-  double times_cpu_u[NTIMER];  /*!< User CPU time */
+  double times_cpu_u[NTIMER];              /*!< User CPU time */
 
-  double times_cpu_s[NTIMER];  /*!< System CPU time */
+  double times_cpu_s[NTIMER];              /*!< System CPU time */
 
 
 } _PDM_closest_t;
@@ -199,8 +201,9 @@ _get_from_id
 int
 PDM_closest_points_create
 (
- const PDM_MPI_Comm comm,
- const int          n_closest
+ const PDM_MPI_Comm    comm,
+ const int             n_closest,
+ const PDM_ownership_t owner
 )
 {
   if (_closest_pts == NULL) {
@@ -211,7 +214,10 @@ PDM_closest_points_create
 
   int id = PDM_Handles_store (_closest_pts, closest);
 
-  closest->comm = comm;
+  closest->comm              = comm;
+  closest->owner             = owner;
+  closest->results_is_getted = PDM_FALSE;
+
   closest->n_closest = n_closest;
   closest->src_cloud = NULL;
   closest->tgt_cloud = NULL;
@@ -231,14 +237,15 @@ PDM_closest_points_create
 void
 PDM_closest_points_create_cf
 (
- const PDM_MPI_Fint comm,
- const int          n_closest,
- int *id
+ const PDM_MPI_Fint     comm,
+ const int              n_closest,
+ const PDM_ownership_t  owner,
+       int             *id
 )
 {
   const PDM_MPI_Comm _comm        = PDM_MPI_Comm_f2c(comm);
 
-  *id = PDM_closest_points_create(_comm, n_closest);
+  *id = PDM_closest_points_create(_comm, n_closest, owner);
 }
 
 
@@ -336,8 +343,8 @@ PDM_closest_points_src_cloud_set
   _PDM_closest_t *cls = _get_from_id (id);
   assert(cls->src_cloud != NULL);
   cls->src_cloud->n_points[i_part] = n_points;
-  cls->src_cloud->coords[i_part] = coords;
-  cls->src_cloud->gnum[i_part] = gnum;
+  cls->src_cloud->coords  [i_part] = coords;
+  cls->src_cloud->gnum    [i_part] = gnum;
 }
 
 /**
@@ -548,6 +555,8 @@ PDM_closest_points_get
 
   *closest_src_gnum = cls->tgt_cloud->closest_src_gnum[i_part_tgt];
   *closest_src_distance = cls->tgt_cloud->closest_src_dist[i_part_tgt];
+
+  cls->results_is_getted = PDM_TRUE;
 }
 
 
@@ -564,13 +573,13 @@ PDM_closest_points_get
 void
 PDM_closest_points_free
 (
- const int id,
- const int partial
+ const int id
 )
 {
   _PDM_closest_t *cls = _get_from_id (id);
 
-  if (!partial) {
+  if(( cls->owner == PDM_OWNERSHIP_KEEP ) ||
+     ( cls->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !cls->results_is_getted)){
     if (cls->tgt_cloud->closest_src_gnum != NULL) {
       for (int j = 0; j < cls->tgt_cloud->n_part ; j++) {
         if (cls->tgt_cloud->closest_src_gnum[j] != NULL) {

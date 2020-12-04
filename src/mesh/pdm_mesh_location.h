@@ -7,6 +7,7 @@
 
 #include "pdm.h"
 #include "pdm_mpi.h"
+#include "pdm_mesh_nodal.h"
 
 #ifdef	__cplusplus
 extern "C" {
@@ -142,8 +143,8 @@ PDM_mesh_location_cloud_get
 void
 PDM_mesh_location_shared_nodal_mesh_set
 (
- const int  id,
- const int  mesh_nodal_id
+ const int               id,
+       PDM_Mesh_nodal_t *mesh_nodal
 );
 
 

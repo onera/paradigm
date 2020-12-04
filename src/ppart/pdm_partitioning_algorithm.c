@@ -281,7 +281,7 @@ PDM_part_reverse_pcellface
 
 /**
  *  \brief Reorient the boundary faces such that they have a outward normal for the boundary cell.
- *   This functions only uses topological information (face->cell connectivity) to determine check
+ *   This functions only uses topological information (face->cell connectivity) to determine
  *   if the face must be reoriented. Thus, input face->cell and cell->face connectivities must
  *   contain correct orientation information.
  *
@@ -326,13 +326,12 @@ PDM_part_reorient_bound_faces
         for (int j = pcell_face_idx[i_part][cell_lid]; j < pcell_face_idx[i_part][cell_lid+1]; j++){
           if (pcell_face[i_part][j] == -1*(i_face+1)){
             pcell_face[i_part][j] = (i_face+1);
-            break;
           }
         }
 
-        /* Reverse face->vertex connectivity */
-        int offset     = pface_vtx_idx[i_part][i_face];
-        int n_face_vtx = pface_vtx_idx[i_part][i_face+1] - pface_vtx_idx[i_part][i_face];
+        /* Reverse face->vertex connectivity : start from same vtx but reverse array*/
+        int offset     = pface_vtx_idx[i_part][i_face] + 1;
+        int n_face_vtx = pface_vtx_idx[i_part][i_face+1] - pface_vtx_idx[i_part][i_face] - 1;
         int end_index  = n_face_vtx - 1;
         int tmp_swap;
         for (int j = 0; j < n_face_vtx/2; j++){
@@ -1185,7 +1184,7 @@ PDM_part_dconnectivity_to_pconnectivity_hash
  * \param [out]  ppart_bound_idx     For each part, indexes of communication information related to the
  *                                   other (global id) parts (size=n_part, each component size=n_part_tot+1)
  * \param [out]  pentity_bound       For each part, communication information (see abobe) (size=n_part)
-*/
+ */
 void
 PDM_part_generate_entity_graph_comm
 (
@@ -1198,7 +1197,8 @@ PDM_part_generate_entity_graph_comm
  const int          **pentity_hint,
        int         ***pproc_bound_idx,
        int         ***ppart_bound_idx,
-       int         ***pentity_bound
+       int         ***pentity_bound,
+       int         ***pentity_priority
 )
 {
   int i_rank;
@@ -1206,6 +1206,15 @@ PDM_part_generate_entity_graph_comm
 
   PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_size(comm, &n_rank);
+
+  int setup_priority = 0; // False
+  if(pentity_priority == NULL){
+    // printf(" pentity_priority not defined \n");
+  } else {
+    setup_priority = 1;
+    assert(pentity_hint == NULL);
+    // printf(" pentity_priority : %p \n", pentity_priority);
+  }
 
   PDM_g_num_t* entity_distribution_ptb = (PDM_g_num_t * ) malloc( sizeof(PDM_g_num_t) * (n_rank+1) );
   for(int i = 0; i < n_rank+1; ++i){
@@ -1218,12 +1227,12 @@ PDM_part_generate_entity_graph_comm
   int** part_stri = (int ** ) malloc( n_part * sizeof(int *));
   int** part_data = (int ** ) malloc( n_part * sizeof(int *));
   for(int i_part = 0; i_part < n_part; ++i_part) {
-    part_stri[i_part] = (int *) malloc(     pn_entity[i_part] * sizeof(int));
+    part_stri[i_part] = (int *) malloc( pn_entity[i_part] * sizeof(int));
     int idx_data = 0;
     if (pentity_hint != NULL) {
       //First pass to count
       for(int i_entity = 0; i_entity < pn_entity[i_part]; ++i_entity){
-        if (pentity_hint[i_part][i_entity]==1){
+        if (pentity_hint[i_part][i_entity] == 1){
           idx_data++;
         }
       }
@@ -1315,19 +1324,36 @@ PDM_part_generate_entity_graph_comm
    *                  And for others we have n_shared * 3 data
    *                  In blk view we can easily remove all non shared data
    *                  We reexchange with block_to_part only the shared data
+   * If priority is query an equilbrate choice is made up
    */
+  int* blk_priority_data;
+  if(setup_priority == 1){
+    blk_priority_data = (int * ) malloc( n_entity_block * sizeof(int));
+  }
+
   int idx_comp = 0;     /* Compressed index use to fill the buffer */
   int idx_data = 0;     /* Index in the block to post-treat        */
 
+  int next_selected_rank = 0;
   for(int i_block = 0; i_block < n_entity_block; ++i_block){
 
     /* Non shared data --> Compression */
     if(blk_stri[i_block] == 3){
       blk_stri[i_block] = 0;
       idx_data += 3;          /* Mv directly to the next */
+      if(setup_priority == 1){
+        blk_priority_data[i_block] = -1;
+      }
+
     } else {
       for(int i_data = 0; i_data < blk_stri[i_block]; ++i_data){
         blk_data[idx_comp++] = blk_data[idx_data++];
+      }
+      /* Fill up entity priority */
+      if(setup_priority == 1){
+        blk_priority_data[i_block] = next_selected_rank;
+        next_selected_rank += 1;
+        next_selected_rank = next_selected_rank % n_rank;
       }
     }
   }
@@ -1368,12 +1394,23 @@ PDM_part_generate_entity_graph_comm
              (int  ***)  &part_stri,
              (void ***)  &part_data);
 
+  if(setup_priority == 1 ){
+    int stride_one = 1;
+    PDM_block_to_part_exch2(btp,
+                            sizeof(int),
+                            PDM_STRIDE_CST,
+                            &stride_one,
+               (void *  )   blk_priority_data,
+                            NULL,
+               (void ***)   pentity_priority);
+    free(blk_priority_data);
+  }
+
   /*
    * Free
    */
   free(blk_data);
   free(blk_stri);
-
 
   /*
    * Interface for pdm_part is  :
@@ -1392,7 +1429,6 @@ PDM_part_generate_entity_graph_comm
   int** _pproc_bound_idx   = *pproc_bound_idx;
   int** _ppart_bound_idx   = *ppart_bound_idx;
   int** _pentity_bound     = *pentity_bound;
-
 
   /*
    * Post-treatment in partition
@@ -1445,7 +1481,7 @@ PDM_part_generate_entity_graph_comm
         idx_part += 1;
       }
     }
-    printf("n_connect_sort::%d\n", n_connect);
+    // printf("n_connect_sort::%d\n", n_connect);
 
     /*
      * Sort
@@ -1533,7 +1569,6 @@ PDM_part_generate_entity_graph_comm
 
   }
 
-
   /*
    * Free
    */
@@ -1561,7 +1596,7 @@ PDM_part_generate_entity_graph_comm
  *                                   (size = n_part, each component size = pn_vtx[i_part])
  * \param [out]  pvtx_coord          Coordinates of partitioned vertices for each partition
  *                                   (size = n_part, each component size = 3*pn_vtx[i_part])
-*/
+ */
 void
 PDM_part_dcoordinates_to_pcoordinates
 (

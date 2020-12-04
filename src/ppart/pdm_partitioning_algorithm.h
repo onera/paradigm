@@ -163,7 +163,8 @@ PDM_part_generate_entity_graph_comm
  const int          **pentity_hint,
        int         ***pproc_bound_idx,
        int         ***ppart_bound_idx,
-       int         ***pentity_bound
+       int         ***pentity_bound,
+       int         ***pentity_priority
 );
 
 /**

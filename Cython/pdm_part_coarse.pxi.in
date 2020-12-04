@@ -445,7 +445,7 @@ cdef class CoarseMesh:
 @COMMENT_NOT_PDMA@        cdef int             *agglomerationLinesInit_data
 @COMMENT_NOT_PDMA@        cdef int             *agglomerationLinesInitIdx_data
 @COMMENT_NOT_PDMA@        cdef int             agglomerationLinesInitIdx_size
-@COMMENT_NOT_PDMA@        cdef int             *isOnFineBnd_data
+@COMMENT_NOT_PDMA@        cdef int             *isOnFineBndInit_data
 @COMMENT_NOT_PDMA@        # ************************************************************************
 @COMMENT_NOT_PDMA@
 @COMMENT_NOT_PDMA@        # \param [in]

@@ -143,9 +143,9 @@ int main(int argc, char *argv[])
    */
 
   PDM_g_num_t  n_vtx_seg  = 3;
-  double        length  = 1.;
-  int           n_part   = 1;
-  int           post    = 0;
+  double        length    = 1.;
+  int           n_part    = 1;
+  int           post      = 0;
 #ifdef PDM_HAVE_PTSCOTCH
   PDM_part_split_t method  = PDM_PART_SPLIT_PTSCOTCH;
 #else
@@ -173,30 +173,28 @@ int main(int argc, char *argv[])
   struct timeval t_elaps_debut;
 
   int i_rank;
-  int numProcs;
+  int n_rank;
 
   PDM_MPI_Init(&argc, &argv);
   PDM_MPI_Comm_rank(PDM_MPI_COMM_WORLD, &i_rank);
-  PDM_MPI_Comm_size(PDM_MPI_COMM_WORLD, &numProcs);
+  PDM_MPI_Comm_size(PDM_MPI_COMM_WORLD, &n_rank);
 
   int           dn_cell;
   int           dn_face;
   int           dn_vtx;
   int           n_face_group;
-  PDM_g_num_t *dface_cell = NULL;
-  int          *dface_vtx_idx = NULL;
-  PDM_g_num_t *dface_vtx = NULL;
-  double       *dvtx_coord = NULL;
+  PDM_g_num_t  *dface_cell      = NULL;
+  int          *dface_vtx_idx   = NULL;
+  PDM_g_num_t  *dface_vtx       = NULL;
+  double       *dvtx_coord      = NULL;
   int          *dface_group_idx = NULL;
-  PDM_g_num_t *dface_group = NULL;
+  PDM_g_num_t  *dface_group     = NULL;
   int           dface_vtxL;
   int           dFaceGroupL;
 
   /*
    *  Create distributed cube
    */
-
-  int          id;
 
   const double xmin = 0;
   const double ymin = 0;
@@ -211,15 +209,15 @@ int main(int argc, char *argv[])
     fflush(stdout);
   }
 
-  PDM_dcube_gen_init(&id,
-                     PDM_MPI_COMM_WORLD,
-                     n_vtx_seg,
-                     length,
-                     xmin,
-                     ymin,
-                     zmin);
+  PDM_dcube_t* dcube = PDM_dcube_gen_init(PDM_MPI_COMM_WORLD,
+                                          n_vtx_seg,
+                                          length,
+                                          xmin,
+                                          ymin,
+                                          zmin,
+                                          PDM_OWNERSHIP_KEEP);
 
-  PDM_dcube_gen_dim_get(id,
+  PDM_dcube_gen_dim_get(dcube,
                       &n_face_group,
                       &dn_cell,
                       &dn_face,
@@ -227,7 +225,7 @@ int main(int argc, char *argv[])
                       &dface_vtxL,
                       &dFaceGroupL);
 
-  PDM_dcube_gen_data_get(id,
+  PDM_dcube_gen_data_get(dcube,
                        &dface_cell,
                        &dface_vtx_idx,
                        &dface_vtx,
@@ -296,13 +294,14 @@ int main(int argc, char *argv[])
 
   int n_point_cloud = 1;
   int id_dist = PDM_dist_cloud_surf_create (PDM_MESH_NATURE_MESH_SETTED,
-                                      n_point_cloud,
-                                      PDM_MPI_COMM_WORLD);
+                                            n_point_cloud,
+                                            PDM_MPI_COMM_WORLD,
+                                            PDM_OWNERSHIP_KEEP);
 
-  int **select_face = malloc (sizeof(int *) * n_part);
-  int *n_select_face = malloc (sizeof(int) * n_part);
-  int **select_vtx = malloc (sizeof(int *) * n_part);
-  int *n_select_vtx = malloc (sizeof(int) * n_part);
+  int **select_face   = malloc (sizeof(int *) * n_part);
+  int  *n_select_face = malloc (sizeof(int  ) * n_part);
+  int **select_vtx    = malloc (sizeof(int *) * n_part);
+  int  *n_select_vtx  = malloc (sizeof(int  ) * n_part);
 
   int **surface_face_vtx_idx =  malloc (sizeof(int *) * n_part);
   int **surface_face_vtx =  malloc (sizeof(int *) * n_part);
@@ -314,8 +313,8 @@ int main(int argc, char *argv[])
   const PDM_g_num_t **surface_face_gnum = malloc (sizeof(PDM_g_num_t *) * n_part);
   const PDM_g_num_t **surface_vtx_gnum = malloc (sizeof(PDM_g_num_t *) * n_part);
 
-  int id_gnum_face = PDM_gnum_create (3, n_part, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD);
-  int id_gnum_vtx = PDM_gnum_create (3, n_part, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD);
+  int id_gnum_face = PDM_gnum_create (3, n_part, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD, PDM_OWNERSHIP_KEEP);
+  int id_gnum_vtx  = PDM_gnum_create (3, n_part, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD, PDM_OWNERSHIP_KEEP);
 
   double **cell_volume = malloc (sizeof(double *) * n_part);
   double **cell_center = malloc (sizeof(double *) * n_part);
@@ -415,7 +414,7 @@ int main(int argc, char *argv[])
       }
     }
 
-    for (int i = 0; i < face_part_bound_proc_idx[numProcs]; i++) {
+    for (int i = 0; i < face_part_bound_proc_idx[n_rank]; i++) {
       select_face[i_part][face_part_bound[4*i]-1] = 0;
     }
 
@@ -800,10 +799,9 @@ int main(int argc, char *argv[])
 
   PDM_part_free(ppart_id);
 
-  PDM_dcube_gen_free(id);
+  PDM_dcube_gen_free(dcube);
   PDM_dist_cloud_surf_dump_times(id_dist);
-  int partial = 0;
-  PDM_dist_cloud_surf_free (id_dist, partial);
+  PDM_dist_cloud_surf_free (id_dist);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
     free (select_face[i_part]);
@@ -834,8 +832,8 @@ int main(int argc, char *argv[])
   free (surface_face_gnum);
   free (surface_vtx_gnum);
 
-  PDM_gnum_free(id_gnum_face, 0);
-  PDM_gnum_free(id_gnum_vtx, 0);
+  PDM_gnum_free(id_gnum_face);
+  PDM_gnum_free(id_gnum_vtx);
 
   PDM_MPI_Finalize();
 

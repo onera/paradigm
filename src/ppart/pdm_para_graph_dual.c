@@ -121,10 +121,9 @@ const int         *dual_graph_n,
       n_cell_connect_comp--;
     }
 
+    //Once a shift is needed, need_shift must stay at one
     if(n_cell_connect_comp < n_cell_connect) {
       need_shift = 1;
-    } else {
-      need_shift = 0;
     }
 
     dual_graph_idx[i+1] = dual_graph_idx[i] + n_cell_connect_comp;
@@ -175,10 +174,9 @@ const int         *dual_graph_n,
     int n_cell_connect_comp = PDM_inplace_unique_long(dual_graph, idx_comp, end_connect);
     // printf(" n_cell_connect:: %d | n_cell_connect_comp:: %d \n", n_cell_connect, n_cell_connect_comp);
 
+    //Once a shift is needed, need_shift must stay at one
     if(n_cell_connect_comp < n_cell_connect) {
       need_shift = 1;
-    } else {
-      need_shift = 0;
     }
 
     dual_graph_idx[i+1] = dual_graph_idx[i] + n_cell_connect_comp;
@@ -317,6 +315,7 @@ const int              compute_dnode_to_arc,
   }
 
 
+  node_strid     = realloc(node_strid,     dn_arc_int    * sizeof(int)         );
   dnode_ln_to_gn = realloc(dnode_ln_to_gn, dn_arc_int    * sizeof(PDM_g_num_t) );
   dopposite_node = realloc(dopposite_node, idx_data_node * sizeof(PDM_g_num_t) );
 
@@ -662,6 +661,7 @@ const PDM_g_num_t     *dnode_arc,
   for (int i = 0; i < dnode_arc_idx[dn_node]; i++) {
     send_stride[i] = 1;
   }
+  free(arc_ln_to_gn);
 
   int        *recv_stride = NULL;
   PDM_g_num_t  *recv_data = NULL;
@@ -726,6 +726,8 @@ const PDM_g_num_t     *dnode_arc,
   free(node_g);
   free(graph_arc_distrib_ptb);
   free(send_stride);
+  free(recv_stride);
+  free(recv_data);
 
   /* Now we have a arc_to_node connectivity, we can call graph_dual_from_arc2node
   */
@@ -739,8 +741,6 @@ const PDM_g_num_t     *dnode_arc,
                                     0,
                                     NULL,
                                     NULL);
-
-
   free(darc_to_node);
 }
 
@@ -767,7 +767,7 @@ PDM_para_graph_dual_from_combine_connectivity
 const PDM_MPI_Comm   comm,
 const PDM_g_num_t   *cell_distrib,
 const PDM_g_num_t   *face_distrib,
-const PDM_g_num_t   *vtx_distrib,
+      PDM_g_num_t   *vtx_distrib,
 const int           *dcell_face_idx,
 const PDM_g_num_t   *dcell_face,
 const int           *dface_vtx_idx,

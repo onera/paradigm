@@ -11,7 +11,6 @@
 
 #include "pdm_mpi.h"
 #include "pdm_mesh_nodal.h"
-#include "pdm_handles.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -38,12 +37,12 @@ typedef struct PDM_Mesh_nodal_vtx_t PDM_Mesh_nodal_vtx_t;
 
 struct PDM_Mesh_nodal_vtx_t {
 
-  PDM_Mesh_nodal_vtx_t *parent;    /*!< Parent vertices if they are extraxted from an other mesh partition */
-  PDM_l_num_t           n_vtx;     /*!< Number of vertices */
-  double               *coords;    /*!< Coordinates (Locally allocated) */
-  const double        *_coords;    /*!< Coordinates (Mapping) */
-  const PDM_g_num_t   *_numabs;    /*!< Global numbering */
-  const int           *_numparent; /*!< Numbering in the parent vertices (mapping) */
+  PDM_Mesh_nodal_vtx_t *parent;     /*!< Parent vertices if they are extraxted from an other mesh partition */
+  PDM_l_num_t           n_vtx;      /*!< Number of vertices */
+  double               *coords;     /*!< Coordinates (Locally allocated) */
+  const double         *_coords;    /*!< Coordinates (Mapping) */
+  const PDM_g_num_t    *_numabs;    /*!< Global numbering */
+  const int            *_numparent; /*!< Numbering in the parent vertices (mapping) */
 };
 
 /**
@@ -176,16 +175,20 @@ typedef struct PDM_Mesh_nodal_prepa_blocks_t {
 
 struct _PDM_Mesh_nodal_t {
 
-  /* PDM_g_num_t                         n_som_abs;                /\*!< Global number of vertices *\/ */
-  /* PDM_g_num_t                         n_elt_abs;                /\*!< Global number of elements *\/ */
   int                                 n_part;                   /*!< Number of partitions */
-  PDM_Mesh_nodal_vtx_t                **vtx;                    /*!< Description des sommmets de chaque partition */
+  PDM_Mesh_nodal_vtx_t              **vtx;                      /*!< Description des sommmets de chaque partition */
   PDM_l_num_t                         *n_cell;                  /*!< Nombre de blocs d'elements standard */
-  PDM_Handles_t                       *blocks_std;              /*!< Standard blocks */
-  PDM_Handles_t                       *blocks_poly2d;           /*!< Polygon blocks */
-  PDM_Handles_t                       *blocks_poly3d;           /*!< Polyhedron blocks */
+
+  int                                  n_block_std;
+  int                                  n_block_poly2d;
+  int                                  n_block_poly3d;
+
+  PDM_Mesh_nodal_block_std_t         **blocks_std;              /*!< Standard blocks */
+  PDM_Mesh_nodal_block_poly2d_t      **blocks_poly2d;           /*!< Polygon blocks */
+  PDM_Mesh_nodal_block_poly3d_t      **blocks_poly3d;           /*!< Polyhedron blocks */
+
   PDM_MPI_Comm                         pdm_mpi_comm;            /*!< MPI Communicator */
-  PDM_Mesh_nodal_prepa_blocks_t  *prepa_blocks;            /*!< Blocks preparation */
+  PDM_Mesh_nodal_prepa_blocks_t       *prepa_blocks;            /*!< Blocks preparation */
   PDM_l_num_t                        **num_cell_parent_to_local;/*!< Initial local numbering to local numbering
                                                                  *   imposed by blocks */
   int                                 *blocks_id;               /*!< Blocks identifier */

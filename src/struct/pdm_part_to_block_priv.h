@@ -35,7 +35,7 @@ extern "C" {
  *
  */
 
-typedef struct {
+struct _pdm_part_to_block_t {
 
   /*
    * Block distribution properties
@@ -103,7 +103,7 @@ typedef struct {
   int**            n_recv_buffer;
   int**            i_recv_buffer;
 
-} _pdm_part_to_block_t;
+} ;
 
 /*=============================================================================
  * Static global variables

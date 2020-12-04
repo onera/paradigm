@@ -95,27 +95,29 @@ typedef struct {
 
 typedef struct {
 
-  int  n_point_cloud; /*!< Number of point clouds */
-  PDM_MPI_Comm comm;  /*!< MPI communicator */
+  PDM_MPI_Comm      comm;                    /*!< MPI communicator */
+  PDM_ownership_t   owner;                   /*!< Which have the responsabilities of results */
+  PDM_bool_t        results_is_getted;       /*!< Flags to indicate if result is getted      */
+  int               n_point_cloud;           /*!< Number of point clouds */
 
-  PDM_mesh_nature_t mesh_nature;  /*!< Nature of the mesh */
+  PDM_mesh_nature_t mesh_nature;             /*!< Nature of the mesh */
 
-  PDM_surf_mesh_t *surf_mesh;  /*!< Surface mesh pointer */
-  PDM_surf_mesh_t *_surf_mesh;  /*!< Surface mesh pointer */
+  PDM_surf_mesh_t  *surf_mesh;               /*!< Surface mesh pointer */
+  PDM_surf_mesh_t  *_surf_mesh;              /*!< Surface mesh pointer */
 
-  int  mesh_nodal_id;  /*!< Surface mesh identifier */
+  PDM_Mesh_nodal_t*  mesh_nodal;             /*!< Surface mesh identifier */
 
-  _points_cloud_t *points_cloud; /*!< Point clouds */
+  _points_cloud_t *points_cloud;             /*!< Point clouds */
 
-  PDM_timer_t *timer; /*!< Timer */
+  PDM_timer_t *timer;                        /*!< Timer */
 
-  double times_elapsed[NTIMER]; /*!< Elapsed time */
+  double times_elapsed[NTIMER];              /*!< Elapsed time */
 
-  double times_cpu[NTIMER];     /*!< CPU time */
+  double times_cpu[NTIMER];                  /*!< CPU time */
 
-  double times_cpu_u[NTIMER];  /*!< User CPU time */
+  double times_cpu_u[NTIMER];                /*!< User CPU time */
 
-  double times_cpu_s[NTIMER];  /*!< System CPU time */
+  double times_cpu_s[NTIMER];                /*!< System CPU time */
 
 
 } _PDM_dist_t;
@@ -174,9 +176,10 @@ int
 PDM_dist_cloud_surf_create
 (
  const PDM_mesh_nature_t mesh_nature,
- const int n_point_cloud,
- const PDM_MPI_Comm comm
- )
+ const int               n_point_cloud,
+ const PDM_MPI_Comm      comm,
+ const PDM_ownership_t   owner
+)
 {
   if (_dists == NULL) {
     _dists = PDM_Handles_create (4);
@@ -186,22 +189,24 @@ PDM_dist_cloud_surf_create
 
   int id = PDM_Handles_store (_dists, dist);
 
-  dist->mesh_nature = mesh_nature;
-  dist->mesh_nodal_id = -1;
-  dist->surf_mesh = NULL;
-  dist->_surf_mesh = NULL;
+  dist->comm              = comm;
+  dist->owner             = owner;
+  dist->results_is_getted = PDM_FALSE;
+
+  dist->mesh_nature   = mesh_nature;
+  dist->mesh_nodal    = NULL;
+  dist->surf_mesh     = NULL;
+  dist->_surf_mesh    = NULL;
   dist->n_point_cloud = n_point_cloud;
-  dist->comm = comm;
-  dist->points_cloud =
-    (_points_cloud_t*) malloc (sizeof(_points_cloud_t) * n_point_cloud);
+  dist->points_cloud  = (_points_cloud_t*) malloc (sizeof(_points_cloud_t) * n_point_cloud);
 
   for (int i = 0; i <  n_point_cloud; i++) {
-    dist->points_cloud[i].n_part = -1;
-    dist->points_cloud[i].n_points = NULL;
-    dist->points_cloud[i].coords = NULL;
-    dist->points_cloud[i].gnum = NULL;
-    dist->points_cloud[i].dist = NULL;
-    dist->points_cloud[i].proj = NULL;
+    dist->points_cloud[i].n_part           = -1;
+    dist->points_cloud[i].n_points         = NULL;
+    dist->points_cloud[i].coords           = NULL;
+    dist->points_cloud[i].gnum             = NULL;
+    dist->points_cloud[i].dist             = NULL;
+    dist->points_cloud[i].proj             = NULL;
     dist->points_cloud[i].closest_elt_gnum = NULL;
   }
 
@@ -220,16 +225,16 @@ PDM_dist_cloud_surf_create
 void
 PDM_dist_cloud_surf_create_cf
 (
- const PDM_mesh_nature_t mesh_nature,
- const int n_point_cloud,
- const PDM_MPI_Fint comm,
- int *id
- )
-
+ const PDM_mesh_nature_t  mesh_nature,
+ const int                n_point_cloud,
+ const PDM_MPI_Fint       comm,
+ const PDM_ownership_t    owner,
+       int               *id
+)
 {
   const PDM_MPI_Comm _comm        = PDM_MPI_Comm_f2c(comm);
 
-  *id = PDM_dist_cloud_surf_create (mesh_nature, n_point_cloud, _comm);
+  *id = PDM_dist_cloud_surf_create (mesh_nature, n_point_cloud, _comm, owner);
 
 }
 
@@ -250,7 +255,7 @@ PDM_dist_cloud_surf_n_part_cloud_set
  const int          id,
  const int          i_point_cloud,
  const int          n_part
- )
+)
 {
   _PDM_dist_t *dist = _get_from_id (id);
 
@@ -304,7 +309,7 @@ PDM_dist_cloud_surf_cloud_set
  const int          n_points,
  double      *coords,
  PDM_g_num_t *gnum
- )
+)
 {
   _PDM_dist_t *dist = _get_from_id (id);
 
@@ -326,12 +331,12 @@ PDM_dist_cloud_surf_cloud_set
 void
 PDM_dist_cloud_surf_nodal_mesh_set
 (
- const int  id,
- const int  mesh_nodal_id
- )
+ const int               id,
+       PDM_Mesh_nodal_t *mesh_nodal
+)
 {
   _PDM_dist_t *dist = _get_from_id (id);
-  dist->mesh_nodal_id = mesh_nodal_id;
+  dist->mesh_nodal = mesh_nodal;
 }
 
 
@@ -351,7 +356,7 @@ PDM_dist_cloud_surf_surf_mesh_map
 (
  const int  id,
  PDM_surf_mesh_t *surf_mesh
- )
+)
 {
   _PDM_dist_t *dist = _get_from_id (id);
 
@@ -377,7 +382,7 @@ PDM_dist_cloud_surf_surf_mesh_global_data_set
  const PDM_g_num_t n_g_face,
  const PDM_g_num_t n_g_vtx,
  const int         n_part
- )
+)
 {
 
   _PDM_dist_t *dist = _get_from_id (id);
@@ -419,7 +424,7 @@ PDM_dist_cloud_surf_surf_mesh_part_set
  const int          n_vtx,
  const double      *coords,
  const PDM_g_num_t *vtx_ln_to_gn
- )
+)
 {
 
   _PDM_dist_t *dist = _get_from_id (id);
@@ -447,13 +452,13 @@ void
 PDM_dist_cloud_surf_compute
 (
  const int id
- )
+)
 {
   _PDM_dist_t *dist = _get_from_id (id);
 
-  const int n_point_cloud = dist->n_point_cloud;
-  const int mesh_id = dist->mesh_nodal_id;
-  PDM_MPI_Comm comm = dist->comm;
+  const int n_point_cloud      = dist->n_point_cloud;
+  PDM_Mesh_nodal_t* mesh_nodal = dist->mesh_nodal;
+  PDM_MPI_Comm comm            = dist->comm;
 
   int rank;
   PDM_MPI_Comm_rank (comm, &rank);
@@ -507,8 +512,8 @@ PDM_dist_cloud_surf_compute
     const int points_in_leaf_max = 4;
 
     int n_part_mesh = 0;
-    if (dist->mesh_nodal_id != -1) {
-      n_part_mesh = PDM_Mesh_nodal_n_part_get (mesh_id);
+    if (dist->mesh_nodal != NULL) {
+      n_part_mesh = PDM_Mesh_nodal_n_part_get (mesh_nodal);
     }
     else if (dist->_surf_mesh != NULL) {
       n_part_mesh = PDM_surf_mesh_n_part_get (dist->_surf_mesh);
@@ -563,14 +568,13 @@ PDM_dist_cloud_surf_compute
       const double *vertices_coords = NULL;
       const PDM_g_num_t *vertices_gnum = NULL;
 
-      if (dist->mesh_nodal_id != -1) {
-        n_vertices      = PDM_Mesh_nodal_n_vertices_get (mesh_id, i_part);
-        vertices_coords = PDM_Mesh_nodal_vertices_get (mesh_id, i_part);
-        vertices_gnum   = PDM_Mesh_nodal_vertices_g_num_get (mesh_id, i_part);
-      }
-      else if (dist->_surf_mesh != NULL) {
+      if (dist->mesh_nodal != NULL) {
+        n_vertices      = PDM_Mesh_nodal_n_vertices_get (mesh_nodal, i_part);
+        vertices_coords = PDM_Mesh_nodal_vertices_get   (mesh_nodal, i_part);
+        vertices_gnum   = PDM_Mesh_nodal_vertices_g_num_get (mesh_nodal, i_part);
+      } else if (dist->_surf_mesh != NULL) {
         n_vertices      = PDM_surf_mesh_part_n_vtx_get(dist->_surf_mesh, i_part);
-        vertices_coords = PDM_surf_mesh_part_vtx_get (dist->_surf_mesh, i_part);
+        vertices_coords = PDM_surf_mesh_part_vtx_get  (dist->_surf_mesh, i_part);
         vertices_gnum   = PDM_surf_mesh_part_vtx_g_num_get (dist->_surf_mesh,
                                                             i_part);
       }
@@ -699,11 +703,11 @@ PDM_dist_cloud_surf_compute
     PDM_timer_resume(dist->timer);
 
 
-    int          *nElts   = malloc (sizeof(int) * n_part_mesh);
-    const double      **extents = malloc (sizeof(double *) * n_part_mesh);
+    int                *n_elmts = malloc (sizeof(int          ) * n_part_mesh);
+    const double      **extents = malloc (sizeof(double      *) * n_part_mesh);
     const PDM_g_num_t **gNum    = malloc (sizeof(PDM_g_num_t *) * n_part_mesh);
 
-    if (dist->mesh_nodal_id != -1) {
+    if (dist->mesh_nodal != NULL) {
 
       /*     int PDM_Mesh_nodal_n_blocks_get */
       /* ( */
@@ -764,7 +768,7 @@ PDM_dist_cloud_surf_compute
     else if (dist->_surf_mesh != NULL) {
       PDM_surf_mesh_compute_faceExtentsMesh (dist->_surf_mesh, 1e-8);
       for (int i_part = 0; i_part < n_part_mesh; i_part++) {
-        nElts[i_part] = PDM_surf_mesh_part_n_face_get (dist->_surf_mesh,
+        n_elmts[i_part] = PDM_surf_mesh_part_n_face_get (dist->_surf_mesh,
                                                        i_part);
 
         gNum[i_part] = PDM_surf_mesh_part_face_g_num_get (dist->_surf_mesh,
@@ -788,7 +792,7 @@ PDM_dist_cloud_surf_compute
     /* Compute local extents */
     double my_extents[6] = {HUGE_VAL, HUGE_VAL, HUGE_VAL, -HUGE_VAL, -HUGE_VAL, -HUGE_VAL};
     for (int ipart = 0; ipart < n_part_mesh; ipart++) {
-      for (int i = 0; i < nElts[ipart]; i++) {
+      for (int i = 0; i < n_elmts[ipart]; i++) {
         for (int j = 0; j < 3; j++) {
           my_extents[j]   = PDM_MIN (my_extents[j],   extents[ipart][6*i + j]);
           my_extents[j+3] = PDM_MAX (my_extents[j+3], extents[ipart][6*i + 3 + j]);
@@ -815,15 +819,15 @@ PDM_dist_cloud_surf_compute
 
     PDM_box_set_t  *surf_mesh_boxes = PDM_dbbtree_boxes_set (dbbt,
                                                              n_part_mesh,
-                                                             nElts,
+                                                             n_elmts,
                                                              extents,
                                                              gNum);
 
     if (idebug) {
       printf ("surf_mesh_boxes->n_boxes : %d\n", PDM_box_set_get_size (surf_mesh_boxes));
       for (int i_part = 0; i_part < n_part_mesh; i_part++) {
-        printf (" PDM_dbbtree_boxes_set nElts %d : %d\n", i_part, nElts[i_part]);
-        for (int i = 0; i < nElts[i_part]; i++) {
+        printf (" PDM_dbbtree_boxes_set n_elmts %d : %d\n", i_part, n_elmts[i_part]);
+        for (int i = 0; i < n_elmts[i_part]; i++) {
           printf ("%d : extents %12.5e %12.5e %12.5e / %12.5e %12.5e %12.5e gnum "PDM_FMT_G_NUM"\n", i,
                   extents[i_part][6*i  ], extents[i_part][6*i+1], extents[i_part][6*i+2],
                   extents[i_part][6*i+3], extents[i_part][6*i+4], extents[i_part][6*i+5],
@@ -902,7 +906,7 @@ PDM_dist_cloud_surf_compute
     PDM_dbbtree_free (dbbt);
     PDM_box_set_destroy (&surf_mesh_boxes);
 
-    free (nElts);
+    free (n_elmts);
     free (gNum);
     free (extents);
 
@@ -1474,19 +1478,21 @@ PDM_dist_cloud_surf_compute
 void
 PDM_dist_cloud_surf_get
 (
- const int          id,
- const int          i_point_cloud,
- const int          i_part,
- double      **distance,
- double      **projected,
- PDM_g_num_t **closest_elt_gnum
- )
+ const int           id,
+ const int           i_point_cloud,
+ const int           i_part,
+       double      **distance,
+       double      **projected,
+       PDM_g_num_t **closest_elt_gnum
+)
 {
   _PDM_dist_t *dist = _get_from_id (id);
 
-  *distance = dist->points_cloud[i_point_cloud].dist[i_part];
-  *projected = dist->points_cloud[i_point_cloud].proj[i_part];
+  *distance         = dist->points_cloud[i_point_cloud].dist            [i_part];
+  *projected        = dist->points_cloud[i_point_cloud].proj            [i_part];
   *closest_elt_gnum = dist->points_cloud[i_point_cloud].closest_elt_gnum[i_part];
+
+  dist->results_is_getted = PDM_TRUE;
 }
 
 
@@ -1503,13 +1509,13 @@ PDM_dist_cloud_surf_get
 void
 PDM_dist_cloud_surf_free
 (
- const int id,
- const int partial
- )
+ const int id
+)
 {
   _PDM_dist_t *dist = _get_from_id (id);
 
-  if (!partial) {
+  if(( dist->owner == PDM_OWNERSHIP_KEEP ) ||
+     ( dist->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !dist->results_is_getted)){
     for (int i_point_cloud = 0;
          i_point_cloud < dist->n_point_cloud;
          i_point_cloud++) {
@@ -1569,7 +1575,7 @@ void
 PDM_dist_cloud_surf_dump_times
 (
  const int id
- )
+)
 {
   _PDM_dist_t *dist = _get_from_id (id);
   double t1 = dist->times_elapsed[END] - dist->times_elapsed[BEGIN];

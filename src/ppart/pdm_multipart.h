@@ -27,6 +27,8 @@
 
 #include "pdm.h"
 #include "pdm_mpi.h"
+#include "pdm_dmesh.h"
+#include "pdm_dmesh_nodal.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -84,7 +86,8 @@ PDM_multipart_create
  const PDM_split_dual_t split_method,
  const PDM_part_size_t  part_size_method,
  const double          *part_fraction,
- const PDM_MPI_Comm     comm
+ const PDM_MPI_Comm     comm,
+ const PDM_ownership_t  owner
 );
 
 
@@ -99,9 +102,25 @@ PDM_multipart_create
 
 void PDM_multipart_register_block
 (
- const int        mpart_id,
- const int        zone_id,
- const int        dmesh_id
+ const int          mpart_id,
+ const int          zone_id,
+       PDM_dmesh_t *dmesh
+);
+
+/**
+ *
+ * \brief Set distributed mesh data for the input zone
+ *
+ * \param [in]   mpart_id       Multipart structure id
+ * \param [in]   zone_id        Global zone id
+ * \param [in]   dmesh_id       Id of the distributed mesh structure to use
+ */
+
+void PDM_multipart_register_dmesh_nodal
+(
+ const int                mpart_id,
+ const int                zone_id,
+       PDM_dmesh_nodal_t *dmesh_nodal
 );
 
 
@@ -144,7 +163,7 @@ void PDM_multipart_set_reordering_options
  const char      *renum_cell_method,
  const int       *renum_cell_properties,
  const char      *renum_face_method
- );
+);
 
 /**
  *
@@ -158,6 +177,18 @@ PDM_multipart_run_ppart
 (
  const int id
 );
+
+/**
+ *
+ * \brief Construct the partitioned meshes on every zones
+ *
+ * \param [in]   mpart_id          Multipart structure id
+ */
+// void
+// PDM_multipart_vtx_graph_comm_compute
+// (
+//  const int id
+// );
 
 /**
  *
@@ -175,12 +206,25 @@ const int   i_part,
       int  *n_vtx,
       int  *n_proc,
       int  *n_total_part,
-      int  *scell_face,
-      int  *sface_vtx,
-      int  *sface_bound,
+      int  *s_cell_face,
+      int  *s_face_vtx,
+      int  *s_face_bound,
       int  *n_bound_groups,
-      int  *sface_join,
+      int  *s_face_join,
       int  *n_join_groups
+);
+
+/**
+ *
+ * \brief Returns the dimensions of a given partition
+ */
+void
+PDM_multipart_part_graph_comm_vtx_dim_get
+(
+ const int   mpart_id,
+ const int   i_zone,
+ const int   i_part,
+       int  *n_vtx_part_bound
 );
 
 /**
@@ -217,6 +261,17 @@ const int            i_part,
 );
 
 void
+PDM_multipart_part_graph_comm_vtx_data_get
+(
+const int            mpart_id,
+const int            i_zone,
+const int            i_part,
+      int          **vtx_part_bound_proc_idx,
+      int          **vtx_part_bound_part_idx,
+      int          **vtx_part_bound
+);
+
+void
 PDM_multipart_part_color_get
 (
 const int            mpart_id,
@@ -226,6 +281,15 @@ const int            i_part,
       int          **face_color,
       int          **thread_color,
       int          **hyperplane_color
+);
+
+void
+PDM_multipart_part_ghost_infomation_get
+(
+const int            mpart_id,
+const int            i_zone,
+const int            i_part,
+      int          **vtx_ghost_information
 );
 
 void

@@ -6,9 +6,10 @@ cdef extern from "pdm_points_merge.h":
 
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     # > Wrapping of function
-    int PDM_points_merge_create(int          n_point_cloud,
-                                double       tolerance,
-                                PDM_MPI_Comm comm);
+    int PDM_points_merge_create(int                   n_point_cloud,
+                                double                tolerance,
+                                PDM_MPI_Comm          comm,
+                                const PDM_ownership_t owner);
     void PDM_points_merge_free(int          id);
     void PDM_points_merge_cloud_set(int          id,
                                     int          i_point_cloud,
@@ -62,12 +63,15 @@ cdef class PointsMerge:
 
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
         # > Convert mpi4py -> PDM_MPI
-        cdef MPI.MPI_Comm c_comm = comm.ob_mpi
-        cdef PDM_MPI_Comm PDMC   = PDM_MPI_mpi_2_pdm_mpi_comm(<void *> &c_comm)
+        cdef MPI.MPI_Comm c_comm   = comm.ob_mpi
+        cdef PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(<void *> &c_comm)
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
-        self._id = PDM_points_merge_create(n_point_cloud, relative_tolerance, PDMC)
+        self._id = PDM_points_merge_create(n_point_cloud,
+                                           relative_tolerance,
+                                           pdm_comm,
+                                           PDM_OWNERSHIP_USER) # Python take ownership
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
     # ------------------------------------------------------------------------
@@ -82,18 +86,11 @@ cdef class PointsMerge:
         # ************************************************************************
 
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
-        print("coords::", coords)
-        print("char_length::", char_length)
         PDM_points_merge_cloud_set(self._id,
                                    i_point_cloud,
                                    n_points,
                                    <double *> coords.data,
                                    <double *> char_length.data)
-        # PDM_points_merge_cloud_set(self._id,
-        #                            i_point_cloud,
-        #                            n_points,
-        #                            <double *> coords.data,
-        #                            NULL)
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
     # ------------------------------------------------------------------------
@@ -136,14 +133,14 @@ cdef class PointsMerge:
                                                    &dim,
                                                    NPY.NPY_INT32,
                                                    <void *> candidates_idx)
+        PyArray_ENABLEFLAGS(np_candidates_idx, NPY.NPY_OWNDATA);
 
         dim = <NPY.npy_intp> 3 * candidates_idx[n_point_cloud]
         np_candidates_desc = NPY.PyArray_SimpleNewFromData(1,
                                                            &dim,
                                                            NPY.NPY_INT32,
                                                            <void *> candidates_desc)
-        # np_candidates_idx  = None
-        # np_candidates_desc = None
+        PyArray_ENABLEFLAGS(np_candidates_desc, NPY.NPY_OWNDATA);
 
         return {'candidates_idx'  : np_candidates_idx,
                 'candidates_desc' : np_candidates_desc
@@ -154,9 +151,5 @@ cdef class PointsMerge:
       """
          Use the free method of PDM Lib
       """
-      # ************************************************************************
-      # > Declaration
-      # ************************************************************************
-      print('PDM_points_merge_free')
       PDM_points_merge_free(self._id)
 

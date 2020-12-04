@@ -1,11 +1,12 @@
 # ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 # > Wrapping of functions
 cdef extern from "pdm_gnum.h":
-    int           PDM_gnum_create(const int          dim,
-                                  const int          n_part,
-                                  const PDM_bool_t   merge,
-                                  const double       tolerance,
-                                  const PDM_MPI_Comm comm);
+    int           PDM_gnum_create(const int             dim,
+                                  const int             n_part,
+                                  const PDM_bool_t      merge,
+                                  const double          tolerance,
+                                  const PDM_MPI_Comm    comm,
+                                  const PDM_ownership_t owner);
 
     void PDM_gnum_set_from_coords(const int     id,
                                   const int     i_part,
@@ -18,8 +19,7 @@ cdef extern from "pdm_gnum.h":
     PDM_g_num_t*     PDM_gnum_get(const int id,
                                   const int i_part);
 
-    void            PDM_gnum_free(const int id,
-                                  const int partial);
+    void            PDM_gnum_free(const int id);
 # ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 # ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -31,7 +31,7 @@ cdef class GlobalNumbering:
   # --------------------------------------------------------------------------
   # > Class attributes
   cdef public int _id
-  cdef NPY.npy_intp[:] _nElemPerPart
+  cdef NPY.npy_intp[:] _n_elem_per_part
   # --------------------------------------------------------------------------
 
   # --------------------------------------------------------------------------
@@ -44,7 +44,7 @@ cdef class GlobalNumbering:
 
     # ************************************************************************
     # > Init private array storing partition sizes
-    self._nElemPerPart = NPY.zeros(n_part, dtype=NPY.intp)
+    self._n_elem_per_part = NPY.zeros(n_part, dtype=NPY.intp)
     # ************************************************************************
 
     # ************************************************************************
@@ -53,7 +53,8 @@ cdef class GlobalNumbering:
                                n_part,
                                merge,
                                tolerance,
-                               PDM_MPI_mpi_2_pdm_mpi_comm (<void *> &c_comm));
+                               PDM_MPI_mpi_2_pdm_mpi_comm (<void *> &c_comm),
+                               PDM_OWNERSHIP_USER) # Python take ownership);
     # ************************************************************************
 
   # --------------------------------------------------------------------------
@@ -80,7 +81,7 @@ cdef class GlobalNumbering:
 
     # ************************************************************************
     # > Store size to use it in the get
-    self._nElemPerPart[i_part] = n_elts
+    self._n_elem_per_part[i_part] = n_elts
     # ************************************************************************
 
     # ************************************************************************
@@ -114,17 +115,18 @@ cdef class GlobalNumbering:
     if (gnum_array == NULL):
       return None
     else:
-      dim = <NPY.npy_intp> self._nElemPerPart[i_part]
-      return NPY.PyArray_SimpleNewFromData(1,
-                                           &dim,
-                                           PDM_G_NUM_NPY_INT,
-                                  <void *> gnum_array)
+      dim = <NPY.npy_intp> self._n_elem_per_part[i_part]
+      np_gnum_array = NPY.PyArray_SimpleNewFromData(1,
+                                                    &dim,
+                                                    PDM_G_NUM_NPY_INT,
+                                                    <void *> gnum_array)
+    PyArray_ENABLEFLAGS(np_gnum_array, NPY.NPY_OWNDATA);
+    return {'gnum' : np_gnum_array}
     # ************************************************************************
 
   # --------------------------------------------------------------------------
   def __dealloc__(self):
     """Calls the free method of PDM_gnum """
-    # Todo : tenir compte du partial ?
-    PDM_gnum_free(self._id, 0);
+    PDM_gnum_free(self._id);
 
 # ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::

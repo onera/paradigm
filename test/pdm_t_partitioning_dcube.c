@@ -191,18 +191,17 @@ int main(int argc, char *argv[])
    *  Create distributed cube
    */
 
-  int          id;
   PDM_MPI_Comm     comm = PDM_MPI_COMM_WORLD;
 
-  PDM_dcube_gen_init(&id,
-                      comm,
-                      n_vtx_seg,
-                      length,
-            		      0.,
-		                  0.,
-		                  0.);
+  PDM_dcube_t* dcube = PDM_dcube_gen_init(comm,
+                                          n_vtx_seg,
+                                          length,
+                                          0.,
+                                          0.,
+                                          0.,
+                                          PDM_OWNERSHIP_KEEP);
 
-  PDM_dcube_gen_dim_get(id,
+  PDM_dcube_gen_dim_get(dcube,
                          &n_face_group,
                          &dn_cell,
                          &dn_face,
@@ -210,7 +209,7 @@ int main(int argc, char *argv[])
                          &dface_vtxL,
                          &dFaceGroupL);
 
-  PDM_dcube_gen_data_get(id,
+  PDM_dcube_gen_data_get(dcube,
                           &dface_cell,
                           &dface_vtx_idx,
                           &dface_vtx,
@@ -487,9 +486,9 @@ int main(int argc, char *argv[])
   PDM_part_reverse_pcellface(n_res_part,
                              pn_cell,
                              pn_faces,
-            (const int **)   pcell_face_idx,
-             (const int **)  pcell_face,
-              (int    ***)  &pface_cell);
+            (const int ** )  pcell_face_idx,
+            (const int ** )  pcell_face,
+            (      int ***) &pface_cell);
 
   if (0 == 1){
     for (int i_part=0; i_part < n_res_part; i_part++){
@@ -597,7 +596,8 @@ int main(int argc, char *argv[])
               (const int **)          face_is_bnd,
                            (int ***) &pproc_face_bound_idx,
                            (int ***) &ppart_face_bound_idx,
-                           (int ***) &pface_bound);
+                           (int ***) &pface_bound,
+                                      NULL);
   for (int i_part = 0; i_part < n_res_part; i_part++)
     free(face_is_bnd[i_part]);
   free(face_is_bnd);
@@ -660,7 +660,7 @@ int main(int argc, char *argv[])
 
 
 
-  PDM_dcube_gen_free(id);
+  PDM_dcube_gen_free(dcube);
 
   PDM_MPI_Finalize();
 

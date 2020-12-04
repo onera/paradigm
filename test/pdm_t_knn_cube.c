@@ -287,7 +287,7 @@ int main(int argc, char *argv[])
                       &tgt_coords,
                       &_nTgt_l);
 
-  int id = PDM_gnum_create (3, 1, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD);
+  int id = PDM_gnum_create (3, 1, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD, PDM_OWNERSHIP_USER);
 
   double *tgt_char_length = malloc(sizeof(double) * _nTgt_l);
 
@@ -301,7 +301,7 @@ int main(int argc, char *argv[])
 
   PDM_g_num_t *tgt_gnum = PDM_gnum_get(id, 0);
 
-  PDM_gnum_free (id, 1);
+  PDM_gnum_free (id);
 
 
 
@@ -327,7 +327,8 @@ int main(int argc, char *argv[])
 
   /* Init closest points structure */
   int id2 = PDM_closest_points_create (PDM_MPI_COMM_WORLD,
-                                       n_closest_points);
+                                       n_closest_points,
+                                       PDM_OWNERSHIP_KEEP);
 
   PDM_closest_points_n_part_cloud_set (id2,
                                        n_part,
@@ -535,8 +536,7 @@ int main(int argc, char *argv[])
 
 
   /* Free */
-  PDM_closest_points_free (id2,
-                           0);
+  PDM_closest_points_free (id2);
 
   free (tgt_coords);
   free (tgt_char_length);

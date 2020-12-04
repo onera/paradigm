@@ -45,6 +45,8 @@ extern "C" {
  * Type definitions
  *============================================================================*/
 
+typedef struct _pdm_dmesh_t PDM_dmesh_t;
+
 /*=============================================================================
  * Static global variables
  *============================================================================*/
@@ -66,14 +68,17 @@ extern "C" {
  * \return     Identifier
  */
 
-int
+PDM_dmesh_t*
 PDM_dmesh_create
 (
- const int          dn_cell,
- const int          dn_face,
- const int          dn_vtx,
- const int          dn_bnd,
- const int          n_join
+       PDM_ownership_t owner,
+ const int             dn_cell,
+ const int             dn_face,
+ const int             dn_edge,
+ const int             dn_vtx,
+ const int             n_bnd,
+ const int             n_join,
+       PDM_MPI_Comm    comm
 );
 
 /**
@@ -103,7 +108,7 @@ PDM_dmesh_create
 void
 PDM_dmesh_set
 (
- const int           id,
+ PDM_dmesh_t        *dmeshm,
  const double       *dvtx_coord,
  const int          *dface_vtx_idx,
  const PDM_g_num_t  *dface_vtx,
@@ -130,12 +135,13 @@ PDM_dmesh_set
 void
 PDM_dmesh_dims_get
 (
- const int   id,
- int        *dn_cell,
- int        *dn_face,
- int        *dn_vtx,
- int        *dn_bnd,
- int        *n_joins
+ PDM_dmesh_t *dmeshm,
+ int         *dn_cell,
+ int         *dn_face,
+ int         *dn_edge,
+ int         *dn_vtx,
+ int         *dn_bnd,
+ int         *n_joins
 );
 
 /**
@@ -157,7 +163,7 @@ PDM_dmesh_dims_get
 void
 PDM_dmesh_data_get
 (
- const int           id,
+ PDM_dmesh_t         *dmeshm,
  const double       **dvtx_coord,
  const int          **dface_vtx_idx,
  const PDM_g_num_t  **dface_vtx,
@@ -167,6 +173,34 @@ PDM_dmesh_data_get
  const int          **joins_glob_id,
  const int          **dface_join_idx,
  const PDM_g_num_t  **dface_join
+);
+
+int
+PDM_dmesh_connectivity_get
+(
+ PDM_dmesh_t              *dmesh,
+ PDM_connectivity_type_t   connectivity_type,
+ PDM_g_num_t             **connect,
+ int                     **connect_idx,
+ PDM_ownership_t           ownership
+);
+
+int
+PDM_dmesh_bound_get
+(
+ PDM_dmesh_t       *dmesh,
+ PDM_bound_type_t   bound_type,
+ PDM_g_num_t      **connect,
+ int              **connect_idx,
+ PDM_ownership_t    ownership
+);
+
+int
+PDM_dmesh_distrib_get
+(
+ PDM_dmesh_t              *dmesh,
+ PDM_mesh_entities_t       entity_type,
+ PDM_g_num_t             **distrib
 );
 
 /**
@@ -180,7 +214,7 @@ PDM_dmesh_data_get
 void
 PDM_dmesh_free
 (
- const int id
+ PDM_dmesh_t        *dmesh
 );
 
 

@@ -39,34 +39,34 @@ extern "C" {
 /**
  * \brief Computes barycenter
  *
- * \param [in]   numPts  Number of polygon vertices
- * \param [in]   pts     Polygon vertices coordinates
- * \param [out]  bary    Barycenter
+ * \param [in]   num_pts  Number of polygon vertices
+ * \param [in]   pts      Polygon vertices coordinates
+ * \param [out]  bary     Barycenter
  *
  */
 
 void
 PDM_plane_barycenter
 (
- const int     numPts,
+ const int     num_pts,
  const double *pts,
- double        n[3]
- );
+       double  n[3]
+);
 
 
 /**
  * \brief Computes normal
  *
- * \param [in]   numPts  Number of polygon vertices
- * \param [in]   pts     Polygon vertices coordinates
- * \param [out]  n       Normal
+ * \param [in]   num_pts  Number of polygon vertices
+ * \param [in]   pts      Polygon vertices coordinates
+ * \param [out]  n        Normal
  *
  */
 
 void
 PDM_plane_normal
 (
- const int     numPts,
+ const int     num_pts,
  const double *pts,
  double        n[3]
 );

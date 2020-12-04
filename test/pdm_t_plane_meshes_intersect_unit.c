@@ -724,7 +724,8 @@ main
       vtxCoordA[3*i+2] * cos(teta);
   }
 
-  int id_gnum = PDM_gnum_create (3, 1, PDM_TRUE, 1e-3, PDM_MPI_COMM_WORLD);
+  int id_gnum = PDM_gnum_create (3, 1, PDM_TRUE, 1e-3,
+                                 PDM_MPI_COMM_WORLD, PDM_OWNERSHIP_KEEP);
 
   double *char_length = malloc(sizeof(double) * nVtxA_merge);
 
@@ -766,7 +767,7 @@ main
     _faceVtxA_merge[i] = new_gnum[faceVtxA_merge[i]-1];
   }
 
-  PDM_gnum_free (id_gnum, 0);
+  PDM_gnum_free (id_gnum);
 
   free (char_length);
   free (faceVtxA_merge);

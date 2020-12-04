@@ -175,27 +175,29 @@ int main(int argc, char *argv[])
     n_part_zones[i_zone] = n_part;
   }
   int mpart_id = PDM_multipart_create(n_zone, n_part_zones, PDM_FALSE,
-                                      method, PDM_PART_SIZE_HOMOGENEOUS, NULL, comm);
-  PDM_multipart_set_reordering_options(mpart_id, -1, "PDM_PART_RENUM_CELL_CUTHILL", NULL, "PDM_PART_RENUM_FACE_NONE");
+                                      method, PDM_PART_SIZE_HOMOGENEOUS,
+                                      NULL, comm, PDM_OWNERSHIP_KEEP);
+  PDM_multipart_set_reordering_options(mpart_id, -1, "PDM_PART_RENUM_CELL_CUTHILL", NULL, "PDM_PART_RENUM_FACE_LEXICOGRAPHIC");
   if (n_zone > 1)
     PDM_multipart_set_reordering_options(mpart_id,  1, "PDM_PART_RENUM_CELL_NONE", NULL, "PDM_PART_RENUM_FACE_NONE");
 
   /* Generate mesh */
-  int *dcube_ids = (int *) malloc(n_zone*sizeof(int));
-  int *dmesh_ids = (int *) malloc(n_zone*sizeof(int));
+  PDM_dcube_t **dcube = (PDM_dcube_t **) malloc(n_zone * sizeof(PDM_dcube_t *));
+  PDM_dmesh_t **dmesh = (PDM_dmesh_t **) malloc(n_zone * sizeof(PDM_dmesh_t *));
   for (int i_zone = 0; i_zone < n_zone; i_zone++)
   {
     // Create a cube for this zone
     if (i_rank == 0) PDM_printf("Creating dcube for zone %d\n", i_zone);
-    PDM_dcube_gen_init(&dcube_ids[i_zone], comm, n_vtx_seg, length, i_zone, 0., 0.);
-    PDM_dcube_gen_dim_get(dcube_ids[i_zone],
+
+    dcube[i_zone] = PDM_dcube_gen_init(comm, n_vtx_seg, length, i_zone, 0., 0., PDM_OWNERSHIP_KEEP);
+    PDM_dcube_gen_dim_get(dcube[i_zone],
                          &n_face_group[i_zone],
                          &dn_cell[i_zone],
                          &dn_face[i_zone],
                          &dn_vtx[i_zone],
                          &dface_vtx_s[i_zone],
                          &dface_group_s[i_zone]);
-    PDM_dcube_gen_data_get(dcube_ids[i_zone],
+    PDM_dcube_gen_data_get(dcube[i_zone],
                           &dface_cell[i_zone],
                           &dface_vtx_idx[i_zone],
                           &dface_vtx[i_zone],
@@ -268,12 +270,15 @@ int main(int argc, char *argv[])
     }
 
     // Store it in dmesh struct
-    dmesh_ids[i_zone] = PDM_dmesh_create(dn_cell[i_zone],
-                                         dn_face[i_zone],
-                                         dn_vtx[i_zone],
-                                         n_bnd,
-                                         n_jn);
-    PDM_dmesh_set(dmesh_ids[i_zone],
+    dmesh[i_zone] = PDM_dmesh_create(PDM_OWNERSHIP_KEEP,
+                                     dn_cell[i_zone],
+                                     dn_face[i_zone],
+                                     -1, // dn_edge
+                                     dn_vtx[i_zone],
+                                     n_bnd,
+                                     n_jn,
+                                     comm);
+    PDM_dmesh_set(dmesh[i_zone],
                   dvtx_coord[i_zone],
                   dface_vtx_idx[i_zone],
                   dface_vtx[i_zone],
@@ -283,7 +288,7 @@ int main(int argc, char *argv[])
                   djoins_ids[i_zone],
                   dface_join_idx[i_zone],
                   dface_join[i_zone]);
-    PDM_multipart_register_block(mpart_id, i_zone, dmesh_ids[i_zone]);
+    PDM_multipart_register_block(mpart_id, i_zone, dmesh[i_zone]);
   }
 
   /* Connection between zones */
@@ -514,17 +519,16 @@ int main(int argc, char *argv[])
   }
 
   /* Free memory */
-  for (int i_zone = 0; i_zone < n_zone; i_zone++)
-  {
+  for (int i_zone = 0; i_zone < n_zone; i_zone++) {
     free(dface_bnd_idx[i_zone]);
     free(dface_bnd[i_zone]);
     free(dface_join_idx[i_zone]);
     free(dface_join[i_zone]);
     free(djoins_ids[i_zone]);
-    PDM_dmesh_free(dmesh_ids[i_zone]);
-    PDM_dcube_gen_free(dcube_ids[i_zone]);
+    PDM_dmesh_free(dmesh[i_zone]);
+    PDM_dcube_gen_free(dcube[i_zone]);
   }
-  free(dcube_ids);
+  free(dcube);
   free(dn_cell);
   free(dn_face);
   free(dn_vtx);
@@ -545,7 +549,7 @@ int main(int argc, char *argv[])
   free(join_to_opposite);
 
   PDM_multipart_free(mpart_id);
-  free(dmesh_ids);
+  free(dmesh);
   free(n_part_zones);
 
   if (i_rank==0) PDM_printf("pdm_t_multipart run finalized\n");

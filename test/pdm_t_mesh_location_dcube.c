@@ -310,8 +310,6 @@ int main(int argc, char *argv[])
    *  Create distributed cube
    */
 
-  int          id;
-
   const double xmin = 0;
   const double ymin = 0;
   const double zmin = 0;
@@ -325,15 +323,15 @@ int main(int argc, char *argv[])
     fflush(stdout);
   }
 
-  PDM_dcube_gen_init(&id,
-                     PDM_MPI_COMM_WORLD,
-                     n_vtx_seg,
-                     length,
-                     xmin,
-                     ymin,
-                     zmin);
+  PDM_dcube_t* dcube = PDM_dcube_gen_init(PDM_MPI_COMM_WORLD,
+                                          n_vtx_seg,
+                                          length,
+                                          xmin,
+                                          ymin,
+                                          zmin,
+                                          PDM_OWNERSHIP_KEEP);
 
-  PDM_dcube_gen_dim_get(id,
+  PDM_dcube_gen_dim_get(dcube,
                         &n_face_group,
                         &dn_cell,
                         &dn_face,
@@ -341,7 +339,7 @@ int main(int argc, char *argv[])
                         &dface_vtx_l,
                         &dface_group_l);
 
-  PDM_dcube_gen_data_get(id,
+  PDM_dcube_gen_data_get(dcube,
                          &dface_cell,
                          &dface_vtx_idx,
                          &dface_vtx,
@@ -437,7 +435,7 @@ int main(int argc, char *argv[])
              pts_coords);
   } 
 
-  int id_gnum = PDM_gnum_create (3, 1, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD);
+  int id_gnum = PDM_gnum_create (3, 1, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD, PDM_OWNERSHIP_USER);
 
   double *char_length = malloc(sizeof(double) * n_pts_l);
 
@@ -451,7 +449,7 @@ int main(int argc, char *argv[])
 
   PDM_g_num_t *pts_gnum = PDM_gnum_get(id_gnum, 0);
 
-  PDM_gnum_free (id_gnum, 1);
+  PDM_gnum_free (id_gnum);
   free (char_length);
 
 
@@ -663,7 +661,7 @@ if (!rotation) {
   free (pts_coords);
   free (pts_gnum);
 
-  PDM_dcube_gen_free (id);
+  PDM_dcube_gen_free(dcube);
 
   PDM_MPI_Finalize();
 

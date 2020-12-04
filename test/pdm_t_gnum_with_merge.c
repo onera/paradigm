@@ -141,45 +141,45 @@ _read_args
 static int
 _create_split_mesh
 (
- int           imesh,
- PDM_MPI_Comm  pdm_mpi_comm,
- PDM_g_num_t  n_vtx_seg,
- double        length,
- int           n_part,
-PDM_part_split_t           method,
- int           haveRandom,
- PDM_g_num_t   *nGFace,
- PDM_g_num_t   *nGVtx,
- PDM_g_num_t   *nGEdge,
- int           *n_total_part,
- int           *nEdgeGroup
+ int               imesh,
+ PDM_MPI_Comm      pdm_mpi_comm,
+ PDM_g_num_t       n_vtx_seg,
+ double            length,
+ int               n_part,
+ PDM_part_split_t  method,
+ int               have_random,
+ PDM_g_num_t      *n_g_face,
+ PDM_g_num_t      *n_g_vtx,
+ PDM_g_num_t      *n_g_edge,
+ int              *n_total_part,
+ int              *n_edge_group
 )
 {
   struct timeval t_elaps_debut;
 
   int i_rank;
-  int numProcs;
+  int num_procs;
 
   PDM_MPI_Comm_rank (pdm_mpi_comm, &i_rank);
-  PDM_MPI_Comm_size (pdm_mpi_comm, &numProcs);
+  PDM_MPI_Comm_size (pdm_mpi_comm, &num_procs);
 
   double        xmin = 0.;
   double        xmax = length;
   double        ymin = 0.;
   double        ymax = length;
-  PDM_g_num_t  nx = n_vtx_seg;
-  PDM_g_num_t  ny = n_vtx_seg;
+  PDM_g_num_t   nx = n_vtx_seg;
+  PDM_g_num_t   ny = n_vtx_seg;
   int           dn_face;
   int           dn_vtx;
-  int           dNEdge;
+  int           dn_edge;
   int          *dface_vtx_idx;
-  PDM_g_num_t *dface_vtx;
+  PDM_g_num_t  *dface_vtx;
   double       *dvtx_coord;
-  PDM_g_num_t *dFaceEdge;
-  PDM_g_num_t *dEdgeVtx;
-  PDM_g_num_t *dEdgeFace;
-  int          *dEdgeGroupIdx;
-  PDM_g_num_t   *dEdgeGroup;
+  PDM_g_num_t  *dface_edge;
+  PDM_g_num_t  *dedge_vtx;
+  PDM_g_num_t  *dedge_face;
+  int          *dedge_group_idx;
+  PDM_g_num_t  *dedge_group;
 
   int           initRandom = 0;
 
@@ -201,27 +201,27 @@ PDM_part_split_t           method,
                      xmax,
                      ymin,
                      ymax,
-                     haveRandom,
+                     have_random,
                      initRandom,
                      nx,
                      ny,
-                     nGFace,
-                     nGVtx,
-                     nGEdge,
+                     n_g_face,
+                     n_g_vtx,
+                     n_g_edge,
                      &dn_vtx,
                      &dvtx_coord,
                      &dn_face,
                      &dface_vtx_idx,
                      &dface_vtx,
-                     &dFaceEdge,
-                     &dNEdge,
-                     &dEdgeVtx,
-                     &dEdgeFace,
-                     nEdgeGroup,
-                     &dEdgeGroupIdx,
-                     &dEdgeGroup);
+                     &dface_edge,
+                     &dn_edge,
+                     &dedge_vtx,
+                     &dedge_face,
+                     n_edge_group,
+                     &dedge_group_idx,
+                     &dedge_group);
 
-  int id = PDM_gnum_create (3, 1, PDM_FALSE, 1e-3, pdm_mpi_comm);
+  int id = PDM_gnum_create (3, 1, PDM_FALSE, 1e-3, pdm_mpi_comm, PDM_OWNERSHIP_KEEP);
 
   PDM_gnum_set_from_coords (id, 0, dn_vtx, dvtx_coord, NULL);
 
@@ -310,9 +310,9 @@ PDM_part_split_t           method,
   if (0 == 1) {
 
     PDM_printf ("edgegroup : ");
-    for (int i = 0; i < *nEdgeGroup; i++) {
-      for (int j = dEdgeGroupIdx[i]; j <  dEdgeGroupIdx[i+1]; j++)
-        PDM_printf (" "PDM_FMT_G_NUM, dEdgeGroup[j]);
+    for (int i = 0; i < *n_edge_group; i++) {
+      for (int j = dedge_group_idx[i]; j <  dedge_group_idx[i+1]; j++)
+        PDM_printf (" "PDM_FMT_G_NUM, dedge_group[j]);
       PDM_printf ("\n");
     }
 
@@ -323,24 +323,24 @@ PDM_part_split_t           method,
       PDM_printf ("\n");
     }
 
-    PDM_printf ("dfaceedge : ");
+    PDM_printf ("dface_edge : ");
     for (int i = 0; i < dn_face; i++) {
       for (int j = dface_vtx_idx[i]; j <  dface_vtx_idx[i+1]; j++)
-        PDM_printf (" "PDM_FMT_G_NUM, dFaceEdge[j]);
+        PDM_printf (" "PDM_FMT_G_NUM, dface_edge[j]);
       PDM_printf ("\n");
     }
 
-    PDM_printf ("dedgevtx : ");
-    for (int i = 0; i < dNEdge; i++) {
-      PDM_printf (" "PDM_FMT_G_NUM, dEdgeVtx[2*i]);
-      PDM_printf (" "PDM_FMT_G_NUM, dEdgeVtx[2*i+1]);
+    PDM_printf ("dedge_vtx : ");
+    for (int i = 0; i < dn_edge; i++) {
+      PDM_printf (" "PDM_FMT_G_NUM, dedge_vtx[2*i]);
+      PDM_printf (" "PDM_FMT_G_NUM, dedge_vtx[2*i+1]);
       PDM_printf ("\n");
     }
 
-    PDM_printf ("dedgeface : ");
-    for (int i = 0; i < dNEdge; i++) {
-      PDM_printf (" "PDM_FMT_G_NUM, dEdgeFace[2*i]);
-      PDM_printf (" "PDM_FMT_G_NUM, dEdgeFace[2*i+1]);
+    PDM_printf ("dedge_face : ");
+    for (int i = 0; i < dn_edge; i++) {
+      PDM_printf (" "PDM_FMT_G_NUM, dedge_face[2*i]);
+      PDM_printf (" "PDM_FMT_G_NUM, dedge_face[2*i+1]);
       PDM_printf ("\n");
     }
   }
@@ -352,11 +352,11 @@ PDM_part_split_t           method,
   int have_dcell_part = 0;
 
   int *dcell_part = (int *) malloc (dn_face*sizeof(int));
-  int *dEdgeVtxIdx = (int *) malloc ((dNEdge+1)*sizeof(int));
+  int *dedge_vtx_idx = (int *) malloc ((dn_edge+1)*sizeof(int));
 
-  dEdgeVtxIdx[0] = 0;
-  for (int i = 0; i < dNEdge; i++) {
-    dEdgeVtxIdx[i+1] = 2 + dEdgeVtxIdx[i];
+  dedge_vtx_idx[0] = 0;
+  for (int i = 0; i < dn_edge; i++) {
+    dedge_vtx_idx[i+1] = 2 + dedge_vtx_idx[i];
   }
 
   /*
@@ -370,7 +370,7 @@ PDM_part_split_t           method,
   int n_property_face = 0;
   int *renum_properties_face = NULL;
 
-  PDM_g_num_t *distrib = (PDM_g_num_t *) malloc((numProcs+1) * sizeof(PDM_g_num_t));
+  PDM_g_num_t *distrib = (PDM_g_num_t *) malloc((num_procs+1) * sizeof(PDM_g_num_t));
   PDM_g_num_t _dn_vtx = (PDM_g_num_t) dn_vtx;
 
   PDM_MPI_Allgather((void *) &_dn_vtx,
@@ -384,7 +384,7 @@ PDM_part_split_t           method,
   // mesh->face_distrib[0] = 1;
   distrib[0] = 0;
 
-  for (int i = 1; i < numProcs; i++) {
+  for (int i = 1; i < num_procs; i++) {
     distrib[i] +=  distrib[i-1];
   }
 
@@ -400,23 +400,23 @@ PDM_part_split_t           method,
                    renum_properties_face,
                    n_part,
                    dn_face,
-                   dNEdge,
+                   dn_edge,
                    dn_vtx,
-                   *nEdgeGroup,
+                   *n_edge_group,
                    NULL,
                    NULL,
                    NULL,
                    NULL,
                    have_dcell_part,
                    dcell_part,
-                   dEdgeFace,
-                   dEdgeVtxIdx,
-                   dEdgeVtx,
+                   dedge_face,
+                   dedge_vtx_idx,
+                   dedge_vtx,
                    NULL,
                    dvtx_coord,
                    NULL,
-                   dEdgeGroupIdx,
-                   dEdgeGroup);
+                   dedge_group_idx,
+                   dedge_group);
 
   free (dcell_part);
 
@@ -463,14 +463,14 @@ PDM_part_split_t           method,
   free (dvtx_coord);
   free (dface_vtx_idx);
   free (dface_vtx);
-  free (dFaceEdge);
-  free (dEdgeVtxIdx);
-  free (dEdgeVtx);
-  free (dEdgeFace);
-  free (dEdgeGroupIdx);
-  free (dEdgeGroup);
+  free (dface_edge);
+  free (dedge_vtx_idx);
+  free (dedge_vtx);
+  free (dedge_face);
+  free (dedge_group_idx);
+  free (dedge_group);
 
-  int id2 = PDM_gnum_create (3, n_part, PDM_TRUE, 1e-3, pdm_mpi_comm);
+  int id2 = PDM_gnum_create (3, n_part, PDM_TRUE, 1e-3, pdm_mpi_comm, PDM_OWNERSHIP_KEEP);
 
   double **char_length = malloc(sizeof(double *) * n_part);
 
@@ -487,7 +487,7 @@ PDM_part_split_t           method,
     int sFaceEdge;
     int sEdgeVtx;
     int sEdgeGroup;
-    int nEdgeGroup2;
+    int n_edge_group2;
 
     PDM_part_part_dim_get (ppart_id,
                            i_part,
@@ -500,7 +500,7 @@ PDM_part_split_t           method,
                            &sFaceEdge,
                            &sEdgeVtx,
                            &sEdgeGroup,
-                           &nEdgeGroup2);
+                           &n_edge_group2);
 
     n_vtxs[i_part] = n_vtx;
 
@@ -618,7 +618,7 @@ PDM_part_split_t           method,
     int sFaceEdge;
     int sEdgeVtx;
     int sEdgeGroup;
-    int nEdgeGroup2;
+    int n_edge_group2;
 
     PDM_part_part_dim_get (ppart_id,
                            i_part,
@@ -631,7 +631,7 @@ PDM_part_split_t           method,
                            &sFaceEdge,
                            &sEdgeVtx,
                            &sEdgeGroup,
-                           &nEdgeGroup2);
+                           &n_edge_group2);
 
     int          *cell_tag;
     int          *cell_face_idx;
@@ -728,9 +728,9 @@ PDM_part_split_t           method,
   free(numabs_init);
   free(distrib);
 
-  PDM_gnum_free (id2, 0);
+  PDM_gnum_free (id2);
 
-  PDM_gnum_free (id, 0);
+  PDM_gnum_free (id);
 
   PDM_part_to_block_free (ptb1);
   PDM_part_to_block_free (ptb2);
@@ -769,10 +769,10 @@ char *argv[]
   PDM_part_split_t method  = PDM_PART_SPLIT_PTSCOTCH;
 #endif
 #endif
-  int           haveRandom = 0;
+  int           have_random = 0;
 
   int           i_rank;
-  int           numProcs;
+  int           num_procs;
 
   /*
    *  Read args
@@ -785,18 +785,18 @@ char *argv[]
               &length);
 
   PDM_MPI_Comm_rank (PDM_MPI_COMM_WORLD, &i_rank);
-  PDM_MPI_Comm_size (PDM_MPI_COMM_WORLD, &numProcs);
+  PDM_MPI_Comm_size (PDM_MPI_COMM_WORLD, &num_procs);
 
   /*
    *  Create a partitioned mesh
    */
 
-  PDM_g_num_t nGFace;
-  PDM_g_num_t nGVtx;
-  PDM_g_num_t nGEdge;
+  PDM_g_num_t n_g_face;
+  PDM_g_num_t n_g_vtx;
+  PDM_g_num_t n_g_edge;
   int imesh = 0;
   int n_total_part;
-  int nEdgeGroup;
+  int n_edge_group;
 
  _create_split_mesh (imesh,
                      PDM_MPI_COMM_WORLD,
@@ -804,12 +804,12 @@ char *argv[]
                      length,
                      n_part,
                      method,
-                     haveRandom,
-                     &nGFace,
-                     &nGVtx,
-                     &nGEdge,
+                     have_random,
+                     &n_g_face,
+                     &n_g_vtx,
+                     &n_g_edge,
                      &n_total_part,
-                     &nEdgeGroup);
+                     &n_edge_group);
 
  PDM_MPI_Finalize ();
 
