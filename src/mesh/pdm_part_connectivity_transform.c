@@ -129,7 +129,7 @@ PDM_part_combine_connectivity
     }
   }
 
-  printf("_entity1_entity3_idx[%i] = %i \n", n_entity1, _entity1_entity3_idx[n_entity1]);
+  // printf("_entity1_entity3_idx[%i] = %i \n", n_entity1, _entity1_entity3_idx[n_entity1]);
   int* _entity1_entity3 = (int *) malloc( _entity1_entity3_idx[n_entity1] * sizeof(int));
 
   int idx = 0;
@@ -144,8 +144,8 @@ PDM_part_combine_connectivity
 
   PDM_compress_connectivity(n_entity1, _entity1_entity3_idx, _entity1_entity3);
 
-  PDM_log_trace_array_int(_entity1_entity3_idx, n_entity1+1                     , "_entity1_entity3_idx::");
-  PDM_log_trace_array_int(_entity1_entity3    , _entity1_entity3_idx[n_entity1], "_entity1_entity3::");
+  // PDM_log_trace_array_int(_entity1_entity3_idx, n_entity1+1                     , "_entity1_entity3_idx::");
+  // PDM_log_trace_array_int(_entity1_entity3    , _entity1_entity3_idx[n_entity1], "_entity1_entity3::");
 
   _entity1_entity3 = realloc(_entity1_entity3, _entity1_entity3_idx[n_entity1] * sizeof(int));
 
@@ -158,11 +158,12 @@ PDM_part_combine_connectivity
 void
 PDM_part_connectivity_transpose
 (
- int   n_entity1,
- int  *entity1_entity2_idx,
- int  *entity1_entity2,
- int **entity2_entity1_idx,
- int **entity2_entity1
+const int   n_entity1,
+const int   n_entity2,
+      int  *entity1_entity2_idx,
+      int  *entity1_entity2,
+      int **entity2_entity1_idx,
+      int **entity2_entity1
 )
 {
   PDM_UNUSED(n_entity1);
@@ -170,5 +171,46 @@ PDM_part_connectivity_transpose
   PDM_UNUSED(entity1_entity2);
   PDM_UNUSED(entity2_entity1_idx);
   PDM_UNUSED(entity2_entity1);
+
+
+  int* _entity2_entity1_idx = (int * ) malloc( (n_entity2 + 1) * sizeof(int));
+  int* entity2_entity1_n = (int * ) malloc( (n_entity2) * sizeof(int));
+
+  for(int i_entity2 = 0; i_entity2 < n_entity2; ++i_entity2) {
+    entity2_entity1_n[i_entity2] = 0;
+  }
+
+  for(int i_entity1 = 0; i_entity1 < n_entity1; ++i_entity1) {
+    for(int idx_1 = entity1_entity2_idx[i_entity1]; idx_1 < entity1_entity2_idx[i_entity1+1]; ++idx_1 ) {
+      int i_entity2 = PDM_ABS(entity1_entity2[idx_1])-1;
+      entity2_entity1_n[i_entity2] += 1;
+    }
+  }
+
+  _entity2_entity1_idx[0] = 0;
+  for(int i_entity2 = 0; i_entity2 < n_entity2; ++i_entity2) {
+    _entity2_entity1_idx[i_entity2+1] = _entity2_entity1_idx[i_entity2] + entity2_entity1_n[i_entity2];
+    entity2_entity1_n[i_entity2] = 0;
+  }
+
+  int* _entity2_entity1 = (int * ) malloc( _entity2_entity1_idx[n_entity2] * sizeof(int));
+
+  for(int i_entity1 = 0; i_entity1 < n_entity1; ++i_entity1) {
+    for(int idx_1 = entity1_entity2_idx[i_entity1]; idx_1 < entity1_entity2_idx[i_entity1+1]; ++idx_1 ) {
+      int i_entity2 = PDM_ABS(entity1_entity2[idx_1])-1;
+      int idx = _entity2_entity1_idx[i_entity2] + entity2_entity1_n[i_entity2]++;
+      _entity2_entity1[idx] = i_entity1+1;
+    }
+  }
+
+  // PDM_log_trace_array_int(_entity2_entity1_idx, n_entity2+1, "_entity2_entity1_idx::");
+  // PDM_log_trace_array_int(entity2_entity1_n   , n_entity2  , "entity2_entity1_n::");
+  // PDM_log_trace_array_int(_entity2_entity1   , _entity2_entity1_idx[n_entity2]  , "_entity2_entity1::");
+
+  free(entity2_entity1_n);
+
+  *entity2_entity1_idx = _entity2_entity1_idx;
+  *entity2_entity1     = _entity2_entity1;
+
 
 }

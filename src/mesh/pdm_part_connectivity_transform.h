@@ -47,11 +47,12 @@ PDM_part_combine_connectivity
 void
 PDM_part_connectivity_transpose
 (
- int   n_entity1,
- int  *entity1_entity2_idx,
- int  *entity1_entity2,
- int **entity2_entity1_idx,
- int **entity2_entity1
+const int   n_entity1,
+const int   n_entity2,
+      int  *entity1_entity2_idx,
+      int  *entity1_entity2,
+      int **entity2_entity1_idx,
+      int **entity2_entity1
 );
 
 #ifdef  __cplusplus
