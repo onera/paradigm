@@ -501,6 +501,32 @@ int main(int argc, char *argv[])
     }
   }
 
+  // int* face_cell_idx = (int *) malloc( (pn_faces[0] + 1 ) * sizeof(int));
+  // int* face_cell     = (int *) malloc( (2 * pn_faces[0] ) * sizeof(int));
+  // int idx = 0;
+  // face_cell_idx[0] = 0;
+  // for(int i_face = 0; i_face < pn_faces[0]; ++i_face) {
+  //   face_cell_idx[i_face+1] = face_cell_idx[i_face];
+  //   if(pface_cell[0][2*i_face + 1 ] == 0) {
+  //     face_cell_idx[i_face+1]++;
+  //     face_cell[idx++] = pface_cell[0][2*i_face];
+  //   } else {
+  //     face_cell_idx[i_face+1] += 2;
+  //     face_cell[idx++] = pface_cell[0][2*i_face  ];
+  //     face_cell[idx++] = pface_cell[0][2*i_face+1];
+  //   }
+  // }
+
+  // PDM_log_trace_array_int(pface_cell[0]    ,  2 * pn_faces[0]    , "pface_cell::");
+  // PDM_log_trace_array_int(pcell_face_idx[0], pn_cell[0]+1                 , "pcell_face_idx::");
+  // PDM_log_trace_array_int(pcell_face[0]    , pcell_face_idx[0][pn_cell[0]], "pcell_face::");
+
+  // printf("pn_faces[0] = % i  \n", pn_faces[0]);
+  // printf("pn_cell[0]  = % i  \n",pn_cell[0] );
+  // PDM_log_trace_array_int(face_cell_idx, pn_faces[0]+1, "face_cell_idx::");
+  // PDM_log_trace_array_int(face_cell, face_cell_idx[pn_faces[0]], "face_cell::");
+  // free(face_cell_idx);
+  // free(face_cell);
 
   /*
    * Generate vtx
