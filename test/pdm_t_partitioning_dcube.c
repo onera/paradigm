@@ -411,6 +411,8 @@ int main(int argc, char *argv[])
                         cell_part,
                         comm);
 
+
+
   if (0==1){
     printf("cell_part[%d]::", dn_cell);
     for(int i = 0; i < dn_cell; ++i){
