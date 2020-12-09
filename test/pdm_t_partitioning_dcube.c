@@ -17,6 +17,7 @@
 #include "pdm_dmesh_nodal_to_dmesh.h"
 #include "pdm_dmesh_nodal_elements_utils.h"
 #include "pdm_dconnectivity_transform.h"
+#include "pdm_part_connectivity_transform.h"
 #include "pdm_dcube_gen.h"
 #include "pdm_printf.h"
 #include "pdm_sort.h"
@@ -622,6 +623,37 @@ int main(int argc, char *argv[])
                            (PDM_g_num_t ***)  &pedge_ln_to_gn,
                            (int         ***)  &pface_edge_idx,
                            (int         ***)  &pface_edge);
+
+
+  int** pedge_face_idx;
+  int** pedge_face;
+  PDM_part_connectivity_transpose(n_res_part,
+                                  pn_faces,
+                                  pn_edge,
+                                  pface_edge_idx,
+                                  pface_edge,
+                                  &pedge_face_idx,
+                                  &pedge_face);
+
+  if (1 == 1){
+    for (int i_part=0; i_part < n_res_part; i_part++){
+      PDM_printf("[%i] generated edge_face part %i [%i]: \n", i_rank, i_part, pn_edge[i_part]);
+      for (int iedge=0 ; iedge < pn_edge[i_part]; iedge++) {
+        PDM_printf(" [%i] -> ", iedge);
+        for( int idx_face = pedge_face_idx[i_part][iedge]; idx_face < pedge_face_idx[i_part][iedge+1]; ++idx_face ) {
+          PDM_printf(" %i ", pedge_face[i_part][idx_face]);
+        }
+        PDM_printf("\n");
+      }
+    }
+  }
+
+  for (int i_part=0; i_part < n_res_part; i_part++){
+    free(pedge_face_idx[i_part]);
+    free(pedge_face[i_part]);
+  }
+  free(pedge_face_idx);
+  free(pedge_face);
 
   double **pvtx_coord = NULL;
   PDM_part_dcoordinates_to_pcoordinates(comm,

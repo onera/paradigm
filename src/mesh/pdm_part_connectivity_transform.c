@@ -108,7 +108,7 @@ PDM_compress_connectivity
 
 
 void
-PDM_part_combine_connectivity
+PDM_combine_connectivity
 (
  int   n_entity1,
  int  *entity1_entity2_idx,
@@ -156,7 +156,7 @@ PDM_part_combine_connectivity
 
 
 void
-PDM_part_connectivity_transpose
+PDM_connectivity_transpose
 (
 const int   n_entity1,
 const int   n_entity2,
@@ -206,5 +206,41 @@ const int   n_entity2,
   *entity2_entity1_idx = _entity2_entity1_idx;
   *entity2_entity1     = _entity2_entity1;
 
+
+}
+
+void
+PDM_part_connectivity_transpose
+(
+const int    n_part,
+const int   *n_entity1,
+const int   *n_entity2,
+      int  **entity1_entity2_idx,
+      int  **entity1_entity2,
+      int ***entity2_entity1_idx,
+      int ***entity2_entity1
+)
+{
+  *entity2_entity1_idx = (int ** ) malloc( n_part * sizeof(int *));
+  *entity2_entity1     = (int ** ) malloc( n_part * sizeof(int *));
+
+  int** _entity2_entity1_idx = *entity2_entity1_idx;
+  int** _entity2_entity1     = *entity2_entity1;
+
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+
+    int* _pentity2_entity1_idx;
+    int* _pentity2_entity1;
+
+    PDM_connectivity_transpose(n_entity1[i_part],
+                               n_entity2[i_part],
+                               entity1_entity2_idx[i_part],
+                               entity1_entity2[i_part],
+                              &_pentity2_entity1_idx,
+                              &_pentity2_entity1);
+
+    _entity2_entity1_idx[i_part] = _pentity2_entity1_idx;
+    _entity2_entity1[i_part]     = _pentity2_entity1;
+  }
 
 }
