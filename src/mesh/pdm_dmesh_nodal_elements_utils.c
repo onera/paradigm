@@ -611,7 +611,7 @@ PDM_poly2d_decomposes_faces
        PDM_g_num_t  beg_gnum_elt_current,
        PDM_g_num_t  beg_gnum_face_current,
  const PDM_g_num_t *connectivity_elmt_vtx,
- const PDM_g_num_t *connectivity_elmt_vtx_idx,
+ const int         *connectivity_elmt_vtx_idx,
        int         *elmt_face_vtx_idx,
        PDM_g_num_t *elmt_face_vtx,
        PDM_g_num_t *elmt_face_cell,
@@ -659,7 +659,7 @@ PDM_poly2d_decomposes_edges
        PDM_g_num_t  beg_gnum_elt_current,
        PDM_g_num_t  beg_gnum_edge_current,
  const PDM_g_num_t *connectivity_elmt_vtx,
- const PDM_g_num_t *connectivity_elmt_vtx_idx,
+ const int         *connectivity_elmt_vtx_idx,
        int         *elmt_edge_vtx_idx,
        PDM_g_num_t *elmt_edge_vtx,
        PDM_g_num_t *elmt_edge_cell,
@@ -684,7 +684,6 @@ PDM_poly2d_decomposes_edges
     // Reminder for poly2d -> Number of vertex = Number of edge
     int n_edge_elt = connectivity_elmt_vtx_idx[ielt+1] - connectivity_elmt_vtx_idx[ielt];
     *n_edge_current += n_edge_elt;
-
     int idx2 = connectivity_elmt_vtx_idx[ielt];
     for (int i_edge = 0; i_edge < n_edge_elt; i_edge++) {
       _current_elmt_edge_vtx_idx[idx + 1] = _current_elmt_edge_vtx_idx[idx] + 2;

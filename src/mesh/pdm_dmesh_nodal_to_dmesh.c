@@ -199,9 +199,8 @@ _make_absolute_entity_numbering
   return entity_distrib;
 }
 
-static
 void
-_generate_entitiy_connectivity
+PDM_generate_entitiy_connectivity
 (
 PDM_MPI_Comm   comm,
 PDM_g_num_t    n_vtx_abs,
@@ -217,8 +216,6 @@ int          **dentity_elmt_idx,
 PDM_g_num_t  **dentity_elmt
 )
 {
-  // PDM_g_num_t       **dentity_elmt_idx --> face : dface_elemt :
-  // PDM_g_num_t       **dentity_elmt_idx --> edge : dedge_elemt : --> Il faut un idx
   /*
    * We are now all information flatten - we only need to compute hash_keys for each entitys
    */
@@ -232,7 +229,7 @@ PDM_g_num_t  **dentity_elmt
                 ln_to_gn,
                 key_mod);
 
-  if(1 == 1) {
+  if(0 == 1) {
     log_trace("n_entity_elt_tot = %i \n", n_entity_elt_tot);
     PDM_log_trace_array_long(ln_to_gn, n_entity_elt_tot , "ln_to_gn:: ");
     PDM_log_trace_array_int(delmt_entity_vtx_idx  , n_entity_elt_tot+1 , "delmt_entity_vtx_idx:: ");
@@ -623,18 +620,18 @@ _generate_faces_from_dmesh_nodal
   assert(link->dmesh == NULL);
   link->dmesh = dm;
 
-  _generate_entitiy_connectivity(dmesh_nodal->pdm_mpi_comm,
-                                 dmesh_nodal->n_vtx_abs,
-                                 n_face_elt_tot,
-                                 delmt_face,
-                                 delmt_face_vtx_idx,
-                                 delmt_face_vtx,
-                                 &dm->dn_face,
-                                 &dm->face_distrib,
-                                 &dm->_dface_vtx_idx,
-                                 &dm->_dface_vtx,
-                                 &link->_dface_elmt_idx,
-                                 &link->_dface_elmt);
+  PDM_generate_entitiy_connectivity(dmesh_nodal->pdm_mpi_comm,
+                                    dmesh_nodal->n_vtx_abs,
+                                    n_face_elt_tot,
+                                    delmt_face,
+                                    delmt_face_vtx_idx,
+                                    delmt_face_vtx,
+                                    &dm->dn_face,
+                                    &dm->face_distrib,
+                                    &dm->_dface_vtx_idx,
+                                    &dm->_dface_vtx,
+                                    &link->_dface_elmt_idx,
+                                    &link->_dface_elmt);
 
   dm->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_FACE_VTX] = PDM_TRUE;
   dm->dconnectivity_idx    [PDM_CONNECTIVITY_TYPE_FACE_VTX] = dm->_dface_vtx_idx;
@@ -696,18 +693,18 @@ _generate_faces_from_dmesh_nodal
     PDM_log_trace_array_long(dface_edge        , n_edge_elt_tot                , "dface_edge:: ");
   }
 
-  _generate_entitiy_connectivity(dmesh_nodal->pdm_mpi_comm,
-                                 dmesh_nodal->n_vtx_abs,
-                                 n_edge_elt_tot,
-                                 dface_edge,
-                                 dface_edge_vtx_idx,
-                                 dface_edge_vtx,
-                                 &dm->dn_edge,
-                                 &dm->edge_distrib,
-                                 &dm->_dedge_vtx_idx,
-                                 &dm->_dedge_vtx,
-                                 &dm->_dedge_face_idx,
-                                 &dm->_dedge_face);
+  PDM_generate_entitiy_connectivity(dmesh_nodal->pdm_mpi_comm,
+                                    dmesh_nodal->n_vtx_abs,
+                                    n_edge_elt_tot,
+                                    dface_edge,
+                                    dface_edge_vtx_idx,
+                                    dface_edge_vtx,
+                                    &dm->dn_edge,
+                                    &dm->edge_distrib,
+                                    &dm->_dedge_vtx_idx,
+                                    &dm->_dedge_vtx,
+                                    &dm->_dedge_face_idx,
+                                    &dm->_dedge_face);
 
   dm->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX ] = PDM_TRUE;
   dm->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_FACE] = PDM_TRUE;
@@ -767,18 +764,18 @@ _generate_edges_from_dmesh_nodal
   assert(link->dmesh == NULL);
   link->dmesh = dm;
 
-  _generate_entitiy_connectivity(dmesh_nodal->pdm_mpi_comm,
-                                 dmesh_nodal->n_vtx_abs,
-                                 n_edge_elt_tot,
-                                 delmt_edge,
-                                 delmt_edge_vtx_idx,
-                                 delmt_edge_vtx,
-                                 &dm->dn_edge,
-                                 &dm->edge_distrib,
-                                 &dm->_dedge_vtx_idx,
-                                 &dm->_dedge_vtx,
-                                 &link->_dedge_elmt_idx,
-                                 &link->_dedge_elmt);
+  PDM_generate_entitiy_connectivity(dmesh_nodal->pdm_mpi_comm,
+                                    dmesh_nodal->n_vtx_abs,
+                                    n_edge_elt_tot,
+                                    delmt_edge,
+                                    delmt_edge_vtx_idx,
+                                    delmt_edge_vtx,
+                                    &dm->dn_edge,
+                                    &dm->edge_distrib,
+                                    &dm->_dedge_vtx_idx,
+                                    &dm->_dedge_vtx,
+                                    &link->_dedge_elmt_idx,
+                                    &link->_dedge_elmt);
 
   dm->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX] = PDM_TRUE;
   dm->dconnectivity_idx    [PDM_CONNECTIVITY_TYPE_EDGE_VTX] = dm->_dedge_vtx_idx;
@@ -850,9 +847,12 @@ _translate_element_group_to_entity
   for(int i = 0; i < dn_entity; ++i) {
     delmt_entity_n[i] = delmt_entity_idx[i+1] - delmt_entity_idx[i];
   }
-  PDM_log_trace_array_long (entity_distrib, n_rank+1, "entity_distrib:: ");
-  PDM_log_trace_array_int (delmt_entity_n, dn_entity, "delmt_entity_n:: ");
-  PDM_log_trace_array_long(delmt_entity  , delmt_entity_idx[dn_entity], "delmt_entity:: ");
+
+  if(0 == 1) {
+    PDM_log_trace_array_long (entity_distrib, n_rank+1, "entity_distrib:: ");
+    PDM_log_trace_array_int (delmt_entity_n, dn_entity, "delmt_entity_n:: ");
+    PDM_log_trace_array_long(delmt_entity  , delmt_entity_idx[dn_entity], "delmt_entity:: ");
+  }
 
   int**         part_group_stri;
   PDM_g_num_t** part_group_data;
@@ -985,7 +985,7 @@ _to_coherent_2d
   PDM_g_num_t *dface_edge     = (PDM_g_num_t *) malloc( link->_delmt_edge_idx[link->dn_elmt] * sizeof(PDM_g_num_t));
   int         *dface_edge_idx = (int         *) malloc( (link->dn_elmt + 1 )                 * sizeof(int        ));
 
-  if( 1 == 1 ){
+  if( 0 == 1 ){
     PDM_log_trace_array_long(link->elmt_distrib , n_rank+1, "link->elmt_distrib");
     PDM_log_trace_array_long(dmesh->edge_distrib, n_rank+1, "link->edge_distrib");
     PDM_log_trace_array_long(section_distribution, dmesh_nodal->n_section_tot+1, "section_distribution");
@@ -1061,7 +1061,7 @@ _to_coherent_2d
   dface_edge_idx = (int         *) realloc(dface_edge_idx, (dn_face+1)             * sizeof(int        ));
   dface_edge     = (PDM_g_num_t *) realloc(dface_edge    , dface_edge_idx[dn_face] * sizeof(PDM_g_num_t));
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_log_trace_array_int (dface_edge_idx, dn_face+1              , "dface_edge_idx");
     PDM_log_trace_array_long(dface_edge    , dface_edge_idx[dn_face], "dface_edge");
     log_trace("dn_face::%i --> %p", dn_face, dface_edge);
@@ -1136,7 +1136,7 @@ _to_coherent_2d
   dmesh->dconnectivity_idx    [PDM_CONNECTIVITY_TYPE_EDGE_FACE] = NULL;
   dmesh->dconnectivity        [PDM_CONNECTIVITY_TYPE_EDGE_FACE] = edge_face;
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_log_trace_array_long(edge_face, 2 * dn_edge, "edge_face::");
   }
 
@@ -1164,7 +1164,7 @@ _to_coherent_3d
   PDM_g_num_t *dcell_face     = (PDM_g_num_t *) malloc( link->_delmt_face_idx[link->dn_elmt] * sizeof(PDM_g_num_t));
   int         *dcell_face_idx = (int         *) malloc( (link->dn_elmt + 1 )                 * sizeof(int        ));
 
-  if( 1 == 1 ){
+  if( 0 == 1 ){
     PDM_log_trace_array_long(link->elmt_distrib , n_rank+1, "link->elmt_distrib");
     PDM_log_trace_array_long(dmesh->face_distrib, n_rank+1, "link->face_distrib");
     PDM_log_trace_array_long(section_distribution, dmesh_nodal->n_section_tot+1, "section_distribution");
@@ -1246,7 +1246,7 @@ _to_coherent_3d
   dcell_face_idx = (int         *) realloc(dcell_face_idx, (dn_cell+1)             * sizeof(int        ));
   dcell_face     = (PDM_g_num_t *) realloc(dcell_face    , dcell_face_idx[dn_cell] * sizeof(PDM_g_num_t));
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_log_trace_array_int (dcell_face_idx, dn_cell+1              , "dcell_face_idx");
     PDM_log_trace_array_long(dcell_face    , dcell_face_idx[dn_cell], "dcell_face");
   }
@@ -1263,8 +1263,8 @@ _to_coherent_3d
   int         *face_cell_idx;
   PDM_g_num_t *face_cell_tmp;
   dmesh->cell_distrib = PDM_compute_entity_distribution(comm, dn_cell); // Begin a 1
-  PDM_log_trace_array_long(dmesh->cell_distrib, n_rank+1, "dmesh->cell_distrib::");
-  PDM_log_trace_array_long(dmesh->face_distrib, n_rank+1, "dmesh->face_distrib::");
+  // PDM_log_trace_array_long(dmesh->cell_distrib, n_rank+1, "dmesh->cell_distrib::");
+  // PDM_log_trace_array_long(dmesh->face_distrib, n_rank+1, "dmesh->face_distrib::");
   PDM_dconnectivity_transpose(dmesh_nodal->pdm_mpi_comm,
                               dmesh->cell_distrib,
                               dmesh->face_distrib,

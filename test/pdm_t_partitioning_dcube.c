@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <assert.h>
 
 #include "pdm.h"
 #include "pdm_config.h"
@@ -13,11 +14,14 @@
 #include "pdm_partitioning_algorithm.h"
 #include "pdm_dmesh_partitioning.h"
 #include "pdm_para_graph_dual.h"
+#include "pdm_dmesh_nodal_to_dmesh.h"
+#include "pdm_dmesh_nodal_elements_utils.h"
 #include "pdm_dcube_gen.h"
 #include "pdm_printf.h"
 #include "pdm_sort.h"
 #include "pdm_distrib.h"
 #include "pdm_error.h"
+#include "pdm_logging.h"
 #include "pdm_priv.h"
 
 /*============================================================================
@@ -256,32 +260,6 @@ int main(int argc, char *argv[])
 
   }
 
-  // printf(" PDM_PART_NONE::%d\n"     , PDM_PART_NONE);
-  // printf(" PDM_PART_NULL::%d\n"     , PDM_PART_NULL);
-  // printf(" PDM_PART_FACE_CELL::%d\n", PDM_PART_FACE_CELL);
-  // printf(" PDM_PART_CELL_FACE::%d\n", PDM_PART_CELL_FACE);
-
-  int flags = PDM_PART_FACE_CELL|PDM_PART_CELL_FACE;
-  printf("PDM_HASFLAG(flags, PDM_PART_FACE_CELL) :: %d\n", PDM_HASFLAG(flags, PDM_PART_FACE_CELL) );
-  printf("PDM_HASFLAG(flags, PDM_PART_CELL_FACE) :: %d\n", PDM_HASFLAG(flags, PDM_PART_CELL_FACE) );
-  printf("PDM_HASFLAG(flags, PDM_PART_FACE_VTX) :: %d\n" , PDM_HASFLAG(flags, PDM_PART_FACE_VTX) );
-  printf("x::PDM_HASFLAG(flags, PDM_PART_FACE_VTX) :: %x\n", PDM_PART_FACE_VTX);
-
-
-  // PDM_dmesh_partitioning_part_get(1, 1, PDM_PART_FACE_CELL, NULL);
-  // PDM_dmesh_partitioning_part_get(1, 1, PDM_PART_CELL_FACE, NULL);
-  // PDM_dmesh_partitioning_part_get(1, 1, PDM_PART_FACE_VTX, NULL);
-  // PDM_dmesh_partitioning_part_get(1, 1, PDM_PART_FACE_VTX|PDM_PART_FACE_CELL, NULL);
-
-  // PDM_dmesh_partitioning_get(1, PDM_PART_FACE_CELL, NULL);
-  // PDM_dmesh_partitioning_get(1, PDM_PART_CELL_FACE, NULL);
-  // PDM_dmesh_partitioning_get(1, PDM_PART_FACE_VTX, NULL);
-  // PDM_dmesh_partitioning_get(1, PDM_PART_FACE_VTX|PDM_PART_FACE_CELL, NULL);
-
-  // int ppart_id = 0;
-
-  gettimeofday(&t_elaps_debut, NULL);
-
   /*
    *  Create mesh partitions
    */
@@ -289,6 +267,67 @@ int main(int argc, char *argv[])
   PDM_g_num_t* face_distribution = PDM_compute_entity_distribution(comm, dn_face);
   PDM_g_num_t* part_distribution = PDM_compute_entity_distribution(comm, n_part );
   PDM_g_num_t* vtx_distribution  = PDM_compute_entity_distribution(comm, dn_vtx );
+
+  /*
+   * Generate edge numbering
+   */
+  int n_edge_elt_tot = dface_vtx_idx[dn_face];
+  PDM_g_num_t* dface_edge         = (PDM_g_num_t *) malloc(     n_edge_elt_tot    * sizeof(PDM_g_num_t) );
+  int*         dface_edge_vtx_idx = (int         *) malloc( ( n_edge_elt_tot + 1) * sizeof(int        ) );
+  PDM_g_num_t* dface_edge_vtx     = (PDM_g_num_t *) malloc( 2 * n_edge_elt_tot    * sizeof(PDM_g_num_t) );
+
+  int n_elmt_current = 0;
+  int n_edge_current = 0;
+  dface_edge_vtx_idx[0] = 0;
+  PDM_poly2d_decomposes_edges(dn_face,
+                              &n_elmt_current,
+                              &n_edge_current,
+                              face_distribution[i_rank],
+                              -1,
+                              dface_vtx,
+                              dface_vtx_idx,
+                              dface_edge_vtx_idx,
+                              dface_edge_vtx,
+                              dface_edge,
+                              NULL,
+                              NULL);
+  assert(n_edge_current == n_edge_elt_tot);
+
+  int  dn_edge = -1;
+  PDM_g_num_t  *dedge_distrib;
+  int          *dedge_vtx_idx;
+  PDM_g_num_t  *dedge_vtx;
+  int          *dedge_face_idx;
+  PDM_g_num_t  *dedge_face;
+
+  PDM_generate_entitiy_connectivity(comm,
+                                    vtx_distribution[n_rank],
+                                    n_edge_elt_tot,
+                                    dface_edge,
+                                    dface_edge_vtx_idx,
+                                    dface_edge_vtx,
+                                    &dn_edge,
+                                    &dedge_distrib,
+                                    &dedge_vtx_idx,
+                                    &dedge_vtx,
+                                    &dedge_face_idx,
+                                    &dedge_face);
+
+  printf("dn_edge = %i \n", dn_edge);
+  PDM_log_trace_array_long(dedge_distrib, n_rank+1, "dedge_distrib::");
+  PDM_log_trace_array_int(dedge_vtx_idx, dn_edge+1, "dedge_vtx_idx::");
+  PDM_log_trace_array_long(dedge_vtx, dedge_vtx_idx[dn_edge], "dedge_vtx::");
+  PDM_log_trace_array_int(dedge_face_idx, dn_edge, "dedge_face_idx::");
+  PDM_log_trace_array_long(dedge_face, dedge_face_idx[dn_edge], "dedge_face::");
+
+  // int flags = PDM_PART_FACE_CELL|PDM_PART_CELL_FACE;
+  // printf("PDM_HASFLAG(flags, PDM_PART_FACE_CELL) :: %d\n", PDM_HASFLAG(flags, PDM_PART_FACE_CELL) );
+  // printf("PDM_HASFLAG(flags, PDM_PART_CELL_FACE) :: %d\n", PDM_HASFLAG(flags, PDM_PART_CELL_FACE) );
+  // printf("PDM_HASFLAG(flags, PDM_PART_FACE_VTX) :: %d\n" , PDM_HASFLAG(flags, PDM_PART_FACE_VTX) );
+  // printf("x::PDM_HASFLAG(flags, PDM_PART_FACE_VTX) :: %x\n", PDM_PART_FACE_VTX);
+
+
+  gettimeofday(&t_elaps_debut, NULL);
 
   // printf("part_distribution::\n");
   // for(int i_part = 0; i_part < n_rank+1; ++i_part){
@@ -685,6 +724,12 @@ int main(int argc, char *argv[])
   free(pface_group_idx);
   free(pface_cell);
   free(pvtx_coord);
+
+  free(dedge_distrib);
+  free(dedge_vtx_idx);
+  free(dedge_vtx);
+  free(dedge_face_idx);
+  free(dedge_face);
 
 
 
