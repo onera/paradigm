@@ -636,11 +636,6 @@ const PDM_g_num_t     *dnode_arc,
     printf("\n");
   }
 
-  // PDM_g_num_t* graph_arc_distrib_ptb = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * (n_rank+1));
-  // for(int i = 0; i < n_rank+1; ++i){
-  //   graph_arc_distrib_ptb[i] = graph_arc_distrib[i] - 1;
-  // }
-
   PDM_part_to_block_t *ptb =
    PDM_part_to_block_create2(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                              PDM_PART_TO_BLOCK_POST_MERGE,

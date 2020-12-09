@@ -717,11 +717,6 @@ PDM_part_dconnectivity_to_pconnectivity_sort
 
   int dn_entity = entity_distribution[i_rank+1] - entity_distribution[i_rank];
 
-  // PDM_g_num_t* entity_distribution_ptb = (PDM_g_num_t * ) malloc( sizeof(PDM_g_num_t) * (n_rank+1) );
-  // for(int i = 0; i < n_rank+1; ++i){
-  //   entity_distribution_ptb[i] = entity_distribution[i] - 1;
-  // }
-
   /*
    * Prepare exchange protocol
    */
@@ -890,7 +885,6 @@ PDM_part_dconnectivity_to_pconnectivity_sort
    * Free
    */
   PDM_block_to_part_free(btp);
-  // free(entity_distribution_ptb);
   for(int i_part = 0; i_part < n_part; ++i_part) {
     free(pstride[i_part]);
     free(pconnectivity_tmp[i_part]);
@@ -950,15 +944,10 @@ PDM_part_dconnectivity_to_pconnectivity_hash
 
   int dn_entity = entity_distribution[i_rank+1] - entity_distribution[i_rank];
 
-  PDM_g_num_t* entity_distribution_ptb = (PDM_g_num_t * ) malloc( sizeof(PDM_g_num_t) * (n_rank+1) );
-  for(int i = 0; i < n_rank+1; ++i){
-    entity_distribution_ptb[i] = entity_distribution[i] - 1;
-  }
-
   /*
    * Prepare exchange protocol
    */
-  PDM_block_to_part_t* btp = PDM_block_to_part_create(entity_distribution_ptb,
+  PDM_block_to_part_t* btp = PDM_block_to_part_create(entity_distribution,
                                (const PDM_g_num_t **) pentity_ln_to_gn,
                                                       pn_entity,
                                                       n_part,
@@ -1137,7 +1126,6 @@ PDM_part_dconnectivity_to_pconnectivity_hash
    * Free
    */
   PDM_block_to_part_free(btp);
-  free(entity_distribution_ptb);
   for(int i_part = 0; i_part < n_part; ++i_part) {
     free(pstride[i_part]);
     free(pconnectivity_tmp[i_part]);
@@ -1596,11 +1584,6 @@ PDM_part_dcoordinates_to_pcoordinates
   PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_size(comm, &n_rank);
 
-  // PDM_g_num_t* vtx_distribution_ptb = (PDM_g_num_t * ) malloc( sizeof(PDM_g_num_t) * (n_rank+1) );
-  // for(int i = 0; i < n_rank+1; ++i){
-  //   vtx_distribution_ptb[i] = vertex_distribution[i] - 1;
-  // }
-
   PDM_block_to_part_t* btp = PDM_block_to_part_create(vertex_distribution,
                                (const PDM_g_num_t **) pvtx_ln_to_gn,
                                                       pn_vtx,
@@ -1618,7 +1601,6 @@ PDM_part_dcoordinates_to_pcoordinates
              (void ***)   pvtx_coord);
 
   PDM_block_to_part_free(btp);
-  // free(vtx_distribution_ptb);
 }
 
 
