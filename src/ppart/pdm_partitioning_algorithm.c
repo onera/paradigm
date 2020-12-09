@@ -109,7 +109,7 @@ int
 PDM_part_assemble_partitions
 (
  const PDM_MPI_Comm    comm,
- const PDM_g_num_t    *part_distribution,
+       PDM_g_num_t    *part_distribution,
  const PDM_g_num_t    *entity_distribution,
  const int            *dentity_to_part,
        int           **pn_entity,
@@ -135,11 +135,6 @@ PDM_part_assemble_partitions
     dpart_ln_to_gn[i] = (PDM_g_num_t) dentity_to_part[i] + 1;
   }
 
-  PDM_g_num_t* part_distribution_ptb = (PDM_g_num_t * ) malloc( sizeof(PDM_g_num_t) * (n_rank+1) );
-  for(int i = 0; i < n_rank+1; ++i){
-    part_distribution_ptb[i] = part_distribution[i] - 1;
-  }
-
   /*
    * Each proc get all the entities affected to its partitions
    */
@@ -148,7 +143,7 @@ PDM_part_assemble_partitions
                              PDM_PART_TO_BLOCK_POST_MERGE,
                              1.,
                              &dpart_ln_to_gn,
-                              part_distribution_ptb,
+                             part_distribution,
                              &dn_entity,
                              1,
                              comm);
@@ -161,7 +156,7 @@ PDM_part_assemble_partitions
   int*             dentity_stri = (int *)          malloc( sizeof(int)         * dn_entity );
   PDM_g_num_t* dentity_ln_to_gn = (PDM_g_num_t * ) malloc( sizeof(PDM_g_num_t) * dn_entity );
 
-  PDM_g_num_t shift_g = entity_distribution[i_rank];
+  PDM_g_num_t shift_g = entity_distribution[i_rank] + 1;
   for(int i = 0; i < dn_entity; ++i){
     dentity_stri[i]     = 1;
     dentity_ln_to_gn[i] = (PDM_g_num_t) shift_g + i;
@@ -214,7 +209,6 @@ PDM_part_assemble_partitions
 
   free(pentity_ln_to_gn_tmp);
   free(dpart_ln_to_gn);
-  free(part_distribution_ptb);
 
   return n_part_block;
 
@@ -396,12 +390,6 @@ PDM_part_distgroup_to_partgroup
   PDM_MPI_Comm_size(comm, &n_rank);
 
   int dn_entity = entity_distribution[i_rank+1] -  entity_distribution[i_rank];
-  printf("dn_entity::%d\n", dn_entity);
-
-  PDM_g_num_t* entity_distribution_ptb = (PDM_g_num_t * ) malloc( sizeof(PDM_g_num_t) * (n_rank+1) );
-  for(int i = 0; i < n_rank+1; ++i){
-    entity_distribution_ptb[i] = entity_distribution[i] - 1;
-  }
 
   /*
    * Compute the groups distribution - Mandatory to have the link between rank and group
@@ -423,7 +411,7 @@ PDM_part_distgroup_to_partgroup
                              PDM_PART_TO_BLOCK_POST_MERGE,
                              1.,
                              (PDM_g_num_t **) & dgroup,
-                             entity_distribution_ptb,
+                             entity_distribution,
                              &dgroup_tot_size,
                              1,
                              comm);
@@ -444,7 +432,7 @@ PDM_part_distgroup_to_partgroup
     int dn_entity_group = dgroup_idx[i_group+1] - dgroup_idx[i_group];
     for(int i_elmt = 0; i_elmt < dn_entity_group; ++i_elmt ) {
       part_data[idx_data++] = i_group;
-      part_data[idx_data++] = i_elmt + groups_distribution[i_group][i_rank]; /* Numero dans le tableau distribue */
+      part_data[idx_data++] = i_elmt + groups_distribution[i_group][i_rank]+1; /* Numero dans le tableau distribue */
       part_stri[idx_stri++] = 2;
     }
   }
@@ -493,7 +481,7 @@ PDM_part_distgroup_to_partgroup
   /* On remet la stri au bonne endroit */
   // int idx_face = 0;
   for(int i_elmt = 0; i_elmt < n_entity_block; ++i_elmt) {
-    int l_elmt = blk_gnum[i_elmt] - entity_distribution[i_rank];
+    int l_elmt = blk_gnum[i_elmt] - entity_distribution[i_rank] - 1;
     // printf("[%d] --> %d \n", i_elmt, l_elmt);
     blk_stri_full[l_elmt] = blk_stri[i_elmt];
   }
@@ -518,7 +506,7 @@ PDM_part_distgroup_to_partgroup
   /*
    * Prepare exchange protocol
    */
-  PDM_block_to_part_t* btp = PDM_block_to_part_create(entity_distribution_ptb,
+  PDM_block_to_part_t* btp = PDM_block_to_part_create(entity_distribution,
                                (const PDM_g_num_t **) pentity_ln_to_gn,
                                                       pn_entity,
                                                       n_part,
@@ -658,7 +646,6 @@ PDM_part_distgroup_to_partgroup
 
   free(count_group);
   free(blk_stri_full);
-  free(entity_distribution_ptb);
   free(part_data);
   free(part_stri);
   free(blk_data);
@@ -669,7 +656,7 @@ PDM_part_distgroup_to_partgroup
   }
   free(part_group_stri);
   free(part_group_data);
-  PDM_part_to_block_free (ptb_group);
+  PDM_part_to_block_free(ptb_group);
   PDM_block_to_part_free(btp);
   for(int i_group = 0; i_group < n_group; ++i_group) {
     free(groups_distribution[i_group]);
@@ -730,15 +717,15 @@ PDM_part_dconnectivity_to_pconnectivity_sort
 
   int dn_entity = entity_distribution[i_rank+1] - entity_distribution[i_rank];
 
-  PDM_g_num_t* entity_distribution_ptb = (PDM_g_num_t * ) malloc( sizeof(PDM_g_num_t) * (n_rank+1) );
-  for(int i = 0; i < n_rank+1; ++i){
-    entity_distribution_ptb[i] = entity_distribution[i] - 1;
-  }
+  // PDM_g_num_t* entity_distribution_ptb = (PDM_g_num_t * ) malloc( sizeof(PDM_g_num_t) * (n_rank+1) );
+  // for(int i = 0; i < n_rank+1; ++i){
+  //   entity_distribution_ptb[i] = entity_distribution[i] - 1;
+  // }
 
   /*
    * Prepare exchange protocol
    */
-  PDM_block_to_part_t* btp = PDM_block_to_part_create(entity_distribution_ptb,
+  PDM_block_to_part_t* btp = PDM_block_to_part_create(entity_distribution,
                                (const PDM_g_num_t **) pentity_ln_to_gn,
                                                       pn_entity,
                                                       n_part,
@@ -903,7 +890,7 @@ PDM_part_dconnectivity_to_pconnectivity_sort
    * Free
    */
   PDM_block_to_part_free(btp);
-  free(entity_distribution_ptb);
+  // free(entity_distribution_ptb);
   for(int i_part = 0; i_part < n_part; ++i_part) {
     free(pstride[i_part]);
     free(pconnectivity_tmp[i_part]);
@@ -1216,11 +1203,6 @@ PDM_part_generate_entity_graph_comm
     // printf(" pentity_priority : %p \n", pentity_priority);
   }
 
-  PDM_g_num_t* entity_distribution_ptb = (PDM_g_num_t * ) malloc( sizeof(PDM_g_num_t) * (n_rank+1) );
-  for(int i = 0; i < n_rank+1; ++i){
-    entity_distribution_ptb[i] = entity_distribution[i] - 1;
-  }
-
   /*
    * First part : we put in data the triplet (iRank, iPart, iEntityLoc)
    */
@@ -1273,8 +1255,8 @@ PDM_part_generate_entity_graph_comm
    PDM_part_to_block_create2(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                              PDM_PART_TO_BLOCK_POST_MERGE,
                              1.,
-                             (PDM_g_num_t **) pentity_ln_to_gn,
-                             entity_distribution_ptb,
+            (PDM_g_num_t **) pentity_ln_to_gn,
+                             entity_distribution,
                              (int *) pn_entity,
                              n_part,
                              comm);
@@ -1380,7 +1362,7 @@ PDM_part_generate_entity_graph_comm
   /*
    * All data is now sort we cen resend to partition
    */
-  PDM_block_to_part_t* btp = PDM_block_to_part_create(entity_distribution_ptb,
+  PDM_block_to_part_t* btp = PDM_block_to_part_create(entity_distribution,
                                (const PDM_g_num_t **) pentity_ln_to_gn,
                                                       pn_entity,
                                                       n_part,
@@ -1501,14 +1483,14 @@ PDM_part_generate_entity_graph_comm
     }
 
     /* We need to recompute for each opposite part */
-    _pproc_bound_idx[i_part]   = (int *) malloc( ( n_rank + 1                ) * sizeof(int));
-    _ppart_bound_idx[i_part]   = (int *) malloc( ( part_distribution[n_rank] ) * sizeof(int));
-    _pentity_bound[i_part]     = (int *) malloc( ( 4 * n_connect             ) * sizeof(int));
+    _pproc_bound_idx[i_part]   = (int *) malloc( ( n_rank + 1                   ) * sizeof(int));
+    _ppart_bound_idx[i_part]   = (int *) malloc( ( part_distribution[n_rank] +1 ) * sizeof(int));
+    _pentity_bound[i_part]     = (int *) malloc( ( 4 * n_connect                ) * sizeof(int));
 
     for(int i = 0; i < n_rank+1; ++i){
       _pproc_bound_idx[i_part][i] = 0;
     }
-    for(int i = 0; i < part_distribution[n_rank]; ++i){
+    for(int i = 0; i < part_distribution[n_rank]+1; ++i){
       _ppart_bound_idx[i_part][i] = 0;
     }
 
@@ -1521,7 +1503,7 @@ PDM_part_generate_entity_graph_comm
 
       // printf(" i::%d | idx::%d \n", i, idx);
       // printf(" opp_proc::%d | opp_part::%d \n", opp_proc, opp_part);
-      int opp_part_g = opp_part + part_distribution[opp_proc] - 1;
+      int opp_part_g = opp_part + part_distribution[opp_proc];
 
       _pproc_bound_idx[i_part][opp_proc  +1] += 1;
       _ppart_bound_idx[i_part][opp_part_g+1] += 1;
@@ -1538,7 +1520,7 @@ PDM_part_generate_entity_graph_comm
     for(int i = 0; i < n_rank; ++i){
       _pproc_bound_idx[i_part][i+1] += _pproc_bound_idx[i_part][i];
     }
-    for(int i = 0; i < part_distribution[n_rank]-1; ++i){
+    for(int i = 0; i < part_distribution[n_rank]; ++i){
       _ppart_bound_idx[i_part][i+1] +=  _ppart_bound_idx[i_part][i];
     }
 
@@ -1578,7 +1560,6 @@ PDM_part_generate_entity_graph_comm
   }
   free(part_stri);
   free(part_data);
-  free(entity_distribution_ptb);
   PDM_block_to_part_free(btp);
 }
 
@@ -1615,12 +1596,12 @@ PDM_part_dcoordinates_to_pcoordinates
   PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_size(comm, &n_rank);
 
-  PDM_g_num_t* vtx_distribution_ptb = (PDM_g_num_t * ) malloc( sizeof(PDM_g_num_t) * (n_rank+1) );
-  for(int i = 0; i < n_rank+1; ++i){
-    vtx_distribution_ptb[i] = vertex_distribution[i] - 1;
-  }
+  // PDM_g_num_t* vtx_distribution_ptb = (PDM_g_num_t * ) malloc( sizeof(PDM_g_num_t) * (n_rank+1) );
+  // for(int i = 0; i < n_rank+1; ++i){
+  //   vtx_distribution_ptb[i] = vertex_distribution[i] - 1;
+  // }
 
-  PDM_block_to_part_t* btp = PDM_block_to_part_create(vtx_distribution_ptb,
+  PDM_block_to_part_t* btp = PDM_block_to_part_create(vertex_distribution,
                                (const PDM_g_num_t **) pvtx_ln_to_gn,
                                                       pn_vtx,
                                                       n_part,
@@ -1637,7 +1618,7 @@ PDM_part_dcoordinates_to_pcoordinates
              (void ***)   pvtx_coord);
 
   PDM_block_to_part_free(btp);
-  free(vtx_distribution_ptb);
+  // free(vtx_distribution_ptb);
 }
 
 
@@ -1687,11 +1668,6 @@ PDM_extend_mesh
   PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_size(comm, &n_rank);
 
-  PDM_g_num_t* entity_distribution_ptb = (PDM_g_num_t * ) malloc( sizeof(PDM_g_num_t) * (n_rank+1) );
-  for(int i = 0; i < n_rank+1; ++i){
-    entity_distribution_ptb[i] = entity_distribution[i] - 1;
-  }
-
   int dn_arc  = entity_distribution[i_rank+1]  -  entity_distribution[i_rank];
 
   /*
@@ -1703,7 +1679,7 @@ PDM_extend_mesh
   /*
    * Prepare exchange protocol
    */
-  PDM_block_to_part_t* btp = PDM_block_to_part_create(entity_distribution_ptb,
+  PDM_block_to_part_t* btp = PDM_block_to_part_create(entity_distribution,
                                (const PDM_g_num_t **) pentity_ln_to_gn,
                                                       pn_entity,
                                                       n_part,
@@ -1803,7 +1779,6 @@ PDM_extend_mesh
   }
 
   PDM_block_to_part_free(btp);
-  free(entity_distribution_ptb);
   for(int i_part = 0; i_part < n_part; ++i_part) {
     free(part_dual_graph_n[i_part]);
     free(part_dual_graph_idx[i_part]);

@@ -18,8 +18,8 @@ MPI_TEST_CASE("[1p] dual from arc2node", 1) {
     /* Simple graph with 5 vertices connected by 6 edges (no vtx to nothing edge) */
     static const int dNnode = 5;
     static const int dNarc  = 6;
-    static PDM_g_num_t node_distribution[2] = {1, dNnode+1};
-    static PDM_g_num_t arc_distribution[2]  = {1, dNarc+1};
+    static PDM_g_num_t node_distribution[2] = {0, dNnode};
+    static PDM_g_num_t arc_distribution[2]  = {0, dNarc};
     static PDM_g_num_t darc2node[2*6] = {
       1, 2, 2, 5, 5, 4, 4, 3, 4, 2, 3, 1};
 
@@ -50,8 +50,8 @@ MPI_TEST_CASE("[1p] dual from arc2node", 1) {
     static const int dcell_size = 8;
     static const int dface_size = 36;
 
-    static PDM_g_num_t cell_distribution[2] = {1, dcell_size+1};
-    static PDM_g_num_t face_distribution[2] = {1, dface_size+1};
+    static PDM_g_num_t cell_distribution[2] = {0, dcell_size};
+    static PDM_g_num_t face_distribution[2] = {0, dface_size};
     static PDM_g_num_t dface_cell[2*dface_size] = {
       1, 0, 2, 0, 3, 0, 4, 0, 1, 5, 2, 6, 3, 7, 4, 8, 5, 0, 6, 0, 7, 0, 8, 0,
       1, 0, 3, 0, 5, 0, 7, 0, 1, 2, 3, 4, 5, 6, 7, 8, 2, 0, 4, 0, 6, 0, 8, 0,
@@ -105,8 +105,8 @@ MPI_TEST_CASE("[3p] dual from arc2node", 3) {
     /* Comes from 8 hexa cells connected by faces. Note that face_cell connect
     some cells to the boundary (0) */
 
-    static PDM_g_num_t cell_distribution[4] = {1, 4, 7, 9};
-    static PDM_g_num_t face_distribution[4] = {1, 13, 25, 37};
+    static PDM_g_num_t cell_distribution[4] = {0, 3, 6, 8};
+    static PDM_g_num_t face_distribution[4] = {0, 12, 24, 36};
 
     static PDM_g_num_t dface_cell_p0[2*12] = {
         1, 0, 2, 0, 3, 0, 4, 0, 1, 5, 2, 6, 3, 7, 4, 8, 5, 0, 6, 0, 7, 0, 8, 0};
@@ -191,8 +191,8 @@ MPI_TEST_CASE("[1p] dual from node2arc", 1) {
     /* Simple graph with 5 vertices connected by 6 edges (no vtx to nothing edge) */
     static const int dNnode = 5;
     static const int dNarc  = 6;
-    static PDM_g_num_t node_distribution[2] = {1, dNnode+1};
-    static PDM_g_num_t arc_distribution[2]  = {1, dNarc+1};
+    static PDM_g_num_t node_distribution[2] = {0, dNnode};
+    static PDM_g_num_t arc_distribution[2]  = {0, dNarc};
     static int         dnode2arc_idx[dNnode+1] = {0, 2, 5, 7, 10, 12};
     static PDM_g_num_t dnode2arc[12] = {1, -6, -1, 2, -5, -4, 6, -3, 4, 5, -2, 3};
 
@@ -219,8 +219,8 @@ MPI_TEST_CASE("[1p] dual from node2arc", 1) {
     static const int dcell_size = 8;
     static const int dface_size = 36;
 
-    static PDM_g_num_t cell_distribution[2] = {1, dcell_size+1};
-    static PDM_g_num_t face_distribution[2] = {1, dface_size+1};
+    static PDM_g_num_t cell_distribution[2] = {0, dcell_size};
+    static PDM_g_num_t face_distribution[2] = {0, dface_size};
     static int         dnode2arc_idx[dcell_size+1] = {0, 6, 12, 18, 24, 30, 36, 42, 48};
     static PDM_g_num_t dnode2arc[48] = {
      1, 5, 13, 17, 25, 29, 2, 6,-17, 21, 27, 31, 3, 7, 14, 18,
@@ -262,8 +262,8 @@ MPI_TEST_CASE("[3p] dual from node2arc", 3) {
     //static const int dcell_size = 8;
     //static const int dface_size = 36;
 
-    static PDM_g_num_t cell_distribution[4] = {1, 4, 7, 9};
-    static PDM_g_num_t face_distribution[4] = {1, 13, 25, 37};
+    static PDM_g_num_t cell_distribution[4] = {0, 3, 6, 8};
+    static PDM_g_num_t face_distribution[4] = {0, 12, 24, 36};
 
     static int dcellface_idx_p0[3+1] = {0, 6, 12, 18};
     static PDM_g_num_t dcellface_p0[18] = {
@@ -335,7 +335,7 @@ MPI_TEST_CASE("[3p] Split graph with PARMetis", 3) {
     /* Comes from 8 hexa cells connected by faces. Note that face_cell connect
     some cells to the boundary (0) */
 
-    static PDM_g_num_t cell_distribution[4] = {1, 4, 7, 9};
+    static PDM_g_num_t cell_distribution[4] = {0, 3, 6, 8};
 
     static PDM_g_num_t graph_idx_p0[3+1] = {0, 3, 6, 9};
     static PDM_g_num_t graph_p0[9] = {1, 2, 4, 0, 3, 5, 0, 3, 6};

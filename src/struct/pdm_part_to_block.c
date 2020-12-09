@@ -999,7 +999,7 @@ PDM_part_to_block_create2
  PDM_part_to_block_post_t      t_post,
  double                         part_active_node,
  PDM_g_num_t                 **gnum_elt,
- PDM_g_num_t                  *data_distrib_index,
+ const PDM_g_num_t            *data_distrib_index,
  int                          *n_elt,
  int                           n_part,
  PDM_MPI_Comm                  comm

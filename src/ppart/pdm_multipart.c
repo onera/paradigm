@@ -253,6 +253,7 @@ _build_join_uface_distribution
   */
 
   free(nb_face_in_joins);
+  PDM_printf("pdm::_build_join_uface_distribution end \n");
 }
 
 /**
@@ -992,7 +993,7 @@ PDM_MPI_Comm      comm
     part_fractions       = (double *) malloc(tn_part * sizeof(double));
     for (int i =0; i < n_rank; i++){
       n_part_per_rank[i] = part_distri[i+1] - part_distri[i];
-      displ[i] = part_distri[i]-1;
+      displ[i] = part_distri[i];
     }
 
     PDM_MPI_Allgatherv((void*) part_fraction,
@@ -1339,6 +1340,7 @@ PDM_multipart_run_ppart
     free(starting_part_idx);
     // Now rebuild joins over the zones
     _search_matching_joins(_multipart);
+    printf(" end ... \n");
   }
 }
 
@@ -1403,6 +1405,9 @@ PDM_multipart_part_graph_comm_vtx_dim_get
 
   assert(i_zone < _multipart->n_zone && i_part < _multipart->n_part[i_zone]);
   _part_mesh_t _pmeshes = _multipart->pmeshes[i_zone];
+
+  printf(" n_vtx_part_bound = %i \n", _pmeshes.parts[i_part]->vtx_part_bound_part_idx[_pmeshes.tn_part]);
+  printf(" _pmeshes.tn_part = %i \n", _pmeshes.tn_part);
 
   *n_vtx_part_bound = _pmeshes.parts[i_part]->vtx_part_bound_part_idx[_pmeshes.tn_part];
 }

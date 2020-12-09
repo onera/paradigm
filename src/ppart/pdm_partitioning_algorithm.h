@@ -43,7 +43,7 @@ int
 PDM_part_assemble_partitions
 (
  const PDM_MPI_Comm    comm,
- const PDM_g_num_t    *part_distribution,
+       PDM_g_num_t    *part_distribution,
  const PDM_g_num_t    *entity_distribution,
  const int            *dentity_to_part,
        int           **pn_entity,

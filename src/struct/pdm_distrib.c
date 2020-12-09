@@ -128,7 +128,7 @@ PDM_compute_entity_distribution
                     PDM__PDM_MPI_G_NUM,
                     comm);
 
-  dentity_proc[0] = 1;
+  dentity_proc[0] = 0;
   for (int i = 1; i < n_rank+1; i++) {
     dentity_proc[i] = dentity_proc[i] + dentity_proc[i-1];
   }
