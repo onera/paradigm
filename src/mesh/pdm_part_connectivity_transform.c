@@ -166,15 +166,8 @@ const int   n_entity2,
       int **entity2_entity1
 )
 {
-  PDM_UNUSED(n_entity1);
-  PDM_UNUSED(entity1_entity2_idx);
-  PDM_UNUSED(entity1_entity2);
-  PDM_UNUSED(entity2_entity1_idx);
-  PDM_UNUSED(entity2_entity1);
-
-
   int* _entity2_entity1_idx = (int * ) malloc( (n_entity2 + 1) * sizeof(int));
-  int* entity2_entity1_n = (int * ) malloc( (n_entity2) * sizeof(int));
+  int* entity2_entity1_n    = (int * ) malloc( (n_entity2    ) * sizeof(int));
 
   for(int i_entity2 = 0; i_entity2 < n_entity2; ++i_entity2) {
     entity2_entity1_n[i_entity2] = 0;
@@ -199,7 +192,8 @@ const int   n_entity2,
     for(int idx_1 = entity1_entity2_idx[i_entity1]; idx_1 < entity1_entity2_idx[i_entity1+1]; ++idx_1 ) {
       int i_entity2 = PDM_ABS(entity1_entity2[idx_1])-1;
       int idx = _entity2_entity1_idx[i_entity2] + entity2_entity1_n[i_entity2]++;
-      _entity2_entity1[idx] = i_entity1+1;
+      int sign = PDM_SIGN(entity1_entity2[idx_1]);
+      _entity2_entity1[idx] = sign * (i_entity1+1);
     }
   }
 
