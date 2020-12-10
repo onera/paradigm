@@ -977,8 +977,6 @@ _renum_vtx_sort_int_ext
  void     *specific_data
 )
 {
-  printf("_renum_vtx_sort_int_ext\n");
-
   assert(specific_data != NULL);
 
   /* Specific data in this context is a array for each part of priority give by graph_comm */
@@ -987,11 +985,6 @@ _renum_vtx_sort_int_ext
   for(int i_part = 0; i_part < n_part; ++i_part) {
     _part_t *part = mesh_parts[i_part];
     const int n_vtx = part->n_vtx;
-    printf("part->n_vtx:%i\n",part->n_vtx);
-    printf("pvtx_priority: ");
-    for (int i = 0; i < n_vtx; i++){
-       printf("%i, ", pvtx_priority[i_part][i]);
-    }
 
     int *order    = (int *) malloc (sizeof(int) * n_vtx);
 
@@ -1012,7 +1005,6 @@ _renum_vtx_sort_int_ext
 
     for (int i = 0; i < n_kind; i++){
       type_idx[i+1] += type_idx[i];
-      printf(" type_idx[%i] = %i\n", i+1, type_idx[i+1]);
     }
 
     /* Setup reordering */
@@ -1817,18 +1809,12 @@ _part_t *part,
 int     *new_to_old_order
 )
 {
-  printf("lolololo01\n");
   /** face_vtx **/
   int *old_to_new_order = (int *) malloc (part->n_vtx * sizeof(int));
   for(int i = 0; i < part->n_vtx; i++) {
    old_to_new_order[new_to_old_order[i]] = i;
   }
 
-  printf("lolololo02\n");
-  printf("part->n_face :%i\n",part->n_face);
-  //for (int i = 0; i < n_elt; ++i)
-  //  printf(" %d ", elt_section_part[i]);
-  //printf("\n");
   if (part->n_face!=0) {
     PDM_part_renum_array (part->face_vtx_idx[part->n_face],
                           old_to_new_order,
@@ -1846,14 +1832,12 @@ int     *new_to_old_order
   }
 
   /** vtx **/
-  printf("lolololo03\n");
   PDM_order_array (part->n_vtx,
                    3*sizeof(double),
                    new_to_old_order,
                    part->vtx);
 
   /** vtx_tag **/
-  printf("lolololo04\n");
   if (part->vtx_tag != NULL) {
     PDM_order_array (part->n_vtx,
                      sizeof(int),
@@ -1870,7 +1854,6 @@ int     *new_to_old_order
   // }
 
   /** vtx_color **/
-  printf("lolololo05\n");
   if (part->new_to_old_order_vtx != NULL) {
     // printf("PDM_order_array :new_to_old_order_vtx \n");
     PDM_order_array (part->n_vtx,
@@ -1880,7 +1863,6 @@ int     *new_to_old_order
   }
 
    /** vtx_ln_to_gn **/
-  printf("lolololo06\n");
   PDM_order_array (part->n_vtx,
                    sizeof(PDM_g_num_t),
                    new_to_old_order,
