@@ -243,8 +243,6 @@ PDM_part_reverse_pcellface
         int      ***pface_cell
 )
 {
-  printf("PDM_part_reverse_pcellface\n");
-
   *pface_cell = (int **) malloc( n_part * sizeof(int *) );
 
   for (int i_part = 0; i_part < n_part; i_part++)
@@ -255,17 +253,17 @@ PDM_part_reverse_pcellface
     const int *_pcell_face     = pcell_face[i_part];
           int *_pface_cell     = (*pface_cell)[i_part];
 
-    for (int i = 0; i < 2 * np_face[i_part]; i++)
+    for (int i = 0; i < 2 * np_face[i_part]; i++) {
       _pface_cell[i] = 0;
+    }
 
     for (int i_cell = 0; i_cell < np_cell[i_part]; i_cell++){
       for (int i_data = _pcell_face_idx[i_cell]; i_data < _pcell_face_idx[i_cell+1]; i_data++){
-        int l_face =  PDM_ABS(_pcell_face[i_data])-1;
-        int sign   = PDM_SIGN(_pcell_face[i_data]);
+        int l_face =  PDM_ABS (_pcell_face[i_data])-1;
+        int sign    = PDM_SIGN(_pcell_face[i_data]);
         if (sign > 0) {
           _pface_cell[2*l_face  ] = i_cell+1;
-        }
-        else {
+        } else {
           _pface_cell[2*l_face+1] = i_cell+1;
         }
       }
@@ -302,7 +300,9 @@ PDM_part_reorient_bound_faces
   const int       **pcell_face_idx,
         int       **pcell_face,
   const int       **pface_vtx_idx,
-        int       **pface_vtx
+        int       **pface_vtx,
+        int       **pface_edge_idx,
+        int       **pface_edge
 )
 {
   printf("PDM_part_reorient_faces\n");
@@ -334,6 +334,14 @@ PDM_part_reorient_bound_faces
           pface_vtx[i_part][offset+j] = tmp_swap;
           end_index--;
         }
+
+        /* Change sign of edge */
+        if(pface_edge_idx != NULL) {
+          for(int idx_edge = pface_edge_idx[i_part][i_face]; idx_edge < pface_edge_idx[i_part][i_face+1]; ++idx_edge) {
+            pface_edge[i_part][idx_edge] = -pface_edge[i_part][idx_edge];
+          }
+        }
+
       }
     }
   }

@@ -76,7 +76,9 @@ PDM_part_reorient_bound_faces
   const int       **pcell_face_idx,
         int       **pcell_face,
   const int       **pface_vtx_idx,
-        int       **pface_vtx
+        int       **pface_vtx,
+        int       **pface_edge_idx,
+        int       **pface_edge
 );
 
 /**

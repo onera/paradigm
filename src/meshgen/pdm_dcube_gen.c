@@ -142,12 +142,12 @@ const double           zero_z,
   PDM_g_num_t _dn_face_lim = distrib_face_lim[i_rank+1] - distrib_face_lim[i_rank];
   int dn_face_lim = (int) _dn_face_lim;
 
-  dcube->dface_cell      = (PDM_g_num_t *) malloc(2*(dcube->dn_face) * sizeof(PDM_g_num_t *));
-  dcube->dface_vtx_idx   = (int *)          malloc((dcube->dn_face + 1) * sizeof(int *));
-  dcube->dface_vtx       = (PDM_g_num_t *) malloc(4*(dcube->dn_face)  * sizeof(PDM_g_num_t *));
-  dcube->dvtx_coord      = (double *)       malloc(3*(dcube->dn_vtx)  * sizeof(double *));
-  dcube->dface_group_idx = (int *)          malloc((dcube->n_face_group + 1)  * sizeof(int *));
-  dcube->dface_group     = (PDM_g_num_t *) malloc(dn_face_lim * sizeof(PDM_g_num_t *));
+  dcube->dface_cell      = (PDM_g_num_t *) malloc(2*(dcube->dn_face    ) * sizeof(PDM_g_num_t *));
+  dcube->dface_vtx_idx   = (int         *) malloc(  (dcube->dn_face + 1) * sizeof(int         *));
+  dcube->dface_vtx       = (PDM_g_num_t *) malloc(4*(dcube->dn_face    ) * sizeof(PDM_g_num_t *));
+  dcube->dvtx_coord      = (double      *) malloc(3*(dcube->dn_vtx     ) * sizeof(double      *));
+  dcube->dface_group_idx = (int         *) malloc(  (dcube->n_face_group + 1) * sizeof(int *));
+  dcube->dface_group     = (PDM_g_num_t *) malloc(   dn_face_lim              * sizeof(PDM_g_num_t *));
 
   PDM_g_num_t  *_dface_cell      = dcube->dface_cell;
   int          *_dface_vtx_idx   = dcube->dface_vtx_idx;
@@ -236,19 +236,26 @@ const double           zero_z,
         if ((k == b1) && (j == b2))
           _b3 = b3;
         for(PDM_g_num_t i = _b3; i < n_face_seg; i++) {
+
           _dface_vtx[cpt * 4    ] = k * n_vtx_seg * n_vtx_seg + (    j * n_vtx_seg + i + 1);
           _dface_vtx[cpt * 4 + 1] = k * n_vtx_seg * n_vtx_seg + ((j+1) * n_vtx_seg + i + 1);
           _dface_vtx[cpt * 4 + 2] = k * n_vtx_seg * n_vtx_seg + ((j+1) * n_vtx_seg + i + 2);
           _dface_vtx[cpt * 4 + 3] = k * n_vtx_seg * n_vtx_seg + (    j * n_vtx_seg + i + 2);
+
           if (k == 0) {
             _dface_cell[2*cpt + 0] = j * n_face_seg + i + 1;
             _dface_cell[2*cpt + 1] = 0;
-          }
-          else if (k == n_face_seg) {
+
+            _dface_vtx[cpt * 4    ] = k * n_vtx_seg * n_vtx_seg + (    j * n_vtx_seg + i + 2);
+            _dface_vtx[cpt * 4 + 1] = k * n_vtx_seg * n_vtx_seg + ((j+1) * n_vtx_seg + i + 2);
+            _dface_vtx[cpt * 4 + 2] = k * n_vtx_seg * n_vtx_seg + ((j+1) * n_vtx_seg + i + 1);
+            _dface_vtx[cpt * 4 + 3] = k * n_vtx_seg * n_vtx_seg + (    j * n_vtx_seg + i + 1);
+
+          } else if (k == n_face_seg) {
             _dface_cell[2*cpt + 0] = (k-1) * n_face_seg * n_face_seg + j * n_face_seg + i + 1;
             _dface_cell[2*cpt + 1] = 0;
-          }
-          else {
+
+          } else {
             _dface_cell[2*cpt + 0] = (k-1) * n_face_seg * n_face_seg + j * n_face_seg + i + 1;
             _dface_cell[2*cpt + 1] =     k * n_face_seg * n_face_seg + j * n_face_seg + i + 1;
           }
@@ -285,21 +292,26 @@ const double           zero_z,
         if ((i == b1) && (k == b2))
           _b3 = b3;
         for(PDM_g_num_t j = _b3; j < n_face_seg; j++) {
-          _dface_vtx[cpt * 4    ] =     k * n_vtx_seg * n_vtx_seg +     j * n_vtx_seg + i + 1;
-          _dface_vtx[cpt * 4 + 1] =     k * n_vtx_seg * n_vtx_seg + (j+1) * n_vtx_seg + i + 1;
-          _dface_vtx[cpt * 4 + 2] = (k+1) * n_vtx_seg * n_vtx_seg + (j+1) * n_vtx_seg + i + 1;
-          _dface_vtx[cpt * 4 + 3] = (k+1) * n_vtx_seg * n_vtx_seg +     j * n_vtx_seg + i + 1;
+
+          _dface_vtx[cpt * 4    ] = (k+1) * n_vtx_seg * n_vtx_seg +     j * n_vtx_seg + i + 1;
+          _dface_vtx[cpt * 4 + 1] = (k+1) * n_vtx_seg * n_vtx_seg + (j+1) * n_vtx_seg + i + 1;
+          _dface_vtx[cpt * 4 + 2] =     k * n_vtx_seg * n_vtx_seg + (j+1) * n_vtx_seg + i + 1;
+          _dface_vtx[cpt * 4 + 3] =     k * n_vtx_seg * n_vtx_seg +     j * n_vtx_seg + i + 1;
+
           if (i == 0) {
             _dface_cell[2*cpt + 0] = k * n_face_seg * n_face_seg + j * n_face_seg + i + 1;
             _dface_cell[2*cpt + 1] = 0;
-          }
 
-          else if (i == n_face_seg) {
+            _dface_vtx[cpt * 4    ] =     k * n_vtx_seg * n_vtx_seg +     j * n_vtx_seg + i + 1;
+            _dface_vtx[cpt * 4 + 1] =     k * n_vtx_seg * n_vtx_seg + (j+1) * n_vtx_seg + i + 1;
+            _dface_vtx[cpt * 4 + 2] = (k+1) * n_vtx_seg * n_vtx_seg + (j+1) * n_vtx_seg + i + 1;
+            _dface_vtx[cpt * 4 + 3] = (k+1) * n_vtx_seg * n_vtx_seg +     j * n_vtx_seg + i + 1;
+
+          } else if (i == n_face_seg) {
             _dface_cell[2*cpt + 0] = k * n_face_seg * n_face_seg + j * n_face_seg + i;
             _dface_cell[2*cpt + 1] = 0;
-          }
 
-          else {
+          } else {
             _dface_cell[2*cpt + 0] = k * n_face_seg * n_face_seg + j * n_face_seg + i ;
             _dface_cell[2*cpt + 1] = k * n_face_seg * n_face_seg + j * n_face_seg + i + 1;
           }
@@ -341,17 +353,21 @@ const double           zero_z,
           _dface_vtx[cpt * 4 + 1] =     k * n_vtx_seg * n_vtx_seg + j * n_vtx_seg + i + 1 + 1;
           _dface_vtx[cpt * 4 + 2] = (k+1) * n_vtx_seg * n_vtx_seg + j * n_vtx_seg + i + 1 + 1;
           _dface_vtx[cpt * 4 + 3] = (k+1) * n_vtx_seg * n_vtx_seg + j * n_vtx_seg + i + 1    ;
+
           if (j == 0) {
             _dface_cell[2*cpt + 0] = k * n_face_seg * n_face_seg + j * n_face_seg + i + 1;
             _dface_cell[2*cpt + 1] = 0;
-          }
 
-          else if (j == n_face_seg) {
+            _dface_vtx[cpt * 4    ] = (k+1) * n_vtx_seg * n_vtx_seg + j * n_vtx_seg + i + 1    ;
+            _dface_vtx[cpt * 4 + 1] = (k+1) * n_vtx_seg * n_vtx_seg + j * n_vtx_seg + i + 1 + 1;
+            _dface_vtx[cpt * 4 + 2] =     k * n_vtx_seg * n_vtx_seg + j * n_vtx_seg + i + 1 + 1;
+            _dface_vtx[cpt * 4 + 3] =     k * n_vtx_seg * n_vtx_seg + j * n_vtx_seg + i + 1    ;
+
+          } else if (j == n_face_seg) {
             _dface_cell[2*cpt + 0] =  k * n_face_seg * n_face_seg + (j-1) * n_face_seg + i + 1;
             _dface_cell[2*cpt + 1] = 0;
-          }
 
-          else {
+          } else {
             _dface_cell[2*cpt + 0] = k * n_face_seg * n_face_seg + (j-1) * n_face_seg + i + 1;
             _dface_cell[2*cpt + 1] = k * n_face_seg * n_face_seg +     j * n_face_seg + i + 1;
           }
@@ -652,8 +668,6 @@ PDM_dcube_gen_dim_get
  int                *sface_group
 )
 {
-  // _pdm_dcube_t *dcube = (_pdm_dcube_t *) pdm_dcube;
-
   *n_face_group = dcube->n_face_group;
   *dn_cell      = dcube->dn_cell;
   *dn_face      = dcube->dn_face;
@@ -688,8 +702,6 @@ PDM_dcube_gen_data_get
  PDM_g_num_t       **dface_group
 )
 {
-  // _pdm_dcube_t *dcube = (_pdm_dcube_t *) pdm_dcube;
-
   *dface_cell      = dcube->dface_cell;
   *dface_vtx_idx   = dcube->dface_vtx_idx;
   *dface_vtx       = dcube->dface_vtx;
@@ -712,8 +724,6 @@ PDM_dcube_gen_free
 PDM_dcube_t        *dcube
 )
 {
-  // _pdm_dcube_t *dcube = (_pdm_dcube_t *) pdm_dcube;
-
   if(dcube->owner == PDM_OWNERSHIP_KEEP) {
     if (dcube->dface_cell  != NULL)
       free(dcube->dface_cell);

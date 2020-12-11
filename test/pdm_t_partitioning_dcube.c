@@ -582,15 +582,6 @@ int main(int argc, char *argv[])
             (const int ** )  pcell_face,
             (      int ***) &pface_cell);
 
-  if (0 == 1){
-    for (int i_part=0; i_part < n_res_part; i_part++){
-      PDM_printf("[%i] generated facecell part %i [%i]:", i_rank, i_part, pn_faces[i_part]);
-      for (int iface=0 ; iface < pn_faces[i_part]; iface++)
-        PDM_printf(" %d %d", pface_cell[i_part][2*iface], pface_cell[i_part][2*iface+1]);
-      PDM_printf("\n");
-    }
-  }
-
   // int* face_cell_idx = (int *) malloc( (pn_faces[0] + 1 ) * sizeof(int));
   // int* face_cell     = (int *) malloc( (2 * pn_faces[0] ) * sizeof(int));
   // int idx = 0;
@@ -639,6 +630,7 @@ int main(int argc, char *argv[])
                            (int         ***)  &pface_vtx_idx,
                            (int         ***)  &pface_vtx);
 
+
   int** pface_edge_idx;
   int** pface_edge;
   int*  pn_edge;
@@ -655,6 +647,25 @@ int main(int argc, char *argv[])
                            (int         ***)  &pface_edge_idx,
                            (int         ***)  &pface_edge);
 
+  // Attention il faut modifier le edge face aussi !!!!
+  PDM_part_reorient_bound_faces(n_part,
+                                pn_faces,
+                                pface_cell,
+                 (const int **) pcell_face_idx,
+                                pcell_face,
+                 (const int **) pface_vtx_idx,
+                                pface_vtx,
+                                pface_edge_idx,
+                                pface_edge);
+
+  if (0 == 1){
+    for (int i_part=0; i_part < n_res_part; i_part++){
+      PDM_printf("[%i] generated facecell part %i [%i]:", i_rank, i_part, pn_faces[i_part]);
+      for (int iface=0 ; iface < pn_faces[i_part]; iface++)
+        PDM_printf(" %d %d", pface_cell[i_part][2*iface], pface_cell[i_part][2*iface+1]);
+      PDM_printf("\n");
+    }
+  }
 
   double **pvtx_coord = NULL;
   PDM_part_dcoordinates_to_pcoordinates(comm,
@@ -696,7 +707,7 @@ int main(int argc, char *argv[])
                                   &pedge_face_idx,
                                   &pedge_face);
 
-  if (1 == 1){
+  if (0 == 1){
     for (int i_part=0; i_part < n_res_part; i_part++){
       PDM_printf("[%i] generated edge_face part %i [%i]: \n", i_rank, i_part, pn_edge[i_part]);
       for (int iedge=0 ; iedge < pn_edge[i_part]; iedge++) {
@@ -717,9 +728,9 @@ int main(int argc, char *argv[])
 
   for (int i_part = 0; i_part < n_res_part; i_part++){
 
-    center_cell[i_part]  = (double *) malloc( 3 * pn_cell[i_part] * sizeof(double) );
+    center_cell[i_part]  = (double *) malloc( 3 * pn_cell[i_part]  * sizeof(double) );
     center_face[i_part]  = (double *) malloc( 3 * pn_faces[i_part] * sizeof(double) );
-    int* count_cell      = (int    *) malloc(     pn_cell[i_part] * sizeof(int   ) );
+    int* count_cell      = (int    *) malloc(     pn_cell[i_part]  * sizeof(int   ) );
 
     for (int iface = 0 ; iface < pn_faces[i_part]; iface++) {
       center_face[i_part][3*iface  ] = 0.;
@@ -753,6 +764,7 @@ int main(int argc, char *argv[])
       int i_cell1 = PDM_ABS(pface_cell[i_part][2*iface  ])-1;
       int i_cell2 = PDM_ABS(pface_cell[i_part][2*iface+1])-1;
 
+      printf(" [%i] --> icell1 = %i | icell2 = %i [%i] \n", i_part, i_cell1, i_cell2, pn_cell[i_part]);
       center_cell[i_part][3*i_cell1  ] += x2;
       center_cell[i_part][3*i_cell1+1] += y2;
       center_cell[i_part][3*i_cell1+2] += z2;
@@ -808,59 +820,57 @@ int main(int argc, char *argv[])
       double y1 = 0.5 * ( _pvtx_coord[3*i_vtx1+1] + _pvtx_coord[3*i_vtx2+1]);
       double z1 = 0.5 * ( _pvtx_coord[3*i_vtx1+2] + _pvtx_coord[3*i_vtx2+2]);
 
-      printf(" x1 = %12.5e | y2 = %12.5e | z2 = %12.5e \n", x1, y1, z1);
+      // printf(" -------------------------------------------------------- \n");
+      // printf(" x1 = %12.5e | y2 = %12.5e | z2 = %12.5e \n", x1, y1, z1);
 
-      printf(" edge %i -> %i %i \n", iedge, i_vtx1, i_vtx2);
+      // printf(" edge %i -> %i %i -> n_face = %i \n", iedge, i_vtx1+1, i_vtx2+1, pedge_face_idx[i_part][iedge+1]-pedge_face_idx[i_part][iedge]);
 
       for(int idx_face = pedge_face_idx[i_part][iedge]; idx_face < pedge_face_idx[i_part][iedge+1]; ++idx_face ) {
 
-        int i_face = PDM_ABS(pedge_face[i_part][idx_face])-1;
+        int i_face = PDM_ABS (pedge_face[i_part][idx_face])-1;
         int sgn    = PDM_SIGN(pedge_face[i_part][idx_face]);
-        // En fait il faut permuter x2 et x3 si le sign est négatif
         double nx, ny, nz;
 
         int i_cell1 = PDM_ABS(pface_cell[i_part][2*i_face  ])-1;
         int i_cell2 = PDM_ABS(pface_cell[i_part][2*i_face+1])-1;
 
+        // printf(" i_cell1 = %i | i_cell2 = %i | %i / %i\n", i_cell1, i_cell2, pface_cell[i_part][2*i_face  ], pface_cell[i_part][2*i_face+1]);
+        // for(int itmp = pcell_face_idx[i_part][i_cell1]; itmp < pcell_face_idx[i_part][i_cell1+1]; ++itmp) {
+        //   printf(" cell_face[%i] = %i \n", itmp, pcell_face[i_part][itmp]);
+        // }
+        // printf("face_vtx[%i] = ", i_face);
+        // for(int itmp = pface_vtx_idx[i_part][i_face]; itmp < pface_vtx_idx[i_part][i_face+1]; ++itmp) {
+        //   printf("%i ", pface_vtx[i_part][itmp]);
+        // }
+        // printf("\n");
+
         double x2, y2, z2;
         double x3, y3, z3;
 
-        if(sgn == 1) {
-          x3 = center_face[i_part][3*i_face  ];
-          y3 = center_face[i_part][3*i_face+1];
-          z3 = center_face[i_part][3*i_face+2];
+        x2 = center_face[i_part][3*i_face  ];
+        y2 = center_face[i_part][3*i_face+1];
+        z2 = center_face[i_part][3*i_face+2];
 
-          x2 = center_cell[i_part][3*i_cell1  ];
-          y2 = center_cell[i_part][3*i_cell1+1];
-          z2 = center_cell[i_part][3*i_cell1+2];
-        } else {
-          x3 = center_face[i_part][3*i_face  ];
-          y3 = center_face[i_part][3*i_face+1];
-          z3 = center_face[i_part][3*i_face+2];
-
-          x2 = center_cell[i_part][3*i_cell1  ];
-          y2 = center_cell[i_part][3*i_cell1+1];
-          z2 = center_cell[i_part][3*i_cell1+2];
-
-        }
+        x3 = center_cell[i_part][3*i_cell1  ];
+        y3 = center_cell[i_part][3*i_cell1+1];
+        z3 = center_cell[i_part][3*i_cell1+2];
 
         _compute_triangle_surf(x1, y1, z1, x2, y2, z2, x3, y3, z3, &nx, &ny, &nz);
-        // _edge_surf[3*iedge  ] += sgn * nx;
-        // _edge_surf[3*iedge+1] += sgn * ny;
-        // _edge_surf[3*iedge+2] += sgn * nz;
-        _edge_surf[3*iedge  ] += nx;
-        _edge_surf[3*iedge+1] += ny;
-        _edge_surf[3*iedge+2] += nz;
+        _edge_surf[3*iedge  ] -= sgn * nx;
+        _edge_surf[3*iedge+1] -= sgn * ny;
+        _edge_surf[3*iedge+2] -= sgn * nz;
 
+        // printf(" icell1 : sgn = %i | nx = %12.5e | ny = %12.5e | nz = %12.5e\n", sgn, nx, ny, nz);
 
-        printf(" icell1 : sgn = %i | nx = %12.5e | ny = %12.5e | nz = %12.5e\n", sgn, nx, ny, nz);
+        if(i_cell2 > -1 ){
 
-        if(i_cell2 > 0 ){
           x3 = center_cell[i_part][3*i_cell2  ];
           y3 = center_cell[i_part][3*i_cell2+1];
           z3 = center_cell[i_part][3*i_cell2+2];
+
           _compute_triangle_surf(x1, y1, z1, x2, y2, z2, x3, y3, z3, &nx, &ny, &nz);
-          printf(" icell2 : sgn = %i | nx = %12.5e | ny = %12.5e | nz = %12.5e\n", sgn, nx, ny, nz);
+
+          // printf(" icell2 : sgn = %i | nx = %12.5e | ny = %12.5e | nz = %12.5e\n", sgn, nx, ny, nz);
 
           _edge_surf[3*iedge  ] += sgn * nx;
           _edge_surf[3*iedge+1] += sgn * ny;
@@ -868,13 +878,21 @@ int main(int argc, char *argv[])
 
         }
 
+        // double surf_norm = sqrt(_edge_surf[3*iedge  ]*_edge_surf[3*iedge  ] +  _edge_surf[3*iedge+1]*_edge_surf[3*iedge+1] + _edge_surf[3*iedge+2]*_edge_surf[3*iedge+2]);
+        // printf(" edge_surf[%i] = %12.5e %12.5e %12.5e -->  %12.5e (%i) \n", iedge, _edge_surf[3*iedge  ], _edge_surf[3*iedge+1], _edge_surf[3*iedge+2], surf_norm, pedge_face_idx[i_part][iedge+1]-pedge_face_idx[i_part][iedge]);
+
       }
+
+      // double surf_norm = sqrt(_edge_surf[3*iedge  ]*_edge_surf[3*iedge  ] +  _edge_surf[3*iedge+1]*_edge_surf[3*iedge+1] + _edge_surf[3*iedge+2]*_edge_surf[3*iedge+2]);
+      // printf(" edge_surf[%i] = %12.5e %12.5e %12.5e -->  %12.5e (%i) \n", iedge, _edge_surf[3*iedge  ], _edge_surf[3*iedge+1], _edge_surf[3*iedge+2], surf_norm, pedge_face_idx[i_part][iedge+1]-pedge_face_idx[i_part][iedge]);
+
     }
 
     for (int iedge=0 ; iedge < pn_edge[i_part]; iedge++) {
-      printf(" edge_surf[%i] = %12.5e %12.5e %12.5e \n", iedge, _edge_surf[3*iedge  ], _edge_surf[3*iedge+1], _edge_surf[3*iedge+2]);
+      double surf_norm = sqrt(_edge_surf[3*iedge  ]*_edge_surf[3*iedge  ] +  _edge_surf[3*iedge+1]*_edge_surf[3*iedge+1] + _edge_surf[3*iedge+2]*_edge_surf[3*iedge+2]);
+      assert(surf_norm > 0.);
+      printf(" edge_surf[%i] = %12.5e %12.5e %12.5e -->  %12.5e (%i) \n", iedge, _edge_surf[3*iedge  ], _edge_surf[3*iedge+1], _edge_surf[3*iedge+2], surf_norm, pedge_face_idx[i_part][iedge+1]-pedge_face_idx[i_part][iedge]);
     }
-
 
   }
 
@@ -935,7 +953,9 @@ int main(int argc, char *argv[])
                  (const int **) pcell_face_idx,
                       ( int **) pcell_face,
                  (const int **) pface_vtx_idx,
-                       (int **) pface_vtx);
+                       (int **) pface_vtx,
+                                pface_edge_idx,
+                                pface_edge);
 
   /*
    * Graph communication build
@@ -1049,39 +1069,3 @@ int main(int argc, char *argv[])
 
   return 0;
 }
-
-
-  // Unit test ...
-  // int test_unique[10] = {10, 2, 1, 12, 31, 2, 31, 4, 5, 2};
-  // // int ns = PDM_inplace_unique_long(test_unique, 4, 10);
-  // // PDM_quick_sort_long(test_unique, 0, 9);
-  // int ns = PDM_inplace_unique_long(test_unique, 0, 9);
-  // printf("ns::%d\n", ns);
-  // printf("test_unique::");
-  // for(int i = 0; i < ns; ++i){
-  //   printf("%d ", test_unique[i]);
-  // }
-  // printf("\n");
-
-  // Unit test ...
-  // int cell_cell_n[4] = {4, 5, 3, 2};
-  // PDM_g_num_t dual_graph_test[14] = {31, 10, 5, 6,
-  //                                    8, 8, 2, 1, 4,
-  //                                    2, 3, 2,
-  //                                    91, 92 };
-  // int dual_graph_test_idx[5];
-
-  // PDM_compress_connectivity(dual_graph_test, dual_graph_test_idx, cell_cell_n, 4);
-
-
-  // if( 1 == 1 ){
-  //   // printf("n_cell_block:: %d \n", n_cell_block);
-  //   for(int i = 0; i < 4; ++i){
-  //     printf(" dual_graph_test_idx = %d ---> \n", dual_graph_test_idx[i]);
-  //     for(int i_data = dual_graph_test_idx[i]; i_data < dual_graph_test_idx[i+1]; ++i_data){
-  //       // printf("%d ", _dual_graph[i_data]);
-  //       printf("\t _dual_graph[%d] = %d \n", i_data, dual_graph_test[i_data]);
-  //     }
-  //     printf("\n");
-  //   }
-  // }
