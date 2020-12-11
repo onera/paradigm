@@ -12,9 +12,9 @@ MPI_TEST_CASE("[1p] pdm_dconnectivity_transform dcell_face + dface_vtx = dcell_v
 
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
 
-  PDM_g_num_t cell_distrib[2]   = {1, 9};
-  PDM_g_num_t face_distrib[2]   = {1, 37};
-  PDM_g_num_t vtx_distrib[2]    = {1, 28};
+  PDM_g_num_t cell_distrib[2]   = {0, 8};
+  PDM_g_num_t face_distrib[2]   = {0, 36};
+  PDM_g_num_t vtx_distrib[2]    = {0, 27};
   int         dcell_face_idx[9] = {0, 6, 12, 18, 24, 30, 36, 42, 48};
   PDM_g_num_t dcell_face[48]    = {1, 5, 13, 17, 25, 29, 2, 6, -17, 21, 27, 31, 3, 7, 14, 18, -29, 33, 4, 8, -18, 22, -31, 35, -5, 9, 15, 19, 26, 30, -6, 10, -19, 23, 28, 32, -7, 11, 16, 20, -30, 34, -8, 12, -20, 24, -32, 36};
   int         dface_vtx_idx[37] = {0, 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64, 68, 72, 76, 80, 84, 88, 92, 96, 100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140, 144};
@@ -75,15 +75,15 @@ MPI_TEST_CASE("[2p] pdm_dconnectivity_transform dcell_face + dface_vtx = dcell_v
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
   // PDM_g_num_t vtx_distrib[3]    = {1, 14, 28};
 
-  std::vector<PDM_g_num_t> cell_distrib_p0   = {1, 5, 9};
-  std::vector<PDM_g_num_t> face_distrib_p0   = {1, 19, 37};
+  std::vector<PDM_g_num_t> cell_distrib_p0   = {0, 4, 8};
+  std::vector<PDM_g_num_t> face_distrib_p0   = {0, 18, 36};
   std::vector<int        > dcell_face_idx_p0 = {0, 6, 12, 18, 24};
   std::vector<PDM_g_num_t> dcell_face_p0     = {1, 5, 13, 17, 25, 29, 2, 6, -17, 21, 27, 31, 3, 7, 14, 18, -29, 33, 4, 8, -18, 22, -31, 35};
   std::vector<int        > dface_vtx_idx_p0  = {0, 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64, 68, 72};
   std::vector<PDM_g_num_t> dface_vtx_p0      = {1, 4, 5, 2, 2, 5, 6, 3, 4, 7, 8, 5, 5, 8, 9, 6, 10, 13, 14, 11, 11, 14, 15, 12, 13, 16, 17, 14, 14, 17, 18, 15, 19, 22, 23, 20, 20, 23, 24, 21, 22, 25, 26, 23, 23, 26, 27, 24, 1, 4, 13, 10, 4, 7, 16, 13, 10, 13, 22, 19, 13, 16, 25, 22, 2, 5, 14, 11, 5, 8, 17, 14};
 
-  std::vector<PDM_g_num_t> cell_distrib_p1   = {1, 5, 9};
-  std::vector<PDM_g_num_t> face_distrib_p1   = {1, 19, 37};
+  std::vector<PDM_g_num_t> cell_distrib_p1   = {0, 4, 8};
+  std::vector<PDM_g_num_t> face_distrib_p1   = {0, 18, 36};
   std::vector<int        > dcell_face_idx_p1 = {0, 6, 12, 18, 24};
   std::vector<PDM_g_num_t> dcell_face_p1     = {-5, 9, 15, 19, 26, 30, -6, 10, -19, 23, 28, 32, -7, 11, 16, 20, -30, 34, -8, 12, -20, 24, -32, 36};
   std::vector<int        > dface_vtx_idx_p1  = {0, 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64, 68, 72};

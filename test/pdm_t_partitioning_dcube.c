@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <assert.h>
 
 #include "pdm.h"
 #include "pdm_config.h"
@@ -13,11 +14,16 @@
 #include "pdm_partitioning_algorithm.h"
 #include "pdm_dmesh_partitioning.h"
 #include "pdm_para_graph_dual.h"
+#include "pdm_dmesh_nodal_to_dmesh.h"
+#include "pdm_dmesh_nodal_elements_utils.h"
+#include "pdm_dconnectivity_transform.h"
+#include "pdm_part_connectivity_transform.h"
 #include "pdm_dcube_gen.h"
 #include "pdm_printf.h"
 #include "pdm_sort.h"
 #include "pdm_distrib.h"
 #include "pdm_error.h"
+#include "pdm_logging.h"
 #include "pdm_priv.h"
 
 /*============================================================================
@@ -121,6 +127,37 @@ _read_args(int            argc,
       _usage(EXIT_FAILURE);
     i++;
   }
+}
+
+static
+void
+_compute_triangle_surf
+(
+ double x1,
+ double y1,
+ double z1,
+ double x2,
+ double y2,
+ double z2,
+ double x3,
+ double y3,
+ double z3,
+ double *nx,
+ double *ny,
+ double *nz
+)
+{
+  double ux = x2 - x1;
+  double uy = y2 - y1;
+  double uz = z2 - z1;
+
+  double vx = x3 - x1;
+  double vy = y3 - y1;
+  double vz = z3 - z1;
+
+  *nx = 0.5 * (uy * vz - uz * vy);
+  *ny = 0.5 * (uz * vx - ux * vz);
+  *nz = 0.5 * (ux * vy - uy * vx);
 }
 
 
@@ -256,32 +293,6 @@ int main(int argc, char *argv[])
 
   }
 
-  // printf(" PDM_PART_NONE::%d\n"     , PDM_PART_NONE);
-  // printf(" PDM_PART_NULL::%d\n"     , PDM_PART_NULL);
-  // printf(" PDM_PART_FACE_CELL::%d\n", PDM_PART_FACE_CELL);
-  // printf(" PDM_PART_CELL_FACE::%d\n", PDM_PART_CELL_FACE);
-
-  int flags = PDM_PART_FACE_CELL|PDM_PART_CELL_FACE;
-  printf("PDM_HASFLAG(flags, PDM_PART_FACE_CELL) :: %d\n", PDM_HASFLAG(flags, PDM_PART_FACE_CELL) );
-  printf("PDM_HASFLAG(flags, PDM_PART_CELL_FACE) :: %d\n", PDM_HASFLAG(flags, PDM_PART_CELL_FACE) );
-  printf("PDM_HASFLAG(flags, PDM_PART_FACE_VTX) :: %d\n" , PDM_HASFLAG(flags, PDM_PART_FACE_VTX) );
-  printf("x::PDM_HASFLAG(flags, PDM_PART_FACE_VTX) :: %x\n", PDM_PART_FACE_VTX);
-
-
-  // PDM_dmesh_partitioning_part_get(1, 1, PDM_PART_FACE_CELL, NULL);
-  // PDM_dmesh_partitioning_part_get(1, 1, PDM_PART_CELL_FACE, NULL);
-  // PDM_dmesh_partitioning_part_get(1, 1, PDM_PART_FACE_VTX, NULL);
-  // PDM_dmesh_partitioning_part_get(1, 1, PDM_PART_FACE_VTX|PDM_PART_FACE_CELL, NULL);
-
-  // PDM_dmesh_partitioning_get(1, PDM_PART_FACE_CELL, NULL);
-  // PDM_dmesh_partitioning_get(1, PDM_PART_CELL_FACE, NULL);
-  // PDM_dmesh_partitioning_get(1, PDM_PART_FACE_VTX, NULL);
-  // PDM_dmesh_partitioning_get(1, PDM_PART_FACE_VTX|PDM_PART_FACE_CELL, NULL);
-
-  // int ppart_id = 0;
-
-  gettimeofday(&t_elaps_debut, NULL);
-
   /*
    *  Create mesh partitions
    */
@@ -289,6 +300,84 @@ int main(int argc, char *argv[])
   PDM_g_num_t* face_distribution = PDM_compute_entity_distribution(comm, dn_face);
   PDM_g_num_t* part_distribution = PDM_compute_entity_distribution(comm, n_part );
   PDM_g_num_t* vtx_distribution  = PDM_compute_entity_distribution(comm, dn_vtx );
+
+  /*
+   * Generate edge numbering
+   */
+  int n_edge_elt_tot = dface_vtx_idx[dn_face];
+  PDM_g_num_t* tmp_dface_edge         = (PDM_g_num_t *) malloc(     n_edge_elt_tot    * sizeof(PDM_g_num_t) );
+  int*         tmp_dface_edge_vtx_idx = (int         *) malloc( ( n_edge_elt_tot + 1) * sizeof(int        ) );
+  PDM_g_num_t* tmp_dface_edge_vtx     = (PDM_g_num_t *) malloc( 2 * n_edge_elt_tot    * sizeof(PDM_g_num_t) );
+
+  int n_elmt_current = 0;
+  int n_edge_current = 0;
+  tmp_dface_edge_vtx_idx[0] = 0;
+  PDM_poly2d_decomposes_edges(dn_face,
+                              &n_elmt_current,
+                              &n_edge_current,
+                              face_distribution[i_rank],
+                              -1,
+                              dface_vtx,
+                              dface_vtx_idx,
+                              tmp_dface_edge_vtx_idx,
+                              tmp_dface_edge_vtx,
+                              tmp_dface_edge,
+                              NULL,
+                              NULL);
+  assert(n_edge_current == n_edge_elt_tot);
+
+  int  dn_edge = -1;
+  PDM_g_num_t  *dedge_distrib;
+  int          *dedge_vtx_idx;
+  PDM_g_num_t  *dedge_vtx;
+  int          *dedge_face_idx;
+  PDM_g_num_t  *dedge_face;
+
+  PDM_generate_entitiy_connectivity(comm,
+                                    vtx_distribution[n_rank],
+                                    n_edge_elt_tot,
+                                    tmp_dface_edge,
+                                    tmp_dface_edge_vtx_idx,
+                                    tmp_dface_edge_vtx,
+                                    &dn_edge,
+                                    &dedge_distrib,
+                                    &dedge_vtx_idx,
+                                    &dedge_vtx,
+                                    &dedge_face_idx,
+                                    &dedge_face);
+
+  /* Make ascending connectivity */
+  int          *dface_edge_idx;
+  PDM_g_num_t  *dface_edge;
+  PDM_log_trace_array_long(face_distribution, n_rank+1, "face_distribution::");
+  PDM_log_trace_array_long(dedge_distrib, n_rank+1, "dedge_distrib::");
+  PDM_log_trace_array_int(dedge_vtx_idx, dn_edge+1, "dedge_vtx_idx::");
+  PDM_log_trace_array_long(dedge_vtx, dedge_vtx_idx[dn_edge], "dedge_vtx::");
+  PDM_log_trace_array_int(dedge_face_idx, dn_edge, "dedge_face_idx::");
+  PDM_log_trace_array_long(dedge_face, dedge_face_idx[dn_edge], "dedge_face::");
+
+  printf(" PDM_dconnectivity_transpose\n");
+  PDM_dconnectivity_transpose(comm,
+                              dedge_distrib,
+                              face_distribution,
+                              dedge_face_idx,
+                              dedge_face,
+                              1,
+                              &dface_edge_idx,
+                              &dface_edge);
+  printf(" PDM_dconnectivity_transpose end m\n");
+
+  printf("dn_edge = %i \n", dn_edge);
+  PDM_log_trace_array_int(dface_edge_idx, dn_face, "dface_edge_idx::");
+  PDM_log_trace_array_long(dface_edge, dface_edge_idx[dn_face], "dface_edge::");
+
+  // int flags = PDM_PART_FACE_CELL|PDM_PART_CELL_FACE;
+  // printf("PDM_HASFLAG(flags, PDM_PART_FACE_CELL) :: %d\n", PDM_HASFLAG(flags, PDM_PART_FACE_CELL) );
+  // printf("PDM_HASFLAG(flags, PDM_PART_CELL_FACE) :: %d\n", PDM_HASFLAG(flags, PDM_PART_CELL_FACE) );
+  // printf("PDM_HASFLAG(flags, PDM_PART_FACE_VTX) :: %d\n" , PDM_HASFLAG(flags, PDM_PART_FACE_VTX) );
+  // printf("x::PDM_HASFLAG(flags, PDM_PART_FACE_VTX) :: %x\n", PDM_PART_FACE_VTX);
+
+  gettimeofday(&t_elaps_debut, NULL);
 
   // printf("part_distribution::\n");
   // for(int i_part = 0; i_part < n_rank+1; ++i_part){
@@ -346,22 +435,22 @@ int main(int argc, char *argv[])
                       (PDM_g_num_t**) &dual_graph);
   }
 
-  // PDM_log_trace_array_long(dual_graph_idx, dn_cell+1              , "pdm_t_partitioning_dcube::dual_graph_idx::");
-  // PDM_log_trace_array_long(dual_graph    , dual_graph_idx[dn_cell], "pdm_t_partitioning_dcube::dual_graph::");
+  PDM_log_trace_array_long(dual_graph_idx, dn_cell+1              , "pdm_t_partitioning_dcube::dual_graph_idx::");
+  PDM_log_trace_array_long(dual_graph    , dual_graph_idx[dn_cell], "pdm_t_partitioning_dcube::dual_graph::");
 
-  free(dual_graph_idx);
-  free(dual_graph);
+  // free(dual_graph_idx);
+  // free(dual_graph);
   // mpirun -np 2 ./paradigm/test/pdm_t_partitioning_dcube -n 23 -n_part 1 -parmetis
-  PDM_para_graph_dual_from_combine_connectivity(comm,
-                                                cell_distribution,
-                                                face_distribution,
-                                                vtx_distribution,
-                                                dcell_face_idx,
-                                                dcell_face,
-                                                dface_vtx_idx,
-                                                dface_vtx,
-                               (PDM_g_num_t**) &dual_graph_idx,
-                               (PDM_g_num_t**) &dual_graph);
+  // PDM_para_graph_dual_from_combine_connectivity(comm,
+  //                                               cell_distribution,
+  //                                               face_distribution,
+  //                                               vtx_distribution,
+  //                                               dcell_face_idx,
+  //                                               dcell_face,
+  //                                               dface_vtx_idx,
+  //                                               dface_vtx,
+  //                              (PDM_g_num_t**) &dual_graph_idx,
+  //                              (PDM_g_num_t**) &dual_graph);
 
   /*
    * Split it !!! CAUTION dn_cell can be different of the size of dual graph !!!
@@ -385,19 +474,19 @@ int main(int argc, char *argv[])
     }
   }
 
-  int tn_part = part_distribution[n_rank]-1;
+  int tn_part = part_distribution[n_rank];
 
   double *part_frac = NULL;
-  if (0 == 0) {
-  part_frac = (double *) malloc(sizeof(double) * tn_part );
-  for (int i_part = 0; i_part < tn_part-1; i_part++)
-  {
-    if (i_part % 2 == 0) part_frac[i_part] = (double) 0.5*(1./tn_part);
-    else                 part_frac[i_part] = (double) 1.5*(1./tn_part);
-  }
-  if (tn_part % 2 == 0) part_frac[tn_part-1] = (double) 1.5*(1./tn_part);
-  else                  part_frac[tn_part-1] = (double) 1.*(1./tn_part);
-  PDM_printf("Testing with heterogeneous part sizes\n");
+  if (1 == 0) {
+    part_frac = (double *) malloc(sizeof(double) * tn_part );
+    for (int i_part = 0; i_part < tn_part-1; i_part++)
+    {
+      if (i_part % 2 == 0) part_frac[i_part] = (double) 0.5*(1./tn_part);
+      else                 part_frac[i_part] = (double) 1.5*(1./tn_part);
+    }
+    if (tn_part % 2 == 0) part_frac[tn_part-1] = (double) 1.5*(1./tn_part);
+    else                  part_frac[tn_part-1] = (double) 1.*(1./tn_part);
+    PDM_printf("Testing with heterogeneous part sizes\n");
   }
 
   PDM_para_graph_split (part_method,
@@ -411,15 +500,17 @@ int main(int argc, char *argv[])
                         cell_part,
                         comm);
 
-  if (0==1){
+  // abort();
+  if (0 == 1){
     printf("cell_part[%d]::", dn_cell);
     for(int i = 0; i < dn_cell; ++i){
       printf("%d ", cell_part[i]);
     }
     printf("\n");
   }
-  if (part_frac != NULL)
+  if (part_frac != NULL){
     free(part_frac);
+  }
 
   /*
    * On dispose pour chaque cellule de la partition associé : il faut retrouver le
@@ -436,7 +527,6 @@ int main(int argc, char *argv[])
                                                 cell_part,
                                     (int ** )  &pn_cell,
                             (PDM_g_num_t ***)  &pcell_ln_to_gn);
-
   /*
    * Tentative extented partition
    */
@@ -465,6 +555,8 @@ int main(int argc, char *argv[])
    *  We can do by the relationship of each varibles (connectivity)
    *  For example face_ln_to_gn can be deduce with cell_face connectivity if we have cell_ln_to_gn
    */
+  printf(" pn_cell[0] : %i \n", pn_cell[0]);
+  PDM_log_trace_array_long(pcell_ln_to_gn[0]    ,  pn_cell[0]    , "pcell_ln_to_gn::");
   int** pcell_face_idx;
   int** pcell_face;
   int*  pn_faces;
@@ -499,6 +591,32 @@ int main(int argc, char *argv[])
     }
   }
 
+  // int* face_cell_idx = (int *) malloc( (pn_faces[0] + 1 ) * sizeof(int));
+  // int* face_cell     = (int *) malloc( (2 * pn_faces[0] ) * sizeof(int));
+  // int idx = 0;
+  // face_cell_idx[0] = 0;
+  // for(int i_face = 0; i_face < pn_faces[0]; ++i_face) {
+  //   face_cell_idx[i_face+1] = face_cell_idx[i_face];
+  //   if(pface_cell[0][2*i_face + 1 ] == 0) {
+  //     face_cell_idx[i_face+1]++;
+  //     face_cell[idx++] = pface_cell[0][2*i_face];
+  //   } else {
+  //     face_cell_idx[i_face+1] += 2;
+  //     face_cell[idx++] = pface_cell[0][2*i_face  ];
+  //     face_cell[idx++] = pface_cell[0][2*i_face+1];
+  //   }
+  // }
+
+  // PDM_log_trace_array_int(pface_cell[0]    ,  2 * pn_faces[0]    , "pface_cell::");
+  // PDM_log_trace_array_int(pcell_face_idx[0], pn_cell[0]+1                 , "pcell_face_idx::");
+  // PDM_log_trace_array_int(pcell_face[0]    , pcell_face_idx[0][pn_cell[0]], "pcell_face::");
+
+  // printf("pn_faces[0] = % i  \n", pn_faces[0]);
+  // printf("pn_cell[0]  = % i  \n",pn_cell[0] );
+  // PDM_log_trace_array_int(face_cell_idx, pn_faces[0]+1, "face_cell_idx::");
+  // PDM_log_trace_array_int(face_cell, face_cell_idx[pn_faces[0]], "face_cell::");
+  // free(face_cell_idx);
+  // free(face_cell);
 
   /*
    * Generate vtx
@@ -521,6 +639,23 @@ int main(int argc, char *argv[])
                            (int         ***)  &pface_vtx_idx,
                            (int         ***)  &pface_vtx);
 
+  int** pface_edge_idx;
+  int** pface_edge;
+  int*  pn_edge;
+  PDM_g_num_t** pedge_ln_to_gn = NULL;
+  PDM_part_dconnectivity_to_pconnectivity_sort(comm,
+                                               face_distribution,
+                                               dface_edge_idx,
+                                               dface_edge,
+                                               n_res_part,
+                                               pn_faces,
+                        (const PDM_g_num_t **) pface_ln_to_gn,
+                           (int         ** )  &pn_edge,
+                           (PDM_g_num_t ***)  &pedge_ln_to_gn,
+                           (int         ***)  &pface_edge_idx,
+                           (int         ***)  &pface_edge);
+
+
   double **pvtx_coord = NULL;
   PDM_part_dcoordinates_to_pcoordinates(comm,
                                         n_part,
@@ -529,6 +664,239 @@ int main(int argc, char *argv[])
                                         pn_vtx,
                 (const PDM_g_num_t **)  pvtx_ln_to_gn,
                           (double ***) &pvtx_coord);
+
+  int** pedge_vtx_idx;
+  int** pedge_vtx;
+  int*  pn_vtx2;
+  PDM_g_num_t** pvtx_ln_to_gn2 = NULL;
+  PDM_part_dconnectivity_to_pconnectivity_sort(comm,
+                                               dedge_distrib,
+                                               dedge_vtx_idx,
+                                               dedge_vtx,
+                                               n_res_part,
+                                               pn_edge,
+                      (const PDM_g_num_t ** )  pedge_ln_to_gn,
+                            (int         ** ) &pn_vtx2,
+                            (PDM_g_num_t ***) &pvtx_ln_to_gn2,
+                            (int         ***) &pedge_vtx_idx,
+                            (int         ***) &pedge_vtx);
+  free(pn_vtx2);
+  for(int i_part = 0; i_part < n_res_part; ++i_part) {
+    free(pvtx_ln_to_gn2[i_part]);
+  }
+  free(pvtx_ln_to_gn2);
+
+  int** pedge_face_idx;
+  int** pedge_face;
+  PDM_part_connectivity_transpose(n_res_part,
+                                  pn_faces,
+                                  pn_edge,
+                                  pface_edge_idx,
+                                  pface_edge,
+                                  &pedge_face_idx,
+                                  &pedge_face);
+
+  if (1 == 1){
+    for (int i_part=0; i_part < n_res_part; i_part++){
+      PDM_printf("[%i] generated edge_face part %i [%i]: \n", i_rank, i_part, pn_edge[i_part]);
+      for (int iedge=0 ; iedge < pn_edge[i_part]; iedge++) {
+        PDM_printf(" [%i] -> ", iedge);
+        for( int idx_face = pedge_face_idx[i_part][iedge]; idx_face < pedge_face_idx[i_part][iedge+1]; ++idx_face ) {
+          PDM_printf(" %i ", pedge_face[i_part][idx_face]);
+        }
+        PDM_printf("\n");
+      }
+    }
+  }
+
+  /*
+   * Compute cell_center and face center coordinates
+   */
+  double** center_cell = (double **) malloc( n_res_part * sizeof(double *) );
+  double** center_face = (double **) malloc( n_res_part * sizeof(double *) );
+
+  for (int i_part = 0; i_part < n_res_part; i_part++){
+
+    center_cell[i_part]  = (double *) malloc( 3 * pn_cell[i_part] * sizeof(double) );
+    center_face[i_part]  = (double *) malloc( 3 * pn_faces[i_part] * sizeof(double) );
+    int* count_cell      = (int    *) malloc(     pn_cell[i_part] * sizeof(int   ) );
+
+    for (int iface = 0 ; iface < pn_faces[i_part]; iface++) {
+      center_face[i_part][3*iface  ] = 0.;
+      center_face[i_part][3*iface+1] = 0.;
+      center_face[i_part][3*iface+2] = 0.;
+    }
+
+    for (int icell = 0 ; icell < pn_cell[i_part]; icell++) {
+      center_cell[i_part][3*icell  ] = 0.;
+      center_cell[i_part][3*icell+1] = 0.;
+      center_cell[i_part][3*icell+2] = 0.;
+      count_cell[icell]              = 0;
+    }
+
+    for (int iface = 0 ; iface < pn_faces[i_part]; iface++) {
+      double x2 = 0.;
+      double y2 = 0.;
+      double z2 = 0.;
+      int n_vtx_on_face = pface_vtx_idx[i_part][iface+1] - pface_vtx_idx[i_part][iface];
+      for(int idx_vtx = pface_vtx_idx[i_part][iface]; idx_vtx < pface_vtx_idx[i_part][iface+1]; ++idx_vtx) {
+        int i_vtx = PDM_ABS(pface_vtx[i_part][idx_vtx])-1;
+        x2 += pvtx_coord[i_part][3*i_vtx  ];
+        y2 += pvtx_coord[i_part][3*i_vtx+1];
+        z2 += pvtx_coord[i_part][3*i_vtx+2];
+
+      }
+      center_face[i_part][3*iface  ] = x2/n_vtx_on_face;
+      center_face[i_part][3*iface+1] = y2/n_vtx_on_face;
+      center_face[i_part][3*iface+2] = z2/n_vtx_on_face;
+
+      int i_cell1 = PDM_ABS(pface_cell[i_part][2*iface  ])-1;
+      int i_cell2 = PDM_ABS(pface_cell[i_part][2*iface+1])-1;
+
+      center_cell[i_part][3*i_cell1  ] += x2;
+      center_cell[i_part][3*i_cell1+1] += y2;
+      center_cell[i_part][3*i_cell1+2] += z2;
+      count_cell[i_cell1] += n_vtx_on_face;
+
+      if(i_cell2 > 0 ){
+        center_cell[i_part][3*i_cell2  ] += x2;
+        center_cell[i_part][3*i_cell2+1] += y2;
+        center_cell[i_part][3*i_cell2+2] += z2;
+        count_cell[i_cell2] += n_vtx_on_face;
+      }
+    }
+    for (int icell = 0 ; icell < pn_cell[i_part]; icell++) {
+      double inv = 1./count_cell[icell];
+      center_cell[i_part][3*icell  ] = center_cell[i_part][3*icell  ] * inv;
+      center_cell[i_part][3*icell+1] = center_cell[i_part][3*icell+1] * inv;
+      center_cell[i_part][3*icell+2] = center_cell[i_part][3*icell+2] * inv;
+    }
+
+    for (int iface = 0 ; iface < pn_faces[i_part]; iface++) {
+      printf(" center_face[%i] = %12.5e %12.5e %12.5e \n", iface, center_face[i_part][3*iface  ], center_face[i_part][3*iface+1], center_face[i_part][3*iface+2]);
+    }
+    for (int icell = 0 ; icell < pn_cell[i_part]; icell++) {
+      printf(" center_cell[%i] = %12.5e %12.5e %12.5e (%i) \n", icell, center_cell[i_part][3*icell  ], center_cell[i_part][3*icell+1], center_cell[i_part][3*icell+2], count_cell[icell]);
+    }
+
+    free(count_cell);
+  }
+
+  /*
+   * Compute normal associate to edge
+   */
+  double** edge_surf = (double **) malloc( n_res_part * sizeof(double *) );
+  for (int i_part = 0; i_part < n_res_part; i_part++){
+
+    int    *_pedge_vtx  = pedge_vtx [i_part];
+    double *_pvtx_coord = pvtx_coord[i_part];
+
+    edge_surf[i_part]  = (double *) malloc( 3 * pn_edge[i_part] * sizeof(double *) );
+    double *_edge_surf = edge_surf[i_part];
+
+    for (int iedge=0 ; iedge < pn_edge[i_part]; iedge++) {
+
+      // Chaque edge est lié a deux vertex -_-
+      int i_vtx1 = _pedge_vtx[2*iedge  ]-1;
+      int i_vtx2 = _pedge_vtx[2*iedge+1]-1;
+
+      _edge_surf[3*iedge  ] = 0.;
+      _edge_surf[3*iedge+1] = 0.;
+      _edge_surf[3*iedge+2] = 0.;
+
+      double x1 = 0.5 * ( _pvtx_coord[3*i_vtx1  ] + _pvtx_coord[3*i_vtx2  ]);
+      double y1 = 0.5 * ( _pvtx_coord[3*i_vtx1+1] + _pvtx_coord[3*i_vtx2+1]);
+      double z1 = 0.5 * ( _pvtx_coord[3*i_vtx1+2] + _pvtx_coord[3*i_vtx2+2]);
+
+      printf(" x1 = %12.5e | y2 = %12.5e | z2 = %12.5e \n", x1, y1, z1);
+
+      printf(" edge %i -> %i %i \n", iedge, i_vtx1, i_vtx2);
+
+      for(int idx_face = pedge_face_idx[i_part][iedge]; idx_face < pedge_face_idx[i_part][iedge+1]; ++idx_face ) {
+
+        int i_face = PDM_ABS(pedge_face[i_part][idx_face])-1;
+        int sgn    = PDM_SIGN(pedge_face[i_part][idx_face]);
+        // En fait il faut permuter x2 et x3 si le sign est négatif
+        double nx, ny, nz;
+
+        int i_cell1 = PDM_ABS(pface_cell[i_part][2*i_face  ])-1;
+        int i_cell2 = PDM_ABS(pface_cell[i_part][2*i_face+1])-1;
+
+        double x2, y2, z2;
+        double x3, y3, z3;
+
+        if(sgn == 1) {
+          x3 = center_face[i_part][3*i_face  ];
+          y3 = center_face[i_part][3*i_face+1];
+          z3 = center_face[i_part][3*i_face+2];
+
+          x2 = center_cell[i_part][3*i_cell1  ];
+          y2 = center_cell[i_part][3*i_cell1+1];
+          z2 = center_cell[i_part][3*i_cell1+2];
+        } else {
+          x3 = center_face[i_part][3*i_face  ];
+          y3 = center_face[i_part][3*i_face+1];
+          z3 = center_face[i_part][3*i_face+2];
+
+          x2 = center_cell[i_part][3*i_cell1  ];
+          y2 = center_cell[i_part][3*i_cell1+1];
+          z2 = center_cell[i_part][3*i_cell1+2];
+
+        }
+
+        _compute_triangle_surf(x1, y1, z1, x2, y2, z2, x3, y3, z3, &nx, &ny, &nz);
+        // _edge_surf[3*iedge  ] += sgn * nx;
+        // _edge_surf[3*iedge+1] += sgn * ny;
+        // _edge_surf[3*iedge+2] += sgn * nz;
+        _edge_surf[3*iedge  ] += nx;
+        _edge_surf[3*iedge+1] += ny;
+        _edge_surf[3*iedge+2] += nz;
+
+
+        printf(" icell1 : sgn = %i | nx = %12.5e | ny = %12.5e | nz = %12.5e\n", sgn, nx, ny, nz);
+
+        if(i_cell2 > 0 ){
+          x3 = center_cell[i_part][3*i_cell2  ];
+          y3 = center_cell[i_part][3*i_cell2+1];
+          z3 = center_cell[i_part][3*i_cell2+2];
+          _compute_triangle_surf(x1, y1, z1, x2, y2, z2, x3, y3, z3, &nx, &ny, &nz);
+          printf(" icell2 : sgn = %i | nx = %12.5e | ny = %12.5e | nz = %12.5e\n", sgn, nx, ny, nz);
+
+          _edge_surf[3*iedge  ] += sgn * nx;
+          _edge_surf[3*iedge+1] += sgn * ny;
+          _edge_surf[3*iedge+2] += sgn * nz;
+
+        }
+
+      }
+    }
+
+    for (int iedge=0 ; iedge < pn_edge[i_part]; iedge++) {
+      printf(" edge_surf[%i] = %12.5e %12.5e %12.5e \n", iedge, _edge_surf[3*iedge  ], _edge_surf[3*iedge+1], _edge_surf[3*iedge+2]);
+    }
+
+
+  }
+
+
+  for (int i_part=0; i_part < n_res_part; i_part++){
+    free(pedge_face_idx[i_part]);
+    free(pedge_face[i_part]);
+    free(pedge_vtx_idx[i_part]);
+    free(pedge_vtx[i_part]);
+    free(edge_surf[i_part]);
+
+    free(center_cell[i_part]);
+    free(center_face[i_part]);
+  }
+  free(pedge_face_idx);
+  free(pedge_face);
+  free(pedge_vtx_idx);
+  free(pedge_vtx);
+  free(edge_surf);
+  free(center_cell);
+  free(center_face);
+
   /*
    * On doit calculer le dcell_face car avec lui et le cell_ln_to_gn on retrouve facilement
    *   le dcell_face sur la partition donc on n'a plus qu'a trié pour avoir le face_ln_to_gn
@@ -636,7 +1004,14 @@ int main(int argc, char *argv[])
     free(pface_bound[i_part]);
     free(pface_cell[i_part]);
     free(pvtx_coord[i_part]);
+    free(pface_edge_idx[i_part]);
+    free(pface_edge[i_part]);
+    free(pedge_ln_to_gn[i_part]);
   }
+  free(pface_edge_idx);
+  free(pface_edge);
+  free(pn_edge);
+  free(pedge_ln_to_gn);
   free(pcell_face);
   free(pcell_face_idx);
   free(pvtx_ln_to_gn);
@@ -658,6 +1033,14 @@ int main(int argc, char *argv[])
   free(pface_cell);
   free(pvtx_coord);
 
+  free(dedge_distrib);
+  free(dedge_vtx_idx);
+  free(dedge_vtx);
+  free(dedge_face_idx);
+  free(dedge_face);
+
+  free(dface_edge_idx);
+  free(dface_edge);
 
 
   PDM_dcube_gen_free(dcube);

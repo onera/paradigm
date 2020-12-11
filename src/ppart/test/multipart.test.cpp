@@ -79,9 +79,9 @@ MPI_TEST_CASE("part by elt", 1) {
   // 2. dmesh_nodal creation {
   PDM_dmesh_nodal_t* dmesh_nodal = PDM_DMesh_nodal_create(comm,3,n_vtx,n_elt,0,0); // 3: dim, 0: n_faces, 0: n_edge
   PDM_DMesh_nodal_coord_set(dmesh_nodal, n_vtx, vtx_coord.data());
-  int id_prism_section = PDM_DMesh_nodal_section_add(dmesh_nodal,PDM_MESH_NODAL_PRISM6  );
-  int id_hex_section   = PDM_DMesh_nodal_section_add(dmesh_nodal,PDM_MESH_NODAL_HEXA8   );
-  int id_quad_section  = PDM_DMesh_nodal_section_add(dmesh_nodal,PDM_MESH_NODAL_QUAD4   );
+  int id_prism_section = PDM_DMesh_nodal_section_add(dmesh_nodal,PDM_MESH_NODAL_PRISM6);
+  int id_hex_section   = PDM_DMesh_nodal_section_add(dmesh_nodal,PDM_MESH_NODAL_HEXA8 );
+  int id_quad_section  = PDM_DMesh_nodal_section_add(dmesh_nodal,PDM_MESH_NODAL_QUAD4 );
   PDM_DMesh_nodal_section_std_set(dmesh_nodal,id_prism_section,n_prism,m.prism.data());
   PDM_DMesh_nodal_section_std_set(dmesh_nodal,id_hex_section  ,n_hex  ,m.hex.data()  );
   PDM_DMesh_nodal_section_std_set(dmesh_nodal,id_quad_section ,n_quad ,m.quad.data()  );

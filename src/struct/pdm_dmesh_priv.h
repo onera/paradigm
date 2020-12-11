@@ -54,6 +54,7 @@ extern "C" {
 
 struct _pdm_dmesh_t
 {
+  PDM_MPI_Comm         comm;
   PDM_ownership_t      owner;                   /*!< Which have the responsabilities of results */
   PDM_bool_t          *results_is_getted;       /*!< Flags to indicate if result is getted      */
 
@@ -101,6 +102,12 @@ struct _pdm_dmesh_t
   PDM_g_num_t *_dface_bound;                    /*!< Distributed faces list of each
                                                  boundary (size = dface_bound_idx[n_bnd])
                                                   or NULL                               */
+  int         *_dedge_bound_idx;                 /*!< Index of distributed edges list of
+                                                  each boundary (size = n_bnd + 1)
+                                                  or NULL                               */
+  PDM_g_num_t *_dedge_bound;                    /*!< Distributed edges list of each
+                                                 boundary (size = dedge_bound_idx[n_bnd])
+                                                  or NULL                               */
   int         *_joins_glob_id;                  /*!< Global id of each joi (size=n_join)
                                                      or NULL. Same data for all procs   */
   int         *_dface_join_idx;                  /*!< Index of distributed faces list of
@@ -114,6 +121,11 @@ struct _pdm_dmesh_t
   int         **dconnectivity_idx;               /* Array of connectivty_idx if any (size = PDM_CONNECTIVITY_TYPE_MAX) */
 
   PDM_bool_t   *is_owner_connectivity;
+
+  PDM_g_num_t **dbound;                   /* Array of connectivty (size = PDM_CONNECTIVITY_TYPE_MAX) */
+  int         **dbound_idx;               /* Array of connectivty_idx if any (size = PDM_CONNECTIVITY_TYPE_MAX) */
+
+  PDM_bool_t   *is_owner_bound;
 
 
 };

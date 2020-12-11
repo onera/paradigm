@@ -94,11 +94,13 @@ PDM_dmesh_create
  const int             dn_edge,
  const int             dn_vtx,
  const int             n_bnd,
- const int             n_join
+ const int             n_join,
+       PDM_MPI_Comm    comm
 )
 {
   PDM_dmesh_t *dmesh = (PDM_dmesh_t *) malloc(sizeof(PDM_dmesh_t));
 
+  dmesh->comm              = comm;
   dmesh->owner             = owner;
   dmesh->results_is_getted = malloc( PDM_CONNECTIVITY_TYPE_MAX * sizeof(PDM_bool_t) );
   dmesh->dn_cell           = dn_cell;
@@ -119,6 +121,9 @@ PDM_dmesh_create
   dmesh->_dedge_face_idx   = NULL;
   dmesh->_dedge_face       = NULL;
 
+  dmesh->_dedge_bound_idx  = NULL;
+  dmesh->_dedge_bound      = NULL;
+
   dmesh->_dface_bound_idx  = NULL;
   dmesh->_dface_bound      = NULL;
   dmesh->_joins_glob_id    = NULL;
@@ -138,6 +143,16 @@ PDM_dmesh_create
     dmesh->is_owner_connectivity[i] = PDM_FALSE;
     dmesh->dconnectivity        [i] = NULL;
     dmesh->dconnectivity_idx    [i] = NULL;
+  }
+
+  dmesh->dbound          = malloc( PDM_BOUND_TYPE_MAX * sizeof(PDM_g_num_t *) );
+  dmesh->dbound_idx      = malloc( PDM_BOUND_TYPE_MAX * sizeof(int         *) );
+  dmesh->is_owner_bound  = malloc( PDM_BOUND_TYPE_MAX * sizeof(PDM_bool_t   ) );
+
+  for(int i = 0; i < PDM_BOUND_TYPE_MAX; ++i) {
+    dmesh->is_owner_bound[i] = PDM_FALSE;
+    dmesh->dbound        [i] = NULL;
+    dmesh->dbound_idx    [i] = NULL;
   }
 
   return dmesh;
@@ -269,7 +284,7 @@ PDM_dmesh_data_get
 }
 
 
-void
+int
 PDM_dmesh_connectivity_get
 (
  PDM_dmesh_t              *dmesh,
@@ -279,16 +294,107 @@ PDM_dmesh_connectivity_get
  PDM_ownership_t           ownership
 )
 {
+  PDM_UNUSED(ownership);
   assert(dmesh != NULL);
 
-  assert(dmesh->dconnectivity[connectivity_type] != NULL);
+  // assert(dmesh->dconnectivity[connectivity_type] != NULL);
 
   *connect     = dmesh->dconnectivity    [connectivity_type];
   *connect_idx = dmesh->dconnectivity_idx[connectivity_type];
 
+  if(ownership == PDM_OWNERSHIP_USER || ownership == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE) {
+    dmesh->is_owner_connectivity[connectivity_type] = PDM_FALSE;
+  }
+
+  int dn_entity = -1;
+  if( connectivity_type == PDM_CONNECTIVITY_TYPE_CELL_ELMT ||
+      connectivity_type == PDM_CONNECTIVITY_TYPE_CELL_CELL ||
+      connectivity_type == PDM_CONNECTIVITY_TYPE_CELL_FACE ||
+      connectivity_type == PDM_CONNECTIVITY_TYPE_CELL_EDGE ||
+      connectivity_type == PDM_CONNECTIVITY_TYPE_CELL_VTX)
+  {
+    dn_entity = dmesh->dn_cell;
+  } else if( connectivity_type == PDM_CONNECTIVITY_TYPE_FACE_ELMT ||
+             connectivity_type == PDM_CONNECTIVITY_TYPE_FACE_CELL ||
+             connectivity_type == PDM_CONNECTIVITY_TYPE_FACE_FACE ||
+             connectivity_type == PDM_CONNECTIVITY_TYPE_FACE_EDGE ||
+             connectivity_type == PDM_CONNECTIVITY_TYPE_FACE_VTX )
+  {
+    dn_entity = dmesh->dn_face;
+  } else if( connectivity_type == PDM_CONNECTIVITY_TYPE_EDGE_ELMT ||
+             connectivity_type == PDM_CONNECTIVITY_TYPE_EDGE_CELL ||
+             connectivity_type == PDM_CONNECTIVITY_TYPE_EDGE_FACE ||
+             connectivity_type == PDM_CONNECTIVITY_TYPE_EDGE_EDGE ||
+             connectivity_type == PDM_CONNECTIVITY_TYPE_EDGE_VTX )
+  {
+    dn_entity = dmesh->dn_edge;
+  } else if( connectivity_type == PDM_CONNECTIVITY_TYPE_VTX_ELMT ||
+             connectivity_type == PDM_CONNECTIVITY_TYPE_VTX_CELL ||
+             connectivity_type == PDM_CONNECTIVITY_TYPE_VTX_FACE ||
+             connectivity_type == PDM_CONNECTIVITY_TYPE_VTX_EDGE ||
+             connectivity_type == PDM_CONNECTIVITY_TYPE_VTX_VTX )
+  {
+    dn_entity = dmesh->dn_vtx;
+  } else if( connectivity_type == PDM_CONNECTIVITY_TYPE_ELMT_CELL ||
+             connectivity_type == PDM_CONNECTIVITY_TYPE_ELMT_FACE ||
+             connectivity_type == PDM_CONNECTIVITY_TYPE_ELMT_EDGE ||
+             connectivity_type == PDM_CONNECTIVITY_TYPE_ELMT_VTX )
+  {
+    dn_entity = -1;
+  }
+
+  return dn_entity;
 }
 
 
+int
+PDM_dmesh_bound_get
+(
+ PDM_dmesh_t       *dmesh,
+ PDM_bound_type_t   bound_type,
+ PDM_g_num_t      **connect,
+ int              **connect_idx,
+ PDM_ownership_t    ownership
+)
+{
+  PDM_UNUSED(ownership);
+  assert(dmesh != NULL);
+
+  // assert(dmesh->dbound[bound_type] != NULL);
+
+  *connect     = dmesh->dbound    [bound_type];
+  *connect_idx = dmesh->dbound_idx[bound_type];
+
+  return dmesh->n_bnd;
+}
+
+
+int
+PDM_dmesh_distrib_get
+(
+ PDM_dmesh_t              *dmesh,
+ PDM_mesh_entities_t       entity_type,
+ PDM_g_num_t             **distrib
+)
+{
+  switch (entity_type) {
+   case PDM_MESH_ENTITY_CELL:
+     *distrib = dmesh->cell_distrib;
+     break;
+   case PDM_MESH_ENTITY_FACE:
+     *distrib = dmesh->face_distrib;
+     break;
+   case PDM_MESH_ENTITY_EDGE:
+     *distrib = dmesh->edge_distrib;
+     break;
+   case PDM_MESH_ENTITY_VERTEX:
+     *distrib = dmesh->vtx_distrib;
+     break;
+   }
+   int n_rank;
+   PDM_MPI_Comm_size(dmesh->comm, &n_rank);
+   return n_rank;
+}
 
 
 /**
@@ -305,7 +411,6 @@ PDM_dmesh_free
  PDM_dmesh_t         *dmesh
 )
 {
-
   dmesh->dn_cell           = 0;
   dmesh->dn_face           = 0;
   dmesh->dn_edge           = 0;
@@ -319,6 +424,10 @@ PDM_dmesh_free
   dmesh->_dvtx_coord       = NULL;
   dmesh->_dface_bound_idx  = NULL;
   dmesh->_dface_bound      = NULL;
+
+  dmesh->_dedge_bound_idx  = NULL;
+  dmesh->_dedge_bound      = NULL;
+
   dmesh->_joins_glob_id    = NULL;
   dmesh->_dface_join_idx   = NULL;
   dmesh->_dface_join       = NULL;
@@ -327,28 +436,49 @@ PDM_dmesh_free
   // On est owner des resultats et il faut free le reste
   // Donc il faut un is_getted + is_owner pour s'en sortir
 
-  // if(owner == )
-  for(int i = 0; i < PDM_CONNECTIVITY_TYPE_MAX; ++i) {
+  if(( dmesh->owner == PDM_OWNERSHIP_KEEP ) ||
+     ( dmesh->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE)){
+    for(int i = 0; i < PDM_CONNECTIVITY_TYPE_MAX; ++i) {
 
-    if(dmesh->is_owner_connectivity[i] == PDM_TRUE) {
+      if(dmesh->is_owner_connectivity[i] == PDM_TRUE) {
 
-      // printf(" dmesh_free :: %i \n", i);
-      assert(dmesh->dconnectivity[i] != NULL);
-      free(dmesh->dconnectivity[i]);
-      if(dmesh->dconnectivity_idx[i] != NULL){
-        free(dmesh->dconnectivity_idx[i]);
+        if(dmesh->dconnectivity[i] != NULL){
+          free(dmesh->dconnectivity[i]);
+        }
+        if(dmesh->dconnectivity_idx[i] != NULL){
+          free(dmesh->dconnectivity_idx[i]);
+        }
+        dmesh->dconnectivity    [i] = NULL;
+        dmesh->dconnectivity_idx[i] = NULL;
+
       }
-      dmesh->dconnectivity    [i] = NULL;
-      dmesh->dconnectivity_idx[i] = NULL;
+    }
 
+    for(int i = 0; i < PDM_BOUND_TYPE_MAX; ++i) {
+
+      if(dmesh->is_owner_bound[i] == PDM_TRUE) {
+
+        printf(" dmesh_free :: %i \n", i);
+        assert(dmesh->dbound[i] != NULL);
+        free(dmesh->dbound[i]);
+        if(dmesh->dbound_idx[i] != NULL){
+          free(dmesh->dbound_idx[i]);
+        }
+        dmesh->dbound    [i] = NULL;
+        dmesh->dbound_idx[i] = NULL;
+
+      }
     }
   }
-  // }
 
   free(dmesh->results_is_getted    );
   free(dmesh->dconnectivity        );
   free(dmesh->dconnectivity_idx    );
   free(dmesh->is_owner_connectivity);
+
+  free(dmesh->dbound        );
+  free(dmesh->dbound_idx    );
+  free(dmesh->is_owner_bound);
 
   /* This result is never getted so we can free them */
   if(dmesh->cell_distrib != NULL) {

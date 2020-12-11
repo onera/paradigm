@@ -183,7 +183,6 @@ const double tolerance
     PDM_octree_seq_points_get (octree_id, node_id,
                                &points_clouds_id, &point_indexes);
 
-
     for (int i = 0; i < n_candidates; i++) {
       double dist2;
       double tol;
@@ -230,14 +229,17 @@ const double tolerance
 
         int _n_couple = *n_couple;
         int *_local_couple = *local_couple;
-        _local_couple[4*_n_couple]   = search_cloud;
-        _local_couple[4*_n_couple+1] = point_indexes[i];
-        _local_couple[4*_n_couple+2] = point_cloud;
-        _local_couple[4*_n_couple+3] = point_idx;
-        *n_couple += 1;
 
+        if (!((search_cloud == point_cloud) && (point_indexes[i] == point_idx))) {
+          _local_couple[4*_n_couple]   = search_cloud;
+          _local_couple[4*_n_couple+1] = point_indexes[i];
+          _local_couple[4*_n_couple+2] = point_cloud;
+          _local_couple[4*_n_couple+3] = point_idx;
+          *n_couple += 1;
+        }
       }
     }
+
   }
 
   else {
@@ -472,6 +474,7 @@ PDM_points_merge_create
  const PDM_ownership_t owner
 )
 {
+
   if (_ppms == NULL) {
     _ppms = PDM_Handles_create (4);
   }
@@ -579,6 +582,7 @@ PDM_points_merge_cloud_set
  const double      *char_length
 )
 {
+
   _point_merge_t *ppm = _get_from_id (id);
 
   ppm->char_length[i_point_cloud] = char_length;
@@ -651,7 +655,9 @@ PDM_points_merge_process
       _char_length = ppm->char_length[i];
     }
 
-    for (int j = i + 1; j < ppm->n_point_clouds; j++) {
+    for (int j = i; j < ppm->n_point_clouds; j++) {
+
+
       for (int k = 0; k < ppm->n_points[j]; k++) {
         const double *_coord = ppm->point_clouds[j] + 3 * k;
         if (point_box != NULL) {
@@ -666,9 +672,9 @@ PDM_points_merge_process
         }
 
         _search_local_couple (&local_couple, &n_local_couple, &s_local_couple,
-                        j, k, _coord, point_box, i, octree_seq_id,
-                        root_id, ppm->point_clouds[i], _char_length,
-                        ppm->tolerance);
+                              j, k, _coord, point_box, i, octree_seq_id,
+                              root_id, ppm->point_clouds[i], _char_length,
+                              ppm->tolerance);
 
       }
     }
@@ -687,7 +693,8 @@ PDM_points_merge_process
   double *extents_proc;
   int    *used_ranks;
 
-  const int n_used_ranks = PDM_octree_processes_extents_get (ppm->octree_id, &used_ranks, &extents_proc);
+  const int n_used_ranks = PDM_octree_processes_extents_get (ppm->octree_id,
+                                                             &used_ranks, &extents_proc);
 
   int s_tmp_store = sizeof(int) * ppm->max_n_points;
   int n_tmp_store = 0;

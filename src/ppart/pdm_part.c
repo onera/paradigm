@@ -1,4 +1,3 @@
-
 /*============================================================================
  * Parallel partitioning
  *============================================================================*/
@@ -627,7 +626,7 @@ _dual_graph_from_cell_face
       else if (ppart->dface_cell[2*lface + 1] == 0)
         ppart->dface_cell[2*lface + 1] = gcell;
       else {
-        printf("[%i] Failed on %i with gcell = %i and gface = %i --> %i %i \n", i, lface, gcell, gface, ppart->dface_cell[2*lface], ppart->dface_cell[2*lface+1]);
+        printf("[%i] Failed on %i with gcell = "PDM_FMT_G_NUM" and gface = "PDM_FMT_G_NUM" --> "PDM_FMT_G_NUM" "PDM_FMT_G_NUM" \n", i, lface, gcell, gface, ppart->dface_cell[2*lface], ppart->dface_cell[2*lface+1]);
 
         double xf = 0.;
         double yf = 0.;
@@ -648,7 +647,7 @@ _dual_graph_from_cell_face
         PDM_printf("PPART internal error : Face already defined in ppart->dface_cell connectivity\n");
         exit(1);
       }
-      printf("[%i] ppart->dface_cell[%i, %i] = %i, %i \n", i, 2*lface, 2*lface+1, ppart->dface_cell[2*lface  ],
+      printf("[%i] ppart->dface_cell[%i, %i] = "PDM_FMT_G_NUM", "PDM_FMT_G_NUM"\n", i, 2*lface, 2*lface+1, ppart->dface_cell[2*lface  ],
                                                               ppart->dface_cell[2*lface+1]);
 
     }

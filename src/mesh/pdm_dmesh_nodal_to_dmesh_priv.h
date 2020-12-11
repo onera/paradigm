@@ -37,6 +37,8 @@ typedef struct _pdm_link_dmesh_nodal_to_dmesh_t {
 
   PDM_dmesh_nodal_t *dmesh_nodal;
   PDM_dmesh_t       *dmesh;
+  PDM_ownership_t    owner;                   /*!< Which have the responsabilities of results */
+  PDM_bool_t         results_is_getted;       /*!< Flags to indicate if result is getted      */
 
   /* We keep the link between the dmesh_nodal and dmesh */
   int           dn_elmt;

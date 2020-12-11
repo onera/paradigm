@@ -37,9 +37,21 @@ cdef extern from "pdm_dmesh_nodal_to_dmesh.h":
     void PDM_dmesh_nodal_to_dmesh_get_dmesh(PDM_dmesh_nodal_to_dmesh_t  *dmn_to_dm,
                                             int                          i_mesh,
                                             PDM_dmesh_t                **dm)
+    void PDM_dmesh_nodal_to_dmesh_transform_to_coherent_dmesh(PDM_dmesh_nodal_to_dmesh_t *dmesh_nodal_to_dm,
+                                                              int                         extract_dim)
 
     void PDM_dmesh_nodal_to_dmesh_free(PDM_dmesh_nodal_to_dmesh_t* dmn_to_dm)
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+
+_PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_FACE = PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_FACE
+_PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_EDGE = PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_EDGE
+
+_PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_NONE    = PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_NONE
+_PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_FACE = PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_FACE
+_PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_EDGE = PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_EDGE
+_PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_VTX  = PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_VTX
+
 
 # ------------------------------------------------------------------
 cdef class DMeshNodalToDMesh:
@@ -52,7 +64,7 @@ cdef class DMeshNodalToDMesh:
   # ************************************************************************
   # ------------------------------------------------------------------------
   def __cinit__(self, n_mesh,
-                     MPI.Comm comm):
+                      MPI.Comm comm):
     """
     TODOUX
     """
@@ -81,6 +93,12 @@ cdef class DMeshNodalToDMesh:
     PDM_dmesh_nodal_to_dmesh_compute(self.dmn_to_dm, transform_kind, transform_group_kind)
 
   # ------------------------------------------------------------------------
+  def transform_to_coherent_dmesh(self, int extract_dim):
+    """
+    """
+    PDM_dmesh_nodal_to_dmesh_transform_to_coherent_dmesh(self.dmn_to_dm, extract_dim)
+
+  # ------------------------------------------------------------------------
   def get_dmesh(self, int i_mesh):
     """
     """
@@ -90,8 +108,7 @@ cdef class DMeshNodalToDMesh:
     # ************************************************************************
     PDM_dmesh_nodal_to_dmesh_get_dmesh(self.dmn_to_dm, i_mesh, &dm)
 
-    # py_casp = PyCapsule_New(&dm, "dmesh", PDM_pydmesh_free);
-    py_casp = PyCapsule_New(&dm, NULL, NULL);
+    py_casp = PyCapsule_New(dm, NULL, NULL);
 
     return DistributedMeshCaspule(py_casp) # The free is inside the class
 
@@ -103,5 +120,6 @@ cdef class DMeshNodalToDMesh:
     # ************************************************************************
     # > Declaration
     # ************************************************************************
+    print("DMeshNodalToDMesh::__dealloc__")
     PDM_dmesh_nodal_to_dmesh_free(self.dmn_to_dm)
-
+    print("DMeshNodalToDMesh::__dealloc__ end ")

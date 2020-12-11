@@ -150,9 +150,6 @@ _define_rank_distrib( PDM_part_to_block_t *ptb,
     g_distrib[id] = 0;
   }
 
-  /* gnum are supposed to be ordered */
-  /* TODO: Refaire cette partie : les nombres ne sont pas tries */
-
   for (int i = 0; i < ptb->n_part; i++) {
 
     for (int j = 0; j < ptb->n_elt[i]; j++) {
@@ -1002,7 +999,7 @@ PDM_part_to_block_create2
  PDM_part_to_block_post_t      t_post,
  double                         part_active_node,
  PDM_g_num_t                 **gnum_elt,
- PDM_g_num_t                  *data_distrib_index,
+ const PDM_g_num_t            *data_distrib_index,
  int                          *n_elt,
  int                           n_part,
  PDM_MPI_Comm                  comm

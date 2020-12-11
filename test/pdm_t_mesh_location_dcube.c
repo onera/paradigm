@@ -79,6 +79,7 @@ _read_args(int            argc,
            char         **argv,
            PDM_g_num_t   *n_vtx_seg,
            double        *length,
+           int           *rotation,
            double        *tolerance,
            double        *marge,
            int           *n_part,
@@ -113,6 +114,9 @@ _read_args(int            argc,
         _usage(EXIT_FAILURE);
       else
         *length = atof(argv[i]);
+    }
+    else if (strcmp(argv[i], "-rot") == 0) {
+        *rotation = 1;
     }
     else if (strcmp(argv[i], "-t") == 0) {
       i++;
@@ -167,6 +171,23 @@ _read_args(int            argc,
 }
 
 
+static void _rotate (const int  n_pts,
+                     double    *coord)
+{
+  double R[3][3] = {{0.9362934, -0.2896295, 0.1986693},
+                    {0.3129918,  0.9447025, -0.0978434},
+                    {-0.1593451,  0.1537920,  0.9751703}};
+
+  for (int i = 0; i < n_pts; i++) {
+    double x = coord[3*i];
+    double y = coord[3*i+1];
+    double z = coord[3*i+2];
+
+    for (int j = 0; j < 3; j++) {
+      coord[3*i+j] = R[j][0]*x + R[j][1]*y + R[j][2]*z;
+    }
+  }
+}
 
 
 
@@ -223,6 +244,7 @@ int main(int argc, char *argv[])
 
   PDM_g_num_t n_vtx_seg = 10;
   double      length    = 1.;
+  int         rotation  = 0;
   double      tolerance = 1e-6;
   double      marge     = 0.;
   int         n_part    = 1;
@@ -248,6 +270,7 @@ int main(int argc, char *argv[])
              argv,
              &n_vtx_seg,
              &length,
+             &rotation,
              &tolerance,
              &marge,
              &n_part,
@@ -323,6 +346,11 @@ int main(int argc, char *argv[])
                          &dvtx_coord,
                          &dface_group_idx,
                          &dface_group);
+
+  if (rotation) {
+    _rotate (dn_vtx,
+             dvtx_coord);
+  } 
   int ppart_id = 0;
 
   gettimeofday(&t_elaps_debut, NULL);
@@ -390,14 +418,7 @@ int main(int argc, char *argv[])
 
   int n_pts_l;
   double *pts_coords = NULL;
-#if 0
-  _gen_cloud_random (n_pts,
-                     length,
-                     n_procs,
-                     my_rank,
-                     &pts_coords,
-                     &n_pts_l);
-#else
+
   marge *= length;
   double xyz_min[3] = {-marge, -marge, -marge};
   double xyz_max[3] = {length + marge, length + marge, length + marge};
@@ -408,7 +429,11 @@ int main(int argc, char *argv[])
                  my_rank,
                  &pts_coords,
                  &n_pts_l);
-#endif
+
+  if (rotation) {
+    _rotate (n_pts_l,
+             pts_coords);
+  } 
 
   int id_gnum = PDM_gnum_create (3, 1, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD, PDM_OWNERSHIP_USER);
 
@@ -427,14 +452,6 @@ int main(int argc, char *argv[])
   PDM_gnum_free (id_gnum);
   free (char_length);
 
-
-
-#if 0
-  for (int ipt = 0; ipt < n_pts_l; ipt++) {
-    printf("[%d] ("PDM_FMT_G_NUM") (%f, %f, %f)\n",
-           my_rank, pts_gnum[ipt], pts_coords[3*ipt], pts_coords[3*ipt+1], pts_coords[3*ipt+2]);
-  }
-#endif
 
   /************************
    *
@@ -561,10 +578,6 @@ int main(int argc, char *argv[])
 
   PDM_mesh_location_dump_times (id_loc);
 
-
-  /* int p_n_points; */
-  /* double      *p_coords      = NULL; */
-  /* PDM_g_num_t *p_gnum        = NULL; */
   PDM_g_num_t *p_location    = NULL;
   int         *p_weights_idx = NULL;
   double      *p_weights     = NULL;
@@ -572,9 +585,6 @@ int main(int argc, char *argv[])
   PDM_mesh_location_get (id_loc,
                          0,//i_point_cloud,
                          0,//i_part,
-                         /* &p_n_points, */
-                         /* &p_coords, */
-                         /* &p_gnum, */
                          &p_location,
                          &p_weights_idx,
                          &p_weights,
@@ -582,6 +592,7 @@ int main(int argc, char *argv[])
 
 
   /* Check results */
+if (!rotation) {
   if (my_rank == 0) {
     printf("-- Check\n");
     fflush(stdout);
@@ -640,7 +651,7 @@ int main(int argc, char *argv[])
       //<<--
     }
   }
-
+}
 
   PDM_mesh_location_free (id_loc,
                           0);

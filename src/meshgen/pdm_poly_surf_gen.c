@@ -318,18 +318,18 @@ PDM_g_num_t    **dedge_group
   *dface_edge    = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * 8 * (*dn_face));
   *dedge_vtx     = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * 2 * (*dn_edge));
   *dedge_face    = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * 2 * (*dn_edge));
-	for (int i=0; i<(*dn_face)+1; i++)
-		(*dface_vtx_idx)[i]=-1;
-	for (int i=0; i<(8 * (*dn_face)); i++)
-		(*dface_vtx)[i]=-1;
-	for (int i=0; i<(8 * (*dn_face)); i++)
-		(*dface_edge)[i]=-1;
-	for (int i=0; i<(2 * (*dn_edge)); i++)
-		(*dedge_vtx)[i]=-1;
-	for (int i=0; i<(2 * (*dn_edge)); i++)
-		(*dedge_face)[i]=-1;
+  for (int i=0; i<(*dn_face)+1; i++)
+    (*dface_vtx_idx)[i]=-1;
+  for (int i=0; i<(8 * (*dn_face)); i++)
+    (*dface_vtx)[i]=-1;
+  for (int i=0; i<(8 * (*dn_face)); i++)
+    (*dface_edge)[i]=-1;
+  for (int i=0; i<(2 * (*dn_edge)); i++)
+    (*dedge_vtx)[i]=-1;
+  for (int i=0; i<(2 * (*dn_edge)); i++)
+    (*dedge_face)[i]=-1;
 
-	/* Calcul des entites */
+  /* Calcul des entites */
   /* ------------------ */
 
   /* Calcul des coordonnees */
@@ -573,11 +573,11 @@ PDM_g_num_t    **dedge_group
       (*dface_edge)[ideb]     = dn_edge_abs + 1;
       if (itri == nbLi - 1){
         (*dface_edge)[ideb+1]   = n_tri + 4 + (6 * nx_poly + 1) * (itri + 1) + (7 * nx_poly + 1) - 6;
-        printf(" Cas 1 : dface_edge)[%i] :: %i \n", ideb+1, (*dface_edge)[ideb+1]);
+        printf(" Cas 1 : dface_edge)[%i] :: "PDM_FMT_G_NUM"\n", ideb+1, (*dface_edge)[ideb+1]);
       }
       else{
         (*dface_edge)[ideb+1]   = n_tri + 4 + (6 * nx_poly + 1) * (itri+2) + 2;
-        printf(" Cas 2 : dface_edge)[%i] :: %i \n", ideb+1, (*dface_edge)[ideb+1]);
+        printf(" Cas 2 : dface_edge)[%i] :: "PDM_FMT_G_NUM"\n", ideb+1, (*dface_edge)[ideb+1]);
       }
       (*dface_edge)[ideb+2]   = n_tri + 4 + (6 * nx_poly + 1) * (itri + 1) - 3;
       dn_face_tmp += 1;

@@ -46,7 +46,7 @@ target_add_dependency(${PROJECT_NAME} std_e)
 ### C++ end
 
 include(${CMAKE_MODULE_PATH}/version.cmake)
-project(PDM VERSION ${PDM_DEF_VERSION} LANGUAGES C CXX Fortran)
+project(PDM VERSION ${PDM_DEF_VERSION_MAJOR} LANGUAGES C CXX Fortran)
 
 if (NOT (PDM_IN_PDMA))
    set(PDM_VERSION "${PDM_VERSION_MAJOR}.${PDM_VERSION_MINOR}.${PDM_VERSION_PATCH}")
@@ -422,7 +422,7 @@ endif()
 # pour les clients utilisant CMake
 #------------------------------------------------------------------------------
 configure_file(
-  "${CMAKE_SOURCE_DIR}/paradigm/cmake/templates/pdmConfig.cmake.in"
+  "${CMAKE_CURRENT_SOURCE_DIR}/cmake/templates/pdmConfig.cmake.in"
   pdmConfig.cmake
   @ONLY
 )

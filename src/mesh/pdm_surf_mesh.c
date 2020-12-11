@@ -1968,18 +1968,6 @@ PDM_surf_mesh_is_plane_surface
     }
   }
 
-
-  printf("plane %d : %12.5e  %12.5e  %12.5e  %12.5e\n",isPlane,
-         planeEquation[0],
-         planeEquation[1],
-         planeEquation[2] ,
-         planeEquation[3]);
-  printf("barycentre : %12.5e  %12.5e  %12.5e\n",
-         barycenter[0],
-         barycenter[1],
-         barycenter[2]);
-  fflush(stdout);
-
   return isPlane;
 }
 
