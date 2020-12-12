@@ -721,15 +721,15 @@ _dconnectivity_to_pconnectivity_abs
   /*
    * Prepare exchange protocol
    */
-  printf("pn_entity =%i\n",pn_entity[0]);
-  printf("entity_distribution:");
-  for (int i = 0; i < n_rank+1; ++i)
-    printf(" %d ", entity_distribution[i]);
-  printf("\n");
-  printf("pentity_ln_to_gn:");
-  for (int i = 0; i < pn_entity[0]; ++i)
-    printf(" %d ", pentity_ln_to_gn[0][i]);
-  printf("\n");
+  //printf("pn_entity =%i\n",pn_entity[0]);
+  //printf("entity_distribution:");
+  //for (int i = 0; i < n_rank+1; ++i)
+  //  printf(" %d ", entity_distribution[i]);
+  //printf("\n");
+  //printf("pentity_ln_to_gn:");
+  //for (int i = 0; i < pn_entity[0]; ++i)
+  //  printf(" %d ", pentity_ln_to_gn[0][i]);
+  //printf("\n");
   PDM_block_to_part_t* btp = PDM_block_to_part_create(entity_distribution,
                                (const PDM_g_num_t **) pentity_ln_to_gn,
                                                       pn_entity,
@@ -959,18 +959,18 @@ PDM_part_multi_dconnectivity_to_pconnectivity_sort
     }
     PDM_g_num_t* dconnectivity_section = dconnectivity + dconnectivity_section_idx[0];
 
-    printf("\ni_section = %i\n",i_section);
-    printf("dn_entity= %i\n",dn_entity);
-    printf("pn_entity= %i\n",pn_entity[i_section][0]);
-    printf("entity_distribution[i_section] = %i\n",entity_distribution[i_section][i_rank+1]);
-    printf("dconnectivity_section_idx_at_0:");
-    for (int i = 0; i < dn_entity+1; i++)
-      printf(" %d ", dconnectivity_section_idx_at_0[i]);
-    printf("\n");
-    printf("dconnectivity_section:");
-    for (int i = 0; i < dconnectivity_section_idx_at_0[dn_entity]; i++)
-      printf(" %d ", dconnectivity_section[i]);
-    printf("\n");
+    //printf("\ni_section = %i\n",i_section);
+    //printf("dn_entity= %i\n",dn_entity);
+    //printf("pn_entity= %i\n",pn_entity[i_section][0]);
+    //printf("entity_distribution[i_section] = %i\n",entity_distribution[i_section][i_rank+1]);
+    //printf("dconnectivity_section_idx_at_0:");
+    //for (int i = 0; i < dn_entity+1; i++)
+    //  printf(" %d ", dconnectivity_section_idx_at_0[i]);
+    //printf("\n");
+    //printf("dconnectivity_section:");
+    //for (int i = 0; i < dconnectivity_section_idx_at_0[dn_entity]; i++)
+    //  printf(" %d ", dconnectivity_section[i]);
+    //printf("\n");
 
     // 0. create pconnectivity with global numbering
     printf("lala5.3\n");
@@ -987,19 +987,19 @@ PDM_part_multi_dconnectivity_to_pconnectivity_sort
     printf("lala5.4\n");
  
     int** _pconnectivity_idx = (*pconnectivity_idx)[i_section];
-    printf("pconnectivity_idx:");
-    for (int i = 0; i < pn_entity[i_section][0]+1; i++)
-      printf(" %d ", _pconnectivity_idx[0][i]);
-    printf("\n");
-    PDM_g_num_t** pconnectivity_abs_section = pconnectivity_abs[i_section];
-    printf("pconnectivity_abs_section:");
-    for (int i = 0; i < _pconnectivity_idx[0][pn_entity[i_section][0]]; i++)
-      printf(" %d ", pconnectivity_abs_section[0][i]);
-    printf("\n");
+    //printf("pconnectivity_idx:");
+    //for (int i = 0; i < pn_entity[i_section][0]+1; i++)
+    //  printf(" %d ", _pconnectivity_idx[0][i]);
+    //printf("\n");
+    //PDM_g_num_t** pconnectivity_abs_section = pconnectivity_abs[i_section];
+    //printf("pconnectivity_abs_section:");
+    //for (int i = 0; i < _pconnectivity_idx[0][pn_entity[i_section][0]]; i++)
+    //  printf(" %d ", pconnectivity_abs_section[0][i]);
+    //printf("\n");
 
     for(int i_part = 0; i_part < n_part; ++i_part) {
       int n_elmts = pn_entity[i_section][i_part];
-      printf("n_elmts = %i\n",n_elmts);
+      //printf("n_elmts = %i\n",n_elmts);
       pn_vtx[i_part] += (*pconnectivity_idx)[i_section][i_part][n_elmts];
     }
     printf("lala5.4b\n");
@@ -1020,11 +1020,11 @@ PDM_part_multi_dconnectivity_to_pconnectivity_sort
         ++pos;
       }
     }
-    printf("pn_vtx= %i\n",pn_vtx[i_part]);
-    printf("pconnectivity_abs_cat:");
-    for (int i = 0; i < pn_vtx[i_part]; ++i)
-      printf(" %d ", pconnectivity_abs_cat[i_part][i]);
-    printf("\n");
+    //printf("pn_vtx= %i\n",pn_vtx[i_part]);
+    //printf("pconnectivity_abs_cat:");
+    //for (int i = 0; i < pn_vtx[i_part]; ++i)
+    //  printf(" %d ", pconnectivity_abs_cat[i_part][i]);
+    //printf("\n");
   }
     printf("lala5.6\n");
   int** unique_order;
@@ -1036,11 +1036,11 @@ PDM_part_multi_dconnectivity_to_pconnectivity_sort
     pchild_ln_to_gn,
     &unique_order
   );
-  printf("n_vtx uniq= %i\n",*pn_child_entity[0]);
-  printf("pchild_ln_to_gn:");
-  for (int i = 0; i < *pn_child_entity[0]; ++i)
-    printf(" %d ", (*pchild_ln_to_gn)[0][i]);
-  printf("\n");
+  //printf("n_vtx uniq= %i\n",*pn_child_entity[0]);
+  //printf("pchild_ln_to_gn:");
+  //for (int i = 0; i < *pn_child_entity[0]; ++i)
+  //  printf(" %d ", (*pchild_ln_to_gn)[0][i]);
+  //printf("\n");
 
     printf("lala5.7\n");
   // 2. create pconnectivity with local numbering
@@ -1428,11 +1428,11 @@ PDM_part_dconnectivity_to_pconnectivity_hash
 
     if(0 == 1){
       //printf("n_elmt_sort::%d\n", n_elmt_sort);
-      printf("_pchild_ln_to_gn::");
-      for(int i = 0; i < nbUnique; ++i){
-        printf(PDM_FMT_G_NUM" ", _pchild_ln_to_gn[i_part][i]);
-      }
-      printf("\n");
+      //printf("_pchild_ln_to_gn::");
+      //for(int i = 0; i < nbUnique; ++i){
+      //  printf(PDM_FMT_G_NUM" ", _pchild_ln_to_gn[i_part][i]);
+      //}
+      //printf("\n");
     }
 
     /*
@@ -1922,16 +1922,16 @@ PDM_part_dcoordinates_to_pcoordinates
   PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_size(comm, &n_rank);
 
-  printf("n_part=%i\n",n_part);
-  printf("pn_vtx=%i\n",pn_vtx[0]);
-  printf("vertex_distribution:");
-  for (int i = 0; i < n_rank+1; ++i)
-    printf(" %d ", vertex_distribution[i]);
-  printf("\n");
-  printf("pvtx_ln_to_gn:");
-  for (int i = 0; i < pn_vtx[0]; ++i)
-    printf(" %d ", pvtx_ln_to_gn[0][i]);
-  printf("\n");
+  //printf("n_part=%i\n",n_part);
+  //printf("pn_vtx=%i\n",pn_vtx[0]);
+  //printf("vertex_distribution:");
+  //for (int i = 0; i < n_rank+1; ++i)
+  //  printf(" %d ", vertex_distribution[i]);
+  //printf("\n");
+  //printf("pvtx_ln_to_gn:");
+  //for (int i = 0; i < pn_vtx[0]; ++i)
+  //  printf(" %d ", pvtx_ln_to_gn[0][i]);
+  //printf("\n");
 
   PDM_block_to_part_t* btp = PDM_block_to_part_create(vertex_distribution,
                                (const PDM_g_num_t **) pvtx_ln_to_gn,
