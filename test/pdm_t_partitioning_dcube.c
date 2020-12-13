@@ -187,15 +187,18 @@ compute_dual_mesh_metrics
   /*
    * Compute cell_center and face center coordinates
    */
-  double** center_cell  = (double **) malloc( n_part * sizeof(double *) );
-  double** center_face  = (double **) malloc( n_part * sizeof(double *) );
-  double** surface_face = (double **) malloc( n_part * sizeof(double *) );
+  double** center_cell        = (double **) malloc( n_part * sizeof(double *) );
+  double** center_face        = (double **) malloc( n_part * sizeof(double *) );
+  double** surface_face       = (double **) malloc( n_part * sizeof(double *) );
+  double** ponderate_face_vtx = (double **) malloc( n_part * sizeof(double *) );
 
   for (int i_part = 0; i_part < n_part; i_part++){
 
     center_cell [i_part] = (double *) malloc( 3 * pn_cell[i_part]  * sizeof(double) );
     center_face [i_part] = (double *) malloc( 3 * pn_faces[i_part] * sizeof(double) );
     surface_face[i_part] = (double *) malloc( 3 * pn_faces[i_part] * sizeof(double) );
+
+    ponderate_face_vtx[i_part] = (double *) malloc( pface_vtx_idx[i_part][pn_faces[i_part]] * sizeof(double) );
     int* count_cell      = (int    *) malloc(     pn_cell[i_part]  * sizeof(int   ) );
 
     for (int iface = 0 ; iface < pn_faces[i_part]; iface++) {
@@ -223,7 +226,6 @@ compute_dual_mesh_metrics
         z2 += pvtx_coord[i_part][3*i_vtx+2];
       }
 
-
       center_face[i_part][3*iface  ] = x2/n_vtx_on_face;
       center_face[i_part][3*iface+1] = y2/n_vtx_on_face;
       center_face[i_part][3*iface+2] = z2/n_vtx_on_face;
@@ -231,7 +233,7 @@ compute_dual_mesh_metrics
       int i_cell1 = PDM_ABS(pface_cell[i_part][2*iface  ])-1;
       int i_cell2 = PDM_ABS(pface_cell[i_part][2*iface+1])-1;
 
-      printf(" [%i] --> icell1 = %i | icell2 = %i [%i] \n", i_part, i_cell1, i_cell2, pn_cell[i_part]);
+      // printf(" [%i] --> icell1 = %i | icell2 = %i [%i] \n", i_part, i_cell1, i_cell2, pn_cell[i_part]);
       center_cell[i_part][3*i_cell1  ] += x2;
       center_cell[i_part][3*i_cell1+1] += y2;
       center_cell[i_part][3*i_cell1+2] += z2;
@@ -254,9 +256,15 @@ compute_dual_mesh_metrics
       double zcf = center_face[i_part][3*iface+2];
 
       int beg = pface_vtx_idx[i_part][iface];
+
+      /* Init */
       for(int idx_vtx2 = 0; idx_vtx2 < n_vtx_on_face; ++idx_vtx2) {
-        int idx_vtx3 = (idx_vtx3 + 1) % n_vtx_on_face;
-        printf("[%i] idx_vtx : %i %i \n", iface, idx_vtx2, idx_vtx3);
+        ponderate_face_vtx[i_part][beg+idx_vtx2] = 0.;
+      }
+
+      for(int idx_vtx2 = 0; idx_vtx2 < n_vtx_on_face; ++idx_vtx2) {
+        int idx_vtx3 = (idx_vtx2 + 1) % n_vtx_on_face;
+        // printf("[%i] idx_vtx : %i %i \n", iface, idx_vtx2, idx_vtx3);
         int i_vtx2 = PDM_ABS(pface_vtx[i_part][beg+idx_vtx2])-1;
         int i_vtx3 = PDM_ABS(pface_vtx[i_part][beg+idx_vtx3])-1;
 
@@ -276,6 +284,29 @@ compute_dual_mesh_metrics
         surface_face[i_part][3*iface+1] += ny;
         surface_face[i_part][3*iface+2] += nz;
 
+        // middle of current edge
+        double mid_x = 0.5 * (xvtx2 + xvtx3);
+        double mid_y = 0.5 * (yvtx2 + yvtx3);
+        double mid_z = 0.5 * (zvtx2 + zvtx3);
+
+        _compute_triangle_surf(xcf, ycf, zcf, xvtx2, yvtx2, zvtx2, mid_x, mid_y, mid_z, &nx, &ny, &nz);
+        ponderate_face_vtx[i_part][beg+idx_vtx2] += sqrt(nx*nx + ny*ny + nz*nz);
+
+        _compute_triangle_surf(xcf, ycf, zcf, mid_x, mid_y, mid_z, xvtx3, yvtx3, zvtx3, &nx, &ny, &nz);
+        ponderate_face_vtx[i_part][beg+idx_vtx3] += sqrt(nx*nx + ny*ny + nz*nz);
+
+      }
+
+      // Compute norm
+      double sn = sqrt(surface_face[i_part][3*iface  ]*surface_face[i_part][3*iface  ] +
+                       surface_face[i_part][3*iface+1]*surface_face[i_part][3*iface+1] +
+                       surface_face[i_part][3*iface+2]*surface_face[i_part][3*iface+2]);
+
+      double invsn = 1./sn;
+
+      for(int idx_vtx2 = 0; idx_vtx2 < n_vtx_on_face; ++idx_vtx2) {
+        ponderate_face_vtx[i_part][beg+idx_vtx2] = ponderate_face_vtx[i_part][beg+idx_vtx2] * invsn;
+        printf("ponderate_face_vtx[%i] = %12.5e \n", beg+idx_vtx2, ponderate_face_vtx[i_part][beg+idx_vtx2]);
       }
 
     }
@@ -492,9 +523,9 @@ compute_dual_mesh_metrics
         double pond = 1./n_vtx_on_face;
         for(int idx_vtx = pface_vtx_idx[i_part][iface]; idx_vtx < pface_vtx_idx[i_part][iface+1]; ++idx_vtx) {
           int i_vtx = pface_vtx[i_part][idx_vtx]-1;
-          flux_bal[3*i_vtx  ] -= pond * surface_face[i_part][3*iface  ];
-          flux_bal[3*i_vtx+1] -= pond * surface_face[i_part][3*iface+1];
-          flux_bal[3*i_vtx+2] -= pond * surface_face[i_part][3*iface+2];
+          flux_bal[3*i_vtx  ] += pond * surface_face[i_part][3*iface  ];
+          flux_bal[3*i_vtx+1] += pond * surface_face[i_part][3*iface+1];
+          flux_bal[3*i_vtx+2] += pond * surface_face[i_part][3*iface+2];
         }
 
       }
@@ -514,10 +545,12 @@ compute_dual_mesh_metrics
     free(center_cell[i_part]);
     free(center_face[i_part]);
     free(surface_face[i_part]);
+    free(ponderate_face_vtx[i_part]);
   }
   free(center_cell);
   free(center_face);
   free(surface_face);
+  free(ponderate_face_vtx);
 
   *pedge_surf = edge_surf;
   *pdual_vol  = dual_vol;
