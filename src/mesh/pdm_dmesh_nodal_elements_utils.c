@@ -967,12 +967,6 @@ PDM_pyra_decomposes_faces
     _current_elmt_face_vtx_idx[ielt * n_face_elt + 4]  = _current_elmt_face_vtx_idx[ielt * n_face_elt + 3] + 3;
     _current_elmt_face_vtx_idx[ielt * n_face_elt + 5]  = _current_elmt_face_vtx_idx[ielt * n_face_elt + 4] + 3;
 
-    // printf("Pyra::_current_elmt_face_vtx_idx[%i] = %i \n", _n_face_current + ielt * n_face_elt + 1, _current_elmt_face_vtx_idx[ielt * n_face_elt    ] + 4);
-    // printf("Pyra::_current_elmt_face_vtx_idx[%i] = %i \n", _n_face_current + ielt * n_face_elt + 2, _current_elmt_face_vtx_idx[ielt * n_face_elt + 1] + 4);
-    // printf("Pyra::_current_elmt_face_vtx_idx[%i] = %i \n", _n_face_current + ielt * n_face_elt + 3, _current_elmt_face_vtx_idx[ielt * n_face_elt + 2] + 4);
-    // printf("Pyra::_current_elmt_face_vtx_idx[%i] = %i \n", _n_face_current + ielt * n_face_elt + 4, _current_elmt_face_vtx_idx[ielt * n_face_elt + 3] + 4);
-    // printf("Pyra::_current_elmt_face_vtx_idx[%i] = %i \n", _n_face_current + ielt * n_face_elt + 5, _current_elmt_face_vtx_idx[ielt * n_face_elt + 4] + 4);
-
     _current_elmt_face_vtx[n_sum_vtx_face * ielt + 0]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + 3];
     _current_elmt_face_vtx[n_sum_vtx_face * ielt + 1]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + 2];
     _current_elmt_face_vtx[n_sum_vtx_face * ielt + 2]  = connectivity_elmt_vtx[n_sum_vtx_elt * ielt + 1];
