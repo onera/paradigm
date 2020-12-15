@@ -1018,10 +1018,11 @@ PDM_MPI_Comm      comm
                         cell_part,
                         comm);
 
-  free(dual_graph_idx);
-  free(dual_graph);
-  if (part_size_method == PDM_PART_SIZE_HETEROGENEOUS)
+  // free(dual_graph_idx);
+  // free(dual_graph);
+  if (part_size_method == PDM_PART_SIZE_HETEROGENEOUS) {
     free(part_fractions);
+  }
 
   // Partitioning algorithm except to work on 2d arrays (external size = n_part) whereas
   // _part_t struture stores n_part * 1d arrays so we have to use tmp pointers
@@ -1056,6 +1057,47 @@ PDM_MPI_Comm      comm
                                cell_part,
                               &pn_cell,
                               &pcell_ln_to_gn);
+
+
+  PDM_g_num_t** pcell_ln_to_gn_extented;
+  int*          pn_cell_extented;
+  PDM_extend_mesh(comm,
+                  part_distri,
+                  cell_distri,
+                  cell_part,
+                  n_part,
+                  dual_graph_idx,
+                  dual_graph,
+                  pn_cell,
+                  pcell_ln_to_gn,
+                 &pn_cell_extented,
+                 &pcell_ln_to_gn_extented);
+
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    free(pcell_ln_to_gn[i_part]);
+  }
+  free(pcell_ln_to_gn);
+  free(pn_cell);
+
+  /* Reassign */
+  pn_cell        = pn_cell_extented;
+  pcell_ln_to_gn = pcell_ln_to_gn_extented;
+
+  free(dual_graph_idx);
+  free(dual_graph);
+
+  // Pour garder la hierarchie de "ghost", l'idéal et de reconstruire par connectivité descendante
+  // cell -> face -> edge -> vtx
+  // Quand on chope les cellules "réelles" on garde l'info
+  // puis qd on etends on met l'info dans les cellules
+  // Par connectivité on met toute les faces dans le cell_face interieur à intérier
+  // Puis avec face_vtx on met les vtx intérieur
+  // Il ne faut pas oublier les face_group à tagger également
+  // Attention pour les ghosts cell on doit prendre en compte les djoin_idx ...
+  // Pour les graphes de comm je pense qu'on a plus besoin des faces ?
+  // A faire : Ecriture d'un test
+
+
   free(cell_part);
   PDM_part_dconnectivity_to_pconnectivity_sort(comm,
                                                cell_distri,
@@ -1387,14 +1429,14 @@ const int   i_part,
   *n_total_part = _pmeshes.tn_part;
 
   *s_cell_face = _pmeshes.parts[i_part]->cell_face_idx[*n_cell];
-  *s_face_vtx  = _pmeshes.parts[i_part]->face_vtx_idx[*n_face];
+  *s_face_vtx  = _pmeshes.parts[i_part]->face_vtx_idx [*n_face];
 
   *n_face_part_bound = _pmeshes.parts[i_part]->face_part_bound_part_idx[*n_total_part];
 
   *n_bound_groups = _pmeshes.n_bounds;
   *n_join_groups  = _pmeshes.n_joins;
-  *s_face_bound    = _pmeshes.parts[i_part]->face_bound_idx[*n_bound_groups];
-  *s_face_join     = _pmeshes.parts[i_part]->face_join_idx[*n_join_groups];
+  *s_face_bound   = _pmeshes.parts[i_part]->face_bound_idx[*n_bound_groups];
+  *s_face_join    = _pmeshes.parts[i_part]->face_join_idx [*n_join_groups ];
 }
 
 
@@ -1608,8 +1650,9 @@ PDM_multipart_free
   // free(_multipart->dmeshes_ids);
   for (int izone = 0; izone < _multipart->n_zone; izone++) {
     free(_multipart->pmeshes[izone].joins_ids);
-    for (int ipart = 0; ipart < _multipart->n_part[izone]; ipart++)
+    for (int ipart = 0; ipart < _multipart->n_part[izone]; ipart++) {
       _part_free(_multipart->pmeshes[izone].parts[ipart], _multipart->owner);
+    }
     free(_multipart->pmeshes[izone].parts);
   }
   free(_multipart->pmeshes);

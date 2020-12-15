@@ -517,6 +517,7 @@ PDM_dconnectivity_transpose
 
   // printf("blk_size       ::%i\n", blk_size       );
   // printf("dn_entity2_recv::%i\n", dn_entity2_recv);
+  log_trace("blk_size = %i | dn_entity2_recv = %i \n", blk_size, dn_entity2_recv);
 
   // PDM_log_trace_array_long(dentity2_entity1_n, dn_entity2_recv, "Before : dentity2_entity1_n::");
   // PDM_log_trace_array_long(recv_data, blk_size, "Before : recv_data::");

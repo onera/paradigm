@@ -330,6 +330,23 @@ PDM_part_renum_face
  */
 
 void
+PDM_part_renum_edge
+(
+ _part_t **part,
+ int       n_part,
+ int       renum_vtx_method,
+ void     *specific_data
+);
+
+/**
+ *
+ * \brief Perform vtx renumbering
+ *
+ * \param [in,out]  part       part structure
+ *
+ */
+
+void
 PDM_part_renum_vtx
 (
  _part_t **part,
@@ -371,6 +388,24 @@ PDM_part_reorder_cell
 
 void
 PDM_part_reorder_face
+(
+ _part_t *part,
+ int     *new_to_old_order
+);
+
+/**
+ *
+ * \brief Perform vtx renumbering from a new order
+ *        Actualise all faces array according to the new numbering
+ *        Connectivities/face_tag/face_color/face_ln_to_gn
+ *
+ * \param [in,out]  part        Current partition
+ * \param [in]      new_to_old_order    NewOrder
+ *
+ */
+
+void
+PDM_part_reorder_edge
 (
  _part_t *part,
  int     *new_to_old_order

@@ -57,6 +57,7 @@ typedef struct  _part_t {
   int           n_vtx;               /*!< Number of vertices                   */
   int           n_cell;              /*!< Number of cells                      */
   int           n_face;              /*!< Number of faces                      */
+  int           n_edge;              /*!< Number of edges                      */
   int           n_face_part_bound;   /*!< Number of partitioning boundary faces*/
   int           n_vtx_part_bound;    /*!< Number of partitioning boundary vtx  */
   int           n_face_group;        /*!< Number of boundary faces             */
@@ -79,6 +80,19 @@ typedef struct  _part_t {
   PDM_g_num_t  *gcell_face;          /*!< Global numbering cell face connectivity
                                       (size = cell_face_idx[n_cell])           */
   int          *face_cell;           /*!< Face cell connectivity
+                                      (size = 2 * n_face)                      */
+
+  int          *face_edge_idx;       /*!< Face edge connectivity index
+                                      (size = n_face + 1)                      */
+  int          *face_edge;           /*!< Edge face connectivity
+                                      (size = cell_face_idx[n_edge])           */
+
+  int          *edge_face_idx;       /*!< Edge face connectivity index
+                                      (size = n_edge + 1)                      */
+  int          *edge_face;           /*!< Edge face connectivity
+                                      (size = cell_face_idx[n_edge])           */
+
+  int          *edge_vtx;           /*!< Face cell connectivity
                                       (size = 2 * n_face)                      */
 
   // Boundaries
@@ -132,6 +146,8 @@ typedef struct  _part_t {
                                       (size = n_face)                          */
   PDM_g_num_t *cell_ln_to_gn;        /*!< Local to global cell numbering
                                       (size = n_cell)                          */
+  PDM_g_num_t *edge_ln_to_gn;        /*!< Local to global vertex numbering
+                                      (size = n_vtx)                           */
   PDM_g_num_t *vtx_ln_to_gn;         /*!< Local to global vertex numbering
                                       (size = n_vtx)                           */
   PDM_g_num_t *face_group_ln_to_gn;  /*!< Local to global boundary face numbering
@@ -145,7 +161,8 @@ typedef struct  _part_t {
   // Tags -- integer fields on mesh entities
   int         *cell_tag;             /*!< Cell tag (size = n_cell)             */
   int         *face_tag;             /*!< Face tag (size = n_face)             */
-  int         *vtx_tag;              /*!< Vertex tag (size = n_face)           */
+  int         *edge_tag;             /*!< Edge tag (size = n_edge)             */
+  int         *vtx_tag;              /*!< Vertex tag (size = n_vtx)            */
 
   // Coarse mesh data
   const int   *cell_weight;          /*!< For coarse mesh (size = n_cell)      */
@@ -154,11 +171,14 @@ typedef struct  _part_t {
   // Cache blocking data
   int         *cell_color;           /*!< For cache blocking (size = n_cell)   */
   int         *face_color;           /*!< For cache blocking (size = n_face)   */
+  int         *edge_color;           /*!< For cache blocking (size = n_face)   */
+  int         *vtx_color;           /*!< For cache blocking (size = n_face)   */
   int         *thread_color;         /*!< For cache blocking (size = nThread)  */
   int         *hyperplane_color;     /*!< For cache blocking (size = nThread)  */
 
   int         *new_to_old_order_cell;    /*!< Cell reordering (size = n_cell)  */
   int         *new_to_old_order_face;    /*!< Face reordering (size = n_face)  */
+  int         *new_to_old_order_edge;    /*!< Face reordering (size = n_face)  */
   int         *new_to_old_order_vtx;     /*!< Face reordering (size = n_face)  */
 
   // Associated to 'ghost'
@@ -336,6 +356,7 @@ void
   part->n_vtx                    = 0;
   part->n_cell                   = 0;
   part->n_face                   = 0;
+  part->n_edge                   = 0;
   part->n_face_part_bound        = 0;
   part->n_vtx_part_bound         = 0;
   part->n_face_group             = 0;
@@ -345,8 +366,13 @@ void
   part->gface_vtx                = NULL;
   part->cell_face_idx            = NULL;
   part->cell_face                = NULL;
+  part->edge_face_idx            = NULL;
+  part->edge_face                = NULL;
+  part->face_edge_idx            = NULL;
+  part->face_edge                = NULL;
   part->gcell_face               = NULL;
   part->face_cell                = NULL;
+  part->edge_vtx                 = NULL;
   part->face_group_idx           = NULL;
   part->face_group               = NULL;
   part->face_part_bound_proc_idx = NULL;
@@ -361,22 +387,27 @@ void
   part->face_join                = NULL;
   part->face_ln_to_gn            = NULL;
   part->cell_ln_to_gn            = NULL;
+  part->edge_ln_to_gn            = NULL;
   part->vtx_ln_to_gn             = NULL;
   part->face_group_ln_to_gn      = NULL;
   part->face_bound_ln_to_gn      = NULL;
   part->face_join_ln_to_gn       = NULL;
   part->cell_tag                 = NULL;
   part->face_tag                 = NULL;
+  part->edge_tag                 = NULL;
   part->vtx_tag                  = NULL;
   part->cell_weight              = NULL;
   part->face_weight              = NULL;
   part->cell_color               = NULL;
   part->face_color               = NULL;
+  part->edge_color               = NULL;
+  part->vtx_color                = NULL;
   part->thread_color             = NULL;
   part->hyperplane_color         = NULL;
   part->vtx_ghost_information    = NULL;
   part->new_to_old_order_cell    = NULL;
   part->new_to_old_order_face    = NULL;
+  part->new_to_old_order_edge    = NULL;
   part->new_to_old_order_vtx     = NULL;
   part->subpartlayout            = NULL;
   return part;

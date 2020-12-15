@@ -312,7 +312,7 @@ PDM_g_num_t  **dentity_elmt
    */
   int blk_size = PDM_part_to_block_n_elt_block_get(ptb);
 
-  if( 1 == 1 ) {
+  if( 0 == 1 ) {
     PDM_log_trace_array_int(blk_tot_entity_vtx_n, blk_size             , "blk_tot_entity_vtx_n:: ");
     PDM_log_trace_array_long(blk_tot_entity_vtx , blk_tot_entity_vtx_size, "blk_tot_entity_vtx:: "  );
 
@@ -1044,8 +1044,8 @@ _to_coherent_2d
 
       for( int ielmt = beg_elmt; ielmt < end_elmt; ++ielmt ) {
         // dcell_elmt[dn_face] = ielmt;
-        log_trace("ielmt::%i --> ", ielmt);
-        log_trace("idxedge = %i -> %i \n ", link->_delmt_edge_idx[ielmt], link->_delmt_edge_idx[ielmt+1]);
+        // log_trace("ielmt::%i --> ", ielmt);
+        // log_trace("idxedge = %i -> %i \n ", link->_delmt_edge_idx[ielmt], link->_delmt_edge_idx[ielmt+1]);
         dface_edge_idx[dn_face+1] = dface_edge_idx[dn_face];
         for(int iedge = link->_delmt_edge_idx[ielmt]; iedge < link->_delmt_edge_idx[ielmt+1]; ++iedge ){
           dface_edge[idx++] = link->_delmt_edge[iedge];
@@ -1225,7 +1225,7 @@ _to_coherent_3d
       // log_trace("PDM_MIN(section_distribution[i_section  ], link->elmt_distrib[dmesh_nodal->i_rank  ]) :: %i \n", PDM_MIN(section_distribution[i_section ], link->elmt_distrib[dmesh_nodal->i_rank]));
       // log_trace("PDM_MIN(section_distribution[i_section+1], link->elmt_distrib[dmesh_nodal->i_rank+1]) :: %i \n", PDM_MIN(section_distribution[i_section+1], link->elmt_distrib[dmesh_nodal->i_rank+1]));
       // log_trace("cur_elmt :: %i \n", cur_elmt);
-      // log_trace("[%i] - beg_elmt = %i | end_elmt = %i \n", i_rank, beg_elmt, end_elmt);
+      log_trace("[%i] - beg_elmt = %i | end_elmt = %i \n", i_rank, beg_elmt, end_elmt);
       // printf("[%i] - beg_elmt = %i | end_elmt = %i \n", i_rank, beg_elmt, end_elmt);
 
       for( int ielmt = beg_elmt; ielmt < end_elmt; ++ielmt ) {
@@ -1280,6 +1280,16 @@ _to_coherent_3d
     PDM_log_trace_array_long(face_cell_tmp, face_cell_idx[dn_face], "face_cell_tmp::");
   }
 
+  log_trace("face_distrib[i_rank  ] = %i \n", dmesh->face_distrib[i_rank]);
+  log_trace("face_distrib[i_rank+1] = %i \n", dmesh->face_distrib[i_rank+1]);
+
+  printf("dcell_face_idx[dn_cell] = %i \n", dcell_face_idx[dmesh->dn_cell]);
+  printf("face_cell_idx[dn_face] = %i \n", face_cell_idx[dmesh->dn_face]);
+  log_trace("dcell_face_idx[dn_cell] = %i \n", dcell_face_idx[dmesh->dn_cell]);
+  log_trace("face_cell_idx[dn_face] = %i \n", face_cell_idx[dmesh->dn_face]);
+  log_trace("face_distrib[i_rank+1] = %i \n", dmesh->face_distrib[i_rank+1]);
+  log_trace("dn_face = %i \n", dn_face);
+
   // Post_treat
   PDM_g_num_t *face_cell = (PDM_g_num_t *) malloc( 2 * dn_face * sizeof(PDM_g_num_t));;
   for(int i_face = 0; i_face < dn_face; ++i_face) {
@@ -1290,6 +1300,15 @@ _to_coherent_3d
       face_cell[2*i_face  ] = PDM_ABS(face_cell_tmp[beg]); // Attention on peut être retourner !!!!
       face_cell[2*i_face+1] = 0;
     } else {
+      if(n_connect_cell != 2) {
+        printf(" Bizarre !!!! %i \n", n_connect_cell);
+
+        log_trace("beg = %i | end = %i | n = %i \n", beg, face_cell_idx[i_face+1], n_connect_cell);
+        for(int ii = beg; ii < face_cell_idx[i_face+1]; ++ii) {
+          printf("[%i] iface = "PDM_FMT_G_NUM" | --> "PDM_FMT_G_NUM" \n", i_rank, dmesh->face_distrib[i_rank]+i_face, face_cell_tmp[ii] );
+        }
+        printf(" \n");
+      }
       assert(n_connect_cell == 2);
       face_cell[2*i_face  ] = PDM_ABS(face_cell_tmp[beg  ]);
       face_cell[2*i_face+1] = PDM_ABS(face_cell_tmp[beg+1]);

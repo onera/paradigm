@@ -116,15 +116,14 @@ PDM_part_assemble_partitions
        PDM_g_num_t  ***pentity_ln_to_gn
 )
 {
-  printf("PDM_part_assemble_partitions\n");
   int i_rank;
   int n_rank;
 
   PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_size(comm, &n_rank);
 
-  int dn_part = part_distribution[i_rank+1] -  part_distribution[i_rank];
-  int dn_entity = entity_distribution[i_rank+1] -  entity_distribution[i_rank];
+  int dn_part   = part_distribution  [i_rank+1] - part_distribution  [i_rank];
+  int dn_entity = entity_distribution[i_rank+1] - entity_distribution[i_rank];
 
   /*
    * On recréer un tableau pourtant dans scotch et metis le part est en int64 ...
@@ -150,15 +149,16 @@ PDM_part_assemble_partitions
 
   const int n_part_block = PDM_part_to_block_n_elt_block_get (ptb_partition);
   assert(n_part_block == dn_part);
+
   /*
    * Generate global numbering
    */
-  int*             dentity_stri = (int *)          malloc( sizeof(int)         * dn_entity );
-  PDM_g_num_t* dentity_ln_to_gn = (PDM_g_num_t * ) malloc( sizeof(PDM_g_num_t) * dn_entity );
+  int*             dentity_stri = (int         *) malloc( sizeof(int        ) * dn_entity );
+  PDM_g_num_t* dentity_ln_to_gn = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) * dn_entity );
 
   PDM_g_num_t shift_g = entity_distribution[i_rank] + 1;
   for(int i = 0; i < dn_entity; ++i){
-    dentity_stri[i]     = 1;
+    dentity_stri    [i] = 1;
     dentity_ln_to_gn[i] = (PDM_g_num_t) shift_g + i;
   }
 
@@ -167,6 +167,7 @@ PDM_part_assemble_partitions
    */
   PDM_g_num_t* pentity_ln_to_gn_tmp = NULL;
 
+  // C'est peut être un multiblock_to_part ???
   PDM_part_to_block_exch (ptb_partition,
                           sizeof(PDM_g_num_t),
                           PDM_STRIDE_VAR,
@@ -716,7 +717,6 @@ PDM_part_dconnectivity_to_pconnectivity_sort
        int          ***pconnectivity
 )
 {
-  printf("PDM_part_dconnectivity_to_pconnectivity\n");
   int i_rank;
   int n_rank;
 
@@ -1632,7 +1632,7 @@ PDM_extend_mesh
  const PDM_g_num_t    *entity_distribution,
  const int            *dentity_to_part,
  const int             n_part,
- const int            *dual_graph_idx,
+ const PDM_g_num_t    *dual_graph_idx,
  const PDM_g_num_t    *dual_graph,
  const int            *pn_entity,
        PDM_g_num_t   **pentity_ln_to_gn,
@@ -1658,7 +1658,7 @@ PDM_extend_mesh
   PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_size(comm, &n_rank);
 
-  int dn_arc  = entity_distribution[i_rank+1]  -  entity_distribution[i_rank];
+  int dn_entity  = entity_distribution[i_rank+1]  -  entity_distribution[i_rank];
 
   /*
    * We search to extended the partition with the dual graph
@@ -1675,13 +1675,13 @@ PDM_extend_mesh
                                                       n_part,
                                                       comm);
 
-  int* dual_graph_n = (int *) malloc( dn_arc * sizeof(int));
-  for(int i = 0; i < dn_arc; ++i){
+  int* dual_graph_n = (int *) malloc( dn_entity * sizeof(int));
+  for(int i = 0; i < dn_entity; ++i){
     dual_graph_n[i] = dual_graph_idx[i+1] - dual_graph_idx[i];
   }
 
-  // PDM_log_trace_array_int(dual_graph_idx, dn_arc+1, "dual_graph_idx::");
-  // PDM_log_trace_array_long(dual_graph, dual_graph_idx[dn_arc], "dual_graph::");
+  // PDM_log_trace_array_int(dual_graph_idx, dn_entity+1, "dual_graph_idx::");
+  // PDM_log_trace_array_long(dual_graph, dual_graph_idx[dn_entity], "dual_graph::");
 
   /*
    * Exchange
@@ -1723,8 +1723,8 @@ PDM_extend_mesh
   for(int i_part = 0; i_part < n_part; ++i_part) {
 
     int new_size = PDM_inplace_unique_long(part_dual_graph[i_part], 0, part_dual_graph_idx[i_part][pn_entity[i_part]]-1);
-    // printf(" new_size         :: %i \n", new_size);
-    // printf(" pn_entity[i_part]:: %i \n", pn_entity[i_part]);
+    printf(" new_size         :: %i \n", new_size);
+    printf(" pn_entity[i_part]:: %i \n", pn_entity[i_part]);
 
     _pentity_ln_to_gn_extended[i_part] = (PDM_g_num_t *) malloc( new_size * sizeof(PDM_g_num_t));
 
@@ -1751,12 +1751,12 @@ PDM_extend_mesh
       }
     }
 
-    /*
-     * Compress
-     */
-    for(int i_entity = 0; i_entity < pn_entity[i_part]; ++i_entity ) {
-      _pentity_ln_to_gn_extended[i_part][i_entity] = pentity_ln_to_gn[i_part][i_entity];
-    }
+    // /*
+    //  * Compress
+    //  */
+    // for(int i_entity = 0; i_entity < pn_entity[i_part]; ++i_entity ) {
+    //   _pentity_ln_to_gn_extended[i_part][i_entity] = pentity_ln_to_gn[i_part][i_entity];
+    // }
 
     // printf("n_new_cell::%i\n", n_new_cell);
     // PDM_log_trace_array_long(pentity_ln_to_gn[i_part], pn_entity[i_part], "_pentity_ln_to_gn[i_part]::");

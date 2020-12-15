@@ -2609,6 +2609,35 @@ _part_free
     free(part->face_tag);
   part->face_tag = NULL;
 
+  if (part->edge_ln_to_gn != NULL)
+    free(part->edge_ln_to_gn);
+  part->edge_ln_to_gn = NULL;
+
+  if (part->edge_tag != NULL)
+    free(part->edge_tag);
+  part->edge_tag = NULL;
+
+
+  if (part->edge_face_idx != NULL)
+    free(part->edge_face_idx);
+  part->edge_face_idx = NULL;
+
+  if (part->edge_face != NULL)
+    free(part->edge_face);
+  part->edge_face = NULL;
+
+  if (part->face_edge_idx != NULL)
+    free(part->face_edge_idx);
+  part->face_edge_idx = NULL;
+
+  if (part->face_edge != NULL)
+    free(part->face_edge);
+  part->face_edge = NULL;
+
+  if (part->edge_vtx != NULL)
+    free(part->edge_vtx);
+  part->edge_vtx = NULL;
+
   if (part->face_part_bound_proc_idx != NULL)
     free(part->face_part_bound_proc_idx);
   part->face_part_bound_proc_idx = NULL;
@@ -2653,6 +2682,14 @@ _part_free
     free(part->face_color);
   part->face_color = NULL;
 
+  if (part->edge_color != NULL)
+    free(part->edge_color);
+  part->edge_color = NULL;
+
+  if (part->vtx_color != NULL)
+    free(part->vtx_color);
+  part->vtx_color = NULL;
+
   if (part->thread_color != NULL)
     free(part->thread_color);
   part->thread_color = NULL;
@@ -2668,6 +2705,10 @@ _part_free
   if (part->new_to_old_order_face != NULL)
     free(part->new_to_old_order_face);
   part->new_to_old_order_face = NULL;
+
+  if (part->new_to_old_order_edge != NULL)
+    free(part->new_to_old_order_edge);
+  part->new_to_old_order_edge = NULL;
 
   if (part->new_to_old_order_vtx != NULL)
     free(part->new_to_old_order_vtx);
