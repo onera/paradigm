@@ -146,6 +146,8 @@ typedef struct  _part_t {
                                       (size = 4*face_join_idx[n_joins])        */
 
   // Local to global numbering
+  PDM_g_num_t **elt_section_ln_to_gn;/*!< Local to global element numbering
+                                      (size = n_section,n_elements[i_section])                          */
   PDM_g_num_t *face_ln_to_gn ;       /*!< Local to global cell numbering
                                       (size = n_face)                          */
   PDM_g_num_t *cell_ln_to_gn;        /*!< Local to global cell numbering
@@ -369,6 +371,8 @@ void
   part->vtx                      = NULL;
   part->face_vtx_idx             = NULL;
   part->face_vtx                 = NULL;
+  part->elt_vtx_idx              = NULL;
+  part->elt_vtx                  = NULL;
   part->gface_vtx                = NULL;
   part->cell_face_idx            = NULL;
   part->cell_face                = NULL;
@@ -391,6 +395,7 @@ void
   part->face_bound               = NULL;
   part->face_join_idx            = NULL;
   part->face_join                = NULL;
+  part->elt_section_ln_to_gn     = NULL;
   part->face_ln_to_gn            = NULL;
   part->cell_ln_to_gn            = NULL;
   part->edge_ln_to_gn            = NULL;

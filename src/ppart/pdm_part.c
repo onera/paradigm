@@ -2734,6 +2734,20 @@ _part_free
     free(part->subpartlayout);
   }
 
+  free(part->n_elt);
+  part->n_elt = NULL;
+  for (int i=0; i<part->n_section; ++i) {
+    free(part->elt_vtx_idx[i]);
+    free(part->elt_vtx[i]);
+    free(part->elt_section_ln_to_gn[i]);
+  }
+  free(part->elt_vtx_idx);
+  free(part->elt_vtx);
+  free(part->elt_section_ln_to_gn);
+  part->elt_vtx_idx          = NULL;
+  part->elt_vtx              = NULL;
+  part->elt_section_ln_to_gn = NULL;
+  part->n_section            = 0;
 
   free(part);
 }
