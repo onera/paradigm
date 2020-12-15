@@ -183,7 +183,7 @@ cdef class MultiPart:
 
     # ------------------------------------------------------------------
     def __dealloc__(self):
-      #PDM_multipart_free(self._mpart_id)
+      PDM_multipart_free(self._mpart_id)
       pass
 
     # ------------------------------------------------------------------
