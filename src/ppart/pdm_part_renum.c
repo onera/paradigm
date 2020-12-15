@@ -982,8 +982,6 @@ _renum_vtx_sort_int_ext
  void     *specific_data
 )
 {
-  PDM_UNUSED(specific_data);
-
   assert(specific_data != NULL);
 
   /* Specific data in this context is a array for each part of priority give by graph_comm */
@@ -1012,7 +1010,6 @@ _renum_vtx_sort_int_ext
 
     for (int i = 0; i < n_kind; i++){
       type_idx[i+1] += type_idx[i];
-      // printf(" type_idx[%i] = %i\n", i+1, type_idx[i+1]);
     }
 
     /* Setup reordering */
@@ -1914,9 +1911,21 @@ int     *new_to_old_order
    old_to_new_order[new_to_old_order[i]] = i;
   }
 
-  PDM_part_renum_array (part->face_vtx_idx[part->n_face],
-                        old_to_new_order,
-                        part->face_vtx);
+  if (part->n_face!=0) {
+    PDM_part_renum_array (part->face_vtx_idx[part->n_face],
+                          old_to_new_order,
+                          part->face_vtx);
+  } else { // the mesh is supposed to be described by elements
+    int n_section = part->n_section;
+    assert(n_section!=0);
+    for (int i_section=0; i_section<n_section; ++i_section) {
+      int n_elt = part->n_elt[i_section];
+      int n_elt_vtx = part->elt_vtx_idx[i_section][n_elt];
+      PDM_part_renum_array (n_elt_vtx,
+                            old_to_new_order,
+                            part->elt_vtx[i_section]);
+    }
+  }
 
   if(part->edge_vtx != NULL) {
     printf("PDM_part_reorder_vtx TO DEBUG \n");

@@ -152,7 +152,7 @@ cdef class DistributedMeshNodal:
         # ************************************************************************
 
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
-        n_vtx = dvtx_coord.shape[0]
+        n_vtx = dvtx_coord.shape[0]//3
         PDM_DMesh_nodal_coord_set(self.dmn, n_vtx, <double *> dvtx_coord.data)
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
 

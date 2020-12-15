@@ -165,13 +165,13 @@ void PDM_multipart_set_reordering_options
  const char      *renum_face_method
 );
 
+
 /**
  *
  * \brief Construct the partitioned meshes on every zones
  *
  * \param [in]   mpart_id          Multipart structure id
  */
-
 void
 PDM_multipart_run_ppart
 (
@@ -200,6 +200,8 @@ PDM_multipart_part_dim_get
 const int   mpart_id,
 const int   i_zone,
 const int   i_part,
+      int  *n_section,
+      int **n_elt,
       int  *n_cell,
       int  *n_face,
       int  *n_face_part_bound,
@@ -237,6 +239,8 @@ PDM_multipart_part_val_get
 const int            mpart_id,
 const int            i_zone,
 const int            i_part,
+      int         ***elt_vtx_idx,
+      int         ***elt_vtx,
       int          **cell_tag,
       int          **cell_face_idx,
       int          **cell_face,

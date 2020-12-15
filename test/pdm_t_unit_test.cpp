@@ -19,17 +19,17 @@ mpi_init_if_needed(int argc, char** argv) -> bool {
 }
 
 int main(int argc, char** argv) {
-  mpi_init_if_needed(argc,argv);
+  //mpi_init_if_needed(argc,argv);
 
-  doctest::Context ctx;
-  ctx.setOption("reporters", "MpiConsoleReporter");
-  ctx.setOption("reporters", "MpiFileReporter");
-  ctx.setOption("force-colors", true);
-  ctx.applyCommandLine(argc, argv);
+  //doctest::Context ctx;
+  //ctx.setOption("reporters", "MpiConsoleReporter");
+  //ctx.setOption("reporters", "MpiFileReporter");
+  //ctx.setOption("force-colors", true);
+  //ctx.applyCommandLine(argc, argv);
 
-  int test_result = ctx.run();
+  //int test_result = ctx.run();
 
-  MPI_Finalize();
+  //MPI_Finalize();
 
-  return test_result;
+  //return test_result;
 }

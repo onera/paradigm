@@ -56,6 +56,8 @@ typedef struct  _part_t {
   //Dimensions
   int           n_vtx;               /*!< Number of vertices                   */
   int           n_cell;              /*!< Number of cells                      */
+  int           n_section;           /*!< Number of element sections           */
+  int          *n_elt;               /*!< Number of element per section        */
   int           n_face;              /*!< Number of faces                      */
   int           n_edge;              /*!< Number of edges                      */
   int           n_face_part_bound;   /*!< Number of partitioning boundary faces*/
@@ -71,6 +73,8 @@ typedef struct  _part_t {
                                       (size = n_face + 1)                      */
   int          *face_vtx;            /*!< Face vertex connectivity
                                       (size = face_vtx_idx[n_face])            */
+  int         **elt_vtx_idx;        /*!< Elt vertex connectivity index         */
+  int         **elt_vtx;            /*!< Elt vertex connectivity               */
   PDM_g_num_t  *gface_vtx;           /*!< Global numbering face vtx connectivity
                                       (size = face_vtx_idx[n_face])            */
   int          *cell_face_idx;       /*!< Cell face connectivity index
@@ -355,6 +359,8 @@ void
 
   part->n_vtx                    = 0;
   part->n_cell                   = 0;
+  part->n_section                = 0;
+  part->n_elt                    = NULL;
   part->n_face                   = 0;
   part->n_edge                   = 0;
   part->n_face_part_bound        = 0;

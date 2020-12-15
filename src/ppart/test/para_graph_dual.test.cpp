@@ -367,7 +367,7 @@ MPI_TEST_CASE("[3p] Split graph with PARMetis", 3) {
 
     SUBCASE("n_part == n_proc") {
       int n_part = 3;
-      PDM_para_graph_split (PDM_SPLIT_DUAL_WITH_PARMETIS,
+      PDM_para_graph_split (PDM_SPLIT_DUAL_WITH_PTSCOTCH,
                             cell_distribution,
                             graph_idx,
                             graph,
@@ -394,7 +394,7 @@ MPI_TEST_CASE("[3p] Split graph with PARMetis", 3) {
     }
     SUBCASE("n_part < n_proc") {
       int n_part = 2;
-      PDM_para_graph_split (PDM_SPLIT_DUAL_WITH_PARMETIS,
+      PDM_para_graph_split (PDM_SPLIT_DUAL_WITH_PTSCOTCH,
                             cell_distribution,
                             graph_idx,
                             graph,
@@ -421,7 +421,7 @@ MPI_TEST_CASE("[3p] Split graph with PARMetis", 3) {
     }
     SUBCASE("n_part > n_proc") {
       int n_part = 4;
-      PDM_para_graph_split (PDM_SPLIT_DUAL_WITH_PARMETIS,
+      PDM_para_graph_split (PDM_SPLIT_DUAL_WITH_PTSCOTCH,
                             cell_distribution,
                             graph_idx,
                             graph,

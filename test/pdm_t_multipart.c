@@ -365,8 +365,10 @@ int main(int argc, char *argv[])
         int n_proc, tn_part;
         int n_cell, n_face, n_vtx, n_bounds, n_joins, n_part_joins;
         int scell_face, sface_vtx, sface_bound, sface_join;
+        int  n_section;
+        int* n_elt;
 
-        PDM_multipart_part_dim_get(mpart_id, i_zone, i_part,
+        PDM_multipart_part_dim_get(mpart_id, i_zone, i_part, &n_section, &n_elt,
                                    &n_cell, &n_face, &n_part_joins, &n_vtx, &n_proc, &tn_part,
                                    &scell_face, &sface_vtx, &sface_bound, &n_bounds, &sface_join, &n_joins);
 
@@ -376,9 +378,10 @@ int main(int argc, char *argv[])
         int          *face_part_bound_proc_idx, *face_part_bound_part_idx, *face_part_bound;
         PDM_g_num_t  *cell_ln_to_gn, *face_ln_to_gn, *vtx_ln_to_gn, *face_bound_ln_to_gn, *face_join_ln_to_gn;
         int          *cell_tag, *face_tag, *vtx_tag;
+        int         **elt_vtx_idx;
+        int         **elt_vtx;
 
-
-        PDM_multipart_part_val_get(mpart_id, i_zone, i_part,
+        PDM_multipart_part_val_get(mpart_id, i_zone, i_part, &elt_vtx_idx, &elt_vtx_idx,
                                    &cell_tag, &cell_face_idx, &cell_face, &cell_ln_to_gn,
                                    &face_tag, &face_cell, &face_vtx_idx, &face_vtx, &face_ln_to_gn,
                                    &face_part_bound_proc_idx, &face_part_bound_part_idx, &face_part_bound,
