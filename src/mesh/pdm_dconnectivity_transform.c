@@ -449,7 +449,6 @@ PDM_dconnectivity_transpose
 
   int save_entity_distrib = 0;
   if(entity2_distrib != NULL && entity2_distrib[0] != -1) {
-
     ptb = PDM_part_to_block_create2(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                     PDM_PART_TO_BLOCK_POST_MERGE,
                                     1.,
@@ -517,7 +516,7 @@ PDM_dconnectivity_transpose
 
   // printf("blk_size       ::%i\n", blk_size       );
   // printf("dn_entity2_recv::%i\n", dn_entity2_recv);
-  log_trace("blk_size = %i | dn_entity2_recv = %i \n", blk_size, dn_entity2_recv);
+  // log_trace("blk_size = %i | dn_entity2_recv = %i \n", blk_size, dn_entity2_recv);
 
   // PDM_log_trace_array_long(dentity2_entity1_n, dn_entity2_recv, "Before : dentity2_entity1_n::");
   // PDM_log_trace_array_long(recv_data, blk_size, "Before : recv_data::");
