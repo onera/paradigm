@@ -188,6 +188,23 @@ PDM_DMesh_nodal_n_section_get
 
 
 /**
+ * \brief  Return type of element of section
+ *
+ * \param [in]  hdl        Distributed nodal mesh handle
+ * \param [in]  id_section   Block identifier
+ *
+ * \return  Type of section
+ *
+ */
+PDM_Mesh_nodal_elt_t
+PDM_DMesh_nodal_section_elt_type_get
+(
+  PDM_dmesh_nodal_t  *dmesh_nodal,
+  const int   id_section
+);
+
+
+/**
  * \brief  Return type of section
  *
  * \param [in]  hdl        Distributed nodal mesh handle
@@ -196,12 +213,27 @@ PDM_DMesh_nodal_n_section_get
  * \return  Type of section
  *
  */
-
 PDM_Mesh_nodal_elt_t
 PDM_DMesh_nodal_section_type_get
 (
       PDM_dmesh_nodal_t *dmesh_nodal,
 const int                id_section
+);
+
+/**
+ * \brief  Return distri of section
+ *
+ * \param [in] dmesh_nodal
+ * \param [in]  id_section   Block identifier
+ *
+ * \return  distri
+ *
+ */
+PDM_g_num_t*
+PDM_DMesh_nodal_section_distri_std_get
+(
+  PDM_dmesh_nodal_t  *dmesh_nodal,
+  const int   id_section
 );
 
 
@@ -370,7 +402,7 @@ const int           n_group_elmt,
  *      //    | /
  *   1 x-------x 2
  *
- *  - PDM_MESH_NODAL_PRSIM6 :
+ *  - PDM_MESH_NODAL_PRISM6 :
  *
  *   4 x-------x 6
  *     |\     /|
@@ -554,14 +586,28 @@ PDM_dmesh_nodal_t *dmesh_nodal
 
 
 /**
+ * \brief  Return vtx distribution of a distributed mesh
+ *
+ * \param [in]  dmesh_nodal
+ *
+ * \return  Return vtx distribution
+ *
+ */
+PDM_g_num_t*
+PDM_dmesh_nodal_vtx_distrib_get
+(
+  PDM_dmesh_nodal_t  *dmesh_nodal
+);
+
+
+/**
  * \brief  Return total number of vertices of a distributed mesh
  *
- * \param [in]  hdl       Distributed nodal mesh handle
+ * \param [in]  dmesh_nodal
  *
  * \return  Return total number of vertices
  *
  */
-
 PDM_g_num_t
 PDM_dmesh_nodal_total_n_vtx_get
 (
@@ -632,6 +678,25 @@ PDM_DMesh_nodal_cell_face_compute
 PDM_dmesh_nodal_t *dmesh_nodal
 );
 
+
+/**
+*
+* \brief Concatenates all element sections blocks 
+*
+* \param [in]   dmesh_nodal
+* \param [out]  section_idx        index of element section
+* \param [out]  cat_delt_vtx_idx   index of element
+* \param [out]  cat_delt_vtx       element vtx
+*
+ * \return     Number sections
+*/
+int PDM_concat_elt_sections(
+  PDM_dmesh_nodal_t  *dmesh_nodal,
+  int** section_idx,
+  int** cat_delt_vtx_idx,
+  PDM_g_num_t** cat_dcell_vtx
+);
+
 /**
  * \brief  Compute cell->cell connectivity
  *
@@ -641,10 +706,13 @@ PDM_dmesh_nodal_t *dmesh_nodal
 void
 PDM_dmesh_nodal_dual_graph
 (
-PDM_dmesh_nodal_t  *dmesh_nodal,
-PDM_g_num_t       **dual_graph_idx,
-PDM_g_num_t       **dual_graph,
-int                 dim
+  PDM_g_num_t*   vtx_dist,
+  PDM_g_num_t*   elt_dist,
+  int           *delt_vtx_idx,
+  PDM_g_num_t   *delt_vtx,
+  PDM_g_num_t  **dual_graph_idx,
+  PDM_g_num_t  **dual_graph,
+  PDM_MPI_Comm   comm
 );
 
 /**

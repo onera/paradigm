@@ -286,8 +286,8 @@ PDM_deduce_combine_connectivity
  * \param [in]   dentity1_entity2      is array is signed
  * \param [in]   dentity2_entity1_idx
  * \param [in]   dentity2_entity1
- * \param [in]   dentity1_entity3_idx
- * \param [in]   dentity1_entity3
+ * \param [out]   dentity1_entity3_idx
+ * \param [out]   dentity1_entity3
  */
 void
 PDM_deduce_combine_connectivity_dual

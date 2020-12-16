@@ -94,7 +94,7 @@ PDM_multi_block_to_part_create
     for(int i = 0; i < mbtp->n_rank + 1; ++i) {
       mbtp->block_distrib_idx[i_block][i] = shift + block_distrib_idx[i_block][i];
     }
-    shift += mbtp->block_distrib_idx[i_block][mbtp->n_rank];
+    shift += block_distrib_idx[i_block][mbtp->n_rank];
     PDM_log_trace_array_long(mbtp->block_distrib_idx[i_block], mbtp->n_rank + 1, "mbtp->block_distrib_idx:: ");
   }
 
@@ -129,7 +129,7 @@ PDM_multi_block_to_part_create
                                                     mbtp->block_distrib_idx[idx_block],
                                                     mbtp->n_rank + 1);
 
-      // printf("[i_part:%i | ielm : %i -> i_block : %i | ind : % i\n", i, j, i_block, ind);
+      //printf("[i_part:%i | ielm : %i -> i_block : %i | ind : % i\n", i_part, j, idx_block, idx_rank);
       int idx_data_block = idx_block + idx_rank*mbtp->n_block;
       mbtp->requested_block_n[idx_data_block]++;
 

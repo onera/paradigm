@@ -56,6 +56,8 @@ typedef struct  _part_t {
   //Dimensions
   int           n_vtx;               /*!< Number of vertices                   */
   int           n_cell;              /*!< Number of cells                      */
+  int           n_section;           /*!< Number of element sections           */
+  int          *n_elt;               /*!< Number of element per section        */
   int           n_face;              /*!< Number of faces                      */
   int           n_edge;              /*!< Number of edges                      */
   int           n_face_part_bound;   /*!< Number of partitioning boundary faces*/
@@ -71,6 +73,8 @@ typedef struct  _part_t {
                                       (size = n_face + 1)                      */
   int          *face_vtx;            /*!< Face vertex connectivity
                                       (size = face_vtx_idx[n_face])            */
+  int         **elt_vtx_idx;        /*!< Elt vertex connectivity index         */
+  int         **elt_vtx;            /*!< Elt vertex connectivity               */
   PDM_g_num_t  *gface_vtx;           /*!< Global numbering face vtx connectivity
                                       (size = face_vtx_idx[n_face])            */
   int          *cell_face_idx;       /*!< Cell face connectivity index
@@ -142,6 +146,8 @@ typedef struct  _part_t {
                                       (size = 4*face_join_idx[n_joins])        */
 
   // Local to global numbering
+  PDM_g_num_t **elt_section_ln_to_gn;/*!< Local to global element numbering
+                                      (size = n_section,n_elements[i_section])                          */
   PDM_g_num_t *face_ln_to_gn ;       /*!< Local to global cell numbering
                                       (size = n_face)                          */
   PDM_g_num_t *cell_ln_to_gn;        /*!< Local to global cell numbering
@@ -355,6 +361,8 @@ void
 
   part->n_vtx                    = 0;
   part->n_cell                   = 0;
+  part->n_section                = 0;
+  part->n_elt                    = NULL;
   part->n_face                   = 0;
   part->n_edge                   = 0;
   part->n_face_part_bound        = 0;
@@ -363,6 +371,8 @@ void
   part->vtx                      = NULL;
   part->face_vtx_idx             = NULL;
   part->face_vtx                 = NULL;
+  part->elt_vtx_idx              = NULL;
+  part->elt_vtx                  = NULL;
   part->gface_vtx                = NULL;
   part->cell_face_idx            = NULL;
   part->cell_face                = NULL;
@@ -385,6 +395,7 @@ void
   part->face_bound               = NULL;
   part->face_join_idx            = NULL;
   part->face_join                = NULL;
+  part->elt_section_ln_to_gn     = NULL;
   part->face_ln_to_gn            = NULL;
   part->cell_ln_to_gn            = NULL;
   part->edge_ln_to_gn            = NULL;
