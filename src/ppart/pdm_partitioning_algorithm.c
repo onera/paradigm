@@ -180,12 +180,6 @@ PDM_part_assemble_partitions
 
   free(dentity_stri);
   free(dentity_ln_to_gn);
-  printf("pn_entity= %i\n",(*pn_entity)[0]);
-  printf("pentity_ln_to_gn_tmp:");
-  for (int i = 0; i < (*pn_entity)[0]; i++)
-    printf(" %d ", pentity_ln_to_gn_tmp[i]);
-  printf("\n");
-
 
   /* Reshape pentity_ln_to_gn */
   *pentity_ln_to_gn = (PDM_g_num_t **) malloc( sizeof(PDM_g_num_t *) * n_part_block);
