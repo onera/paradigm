@@ -635,6 +635,40 @@ _part_free
 }
 
 
+static inline
+int
+_vtx_is_in_connectivity
+(
+  PDM_g_num_t  vtx,
+  PDM_g_num_t *first_vtx,
+  int          n_vtx
+)
+{
+  for (int i=0; i<n_vtx; ++i) {
+    if (first_vtx[i]==vtx) return 1;
+  }
+  return 0;
+}
+
+static
+int
+_is_parent
+(
+  PDM_g_num_t *first_vtx,
+  int          n_vtx,
+  PDM_g_num_t *first_face_vtx,
+  int          n_face_vtx
+)
+{
+  // WARNING: quadratic but n_face_vtx should be 3 or 4
+  for (int i=0; i<n_face_vtx; ++i) {
+    if (!(_vtx_is_in_connectivity(first_face_vtx[i],first_vtx,n_vtx))) {
+      return 0;
+    }
+  }
+  return 1;
+}
+
 static void
 _setup_ghost_information
 (
@@ -1007,29 +1041,29 @@ PDM_MPI_Comm      comm
                               &pcell_ln_to_gn);
 
 
-  PDM_g_num_t** pcell_ln_to_gn_extented;
-  int*          pn_cell_extented;
-  PDM_extend_mesh(comm,
-                  part_distri,
-                  cell_distri,
-                  cell_part,
-                  n_part,
-                  dual_graph_idx,
-                  dual_graph,
-                  pn_cell,
-                  pcell_ln_to_gn,
-                 &pn_cell_extented,
-                 &pcell_ln_to_gn_extented);
+  // PDM_g_num_t** pcell_ln_to_gn_extented;
+  // int*          pn_cell_extented;
+  // PDM_extend_mesh(comm,
+  //                 part_distri,
+  //                 cell_distri,
+  //                 cell_part,
+  //                 n_part,
+  //                 dual_graph_idx,
+  //                 dual_graph,
+  //                 pn_cell,
+  //                 pcell_ln_to_gn,
+  //                &pn_cell_extented,
+  //                &pcell_ln_to_gn_extented);
 
-  for(int i_part = 0; i_part < n_part; ++i_part) {
-    free(pcell_ln_to_gn[i_part]);
-  }
-  free(pcell_ln_to_gn);
-  free(pn_cell);
+  // for(int i_part = 0; i_part < n_part; ++i_part) {
+  //   free(pcell_ln_to_gn[i_part]);
+  // }
+  // free(pcell_ln_to_gn);
+  // free(pn_cell);
 
-  /* Reassign */
-  pn_cell        = pn_cell_extented;
-  pcell_ln_to_gn = pcell_ln_to_gn_extented;
+  // /* Reassign */
+  // pn_cell        = pn_cell_extented;
+  // pcell_ln_to_gn = pcell_ln_to_gn_extented;
 
   free(dual_graph_idx);
   free(dual_graph);
@@ -1266,34 +1300,6 @@ PDM_MPI_Comm      comm
   free(part_distri);
 }
 
-static inline
-int _vtx_is_in_connectivity(
-  PDM_g_num_t  vtx,
-  PDM_g_num_t *first_vtx,
-  int          n_vtx
-)
-{
-  for (int i=0; i<n_vtx; ++i) {
-    if (first_vtx[i]==vtx) return 1;
-  }
-  return 0;
-}
-
-int _is_parent(
-  PDM_g_num_t *first_vtx,
-  int          n_vtx,
-  PDM_g_num_t *first_face_vtx,
-  int          n_face_vtx
-)
-{
-  // WARNING: quadratic but n_face_vtx should be 3 or 4
-  for (int i=0; i<n_face_vtx; ++i) {
-    if (!(_vtx_is_in_connectivity(first_face_vtx[i],first_vtx,n_vtx))) {
-      return 0;
-    }
-  }
-  return 1;
-}
 /*
  * \brief give the elt_part of a 2d element as the one of its parent
  *
@@ -1304,7 +1310,8 @@ int _is_parent(
  */
 static
 void
-face_part_from_parent(
+face_part_from_parent
+(
   int           n_elt,
   int           dn_elt,
   int           section_idx,
@@ -1390,7 +1397,7 @@ _run_ppart_zone_nodal
   PDM_dmesh_nodal_t *dmesh_nodal,
   _part_mesh_t      *pmesh,
   PDM_split_dual_t   split_method,
-  int                dn_part, 
+  int                dn_part,
   PDM_MPI_Comm       comm
 ) {
   printf("run_ppart_zone_nodal\n");
@@ -1474,7 +1481,7 @@ _run_ppart_zone_nodal
 
   // 4. ln_to_gn for elt sections and cells
   PDM_g_num_t* part_distri = PDM_compute_entity_distribution(comm, dn_part );
-  // 
+  //
   int** pn_elt_section = (int**)malloc(n_section * sizeof(int*));
   PDM_g_num_t*** pelt_section_ln_to_gn = (PDM_g_num_t***)malloc(n_section * sizeof(PDM_g_num_t**));
   PDM_g_num_t** elt_section_distri = (PDM_g_num_t**)malloc(n_section * sizeof(PDM_g_num_t*));
@@ -1539,8 +1546,8 @@ _run_ppart_zone_nodal
     int pos = 0;
     int offset = 0;
     for (int i_section=0; i_section<n_section; ++i_section) {
-      int pn_elt = pn_elt_section[i_section][i_part];
-      for (int i=0; i<pn_elt; ++i) {
+      int part_n_elt = pn_elt_section[i_section][i_part];
+      for (int i=0; i<part_n_elt; ++i) {
         pelt_ln_to_gn[i_part][pos] = pelt_section_ln_to_gn[i_section][i_part][i] + offset;
         ++pos;
       }
@@ -1594,16 +1601,16 @@ _run_ppart_zone_nodal
     pmesh->parts[i_part]->cell_ln_to_gn = pcell_ln_to_gn[i_part];
     pmesh->parts[i_part]->vtx_ln_to_gn  = pvtx_ln_to_gn[i_part];
 
-    pmesh->parts[i_part]->n_section = n_section;
-    pmesh->parts[i_part]->n_elt = (int*)malloc(n_section * sizeof(int));
-    pmesh->parts[i_part]->elt_section_ln_to_gn = (PDM_g_num_t*)malloc(n_section * sizeof(PDM_g_num_t));
-    pmesh->parts[i_part]->elt_vtx_idx = (int**)malloc(n_section * sizeof(int*));
-    pmesh->parts[i_part]->elt_vtx = (int**)malloc(n_section * sizeof(int*));
+    pmesh->parts[i_part]->n_section            = n_section;
+    pmesh->parts[i_part]->n_elt                = (int          *) malloc(n_section * sizeof(int          ));
+    pmesh->parts[i_part]->elt_section_ln_to_gn = (PDM_g_num_t **) malloc(n_section * sizeof(PDM_g_num_t *));
+    pmesh->parts[i_part]->elt_vtx_idx          = (int         **) malloc(n_section * sizeof(int         *));
+    pmesh->parts[i_part]->elt_vtx              = (int         **) malloc(n_section * sizeof(int         *));
     for (int i_section=0; i_section<n_section; ++i_section) {
-      pmesh->parts[i_part]->n_elt[i_section] = pn_elt_section[i_section][i_part];
+      pmesh->parts[i_part]->n_elt               [i_section] = pn_elt_section[i_section][i_part];
       pmesh->parts[i_part]->elt_section_ln_to_gn[i_section] = pelt_section_ln_to_gn[i_section][i_part];
-      pmesh->parts[i_part]->elt_vtx_idx[i_section] = pelt_vtx_idx[i_section][i_part];
-      pmesh->parts[i_part]->elt_vtx[i_section] = pelt_vtx[i_section][i_part];
+      pmesh->parts[i_part]->elt_vtx_idx         [i_section] = pelt_vtx_idx[i_section][i_part];
+      pmesh->parts[i_part]->elt_vtx             [i_section] = pelt_vtx[i_section][i_part];
     }
   }
   free(pcell_ln_to_gn);
@@ -1750,7 +1757,7 @@ _run_ppart_zone_nodal
 }
 
 /**
- 
+
  * \brief Construct the partitioned meshes on every zones
  *
  * \param [in]   mpart_id          Multipart structure id

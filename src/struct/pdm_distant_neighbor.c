@@ -168,8 +168,8 @@ const int           *n_entity,
   dn->neighbor_desc        = neighbor_desc;
   dn->order                = (int **) malloc(   dn->n_part       * sizeof(int **));
   dn->order_unique         = (int **) malloc(   dn->n_part       * sizeof(int **));
-  dn->requested_data_n     = (int * ) malloc( ( n_rank          ) * sizeof(int * ));
-  dn->requested_data_idx   = (int * ) malloc( ( n_rank + 1      ) * sizeof(int * ));
+  dn->requested_data_n     = (int * ) malloc( ( n_rank         ) * sizeof(int * ));
+  dn->requested_data_idx   = (int * ) malloc( ( n_rank + 1     ) * sizeof(int * ));
   dn->distributed_part_n   = (int * ) malloc( ( dn->n_part     ) * sizeof(int * ));
   dn->distributed_part_idx = (int * ) malloc( ( dn->n_part + 1 ) * sizeof(int * ));
 
@@ -434,7 +434,6 @@ const int           *n_entity,
 /**
  * \brief Exchange data between \ref PDM_distant_neighbor_t structure
  * \param [in]   id          identifier of internal structre
- *  NB : On va commencer par des entiers en stride constantes
  *
  */
 void

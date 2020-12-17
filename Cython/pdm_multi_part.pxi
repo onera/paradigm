@@ -45,23 +45,23 @@ cdef extern from "pdm_multipart.h":
     void PDM_multipart_run_ppart(int id);
 
     # ------------------------------------------------------------------
-    void PDM_multipart_part_dim_get(int  mpart_id,
-                                    int  zone_gid,
-                                    int  ipart,
-                                    int *n_section,
-                                    int**n_elt,
-                                    int *n_cell,
-                                    int *n_face,
-                                    int *n_face_part_bound,
-                                    int *nVtx,
-                                    int *n_proc,
-                                    int *nt_part,
-                                    int *scell_face,
-                                    int *sface_vtx,
-                                    int *s_face_bound,
-                                    int *n_face_bound,
-                                    int *s_face_join,
-                                    int *n_face_join);
+    void PDM_multipart_part_dim_get(int   mpart_id,
+                                    int   zone_gid,
+                                    int   ipart,
+                                    int  *n_section,
+                                    int **n_elt,
+                                    int  *n_cell,
+                                    int  *n_face,
+                                    int  *n_face_part_bound,
+                                    int  *nVtx,
+                                    int  *n_proc,
+                                    int  *nt_part,
+                                    int  *scell_face,
+                                    int  *sface_vtx,
+                                    int  *s_face_bound,
+                                    int  *n_face_bound,
+                                    int  *s_face_join,
+                                    int  *n_face_join);
 
     # ------------------------------------------------------------------
     void PDM_multipart_part_val_get(int            mpart_id,
