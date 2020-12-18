@@ -543,7 +543,7 @@ _dual_graph_from_cell_face
       int found_rank = PDM_search_rank(iface, ppart->dface_proc, 0, n_rank);
       int idx        = face_to_send_idx[found_rank] + face_to_send_n[found_rank];
       face_to_send[idx  ]   = iface;
-      face_to_send[idx+1]   = ppart->dcell_proc[found_rank] + i;
+      face_to_send[idx+1]   = ppart->dcell_proc[i_rank] + i;//ppart->dcell_proc[found_rank] + i;
       face_to_send_n[found_rank] += n_data;
     }
   }
