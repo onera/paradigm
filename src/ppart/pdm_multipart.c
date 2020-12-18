@@ -1318,9 +1318,9 @@ face_part_from_parent
   PDM_g_num_t  *elt_dist,
   int          *elt_part,
   int          *delt_vtx_idx,
-  int          *delt_vtx,
-  int          *elt_elt_idx,
-  int          *elt_elt,
+  PDM_g_num_t  *delt_vtx,
+  PDM_g_num_t  *elt_elt_idx,
+  PDM_g_num_t  *elt_elt,
   int          *elt2d_part,
   PDM_MPI_Comm  comm
 )
@@ -1361,23 +1361,23 @@ face_part_from_parent
   for (int i=0; i<dn_elt; ++i) {
     block_idx2[i] = delt_vtx_idx[i+1] - delt_vtx_idx[i];
   }
-  int* block_data2 = delt_vtx;
+  PDM_g_num_t* block_data2 = delt_vtx;
   int** neighbor_vtx_stri;
-  int** neighbor_vtx;
-  PDM_block_to_part_exch2(btp,sizeof(int),PDM_STRIDE_VAR,block_idx2,block_data2,&neighbor_vtx_stri,(void***)&neighbor_vtx);
+  PDM_g_num_t** neighbor_vtx;
+  PDM_block_to_part_exch2(btp,sizeof(PDM_g_num_t),PDM_STRIDE_VAR,block_idx2,block_data2,&neighbor_vtx_stri,(void***)&neighbor_vtx);
 
   int pos2 = 0;
   int neighbor_vtx_cur_idx = 0;
   for (int i=0; i<n_elt; ++i) {
     int face_vtx_idx = delt_vtx_idx[section_idx+i];
     int n_face_vtx = delt_vtx_idx[section_idx+i+1] - delt_vtx_idx[section_idx+i];
-    int* first_face_vtx = delt_vtx+face_vtx_idx;
+    PDM_g_num_t* first_face_vtx = delt_vtx+face_vtx_idx;
 
     int n_neighbor = face_neighbors_idx[i+1] - face_neighbors_idx[i];
     int parent_found = 0;
     for (int j=0; j<n_neighbor; ++j) {
       int n_vtx = neighbor_vtx_stri[0][pos2];
-      int* first_vtx = neighbor_vtx[0] + neighbor_vtx_cur_idx;
+      PDM_g_num_t* first_vtx = neighbor_vtx[0] + neighbor_vtx_cur_idx;
       neighbor_vtx_cur_idx += n_vtx;
       if (_is_parent(first_vtx,n_vtx,first_face_vtx,n_face_vtx)) {
         elt2d_part[i] = neighbor_part[0][pos2];
@@ -1399,7 +1399,8 @@ _run_ppart_zone_nodal
   PDM_split_dual_t   split_method,
   int                dn_part,
   PDM_MPI_Comm       comm
-) {
+)
+{
   printf("run_ppart_zone_nodal\n");
   // TODO: joins
   // TODO: split only regarding cells, not all elements
@@ -1559,7 +1560,7 @@ _run_ppart_zone_nodal
 
   // 5. reconstruct elts on partitions
   int* pn_vtx;
-  int** pvtx_ln_to_gn;
+  PDM_g_num_t** pvtx_ln_to_gn;
   int*** pelt_vtx_idx;
   int*** pelt_vtx;
   PDM_part_multi_dconnectivity_to_pconnectivity_sort(comm,
