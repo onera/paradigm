@@ -1555,7 +1555,7 @@ int               *n_sum_vtx_edge_tot
 
 /**
 *
-* \brief Concatenates all element sections blocks 
+* \brief Concatenates all element sections blocks
 *
 * \param [in]   dmesh_nodal
 * \param [out]  section_idx        index of element section
@@ -1564,11 +1564,12 @@ int               *n_sum_vtx_edge_tot
 *
  * \return     Number sections
 */
-int PDM_concat_elt_sections(
+int PDM_concat_elt_sections
+(
   PDM_dmesh_nodal_t  *dmesh_nodal,
-  int** section_idx,
-  int** cat_delt_vtx_idx,
-  PDM_g_num_t** cat_delt_vtx
+  int               **section_idx,
+  int               **cat_delt_vtx_idx,
+  PDM_g_num_t       **cat_delt_vtx
 )
 {
   // 0. sizes
@@ -1636,8 +1637,8 @@ int PDM_concat_elt_sections(
 void
 PDM_dmesh_nodal_dual_graph
 (
-  PDM_g_num_t*   vtx_dist,
-  PDM_g_num_t*   elt_dist,
+  PDM_g_num_t   *vtx_dist,
+  PDM_g_num_t   *elt_dist,
   int           *delt_vtx_idx,
   PDM_g_num_t   *delt_vtx,
   PDM_g_num_t  **delt_elt_idx,
@@ -1654,24 +1655,21 @@ PDM_dmesh_nodal_dual_graph
   int* dvtx_elt_idx;
   PDM_g_num_t* dvtx_elt;
 
-  PDM_dconnectivity_transpose(
-    comm,
-    elt_dist, vtx_dist,
-    delt_vtx_idx,delt_vtx,
-    0, // not signed
-    &dvtx_elt_idx,&dvtx_elt
-  );
+  PDM_dconnectivity_transpose(comm,
+                              elt_dist, vtx_dist,
+                              delt_vtx_idx,delt_vtx,
+                              0, // not signed
+                              &dvtx_elt_idx,&dvtx_elt);
 
   // 1. dual
-  PDM_deduce_combine_connectivity_dual(
-    comm,
-    elt_dist, vtx_dist,
-    delt_vtx_idx,delt_vtx,
-    dvtx_elt_idx,dvtx_elt,
-    0, // not signed
-    delt_elt_idx,
-    delt_elt
-  );
+  PDM_deduce_combine_connectivity_dual(comm,
+                                       elt_dist, vtx_dist,
+                                       delt_vtx_idx,delt_vtx,
+                                       dvtx_elt_idx,dvtx_elt,
+                                       0, // not signed
+                                       delt_elt_idx,
+                                       delt_elt);
+
 }
 
 /**
@@ -2102,7 +2100,6 @@ PDM_dmesh_nodal_t  *dmesh_nodal
   assert(dmesh_nodal->dcell_face == NULL);
   dmesh_nodal->dcell_face = blk_cell_face;
 
-
   /* Compress connectivity in place */
   PDM_para_graph_compress_connectivity(dmesh_nodal->dn_cell,
                                        dmesh_nodal->dcell_face_idx,
@@ -2120,7 +2117,6 @@ PDM_dmesh_nodal_t  *dmesh_nodal
    *  Realloc
    */
   dmesh_nodal->dcell_face = (PDM_g_num_t *) realloc( dmesh_nodal->dcell_face, dmesh_nodal->dcell_face_idx[dmesh_nodal->dn_cell] * sizeof(PDM_g_num_t));
-
 
   free(blk_cell_face_n);
 }

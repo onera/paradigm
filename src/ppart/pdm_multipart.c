@@ -1463,19 +1463,17 @@ _run_ppart_zone_nodal
     PDM_Mesh_nodal_elt_t type = PDM_DMesh_nodal_section_elt_type_get(dmesh_nodal,i_section);
     if (type==PDM_MESH_NODAL_TRIA3 || type==PDM_MESH_NODAL_QUAD4) {
       int n_elt = section_idx[i_section+1] - section_idx[i_section];
-      face_part_from_parent(
-        n_elt,
-        dn_elt,
-        section_idx[i_section],
-        elt_dist,
-        elt_part,
-        delt_vtx_idx,
-        delt_vtx,
-        elt_elt_idx,
-        elt_elt,
-        elt_section_part,
-        comm
-      );
+      face_part_from_parent(n_elt,
+                            dn_elt,
+                            section_idx[i_section],
+                            elt_dist,
+                            elt_part,
+                            delt_vtx_idx,
+                            delt_vtx,
+                            elt_elt_idx,
+                            elt_elt,
+                            elt_section_part,
+                            comm);
     }
   }
 
@@ -1510,10 +1508,12 @@ _run_ppart_zone_nodal
       }
     }
   }
+
   PDM_g_num_t** pcell_ln_to_gn = (PDM_g_num_t**)malloc(dn_part * sizeof(PDM_g_num_t*));
   for (int i_part=0; i_part<dn_part; ++i_part) {
     pcell_ln_to_gn[i_part] = (PDM_g_num_t*)malloc(pn_cell[i_part]* sizeof(PDM_g_num_t));
   }
+
   for (int i_part=0; i_part<dn_part; ++i_part) {
     int pos = 0;
     int offset = 0;
