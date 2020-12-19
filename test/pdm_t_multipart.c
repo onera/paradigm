@@ -238,32 +238,32 @@ int main(int argc, char *argv[])
     dface_join_idx[i_zone][0] = 0;
     for (int igroup = 0; igroup < n_face_group[i_zone]; igroup++)
     {
-      int copyToBnd = (igroup != 2 || (igroup == 2 && i_zone == 0)) && (igroup != 3 || (igroup == 3 && i_zone == n_zone-1));
+      int copy_to_bnd = (igroup != 2 || (igroup == 2 && i_zone == 0)) && (igroup != 3 || (igroup == 3 && i_zone == n_zone-1));
       int group_size = dface_group_idx[i_zone][igroup+1] - dface_group_idx[i_zone][igroup];
-      if (copyToBnd) //Its a boundary
+      if (copy_to_bnd) //Its a boundary
         dface_bnd_idx[i_zone][i_bnd++] = group_size;
       else { //Its a join
         dface_join_idx[i_zone][i_jn++] = group_size;
       }
     }
-    for (int i = 0; i < n_bnd; i++)
+    for (int i = 0; i < n_bnd; i++) {
       dface_bnd_idx[i_zone][i+1] = dface_bnd_idx[i_zone][i+1] + dface_bnd_idx[i_zone][i];
-    for (int i = 0; i < n_jn; i++)
+    }
+    for (int i = 0; i < n_jn; i++) {
       dface_join_idx[i_zone][i+1] = dface_join_idx[i_zone][i+1] + dface_join_idx[i_zone][i];
+    }
 
     // Second pass to copy
-    dface_bnd[i_zone]  = (PDM_g_num_t *) malloc(dface_bnd_idx[i_zone][n_bnd] * sizeof(PDM_g_num_t));
-    dface_join[i_zone] = (PDM_g_num_t *) malloc(dface_join_idx[i_zone][n_jn] * sizeof(PDM_g_num_t));
+    dface_bnd [i_zone] = (PDM_g_num_t *) malloc(dface_bnd_idx [i_zone][n_bnd] * sizeof(PDM_g_num_t));
+    dface_join[i_zone] = (PDM_g_num_t *) malloc(dface_join_idx[i_zone][n_jn ] * sizeof(PDM_g_num_t));
     i_bnd = 0;
     i_jn  = 0;
-    for (int igroup = 0; igroup < n_face_group[i_zone]; igroup++)
-    {
-      int copyToBnd = (igroup != 2 || (igroup == 2 && i_zone == 0)) && (igroup != 3 || (igroup == 3 && i_zone == n_zone-1));
-      if (copyToBnd){ //Its a boundary
+    for (int igroup = 0; igroup < n_face_group[i_zone]; igroup++) {
+      int copy_to_bnd = (igroup != 2 || (igroup == 2 && i_zone == 0)) && (igroup != 3 || (igroup == 3 && i_zone == n_zone-1));
+      if (copy_to_bnd){ //Its a boundary
         for (int i = dface_group_idx[i_zone][igroup]; i < dface_group_idx[i_zone][igroup+1]; i++)
           dface_bnd[i_zone][i_bnd++] = dface_group[i_zone][i];
-      }
-      else{ //Its a join
+      } else { //Its a join
         for (int i = dface_group_idx[i_zone][igroup]; i < dface_group_idx[i_zone][igroup+1]; i++)
           dface_join[i_zone][i_jn++] = dface_group[i_zone][i];
       }
@@ -331,17 +331,17 @@ int main(int argc, char *argv[])
                                                 n_part_zones[i_zone]); //total nb of part for this proc/zone
     }
     // Cell local id
-    int id_var_cellId = PDM_writer_var_create(id_cs, PDM_WRITER_OFF, PDM_WRITER_VAR_SCALAIRE, PDM_WRITER_VAR_ELEMENTS, "cellId");
+    int id_var_cell_id = PDM_writer_var_create(id_cs, PDM_WRITER_OFF, PDM_WRITER_VAR_SCALAIRE, PDM_WRITER_VAR_ELEMENTS, "cell_id");
     // Global partition Id (ordred by proc / zone), staring at 1
-    int id_var_gpartId = PDM_writer_var_create(id_cs, PDM_WRITER_OFF, PDM_WRITER_VAR_SCALAIRE, PDM_WRITER_VAR_ELEMENTS, "gpartId");
+    int id_var_gpart_id = PDM_writer_var_create(id_cs, PDM_WRITER_OFF, PDM_WRITER_VAR_SCALAIRE, PDM_WRITER_VAR_ELEMENTS, "gpart_id");
     // Local partition Id on the proc / zone, starting at 0
-    int id_var_lpartId = PDM_writer_var_create(id_cs, PDM_WRITER_OFF, PDM_WRITER_VAR_SCALAIRE, PDM_WRITER_VAR_ELEMENTS, "lpartId");
+    int id_var_lpart_id = PDM_writer_var_create(id_cs, PDM_WRITER_OFF, PDM_WRITER_VAR_SCALAIRE, PDM_WRITER_VAR_ELEMENTS, "lpart_id");
     // Proc Id
-    int id_var_procId = PDM_writer_var_create(id_cs, PDM_WRITER_OFF, PDM_WRITER_VAR_SCALAIRE, PDM_WRITER_VAR_ELEMENTS, "iproc");
+    int id_var_proc_id = PDM_writer_var_create(id_cs, PDM_WRITER_OFF, PDM_WRITER_VAR_SCALAIRE, PDM_WRITER_VAR_ELEMENTS, "iproc");
     // Id of opposite proc
-    int id_var_oppProcId = PDM_writer_var_create(id_cs, PDM_WRITER_OFF, PDM_WRITER_VAR_SCALAIRE, PDM_WRITER_VAR_SOMMETS, "oppProc");
+    int id_var_opp_proc_id = PDM_writer_var_create(id_cs, PDM_WRITER_OFF, PDM_WRITER_VAR_SCALAIRE, PDM_WRITER_VAR_SOMMETS, "oppProc");
     // Id of opposite part (in the local numerotation of the opposite proc)
-    int id_var_oppPartId = PDM_writer_var_create(id_cs, PDM_WRITER_OFF, PDM_WRITER_VAR_SCALAIRE, PDM_WRITER_VAR_SOMMETS, "oppPart");
+    int id_var_opp_part_id = PDM_writer_var_create(id_cs, PDM_WRITER_OFF, PDM_WRITER_VAR_SCALAIRE, PDM_WRITER_VAR_SOMMETS, "oppPart");
     PDM_writer_step_beg(id_cs, 0.);
 
     /* Alloc for part meshes */
@@ -441,64 +441,67 @@ int main(int argc, char *argv[])
                                             cell_face,
                                             cell_ln_to_gn);
         pn_cell[ipartzone] = n_cell;
-        pn_vtx[ipartzone]  = n_vtx;
+        pn_vtx [ipartzone] = n_vtx;
         ipartzone++;
       }
     if (i_rank==0) PDM_printf("Write geometry for zone %i\n", i_zone);
     PDM_writer_geom_write(id_cs, geom_ids[i_zone]);
     }
+
     /* Write data */
     PDM_g_num_t *partzoneshift = PDM_compute_entity_distribution(comm, tn_part_proc);
 
     ipartzone = 0;
     for (int i_zone = 0; i_zone < n_zone; i_zone++){
       for (int i_part = 0; i_part < n_part_zones[i_zone]; i_part++){
-        PDM_real_t *val_cellid = (PDM_real_t *) malloc(sizeof(PDM_real_t) * pn_cell[ipartzone]);
-        PDM_real_t *val_gpartid = (PDM_real_t *) malloc(sizeof(PDM_real_t) * pn_cell[ipartzone]);
-        PDM_real_t *val_lpartid = (PDM_real_t *) malloc(sizeof(PDM_real_t) * pn_cell[ipartzone]);
-        PDM_real_t *val_procid = (PDM_real_t *) malloc(sizeof(PDM_real_t) * pn_cell[ipartzone]);
-        PDM_real_t *val_oppprocid = (PDM_real_t *) malloc(sizeof(PDM_real_t) * pn_vtx[ipartzone]);
-        PDM_real_t *val_opppartid = (PDM_real_t *) malloc(sizeof(PDM_real_t) * pn_vtx[ipartzone]);
+        PDM_real_t *val_cell_id     = (PDM_real_t *) malloc(sizeof(PDM_real_t) * pn_cell[ipartzone]);
+        PDM_real_t *val_gpart_id    = (PDM_real_t *) malloc(sizeof(PDM_real_t) * pn_cell[ipartzone]);
+        PDM_real_t *val_lpart_id    = (PDM_real_t *) malloc(sizeof(PDM_real_t) * pn_cell[ipartzone]);
+        PDM_real_t *val_proc_id     = (PDM_real_t *) malloc(sizeof(PDM_real_t) * pn_cell[ipartzone]);
+        PDM_real_t *val_opp_proc_id = (PDM_real_t *) malloc(sizeof(PDM_real_t) * pn_vtx [ipartzone]);
+        PDM_real_t *val_opp_part_id = (PDM_real_t *) malloc(sizeof(PDM_real_t) * pn_vtx [ipartzone]);
         for (int i=0; i < pn_cell[ipartzone]; i++) {
-          val_cellid[i] = i;
-          val_gpartid[i] = (PDM_real_t) (partzoneshift[i_rank] + ipartzone);
-          val_lpartid[i] = i_part;
-          val_procid[i]  = i_rank;
+          val_cell_id[i] = i;
+          val_gpart_id[i] = (PDM_real_t) (partzoneshift[i_rank] + ipartzone);
+          val_lpart_id[i] = i_part;
+          val_proc_id[i]  = i_rank;
         }
         for (int i=0; i < pn_vtx[ipartzone]; i++){
-          val_oppprocid[i] = commVisu[ipartzone][2*i];
-          val_opppartid[i] = commVisu[ipartzone][2*i+1];
+          val_opp_proc_id[i] = commVisu[ipartzone][2*i  ];
+          val_opp_part_id[i] = commVisu[ipartzone][2*i+1];
         }
-        PDM_writer_var_set(id_cs, id_var_cellId, geom_ids[i_zone], i_part, val_cellid);
-        PDM_writer_var_set(id_cs, id_var_gpartId, geom_ids[i_zone], i_part, val_gpartid);
-        PDM_writer_var_set(id_cs, id_var_lpartId, geom_ids[i_zone], i_part, val_lpartid);
-        PDM_writer_var_set(id_cs, id_var_procId, geom_ids[i_zone], i_part, val_procid);
-        PDM_writer_var_set(id_cs, id_var_oppProcId, geom_ids[i_zone], i_part, val_oppprocid);
-        PDM_writer_var_set(id_cs, id_var_oppPartId, geom_ids[i_zone], i_part, val_opppartid);
-        free(val_cellid);
-        free(val_gpartid);
-        free(val_lpartid);
-        free(val_procid);
-        free(val_oppprocid);
-        free(val_opppartid);
+        PDM_writer_var_set(id_cs, id_var_cell_id    , geom_ids[i_zone], i_part, val_cell_id    );
+        PDM_writer_var_set(id_cs, id_var_gpart_id   , geom_ids[i_zone], i_part, val_gpart_id   );
+        PDM_writer_var_set(id_cs, id_var_lpart_id   , geom_ids[i_zone], i_part, val_lpart_id   );
+        PDM_writer_var_set(id_cs, id_var_proc_id    , geom_ids[i_zone], i_part, val_proc_id    );
+        PDM_writer_var_set(id_cs, id_var_opp_proc_id, geom_ids[i_zone], i_part, val_opp_proc_id);
+        PDM_writer_var_set(id_cs, id_var_opp_part_id, geom_ids[i_zone], i_part, val_opp_part_id);
+
+        free(val_cell_id    );
+        free(val_gpart_id   );
+        free(val_lpart_id   );
+        free(val_proc_id    );
+        free(val_opp_proc_id);
+        free(val_opp_part_id);
+
         ipartzone++;
       }
     }
     free(partzoneshift);
 
     if (i_rank==0) PDM_printf("Write variables\n");
-    PDM_writer_var_write(id_cs, id_var_cellId);
-    PDM_writer_var_free(id_cs,  id_var_cellId);
-    PDM_writer_var_write(id_cs, id_var_gpartId);
-    PDM_writer_var_free(id_cs,  id_var_gpartId);
-    PDM_writer_var_write(id_cs, id_var_lpartId);
-    PDM_writer_var_free(id_cs,  id_var_lpartId);
-    PDM_writer_var_write(id_cs, id_var_procId);
-    PDM_writer_var_free(id_cs,  id_var_procId);
-    PDM_writer_var_write(id_cs, id_var_oppProcId);
-    PDM_writer_var_free(id_cs,  id_var_oppProcId);
-    PDM_writer_var_write(id_cs, id_var_oppPartId);
-    PDM_writer_var_free(id_cs,  id_var_oppPartId);
+    PDM_writer_var_write(id_cs, id_var_cell_id    );
+    PDM_writer_var_free (id_cs, id_var_cell_id    );
+    PDM_writer_var_write(id_cs, id_var_gpart_id   );
+    PDM_writer_var_free (id_cs, id_var_gpart_id   );
+    PDM_writer_var_write(id_cs, id_var_lpart_id   );
+    PDM_writer_var_free (id_cs, id_var_lpart_id   );
+    PDM_writer_var_write(id_cs, id_var_proc_id    );
+    PDM_writer_var_free (id_cs, id_var_proc_id    );
+    PDM_writer_var_write(id_cs, id_var_opp_proc_id);
+    PDM_writer_var_free (id_cs, id_var_opp_proc_id);
+    PDM_writer_var_write(id_cs, id_var_opp_part_id);
+    PDM_writer_var_free (id_cs, id_var_opp_part_id);
 
     PDM_writer_step_end(id_cs);
 

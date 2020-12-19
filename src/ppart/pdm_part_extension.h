@@ -27,6 +27,8 @@ extern "C" {
  * Type
  *============================================================================*/
 
+typedef struct _pdm_part_extension_t PDM_part_extension_t;
+
 /*=============================================================================
  * Static global variables
  *============================================================================*/
@@ -34,6 +36,24 @@ extern "C" {
 /*=============================================================================
  * Public function prototypes
  *============================================================================*/
+
+
+PDM_part_extension_t*
+PDM_part_extension_create
+(
+ const int              n_block,
+ const int             *n_part,
+ const PDM_MPI_Comm     comm,
+ const PDM_ownership_t  owner
+);
+
+
+void
+PDM_part_extension_free
+(
+ PDM_part_extension_t *part_ext
+);
+
 
 #ifdef __cplusplus
 }

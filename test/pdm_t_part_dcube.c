@@ -163,22 +163,22 @@ int main(int argc, char *argv[])
   struct timeval t_elaps_debut;
 
   int i_rank;
-  int numProcs;
+  int n_rank;
 
   PDM_MPI_Init(&argc, &argv);
   PDM_MPI_Comm_rank(PDM_MPI_COMM_WORLD, &i_rank);
-  PDM_MPI_Comm_size(PDM_MPI_COMM_WORLD, &numProcs);
+  PDM_MPI_Comm_size(PDM_MPI_COMM_WORLD, &n_rank);
 
   int           dn_cell;
   int           dn_face;
   int           dn_vtx;
   int           n_face_group;
-  PDM_g_num_t *dface_cell = NULL;
+  PDM_g_num_t  *dface_cell = NULL;
   int          *dface_vtx_idx = NULL;
-  PDM_g_num_t *dface_vtx = NULL;
+  PDM_g_num_t  *dface_vtx = NULL;
   double       *dvtx_coord = NULL;
   int          *dface_group_idx = NULL;
-  PDM_g_num_t *dface_group = NULL;
+  PDM_g_num_t  *dface_group = NULL;
   int           dface_vtxL;
   int           dFaceGroupL;
 
@@ -295,16 +295,16 @@ int main(int argc, char *argv[])
                   dface_group_idx,
                   dface_group);
 
-  double  *elapsed = NULL;
-  double  *cpu = NULL;
+  double  *elapsed  = NULL;
+  double  *cpu      = NULL;
   double  *cpu_user = NULL;
-  double  *cpu_sys = NULL;
+  double  *cpu_sys  = NULL;
 
   PDM_part_time_get(ppart_id,
-                 &elapsed,
-                 &cpu,
-                 &cpu_user,
-                 &cpu_sys);
+                    &elapsed,
+                    &cpu,
+                    &cpu_user,
+                    &cpu_sys);
 
   PDM_printf("[%i]   - elapsed total                    : %12.5e\n", i_rank, elapsed[0]);
   PDM_printf("[%i]   - elapsed building graph           : %12.5e\n", i_rank, elapsed[1]);
@@ -367,42 +367,42 @@ int main(int argc, char *argv[])
       int          *cell_tag;
       int          *cell_face_idx;
       int          *cell_face;
-      PDM_g_num_t *cell_ln_to_gn;
+      PDM_g_num_t  *cell_ln_to_gn;
       int          *face_tag;
       int          *face_cell;
       int          *face_vtx_idx;
       int          *face_vtx;
-      PDM_g_num_t *face_ln_to_gn;
+      PDM_g_num_t  *face_ln_to_gn;
       int          *face_part_bound_proc_idx;
       int          *face_part_bound_part_idx;
       int          *face_part_bound;
       int          *vtx_tag;
       double       *vtx;
-      PDM_g_num_t *vtx_ln_to_gn;
+      PDM_g_num_t  *vtx_ln_to_gn;
       int          *face_group_idx;
       int          *face_group;
-      PDM_g_num_t *face_group_ln_to_gn;
+      PDM_g_num_t  *face_group_ln_to_gn;
 
       PDM_part_part_val_get(ppart_id,
-                         i_part,
-                         &cell_tag,
-                         &cell_face_idx,
-                         &cell_face,
-                         &cell_ln_to_gn,
-                         &face_tag,
-                         &face_cell,
-                         &face_vtx_idx,
-                         &face_vtx,
-                         &face_ln_to_gn,
-                         &face_part_bound_proc_idx,
-                         &face_part_bound_part_idx,
-                         &face_part_bound,
-                         &vtx_tag,
-                         &vtx,
-                         &vtx_ln_to_gn,
-                         &face_group_idx,
-                         &face_group,
-                         &face_group_ln_to_gn);
+                            i_part,
+                            &cell_tag,
+                            &cell_face_idx,
+                            &cell_face,
+                            &cell_ln_to_gn,
+                            &face_tag,
+                            &face_cell,
+                            &face_vtx_idx,
+                            &face_vtx,
+                            &face_ln_to_gn,
+                            &face_part_bound_proc_idx,
+                            &face_part_bound_part_idx,
+                            &face_part_bound,
+                            &vtx_tag,
+                            &vtx,
+                            &vtx_ln_to_gn,
+                            &face_group_idx,
+                            &face_group,
+                            &face_group_ln_to_gn);
 
 
       PDM_printf("[%i] n_face_group     : %i\n", i_rank, n_face_group);
