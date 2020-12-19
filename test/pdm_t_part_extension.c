@@ -364,6 +364,27 @@ int main(int argc, char *argv[])
                           &face_group,
                           &face_group_ln_to_gn);
 
+    PDM_part_extension_set_part(part_ext, 0, i_part,
+                                cell_face_idx,
+                                cell_face,
+                                face_cell,
+                                NULL, // face_edge_idx
+                                NULL, // face_edge
+                                face_vtx_idx,
+                                face_vtx,
+                                NULL, //edge_vtx
+                                face_group_idx,
+                                face_group,
+                                NULL, // face_join_idx
+                                NULL, // face_join
+                                face_part_bound_proc_idx,
+                                face_part_bound_part_idx,
+                                face_part_bound,
+                                cell_ln_to_gn,
+                                face_ln_to_gn,
+                                NULL, // edge_ln_to_gn
+                                vtx_ln_to_gn,
+                                face_group_ln_to_gn);
 
     PDM_printf("[%i] n_face_group     : %i\n", i_rank, n_face_group);
     PDM_printf("[%i] n_cell          : %i\n", i_rank, n_cell);
@@ -435,6 +456,8 @@ int main(int argc, char *argv[])
       PDM_printf("\n");
     }
   }
+
+  PDM_part_extension_compute(part_ext, 1, PDM_EXTEND_FROM_FACE);
 
 
   PDM_part_extension_free(part_ext);
