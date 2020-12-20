@@ -655,6 +655,7 @@ PDM_distant_neighbor_exch
     for (int i = 0; i < s_distributed_data; i++) {
       int i_part = dn->distributed_data[2*i  ];
       int ienty = dn->distributed_data[2*i+1];
+      // printf(" [%i] -> i_part = %i | ienty = %i \n", i, i_part, ienty);
       for(int idata = 0; idata < s_block_unit; idata++){
         send_buffer[idx1++] = _send_entity_data[i_part][s_block_unit*ienty+idata];
       }

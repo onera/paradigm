@@ -402,6 +402,11 @@ int main(int argc, char *argv[])
 
     PDM_printf("\n");
 
+    PDM_printf("[%i]  face_part_bound    : ", i_rank);
+    for (int i = 0; i < 4 * n_face_part_bound; i++)
+      PDM_printf(" "PDM_FMT_G_NUM, face_part_bound[i]);
+    PDM_printf("\n");
+
     PDM_printf("[%i]  cell_ln_to_gn    : ", i_rank);
     for (int i = 0; i < n_cell; i++)
       PDM_printf(" "PDM_FMT_G_NUM, cell_ln_to_gn[i]);

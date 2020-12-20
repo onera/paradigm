@@ -14,6 +14,8 @@
 
 #include "pdm_mpi.h"
 #include "pdm.h"
+#include "pdm_distant_neighbor.h"
+#include "pdm_logging.h"
 #include "pdm_part_extension.h"
 #include "pdm_part_extension_priv.h"
 
@@ -39,6 +41,57 @@ extern "C" {
 /*=============================================================================
  * Static function definitions
  *============================================================================*/
+
+static
+int
+_setup_neighbor
+(
+ int           ntot_part,
+ int          *entity_part_bound_part_idx,
+ int          *entity_part_bound,
+ int          *entity_cell,
+ PDM_g_num_t  *cell_ln_to_gn,
+ PDM_g_num_t **cell_border_ln_to_gn,
+ int         **neighbor_idx,
+ int         **neighbor_desc
+)
+{
+  *neighbor_idx         = malloc(     ( entity_part_bound_part_idx[ntot_part] + 1 ) * sizeof(int        ));
+  *neighbor_desc        = malloc(  3 *  entity_part_bound_part_idx[ntot_part]       * sizeof(int        )); // i_proc, i_part, i_entity
+  *cell_border_ln_to_gn = malloc(       entity_part_bound_part_idx[ntot_part]       * sizeof(PDM_g_num_t));
+
+  int* _neighbor_idx  = *neighbor_idx;
+  int* _neighbor_desc = *neighbor_desc;
+
+  PDM_g_num_t* _cell_border_ln_to_gn = *cell_border_ln_to_gn;
+
+  int n_entity_bound = 0;
+  for(int i_part = 0; i_part < ntot_part; ++i_part ){
+    _neighbor_idx[0] = 0;
+    for(int idx_entity = entity_part_bound_part_idx[i_part]; idx_entity < entity_part_bound_part_idx[i_part+1]; ++idx_entity) {
+
+      int i_entity     = entity_part_bound[4*idx_entity  ];
+      int i_proc_opp   = entity_part_bound[4*idx_entity+1];
+      int i_part_opp   = entity_part_bound[4*idx_entity+2]-1;
+      int i_entity_opp = entity_part_bound[4*idx_entity+3];
+
+      _neighbor_idx [idx_entity+1  ] = _neighbor_idx[idx_entity] + 1;
+      _neighbor_desc[3*idx_entity  ] = i_proc_opp;
+      _neighbor_desc[3*idx_entity+1] = i_part_opp;
+      // _neighbor_desc[3*idx_entity+2] = i_entity_opp;
+      _neighbor_desc[3*idx_entity+2] = idx_entity; // Car symétrique
+
+      int icell1 = entity_cell[2*i_entity];
+
+      _cell_border_ln_to_gn[idx_entity] = cell_ln_to_gn[icell1-1];
+
+      n_entity_bound++;
+    }
+  }
+
+  return n_entity_bound;
+}
+
 
 /*=============================================================================
  * Public function definitions
@@ -149,8 +202,100 @@ PDM_part_extension_compute
   PDM_extend_type_t     extend_type
 )
 {
+  /*
+   *  A prevoir : reconstruire les "ghost" sans toute la topologie
+   *              par exemple pour l'algébre linéaire
+   */
+
   assert(part_ext != NULL);
   printf(" PDM_part_extension_compute : depth = %i | extend_type = %i \n", depth, extend_type);
+
+  assert(extend_type == PDM_EXTEND_FROM_FACE);
+
+  int*** neighbor_idx      = (int ***) malloc( part_ext->n_domain * sizeof(int ** ) );
+  int*** neighbor_desc     = (int ***) malloc( part_ext->n_domain * sizeof(int ** ) );
+  int**  n_face_part_bound = (int  **) malloc( part_ext->n_domain * sizeof(int  * ) );
+
+  // Begin with exchange by the connectivity the cell opposite number
+  for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
+
+    int n_part_total = -1;
+    int n_part_loc = part_ext->n_part[i_domain];
+    PDM_MPI_Allreduce(&n_part_loc, &n_part_total, 1, PDM_MPI_INT, PDM_MPI_SUM, part_ext->comm);
+
+    neighbor_idx     [i_domain] = (int **) malloc( part_ext->n_part[i_domain] * sizeof(int *) );
+    neighbor_desc    [i_domain] = (int **) malloc( part_ext->n_part[i_domain] * sizeof(int *) );
+    n_face_part_bound[i_domain] = (int  *) malloc( part_ext->n_part[i_domain] * sizeof(int  ) );
+
+    printf(" n_part_total = %i \n", n_part_total);
+    PDM_g_num_t** cell_border_ln_to_gn = malloc( part_ext->n_part [i_domain] * sizeof(PDM_g_num_t * ));
+
+    for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
+
+      // Pour chaque partition on hook le graph de comm
+      n_face_part_bound[i_domain][i_part] = _setup_neighbor(n_part_total,
+                                                            part_ext->parts[i_domain][i_part].face_part_bound_part_idx,
+                                                            part_ext->parts[i_domain][i_part].face_part_bound,
+                                                            part_ext->parts[i_domain][i_part].face_cell,
+                                                            part_ext->parts[i_domain][i_part].cell_ln_to_gn,
+                                                            &cell_border_ln_to_gn[i_part],
+                                                            &neighbor_idx[i_domain][i_part],
+                                                            &neighbor_desc[i_domain][i_part]);
+    }
+
+    /*
+     * Create distant neighbor
+     */
+    PDM_distant_neighbor_t* dn = PDM_distant_neighbor_create(part_ext->comm,
+                                                             part_ext->n_part [i_domain],
+                                                             n_face_part_bound[i_domain],
+                                                             neighbor_idx     [i_domain],
+                                                             neighbor_desc    [i_domain]);
+
+    /*
+     * Echange du numero :
+     *     - i_domain (useless now)
+     *     - cell_ln_to_gn
+     *     - cell_face (in gn )
+     *     - face_ln_to_gn
+     */
+    PDM_g_num_t **cell_ln_to_gn_opp;
+    PDM_distant_neighbor_exch(dn,
+                              sizeof(PDM_g_num_t),
+                              PDM_STRIDE_CST,
+                              1,
+                              NULL,
+                    (void **) cell_border_ln_to_gn,
+                              NULL,
+                   (void ***)&cell_ln_to_gn_opp);
+
+    for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
+      PDM_log_trace_array_long(cell_border_ln_to_gn[i_part], n_face_part_bound[i_domain][i_part], "cell_border_ln_to_gn = ");
+      PDM_log_trace_array_long(cell_ln_to_gn_opp[i_part], n_face_part_bound[i_domain][i_part], "cell_ln_to_gn_opp = ");
+      free(cell_border_ln_to_gn[i_part]);
+      free(cell_ln_to_gn_opp[i_part]);
+    }
+    free(cell_border_ln_to_gn);
+    free(cell_ln_to_gn_opp);
+
+    PDM_distant_neighbor_free(dn);
+
+  }
+
+  for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
+    for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
+      free(neighbor_idx [i_domain][i_part]);
+      free(neighbor_desc[i_domain][i_part]);
+    }
+    free(neighbor_idx[i_domain]);
+    free(neighbor_desc[i_domain]);
+    free(n_face_part_bound[i_domain]);
+  }
+  free(neighbor_idx);
+  free(neighbor_desc);
+  free(n_face_part_bound);
+
+
 
   printf(" PDM_part_extension_compute end \n");
 }
