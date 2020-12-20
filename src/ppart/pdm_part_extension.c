@@ -46,11 +46,15 @@ static
 int
 _setup_neighbor
 (
+ int           i_proc_cur,
+ int           i_part_cur,
  int           ntot_part,
  int          *entity_part_bound_part_idx,
  int          *entity_part_bound,
  int          *entity_cell,
  PDM_g_num_t  *cell_ln_to_gn,
+ int          *cell_list,
+ int          *graph_comm_cell,
  PDM_g_num_t **cell_border_ln_to_gn,
  int         **neighbor_idx,
  int         **neighbor_desc
@@ -68,22 +72,28 @@ _setup_neighbor
   int n_entity_bound = 0;
   for(int i_part = 0; i_part < ntot_part; ++i_part ){
     _neighbor_idx[0] = 0;
+    int idx_opp = 0;
     for(int idx_entity = entity_part_bound_part_idx[i_part]; idx_entity < entity_part_bound_part_idx[i_part+1]; ++idx_entity) {
 
-      int i_entity     = entity_part_bound[4*idx_entity  ];
+      int i_entity     = entity_part_bound[4*idx_entity  ]-1;
       int i_proc_opp   = entity_part_bound[4*idx_entity+1];
       int i_part_opp   = entity_part_bound[4*idx_entity+2]-1;
-      int i_entity_opp = entity_part_bound[4*idx_entity+3];
+      // int i_entity_opp = entity_part_bound[4*idx_entity+3];
 
       _neighbor_idx [idx_entity+1  ] = _neighbor_idx[idx_entity] + 1;
       _neighbor_desc[3*idx_entity  ] = i_proc_opp;
       _neighbor_desc[3*idx_entity+1] = i_part_opp;
       // _neighbor_desc[3*idx_entity+2] = i_entity_opp;
-      _neighbor_desc[3*idx_entity+2] = idx_entity; // Car symétrique
+      _neighbor_desc[3*idx_entity+2] = idx_opp; // Car symétrique
 
       int icell1 = entity_cell[2*i_entity];
 
       _cell_border_ln_to_gn[idx_entity] = cell_ln_to_gn[icell1-1];
+
+      cell_list[idx_entity] = icell1;
+      graph_comm_cell[3*idx_entity  ] = idx_opp++;
+      graph_comm_cell[3*idx_entity+1] = i_proc_cur;
+      graph_comm_cell[3*idx_entity+2] = i_part_cur;
 
       n_entity_bound++;
     }
@@ -202,10 +212,16 @@ PDM_part_extension_compute
   PDM_extend_type_t     extend_type
 )
 {
+
   /*
    *  A prevoir : reconstruire les "ghost" sans toute la topologie
    *              par exemple pour l'algébre linéaire
    */
+
+  int i_rank;
+  int n_rank;
+  PDM_MPI_Comm_rank(part_ext->comm, &i_rank);
+  PDM_MPI_Comm_size(part_ext->comm, &n_rank);
 
   assert(part_ext != NULL);
   printf(" PDM_part_extension_compute : depth = %i | extend_type = %i \n", depth, extend_type);
@@ -215,6 +231,10 @@ PDM_part_extension_compute
   int*** neighbor_idx      = (int ***) malloc( part_ext->n_domain * sizeof(int ** ) );
   int*** neighbor_desc     = (int ***) malloc( part_ext->n_domain * sizeof(int ** ) );
   int**  n_face_part_bound = (int  **) malloc( part_ext->n_domain * sizeof(int  * ) );
+
+  int ***cell_list       = (int ***) malloc( part_ext->n_domain * sizeof(int **));
+  int ***graph_comm_cell = (int ***) malloc( part_ext->n_domain * sizeof(int **));
+
 
   // Begin with exchange by the connectivity the cell opposite number
   for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
@@ -230,17 +250,30 @@ PDM_part_extension_compute
     printf(" n_part_total = %i \n", n_part_total);
     PDM_g_num_t** cell_border_ln_to_gn = malloc( part_ext->n_part [i_domain] * sizeof(PDM_g_num_t * ));
 
+    cell_list      [i_domain] = (int **) malloc( part_ext->n_part[i_domain] * sizeof(int *));
+    graph_comm_cell[i_domain] = (int **) malloc( part_ext->n_part[i_domain] * sizeof(int *));
+
     for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
 
+      int n_part_face_bound_tot = part_ext->parts[i_domain][i_part].face_part_bound_part_idx[n_part_total];
+      cell_list      [i_domain][i_part] = (int *) malloc(     n_part_face_bound_tot * sizeof(int));
+      graph_comm_cell[i_domain][i_part] = (int *) malloc( 3 * n_part_face_bound_tot * sizeof(int));
+
       // Pour chaque partition on hook le graph de comm
-      n_face_part_bound[i_domain][i_part] = _setup_neighbor(n_part_total,
+      n_face_part_bound[i_domain][i_part] = _setup_neighbor(i_rank,
+                                                            i_part,
+                                                            n_part_total,
                                                             part_ext->parts[i_domain][i_part].face_part_bound_part_idx,
                                                             part_ext->parts[i_domain][i_part].face_part_bound,
                                                             part_ext->parts[i_domain][i_part].face_cell,
                                                             part_ext->parts[i_domain][i_part].cell_ln_to_gn,
+                                                            cell_list[i_domain][i_part],
+                                                            graph_comm_cell[i_domain][i_part],
                                                             &cell_border_ln_to_gn[i_part],
-                                                            &neighbor_idx[i_domain][i_part],
+                                                            &neighbor_idx [i_domain][i_part],
                                                             &neighbor_desc[i_domain][i_part]);
+
+      printf(" n_face_part_bound[%i][%i] = %i \n", i_domain, i_part, n_face_part_bound[i_domain][i_part]);
     }
 
     /*
@@ -269,14 +302,27 @@ PDM_part_extension_compute
                               NULL,
                    (void ***)&cell_ln_to_gn_opp);
 
+    int **graph_comm_cell_opp;
+    PDM_distant_neighbor_exch(dn,
+                              sizeof(int),
+                              PDM_STRIDE_CST,
+                              3,
+                              NULL,
+                    (void **) graph_comm_cell[i_domain],
+                              NULL,
+                   (void ***)&graph_comm_cell_opp);
+
     for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
       PDM_log_trace_array_long(cell_border_ln_to_gn[i_part], n_face_part_bound[i_domain][i_part], "cell_border_ln_to_gn = ");
       PDM_log_trace_array_long(cell_ln_to_gn_opp[i_part], n_face_part_bound[i_domain][i_part], "cell_ln_to_gn_opp = ");
+      PDM_log_trace_array_int(graph_comm_cell_opp[i_part], 3 * n_face_part_bound[i_domain][i_part], "graph_comm_cell_opp = ");
       free(cell_border_ln_to_gn[i_part]);
       free(cell_ln_to_gn_opp[i_part]);
+      free(graph_comm_cell_opp[i_part]);
     }
     free(cell_border_ln_to_gn);
     free(cell_ln_to_gn_opp);
+    free(graph_comm_cell_opp);
 
     PDM_distant_neighbor_free(dn);
 
@@ -286,16 +332,20 @@ PDM_part_extension_compute
     for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
       free(neighbor_idx [i_domain][i_part]);
       free(neighbor_desc[i_domain][i_part]);
+      free(graph_comm_cell[i_domain][i_part]);
+      free(cell_list[i_domain][i_part]);
     }
     free(neighbor_idx[i_domain]);
     free(neighbor_desc[i_domain]);
     free(n_face_part_bound[i_domain]);
+    free(graph_comm_cell[i_domain]);
+    free(cell_list[i_domain]);
   }
   free(neighbor_idx);
   free(neighbor_desc);
   free(n_face_part_bound);
-
-
+  free(graph_comm_cell);
+  free(cell_list);
 
   printf(" PDM_part_extension_compute end \n");
 }
