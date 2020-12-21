@@ -260,14 +260,22 @@ PDM_part_extension_compute
   int ***face_cell_idx = malloc( part_ext->n_domain * sizeof(int ***));
   int ***face_cell     = malloc( part_ext->n_domain * sizeof(int ***));
 
+  int ***cell_cell_idx = malloc( part_ext->n_domain * sizeof(int ***));
+  int ***cell_cell     = malloc( part_ext->n_domain * sizeof(int ***));
+
   for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
 
-    int  *pn_face    = (int * ) malloc( part_ext->n_part[i_domain] * sizeof(int  ));
-    int **pface_cell = (int **) malloc( part_ext->n_part[i_domain] * sizeof(int *));
+    int  *pn_face        = (int * ) malloc( part_ext->n_part[i_domain] * sizeof(int  ));
+    int  *pn_cell        = (int * ) malloc( part_ext->n_part[i_domain] * sizeof(int  ));
+    int **pface_cell     = (int **) malloc( part_ext->n_part[i_domain] * sizeof(int *));
+    int **pcell_face     = (int **) malloc( part_ext->n_part[i_domain] * sizeof(int *));
+    int **pcell_face_idx = (int **) malloc( part_ext->n_part[i_domain] * sizeof(int *));
     for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
       pn_face[i_part] = part_ext->parts[i_domain][i_part].n_face;
-      printf("pn_face[%i] = %i \n", i_part, pn_face[i_part]);
+      pn_cell[i_part] = part_ext->parts[i_domain][i_part].n_cell;
       pface_cell[i_part] = part_ext->parts[i_domain][i_part].face_cell;
+      pcell_face_idx[i_part] = part_ext->parts[i_domain][i_part].cell_face_idx;
+      pcell_face[i_part] = part_ext->parts[i_domain][i_part].cell_face;
     }
 
     PDM_part_connectivity_to_connectity_idx(part_ext->n_part[i_domain],
@@ -275,9 +283,34 @@ PDM_part_extension_compute
                                             pface_cell,
                                             &face_cell_idx[i_domain],
                                             &face_cell[i_domain]);
+
+    cell_cell_idx[i_domain] = (int **) malloc( part_ext->n_part[i_domain] * sizeof(int *));
+    cell_cell    [i_domain] = (int **) malloc( part_ext->n_part[i_domain] * sizeof(int *));
+
+    for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
+
+      PDM_log_trace_array_int(face_cell_idx[i_domain][i_part], pn_face[i_part], "face_cell_idx::");
+      PDM_log_trace_array_int(face_cell    [i_domain][i_part], face_cell_idx[i_domain][i_part][pn_face[i_part]], "face_cell::");
+
+      // On fait égalemnt le cell_cell
+      // printf("PDM_combine_connectivity[%i] -> %i %i \n", i_part, pn_cell[i_part], pn_face[i_part]);
+      PDM_combine_connectivity(pn_cell[i_part],
+                               pcell_face_idx[i_part],
+                               pcell_face[i_part],
+                               face_cell_idx[i_domain][i_part],
+                               face_cell[i_domain][i_part],
+                               &cell_cell_idx[i_domain][i_part],
+                               &cell_cell[i_domain][i_part]);
+    }
+
     free(pn_face);
+    free(pn_cell);
     free(pface_cell);
+    free(pcell_face);
+    free(pcell_face_idx);
   }
+
+
 
   // TODO : face_cell_idx
   // TODO : vtx_cell
@@ -497,8 +530,8 @@ PDM_part_extension_compute
   free(graph_comm_cell);
 
 
-  // for(int i_depth = 0; i_depth < depth+1; ++i_depth) {
-  for(int i_depth = 0; i_depth < 1; ++i_depth) {
+  for(int i_depth = 0; i_depth < depth+1; ++i_depth) {
+  // for(int i_depth = 0; i_depth < 1; ++i_depth) {
     for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
       for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
         free(graph_comm_cell_opp    [i_depth][i_domain][i_part]);
@@ -518,14 +551,30 @@ PDM_part_extension_compute
   free(cell_list);
 
 
-  // for(int i_depth = 0; i_depth < depth+1; ++i_depth) {
-  for(int i_depth = 0; i_depth < 1; ++i_depth) {
+  for(int i_depth = 0; i_depth < depth+1; ++i_depth) {
     for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
       free(n_cell_per_bound[i_depth][i_domain]);
     }
     free(n_cell_per_bound[i_depth]);
   }
   free(n_cell_per_bound);
+
+  for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
+    for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
+      free(face_cell[i_domain][i_part]);
+      free(face_cell_idx[i_domain][i_part]);
+      free(cell_cell_idx[i_domain][i_part]);
+      free(cell_cell[i_domain][i_part]);
+    }
+    free(face_cell[i_domain]);
+    free(face_cell_idx[i_domain]);
+    free(cell_cell_idx[i_domain]);
+    free(cell_cell[i_domain]);
+  }
+  free(face_cell);
+  free(face_cell_idx);
+  free(cell_cell_idx);
+  free(cell_cell);
 
   printf(" PDM_part_extension_compute end \n");
 }

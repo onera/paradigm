@@ -283,7 +283,7 @@ const int   *n_entity1,
       }
     }
 
-    *_entity1_entity2 = realloc(*_entity1_entity2, idx * sizeof(int));
+    _entity1_entity2    [i_part] = realloc(_entity1_entity2    [i_part], idx * sizeof(int));
 
 
   }
