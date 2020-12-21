@@ -67,6 +67,17 @@ const int   *n_entity2,
       int ***entity2_entity1
 );
 
+
+void
+PDM_part_connectivity_to_connectity_idx
+(
+const int    n_part,
+const int   *n_entity1,
+      int  **entity1_entity2_in,
+      int ***entity1_entity2_idx,
+      int ***entity1_entity2
+);
+
 #ifdef  __cplusplus
 }
 #endif

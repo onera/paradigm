@@ -244,3 +244,63 @@ const int   *n_entity2,
   }
 
 }
+
+
+
+void
+PDM_part_connectivity_to_connectity_idx
+(
+const int    n_part,
+const int   *n_entity1,
+      int  **entity1_entity2_in,
+      int ***entity1_entity2_idx,
+      int ***entity1_entity2
+)
+{
+
+  *entity1_entity2_idx = (int ** ) malloc( n_part * sizeof(int *));
+  *entity1_entity2     = (int ** ) malloc( n_part * sizeof(int *));
+
+  int** _entity1_entity2_idx = *entity1_entity2_idx;
+  int** _entity1_entity2     = *entity1_entity2;
+
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+
+    _entity1_entity2_idx[i_part] = (int * ) malloc( (    n_entity1[i_part] + 1) * sizeof(int));
+    _entity1_entity2    [i_part] = (int * ) malloc( (2 * n_entity1[i_part]    ) * sizeof(int));
+
+    int idx = 0;
+    _entity1_entity2_idx[i_part][0] = 0;
+    for(int i_entity = 0; i_entity < n_entity1[i_part]; ++i_entity) {
+      _entity1_entity2_idx[i_part][i_entity+1] = _entity1_entity2_idx[i_part][i_entity];
+      if(entity1_entity2_in[i_part][2*i_entity + 1 ] == 0) {
+        _entity1_entity2_idx[i_part][i_entity+1]++;
+        _entity1_entity2[i_part][idx++] = entity1_entity2_in[i_part][2*i_entity];
+      } else {
+        _entity1_entity2_idx[i_part][i_entity+1] += 2;
+        _entity1_entity2[i_part][idx++] = entity1_entity2_in[i_part][2*i_entity  ];
+        _entity1_entity2[i_part][idx++] = entity1_entity2_in[i_part][2*i_entity+1];
+      }
+    }
+
+    *_entity1_entity2 = realloc(*_entity1_entity2, idx * sizeof(int));
+
+
+  }
+  // int* face_cell_idx = (int *) malloc( (pn_faces[0] + 1 ) * sizeof(int));
+  // int* face_cell     = (int *) malloc( (2 * pn_faces[0] ) * sizeof(int));
+  // int idx = 0;
+  // face_cell_idx[0] = 0;
+  // for(int i_face = 0; i_face < pn_faces[0]; ++i_face) {
+  //   face_cell_idx[i_face+1] = face_cell_idx[i_face];
+  //   if(pface_cell[0][2*i_face + 1 ] == 0) {
+  //     face_cell_idx[i_face+1]++;
+  //     face_cell[idx++] = pface_cell[0][2*i_face];
+  //   } else {
+  //     face_cell_idx[i_face+1] += 2;
+  //     face_cell[idx++] = pface_cell[0][2*i_face  ];
+  //     face_cell[idx++] = pface_cell[0][2*i_face+1];
+  //   }
+  // }
+
+}

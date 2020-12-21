@@ -365,6 +365,10 @@ int main(int argc, char *argv[])
                           &face_group_ln_to_gn);
 
     PDM_part_extension_set_part(part_ext, 0, i_part,
+                                n_cell,
+                                n_face,
+                                n_face_part_bound,
+                                n_vtx,
                                 cell_face_idx,
                                 cell_face,
                                 face_cell,
