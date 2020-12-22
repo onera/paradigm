@@ -42,8 +42,18 @@ struct _pdm_part_extension_t {
   int             n_domain;
   const int      *n_part;
 
-  /* Plus tard --> Un pdm_multipart */
   _part_t  **parts;
+
+  /* Store for each depth / each domain / each part */
+  int ****neighbor_idx;
+  int ****neighbor_desc;
+  int ****graph_comm_cell_opp;
+  int ****graph_comm_cell_opp_idx;
+  int ****graph_comm_cell;
+  int ****cell_list;
+  int  ***n_cell_per_bound;
+
+
 
 };
 

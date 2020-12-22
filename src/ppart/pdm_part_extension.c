@@ -104,6 +104,143 @@ _setup_neighbor
 }
 
 
+static
+void
+_create_cell_graph
+(
+  PDM_part_extension_t *part_ext
+)
+{
+
+  int i_rank;
+  int n_rank;
+  PDM_MPI_Comm_rank(part_ext->comm, &i_rank);
+  PDM_MPI_Comm_size(part_ext->comm, &n_rank);
+
+  int**  n_face_part_bound = (int  **) malloc( part_ext->n_domain * sizeof(int  * ) );
+
+  // Begin with exchange by the connectivity the cell opposite number
+  for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
+
+    int n_part_total = -1;
+    int n_part_loc = part_ext->n_part[i_domain];
+    PDM_MPI_Allreduce(&n_part_loc, &n_part_total, 1, PDM_MPI_INT, PDM_MPI_SUM, part_ext->comm);
+
+    part_ext->neighbor_idx [0][i_domain] = (int **) malloc( part_ext->n_part[i_domain] * sizeof(int *) );
+    part_ext->neighbor_desc[0][i_domain] = (int **) malloc( part_ext->n_part[i_domain] * sizeof(int *) );
+    n_face_part_bound[i_domain] = (int  *) malloc( part_ext->n_part[i_domain] * sizeof(int  ) );
+
+    part_ext->n_cell_per_bound[0][i_domain] = (int  *) malloc( part_ext->n_part[i_domain] * sizeof(int  ) );
+
+    printf(" n_part_total = %i \n", n_part_total);
+    PDM_g_num_t** cell_border_ln_to_gn = malloc( part_ext->n_part [i_domain] * sizeof(PDM_g_num_t * ));
+
+    part_ext->cell_list      [0][i_domain] = (int **) malloc( part_ext->n_part[i_domain] * sizeof(int *));
+    part_ext->graph_comm_cell[0][i_domain] = (int **) malloc( part_ext->n_part[i_domain] * sizeof(int *));
+
+    for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
+
+      int n_part_face_bound_tot = part_ext->parts[i_domain][i_part].face_part_bound_part_idx[n_part_total];
+      part_ext->cell_list      [0][i_domain][i_part] = (int *) malloc(     n_part_face_bound_tot * sizeof(int));
+      part_ext->graph_comm_cell[0][i_domain][i_part] = (int *) malloc( 3 * n_part_face_bound_tot * sizeof(int));
+
+      // Pour chaque partition on hook le graph de comm
+      n_face_part_bound[i_domain][i_part] = _setup_neighbor(i_rank,
+                                                            i_part,
+                                                            n_part_total,
+                                                            part_ext->parts[i_domain][i_part].face_part_bound_part_idx,
+                                                            part_ext->parts[i_domain][i_part].face_part_bound,
+                                                            part_ext->parts[i_domain][i_part].face_cell,
+                                                            part_ext->parts[i_domain][i_part].cell_ln_to_gn,
+                                                            part_ext->cell_list[0][i_domain][i_part],
+                                                            part_ext->graph_comm_cell[0][i_domain][i_part],
+                                                            &cell_border_ln_to_gn[i_part],
+                                                            &part_ext->neighbor_idx [0][i_domain][i_part],
+                                                            &part_ext->neighbor_desc[0][i_domain][i_part]);
+
+      // For the first depth it's the same
+      part_ext->n_cell_per_bound[0][i_domain][i_part] = n_face_part_bound[i_domain][i_part];
+      printf(" n_face_part_bound[%i][%i] = %i \n", i_domain, i_part, n_face_part_bound[i_domain][i_part]);
+    }
+
+    /*
+     * Create distant neighbor
+     */
+    PDM_distant_neighbor_t* dn = PDM_distant_neighbor_create(part_ext->comm,
+                                                             part_ext->n_part [i_domain],
+                                                             n_face_part_bound[i_domain],
+                                                             part_ext->neighbor_idx [0][i_domain],
+                                                             part_ext->neighbor_desc[0][i_domain]);
+
+    /*
+     * Echange du numero :
+     *     - i_domain (useless now)
+     *     - cell_ln_to_gn
+     *     - cell_face (in gn )
+     *     - face_ln_to_gn
+     */
+    PDM_g_num_t **cell_ln_to_gn_opp;
+    PDM_distant_neighbor_exch(dn,
+                              sizeof(PDM_g_num_t),
+                              PDM_STRIDE_CST,
+                              1,
+                              NULL,
+                    (void **) cell_border_ln_to_gn,
+                              NULL,
+                   (void ***)&cell_ln_to_gn_opp);
+
+    PDM_distant_neighbor_exch(dn,
+                              sizeof(int),
+                              PDM_STRIDE_CST,
+                              3,
+                              NULL,
+                    (void **) part_ext->graph_comm_cell[0][i_domain],
+                              NULL,
+                   (void ***)&part_ext->graph_comm_cell_opp[0][i_domain]);
+
+    for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
+      PDM_log_trace_array_long(cell_border_ln_to_gn[i_part], n_face_part_bound[i_domain][i_part], "cell_border_ln_to_gn = ");
+      PDM_log_trace_array_long(cell_ln_to_gn_opp[i_part], n_face_part_bound[i_domain][i_part], "cell_ln_to_gn_opp = ");
+      PDM_log_trace_array_int(part_ext->graph_comm_cell_opp[0][i_domain][i_part], 3 * n_face_part_bound[i_domain][i_part], "graph_comm_cell_opp = ");
+      free(cell_border_ln_to_gn[i_part]);
+      free(cell_ln_to_gn_opp[i_part]);
+    }
+    free(cell_border_ln_to_gn);
+    free(cell_ln_to_gn_opp);
+
+    /* Setup for the next distant neighbor */
+    part_ext->graph_comm_cell_opp_idx[0][i_domain] = (int **) malloc( part_ext->n_part[i_domain] * sizeof(int *));
+
+    for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
+      part_ext->graph_comm_cell_opp_idx[0][i_domain][i_part] = (int *) malloc( (part_ext->n_cell_per_bound[0][i_domain][i_part]+1) * sizeof(int));
+      part_ext->graph_comm_cell_opp_idx[0][i_domain][i_part][0] = 0;
+      for(int i = 0; i < part_ext->n_cell_per_bound[0][i_domain][i_part]; ++i) {
+        part_ext->graph_comm_cell_opp_idx[0][i_domain][i_part][i+1] = part_ext->graph_comm_cell_opp_idx[0][i_domain][i_part][i] + 1;
+      }
+    }
+    PDM_distant_neighbor_free(dn);
+  }
+}
+
+
+static
+void
+_extend_cell_graph
+(
+  PDM_part_extension_t *part_ext
+)
+{
+  /*
+   *  On fait 2 échanges :
+   *     - Le premier permet d'avoir le graph de comm pour le prochain échange
+   *     - Le deuxième permet de connaitre le graphe associé
+   */
+
+
+}
+
+
+
 /*=============================================================================
  * Public function definitions
  *============================================================================*/
@@ -227,7 +364,6 @@ PDM_part_extension_compute
    *  A prevoir : reconstruire les "ghost" sans toute la topologie
    *              par exemple pour l'algébre linéaire
    */
-
   int i_rank;
   int n_rank;
   PDM_MPI_Comm_rank(part_ext->comm, &i_rank);
@@ -237,25 +373,6 @@ PDM_part_extension_compute
   printf(" PDM_part_extension_compute : depth = %i | extend_type = %i \n", depth, extend_type);
 
   assert(extend_type == PDM_EXTEND_FROM_FACE);
-
-  int*** neighbor_idx      = (int ***) malloc( part_ext->n_domain * sizeof(int ** ) );
-  int*** neighbor_desc     = (int ***) malloc( part_ext->n_domain * sizeof(int ** ) );
-  int**  n_face_part_bound = (int  **) malloc( part_ext->n_domain * sizeof(int  * ) );
-
-  int ***graph_comm_cell = (int ***) malloc( part_ext->n_domain * sizeof(int **));
-
-  // Four indirection -> depth / i_domain / i_part / i_cell
-  int ****cell_list               = (int ****) malloc( (depth + 1) * sizeof(int ***));
-  int ****graph_comm_cell_opp_idx = (int ****) malloc( (depth + 1) * sizeof(int ***));
-  int ****graph_comm_cell_opp     = (int ****) malloc( (depth + 1) * sizeof(int ***));
-  int  ***n_cell_per_bound        = (int  ***) malloc( (depth + 1) * sizeof(int  **));
-
-  for(int i_depth = 0; i_depth < depth+1; ++i_depth) {
-    cell_list              [i_depth] = (int ***) malloc( part_ext->n_domain * sizeof(int ***));
-    graph_comm_cell_opp_idx[i_depth] = (int ***) malloc( part_ext->n_domain * sizeof(int ***));
-    graph_comm_cell_opp    [i_depth] = (int ***) malloc( part_ext->n_domain * sizeof(int ***));
-    n_cell_per_bound       [i_depth] = (int  **) malloc( part_ext->n_domain * sizeof(int  **));
-  }
 
   int ***face_cell_idx = malloc( part_ext->n_domain * sizeof(int ***));
   int ***face_cell     = malloc( part_ext->n_domain * sizeof(int ***));
@@ -270,12 +387,13 @@ PDM_part_extension_compute
     int **pface_cell     = (int **) malloc( part_ext->n_part[i_domain] * sizeof(int *));
     int **pcell_face     = (int **) malloc( part_ext->n_part[i_domain] * sizeof(int *));
     int **pcell_face_idx = (int **) malloc( part_ext->n_part[i_domain] * sizeof(int *));
+
     for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
-      pn_face[i_part] = part_ext->parts[i_domain][i_part].n_face;
-      pn_cell[i_part] = part_ext->parts[i_domain][i_part].n_cell;
-      pface_cell[i_part] = part_ext->parts[i_domain][i_part].face_cell;
+      pn_face       [i_part] = part_ext->parts[i_domain][i_part].n_face;
+      pn_cell       [i_part] = part_ext->parts[i_domain][i_part].n_cell;
+      pface_cell    [i_part] = part_ext->parts[i_domain][i_part].face_cell;
       pcell_face_idx[i_part] = part_ext->parts[i_domain][i_part].cell_face_idx;
-      pcell_face[i_part] = part_ext->parts[i_domain][i_part].cell_face;
+      pcell_face    [i_part] = part_ext->parts[i_domain][i_part].cell_face;
     }
 
     PDM_part_connectivity_to_connectity_idx(part_ext->n_part[i_domain],
@@ -289,8 +407,8 @@ PDM_part_extension_compute
 
     for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
 
-      PDM_log_trace_array_int(face_cell_idx[i_domain][i_part], pn_face[i_part], "face_cell_idx::");
-      PDM_log_trace_array_int(face_cell    [i_domain][i_part], face_cell_idx[i_domain][i_part][pn_face[i_part]], "face_cell::");
+      // PDM_log_trace_array_int(face_cell_idx[i_domain][i_part], pn_face[i_part], "face_cell_idx::");
+      // PDM_log_trace_array_int(face_cell    [i_domain][i_part], face_cell_idx[i_domain][i_part][pn_face[i_part]], "face_cell::");
 
       // On fait égalemnt le cell_cell
       // printf("PDM_combine_connectivity[%i] -> %i %i \n", i_part, pn_cell[i_part], pn_face[i_part]);
@@ -311,113 +429,28 @@ PDM_part_extension_compute
   }
 
 
+  part_ext->neighbor_idx    = (int ****) malloc( (depth + 1) * sizeof(int ***));
+  part_ext->neighbor_desc   = (int ****) malloc( (depth + 1) * sizeof(int ***));
+  part_ext->graph_comm_cell = (int ****) malloc( (depth + 1) * sizeof(int ***));
+
+  part_ext->cell_list               = (int ****) malloc( (depth + 1) * sizeof(int ***));
+  part_ext->graph_comm_cell_opp_idx = (int ****) malloc( (depth + 1) * sizeof(int ***));
+  part_ext->graph_comm_cell_opp     = (int ****) malloc( (depth + 1) * sizeof(int ***));
+  part_ext->n_cell_per_bound        = (int  ***) malloc( (depth + 1) * sizeof(int  **));
+
+  for(int i_depth = 0; i_depth < depth+1; ++i_depth) {
+    part_ext->neighbor_idx           [i_depth] = (int ***) malloc( part_ext->n_domain * sizeof(int ***));
+    part_ext->neighbor_desc          [i_depth] = (int ***) malloc( part_ext->n_domain * sizeof(int ***));
+    part_ext->graph_comm_cell        [i_depth] = (int ***) malloc( part_ext->n_domain * sizeof(int ***));
+    part_ext->cell_list              [i_depth] = (int ***) malloc( part_ext->n_domain * sizeof(int ***));
+    part_ext->graph_comm_cell_opp_idx[i_depth] = (int ***) malloc( part_ext->n_domain * sizeof(int ***));
+    part_ext->graph_comm_cell_opp    [i_depth] = (int ***) malloc( part_ext->n_domain * sizeof(int ***));
+    part_ext->n_cell_per_bound       [i_depth] = (int  **) malloc( part_ext->n_domain * sizeof(int  **));
+  }
 
   // TODO : face_cell_idx
   // TODO : vtx_cell
-
-  // Begin with exchange by the connectivity the cell opposite number
-  for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
-
-    int n_part_total = -1;
-    int n_part_loc = part_ext->n_part[i_domain];
-    PDM_MPI_Allreduce(&n_part_loc, &n_part_total, 1, PDM_MPI_INT, PDM_MPI_SUM, part_ext->comm);
-
-    neighbor_idx     [i_domain] = (int **) malloc( part_ext->n_part[i_domain] * sizeof(int *) );
-    neighbor_desc    [i_domain] = (int **) malloc( part_ext->n_part[i_domain] * sizeof(int *) );
-    n_face_part_bound[i_domain] = (int  *) malloc( part_ext->n_part[i_domain] * sizeof(int  ) );
-
-    n_cell_per_bound[0][i_domain] = (int  *) malloc( part_ext->n_part[i_domain] * sizeof(int  ) );
-
-    printf(" n_part_total = %i \n", n_part_total);
-    PDM_g_num_t** cell_border_ln_to_gn = malloc( part_ext->n_part [i_domain] * sizeof(PDM_g_num_t * ));
-
-    cell_list      [0][i_domain] = (int **) malloc( part_ext->n_part[i_domain] * sizeof(int *));
-    graph_comm_cell   [i_domain] = (int **) malloc( part_ext->n_part[i_domain] * sizeof(int *));
-
-    for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
-
-      int n_part_face_bound_tot = part_ext->parts[i_domain][i_part].face_part_bound_part_idx[n_part_total];
-      cell_list      [0][i_domain][i_part] = (int *) malloc(     n_part_face_bound_tot * sizeof(int));
-      graph_comm_cell[i_domain][i_part] = (int *) malloc( 3 * n_part_face_bound_tot * sizeof(int));
-
-      // Pour chaque partition on hook le graph de comm
-      n_face_part_bound[i_domain][i_part] = _setup_neighbor(i_rank,
-                                                            i_part,
-                                                            n_part_total,
-                                                            part_ext->parts[i_domain][i_part].face_part_bound_part_idx,
-                                                            part_ext->parts[i_domain][i_part].face_part_bound,
-                                                            part_ext->parts[i_domain][i_part].face_cell,
-                                                            part_ext->parts[i_domain][i_part].cell_ln_to_gn,
-                                                            cell_list[0][i_domain][i_part],
-                                                            graph_comm_cell[i_domain][i_part],
-                                                            &cell_border_ln_to_gn[i_part],
-                                                            &neighbor_idx [i_domain][i_part],
-                                                            &neighbor_desc[i_domain][i_part]);
-
-      // For the first depth it's the same
-      n_cell_per_bound[0][i_domain][i_part] = n_face_part_bound[i_domain][i_part];
-      printf(" n_face_part_bound[%i][%i] = %i \n", i_domain, i_part, n_face_part_bound[i_domain][i_part]);
-    }
-
-    /*
-     * Create distant neighbor
-     */
-    PDM_distant_neighbor_t* dn = PDM_distant_neighbor_create(part_ext->comm,
-                                                             part_ext->n_part [i_domain],
-                                                             n_face_part_bound[i_domain],
-                                                             neighbor_idx     [i_domain],
-                                                             neighbor_desc    [i_domain]);
-
-    /*
-     * Echange du numero :
-     *     - i_domain (useless now)
-     *     - cell_ln_to_gn
-     *     - cell_face (in gn )
-     *     - face_ln_to_gn
-     */
-    PDM_g_num_t **cell_ln_to_gn_opp;
-    PDM_distant_neighbor_exch(dn,
-                              sizeof(PDM_g_num_t),
-                              PDM_STRIDE_CST,
-                              1,
-                              NULL,
-                    (void **) cell_border_ln_to_gn,
-                              NULL,
-                   (void ***)&cell_ln_to_gn_opp);
-
-    PDM_distant_neighbor_exch(dn,
-                              sizeof(int),
-                              PDM_STRIDE_CST,
-                              3,
-                              NULL,
-                    (void **) graph_comm_cell[i_domain],
-                              NULL,
-                   (void ***)&graph_comm_cell_opp[0][i_domain]);
-
-    for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
-      PDM_log_trace_array_long(cell_border_ln_to_gn[i_part], n_face_part_bound[i_domain][i_part], "cell_border_ln_to_gn = ");
-      PDM_log_trace_array_long(cell_ln_to_gn_opp[i_part], n_face_part_bound[i_domain][i_part], "cell_ln_to_gn_opp = ");
-      PDM_log_trace_array_int(graph_comm_cell_opp[0][i_domain][i_part], 3 * n_face_part_bound[i_domain][i_part], "graph_comm_cell_opp = ");
-      free(cell_border_ln_to_gn[i_part]);
-      free(cell_ln_to_gn_opp[i_part]);
-    }
-    free(cell_border_ln_to_gn);
-    free(cell_ln_to_gn_opp);
-
-    /* Setup for the next distant neighbor */
-    graph_comm_cell_opp_idx[0][i_domain] = (int **) malloc( part_ext->n_part[i_domain] * sizeof(int *));
-
-    for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
-      graph_comm_cell_opp_idx[0][i_domain][i_part] = (int *) malloc( (n_cell_per_bound[0][i_domain][i_part]+1) * sizeof(int));
-      graph_comm_cell_opp_idx[0][i_domain][i_part][0] = 0;
-      for(int i = 0; i < n_cell_per_bound[0][i_domain][i_part]; ++i) {
-        graph_comm_cell_opp_idx[0][i_domain][i_part][i+1] = graph_comm_cell_opp_idx[0][i_domain][i_part][i] + 1;
-      }
-    }
-
-    PDM_distant_neighbor_free(dn);
-
-  }
+  _create_cell_graph(part_ext);
 
   /*
    *  So we have the comm graph between cell directly and the cell_list
@@ -425,139 +458,138 @@ PDM_part_extension_compute
    *    for the first rank this step is enought depth = 0
    */
   // int*** graph_comm_cell_opp = (int ***) malloc( depth * sizeof(int **));
+  // for(int i_depth = 1; i_depth < depth+1; ++i_depth) {
+  //   for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
 
-  for(int i_depth = 1; i_depth < depth+1; ++i_depth) {
-    for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
+  //     n_cell_per_bound[i_depth][i_domain] = (int  *) malloc( part_ext->n_part[i_domain] * sizeof(int  ) );
+  //     cell_list       [i_depth][i_domain] = (int **) malloc( part_ext->n_part[i_domain] * sizeof(int *));
 
-      n_cell_per_bound[i_depth][i_domain] = (int  *) malloc( part_ext->n_part[i_domain] * sizeof(int  ) );
-      cell_list       [i_depth][i_domain] = (int **) malloc( part_ext->n_part[i_domain] * sizeof(int *));
+  //     /*
+  //      *  Collect data connexion AND next graph_comm
+  //      */
+  //     for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
+  //       n_cell_per_bound[i_depth][i_domain][i_part] = 0;
+  //       for(int i = 0; i < n_cell_per_bound[i_depth-1][i_domain][i_part]; ++i) {
+  //         int i_cell = cell_list[i_depth-1][i_domain][i_part][i];
+  //         int beg = part_ext->parts[i_domain][i_part].cell_face_idx[i_cell  ];
+  //         int end = part_ext->parts[i_domain][i_part].cell_face_idx[i_cell+1];
+  //         for(int idx_face = beg; idx_face < end; ++idx_face) {
+  //           int i_face = PDM_ABS(part_ext->parts[i_domain][i_part].cell_face[idx_face])-1;
+  //           int i_cell2 = part_ext->parts[i_domain][i_part].face_cell[2*i_face+1]-1;
+  //           n_cell_per_bound[i_depth][i_domain][i_part] += 1;
+  //           if(i_cell2 > -1) {
+  //             n_cell_per_bound[i_depth][i_domain][i_part] += 1;
+  //           }
+  //         }
+  //       }
+  //       printf(" n_cell_per_bound[%i][%i][%i] = %i \n", i_depth, i_domain, i_part, n_cell_per_bound[i_depth][i_domain][i_part]);
+  //     }
 
-      /*
-       *  Collect data connexion AND next graph_comm
-       */
-      for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
-        n_cell_per_bound[i_depth][i_domain][i_part] = 0;
-        for(int i = 0; i < n_cell_per_bound[i_depth-1][i_domain][i_part]; ++i) {
-          int i_cell = cell_list[i_depth-1][i_domain][i_part][i];
-          int beg = part_ext->parts[i_domain][i_part].cell_face_idx[i_cell  ];
-          int end = part_ext->parts[i_domain][i_part].cell_face_idx[i_cell+1];
-          for(int idx_face = beg; idx_face < end; ++idx_face) {
-            int i_face = PDM_ABS(part_ext->parts[i_domain][i_part].cell_face[idx_face])-1;
-            int i_cell2 = part_ext->parts[i_domain][i_part].face_cell[2*i_face+1]-1;
-            n_cell_per_bound[i_depth][i_domain][i_part] += 1;
-            if(i_cell2 > -1) {
-              n_cell_per_bound[i_depth][i_domain][i_part] += 1;
-            }
-          }
-        }
-        printf(" n_cell_per_bound[%i][%i][%i] = %i \n", i_depth, i_domain, i_part, n_cell_per_bound[i_depth][i_domain][i_part]);
-      }
+  //     graph_comm_cell_opp    [i_depth][i_domain] = (int **) malloc( part_ext->n_part[i_domain] * sizeof(int *));
+  //     graph_comm_cell_opp_idx[i_depth][i_domain] = (int **) malloc( part_ext->n_part[i_domain] * sizeof(int *));
 
-      graph_comm_cell_opp    [i_depth][i_domain] = (int **) malloc( part_ext->n_part[i_domain] * sizeof(int *));
-      graph_comm_cell_opp_idx[i_depth][i_domain] = (int **) malloc( part_ext->n_part[i_domain] * sizeof(int *));
+  //     for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
+  //       cell_list              [i_depth][i_domain][i_part] = (int *) malloc(     (n_cell_per_bound[i_depth][i_domain][i_part]  ) * sizeof(int));
+  //       graph_comm_cell_opp    [i_depth][i_domain][i_part] = (int *) malloc( 3 * (n_cell_per_bound[i_depth][i_domain][i_part]  ) * sizeof(int));
+  //       graph_comm_cell_opp_idx[i_depth][i_domain][i_part] = (int *) malloc(     (n_cell_per_bound[i_depth][i_domain][i_part]+1) * sizeof(int));
+  //       graph_comm_cell_opp_idx[i_depth][i_domain][i_part][0] = 0;
 
-      for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
-        cell_list              [i_depth][i_domain][i_part] = (int *) malloc(     (n_cell_per_bound[i_depth][i_domain][i_part]  ) * sizeof(int));
-        graph_comm_cell_opp    [i_depth][i_domain][i_part] = (int *) malloc( 3 * (n_cell_per_bound[i_depth][i_domain][i_part]  ) * sizeof(int));
-        graph_comm_cell_opp_idx[i_depth][i_domain][i_part] = (int *) malloc(     (n_cell_per_bound[i_depth][i_domain][i_part]+1) * sizeof(int));
-        graph_comm_cell_opp_idx[i_depth][i_domain][i_part][0] = 0;
+  //       int idx = 0;
+  //       for(int i = 0; i < n_cell_per_bound[i_depth-1][i_domain][i_part]; ++i) {
+  //         int i_cell = cell_list[i_depth-1][i_domain][i_part][i];
+  //         int beg = part_ext->parts[i_domain][i_part].cell_face_idx[i_cell  ];
+  //         int end = part_ext->parts[i_domain][i_part].cell_face_idx[i_cell+1];
+  //         for(int idx_face = beg; idx_face < end; ++idx_face) {
+  //           int i_face = PDM_ABS(part_ext->parts[i_domain][i_part].cell_face[idx_face])-1;
+  //           int i_cell1 = part_ext->parts[i_domain][i_part].face_cell[2*i_face  ]-1;
+  //           int i_cell2 = part_ext->parts[i_domain][i_part].face_cell[2*i_face+1]-1;
+  //           n_cell_per_bound[i_depth][i_domain][i_part] += 1;
 
-        int idx = 0;
-        for(int i = 0; i < n_cell_per_bound[i_depth-1][i_domain][i_part]; ++i) {
-          int i_cell = cell_list[i_depth-1][i_domain][i_part][i];
-          int beg = part_ext->parts[i_domain][i_part].cell_face_idx[i_cell  ];
-          int end = part_ext->parts[i_domain][i_part].cell_face_idx[i_cell+1];
-          for(int idx_face = beg; idx_face < end; ++idx_face) {
-            int i_face = PDM_ABS(part_ext->parts[i_domain][i_part].cell_face[idx_face])-1;
-            int i_cell1 = part_ext->parts[i_domain][i_part].face_cell[2*i_face  ]-1;
-            int i_cell2 = part_ext->parts[i_domain][i_part].face_cell[2*i_face+1]-1;
-            n_cell_per_bound[i_depth][i_domain][i_part] += 1;
+  //           graph_comm_cell_opp[i_depth][i_domain][i_part][3*idx  ] = idx;
+  //           graph_comm_cell_opp[i_depth][i_domain][i_part][3*idx+1] = i_rank;
+  //           graph_comm_cell_opp[i_depth][i_domain][i_part][3*idx+2] = i_part;
 
-            graph_comm_cell_opp[i_depth][i_domain][i_part][3*idx  ] = idx;
-            graph_comm_cell_opp[i_depth][i_domain][i_part][3*idx+1] = i_rank;
-            graph_comm_cell_opp[i_depth][i_domain][i_part][3*idx+2] = i_part;
+  //           cell_list[i_depth][i_domain][i_part][idx++] = i_cell1;
 
-            cell_list[i_depth][i_domain][i_part][idx++] = i_cell1;
+  //           if(i_cell2 > -1) {
+  //             n_cell_per_bound[i_depth][i_domain][i_part] += 1;
+  //             graph_comm_cell_opp[i_depth][i_domain][i_part][3*idx  ] = idx;
+  //             graph_comm_cell_opp[i_depth][i_domain][i_part][3*idx+1] = i_rank;
+  //             graph_comm_cell_opp[i_depth][i_domain][i_part][3*idx+2] = i_part;
 
-            if(i_cell2 > -1) {
-              n_cell_per_bound[i_depth][i_domain][i_part] += 1;
-              graph_comm_cell_opp[i_depth][i_domain][i_part][3*idx  ] = idx;
-              graph_comm_cell_opp[i_depth][i_domain][i_part][3*idx+1] = i_rank;
-              graph_comm_cell_opp[i_depth][i_domain][i_part][3*idx+2] = i_part;
+  //             cell_list[i_depth][i_domain][i_part][idx++] = i_cell2;
 
-              cell_list[i_depth][i_domain][i_part][idx++] = i_cell2;
+  //           }
+  //         }
+  //       }
 
-            }
-          }
-        }
-
-      }
-
-
-      printf(" manage depth = %i \n", i_depth);
-
-      PDM_distant_neighbor_t* dn = PDM_distant_neighbor_create(part_ext->comm,
-                                                               part_ext->n_part[i_domain],
-                                                               n_cell_per_bound       [i_depth-1][i_domain],
-                                                               graph_comm_cell_opp_idx[i_depth-1][i_domain],
-                                                               graph_comm_cell_opp    [i_depth-1][i_domain]);
-
-      /*
-       *  Prepare exchange with cell_list of previous depth
-       */
-
-      PDM_distant_neighbor_free(dn);
-
-    }
-  }
+  //     }
 
 
+  //     printf(" manage depth = %i \n", i_depth);
 
-  for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
-    for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
-      free(neighbor_idx [i_domain][i_part]);
-      free(neighbor_desc[i_domain][i_part]);
-      free(graph_comm_cell[i_domain][i_part]);
-    }
-    free(neighbor_idx[i_domain]);
-    free(neighbor_desc[i_domain]);
-    free(n_face_part_bound[i_domain]);
-    free(graph_comm_cell[i_domain]);
-  }
-  free(neighbor_idx);
-  free(neighbor_desc);
-  free(n_face_part_bound);
-  free(graph_comm_cell);
+  //     PDM_distant_neighbor_t* dn = PDM_distant_neighbor_create(part_ext->comm,
+  //                                                              part_ext->n_part[i_domain],
+  //                                                              n_cell_per_bound       [i_depth-1][i_domain],
+  //                                                              graph_comm_cell_opp_idx[i_depth-1][i_domain],
+  //                                                              graph_comm_cell_opp    [i_depth-1][i_domain]);
+
+  //     /*
+  //      *  Prepare exchange with cell_list of previous depth
+  //      */
+
+  //     PDM_distant_neighbor_free(dn);
+
+  //   }
+  // }
+
+
+
+  // for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
+  //   for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
+  //     free(neighbor_idx [i_domain][i_part]);
+  //     free(neighbor_desc[i_domain][i_part]);
+  //     free(graph_comm_cell[i_domain][i_part]);
+  //   }
+  //   free(neighbor_idx[i_domain]);
+  //   free(neighbor_desc[i_domain]);
+  //   free(n_face_part_bound[i_domain]);
+  //   free(graph_comm_cell[i_domain]);
+  // }
+  // free(neighbor_idx);
+  // free(neighbor_desc);
+  // free(n_face_part_bound);
+  // free(graph_comm_cell);
+
+
+  // for(int i_depth = 0; i_depth < depth+1; ++i_depth) {
+  // // for(int i_depth = 0; i_depth < 1; ++i_depth) {
+  //   for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
+  //     for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
+  //       free(graph_comm_cell_opp    [i_depth][i_domain][i_part]);
+  //       free(graph_comm_cell_opp_idx[i_depth][i_domain][i_part]);
+  //       free(cell_list[i_depth][i_domain][i_part]);
+  //     }
+  //     free(graph_comm_cell_opp    [i_depth][i_domain]);
+  //     free(graph_comm_cell_opp_idx[i_depth][i_domain]);
+  //     free(cell_list[i_depth][i_domain]);
+  //   }
+  //   free(graph_comm_cell_opp    [i_depth]);
+  //   free(graph_comm_cell_opp_idx[i_depth]);
+  //   free(cell_list[i_depth]);
+  // }
+  // free(graph_comm_cell_opp);
+  // free(graph_comm_cell_opp_idx);
+  // free(cell_list);
 
 
   for(int i_depth = 0; i_depth < depth+1; ++i_depth) {
-  // for(int i_depth = 0; i_depth < 1; ++i_depth) {
     for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
-      for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
-        free(graph_comm_cell_opp    [i_depth][i_domain][i_part]);
-        free(graph_comm_cell_opp_idx[i_depth][i_domain][i_part]);
-        free(cell_list[i_depth][i_domain][i_part]);
-      }
-      free(graph_comm_cell_opp    [i_depth][i_domain]);
-      free(graph_comm_cell_opp_idx[i_depth][i_domain]);
-      free(cell_list[i_depth][i_domain]);
+      free(part_ext->n_cell_per_bound[i_depth][i_domain]);
     }
-    free(graph_comm_cell_opp    [i_depth]);
-    free(graph_comm_cell_opp_idx[i_depth]);
-    free(cell_list[i_depth]);
+    free(part_ext->n_cell_per_bound[i_depth]);
   }
-  free(graph_comm_cell_opp);
-  free(graph_comm_cell_opp_idx);
-  free(cell_list);
-
-
-  for(int i_depth = 0; i_depth < depth+1; ++i_depth) {
-    for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
-      free(n_cell_per_bound[i_depth][i_domain]);
-    }
-    free(n_cell_per_bound[i_depth]);
-  }
-  free(n_cell_per_bound);
+  free(part_ext->n_cell_per_bound);
 
   for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
     for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
