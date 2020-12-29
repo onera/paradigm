@@ -43,64 +43,64 @@ extern "C" {
  * Static function definitions
  *============================================================================*/
 
-static
-int
-_setup_neighbor
-(
- int           i_proc_cur,
- int           i_part_cur,
- int           ntot_part,
- int          *entity_part_bound_part_idx,
- int          *entity_part_bound,
- int          *entity_cell_idx,
- int          *entity_cell,
- int          *cell_list,
- int          *graph_comm_cell,
- PDM_g_num_t **cell_border_ln_to_gn,
- int         **neighbor_idx,
- int         **neighbor_desc
-)
-{
-  abort();
-  *neighbor_idx         = malloc(     ( entity_part_bound_part_idx[ntot_part] + 1 ) * sizeof(int        ));
-  *neighbor_desc        = malloc(  3 *  entity_part_bound_part_idx[ntot_part]       * sizeof(int        )); // i_proc, i_part, i_entity
+// static
+// int
+// _setup_neighbor
+// (
+//  int           i_proc_cur,
+//  int           i_part_cur,
+//  int           ntot_part,
+//  int          *entity_part_bound_part_idx,
+//  int          *entity_part_bound,
+//  int          *entity_cell_idx,
+//  int          *entity_cell,
+//  int          *cell_list,
+//  int          *graph_comm_cell,
+//  PDM_g_num_t **cell_border_ln_to_gn,
+//  int         **neighbor_idx,
+//  int         **neighbor_desc
+// )
+// {
+//   abort();
+//   *neighbor_idx         = malloc(     ( entity_part_bound_part_idx[ntot_part] + 1 ) * sizeof(int        ));
+//   *neighbor_desc        = malloc(  3 *  entity_part_bound_part_idx[ntot_part]       * sizeof(int        )); // i_proc, i_part, i_entity
 
-  int* _neighbor_idx  = *neighbor_idx;
-  int* _neighbor_desc = *neighbor_desc;
+//   int* _neighbor_idx  = *neighbor_idx;
+//   int* _neighbor_desc = *neighbor_desc;
 
-  PDM_g_num_t* _cell_border_ln_to_gn = *cell_border_ln_to_gn;
+//   PDM_g_num_t* _cell_border_ln_to_gn = *cell_border_ln_to_gn;
 
-  int n_entity_bound = 0;
-  for(int i_part = 0; i_part < ntot_part; ++i_part ){
-    _neighbor_idx[0] = 0;
-    int idx_opp = 0;
-    for(int idx_entity = entity_part_bound_part_idx[i_part]; idx_entity < entity_part_bound_part_idx[i_part+1]; ++idx_entity) {
+//   int n_entity_bound = 0;
+//   for(int i_part = 0; i_part < ntot_part; ++i_part ){
+//     _neighbor_idx[0] = 0;
+//     int idx_opp = 0;
+//     for(int idx_entity = entity_part_bound_part_idx[i_part]; idx_entity < entity_part_bound_part_idx[i_part+1]; ++idx_entity) {
 
-      int i_entity     = entity_part_bound[4*idx_entity  ]-1;
-      int i_proc_opp   = entity_part_bound[4*idx_entity+1];
-      int i_part_opp   = entity_part_bound[4*idx_entity+2]-1;
-      // int i_entity_opp = entity_part_bound[4*idx_entity+3];
+//       int i_entity     = entity_part_bound[4*idx_entity  ]-1;
+//       int i_proc_opp   = entity_part_bound[4*idx_entity+1];
+//       int i_part_opp   = entity_part_bound[4*idx_entity+2]-1;
+//       // int i_entity_opp = entity_part_bound[4*idx_entity+3];
 
-      _neighbor_idx [idx_entity+1  ] = _neighbor_idx[idx_entity] + 1;
-      _neighbor_desc[3*idx_entity  ] = i_proc_opp;
-      _neighbor_desc[3*idx_entity+1] = i_part_opp;
-      _neighbor_desc[3*idx_entity+2] = idx_opp; // Car symétrique
+//       _neighbor_idx [idx_entity+1  ] = _neighbor_idx[idx_entity] + 1;
+//       _neighbor_desc[3*idx_entity  ] = i_proc_opp;
+//       _neighbor_desc[3*idx_entity+1] = i_part_opp;
+//       _neighbor_desc[3*idx_entity+2] = idx_opp; // Car symétrique
 
-      /* Each bound can be connected to multiple cell */
-      int icell1 = entity_cell[2*i_entity]-1;
+//       /* Each bound can be connected to multiple cell */
+//       int icell1 = entity_cell[2*i_entity]-1;
 
-      cell_list[idx_entity] = icell1;
-      graph_comm_cell[3*idx_entity  ] = i_proc_cur;
-      graph_comm_cell[3*idx_entity+1] = i_part_cur;
-      graph_comm_cell[3*idx_entity+2] = icell1;
+//       cell_list[idx_entity] = icell1;
+//       graph_comm_cell[3*idx_entity  ] = i_proc_cur;
+//       graph_comm_cell[3*idx_entity+1] = i_part_cur;
+//       graph_comm_cell[3*idx_entity+2] = icell1;
 
-      idx_opp++;
-      n_entity_bound++;
-    }
-  }
+//       idx_opp++;
+//       n_entity_bound++;
+//     }
+//   }
 
-  return n_entity_bound;
-}
+//   return n_entity_bound;
+// }
 
 
 // static
@@ -146,7 +146,6 @@ _create_cell_cell_graph
     int ***face_cell_idx = malloc( part_ext->n_domain * sizeof(int ***));
     int ***face_cell     = malloc( part_ext->n_domain * sizeof(int ***));
 
-    int n_part_loc_all_domain = 0;
     int shift_part = 0;
     for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
 
@@ -337,7 +336,7 @@ _create_cell_cell_graph
 
 static
 void
-_create_cell_graph_comm2
+_create_cell_graph_comm
 (
   PDM_part_extension_t *part_ext
 )
@@ -613,7 +612,7 @@ PDM_part_extension_create
   part_ext->n_part      = n_part;
   part_ext->comm        = comm;
   part_ext->owner       = owner;
-  part_ext->extend_type = owner;
+  part_ext->extend_type = extend_type;
 
   part_ext->parts = malloc(n_domain * sizeof(_part_t *));
   for(int i_domain = 0; i_domain < n_domain; ++i_domain) {
@@ -781,14 +780,12 @@ PDM_part_extension_compute
   }
 
   // TODO : vtx_cell
-  // _create_cell_graph_comm(part_ext);
-  _create_cell_graph_comm2(part_ext);
+  _create_cell_graph_comm(part_ext);
 
   /*
    * Creation du premier graph donc on utilise le cell_cell ET ce qui vient du graph de comm
    * Cette étape initialize une sorte de recurence
    */
-
   int i_depth_cur = 1;
   for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
     part_ext->cell_cell_extended_idx[i_depth_cur][i_domain] = (int **) malloc( part_ext->n_part[i_domain] * sizeof(int *));
