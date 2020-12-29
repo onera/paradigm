@@ -296,7 +296,11 @@ int main(int argc, char *argv[])
                   dface_group_idx,
                   dface_group);
 
-  PDM_part_extension_t* part_ext = PDM_part_extension_create(1, &n_part, comm, PDM_OWNERSHIP_KEEP);
+  PDM_part_extension_t* part_ext = PDM_part_extension_create(1,
+                                                             &n_part,
+                                                             PDM_EXTEND_FROM_FACE,
+                                                             comm,
+                                                             PDM_OWNERSHIP_KEEP);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
 
@@ -466,7 +470,7 @@ int main(int argc, char *argv[])
     }
   }
 
-  PDM_part_extension_compute(part_ext, 1, PDM_EXTEND_FROM_FACE);
+  PDM_part_extension_compute(part_ext, 1);
 
 
   PDM_part_extension_free(part_ext);

@@ -536,11 +536,11 @@ PDM_distant_neighbor_exch
        * Setup send data
        */
 
-      int iBeg = dn->distributed_data_idx[i];
-      int iEnd = dn->distributed_data_idx[i] + dn->distributed_data_n[i];
+      int i_beg = dn->distributed_data_idx[i];
+      int i_end = dn->distributed_data_idx[i] + dn->distributed_data_n[i];
 
       n_send_buffer[i] = 0;
-      for (int k = iBeg; k < iEnd; k++)  {
+      for (int k = i_beg; k < i_end; k++)  {
         n_send_buffer[i] += send_stride[k];
       }
 
@@ -548,19 +548,18 @@ PDM_distant_neighbor_exch
 
       if (i > 0) {
         i_send_buffer[i] = i_send_buffer[i-1] + n_send_buffer[i-1];
-      }
-      else {
+      } else {
         i_send_buffer[i] = 0;
       }
 
       /*
        * Setup recv data
        */
-      iBeg = dn->requested_data_idx[i];
-      iEnd = dn->requested_data_idx[i] + dn->requested_data_n[i];
+      i_beg = dn->requested_data_idx[i];
+      i_end = dn->requested_data_idx[i] + dn->requested_data_n[i];
 
       n_recv_buffer[i] = 0;
-      for (int k = iBeg; k < iEnd; k++) {
+      for (int k = i_beg; k < i_end; k++) {
         n_recv_buffer[i] += recv_stride[k];
       }
 
@@ -568,8 +567,7 @@ PDM_distant_neighbor_exch
 
       if (i > 0) {
         i_recv_buffer[i] = i_recv_buffer[i-1] + n_recv_buffer[i-1];
-      }
-      else {
+      } else {
         i_recv_buffer[i] = 0;
       }
     } /* End i_rank loop */
@@ -607,7 +605,7 @@ PDM_distant_neighbor_exch
     int idx1 = 0;
     for (int i = 0; i < s_distributed_data; i++) {
       int i_part = dn->distributed_data[2*i  ];
-      int ienty = dn->distributed_data[2*i+1];
+      int ienty  = dn->distributed_data[2*i+1];
       for(int idata = 0; idata < send_entity_stride[i_part][ienty] * (int) s_data ; idata++){
         int idxdata = stride_idx[i_part][ienty] * s_data + idata;
         // log_trace("send[%d/%d] --> [%d,%d] -> %d \n", idx1, s_distributed_data, i_part, ienty, _send_entity_data[i_part][idxdata]);
@@ -631,10 +629,10 @@ PDM_distant_neighbor_exch
     for (int i = 0; i < n_rank; i++) {
 
       i_send_buffer[i] = dn->distributed_data_idx[i] * s_block_unit;
-      i_recv_buffer[i] = dn->requested_data_idx[i] * s_block_unit;
+      i_recv_buffer[i] = dn->requested_data_idx  [i] * s_block_unit;
 
       n_send_buffer[i] = dn->distributed_data_n[i] * s_block_unit;
-      n_recv_buffer[i] = dn->requested_data_n[i] * s_block_unit;
+      n_recv_buffer[i] = dn->requested_data_n  [i] * s_block_unit;
 
       // log_trace("[%d] send::[%d/%d] | recv::[%d/%d] \n ", i, i_send_buffer[i], n_send_buffer[i],
       //                                                        i_recv_buffer[i], n_recv_buffer[i]);
@@ -654,7 +652,7 @@ PDM_distant_neighbor_exch
     int idx1 = 0;
     for (int i = 0; i < s_distributed_data; i++) {
       int i_part = dn->distributed_data[2*i  ];
-      int ienty = dn->distributed_data[2*i+1];
+      int ienty  = dn->distributed_data[2*i+1];
       // printf(" [%i] -> i_part = %i | ienty = %i \n", i, i_part, ienty);
       for(int idata = 0; idata < s_block_unit; idata++){
         send_buffer[idx1++] = _send_entity_data[i_part][s_block_unit*ienty+idata];
@@ -682,7 +680,6 @@ PDM_distant_neighbor_exch
 
   *recv_entity_data = malloc( dn->n_part * sizeof(unsigned char *) );
   unsigned char **_recv_entity_data = (*(unsigned char ***) recv_entity_data);
-
 
   if (t_stride == PDM_STRIDE_VAR) {
 
@@ -885,11 +882,11 @@ PDM_distant_neighbor_exch_int
        * Setup send data
        */
 
-      int iBeg = dn->distributed_data_idx[i];
-      int iEnd = dn->distributed_data_idx[i] + dn->distributed_data_n[i];
+      int i_beg = dn->distributed_data_idx[i];
+      int i_end = dn->distributed_data_idx[i] + dn->distributed_data_n[i];
 
       n_send_buffer[i] = 0;
-      for (int k = iBeg; k < iEnd; k++)  {
+      for (int k = i_beg; k < i_end; k++)  {
         n_send_buffer[i] += send_stride[k];
       }
 
@@ -905,11 +902,11 @@ PDM_distant_neighbor_exch_int
       /*
        * Setup recv data
        */
-      iBeg = dn->requested_data_idx[i];
-      iEnd = dn->requested_data_idx[i] + dn->requested_data_n[i];
+      i_beg = dn->requested_data_idx[i];
+      i_end = dn->requested_data_idx[i] + dn->requested_data_n[i];
 
       n_recv_buffer[i] = 0;
-      for (int k = iBeg; k < iEnd; k++) {
+      for (int k = i_beg; k < i_end; k++) {
         n_recv_buffer[i] += recv_stride[k];
       }
 

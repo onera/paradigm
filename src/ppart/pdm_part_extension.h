@@ -51,10 +51,11 @@ typedef enum {
 PDM_part_extension_t*
 PDM_part_extension_create
 (
- const int              n_domain,
- const int             *n_part,
- const PDM_MPI_Comm     comm,
- const PDM_ownership_t  owner
+ const int                n_domain,
+ const int               *n_part,
+       PDM_extend_type_t  extend_type,
+ const PDM_MPI_Comm       comm,
+ const PDM_ownership_t    owner
 );
 
 /**
@@ -68,8 +69,7 @@ void
 PDM_part_extension_compute
 (
   PDM_part_extension_t *part_ext,
-  int                   depth,
-  PDM_extend_type_t     extend_type
+  int                   depth
 );
 
 void
