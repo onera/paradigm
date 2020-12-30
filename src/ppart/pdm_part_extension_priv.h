@@ -51,6 +51,11 @@ struct _pdm_part_extension_t {
   int **neighbor_desc;
   int  *n_entity_bound;
 
+  /* Graph of cell */
+  int **dist_neighbor_cell_n;
+  int **dist_neighbor_cell_idx;
+  int **dist_neighbor_cell_desc;
+
   int ****graph_comm_cell_opp;
   int ****graph_comm_cell_opp_idx;
   int ****graph_comm_cell;
