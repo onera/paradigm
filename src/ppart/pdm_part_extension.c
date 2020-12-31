@@ -485,27 +485,19 @@ _compute_dual_graph
   int                     i_depth
 )
 {
+  int i_rank;
+  int n_rank;
+  PDM_MPI_Comm_rank(part_ext->comm, &i_rank);
+  PDM_MPI_Comm_size(part_ext->comm, &n_rank);
+
   assert(i_depth > 0);
   int** prev_cell_cell_extended_idx = part_ext->cell_cell_extended_idx[i_depth-1];
   int** prev_cell_cell_extended_n   = part_ext->cell_cell_extended_n  [i_depth-1];
   int** prev_cell_cell_extended     = part_ext->cell_cell_extended    [i_depth-1];
 
-  int** next_cell_cell_extended_idx = NULL;
+  // int** next_cell_cell_extended_idx = NULL;
   int** next_cell_cell_extended_n   = NULL;
   int** next_cell_cell_extended     = NULL;
-
-  int shift_part = 0;
-  // for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
-  //   for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
-
-  //     int n_cell = part_ext->n_cell[i_part+shift_part];
-  //     int n_cell_border = part_ext->n_cell_border[i_part+shift_part];
-  //     for(int i = 0; i < n_cell; ++i) {
-  //       prev_cell_cell_extended_n[i_part+shift_part][i] = prev_cell_cell_extended_n[i_part+shift_part][i] * 3;
-  //     }
-  //   }
-  //   shift_part += part_ext->n_part[i_domain];
-  // }
 
   /*
    * Exchange of the previous rank
@@ -519,75 +511,177 @@ _compute_dual_graph
                            &next_cell_cell_extended_n,
                  (void ***)&next_cell_cell_extended);
 
-  // shift_part = 0;
-  // for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
-  //   for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
-
-  //     int n_cell = part_ext->n_cell[i_part+shift_part];
-  //     int n_cell_border = part_ext->n_cell_border[i_part+shift_part];
-  //     for(int i = 0; i < n_cell; ++i) {
-  //       prev_cell_cell_extended_n[i_part+shift_part][i] = prev_cell_cell_extended_n[i_part+shift_part][i] / 3;
-  //     }
-
-  //     for(int i = 0; i < n_cell_border; ++i) {
-  //       next_cell_cell_extended_n[i_part+shift_part][i] = next_cell_cell_extended_n[i_part+shift_part][i] / 3;
-  //     }
-  //   }
-  //   shift_part += part_ext->n_part[i_domain];
-  // }
-
-  shift_part = 0;
+  int shift_part = 0;
   for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
     for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
 
       int n_cell        = part_ext->n_cell       [i_part+shift_part];
       int n_cell_border = part_ext->n_cell_border[i_part+shift_part];
 
-      int* _cell_cell_extended_n   = next_cell_cell_extended_n[i_part+shift_part];
-      int* _cell_cell_extended     = next_cell_cell_extended  [i_part+shift_part];
-      int* _cell_cell_extended_idx = (int * ) malloc( (n_cell_border+1) * sizeof(int) );
+      int* _border_cell_cell_extended_n   = next_cell_cell_extended_n[i_part+shift_part];
+      int* _border_cell_cell_extended     = next_cell_cell_extended  [i_part+shift_part];
+      int* _border_cell_cell_extended_idx = (int * ) malloc( (n_cell_border+1) * sizeof(int) );
 
-      _cell_cell_extended_idx[0] = 0;
+      _border_cell_cell_extended_idx[0] = 0;
       for(int i = 0; i < n_cell_border; ++i) {
-        _cell_cell_extended_idx[i+1] = _cell_cell_extended_idx[i] + _cell_cell_extended_n[i];
+        _border_cell_cell_extended_idx[i+1] = _border_cell_cell_extended_idx[i] + _border_cell_cell_extended_n[i];
       }
 
+      if( 0 == 1) {
+        PDM_log_trace_array_int(_border_cell_cell_extended_idx, n_cell_border+1, "next_border_cell_cell_extended_idx::");
+        PDM_log_trace_array_int(_border_cell_cell_extended_n  , n_cell_border,   "next_border_cell_cell_extended_n::");
+        PDM_log_trace_array_int(_border_cell_cell_extended    , 3 * _border_cell_cell_extended_idx[n_cell_border], "next_border_cell_cell_extended::");
 
-      // int* _cell_cell_extended_idx = next_cell_cell_extended_idx[i_part+shift_part];
+        // for(int i = 0; i < n_cell_border; ++i) {
+        //   int i_cell = part_ext->border_cell_list[i_part+shift_part][i];
+        //   printf("i_cell -> %i -->  ", i_cell);
+        //   for(int idx = _border_cell_cell_extended_idx[i]; idx < _border_cell_cell_extended_idx[i+1]; ++idx) {
+        //     printf("(%i, %i) ", _border_cell_cell_extended[3*idx+1], _border_cell_cell_extended[3*idx+2]);
+        //   }
+        //   printf("\n");
+        // }
 
-      PDM_log_trace_array_int(_cell_cell_extended_idx, n_cell_border+1, "next_cell_cell_extended_idx::");
-      PDM_log_trace_array_int(_cell_cell_extended_n  , n_cell_border,   "next_cell_cell_extended_n::");
-      PDM_log_trace_array_int(_cell_cell_extended    , 3 * _cell_cell_extended_idx[n_cell_border], "next_cell_cell_extended::");
+      }
 
-      free(_cell_cell_extended_idx);
-  //     part_ext->cell_cell_extended_idx[i_depth][i_part+shift_part] = (int *) malloc( (n_cell+1) * sizeof(int));
+      /* Now we have the opposite border_cell_cell_extended
+       *   -> We need to reput all together
+       *   -> The current cell has to be also extendted but caution !!!
+       *      the extension depend also of border
+       */
 
-  //     int* _cell_cell_extended_idx  = part_ext->cell_cell_extended_idx [i_depth][i_part+shift_part];
-  //     int* _dist_neighbor_cell_idx  = part_ext->dist_neighbor_cell_idx          [i_part+shift_part];
-  //     int* _dist_neighbor_cell_desc = part_ext->dist_neighbor_cell_desc         [i_part+shift_part];
+      /*
+       * Generate tag to know is a local cell is a border or not
+       */
+      int* idx_border_cell = (int *) malloc( n_cell * sizeof(int));
+      for(int i_cell = 0; i_cell < n_cell; ++i_cell) {
+        idx_border_cell[i_cell] = -1;
+      }
 
-  //     // int n_cell_border = _dist_neighbor_cell_idx[n_cell];
-  //     int n_cell_border = part_ext->n_cell_border[i_part+shift_part];
+      for(int idx_cell = 0; idx_cell < n_cell_border; ++idx_cell) {
+        int i_cell = part_ext->border_cell_list[i_part+shift_part][idx_cell];
+        idx_border_cell[i_cell] = idx_cell; /* Keep idx_cell for imediate loop */
+      }
 
-  //     int* _cell_cell_extended_n = (int *) malloc( n_cell * sizeof(int));
+      /* Allocate current depth and shorcut */
+      part_ext->cell_cell_extended_idx[i_depth][i_part+shift_part] = (int *) malloc( (n_cell + 1 ) * sizeof(int));
+      part_ext->cell_cell_extended_n  [i_depth][i_part+shift_part] = (int *) malloc( (n_cell     ) * sizeof(int));
 
-  //     for(int i_cell = 0; i_cell < n_cell; ++i_cell) {
-  //       _cell_cell_extended_n  [i_cell] = 0;
-  //       _cell_cell_extended_idx[i_cell] = 0;
-  //     }
-  //     _cell_cell_extended_idx[n_cell] = 0;
+      int* _pcell_cell_extended_n   = prev_cell_cell_extended_n  [i_part+shift_part];
+      int* _pcell_cell_extended_idx = prev_cell_cell_extended_idx[i_part+shift_part];
+      int* _pcell_cell_extended     = prev_cell_cell_extended    [i_part+shift_part];
 
-  //     /* On peut comprimer le graph au voisinage direct du rang précédent */
-  //     // for(int idx_cell = 0; idx_cell < n_cell_border; ++idx_cell) {
-  //     //   int i_cell = part_ext->border_cell_list[i_part+shift_part][idx_cell];
-  //     //   printf(" i_cell = %i \n", i_cell);
+      int* _cell_cell_extended_idx = part_ext->cell_cell_extended_idx[i_depth][i_part+shift_part];
+      int* _cell_cell_extended_n   = part_ext->cell_cell_extended_n  [i_depth][i_part+shift_part];
 
-  //     //   for(int idx_cell_neight = )
-
-
-  //     // }
+      for(int i_cell = 0; i_cell < n_cell; ++i_cell) {
+        _cell_cell_extended_idx[i_cell] = 0;
+        _cell_cell_extended_n  [i_cell] = 0;
+      }
+      _cell_cell_extended_idx[n_cell] = 0;
 
 
+      /* Let's go - First pass to count */
+      for(int idx_cell = 0; idx_cell < n_cell_border; ++idx_cell) {
+        int i_cell = part_ext->border_cell_list[i_part+shift_part][idx_cell];
+
+        assert(_cell_cell_extended_n[i_cell] == 0); // All are sorted before
+
+        /* From interior - we add the previous rank */
+        _cell_cell_extended_n[i_cell] = _pcell_cell_extended_n[i_cell];
+
+        /* From border */
+        assert(_border_cell_cell_extended_n[idx_cell] > 0);
+        _cell_cell_extended_n[i_cell] += _border_cell_cell_extended_n[idx_cell];
+
+        /* Now we have to extend the interior */
+        for(int idx_neight = _pcell_cell_extended_idx[i_cell]; idx_neight < _pcell_cell_extended_idx[i_cell+1]; ++idx_neight) {
+          int i_rank_neight = _pcell_cell_extended[3*idx_neight  ];
+          int i_part_neight = _pcell_cell_extended[3*idx_neight+1];
+          /* We add stencil only if it's local */
+          if(i_part == i_part_neight && i_rank == i_rank_neight) {
+            int i_cell_neight = _pcell_cell_extended[3*idx_neight+2];
+
+            /* From interior */
+            _cell_cell_extended_n[i_cell] += _pcell_cell_extended_n[i_cell_neight];
+
+            int idx_border_neight = idx_border_cell[i_cell_neight];
+            if(idx_border_neight != -1) {
+              // Il faut rajouter les voisins aussi
+              _cell_cell_extended_n[i_cell] += _border_cell_cell_extended_n[idx_border_neight];
+            }
+          } /* End if same part and same proc */
+        } /* End loop neighbor */
+      } /* End loop border */
+
+      /* Setup idx and reset */
+      _cell_cell_extended_idx[0] = 0;
+      for(int i_cell = 0; i_cell < n_cell; ++i_cell) {
+        _cell_cell_extended_idx[i_cell+1] = _cell_cell_extended_idx[i_cell] + _cell_cell_extended_n[i_cell];
+        _cell_cell_extended_n[i_cell] = 0;
+      }
+
+      /* Allocate */
+      part_ext->cell_cell_extended[i_depth][i_part+shift_part] = (int *) malloc( 3 * _cell_cell_extended_idx[n_cell] * sizeof(int));
+      int* _cell_cell_extended = part_ext->cell_cell_extended[i_depth][i_part+shift_part];
+
+      /* Let's go - Second pass to fill */
+      for(int idx_cell = 0; idx_cell < n_cell_border; ++idx_cell) {
+        int i_cell = part_ext->border_cell_list[i_part+shift_part][idx_cell];
+
+        assert(_cell_cell_extended_n[i_cell] == 0); // All are sorted before
+
+        /* From interior - we add the previous rank */
+        for(int idx_neight = _pcell_cell_extended_idx[i_cell]; idx_neight < _pcell_cell_extended_idx[i_cell+1]; ++idx_neight) {
+          int idx_write = _cell_cell_extended_idx[i_cell] + _cell_cell_extended_n[i_cell]++;
+          _cell_cell_extended[3*idx_write  ] = _pcell_cell_extended[3*idx_neight  ];
+          _cell_cell_extended[3*idx_write+1] = _pcell_cell_extended[3*idx_neight+1];
+          _cell_cell_extended[3*idx_write+2] = _pcell_cell_extended[3*idx_neight+2];
+        }
+
+        /* From border */
+        assert(_border_cell_cell_extended_n[idx_cell] > 0);
+        for(int idx_neight = _border_cell_cell_extended_idx[idx_cell]; idx_neight < _border_cell_cell_extended_idx[idx_cell+1]; ++idx_neight) {
+          int idx_write = _cell_cell_extended_idx[i_cell] + _cell_cell_extended_n[i_cell]++;
+          _cell_cell_extended[3*idx_write  ] = _border_cell_cell_extended[3*idx_neight  ];
+          _cell_cell_extended[3*idx_write+1] = _border_cell_cell_extended[3*idx_neight+1];
+          _cell_cell_extended[3*idx_write+2] = _border_cell_cell_extended[3*idx_neight+2];
+        }
+
+        /* Now we have to extend the interior */
+        for(int idx_neight = _pcell_cell_extended_idx[i_cell]; idx_neight < _pcell_cell_extended_idx[i_cell+1]; ++idx_neight) {
+          int i_rank_neight = _pcell_cell_extended[3*idx_neight  ];
+          int i_part_neight = _pcell_cell_extended[3*idx_neight+1];
+          /* We add stencil only if it's local */
+          if(i_part == i_part_neight && i_rank == i_rank_neight) {
+            int i_cell_neight = _pcell_cell_extended[3*idx_neight+2];
+
+            /* From interior */
+            for(int idx_neight2 = _pcell_cell_extended_idx[i_cell_neight]; idx_neight2 < _pcell_cell_extended_idx[i_cell_neight+1]; ++idx_neight2) {
+              int idx_write = _cell_cell_extended_idx[i_cell] + _cell_cell_extended_n[i_cell]++;
+              _cell_cell_extended[3*idx_write  ] = _pcell_cell_extended[3*idx_neight2  ];
+              _cell_cell_extended[3*idx_write+1] = _pcell_cell_extended[3*idx_neight2+1];
+              _cell_cell_extended[3*idx_write+2] = _pcell_cell_extended[3*idx_neight2+2];
+            }
+
+            int idx_border_neight = idx_border_cell[i_cell_neight];
+            if(idx_border_neight != -1) {
+              // Il faut rajouter les voisins aussi
+              for(int idx_neight2 = _border_cell_cell_extended_idx[idx_border_neight]; idx_neight2 < _border_cell_cell_extended_idx[idx_border_neight+1]; ++idx_neight2) {
+                int idx_write = _cell_cell_extended_idx[i_cell] + _cell_cell_extended_n[i_cell]++;
+                _cell_cell_extended[3*idx_write  ] = _border_cell_cell_extended[3*idx_neight2  ];
+                _cell_cell_extended[3*idx_write+1] = _border_cell_cell_extended[3*idx_neight2+1];
+                _cell_cell_extended[3*idx_write+2] = _border_cell_cell_extended[3*idx_neight2+2];
+              }
+            }
+          } /* End if same part and same proc */
+
+        } /* End loop neighbor */
+      } /* End loop border */
+
+
+      /* Free */
+      free(idx_border_cell);
+      free(_border_cell_cell_extended_idx);
 
     }
     shift_part += part_ext->n_part[i_domain];
