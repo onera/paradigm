@@ -299,6 +299,7 @@ int main(int argc, char *argv[])
   PDM_part_extension_t* part_ext = PDM_part_extension_create(1,
                                                              &n_part,
                                                              PDM_EXTEND_FROM_FACE,
+                                                             1,
                                                              comm,
                                                              PDM_OWNERSHIP_KEEP);
 
@@ -470,7 +471,7 @@ int main(int argc, char *argv[])
     }
   }
 
-  PDM_part_extension_compute(part_ext, 1);
+  PDM_part_extension_compute(part_ext);
 
 
   PDM_part_extension_free(part_ext);

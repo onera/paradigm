@@ -40,6 +40,7 @@ struct _pdm_part_extension_t {
   PDM_ownership_t   owner;           /*!< Which have the responsabilities of results*/
 
   PDM_extend_type_t extend_type;
+  int               depth;
 
   int             n_domain;
   const int      *n_part;
@@ -57,12 +58,6 @@ struct _pdm_part_extension_t {
   int **dist_neighbor_cell_n;
   int **dist_neighbor_cell_idx;
   int **dist_neighbor_cell_desc;
-
-  int ****graph_comm_cell_opp;
-  int ****graph_comm_cell_opp_idx;
-  int ****graph_comm_cell;
-  int ****cell_list;
-  int  ***n_cell_per_bound;
 
   int ***cell_cell_idx;
   int ***cell_cell;
