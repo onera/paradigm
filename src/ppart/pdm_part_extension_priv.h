@@ -69,6 +69,7 @@ struct _pdm_part_extension_t {
 
   /* This one is only on the border and contains only border cells */
   int ***cell_cell_extended_idx;
+  int ***cell_cell_extended_n;
   int ***cell_cell_extended;
   int  **border_cell_list;
 

@@ -480,45 +480,114 @@ static
 void
 _compute_dual_graph
 (
-  PDM_part_extension_t *part_ext,
-  int                   i_depth
+  PDM_part_extension_t   *part_ext,
+  PDM_distant_neighbor_t *dn,
+  int                     i_depth
 )
 {
+  assert(i_depth > 0);
+  int** prev_cell_cell_extended_idx = part_ext->cell_cell_extended_idx[i_depth-1];
+  int** prev_cell_cell_extended_n   = part_ext->cell_cell_extended_n  [i_depth-1];
+  int** prev_cell_cell_extended     = part_ext->cell_cell_extended    [i_depth-1];
+
+  int** next_cell_cell_extended_idx = NULL;
+  int** next_cell_cell_extended_n   = NULL;
+  int** next_cell_cell_extended     = NULL;
 
   int shift_part = 0;
+  // for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
+  //   for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
+
+  //     int n_cell = part_ext->n_cell[i_part+shift_part];
+  //     int n_cell_border = part_ext->n_cell_border[i_part+shift_part];
+  //     for(int i = 0; i < n_cell; ++i) {
+  //       prev_cell_cell_extended_n[i_part+shift_part][i] = prev_cell_cell_extended_n[i_part+shift_part][i] * 3;
+  //     }
+  //   }
+  //   shift_part += part_ext->n_part[i_domain];
+  // }
+
+  /*
+   * Exchange of the previous rank
+   */
+  PDM_distant_neighbor_exch(dn,
+                            3 * sizeof(int),
+                            PDM_STRIDE_VAR,
+                            -1,
+                            prev_cell_cell_extended_n,
+                  (void **) prev_cell_cell_extended,
+                           &next_cell_cell_extended_n,
+                 (void ***)&next_cell_cell_extended);
+
+  // shift_part = 0;
+  // for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
+  //   for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
+
+  //     int n_cell = part_ext->n_cell[i_part+shift_part];
+  //     int n_cell_border = part_ext->n_cell_border[i_part+shift_part];
+  //     for(int i = 0; i < n_cell; ++i) {
+  //       prev_cell_cell_extended_n[i_part+shift_part][i] = prev_cell_cell_extended_n[i_part+shift_part][i] / 3;
+  //     }
+
+  //     for(int i = 0; i < n_cell_border; ++i) {
+  //       next_cell_cell_extended_n[i_part+shift_part][i] = next_cell_cell_extended_n[i_part+shift_part][i] / 3;
+  //     }
+  //   }
+  //   shift_part += part_ext->n_part[i_domain];
+  // }
+
+  shift_part = 0;
   for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
     for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
 
-      int n_cell = part_ext->n_cell[i_part+shift_part];
-      part_ext->cell_cell_extended_idx[i_depth][i_part+shift_part] = (int *) malloc( (n_cell+1) * sizeof(int));
-
-      int* _cell_cell_extended_idx  = part_ext->cell_cell_extended_idx [i_depth][i_part+shift_part];
-      int* _dist_neighbor_cell_idx  = part_ext->dist_neighbor_cell_idx          [i_part+shift_part];
-      int* _dist_neighbor_cell_desc = part_ext->dist_neighbor_cell_desc         [i_part+shift_part];
-
-      // int n_cell_border = _dist_neighbor_cell_idx[n_cell];
+      int n_cell        = part_ext->n_cell       [i_part+shift_part];
       int n_cell_border = part_ext->n_cell_border[i_part+shift_part];
 
-      int* _cell_cell_extended_n = (int *) malloc( n_cell * sizeof(int));
+      int* _cell_cell_extended_n   = next_cell_cell_extended_n[i_part+shift_part];
+      int* _cell_cell_extended     = next_cell_cell_extended  [i_part+shift_part];
+      int* _cell_cell_extended_idx = (int * ) malloc( (n_cell_border+1) * sizeof(int) );
 
-      for(int i_cell = 0; i_cell < n_cell; ++i_cell) {
-        _cell_cell_extended_n  [i_cell] = 0;
-        _cell_cell_extended_idx[i_cell] = 0;
+      _cell_cell_extended_idx[0] = 0;
+      for(int i = 0; i < n_cell_border; ++i) {
+        _cell_cell_extended_idx[i+1] = _cell_cell_extended_idx[i] + _cell_cell_extended_n[i];
       }
-      _cell_cell_extended_idx[n_cell] = 0;
-
-      /* On peut comprimer le graph au voisinage direct du rang précédent */
-      // for(int idx_cell = 0; idx_cell < n_cell_border; ++idx_cell) {
-      //   int i_cell = part_ext->border_cell_list[i_part+shift_part][idx_cell];
-      //   printf(" i_cell = %i \n", i_cell);
-
-      //   for(int idx_cell_neight = )
 
 
-      // }
+      // int* _cell_cell_extended_idx = next_cell_cell_extended_idx[i_part+shift_part];
+
+      PDM_log_trace_array_int(_cell_cell_extended_idx, n_cell_border+1, "next_cell_cell_extended_idx::");
+      PDM_log_trace_array_int(_cell_cell_extended_n  , n_cell_border,   "next_cell_cell_extended_n::");
+      PDM_log_trace_array_int(_cell_cell_extended    , 3 * _cell_cell_extended_idx[n_cell_border], "next_cell_cell_extended::");
+
+      free(_cell_cell_extended_idx);
+  //     part_ext->cell_cell_extended_idx[i_depth][i_part+shift_part] = (int *) malloc( (n_cell+1) * sizeof(int));
+
+  //     int* _cell_cell_extended_idx  = part_ext->cell_cell_extended_idx [i_depth][i_part+shift_part];
+  //     int* _dist_neighbor_cell_idx  = part_ext->dist_neighbor_cell_idx          [i_part+shift_part];
+  //     int* _dist_neighbor_cell_desc = part_ext->dist_neighbor_cell_desc         [i_part+shift_part];
+
+  //     // int n_cell_border = _dist_neighbor_cell_idx[n_cell];
+  //     int n_cell_border = part_ext->n_cell_border[i_part+shift_part];
+
+  //     int* _cell_cell_extended_n = (int *) malloc( n_cell * sizeof(int));
+
+  //     for(int i_cell = 0; i_cell < n_cell; ++i_cell) {
+  //       _cell_cell_extended_n  [i_cell] = 0;
+  //       _cell_cell_extended_idx[i_cell] = 0;
+  //     }
+  //     _cell_cell_extended_idx[n_cell] = 0;
+
+  //     /* On peut comprimer le graph au voisinage direct du rang précédent */
+  //     // for(int idx_cell = 0; idx_cell < n_cell_border; ++idx_cell) {
+  //     //   int i_cell = part_ext->border_cell_list[i_part+shift_part][idx_cell];
+  //     //   printf(" i_cell = %i \n", i_cell);
+
+  //     //   for(int idx_cell_neight = )
 
 
-      free(_cell_cell_extended_n);
+  //     // }
+
+
 
     }
     shift_part += part_ext->n_part[i_domain];
@@ -548,6 +617,7 @@ _compute_first_extended_cell_graph
 
       int n_cell = part_ext->n_cell[i_part+shift_part];
       part_ext->cell_cell_extended_idx[i_depth_cur][i_part+shift_part] = (int *) malloc( (n_cell + 1 ) * sizeof(int));
+      part_ext->cell_cell_extended_n  [i_depth_cur][i_part+shift_part] = (int *) malloc( (n_cell     ) * sizeof(int));
 
       int* _dist_neighbor_cell_n    = part_ext->dist_neighbor_cell_n   [i_part+shift_part];
       int* _dist_neighbor_cell_idx  = part_ext->dist_neighbor_cell_idx [i_part+shift_part];
@@ -558,7 +628,7 @@ _compute_first_extended_cell_graph
       int n_cell_border = part_ext->n_cell_border[i_part+shift_part];
 
       int* _cell_cell_extended_idx = part_ext->cell_cell_extended_idx[i_depth_cur][i_part+shift_part];
-      int* _cell_cell_extended_n   = (int *) malloc( n_cell * sizeof(int));
+      int* _cell_cell_extended_n   = part_ext->cell_cell_extended_n  [i_depth_cur][i_part+shift_part];
 
       int* _cell_cell_idx = part_ext->cell_cell_idx[i_depth_cur][i_part+shift_part];
       int* _cell_cell     = part_ext->cell_cell    [i_depth_cur][i_part+shift_part];
@@ -590,10 +660,6 @@ _compute_first_extended_cell_graph
         _cell_cell_extended_n[i_cell] = 0;
       }
 
-      if(1 == 1) {
-        PDM_log_trace_array_int(_cell_cell_extended_n  , n_cell  , "_cell_cell_extended_n::");
-        PDM_log_trace_array_int(_cell_cell_extended_idx, n_cell+1, "_cell_cell_extended_idx::");
-      }
 
       part_ext->cell_cell_extended[i_depth_cur][i_part+shift_part] = (int *) malloc( 3 * _cell_cell_extended_idx[n_cell] * sizeof(int));
       int* _cell_cell_extended = part_ext->cell_cell_extended[i_depth_cur][i_part+shift_part];
@@ -624,11 +690,10 @@ _compute_first_extended_cell_graph
       }
 
       if(1 == 1) {
+        PDM_log_trace_array_int(_cell_cell_extended_n  , n_cell  , "_cell_cell_extended_n::");
+        PDM_log_trace_array_int(_cell_cell_extended_idx, n_cell+1, "_cell_cell_extended_idx::");
         PDM_log_trace_array_int(_cell_cell_extended, 3 * _cell_cell_extended_idx[n_cell]  , "_cell_cell_extended::");
       }
-
-      free(_cell_cell_extended_n);
-      //
 
     }
     shift_part += part_ext->n_part[i_domain];
@@ -896,6 +961,7 @@ PDM_part_extension_compute
   part_ext->n_cell_per_bound        = (int  ***) malloc( (depth + 1) * sizeof(int  **));
 
   part_ext->cell_cell_extended_idx  = (int *** ) malloc( (depth + 1) * sizeof(int  **));
+  part_ext->cell_cell_extended_n    = (int *** ) malloc( (depth + 1) * sizeof(int  **));
   part_ext->cell_cell_extended      = (int *** ) malloc( (depth + 1) * sizeof(int  **));
 
   for(int i_depth = 0; i_depth < depth+1; ++i_depth) {
@@ -908,6 +974,7 @@ PDM_part_extension_compute
     part_ext->n_cell_per_bound       [i_depth] = (int  **) malloc( part_ext->n_domain * sizeof(int  *));
 
     part_ext->cell_cell_extended_idx [i_depth] = (int **) malloc( n_part_loc_all_domain * sizeof(int *));
+    part_ext->cell_cell_extended_n   [i_depth] = (int **) malloc( n_part_loc_all_domain * sizeof(int *));
     part_ext->cell_cell_extended     [i_depth] = (int **) malloc( n_part_loc_all_domain * sizeof(int *));
   }
 
@@ -942,7 +1009,7 @@ PDM_part_extension_compute
   for(int i_depth = 1; i_depth < depth+1; ++i_depth) {
 
     /* Graph compute = local + distant */
-    _compute_dual_graph(part_ext, i_depth);
+    _compute_dual_graph(part_ext, dn, i_depth);
 
     /* Exchange for next rank */
 
