@@ -50,6 +50,8 @@ struct _pdm_part_extension_t {
   int **neighbor_idx;
   int **neighbor_desc;
   int  *n_entity_bound;
+  int  *n_cell;
+  int  *n_cell_border;
 
   /* Graph of cell */
   int **dist_neighbor_cell_n;
@@ -66,8 +68,9 @@ struct _pdm_part_extension_t {
   int ***cell_cell;
 
   /* This one is only on the border and contains only border cells */
-  int ****cell_cell_extended_idx;
-  int ****cell_cell_extended;
+  int ***cell_cell_extended_idx;
+  int ***cell_cell_extended;
+  int  **border_cell_list;
 
   int  *n_tot_part_by_domain;
 
