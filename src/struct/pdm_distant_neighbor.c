@@ -706,9 +706,8 @@ PDM_distant_neighbor_exch
     int** _recv_entity_stride_idx = (int**) malloc( dn->n_part * sizeof(int **));
     for(int i_part = 0; i_part < dn->n_part; i_part++){
       int *_part_neighbor_idx  = dn->neighbor_idx[i_part];
-      _recv_entity_stride_idx[i_part] = (int*) malloc( (dn->n_entity[i_part] + 1)  * sizeof(int*));
+      _recv_entity_stride_idx[i_part] = (int*) malloc( (_part_neighbor_idx[dn->n_entity[i_part]] + 1)  * sizeof(int*));
       _recv_entity_stride_idx[i_part][0] = 0;
-      // for(int i_entity = 0; i_entity < dn->n_entity[i_part]; i_entity++){
       for(int i_entity = 0; i_entity < _part_neighbor_idx[dn->n_entity[i_part]]; i_entity++){
         _recv_entity_stride_idx[i_part][i_entity+1] = _recv_entity_stride_idx[i_part][i_entity] + _recv_entity_stride[i_part][i_entity];
       }
