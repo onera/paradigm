@@ -16,6 +16,8 @@
 #include "pdm.h"
 #include "pdm_distant_neighbor.h"
 #include "pdm_logging.h"
+#include "pdm_unique.h"
+#include "pdm_binary_search.h"
 #include "pdm_order.h"
 #include "pdm_part_extension.h"
 #include "pdm_part_extension_priv.h"
@@ -756,7 +758,7 @@ _compute_dual_graph
       part_ext->cell_cell_extended_n  [i_depth][i_part+shift_part] = _ncell_cell_extended_n;
       part_ext->cell_cell_extended    [i_depth][i_part+shift_part] = _ncell_cell_extended;
 
-      if(1 == 1) {
+      if(0 == 1) {
         PDM_log_trace_array_int(_ncell_cell_extended_idx, n_cell+1, "_ncell_cell_extended_idx:: ");
         PDM_log_trace_array_int(_ncell_cell_extended_n  , n_cell  , "_ncell_cell_extended_n:: ");
         PDM_log_trace_array_int(_ncell_cell_extended    , 3 * _ncell_cell_extended_idx[n_cell], "_ncell_cell_extended:: ");
@@ -912,6 +914,29 @@ _rebuild_faces
     n_part_loc_all_domain += part_ext->n_part[i_domain];
   }
 
+  if(0 == 1) {
+    int shift_part = 0;
+    for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
+      for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
+
+        printf("cell_cell_extended[i_depth=%i, %i] :: --------------------- \n", i_depth, i_part+shift_part);
+        int n_cell_border = part_ext->n_cell_border[i_part+shift_part];
+        int* _cell_cell_extended_idx = part_ext->cell_cell_extended_idx[i_depth][i_part+shift_part];
+        int* _cell_cell_extended     = part_ext->cell_cell_extended    [i_depth][i_part+shift_part];
+        for(int i = 0; i < n_cell_border; ++i) {
+          int i_cell = part_ext->border_cell_list[i_part+shift_part][i];
+          printf("i_cell -> %i -->  ", i_cell);
+          for(int idx = _cell_cell_extended_idx[i]; idx < _cell_cell_extended_idx[i+1]; ++idx) {
+            printf("(%i, %i) ", _cell_cell_extended[3*idx+1], _cell_cell_extended[3*idx+2]);
+          }
+          printf("\n");
+        }
+        printf("cell_cell_extended :: --------------------- END \n");
+      }
+      shift_part += part_ext->n_part[i_domain];
+    }
+  }
+
   PDM_distant_neighbor_t* dn = PDM_distant_neighbor_create(part_ext->comm,
                                                            n_part_loc_all_domain,
                                                            part_ext->n_cell,
@@ -931,7 +956,7 @@ _rebuild_faces
       int* cell_face     =  part_ext->parts[i_domain][i_part].cell_face;
 
       int n_cell      = part_ext->parts[i_domain][i_part].n_cell;
-      int n_face      = part_ext->parts[i_domain][i_part].n_face;
+      // int n_face      = part_ext->parts[i_domain][i_part].n_face;
       int s_cell_face = cell_face_idx[n_cell];
 
       cell_face_n[i_part+shift_part] = (int         *) malloc( n_cell      * sizeof(int        ));
@@ -944,7 +969,16 @@ _rebuild_faces
         for(int idx_face = cell_face_idx[i_cell]; idx_face < cell_face_idx[i_cell+1]; ++idx_face) {
           int sgn    = PDM_SIGN(cell_face[idx_face]);
           int i_face = PDM_ABS (cell_face[idx_face])-1;
+          // gcell_face[i_part+shift_part][idx_face] = sgn * face_ln_to_gn[i_face];
+          if(i_part == 0) {
+            gcell_face[i_part+shift_part][idx_face] = (1+idx_face);
+          } else {
+            gcell_face[i_part+shift_part][idx_face] = -(1+idx_face);
+          }
           gcell_face[i_part+shift_part][idx_face] = sgn * face_ln_to_gn[i_face];
+          printf("gcell_face[%i][%i] = %i \n", i_part+shift_part, idx_face, i_part);
+          // gcell_face[i_part+shift_part][idx_face] = i_part;
+          // gcell_face[i_part+shift_part][idx_face] = i_cell;
         }
       }
 
@@ -953,7 +987,7 @@ _rebuild_faces
   }
 
   /* Exchange */
-  int         **border_gcell_face_idx;
+  int         **border_gcell_face_n;
   PDM_g_num_t **border_gcell_face;
   PDM_distant_neighbor_exch(dn,
                             sizeof(PDM_g_num_t),
@@ -961,13 +995,106 @@ _rebuild_faces
                             -1,
                             cell_face_n,
                  (void **)  gcell_face,
-                           &border_gcell_face_idx,
+                           &border_gcell_face_n,
                 (void ***) &border_gcell_face);
 
+  // PDM_distant_neighbor_exch_int(dn,
+  //                           sizeof(PDM_g_num_t),
+  //                           PDM_STRIDE_VAR,
+  //                           -1,
+  //                           cell_face_n,
+  //                (void **)  gcell_face,
+  //                          &border_gcell_face_n,
+  //               (void ***) &border_gcell_face);
 
+
+  /* Post treatment */
+  shift_part = 0;
+  for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
+    for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
+
+      int n_cell        = part_ext->n_cell       [i_part+shift_part];
+      int n_face        = part_ext->parts[i_domain][i_part].n_face;
+      int n_cell_border = part_ext->n_cell_border[i_part+shift_part];
+
+      int         *_cell_cell_extended     = part_ext->cell_cell_extended    [i_depth][i_part+shift_part];
+      int         *_cell_cell_extended_idx = part_ext->cell_cell_extended_idx[i_depth][i_part+shift_part];
+
+      int         *_border_gcell_face_n   = border_gcell_face_n[i_part+shift_part];
+      PDM_g_num_t *_border_gcell_face     = border_gcell_face[i_part+shift_part];
+      // int         *_border_gcell_face_idx = (int * ) malloc( (n_cell_border+1) * sizeof(int) );
+      int         *_border_gcell_face_idx = (int * ) malloc( (_cell_cell_extended_idx[n_cell]+1) * sizeof(int) );
+
+      _border_gcell_face_idx[0] = 0;
+      // for(int i = 0; i < n_cell_border; ++i) {
+      // --> PAS BON
+      // for(int i = 0; i < _cell_cell_extended_idx[n_cell_border]; ++i) {
+      //   _border_gcell_face_idx[i+1] = _border_gcell_face_idx[i] + _border_gcell_face_n[i];
+      // }
+      int n_neight_tot = _cell_cell_extended_idx[n_cell];
+      int s_tot = 0;
+      for(int i = 0; i < n_cell_border; ++i) {
+        printf("_border_gcell_face_idx[%i] -> \n", i);
+        for(int idx_neight = _cell_cell_extended_idx[i]; idx_neight < _cell_cell_extended_idx[i+1]; ++idx_neight) {
+          printf("(%i,%i) -> %i ", _cell_cell_extended[3*idx_neight+1],  _cell_cell_extended[3*idx_neight+2], _border_gcell_face_n[idx_neight]);
+          s_tot += _border_gcell_face_n[idx_neight];
+          _border_gcell_face_idx[idx_neight+1] =  _border_gcell_face_idx[idx_neight] + _border_gcell_face_n[idx_neight];
+        }
+        printf("\n");
+      }
+      printf(" s_tot = %i \n", s_tot);
+      printf(" _cell_cell_extended_idx[n_cell] = %i \n", _cell_cell_extended_idx[n_cell]);
+
+      if(1 == 1) {
+        printf("n_cell_border = %i \n", n_cell_border);
+        // PDM_log_trace_array_int (_border_gcell_face_idx, n_cell_border+1, "_border_gcell_face_idx::");
+        // PDM_log_trace_array_int (_border_gcell_face_n  , n_cell_border,   "_border_gcell_face_n::");
+        // Pas la bonne taille sur
+        PDM_log_trace_array_int (_border_gcell_face_idx, n_neight_tot+1, "_border_gcell_face_idx::");
+        PDM_log_trace_array_int (_border_gcell_face_n  , n_neight_tot  , "_border_gcell_face_n::");
+        // PDM_log_trace_array_long(_border_gcell_face    , _border_gcell_face_idx[_cell_cell_extended_idx[n_cell_border]]  , "_border_gcell_face::");
+        PDM_log_trace_array_long(_border_gcell_face, s_tot, "_border_gcell_face::");
+      }
+
+      /* Preparation du tableau des faces venant de l'exterieur */
+      // PDM_g_num_t* _border_face_ln_to_gn = (PDM_g_num_t * ) malloc( _border_gcell_face_idx[n_cell_border] * sizeof(PDM_g_num_t));
+      PDM_g_num_t* _border_face_ln_to_gn = (PDM_g_num_t * ) malloc( s_tot * sizeof(PDM_g_num_t));
+      PDM_g_num_t* face_ln_to_gn = part_ext->parts[i_domain][i_part].face_ln_to_gn;
+
+      PDM_g_num_t* _sorted_face_ln_to_gn = (PDM_g_num_t * ) malloc( n_face * sizeof(PDM_g_num_t));
+      for(int i_face = 0; i_face < n_face; ++i_face ) {
+        _sorted_face_ln_to_gn[i_face] = face_ln_to_gn[i_face];
+      }
+      PDM_sort_long(_sorted_face_ln_to_gn, 0, n_face-1);
+
+      // for(int i = 0; i < _border_gcell_face_idx[n_cell_border]; ++i) {
+      for(int i = 0; i < s_tot; ++i) {
+        _border_face_ln_to_gn[i] = _border_gcell_face[i];
+      }
+      // int n_face_extended = PDM_inplace_unique_long(_border_face_ln_to_gn, 0, _border_gcell_face_idx[n_cell_border]-1);
+      // int n_face_extended = PDM_inplace_unique_long(_border_face_ln_to_gn, 0, _border_gcell_face_idx[_cell_cell_extended_idx[n_cell_border]]-1);
+      int n_face_extended = PDM_inplace_unique_long(_border_face_ln_to_gn, 0, s_tot-1);
+
+      if(1 == 1) {
+        PDM_log_trace_array_long(_border_face_ln_to_gn, n_face_extended, "_border_face_ln_to_gn::");
+      }
+
+      /* Pour chaque elements on chercher si il est dans les face_ln_to_gn */
+      // for(int i_face = 0; i_face < n_face_extended; ++i_face) {
+      for(int i_face = 0; i_face < s_tot; ++i_face) {
+        PDM_g_num_t g_face = _border_face_ln_to_gn[i_face];
+        int pos = PDM_binary_search_long(g_face, _sorted_face_ln_to_gn, n_face);
+        printf(" [%i] found [%i] = %i\n", i_part+shift_part, i_face, pos);
+      }
+
+      free(_border_gcell_face_idx);
+      free(_border_face_ln_to_gn);
+      free(_sorted_face_ln_to_gn);
+    }
+    shift_part += part_ext->n_part[i_domain];
+  }
 
   /* Pour les faces group on peut faire aussi le gnum location --> Marche pas en multidomain (ou il faut shifter )*/
-
   shift_part = 0;
   for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
     for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
@@ -975,7 +1102,7 @@ _rebuild_faces
 
       free(cell_face_n[i_part+shift_part]);
       free(gcell_face[i_part+shift_part]);
-      free(border_gcell_face_idx[i_part+shift_part]);
+      free(border_gcell_face_n[i_part+shift_part]);
       free(border_gcell_face[i_part+shift_part]);
     }
     shift_part += part_ext->n_part[i_domain];
@@ -984,7 +1111,7 @@ _rebuild_faces
   PDM_distant_neighbor_free(dn);
   free(cell_face_n);
   free(gcell_face);
-  free(border_gcell_face_idx);
+  free(border_gcell_face_n);
   free(border_gcell_face);
   printf("_rebuild_faces end \n");
 }
@@ -1235,7 +1362,9 @@ PDM_part_extension_compute
   /*
    *  Implem du binary search bi-niveaux -> i_domain + ln_to_gn
    */
-  _rebuild_faces(part_ext, depth);
+  printf(" ATTENTION CHANGEMENT DEPTH DEBUG \n");
+  _rebuild_faces(part_ext, depth-1);
+  printf(" ATTENTION CHANGEMENT DEPTH DEBUG \n");
 
 
 
