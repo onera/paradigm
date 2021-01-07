@@ -969,16 +969,8 @@ _rebuild_faces
         for(int idx_face = cell_face_idx[i_cell]; idx_face < cell_face_idx[i_cell+1]; ++idx_face) {
           int sgn    = PDM_SIGN(cell_face[idx_face]);
           int i_face = PDM_ABS (cell_face[idx_face])-1;
-          // gcell_face[i_part+shift_part][idx_face] = sgn * face_ln_to_gn[i_face];
-          if(i_part == 0) {
-            gcell_face[i_part+shift_part][idx_face] = (1+idx_face);
-          } else {
-            gcell_face[i_part+shift_part][idx_face] = -(1+idx_face);
-          }
           gcell_face[i_part+shift_part][idx_face] = sgn * face_ln_to_gn[i_face];
           printf("gcell_face[%i][%i] = %i \n", i_part+shift_part, idx_face, i_part);
-          // gcell_face[i_part+shift_part][idx_face] = i_part;
-          // gcell_face[i_part+shift_part][idx_face] = i_cell;
         }
       }
 
@@ -1026,11 +1018,6 @@ _rebuild_faces
       int         *_border_gcell_face_idx = (int * ) malloc( (_cell_cell_extended_idx[n_cell]+1) * sizeof(int) );
 
       _border_gcell_face_idx[0] = 0;
-      // for(int i = 0; i < n_cell_border; ++i) {
-      // --> PAS BON
-      // for(int i = 0; i < _cell_cell_extended_idx[n_cell_border]; ++i) {
-      //   _border_gcell_face_idx[i+1] = _border_gcell_face_idx[i] + _border_gcell_face_n[i];
-      // }
       int n_neight_tot = _cell_cell_extended_idx[n_cell];
       int s_tot = 0;
       for(int i = 0; i < n_cell_border; ++i) {
@@ -1065,28 +1052,83 @@ _rebuild_faces
       for(int i_face = 0; i_face < n_face; ++i_face ) {
         _sorted_face_ln_to_gn[i_face] = face_ln_to_gn[i_face];
       }
-      PDM_sort_long(_sorted_face_ln_to_gn, 0, n_face-1);
+
+      int* order = (int *) malloc( n_face * sizeof(int));
+      for(int i = 0; i < n_face; ++i) {
+        order[i] = i;
+      }
+      PDM_sort_long(_sorted_face_ln_to_gn, order, n_face-1);
 
       // for(int i = 0; i < _border_gcell_face_idx[n_cell_border]; ++i) {
       for(int i = 0; i < s_tot; ++i) {
         _border_face_ln_to_gn[i] = _border_gcell_face[i];
       }
-      // int n_face_extended = PDM_inplace_unique_long(_border_face_ln_to_gn, 0, _border_gcell_face_idx[n_cell_border]-1);
-      // int n_face_extended = PDM_inplace_unique_long(_border_face_ln_to_gn, 0, _border_gcell_face_idx[_cell_cell_extended_idx[n_cell_border]]-1);
-      int n_face_extended = PDM_inplace_unique_long(_border_face_ln_to_gn, 0, s_tot-1);
+      // int n_face_unique = PDM_inplace_unique_long(_border_face_ln_to_gn, 0, _border_gcell_face_idx[n_cell_border]-1);
+      // int n_face_unique = PDM_inplace_unique_long(_border_face_ln_to_gn, 0, _border_gcell_face_idx[_cell_cell_extended_idx[n_cell_border]]-1);
+      int n_face_unique = PDM_inplace_unique_long(_border_face_ln_to_gn, 0, s_tot-1);
 
       if(1 == 1) {
-        PDM_log_trace_array_long(_border_face_ln_to_gn, n_face_extended, "_border_face_ln_to_gn::");
+        PDM_log_trace_array_long(_border_face_ln_to_gn, n_face_unique, "_border_face_ln_to_gn::");
       }
 
       /* Pour chaque elements on chercher si il est dans les face_ln_to_gn */
-      // for(int i_face = 0; i_face < n_face_extended; ++i_face) {
-      for(int i_face = 0; i_face < s_tot; ++i_face) {
+      PDM_g_num_t *face_extended_gnum = (PDM_g_num_t * ) malloc( n_face_unique * sizeof(PDM_g_num_t));
+      int n_face_extended = 0;
+      for(int i_face = 0; i_face < n_face_unique; ++i_face) {
+      // for(int i_face = 0; i_face < s_tot; ++i_face) {
         PDM_g_num_t g_face = _border_face_ln_to_gn[i_face];
         int pos = PDM_binary_search_long(g_face, _sorted_face_ln_to_gn, n_face);
+        if(pos == -1) {
+          face_extended_gnum[n_face_extended++] = g_face;
+        }
         printf(" [%i] found [%i] = %i\n", i_part+shift_part, i_face, pos);
       }
 
+      if(0 == 1) {
+        PDM_log_trace_array_long(face_extended_gnum, n_face_extended, "face_extended_lnum::");
+      }
+
+      /*
+       *   On a recreer un index implicite pour chaque nouvelle face
+       *   On doit tout reparcourir pour updater le cell_face
+       */
+      int* _border_lcell_face = (int *) malloc(s_tot * sizeof(int));
+      for(int i = 0; i < s_tot; ++i) {
+        _border_lcell_face[i] = -1;
+      }
+
+      int idx = 0;
+      int i_face_extented = 0;
+      for(int i = 0; i < s_tot; ++i) {
+        PDM_g_num_t g_face = _border_gcell_face[i];
+
+        /* On cherche d'abord dans le bord - face_extended_gnum is sort by construction */
+        int pos = PDM_binary_search_long(g_face, face_extended_gnum, n_face_extended);
+
+        if(pos != -1) {
+          // printf(" Border face comming for other proc %i - %i  \n", pos, idx);
+          _border_lcell_face[idx++] = pos+n_face+1; // Car on shift
+          i_face_extented++;
+        } else {
+          /* La face existe deja dans la partition */
+          int pos_interior = PDM_binary_search_long(g_face, _sorted_face_ln_to_gn, n_face);
+          // printf(" Border face comming from interior %i - %i \n", pos_interior, idx);
+          _border_lcell_face[idx++] = order[pos_interior]+1; // Car le tableau est trié pas comme la partition
+          // _border_lcell_face[idx++] = -2; // Car le tableau est trié pas comme la partition
+        }
+      }
+
+      if(0 == 1) {
+        PDM_log_trace_array_int(_border_lcell_face, s_tot, "_border_lcell_face::");
+      }
+      assert(idx == s_tot);
+      printf("i_face_extented = %i \n", i_face_extented);
+      printf("n_face_extended = %i \n", n_face_extended);
+      // assert(i_face_extented == n_face_extended);
+
+      free(order);
+      free(_border_lcell_face);
+      free(face_extended_gnum);
       free(_border_gcell_face_idx);
       free(_border_face_ln_to_gn);
       free(_sorted_face_ln_to_gn);
