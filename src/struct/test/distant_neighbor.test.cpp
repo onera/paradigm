@@ -208,3 +208,79 @@ MPI_TEST_CASE("[1p] distant neighbor (unsorted) ",1) {
   PDM_distant_neighbor_free(dn);
 
 }
+
+
+// Same as before but neighbor not appear in sorted way
+//  Parenthesis is fields
+//         Part 1                        Part 2
+//   +--------+--------+           +--------+--------+
+//   |        |        |           |        |        |
+//   |   0(1) |   1(2) |           |   2(-3)|   3(-4)|
+//   +--------+--------+           +--------+--------+
+//   |        |        |           |        |        |
+//   |   3(4) |   2(3) |           |   0(-1)|   1(-2)|
+//   +--------+--------+           +--------+--------+
+//
+//
+MPI_TEST_CASE("[1p] distant neighbor (multiple unsorted) ",1) {
+
+  PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
+
+  int n_part = 2;
+  int n_entity[2] = {4, 4};
+
+  std::vector<int> neighbor_idx_p1 = { 0, 0, 2, 4, 4};
+  std::vector<int> neighbor_idx_p2 = { 0, 2, 2, 4, 4};
+
+  std::vector<int> neighbor_desc_p1 = { 0, 1, 2,
+                                        0, 1, 0,
+                                        0, 1, 0,
+                                        0, 1, 2};
+
+  std::vector<int> neighbor_desc_p2 = { 0, 0, 2,
+                                        0, 0, 1,
+                                        0, 0, 1,
+                                        0, 0, 2};
+
+  std::vector<int*> neighbor_idx  = {neighbor_idx_p1 .data(), neighbor_idx_p2 .data()};
+  std::vector<int*> neighbor_desc = {neighbor_desc_p1.data(), neighbor_desc_p2.data()};
+
+  PDM_distant_neighbor_t* dn = PDM_distant_neighbor_create(pdm_comm,
+                                                           n_part,
+                                                           n_entity,
+                                                           neighbor_idx.data(),
+                                                           neighbor_desc.data());
+
+  // Prepare exchange
+  std::vector<int> field_p1 = { 1,  2,  3,  4};
+  std::vector<int> field_p2 = {-1, -2, -3, -4};
+
+  std::vector<int*> fields = {field_p1.data(), field_p2.data()};
+
+  int** exch_fields = NULL;
+  PDM_distant_neighbor_exch_int(dn,
+                            sizeof(int),
+                            PDM_STRIDE_CST,
+                            1,
+                            NULL,
+                            fields.data(),
+                            NULL,
+                           &exch_fields);
+
+  PDM_log_trace_array_int(exch_fields[0], neighbor_idx_p1[n_entity[0]], "p1:: ");
+  PDM_log_trace_array_int(exch_fields[1], neighbor_idx_p2[n_entity[1]], "p2:: ");
+
+  // int exch_fields_expexted_p1[2] = {-1, -3};
+  // int exch_fields_expexted_p2[2] = { 2,  3};
+
+  // CHECK_EQ_C_ARRAY(exch_fields[0], exch_fields_expexted_p1, neighbor_idx_p1[n_entity[0]]); // Part 1
+  // CHECK_EQ_C_ARRAY(exch_fields[1], exch_fields_expexted_p2, neighbor_idx_p2[n_entity[1]]); // Part 2
+
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    free(exch_fields[i_part]);
+  }
+  free(exch_fields);
+
+  PDM_distant_neighbor_free(dn);
+
+}
