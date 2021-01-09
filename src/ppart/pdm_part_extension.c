@@ -888,6 +888,92 @@ _compute_first_extended_cell_graph
   }
 }
 
+
+static
+void
+_prune_cell_cell_extented
+(
+  PDM_part_extension_t *part_ext,
+  int i_depth
+)
+{
+  printf("_prune_cell_cell_extented \n");
+  int i_rank;
+  int n_rank;
+  PDM_MPI_Comm_rank(part_ext->comm, &i_rank);
+  PDM_MPI_Comm_size(part_ext->comm, &n_rank);
+
+  int shift_part = 0;
+  for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
+    for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
+
+      int* _cell_cell_extended_idx = part_ext->cell_cell_extended_idx[i_depth][i_part+shift_part];
+      int* _cell_cell_extended     = part_ext->cell_cell_extended    [i_depth][i_part+shift_part];
+
+      int n_cell      = part_ext->parts[i_domain][i_part].n_cell;
+      int s_tot       = _cell_cell_extended_idx[n_cell];
+
+      int* order = (int * ) malloc( s_tot * sizeof(int));
+      PDM_order_lnum_s(_cell_cell_extended, 3, order, s_tot);
+
+      part_ext->cell_cell_extended_pruned    [i_part+shift_part] = (int * ) malloc( 3 * s_tot * sizeof(int));
+      part_ext->cell_cell_extended_pruned_idx[i_part+shift_part] = (int * ) malloc(         2 * sizeof(int)); // Debut et fin uniquement
+
+      int* _cell_cell_extended_pruned     = part_ext->cell_cell_extended_pruned    [i_part+shift_part];
+      int* _cell_cell_extended_pruned_idx = part_ext->cell_cell_extended_pruned_idx[i_part+shift_part];
+
+      int idx_unique = 0;
+      int last_proc  = -1;
+      int last_part  = -1;
+      int last_elmt  = -1;
+      _cell_cell_extended_pruned_idx[0] = 0;
+      _cell_cell_extended_pruned_idx[1] = 0;
+      for(int i = 0; i < s_tot; ++i) {
+        int old_order = order[i];
+        int curr_proc = _cell_cell_extended[3*old_order  ];
+        int curr_part = _cell_cell_extended[3*old_order+1];
+        int curr_cell = _cell_cell_extended[3*old_order+2];
+        int is_same  = _is_same_triplet(last_proc, last_part, last_elmt,
+                                        curr_proc, curr_part, curr_cell);
+
+        int is_local = (curr_proc == i_rank) && (curr_part == i_part+shift_part);
+        // On peut également trie les locaux qui ne serve à rien
+        if(is_same == 0 && !is_local){ // N'est pas le meme
+          // idx_unique++;
+          last_proc = curr_proc;
+          last_part = curr_part;
+          last_elmt = curr_cell;
+
+          _cell_cell_extended_pruned[idx_unique++] = curr_proc;
+          _cell_cell_extended_pruned[idx_unique++] = curr_part;
+          _cell_cell_extended_pruned[idx_unique++] = curr_cell;
+
+          /* Increment the new counter */
+          _cell_cell_extended_pruned_idx[1]++;
+        }
+      }
+
+      part_ext->cell_cell_extended_pruned[i_part+shift_part] = realloc(part_ext->cell_cell_extended_pruned[i_part+shift_part], idx_unique * sizeof(int));
+
+      printf(" s_tot      = %i\n", s_tot);
+      printf(" idx_unique = %i\n", idx_unique/3);
+
+      if(1 == 1) {
+        _cell_cell_extended_pruned     = part_ext->cell_cell_extended_pruned    [i_part+shift_part];
+        PDM_log_trace_array_int(_cell_cell_extended_pruned_idx, 2, "_cell_cell_extended_pruned_idx:: ");
+        PDM_log_trace_array_int(_cell_cell_extended_pruned, 3 * _cell_cell_extended_pruned_idx[1], "_cell_cell_extended_pruned:: ");
+      }
+      free(order);
+
+    }
+    shift_part += part_ext->n_part[i_domain];
+  }
+
+
+
+  printf("_prune_cell_cell_extented end \n");
+}
+
 static
 void
 _rebuild_faces
@@ -898,6 +984,13 @@ _rebuild_faces
 {
 
   printf("_rebuild_faces \n");
+  printf(" We can change the algorithm to exchange only once cells \n");
+  printf(" ---> Need to sort cell_cell_extended to have only one neighbor \n");
+  printf(" ---> Need to sort cell_cell_extended to have only one neighbor \n");
+  printf(" ---> Need to sort cell_cell_extended to have only one neighbor \n");
+  printf(" ---> Need to sort cell_cell_extended to have only one neighbor \n");
+  printf(" ---> Need to sort cell_cell_extended to have only one neighbor \n");
+  printf(" REDUCE ALL \n");
 
   int n_tot_all_domain = 0;
   int n_part_loc_all_domain = 0;
@@ -1193,6 +1286,12 @@ PDM_part_extension_create
   part_ext->entity_cell_opp_idx = NULL;
   part_ext->entity_cell_opp     = NULL;
 
+  part_ext->cell_cell_extended_idx        = NULL;
+  part_ext->cell_cell_extended_n          = NULL;
+  part_ext->cell_cell_extended            = NULL;
+  part_ext->cell_cell_extended_pruned_idx = NULL;
+  part_ext->cell_cell_extended_pruned     = NULL;
+
   return part_ext;
 }
 
@@ -1333,6 +1432,9 @@ PDM_part_extension_compute
     part_ext->cell_cell_extended     [i_depth] = (int **) malloc( n_part_loc_all_domain * sizeof(int *));
   }
 
+  part_ext->cell_cell_extended_pruned_idx = (int **) malloc( n_part_loc_all_domain * sizeof(int *));
+  part_ext->cell_cell_extended_pruned     = (int **) malloc( n_part_loc_all_domain * sizeof(int *));
+
   // TODO : vtx_cell
   _create_cell_graph_comm(part_ext);
 
@@ -1380,6 +1482,9 @@ PDM_part_extension_compute
    *       cell -> face -> edge -> vtx
    * Another step is to compute the ln_to_gn in mulitpart context -> (i_domain, ln_to_gn)
    */
+
+  // _prune_cell_cell_extented(part_ext, depth);
+  _prune_cell_cell_extented(part_ext, depth-1);
 
   /*
    *  Implem du binary search bi-niveaux -> i_domain + ln_to_gn
@@ -1490,6 +1595,17 @@ PDM_part_extension_free
   free(part_ext->entity_cell_opp_idx);
   free(part_ext->entity_cell_opp_n  );
   free(part_ext->entity_cell_opp    );
+
+  int shift_part = 0;
+  for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
+    for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
+      free(part_ext->cell_cell_extended_pruned_idx[i_part+shift_part]);
+      free(part_ext->cell_cell_extended_pruned    [i_part+shift_part]);
+    }
+    shift_part += part_ext->n_part[i_domain];
+  }
+  free(part_ext->cell_cell_extended_pruned_idx);
+  free(part_ext->cell_cell_extended_pruned    );
 
   part_ext->n_part = NULL;
 

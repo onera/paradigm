@@ -68,6 +68,9 @@ struct _pdm_part_extension_t {
   int ***cell_cell_extended;
   int  **border_cell_list;
 
+  int  **cell_cell_extended_pruned_idx;
+  int  **cell_cell_extended_pruned;
+
   int  *n_tot_part_by_domain;
 
   int **entity_cell_idx;
