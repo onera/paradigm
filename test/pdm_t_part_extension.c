@@ -15,6 +15,7 @@
 #include "pdm_dcube_gen.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
+#include "pdm_cellface_orient.h"
 
 /*============================================================================
  * Type definitions
@@ -368,6 +369,16 @@ int main(int argc, char *argv[])
                           &face_group_idx,
                           &face_group,
                           &face_group_ln_to_gn);
+
+    PDM_cellface_orient (n_cell,
+                         n_face,
+                         n_vtx,
+                         vtx,
+                         cell_face_idx,
+                         cell_face,
+                         face_cell,
+                         face_vtx_idx,
+                         face_vtx);
 
     PDM_part_extension_set_part(part_ext, 0, i_part,
                                 n_cell,
