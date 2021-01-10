@@ -27,6 +27,7 @@
 #include "pdm_printf.h"
 #include "pdm_error.h"
 #include "pdm_sort.h"
+#include "pdm_unique.h"
 #include "pdm_binary_search.h"
 #include "pdm_handles.h"
 #include "pdm_part_to_block.h"
@@ -108,7 +109,7 @@ const int         *dual_graph_n,
     int end_connect         = idx_comp + n_cell_connect - 1;
     // printf(" idx_comp:: %d | end_connect:: %d \n", idx_comp, end_connect);
 
-    int n_cell_connect_comp = PDM_inplace_unique_long(dual_graph, idx_comp, end_connect);
+    int n_cell_connect_comp = PDM_inplace_unique_long(dual_graph, NULL, idx_comp, end_connect);
     // printf(" n_cell_connect:: %d | n_cell_connect_comp:: %d \n", n_cell_connect, n_cell_connect_comp);
 
     PDM_g_num_t g_num = i + shift_rank + 1;
@@ -171,7 +172,7 @@ const int         *dual_graph_n,
     int end_connect         = idx_comp + n_cell_connect - 1;
     // printf(" idx_comp:: %d | end_connect:: %d \n", idx_comp, end_connect);
 
-    int n_cell_connect_comp = PDM_inplace_unique_long(dual_graph, idx_comp, end_connect);
+    int n_cell_connect_comp = PDM_inplace_unique_long(dual_graph, NULL, idx_comp, end_connect);
     // printf(" n_cell_connect:: %d | n_cell_connect_comp:: %d \n", n_cell_connect, n_cell_connect_comp);
 
     //Once a shift is needed, need_shift must stay at one

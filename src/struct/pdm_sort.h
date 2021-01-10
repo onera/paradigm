@@ -106,41 +106,6 @@ PDM_sort_double
 
 /**
  *
- * \brief Unique in place
- *
- * \param [inout]   a     Array to sort
- * \param [in]      l     First element
- * \param [in]      r     Last  element
- *
- */
-int
-PDM_inplace_unique_long
-(
- PDM_g_num_t a[],
- int l,
- int r
-);
-
-/**
- *
- * \brief Unique in place
- *
- * \param [inout]   a     Array to sort
- * \param [in]      l     First element
- * \param [in]      r     Last  element
- *
- */
-int
-PDM_inplace_unique_long2
-(
- PDM_g_num_t a[],
- int unique_order[],
- int l,
- int r
-);
-
-/**
- *
  * \brief Compare operator for connectivities
  *
  */

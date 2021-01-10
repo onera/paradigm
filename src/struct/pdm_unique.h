@@ -66,6 +66,7 @@ int
 PDM_inplace_unique_long
 (
  PDM_g_num_t a[],
+ int         order[],
  int l,
  int r
 );

@@ -1047,7 +1047,7 @@ _generate_extended_partition_connectivity
   for(int i = 0; i < s_tot; ++i) {
     _border_entity2_ln_to_gn[i] = PDM_ABS(border_gentity1_entity2[i]);
   }
-  int n_face_unique = PDM_inplace_unique_long(_border_entity2_ln_to_gn, 0, s_tot-1);
+  int n_face_unique = PDM_inplace_unique_long(_border_entity2_ln_to_gn, NULL, 0, s_tot-1);
 
   if(1 == 1) {
     PDM_log_trace_array_long(_border_entity2_ln_to_gn, n_face_unique, "_border_face_ln_to_gn::");
@@ -1193,7 +1193,7 @@ _rebuild_connectivity
       for(int i = 0; i < s_tot; ++i) {
         _border_face_ln_to_gn[i] = PDM_ABS(_border_gcell_face[i]);
       }
-      int n_face_unique = PDM_inplace_unique_long(_border_face_ln_to_gn, 0, s_tot-1);
+      int n_face_unique = PDM_inplace_unique_long(_border_face_ln_to_gn, NULL, 0, s_tot-1);
 
       if(1 == 1) {
         PDM_log_trace_array_long(_border_face_ln_to_gn, n_face_unique, "_border_face_ln_to_gn::");

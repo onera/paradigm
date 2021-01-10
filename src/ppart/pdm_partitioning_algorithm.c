@@ -1996,7 +1996,7 @@ PDM_extend_mesh
   PDM_g_num_t** _pentity_ln_to_gn_extended = *pentity_ln_to_gn_extended;
   for(int i_part = 0; i_part < n_part; ++i_part) {
 
-    int new_size = PDM_inplace_unique_long(part_dual_graph[i_part], 0, part_dual_graph_idx[i_part][pn_entity[i_part]]-1);
+    int new_size = PDM_inplace_unique_long(part_dual_graph[i_part], NULL, 0, part_dual_graph_idx[i_part][pn_entity[i_part]]-1);
     printf(" new_size         :: %i \n", new_size);
     printf(" pn_entity[i_part]:: %i \n", pn_entity[i_part]);
 
