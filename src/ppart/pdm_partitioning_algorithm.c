@@ -804,7 +804,8 @@ _dconnectivity_to_pconnectivity_abs
 */
 static
 void
-_create_pchild_local_num(
+_create_pchild_local_num
+(
   const int      n_part,
   int           *pn_child,
   PDM_g_num_t  **pconnectivity_abs,
@@ -854,7 +855,7 @@ _create_pchild_local_num(
 
   }
 }
-  
+
 /**
  *  \brief Computes a local numbering from connectivities with children in gn
  *
@@ -866,7 +867,8 @@ _create_pchild_local_num(
 */
 static
 void
-_pconnectivity_with_local_num(
+_pconnectivity_with_local_num
+(
   const int      n_part,
   int           *pn_child,
   PDM_g_num_t  **pconnectivity_abs,
@@ -957,7 +959,7 @@ PDM_part_multi_dconnectivity_to_pconnectivity_sort
       &(*pconnectivity_idx)[i_section],&pconnectivity_abs[i_section]
     );
     free(dconnectivity_section_idx_at_0);
- 
+
     for(int i_part = 0; i_part < n_part; ++i_part) {
       int n_elmts = pn_entity[i_section][i_part];
       pn_vtx[i_part] += (*pconnectivity_idx)[i_section][i_part][n_elmts];
