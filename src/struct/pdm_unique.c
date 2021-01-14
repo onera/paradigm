@@ -102,15 +102,15 @@ PDM_inplace_unique_long
   int new_size  = 1;
   int idx_write = l;
   PDM_g_num_t last_value = a[l];
-  if(order != NULL) {
-    order[idx_write] = order[l];
-  }
+  // if(order != NULL) {
+  //   order[idx_write] = order[l];
+  // }
   a[idx_write++] = last_value;
   for (int idx = l+1; idx <= r; idx++) {
     if(last_value != a[idx]){
-      if(order != NULL) {
-        order[idx_write] = order[idx];
-      }
+      // if(order != NULL) {
+      //   order[idx_write] = order[idx];
+      // }
       last_value = a[idx];
       a[idx_write++] = a[idx];
       new_size++;
