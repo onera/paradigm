@@ -963,8 +963,8 @@ const int           n_elt,
     PDM_error (__FILE__, __LINE__, 0, "Bad standard block identifier\n");
   }
 
-  PDM_printf(" PDM_Mesh_nodal_section_std_set - _id_section : %i  \n ", _id_section);
-  PDM_printf(" PDM_Mesh_nodal_section_std_set - n_elt       : %i  \n ", n_elt);
+  //PDM_printf(" PDM_Mesh_nodal_section_std_set - _id_section : %i  \n ", _id_section);
+  //PDM_printf(" PDM_Mesh_nodal_section_std_set - n_elt       : %i  \n ", n_elt);
 
   /* Mapping */
   section->n_elt   = n_elt;
