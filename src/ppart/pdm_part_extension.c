@@ -1566,10 +1566,12 @@ _rebuild_connectivity_cell_face
     shift_part += part_ext->n_part[i_domain];
   }
 
-  int **border_lcell_face_idx;
-  int **border_lcell_face;
-  int **face_face_extended_idx;
-  int **face_face_extended;
+  // int **border_lcell_face_idx;
+  // int **border_lcell_face;
+  // int **face_face_extended_idx;
+  // int **face_face_extended;
+  assert(part_ext->face_face_extended_idx == NULL);
+  assert(part_ext->face_face_extended     == NULL);
   _rebuild_connectivity(part_ext,
                         n_cell,
                         n_face,
@@ -1578,26 +1580,10 @@ _rebuild_connectivity_cell_face
                         cell_face_idx,
                         cell_face,
                         face_ln_to_gn,
-                       &border_lcell_face_idx,
-                       &border_lcell_face,
-                       &face_face_extended_idx,
-                       &face_face_extended);
-
-  shift_part = 0;
-  for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
-    for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
-      free(border_lcell_face_idx [i_part+shift_part]);
-      free(border_lcell_face     [i_part+shift_part]);
-      free(face_face_extended_idx[i_part+shift_part]);
-      free(face_face_extended    [i_part+shift_part]);
-    }
-    shift_part += part_ext->n_part[i_domain];
-  }
-  free(border_lcell_face_idx );
-  free(border_lcell_face     );
-  free(face_face_extended_idx);
-  free(face_face_extended    );
-
+                       &part_ext->border_cell_face_idx,
+                       &part_ext->border_cell_face,
+                       &part_ext->face_face_extended_idx,
+                       &part_ext->face_face_extended);
 
   free(n_cell       );
   free(n_face       );
@@ -1665,6 +1651,24 @@ PDM_part_extension_create
   part_ext->cell_cell_extended            = NULL;
   part_ext->cell_cell_extended_pruned_idx = NULL;
   part_ext->cell_cell_extended_pruned     = NULL;
+
+  part_ext->face_face_extended_idx        = NULL;
+  part_ext->face_face_extended            = NULL;
+
+  part_ext->edge_edge_extended_idx        = NULL;
+  part_ext->edge_edge_extended            = NULL;
+
+  part_ext->vtx_vtx_extended_idx          = NULL;
+  part_ext->vtx_vtx_extended              = NULL;
+
+  part_ext->border_cell_face_idx          = NULL;
+  part_ext->border_cell_face              = NULL;
+
+  part_ext->border_face_edge_idx          = NULL;
+  part_ext->border_face_edge              = NULL;
+
+  part_ext->border_face_vtx_idx           = NULL;
+  part_ext->border_face_vtx               = NULL;
 
   return part_ext;
 }
@@ -1891,6 +1895,50 @@ PDM_part_extension_free
           free(part_ext->entity_cell    [i_part+shift_part]);
         }
 
+        if(part_ext->face_face_extended_idx != NULL) {
+          free(part_ext->face_face_extended_idx[i_part+shift_part]);
+        }
+
+        if(part_ext->face_face_extended != NULL) {
+          free(part_ext->face_face_extended[i_part+shift_part]);
+        }
+
+        if(part_ext->edge_edge_extended_idx != NULL) {
+          free(part_ext->edge_edge_extended_idx[i_part+shift_part]);
+        }
+
+        if(part_ext->edge_edge_extended != NULL) {
+          free(part_ext->edge_edge_extended[i_part+shift_part]);
+        }
+
+        if(part_ext->vtx_vtx_extended_idx != NULL) {
+          free(part_ext->vtx_vtx_extended_idx[i_part+shift_part]);
+        }
+
+        if(part_ext->vtx_vtx_extended != NULL) {
+          free(part_ext->vtx_vtx_extended[i_part+shift_part]);
+        }
+
+        if(part_ext->owner == PDM_OWNERSHIP_KEEP) {
+
+          if(part_ext->border_cell_face_idx != NULL) {
+            free(part_ext->border_cell_face_idx[i_part+shift_part]);
+            free(part_ext->border_cell_face    [i_part+shift_part]);
+          }
+
+          if(part_ext->border_face_edge_idx != NULL) {
+            free(part_ext->border_face_edge_idx[i_part+shift_part]);
+            free(part_ext->border_face_edge    [i_part+shift_part]);
+          }
+
+          if(part_ext->border_face_vtx_idx != NULL) {
+            free(part_ext->border_face_vtx_idx[i_part+shift_part]);
+            free(part_ext->border_face_vtx    [i_part+shift_part]);
+          }
+
+
+        }
+
         free(part_ext->cell_cell_idx[i_domain][i_part]);
         free(part_ext->cell_cell    [i_domain][i_part]);
 
@@ -1910,6 +1958,37 @@ PDM_part_extension_free
 
   free(part_ext->cell_cell_idx);
   free(part_ext->cell_cell);
+
+  if(part_ext->face_face_extended_idx != NULL) {
+    free(part_ext->face_face_extended_idx);
+    free(part_ext->face_face_extended);
+  }
+
+  if(part_ext->vtx_vtx_extended_idx != NULL) {
+    free(part_ext->vtx_vtx_extended_idx);
+    free(part_ext->vtx_vtx_extended);
+  }
+
+  if(part_ext->vtx_vtx_extended_idx != NULL) {
+    free(part_ext->vtx_vtx_extended_idx);
+    free(part_ext->vtx_vtx_extended);
+  }
+
+  /* Peu import l'ownership on free car on rend à l'utilisateur l'interface i_domain / i_part */
+  if(part_ext->border_cell_face_idx != NULL) {
+    free(part_ext->border_cell_face_idx);
+    free(part_ext->border_cell_face);
+  }
+
+  if(part_ext->border_face_edge_idx != NULL) {
+    free(part_ext->border_face_edge_idx);
+    free(part_ext->border_face_edge);
+  }
+
+  if(part_ext->border_face_vtx_idx != NULL) {
+    free(part_ext->border_face_vtx_idx);
+    free(part_ext->border_face_vtx);
+  }
 
 
   for(int i_depth = 0; i_depth < part_ext->depth+1; ++i_depth) {

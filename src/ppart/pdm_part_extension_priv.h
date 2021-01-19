@@ -81,6 +81,27 @@ struct _pdm_part_extension_t {
   int **entity_cell_opp_n;
   int **entity_cell_opp;
 
+  /* Internal results */
+  int **face_face_extended_idx;
+  int **face_face_extended;
+
+  int **edge_edge_extended_idx;
+  int **edge_edge_extended;
+
+  int **vtx_vtx_extended_idx;
+  int **vtx_vtx_extended;
+
+  /* Results */
+  int **border_cell_face_idx;
+  int **border_cell_face;
+
+  int **border_face_edge_idx;
+  int **border_face_edge;
+
+  int **border_face_vtx_idx;
+  int **border_face_vtx;
+
+
 };
 
 #ifdef __cplusplus
