@@ -111,6 +111,17 @@ PDM_part_extension_free
 );
 
 
+int
+PDM_part_extension_get
+(
+ PDM_part_extension_t     *part_ext,
+ int                       i_domain,
+ int                       i_part,
+ PDM_connectivity_type_t   connectivity_type,
+ PDM_g_num_t             **connect,
+ int                     **connect_idx
+);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

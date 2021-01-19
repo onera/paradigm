@@ -44,6 +44,7 @@ struct _pdm_part_extension_t {
 
   int             n_domain;
   const int      *n_part;
+  int            *n_part_idx;
 
   _part_t  **parts;
 
@@ -97,6 +98,9 @@ struct _pdm_part_extension_t {
 
   int **border_face_edge_idx;
   int **border_face_edge;
+
+  int **border_edge_vtx_idx;
+  int **border_edge_vtx;
 
   int **border_face_vtx_idx;
   int **border_face_vtx;

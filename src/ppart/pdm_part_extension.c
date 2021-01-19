@@ -19,6 +19,7 @@
 #include "pdm_unique.h"
 #include "pdm_binary_search.h"
 #include "pdm_order.h"
+#include "pdm_error.h"
 #include "pdm_part_extension.h"
 #include "pdm_part_extension_priv.h"
 #include "pdm_part_connectivity_transform.h"
@@ -1625,9 +1626,12 @@ PDM_part_extension_create
   part_ext->extend_type = extend_type;
   part_ext->depth       = depth;
 
+  part_ext->n_part_idx  = (int * ) malloc( (n_domain + 1) * sizeof(int));
   part_ext->parts = malloc(n_domain * sizeof(_part_t *));
+  part_ext->n_part_idx[0] = 0;
   for(int i_domain = 0; i_domain < n_domain; ++i_domain) {
     part_ext->parts[i_domain] = malloc( n_part[i_domain] * sizeof(_part_t));
+    part_ext->n_part_idx[i_domain+1] = part_ext->n_part_idx[i_domain] + part_ext->n_part[i_domain];
   }
 
   part_ext->neighbor_idx     = NULL;
@@ -1666,6 +1670,9 @@ PDM_part_extension_create
 
   part_ext->border_face_edge_idx          = NULL;
   part_ext->border_face_edge              = NULL;
+
+  part_ext->border_edge_vtx_idx           = NULL;
+  part_ext->border_edge_vtx               = NULL;
 
   part_ext->border_face_vtx_idx           = NULL;
   part_ext->border_face_vtx               = NULL;
@@ -1931,6 +1938,11 @@ PDM_part_extension_free
             free(part_ext->border_face_edge    [i_part+shift_part]);
           }
 
+          if(part_ext->border_edge_vtx_idx != NULL) {
+            free(part_ext->border_edge_vtx_idx[i_part+shift_part]);
+            free(part_ext->border_edge_vtx    [i_part+shift_part]);
+          }
+
           if(part_ext->border_face_vtx_idx != NULL) {
             free(part_ext->border_face_vtx_idx[i_part+shift_part]);
             free(part_ext->border_face_vtx    [i_part+shift_part]);
@@ -1985,11 +1997,17 @@ PDM_part_extension_free
     free(part_ext->border_face_edge);
   }
 
+  if(part_ext->border_edge_vtx_idx != NULL) {
+    free(part_ext->border_edge_vtx_idx);
+    free(part_ext->border_edge_vtx);
+  }
+
   if(part_ext->border_face_vtx_idx != NULL) {
     free(part_ext->border_face_vtx_idx);
     free(part_ext->border_face_vtx);
   }
 
+  free(part_ext->n_part_idx);
 
   for(int i_depth = 0; i_depth < part_ext->depth+1; ++i_depth) {
 
@@ -2047,6 +2065,66 @@ PDM_part_extension_free
   free(part_ext);
 }
 
+
+int
+PDM_part_extension_get
+(
+ PDM_part_extension_t     *part_ext,
+ int                       i_domain,
+ int                       i_part,
+ PDM_connectivity_type_t   connectivity_type,
+ PDM_g_num_t             **connect,
+ int                     **connect_idx
+)
+{
+  int n_entity = -1;
+  int shift_part = part_ext->n_part_idx[i_domain];
+  switch(connectivity_type)
+  {
+    case PDM_CONNECTIVITY_TYPE_CELL_FACE:
+    {
+      int n_cell   = part_ext->parts[i_domain][i_part].n_cell;
+      n_entity     = part_ext->cell_cell_extended_pruned_idx[shift_part+i_part][n_cell];
+      *connect_idx = part_ext->border_cell_face_idx         [shift_part+i_part];
+      *connect     = part_ext->border_cell_face             [shift_part+i_part];
+    }
+    break;
+
+    case PDM_CONNECTIVITY_TYPE_FACE_EDGE:
+    {
+      int n_face   = part_ext->parts[i_domain][i_part].n_face;
+      n_entity     = part_ext->face_face_extended_idx[shift_part+i_part][n_face];
+      *connect_idx = part_ext->border_face_edge_idx  [shift_part+i_part];
+      *connect     = part_ext->border_face_edge      [shift_part+i_part];
+    }
+    break;
+
+    case PDM_CONNECTIVITY_TYPE_FACE_VTX:
+    {
+      int n_face   = part_ext->parts[i_domain][i_part].n_face;
+      n_entity     = part_ext->face_face_extended_idx[shift_part+i_part][n_face];
+      *connect_idx = part_ext->border_face_vtx_idx   [shift_part+i_part];
+      *connect     = part_ext->border_face_vtx       [shift_part+i_part];
+    }
+    break;
+
+    case PDM_CONNECTIVITY_TYPE_EDGE_VTX:
+    {
+      int n_edge   = part_ext->parts[i_domain][i_part].n_edge;
+      n_entity     = part_ext->edge_edge_extended_idx[shift_part+i_part][n_edge];
+      *connect_idx = part_ext->border_edge_vtx_idx   [shift_part+i_part];
+      *connect     = part_ext->border_edge_vtx       [shift_part+i_part];
+    }
+    break;
+
+  default :
+    PDM_error(__FILE__, __LINE__, 0, "Unknown connectivity_type \n");
+    break;
+
+  }
+
+  return n_entity;
+}
 
 #ifdef __cplusplus
 }
