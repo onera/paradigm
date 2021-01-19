@@ -1593,6 +1593,68 @@ _rebuild_connectivity_cell_face
   free(face_ln_to_gn);
 }
 
+
+
+static
+void
+_rebuild_connectivity_face_vtx
+(
+  PDM_part_extension_t *part_ext
+)
+{
+
+  int n_tot_all_domain = 0;
+  int n_part_loc_all_domain = 0;
+  for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
+    n_tot_all_domain      += part_ext->n_tot_part_by_domain[i_domain];
+    n_part_loc_all_domain += part_ext->n_part[i_domain];
+  }
+
+  /* Cell face */
+  int          *n_face        = (int * ) malloc( n_part_loc_all_domain * sizeof(int          ));
+  int          *n_vtx         = (int * ) malloc( n_part_loc_all_domain * sizeof(int          ));
+  int         **face_vtx_idx  = (int **) malloc( n_part_loc_all_domain * sizeof(int         *));
+  int         **face_vtx      = (int **) malloc( n_part_loc_all_domain * sizeof(int         *));
+  PDM_g_num_t **vtx_ln_to_gn  = (int **) malloc( n_part_loc_all_domain * sizeof(PDM_g_num_t *));
+
+  int shift_part = 0;
+  for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
+    for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
+      n_face       [i_part+shift_part] = part_ext->parts[i_domain][i_part].n_face;
+      n_vtx        [i_part+shift_part] = part_ext->parts[i_domain][i_part].n_vtx;
+      face_vtx_idx [i_part+shift_part] = part_ext->parts[i_domain][i_part].face_vtx_idx;
+      face_vtx     [i_part+shift_part] = part_ext->parts[i_domain][i_part].face_vtx;
+      vtx_ln_to_gn [i_part+shift_part] = part_ext->parts[i_domain][i_part].vtx_ln_to_gn;
+    }
+    shift_part += part_ext->n_part[i_domain];
+  }
+
+  // int **border_lface_vtx_idx;
+  // int **border_lface_vtx;
+  // int **face_face_extended_idx;
+  // int **face_face_extended;
+  assert(part_ext->face_face_extended_idx == NULL);
+  assert(part_ext->face_face_extended     == NULL);
+  _rebuild_connectivity(part_ext,
+                        n_face,
+                        n_vtx,
+                        part_ext->face_face_extended_idx,
+                        part_ext->face_face_extended,
+                        face_vtx_idx,
+                        face_vtx,
+                        vtx_ln_to_gn,
+                       &part_ext->border_face_vtx_idx,
+                       &part_ext->border_face_vtx,
+                       &part_ext->vtx_vtx_extended_idx,
+                       &part_ext->vtx_vtx_extended);
+
+  free(n_face      );
+  free(n_vtx       );
+  free(face_vtx_idx);
+  free(face_vtx    );
+  free(vtx_ln_to_gn);
+}
+
 /*=============================================================================
  * Public function definitions
  *============================================================================*/
@@ -1854,6 +1916,10 @@ PDM_part_extension_compute
   }
 
   _rebuild_connectivity_cell_face(part_ext);
+  _rebuild_connectivity_face_vtx(part_ext);
+
+  /* Finalize with vertex */
+
 
 
   printf(" PDM_part_extension_compute end \n");
