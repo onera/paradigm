@@ -404,7 +404,8 @@ int main(int argc, char *argv[])
                                 face_ln_to_gn,
                                 NULL, // edge_ln_to_gn
                                 vtx_ln_to_gn,
-                                face_group_ln_to_gn);
+                                face_group_ln_to_gn,
+                                vtx);
 
     PDM_printf("[%i] n_face_group     : %i\n", i_rank, n_face_group);
     PDM_printf("[%i] n_cell          : %i\n", i_rank, n_cell);

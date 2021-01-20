@@ -101,7 +101,8 @@ PDM_part_extension_set_part
   PDM_g_num_t          *face_ln_to_gn,
   PDM_g_num_t          *edge_ln_to_gn,
   PDM_g_num_t          *vtx_ln_to_gn,
-  PDM_g_num_t          *face_group_ln_to_gn
+  PDM_g_num_t          *face_group_ln_to_gn,
+  double               *vtx_coord
 );
 
 void

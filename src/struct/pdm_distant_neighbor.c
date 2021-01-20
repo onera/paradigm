@@ -220,10 +220,13 @@ const int           *n_entity,
     int *_part_neighbor_idx  = dn->neighbor_idx [i_part];
     int *_part_neighbor_desc = dn->neighbor_desc[i_part];
 
-    // printf("[%i] - n_entity:: %d\n", i_part, n_entity[i_part]);
+    printf("[%i] - n_entity:: %d\n", i_part, n_entity[i_part]);
 
     dn->order       [i_part] = (int *) malloc( _part_neighbor_idx[n_entity[i_part]] * sizeof(int *));
     dn->order_unique[i_part] = (int *) malloc( _part_neighbor_idx[n_entity[i_part]] * sizeof(int *));
+
+    PDM_log_trace_array_int(_part_neighbor_idx , n_entity[i_part], "_part_neighbor_idx::");
+    PDM_log_trace_array_int(_part_neighbor_desc, 3 * _part_neighbor_idx[n_entity[i_part]], "_part_neighbor_desc::");
 
     // Sort
     PDM_order_lnum_s(dn->neighbor_desc[i_part],
@@ -527,7 +530,7 @@ PDM_distant_neighbor_exch
     for (int i = 0; i < s_distributed_data; i++) {
       int i_part = dn->distributed_data[2*i  ];
       int ienty  = dn->distributed_data[2*i+1];
-      // log_trace("send_stride[%d/%d] --> [%d,%d] -> %d \n", idx_send, s_distributed_data, i_part, ienty, send_entity_stride[i_part][ienty]);
+      log_trace("send_stride[%d/%d] --> [%d,%d] -> %d \n", idx_send, s_distributed_data, i_part, ienty, send_entity_stride[i_part][ienty]);
       send_stride[idx_send++] = send_entity_stride[i_part][ienty];
     }
 
