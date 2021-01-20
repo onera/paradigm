@@ -485,6 +485,16 @@ int main(int argc, char *argv[])
 
   PDM_part_extension_compute(part_ext);
 
+  for (int i_part = 0; i_part < n_part; i_part++) {
+
+    double* vtx_coord_extended;
+    int n_vtx_extended = PDM_part_extension_coord_get(part_ext, 0, i_part, &vtx_coord_extended);
+
+    for(int i_vtx = 0; i_vtx < n_vtx_extended; ++i_vtx) {
+      printf("[%i] vtx_coord_extended[%i] = %12.5e %12.5e %12.5e \n", i_part, i_vtx, vtx_coord_extended[3*i_vtx], vtx_coord_extended[3*i_vtx+1], vtx_coord_extended[3*i_vtx+2]);
+    }
+
+  }
 
   PDM_part_extension_free(part_ext);
 

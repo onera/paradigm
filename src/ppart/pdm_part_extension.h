@@ -123,6 +123,15 @@ PDM_part_extension_get
  int                     **connect_idx
 );
 
+int
+PDM_part_extension_coord_get
+(
+ PDM_part_extension_t     *part_ext,
+ int                       i_domain,
+ int                       i_part,
+ double                  **vtx_coord
+);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

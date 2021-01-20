@@ -2267,6 +2267,24 @@ PDM_part_extension_get
   return n_entity;
 }
 
+
+int
+PDM_part_extension_coord_get
+(
+ PDM_part_extension_t     *part_ext,
+ int                       i_domain,
+ int                       i_part,
+ double                  **vtx_coord
+)
+{
+  int shift_part     = part_ext->n_part_idx[i_domain];
+  int n_vtx          = part_ext->parts[i_domain][i_part].n_vtx;
+  int n_vtx_extended = part_ext->vtx_vtx_extended_idx[shift_part+i_part][n_vtx];
+  *vtx_coord = part_ext->border_vtx[shift_part+i_part];
+
+  return n_vtx_extended;
+}
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
