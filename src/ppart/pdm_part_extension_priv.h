@@ -105,6 +105,11 @@ struct _pdm_part_extension_t {
   int **border_face_vtx_idx;
   int **border_face_vtx;
 
+  PDM_g_num_t **border_cell_ln_to_gn;
+  PDM_g_num_t **border_face_ln_to_gn;
+  PDM_g_num_t **border_edge_ln_to_gn;
+  PDM_g_num_t **border_vtx_ln_to_gn;
+
   double **border_vtx;
 
 

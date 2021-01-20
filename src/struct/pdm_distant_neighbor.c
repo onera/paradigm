@@ -530,7 +530,7 @@ PDM_distant_neighbor_exch
     for (int i = 0; i < s_distributed_data; i++) {
       int i_part = dn->distributed_data[2*i  ];
       int ienty  = dn->distributed_data[2*i+1];
-      log_trace("send_stride[%d/%d] --> [%d,%d] -> %d \n", idx_send, s_distributed_data, i_part, ienty, send_entity_stride[i_part][ienty]);
+      // log_trace("send_stride[%d/%d] --> [%d,%d] -> %d \n", idx_send, s_distributed_data, i_part, ienty, send_entity_stride[i_part][ienty]);
       send_stride[idx_send++] = send_entity_stride[i_part][ienty];
     }
 

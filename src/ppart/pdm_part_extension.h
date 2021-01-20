@@ -113,14 +113,25 @@ PDM_part_extension_free
 
 
 int
-PDM_part_extension_get
+PDM_part_extension_connectivity_get
 (
  PDM_part_extension_t     *part_ext,
  int                       i_domain,
  int                       i_part,
  PDM_connectivity_type_t   connectivity_type,
- PDM_g_num_t             **connect,
+ int                     **connect,
  int                     **connect_idx
+ );
+
+
+int
+PDM_part_extension_ln_to_gn_get
+(
+ PDM_part_extension_t     *part_ext,
+ int                       i_domain,
+ int                       i_part,
+ PDM_mesh_entities_t       connectivity_type,
+ PDM_g_num_t             **ln_to_gn
 );
 
 int
