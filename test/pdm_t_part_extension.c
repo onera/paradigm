@@ -490,11 +490,17 @@ int main(int argc, char *argv[])
 
     double* vtx_coord_extended;
     PDM_g_num_t* border_vtx_ln_to_gn;
+    PDM_g_num_t* border_cell_ln_to_gn;
     int n_vtx_extended = PDM_part_extension_coord_get(part_ext, 0, i_part, &vtx_coord_extended);
     int n_vtx_extended2 = PDM_part_extension_ln_to_gn_get(part_ext, 0, i_part, PDM_MESH_ENTITY_VERTEX, &border_vtx_ln_to_gn);
+    int n_cell_extended = PDM_part_extension_ln_to_gn_get(part_ext, 0, i_part, PDM_MESH_ENTITY_CELL, &border_cell_ln_to_gn);
     assert(n_vtx_extended == n_vtx_extended2);
     for(int i_vtx = 0; i_vtx < n_vtx_extended; ++i_vtx) {
       printf("[%i] vtx_coord_extended[%i] = %12.5e %12.5e %12.5e "PDM_FMT_G_NUM" \n", i_part, i_vtx, vtx_coord_extended[3*i_vtx], vtx_coord_extended[3*i_vtx+1], vtx_coord_extended[3*i_vtx+2], border_vtx_ln_to_gn[i_vtx]);
+    }
+
+    for(int i_cell = 0; i_cell < n_cell_extended; ++i_cell) {
+      printf("[%i] border_cell_ln_to_gn[%i] = "PDM_FMT_G_NUM" \n", i_part, i_cell, border_cell_ln_to_gn[i_cell]);
     }
 
   }

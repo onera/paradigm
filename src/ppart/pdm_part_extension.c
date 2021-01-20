@@ -1295,9 +1295,10 @@ _rebuild_connectivity_cell_face_debug
    */
 
   /* Prepare */
-  int         **cell_face_n = (int         **) malloc( n_part_loc_all_domain * sizeof(int         *));
-  PDM_g_num_t **gcell_face  = (PDM_g_num_t **) malloc( n_part_loc_all_domain * sizeof(PDM_g_num_t *));
-  PDM_g_num_t **lcell_face  = (PDM_g_num_t **) malloc( n_part_loc_all_domain * sizeof(PDM_g_num_t *));
+  int         **cell_face_n   = (int         **) malloc( n_part_loc_all_domain * sizeof(int         *));
+  PDM_g_num_t **gcell_face    = (PDM_g_num_t **) malloc( n_part_loc_all_domain * sizeof(PDM_g_num_t *));
+  PDM_g_num_t **lcell_face    = (PDM_g_num_t **) malloc( n_part_loc_all_domain * sizeof(PDM_g_num_t *));
+  PDM_g_num_t **cell_ln_to_gn = (PDM_g_num_t **) malloc( n_part_loc_all_domain * sizeof(PDM_g_num_t *));
   // PDM_g_num_t **cell_flags    = (PDM_g_num_t **) malloc( n_part_loc_all_domain * sizeof(PDM_g_num_t *));
 
   int shift_part = 0;
@@ -1318,6 +1319,7 @@ _rebuild_connectivity_cell_face_debug
 
       PDM_g_num_t* face_ln_to_gn = part_ext->parts[i_domain][i_part].face_ln_to_gn;
 
+      cell_ln_to_gn[i_part+shift_part] = part_ext->parts[i_domain][i_part].cell_ln_to_gn;
 
       for(int i_cell = 0; i_cell < n_cell; ++i_cell) {
         cell_face_n[i_part+shift_part][i_cell] = cell_face_idx[i_cell+1] - cell_face_idx[i_cell];
@@ -1356,7 +1358,18 @@ _rebuild_connectivity_cell_face_debug
                            &border_lcell_face_n,
                 (void ***) &border_lcell_face);
 
+  /* On fait le cell_ln_to_gn par la même occasion */
+  PDM_distant_neighbor_exch(dn,
+                            sizeof(PDM_g_num_t),
+                            PDM_STRIDE_CST,
+                            1,
+                            NULL,
+                 (void **)  cell_ln_to_gn,
+                            NULL,
+                (void ***) &part_ext->border_cell_ln_to_gn);
+
   free(lcell_face);
+  free(cell_ln_to_gn);
 
   /* Post treatment */
   shift_part = 0;
@@ -1595,11 +1608,12 @@ _rebuild_connectivity_cell_face
   }
 
   /* Cell face */
-  int          *n_cell        = (int * ) malloc( n_part_loc_all_domain * sizeof(int          ));
-  int          *n_face        = (int * ) malloc( n_part_loc_all_domain * sizeof(int          ));
-  int         **cell_face_idx = (int **) malloc( n_part_loc_all_domain * sizeof(int         *));
-  int         **cell_face     = (int **) malloc( n_part_loc_all_domain * sizeof(int         *));
-  PDM_g_num_t **face_ln_to_gn = (int **) malloc( n_part_loc_all_domain * sizeof(PDM_g_num_t *));
+  int          *n_cell        = (int         * ) malloc( n_part_loc_all_domain * sizeof(int          ));
+  int          *n_face        = (int         * ) malloc( n_part_loc_all_domain * sizeof(int          ));
+  int         **cell_face_idx = (int         **) malloc( n_part_loc_all_domain * sizeof(int         *));
+  int         **cell_face     = (int         **) malloc( n_part_loc_all_domain * sizeof(int         *));
+  PDM_g_num_t **face_ln_to_gn = (int         **) malloc( n_part_loc_all_domain * sizeof(PDM_g_num_t *));
+  PDM_g_num_t **cell_ln_to_gn = (PDM_g_num_t **) malloc( n_part_loc_all_domain * sizeof(PDM_g_num_t *));
 
   int shift_part = 0;
   for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
@@ -1609,9 +1623,29 @@ _rebuild_connectivity_cell_face
       cell_face_idx[i_part+shift_part] = part_ext->parts[i_domain][i_part].cell_face_idx;
       cell_face    [i_part+shift_part] = part_ext->parts[i_domain][i_part].cell_face;
       face_ln_to_gn[i_part+shift_part] = part_ext->parts[i_domain][i_part].face_ln_to_gn;
+      cell_ln_to_gn[i_part+shift_part] = part_ext->parts[i_domain][i_part].cell_ln_to_gn;
     }
     shift_part += part_ext->n_part[i_domain];
   }
+
+
+  PDM_distant_neighbor_t* dn = PDM_distant_neighbor_create(part_ext->comm,
+                                                           n_part_loc_all_domain,
+                                                           part_ext->n_cell,
+                                                           part_ext->cell_cell_extended_pruned_idx,
+                                                           part_ext->cell_cell_extended_pruned    );
+  assert(part_ext->border_cell_ln_to_gn == NULL);
+  /* On fait le cell_ln_to_gn par la même occasion */
+  PDM_distant_neighbor_exch(dn,
+                            sizeof(PDM_g_num_t),
+                            PDM_STRIDE_CST,
+                            1,
+                            NULL,
+                 (void **)  cell_ln_to_gn,
+                            NULL,
+                (void ***) &part_ext->border_cell_ln_to_gn);
+
+  PDM_distant_neighbor_free(dn);
 
   // int **border_lcell_face_idx;
   // int **border_lcell_face;
@@ -1638,6 +1672,7 @@ _rebuild_connectivity_cell_face
   free(cell_face_idx);
   free(cell_face    );
   free(face_ln_to_gn);
+  free(cell_ln_to_gn);
 }
 
 
