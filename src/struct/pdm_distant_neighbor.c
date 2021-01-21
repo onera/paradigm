@@ -225,8 +225,8 @@ const int           *n_entity,
     dn->order       [i_part] = (int *) malloc( _part_neighbor_idx[n_entity[i_part]] * sizeof(int *));
     dn->order_unique[i_part] = (int *) malloc( _part_neighbor_idx[n_entity[i_part]] * sizeof(int *));
 
-    PDM_log_trace_array_int(_part_neighbor_idx , n_entity[i_part], "_part_neighbor_idx::");
-    PDM_log_trace_array_int(_part_neighbor_desc, 3 * _part_neighbor_idx[n_entity[i_part]], "_part_neighbor_desc::");
+    // PDM_log_trace_array_int(_part_neighbor_idx , n_entity[i_part], "_part_neighbor_idx::");
+    // PDM_log_trace_array_int(_part_neighbor_desc, 3 * _part_neighbor_idx[n_entity[i_part]], "_part_neighbor_desc::");
 
     // Sort
     PDM_order_lnum_s(dn->neighbor_desc[i_part],

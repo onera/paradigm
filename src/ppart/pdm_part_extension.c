@@ -1783,7 +1783,7 @@ _rebuild_face_group
       }
 
       for(int i_group = 0; i_group < n_face_group; ++i_group) {
-        printf("_pface_group_idx[%i] = %i --> %i \n", i_group, _pface_group_idx[i_group], _pface_group_idx[i_group+1]);
+        // printf("_pface_group_idx[%i] = %i --> %i \n", i_group, _pface_group_idx[i_group], _pface_group_idx[i_group+1]);
         for(int idx_face = _pface_group_idx[i_group]; idx_face < _pface_group_idx[i_group+1]; ++idx_face) {
           int i_face = _pface_group[idx_face];
           face_group_n[i_part+shift_part][i_face-1]++;
@@ -1792,7 +1792,7 @@ _rebuild_face_group
 
       face_group_idx[0] = 0;
       for(int i_face = 0; i_face < pn_face; ++i_face) {
-        printf(" face_group_n[%i] = %i \n", i_face, face_group_n[i_part+shift_part][i_face]);
+        // printf(" face_group_n[%i] = %i \n", i_face, face_group_n[i_part+shift_part][i_face]);
         face_group_idx[i_face+1] = face_group_idx[i_face] + face_group_n[i_part+shift_part][i_face];
         face_group_n[i_part+shift_part][i_face] = 0;
       }
@@ -1805,7 +1805,7 @@ _rebuild_face_group
       int* _face_group_ln_to_gn = face_group_ln_to_gn[i_part+shift_part];
       int* _face_ln_to_gn_check = face_ln_to_gn_check[i_part+shift_part];
 
-      PDM_log_trace_array_long(_pface_ln_to_gn, pn_face, "_pface_ln_to_gn::");
+      // PDM_log_trace_array_long(_pface_ln_to_gn, pn_face, "_pface_ln_to_gn::");
 
       for(int i_group = 0; i_group < n_face_group; ++i_group) {
         for(int idx_face = _pface_group_idx[i_group]; idx_face < _pface_group_idx[i_group+1]; ++idx_face) {
@@ -1813,7 +1813,7 @@ _rebuild_face_group
           int idx_write = face_group_idx[i_face-1] + face_group_n[i_part+shift_part][i_face-1]++;
           _face_group_idg     [idx_write] = i_group;
           _face_group_ln_to_gn[idx_write] = _pface_group_ln_to_gn[idx_face];
-          printf("[%i] _face_ln_to_gn_check[%i] = %i \n", i_part+shift_part, idx_write, (int)_pface_ln_to_gn[i_face-1]);
+          // printf("[%i] _face_ln_to_gn_check[%i] = %i \n", i_part+shift_part, idx_write, (int)_pface_ln_to_gn[i_face-1]);
           _face_ln_to_gn_check[idx_write] = _pface_ln_to_gn[i_face-1];
         }
       }
@@ -1900,7 +1900,7 @@ _rebuild_face_group
         _pborder_face_group_idx[i_group+1] += _pborder_face_group_idx[i_group];
       }
 
-      printf(" _pborder_face_group_idx[%i] = %i\n", n_face_group, _pborder_face_group_idx[n_face_group]);
+      // printf(" _pborder_face_group_idx[%i] = %i\n", n_face_group, _pborder_face_group_idx[n_face_group]);
 
       part_ext->border_face_group         [shift_part+i_part] = malloc( _pborder_face_group_idx[n_face_group] * sizeof(int        ));
       part_ext->border_face_group_ln_to_gn[shift_part+i_part] = malloc( _pborder_face_group_idx[n_face_group] * sizeof(PDM_g_num_t));
@@ -1913,20 +1913,23 @@ _rebuild_face_group
         pborder_face_group_n[i_group] = 0;
       }
 
-      PDM_log_trace_array_long(part_ext->border_face_ln_to_gn[shift_part+i_part], n_face_border, "border_face_ln_to_gn::");
+      // PDM_log_trace_array_long(part_ext->border_face_ln_to_gn[shift_part+i_part], n_face_border, "border_face_ln_to_gn::");
 
       idx = 0;
       for(int i = 0; i < n_face_border; ++i) {
         for(int j = 0; j < border_face_group_idg_n[shift_part+i_part][i]; ++j) {
           int i_group = border_face_group_idg[shift_part+i_part][idx];
           int idx_write = _pborder_face_group_idx[i_group] + pborder_face_group_n[i_group]++;
-          _pborder_face_group[idx_write] = pn_face+idx;
+          // _pborder_face_group         [idx_write] = pn_face+idx; // NON car si on a plusieurs group
+          _pborder_face_group         [idx_write] = pn_face+i;
+          _pborder_face_group_ln_to_gn[idx_write] = border_face_group_ln_to_gn[shift_part+i_part][idx];
 
           PDM_g_num_t g_num_face = border_face_ln_to_gn_check[shift_part+i_part][idx];
           int pos = PDM_binary_search_long(g_num_face, part_ext->border_face_ln_to_gn[shift_part+i_part], n_face_border);
-          printf("Find "PDM_FMT_G_NUM" pos = %i\n", g_num_face, pos);
-          printf(" check_ln_to_gn[%i] = "PDM_FMT_G_NUM" | "PDM_FMT_G_NUM" \n", idx, g_num_face, part_ext->border_face_ln_to_gn[shift_part+i_part][pos] );
 
+          assert(g_num_face == part_ext->border_face_ln_to_gn[shift_part+i_part][pos]);
+          // printf("Find "PDM_FMT_G_NUM" pos = %i\n", g_num_face, pos);
+          // printf(" check_ln_to_gn[%i] = "PDM_FMT_G_NUM" | "PDM_FMT_G_NUM" \n", idx, g_num_face, part_ext->border_face_ln_to_gn[shift_part+i_part][pos] );
           idx++;
         }
       }
