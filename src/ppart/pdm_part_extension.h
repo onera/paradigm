@@ -81,6 +81,7 @@ PDM_part_extension_set_part
   int                   n_cell,
   int                   n_face,
   int                   n_face_part_bound,
+  int                   n_face_group,
   int                   n_vtx,
   int                  *cell_face_idx,
   int                  *cell_face,

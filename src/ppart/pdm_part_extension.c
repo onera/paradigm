@@ -1762,12 +1762,11 @@ _rebuild_face_group
       int* _pface_group_idx = part_ext->parts[i_domain][i_part].face_bound_idx;
       int* _pface_group     = part_ext->parts[i_domain][i_part].face_bound;
 
-      PDM_g_num_t* _pface_group_ln_to_gn = part_ext->parts[i_domain][i_part].face_bound_ln_to_gn;
+      PDM_g_num_t* _pface_group_ln_to_gn = part_ext->parts[i_domain][i_part].face_group_ln_to_gn;
       PDM_g_num_t* _pface_ln_to_gn       = part_ext->parts[i_domain][i_part].face_ln_to_gn;
 
       /* Creation d'un champs de face contenant les id de group */
-      int n_face_group = part_ext->parts[i_domain][i_part].n_face_part_bound;
-      // int n_face_group = part_ext->parts[i_domain][i_part].n_face_group;
+      int n_face_group = part_ext->parts[i_domain][i_part].n_face_group;
       int pn_face      = part_ext->parts[i_domain][i_part].n_face;
 
       int* face_group_idx = malloc( ( pn_face + 1 ) * sizeof(int));
@@ -1800,16 +1799,18 @@ _rebuild_face_group
       int* _face_group_ln_to_gn = face_group_ln_to_gn[i_part+shift_part];
       int* _face_ln_to_gn_check = face_ln_to_gn_check[i_part+shift_part];
 
+      PDM_log_trace_array_long(_pface_ln_to_gn, pn_face, "_pface_ln_to_gn::");
+
       for(int i_group = 0; i_group < n_face_group; ++i_group) {
         for(int idx_face = _pface_group_idx[i_group]; idx_face < _pface_group_idx[i_group+1]; ++idx_face) {
           int i_face    = _pface_group[idx_face];
           int idx_write = face_group_idx[i_face-1] + face_group_n[i_part+shift_part][i_face-1]++;
           _face_group_idg     [idx_write] = i_group;
           _face_group_ln_to_gn[idx_write] = _pface_group_ln_to_gn[idx_face];
+          printf("[%i] _face_ln_to_gn_check[%i] = %i \n", i_part+shift_part, idx_write, (int)_pface_ln_to_gn[i_face-1]);
           _face_ln_to_gn_check[idx_write] = _pface_ln_to_gn[i_face-1];
         }
       }
-
 
       free(face_group_idx);
     }
@@ -1858,6 +1859,76 @@ _rebuild_face_group
 
   PDM_distant_neighbor_free(dn);
 
+  /* Post treatment */
+  // TODO MANAGEMENT of multiple domain
+  assert(part_ext->n_domain == 1);
+
+  part_ext->border_face_group_idx      = malloc( n_part_loc_all_domain * sizeof(int         *));
+  part_ext->border_face_group          = malloc( n_part_loc_all_domain * sizeof(int         *));
+  part_ext->border_face_group_ln_to_gn = malloc( n_part_loc_all_domain * sizeof(PDM_g_num_t *));
+
+  shift_part = 0;
+  for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
+    for(int i_part = 0; i_part < part_ext->n_part[i_domain]; ++i_part) {
+      int pn_face = part_ext->parts[i_domain][i_part].n_face;
+      int n_face_border = part_ext->face_face_extended_idx[shift_part+i_part][pn_face];
+
+      // En tout rigeur le nombre de group peut être different entre 2 domaines
+      int n_face_group = part_ext->parts[i_domain][i_part].n_face_group;
+      part_ext->border_face_group_idx[shift_part+i_part] = malloc( (n_face_group+1) * sizeof(int));
+      int *_pborder_face_group_idx = part_ext->border_face_group_idx[shift_part+i_part];
+
+      for(int i_group = 0; i_group < n_face_group+1; ++i_group) {
+        _pborder_face_group_idx[i_group] = 0;
+      }
+
+      int idx = 0;
+      for(int i = 0; i < n_face_border; ++i) {
+        for(int j = 0; j < border_face_group_idg_n[shift_part+i_part][i]; ++j) {
+          int i_group = border_face_group_idg[shift_part+i_part][idx++];
+          _pborder_face_group_idx[i_group+1]++;
+        }
+      }
+
+      for(int i_group = 1; i_group < n_face_group; ++i_group) {
+        _pborder_face_group_idx[i_group+1] += _pborder_face_group_idx[i_group];
+      }
+
+      printf(" _pborder_face_group_idx[%i] = %i\n", n_face_group, _pborder_face_group_idx[n_face_group]);
+
+      part_ext->border_face_group         [shift_part+i_part] = malloc( _pborder_face_group_idx[n_face_group] * sizeof(int        ));
+      part_ext->border_face_group_ln_to_gn[shift_part+i_part] = malloc( _pborder_face_group_idx[n_face_group] * sizeof(PDM_g_num_t));
+
+      int         *_pborder_face_group          = part_ext->border_face_group         [shift_part+i_part];
+      PDM_g_num_t *_pborder_face_group_ln_to_gn = part_ext->border_face_group_ln_to_gn[shift_part+i_part];
+
+      int* pborder_face_group_n = (int *) malloc( n_face_group * sizeof(int) );
+      for(int i_group = 0; i_group < n_face_group; ++i_group) {
+        pborder_face_group_n[i_group] = 0;
+      }
+
+      PDM_log_trace_array_long(part_ext->border_face_ln_to_gn[shift_part+i_part], n_face_border, "border_face_ln_to_gn::");
+
+      idx = 0;
+      for(int i = 0; i < n_face_border; ++i) {
+        for(int j = 0; j < border_face_group_idg_n[shift_part+i_part][i]; ++j) {
+          int i_group = border_face_group_idg[shift_part+i_part][idx];
+          int idx_write = _pborder_face_group_idx[i_group] + pborder_face_group_n[i_group]++;
+          _pborder_face_group[idx_write] = pn_face+idx;
+
+          PDM_g_num_t g_num_face = border_face_ln_to_gn_check[shift_part+i_part][idx];
+          int pos = PDM_binary_search_long(g_num_face, part_ext->border_face_ln_to_gn[shift_part+i_part], n_face_border);
+          printf("Find "PDM_FMT_G_NUM" pos = %i\n", g_num_face, pos);
+          printf(" check_ln_to_gn[%i] = "PDM_FMT_G_NUM" | "PDM_FMT_G_NUM" \n", idx, g_num_face, part_ext->border_face_ln_to_gn[shift_part+i_part][pos] );
+
+          idx++;
+        }
+      }
+
+      free(pborder_face_group_n);
+    }
+    shift_part += part_ext->n_part[i_domain];
+  }
 
   for(int i = 0; i < n_part_loc_all_domain; ++i) {
     free(border_face_group_idg_n[i]);
@@ -1995,6 +2066,7 @@ PDM_part_extension_set_part
   int                   n_cell,
   int                   n_face,
   int                   n_face_part_bound,
+  int                   n_face_group,
   int                   n_vtx,
   int                  *cell_face_idx,
   int                  *cell_face,
@@ -2023,6 +2095,7 @@ PDM_part_extension_set_part
   part_ext->parts[i_domain][i_part].n_cell            = n_cell;
   part_ext->parts[i_domain][i_part].n_face            = n_face;
   part_ext->parts[i_domain][i_part].n_face_part_bound = n_face_part_bound;
+  part_ext->parts[i_domain][i_part].n_face_group      = n_face_group;
   part_ext->parts[i_domain][i_part].n_vtx             = n_vtx;
 
   part_ext->parts[i_domain][i_part].cell_face_idx = cell_face_idx;
@@ -2049,6 +2122,8 @@ PDM_part_extension_set_part
   part_ext->parts[i_domain][i_part].face_bound_idx      = face_bound_idx;
   part_ext->parts[i_domain][i_part].face_bound          = face_bound;
   part_ext->parts[i_domain][i_part].face_bound_ln_to_gn = face_group_ln_to_gn;
+
+  part_ext->parts[i_domain][i_part].face_group_ln_to_gn = face_group_ln_to_gn;
 
   part_ext->parts[i_domain][i_part].face_join_idx       = face_join_idx;
   part_ext->parts[i_domain][i_part].face_join           = face_join;
@@ -2205,7 +2280,7 @@ PDM_part_extension_compute
   printf(" PDM_part_extension_compute end \n");
 
   /* Condition limite - Face uniquement pour l'instant */
-  _rebuild_face_group(part_ext);
+  // _rebuild_face_group(part_ext);
 
 }
 

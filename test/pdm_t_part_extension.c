@@ -385,6 +385,7 @@ int main(int argc, char *argv[])
                                 n_cell,
                                 n_face,
                                 n_face_part_bound,
+                                n_face_group,
                                 n_vtx,
                                 cell_face_idx,
                                 cell_face,

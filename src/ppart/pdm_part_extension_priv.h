@@ -105,6 +105,7 @@ struct _pdm_part_extension_t {
   int **border_face_vtx_idx;
   int **border_face_vtx;
 
+  // int  *n_face_group;
   int **border_face_group_idx;
   int **border_face_group;
 
