@@ -1143,33 +1143,33 @@ _generate_extended_partition_connectivity
     int pos = PDM_binary_search_long(g_entity2, _sorted_entity2_ln_to_gn, n_entity2);
     if(pos == -1) {
       entity2_extended_gnum[n_entity2_extended++] = g_entity2;
-    // printf(" [%i] found [%i] = %i\n", i_part+shift_part, i_entity2, pos);
+      // printf(" [%i] found [%i] = %i\n", i_part+shift_part, i_entity2, pos);
 
-    _entity2_entity2_extended_idx[1]++;
+      _entity2_entity2_extended_idx[1]++;
 
-    int old_entity1_order = border_entity1_order[i_entity2];
-    // int old_entity2_order = border_order        [i_entity2];
+      int old_entity1_order = border_entity1_order[i_entity2];
+      // int old_entity2_order = border_order        [i_entity2];
 
-    int opp_proc    = entity1_entity1_extended[3*old_entity1_order  ];
-    int opp_part    = entity1_entity1_extended[3*old_entity1_order+1];
-    // int opp_entity1 = entity1_entity1_extended[3*old_entity1_order+2];
+      int opp_proc    = entity1_entity1_extended[3*old_entity1_order  ];
+      int opp_part    = entity1_entity1_extended[3*old_entity1_order+1];
+      // int opp_entity1 = entity1_entity1_extended[3*old_entity1_order+2];
 
-    int pos_first_unique = border_entity2_first_unique[i_entity2];
-    int old_order        = border_order[pos_first_unique];
-    // int gopp_entity2     = border_gentity1_entity2[old_order];
-    int opp_entity2      = border_lentity1_entity2[old_order];;
+      int pos_first_unique = border_entity2_first_unique[i_entity2];
+      int old_order        = border_order[pos_first_unique];
+      // int gopp_entity2     = border_gentity1_entity2[old_order];
+      int opp_entity2      = border_lentity1_entity2[old_order];;
 
-    // printf(" border_gentity1_entity2[%i] = %i for g_entity2 = %i \n", old_order, border_gentity1_entity2[old_order], g_entity2);
+      // printf(" border_gentity1_entity2[%i] = %i for g_entity2 = %i \n", old_order, border_gentity1_entity2[old_order], g_entity2);
 
-    // printf(" old_entity1_order = %i | old_entity2_order = %i | new_entity2 = %i \n", old_entity1_order, old_entity2_order, new_entity2);
-    // printf(" [pos = %i] [opp_proc = %i | opp_part = %i | opp_entity1 = %i | opp_entity2 = %i] | g_entity2 = %i | gopp_entity2 = %i\n", pos, opp_proc, opp_part, opp_entity1, PDM_ABS(opp_entity2), (int)g_entity2, gopp_entity2);
-    // printf(" pos_first_unique = %i | old_order = %i | g_num = %i | g_num_check = %i \n",
-    //        pos_first_unique, old_order, g_entity2, gopp_entity2);
+      // printf(" old_entity1_order = %i | old_entity2_order = %i | new_entity2 = %i \n", old_entity1_order, old_entity2_order, new_entity2);
+      // printf(" [pos = %i] [opp_proc = %i | opp_part = %i | opp_entity1 = %i | opp_entity2 = %i] | g_entity2 = %i | gopp_entity2 = %i\n", pos, opp_proc, opp_part, opp_entity1, PDM_ABS(opp_entity2), (int)g_entity2, gopp_entity2);
+      // printf(" pos_first_unique = %i | old_order = %i | g_num = %i | g_num_check = %i \n",
+      //        pos_first_unique, old_order, g_entity2, gopp_entity2);
 
-    _entity2_entity2_extended[3*idx_write  ] = opp_proc;
-    _entity2_entity2_extended[3*idx_write+1] = opp_part;
-    _entity2_entity2_extended[3*idx_write+2] = PDM_ABS(opp_entity2)-1;
-    idx_write++;
+      _entity2_entity2_extended[3*idx_write  ] = opp_proc;
+      _entity2_entity2_extended[3*idx_write+1] = opp_part;
+      _entity2_entity2_extended[3*idx_write+2] = PDM_ABS(opp_entity2)-1;
+      idx_write++;
     }
 
   }
@@ -1244,6 +1244,12 @@ _generate_extended_partition_connectivity
   }
   // exit(1);
 
+  // Mise à jour
+  _border_entity2_ln_to_gn = realloc(_border_entity2_ln_to_gn, n_entity2_extended * sizeof(PDM_g_num_t));
+  *border_entity2_ln_to_gn = _border_entity2_ln_to_gn;
+  for(int i = 0; i < n_entity2_extended; ++i){
+    _border_entity2_ln_to_gn[i] = entity2_extended_gnum[i];
+  }
 
   /*
    * Free
@@ -2280,7 +2286,7 @@ PDM_part_extension_compute
   printf(" PDM_part_extension_compute end \n");
 
   /* Condition limite - Face uniquement pour l'instant */
-  // _rebuild_face_group(part_ext);
+  _rebuild_face_group(part_ext);
 
 }
 
