@@ -21,7 +21,7 @@ program testf
 
   use pdm
   use mpi
-  use pdm_dcube
+  use pdm_dcube_gen
   use iso_c_binding
   use pdm_fortran
 
