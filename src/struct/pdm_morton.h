@@ -490,6 +490,21 @@ PDM_morton_intersect_box
  size_t                  *n_intersect,
  int                     *intersect
  );
+
+
+void
+PDM_morton_closest_node
+(
+ const int                dim,
+ const PDM_morton_code_t  node,
+ const PDM_morton_code_t  nodes[],
+ const double             point[],
+ const double             d[],
+ const size_t             start,
+ const size_t             end,
+ int                     *closest_node,
+ double                  *closest_dist2
+ );
 /*----------------------------------------------------------------------------*/
 
 #ifdef __cplusplus

@@ -2263,6 +2263,138 @@ PDM_morton_intersect_box
   }
 }
 
+
+
+
+inline static double
+_min_dist2
+(
+ const int               dim,
+ const PDM_morton_code_t node,
+ const double            point[],
+ const double            d[]
+ )
+{
+  double min_dist2 = 0.;
+  double delta, xmin, xmax;
+  double side = 1. / ((double) (1 << node.L));
+
+  for (int i = 0; i < dim; i++) {
+    xmin = side * node.X[i];
+    xmax = xmin + side;
+
+    if (point[i] > xmax) {
+      delta = d[i] * (point[i] - xmax);
+      min_dist2 += delta * delta;
+    } else if (point[i] < xmin) {
+      delta = d[i] * (point[i] - xmin);
+      min_dist2 += delta * delta;
+    }
+  }
+
+  return min_dist2;
+}
+
+
+
+void
+PDM_morton_closest_node
+(
+ const int                dim,
+ const PDM_morton_code_t  node,
+ const PDM_morton_code_t  nodes[],
+ const double             point[],
+ const double             d[],
+ const size_t             start,
+ const size_t             end,
+ int                     *closest_node,
+ double                  *closest_dist2
+ )
+{
+  /* If current range contains few octants, go brute force */
+  if (end - start < N_BRUTE_FORCE) {
+
+    for (size_t i = start; i < end; i++) {
+      double dist2 = _min_dist2 (dim,
+                                 nodes[i],
+                                 point,
+                                 d);
+      if (dist2 < *closest_dist2) {
+        *closest_dist2 = dist2;
+        *closest_node = i;
+      }
+    }
+    return;
+  }
+
+  else {
+    double dist2 = _min_dist2 (dim,
+                               node,
+                               point,
+                               d);
+    if (dist2 < *closest_dist2) {
+      /* Inspect children of current node */
+      const size_t n_children = 1 << dim;
+      PDM_morton_code_t children[8];
+      PDM_morton_get_children (dim,
+                               node,
+                               children);
+
+      size_t new_start, new_end;
+      size_t prev_end = start;
+      for (size_t ichild = 0; ichild < n_children; ichild++) {
+        /* get start and end of range in list of nodes covered by current child */
+          /* new_start <-- first descendant of child in list */
+          new_start = prev_end; // end of previous child's range
+          // linear search
+          while (new_start < end) {
+            if (PDM_morton_ancestor_is (children[ichild], nodes[new_start])) {
+              break;
+            } else if (_a_gt_b(nodes[new_start], children[ichild])) {
+              /* all the following nodes are clearly not descendants of current child */
+              new_start = end+1;
+              break;
+            }
+            new_start++;
+          }
+
+          if (new_start > end) {
+            /* no need to go further for that child
+               because it has no descendants in the node list */
+            continue;
+          }
+
+          /* new_end <-- next of last descendant of child in list */
+          size_t l = new_start;
+          new_end = end;
+          while (new_end > l + 1) {
+            size_t m = l + (new_end - l) / 2;
+            if (PDM_morton_ancestor_is (children[ichild], nodes[m])) {
+              l = m;
+            } else {
+              new_end = m;
+            }
+          }
+
+          prev_end = new_end;
+
+          /* Carry on recursion */
+          PDM_morton_closest_node (dim,
+                                   children[ichild],
+                                   nodes,
+                                   point,
+                                   d,
+                                   new_start,
+                                   new_end,
+                                   closest_node,
+                                   closest_dist2);
+
+      } // End loop children
+    }
+  }
+}
+
+
 /*----------------------------------------------------------------------------*/
 
 #ifdef __cplusplus
