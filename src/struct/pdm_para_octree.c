@@ -8547,12 +8547,12 @@ _pt_to_pt_dist2_normalized
 static void
 _single_closest_point_local
 (
- const _octree_t  *octree,
- const int         n_tgt,
- double           *tgt_coord,
- int              *start_leaf,
- PDM_g_num_t      *closest_point_g_num,
- double           *closest_point_dist2
+ const _octree_t   *octree,
+ const int          n_tgt,
+ double            *tgt_coord,
+ PDM_morton_code_t *tgt_mcode,
+ PDM_g_num_t       *closest_point_g_num,
+ double            *closest_point_dist2
  )
 {
   const _l_octant_t *octants = octree->octants;
@@ -8562,6 +8562,8 @@ _single_closest_point_local
   PDM_MPI_Comm_rank (octree->comm, &i_rank);
   PDM_MPI_Comm_size (octree->comm, &n_rank);
 
+  int is_base_rank = (tgt_mcode != NULL);
+
 
   int *is_visited     = malloc (sizeof(int) * octants->n_nodes);
   int *visited_leaves = malloc (sizeof(int) * octants->n_nodes);// could be smaller...
@@ -8570,64 +8572,80 @@ _single_closest_point_local
     is_visited[i] = 0;
   }
 
+
+
   /* Min heap used to visit leaves from neighbour to neighbour */
   _min_heap_t *leaf_heap = _min_heap_create (octants->n_nodes);
   PDM_g_num_t unused;
 
 
   double ptn[3];
+  /* Loop over target points */
   for (int i_tgt = 0; i_tgt < n_tgt; i_tgt++) {
-    /* Reset priority queue */
+    // Reset priority queue
     _min_heap_reset (leaf_heap);
 
+    // Init
+    for (int i = 0; i < n_visited; i++) {
+      is_visited[visited_leaves[i]] = 0;
+    }
+    n_visited = 0;
+
+    // Normalize coordinates
     for (int i_dim = 0; i_dim < dim; i_dim++) {
       ptn[i_dim] = (tgt_coord[dim*i_tgt + i_dim] - octree->s[i_dim]) / octree->d[i_dim];
     }
 
-    int start_i = start_leaf[i_tgt];
-    double start_dist2;
+    // Get start leaves
+    int base_part = -1;
+    if (is_base_rank) {
+      int base_leaf = PDM_morton_binary_search (octants->n_nodes,
+                                                tgt_mcode[i_tgt],
+                                                octants->codes);
+      _min_heap_push (leaf_heap,
+                      base_leaf,
+                      0,
+                      0.);
+      is_visited[base_leaf] = 1;
+      visited_leaves[n_visited++] = base_leaf;
 
-    if (start_i < 0) {
-      /* Find closest octant in each connected part and start from there */
-      for (int i_part = 0; i_part < octree->n_connected; i_part++) {
-        /* Deepest common ancestor of all octants in current part */
-        PDM_morton_code_t part_root;
-        PDM_morton_nearest_common_ancestor (octants->codes[octree->connected_idx[i_part]],
-                                            octants->codes[octree->connected_idx[i_part+1]-1],
-                                            &part_root);
+      base_part = _get_octant_part_id (octree, base_leaf);
+    }
 
-        start_dist2 = HUGE_VAL;
-        PDM_morton_closest_node (dim,
-                                 part_root,
-                                 octants->codes,
-                                 ptn,
-                                 octree->d,
-                                 octree->connected_idx[i_part],
-                                 octree->connected_idx[i_part+1],
-                                 &start_i,
-                                 &start_dist2);
+    // Find closest leaf in each connected part and push them into the priority queue
+    for (int i_part = 0; i_part < octree->n_connected; i_part++) {
+      if (i_part == base_part) continue;
+
+      // Deepest common ancestor of all octants in current part
+      PDM_morton_code_t part_root;
+      PDM_morton_nearest_common_ancestor (octants->codes[octree->connected_idx[i_part]],
+                                          octants->codes[octree->connected_idx[i_part+1]-1],
+                                          &part_root);
+
+      int start_i;
+      double start_dist2 = HUGE_VAL;
+      PDM_morton_closest_node (dim,
+                               part_root,
+                               octants->codes,
+                               ptn,
+                               octree->d,
+                               octree->connected_idx[i_part],
+                               octree->connected_idx[i_part+1],
+                               &start_i,
+                               &start_dist2);
+
+      if (start_dist2 < closest_point_dist2[i_tgt]) {
+        _min_heap_push (leaf_heap,
+                        start_i,
+                        0,
+                        start_dist2);
+        is_visited[start_i] = 1;
+        visited_leaves[n_visited++] = start_i;
       }
     }
 
-    else {
-      start_dist2 = _octant_min_dist2_normalized (dim,
-                                                  octants->codes[start_i],
-                                                  octree->d,
-                                                  ptn);
-    }
 
-    /* Push start leaf into priority queue */
-    if (start_i >= 0 && start_dist2 < closest_point_dist2[i_tgt]) {
-      _min_heap_push (leaf_heap,
-                      start_i,
-                      0,
-                      start_dist2);
-      is_visited[start_i] = 1;
-      visited_leaves[n_visited++] = start_i;
-    }
-
-
-    /* Visit octree leaves from neighbour to neighbour using priority queue */
+    // Visit octree leaves from neighbour to neighbour using priority queue
     int leaf_i;
     double leaf_dist2;
 
@@ -8678,15 +8696,20 @@ _single_closest_point_local
                               0,
                               ngb_dist2);
             }
-          }
+          } // end if local neighbour
 
         } // end loop on neighbours in current direction
       } // end loop on directions
 
-    }
-
+    } // end while heap not empty
 
   } // end loop on target points
+
+
+  free (is_visited);
+  free (visited_leaves);
+
+  _min_heap_free (leaf_heap);
 }
 
 /**
@@ -8724,17 +8747,6 @@ PDM_para_octree_single_closest_point
   int i_rank, n_rank;
   PDM_MPI_Comm_rank (octree->comm, &i_rank);
   PDM_MPI_Comm_size (octree->comm, &n_rank);
-
-  /********************************************
-   * Initialize closest point arrays
-   ********************************************/
-  /*
-  for (int i = 0; i < n_pts; i++) {
-    closest_octree_pt_g_num[i] = -1;
-    closest_octree_pt_dist2[i] = HUGE_VAL;
-  }
-  */
-
 
   /* Part-to-block create (only to get block distribution) */
   int _n_pts = n_pts;
@@ -8880,14 +8892,9 @@ PDM_para_octree_single_closest_point
         }
       }
 
-
-      /* Leaf containing current target point */
-      start_leaf[i] = PDM_morton_binary_search (octants->n_nodes,
-                                                pts_code[i],
-                                                octants->codes);
     }
-    printf ("[%d] 1st guess for pt ("PDM_FMT_G_NUM") : ("PDM_FMT_G_NUM") at dist2 = %f\n",
-              i_rank, recv_g_num[i], _closest_pt_g_num[i], _closest_pt_dist2[i]);
+    /*printf ("[%d] 1st guess for pt ("PDM_FMT_G_NUM") : ("PDM_FMT_G_NUM") at dist2 = %f\n",
+      i_rank, recv_g_num[i], _closest_pt_g_num[i], _closest_pt_dist2[i]);*/
   }
   free (pts_code);
 
@@ -8897,11 +8904,9 @@ PDM_para_octree_single_closest_point
   _single_closest_point_local (octree,
                                n_recv_pts,
                                recv_coord,
-                               start_leaf,
+                               pts_code,
                                _closest_pt_g_num,
                                _closest_pt_dist2);
-  free (start_leaf);
-
 
   //-->>
   int *close_ranks_idx = malloc (sizeof(int) * (n_recv_pts + 1));
@@ -8942,10 +8947,11 @@ PDM_para_octree_single_closest_point
   }
   close_ranks = realloc (close_ranks, sizeof(int) * close_ranks_idx[n_recv_pts]);
 
+  //-->> stats
   double avg_close_ranks = 0;
   if (n_recv_pts > 0) avg_close_ranks = (double) close_ranks_idx[n_recv_pts] / (double) n_recv_pts;
   printf("[%d] avg nb of close_ranks per pt = %f\n", i_rank, avg_close_ranks);
-
+  //<<--
 
   for (int i = 0; i < n_rank; i++) {
     send_count[i] = 0;
@@ -8969,11 +8975,14 @@ PDM_para_octree_single_closest_point
 
   send_g_num = realloc (send_g_num, sizeof(PDM_g_num_t) * send_shift[n_rank]);
   send_coord = realloc (send_coord, sizeof(double)      * send_shift[n_rank]*dim);
+  double *send_closest_pt_dist2 = malloc (sizeof(double) * send_shift[n_rank]);
+
   for (int i = 0; i < n_recv_pts; i++) {
     for (int j = close_ranks_idx[i]; j < close_ranks_idx[i+1]; j++) {
       int rank = close_ranks[j];
       int k = send_shift[rank] + send_count[rank];
       send_g_num[k] = recv_g_num[i];
+      send_closest_pt_dist2[k] = _closest_pt_dist2[i];
       for (int l = 0; l < dim; l++) {
         send_coord[dim*k+l] = recv_coord[dim*i+l];
       }
@@ -8985,7 +8994,7 @@ PDM_para_octree_single_closest_point
 
   /*recv_g_num = realloc (recv_g_num, sizeof(PDM_g_num_t) * recv_shift[n_rank]);
   recv_coord = realloc (recv_coord, sizeof(double)      * recv_shift[n_rank]*dim);
-
+  double *recv_closest_pt_dist2 = malloc (sizeof(double) * recv_shift[n_rank]);
   PDM_MPI_Alltoallv (send_g_num, send_count, send_shift, PDM__PDM_MPI_G_NUM,
                      recv_g_num, recv_count, recv_shift, PDM__PDM_MPI_G_NUM,
                      octree->comm);
@@ -9000,6 +9009,14 @@ PDM_para_octree_single_closest_point
   PDM_MPI_Alltoallv (send_coord, send_count, send_shift, PDM_MPI_DOUBLE,
                      recv_coord, recv_count, recv_shift, PDM_MPI_DOUBLE,
                      octree->comm);*/
+
+
+  /*_single_closest_point_local (octree,
+                               n_recv_pts,
+                               recv_coord,
+                               NULL,
+                               _closest_pt_g_num,
+                               _closest_pt_dist2);*/
   //<<--
 
 
