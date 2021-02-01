@@ -748,11 +748,11 @@ int main(int argc, char *argv[])
     PDM_g_num_t true_closest_src_g_num;
     double      true_closest_src_dist2 = HUGE_VAL;
     for (int k = ijk_lo[2]; k < ijk_hi[2]; k++) {
-      cell_ctr[2] = (k + 0.5) * cell_side;
+      cell_ctr[2] = (k + 0.5) * cell_side + origin[2];
       for (int j = ijk_lo[1]; j < ijk_hi[1]; j++) {
-        cell_ctr[1] = (j + 0.5) * cell_side;
+        cell_ctr[1] = (j + 0.5) * cell_side + origin[1];
         for (int i = ijk_lo[0]; i < ijk_hi[0]; i++) {
-          cell_ctr[0] = (i + 0.5) * cell_side;
+          cell_ctr[0] = (i + 0.5) * cell_side + origin[0];
 
           PDM_g_num_t g_num = 1 + i + n_face_seg*(j + n_face_seg*k);
           double dist2 = 0.;
