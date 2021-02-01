@@ -667,6 +667,7 @@ int main(int argc, char *argv[])
     if (i_rank == 0) printf ("Method : New \n");
     _single_closest_point (PDM_MPI_COMM_WORLD,
                            use_neighbours,
+                           n_max_per_leaf,
                            n_part_src,
                            (const int *) &_n_src,
                            (const double **) &src_coord,
