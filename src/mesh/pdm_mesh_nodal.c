@@ -718,15 +718,17 @@ _connec_tetra
   const PDM_real_t *_coords = vtx->_coords;
   double v1[3];
   double v2[3];
+  double v3[3];
   double n[3];
 
   for (int i = 0; i < 3; i++) {
-    v1[i] = _coords[3*(tria_vtx[1] - 1) + i] - _coords[3*(tria_vtx[0] - 1) + i];
-    v2[i] = _coords[3*(tria_vtx[2] - 1) + i] - _coords[3*(tria_vtx[0] - 1) + i];
+    v1[i] = _coords[3*(tetra_vtx[1] - 1) + i] - _coords[3*(tetra_vtx[0] - 1) + i];
+    v2[i] = _coords[3*(tetra_vtx[2] - 1) + i] - _coords[3*(tetra_vtx[0] - 1) + i];
+    v3[i] = _coords[3*(tetra_vtx[3] - 1) + i] - _coords[3*(tetra_vtx[0] - 1) + i];
   }
 
   _p_cross(v1, v2, n);
-  double orient = _p_dot(v1, n);
+  double orient = _p_dot(v3, n);
 
   if (orient < 0) {
     tetra_vtx[0] = tria_vtx[2];
@@ -734,7 +736,6 @@ _connec_tetra
     tetra_vtx[2] = tria_vtx[0];
   }
 }
-
 
 /**
  *
