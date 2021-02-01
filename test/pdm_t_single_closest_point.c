@@ -20,7 +20,7 @@
 #include "pdm_octree.h"
 #include "pdm_para_octree.h"
 #include "pdm_closest_points.h"
-
+#include "pdm_timer.h"
 
 /*============================================================================
  * Type definitions
@@ -71,7 +71,8 @@ _read_args(int            argc,
            PDM_g_num_t   *n_faceSeg,
            double        *length,
            PDM_g_num_t   *nTgt,
-           int           *method)
+           int           *method,
+           int           *use_neighbours)
 {
   int i = 1;
 
@@ -114,6 +115,9 @@ _read_args(int            argc,
         _usage(EXIT_FAILURE);
       else
         *method = atoi(argv[i]);
+    }
+    else if (strcmp(argv[i], "-un") == 0) {
+      *use_neighbours = 1;
     }
     else
       _usage(EXIT_FAILURE);
@@ -225,6 +229,7 @@ static void
 _single_closest_point
 (
  PDM_MPI_Comm         comm,
+ const int            use_neighbours,
  const int            n_part_src,
  const int           *n_src,
  const double       **src_coord,
@@ -240,12 +245,11 @@ _single_closest_point
   /* Build parallel octree */
   const int depth_max = 31;
   const int points_in_leaf_max = 1;
-  const int build_leaf_neighbours = 1;
 
   int octree_id = PDM_para_octree_create (n_part_src,
                                           depth_max,
                                           points_in_leaf_max,
-                                          build_leaf_neighbours,
+                                          use_neighbours,
                                           comm);
 
   for (int i_part = 0; i_part < n_part_src; i_part++) {
@@ -380,6 +384,9 @@ _closest_point_seq
  double            ***closest_point_dist2
  )
 {
+  int i_rank;
+  PDM_MPI_Comm_rank (comm, &i_rank);
+
   const double tolerance = 1e-4;
   const int depth_max = 31;
   const int points_in_leaf_max = 4;
@@ -399,7 +406,22 @@ _closest_point_seq
   }
 
   /* Build octree */
+  PDM_timer_t *timer = PDM_timer_create ();
+  double t_begin = PDM_timer_elapsed (timer);
+  PDM_timer_resume (timer);
+
   PDM_octree_build (octree_id);
+
+  PDM_timer_hang_on (timer);
+  double t_end = PDM_timer_elapsed (timer) - t_begin;
+  t_begin = PDM_timer_elapsed (timer);
+  PDM_timer_resume (timer);
+
+  double t_max;
+  PDM_MPI_Reduce (&t_end, &t_max, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, 0, PDM_MPI_COMM_WORLD);
+  if (i_rank == 0) {
+    printf ("Octree build elapsed time = %.3gs\n", t_max);
+  }
 
   /* Concatenate partitions */
   int _n_tgt = 0;
@@ -425,12 +447,25 @@ _closest_point_seq
   }
 
   /* Search closest source points */
+  PDM_timer_hang_on (timer);
+  t_begin = PDM_timer_elapsed (timer);
+  PDM_timer_resume (timer);
+
   PDM_octree_closest_point (octree_id,
                             _n_tgt,
                             _tgt_coord,
                             _tgt_g_num,
                             _closest_src_g_num,
                             _closest_src_dist2);
+
+  PDM_timer_hang_on (timer);
+  t_end = PDM_timer_elapsed (timer) - t_begin;
+  PDM_timer_resume (timer);
+
+  PDM_MPI_Reduce (&t_end, &t_max, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, 0, PDM_MPI_COMM_WORLD);
+  if (i_rank == 0) {
+    printf ("Octree closest point elapsed time = %.3gs\n", t_max);
+  }
 
   /* Restore partitions */
   free (_tgt_coord);
@@ -534,10 +569,11 @@ int main(int argc, char *argv[])
   /*
    *  Set default values
    */
-  PDM_g_num_t n_face_seg = 10;
-  double      length     = 1.;
-  PDM_g_num_t n_tgt      = 10;
-  int         method     = 0;
+  PDM_g_num_t n_face_seg     = 10;
+  double      length         = 1.;
+  PDM_g_num_t n_tgt          = 10;
+  int         method         = 0;
+  int         use_neighbours = 0;
 
   /*
    *  Read args
@@ -547,7 +583,11 @@ int main(int argc, char *argv[])
               &n_face_seg,
               &length,
               &n_tgt,
-              &method);
+              &method,
+              &use_neighbours);
+
+  if (method == 1) use_neighbours = 1;
+  if (method == 0 && i_rank == 0) printf("use neighbours? %d\n", use_neighbours);
 
   double origin[3] = {0., 0., 0.};
   if (1) {
@@ -607,11 +647,16 @@ int main(int argc, char *argv[])
   /*
    *  Compute closest point
    */
+  PDM_timer_t *timer = PDM_timer_create ();
+  double t_begin = PDM_timer_elapsed (timer);
+  PDM_timer_resume (timer);
+
   PDM_g_num_t **closest_point_g_num = NULL;
   double      **closest_point_dist2 = NULL;
   if (method == 0) {
     if (i_rank == 0) printf ("Method : New \n");
     _single_closest_point (PDM_MPI_COMM_WORLD,
+                           use_neighbours,
                            n_part_src,
                            (const int *) &_n_src,
                            (const double **) &src_coord,
@@ -651,6 +696,15 @@ int main(int argc, char *argv[])
   }
 
 
+  PDM_timer_hang_on (timer);
+  double t_end = PDM_timer_elapsed (timer);
+  t_end -= t_begin;
+
+  double t_max;
+  PDM_MPI_Reduce (&t_end, &t_max, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, 0, PDM_MPI_COMM_WORLD);
+  if (i_rank == 0) {
+    printf ("\nTotal elapsed time = %.3gs\n", t_max);
+  }
 
   /*
    *  Check results
