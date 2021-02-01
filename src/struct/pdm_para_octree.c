@@ -9288,59 +9288,17 @@ PDM_para_octree_single_closest_point
     int *close_ranks_idx = NULL;
     int *close_ranks = NULL;
 
-    if (1) {
-      PDM_box_tree_closest_upper_bound_dist_boxes_get (octree->bt_shared,
-                                                       n_recv_pts,
-                                                       recv_coord,
-                                                       _closest_pt_dist2,
-                                                       &close_ranks_idx,
-                                                       &close_ranks);
-      if (octree->n_used_rank < n_rank) {
-        for (int i = 0; i < close_ranks_idx[n_recv_pts]; i++) {
-          int j = close_ranks[i];
-          close_ranks[i] = octree->used_rank[j];
-        }
+    PDM_box_tree_closest_upper_bound_dist_boxes_get (octree->bt_shared,
+                                                     n_recv_pts,
+                                                     recv_coord,
+                                                     _closest_pt_dist2,
+                                                     &close_ranks_idx,
+                                                     &close_ranks);
+    if (octree->n_used_rank < n_rank) {
+      for (int i = 0; i < close_ranks_idx[n_recv_pts]; i++) {
+        int j = close_ranks[i];
+        close_ranks[i] = octree->used_rank[j];
       }
-    }
-
-    else {
-      close_ranks_idx = malloc (sizeof(int) * (n_recv_pts + 1));
-      close_ranks_idx[0] = 0;
-      int s_close_ranks = 2 * n_recv_pts;
-      close_ranks = malloc (sizeof(int) * s_close_ranks);
-
-      for (int i = 0; i < n_recv_pts; i++) {
-        double *_pt = recv_coord + dim*i;
-        close_ranks_idx[i+1] = close_ranks_idx[i];
-
-        for (int j = 0; j < octree->n_used_rank; j++) {
-          int j_rank = octree->used_rank[j];
-
-          if (j_rank == i_rank) continue;
-
-          double *ext = octree->used_rank_extents + 2*dim*j;
-          double dist2 = 0., delta;
-          for (int k = 0; k < dim; k++) {
-            if (_pt[k] < ext[k]) {
-              delta = _pt[k] - ext[k];
-              dist2 += delta*delta;
-            } else if (_pt[k] > ext[k+dim]) {
-              delta = _pt[k] - ext[k+dim];
-              dist2 += delta*delta;
-            }
-          }
-
-          if (dist2 < _closest_pt_dist2[i]) {
-            if (s_close_ranks <= close_ranks_idx[i+1]) {
-              s_close_ranks *= 2;//?
-              close_ranks = realloc (close_ranks, sizeof(int) * s_close_ranks);
-            }
-
-            close_ranks[close_ranks_idx[i+1]++] = j_rank;
-          }
-        }
-      }
-      close_ranks = realloc (close_ranks, sizeof(int) * close_ranks_idx[n_recv_pts]);
     }
 
     PDM_timer_hang_on (octree->timer);
