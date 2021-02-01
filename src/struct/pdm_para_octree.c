@@ -8904,10 +8904,11 @@ _single_closest_point_local_top_down
 }
 
 
-#define NTIMER_SCP 12
+#define NTIMER_SCP 13
 
 typedef enum {
   SCP_BEGIN,
+  COMPUTE_RANK_EXTENTS,
   FIRST_DISTRIBUTION,
   FIRST_GUESS,
   FIRST_LOCAL_SEARCH,
@@ -8938,6 +8939,7 @@ static void _scp_dump_times
   if (i_rank == 0) {
     printf ("Single closest point elapsed time in seconds:\n");
     printf ("  Total                : "SCP_TIME_FMT"\n", tmax[SCP_TOTAL]);
+    printf ("    rank extents       : "SCP_TIME_FMT"\n", tmax[COMPUTE_RANK_EXTENTS]);
     printf ("    1st phase          : "SCP_TIME_FMT"\n", tmax[PHASE_1]);
     printf ("      first guess      : "SCP_TIME_FMT"\n", tmax[FIRST_GUESS]);
     printf ("      local search     : "SCP_TIME_FMT"\n", tmax[FIRST_LOCAL_SEARCH]);
@@ -8978,9 +8980,26 @@ PDM_para_octree_single_closest_point
   _octree_t *octree = _get_from_id (id);
   const int dim = octree->dim;
 
+  double times_elapsed[NTIMER_SCP], b_t_elapsed, e_t_elapsed;
+  for (_spc_timer_step_t step = SCP_BEGIN; step <= SCP_TOTAL; step++) {
+    times_elapsed[step] = 0.;
+  }
+
+  PDM_timer_hang_on (octree->timer);
+  times_elapsed[SCP_BEGIN] = PDM_timer_elapsed (octree->timer);
+  b_t_elapsed = times_elapsed[SCP_BEGIN];
+  PDM_timer_resume (octree->timer);
+
+
   if (octree->used_rank_extents == NULL) {
     _compute_rank_extents (octree);
   }
+
+  PDM_timer_hang_on (octree->timer);
+  e_t_elapsed = PDM_timer_elapsed (octree->timer);
+  times_elapsed[COMPUTE_RANK_EXTENTS] = e_t_elapsed - b_t_elapsed;
+  b_t_elapsed = e_t_elapsed;
+  PDM_timer_resume (octree->timer);
 
   int i_rank, n_rank;
   PDM_MPI_Comm_rank (octree->comm, &i_rank);
@@ -8998,19 +9017,6 @@ PDM_para_octree_single_closest_point
                                   &_n_pts,
                                   1,
                                   octree->comm);
-
-  double times_elapsed[NTIMER_SCP];
-  for (_spc_timer_step_t step = SCP_BEGIN; step <= SCP_TOTAL; step++) {
-    times_elapsed[step] = 0.;
-  }
-
-  double b_t_elapsed;
-  double e_t_elapsed;
-
-  PDM_timer_hang_on (octree->timer);
-  times_elapsed[SCP_BEGIN] = PDM_timer_elapsed (octree->timer);
-  b_t_elapsed = times_elapsed[SCP_BEGIN];
-  PDM_timer_resume (octree->timer);
 
   /********************************************
    * Distribute target points
