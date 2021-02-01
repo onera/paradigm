@@ -72,7 +72,8 @@ _read_args(int            argc,
            double        *length,
            PDM_g_num_t   *nTgt,
            int           *method,
-           int           *use_neighbours)
+           int           *use_neighbours,
+           int           *n_max_per_leaf)
 {
   int i = 1;
 
@@ -118,6 +119,13 @@ _read_args(int            argc,
     }
     else if (strcmp(argv[i], "-un") == 0) {
       *use_neighbours = 1;
+    }
+    else if (strcmp(argv[i], "-mpl") == 0) {
+      i++;
+      if (i >= argc)
+        _usage(EXIT_FAILURE);
+      else
+        *n_max_per_leaf = atoi(argv[i]);
     }
     else
       _usage(EXIT_FAILURE);
@@ -230,6 +238,7 @@ _single_closest_point
 (
  PDM_MPI_Comm         comm,
  const int            use_neighbours,
+ const int            n_max_per_leaf,
  const int            n_part_src,
  const int           *n_src,
  const double       **src_coord,
@@ -244,11 +253,10 @@ _single_closest_point
 {
   /* Build parallel octree */
   const int depth_max = 31;
-  const int points_in_leaf_max = 1;
 
   int octree_id = PDM_para_octree_create (n_part_src,
                                           depth_max,
-                                          points_in_leaf_max,
+                                          n_max_per_leaf,
                                           use_neighbours,
                                           comm);
 
@@ -574,6 +582,7 @@ int main(int argc, char *argv[])
   PDM_g_num_t n_tgt          = 10;
   int         method         = 0;
   int         use_neighbours = 0;
+  int         n_max_per_leaf = 1;
 
   /*
    *  Read args
@@ -584,7 +593,8 @@ int main(int argc, char *argv[])
               &length,
               &n_tgt,
               &method,
-              &use_neighbours);
+              &use_neighbours,
+              &n_max_per_leaf);
 
   if (method == 1) use_neighbours = 1;
   if (method == 0 && i_rank == 0) printf("use neighbours? %d\n", use_neighbours);
