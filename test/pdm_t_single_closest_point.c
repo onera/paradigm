@@ -714,7 +714,7 @@ int main(int argc, char *argv[])
     fflush(stdout);
   }
 
-  int marge = 2;
+  int marge = 3;
   int ijk0;
   int ijk_lo[3];
   int ijk_hi[3];
