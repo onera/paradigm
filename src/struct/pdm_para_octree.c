@@ -9113,23 +9113,44 @@ PDM_para_octree_single_closest_point
     }
 
     else {
-      /* Last source point with Morton code lower than current target point's code */
-      int j = PDM_morton_binary_search (octree->n_points,
-                                        pts_code[i],
-                                        octree->points_code);
+      /* Find base leaf */
+      int base = PDM_morton_binary_search (octree->octants->n_nodes,
+                                           pts_code[i],
+                                           octree->octants->codes);
 
-      _closest_pt_dist2[i] = _pt_to_pt_dist2 (dim,
-                                              recv_coord + dim*i,
-                                              octree->points + dim*j);
-      _closest_pt_g_num[i] = octree->points_gnum[j];
-      /* Check next source point as well (if in same rank) */
-      if (j+1 < octree->n_points) {
-        double dist2 =  _pt_to_pt_dist2 (dim,
-                                         recv_coord + dim*i,
-                                         octree->points + dim*(j+1));
-        if (dist2 < _closest_pt_dist2[i]) {
-          _closest_pt_dist2[i] = dist2;
-          _closest_pt_g_num[i] = octree->points_gnum[j+1];
+      if (octree->octants->n_points[base] > 0) {
+        _closest_pt_dist2[i] = HUGE_VAL;
+        for (int k = 0; k < octree->octants->n_points[base]; k++) {
+          int j = octree->octants->range[base] + k;
+          double dist2 = _pt_to_pt_dist2 (dim,
+                                          recv_coord + dim*i,
+                                          octree->points + dim*j);
+          if (dist2 < _closest_pt_dist2[i]) {
+            _closest_pt_dist2[i] = dist2;
+            _closest_pt_g_num[i] = octree->points_gnum[j];
+          }
+        }
+      }
+
+      else {
+        /* Last source point with Morton code lower than current target point's code */
+        int j = PDM_morton_binary_search (octree->n_points,
+                                          pts_code[i],
+                                          octree->points_code);
+
+        _closest_pt_dist2[i] = _pt_to_pt_dist2 (dim,
+                                                recv_coord + dim*i,
+                                                octree->points + dim*j);
+        _closest_pt_g_num[i] = octree->points_gnum[j];
+        /* Check next source point as well (if in same rank) */
+        if (j+1 < octree->n_points) {
+          double dist2 =  _pt_to_pt_dist2 (dim,
+                                           recv_coord + dim*i,
+                                           octree->points + dim*(j+1));
+          if (dist2 < _closest_pt_dist2[i]) {
+            _closest_pt_dist2[i] = dist2;
+            _closest_pt_g_num[i] = octree->points_gnum[j+1];
+          }
         }
       }
 
