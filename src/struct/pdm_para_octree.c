@@ -9538,9 +9538,10 @@ PDM_para_octree_single_closest_point
   PDM_timer_resume (octree->timer);
 
   //printf ("[%d] total = "SCP_TIME_FMT", phase1 = "SCP_TIME_FMT", phase2 = "SCP_TIME_FMT"\n", i_rank, times_elapsed[SCP_TOTAL], times_elapsed[PHASE_1], times_elapsed[PHASE_2]);
-  printf ("[%d] "SCP_TIME_FMT" "SCP_TIME_FMT" "SCP_TIME_FMT" "SCP_TIME_FMT" "SCP_TIME_FMT" "SCP_TIME_FMT" "SCP_TIME_FMT" "SCP_TIME_FMT" "SCP_TIME_FMT" "SCP_TIME_FMT"\n",
+  printf ("[%d] "SCP_TIME_FMT" "SCP_TIME_FMT" "SCP_TIME_FMT" "SCP_TIME_FMT" "SCP_TIME_FMT" "SCP_TIME_FMT" "SCP_TIME_FMT" "SCP_TIME_FMT" "SCP_TIME_FMT" "SCP_TIME_FMT" "SCP_TIME_FMT"\n",
           i_rank,
           times_elapsed[SCP_TOTAL],
+          times_elapsed[COMPUTE_RANK_EXTENTS],
           times_elapsed[PHASE_1],
           times_elapsed[FIRST_GUESS],
           times_elapsed[FIRST_LOCAL_SEARCH],
