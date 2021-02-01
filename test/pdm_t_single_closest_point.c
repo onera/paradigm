@@ -771,7 +771,8 @@ int main(int argc, char *argv[])
     }
 
     // check
-    if (true_closest_src_g_num != closest_point_g_num[0][itgt]) {
+    //if (true_closest_src_g_num != closest_point_g_num[0][itgt]) {
+    if (closest_point_dist2[0][itgt] > true_closest_src_dist2) {
       _n_wrong++;
       double d0 = sqrt(true_closest_src_dist2);
       double d1 = sqrt(closest_point_dist2[0][itgt]);
