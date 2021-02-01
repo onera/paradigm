@@ -592,7 +592,7 @@ int main(int argc, char *argv[])
   double origin[3] = {0., 0., 0.};
   if (1) {
     for (int i = 0; i < 3; i++) {
-      origin[3] = 2. * (double) rand() / ((double) RAND_MAX) - 1.;
+      origin[i] = 2. * (double) rand() / ((double) RAND_MAX) - 1.;
     }
   }
 
