@@ -73,7 +73,8 @@ _read_args(int            argc,
            PDM_g_num_t   *nTgt,
            int           *method,
            int           *use_neighbours,
-           int           *n_max_per_leaf)
+           int           *n_max_per_leaf,
+           int           *surf_source)
 {
   int i = 1;
 
@@ -126,6 +127,9 @@ _read_args(int            argc,
         _usage(EXIT_FAILURE);
       else
         *n_max_per_leaf = atoi(argv[i]);
+    }
+    else if (strcmp(argv[i], "-surf") == 0) {
+      *surf_source = 1;
     }
     else
       _usage(EXIT_FAILURE);
@@ -230,6 +234,65 @@ _gen_cube_cell_centers
 }
 
 
+static void
+_gen_cube_face_centers
+(
+ PDM_MPI_Comm        comm,
+ const PDM_g_num_t   n_faceSeg,
+ const double        origin[3],
+ const double        length,
+ int                *npts,
+ PDM_g_num_t       **g_num,
+ double            **coord
+ )
+{
+  int n_rank, i_rank;
+
+  PDM_MPI_Comm_size(comm, &n_rank);
+  PDM_MPI_Comm_rank(comm, &i_rank);
+
+  PDM_g_num_t n_faceFace = n_faceSeg * n_faceSeg;
+  PDM_g_num_t n_face     = 6 * n_faceFace;
+
+  PDM_g_num_t step_rank = n_face / n_rank;
+  PDM_g_num_t remainder = n_face % n_rank;
+
+  PDM_g_num_t *distrib = (PDM_g_num_t *) malloc((n_rank + 1) * sizeof(PDM_g_num_t));
+  distrib[0] = 0;
+  for (int i = 0; i < n_rank; i++) {
+    int n = step_rank;
+    if (i < remainder) n++;
+    distrib[i+1] = distrib[i] + n;
+  }
+
+  PDM_g_num_t _dn_face = distrib[i_rank+1] - distrib[i_rank];
+
+  const double step = length / (double) n_faceSeg;
+
+  *g_num = malloc (sizeof(PDM_g_num_t) * _dn_face);
+  *coord = malloc (sizeof(double)      * _dn_face * 3);
+
+  int _npts = 0;
+  for (PDM_g_num_t g = distrib[i_rank]; g < distrib[i_rank+1]; g++) {
+    int k = g / n_faceFace;
+    int dir0 = k / 3;
+    int dir1 = (dir0 + 1) % 3;
+    int dir2 = (dir0 + 2) % 3;
+    int sgn = k % 2;
+
+    PDM_g_num_t i = g % n_faceSeg;
+    PDM_g_num_t j = ((g - i) % n_faceFace) / n_faceSeg;
+
+    (*coord)[3 * _npts + dir0] = origin[dir0] + sgn * length;
+    (*coord)[3 * _npts + dir1] = (i + 0.5) * step + origin[dir1];
+    (*coord)[3 * _npts + dir2] = (j + 0.5) * step + origin[dir2];
+    (*g_num)[_npts++] = g + 1;
+  }
+
+  *npts = _npts;
+
+  free (distrib);
+}
 
 
 
@@ -583,6 +646,7 @@ int main(int argc, char *argv[])
   int         method         = 0;
   int         use_neighbours = 0;
   int         n_max_per_leaf = 1;
+  int         surf_source    = 0;
 
   /*
    *  Read args
@@ -594,7 +658,8 @@ int main(int argc, char *argv[])
               &n_tgt,
               &method,
               &use_neighbours,
-              &n_max_per_leaf);
+              &n_max_per_leaf,
+              &surf_source);
 
   if (method == 1) use_neighbours = 1;
   if (method == 0 && i_rank == 0) printf("use neighbours? %d\n", use_neighbours);
@@ -645,14 +710,25 @@ int main(int argc, char *argv[])
   double *src_coord = NULL;
   PDM_g_num_t *src_g_num = NULL;
 
-  _gen_cube_cell_centers (PDM_MPI_COMM_WORLD,
-                          n_face_seg,
-                          origin,
-                          length,
-                          &_n_src,
-                          &src_g_num,
-                          &src_coord);
+  if (surf_source) {
+    _gen_cube_face_centers (PDM_MPI_COMM_WORLD,
+                            n_face_seg,
+                            origin,
+                            length,
+                            &_n_src,
+                            &src_g_num,
+                            &src_coord);
+  }
 
+  else {
+    _gen_cube_cell_centers (PDM_MPI_COMM_WORLD,
+                            n_face_seg,
+                            origin,
+                            length,
+                            &_n_src,
+                            &src_g_num,
+                            &src_coord);
+  }
 
   /*
    *  Compute closest point
@@ -730,45 +806,53 @@ int main(int argc, char *argv[])
   int ijk_lo[3];
   int ijk_hi[3];
   double cell_side = length / ((double) n_face_seg);
-  double cell_ctr[3];
+  double coord[3];
 
   PDM_g_num_t _n_wrong = 0;
   for (int itgt = 0; itgt < _n_tgt; itgt++) {
     /*printf ("[%d] pt ("PDM_FMT_G_NUM") closest src : ("PDM_FMT_G_NUM") at dist2 = %f\n",
       i_rank, tgt_g_num[itgt], closest_point_g_num[0][itgt], closest_point_dist2[0][itgt]);*/
+    PDM_g_num_t true_closest_src_g_num;
+    double      true_closest_src_dist2 = HUGE_VAL;
 
     // find i,j,k of the cell that contains the target point
     // and define search region
-    for (int idim = 0; idim < 3; idim++) {
-      ijk0 = (int) floor(tgt_coord[3*itgt+idim] / cell_side);
-      ijk0 = PDM_MIN (PDM_MAX (ijk0, 0), n_face_seg-1);
+    if (surf_source) {
+      int k;
+      double max_val = -HUGE_VAL;
+      for (int idim = 0; idim < 3; idim++) {
+        double val1 = PDM_ABS (tgt_coord[3*itgt+idim] - origin[idim]);
+        double val2 = PDM_ABS (tgt_coord[3*itgt+idim] - origin[idim] - length);
 
-      if (ijk0 < marge) {
-        ijk_lo[idim] = 0;
-        ijk_hi[idim] = 2*marge;
-      } else if (ijk0 > n_face_seg - marge) {
-        ijk_hi[idim] = n_face_seg;
-        ijk_lo[idim] = n_face_seg - 2*marge;
-      } else {
-        ijk_lo[idim] = ijk0 - marge;
-        ijk_hi[idim] = ijk0 + marge;
+        if (val1 > max_val) {
+          k = 2*idim;
+          max_val = val1;
+        }
+
+        if (val2 > max_val) {
+          k = 2*idim+1;
+          max_val = val2;
+        }
+
       }
-    }
 
-    // inspect search region
-    PDM_g_num_t true_closest_src_g_num;
-    double      true_closest_src_dist2 = HUGE_VAL;
-    for (int k = ijk_lo[2]; k < ijk_hi[2]; k++) {
-      cell_ctr[2] = (k + 0.5) * cell_side + origin[2];
-      for (int j = ijk_lo[1]; j < ijk_hi[1]; j++) {
-        cell_ctr[1] = (j + 0.5) * cell_side + origin[1];
-        for (int i = ijk_lo[0]; i < ijk_hi[0]; i++) {
-          cell_ctr[0] = (i + 0.5) * cell_side + origin[0];
+      int dir0 = k / 3;
+      int dir1 = (dir0 + 1) % 3;
+      int dir2 = (dir0 + 2) % 3;
+      int sgn = k % 2;
+
+      coord[dir0] = origin[dir0] + sgn * length;
+      for (int j = -marge; j < marge; j++) {
+        int _j = PDM_MAX (0, PDM_MIN (j, n_face_seg-1));
+        coord[dir2] = (_j + 0.5) * cell_side + origin[dir2];
+        for (int i = -marge; i < marge; i++) {
+          int _i = PDM_MAX (0, PDM_MIN (i, n_face_seg-1));
+          coord[dir1] = (_i + 0.5) * cell_side + origin[dir1];
 
           PDM_g_num_t g_num = 1 + i + n_face_seg*(j + n_face_seg*k);
           double dist2 = 0.;
           for (int idim = 0; idim < 3; idim++) {
-            double delta = tgt_coord[3*itgt+idim] - cell_ctr[idim];
+            double delta = tgt_coord[3*itgt+idim] - coord[idim];
             dist2 += delta * delta;
           }
 
@@ -776,7 +860,49 @@ int main(int argc, char *argv[])
             true_closest_src_dist2 = dist2;
             true_closest_src_g_num = g_num;
           }
+        }
+      }
 
+    }
+
+    else {
+      for (int idim = 0; idim < 3; idim++) {
+        ijk0 = (int) floor(tgt_coord[3*itgt+idim] / cell_side);
+        ijk0 = PDM_MIN (PDM_MAX (ijk0, 0), n_face_seg-1);
+
+        if (ijk0 < marge) {
+          ijk_lo[idim] = 0;
+          ijk_hi[idim] = 2*marge;
+        } else if (ijk0 > n_face_seg - marge) {
+          ijk_hi[idim] = n_face_seg;
+          ijk_lo[idim] = n_face_seg - 2*marge;
+        } else {
+          ijk_lo[idim] = ijk0 - marge;
+          ijk_hi[idim] = ijk0 + marge;
+        }
+      }
+
+      // inspect search region
+      for (int k = ijk_lo[2]; k < ijk_hi[2]; k++) {
+        coord[2] = (k + 0.5) * cell_side + origin[2];
+        for (int j = ijk_lo[1]; j < ijk_hi[1]; j++) {
+          coord[1] = (j + 0.5) * cell_side + origin[1];
+          for (int i = ijk_lo[0]; i < ijk_hi[0]; i++) {
+            coord[0] = (i + 0.5) * cell_side + origin[0];
+
+            PDM_g_num_t g_num = 1 + i + n_face_seg*(j + n_face_seg*k);
+            double dist2 = 0.;
+            for (int idim = 0; idim < 3; idim++) {
+              double delta = tgt_coord[3*itgt+idim] - coord[idim];
+              dist2 += delta * delta;
+            }
+
+            if (dist2 < true_closest_src_dist2) {
+              true_closest_src_dist2 = dist2;
+              true_closest_src_g_num = g_num;
+            }
+
+          }
         }
       }
     }
