@@ -543,6 +543,7 @@ _closest_point_seq
   if (i_rank == 0) {
     printf ("Octree closest point elapsed time = %.3gs\n", t_max);
   }
+  PDM_timer_free (timer);
 
   /* Restore partitions */
   free (_tgt_coord);
@@ -708,7 +709,7 @@ int main(int argc, char *argv[])
   PDM_g_num_t *tgt_g_num = PDM_gnum_get (id_gnum, 0);
 
   PDM_gnum_free (id_gnum);
-
+  free (tgt_char_length);
 
 
   /*
@@ -802,6 +803,7 @@ int main(int argc, char *argv[])
   if (i_rank == 0) {
     printf ("\nTotal elapsed time = %.3gs\n", t_max);
   }
+  PDM_timer_free (timer);
 
   /*
    *  Check results

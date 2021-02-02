@@ -4822,6 +4822,8 @@ PDM_para_octree_create
   //-->>
   octree->used_rank = NULL;
   octree->used_rank_extents = NULL;
+  octree->rank_boxes = NULL;
+  octree->bt_shared = NULL;
   //<<--
 
   octree->timer = PDM_timer_create ();
@@ -4919,6 +4921,13 @@ PDM_para_octree_free
   if (octree->used_rank_extents != NULL) {
     free (octree->used_rank_extents);
   }
+
+  PDM_box_set_destroy (&octree->rank_boxes);
+
+  if (octree->rank_comm != PDM_MPI_COMM_NULL) {
+    PDM_MPI_Comm_free (&(octree->rank_comm));
+  }
+  PDM_box_tree_destroy (&octree->bt_shared);
   //<<--
 
   PDM_timer_free (octree->timer);
