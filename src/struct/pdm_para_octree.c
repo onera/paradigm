@@ -9557,6 +9557,7 @@ void
 PDM_para_octree_single_closest_point
 (
  const int    id,
+ const int    use_heap,
  const int    n_pts,
  double      *pts_coord,
  PDM_g_num_t *pts_g_num,
@@ -9807,11 +9808,19 @@ PDM_para_octree_single_closest_point
                                  _closest_pt_g_num,
                                  _closest_pt_dist2);
   } else {
-    _single_closest_point_local_top_down_heap (octree,
-                                          n_recv_pts,
-                                          recv_coord,
-                                          _closest_pt_g_num,
-                                          _closest_pt_dist2);
+    if (use_heap) {
+      _single_closest_point_local_top_down_heap (octree,
+                                                 n_recv_pts,
+                                                 recv_coord,
+                                                 _closest_pt_g_num,
+                                                 _closest_pt_dist2);
+    } else {
+      _single_closest_point_local_top_down (octree,
+                                            n_recv_pts,
+                                            recv_coord,
+                                            _closest_pt_g_num,
+                                            _closest_pt_dist2);
+    }
   }
   free (pts_code);
 
@@ -9996,11 +10005,19 @@ PDM_para_octree_single_closest_point
                                    _closest_pt_g_num,
                                    _closest_pt_dist2);
     } else {
-      _single_closest_point_local_top_down_heap (octree,
-                                            n_recv_pts,
-                                            recv_coord,
-                                            _closest_pt_g_num,
-                                            _closest_pt_dist2);
+      if (use_heap) {
+        _single_closest_point_local_top_down_heap (octree,
+                                                   n_recv_pts,
+                                                   recv_coord,
+                                                   _closest_pt_g_num,
+                                                   _closest_pt_dist2);
+      } else {
+        _single_closest_point_local_top_down (octree,
+                                              n_recv_pts,
+                                              recv_coord,
+                                              _closest_pt_g_num,
+                                              _closest_pt_dist2);
+      }
     }
     free (recv_coord);
 

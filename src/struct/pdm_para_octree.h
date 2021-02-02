@@ -287,6 +287,7 @@ void
 PDM_para_octree_single_closest_point
 (
 const int    id,
+const int    use_heap,
 const int    n_pts,
 double      *pts,
 PDM_g_num_t *pts_g_num,
