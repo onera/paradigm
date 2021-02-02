@@ -8911,7 +8911,6 @@ _single_closest_point_recursive_sorted
                              child_code);
 
     double child_dist2[8];
-    int child_order[8], n_child_close = 0;
     size_t child_start[8], child_end[8];
     size_t prev_end = start;
     for (size_t i = 0; i < n_child; i++) {
@@ -8933,7 +8932,7 @@ _single_closest_point_recursive_sorted
       if (s > end) {
         /* no need to go further for that child
            because it has no descendants in the node list */
-        //child_dist2[i] = HUGE_VAL;
+        child_dist2[i] = HUGE_VAL;
         continue;
       }
 
@@ -8954,36 +8953,21 @@ _single_closest_point_recursive_sorted
       child_end[i] = e;
 
       if (child_end[i] > child_start[i]) {
-        double dist2 = _octant_min_dist2 (dim,
-                                          child_code[i],
-                                          octree->d,
-                                          octree->s,
-                                          point);
+        child_dist2[i] = _octant_min_dist2 (dim,
+                                            child_code[i],
+                                            octree->d,
+                                            octree->s,
+                                            point);
 
-        int j = 0;
-        for (j = 0; j < n_child_close; j++) {
-          if (dist2 < child_dist2[j]) {
-            for (int k = n_child_close; k > j; k--) {
-              child_dist2[k] = child_dist2[k-1];
-              child_order[k] = child_order[k-1];
-            }
-            break;
-          }
-        }
-        child_dist2[j] = dist2;
-        child_order[j] = i;
-        n_child_close++;
         /*if (dist2 < *closest_point_dist2) {
           _min_heap_push (child_heap,
                           i,
                           0,
                           dist2);
                           }*/
-      }
-
-        /*else {
+      } else {
         child_dist2[i] = HUGE_VAL;
-        }*/
+      }
     }
 
     // Carry on recursion on children
@@ -8999,12 +8983,12 @@ _single_closest_point_recursive_sorted
                                               closest_point_g_num,
                                               closest_point_dist2);
                                               }*/
-    /*int child_order[8] = {0, 1, 2, 3, 4, 5, 6, 7};
+    int child_order[8] = {0, 1, 2, 3, 4, 5, 6, 7};
     PDM_sort_double (child_dist2,
                      child_order,
-                     (int) n_child);*/
-    for (int i = 0; i < n_child_close; i++) {
-      //if (child_dist2[i] >= *closest_point_dist2) return;
+                     (int) n_child);
+    for (size_t i = 0; i < n_child; i++) {
+      if (child_dist2[i] >= *closest_point_dist2) return;
       int i_child = child_order[i];
       _single_closest_point_recursive_sorted (child_code[i_child],
                                               octree,
