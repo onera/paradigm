@@ -9180,9 +9180,9 @@ _single_closest_point_local_top_down
 
 
 typedef struct {
-  PDM_morton_code_t *code;
-  int                start;
-  int                end;
+  PDM_morton_code_t code;
+  int               start;
+  int               end;
 } _heap_node_t;
 
 static void _heap_node_set (_heap_node_t            *node,
@@ -9190,8 +9190,8 @@ static void _heap_node_set (_heap_node_t            *node,
                             const int                start,
                             const int                end)
 {
-  node->code = malloc (sizeof(PDM_morton_code_t));
-  PDM_morton_copy (code, node->code);
+  //node->code = malloc (sizeof(PDM_morton_code_t));
+  PDM_morton_copy (code, &node->code);
   node->start = start;
   node->end   = end;
 }
@@ -9224,9 +9224,9 @@ _single_closest_point_local_top_down_heap
 
   /* Loop over target points */
   double node_dist2;
-  _heap_node_t *node = malloc (s_data);
+  _heap_node_t node;
 
-  _heap_node_t *child_node = malloc (s_data);
+  _heap_node_t child_node;
   const int n_child = 1 << dim;
   PDM_morton_code_t child_code[8];
   int new_start, new_end, prev_end;
@@ -9239,7 +9239,7 @@ _single_closest_point_local_top_down_heap
     _min_heap_reset2 (heap);
     _min_heap_push2 (heap, (void *) &root_node, 0.);
 
-    while (_min_heap_pop2 (heap, (void *) node, &node_dist2)) {
+    while (_min_heap_pop2 (heap, (void *) &node, &node_dist2)) {
 
       if (node_dist2 >= closest_point_dist2[i_tgt]) {
         /* All the nodes in the heap are now farther than the provisional closest point */
@@ -9247,31 +9247,31 @@ _single_closest_point_local_top_down_heap
       }
 
       /* Internal node */
-      if (node->end > node->start + 1) {
+      if (node.end > node.start + 1) {
         /* Carry on with children of popped node */
         PDM_morton_get_children (dim,
-                                 *(node->code),
+                                 node.code,
                                  child_code);
-        prev_end = node->start;
+        prev_end = node.start;
         for (int i_child = 0; i_child < n_child; i_child++) {
           /* get start and end of range in list of nodes covered by current child */
           /* new_start <-- first descendant of child in list */
           new_start = prev_end; // end of previous child's range
 
-          while (new_start < node->end) {
+          while (new_start < node.end) {
             if (PDM_morton_ancestor_is (child_code[i_child],
                                         octree->octants->codes[new_start])) {
               break;
             } else if (PDM_morton_a_gt_b(octree->octants->codes[new_start],
                                          child_code[i_child])) {
               /* all the following nodes are clearly not descendants of current child */
-              new_start = node->end+1;
+              new_start = node.end+1;
               break;
             }
             new_start++;
           }
 
-          if (new_start > node->end) {
+          if (new_start > node.end) {
             /* no need to go further for that child
                because it has no descendants in the node list */
             continue;
@@ -9279,7 +9279,7 @@ _single_closest_point_local_top_down_heap
 
           /* new_end <-- next of last descendant of child in list */
           int l = new_start;
-          new_end = node->end;
+          new_end = node.end;
           while (new_end > l + 1) {
             int m = l + (new_end - l) / 2;
             if (PDM_morton_ancestor_is (child_code[i_child],
@@ -9303,11 +9303,11 @@ _single_closest_point_local_top_down_heap
 
           /* Push child in heap */
           if (child_dist2 < closest_point_dist2[i_tgt]) {
-            _heap_node_set (child_node,
+            _heap_node_set (&child_node,
                             child_code[i_child],
                             new_start,
                             new_end);
-            _min_heap_push2 (heap, (void *) child_node, child_dist2);
+            _min_heap_push2 (heap, (void *) &child_node, child_dist2);
           }
 
         } // End of loop on children
@@ -9316,8 +9316,8 @@ _single_closest_point_local_top_down_heap
       /* Leaf node */
       else {
         /* inspect source points inside popped leaf */
-        for (int i = 0; i < octree->octants->n_points[node->start]; i++) {
-          int j = octree->octants->range[node->start] + i;
+        for (int i = 0; i < octree->octants->n_points[node.start]; i++) {
+          int j = octree->octants->range[node.start] + i;
           double point_dist2 = _pt_to_pt_dist2 (dim,
                                                 point,
                                                 octree->points + dim*j);
@@ -9331,9 +9331,6 @@ _single_closest_point_local_top_down_heap
     } // End while heap not empty
 
   } // End of loop on target points
-
-  free (node);
-  free (child_node);
 
   _min_heap_free2 (heap);
 }
