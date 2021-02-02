@@ -8870,6 +8870,120 @@ _single_closest_point_recursive
 }
 
 
+
+static void
+_single_closest_point_recursive_sorted
+(
+ const PDM_morton_code_t  node,
+ const _octree_t         *octree,
+ const double             point[],
+ const size_t             start,
+ const size_t             end,
+ PDM_g_num_t             *closest_point_g_num,
+ double                  *closest_point_dist2
+ )
+{
+  const int dim = octree->dim;
+
+  /* Single octant */
+  if (start == end-1) {
+    for (int i = 0; i < octree->octants->n_points[start]; i++) {
+      int j = octree->octants->range[start] + i;
+      double dist2 = _pt_to_pt_dist2 (dim,
+                                      point,
+                                      octree->points + dim*j);
+      if (dist2 < *closest_point_dist2) {
+        *closest_point_dist2 = dist2;
+        *closest_point_g_num = octree->points_gnum[j];
+      }
+    }
+    return;
+  }
+
+  /* Multiple octants */
+  else {
+    const size_t n_child = 1 << dim;
+    _min_heap_t *child_heap = _min_heap_create (n_child);
+
+    PDM_morton_code_t child_code[8];
+    PDM_morton_get_children (dim,
+                             node,
+                             child_code);
+
+    size_t child_start[8], child_end[8];
+    size_t prev_end = start;
+    for (size_t i = 0; i < n_child; i++) {
+
+      /* get start and end of range in list of nodes covered by current child */
+        /* s <-- first descendant of child in list */
+      size_t s = prev_end;
+      while (s < end) {
+        if (PDM_morton_ancestor_is (child_code[i], octree->octants->codes[s])) {
+          break;
+        } else if (PDM_morton_a_gt_b(octree->octants->codes[s], child_code[i])) {
+          /* all the following nodes are clearly not descendants of current child */
+          s = end+1;
+          break;
+        }
+        s++;
+      }
+
+      if (s > end) {
+        /* no need to go further for that child
+           because it has no descendants in the node list */
+        continue;
+      }
+
+      child_start[i] = s;
+
+      /* e <-- next of last descendant of child in list */
+      size_t e = end;
+      while (e > s + 1) {
+        size_t m = s + (e - s) / 2;
+        if (PDM_morton_ancestor_is (child_code[i], octree->octants->codes[m])) {
+          s = m;
+        } else {
+          e = m;
+        }
+      }
+
+      prev_end = e;
+      child_end[i] = e;
+
+      if (child_end[i] > child_start[i]) {
+        double dist2 = _octant_min_dist2 (dim,
+                                          child_code[i],
+                                          octree->d,
+                                          octree->s,
+                                          point);
+
+        if (dist2 < *closest_point_dist2) {
+          _min_heap_push (child_heap,
+                          i,
+                          0,
+                          dist2);
+        }
+      }
+    }
+
+    // Carry on recursion on children
+    PDM_g_num_t unused;
+    int i_child;
+    double dist2;
+    while (_min_heap_pop (child_heap, &i_child, &unused, &dist2)) {
+      _single_closest_point_recursive_sorted (child_code[i_child],
+                                              octree,
+                                              point,
+                                              child_start[i_child],
+                                              child_end[i_child],
+                                              closest_point_g_num,
+                                              closest_point_dist2);
+    }
+  }
+
+}
+
+
 static void
 _single_closest_point_local_top_down
 (
@@ -8883,26 +8997,19 @@ _single_closest_point_local_top_down
   const int dim = octree->dim;
 
   PDM_morton_code_t ancestor;
-  /*ancestor.L = 0;
-  for (int i = 0; i < dim; i++) {
-    ancestor.X[i] = 0;
-    }*/
   PDM_morton_nearest_common_ancestor (octree->octants->codes[0],
                                       octree->octants->codes[octree->octants->n_nodes-1],
                                       &ancestor);
 
   /* Loop over target points */
   for (int i = 0; i < n_tgt; i++) {
-
-    // Recursion
-    _single_closest_point_recursive (ancestor,
-                                     octree,
-                                     tgt_coord + dim*i,
-                                     0,
-                                     octree->octants->n_nodes,
-                                     closest_point_g_num + i,
-                                     closest_point_dist2 + i);
-
+    _single_closest_point_recursive_sorted (ancestor,
+                                            octree,
+                                            tgt_coord + dim*i,
+                                            0,
+                                            octree->octants->n_nodes,
+                                            closest_point_g_num + i,
+                                            closest_point_dist2 + i);
   }
 }
 
