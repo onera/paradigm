@@ -8882,17 +8882,20 @@ _single_closest_point_local_top_down
 {
   const int dim = octree->dim;
 
-  PDM_morton_code_t root;
-  root.L = 0;
+  PDM_morton_code_t ancestor;
+  /*ancestor.L = 0;
   for (int i = 0; i < dim; i++) {
-    root.X[i] = 0;
-  }
+    ancestor.X[i] = 0;
+    }*/
+  PDM_morton_nearest_common_ancestor (octree->octants->codes[0],
+                                      octree->octants->codes[octree->octants->n_nodes-1],
+                                      &ancestor);
 
   /* Loop over target points */
   for (int i = 0; i < n_tgt; i++) {
 
     // Recursion
-    _single_closest_point_recursive (root,
+    _single_closest_point_recursive (ancestor,
                                      octree,
                                      tgt_coord + dim*i,
                                      0,
