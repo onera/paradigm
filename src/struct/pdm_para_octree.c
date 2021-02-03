@@ -9975,19 +9975,6 @@ PDM_para_octree_single_closest_point
                                  _closest_pt_g_num,
                                  _closest_pt_dist2);
   } else {
-    /*if (use_heap) {
-      _single_closest_point_local_top_down_heap (octree,
-                                                 n_recv_pts,
-                                                 recv_coord,
-                                                 _closest_pt_g_num,
-                                                 _closest_pt_dist2);
-    } else {
-      _single_closest_point_local_top_down (octree,
-                                            n_recv_pts,
-                                            recv_coord,
-                                            _closest_pt_g_num,
-                                            _closest_pt_dist2);
-                                            }*/
     (*local_search_fun_ptr) (octree,
                              n_recv_pts,
                              recv_coord,
@@ -10177,19 +10164,6 @@ PDM_para_octree_single_closest_point
                                    _closest_pt_g_num,
                                    _closest_pt_dist2);
     } else {
-      /*if (use_heap) {
-        _single_closest_point_local_top_down_binary (octree,
-                                                   n_recv_pts,
-                                                   recv_coord,
-                                                   _closest_pt_g_num,
-                                                   _closest_pt_dist2);
-      } else {
-        _single_closest_point_local_top_down (octree,
-                                              n_recv_pts,
-                                              recv_coord,
-                                              _closest_pt_g_num,
-                                              _closest_pt_dist2);
-                                              }*/
       (*local_search_fun_ptr) (octree,
                                n_recv_pts,
                                recv_coord,

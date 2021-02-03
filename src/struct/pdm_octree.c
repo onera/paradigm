@@ -33,6 +33,7 @@
 #include "pdm_octree_seq.h"
 #include "pdm_block_to_part.h"
 #include "pdm_part_to_block.h"
+#include "pdm_timer.h"//
 
 /*----------------------------------------------------------------------------*/
 
@@ -859,6 +860,10 @@ PDM_g_num_t *closest_octree_pt_g_num,
 double      *closest_octree_pt_dist2
 )
 {
+  //-->>
+  PDM_timer_t *timer = PDM_timer_create ();
+  double b_t_elapsed, e_t_elapsed;
+  //<<--
   const int idebug = 0;
 
   _octree_t *octree = _get_from_id (id);
@@ -984,8 +989,16 @@ double      *closest_octree_pt_dist2
   int *closest_pt = (int *) malloc(sizeof(int) * 2 * i_recv_pts[n_rank]);
   double *closest_dist = (double *) malloc(sizeof(double) * i_recv_pts[n_rank]);
 
+  b_t_elapsed = PDM_timer_elapsed (timer);//
+  PDM_timer_resume (timer);//
   PDM_octree_seq_closest_point (octree->octree_seq_id, i_recv_pts[n_rank],
                                 recv_pts, closest_pt, closest_dist);
+  PDM_timer_hang_on (timer);//
+  e_t_elapsed = PDM_timer_elapsed (timer);//
+  double avg_elapsed = e_t_elapsed - b_t_elapsed;//
+  if (i_recv_pts[n_rank] != 0) avg_elapsed /= (double) i_recv_pts[n_rank];//
+  printf ("[%d] 1st PDM_octree_seq_closest_point : %e s/pt\n", i_rank, avg_elapsed);//
+  PDM_timer_resume (timer);//
 
   if (idebug == 1) {
     printf ("*** PDM_octree_closest_point d step 2 :"
@@ -1704,11 +1717,20 @@ double      *closest_octree_pt_dist2
     /* /\*   } *\/ */
     /* /\* } *\/ */
 
+    PDM_timer_hang_on (timer);//
+    b_t_elapsed = PDM_timer_elapsed (timer);//
+    PDM_timer_resume (timer);//
     PDM_octree_seq_closest_point (octree->octree_seq_id,
                                   i_recv_gnum[n_rank],
                                   data_recv_pts,
-                                 _closest_octree_pt_id,
-                                 _closest_octree_pt_dist2);
+                                  _closest_octree_pt_id,
+                                  _closest_octree_pt_dist2);
+    PDM_timer_hang_on (timer);//
+    e_t_elapsed = PDM_timer_elapsed (timer);//
+    avg_elapsed = e_t_elapsed - b_t_elapsed;//
+    if (i_recv_gnum[n_rank] != 0) avg_elapsed /= (double) i_recv_gnum[n_rank];//
+    printf ("[%d] 2nd PDM_octree_seq_closest_point : %e s/pt\n", i_rank, avg_elapsed);//
+    PDM_timer_resume (timer);//
 
     for (int j = 0; j < i_recv_gnum[n_rank]; j++) {
       _closest_octree_pt_g_num[j] = -1;
@@ -1830,6 +1852,9 @@ double      *closest_octree_pt_dist2
   free (_closest_octree_pt_dist2);
   free (_closest_octree_pt_g_num);
 
+  //-->>
+  PDM_timer_free (timer);
+  //<<--
 }
 
 
