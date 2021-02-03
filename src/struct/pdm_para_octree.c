@@ -8743,8 +8743,6 @@ _pt_to_pt_dist2_normalized
   return dist2;
 }
 
-
-
 static void
 _single_closest_point_local
 (
@@ -9148,6 +9146,8 @@ _single_closest_point_recursive_sorted
 }
 
 
+
+
 static void
 _single_closest_point_local_top_down
 (
@@ -9167,7 +9167,7 @@ _single_closest_point_local_top_down
 
   /* Loop over target points */
   for (int i = 0; i < n_tgt; i++) {
-#if 0
+#if 1
     _single_closest_point_recursive (ancestor,
                                      octree,
                                      tgt_coord + dim*i,
@@ -9344,6 +9344,109 @@ _single_closest_point_local_top_down_heap
   _min_heap_free2 (heap);
 }
 
+
+
+
+static void
+_single_closest_point_local_top_down_heap_binary
+(
+ const _octree_t *octree,
+ const int        n_tgt,
+ const double    *tgt_coord,
+ PDM_g_num_t     *closest_point_g_num,
+ double          *closest_point_dist2
+ )
+{
+  const int dim = octree->dim;
+  const int n_nodes = octree->octants->n_nodes;
+
+  typedef struct {
+    int start;
+    int end;
+  } _node_t;
+  const size_t s_data = sizeof(_node_t);
+
+  /* Deepest common ancestor of all local octants */
+  PDM_morton_code_t ancestor;
+  PDM_morton_nearest_common_ancestor (octree->octants->codes[0],
+                                      octree->octants->codes[n_nodes-1],
+                                      &ancestor);
+
+  _node_t root_node;
+  root_node.start = 0;
+  root_node.end   = n_nodes;
+
+  _min_heap_2_t *heap = _min_heap_create2 (n_nodes, s_data);
+
+  /* Loop over target points */
+  double node_dist2;
+  _node_t node;
+
+  _node_t child_node;
+  PDM_morton_code_t child_code;
+  double child_dist2;
+
+  for (int i_tgt = 0; i_tgt < n_tgt; i_tgt++) {
+
+    const double *point = tgt_coord + dim*i_tgt;
+
+    _min_heap_reset2 (heap);
+    _min_heap_push2 (heap, (void *) &root_node, 0.);
+
+    while (_min_heap_pop2 (heap, (void *) &node, &node_dist2)) {
+
+      if (node_dist2 >= closest_point_dist2[i_tgt]) {
+        /* All the nodes in the heap are now farther than the provisional closest point */
+        break;
+      }
+
+      /* Internal node */
+      if (node.end > node.start + 1) {
+        /* Bisect */
+        int range[3] = {node.start,
+                        node.start + (node.end - node.start)/2,
+                        node.end};
+        for (int i_child = 0; i_child < 2; i_child++) {
+          child_node.start = range[i_child];
+          child_node.end   = range[i_child+1];
+
+          PDM_morton_nearest_common_ancestor (octree->octants->codes[child_node.start],
+                                              octree->octants->codes[child_node.end-1],
+                                              &child_code);
+
+          child_dist2 = _octant_min_dist2 (dim,
+                                           child_code,
+                                           octree->d,
+                                           octree->s,
+                                           point);
+          /* Push child in heap */
+          if (child_dist2 < closest_point_dist2[i_tgt]) {
+            _min_heap_push2 (heap, (void *) &child_node, child_dist2);
+          }
+        }
+      }
+
+      /* Leaf node */
+      else {
+        /* inspect source points inside popped leaf */
+        for (int i = 0; i < octree->octants->n_points[node.start]; i++) {
+          int j = octree->octants->range[node.start] + i;
+          double point_dist2 = _pt_to_pt_dist2 (dim,
+                                                point,
+                                                octree->points + dim*j);
+          if (point_dist2 < closest_point_dist2[i_tgt]) {
+            closest_point_dist2[i_tgt] = point_dist2;
+            closest_point_g_num[i_tgt] = octree->points_gnum[j];
+          }
+        } // End of loop on source points inside popped leaf
+      } // End if internal/leaf node
+
+    } // End while heap not empty
+
+  } // End of loop on target points
+
+  _min_heap_free2 (heap);
+}
 
 
 
@@ -9566,7 +9669,7 @@ void
 PDM_para_octree_single_closest_point
 (
  const int    id,
- const int    use_heap,
+ const _local_search_fun_t local_search_fun,
  const int    n_pts,
  double      *pts_coord,
  PDM_g_num_t *pts_g_num,
@@ -9576,6 +9679,27 @@ PDM_para_octree_single_closest_point
 {
   _octree_t *octree = _get_from_id (id);
   const int dim = octree->dim;
+
+  void (*local_search_fun_ptr) (const _octree_t *,
+                                const int,
+                                double *,
+                                PDM_g_num_t *,
+                                double *) = NULL;
+  if (!octree->neighboursToBuild) {
+    switch (local_search_fun) {
+    case LOCAL_SEARCH_RECURSIVE:
+      local_search_fun_ptr = &_single_closest_point_local_top_down;
+      break;
+    case LOCAL_SEARCH_HEAP:
+      local_search_fun_ptr = &_single_closest_point_local_top_down_heap;
+      break;
+    case LOCAL_SEARCH_HEAP_BINARY:
+      local_search_fun_ptr = &_single_closest_point_local_top_down_heap_binary;
+      break;
+    default:
+      local_search_fun_ptr = &_single_closest_point_local_top_down;
+    }
+  }
 
   double times_elapsed[NTIMER_SCP], b_t_elapsed, e_t_elapsed;
   for (_spc_timer_step_t step = SCP_BEGIN; step <= SCP_TOTAL; step++) {
@@ -9817,7 +9941,7 @@ PDM_para_octree_single_closest_point
                                  _closest_pt_g_num,
                                  _closest_pt_dist2);
   } else {
-    if (use_heap) {
+    /*if (use_heap) {
       _single_closest_point_local_top_down_heap (octree,
                                                  n_recv_pts,
                                                  recv_coord,
@@ -9829,7 +9953,12 @@ PDM_para_octree_single_closest_point
                                             recv_coord,
                                             _closest_pt_g_num,
                                             _closest_pt_dist2);
-    }
+                                            }*/
+    (*local_search_fun_ptr) (octree,
+                             n_recv_pts,
+                             recv_coord,
+                             _closest_pt_g_num,
+                             _closest_pt_dist2);
   }
   free (pts_code);
 
@@ -10014,8 +10143,8 @@ PDM_para_octree_single_closest_point
                                    _closest_pt_g_num,
                                    _closest_pt_dist2);
     } else {
-      if (use_heap) {
-        _single_closest_point_local_top_down_heap (octree,
+      /*if (use_heap) {
+        _single_closest_point_local_top_down_binary (octree,
                                                    n_recv_pts,
                                                    recv_coord,
                                                    _closest_pt_g_num,
@@ -10026,7 +10155,12 @@ PDM_para_octree_single_closest_point
                                               recv_coord,
                                               _closest_pt_g_num,
                                               _closest_pt_dist2);
-      }
+                                              }*/
+      (*local_search_fun_ptr) (octree,
+                               n_recv_pts,
+                               recv_coord,
+                               _closest_pt_g_num,
+                               _closest_pt_dist2);
     }
     free (recv_coord);
 

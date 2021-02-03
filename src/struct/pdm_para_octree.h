@@ -283,11 +283,17 @@ PDM_para_octree_points_inside_boxes
  *
  */
 
+typedef enum {
+  LOCAL_SEARCH_RECURSIVE,
+  LOCAL_SEARCH_HEAP,
+  LOCAL_SEARCH_HEAP_BINARY
+} _local_search_fun_t;
+
 void
 PDM_para_octree_single_closest_point
 (
 const int    id,
-const int    use_heap,
+const _local_search_fun_t local_search_fun,
 const int    n_pts,
 double      *pts,
 PDM_g_num_t *pts_g_num,

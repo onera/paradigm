@@ -75,7 +75,7 @@ _read_args(int            argc,
            int           *use_neighbours,
            int           *n_max_per_leaf,
            int           *surf_source,
-           int           *use_heap)
+           int           *local_search_fun)
 {
   int i = 1;
 
@@ -132,8 +132,12 @@ _read_args(int            argc,
     else if (strcmp(argv[i], "-surf") == 0) {
       *surf_source = 1;
     }
-    else if (strcmp(argv[i], "-heap") == 0) {
-      *use_heap = 1;
+    else if (strcmp(argv[i], "-lsf") == 0) {
+      i++;
+      if (i >= argc)
+        _usage(EXIT_FAILURE);
+      else
+        *local_search_fun = atoi(argv[i]);
     }
     else
       _usage(EXIT_FAILURE);
@@ -306,7 +310,7 @@ _single_closest_point
  PDM_MPI_Comm         comm,
  const int            use_neighbours,
  const int            n_max_per_leaf,
- const int            use_heap,
+ const int            local_search_fun,
  const int            n_part_src,
  const int           *n_src,
  const double       **src_coord,
@@ -412,7 +416,7 @@ _single_closest_point
 
   /* Search closest source points */
   PDM_para_octree_single_closest_point (octree_id,
-                                        use_heap,
+                                        (const _local_search_fun_t) local_search_fun,
                                         _n_tgt,
                                         _tgt_coord,
                                         _tgt_g_num,
@@ -654,7 +658,7 @@ int main(int argc, char *argv[])
   int         use_neighbours = 0;
   int         n_max_per_leaf = 1;
   int         surf_source    = 0;
-  int         use_heap       = 0;
+  int         local_search_fun = 0;
 
   /*
    *  Read args
@@ -668,11 +672,11 @@ int main(int argc, char *argv[])
               &use_neighbours,
               &n_max_per_leaf,
               &surf_source,
-              &use_heap);
+              &local_search_fun);
 
   if (method == 1) use_neighbours = 1;
-  if (method == 0 && i_rank == 0) printf("use neighbours? %d, use heap? %d\n",
-                                         use_neighbours, use_heap);
+  if (method == 0 && i_rank == 0) printf("use neighbours? %d, local_search_fun = %d\n",
+                                         use_neighbours, local_search_fun);
 
   double origin[3] = {0., 0., 0.};
   if (1) {
@@ -754,7 +758,7 @@ int main(int argc, char *argv[])
     _single_closest_point (PDM_MPI_COMM_WORLD,
                            use_neighbours,
                            n_max_per_leaf,
-                           use_heap,
+                           local_search_fun,
                            n_part_src,
                            (const int *) &_n_src,
                            (const double **) &src_coord,
