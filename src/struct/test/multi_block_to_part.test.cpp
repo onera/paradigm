@@ -331,3 +331,148 @@ MPI_TEST_CASE("[2p] multi_block_to_part",2) {
   free(n_elmts);
 
 }
+
+#include <vector>
+#include <algorithm>
+
+MPI_TEST_CASE("[3p] multi_block_to_part n_block=1",3) {
+  PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
+
+  int n_block = 1;
+  int n_rank = 3;
+
+  int n_elt = 7;
+  std::vector<PDM_g_num_t> multi_distrib_idx = {0,21};
+  std::vector<std::vector<PDM_g_num_t>> block_distribs_storer = {{0,7,14,21}};
+
+  std::vector<PDM_g_num_t*> block_distribs(n_block);
+  for (int i=0; i<n_block; ++i) {
+    block_distribs[i] = block_distribs_storer[i].data();
+  }
+
+  const int n_part = 1;
+
+  std::vector<PDM_g_num_t> ln_to_gn_0(n_elt);
+  std::iota(begin(ln_to_gn_0),end(ln_to_gn_0),test_rank*n_elt+1);
+  std::vector<PDM_g_num_t*> ln_to_gn = {ln_to_gn_0.data()};
+  std::vector<int> n_elts = {n_elt};
+
+
+  PDM_multi_block_to_part_t* mbtp =
+    PDM_multi_block_to_part_create(multi_distrib_idx.data(),
+                                   n_block,
+             (const PDM_g_num_t**) block_distribs.data(),
+             (const PDM_g_num_t**) ln_to_gn.data(),
+                                   n_elts.data(),
+                                   n_part,
+                                   pdm_comm);
+  int* stride_one = (int*)malloc( 1 * sizeof(int));
+  stride_one[0] = 1;
+
+  std::vector<int32_t> darray(n_elt);
+  if (test_rank==0) darray = { 0, 1, 2, 3, 4, 5, 6};
+  if (test_rank==1) darray = { 7, 8, 9,10,11,12,13};
+  if (test_rank==2) darray = {14,15,16,17,18,19,20};
+  std::vector<int32_t*> darray_ptr(n_block);
+  darray_ptr[0] = darray.data();
+
+  int32_t** parray = nullptr;
+  PDM_multi_block_to_part_exch2(mbtp, sizeof(int32_t), PDM_STRIDE_CST,
+                                &stride_one,
+                     (void ** ) darray_ptr.data(),
+                                nullptr,
+                     (void ***) &parray);
+
+  // since there is only one block, the exchange is just the identity
+  MPI_CHECK_EQ_C_ARRAY(0, parray[0], darray.data(), n_elt);
+  MPI_CHECK_EQ_C_ARRAY(1, parray[0], darray.data(), n_elt);
+  MPI_CHECK_EQ_C_ARRAY(2, parray[0], darray.data(), n_elt);
+
+  for(int i_part = 0; i_part < n_part; ++i_part){
+    free(parray[i_part]);
+  }
+  free(parray);
+  free(stride_one);
+  PDM_multi_block_to_part_free(mbtp);
+}
+
+
+MPI_TEST_CASE("[3p] multi_block_to_part n_block=2",3) {
+  PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
+
+  int n_block = 2;
+  int n_rank = 3;
+  int i_rank = test_rank;
+
+  int n_elt = 7;
+  std::vector<PDM_g_num_t> multi_distrib_idx = {0,21,42};
+  std::vector<std::vector<PDM_g_num_t>> block_distribs_storer = {{0,7,14,21},{0,7,14,21}};
+
+  std::vector<PDM_g_num_t*> block_distribs(n_block);
+  for (int i=0; i<n_block; ++i) {
+    block_distribs[i] = block_distribs_storer[i].data();
+  }
+
+  const int n_part = 1;
+
+  std::vector<PDM_g_num_t> merged_distri = {0,14,28,42};
+
+  int n_elts_0 = merged_distri[i_rank+1]-merged_distri[i_rank];
+  std::vector<PDM_g_num_t> ln_to_gn_0(n_elts_0);
+  std::iota(begin(ln_to_gn_0),end(ln_to_gn_0),merged_distri[i_rank]+1);
+  std::vector<PDM_g_num_t*> ln_to_gn = {ln_to_gn_0.data()};
+  std::vector<int> n_elts = {n_elts_0};
+
+  PDM_multi_block_to_part_t* mbtp =
+    PDM_multi_block_to_part_create(multi_distrib_idx.data(),
+                                   n_block,
+             (const PDM_g_num_t**) block_distribs.data(),
+             (const PDM_g_num_t**) ln_to_gn.data(),
+                                   n_elts.data(),
+                                   n_part,
+                                   pdm_comm);
+  int stride = 1;
+  int** stride_one = (int ** ) malloc( n_block * sizeof(int *));
+  for(int i_block = 0; i_block < n_block; ++i_block){
+    stride_one[i_block] = (int * ) malloc( 1 * sizeof(int));
+    stride_one[i_block][0] = stride;
+  }
+
+  std::vector<int32_t> darray0;
+  std::vector<int32_t> darray1;
+  if (i_rank==0) darray0 = { 0, 1, 2, 3, 4, 5, 6};
+  if (i_rank==1) darray0 = { 7, 8, 9,10,11,12,13};
+  if (i_rank==2) darray0 = {14,15,16,17,18,19,20};
+  if (i_rank==0) darray1 = {  0, 10, 20, 30, 40, 50, 60};
+  if (i_rank==1) darray1 = { 70, 80, 90,100,110,120,130};
+  if (i_rank==2) darray1 = {140,150,160,170,180,190,200};
+  std::vector<int32_t*> darray_ptr(n_block);
+  darray_ptr[0] = darray0.data();
+  darray_ptr[1] = darray1.data();
+
+  int32_t** parray = nullptr;
+  PDM_multi_block_to_part_exch2(mbtp, sizeof(int32_t), PDM_STRIDE_CST,
+                                stride_one,
+                     (void ** ) darray_ptr.data(),
+                                nullptr,
+                     (void ***) &parray);
+
+  // since there is only one block, the exchange is just the identity
+  std::vector<int32_t> parray_expected;
+  if (i_rank==0) parray_expected = {  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13};
+  if (i_rank==1) parray_expected = { 14, 15, 16, 17, 18, 19, 20,  0, 10, 20, 30, 40, 50, 60};
+  if (i_rank==2) parray_expected = { 70, 80, 90,100,110,120,130,140,150,160,170,180,190,200};
+  MPI_CHECK_EQ_C_ARRAY(0, parray[0], parray_expected.data(), n_elt*2);
+  MPI_CHECK_EQ_C_ARRAY(1, parray[0], parray_expected.data(), n_elt*2);
+  MPI_CHECK_EQ_C_ARRAY(2, parray[0], parray_expected.data(), n_elt*2);
+
+  for(int i_part = 0; i_part < n_part; ++i_part){
+    free(parray[i_part]);
+  }
+  free(parray);
+  for(int i_block = 0; i_block < n_block; ++i_block){
+    free(stride_one[i_block]);
+  }
+  free(stride_one);
+  PDM_multi_block_to_part_free(mbtp);
+}

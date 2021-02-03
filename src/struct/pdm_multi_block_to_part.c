@@ -436,13 +436,14 @@ PDM_multi_block_to_part_exch2
   } else if (t_stride == PDM_STRIDE_CST) {
 
     for (int i = 0; i < mbtp->n_rank; i++) {
+      i_send_buffer[i+1] = i_send_buffer[i];
+      i_recv_buffer[i+1] = i_recv_buffer[i];
       for(int i_block = 0; i_block < mbtp->n_block; ++i_block) {
         int idx = i_block + i*mbtp->n_block;
         int cst_stride   = block_stride[i_block][0];
         int s_block_unit = cst_stride * (int) s_data;
         i_send_buffer[i+1] += mbtp->distributed_block_n[idx] * s_block_unit;
         i_recv_buffer[i+1] += mbtp->requested_block_n  [idx] * s_block_unit;
-
         n_send_buffer[i] += mbtp->distributed_block_n[idx] * s_block_unit;
         n_recv_buffer[i] += mbtp->requested_block_n  [idx] * s_block_unit;
       }
@@ -455,8 +456,8 @@ PDM_multi_block_to_part_exch2
       PDM_log_trace_array_int   (n_recv_buffer, mbtp->n_rank  , "n_recv_buffer:: ");
     }
 
-    s_send_buffer = i_send_buffer[n_rank1] + n_send_buffer[n_rank1];
-    s_recv_buffer = i_recv_buffer[n_rank1] + n_recv_buffer[n_rank1];
+    s_send_buffer = i_send_buffer[mbtp->n_rank];
+    s_recv_buffer = i_recv_buffer[mbtp->n_rank];
 
     send_buffer = (unsigned char *) malloc(sizeof(unsigned char) * s_send_buffer);
     recv_buffer = (unsigned char *) malloc(sizeof(unsigned char) * s_recv_buffer);
