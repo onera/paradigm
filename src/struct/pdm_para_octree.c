@@ -9188,6 +9188,39 @@ _single_closest_point_local_top_down
 }
 
 
+static void
+_single_closest_point_local_top_down_sorted
+(
+ const _octree_t   *octree,
+ const int          n_tgt,
+ double            *tgt_coord,
+ PDM_g_num_t       *closest_point_g_num,
+ double            *closest_point_dist2
+ )
+{
+  const int dim = octree->dim;
+
+  PDM_morton_code_t ancestor;
+  PDM_morton_nearest_common_ancestor (octree->octants->codes[0],
+                                      octree->octants->codes[octree->octants->n_nodes-1],
+                                      &ancestor);
+
+  /* Loop over target points */
+  for (int i = 0; i < n_tgt; i++) {
+    _single_closest_point_recursive_sorted (ancestor,
+                                            octree,
+                                            tgt_coord + dim*i,
+                                            0,
+                                            octree->octants->n_nodes,
+                                            closest_point_g_num + i,
+                                            closest_point_dist2 + i);
+  }
+}
+
+
+
+
+
 typedef struct {
   PDM_morton_code_t code;
   int               start;
@@ -9689,6 +9722,9 @@ PDM_para_octree_single_closest_point
     switch (local_search_fun) {
     case LOCAL_SEARCH_RECURSIVE:
       local_search_fun_ptr = &_single_closest_point_local_top_down;
+      break;
+    case LOCAL_SEARCH_RECURSIVE_SORTED:
+      local_search_fun_ptr = &_single_closest_point_local_top_down_sorted;
       break;
     case LOCAL_SEARCH_HEAP:
       local_search_fun_ptr = &_single_closest_point_local_top_down_heap;

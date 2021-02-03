@@ -285,6 +285,7 @@ PDM_para_octree_points_inside_boxes
 
 typedef enum {
   LOCAL_SEARCH_RECURSIVE,
+  LOCAL_SEARCH_RECURSIVE_SORTED,
   LOCAL_SEARCH_HEAP,
   LOCAL_SEARCH_HEAP_BINARY
 } _local_search_fun_t;
