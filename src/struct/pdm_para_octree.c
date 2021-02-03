@@ -9063,22 +9063,20 @@ _single_closest_point_recursive_sorted
 
   /* Multiple octants */
   else {
-    const size_t n_child = 1 << dim;
-    /*_min_heap_t *child_heap = _min_heap_create (n_child);*/
-
+    const int n_child = 1 << dim;
     PDM_morton_code_t child_code[8];
     PDM_morton_get_children (dim,
                              node,
                              child_code);
 
     double child_dist2[8];
-    size_t child_start[8], child_end[8];
-    size_t prev_end = start;
-    for (size_t i = 0; i < n_child; i++) {
+    int child_start[8], child_end[8];
+    int prev_end = start;
+    for (int i = 0; i < n_child; i++) {
 
       /* get start and end of range in list of nodes covered by current child */
       /* s <-- first descendant of child in list */
-      size_t s = prev_end;
+      int s = prev_end;
       while (s < end) {
         if (PDM_morton_ancestor_is (child_code[i], octree->octants->codes[s])) {
           break;
@@ -9100,9 +9098,9 @@ _single_closest_point_recursive_sorted
       child_start[i] = s;
 
       /* e <-- next of last descendant of child in list */
-      size_t e = end;
+      int e = end;
       while (e > s + 1) {
-        size_t m = s + (e - s) / 2;
+        int m = s + (e - s) / 2;
         if (PDM_morton_ancestor_is (child_code[i], octree->octants->codes[m])) {
           s = m;
         } else {
@@ -9128,9 +9126,9 @@ _single_closest_point_recursive_sorted
     int child_order[8] = {0, 1, 2, 3, 4, 5, 6, 7};
     PDM_sort_double (child_dist2,
                      child_order,
-                     (int) n_child);
+                     n_child);
 
-    for (size_t i = 0; i < n_child; i++) {
+    for (int i = 0; i < n_child; i++) {
       if (child_dist2[i] >= *closest_point_dist2) return;
       int i_child = child_order[i];
       _single_closest_point_recursive_sorted (child_code[i_child],
