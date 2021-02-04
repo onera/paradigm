@@ -10069,9 +10069,9 @@ PDM_para_octree_single_closest_point
     PDM_timer_resume (octree->timer);
 
     //-->> stats
-    double avg_close_ranks = 0;
-    if (n_recv_pts > 0) avg_close_ranks = (double) close_ranks_idx[n_recv_pts] / (double) n_recv_pts;
-    printf("[%d] avg nb of close ranks per pt = %f\n", i_rank, avg_close_ranks);
+    double avg_close_ranks = (double) (close_ranks_idx[n_recv_pts] - n_recv_pts);
+    if (n_recv_pts > 0) avg_close_ranks /= (double) n_recv_pts;
+    printf("[%d] avg nb of close ranks per pt = %.3f\n", i_rank, avg_close_ranks);
     //<<--
 
     for (int i = 0; i < n_rank; i++) {
@@ -10080,7 +10080,11 @@ PDM_para_octree_single_closest_point
 
     for (int i = 0; i < n_recv_pts; i++) {
       for (int j = close_ranks_idx[i]; j < close_ranks_idx[i+1]; j++) {
-        send_count[close_ranks[j]]++;
+        int rank = close_ranks[j];
+        if (rank == i_rank) {
+          continue;
+        }
+        send_count[rank]++;
       }
     }
 
@@ -10101,6 +10105,10 @@ PDM_para_octree_single_closest_point
     for (int i = 0; i < n_recv_pts; i++) {
       for (int j = close_ranks_idx[i]; j < close_ranks_idx[i+1]; j++) {
         int rank = close_ranks[j];
+        if (rank == i_rank) {
+          continue;
+        }
+
         int k = send_shift[rank] + send_count[rank];
         send_g_num[k] = recv_g_num[i];
         send_closest_pt_dist2[k] = _closest_pt_dist2[i];
@@ -10309,6 +10317,7 @@ PDM_para_octree_single_closest_point
   _scp_dump_times (times_elapsed,
                    octree->comm);
 }
+
 
 #ifdef __cplusplus
 }
