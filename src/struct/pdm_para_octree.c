@@ -9713,7 +9713,7 @@ PDM_para_octree_single_closest_point
 
   void (*local_search_fun_ptr) (const _octree_t *,
                                 const int,
-                                double *,
+                                const double *,
                                 PDM_g_num_t *,
                                 double *) = NULL;
   if (!octree->neighboursToBuild) {
