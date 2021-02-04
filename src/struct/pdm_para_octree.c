@@ -9151,7 +9151,7 @@ _single_closest_point_local_top_down
 (
  const _octree_t   *octree,
  const int          n_tgt,
- double            *tgt_coord,
+ const double      *tgt_coord,
  PDM_g_num_t       *closest_point_g_num,
  double            *closest_point_dist2
  )
@@ -9191,7 +9191,7 @@ _single_closest_point_local_top_down_sorted
 (
  const _octree_t   *octree,
  const int          n_tgt,
- double            *tgt_coord,
+ const double      *tgt_coord,
  PDM_g_num_t       *closest_point_g_num,
  double            *closest_point_dist2
  )
