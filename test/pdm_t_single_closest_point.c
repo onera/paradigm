@@ -75,7 +75,8 @@ _read_args(int            argc,
            int           *use_neighbours,
            int           *n_max_per_leaf,
            int           *surf_source,
-           int           *local_search_fun)
+           int           *local_search_fun,
+           int           *randomize)
 {
   int i = 1;
 
@@ -139,12 +140,19 @@ _read_args(int            argc,
       else
         *local_search_fun = atoi(argv[i]);
     }
+    else if (strcmp(argv[i], "-rand") == 0) {
+      *randomize = 1;
+    }
     else
       _usage(EXIT_FAILURE);
     i++;
   }
 }
 
+
+static inline double _rand01(void) {
+  return (double) rand() / (double) RAND_MAX;
+}
 
 
 static void
@@ -165,13 +173,9 @@ _gen_cloud
   }
   *pts_coord = malloc (sizeof(double) * 3 * (*_n_pts));
 
-  int idx = 0;
-  for (int i = 0; i < n_pts; i++) {
+  for (int i = 0; i < (*_n_pts); i++) {
     for (int j = 0; j < 3; j++) {
-      double x = origin[j] + length * (double) rand() / ((double) RAND_MAX);
-      if (i%n_rank == i_rank) {
-        (*pts_coord)[idx++] = x;
-      }
+      (*pts_coord)[3*i+j] = origin[j] + length * _rand01();
     }
   }
 }
@@ -179,12 +183,13 @@ _gen_cloud
 
 
 static void
-_gen_cube_cell_centers
+_gen_cube_vol
 (
  PDM_MPI_Comm        comm,
  const PDM_g_num_t   n_faceSeg,
  const double        origin[3],
  const double        length,
+ const int           randomize,
  int                *npts,
  PDM_g_num_t       **g_num,
  double            **coord
@@ -196,9 +201,10 @@ _gen_cube_cell_centers
   PDM_MPI_Comm_size(comm, &n_rank);
   PDM_MPI_Comm_rank(comm, &i_rank);
 
+  PDM_g_num_t n_cell = n_faceSeg * n_faceSeg * n_faceSeg;
+
   PDM_g_num_t *distribCell = (PDM_g_num_t *) malloc((n_rank + 1) * sizeof(PDM_g_num_t));
 
-  PDM_g_num_t n_cell     = n_faceSeg * n_faceSeg * n_faceSeg;
   PDM_g_num_t n_faceFace = n_faceSeg * n_faceSeg;
 
   // Define distribution
@@ -218,37 +224,48 @@ _gen_cube_cell_centers
   }
 
   PDM_g_num_t _dn_cell = distribCell[i_rank+1] - distribCell[i_rank];
+  *npts = (int) _dn_cell;
 
   const double step = length / (double) n_faceSeg;
 
   *g_num = malloc (sizeof(PDM_g_num_t) * _dn_cell);
   *coord = malloc (sizeof(double)      * _dn_cell * 3);
 
-  int _npts = 0;
-  for (PDM_g_num_t g = distribCell[i_rank]; g < distribCell[i_rank+1]; g++) {
-    PDM_g_num_t i = g % n_faceSeg;
-    PDM_g_num_t j = ((g - i) % n_faceFace) / n_faceSeg;
-    PDM_g_num_t k = (g - i - n_faceSeg * j) / n_faceFace;
-
-    (*coord)[3 * _npts    ] = (i + 0.5) * step + origin[0];
-    (*coord)[3 * _npts + 1] = (j + 0.5) * step + origin[1];
-    (*coord)[3 * _npts + 2] = (k + 0.5) * step + origin[2];
-    (*g_num)[_npts++] = g + 1;//1 + i + n_faceSeg * j + n_faceFace * k;
+  if (randomize) {
+    for (int i = 0; i < *npts; i++) {
+      (*g_num)[i] = 1 + i + distribCell[i_rank];
+      for (int j = 0; j < 3; j++) {
+        (*coord)[3*i+j] = origin[j] + length * _rand01();
+      }
+    }
   }
 
-  *npts = _npts;
+  else {
+    int _npts = 0;
+    for (PDM_g_num_t g = distribCell[i_rank]; g < distribCell[i_rank+1]; g++) {
+      PDM_g_num_t i = g % n_faceSeg;
+      PDM_g_num_t j = ((g - i) % n_faceFace) / n_faceSeg;
+      PDM_g_num_t k = (g - i - n_faceSeg * j) / n_faceFace;
+
+      (*coord)[3 * _npts    ] = (i + 0.5) * step + origin[0];
+      (*coord)[3 * _npts + 1] = (j + 0.5) * step + origin[1];
+      (*coord)[3 * _npts + 2] = (k + 0.5) * step + origin[2];
+      (*g_num)[_npts++] = g + 1;//1 + i + n_faceSeg * j + n_faceFace * k;
+    }
+  }
 
   free (distribCell);
 }
 
 
 static void
-_gen_cube_face_centers
+_gen_cube_surf
 (
  PDM_MPI_Comm        comm,
  const PDM_g_num_t   n_faceSeg,
  const double        origin[3],
  const double        length,
+ const int           randomize,
  int                *npts,
  PDM_g_num_t       **g_num,
  double            **coord
@@ -258,6 +275,7 @@ _gen_cube_face_centers
 
   PDM_MPI_Comm_size(comm, &n_rank);
   PDM_MPI_Comm_rank(comm, &i_rank);
+
 
   PDM_g_num_t n_faceFace = n_faceSeg * n_faceSeg;
   PDM_g_num_t n_face     = 6 * n_faceFace;
@@ -292,8 +310,15 @@ _gen_cube_face_centers
     PDM_g_num_t j = ((g - i) % n_faceFace) / n_faceSeg;
 
     (*coord)[3 * _npts + dir0] = origin[dir0] + sgn * length;
-    (*coord)[3 * _npts + dir1] = (i + 0.5) * step + origin[dir1];
-    (*coord)[3 * _npts + dir2] = (j + 0.5) * step + origin[dir2];
+    if (randomize) {
+      (*coord)[3 * _npts + dir1] = origin[dir1] + length * _rand01();
+      (*coord)[3 * _npts + dir2] = origin[dir2] + length * _rand01();
+    }
+
+    else {
+      (*coord)[3 * _npts + dir1] = (i + 0.5) * step + origin[dir1];
+      (*coord)[3 * _npts + dir2] = (j + 0.5) * step + origin[dir2];
+    }
     (*g_num)[_npts++] = g + 1;
   }
 
@@ -647,6 +672,7 @@ int main(int argc, char *argv[])
   PDM_MPI_Comm_rank (PDM_MPI_COMM_WORLD, &i_rank);
   PDM_MPI_Comm_size (PDM_MPI_COMM_WORLD, &n_rank);
 
+  srand (time(NULL) + i_rank);
 
   /*
    *  Set default values
@@ -659,6 +685,7 @@ int main(int argc, char *argv[])
   int         n_max_per_leaf = 1;
   int         surf_source    = 0;
   int         local_search_fun = 0;
+  int         randomize      = 0;
 
   /*
    *  Read args
@@ -672,17 +699,35 @@ int main(int argc, char *argv[])
               &use_neighbours,
               &n_max_per_leaf,
               &surf_source,
-              &local_search_fun);
+              &local_search_fun,
+              &randomize);
 
   if (method == 1) use_neighbours = 1;
-  if (method == 0 && i_rank == 0) printf("use neighbours? %d, local_search_fun = %d\n",
-                                         use_neighbours, local_search_fun);
+  if (i_rank == 0) printf("use neighbours? %d, local_search_fun = %d, randomize? %d\n",
+                          use_neighbours, local_search_fun, randomize);
 
   double origin[3] = {0., 0., 0.};
   if (1) {
-    for (int i = 0; i < 3; i++) {
-      origin[i] = 2. * (double) rand() / ((double) RAND_MAX) - 1.;
+    if (i_rank == 0) {
+      for (int i = 0; i < 3; i++) {
+        origin[i] = 2.*_rand01() - 1.;
+      }
     }
+
+    PDM_MPI_Bcast (origin, 3, PDM_MPI_DOUBLE, 0, PDM_MPI_COMM_WORLD);
+  }
+
+  double aniso[3] = {1., 1., 1.};
+  if (1) {
+    if (i_rank == 0) {
+      for (int i = 0; i < 3; i++) {
+        double r = 2.*_rand01() - 1.;
+        aniso[i] = pow(2., r);
+      }
+      printf("aniso = %f %f %f\n", aniso[0], aniso[1], aniso[2]);
+    }
+
+    PDM_MPI_Bcast (aniso, 3, PDM_MPI_DOUBLE, 0, PDM_MPI_COMM_WORLD);
   }
 
   /*
@@ -698,6 +743,14 @@ int main(int argc, char *argv[])
               i_rank,
               &tgt_coord,
               &_n_tgt);
+
+  for (int i = 0; i < _n_tgt; i++) {
+    for (int j = 0; j < 3; j++) {
+      tgt_coord[3*i+j] = origin[j] + aniso[j] * (tgt_coord[3*i+j] - origin[j]);
+    }
+    //printf("[%d] tgt %f %f %f\n", i_rank, tgt_coord[3*i], tgt_coord[3*i+1], tgt_coord[3*i+2]);
+  }
+
   int id_gnum = PDM_gnum_create (3, 1, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD, PDM_OWNERSHIP_USER);
 
   double *tgt_char_length = malloc (sizeof(double) * _n_tgt);
@@ -725,24 +778,35 @@ int main(int argc, char *argv[])
   PDM_g_num_t *src_g_num = NULL;
 
   if (surf_source) {
-    _gen_cube_face_centers (PDM_MPI_COMM_WORLD,
-                            n_face_seg,
-                            origin,
-                            length,
-                            &_n_src,
-                            &src_g_num,
-                            &src_coord);
+    _gen_cube_surf (PDM_MPI_COMM_WORLD,
+                    n_face_seg,
+                    origin,
+                    length,
+                    randomize,
+                    &_n_src,
+                    &src_g_num,
+                    &src_coord);
   }
 
   else {
-    _gen_cube_cell_centers (PDM_MPI_COMM_WORLD,
-                            n_face_seg,
-                            origin,
-                            length,
-                            &_n_src,
-                            &src_g_num,
-                            &src_coord);
+    _gen_cube_vol (PDM_MPI_COMM_WORLD,
+                   n_face_seg,
+                   origin,
+                   length,
+                   randomize,
+                   &_n_src,
+                   &src_g_num,
+                   &src_coord);
   }
+
+  for (int i = 0; i < _n_src; i++) {
+    for (int j = 0; j < 3; j++) {
+      src_coord[3*i+j] = origin[j] + aniso[j] * (src_coord[3*i+j] - origin[j]);
+    }
+    //printf("[%d] src %f %f %f\n", i_rank, src_coord[3*i], src_coord[3*i+1], src_coord[3*i+2]);
+  }
+
+
 
   /*
    *  Compute closest point
@@ -812,6 +876,7 @@ int main(int argc, char *argv[])
   /*
    *  Check results
    */
+  if (!randomize) {
   if (i_rank == 0) {
     printf("-- Check\n");
     fflush(stdout);
@@ -857,13 +922,13 @@ int main(int argc, char *argv[])
       int dir2 = (dir0 + 2) % 3;
       int sgn = k % 2;
 
-      coord[dir0] = origin[dir0] + sgn * length;
+      coord[dir0] = origin[dir0] + sgn * length * aniso[dir0];
       for (int j = -marge; j < marge; j++) {
         int _j = PDM_MAX (0, PDM_MIN (j, n_face_seg-1));
-        coord[dir2] = (_j + 0.5) * cell_side + origin[dir2];
+        coord[dir2] = (_j + 0.5) * cell_side * aniso[dir2] + origin[dir2];
         for (int i = -marge; i < marge; i++) {
           int _i = PDM_MAX (0, PDM_MIN (i, n_face_seg-1));
-          coord[dir1] = (_i + 0.5) * cell_side + origin[dir1];
+          coord[dir1] = (_i + 0.5) * cell_side * aniso[dir1] + origin[dir1];
 
           PDM_g_num_t g_num = 1 + i + n_face_seg*(j + n_face_seg*k);
           double dist2 = 0.;
@@ -883,7 +948,7 @@ int main(int argc, char *argv[])
 
     else {
       for (int idim = 0; idim < 3; idim++) {
-        ijk0 = (int) floor(tgt_coord[3*itgt+idim] / cell_side);
+        ijk0 = (int) floor(tgt_coord[3*itgt+idim] / (cell_side * aniso[idim]));
         ijk0 = PDM_MIN (PDM_MAX (ijk0, 0), n_face_seg-1);
 
         if (ijk0 < marge) {
@@ -900,11 +965,11 @@ int main(int argc, char *argv[])
 
       // inspect search region
       for (int k = ijk_lo[2]; k < ijk_hi[2]; k++) {
-        coord[2] = (k + 0.5) * cell_side + origin[2];
+        coord[2] = (k + 0.5) * cell_side * aniso[2] + origin[2];
         for (int j = ijk_lo[1]; j < ijk_hi[1]; j++) {
-          coord[1] = (j + 0.5) * cell_side + origin[1];
+          coord[1] = (j + 0.5) * cell_side * aniso[1] + origin[1];
           for (int i = ijk_lo[0]; i < ijk_hi[0]; i++) {
-            coord[0] = (i + 0.5) * cell_side + origin[0];
+            coord[0] = (i + 0.5) * cell_side * aniso[0] + origin[0];
 
             PDM_g_num_t g_num = 1 + i + n_face_seg*(j + n_face_seg*k);
             double dist2 = 0.;
@@ -925,7 +990,8 @@ int main(int argc, char *argv[])
 
     // check
     //if (true_closest_src_g_num != closest_point_g_num[0][itgt]) {
-    if (closest_point_dist2[0][itgt] > true_closest_src_dist2) {
+    if (closest_point_dist2[0][itgt] >  true_closest_src_dist2 &&
+        closest_point_g_num[0][itgt] != true_closest_src_g_num) {
       _n_wrong++;
       double d0 = sqrt(true_closest_src_dist2);
       double d1 = sqrt(closest_point_dist2[0][itgt]);
@@ -961,7 +1027,7 @@ int main(int argc, char *argv[])
            wrong_percentage);
     fflush(stdout);
   }
-
+  }
 
 
 

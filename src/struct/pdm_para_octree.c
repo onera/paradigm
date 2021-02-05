@@ -8743,6 +8743,11 @@ _pt_to_pt_dist2_normalized
   return dist2;
 }
 
+
+
+
+
+
 static void
 _single_closest_point_local
 (
@@ -9230,7 +9235,6 @@ static void _heap_node_set (_heap_node_t            *node,
                             const int                start,
                             const int                end)
 {
-  //node->code = malloc (sizeof(PDM_morton_code_t));
   PDM_morton_copy (code, &node->code);
   node->start = start;
   node->end   = end;
