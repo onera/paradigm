@@ -1,4 +1,3 @@
-
 /*----------------------------------------------------------------------------
  * Standard C library headers
  *----------------------------------------------------------------------------*/
@@ -1656,19 +1655,20 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
   int *box_l_num_local;
   #if 0
   PDM_box_tree_closest_upper_bound_dist_boxes_get (_dbbt->btLoc,
-						   n_pts_local,
-						   pts_local,
-						   upper_bound_dist_local,
-						   &box_index_local,
-						   &box_l_num_local);
+                                                   n_pts_local,
+                                                   pts_local,
+                                                   upper_bound_dist_local,
+                                                   &box_index_local,
+                                                   &box_l_num_local);
   #else
   PDM_box_tree_closest_upper_bound_dist_boxes_get_v2 (_dbbt->btLoc,
-						      -1, // search in local box tree
-						      n_pts_local,
-						      pts_local,
-						      upper_bound_dist_local,
-						      &box_index_local,
-						      &box_l_num_local);
+                                                      -1, // search in local box tree
+                                                      n_pts_local,
+                                                      pts_local,
+                                                      upper_bound_dist_local,
+                                                      &box_index_local,
+                                                      &box_l_num_local,
+                                                      _dbbt->d);
   #endif
   free(pts_local);
   free(upper_bound_dist_local);
@@ -1695,11 +1695,11 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
 
     #if 0
     PDM_box_tree_closest_upper_bound_dist_boxes_get_from_copied_ranks (_dbbt->btLoc,
-								       i_pts_rank,
-								       pts_rank,
-								       upper_bound_dist_rank,
-								       &box_index_rank,
-								       &box_l_num_rank);
+                                                                       i_pts_rank,
+                                                                       pts_rank,
+                                                                       upper_bound_dist_rank,
+                                                                       &box_index_rank,
+                                                                       &box_l_num_rank);
     #else
     box_index_rank = (int **) malloc (sizeof(int *) * n_copied_ranks);
     box_l_num_rank = (int **) malloc (sizeof(int *) * n_copied_ranks);
@@ -1709,12 +1709,13 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
       double *pts_copied_rank = pts_rank + 3*i_pts_rank[i_copied_rank];
       double *upper_bound_dist_copied_rank = upper_bound_dist_rank + i_pts_rank[i_copied_rank];
       PDM_box_tree_closest_upper_bound_dist_boxes_get_v2 (_dbbt->btLoc,
-							  i_copied_rank,
-							  n_pts_copied_rank,
-							  pts_copied_rank,
-							  upper_bound_dist_copied_rank,
-							  &(box_index_rank[i_copied_rank]),
-							  &(box_l_num_rank[i_copied_rank]));
+                                                          i_copied_rank,
+                                                          n_pts_copied_rank,
+                                                          pts_copied_rank,
+                                                          upper_bound_dist_copied_rank,
+                                                          &(box_index_rank[i_copied_rank]),
+                                                          &(box_l_num_rank[i_copied_rank]),
+                                                          _dbbt->d);
     }
     #endif
 
@@ -1758,12 +1759,13 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
                                                      &box_l_num_recv);
     #else
     PDM_box_tree_closest_upper_bound_dist_boxes_get_v2 (_dbbt->btLoc,
-							-1, // search in local box tree
-							n_pts_recv_total,
-							pts_recv,
-							upper_bound_dist_recv,
-							&box_index_recv,
-							&box_l_num_recv);
+                                                        -1, // search in local box tree
+                                                        n_pts_recv_total,
+                                                        pts_recv,
+                                                        upper_bound_dist_recv,
+                                                        &box_index_recv,
+                                                        &box_l_num_recv,
+                                                        _dbbt->d);
     #endif
     free(pts_recv);
     free(upper_bound_dist_recv);
