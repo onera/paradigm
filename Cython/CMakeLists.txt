@@ -63,6 +63,7 @@ cython_add_module (Pypdm
                    OTHER_SOURCES $<TARGET_OBJECTS:pdm>
                    INCLUDE_DIRECTORIES ${include_dirs})
 endif()
+set_target_properties(Pypdm PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/Pypdm/")
 
 get_target_property(PDM_INC pdm INCLUDE_DIRECTORIES)
 target_include_directories(Pypdm PUBLIC ${PDM_INC})
@@ -113,4 +114,5 @@ if ((CMAKE_C_COMPILER_ID STREQUAL "GNU") OR
   set_target_properties (Pypdm PROPERTIES COMPILE_FLAGS "-w")
 endif()
 
-install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} ${SETUP_PY} --quiet install --prefix=${CMAKE_PDM_INSTALL_PYTHON_DIR} --install-data=${SITE_PACKAGES_PDM} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})")
+install(TARGETS Pypdm
+        LIBRARY DESTINATION ${SITE_PACKAGES_PDM})
