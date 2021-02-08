@@ -9908,14 +9908,15 @@ PDM_para_octree_single_closest_point
                             d,
                             s);
 
-  for (int i = 0; i < n_recv_pts; i++) {
-
-    if (octree->n_points == 0) {
+  if (octree->n_points == 0) {
+    for (int i = 0; i < n_recv_pts; i++) {
       _closest_pt_dist2[i] = HUGE_VAL;
       _closest_pt_g_num[i] = -1;
     }
+  }
 
-    else {
+  else {
+    for (int i = 0; i < n_recv_pts; i++) {
       /* Find base leaf */
       int base = PDM_morton_binary_search (octree->octants->n_nodes,
                                            pts_code[i],
@@ -9957,9 +9958,9 @@ PDM_para_octree_single_closest_point
         }
       }
 
+      /*printf ("[%d] 1st guess for pt ("PDM_FMT_G_NUM") : ("PDM_FMT_G_NUM") at dist2 = %f\n",
+        i_rank, recv_g_num[i], _closest_pt_g_num[i], _closest_pt_dist2[i]);*/
     }
-    /*printf ("[%d] 1st guess for pt ("PDM_FMT_G_NUM") : ("PDM_FMT_G_NUM") at dist2 = %f\n",
-      i_rank, recv_g_num[i], _closest_pt_g_num[i], _closest_pt_dist2[i]);*/
   }
 
   PDM_timer_hang_on (octree->timer);
@@ -10103,8 +10104,8 @@ PDM_para_octree_single_closest_point
     }
 
     send_g_num = realloc (send_g_num, sizeof(PDM_g_num_t) * send_shift[n_rank]);
-    send_coord = realloc (send_coord, sizeof(double)      * send_shift[n_rank]*dim);
-    double *send_closest_pt_dist2 = malloc (sizeof(double) * send_shift[n_rank]);
+    int s_data = dim + 1;
+    send_coord = realloc (send_coord, sizeof(double) * send_shift[n_rank] * s_data);
 
     for (int i = 0; i < n_recv_pts; i++) {
       for (int j = close_ranks_idx[i]; j < close_ranks_idx[i+1]; j++) {
@@ -10115,10 +10116,10 @@ PDM_para_octree_single_closest_point
 
         int k = send_shift[rank] + send_count[rank];
         send_g_num[k] = recv_g_num[i];
-        send_closest_pt_dist2[k] = _closest_pt_dist2[i];
         for (int l = 0; l < dim; l++) {
-          send_coord[dim*k+l] = recv_coord[dim*i+l];
+          send_coord[s_data*k+l] = send_coord[s_data*k] = recv_coord[dim*i];
         }
+        send_coord[s_data*k+dim] = _closest_pt_dist2[i];
         send_count[rank]++;
       }
     }
@@ -10126,31 +10127,36 @@ PDM_para_octree_single_closest_point
     free (close_ranks);
 
     recv_g_num = realloc (recv_g_num, sizeof(PDM_g_num_t) * recv_shift[n_rank]);
-    recv_coord = realloc (recv_coord, sizeof(double)      * recv_shift[n_rank]*dim);
-    _closest_pt_dist2 = realloc (_closest_pt_dist2, sizeof(double) * recv_shift[n_rank]);
     PDM_MPI_Alltoallv (send_g_num, send_count, send_shift, PDM__PDM_MPI_G_NUM,
                        recv_g_num, recv_count, recv_shift, PDM__PDM_MPI_G_NUM,
                        octree->comm);
     free (send_g_num);
 
-    PDM_MPI_Alltoallv (send_closest_pt_dist2, send_count, send_shift, PDM_MPI_DOUBLE,
-                       _closest_pt_dist2,     recv_count, recv_shift, PDM_MPI_DOUBLE,
-                       octree->comm);
-    free (send_closest_pt_dist2);
-
     n_recv_pts = recv_shift[n_rank];
     printf ("[%d] phase 2: n_recv_pts = %d\n", i_rank, n_recv_pts);
 
     for (int i = 0; i < n_rank; i++) {
-      send_count[i] *= dim;
-      recv_count[i] *= dim;
-      send_shift[i+1] *= dim;
-      recv_shift[i+1] *= dim;
+      send_count[i] *= s_data;
+      recv_count[i] *= s_data;
+      send_shift[i+1] *= s_data;
+      recv_shift[i+1] *= s_data;
     }
+    double *recv_double = malloc (sizeof(double) * recv_shift[n_rank]);
     PDM_MPI_Alltoallv (send_coord, send_count, send_shift, PDM_MPI_DOUBLE,
-                       recv_coord, recv_count, recv_shift, PDM_MPI_DOUBLE,
+                       recv_double, recv_count, recv_shift, PDM_MPI_DOUBLE,
                        octree->comm);
     free (send_coord);
+
+    recv_coord = realloc (recv_coord, sizeof(double) * n_recv_pts * dim);
+    _closest_pt_dist2 = realloc (_closest_pt_dist2, sizeof(double) * n_recv_pts);
+    int idx1 = 0, idx2 = 0;
+    for (int i = 0; i < n_recv_pts; i++) {
+      for (int j = 0; j < dim; j++) {
+        recv_coord[idx1++] = recv_double[idx2++];
+      }
+      _closest_pt_dist2[i] = recv_double[idx2++];
+    }
+    free (recv_double);
     free (send_count);
     free (send_shift);
     free (recv_count);
@@ -10321,6 +10327,27 @@ PDM_para_octree_single_closest_point
   _scp_dump_times (times_elapsed,
                    octree->comm);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
