@@ -44,6 +44,7 @@ struct _pdm_part_extension_t {
 
   int             n_domain;
   const int      *n_part;
+  int            *n_part_idx;
 
   _part_t  **parts;
 
@@ -80,6 +81,43 @@ struct _pdm_part_extension_t {
   int **entity_cell_opp_idx;
   int **entity_cell_opp_n;
   int **entity_cell_opp;
+
+  /* Internal results */
+  int **face_face_extended_idx;
+  int **face_face_extended;
+
+  int **edge_edge_extended_idx;
+  int **edge_edge_extended;
+
+  int **vtx_vtx_extended_idx;
+  int **vtx_vtx_extended;
+
+  /* Results */
+  int **border_cell_face_idx;
+  int **border_cell_face;
+
+  int **border_face_edge_idx;
+  int **border_face_edge;
+
+  int **border_edge_vtx_idx;
+  int **border_edge_vtx;
+
+  int **border_face_vtx_idx;
+  int **border_face_vtx;
+
+  // int  *n_face_group;
+  int **border_face_group_idx;
+  int **border_face_group;
+
+  PDM_g_num_t **border_cell_ln_to_gn;
+  PDM_g_num_t **border_face_ln_to_gn;
+  PDM_g_num_t **border_edge_ln_to_gn;
+  PDM_g_num_t **border_vtx_ln_to_gn;
+
+  PDM_g_num_t **border_face_group_ln_to_gn;
+
+  double **border_vtx;
+
 
 };
 
