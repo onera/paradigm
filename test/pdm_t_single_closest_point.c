@@ -76,6 +76,7 @@ _read_args(int            argc,
            int           *n_max_per_leaf,
            int           *surf_source,
            int           *local_search_fun,
+           int           *start_from_minmax_rank,
            int           *randomize)
 {
   int i = 1;
@@ -139,6 +140,9 @@ _read_args(int            argc,
         _usage(EXIT_FAILURE);
       else
         *local_search_fun = atoi(argv[i]);
+    }
+    else if (strcmp(argv[i], "-sfmm") == 0) {
+      *start_from_minmax_rank = 1;
     }
     else if (strcmp(argv[i], "-rand") == 0) {
       *randomize = 1;
@@ -336,6 +340,7 @@ _single_closest_point
  const int            use_neighbours,
  const int            n_max_per_leaf,
  const int            local_search_fun,
+ const int            start_from_minmax_rank,
  const int            n_part_src,
  const int           *n_src,
  const double       **src_coord,
@@ -440,13 +445,23 @@ _single_closest_point
 
 
   /* Search closest source points */
-  PDM_para_octree_single_closest_point (octree_id,
-                                        (const _local_search_fun_t) local_search_fun,
-                                        _n_tgt,
-                                        _tgt_coord,
-                                        _tgt_g_num,
-                                        _closest_src_g_num,
-                                        _closest_src_dist2);
+  if (start_from_minmax_rank) {
+    PDM_para_octree_single_closest_point2 (octree_id,
+                                           (const _local_search_fun_t) local_search_fun,
+                                           _n_tgt,
+                                           _tgt_coord,
+                                           _tgt_g_num,
+                                           _closest_src_g_num,
+                                           _closest_src_dist2);
+  } else {
+    PDM_para_octree_single_closest_point (octree_id,
+                                          (const _local_search_fun_t) local_search_fun,
+                                          _n_tgt,
+                                          _tgt_coord,
+                                          _tgt_g_num,
+                                          _closest_src_g_num,
+                                          _closest_src_dist2);
+  }
 
   /* Restore partitions */
   free (_tgt_coord);
@@ -685,6 +700,7 @@ int main(int argc, char *argv[])
   int         n_max_per_leaf = 1;
   int         surf_source    = 0;
   int         local_search_fun = 0;
+  int         start_from_minmax_rank = 0;
   int         randomize      = 0;
 
   /*
@@ -700,11 +716,12 @@ int main(int argc, char *argv[])
               &n_max_per_leaf,
               &surf_source,
               &local_search_fun,
+              &start_from_minmax_rank,
               &randomize);
 
   if (method == 1) use_neighbours = 1;
-  if (i_rank == 0) printf("use neighbours? %d, local_search_fun = %d, randomize? %d\n",
-                          use_neighbours, local_search_fun, randomize);
+  if (i_rank == 0) printf("use neighbours? %d, local_search_fun = %d, start from minmax rank? %d, randomize? %d\n",
+                          use_neighbours, local_search_fun, start_from_minmax_rank, randomize);
 
   double origin[3] = {0., 0., 0.};
   if (1) {
@@ -823,6 +840,7 @@ int main(int argc, char *argv[])
                            use_neighbours,
                            n_max_per_leaf,
                            local_search_fun,
+                           start_from_minmax_rank,
                            n_part_src,
                            (const int *) &_n_src,
                            (const double **) &src_coord,

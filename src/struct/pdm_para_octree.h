@@ -302,6 +302,18 @@ PDM_g_num_t *closest_octree_pt_g_num,
 double      *closest_octree_pt_dist2
 );
 
+void
+PDM_para_octree_single_closest_point2
+(
+const int    id,
+const _local_search_fun_t local_search_fun,
+const int    n_pts,
+double      *pts,
+PDM_g_num_t *pts_g_num,
+PDM_g_num_t *closest_octree_pt_g_num,
+double      *closest_octree_pt_dist2
+);
+
 #ifdef	__cplusplus
 }
 #endif
