@@ -339,7 +339,7 @@ MPI_TEST_CASE("[3p] multi_block_to_part n_block=1",3) {
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
 
   int n_block = 1;
-  int n_rank = 3;
+  // int n_rank = 3;
 
   int n_elt = 7;
   std::vector<PDM_g_num_t> multi_distrib_idx = {0,21};
@@ -401,7 +401,7 @@ MPI_TEST_CASE("[3p] multi_block_to_part n_block=2",3) {
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
 
   int n_block = 2;
-  int n_rank = 3;
+  // int n_rank = 3;
   int i_rank = test_rank;
 
   int n_elt = 7;

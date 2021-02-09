@@ -409,79 +409,81 @@ int main(int argc, char *argv[])
                                 face_group_ln_to_gn,
                                 vtx);
 
-    PDM_printf("[%i] n_face_group     : %i\n", i_rank, n_face_group);
-    PDM_printf("[%i] n_cell          : %i\n", i_rank, n_cell);
-    PDM_printf("[%i] n_face          : %i\n", i_rank, n_face);
-    PDM_printf("[%i] n_vtx           : %i\n", i_rank, n_vtx);
-    PDM_printf("[%i] n_face_part_bound : %i\n", i_rank, n_face_part_bound);
+    if( 0 == 1) {
+      PDM_printf("[%i] n_face_group     : %i\n", i_rank, n_face_group);
+      PDM_printf("[%i] n_cell          : %i\n", i_rank, n_cell);
+      PDM_printf("[%i] n_face          : %i\n", i_rank, n_face);
+      PDM_printf("[%i] n_vtx           : %i\n", i_rank, n_vtx);
+      PDM_printf("[%i] n_face_part_bound : %i\n", i_rank, n_face_part_bound);
 
-    PDM_printf("[%i] cell_face     : ", i_rank);
-    for (int i = 0; i < n_cell; i++) {
-      for (int j = cell_face_idx[i]; j < cell_face_idx[i+1]; j++) {
-        PDM_printf(" %i", cell_face[j]);
+      PDM_printf("[%i] cell_face     : ", i_rank);
+      for (int i = 0; i < n_cell; i++) {
+        for (int j = cell_face_idx[i]; j < cell_face_idx[i+1]; j++) {
+          PDM_printf(" %i", cell_face[j]);
+        }
+        PDM_printf("\n");
       }
+
       PDM_printf("\n");
-    }
 
-    PDM_printf("\n");
+      PDM_printf("[%i]  face_part_bound    : ", i_rank);
+      for (int i = 0; i < 4 * n_face_part_bound; i++)
+        PDM_printf(" "PDM_FMT_G_NUM, face_part_bound[i]);
+      PDM_printf("\n");
 
-    PDM_printf("[%i]  face_part_bound    : ", i_rank);
-    for (int i = 0; i < 4 * n_face_part_bound; i++)
-      PDM_printf(" "PDM_FMT_G_NUM, face_part_bound[i]);
-    PDM_printf("\n");
+      PDM_printf("[%i]  cell_ln_to_gn    : ", i_rank);
+      for (int i = 0; i < n_cell; i++)
+        PDM_printf(" "PDM_FMT_G_NUM, cell_ln_to_gn[i]);
+      PDM_printf("\n");
 
-    PDM_printf("[%i]  cell_ln_to_gn    : ", i_rank);
-    for (int i = 0; i < n_cell; i++)
-      PDM_printf(" "PDM_FMT_G_NUM, cell_ln_to_gn[i]);
-    PDM_printf("\n");
+      PDM_printf("[%i] face_cell     : ", i_rank);
+      for (int i = 0; i < 2 * n_face; i++)
+        PDM_printf(" %i", face_cell[i]);
+      PDM_printf("\n");
 
-    PDM_printf("[%i] face_cell     : ", i_rank);
-    for (int i = 0; i < 2 * n_face; i++)
-      PDM_printf(" %i", face_cell[i]);
-    PDM_printf("\n");
-
-    PDM_printf("[%i] face_vtx      : ", i_rank);
-    for (int i = 0; i < n_face; i++) {
-      for (int j = face_vtx_idx[i]; j < face_vtx_idx[i+1]; j++) {
-        PDM_printf(" %i", face_vtx[j]);
+      PDM_printf("[%i] face_vtx      : ", i_rank);
+      for (int i = 0; i < n_face; i++) {
+        for (int j = face_vtx_idx[i]; j < face_vtx_idx[i+1]; j++) {
+          PDM_printf(" %i", face_vtx[j]);
+        }
+        PDM_printf("\n");
       }
+
+      PDM_printf("[%i]  face_ln_to_gn    : ", i_rank);
+      for (int i = 0; i < n_face; i++)
+        PDM_printf(" "PDM_FMT_G_NUM, face_ln_to_gn[i]);
       PDM_printf("\n");
-    }
 
-    PDM_printf("[%i]  face_ln_to_gn    : ", i_rank);
-    for (int i = 0; i < n_face; i++)
-      PDM_printf(" "PDM_FMT_G_NUM, face_ln_to_gn[i]);
-    PDM_printf("\n");
+      PDM_printf("[%i] vtx           : ", i_rank);
+      for (int i = 0; i < 3 * n_vtx; i++)
+        PDM_printf(" %12.5e", vtx[i]);
+      PDM_printf("\n");
 
-    PDM_printf("[%i] vtx           : ", i_rank);
-    for (int i = 0; i < 3 * n_vtx; i++)
-      PDM_printf(" %12.5e", vtx[i]);
-    PDM_printf("\n");
+      PDM_printf("[%i] vtx_ln_to_gn     : ", i_rank);
+      for (int i = 0; i <  n_vtx; i++)
+        PDM_printf(" "PDM_FMT_G_NUM, vtx_ln_to_gn[i]);
+      PDM_printf("\n");
 
-    PDM_printf("[%i] vtx_ln_to_gn     : ", i_rank);
-    for (int i = 0; i <  n_vtx; i++)
-      PDM_printf(" "PDM_FMT_G_NUM, vtx_ln_to_gn[i]);
-    PDM_printf("\n");
+      PDM_printf("[%i] face_group_idx : ", i_rank);
+      for (int i = 0; i < n_face_group + 1; i++)
+        PDM_printf(" %i", face_group_idx[i]);
+      PDM_printf("\n");
 
-    PDM_printf("[%i] face_group_idx : ", i_rank);
-    for (int i = 0; i < n_face_group + 1; i++)
-      PDM_printf(" %i", face_group_idx[i]);
-    PDM_printf("\n");
-
-    PDM_printf("[%i] face_group    : ", i_rank);
-    for (int i = 0; i < n_face_group; i++) {
-      for (int j = face_group_idx[i]; j < face_group_idx[i+1]; j++) {
-        PDM_printf(" %i", face_group[j]);
+      PDM_printf("[%i] face_group    : ", i_rank);
+      for (int i = 0; i < n_face_group; i++) {
+        for (int j = face_group_idx[i]; j < face_group_idx[i+1]; j++) {
+          PDM_printf(" %i", face_group[j]);
+        }
+        PDM_printf("\n");
       }
-      PDM_printf("\n");
-    }
 
-    PDM_printf("[%i] face_group_ln_to_gn   : ", i_rank);
-    for (int i = 0; i < n_face_group; i++) {
-      for (int j = face_group_idx[i]; j < face_group_idx[i+1]; j++) {
-        PDM_printf(" "PDM_FMT_G_NUM, face_group_ln_to_gn[j]);
+      PDM_printf("[%i] face_group_ln_to_gn   : ", i_rank);
+      for (int i = 0; i < n_face_group; i++) {
+        for (int j = face_group_idx[i]; j < face_group_idx[i+1]; j++) {
+          PDM_printf(" "PDM_FMT_G_NUM, face_group_ln_to_gn[j]);
+        }
+        PDM_printf("\n");
       }
-      PDM_printf("\n");
     }
   }
 
@@ -496,14 +498,15 @@ int main(int argc, char *argv[])
     int n_vtx_extended2 = PDM_part_extension_ln_to_gn_get(part_ext, 0, i_part, PDM_MESH_ENTITY_VERTEX, &border_vtx_ln_to_gn);
     int n_cell_extended = PDM_part_extension_ln_to_gn_get(part_ext, 0, i_part, PDM_MESH_ENTITY_CELL, &border_cell_ln_to_gn);
     assert(n_vtx_extended == n_vtx_extended2);
-    for(int i_vtx = 0; i_vtx < n_vtx_extended; ++i_vtx) {
-      printf("[%i] vtx_coord_extended[%i] = %12.5e %12.5e %12.5e "PDM_FMT_G_NUM" \n", i_part, i_vtx, vtx_coord_extended[3*i_vtx], vtx_coord_extended[3*i_vtx+1], vtx_coord_extended[3*i_vtx+2], border_vtx_ln_to_gn[i_vtx]);
-    }
+    if(0 == 1) {
+      for(int i_vtx = 0; i_vtx < n_vtx_extended; ++i_vtx) {
+        printf("[%i] vtx_coord_extended[%i] = %12.5e %12.5e %12.5e "PDM_FMT_G_NUM" \n", i_part, i_vtx, vtx_coord_extended[3*i_vtx], vtx_coord_extended[3*i_vtx+1], vtx_coord_extended[3*i_vtx+2], border_vtx_ln_to_gn[i_vtx]);
+      }
 
-    for(int i_cell = 0; i_cell < n_cell_extended; ++i_cell) {
-      printf("[%i] border_cell_ln_to_gn[%i] = "PDM_FMT_G_NUM" \n", i_part, i_cell, border_cell_ln_to_gn[i_cell]);
+      for(int i_cell = 0; i_cell < n_cell_extended; ++i_cell) {
+        printf("[%i] border_cell_ln_to_gn[%i] = "PDM_FMT_G_NUM" \n", i_part, i_cell, border_cell_ln_to_gn[i_cell]);
+      }
     }
-
   }
 
   PDM_part_extension_free(part_ext);
