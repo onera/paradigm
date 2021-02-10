@@ -75,7 +75,6 @@ _read_args(int            argc,
            int           *use_neighbours,
            int           *n_max_per_leaf,
            int           *surf_source,
-           int           *local_search_fun,
            int           *start_from_minmax_rank,
            int           *randomize)
 {
@@ -133,13 +132,6 @@ _read_args(int            argc,
     }
     else if (strcmp(argv[i], "-surf") == 0) {
       *surf_source = 1;
-    }
-    else if (strcmp(argv[i], "-lsf") == 0) {
-      i++;
-      if (i >= argc)
-        _usage(EXIT_FAILURE);
-      else
-        *local_search_fun = atoi(argv[i]);
     }
     else if (strcmp(argv[i], "-sfmm") == 0) {
       *start_from_minmax_rank = 1;
@@ -334,7 +326,7 @@ _gen_cube_surf
 
 
 static void
-_single_closest_point
+_closest_point_par
 (
  PDM_MPI_Comm         comm,
  const int            use_neighbours,
@@ -615,7 +607,7 @@ _closest_point_seq
 
 
 static void
-_closest_point
+_closest_point_par2
 (
  PDM_MPI_Comm         comm,
  const int            n_part_src,
@@ -699,8 +691,7 @@ int main(int argc, char *argv[])
   int         use_neighbours = 0;
   int         n_max_per_leaf = 1;
   int         surf_source    = 0;
-  int         local_search_fun = 0;
-  int         start_from_minmax_rank = 0;
+  int         start_from_minmax_rank = 0;//
   int         randomize      = 0;
 
   /*
@@ -715,13 +706,10 @@ int main(int argc, char *argv[])
               &use_neighbours,
               &n_max_per_leaf,
               &surf_source,
-              &local_search_fun,
               &start_from_minmax_rank,
               &randomize);
 
-  if (method == 1) use_neighbours = 1;
-  if (i_rank == 0) printf("use neighbours? %d, local_search_fun = %d, start from minmax rank? %d, randomize? %d\n",
-                          use_neighbours, local_search_fun, start_from_minmax_rank, randomize);
+  if (method < 0) use_neighbours = 1;
 
   double origin[3] = {0., 0., 0.};
   if (1) {
@@ -824,6 +812,15 @@ int main(int argc, char *argv[])
   }
 
 
+  PDM_g_num_t n_local[2], n_global[2];
+  n_local[0] = (PDM_g_num_t) _n_src;
+  n_local[1] = (PDM_g_num_t) _n_tgt;
+  PDM_MPI_Reduce (n_local, n_global, 2, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, 0, PDM_MPI_COMM_WORLD);
+  if (i_rank == 0) {
+    //printf("n_procs %d, n_src "PDM_FMT_G_NUM", n_tgt "PDM_FMT_G_NUM", method %d, surf src %d, random src %d\n", n_rank, n_global[0], n_global[1], method, surf_source, randomize);
+    printf("n_procs = %d\nn_src_total = "PDM_FMT_G_NUM"\nn_tgt_total = "PDM_FMT_G_NUM"\nmethod = %d\nsurf src = %d\nrandom src = %d\n", n_rank, n_global[0], n_global[1], method, surf_source, randomize);
+  }
+
 
   /*
    *  Compute closest point
@@ -835,37 +832,6 @@ int main(int argc, char *argv[])
   PDM_g_num_t **closest_point_g_num = NULL;
   double      **closest_point_dist2 = NULL;
   if (method == 0) {
-    if (i_rank == 0) printf ("Method : New \n");
-    _single_closest_point (PDM_MPI_COMM_WORLD,
-                           use_neighbours,
-                           n_max_per_leaf,
-                           local_search_fun,
-                           start_from_minmax_rank,
-                           n_part_src,
-                           (const int *) &_n_src,
-                           (const double **) &src_coord,
-                           (const PDM_g_num_t **) &src_g_num,
-                           n_part_tgt,
-                           (const int *) &_n_tgt,
-                           (const double **) &tgt_coord,
-                           (const PDM_g_num_t **) &tgt_g_num,
-                           &closest_point_g_num,
-                           &closest_point_dist2);
-  } else if (method == 1) {
-    if (i_rank == 0) printf ("Method : kNN with k = 1\n");
-    _closest_point (PDM_MPI_COMM_WORLD,
-                    n_part_src,
-                    (const int *) &_n_src,
-                    (const double **) &src_coord,
-                    (const PDM_g_num_t **) &src_g_num,
-                    n_part_tgt,
-                    (const int *) &_n_tgt,
-                    (const double **) &tgt_coord,
-                    (const PDM_g_num_t **) &tgt_g_num,
-                    &closest_point_g_num,
-                    &closest_point_dist2);
-  } else {
-    if (i_rank == 0) printf ("Method : serial octree\n");
     _closest_point_seq (PDM_MPI_COMM_WORLD,
                         n_part_src,
                         (const int *) &_n_src,
@@ -877,6 +843,38 @@ int main(int argc, char *argv[])
                         (const PDM_g_num_t **) &tgt_g_num,
                         &closest_point_g_num,
                         &closest_point_dist2);
+  }
+
+  else if (method > 0) {
+    _closest_point_par (PDM_MPI_COMM_WORLD,
+                        use_neighbours,
+                        n_max_per_leaf,
+                        method - 1,
+                        start_from_minmax_rank,
+                        n_part_src,
+                        (const int *) &_n_src,
+                        (const double **) &src_coord,
+                        (const PDM_g_num_t **) &src_g_num,
+                        n_part_tgt,
+                        (const int *) &_n_tgt,
+                        (const double **) &tgt_coord,
+                        (const PDM_g_num_t **) &tgt_g_num,
+                        &closest_point_g_num,
+                        &closest_point_dist2);
+  }
+
+  else {
+    _closest_point_par2 (PDM_MPI_COMM_WORLD,
+                    n_part_src,
+                    (const int *) &_n_src,
+                    (const double **) &src_coord,
+                    (const PDM_g_num_t **) &src_g_num,
+                    n_part_tgt,
+                    (const int *) &_n_tgt,
+                    (const double **) &tgt_coord,
+                    (const PDM_g_num_t **) &tgt_g_num,
+                    &closest_point_g_num,
+                    &closest_point_dist2);
   }
 
 
