@@ -794,18 +794,12 @@ int main(int argc, char *argv[])
 
   if (repeat_last) {
     char filename[999];
-    sprintf(filename, "tgt_%3.3d.vtk", i_rank);
+    sprintf(filename, "last/tgt_%3.3d.vtk", i_rank);
 
     _read_point_cloud (filename,
                        &_n_tgt,
                        &tgt_coord,
                        &tgt_g_num);
-
-    if (i_rank == 0) {
-      for (int i = 0; i < _n_tgt; i++) {
-        printf("[%d] tgt %.20lf %.20lf %.20lf\n", i_rank, tgt_coord[3*i], tgt_coord[3*i+1], tgt_coord[3*i+2]);
-      }
-    }
   }
 
   else {
@@ -834,18 +828,12 @@ int main(int argc, char *argv[])
 
   if (repeat_last) {
     char filename[999];
-    sprintf(filename, "src_%3.3d.vtk", i_rank);
+    sprintf(filename, "last/src_%3.3d.vtk", i_rank);
 
     _read_point_cloud (filename,
                        &_n_src,
                        &src_coord,
                        &src_g_num);
-
-    if (i_rank == 0) {
-      for (int i = 0; i < _n_src; i++) {
-        printf("[%d] src %.20lf %.20lf %.20lf\n", i_rank, src_coord[3*i], src_coord[3*i+1], src_coord[3*i+2]);
-      }
-    }
   }
 
   else {
@@ -885,14 +873,14 @@ int main(int argc, char *argv[])
   if (!repeat_last) {
     char filename[999];
 
-    sprintf(filename, "tgt_%3.3d.vtk", i_rank);
+    sprintf(filename, "last/tgt_%3.3d.vtk", i_rank);
     _write_point_cloud (filename,
                         "tgt",
                         _n_tgt,
                         tgt_coord,
                         tgt_g_num);
 
-    sprintf(filename, "src_%3.3d.vtk", i_rank);
+    sprintf(filename, "last/src_%3.3d.vtk", i_rank);
     _write_point_cloud (filename,
                         "src",
                         _n_src,
