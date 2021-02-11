@@ -220,7 +220,7 @@ const int           *n_entity,
     int *_part_neighbor_idx  = dn->neighbor_idx [i_part];
     int *_part_neighbor_desc = dn->neighbor_desc[i_part];
 
-    printf("[%i] - n_entity:: %d\n", i_part, n_entity[i_part]);
+    // printf("[%i] - n_entity:: %d\n", i_part, n_entity[i_part]);
 
     dn->order       [i_part] = (int *) malloc( _part_neighbor_idx[n_entity[i_part]] * sizeof(int *));
     dn->order_unique[i_part] = (int *) malloc( _part_neighbor_idx[n_entity[i_part]] * sizeof(int *));
@@ -264,7 +264,7 @@ const int           *n_entity,
    */
   int s_requested_data = dn->requested_data_idx[n_rank-1] + dn->requested_data_n[n_rank-1];
 
-  printf("s_requested_data:: %d \n", s_requested_data);
+  // printf("s_requested_data:: %d \n", s_requested_data);
   for (int i = 0; i < n_rank; i++) {
     dn->requested_data_n[i] = 0;
   }
@@ -688,7 +688,6 @@ PDM_distant_neighbor_exch
     for (int i = 0; i < s_distributed_data; i++) {
       int i_part = dn->distributed_data[2*i  ];
       int ienty  = dn->distributed_data[2*i+1];
-      printf(" [%i] -> i_part = %i | ienty = %i \n", i, i_part, ienty);
       for(int idata = 0; idata < s_block_unit; idata++){
         send_buffer[idx1++] = _send_entity_data[i_part][s_block_unit*ienty+idata];
       }
