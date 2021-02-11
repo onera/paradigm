@@ -8932,20 +8932,16 @@ _single_closest_point_recursive
  double                  *closest_point_dist2
  )
 {
-  int DEBUG = (point[0] > 0.7090046 && point[0] < 0.7090047 &&
-               point[1] > 0.7261017 && point[1] < 0.7261018 &&
-               point[2] > 0.4679233 && point[2] < 0.4679234);
-
   const int dim = octree->dim;
   /* Leaf node */
   if (start == end-1) {
-    if (DEBUG) printf("inspect leaf #%zu\n", start);
+
     for (int i = 0; i < octree->octants->n_points[start]; i++) {
       int j = octree->octants->range[start] + i;
       double dist2 = _pt_to_pt_dist2 (dim,
                                       point,
                                       octree->points + dim*j);
-      if (DEBUG) printf("  point ("PDM_FMT_G_NUM") at dist2 = %g\n", octree->points_gnum[j], dist2);
+
       if (dist2 < *closest_point_dist2) {
         *closest_point_dist2 = dist2;
         *closest_point_g_num = octree->points_gnum[j];
@@ -9926,13 +9922,11 @@ PDM_para_octree_single_closest_point
 
   else {
     for (int i = 0; i < n_recv_pts; i++) {
-      int DEBUG = (recv_g_num[i] == 24);
 
       /* Find base leaf */
       int base = PDM_morton_binary_search (octree->octants->n_nodes,
                                            pts_code[i],
                                            octree->octants->codes);
-      if (DEBUG) printf("[%d] point ("PDM_FMT_G_NUM"): base leaf = %d\n", i_rank, recv_g_num[i], base);
 
       if (octree->octants->n_points[base] > 0) {
         _closest_pt_dist2[i] = HUGE_VAL;
@@ -9970,7 +9964,7 @@ PDM_para_octree_single_closest_point
         }
       }
 
-      if (DEBUG) printf ("[%d] 1st guess for pt ("PDM_FMT_G_NUM") : ("PDM_FMT_G_NUM") at dist2 = %f\n", i_rank, recv_g_num[i], _closest_pt_g_num[i], _closest_pt_dist2[i]);
+      //printf ("[%d] 1st guess for pt ("PDM_FMT_G_NUM") : ("PDM_FMT_G_NUM") at dist2 = %f\n", i_rank, recv_g_num[i], _closest_pt_g_num[i], _closest_pt_dist2[i]);
     }
   }
 
@@ -10095,17 +10089,13 @@ PDM_para_octree_single_closest_point
     }
 
     for (int i = 0; i < n_recv_pts; i++) {
-      int DEBUG = (recv_g_num[i] == 24);
-      if (DEBUG) printf("[%d] close ranks for pt ("PDM_FMT_G_NUM") :", i_rank, recv_g_num[i]);
       for (int j = close_ranks_idx[i]; j < close_ranks_idx[i+1]; j++) {
         int rank = close_ranks[j];
         if (rank == i_rank) {
           continue;
         }
         send_count[rank]++;
-        if (DEBUG) printf(" %d", rank);
       }
-      if (DEBUG) printf("\n");
     }
 
     PDM_MPI_Alltoall (send_count, 1, PDM_MPI_INT,
