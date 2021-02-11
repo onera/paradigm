@@ -1129,7 +1129,7 @@ int main(int argc, char *argv[])
   if (i_rank == 0) {
     printf("\n\n\n");
     for (int method = 0; method < n_methods; method++) {
-      printf ("method %d: elapsed = %.3gs, relative to min = %.3f\n",
+      printf ("method %d: elapsed = %.4fs, relative to min = %.3f\n",
               method, elapsed[method], elapsed[method] / elapsed_min);
     }
   }
