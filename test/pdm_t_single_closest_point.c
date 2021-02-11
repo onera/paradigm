@@ -76,7 +76,8 @@ _read_args(int            argc,
            int           *n_max_per_leaf,
            int           *surf_source,
            int           *start_from_minmax_rank,
-           int           *randomize)
+           int           *randomize,
+           int           *repeat_last)
 {
   int i = 1;
 
@@ -138,6 +139,9 @@ _read_args(int            argc,
     }
     else if (strcmp(argv[i], "-rand") == 0) {
       *randomize = 1;
+    }
+    else if (strcmp(argv[i], "-repeat") == 0) {
+      *repeat_last = 1;
     }
     else
       _usage(EXIT_FAILURE);
@@ -209,7 +213,7 @@ _gen_cube_vol
   PDM_g_num_t remainderCell = n_cell % n_rank;
 
   for (int i = 1; i < n_rank + 1; i++) {
-    distribCell[i]  = stepCell;
+    distribCell[i] = stepCell;
     const int i1 = i - 1;
     if (i1 < remainderCell)
       distribCell[i] += 1;
@@ -663,6 +667,109 @@ _closest_point_par2
   }
 }
 
+
+static void
+_write_point_cloud
+(
+ const char        *filename,
+ const char        *header,
+ const int          n_pts,
+ const double       coord[],
+ const PDM_g_num_t  g_num[]
+ )
+{
+  FILE *f = fopen(filename, "w");
+
+  fprintf(f, "# vtk DataFile Version 2.0\n");
+  if (header != NULL) {
+    fprintf(f, "%s\n", header);
+  } else {
+    fprintf(f, "point cloud\n");
+  }
+  fprintf(f, "ASCII\n");
+  fprintf(f, "DATASET UNSTRUCTURED_GRID\n");
+
+  fprintf(f, "POINTS %d double\n", n_pts);
+  for (int i = 0; i < n_pts; i++) {
+    for (int j = 0; j < 3; j++) {
+      fprintf(f, "%12.5e ", coord[3*i+j]);
+    }
+    fprintf(f, "\n");
+  }
+
+  fprintf(f, "CELLS %d %d\n", n_pts, 2*n_pts);
+  for (int i = 0; i < n_pts; i++) {
+    fprintf(f, "1 %d\n", i);
+  }
+
+  fprintf(f, "CELL_TYPES %d\n", n_pts);
+  for (int i = 0; i < n_pts; i++) {
+    fprintf(f, "1\n");
+  }
+
+  if (g_num != NULL) {
+    fprintf(f, "CELL_DATA %d\n", n_pts);
+    fprintf(f, "SCALARS gnum int\n LOOKUP_TABLE default\n");
+    for (int i = 0; i < n_pts; i++) {
+      fprintf(f, ""PDM_FMT_G_NUM"\n", g_num[i]);
+    }
+  }
+
+  fclose(f);
+}
+
+
+static void
+_read_point_cloud
+(
+ const char   *filename,
+ int          *n_pts,
+ double      **coord,
+ PDM_g_num_t **g_num
+ )
+{
+  FILE *f = fopen(filename, "r");
+  if (f == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Unable to open %s", filename);
+  }
+
+  char line[999];
+  while (fgets(line, sizeof(line), f) != NULL) {
+    if (strcmp(line,"\n") == 0 && strcmp(line,"\r\n") == 0) {
+      continue;
+    }
+
+    if (strstr(line, "POINTS") != NULL) {
+      int stat = sscanf(line,
+                        "%*[^0123456789]%d%*[^0123456789]",
+                        n_pts);
+      assert (stat);
+
+      *coord = malloc (sizeof(double) * (*n_pts) * 3);
+      for (int i = 0; i < *n_pts; i++) {
+        fscanf(f, "%lf %lf %lf",
+               *coord + 3*i,
+               *coord + 3*i + 1,
+               *coord + 3*i + 2);
+      }
+    }
+
+    if (strstr(line, "CELL_DATA") != NULL) {
+
+      *g_num = malloc (sizeof(PDM_g_num_t) * (*n_pts));
+      fgets(line, sizeof(line), f);
+      fgets(line, sizeof(line), f);
+      for (int i = 0; i < *n_pts; i++) {
+        fscanf(f, PDM_FMT_G_NUM, *g_num + i);
+      }
+    }
+  }
+
+  fclose(f);
+}
+
+
+
 /**
  *
  * \brief  Main
@@ -693,6 +800,7 @@ int main(int argc, char *argv[])
   int         surf_source    = 0;
   int         start_from_minmax_rank = 0;//
   int         randomize      = 0;
+  int         repeat_last    = 0;
 
   /*
    *  Read args
@@ -707,12 +815,13 @@ int main(int argc, char *argv[])
               &n_max_per_leaf,
               &surf_source,
               &start_from_minmax_rank,
-              &randomize);
+              &randomize,
+              &repeat_last);
 
   if (method < 0) use_neighbours = 1;
 
   double origin[3] = {0., 0., 0.};
-  if (1) {
+  if (0) {
     if (i_rank == 0) {
       for (int i = 0; i < 3; i++) {
         origin[i] = 2.*_rand01() - 1.;
@@ -723,7 +832,7 @@ int main(int argc, char *argv[])
   }
 
   double aniso[3] = {1., 1., 1.};
-  if (1) {
+  if (0) {
     if (i_rank == 0) {
       for (int i = 0; i < 3; i++) {
         double r = 2.*_rand01() - 1.;
@@ -739,39 +848,53 @@ int main(int argc, char *argv[])
    *  Define the target point cloud
    */
   int n_part_tgt = 1;
-  double *tgt_coord = NULL;
+  double      *tgt_coord = NULL;
+  PDM_g_num_t *tgt_g_num = NULL;
   int _n_tgt;
-  _gen_cloud (n_tgt,
-              origin,
-              length,
-              n_rank,
-              i_rank,
-              &tgt_coord,
-              &_n_tgt);
 
-  for (int i = 0; i < _n_tgt; i++) {
-    for (int j = 0; j < 3; j++) {
-      tgt_coord[3*i+j] = origin[j] + aniso[j] * (tgt_coord[3*i+j] - origin[j]);
+  if (repeat_last) {
+    char filename[999];
+    sprintf(filename, "tgt_%3.3d.vtk", i_rank);
+
+    _read_point_cloud (filename,
+                       &_n_tgt,
+                       &tgt_coord,
+                       &tgt_g_num);
+  }
+
+  else {
+    _gen_cloud (n_tgt,
+                origin,
+                length,
+                n_rank,
+                i_rank,
+                &tgt_coord,
+                &_n_tgt);
+
+    for (int i = 0; i < _n_tgt; i++) {
+      for (int j = 0; j < 3; j++) {
+        tgt_coord[3*i+j] = origin[j] + aniso[j] * (tgt_coord[3*i+j] - origin[j]);
+      }
+      //printf("[%d] tgt %f %f %f\n", i_rank, tgt_coord[3*i], tgt_coord[3*i+1], tgt_coord[3*i+2]);
     }
-    //printf("[%d] tgt %f %f %f\n", i_rank, tgt_coord[3*i], tgt_coord[3*i+1], tgt_coord[3*i+2]);
+
+    int id_gnum = PDM_gnum_create (3, 1, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD, PDM_OWNERSHIP_USER);
+
+    double *tgt_char_length = malloc (sizeof(double) * _n_tgt);
+
+    for (int i = 0; i < _n_tgt; i++) {
+      tgt_char_length[i] = length * 1.e-6;
+    }
+
+    PDM_gnum_set_from_coords (id_gnum, 0, _n_tgt, tgt_coord, tgt_char_length);
+
+    PDM_gnum_compute (id_gnum);
+
+    tgt_g_num = PDM_gnum_get (id_gnum, 0);
+
+    PDM_gnum_free (id_gnum);
+    free (tgt_char_length);
   }
-
-  int id_gnum = PDM_gnum_create (3, 1, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD, PDM_OWNERSHIP_USER);
-
-  double *tgt_char_length = malloc (sizeof(double) * _n_tgt);
-
-  for (int i = 0; i < _n_tgt; i++) {
-    tgt_char_length[i] = length * 1.e-6;
-  }
-
-  PDM_gnum_set_from_coords (id_gnum, 0, _n_tgt, tgt_coord, tgt_char_length);
-
-  PDM_gnum_compute (id_gnum);
-
-  PDM_g_num_t *tgt_g_num = PDM_gnum_get (id_gnum, 0);
-
-  PDM_gnum_free (id_gnum);
-  free (tgt_char_length);
 
 
   /*
@@ -782,33 +905,65 @@ int main(int argc, char *argv[])
   double *src_coord = NULL;
   PDM_g_num_t *src_g_num = NULL;
 
-  if (surf_source) {
-    _gen_cube_surf (PDM_MPI_COMM_WORLD,
-                    n_face_seg,
-                    origin,
-                    length,
-                    randomize,
-                    &_n_src,
-                    &src_g_num,
-                    &src_coord);
+  if (repeat_last) {
+    char filename[999];
+    sprintf(filename, "src_%3.3d.vtk", i_rank);
+
+    _read_point_cloud (filename,
+                       &_n_src,
+                       &src_coord,
+                       &src_g_num);
   }
 
   else {
-    _gen_cube_vol (PDM_MPI_COMM_WORLD,
-                   n_face_seg,
-                   origin,
-                   length,
-                   randomize,
-                   &_n_src,
-                   &src_g_num,
-                   &src_coord);
+
+    if (surf_source) {
+      _gen_cube_surf (PDM_MPI_COMM_WORLD,
+                      n_face_seg,
+                      origin,
+                      length,
+                      randomize,
+                      &_n_src,
+                      &src_g_num,
+                      &src_coord);
+    }
+
+    else {
+      _gen_cube_vol (PDM_MPI_COMM_WORLD,
+                     n_face_seg,
+                     origin,
+                     length,
+                     randomize,
+                     &_n_src,
+                     &src_g_num,
+                     &src_coord);
+    }
+
+    for (int i = 0; i < _n_src; i++) {
+      for (int j = 0; j < 3; j++) {
+        src_coord[3*i+j] = origin[j] + aniso[j] * (src_coord[3*i+j] - origin[j]);
+      }
+      //printf("[%d] src %f %f %f\n", i_rank, src_coord[3*i], src_coord[3*i+1], src_coord[3*i+2]);
+    }
   }
 
-  for (int i = 0; i < _n_src; i++) {
-    for (int j = 0; j < 3; j++) {
-      src_coord[3*i+j] = origin[j] + aniso[j] * (src_coord[3*i+j] - origin[j]);
-    }
-    //printf("[%d] src %f %f %f\n", i_rank, src_coord[3*i], src_coord[3*i+1], src_coord[3*i+2]);
+
+  if (!repeat_last) {
+    char filename[999];
+
+    sprintf(filename, "tgt_%3.3d.vtk", i_rank);
+    _write_point_cloud (filename,
+                        "tgt",
+                        _n_tgt,
+                        tgt_coord,
+                        tgt_g_num);
+
+    sprintf(filename, "src_%3.3d.vtk", i_rank);
+    _write_point_cloud (filename,
+                        "src",
+                        _n_src,
+                        src_coord,
+                        src_g_num);
   }
 
 
@@ -865,16 +1020,16 @@ int main(int argc, char *argv[])
 
   else {
     _closest_point_par2 (PDM_MPI_COMM_WORLD,
-                    n_part_src,
-                    (const int *) &_n_src,
-                    (const double **) &src_coord,
-                    (const PDM_g_num_t **) &src_g_num,
-                    n_part_tgt,
-                    (const int *) &_n_tgt,
-                    (const double **) &tgt_coord,
-                    (const PDM_g_num_t **) &tgt_g_num,
-                    &closest_point_g_num,
-                    &closest_point_dist2);
+                         n_part_src,
+                         (const int *) &_n_src,
+                         (const double **) &src_coord,
+                         (const PDM_g_num_t **) &src_g_num,
+                         n_part_tgt,
+                         (const int *) &_n_tgt,
+                         (const double **) &tgt_coord,
+                         (const PDM_g_num_t **) &tgt_g_num,
+                         &closest_point_g_num,
+                         &closest_point_dist2);
   }
 
 
@@ -893,99 +1048,58 @@ int main(int argc, char *argv[])
    *  Check results
    */
   if (!randomize) {
-  if (i_rank == 0) {
-    printf("-- Check\n");
-    fflush(stdout);
-  }
-
-  int marge = 3;
-  int ijk0;
-  int ijk_lo[3];
-  int ijk_hi[3];
-  double cell_side = length / ((double) n_face_seg);
-  double coord[3];
-
-  PDM_g_num_t _n_wrong = 0;
-  for (int itgt = 0; itgt < _n_tgt; itgt++) {
-    /*printf ("[%d] pt ("PDM_FMT_G_NUM") closest src : ("PDM_FMT_G_NUM") at dist2 = %f\n",
-      i_rank, tgt_g_num[itgt], closest_point_g_num[0][itgt], closest_point_dist2[0][itgt]);*/
-    PDM_g_num_t true_closest_src_g_num;
-    double      true_closest_src_dist2 = HUGE_VAL;
-
-    // find i,j,k of the cell that contains the target point
-    // and define search region
-    if (surf_source) {
-      int k;
-      double max_val = -HUGE_VAL;
-      for (int idim = 0; idim < 3; idim++) {
-        double val1 = PDM_ABS (tgt_coord[3*itgt+idim] - origin[idim]);
-        double val2 = PDM_ABS (tgt_coord[3*itgt+idim] - origin[idim] - length);
-
-        if (val1 > max_val) {
-          k = 2*idim;
-          max_val = val1;
-        }
-
-        if (val2 > max_val) {
-          k = 2*idim+1;
-          max_val = val2;
-        }
-
-      }
-
-      int dir0 = k / 3;
-      int dir1 = (dir0 + 1) % 3;
-      int dir2 = (dir0 + 2) % 3;
-      int sgn = k % 2;
-
-      coord[dir0] = origin[dir0] + sgn * length * aniso[dir0];
-      for (int j = -marge; j < marge; j++) {
-        int _j = PDM_MAX (0, PDM_MIN (j, n_face_seg-1));
-        coord[dir2] = (_j + 0.5) * cell_side * aniso[dir2] + origin[dir2];
-        for (int i = -marge; i < marge; i++) {
-          int _i = PDM_MAX (0, PDM_MIN (i, n_face_seg-1));
-          coord[dir1] = (_i + 0.5) * cell_side * aniso[dir1] + origin[dir1];
-
-          PDM_g_num_t g_num = 1 + i + n_face_seg*(j + n_face_seg*k);
-          double dist2 = 0.;
-          for (int idim = 0; idim < 3; idim++) {
-            double delta = tgt_coord[3*itgt+idim] - coord[idim];
-            dist2 += delta * delta;
-          }
-
-          if (dist2 < true_closest_src_dist2) {
-            true_closest_src_dist2 = dist2;
-            true_closest_src_g_num = g_num;
-          }
-        }
-      }
-
+    if (i_rank == 0) {
+      printf("-- Check\n");
+      fflush(stdout);
     }
 
-    else {
-      for (int idim = 0; idim < 3; idim++) {
-        ijk0 = (int) floor(tgt_coord[3*itgt+idim] / (cell_side * aniso[idim]));
-        ijk0 = PDM_MIN (PDM_MAX (ijk0, 0), n_face_seg-1);
+    int marge = 3;
+    int ijk0;
+    int ijk_lo[3];
+    int ijk_hi[3];
+    double cell_side = length / ((double) n_face_seg);
+    double coord[3];
 
-        if (ijk0 < marge) {
-          ijk_lo[idim] = 0;
-          ijk_hi[idim] = 2*marge;
-        } else if (ijk0 > n_face_seg - marge) {
-          ijk_hi[idim] = n_face_seg;
-          ijk_lo[idim] = n_face_seg - 2*marge;
-        } else {
-          ijk_lo[idim] = ijk0 - marge;
-          ijk_hi[idim] = ijk0 + marge;
+    PDM_g_num_t _n_wrong = 0;
+    for (int itgt = 0; itgt < _n_tgt; itgt++) {
+      /*printf ("[%d] pt ("PDM_FMT_G_NUM") closest src : ("PDM_FMT_G_NUM") at dist2 = %f\n",
+        i_rank, tgt_g_num[itgt], closest_point_g_num[0][itgt], closest_point_dist2[0][itgt]);*/
+      PDM_g_num_t true_closest_src_g_num;
+      double      true_closest_src_dist2 = HUGE_VAL;
+
+      // find i,j,k of the cell that contains the target point
+      // and define search region
+      if (surf_source) {
+        int k;
+        double max_val = -HUGE_VAL;
+        for (int idim = 0; idim < 3; idim++) {
+          double val1 = PDM_ABS (tgt_coord[3*itgt+idim] - origin[idim]);
+          double val2 = PDM_ABS (tgt_coord[3*itgt+idim] - origin[idim] - length);
+
+          if (val1 > max_val) {
+            k = 2*idim;
+            max_val = val1;
+          }
+
+          if (val2 > max_val) {
+            k = 2*idim+1;
+            max_val = val2;
+          }
+
         }
-      }
 
-      // inspect search region
-      for (int k = ijk_lo[2]; k < ijk_hi[2]; k++) {
-        coord[2] = (k + 0.5) * cell_side * aniso[2] + origin[2];
-        for (int j = ijk_lo[1]; j < ijk_hi[1]; j++) {
-          coord[1] = (j + 0.5) * cell_side * aniso[1] + origin[1];
-          for (int i = ijk_lo[0]; i < ijk_hi[0]; i++) {
-            coord[0] = (i + 0.5) * cell_side * aniso[0] + origin[0];
+        int dir0 = k / 3;
+        int dir1 = (dir0 + 1) % 3;
+        int dir2 = (dir0 + 2) % 3;
+        int sgn = k % 2;
+
+        coord[dir0] = origin[dir0] + sgn * length * aniso[dir0];
+        for (int j = -marge; j < marge; j++) {
+          int _j = PDM_MAX (0, PDM_MIN (j, n_face_seg-1));
+          coord[dir2] = (_j + 0.5) * cell_side * aniso[dir2] + origin[dir2];
+          for (int i = -marge; i < marge; i++) {
+            int _i = PDM_MAX (0, PDM_MIN (i, n_face_seg-1));
+            coord[dir1] = (_i + 0.5) * cell_side * aniso[dir1] + origin[dir1];
 
             PDM_g_num_t g_num = 1 + i + n_face_seg*(j + n_face_seg*k);
             double dist2 = 0.;
@@ -998,51 +1112,93 @@ int main(int argc, char *argv[])
               true_closest_src_dist2 = dist2;
               true_closest_src_g_num = g_num;
             }
+          }
+        }
 
+      }
+
+      else {
+        for (int idim = 0; idim < 3; idim++) {
+          ijk0 = (int) floor(tgt_coord[3*itgt+idim] / (cell_side * aniso[idim]));
+          ijk0 = PDM_MIN (PDM_MAX (ijk0, 0), n_face_seg-1);
+
+          if (ijk0 < marge) {
+            ijk_lo[idim] = 0;
+            ijk_hi[idim] = 2*marge;
+          } else if (ijk0 > n_face_seg - marge) {
+            ijk_hi[idim] = n_face_seg;
+            ijk_lo[idim] = n_face_seg - 2*marge;
+          } else {
+            ijk_lo[idim] = ijk0 - marge;
+            ijk_hi[idim] = ijk0 + marge;
+          }
+        }
+
+        // inspect search region
+        for (int k = ijk_lo[2]; k < ijk_hi[2]; k++) {
+          coord[2] = (k + 0.5) * cell_side * aniso[2] + origin[2];
+          for (int j = ijk_lo[1]; j < ijk_hi[1]; j++) {
+            coord[1] = (j + 0.5) * cell_side * aniso[1] + origin[1];
+            for (int i = ijk_lo[0]; i < ijk_hi[0]; i++) {
+              coord[0] = (i + 0.5) * cell_side * aniso[0] + origin[0];
+
+              PDM_g_num_t g_num = 1 + i + n_face_seg*(j + n_face_seg*k);
+              double dist2 = 0.;
+              for (int idim = 0; idim < 3; idim++) {
+                double delta = tgt_coord[3*itgt+idim] - coord[idim];
+                dist2 += delta * delta;
+              }
+
+              if (dist2 < true_closest_src_dist2) {
+                true_closest_src_dist2 = dist2;
+                true_closest_src_g_num = g_num;
+              }
+
+            }
           }
         }
       }
+
+      // check
+      //if (true_closest_src_g_num != closest_point_g_num[0][itgt]) {
+      if (closest_point_dist2[0][itgt] >  true_closest_src_dist2 &&
+          closest_point_g_num[0][itgt] != true_closest_src_g_num) {
+        _n_wrong++;
+        double d0 = sqrt(true_closest_src_dist2);
+        double d1 = sqrt(closest_point_dist2[0][itgt]);
+
+        printf ("[%d] ERROR pt ("PDM_FMT_G_NUM") : dist2 = %3.g | %3.g (rel. err. = %3.g), gnum = "PDM_FMT_G_NUM" | "PDM_FMT_G_NUM"\n",
+                i_rank,
+                tgt_g_num[itgt],
+                closest_point_dist2[0][itgt],
+                true_closest_src_dist2,
+                (d1 - d0)/d0,
+                closest_point_g_num[0][itgt],
+                true_closest_src_g_num);
+      }
     }
 
-    // check
-    //if (true_closest_src_g_num != closest_point_g_num[0][itgt]) {
-    if (closest_point_dist2[0][itgt] >  true_closest_src_dist2 &&
-        closest_point_g_num[0][itgt] != true_closest_src_g_num) {
-      _n_wrong++;
-      double d0 = sqrt(true_closest_src_dist2);
-      double d1 = sqrt(closest_point_dist2[0][itgt]);
+    PDM_g_num_t n_wrong;
+    PDM_MPI_Reduce (&_n_wrong,
+                    &n_wrong,
+                    1,
+                    PDM__PDM_MPI_G_NUM,
+                    PDM_MPI_SUM,
+                    0,
+                    PDM_MPI_COMM_WORLD);
+    if (i_rank == 0) {
+      PDM_g_num_t wrong_percentage = 100 * n_wrong;
+      if (n_tgt > 0) {
+        wrong_percentage /= n_tgt;
+      }
 
-      printf ("[%d] ERROR pt ("PDM_FMT_G_NUM") : dist2 = %3.g | %3.g (rel. err. = %3.g), gnum = "PDM_FMT_G_NUM" | "PDM_FMT_G_NUM"\n",
-              i_rank,
-              tgt_g_num[itgt],
-              closest_point_dist2[0][itgt],
-              true_closest_src_dist2,
-              (d1 - d0)/d0,
-              closest_point_g_num[0][itgt],
-              true_closest_src_g_num);
+      printf("\nn_wrong = "PDM_FMT_G_NUM" / "PDM_FMT_G_NUM" ("PDM_FMT_G_NUM"%%)\n",
+             n_wrong,
+             n_tgt,
+             wrong_percentage);
+      fflush(stdout);
+      assert (n_wrong == 0);
     }
-  }
-
-  PDM_g_num_t n_wrong;
-  PDM_MPI_Reduce (&_n_wrong,
-                  &n_wrong,
-                  1,
-                  PDM__PDM_MPI_G_NUM,
-                  PDM_MPI_SUM,
-                  0,
-                  PDM_MPI_COMM_WORLD);
-  if (i_rank == 0) {
-    PDM_g_num_t wrong_percentage = 100 * n_wrong;
-    if (n_tgt > 0) {
-      wrong_percentage /= n_tgt;
-    }
-
-    printf("\nn_wrong = "PDM_FMT_G_NUM" / "PDM_FMT_G_NUM" ("PDM_FMT_G_NUM"%%)\n",
-           n_wrong,
-           n_tgt,
-           wrong_percentage);
-    fflush(stdout);
-  }
   }
 
 

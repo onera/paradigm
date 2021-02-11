@@ -166,12 +166,12 @@ typedef struct  {
   int *connected_idx;
 
   //-->>
-  PDM_box_set_t      *rank_boxes;            /*!< Rank Boxes */
-  int                 n_used_rank;           /*!< Number of used ranks */
-  int                *used_rank;             /*!< used ranks */
-  double             *used_rank_extents;     /*!< Extents of processes */
+  PDM_box_set_t  *rank_boxes;            /*!< Rank Boxes */
+  int             n_used_rank;           /*!< Number of used ranks */
+  int            *used_rank;             /*!< used ranks */
+  double         *used_rank_extents;     /*!< Extents of processes */
 
-  PDM_box_tree_t     *bt_shared;             /*!< Shared Boundary box tree */
+  PDM_box_tree_t *bt_shared;             /*!< Shared Boundary box tree */
   //_box_tree_stats_t   bts_shared;            /*!< Shared Boundary box tree statistic */
 
   PDM_MPI_Comm rank_comm;                    /*!< MPI communicator */
@@ -8932,17 +8932,20 @@ _single_closest_point_recursive
  double                  *closest_point_dist2
  )
 {
+  int DEBUG = (point[0] > 0.7090046 && point[0] < 0.7090047 &&
+               point[1] > 0.7261017 && point[1] < 0.7261018 &&
+               point[2] > 0.4679233 && point[2] < 0.4679234);
+
   const int dim = octree->dim;
-  /* If current range contains few octants, go brute force */
+  /* Leaf node */
   if (start == end-1) {
-    /*int i_rank;
-    PDM_MPI_Comm_rank (octree->comm, &i_rank);
-    printf("[%d] start = %zu, n_nodes = %d, n_nodes_max = %d\n", i_rank, start, octree->octants->n_nodes, octree->octants->n_nodes_max);*/
+    if (DEBUG) printf("inspect leaf #%zu\n", start);
     for (int i = 0; i < octree->octants->n_points[start]; i++) {
       int j = octree->octants->range[start] + i;
       double dist2 = _pt_to_pt_dist2 (dim,
                                       point,
                                       octree->points + dim*j);
+      if (DEBUG) printf("  point ("PDM_FMT_G_NUM") at dist2 = %g\n", octree->points_gnum[j], dist2);
       if (dist2 < *closest_point_dist2) {
         *closest_point_dist2 = dist2;
         *closest_point_g_num = octree->points_gnum[j];
@@ -8950,22 +8953,8 @@ _single_closest_point_recursive
     }
     return;
   }
-  /*if (end - start <= n_brute_force_distance) {
-    for (size_t k = start; k < end; k++) {
-      for (int i = 0; i < octree->octants->n_points[k]; i++) {
-        int j = octree->octants->range[k] + i;
-        double dist2 = _pt_to_pt_dist2 (dim,
-                                        point,
-                                        octree->points + dim*j);
-        if (dist2 < *closest_point_dist2) {
-          *closest_point_dist2 = dist2;
-          *closest_point_g_num = octree->points_gnum[j];
-        }
-      }
-    }
-    return;
-    }*/
 
+  /* Internal node */
   else {
     double dist2 = _octant_min_dist2 (dim,
                                       node,
@@ -8987,7 +8976,6 @@ _single_closest_point_recursive
         /* get start and end of range in list of nodes covered by current child */
         /* new_start <-- first descendant of child in list */
         new_start = prev_end; // end of previous child's range
-        // linear search
         while (new_start < end) {
           if (PDM_morton_ancestor_is (children[ichild], octree->octants->codes[new_start])) {
             break;
@@ -9764,6 +9752,27 @@ PDM_para_octree_single_closest_point
   PDM_MPI_Comm_rank (octree->comm, &i_rank);
   PDM_MPI_Comm_size (octree->comm, &n_rank);
 
+
+  int VISU = 0;
+  char *env_visu = getenv ("VISU_OCTREE");
+  if (env_visu != NULL) {
+    VISU = atoi(env_visu);
+  }
+
+  if (VISU) {
+    if (i_rank == 0) printf("visu octree\n");
+    char filename[999];
+
+    sprintf(filename, "octants_%3.3d.vtk", i_rank);
+    write_octree_octants (id,
+                          filename);
+
+    sprintf(filename, "points_%3.3d.vtk", i_rank);
+    write_octree_points (id,
+                         filename,
+                         1);
+  }
+
   /* Part-to-block create (only to get block distribution) */
   int _n_pts = n_pts;
   PDM_part_to_block_t *ptb = NULL;
@@ -9917,10 +9926,13 @@ PDM_para_octree_single_closest_point
 
   else {
     for (int i = 0; i < n_recv_pts; i++) {
+      int DEBUG = (recv_g_num[i] == 24);
+
       /* Find base leaf */
       int base = PDM_morton_binary_search (octree->octants->n_nodes,
                                            pts_code[i],
                                            octree->octants->codes);
+      if (DEBUG) printf("[%d] point ("PDM_FMT_G_NUM"): base leaf = %d\n", i_rank, recv_g_num[i], base);
 
       if (octree->octants->n_points[base] > 0) {
         _closest_pt_dist2[i] = HUGE_VAL;
@@ -9958,8 +9970,7 @@ PDM_para_octree_single_closest_point
         }
       }
 
-      /*printf ("[%d] 1st guess for pt ("PDM_FMT_G_NUM") : ("PDM_FMT_G_NUM") at dist2 = %f\n",
-        i_rank, recv_g_num[i], _closest_pt_g_num[i], _closest_pt_dist2[i]);*/
+      if (DEBUG) printf ("[%d] 1st guess for pt ("PDM_FMT_G_NUM") : ("PDM_FMT_G_NUM") at dist2 = %f\n", i_rank, recv_g_num[i], _closest_pt_g_num[i], _closest_pt_dist2[i]);
     }
   }
 
@@ -10084,13 +10095,17 @@ PDM_para_octree_single_closest_point
     }
 
     for (int i = 0; i < n_recv_pts; i++) {
+      int DEBUG = (recv_g_num[i] == 24);
+      if (DEBUG) printf("[%d] close ranks for pt ("PDM_FMT_G_NUM") :", i_rank, recv_g_num[i]);
       for (int j = close_ranks_idx[i]; j < close_ranks_idx[i+1]; j++) {
         int rank = close_ranks[j];
         if (rank == i_rank) {
           continue;
         }
         send_count[rank]++;
+        if (DEBUG) printf(" %d", rank);
       }
+      if (DEBUG) printf("\n");
     }
 
     PDM_MPI_Alltoall (send_count, 1, PDM_MPI_INT,
@@ -10117,7 +10132,7 @@ PDM_para_octree_single_closest_point
         int k = send_shift[rank] + send_count[rank];
         send_g_num[k] = recv_g_num[i];
         for (int l = 0; l < dim; l++) {
-          send_coord[s_data*k+l] = send_coord[s_data*k] = recv_coord[dim*i];
+          send_coord[s_data*k+l] = recv_coord[dim*i+l];
         }
         send_coord[s_data*k+dim] = _closest_pt_dist2[i];
         send_count[rank]++;
