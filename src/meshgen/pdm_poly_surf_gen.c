@@ -668,8 +668,6 @@ PDM_g_num_t    **dedge_group
 
   /* Quadrangle */
 
-  printf("nx_poly, ny_poly, nx_quad, ny_quad : %d %d %d %d\n", nx_poly, ny_poly, nx_quad, ny_quad);
-
   for (PDM_g_num_t iy = 0; iy < ny_quad; iy++) {
     for (PDM_g_num_t ix = 0; ix < nx_quad; ix++) {
       n1 = iy*(2*nx1-2) + nx1 + nx1/2 + 1 + ix + 1;

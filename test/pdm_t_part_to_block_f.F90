@@ -90,7 +90,7 @@ program testf
   call mpi_comm_size(mpi_comm_world, n_rank, code)
 
   if (n_rank .ne. 1) then
-    print *,'Error : 2 MPI processes are mandatory'
+    print *,'Error : 1 MPI process are mandatory'
     call mpi_finalize(code)
     stop
   end if
