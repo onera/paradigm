@@ -605,7 +605,6 @@ PDM_dist_cloud_surf_compute
      * Build octree
      */
     //--->>>
-#if 1
     int                *n_elmts = malloc (sizeof(int          ) * n_part_mesh);
     const double      **extents = malloc (sizeof(double      *) * n_part_mesh);
     const PDM_g_num_t **gNum    = malloc (sizeof(PDM_g_num_t *) * n_part_mesh);
@@ -653,9 +652,6 @@ PDM_dist_cloud_surf_compute
       global_extents[i]   -= max_range * 1.1e-3;
       global_extents[i+3] += max_range * 1.0e-3;
     }
-#else
-    double *global_extents = NULL;
-#endif
 
     if (octree_type == PDM_OCTREE_SERIAL) {
       PDM_octree_build (octree_id);
@@ -787,120 +783,6 @@ PDM_dist_cloud_surf_compute
     b_t_cpu_u   = PDM_timer_cpu_user(dist->timer);
     b_t_cpu_s   = PDM_timer_cpu_sys(dist->timer);
     PDM_timer_resume(dist->timer);
-
-#if 0
-    int                *n_elmts = malloc (sizeof(int          ) * n_part_mesh);
-    const double      **extents = malloc (sizeof(double      *) * n_part_mesh);
-    const PDM_g_num_t **gNum    = malloc (sizeof(PDM_g_num_t *) * n_part_mesh);
-
-    if (dist->mesh_nodal != NULL) {
-
-      /*     int PDM_Mesh_nodal_n_blocks_get */
-      /* ( */
-      /* const int   idx */
-      /* ); */
-
-      /* int * */
-      /* PDM_Mesh_nodal_blocks_id_get */
-      /* ( */
-      /* const int   idx */
-      /* ); */
-
-
-      /* PDM_Mesh_nodal_elt_t */
-      /* PDM_Mesh_nodal_block_type_get */
-      /* ( */
-      /* const int   idx, */
-      /* const int   id_block      */
-      /* ); */
-
-      /* void */
-      /* PDM_Mesh_nodal_block_std_get  */
-      /* (    */
-      /* const int            idx, */
-      /* const int            id_block,      */
-      /* const int            id_part,  */
-      /*       PDM_l_num_t  **connec    */
-      /* );  */
-
-      /* int */
-      /* PDM_Mesh_nodal_block_n_elt_get  */
-      /* (    */
-      /* const int            idx, */
-      /* const int            id_block,      */
-      /* const int            id_part  */
-      /* ); */
-
-      /* PDM_g_num_t * */
-      /* PDM_Mesh_nodal_block_g_num_get  */
-      /* (    */
-      /* const int            idx, */
-      /* const int            id_block,      */
-      /* const int            id_part  */
-      /* );  */
-
-
-      /* void */
-      /* PDM_Mesh_nodal_block_poly2d_get  */
-      /* ( */
-      /*  const int          idx, */
-      /*  const int          id_block,  */
-      /*  const int          id_part,  */
-      /*        PDM_l_num_t  **connec_idx,    */
-      /*        PDM_l_num_t  **connec */
-      /* );  */
-
-    }
-    else if (dist->_surf_mesh != NULL) {
-      PDM_surf_mesh_compute_faceExtentsMesh (dist->_surf_mesh, 1e-8);
-      for (int i_part = 0; i_part < n_part_mesh; i_part++) {
-        n_elmts[i_part] = PDM_surf_mesh_part_n_face_get (dist->_surf_mesh,
-                                                       i_part);
-
-        gNum[i_part] = PDM_surf_mesh_part_face_g_num_get (dist->_surf_mesh,
-                                                          i_part);
-
-        extents[i_part] = PDM_surf_mesh_part_extents_get (dist->_surf_mesh,
-                                                          i_part);
-
-      }
-    }
-
-    else {
-      PDM_error(__FILE__, __LINE__, 0,
-                "PDM_dist_cloud_surf error : The surface mesh is not defined."
-                " To do that : \n"
-                "        Call PDM_dist_cloud_surf_nodal_mesh_set or\n"
-                "        Call PDM_dist_cloud_surf_surf_mesh_global_data_set +"
-                " PDM_dist_cloud_surf_surf_mesh_part_set\n");
-    }
-
-    /* Compute local extents */
-    double my_extents[6] = {HUGE_VAL, HUGE_VAL, HUGE_VAL, -HUGE_VAL, -HUGE_VAL, -HUGE_VAL};
-    for (int ipart = 0; ipart < n_part_mesh; ipart++) {
-      for (int i = 0; i < n_elmts[ipart]; i++) {
-        for (int j = 0; j < 3; j++) {
-          my_extents[j]   = PDM_MIN (my_extents[j],   extents[ipart][6*i + j]);
-          my_extents[j+3] = PDM_MAX (my_extents[j+3], extents[ipart][6*i + 3 + j]);
-        }
-      }
-    }
-
-    /* Compute global extents */
-    double global_extents[6];
-    PDM_MPI_Allreduce (my_extents,   global_extents,   3, PDM_MPI_DOUBLE, PDM_MPI_MIN, dist->comm);
-    PDM_MPI_Allreduce (my_extents+3, global_extents+3, 3, PDM_MPI_DOUBLE, PDM_MPI_MAX, dist->comm);
-
-    /* Break symmetry */
-    double max_range = 0.;
-    for (int i = 0; i < 3; i++) {
-      max_range = PDM_MAX (max_range, global_extents[i+3] - global_extents[i]);
-    }
-    for (int i = 0; i < 3; i++) {
-      global_extents[i]   -= max_range * 1.1e-3;
-      global_extents[i+3] += max_range * 1.0e-3;
-    }
-#endif
 
     PDM_dbbtree_t *dbbt = PDM_dbbtree_create (dist->comm, 3, global_extents);
 
