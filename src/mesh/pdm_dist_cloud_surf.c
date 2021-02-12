@@ -22,6 +22,7 @@
 #include "pdm_surf_mesh.h"
 #include "pdm_handles.h"
 #include "pdm_octree.h"
+#include "pdm_para_octree.h"
 #include "pdm_dbbtree.h"
 #include "pdm_part_to_block.h"
 #include "pdm_block_to_part.h"
@@ -440,6 +441,14 @@ PDM_dist_cloud_surf_surf_mesh_part_set
                             vtx_ln_to_gn);
 }
 
+
+//--->>>
+typedef enum {
+  PDM_OCTREE_SERIAL,
+  PDM_OCTREE_PARALLEL,
+} _octree_type_t;
+//<<<---
+
 /**
  *
  * \brief Compute distance
@@ -462,6 +471,18 @@ PDM_dist_cloud_surf_compute
 
   int rank;
   PDM_MPI_Comm_rank (comm, &rank);
+
+  //--->>>
+  _octree_type_t octree_type = PDM_OCTREE_SERIAL;
+  char *env_octree_type = getenv ("PDM_OCTREE_TYPE");
+  if (env_octree_type != NULL) {
+    if (atoi(env_octree_type) == 1) {
+      octree_type = PDM_OCTREE_PARALLEL;
+    }
+  }
+  if (rank == 0) printf("octree_type = %d\n", octree_type);
+  //<<<---
+
 
   double b_t_elapsed;
   double b_t_cpu;
@@ -556,11 +577,22 @@ PDM_dist_cloud_surf_compute
                 " PDM_dist_cloud_surf_surf_mesh_part_set\n");
     }
 
-    int octree_id = PDM_octree_create (n_part_mesh,
-                                       depth_max,
-                                       points_in_leaf_max,
-                                       tolerance,
-                                       comm);
+    //--->>>
+    int octree_id;
+    if (octree_type == PDM_OCTREE_SERIAL) {
+      octree_id = PDM_octree_create (n_part_mesh,
+                                     depth_max,
+                                     points_in_leaf_max,
+                                     tolerance,
+                                     comm);
+    } else {
+      octree_id = PDM_para_octree_create (n_part_mesh,
+                                          depth_max,
+                                          points_in_leaf_max,
+                                          0,
+                                          comm);
+    }
+    //<<<---
 
     for (int i_part = 0; i_part < n_part_mesh; i_part++) {
 
@@ -587,15 +619,28 @@ PDM_dist_cloud_surf_compute
                   " PDM_dist_cloud_surf_surf_mesh_part_set\n");
       }
 
-      PDM_octree_point_cloud_set (octree_id, i_part, n_vertices,
-                                  vertices_coords, vertices_gnum);
+      //--->>>
+      if (octree_type == PDM_OCTREE_SERIAL) {
+        PDM_octree_point_cloud_set (octree_id, i_part, n_vertices,
+                                    vertices_coords, vertices_gnum);
+      } else {
+        PDM_para_octree_point_cloud_set (octree_id, i_part, n_vertices,
+                                         vertices_coords, vertices_gnum);
+      }
+      //<<<---
     }
 
     /*
      * Build octree
      */
-
-    PDM_octree_build (octree_id);
+    //--->>>
+    if (octree_type == PDM_OCTREE_SERIAL) {
+      PDM_octree_build (octree_id);
+    } else {
+      PDM_para_octree_build (octree_id, NULL);//global_extents?
+      PDM_para_octree_dump_times (octree_id);
+    }
+    //<<<---
 
     /*
      * Concatenation of the partitions
@@ -630,12 +675,24 @@ PDM_dist_cloud_surf_compute
 
     double *closest_vertices_dist2 =  malloc (sizeof(double) * n_pts_rank);
 
-    PDM_octree_closest_point (octree_id,
-                              n_pts_rank,
-                              pts_rank,
-                              pts_g_num_rank,
-                              closest_vertices_gnum,
-                              closest_vertices_dist2);
+    //--->>>
+    if (octree_type == PDM_OCTREE_SERIAL) {
+      PDM_octree_closest_point (octree_id,
+                                n_pts_rank,
+                                pts_rank,
+                                pts_g_num_rank,
+                                closest_vertices_gnum,
+                                closest_vertices_dist2);
+    } else {
+      PDM_para_octree_single_closest_point (octree_id,
+                                            LOCAL_SEARCH_RECURSIVE,
+                                            n_pts_rank,
+                                            pts_rank,
+                                            pts_g_num_rank,
+                                            closest_vertices_gnum,
+                                            closest_vertices_dist2);
+    }
+    //<<<---
 
     //      debut test cube :
 
@@ -672,7 +729,13 @@ PDM_dist_cloud_surf_compute
 
     free (closest_vertices_gnum);
 
-    PDM_octree_free (octree_id);
+    //--->>>
+    if (octree_type == PDM_OCTREE_SERIAL) {
+      PDM_octree_free (octree_id);
+    } else {
+      PDM_para_octree_free (octree_id);
+    }
+    //<<<---
 
     PDM_timer_hang_on(dist->timer);
     e_t_elapsed = PDM_timer_elapsed(dist->timer);
