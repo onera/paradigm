@@ -69,6 +69,7 @@ cdef extern from "pdm_multipart.h":
                                     int            ipart,
                                     int         ***elt_vtx_idx,
                                     int         ***elt_vtx,
+                                    PDM_g_num_t ***elt_section_ln_to_gn,
                                     int          **cell_tag,
                                     int          **cell_face_idx,
                                     int          **cell_face,
@@ -326,6 +327,7 @@ cdef class MultiPart:
         cdef PDM_g_num_t  *face_join_ln_to_gn
         cdef int         **elt_vtx_idx
         cdef int         **elt_vtx
+        cdef PDM_g_num_t **elt_section_ln_to_gn
         # ************************************************************************
 
         # dims = self.part_dim_get(self._mpart_id, ipart)
@@ -337,6 +339,7 @@ cdef class MultiPart:
                                    ipart,
                                    &elt_vtx_idx,
                                    &elt_vtx,
+                                   &elt_section_ln_to_gn,
                                    &cell_tag,
                                    &cell_face_idx,
                                    &cell_face,
@@ -362,6 +365,7 @@ cdef class MultiPart:
         cdef NPY.npy_intp n_section = <NPY.npy_intp> dims['n_section']
         cdef list np_elt_vtx_idx = []
         cdef list np_elt_vtx = []
+        cdef list np_elt_section_ln_to_gn = []
         cdef NPY.npy_intp dim_idx
         for i_section in range(n_section):
             dim_idx = dims['n_elt'][i_section] + 1
@@ -369,6 +373,11 @@ cdef class MultiPart:
                                                      &dim_idx,
                                                      NPY.NPY_INT32,
                                                      <void *> elt_vtx_idx[i_section])
+            n_elt_i_section = <NPY.npy_intp> dims['n_elt'][i_section]
+            np_elt_section_ln_to_gn_i_section = NPY.PyArray_SimpleNewFromData(1,
+                                                     &n_elt_i_section,
+                                                     PDM_G_NUM_NPY_INT,
+                                                     <void *> elt_section_ln_to_gn[i_section])
             dim_elt = <NPY.npy_intp> np_elt_vtx_idx_i_section[-1]
             np_elt_vtx_i_section = NPY.PyArray_SimpleNewFromData(1,
                                                      &dim_elt,
@@ -377,9 +386,11 @@ cdef class MultiPart:
 
             PyArray_ENABLEFLAGS(np_elt_vtx_idx_i_section, NPY.NPY_OWNDATA);
             PyArray_ENABLEFLAGS(np_elt_vtx_i_section, NPY.NPY_OWNDATA);
+            PyArray_ENABLEFLAGS(np_elt_section_ln_to_gn_i_section, NPY.NPY_OWNDATA);
 
             np_elt_vtx_idx.append(np_elt_vtx_idx_i_section)
             np_elt_vtx.append(np_elt_vtx_i_section)
+            np_elt_section_ln_to_gn.append(np_elt_section_ln_to_gn_i_section)
 
         # -> Begin
         cdef NPY.npy_intp dim
@@ -625,6 +636,7 @@ cdef class MultiPart:
                 'np_face_cell'                 : np_face_cell,
                 'np_elt_vtx_idx'               : np_elt_vtx_idx,
                 'np_elt_vtx'                   : np_elt_vtx,
+                'np_elt_section_ln_to_gn'      : np_elt_section_ln_to_gn,
                 'np_face_vtx_idx'              : np_face_vtx_idx,
                 'np_face_vtx'                  : np_face_vtx,
                 'np_face_ln_to_gn'             : np_face_ln_to_gn,

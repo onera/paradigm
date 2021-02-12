@@ -1920,6 +1920,7 @@ const int            i_zone,
 const int            i_part,
       int         ***elt_vtx_idx,
       int         ***elt_vtx,
+      PDM_g_num_t ***elt_section_ln_to_gn,
       int          **cell_tag,
       int          **cell_face_idx,
       int          **cell_face,
@@ -1977,6 +1978,7 @@ const int            i_part,
 
   *elt_vtx_idx = _pmeshes.parts[i_part]->elt_vtx_idx;
   *elt_vtx     = _pmeshes.parts[i_part]->elt_vtx;
+  *elt_section_ln_to_gn = _pmeshes.parts[i_part]->elt_section_ln_to_gn;
 }
 
 
