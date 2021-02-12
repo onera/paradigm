@@ -25,6 +25,17 @@ else ()
    set(PYX_L_NUM int)
 endif ()
 
+if (PDM_HAVE_PARMETIS)
+  set(PYX_PDM_HAS_PARMETIS True)
+else ()
+  set(PYX_PDM_HAS_PARMETIS False)
+endif ()
+if (PDM_HAVE_PTSCOTCH)
+  set(PYX_PDM_HAS_PTSCOTCH True)
+else ()
+  set(PYX_PDM_HAS_PTSCOTCH False)
+endif ()
+
 file ( COPY . DESTINATION "${CMAKE_CURRENT_BINARY_DIR}" FILES_MATCHING PATTERN "*.pxi")
 file ( COPY . DESTINATION "${CMAKE_CURRENT_BINARY_DIR}" FILES_MATCHING PATTERN "*.py")
 
