@@ -4820,6 +4820,7 @@ PDM_para_octree_create
   octree->connected_idx = NULL;
 
   //-->>
+  octree->rank_comm = PDM_MPI_COMM_NULL;
   octree->used_rank = NULL;
   octree->used_rank_extents = NULL;
   octree->rank_boxes = NULL;

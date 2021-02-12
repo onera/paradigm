@@ -538,35 +538,6 @@ PDM_dist_cloud_surf_compute
     }
     else if (dist->_surf_mesh != NULL) {
       n_part_mesh = PDM_surf_mesh_n_part_get (dist->_surf_mesh);
-      /* PDM_surf_mesh_compute_faceExtentsMesh (dist->_surf_mesh, 1e-8); */
-
-      /* double glob_extents[6]; */
-      /* glob_extents[0] = HUGE_VAL; */
-      /* glob_extents[1] = HUGE_VAL; */
-      /* glob_extents[2] = HUGE_VAL; */
-      /* glob_extents[3] = -HUGE_VAL; */
-      /* glob_extents[4] = -HUGE_VAL; */
-      /* glob_extents[5] = -HUGE_VAL; */
-
-      /* for (int i = 0; i < n_part_mesh; i++) { */
-      /*   const double *_extents = PDM_surf_mesh_part_extents_get (dist->_surf_mesh, i); */
-      /*   glob_extents[0] = PDM_MIN (_extents[0], glob_extents[0]); */
-      /*   glob_extents[1] = PDM_MIN (_extents[1], glob_extents[1]); */
-      /*   glob_extents[2] = PDM_MIN (_extents[2], glob_extents[2]); */
-      /*   glob_extents[3] = PDM_MAX (_extents[3], glob_extents[3]); */
-      /*   glob_extents[4] = PDM_MAX (_extents[4], glob_extents[4]); */
-      /*   glob_extents[5] = PDM_MAX (_extents[5], glob_extents[5]); */
-      /* } */
-      /* double min_dim = HUGE_VAL; */
-      /* min_dim = glob_extents[3] - glob_extents[0]; */
-      /* min_dim = PDM_MIN (min_dim, glob_extents[4] - glob_extents[1]); */
-      /* min_dim = PDM_MIN (min_dim, glob_extents[5] - glob_extents[2]); */
-
-      /* depth_max = 0; */
-      /* while ((min_dim) > 1e-10) { */
-      /*   min_dim = min_dim / 2.; */
-      /*   depth_max += 1; */
-      /* } */
     }
     else {
       PDM_error(__FILE__, __LINE__, 0,
@@ -634,10 +605,62 @@ PDM_dist_cloud_surf_compute
      * Build octree
      */
     //--->>>
+#if 1
+    int                *n_elmts = malloc (sizeof(int          ) * n_part_mesh);
+    const double      **extents = malloc (sizeof(double      *) * n_part_mesh);
+    const PDM_g_num_t **gNum    = malloc (sizeof(PDM_g_num_t *) * n_part_mesh);
+
+    if (dist->mesh_nodal != NULL) {
+      //...
+    }
+    else if (dist->_surf_mesh != NULL) {
+      PDM_surf_mesh_compute_faceExtentsMesh (dist->_surf_mesh, 1e-8);
+      for (int i_part = 0; i_part < n_part_mesh; i_part++) {
+        n_elmts[i_part] = PDM_surf_mesh_part_n_face_get (dist->_surf_mesh,
+                                                         i_part);
+
+        gNum[i_part] = PDM_surf_mesh_part_face_g_num_get (dist->_surf_mesh,
+                                                          i_part);
+
+        extents[i_part] = PDM_surf_mesh_part_extents_get (dist->_surf_mesh,
+                                                          i_part);
+
+      }
+    }
+
+    /* Compute local extents */
+    double my_extents[6] = {HUGE_VAL, HUGE_VAL, HUGE_VAL, -HUGE_VAL, -HUGE_VAL, -HUGE_VAL};
+    for (int ipart = 0; ipart < n_part_mesh; ipart++) {
+      for (int i = 0; i < n_elmts[ipart]; i++) {
+        for (int j = 0; j < 3; j++) {
+          my_extents[j]   = PDM_MIN (my_extents[j],   extents[ipart][6*i + j]);
+          my_extents[j+3] = PDM_MAX (my_extents[j+3], extents[ipart][6*i + 3 + j]);
+        }
+      }
+    }
+
+    /* Compute global extents */
+    double global_extents[6];
+    PDM_MPI_Allreduce (my_extents,   global_extents,   3, PDM_MPI_DOUBLE, PDM_MPI_MIN, dist->comm);
+    PDM_MPI_Allreduce (my_extents+3, global_extents+3, 3, PDM_MPI_DOUBLE, PDM_MPI_MAX, dist->comm);
+
+    /* Break symmetry */
+    double max_range = 0.;
+    for (int i = 0; i < 3; i++) {
+      max_range = PDM_MAX (max_range, global_extents[i+3] - global_extents[i]);
+    }
+    for (int i = 0; i < 3; i++) {
+      global_extents[i]   -= max_range * 1.1e-3;
+      global_extents[i+3] += max_range * 1.0e-3;
+    }
+#else
+    double *global_extents = NULL;
+#endif
+
     if (octree_type == PDM_OCTREE_SERIAL) {
       PDM_octree_build (octree_id);
     } else {
-      PDM_para_octree_build (octree_id, NULL);//global_extents?
+      PDM_para_octree_build (octree_id, global_extents);
       PDM_para_octree_dump_times (octree_id);
     }
     //<<<---
@@ -765,7 +788,7 @@ PDM_dist_cloud_surf_compute
     b_t_cpu_s   = PDM_timer_cpu_sys(dist->timer);
     PDM_timer_resume(dist->timer);
 
-
+#if 0
     int                *n_elmts = malloc (sizeof(int          ) * n_part_mesh);
     const double      **extents = malloc (sizeof(double      *) * n_part_mesh);
     const PDM_g_num_t **gNum    = malloc (sizeof(PDM_g_num_t *) * n_part_mesh);
@@ -877,6 +900,7 @@ PDM_dist_cloud_surf_compute
       global_extents[i]   -= max_range * 1.1e-3;
       global_extents[i+3] += max_range * 1.0e-3;
     }
+#endif
 
     PDM_dbbtree_t *dbbt = PDM_dbbtree_create (dist->comm, 3, global_extents);
 
