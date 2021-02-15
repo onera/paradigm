@@ -79,6 +79,15 @@ typedef enum {
 } PDM_Mesh_adapt_tool_t;
 
 
+/**
+ * \struct PDM_Mesh_adapt_t
+ * \brief  Mesh adaptation workflow
+ *
+ */
+
+typedef struct _PDM_Mesh_adapt_t PDM_Mesh_adapt_t;
+
+
 /*============================================================================
  * Public function definitions
  *============================================================================*/
@@ -116,7 +125,7 @@ typedef enum {
  *
  */
 
-int
+PDM_Mesh_adapt_t *
 PDM_Mesh_adapt_create
 (
  const PDM_MPI_Comm            comm,
@@ -133,14 +142,14 @@ PDM_Mesh_adapt_create
  * \brief Free a parallel mesh adaptation workflow according to the selected
  *        ownership property
  *
- * \param [in]  ima      Identifier
+ * \param [in]  ma    Mesh adaptation workfow
  *
  */
 
 void
 PDM_Mesh_adapt_free
 (
- const int  ima
+ PDM_Mesh_adapt_t *ma
 );
 
 
@@ -155,40 +164,436 @@ PDM_Mesh_adapt_free
 /**
  * \brief Set source mesh vertices.
  *
- * \param [in]  ima          Identifier
+ * \param [in]  ma           Mesh adaptation workfow
  * \param [in]  i_part       Current partition
  * \param [in]  n_pts        Number of points
  * \param [in]  coord        Coordinates (size = 3 * \p n_pts)
- * \param [in]  global_num   Global element number (or NULL)
+ * \param [in]  g_num        Global element number (or NULL)
  *
  */
 
 void
 PDM_Mesh_adapt_src_vtx_set
 (
- const int    ima,
- const int    i_part,
- const int    n_pts,
- double       coord[],
- PDM_g_num_t  global_num[]
+ PDM_Mesh_adapt_t *ma,
+ const int         i_part,
+ const int         n_pts,
+ double            coord[],
+ PDM_g_num_t       g_num[]
 );
 
 
 /**
  * \brief Add a connectivity block to the source mesh.
  *
- * \param [in]  ima              Identifier
+ * \param [in]  ma               Mesh adaptation workfow
  * \param [in]  block_type       Block type
  *
- * \return block identifier (ibl)
+ * \return block identifier (i_block)
  */
 
 int
 PDM_Mesh_adapt_src_block_add
 (
- const int                   ima,
+ PDM_Mesh_adapt_t           *ma,
  const PDM_Mesh_nodal_elt_t  block_type
 );
+
+
+/**
+ * \brief Set a standard block of the source mesh.
+ *
+ * This function adds a connectivity block to the interface mesh.
+ * Definition of element connectivity is :
+ *
+ *  - edge (\ref CWP_BLOCK_EDGE2) :
+ *
+ *   \code
+ *       1 x-------x 2
+ *   \endcode
+ *
+ *  - triangle (\ref CWP_BLOCK_FACE_TRIA3):
+ *
+ *   \code
+ *       1 x-------x 3
+ *          \     /
+ *           \   /
+ *            \ /
+ *             x 2
+ *   \endcode
+ *
+ *  - quadrangle (\ref CWP_BLOCK_FACE_QUAD4) :
+ *
+ *   \code
+ *          4 x-------x 3
+ *           /       /
+ *          /       /
+ *       1 x-------x2
+ *   \endcode
+ *
+ *   - tetrahedron (\ref CWP_BLOCK_CELL_TETRA4) :
+ *
+ *   \code
+ *             x 4
+ *            /|\
+ *           / | \
+ *          /  |  \
+ *       1 x- -|- -x 3
+ *          \  |  /
+ *           \ | /
+ *            \|/
+ *             x 2
+ *   \endcode
+ *
+ *   - pyramid (\ref CWP_BLOCK_CELL_PYRAM5) :
+ *
+ *   \code
+ *              5 x
+ *               /|\
+ *              //| \
+ *             // |  \
+ *          4 x/--|---x 3
+ *           //   |  /
+ *          //    | /
+ *       1 x-------x 2
+ *   \endcode
+ *
+ *  - prism (\ref CWP_BLOCK_CELL_PRISM6) :
+ *
+ *   \code
+ *       4 x-------x 6
+ *         |\     /|
+ *         | \   / |
+ *       1 x- \-/ -x 3
+ *          \ 5x  /
+ *           \ | /
+ *            \|/
+ *             x 2
+ *   \endcode
+ *
+ *  -  hexaedron (\ref CWP_BLOCK_CELL_HEXA8) :
+ *
+ *   \code
+ *          8 x-------x 7
+ *           /|      /|
+ *          / |     / |
+ *       5 x-------x6 |
+ *         | 4x----|--x 3
+ *         | /     | /
+ *         |/      |/
+ *       1 x-------x 2
+ *   \endcode
+ *
+ * \param [in]  ma           Mesh adaptation workfow
+ * \param [in]  i_part       Partition identifier
+ * \param [in]  i_block      Block identifier
+ * \param [in]  n_elts       Number of elements
+ * \param [in]  elt_vtx      Connectivity (size = n_vertex_elt * n_elts)
+ * \param [in]  g_num        Global element number (or NULL) (size = n_elts)
+ *
+ * \return                   Local element number in the mesh
+ *
+ */
+
+int *
+PDM_Mesh_adapt_src_block_std_set
+(
+ PDM_Mesh_adapt_t *ma,
+ const int         i_part,
+ const int         i_block,
+ const int         n_elts,
+ int               elt_vtx[],
+ PDM_g_num_t       g_num[]
+);
+
+
+/**
+ * \brief Set a generic high order block of the source mesh.
+ *
+ * \param [in]  ma                   Mesh adaptation workfow
+ * \param [in]  i_part               Partition identifier
+ * \param [in]  i_block              Block identifier
+ * \param [in]  local_node_location  Node location in the (u, v, w) grid
+ *                                   (size = 3 * n_nodes_elt)
+ * \param [in]  n_elts               Number of elements
+ * \param [in]  elt_node             Connectivity (size = n_nodes_elt * n_elts)
+ * \param [in]  g_num                Global element number (or NULL)
+ *
+ * \return                           Local element number in the mesh
+ *
+ */
+
+int *
+PDM_Mesh_adapt_src_block_ho_set
+(
+ PDM_Mesh_adapt_t *ma,
+ const int         i_part,
+ const int         i_block,
+ int               local_node_location[],
+ const int         n_elts,
+ int               elt_node[],
+ PDM_g_num_t       g_num[]
+);
+
+
+/**
+ * \brief Set the connectivity of a polygon block of the source mesh.
+ *
+ * \param [in]  ma               Mesh adaptation workfow
+ * \param [in]  i_part           Partition identifier
+ * \param [in]  i_block          Block identifier
+ * \param [in]  n_elts           Number of elements
+ * \param [in]  face_vtx_idx     Connectivity index (\p connec_id[0] = 0 and
+ *                               size = \p n_elts + 1)
+ * \param [in]  face_vtx         face_vtx (size = \p face_vtx_idx[\p n_elts])
+ * \param [in]  g_num            Global element number (or NULL)
+ *
+ * \return                       Local element number in the mesh
+ *
+ */
+
+int *
+PDM_Mesh_adapt_src_block_f_poly_set
+(
+ PDM_Mesh_adapt_t *ma,
+ const int         i_part,
+ const int         i_block,
+ const int         n_elts,
+ int               face_vtx_idx[],
+ int               face_vtx[],
+ PDM_g_num_t       g_num[]
+);
+
+/**
+ *
+ * \brief Set the connectivity of a polyhedron block of the source mesh.
+ *
+ * \param [in]  ma                Mesh adaptation workfow
+ * \param [in]  i_part            Partition identifier
+ * \param [in]  i_block           Block identifier
+ * \param [in]  n_elts            Number of elements
+ * \param [in]  n_faces           Number of faces
+ * \param [in]  face_vtx_idx      Polyhedron face to vertex index
+ *                                (\p face_vertex_idx[0] = 0 and
+ *                                 size = max(\p cell_face_connec) + 1)
+ * \param [in]  face_vtx          Polyhedron face to vertex connectivity
+ *                                (size = \p face_vertex_idx[\p n_elts])
+ * \param [in]  face_g_num        Face global element number (or NULL)
+ * \param [in]  cell_face_idx     Polyhedron to face index (or NULL)
+ *                                (\p src_poly_cell_face_idx[0] = 0 and
+ *                                 size = \p n_elts + 1)
+ * \param [in]  cell_face         Polyhedron to face connectivity (or NULL)
+ *                                The connectivity is oriented :
+ *                                  - > 0 if outgoing normal,
+ *                                  - < 0 otherwise
+ *                                (size = \p cell_face_idx[\p n_elts])
+ * \param [in]  face_cell         Face to polyhedron connectivity (or NULL)
+ *                                  - left value  : outgoing normal,
+ *                                  - right value : incoming normal
+ *                                (size = 2 * \p n_faces)
+ * \param [in]  cell_g_num        Cell global element number (or NULL)
+ *
+ * \return                        Local element number in the mesh
+ *
+ */
+
+int *
+PDM_Mesh_adapt_src_block_c_poly_set
+(
+ PDM_Mesh_adapt_t *ma,
+ const int         i_part,
+ const int         i_block,
+ const int         n_elts,
+ const int         n_faces,
+ int               face_vtx_idx[],
+ int               face_vtx[],
+ PDM_g_num_t       face_g_num[],
+ int               cell_face_idx[],
+ int               cell_face[],
+ int               face_cell[],
+ PDM_g_num_t       cell_g_num[]
+);
+
+/**
+ * \brief Add a connectivity block to the boundary source mesh.
+ *
+ * \param [in]  ma               Mesh adaptation workfow
+ * \param [in]  block_type       Block type
+ *
+ * \return block identifier (i_block)
+ */
+
+int
+PDM_Mesh_adapt_boundary_src_block_add
+(
+ PDM_Mesh_adapt_t           *ma,
+ const PDM_Mesh_nodal_elt_t  block_type
+);
+
+
+/**
+ * \brief Set a standard block of the boundary source mesh.
+ *
+ * This function adds a connectivity block to the interface mesh.
+ * Definition of element connectivity is :
+ *
+ *  - edge (\ref CWP_BLOCK_EDGE2) :
+ *
+ *   \code
+ *       1 x-------x 2
+ *   \endcode
+ *
+ *  - triangle (\ref CWP_BLOCK_FACE_TRIA3):
+ *
+ *   \code
+ *       1 x-------x 3
+ *          \     /
+ *           \   /
+ *            \ /
+ *             x 2
+ *   \endcode
+ *
+ *  - quadrangle (\ref CWP_BLOCK_FACE_QUAD4) :
+ *
+ *   \code
+ *          4 x-------x 3
+ *           /       /
+ *          /       /
+ *       1 x-------x2
+ *   \endcode
+ *
+ *
+ * \param [in]  ma           Mesh adaptation workfow
+ * \param [in]  i_part       Partition identifier
+ * \param [in]  i_block      Block identifier
+ * \param [in]  n_elts       Number of elements
+ * \param [in]  elt_vtx      Connectivity (size = n_vertex_elt * n_elts)
+ * \param [in]  g_num        Global element number (or NULL) (size = n_elts)
+ *
+ * \return                   Local element number in the mesh
+ *
+ */
+
+int *
+PDM_Mesh_adapt_boundary_src_block_std_set
+(
+ PDM_Mesh_adapt_t *ma,
+ const int         i_part,
+ const int         i_block,
+ const int         n_elts,
+ int               elt_vtx[],
+ PDM_g_num_t       g_num[]
+);
+
+
+/**
+ * \brief Set a generic high order block of the source mesh.
+ *
+ * \param [in]  ma                   Mesh adaptation workfow
+ * \param [in]  i_part               Partition identifier
+ * \param [in]  i_block              Block identifier
+ * \param [in]  local_node_location  Node location in the (u, v, w) grid
+ *                                   (size = 3 * n_nodes_elt)
+ * \param [in]  n_elts               Number of elements
+ * \param [in]  elt_node             Connectivity (size = n_nodes_elt * n_elts)
+ * \param [in]  g_num                Global element number (or NULL)
+ *
+ * \return                           Local element number in the mesh
+ *
+ */
+
+int *
+PDM_Mesh_adapt_src_block_ho_set
+(
+ PDM_Mesh_adapt_t *ma,
+ const int         i_part,
+ const int         i_block,
+ int               local_node_location[],
+ const int         n_elts,
+ int               elt_node[],
+ PDM_g_num_t       g_num[]
+);
+
+
+/**
+ * \brief Set the connectivity of a polygon block of the source mesh.
+ *
+ * \param [in]  ma               Mesh adaptation workfow
+ * \param [in]  i_part           Partition identifier
+ * \param [in]  i_block          Block identifier
+ * \param [in]  n_elts           Number of elements
+ * \param [in]  face_vtx_idx     Connectivity index (\p connec_id[0] = 0 and
+ *                               size = \p n_elts + 1)
+ * \param [in]  face_vtx         face_vtx (size = \p face_vtx_idx[\p n_elts])
+ * \param [in]  g_num            Global element number (or NULL)
+ *
+ * \return                       Local element number in the mesh
+ *
+ */
+
+int *
+PDM_Mesh_adapt_src_block_f_poly_set
+(
+ PDM_Mesh_adapt_t *ma,
+ const int         i_part,
+ const int         i_block,
+ const int         n_elts,
+ int               face_vtx_idx[],
+ int               face_vtx[],
+ PDM_g_num_t       g_num[]
+);
+
+/**
+ *
+ * \brief Set the connectivity of a polyhedron block of the source mesh.
+ *
+ * \param [in]  ma                Mesh adaptation workfow
+ * \param [in]  i_part            Partition identifier
+ * \param [in]  i_block           Block identifier
+ * \param [in]  n_elts            Number of elements
+ * \param [in]  n_faces           Number of faces
+ * \param [in]  face_vtx_idx      Polyhedron face to vertex index
+ *                                (\p face_vertex_idx[0] = 0 and
+ *                                 size = max(\p cell_face_connec) + 1)
+ * \param [in]  face_vtx          Polyhedron face to vertex connectivity
+ *                                (size = \p face_vertex_idx[\p n_elts])
+ * \param [in]  face_g_num        Face global element number (or NULL)
+ * \param [in]  cell_face_idx     Polyhedron to face index (or NULL)
+ *                                (\p src_poly_cell_face_idx[0] = 0 and
+ *                                 size = \p n_elts + 1)
+ * \param [in]  cell_face         Polyhedron to face connectivity (or NULL)
+ *                                The connectivity is oriented :
+ *                                  - > 0 if outgoing normal,
+ *                                  - < 0 otherwise
+ *                                (size = \p cell_face_idx[\p n_elts])
+ * \param [in]  face_cell         Face to polyhedron connectivity (or NULL)
+ *                                  - left value  : outgoing normal,
+ *                                  - right value : incoming normal
+ *                                (size = 2 * \p n_faces)
+ * \param [in]  cell_g_num        Cell global element number (or NULL)
+ *
+ * \return                        Local element number in the mesh
+ *
+ */
+
+int *
+PDM_Mesh_adapt_src_block_c_poly_set
+(
+ PDM_Mesh_adapt_t *ma,
+ const int         i_part,
+ const int         i_block,
+ const int         n_elts,
+ const int         n_faces,
+ int               face_vtx_idx[],
+ int               face_vtx[],
+ PDM_g_num_t       face_g_num[],
+ int               cell_face_idx[],
+ int               cell_face[],
+ int               face_cell[],
+ PDM_g_num_t       cell_g_num[]
+);
+
+
 
 
 /**
@@ -197,15 +602,26 @@ PDM_Mesh_adapt_src_block_add
  * This function computes the global numbers of mesh entities if they are
  * not provided (MPI collective communications)
  *
- * \param [in]  ima          Identifier
+ * \param [in]  ma                Mesh adaptation workfow
  *
  */
 
 void
 PDM_Mesh_adapt_src_finalize
 (
- const int  ima
+ PDM_Mesh_adapt_t *ma
 );
+
+
+/*----------------------------------------------------------------------------*
+ *
+ * Functions about the geometric representation of the boundary
+ *    - set geometry reprsentation of the boundary (Source mesh, P1 mesh,
+ *                                                  P2 mesh, P3 mesh,
+ *                                                  CAD iges, CAD step, ...)
+ *    - set ridge and corners on meshes
+ *
+ *----------------------------------------------------------------------------*/
 
 
 /*----------------------------------------------------------------------------*
