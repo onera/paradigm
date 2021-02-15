@@ -4326,13 +4326,25 @@ PDM_box_tree_closest_upper_bound_dist_boxes_get_v2
  double           pts[],
  double           upper_bound_dist2[],
  int             *i_boxes[],
- int             *boxes[]
+ int             *boxes[],
+ const double    *d_opt
  )
 {
   assert(i_rank < bt->n_copied_ranks);
 
   int normalized = bt->boxes->normalized;
-  const double *d = bt->boxes->d;
+
+  /*
+    Fix inconsistency between dbbt->d and bt->d
+    in the case where  non-NULL global extents
+    were passed to PDM_dbbtree_create.
+  */
+  const double *d;
+  if (d_opt == NULL) {
+    d = bt->boxes->d;
+  } else {
+    d = d_opt;
+  }
 
   double *_pts = pts;
   /* if (normalized) { */

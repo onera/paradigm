@@ -341,7 +341,8 @@ PDM_box_tree_closest_upper_bound_dist_boxes_get_v2
  double           pts[],
  double           upper_bound_dist2[],
  int             *i_boxes[],
- int             *boxes[]
+ int             *boxes[],
+ const double    *d_opt
  );
 
 
