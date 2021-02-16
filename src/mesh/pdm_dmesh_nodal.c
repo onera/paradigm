@@ -1627,6 +1627,94 @@ int PDM_concat_elt_sections
 
 
 /**
+*
+* \brief Concatenates 3D element sections blocks
+*
+* \param [in]   dmesh_nodal
+* \param [out]  section_idx        index of element section
+* \param [out]  cat_delt_vtx_idx   index of element
+* \param [out]  cat_delt_vtx       element vtx
+*
+ * \return     Number sections
+*/
+int PDM_concat_cell_sections
+(
+  PDM_dmesh_nodal_t  *dmesh_nodal,
+  int               **cell_section_idx,
+  int               **cat_dcell_vtx_idx,
+  PDM_g_num_t       **cat_dcell_vtx
+)
+{
+  // 0. sizes
+  int n_section = PDM_DMesh_nodal_n_section_get(dmesh_nodal);
+  int n_cell_section = 0;
+  for (int i=0; i<n_section; ++i) {
+    PDM_Mesh_nodal_elt_t type = PDM_DMesh_nodal_section_elt_type_get(dmesh_nodal,i);
+    if (is_3D_element(type)) {
+      ++n_cell_section;
+    }
+  }
+
+  int dn_cell_vtx = 0;
+  *cell_section_idx = (int*) malloc((n_cell_section+1) * sizeof(int));
+  int* _cell_section_idx = *cell_section_idx;
+  int* n_vtx_by_cell_by_section = (int*) malloc(n_cell_section * sizeof(int));
+  _cell_section_idx[0] = 0;
+  int* n_cell_vtx_by_section = (int*) malloc(n_section * sizeof(int));
+  int cnt = 0;
+  for (int i=0; i<n_section; ++i) {
+    PDM_Mesh_nodal_elt_t type = PDM_DMesh_nodal_section_elt_type_get(dmesh_nodal,i);
+    if (is_3D_element(type)) {
+      int n_cell_by_section = PDM_DMesh_nodal_section_n_elt_get(dmesh_nodal,i);
+      _cell_section_idx[cnt+1] = _cell_section_idx[cnt] + n_cell_by_section;
+      n_vtx_by_cell_by_section[cnt] = PDM_Mesh_nodal_n_vertices_element(type,1); // 1: elements of order 1
+      n_cell_vtx_by_section[i] = n_cell_by_section*n_vtx_by_cell_by_section[cnt];
+      dn_cell_vtx += n_cell_vtx_by_section[i];
+      ++cnt;
+    }
+  }
+
+  // 1. cat_delt_vtx_idx
+  int dn_cell = _cell_section_idx[n_cell_section];
+  *cat_dcell_vtx_idx = (int*) malloc((dn_cell+1)* sizeof(int));
+  int* _cat_dcell_vtx_idx = *cat_dcell_vtx_idx;
+  _cat_dcell_vtx_idx[0] = 0;
+  int pos_idx = 1;
+  for (int i=0; i<n_cell_section; ++i) {
+    int n_cell_by_section = _cell_section_idx[i+1] - _cell_section_idx[i];
+    for (int j=0; j<n_cell_by_section; ++j) {
+      _cat_dcell_vtx_idx[pos_idx+j] = n_vtx_by_cell_by_section[i];
+    }
+    pos_idx += n_cell_by_section;
+  }
+  for (int i=1; i<dn_cell+1; ++i) {
+    _cat_dcell_vtx_idx[i] += _cat_dcell_vtx_idx[i-1];
+  }
+
+  // 2. cat_delt_vtx
+  *cat_dcell_vtx = (PDM_g_num_t *) malloc(dn_cell_vtx * sizeof(PDM_g_num_t));
+  PDM_g_num_t* _cat_dcell_vtx = *cat_dcell_vtx;
+  int pos = 0;
+  for (int i=0; i<n_section; ++i) {
+    PDM_Mesh_nodal_elt_t type = PDM_DMesh_nodal_section_elt_type_get(dmesh_nodal,i);
+    if (is_3D_element(type)) {
+      PDM_g_num_t* dcell_vtx = PDM_DMesh_nodal_section_std_get(dmesh_nodal,i);
+      for (int j=0; j<n_cell_vtx_by_section[i]; ++j) {
+        _cat_dcell_vtx[pos+j] = dcell_vtx[j];
+      }
+      pos += n_cell_vtx_by_section[i];
+    }
+  }
+
+  // 3. free
+  free(n_cell_vtx_by_section);
+  free(n_vtx_by_cell_by_section);
+
+  return n_cell_section;
+}
+
+
+/**
  * \brief  Compute elt->elt connectivity
  *
  * \param [out]  dual_graph_idx
