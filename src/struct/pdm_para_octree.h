@@ -315,6 +315,20 @@ double      *closest_octree_pt_dist2
 );
 
 
+void
+PDM_para_octree_points_within_radius
+(
+ const int     id,
+ const int     sort_close_points,
+ const int     n_pts,
+ double       *pts_coord,
+ PDM_g_num_t  *pts_g_num,
+ double       *pts_radius2,
+ int         **close_pts_idx,
+ PDM_g_num_t **close_pts_g_num,
+ double      **close_pts_dist2
+ );
+
 #ifdef	__cplusplus
 }
 #endif

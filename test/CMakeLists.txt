@@ -99,3 +99,4 @@ endif()
 
 test_c_create (pdm_t_single_closest_point ${MPIEXEC_MAX_NUMPROCS})
 test_c_create (compare_single_closest_point ${MPIEXEC_MAX_NUMPROCS})
+test_c_create (pdm_t_points_within_radius ${MPIEXEC_MAX_NUMPROCS})

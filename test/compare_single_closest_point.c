@@ -450,23 +450,13 @@ _closest_point_par
 
 
   /* Search closest source points */
-  if (0) {
-    PDM_para_octree_single_closest_point (octree_id,
-                                          (const _local_search_fun_t) local_search_fun,
-                                          _n_tgt,
-                                          _tgt_coord,
-                                          _tgt_g_num,
-                                          _closest_src_g_num,
-                                          _closest_src_dist2);
-  } else {
-    PDM_para_octree_closest_points (octree_id,
-                                    1,
-                                    _n_tgt,
-                                    _tgt_coord,
-                                    _tgt_g_num,
-                                    _closest_src_g_num,
-                                    _closest_src_dist2);
-  }
+  PDM_para_octree_single_closest_point (octree_id,
+                                        (const _local_search_fun_t) local_search_fun,
+                                        _n_tgt,
+                                        _tgt_coord,
+                                        _tgt_g_num,
+                                        _closest_src_g_num,
+                                        _closest_src_dist2);
 
   /* Restore partitions */
   free (_tgt_coord);
