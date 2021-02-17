@@ -647,21 +647,21 @@ _dual_graph_from_cell_face
         PDM_printf("PPART internal error : Face already defined in ppart->dface_cell connectivity\n");
         exit(1);
       }
-      printf("[%i] ppart->dface_cell[%i, %i] = "PDM_FMT_G_NUM", "PDM_FMT_G_NUM"\n", i, 2*lface, 2*lface+1, ppart->dface_cell[2*lface  ],
-                                                              ppart->dface_cell[2*lface+1]);
+      /*printf("[%i] ppart->dface_cell[%i, %i] = "PDM_FMT_G_NUM", "PDM_FMT_G_NUM"\n", i, 2*lface, 2*lface+1, ppart->dface_cell[2*lface  ],
+                                                              ppart->dface_cell[2*lface+1]);*/
 
     }
     ppart->_dface_cell = ppart->dface_cell;
   }
 
 
-    PDM_printf ("- dface_cell : \n");
+    /*PDM_printf ("- dface_cell : \n");
   for (int i = 0; i < ppart->dn_face; i++) {
     PDM_printf ("%d-> ", i);
     PDM_printf (" "PDM_FMT_G_NUM, ppart->dface_cell[2*i]);
     PDM_printf (" "PDM_FMT_G_NUM, ppart->dface_cell[2*i+1]);
     PDM_printf ("\n");
-  }
+  }*/
 
   /*
    * Exchange cell neighbour
