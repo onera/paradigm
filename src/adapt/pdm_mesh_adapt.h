@@ -38,7 +38,7 @@ extern "C" {
 #endif
 #endif /* __cplusplus */
 
-// Questions ouvertes :
+// Points a ajouter :
 //     - Gestion multi-maillages
 //     - Gestion des periodicites
 //
@@ -65,6 +65,21 @@ typedef enum {
   PDM_MESH_ADAPT_REMESHING,   /*!< Remeshing */
   PDM_MESH_ADAPT_REFINMENT,   /*!< Refinment */
   PDM_MESH_ADAPT_METHOD_N     /*!< Number of methods */
+
+} PDM_Mesh_adapt_method_t;
+
+
+/**
+ * \enum  PDM_Mesh_adapt_periodicity_t
+ * \brief Periodicity
+ *
+ */
+
+typedef enum {
+
+  PDM_MESH_ADAPT_PERIO_TRANS,  /*!< Translation periodicity */
+  PDM_MESH_ADAPT_PERIO_ROT,    /*!< Rotation periodicity */
+  PDM_MESH_ADAPT_PERIO_N       /*!< Number of type of periodicity */
 
 } PDM_Mesh_adapt_method_t;
 
@@ -1638,9 +1653,9 @@ PDM_Mesh_adapt_tgt_boundary_block_std_get
  const int         i_part,
  const int         i_block,
  int              *n_elts,
- int              *elt_vtx[],
- int              *l_num[],
- PDM_g_num_t      *g_num[]
+ int              (*elt_vtx)[],
+ int              (*l_num)[],
+ PDM_g_num_t      (*g_num)[]
 );
 
 
@@ -1664,9 +1679,9 @@ PDM_Mesh_adapt_tgt_boundary_block_ho_get
  const int         i_part,
  const int         i_block,
  int              *n_elts,
- int              *elt_node[],
- int              *l_num[],
- PDM_g_num_t      *g_num[]
+ int              (*elt_node)[],
+ int              (*l_num)[],
+ PDM_g_num_t      (*g_num)[]
 );
 
 
@@ -1693,10 +1708,10 @@ PDM_Mesh_adapt_tgt_boundary_block_f_poly_get
  const int         i_part,
  const int         i_block,
  int              *n_elts,
- int              *face_vtx_idx[],
- int              *face_vtx[],
- int              *l_num[],
- PDM_g_num_t      *g_num[]
+ int              (*face_vtx_idx)[],
+ int              (*face_vtx)[],
+ int              (*l_num)[],
+ PDM_g_num_t      (*g_num)[]
 );
 
 
@@ -1719,9 +1734,9 @@ PDM_Mesh_adapt_tgt_ancestor_get
 (
  PDM_Mesh_adapt_t *ma,
  const int        i_part,
- PDM_g_num_t      *g_num_vtx_ancestor[],
- PDM_g_num_t      *g_num_elt_ancestor[],
- PDM_g_num_t      *g_num_boundary_elt_ancestor[]
+ PDM_g_num_t      (*g_num_vtx_ancestor)[],
+ PDM_g_num_t      (*g_num_elt_ancestor)[],
+ PDM_g_num_t      (*g_num_boundary_elt_ancestor)[]
 );
 
 
@@ -1760,11 +1775,41 @@ PDM_Mesh_adapt_tgt_graph_get
 /*----------------------------------------------------------------------------*
  *
  * Functions about interpolation callback
- *   - Defined on the Volume (cell-center/node/user points())
- *   - Boundary faces (cell-center/node/user points())
- *   - Interpolation
  *
  *----------------------------------------------------------------------------*/
+
+/**
+ * \brief Set a user structure that can be used in the callback called from
+ * the source mesh
+ *
+ * \param [in]  ma              Mesh adaptation workflow
+ * \param [in]  user_struct     user_struct
+ *
+ */
+
+void
+PDM_Mesh_adapt_callback_src_user_struct_set
+(
+ PDM_Mesh_adapt_t   *ma,
+ void               *user_struct
+);
+
+
+/**
+ * \brief Set a user structure that can be used in the callback called from
+ * the target mesh
+ *
+ * \param [in]  ma              Mesh adaptation workflow
+ * \param [in]  user_struct     user_struct
+ *
+ */
+
+void
+PDM_Mesh_adapt_callback_tgt_user_struct_set
+(
+ PDM_Mesh_adapt_t   *ma,
+ void               *user_struct
+);
 
 
 /**
@@ -1802,8 +1847,8 @@ PDM_Mesh_adapt_interp_from_intersect_set
 
 
 /**
- * \brief Set the function used to interpolate fields from the intersectio of
- * source ans target meshes
+ * \brief Set the function used to interpolate fields from the 'k' closest
+ * degrees of freedom in the source mesh
  *
  * \param [in]  ma                           Mesh adaptation workflow
  * \param [in]  callback                     Partition identifier
@@ -1823,6 +1868,67 @@ PDM_Mesh_adapt_interp_from_closest_points_set
  *
  *----------------------------------------------------------------------------*/
 
+/**
+ * \brief Send a field to the target mesh (non-blocking communications)
+ *
+ * \param [in]  ma                  Mesh adaptation workflow
+ * \param [in]  i_field_family      Family of the field
+ *                                  (from \ref PDM_Mesh_adapt_field_family_add)
+ * \param [in]  stride              Stride of the field
+ * \param [in]  src_field           Array of pointers to field data (size = \n_part)
+ * \param [out] request             Request is used by \ref PDM_Mesh_adapt_src_wait_field
+ *
+ */
+
+void
+PDM_Mesh_adapt_src_field_issend
+(
+ PDM_Mesh_adapt_t  *ma,
+ const int         i_field_family,
+ const int         stride,
+ double           *src_field[],
+ int              *request
+);
+
+
+/**
+ * \brief Receive a field from the source mesh (non-blocking communications)
+ *
+ * \param [in]  ma                  Mesh adaptation workflow
+ * \param [in]  i_field_family      Family of the field
+ *                                  (from \ref PDM_Mesh_adapt_field_family_add)
+ * \param [in]  stride              Stride of the field
+ * \param [in]  src_field           Array of pointers to field data (size = \n_part)
+ * \param [out] request             Request is used by \ref PDM_Mesh_adapt_src_wait_field
+ *
+ */
+
+void
+PDM_Mesh_adapt_tgt_field_irecv
+(
+ PDM_Mesh_adapt_t  *ma,
+ const int         i_field_family,
+ const int         stride,
+ double           *tgt_field[],
+ int              *request
+);
+
+
+/**
+ * \brief Wait for the field exchange
+ *
+ * \param [in] ma           Mesh adaptation workflow
+ * \param [in] request      Request from \ref PDM_Mesh_adapt_tgt_field_irecv or
+ *                          \ref PDM_Mesh_adapt_tgt_field_issend
+ *
+ */
+
+void
+PDM_Mesh_adapt_wait
+(
+ PDM_Mesh_adapt_t  *ma,
+ int              request
+);
 
 #ifdef	__cplusplus
 }
