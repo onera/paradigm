@@ -855,6 +855,7 @@ PDM_dist_cloud_surf_compute
 						      &box_g_num);
     }  //#endif
       //<<<<---------
+printf("[%d] << PDM_dbbtree_closest_upper_bound_dist_boxes_get\n", rank);
 
     if (idebug) {
       printf (" PDM_dbbtree_closest_upper_bound_dist_boxes_get n_pts_rank : %d\n", n_pts_rank);
@@ -898,6 +899,7 @@ PDM_dist_cloud_surf_compute
      * (distance from a point to an element)
      *
      **************************************************************************/
+printf("[%d] Load balancing of elementary computations...\n", rank);
 
     PDM_timer_hang_on(dist->timer);
     b_t_elapsed = PDM_timer_elapsed(dist->timer);
@@ -1214,7 +1216,7 @@ PDM_dist_cloud_surf_compute
      * compute distance min per points
      *
      **************************************************************************/
-
+printf("[%d] compute distance min per points...\n", rank);
     PDM_timer_hang_on(dist->timer);
     b_t_elapsed = PDM_timer_elapsed(dist->timer);
     b_t_cpu     = PDM_timer_cpu(dist->timer);
@@ -1428,6 +1430,7 @@ PDM_dist_cloud_surf_compute
   dist->times_cpu_s[END]   = PDM_timer_cpu_sys(dist->timer);
   PDM_timer_resume(dist->timer);
 
+printf("[%d] << PDM_dist_cloud_surf_compute\n", rank);
 }
 
 
