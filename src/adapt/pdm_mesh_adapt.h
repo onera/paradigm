@@ -4,7 +4,7 @@
 /*
   This file is part of the ParaDiGM library.
 
-  Copyright (C) 2019       ONERA
+  Copyright (C) 2021       ONERA
 
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
@@ -37,6 +37,14 @@ extern "C" {
 } /* Fake brace to force back Emacs auto-indentation back to column 0 */
 #endif
 #endif /* __cplusplus */
+
+// Questions ouvertes :
+//     - Gestion multi-maillages
+//     - Gestion des periodicites
+//
+//
+
+
 
 /*============================================================================
  * Macro definitions
@@ -104,7 +112,8 @@ typedef enum {
 
 typedef enum {
 
-  PDM_MESH_ADAPT_METRIC,           /*!< Metric defined to vertices */
+  PDM_MESH_ADAPT_METRIC_VTX,       /*!< Metric defined to vertices */
+  PDM_MESH_ADAPT_METRIC_CELL,      /*!< ??? Metric defined to elements ??? */
   PDM_MESH_ADAPT_SUBDIVSION_LEVEL, /*!< Subdvision level defined to elements */
   PDM_MESH_ADAPT_CRITERION_N       /*!< Number of cirteria */
 
@@ -150,9 +159,193 @@ typedef enum {
 
 } PDM_Mesh_adapt_inter_part_graph_t;
 
+
+/**
+ * \enum  PDM_Mesh_adapt_dof_location_t
+ * \brief Degrees of freedom location
+ *
+ */
+
+typedef enum {
+
+  PDM_MESH_ADAPT_DOF_LOC_NODE, /*!< degrees of freedom defined at node  */
+  PDM_MESH_ADAPT_DOF_LOC_ELTS, /*!< degrees of freedom defined at element */
+  PDM_MESH_ADAPT_DOF_LOC_USER, /*!< degrees of freedom defined by user */
+  PDM_MESH_ADAPT_DOF_LOC_N     /*!< Number of  degrres of freedom location  */
+
+} PDM_Mesh_adapt_dof_location_t;
+
+
+/**
+ * \enum  PDM_Mesh_adapt_field_interp_t
+ * \brief Interpolation methods
+ *
+ */
+
+typedef enum {
+
+  PDM_MESH_ADAPT_INTERP_DEFAULT_FROM_KNN,          /*!< Default interpolation
+                                                        from the 'k' closest vertices
+                                                        of the source mesh */
+  PDM_MESH_ADAPT_INTERP_DEFAULT_FROM_LOCATION,     /*!< Default interpolation
+                                                        from the location of
+                                                        target degrees of freedom
+                                                        into the source mesh  */
+  PDM_MESH_ADAPT_INTERP_DEFAULT_FROM_INTERSECTION, /*!< Default interpolation from
+                                                        the intersection between
+                                                        source and target meshes  */
+  PDM_MESH_ADAPT_INTERP_USER_FROM_KNN,             /*!< user interpolation (callback)
+                                                        from the 'k' closest vertices
+                                                        of the source mesh */
+  PDM_MESH_ADAPT_INTERP_USER_FROM_LOCATION,        /*!< User interpolation (callback)
+                                                        from the location of
+                                                        target degrees of freedom
+                                                        into the source mesh  */
+  PDM_MESH_ADAPT_INTERP_USER_FROM_INTERSECTION,    /*!< Field defined at node  */
+  PDM_MESH_ADAPT_INTERP_FEFLO,                     /*!< Feflo interpolation
+                                                        method  */
+  PDM_MESH_ADAPT_INTERP_TREEPART,                   /*!< Treepart interpolation
+                                                         method */
+  PDM_MESH_ADAPT_INTERP_N                           /*!< Number of interpolation
+                                                         methods */
+
+} PDM_Mesh_adapt_field_interp_t;
+
+
 /*============================================================================
  * Callback function prototypes
  *============================================================================*/
+
+/**
+ * \typedef void (*CWP_Interp_from_location_t)
+ * \brief User interpolation function interface from location into a mesh.
+ *
+ * void (*CWP_Interp_from_location_t) defines the user interpolation
+ * interface to take into account an user interpolation from location of target
+ * points into the source mesh. Use \ref CWP_Interp_from_location_set to activate
+ * the function.
+ *
+ * \param [in]  user_struct_about_src       Generic pointer to user structure about target
+ *                                          setted from
+ *                                          \ref PDM_adapt_mesh_user_src_struct_set function
+ *                                          or NULL
+ * \param [in]  n_tgt_vtx                   Local number of target vertices
+ * \param [in]  tgt_pts_coords              Target points coordinates
+ *                                          (size = 3 * n_tgt_pts)
+ * \param [in]  tgt_pts_location            target points location
+ *                                          (size = n_tgt_pts)
+ * \param [in]  tgt_pts_dist                target points distance to location element
+ *                                          (size = n_tgt_pts)
+ * \param [in]  tgt_pts_bary_coords_idx     Index of Barycentric coordinates target points
+ *                                          in location element
+ *                                          (tgt_pts_bary_coords_idx[0] = 0 and
+ *                                          size = n_tgt_pts + 1)
+ * \param [in]  tgt_pts_bary_coords         Barycentric coordinates target points
+ *                                          in location element
+ *                                          (size = tgt_pts_bary_coords_idx[n_tgt_pts])
+ * \param [in]  dof_location                Degrees of freedom location
+ * \param [in]  field_stride                Field stride
+ * \param [in]  src_field                   Source field
+ *                                          (size depends on field type and stride)
+ * \param [out] tgt_field                   Target field
+ *                                          (size = stride * n_tgt_pts)
+ *
+ */
+
+typedef void (*PDM_Mesh_adapt_interp_from_location_t)
+(
+ // TODO: Add some properties about intersected mesh. To be continued
+ void                                *user_struct_about_src,
+ const int                            n_tgt_pts,
+ const double                         tgt_pts_coords[],
+ const int                            tgt_pts_location[],
+ const double                         tgt_pts_dist[],
+ const int                            tgt_pts_bary_coords_idx[],
+ const double                         tgt_pts_bary_coords[],
+ const PDM_Mesh_adapt_dof_location_t  dof_location,
+ const int                            field_stride,
+ const double                         src_field[],
+ double                               tgt_field[]
+);
+
+
+/**
+ * \brief User interpolation function interface from intersection between meshes. <b>(Not implemented yet)</b>
+ *
+ * void (*PDM_Mesh_adapt_interp_from_intersect_t) defines the user interpolation
+ * interface to take into account an user interpolation from intersection
+ * between source and target meshes. Use \ref CWP_Interp_from_intersect_set to activate
+ * the function.
+ *
+ * TODO: Add some properties about intersected mesh. To be continued
+ *
+ *  \param [in]  user_struct_about_src    Generic pointer to user structure about target
+ *                                        setted from
+ *                                        \ref PDM_adapt_mesh_user_src_struct_set function
+ *                                        or NULL
+ *  \param [in]  field_stride             Field stride
+ *  \param [in]  src_field                Source field
+ *  \param [out] tgt_field                Target field
+ *
+ */
+
+typedef void (*PDM_Mesh_adapt_interp_from_intersect_t)
+(
+ // TODO: Add some properties about intersected mesh. To be continued
+ void                                *user_struct_about_src,
+ const PDM_Mesh_adapt_dof_location_t  dof_location,
+ const int                            field_stride,
+ const double                         src_field[],
+ double                               tgt_field[]
+);
+
+
+/**
+ * \brief User interpolation function from closest points. <b>(Not implemented yet)</b>
+ *
+ * void (*PDM_mesh_adapt_interp_from_closest_pts_t) defines the user interpolation
+ * interface to take into account an user interpolation from <i>k</i> closest
+ * points. For this method the source field is sent to the target
+ * before the interpolation. Interpolation is done on the target side.
+ * To transfer more informations about source, you can stored them in additional
+ * components in the source fields.
+ *
+ * TODO: Add some properties about intersected mesh. To be continued
+ *  \param [in]  user_struct_about_tgt    Generic pointer to an user structure about target
+ *                                        setted from \ref PDM_adapta_mesh_user_tgt_struct_set
+ *                                        function or NULL
+ *  \param [in]  k_closest                value of 'k'
+ *  \param [in]  n_tgt_vtx                Local number of target vertices
+ *  \param [in]  tgt_vtx_coords           Coordinates of the target vertices
+ *  \param [in]  tgt_src_closest_g_num    For each target vertex the global numbers of
+ *                                        the 'k' closest source vertices
+ *  \param [in]  tgt_src_closest_dist     For each target vertex the distance to
+ *                                        the 'k' closest source vertices
+ *  \param [in]  tgt_src_closest_dist     For each target vertex the coordinates of
+ *                                        the 'k' closest source vertices
+ *  \param [in]  dof_location             Degrees of freedom location
+ *  \param [in]  field_stride             Field stride
+ *  \param [in]  src_field_at_closest_vtx For each target vertex the field defined at
+ *                                        the 'k' closest source vertices
+ *  \param [out] tgt_field                Target field
+ *
+ */
+
+typedef void (*PDM_Mesh_adapt_interp_from_closest_pts_t)
+(
+ // TODO: Add some properties about intersected mesh. To be continued
+ void                                *user_struct_about_tgt,
+ const int                           k_closest,
+ const int                           n_tgt_vtx,
+ const double                        tgt_vtx_coords[],
+ const PDM_g_num_t                   tgt_src_closest_g_num[],
+ const double                        tgt_src_closest_dist[],
+ const double                        tgt_src_closest_coords[],
+ const PDM_Mesh_adapt_dof_location_t dof_location,
+ const int                           field_stride,
+ const double                        src_field_at_closest_vtx[],
+       double                        tgt_field[]
+);
 
 
 /*============================================================================
@@ -296,9 +489,9 @@ PDM_Mesh_adapt_src_vtx_set
  *
  * \param [in]  ma               Mesh adaptation workflow
  * \param [in]  block_type       Block type
- *                                 -  PDM_MESH_NODAL_POINT
- *                                 -  PDM_MESH_NODAL_BAR2
- *                                 -  PDM_MESH_NODAL_BARHO
+// *                                 -  PDM_MESH_NODAL_POINT
+// *                                 -  PDM_MESH_NODAL_BAR2
+// *                                 -  PDM_MESH_NODAL_BARHO
  *                                 -  PDM_MESH_NODAL_TRIA3
  *                                 -  PDM_MESH_NODAL_TRIAHO
  *                                 -  PDM_MESH_NODAL_QUAD4
@@ -416,11 +609,9 @@ PDM_Mesh_adapt_src_block_add
  * \param [in]  l_num        Local element number in the partition (size = n_elts)
  * \param [in]  g_num        Global element number (or NULL) (size = n_elts)
  *
- * \return                   Local element number in the mesh
- *
  */
 
-int *
+void
 PDM_Mesh_adapt_src_block_std_set
 (
  PDM_Mesh_adapt_t *ma,
@@ -447,11 +638,9 @@ PDM_Mesh_adapt_src_block_std_set
  *                                   in the partition (size = n_elts)
  * \param [in]  g_num                Global element number (or NULL)
  *
- * \return                           Local element number in the mesh
- *
  */
 
-int *
+void
 PDM_Mesh_adapt_src_block_ho_set
 (
  PDM_Mesh_adapt_t *ma,
@@ -479,11 +668,9 @@ PDM_Mesh_adapt_src_block_ho_set
  *                               (size = n_elts)
  * \param [in]  g_num            Global element number (or NULL)
  *
- * \return                       Local element number in the mesh
- *
  */
 
-int *
+void
 PDM_Mesh_adapt_src_block_f_poly_set
 (
  PDM_Mesh_adapt_t *ma,
@@ -532,11 +719,9 @@ PDM_Mesh_adapt_src_block_f_poly_set
  *                                (size = n_elts)
  * \param [in]  cell_g_num        Cell global element number (or NULL)
  *
- * \return                        Local element number in the mesh
- *
  */
 
-int *
+void
 PDM_Mesh_adapt_src_block_c_poly_set
 (
  PDM_Mesh_adapt_t *ma,
@@ -611,11 +796,9 @@ PDM_Mesh_adapt_boundary_src_block_add
  * \param [in]  l_num        Local element number in the partition (size = n_elts)
  * \param [in]  g_num        Global element number (or NULL) (size = n_elts)
  *
- * \return                   Local element number in the mesh
- *
  */
 
-int *
+void
 PDM_Mesh_adapt_boundary_src_block_std_set
 (
  PDM_Mesh_adapt_t *ma,
@@ -641,11 +824,9 @@ PDM_Mesh_adapt_boundary_src_block_std_set
  * \param [in]  l_num                Local element number in the partition (size = n_elts)
  * \param [in]  g_num                Global element number (or NULL)
  *
- * \return                           Local element number in the mesh
- *
  */
 
-int *
+void
 PDM_Mesh_adapt_boundary_src_block_ho_set
 (
  PDM_Mesh_adapt_t *ma,
@@ -674,11 +855,9 @@ PDM_Mesh_adapt_boundary_src_block_ho_set
  *                               (size = \p n_elts)
  * \param [in]  g_num            Global element number (or NULL)
  *
- * \return                       Local element number in the mesh
- *
  */
 
-int *
+void
 PDM_Mesh_adapt_boundary_src_block_f_poly_set
 (
  PDM_Mesh_adapt_t *ma,
@@ -734,6 +913,8 @@ PDM_Mesh_adapt_src_graph_set
  *
  */
 
+//TODO: remplacer par entity group
+
 void
 PDM_Mesh_adapt_face_group_n_set
 (
@@ -750,6 +931,7 @@ PDM_Mesh_adapt_face_group_n_set
  * the notion of boudary condition
  *
  * \param [in]  ma        Mesh adaptation workflow
+ * \param [in]  i_part      Partition identifier
  * \param [in]  i_group   Group identifier
  * \param [in]  n_face    Number of faces in the group
  * \param [in]  faces     List of faces
@@ -761,6 +943,7 @@ void
 PDM_Mesh_adapt_face_group_set
 (
  PDM_Mesh_adapt_t *ma,
+ const int        i_part,
  const int        i_group,
  const int        n_face,
  int              faces[],
@@ -778,11 +961,14 @@ PDM_Mesh_adapt_face_group_set
  *
  */
 
+// name : finalize vs warmup
+
 void
 PDM_Mesh_adapt_src_finalize
 (
  PDM_Mesh_adapt_t *ma
 );
+
 
 /*----------------------------------------------------------------------------*
  *
@@ -846,7 +1032,7 @@ PDM_Mesh_adapt_geom_repr_vtx_set
  const int         n_vtx,
  double            coord[],
  PDM_g_num_t       g_num[]
- );
+);
 
 
 /**
@@ -918,11 +1104,9 @@ PDM_Mesh_adapt_geom_repr_block_add
  * \param [in]  l_num        Local element number in the partition (size = n_elts)
  * \param [in]  g_num        Global element number (or NULL) (size = n_elts)
  *
- * \return                   Local element number in the mesh
- *
  */
 
-int *
+void
 PDM_Mesh_adapt_geom_repr_block_std_set
 (
  PDM_Mesh_adapt_t *ma,
@@ -950,11 +1134,9 @@ PDM_Mesh_adapt_geom_repr_block_std_set
  *                                   (size = n_elts)
  * \param [in]  g_num                Global element number (or NULL)
  *
- * \return                           Local element number in the mesh
- *
  */
 
-int *
+void
 PDM_Mesh_adapt_geom_repr_block_ho_set
 (
  PDM_Mesh_adapt_t *ma,
@@ -982,11 +1164,9 @@ PDM_Mesh_adapt_geom_repr_block_ho_set
  * \param [in]  l_num            Local element number in the partition (size = \p n_elts)
  * \param [in]  g_num            Global element number (or NULL)
  *
- * \return                       Local element number in the mesh
- *
  */
 
-int *
+void
 PDM_Mesh_adapt_geom_repr_block_f_poly_set
 (
  PDM_Mesh_adapt_t *ma,
@@ -1017,6 +1197,52 @@ PDM_Mesh_adapt_geom_repr_finalize
 );
 
 
+/**
+ * \brief Set ridges
+ *
+ * This functions defines the ridges in the mesh of the geometric representation
+ * Under the form of the list of couples of points (vtx1/vtx2)
+ *
+ * \param [in]  ma               Mesh adaptation workflow
+ * \param [in]  i_part           Partition identifier
+ * \param [in]  n_ridge          Number of ridges
+ * \param [in]  ridges           List of ridges
+ *
+ */
+
+void
+PDM_Mesh_adapt_geom_repr_ridge_set
+(
+ PDM_Mesh_adapt_t *ma,
+ const int         i_part,
+ const int         n_ridge,
+ int               ridges
+);
+
+
+/**
+ * \brief Set corners
+ *
+ * This functions defines the corners in the mesh of the geometric representation
+ * under the form of the list of points
+ *
+ * \param [in]  ma               Mesh adaptation workflow
+ * \param [in]  i_part           Partition identifier
+ * \param [in]  n_corner         Number of corners
+ * \param [in]  ridges           List of corners
+ *
+ */
+
+void
+PDM_Mesh_adapt_geom_repr_ridge_set
+(
+ PDM_Mesh_adapt_t *ma,
+ const int         i_part,
+ const int         n_corner,
+ int               corners
+);
+
+
 /*----------------------------------------------------------------------------*
  *
  * Functions about geomtric criteria
@@ -1029,6 +1255,7 @@ PDM_Mesh_adapt_geom_repr_finalize
  *  Depends on the type of selected criterion.
  *
  * \param [in]  ma           Mesh adaptation workflow
+ * \param [in]  i_part       Partition identifier
  * \param [in]  criterion    Geometric adaptation criterion (size = n_elt or n_vtx)
  *                              - type int * : local refinment criterion (size = n_elt)
  *                              - type double * : metric (size = 6 * n_nodes)
@@ -1038,6 +1265,7 @@ void
 PDM_Mesh_adapt_geom_criterion_set
 (
  PDM_Mesh_adapt_t *ma,
+ const int         i_part,
  void             *criterion
 );
 
@@ -1069,12 +1297,39 @@ PDM_Mesh_adapt_tool_param_set
 
 /*----------------------------------------------------------------------------*
  *
- * Compute
+ * About field family
  *
  *----------------------------------------------------------------------------*/
 
 /**
- * \brief Computed target mesh
+ * \brief Set
+ *
+ * \param [in]  ma              Mesh adaptation workflow
+ * \param [in]  dof_location  Location of the Degrees of freedom
+ * \param [in]  field_interp    Intepolation method
+ *
+ * \return  i_field_family  field family identifier (used by transfer
+ *                                                   field functions)
+ */
+
+int
+PDM_Mesh_adapt_field_family_add
+(
+ PDM_Mesh_adapt_t                 *ma,
+ PDM_Mesh_adapt_dof_location_t    *dof_location,
+ PDM_Mesh_adapt_field_interp_t    *field_interp
+);
+
+/*----------------------------------------------------------------------------*
+ *
+ * Compute taget mesh
+ *
+ *----------------------------------------------------------------------------*/
+
+/**
+ * \brief Computes target mesh, splits it, redistributes it  and computes
+ *        MPI communication graphs between source and target meshes according to
+ *        the properties of field families.
  *
  * \param [in]  ma           Mesh adaptation workflow
  *
@@ -1090,8 +1345,6 @@ PDM_Mesh_adapt_geom_compute
 /*----------------------------------------------------------------------------*
  *
  * Functions about target mesh
- *   - Volume mesh
- *   - Boundary faces ???
  *
  *----------------------------------------------------------------------------*/
 
@@ -1364,6 +1617,7 @@ PDM_Mesh_adapt_tgt_boundary_block_type_get
  const int          i_block
 );
 
+
 /**
  * \brief Get a standard block of the target boundary mesh.
  *
@@ -1449,12 +1703,14 @@ PDM_Mesh_adapt_tgt_boundary_block_f_poly_get
 /**
  * \brief Get ancestor in the source mesh (only for \ref PDM_MESH_ADAPT_REFINMENT method)
  *
- * \param [in]  ma                       Mesh adaptation workflow
- * \param [in]  i_part                   Partition identifier
- * \param [out] g_num_ancestor           Global element number of ancestors
- *                                       (size = \p n_elts)
- * \param [out] g_num_boundary_ancestor  Global element number of boundary ancestors
- *                                       (size = \p n_boundary_elts)
+ * \param [in]  ma                           Mesh adaptation workflow
+ * \param [in]  i_part                       Partition identifier
+ * \param [out] g_num_vtx_ancestor           Ancestor global vertex number
+ *                                           (size = \p n_elts)
+ * \param [out] g_num_elt_ancestor           Ancestor global element number
+ *                                           (size = \p n_elts)
+ * \param [out] g_num_boundary_elt_ancestor  Ancestor global boundary element number
+ *                                           (size = \p n_boundary_elts)
  *
  */
 
@@ -1462,26 +1718,108 @@ void
 PDM_Mesh_adapt_tgt_ancestor_get
 (
  PDM_Mesh_adapt_t *ma,
- PDM_g_num_t      *g_num_ancestor[],
- PDM_g_num_t      *g_num_boundary_ancestor[]
+ const int        i_part,
+ PDM_g_num_t      *g_num_vtx_ancestor[],
+ PDM_g_num_t      *g_num_elt_ancestor[],
+ PDM_g_num_t      *g_num_boundary_elt_ancestor[]
+);
+
+
+/**
+ * \brief Get MPI graph communication between partitions
+ *
+ * \param [in]  ma          Mesh adaptation workflow
+ * \param [in]  i_part      Partition identifier
+ * \param [out] n_elt_graph Number of elements in the graph
+ * \param [out] graph_idx   Element index in \p graph
+ *                          (size = \a n_elt_graph)
+ * \param [out] graph       For each element graph :
+ *                             - Local element in the partition
+ *                               it is an element number or face number according to
+ *                               the type graph selected in \ref PDM_Mesh_adapt_create
+ *                             - List of triplets values :
+ *                                  + Connected process
+ *                                  + Local partition number in the
+ *                                    connected process
+ *                                  + Local element number in the local
+ *                                    partition number
+ *
+ */
+
+void
+PDM_Mesh_adapt_tgt_graph_get
+(
+ PDM_Mesh_adapt_t *ma,
+ const int         i_part,
+ int              *n_elt_graph,
+ int              *graph_idx[],
+ int              *graph[]
 );
 
 
 /*----------------------------------------------------------------------------*
  *
- * Functions about a
+ * Functions about interpolation callback
  *   - Defined on the Volume (cell-center/node/user points())
  *   - Boundary faces (cell-center/node/user points())
  *   - Interpolation
  *
  *----------------------------------------------------------------------------*/
 
+
+/**
+ * \brief Set the function used to interpolate fields from the location of
+ * the degrees of freedom into the src mesh
+ *
+ * \param [in]  ma                           Mesh adaptation workflow
+ * \param [in]  callback                     Partition identifier
+ *
+ */
+
+void
+PDM_Mesh_adapt_interp_from_location_set
+(
+ PDM_Mesh_adapt_t                     *ma,
+ PDM_Mesh_adapt_interp_from_location_t callback
+);
+
+
+/**
+ * \brief Set the function used to interpolate fields from the intersectio of
+ * source ans target meshes
+ *
+ * \param [in]  ma                           Mesh adaptation workflow
+ * \param [in]  callback                     Partition identifier
+ *
+ */
+
+void
+PDM_Mesh_adapt_interp_from_intersect_set
+(
+ PDM_Mesh_adapt_t                     *ma,
+ PDM_Mesh_adapt_interp_from_intersect_t callback
+);
+
+
+/**
+ * \brief Set the function used to interpolate fields from the intersectio of
+ * source ans target meshes
+ *
+ * \param [in]  ma                           Mesh adaptation workflow
+ * \param [in]  callback                     Partition identifier
+ *
+ */
+
+void
+PDM_Mesh_adapt_interp_from_closest_points_set
+(
+ PDM_Mesh_adapt_t                        *ma,
+ PDM_Mesh_adapt_interp_from_closest_pts_t callback
+);
+
 /*----------------------------------------------------------------------------*
  *
  * Functions about field transfer
- *   - Defined on the Volume (cell-center/node/user points())
- *   - Boundary faces (cell-center/node/user points())
- *   - Interpolation
  *
  *----------------------------------------------------------------------------*/
 
