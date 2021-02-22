@@ -632,7 +632,7 @@ PDM_g_num_t ng_elt;
 PDM_MPI_Allreduce (&n_elt_rank, &ng_elt, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, dist->comm);
 
 int n_rank;
-PDM_MPI_Comm_rank (dist->comm, &n_rank);
+PDM_MPI_Comm_size (dist->comm, &n_rank);
 PDM_g_num_t n_elt_avg = ng_elt / n_rank;
 printf("[%d] n_elt = "PDM_FMT_G_NUM" (%.3f times avg)\n", rank, n_elt_rank, (float) n_elt_rank / (float) n_elt_avg);
 
