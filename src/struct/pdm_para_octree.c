@@ -9539,14 +9539,14 @@ PDM_para_octree_single_closest_point
     if (i_rank == 0) printf("visu octree\n");
     char filename[999];
 
-    sprintf(filename, "octants_%3.3d.vtk", i_rank);
+    sprintf(filename, "octants_par_%3.3d.vtk", i_rank);
     write_octree_octants (id,
                           filename);
 
-    sprintf(filename, "points_%3.3d.vtk", i_rank);
+    /*sprintf(filename, "points_%3.3d.vtk", i_rank);
     write_octree_points (id,
                          filename,
-                         1);
+                         1);*/
   }
 
   /* Part-to-block create (only to get block distribution) */

@@ -608,6 +608,7 @@ PDM_dist_cloud_surf_compute
     int                *n_elmts = malloc (sizeof(int          ) * n_part_mesh);
     const double      **extents = malloc (sizeof(double      *) * n_part_mesh);
     const PDM_g_num_t **gNum    = malloc (sizeof(PDM_g_num_t *) * n_part_mesh);
+PDM_g_num_t n_elt_rank = 0;//
 
     if (dist->mesh_nodal != NULL) {
       //...
@@ -617,6 +618,7 @@ PDM_dist_cloud_surf_compute
       for (int i_part = 0; i_part < n_part_mesh; i_part++) {
         n_elmts[i_part] = PDM_surf_mesh_part_n_face_get (dist->_surf_mesh,
                                                          i_part);
+n_elt_rank += n_elmts[i_part];//
 
         gNum[i_part] = PDM_surf_mesh_part_face_g_num_get (dist->_surf_mesh,
                                                           i_part);
@@ -626,6 +628,13 @@ PDM_dist_cloud_surf_compute
 
       }
     }
+PDM_g_num_t ng_elt;
+PDM_MPI_Allreduce (&n_elt_rank, &ng_elt, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, dist->comm);
+
+int n_rank;
+PDM_MPI_Comm_rank (dist->comm, &n_rank);
+PDM_g_num_t n_elt_avg = ng_elt / n_rank;
+printf("[%d] n_elt = "PDM_FMT_G_NUM" (%.3f times avg)\n", rank, n_elt_rank, (float) n_elt_rank / (float) n_elt_avg);
 
     /* Compute local extents */
     double my_extents[6] = {HUGE_VAL, HUGE_VAL, HUGE_VAL, -HUGE_VAL, -HUGE_VAL, -HUGE_VAL};
@@ -855,7 +864,6 @@ PDM_dist_cloud_surf_compute
 						      &box_g_num);
     }  //#endif
       //<<<<---------
-printf("[%d] << PDM_dbbtree_closest_upper_bound_dist_boxes_get\n", rank);
 
     if (idebug) {
       printf (" PDM_dbbtree_closest_upper_bound_dist_boxes_get n_pts_rank : %d\n", n_pts_rank);
@@ -899,7 +907,6 @@ printf("[%d] << PDM_dbbtree_closest_upper_bound_dist_boxes_get\n", rank);
      * (distance from a point to an element)
      *
      **************************************************************************/
-printf("[%d] Load balancing of elementary computations...\n", rank);
 
     PDM_timer_hang_on(dist->timer);
     b_t_elapsed = PDM_timer_elapsed(dist->timer);
@@ -1216,7 +1223,7 @@ printf("[%d] Load balancing of elementary computations...\n", rank);
      * compute distance min per points
      *
      **************************************************************************/
-printf("[%d] compute distance min per points...\n", rank);
+
     PDM_timer_hang_on(dist->timer);
     b_t_elapsed = PDM_timer_elapsed(dist->timer);
     b_t_cpu     = PDM_timer_cpu(dist->timer);
@@ -1430,7 +1437,6 @@ printf("[%d] compute distance min per points...\n", rank);
   dist->times_cpu_s[END]   = PDM_timer_cpu_sys(dist->timer);
   PDM_timer_resume(dist->timer);
 
-printf("[%d] << PDM_dist_cloud_surf_compute\n", rank);
 }
 
 

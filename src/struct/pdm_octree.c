@@ -873,6 +873,23 @@ double      *closest_octree_pt_dist2
   int n_rank;
   PDM_MPI_Comm_size (octree->comm, &n_rank);
 
+//-->>
+  int VISU = 0;
+  char *env_visu = getenv ("VISU_OCTREE");
+  if (env_visu != NULL) {
+    VISU = atoi(env_visu);
+  }
+
+  if (VISU) {
+    if (i_rank == 0) printf("visu octree\n");
+    char filename[999];
+
+    sprintf(filename, "octants_seq_%3.3d.vtk", i_rank);
+    PDM_octree_seq_write_octants (octree->octree_seq_id,
+                                  filename);
+  }
+//<<--
+
   for (int i = 0; i < n_pts; i++) {
     closest_octree_pt_g_num[i] = -1;
     closest_octree_pt_dist2[i] = HUGE_VAL;
