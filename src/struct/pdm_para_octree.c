@@ -9673,7 +9673,7 @@ PDM_para_octree_single_closest_point
   b_t_elapsed = e_t_elapsed;
   PDM_timer_resume (octree->timer);
 
-  printf ("[%d] phase 1: n_recv_pts = %d\n", i_rank, n_recv_pts);
+  printf ("[%4d] phase 1: n_recv_pts = %d\n", i_rank, n_recv_pts);
 
   /********************************************
    * First guess : closest source point in the
@@ -9861,7 +9861,7 @@ PDM_para_octree_single_closest_point
     //-->> stats
     double avg_close_ranks = (double) (close_ranks_idx[n_recv_pts] - n_recv_pts);
     if (n_recv_pts > 0) avg_close_ranks /= (double) n_recv_pts;
-    printf("[%d] avg nb of close ranks per pt = %.3f\n", i_rank, avg_close_ranks);
+    printf("[%4d] avg nb of close ranks per pt = %.3f\n", i_rank, avg_close_ranks);
     //<<--
 
     for (int i = 0; i < n_rank; i++) {
@@ -9918,7 +9918,7 @@ PDM_para_octree_single_closest_point
     free (send_g_num);
 
     n_recv_pts = recv_shift[n_rank];
-    printf ("[%d] phase 2: n_recv_pts = %d\n", i_rank, n_recv_pts);
+    printf ("[%4d] phase 2: n_recv_pts = %d\n", i_rank, n_recv_pts);
 
     for (int i = 0; i < n_rank; i++) {
       send_count[i] *= s_data;
@@ -10096,7 +10096,7 @@ PDM_para_octree_single_closest_point
   PDM_timer_resume (octree->timer);
 
   //printf ("[%d] total = "SCP_TIME_FMT", phase1 = "SCP_TIME_FMT", phase2 = "SCP_TIME_FMT"\n", i_rank, times_elapsed[SCP_TOTAL], times_elapsed[PHASE_1], times_elapsed[PHASE_2]);
-  printf ("[%d] "SCP_TIME_FMT" "SCP_TIME_FMT" "SCP_TIME_FMT" "SCP_TIME_FMT" "SCP_TIME_FMT" "SCP_TIME_FMT" "SCP_TIME_FMT" "SCP_TIME_FMT" "SCP_TIME_FMT" "SCP_TIME_FMT" "SCP_TIME_FMT" "SCP_TIME_FMT"\n",
+  printf ("[%4d] "SCP_TIME_FMT" "SCP_TIME_FMT" "SCP_TIME_FMT" "SCP_TIME_FMT" "SCP_TIME_FMT" "SCP_TIME_FMT" "SCP_TIME_FMT" "SCP_TIME_FMT" "SCP_TIME_FMT" "SCP_TIME_FMT" "SCP_TIME_FMT" "SCP_TIME_FMT"\n",
           i_rank,
           times_elapsed[SCP_TOTAL],
           times_elapsed[COMPUTE_RANK_EXTENTS],
