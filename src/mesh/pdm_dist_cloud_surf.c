@@ -683,7 +683,7 @@ PDM_g_num_t _n_pts_rank = n_pts_rank;
 PDM_g_num_t ng_pts;
 PDM_MPI_Allreduce (&_n_pts_rank, &ng_pts, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, dist->comm);
 
-PDM_g_num_t n_pts_avg = ng_elt / n_rank;
+PDM_g_num_t n_pts_avg = ng_pts / n_rank;
 printf("[%d] n_pts = "PDM_FMT_G_NUM" (%.3f times avg)\n", rank, _n_pts_rank, (float) _n_pts_rank / (float) n_pts_avg);
 
     double *pts_rank = malloc (sizeof(double) * n_pts_rank * 3);
