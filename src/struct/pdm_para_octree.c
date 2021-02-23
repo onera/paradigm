@@ -177,6 +177,16 @@ typedef struct  {
   PDM_MPI_Comm rank_comm;                    /*!< MPI communicator */
   //<<--
 
+  //-->>
+  int                 n_copied_ranks;      /* Number of copies from other ranks */
+  int                *copied_ranks;        /* Copied ranks */
+  _l_octant_t       **copied_octants;      /* Octants from copied ranks */
+  int                *n_copied_points;     /*!< Number of points copied from other ranks */
+  double            **copied_points;       /*!< Coordinates of copied points */
+  PDM_g_num_t       **copied_points_gnum;  /*!< Global numbers of copied points  */
+  PDM_morton_code_t **copied_points_code;  /*!< Morton codes of copied points */
+  //<<--
+
 } _octree_t;
 
 
@@ -4789,6 +4799,16 @@ PDM_para_octree_create
   octree->bt_shared = NULL;
   //<<--
 
+  //-->>
+  octree->n_copied_ranks     = 0;
+  octree->copied_ranks       = NULL;
+  octree->copied_octants     = NULL;
+  octree->n_copied_points    = NULL;
+  octree->copied_points      = NULL;
+  octree->copied_points_gnum = NULL;
+  octree->copied_points_code = NULL;
+  //<<--
+
   octree->timer = PDM_timer_create ();
 
   for (int i = 0; i < NTIMER; i++) {
@@ -4891,6 +4911,44 @@ PDM_para_octree_free
     PDM_MPI_Comm_free (&(octree->rank_comm));
   }
   PDM_box_tree_destroy (&octree->bt_shared);
+  //<<--
+
+  //-->>
+  if (octree->copied_ranks != NULL) {
+    free (octree->copied_ranks);
+  }
+
+  if (octree->copied_octants != NULL) {
+    for (int i = 0; i < octree->n_copied_ranks; i++) {
+      free (octree->copied_octants[i]);
+    }
+    free (octree->copied_octants);
+  }
+
+  if (octree->n_copied_points != NULL) {
+    free (octree->n_copied_points);
+  }
+
+  if (octree->copied_points != NULL) {
+    for (int i = 0; i < octree->n_copied_ranks; i++) {
+      free (octree->copied_points[i]);
+    }
+    free (octree->copied_points);
+  }
+
+  if (octree->copied_points_gnum != NULL) {
+    for (int i = 0; i < octree->n_copied_ranks; i++) {
+      free (octree->copied_points_gnum[i]);
+    }
+    free (octree->copied_points_gnum);
+  }
+
+  if (octree->copied_points_code != NULL) {
+    for (int i = 0; i < octree->n_copied_ranks; i++) {
+      free (octree->copied_points_code[i]);
+    }
+    free (octree->copied_points_code);
+  }
   //<<--
 
   PDM_timer_free (octree->timer);
