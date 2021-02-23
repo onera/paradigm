@@ -758,6 +758,7 @@ PDM_multipart_create
   _multipart->dmeshes_nodal = (PDM_dmesh_nodal_t **) malloc(_multipart->n_zone * sizeof(PDM_dmesh_nodal_t *));
   for (int i=0; i<_multipart->n_zone; ++i) {
     _multipart->dmeshes_nodal[i] = NULL;
+    _multipart->dmeshes[i]       = NULL;
   }
 
   _multipart->pmeshes       = (_part_mesh_t *) malloc(_multipart->n_zone * sizeof(_part_mesh_t ));
@@ -765,11 +766,11 @@ PDM_multipart_create
   int _renum_cell_method = PDM_part_renum_method_cell_idx_get("PDM_PART_RENUM_CELL_NONE");
   int _renum_face_method = PDM_part_renum_method_face_idx_get("PDM_PART_RENUM_FACE_NONE");
   for (int izone = 0; izone < _multipart->n_zone; izone++) {
-    // _multipart->dmeshes_ids[izone] = -1;
-    _multipart->dmeshes[izone] = NULL;
     _multipart->pmeshes[izone].renum_cell_method = _renum_cell_method;
     _multipart->pmeshes[izone].renum_face_method = _renum_face_method;
     _multipart->pmeshes[izone].renum_cell_properties = NULL;
+    _multipart->pmeshes[izone].joins_ids = NULL;
+    _multipart->pmeshes[izone].parts     = NULL;
   }
 
   return id;
@@ -2162,11 +2163,14 @@ PDM_multipart_free
 
   // free(_multipart->dmeshes_ids);
   for (int izone = 0; izone < _multipart->n_zone; izone++) {
-    free(_multipart->pmeshes[izone].joins_ids);
-    for (int ipart = 0; ipart < _multipart->n_part[izone]; ipart++) {
-      _part_free(_multipart->pmeshes[izone].parts[ipart], _multipart->owner);
+    if (_multipart->pmeshes[izone].joins_ids != NULL)
+      free(_multipart->pmeshes[izone].joins_ids);
+    if (_multipart->pmeshes[izone].parts != NULL){
+      for (int ipart = 0; ipart < _multipart->n_part[izone]; ipart++) {
+        _part_free(_multipart->pmeshes[izone].parts[ipart], _multipart->owner);
+      }
+      free(_multipart->pmeshes[izone].parts);
     }
-    free(_multipart->pmeshes[izone].parts);
   }
   free(_multipart->pmeshes);
   free(_multipart->dmeshes);
