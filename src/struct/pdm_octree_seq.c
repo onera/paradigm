@@ -1234,6 +1234,7 @@ void PDM_octree_seq_write_octants
   // write VTK
   FILE *f = fopen(filename, "w");
 
+  fprintf(f, "# vtk DataFile Version 2.0\n");
   fprintf(f, "octree_seq\n");
   fprintf(f, "ASCII\n");
   fprintf(f, "DATASET UNSTRUCTURED_GRID\n");
