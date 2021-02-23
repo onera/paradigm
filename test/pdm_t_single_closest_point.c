@@ -21,6 +21,8 @@
 #include "pdm_para_octree.h"
 #include "pdm_closest_points.h"
 #include "pdm_timer.h"
+#include "pdm_part.h"
+#include "pdm_dcube_gen.h"
 
 /*============================================================================
  * Type definitions
@@ -322,6 +324,216 @@ _gen_cube_surf
 
   free (distrib);
 }
+
+
+
+
+
+
+
+static void
+_gen_cube_surf2
+(
+ PDM_MPI_Comm        comm,
+ const PDM_g_num_t   n_faceSeg,
+ const double        origin[3],
+ const double        length,
+ const int           randomize,
+ int                *npts,
+ PDM_g_num_t       **g_num,
+ double            **coord
+ )
+{
+#ifdef PDM_HAVE_PARMETIS
+  PDM_part_split_t part_method  = PDM_PART_SPLIT_PARMETIS;
+#else
+#ifdef PDM_HAVE_PTSCOTCH
+  PDM_part_split_t part_method  = PDM_PART_SPLIT_PTSCOTCH;
+#else
+  PDM_part_split_t part_method  = PDM_PART_SPLIT_HILBERT;
+#endif
+#endif
+
+  int n_rank, i_rank;
+
+  PDM_MPI_Comm_size(comm, &n_rank);
+  PDM_MPI_Comm_rank(comm, &i_rank);
+
+  PDM_dcube_t *dcube = PDM_dcube_gen_init(comm,
+                                          n_faceSeg+1,
+                                          length,
+                                          origin[0],
+                                          origin[1],
+                                          origin[2],
+                                          PDM_OWNERSHIP_KEEP);
+
+  int          dn_cell;
+  int          dn_face;
+  int          dn_vtx;
+  int          n_face_group;
+  PDM_g_num_t *dface_cell = NULL;
+  int         *dface_vtx_idx = NULL;
+  PDM_g_num_t *dface_vtx = NULL;
+  double      *dvtx_coord = NULL;
+  int         *dface_group_idx = NULL;
+  PDM_g_num_t *dface_group = NULL;
+  int          dface_vtx_l;
+  int          dface_group_l;
+
+  PDM_dcube_gen_dim_get(dcube,
+                        &n_face_group,
+                        &dn_cell,
+                        &dn_face,
+                        &dn_vtx,
+                        &dface_vtx_l,
+                        &dface_group_l);
+
+  PDM_dcube_gen_data_get(dcube,
+                         &dface_cell,
+                         &dface_vtx_idx,
+                         &dface_vtx,
+                         &dvtx_coord,
+                         &dface_group_idx,
+                         &dface_group);
+
+  /*
+   *  Create mesh partitions
+   */
+  int ppart_id = 0;
+  int have_dcell_part = 0;
+
+  int *dcell_part = (int *) malloc(dn_cell*sizeof(int));
+
+  int *renum_properties_cell = NULL;
+  int *renum_properties_face = NULL;
+  int n_property_cell = 0;
+  int n_property_face = 0;
+
+  int n_part = 1;
+
+  PDM_part_create (&ppart_id,
+                   PDM_MPI_COMM_WORLD,
+                   part_method,
+                   "PDM_PART_RENUM_CELL_NONE",
+                   "PDM_PART_RENUM_FACE_NONE",
+                   n_property_cell,
+                   renum_properties_cell,
+                   n_property_face,
+                   renum_properties_face,
+                   n_part,
+                   dn_cell,
+                   dn_face,
+                   dn_vtx,
+                   n_face_group,
+                   NULL,
+                   NULL,
+                   NULL,
+                   NULL,
+                   have_dcell_part,
+                   dcell_part,
+                   dface_cell,
+                   dface_vtx_idx,
+                   dface_vtx,
+                   NULL,
+                   dvtx_coord,
+                   NULL,
+                   dface_group_idx,
+                   dface_group);
+
+  free(dcell_part);
+
+
+  int n_cell;
+  int n_face;
+  int n_face_part_bound;
+  int n_vtx;
+  int n_proc;
+  int n_t_part;
+  int s_cell_face;
+  int s_face_vtx;
+  int s_face_group;
+  int n_edge_group2;
+
+  PDM_part_part_dim_get (ppart_id,
+                         0,
+                         &n_cell,
+                         &n_face,
+                         &n_face_part_bound,
+                         &n_vtx,
+                         &n_proc,
+                         &n_t_part,
+                         &s_cell_face,
+                         &s_face_vtx,
+                         &s_face_group,
+                         &n_edge_group2);
+
+  int         *cell_tag;
+  int         *cell_face_idx;
+  int         *cell_face;
+  PDM_g_num_t *cell_ln_to_gn;
+  int         *face_tag;
+  int         *face_cell;
+  int         *face_vtx_idx;
+  int         *face_vtx;
+  PDM_g_num_t *face_ln_to_gn;
+  int         *face_part_boundProcIdx;
+  int         *face_part_boundPartIdx;
+  int         *face_part_bound;
+  int         *vtx_tag;
+  double      *vtx;
+  PDM_g_num_t *vtx_ln_to_gn;
+  int         *face_group_idx;
+  int         *face_group;
+  PDM_g_num_t *face_group_ln_to_gn;
+
+  PDM_part_part_val_get (ppart_id,
+                         0,
+                         &cell_tag,
+                         &cell_face_idx,
+                         &cell_face,
+                         &cell_ln_to_gn,
+                         &face_tag,
+                         &face_cell,
+                         &face_vtx_idx,
+                         &face_vtx,
+                         &face_ln_to_gn,
+                         &face_part_boundProcIdx,
+                         &face_part_boundPartIdx,
+                         &face_part_bound,
+                         &vtx_tag,
+                         &vtx,
+                         &vtx_ln_to_gn,
+                         &face_group_idx,
+                         &face_group,
+                         &face_group_ln_to_gn);
+
+  *npts = face_group_idx[n_face_group];
+  *g_num = malloc (sizeof(PDM_g_num_t) * (*npts));
+  *coord = malloc (sizeof(double)      * (*npts) * 3);
+
+  for (int i = 0; i < (*npts); i++) {
+    int iface = face_group[i] - 1;
+    (*g_num)[i] = face_ln_to_gn[iface];
+
+    for (int j = 0; j < 3; j++) {
+      (*coord)[3*i+j] = 0;
+    }
+
+    for (int k = face_vtx_idx[iface]; k < face_vtx_idx[iface+1]; k++) {
+      int ivtx = face_vtx[k] - 1;
+      for (int j = 0; j < 3; j++) {
+        (*coord)[3*i+j] += vtx[3*ivtx+j];
+      }
+    }
+
+    double normalization = 1. / (double) (face_vtx_idx[iface+1] - face_vtx_idx[iface]);
+    for (int j = 0; j < 3; j++) {
+      (*coord)[3*i+j] *= normalization;
+    }
+  }
+}
+
+
 
 
 

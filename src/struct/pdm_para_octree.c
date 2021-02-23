@@ -9417,7 +9417,7 @@ typedef enum {
   NTIMER_SCP
 } _spc_timer_step_t;
 
-#define SCP_TIME_FMT "%.3g" //"12.5e"
+#define SCP_TIME_FMT "%#.3g" //"12.5e"
 
 static void _scp_dump_times
 (
@@ -9431,6 +9431,9 @@ static void _scp_dump_times
   double tmax[NTIMER_SCP];
   PDM_MPI_Allreduce (times, tmax, NTIMER_SCP, PDM_MPI_DOUBLE, PDM_MPI_MAX, comm);
 
+  double tmin[NTIMER_SCP];
+  PDM_MPI_Allreduce (times, tmin, NTIMER_SCP, PDM_MPI_DOUBLE, PDM_MPI_MIN, comm);
+
   if (i_rank == 0) {
     printf ("Single closest point elapsed time in seconds:\n");
     printf ("  Total                : "SCP_TIME_FMT"\n", tmax[SCP_TOTAL]);
@@ -9438,12 +9441,12 @@ static void _scp_dump_times
     printf ("    1st phase          : "SCP_TIME_FMT"\n", tmax[PHASE_1]);
     printf ("      first guess      : "SCP_TIME_FMT"\n", tmax[FIRST_GUESS]);
     printf ("      local search     : "SCP_TIME_FMT"\n", tmax[FIRST_LOCAL_SEARCH]);
-    printf ("      ptb              : "SCP_TIME_FMT"\n", tmax[FIRST_PART_TO_BLOCK]);
+    printf ("      ptb              : "SCP_TIME_FMT"\n", tmin[FIRST_PART_TO_BLOCK]);
     printf ("    2nd phase          : "SCP_TIME_FMT"\n", tmax[PHASE_2]);
     printf ("      find close ranks : "SCP_TIME_FMT"\n", tmax[FIND_CLOSE_RANKS]);
-    printf ("      alltoall         : "SCP_TIME_FMT"\n", tmax[SEND_TO_CLOSE_RANKS]);
+    printf ("      alltoall         : "SCP_TIME_FMT"\n", tmin[SEND_TO_CLOSE_RANKS]);
     printf ("      local search     : "SCP_TIME_FMT"\n", tmax[SECOND_LOCAL_SEARCH]);
-    printf ("    PtB + BtP          : "SCP_TIME_FMT"\n", tmax[FINALIZE]);
+    printf ("    PtB + BtP          : "SCP_TIME_FMT"\n", tmin[FINALIZE]);
   }
 }
 
