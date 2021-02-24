@@ -1008,6 +1008,7 @@ double      *closest_octree_pt_dist2
 
   b_t_elapsed = PDM_timer_elapsed (timer);//
   PDM_timer_resume (timer);//
+  printf ("[%4d] phase 1: n_recv_pts = %d\n", i_rank, i_recv_pts[n_rank]);
   PDM_octree_seq_closest_point (octree->octree_seq_id, i_recv_pts[n_rank],
                                 recv_pts, closest_pt, closest_dist);
   PDM_timer_hang_on (timer);//
@@ -1737,6 +1738,7 @@ double      *closest_octree_pt_dist2
     PDM_timer_hang_on (timer);//
     b_t_elapsed = PDM_timer_elapsed (timer);//
     PDM_timer_resume (timer);//
+    printf ("[%4d] phase 2: n_recv_pts = %d\n", i_rank, i_recv_gnum[n_rank]);
     PDM_octree_seq_closest_point (octree->octree_seq_id,
                                   i_recv_gnum[n_rank],
                                   data_recv_pts,
