@@ -573,6 +573,7 @@ _closest_point_par
                                      src_g_num[i_part]);
   }
 
+#if 0
   /* Compute global extents of source and target point clouds */
   double local_min[3] = { HUGE_VAL,  HUGE_VAL,  HUGE_VAL};
   double local_max[3] = {-HUGE_VAL, -HUGE_VAL, -HUGE_VAL};
@@ -617,6 +618,10 @@ _closest_point_par
   }
 
   PDM_para_octree_build (octree_id, global_extents);
+#else
+  PDM_para_octree_build (octree_id, NULL);
+#endif
+
   //PDM_para_octree_dump (octree_id);
   PDM_para_octree_dump_times (octree_id);
 
@@ -1059,6 +1064,14 @@ int main(int argc, char *argv[])
   }
 
   else {
+
+    double origin_tgt[3];
+    double aniso_tgt[3];
+    for (int i = 0; i < 3; i++) {
+      aniso_tgt[i] = 2 * aniso[i];
+      origin_tgt[i] = origin[i] - 0.5*aniso[i];
+    }
+
     _gen_cloud (n_tgt,
                 origin,
                 length,
@@ -1069,7 +1082,7 @@ int main(int argc, char *argv[])
 
     for (int i = 0; i < _n_tgt; i++) {
       for (int j = 0; j < 3; j++) {
-        tgt_coord[3*i+j] = origin[j] + aniso[j] * (tgt_coord[3*i+j] - origin[j]);
+        tgt_coord[3*i+j] = origin_tgt[j] + aniso_tgt[j] * (tgt_coord[3*i+j] - origin[j]);
       }
       //printf("[%d] tgt %f %f %f\n", i_rank, tgt_coord[3*i], tgt_coord[3*i+1], tgt_coord[3*i+2]);
     }

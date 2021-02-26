@@ -9509,6 +9509,82 @@ static void _scp_dump_times
 }
 
 
+
+void
+_morton_encode_coords
+(
+ const int          dim,
+ PDM_morton_int_t   level,
+ const double       extents[],
+ size_t             n_coords,
+ const double       coords[],
+ PDM_morton_code_t  m_code[],
+ double             d[3],
+ double             s[3]
+ )
+{
+    size_t i, j;
+  double n[3];
+  double d_max = 0.0;
+
+  PDM_morton_int_t  refinement = 1u << level;
+
+  for (i = 0; i < (size_t)dim; i++) {
+    s[i] = extents[i];
+    d[i] = extents[i+dim] - extents[i];
+    d_max = PDM_MAX(d_max, d[i]);
+  }
+
+  for (i = 0; i < (size_t)dim; i++) { /* Reduce effective dimension */
+    if (d[i] < d_max * 1e-10)
+      d[i] = d_max * 1e-10;
+  }
+
+  switch(dim) {
+
+  case 3:
+    for (i = 0; i < n_coords; i++) {
+      m_code[i].L = level;
+      for (j = 0; j < 3; j++) {
+        n[j] = PDM_MAX (0., (coords[i*dim + j] - s[j]) / d[j]);//
+        m_code[i].X[j] = (PDM_morton_int_t) PDM_MIN(floor(n[j]*refinement), refinement - 1);
+      }
+    }
+    break;
+
+  case 2:
+    for (i = 0; i < n_coords; i++) {
+      m_code[i].L = level;
+      for (j = 0; j < 2; j++) {
+        n[j] = PDM_MAX (0., (coords[i*dim + j] - s[j]) / d[j]);//
+        m_code[i].X[j] = (PDM_morton_int_t) PDM_MIN(floor(n[j]*refinement), refinement - 1);
+      }
+      m_code[i].X[2] = 0;
+    }
+    break;
+
+  case 1:
+    for (i = 0; i < n_coords; i++) {
+      m_code[i].L = level;
+      n[0] = PDM_MAX (0., (coords[i] - s[0]) / d[0]);//
+      m_code[i].X[0] = (PDM_morton_int_t) PDM_MIN(floor(n[0]*refinement), refinement - 1);
+      m_code[i].X[1] = 0;
+      m_code[i].X[2] = 0;
+    }
+    break;
+
+  default:
+    assert(dim > 0 && dim < 4);
+    break;
+  }
+}
+
+
+
+
+
+
+
 /**
  *
  * Look for single closest point stored inside an octree
@@ -9642,7 +9718,7 @@ PDM_para_octree_single_closest_point
   if (n_rank > 1) {
     /*   1) Encode the coordinates of every target point */
     pts_code = malloc (sizeof(PDM_morton_code_t) * n_pts);
-    PDM_morton_encode_coords (dim,
+    _morton_encode_coords (dim,
                               PDM_morton_max_level,
                               octree->global_extents,
                               (size_t) n_pts,
@@ -9742,7 +9818,7 @@ PDM_para_octree_single_closest_point
 
   /* Encode the coordinates of the received target points */
   pts_code = malloc (sizeof(PDM_morton_code_t) * n_recv_pts);
-  PDM_morton_encode_coords (dim,
+  _morton_encode_coords (dim,
                             PDM_morton_max_level,
                             octree->global_extents,
                             (size_t) n_recv_pts,

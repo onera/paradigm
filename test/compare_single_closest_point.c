@@ -589,6 +589,7 @@ _closest_point_par
                                      src_g_num[i_part]);
   }
 
+#if 0
   /* Compute global extents of source and target point clouds */
   double local_min[3] = { HUGE_VAL,  HUGE_VAL,  HUGE_VAL};
   double local_max[3] = {-HUGE_VAL, -HUGE_VAL, -HUGE_VAL};
@@ -633,6 +634,10 @@ _closest_point_par
   }
 
   PDM_para_octree_build (octree_id, global_extents);
+#else
+  PDM_para_octree_build (octree_id, NULL);
+#endif
+
   //PDM_para_octree_dump (octree_id);
   PDM_para_octree_dump_times (octree_id);
 

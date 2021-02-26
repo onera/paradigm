@@ -665,7 +665,7 @@ printf("[%d] n_elt = "PDM_FMT_G_NUM" (%.3f times avg)\n", rank, n_elt_rank, (flo
     if (octree_type == PDM_OCTREE_SERIAL) {
       PDM_octree_build (octree_id);
     } else {
-      PDM_para_octree_build (octree_id, global_extents);
+      PDM_para_octree_build (octree_id, NULL);//global_extents);
       PDM_para_octree_dump_times (octree_id);
     }
     //<<<---
