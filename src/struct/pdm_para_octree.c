@@ -180,6 +180,7 @@ typedef struct  {
   //-->>
   int                 n_copied_ranks;      /* Number of copies from other ranks */
   int                *copied_ranks;        /* Copied ranks */
+
   _l_octant_t       **copied_octants;      /* Octants from copied ranks */
   int                *n_copied_points;     /*!< Number of points copied from other ranks */
   double            **copied_points;       /*!< Coordinates of copied points */
@@ -4920,7 +4921,7 @@ PDM_para_octree_free
 
   if (octree->copied_octants != NULL) {
     for (int i = 0; i < octree->n_copied_ranks; i++) {
-      free (octree->copied_octants[i]);
+      _octants_free (octree->copied_octants[i]);
     }
     free (octree->copied_octants);
   }
@@ -9510,7 +9511,7 @@ static void _scp_dump_times
 
 
 
-void
+static void
 _morton_encode_coords
 (
  const int          dim,
@@ -9579,6 +9580,156 @@ _morton_encode_coords
   }
 }
 
+
+
+
+static void
+PDM_para_octree_copy_ranks
+(
+ const int  id,
+ const int  n_copied_ranks,
+ const int *copied_ranks
+ )
+{
+  _octree_t *octree = _get_from_id (id);
+  int dim = octree->dim;
+
+  int i_rank, n_rank;
+  PDM_MPI_Comm_rank (octree->comm, &i_rank);
+  PDM_MPI_Comm_size (octree->comm, &n_rank);
+
+
+  octree->n_copied_ranks = n_copied_ranks;
+
+  octree->copied_ranks = malloc (sizeof(int) * n_copied_ranks);
+  memcpy (octree->copied_ranks, copied_ranks, sizeof(int) * n_copied_ranks);
+
+  octree->copied_octants     = malloc (sizeof(_l_octant_t *)       * n_copied_ranks);
+  octree->n_copied_points    = malloc (sizeof(int)                 * n_copied_ranks);
+  octree->copied_points      = malloc (sizeof(double *)            * n_copied_ranks);
+  octree->copied_points_gnum = malloc (sizeof(PDM_g_num_t *)       * n_copied_ranks);
+  octree->copied_points_code = malloc (sizeof(PDM_morton_code_t *) * n_copied_ranks);
+
+
+  int n[2] = {0, 0};
+  double      *pts_coord = NULL;
+  PDM_g_num_t *pts_g_num = NULL;
+  int         *codes     = NULL;
+  int         *oct_n_pts = NULL;
+
+  for (int i = 0; i < n_copied_ranks; i++) {
+
+    int rank = copied_ranks[i];
+
+    if (rank == i_rank) {
+      n[0] = octree->octants->n_nodes;
+      n[1] = octree->n_points;
+    }
+
+    PDM_MPI_Bcast (n, 2, PDM_MPI_INT, i_rank, octree->comm);
+    int n_copied_octants = n[0];
+    int n_copied_points  = n[1];
+
+
+    codes     = malloc (sizeof(int) * (n_copied_octants + n_copied_points) * 4);
+    oct_n_pts = malloc (sizeof(int) * n_copied_octants * 2);
+    pts_coord = malloc (sizeof(double)      * n_copied_points * dim);
+    pts_g_num = malloc (sizeof(PDM_g_num_t) * n_copied_points);
+
+    if (rank == i_rank) {
+
+      octree->copied_octants[i]     = NULL;
+      octree->n_copied_points[i]    = 0;
+      octree->copied_points[i]      = NULL;
+      octree->copied_points_gnum[i] = NULL;
+      octree->copied_points_code[i] = NULL;
+
+      for (int j = 0; j < n_copied_octants; j++) {
+        codes[4*j] = (int) octree->octants->codes[j].L;
+        for (int k = 0; k < 3; k++) {
+          codes[4*j + k] = (int) octree->octants->codes[j].X[k];
+        }
+
+        oct_n_pts[2*j]     = octree->octants->n_points[j];
+        oct_n_pts[2*j + 1] = octree->octants->range[j];
+      }
+
+      for (int j = 0; j < n_copied_points; j++) {
+        codes[n_copied_octants + 4*j] = octree->points_code[j].L;
+        for (int k = 0; k < 3; k++) {
+          codes[n_copied_octants + 4*j + k] = octree->points_code[j].X[k];
+        }
+      }
+
+      memcpy (pts_coord, octree->points,      sizeof(double)      * n_copied_points * dim);
+      memcpy (pts_g_num, octree->points_gnum, sizeof(PDM_g_num_t) * n_copied_points);
+    }
+
+    PDM_MPI_Bcast (codes,
+                   (n_copied_octants + n_copied_points) * 4,
+                   PDM_MPI_INT,
+                   i_rank,
+                   octree->comm);
+    PDM_MPI_Bcast (oct_n_pts, n_copied_octants * 2,  PDM_MPI_INT,        i_rank, octree->comm);
+    PDM_MPI_Bcast (pts_coord, n_copied_points * dim, PDM_MPI_DOUBLE,     i_rank, octree->comm);
+    PDM_MPI_Bcast (pts_g_num, n_copied_points,       PDM__PDM_MPI_G_NUM, i_rank, octree->comm);
+
+
+
+    if (rank != i_rank) {
+
+      octree->copied_octants[i] = malloc (sizeof(_l_octant_t));
+      octree->copied_octants[i]->dim = octree->dim;
+      octree->copied_octants[i]->n_nodes = n_copied_octants;
+      octree->copied_octants[i]->n_nodes_max = n_copied_octants;//?
+      octree->copied_octants[i]->codes = malloc (sizeof(PDM_morton_code_t) * n_copied_octants);
+      octree->copied_octants[i]->n_points = malloc (sizeof(int) * n_copied_octants);
+      octree->copied_octants[i]->range    = malloc (sizeof(int) * n_copied_octants);
+      octree->copied_octants[i]->neighbours    = NULL;
+      octree->copied_octants[i]->neighbour_idx = NULL;
+
+      octree->n_copied_points[i]    = n_copied_points;
+      octree->copied_points[i]      = malloc (sizeof(double)      * dim * n_copied_points);
+      octree->copied_points_gnum[i] = malloc (sizeof(PDM_g_num_t)       * n_copied_points);
+      octree->copied_points_code[i] = malloc (sizeof(PDM_morton_code_t) * n_copied_points);
+
+      for (int j = 0; j < n_copied_points; j++) {
+        octree->copied_octants[i]->codes[j].L =
+          (PDM_morton_int_t) codes[n_copied_octants + 4*j];
+        for (int k = 0; k < 3; k++) {
+          octree->copied_octants[i]->codes[j].X[k] =
+            (PDM_morton_int_t) codes[n_copied_octants + 4*j + k];
+        }
+
+        octree->copied_octants[i]->n_points[j] = oct_n_pts[2*j];
+        octree->copied_octants[i]->range[j]    = oct_n_pts[2*j + 1];
+      }
+
+      for (int j = 0; j < n_copied_points; j++) {
+        octree->copied_points_code[j]->L = (PDM_morton_int_t) codes[n_copied_octants + 4*j];
+        for (int k = 0; k < 3; k++) {
+          octree->copied_points_code[j]->X[k] =
+            (PDM_morton_int_t) codes[n_copied_octants + 4*j + k];
+        }
+      }
+
+      // TO DO: copy neighbours...
+
+      memcpy (octree->copied_points[i],
+              pts_coord,
+              sizeof(double) * n_copied_points * dim);
+      memcpy (octree->copied_points_gnum[i],
+              pts_g_num,
+              sizeof(PDM_g_num_t) * n_copied_points);
+
+    }
+
+    free (pts_coord);
+    free (pts_g_num);
+    free (codes);
+    free (oct_n_pts);
+  }
+}
 
 
 
