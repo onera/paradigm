@@ -4921,7 +4921,9 @@ PDM_para_octree_free
 
   if (octree->copied_octants != NULL) {
     for (int i = 0; i < octree->n_copied_ranks; i++) {
-      _octants_free (octree->copied_octants[i]);
+      if (octree->copied_octants[i] != NULL) {
+        _octants_free (octree->copied_octants[i]);
+      }
     }
     free (octree->copied_octants);
   }
@@ -9610,8 +9612,7 @@ PDM_para_octree_copy_ranks
   octree->copied_points_gnum = malloc (sizeof(PDM_g_num_t *)       * n_copied_ranks);
   octree->copied_points_code = malloc (sizeof(PDM_morton_code_t *) * n_copied_ranks);
 
-
-  int n[2] = {0, 0};
+  int n[2];
   double      *pts_coord = NULL;
   PDM_g_num_t *pts_g_num = NULL;
   int         *codes     = NULL;
@@ -9626,12 +9627,12 @@ PDM_para_octree_copy_ranks
       n[1] = octree->n_points;
     }
 
-    PDM_MPI_Bcast (n, 2, PDM_MPI_INT, i_rank, octree->comm);
+    PDM_MPI_Bcast (n, 2, PDM_MPI_INT, rank, octree->comm);
     int n_copied_octants = n[0];
     int n_copied_points  = n[1];
 
-
-    codes     = malloc (sizeof(int) * (n_copied_octants + n_copied_points) * 4);
+    int s_codes = (n_copied_octants + n_copied_points) * 4;
+    codes     = malloc (sizeof(int) * s_codes);
     oct_n_pts = malloc (sizeof(int) * n_copied_octants * 2);
     pts_coord = malloc (sizeof(double)      * n_copied_points * dim);
     pts_g_num = malloc (sizeof(PDM_g_num_t) * n_copied_points);
@@ -9665,15 +9666,10 @@ PDM_para_octree_copy_ranks
       memcpy (pts_g_num, octree->points_gnum, sizeof(PDM_g_num_t) * n_copied_points);
     }
 
-    PDM_MPI_Bcast (codes,
-                   (n_copied_octants + n_copied_points) * 4,
-                   PDM_MPI_INT,
-                   i_rank,
-                   octree->comm);
-    PDM_MPI_Bcast (oct_n_pts, n_copied_octants * 2,  PDM_MPI_INT,        i_rank, octree->comm);
-    PDM_MPI_Bcast (pts_coord, n_copied_points * dim, PDM_MPI_DOUBLE,     i_rank, octree->comm);
-    PDM_MPI_Bcast (pts_g_num, n_copied_points,       PDM__PDM_MPI_G_NUM, i_rank, octree->comm);
-
+    PDM_MPI_Bcast (codes,     s_codes,               PDM_MPI_INT,        rank, octree->comm);
+    PDM_MPI_Bcast (oct_n_pts, n_copied_octants * 2,  PDM_MPI_INT,        rank, octree->comm);
+    PDM_MPI_Bcast (pts_coord, n_copied_points * dim, PDM_MPI_DOUBLE,     rank, octree->comm);
+    PDM_MPI_Bcast (pts_g_num, n_copied_points,       PDM__PDM_MPI_G_NUM, rank, octree->comm);
 
 
     if (rank != i_rank) {
@@ -9693,7 +9689,7 @@ PDM_para_octree_copy_ranks
       octree->copied_points_gnum[i] = malloc (sizeof(PDM_g_num_t)       * n_copied_points);
       octree->copied_points_code[i] = malloc (sizeof(PDM_morton_code_t) * n_copied_points);
 
-      for (int j = 0; j < n_copied_points; j++) {
+      for (int j = 0; j < n_copied_octants; j++) {
         octree->copied_octants[i]->codes[j].L =
           (PDM_morton_int_t) codes[n_copied_octants + 4*j];
         for (int k = 0; k < 3; k++) {
@@ -9705,11 +9701,11 @@ PDM_para_octree_copy_ranks
         octree->copied_octants[i]->range[j]    = oct_n_pts[2*j + 1];
       }
 
+      PDM_morton_code_t *_pts_codes = octree->copied_points_code[i];
       for (int j = 0; j < n_copied_points; j++) {
-        octree->copied_points_code[j]->L = (PDM_morton_int_t) codes[n_copied_octants + 4*j];
+        _pts_codes[j].L = (PDM_morton_int_t) codes[n_copied_octants + 4*j];
         for (int k = 0; k < 3; k++) {
-          octree->copied_points_code[j]->X[k] =
-            (PDM_morton_int_t) codes[n_copied_octants + 4*j + k];
+          _pts_codes[j].X[k] = (PDM_morton_int_t) codes[n_copied_octants + 4*j + k];
         }
       }
 
@@ -9732,7 +9728,79 @@ PDM_para_octree_copy_ranks
 }
 
 
+static void
+_prepare_copies
+(
+ PDM_MPI_Comm  comm,
+ const float   f_threshold,
+ const float   f_max_copy,
+ int           n_request,
+ int          *n_copied_ranks,
+ int         **copied_ranks
+ )
+{
+  *n_copied_ranks = 0;
 
+  int i_rank, n_rank;
+  PDM_MPI_Comm_rank (comm, &i_rank);
+  PDM_MPI_Comm_size (comm, &n_rank);
+
+  int n_max_copy = (int) (f_max_copy * n_rank);
+  if (n_max_copy < 1) {
+    return;
+  }
+
+  int *all_n_request = malloc (sizeof(int) * n_rank);
+  PDM_MPI_Allgather (&n_request,    1, PDM_MPI_INT,
+                     all_n_request, 1, PDM_MPI_INT,
+                     comm);
+
+  // Mean number of requests
+  long l_mean_n_request = 0;
+  for (int i = 0; i < n_rank; i++) {
+    l_mean_n_request += all_n_request[i];
+  }
+  int mean_n_request = (int) (l_mean_n_request / n_rank);
+
+  float n_threshold = f_threshold * mean_n_request;
+
+  // Sort ranks
+  int *order = malloc (sizeof(int) * n_rank);
+  for (int i = 0; i < n_rank; i++) {
+    order[i] = i;
+  }
+
+  PDM_sort_int (all_n_request,
+                order,
+                n_rank);
+
+  if (i_rank == 0) {
+    printf("avant: min = %d, max = %d (%g times mean), max-min = %d\n",
+           all_n_request[0],
+           all_n_request[n_rank-1],
+           (float) all_n_request[n_rank-1] / (float) mean_n_request,
+           all_n_request[n_rank-1] - all_n_request[0]);
+  }
+
+  // Identify ranks to copy
+  *copied_ranks = malloc (sizeof(int) * n_max_copy);
+  for (int i = 0; i < n_max_copy; i++) {
+    int j = n_rank - i - 1;
+
+    if (all_n_request[j] > n_threshold) {
+      (*copied_ranks)[(*n_copied_ranks)++] = order[j];
+    }
+    else {
+      break;
+    }
+  }
+
+
+  if (*n_copied_ranks > 0) {
+    *copied_ranks = realloc (*copied_ranks, sizeof(int) * (*n_copied_ranks));
+  }
+  free (order);
+}
 
 
 
@@ -9911,6 +9979,34 @@ PDM_para_octree_single_closest_point
       send_count[i] = 0;
     }
 
+    n_recv_pts = recv_shift[n_rank];
+
+    int n_copied_ranks;
+    int *copied_ranks = NULL;
+    _prepare_copies (octree->comm,
+                     1.2, // f_threshold
+                     0.2, // f_max_copy
+                     n_recv_pts,
+                     &n_copied_ranks,
+                     &copied_ranks);
+
+    if (n_copied_ranks > 0) {
+      if (i_rank == 0) {
+        printf("%d copied ranks:", n_copied_ranks);
+        for (int i = 0; i < n_copied_ranks; i++) {
+          printf(" %d", copied_ranks[i]);
+        }
+        printf("\n");
+      }
+
+      PDM_para_octree_copy_ranks (id,
+                                  n_copied_ranks,
+                                  copied_ranks);
+    } else {
+      if (i_rank == 0) printf("0 copied ranks\n");
+    }
+
+
     /*   4) Fill send buffers */
     send_g_num = malloc (sizeof(PDM_g_num_t) * send_shift[n_rank]);
     recv_g_num = malloc (sizeof(PDM_g_num_t) * recv_shift[n_rank]);
@@ -9933,7 +10029,6 @@ PDM_para_octree_single_closest_point
                        octree->comm);
 
     /*   6) Send coord buffer */
-    n_recv_pts = recv_shift[n_rank];
     for (int i = 0; i < n_rank; i++) {
       send_count[i] *= dim;
       recv_count[i] *= dim;
