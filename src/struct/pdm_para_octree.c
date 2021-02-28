@@ -9748,8 +9748,6 @@ PDM_para_octree_copy_ranks
     int s_codes = (n_copied_octants + n_copied_points) * 4;
     codes     = malloc (sizeof(int) * s_codes);
     oct_n_pts = malloc (sizeof(int) * n_copied_octants * 2);
-    pts_coord = malloc (sizeof(double)      * n_copied_points * dim);
-    pts_g_num = malloc (sizeof(PDM_g_num_t) * n_copied_points);
 
     if (rank == i_rank) {
       octree->copied_octants[i]     = NULL;
