@@ -9697,99 +9697,6 @@ _morton_encode_coords
 }
 
 
-static
-void write_octants_vtk
-(
- const _l_octant_t *octants,
- const double      *d,
- const double      *s,
- const char        *filename,
- const char        *header
- )
-{
-  FILE *f = fopen(filename, "w");
-
-  fprintf(f, "# vtk DataFile Version 2.0\n");
-  if (header != NULL) {
-    fprintf(f, "%s\n", header);
-  } else {
-    fprintf(f, "octants\n");
-  }
-  fprintf(f, "ASCII\n");
-  fprintf(f, "DATASET UNSTRUCTURED_GRID\n");
-
-  fprintf(f, "POINTS %d double\n", 8*octants->n_nodes);
-
-  double ext[6];
-  int ii = 0;
-  for (int inode = 0; inode < octants->n_nodes; inode++) {
-    double side = 1./ (double) (1 << octants->codes[inode].L);
-    for (int idim = 0; idim < 3; idim++) {
-      double co = octants->codes[inode].X[idim];
-      ext[idim] = s[idim] + d[idim]*co*side;
-      ext[3+idim] = ext[idim] + d[idim]*side;
-    }
-    for (int k = 0; k < 2; k++) {
-      for (int j = 0; j < 2; j++) {
-        for (int i = 0; i < 2; i++) {
-          ii = (1-j)*i + j*(1-i);
-          fprintf(f, "%f %f %f\n", ext[3*ii], ext[3*j+1], ext[3*k+2]);
-        }
-      }
-    }
-  }
-
-  fprintf(f, "CELLS %d %d\n", octants->n_nodes, 9*octants->n_nodes);
-  for (int i = 0; i < octants->n_nodes; i++) {
-    fprintf(f, "8 ");
-    for (int j = 0; j < 8; j++) {
-      fprintf(f, "%d ", 8*i+j);
-    }
-    fprintf(f, "\n");
-  }
-
-  fprintf(f, "CELL_TYPES %d\n", octants->n_nodes);
-  for (int i = 0; i < octants->n_nodes; i++) {
-    fprintf(f, "%d\n", 12);
-  }
-
-  fprintf(f, "CELL_DATA %d\n", octants->n_nodes);
-  fprintf(f, "SCALARS order int\n LOOKUP_TABLE default\n");
-  for (int i = 0; i < octants->n_nodes; i++) {
-    fprintf(f, "%d\n", i);
-  }
-
-  fclose(f);
-}
-
-
-static
-void write_octants
-(
- const _l_octant_t *octants,
- const double      *d,
- const double      *s,
- const char        *filename,
- const char        *header
- )
-{
-  FILE *f = fopen(filename, "w");
-
-  fprintf(f, "%d\n", octants->n_nodes);
-
-  for (int i = 0; i < octants->n_nodes; i++) {
-    fprintf(f, "%d   %d %d %d %d %d %d\n",
-            i,
-           octants->codes[i].L,
-           octants->codes[i].X[0],
-           octants->codes[i].X[1],
-           octants->codes[i].X[2],
-           octants->range[i],
-           octants->n_points[i]);
-  }
-
-  fclose(f);
-}
 
 static void
 PDM_para_octree_copy_ranks
@@ -9845,17 +9752,6 @@ PDM_para_octree_copy_ranks
     pts_g_num = malloc (sizeof(PDM_g_num_t) * n_copied_points);
 
     if (rank == i_rank) {
-
-      if (VISU_COPY) {
-        char filename[999];
-        sprintf(filename, "check_copy_original_%3.3d.vtk", rank);
-        write_octants (octree->octants,
-                       octree->d,
-                       octree->s,
-                       filename,
-                       NULL);
-      }
-
       octree->copied_octants[i]     = NULL;
       octree->n_copied_points[i]    = 0;
       octree->copied_points[i]      = NULL;
@@ -9932,16 +9828,6 @@ PDM_para_octree_copy_ranks
       }
 
       // TO DO: copy neighbours...
-
-      if (VISU_COPY) {
-        char filename[999];
-        sprintf(filename, "check_copy_copy_%3.3d_%3.3d.vtk", rank, i_rank);
-        write_octants (octree->copied_octants[i],
-                       octree->d,
-                       octree->s,
-                       filename,
-                       NULL);
-      }
     }
 
     free (codes);
