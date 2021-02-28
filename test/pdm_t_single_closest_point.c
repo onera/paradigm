@@ -651,7 +651,6 @@ _closest_point_par
     _n_tgt += n_tgt[i_part];
   }
 
-  printf("avant: _tgt_g_num : %p\n", (void *) _tgt_g_num);
   /* Search closest source points */
   PDM_para_octree_single_closest_point (octree_id,
                                         (const _local_search_fun_t) local_search_fun,
@@ -660,7 +659,6 @@ _closest_point_par
                                         _tgt_g_num,
                                         _closest_src_g_num,
                                         _closest_src_dist2);
-  printf("après: _tgt_g_num : %p\n", (void *) _tgt_g_num);
 
   /* Restore partitions */
   free (_tgt_coord);
