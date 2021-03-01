@@ -9706,7 +9706,6 @@ PDM_para_octree_copy_ranks
  const int *copied_ranks
  )
 {
-  const int VISU_COPY = 0;
   _octree_t *octree = _get_from_id (id);
   int dim = octree->dim;
 
@@ -9714,6 +9713,9 @@ PDM_para_octree_copy_ranks
   PDM_MPI_Comm_rank (octree->comm, &i_rank);
   PDM_MPI_Comm_size (octree->comm, &n_rank);
 
+  PDM_timer_hang_on (octree->timer);
+  double b_t_elapsed = PDM_timer_elapsed (octree->timer);
+  PDM_timer_resume (octree->timer);
 
   octree->n_copied_ranks = n_copied_ranks;
 
@@ -9831,6 +9833,14 @@ PDM_para_octree_copy_ranks
     free (codes);
     free (oct_n_pts);
   }
+
+
+  PDM_timer_hang_on (octree->timer);
+  double e_t_elapsed = PDM_timer_elapsed (octree->timer);
+  if (i_rank == 0) {
+    printf("PDM_para_octree_copy_ranks: elapsed = %12.5es\n", e_t_elapsed - b_t_elapsed);
+  }
+  PDM_timer_resume (octree->timer);
 }
 
 
