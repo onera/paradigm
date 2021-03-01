@@ -1390,6 +1390,8 @@ int main(int argc, char *argv[])
   double elapsed_min = HUGE_VAL;
   for (int method = 0; method < n_methods; method++) {
 
+    PDM_MPI_Barrier (PDM_MPI_COMM_WORLD);
+
     if (i_rank == 0) {
       printf("\n\nMethod %d\n", method);
     }
