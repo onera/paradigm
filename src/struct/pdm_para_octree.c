@@ -10507,7 +10507,7 @@ PDM_para_octree_single_closest_point
                                copied_shift1[i+1] - copied_shift1[i],
                                _pts_coord1,
                                __closest_pt_g_num + copied_shift1[i],
-                               __closest_pt_dist2 + copied_shift1[i] * dim);
+                               __closest_pt_dist2 + copied_shift1[i]);
     }
   }
   free (pts_code);
@@ -10945,7 +10945,7 @@ PDM_para_octree_single_closest_point
                                copied_shift2[i+1] - copied_shift2[i],
                                _pts_coord2,
                                __closest_pt_g_num + copied_shift2[i],
-                               __closest_pt_dist2 + copied_shift2[i] * dim);
+                               __closest_pt_dist2 + copied_shift2[i]);
     }
 
   }
