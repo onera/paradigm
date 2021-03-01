@@ -4915,43 +4915,7 @@ PDM_para_octree_free
   //<<--
 
   //-->>
-  if (octree->copied_ranks != NULL) {
-    free (octree->copied_ranks);
-  }
-
-  if (octree->copied_octants != NULL) {
-    for (int i = 0; i < octree->n_copied_ranks; i++) {
-      if (octree->copied_octants[i] != NULL) {
-        _octants_free (octree->copied_octants[i]);
-      }
-    }
-    free (octree->copied_octants);
-  }
-
-  if (octree->n_copied_points != NULL) {
-    free (octree->n_copied_points);
-  }
-
-  if (octree->copied_points != NULL) {
-    for (int i = 0; i < octree->n_copied_ranks; i++) {
-      free (octree->copied_points[i]);
-    }
-    free (octree->copied_points);
-  }
-
-  if (octree->copied_points_gnum != NULL) {
-    for (int i = 0; i < octree->n_copied_ranks; i++) {
-      free (octree->copied_points_gnum[i]);
-    }
-    free (octree->copied_points_gnum);
-  }
-
-  if (octree->copied_points_code != NULL) {
-    for (int i = 0; i < octree->n_copied_ranks; i++) {
-      free (octree->copied_points_code[i]);
-    }
-    free (octree->copied_points_code);
-  }
+  PDM_para_octree_free_copies (id);
   //<<--
 
   PDM_timer_free (octree->timer);
@@ -9844,6 +9808,54 @@ PDM_para_octree_copy_ranks
 }
 
 
+void
+PDM_para_octree_free_copies
+(
+ const int          id
+ )
+{
+  _octree_t *octree = _get_from_id (id);
+
+  if (octree->copied_ranks != NULL) {
+    free (octree->copied_ranks);
+  }
+
+  if (octree->copied_octants != NULL) {
+    for (int i = 0; i < octree->n_copied_ranks; i++) {
+      if (octree->copied_octants[i] != NULL) {
+        _octants_free (octree->copied_octants[i]);
+      }
+    }
+    free (octree->copied_octants);
+  }
+
+  if (octree->n_copied_points != NULL) {
+    free (octree->n_copied_points);
+  }
+
+  if (octree->copied_points != NULL) {
+    for (int i = 0; i < octree->n_copied_ranks; i++) {
+      free (octree->copied_points[i]);
+    }
+    free (octree->copied_points);
+  }
+
+  if (octree->copied_points_gnum != NULL) {
+    for (int i = 0; i < octree->n_copied_ranks; i++) {
+      free (octree->copied_points_gnum[i]);
+    }
+    free (octree->copied_points_gnum);
+  }
+
+  if (octree->copied_points_code != NULL) {
+    for (int i = 0; i < octree->n_copied_ranks; i++) {
+      free (octree->copied_points_code[i]);
+    }
+    free (octree->copied_points_code);
+  }
+
+  octree->n_copied_ranks = 0;
+}
 
 static void
 _prepare_copies

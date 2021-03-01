@@ -281,6 +281,19 @@ PDM_para_octree_points_inside_boxes
  );
 
 
+/**
+ *
+ * \brief Free copied data in an octree structure
+ *
+ * \param [in]   id                 Identifier
+ *
+ */
+
+void
+PDM_para_octree_free_copies
+(
+ const int          id
+ );
 
 /**
  *
