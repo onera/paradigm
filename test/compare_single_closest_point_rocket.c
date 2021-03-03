@@ -1388,7 +1388,7 @@ int main(int argc, char *argv[])
   double      **closest_point_dist2 = NULL;
 
   double elapsed_min = HUGE_VAL;
-  for (int method = 0; method < n_methods; method++) {
+  for (int method = 1; method < n_methods; method++) {
 
     PDM_MPI_Barrier (PDM_MPI_COMM_WORLD);
 
@@ -1396,7 +1396,7 @@ int main(int argc, char *argv[])
       printf("\n\nMethod %d\n", method);
     }
 
-    if (method > 0) PDM_timer_hang_on (timer);
+    if (method > 1) PDM_timer_hang_on (timer);
     t_begin = PDM_timer_elapsed (timer);
     PDM_timer_resume (timer);
 
@@ -1466,7 +1466,7 @@ int main(int argc, char *argv[])
   /*
    *  Summary
    */
-  if (i_rank == 0) {
+  if (0) {//i_rank == 0) {
     printf("\n\n\n");
     for (int method = 0; method < n_methods; method++) {
       printf ("method %d: elapsed = %.4fs, relative to min = %.3f\n",
