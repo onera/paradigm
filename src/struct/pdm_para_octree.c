@@ -11111,7 +11111,7 @@ PDM_para_octree_single_closest_point
 if (1) {
   double dist2_min =  HUGE_VAL;
   double dist2_max = -HUGE_VAL;
-  for (int i = 0; i < n_pts) {
+  for (int i = 0; i < n_pts; i++) {
     dist2_min = PDM_MIN (dist2_min, closest_octree_pt_dist2[i]);
     dist2_max = PDM_MAX (dist2_max, closest_octree_pt_dist2[i]);
   }
