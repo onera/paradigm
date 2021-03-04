@@ -1472,7 +1472,17 @@ if (1) {
         idx += 1;
       }
     }
-
+if (1) {
+  PDM_g_num_t gnum_min =  9999999;
+  PDM_g_num_t gnum_max = -gnum_min;
+  for (int i = 0; i < n_block_vtx; i++) {
+    for (int j = block_g_num_opt_idx[i]; j < block_g_num_opt_idx[i+1]; j++) {
+      gnum_min = PDM_MIN (gnum_min, block_closest_gnum[j]);
+      gnum_max = PDM_MAX (gnum_max, block_closest_gnum[j]);
+    }
+  }
+  printf("[%d] block_closest min/max gnum = "PDM_FMT_G_NUM" / "PDM_FMT_G_NUM"\n", rank, gnum_min, gnum_max);
+}
     free (block_g_num_opt_idx);
 
     free (block_pts);
