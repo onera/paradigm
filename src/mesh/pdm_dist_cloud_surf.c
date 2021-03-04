@@ -996,6 +996,18 @@ printf("[%d] max_n_candidates = %d, avg = %ld\n", rank, max_n_candidates, avg_n_
       }
     }
 
+if (1) {
+  PDM_g_num_t gnum_min =  9999999;
+  PDM_g_num_t gnum_max = -gnum_min;
+  for (int i = 0; i < n_pts_rank; i++) {
+    for (int j = box_index[i]; j < box_index[i+1]; j++) {
+      gnum_min = PDM_MIN (gnum_min, box_g_num[j]);
+      gnum_max = PDM_MAX (gnum_max, box_g_num[j]);
+    }
+  }
+  printf("[%d] dbbtree -> min/max gnum = "PDM_FMT_G_NUM" / "PDM_FMT_G_NUM"\n", rank, gnum_min, gnum_max);
+}
+
     free (closest_vertices_dist2);
 
     PDM_dbbtree_free (dbbt);

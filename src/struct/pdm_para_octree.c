@@ -11108,7 +11108,7 @@ PDM_para_octree_single_closest_point
     free (copied_ranks1);
   }
 
-if (1) {
+if (0) {
   double dist2_min =  HUGE_VAL;
   double dist2_max = -HUGE_VAL;
   for (int i = 0; i < n_pts; i++) {
