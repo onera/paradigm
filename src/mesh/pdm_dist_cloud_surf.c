@@ -1524,8 +1524,8 @@ printf("[%d] max_n_candidates = %d, avg = %ld\n", rank, max_n_candidates, avg_n_
                             (void **) pt_cloud->closest_elt_gnum);
 
 if (1) {
-  PDM_g_num_t gnum_min =  HUGE_VAL;
-  PDM_g_num_t gnum_max = -HUGE_VAL;
+  PDM_g_num_t gnum_min =  9999999;
+  PDM_g_num_t gnum_max = -gnum_min;
   for (int i = 0; i < n_part; i++) {
     for (int j = 0; j < pt_cloud->n_points[i]; j++) {
       gnum_min = PDM_MIN (gnum_min, pt_cloud->closest_elt_gnum[i][j]);
