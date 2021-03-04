@@ -11107,6 +11107,16 @@ PDM_para_octree_single_closest_point
   if (copied_ranks1 != NULL) {
     free (copied_ranks1);
   }
+
+if (1) {
+  double dist2_min =  HUGE_VAL;
+  double dist2_max = -HUGE_VAL;
+  for (int i = 0; i < n_pts) {
+    dist2_min = PDM_MIN (dist2_min, closest_octree_pt_dist2[i]);
+    dist2_max = PDM_MAX (dist2_max, closest_octree_pt_dist2[i]);
+  }
+  printf("[%d] min/max dist2 = %f / %f\n", i_rank, dist2_min, dist2_max);
+}
 }
 
 
