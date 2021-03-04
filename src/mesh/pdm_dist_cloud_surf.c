@@ -1394,6 +1394,8 @@ if (1) {
 
     PDM_g_num_t *block_vtx_gnum = PDM_part_to_block_block_gnum_get (ptb_vtx);
 
+PDM_g_num_t _gnum_min =  9999999;
+PDM_g_num_t _gnum_max = -_gnum_min;
     for (int i = 0; i < n_block_vtx; i++) {
       double *_pt_coords = block_pts + 3*i;
       double *_block_closest_proj = block_closest_proj + 3*i;
@@ -1467,12 +1469,14 @@ if (1) {
             _block_closest_proj[k] = closestPoint[k];
           }
           _block_closest_gnum[0] = face_g_num;
+_gnum_min = PDM_MIN (_gnum_min, face_g_num);
+_gnum_max = PDM_MAX (_gnum_max, face_g_num);
         }
 
         idx += 1;
       }
     }
-if (1) {
+/*if (1) {
   PDM_g_num_t gnum_min =  9999999;
   PDM_g_num_t gnum_max = -gnum_min;
   for (int i = 0; i < n_block_vtx; i++) {
@@ -1480,9 +1484,9 @@ if (1) {
       gnum_min = PDM_MIN (gnum_min, block_closest_gnum[j]);
       gnum_max = PDM_MAX (gnum_max, block_closest_gnum[j]);
     }
-  }
-  printf("[%d] block_closest min/max gnum = "PDM_FMT_G_NUM" / "PDM_FMT_G_NUM"\n", rank, gnum_min, gnum_max);
-}
+  }*/
+  printf("[%d] block_closest min/max gnum = "PDM_FMT_G_NUM" / "PDM_FMT_G_NUM"\n", rank, _gnum_min, _gnum_max);
+/*}*/
     free (block_g_num_opt_idx);
 
     free (block_pts);
