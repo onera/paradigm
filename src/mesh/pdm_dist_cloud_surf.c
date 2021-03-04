@@ -1124,11 +1124,21 @@ if (1) {
      * Remove double boxes
      */
 
-
     for (int i = 0; i < n_block_vtx; i++) {
       block_g_num_idx[i+1] = block_g_num_stride[i] + block_g_num_idx[i];
       block_g_num_stride[i] = 0;
     }
+if (1) {
+  PDM_g_num_t gnum_min =  9999999;
+  PDM_g_num_t gnum_max = -gnum_min;
+  for (int i = 0; i < n_block_vtx; i++) {
+    for (int j = block_g_num_idx[i]; j < block_g_num_idx[i+1]; j++) {
+      gnum_min = PDM_MIN (gnum_min, block_g_num[j]);
+      gnum_max = PDM_MAX (gnum_max, block_g_num[j]);
+    }
+  }
+  printf("[%d] before: block min/max gnum = "PDM_FMT_G_NUM" / "PDM_FMT_G_NUM"\n", rank, gnum_min, gnum_max);
+}
 
     int *block_g_num_opt_idx = malloc (sizeof(int) * (n_block_vtx+1));
     int keyMax = 3 * n_block_vtx;
@@ -1183,6 +1193,17 @@ if (1) {
         printf ("\n");
       }
     }
+if (1) {
+  PDM_g_num_t gnum_min =  9999999;
+  PDM_g_num_t gnum_max = -gnum_min;
+  for (int i = 0; i < n_block_vtx; i++) {
+    for (int j = block_g_num_opt_idx[i]; j < block_g_num_opt_idx[i+1]; j++) {
+      gnum_min = PDM_MIN (gnum_min, block_g_num[j]);
+      gnum_max = PDM_MAX (gnum_max, block_g_num[j]);
+    }
+  }
+  printf("[%d] after: block min/max gnum = "PDM_FMT_G_NUM" / "PDM_FMT_G_NUM"\n", rank, gnum_min, gnum_max);
+}
 
     int block_g_num_n = block_g_num_opt_idx[n_block_vtx];
 
