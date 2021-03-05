@@ -498,6 +498,10 @@ PDM_dist_cloud_surf_compute
       int n_vtx = PDM_surf_mesh_part_n_vtx_get(dist->_surf_mesh, i_part);
       fprintf(f, "%d\n", n_vtx);
       const double *vtx = PDM_surf_mesh_part_vtx_get(dist->_surf_mesh, i_part);
+      const PDM_g_num_t *vtx_gnum = PDM_Mesh_nodal_vertices_g_num_get (mesh_nodal, i_part);
+      for (int i = 0; i < n_vtx; i++) {
+        fprintf(f, PDM_FMT_G_NUM"\n", vtx_gnum[i]);
+      }
       for (int i = 0; i < n_vtx; i++) {
         for (int j = 0; j < 3; j++) {
           fprintf(f, "%12.5e\n", vtx[3*i+j]);
@@ -508,6 +512,11 @@ PDM_dist_cloud_surf_compute
       // Faces
       int n_face = PDM_surf_mesh_part_n_face_get(dist->_surf_mesh, i_part);
       fprintf(f, "%d\n", n_face);
+      const PDM_g_num_t *face_gnum = PDM_surf_mesh_part_face_g_num_get (dist->_surf_mesh, i_part);
+      for (int i = 0; i < n_face; i++) {
+        fprintf(f, PDM_FMT_G_NUM"\n", face_gnum[i]);
+      }
+
       const int *face_vtx_idx = PDM_surf_mesh_part_face_vtx_idx_get (dist->_surf_mesh, i_part);
       const int *face_vtx = PDM_surf_mesh_part_face_vtx_get(dist->_surf_mesh, i_part);
       for (int i = 0; i <= n_face; i++) {
