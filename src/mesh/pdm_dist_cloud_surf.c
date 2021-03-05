@@ -483,6 +483,69 @@ PDM_dist_cloud_surf_compute
   if (rank == 0) printf("octree_type = %d\n", octree_type);
   //<<<---
 
+  //-->>
+  if (1) {
+    char filename[999];
+    /* Export surface mesh */
+    sprintf(filename, "surf_mesh_%4.4d.dat", rank);
+
+    FILE *f = fopen(filename, "w");
+    // n_parts
+    int n_part_mesh = PDM_surf_mesh_n_part_get (dist->_surf_mesh);
+    fprintf(f, "%d\n", n_part_mesh);
+    for (int i_part = 0; i_part < n_part_mesh; i_part++) {
+      // Vertices
+      int n_vtx = PDM_surf_mesh_part_n_vtx_get(dist->_surf_mesh, i_part);
+      fprintf(f, "%d\n", n_vtx);
+      const double *vtx = PDM_surf_mesh_part_vtx_get(dist->_surf_mesh, i_part);
+      for (int i = 0; i < n_vtx; i++) {
+        for (int j = 0; j < 3; j++) {
+          fprintf(f, "%12.5e\n", vtx[3*i+j]);
+        }
+        fprintf(f, "\n");
+      }
+
+      // Faces
+      int n_face = PDM_surf_mesh_part_n_face_get(dist->_surf_mesh, i_part);
+      fprintf(f, "%d\n", n_face);
+      const int *face_vtx_idx = PDM_surf_mesh_part_face_vtx_idx_get (dist->_surf_mesh, i_part);
+      const int *face_vtx = PDM_surf_mesh_part_face_vtx_get(dist->_surf_mesh, i_part);
+      for (int i = 0; i <= n_face; i++) {
+        fprintf(f, "%d\n", face_vtx_idx[i]);
+      }
+      for (int i = 0; i < face_vtx_idx[n_face]; i++) {
+        fprintf(f, "%d\n", face_vtx[i]);
+      }
+    }
+    fclose(f);
+
+
+    /* Export point clouds */
+    for (int i_point_cloud = 0; i_point_cloud < n_point_cloud; i_point_cloud++) {
+      sprintf(filename, "point_cloud_%3.3d_%4.4d.vtk", i_point_cloud, rank);
+
+      _points_cloud_t *pt_cloud = &(dist->points_cloud[i_point_cloud]);
+
+      f = fopen(filename, "w");
+      // n_parts
+      const int n_part = pt_cloud->n_part;
+      fprintf(f, "%d\n", n_part);
+      for (int i_part = 0; i_part < n_part; i_part++) {
+        int n_pts = dist->points_cloud[i_point_cloud].n_points[i_part];
+        double *pts = dist->points_cloud[i_point_cloud].coords[i_part];
+        fprintf(f, "%d\n", n_pts);
+        for (int i = 0; i < n_pts; i++) {
+          for (int j = 0; j < 3; j++) {
+            fprintf(f, "%12.5e\n", pts[3*i+j]);
+          }
+          fprintf(f, "\n");
+        }
+      }
+
+      fclose(f);
+    }
+  }
+  //<<--
 
 
   //-->>
