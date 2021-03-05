@@ -505,7 +505,7 @@ PDM_dist_cloud_surf_compute
       }
       for (int i = 0; i < n_vtx; i++) {
         for (int j = 0; j < 3; j++) {
-          fprintf(f, "%12.5e\n", vtx[3*i+j]);
+          fprintf(f, "%12.5e ", vtx[3*i+j]);
         }
         fprintf(f, "\n");
       }
@@ -546,7 +546,7 @@ PDM_dist_cloud_surf_compute
         fprintf(f, "%d\n", n_pts);
         for (int i = 0; i < n_pts; i++) {
           for (int j = 0; j < 3; j++) {
-            fprintf(f, "%12.5e\n", pts[3*i+j]);
+            fprintf(f, "%12.5e ", pts[3*i+j]);
           }
           fprintf(f, "\n");
         }
