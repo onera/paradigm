@@ -532,7 +532,7 @@ PDM_dist_cloud_surf_compute
 
     /* Export point clouds */
     for (int i_point_cloud = 0; i_point_cloud < n_point_cloud; i_point_cloud++) {
-      sprintf(filename, "point_cloud_%3.3d_%4.4d.vtk", i_point_cloud, rank);
+      sprintf(filename, "point_cloud_%3.3d_%4.4d.dat", i_point_cloud, rank);
 
       _points_cloud_t *pt_cloud = &(dist->points_cloud[i_point_cloud]);
 
@@ -542,8 +542,14 @@ PDM_dist_cloud_surf_compute
       fprintf(f, "%d\n", n_part);
       for (int i_part = 0; i_part < n_part; i_part++) {
         int n_pts = dist->points_cloud[i_point_cloud].n_points[i_part];
-        double *pts = dist->points_cloud[i_point_cloud].coords[i_part];
         fprintf(f, "%d\n", n_pts);
+
+        PDM_g_num_t *pts_gnum = dist->points_cloud[i_point_cloud].gnum[i_part];
+        for (int i = 0; i < n_pts; i++) {
+          fprintf(f, PDM_FMT_G_NUM"\n", pts_gnum[i]);
+        }
+
+        double *pts = dist->points_cloud[i_point_cloud].coords[i_part];
         for (int i = 0; i < n_pts; i++) {
           for (int j = 0; j < 3; j++) {
             fprintf(f, "%12.5e ", pts[3*i+j]);
