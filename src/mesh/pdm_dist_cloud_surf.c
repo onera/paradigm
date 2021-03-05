@@ -498,7 +498,8 @@ PDM_dist_cloud_surf_compute
       int n_vtx = PDM_surf_mesh_part_n_vtx_get(dist->_surf_mesh, i_part);
       fprintf(f, "%d\n", n_vtx);
       const double *vtx = PDM_surf_mesh_part_vtx_get(dist->_surf_mesh, i_part);
-      const PDM_g_num_t *vtx_gnum = PDM_Mesh_nodal_vertices_g_num_get (mesh_nodal, i_part);
+      const PDM_g_num_t *vtx_gnum = PDM_surf_mesh_part_vtx_g_num_get (dist->_surf_mesh, i_part);
+
       for (int i = 0; i < n_vtx; i++) {
         fprintf(f, PDM_FMT_G_NUM"\n", vtx_gnum[i]);
       }
