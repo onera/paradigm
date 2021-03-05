@@ -807,6 +807,15 @@ printf("[%d] n_pts = "PDM_FMT_G_NUM" (%.3f times avg)\n", rank, _n_pts_rank, (fl
                                             closest_vertices_gnum,
                                             closest_vertices_dist2);
     }
+if (1) {
+  double dist2_min =  HUGE_VAL;
+  double dist2_max = -HUGE_VAL;
+  for (int i = 0; i < n_pts_rank; i++) {
+    dist2_min = PDM_MIN (dist2_min, closest_vertices_dist2[i]);
+    dist2_max = PDM_MAX (dist2_max, closest_vertices_dist2[i]);
+  }
+  printf("[%d] min/max dist2 = %f / %f\n", rank, dist2_min, dist2_max);
+}
     //<<<---
 
     if (1) {
