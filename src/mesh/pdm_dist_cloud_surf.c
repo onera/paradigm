@@ -483,167 +483,6 @@ PDM_dist_cloud_surf_compute
   if (rank == 0) printf("octree_type = %d\n", octree_type);
   //<<<---
 
-  //-->>
-  if (0) {
-    char filename[999];
-    /* Export surface mesh */
-    sprintf(filename, "surf_mesh_%4.4d.dat", rank);
-
-    FILE *f = fopen(filename, "w");
-    // n_parts
-    int n_part_mesh = PDM_surf_mesh_n_part_get (dist->_surf_mesh);
-    fprintf(f, "%d\n", n_part_mesh);
-    for (int i_part = 0; i_part < n_part_mesh; i_part++) {
-      // Vertices
-      int n_vtx = PDM_surf_mesh_part_n_vtx_get(dist->_surf_mesh, i_part);
-      fprintf(f, "%d\n", n_vtx);
-      const double *vtx = PDM_surf_mesh_part_vtx_get(dist->_surf_mesh, i_part);
-      const PDM_g_num_t *vtx_gnum = PDM_surf_mesh_part_vtx_g_num_get (dist->_surf_mesh, i_part);
-
-      for (int i = 0; i < n_vtx; i++) {
-        fprintf(f, PDM_FMT_G_NUM"\n", vtx_gnum[i]);
-      }
-      for (int i = 0; i < n_vtx; i++) {
-        for (int j = 0; j < 3; j++) {
-          fprintf(f, "%12.5e ", vtx[3*i+j]);
-        }
-        fprintf(f, "\n");
-      }
-
-      // Faces
-      int n_face = PDM_surf_mesh_part_n_face_get(dist->_surf_mesh, i_part);
-      fprintf(f, "%d\n", n_face);
-      const PDM_g_num_t *face_gnum = PDM_surf_mesh_part_face_g_num_get (dist->_surf_mesh, i_part);
-      for (int i = 0; i < n_face; i++) {
-        fprintf(f, PDM_FMT_G_NUM"\n", face_gnum[i]);
-      }
-
-      const int *face_vtx_idx = PDM_surf_mesh_part_face_vtx_idx_get (dist->_surf_mesh, i_part);
-      const int *face_vtx = PDM_surf_mesh_part_face_vtx_get(dist->_surf_mesh, i_part);
-      for (int i = 0; i <= n_face; i++) {
-        fprintf(f, "%d\n", face_vtx_idx[i]);
-      }
-      for (int i = 0; i < face_vtx_idx[n_face]; i++) {
-        fprintf(f, "%d\n", face_vtx[i]);
-      }
-    }
-    fclose(f);
-
-
-    /* Export point clouds */
-    for (int i_point_cloud = 0; i_point_cloud < n_point_cloud; i_point_cloud++) {
-      sprintf(filename, "point_cloud_%3.3d_%4.4d.dat", i_point_cloud, rank);
-
-      _points_cloud_t *pt_cloud = &(dist->points_cloud[i_point_cloud]);
-
-      f = fopen(filename, "w");
-      // n_parts
-      const int n_part = pt_cloud->n_part;
-      fprintf(f, "%d\n", n_part);
-      for (int i_part = 0; i_part < n_part; i_part++) {
-        int n_pts = dist->points_cloud[i_point_cloud].n_points[i_part];
-        fprintf(f, "%d\n", n_pts);
-
-        PDM_g_num_t *pts_gnum = dist->points_cloud[i_point_cloud].gnum[i_part];
-        for (int i = 0; i < n_pts; i++) {
-          fprintf(f, PDM_FMT_G_NUM"\n", pts_gnum[i]);
-        }
-
-        double *pts = dist->points_cloud[i_point_cloud].coords[i_part];
-        for (int i = 0; i < n_pts; i++) {
-          for (int j = 0; j < 3; j++) {
-            fprintf(f, "%12.5e ", pts[3*i+j]);
-          }
-          fprintf(f, "\n");
-        }
-      }
-
-      fclose(f);
-    }
-  }
-  //<<--
-
-
-  //-->>
-  if (0) {
-    char filename[999];
-    /* Export surface mesh */
-    sprintf(filename, "surf_mesh_%4.4d.dat", rank);
-
-    FILE *f = fopen(filename, "w");
-    // n_parts
-    int n_part_mesh = PDM_surf_mesh_n_part_get (dist->_surf_mesh);
-    fprintf(f, "%d\n", n_part_mesh);
-    for (int i_part = 0; i_part < n_part_mesh; i_part++) {
-      // Vertices
-      int n_vtx = PDM_surf_mesh_part_n_vtx_get(dist->_surf_mesh, i_part);
-      fprintf(f, "%d\n", n_vtx);
-      const double *vtx = PDM_surf_mesh_part_vtx_get(dist->_surf_mesh, i_part);
-      const PDM_g_num_t *vtx_gnum = PDM_surf_mesh_part_vtx_g_num_get (dist->_surf_mesh, i_part);
-      for (int i = 0; i < n_vtx; i++) {
-        fprintf(f, PDM_FMT_G_NUM"\n", vtx_gnum[i]);
-      }
-      for (int i = 0; i < n_vtx; i++) {
-        for (int j = 0; j < 3; j++) {
-          fprintf(f, "%12.5e ", vtx[3*i+j]);
-        }
-        fprintf(f, "\n");
-      }
-
-      // Faces
-      int n_face = PDM_surf_mesh_part_n_face_get(dist->_surf_mesh, i_part);
-      fprintf(f, "%d\n", n_face);
-      const PDM_g_num_t *face_gnum = PDM_surf_mesh_part_face_g_num_get (dist->_surf_mesh, i_part);
-      for (int i = 0; i < n_face; i++) {
-        fprintf(f, PDM_FMT_G_NUM"\n", face_gnum[i]);
-      }
-
-      const int *face_vtx_idx = PDM_surf_mesh_part_face_vtx_idx_get (dist->_surf_mesh, i_part);
-      const int *face_vtx = PDM_surf_mesh_part_face_vtx_get(dist->_surf_mesh, i_part);
-      for (int i = 0; i <= n_face; i++) {
-        fprintf(f, "%d\n", face_vtx_idx[i]);
-      }
-      for (int i = 0; i < face_vtx_idx[n_face]; i++) {
-        fprintf(f, "%d\n", face_vtx[i]);
-      }
-    }
-    fclose(f);
-
-
-    /* Export point clouds */
-    for (int i_point_cloud = 0; i_point_cloud < n_point_cloud; i_point_cloud++) {
-      sprintf(filename, "point_cloud_%3.3d_%4.4d.dat", i_point_cloud, rank);
-
-      _points_cloud_t *pt_cloud = &(dist->points_cloud[i_point_cloud]);
-
-      f = fopen(filename, "w");
-      // n_parts
-      const int n_part = pt_cloud->n_part;
-      fprintf(f, "%d\n", n_part);
-      for (int i_part = 0; i_part < n_part; i_part++) {
-        int n_pts = dist->points_cloud[i_point_cloud].n_points[i_part];
-        fprintf(f, "%d\n", n_pts);
-
-        PDM_g_num_t *pts_gnum = dist->points_cloud[i_point_cloud].gnum[i_part];
-        for (int i = 0; i < n_pts; i++) {
-          fprintf(f, PDM_FMT_G_NUM"\n", pts_gnum[i]);
-        }
-
-        double *pts = dist->points_cloud[i_point_cloud].coords[i_part];
-        for (int i = 0; i < n_pts; i++) {
-          for (int j = 0; j < 3; j++) {
-            fprintf(f, "%12.5e ", pts[3*i+j]);
-          }
-          fprintf(f, "\n");
-        }
-      }
-
-      fclose(f);
-    }
-  }
-  //<<--
-
-
   double b_t_elapsed;
   double b_t_cpu;
   double b_t_cpu_u;
@@ -886,31 +725,7 @@ printf("[%d] n_pts = "PDM_FMT_G_NUM" (%.3f times avg)\n", rank, _n_pts_rank, (fl
                                             closest_vertices_gnum,
                                             closest_vertices_dist2);
     }
-if (1) {
-  double dist2_min =  HUGE_VAL;
-  double dist2_max = -HUGE_VAL;
-  for (int i = 0; i < n_pts_rank; i++) {
-    dist2_min = PDM_MIN (dist2_min, closest_vertices_dist2[i]);
-    dist2_max = PDM_MAX (dist2_max, closest_vertices_dist2[i]);
-  }
-  printf("[%d] min/max dist2 = %f / %f\n", rank, dist2_min, dist2_max);
-}
     //<<<---
-
-    if (1) {
-      PDM_g_num_t min_gnum = 99999999;
-      PDM_g_num_t max_gnum = -min_gnum;
-      double min_dist = HUGE_VAL;
-      double max_dist = -HUGE_VAL;
-      for (int i = 0; i < n_pts_rank; i++) {
-        min_gnum = PDM_MIN (min_gnum, closest_vertices_gnum[i]);
-        max_gnum = PDM_MAX (max_gnum, closest_vertices_gnum[i]);
-        min_dist = PDM_MIN (min_dist, closest_vertices_dist2[i]);
-        max_dist = PDM_MAX (max_dist, closest_vertices_dist2[i]);
-      }
-      printf("[%d] gnum min/max = "PDM_FMT_G_NUM" / "PDM_FMT_G_NUM"\n", rank, min_gnum, max_gnum);
-      printf("[%d] min/max dist = %f / %f\n", rank, min_dist, max_dist);
-    }
 
     //      debut test cube :
 
@@ -1054,21 +869,6 @@ if (1) {
 						      &box_g_num);
     }  //#endif
       //<<<<---------
-    //-->>
-int max_n_candidates = 0;
-for (int i = 0; i < n_pts_rank; i++) {
-  int n_candidates = box_index[i+1] - box_index[i];
-  if (n_candidates > max_n_candidates) {
-    max_n_candidates = n_candidates;
-  }
-}
-
-long avg_n_candidates = box_index[n_pts_rank];
-if (n_pts_rank > 0) avg_n_candidates /= n_pts_rank;
-
-printf("[%d] max_n_candidates = %d, avg = %ld\n", rank, max_n_candidates, avg_n_candidates);
-//<<--
-
 
     if (idebug) {
       printf (" PDM_dbbtree_closest_upper_bound_dist_boxes_get n_pts_rank : %d\n", n_pts_rank);
@@ -1083,18 +883,6 @@ printf("[%d] max_n_candidates = %d, avg = %ld\n", rank, max_n_candidates, avg_n_
         printf ("\n");
       }
     }
-
-if (1) {
-  PDM_g_num_t gnum_min =  9999999;
-  PDM_g_num_t gnum_max = -gnum_min;
-  for (int i = 0; i < n_pts_rank; i++) {
-    for (int j = box_index[i]; j < box_index[i+1]; j++) {
-      gnum_min = PDM_MIN (gnum_min, box_g_num[j]);
-      gnum_max = PDM_MAX (gnum_max, box_g_num[j]);
-    }
-  }
-  printf("[%d] dbbtree -> min/max gnum = "PDM_FMT_G_NUM" / "PDM_FMT_G_NUM"\n", rank, gnum_min, gnum_max);
-}
 
     free (closest_vertices_dist2);
 
@@ -1216,17 +1004,6 @@ if (1) {
       block_g_num_idx[i+1] = block_g_num_stride[i] + block_g_num_idx[i];
       block_g_num_stride[i] = 0;
     }
-if (1) {
-  PDM_g_num_t gnum_min =  9999999;
-  PDM_g_num_t gnum_max = -gnum_min;
-  for (int i = 0; i < n_block_vtx; i++) {
-    for (int j = block_g_num_idx[i]; j < block_g_num_idx[i+1]; j++) {
-      gnum_min = PDM_MIN (gnum_min, block_g_num[j]);
-      gnum_max = PDM_MAX (gnum_max, block_g_num[j]);
-    }
-  }
-  printf("[%d] before: block min/max gnum = "PDM_FMT_G_NUM" / "PDM_FMT_G_NUM"\n", rank, gnum_min, gnum_max);
-}
 
     int *block_g_num_opt_idx = malloc (sizeof(int) * (n_block_vtx+1));
     int keyMax = 3 * n_block_vtx;
@@ -1281,17 +1058,6 @@ if (1) {
         printf ("\n");
       }
     }
-if (1) {
-  PDM_g_num_t gnum_min =  9999999;
-  PDM_g_num_t gnum_max = -gnum_min;
-  for (int i = 0; i < n_block_vtx; i++) {
-    for (int j = block_g_num_opt_idx[i]; j < block_g_num_opt_idx[i+1]; j++) {
-      gnum_min = PDM_MIN (gnum_min, block_g_num[j]);
-      gnum_max = PDM_MAX (gnum_max, block_g_num[j]);
-    }
-  }
-  printf("[%d] after: block min/max gnum = "PDM_FMT_G_NUM" / "PDM_FMT_G_NUM"\n", rank, gnum_min, gnum_max);
-}
 
     int block_g_num_n = block_g_num_opt_idx[n_block_vtx];
 
@@ -1481,9 +1247,6 @@ if (1) {
     }
 
     PDM_g_num_t *block_vtx_gnum = PDM_part_to_block_block_gnum_get (ptb_vtx);
-
-PDM_g_num_t _gnum_min =  9999999;
-PDM_g_num_t _gnum_max = -_gnum_min;
     for (int i = 0; i < n_block_vtx; i++) {
       double *_pt_coords = block_pts + 3*i;
       double *_block_closest_proj = block_closest_proj + 3*i;
@@ -1557,24 +1320,11 @@ PDM_g_num_t _gnum_max = -_gnum_min;
             _block_closest_proj[k] = closestPoint[k];
           }
           _block_closest_gnum[0] = face_g_num;
-_gnum_min = PDM_MIN (_gnum_min, face_g_num);
-_gnum_max = PDM_MAX (_gnum_max, face_g_num);
         }
 
         idx += 1;
       }
     }
-/*if (1) {
-  PDM_g_num_t gnum_min =  9999999;
-  PDM_g_num_t gnum_max = -gnum_min;
-  for (int i = 0; i < n_block_vtx; i++) {
-    for (int j = block_g_num_opt_idx[i]; j < block_g_num_opt_idx[i+1]; j++) {
-      gnum_min = PDM_MIN (gnum_min, block_closest_gnum[j]);
-      gnum_max = PDM_MAX (gnum_max, block_closest_gnum[j]);
-    }
-  }*/
-  printf("[%d] block_closest min/max gnum = "PDM_FMT_G_NUM" / "PDM_FMT_G_NUM"\n", rank, _gnum_min, _gnum_max);
-/*}*/
     free (block_g_num_opt_idx);
 
     free (block_pts);
@@ -1658,17 +1408,6 @@ _gnum_max = PDM_MAX (_gnum_max, face_g_num);
                             NULL,
                             (void **) pt_cloud->closest_elt_gnum);
 
-if (1) {
-  PDM_g_num_t gnum_min =  9999999;
-  PDM_g_num_t gnum_max = -gnum_min;
-  for (int i = 0; i < n_part; i++) {
-    for (int j = 0; j < pt_cloud->n_points[i]; j++) {
-      gnum_min = PDM_MIN (gnum_min, pt_cloud->closest_elt_gnum[i][j]);
-      gnum_max = PDM_MAX (gnum_max, pt_cloud->closest_elt_gnum[i][j]);
-    }
-  }
-  printf("[%d] min/max gnum = "PDM_FMT_G_NUM" / "PDM_FMT_G_NUM"\n", rank, gnum_min, gnum_max);
-}
 
     PDM_block_to_part_free (btp_vtx);
     PDM_part_to_block_free (ptb_vtx);
