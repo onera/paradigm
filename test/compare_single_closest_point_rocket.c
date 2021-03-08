@@ -1173,7 +1173,8 @@ _write_point_cloud
  const char        *header,
  const int          n_pts,
  const double       coord[],
- const PDM_g_num_t  g_num[]
+ const PDM_g_num_t  g_num[],
+ const double       field[]
  )
 {
   FILE *f = fopen(filename, "w");
@@ -1210,6 +1211,14 @@ _write_point_cloud
     fprintf(f, "SCALARS gnum int\n LOOKUP_TABLE default\n");
     for (int i = 0; i < n_pts; i++) {
       fprintf(f, ""PDM_FMT_G_NUM"\n", g_num[i]);
+    }
+  }
+
+  else if (field != NULL) {
+    fprintf(f, "CELL_DATA %d\n", n_pts);
+    fprintf(f, "SCALARS field double\n LOOKUP_TABLE default\n");
+    for (int i = 0; i < n_pts; i++) {
+      fprintf(f, "%f\n", field[i]);
     }
   }
 
@@ -1346,6 +1355,14 @@ int main(int argc, char *argv[])
                         &src_g_num,
                         &src_coord);
 
+
+  PDM_g_num_t n_src_local, n_src_global;
+  n_src_local = _n_src;
+  PDM_MPI_Allreduce (&n_src_local, &n_src_global, 1, PDM__PDM_MPI_G_NUM,
+                     PDM_MPI_SUM, PDM_MPI_COMM_WORLD);
+  PDM_g_num_t src_g_num_min = 1;
+  PDM_g_num_t src_g_num_max = n_src_global;
+
   double z_shift;
   if (on_ground) {
     z_shift = 0.5*domain_size;
@@ -1366,14 +1383,16 @@ int main(int argc, char *argv[])
                         "tgt",
                         _n_tgt,
                         tgt_coord,
-                        tgt_g_num);
+                        tgt_g_num,
+                        NULL);
 
     sprintf(filename, "src_%3.3d.vtk", i_rank);
     _write_point_cloud (filename,
                         "src",
                         _n_src,
                         src_coord,
-                        src_g_num);
+                        src_g_num,
+                        NULL);
   }
 
 
@@ -1386,6 +1405,9 @@ int main(int argc, char *argv[])
 
   PDM_g_num_t **closest_point_g_num = NULL;
   double      **closest_point_dist2 = NULL;
+
+  PDM_g_num_t *true_closest_point_g_num = NULL;
+  double      *true_closest_point_dist2 = NULL;
 
   double elapsed_min = HUGE_VAL;
   for (int method = 1; method < n_methods; method++) {
@@ -1431,13 +1453,6 @@ int main(int argc, char *argv[])
                           &closest_point_dist2);
     }
 
-    for (int i = 0; i < n_part_tgt; i++) {
-      free (closest_point_g_num[i]);
-      free (closest_point_dist2[i]);
-    }
-    free (closest_point_g_num);
-    free (closest_point_dist2);
-
     PDM_timer_hang_on (timer);
     t_end = PDM_timer_elapsed (timer) - t_begin;
     PDM_timer_resume (timer);
@@ -1455,6 +1470,86 @@ int main(int argc, char *argv[])
         elapsed_min = elapsed[method];
       }
     }
+
+    if (0) {
+      // Check g num validity
+      PDM_g_num_t gmin = 99999999;
+      PDM_g_num_t gmax = -gmin;
+      double dmin = HUGE_VAL;
+      double dmax = -HUGE_VAL;
+      for (int i = 0; i < _n_tgt; i++) {
+        gmin = PDM_MIN (gmin, closest_point_g_num[0][i]);
+        gmax = PDM_MAX (gmax, closest_point_g_num[0][i]);
+        dmin = PDM_MIN (dmin, closest_point_dist2[0][i]);
+        dmax = PDM_MAX (dmax, closest_point_dist2[0][i]);
+
+        if (closest_point_g_num[0][i] < src_g_num_min) {
+          printf("[%d] !!! pt ("PDM_FMT_G_NUM"): closest_point_g_num = "PDM_FMT_G_NUM" < min\n",
+                 i_rank, tgt_g_num[i], closest_point_g_num[0][i]);
+        }
+        else if (closest_point_g_num[0][i] > src_g_num_max) {
+          printf("[%d] !!! pt ("PDM_FMT_G_NUM"): closest_point_g_num = "PDM_FMT_G_NUM" > max\n",
+                 i_rank, tgt_g_num[i], closest_point_g_num[0][i]);
+        }
+      }
+
+      printf("[%d] gmin/gmax = "PDM_FMT_G_NUM" / "PDM_FMT_G_NUM"\n", i_rank, gmin, gmax);
+      printf("[%d] dmin/dmax = %f / %f\n", i_rank, dmin, dmax);
+    }
+
+
+    if (0) {
+      char filename[999];
+      double *_dist = malloc (sizeof(double) * _n_tgt);
+      for (int i = 0; i < _n_tgt; i++) {
+          _dist[i] = sqrt (closest_point_dist2[0][i]);
+      }
+
+      sprintf(filename, "check_dist_%d_%3.3d.vtk", method, i_rank);
+      _write_point_cloud (filename,
+                          "tgt",
+                          _n_tgt,
+                          tgt_coord,
+                          NULL,
+                          _dist);
+
+      sprintf(filename, "check_gnum_%d_%3.3d.vtk", method, i_rank);
+      _write_point_cloud (filename,
+                          "tgt",
+                          _n_tgt,
+                          tgt_coord,
+                          closest_point_g_num[0],
+                          NULL);
+
+      free (_dist);
+    }
+
+    if (method == 0) {
+      true_closest_point_g_num = malloc (sizeof(PDM_g_num_t) * _n_tgt);
+      true_closest_point_dist2 = malloc (sizeof(double)      * _n_tgt);
+      memcpy (true_closest_point_g_num, closest_point_g_num[0], sizeof(PDM_g_num_t) * _n_tgt);
+      memcpy (true_closest_point_dist2, closest_point_dist2[0], sizeof(double)      * _n_tgt);
+    } else {
+      if (true_closest_point_g_num != NULL) {
+        for (int i = 0; i < _n_tgt; i++) {
+          if (closest_point_g_num[0][i] != true_closest_point_g_num[i]) {
+            double d0 = sqrt(closest_point_dist2[0][i]);
+            double d1 = sqrt(true_closest_point_dist2[i]);
+            printf("[%d] error point ("PDM_FMT_G_NUM"): ("PDM_FMT_G_NUM") / ("PDM_FMT_G_NUM"), %f / %f (rel. err. %e)\n",
+                   i_rank, tgt_g_num[i], closest_point_g_num[0][i], true_closest_point_g_num[i], d0, d1, d0/d1 - 1.);
+          }
+        }
+      }
+    }
+
+
+
+    for (int i = 0; i < n_part_tgt; i++) {
+      free (closest_point_g_num[i]);
+      free (closest_point_dist2[i]);
+    }
+    free (closest_point_g_num);
+    free (closest_point_dist2);
   }
 
 

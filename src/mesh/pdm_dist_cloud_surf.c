@@ -484,6 +484,87 @@ PDM_dist_cloud_surf_compute
   //<<<---
 
 
+
+  //-->>
+  if (0) {
+    char filename[999];
+    /* Export surface mesh */
+    sprintf(filename, "surf_mesh_%4.4d.dat", rank);
+
+    FILE *f = fopen(filename, "w");
+    // n_parts
+    int n_part_mesh = PDM_surf_mesh_n_part_get (dist->_surf_mesh);
+    fprintf(f, "%d\n", n_part_mesh);
+    for (int i_part = 0; i_part < n_part_mesh; i_part++) {
+      // Vertices
+      int n_vtx = PDM_surf_mesh_part_n_vtx_get(dist->_surf_mesh, i_part);
+      fprintf(f, "%d\n", n_vtx);
+      const double *vtx = PDM_surf_mesh_part_vtx_get(dist->_surf_mesh, i_part);
+      const PDM_g_num_t *vtx_gnum = PDM_surf_mesh_part_vtx_g_num_get (dist->_surf_mesh, i_part);
+      for (int i = 0; i < n_vtx; i++) {
+        fprintf(f, PDM_FMT_G_NUM"\n", vtx_gnum[i]);
+      }
+      for (int i = 0; i < n_vtx; i++) {
+        for (int j = 0; j < 3; j++) {
+          fprintf(f, "%12.5e ", vtx[3*i+j]);
+        }
+        fprintf(f, "\n");
+      }
+
+      // Faces
+      int n_face = PDM_surf_mesh_part_n_face_get(dist->_surf_mesh, i_part);
+      fprintf(f, "%d\n", n_face);
+      const PDM_g_num_t *face_gnum = PDM_surf_mesh_part_face_g_num_get (dist->_surf_mesh, i_part);
+      for (int i = 0; i < n_face; i++) {
+        fprintf(f, PDM_FMT_G_NUM"\n", face_gnum[i]);
+      }
+
+      const int *face_vtx_idx = PDM_surf_mesh_part_face_vtx_idx_get (dist->_surf_mesh, i_part);
+      const int *face_vtx = PDM_surf_mesh_part_face_vtx_get(dist->_surf_mesh, i_part);
+      for (int i = 0; i <= n_face; i++) {
+        fprintf(f, "%d\n", face_vtx_idx[i]);
+      }
+      for (int i = 0; i < face_vtx_idx[n_face]; i++) {
+        fprintf(f, "%d\n", face_vtx[i]);
+      }
+    }
+    fclose(f);
+
+
+    /* Export point clouds */
+    for (int i_point_cloud = 0; i_point_cloud < n_point_cloud; i_point_cloud++) {
+      sprintf(filename, "point_cloud_%3.3d_%4.4d.dat", i_point_cloud, rank);
+
+      _points_cloud_t *pt_cloud = &(dist->points_cloud[i_point_cloud]);
+
+      f = fopen(filename, "w");
+      // n_parts
+      const int n_part = pt_cloud->n_part;
+      fprintf(f, "%d\n", n_part);
+      for (int i_part = 0; i_part < n_part; i_part++) {
+        int n_pts = dist->points_cloud[i_point_cloud].n_points[i_part];
+        fprintf(f, "%d\n", n_pts);
+
+        PDM_g_num_t *pts_gnum = dist->points_cloud[i_point_cloud].gnum[i_part];
+        for (int i = 0; i < n_pts; i++) {
+          fprintf(f, PDM_FMT_G_NUM"\n", pts_gnum[i]);
+        }
+
+        double *pts = dist->points_cloud[i_point_cloud].coords[i_part];
+        for (int i = 0; i < n_pts; i++) {
+          for (int j = 0; j < 3; j++) {
+            fprintf(f, "%12.5e ", pts[3*i+j]);
+          }
+          fprintf(f, "\n");
+        }
+      }
+
+      fclose(f);
+    }
+  }
+  //<<--
+
+
   double b_t_elapsed;
   double b_t_cpu;
   double b_t_cpu_u;
@@ -728,6 +809,21 @@ printf("[%d] n_pts = "PDM_FMT_G_NUM" (%.3f times avg)\n", rank, _n_pts_rank, (fl
     }
     //<<<---
 
+    if (1) {
+      PDM_g_num_t min_gnum = 99999999;
+      PDM_g_num_t max_gnum = -min_gnum;
+      double min_dist = HUGE_VAL;
+      double max_dist = -HUGE_VAL;
+      for (int i = 0; i < n_pts_rank; i++) {
+        min_gnum = PDM_MIN (min_gnum, closest_vertices_gnum[i]);
+        max_gnum = PDM_MAX (max_gnum, closest_vertices_gnum[i]);
+        min_dist = PDM_MIN (min_dist, closest_vertices_dist2[i]);
+        max_dist = PDM_MAX (max_dist, closest_vertices_dist2[i]);
+      }
+      printf("[%d] gnum min/max = "PDM_FMT_G_NUM" / "PDM_FMT_G_NUM"\n", rank, min_gnum, max_gnum);
+      printf("[%d] min/max dist = %f / %f\n", rank, min_dist, max_dist);
+    }
+
     //      debut test cube :
 
     /* int ierr = 0; */
@@ -870,6 +966,21 @@ printf("[%d] n_pts = "PDM_FMT_G_NUM" (%.3f times avg)\n", rank, _n_pts_rank, (fl
 						      &box_g_num);
     }  //#endif
       //<<<<---------
+    //-->>
+int max_n_candidates = 0;
+for (int i = 0; i < n_pts_rank; i++) {
+  int n_candidates = box_index[i+1] - box_index[i];
+  if (n_candidates > max_n_candidates) {
+    max_n_candidates = n_candidates;
+  }
+}
+
+long avg_n_candidates = box_index[n_pts_rank];
+if (n_pts_rank > 0) avg_n_candidates /= n_pts_rank;
+
+printf("[%d] max_n_candidates = %d, avg = %ld\n", rank, max_n_candidates, avg_n_candidates);
+//<<--
+
 
     if (idebug) {
       printf (" PDM_dbbtree_closest_upper_bound_dist_boxes_get n_pts_rank : %d\n", n_pts_rank);

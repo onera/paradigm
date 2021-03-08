@@ -10389,8 +10389,8 @@ PDM_para_octree_single_closest_point
 
     if (_n_src == 0) {
       for (int i = copied_shift1[rank]; i < copied_shift1[rank+1]; i++) {
-        _closest_pt_dist2[i] = HUGE_VAL;
-        _closest_pt_g_num[i] = -1;
+        __closest_pt_dist2[i] = HUGE_VAL;
+        __closest_pt_g_num[i] = -1;
       }
     }
 
@@ -10466,7 +10466,7 @@ PDM_para_octree_single_closest_point
                                  _closest_pt_dist2);
   } else {
 
-    (*local_search_fun_ptr) (octree->dim,
+    (*local_search_fun_ptr) (dim,
                              octree->d,
                              octree->s,
                              octree->octants,
@@ -10479,14 +10479,14 @@ PDM_para_octree_single_closest_point
 
 
     for (int i = 0; i < octree->n_copied_ranks; i++) {
-      (*local_search_fun_ptr) (octree->dim,
+      (*local_search_fun_ptr) (dim,
                                octree->d,
                                octree->s,
                                octree->copied_octants[i],
                                octree->copied_points_gnum[i],
                                octree->copied_points[i],
                                copied_shift1[i+1] - copied_shift1[i],
-                               _pts_coord1,
+                               _pts_coord1 + copied_shift1[i]*dim,
                                __closest_pt_g_num + copied_shift1[i],
                                __closest_pt_dist2 + copied_shift1[i]);
     }
@@ -10647,7 +10647,7 @@ PDM_para_octree_single_closest_point
 
   if (n_copied_ranks2 > 0) {
     if (i_rank == 0) {
-      if (n_copied_ranks2 == 2) {
+      if (n_copied_ranks2 == 1) {
         printf("phase 2: 1 copied rank: %d\n", copied_ranks2[0]);
       }
       else {
@@ -10685,7 +10685,7 @@ PDM_para_octree_single_closest_point
     if (rank != i_rank) {
       int si = send_count[rank];
 
-      si = PDM_MIN (si, PDM_MAX (0, (n_recv_pts_copied_ranks[rank] - n_recv_pts)/2));
+      si = PDM_MIN (si, PDM_MAX (0, (n_recv_pts_copied_ranks[i] - n_recv_pts)/2));
       if (i_copied_rank2[i_rank] < 0) {
         si = PDM_MIN (si, PDM_MAX (0, mean_n_recv_pts - n_recv_pts));
       }
@@ -10935,7 +10935,7 @@ PDM_para_octree_single_closest_point
                                  _closest_pt_dist22);
   } else {
 
-    (*local_search_fun_ptr) (octree->dim,
+    (*local_search_fun_ptr) (dim,
                              octree->d,
                              octree->s,
                              octree->octants,
@@ -10947,14 +10947,14 @@ PDM_para_octree_single_closest_point
                              _closest_pt_dist22);
 
     for (int i = 0; i < octree->n_copied_ranks; i++) {
-      (*local_search_fun_ptr) (octree->dim,
+      (*local_search_fun_ptr) (dim,
                                octree->d,
                                octree->s,
                                octree->copied_octants[i],
                                octree->copied_points_gnum[i],
                                octree->copied_points[i],
                                copied_shift2[i+1] - copied_shift2[i],
-                               _pts_coord2,
+                               _pts_coord2 + copied_shift2[i]*dim,
                                __closest_pt_g_num + copied_shift2[i],
                                __closest_pt_dist2 + copied_shift2[i]);
     }
