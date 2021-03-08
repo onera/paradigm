@@ -1561,7 +1561,7 @@ int main(int argc, char *argv[])
   /*
    *  Summary
    */
-  if (0) {//i_rank == 0) {
+  if (i_rank == 0) {
     printf("\n\n\n");
     for (int method = 0; method < n_methods; method++) {
       printf ("method %d: elapsed = %.4fs, relative to min = %.3f\n",
