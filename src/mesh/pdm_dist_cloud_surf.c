@@ -484,7 +484,7 @@ PDM_dist_cloud_surf_compute
   //<<<---
 
   //-->>
-  if (1) {
+  if (0) {
     char filename[999];
     /* Export surface mesh */
     sprintf(filename, "surf_mesh_%4.4d.dat", rank);
