@@ -21,6 +21,47 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
+/**
+
+This file defines a parallel and genric workflow for the mesh adaptation.
+This workflow can be called in a scientfic software without stopping its execution.
+
+Entries are  a partitioned mesh with fields defined on it. The outpouts are the
+partitioned adapted mesh with interpolated fields defined on it. To ensure a good
+load balancing, the paritioning of the adapted mesh does not come from the source
+mesh. It is recomputed.
+
+The workflow is divided into 9 steps :
+  1. Initialization with \ref PDM_Mesh_adapt_create functions. This step defines
+     the global parameters (adaptation method, adapatation tool,
+     graph partitioner, interpolation method, ...)
+  2. Definition of source mesh with \p PDM_Mesh_adapt_src*
+  3. Definition of boundary surface geometry with \p PDM_Mesh_adapt_geom_repr*
+  4. Definition of specific options of the adaptation tool with
+     \ref PDM_Mesh_adapt_tool_param_set
+  5. Definition of field families with \ref PDM_Mesh_adapt_field_family_add.
+     A family has 3 properties : the location of degrees of freedom, the
+     interpolation method and the storage of components
+  6. Computation of the adapted mesh and its partitioning with
+     \ref PDM_Mesh_adapt_geom_compute.
+     This function also computes the geometric algorithms necessary for the field
+     interpolation. This function groups together all the blocking MPI calls which
+     makes it possible to transfer the interpolated fields without blocking MPI
+     exchange
+  7. Getting of the target mesh properties with \p PDM_Mesh_adapt_tgt*
+  8. Send source fields with \ref PDM_Mesh_adapt_src_field_issend
+  9. Recevive target fields with \ref PDM_Mesh_adapt_tgt_field_irecv
+
+This describes a simple workflow. it is possible to particularize a workflow
+using some callbacks to take into the numerical methods of softwares. User can
+define some user locations of the dregrees of freedom and he can define some user
+interpolation method from 3 type of geometric results :
+  1.  k-nearest neighbors into the source mesh (parallel algorithm)
+  2.  Location of target of degrees of freedon into the source mesh
+  3.  Intersection of source and target meshes (parallel algorithm)
+
+*/
+
 /*----------------------------------------------------------------------------
  * Local headers
  *----------------------------------------------------------------------------*/
@@ -37,14 +78,6 @@ extern "C" {
 } /* Fake brace to force back Emacs auto-indentation back to column 0 */
 #endif
 #endif /* __cplusplus */
-
-// Points a ajouter :
-//     - Gestion multi-maillages
-//     - Gestion des periodicites
-//
-//
-
-
 
 /*============================================================================
  * Macro definitions
@@ -81,7 +114,7 @@ typedef enum {
   PDM_MESH_ADAPT_PERIO_ROT,    /*!< Rotation periodicity */
   PDM_MESH_ADAPT_PERIO_N       /*!< Number of type of periodicity */
 
-} PDM_Mesh_adapt_method_t;
+} PDM_Mesh_adapt_perio_t;
 
 
 /**
@@ -115,7 +148,6 @@ typedef enum {
   PDM_MESH_ADAPT_GEOM_REPR_STEP,           /*!< STEP file */
   PDM_MESH_ADAPT_GEOM_REPR_N               /*!< Number of type of geometric
                                                 representations */
-
 } PDM_Mesh_adapt_geom_repr_t;
 
 
@@ -129,7 +161,8 @@ typedef enum {
 
   PDM_MESH_ADAPT_METRIC_VTX,       /*!< Metric defined to vertices */
   PDM_MESH_ADAPT_METRIC_CELL,      /*!< ??? Metric defined to elements ??? */
-  PDM_MESH_ADAPT_SUBDIVSION_LEVEL, /*!< Subdvision level defined to elements */
+  PDM_MESH_ADAPT_SUBDIVSION_LEVEL_VTX, /*!< Subdvision level defined to vertices */
+  PDM_MESH_ADAPT_SUBDIVSION_LEVEL_CELL, /*!< Subdvision level defined to elements */
   PDM_MESH_ADAPT_CRITERION_N       /*!< Number of cirteria */
 
 } PDM_Mesh_adapt_criterion_t;
@@ -217,15 +250,27 @@ typedef enum {
                                                         target degrees of freedom
                                                         into the source mesh  */
   PDM_MESH_ADAPT_INTERP_USER_FROM_INTERSECTION,    /*!< Field defined at node  */
-  PDM_MESH_ADAPT_INTERP_FEFLO,                     /*!< Feflo interpolation
-                                                        method  */
-  PDM_MESH_ADAPT_INTERP_TREEPART,                   /*!< Treepart interpolation
-                                                         method */
-  PDM_MESH_ADAPT_INTERP_N                           /*!< Number of interpolation
-                                                         methods */
+  PDM_MESH_ADAPT_INTERP_INTERPOL,                  /*!< Tool : Interpol */
+  PDM_MESH_ADAPT_INTERP_TREEPART,                  /*!< Tool : Treepart */
+  PDM_MESH_ADAPT_INTERP_ADAPTCELLS,                /*!< Tool : Adaptcells */
+  PDM_MESH_ADAPT_INTERP_N                          /*!< Number of interpolation
+                                                        methods */
 
 } PDM_Mesh_adapt_field_interp_t;
 
+/**
+ * \enum PDM_Mesh_adapt_group_entity_t
+ * \brief Group entities
+ *
+ */
+
+typedef enum {
+  PDM_MESH_ADAPT_GROUP_CELL,  /*!< Cell group */
+  PDM_MESH_ADAPT_GROUP_FACE,  /*!< Face group */
+  PDM_MESH_ADAPT_GROUP_EDGE,  /*!< Edge group */
+  PDM_MESH_ADAPT_GROUP_NODE,  /*!< Node group */
+  PDM_MESH_ADAPT_GROUP_N      /*!< Number of group types */
+} PDM_Mesh_adapt_group_entity_t;
 
 /*============================================================================
  * Callback function prototypes
@@ -423,7 +468,8 @@ typedef struct _PDM_Mesh_adapt_t PDM_Mesh_adapt_t;
  *                       - PDM_MESH_ADAPT_PART_HILBERT
  *                       - PDM_MESH_ADAPT_PART_MORTON
  * \param [in] order  Mesh order
- * \param [in] n_part Number of local mesh partition
+ * \param [in] n_dom  Number of meshes
+ * \param [in] n_part Number of local mesh partition for each domain (size = \p n_dom)
  *                    (same value for source and target meshes)
  * \param [in] owner  Results owner
  *                       - PDM_OWNERSHIP_KEEP                 : Paradigm will
@@ -445,8 +491,9 @@ PDM_Mesh_adapt_create
  const PDM_Mesh_adapt_geom_repr_t        geom_repr,
  const PDM_Mesh_adapt_inter_part_graph_t part_graph,
  const PDM_Mesh_adapt_part_tool_t        part_tool,
- const int                               order,
- const int                               n_part,
+ const int                               mesh_order,
+ const int                               n_dom,
+ const int                               n_part[],
  const PDM_ownership_t                   owner
 );
 
@@ -481,6 +528,7 @@ PDM_Mesh_adapt_free
  * \brief Set source mesh vertices.
  *
  * \param [in]  ma           Mesh adaptation workflow
+ * \param [in]  i_dom        Current domain
  * \param [in]  i_part       Current partition
  * \param [in]  n_vtx        Number of vertices
  * \param [in]  coord        Coordinates (size = 3 * \p n_vtx)
@@ -492,6 +540,7 @@ void
 PDM_Mesh_adapt_src_vtx_set
 (
  PDM_Mesh_adapt_t *ma,
+ const int         i_dom,
  const int         i_part,
  const int         n_nodes,
  double            coord[],
@@ -503,10 +552,11 @@ PDM_Mesh_adapt_src_vtx_set
  * \brief Add a connectivity block to the source mesh.
  *
  * \param [in]  ma               Mesh adaptation workflow
+ * \param [in]  i_dom        Current domain
  * \param [in]  block_type       Block type
-// *                                 -  PDM_MESH_NODAL_POINT
-// *                                 -  PDM_MESH_NODAL_BAR2
-// *                                 -  PDM_MESH_NODAL_BARHO
+ *                                 -  PDM_MESH_NODAL_POINT
+ *                                 -  PDM_MESH_NODAL_BAR2
+ *                                 -  PDM_MESH_NODAL_BARHO
  *                                 -  PDM_MESH_NODAL_TRIA3
  *                                 -  PDM_MESH_NODAL_TRIAHO
  *                                 -  PDM_MESH_NODAL_QUAD4
@@ -529,6 +579,7 @@ int
 PDM_Mesh_adapt_src_block_add
 (
  PDM_Mesh_adapt_t           *ma,
+ const int                   i_dom,
  const PDM_Mesh_nodal_elt_t  block_type
 );
 
@@ -617,6 +668,7 @@ PDM_Mesh_adapt_src_block_add
  *   \endcode
  *
  * \param [in]  ma           Mesh adaptation workflow
+ * \param [in]  i_dom        Domain identifier
  * \param [in]  i_part       Partition identifier
  * \param [in]  i_block      Block identifier
  * \param [in]  n_elts       Number of elements
@@ -630,6 +682,7 @@ void
 PDM_Mesh_adapt_src_block_std_set
 (
  PDM_Mesh_adapt_t *ma,
+ const int         i_dom,
  const int         i_part,
  const int         i_block,
  const int         n_elts,
@@ -643,6 +696,7 @@ PDM_Mesh_adapt_src_block_std_set
  * \brief Set a generic high order block of the source mesh.
  *
  * \param [in]  ma                   Mesh adaptation workflow
+ * \param [in]  i_dom                Domain identifier
  * \param [in]  i_part               Partition identifier
  * \param [in]  i_block              Block identifier
  * \param [in]  local_node_location  Node location in the (u, v, w) grid
@@ -659,6 +713,7 @@ void
 PDM_Mesh_adapt_src_block_ho_set
 (
  PDM_Mesh_adapt_t *ma,
+ const int         i_dom,
  const int         i_part,
  const int         i_block,
  int               local_node_location[],
@@ -673,6 +728,7 @@ PDM_Mesh_adapt_src_block_ho_set
  * \brief Set the connectivity of a polygon block of the source mesh.
  *
  * \param [in]  ma               Mesh adaptation workflow
+ * \param [in]  i_dom            Domain identifier
  * \param [in]  i_part           Partition identifier
  * \param [in]  i_block          Block identifier
  * \param [in]  n_elts           Number of elements
@@ -689,6 +745,7 @@ void
 PDM_Mesh_adapt_src_block_f_poly_set
 (
  PDM_Mesh_adapt_t *ma,
+ const int         i_dom,
  const int         i_part,
  const int         i_block,
  const int         n_elts,
@@ -706,6 +763,7 @@ PDM_Mesh_adapt_src_block_f_poly_set
  * PDM_cellface_orient
  *
  * \param [in]  ma                Mesh adaptation workflow
+ * \param [in]  i_dom             Domain identifier
  * \param [in]  i_part            Partition identifier
  * \param [in]  i_block           Block identifier
  * \param [in]  n_elts            Number of elements
@@ -740,6 +798,7 @@ void
 PDM_Mesh_adapt_src_block_c_poly_set
 (
  PDM_Mesh_adapt_t *ma,
+ const int         i_dom,
  const int         i_part,
  const int         i_block,
  const int         n_elts,
@@ -759,6 +818,7 @@ PDM_Mesh_adapt_src_block_c_poly_set
  * \brief Add a connectivity block to the boundary source mesh.
  *
  * \param [in]  ma               Mesh adaptation workflow
+ * \param [in]  i_dom             Domain identifier
  * \param [in]  block_type       Block type
  *
  * \return block identifier (i_block)
@@ -768,6 +828,7 @@ int
 PDM_Mesh_adapt_boundary_src_block_add
 (
  PDM_Mesh_adapt_t           *ma,
+ const int                   i_dom,
  const PDM_Mesh_nodal_elt_t  block_type
 );
 
@@ -804,6 +865,7 @@ PDM_Mesh_adapt_boundary_src_block_add
  *
  *
  * \param [in]  ma           Mesh adaptation workflow
+ * \param [in]  i_dom        Domain identifier
  * \param [in]  i_part       Partition identifier
  * \param [in]  i_block      Block identifier
  * \param [in]  n_elts       Number of elements
@@ -817,6 +879,7 @@ void
 PDM_Mesh_adapt_boundary_src_block_std_set
 (
  PDM_Mesh_adapt_t *ma,
+ const int         i_dom,
  const int         i_part,
  const int         i_block,
  const int         n_elts,
@@ -830,6 +893,7 @@ PDM_Mesh_adapt_boundary_src_block_std_set
  * \brief Set a generic high order block of the boundary source mesh.
  *
  * \param [in]  ma                   Mesh adaptation workflow
+ * \param [in]  i_dom                Domain identifier
  * \param [in]  i_part               Partition identifier
  * \param [in]  i_block              Block identifier
  * \param [in]  local_node_location  Node location in the (u, v, w) grid
@@ -845,6 +909,7 @@ void
 PDM_Mesh_adapt_boundary_src_block_ho_set
 (
  PDM_Mesh_adapt_t *ma,
+ const int         i_dom,
  const int         i_part,
  const int         i_block,
  int               local_node_location[],
@@ -859,6 +924,7 @@ PDM_Mesh_adapt_boundary_src_block_ho_set
  * \brief Set the connectivity of a polygon block of the boundary source mesh.
  *
  * \param [in]  ma               Mesh adaptation workflow
+ * \param [in]  i_dom            Domain identifier
  * \param [in]  i_part           Partition identifier
  * \param [in]  i_block          Block identifier
  * \param [in]  n_elts           Number of elements
@@ -876,6 +942,7 @@ void
 PDM_Mesh_adapt_boundary_src_block_f_poly_set
 (
  PDM_Mesh_adapt_t *ma,
+ const int         i_dom,
  const int         i_part,
  const int         i_block,
  const int         n_elts,
@@ -890,6 +957,7 @@ PDM_Mesh_adapt_boundary_src_block_f_poly_set
  * \brief Set MPI graph communication between partitions
  *
  * \param [in]  ma          Mesh adaptation workflow
+ * \param [in]  i_dom       Domain identifier
  * \param [in]  i_part      Partition identifier
  * \param [in]  n_elt_graph Number of elements in the
  * \param [in]  graph_idx   Element index in \p graph
@@ -907,10 +975,13 @@ PDM_Mesh_adapt_boundary_src_block_f_poly_set
  *
  */
 
+//TODO transformer en mettant une fonction add et en ajoutant le type de graph
+
 void
 PDM_Mesh_adapt_src_graph_set
 (
  PDM_Mesh_adapt_t *ma,
+ const int         i_dom,
  const int         i_part,
  const int         n_elt_graph,
  int               graph_idx[],
@@ -919,33 +990,34 @@ PDM_Mesh_adapt_src_graph_set
 
 
 /**
- * \brief Set the number of face groups
+ * \brief Set the number of entity groups
  *
  * Face groups are used to define boundary conditions.
  *
  * \param [in]  ma        Mesh adaptation workflow
+ * \param [in]  i_dom       Domain identifier
  * \param [in]  n_group   Number of face groups
  *
  */
 
-//TODO: remplacer par entity group
-
 void
-PDM_Mesh_adapt_face_group_n_set
+PDM_Mesh_adapt_entity_group_n_set
 (
- PDM_Mesh_adapt_t *ma,
- const int        n_group
+ PDM_Mesh_adapt_t              *ma,
+ PDM_Mesh_adapt_group_entity_t g_entity,
+ const int                     i_dom,
+ const int                     n_group
 );
 
 
 /**
- * \brief Set a face group
+ * \brief Set a entity group
  *
- * A face group is used to define a boundary condittion. As a face can be
- * contained in several groups, the notion of group  is more general than
+ * An entity can be contained in several groups, the notion of group  is more general than
  * the notion of boudary condition
  *
  * \param [in]  ma        Mesh adaptation workflow
+ * \param [in]  i_dom       Domain identifier
  * \param [in]  i_part      Partition identifier
  * \param [in]  i_group   Group identifier
  * \param [in]  n_face    Number of faces in the group
@@ -955,15 +1027,35 @@ PDM_Mesh_adapt_face_group_n_set
  */
 
 void
-PDM_Mesh_adapt_face_group_set
+PDM_Mesh_adapt_entity_group_set
 (
- PDM_Mesh_adapt_t *ma,
- const int        i_part,
- const int        i_group,
- const int        n_face,
- int              faces[],
- PDM_g_num_t      g_num[]
+ PDM_Mesh_adapt_t              *ma,
+ PDM_Mesh_adapt_group_entity_t g_entity,
+ const int                     i_dom,
+ const int                     i_part,
+ const int                     i_group,
+ const int                     n_entities,
+ int                           entities[],
+ PDM_g_num_t                   g_num[]
 );
+
+/* /\** */
+/*  * \brief Finalize the source mesh definition. */
+/*  * */
+/*  * This function computes the global numbers of mesh entities if they are */
+/*  * not provided (MPI collective communications) */
+/*  * */
+/*  * \param [in]  ma                Mesh adaptation workflow */
+/*  * */
+/*  *\/ */
+//TODO transformer en mettant une fonction add et en ajoutant le type de graph
+
+/* void */
+/* PDM_Mesh_adapt_src_inter_dom */
+/* ( */
+/*  PDM_Mesh_adapt_t *ma */
+/* ); */
+
 
 
 /**
@@ -975,8 +1067,6 @@ PDM_Mesh_adapt_face_group_set
  * \param [in]  ma                Mesh adaptation workflow
  *
  */
-
-// name : finalize vs warmup
 
 void
 PDM_Mesh_adapt_src_finalize
@@ -1014,16 +1104,18 @@ PDM_Mesh_adapt_src_finalize
  *  is selected.
  *
  * \param [in]  ma           Mesh adaptation workflow
- * \param [in]  n_part       Number of partitions
+ * \param [in]  n_dom        Number of domains
+ * \param [in]  n_part       Number of local partitions for each domain
  * \param [in]  order        Mesh order
  *
  */
 
 void
-PDM_Mesh_adapt_geom_repr_init
+PDM_Mesh_adapt_geom_repr_mesh_init
 (
  PDM_Mesh_adapt_t   *ma,
- const int           n_part,
+ const int           n_dom,
+ const int           n_part[],
  const int           order
 );
 
@@ -1032,6 +1124,7 @@ PDM_Mesh_adapt_geom_repr_init
  * \brief Set vertices of the geometric representation of the boundary
  *
  * \param [in]  ma           Mesh adaptation workflow
+ * \param [in]  i_dom       Domain identifier
  * \param [in]  i_part       Current partition
  * \param [in]  n_vtx        Number of vertices
  * \param [in]  coord        Coordinates (size = 3 * \p n_vtx)
@@ -1043,6 +1136,7 @@ void
 PDM_Mesh_adapt_geom_repr_vtx_set
 (
  PDM_Mesh_adapt_t *ma,
+ const int         i_dom,
  const int         i_part,
  const int         n_vtx,
  double            coord[],
@@ -1058,6 +1152,7 @@ PDM_Mesh_adapt_geom_repr_vtx_set
  *  is selected.
  *
  * \param [in]  ma               Mesh adaptation workflow
+ * \param [in]  i_dom            Domain identifier
  * \param [in]  block_type       Block type
  *                                 -  PDM_MESH_NODAL_POINT
  *                                 -  PDM_MESH_NODAL_BAR2
@@ -1075,6 +1170,7 @@ int
 PDM_Mesh_adapt_geom_repr_block_add
 (
  PDM_Mesh_adapt_t           *ma,
+ const int                   i_dom,
  const PDM_Mesh_nodal_elt_t  block_type
 );
 
@@ -1112,6 +1208,7 @@ PDM_Mesh_adapt_geom_repr_block_add
  *
  *
  * \param [in]  ma           Mesh adaptation workflow
+ * \param [in]  i_dom        Domain identifier
  * \param [in]  i_part       Partition identifier
  * \param [in]  i_block      Block identifier
  * \param [in]  n_elts       Number of elements
@@ -1125,6 +1222,7 @@ void
 PDM_Mesh_adapt_geom_repr_block_std_set
 (
  PDM_Mesh_adapt_t *ma,
+ const int         i_dom,
  const int         i_part,
  const int         i_block,
  const int         n_elts,
@@ -1139,6 +1237,7 @@ PDM_Mesh_adapt_geom_repr_block_std_set
  *        the geometric representation of the boundary.the boundary source mesh.
  *
  * \param [in]  ma                   Mesh adaptation workflow
+ * \param [in]  i_dom                Domain identifier
  * \param [in]  i_part               Partition identifier
  * \param [in]  i_block              Block identifier
  * \param [in]  local_node_location  Node location in the (u, v, w) grid
@@ -1155,6 +1254,7 @@ void
 PDM_Mesh_adapt_geom_repr_block_ho_set
 (
  PDM_Mesh_adapt_t *ma,
+ const int         i_dom,
  const int         i_part,
  const int         i_block,
  int               local_node_location[],
@@ -1170,6 +1270,7 @@ PDM_Mesh_adapt_geom_repr_block_ho_set
  *        of the boundary source mesh.
  *
  * \param [in]  ma               Mesh adaptation workflow
+ * \param [in]  i_dom            Domain identifier
  * \param [in]  i_part           Partition identifier
  * \param [in]  i_block          Block identifier
  * \param [in]  n_elts           Number of elements
@@ -1185,6 +1286,7 @@ void
 PDM_Mesh_adapt_geom_repr_block_f_poly_set
 (
  PDM_Mesh_adapt_t *ma,
+ const int         i_dom,
  const int         i_part,
  const int         i_block,
  const int         n_elts,
@@ -1219,6 +1321,7 @@ PDM_Mesh_adapt_geom_repr_finalize
  * Under the form of the list of couples of points (vtx1/vtx2)
  *
  * \param [in]  ma               Mesh adaptation workflow
+ * \param [in]  i_dom            Domain identifier
  * \param [in]  i_part           Partition identifier
  * \param [in]  n_ridge          Number of ridges
  * \param [in]  ridges           List of ridges
@@ -1229,6 +1332,7 @@ void
 PDM_Mesh_adapt_geom_repr_ridge_set
 (
  PDM_Mesh_adapt_t *ma,
+ const int         i_dom,
  const int         i_part,
  const int         n_ridge,
  int               ridges
@@ -1242,6 +1346,7 @@ PDM_Mesh_adapt_geom_repr_ridge_set
  * under the form of the list of points
  *
  * \param [in]  ma               Mesh adaptation workflow
+ * \param [in]  i_dom            Domain identifier
  * \param [in]  i_part           Partition identifier
  * \param [in]  n_corner         Number of corners
  * \param [in]  ridges           List of corners
@@ -1249,9 +1354,10 @@ PDM_Mesh_adapt_geom_repr_ridge_set
  */
 
 void
-PDM_Mesh_adapt_geom_repr_ridge_set
+PDM_Mesh_adapt_geom_repr_corner_set
 (
  PDM_Mesh_adapt_t *ma,
+ const int         i_dom,
  const int         i_part,
  const int         n_corner,
  int               corners
@@ -1270,6 +1376,7 @@ PDM_Mesh_adapt_geom_repr_ridge_set
  *  Depends on the type of selected criterion.
  *
  * \param [in]  ma           Mesh adaptation workflow
+ * \param [in]  i_dom        Domain identifier
  * \param [in]  i_part       Partition identifier
  * \param [in]  criterion    Geometric adaptation criterion (size = n_elt or n_vtx)
  *                              - type int * : local refinment criterion (size = n_elt)
@@ -1280,6 +1387,7 @@ void
 PDM_Mesh_adapt_geom_criterion_set
 (
  PDM_Mesh_adapt_t *ma,
+ const int         i_dom,
  const int         i_part,
  void             *criterion
 );
@@ -1296,6 +1404,7 @@ PDM_Mesh_adapt_geom_criterion_set
  *
  *
  * \param [in]  ma           Mesh adaptation workflow
+ * \param [in]  i_dom        Domain identifier
  * \param [in]  name         Parameter name
  * \param [in]  value        Parameter value
 
@@ -1305,6 +1414,7 @@ void
 PDM_Mesh_adapt_tool_param_set
 (
  PDM_Mesh_adapt_t *ma,
+ const int         i_dom,
  const  char      *name,
  void             *value
 );
@@ -1334,6 +1444,9 @@ PDM_Mesh_adapt_field_family_add
  PDM_Mesh_adapt_dof_location_t    *dof_location,
  PDM_Mesh_adapt_field_interp_t    *field_interp
 );
+
+
+// TODO : maque fonction PDM_Mesh_adapt_field_user_loc_set
 
 /*----------------------------------------------------------------------------*
  *
@@ -1368,6 +1481,7 @@ PDM_Mesh_adapt_geom_compute
  * \brief Get target mesh global size
  *
  * \param [in]   ma                Mesh adaptation workflow
+ * \param [in]   i_dom             Domain identifier
  * \param [out]  g_n_node          Global number of nodes
  * \param [out]  g_n_elt           Global number of elements
  * \param [out]  g_n_face          Global number of faces
@@ -1379,6 +1493,7 @@ void
 PDM_Mesh_adapt_tgt_global_size
 (
  PDM_Mesh_adapt_t *ma,
+ const int         i_dom,
  PDM_g_num_t      *g_n_vtx,
  PDM_g_num_t      *g_n_elt,
  PDM_g_num_t      *g_n_face,
@@ -1390,6 +1505,7 @@ PDM_Mesh_adapt_tgt_global_size
  * \brief Get target mesh local size
  *
  * \param [in]   ma              Mesh adaptation workflow
+ * \param [in]   i_dom           Domain identifier
  * \param [in]   i_part          Current partition
  * \param [out]  n_vtx           Number of vertices
  * \param [out]  n_elt           Number of elements
@@ -1402,6 +1518,7 @@ void
 PDM_Mesh_adapt_tgt_size
 (
  PDM_Mesh_adapt_t *ma,
+ const int         i_dom,
  const int         i_part,
  int              *n_vtx,
  int              *n_elt,
@@ -1414,6 +1531,7 @@ PDM_Mesh_adapt_tgt_size
  * \brief Get target mesh vertices.
  *
  * \param [in]   ma           Mesh adaptation workflow
+ * \param [in]   i_dom        Domain identifier
  * \param [in]   i_part       Current partition
  * \param [out]  coord        Coordinates (size = 3 * \p n_vtx)
  * \param [out]  g_num        Global element number
@@ -1424,6 +1542,7 @@ void
 PDM_Mesh_adapt_tgt_vtx_get
 (
  PDM_Mesh_adapt_t *ma,
+ const int         i_dom,
  const int         i_part,
  double           *coord[],
  PDM_g_num_t      *g_num[]
@@ -1434,6 +1553,7 @@ PDM_Mesh_adapt_tgt_vtx_get
  * \brief Get the number of blocks in the target mesh
  *
  * \param [in]  ma      Mesh adaptation workflow
+ * \param [in]  i_dom   Domain identifier
  *
  * \return      Number of blocks
  */
@@ -1441,7 +1561,8 @@ PDM_Mesh_adapt_tgt_vtx_get
 int
 PDM_Mesh_adapt_tgt_n_block_get
 (
- PDM_Mesh_adapt_t   *ma
+ PDM_Mesh_adapt_t   *ma,
+ const int         i_dom
 );
 
 
@@ -1449,6 +1570,7 @@ PDM_Mesh_adapt_tgt_n_block_get
  * \brief Get the type of block
  *
  * \param [in]  ma            Mesh adaptation workflow
+ * \param [in]  i_dom           Domain identifier
  * \param [in]  i_block       Block identifier
  *
  * \return   Type of the current block
@@ -1458,6 +1580,7 @@ PDM_Mesh_nodal_elt_t
 PDM_Mesh_adapt_tgt_block_type_get
 (
  PDM_Mesh_adapt_t  *ma,
+ const int         i_dom,
  const int          i_block
 );
 
@@ -1466,6 +1589,7 @@ PDM_Mesh_adapt_tgt_block_type_get
  * \brief Get a standard block of the target mesh.
  *
  * \param [in]  ma           Mesh adaptation workflow
+ * \param [in]  i_dom        Domain identifier
  * \param [in]  i_part       Partition identifier
  * \param [in]  i_block      Block identifier
  * \param [out] n_elts       Number of elements
@@ -1479,6 +1603,7 @@ void
 PDM_Mesh_adapt_tgt_block_std_get
 (
  PDM_Mesh_adapt_t *ma,
+ const int         i_dom,
  const int         i_part,
  const int         i_block,
  int              *n_elts,
@@ -1492,6 +1617,7 @@ PDM_Mesh_adapt_tgt_block_std_get
  * \brief Get a generic high order block of the target mesh.
  *
  * \param [in]  ma           Mesh adaptation workflow
+ * \param [in]  i_dom        Domain identifier
  * \param [in]  i_part       Partition identifier
  * \param [in]  i_block      Block identifier
  * \param [out] n_elts       Number of elements
@@ -1505,6 +1631,7 @@ void
 PDM_Mesh_adapt_tgt_block_ho_get
 (
  PDM_Mesh_adapt_t *ma,
+ const int         i_dom,
  const int         i_part,
  const int         i_block,
  int              *n_elts,
@@ -1518,6 +1645,7 @@ PDM_Mesh_adapt_tgt_block_ho_get
  * \brief Get a polygon block of the target mesh.
  *
  * \param [in]  ma             Mesh adaptation workflow
+ * \param [in]  i_dom          Domain identifier
  * \param [in]  i_part         Partition identifier
  * \param [in]  i_block        Block identifier
  * \param [out] n_elts         Number of elements
@@ -1534,6 +1662,7 @@ void
 PDM_Mesh_adapt_tgt_block_f_poly_get
 (
  PDM_Mesh_adapt_t *ma,
+ const int         i_dom,
  const int         i_part,
  const int         i_block,
  int              *n_elts,
@@ -1552,6 +1681,7 @@ PDM_Mesh_adapt_tgt_block_f_poly_get
  * PDM_cellface_orient
  *
  * \param [in]  ma                Mesh adaptation workflow
+ * \param [in]  i_dom             Domain identifier
  * \param [in]  i_part            Partition identifier
  * \param [in]  i_block           Block identifier
  * \param [out]  n_elts            Number of elements
@@ -1585,6 +1715,7 @@ void
 PDM_Mesh_adapt_tgt_block_c_poly_get
 (
  PDM_Mesh_adapt_t *ma,
+ const int         i_dom,
  const int         i_part,
  const int         i_block,
  int              *n_elts,
@@ -1605,6 +1736,7 @@ PDM_Mesh_adapt_tgt_block_c_poly_get
  * \brief Get the number of blocks in the target boundary mesh
  *
  * \param [in]  ma      Mesh adaptation workflow
+ * \param [in]  i_dom   Domain identifier
  *
  * \return      Number of boundary blocks
  */
@@ -1612,7 +1744,8 @@ PDM_Mesh_adapt_tgt_block_c_poly_get
 int
 PDM_Mesh_adapt_tgt_n_boundary_block_get
 (
- PDM_Mesh_adapt_t   *ma
+ PDM_Mesh_adapt_t   *ma,
+ const int         i_dom
 );
 
 
@@ -1620,6 +1753,7 @@ PDM_Mesh_adapt_tgt_n_boundary_block_get
  * \brief Get the type of a boundary block block
  *
  * \param [in]  ma            Mesh adaptation workflow
+ * \param [in]  i_dom         Domain identifier
  * \param [in]  i_block       Block identifier
  *
  * \return   Type of the current block
@@ -1629,6 +1763,7 @@ PDM_Mesh_nodal_elt_t
 PDM_Mesh_adapt_tgt_boundary_block_type_get
 (
  PDM_Mesh_adapt_t  *ma,
+ const int         i_dom,
  const int          i_block
 );
 
@@ -1637,6 +1772,7 @@ PDM_Mesh_adapt_tgt_boundary_block_type_get
  * \brief Get a standard block of the target boundary mesh.
  *
  * \param [in]  ma           Mesh adaptation workflow
+ * \param [in]  i_dom        Domain identifier
  * \param [in]  i_part       Partition identifier
  * \param [in]  i_block      Block identifier
  * \param [out] n_elts       Number of elements
@@ -1650,6 +1786,7 @@ void
 PDM_Mesh_adapt_tgt_boundary_block_std_get
 (
  PDM_Mesh_adapt_t *ma,
+ const int         i_dom,
  const int         i_part,
  const int         i_block,
  int              *n_elts,
@@ -1663,6 +1800,7 @@ PDM_Mesh_adapt_tgt_boundary_block_std_get
  * \brief Get a generic high order block of the target boundary mesh.
  *
  * \param [in]  ma           Mesh adaptation workflow
+ * \param [in]  i_dom        Domain identifier
  * \param [in]  i_part       Partition identifier
  * \param [in]  i_block      Block identifier
  * \param [out] n_elts       Number of elements
@@ -1676,6 +1814,7 @@ void
 PDM_Mesh_adapt_tgt_boundary_block_ho_get
 (
  PDM_Mesh_adapt_t *ma,
+ const int         i_dom,
  const int         i_part,
  const int         i_block,
  int              *n_elts,
@@ -1689,6 +1828,7 @@ PDM_Mesh_adapt_tgt_boundary_block_ho_get
  * \brief Get a polygon block of the target boundary mesh.
  *
  * \param [in]  ma             Mesh adaptation workflow
+ * \param [in]  i_dom          Domain identifier
  * \param [in]  i_part         Partition identifier
  * \param [in]  i_block        Block identifier
  * \param [out] n_elts         Number of elements
@@ -1705,6 +1845,7 @@ void
 PDM_Mesh_adapt_tgt_boundary_block_f_poly_get
 (
  PDM_Mesh_adapt_t *ma,
+ const int         i_dom,
  const int         i_part,
  const int         i_block,
  int              *n_elts,
@@ -1719,6 +1860,7 @@ PDM_Mesh_adapt_tgt_boundary_block_f_poly_get
  * \brief Get ancestor in the source mesh (only for \ref PDM_MESH_ADAPT_REFINMENT method)
  *
  * \param [in]  ma                           Mesh adaptation workflow
+ * \param [in]  i_dom                        Domain identifier
  * \param [in]  i_part                       Partition identifier
  * \param [out] g_num_vtx_ancestor           Ancestor global vertex number
  *                                           (size = \p n_elts)
@@ -1733,7 +1875,8 @@ void
 PDM_Mesh_adapt_tgt_ancestor_get
 (
  PDM_Mesh_adapt_t *ma,
- const int        i_part,
+ const int         i_dom,
+ const int         i_part,
  PDM_g_num_t      (*g_num_vtx_ancestor)[],
  PDM_g_num_t      (*g_num_elt_ancestor)[],
  PDM_g_num_t      (*g_num_boundary_elt_ancestor)[]
@@ -1744,6 +1887,7 @@ PDM_Mesh_adapt_tgt_ancestor_get
  * \brief Get MPI graph communication between partitions
  *
  * \param [in]  ma          Mesh adaptation workflow
+ * \param [in]  i_dom       Domain identifier
  * \param [in]  i_part      Partition identifier
  * \param [out] n_elt_graph Number of elements in the graph
  * \param [out] graph_idx   Element index in \p graph
@@ -1765,6 +1909,7 @@ void
 PDM_Mesh_adapt_tgt_graph_get
 (
  PDM_Mesh_adapt_t *ma,
+ const int         i_dom,
  const int         i_part,
  int              *n_elt_graph,
  int              *graph_idx[],
@@ -1783,6 +1928,7 @@ PDM_Mesh_adapt_tgt_graph_get
  * the source mesh
  *
  * \param [in]  ma              Mesh adaptation workflow
+ * \param [in]  i_dom           Domain identifier
  * \param [in]  user_struct     user_struct
  *
  */
@@ -1791,6 +1937,7 @@ void
 PDM_Mesh_adapt_callback_src_user_struct_set
 (
  PDM_Mesh_adapt_t   *ma,
+ const int         i_dom,
  void               *user_struct
 );
 
@@ -1800,6 +1947,7 @@ PDM_Mesh_adapt_callback_src_user_struct_set
  * the target mesh
  *
  * \param [in]  ma              Mesh adaptation workflow
+ * \param [in]  i_dom           Domain identifier
  * \param [in]  user_struct     user_struct
  *
  */
@@ -1808,6 +1956,7 @@ void
 PDM_Mesh_adapt_callback_tgt_user_struct_set
 (
  PDM_Mesh_adapt_t   *ma,
+ const int         i_dom,
  void               *user_struct
 );
 
@@ -1872,6 +2021,7 @@ PDM_Mesh_adapt_interp_from_closest_points_set
  * \brief Send a field to the target mesh (non-blocking communications)
  *
  * \param [in]  ma                  Mesh adaptation workflow
+ * \param [in]  i_dom               Domain identifier
  * \param [in]  i_field_family      Family of the field
  *                                  (from \ref PDM_Mesh_adapt_field_family_add)
  * \param [in]  stride              Stride of the field
@@ -1884,6 +2034,7 @@ void
 PDM_Mesh_adapt_src_field_issend
 (
  PDM_Mesh_adapt_t  *ma,
+ const int         i_dom,
  const int         i_field_family,
  const int         stride,
  double           *src_field[],
@@ -1895,6 +2046,7 @@ PDM_Mesh_adapt_src_field_issend
  * \brief Receive a field from the source mesh (non-blocking communications)
  *
  * \param [in]  ma                  Mesh adaptation workflow
+ * \param [in]  i_dom               Domain identifier
  * \param [in]  i_field_family      Family of the field
  *                                  (from \ref PDM_Mesh_adapt_field_family_add)
  * \param [in]  stride              Stride of the field
@@ -1907,6 +2059,7 @@ void
 PDM_Mesh_adapt_tgt_field_irecv
 (
  PDM_Mesh_adapt_t  *ma,
+ const int         i_dom,
  const int         i_field_family,
  const int         stride,
  double           *tgt_field[],
