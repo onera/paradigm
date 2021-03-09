@@ -10585,12 +10585,6 @@ PDM_para_octree_single_closest_point
   b_t_elapsed = e_t_elapsed;
   PDM_timer_resume (octree->timer);
 
-  //-->> stats
-  double avg_close_ranks = (double) (close_ranks_idx[n_pts1] - n_pts1);
-  if (n_pts1 > 0) avg_close_ranks /= (double) n_pts1;
-  printf("[%4d] avg nb of close ranks per pt = %.3f\n", i_rank, avg_close_ranks);
-  //<<--
-
   for (int i = 0; i < n_rank; i++) {
     send_count[i] = 0;
   }
@@ -11107,16 +11101,6 @@ PDM_para_octree_single_closest_point
   if (copied_ranks1 != NULL) {
     free (copied_ranks1);
   }
-
-if (0) {
-  double dist2_min =  HUGE_VAL;
-  double dist2_max = -HUGE_VAL;
-  for (int i = 0; i < n_pts; i++) {
-    dist2_min = PDM_MIN (dist2_min, closest_octree_pt_dist2[i]);
-    dist2_max = PDM_MAX (dist2_max, closest_octree_pt_dist2[i]);
-  }
-  printf("[%d] min/max dist2 = %f / %f\n", i_rank, dist2_min, dist2_max);
-}
 }
 
 
