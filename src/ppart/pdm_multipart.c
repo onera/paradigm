@@ -2095,12 +2095,13 @@ const int            i_part,
   _pdm_multipart_t *_multipart = _get_from_id (mpart_id);
 
   assert(i_zone < _multipart->n_zone && i_part < _multipart->n_part[i_zone]);
+  _part_mesh_t _pmeshes = _multipart->pmeshes[i_zone];
 
   PDM_printf("PDM_multipart_part_color_get: Not implemented\n");
-  *cell_color       = NULL;
-  *face_color       = NULL;
-  *thread_color     = NULL;
-  *hyperplane_color = NULL;
+  *cell_color       = _pmeshes.parts[i_part]->cell_color      ;
+  *face_color       = _pmeshes.parts[i_part]->face_color      ;
+  *thread_color     = _pmeshes.parts[i_part]->thread_color    ;
+  *hyperplane_color = _pmeshes.parts[i_part]->hyperplane_color;
 
 }
 

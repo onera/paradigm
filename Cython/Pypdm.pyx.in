@@ -252,4 +252,9 @@ include "pdm_poly_mesh_surf.pxi"
 # PDM_poly_mesh_surf :
 # --------------------
 include "pdm_partitioning_algorithm.pxi"
+
+# PDM_poly_mesh_surf :
+# --------------------
+include "pdm_part_extension.pxi"
+
 # TODO: PDM_writer, ...
