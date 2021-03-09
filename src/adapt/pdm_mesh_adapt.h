@@ -205,7 +205,7 @@ typedef enum {
                                                          nodes through nodes*/
   PDM_MESH_ADAPT_INTER_PART_GRAPH_N
 
-} PDM_Mesh_adapt_inter_part_graph_t;
+} PDM_Mesh_adapt_graph_t;
 
 
 /**
@@ -994,7 +994,7 @@ PDM_Mesh_adapt_src_intra_dom_graph_set
  const int         i_part,
  const int         n_elt_graph,
  int               graph_idx[],
- int               graph[],
+ int               graph[]
 );
 
 
