@@ -1088,6 +1088,13 @@ int main(int argc, char *argv[])
   }
 
 
+PDM_g_num_t n_vtx = _n_src;
+printf("[%d] n_vtx = "PDM_FMT_G_NUM"\n", i_rank, n_vtx);
+PDM_g_num_t ng_vtx;
+PDM_MPI_Allreduce (&n_vtx, &ng_vtx, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, PDM_MPI_COMM_WORLD);
+if (i_rank == 0) {
+  printf("ng_vtx = "PDM_FMT_G_NUM"\n", ng_vtx);
+}
 
   if (0) {//!repeat_last) {
     char filename[999];
