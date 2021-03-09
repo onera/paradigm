@@ -457,10 +457,6 @@ typedef struct _PDM_Mesh_adapt_t PDM_Mesh_adapt_t;
  *                       - PDM_MESH_ADAPT_GEOM_REPR_STL
  *                       - PDM_MESH_ADAPT_GEOM_REPR_IGES
  *                       - PDM_MESH_ADAPT_GEOM_REPR_STEP
- * \param [in] part_graph  MPI inter partition graph
- *                       - PDM_MESH_ADAPT_INTER_PART_GRAPH_NONE
- *                       - PDM_MESH_ADAPT_INTER_PART_GRAPH_FACE
- *                       - PDM_MESH_ADAPT_INTER_PART_GRAPH_NODE
  * \param [in] tgt_part  Target mesh partitionning
  *                       - PDM_MESH_ADAPT_PART_PTSCOTCH
  *                       - PDM_MESH_ADAPT_PART_PARMETIS
@@ -489,7 +485,6 @@ PDM_Mesh_adapt_create
  const PDM_Mesh_adapt_tool_t             tool,
  const PDM_Mesh_adapt_criterion_t        criterion,
  const PDM_Mesh_adapt_geom_repr_t        geom_repr,
- const PDM_Mesh_adapt_inter_part_graph_t part_graph,
  const PDM_Mesh_adapt_part_tool_t        part_tool,
  const int                               mesh_order,
  const int                               n_dom,
@@ -519,7 +514,7 @@ PDM_Mesh_adapt_free
  * Functions about source mesh definition
  *   - Volume mesh    : call PDM_Mesh_adapt_src_block* to define it
  *   - Boundary mesh  : call PDM_Mesh_adapt_boundary_src_block* to define it
- *   - Face group (To describe boundary conditions) : call PDM_Mesh_adapt_face_group*
+ *   - Entity groups (To describe boundary conditions) : call PDM_Mesh_adapt_entity_group*
  *                      to define them
  *
  *----------------------------------------------------------------------------*/
@@ -814,6 +809,7 @@ PDM_Mesh_adapt_src_block_c_poly_set
  PDM_g_num_t       cell_g_num[]
 );
 
+
 /**
  * \brief Add a connectivity block to the boundary source mesh.
  *
@@ -954,7 +950,24 @@ PDM_Mesh_adapt_boundary_src_block_f_poly_set
 
 
 /**
- * \brief Set MPI graph communication between partitions
+ * \brief Add an intra-domain graph communication between partitions
+ *
+ * \param [in]  ma          Mesh adaptation workflow
+ * \param [in]  t_graph     Graph type
+ *
+ * \return Graph identifier
+ */
+
+int
+PDM_Mesh_adapt_src_intra_dom_graph_add
+(
+ PDM_Mesh_adapt_t             *ma,
+ const PDM_Mesh_adapt_graph_t t_graph
+);
+
+
+/**
+ * \brief Set an intra-domain graph communication between partitions
  *
  * \param [in]  ma          Mesh adaptation workflow
  * \param [in]  i_dom       Domain identifier
@@ -963,10 +976,8 @@ PDM_Mesh_adapt_boundary_src_block_f_poly_set
  * \param [in]  graph_idx   Element index in \p graph
  *                          (size = \a n_elt_graph)
  * \param [in]  graph       For each element graph :
- *                             - Local element in the partition
- *                               element number or face number according to
- *                               the type graph selected in \ref PDM_Mesh_adapt_create
- *                             - List of triplets values :
+ *                             - Local entity number in the partition
+ *                             - Lists of 3 values :
  *                                  + Connected process
  *                                  + Local partition number in the
  *                                    connected process
@@ -975,17 +986,15 @@ PDM_Mesh_adapt_boundary_src_block_f_poly_set
  *
  */
 
-//TODO transformer en mettant une fonction add et en ajoutant le type de graph
-
 void
-PDM_Mesh_adapt_src_graph_set
+PDM_Mesh_adapt_src_intra_dom_graph_set
 (
  PDM_Mesh_adapt_t *ma,
- const int         i_dom,
+ const int         i_graph,
  const int         i_part,
  const int         n_elt_graph,
  int               graph_idx[],
- int               graph[]
+ int               graph[],
 );
 
 
@@ -995,7 +1004,7 @@ PDM_Mesh_adapt_src_graph_set
  * Face groups are used to define boundary conditions.
  *
  * \param [in]  ma        Mesh adaptation workflow
- * \param [in]  i_dom       Domain identifier
+ * \param [in]  i_dom     Domain identifier
  * \param [in]  n_group   Number of face groups
  *
  */
@@ -1016,18 +1025,19 @@ PDM_Mesh_adapt_entity_group_n_set
  * An entity can be contained in several groups, the notion of group  is more general than
  * the notion of boudary condition
  *
- * \param [in]  ma        Mesh adaptation workflow
+ * \param [in]  ma          Mesh adaptation workflow
+ * \param [in]  g_entity    Enity group
  * \param [in]  i_dom       Domain identifier
  * \param [in]  i_part      Partition identifier
- * \param [in]  i_group   Group identifier
- * \param [in]  n_face    Number of faces in the group
- * \param [in]  faces     List of faces
- * \param [in]  g_num     Global element number in the group (or NULL)
+ * \param [in]  i_group     Group identifier
+ * \param [in]  n_entities  Number of entities in the group
+ * \param [in]  entities    List of entities
+ * \param [in]  g_num       Global element number in the group (or NULL)
  *
  */
 
 void
-PDM_Mesh_adapt_entity_group_set
+PDM_Mesh_adapt_src_entity_group_set
 (
  PDM_Mesh_adapt_t              *ma,
  PDM_Mesh_adapt_group_entity_t g_entity,
@@ -1039,23 +1049,151 @@ PDM_Mesh_adapt_entity_group_set
  PDM_g_num_t                   g_num[]
 );
 
-/* /\** */
-/*  * \brief Finalize the source mesh definition. */
-/*  * */
-/*  * This function computes the global numbers of mesh entities if they are */
-/*  * not provided (MPI collective communications) */
-/*  * */
-/*  * \param [in]  ma                Mesh adaptation workflow */
-/*  * */
-/*  *\/ */
-//TODO transformer en mettant une fonction add et en ajoutant le type de graph
 
-/* void */
-/* PDM_Mesh_adapt_src_inter_dom */
-/* ( */
-/*  PDM_Mesh_adapt_t *ma */
-/* ); */
+/**
+ * \brief Add an inter-domain graph communication between partitions
+ *
+ * \param [in]  ma          Mesh adaptation workflow
+ * \param [in]  t_graph     Graph type
+ *
+ * \return Graph identifier
+ */
 
+int
+PDM_Mesh_adapt_src_inter_dom_graph_add
+(
+ PDM_Mesh_adapt_t             *ma,
+ const PDM_Mesh_adapt_graph_t t_graph
+);
+
+
+/**
+ * \brief Set an inter-domain graph communication between partitions
+ *
+ * \param [in]  ma          Mesh adaptation workflow
+ * \param [in]  i_graph     Graph identifier
+ * \param [in]  i_dom       Domain identifier
+ * \param [in]  i_part      Partition identifier
+ * \param [in]  n_elt_graph Number of elements in the
+ * \param [in]  graph_idx   Element index in \p graph
+ *                          (size = \a n_elt_graph)
+ * \param [in]  graph       For each element graph :
+ *                             - Local entity number in the partition
+ *                             - Lists of 4 values :
+ *                                  + Connected process
+ *                                  + Connected domain
+ *                                  + Local partition number in the
+ *                                    connected process
+ *                                  + Local element number in the local
+ *                                    partition number
+ *
+ */
+
+void
+PDM_Mesh_adapt_src_inter_dom_graph_set
+(
+ PDM_Mesh_adapt_t *ma,
+ const int         i_graph,
+ const int         i_dom,
+ const int         i_part,
+ const int         n_elt_graph,
+ int               graph_idx[],
+ int               graph[]
+);
+
+
+/**
+ * \brief Add a periodicity relation
+ *
+ * \param [in]  ma          Mesh adaptation workflow
+ * \param [in]  t_perio     Periodicity type
+ *
+ * \return Periodicity identifier
+ */
+
+int
+PDM_Mesh_adapt_src_perio_add
+(
+ PDM_Mesh_adapt_t             *ma,
+ const PDM_Mesh_adapt_perio_t t_perio
+);
+
+
+/**
+ * \brief Set properties of a translation periodicity
+ *
+ * \param [in]  ma          Mesh adaptation workflow
+ * \param [in]  i_perio     Periodicity identifier
+ * \param [in]  vect        Translation vector
+ *
+ * \return Periodicity identifier
+ */
+
+int
+PDM_Mesh_adapt_src_perio_translation_set
+(
+ PDM_Mesh_adapt_t  *ma,
+ const int          i_perio,
+ double             vect[]
+);
+
+
+/**
+ * \brief Set properties of a rotation periodicity
+ *
+ * \param [in]  ma          Mesh adaptation workflow
+ * \param [in]  i_perio     Periodicity identifier
+ * \param [in]  axis        Axis
+ * \param [in]  center      Center
+ * \param [in]  angle       Angle
+ *
+ * \return Periodicity identifier
+ */
+
+int
+PDM_Mesh_adapt_src_perio_rotation_set
+(
+ PDM_Mesh_adapt_t  *ma,
+ const int          i_perio,
+ double             axis[],
+ double             center[],
+ double             angle
+);
+
+
+/**
+ * \brief Set a graph communication between 2 periodicity surfaces
+ *
+ * \param [in]  ma          Mesh adaptation workflow
+ * \param [in]  i_perio     Periodicity identifier
+ * \param [in]  i_dom       Domain identifier
+ * \param [in]  i_part      Partition identifier
+ * \param [in]  n_elt_graph Number of elements in the
+ * \param [in]  graph_idx   Element index in \p graph
+ *                          (size = \a n_elt_graph)
+ * \param [in]  graph       For each element graph :
+ *                             - Local entity number in the partition
+ *                             - List of 4 values :
+ *                                  + Connected process
+ *                                  + Connected domain
+ *                                  + Local partition number in the
+ *                                    connected process
+ *                                  + Local element number in the local
+ *                                    partition number
+ *
+ */
+
+void
+PDM_Mesh_adapt_src_perio_graph_set
+(
+ PDM_Mesh_adapt_t *ma,
+ const int         i_perio,
+ const int         i_dom,
+ const int         i_part,
+ const int         n_elt_graph,
+ int               graph_idx[],
+ int               graph[]
+);
 
 
 /**
@@ -1429,9 +1567,9 @@ PDM_Mesh_adapt_tool_param_set
 /**
  * \brief Set
  *
- * \param [in]  ma              Mesh adaptation workflow
- * \param [in]  dof_location  Location of the Degrees of freedom
- * \param [in]  field_interp    Intepolation method
+ * \param [in]  ma             Mesh adaptation workflow
+ * \param [in]  dof_location   Location of the Degrees of freedom
+ * \param [in]  field_interp   Intepolation method
  *
  * \return  i_field_family  field family identifier (used by transfer
  *                                                   field functions)
@@ -1581,7 +1719,7 @@ PDM_Mesh_adapt_tgt_block_type_get
 (
  PDM_Mesh_adapt_t  *ma,
  const int         i_dom,
- const int          i_block
+ const int         i_block
 );
 
 
@@ -1764,7 +1902,7 @@ PDM_Mesh_adapt_tgt_boundary_block_type_get
 (
  PDM_Mesh_adapt_t  *ma,
  const int         i_dom,
- const int          i_block
+ const int         i_block
 );
 
 
@@ -1882,21 +2020,49 @@ PDM_Mesh_adapt_tgt_ancestor_get
  PDM_g_num_t      (*g_num_boundary_elt_ancestor)[]
 );
 
+/**
+ * \brief Get a entity group
+ *
+ * An entity can be contained in several groups, the notion of group  is more general than
+ * the notion of boudary condition
+ *
+ * \param [in]  ma          Mesh adaptation workflow
+ * \param [in]  g_entity    Entity group
+ * \param [in]  i_dom       Domain identifier
+ * \param [in]  i_part      Partition identifier
+ * \param [in]  i_group     Group identifier
+ * \param [out]  n_entities Number of entities in the group
+ * \param [out]  entities   List of entities
+ * \param [out]  g_num      Global element number in the group (or NULL)
+ *
+ */
+
+void
+PDM_Mesh_adapt_tgt_entity_group_get
+(
+ PDM_Mesh_adapt_t              *ma,
+ PDM_Mesh_adapt_group_entity_t g_entity,
+ const int                     i_dom,
+ const int                     i_part,
+ const int                     i_group,
+ const int                    *n_entities,
+ int                         (*entities)[],
+ PDM_g_num_t                 (*g_num)[]
+);
+
 
 /**
- * \brief Get MPI graph communication between partitions
+ * \brief Get an intra-domain graph communication between partitions
  *
  * \param [in]  ma          Mesh adaptation workflow
  * \param [in]  i_dom       Domain identifier
  * \param [in]  i_part      Partition identifier
- * \param [out] n_elt_graph Number of elements in the graph
- * \param [out] graph_idx   Element index in \p graph
+ * \param [out]  n_elt_graph Number of elements in the
+ * \param [out]  graph_idx   Element index in \p graph
  *                          (size = \a n_elt_graph)
- * \param [out] graph       For each element graph :
- *                             - Local element in the partition
- *                               it is an element number or face number according to
- *                               the type graph selected in \ref PDM_Mesh_adapt_create
- *                             - List of triplets values :
+ * \param [out]  graph       For each element graph :
+ *                             - Local entity number in the partition
+ *                             - Lists of 3 values :
  *                                  + Connected process
  *                                  + Local partition number in the
  *                                    connected process
@@ -1906,16 +2072,85 @@ PDM_Mesh_adapt_tgt_ancestor_get
  */
 
 void
-PDM_Mesh_adapt_tgt_graph_get
+PDM_Mesh_adapt_tgt_intra_dom_graph_get
 (
  PDM_Mesh_adapt_t *ma,
+ const int         i_graph,
+ const int         i_part,
+ int              *n_elt_graph,
+ int              (*graph_idx)[],
+ int              (*graph)[]
+);
+
+
+/**
+ * \brief Get an inter-domain graph communication between partitions
+ *
+ * \param [in]  ma          Mesh adaptation workflow
+ * \param [in]  i_graph     Graph identifier
+ * \param [in]  i_dom       Domain identifier
+ * \param [in]  i_part      Partition identifier
+ * \param [out]  n_elt_graph Number of elements in the
+ * \param [out]  graph_idx   Element index in \p graph
+ *                          (size = \a n_elt_graph)
+ * \param [out]  graph       For each element graph :
+ *                             - Local entity number in the partition
+ *                             - Lists of 4 values :
+ *                                  + Connected process
+ *                                  + Connected domain
+ *                                  + Local partition number in the
+ *                                    connected process
+ *                                  + Local element number in the local
+ *                                    partition number
+ *
+ */
+
+void
+PDM_Mesh_adapt_tgt_inter_dom_graph_get
+(
+ PDM_Mesh_adapt_t  *ma,
+ const int          i_graph,
+ const int          i_dom,
+ const int          i_part,
+ int               *n_elt_graph,
+ int              (*graph_idx)[],
+ int              (*graph)[]
+);
+
+
+/**
+ * \brief Set an intra-domain graph communication between partitions
+ *
+ * \param [in]  ma          Mesh adaptation workflow
+ * \param [in]  i_perio     Periodicity identifier
+ * \param [in]  i_dom       Domain identifier
+ * \param [in]  i_part      Partition identifier
+ * \param [in]  n_elt_graph Number of elements in the
+ * \param [in]  graph_idx   Element index in \p graph
+ *                          (size = \a n_elt_graph)
+ * \param [in]  graph       For each element graph :
+ *                             - Local entity number in the partition
+ *                             - List of 4 values :
+ *                                  + Connected process
+ *                                  + Connected domain
+ *                                  + Local partition number in the
+ *                                    connected process
+ *                                  + Local element number in the local
+ *                                    partition number
+ *
+ */
+
+void
+PDM_Mesh_adapt_tgt_perio_graph_get
+(
+ PDM_Mesh_adapt_t *ma,
+ const int         i_perio,
  const int         i_dom,
  const int         i_part,
  int              *n_elt_graph,
- int              *graph_idx[],
- int              *graph[]
+ int             (*graph_idx)[],
+ int             (*graph)[]
 );
-
 
 /*----------------------------------------------------------------------------*
  *
@@ -2083,7 +2318,7 @@ PDM_Mesh_adapt_wait
  int              request
 );
 
-#ifdef	__cplusplus
+#ifdef __cplusplus
 }
 #endif
 
