@@ -215,7 +215,11 @@ if (NOT (PDM_IN_PDMA OR PDM_IN_CWP))
   # Check MPI (TODO : check MPI wrapper function check )
   # -------------
 
-  find_package(MPI REQUIRED COMPONENTS C)
+  if (PDM_ENABLE_Fortran)
+    find_package(MPI REQUIRED COMPONENTS C Fortran)
+  else()
+    find_package(MPI REQUIRED COMPONENTS C)
+  endif()
 
   mark_as_advanced (MPI_EXTRA_LIBRARY MPI_LIBRARY)
 
