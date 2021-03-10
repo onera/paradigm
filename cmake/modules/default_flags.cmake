@@ -149,7 +149,7 @@ if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
 
   link_libraries ("m")
 
-  set (CMAKE_C_FLAGS "-std=gnu99 -fPIC -funsigned-char -pedantic -W -Wall -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wnested-externs -Wunused -Wfloat-equal ")
+  set (CMAKE_C_FLAGS "-std=gnu99 -fPIC -funsigned-char -pedantic -W -Wall -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wnested-externs -Wunused -Wfloat-equal -Wno-unknown-pragmas")
 
   set (CMAKE_C_FLAGS_RELEASE         "-O3")
   set (CMAKE_C_FLAGS_DEBUG           "-O0 -g")
@@ -266,8 +266,8 @@ mark_as_advanced (CMAKE_C_FLAGS_PROFILING CMAKE_C_FLAGS_SANITIZE)
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 
-  # set (CMAKE_CXX_FLAGS "-std=c++11 -fPIC -funsigned-char -W -Wall -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -Wunused -Wno-long-long -Wfloat-equal ")
-  set (CMAKE_CXX_FLAGS "-std=c++11 -fPIC -funsigned-char -W -Wall -Wshadow -Wpointer-arith -Wwrite-strings -Wunused -Wno-long-long -Wfloat-equal ")
+  # set (CMAKE_CXX_FLAGS "-std=c++11 -fPIC -funsigned-char -W -Wall -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -Wunused -Wno-long-long -Wfloat-equal  -Wno-unknown-pragmas")
+  set (CMAKE_CXX_FLAGS "-std=c++11 -fPIC -funsigned-char -W -Wall -Wshadow -Wpointer-arith -Wwrite-strings -Wunused -Wno-long-long -Wfloat-equal  -Wno-unknown-pragmas")
 
   set (CMAKE_CXX_FLAGS_RELEASE         "-O3")
   set (CMAKE_CXX_FLAGS_DEBUG           "-O0 -g")
