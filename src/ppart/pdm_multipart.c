@@ -923,6 +923,7 @@ PDM_MPI_Comm      comm
 
   // This will store all the partitions created by this proc on this zone
   // Copy number of bounds and joins (global data) in the part structure
+  printf("pmeshes->n_bounds :: %i \n", n_bnd);
   pmeshes->n_bounds  = n_bnd;
   pmeshes->n_joins   = n_join;
   pmeshes->joins_ids = (int *) malloc(n_join * sizeof(int));

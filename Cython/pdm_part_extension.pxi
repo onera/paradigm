@@ -126,79 +126,80 @@ cdef class PartExtension:
     if (cell_face_idx is None):
       cell_face_idx_data = NULL
     else:
-      cell_face_idx_data_data = <int *> cell_face_idx.data
+      cell_face_idx_data = <int *> cell_face_idx.data
 
     cdef int * cell_face_data
     if (cell_face is None):
       cell_face_data = NULL
     else:
-      cell_face_data_data = <int *> cell_face.data
+      cell_face_data = <int *> cell_face.data
 
     cdef int * face_cell_data
     if (face_cell is None):
       face_cell_data = NULL
     else:
-      face_cell_data_data = <int *> face_cell.data
+      face_cell_data = <int *> face_cell.data
+    print("face_cell::", face_cell)
 
     cdef int * face_edge_idx_data
     if (face_edge_idx is None):
       face_edge_idx_data = NULL
     else:
-      face_edge_idx_data_data = <int *> face_edge_idx.data
+      face_edge_idx_data = <int *> face_edge_idx.data
 
     cdef int * face_edge_data
     if (face_edge is None):
       face_edge_data = NULL
     else:
-      face_edge_data_data = <int *> face_edge.data
+      face_edge_data = <int *> face_edge.data
 
     cdef int * face_vtx_idx_data
     if (face_vtx_idx is None):
       face_vtx_idx_data = NULL
     else:
-      face_vtx_idx_data_data = <int *> face_vtx_idx.data
+      face_vtx_idx_data = <int *> face_vtx_idx.data
 
     cdef int * face_vtx_data
     if (face_vtx is None):
       face_vtx_data = NULL
     else:
-      face_vtx_data_data = <int *> face_vtx.data
+      face_vtx_data = <int *> face_vtx.data
 
     cdef int * edge_vtx_data
     if (edge_vtx is None):
       edge_vtx_data = NULL
     else:
-      edge_vtx_data_data = <int *> edge_vtx.data
+      edge_vtx_data = <int *> edge_vtx.data
 
     cdef int * face_bound_data
     if (face_bound is None):
       face_bound_data = NULL
     else:
-      face_bound_data_data = <int *> face_bound.data
+      face_bound_data = <int *> face_bound.data
 
     cdef int * face_bound_idx_data
     if (face_bound_idx is None):
       face_bound_idx_data = NULL
     else:
-      face_bound_idx_data_data = <int *> face_bound_idx.data
+      face_bound_idx_data = <int *> face_bound_idx.data
 
     cdef int * face_join_idx_data
     if (face_join_idx is None):
       face_join_idx_data = NULL
     else:
-      face_join_idx_data_data = <int *> face_join_idx.data
+      face_join_idx_data = <int *> face_join_idx.data
 
     cdef int * face_join_data
     if (face_join is None):
       face_join_data = NULL
     else:
-      face_join_data_data = <int *> face_join.data
+      face_join_data = <int *> face_join.data
 
     cdef int * face_part_bound_proc_idx_data
     if (face_part_bound_proc_idx is None):
-      face_part_bound_proc_idx_data_data = NULL
+      face_part_bound_proc_idx_data = NULL
     else:
-      face_part_bound_proc_idx_data_data = <int *> face_part_bound_proc_idx.data
+      face_part_bound_proc_idx_data = <int *> face_part_bound_proc_idx.data
 
     cdef int * face_part_bound_part_idx_data
     if (face_part_bound_part_idx is None):
@@ -271,6 +272,10 @@ cdef class PartExtension:
                                 vtx_ln_to_gn_data,
                                 face_group_ln_to_gn_data,
                      <double*>  vtx_coord.data)
+
+  # ------------------------------------------------------------------
+  def compute(self):
+    PDM_part_extension_compute(self._part_ext)
 
   # ------------------------------------------------------------------
   def get_connectivity(self,
