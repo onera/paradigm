@@ -52,7 +52,7 @@ target_include_directories(pdm
 if (PDM_IN_PDMA)
   target_include_directories(pdm
                              PUBLIC $<BUILD_INTERFACE:${PDMA_SOURCE_DIR}/src/plugins/renum>
-                             PUBLIC $<BUILD_INTERFACE:${PDMA_SOURCE_DIR}/src/overlay>)
+                             )
 endif()
 
 if (PDM_ENABLE_STATIC_Fortran_INTERFACE OR PDM_ENABLE_SHARED_Fortran_INTERFACE)
@@ -77,7 +77,7 @@ if (PDM_ENABLE_STATIC_Fortran_INTERFACE OR PDM_ENABLE_SHARED_Fortran_INTERFACE)
     if (PDM_IN_PDMA)
       target_include_directories(pdmf
                                  PUBLIC $<BUILD_INTERFACE:${PDMA_SOURCE_DIR}/src/plugins/renum>
-                                 PUBLIC $<BUILD_INTERFACE:${PDMA_SOURCE_DIR}/src/overlay>)
+                                 )
     endif()
 endif()
 
