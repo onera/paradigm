@@ -181,7 +181,6 @@ typedef struct  _part_t {
   int         *vtx_color;           /*!< For cache blocking (size = n_face)   */
   int         *thread_color;         /*!< For cache blocking (size = nThread)  */
   int         *hyperplane_color;     /*!< For cache blocking (size = nThread)  */
-  int         *hplane_id_dbg;
 
   int         *new_to_old_order_cell;    /*!< Cell reordering (size = n_cell)  */
   int         *new_to_old_order_face;    /*!< Face reordering (size = n_face)  */
@@ -416,7 +415,6 @@ void
   part->vtx_color                = NULL;
   part->thread_color             = NULL;
   part->hyperplane_color         = NULL;
-  part->hplane_id_dbg            = NULL;
   part->vtx_ghost_information    = NULL;
   part->new_to_old_order_cell    = NULL;
   part->new_to_old_order_face    = NULL;

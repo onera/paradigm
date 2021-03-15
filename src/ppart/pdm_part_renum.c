@@ -1700,13 +1700,6 @@ PDM_part_reorder_cell
                      part->thread_color);
   }
 
-  if (part->hplane_id_dbg != NULL) {
-    PDM_order_array (part->n_cell,
-                     sizeof(int),
-                     new_to_old_order,
-                     part->hplane_id_dbg);
-  }
-
   if (part->hyperplane_color != NULL) {
     PDM_order_array (part->n_cell,
                      sizeof(int),
