@@ -211,31 +211,6 @@ PDM_para_octree_dump
  */
 
 void
-PDM_para_octree_closest_point
-(
-const int    id,
-const int    n_closest_points,
-const int    n_pts,
-double      *pts,
-PDM_g_num_t *pts_g_num,
-PDM_g_num_t *closest_octree_pt_g_num,
-double      *closest_octree_pt_dist2
-);
-
-
-void
-PDM_para_octree_closest_point2
-(
-const int    id,
-const int    n_closest_points,
-const int    n_pts,
-double      *pts,
-PDM_g_num_t *pts_g_num,
-PDM_g_num_t *closest_octree_pt_g_num,
-double      *closest_octree_pt_dist2
-);
-
-void
 PDM_para_octree_closest_points
 (
 const int    id,
@@ -335,6 +310,8 @@ PDM_g_num_t *pts_g_num,
 PDM_g_num_t *closest_octree_pt_g_num,
 double      *closest_octree_pt_dist2
 );
+
+
 
 
 #ifdef	__cplusplus

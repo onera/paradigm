@@ -809,63 +809,6 @@ _closest_point_seq
 }
 
 
-static void
-_closest_point_par2
-(
- PDM_MPI_Comm         comm,
- const int            n_part_src,
- const int           *n_src,
- const double       **src_coord,
- const PDM_g_num_t  **src_g_num,
- const int            n_part_tgt,
- const int           *n_tgt,
- const double       **tgt_coord,
- const PDM_g_num_t  **tgt_g_num,
- PDM_g_num_t       ***closest_point_g_num,
- double            ***closest_point_dist2
- )
-{
-  /* Init closest points structure */
-  int id = PDM_closest_points_create (comm,
-                                      1,//n_closest_points
-                                      PDM_OWNERSHIP_KEEP);
-
-  /* Set point clouds */
-  PDM_closest_points_n_part_cloud_set (id,
-                                       n_part_src,
-                                       n_part_tgt);
-
-  for (int ipart = 0; ipart < n_part_tgt; ipart++) {
-    PDM_closest_points_tgt_cloud_set (id,
-                                      ipart,
-                                      n_tgt[ipart],
-                                      tgt_coord[ipart],
-                                      tgt_g_num[ipart]);
-  }
-
-  for (int ipart = 0; ipart < n_part_src; ipart++) {
-    PDM_closest_points_src_cloud_set (id,
-                                      ipart,
-                                      n_src[ipart],
-                                      src_coord[ipart],
-                                      src_g_num[ipart]);
-  }
-
-  /* Compute closest point */
-  PDM_closest_points_compute (id);
-
-  PDM_closest_points_dump_times (id);
-
-  *closest_point_g_num = (PDM_g_num_t **) malloc (sizeof(PDM_g_num_t *) * n_part_tgt);
-  *closest_point_dist2 = (double **) malloc (sizeof(double *) * n_part_tgt);
-  for (int ipart = 0; ipart < n_part_tgt; ipart++) {
-    PDM_closest_points_get (id,
-                            ipart,
-                            *closest_point_g_num + ipart,
-                            *closest_point_dist2 + ipart);
-  }
-}
-
 
 static void
 _write_point_cloud
@@ -1123,7 +1066,7 @@ int main(int argc, char *argv[])
   else {
 
     if (surf_source) {
-      _gen_cube_surf (PDM_MPI_COMM_WORLD,
+      _gen_cube_surf2 (PDM_MPI_COMM_WORLD,
                       n_face_seg,
                       origin,
                       length,
@@ -1205,7 +1148,7 @@ int main(int argc, char *argv[])
                         &closest_point_dist2);
   }
 
-  else if (method > 0) {
+  else {
     _closest_point_par (PDM_MPI_COMM_WORLD,
                         use_neighbours,
                         n_max_per_leaf,
@@ -1219,20 +1162,6 @@ int main(int argc, char *argv[])
                         (const PDM_g_num_t **) &tgt_g_num,
                         &closest_point_g_num,
                         &closest_point_dist2);
-  }
-
-  else {
-    _closest_point_par2 (PDM_MPI_COMM_WORLD,
-                         n_part_src,
-                         (const int *) &_n_src,
-                         (const double **) &src_coord,
-                         (const PDM_g_num_t **) &src_g_num,
-                         n_part_tgt,
-                         (const int *) &_n_tgt,
-                         (const double **) &tgt_coord,
-                         (const PDM_g_num_t **) &tgt_g_num,
-                         &closest_point_g_num,
-                         &closest_point_dist2);
   }
 
 
