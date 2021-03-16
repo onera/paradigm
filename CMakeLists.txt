@@ -17,7 +17,7 @@ if (NOT (PDM_IN_PDMA OR PDM_IN_CWP))
 endif()
 
 include(${CMAKE_MODULE_PATH}/version.cmake)
-project(PDM VERSION ${PDM_DEF_VERSION_MAJOR} LANGUAGES C CXX Fortran)
+project(PDM VERSION ${PDM_DEF_VERSION_MAJOR} LANGUAGES C CXX)
 
 if (NOT (PDM_IN_PDMA))
    set(PDM_VERSION "${PDM_VERSION_MAJOR}.${PDM_VERSION_MINOR}.${PDM_VERSION_PATCH}")
@@ -82,6 +82,10 @@ if (NOT (PDM_IN_PDMA OR PDM_IN_CWP))
    # -----------------
 
    option(PDM_ENABLE_Fortran "Build Fortran Interface" ON)
+
+   if (PDM_ENABLE_Fortran)
+     enable_language(Fortran)
+   endif()
 
    if (PDM_ENABLE_STATIC AND PDM_ENABLE_Fortran)
       set(PDM_ENABLE_STATIC_Fortran_INTERFACE ON)
@@ -211,7 +215,11 @@ if (NOT (PDM_IN_PDMA OR PDM_IN_CWP))
   # Check MPI (TODO : check MPI wrapper function check )
   # -------------
 
-  find_package(MPI REQUIRED)
+  if (PDM_ENABLE_Fortran)
+    find_package(MPI REQUIRED COMPONENTS C Fortran)
+  else()
+    find_package(MPI REQUIRED COMPONENTS C)
+  endif()
 
   mark_as_advanced (MPI_EXTRA_LIBRARY MPI_LIBRARY)
 
