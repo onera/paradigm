@@ -374,8 +374,8 @@ PDM_closest_points_compute
   int i_rank;
   PDM_MPI_Comm_rank (cls->comm, &i_rank);
 
-  const int depth_max = 31;//?
-  const int points_in_leaf_max = 1;//2*cls->n_closest;//?
+  const int depth_max = 31;
+  const int points_in_leaf_max = 1;
   const int build_leaf_neighbours = 1;
 
 
@@ -488,13 +488,22 @@ PDM_closest_points_compute
                                    closest_src_gnum,
                                    closest_src_dist);
   } else {
-    PDM_para_octree_closest_points (octree_id,
-                                    cls->n_closest,
-                                    n_tgt,
-                                    tgt_coord,
-                                    tgt_g_num,
-                                    closest_src_gnum,
-                                    closest_src_dist);
+    if (cls->n_closest == 1) {
+      PDM_para_octree_single_closest_point (octree_id,
+                                            n_tgt,
+                                            tgt_coord,
+                                            tgt_g_num,
+                                            closest_src_gnum,
+                                            closest_src_dist);
+    } else {
+      PDM_para_octree_closest_points (octree_id,
+                                      cls->n_closest,
+                                      n_tgt,
+                                      tgt_coord,
+                                      tgt_g_num,
+                                      closest_src_gnum,
+                                      closest_src_dist);
+    }
   }
 
 

@@ -543,7 +543,6 @@ _closest_point_par
  PDM_MPI_Comm         comm,
  const int            use_neighbours,
  const int            n_max_per_leaf,
- const int            local_search_fun,
  const int            n_part_src,
  const int           *n_src,
  const double       **src_coord,
@@ -653,7 +652,6 @@ _closest_point_par
 
   /* Search closest source points */
   PDM_para_octree_single_closest_point (octree_id,
-                                        (const _local_search_fun_t) local_search_fun,
                                         _n_tgt,
                                         _tgt_coord,
                                         _tgt_g_num,
@@ -1211,7 +1209,6 @@ int main(int argc, char *argv[])
     _closest_point_par (PDM_MPI_COMM_WORLD,
                         use_neighbours,
                         n_max_per_leaf,
-                        method - 1,
                         n_part_src,
                         (const int *) &_n_src,
                         (const double **) &src_coord,

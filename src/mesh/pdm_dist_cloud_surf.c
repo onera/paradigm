@@ -481,16 +481,6 @@ PDM_dist_cloud_surf_compute
     }
   }
   if (rank == 0) printf("octree_type = %d\n", octree_type);
-
-  _local_search_fun_t search_method = LOCAL_SEARCH_RECURSIVE;
-  if (octree_type == PDM_OCTREE_PARALLEL) {
-    char *env_method = getenv ("LOCAL_SEARCH_METHOD");
-    if (env_method != NULL) {
-      search_method = (_local_search_fun_t) atoi (env_method);
-    }
-    if (rank == 0) printf("search_method = %d\n", search_method);
-  }
-
   //<<<---
 
   double b_t_elapsed;
@@ -728,7 +718,6 @@ printf("[%d] n_pts = "PDM_FMT_G_NUM" (%.3f times avg)\n", rank, _n_pts_rank, (fl
                                 closest_vertices_dist2);
     } else {
       PDM_para_octree_single_closest_point (octree_id,
-                                            search_method,//LOCAL_SEARCH_RECURSIVE,
                                             n_pts_rank,
                                             pts_rank,
                                             pts_g_num_rank,

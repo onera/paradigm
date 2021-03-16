@@ -280,6 +280,23 @@ PDM_para_octree_points_inside_boxes
  double            **pts_in_box_coord
  );
 
+/**
+ *
+ * \brief Copy octree data of some ranks into all ranks
+ *
+ * \param [in]   id                 Identifier
+ * \param [in]   n_copied_ranks     Number of ranks to copy
+ * \param [in]   copied_ranks       Array of ranks to copy
+ *
+ */
+
+void
+PDM_para_octree_copy_ranks
+(
+ const int  id,
+ const int  n_copied_ranks,
+ const int *copied_ranks
+ );
 
 /**
  *
@@ -308,18 +325,10 @@ PDM_para_octree_free_copies
  *
  */
 
-typedef enum {
-  LOCAL_SEARCH_RECURSIVE,
-  LOCAL_SEARCH_RECURSIVE_SORTED,
-  LOCAL_SEARCH_HEAP,
-  LOCAL_SEARCH_HEAP_BINARY
-} _local_search_fun_t;
-
 void
 PDM_para_octree_single_closest_point
 (
 const int    id,
-const _local_search_fun_t local_search_fun,
 const int    n_pts,
 double      *pts,
 PDM_g_num_t *pts_g_num,
@@ -327,20 +336,6 @@ PDM_g_num_t *closest_octree_pt_g_num,
 double      *closest_octree_pt_dist2
 );
 
-
-void
-PDM_para_octree_points_within_radius
-(
- const int     id,
- const int     sort_close_points,
- const int     n_pts,
- double       *pts_coord,
- PDM_g_num_t  *pts_g_num,
- double       *pts_radius2,
- int         **close_pts_idx,
- PDM_g_num_t **close_pts_g_num,
- double      **close_pts_dist2
- );
 
 #ifdef	__cplusplus
 }

@@ -8714,290 +8714,8 @@ _pt_to_pt_dist2
 }
 
 
-
-static void
-_single_closest_point_local
-(
- const _octree_t   *octree,
- const int          n_tgt,
- double            *tgt_coord,
- PDM_morton_code_t *tgt_mcode,
- PDM_g_num_t       *closest_point_g_num,
- double            *closest_point_dist2
- )
-{
-  const _l_octant_t *octants = octree->octants;
-  const int dim = octree->dim;
-  const PDM_para_octree_direction_t n_dir = (PDM_para_octree_direction_t) 2*dim;
-
-  int i_rank, n_rank;
-  PDM_MPI_Comm_rank (octree->comm, &i_rank);
-  PDM_MPI_Comm_size (octree->comm, &n_rank);
-
-  int is_base_rank = (tgt_mcode != NULL);
-
-
-  int *is_visited     = malloc (sizeof(int) * octants->n_nodes);
-  int *visited_leaves = malloc (sizeof(int) * octants->n_nodes);// could be smaller...
-  int n_visited = 0;
-  for (int i = 0; i < octants->n_nodes; i++) {
-    is_visited[i] = 0;
-  }
-
-
-
-  /* Min heap used to visit leaves from neighbour to neighbour */
-  _min_heap_t *leaf_heap = _min_heap_create (octants->n_nodes);
-  PDM_g_num_t unused;
-
-
-  double ptn[3];
-  /* Loop over target points */
-  for (int i_tgt = 0; i_tgt < n_tgt; i_tgt++) {
-    // Reset priority queue
-    _min_heap_reset (leaf_heap);
-
-    // Init
-    for (int i = 0; i < n_visited; i++) {
-      is_visited[visited_leaves[i]] = 0;
-    }
-    n_visited = 0;
-
-    // Normalize coordinates
-    for (int i_dim = 0; i_dim < dim; i_dim++) {
-      ptn[i_dim] = (tgt_coord[dim*i_tgt + i_dim] - octree->s[i_dim]) / octree->d[i_dim];
-    }
-
-    // Get start leaves
-    int base_part = -1;
-    if (is_base_rank) {
-      int base_leaf = PDM_morton_binary_search (octants->n_nodes,
-                                                tgt_mcode[i_tgt],
-                                                octants->codes);
-      _min_heap_push (leaf_heap,
-                      base_leaf,
-                      0,
-                      0.);
-      is_visited[base_leaf] = 1;
-      visited_leaves[n_visited++] = base_leaf;
-
-      base_part = _get_octant_part_id (octree, base_leaf);
-    }
-
-    // Find closest leaf in each connected part and push them into the priority queue
-    for (int i_part = 0; i_part < octree->n_connected; i_part++) {
-      if (i_part == base_part) continue;
-
-      // Deepest common ancestor of all octants in current part
-      PDM_morton_code_t part_root;
-      PDM_morton_nearest_common_ancestor (octants->codes[octree->connected_idx[i_part]],
-                                          octants->codes[octree->connected_idx[i_part+1]-1],
-                                          &part_root);
-
-      int start_i;
-      double start_dist2 = HUGE_VAL;
-      PDM_morton_closest_node (dim,
-                               part_root,
-                               octants->codes,
-                               ptn,
-                               octree->d,
-                               octree->connected_idx[i_part],
-                               octree->connected_idx[i_part+1],
-                               &start_i,
-                               &start_dist2);
-
-      if (start_dist2 < closest_point_dist2[i_tgt]) {
-        _min_heap_push (leaf_heap,
-                        start_i,
-                        0,
-                        start_dist2);
-        is_visited[start_i] = 1;
-        visited_leaves[n_visited++] = start_i;
-      }
-    }
-
-
-    // Visit octree leaves from neighbour to neighbour using priority queue
-    int leaf_i;
-    double leaf_dist2;
-
-    while (_min_heap_pop (leaf_heap, &leaf_i, &unused, &leaf_dist2)) {
-
-      if (leaf_dist2 >= closest_point_dist2[i_tgt]) {
-        break;
-      }
-
-      /* inspect source points inside popped leaf */
-      for (int i = 0; i < octants->n_points[leaf_i]; i++) {
-        int i_src = octants->range[leaf_i] + i;
-        double *src_coord = octree->points + dim*i_src;
-
-        double src_dist2 = _pt_to_pt_dist2 (dim,
-                                            tgt_coord + dim*i_tgt,
-                                            src_coord);
-
-        if (src_dist2 < closest_point_dist2[i_tgt]) {
-          closest_point_dist2[i_tgt] = src_dist2;
-          closest_point_g_num[i_tgt] = octree->points_gnum[i_src];
-        }
-      } // end loop on source points
-
-
-      /* inspect neighbours of popped leaf */
-      for (PDM_para_octree_direction_t dir = PDM_BOTTOM; dir < n_dir; dir++) {
-        /* inspect neighbours in direction dir */
-        for (int i = octants->neighbour_idx[6*leaf_i + dir];
-             i < octants->neighbour_idx[6*leaf_i + dir + 1]; i++) {
-
-          int ngb_i = octants->neighbours[i];
-          if (ngb_i >= 0) { // local neighbour
-            if (is_visited[ngb_i] == 1) continue;
-
-            is_visited[ngb_i] = 1;
-            visited_leaves[n_visited++] = ngb_i;
-
-            // compute min dist from target point to current neighbor leaf
-            double ngb_dist2 = _octant_min_dist2_normalized (dim,
-                                                             octants->codes[ngb_i],
-                                                             octree->d,
-                                                             ptn);
-            if (ngb_dist2 < closest_point_dist2[i_tgt]) {
-              // push current neighbour into priority queue
-              _min_heap_push (leaf_heap,
-                              ngb_i,
-                              0,
-                              ngb_dist2);
-            }
-          } // end if local neighbour
-
-        } // end loop on neighbours in current direction
-      } // end loop on directions
-
-    } // end while heap not empty
-
-  } // end loop on target points
-
-
-  free (is_visited);
-  free (visited_leaves);
-
-  _min_heap_free (leaf_heap);
-}
-
-
-
 static void
 _single_closest_point_recursive
-(
- const int                dim,
- const double             d[],
- const double             s[],
- const PDM_morton_code_t  node,
- const _l_octant_t       *octants,
- const PDM_g_num_t       *src_g_num,
- const double            *src_coord,
- const double             point[],
- const int                start,
- const int                end,
- PDM_g_num_t             *closest_point_g_num,
- double                  *closest_point_dist2
- )
-{
-  /* Leaf node */
-  if (start == end-1) {
-
-    for (int i = 0; i < octants->n_points[start]; i++) {
-      int j = octants->range[start] + i;
-      double dist2 = _pt_to_pt_dist2 (dim,
-                                      point,
-                                      src_coord + dim*j);
-
-      if (dist2 < *closest_point_dist2) {
-        *closest_point_dist2 = dist2;
-        *closest_point_g_num = src_g_num[j];
-      }
-    }
-    return;
-  }
-
-  /* Internal node */
-  else {
-    double dist2 = _octant_min_dist2 (dim,
-                                      node,
-                                      d,
-                                      s,
-                                      point);
-
-    if (dist2 < *closest_point_dist2) {
-      /* Inspect children of current node */
-      const int n_child = 1 << dim;
-      PDM_morton_code_t child_code[8];
-      PDM_morton_get_children (dim,
-                               node,
-                               child_code);
-
-      int new_start, new_end;
-      int prev_end = start;
-      for (int ichild = 0; ichild < n_child; ichild++) {
-        /* get start and end of range in list of nodes covered by current child */
-        /* new_start <-- first descendant of child in list */
-        new_start = prev_end; // end of previous child's range
-        while (new_start < end) {
-          if (PDM_morton_ancestor_is (child_code[ichild], octants->codes[new_start])) {
-            break;
-            } else if (PDM_morton_a_gt_b (octants->codes[new_start], child_code[ichild])) {
-            /* all the following nodes are clearly not descendants of current child */
-            new_start = end+1;
-            break;
-          }
-          new_start++;
-        }
-
-        if (new_start > end) {
-          /* no need to go further for that child
-             because it has no descendants in the node list */
-          continue;
-        }
-
-        /* new_end <-- next of last descendant of child in list */
-        int l = new_start;
-        new_end = end;
-        while (new_end > l + 1) {
-          int m = l + (new_end - l) / 2;
-          if (PDM_morton_ancestor_is (child_code[ichild], octants->codes[m])) {
-            l = m;
-          } else {
-            new_end = m;
-          }
-        }
-
-        prev_end = new_end;
-
-        /* Carry on recursion */
-        if (new_end > new_start) {
-          _single_closest_point_recursive (dim,
-                                           d,
-                                           s,
-                                           child_code[ichild],
-                                           octants,
-                                           src_g_num,
-                                           src_coord,
-                                           point,
-                                           new_start,
-                                           new_end,
-                                           closest_point_g_num,
-                                           closest_point_dist2);
-        }
-
-      } // End loop children
-    }
-  }
-}
-
-
-
-static void
-_single_closest_point_recursive_sorted
 (
  const int                dim,
  const double             d[],
@@ -9098,28 +8816,26 @@ _single_closest_point_recursive_sorted
     for (int i = 0; i < n_child; i++) {
       if (child_dist2[i] >= *closest_point_dist2) return;
       int i_child = child_order[i];
-      _single_closest_point_recursive_sorted (dim,
-                                              d,
-                                              s,
-                                              child_code[i_child],
-                                              octants,
-                                              src_g_num,
-                                              src_coord,
-                                              point,
-                                              child_start[i_child],
-                                              child_end[i_child],
-                                              closest_point_g_num,
-                                              closest_point_dist2);
+      _single_closest_point_recursive (dim,
+                                       d,
+                                       s,
+                                       child_code[i_child],
+                                       octants,
+                                       src_g_num,
+                                       src_coord,
+                                       point,
+                                       child_start[i_child],
+                                       child_end[i_child],
+                                       closest_point_g_num,
+                                       closest_point_dist2);
     }
   }
 
 }
 
 
-
-
 static void
-_single_closest_point_local_top_down
+_single_closest_point
 (
  const int          dim,
  const double       d[],
@@ -9137,7 +8853,6 @@ _single_closest_point_local_top_down
     return;
   }
 
-  /* Deepest common ancestor of all local octants */
   PDM_morton_code_t ancestor;
   PDM_morton_nearest_common_ancestor (octants->codes[0],
                                       octants->codes[octants->n_nodes-1],
@@ -9160,320 +8875,6 @@ _single_closest_point_local_top_down
   }
 }
 
-
-static void
-_single_closest_point_local_top_down_sorted
-(
- const int          dim,
- const double       d[],
- const double       s[],
- const _l_octant_t *octants,
- const PDM_g_num_t *src_g_num,
- const double      *src_coord,
- const int          n_tgt,
- const double      *tgt_coord,
- PDM_g_num_t       *closest_point_g_num,
- double            *closest_point_dist2
- )
-{
-  if (n_tgt < 1) {
-    return;
-  }
-
-  PDM_morton_code_t ancestor;
-  PDM_morton_nearest_common_ancestor (octants->codes[0],
-                                      octants->codes[octants->n_nodes-1],
-                                      &ancestor);
-
-  /* Loop over target points */
-  for (int i = 0; i < n_tgt; i++) {
-    _single_closest_point_recursive_sorted (dim,
-                                            d,
-                                            s,
-                                            ancestor,
-                                            octants,
-                                            src_g_num,
-                                            src_coord,
-                                            tgt_coord + dim*i,
-                                            0,
-                                            octants->n_nodes,
-                                            closest_point_g_num + i,
-                                            closest_point_dist2 + i);
-  }
-}
-
-
-
-
-
-typedef struct {
-  PDM_morton_code_t code;
-  int               start;
-  int               end;
-} _heap_node_t;
-
-static void _heap_node_set (_heap_node_t            *node,
-                            const PDM_morton_code_t  code,
-                            const int                start,
-                            const int                end)
-{
-  PDM_morton_copy (code, &node->code);
-  node->start = start;
-  node->end   = end;
-}
-
-
-
-static void
-_single_closest_point_local_top_down_heap
-(
- const int          dim,
- const double       d[],
- const double       s[],
- const _l_octant_t *octants,
- const PDM_g_num_t *src_g_num,
- const double      *src_coord,
- const int          n_tgt,
- const double      *tgt_coord,
- PDM_g_num_t       *closest_point_g_num,
- double            *closest_point_dist2
- )
-{
-  if (n_tgt < 1) {
-    return;
-  }
-  const size_t s_data = sizeof(_heap_node_t);
-
-  /* Deepest common ancestor of all local octants */
-  PDM_morton_code_t ancestor;
-  PDM_morton_nearest_common_ancestor (octants->codes[0],
-                                      octants->codes[octants->n_nodes-1],
-                                      &ancestor);
-
-  _heap_node_t root_node;
-  _heap_node_set (&root_node, ancestor, 0, octants->n_nodes);
-
-  _min_heap_2_t *heap = _min_heap_create2 (octants->n_nodes, s_data);
-
-  /* Loop over target points */
-  double node_dist2;
-  _heap_node_t node;
-
-  _heap_node_t child_node;
-  const int n_child = 1 << dim;
-  PDM_morton_code_t child_code[8];
-  int new_start, new_end, prev_end;
-  double child_dist2;
-
-  for (int i_tgt = 0; i_tgt < n_tgt; i_tgt++) {
-
-    const double *point = tgt_coord + dim*i_tgt;
-
-    _min_heap_reset2 (heap);
-    _min_heap_push2 (heap, (void *) &root_node, 0.);
-
-    while (_min_heap_pop2 (heap, (void *) &node, &node_dist2)) {
-
-      if (node_dist2 >= closest_point_dist2[i_tgt]) {
-        /* All the nodes in the heap are now farther than the provisional closest point */
-        break;
-      }
-
-      /* Internal node */
-      if (node.end > node.start + 1) {
-        /* Carry on with children of popped node */
-        PDM_morton_get_children (dim,
-                                 node.code,
-                                 child_code);
-        prev_end = node.start;
-        for (int i_child = 0; i_child < n_child; i_child++) {
-          /* get start and end of range in list of nodes covered by current child */
-          /* new_start <-- first descendant of child in list */
-          new_start = prev_end; // end of previous child's range
-
-          while (new_start < node.end) {
-            if (PDM_morton_ancestor_is (child_code[i_child], octants->codes[new_start])) {
-              break;
-            } else if (PDM_morton_a_gt_b(octants->codes[new_start], child_code[i_child])) {
-              /* all the following nodes are clearly not descendants of current child */
-              new_start = node.end+1;
-              break;
-            }
-            new_start++;
-          }
-
-          if (new_start > node.end) {
-            /* no need to go further for that child
-               because it has no descendants in the node list */
-            continue;
-          }
-
-          /* new_end <-- next of last descendant of child in list */
-          int l = new_start;
-          new_end = node.end;
-          while (new_end > l + 1) {
-            int m = l + (new_end - l) / 2;
-            if (PDM_morton_ancestor_is (child_code[i_child], octants->codes[m])) {
-              l = m;
-            } else {
-              new_end = m;
-            }
-          }
-
-          prev_end = new_end;
-          if (new_end <= new_start) {
-            continue;
-          }
-
-          child_dist2 = _octant_min_dist2 (dim,
-                                           child_code[i_child],
-                                           d,
-                                           s,
-                                           point);
-
-          /* Push child in heap */
-          if (child_dist2 < closest_point_dist2[i_tgt]) {
-            _heap_node_set (&child_node,
-                            child_code[i_child],
-                            new_start,
-                            new_end);
-            _min_heap_push2 (heap, (void *) &child_node, child_dist2);
-          }
-
-        } // End of loop on children
-      }
-
-      /* Leaf node */
-      else {
-        /* inspect source points inside popped leaf */
-        for (int i = 0; i < octants->n_points[node.start]; i++) {
-          int j = octants->range[node.start] + i;
-          double point_dist2 = _pt_to_pt_dist2 (dim,
-                                                point,
-                                                src_coord + dim*j);
-          if (point_dist2 < closest_point_dist2[i_tgt]) {
-            closest_point_dist2[i_tgt] = point_dist2;
-            closest_point_g_num[i_tgt] = src_g_num[j];
-          }
-        } // End of loop on source points inside popped leaf
-      } // End if internal/leaf node
-
-    } // End while heap not empty
-
-  } // End of loop on target points
-
-  _min_heap_free2 (heap);
-}
-
-
-
-
-static void
-_single_closest_point_local_top_down_heap_binary
-(
- const int          dim,
- const double       d[],
- const double       s[],
- const _l_octant_t *octants,
- const PDM_g_num_t *src_g_num,
- const double      *src_coord,
- const int          n_tgt,
- const double      *tgt_coord,
- PDM_g_num_t       *closest_point_g_num,
- double            *closest_point_dist2
- )
-{
-  if (n_tgt < 1) {
-    return;
-  }
-
-  typedef struct {
-    int start;
-    int end;
-  } _node_t;
-  const size_t s_data = sizeof(_node_t);
-
-  /* Deepest common ancestor of all local octants */
-  PDM_morton_code_t ancestor;
-  PDM_morton_nearest_common_ancestor (octants->codes[0],
-                                      octants->codes[octants->n_nodes-1],
-                                      &ancestor);
-
-  _node_t root_node;
-  root_node.start = 0;
-  root_node.end   = octants->n_nodes;
-
-  _min_heap_2_t *heap = _min_heap_create2 (octants->n_nodes, s_data);
-
-  /* Loop over target points */
-  double node_dist2;
-  _node_t node;
-
-  _node_t child_node;
-  PDM_morton_code_t child_code;
-  double child_dist2;
-
-  for (int i_tgt = 0; i_tgt < n_tgt; i_tgt++) {
-
-    const double *point = tgt_coord + dim*i_tgt;
-
-    _min_heap_reset2 (heap);
-    _min_heap_push2 (heap, (void *) &root_node, 0.);
-
-    while (_min_heap_pop2 (heap, (void *) &node, &node_dist2)) {
-
-      if (node_dist2 >= closest_point_dist2[i_tgt]) {
-        /* All the nodes in the heap are now farther than the provisional closest point */
-        break;
-      }
-
-      /* Internal node */
-      if (node.end > node.start + 1) {
-        /* Bisect */
-        int range[3] = {node.start,
-                        node.start + (node.end - node.start)/2,
-                        node.end};
-        for (int i_child = 0; i_child < 2; i_child++) {
-          child_node.start = range[i_child];
-          child_node.end   = range[i_child+1];
-
-          PDM_morton_nearest_common_ancestor (octants->codes[child_node.start],
-                                              octants->codes[child_node.end-1],
-                                              &child_code);
-
-          child_dist2 = _octant_min_dist2 (dim,
-                                           child_code,
-                                           d,
-                                           s,
-                                           point);
-          /* Push child in heap */
-          if (child_dist2 < closest_point_dist2[i_tgt]) {
-            _min_heap_push2 (heap, (void *) &child_node, child_dist2);
-          }
-        }
-      }
-
-      /* Leaf node */
-      else {
-        /* inspect source points inside popped leaf */
-        for (int i = 0; i < octants->n_points[node.start]; i++) {
-          int j = octants->range[node.start] + i;
-          double point_dist2 = _pt_to_pt_dist2 (dim,
-                                                point,
-                                                src_coord + dim*j);
-          if (point_dist2 < closest_point_dist2[i_tgt]) {
-            closest_point_dist2[i_tgt] = point_dist2;
-            closest_point_g_num[i_tgt] = src_g_num[j];
-          }
-        } // End of loop on source points inside popped leaf
-      } // End if internal/leaf node
-
-    } // End while heap not empty
-
-  } // End of loop on target points
-
-  _min_heap_free2 (heap);
-}
 
 
 typedef enum {
@@ -9598,8 +8999,17 @@ _morton_encode_coords
 }
 
 
+/**
+ *
+ * \brief Copy octree data of some ranks into all ranks
+ *
+ * \param [in]   id                 Identifier
+ * \param [in]   n_copied_ranks     Number of ranks to copy
+ * \param [in]   copied_ranks       Array of ranks to copy
+ *
+ */
 
-static void
+void
 PDM_para_octree_copy_ranks
 (
  const int  id,
@@ -9745,6 +9155,15 @@ PDM_para_octree_copy_ranks
 }
 
 
+
+/**
+ *
+ * \brief Free copied data in an octree structure
+ *
+ * \param [in]   id                 Identifier
+ *
+ */
+
 void
 PDM_para_octree_free_copies
 (
@@ -9809,6 +9228,8 @@ PDM_para_octree_free_copies
   octree->n_copied_ranks = 0;
 }
 
+
+
 static void
 _prepare_copies
 (
@@ -9857,14 +9278,6 @@ _prepare_copies
                 order,
                 n_rank);
 
-  if (i_rank == 0) {
-    printf("copy threshold = %d (%g), max copy = %d (%g)\n", (int) n_threshold, f_threshold, n_max_copy, f_max_copy);
-    printf("avant: min = %d, max = %d (%g times mean), max-min = %d\n",
-           all_n_request[0],
-           all_n_request[n_rank-1],
-           (float) all_n_request[n_rank-1] / (float) (*mean_n_request),
-           all_n_request[n_rank-1] - all_n_request[0]);
-  }
 
   // Identify ranks to copy
   *copied_ranks = malloc (sizeof(int) * n_max_copy);
@@ -9899,10 +9312,10 @@ _prepare_copies
  *
  * \param [in]   id                     Identifier
  * \param [in]   n_pts                  Number of points
- * \param [in]   pts                    Point Coordinates
+ * \param [in]   pts                    Point coordinates
  * \param [in]   pts_g_num              Point global numbers
- * \param [out]  closest_octree_pt_id   Closest points in octree global number
- * \param [out]  closest_octree_pt_dist Closest points in octree distance
+ * \param [out]  closest_octree_pt_id   Closest point in octree global number
+ * \param [out]  closest_octree_pt_dist Closest point in octree distance
  *
  */
 
@@ -9910,7 +9323,6 @@ void
 PDM_para_octree_single_closest_point
 (
  const int    id,
- const _local_search_fun_t local_search_fun,
  const int    n_pts,
  double      *pts_coord,
  PDM_g_num_t *pts_g_num,
@@ -9921,38 +9333,8 @@ PDM_para_octree_single_closest_point
   _octree_t *octree = _get_from_id (id);
   const int dim = octree->dim;
 
-  void (*local_search_fun_ptr) (const int,
-                                const double[],
-                                const double[],
-                                const _l_octant_t *,
-                                const PDM_g_num_t *,
-                                const double      *,
-                                const int,
-                                const double *,
-                                PDM_g_num_t *,
-                                double *) = NULL;
-
-  if (!octree->neighboursToBuild) {
-    switch (local_search_fun) {
-    case LOCAL_SEARCH_RECURSIVE:
-      local_search_fun_ptr = &_single_closest_point_local_top_down;
-      break;
-    case LOCAL_SEARCH_RECURSIVE_SORTED:
-      local_search_fun_ptr = &_single_closest_point_local_top_down_sorted;
-      break;
-    case LOCAL_SEARCH_HEAP:
-      local_search_fun_ptr = &_single_closest_point_local_top_down_heap;
-      break;
-    case LOCAL_SEARCH_HEAP_BINARY:
-      local_search_fun_ptr = &_single_closest_point_local_top_down_heap_binary;
-      break;
-    default:
-      local_search_fun_ptr = &_single_closest_point_local_top_down;
-    }
-  }
-
-  float f_copy_threshold = 1.2;
-  float f_max_copy = 0.2;
+  float f_copy_threshold = 1.1;
+  float f_max_copy = 0.3;
 
   char *env_var = NULL;
   env_var = getenv ("OCTREE_COPY_THRESHOLD");
@@ -9990,26 +9372,6 @@ PDM_para_octree_single_closest_point
   PDM_MPI_Comm_rank (octree->comm, &i_rank);
   PDM_MPI_Comm_size (octree->comm, &n_rank);
 
-
-  int VISU = 0;
-  char *env_visu = getenv ("VISU_OCTREE");
-  if (env_visu != NULL) {
-    VISU = atoi(env_visu);
-  }
-
-  if (VISU) {
-    if (i_rank == 0) printf("visu octree\n");
-    char filename[999];
-
-    sprintf(filename, "octants_par_%3.3d.vtk", i_rank);
-    write_octree_octants (id,
-                          filename);
-
-    /*sprintf(filename, "points_%3.3d.vtk", i_rank);
-    write_octree_points (id,
-                         filename,
-                         1);*/
-  }
 
   /* Part-to-block create (only to get block distribution) */
   int _n_pts = n_pts;
@@ -10282,7 +9644,7 @@ PDM_para_octree_single_closest_point
   b_t_elapsed = e_t_elapsed;
   PDM_timer_resume (octree->timer);
 
-  printf ("[%4d] phase 1: n_recv_pts = %8d (wihtout copies: %8d)\n", i_rank, n_pts1, n_recv_pts);
+  //printf ("[%4d] phase 1: n_recv_pts = %8d (wihtout copies: %8d)\n", i_rank, n_pts1, n_recv_pts);
 
 
   /********************************************
@@ -10446,6 +9808,7 @@ PDM_para_octree_single_closest_point
       }
     }
   }
+  free (pts_code);
 
 
   PDM_timer_hang_on (octree->timer);
@@ -10457,41 +9820,30 @@ PDM_para_octree_single_closest_point
   /*
    *  Traverse local octree horizontally using min_heap
    */
-  if (0) {//octree->neighboursToBuild) {
-    _single_closest_point_local (octree,
-                                 n_recv_pts,
-                                 recv_coord,
-                                 pts_code,
-                                 _closest_pt_g_num,
-                                 _closest_pt_dist2);
-  } else {
-
-    (*local_search_fun_ptr) (dim,
-                             octree->d,
-                             octree->s,
-                             octree->octants,
-                             octree->points_gnum,
-                             octree->points,
-                             idx_pts1[2],
-                             pts_coord1,
-                             _closest_pt_g_num,
-                             _closest_pt_dist2);
+  _single_closest_point (dim,
+                         octree->d,
+                         octree->s,
+                         octree->octants,
+                         octree->points_gnum,
+                         octree->points,
+                         idx_pts1[2],
+                         pts_coord1,
+                         _closest_pt_g_num,
+                         _closest_pt_dist2);
 
 
-    for (int i = 0; i < octree->n_copied_ranks; i++) {
-      (*local_search_fun_ptr) (dim,
-                               octree->d,
-                               octree->s,
-                               octree->copied_octants[i],
-                               octree->copied_points_gnum[i],
-                               octree->copied_points[i],
-                               copied_shift1[i+1] - copied_shift1[i],
-                               _pts_coord1 + copied_shift1[i]*dim,
-                               __closest_pt_g_num + copied_shift1[i],
-                               __closest_pt_dist2 + copied_shift1[i]);
-    }
+  for (int i = 0; i < octree->n_copied_ranks; i++) {
+    _single_closest_point (dim,
+                           octree->d,
+                           octree->s,
+                           octree->copied_octants[i],
+                           octree->copied_points_gnum[i],
+                           octree->copied_points[i],
+                           copied_shift1[i+1] - copied_shift1[i],
+                           _pts_coord1 + copied_shift1[i]*dim,
+                           __closest_pt_g_num + copied_shift1[i],
+                           __closest_pt_dist2 + copied_shift1[i]);
   }
-  free (pts_code);
 
 
 
@@ -10622,7 +9974,6 @@ PDM_para_octree_single_closest_point
   }
 
   n_recv_pts = recv_shift[n_rank];
-  int n_recv_pts_no_copies = n_recv_pts;
 
   PDM_para_octree_free_copies (id);
 
@@ -10876,7 +10227,7 @@ PDM_para_octree_single_closest_point
                      octree->comm);
   free (send_g_num);
 
-  printf ("[%4d] phase 2: n_recv_pts = %8d (wihtout copies: %8d)\n", i_rank, n_pts2, n_recv_pts_no_copies);
+  //printf ("[%4d] phase 2: n_recv_pts = %8d (wihtout copies: %8d)\n", i_rank, n_pts2, n_recv_pts_no_copies);
 
   for (int i = 0; i < n_rank; i++) {
     send_count[i] *= s_data;
@@ -10916,43 +10267,31 @@ PDM_para_octree_single_closest_point
     _closest_pt_g_num[i] = -1;
   }
 
+  _single_closest_point (dim,
+                         octree->d,
+                         octree->s,
+                         octree->octants,
+                         octree->points_gnum,
+                         octree->points,
+                         idx_pts2[2],
+                         pts_coord2,
+                         _closest_pt_g_num,
+                         _closest_pt_dist22);
 
   double *_pts_coord2 = pts_coord2 + idx_pts2[2] * dim;
   __closest_pt_dist2 = _closest_pt_dist22 + idx_pts2[2];
   __closest_pt_g_num = _closest_pt_g_num + idx_pts2[2];
-  if (0) {//octree->neighboursToBuild) {
-    _single_closest_point_local (octree,
-                                 n_recv_pts,
-                                 recv_coord,
-                                 NULL,
-                                 _closest_pt_g_num,
-                                 _closest_pt_dist22);
-  } else {
-
-    (*local_search_fun_ptr) (dim,
-                             octree->d,
-                             octree->s,
-                             octree->octants,
-                             octree->points_gnum,
-                             octree->points,
-                             idx_pts2[2],
-                             pts_coord2,
-                             _closest_pt_g_num,
-                             _closest_pt_dist22);
-
-    for (int i = 0; i < octree->n_copied_ranks; i++) {
-      (*local_search_fun_ptr) (dim,
-                               octree->d,
-                               octree->s,
-                               octree->copied_octants[i],
-                               octree->copied_points_gnum[i],
-                               octree->copied_points[i],
-                               copied_shift2[i+1] - copied_shift2[i],
-                               _pts_coord2 + copied_shift2[i]*dim,
-                               __closest_pt_g_num + copied_shift2[i],
-                               __closest_pt_dist2 + copied_shift2[i]);
-    }
-
+  for (int i = 0; i < octree->n_copied_ranks; i++) {
+    _single_closest_point (dim,
+                           octree->d,
+                           octree->s,
+                           octree->copied_octants[i],
+                           octree->copied_points_gnum[i],
+                           octree->copied_points[i],
+                           copied_shift2[i+1] - copied_shift2[i],
+                           _pts_coord2 + copied_shift2[i]*dim,
+                           __closest_pt_g_num + copied_shift2[i],
+                           __closest_pt_dist2 + copied_shift2[i]);
   }
   free (pts_coord2);
 
@@ -11078,25 +10417,6 @@ PDM_para_octree_single_closest_point
   times_elapsed[FINALIZE] = e_t_elapsed - b_t_elapsed;
   times_elapsed[SCP_TOTAL] = e_t_elapsed - times_elapsed[SCP_BEGIN];
   PDM_timer_resume (octree->timer);
-
-  //printf ("[%d] total = "SCP_TIME_FMT", phase1 = "SCP_TIME_FMT", phase2 = "SCP_TIME_FMT"\n", i_rank, times_elapsed[SCP_TOTAL], times_elapsed[PHASE_1], times_elapsed[PHASE_2]);
-  printf ("[%4d] "SCP_TIME_FMT" "SCP_TIME_FMT" "SCP_TIME_FMT" "SCP_TIME_FMT" "SCP_TIME_FMT" "SCP_TIME_FMT" "SCP_TIME_FMT" "SCP_TIME_FMT" "SCP_TIME_FMT" "SCP_TIME_FMT" "SCP_TIME_FMT" "SCP_TIME_FMT"\n",
-          i_rank,
-          times_elapsed[SCP_TOTAL],
-          times_elapsed[COMPUTE_RANK_EXTENTS],
-          times_elapsed[PHASE_1],
-          times_elapsed[FIRST_DISTRIBUTION],
-          times_elapsed[FIRST_GUESS],
-          times_elapsed[FIRST_LOCAL_SEARCH],
-          times_elapsed[FIRST_PART_TO_BLOCK],
-          times_elapsed[PHASE_2],
-          times_elapsed[FIND_CLOSE_RANKS],
-          times_elapsed[SEND_TO_CLOSE_RANKS],
-          times_elapsed[SECOND_LOCAL_SEARCH],
-          times_elapsed[FINALIZE]);
-  _scp_dump_times (times_elapsed,
-                   octree->comm);
-
 
   if (copied_ranks1 != NULL) {
     free (copied_ranks1);
@@ -11301,6 +10621,22 @@ _closest_points_local_top_down
                                               closest_points_g_num + n_closest_points*i,
                                               closest_points_dist2 + n_closest_points*i);
   }
+}
+
+typedef struct {
+  PDM_morton_code_t code;
+  int               start;
+  int               end;
+} _heap_node_t;
+
+static void _heap_node_set (_heap_node_t            *node,
+                            const PDM_morton_code_t  code,
+                            const int                start,
+                            const int                end)
+{
+  PDM_morton_copy (code, &node->code);
+  node->start = start;
+  node->end   = end;
 }
 
 static void
@@ -12090,510 +11426,6 @@ PDM_para_octree_closest_points
   _scp_dump_times (times_elapsed,
                    octree->comm);
 }
-
-
-
-
-
-static void
-_points_within_radius_local
-(
- const _octree_t *octree,
- const int        n_tgt,
- const double    *tgt_coord,
- const double    *tgt_radius2,
- int            **close_pts_idx,
- PDM_g_num_t    **close_pts_g_num,
- double         **close_pts_dist2
- )
-{
-
-  const int dim = octree->dim;
-  const size_t s_data = sizeof(_heap_node_t);
-
-  int s_close_pts = n_tgt;
-  *close_pts_dist2 = malloc (sizeof(double)      * s_close_pts);
-  *close_pts_g_num = malloc (sizeof(PDM_g_num_t) * s_close_pts);
-  *close_pts_idx   = malloc (sizeof(int) * (n_tgt + 1));
-  int *_close_pts_idx = *close_pts_idx;
-  _close_pts_idx[0] = 0;
-
-  if (n_tgt < 1) return;
-
-  /* Deepest common ancestor of all local octants */
-  PDM_morton_code_t ancestor;
-  PDM_morton_nearest_common_ancestor (octree->octants->codes[0],
-                                      octree->octants->codes[octree->octants->n_nodes-1],
-                                      &ancestor);
-
-  _heap_node_t root_node;
-  _heap_node_set (&root_node, ancestor, 0, octree->octants->n_nodes);
-
-  _min_heap_2_t *heap = _min_heap_create2 (octree->octants->n_nodes, s_data);
-
-  /* Loop over target points */
-  double node_dist2;
-  _heap_node_t node;
-
-  _heap_node_t child_node;
-  const int n_child = 1 << dim;
-  PDM_morton_code_t child_code[8];
-  int new_start, new_end, prev_end;
-  double child_dist2;
-
-  for (int i_tgt = 0; i_tgt < n_tgt; i_tgt++) {
-
-    const double *point = tgt_coord + dim*i_tgt;
-    const double radius2 = tgt_radius2[i_tgt];
-
-    const int idx = _close_pts_idx[i_tgt];
-    _close_pts_idx[i_tgt+1] = idx;
-
-    _min_heap_reset2 (heap);
-    _min_heap_push2 (heap, (void *) &root_node, 0.);
-
-    while (_min_heap_pop2 (heap, (void *) &node, &node_dist2)) {
-
-      if (node_dist2 > radius2) {
-        /* All the nodes in the heap are now farther than the provisional closest point */
-        break;
-      }
-
-      /* Internal node */
-      if (node.end > node.start + 1) {
-        /* Carry on with children of popped node */
-        PDM_morton_get_children (dim,
-                                 node.code,
-                                 child_code);
-        prev_end = node.start;
-        for (int i_child = 0; i_child < n_child; i_child++) {
-          /* get start and end of range in list of nodes covered by current child */
-          /* new_start <-- first descendant of child in list */
-          new_start = prev_end; // end of previous child's range
-
-          while (new_start < node.end) {
-            if (PDM_morton_ancestor_is (child_code[i_child],
-                                        octree->octants->codes[new_start])) {
-              break;
-            } else if (PDM_morton_a_gt_b(octree->octants->codes[new_start],
-                                         child_code[i_child])) {
-              /* all the following nodes are clearly not descendants of current child */
-              new_start = node.end+1;
-              break;
-            }
-            new_start++;
-          }
-
-          if (new_start > node.end) {
-            /* no need to go further for that child
-               because it has no descendants in the node list */
-            continue;
-          }
-
-          /* new_end <-- next of last descendant of child in list */
-          int l = new_start;
-          new_end = node.end;
-          while (new_end > l + 1) {
-            int m = l + (new_end - l) / 2;
-            if (PDM_morton_ancestor_is (child_code[i_child],
-                                        octree->octants->codes[m])) {
-              l = m;
-            } else {
-              new_end = m;
-            }
-          }
-
-          prev_end = new_end;
-          if (new_end <= new_start) {
-            continue;
-          }
-
-          child_dist2 = _octant_min_dist2 (dim,
-                                           child_code[i_child],
-                                           octree->d,
-                                           octree->s,
-                                           point);
-          /* Push child in heap */
-          if (child_dist2 < radius2) {
-            _heap_node_set (&child_node,
-                            child_code[i_child],
-                            new_start,
-                            new_end);
-            _min_heap_push2 (heap, (void *) &child_node, child_dist2);
-          }
-
-        } // End of loop on children
-      }
-
-      /* Leaf node */
-      else {
-        /* inspect source points inside popped leaf */
-        for (int i = 0; i < octree->octants->n_points[node.start]; i++) {
-          int j = octree->octants->range[node.start] + i;
-          double point_dist2 = _pt_to_pt_dist2 (dim,
-                                                point,
-                                                octree->points + dim*j);
-          if (point_dist2 < radius2) {
-            if (_close_pts_idx[i_tgt+1] >= s_close_pts) {
-              s_close_pts *= 2;
-              assert (s_close_pts > _close_pts_idx[i_tgt+1]);
-              //s_close_pts = PDM_MAX (2*s_close_pts, _close_pts_idx[i_tgt+1]+1);//?
-              *close_pts_dist2 = realloc (*close_pts_dist2, sizeof(double)      * s_close_pts);
-              assert (*close_pts_dist2 != NULL);
-              *close_pts_g_num = realloc (*close_pts_g_num, sizeof(PDM_g_num_t) * s_close_pts);
-              assert (*close_pts_g_num != NULL);
-            }
-            /*_insertion_sort (point_dist2,
-                             octree->points_gnum[j],
-                             _close_pts_idx[i_tgt+1] - idx,
-                             *close_pts_dist2 + idx,
-                             *close_pts_g_num + idx);*/
-            (*close_pts_dist2)[_close_pts_idx[i_tgt+1]] = point_dist2;
-            (*close_pts_g_num)[_close_pts_idx[i_tgt+1]] = octree->points_gnum[j];
-            _close_pts_idx[i_tgt+1]++;
-          }
-        } // End of loop on source points inside popped leaf
-      } // End if internal/leaf node
-
-    } // End while heap not empty
-
-  } // End of loop on target points
-
-  s_close_pts = _close_pts_idx[n_tgt];
-  *close_pts_dist2 = realloc (*close_pts_dist2, sizeof(double)      * s_close_pts);
-  *close_pts_g_num = realloc (*close_pts_g_num, sizeof(PDM_g_num_t) * s_close_pts);
-
-  _min_heap_free2 (heap);
-}
-
-
-
-void
-PDM_para_octree_points_within_radius
-(
- const int     id,
- const int     sort_close_points,
- const int     n_pts,
- double       *pts_coord,
- PDM_g_num_t  *pts_g_num,
- double       *pts_radius2,
- int         **close_pts_idx,
- PDM_g_num_t **close_pts_g_num,
- double      **close_pts_dist2
- )
-{
-  _octree_t *octree = _get_from_id (id);
-  const int dim = octree->dim;
-
-  int i_rank, n_rank;
-  PDM_MPI_Comm_rank (octree->comm, &i_rank);
-  PDM_MPI_Comm_size (octree->comm, &n_rank);
-
-  int n_recv_pts;
-  double      *recv_coord = NULL;
-  PDM_g_num_t *recv_g_num = NULL;
-  double      *recv_radius2 = NULL;
-
-  /* Multi procs */
-  if (n_rank > 1) {
-
-    if (octree->used_rank_extents == NULL) {
-      _compute_rank_extents (octree);
-    }
-
-    int *close_ranks_idx = NULL;
-    int *close_ranks     = NULL;
-    PDM_box_tree_closest_upper_bound_dist_boxes_get (octree->bt_shared,
-                                                     n_pts,
-                                                     pts_coord,
-                                                     pts_radius2,
-                                                     &close_ranks_idx,
-                                                     &close_ranks);
-
-    if (octree->n_used_rank < n_rank) {
-      for (int i = 0; i < close_ranks_idx[n_pts]; i++) {
-        int j = close_ranks[i];
-        close_ranks[i] = octree->used_rank[j];
-      }
-    }
-
-    int *send_count = malloc (sizeof(int) * n_rank);
-    int *recv_count = malloc (sizeof(int) * n_rank);
-    for (int i = 0; i < n_rank; i++) {
-      send_count[i] = 0;
-    }
-
-    for (int i = 0; i < n_pts; i++) {
-      for (int j = close_ranks_idx[i]; j < close_ranks_idx[i+1]; j++) {
-        send_count[close_ranks[j]]++;
-      }
-    }
-
-    PDM_MPI_Alltoall (send_count, 1, PDM_MPI_INT,
-                      recv_count, 1, PDM_MPI_INT,
-                      octree->comm);
-
-    int *send_shift = malloc (sizeof(int) * (n_rank + 1));
-    int *recv_shift = malloc (sizeof(int) * (n_rank + 1));
-    send_shift[0] = 0;
-    recv_shift[0] = 0;
-    for (int i = 0; i < n_rank; i++) {
-      send_shift[i+1] = send_shift[i] + send_count[i];
-      recv_shift[i+1] = recv_shift[i] + recv_count[i];
-      send_count[i] = 0;
-    }
-
-    int s_double = dim + 1;
-    PDM_g_num_t *send_g_num = malloc (sizeof(PDM_g_num_t) * send_shift[n_rank]);
-    double      *send_double = malloc (sizeof(double) * send_shift[n_rank]*s_double);
-    for (int i = 0; i < n_pts; i++) {
-      for (int j = close_ranks_idx[i]; j < close_ranks_idx[i+1]; j++) {
-        int rank = close_ranks[j];
-        int k = send_shift[rank] + send_count[rank];
-        send_g_num[k] = pts_g_num[i];
-        for (int l = 0; l < dim; l++) {
-          send_double[s_double*k+l] = pts_coord[dim*i+l];
-        }
-        send_double[s_double*k+dim] = pts_radius2[i];
-        send_count[rank]++;
-      }
-    }
-    free (close_ranks_idx);
-    free (close_ranks);
-
-    n_recv_pts = recv_shift[n_rank];
-
-    recv_g_num = malloc (sizeof(PDM_g_num_t) * n_recv_pts);
-    PDM_MPI_Alltoallv (send_g_num, send_count, send_shift, PDM__PDM_MPI_G_NUM,
-                       recv_g_num, recv_count, recv_shift, PDM__PDM_MPI_G_NUM,
-                       octree->comm);
-    free (send_g_num);
-
-
-    for (int i = 0; i < n_rank; i++) {
-      send_count[i] *= s_double;
-      recv_count[i] *= s_double;
-      send_shift[i+1] *= s_double;
-      recv_shift[i+1] *= s_double;
-    }
-
-    double *recv_double = malloc (sizeof(double) * recv_shift[n_rank]);
-    PDM_MPI_Alltoallv (send_double, send_count, send_shift, PDM_MPI_DOUBLE,
-                       recv_double, recv_count, recv_shift, PDM_MPI_DOUBLE,
-                       octree->comm);
-    free (send_double);
-
-    recv_coord = malloc (sizeof(double) * n_recv_pts * dim);
-    recv_radius2 = malloc (sizeof(double) * n_recv_pts);
-    for (int i = 0; i < n_recv_pts; i++) {
-      for (int j = 0; j < dim; j++) {
-        recv_coord[dim*i+j] = recv_double[s_double*i+j];
-      }
-     recv_radius2[i] = recv_double[s_double*i+dim];
-    }
-    free (recv_double);
-    free (send_count);
-    free (send_shift);
-    free (recv_count);
-    free (recv_shift);
-  }
-
-  /* Single proc */
-  else {
-    n_recv_pts = n_pts;
-    recv_coord = pts_coord;
-    recv_g_num = pts_g_num;
-    recv_radius2 = pts_radius2;
-  }
-
-
-  /* Local search */
-  int         *_close_pts_idx   = NULL;
-  PDM_g_num_t *_close_pts_g_num = NULL;
-  double      *_close_pts_dist2 = NULL;
-
-  _points_within_radius_local (octree,
-                               n_recv_pts,
-                               recv_coord,
-                               recv_radius2,
-                               &_close_pts_idx,
-                               &_close_pts_g_num,
-                               &_close_pts_dist2);
-
-
-  if (n_rank == 1) {
-    *close_pts_idx   = _close_pts_idx;
-    *close_pts_dist2 = _close_pts_dist2;
-    *close_pts_g_num = _close_pts_g_num;
-    return;
-  }
-
-  else {
-    free (recv_coord);
-    free (recv_radius2);
-
-    /*
-     *  Back to original partitioning
-     */
-    /* 1) Part-to-block */
-    int _n_pts = n_pts;
-    PDM_part_to_block_t *ptb = PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
-                                                         PDM_PART_TO_BLOCK_POST_MERGE,
-                                                         1.,
-                                                         &pts_g_num,
-                                                         NULL,
-                                                         &_n_pts,
-                                                         1,
-                                                         octree->comm);
-
-    PDM_g_num_t *block_distrib_idx = PDM_part_to_block_distrib_index_get (ptb);
-    PDM_part_to_block_t *ptb1 = PDM_part_to_block_create2 (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
-                                                           PDM_PART_TO_BLOCK_POST_MERGE,
-                                                           1.,
-                                                           &recv_g_num,
-                                                           block_distrib_idx,
-                                                           &n_recv_pts,
-                                                           1,
-                                                           octree->comm);
-
-    int *part_stride = malloc (sizeof(int) * n_recv_pts);
-    for (int i = 0; i < n_recv_pts; i++) {
-      part_stride[i] = _close_pts_idx[i+1] - _close_pts_idx[i];
-    }
-    free (_close_pts_idx);
-
-    double *block_close_pts_dist2 = NULL;
-    int *tmp_block_stride = NULL;
-    PDM_part_to_block_exch (ptb1,
-                            sizeof(double),
-                            PDM_STRIDE_VAR,
-                            1,
-                            &part_stride,
-                            (void **) &_close_pts_dist2,
-                            &tmp_block_stride,
-                            (void **) &block_close_pts_dist2);
-    free (tmp_block_stride);
-    free (_close_pts_dist2);
-
-    PDM_g_num_t *block_close_pts_g_num = NULL;
-    PDM_part_to_block_exch (ptb1,
-                            sizeof(PDM_g_num_t),
-                            PDM_STRIDE_VAR,
-                            1,
-                            &part_stride,
-                            (void **) &_close_pts_g_num,
-                            &tmp_block_stride,
-                            (void **) &block_close_pts_g_num);
-    free (_close_pts_g_num);
-
-    /*
-     *  Sort close points in ascending order of distance
-     */
-    const int n_pts_block = PDM_part_to_block_n_elt_block_get (ptb);
-    const int n_pts_block1 = PDM_part_to_block_n_elt_block_get (ptb1);
-    PDM_g_num_t *block_g_num1 = PDM_part_to_block_block_gnum_get (ptb1);
-
-    int *block_stride = NULL;
-    if (n_pts_block1 < n_pts_block) {
-      block_stride = malloc (sizeof(int) * n_pts_block);
-      for (int i = 0; i < n_pts_block; i++) {
-        block_stride[i] = 0;
-      }
-      for (int i1 = 0; i1 < n_pts_block1; i1++) {
-        int i = (int) (block_g_num1[i1] - block_distrib_idx[i_rank] - 1);
-
-        block_stride[i] = tmp_block_stride[i1];
-      }
-    }
-    else {
-      block_stride = tmp_block_stride;
-    }
-
-    if (sort_close_points) {
-      int max_stride = 0;
-      for (int i = 0; i < n_pts_block1; i++) {
-        max_stride = PDM_MAX (max_stride, tmp_block_stride[i]);
-      }
-
-      _min_heap_2_t *heap = _min_heap_create2 (max_stride, sizeof(PDM_g_num_t));
-      int idx = 0;
-      for (int i = 0; i < n_pts_block1; i++) {
-        for (int j = 0; j < tmp_block_stride[i]; j++) {
-          _min_heap_push2 (heap,
-                           (void *) &(block_close_pts_dist2[idx + j]),
-                           block_close_pts_dist2[idx + j]);
-        }
-
-        for (int j = 0; j < tmp_block_stride[i]; j++) {
-          _min_heap_pop2 (heap,
-                          (void *) &(block_close_pts_dist2[idx + j]),
-                          &(block_close_pts_dist2[idx + j]));
-        }
-
-        idx += tmp_block_stride[i];
-      }
-        _min_heap_free2 (heap);
-    }
-
-    if (tmp_block_stride != block_stride) {
-      free (tmp_block_stride);
-    }
-
-    /* 2) Block-to-part */
-    PDM_block_to_part_t *btp = PDM_block_to_part_create (block_distrib_idx,
-                                                         (const PDM_g_num_t **) &pts_g_num,
-                                                         &n_pts,
-                                                         1,
-                                                         octree->comm);
-
-    part_stride = realloc (part_stride, sizeof(int) * n_pts);
-    int stride = 1;
-    PDM_block_to_part_exch (btp,
-                            sizeof(int),
-                            PDM_STRIDE_CST,
-                            &stride,
-                            block_stride,
-                            NULL,
-                            (void **) &part_stride);
-
-    *close_pts_idx = malloc (sizeof(int) * (n_pts + 1));
-    (*close_pts_idx)[0] = 0;
-    for (int i = 0; i < n_pts; i++) {
-      (*close_pts_idx)[i+1] = (*close_pts_idx)[i] + part_stride[i];
-    }
-
-    *close_pts_g_num = malloc (sizeof(PDM_g_num_t) * (*close_pts_idx)[n_pts]);
-    PDM_block_to_part_exch (btp,
-                            sizeof(PDM_g_num_t),
-                            PDM_STRIDE_VAR,
-                            block_stride,
-                            block_close_pts_g_num,
-                            &part_stride,
-                            (void **) close_pts_g_num);
-    free (block_close_pts_g_num);
-
-    *close_pts_dist2 = malloc (sizeof(double) * (*close_pts_idx)[n_pts]);
-    PDM_block_to_part_exch (btp,
-                            sizeof(double),
-                            PDM_STRIDE_VAR,
-                            block_stride,
-                            block_close_pts_dist2,
-                            &part_stride,
-                            (void **) close_pts_dist2);
-    free (block_close_pts_dist2);
-    free (block_stride);
-    free (part_stride);
-
-    ptb1 = PDM_part_to_block_free (ptb1);
-    btp = PDM_block_to_part_free (btp);
-    ptb = PDM_part_to_block_free (ptb);
-
-    free (recv_g_num);
-  }
-}
-
-
-
 
 
 
