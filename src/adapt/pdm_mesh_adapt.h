@@ -1271,7 +1271,7 @@ PDM_Mesh_adapt_geom_repr_mesh_init
  */
 
 void
-PDM_Mesh_adapt_geom_repr_vtx_set
+PDM_Mesh_adapt_geom_repr_mesh_vtx_set
 (
  PDM_Mesh_adapt_t *ma,
  const int         i_dom,
@@ -1305,7 +1305,7 @@ PDM_Mesh_adapt_geom_repr_vtx_set
  */
 
 int
-PDM_Mesh_adapt_geom_repr_block_add
+PDM_Mesh_adapt_geom_repr_mesh_block_add
 (
  PDM_Mesh_adapt_t           *ma,
  const int                   i_dom,
@@ -1357,7 +1357,7 @@ PDM_Mesh_adapt_geom_repr_block_add
  */
 
 void
-PDM_Mesh_adapt_geom_repr_block_std_set
+PDM_Mesh_adapt_geom_repr_mesh_block_std_set
 (
  PDM_Mesh_adapt_t *ma,
  const int         i_dom,
@@ -1389,7 +1389,7 @@ PDM_Mesh_adapt_geom_repr_block_std_set
  */
 
 void
-PDM_Mesh_adapt_geom_repr_block_ho_set
+PDM_Mesh_adapt_geom_repr_mesh_block_ho_set
 (
  PDM_Mesh_adapt_t *ma,
  const int         i_dom,
@@ -1421,7 +1421,7 @@ PDM_Mesh_adapt_geom_repr_block_ho_set
  */
 
 void
-PDM_Mesh_adapt_geom_repr_block_f_poly_set
+PDM_Mesh_adapt_geom_repr_mesh_block_f_poly_set
 (
  PDM_Mesh_adapt_t *ma,
  const int         i_dom,
@@ -1446,7 +1446,7 @@ PDM_Mesh_adapt_geom_repr_block_f_poly_set
  */
 
 void
-PDM_Mesh_adapt_geom_repr_finalize
+PDM_Mesh_adapt_geom_mesh_repr_finalize
 (
  PDM_Mesh_adapt_t *ma
 );
@@ -1501,10 +1501,26 @@ PDM_Mesh_adapt_geom_repr_corner_set
  int               corners
 );
 
+/**
+ * \brief Load CAD
+ *
+ * This functions loads the CAD file
+ *
+ * \param [in]  ma               Mesh adaptation workflow
+ *
+ */
+
+void
+PDM_Mesh_adapt_geom_cad_load
+(
+ PDM_Mesh_adapt_t *ma,
+ const char*       cad_file
+);
+
 
 /*----------------------------------------------------------------------------*
  *
- * Functions about geomtric criteria
+ * Functions about geometric criteria
  *
  *----------------------------------------------------------------------------*/
 
