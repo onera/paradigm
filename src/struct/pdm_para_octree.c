@@ -5555,24 +5555,6 @@ PDM_para_octree_dump
 
 
 
-typedef enum {
-  CLOSEST_POINT_BEGIN,
-  COMPUTE_RANK_EXTENTS,
-  FIRST_DISTRIBUTION,
-  FIRST_GUESS,
-  FIRST_LOCAL_SEARCH,
-  FIRST_PART_TO_BLOCK,
-  PHASE_1,
-  FIND_CLOSE_RANKS,
-  SEND_TO_CLOSE_RANKS,
-  SECOND_LOCAL_SEARCH,
-  PHASE_2,
-  FINALIZE,
-  CLOSEST_POINT_TOTAL,
-  NTIMER_CLOSEST_POINT
-} _spc_timer_step_t;
-
-
 /**
  *
  * Look for closest points stored inside an octree
@@ -5616,26 +5598,12 @@ PDM_para_octree_closest_points
     f_max_copy = (float) atof(env_var);
   }
 
-  double times_elapsed[NTIMER_CLOSEST_POINT], b_t_elapsed, e_t_elapsed;
-  for (_spc_timer_step_t step = CLOSEST_POINT_BEGIN; step <= CLOSEST_POINT_TOTAL; step++) {
-    times_elapsed[step] = 0.;
-  }
-
-  PDM_timer_hang_on (octree->timer);
-  times_elapsed[CLOSEST_POINT_BEGIN] = PDM_timer_elapsed (octree->timer);
-  b_t_elapsed = times_elapsed[CLOSEST_POINT_BEGIN];
-  PDM_timer_resume (octree->timer);
 
   /* Compute rank extents and build shared bounding-box tree */
   if (octree->used_rank_extents == NULL) {
     _compute_rank_extents (octree);
   }
 
-  PDM_timer_hang_on (octree->timer);
-  e_t_elapsed = PDM_timer_elapsed (octree->timer);
-  times_elapsed[COMPUTE_RANK_EXTENTS] = e_t_elapsed - b_t_elapsed;
-  b_t_elapsed = e_t_elapsed;
-  PDM_timer_resume (octree->timer);
 
 
   int i_rank, n_rank;
@@ -5908,12 +5876,6 @@ else {
     pts_coord1 = pts_coord;
   }
 
-  PDM_timer_hang_on (octree->timer);
-  e_t_elapsed = PDM_timer_elapsed (octree->timer);
-  times_elapsed[FIRST_DISTRIBUTION] = e_t_elapsed - b_t_elapsed;
-  b_t_elapsed = e_t_elapsed;
-  PDM_timer_resume (octree->timer);
-
 
 
   /********************************************
@@ -6020,14 +5982,6 @@ else {
   free (pts_code);
 
 
-  PDM_timer_hang_on (octree->timer);
-  e_t_elapsed = PDM_timer_elapsed (octree->timer);
-  times_elapsed[FIRST_GUESS] = e_t_elapsed - b_t_elapsed;
-  b_t_elapsed = e_t_elapsed;
-  PDM_timer_resume (octree->timer);
-
-
-
   /*
    *  Search closest points
    */
@@ -6056,13 +6010,6 @@ else {
                      __closest_pts_g_num + n_closest_points*copied_shift1[i],
                      __closest_pts_dist2 + n_closest_points*copied_shift1[i]);
   }
-
-
-  PDM_timer_hang_on (octree->timer);
-  e_t_elapsed = PDM_timer_elapsed (octree->timer);
-  times_elapsed[FIRST_LOCAL_SEARCH] = e_t_elapsed - b_t_elapsed;
-  b_t_elapsed = e_t_elapsed;
-  PDM_timer_resume (octree->timer);
 
 
   if (n_rank == 1) {
@@ -6111,16 +6058,8 @@ else {
   free (block_stride);
   free (part_stride);
 
-
   ptb1 = PDM_part_to_block_free (ptb1);
 
-  PDM_timer_hang_on (octree->timer);
-  e_t_elapsed = PDM_timer_elapsed (octree->timer);
-  times_elapsed[FIRST_PART_TO_BLOCK] = e_t_elapsed - b_t_elapsed;
-  times_elapsed[PHASE_1] = e_t_elapsed - times_elapsed[BEGIN];
-  b_t_elapsed = e_t_elapsed;
-  double b2_t_elapsed = b_t_elapsed;
-  PDM_timer_resume (octree->timer);
 
 
   /*
@@ -6146,12 +6085,6 @@ else {
       close_ranks[i] = octree->used_rank[j];
     }
   }
-
-  PDM_timer_hang_on (octree->timer);
-  e_t_elapsed = PDM_timer_elapsed (octree->timer);
-  times_elapsed[FIND_CLOSE_RANKS] = e_t_elapsed - b_t_elapsed;
-  b_t_elapsed = e_t_elapsed;
-  PDM_timer_resume (octree->timer);
 
   for (int i = 0; i < n_rank; i++) {
     send_count[i] = 0;
@@ -6482,12 +6415,6 @@ else {
   free (recv_count);
   free (recv_shift);
 
-  PDM_timer_hang_on (octree->timer);
-  e_t_elapsed = PDM_timer_elapsed (octree->timer);
-  times_elapsed[SEND_TO_CLOSE_RANKS] = e_t_elapsed - b_t_elapsed;
-  b_t_elapsed = e_t_elapsed;
-  PDM_timer_resume (octree->timer);
-
 
   _closest_pts_g_num = realloc (_closest_pts_g_num, sizeof(PDM_g_num_t) * n_pts2 * n_closest_points);
   for (int i = 0; i < n_pts2 * n_closest_points; i++) {
@@ -6524,12 +6451,6 @@ else {
   }
   free (pts_coord2);
 
-  PDM_timer_hang_on (octree->timer);
-  e_t_elapsed = PDM_timer_elapsed (octree->timer);
-  times_elapsed[SECOND_LOCAL_SEARCH] = e_t_elapsed - b_t_elapsed;
-  b_t_elapsed = e_t_elapsed;
-  PDM_timer_resume (octree->timer);
-
   if (copied_ranks2 != NULL) {
     free (copied_ranks2);
   }
@@ -6537,16 +6458,7 @@ else {
 
 
   /*
-   *  End of phase 2
-   */
-  PDM_timer_hang_on (octree->timer);
-  e_t_elapsed = PDM_timer_elapsed (octree->timer);
-  times_elapsed[PHASE_2] = e_t_elapsed - b2_t_elapsed;
-  b_t_elapsed = e_t_elapsed;
-  PDM_timer_resume (octree->timer);
-
-  /*
-   *  Back to original partitioning
+   *  End of phase 2 -- Back to original partitioning
    */
   /* 1) Part-to-block */
   ptb1 = PDM_part_to_block_create2 (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
@@ -6597,9 +6509,7 @@ else {
 
     // use more efficient method?
     for (int j = 0; j < block_stride[i1]; j++) {
-      if (//tmp_block_closest_pts_g_num[idx] > 0 &&
-          tmp_block_closest_pts_dist2[idx] < *last_closest_pt_dist2) {
-
+      if (tmp_block_closest_pts_dist2[idx] < *last_closest_pt_dist2) {
         assert (tmp_block_closest_pts_g_num[idx] > 0);//
         _insertion_sort (tmp_block_closest_pts_dist2[idx],
                          tmp_block_closest_pts_g_num[idx],
@@ -6644,12 +6554,6 @@ else {
   ptb1 = PDM_part_to_block_free (ptb1);
   btp = PDM_block_to_part_free (btp);
   ptb = PDM_part_to_block_free (ptb);
-
-  PDM_timer_hang_on (octree->timer);
-  e_t_elapsed = PDM_timer_elapsed (octree->timer);
-  times_elapsed[FINALIZE] = e_t_elapsed - b_t_elapsed;
-  times_elapsed[CLOSEST_POINT_TOTAL] = e_t_elapsed - times_elapsed[CLOSEST_POINT_BEGIN];
-  PDM_timer_resume (octree->timer);
 
   if (copied_ranks1 != NULL) {
     free (copied_ranks1);
@@ -6698,26 +6602,12 @@ PDM_para_octree_single_closest_point
     f_max_copy = (float) atof(env_var);
   }
 
-  double times_elapsed[NTIMER_CLOSEST_POINT], b_t_elapsed, e_t_elapsed;
-  for (_spc_timer_step_t step = CLOSEST_POINT_BEGIN; step <= CLOSEST_POINT_TOTAL; step++) {
-    times_elapsed[step] = 0.;
-  }
-
-  PDM_timer_hang_on (octree->timer);
-  times_elapsed[CLOSEST_POINT_BEGIN] = PDM_timer_elapsed (octree->timer);
-  b_t_elapsed = times_elapsed[CLOSEST_POINT_BEGIN];
-  PDM_timer_resume (octree->timer);
 
   /* Compute rank extents and build shared bounding-box tree */
   if (octree->used_rank_extents == NULL) {
     _compute_rank_extents (octree);
   }
 
-  PDM_timer_hang_on (octree->timer);
-  e_t_elapsed = PDM_timer_elapsed (octree->timer);
-  times_elapsed[COMPUTE_RANK_EXTENTS] = e_t_elapsed - b_t_elapsed;
-  b_t_elapsed = e_t_elapsed;
-  PDM_timer_resume (octree->timer);
 
   int i_rank, n_rank;
   PDM_MPI_Comm_rank (octree->comm, &i_rank);
@@ -6988,13 +6878,6 @@ PDM_para_octree_single_closest_point
     pts_g_num1 = pts_g_num;
     pts_coord1 = pts_coord;
   }
-
-  PDM_timer_hang_on (octree->timer);
-  e_t_elapsed = PDM_timer_elapsed (octree->timer);
-  times_elapsed[FIRST_DISTRIBUTION] = e_t_elapsed - b_t_elapsed;
-  b_t_elapsed = e_t_elapsed;
-  PDM_timer_resume (octree->timer);
-
   //printf ("[%4d] phase 1: n_recv_pts = %8d (wihtout copies: %8d)\n", i_rank, n_pts1, n_recv_pts);
 
 
@@ -7160,13 +7043,6 @@ PDM_para_octree_single_closest_point
   }
   free (pts_code);
 
-
-  PDM_timer_hang_on (octree->timer);
-  e_t_elapsed = PDM_timer_elapsed (octree->timer);
-  times_elapsed[FIRST_GUESS] = e_t_elapsed - b_t_elapsed;
-  b_t_elapsed = e_t_elapsed;
-  PDM_timer_resume (octree->timer);
-
   /*
    *  Search closest point
    */
@@ -7194,15 +7070,6 @@ PDM_para_octree_single_closest_point
                            __closest_pt_g_num + copied_shift1[i],
                            __closest_pt_dist2 + copied_shift1[i]);
   }
-
-
-
-  PDM_timer_hang_on (octree->timer);
-  e_t_elapsed = PDM_timer_elapsed (octree->timer);
-  times_elapsed[FIRST_LOCAL_SEARCH] = e_t_elapsed - b_t_elapsed;
-  b_t_elapsed = e_t_elapsed;
-  PDM_timer_resume (octree->timer);
-
 
   if (n_rank == 1) {
     return;
@@ -7253,14 +7120,6 @@ PDM_para_octree_single_closest_point
 
   ptb1 = PDM_part_to_block_free (ptb1);
 
-  PDM_timer_hang_on (octree->timer);
-  e_t_elapsed = PDM_timer_elapsed (octree->timer);
-  times_elapsed[FIRST_PART_TO_BLOCK] = e_t_elapsed - b_t_elapsed;
-  times_elapsed[PHASE_1] = e_t_elapsed - times_elapsed[BEGIN];
-  b_t_elapsed = e_t_elapsed;
-  double b2_t_elapsed = b_t_elapsed;
-  PDM_timer_resume (octree->timer);
-
 
   /*
    *  Phase 2 : send tgt points to close ranks and search for close source points there
@@ -7280,12 +7139,6 @@ PDM_para_octree_single_closest_point
       close_ranks[i] = octree->used_rank[j];
     }
   }
-
-  PDM_timer_hang_on (octree->timer);
-  e_t_elapsed = PDM_timer_elapsed (octree->timer);
-  times_elapsed[FIND_CLOSE_RANKS] = e_t_elapsed - b_t_elapsed;
-  b_t_elapsed = e_t_elapsed;
-  PDM_timer_resume (octree->timer);
 
   for (int i = 0; i < n_rank; i++) {
     send_count[i] = 0;
@@ -7605,13 +7458,6 @@ PDM_para_octree_single_closest_point
   free (recv_count);
   free (recv_shift);
 
-  PDM_timer_hang_on (octree->timer);
-  e_t_elapsed = PDM_timer_elapsed (octree->timer);
-  times_elapsed[SEND_TO_CLOSE_RANKS] = e_t_elapsed - b_t_elapsed;
-  b_t_elapsed = e_t_elapsed;
-  PDM_timer_resume (octree->timer);
-
-
   _closest_pt_g_num = realloc (_closest_pt_g_num, sizeof(PDM_g_num_t) * n_pts2);
   for (int i = 0; i < n_pts2; i++) {
     _closest_pt_g_num[i] = -1;
@@ -7645,29 +7491,13 @@ PDM_para_octree_single_closest_point
   }
   free (pts_coord2);
 
-  PDM_timer_hang_on (octree->timer);
-  e_t_elapsed = PDM_timer_elapsed (octree->timer);
-  times_elapsed[SECOND_LOCAL_SEARCH] = e_t_elapsed - b_t_elapsed;
-  b_t_elapsed = e_t_elapsed;
-  PDM_timer_resume (octree->timer);
-
   if (copied_ranks2 != NULL) {
     free (copied_ranks2);
   }
   free (copied_shift2);
 
   /*
-   *  End of phase 2
-   */
-  PDM_timer_hang_on (octree->timer);
-  e_t_elapsed = PDM_timer_elapsed (octree->timer);
-  times_elapsed[PHASE_2] = e_t_elapsed - b2_t_elapsed;
-  b_t_elapsed = e_t_elapsed;
-  PDM_timer_resume (octree->timer);
-
-
-  /*
-   *  Back to original partitioning
+   *  End of phase 2 -- Back to original partitioning
    */
   /* 1) Part-to-block */
   ptb1 = PDM_part_to_block_create2 (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
@@ -7761,12 +7591,6 @@ PDM_para_octree_single_closest_point
   ptb1 = PDM_part_to_block_free (ptb1);
   btp = PDM_block_to_part_free (btp);
   ptb = PDM_part_to_block_free (ptb);
-
-  PDM_timer_hang_on (octree->timer);
-  e_t_elapsed = PDM_timer_elapsed (octree->timer);
-  times_elapsed[FINALIZE] = e_t_elapsed - b_t_elapsed;
-  times_elapsed[CLOSEST_POINT_TOTAL] = e_t_elapsed - times_elapsed[CLOSEST_POINT_BEGIN];
-  PDM_timer_resume (octree->timer);
 
   if (copied_ranks1 != NULL) {
     free (copied_ranks1);
