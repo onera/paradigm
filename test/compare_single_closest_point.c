@@ -1126,13 +1126,13 @@ if (i_rank == 0) {
   double      **closest_point_dist2 = NULL;
 
   double elapsed_min = HUGE_VAL;
-  for (int method = 0; method < n_methods; method++) {
+  for (int method = 1; method < n_methods; method++) {
 
     if (i_rank == 0) {
       printf("\n\nMethod %d\n", method);
     }
 
-    if (method > 0) PDM_timer_hang_on (timer);
+    if (method > 1) PDM_timer_hang_on (timer);
     t_begin = PDM_timer_elapsed (timer);
     PDM_timer_resume (timer);
 

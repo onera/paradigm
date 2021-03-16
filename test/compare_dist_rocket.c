@@ -1647,7 +1647,7 @@ int main(int argc, char *argv[])
   }
 
 
-  if (1) {
+  if (0) {
     char filename[999];
 
     for (int i_part = 0; i_part < n_part_tgt; i_part++) {
