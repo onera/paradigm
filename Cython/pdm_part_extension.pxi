@@ -139,7 +139,6 @@ cdef class PartExtension:
       face_cell_data = NULL
     else:
       face_cell_data = <int *> face_cell.data
-    print("face_cell::", face_cell)
 
     cdef int * face_edge_idx_data
     if (face_edge_idx is None):
