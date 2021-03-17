@@ -30,7 +30,7 @@ extern "C" {
  * \brief Names of 8 children of a node
  *
  */
-
+#ifndef PDM_OCTREE_H
 typedef enum {
   PDM_BOTTOM,
   PDM_UP,
@@ -40,7 +40,7 @@ typedef enum {
   PDM_EAST,
   PDM_N_DIRECTION,
 } PDM_para_octree_direction_t;
-
+#endif
 /**
  * \enum PDM_para_octree_child_t
  * \brief Names of 8 children of a node
@@ -235,6 +235,18 @@ PDM_g_num_t *closest_octree_pt_g_num,
 double      *closest_octree_pt_dist2
 );
 
+void
+PDM_para_octree_closest_points
+(
+const int    id,
+const int    n_closest_points,
+const int    n_pts,
+double      *pts,
+PDM_g_num_t *pts_g_num,
+PDM_g_num_t *closest_octree_pt_g_num,
+double      *closest_octree_pt_dist2
+);
+
 /**
  *
  * \brief  Dump elapsed an CPU time
@@ -266,6 +278,68 @@ PDM_para_octree_points_inside_boxes
  int               **pts_in_box_idx,
  PDM_g_num_t       **pts_in_box_g_num,
  double            **pts_in_box_coord
+ );
+
+
+/**
+ *
+ * \brief Free copied data in an octree structure
+ *
+ * \param [in]   id                 Identifier
+ *
+ */
+
+void
+PDM_para_octree_free_copies
+(
+ const int          id
+ );
+
+/**
+ *
+ * Look for single closest point stored inside an octree
+ *
+ * \param [in]   id                     Identifier
+ * \param [in]   n_pts                  Number of points
+ * \param [in]   pts                    Point Coordinates
+ * \param [in]   pts_g_num              Point global numbers
+ * \param [out]  closest_octree_pt_id   Closest points in octree global number
+ * \param [out]  closest_octree_pt_dist Closest points in octree distance
+ *
+ */
+
+typedef enum {
+  LOCAL_SEARCH_RECURSIVE,
+  LOCAL_SEARCH_RECURSIVE_SORTED,
+  LOCAL_SEARCH_HEAP,
+  LOCAL_SEARCH_HEAP_BINARY
+} _local_search_fun_t;
+
+void
+PDM_para_octree_single_closest_point
+(
+const int    id,
+const _local_search_fun_t local_search_fun,
+const int    n_pts,
+double      *pts,
+PDM_g_num_t *pts_g_num,
+PDM_g_num_t *closest_octree_pt_g_num,
+double      *closest_octree_pt_dist2
+);
+
+
+void
+PDM_para_octree_points_within_radius
+(
+ const int     id,
+ const int     sort_close_points,
+ const int     n_pts,
+ double       *pts_coord,
+ PDM_g_num_t  *pts_g_num,
+ double       *pts_radius2,
+ int         **close_pts_idx,
+ PDM_g_num_t **close_pts_g_num,
+ double      **close_pts_dist2
  );
 
 #ifdef	__cplusplus

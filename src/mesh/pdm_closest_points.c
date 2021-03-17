@@ -473,13 +473,29 @@ PDM_closest_points_compute
   }
 
   /* Search closest source points from target points */
-  PDM_para_octree_closest_point (octree_id,
-                                 cls->n_closest,
-                                 n_tgt,
-                                 tgt_coord,
-                                 tgt_g_num,
-                                 closest_src_gnum,
-                                 closest_src_dist);
+  int method = 0;
+  char *env_method = getenv ("PDM_CLOSEST_POINTS_METHOD");
+  if (env_method != NULL) {
+    method = atoi(env_method);
+  }
+
+  if (method == 0) {
+    PDM_para_octree_closest_point (octree_id,
+                                   cls->n_closest,
+                                   n_tgt,
+                                   tgt_coord,
+                                   tgt_g_num,
+                                   closest_src_gnum,
+                                   closest_src_dist);
+  } else {
+    PDM_para_octree_closest_points (octree_id,
+                                    cls->n_closest,
+                                    n_tgt,
+                                    tgt_coord,
+                                    tgt_g_num,
+                                    closest_src_gnum,
+                                    closest_src_dist);
+  }
 
 
   /* Restore partitions */

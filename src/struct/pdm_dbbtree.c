@@ -1,4 +1,3 @@
-
 /*----------------------------------------------------------------------------
  * Standard C library headers
  *----------------------------------------------------------------------------*/
@@ -255,7 +254,7 @@ PDM_dbbtree_create
  PDM_MPI_Comm          comm,
  const int         dim,
  double       *global_extents
-)
+ )
 {
   _PDM_dbbtree_t *_dbbt = (_PDM_dbbtree_t *) malloc(sizeof(_PDM_dbbtree_t));
 
@@ -1510,9 +1509,9 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
      */
     rank_copy_num = (int *) malloc (sizeof(int) * lComm);
     PDM_box_tree_copy_to_ranks (_dbbt->btLoc,
-				&n_copied_ranks,
-				copied_ranks,
-				rank_copy_num);
+                                &n_copied_ranks,
+                                copied_ranks,
+                                rank_copy_num);
     /* rank_copy_num[_dbbt->btLoc->copied_ranks[i]] (def)= i*/
     free(copied_ranks);
 
@@ -1654,13 +1653,13 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
   // Determine candidate boxes in local box tree (local points)
   int *box_index_local;
   int *box_l_num_local;
-  #if 0
+#if 0
   PDM_box_tree_closest_upper_bound_dist_boxes_get (_dbbt->btLoc,
-						   n_pts_local,
-						   pts_local,
-						   upper_bound_dist_local,
-						   &box_index_local,
-						   &box_l_num_local);
+                                                   n_pts_local,
+                                                   pts_local,
+                                                   upper_bound_dist_local,
+                                                   &box_index_local,
+                                                   &box_l_num_local);
 #else
   PDM_box_tree_closest_upper_bound_dist_boxes_get_v2 (_dbbt->btLoc,
                                                       -1, // search in local box tree
@@ -1669,8 +1668,8 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
                                                       upper_bound_dist_local,
                                                       &box_index_local,
                                                       &box_l_num_local,
-                                                     _dbbt->d);
-  #endif
+                                                      _dbbt->d);
+#endif
   free(pts_local);
   free(upper_bound_dist_local);
 
@@ -1694,14 +1693,14 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
     int **box_index_rank;
     int **box_l_num_rank;
 
-    #if 0
+#if 0
     PDM_box_tree_closest_upper_bound_dist_boxes_get_from_copied_ranks (_dbbt->btLoc,
-								       i_pts_rank,
-								       pts_rank,
-								       upper_bound_dist_rank,
-								       &box_index_rank,
-								       &box_l_num_rank);
-    #else
+                                                                       i_pts_rank,
+                                                                       pts_rank,
+                                                                       upper_bound_dist_rank,
+                                                                       &box_index_rank,
+                                                                       &box_l_num_rank);
+#else
     box_index_rank = (int **) malloc (sizeof(int *) * n_copied_ranks);
     box_l_num_rank = (int **) malloc (sizeof(int *) * n_copied_ranks);
 
@@ -1718,7 +1717,7 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
                                                           &(box_l_num_rank[i_copied_rank]),
                                                           _dbbt->d);
     }
-    #endif
+#endif
 
     free(pts_rank);
     free(upper_bound_dist_rank);
@@ -1751,14 +1750,14 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
     int *box_index_recv = NULL;
     int *box_l_num_recv = NULL;
 
-    #if 0
+#if 0
     PDM_box_tree_closest_upper_bound_dist_boxes_get (_dbbt->btLoc,
                                                      n_pts_recv_total,
                                                      pts_recv,
                                                      upper_bound_dist_recv,
                                                      &box_index_recv,
                                                      &box_l_num_recv);
-    #else
+#else
     PDM_box_tree_closest_upper_bound_dist_boxes_get_v2 (_dbbt->btLoc,
                                                         -1, // search in local box tree
                                                         n_pts_recv_total,
@@ -1767,7 +1766,7 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
                                                         &box_index_recv,
                                                         &box_l_num_recv,
                                                         _dbbt->d);
-    #endif
+#endif
     free(pts_recv);
     free(upper_bound_dist_recv);
 
@@ -1882,7 +1881,7 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
     int key = 0;
     int found = 0;
     PDM_hash_tab_t *ht = PDM_hash_tab_create (PDM_HASH_TAB_KEY_INT,
-					      &keyMax);
+                                              &keyMax);
 
     PDM_g_num_t i_box = 0;
 
@@ -1899,7 +1898,7 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
             for (int k = box_index_local[i1]; k < box_index_local[i1+1]; k++) {
               i_box = box_g_num_local[k];
 
-	      found = PDM_hash_tab_check_collision (ht, i_box, keyMax, &key);
+              found = PDM_hash_tab_check_collision (ht, i_box, keyMax, &key);
 
               if (!found) {
                 PDM_hash_tab_data_add (ht, (void *) &key, *box_g_num + idx);
@@ -1917,7 +1916,7 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
             for (int k = box_index_rank[j_rank][i2]; k < box_index_rank[j_rank][i2+1]; k++) {
               i_box = box_g_num_rank[j_rank][k];
 
-	      found = PDM_hash_tab_check_collision (ht, i_box, keyMax, &key);
+              found = PDM_hash_tab_check_collision (ht, i_box, keyMax, &key);
 
               if (!found) {
                 PDM_hash_tab_data_add (ht, (void *) &key, *box_g_num + idx);
@@ -1935,7 +1934,7 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
             for (int k = 0; k < n_box_l_num_per_pts[i5]; k++) {
               i_box = box_g_num_per_pts[i4++];
 
-	      found = PDM_hash_tab_check_collision (ht, i_box, keyMax, &key);
+              found = PDM_hash_tab_check_collision (ht, i_box, keyMax, &key);
 
               if (!found) {
                 PDM_hash_tab_data_add (ht, (void *) &key, *box_g_num + idx);
@@ -2056,14 +2055,14 @@ PDM_dbbtree_points_inside_boxes
   double      *send_coord = NULL;
   double      *recv_coord = NULL;
 
-//-->>
+  //-->>
   double *_pts_coord = malloc (sizeof(double) * n_pts * 3);
   for (int i = 0; i < n_pts; i++) {
     _normalize (_dbbt,
                 pts_coord + 3*i,
                 _pts_coord + 3*i);
   }
-//<<--
+  //<<--
 
   if (_dbbt->btShared != NULL) {
     PDM_box_tree_points_inside_boxes (_dbbt->btShared,
@@ -2284,13 +2283,13 @@ PDM_dbbtree_points_inside_boxes
     free (recv_coord);
   }
 
-//-->>
+  //-->>
   for (int i = 0; i < (*pts_in_box_idx)[n_boxes]; i++) {
     for (int j = 0; j < 3; j++) {
       (*pts_in_box_coord)[3*i+j] = _dbbt->s[j] + _dbbt->d[j] * ((*pts_in_box_coord)[3*i+j]);
     }
   }
-//<<--
+  //<<--
 }
 
 
