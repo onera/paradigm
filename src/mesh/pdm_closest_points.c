@@ -374,8 +374,8 @@ PDM_closest_points_compute
   int i_rank;
   PDM_MPI_Comm_rank (cls->comm, &i_rank);
 
-  const int depth_max = 31;//?
-  const int points_in_leaf_max = 1;//2*cls->n_closest;//?
+  const int depth_max = 31;
+  const int points_in_leaf_max = cls->n_closest;
   const int build_leaf_neighbours = 1;
 
 
@@ -396,57 +396,8 @@ PDM_closest_points_compute
                                      cls->src_cloud->gnum[i_part]);
   }
 
-
-  /* Compute global extents of source and target point clouds */
-  double local_min[3] = { HUGE_VAL,  HUGE_VAL,  HUGE_VAL};
-  double local_max[3] = {-HUGE_VAL, -HUGE_VAL, -HUGE_VAL};
-  for (int i_part = 0; i_part < cls->src_cloud->n_part; i_part++) {
-    double *x = cls->src_cloud->coords[i_part];
-    for (int i = 0; i < cls->src_cloud->n_points[i_part]; i++) {
-      for (int j = 0; j < 3; j++) {
-        if (*x < local_min[j])
-          local_min[j] = *x;
-        if (*x > local_max[j])
-          local_max[j] = *x;
-        x++;
-      }
-    }
-  }
-
-  for (int i_part = 0; i_part < cls->tgt_cloud->n_part; i_part++) {
-    double *x = cls->tgt_cloud->coords[i_part];
-    for (int i = 0; i < cls->tgt_cloud->n_points[i_part]; i++) {
-      for (int j = 0; j < 3; j++) {
-        if (*x < local_min[j])
-          local_min[j] = *x;
-        if (*x > local_max[j])
-          local_max[j] = *x;
-        x++;
-      }
-    }
-  }
-
-  double global_extents[6];
-  PDM_MPI_Allreduce(local_min, global_extents,     3, PDM_MPI_DOUBLE, PDM_MPI_MIN, cls->comm);
-  PDM_MPI_Allreduce(local_max, global_extents + 3, 3, PDM_MPI_DOUBLE, PDM_MPI_MAX, cls->comm);
-
-  /*
-   * Dilate extents
-   */
-  double max_range = 0.;
-  for (int i = 0; i < 3; i++) {
-    max_range = PDM_MAX (max_range,
-                         global_extents[i+3] - global_extents[i]);
-  }
-
-  const double epsilon = 1.e-3 * max_range;
-  for (int i = 0; i < 3; i++) {
-    global_extents[i]   -= 1.1 * epsilon; // On casse la symetrie !
-    global_extents[i+3] +=       epsilon;
-  }
-
   /* Build parallel octree */
-  PDM_para_octree_build (octree_id, global_extents);
+  PDM_para_octree_build (octree_id, NULL);
   //PDM_para_octree_dump (octree_id);
   PDM_para_octree_dump_times (octree_id);
 
@@ -473,20 +424,13 @@ PDM_closest_points_compute
   }
 
   /* Search closest source points from target points */
-  int method = 0;
-  char *env_method = getenv ("PDM_CLOSEST_POINTS_METHOD");
-  if (env_method != NULL) {
-    method = atoi(env_method);
-  }
-
-  if (method == 0) {
-    PDM_para_octree_closest_point (octree_id,
-                                   cls->n_closest,
-                                   n_tgt,
-                                   tgt_coord,
-                                   tgt_g_num,
-                                   closest_src_gnum,
-                                   closest_src_dist);
+  if (cls->n_closest == 1) {
+    PDM_para_octree_single_closest_point (octree_id,
+                                          n_tgt,
+                                          tgt_coord,
+                                          tgt_g_num,
+                                          closest_src_gnum,
+                                          closest_src_dist);
   } else {
     PDM_para_octree_closest_points (octree_id,
                                     cls->n_closest,
@@ -496,6 +440,7 @@ PDM_closest_points_compute
                                     closest_src_gnum,
                                     closest_src_dist);
   }
+
 
 
   /* Restore partitions */
