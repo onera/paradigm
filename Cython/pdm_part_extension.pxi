@@ -62,6 +62,14 @@ cdef extern from "pdm_part_extension.h":
                                       PDM_mesh_entities_t       connectivity_type,
                                       PDM_g_num_t             **ln_to_gn);
 
+  int PDM_part_extension_group_get(PDM_part_extension_t     *part_ext,
+                                   int                       i_domain,
+                                   int                       i_part,
+                                   PDM_mesh_entities_t       mesh_entity,
+                                   int                     **connect,
+                                   int                     **connect_idx,
+                                   PDM_g_num_t             **ln_to_gn);
+
   int PDM_part_extension_coord_get(PDM_part_extension_t     *part_ext,
                                    int                       i_domain,
                                    int                       i_part,
@@ -334,6 +342,56 @@ cdef class PartExtension:
       PyArray_ENABLEFLAGS(np_ln_to_gn, NPY.NPY_OWNDATA);
 
     return np_ln_to_gn
+
+  # ------------------------------------------------------------------
+  def get_group(self,
+                int i_domain,
+                int i_part,
+                PDM_mesh_entities_t mesh_ety_type):
+    """
+    """
+    cdef int *entity_group_idx
+    cdef int *entity_group
+    cdef PDM_g_num_t *group_ln_to_gn
+    cdef int size
+
+    n_group = PDM_part_extension_group_get(self._part_ext, i_domain, i_part,
+                                        mesh_ety_type,
+                                        &entity_group,
+                                        &entity_group_idx,
+                                        &group_ln_to_gn)
+
+    if (group_ln_to_gn == NULL) :
+      np_group_ln_to_gn = None
+    else :
+      dim = <NPY.npy_intp> entity_group_idx[n_group]
+      np_group_ln_to_gn = NPY.PyArray_SimpleNewFromData(1,
+                                                  &dim,
+                                                  PDM_G_NUM_NPY_INT,
+                                                  <void *> group_ln_to_gn)
+      PyArray_ENABLEFLAGS(np_group_ln_to_gn, NPY.NPY_OWNDATA);
+
+    if (entity_group_idx == NULL) :
+      np_entity_group_idx = None
+    else :
+      dim = <NPY.npy_intp> (n_group+1)
+      np_entity_group_idx = NPY.PyArray_SimpleNewFromData(1,
+                                                          &dim,
+                                                          NPY.NPY_INT32,
+                                                          <void *> entity_group_idx)
+      PyArray_ENABLEFLAGS(np_entity_group_idx, NPY.NPY_OWNDATA);
+
+    if (entity_group == NULL) :
+      np_entity_group = None
+    else :
+      dim = <NPY.npy_intp> entity_group_idx[n_group]
+      np_entity_group = NPY.PyArray_SimpleNewFromData(1,
+                                                      &dim,
+                                                      NPY.NPY_INT32,
+                                                      <void *> entity_group)
+      PyArray_ENABLEFLAGS(np_entity_group, NPY.NPY_OWNDATA);
+
+    return (np_entity_group_idx, np_entity_group, np_group_ln_to_gn)
 
   # ------------------------------------------------------------------
   def get_coord(self, int i_domain, int i_part):
