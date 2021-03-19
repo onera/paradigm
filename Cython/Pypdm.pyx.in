@@ -26,6 +26,8 @@ NPY.import_array()
 ctypedef @PYX_NPY_G_NUM@ npy_pdm_gnum_t
 ctypedef @PYX_NPY_L_NUM@ npy_pdm_lnum_t
 npy_pdm_gnum_dtype = @PYX_NPY_G_NUM_DTYPE@
+pdm_has_parmetis   = @PYX_PDM_HAS_PARMETIS@
+pdm_has_ptscotch   = @PYX_PDM_HAS_PTSCOTCH@
 ctypedef @PYX_G_NUM@ PDM_g_num_t
 ctypedef @PYX_L_NUM@ PDM_l_num_t
 
@@ -149,6 +151,10 @@ _PDM_BOUND_TYPE_EDGE   = PDM_BOUND_TYPE_EDGE
 _PDM_BOUND_TYPE_VTX    = PDM_BOUND_TYPE_VTX
 _PDM_BOUND_TYPE_MAX    = PDM_BOUND_TYPE_MAX
 
+_PDM_EXTEND_FROM_FACE   = PDM_EXTEND_FROM_FACE
+_PDM_EXTEND_FROM_EDGE   = PDM_EXTEND_FROM_EDGE
+_PDM_EXTEND_FROM_VTX    = PDM_EXTEND_FROM_VTX
+
 
 @COMMENT_NOT_PDMA@
 @COMMENT_NOT_PDMA@cdef extern from "pdm_plugin.h":
@@ -250,4 +256,11 @@ include "pdm_poly_mesh_surf.pxi"
 # PDM_poly_mesh_surf :
 # --------------------
 include "pdm_partitioning_algorithm.pxi"
+
+# PDM_poly_mesh_surf :
+# --------------------
+include "pdm_part_extension.pxi"
+
+
+
 # TODO: PDM_writer, ...

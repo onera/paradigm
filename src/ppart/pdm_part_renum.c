@@ -1925,6 +1925,10 @@ int     *new_to_old_order
                             old_to_new_order,
                             part->elt_vtx[i_section]);
     }
+    PDM_order_array (part->n_vtx,
+                     sizeof(int),
+                     new_to_old_order,
+                     part->vtx_ghost_information);
   }
 
   if(part->edge_vtx != NULL) {

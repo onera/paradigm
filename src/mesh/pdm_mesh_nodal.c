@@ -63,6 +63,20 @@ extern "C" {
  * \return        NULL
  *
  */
+int
+is_2D_element(PDM_Mesh_nodal_elt_t type) {
+  return type==PDM_MESH_NODAL_TRIA3
+      || type==PDM_MESH_NODAL_QUAD4
+      || type==PDM_MESH_NODAL_POLY_2D;
+}
+int
+is_3D_element(PDM_Mesh_nodal_elt_t type) {
+  return type==PDM_MESH_NODAL_TETRA4
+      || type==PDM_MESH_NODAL_PYRAMID5
+      || type==PDM_MESH_NODAL_PRISM6
+      || type==PDM_MESH_NODAL_HEXA8
+      || type==PDM_MESH_NODAL_POLY_3D;
+}
 
 static
 PDM_Mesh_nodal_vtx_t *

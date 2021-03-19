@@ -122,7 +122,7 @@ PDM_part_extension_connectivity_get
  PDM_connectivity_type_t   connectivity_type,
  int                     **connect,
  int                     **connect_idx
- );
+);
 
 
 int
@@ -131,7 +131,20 @@ PDM_part_extension_ln_to_gn_get
  PDM_part_extension_t     *part_ext,
  int                       i_domain,
  int                       i_part,
- PDM_mesh_entities_t       connectivity_type,
+ PDM_mesh_entities_t       mesh_entity,
+ PDM_g_num_t             **ln_to_gn
+);
+
+
+int
+PDM_part_extension_group_get
+(
+ PDM_part_extension_t     *part_ext,
+ int                       i_domain,
+ int                       i_part,
+ PDM_mesh_entities_t       mesh_entity,
+ int                     **connect,
+ int                     **connect_idx,
  PDM_g_num_t             **ln_to_gn
 );
 

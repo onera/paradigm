@@ -1405,6 +1405,25 @@ PDM_part_dconnectivity_to_pconnectivity_hash
   free(pconnectivity_tmp);
 }
 
+
+int
+min_sub_index
+(
+  int* array,
+  int* sub_indices,
+  int n_sub_indices,
+  int i_rank
+)
+{
+  int min_idx = sub_indices[0];
+  for (int i=1; i<n_sub_indices; ++i) {
+    if (array[sub_indices[i]] < array[min_idx]) {
+      min_idx = sub_indices[i];
+    }
+  }
+  return min_idx;
+}
+
 /**
  *  \brief Generates the communication information at the partition interfaces for the
  *   given entity. The communication data associates to
@@ -1534,6 +1553,27 @@ PDM_part_generate_entity_graph_comm
                 (void **) part_data,
                           &blk_stri,
                 (void **) &blk_data);
+  // get the procs from which the data comes from
+  int** proc_part_stri = (int ** ) malloc( n_part * sizeof(int *));
+  int** proc_part_data = (int ** ) malloc( n_part * sizeof(int *));
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    proc_part_stri[i_part] = (int *) malloc( pn_entity[i_part] * sizeof(int));
+    proc_part_data[i_part] = (int *) malloc( pn_entity[i_part] * sizeof(int));
+    for (int i=0; i<pn_entity[i_part]; ++i) {
+      proc_part_stri[i_part][i] = 1;
+      proc_part_data[i_part][i] = i_rank;
+    }
+  }
+  int* proc_blk_stri = NULL;
+  int* proc_blk_data = NULL;
+  PDM_part_to_block_exch (ptb,
+                          sizeof(int),
+                          PDM_STRIDE_VAR,
+                          1,
+                          proc_part_stri,
+                (void **) proc_part_data,
+                          &proc_blk_stri,
+                (void **) &proc_blk_data);
 
   /*
    * Free
@@ -1542,9 +1582,11 @@ PDM_part_generate_entity_graph_comm
   for(int i_part = 0; i_part < n_part; ++i_part) {
     free(part_stri[i_part]);
     free(part_data[i_part]);
+    free(proc_part_stri[i_part]);
+    free(proc_part_data[i_part]);
   }
-  free(part_stri);
-  free(part_data);
+  free(proc_part_stri);
+  free(proc_part_data);
 
   /*
    * Panic verbose
@@ -1558,6 +1600,7 @@ PDM_part_generate_entity_graph_comm
       }
       printf("\n");
     }
+
   }
 
   /*
@@ -1575,7 +1618,12 @@ PDM_part_generate_entity_graph_comm
   int idx_comp = 0;     /* Compressed index use to fill the buffer */
   int idx_data = 0;     /* Index in the block to post-treat        */
 
-  int next_selected_rank = 0;
+  int* n_owner_entity_by_rank = (int*)malloc(n_rank * sizeof(int));
+  for (int i=0; i<n_rank; ++i) {
+    n_owner_entity_by_rank[i] = 0;
+  }
+  int* proc_data_current = proc_blk_data;
+
   for(int i_block = 0; i_block < n_entity_block; ++i_block){
 
     /* Non shared data --> Compression */
@@ -1592,12 +1640,15 @@ PDM_part_generate_entity_graph_comm
       }
       /* Fill up entity priority */
       if(setup_priority == 1){
-        blk_priority_data[i_block] = next_selected_rank;
-        next_selected_rank += 1;
-        next_selected_rank = next_selected_rank % n_rank;
+        int selected_owner_rank = min_sub_index(n_owner_entity_by_rank,proc_data_current,proc_blk_stri[i_block],i_rank);
+        ++n_owner_entity_by_rank[selected_owner_rank];
+
+        blk_priority_data[i_block] = selected_owner_rank;
       }
     }
+    proc_data_current += proc_blk_stri[i_block];
   }
+  free(n_owner_entity_by_rank);
 
   /*
    * Compress data
@@ -1652,6 +1703,8 @@ PDM_part_generate_entity_graph_comm
    */
   free(blk_data);
   free(blk_stri);
+  free(proc_blk_data);
+  free(proc_blk_stri);
 
   /*
    * Interface for pdm_part is  :

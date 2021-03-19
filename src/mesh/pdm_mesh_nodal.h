@@ -58,6 +58,11 @@ typedef enum {
 
 } PDM_Mesh_nodal_elt_t;
 
+int
+is_2D_element(PDM_Mesh_nodal_elt_t type);
+int
+is_3D_element(PDM_Mesh_nodal_elt_t type);
+
 
 typedef struct _PDM_Mesh_nodal_t PDM_Mesh_nodal_t;
 
