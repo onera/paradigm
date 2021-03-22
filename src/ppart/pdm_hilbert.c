@@ -1037,61 +1037,6 @@ PDM_hilbert_encode_coords(int                  dim,
   const unsigned *idata = NULL;
   const unsigned *istate = NULL;
 
-  switch (encode) {
-
-  case PDM_HILBERT_CS:
-
-    if (dim == 2) {
-      idata  = _pdm_idata2d;
-      istate = _pdm_istate2d;
-    }
-    else if (dim == 3) {
-      idata  = _pdm_idata3d;
-      istate = _pdm_istate3d;
-    }
-    break;
-
-  case PDM_HILBERT_GRIEBEL:
-
-    if (dim == 2) {
-      PDM_error(__FILE__, __LINE__, 0, "pdm_hilbert_encode_coords : No data for griebel 2D\n");
-      exit(0);
-    }
-    else if (dim == 3) {
-      idata  = _griebel_idata3d;
-      istate = _griebel_istate3d;
-    }
-    break;
-
-  case PDM_HILBERT_BADER:
-
-    if (dim == 2) {
-      idata  = _bader_idata2d;
-      istate = _bader_istate2d;
-    }
-    else if (dim == 3) {
-      idata  = _bader_idata3d;
-      istate = _bader_istate3d;
-    }
-    break;
-
-  case PDM_HILBERT_ZHANG:  /*!< Zhang */
-    if (dim == 2) {
-      idata  = _zhang_idata2d;
-      istate = _zhang_istate2d;
-    }
-    else if (dim == 3) {
-      idata  = _zhang_idata3d;
-      istate = _zhang_istate3d;
-    }
-    break;
-
-  default:
-    PDM_error(__FILE__, __LINE__, 0, "pdm_hilbert_encode_coords : Unknow encode type\n");
-    exit(0);
-
-  }
-
   int i, j, k;
   double s[3], d[3], n[3];
 
@@ -1119,6 +1064,63 @@ PDM_hilbert_encode_coords(int                  dim,
       e_dim += 1;
     }
   }
+
+  switch (encode) {
+
+  case PDM_HILBERT_CS:
+
+    if (e_dim == 2) {
+      idata  = _pdm_idata2d;
+      istate = _pdm_istate2d;
+    }
+    else if (e_dim == 3) {
+      idata  = _pdm_idata3d;
+      istate = _pdm_istate3d;
+    }
+    break;
+
+  case PDM_HILBERT_GRIEBEL:
+
+    if (e_dim == 2) {
+      PDM_error(__FILE__, __LINE__, 0, "pdm_hilbert_encode_coords : No data for griebel 2D\n");
+      exit(0);
+    }
+    else if (e_dim == 3) {
+      idata  = _griebel_idata3d;
+      istate = _griebel_istate3d;
+    }
+    break;
+
+  case PDM_HILBERT_BADER:
+
+    if (e_dim == 2) {
+      idata  = _bader_idata2d;
+      istate = _bader_istate2d;
+    }
+    else if (e_dim == 3) {
+      idata  = _bader_idata3d;
+      istate = _bader_istate3d;
+    }
+    break;
+
+  case PDM_HILBERT_ZHANG:  /*!< Zhang */
+    if (e_dim == 2) {
+      idata  = _zhang_idata2d;
+      istate = _zhang_istate2d;
+    }
+    else if (e_dim == 3) {
+      idata  = _zhang_idata3d;
+      istate = _zhang_istate3d;
+    }
+    break;
+
+  default:
+    PDM_error(__FILE__, __LINE__, 0, "pdm_hilbert_encode_coords : Unknow encode type\n");
+    exit(0);
+
+  }
+
+
 
   switch(dim) {
 
