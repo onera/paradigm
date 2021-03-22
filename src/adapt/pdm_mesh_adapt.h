@@ -146,6 +146,7 @@ typedef enum {
   PDM_MESH_ADAPT_GEOM_REPR_STL,            /*!< STL file */
   PDM_MESH_ADAPT_GEOM_REPR_IGES,           /*!< IGES file  */
   PDM_MESH_ADAPT_GEOM_REPR_STEP,           /*!< STEP file */
+  PDM_MESH_ADAPT_GEOM_REPR_EGADS_LITE,     /*!< Egads lite file */
   PDM_MESH_ADAPT_GEOM_REPR_N               /*!< Number of type of geometric
                                                 representations */
 } PDM_Mesh_adapt_geom_repr_t;
@@ -159,11 +160,11 @@ typedef enum {
 
 typedef enum {
 
-  PDM_MESH_ADAPT_METRIC_VTX,       /*!< Metric defined to vertices */
-  PDM_MESH_ADAPT_METRIC_CELL,      /*!< ??? Metric defined to elements ??? */
-  PDM_MESH_ADAPT_SUBDIVSION_LEVEL_VTX, /*!< Subdvision level defined to vertices */
+  PDM_MESH_ADAPT_METRIC_VTX,            /*!< Metric defined to vertices */
+  PDM_MESH_ADAPT_METRIC_CELL,           /*!< Metric defined to elements (not recommended) */
+  PDM_MESH_ADAPT_SUBDIVSION_LEVEL_VTX,  /*!< Subdvision level defined to vertices */
   PDM_MESH_ADAPT_SUBDIVSION_LEVEL_CELL, /*!< Subdvision level defined to elements */
-  PDM_MESH_ADAPT_CRITERION_N       /*!< Number of cirteria */
+  PDM_MESH_ADAPT_CRITERION_N            /*!< Number of cirteria */
 
 } PDM_Mesh_adapt_criterion_t;
 
@@ -447,7 +448,7 @@ typedef struct _PDM_Mesh_adapt_t PDM_Mesh_adapt_t;
  *                       - PDM_MESH_ADAPT_ADAPTCELLS
  *                       - PDM_MESH_ADAPT_FEFLO
  *                       - PDM_MESH_ADAPT_PARMMG
- *                       - PDM_MESH_ADAPT_TREEPART
+ *                       - PDM_MESH_ADAPT_TREEADAPT
  * \param [in] criterion   Geometric adaptation criterion
  *                       - PDM_MESH_ADAPT_METRIC
  *                       - PDM_MESH_ADAPT_SUBDIVSION_LEVEL
@@ -1618,7 +1619,7 @@ PDM_Mesh_adapt_field_family_add
  */
 
 void
-PDM_Mesh_adapt_geom_compute
+PDM_Mesh_adapt_compute
 (
  PDM_Mesh_adapt_t *ma
 );
