@@ -169,7 +169,7 @@ typedef enum {
 typedef enum {
 
   PDM_MESH_NATURE_NODAL_SHARED   = 0,  /*!< Shared PDM_mesh_nodal  */
-  PDM_MESH_NATURE_MESH_SETTED    = 1,  /*!< PDm_surface_mesh  */
+  PDM_MESH_NATURE_MESH_SETTED    = 1   /*!< PDm_surface_mesh  */
 
 } PDM_mesh_nature_t;
 

@@ -28,7 +28,6 @@ extern "C" {
  * Types definition
  *============================================================================*/
 
-//-->>
 typedef enum {
 
   PDM_BLOCK_ID_BLOCK_STD    = 0,
@@ -36,7 +35,6 @@ typedef enum {
   PDM_BLOCK_ID_BLOCK_POLY3D = 2000000
 
 } PDM_block_id_block_t;
-//<<--
 
 /*----------------------------------------------------------------------------
  * Geometric element type
