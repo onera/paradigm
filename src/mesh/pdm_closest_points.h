@@ -27,6 +27,7 @@
 
 #include "pdm.h"
 #include "pdm_mpi.h"
+#include "pdm_handles.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -208,6 +209,19 @@ PDM_closest_points_dump_times
 (
  const int id
 );
+
+ /**
+ *
+ * \brief  transfert _closest_pts var as it seems this static var is not readable
+ *          when we switch to the nvcc compiler
+ *
+ */
+
+PDM_Handles_t *
+PDM_closest_points_closest_transfert
+(
+  void
+ );
 
 #ifdef	__cplusplus
 }

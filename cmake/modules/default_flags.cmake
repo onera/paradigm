@@ -140,6 +140,14 @@ set (FORTRAN_LIBRARIES_FLAG "${FORTRAN_LIBRARIES_FLAG}" CACHE STRING "Fortran li
 
 mark_as_advanced (CMAKE_Fortran_FLAGS_PROFILING CMAKE_Fortran_FLAGS_SANITIZE FORTRAN_LIBRARIES FORTRAN_LIBRARIES_FLAG)
 
+#------------------------------------------------------------------------------
+# CUDA Default Flags
+#------------------------------------------------------------------------------
+
+#set(CUDA_SEPARABLE_COMPILATION ON)
+#set(CUDA_NVCC_FLAGS "-dc")
+#set(CMAKE_CUDA_FLAGS "-dc")
+#set(CMAKE_CUDA_FLAGS "-gencode=arch=compute_20,code=sm_20")
 
 #------------------------------------------------------------------------------
 # C Default Flags
@@ -150,6 +158,7 @@ if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
   link_libraries ("m")
 
   set (CMAKE_C_FLAGS "-std=gnu99 -fPIC -funsigned-char -pedantic -W -Wall -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wnested-externs -Wunused -Wfloat-equal ")
+  set (CMAKE_CUDA_FLAGS "--compiler-options -fPIC")
 
   set (CMAKE_C_FLAGS_RELEASE         "-O3")
   set (CMAKE_C_FLAGS_DEBUG           "-O0 -g")
@@ -162,6 +171,7 @@ elseif (CMAKE_C_COMPILER_ID STREQUAL "Intel")
 
   set (CMAKE_C_FLAGS "-std=gnu99 -restrict -fpic -funsigned-char -Wall -Wcheck -Wshadow -Wpointer-arith -Wmissing-prototypes -Wuninitialized -Wunused -wd3656")
   # set (CMAKE_C_FLAGS "-std=gnu99 -restrict -xHost -qopt-report=5 -fpic -funsigned-char -Wall -Wcheck -Wshadow -Wpointer-arith -Wmissing-prototypes -Wuninitialized -Wunused -wd869,3656")
+  set (CMAKE_CUDA_FLAGS "--compiler-options -fpic")
 
   set (CMAKE_C_FLAGS_RELEASE "-O3")
 
@@ -414,6 +424,5 @@ endif()
 # leak:librxm-fi.so
 # leak:*MPI*
 # leak:*mpi*
-
 
 

@@ -179,8 +179,6 @@ _get_from_id
 
   return closest;
 }
-
-
 /*============================================================================
  * Public function definitions
  *============================================================================*/
@@ -400,7 +398,7 @@ PDM_closest_points_compute
   PDM_para_octree_build (octree_id, NULL);
   //PDM_para_octree_dump (octree_id);
   PDM_para_octree_dump_times (octree_id);
-
+  //<--
 
 
   /* Concatenate partitions */
@@ -473,9 +471,10 @@ PDM_closest_points_compute
 
 
 
+  //-->GPU
   /* Free parallel octree */
   PDM_para_octree_free (octree_id);
-
+  //<--
 
 
   PDM_timer_hang_on(cls->timer);
@@ -634,6 +633,22 @@ PDM_closest_points_dump_times
     PDM_printf( "closest_points timer : all (elapsed and cpu) : %12.5es %12.5es\n",
                 t1max, t2max);
   }
+}
+
+/**
+ *
+ * \brief  transfert _closest_pts var as it seems this static var is not readable
+ *          when we switch to the nvcc compiler
+ *
+ */
+
+PDM_Handles_t *
+PDM_closest_points_closest_transfert
+(
+  void
+ )
+{
+  return _closest_pts;
 }
 
 #ifdef	__cplusplus

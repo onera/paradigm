@@ -24,10 +24,37 @@ file(GLOB_RECURSE SOURCESF
      *.[fF]
      *.[fF]90)
 
+file(GLOB_RECURSE SOURCESGPU
+     gpu/*.cu
+     gpu/*.cuh)
+
 add_library(pdm OBJECT ${SOURCES})
 
 if (PDM_ENABLE_STATIC_Fortran_INTERFACE OR PDM_ENABLE_SHARED_Fortran_INTERFACE)
   add_library(pdmf OBJECT ${SOURCESF})
+endif()
+
+if (PDM_ENABLE_CUDA)
+  add_library(pdm_gpu STATIC ${SOURCESGPU})
+  set_target_properties(pdm_gpu PROPERTIES
+                            CUDA_SEPARABLE_COMPILATION ON)
+  target_compile_options(pdm_gpu PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:
+  -maxrregcount=32;--fmad=false;#-G;-g;
+  # -gencode=arch=compute_35,code=sm_35;
+  # -gencode=arch=compute_37,code=sm_37;
+  # -gencode=arch=compute_50,code=sm_50;
+  # -gencode=arch=compute_52,code=sm_52;
+  # -gencode=arch=compute_60,code=sm_60;
+  -gencode=arch=compute_61,code=sm_61;
+  # -gencode=arch=compute_70,code=sm_70;
+  # -gencode=arch=compute_75,code=sm_75;
+  # -gencode=arch=compute_75,code=compute_75;
+  >)
+  #set(CUDA_PROPAGATE_HOST_FLAGS OFF)
+  #list(APPEND CUDA_NVCC_FLAGS -gencode arch=compute_61,code=sm_51;)  
+  #set(CUDA_NVCC_FLAGS "-gencode arch=compute_60,code=sm_60")
+  #set(CUDA_LAUNCH_BLOCKING 1)
+  #set(CMAKE_C_FLAGS "-std=c17 -pedantic-errors ${CMAKE_C_FLAGS}")
 endif()
 
 target_include_directories(pdm
@@ -45,6 +72,7 @@ target_include_directories(pdm
   PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/mesh>
   PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/meshgen>
   PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/struct>
+  PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/gpu>
   PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/adapt>
   PUBLIC    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/util>
   PUBLIC    $<INSTALL_INTERFACE:include/>
@@ -91,6 +119,28 @@ if (PARMETIS_FOUND)
     target_include_directories(pdm
                               PRIVATE $<BUILD_INTERFACE:${PARMETIS_INCLUDE_DIRS}>)
 endif (PARMETIS_FOUND)
+
+if (PDM_ENABLE_CUDA)
+    target_include_directories(pdm_gpu
+                              INTERFACE ${CMAKE_CURRENT_BINARY_DIR}
+                              PRIVATE   ${CMAKE_CURRENT_BINARY_DIR}
+                              PRIVATE  ${CMAKE_BINARY_DIR}
+                              PRIVATE  ${PDM_BINARY_DIR}
+                              PUBLIC  ${CMAKE_SOURCE_DIR}
+                              PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}
+                              #PUBLIC  /opt/tools/openmpi/4.0.1-gnu-8.3/include/
+                              PUBLIC  ${MPI_INCLUDE_PATH}
+                              PUBLIC  ${CUDA_INCLUDE_DIRS}
+                              PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/pario
+                              PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/ppart
+                              PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/io 
+                              PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/mpi_wrapper 
+                              PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/ext_wrapper                       
+                              PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/mesh 
+                              PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/meshgen                      
+                              PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/struct
+                              PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/util)
+endif ()
 
 # Liste des header
 # ----------------
@@ -248,6 +298,21 @@ if (PDM_ENABLE_STATIC_Fortran_INTERFACE)
   get_target_property(PDM_INC pdmf INCLUDE_DIRECTORIES)
   target_include_directories(pdmf_static PUBLIC ${PDM_INC})
 
+endif()
+
+if (PDM_ENABLE_CUDA)
+  set_property(TARGET ${pdm_gpu} PROPERTY POSITION_INDEPENDENT_CODE 1)
+
+  if (PDM_ENABLE_STATIC)
+    target_link_libraries(pdm_gpu pdm_static)
+  elseif (PDM_ENABLE_SHARED)
+    target_link_libraries(pdm_gpu pdm_shared)
+  endif()
+  set_target_properties(pdm_gpu PROPERTIES
+                             PUBLIC_HEADER "${LIST_HEADER}")
+
+  get_target_property(PDM_INC pdm_gpu INCLUDE_DIRECTORIES)
+  target_include_directories(pdm_gpu PUBLIC ${PDM_INC})
 endif()
 
 # Spécification de l'installation
