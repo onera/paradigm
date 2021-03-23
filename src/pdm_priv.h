@@ -62,7 +62,7 @@ extern "C" {
 #endif // DOCTEST_GCC
 
 PDM_GCC_SUPPRESS_WARNING("-Wcast-qual")
-
+PDM_GCC_SUPPRESS_WARNING("-Wunknown-pragmas")
 
 /*============================================================================
  * Type
