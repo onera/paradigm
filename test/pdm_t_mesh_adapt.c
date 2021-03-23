@@ -39,6 +39,8 @@ main
 )
 {
   // check pdm_mesh_adapt.h compilation only
+  PDM_UNUSED(argc);
+  PDM_UNUSED(argv);
 
   return 0;
 }

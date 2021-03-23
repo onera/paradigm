@@ -380,7 +380,7 @@ int main(int argc, char *argv[])
         int          *cell_tag, *face_tag, *vtx_tag;
         int         **elt_vtx_idx;
         int         **elt_vtx;
-        int         **elt_section_ln_to_gn;
+        PDM_g_num_t **elt_section_ln_to_gn;
 
         PDM_multipart_part_val_get(mpart_id, i_zone, i_part, &elt_vtx_idx, &elt_vtx, &elt_section_ln_to_gn,
                                    &cell_tag, &cell_face_idx, &cell_face, &cell_ln_to_gn,

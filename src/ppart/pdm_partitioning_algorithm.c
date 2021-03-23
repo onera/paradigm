@@ -1,4 +1,3 @@
-
 /*============================================================================
  * Parallel partitioning
  *============================================================================*/
@@ -1406,7 +1405,7 @@ PDM_part_dconnectivity_to_pconnectivity_hash
 }
 
 
-int
+static int
 min_sub_index
 (
   int* array,
@@ -1415,6 +1414,7 @@ min_sub_index
   int i_rank
 )
 {
+  PDM_UNUSED(i_rank);
   int min_idx = sub_indices[0];
   for (int i=1; i<n_sub_indices; ++i) {
     if (array[sub_indices[i]] < array[min_idx]) {
