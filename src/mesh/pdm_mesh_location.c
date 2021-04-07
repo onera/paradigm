@@ -92,6 +92,25 @@ typedef struct {
 
 
 /**
+ * \struct _points_in_element_t
+ * \brief
+ *
+ */
+
+typedef struct {
+
+  int           n_part;
+  int          *n_elts;
+  PDM_g_num_t **gnum_points;
+  double      **coords_points;
+  double      **projected_coords_points;
+  int         **weights_idx;
+  double      **weights;
+
+} _points_in_element_t;
+
+
+/**
  * \struct _PDM_Dist_t
  * \brief  Distance to a mesh surface structure
  *
@@ -126,6 +145,7 @@ typedef struct {
 
   double times_cpu_s[NTIMER];  /*!< System CPU time */
 
+  _points_in_element_t *points_in_elements; /*!< System CPU time */
 
 } _PDM_location_t;
 
@@ -1320,8 +1340,6 @@ PDM_mesh_location_method_set
 }
 
 
-
-
 /**
  *
  * \brief Get mesh location
@@ -1338,7 +1356,7 @@ PDM_mesh_location_method_set
  */
 
 void
-PDM_mesh_location_get
+PDM_mesh_location_point_location_get
 (
  const int     id,
  const int     i_point_cloud,
@@ -1365,6 +1383,32 @@ PDM_mesh_location_get
 }
 
 
+
+/**
+ *
+ * \brief Get points in elements
+ *
+ * \param [in]   id                    Identifier
+ * \param [in]   i_part                Index of partition of the cloud
+ * \param [out]  elt_idx               Index in (size = n_elt + 1)
+ * \param [out]  point_gnum            Global number of points (size = elt_idx[n_elt])
+ * \param [out]  point_coords          Coordinates of points (size = 3 * elt_idx[n_elt])
+ *
+ */
+
+void
+PDM_mesh_location_points_in_elt_get
+(
+ const int     id,
+ const int     i_part,
+ int         **elt_idx,
+ PDM_g_num_t **point_gnum,
+ double      **point_coords
+)
+{
+
+
+}
 
 
 /**
@@ -1581,7 +1625,7 @@ void
 PDM_mesh_location_compute
 (
  const int id
- )
+)
 {
   const double eps_dist = 1.e-10;
   const double tolerance = 1e-6;
@@ -2045,6 +2089,7 @@ PDM_mesh_location_compute
     /*
      * Merge location data
      */
+
     PDM_g_num_t *pcloud_location       = NULL;
     int         *pcloud_weights_stride = NULL;
     int         *pcloud_weights_idx    = NULL;
@@ -2397,6 +2442,153 @@ PDM_mesh_location_compute
   if (dbbt != NULL) {
     PDM_dbbtree_free (dbbt);
   }
+
+  /*
+   *  Reverse results : Get points in elements
+   */
+
+  double **elt_weight = malloc (sizeof(double *) * pcloud->n_part);
+  int    **n_elt_point = malloc (sizeof(double *) * pcloud->n_part);
+  int    **weight_stride = malloc (sizeof(double *) * pcloud->n_part);
+  for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
+    elt_weight[ipart] = malloc (sizeof(double) * pcloud->n_points[ipart]);
+    n_elt_point[ipart] = malloc (sizeof(int) * pcloud->n_points[ipart]);
+    weight_stride[ipart] = malloc (sizeof(int) * pcloud->n_points[ipart]);
+    for (int j = 0; j < pcloud->n_points[ipart]; j++) {
+      elt_weight[ipart][j]    = 1.;
+      n_elt_point[ipart][j]   = 1;
+      weight_stride[ipart][j] = 0;
+    }
+  }
+
+  ptb = PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                  PDM_PART_TO_BLOCK_POST_MERGE,
+                                  1.
+                                  pcloud->gnum_points,
+                                  elt_weight,
+                                  pcloud->n_points,
+                                  pcloud->n_part,
+                                  location->comm);
+
+  for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
+    free (elt_weight[ipart]);
+  }
+  free (elt_weight);
+
+  int block_n_elt = PDM_part_to_block_n_elt_block_get (ptb);
+  PDM_g_num_t *block_distrib_idx = PDM_part_to_block_distrib_index_get (ptb);
+
+  /*
+   * Exchange points to locate
+   */
+
+  /* Global number */
+
+  int *block_n_pts_per_elt = NULL;
+  PDM_g_num_t *block_pts_g_num = NULL;
+  PDM_part_to_block_exch (ptb,
+                          sizeof(PDM_g_num_t),
+                          PDM_STRIDE_VAR,
+                          1,
+                          n_elt_point,
+                          (void **) pcloud->gnum_points,
+                          &block_n_pts_per_elt,
+                          (void **) &block_pts_g_num);
+
+  for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
+    for (ielt = 0; ielt < n_elt_point[ipart]; ielt++) {
+      weight_stride[ipart][j] = pcloud->weights_idx[ipart][j+1] -
+        pcloud->weights_idx[ipart][j];
+    }
+  }
+
+  free (block_n_pts_per_elt);
+
+  int *block_weight_stride = NULL;
+  PDM_part_to_block_exch (ptb,
+                          sizeof(int),
+                          PDM_STRIDE_VAR,
+                          1,
+                          n_elt_point,
+                          (void **) weight_stride,
+                          &block_n_pts_per_elt,
+                          (void **) &block_weight_stride);
+
+  /* Coordinates */
+
+  for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
+    for (ielt = 0; ielt < n_elt_point[ipart]; ielt++) {
+      n_elt_point[ielt] = 3;
+    }
+  }
+
+  free (block_n_pts_per_elt);
+
+  double *block_pts_coord = NULL;
+  PDM_part_to_block_exch (ptb,
+                          sizeof(double),
+                          PDM_STRIDE_VAR,
+                          1,
+                          n_elt_point,
+                          (void **) pcloud->coords,
+                          &block_n_pts_per_elt,
+                          (void **) &block_pts_coord);
+
+  free (block_n_pts_per_elt);
+
+  double *block_proj_coord = NULL;
+  PDM_part_to_block_exch (ptb,
+                          sizeof(double),
+                          PDM_STRIDE_VAR,
+                          1,
+                          n_elt_point,
+                          (void **) pcloud->projected_coords,
+                          &block_n_pts_per_elt,
+                          (void **) &block_proj_coord);
+
+
+  for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
+    for (ielt = 0; ielt < n_elt_point[ipart]; ielt++) {
+      n_elt_point[ielt] = 3;
+    }
+  }
+
+  free (block_n_pts_per_elt);
+
+  double *block_weights = NULL;
+  PDM_part_to_block_exch (ptb,
+                          sizeof(double),
+                          PDM_STRIDE_VAR,
+                          1,
+                          n_elt_point,
+                          (void **) pcloud->weights,
+                          &block_n_pts_per_elt,
+                          (void **) &block_weights);
+
+
+  for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
+    free (n_elt_point[ipart]);
+  }
+  free (n_elt_point);
+  PDM_part_to_block_free (ptb);
+
+
+  btp = PDM_block_to_part_create (block_distrib_idx,
+                                  (const PDM_g_num_t **) &pcloud_g_num,
+                                  &n_pts_pcloud,
+                                  1,
+                                  location->comm);
+
+
+  /* PDM_block_to_part_exch (btp, */
+  /*                         sizeof(double), */
+  /*                         PDM_STRIDE_CST, */
+  /*                         &three, */
+  /*                         block_proj_coord2, */
+  /*                         NULL, */
+  /*                         (void **) &pcloud_proj_coord); */
+
+  /* PDM_block_to_part_free (btp); */
 
 
   PDM_timer_hang_on(location->timer);

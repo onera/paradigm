@@ -120,7 +120,7 @@ _mesh_init
 {
 
   mesh->n_part                   = n_part;
-
+  mesh->numabs                   = NULL;
   mesh->vtx                      = malloc(n_part * sizeof(PDM_Mesh_nodal_vtx_t *));
   mesh->n_cell                   = malloc(n_part * sizeof(int));
   for (int i = 0; i < n_part; i++) {
@@ -1322,6 +1322,47 @@ PDM_Mesh_nodal_t *mesh
 
 
 /**
+ * \brief Get the cell global numbering
+ *
+ * \param [in]  idx   Nodal mesh handle
+ *
+ * \return      NULL
+ *
+ */
+
+PDM_g_num_t *
+PDM_Mesh_nodal_g_num_get_from_part
+(
+PDM_Mesh_nodal_t *mesh,
+const int i_part,
+)
+{
+  if (mesh->numabs != NULL) {
+    mesh->numabs = malloc (sizeof(PDM_g_num_t*)*mesh->n_part);
+    for (int i = 0; i < mesh->n_part; i++) {
+      int k = 0;
+      mesh->numabs[i] = malloc (sizeof(int)*mesh->n_cell[i]);
+      for (int i1 = 0; i1 < mesh->n_block_std; i1++) {
+        for (int i2 = 0; i2 < mesh->blocks_std[i1]->n_cell ; i2++) {
+          mesh->numabs[i][k++] = ->_numabs[id_part][i2];
+        }
+      }
+      for (int i1 = 0; i1 < mesh->n_block_poly2d; i1++) {
+        for (int i2 = 0; i2 < mesh->blocks_std[i1]->n_cell ; i2++) {
+          mesh->numabs[i][k++] = block->_numabs[id_part][i2];
+        }
+      }
+      for (int i1 = 0; i1 < mesh->n_block_poly3d; i1++) {
+        for (int i2 = 0; i2 < mesh->blocks_std[i1]->n_cell ; i2++) {
+          mesh->numabs[i][k++] = block->_numabs[id_part][i2];
+        }
+      }
+    }
+  }
+  return mesh->numabs[i_part];
+}
+
+/**
  * \brief Free a nodal mesh structure
  *
  * \param [in]  idx   Nodal mesh handle
@@ -1340,6 +1381,13 @@ PDM_Mesh_nodal_t *mesh
   PDM_Mesh_nodal_partial_free (mesh);
 
   if (mesh != NULL) {
+
+    if (mesh->numabs != NULL) {
+      for (int i = 0; i < mesh->n_part; i++) {
+        free (mesh->numabs[i]);
+      }
+      free (mesh->numabs);
+    }
 
     if (mesh->blocks_id != NULL) {
       free (mesh->blocks_id);

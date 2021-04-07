@@ -294,7 +294,7 @@ PDM_mesh_location_compute
 
 /**
  *
- * \brief Get mesh location
+ * \brief Get point location
  *
  * \param [in]   id                    Identifier
  * \param [in]   i_point_cloud         Current cloud
@@ -308,7 +308,7 @@ PDM_mesh_location_compute
  */
 
 void
-PDM_mesh_location_get
+PDM_mesh_location_point_location_get
 (
  const int     id,
  const int     i_point_cloud,
@@ -318,6 +318,33 @@ PDM_mesh_location_get
  double      **weights,
  double      **projected_coord
 );
+
+
+/**
+ *
+ * \brief Get points in elements
+ *
+ * \param [in]   id                    Identifier
+ * \param [in]   i_part                Index of partition of the cloud
+ * \param [out]  elt_idx               Index in (size = n_elt + 1)
+ * \param [out]  point_gnum            Global number of points (size = elt_idx[n_elt])
+ * \param [out]  point_coords          Coordinates of points (size = 3 * elt_idx[n_elt])
+ *
+ */
+
+void
+PDM_mesh_location_points_in_elt_get
+(
+ const int     id,
+ const int     i_part,
+ int         **elt_idx,
+ PDM_g_num_t **point_gnum,
+ double      **point_coords,
+ int         **weights_idx,
+ double      **weights,
+ double      **projected_coord
+);
+
 
 /**
  *
