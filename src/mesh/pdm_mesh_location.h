@@ -301,7 +301,6 @@ PDM_mesh_location_compute
  * \param [in]   i_part                Index of partition of the cloud
  * \param [out]  n_points              Number of points in point cloud
  * \param [out]  coord                 Coordinates of points in point cloud
- * \param [out]  g_num                 Global numbers of points in point cloud
  * \param [out]  location              The global number of the closest element if the point is located,
  *                                     -1 otherwise
  *
@@ -316,6 +315,7 @@ PDM_mesh_location_point_location_get
  PDM_g_num_t **location,
  int         **weights_idx,
  double      **weights,
+ double      **dist2,
  double      **projected_coord
 );
 
@@ -337,12 +337,14 @@ PDM_mesh_location_points_in_elt_get
 (
  const int     id,
  const int     i_part,
+ const int     i_point_cloud,
  int         **elt_idx,
- PDM_g_num_t **point_gnum,
- double      **point_coords,
- int         **weights_idx,
- double      **weights,
- double      **projected_coord
+ PDM_g_num_t **points_gnum,
+ double      **points_coords,
+ int         **points_weights_idx,
+ double      **points_weights,
+ double      **points_dist2,
+ double      **points_projected_coords
 );
 
 

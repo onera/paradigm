@@ -1,4 +1,3 @@
-
 /*----------------------------------------------------------------------------
  *  System headers
  *----------------------------------------------------------------------------*/
@@ -1334,27 +1333,27 @@ PDM_g_num_t *
 PDM_Mesh_nodal_g_num_get_from_part
 (
 PDM_Mesh_nodal_t *mesh,
-const int i_part,
+const int i_part
 )
 {
   if (mesh->numabs != NULL) {
     mesh->numabs = malloc (sizeof(PDM_g_num_t*)*mesh->n_part);
     for (int i = 0; i < mesh->n_part; i++) {
       int k = 0;
-      mesh->numabs[i] = malloc (sizeof(int)*mesh->n_cell[i]);
+      mesh->numabs[i] = malloc (sizeof(PDM_g_num_t)*mesh->n_cell[i]);
       for (int i1 = 0; i1 < mesh->n_block_std; i1++) {
-        for (int i2 = 0; i2 < mesh->blocks_std[i1]->n_cell ; i2++) {
-          mesh->numabs[i][k++] = ->_numabs[id_part][i2];
+        for (int i2 = 0; i2 < mesh->blocks_std[i1]->n_elt[i]; i2++) {
+          mesh->numabs[i][k++] = mesh->blocks_std[i1]->_numabs[i][i2];
         }
       }
       for (int i1 = 0; i1 < mesh->n_block_poly2d; i1++) {
-        for (int i2 = 0; i2 < mesh->blocks_std[i1]->n_cell ; i2++) {
-          mesh->numabs[i][k++] = block->_numabs[id_part][i2];
+        for (int i2 = 0; i2 < mesh->blocks_poly2d[i1]->n_elt[i]; i2++) {
+          mesh->numabs[i][k++] = mesh->blocks_poly2d[i1]->_numabs[i][i2];
         }
       }
       for (int i1 = 0; i1 < mesh->n_block_poly3d; i1++) {
-        for (int i2 = 0; i2 < mesh->blocks_std[i1]->n_cell ; i2++) {
-          mesh->numabs[i][k++] = block->_numabs[id_part][i2];
+        for (int i2 = 0; i2 < mesh->blocks_poly3d[i1]->n_elt[i]; i2++) {
+          mesh->numabs[i][k++] = mesh->blocks_poly3d[i1]->_numabs[i][i2];
         }
       }
     }

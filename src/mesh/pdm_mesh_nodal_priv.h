@@ -194,7 +194,7 @@ struct _PDM_Mesh_nodal_t {
   int                                 *blocks_id;               /*!< Blocks identifier */
   int                                  n_blocks;                /*!< Total number of blocks */
   int                      is_vtx_def_from_parent;              /*<! Are the points defined from parents */
-  PDM_g_num_t                          *numabs;                 /*<! Global numbering per cell per partition */
+  PDM_g_num_t                          **numabs;                 /*<! Global numbering per cell per partition */
 };
 
 #ifdef __cplusplus

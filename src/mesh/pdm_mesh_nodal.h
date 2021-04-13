@@ -1035,6 +1035,23 @@ PDM_Mesh_nodal_poly3d_cell_vtx_get
        PDM_l_num_t **cell_vtx
 );
 
+
+/**
+ * \brief Get the cell global numbering
+ *
+ * \param [in]  idx   Nodal mesh handle
+ *
+ * \return      NULL
+ *
+ */
+
+PDM_g_num_t *
+PDM_Mesh_nodal_g_num_get_from_part
+(
+ PDM_Mesh_nodal_t *mesh,
+ const int i_part
+);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
