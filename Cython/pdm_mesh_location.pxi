@@ -314,7 +314,7 @@ cdef class MeshLocation:
     dim = <NPY.npy_intp> 3*n_points
     np_p_proj_coord = NPY.PyArray_SimpleNewFromData(1,
                                               &dim,
-                                              NPY.NPY_INT32,
+                                              NPY.NPY_DOUBLE,
                                               <void *> p_proj_coord)
     # PyArray_ENABLEFLAGS(np_location, NPY.NPY_OWNDATA)
 

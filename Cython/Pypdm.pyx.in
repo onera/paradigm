@@ -261,6 +261,4 @@ include "pdm_partitioning_algorithm.pxi"
 # --------------------
 include "pdm_part_extension.pxi"
 
-
-
 # TODO: PDM_writer, ...

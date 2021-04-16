@@ -1587,6 +1587,8 @@ PDM_part_generate_entity_graph_comm
   }
   free(proc_part_stri);
   free(proc_part_data);
+  free(part_stri);
+  free(part_data);
 
   /*
    * Panic verbose
