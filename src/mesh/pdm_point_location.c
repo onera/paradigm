@@ -966,7 +966,7 @@ _locate_in_cell_3d
       continue;
     }
 
-    /* Compute parametric coordinates */
+    /* Compute parametric coordinates : Try Newton */
     PDM_bool_t stat_uvw = _compute_uvw (elt_type,
                                         _pt,
                                         cell_coord,
@@ -1575,6 +1575,7 @@ _locate_in_polyhedron
 /*============================================================================
  * Public function definitions
  *============================================================================*/
+
 void
 PDM_point_location_nodal
 (
@@ -1607,6 +1608,7 @@ PDM_point_location_nodal
   /*
    * Allocate arrays
    */
+
   int n_elt = type_idx[PDM_MESH_NODAL_N_ELEMENT_TYPES];
   int n_pts = pts_idx[n_elt];
   *distance = malloc (sizeof(double) * n_pts);

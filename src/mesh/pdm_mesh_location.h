@@ -313,10 +313,29 @@ PDM_mesh_location_point_location_get
  const int     i_point_cloud,
  const int     i_part,
  PDM_g_num_t **location,
- int         **weights_idx,
- double      **weights,
  double      **dist2,
  double      **projected_coord
+);
+
+
+/**
+ *
+ * \brief get cell vertex connectivity
+ *
+ * \param [in]   id                    Identifier
+ * \param [in]   i_part                Index of partition of the cloud
+ * \param [out]  cell_vtx_idx          Index in (size = n_elt + 1)
+ * \param [out]  cell_vtx              Cell vertex connectivity
+ *
+ */
+
+void
+PDM_mesh_location_cell_vertex_get
+(
+ const int     id,
+ const int     i_part,
+ int         **cell_vtx_idx,
+ int         **cell_vtx
 );
 
 
@@ -338,9 +357,10 @@ PDM_mesh_location_points_in_elt_get
  const int     id,
  const int     i_part,
  const int     i_point_cloud,
- int         **elt_idx,
+ int         **elt_pts_inside_idx,
  PDM_g_num_t **points_gnum,
  double      **points_coords,
+ double      **points_uvw,
  int         **points_weights_idx,
  double      **points_weights,
  double      **points_dist2,
