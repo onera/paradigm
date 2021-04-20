@@ -196,6 +196,13 @@ _vtx_free
       free (vtx->distrib);
       vtx->distrib = NULL;
     }
+
+    if(vtx->owner == PDM_OWNERSHIP_KEEP) {
+      if(vtx->_coords != NULL) {
+        free(vtx->_coords);
+        vtx->_coords = NULL;
+      }
+    }
     free (vtx);
   }
   return NULL;
@@ -225,6 +232,13 @@ PDM_DMesh_nodal_section_std_t *_section_std
   if (_section_std->distrib != NULL) {
     free (_section_std->distrib);
     _section_std->distrib = NULL;
+  }
+
+  if(_section_std->owner == PDM_OWNERSHIP_KEEP) {
+    if(_section_std->_connec != NULL) {
+      free(_section_std->_connec);
+      _section_std->_connec = NULL;
+    }
   }
 
   free(_section_std);
@@ -258,6 +272,17 @@ PDM_DMesh_nodal_section_poly2d_t *_section_poly2d
     _section_poly2d->distrib = NULL;
   }
 
+  if(_section_poly2d->owner == PDM_OWNERSHIP_KEEP) {
+    if(_section_poly2d->_connec != NULL) {
+      free(_section_poly2d->_connec);
+      _section_poly2d->_connec = NULL;
+    }
+    if(_section_poly2d->_connec_idx != NULL) {
+      free(_section_poly2d->_connec_idx);
+      _section_poly2d->_connec_idx = NULL;
+    }
+  }
+
   free(_section_poly2d);
 }
 
@@ -285,6 +310,26 @@ PDM_DMesh_nodal_section_poly3d_t *_section_poly3d
     free (_section_poly3d->distrib);
     _section_poly3d->distrib = NULL;
   }
+
+  if(_section_poly3d->owner == PDM_OWNERSHIP_KEEP) {
+    if(_section_poly3d->_face_vtx_idx != NULL) {
+      free(_section_poly3d->_face_vtx_idx);
+      _section_poly3d->_face_vtx_idx = NULL;
+    }
+    if(_section_poly3d->_face_vtx != NULL) {
+      free(_section_poly3d->_face_vtx);
+      _section_poly3d->_face_vtx = NULL;
+    }
+    if(_section_poly3d->_cell_face_idx != NULL) {
+      free(_section_poly3d->_cell_face_idx);
+      _section_poly3d->_cell_face_idx = NULL;
+    }
+    if(_section_poly3d->_cell_face != NULL) {
+      free(_section_poly3d->_cell_face);
+      _section_poly3d->_cell_face = NULL;
+    }
+  }
+
 
   free(_section_poly3d);
 }
@@ -407,6 +452,7 @@ const PDM_MPI_Comm        comm,
   dmesh_nodal->n_group_elmt             = 0;
   dmesh_nodal->dgroup_elmt_idx          = NULL;
   dmesh_nodal->dgroup_elmt              = NULL;
+  dmesh_nodal->dgroup_elmt_owner        = -1;
 
   dmesh_nodal->n_section_tot            = 0;
 
@@ -520,6 +566,15 @@ const int                partial
     _sections_poly3d_free(dmesh_nodal->sections_poly3d, dmesh_nodal->n_section_poly3d);
     _sections_poly2d_free(dmesh_nodal->sections_poly2d, dmesh_nodal->n_section_poly2d);
 
+    if(dmesh_nodal->dgroup_elmt_owner == PDM_OWNERSHIP_KEEP) {
+      if (dmesh_nodal->dgroup_elmt != NULL) {
+        free (dmesh_nodal->dgroup_elmt);
+      }
+      if (dmesh_nodal->dgroup_elmt_idx != NULL) {
+        free (dmesh_nodal->dgroup_elmt_idx);
+      }
+    }
+
     if(partial == 0){
       if (dmesh_nodal->dcell_face_idx != NULL) {
         free (dmesh_nodal->dcell_face_idx);
@@ -545,50 +600,6 @@ const int                partial
         free (dmesh_nodal->face_distrib);
       }
 
-      // if (dmesh_nodal->edge_distrib != NULL) {
-      //   free (dmesh_nodal->edge_distrib);
-      // }
-
-      // if (dmesh_nodal->_dedge_vtx_idx != NULL) {
-      //   free (dmesh_nodal->_dedge_vtx_idx);
-      // }
-
-      // if (dmesh_nodal->_dedge_vtx != NULL) {
-      //   free (dmesh_nodal->_dedge_vtx);
-      // }
-
-      // if (dmesh_nodal->dface_edge_idx != NULL) {
-      //   free (dmesh_nodal->dface_edge_idx);
-      // }
-
-      // if (dmesh_nodal->dface_edge != NULL) {
-      //   free (dmesh_nodal->dface_edge);
-      // }
-
-      // if (dmesh_nodal->_dedge_face != NULL) {
-      //   free (dmesh_nodal->_dedge_face);
-      // }
-
-      // if (dmesh_nodal->elmt_distrib != NULL) {
-      //   free (dmesh_nodal->elmt_distrib);
-      // }
-
-      // if (dmesh_nodal->_dface_elmt != NULL) {
-      //   free (dmesh_nodal->_dface_elmt);
-      // }
-
-      // if (dmesh_nodal->_dface_elmt_idx != NULL) {
-      //   free (dmesh_nodal->_dface_elmt_idx);
-      // }
-
-      // if (dmesh_nodal->_dedge_elmt != NULL) {
-      //   free (dmesh_nodal->_dedge_elmt);
-      // }
-
-      // if (dmesh_nodal->_dedge_elmt_idx != NULL) {
-      //   free (dmesh_nodal->_dedge_elmt_idx);
-      // }
-
     }
 
     free(dmesh_nodal);
@@ -611,7 +622,8 @@ PDM_DMesh_nodal_coord_set
 (
        PDM_dmesh_nodal_t *dmesh_nodal,
  const int                n_vtx,
- const PDM_real_t        *coords
+       PDM_real_t        *coords,
+       PDM_ownership_t    owner
 )
 {
 
@@ -629,6 +641,7 @@ PDM_DMesh_nodal_coord_set
 
   vtx->n_vtx   = n_vtx;
   vtx->_coords = coords;
+  vtx->owner   = owner;
 
   vtx->distrib = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * (dmesh_nodal->n_rank + 1));
 
@@ -946,10 +959,11 @@ const PDM_Mesh_nodal_elt_t  t_elt
 void
 PDM_DMesh_nodal_section_std_set
 (
-PDM_dmesh_nodal_t  *dmesh_nodal,
-const int           id_section,
-const int           n_elt,
-      PDM_g_num_t  *connec
+PDM_dmesh_nodal_t     *dmesh_nodal,
+const int              id_section,
+const int              n_elt,
+      PDM_g_num_t     *connec,
+      PDM_ownership_t  owner
 )
 {
   if (dmesh_nodal == NULL) {
@@ -969,6 +983,7 @@ const int           n_elt,
   /* Mapping */
   section->n_elt   = n_elt;
   section->_connec = connec;
+  section->owner   = owner;
 
   section->distrib = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * (dmesh_nodal->n_rank + 1));
 
@@ -998,15 +1013,17 @@ const int           n_elt,
 void
 PDM_DMesh_nodal_section_group_elmt_set
 (
-PDM_dmesh_nodal_t  *dmesh_nodal,
-const int           n_group_elmt,
-      int          *dgroup_elmt_idx,
-      PDM_g_num_t  *dgroup_elmt
+PDM_dmesh_nodal_t     *dmesh_nodal,
+const int              n_group_elmt,
+      int             *dgroup_elmt_idx,
+      PDM_g_num_t     *dgroup_elmt,
+      PDM_ownership_t  owner
 )
 {
-  dmesh_nodal->n_group_elmt    = n_group_elmt;
-  dmesh_nodal->dgroup_elmt_idx = dgroup_elmt_idx;
-  dmesh_nodal->dgroup_elmt     = dgroup_elmt;
+  dmesh_nodal->n_group_elmt      = n_group_elmt;
+  dmesh_nodal->dgroup_elmt_idx   = dgroup_elmt_idx;
+  dmesh_nodal->dgroup_elmt       = dgroup_elmt;
+  dmesh_nodal->dgroup_elmt_owner = owner;
 }
 
 /**
@@ -1119,7 +1136,8 @@ PDM_DMesh_nodal_section_poly2d_set
 const int                id_section,
 const PDM_l_num_t        n_elt,
       PDM_l_num_t       *connec_idx,
-      PDM_g_num_t       *connec
+      PDM_g_num_t       *connec,
+      PDM_ownership_t    owner
 )
 {
   int _id_section = id_section - PDM_BLOCK_ID_BLOCK_POLY2D;
@@ -1135,6 +1153,7 @@ const PDM_l_num_t        n_elt,
   section->n_elt       = n_elt;
   section->_connec_idx = connec_idx;
   section->_connec     = connec;
+  section->owner       = owner;
 
   section->distrib = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * (dmesh_nodal->n_rank + 1));
 
@@ -1217,7 +1236,8 @@ const PDM_l_num_t         n_face,
       PDM_l_num_t        *facvtx_idx,
       PDM_g_num_t        *facvtx,
       PDM_l_num_t        *cellfac_idx,
-      PDM_g_num_t        *cellfac
+      PDM_g_num_t        *cellfac,
+      PDM_ownership_t     owner
 )
 {
   if (dmesh_nodal == NULL) {
@@ -1238,6 +1258,7 @@ const PDM_l_num_t         n_face,
   section->_face_vtx      = facvtx;
   section->_cell_face_idx = cellfac_idx;
   section->_cell_face     = cellfac;
+  section->owner          = owner;
 
   section->distrib = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * (dmesh_nodal->n_rank + 1));
 

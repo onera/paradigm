@@ -51,7 +51,7 @@ if (PDM_ENABLE_CUDA)
   # -gencode=arch=compute_75,code=compute_75;
   >)
   #set(CUDA_PROPAGATE_HOST_FLAGS OFF)
-  #list(APPEND CUDA_NVCC_FLAGS -gencode arch=compute_61,code=sm_51;)  
+  #list(APPEND CUDA_NVCC_FLAGS -gencode arch=compute_61,code=sm_51;)
   #set(CUDA_NVCC_FLAGS "-gencode arch=compute_60,code=sm_60")
   #set(CUDA_LAUNCH_BLOCKING 1)
   #set(CMAKE_C_FLAGS "-std=c17 -pedantic-errors ${CMAKE_C_FLAGS}")
@@ -133,11 +133,11 @@ if (PDM_ENABLE_CUDA)
                               PUBLIC  ${CUDA_INCLUDE_DIRS}
                               PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/pario
                               PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/ppart
-                              PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/io 
-                              PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/mpi_wrapper 
-                              PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/ext_wrapper                       
-                              PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/mesh 
-                              PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/meshgen                      
+                              PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/io
+                              PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/mpi_wrapper
+                              PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/ext_wrapper
+                              PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/mesh
+                              PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/meshgen
                               PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/struct
                               PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}/util)
 endif ()
@@ -159,6 +159,7 @@ list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/util/pdm_mpi_node_first_ran
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/util/pdm_timer.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/util/pdm_fortran_to_c_string.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/meshgen/pdm_dcube_gen.h")
+list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/meshgen/pdm_dcube_nodal_gen.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_gnum.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_distrib.h")
 list(APPEND LIST_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/struct/pdm_gnum_from_hash_values.h")

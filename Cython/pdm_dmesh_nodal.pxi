@@ -6,16 +6,16 @@ cdef extern from "pdm_dmesh_nodal.h":
       pass
 
     ctypedef enum PDM_Mesh_nodal_elt_t:
-      PDM_MESH_NODAL_POINT    = 1
-      PDM_MESH_NODAL_BAR2     = 2
-      PDM_MESH_NODAL_TRIA3    = 3
-      PDM_MESH_NODAL_QUAD4    = 4
-      PDM_MESH_NODAL_POLY_2D  = 5
-      PDM_MESH_NODAL_TETRA4   = 6
-      PDM_MESH_NODAL_PYRAMID5 = 7
-      PDM_MESH_NODAL_PRISM6   = 8
-      PDM_MESH_NODAL_HEXA8    = 9
-      PDM_MESH_NODAL_POLY_3D  = 10
+      PDM_MESH_NODAL_POINT    = 0
+      PDM_MESH_NODAL_BAR2     = 1
+      PDM_MESH_NODAL_TRIA3    = 2
+      PDM_MESH_NODAL_QUAD4    = 3
+      PDM_MESH_NODAL_POLY_2D  = 4
+      PDM_MESH_NODAL_TETRA4   = 5
+      PDM_MESH_NODAL_PYRAMID5 = 6
+      PDM_MESH_NODAL_PRISM6   = 7
+      PDM_MESH_NODAL_HEXA8    = 8
+      PDM_MESH_NODAL_POLY_3D  = 9
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -28,7 +28,7 @@ cdef extern from "pdm_dmesh_nodal.h":
                                               PDM_g_num_t  n_edge)
     void PDM_DMesh_nodal_free(PDM_dmesh_nodal_t* dmn, int partial)
 
-    void PDM_DMesh_nodal_coord_set(PDM_dmesh_nodal_t* dmn, int n_vtx, double* coords)
+    void PDM_DMesh_nodal_coord_set(PDM_dmesh_nodal_t* dmn, int n_vtx, double* coords, PDM_ownership_t    owner)
 
     # PDM_g_num_t *PDM_DMesh_nodal_distrib_vtx_get(PDM_dmesh_nodal_t* dmn)
     # PDM_g_num_t *PDM_DMesh_nodal_distrib_section_get(PDM_dmesh_nodal_t* dmn, int id_section)
@@ -41,20 +41,23 @@ cdef extern from "pdm_dmesh_nodal.h":
 
     int                  PDM_DMesh_nodal_section_add(PDM_dmesh_nodal_t* dmn, PDM_Mesh_nodal_elt_t t_elt)
     void                 PDM_DMesh_nodal_section_std_set(PDM_dmesh_nodal_t* dmn,
-                                                        int          id_section,
-                                                        int          n_elmts,
-                                                        PDM_g_num_t* connec)
+                                                        int                 id_section,
+                                                        int                 n_elmts,
+                                                        PDM_g_num_t*        connec,
+                                                        PDM_ownership_t     owner)
 
     PDM_g_num_t* PDM_DMesh_nodal_section_std_get(PDM_dmesh_nodal_t* dmn, int id_section)
     int PDM_DMesh_nodal_section_n_elt_get(PDM_dmesh_nodal_t* dmn, int id_section)
 
     void PDM_DMesh_nodal_section_poly2d_set(PDM_dmesh_nodal_t* dmn, int id_section, PDM_l_num_t n_elt,
-                                            PDM_l_num_t* connec_idx,
-                                            PDM_g_num_t   *connec)
+                                            PDM_l_num_t        *connec_idx,
+                                            PDM_g_num_t        *connec,
+                                            PDM_ownership_t     owner)
     void PDM_DMesh_nodal_section_group_elmt_set(PDM_dmesh_nodal_t  *dmesh_nodal,
                                                 int                 n_group_elmt,
                                                 int                *dgroup_elmt_idx,
-                                                PDM_g_num_t        *dgroup_elmt)
+                                                PDM_g_num_t        *dgroup_elmt,
+                                                PDM_ownership_t     owner)
 
     PDM_g_num_t PDM_dmesh_nodal_total_n_cell_get(PDM_dmesh_nodal_t* dmn)
     PDM_g_num_t PDM_dmesh_nodal_total_n_face_get(PDM_dmesh_nodal_t* dmn)
@@ -153,7 +156,7 @@ cdef class DistributedMeshNodal:
 
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
         n_vtx = dvtx_coord.shape[0]//3
-        PDM_DMesh_nodal_coord_set(self.dmn, n_vtx, <double *> dvtx_coord.data)
+        PDM_DMesh_nodal_coord_set(self.dmn, n_vtx, <double *> dvtx_coord.data, PDM_OWNERSHIP_USER)
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
     # ------------------------------------------------------------------------
@@ -177,7 +180,11 @@ cdef class DistributedMeshNodal:
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
         for i_elmt, connect in enumerate(elmt_list):
           id_section = PDM_DMesh_nodal_section_add(self.dmn, <PDM_Mesh_nodal_elt_t> elmts_type[i_elmt])
-          PDM_DMesh_nodal_section_std_set(self.dmn, id_section, n_elemts[i_elmt], <PDM_g_num_t *> connect.data)
+          PDM_DMesh_nodal_section_std_set(self.dmn,
+                                          id_section,
+                                          n_elemts[i_elmt],
+                          <PDM_g_num_t *> connect.data,
+                                          PDM_OWNERSHIP_USER)
         # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
     # ------------------------------------------------------------------------
@@ -190,12 +197,13 @@ cdef class DistributedMeshNodal:
         if(dgroup_elmt_idx is None):
           PDM_DMesh_nodal_section_group_elmt_set(self.dmn,
                                                  n_group_elmt,
-                                                 NULL, NULL)
+                                                 NULL, NULL, PDM_OWNERSHIP_USER)
         else:
           PDM_DMesh_nodal_section_group_elmt_set(self.dmn,
                                                  n_group_elmt,
                                           <int*> dgroup_elmt_idx.data,
-                                  <PDM_g_num_t*> dgroup_elmt.data)
+                                  <PDM_g_num_t*> dgroup_elmt.data,
+                                                 PDM_OWNERSHIP_USER)
 
     # ------------------------------------------------------------------------
     def generate_distribution(self):

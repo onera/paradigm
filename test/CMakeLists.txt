@@ -63,6 +63,7 @@ endif()
 
 if (PDM_HAVE_PARMETIS OR PDM_HAVE_PTSCOTCH)
   test_c_create (pdm_t_part_dcube ${MPIEXEC_MAX_NUMPROCS})
+  test_c_create (pdm_t_part_dcube_nodal ${MPIEXEC_MAX_NUMPROCS})
   test_c_create (pdm_t_part_extension ${MPIEXEC_MAX_NUMPROCS})
   test_c_create (pdm_t_partitioning_dcube ${MPIEXEC_MAX_NUMPROCS})
   test_c_create (pdm_t_multipart ${MPIEXEC_MAX_NUMPROCS})

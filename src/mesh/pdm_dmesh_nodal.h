@@ -85,7 +85,8 @@ PDM_DMesh_nodal_coord_set
 (
        PDM_dmesh_nodal_t *dmesh_nodal,
  const int                n_vtx,
- const PDM_real_t        *coords
+       PDM_real_t        *coords,
+       PDM_ownership_t    owner
 );
 
 
@@ -341,16 +342,18 @@ PDM_DMesh_nodal_section_std_set
       PDM_dmesh_nodal_t *dmesh_nodal,
 const int                id_section,
 const int                n_elt,
-      PDM_g_num_t       *connec
+      PDM_g_num_t       *connec,
+      PDM_ownership_t    owner
 );
 
 void
 PDM_DMesh_nodal_section_group_elmt_set
 (
-PDM_dmesh_nodal_t  *dmesh_nodal,
-const int           n_group_elmt,
-      int          *dgroup_elmt_idx,
-      PDM_g_num_t  *dgroup_elmt
+PDM_dmesh_nodal_t     *dmesh_nodal,
+const int              n_group_elmt,
+      int             *dgroup_elmt_idx,
+      PDM_g_num_t     *dgroup_elmt,
+      PDM_ownership_t  owner
 );
 
 /**
@@ -475,7 +478,8 @@ PDM_DMesh_nodal_section_poly2d_set
 const int                id_section,
 const PDM_l_num_t        n_elt,
       PDM_l_num_t       *connec_idx,
-      PDM_g_num_t       *connec
+      PDM_g_num_t       *connec,
+      PDM_ownership_t    owner
 );
 
 
@@ -523,7 +527,8 @@ const PDM_l_num_t        n_face,
       PDM_l_num_t       *facvtx_idx,
       PDM_g_num_t       *facvtx,
       PDM_l_num_t       *cellfac_idx,
-      PDM_g_num_t       *cellfac
+      PDM_g_num_t       *cellfac,
+      PDM_ownership_t    owner
 );
 
 
@@ -681,7 +686,7 @@ PDM_dmesh_nodal_t *dmesh_nodal
 
 /**
 *
-* \brief Concatenates all element sections blocks 
+* \brief Concatenates all element sections blocks
 *
 * \param [in]   dmesh_nodal
 * \param [out]  section_idx        index of element section
@@ -690,14 +695,15 @@ PDM_dmesh_nodal_t *dmesh_nodal
 *
  * \return     Number sections
 */
-int PDM_concat_elt_sections(
+int PDM_concat_elt_sections
+(
   PDM_dmesh_nodal_t  *dmesh_nodal,
-  int** section_idx,
-  int** cat_delt_vtx_idx,
-  PDM_g_num_t** cat_dcell_vtx
+  int               **section_idx,
+  int               **cat_delt_vtx_idx,
+  PDM_g_num_t       **cat_dcell_vtx
 );
 
-/**
+/**ss
 *
 * \brief Concatenates 3D element sections blocks
 *
