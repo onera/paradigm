@@ -74,7 +74,7 @@ const double                zero_z,
 void
 PDM_dcube_nodal_gen_dim_get
 (
- PDM_dcube_nodal_t  *pdm_dcube_nodal,
+ PDM_dcube_nodal_t  *dcube_nodal,
  int                *n_face_group,
  int                *dn_cell,
  int                *dn_face,
@@ -100,7 +100,7 @@ PDM_dcube_nodal_gen_dim_get
 void
 PDM_dcube_nodal_gen_data_get
 (
- PDM_dcube_nodal_t  *pdm_dcube_nodal,
+ PDM_dcube_nodal_t  *dcube_nodal,
  PDM_g_num_t       **delmt_vtx,
  double            **dvtx_coord,
  int               **dface_group_idx,
@@ -112,7 +112,7 @@ PDM_dcube_nodal_gen_data_get
 PDM_dmesh_nodal_t*
 PDM_dcube_nodal_gen_dmesh_nodal_get
 (
- PDM_dcube_nodal_t  *pdm_dcube_nodal
+ PDM_dcube_nodal_t  *dcube_nodal
 );
 
 /**
@@ -126,7 +126,7 @@ PDM_dcube_nodal_gen_dmesh_nodal_get
 void
 PDM_dcube_nodal_gen_free
 (
- PDM_dcube_nodal_t       *pdm_dcube_nodal
+ PDM_dcube_nodal_t       *dcube_nodal
 );
 
 #ifdef __cplusplus

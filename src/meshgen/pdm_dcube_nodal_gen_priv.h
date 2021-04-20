@@ -44,9 +44,14 @@ struct _pdm_dcube_nodal_t {
   double                zero_x;          /*!< Coordinates of the origin                 */
   double                zero_y;          /*!< Coordinates of the origin                 */
   double                zero_z;          /*!< Coordinates of the origin                 */
+
+  int                   dn_hexa_cell;    /*!< Number of hexa stored in this process     */
+  int                   dn_quad_lim;     /*!< Number of quad stored in this process     */
+
   int                   n_face_group;    /*!< Number of faces groups                    */
   int                   dn_cell;         /*!< Number of cells stored in this process    */
   int                   dn_vtx;          /*!< Number of vertices stored in this process */
+
   PDM_g_num_t          *delmt_vtx;       /*!< Faces from vertices connectivity          */
   PDM_g_num_t          *delmt_lim_vtx;   /*!< Faces from vertices connectivity          */
   double               *dvtx_coord;      /*!< Vertices coordinates                      */
