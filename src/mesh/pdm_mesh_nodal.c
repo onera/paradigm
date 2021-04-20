@@ -1321,7 +1321,7 @@ PDM_Mesh_nodal_t *mesh
 
 
 /**
- * \brief Get the cell global numbering
+ * \brief Get the cell global numbering taking into account parent_num
  *
  * \param [in]  idx   Nodal mesh handle
  *
@@ -1338,24 +1338,55 @@ const int i_part
 {
   if (mesh->numabs != NULL) {
     mesh->numabs = malloc (sizeof(PDM_g_num_t*)*mesh->n_part);
+    int is_parent_num = (PDM_Mesh_nodal_block_parent_num_get(mesh, 0, 0) == NULL);
     for (int i = 0; i < mesh->n_part; i++) {
-      int k = 0;
-      mesh->numabs[i] = malloc (sizeof(PDM_g_num_t)*mesh->n_cell[i]);
-      for (int i1 = 0; i1 < mesh->n_block_std; i1++) {
-        for (int i2 = 0; i2 < mesh->blocks_std[i1]->n_elt[i]; i2++) {
-          mesh->numabs[i][k++] = mesh->blocks_std[i1]->_numabs[i][i2];
+      for (int i1 = 0; i1 < mesh->n_blocks; i1++) {
+        assert (is_parent_num == (PDM_Mesh_nodal_block_parent_num_get(mesh, i, i1) == NULL)); 
+      }
+    }
+
+    if (!is_parent_num) {
+
+      for (int i = 0; i < mesh->n_part; i++) {
+        int k = 0;
+        mesh->numabs[i] = malloc (sizeof(PDM_g_num_t)*mesh->n_cell[i]);
+        for (int i1 = 0; i1 < mesh->n_block_std; i1++) {
+          for (int i2 = 0; i2 < mesh->blocks_std[i1]->n_elt[i]; i2++) {
+            mesh->numabs[i][k++] = mesh->blocks_std[i1]->_numabs[i][i2];
+          }
+        }
+        for (int i1 = 0; i1 < mesh->n_block_poly2d; i1++) {
+          for (int i2 = 0; i2 < mesh->blocks_poly2d[i1]->n_elt[i]; i2++) {
+            mesh->numabs[i][k++] = mesh->blocks_poly2d[i1]->_numabs[i][i2];
+          }
+        }
+        for (int i1 = 0; i1 < mesh->n_block_poly3d; i1++) {
+          for (int i2 = 0; i2 < mesh->blocks_poly3d[i1]->n_elt[i]; i2++) {
+            mesh->numabs[i][k++] = mesh->blocks_poly3d[i1]->_numabs[i][i2];
+          }
         }
       }
-      for (int i1 = 0; i1 < mesh->n_block_poly2d; i1++) {
-        for (int i2 = 0; i2 < mesh->blocks_poly2d[i1]->n_elt[i]; i2++) {
-          mesh->numabs[i][k++] = mesh->blocks_poly2d[i1]->_numabs[i][i2];
+    }
+
+    else {
+      for (int i = 0; i < mesh->n_part; i++) {
+        mesh->numabs[i] = malloc (sizeof(PDM_g_num_t)*mesh->n_cell[i]);
+        for (int i1 = 0; i1 < mesh->n_block_std; i1++) {
+          for (int i2 = 0; i2 < mesh->blocks_std[i1]->n_elt[i]; i2++) {
+            mesh->numabs[i][mesh->blocks_std[i1]->_parent_num[i][i2]] = mesh->blocks_std[i1]->_numabs[i][i2];
+          }
         }
-      }
-      for (int i1 = 0; i1 < mesh->n_block_poly3d; i1++) {
-        for (int i2 = 0; i2 < mesh->blocks_poly3d[i1]->n_elt[i]; i2++) {
-          mesh->numabs[i][k++] = mesh->blocks_poly3d[i1]->_numabs[i][i2];
+        for (int i1 = 0; i1 < mesh->n_block_poly2d; i1++) {
+          for (int i2 = 0; i2 < mesh->blocks_poly2d[i1]->n_elt[i]; i2++) {
+            mesh->numabs[i][mesh->blocks_poly2d[i1]->_parent_num[i][i2]] = mesh->blocks_poly2d[i1]->_numabs[i][i2];
+          }
         }
-      }
+        for (int i1 = 0; i1 < mesh->n_block_poly3d; i1++) {
+          for (int i2 = 0; i2 < mesh->blocks_poly3d[i1]->n_elt[i]; i2++) {
+            mesh->numabs[i][mesh->blocks_poly3d[i1]->_parent_num[i][i2]] = mesh->blocks_poly3d[i1]->_numabs[i][i2];
+          }
+        }
+      }     
     }
   }
   return mesh->numabs[i_part];
