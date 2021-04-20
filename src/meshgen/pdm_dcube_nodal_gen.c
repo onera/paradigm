@@ -138,13 +138,13 @@ const double                zero_z,
 
 
   PDM_g_num_t *distrib_vtx      = (PDM_g_num_t *) malloc((n_rank + 1) * sizeof(PDM_g_num_t));
-  PDM_g_num_t *distrib_cell     = (PDM_g_num_t *) malloc((n_rank + 1) * sizeof(PDM_g_num_t));
+  PDM_g_num_t *distrib_hexa     = (PDM_g_num_t *) malloc((n_rank + 1) * sizeof(PDM_g_num_t));
   PDM_g_num_t *distrib_face_lim = (PDM_g_num_t *) malloc((n_rank + 1) * sizeof(PDM_g_num_t));
 
   //
   // Define distribution
   distrib_vtx[0]      = 0;
-  distrib_cell[0]     = 0;
+  distrib_hexa[0]     = 0;
   distrib_face_lim[0] = 0;
 
   PDM_g_num_t step_vtx      = n_vtx / n_rank;
@@ -158,25 +158,25 @@ const double                zero_z,
 
   for (int i = 1; i < n_rank + 1; i++) {
     distrib_vtx[i]     = step_vtx;
-    distrib_cell[i]    = step_cell;
+    distrib_hexa[i]    = step_cell;
     distrib_face_lim[i] = step_face_im;
     const int i1 = i - 1;
     if (i1 < remainder_vtx)
       distrib_vtx[i]  += 1;
     if (i1 < remainder_cell)
-      distrib_cell[i]  += 1;
+      distrib_hexa[i]  += 1;
     if (i1 < remainder_face_lim)
       distrib_face_lim[i]  += 1;
   }
 
   for (int i = 1; i < n_rank + 1; i++) {
     distrib_vtx[i]  += distrib_vtx[i-1];
-    distrib_cell[i] += distrib_cell[i-1];
+    distrib_hexa[i] += distrib_hexa[i-1];
     distrib_face_lim[i] += distrib_face_lim[i-1];
   }
 
   dcube->n_face_group = 6;
-  PDM_g_num_t _dn_cell     = distrib_cell[i_rank+1] - distrib_cell[i_rank];
+  PDM_g_num_t _dn_cell     = distrib_hexa[i_rank+1] - distrib_hexa[i_rank];
   dcube->dn_cell           = (int) _dn_cell;
   PDM_g_num_t _dn_vtx      = distrib_vtx[i_rank+1]     - distrib_vtx[i_rank];
   dcube->dn_vtx            = (int) _dn_vtx;
@@ -216,7 +216,6 @@ const double                zero_z,
     _dvtx_coord[3 * i_vtx + 1] = indj * step + zero_y;
     _dvtx_coord[3 * i_vtx + 2] = indk * step + zero_z;
 
-
   }
 
   /*
@@ -227,7 +226,7 @@ const double                zero_z,
   for(int i_cell = 0; i_cell < _dn_cell/5; ++i_cell) { // TETRA
 
     /* We need to adapt for each type of elemt to generate */
-    PDM_g_num_t g_cell = distrib_cell[i_rank] + i_cell;
+    PDM_g_num_t g_cell = distrib_hexa[i_rank] + i_cell;
 
     PDM_g_num_t idx  = g_cell;
     PDM_g_num_t indk =  idx                                             / ( n_hexa_cell_seg * n_hexa_cell_seg );
