@@ -169,16 +169,16 @@ int main(int argc, char *argv[])
   PDM_MPI_Comm_rank(PDM_MPI_COMM_WORLD, &i_rank);
   PDM_MPI_Comm_size(PDM_MPI_COMM_WORLD, &n_rank);
 
-  int           dn_cell;
-  int           dn_face;
-  int           dn_vtx;
-  int           n_face_group;
-  PDM_g_num_t  *delmt_cell = NULL;
-  double       *dvtx_coord = NULL;
-  int          *dface_group_idx = NULL;
-  PDM_g_num_t  *dface_group = NULL;
-  int           dface_vtxL;
-  int           dFaceGroupL;
+  // int           dn_cell;
+  // int           dn_face;
+  // int           dn_vtx;
+  // int           n_face_group;
+  // PDM_g_num_t  *delmt_cell = NULL;
+  // double       *dvtx_coord = NULL;
+  // int          *dface_group_idx = NULL;
+  // PDM_g_num_t  *dface_group = NULL;
+  // int           dface_vtxL;
+  // int           dFaceGroupL;
 
   /*
    *  Create distributed cube

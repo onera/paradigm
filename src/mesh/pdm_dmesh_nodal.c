@@ -665,10 +665,10 @@ void
 PDM_DMesh_nodal_section_g_dims_get
 (
   PDM_dmesh_nodal_t *dmesh_nodal,
-  int               *n_cell_abs,
-  int               *n_face_abs,
-  int               *n_edge_abs,
-  int               *n_vtx_abs
+  PDM_g_num_t       *n_cell_abs,
+  PDM_g_num_t       *n_face_abs,
+  PDM_g_num_t       *n_edge_abs,
+  PDM_g_num_t       *n_vtx_abs
 )
 {
   *n_cell_abs = dmesh_nodal->n_cell_abs;
@@ -1648,8 +1648,8 @@ int               *n_sum_vtx_edge_tot
   // assert(dmesh_nodal->n_section_poly3d == 0); // Not implemented
   // assert(dmesh_nodal->n_section_poly2d == 0); // Not implemented
 
-  printf("n_edge_elt_tot     ::%i\n", *n_edge_elt_tot   );
-  printf("n_sum_vtx_edge_tot::%i\n" , *n_sum_vtx_edge_tot);
+  // printf("n_edge_elt_tot     ::%i\n", *n_edge_elt_tot   );
+  // printf("n_sum_vtx_edge_tot::%i\n" , *n_sum_vtx_edge_tot);
 }
 
 

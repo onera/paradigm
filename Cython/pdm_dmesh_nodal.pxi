@@ -22,10 +22,10 @@ cdef extern from "pdm_dmesh_nodal.h":
 
     void PDM_DMesh_nodal_coord_set(PDM_dmesh_nodal_t* dmn, int n_vtx, double* coords, PDM_ownership_t    owner)
     void PDM_DMesh_nodal_section_g_dims_get(PDM_dmesh_nodal_t* dmn,
-                                            int               *n_cell_abs,
-                                            int               *n_face_abs,
-                                            int               *n_edge_abs,
-                                            int               *n_vtx_abs)
+                                            PDM_g_num_t        *n_cell_abs,
+                                            PDM_g_num_t        *n_face_abs,
+                                            PDM_g_num_t        *n_edge_abs,
+                                            PDM_g_num_t        *n_vtx_abs)
 
     # PDM_g_num_t *PDM_DMesh_nodal_distrib_vtx_get(PDM_dmesh_nodal_t* dmn)
     # PDM_g_num_t *PDM_DMesh_nodal_distrib_section_get(PDM_dmesh_nodal_t* dmn, int id_section)
@@ -384,7 +384,6 @@ cdef class DistributedMeshNodalCaspule:
   def dmesh_nodal_get_sections(self, MPI.Comm    comm):
     """
     """
-    print("Wrap dmesh_nodal_get_sections")
     return dmesh_nodal_get_sections(self, comm)
 
   # ------------------------------------------------------------------------
@@ -399,9 +398,9 @@ cdef class DistributedMeshNodalCaspule:
     """
        Use the free method of PDM Lib
     """
-    print("DistributedMeshNodalCaspule::__dealloc__")
+    # print("DistributedMeshNodalCaspule::__dealloc__")
     PDM_DMesh_nodal_free(self.dmn, 1)
-    print("DistributedMeshNodalCaspule::__dealloc__ end z")
+    # print("DistributedMeshNodalCaspule::__dealloc__ end z")
 
 ctypedef fused DMeshNodal:
   DistributedMeshNodal
@@ -413,7 +412,7 @@ def dmesh_nodal_get_g_dims(DMeshNodal pydmn):
   """
   # ************************************************************************
   # > Declaration
-  cdef int n_cell_abs, n_face_abs, n_edge_abs, n_vtx_abs
+  cdef PDM_g_num_t n_cell_abs, n_face_abs, n_edge_abs, n_vtx_abs
   # ************************************************************************
 
   PDM_DMesh_nodal_section_g_dims_get(pydmn.dmn, &n_cell_abs, &n_face_abs, &n_edge_abs, &n_vtx_abs)
@@ -440,7 +439,6 @@ def dmesh_nodal_get_sections(DMeshNodal pydmn, MPI.Comm    comm):
   cdef NPY.npy_intp          dim
   # ************************************************************************
 
-  print("dmesh_nodal_get_sections ")
   n_section  = PDM_DMesh_nodal_n_section_get(pydmn.dmn)
   section_id = PDM_DMesh_nodal_sections_id_get(pydmn.dmn)
 

@@ -94,10 +94,10 @@ void
 PDM_DMesh_nodal_section_g_dims_get
 (
   PDM_dmesh_nodal_t *dmesh_nodal,
-  int               *n_cell_abs,
-  int               *n_face_abs,
-  int               *n_edge_abs,
-  int               *n_vtx_abs
+  PDM_g_num_t       *n_cell_abs,
+  PDM_g_num_t       *n_face_abs,
+  PDM_g_num_t       *n_edge_abs,
+  PDM_g_num_t       *n_vtx_abs
 );
 
 
