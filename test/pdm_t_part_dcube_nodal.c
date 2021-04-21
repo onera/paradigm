@@ -195,48 +195,48 @@ int main(int argc, char *argv[])
                                                       PDM_MESH_NODAL_HEXA8,
                                                       PDM_OWNERSHIP_KEEP);
 
-  PDM_dcube_nodal_gen_dim_get(dcube,
-                              &n_face_group,
-                              &dn_cell,
-                              &dn_face,
-                              &dn_vtx,
-                              &dface_vtxL,
-                              &dFaceGroupL);
+  // PDM_dcube_nodal_gen_dim_get(dcube,
+  //                             &n_face_group,
+  //                             &dn_cell,
+  //                             &dn_face,
+  //                             &dn_vtx,
+  //                             &dface_vtxL,
+  //                             &dFaceGroupL);
 
-  PDM_dcube_nodal_gen_data_get(dcube,
-                               &delmt_cell,
-                               &dvtx_coord,
-                               &dface_group_idx,
-                               &dface_group);
+  // PDM_dcube_nodal_gen_data_get(dcube,
+  //                              &delmt_cell,
+  //                              &dvtx_coord,
+  //                              &dface_group_idx,
+  //                              &dface_group);
 
-  if (1 == 1) {
+  // if (1 == 1) {
 
-    PDM_printf("[%i] n_face_group    : %i\n", i_rank, n_face_group);
-    PDM_printf("[%i] dn_cell        : %i\n", i_rank, dn_cell);
-    PDM_printf("[%i] dn_face        : %i\n", i_rank, dn_face);
-    PDM_printf("[%i] dn_vtx         : %i\n", i_rank, dn_vtx);
+  //   PDM_printf("[%i] n_face_group    : %i\n", i_rank, n_face_group);
+  //   PDM_printf("[%i] dn_cell        : %i\n", i_rank, dn_cell);
+  //   PDM_printf("[%i] dn_face        : %i\n", i_rank, dn_face);
+  //   PDM_printf("[%i] dn_vtx         : %i\n", i_rank, dn_vtx);
 
-    PDM_printf("[%i] delmt_cell     : ", i_rank);
-    for (int i = 0; i < 6 * dn_cell; i++)
-      PDM_printf(" "PDM_FMT_G_NUM, delmt_cell[i]);
-    PDM_printf("\n");
+  //   PDM_printf("[%i] delmt_cell     : ", i_rank);
+  //   for (int i = 0; i < 6 * dn_cell; i++)
+  //     PDM_printf(" "PDM_FMT_G_NUM, delmt_cell[i]);
+  //   PDM_printf("\n");
 
-    PDM_printf("[%i] dvtx_coord     : ", i_rank);
-    for (int i = 0; i < 3*dn_vtx; i++)
-      PDM_printf(" %12.5e", dvtx_coord[i]);
-    PDM_printf("\n");
+  //   PDM_printf("[%i] dvtx_coord     : ", i_rank);
+  //   for (int i = 0; i < 3*dn_vtx; i++)
+  //     PDM_printf(" %12.5e", dvtx_coord[i]);
+  //   PDM_printf("\n");
 
-    PDM_printf("[%i] dface_group_idx : ", i_rank);
-    for (int i = 0; i < n_face_group + 1; i++)
-      PDM_printf(" %i", dface_group_idx[i]);
-    PDM_printf("\n");
+  //   PDM_printf("[%i] dface_group_idx : ", i_rank);
+  //   for (int i = 0; i < n_face_group + 1; i++)
+  //     PDM_printf(" %i", dface_group_idx[i]);
+  //   PDM_printf("\n");
 
-    PDM_printf("[%i] dface_group    : ", i_rank);
-    for (int i = 0; i < dface_group_idx[n_face_group]; i++)
-      PDM_printf(" "PDM_FMT_G_NUM, dface_group[i]);
-    PDM_printf("\n");
+  //   PDM_printf("[%i] dface_group    : ", i_rank);
+  //   for (int i = 0; i < dface_group_idx[n_face_group]; i++)
+  //     PDM_printf(" "PDM_FMT_G_NUM, dface_group[i]);
+  //   PDM_printf("\n");
 
-  }
+  // }
 
   gettimeofday(&t_elaps_debut, NULL);
   PDM_dcube_nodal_gen_free(dcube);

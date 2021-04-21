@@ -33,6 +33,7 @@ cdef extern from "pdm_dcube_nodal_gen.h":
 
     # ------------------------------------------------------------------
     void PDM_dcube_nodal_gen_free(PDM_dcube_nodal_t        *pdm_dcube)
+    PDM_dmesh_nodal_t* PDM_dcube_nodal_gen_dmesh_nodal_get(PDM_dcube_nodal_t  *dcube)
     # ------------------------------------------------------------------
 
 # ------------------------------------------------------------------
@@ -69,7 +70,9 @@ cdef class DCubeNodalGenerator:
 
     # ------------------------------------------------------------------
     def __dealloc__(self):
+        print("PDM_dcube_nodal_gen_free")
         PDM_dcube_nodal_gen_free(self._dcube)
+        print("PDM_dcube_nodal_gen_free ...")
 
     # ------------------------------------------------------------------
     def dcube_dim_get(self):
@@ -165,3 +168,17 @@ cdef class DCubeNodalGenerator:
         #         'dvtx_coord'      : np_vtx_coord,
         #         'dface_group_idx' : np_dface_group_idx,
         #         'dface_group'     : np_dface_group}
+
+    # ------------------------------------------------------------------------
+    def get_dmesh_nodal(self):
+      """
+      """
+      # ************************************************************************
+      # > Declaration
+      cdef PDM_dmesh_nodal_t* dmn
+      # ************************************************************************
+      dmn = PDM_dcube_nodal_gen_dmesh_nodal_get(self._dcube)
+
+      py_casp = PyCapsule_New(dmn, NULL, NULL);
+
+      return DistributedMeshNodalCaspule(py_casp) # The free is inside the class

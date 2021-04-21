@@ -1,21 +1,13 @@
 
+cdef extern from "pdm_mesh_nodal.h":
+  int PDM_Mesh_nodal_n_vertices_element(PDM_Mesh_nodal_elt_t type,
+                                        int            order);
+
 cdef extern from "pdm_dmesh_nodal.h":
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     # > Wrapping of Ppart Structure
     ctypedef struct PDM_dmesh_nodal_t:
       pass
-
-    ctypedef enum PDM_Mesh_nodal_elt_t:
-      PDM_MESH_NODAL_POINT    = 0
-      PDM_MESH_NODAL_BAR2     = 1
-      PDM_MESH_NODAL_TRIA3    = 2
-      PDM_MESH_NODAL_QUAD4    = 3
-      PDM_MESH_NODAL_POLY_2D  = 4
-      PDM_MESH_NODAL_TETRA4   = 5
-      PDM_MESH_NODAL_PYRAMID5 = 6
-      PDM_MESH_NODAL_PRISM6   = 7
-      PDM_MESH_NODAL_HEXA8    = 8
-      PDM_MESH_NODAL_POLY_3D  = 9
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -29,16 +21,23 @@ cdef extern from "pdm_dmesh_nodal.h":
     void PDM_DMesh_nodal_free(PDM_dmesh_nodal_t* dmn, int partial)
 
     void PDM_DMesh_nodal_coord_set(PDM_dmesh_nodal_t* dmn, int n_vtx, double* coords, PDM_ownership_t    owner)
+    void PDM_DMesh_nodal_section_g_dims_get(PDM_dmesh_nodal_t* dmn,
+                                            int               *n_cell_abs,
+                                            int               *n_face_abs,
+                                            int               *n_edge_abs,
+                                            int               *n_vtx_abs)
 
     # PDM_g_num_t *PDM_DMesh_nodal_distrib_vtx_get(PDM_dmesh_nodal_t* dmn)
     # PDM_g_num_t *PDM_DMesh_nodal_distrib_section_get(PDM_dmesh_nodal_t* dmn, int id_section)
 
-    # int                  PDM_DMesh_nodal_n_vtx_get(PDM_dmesh_nodal_t* dmn)
-    # int                  PDM_DMesh_nodal_n_sections_get(PDM_dmesh_nodal_t* dmn)
-    # int*                 PDM_DMesh_nodal_sections_id_get(PDM_dmesh_nodal_t* dmn)
-    # PDM_Mesh_nodal_elt_t PDM_DMesh_nodal_section_type_get(PDM_dmesh_nodal_t* dmn, int id_section)
-    # double*              PDM_DMesh_nodal_vtx_get(PDM_dmesh_nodal_t* dmn)
-
+    int                  PDM_DMesh_nodal_n_vtx_get(PDM_dmesh_nodal_t* dmn)
+    int*                 PDM_DMesh_nodal_sections_id_get(PDM_dmesh_nodal_t* dmn)
+    int                  PDM_DMesh_nodal_n_section_get(PDM_dmesh_nodal_t* dmn)
+    PDM_Mesh_nodal_elt_t PDM_DMesh_nodal_section_type_get(PDM_dmesh_nodal_t* dmn, int id_section)
+    double*              PDM_DMesh_nodal_vtx_get(PDM_dmesh_nodal_t* dmn)
+    PDM_g_num_t*         PDM_DMesh_nodal_section_distri_std_copy_get(PDM_dmesh_nodal_t *dmesh_nodal,
+                                                                     int                id_section)
+    PDM_g_num_t*         PDM_dmesh_nodal_vtx_distrib_copy_get(PDM_dmesh_nodal_t *dmesh_nodal)
     int                  PDM_DMesh_nodal_section_add(PDM_dmesh_nodal_t* dmn, PDM_Mesh_nodal_elt_t t_elt)
     void                 PDM_DMesh_nodal_section_std_set(PDM_dmesh_nodal_t* dmn,
                                                         int                 id_section,
@@ -365,7 +364,145 @@ cdef class DistributedMeshNodal:
       print('PDM_DMesh_nodal_free')
       PDM_DMesh_nodal_free(self.dmn, 1)
 
+# ------------------------------------------------------------------
+cdef class DistributedMeshNodalCaspule:
+  """
+  """
+  # ************************************************************************
+  # > Class attributes
+  cdef PDM_dmesh_nodal_t* dmn
+  # ************************************************************************
+  # ------------------------------------------------------------------------
+  def __cinit__(self, object caps):
+    """
+    """
+    # print("DistributedMeshNodalCaspule", PyCapsule_GetName(caps))
+    cdef PDM_dmesh_nodal_t* casp_dmn = <PDM_dmesh_nodal_t *> PyCapsule_GetPointer(caps, NULL)
+    self.dmn = casp_dmn;
 
+  # ------------------------------------------------------------------------
+  def dmesh_nodal_get_sections(self, MPI.Comm    comm):
+    """
+    """
+    print("Wrap dmesh_nodal_get_sections")
+    return dmesh_nodal_get_sections(self, comm)
+
+  # ------------------------------------------------------------------------
+  def dmesh_nodal_get_g_dims(self):
+    """
+    """
+    print("Wrap dmesh_nodal_get_g_dims")
+    return dmesh_nodal_get_g_dims(self)
+
+  # ------------------------------------------------------------------------
+  def __dealloc__(self):
+    """
+       Use the free method of PDM Lib
+    """
+    print("DistributedMeshNodalCaspule::__dealloc__")
+    PDM_DMesh_nodal_free(self.dmn, 1)
+    print("DistributedMeshNodalCaspule::__dealloc__ end z")
+
+ctypedef fused DMeshNodal:
+  DistributedMeshNodal
+  DistributedMeshNodalCaspule
+
+
+def dmesh_nodal_get_g_dims(DMeshNodal pydmn):
+  """
+  """
+  # ************************************************************************
+  # > Declaration
+  cdef int n_cell_abs, n_face_abs, n_edge_abs, n_vtx_abs
+  # ************************************************************************
+
+  PDM_DMesh_nodal_section_g_dims_get(pydmn.dmn, &n_cell_abs, &n_face_abs, &n_edge_abs, &n_vtx_abs)
+  return {"n_cell_abs" : n_cell_abs,
+          "n_face_abs" : n_face_abs,
+          "n_edge_abs" : n_edge_abs,
+          "n_vtx_abs"  : n_vtx_abs}
+
+
+def dmesh_nodal_get_sections(DMeshNodal pydmn, MPI.Comm    comm):
+  """
+  """
+  # ************************************************************************
+  # > Declaration
+  cdef int                   n_section
+  cdef int                   n_vtx_per_elmt
+  cdef PDM_g_num_t           dn_elmt
+  cdef int                  *section_id
+  cdef int                  *connect_idx
+  cdef PDM_g_num_t          *connect
+  cdef PDM_g_num_t          *section_distrib
+  cdef double               *vtx_coord
+  cdef PDM_Mesh_nodal_elt_t  t_elmt
+  cdef NPY.npy_intp          dim
+  # ************************************************************************
+
+  print("dmesh_nodal_get_sections ")
+  n_section  = PDM_DMesh_nodal_n_section_get(pydmn.dmn)
+  section_id = PDM_DMesh_nodal_sections_id_get(pydmn.dmn)
+
+  print("n_section : ", n_section)
+
+  sections = []
+  for i_section in range(n_section):
+    id_section = section_id[i_section]
+    t_elmt = PDM_DMesh_nodal_section_type_get(pydmn.dmn, id_section)
+    # > For now only use this interfaces for standard element ... (to be refactor with HO and polyhedra elements)
+    assert(t_elmt != PDM_MESH_NODAL_POLY_2D)
+    assert(t_elmt != PDM_MESH_NODAL_POLY_3D)
+
+    section_distrib = PDM_DMesh_nodal_section_distri_std_copy_get(pydmn.dmn, id_section)
+    connect         = PDM_DMesh_nodal_section_std_get(pydmn.dmn, id_section)
+
+    # > Build numpy capsule
+    dim = <NPY.npy_intp> comm.Get_size() + 1
+    np_distrib = NPY.PyArray_SimpleNewFromData(1,
+                                                    &dim,
+                                                    PDM_G_NUM_NPY_INT,
+                                                    <void *> section_distrib)
+    PyArray_ENABLEFLAGS(np_distrib, NPY.NPY_OWNDATA);
+
+    # > Build numpy capsule
+    dn_elmt = np_distrib[comm.Get_rank()+1] - np_distrib[comm.Get_rank()]
+    n_vtx_per_elmt = PDM_Mesh_nodal_n_vertices_element(t_elmt, 1)
+    dim = <NPY.npy_intp> n_vtx_per_elmt * dn_elmt
+    np_connec = NPY.PyArray_SimpleNewFromData(1,
+                                               &dim,
+                                               PDM_G_NUM_NPY_INT,
+                                               <void *> connect)
+    PyArray_ENABLEFLAGS(np_connec, NPY.NPY_OWNDATA);
+
+    sections.append({"pdm_type"   : t_elmt,
+                     "np_distrib" : np_distrib,
+                     "np_connec"  : np_connec})
+    # print("t_elmt : ", t_elmt )
+    # print("np_distrib : ", np_distrib )
+    # print("np_connec : ", np_connec )
+
+  vtx_distrib = PDM_dmesh_nodal_vtx_distrib_copy_get(pydmn.dmn)
+  n_vtx = PDM_DMesh_nodal_n_vtx_get(pydmn.dmn);
+  vtx_coord = PDM_DMesh_nodal_vtx_get(pydmn.dmn)
+
+  dim = <NPY.npy_intp> 3 * n_vtx
+  np_vtx = NPY.PyArray_SimpleNewFromData(1,
+                                         &dim,
+                                         NPY.NPY_DOUBLE,
+                                         <void *> vtx_coord)
+  PyArray_ENABLEFLAGS(np_vtx, NPY.NPY_OWNDATA);
+
+  dim = <NPY.npy_intp> comm.Get_size() + 1
+  np_vtx_distrib = NPY.PyArray_SimpleNewFromData(1,
+                                             &dim,
+                                             PDM_G_NUM_NPY_INT,
+                                             <void *> vtx_distrib)
+  PyArray_ENABLEFLAGS(np_vtx_distrib, NPY.NPY_OWNDATA);
+
+  print("Return dmesh_nodal_get_sections")
+  return {"vtx"      : {"np_vtx" : np_vtx, "np_vtx_distrib" : np_vtx_distrib},
+          "sections" : sections}
 
 # ------------------------------------------------------------------------
 def ElementParentFind(int                                           dnelt,

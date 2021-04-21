@@ -90,6 +90,17 @@ PDM_DMesh_nodal_coord_set
 );
 
 
+void
+PDM_DMesh_nodal_section_g_dims_get
+(
+  PDM_dmesh_nodal_t *dmesh_nodal,
+  int               *n_cell_abs,
+  int               *n_face_abs,
+  int               *n_edge_abs,
+  int               *n_vtx_abs
+);
+
+
 /**
  * \brief  Return vertices distribution
  *
@@ -149,7 +160,7 @@ PDM_DMesh_nodal_n_vtx_get
  *
  */
 
-const double *
+double *
 PDM_DMesh_nodal_vtx_get
 (
   PDM_dmesh_nodal_t *dmesh_nodal
@@ -181,11 +192,11 @@ PDM_DMesh_nodal_n_section_get
  *
  */
 
-// int *
-// PDM_DMesh_nodal_sections_id_get
-// (
-// const int   hdl
-// );
+int *
+PDM_DMesh_nodal_sections_id_get
+(
+PDM_dmesh_nodal_t  *dmesh_nodal
+);
 
 
 /**
@@ -232,6 +243,22 @@ const int                id_section
  */
 PDM_g_num_t*
 PDM_DMesh_nodal_section_distri_std_get
+(
+  PDM_dmesh_nodal_t  *dmesh_nodal,
+  const int   id_section
+);
+
+/**
+ * \brief  Return distri of section (by copy)
+ *
+ * \param [in] dmesh_nodal
+ * \param [in]  id_section   Block identifier
+ *
+ * \return  distri
+ *
+ */
+PDM_g_num_t*
+PDM_DMesh_nodal_section_distri_std_copy_get
 (
   PDM_dmesh_nodal_t  *dmesh_nodal,
   const int   id_section
@@ -604,6 +631,12 @@ PDM_dmesh_nodal_vtx_distrib_get
   PDM_dmesh_nodal_t  *dmesh_nodal
 );
 
+
+PDM_g_num_t*
+PDM_dmesh_nodal_vtx_distrib_copy_get
+(
+  PDM_dmesh_nodal_t  *dmesh_nodal
+);
 
 /**
  * \brief  Return total number of vertices of a distributed mesh
