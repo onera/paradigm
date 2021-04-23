@@ -111,7 +111,7 @@ typedef struct {
 typedef struct {
 
   int           n_part;
-  int          *n_elts;
+  int          *n_elts; // Aredescendre dans la structure parente
   int         **pts_inside_idx;
   PDM_g_num_t **gnum;
   double      **coords;
@@ -980,6 +980,133 @@ PDM_mesh_location_create_cf
 
 /**
  *
+ * \brief Get the number of located points
+ *
+ * \param [in]   id              Identifier
+ * \param [in]   i_point_cloud   Index of point cloud
+ * \param [in]   i_part          Index of partition
+ *
+ * \return     The number of located points
+ *
+ */
+
+int
+PDM_mesh_location_n_located_get
+(
+ const int           id,
+ const int           i_point_cloud,
+ const int           i_part
+)
+{
+  _PDM_location_t *mesh_location = _get_from_id (id);
+
+  assert (mesh_location->point_clouds != NULL);
+  assert (i_point_cloud < mesh_location->n_point_cloud);
+
+  _point_cloud_t *pcloud = mesh_location->point_clouds + i_point_cloud;
+
+  assert (i_part < pcloud->n_part);  
+  return pcloud->n_located[i_part];       
+}
+
+
+/**
+ *
+ * \brief Get the number of unlocated points
+ *
+ * \param [in]   id              Identifier
+ * \param [in]   i_point_cloud   Index of point cloud
+ * \param [in]   i_part          Index of partition
+ *
+ * \return     The number of unlocated points
+ *
+ */
+
+int
+PDM_mesh_location_n_unlocated_get
+(
+ const int           id,
+ const int           i_point_cloud,
+ const int           i_part
+)
+{
+  _PDM_location_t *mesh_location = _get_from_id (id);
+
+  assert (mesh_location->point_clouds != NULL);
+  assert (i_point_cloud < mesh_location->n_point_cloud);
+
+  _point_cloud_t *pcloud = mesh_location->point_clouds + i_point_cloud;
+
+  assert (i_part < pcloud->n_part);
+  return pcloud->n_un_located[i_part];       
+}
+
+
+/**
+ *
+ * \brief Get the list of unlocated points
+ *
+ * \param [in]   id              Identifier
+ * \param [in]   i_point_cloud   Index of point cloud
+ * \param [in]   i_part          Index of partition
+ *
+ * \return     The list of unlocated points
+ *
+ */
+
+int *
+PDM_mesh_location_unlocated_get
+(
+ const int           id,
+ const int           i_point_cloud,
+ const int           i_part
+)
+{
+  _PDM_location_t *mesh_location = _get_from_id (id);
+
+  assert (mesh_location->point_clouds != NULL);
+  assert (i_point_cloud < mesh_location->n_point_cloud);
+
+  _point_cloud_t *pcloud = mesh_location->point_clouds + i_point_cloud;
+
+  assert (i_part < pcloud->n_part);
+  return pcloud->un_located[i_part];        
+}
+
+
+/**
+ *
+ * \brief Get the list of located points
+ *
+ * \param [in]   id              Identifier
+ * \param [in]   i_point_cloud   Index of point cloud
+ * \param [in]   i_part          Index of partition
+ *
+ * \return     The list of located points
+ *
+ */
+
+int *
+PDM_mesh_location_located_get
+(
+ const int           id,
+ const int           i_point_cloud,
+ const int           i_part
+)
+{
+  _PDM_location_t *mesh_location = _get_from_id (id);
+
+  assert (mesh_location->point_clouds != NULL);
+  assert (i_point_cloud < mesh_location->n_point_cloud);
+
+  _point_cloud_t *pcloud = mesh_location->point_clouds + i_point_cloud;
+
+  assert (i_part < pcloud->n_part);
+  return pcloud->located[i_part];        
+}
+
+/**
+ *
  * \brief Set the number of partitions of a point cloud
  *
  * \param [in]   id              Identifier
@@ -1359,14 +1486,13 @@ PDM_mesh_location_method_set
 
 /**
  *
- * \brief Get mesh location
+ * \brief Get point location
  *
  * \param [in]   id                    Identifier
  * \param [in]   i_point_cloud         Current cloud
  * \param [in]   i_part                Index of partition of the cloud
  * \param [out]  n_points              Number of points in point cloud
  * \param [out]  coord                 Coordinates of points in point cloud
- * \param [out]  g_num                 Global numbers of points in point cloud
  * \param [out]  location              The global number of the closest element if the point is located,
  *                                     -1 otherwise
  *
@@ -1431,16 +1557,21 @@ PDM_mesh_location_cell_vertex_get
 }
 
 
-
 /**
  *
- * \brief Get points in elements
+ * \brief Get point list located in elements
  *
- * \param [in]   id                    Identifier
- * \param [in]   i_part                Index of partition of the cloud
- * \param [out]  elt_idx               Index in (size = n_elt + 1)
- * \param [out]  point_gnum            Global number of points (size = elt_idx[n_elt])
- * \param [out]  point_coords          Coordinates of points (size = 3 * elt_idx[n_elt])
+ * \param [in]   id                      Identifier
+ * \param [in]   i_part                  Index of partition of the mesh
+ * \param [in]   i_point_cloud           Index of cloud
+ * \param [out]  elt_pts_inside_idx      Points index (size = n_elt + 1)
+ * \param [out]  points_gnum             Points global number
+ * \param [out]  points_coords           Points coordinates
+ * \param [out]  points_uvw              Points parametric coordinates in elements
+ * \param [out]  points_weights_idx      Interpolation weights index (size = elt_pts_inside_idx[n_elt] + 1)
+ * \param [out]  points_weights          Interpolation weights
+ * \param [out]  points_dist2            Distance element-points (dist < 0 if the point is inside)
+ * \param [out]  points_projected_coords Point projection on element if the point is outside 
  *
  */
 
@@ -3497,6 +3628,29 @@ PDM_mesh_location_compute
   PDM_timer_resume(location->timer);
 }
 
+
+/**
+ *
+ * \brief Get the number of cells
+ *
+ * \param [in]  id       Identifier
+ * \param [in]  i_part   Index of partition of the mesh
+ *
+ */
+
+int
+PDM_mesh_location_n_cell_get
+(
+ const int id, 
+ const int i_part 
+)
+{
+
+  _PDM_location_t *location = _get_from_id (id);
+
+  return location->points_in_elements[0].n_elts[i_part];
+
+}
 
 
 // PDM_Mesh_nodal_t*
