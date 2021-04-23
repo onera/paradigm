@@ -1485,7 +1485,7 @@ _run_ppart_zone_nodal
 
     PDM_Mesh_nodal_elt_t type = PDM_DMesh_nodal_section_elt_type_get(dmesh_nodal,i_section);
     int counter=0;
-    if (is_3D_element(type)) {
+    if (PDM_Mesh_nodal_is_3D_element(type)) {
       int n_elt = section_idx[i_section+1] - section_idx[i_section];
       for (int i=0; i<n_elt; ++i) {
         elt_section_part[i] = cell_part[counter];
@@ -1498,7 +1498,7 @@ _run_ppart_zone_nodal
     int* elt_section_part = elt_part + section_idx[i_section];
 
     PDM_Mesh_nodal_elt_t type = PDM_DMesh_nodal_section_elt_type_get(dmesh_nodal,i_section);
-    if (is_2D_element(type)) {
+    if (PDM_Mesh_nodal_is_2D_element(type)) {
       int n_elt = section_idx[i_section+1] - section_idx[i_section];
       face_part_from_parent(n_elt,
                             dn_elt,
@@ -1540,7 +1540,7 @@ _run_ppart_zone_nodal
     pn_cell[i_part] = 0;
     for (int i_section=0; i_section<n_section; ++i_section) {
       PDM_Mesh_nodal_elt_t type = PDM_DMesh_nodal_section_elt_type_get(dmesh_nodal,i_section);
-      if (is_3D_element(type)) { // only counting cells
+      if (PDM_Mesh_nodal_is_3D_element(type)) { // only counting cells
         pn_cell[i_part] += pn_elt_section[i_section][i_part];
       }
     }
@@ -1556,7 +1556,7 @@ _run_ppart_zone_nodal
     int offset = 0;
     for (int i_section=0; i_section<n_section; ++i_section) {
       PDM_Mesh_nodal_elt_t type = PDM_DMesh_nodal_section_elt_type_get(dmesh_nodal,i_section);
-      if (is_3D_element(type)) { // only counting cells
+      if (PDM_Mesh_nodal_is_3D_element(type)) { // only counting cells
         int pn_elt = pn_elt_section[i_section][i_part];
         for (int i=0; i<pn_elt; ++i) {
           pcell_ln_to_gn[i_part][pos] = pelt_section_ln_to_gn[i_section][i_part][i] + offset;

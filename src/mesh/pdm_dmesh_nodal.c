@@ -1650,7 +1650,7 @@ int PDM_concat_cell_sections
   int n_cell_section = 0;
   for (int i=0; i<n_section; ++i) {
     PDM_Mesh_nodal_elt_t type = PDM_DMesh_nodal_section_elt_type_get(dmesh_nodal,i);
-    if (is_3D_element(type)) {
+    if (PDM_Mesh_nodal_is_3D_element(type)) {
       ++n_cell_section;
     }
   }
@@ -1664,7 +1664,7 @@ int PDM_concat_cell_sections
   int cnt = 0;
   for (int i=0; i<n_section; ++i) {
     PDM_Mesh_nodal_elt_t type = PDM_DMesh_nodal_section_elt_type_get(dmesh_nodal,i);
-    if (is_3D_element(type)) {
+    if (PDM_Mesh_nodal_is_3D_element(type)) {
       int n_cell_by_section = PDM_DMesh_nodal_section_n_elt_get(dmesh_nodal,i);
       _cell_section_idx[cnt+1] = _cell_section_idx[cnt] + n_cell_by_section;
       n_vtx_by_cell_by_section[cnt] = PDM_Mesh_nodal_n_vertices_element(type,1); // 1: elements of order 1
@@ -1697,7 +1697,7 @@ int PDM_concat_cell_sections
   int pos = 0;
   for (int i=0; i<n_section; ++i) {
     PDM_Mesh_nodal_elt_t type = PDM_DMesh_nodal_section_elt_type_get(dmesh_nodal,i);
-    if (is_3D_element(type)) {
+    if (PDM_Mesh_nodal_is_3D_element(type)) {
       PDM_g_num_t* dcell_vtx = PDM_DMesh_nodal_section_std_get(dmesh_nodal,i);
       for (int j=0; j<n_cell_vtx_by_section[i]; ++j) {
         _cat_dcell_vtx[pos+j] = dcell_vtx[j];

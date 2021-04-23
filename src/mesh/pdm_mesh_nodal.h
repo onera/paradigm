@@ -56,11 +56,6 @@ typedef enum {
 
 } PDM_Mesh_nodal_elt_t;
 
-int
-is_2D_element(PDM_Mesh_nodal_elt_t type);
-int
-is_3D_element(PDM_Mesh_nodal_elt_t type);
-
 
 typedef struct _PDM_Mesh_nodal_t PDM_Mesh_nodal_t;
 
@@ -71,6 +66,37 @@ typedef struct _PDM_Mesh_nodal_t PDM_Mesh_nodal_t;
 /*=============================================================================
  * Public function interfaces
  *============================================================================*/
+
+
+int
+PDM_Mesh_nodal_is_2D_element
+(
+  PDM_Mesh_nodal_elt_t type
+);
+
+int
+PDM_Mesh_nodal_is_3D_element
+(
+  PDM_Mesh_nodal_elt_t type
+);
+
+
+/**
+ * \brief Get the number of vertices of an element type
+ *
+ * \param [in]   type     Element type
+ * \param [in]   comm     Element order
+ *
+ * \return       Number of vertices
+ *
+ */
+
+int
+PDM_Mesh_nodal_n_vtx_elt_get
+(
+  PDM_Mesh_nodal_elt_t type,
+  const int order
+);
 
 /**
  * \brief Create a Mesh nodal structure

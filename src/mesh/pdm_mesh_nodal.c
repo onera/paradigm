@@ -53,29 +53,6 @@ extern "C" {
  * Private function definitions
  *============================================================================*/
 
-/**
- *
- * \brief Free vtx structure
- *
- * \param[inout]  vtx    Vertices
- *
- * \return        NULL
- *
- */
-int
-is_2D_element(PDM_Mesh_nodal_elt_t type) {
-  return type==PDM_MESH_NODAL_TRIA3
-      || type==PDM_MESH_NODAL_QUAD4
-      || type==PDM_MESH_NODAL_POLY_2D;
-}
-int
-is_3D_element(PDM_Mesh_nodal_elt_t type) {
-  return type==PDM_MESH_NODAL_TETRA4
-      || type==PDM_MESH_NODAL_PYRAMID5
-      || type==PDM_MESH_NODAL_PRISM6
-      || type==PDM_MESH_NODAL_HEXA8
-      || type==PDM_MESH_NODAL_POLY_3D;
-}
 
 static
 PDM_Mesh_nodal_vtx_t *
@@ -1239,6 +1216,95 @@ _type_cell_3D
 /*=============================================================================
  * Public function definitions
  *============================================================================*/
+
+/**
+ *
+ * \brief Free vtx structure
+ *
+ * \param[inout]  vtx    Vertices
+ *
+ * \return        NULL
+ *
+ */
+
+int
+PDM_Mesh_nodal_is_2D_element
+(
+  PDM_Mesh_nodal_elt_t type
+) 
+{
+  return type==PDM_MESH_NODAL_TRIA3
+      || type==PDM_MESH_NODAL_QUAD4
+      || type==PDM_MESH_NODAL_POLY_2D;
+}
+
+int
+PDM_Mesh_nodal_is_3D_element
+(
+  PDM_Mesh_nodal_elt_t type
+) 
+{
+  return type==PDM_MESH_NODAL_TETRA4
+      || type==PDM_MESH_NODAL_PYRAMID5
+      || type==PDM_MESH_NODAL_PRISM6
+      || type==PDM_MESH_NODAL_HEXA8
+      || type==PDM_MESH_NODAL_POLY_3D;
+}
+
+
+/**
+ * \brief Get the number of vertices of an element type
+ *
+ * \param [in]   type     Element type
+ * \param [in]   comm     Element order
+ *
+ * \return       Number of vertices
+ *
+ */
+
+int
+PDM_Mesh_nodal_n_vtx_elt_get
+(
+  PDM_Mesh_nodal_elt_t type,
+  const int order
+)
+{
+  if (order != 1) {
+     PDM_error (__FILE__, __LINE__, 0, "Not implemented yet for order > 1\n");
+  }
+
+  switch (type) {
+  case PDM_MESH_NODAL_POINT :
+    return 1;
+    break;
+  case PDM_MESH_NODAL_BAR2 :
+    return 2;
+    break;
+  case PDM_MESH_NODAL_TRIA3 :
+    return 3;
+    break;
+  case PDM_MESH_NODAL_QUAD4 :
+    return 4;
+    break;
+  case PDM_MESH_NODAL_TETRA4 :
+    return 4;
+    break;
+  case PDM_MESH_NODAL_PYRAMID5 :
+    return 5;
+    break;
+  case PDM_MESH_NODAL_PRISM6 :
+    return 6;
+    break;
+  case PDM_MESH_NODAL_HEXA8 :
+    return 8;
+    break;
+  default :
+    PDM_error (__FILE__, __LINE__, 0, "Unknown for order Poly2D and Polyu3D\n");
+  }
+  return -1;
+}
+
+
 
 /**
  * \brief Create a Mesh nodal structure
