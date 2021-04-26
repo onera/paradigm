@@ -46,15 +46,15 @@ extern "C" {
  * Macro definitions
  *============================================================================*/
 
-#define _DOT_PRODUCT(v1, v2) \
+#define _DOT_PRODUCT(v1, v2)                    \
   (v1[0]*v2[0] + v1[1]*v2[1] + v1[2]*v2[2])
 
-#define _CROSS_PRODUCT_3D(cross_v1_v2, v1, v2) ( \
- cross_v1_v2[0] = v1[1]*v2[2] - v1[2]*v2[1],   \
- cross_v1_v2[1] = v1[2]*v2[0] - v1[0]*v2[2],   \
- cross_v1_v2[2] = v1[0]*v2[1] - v1[1]*v2[0]  )
+#define _CROSS_PRODUCT_3D(cross_v1_v2, v1, v2) (                        \
+                                                cross_v1_v2[0] = v1[1]*v2[2] - v1[2]*v2[1], \
+                                                cross_v1_v2[1] = v1[2]*v2[0] - v1[0]*v2[2], \
+                                                cross_v1_v2[2] = v1[0]*v2[1] - v1[1]*v2[0]  )
 
-#define _MODULE(v) \
+#define _MODULE(v)                              \
   sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2])
 
 #define _MIN(a,b)   ((a) < (b) ?  (a) : (b))  /* Minimum of a et b */
@@ -141,7 +141,7 @@ static void
 _ol_dump_times
 (
  PDM_ol_t *ol
-)
+ )
 {
 
   _ol_timer_step_t tfin = OL_SORT_A_B_CONNECT_GRAPH;
@@ -279,7 +279,7 @@ static void
 _build_edges
 (
  PDM_ol_t *ol
-)
+ )
 {
 
   /*
@@ -313,7 +313,7 @@ static void
 _build_exchange_graph
 (
  PDM_ol_t *ol
-)
+ )
 {
 
   PDM_surf_mesh_build_exchange_graph (ol->meshA);
@@ -337,7 +337,7 @@ static void
 _compute_carLgthVtx
 (
  PDM_ol_t *ol
-)
+ )
 {
 
   PDM_surf_mesh_compute_carLgthVtx (ol->meshA);
@@ -360,7 +360,7 @@ static void
 _compute_faceExtents
 (
  PDM_ol_t *ol
-)
+ )
 {
 
   PDM_surf_mesh_compute_faceExtentsMesh(ol->meshA,
@@ -387,7 +387,7 @@ _is_same_plane
 (
  PDM_ol_t *ol,
  double   *dist
-)
+ )
 {
   double planeEquationA[4] = {0, 0, 0, 0};
   double planeEquationB[4] = {0, 0, 0, 0};
@@ -408,7 +408,7 @@ _is_same_plane
 
   if (isSamePlane) {
     if (   (1 - fabs (_DOT_PRODUCT (planeEquationA, planeEquationB))
-         > ol->samePlaneTol)) {
+            > ol->samePlaneTol)) {
       isSamePlane = 0;
     }
   }
@@ -431,31 +431,25 @@ _is_same_plane
   return isSamePlane;
 }
 
-/**
- * \brief Compute overlay planes
- *
- * This function computes overlay mesh of two plane meshes
- *
- * \param [in]  ol       overlay object
- *
- */
+
+
 
 static void
-_compute_overlay_planes
+_intersect_bounding_boxes
 (
- PDM_ol_t *ol
-)
+ PDM_ol_t       *ol,
+ PDM_box_set_t **boxesA,
+ PDM_box_set_t **boxesB,
+ int           **boxesB_intersection_index,
+ int           **boxesB_intersection_l_num
+ )
 {
   const int vb = 0;
-
-  //TODO: Cette fonction est très grosse. Elle sera decoupee en petites fonctions
-  //      lors de l'optimisation de l'algorithme.
 
   int i_rank;
   PDM_MPI_Comm_rank (ol->comm, &i_rank);
   int lComm;
   PDM_MPI_Comm_size (ol->comm, &lComm);
-
 
   /*****************************************************************************
    *                                                                           *
@@ -464,16 +458,8 @@ _compute_overlay_planes
    *                                                                           *
    ****************************************************************************/
 
-  /* for (int i = 0; i < ol->meshA->n_part; i++) { */
-	/*   PDM_surf_part_dump(ol->meshA->part[i]); */
-  /* } */
-
-  /* for (int i = 0; i < ol->meshA->n_part; i++) { */
-	/*   PDM_surf_part_dump(ol->meshA->part[i]); */
-  /* } */
-
   double global_extents[6] = {HUGE_VAL,  HUGE_VAL,  HUGE_VAL,
-                             -HUGE_VAL, -HUGE_VAL, -HUGE_VAL};
+                              -HUGE_VAL, -HUGE_VAL, -HUGE_VAL};
 
   const int dim = 3;
 
@@ -482,7 +468,7 @@ _compute_overlay_planes
 
   int *nEltsA = (int *) malloc (sizeof(int) * n_partA);
   const PDM_g_num_t **gNumA =
-                  (const PDM_g_num_t **) malloc (sizeof(PDM_g_num_t *) * n_partA);
+    (const PDM_g_num_t **) malloc (sizeof(PDM_g_num_t *) * n_partA);
   const double **extentsA = (const double **) malloc (sizeof(double *) * n_partA);
 
   for (int i = 0; i < n_partA; i++) {
@@ -509,7 +495,7 @@ _compute_overlay_planes
     extentsB[i] = PDM_surf_mesh_part_extents_get (meshB, i);
     for (int j = 0; j < nEltsB[i]; j++) {
       for (int k = 0; k < dim; k++) {
-        global_extents[k]       = PDM_MIN(extentsB[i][2*dim*j + k], global_extents[k]);
+        global_extents[k]       = PDM_MIN(extentsB[i][2*dim*j + k],       global_extents[k]);
         global_extents[dim + k] = PDM_MAX(extentsB[i][(2*j+1) * dim + k], global_extents[dim+k]);
       }
     }
@@ -536,15 +522,16 @@ _compute_overlay_planes
 
   PDM_dbbtree_t *dbbtreeA = PDM_dbbtree_create (ol->comm, dim, g_global_extents);
 
-  PDM_box_set_t  *boxesA = PDM_dbbtree_boxes_set (dbbtreeA,
-                                                  n_partA,
-                                                  nEltsA,
-                                                  extentsA,
-                                                  gNumA);
+  *boxesA = PDM_dbbtree_boxes_set (dbbtreeA,
+                                   n_partA,
+                                   nEltsA,
+                                   extentsA,
+                                   gNumA);
 
   free (nEltsA);
   free (gNumA);
   free (extentsA);
+
 
   PDM_MPI_Barrier (ol->comm);
   PDM_timer_hang_on(ol->timer);
@@ -559,6 +546,7 @@ _compute_overlay_planes
     fflush(stdout);
   }
 
+
   /*****************************************************************************
    *                                                                           *
    * Look for intersections between each mesh A boxes and mesh B boxes         *
@@ -567,64 +555,71 @@ _compute_overlay_planes
    *                             (local number of B boxes)                     *
    *                                                                           *
    ****************************************************************************/
-
-  int *boxesB_intersection_index;
-  int *boxesB_intersection_l_num;
-  PDM_box_set_t  *boxesB = PDM_dbbtree_intersect_boxes_set (dbbtreeA,
-                                                            n_partB,
-                                                            nEltsB,
-                                                            extentsB,
-                                                            gNumB,
-                                                            &boxesB_intersection_index,
-                                                            &boxesB_intersection_l_num);
+  *boxesB = PDM_dbbtree_intersect_boxes_set (dbbtreeA,
+                                             n_partB,
+                                             nEltsB,
+                                             extentsB,
+                                             gNumB,
+                                             boxesB_intersection_index,
+                                             boxesB_intersection_l_num);
 
 
   PDM_dbbtree_free (dbbtreeA);
   free (nEltsB);
   free (gNumB);
   free (extentsB);
+}
 
-  /*
-   * Check boxesA and boxesB entities
-   */
 
-  const int *originA = PDM_box_set_origin_get (boxesA);
+/**
+ * \brief Compute intersections betwwen the bounding boxes of meshes A and B and redistribute results
+ *
+ * \param [in]  ol                       overlay object
+ * \param [out] boxesA                   (redistributed) set of bounding boxes of elements of mesh A
+ * \param [out] boxesB                   (redistributed) set of bounding boxes of elements of mesh B
+ * \param [out] n_elt_blockA             number of boxes of A in block
+ * \param [out] block_gnumA              global numbers of boxes of A in block
+ * \param [out] blockA_boxesB_idx        index of boxes of B intersecting each box of A in block
+ * \param [out] blockA_boxesB_gnum_data  global numbers of boxes of B intersecting each box of A in block
+ * \param [out] blockA_boxesB_lnum_data  local numbers of boxes of B intersecting each box of A in block
+ * \param [out] blockA_lnum_data         local numbers of boxes of A in block
+ *
+ */
 
-  const int *originB = PDM_box_set_origin_get (boxesB);
+static void _intersect_bounding_boxes_and_redistribute
+(
+ PDM_ol_t       *ol,
+ PDM_box_set_t **boxesA,
+ PDM_box_set_t **boxesB,
+ int            *n_elt_blockA,
+ PDM_g_num_t   **block_gnumA,
+ int           **blockA_boxesB_idx,
+ PDM_g_num_t   **blockA_boxesB_gnum_data,
+ int           **blockA_boxesB_lnum_data,
+ int           **blockA_lnum_data
+ )
+{
+  int lComm;
+  PDM_MPI_Comm_size (ol->comm, &lComm);
 
-  int              n_eltA    = PDM_box_set_get_size (boxesA);
-  int              n_eltB    = PDM_box_set_get_size (boxesB);
+  int *boxesB_intersection_index = NULL;
+  int *boxesB_intersection_l_num = NULL;
 
-  PDM_g_num_t *gnum_eltA = (PDM_g_num_t *) PDM_box_set_get_g_num (boxesA);
-  PDM_g_num_t *gnum_eltB = (PDM_g_num_t *) PDM_box_set_get_g_num (boxesB);
+  _intersect_bounding_boxes (ol,
+                             boxesA,
+                             boxesB,
+                             &boxesB_intersection_index,
+                             &boxesB_intersection_l_num);
 
-  if (1 == 0) {
-    printf ("intersections A\n");
-    for (int i = 0; i < n_eltA; i++) {
-      printf(PDM_FMT_G_NUM" :", gnum_eltA[i]);
-      for (int j = boxesB_intersection_index[i]; j < boxesB_intersection_index[i+1]; j++) {
-        printf(" "PDM_FMT_G_NUM, gnum_eltB[boxesB_intersection_l_num[j]]);
-      }
-      printf("\n");
-    }
-  }
+  int n_eltA = PDM_box_set_get_size (*boxesA);
+  int n_eltB = PDM_box_set_get_size (*boxesB);
 
-  PDM_MPI_Barrier (ol->comm);
-  PDM_timer_hang_on(ol->timer);
-  ol->times_elapsed[OL_BOXES_INTERSECT] = PDM_timer_elapsed(ol->timer);
-  ol->times_cpu[OL_BOXES_INTERSECT]     = PDM_timer_cpu(ol->timer);
-  ol->times_cpu_u[OL_BOXES_INTERSECT]   = PDM_timer_cpu_user(ol->timer);
-  ol->times_cpu_s[OL_BOXES_INTERSECT]   = PDM_timer_cpu_sys(ol->timer);
-  PDM_timer_resume(ol->timer);
-
-  if (i_rank == 0  && vb == 1) {
-    printf ("!!!! boxes intersect !!!!\n");
-    fflush(stdout);
-  }
+  PDM_g_num_t *gnum_eltA = (PDM_g_num_t *) PDM_box_set_get_g_num (*boxesA);
+  PDM_g_num_t *gnum_eltB = (PDM_g_num_t *) PDM_box_set_get_g_num (*boxesB);
 
   /*****************************************************************************
    *                                                                           *
-   *  Transfer intersection information from partitions to blocks              *
+   *  Transfer gintersection information from partitions to blocks              *
    * with PDM_part_to_block_exch function                                       *
    *                                                                           *
    *  Results :                                                                *
@@ -643,71 +638,65 @@ _compute_overlay_planes
                                                               1,
                                                               ol->comm);
 
-  int n_elt_blockA = PDM_part_to_block_n_elt_block_get (ptb_boxesA);
+  *n_elt_blockA = PDM_part_to_block_n_elt_block_get (ptb_boxesA);
 
-  PDM_g_num_t *block_gnumA = PDM_part_to_block_block_gnum_get (ptb_boxesA);
+  *block_gnumA = PDM_part_to_block_block_gnum_get (ptb_boxesA);
 
-  int *part_strideA = (int *) malloc (sizeof(int) * n_eltA);
+  int *part_strideA = (int *) malloc (sizeof(int) * (n_eltA));
 
   for (int i = 0; i < n_eltA; i++) {
     part_strideA[i] =
-            boxesB_intersection_index[i+1] - boxesB_intersection_index[i];
+      boxesB_intersection_index[i+1] - boxesB_intersection_index[i];
   }
 
 
   PDM_g_num_t *boxesB_intersection_g_num = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) *
-                                                               boxesB_intersection_index[n_eltA]);
+                                                                   boxesB_intersection_index[n_eltA]);
 
   for (int k = 0; k < boxesB_intersection_index[n_eltA]; k++) {
     boxesB_intersection_g_num[k] =  gnum_eltB[boxesB_intersection_l_num[k]];
   }
 
-  int       *blockA_boxesB_stride;
-  PDM_g_num_t *blockA_boxesB_gnum_data;
-
+  int *blockA_boxesB_stride;
   PDM_part_to_block_exch (ptb_boxesA,
-                         sizeof(PDM_g_num_t),
-                         PDM_STRIDE_VAR,
-                         0,
-                         &part_strideA,
-                         (void **) &boxesB_intersection_g_num,
-                         &blockA_boxesB_stride,
-                         (void **) &blockA_boxesB_gnum_data);
+                          sizeof(PDM_g_num_t),
+                          PDM_STRIDE_VAR,
+                          0,
+                          &part_strideA,
+                          (void **) &boxesB_intersection_g_num,
+                          &blockA_boxesB_stride,
+                          (void **) blockA_boxesB_gnum_data);
 
-  int *blockA_boxesB_idx = PDM_array_zeros_int(n_elt_blockA + 1);
-
-  for (int i = 0; i < n_elt_blockA; i++) {
-    blockA_boxesB_idx[i+1] = blockA_boxesB_idx[i] + blockA_boxesB_stride[i];
-  }
-
+  *blockA_boxesB_idx = PDM_array_new_idx_from_sizes_int (blockA_boxesB_stride, *n_elt_blockA);
+  int *_blockA_boxesB_idx = *blockA_boxesB_idx;
   free (blockA_boxesB_stride);
 
   int idx = 0;
-  int *blockA_boxesB_idx_new = PDM_array_zeros_int(n_elt_blockA + 1);
+  int *blockA_boxesB_idx_new = PDM_array_zeros_int (*n_elt_blockA + 1);
 
-  for (int i = 0; i < n_elt_blockA; i++) {
+  for (int i = 0; i < *n_elt_blockA; i++) {
 
-    PDM_g_num_t *ideb = blockA_boxesB_gnum_data + blockA_boxesB_idx[i];
-    int length = blockA_boxesB_idx[i+1] - blockA_boxesB_idx[i];
+    PDM_g_num_t *ideb = *blockA_boxesB_gnum_data + _blockA_boxesB_idx[i];
+    int length = _blockA_boxesB_idx[i+1] - _blockA_boxesB_idx[i];
 
     PDM_sort_long (ideb, NULL, length);
 
     PDM_g_num_t pre = -1;
     for (int k = 0; k < length; k++) {
       if (pre != ideb[k]) {
-        blockA_boxesB_gnum_data[idx++] = ideb[k];
+        (*blockA_boxesB_gnum_data)[idx++] = ideb[k];
         blockA_boxesB_idx_new[i+1] += 1;
         pre = ideb[k];
       }
     }
   }
 
-  for (int i = 0; i < n_elt_blockA; i++) {
+  for (int i = 0; i < *n_elt_blockA; i++) {
     blockA_boxesB_idx_new[i+1] += blockA_boxesB_idx_new[i];
   }
 
-  for (int i = 0; i < n_elt_blockA + 1; i++) {
-    blockA_boxesB_idx[i] = blockA_boxesB_idx_new[i];
+  for (int i = 0; i < *n_elt_blockA + 1; i++) {
+    _blockA_boxesB_idx[i] = blockA_boxesB_idx_new[i];
   }
 
   free (blockA_boxesB_idx_new);
@@ -732,16 +721,16 @@ _compute_overlay_planes
 
   PDM_l_num_t *destination = PDM_part_to_block_destination_get (ptb_boxesA);
 
-  PDM_g_num_t n_g_eltA = PDM_box_set_get_global_size(boxesA);
+  PDM_g_num_t n_g_eltA = PDM_box_set_get_global_size(*boxesA);
 
   PDM_box_distrib_t *distribA =
-          PDM_box_distrib_create (n_eltA,
-                                  n_g_eltA,
-                                  1, // Don't use in this case
-                                  ol->comm);
+    PDM_box_distrib_create (n_eltA,
+                            n_g_eltA,
+                            1, // Don't use in this case
+                            ol->comm);
 
 
-  PDM_g_num_t n_g_eltB = PDM_box_set_get_global_size(boxesB);
+  PDM_g_num_t n_g_eltB = PDM_box_set_get_global_size(*boxesB);
 
   PDM_box_distrib_t *distribB = PDM_box_distrib_create (n_eltB,
                                                         n_g_eltB,
@@ -788,12 +777,12 @@ _compute_overlay_planes
     }
   }
 
-  PDM_g_num_t *_block_gnumA = malloc (sizeof(PDM_g_num_t) * n_elt_blockA);
-  memcpy(_block_gnumA, block_gnumA, sizeof(PDM_g_num_t) * n_elt_blockA);
+  PDM_g_num_t *_block_gnumA = malloc (sizeof(PDM_g_num_t) * (*n_elt_blockA));
+  memcpy(_block_gnumA, *block_gnumA, sizeof(PDM_g_num_t) * (*n_elt_blockA));
 
   PDM_part_to_block_free (ptb_boxesA);
 
-  block_gnumA = _block_gnumA;
+  *block_gnumA = _block_gnumA;
 
   free (boxesB_intersection_g_num);
   free (boxesB_intersection_l_num);
@@ -805,14 +794,157 @@ _compute_overlay_planes
   PDM_box_distrib_clean (distribA);
   PDM_box_distrib_clean (distribB);
 
-  PDM_box_set_redistribute (distribA, boxesA);
-  PDM_box_set_redistribute (distribB, boxesB);
+  PDM_box_set_redistribute (distribA, *boxesA);
+  PDM_box_set_redistribute (distribB, *boxesB);
 
   PDM_box_distrib_destroy (&distribA);
   PDM_box_distrib_destroy (&distribB);
 
-  PDM_box_set_remove_duplicate (boxesA);
-  PDM_box_set_remove_duplicate (boxesB);
+  PDM_box_set_remove_duplicate (*boxesA);
+  PDM_box_set_remove_duplicate (*boxesB);
+
+/*****************************************************************************
+   *                                                                           *
+   *   Find BoxesB local number to build : blockA_boxesB_lnum_data             *
+   *                                                                           *
+   *  Steps :                                                                  *
+   *      - Sort Boxes B gnum                                                  *
+   *      - Binary search in sorted boxes B gnum array                         *
+   *                                                                           *
+   ****************************************************************************/
+
+  *blockA_boxesB_lnum_data =
+    (int *) malloc (sizeof(int) * (*blockA_boxesB_idx)[*n_elt_blockA]);
+
+  gnum_eltB = (PDM_g_num_t *) PDM_box_set_get_g_num (*boxesB);
+
+  n_eltB = PDM_box_set_get_size (*boxesB);
+
+  int *lnum = (int *) malloc (sizeof(int) * (n_eltB));
+  PDM_g_num_t *gnum_eltB_cp = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * (n_eltB));
+
+  for (int i = 0; i < n_eltB; i++) {
+    lnum[i] = i + 1;
+    gnum_eltB_cp[i] = gnum_eltB[i];
+  }
+
+  PDM_sort_long (gnum_eltB_cp, lnum, n_eltB);
+
+  for (int i = 0; i < (*blockA_boxesB_idx)[*n_elt_blockA]; i++) {
+    PDM_g_num_t box_gnum = (*blockA_boxesB_gnum_data)[i];
+    int idx1 = PDM_binary_search_long (box_gnum, gnum_eltB_cp, n_eltB);
+
+    (*blockA_boxesB_lnum_data)[i] = lnum[idx1];
+  }
+
+  free (lnum);
+  free (gnum_eltB_cp);
+
+  gnum_eltA = (PDM_g_num_t *) PDM_box_set_get_g_num (*boxesA);
+
+  n_eltA = PDM_box_set_get_size (*boxesA);
+
+  *blockA_lnum_data =
+    (int *) malloc (sizeof(int) * (*n_elt_blockA));
+
+  PDM_g_num_t *gnum_eltA_cp = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * (n_eltA));
+
+  for (int i = 0; i < n_eltA; i++) {
+    (*blockA_lnum_data)[i] = i + 1;
+    gnum_eltA_cp[i] = gnum_eltA[i];
+  }
+
+  PDM_sort_long (gnum_eltA_cp, *blockA_lnum_data, n_eltA);
+
+
+  free (gnum_eltA_cp);
+
+}
+
+
+
+
+static int
+_compute_vertex_normals
+(
+ PDM_ol_t        *ol,
+ PDM_ol_mesh_t    mesh,
+ double        ***vtx_normal
+ )
+{
+  PDM_surf_mesh_t *_mesh;
+  if (mesh == PDM_OL_MESH_A) {
+    _mesh = ol->meshA;
+  } else {
+    _mesh = ol->meshB;
+  }
+
+  int singular = PDM_surf_mesh_vtx_normal_get (_mesh,
+                                               vtx_normal);
+  return singular;
+}
+
+/**
+ * \brief Compute overlay planes
+ *
+ * This function computes overlay mesh of two plane meshes
+ *
+ * \param [in]  ol       overlay object
+ *
+ */
+
+static void
+_compute_overlay_planes
+(
+ PDM_ol_t *ol
+ )
+{
+  const int vb = 0;
+
+  //TODO: Cette fonction est très grosse. Elle sera decoupee en petites fonctions
+  //      lors de l'optimisation de l'algorithme.
+
+  int i_rank;
+  PDM_MPI_Comm_rank (ol->comm, &i_rank);
+  int lComm;
+  PDM_MPI_Comm_size (ol->comm, &lComm);
+
+  /* for (int i = 0; i < ol->meshA->n_part; i++) { */
+	/*   PDM_surf_part_dump(ol->meshA->part[i]); */
+  /* } */
+
+  /* for (int i = 0; i < ol->meshA->n_part; i++) { */
+	/*   PDM_surf_part_dump(ol->meshA->part[i]); */
+  /* } */
+  int dim = 3;
+
+  PDM_surf_mesh_t *meshA = ol->meshA;
+  const int n_partA = PDM_surf_mesh_n_part_get (meshA);
+
+  PDM_surf_mesh_t *meshB = ol->meshB;
+  const int n_partB = PDM_surf_mesh_n_part_get (meshB);
+
+  PDM_box_set_t *boxesA = NULL;
+  PDM_box_set_t *boxesB = NULL;
+  int            n_elt_blockA;
+  PDM_g_num_t   *block_gnumA = NULL;
+  int           *blockA_boxesB_idx = NULL;
+  PDM_g_num_t   *blockA_boxesB_gnum_data = NULL;
+  int           *blockA_boxesB_lnum_data = NULL;
+  int           *blockA_lnum_data = NULL;
+
+  _intersect_bounding_boxes_and_redistribute (ol,
+                                              &boxesA,
+                                              &boxesB,
+                                              &n_elt_blockA,
+                                              &block_gnumA,
+                                              &blockA_boxesB_idx,
+                                              &blockA_boxesB_gnum_data,
+                                              &blockA_boxesB_lnum_data,
+                                              &blockA_lnum_data);
+  int n_eltA = PDM_box_set_get_size (boxesA);
+  int n_eltB = PDM_box_set_get_size (boxesB);
+  PDM_g_num_t *gnum_eltA = (PDM_g_num_t *) PDM_box_set_get_g_num (boxesA);
 
   /*****************************************************************************
    *                                                                           *
@@ -829,15 +961,15 @@ _compute_overlay_planes
    *                                                                           *
    ****************************************************************************/
 
-  int        *faceStrideCurrent[2];
-  int        *faceStrideCurrent3[2];
+  int         *faceStrideCurrent[2];
+  int         *faceStrideCurrent3[2];
   PDM_g_num_t *faceToEdgeCurrent[2];
   PDM_g_num_t *faceToVtxCurrent[2];
-  double     *face_vtxCooCurrent[2];
-  double     *face_vtxEpsCurrent[2];
+  double      *face_vtxCooCurrent[2];
+  double      *face_vtxEpsCurrent[2];
 
   PDM_surf_mesh_t *meshes[2] = {meshA, meshB};
-  PDM_box_set_t  *boxes[2] = {boxesA, boxesB};
+  PDM_box_set_t *boxes[2] = {boxesA, boxesB};
   //PDM_g_num_t nGF[2] = {ol->meshA->nGFace, ol->meshB->nGFace};
 
   for (int imesh = 0; imesh < 2; imesh++) {
@@ -848,17 +980,17 @@ _compute_overlay_planes
 
     int n_part = PDM_surf_mesh_n_part_get (mesh);
 
-    int         **faceStrideOrigin = (int **) malloc (sizeof(int *) * n_part);
-    PDM_g_num_t  **faceToEdgeOrigin = (PDM_g_num_t **) malloc (sizeof(PDM_g_num_t *) * n_part);
-    PDM_g_num_t  **faceToVtxOrigin  = (PDM_g_num_t **) malloc (sizeof(PDM_g_num_t *) * n_part);
-    double      **face_vtxCooOrigin = (double **) malloc (sizeof(double *) * n_part);
-    double      **face_vtxEpsOrigin = (double **) malloc (sizeof(double *) * n_part);
+    int         **faceStrideOrigin  = (int **)         malloc (sizeof(int *)         * n_part);
+    PDM_g_num_t **faceToEdgeOrigin  = (PDM_g_num_t **) malloc (sizeof(PDM_g_num_t *) * n_part);
+    PDM_g_num_t **faceToVtxOrigin   = (PDM_g_num_t **) malloc (sizeof(PDM_g_num_t *) * n_part);
+    double      **face_vtxCooOrigin = (double **)      malloc (sizeof(double *)      * n_part);
+    double      **face_vtxEpsOrigin = (double **)      malloc (sizeof(double *)      * n_part);
 
     for (int i = 0; i < n_part; i++) {
-      int               nEltPart        = PDM_surf_mesh_part_n_face_get (mesh, i);
-      const int        *partFaceEdgeIdx = PDM_surf_mesh_part_face_edge_idx_get (mesh, i);
-      const int        *partFaceEdge    = PDM_surf_mesh_part_face_edge_get (mesh, i);
-      const int        *partface_vtx     = PDM_surf_mesh_part_face_vtx_get (mesh, i);
+      int                nEltPart        = PDM_surf_mesh_part_n_face_get (mesh, i);
+      const int         *partFaceEdgeIdx = PDM_surf_mesh_part_face_edge_idx_get (mesh, i);
+      const int         *partFaceEdge    = PDM_surf_mesh_part_face_edge_get (mesh, i);
+      const int         *partface_vtx    = PDM_surf_mesh_part_face_vtx_get (mesh, i);
       const PDM_g_num_t *partEdgeGNum    = PDM_surf_mesh_part_edge_g_num_get (mesh, i);
       const PDM_g_num_t *partVtxGNum     = PDM_surf_mesh_part_vtx_g_num_get (mesh, i);
       //const PDM_g_num_t *partFaceGNum     = PDM_surf_mesh_part_face_g_num_get (mesh, i);
@@ -872,11 +1004,11 @@ _compute_overlay_planes
       face_vtxCooOrigin[i] = (double *) malloc (sizeof(double) * 3 * partFaceEdgeIdx[nEltPart]);
       face_vtxEpsOrigin[i] = (double *) malloc (sizeof(double) * partFaceEdgeIdx[nEltPart]);
 
-      int        *_faceStrideOrigin = faceStrideOrigin[i];
-      PDM_g_num_t *_faceToEdgeOrigin = faceToEdgeOrigin[i];
-      PDM_g_num_t *_faceToVtxOrigin  = faceToVtxOrigin[i];
-      double     *_face_vtxCooOrigin = face_vtxCooOrigin[i];
-      double     *_face_vtxEpsOrigin = face_vtxEpsOrigin[i];
+      int         *_faceStrideOrigin  = faceStrideOrigin[i];
+      PDM_g_num_t *_faceToEdgeOrigin  = faceToEdgeOrigin[i];
+      PDM_g_num_t *_faceToVtxOrigin   = faceToVtxOrigin[i];
+      double      *_face_vtxCooOrigin = face_vtxCooOrigin[i];
+      double      *_face_vtxEpsOrigin = face_vtxEpsOrigin[i];
 
       for (int j = 0; j < nEltPart; j++) {
         _faceStrideOrigin[j] = partFaceEdgeIdx[j+1] - partFaceEdgeIdx[j];
@@ -898,8 +1030,8 @@ _compute_overlay_planes
     faceStrideCurrent3[imesh] = NULL;
     faceToEdgeCurrent[imesh]  = NULL;
     faceToVtxCurrent[imesh]   = NULL;
-    face_vtxCooCurrent[imesh]  = NULL;
-    face_vtxEpsCurrent[imesh]  = NULL;
+    face_vtxCooCurrent[imesh] = NULL;
+    face_vtxEpsCurrent[imesh] = NULL;
 
     PDM_box_set_recv_data_from_origin_distrib (boxes[imesh],
                                                PDM_STRIDE_VAR,
@@ -960,61 +1092,6 @@ _compute_overlay_planes
 
   }
 
-  /*****************************************************************************
-   *                                                                           *
-   *   Find BoxesB local number to build : blockA_boxesB_lnum_data             *
-   *                                                                           *
-   *  Steps :                                                                  *
-   *      - Sort Boxes B gnum                                                  *
-   *      - Binary search in sorted boxes B gnum array                         *
-   *                                                                           *
-   ****************************************************************************/
-
-  int *blockA_boxesB_lnum_data =
-    (int *) malloc (sizeof(int) * blockA_boxesB_idx[n_elt_blockA]);
-
-  gnum_eltB = (PDM_g_num_t *) PDM_box_set_get_g_num (boxesB);
-
-  n_eltB    = PDM_box_set_get_size (boxesB);
-
-  int *lnum = (int *) malloc (sizeof(int) * n_eltB);
-  PDM_g_num_t *gnum_eltB_cp = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * n_eltB);
-
-  for (int i = 0; i < n_eltB; i++) {
-    lnum[i] = i + 1;
-    gnum_eltB_cp[i] = gnum_eltB[i];
-  }
-
-  PDM_sort_long (gnum_eltB_cp, lnum, n_eltB);
-
-  for (int i = 0; i <  blockA_boxesB_idx[n_elt_blockA]; i++) {
-    PDM_g_num_t box_gnum = blockA_boxesB_gnum_data[i];
-    int idx1 = PDM_binary_search_long (box_gnum, gnum_eltB_cp, n_eltB);
-
-    blockA_boxesB_lnum_data[i] = lnum[idx1];
-  }
-
-  free (lnum);
-  free (gnum_eltB_cp);
-
-  gnum_eltA = (PDM_g_num_t *) PDM_box_set_get_g_num (boxesA);
-
-  n_eltA    = PDM_box_set_get_size (boxesA);
-
-  int *blockA_lnum_data =
-    (int *) malloc (sizeof(int) * n_elt_blockA);
-
-  PDM_g_num_t *gnum_eltA_cp = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * n_eltA);
-
-  for (int i = 0; i < n_eltA; i++) {
-    blockA_lnum_data[i] = i + 1;
-    gnum_eltA_cp[i] = gnum_eltA[i];
-  }
-
-  PDM_sort_long (gnum_eltA_cp, blockA_lnum_data, n_eltA);
-
-
-  free (gnum_eltA_cp);
 
   PDM_MPI_Barrier (ol->comm);
   PDM_timer_hang_on(ol->timer);
@@ -1042,7 +1119,7 @@ _compute_overlay_planes
    *                                                                           *
    ****************************************************************************/
 
-  /* Stocker les intersection dans une structure */
+  /* Stocker les intersections dans une structure */
 
   int *faceIdxCurrent[2];
   faceIdxCurrent[0] = PDM_array_new_idx_from_sizes_int(faceStrideCurrent[0], n_elt_blockA);
@@ -1186,7 +1263,7 @@ _compute_overlay_planes
   facesToSubFacesAIdx[0] = 0;
   facesToSubFacesBIdx[0] = 0;
 
-  originB = PDM_box_set_origin_get (boxesB);
+  const int *originB = PDM_box_set_origin_get (boxesB);
 
   for (int i = 0; i < n_elt_blockA; i++) {
 
@@ -1351,7 +1428,7 @@ _compute_overlay_planes
           s_subFacesConnecIdx += PDM_MAX(1, s_subFacesConnecIdx/3);
         }
         subFacesConnecIdx = realloc (subFacesConnecIdx,
-                                  sizeof(int) * s_subFacesConnecIdx);
+                                     sizeof(int) * s_subFacesConnecIdx);
       }
 
       newSize = iclipp + nPolyClippA;
@@ -1371,7 +1448,7 @@ _compute_overlay_planes
           s_subFacesConnecA += PDM_MAX(1, s_subFacesConnecA/3);
         }
         subFacesConnecA = realloc (subFacesConnecA,
-                                  sizeof(PDM_g_num_t) * s_subFacesConnecA);
+                                   sizeof(PDM_g_num_t) * s_subFacesConnecA);
       }
 
       if (newSize > s_subFacesConnecB) {
@@ -1379,7 +1456,7 @@ _compute_overlay_planes
           s_subFacesConnecB += PDM_MAX(1, s_subFacesConnecB/3);
         }
         subFacesConnecB = realloc (subFacesConnecB,
-                                  sizeof(PDM_g_num_t) * s_subFacesConnecB);
+                                   sizeof(PDM_g_num_t) * s_subFacesConnecB);
       }
 
       newSize = 3 * (ibeg + polyClippIdxA[nPolyClippA]);
@@ -1388,7 +1465,7 @@ _compute_overlay_planes
           s_subFacesCoordsA += PDM_MAX(1, s_subFacesCoordsA/3);
         }
         subFacesCoordsA = realloc (subFacesCoordsA,
-                                  sizeof(double) * s_subFacesCoordsA);
+                                   sizeof(double) * s_subFacesCoordsA);
       }
 
       newSize = 5*(iclipp + nPolyClippA);
@@ -1397,12 +1474,12 @@ _compute_overlay_planes
           s_subFacesToFaces += PDM_MAX(1, s_subFacesToFaces/3);
         }
         subFacesToFaces = realloc (subFacesToFaces,
-                                  sizeof(PDM_g_num_t) * s_subFacesToFaces);
+                                   sizeof(PDM_g_num_t) * s_subFacesToFaces);
       }
 
       for (int k = 0; k < nPolyClippA; k++) {
         subFacesConnecIdx[iclipp+1] =  subFacesConnecIdx[iclipp]
-                                     + (polyClippIdxA[k+1] - polyClippIdxA[k]);
+          + (polyClippIdxA[k+1] - polyClippIdxA[k]);
 
         for (int k1 = polyClippIdxA[k]; k1 < polyClippIdxA[k+1]; k1++) {
           subFacesConnecA[ibeg] = polyClippConnecA[k1];
@@ -1463,7 +1540,7 @@ _compute_overlay_planes
   PDM_g_num_t beg_nSharedSubFaces = -1;
 
   PDM_MPI_Scan(&nSharedSubFaces_l, &beg_nSharedSubFaces,
-           1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, ol->comm);
+               1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, ol->comm);
 
   beg_nSharedSubFaces += -nSharedSubFaces;
 
@@ -1495,7 +1572,7 @@ _compute_overlay_planes
     for (int i = 0; i < nSharedSubFaces; i++) {
       printf ("%d :", i);
       for (int j = subFacesConnecIdx[i]; j < subFacesConnecIdx[i+1]; j++) {
-      printf (" "PDM_FMT_G_NUM, subFacesConnecA[j]);
+        printf (" "PDM_FMT_G_NUM, subFacesConnecA[j]);
       }
       printf("\n");
     }
@@ -1667,7 +1744,7 @@ _compute_overlay_planes
   int s_faceIniVtxA = 4 * n_elt_blockA;
   PDM_g_num_t *faceIniVtxA = malloc (sizeof(PDM_g_num_t) * s_faceIniVtxA);
 
-  idx = 0;
+  int idx = 0;
   int idxFaceIni = 0;
   PDM_g_num_t _max_key = (2*n_g_newVtxA) / lComm + 1;
   int max_key = (int) _max_key;
@@ -2066,7 +2143,7 @@ _compute_overlay_planes
         s_subFacesConnecIdx += PDM_MAX (1, s_subFacesConnecIdx/3);
       }
       subFacesConnecIdx = realloc(subFacesConnecIdx,
-                                sizeof(int) * s_subFacesConnecIdx);
+                                  sizeof(int) * s_subFacesConnecIdx);
     }
 
     int ibeg = subFacesConnecIdx[iclipp];
@@ -2088,7 +2165,7 @@ _compute_overlay_planes
         s_subFacesCoordsA += PDM_MAX (1, s_subFacesCoordsA/3);
       }
       subFacesCoordsA = realloc (subFacesCoordsA,
-                                sizeof(double) * s_subFacesCoordsA);
+                                 sizeof(double) * s_subFacesCoordsA);
     }
 
     newSize = 5*(iclipp + nAddSubFace);
@@ -2111,7 +2188,7 @@ _compute_overlay_planes
 
     for (int k1 = 0; k1 < nAddSubFace; k1++) {
       subFacesConnecIdx[iclipp+1] = subFacesConnecIdx[iclipp] +
-                                    (addSubFaceIdx[k1+1] - addSubFaceIdx[k1]);
+        (addSubFaceIdx[k1+1] - addSubFaceIdx[k1]);
       subFacesToFaces[5*iclipp  ] = i;          // A local number
       subFacesToFaces[5*iclipp+1] = gnum_boxA;  // A global number
       subFacesToFaces[5*iclipp+2] = -1;         // B local number
@@ -2154,7 +2231,7 @@ _compute_overlay_planes
    */
 
   faceIniVtxA = realloc (faceIniVtxA,
-                          sizeof(PDM_g_num_t) * faceIniVtxIdxA[n_elt_blockA]);
+                         sizeof(PDM_g_num_t) * faceIniVtxIdxA[n_elt_blockA]);
 
   subFacesConnecA = realloc (subFacesConnecA,
                              sizeof(PDM_g_num_t) * subFacesConnecIdx[nSubFaces]);
@@ -2244,7 +2321,7 @@ _compute_overlay_planes
                     PDM__PDM_MPI_G_NUM, PDM_MPI_MAX, ol->comm);
 
   PDM_MPI_Scan (&nAddSubFaces_l, &beg_nAddSubFaces,
-            1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, ol->comm);
+                1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, ol->comm);
 
   beg_nAddSubFaces += -nAddSubFaces_l;
 
@@ -2386,9 +2463,9 @@ _compute_overlay_planes
   int *recv_stride1 = NULL;
 
   PDM_g_num_t *subFacesConnecN =
-          (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * 4* nSharedSubFaces);
+    (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * 4* nSharedSubFaces);
 
-  originA = PDM_box_set_origin_get (boxesA);
+  const int *originA = PDM_box_set_origin_get (boxesA);
 
   originB = PDM_box_set_origin_get (boxesB);
 
@@ -2409,13 +2486,13 @@ _compute_overlay_planes
 
   PDM_g_num_t *recvSubFacesConnecBN;
   PDM_part_to_block_exch (ptb_boxesB,
-                         sizeof(PDM_g_num_t),
-                         PDM_STRIDE_VAR,
-                         0,
-                         &_tmp_stride,
-                         (void **) &subFacesConnecN,
-                         &recv_stride1,
-                         (void **) &recvSubFacesConnecBN);
+                          sizeof(PDM_g_num_t),
+                          PDM_STRIDE_VAR,
+                          0,
+                          &_tmp_stride,
+                          (void **) &subFacesConnecN,
+                          &recv_stride1,
+                          (void **) &recvSubFacesConnecBN);
 
   free (subFacesConnecN);
 
@@ -2452,13 +2529,13 @@ _compute_overlay_planes
   free (subFacesConnecB);
   PDM_g_num_t *recvSubFacesConnecB;
   PDM_part_to_block_exch (ptb_boxesB,
-                         sizeof(PDM_g_num_t),
-                         PDM_STRIDE_VAR,
-                         0,
-                         &_tmp_stride,
-                         (void **) &subFacesConnecB_ordered,
-                         &recv_stride2,
-                         (void **) &recvSubFacesConnecB);
+                          sizeof(PDM_g_num_t),
+                          PDM_STRIDE_VAR,
+                          0,
+                          &_tmp_stride,
+                          (void **) &subFacesConnecB_ordered,
+                          &recv_stride2,
+                          (void **) &recvSubFacesConnecB);
 
   free (subFacesConnecB_ordered);
 
@@ -2481,13 +2558,13 @@ _compute_overlay_planes
   int *recv_stride21;
   double *recvSubFacesCoordsB;
   PDM_part_to_block_exch (ptb_boxesB,
-                         sizeof(double),
-                         PDM_STRIDE_VAR,
-                         0,
-                         &_tmp_stride,
-                         (void **) &subFacesCoordsA_ordered,
-                         &recv_stride21,
-                         (void **) &recvSubFacesCoordsB);
+                          sizeof(double),
+                          PDM_STRIDE_VAR,
+                          0,
+                          &_tmp_stride,
+                          (void **) &subFacesCoordsA_ordered,
+                          &recv_stride21,
+                          (void **) &recvSubFacesCoordsB);
 
   free (subFacesCoordsA_ordered);
 
@@ -2595,13 +2672,13 @@ _compute_overlay_planes
 
   PDM_g_num_t *recvFaceToEdgeNPtInt;
   PDM_part_to_block_exch (ptb_boxesB,
-                         sizeof(PDM_g_num_t),
-                         PDM_STRIDE_VAR,
-                         0,
-                         &_tmp_stride,
-                         (void **) &sendFaceToEdgeNPtInt,
-                         &recv_stride4,
-                         (void **) &recvFaceToEdgeNPtInt);
+                          sizeof(PDM_g_num_t),
+                          PDM_STRIDE_VAR,
+                          0,
+                          &_tmp_stride,
+                          (void **) &sendFaceToEdgeNPtInt,
+                          &recv_stride4,
+                          (void **) &recvFaceToEdgeNPtInt);
 
   free (sendFaceToEdgeNPtInt);
 
@@ -2609,7 +2686,7 @@ _compute_overlay_planes
 
   int *recv_stride41 = NULL;
 
-   double *sendFaceToEdgeCoordsvtx = malloc (sizeof(double) * 6 * _tmp_idx[n_boxesB_without_dupl]);
+  double *sendFaceToEdgeCoordsvtx = malloc (sizeof(double) * 6 * _tmp_idx[n_boxesB_without_dupl]);
   //double *recvFaceToEdgeCoordsvtx = malloc (sizeof(double) * idx1);
   double *recvFaceToEdgeCoordsvtx;
 
@@ -2638,13 +2715,13 @@ _compute_overlay_planes
   }
 
   PDM_part_to_block_exch (ptb_boxesB,
-                         sizeof(double),
-                         PDM_STRIDE_VAR,
-                         0,
-                         &_tmp_stride,
-                         (void **) &sendFaceToEdgeCoordsvtx,
-                         &recv_stride41,
-                         (void **) &recvFaceToEdgeCoordsvtx);
+                          sizeof(double),
+                          PDM_STRIDE_VAR,
+                          0,
+                          &_tmp_stride,
+                          (void **) &sendFaceToEdgeCoordsvtx,
+                          &recv_stride41,
+                          (void **) &recvFaceToEdgeCoordsvtx);
 
   free (sendFaceToEdgeCoordsvtx);
 
@@ -2742,13 +2819,13 @@ _compute_overlay_planes
 
   PDM_g_num_t *recvFaceToEdgeOrAndGnumPtInt;
   PDM_part_to_block_exch (ptb_boxesB,
-                         sizeof(PDM_g_num_t),
-                         PDM_STRIDE_VAR,
-                         0,
-                         &_tmp_stride2,
-                         (void **) &sendFaceToEdgeOrAndGnumPtInt,
-                         &recv_stride5,
-                         (void **) &recvFaceToEdgeOrAndGnumPtInt);
+                          sizeof(PDM_g_num_t),
+                          PDM_STRIDE_VAR,
+                          0,
+                          &_tmp_stride2,
+                          (void **) &sendFaceToEdgeOrAndGnumPtInt,
+                          &recv_stride5,
+                          (void **) &recvFaceToEdgeOrAndGnumPtInt);
 
   free (sendFaceToEdgeOrAndGnumPtInt);
   free (recv_stride5);
@@ -2759,13 +2836,13 @@ _compute_overlay_planes
 
   double *recvFaceToEdgeUPtInt;
   PDM_part_to_block_exch (ptb_boxesB,
-                         sizeof(double),
-                         PDM_STRIDE_VAR,
-                         0,
-                         &_tmp_stride2,
-                         (void **) &sendFaceToEdgeUPtInt,
-                         &recv_stride6,
-                         (void **) &recvFaceToEdgeUPtInt);
+                          sizeof(double),
+                          PDM_STRIDE_VAR,
+                          0,
+                          &_tmp_stride2,
+                          (void **) &sendFaceToEdgeUPtInt,
+                          &recv_stride6,
+                          (void **) &recvFaceToEdgeUPtInt);
 
   free (_tmp_stride);
   free (_tmp_stride2);
@@ -2825,9 +2902,9 @@ _compute_overlay_planes
   int s_subFacesToLinkA = 4 * n_elt_blockB;
   PDM_g_num_t *subFacesToLinkA = malloc (sizeof(PDM_g_num_t) * s_subFacesToLinkA);
 
-      idx1 = 0;
-      idx2 = 0;
-      idx3 = 0;
+  idx1 = 0;
+  idx2 = 0;
+  idx3 = 0;
   int idx4 = 0;
   int idx41 = 0;
   int idx5 = 0;
@@ -2855,7 +2932,7 @@ _compute_overlay_planes
   PDM_hash_tab_t *htSubEdgeB = PDM_hash_tab_create (PDM_HASH_TAB_KEY_INT,
                                                     &max_key);
   PDM_hash_tab_t *htEdgeB = PDM_hash_tab_create (PDM_HASH_TAB_KEY_INT,
-                                                    &max_key);
+                                                 &max_key);
 
   PDM_g_num_t *sum_vtx = NULL;
   int s_sum_vtx = 0;
@@ -2895,7 +2972,7 @@ _compute_overlay_planes
       subFacesToFaceB = realloc(subFacesToFaceB,
                                 sizeof(PDM_g_num_t) * s_subFacesToFaceB);
       gNumSubFacesB = realloc(gNumSubFacesB,
-                                sizeof(PDM_g_num_t) * s_subFacesToFaceB);
+                              sizeof(PDM_g_num_t) * s_subFacesToFaceB);
     }
 
     newSize =  3 * (nSubFacesB + n_SubFaceFace);
@@ -2981,7 +3058,7 @@ _compute_overlay_planes
         PDM_g_num_t _key = (se->vtx1 + se->vtx2) / lComm;
         int key = (int) _key;
 
-				PDM_hash_tab_data_add (htSubEdgeB, &key, (void *) se);
+        PDM_hash_tab_data_add (htSubEdgeB, &key, (void *) se);
 
         subFacesConnecB[iBeg1++] = recvSubFacesConnecB[idx2];
 
@@ -3375,7 +3452,7 @@ _compute_overlay_planes
       subFacesToFaceB = realloc(subFacesToFaceB,
                                 sizeof(PDM_g_num_t) * s_subFacesToFaceB);
       gNumSubFacesB = realloc(gNumSubFacesB,
-                                sizeof(PDM_g_num_t) * s_subFacesToFaceB);
+                              sizeof(PDM_g_num_t) * s_subFacesToFaceB);
     }
 
     newSize =  3 * (nSubFacesB + nAddSubFace);
@@ -3419,7 +3496,7 @@ _compute_overlay_planes
           s_subFacesCoordsB += PDM_MAX(1, s_subFacesCoordsB/3);
         }
         subFacesCoordsB = realloc(subFacesCoordsB,
-                                     sizeof(double) * s_subFacesCoordsB);
+                                  sizeof(double) * s_subFacesCoordsB);
       }
 
       int _ideb2 =     subFacesConnecIdxB[nSubFacesB-1];
@@ -3434,8 +3511,8 @@ _compute_overlay_planes
     }
 
     facesToSubFacesBIdx[i+1] = facesToSubFacesBIdx[i]
-                             + n_SubFaceFace
-                             + nAddSubFace;
+      + n_SubFaceFace
+      + nAddSubFace;
     /* Cleanup */
 
     free (oneRef);
@@ -3517,7 +3594,7 @@ _compute_overlay_planes
   }
 
   PDM_MPI_Scan (&n_t_nAddSubFace, &beg_nAddSubFaces,
-            1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, ol->comm);
+                1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, ol->comm);
 
   beg_nAddSubFaces += -n_t_nAddSubFace + 1;
 
@@ -3617,7 +3694,7 @@ _compute_overlay_planes
    ***********************************************************************************/
 
   PDM_g_num_t *firstSend = malloc (sizeof(PDM_g_num_t) *
-                          facesToAddSubFacesAIdx[n_elt_blockA] * 5);
+                                   facesToAddSubFacesAIdx[n_elt_blockA] * 5);
 
   int        *firstSendStride = malloc (sizeof(int) * n_elt_blockA);
 
@@ -3859,14 +3936,14 @@ _compute_overlay_planes
 
   block_gnumB = PDM_part_to_block_block_gnum_get (ptb_boxesB);
 
-  n_g_eltB = PDM_box_set_get_global_size(boxesB);
+  PDM_g_num_t n_g_eltB = PDM_box_set_get_global_size(boxesB);
 
-  distribB = PDM_box_distrib_create (box_size,
-                                     n_g_eltB,
-                                     1, // Don't use in this case
-                                     ol->comm);
+  PDM_box_distrib_t *distribB = PDM_box_distrib_create (box_size,
+                                                        n_g_eltB,
+                                                        1, // Don't use in this case
+                                                        ol->comm);
 
-  countEltsB = PDM_array_zeros_int(lComm);
+  int *countEltsB = PDM_array_zeros_int(lComm);
   PDM_array_reset_int(distribB->index, lComm+1, 0);
 
   for (int i = 0; i < box_size; i++) {
@@ -4162,14 +4239,14 @@ _compute_overlay_planes
 
   PDM_g_num_t begUnChangedFaceA = 0;
   PDM_MPI_Scan (&nUnChangedFaceA, &begUnChangedFaceA,
-            1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, ol->comm);
+                1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, ol->comm);
 
   begUnChangedFaceA += -nUnChangedFaceA + 1;
 
   PDM_g_num_t n_faceA = nUnChangedFaceA + nSubFaceA;
   PDM_g_num_t nGFaceA;
   PDM_MPI_Allreduce(&n_faceA, &nGFaceA, 1,
-                PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, ol->comm);
+                    PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, ol->comm);
 
   PDM_g_num_t nGVtxA = n_g_newVtxA;
   ol->olMeshA = _ol_mesh_create (nGFaceA, nGVtxA, n_partA);
@@ -4227,16 +4304,16 @@ _compute_overlay_planes
       if (firstRecvStrideA[i][j] == 0) {
         initToOlTmpN[j] = 1;
         face_vtx_idxPart[n_facePartStored+1] =
-                face_vtx_idxPart[n_facePartStored] +
-                (iniface_vtx_idxA[j+1] - iniface_vtx_idxA[j]);
+          face_vtx_idxPart[n_facePartStored] +
+          (iniface_vtx_idxA[j+1] - iniface_vtx_idxA[j]);
         for (int k = iniface_vtx_idxA[j]; k < iniface_vtx_idxA[j+1]; k++) {
           face_vtxPart[idx1++] = iniface_vtxA[k];
         }
         initToOlTmp1[n_facePartStored] = n_facePartStored+1;
         face_ln_to_gn[n_facePartStored] = nTSubFacesA
-                                    + begUnChangedFaceA
-                                    + idxIpart
-                                    + 1;
+          + begUnChangedFaceA
+          + idxIpart
+          + 1;
         idxIpart += 1;
         n_facePartStored += 1;
       }
@@ -4273,7 +4350,7 @@ _compute_overlay_planes
           int iProcB  = (int) firstRecvA[i][idx++];
           int iPartB  = (int) firstRecvA[i][idx++];
           face_vtx_idxPart[n_facePartStored+1] =
-                  face_vtx_idxPart[n_facePartStored] + n_vtx;
+            face_vtx_idxPart[n_facePartStored] + n_vtx;
 
           face_ln_to_gn[n_facePartStored] = numAbs;
 
@@ -4327,7 +4404,7 @@ _compute_overlay_planes
       }
       else {
         for (int k = 0; k < firstRecvStrideA[i][j]/5; k++) {
-                               olp->initToOlFace[ii++] = initToOlTmp2[itmp2++];
+          olp->initToOlFace[ii++] = initToOlTmp2[itmp2++];
         }
       }
       initToOlTmpN[j]++;
@@ -4451,7 +4528,7 @@ _compute_overlay_planes
       }
       else {
         olp->faceIniVtxIdx[j+1] = olp->faceIniVtxIdx[j] +
-                iniface_vtx_idxA[j+1] - iniface_vtx_idxA[j];
+          iniface_vtx_idxA[j+1] - iniface_vtx_idxA[j];
 
       }
     }
@@ -4615,14 +4692,14 @@ _compute_overlay_planes
 
   PDM_g_num_t begUnChangedFaceB = 0;
   PDM_MPI_Scan (&nUnChangedFaceB, &begUnChangedFaceB,
-            1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, ol->comm);
+                1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, ol->comm);
 
   begUnChangedFaceB += -nUnChangedFaceB + 1;
 
   PDM_g_num_t n_faceB = nUnChangedFaceB + nSubFaceB;
   PDM_g_num_t nGFaceB;
   PDM_MPI_Allreduce(&n_faceB, &nGFaceB, 1,
-                PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, ol->comm);
+                    PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, ol->comm);
 
   PDM_g_num_t nGVtxB = n_g_newVtxB;
   ol->olMeshB = _ol_mesh_create (nGFaceB, nGVtxB, n_partB);
@@ -4680,15 +4757,15 @@ _compute_overlay_planes
       if (firstRecvStrideB[i][j] == 0) {
         initToOlTmpN[j] = 1;
         face_vtx_idxPart[n_facePartStored+1] =
-                face_vtx_idxPart[n_facePartStored] +
-                (iniface_vtx_idxB[j+1] - iniface_vtx_idxB[j]);
+          face_vtx_idxPart[n_facePartStored] +
+          (iniface_vtx_idxB[j+1] - iniface_vtx_idxB[j]);
         for (int k = iniface_vtx_idxB[j]; k < iniface_vtx_idxB[j+1]; k++) {
           face_vtxPart[idx1++] = iniface_vtxB[k];
         }
         initToOlTmp1[n_facePartStored] = n_facePartStored + 1;
         face_ln_to_gn[n_facePartStored] = nTSubFacesB
-                                    + begUnChangedFaceB
-                                    + idxIpart;
+          + begUnChangedFaceB
+          + idxIpart;
 
         idxIpart += 1;
         n_facePartStored += 1;
@@ -4724,7 +4801,7 @@ _compute_overlay_planes
           int iProcA  = (int) firstRecvB[i][idx++];
           int iPartA  = (int) firstRecvB[i][idx++];
           face_vtx_idxPart[n_facePartStored+1] =
-                  face_vtx_idxPart[n_facePartStored] + n_vtx;
+            face_vtx_idxPart[n_facePartStored] + n_vtx;
 
           face_ln_to_gn[n_facePartStored] = numAbs;
 
@@ -4904,7 +4981,7 @@ _compute_overlay_planes
       }
       else {
         olp->faceIniVtxIdx[j+1] = olp->faceIniVtxIdx[j] +
-                iniface_vtx_idxB[j+1] - iniface_vtx_idxB[j];
+          iniface_vtx_idxB[j+1] - iniface_vtx_idxB[j];
 
       }
     }
@@ -5372,9 +5449,233 @@ static void
 _compute_overlay_surfaces
 (
  PDM_ol_t *ol
-)
+ )
 {
-  PDM_UNUSED(ol);
+  const int vb = 0;
+
+  int i_rank;
+  PDM_MPI_Comm_rank (ol->comm, &i_rank);
+  int lComm;
+  PDM_MPI_Comm_size (ol->comm, &lComm);
+
+  /* Compute unit normals at vertices */
+  double **vtx_normal[2];
+  for (int imesh = 0; imesh < 2; imesh++) {
+    int singular = _compute_vertex_normals (ol,
+                                            imesh,
+                                            vtx_normal + imesh);
+
+    if (singular) {
+      PDM_error (__FILE__, __LINE__, 0,
+                 "Error _compute_overlay_surfaces : singular vertex normals\n");
+    }
+  }
+
+
+  int dim = 3;
+
+  PDM_surf_mesh_t *meshA = ol->meshA;
+  const int n_partA = PDM_surf_mesh_n_part_get (meshA);
+
+  PDM_surf_mesh_t *meshB = ol->meshB;
+  const int n_partB = PDM_surf_mesh_n_part_get (meshB);
+
+  PDM_box_set_t *boxesA = NULL;
+  PDM_box_set_t *boxesB = NULL;
+  int            n_elt_blockA;
+  PDM_g_num_t   *block_gnumA = NULL;
+  int           *blockA_boxesB_idx = NULL;
+  PDM_g_num_t   *blockA_boxesB_gnum_data = NULL;
+  int           *blockA_boxesB_lnum_data = NULL;
+  int           *blockA_lnum_data = NULL;
+
+  _intersect_bounding_boxes_and_redistribute (ol,
+                                              &boxesA,
+                                              &boxesB,
+                                              &n_elt_blockA,
+                                              &block_gnumA,
+                                              &blockA_boxesB_idx,
+                                              &blockA_boxesB_gnum_data,
+                                              &blockA_boxesB_lnum_data,
+                                              &blockA_lnum_data);
+  int n_eltA = PDM_box_set_get_size (boxesA);
+  int n_eltB = PDM_box_set_get_size (boxesB);
+  PDM_g_num_t *gnum_eltA = (PDM_g_num_t *) PDM_box_set_get_g_num (boxesA);
+
+
+  /*****************************************************************************
+   *                                                                           *
+   *  Transfer from origin data to compute polygon intersections               *
+   * (function PDM_box_set_recv_data_from_origin_distrib)                      *
+   *      - faceA->edgesA connectivities (absolute number) (mapping)           *
+   *      - faceB->edgesB connectivities (absolute number) (mapping)           *
+   *      - faceA->vtxA connectivities (absolute number) (mapping)             *
+   *      - faceB->vtxB connectivities (absolute number) (mapping)             *
+   *      - faceA->coordsVtxA (To be allocate)                                 *
+   *      - faceB->coordsVtxB (To be allocate)                                 *
+   *      - faceA->epsVtxA (To be allocate)                                    *
+   *      - faceB->epsVtxB (To be allocate)                                    *
+   *                                                                           *
+   ****************************************************************************/
+
+  int         *faceStrideCurrent[2];
+  int         *faceStrideCurrent3[2];
+  PDM_g_num_t *faceToEdgeCurrent[2];
+  PDM_g_num_t *faceToVtxCurrent[2];
+  double      *face_vtxCooCurrent[2];
+  double      *face_vtxEpsCurrent[2];
+  double      *face_vtxNormalCurrent[2];
+
+  PDM_surf_mesh_t *meshes[2] = {meshA, meshB};
+  PDM_box_set_t *boxes[2] = {boxesA, boxesB};
+
+  for (int imesh = 0; imesh < 2; imesh++) {
+
+    size_t data_size_l = sizeof(PDM_g_num_t);
+    size_t data_size_r = sizeof(double);
+    PDM_surf_mesh_t *mesh = meshes[imesh];
+
+    int n_part = PDM_surf_mesh_n_part_get (mesh);
+
+    int         **faceStrideOrigin  = (int **)         malloc (sizeof(int *)         * n_part);
+    PDM_g_num_t **faceToEdgeOrigin  = (PDM_g_num_t **) malloc (sizeof(PDM_g_num_t *) * n_part);
+    PDM_g_num_t **faceToVtxOrigin   = (PDM_g_num_t **) malloc (sizeof(PDM_g_num_t *) * n_part);
+    double      **face_vtxCooOrigin = (double **)      malloc (sizeof(double *)      * n_part);
+    double      **face_vtxEpsOrigin = (double **)      malloc (sizeof(double *)      * n_part);
+    double      **face_vtxNormalOrigin = (double **)   malloc (sizeof(double *)      * n_part);
+
+    for (int i = 0; i < n_part; i++) {
+      int                nEltPart        = PDM_surf_mesh_part_n_face_get (mesh, i);
+      const int         *partFaceEdgeIdx = PDM_surf_mesh_part_face_edge_idx_get (mesh, i);
+      const int         *partFaceEdge    = PDM_surf_mesh_part_face_edge_get (mesh, i);
+      const int         *partface_vtx    = PDM_surf_mesh_part_face_vtx_get (mesh, i);
+      const PDM_g_num_t *partEdgeGNum    = PDM_surf_mesh_part_edge_g_num_get (mesh, i);
+      const PDM_g_num_t *partVtxGNum     = PDM_surf_mesh_part_vtx_g_num_get (mesh, i);
+      //const PDM_g_num_t *partFaceGNum     = PDM_surf_mesh_part_face_g_num_get (mesh, i);
+      const double     *partVtxCoord    = PDM_surf_mesh_part_vtx_get (mesh, i);
+      const double     *partVtxEps      = PDM_surf_mesh_part_carLgthVtx_get (mesh, i);
+
+      faceStrideOrigin[i] = (int *) malloc (sizeof(int) * nEltPart);
+      // numero de face local et numero d aretes global
+      faceToEdgeOrigin[i] = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * partFaceEdgeIdx[nEltPart]);
+      faceToVtxOrigin[i]  = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) *partFaceEdgeIdx[nEltPart]);
+      face_vtxCooOrigin[i] = (double *) malloc (sizeof(double) * 3 * partFaceEdgeIdx[nEltPart]);
+      face_vtxEpsOrigin[i] = (double *) malloc (sizeof(double) * partFaceEdgeIdx[nEltPart]);
+      face_vtxNormalOrigin[i] = (double *) malloc (sizeof(double) * 3 * partFaceEdgeIdx[nEltPart]);
+
+      int         *_faceStrideOrigin  = faceStrideOrigin[i];
+      PDM_g_num_t *_faceToEdgeOrigin  = faceToEdgeOrigin[i];
+      PDM_g_num_t *_faceToVtxOrigin   = faceToVtxOrigin[i];
+      double      *_face_vtxCooOrigin = face_vtxCooOrigin[i];
+      double      *_face_vtxEpsOrigin = face_vtxEpsOrigin[i];
+      double      *_face_vtxNormalOrigin = face_vtxNormalOrigin[i];
+
+      for (int j = 0; j < nEltPart; j++) {
+        _faceStrideOrigin[j] = partFaceEdgeIdx[j+1] - partFaceEdgeIdx[j];
+      }
+
+      for (int j = 0; j < partFaceEdgeIdx[nEltPart]; j++) {
+        int edge1 = PDM_ABS(partFaceEdge[j]) - 1;
+        int vtx1 = partface_vtx[j] - 1;
+        _faceToEdgeOrigin[j] = partFaceEdge[j]/PDM_ABS(partFaceEdge[j]) * partEdgeGNum[edge1];
+        _faceToVtxOrigin[j] = partVtxGNum[vtx1];
+        _face_vtxEpsOrigin[j] = partVtxEps[vtx1];
+        for (int k = 0; k < 3; k++) {
+          _face_vtxCooOrigin[3*j+k] = partVtxCoord[3*vtx1+k];
+          _face_vtxNormalOrigin[3*j+k] = vtx_normal[imesh][i][3*j+k];
+        }
+      }
+    }
+
+    faceStrideCurrent[imesh]  = NULL;
+    faceStrideCurrent3[imesh] = NULL;
+    faceToEdgeCurrent[imesh]  = NULL;
+    faceToVtxCurrent[imesh]   = NULL;
+    face_vtxCooCurrent[imesh] = NULL;
+    face_vtxEpsCurrent[imesh] = NULL;
+
+    PDM_box_set_recv_data_from_origin_distrib (boxes[imesh],
+                                               PDM_STRIDE_VAR,
+                                               1,
+                                               data_size_l,
+                                               faceStrideOrigin,
+                                               (void **) faceToEdgeOrigin,
+                                               &(faceStrideCurrent[imesh]),
+                                               (void **) &faceToEdgeCurrent[imesh]);
+
+    PDM_box_set_recv_data_from_origin_distrib (boxes[imesh],
+                                               PDM_STRIDE_VAR,
+                                               1,
+                                               data_size_l,
+                                               faceStrideOrigin,
+                                               (void **) faceToVtxOrigin,
+                                               &(faceStrideCurrent[imesh]),
+                                               (void **) &faceToVtxCurrent[imesh]);
+
+    PDM_box_set_recv_data_from_origin_distrib (boxes[imesh],
+                                               PDM_STRIDE_VAR,
+                                               1,
+                                               data_size_r,
+                                               faceStrideOrigin,
+                                               (void **) face_vtxEpsOrigin,
+                                               &(faceStrideCurrent[imesh]),
+                                               (void **) &face_vtxEpsCurrent[imesh]);
+
+    for (int i = 0; i < n_part; i++) {
+      int nEltPart        = PDM_surf_mesh_part_n_face_get (mesh, i);
+      for (int j = 0; j < nEltPart; j++) {
+        faceStrideOrigin[i][j] = 3 * faceStrideOrigin[i][j];
+      }
+    }
+
+    PDM_box_set_recv_data_from_origin_distrib (boxes[imesh],
+                                               PDM_STRIDE_VAR,
+                                               1,
+                                               data_size_r,
+                                               faceStrideOrigin,
+                                               (void **) face_vtxCooOrigin,
+                                               &(faceStrideCurrent3[imesh]),
+                                               (void **) &face_vtxCooCurrent[imesh]);
+
+    PDM_box_set_recv_data_from_origin_distrib (boxes[imesh],
+                                               PDM_STRIDE_VAR,
+                                               1,
+                                               data_size_r,
+                                               faceStrideOrigin,
+                                               (void **) face_vtxNormalOrigin,
+                                               &(faceStrideCurrent3[imesh]),
+                                               (void **) &face_vtxNormalCurrent[imesh]);
+
+    for (int i = 0; i < n_part; i++) {
+      free (faceStrideOrigin[i]);
+      free (faceToEdgeOrigin[i]);
+      free (faceToVtxOrigin[i]);
+      free (face_vtxCooOrigin[i]);
+      free (face_vtxEpsOrigin[i]);
+      free (face_vtxNormalOrigin[i]);
+    }
+
+    free (faceStrideOrigin);
+    free (faceToEdgeOrigin);
+    free (faceToVtxOrigin);
+    free (face_vtxCooOrigin);
+    free (face_vtxEpsOrigin);
+    free (face_vtxNormalOrigin);
+  }
+
+  PDM_MPI_Barrier (ol->comm);
+  PDM_timer_hang_on(ol->timer);
+  ol->times_elapsed[OL_DISTRIB_BOXESA_BLOCK] = PDM_timer_elapsed(ol->timer);
+  ol->times_cpu[OL_DISTRIB_BOXESA_BLOCK]     = PDM_timer_cpu(ol->timer);
+  ol->times_cpu_u[OL_DISTRIB_BOXESA_BLOCK]   = PDM_timer_cpu_user(ol->timer);
+  ol->times_cpu_s[OL_DISTRIB_BOXESA_BLOCK]   = PDM_timer_cpu_sys(ol->timer);
+  PDM_timer_resume(ol->timer);
+
+  if (i_rank == 0  && vb == 1) {
+    printf ("!!!! ol_distrib_boxesa_block !!!!\n");
+    fflush(stdout);
+  }
+
   PDM_error(__FILE__, __LINE__, 0, "Error _compute_overlay_surfaces : Not yet implemented\n");
   exit(0);
 }
@@ -5393,7 +5694,7 @@ static void
 _compute_overlay
 (
  PDM_ol_t *ol
-)
+ )
 {
   /*
    * Compute faces extents
@@ -5484,7 +5785,7 @@ PDM_ol_create
  const PDM_g_num_t  nGVtxMeshB,
  const double       projectCoeff,
  const PDM_MPI_Comm comm
-)
+ )
 {
   /*
    * Update olArray size
@@ -5536,17 +5837,17 @@ PDM_ol_create
 
 void
 PROCF (pdm_ol_create, PDM_OL_CREATE)
-(
- int        *n_partMeshA,
- PDM_g_num_t *nGFaceMeshA,
- PDM_g_num_t *nGVtxMeshA,
- int        *n_partMeshB,
- PDM_g_num_t *nGFaceMeshB,
- PDM_g_num_t *nGVtxMeshB,
- double     *projectCoeff,
- PDM_MPI_Fint   *comm,
- int        *id
-)
+  (
+   int        *n_partMeshA,
+   PDM_g_num_t *nGFaceMeshA,
+   PDM_g_num_t *nGVtxMeshA,
+   int        *n_partMeshB,
+   PDM_g_num_t *nGFaceMeshB,
+   PDM_g_num_t *nGVtxMeshB,
+   double     *projectCoeff,
+   PDM_MPI_Fint   *comm,
+   int        *id
+   )
 {
 
   // printf("tototo :%d %ld %ld %d %ld %ld %12.5e %d\n", *n_partMeshA,  *nGFaceMeshA,
@@ -5582,7 +5883,7 @@ PDM_ol_parameter_set
  const int                id,
  const PDM_ol_parameter_t parameter,
  const double             value
-)
+ )
 {
   PDM_ol_t *ol = _ol_get(id);
   PDM_timer_resume(ol->timer);
@@ -5603,7 +5904,7 @@ PDM_ol_parameter_set
 
   default :
     PDM_error(__FILE__, __LINE__, 0, "Error PDM_ol_parameter_set :"
-            " Unavailable parameter to set\n");
+              " Unavailable parameter to set\n");
     abort();
 
   }
@@ -5613,11 +5914,11 @@ PDM_ol_parameter_set
 
 void
 PROCF (pdm_ol_parameter_set, PDM_OL_PARAMETER_SET)
-(
- int                *id,
- PDM_ol_parameter_t *parameter,
- double             *value
-)
+  (
+   int                *id,
+   PDM_ol_parameter_t *parameter,
+   double             *value
+   )
 {
   PDM_ol_parameter_set (*id,
                         *parameter,
@@ -5657,7 +5958,7 @@ PDM_ol_input_mesh_set
  const int            n_vtx,
  const double        *coords,
  const PDM_g_num_t    *vtx_ln_to_gn
-)
+ )
 {
   /*
    * Get overlay object
@@ -5684,7 +5985,7 @@ PDM_ol_input_mesh_set
 
   default:
     PDM_error(__FILE__, __LINE__, 0, "Error PDM_ol_input_mesh_set :"
-            " unknown PDM_ol_mesh_t mesh\n");
+              " unknown PDM_ol_mesh_t mesh\n");
     abort();
   }
 
@@ -5713,18 +6014,18 @@ PDM_ol_input_mesh_set
 
 void
 PROCF (pdm_ol_input_mesh_set, PDM_OL_INPUT_MESH_SET)
-(
- int           *id,
- PDM_ol_mesh_t *mesh,
- int           *i_part,
- int           *n_face,
- int           *face_vtx_idx,
- int           *face_vtx,
- PDM_g_num_t    *face_ln_to_gn,
- int           *n_vtx,
- double        *coords,
- PDM_g_num_t    *vtx_ln_to_gn
-)
+  (
+   int           *id,
+   PDM_ol_mesh_t *mesh,
+   int           *i_part,
+   int           *n_face,
+   int           *face_vtx_idx,
+   int           *face_vtx,
+   PDM_g_num_t    *face_ln_to_gn,
+   int           *n_vtx,
+   double        *coords,
+   PDM_g_num_t    *vtx_ln_to_gn
+   )
 {
   PDM_ol_input_mesh_set (*id,
                          *mesh,
@@ -5752,7 +6053,7 @@ void
 PDM_ol_compute
 (
  const int id
-)
+ )
 {
 
   /*
@@ -5852,9 +6153,9 @@ PDM_ol_compute
 
 void
 PROCF (pdm_ol_compute, PDM_OL_COMPUTE)
-(
- int         *id
-)
+  (
+   int         *id
+   )
 {
   PDM_ol_compute (*id);
 }
@@ -5878,7 +6179,7 @@ PDM_ol_moving_type_set
  const int           id,
  const PDM_ol_mesh_t mesh,
  const PDM_ol_mv_t   mv
-)
+ )
 {
   /*
    * Get overlay object
@@ -5896,11 +6197,11 @@ PDM_ol_moving_type_set
 
 void
 PROCF (pdm_ol_moving_type_set, PDM_OL_MOVING_TYPE_SET)
-(
- int           *id,
- PDM_ol_mesh_t *mesh,
- PDM_ol_mv_t   *mv
-)
+  (
+   int           *id,
+   PDM_ol_mesh_t *mesh,
+   PDM_ol_mv_t   *mv
+   )
 {
   PDM_ol_moving_type_set (*id,
                           *mesh,
@@ -5944,11 +6245,11 @@ PDM_ol_translation_set
 
 void
 PROCF (pdm_ol_translation_set, PDM_OL_TRANSLATION_SET)
-(
- int          *id,
- double       *vect,
- double       *center
-)
+  (
+   int          *id,
+   double       *vect,
+   double       *center
+   )
 {
   PDM_ol_translation_set (*id,
                           vect,
@@ -5976,7 +6277,7 @@ PDM_ol_rotation_set
  const double  *direction,
  const double  *center,
  const double   angle
-)
+ )
 {
   /*
    * Get overlay object
@@ -5997,12 +6298,12 @@ PDM_ol_rotation_set
 
 void
 PROCF (pdm_ol_rotation_set, PDM_OL_ROTATION_SET)
-(
- int     *id,
- double  *direction,
- double  *center,
- double  *angle
-)
+  (
+   int     *id,
+   double  *direction,
+   double  *center,
+   double  *angle
+   )
 {
   PDM_ol_rotation_set (*id,
                        direction,
@@ -6030,9 +6331,9 @@ PDM_ol_mesh_dim_get
 (
  const int            id,
  const PDM_ol_mesh_t  mesh,
-       PDM_g_num_t    *nGOlFace,
-       PDM_g_num_t    *nGOlVtx
-)
+ PDM_g_num_t    *nGOlFace,
+ PDM_g_num_t    *nGOlVtx
+ )
 {
   /*
    * Get overlay object
@@ -6064,12 +6365,12 @@ PDM_ol_mesh_dim_get
 
 void
 PROCF (pdm_ol_mesh_dim_get, PDM_OL_MESH_DIM_GET)
-(
- int           *id,
- PDM_ol_mesh_t *mesh,
- PDM_g_num_t   *nGOlFace,
- PDM_g_num_t   *nGOlVtx
-)
+  (
+   int           *id,
+   PDM_ol_mesh_t *mesh,
+   PDM_g_num_t   *nGOlFace,
+   PDM_g_num_t   *nGOlVtx
+   )
 {
   PDM_ol_mesh_dim_get (*id,
                        *mesh,
@@ -6104,13 +6405,13 @@ PDM_ol_part_mesh_dim_get
  const int            id,
  const PDM_ol_mesh_t  mesh,
  const int            i_part,
-       int           *nOlFace,
-       int           *nOlLinkedFace,
-       int           *nOlVtx,
-       int           *sOlFaceIniVtx,
-       int           *sOlface_vtx,
-       int           *sInitToOlFace
-)
+ int           *nOlFace,
+ int           *nOlLinkedFace,
+ int           *nOlVtx,
+ int           *sOlFaceIniVtx,
+ int           *sOlface_vtx,
+ int           *sInitToOlFace
+ )
 {
   /*
    * Get overlay object
@@ -6153,17 +6454,17 @@ PDM_ol_part_mesh_dim_get
 
 void
 PROCF (pdm_ol_part_mesh_dim_get, PDM_OL_PART_MESH_DIM_GET)
-(
- int           *id,
- PDM_ol_mesh_t *mesh,
- int           *i_part,
- int           *nOlFace,
- int           *nOlLinkedFace,
- int           *nOlVtx,
- int           *sOlFaceIniVtx,
- int           *sOlface_vtx,
- int           *sInitToOlFace
-)
+  (
+   int           *id,
+   PDM_ol_mesh_t *mesh,
+   int           *i_part,
+   int           *nOlFace,
+   int           *nOlLinkedFace,
+   int           *nOlVtx,
+   int           *sOlFaceIniVtx,
+   int           *sOlface_vtx,
+   int           *sInitToOlFace
+   )
 {
   PDM_ol_part_mesh_dim_get (*id,
                             *mesh,
@@ -6215,21 +6516,21 @@ PROCF (pdm_ol_part_mesh_dim_get, PDM_OL_PART_MESH_DIM_GET)
 void
 PDM_ol_mesh_entities_get
 (
-const int              id,
-const PDM_ol_mesh_t    mesh,
-const int              i_part,
-      int            **olFaceIniVtxIdx,
-      int            **olFaceIniVtx,
-      int            **olface_vtx_idx,
-      int            **olface_vtx,
-      int            **olLinkedface_procIdx,
-      int            **olLinkedFace,
-      PDM_g_num_t    **olface_ln_to_gn,
-      double         **olCoords,
-      PDM_g_num_t    **olvtx_ln_to_gn,
-      int            **initToOlFaceIdx,
-      int            **initToOlFace
-)
+ const int              id,
+ const PDM_ol_mesh_t    mesh,
+ const int              i_part,
+ int            **olFaceIniVtxIdx,
+ int            **olFaceIniVtx,
+ int            **olface_vtx_idx,
+ int            **olface_vtx,
+ int            **olLinkedface_procIdx,
+ int            **olLinkedFace,
+ PDM_g_num_t    **olface_ln_to_gn,
+ double         **olCoords,
+ PDM_g_num_t    **olvtx_ln_to_gn,
+ int            **initToOlFaceIdx,
+ int            **initToOlFace
+ )
 {
   /*
    * Get overlay object
@@ -6276,22 +6577,22 @@ const int              i_part,
 
 void
 PROCF (pdm_ol_mesh_entities_get, PDM_OL_MESH_ENTITIES_GET)
-(
- int            *id,
- PDM_ol_mesh_t  *mesh,
- int            *i_part,
- int            *olFaceIniVtxIdx,
- int            *olFaceIniVtx,
- int            *olface_vtx_idx,
- int            *olface_vtx,
- int            *olLinkedface_procIdx,
- int            *olLinkedFace,
- PDM_g_num_t    *olface_ln_to_gn,
- double         *olCoords,
- PDM_g_num_t    *olvtx_ln_to_gn,
- int            *initToOlFaceIdx,
- int            *initToOlFace
-)
+  (
+   int            *id,
+   PDM_ol_mesh_t  *mesh,
+   int            *i_part,
+   int            *olFaceIniVtxIdx,
+   int            *olFaceIniVtx,
+   int            *olface_vtx_idx,
+   int            *olface_vtx,
+   int            *olLinkedface_procIdx,
+   int            *olLinkedFace,
+   PDM_g_num_t    *olface_ln_to_gn,
+   double         *olCoords,
+   PDM_g_num_t    *olvtx_ln_to_gn,
+   int            *initToOlFaceIdx,
+   int            *initToOlFace
+   )
 {
   int          *_olFaceIniVtxIdx;
   int          *_olFaceIniVtx;
@@ -6422,7 +6723,7 @@ void
 PDM_ol_del
 (
  const int     id
-)
+ )
 {
   /*
    * Get overlay object
@@ -6464,9 +6765,9 @@ PDM_ol_del
 
 void
 PROCF (pdm_ol_del, PDM_OL_DEL)
-(
- int     *id
-)
+  (
+   int     *id
+   )
 {
 
   PDM_ol_t *ol = _ol_get(*id);
@@ -6573,7 +6874,7 @@ void
 PDM_ol_dump_times
 (
  const int     id
-)
+ )
 {
   /*
    * Get overlay object
@@ -6589,9 +6890,9 @@ PDM_ol_dump_times
 
 void
 PROCF (pdm_ol_dump_times, PDM_OL_DUMP_TIMES)
-(
- int     *id
-)
+  (
+   int     *id
+   )
 {
   PDM_ol_dump_times (*id);
 }

@@ -106,7 +106,8 @@ _read_args
  int           *randomTimeInit,
  int           *randomMeshAInit,
  int           *randomMeshBInit,
- int           *nProcData
+ int           *nProcData,
+ int           *rotate
 )
 {
   int i = 1;
@@ -238,6 +239,9 @@ _read_args
       else {
         *nProcData = atoi (argv[i]);
       }
+    }
+    else if (strcmp (argv[i], "-rotate") == 0) {
+      *rotate = 1;
     }
     else
       _usage (EXIT_FAILURE);
@@ -449,6 +453,33 @@ _compute_faceVtx
 }
 
 
+
+static void
+_rotation_matrix
+(
+ double rot[3][3]
+ )
+{
+  double q[4] = {1., -2., 3., -4};
+
+  double l = sqrt(q[0]*q[0] + q[1]*q[1] + q[2]*q[2] + q[3]*q[3]);
+  q[0] /= l;
+  q[1] /= l;
+  q[2] /= l;
+  q[3] /= l;
+
+  rot[0][0] = 1. - 2.*(q[1]*q[1] + q[2]*q[2]);
+  rot[0][1] =      2.*(q[0]*q[1] - q[2]*q[3]);
+  rot[0][2] =      2.*(q[0]*q[2] + q[1]*q[3]);
+  rot[1][0] =      2.*(q[0]*q[1] + q[2]*q[3]);
+  rot[1][1] = 1. - 2.*(q[0]*q[0] + q[2]*q[2]);
+  rot[1][2] =      2.*(q[1]*q[2] - q[0]*q[3]);
+  rot[2][0] =      2.*(q[0]*q[2] - q[1]*q[3]);
+  rot[2][1] =      2.*(q[1]*q[2] + q[0]*q[3]);
+  rot[2][2] = 1. - 2.*(q[0]*q[0] + q[1]*q[1]);
+}
+
+
 /**
  *
  * \brief  Create and split Mesh
@@ -472,8 +503,9 @@ _create_split_mesh
  double            ymin,
  PDM_g_num_t       nVtxSeg,
  double            length,
+ int               rotate,
  int               n_part,
- PDM_part_split_t   method,
+ PDM_part_split_t  method,
  int               haveRandom,
  int               initRandom,
  PDM_g_num_t      *nGFace,
@@ -548,6 +580,21 @@ _create_split_mesh
                        &nEdgeGroup,
                        &dEdgeGroupIdx,
                        &dEdgeGroup);
+
+    if (rotate) {
+      double rot[3][3];
+      _rotation_matrix (rot);
+
+      for (int i = 0; i < dNVtx; i++) {
+        double x = dVtxCoord[3*i];
+        double y = dVtxCoord[3*i+1];
+        double z = dVtxCoord[3*i+2];
+
+        for (int j = 0; j < 3; j++) {
+          dVtxCoord[3*i+j] = x * rot[j][0] + y * rot[j][1] + z * rot[j][2];
+        }
+      }
+    }
 
     struct timeval t_elaps_fin;
 
@@ -1469,6 +1516,7 @@ char *argv[]
   int              i_rank;
   int              numProcs;
 
+  int rotate = 0;
   /*
    *  Read args
    */
@@ -1491,8 +1539,8 @@ char *argv[]
               &randomTimeInit,
               &randomMeshAInit,
               &randomMeshBInit,
-              &nProcData
-              );
+              &nProcData,
+              &rotate);
 
   PDM_MPI_Comm_rank (PDM_MPI_COMM_WORLD, &i_rank);
   PDM_MPI_Comm_size (PDM_MPI_COMM_WORLD, &numProcs);
@@ -1622,6 +1670,7 @@ char *argv[]
                         ymin,
                         n_vtx_seg,
                         length,
+                        rotate,
                         n_part,
                         method,
                         haveRandom,
