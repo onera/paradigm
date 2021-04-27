@@ -311,6 +311,21 @@ PDM_edges_intersect_dump
 PDM_edges_intersect_t       *ei
 );
 
+
+
+PDM_line_intersect_t
+_intersect_edges_projection
+(
+ const double  a0[3],
+ const double  a1[3],
+ const double  n0[3],
+ const double  n1[3],
+ const double  b0[3],
+ const double  b1[3],
+ double       *uA,
+ double       *uB
+ );
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

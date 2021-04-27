@@ -4873,7 +4873,7 @@ _solve_quadratic
 
 
 
-static PDM_line_intersect_t
+PDM_line_intersect_t
 _intersect_edges_projection
 (
  const double  a0[3],
