@@ -5519,6 +5519,12 @@ const double                 coordsVtxB[6]
                                                                            coordsVtxB + 3,
                                                                            &uAproj,
                                                                            &uBproj);
+
+        if (tIntersectProj == PDM_LINE_INTERSECT_YES) {
+          tIntersect = tIntersectProj;
+          u1 = uAproj;
+          v1 = uBproj;
+        }
       }
       //<<--
     }

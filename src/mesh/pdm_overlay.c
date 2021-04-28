@@ -5779,6 +5779,266 @@ _compute_overlay_surfaces
     fflush(stdout);
   }
 
+
+  /*****************************************************************************
+   *                                                                           *
+   *  Synchronize intersections                                                *
+   *                                                                           *
+   *      Synchronize function Defines global number for :                     *
+   *      - new A vertices in A overlay mesh                                   *
+   *      - new B vertices in B overlay mesh                                   *
+   *                                                                           *
+   ****************************************************************************/
+
+  PDM_g_num_t n_g_vtxA = PDM_surf_mesh_n_g_vtx_get (meshA);
+  PDM_g_num_t n_g_vtxB = PDM_surf_mesh_n_g_vtx_get (meshB);
+
+  PDM_g_num_t n_g_newVtxA = 0;
+  PDM_g_num_t n_g_newVtxB = 0;
+
+  PDM_edges_intersect_synchronize (intersect, n_g_vtxA, n_g_vtxB,
+                                   &n_g_newVtxA, &n_g_newVtxB);
+
+
+
+  PDM_MPI_Barrier (ol->comm);
+  PDM_timer_hang_on(ol->timer);
+  ol->times_elapsed[OL_EDGES_SYNCHRO] = PDM_timer_elapsed(ol->timer);
+  ol->times_cpu[OL_EDGES_SYNCHRO]     = PDM_timer_cpu(ol->timer);
+  ol->times_cpu_u[OL_EDGES_SYNCHRO]   = PDM_timer_cpu_user(ol->timer);
+  ol->times_cpu_s[OL_EDGES_SYNCHRO]   = PDM_timer_cpu_sys(ol->timer);
+  PDM_timer_resume(ol->timer);
+
+  if (i_rank == 0 && vb == 1) {
+    printf ("!!!! ol_edges_synchro !!!!\n");
+    fflush(stdout);
+  }
+
+
+  /*****************************************************************************
+   *                                                                           *
+   *                             Clipping                                      *
+   *                                                                           *
+   ****************************************************************************/
+
+  int iclipp = 0;
+
+  int s_subFacesToFaces = 5 * n_elt_blockA;
+  PDM_g_num_t *subFacesToFaces = malloc (sizeof(PDM_g_num_t) * s_subFacesToFaces);
+
+  int s_subFacesConnecIdx = (1 + n_elt_blockA);
+  int *subFacesConnecIdx = malloc (sizeof(int) * s_subFacesConnecIdx);
+  subFacesConnecIdx[0] = 0;
+
+  int s_subFacesConnecA = 4 * n_elt_blockA;
+  int s_subFacesConnecB = 4 * n_elt_blockA;
+  PDM_g_num_t *subFacesConnecA = malloc (sizeof(PDM_g_num_t) * s_subFacesConnecA);
+  int s_gNumSubFacesA = n_elt_blockA;
+  PDM_g_num_t *gNumSubFacesA   = malloc (sizeof(PDM_g_num_t) * s_gNumSubFacesA);
+  PDM_g_num_t *subFacesConnecB = malloc (sizeof(PDM_g_num_t) * s_subFacesConnecB);
+
+  int s_subFacesCoordsA = 3 * s_subFacesConnecA;
+  double *subFacesCoordsA = malloc (sizeof(double) * s_subFacesCoordsA);
+
+  int *facesToSubFacesAIdx = malloc (sizeof(int) * (1 + n_elt_blockA));
+  int *facesToSubFacesBIdx = malloc (sizeof(int) * (1 + blockA_boxesB_idx[n_elt_blockA]));
+
+  facesToSubFacesAIdx[0] = 0;
+  facesToSubFacesBIdx[0] = 0;
+
+  const int *originB = PDM_box_set_origin_get (boxesB);
+
+  for (int i = 0; i < n_elt_blockA; i++) {
+
+    int lnum_boxA = blockA_lnum_data[i] - 1;
+
+    PDM_g_num_t gnum_boxA = block_gnumA[i];
+
+    int n_vtxA = faceIdxCurrent[0][lnum_boxA + 1] - faceIdxCurrent[0][lnum_boxA];
+    PDM_g_num_t *_faceToEdgeA = faceToEdgeCurrent[0] + faceIdxCurrent[0][lnum_boxA];
+    PDM_g_num_t *_faceToVtxA  = faceToVtxCurrent[0] + faceIdxCurrent[0][lnum_boxA];
+    double     *_face_vtxCooA = face_vtxCooCurrent[0] + 3 * faceIdxCurrent[0][lnum_boxA];
+
+    facesToSubFacesAIdx[i+1] = facesToSubFacesAIdx[i];
+
+    for (int j = blockA_boxesB_idx[i]; j < blockA_boxesB_idx[i+1]; j++) {
+
+      PDM_g_num_t gnum_boxB = blockA_boxesB_gnum_data[j];
+
+      int lnum_boxB = blockA_boxesB_lnum_data[j] - 1;
+      int n_vtxB = faceIdxCurrent[1][lnum_boxB + 1] - faceIdxCurrent[1][lnum_boxB];
+      PDM_g_num_t *_faceToEdgeB = faceToEdgeCurrent[1] + faceIdxCurrent[1][lnum_boxB];
+      PDM_g_num_t *_faceToVtxB  = faceToVtxCurrent[1] + faceIdxCurrent[1][lnum_boxB];
+      double     *_face_vtxCooB = face_vtxCooCurrent[1] + 3 * faceIdxCurrent[1][lnum_boxB];
+
+      int         nPolyClippA      = 0;
+      int        *polyClippIdxA    = NULL;
+      PDM_g_num_t *polyClippConnecA = NULL;
+      double     *polyClippCoordsA = NULL;
+
+      int         nPolyClippB      = 0;
+      int        *polyClippIdxB    = NULL;
+      PDM_g_num_t *polyClippConnecB = NULL;
+      double     *polyClippCoordsB = NULL;
+
+              for (int k1 = 0; k1 < n_vtxA; k1++) {
+          for (int k2 = 0; k2 < n_vtxB; k2++) {
+            int n_intersect;
+            PDM_edges_intersect_res_t **eir1 = PDM_edges_intersect_get (intersect,
+                                                                        PDM_EDGES_GET_FROM_AB,
+                                                                        PDM_ABS(_faceToEdgeA[k1]),
+                                                                        PDM_ABS(_faceToEdgeB[k2]),
+                                                                        &n_intersect);
+            if (eir1 != NULL) {
+              PDM_edges_intersect_res_dump(*eir1);
+            }
+          }
+        }
+      }
+
+      PDM_poly_clipp (intersect,
+                      gnum_boxA,
+                      gnum_boxB,
+                      n_vtxA,
+                      _faceToEdgeA,
+                      _faceToVtxA,
+                      _face_vtxCooA,
+                      n_vtxB,
+                      _faceToEdgeB,
+                      _faceToVtxB,
+                      _face_vtxCooB,
+                      PDM_POLY_CLIPP_CLIP,
+                      &nPolyClippA,
+                      &polyClippIdxA,
+                      &polyClippConnecA,
+                      &polyClippCoordsA,
+                      &nPolyClippB,
+                      &polyClippIdxB,
+                      &polyClippConnecB,
+                      &polyClippCoordsB);
+
+      if (vb) {
+        printf(" ---> poly_clipp gnumEltA gnumEltB : "PDM_FMT_G_NUM" "PDM_FMT_G_NUM" fin\n", gnum_boxA, gnum_boxB);
+      }
+
+      assert (nPolyClippA == nPolyClippB);
+
+      facesToSubFacesAIdx[i+1] += nPolyClippA;
+
+      facesToSubFacesBIdx[j+1] = nPolyClippB;
+
+      int newSize = iclipp + nPolyClippA + 1;
+      if (newSize > s_subFacesConnecIdx) {
+        while (newSize > s_subFacesConnecIdx) {
+          s_subFacesConnecIdx += PDM_MAX(1, s_subFacesConnecIdx/3);
+        }
+        subFacesConnecIdx = realloc (subFacesConnecIdx,
+                                     sizeof(int) * s_subFacesConnecIdx);
+      }
+
+      newSize = iclipp + nPolyClippA;
+      if (newSize > s_gNumSubFacesA) {
+        while (newSize > s_gNumSubFacesA) {
+          s_gNumSubFacesA += PDM_MAX(1, s_gNumSubFacesA/3);
+        }
+        gNumSubFacesA  = realloc (gNumSubFacesA,
+                                  sizeof(PDM_g_num_t) * s_gNumSubFacesA);
+      }
+
+      int ibeg = subFacesConnecIdx[iclipp];
+      int ibeg2 = 3 *ibeg;
+      newSize = ibeg + polyClippIdxA[nPolyClippA];
+      if (newSize > s_subFacesConnecA) {
+        while (newSize > s_subFacesConnecA) {
+          s_subFacesConnecA += PDM_MAX(1, s_subFacesConnecA/3);
+        }
+        subFacesConnecA = realloc (subFacesConnecA,
+                                   sizeof(PDM_g_num_t) * s_subFacesConnecA);
+      }
+
+      if (newSize > s_subFacesConnecB) {
+        while (newSize > s_subFacesConnecB) {
+          s_subFacesConnecB += PDM_MAX(1, s_subFacesConnecB/3);
+        }
+        subFacesConnecB = realloc (subFacesConnecB,
+                                   sizeof(PDM_g_num_t) * s_subFacesConnecB);
+      }
+
+      newSize = 3 * (ibeg + polyClippIdxA[nPolyClippA]);
+      if (newSize > s_subFacesCoordsA) {
+        while (newSize > s_subFacesCoordsA) {
+          s_subFacesCoordsA += PDM_MAX(1, s_subFacesCoordsA/3);
+        }
+        subFacesCoordsA = realloc (subFacesCoordsA,
+                                   sizeof(double) * s_subFacesCoordsA);
+      }
+
+      newSize = 5*(iclipp + nPolyClippA);
+      if (newSize > s_subFacesToFaces) {
+        while (newSize > s_subFacesToFaces) {
+          s_subFacesToFaces += PDM_MAX(1, s_subFacesToFaces/3);
+        }
+        subFacesToFaces = realloc (subFacesToFaces,
+                                   sizeof(PDM_g_num_t) * s_subFacesToFaces);
+      }
+
+      for (int k = 0; k < nPolyClippA; k++) {
+        subFacesConnecIdx[iclipp+1] =  subFacesConnecIdx[iclipp]
+          + (polyClippIdxA[k+1] - polyClippIdxA[k]);
+
+        for (int k1 = polyClippIdxA[k]; k1 < polyClippIdxA[k+1]; k1++) {
+          subFacesConnecA[ibeg] = polyClippConnecA[k1];
+          subFacesConnecB[ibeg] = polyClippConnecB[k1];
+          ibeg += 1;
+        }
+
+        for (int k1 = 3*polyClippIdxA[k]; k1 < 3*polyClippIdxA[k+1]; k1++) {
+          subFacesCoordsA[ibeg2++] = polyClippCoordsA[k1];
+        }
+
+        subFacesToFaces[5*iclipp ]  = i;         // A local number
+        subFacesToFaces[5*iclipp+1] = gnum_boxA; // A global number
+        subFacesToFaces[5*iclipp+2] = originB[3*lnum_boxB];         // B local number
+        subFacesToFaces[5*iclipp+3] = originB[3*lnum_boxB+1];         // B local number
+        subFacesToFaces[5*iclipp+4] = gnum_boxB; // B global number
+
+        //printf("link "PDM_FMT_G_NUM" : %d %d "PDM_FMT_G_NUM"\n", gnum_boxA, originB[3*lnum_boxB], originB[3*lnum_boxB+1], gnum_boxB);
+
+        iclipp += 1;
+      }
+
+      if (polyClippIdxB != polyClippIdxA) {
+        free (polyClippIdxB);
+        polyClippIdxB = NULL;
+      }
+
+      if (polyClippConnecB != NULL) {
+        free (polyClippConnecB);
+        polyClippConnecB = NULL;
+      }
+
+      if (polyClippIdxA != NULL) {
+        free (polyClippIdxA);
+      }
+
+      if (polyClippConnecA != NULL) {
+        free (polyClippConnecA);
+      }
+      if (polyClippCoordsA != NULL) {
+        free (polyClippCoordsA);
+      }
+
+    }
+  }
+
+
+
+
+
+
+
+
+
   PDM_error(__FILE__, __LINE__, 0, "Error _compute_overlay_surfaces : Not yet implemented\n");
   exit(0);
 }
