@@ -312,7 +312,7 @@ PDM_edges_intersect_t       *ei
 );
 
 
-
+//-->> static function
 PDM_line_intersect_t
 _intersect_edges_projection
 (
@@ -324,6 +324,22 @@ _intersect_edges_projection
  const double  b1[3],
  double       *uA,
  double       *uB
+ );
+//<<--
+
+PDM_edges_intersect_res_t *
+PDM_edges_intersect_projection_add
+(
+PDM_edges_intersect_t       *ei,
+const PDM_g_num_t            nGEdgeA,
+const PDM_g_num_t            nGVtxA[2],
+const double                 charLgthVtxA[2],
+const double                 coordsVtxA[6],
+const double                 normalVtxA[6],
+const PDM_g_num_t            nGEdgeB,
+const PDM_g_num_t            nGVtxB[2],
+const double                 charLgthVtxB[2],
+const double                 coordsVtxB[6]
  );
 
 #ifdef __cplusplus
