@@ -342,6 +342,24 @@ const double                 charLgthVtxB[2],
 const double                 coordsVtxB[6]
  );
 
+
+void
+PDM_edges_intersect_projection_poly_add
+(
+PDM_edges_intersect_t  *ei,
+const int               n_vtxA,
+PDM_g_num_t            *faceToEdgeA,
+PDM_g_num_t            *faceToVtxA,
+double                 *face_vtxCooA,
+double                 *face_vtxEpsA,
+double                 *face_vtxNormalA,
+const int               n_vtxB,
+PDM_g_num_t            *faceToEdgeB,
+PDM_g_num_t            *faceToVtxB,
+double                 *face_vtxCooB,
+double                 *face_vtxEpsB
+ );
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

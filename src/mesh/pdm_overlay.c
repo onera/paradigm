@@ -5676,6 +5676,109 @@ _compute_overlay_surfaces
     fflush(stdout);
   }
 
+  /*****************************************************************************
+   *                                                                           *
+   *   Perform polygon clippings                                               *
+   *      - Use :                                                              *
+   *              * faceStrideCurrent                                          *
+   *              * faceStrideCurrent3                                         *
+   *              * faceToEdgeCurrent                                          *
+   *              * faceToVtxCurrent                                           *
+   *              * face_vtxCooCurrent                                         *
+   *              * face_vtxEpsCurrent                                         *
+   *                                                                           *
+   ****************************************************************************/
+
+  /* Stocker les intersections dans une structure */
+
+  int *faceIdxCurrent[2];
+  faceIdxCurrent[0] = (int *) malloc (sizeof(int) * (n_elt_blockA + 1));
+  faceIdxCurrent[1] = (int *) malloc (sizeof(int) * (n_eltB + 1));
+  for (int i = 0; i < 2; i++) {
+    faceIdxCurrent[i][0] = 0;
+  }
+  for (int j = 0; j < n_elt_blockA; j++) {
+    faceIdxCurrent[0][j+1] = faceIdxCurrent[0][j] + faceStrideCurrent[0][j];
+  }
+  for (int j = 0; j < n_eltB; j++) {
+    faceIdxCurrent[1][j+1] = faceIdxCurrent[1][j] + faceStrideCurrent[1][j];
+  }
+
+  /*****************************************************************************
+   *                                                                           *
+   *                  Pre-clipping : Perform intersections                     *
+   *                                                                           *
+   ****************************************************************************/
+
+  PDM_g_num_t maxGNEdgeA = PDM_surf_mesh_n_g_edge_get (meshA);
+  PDM_g_num_t maxGNEdgeB = PDM_surf_mesh_n_g_edge_get (meshB);
+
+  PDM_edges_intersect_t *intersect = PDM_edges_intersect_create (maxGNEdgeA,
+                                                                 maxGNEdgeB,
+                                                                 ol->vtxCarLengthTol,
+                                                                 ol->comm);
+
+  for (int i = 0; i < n_elt_blockA; i++) {
+    int lnum_boxA = blockA_lnum_data[i] - 1;
+    int n_vtxA = faceIdxCurrent[0][lnum_boxA  + 1] - faceIdxCurrent[0][lnum_boxA ];
+    PDM_g_num_t *_faceToEdgeA = faceToEdgeCurrent[0] + faceIdxCurrent[0][lnum_boxA ];
+    PDM_g_num_t *_faceToVtxA  = faceToVtxCurrent[0] + faceIdxCurrent[0][lnum_boxA ];
+    double     *_face_vtxCooA = face_vtxCooCurrent[0] + (3 * faceIdxCurrent[0][lnum_boxA]);
+    double     *_face_vtxEpsA = face_vtxEpsCurrent[0] + faceIdxCurrent[0][lnum_boxA ];
+    double     *_face_vtxNormalA = face_vtxNormalCurrent[0] + faceIdxCurrent[0][lnum_boxA ];
+    //PDM_g_num_t  gnum_boxA = block_gnumA[i];
+
+    /*
+     * Perform each edge-edge intersection :
+     *      - Each elementA edge intersects each elementB edge
+     *      - Storage in a hash table the result of each intersection
+     *        (key = sum of global number of vertices)
+     *      - Build sub face element
+     */
+
+    for (int j = blockA_boxesB_idx[i]; j < blockA_boxesB_idx[i+1]; j++) {
+      int lnum_boxB = blockA_boxesB_lnum_data[j]-1;
+      //PDM_g_num_t gnum_boxB = blockA_boxesB_gnum_data[j];
+
+      int n_vtxB = faceIdxCurrent[1][lnum_boxB + 1] - faceIdxCurrent[1][lnum_boxB];
+      PDM_g_num_t *_faceToEdgeB = faceToEdgeCurrent[1] + faceIdxCurrent[1][lnum_boxB];
+      PDM_g_num_t *_faceToVtxB  = faceToVtxCurrent[1] + faceIdxCurrent[1][lnum_boxB];
+  	  double     *_face_vtxCooB = face_vtxCooCurrent[1] + (3 * faceIdxCurrent[1][lnum_boxB]);
+      double     *_face_vtxEpsB = face_vtxEpsCurrent[1] + faceIdxCurrent[1][lnum_boxB];
+
+      /*
+       * Build polygon structure according to clipping polygon structure
+       */
+
+      PDM_edges_intersect_projection_poly_add (intersect,
+                                               n_vtxA,
+                                               _faceToEdgeA,
+                                               _faceToVtxA,
+                                               _face_vtxCooA,
+                                               _face_vtxEpsA,
+                                               _face_vtxNormalA,
+                                               n_vtxB,
+                                               _faceToEdgeB,
+                                               _faceToVtxB,
+                                               _face_vtxCooB,
+                                               _face_vtxEpsB);
+
+    }
+  }
+
+  PDM_MPI_Barrier (ol->comm);
+  PDM_timer_hang_on(ol->timer);
+  ol->times_elapsed[OL_EDGES_INTERSECTION] = PDM_timer_elapsed(ol->timer);
+  ol->times_cpu[OL_EDGES_INTERSECTION]     = PDM_timer_cpu(ol->timer);
+  ol->times_cpu_u[OL_EDGES_INTERSECTION]   = PDM_timer_cpu_user(ol->timer);
+  ol->times_cpu_s[OL_EDGES_INTERSECTION]   = PDM_timer_cpu_sys(ol->timer);
+  PDM_timer_resume(ol->timer);
+
+  if (i_rank == 0  && vb == 1) {
+    printf ("!!!! ol_edges_intersection !!!!\n");
+    fflush(stdout);
+  }
+
   PDM_error(__FILE__, __LINE__, 0, "Error _compute_overlay_surfaces : Not yet implemented\n");
   exit(0);
 }
