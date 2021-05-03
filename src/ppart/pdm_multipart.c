@@ -2090,6 +2090,7 @@ const int            i_zone,
 const int            i_part,
       int          **cell_color,
       int          **face_color,
+      int          **face_hp_color,
       int          **thread_color,
       int          **hyperplane_color
 )
@@ -2100,6 +2101,7 @@ const int            i_part,
   _part_mesh_t _pmeshes = _multipart->pmeshes[i_zone];
   *cell_color       = _pmeshes.parts[i_part]->cell_color;
   *face_color       = _pmeshes.parts[i_part]->face_color;
+  *face_hp_color    = _pmeshes.parts[i_part]->face_hp_color;
   *thread_color     = _pmeshes.parts[i_part]->thread_color;
   *hyperplane_color = _pmeshes.parts[i_part]->hyperplane_color;
 

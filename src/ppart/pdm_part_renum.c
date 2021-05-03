@@ -1780,6 +1780,12 @@ int     *new_to_old_order
                      new_to_old_order,
                      part->face_color);
   }
+  if (part->face_hp_color != NULL) {
+    PDM_order_array (part->n_face,
+                     sizeof(int),
+                     new_to_old_order,
+                     part->face_hp_color);
+  }
 
   /** face_color **/
   if (part->new_to_old_order_face != NULL) {
