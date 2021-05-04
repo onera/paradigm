@@ -18,6 +18,7 @@
 #include "pdm_mpi.h"
 #include "pdm_box.h"
 #include "pdm_sort.h"
+#include "pdm_array.h"
 #include "pdm_hash_tab.h"
 #include "pdm_box_priv.h"
 #include "pdm_box_tree.h"
@@ -556,10 +557,7 @@ PDM_dbbtree_boxes_set
 
     allGExtents = (double *) realloc (allGExtents, sizeof(double) * sExtents * nUsedRank);
 
-    int *initLocation_proc = (int *) malloc (sizeof(int) * 3 * nUsedRank);
-    for (int i = 0; i < 3 * nUsedRank; i++) {
-      initLocation_proc[i] = 0;
-    }
+    int *initLocation_proc = PDM_array_zeros_int(3 * nUsedRank);
 
     //TODO: Faire un PDM_box_set et PDM_box_tree_create sequentiel ! Le comm split a u n 1 proc ici : pas terrible
 
@@ -810,9 +808,7 @@ PDM_dbbtree_intersect_boxes_set
                                       1, // Don't use in this case
                                       boxes->comm);
 
-    for (int i = 0; i < lComm + 1; i++) {
-      distrib->index[i] = 0;
-    }
+    PDM_array_reset_int(distrib->index, lComm + 1, 0);
 
     for (int i = 0; i < nUsedRank; i++) {
       distrib->index[usedRanks[i]+1] = (*box_index)[i+1] - (*box_index)[i];
@@ -874,10 +870,7 @@ PDM_dbbtree_intersect_boxes_set
 
   int nBoxesA = _dbbt->boxes->local_boxes->n_boxes;//*
 
-  int *newIndex = (int *) malloc (sizeof(int) * (nBoxesA + 1));
-  for (int i = 0; i < nBoxesA + 1; i++) {
-    newIndex[i] = 0;
-  }
+  int *newIndex = PDM_array_zeros_int(nBoxesA + 1);
 
   int *_box_index = *box_index;
   int *_box_l_num = *box_l_num;
@@ -1018,15 +1011,12 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get_OLD
      * Envoi des points a chaque proc concerne
      */
 
-    n_send_pts = malloc (sizeof(int) * lComm);
+    n_send_pts = PDM_array_zeros_int(lComm);
     i_send_pts = malloc (sizeof(int) * (lComm+1));
 
     n_recv_pts = malloc (sizeof(int) * lComm);
     i_recv_pts = malloc (sizeof(int) * (lComm+1));
 
-    for (int i = 0; i < lComm; i++) {
-      n_send_pts[i] = 0;
-    }
 
     i_send_pts[0] = 0;
     i_recv_pts[0] = 0;
@@ -1050,9 +1040,7 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get_OLD
     double *send_pts = malloc (sizeof(double) * i_send_pts[lComm]);
     double *recv_pts = malloc (sizeof(double) * i_recv_pts[lComm]);
 
-    for (int i = 0; i < lComm; i++) {
-      n_send_pts[i] = 0;
-    }
+    PDM_array_reset_int(n_send_pts, lComm, 0);
 
     for (int i = 0; i < n_pts; i++) {
       for (int j = box_index_tmp[i]; j < box_index_tmp[i+1]; j++) {
@@ -1213,17 +1201,11 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get_OLD
      */
 
     *box_index = malloc(sizeof(int) * (n_pts + 1));
-    int* box_n = malloc(sizeof(int) * n_pts);
+    int* box_n = PDM_array_zeros_int(n_pts);
     *box_g_num = malloc(sizeof(PDM_g_num_t) * i_send_pts2[lComm]);
     (*box_index)[0] = 0;
 
-    for (int i = 0; i < n_pts; i++) {
-      box_n[i] = 0;
-    }
-
-    for (int i = 0; i < lComm; i++) {
-      n_send_pts[i] = 0;
-    }
+    PDM_array_reset_int(n_send_pts, lComm, 0);
 
     for (int i = 0; i < n_pts; i++) {
       for (int j = box_index_tmp[i]; j < box_index_tmp[i+1]; j++) {
@@ -1422,12 +1404,9 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
     /*
      * Count (provisional) nb of points to send to each process
      */
-    n_send_pts = malloc (sizeof(int) * lComm);
+    n_send_pts = PDM_array_zeros_int(lComm);
     n_recv_pts = malloc (sizeof(int) * lComm);
 
-    for (int i = 0; i < lComm; i++) {
-      n_send_pts[i] = 0;
-    }
 
     for (int i = 0; i < n_pts; i++) {
       for (int j = box_index_tmp[i]; j < box_index_tmp[i+1]; j++) {
@@ -1524,17 +1503,11 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
      */
     n_pts_local = 0;
 
-    n_pts_rank = malloc (sizeof(int) * n_copied_ranks);
-    for (int i = 0; i < n_copied_ranks; i++) {
-      n_pts_rank[i] = 0;
-    }
+    n_pts_rank = PDM_array_zeros_int(n_copied_ranks);
 
-    n_pts_send = malloc (sizeof(int) * lComm);
+    n_pts_send = PDM_array_zeros_int(lComm);
     n_pts_recv = malloc (sizeof(int) * lComm);
 
-    for (int i = 0; i < lComm; i++) {
-      n_pts_send[i] = 0;
-    }
 
     for (int i = 0; i < n_pts; i++) {
       for (int j = box_index_tmp[i]; j < box_index_tmp[i+1]; j++) {
@@ -1581,12 +1554,8 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
     double *data_send = malloc (sizeof(double) * i_pts_send[lComm]);
     double *data_recv = malloc (sizeof(double) * i_pts_recv[lComm]);
 
-    for (int i = 0; i < lComm; i++) {
-      n_pts_send[i] = 0;
-    }
-    for (int i = 0; i < n_copied_ranks; i++) {
-      n_pts_rank[i] = 0;
-    }
+    PDM_array_reset_int(n_pts_send, lComm, 0);
+    PDM_array_reset_int(n_pts_rank, n_copied_ranks, 0);
 
     i1 = 0; i2 = 0; i3 = 0;
     for (int i = 0; i < n_pts; i++) {
@@ -1871,9 +1840,7 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
       n_pts_send2[i] = 0;
     }
 
-    for (int i_copied_rank = 0; i_copied_rank < n_copied_ranks; i_copied_rank++) {
-      n_pts_rank[i_copied_rank] = 0;
-    }
+    PDM_array_reset_int(n_pts_rank, n_copied_ranks, 0);
 
 
 
@@ -2077,9 +2044,7 @@ PDM_dbbtree_points_inside_boxes
     /* Count points to send to each rank */
     send_count = malloc (sizeof(int) * n_ranks);
     if (n_used_ranks < n_ranks) {
-      for (int i = 0; i < n_ranks; i++) {
-        send_count[i] = 0;
-      }
+      PDM_array_reset_int(send_count, n_ranks, 0);
     }
 
     for (int i = 0; i < n_used_ranks; i++) {

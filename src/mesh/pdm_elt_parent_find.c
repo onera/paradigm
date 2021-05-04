@@ -22,6 +22,7 @@
 #include "pdm_part_to_block.h"
 #include "pdm_block_to_block.h"
 #include "pdm_quick_sort.h"
+#include "pdm_array.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -59,10 +60,7 @@ const int          nFac,
   /*
    * Make array of already treated face
    */
-  int *AlreadyTreat = (int * ) malloc( sizeof(int *) * nFac);
-  for(int i=0; i < nFac; i++){
-    AlreadyTreat[i] = -1;
-  }
+  int *AlreadyTreat = PDM_array_const_int(nFac, -1);
 
   /*
    * Begin with the first face of the array

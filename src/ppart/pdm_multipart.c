@@ -49,6 +49,7 @@
 #include "pdm_part_to_block.h"
 #include "pdm_block_to_part.h"
 #include "pdm_distrib.h"
+#include "pdm_array.h"
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
@@ -158,9 +159,7 @@ _build_join_uface_distribution
   */
 
   //Count faces in joins
-  int *nb_face_in_joins = (int *) malloc(n_unique_joins * sizeof(int));
-  for (int i = 0; i < n_unique_joins; i++)
-    nb_face_in_joins[i] = 0;
+  int *nb_face_in_joins = PDM_array_zeros_int(n_unique_joins);
 
   for (int izone = 0; izone < _multipart->n_zone; izone++){
     for (int i_part = 0; i_part < _multipart->n_part[izone]; i_part++){
@@ -1684,10 +1683,8 @@ _run_ppart_zone_nodal
   // reorder vtx priority itself
   for (int i_part=0; i_part<dn_part; ++i_part) {
     int n_kind = 3;
-    int* priority_count = (int*)malloc(n_kind*sizeof(int));
-    for (int k=0; k<n_kind; ++k) {
-      priority_count[k] = 0;
-    }
+    int* priority_count = PDM_array_zeros_int(n_kind);
+
     for (int i=0; i<pn_vtx[i_part]; ++i) {
       ++priority_count[pinternal_vtx_priority[i_part][i]];
     }

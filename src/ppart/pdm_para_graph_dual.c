@@ -33,6 +33,7 @@
 #include "pdm_part_to_block.h"
 #include "pdm_block_to_part.h"
 #include "pdm_para_graph_dual.h"
+#include "pdm_array.h"
 #include "pdm_dconnectivity_transform.h"
 
 
@@ -497,16 +498,12 @@ const int              compute_dnode_to_arc,
      * Post treatment
      */
     *dnode_to_arc      = (PDM_g_num_t *) malloc(  n_data_cf_recv  * sizeof(PDM_g_num_t));
-    *dnode_to_arc_idx  = (int*         ) malloc( (n_node_block+1) * sizeof(int        ));
-    int* node_to_arc_n = (int*         ) malloc( (n_node_block+1) * sizeof(int        ));
+    *dnode_to_arc_idx  = PDM_array_zeros_int(n_node_block+1);
+    int* node_to_arc_n = PDM_array_zeros_int(n_node_block+1);
 
     /* Short-cut */
     int*         _dnode_to_arc_idx = *dnode_to_arc_idx;
     PDM_g_num_t* _dnode_to_arc     = *dnode_to_arc;
-
-    for(int i = 0; i < n_node_block+1; ++i) {
-      _dnode_to_arc_idx[i] = 0;
-    }
 
     for(int i_recv = 0; i_recv < n_data_cf_recv; ++i_recv) {
       int ielmt = blk_gnum[i_recv] - graph_node_distrib[i_rank] - 1;
@@ -520,9 +517,6 @@ const int              compute_dnode_to_arc,
       _dnode_to_arc_idx[i+1] += _dnode_to_arc_idx[i];
     }
 
-    for(int i = 0; i < n_node_block+1; ++i){
-      node_to_arc_n[i] = 0;
-    }
 
     /*
      * Fill buffer -  Cas particulier ou recv_stride == 1
@@ -647,10 +641,7 @@ const PDM_g_num_t     *dnode_arc,
                              1,
                              comm);
 
-  int* send_stride = (int *) malloc(dnode_arc_idx[dn_node] * sizeof(int));
-  for (int i = 0; i < dnode_arc_idx[dn_node]; i++) {
-    send_stride[i] = 1;
-  }
+  int* send_stride = PDM_array_const_int(dnode_arc_idx[dn_node], 1);
   free(arc_ln_to_gn);
 
   int        *recv_stride = NULL;
@@ -936,9 +927,7 @@ const PDM_MPI_Comm      comm
 
   int dn_elmt = graph_node_distrib[i_rank+1] - graph_node_distrib[i_rank];
 
-  for (int i = 0; i < dn_elmt; i++) {
-    node_part_id[i] = 0;
-  }
+  PDM_array_reset_int(node_part_id, dn_elmt, 0);
 
   switch (split_method) {
 

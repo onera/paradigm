@@ -21,6 +21,7 @@
 #include "pdm_mpi.h"
 #include "pdm_octree.h"
 #include "pdm_octree_seq.h"
+#include "pdm_array.h"
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
@@ -757,11 +758,7 @@ PDM_points_merge_process
     }
   }
 
-  int *val_send_n = malloc(sizeof(int)*n_rank);
-
-  for (int i = 0; i < n_rank; i++) {
-    val_send_n[i] = 0;
-  }
+  int *val_send_n = PDM_array_zeros_int(n_rank);
 
   for (int i = 0; i < n_tmp_store; i++) {
     val_send_n[tmp_store[3*i]]++;
@@ -838,9 +835,7 @@ PDM_points_merge_process
 
   int *n_fusion_from_proc = val_send_n;
 
-  for (int i = 0; i < n_rank; i++) {
-    n_fusion_from_proc[i] = 0;
-  }
+  PDM_array_reset_int(n_fusion_from_proc, n_rank, 0);
 
   int *distant_couple  = NULL;
   int n_distant_couple = 0;
@@ -934,9 +929,7 @@ PDM_points_merge_process
     int *_candidates_idx = ppm->candidates_idx[i];
     int _n_points = ppm->n_points[i];
 
-    for (int j = 0; j < _n_points + 1; j++) {
-      _candidates_idx[j] = 0;
-    }
+    PDM_array_reset_int(_candidates_idx, _n_points + 1, 0);
   }
 
   for (int i = 0; i < n_local_couple; i++) {

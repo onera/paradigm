@@ -23,6 +23,7 @@
 #include "pdm_part_extension.h"
 #include "pdm_part_extension_priv.h"
 #include "pdm_part_connectivity_transform.h"
+#include "pdm_array.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -242,10 +243,7 @@ _create_cell_graph_comm
 
       int* _neighbor_idx  = part_ext->neighbor_idx [i_part+shift_part];
 
-      int* _neighbor_n = (int * ) malloc( part_ext->n_entity_bound[i_part+shift_part] * sizeof(int));
-      for(int i_entity = 0; i_entity < part_ext->n_entity_bound[i_part+shift_part]; ++i_entity) {
-        _neighbor_n[i_entity] = 0;
-      }
+      int* _neighbor_n = PDM_array_zeros_int(part_ext->n_entity_bound[i_part+shift_part]);
 
       /* Just copy to remove the 4 indices to 3 indices */
       for(int idx_entity = 0; idx_entity < n_part_entity_bound_tot; ++idx_entity) {
@@ -350,9 +348,7 @@ _create_cell_graph_comm
       }
 
       /* Init in order to count after - two pass to count = interior then border */
-      for(int i_cell = 0; i_cell < n_cell; ++i_cell) {
-        _dist_neighbor_cell_n[i_cell] = 0;
-      }
+      PDM_array_reset_int(_dist_neighbor_cell_n, n_cell, 0);
 
       part_ext->border_cell_list[i_part+shift_part] = malloc( n_elmt * sizeof(int));
       // for(int i = 0; i < n_elmt; ++i) {
@@ -392,9 +388,7 @@ _create_cell_graph_comm
       // PDM_log_trace_array_int(part_ext->border_cell_list[i_part+shift_part]  , idx_indic  , "border_cell_list::");
 
       /* Reset */
-      for(int i_cell = 0; i_cell < n_cell; ++i_cell) {
-        _dist_neighbor_cell_n[i_cell] = 0;
-      }
+      PDM_array_reset_int(_dist_neighbor_cell_n, n_cell, 0);
 
       /* Allocate */
       part_ext->dist_neighbor_cell_desc[i_part+shift_part] = (int * ) malloc( 3 * _dist_neighbor_cell_idx[n_cell] * sizeof(int));
@@ -595,10 +589,7 @@ _compute_dual_graph
       /*
        * Generate tag to know is a local cell is a border or not
        */
-      int* idx_border_cell = (int *) malloc( n_cell * sizeof(int));
-      for(int i_cell = 0; i_cell < n_cell; ++i_cell) {
-        idx_border_cell[i_cell] = -1;
-      }
+      int* idx_border_cell = PDM_array_const_int(n_cell, -1);
 
       for(int idx_cell = 0; idx_cell < n_cell_border; ++idx_cell) {
         int i_cell = part_ext->border_cell_list[i_part+shift_part][idx_cell];
@@ -1989,9 +1980,7 @@ _rebuild_face_group
       part_ext->border_face_group_idx[shift_part+i_part] = malloc( (n_face_group+1) * sizeof(int));
       int *_pborder_face_group_idx = part_ext->border_face_group_idx[shift_part+i_part];
 
-      for(int i_group = 0; i_group < n_face_group+1; ++i_group) {
-        _pborder_face_group_idx[i_group] = 0;
-      }
+      PDM_array_reset_int(_pborder_face_group_idx, n_face_group+1, 0);
 
       int idx = 0;
       for(int i = 0; i < n_face_border; ++i) {
@@ -2013,10 +2002,7 @@ _rebuild_face_group
       int         *_pborder_face_group          = part_ext->border_face_group         [shift_part+i_part];
       PDM_g_num_t *_pborder_face_group_ln_to_gn = part_ext->border_face_group_ln_to_gn[shift_part+i_part];
 
-      int* pborder_face_group_n = (int *) malloc( n_face_group * sizeof(int) );
-      for(int i_group = 0; i_group < n_face_group; ++i_group) {
-        pborder_face_group_n[i_group] = 0;
-      }
+      int* pborder_face_group_n = PDM_array_zeros_int(n_face_group);
 
       // PDM_log_trace_array_long(part_ext->border_face_ln_to_gn[shift_part+i_part], n_face_border, "border_face_ln_to_gn::");
 

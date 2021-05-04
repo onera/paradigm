@@ -38,6 +38,7 @@
 #include "pdm_printf.h"
 #include "pdm_error.h"
 #include "pdm_order.h"
+#include "pdm_array.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -557,15 +558,9 @@ _dual_graph_firstrank
   //cell_cell: dual graph to be built
   //cell_cell_idx: array of indexes of the dual graph (same as cell_face_idx)
 
-  int *cell_cell_n = (int *) malloc(part_ini->n_cell * sizeof(int));
-  for (int i = 0; i < part_ini->n_cell; i++) {
-    cell_cell_n[i] = 0;
-  }
+  int *cell_cell_n = PDM_array_zeros_int(part_ini->n_cell);
 
-  int *cell_cell = (int *) malloc(part_ini->cell_face_idx[part_ini->n_cell] * sizeof(int));
-  for (int i = 0; i < part_ini->cell_face_idx[part_ini->n_cell]; i++) {
-    cell_cell[i] = -1;
-  }
+  int *cell_cell = PDM_array_const_int(part_ini->cell_face_idx[part_ini->n_cell], -1);
 
   int *cell_cell_idx = (int *) malloc((part_ini->n_cell + 1) * sizeof(int));
   for(int i = 0; i < part_ini->n_cell + 1; i++) {

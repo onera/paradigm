@@ -30,6 +30,7 @@
 #include "pdm_mesh_location.h"
 #include "pdm_point_location.h"
 #include "pdm_ho_location.h"
+#include "pdm_array.h"
 
 #include "pdm_binary_search.h"
 #include "pdm_para_octree.h"
@@ -555,10 +556,7 @@ _redistribute_elementary_location
   /*
    * Exchange elements
    */
-  int *part_stride = malloc (sizeof(int) * n_elt);
-  for (ielt = 0; ielt < n_elt; ielt++) {
-    part_stride[ielt] = 1;
-  }
+  int *part_stride = PDM_array_const_int(n_elt, 1);
 
   /* Type */
   PDM_Mesh_nodal_elt_t *block_elt_type = NULL;
@@ -623,10 +621,7 @@ _redistribute_elementary_location
   int r_n_poly3d = PDM_part_to_block_n_elt_block_get (ptb_poly3d);
 
   /* Number of faces per polyhedron */
-  part_stride = malloc (sizeof(int) * n_poly3d);
-  for (ipoly = 0; ipoly < n_poly3d; ipoly++) {
-    part_stride[ipoly] = 1;
-  }
+  part_stride = PDM_array_const_int(n_poly3d, 1);
 
   int *r_n_face_per_elt = NULL;
   PDM_part_to_block_exch (ptb_poly3d,
@@ -2643,10 +2638,8 @@ PDM_mesh_location_compute
 
     const int n_pts_block1 = PDM_part_to_block_n_elt_block_get (ptb1);
 
-    int *part_stride = malloc (sizeof(int) * n_pts);
-    for (int i = 0; i < n_pts; i++) {
-      part_stride[i] = 1;
-    }
+    int *part_stride = PDM_array_const_int(n_pts, 1);
+
     int *block_stride = NULL;
 
     /* Exchange location */

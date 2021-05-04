@@ -17,6 +17,7 @@
 #include "pdm_priv.h"
 #include "pdm_config.h"
 #include "pdm_morton.h"
+#include "pdm_array.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
 #include "pdm_handles.h"
@@ -400,10 +401,7 @@ PDM_global_mean_field_compute
 
     _stride_w = malloc (sizeof(int *) * _gpm->n_part);
     for (int i = 0; i < _gpm->n_part; i++) {
-      _stride_w[i] = malloc (sizeof(int) * _gpm->n_elts[i]);
-      for (int j = 0; j < _gpm->n_elts[i]; j++) {
-        _stride_w[i][j] = 1;
-      }
+      _stride_w[i] = PDM_array_const_int(_gpm->n_elts[i], 1);
     }
 
     PDM_part_to_block_exch (_gpm->ptb,

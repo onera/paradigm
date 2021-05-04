@@ -21,6 +21,7 @@
 #include "pdm_block_to_part.h"
 #include "pdm_mpi.h"
 #include "pdm_morton.h"
+#include "pdm_array.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
 
@@ -2993,10 +2994,7 @@ PDM_g_num_t            *nAbsNewVtxB
 
   free (b_stride_one);
 
-  int *tag = malloc(sizeof(int) * b_stride_one_idx[n_elt_block]);
-  for (int i = 0; i < b_stride_one_idx[n_elt_block]; i++) {
-    tag[i] = 0;
-  }
+  int *tag = PDM_array_zeros_int(b_stride_one_idx[n_elt_block]);
 
   int *b_nNewPointsA_idx = malloc(sizeof(int) * (b_stride_one_idx[n_elt_block] + 1));
   b_nNewPointsA_idx[0] = 0;
@@ -3691,10 +3689,7 @@ PDM_g_num_t            *nAbsNewVtxB
 
   int n_BForA_gnum = PDM_part_to_block_n_elt_block_get (ptbBForA);
 
-  int *b_stride_packA = malloc (sizeof(int) * nPtsFromBForA);
-  for (int i = 0; i < nPtsFromBForA; i++) {
-    b_stride_packA[i] = 3;
-  }
+  int *b_stride_packA = PDM_array_const_int(nPtsFromBForA, 3);
 
   int *b_b_stride_packA = NULL;
   double *b_b_cNewPointsA_true_pack = NULL;
@@ -3880,10 +3875,7 @@ PDM_g_num_t            *nAbsNewVtxB
 
   int n_AForB_gnum = PDM_part_to_block_n_elt_block_get (ptbAForB);
 
-  int *b_stride_packB = malloc (sizeof(int) * nPtsFromAForB);
-  for (int i = 0; i < nPtsFromAForB; i++) {
-    b_stride_packB[i] = 3;
-  }
+  int *b_stride_packB = PDM_array_const_int(nPtsFromAForB, 3);
 
   int *b_b_stride_packB = NULL;
   double *b_b_cNewPointsB_true_pack = NULL;
@@ -4055,10 +4047,8 @@ PDM_g_num_t            *nAbsNewVtxB
                                                             _ei->comm);
 
   int btpBForA_n_elt_block = blockDistribIdxA[i_rank+1] - blockDistribIdxA[i_rank];
-  int *_b_b_stride_packA = malloc (sizeof(int) * btpBForA_n_elt_block);
-  for (int i = 0; i < btpBForA_n_elt_block; i++) {
-    _b_b_stride_packA[i] = 0;
-  }
+  int *_b_b_stride_packA = PDM_array_zeros_int(btpBForA_n_elt_block);
+
   for (int i = 0; i < n_BForA_gnum; i++) {
     int idx_block = PDM_block_to_part_gnum_idx_get(btpBForA, ptbBForA_block_gnum[i]);
     _b_b_stride_packA[idx_block] = b_b_stride_packA[i];
@@ -4122,10 +4112,8 @@ PDM_g_num_t            *nAbsNewVtxB
   free (b_lNewPointsB_true_pack);
 
   int btpAForB_n_elt_block = blockDistribIdxB[i_rank+1] - blockDistribIdxB[i_rank];
-  int *_b_b_stride_packB = malloc (sizeof(int) * btpAForB_n_elt_block);
-  for (int i = 0; i < btpAForB_n_elt_block; i++) {
-    _b_b_stride_packB[i] = 0;
-  }
+  int *_b_b_stride_packB = PDM_array_zeros_int(btpAForB_n_elt_block);
+
   for (int i = 0; i < n_AForB_gnum; i++) {
     int idx_block = PDM_block_to_part_gnum_idx_get(btpAForB, ptbAForB_block_gnum[i]);
     _b_b_stride_packB[idx_block] = b_b_stride_packB[i];
@@ -4257,11 +4245,8 @@ PDM_g_num_t            *nAbsNewVtxB
   int n_elt_block_from_ptb = n_elt_block;
   n_elt_block = blockDistribIdx[i_rank+1] - blockDistribIdx[i_rank];
 
-  int *b_stride_one_true = malloc (sizeof(int) * n_elt_block);
+  int *b_stride_one_true = PDM_array_zeros_int(n_elt_block);
 
-  for (int i = 0; i < n_elt_block; i++) {
-    b_stride_one_true [i] = 0;
-  }
 
   for (int i = 0; i < n_elt_block_from_ptb; i++) {
     int idx_block = PDM_block_to_part_gnum_idx_get(btp, block_gnum[i]);
@@ -4329,11 +4314,7 @@ PDM_g_num_t            *nAbsNewVtxB
   free (*r_stride_one_true);
   free (r_stride_one_true);
 
-  int *b_stridePtsADep_true = malloc (sizeof(int) * n_elt_block);
-
-  for (int i = 0; i < n_elt_block; i++) {
-    b_stridePtsADep_true[i] = 0;
-  }
+  int *b_stridePtsADep_true = PDM_array_zeros_int(n_elt_block);
 
   for (int i = 0; i < n_elt_block_from_ptb; i++) {
     int idx_block = PDM_block_to_part_gnum_idx_get(btp, block_gnum[i]);
@@ -4414,10 +4395,8 @@ PDM_g_num_t            *nAbsNewVtxB
 
   free (b_stride_one_true);
 
-  int *b_stridePtsBDep_true = malloc (sizeof(int) * n_elt_block);
-  for (int i = 0; i < n_elt_block; i++) {
-    b_stridePtsBDep_true[i] = 0;
-  }
+  int *b_stridePtsBDep_true = PDM_array_zeros_int(n_elt_block);
+
 
   for (int i = 0; i < n_elt_block_from_ptb; i++) {
     int idx_block = PDM_block_to_part_gnum_idx_get(btp, block_gnum[i]);

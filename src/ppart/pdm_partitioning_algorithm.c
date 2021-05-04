@@ -32,6 +32,7 @@
 #include "pdm_binary_search.h"
 #include "pdm_handles.h"
 #include "pdm_hash_tab.h"
+#include "pdm_array.h"
 
 #include "pdm_partitioning_algorithm.h"
 #include "pdm_distrib.h"
@@ -208,10 +209,7 @@ PDM_part_assemble_partitions
 
   if (n_part_block==0) { // in this case, the ln_to_gn is empty, but the size (i.e. 0) still needs to be there
     free(*pn_entity);
-    *pn_entity = (int*)malloc(dn_part * sizeof(int));
-    for (int i_part=0; i_part<dn_part; ++i_part) {
-      (*pn_entity)[i_part] = 0;
-    }
+    *pn_entity = PDM_array_zeros_int(dn_part);
   }
 
   PDM_part_to_block_free (ptb_partition);
@@ -256,15 +254,12 @@ PDM_part_reverse_pcellface
 
   for (int i_part = 0; i_part < n_part; i_part++)
   {
-    (*pface_cell)[i_part] = (int *) malloc( sizeof(int) * 2 * np_face[i_part]);
+    (*pface_cell)[i_part] = PDM_array_zeros_int(2 * np_face[i_part]);
     /* Shortcuts for this part */
     const int *_pcell_face_idx = pcell_face_idx[i_part];
     const int *_pcell_face     = pcell_face[i_part];
           int *_pface_cell     = (*pface_cell)[i_part];
 
-    for (int i = 0; i < 2 * np_face[i_part]; i++) {
-      _pface_cell[i] = 0;
-    }
 
     for (int i_cell = 0; i_cell < np_cell[i_part]; i_cell++){
       for (int i_data = _pcell_face_idx[i_cell]; i_data < _pcell_face_idx[i_cell+1]; i_data++){
@@ -490,10 +485,7 @@ PDM_part_distgroup_to_partgroup
   /*
    * No choice we need to rebuild a proper blk_stri (but not blk_data)
    */
-  int* blk_stri_full = (int *) malloc( dn_entity * sizeof(int));
-  for(int i = 0; i < dn_entity; ++i){
-    blk_stri_full[i] = 0;
-  }
+  int* blk_stri_full = PDM_array_zeros_int(dn_entity);
 
   /* On remet la stri au bonne endroit */
   // int idx_face = 0;
@@ -1620,10 +1612,7 @@ PDM_part_generate_entity_graph_comm
   int idx_comp = 0;     /* Compressed index use to fill the buffer */
   int idx_data = 0;     /* Index in the block to post-treat        */
 
-  int* n_owner_entity_by_rank = (int*)malloc(n_rank * sizeof(int));
-  for (int i=0; i<n_rank; ++i) {
-    n_owner_entity_by_rank[i] = 0;
-  }
+  int* n_owner_entity_by_rank = PDM_array_zeros_int(n_rank);
   int* proc_data_current = proc_blk_data;
 
   for(int i_block = 0; i_block < n_entity_block; ++i_block){
@@ -1797,16 +1786,10 @@ PDM_part_generate_entity_graph_comm
     }
 
     /* We need to recompute for each opposite part */
-    _pproc_bound_idx[i_part]   = (int *) malloc( ( n_rank + 1                   ) * sizeof(int));
-    _ppart_bound_idx[i_part]   = (int *) malloc( ( part_distribution[n_rank] +1 ) * sizeof(int));
+    _pproc_bound_idx[i_part]   = PDM_array_zeros_int(n_rank + 1);
+    _ppart_bound_idx[i_part]   = PDM_array_zeros_int(part_distribution[n_rank] + 1);
     _pentity_bound[i_part]     = (int *) malloc( ( 4 * n_connect                ) * sizeof(int));
 
-    for(int i = 0; i < n_rank+1; ++i){
-      _pproc_bound_idx[i_part][i] = 0;
-    }
-    for(int i = 0; i < part_distribution[n_rank]+1; ++i){
-      _ppart_bound_idx[i_part][i] = 0;
-    }
 
     /* Rebuild */
     for(int i = 0; i < n_connect; ++i){

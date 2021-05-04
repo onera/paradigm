@@ -21,6 +21,7 @@
 #include "pdm_binary_search.h"
 #include "pdm_priv.h"
 #include "pdm_mpi.h"
+#include "pdm_array.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
 
@@ -193,27 +194,16 @@ PDM_surf_mesh_build_edges_gn_and_edge_part_bound
   for (int i = 0; i < n_part; i++) {
     PDM_surf_part_t *part =  mesh->part[i];
     nIntEdgePart[i+1] = 0;
-    part->edgeLnToGn = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * part->nEdge);
-    for (int j = 0; j < part->nEdge; j++) {
-      part->edgeLnToGn[j] = -1;
-    }
+    part->edgeLnToGn = PDM_array_const_gnum(part->nEdge, -1);
     n_vtxProc +=  part->n_vtx;
     nEdgeProc += part->nEdge;
   }
 
   int  keyMax        = 2 * n_vtxProc;
   int  lHashTableIdx = keyMax + 1;
-  int *hashTableIdx  = (int *) malloc(sizeof(int) * lHashTableIdx);
+  int *hashTableIdx  = PDM_array_zeros_int(lHashTableIdx);
   int *hashTable     = (int *) malloc(sizeof(int) * 2 * nEdgeProc);
-  int *nHashTable    = (int *) malloc(sizeof(int) * keyMax);
-
-  for (int i = 0; i < lHashTableIdx; i++) {
-    hashTableIdx[i] = 0;
-  }
-
-  for (int i = 0; i < keyMax; i++) {
-    nHashTable[i] = 0;
-  }
+  int *nHashTable    = PDM_array_zeros_int(keyMax);
 
   for (int i = 0; i < n_part; i++) {
     PDM_surf_part_t *part = mesh->part[i];
@@ -441,25 +431,16 @@ PDM_surf_mesh_build_edges_gn_and_edge_part_bound
   nKeyProc = (int) _nKeyProc;
 
   int lDHashTableIdx  = nKeyProc + 1;
-  int *dHashTableIdx  = (int *) malloc(sizeof(int) * lDHashTableIdx);
-  int *dNHashTable    = (int *) malloc(sizeof(int) * nKeyProc);
+  int *dHashTableIdx  = PDM_array_zeros_int(lDHashTableIdx);
+  int *dNHashTable    = PDM_array_zeros_int(nKeyProc);
 
- for (int i = 0; i < lDHashTableIdx; i++) {
-    dHashTableIdx[i] = 0;
-  }
-
-  for (int i = 0; i < nKeyProc; i++) {
-    dNHashTable[i] = 0;
-  }
 
   const int nDataToSend = 6;
 
   //FIXMe : AJOUTER UNE VALEUR LE NUMERO DE PROC
 
-  int *edgeToSendN = (int *) malloc(lComm * sizeof(int));
+  int *edgeToSendN = PDM_array_zeros_int(lComm);
 
-  for (int i = 0; i < lComm; i++)
-    edgeToSendN[i] = 0;
 
   for (int i = 0; i < nEdgeWithoutNG; i++) {
     int i_part = edgeWithoutNG[2*i];
@@ -850,22 +831,11 @@ PDM_surf_mesh_t *mesh
   nKeyProc = nKeyProcs[myRank+1] - nKeyProcs[myRank];
 
   int lDHashTableIdx = nKeyProc + 1;
-  int *dHashTableIdx = (int *) malloc(sizeof(int) * lDHashTableIdx);
-  int *dNHashTable   = (int *) malloc(sizeof(int) * nKeyProc);
-
-  for (int i = 0; i < lDHashTableIdx; i++) {
-    dHashTableIdx[i] = 0;
-  }
-
-  for (int i = 0; i < nKeyProc; i++) {
-    dNHashTable[i] = 0;
-  }
+  int *dHashTableIdx = PDM_array_zeros_int(lDHashTableIdx);
+  int *dNHashTable   = PDM_array_zeros_int(nKeyProc);
 
   const int nDataToSend = 3;
-  int *vtx_to_sendN = (int *) malloc(lComm * sizeof(int));
-
-  for (int i = 0; i < lComm; i++)
-    vtx_to_sendN[i] = 0;
+  int *vtx_to_sendN = PDM_array_zeros_int(lComm);
 
   int maxn_vtx = 0;
   for (int i = 0; i < n_part; i++) {
@@ -873,11 +843,8 @@ PDM_surf_mesh_t *mesh
     maxn_vtx = PDM_MAX(maxn_vtx, part->n_vtx);
   }
 
-  int *tagVtx = (int *) malloc(sizeof(int) * maxn_vtx);
+  int *tagVtx = PDM_array_zeros_int(maxn_vtx);
 
-  for (int i = 0; i <  maxn_vtx; i++) {
-    tagVtx[i] = 0;
-  }
 
   for (int i = 0; i < n_part; i++) {
     PDM_surf_part_t *part = mesh->part[i];
@@ -903,9 +870,7 @@ PDM_surf_mesh_t *mesh
         }
       }
     }
-    for (int i1 = 0; i1 < maxn_vtx; i1++) {
-      tagVtx[i1] = 0;
-    }
+    PDM_array_reset_int(tagVtx, maxn_vtx, 0);
   }
 
   int *vtx_to_sendIdx = (int *) malloc((lComm+1) * sizeof(int));
@@ -959,9 +924,7 @@ PDM_surf_mesh_t *mesh
         }
       }
     }
-    for (int i1 = 0; i1 < maxn_vtx; i1++) {
-      tagVtx[i1] = 0;
-    }
+    PDM_array_reset_int(tagVtx, maxn_vtx, 0);
   }
   free(tagVtx);
 
@@ -969,11 +932,8 @@ PDM_surf_mesh_t *mesh
    * Receive keys from the others processes
    */
 
-  int *vtxToRecvN = (int *) malloc(lComm * sizeof(int));
+  int *vtxToRecvN = PDM_array_const_int(lComm, -100);
 
-  for (int i = 0; i < lComm; i++) {
-    vtxToRecvN[i] = -100;
-  }
 
   PDM_MPI_Alltoall(vtx_to_sendN,
                1,
@@ -1049,9 +1009,7 @@ PDM_surf_mesh_t *mesh
   const int nDataToSend1 = 3;
   const int nDataToSend2 = 3;
 
-  for (int i = 0; i < lComm; i++) {
-    vtxToRecvN[i] = 0;
-  }
+  PDM_array_reset_int(vtxToRecvN, lComm, 0);
 
   for (int i = 0; i < nKeyProc; i++) {
     int idx        = dHashTableIdx[i];
@@ -1410,10 +1368,7 @@ PDM_surf_mesh_build_ghost_element
      * Update edgeVtx
      */
 
-    int *newVtxEdgeIdx = (int *) malloc ((part->n_vtx + 1) * sizeof(int));
-    for (int i1 = 0; i1 < part->n_vtx + 1; i1++) {
-      newVtxEdgeIdx[i1] = 0;
-    }
+    int *newVtxEdgeIdx = PDM_array_zeros_int(part->n_vtx + 1);
 
     for (int ghostElt = 0; ghostElt < nGhostEdge; ghostElt++) {
       int nTouchElt = PDM_graph_bound_ghost_elt_n_touch_elt_get (graph_bound,
@@ -1443,11 +1398,7 @@ PDM_surf_mesh_build_ghost_element
 
     int *newVtxEdge = (int *) malloc (newVtxEdgeIdx[part->n_vtx] * sizeof(int));
 
-    int *cptVtxEdge = (int *) malloc (part->n_vtx * sizeof(int));
-
-    for (int i1 = 0; i1 < part->n_vtx; i1++) {
-      cptVtxEdge[i1] = 0;
-    }
+    int *cptVtxEdge = PDM_array_zeros_int(part->n_vtx);
 
     for (int i1 = 0; i1 < part->n_vtx; i1++) {
       int idx = newVtxEdgeIdx[i1];
