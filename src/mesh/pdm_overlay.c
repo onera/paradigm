@@ -5820,7 +5820,7 @@ _compute_overlay_surfaces
    *                             Clipping                                      *
    *                                                                           *
    ****************************************************************************/
-
+#if 0
   int iclipp = 0;
 
   int s_subFacesToFaces = 5 * n_elt_blockA;
@@ -6030,7 +6030,7 @@ _compute_overlay_surfaces
 
     }
   }
-
+#endif
 
 
 

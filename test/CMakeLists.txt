@@ -114,5 +114,6 @@ endif()
 test_c_create (validation_point_in_polygon 1)
 test_c_create (validation_point_in_polygon2d 1)
 test_c_create (test_projection_polygon 1)
+test_c_create (test_multipart_orient 2)
 
 test_c_create (pdm_t_surface_meshes_intersect 2)

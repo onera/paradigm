@@ -752,7 +752,7 @@ _dconnectivity_to_pconnectivity_abs
       for(int i_elmt = 0; i_elmt < pn_entity[i_part]; ++i_elmt) {
         printf("[%d] --> ", pstride[i_part][i_elmt]);
         for(int i_data = 0; i_data < pstride[i_part][i_elmt]; ++i_data ){
-          printf(PDM_FMT_G_NUM" ", *pconnectivity_abs[i_part][idx_data++] );
+          printf(PDM_FMT_G_NUM" ", (*pconnectivity_abs)[i_part][idx_data++] );
         }
         printf("\n");
       }
@@ -867,20 +867,20 @@ _pconnectivity_with_local_num
      *  We need to regenerate the connectivity and pass it in local numbering
      *  This one is vectorisable if we remove PDM_binary_seach and idx_data++
      */
-    // idx_data = 0;
-    // for(int i_cell = 0; i_cell < n_elmts[i_part]; ++i_cell) {
-    //   for(int i_data = 0; i_data < cell_stri[i_part][i_cell]; ++i_data ){
-    //     int         g_sgn  = PDM_SIGN(pcell_face_tmp[i_part][idx_data]);
-    //     PDM_g_num_t g_elmt = PDM_ABS (pcell_face_tmp[i_part][idx_data]);
-    //     int l_elmt         = unique_order[idx_data];
-    //     int l_elmt_old     = PDM_binary_search_long(g_elmt, _pchild_ln_to_gn[i_part], n_elmt_sort); /* In [0, n_elmt_sort-1] */
+    /*int idx_data = 0;
+    for(int i_cell = 0; i_cell < pn_child[i_part]; ++i_cell) {
+      for(int i_data = 0; i_data < cell_stri[i_part][i_cell]; ++i_data ){
+         int         g_sgn  = PDM_SIGN(pcell_face_tmp[i_part][idx_data]);
+         PDM_g_num_t g_elmt = PDM_ABS (pcell_face_tmp[i_part][idx_data]);
+         int l_elmt         = unique_order[idx_data];
+         int l_elmt_old     = PDM_binary_search_long(g_elmt, _pchild_ln_to_gn[i_part], n_elmt_sort); // In [0, n_elmt_sort-1]
 
-    //     // printf("[%d] - Search [%d] --> %d | %d \n", idx_data, g_elmt, l_elmt, l_elmt_old);
+         // printf("[%d] - Search [%d] --> %d | %d \n", idx_data, g_elmt, l_elmt, l_elmt_old);
 
-    //     /* Overwrite the pcell_face with local numbering and reput sign on it */
-    //     _pconnectivity[i_part][idx_data++] = (l_elmt + 1) * g_sgn ;
-    //   }
-    // }
+         // Overwrite the pcell_face with local numbering and reput sign on it
+         _pconnectivity[i_part][idx_data++] = (l_elmt + 1) * g_sgn ;
+       }
+     }*/
 
     int n_child = pn_child[i_part];
     _pconnectivity[i_part]   = (int*) malloc( n_child * sizeof(int        ));
@@ -892,6 +892,59 @@ _pconnectivity_with_local_num
   }
 }
 
+
+static
+void
+_pconnectivity_with_local_num2
+(
+  const int      n_part,
+  int           *pn_child,
+  const int           *pn_entity,
+  PDM_g_num_t  **pconnectivity_abs,
+  int          **unique_order,
+  int          **pconnectivity_idx,
+  //PDM_g_num_t  **_pchild_ln_to_gn,
+  int         ***pconnectivity
+)
+{
+  *pconnectivity = (int**) malloc( n_part * sizeof(int*) );
+  int** _pconnectivity = *pconnectivity;
+  for(int i_part = 0; i_part < n_part; ++i_part){
+    int n_child = pn_child[i_part];
+    _pconnectivity[i_part]   = (int*) malloc( n_child * sizeof(int        ));
+
+    //int n_elmt_sort = pn_child[i_part];
+    /*
+     *  We need to regenerate the connectivity and pass it in local numbering
+     *  This one is vectorisable if we remove PDM_binary_seach and idx_data++
+     */
+    int idx_data = 0;
+    for(int i_cell = 0; i_cell < pn_entity[i_part]; ++i_cell) {
+      int cell_stri = pconnectivity_idx[i_part][i_cell+1] - pconnectivity_idx[i_part][i_cell];
+      //printf("ipart = %d, i_cell = %d, stride = %d\n", i_part, i_cell, cell_stri);
+      for(int i_data = 0; i_data < cell_stri; ++i_data ){
+         int         g_sgn  = PDM_SIGN(pconnectivity_abs[i_part][idx_data]);
+         //PDM_g_num_t g_elmt = PDM_ABS (pconnectivity_abs[i_part][idx_data]);
+         int l_elmt         = unique_order[i_part][idx_data];
+
+         //int l_elmt_old     = PDM_binary_search_long(g_elmt, _pchild_ln_to_gn[i_part], n_elmt_sort); /* In [0, n_elmt_sort-1] */
+
+         //printf("[%d] - Search [%d] --> %d | %d, g_sgn = %d\n", idx_data, g_elmt, l_elmt, l_elmt_old, g_sgn);
+
+         /* Overwrite the pcell_face with local numbering and reput sign on it */
+         _pconnectivity[i_part][idx_data++] = (l_elmt + 1) * g_sgn ;
+       }
+     }
+    /*
+    int n_child = pn_child[i_part];
+    _pconnectivity[i_part]   = (int*) malloc( n_child * sizeof(int        ));
+    for(int idx = 0; idx < n_child; ++idx) {
+      int l_elmt = unique_order[i_part][idx];
+      int g_sgn  = PDM_SIGN(pconnectivity_abs[i_part][l_elmt]);
+      _pconnectivity[i_part][idx] = (l_elmt + 1) * g_sgn ;
+      }*/
+  }
+}
 
 void
 PDM_part_multi_dconnectivity_to_pconnectivity_sort
@@ -1109,13 +1162,26 @@ PDM_part_dconnectivity_to_pconnectivity_sort
   );
 
   // 2. create pconnectivity with local numbering
-  _pconnectivity_with_local_num(
-    n_part,
-    pn_child,
-    pconnectivity_abs,
-    unique_order,
-    pconnectivity
-  );
+  if (0) {
+    _pconnectivity_with_local_num(
+                                  n_part,
+                                  pn_child,
+                                  pconnectivity_abs,
+                                  unique_order,
+                                  pconnectivity
+                                  );
+  } else {
+    _pconnectivity_with_local_num2(
+                                   n_part,
+                                   pn_child,
+                                   pn_entity,
+                                   pconnectivity_abs,
+                                   unique_order,
+                                   _pconnectivity_idx,
+                                   //*pchild_ln_to_gn,
+                                   pconnectivity
+                                   );
+  }
 
   /*
    * Panic verbose

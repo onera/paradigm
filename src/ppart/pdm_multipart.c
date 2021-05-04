@@ -1602,15 +1602,17 @@ PDM_MPI_Comm      comm
                              (const int **) pcell_face_idx, (const int **) pcell_face,
                             &pface_cell);
 
-  PDM_part_reorient_bound_faces(n_part,
-                                pn_face,
-                                pface_cell,
-                 (const int **) pcell_face_idx,
-                                pcell_face,
-                 (const int **) pface_vtx_idx,
-                                pface_vtx,
-                                NULL,  // pface_edge_idx
-                                NULL); // pface_edge
+  if (0) {
+    PDM_part_reorient_bound_faces(n_part,
+                                  pn_face,
+                                  pface_cell,
+                                  (const int **) pcell_face_idx,
+                                  pcell_face,
+                                  (const int **) pface_vtx_idx,
+                                  pface_vtx,
+                                  NULL,  // pface_edge_idx
+                                  NULL); // pface_edge
+  }
 
   PDM_part_dcoordinates_to_pcoordinates(comm,
                                         n_part,
