@@ -2986,27 +2986,12 @@ PDM_g_num_t            *nAbsNewVtxB
    *   - Fill true intersection properties
    */
 
-  int *b_stride_one_idx = malloc (sizeof(int) * (n_elt_block + 1));
-  b_stride_one_idx[0] = 0;
-  for (int i = 0; i < n_elt_block; i++) {
-    b_stride_one_idx[i+1] = b_stride_one_idx[i] + b_stride_one[i];
-  }
-
+  int *b_stride_one_idx = PDM_array_new_idx_from_sizes_int(b_stride_one, n_elt_block);
+  int *b_nNewPointsA_idx = PDM_array_new_idx_from_sizes_int(b_nNewPointsA, b_stride_one_idx[n_elt_block]);
+  int *b_nNewPointsB_idx = PDM_array_new_idx_from_sizes_int(b_nNewPointsB, b_stride_one_idx[n_elt_block]);
   free (b_stride_one);
 
   int *tag = PDM_array_zeros_int(b_stride_one_idx[n_elt_block]);
-
-  int *b_nNewPointsA_idx = malloc(sizeof(int) * (b_stride_one_idx[n_elt_block] + 1));
-  b_nNewPointsA_idx[0] = 0;
-  for (int i = 0; i < b_stride_one_idx[n_elt_block]; i++) {
-    b_nNewPointsA_idx[i+1] = b_nNewPointsA_idx[i] + b_nNewPointsA[i];
-  }
-
-  int *b_nNewPointsB_idx = malloc(sizeof(int) * (b_stride_one_idx[n_elt_block] + 1));
-  b_nNewPointsB_idx[0] = 0;
-  for (int i = 0; i < b_stride_one_idx[n_elt_block]; i++) {
-    b_nNewPointsB_idx[i+1] = b_nNewPointsB_idx[i] + b_nNewPointsB[i];
-  }
 
   int *b_stride_one_idx_true = malloc(sizeof(int) * (n_elt_block + 1));
 

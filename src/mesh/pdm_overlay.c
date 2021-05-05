@@ -1045,17 +1045,8 @@ _compute_overlay_planes
   /* Stocker les intersection dans une structure */
 
   int *faceIdxCurrent[2];
-  faceIdxCurrent[0] = (int *) malloc (sizeof(int) * (n_elt_blockA + 1));
-  faceIdxCurrent[1] = (int *) malloc (sizeof(int) * (n_eltB + 1));
-  for (int i = 0; i < 2; i++) {
-    faceIdxCurrent[i][0] = 0;
-  }
-  for (int j = 0; j < n_elt_blockA; j++) {
-    faceIdxCurrent[0][j+1] = faceIdxCurrent[0][j] + faceStrideCurrent[0][j];
-  }
-  for (int j = 0; j < n_eltB; j++) {
-    faceIdxCurrent[1][j+1] = faceIdxCurrent[1][j] + faceStrideCurrent[1][j];
-  }
+  faceIdxCurrent[0] = PDM_array_new_idx_from_sizes_int(faceStrideCurrent[0], n_elt_blockA);
+  faceIdxCurrent[1] = PDM_array_new_idx_from_sizes_int(faceStrideCurrent[1], n_eltB);
 
   /*****************************************************************************
    *                                                                           *

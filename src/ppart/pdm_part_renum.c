@@ -597,12 +597,7 @@ _dual_graph_firstrank
   }
 
   // cell_cell_idx is rebuilt
-  *cell_cell_comp_idx = malloc((part_ini->n_cell + 1) * sizeof(int));
-
-  (*cell_cell_comp_idx)[0] = 0;
-  for(int i = 0; i < part_ini->n_cell; i++) {
-    (*cell_cell_comp_idx)[i + 1] = (*cell_cell_comp_idx)[i] + cell_cell_n[i];
-  }
+  *cell_cell_comp_idx = PDM_array_new_idx_from_sizes_int(cell_cell_n, part_ini->n_cell);
 
   //We compress the dual graph since cell_cell_idx was built from cell_face_idx
   //We have then n_face elements in cell_cell whereas it needs to be composed of n_cell elements

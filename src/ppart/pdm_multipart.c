@@ -1836,12 +1836,7 @@ PDM_multipart_run_ppart
     // 1. Generate global numerotation using all blocks
     // 2. Call the partitionner once on the global numbering
   } else {
-    int n_zone = _multipart->n_zone;
-    int* starting_part_idx = (int *) malloc( (n_zone+1) * sizeof(int));
-    starting_part_idx[0] = 0;
-    for (int i = 0; i < n_zone; ++i) {
-      starting_part_idx[i+1] = starting_part_idx[i] + _multipart->n_part[i];
-    }
+    int *starting_part_idx =  PDM_array_new_idx_from_sizes_int(_multipart->n_part, _multipart->n_zone);
 
     int is_by_elt = 0;
     for (int i_zone = 0; i_zone < _multipart->n_zone; ++i_zone) {

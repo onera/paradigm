@@ -849,7 +849,6 @@ PDM_box_set_redistribute(const PDM_box_distrib_t  *distrib,
   send_count = (int *) malloc(distrib->n_ranks * sizeof(int));
   recv_count = (int *) malloc(distrib->n_ranks * sizeof(int));
   send_shift = (int *) malloc((distrib->n_ranks + 1) * sizeof(int));
-  recv_shift = (int *) malloc((distrib->n_ranks + 1) * sizeof(int));
 
   for (rank_id = 0; rank_id < distrib->n_ranks; rank_id++)
     send_count[rank_id]
@@ -863,9 +862,7 @@ PDM_box_set_redistribute(const PDM_box_distrib_t  *distrib,
   for (i = 0; i < distrib->n_ranks; i++)
     send_shift[i] = distrib->index[i];
 
-  recv_shift[0] = 0;
-  for (rank_id = 0; rank_id < distrib->n_ranks; rank_id++)
-    recv_shift[rank_id + 1] = recv_shift[rank_id] + recv_count[rank_id];
+  recv_shift = PDM_array_new_idx_from_sizes_int(recv_count, distrib->n_ranks);
 
   /* Build send_buffers */
 

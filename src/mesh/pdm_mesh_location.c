@@ -2793,11 +2793,7 @@ PDM_mesh_location_compute
       s_weights += block_weights_stride2[ipt];
     }
 
-    int *block_weights_idx1 = malloc (sizeof(int) * (idx + 1));
-    block_weights_idx1[0] = 0;
-    for (int i = 0; i < idx; i++) {
-      block_weights_idx1[i+1] = block_weights_idx1[i] + block_n_vtx_elt[i];
-    }
+    int *block_weights_idx1 = PDM_array_new_idx_from_sizes_int(block_n_vtx_elt, idx);
 
 
     double *block_weights2 = malloc (sizeof(double) * s_weights);
@@ -2874,11 +2870,7 @@ PDM_mesh_location_compute
                             NULL,
                             (void **) &pcloud_weights_stride);
 
-    pcloud_weights_idx = malloc (sizeof(int) * (n_pts_pcloud + 1));
-    pcloud_weights_idx[0] = 0;
-    for (int i = 0; i < n_pts_pcloud; i++) {
-      pcloud_weights_idx[i+1] = pcloud_weights_idx[i] + pcloud_weights_stride[i];
-    }
+    pcloud_weights_idx = PDM_array_new_idx_from_sizes_int(pcloud_weights_stride, n_pts_pcloud);
 
     /* Exchange weights */
     pcloud_weights = malloc (sizeof(double) * pcloud_weights_idx[n_pts_pcloud]);

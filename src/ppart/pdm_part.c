@@ -156,10 +156,7 @@ _alltoall
                    PDM_MPI_INT,
                    comm);
 
-  recv_buff_idx[0] = 0;
-  for(int i = 0; i < n_rank; i++) {
-      recv_buff_idx[i+1] = recv_buff_idx[i] + recv_buff_n[i];
-  }
+  PDM_array_idx_from_sizes_int(recv_buff_n, n_rank, recv_buff_idx);
 
   *recv_buff = malloc(recv_buff_idx[n_rank] * MPIDataTypeSize);
 
@@ -275,12 +272,7 @@ _dual_graph_from_face_cell
                    PDM_MPI_INT,
                    ppart->comm);
 
-  int *cell_to_recv_idx = (int *) malloc((n_rank+1) * sizeof(int));
-
-  cell_to_recv_idx[0] = 0;
-  for(int i = 1; i < (n_rank+1); i++) {
-    cell_to_recv_idx[i] = cell_to_recv_idx[i-1] + cell_to_recv_n[i-1];
-  }
+  int *cell_to_recv_idx =  PDM_array_new_idx_from_sizes_int(cell_to_recv_n, n_rank);
 
   PDM_g_num_t *cell_to_recv = (PDM_g_num_t *) malloc(cell_to_recv_idx[n_rank]*sizeof(PDM_g_num_t));
 
@@ -350,11 +342,7 @@ _dual_graph_from_face_cell
    */
 
   if (!have_dcell_face) {
-    ppart->dcell_face_idx  = (int *) malloc((1+ppart->dn_cell) * sizeof(int));
-    ppart->dcell_face_idx[0] = 0;
-    for (int i = 0; i < ppart->dn_cell; i++) {
-      ppart->dcell_face_idx[i+1]     = ppart->dcell_face_idx[i] + dcell_face_n[i];
-    }
+    ppart->dcell_face_idx = PDM_array_new_idx_from_sizes_int(dcell_face_n, ppart->dn_cell);
     ppart->dcell_face = PDM_array_const_gnum(ppart->dcell_face_idx[ppart->dn_cell], -1);
     PDM_array_reset_int(dcell_face_n, ppart->dn_cell, 0);
 
@@ -362,14 +350,8 @@ _dual_graph_from_face_cell
     ppart->_dcell_face = ppart->dcell_face;
   }
 
-  ppart->ddual_graph_idx = (PDM_g_num_t *) malloc((1+ppart->dn_cell) * sizeof(PDM_g_num_t));
-  ppart->ddual_graph_idx[0] = 0;
-  for (int i = 0; i < ppart->dn_cell; i++) {
-    ppart->ddual_graph_idx[i+1] = ppart->ddual_graph_idx[i] + n_neighbour[i];
-  }
-
+  ppart->ddual_graph_idx = PDM_array_new_idx_from_sizes_gnum(n_neighbour, ppart->dn_cell);
   ppart->ddual_graph = PDM_array_const_gnum(ppart->ddual_graph_idx[ppart->dn_cell], -1);
-
   PDM_array_reset_int(n_neighbour, ppart->dn_cell, 0);
 
   /*
@@ -428,10 +410,7 @@ _dual_graph_from_face_cell
    */
 
   ppart->ddual_graph = realloc(ppart->ddual_graph, k1 * sizeof(PDM_g_num_t));
-
-  ppart->ddual_graph_idx[0] = 0;
-  for (int i = 1; i < ppart->dn_cell + 1; i++)
-    ppart->ddual_graph_idx[i] = ppart->ddual_graph_idx[i-1] + n_neighbour[i-1];
+  PDM_array_idx_from_sizes_gnum(n_neighbour, ppart->dn_cell, ppart->ddual_graph_idx);
 
   /*
    * ppart->dcell_face_idx is ppart->ddual_graph_idx
@@ -500,13 +479,8 @@ _dual_graph_from_cell_face
    * Create index aray
    */
 
-  int *face_to_send_idx = (int *) malloc((n_rank+1) * sizeof(int));
-
-  face_to_send_idx[0] = 0;
-  for (int i = 1; i < n_rank + 1; i++) {
-    face_to_send_idx[i] = face_to_send_idx[i-1] + face_to_send_n[i-1];
-    face_to_send_n[i-1] = 0;
-  }
+  int *face_to_send_idx = PDM_array_new_idx_from_sizes_int(face_to_send_n, n_rank);
+  PDM_array_reset_int(face_to_send_n, n_rank, 0);
 
   PDM_g_num_t *face_to_send =
     (PDM_g_num_t *) malloc(face_to_send_idx[n_rank] * sizeof(PDM_g_num_t));
@@ -541,12 +515,7 @@ _dual_graph_from_cell_face
                    PDM_MPI_INT,
                    ppart->comm);
 
-  int *face_to_recv_idx = (int *) malloc((n_rank+1) * sizeof(int));
-
-  face_to_recv_idx[0] = 0;
-  for(int i = 1; i < (n_rank+1); i++) {
-    face_to_recv_idx[i] = face_to_recv_idx[i-1] + face_to_recv_n[i-1];
-  }
+  int *face_to_recv_idx = PDM_array_new_idx_from_sizes_int(face_to_recv_n, n_rank);
 
   PDM_g_num_t *face_to_recv =
     (PDM_g_num_t *) malloc(face_to_recv_idx[n_rank]*sizeof(PDM_g_num_t));
@@ -730,10 +699,7 @@ _dual_graph_from_cell_face
    */
 
   ppart->ddual_graph = realloc(ppart->ddual_graph, k1 * sizeof(PDM_g_num_t));
-
-  ppart->ddual_graph_idx[0] = 0;
-  for (int i = 1; i < ppart->dn_cell + 1; i++)
-    ppart->ddual_graph_idx[i] = ppart->ddual_graph_idx[i-1] + n_neighbour[i-1];
+  PDM_array_idx_from_sizes_gnum(n_neighbour,  ppart->dn_cell, ppart->ddual_graph_idx);
 
   /* Verifier tous les tableaux ..... */
 

@@ -331,24 +331,15 @@ _create_cell_graph_comm
       int n_entity = part_ext->n_entity_bound[i_part+shift_part]; // n_face / n_edge / n_vtx
       int n_elmt   = _neighbor_idx[n_entity];
 
-      part_ext->entity_cell_opp_idx   [i_part+shift_part] = (int *) malloc((n_elmt+1) * sizeof(int) );
-
       // int n_cell = part_ext->parts[i_domain][i_part].n_cell;
-      part_ext->dist_neighbor_cell_n  [i_part+shift_part] = (int *) malloc(  n_cell    * sizeof(int) );
+      part_ext->entity_cell_opp_idx   [i_part+shift_part] = PDM_array_new_idx_from_sizes_int(_entity_cell_opp_n, n_elmt);
+      part_ext->dist_neighbor_cell_n  [i_part+shift_part] = PDM_array_zeros_int(n_cell);
       part_ext->dist_neighbor_cell_idx[i_part+shift_part] = (int *) malloc( (n_cell+1) * sizeof(int) );
 
       int* _entity_cell_opp_idx    = part_ext->entity_cell_opp_idx   [i_part+shift_part];
       int* _dist_neighbor_cell_n   = part_ext->dist_neighbor_cell_n  [i_part+shift_part];
       int* _dist_neighbor_cell_idx = part_ext->dist_neighbor_cell_idx[i_part+shift_part];
 
-      // printf(" n_elmt = %i \n", n_elmt);
-      _entity_cell_opp_idx[0] = 0;
-      for(int i_elmt = 0; i_elmt < n_elmt; ++i_elmt) {
-        _entity_cell_opp_idx[i_elmt+1] = _entity_cell_opp_idx[i_elmt] + _entity_cell_opp_n[i_elmt];
-      }
-
-      /* Init in order to count after - two pass to count = interior then border */
-      PDM_array_reset_int(_dist_neighbor_cell_n, n_cell, 0);
 
       part_ext->border_cell_list[i_part+shift_part] = malloc( n_elmt * sizeof(int));
       // for(int i = 0; i < n_elmt; ++i) {
@@ -1652,13 +1643,7 @@ _rebuild_connectivity
 
       /* On refait l'index */
       int n_neight_tot = entity1_entity1_extended_idx[i_part+shift_part][pn_entity1];
-      (*border_lentity1_entity2_idx)[i_part+shift_part] = (int *) malloc( ( n_neight_tot + 1 ) * sizeof(int));
-      int *_border_lentity1_entity2_idx = (*border_lentity1_entity2_idx)[i_part+shift_part];
-      _border_lentity1_entity2_idx[0] = 0;
-      for(int i = 0; i < n_neight_tot; ++i ) {
-        _border_lentity1_entity2_idx[i+1] = _border_lentity1_entity2_idx[i] + border_lentity1_entity2_n[i_part+shift_part][i];
-      }
-
+      (*border_lentity1_entity2_idx)[i_part+shift_part] = PDM_array_new_idx_from_sizes_int(border_lentity1_entity2_n[i_part+shift_part], n_neight_tot);
     }
     shift_part += part_ext->n_part[i_domain];
   }

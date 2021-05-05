@@ -560,11 +560,7 @@ PDM_elt_parent_find_from_distrib
   /*
    *  Creation of array of diplacement
    */
-  int* BlkStriIdx = (int *) malloc( sizeof(int *) * (BlkSize+1) ) ;
-  BlkStriIdx[0] = 0;
-  for (int i = 0; i < BlkSize; i++) {
-    BlkStriIdx[i+1] = BlkStriIdx[i] + BlkStri[i];
-  }
+  int *BlkStriIdx = PDM_array_new_idx_from_sizes_int(BlkStri, BlkSize);
   free(BlkStri);
 
   /* Find parent in distributed hash table */

@@ -509,12 +509,7 @@ PDM_surf_mesh_build_edges_gn_and_edge_part_bound
                PDM_MPI_INT,
                mesh->comm);
 
-  int *edgeToRecvIdx = (int *) malloc((lComm+1) * sizeof(int));
-
-  edgeToRecvIdx[0] = 0;
-  for(int i = 1; i < (lComm+1); i++) {
-    edgeToRecvIdx[i] = edgeToRecvIdx[i-1] + edgeToRecvN[i-1];
-  }
+  int *edgeToRecvIdx =  PDM_array_new_idx_from_sizes_int(edgeToRecvN, lComm);
 
   PDM_g_num_t *edgeToRecv =
     (PDM_g_num_t *) malloc(edgeToRecvIdx[lComm]*sizeof(PDM_g_num_t));
@@ -943,12 +938,7 @@ PDM_surf_mesh_t *mesh
                PDM_MPI_INT,
                mesh->comm);
 
-  int *vtxToRecvIdx = (int *) malloc((lComm+1) * sizeof(int));
-
-  vtxToRecvIdx[0] = 0;
-  for(int i = 1; i < (lComm+1); i++) {
-    vtxToRecvIdx[i] = vtxToRecvIdx[i-1] + vtxToRecvN[i-1];
-  }
+  int *vtxToRecvIdx =  PDM_array_new_idx_from_sizes_int(vtxToRecvN, lComm);
 
   PDM_g_num_t *vtxToRecv =
     (PDM_g_num_t *) malloc(vtxToRecvIdx[lComm]*sizeof(PDM_g_num_t));

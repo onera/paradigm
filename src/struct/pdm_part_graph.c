@@ -430,12 +430,7 @@ PDM_part_graph_compute_from_face_cell
 
   //cell_cell_idx is rebuilt
   assert((*cell_cell_idxCompressed) == NULL);
-  (*cell_cell_idxCompressed) = (int *) malloc((part_ini->n_cell + 1) * sizeof(int));
-
-  (*cell_cell_idxCompressed)[0] = 0;
-  for(int i = 0; i < part_ini->n_cell; i++) {
-    (*cell_cell_idxCompressed)[i + 1] = (*cell_cell_idxCompressed)[i] + cell_cellN[i];
-  }
+  *cell_cell_idxCompressed = PDM_array_new_idx_from_sizes_int(cell_cellN, part_ini->n_cell);
 
   //We compress the dual graph since cell_cell_idx was built from cell_face_idx
   //We have then n_face elements in cell_cell whereas it needs to be composed of n_cell elements

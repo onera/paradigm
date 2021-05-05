@@ -765,13 +765,7 @@ _dconnectivity_to_pconnectivity_abs
   int** _pconnectivity_idx       = *pconnectivity_idx;
 
   for(int i_part = 0; i_part < n_part; ++i_part){
-    int n_elmts = pn_entity[i_part];
-
-    _pconnectivity_idx[i_part] = (int *) malloc( (n_elmts + 1) * sizeof(int) );
-    _pconnectivity_idx[i_part][0] = 0;
-    for(int i_elmt = 0; i_elmt < n_elmts; ++i_elmt) {
-      _pconnectivity_idx[i_part][i_elmt+1] = _pconnectivity_idx[i_part][i_elmt] + pstride[i_part][i_elmt];
-    }
+    _pconnectivity_idx[i_part] = PDM_array_new_idx_from_sizes_int(pstride[i_part], pn_entity[i_part]);
   }
 
   // free
@@ -1277,11 +1271,8 @@ PDM_part_dconnectivity_to_pconnectivity_hash
     /*
      *  First loop to count and setup part_strid_idx
      */
-    _pconnectivity_idx[i_part] = (int *) malloc( (n_elmts + 1) * sizeof(int) );
-    _pconnectivity_idx[i_part][0] = 0;
-    for(int i_elmt = 0; i_elmt < n_elmts; ++i_elmt) {
-      _pconnectivity_idx[i_part][i_elmt+1] = _pconnectivity_idx[i_part][i_elmt] + pstride[i_part][i_elmt];
-    }
+    _pconnectivity_idx[i_part] = PDM_array_new_idx_from_sizes_int(pstride[i_part], pn_entity[i_part]);
+
 
 
     /*
@@ -2011,11 +2002,7 @@ PDM_extend_mesh
 
   int** part_dual_graph_idx = (int ** ) malloc( n_part * sizeof(int*));
   for(int i_part = 0; i_part < n_part; ++i_part) {
-    part_dual_graph_idx[i_part] = (int *) malloc( (pn_entity[i_part]+1) * sizeof(int));
-    part_dual_graph_idx[i_part][0] = 0;
-    for(int i_entity = 0; i_entity < pn_entity[i_part]; ++i_entity) {
-      part_dual_graph_idx[i_part][i_entity+1] = part_dual_graph_idx[i_part][i_entity] + part_dual_graph_n[i_part][i_entity];
-    }
+    part_dual_graph_idx[i_part] = PDM_array_new_idx_from_sizes_int(part_dual_graph_n[i_part], pn_entity[i_part]);
     // PDM_log_trace_array_int(part_dual_graph_n[i_part], pn_entity[i_part], "part_dual_graph_n[i_part]::");
     // PDM_log_trace_array_int(part_dual_graph_idx[i_part], pn_entity[i_part]+1, "part_dual_graph_idx[i_part]::");
     // PDM_log_trace_array_long(part_dual_graph[i_part], part_dual_graph_idx[i_part][pn_entity[i_part]], "part_dual_graph[i_part]::");

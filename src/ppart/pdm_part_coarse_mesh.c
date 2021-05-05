@@ -494,12 +494,7 @@ _dual_graph_from_face_cell
   }
 
   //cell_cell_idx is rebuilt
-  *cell_cell_idxCompressed = malloc((part_ini->n_cell + 1) * sizeof(int));
-
-  (*cell_cell_idxCompressed)[0] = 0;
-  for(int i = 0; i < part_ini->n_cell; i++) {
-    (*cell_cell_idxCompressed)[i + 1] = (*cell_cell_idxCompressed)[i] + cell_cellN[i];
-  }
+  *cell_cell_idxCompressed = PDM_array_new_idx_from_sizes_int(cell_cellN, part_ini->n_cell);
 
   //We compress the dual graph since cell_cell_idx was built from cell_face_idx
   //We have then n_face elements in cell_cell whereas it needs to be composed of n_cell elements
@@ -692,11 +687,7 @@ _part_cell_from_cell_part
   }
 
   //Allocation of an array for counter indexes
-  *part_cell_idx = (int *) malloc((n_coarse_cell + 1) * sizeof(int));
-  (*part_cell_idx)[0] = 0;
-  for (int i = 0; i < n_coarse_cell; i++){
-    (*part_cell_idx)[i + 1] = (*part_cell_idx)[i] + cpt_cells_per_partitions[i];
-  }
+  *part_cell_idx = PDM_array_new_idx_from_sizes_int(cpt_cells_per_partitions, n_coarse_cell);
 
   if (0 == 1) {
     PDM_printf("\n Contenu de part_cell_idx : \n");
@@ -1209,11 +1200,7 @@ _coarsecell_face_from_face_coarse_cell
    * Allocation of an array for counter indexes
    */
 
-  *coarsecell_face_idx = (int *)malloc((n_coarse_cell_checked + 1) * sizeof(int));
-  (*coarsecell_face_idx)[0] = 0;
-  for (int i = 0; i < n_coarse_cell_checked; i++) {
-    (*coarsecell_face_idx)[i + 1] = (*coarsecell_face_idx)[i] + cpt_faces_per_coarse_cell[i];
-  }
+  *coarsecell_face_idx = PDM_array_new_idx_from_sizes_int(cpt_faces_per_coarse_cell, n_coarse_cell_checked);
 
   *coarsecell_face = (int *) malloc((*coarsecell_face_idx)[n_coarse_cell_checked] * sizeof(int));
 
@@ -1718,12 +1705,7 @@ _build_faceGroup
   }
 
   //Update of face_group_idx
-  (*face_group_idx)[0] = 0;
-
-  //Loop over cptFacesPerGroup, i = group number
-  for (int i = 0; i < n_face_group; i++) {
-    (*face_group_idx)[i + 1] = (*face_group_idx)[i] + cptFacesPerGroup[i];
-  }
+  PDM_array_idx_from_sizes_int(cptFacesPerGroup, n_face_group, *face_group_idx);
 
   (*face_group) = realloc((*face_group), (*face_group_idx)[n_face_group] * sizeof(int));
   (*coarse_face_group_to_fine_face_group) = realloc((*coarse_face_group_to_fine_face_group), (*face_group_idx)[n_face_group] * sizeof(int));
@@ -3040,13 +3022,8 @@ _coarse_mesh_t * cm
     n_t_recv += cmp_coarse->n_face_part_bound;
   }
 
-  sendIdx[0] = 0;
-  for (int i = 1; i < n_proc; i++) {
-    sendIdx[i] = sendIdx[i - 1] + sendN[i - 1];
-    sendN[i - 1] = 0;
-  }
-
-  sendN[n_proc - 1] = 0;
+  PDM_array_idx_from_sizes_int(sendN, n_proc, sendIdx);
+  PDM_array_reset_int(sendN, n_proc, 0);
 
   sendBuff = malloc(sizeof(PDM_g_num_t) * n_t_send * 3);
   recvBuff = malloc(sizeof(PDM_g_num_t) * n_t_recv * 3);
@@ -3112,11 +3089,8 @@ _coarse_mesh_t * cm
   PDM_MPI_Alltoall (sendN, 1, PDM_MPI_INT,
                 recvN, 1, PDM_MPI_INT,
                 cm->comm);
-  recvIdx[0] = 0;
 
-  for (int i = 1; i < n_proc; i++)  {
-    recvIdx[i] = recvIdx[i - 1] + recvN[i - 1];
-  }
+  PDM_array_idx_from_sizes_int(recvN, n_proc, recvIdx);
 
   PDM_MPI_Alltoallv(sendBuff, sendN, sendIdx, PDM__PDM_MPI_G_NUM,
                 recvBuff, recvN, recvIdx, PDM__PDM_MPI_G_NUM, cm->comm);

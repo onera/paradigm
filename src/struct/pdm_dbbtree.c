@@ -1529,11 +1529,7 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
                       n_pts_recv, 1, PDM_MPI_INT,
                       _dbbt->comm);
 
-    i_pts_rank = malloc (sizeof(int) * (n_copied_ranks+1));
-    i_pts_rank[0] = 0;
-    for (int i = 0; i < n_copied_ranks; i++) {
-      i_pts_rank[i+1] = i_pts_rank[i] + n_pts_rank[i];
-    }
+    i_pts_rank = PDM_array_new_idx_from_sizes_int(n_pts_rank, n_copied_ranks);
 
     i_pts_send = malloc (sizeof(int) * (lComm+1));
     i_pts_recv = malloc (sizeof(int) * (lComm+1));
@@ -2054,10 +2050,7 @@ PDM_dbbtree_points_inside_boxes
 
     if (n_used_ranks < n_ranks) {
       send_shift = realloc (send_shift, sizeof(int) * (n_ranks + 1));
-      send_shift[0] = 0;
-      for (int i = 0; i < n_ranks; i++) {
-        send_shift[i+1] = send_shift[i] + send_count[i];
-      }
+      PDM_array_idx_from_sizes_int(send_count, n_ranks, send_shift);
     }
 
     recv_count = malloc (sizeof(int) * n_ranks);
@@ -2065,11 +2058,7 @@ PDM_dbbtree_points_inside_boxes
                       recv_count, 1, PDM_MPI_INT,
                       _dbbt->comm);
 
-    recv_shift = malloc (sizeof(int) * (n_ranks + 1));
-    recv_shift[0] = 0;
-    for (int i = 0; i < n_ranks; i++) {
-      recv_shift[i+1] = recv_shift[i] + recv_count[i];
-    }
+    recv_shift = PDM_array_new_idx_from_sizes_int(recv_count, n_ranks);
     n_recv_pts = recv_shift[n_ranks];
 
     /* Exchange points */
@@ -2203,11 +2192,7 @@ PDM_dbbtree_points_inside_boxes
                             NULL,
                             (void **) &pts_in_box_count);
 
-    *pts_in_box_idx = malloc (sizeof(int) * (n_boxes + 1));
-    (*pts_in_box_idx)[0] = 0;
-    for (int ibox = 0; ibox < n_boxes; ibox++) {
-      (*pts_in_box_idx)[ibox+1] = (*pts_in_box_idx)[ibox] + pts_in_box_count[ibox];
-    }
+    *pts_in_box_idx = PDM_array_new_idx_from_sizes_int(pts_in_box_count, n_boxes);
 
     *pts_in_box_g_num = malloc (sizeof(PDM_g_num_t) * (*pts_in_box_idx)[n_boxes]);
     PDM_block_to_part_exch (btp,
