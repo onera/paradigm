@@ -5465,11 +5465,75 @@ _compute_overlay_surfaces
                                             imesh,
                                             vtx_normal + imesh);
 
+    //-->> Check vtx normal
+    if (1) {
+      PDM_surf_mesh_t *_mesh;
+      char mesh_name;
+      if (imesh == PDM_OL_MESH_A) {
+        _mesh = ol->meshA;
+        mesh_name = 'A';
+      } else {
+        _mesh = ol->meshA;
+        mesh_name = 'B';
+      }
+
+      int n_part = PDM_surf_mesh_n_part_get (_mesh);
+
+      for (int ipart = 0; ipart < n_part; ipart++) {
+        int ifile = n_part * i_rank + ipart;
+
+        int n_face = PDM_surf_mesh_part_n_face_get (_mesh, ipart);
+        int n_vtx = PDM_surf_mesh_part_n_vtx_get (_mesh, ipart);
+        const int *face_vtx_idx = PDM_surf_mesh_part_face_vtx_idx_get (_mesh, ipart);
+        const int *face_vtx = PDM_surf_mesh_part_face_vtx_get (_mesh, ipart);
+        const double *vtx_coord = PDM_surf_mesh_part_vtx_get (_mesh, ipart);
+
+        char filename[999];
+        sprintf(filename, "check_vtx_normal%c_%3.3d.vtk", mesh_name, ifile);
+        FILE *f = fopen(filename, "w");
+
+        fprintf(f, "# vtk DataFile Version 2.0\ncheck_vtx_normal%c\nASCII\nDATASET POLYDATA\n", mesh_name);
+
+        fprintf(f, "POINTS %d double\n", n_vtx);
+        for (int i = 0; i < n_vtx; i++) {
+          for (int j = 0; j < 3; j++) {
+            fprintf(f, "%lf ", vtx_coord[3*i+j]);
+          }
+          fprintf(f, "\n");
+        }
+
+        fprintf(f, "POLYGONS %d %d\n", n_face, n_face + face_vtx_idx[n_face]);
+        for (int i = 0; i < n_face; i++) {
+          fprintf(f, "%d ", face_vtx_idx[i+1] - face_vtx_idx[i]);
+          for (int j = face_vtx_idx[i]; j < face_vtx_idx[i+1]; j++) {
+            fprintf(f, "%d ", face_vtx[j] - 1);
+          }
+          fprintf(f, "\n");
+        }
+
+        fprintf(f, "POINT_DATA %d\n", n_vtx);
+        fprintf(f, "VECTORS vtx_normal double\n");
+        for (int i = 0; i < n_vtx; i++) {
+          for (int j = 0; j < 3; j++) {
+            fprintf(f, "%lf ", vtx_normal[imesh][ipart][3*i+j]);
+          }
+          fprintf(f, "\n");
+        }
+
+        fclose(f);
+      }
+    }
+    //<<--
+
     if (singular) {
       PDM_error (__FILE__, __LINE__, 0,
                  "Error _compute_overlay_surfaces : singular vertex normals\n");
     }
   }
+
+  //-->>
+  PDM_MPI_Barrier (ol->comm);
+  //<<--
 
 
   int dim = 3;
