@@ -71,7 +71,8 @@ program testf
   type(c_ptr)  :: cptr_gnum_vtx
 
   integer :: i
-  integer, parameter :: i_part = 0
+  integer, parameter :: i_part_cloud = 0
+  integer, parameter :: i_part_mesh = 0
 
   integer :: id
 
@@ -86,14 +87,37 @@ program testf
   !
 
   type(c_ptr) :: cptr_location
-  type(c_ptr) :: cptr_weights_idx
-  type(c_ptr) :: cptr_weights
+  type(c_ptr) :: cptr_dist2
   type(c_ptr) :: cptr_projected_coords
 
   integer (kind = pdm_g_num_s), pointer :: location(:)
-  integer (c_int), pointer :: weights_idx(:)
-  double precision, pointer :: weights(:)
+  double precision, pointer :: dist2(:)
   double precision, pointer :: projected_coords(:)
+
+  integer :: n_located
+  integer :: n_unlocated
+  integer (c_int), pointer :: located(:)
+  integer (c_int), pointer :: unlocated(:)
+  type(c_ptr)  :: cptr_located
+  type(c_ptr)  :: cptr_unlocated
+
+  type(c_ptr) :: cptr_elt_pts_inside_idx
+  type(c_ptr) :: cptr_points_gnum
+  type(c_ptr) :: cptr_points_coords
+  type(c_ptr) :: cptr_points_uvw
+  type(c_ptr) :: cptr_points_weights_idx
+  type(c_ptr) :: cptr_points_weights
+  type(c_ptr) :: cptr_points_dist2
+  type(c_ptr) :: cptr_points_projected_coords
+
+  integer (c_int), pointer :: elt_pts_inside_idx (:)
+  integer (kind = pdm_g_num_s), pointer :: points_gnum (:)
+  double precision, pointer :: points_coords (:)
+  double precision, pointer :: points_uvw (:)
+  integer (c_int), pointer :: points_weights_idx (:)
+  double precision, pointer :: points_weights (:)
+  double precision, pointer :: points_dist2 (:)
+  double precision, pointer :: points_projected_coords (:)
 
   !
   ! Init
@@ -326,7 +350,7 @@ program testf
 
   call PDM_mesh_location_cloud_set (id, &
                                     i_point_cloud, &
-                                    i_part, &
+                                    i_part_cloud, &
                                     n_points_into_cloud, &
                                     cptr_coords_cloud, &
                                     cptr_gnum_cloud)
@@ -339,7 +363,7 @@ program testf
                                                n_part_mesh)
 
   call PDM_mesh_location_part_set (id, &
-                                   i_part, &
+                                   i_part_mesh, &
                                    n_cell, &
                                    cptr_cell_face_idx, &
                                    cptr_cell_face, &
@@ -371,19 +395,55 @@ program testf
   ! Get results
   !
 
-  call PDM_mesh_location_get (id, &
-                              i_point_cloud, &
-                              i_part, &
-                              cptr_location, &
-                              cptr_weights_idx, &
-                              cptr_weights, &
-                              cptr_projected_coords)
+  n_unlocated = PDM_mesh_location_n_unlocated_get (id, &
+                                                   i_point_cloud, &
+                                                   i_part_cloud)
 
-  call c_f_pointer(cptr_location, location, [n_points_into_cloud])
-  call c_f_pointer(cptr_weights_idx, weights_idx, [n_points_into_cloud+1])
-  call c_f_pointer(cptr_weights, weights, [weights_idx(n_points_into_cloud+1)])
-  call c_f_pointer(cptr_projected_coords, projected_coords, [3*n_points_into_cloud])
+  n_located = PDM_mesh_location_n_located_get (id, &
+                                               i_point_cloud, &
+                                               i_part_cloud)
 
+  cptr_unlocated = PDM_mesh_location_unlocated_get (id, &
+                                                    i_point_cloud, &
+                                                    i_part_cloud)
+
+  cptr_located = PDM_mesh_location_located_get (id, &
+                                                i_point_cloud, &
+                                                i_part_cloud)
+  call c_f_pointer(cptr_located, located, [n_located])
+  call c_f_pointer(cptr_unlocated, unlocated, [n_unlocated])
+
+  call PDM_mesh_location_point_location_get (id, &
+                                             i_point_cloud, &
+                                             i_part_cloud, &
+                                             cptr_location, &
+                                             cptr_dist2, &
+                                             cptr_projected_coords)
+
+  call c_f_pointer(cptr_location, location, [n_located])
+  call c_f_pointer(cptr_dist2, dist2, [n_located])
+  call c_f_pointer(cptr_projected_coords, projected_coords, [3*n_located])
+
+  call PDM_mesh_location_points_in_elt_get (id, &
+                                            i_part_mesh, &
+                                            i_point_cloud, &
+                                            cptr_elt_pts_inside_idx, &
+                                            cptr_points_gnum, &
+                                            cptr_points_coords, &
+                                            cptr_points_uvw, &
+                                            cptr_points_weights_idx, &
+                                            cptr_points_weights, &
+                                            cptr_points_dist2, &
+                                            cptr_points_projected_coords)
+
+  call c_f_pointer(cptr_elt_pts_inside_idx, elt_pts_inside_idx, [n_cell + 1])
+  call c_f_pointer(cptr_points_gnum, points_gnum, [elt_pts_inside_idx(n_cell+1)])
+  call c_f_pointer(cptr_points_coords, points_coords, [3 * elt_pts_inside_idx(n_cell+1)])
+  call c_f_pointer(cptr_points_uvw, points_uvw, [3 * elt_pts_inside_idx(n_cell+1)])
+  call c_f_pointer(cptr_points_weights_idx, points_weights_idx, [elt_pts_inside_idx(n_cell+1)])
+  call c_f_pointer(cptr_points_weights, points_weights, [points_weights_idx(elt_pts_inside_idx(n_cell + 1) + 1)])
+  call c_f_pointer(cptr_points_dist2, points_dist2, [elt_pts_inside_idx(n_cell+1)])
+  call c_f_pointer(cptr_points_projected_coords, points_projected_coords, [3 * elt_pts_inside_idx(n_cell+1)])
 
   call PDM_mesh_location_dump_times (id)
 

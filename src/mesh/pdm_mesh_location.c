@@ -89,8 +89,8 @@ typedef struct {
   int          *n_located;
   int          *n_un_located;
 
-  PDM_g_num_t **located;
-  PDM_g_num_t **un_located;
+  int         **located;
+  int         **un_located;
 
   PDM_g_num_t **location;
   double      **dist2;
@@ -3049,8 +3049,8 @@ PDM_mesh_location_compute
       pcloud->n_located[ipart]    = 0;
       pcloud->n_un_located[ipart] = 0;
 
-      pcloud->located[ipart]    = malloc (sizeof(PDM_g_num_t) * pcloud->n_points[ipart]);
-      pcloud->un_located[ipart] = malloc (sizeof(PDM_g_num_t) * pcloud->n_points[ipart]);
+      pcloud->located[ipart]    = malloc (sizeof(int) * pcloud->n_points[ipart]);
+      pcloud->un_located[ipart] = malloc (sizeof(int) * pcloud->n_points[ipart]);
 
       for (int j = 0; j < pcloud->n_points[ipart]; j++) {
         if (pcloud->location[ipart][j] > 0) {

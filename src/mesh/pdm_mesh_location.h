@@ -485,9 +485,10 @@ PDM_mesh_location_free
  * \param [in]  id       Identifier
  * \param [in]  i_part   Index of partition of the mesh
  *
+ * \return Number of cells
  */
 
-void
+int
 PDM_mesh_location_n_cell_get
 (
  const int id, 

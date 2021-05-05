@@ -136,6 +136,9 @@ cdef extern from "pdm_mesh_location.h":
 
   int PDM_mesh_location_n_cell_get (int id, int i_part);
 
+  void PDM_mesh_location_cell_vertex_get (int id, int i_part, int **cell_vtx_idx, int **cell_vtx);
+
+
 # ------------------------------------------------------------------
 cdef class MeshLocation:
   """
@@ -346,6 +349,39 @@ cdef class MeshLocation:
             }
 
 
+  def cell_vertex_get (self, int i_part):
+
+    cdef int  n_elts
+    cdef int *cell_vtx_idx 
+    cdef int *cell_vtx
+
+    n_elts =  PDM_mesh_location_n_cell_get(self._id, i_part);
+
+
+    PDM_mesh_location_cell_vertex_get(self._id, 
+                                      i_part,
+                                      &cell_vtx_idx,                                        
+                                      &cell_vtx)
+
+    cdef NPY.npy_intp dim
+    # > Build numpy capsule
+    dim = <NPY.npy_intp> n_elts + 1
+    np_cell_vtx_idx = NPY.PyArray_SimpleNewFromData(1,
+                                                    &dim,
+                                                    NPY.NPY_INT32,
+                                                    <void *> cell_vtx_idx)
+
+    dim = <NPY.npy_intp> cell_vtx_idx[n_elts]
+    np_cell_vtx = NPY.PyArray_SimpleNewFromData(1,
+                                                &dim,
+                                                NPY.NPY_INT32,
+                                                <void *> cell_vtx)
+
+    return {'cell_vtx_idx'      : np_cell_vtx_idx,
+            'cell_vtx'          : np_cell_vtx}
+
+
+
   def points_in_elt_get(self, int i_part, int i_point_cloud):
     """
     """
@@ -353,11 +389,14 @@ cdef class MeshLocation:
     # > Declaration
     cdef int           n_points
     cdef int           n_elts
-    cdef double       *coords
-    cdef PDM_g_num_t  *gnum
-    cdef PDM_g_num_t  *location
-    cdef double       *dist2
-    cdef double       *p_proj_coord
+    cdef int          *elt_pts_inside_idx
+    cdef PDM_g_num_t  *points_gnum
+    cdef double       *points_coords
+    cdef double       *points_uvw
+    cdef int          *points_weights_idx
+    cdef double       *points_weights
+    cdef double       *points_dist2
+    cdef double       *points_projected_coords
     # ************************************************************************
 
     n_elts =  PDM_mesh_location_n_cell_get(self._id, i_part);
@@ -366,60 +405,83 @@ cdef class MeshLocation:
     PDM_mesh_location_points_in_elt_get(self._id, 
                                         i_part,
                                         i_point_cloud,
- int         **elt_pts_inside_idx,
- PDM_g_num_t **points_gnum,
- double      **points_coords,
- double      **points_uvw,
- int         **points_weights_idx,
- double      **points_weights,
- double      **points_dist2,
- double      **points_projected_coords
-);
-
-
+                                        &elt_pts_inside_idx,
+                                        &points_gnum,
+                                        &points_coords,
+                                        &points_uvw,
+                                        &points_weights_idx,
+                                        &points_weights,
+                                        &points_dist2,
+                                        &points_projected_coords);
 
     cdef NPY.npy_intp dim
     # > Build numpy capsule
-    dim = <NPY.npy_intp> n_points
-    np_g_num = NPY.PyArray_SimpleNewFromData(1,
-                                             &dim,
-                                             PDM_G_NUM_NPY_INT,
-                                             <void *> gnum)
+    dim = <NPY.npy_intp> n_elts + 1
+    np_elt_pts_inside_idx = NPY.PyArray_SimpleNewFromData(1,
+                                                         &dim,
+                                                         NPY.NPY_INT32,
+                                                         <void *> elt_pts_inside_idx)
     # PyArray_ENABLEFLAGS(np_g_num, NPY.NPY_OWNDATA)
 
-    np_location = NPY.PyArray_SimpleNewFromData(1,
-                                             &dim,
-                                             PDM_G_NUM_NPY_INT,
-                                             <void *> location)
+    dim = <NPY.npy_intp> elt_pts_inside_idx[n_elts]
+    np_points_gnum = NPY.PyArray_SimpleNewFromData(1,
+                                                  &dim,
+                                                  PDM_G_NUM_NPY_INT,
+                                                  <void *> points_gnum)
     # PyArray_ENABLEFLAGS(np_location, NPY.NPY_OWNDATA)
 
-    np_dist2 = NPY.PyArray_SimpleNewFromData(1,
-                                             &dim,
-                                             NPY.NPY_DOUBLE,
-                                             <void *> dist2)
-    # > Build numpy capsule
-    dim = <NPY.npy_intp> 3*n_points
-    np_p_proj_coord = NPY.PyArray_SimpleNewFromData(1,
-                                              &dim,
-                                              NPY.NPY_DOUBLE,
-                                              <void *> p_proj_coord)
-    # PyArray_ENABLEFLAGS(np_location, NPY.NPY_OWNDATA)
+    dim = <NPY.npy_intp> 3 * elt_pts_inside_idx[n_elts]
+    np_points_coords = NPY.PyArray_SimpleNewFromData(1,
+                                                  &dim,
+                                                  NPY.NPY_DOUBLE,
+                                                  <void *> points_coords)
 
-    return {'g_num'        : np_g_num,
-            'location'     : np_location,
-            'dist2'        : np_dist2,
-            'p_proj_coord' : np_p_proj_coord
+    dim = <NPY.npy_intp> 3 * elt_pts_inside_idx[n_elts]
+    np_points_uvw = NPY.PyArray_SimpleNewFromData(1,
+                                                  &dim,
+                                                  NPY.NPY_DOUBLE,
+                                                  <void *> points_uvw)
+
+    dim = <NPY.npy_intp> elt_pts_inside_idx[n_elts] + 1
+    np_points_weights_idx = NPY.PyArray_SimpleNewFromData(1,
+                                                  &dim,
+                                                  NPY.NPY_INT32,
+                                                  <void *> points_weights_idx)
+
+    dim = <NPY.npy_intp> points_weights[elt_pts_inside_idx[n_elts]]
+    np_points_weights = NPY.PyArray_SimpleNewFromData(1,
+                                                     &dim,
+                                                     NPY.NPY_DOUBLE,
+                                                     <void *> points_weights)
+
+    dim = <NPY.npy_intp> elt_pts_inside_idx[n_elts]
+    np_points_dist2 = NPY.PyArray_SimpleNewFromData(1,
+                                                    &dim,
+                                                    NPY.NPY_DOUBLE,
+                                                    <void *> points_dist2)
+
+    dim = <NPY.npy_intp> 3 * elt_pts_inside_idx[n_elts]
+    np_points_projected_coords = NPY.PyArray_SimpleNewFromData(1,
+                                                              &dim,
+                                                              NPY.NPY_DOUBLE,
+                                                              <void *> points_projected_coords)
+
+    return {'elt_pts_inside_idx'      : np_elt_pts_inside_idx,
+            'points_gnum'             : np_points_gnum,
+            'points_coords'           : np_points_coords,
+            'points_uvw'              : np_points_uvw,
+            'points_weights_idx'      : np_points_weights_idx,
+            'points_weights'          : np_points_weights,
+            'points_dist2'            : np_points_dist2,
+            'points_projected_coords' : np_points_projected_coords,
             }
-
-
-
 
 
   def located_get(self, int i_point_cloud, int i_part):
     """
     """
     cdef int           n_located
-    cdef double       *located
+    cdef int          *located
 
     n_located = PDM_mesh_location_n_located_get(self._id,
                                                 i_point_cloud,
@@ -428,7 +490,7 @@ cdef class MeshLocation:
     located = PDM_mesh_location_located_get(self._id,
                                               i_point_cloud,
                                               i_part);
-    dim = <NPY.npy_intp> 3*n_located
+    dim = <NPY.npy_intp> n_located
     np_located = NPY.PyArray_SimpleNewFromData(1,
                                                &dim,
                                                NPY.NPY_INT32,
@@ -439,7 +501,7 @@ cdef class MeshLocation:
     """
     """
     cdef int           n_unlocated
-    cdef double       *unlocated
+    cdef int          *unlocated
 
     n_unlocated = PDM_mesh_location_n_unlocated_get(self._id,
                                                 i_point_cloud,
@@ -448,7 +510,7 @@ cdef class MeshLocation:
     unlocated = PDM_mesh_location_unlocated_get(self._id,
                                               i_point_cloud,
                                               i_part);
-    dim = <NPY.npy_intp> 3*n_unlocated
+    dim = <NPY.npy_intp> n_unlocated
     np_unlocated = NPY.PyArray_SimpleNewFromData(1,
                                                &dim,
                                                NPY.NPY_INT32,

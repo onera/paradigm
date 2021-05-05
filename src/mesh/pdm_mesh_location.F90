@@ -205,6 +205,35 @@ module pdm_mesh_location
 
     !>
     !!
+    !! \brief get cell vertex connectivity
+    !!
+    !! \param [in]   id                    Identifier
+    !! \param [in]   i_part                Index of partition of the cloud
+    !! \param [out]  cell_vtx_idx          Index in (size = n_elt + 1)
+    !! \param [out]  cell_vtx              Cell vertex connectivity
+    !!
+    !!
+
+    subroutine PDM_mesh_location_cell_vertex_get (id, &
+                                                  i_part, &
+                                                  cell_vtx_idx, &
+                                                  cell_vtx) &
+     bind (c, name = 'PDM_mesh_location_cell_vertex_get')
+
+      use iso_c_binding
+
+      implicit none
+
+      integer(c_int), value :: id
+      integer(c_int), value :: i_part
+      type(c_ptr)           :: cell_vtx_idx        
+      type(c_ptr)           :: cell_vtx  
+
+    end subroutine PDM_mesh_location_cell_vertex_get
+
+
+    !>
+    !!
     !! \brief Set a part of a mesh
     !!
     !! \param [in]   id            Identifier
@@ -407,6 +436,31 @@ module pdm_mesh_location
 
     !>
     !!
+    !! \brief Get the number of cells
+    !!
+    !! \param [in]  id       Identifier
+    !! \param [in]  i_part   Index of partition of the mesh
+    !!
+    !! \return Number of cells
+    !!
+
+    function PDM_mesh_location_n_cell_get (id, & 
+                                           i_part) &
+                                           result(n_cell) & 
+      bind (c, name = 'PDM_mesh_location_n_cell_get')
+
+      use iso_c_binding
+
+      implicit none
+
+      integer(c_int), value :: id
+      integer(c_int), value :: i_part
+      integer(c_int)        :: n_cell
+
+    end function PDM_mesh_location_n_cell_get
+
+    !>
+    !!
     !! \brief Get the number of unlocated points
     !!
     !! \param [in]   id              Identifier
@@ -459,7 +513,7 @@ module pdm_mesh_location
       integer(c_int), value :: id
       integer(c_int), value :: i_point_cloud
       integer(c_int), value :: i_part
-      integer(c_ptr)        :: unlocated
+      type(c_ptr)           :: unlocated
 
     end function PDM_mesh_location_unlocated_get
 
@@ -489,7 +543,7 @@ module pdm_mesh_location
       integer(c_int), value :: id
       integer(c_int), value :: i_point_cloud
       integer(c_int), value :: i_part
-      integer(c_ptr)        :: located
+      type(c_ptr)           :: located
 
     end function PDM_mesh_location_located_get
 
