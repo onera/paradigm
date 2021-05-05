@@ -1081,6 +1081,22 @@ const int              n_group_elmt,
   dmesh_nodal->dgroup_elmt_owner = owner;
 }
 
+
+void
+PDM_DMesh_nodal_section_group_elmt_get
+(
+PDM_dmesh_nodal_t     *dmesh_nodal,
+      int             *n_group_elmt,
+      int             **dgroup_elmt_idx,
+      PDM_g_num_t     **dgroup_elmt
+)
+{
+  *n_group_elmt    = dmesh_nodal->n_group_elmt;
+  *dgroup_elmt_idx = dmesh_nodal->dgroup_elmt_idx;
+  *dgroup_elmt     = dmesh_nodal->dgroup_elmt;
+}
+
+
 /**
  * \brief Return standard section description
  * \param [in]  hdl            Distributed nodal mesh handle

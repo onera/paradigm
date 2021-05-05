@@ -383,6 +383,16 @@ const int              n_group_elmt,
       PDM_ownership_t  owner
 );
 
+void
+PDM_DMesh_nodal_section_group_elmt_get
+(
+PDM_dmesh_nodal_t     *dmesh_nodal,
+      int             *n_group_elmt,
+      int             **dgroup_elmt_idx,
+      PDM_g_num_t     **dgroup_elmt
+);
+
+
 /**
  * \brief Return standard section description
  *

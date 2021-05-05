@@ -2100,7 +2100,10 @@ PDM_part_extension_create
   PDM_part_extension_t *part_ext = (PDM_part_extension_t *) malloc(sizeof(PDM_part_extension_t));
 
   part_ext->n_domain    = n_domain;
-  part_ext->n_part      = n_part;
+  part_ext->n_part      = malloc( n_domain * sizeof(int)); // Make a copy to avoid pb in cython
+  for(int i = 0; i < part_ext->n_domain; ++i) {
+    part_ext->n_part[i] = n_part[i];
+  }
   part_ext->comm        = comm;
   part_ext->owner       = owner;
   part_ext->extend_type = extend_type;
@@ -2710,6 +2713,7 @@ PDM_part_extension_free
     free(part_ext->parts[i_domain]);
   }
   free(part_ext->parts);
+  free(part_ext->n_part);
 
 
   free(part_ext);

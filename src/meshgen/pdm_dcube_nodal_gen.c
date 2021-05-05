@@ -35,7 +35,9 @@ _decompose_into_quad_i
 (
  PDM_dcube_nodal_t* dcube,
  PDM_dmesh_nodal_t* dmesh_nodal,
- int                plane
+ int                plane,
+ PDM_g_num_t        shift_elmt,
+ PDM_g_num_t*       delmt_group
 )
 {
   int i_rank;
@@ -49,6 +51,7 @@ _decompose_into_quad_i
 
     /* Pour le remplissage du elmt_group */
     PDM_g_num_t g_quad_lim = dcube->distrib_quad_seg_lim[i_rank] + i_quad;
+    PDM_g_num_t g_elmt     = shift_elmt + dcube->distrib_quad_seg_lim[i_rank] + i_quad; // Revient a donner le numero global de l'element (implicit par construction mais on a besoin de l'explicite pour les elmt_group)
 
     PDM_g_num_t ipl_k = ( g_quad_lim                                    ) / ( dcube->n_g_hexa_cell_seg );
     PDM_g_num_t ipl_j = ( g_quad_lim - ipl_k * dcube->n_g_hexa_cell_seg );
@@ -58,6 +61,10 @@ _decompose_into_quad_i
     delmt_vtx[n_vtx_per_elmt_lim * i_quad + 1] = (ipl_i  ) + (ipl_j    ) * n_vtx_seg + ( ipl_k + 1 ) * n_vtx_seg * n_vtx_seg + 1;
     delmt_vtx[n_vtx_per_elmt_lim * i_quad + 2] = (ipl_i  ) + (ipl_j + 1) * n_vtx_seg + ( ipl_k + 1 ) * n_vtx_seg * n_vtx_seg + 1;
     delmt_vtx[n_vtx_per_elmt_lim * i_quad + 3] = (ipl_i  ) + (ipl_j + 1) * n_vtx_seg + ( ipl_k     ) * n_vtx_seg * n_vtx_seg + 1;
+
+    delmt_group[i_quad] = g_elmt;
+
+    // printf(" delmt_group[%i] = %i (shift_elmt = %i)\n", i_quad, g_elmt, shift_elmt);
 
     // printf("IMIN :: ipl_j = "PDM_FMT_G_NUM", ipl_k = "PDM_FMT_G_NUM" \n", ipl_j, ipl_k);
 
@@ -81,7 +88,9 @@ _decompose_into_quad_j
 (
  PDM_dcube_nodal_t* dcube,
  PDM_dmesh_nodal_t* dmesh_nodal,
- int                plane
+ int                plane,
+ PDM_g_num_t        shift_elmt,
+ PDM_g_num_t*       delmt_group
 )
 {
   int i_rank;
@@ -94,6 +103,8 @@ _decompose_into_quad_j
   for(int i_quad = 0; i_quad < dcube->dn_quad_seq_lim; ++i_quad) { // QUAD
 
     PDM_g_num_t g_quad_lim = dcube->distrib_quad_seg_lim[i_rank] + i_quad;
+    PDM_g_num_t g_elmt     = shift_elmt + dcube->distrib_quad_seg_lim[i_rank] + i_quad; // Revient a donner le numero global de l'element (implicit par construction mais on a besoin de l'explicite pour les elmt_group)
+
 
     PDM_g_num_t ipl_k = ( g_quad_lim                                    ) / ( dcube->n_g_hexa_cell_seg );
     PDM_g_num_t ipl_j = plane; // Donc maillage en I,K
@@ -103,6 +114,8 @@ _decompose_into_quad_j
     delmt_vtx[n_vtx_per_elmt_lim * i_quad + 1] = (ipl_i+1) + (ipl_j    ) * n_vtx_seg + ( ipl_k     ) * n_vtx_seg * n_vtx_seg + 1;
     delmt_vtx[n_vtx_per_elmt_lim * i_quad + 2] = (ipl_i+1) + (ipl_j    ) * n_vtx_seg + ( ipl_k + 1 ) * n_vtx_seg * n_vtx_seg + 1;
     delmt_vtx[n_vtx_per_elmt_lim * i_quad + 3] = (ipl_i  ) + (ipl_j    ) * n_vtx_seg + ( ipl_k + 1 ) * n_vtx_seg * n_vtx_seg + 1;
+
+    delmt_group[i_quad] = g_elmt;
 
     // printf("JMIN :: ipl_j = "PDM_FMT_G_NUM", ipl_k = "PDM_FMT_G_NUM" \n", ipl_j, ipl_k);
 
@@ -126,7 +139,9 @@ _decompose_into_quad_k
 (
  PDM_dcube_nodal_t* dcube,
  PDM_dmesh_nodal_t* dmesh_nodal,
- int                plane
+ int                plane,
+ PDM_g_num_t        shift_elmt,
+ PDM_g_num_t*       delmt_group
 )
 {
   int i_rank;
@@ -140,6 +155,7 @@ _decompose_into_quad_k
 
     /* Pour le remplissage du elmt_group */
     PDM_g_num_t g_quad_lim = dcube->distrib_quad_seg_lim[i_rank] + i_quad;
+    PDM_g_num_t g_elmt     = shift_elmt + dcube->distrib_quad_seg_lim[i_rank] + i_quad; // Revient a donner le numero global de l'element (implicit par construction mais on a besoin de l'explicite pour les elmt_group)
 
     PDM_g_num_t ipl_k = plane; // Donc maillage en I,J
     PDM_g_num_t ipl_j = ( g_quad_lim                                    ) / ( dcube->n_g_hexa_cell_seg );
@@ -150,6 +166,7 @@ _decompose_into_quad_k
     delmt_vtx[n_vtx_per_elmt_lim * i_quad + 2] = (ipl_i+1) + (ipl_j + 1) * n_vtx_seg + ( ipl_k ) * n_vtx_seg * n_vtx_seg + 1;
     delmt_vtx[n_vtx_per_elmt_lim * i_quad + 3] = (ipl_i+1) + (ipl_j    ) * n_vtx_seg + ( ipl_k ) * n_vtx_seg * n_vtx_seg + 1;
 
+    delmt_group[i_quad] = g_elmt;
     // printf("kMIN :: ipl_j = "PDM_FMT_G_NUM", ipl_k = "PDM_FMT_G_NUM" \n", ipl_j, ipl_k);
 
   }
@@ -168,76 +185,13 @@ _decompose_into_quad_k
  */
 static
 void
-_decompose_into_tri_j
-(
- PDM_dcube_nodal_t* dcube,
- PDM_dmesh_nodal_t* dmesh_nodal,
- int                plane
-)
-{
-  int i_rank;
-  PDM_MPI_Comm_rank(dcube->comm, &i_rank);
-
-  PDM_g_num_t n_vtx_seg  = dcube->n_vtx_seg;
-  int n_vtx_per_elmt_lim = 3;
-
-  int dn_tri_seq_lim = 2 * dcube->dn_quad_seq_lim;
-
-  PDM_g_num_t* delmt_vtx = (PDM_g_num_t *) malloc( ( n_vtx_per_elmt_lim * dn_tri_seq_lim ) * sizeof(PDM_g_num_t));
-  for(int i_quad = 0; i_quad < dcube->dn_quad_seq_lim; ++i_quad) { // QUAD
-
-    PDM_g_num_t g_quad_lim = dcube->distrib_quad_seg_lim[i_rank] + i_quad;
-
-    PDM_g_num_t ipl_k = ( g_quad_lim                                    ) / ( dcube->n_g_hexa_cell_seg );
-    PDM_g_num_t ipl_j = plane; // Donc maillage en I,K
-    PDM_g_num_t ipl_i = ( g_quad_lim - ipl_k * dcube->n_g_hexa_cell_seg );
-
-    PDM_g_num_t n = ipl_i+ipl_k;
-
-    if( n % 2 == 0) {
-
-      delmt_vtx[2 * n_vtx_per_elmt_lim * i_quad    ] = (ipl_i  ) + (ipl_j    ) * n_vtx_seg + ( ipl_k     ) * n_vtx_seg * n_vtx_seg + 1;
-      delmt_vtx[2 * n_vtx_per_elmt_lim * i_quad + 1] = (ipl_i+1) + (ipl_j    ) * n_vtx_seg + ( ipl_k     ) * n_vtx_seg * n_vtx_seg + 1;
-      delmt_vtx[2 * n_vtx_per_elmt_lim * i_quad + 2] = (ipl_i  ) + (ipl_j    ) * n_vtx_seg + ( ipl_k + 1 ) * n_vtx_seg * n_vtx_seg + 1;
-
-      delmt_vtx[2 * n_vtx_per_elmt_lim * i_quad + 3] = (ipl_i+1) + (ipl_j    ) * n_vtx_seg + ( ipl_k     ) * n_vtx_seg * n_vtx_seg + 1;
-      delmt_vtx[2 * n_vtx_per_elmt_lim * i_quad + 4] = (ipl_i+1) + (ipl_j    ) * n_vtx_seg + ( ipl_k + 1 ) * n_vtx_seg * n_vtx_seg + 1;
-      delmt_vtx[2 * n_vtx_per_elmt_lim * i_quad + 5] = (ipl_i  ) + (ipl_j    ) * n_vtx_seg + ( ipl_k + 1 ) * n_vtx_seg * n_vtx_seg + 1;
-
-    } else {
-
-      delmt_vtx[2 * n_vtx_per_elmt_lim * i_quad    ] = (ipl_i  ) + (ipl_j    ) * n_vtx_seg + ( ipl_k     ) * n_vtx_seg * n_vtx_seg + 1;
-      delmt_vtx[2 * n_vtx_per_elmt_lim * i_quad + 1] = (ipl_i+1) + (ipl_j    ) * n_vtx_seg + ( ipl_k     ) * n_vtx_seg * n_vtx_seg + 1;
-      delmt_vtx[2 * n_vtx_per_elmt_lim * i_quad + 2] = (ipl_i+1) + (ipl_j    ) * n_vtx_seg + ( ipl_k + 1 ) * n_vtx_seg * n_vtx_seg + 1;
-
-      delmt_vtx[2 * n_vtx_per_elmt_lim * i_quad + 3] = (ipl_i  ) + (ipl_j    ) * n_vtx_seg + ( ipl_k     ) * n_vtx_seg * n_vtx_seg + 1;
-      delmt_vtx[2 * n_vtx_per_elmt_lim * i_quad + 4] = (ipl_i+1) + (ipl_j    ) * n_vtx_seg + ( ipl_k + 1 ) * n_vtx_seg * n_vtx_seg + 1;
-      delmt_vtx[2 * n_vtx_per_elmt_lim * i_quad + 5] = (ipl_i  ) + (ipl_j    ) * n_vtx_seg + ( ipl_k + 1 ) * n_vtx_seg * n_vtx_seg + 1;
-
-    }
-    // printf("JMIN :: ipl_j = "PDM_FMT_G_NUM", ipl_k = "PDM_FMT_G_NUM" \n", ipl_j, ipl_k);
-
-  }
-
-  int id_tri = PDM_DMesh_nodal_section_add(dmesh_nodal, PDM_MESH_NODAL_TRIA3);
-
-  PDM_DMesh_nodal_section_std_set(dmesh_nodal,
-                                  id_tri,
-                                  dn_tri_seq_lim,
-                                  delmt_vtx,
-                                  dcube->owner_for_dmesh_nodal);
-}
-
-/*
- * Generate jmin plane into TRI
- */
-static
-void
 _decompose_into_tri_i
 (
  PDM_dcube_nodal_t* dcube,
  PDM_dmesh_nodal_t* dmesh_nodal,
- int                plane
+ int                plane,
+ PDM_g_num_t        shift_elmt,
+ PDM_g_num_t*       delmt_group
 )
 {
   int i_rank;
@@ -252,6 +206,7 @@ _decompose_into_tri_i
   for(int i_quad = 0; i_quad < dcube->dn_quad_seq_lim; ++i_quad) { // QUAD
 
     PDM_g_num_t g_quad_lim = dcube->distrib_quad_seg_lim[i_rank] + i_quad;
+    PDM_g_num_t g_elmt     = shift_elmt + 2 * (dcube->distrib_quad_seg_lim[i_rank] + i_quad); // Revient a donner le numero global de l'element (implicit par construction mais on a besoin de l'explicite pour les elmt_group)
 
     PDM_g_num_t ipl_k = ( g_quad_lim                                    ) / ( dcube->n_g_hexa_cell_seg );
     PDM_g_num_t ipl_j = ( g_quad_lim - ipl_k * dcube->n_g_hexa_cell_seg );
@@ -281,6 +236,8 @@ _decompose_into_tri_i
 
 
     }
+    delmt_group[2*i_quad  ] = g_elmt;
+    delmt_group[2*i_quad+1] = g_elmt+1;
     // printf("JMIN :: ipl_j = "PDM_FMT_G_NUM", ipl_k = "PDM_FMT_G_NUM" \n", ipl_j, ipl_k);
 
   }
@@ -299,11 +256,13 @@ _decompose_into_tri_i
  */
 static
 void
-_decompose_into_tri_k
+_decompose_into_tri_j
 (
  PDM_dcube_nodal_t* dcube,
  PDM_dmesh_nodal_t* dmesh_nodal,
- int                plane
+ int                plane,
+ PDM_g_num_t        shift_elmt,
+ PDM_g_num_t*       delmt_group
 )
 {
   int i_rank;
@@ -318,6 +277,80 @@ _decompose_into_tri_k
   for(int i_quad = 0; i_quad < dcube->dn_quad_seq_lim; ++i_quad) { // QUAD
 
     PDM_g_num_t g_quad_lim = dcube->distrib_quad_seg_lim[i_rank] + i_quad;
+    PDM_g_num_t g_elmt     = shift_elmt + 2 * (dcube->distrib_quad_seg_lim[i_rank] + i_quad); // Revient a donner le numero global de l'element (implicit par construction mais on a besoin de l'explicite pour les elmt_group)
+
+    PDM_g_num_t ipl_k = ( g_quad_lim                                    ) / ( dcube->n_g_hexa_cell_seg );
+    PDM_g_num_t ipl_j = plane; // Donc maillage en I,K
+    PDM_g_num_t ipl_i = ( g_quad_lim - ipl_k * dcube->n_g_hexa_cell_seg );
+
+    PDM_g_num_t n = ipl_i+ipl_k;
+
+    if( n % 2 == 0) {
+
+      delmt_vtx[2 * n_vtx_per_elmt_lim * i_quad    ] = (ipl_i  ) + (ipl_j    ) * n_vtx_seg + ( ipl_k     ) * n_vtx_seg * n_vtx_seg + 1;
+      delmt_vtx[2 * n_vtx_per_elmt_lim * i_quad + 1] = (ipl_i+1) + (ipl_j    ) * n_vtx_seg + ( ipl_k     ) * n_vtx_seg * n_vtx_seg + 1;
+      delmt_vtx[2 * n_vtx_per_elmt_lim * i_quad + 2] = (ipl_i  ) + (ipl_j    ) * n_vtx_seg + ( ipl_k + 1 ) * n_vtx_seg * n_vtx_seg + 1;
+
+      delmt_vtx[2 * n_vtx_per_elmt_lim * i_quad + 3] = (ipl_i+1) + (ipl_j    ) * n_vtx_seg + ( ipl_k     ) * n_vtx_seg * n_vtx_seg + 1;
+      delmt_vtx[2 * n_vtx_per_elmt_lim * i_quad + 4] = (ipl_i+1) + (ipl_j    ) * n_vtx_seg + ( ipl_k + 1 ) * n_vtx_seg * n_vtx_seg + 1;
+      delmt_vtx[2 * n_vtx_per_elmt_lim * i_quad + 5] = (ipl_i  ) + (ipl_j    ) * n_vtx_seg + ( ipl_k + 1 ) * n_vtx_seg * n_vtx_seg + 1;
+
+    } else {
+
+      delmt_vtx[2 * n_vtx_per_elmt_lim * i_quad    ] = (ipl_i  ) + (ipl_j    ) * n_vtx_seg + ( ipl_k     ) * n_vtx_seg * n_vtx_seg + 1;
+      delmt_vtx[2 * n_vtx_per_elmt_lim * i_quad + 1] = (ipl_i+1) + (ipl_j    ) * n_vtx_seg + ( ipl_k     ) * n_vtx_seg * n_vtx_seg + 1;
+      delmt_vtx[2 * n_vtx_per_elmt_lim * i_quad + 2] = (ipl_i+1) + (ipl_j    ) * n_vtx_seg + ( ipl_k + 1 ) * n_vtx_seg * n_vtx_seg + 1;
+
+      delmt_vtx[2 * n_vtx_per_elmt_lim * i_quad + 3] = (ipl_i  ) + (ipl_j    ) * n_vtx_seg + ( ipl_k     ) * n_vtx_seg * n_vtx_seg + 1;
+      delmt_vtx[2 * n_vtx_per_elmt_lim * i_quad + 4] = (ipl_i+1) + (ipl_j    ) * n_vtx_seg + ( ipl_k + 1 ) * n_vtx_seg * n_vtx_seg + 1;
+      delmt_vtx[2 * n_vtx_per_elmt_lim * i_quad + 5] = (ipl_i  ) + (ipl_j    ) * n_vtx_seg + ( ipl_k + 1 ) * n_vtx_seg * n_vtx_seg + 1;
+
+    }
+
+    delmt_group[2*i_quad  ] = g_elmt;
+    delmt_group[2*i_quad+1] = g_elmt+1;
+
+    // printf("JMIN :: ipl_j = "PDM_FMT_G_NUM", ipl_k = "PDM_FMT_G_NUM" \n", ipl_j, ipl_k);
+
+  }
+
+  int id_tri = PDM_DMesh_nodal_section_add(dmesh_nodal, PDM_MESH_NODAL_TRIA3);
+
+  PDM_DMesh_nodal_section_std_set(dmesh_nodal,
+                                  id_tri,
+                                  dn_tri_seq_lim,
+                                  delmt_vtx,
+                                  dcube->owner_for_dmesh_nodal);
+}
+
+
+/*
+ * Generate jmin plane into TRI
+ */
+static
+void
+_decompose_into_tri_k
+(
+ PDM_dcube_nodal_t* dcube,
+ PDM_dmesh_nodal_t* dmesh_nodal,
+ int                plane,
+ PDM_g_num_t        shift_elmt,
+ PDM_g_num_t*       delmt_group
+)
+{
+  int i_rank;
+  PDM_MPI_Comm_rank(dcube->comm, &i_rank);
+
+  PDM_g_num_t n_vtx_seg  = dcube->n_vtx_seg;
+  int n_vtx_per_elmt_lim = 3;
+
+  int dn_tri_seq_lim = 2 * dcube->dn_quad_seq_lim;
+
+  PDM_g_num_t* delmt_vtx = (PDM_g_num_t *) malloc( ( n_vtx_per_elmt_lim * dn_tri_seq_lim ) * sizeof(PDM_g_num_t));
+  for(int i_quad = 0; i_quad < dcube->dn_quad_seq_lim; ++i_quad) { // QUAD
+
+    PDM_g_num_t g_quad_lim = dcube->distrib_quad_seg_lim[i_rank] + i_quad;
+    PDM_g_num_t g_elmt     = shift_elmt + 2 * (dcube->distrib_quad_seg_lim[i_rank] + i_quad); // Revient a donner le numero global de l'element (implicit par construction mais on a besoin de l'explicite pour les elmt_group)
 
     PDM_g_num_t ipl_k = plane; // Donc maillage en I,J
     PDM_g_num_t ipl_j = ( g_quad_lim                                    ) / ( dcube->n_g_hexa_cell_seg );
@@ -347,6 +380,8 @@ _decompose_into_tri_k
 
 
     }
+    delmt_group[2*i_quad  ] = g_elmt;
+    delmt_group[2*i_quad+1] = g_elmt+1;
     // printf("JMIN :: ipl_j = "PDM_FMT_G_NUM", ipl_k = "PDM_FMT_G_NUM" \n", ipl_j, ipl_k);
 
   }
@@ -371,7 +406,9 @@ _decompose_into_tri2_k
 (
  PDM_dcube_nodal_t* dcube,
  PDM_dmesh_nodal_t* dmesh_nodal,
- int                plane
+ int                plane,
+ PDM_g_num_t        shift_elmt,
+ PDM_g_num_t*       delmt_group
 )
 {
   int i_rank;
@@ -386,6 +423,7 @@ _decompose_into_tri2_k
   for(int i_quad = 0; i_quad < dcube->dn_quad_seq_lim; ++i_quad) { // QUAD
 
     PDM_g_num_t g_quad_lim = dcube->distrib_quad_seg_lim[i_rank] + i_quad;
+    PDM_g_num_t g_elmt     = shift_elmt + 2 * (dcube->distrib_quad_seg_lim[i_rank] + i_quad); // Revient a donner le numero global de l'element (implicit par construction mais on a besoin de l'explicite pour les elmt_group)
 
     PDM_g_num_t ipl_k = plane; // Donc maillage en I,J
     PDM_g_num_t ipl_j = ( g_quad_lim                                    ) / ( dcube->n_g_hexa_cell_seg );
@@ -398,6 +436,10 @@ _decompose_into_tri2_k
     delmt_vtx[2 * n_vtx_per_elmt_lim * i_quad + 3] = (ipl_i     ) + (ipl_j    ) * n_vtx_seg + ( ipl_k ) * n_vtx_seg * n_vtx_seg + 1;
     delmt_vtx[2 * n_vtx_per_elmt_lim * i_quad + 4] = (ipl_i + 1 ) + (ipl_j +1 ) * n_vtx_seg + ( ipl_k ) * n_vtx_seg * n_vtx_seg + 1;
     delmt_vtx[2 * n_vtx_per_elmt_lim * i_quad + 5] = (ipl_i + 1 ) + (ipl_j    ) * n_vtx_seg + ( ipl_k ) * n_vtx_seg * n_vtx_seg + 1;
+
+    // printf(" delmt_group[%i] = %i (shift_elmt = %i)\n", i_quad, g_elmt, shift_elmt);
+    delmt_group[2*i_quad  ] = g_elmt;
+    delmt_group[2*i_quad+1] = g_elmt+1;
 
     // printf("JMIN :: ipl_j = "PDM_FMT_G_NUM", ipl_k = "PDM_FMT_G_NUM" \n", ipl_j, ipl_k);
 
@@ -457,8 +499,9 @@ _generate_tetra_from_hexa
  PDM_dmesh_nodal_t* dmesh_nodal
 )
 {
-  int i_rank;
+  int n_rank, i_rank;
   PDM_MPI_Comm_rank(dcube->comm, &i_rank);
+  PDM_MPI_Comm_size(dcube->comm, &n_rank);
 
   int n_vtx_per_elmt     = 4;
 
@@ -556,13 +599,43 @@ _generate_tetra_from_hexa
                                   delmt_vtx,
                                   dcube->owner_for_dmesh_nodal);
 
-  _decompose_into_tri_i(dcube, dmesh_nodal, 0);
-  _decompose_into_tri_i(dcube, dmesh_nodal, dcube->n_g_hexa_cell_seg);
-  _decompose_into_tri_j(dcube, dmesh_nodal, 0);
-  _decompose_into_tri_j(dcube, dmesh_nodal, dcube->n_g_hexa_cell_seg);
-  _decompose_into_tri_k(dcube, dmesh_nodal, 0);
-  _decompose_into_tri_k(dcube, dmesh_nodal, dcube->n_g_hexa_cell_seg);
+  int         *delmt_group_idx = (int         *) malloc( (6 + 1                                   ) * sizeof(int        ));
+  int dn_quad_face = dcube->distrib_quad_seg_lim[i_rank+1] - dcube->distrib_quad_seg_lim[i_rank];
+  PDM_g_num_t *delmt_group     = (PDM_g_num_t *) malloc( (6 * 2 * dn_quad_face) * sizeof(PDM_g_num_t));
 
+  delmt_group_idx[0] = 0;
+
+  PDM_g_num_t shift_elmt = 5 * dcube->distrib_hexa[n_rank]+1; // Car les elements surfaciques se mettent après les volumiques et un tetra = 5 Hexa
+
+  delmt_group_idx[1] = 2 * dn_quad_face;
+  _decompose_into_tri_i(dcube, dmesh_nodal, 0, shift_elmt, &delmt_group[delmt_group_idx[0]]);
+
+  shift_elmt += 2 * dcube->distrib_quad_seg_lim[n_rank];
+  delmt_group_idx[2] = 4 * dn_quad_face;
+  _decompose_into_tri_i(dcube, dmesh_nodal, dcube->n_g_hexa_cell_seg, shift_elmt, &delmt_group[delmt_group_idx[1]]);
+
+  shift_elmt += 2 * dcube->distrib_quad_seg_lim[n_rank];
+  delmt_group_idx[3] = 6 * dn_quad_face;
+  _decompose_into_tri_j(dcube, dmesh_nodal, 0, shift_elmt, &delmt_group[delmt_group_idx[2]]);
+
+  shift_elmt += 2 * dcube->distrib_quad_seg_lim[n_rank];
+  delmt_group_idx[4] = 8 * dn_quad_face;
+  _decompose_into_tri_j(dcube, dmesh_nodal, dcube->n_g_hexa_cell_seg, shift_elmt, &delmt_group[delmt_group_idx[3]]);
+
+  shift_elmt += 2 * dcube->distrib_quad_seg_lim[n_rank];
+  delmt_group_idx[5] = 10 * dn_quad_face;
+  _decompose_into_tri_k(dcube, dmesh_nodal, 0, shift_elmt, &delmt_group[delmt_group_idx[4]]);
+
+  shift_elmt += 2 * dcube->distrib_quad_seg_lim[n_rank];
+  delmt_group_idx[6] = 12 * dn_quad_face;
+  _decompose_into_tri_k(dcube, dmesh_nodal, dcube->n_g_hexa_cell_seg, shift_elmt, &delmt_group[delmt_group_idx[5]]);
+
+  // Rajout dans le dmesh_nodal
+  PDM_DMesh_nodal_section_group_elmt_set(dmesh_nodal,
+                                         6,
+                                         delmt_group_idx,
+                                         delmt_group,
+                                         dcube->owner_for_dmesh_nodal);
 }
 
 
@@ -574,8 +647,9 @@ _generate_prism_from_hexa
  PDM_dmesh_nodal_t* dmesh_nodal
 )
 {
-  int i_rank;
+  int n_rank, i_rank;
   PDM_MPI_Comm_rank(dcube->comm, &i_rank);
+  PDM_MPI_Comm_size(dcube->comm, &n_rank);
 
   int n_vtx_per_elmt     = 6;
 
@@ -621,12 +695,43 @@ _generate_prism_from_hexa
                                   delmt_vtx,
                                   dcube->owner_for_dmesh_nodal);
 
-  _decompose_into_quad_i(dcube, dmesh_nodal, 0);
-  _decompose_into_quad_i(dcube, dmesh_nodal, dcube->n_g_hexa_cell_seg);
-  _decompose_into_quad_j(dcube, dmesh_nodal, 0);
-  _decompose_into_quad_j(dcube, dmesh_nodal, dcube->n_g_hexa_cell_seg);
-  _decompose_into_tri2_k(dcube, dmesh_nodal, 0);
-  _decompose_into_tri2_k(dcube, dmesh_nodal, dcube->n_g_hexa_cell_seg);
+  // Prism = 4 * quad + 2 * tri
+  int         *delmt_group_idx = (int         *) malloc( (6 + 1                                   ) * sizeof(int        ));
+  int dn_quad_face = dcube->distrib_quad_seg_lim[i_rank+1] - dcube->distrib_quad_seg_lim[i_rank];
+  PDM_g_num_t *delmt_group     = (PDM_g_num_t *) malloc( (4 * dn_quad_face + 2 * 2 * dn_quad_face) * sizeof(PDM_g_num_t));
+
+  delmt_group_idx[0] = 0;
+
+  PDM_g_num_t shift_elmt = 2 * dcube->distrib_hexa[n_rank]+1; // Car les elements surfaciques se mettent après les volumiques et un prism = 2 Hexa
+  delmt_group_idx[1] = dn_quad_face;
+  _decompose_into_quad_i(dcube, dmesh_nodal, 0, shift_elmt, &delmt_group[delmt_group_idx[0]]);
+
+  shift_elmt += dcube->distrib_quad_seg_lim[n_rank];
+  delmt_group_idx[2] = 2 * dn_quad_face;
+  _decompose_into_quad_i(dcube, dmesh_nodal, dcube->n_g_hexa_cell_seg, shift_elmt, &delmt_group[delmt_group_idx[1]]);
+
+  shift_elmt += dcube->distrib_quad_seg_lim[n_rank];
+  delmt_group_idx[3] = 3 * dn_quad_face;
+  _decompose_into_quad_j(dcube, dmesh_nodal, 0, shift_elmt, &delmt_group[delmt_group_idx[2]]);
+
+  shift_elmt += dcube->distrib_quad_seg_lim[n_rank];
+  delmt_group_idx[4] = 4 * dn_quad_face;
+  _decompose_into_quad_j(dcube, dmesh_nodal, dcube->n_g_hexa_cell_seg, shift_elmt, &delmt_group[delmt_group_idx[3]]);
+
+  shift_elmt += dcube->distrib_quad_seg_lim[n_rank];
+  delmt_group_idx[5] = 4 * dn_quad_face + 2 * dn_quad_face;
+  _decompose_into_tri2_k(dcube, dmesh_nodal, 0, shift_elmt, &delmt_group[delmt_group_idx[4]]);
+
+  shift_elmt += 2 * dcube->distrib_quad_seg_lim[n_rank];
+  delmt_group_idx[6] = 4 * dn_quad_face + 4 * dn_quad_face;
+  _decompose_into_tri2_k(dcube, dmesh_nodal, dcube->n_g_hexa_cell_seg, shift_elmt, &delmt_group[delmt_group_idx[5]]);
+
+  // Rajout dans le dmesh_nodal
+  PDM_DMesh_nodal_section_group_elmt_set(dmesh_nodal,
+                                         6,
+                                         delmt_group_idx,
+                                         delmt_group,
+                                         dcube->owner_for_dmesh_nodal);
 
 }
 
@@ -638,8 +743,9 @@ _generate_hexa_from_hexa
  PDM_dmesh_nodal_t* dmesh_nodal
 )
 {
-  int i_rank;
+  int n_rank, i_rank;
   PDM_MPI_Comm_rank(dcube->comm, &i_rank);
+  PDM_MPI_Comm_size(dcube->comm, &n_rank);
 
   int n_vtx_per_elmt     = 8;
 
@@ -676,13 +782,42 @@ _generate_hexa_from_hexa
                                   delmt_vtx,
                                   dcube->owner_for_dmesh_nodal);
 
+  // Hexa = que des quad aux bords
+  int         *delmt_group_idx = (int         *) malloc( (6 + 1                                   ) * sizeof(int        ));
+  int dn_quad_face = dcube->distrib_quad_seg_lim[i_rank+1] - dcube->distrib_quad_seg_lim[i_rank];
+  PDM_g_num_t *delmt_group     = (PDM_g_num_t *) malloc( (6 * dn_quad_face ) * sizeof(PDM_g_num_t));
+  delmt_group_idx[0] = 0;
 
-  _decompose_into_quad_i(dcube, dmesh_nodal, 0);
-  _decompose_into_quad_i(dcube, dmesh_nodal, dcube->n_g_hexa_cell_seg);
-  _decompose_into_quad_j(dcube, dmesh_nodal, 0);
-  _decompose_into_quad_j(dcube, dmesh_nodal, dcube->n_g_hexa_cell_seg);
-  _decompose_into_quad_k(dcube, dmesh_nodal, 0);
-  _decompose_into_quad_k(dcube, dmesh_nodal, dcube->n_g_hexa_cell_seg);
+  int shift_elmt = dcube->distrib_hexa[n_rank]+1; // Car les elements surfaciques se mettent après les volumiques et on commence à 1
+  delmt_group_idx[1] = dn_quad_face;
+  _decompose_into_quad_i(dcube, dmesh_nodal, 0, shift_elmt, &delmt_group[delmt_group_idx[0]]);
+
+  shift_elmt += dcube->distrib_quad_seg_lim[n_rank];
+  delmt_group_idx[2] = 2 * dn_quad_face;
+  _decompose_into_quad_i(dcube, dmesh_nodal, dcube->n_g_hexa_cell_seg, shift_elmt, &delmt_group[delmt_group_idx[1]]);
+
+  shift_elmt += dcube->distrib_quad_seg_lim[n_rank];
+  delmt_group_idx[3] = 3 * dn_quad_face;
+  _decompose_into_quad_j(dcube, dmesh_nodal, 0, shift_elmt, &delmt_group[delmt_group_idx[2]]);
+
+  shift_elmt += dcube->distrib_quad_seg_lim[n_rank];
+  delmt_group_idx[4] = 4 * dn_quad_face;
+  _decompose_into_quad_j(dcube, dmesh_nodal, dcube->n_g_hexa_cell_seg, shift_elmt, &delmt_group[delmt_group_idx[3]]);
+
+  shift_elmt += dcube->distrib_quad_seg_lim[n_rank];
+  delmt_group_idx[5] = 5 * dn_quad_face;
+  _decompose_into_quad_k(dcube, dmesh_nodal, 0, shift_elmt, &delmt_group[delmt_group_idx[4]]);
+
+  shift_elmt += dcube->distrib_quad_seg_lim[n_rank];
+  delmt_group_idx[6] = 6 * dn_quad_face;
+  _decompose_into_quad_k(dcube, dmesh_nodal, dcube->n_g_hexa_cell_seg, shift_elmt, &delmt_group[delmt_group_idx[5]]);
+
+  // Rajout dans le dmesh_nodal
+  PDM_DMesh_nodal_section_group_elmt_set(dmesh_nodal,
+                                         6,
+                                         delmt_group_idx,
+                                         delmt_group,
+                                         dcube->owner_for_dmesh_nodal);
 
 }
 
@@ -848,68 +983,68 @@ const double                zero_z,
 
 }
 
-/**
- *
- * \brief Return distributed cube size
- *
- * \param [in]   id            dcube identifier
- * \param [out]  n_face_group  Number of faces groups
- * \param [out]  dn_hexa_cell       Number of cells stored in this process
- * \param [out]  dn_face       Number of faces stored in this process
- * \param [out]  dn_vtx        Number of vertices stored in this process
- * \param [out]  sface_vtx     Length of dface_vtx array
- * \param [out]  sface_group   Length of dface_group array
- *
- */
+// /**
+//  *
+//  * \brief Return distributed cube size
+//  *
+//  * \param [in]   id            dcube identifier
+//  * \param [out]  n_face_group  Number of faces groups
+//  * \param [out]  dn_hexa_cell       Number of cells stored in this process
+//  * \param [out]  dn_face       Number of faces stored in this process
+//  * \param [out]  dn_vtx        Number of vertices stored in this process
+//  * \param [out]  sface_vtx     Length of dface_vtx array
+//  * \param [out]  sface_group   Length of dface_group array
+//  *
+//  */
 
-void
-PDM_dcube_nodal_gen_dim_get
-(
- PDM_dcube_nodal_t  *dcube,
- int                *n_face_group,
- int                *dn_hexa_cell,
- int                *dn_face,
- int                *dn_vtx,
- int                *sface_vtx,
- int                *sface_group
-)
-{
-  *n_face_group = dcube->n_face_group;
-  *dn_hexa_cell = dcube->dn_hexa_cell;
-  *dn_face      = -1;
-  *dn_vtx       = dcube->dn_vtx;
-  *sface_vtx    = 0; // dcube->dface_vtx_idx[dcube->dn_face];
-  *sface_group  = 0; // dcube->dface_group_idx[dcube->n_face_group];
-}
+// void
+// PDM_dcube_nodal_gen_dim_get
+// (
+//  PDM_dcube_nodal_t  *dcube,
+//  int                *n_face_group,
+//  int                *dn_hexa_cell,
+//  int                *dn_face,
+//  int                *dn_vtx,
+//  int                *sface_vtx,
+//  int                *sface_group
+// )
+// {
+//   *n_face_group = dcube->n_face_group;
+//   *dn_hexa_cell = dcube->dn_hexa_cell;
+//   *dn_face      = -1;
+//   *dn_vtx       = dcube->dn_vtx;
+//   *sface_vtx    = 0; // dcube->dface_vtx_idx[dcube->dn_face];
+//   *sface_group  = 0; // dcube->dface_group_idx[dcube->n_face_group];
+// }
 
-/**
- *
- * \brief Return distributed cube data
- *
- * \param [in]  id              dcube identifier
- * \param [out] dface_cell      Faces from cells connectivity (size = 2 * dn_face)
- * \param [out] dface_vtx_idx    Faces from vertices connectivity index (size = dn_face + 1)
- * \param [out] dface_vtx       Faces from vertices connectivity (size = sface_vtx)
- * \param [out] dvtx_coord      Vertices coordinates (size = 3 * dn_vtx)
- * \param [out] dface_group_idx Faces groups index (size = n_face_group + 1)
- * \param [out] dface_group     Faces groups (size = sface_group)
- *
- */
-void
-PDM_dcube_nodal_gen_data_get
-(
- PDM_dcube_nodal_t  *dcube,
- PDM_g_num_t       **delmt_vtx,
- double            **dvtx_coord,
- int               **dface_group_idx,
- PDM_g_num_t       **dface_group
-)
-{
-  *delmt_vtx       = dcube->delmt_vtx;
-  *dvtx_coord      = dcube->dvtx_coord;
-  *dface_group_idx = dcube->dface_group_idx;
-  *dface_group     = dcube->dface_group;
-}
+// /**
+//  *
+//  * \brief Return distributed cube data
+//  *
+//  * \param [in]  id              dcube identifier
+//  * \param [out] dface_cell      Faces from cells connectivity (size = 2 * dn_face)
+//  * \param [out] dface_vtx_idx    Faces from vertices connectivity index (size = dn_face + 1)
+//  * \param [out] dface_vtx       Faces from vertices connectivity (size = sface_vtx)
+//  * \param [out] dvtx_coord      Vertices coordinates (size = 3 * dn_vtx)
+//  * \param [out] dface_group_idx Faces groups index (size = n_face_group + 1)
+//  * \param [out] dface_group     Faces groups (size = sface_group)
+//  *
+//  */
+// void
+// PDM_dcube_nodal_gen_data_get
+// (
+//  PDM_dcube_nodal_t  *dcube,
+//  PDM_g_num_t       **delmt_vtx,
+//  double            **dvtx_coord,
+//  int               **dface_group_idx,
+//  PDM_g_num_t       **dface_group
+// )
+// {
+//   *delmt_vtx       = dcube->delmt_vtx;
+//   *dvtx_coord      = dcube->dvtx_coord;
+//   *dface_group_idx = dcube->dface_group_idx;
+//   *dface_group     = dcube->dface_group;
+// }
 
 
 PDM_dmesh_nodal_t*

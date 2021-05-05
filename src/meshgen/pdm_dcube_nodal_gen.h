@@ -70,18 +70,17 @@ const double                zero_z,
  * \param [out]  sface_group   Length of dface_group array
  *
  */
-
-void
-PDM_dcube_nodal_gen_dim_get
-(
- PDM_dcube_nodal_t  *dcube_nodal,
- int                *n_face_group,
- int                *dn_cell,
- int                *dn_face,
- int                *dn_vtx,
- int                *sface_vtx,
- int                *sface_group
-);
+// void
+// PDM_dcube_nodal_gen_dim_get
+// (
+//  PDM_dcube_nodal_t  *dcube_nodal,
+//  int                *n_face_group,
+//  int                *dn_cell,
+//  int                *dn_face,
+//  int                *dn_vtx,
+//  int                *sface_vtx,
+//  int                *sface_group
+// );
 
 /**
  *
@@ -96,16 +95,15 @@ PDM_dcube_nodal_gen_dim_get
  * \param [out] dface_group     Faces groups (size = dFacegroupL)
  *
  */
-
-void
-PDM_dcube_nodal_gen_data_get
-(
- PDM_dcube_nodal_t  *dcube_nodal,
- PDM_g_num_t       **delmt_vtx,
- double            **dvtx_coord,
- int               **dface_group_idx,
- PDM_g_num_t       **dface_group
-);
+// void
+// PDM_dcube_nodal_gen_data_get
+// (
+//  PDM_dcube_nodal_t  *dcube_nodal,
+//  PDM_g_num_t       **delmt_vtx,
+//  double            **dvtx_coord,
+//  int               **dface_group_idx,
+//  PDM_g_num_t       **dface_group
+// );
 
 
 

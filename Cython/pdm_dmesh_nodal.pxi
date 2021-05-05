@@ -57,6 +57,10 @@ cdef extern from "pdm_dmesh_nodal.h":
                                                 int                *dgroup_elmt_idx,
                                                 PDM_g_num_t        *dgroup_elmt,
                                                 PDM_ownership_t     owner)
+    void PDM_DMesh_nodal_section_group_elmt_get(PDM_dmesh_nodal_t  *dmesh_nodal,
+                                                int                *n_group_elmt,
+                                                int               **dgroup_elmt_idx,
+                                                PDM_g_num_t       **dgroup_elmt)
 
     PDM_g_num_t PDM_dmesh_nodal_total_n_cell_get(PDM_dmesh_nodal_t* dmn)
     PDM_g_num_t PDM_dmesh_nodal_total_n_face_get(PDM_dmesh_nodal_t* dmn)
@@ -387,6 +391,12 @@ cdef class DistributedMeshNodalCaspule:
     return dmesh_nodal_get_sections(self, comm)
 
   # ------------------------------------------------------------------------
+  def dmesh_nodal_get_group(self):
+    """
+    """
+    return dmesh_nodal_get_group(self)
+
+  # ------------------------------------------------------------------------
   def dmesh_nodal_get_g_dims(self):
     """
     """
@@ -501,6 +511,38 @@ def dmesh_nodal_get_sections(DMeshNodal pydmn, MPI.Comm    comm):
   print("Return dmesh_nodal_get_sections")
   return {"vtx"      : {"np_vtx" : np_vtx, "np_vtx_distrib" : np_vtx_distrib},
           "sections" : sections}
+
+
+def dmesh_nodal_get_group(DMeshNodal pydmn):
+  """
+  """
+  # ************************************************************************
+  # > Declaration
+  cdef int                   n_group
+  cdef int                  *dgroup_elmt_idx
+  cdef PDM_g_num_t          *dgroup_elmt
+  cdef NPY.npy_intp          dim
+  # ************************************************************************
+
+  PDM_DMesh_nodal_section_group_elmt_get(pydmn.dmn, &n_group, &dgroup_elmt_idx, &dgroup_elmt);
+
+  dim = <NPY.npy_intp> n_group + 1
+  np_dgroup_elmt_idx = NPY.PyArray_SimpleNewFromData(1,
+                                                     &dim,
+                                                     NPY.NPY_INT32,
+                                                     <void *> dgroup_elmt_idx)
+  PyArray_ENABLEFLAGS(np_dgroup_elmt_idx, NPY.NPY_OWNDATA);
+
+  dim = <NPY.npy_intp> np_dgroup_elmt_idx[n_group]
+  np_dgroup_elmt = NPY.PyArray_SimpleNewFromData(1,
+                                                 &dim,
+                                                 PDM_G_NUM_NPY_INT,
+                                                 <void *> dgroup_elmt)
+  PyArray_ENABLEFLAGS(np_dgroup_elmt, NPY.NPY_OWNDATA);
+
+  return {"dgroup_elmt_idx" : np_dgroup_elmt_idx,
+          "dgroup_elmt"     : np_dgroup_elmt}
+
 
 # ------------------------------------------------------------------------
 def ElementParentFind(int                                           dnelt,
