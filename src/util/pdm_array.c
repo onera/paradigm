@@ -74,6 +74,33 @@ inline void PDM_array_reset_gnum(PDM_g_num_t *array, const int size, const PDM_g
         array[i] = value;
 }
 
+inline int* PDM_array_new_idx_from_sizes_int(const int *size_array, const int size) {
+  int *idx_array = (int *) malloc((size+1) * sizeof(int));
+  idx_array[0] = 0;
+  for (int i = 0; i < size; i++)
+    idx_array[i+1] = idx_array[i] + size_array[i];
+  return idx_array;
+}
+
+inline void PDM_array_idx_from_sizes_int(const int *size_array, const int size, int *idx_array) {
+  idx_array[0] = 0;
+  for (int i = 0; i < size; i++)
+    idx_array[i+1] = idx_array[i] + size_array[i];
+}
+
+inline PDM_g_num_t* PDM_array_new_idx_from_sizes_gnum(const int *size_array, const int size) {
+  PDM_g_num_t *idx_array = (PDM_g_num_t *) malloc((size+1) * sizeof(PDM_g_num_t));
+  idx_array[0] = 0;
+  for (int i = 0; i < size; i++)
+    idx_array[i+1] = idx_array[i] + size_array[i];
+  return idx_array;
+}
+
+inline void PDM_array_idx_from_sizes_gnum(const int *size_array, const int size, PDM_g_num_t *idx_array) {
+  idx_array[0] = 0;
+  for (int i = 0; i < size; i++)
+    idx_array[i+1] = idx_array[i] + size_array[i];
+}
 
 #ifdef __cplusplus
 }

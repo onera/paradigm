@@ -47,3 +47,33 @@ MPI_TEST_CASE("[1p] _PDM_array_reset", 1) {
   free(array_gnum);
 }
 
+MPI_TEST_CASE("[1p] _PDM_array_new_idx_from_sizes", 1) {
+  int size_array[] = {5, 5, 2, 5};
+  int *idx_array = PDM_array_new_idx_from_sizes_int(size_array, 4);
+  int expected_idx_array[] = {0, 5, 10, 12, 17};
+  CHECK_EQ_C_ARRAY(idx_array, expected_idx_array, 4+1);
+  free(idx_array);
+
+  PDM_g_num_t *idx_array_gnum = PDM_array_new_idx_from_sizes_gnum(size_array, 4);
+  PDM_g_num_t expected_idx_array_gnum[] = {0, 5, 10, 12, 17};
+  CHECK_EQ_C_ARRAY(idx_array_gnum, expected_idx_array_gnum, 4+1);
+  free(idx_array_gnum);
+
+  int empty_array[] = {};
+  idx_array = PDM_array_new_idx_from_sizes_int(empty_array, 0);
+  CHECK(idx_array[0] == 0);
+  free(idx_array);
+}
+
+MPI_TEST_CASE("[1p] _PDM_array_idx_from_sizes", 1) {
+  int size_array[] = {5, 5, 2, 5};
+  int idx_array[] = {-1,-1,-1,-1,-1};
+  PDM_array_idx_from_sizes_int(size_array, 4, idx_array);
+  int expected_idx_array[] = {0, 5, 10, 12, 17};
+  CHECK_EQ_C_ARRAY(idx_array, expected_idx_array, 4+1);
+
+  PDM_g_num_t idx_array_gnum[] = {-1,-1,-1,-1,-1};
+  PDM_array_idx_from_sizes_gnum(size_array, 4, idx_array_gnum);
+  int expected_idx_array_gnum[] = {0, 5, 10, 12, 17};
+  CHECK_EQ_C_ARRAY(idx_array_gnum, expected_idx_array_gnum, 4+1);
+}
