@@ -77,3 +77,23 @@ MPI_TEST_CASE("[1p] _PDM_array_idx_from_sizes", 1) {
   int expected_idx_array_gnum[] = {0, 5, 10, 12, 17};
   CHECK_EQ_C_ARRAY(idx_array_gnum, expected_idx_array_gnum, 4+1);
 }
+
+MPI_TEST_CASE("[1p] _PDM_array_count_per_col", 1) {
+  int color_array[] = {3,2,1,2,4,3,2,1,2,3,2,1,2,3,4};
+  int n_per_col[5];
+  int expected_n_per_col[] = {0,3,6,4,2};
+  PDM_array_count_per_col_int(5, 15, color_array, n_per_col);
+  CHECK_EQ_C_ARRAY(n_per_col, expected_n_per_col, 5);
+}
+
+MPI_TEST_CASE("[1p] _PDM_array_repart_per_col", 1) {
+  int color_array[] = {3,2,1,2,4,3,2,1,2,3,2,1,2,3,4};
+  int ordered_idx[5+1];
+  int ordered[15];
+  int expected_ordered_idx[] = {0, 0, 3, 9, 13, 15};
+  int expected_ordered[] = {2,7,11,1,3,6,8,10,12,0,5,9,13,4,14};
+  PDM_array_repart_per_col_int(5, 15, color_array, ordered_idx, ordered);
+  CHECK_EQ_C_ARRAY(ordered_idx, expected_ordered_idx, 5+1);
+  CHECK_EQ_C_ARRAY(ordered, expected_ordered, 15);
+}
+

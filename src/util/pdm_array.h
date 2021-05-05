@@ -32,6 +32,16 @@ PDM_g_num_t* PDM_array_new_idx_from_sizes_gnum(const int *size_array, const int 
 void PDM_array_idx_from_sizes_gnum(const int *size_array, const int size, PDM_g_num_t *idx_array);
 
 
+void PDM_array_count_per_col_int(const int n_col, const int n_elem, const int *elem_col, int *n_per_col);
+void PDM_array_repart_per_col_int
+(
+ const int   n_col,
+ const int   n_elem,
+ const int *elem_col,
+ int       *ordered_idx,
+ int       *ordered
+);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
