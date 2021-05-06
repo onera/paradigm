@@ -37,80 +37,93 @@ extern "C" {
  * Definition des fonctions publiques
  *============================================================================*/
 
+/* Utils functions creating new arrays */
+
+
 /*
- * Create a new array int array of size size and fill it with 0
+ * Allocate a new array of size size and fill it with 0
 */
-inline int* PDM_array_zeros_int(const int size) {
+int* PDM_array_zeros_int(const int size) {
   int *array = (int *) malloc(size * sizeof(int));
   assert (array != NULL);
-  for (int i = 0; i < size; i++)
-    array[i] = 0;
+  for (int i = 0; i < size; i++) array[i] = 0;
   return array;
 }
 
-inline int* PDM_array_const_int(const int size, const int value) {
+/*
+ * Allocate a new array of size size and fill it with value
+*/
+int* PDM_array_const_int(const int size, const int value) {
   int *array = (int *) malloc(size * sizeof(int));
   assert (array != NULL);
-  for (int i = 0; i < size; i++)
-    array[i] = value;
+  for (int i = 0; i < size; i++) array[i] = value;
   return array;
 }
-
-inline void PDM_array_reset_int(int *array, const int size, const int value) {
-    for (int i = 0; i < size; i++)
-        array[i] = value;
-}
-
-inline PDM_g_num_t* PDM_array_const_gnum(const int size, const PDM_g_num_t value) {
+PDM_g_num_t* PDM_array_const_gnum(const int size, const PDM_g_num_t value) {
   PDM_g_num_t *array = (PDM_g_num_t *) malloc(size * sizeof(PDM_g_num_t));
   assert (array != NULL);
-  for (int i = 0; i < size; i++)
-    array[i] = value;
+  for (int i = 0; i < size; i++) array[i] = value;
   return array;
 }
 
-inline void PDM_array_reset_gnum(PDM_g_num_t *array, const int size, const PDM_g_num_t value) {
-    for (int i = 0; i < size; i++)
-        array[i] = value;
-}
-
-inline int* PDM_array_new_idx_from_sizes_int(const int *size_array, const int size) {
+/*
+ * Allocate a new array index array (size=size+1) and fill it from
+ * the size array size_array (which must be of size size)
+*/
+int* PDM_array_new_idx_from_sizes_int(const int *size_array, const int size) {
   int *idx_array = (int *) malloc((size+1) * sizeof(int));
   idx_array[0] = 0;
-  for (int i = 0; i < size; i++)
-    idx_array[i+1] = idx_array[i] + size_array[i];
+  for (int i = 0; i < size; i++) idx_array[i+1] = idx_array[i] + size_array[i];
   return idx_array;
 }
-
-inline void PDM_array_idx_from_sizes_int(const int *size_array, const int size, int *idx_array) {
-  idx_array[0] = 0;
-  for (int i = 0; i < size; i++)
-    idx_array[i+1] = idx_array[i] + size_array[i];
-}
-
-inline PDM_g_num_t* PDM_array_new_idx_from_sizes_gnum(const int *size_array, const int size) {
+PDM_g_num_t* PDM_array_new_idx_from_sizes_gnum(const int *size_array, const int size) {
   PDM_g_num_t *idx_array = (PDM_g_num_t *) malloc((size+1) * sizeof(PDM_g_num_t));
   idx_array[0] = 0;
-  for (int i = 0; i < size; i++)
-    idx_array[i+1] = idx_array[i] + size_array[i];
+  for (int i = 0; i < size; i++) idx_array[i+1] = idx_array[i] + size_array[i];
   return idx_array;
 }
 
-inline void PDM_array_idx_from_sizes_gnum(const int *size_array, const int size, PDM_g_num_t *idx_array) {
+
+/* Utils functions modifying arrays*/
+
+
+/*
+ * Fill the given array of size size with the value value
+*/
+void PDM_array_reset_int(int *array, const int size, const int value) {
+    for (int i = 0; i < size; i++) array[i] = value;
+}
+void PDM_array_reset_gnum(PDM_g_num_t *array, const int size, const PDM_g_num_t value) {
+    for (int i = 0; i < size; i++) array[i] = value;
+}
+
+/*
+ * Fill the index array idx_array (preallocated at size=size+1) from the size array
+ * size_array (of size size)
+*/
+void PDM_array_idx_from_sizes_int(const int *size_array, const int size, int *idx_array) {
   idx_array[0] = 0;
-  for (int i = 0; i < size; i++)
-    idx_array[i+1] = idx_array[i] + size_array[i];
+  for (int i = 0; i < size; i++) idx_array[i+1] = idx_array[i] + size_array[i];
+}
+void PDM_array_idx_from_sizes_gnum(const int *size_array, const int size, PDM_g_num_t *idx_array) {
+  idx_array[0] = 0;
+  for (int i = 0; i < size; i++) idx_array[i+1] = idx_array[i] + size_array[i];
 }
 
-inline void PDM_array_accumulate_int(int *array, const int size) {
-  for (int i = 1; i < size; i++)
-    array[i] = array[i] + array[i-1];
+/*
+ * Accumulate the values of the input array array of size size, ie
+ * array[0] remains unchanged, and array[i] = sum_{j=0...i} array[j]
+*/
+void PDM_array_accumulate_int(int *array, const int size) {
+  for (int i = 1; i < size; i++) array[i] = array[i] + array[i-1];
+}
+void PDM_array_accumulate_gnum(PDM_g_num_t *array, const int size) {
+  for (int i = 1; i < size; i++) array[i] = array[i] + array[i-1];
 }
 
-inline void PDM_array_accumulate_gnum(PDM_g_num_t *array, const int size) {
-  for (int i = 1; i < size; i++)
-    array[i] = array[i] + array[i-1];
-}
+
+/* Arrays algorithms */
+
 
 /*
  * Count the number of occurence of each color in a color_array.
@@ -123,7 +136,7 @@ void PDM_array_count_per_col_int
  const int  n_elem,
  const int *elem_col,
  int       *n_per_col
-) 
+)
 {
   PDM_array_reset_int(n_per_col, n_col, 0);
   for (int i_elem = 0; i_elem < n_elem; i_elem++)
@@ -135,9 +148,9 @@ void PDM_array_count_per_col_int
 }
 
 /*
- * From an array of colors, compute the index order to be used to 
+ * From an array of colors, compute the index order to be used to
  * read the array in increasing color order.
- * Fill ordered_idx, which must be pre allocated at size n_col+1, and 
+ * Fill ordered_idx, which must be pre allocated at size n_col+1, and
  * ordered, which must be preallocated at size n_elem.
  * Colors are expected to start at 0.
 */
