@@ -718,10 +718,7 @@ PDM_elt_parent_find_from_distrib
                     comm);
 
   FaceDistrib[0] = 0;
-
-  for (int i = 1; i < n_rank+1; i++) {
-    FaceDistrib[i] +=  FaceDistrib[i-1];
-  }
+  PDM_array_accumulate_gnum(FaceDistrib, n_rank+1);
 
   /* Verbose */
   if (0 == 1) {

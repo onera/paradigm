@@ -78,6 +78,13 @@ MPI_TEST_CASE("[1p] _PDM_array_idx_from_sizes", 1) {
   CHECK_EQ_C_ARRAY(idx_array_gnum, expected_idx_array_gnum, 4+1);
 }
 
+MPI_TEST_CASE("[1p] _PDM_array_accumulate", 1) {
+  int array[] = {0,3,6,4,2};
+  int expected_array[] = {0,3,9,13,15};
+  PDM_array_accumulate_int(array, 5);
+  CHECK_EQ_C_ARRAY(array, expected_array, 5);
+}
+
 MPI_TEST_CASE("[1p] _PDM_array_count_per_col", 1) {
   int color_array[] = {3,2,1,2,4,3,2,1,2,3,2,1,2,3,4};
   int n_per_col[5];

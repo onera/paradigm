@@ -185,9 +185,7 @@ _build_join_uface_distribution
                     PDM_MPI_INT, PDM_MPI_SUM, _multipart->comm);
 
   _face_in_join_distri[0] = 0;
-  for (int i=0; i < n_unique_joins; i++) {
-    _face_in_join_distri[i+1] = _face_in_join_distri[i+1] + _face_in_join_distri[i];
-  }
+  PDM_array_accumulate_int(_face_in_join_distri, n_unique_joins+1);
 
   /*
   PDM_printf("[%d] _face_in_join_distri : ", i_rank);

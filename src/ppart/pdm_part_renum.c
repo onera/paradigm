@@ -308,9 +308,7 @@ int       *connectivities
   }
 
   connectivity_idx[0] = 0;
-  for (int elem = 1; elem < n_elmt+1; ++elem) {
-    connectivity_idx[elem] += connectivity_idx[elem-1];
-  }
+  PDM_array_accumulate_int(connectivity_idx, n_elmt+1);
 
   for (int elem = 0; elem < n_elmt; ++elem) {
     int nbsslemt = old_connectivity_idx[new_to_old_order[elem] + 1] - old_connectivity_idx[new_to_old_order[elem]];

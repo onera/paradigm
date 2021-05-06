@@ -212,9 +212,7 @@ PDM_surf_part_t *part
   }
 
   hashTableIdx[0] = 0;
-  for (int i = 1; i < lHashTableIdx; i++) {
-    hashTableIdx[i] =  hashTableIdx[i] +  hashTableIdx[i-1];
-  }
+  PDM_array_accumulate_int(hashTableIdx, lHashTableIdx);
 
   int *listEdges = (int *) malloc(sizeof(int) * l_edges);
   int *edgeFaceUncompress = (int *) malloc(sizeof(int) * l_edges/2);

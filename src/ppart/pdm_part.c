@@ -223,13 +223,8 @@ _dual_graph_from_face_cell
    * Create index aray
    */
 
-  int *cell_to_send_idx = (int *) malloc((n_rank+1) * sizeof(int));
-
-  cell_to_send_idx[0] = 0;
-  for (int i = 1; i < n_rank + 1; i++) {
-    cell_to_send_idx[i] = cell_to_send_idx[i-1] + cell_to_send_n[i-1];
-    cell_to_send_n[i-1] = 0;
-  }
+  int *cell_to_send_idx = PDM_array_new_idx_from_sizes_int(cell_to_send_n, n_rank);
+  PDM_array_reset_int(cell_to_send_n, n_rank, 0);
 
   PDM_g_num_t *cell_to_send = (PDM_g_num_t *) malloc(cell_to_send_idx[n_rank] * sizeof(PDM_g_num_t));
 
@@ -919,9 +914,7 @@ _distrib_cell
   }
 
   face_to_send_idx[0] = 0;
-  for (int i = 0; i < n_rank; i++) {
-    face_to_send_idx[i+1] += face_to_send_idx[i] ;
-  }
+  PDM_array_accumulate_int(face_to_send_idx, n_rank+1);
 
   int         *face_to_send_n = PDM_array_zeros_int(n_rank);
   PDM_g_num_t *face_to_send  =
@@ -1349,8 +1342,7 @@ _distrib_face
       }
 
       mesh_part->face_vtx_idx[0] = 0;
-      for (int i = 0; i < mesh_part->n_face; i++)
-        mesh_part->face_vtx_idx[i+1] += mesh_part->face_vtx_idx[i];
+      PDM_array_accumulate_int(mesh_part->face_vtx_idx, mesh_part->n_face+1);
 
       mesh_part->gface_vtx =
         (PDM_g_num_t *) malloc(mesh_part->face_vtx_idx[mesh_part->n_face] * sizeof(PDM_g_num_t));
@@ -2144,9 +2136,7 @@ _distrib_face_groups
                       ppart->comm);
 
     dface_group_proc[0] = 0;
-    for (int i = 1; i < n_rank+1; i++) {
-      dface_group_proc[i] = dface_group_proc[i] + dface_group_proc[i-1];
-    }
+    PDM_array_accumulate_gnum(dface_group_proc, n_rank+1);
 
     /*
      *  Build dface_group

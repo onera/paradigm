@@ -1349,10 +1349,7 @@ const int                n_part,
         ghostEltPartIdx[++idx] = tagGhostEltPart[i][j];
       }
     }
-
-    for (int j = 0; j < nGhostEltPart; j++) {
-      ghostEltPartIdx[j+1] += ghostEltPartIdx[j];
-    }
+    PDM_array_accumulate_int(ghostEltPartIdx, nGhostEltPart+1);
 
     free (tagGhostEltPart[i]);
 

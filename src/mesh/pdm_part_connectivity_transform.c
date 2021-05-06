@@ -178,11 +178,8 @@ const int   n_entity2,
     }
   }
 
-  _entity2_entity1_idx[0] = 0;
-  for(int i_entity2 = 0; i_entity2 < n_entity2; ++i_entity2) {
-    _entity2_entity1_idx[i_entity2+1] = _entity2_entity1_idx[i_entity2] + entity2_entity1_n[i_entity2];
-    entity2_entity1_n[i_entity2] = 0;
-  }
+  PDM_array_idx_from_sizes_int(entity2_entity1_n, n_entity2, _entity2_entity1_idx);
+  PDM_array_reset_int(entity2_entity1_n, n_entity2, 0);
 
   int* _entity2_entity1 = (int * ) malloc( _entity2_entity1_idx[n_entity2] * sizeof(int));
 

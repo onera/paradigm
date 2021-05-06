@@ -102,6 +102,16 @@ inline void PDM_array_idx_from_sizes_gnum(const int *size_array, const int size,
     idx_array[i+1] = idx_array[i] + size_array[i];
 }
 
+inline void PDM_array_accumulate_int(int *array, const int size) {
+  for (int i = 1; i < size; i++)
+    array[i] = array[i] + array[i-1];
+}
+
+inline void PDM_array_accumulate_gnum(PDM_g_num_t *array, const int size) {
+  for (int i = 1; i < size; i++)
+    array[i] = array[i] + array[i-1];
+}
+
 /*
  * Count the number of occurence of each color in a color_array.
  * Fill n_per_col, which must be pre allocated at size n_col
