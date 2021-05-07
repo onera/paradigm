@@ -26,6 +26,8 @@
 #include "pdm_error.h"
 #include "pdm_mpi_node_first_rank.h"
 
+#include "pdm_triangulate.h"
+
 /*============================================================================
  * Type definitions
  *============================================================================*/
@@ -1702,6 +1704,179 @@ static void _export_vtk
 
 
 
+
+static void
+_export_ol_vtk
+(
+ const PDM_MPI_Comm   pdm_mpi_comm,
+ const int            pdm_id,
+ int                **nFace,
+ double             **sFieldOlA,
+ double             **rFieldOlB,
+ const int            n_part
+ )
+{
+  int i_rank;
+  int numProcs;
+
+  PDM_MPI_Comm_rank (PDM_MPI_COMM_WORLD, &i_rank);
+  PDM_MPI_Comm_size (PDM_MPI_COMM_WORLD, &numProcs);
+
+  char nom_geom[8];
+  for (int imesh = 0; imesh < 2; imesh++) {
+
+    double **field;
+    PDM_ol_mesh_t mesht;
+
+    if (imesh == 0) {
+      strcpy (nom_geom,"olmesh1");
+      mesht = PDM_OL_MESH_A;
+      field = sFieldOlA;
+    }
+    else {
+      strcpy (nom_geom,"olmesh2");
+      mesht = PDM_OL_MESH_B;
+      field = rFieldOlB;
+    }
+
+    for (int ipart = 0; ipart < n_part; ipart++) {
+
+      int           nOlFace;
+      int           nOlLinkedFace;
+      int           nOlVtx;
+      int           sOlFaceIniVtx;
+      int           sOlface_vtx;
+      int           sInitToOlFace;
+
+      PDM_ol_part_mesh_dim_get (pdm_id,
+                                mesht,
+                                ipart,
+                                &nOlFace,
+                                &nOlLinkedFace,
+                                &nOlVtx,
+                                &sOlFaceIniVtx,
+                                &sOlface_vtx,
+                                &sInitToOlFace);
+
+      int            *olFaceIniVtxIdx;
+      int            *olFaceIniVtx;
+      int            *olface_vtx_idx;
+      int            *olface_vtx;
+      int            *olLinkedface_procIdx;
+      int            *olLinkedFace;
+      PDM_g_num_t    *olface_ln_to_gn;
+      double         *olCoords;
+      PDM_g_num_t    *olvtx_ln_to_gn;
+      int            *initToOlFaceIdx;
+      int            *initToOlFace;
+
+      PDM_ol_mesh_entities_get (pdm_id,
+                                mesht,
+                                ipart,
+                                &olFaceIniVtxIdx,
+                                &olFaceIniVtx,
+                                &olface_vtx_idx,
+                                &olface_vtx,
+                                &olLinkedface_procIdx,
+                                &olLinkedFace,
+                                &olface_ln_to_gn,
+                                &olCoords,
+                                &olvtx_ln_to_gn,
+                                &initToOlFaceIdx,
+                                &initToOlFace);
+
+      int n_tri = 0;
+      int max_n_vtx_poly = 0;
+      for (int ipoly = 0; ipoly < nOlFace; ipoly++) {
+        int n_vtx_poly = olface_vtx_idx[ipoly+1] - olface_vtx_idx[ipoly];
+        n_tri += (n_vtx_poly - 2)*3;
+        max_n_vtx_poly = PDM_MAX (max_n_vtx_poly, n_vtx_poly);
+      }
+
+      PDM_triangulate_state_t *state = PDM_triangulate_state_create (max_n_vtx_poly);
+
+      int *tri_vtx_idx = malloc (sizeof(int) * (n_tri+1));
+      int *tri_vtx = malloc (sizeof(int) * n_tri * 3);
+      int *tri_poly = malloc (sizeof(int) * n_tri);
+      tri_vtx_idx[0] = 0;
+      n_tri = 0;
+      for (int ipoly = 0; ipoly < nOlFace; ipoly++) {
+        int n_vtx_poly = olface_vtx_idx[ipoly+1] - olface_vtx_idx[ipoly];
+
+        int _n_tri = PDM_triangulate_polygon (3,
+                                              n_vtx_poly,
+                                              olCoords,
+                                              NULL,
+                                              olface_vtx + olface_vtx_idx[ipoly],
+                                              PDM_TRIANGULATE_MESH_DEF,
+                                              tri_vtx + tri_vtx_idx[n_tri],
+                                              state);
+
+        for (int i = 0; i < _n_tri; i++) {
+          tri_vtx_idx[n_tri+1] = tri_vtx_idx[n_tri] + 3;
+          tri_poly[n_tri] = ipoly + 1;
+          n_tri++;
+        }
+      } // End loop on polygons
+
+
+      char filename[999];
+      sprintf(filename, "%s_%3.3d.vtk", nom_geom, n_part*i_rank + ipart);
+
+      FILE *f = fopen(filename, "w");
+
+      fprintf(f, "# vtk DataFile Version 2.0\nmesh\nASCII\nDATASET POLYDATA\n");
+
+      fprintf(f, "POINTS %d double\n", nOlVtx);
+      for (int i = 0; i < nOlVtx; i++) {
+        for (int j = 0; j < 3; j++) {
+          fprintf(f, "%lf ", olCoords[3*i+j]);
+        }
+        fprintf(f, "\n");
+      }
+
+      if (1) {
+        fprintf(f, "POLYGONS %d %d\n", n_tri, 4*n_tri);
+        for (int i = 0; i < n_tri; i++) {
+          fprintf(f, "%d ", tri_vtx_idx[i+1] - tri_vtx_idx[i]);
+          for (int j = tri_vtx_idx[i]; j < tri_vtx_idx[i+1]; j++) {
+            fprintf(f, "%d ", tri_vtx[j] - 1);
+          }
+          fprintf(f, "\n");
+        }
+
+        fprintf(f, "CELL_DATA %d\n", n_tri);
+        fprintf(f, "SCALARS field double 1\n");
+        fprintf(f, "LOOKUP_TABLE default\n");
+        for (int i = 0; i < n_tri; i++) {
+          int iface = tri_poly[i] - 1;
+          fprintf(f, "%f\n", field[ipart][iface]);
+        }
+
+      } else {
+        fprintf(f, "POLYGONS %d %d\n", nOlFace, nOlFace + olface_vtx_idx[nOlFace]);
+        for (int i = 0; i < nOlFace; i++) {
+          fprintf(f, "%d ", olface_vtx_idx[i+1] - olface_vtx_idx[i]);
+          for (int j = olface_vtx_idx[i]; j < olface_vtx_idx[i+1]; j++) {
+            fprintf(f, "%d ", olface_vtx[j] - 1);
+          }
+          fprintf(f, "\n");
+        }
+      }
+
+      fclose(f);
+
+
+      state = PDM_triangulate_state_destroy (state);
+      free (tri_vtx_idx);
+      free (tri_vtx);
+      free (tri_poly);
+    } // End loop on parts
+
+  } // End loop on meshes
+}
+
+
 /**
  *
  * \brief  Main
@@ -2252,6 +2427,7 @@ char *argv[]
 
         for (int i = 0; i < nOlFace; i++) {
           surfOlB[ipart][i] = PDM_MODULE(ol_surface_vector + 3*i);
+          rFieldOlB[ipart][i] = -1.;//
         }
 
         for (int i = 0; i < nFace[imesh][ipart]; i++) {
@@ -2419,6 +2595,13 @@ char *argv[]
                      sFieldOlA,
                      rFieldOlB,
                      n_part);
+
+    _export_ol_vtk (PDM_MPI_COMM_WORLD,
+                    pdm_id,
+                    nFace,
+                    sFieldOlA,
+                    rFieldOlB,
+                    n_part);
   }
 
   /*
