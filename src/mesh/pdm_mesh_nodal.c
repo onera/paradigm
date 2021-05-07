@@ -1402,7 +1402,7 @@ PDM_Mesh_nodal_t *mesh,
 const int i_part
 )
 {
-  if (mesh->numabs != NULL) {
+  if (mesh->numabs == NULL) {
     mesh->numabs = malloc (sizeof(PDM_g_num_t*)*mesh->n_part);
     int is_parent_num = (PDM_Mesh_nodal_block_parent_num_get(mesh, 0, 0) == NULL);
     for (int i = 0; i < mesh->n_part; i++) {
