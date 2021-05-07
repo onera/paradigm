@@ -4942,6 +4942,35 @@ _intersect_edges_projection
     if (solutions[0] >= 0. && solutions[0] <= 1.) {
       if (solutions[1] >= 0. && solutions[1] <= 1.) {
         // which solution to keep???
+        printf("A0 = (%12.5e, %12.5e, %12.5e)\n", a0[0], a0[1], a0[2]);
+        printf("A1 = (%12.5e, %12.5e, %12.5e)\n", a1[0], a1[1], a1[2]);
+        printf("n0 = (%12.5e, %12.5e, %12.5e)\n", n0[0], n0[1], n0[2]);
+        printf("n1 = (%12.5e, %12.5e, %12.5e)\n", n1[0], n1[1], n1[2]);
+        printf("B0 = (%12.5e, %12.5e, %12.5e)\n", b0[0], b0[1], b0[2]);
+        printf("B1 = (%12.5e, %12.5e, %12.5e)\n", b1[0], b1[1], b1[2]);
+        printf("c2 = %12.5e, c1 = %12.5e, c0 = %12.5e\n", c2, c1, c0);
+
+        FILE *f = fopen("debug_intersect_edge_projection.vtk", "w");
+        fprintf(f, "# vtk DataFile Version 2.0\nintersect_edge_projection\nASCII\nDATASET UNSTRUCTURED_GRID\n");
+        fprintf(f, "POINTS 4 double\n");
+        fprintf(f, "%12.5e %12.5e %12.5e\n", a0[0], a0[1], a0[2]);
+        fprintf(f, "%12.5e %12.5e %12.5e\n", a1[0], a1[1], a1[2]);
+        fprintf(f, "%12.5e %12.5e %12.5e\n", b0[0], b0[1], b0[2]);
+        fprintf(f, "%12.5e %12.5e %12.5e\n", b1[0], b1[1], b1[2]);
+        fprintf(f, "CELLS 2 6\n");
+        fprintf(f, "2 0 1\n2 2 3\n");
+        fprintf(f, "CELL_TYPES 2\n");
+        fprintf(f, "3\n3\n");
+        fprintf(f, "CELL_DATA 2\n");
+        fprintf(f, "SCALARS imesh int\nLOOKUP_TABLE default\n");
+        fprintf(f, "1\n2\n");
+        fprintf(f, "POINT_DATA 4\n");
+        fprintf(f, "VECTORS normal double\n");
+        fprintf(f, "%12.5e %12.5e %12.5e\n", n0[0], n0[1], n0[2]);
+        fprintf(f, "%12.5e %12.5e %12.5e\n", n1[0], n1[1], n1[2]);
+        fprintf(f, "0. 0. 1.\n0. 0. 1.\n");
+        fclose(f);
+
         PDM_error(__FILE__, __LINE__, 0, "_solve_quadratic found 2 real, valid solutions: %f and %f\n", solutions[0], solutions[1]);
       }
       else {
@@ -5079,6 +5108,15 @@ const double                 coordsVtxB[6]
   /*  PDM_LINE_INTERSECT_YES     = 1,  !< Intersection */
   /*  PDM_LINE_INTERSECT_ON_LINE = 2,  !< On line  */
 
+  /* IMPORTANT REMINDER:
+   * A point A(u) (resp B(v)) on line A (resp on line B) is parameterized by:
+   *   A(u) = (1 - u)*A0 + u*A1 (resp B(v) = (1 - v)*B0 + v*B1))
+   * The distance between A(u) and B(v) is minimal for u = u1 and v = v1 (-inf < u,v < +inf).
+   * Therefore, PDM_LINE_INTERSECT_YES means that the points of minimal distance
+   * between lines A and B are actually INSIDE edges A and B (0 <= u1,v1 <= 1).
+   * However, this distance is generally non-zero.
+   */
+
   bool isInitialOnLine = false;
   if (tIntersect == PDM_LINE_INTERSECT_ON_LINE) {
     isInitialOnLine = true;
@@ -5144,29 +5182,6 @@ const double                 coordsVtxB[6]
 
     int isA2B2 = (mB2A2 < _charLgthVtxA[1]) &&
       (mB2A2 < _charLgthVtxB[1]);
-
-
-    /* double dVtxA[2] = {PDM_ABS (u1 * vA_norm), */
-    /*                    PDM_ABS ((1. - u1) * vA_norm)}; */
-
-    /* double dVtxB[2] = {PDM_ABS (v1 * vB_norm), */
-    /*                    PDM_ABS ((1. - v1) * vB_norm)}; */
-
-    /*
-     * Check if A vertex and B vertex are the same
-     */
-
-    /* int isA1B1 = (dVtxA[0] < _charLgthVtxA[0]) && */
-    /*              (dVtxB[0] < _charLgthVtxB[0]); */
-
-    /* int isA1B2 = (dVtxA[0] < _charLgthVtxA[0]) && */
-    /*              (dVtxB[1] < _charLgthVtxB[1]); */
-
-    /* int isA2B1 = (dVtxA[1] < _charLgthVtxA[1]) && */
-    /*              (dVtxB[0] < _charLgthVtxB[0]); */
-
-    /* int isA2B2 = (dVtxA[1] < _charLgthVtxA[1]) && */
-    /*              (dVtxB[1] < _charLgthVtxB[1]); */
 
 
     /*
@@ -5510,20 +5525,47 @@ const double                 coordsVtxB[6]
 
       //-->>
       else {
-        double uAproj, uBproj;
-        PDM_line_intersect_t tIntersectProj = _intersect_edges_projection (coordsVtxA,
-                                                                           coordsVtxA + 3,
-                                                                           normalVtxA,
-                                                                           normalVtxA + 3,
-                                                                           coordsVtxB,
-                                                                           coordsVtxB + 3,
-                                                                           &uAproj,
-                                                                           &uBproj);
+        /*
+         * edges A and B are in general position, i.e.
+         *   - they are not parallel
+         *   - vertices of edge A are not on edge B and vice versa
+         */
 
-        if (tIntersectProj == PDM_LINE_INTERSECT_YES) {
-          tIntersect = tIntersectProj;
-          u1 = uAproj;
-          v1 = uBproj;
+        /* check whether edges A and B actually intersect */
+        double cl = PDM_MIN (_charLgthVtxA[0] + u1*(_charLgthVtxA[1] - _charLgthVtxA[0]),
+                             _charLgthVtxB[0] + v1*(_charLgthVtxB[1] - _charLgthVtxB[0]));
+        double dist2 = 0., d;
+        for (int i = 0; i < 3; i++) {
+          d = (coordsVtxA[i] + u1*(coordsVtxA[3+i] - coordsVtxA[i]))
+            - (coordsVtxB[i] + v1*(coordsVtxB[3+i] - coordsVtxB[i]));
+          dist2 += d * d;
+        }
+
+        if (dist2 > cl*cl) {
+          /* Edges A and B do not actually intersect
+           * Check whether the projection of edge B on mesh A intersects edge A
+           */
+          double uAproj, uBproj;
+          //printf("dist = %12.5e, cl = %12.5e\n", sqrt(dist2), cl);
+          PDM_line_intersect_t tIntersectProj = _intersect_edges_projection (coordsVtxA,
+                                                                             coordsVtxA + 3,
+                                                                             normalVtxA,
+                                                                             normalVtxA + 3,
+                                                                             coordsVtxB,
+                                                                             coordsVtxB + 3,
+                                                                             &uAproj,
+                                                                             &uBproj);
+
+          if (tIntersectProj == PDM_LINE_INTERSECT_YES) {
+            /* the projection of edge B on mesh A intersects edge A */
+              tIntersect = tIntersectProj;
+              u1 = uAproj;
+              v1 = uBproj;
+          }
+          else {
+            /* the projection of edge B on mesh A does not intersect edge A */
+            tIntersect = PDM_LINE_INTERSECT_NO;
+          }
         }
       }
       //<<--
@@ -6324,6 +6366,7 @@ double                 *face_vtxEpsB
   PDM_g_num_t *_faceToVtxA  = faceToVtxA;
   double     *_face_vtxCooA = face_vtxCooA;
   double     *_face_vtxEpsA = face_vtxEpsA;
+  double     *_face_vtxNormalA = face_vtxNormalA;
 
   PDM_g_num_t *_faceToEdgeB = faceToEdgeB;
   PDM_g_num_t *_faceToVtxB  = faceToVtxB;
@@ -6375,10 +6418,10 @@ double                 *face_vtxEpsB
 
   }
 
-  _face_vtxCooA = malloc (sizeof(double) * 3 * n_vtxA);
+  /*_face_vtxCooA = malloc (sizeof(double) * 3 * n_vtxA);
   for (int i = 0; i < n_vtxA; i++) {
     PDM_plane_projection (face_vtxCooA + 3 * i, baryA, nA, _face_vtxCooA + 3 * i);
-  }
+    }
   //PDM_plane_normal (n_vtxA, _face_vtxCooA, nA);
 
   if (revert) {
@@ -6391,7 +6434,7 @@ double                 *face_vtxEpsB
     for (int i = 0; i < n_vtxB; i++) {
       PDM_plane_projection (face_vtxCooB + 3 * i, baryA, nA, _face_vtxCooB + 3 * i);
     }
-  }
+    }*/
 
 
   /*
@@ -6431,6 +6474,13 @@ double                 *face_vtxEpsB
                               _face_vtxCooA[3*inext+1],
                               _face_vtxCooA[3*inext+2]};
 
+    double normalVtxA[6] = {_face_vtxNormalA[3*i],
+                            _face_vtxNormalA[3*i+1],
+                            _face_vtxNormalA[3*i+2],
+                            _face_vtxNormalA[3*inext],
+                            _face_vtxNormalA[3*inext+1],
+                            _face_vtxNormalA[3*inext+2]};
+
     for (int j = 0; j < n_vtxB; j++) {
       int jnext = (j + 1) % n_vtxB;
       PDM_g_num_t nGVtxB[2]   = {_faceToVtxB[j],
@@ -6461,15 +6511,16 @@ double                 *face_vtxEpsB
       }
 
       PDM_edges_intersect_res_t *eir =
-        PDM_edges_intersect_add (ei,
-                                 PDM_ABS(_faceToEdgeA[i]),
-                                 nGVtxA,
-                                 charLgthVtxA,
-                                 coordsVtxA,
-                                 PDM_ABS(_faceToEdgeB[j]),
-                                 nGVtxB,
-                                 charLgthVtxB,
-                                 coordsVtxB);
+        PDM_edges_intersect_projection_add (ei,
+                                            PDM_ABS(_faceToEdgeA[i]),
+                                            nGVtxA,
+                                            charLgthVtxA,
+                                            coordsVtxA,
+                                            normalVtxA,
+                                            PDM_ABS(_faceToEdgeB[j]),
+                                            nGVtxB,
+                                            charLgthVtxB,
+                                            coordsVtxB);
 
 
       _edges_intersect_res_t *_eir = (_edges_intersect_res_t *) eir;

@@ -115,6 +115,32 @@ double                **polyClippCoordsB
 );
 
 
+void
+PDM_poly_clipp_projection
+(
+ PDM_edges_intersect_t  *ei,
+ PDM_g_num_t             gnum_boxA,
+ PDM_g_num_t             gnum_boxB,
+ const int               n_vtxA,
+ PDM_g_num_t            *faceToEdgeA,
+ PDM_g_num_t            *faceToVtxA,
+ double                 *face_vtxCooA,
+ double                 *face_vtxNormalA,
+ const int               n_vtxB,
+ PDM_g_num_t            *faceToEdgeB,
+ PDM_g_num_t            *faceToVtxB,
+ double                 *face_vtxCooB,
+ PDM_poly_clipp_t        performed_t,
+ int                    *nPolyClippA,
+ int                   **polyClippIdxA,
+ PDM_g_num_t           **polyClippConnecA,
+ double                **polyClippCoordsA,
+ int                    *nPolyClippB,
+ int                   **polyClippIdxB,
+ PDM_g_num_t           **polyClippConnecB,
+ double                **polyClippCoordsB
+ );
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

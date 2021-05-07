@@ -268,7 +268,8 @@ static void _add_depth (const double  x_min,
   for (int i = 0; i < n_pts; i++) {
     double x = coord[3*i];
     double y = coord[3*i+1];
-    coord[3*i+2] = scale * (x*x + y*y);
+    //coord[3*i+2] = scale * (x*x + y*y);
+    coord[3*i+2] = 0.5 * scale * (cos(6*x + .2) + sin(5*y + .1));
   }
 }
 
@@ -1361,6 +1362,253 @@ _export_ol_mesh
 
 }
 
+
+static void _export_ensight
+(
+ const PDM_MPI_Comm   pdm_mpi_comm,
+ const int            n_part,
+ int                 *nFace[2],
+ int                **faceVtxIdx[2],
+ int                **faceVtx[2],
+ PDM_g_num_t        **faceLNToGN[2],
+ int                 *nVtx[2],
+ double             **vtxCoord[2],
+ PDM_g_num_t        **vtxLNToGN[2]
+ )
+{
+  int i_rank;
+  int numProcs;
+
+  PDM_MPI_Comm_rank (PDM_MPI_COMM_WORLD, &i_rank);
+  PDM_MPI_Comm_size (PDM_MPI_COMM_WORLD, &numProcs);
+
+  /*
+   *  Export Mesh to Ensight
+   */
+
+  int id_cs[2];
+
+  id_cs[0] = PDM_writer_create ("Ensight",
+                                PDM_WRITER_FMT_ASCII,
+                                PDM_WRITER_TOPO_CONSTANTE,
+                                PDM_WRITER_OFF,
+                                "test_2d_surf_ens",
+                                "meshA",
+                                pdm_mpi_comm,
+                                PDM_IO_ACCES_MPI_SIMPLE,
+                                1.,
+                                NULL);
+
+  id_cs[1] = PDM_writer_create ("Ensight",
+                                PDM_WRITER_FMT_ASCII,
+                                PDM_WRITER_TOPO_CONSTANTE,
+                                PDM_WRITER_OFF,
+                                "test_2d_surf_ens",
+                                "meshB",
+                                pdm_mpi_comm,
+                                PDM_IO_ACCES_MPI_SIMPLE,
+                                1,
+                                NULL);
+
+  /*
+   * Creation des variables
+   */
+
+  int id_var_num_part[2];
+  int id_var_face_gnum[2];
+  int id_var_vtx_gnum[2];
+  int id_geom[2];
+
+  for (int imesh = 0; imesh < 2; imesh++) {
+
+    id_var_num_part[imesh] = PDM_writer_var_create (id_cs[imesh],
+                                                    PDM_WRITER_OFF,
+                                                    PDM_WRITER_VAR_SCALAIRE,
+                                                    PDM_WRITER_VAR_ELEMENTS,
+                                                    "num_part");
+
+    id_var_face_gnum[imesh] = PDM_writer_var_create (id_cs[imesh],
+                                                    PDM_WRITER_OFF,
+                                                    PDM_WRITER_VAR_SCALAIRE,
+                                                    PDM_WRITER_VAR_ELEMENTS,
+                                                    "face_gnum");
+
+    id_var_vtx_gnum[imesh] = PDM_writer_var_create (id_cs[imesh],
+                                                    PDM_WRITER_OFF,
+                                                    PDM_WRITER_VAR_SCALAIRE,
+                                                    PDM_WRITER_VAR_SOMMETS,
+                                                    "vtx_gnum");
+
+    /*
+     * Creation de la geometrie
+     */
+
+    char nom_geom[6];
+    if (imesh == 0)
+      strcpy (nom_geom,"mesh1");
+    else
+      strcpy (nom_geom,"mesh2");
+
+    id_geom[imesh] = PDM_writer_geom_create (id_cs[imesh],
+                                             nom_geom,
+                                             PDM_WRITER_OFF,
+                                             PDM_WRITER_OFF,
+                                             n_part);
+
+    /*
+     * Debut des ecritures
+     */
+
+    int *nsom_part  = (int *) malloc(sizeof(int) * n_part);
+
+    int *n_part_procs = (int *) malloc(sizeof(int) * numProcs);
+
+    PDM_MPI_Allgather ((void *) &n_part,      1, PDM_MPI_INT,
+                       (void *) n_part_procs, 1, PDM_MPI_INT,
+                       PDM_MPI_COMM_WORLD);
+
+    int *debPartProcs = (int *) malloc(sizeof(int) * (numProcs + 1));
+
+    debPartProcs[0] = 0;
+    for (int i = 0; i < numProcs; i++) {
+      debPartProcs[i+1] = debPartProcs[i] + n_part_procs[i];
+    }
+
+    free(n_part_procs);
+
+    PDM_writer_step_beg (id_cs[imesh], 0.);
+
+    int **_face_nb =  malloc(sizeof(int *) * n_part);
+    int **_face_idx =  malloc(sizeof(int *) * n_part);
+
+    for (int ipart = 0; ipart < n_part; ipart++) {
+
+      PDM_writer_geom_coord_set (id_cs[imesh],
+                                 id_geom[imesh],
+                                 ipart,
+                                 nVtx[imesh][ipart],
+                                 vtxCoord[imesh][ipart],
+                                 vtxLNToGN[imesh][ipart]);
+
+      _face_nb[ipart] = malloc(sizeof(int) * nFace[imesh][ipart]);
+      _face_idx[ipart] = malloc(sizeof(int) * nFace[imesh][ipart]);
+
+      for (int j = 0; j < nFace[imesh][ipart]; j++) {
+        _face_nb[ipart][j]  = faceVtxIdx[imesh][ipart][j+1] - faceVtxIdx[imesh][ipart][j];
+        _face_idx[ipart][j] = faceVtxIdx[imesh][ipart][j] + 1;
+      }
+
+      PDM_writer_geom_faces_facesom_add (id_cs[imesh],
+                                         id_geom[imesh],
+                                         ipart,
+                                         nFace[imesh][ipart],
+                                         _face_idx[ipart],
+                                         _face_nb[ipart],
+                                         faceVtx[imesh][ipart],
+                                         faceLNToGN[imesh][ipart]);
+    } // End loop on parts
+
+    for (int ipart = 0; ipart < n_part; ipart++) {
+      free (_face_nb[ipart]);
+      free (_face_idx[ipart]);
+    }
+
+    free(_face_nb);
+    free(_face_idx);
+
+    PDM_writer_geom_write(id_cs[imesh],
+                          id_geom[imesh]);
+
+    /* Creation des variables :
+       - numero de partition
+       - normale aux sommets
+    */
+    PDM_real_t **val_num_part  = (PDM_real_t **) malloc (sizeof(PDM_real_t *) * n_part);
+    PDM_real_t **val_face_gnum = (PDM_real_t **) malloc (sizeof(PDM_real_t *) * n_part);
+    PDM_real_t **val_vtx_gnum  = (PDM_real_t **) malloc (sizeof(PDM_real_t *) * n_part);
+
+    for (int ipart = 0; ipart < n_part; ipart++) {
+
+      val_num_part[ipart]  = (PDM_real_t *) malloc (sizeof(PDM_real_t) * nFace[imesh][ipart]);
+      val_face_gnum[ipart] = (PDM_real_t *) malloc (sizeof(PDM_real_t) * nFace[imesh][ipart]);
+      val_vtx_gnum[ipart]  = (PDM_real_t *) malloc (sizeof(PDM_real_t) * nVtx[imesh][ipart]);
+      nsom_part[ipart] = nVtx[imesh][ipart];
+
+      for (int i = 0; i < nFace[imesh][ipart]; i++) {
+        val_num_part[ipart][i] = ipart + 1 + debPartProcs[i_rank];
+        val_face_gnum[ipart][i] = faceLNToGN[imesh][ipart][i];
+      }
+
+      for (int i = 0; i < nVtx[imesh][ipart]; i++) {
+        val_vtx_gnum[ipart][i] = vtxLNToGN[imesh][ipart][i];
+      }
+
+      PDM_writer_var_set (id_cs[imesh],
+                          id_var_num_part[imesh],
+                          id_geom[imesh],
+                          ipart,
+                          val_num_part[ipart]);
+
+      PDM_writer_var_set (id_cs[imesh],
+                          id_var_face_gnum[imesh],
+                          id_geom[imesh],
+                          ipart,
+                          val_face_gnum[ipart]);
+
+      PDM_writer_var_set (id_cs[imesh],
+                          id_var_vtx_gnum[imesh],
+                          id_geom[imesh],
+                          ipart,
+                          val_vtx_gnum[ipart]);
+    } // End loop on parts
+
+    PDM_writer_var_write (id_cs[imesh],
+                          id_var_num_part[imesh]);
+
+    PDM_writer_var_free (id_cs[imesh],
+                         id_var_num_part[imesh]);
+
+    PDM_writer_var_write (id_cs[imesh],
+                          id_var_face_gnum[imesh]);
+
+    PDM_writer_var_free (id_cs[imesh],
+                         id_var_face_gnum[imesh]);
+
+    PDM_writer_var_write (id_cs[imesh],
+                          id_var_vtx_gnum[imesh]);
+
+    PDM_writer_var_free (id_cs[imesh],
+                         id_var_vtx_gnum[imesh]);
+
+   for (int ipart = 0; ipart < n_part; ipart++) {
+      free (val_num_part[ipart]);
+      free (val_face_gnum[ipart]);
+      free (val_vtx_gnum[ipart]);
+    }
+
+    free (val_num_part);
+    free (val_face_gnum);
+    free (val_vtx_gnum);
+    free (nsom_part);
+
+    PDM_writer_step_end (id_cs[imesh]);
+    PDM_writer_geom_data_free (id_cs[imesh],
+                               id_geom[imesh]);
+
+    PDM_writer_geom_free (id_cs[imesh],
+                          id_geom[imesh]);
+    PDM_writer_free (id_cs[imesh]);
+
+    free (debPartProcs);
+  } // End loop on meshes
+}
+
+
+
+
+
+
+
 static void _export_vtk
 (
  const PDM_MPI_Comm  pdm_mpi_comm,
@@ -1672,6 +1920,18 @@ char *argv[]
 
   }
 
+  if (1) {
+    _export_ensight (PDM_MPI_COMM_WORLD,
+                     n_part,
+                     nFace,
+                     faceVtxIdx,
+                     faceVtx,
+                     faceLNToGN,
+                     nVtx,
+                     vtxCoord,
+                     vtxLNToGN);
+  }
+
   if (nProcData > 0 && nProcData < numProcs) {
     PDM_MPI_Comm_free(&meshComm);
   }
@@ -1789,7 +2049,7 @@ char *argv[]
   }
 
 
-#if 1
+#if 0
   if (post) {
     _export_ini_mesh (PDM_MPI_COMM_WORLD,
                       n_part,
