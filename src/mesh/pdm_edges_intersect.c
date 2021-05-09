@@ -180,6 +180,222 @@ _edges_intersect_res_free (_edges_intersect_res_t *eir)
   return NULL;
 }
 
+
+
+
+
+
+
+static void
+_solve_quadratic
+(
+ const double  a,
+ const double  b,
+ const double  c,
+ int          *n_solutions,
+ double        solutions[2]
+ )
+{
+  const double _eps = 1e-15;
+
+  if (fabs(a) < _eps) {
+    // Linear equation
+    if (fabs(b) < _eps) {
+      if (fabs(c) < _eps) {
+        // trivial equation 0 = 0
+        *n_solutions = -1;
+        return;
+      }
+      else {
+        // no solution
+        *n_solutions = 0;
+        return;
+      }
+    }
+    else {
+      *n_solutions = 1;
+      solutions[0] = -c/b;
+      return;
+    }
+  }
+
+  else {
+    // True quadratic equation
+    double _b = b/a;
+    double _c = c/a;
+
+    if (fabs(_c) < _eps) {
+      *n_solutions = 2;
+      solutions[0] = PDM_MIN (0, -_b);
+      solutions[1] = PDM_MAX (0, -_b);
+      return;
+    }
+    else {
+      double d = _b*_b - 4.*_c;
+      if (d < 0) {
+        // no real solution
+        *n_solutions = 0;
+        return;
+      }
+      else {
+        // two real solutions (possibly one double solution)
+        *n_solutions = 2;
+        d = sqrt(d);
+        double x1, x2;
+        if (_b < 0) {
+          x1 = 0.5*(-_b + d);
+        } else {
+          x1 = 0.5*(-_b - d);
+        }
+        x2 = _c/x1;
+        solutions[0] = PDM_MIN (x1, x2);
+        solutions[1] = PDM_MAX (x1, x2);
+        return;
+      }
+    }
+  }
+}
+
+
+
+PDM_line_intersect_t
+_intersect_edges_projection
+(
+ const double  a0[3],
+ const double  a1[3],
+ const double  n0[3],
+ const double  n1[3],
+ const double  b0[3],
+ const double  b1[3],
+ double       *uA,
+ double       *uB
+ )
+{
+  /**
+   * Edges A and B are assumed to be in general position, i.e.:
+   *   - not to be parallel (i.e (a1 - a0)x(b1 - b0) != 0)
+   *   - vertices of edge A are not on edge B (in particular, a0 - b0 != 0)
+   *   - vertices of edge B are not on edge A.
+   * Additionally, we assume that, for all 0 <= s <= 1,
+   *   - interpolated normal n(s) := n0 + s*(n1 - n0) != 0;
+   *   - n(s) x (a1 - a0) != 0;
+   *   - n(s) x (b1 - b0) != 0.
+   **/
+
+  double a0a1[3] = {a1[0] - a0[0],
+                    a1[1] - a0[1],
+                    a1[2] - a0[2]};
+
+  double b0b1[3] = {b1[0] - b0[0],
+                    b1[1] - b0[1],
+                    b1[2] - b0[2]};
+
+  double n0n1[3] = {n1[0] - n0[0],
+                    n1[1] - n0[1],
+                    n1[2] - n0[2]};
+
+  double b0a0[3] = {a0[0] - b0[0],
+                    a0[1] - b0[1],
+                    a0[2] - b0[2]};
+
+  double a0a1xb0b1[3];
+  PDM_CROSS_PRODUCT (a0a1xb0b1, a0a1, b0b1);
+
+  double b0a0xb0b1[3];
+  PDM_CROSS_PRODUCT (b0a0xb0b1, b0a0, b0b1);
+
+  double c2 = PDM_DOT_PRODUCT (n0n1, a0a1xb0b1);
+  double c1 = PDM_DOT_PRODUCT (n0, a0a1xb0b1) + PDM_DOT_PRODUCT (n0n1, b0a0xb0b1);
+  double c0 = PDM_DOT_PRODUCT (n0, b0a0xb0b1);
+
+  int n_solutions;
+  double solutions[2];
+  _solve_quadratic (c2,
+                    c1,
+                    c0,
+                    &n_solutions,
+                    solutions);
+
+  if (n_solutions == 1) {
+    if (solutions[0] >= 0. && solutions[0] <= 1.) {
+      *uA = solutions[0];
+    } else {
+      n_solutions = 0;
+    }
+  }
+  else if (n_solutions == 2) {
+    if (solutions[0] >= 0. && solutions[0] <= 1.) {
+      if (solutions[1] >= 0. && solutions[1] <= 1.) {
+        // which solution to keep???
+        printf("A0 = (%12.5e, %12.5e, %12.5e)\n", a0[0], a0[1], a0[2]);
+        printf("A1 = (%12.5e, %12.5e, %12.5e)\n", a1[0], a1[1], a1[2]);
+        printf("n0 = (%12.5e, %12.5e, %12.5e)\n", n0[0], n0[1], n0[2]);
+        printf("n1 = (%12.5e, %12.5e, %12.5e)\n", n1[0], n1[1], n1[2]);
+        printf("B0 = (%12.5e, %12.5e, %12.5e)\n", b0[0], b0[1], b0[2]);
+        printf("B1 = (%12.5e, %12.5e, %12.5e)\n", b1[0], b1[1], b1[2]);
+        printf("c2 = %12.5e, c1 = %12.5e, c0 = %12.5e\n", c2, c1, c0);
+
+        FILE *f = fopen("debug_intersect_edge_projection.vtk", "w");
+        fprintf(f, "# vtk DataFile Version 2.0\nintersect_edge_projection\nASCII\nDATASET UNSTRUCTURED_GRID\n");
+        fprintf(f, "POINTS 4 double\n");
+        fprintf(f, "%12.5e %12.5e %12.5e\n", a0[0], a0[1], a0[2]);
+        fprintf(f, "%12.5e %12.5e %12.5e\n", a1[0], a1[1], a1[2]);
+        fprintf(f, "%12.5e %12.5e %12.5e\n", b0[0], b0[1], b0[2]);
+        fprintf(f, "%12.5e %12.5e %12.5e\n", b1[0], b1[1], b1[2]);
+        fprintf(f, "CELLS 2 6\n");
+        fprintf(f, "2 0 1\n2 2 3\n");
+        fprintf(f, "CELL_TYPES 2\n");
+        fprintf(f, "3\n3\n");
+        fprintf(f, "CELL_DATA 2\n");
+        fprintf(f, "SCALARS imesh int\nLOOKUP_TABLE default\n");
+        fprintf(f, "1\n2\n");
+        fprintf(f, "POINT_DATA 4\n");
+        fprintf(f, "VECTORS normal double\n");
+        fprintf(f, "%12.5e %12.5e %12.5e\n", n0[0], n0[1], n0[2]);
+        fprintf(f, "%12.5e %12.5e %12.5e\n", n1[0], n1[1], n1[2]);
+        fprintf(f, "0. 0. 1.\n0. 0. 1.\n");
+        fclose(f);
+
+        PDM_error(__FILE__, __LINE__, 0, "_solve_quadratic found 2 real, valid solutions: %f and %f\n", solutions[0], solutions[1]);
+      }
+      else {
+        n_solutions = 1;
+        *uA = solutions[0];
+      }
+    }
+    else {
+      if (solutions[1] >= 0. && solutions[1] <= 1.) {
+        n_solutions = 1;
+        *uA = solutions[1];
+      }
+      else {
+        n_solutions = 0;
+      }
+    }
+  }
+
+
+  if (n_solutions == 1) {
+    n_solutions = 0;
+    double nu[3] = {n0[0] + (*uA)*n0n1[0],
+                    n0[1] + (*uA)*n0n1[1],
+                    n0[2] + (*uA)*n0n1[2]};
+
+    double a0a1xnu[3];
+    PDM_CROSS_PRODUCT (a0a1xnu, a0a1, nu);
+
+    double denom = PDM_DOT_PRODUCT (a0a1xnu, b0b1);
+    if (denom != 0) {
+      *uB = PDM_DOT_PRODUCT (a0a1xnu, b0a0) / denom;
+      if (*uB >= 0. && *uB <= 1.) {
+        return PDM_LINE_INTERSECT_YES;
+      }
+    }
+  }
+
+  return PDM_LINE_INTERSECT_NO;
+}
+
 /*=============================================================================
  * Public function definitions
  *============================================================================*/
@@ -394,18 +610,18 @@ PDM_edges_intersect_res_t *
 PDM_edges_intersect_add
 (
 PDM_edges_intersect_t       *ei,
-const PDM_g_num_t             nGEdgeA,
-const PDM_g_num_t             nGVtxA[2],
+const int                    is_same_plane,
+const PDM_g_num_t            nGEdgeA,
+const PDM_g_num_t            nGVtxA[2],
 const double                 charLgthVtxA[2],
 const double                 coordsVtxA[6],
-const PDM_g_num_t             nGEdgeB,
-const PDM_g_num_t             nGVtxB[2],
+const double                 normalVtxA[6],
+const PDM_g_num_t            nGEdgeB,
+const PDM_g_num_t            nGVtxB[2],
 const double                 charLgthVtxB[2],
 const double                 coordsVtxB[6]
 )
 {
-
-
   int vb = 0;//1;
   if (vb)   {
     PDM_printf ("==== PDM_edges_intersect_add ==== \n");
@@ -481,6 +697,15 @@ const double                 coordsVtxB[6]
   /*  PDM_LINE_INTERSECT_YES     = 1,  !< Intersection */
   /*  PDM_LINE_INTERSECT_ON_LINE = 2,  !< On line  */
 
+  /* IMPORTANT REMINDER:
+   * A point A(u) (resp B(v)) on line A (resp on line B) is parameterized by:
+   *   A(u) = (1 - u)*A0 + u*A1 (resp B(v) = (1 - v)*B0 + v*B1))
+   * The distance between A(u) and B(v) is minimal for u = u1 and v = v1 (-inf < u,v < +inf).
+   * Therefore, PDM_LINE_INTERSECT_YES means that the points of minimal distance
+   * between lines A and B are actually INSIDE edges A and B (0 <= u1,v1 <= 1).
+   * However, this distance is generally non-zero.
+   */
+
   bool isInitialOnLine = false;
   if (tIntersect == PDM_LINE_INTERSECT_ON_LINE) {
     isInitialOnLine = true;
@@ -546,29 +771,6 @@ const double                 coordsVtxB[6]
 
     int isA2B2 = (mB2A2 < _charLgthVtxA[1]) &&
       (mB2A2 < _charLgthVtxB[1]);
-
-
-    /* double dVtxA[2] = {PDM_ABS (u1 * vA_norm), */
-    /*                    PDM_ABS ((1. - u1) * vA_norm)}; */
-
-    /* double dVtxB[2] = {PDM_ABS (v1 * vB_norm), */
-    /*                    PDM_ABS ((1. - v1) * vB_norm)}; */
-
-    /*
-     * Check if A vertex and B vertex are the same
-     */
-
-    /* int isA1B1 = (dVtxA[0] < _charLgthVtxA[0]) && */
-    /*              (dVtxB[0] < _charLgthVtxB[0]); */
-
-    /* int isA1B2 = (dVtxA[0] < _charLgthVtxA[0]) && */
-    /*              (dVtxB[1] < _charLgthVtxB[1]); */
-
-    /* int isA2B1 = (dVtxA[1] < _charLgthVtxA[1]) && */
-    /*              (dVtxB[0] < _charLgthVtxB[0]); */
-
-    /* int isA2B2 = (dVtxA[1] < _charLgthVtxA[1]) && */
-    /*              (dVtxB[1] < _charLgthVtxB[1]); */
 
 
     /*
@@ -909,6 +1111,53 @@ const double                 coordsVtxB[6]
 
         isSetted = true;
       }
+
+      //-->>
+      else if (!is_same_plane) {
+        /*
+         * edges A and B are in general position, i.e.
+         *   - they are not parallel
+         *   - vertices of edge A are not on edge B and vice versa
+         */
+
+        /* check whether edges A and B actually intersect */
+        double cl = PDM_MIN (_charLgthVtxA[0] + u1*(_charLgthVtxA[1] - _charLgthVtxA[0]),
+                             _charLgthVtxB[0] + v1*(_charLgthVtxB[1] - _charLgthVtxB[0]));
+        double dist2 = 0., d;
+        for (int i = 0; i < 3; i++) {
+          d = (coordsVtxA[i] + u1*(coordsVtxA[3+i] - coordsVtxA[i]))
+            - (coordsVtxB[i] + v1*(coordsVtxB[3+i] - coordsVtxB[i]));
+          dist2 += d * d;
+        }
+
+        if (dist2 > cl*cl) {
+          /* Edges A and B do not actually intersect
+           * Check whether the projection of edge B on mesh A intersects edge A
+           */
+          double uAproj, uBproj;
+          //printf("dist = %12.5e, cl = %12.5e\n", sqrt(dist2), cl);
+          PDM_line_intersect_t tIntersectProj = _intersect_edges_projection (coordsVtxA,
+                                                                             coordsVtxA + 3,
+                                                                             normalVtxA,
+                                                                             normalVtxA + 3,
+                                                                             coordsVtxB,
+                                                                             coordsVtxB + 3,
+                                                                             &uAproj,
+                                                                             &uBproj);
+
+          if (tIntersectProj == PDM_LINE_INTERSECT_YES) {
+            /* the projection of edge B on mesh A intersects edge A */
+              tIntersect = tIntersectProj;
+              u1 = uAproj;
+              v1 = uBproj;
+          }
+          else {
+            /* the projection of edge B on mesh A does not intersect edge A */
+            tIntersect = PDM_LINE_INTERSECT_NO;
+          }
+        }
+      }
+      //<<--
     }
   }
 
@@ -1678,7 +1927,6 @@ const double                 coordsVtxB[6]
   return (PDM_edges_intersect_res_t *) newInter;
 }
 
-
 /**
  *
  * \brief Free \ref PDM_edges_intersect_t object
@@ -1819,6 +2067,7 @@ PDM_g_num_t            *faceToEdgeA,
 PDM_g_num_t            *faceToVtxA,
 double                 *face_vtxCooA,
 double                 *face_vtxEpsA,
+double                 *face_vtxNormalA,
 const int               n_vtxB,
 PDM_g_num_t            *faceToEdgeB,
 PDM_g_num_t            *faceToVtxB,
@@ -1826,6 +2075,8 @@ double                 *face_vtxCooB,
 double                 *face_vtxEpsB
 )
 {
+  int is_same_plane = (face_vtxNormalA == NULL);
+
   int vb = 0;
   if (vb) {
     PDM_printf ("==== PDM_edges_intersect_poly_add ==== \n");
@@ -1835,6 +2086,7 @@ double                 *face_vtxEpsB
   PDM_g_num_t *_faceToVtxA  = faceToVtxA;
   double     *_face_vtxCooA = face_vtxCooA;
   double     *_face_vtxEpsA = face_vtxEpsA;
+  double     *_face_vtxNormalA = face_vtxNormalA;
 
   PDM_g_num_t *_faceToEdgeB = faceToEdgeB;
   PDM_g_num_t *_faceToVtxB  = faceToVtxB;
@@ -1886,21 +2138,23 @@ double                 *face_vtxEpsB
 
   }
 
-  _face_vtxCooA = malloc (sizeof(double) * 3 * n_vtxA);
-  for (int i = 0; i < n_vtxA; i++) {
-    PDM_plane_projection (face_vtxCooA + 3 * i, baryA, nA, _face_vtxCooA + 3 * i);
-  }
-  //PDM_plane_normal (n_vtxA, _face_vtxCooA, nA);
-
-  if (revert) {
-    for (int i = 0; i < n_vtxB; i++) {
-      PDM_plane_projection (_face_vtxCooB + 3 * i, baryA, nA, _face_vtxCooB + 3 * i);
+  if (is_same_plane) {
+    _face_vtxCooA = malloc (sizeof(double) * 3 * n_vtxA);
+    for (int i = 0; i < n_vtxA; i++) {
+      PDM_plane_projection (face_vtxCooA + 3 * i, baryA, nA, _face_vtxCooA + 3 * i);
     }
-  }
-  else {
-    _face_vtxCooB = malloc (sizeof(double) * 3 * n_vtxB);
-    for (int i = 0; i < n_vtxB; i++) {
-      PDM_plane_projection (face_vtxCooB + 3 * i, baryA, nA, _face_vtxCooB + 3 * i);
+    //PDM_plane_normal (n_vtxA, _face_vtxCooA, nA);
+
+    if (revert) {
+      for (int i = 0; i < n_vtxB; i++) {
+        PDM_plane_projection (_face_vtxCooB + 3 * i, baryA, nA, _face_vtxCooB + 3 * i);
+      }
+    }
+    else {
+      _face_vtxCooB = malloc (sizeof(double) * 3 * n_vtxB);
+      for (int i = 0; i < n_vtxB; i++) {
+        PDM_plane_projection (face_vtxCooB + 3 * i, baryA, nA, _face_vtxCooB + 3 * i);
+      }
     }
   }
 
@@ -1929,6 +2183,7 @@ double                 *face_vtxEpsB
     vtxBOnEdgeAEir[i] = NULL;
   }
 
+  double normalVtxA[6];
   for (int i = 0; i < n_vtxA; i++) {
 
     int inext = (i + 1) % n_vtxA;
@@ -1941,6 +2196,13 @@ double                 *face_vtxEpsB
                               _face_vtxCooA[3*inext],
                               _face_vtxCooA[3*inext+1],
                               _face_vtxCooA[3*inext+2]};
+
+    if (!is_same_plane) {
+      for (int k = 0; k < 3; k++) {
+      normalVtxA[k]   = _face_vtxNormalA[3*i+k];
+      normalVtxA[k+3] = _face_vtxNormalA[3*inext+k];
+      }
+    }
 
     for (int j = 0; j < n_vtxB; j++) {
       int jnext = (j + 1) % n_vtxB;
@@ -1973,10 +2235,12 @@ double                 *face_vtxEpsB
 
       PDM_edges_intersect_res_t *eir =
         PDM_edges_intersect_add (ei,
+                                 is_same_plane,
                                  PDM_ABS(_faceToEdgeA[i]),
                                  nGVtxA,
                                  charLgthVtxA,
                                  coordsVtxA,
+                                 normalVtxA,
                                  PDM_ABS(_faceToEdgeB[j]),
                                  nGVtxB,
                                  charLgthVtxB,
@@ -2542,7 +2806,6 @@ double                 *face_vtxEpsB
   }
 
 }
-
 
 /**
  *
@@ -4799,2292 +5062,6 @@ PDM_edges_intersect_res_t       *eir
 	PDM_printf ("--- Intersection - nGEdgeA : %d, nGEdgeB : %d end\n\n", _eir->nGEdgeA, _eir->nGEdgeB );
 }
 
-
-
-static void
-_solve_quadratic
-(
- const double  a,
- const double  b,
- const double  c,
- int          *n_solutions,
- double        solutions[2]
- )
-{
-  const double _eps = 1e-15;
-
-  if (fabs(a) < _eps) {
-    // Linear equation
-    if (fabs(b) < _eps) {
-      if (fabs(c) < _eps) {
-        // trivial equation 0 = 0
-        *n_solutions = -1;
-        return;
-      }
-      else {
-        // no solution
-        *n_solutions = 0;
-        return;
-      }
-    }
-    else {
-      *n_solutions = 1;
-      solutions[0] = -c/b;
-      return;
-    }
-  }
-
-  else {
-    // True quadratic equation
-    double _b = b/a;
-    double _c = c/a;
-
-    if (fabs(_c) < _eps) {
-      *n_solutions = 2;
-      solutions[0] = PDM_MIN (0, -_b);
-      solutions[1] = PDM_MAX (0, -_b);
-      return;
-    }
-    else {
-      double d = _b*_b - 4.*_c;
-      if (d < 0) {
-        // no real solution
-        *n_solutions = 0;
-        return;
-      }
-      else {
-        // two real solutions (possibly one double solution)
-        *n_solutions = 2;
-        d = sqrt(d);
-        double x1, x2;
-        if (_b < 0) {
-          x1 = 0.5*(-_b + d);
-        } else {
-          x1 = 0.5*(-_b - d);
-        }
-        x2 = _c/x1;
-        solutions[0] = PDM_MIN (x1, x2);
-        solutions[1] = PDM_MAX (x1, x2);
-        return;
-      }
-    }
-  }
-}
-
-
-
-PDM_line_intersect_t
-_intersect_edges_projection
-(
- const double  a0[3],
- const double  a1[3],
- const double  n0[3],
- const double  n1[3],
- const double  b0[3],
- const double  b1[3],
- double       *uA,
- double       *uB
- )
-{
-  /**
-   * Edges A and B are assumed to be in general position, i.e.:
-   *   - not to be parallel (i.e (a1 - a0)x(b1 - b0) != 0)
-   *   - vertices of edge A are not on edge B (in particular, a0 - b0 != 0)
-   *   - vertices of edge B are not on edge A.
-   * Additionally, we assume that, for all 0 <= s <= 1,
-   *   - interpolated normal n(s) := n0 + s*(n1 - n0) != 0;
-   *   - n(s) x (a1 - a0) != 0;
-   *   - n(s) x (b1 - b0) != 0.
-   **/
-
-  double a0a1[3] = {a1[0] - a0[0],
-                    a1[1] - a0[1],
-                    a1[2] - a0[2]};
-
-  double b0b1[3] = {b1[0] - b0[0],
-                    b1[1] - b0[1],
-                    b1[2] - b0[2]};
-
-  double n0n1[3] = {n1[0] - n0[0],
-                    n1[1] - n0[1],
-                    n1[2] - n0[2]};
-
-  double b0a0[3] = {a0[0] - b0[0],
-                    a0[1] - b0[1],
-                    a0[2] - b0[2]};
-
-  double a0a1xb0b1[3];
-  PDM_CROSS_PRODUCT (a0a1xb0b1, a0a1, b0b1);
-
-  double b0a0xb0b1[3];
-  PDM_CROSS_PRODUCT (b0a0xb0b1, b0a0, b0b1);
-
-  double c2 = PDM_DOT_PRODUCT (n0n1, a0a1xb0b1);
-  double c1 = PDM_DOT_PRODUCT (n0, a0a1xb0b1) + PDM_DOT_PRODUCT (n0n1, b0a0xb0b1);
-  double c0 = PDM_DOT_PRODUCT (n0, b0a0xb0b1);
-
-  int n_solutions;
-  double solutions[2];
-  _solve_quadratic (c2,
-                    c1,
-                    c0,
-                    &n_solutions,
-                    solutions);
-
-  if (n_solutions == 1) {
-    if (solutions[0] >= 0. && solutions[0] <= 1.) {
-      *uA = solutions[0];
-    } else {
-      n_solutions = 0;
-    }
-  }
-  else if (n_solutions == 2) {
-    if (solutions[0] >= 0. && solutions[0] <= 1.) {
-      if (solutions[1] >= 0. && solutions[1] <= 1.) {
-        // which solution to keep???
-        printf("A0 = (%12.5e, %12.5e, %12.5e)\n", a0[0], a0[1], a0[2]);
-        printf("A1 = (%12.5e, %12.5e, %12.5e)\n", a1[0], a1[1], a1[2]);
-        printf("n0 = (%12.5e, %12.5e, %12.5e)\n", n0[0], n0[1], n0[2]);
-        printf("n1 = (%12.5e, %12.5e, %12.5e)\n", n1[0], n1[1], n1[2]);
-        printf("B0 = (%12.5e, %12.5e, %12.5e)\n", b0[0], b0[1], b0[2]);
-        printf("B1 = (%12.5e, %12.5e, %12.5e)\n", b1[0], b1[1], b1[2]);
-        printf("c2 = %12.5e, c1 = %12.5e, c0 = %12.5e\n", c2, c1, c0);
-
-        FILE *f = fopen("debug_intersect_edge_projection.vtk", "w");
-        fprintf(f, "# vtk DataFile Version 2.0\nintersect_edge_projection\nASCII\nDATASET UNSTRUCTURED_GRID\n");
-        fprintf(f, "POINTS 4 double\n");
-        fprintf(f, "%12.5e %12.5e %12.5e\n", a0[0], a0[1], a0[2]);
-        fprintf(f, "%12.5e %12.5e %12.5e\n", a1[0], a1[1], a1[2]);
-        fprintf(f, "%12.5e %12.5e %12.5e\n", b0[0], b0[1], b0[2]);
-        fprintf(f, "%12.5e %12.5e %12.5e\n", b1[0], b1[1], b1[2]);
-        fprintf(f, "CELLS 2 6\n");
-        fprintf(f, "2 0 1\n2 2 3\n");
-        fprintf(f, "CELL_TYPES 2\n");
-        fprintf(f, "3\n3\n");
-        fprintf(f, "CELL_DATA 2\n");
-        fprintf(f, "SCALARS imesh int\nLOOKUP_TABLE default\n");
-        fprintf(f, "1\n2\n");
-        fprintf(f, "POINT_DATA 4\n");
-        fprintf(f, "VECTORS normal double\n");
-        fprintf(f, "%12.5e %12.5e %12.5e\n", n0[0], n0[1], n0[2]);
-        fprintf(f, "%12.5e %12.5e %12.5e\n", n1[0], n1[1], n1[2]);
-        fprintf(f, "0. 0. 1.\n0. 0. 1.\n");
-        fclose(f);
-
-        PDM_error(__FILE__, __LINE__, 0, "_solve_quadratic found 2 real, valid solutions: %f and %f\n", solutions[0], solutions[1]);
-      }
-      else {
-        n_solutions = 1;
-        *uA = solutions[0];
-      }
-    }
-    else {
-      if (solutions[1] >= 0. && solutions[1] <= 1.) {
-        n_solutions = 1;
-        *uA = solutions[1];
-      }
-      else {
-        n_solutions = 0;
-      }
-    }
-  }
-
-
-  if (n_solutions == 1) {
-    n_solutions = 0;
-    double nu[3] = {n0[0] + (*uA)*n0n1[0],
-                    n0[1] + (*uA)*n0n1[1],
-                    n0[2] + (*uA)*n0n1[2]};
-
-    double a0a1xnu[3];
-    PDM_CROSS_PRODUCT (a0a1xnu, a0a1, nu);
-
-    double denom = PDM_DOT_PRODUCT (a0a1xnu, b0b1);
-    if (denom != 0) {
-      *uB = PDM_DOT_PRODUCT (a0a1xnu, b0a0) / denom;
-      if (*uB >= 0. && *uB <= 1.) {
-        return PDM_LINE_INTERSECT_YES;
-      }
-    }
-  }
-
-  return PDM_LINE_INTERSECT_NO;
-}
-
-
-
-void
-PDM_edges_intersect_poly_add2
-(
-PDM_edges_intersect_t  *ei,
-const int               n_vtxA,
-PDM_g_num_t            *faceToEdgeA,
-PDM_g_num_t            *faceToVtxA,
-double                 *face_vtxCooA,
-double                 *face_vtxEpsA,
-double                 *face_vtxNormalA,
-const int               n_vtxB,
-PDM_g_num_t            *faceToEdgeB,
-PDM_g_num_t            *faceToVtxB,
-double                 *face_vtxCooB,
-double                 *face_vtxEpsB
-)
-{
-  int is_same_plane = (face_vtxNormalA == NULL);
-
-  int vb = 0;
-  if (vb) {
-    PDM_printf ("==== PDM_edges_intersect_poly_add ==== \n");
-  }
-
-  PDM_g_num_t *_faceToEdgeA = faceToEdgeA;
-  PDM_g_num_t *_faceToVtxA  = faceToVtxA;
-  double     *_face_vtxCooA = face_vtxCooA;
-  double     *_face_vtxEpsA = face_vtxEpsA;
-  double     *_face_vtxNormalA = face_vtxNormalA;
-
-  PDM_g_num_t *_faceToEdgeB = faceToEdgeB;
-  PDM_g_num_t *_faceToVtxB  = faceToVtxB;
-  double     *_face_vtxCooB = face_vtxCooB;
-  double     *_face_vtxEpsB = face_vtxEpsB;
-
-  /*
-   * Compute Normal
-   */
-
-  double nA[3];
-  double baryA[3];
-  PDM_plane_normal (n_vtxA, face_vtxCooA, nA);
-  PDM_plane_barycenter (n_vtxA, face_vtxCooA, baryA);
-
-  double nB[3];
-  PDM_plane_normal (n_vtxB, face_vtxCooB, nB);
-
-  double dot = PDM_DOT_PRODUCT (nA, nB);
-
-  bool revert = false;
-
-   if (dot < 0) {
-     revert = true;
-   }
-
-  /*
-   * Reorient if necessary
-   */
-
-  if (revert) {
-
-    _faceToEdgeB = malloc (sizeof(PDM_g_num_t) * n_vtxB);
-    _faceToVtxB  = malloc (sizeof(PDM_g_num_t) * n_vtxB);
-    _face_vtxCooB = malloc (sizeof(double) * 3 * n_vtxB);
-    _face_vtxEpsB = malloc (sizeof(double) * n_vtxB);
-
-    int j = n_vtxB - 1;
-    for (int i = 0; i < n_vtxB; i++) {
-      _faceToEdgeB[i] = faceToEdgeB[j];
-      _faceToEdgeB[i] = -faceToEdgeB[_modulo((j-1),n_vtxB)];
-      _faceToVtxB[i] = faceToVtxB[j];
-      for (int k = 0; k < 3; k++) {
-        _face_vtxCooB[3*i+k] = face_vtxCooB[3*j+k];
-      }
-      _face_vtxEpsB[i] = face_vtxEpsB[j];
-      j += -1;
-    }
-
-  }
-
-  if (is_same_plane) {
-    _face_vtxCooA = malloc (sizeof(double) * 3 * n_vtxA);
-    for (int i = 0; i < n_vtxA; i++) {
-      PDM_plane_projection (face_vtxCooA + 3 * i, baryA, nA, _face_vtxCooA + 3 * i);
-    }
-    //PDM_plane_normal (n_vtxA, _face_vtxCooA, nA);
-
-    if (revert) {
-      for (int i = 0; i < n_vtxB; i++) {
-        PDM_plane_projection (_face_vtxCooB + 3 * i, baryA, nA, _face_vtxCooB + 3 * i);
-      }
-    }
-    else {
-      _face_vtxCooB = malloc (sizeof(double) * 3 * n_vtxB);
-      for (int i = 0; i < n_vtxB; i++) {
-        PDM_plane_projection (face_vtxCooB + 3 * i, baryA, nA, _face_vtxCooB + 3 * i);
-      }
-    }
-  }
-
-
-  /*
-   *   Compute Edges Intersection :
-   *   - First step : Remove case with vertex located on 2 two different edges
-   *   - Second step : Compute other intersection
-   */
-
-  //
-  // FIXME: faire un test pour verifier que le resultat de 2 intersections d'une
-  // arete de A de B donnent toujours des resultats differents
-  // Faire l'inverse : Detection  des aretes a pb .
-  // Echange MPI des aretes a pb broad cast apres un premier clipping
-  // Mise a jour des clipping concernes
-  //
-
-  _edges_intersect_res_t **vtxAOnEdgeBEir = malloc(sizeof(_edges_intersect_res_t *) * n_vtxA);
-  for (int i = 0; i < n_vtxA; i++) {
-    vtxAOnEdgeBEir[i] = NULL;
-  }
-
-  _edges_intersect_res_t **vtxBOnEdgeAEir = malloc(sizeof(_edges_intersect_res_t *) * n_vtxB);
-  for (int i = 0; i < n_vtxB; i++) {
-    vtxBOnEdgeAEir[i] = NULL;
-  }
-
-  double normalVtxA[6];
-  for (int i = 0; i < n_vtxA; i++) {
-
-    int inext = (i + 1) % n_vtxA;
-
-    PDM_g_num_t nGVtxA[2]   = {_faceToVtxA[i], _faceToVtxA[inext]};
-    double charLgthVtxA[2] = {_face_vtxEpsA[i], _face_vtxEpsA[inext]};
-    double coordsVtxA[6]   = {_face_vtxCooA[3*i],
-                              _face_vtxCooA[3*i+1],
-                              _face_vtxCooA[3*i+2],
-                              _face_vtxCooA[3*inext],
-                              _face_vtxCooA[3*inext+1],
-                              _face_vtxCooA[3*inext+2]};
-
-    if (!is_same_plane) {
-      for (int k = 0; k < 3; k++) {
-      normalVtxA[k]   = _face_vtxNormalA[3*i+k];
-      normalVtxA[k+3] = _face_vtxNormalA[3*inext+k];
-      }
-    }
-
-    for (int j = 0; j < n_vtxB; j++) {
-      int jnext = (j + 1) % n_vtxB;
-      PDM_g_num_t nGVtxB[2]   = {_faceToVtxB[j],
-                                 _faceToVtxB[jnext]};
-      double charLgthVtxB[2] = {_face_vtxEpsB[j], _face_vtxEpsB[jnext]};
-      double coordsVtxB[6]   = {_face_vtxCooB[3*j],
-                                _face_vtxCooB[3*j+1],
-                                _face_vtxCooB[3*j+2],
-                                _face_vtxCooB[3*jnext],
-                                _face_vtxCooB[3*jnext+1],
-                                _face_vtxCooB[3*jnext+2]};
-
-      /*
-       * Perform intersection
-       */
-
-      if (vb) {
-        PDM_printf ("_faceToEdgeA[i]:%d, nGVtxA:%d-%d, charLgthVtxA:%12.5e-%12.5e, "
-                    "coordsVtxA:%12.5e-%12.5e-%12.5e-%12.5e-%12.5e-%12.5e\n",
-                    _faceToEdgeA[i], nGVtxA[0],
-                    nGVtxA[1], charLgthVtxA[0], charLgthVtxA[1], coordsVtxA[0],
-                    coordsVtxA[1], coordsVtxA[2], coordsVtxA[3], coordsVtxA[4], coordsVtxA[5]);
-        PDM_printf ("_faceToEdgeB[j]:%d, nGVtxB:%d-%d, charLgthVtxB:%12.5e-%12.5e, "
-                    "coordsVtxB:%12.5e-%12.5e-%12.5e-%12.5e-%12.5e-%12.5e \n",
-                    _faceToEdgeB[j], nGVtxB[0],
-                    nGVtxB[1], charLgthVtxB[0], charLgthVtxB[1], coordsVtxB[0],
-                    coordsVtxB[1], coordsVtxB[2], coordsVtxB[3], coordsVtxB[4], coordsVtxB[5]);
-      }
-
-      PDM_edges_intersect_res_t *eir =
-        PDM_edges_intersect_add2 (ei,
-                                  is_same_plane,
-                                  PDM_ABS(_faceToEdgeA[i]),
-                                  nGVtxA,
-                                  charLgthVtxA,
-                                  coordsVtxA,
-                                  normalVtxA,
-                                  PDM_ABS(_faceToEdgeB[j]),
-                                  nGVtxB,
-                                  charLgthVtxB,
-                                  coordsVtxB);
-
-
-      _edges_intersect_res_t *_eir = (_edges_intersect_res_t *) eir;
-
-      /*
-       * Get intersection properties if intersection!!!
-       */
-
-      if (eir != NULL) {
-
-        PDM_line_intersect_t         tIntersect;
-
-        PDM_g_num_t                   nGEdgeA;
-        PDM_g_num_t                   originEdgeA;
-        PDM_g_num_t                   endEdgeA;
-        int                          nNewPointsA;
-        PDM_edges_intersect_point_t *oNewPointsA;
-        PDM_g_num_t                  *linkA;
-        PDM_g_num_t                  *gNumA;
-        double                      *coordsA;
-        double                      *uA;
-
-        PDM_edges_intersect_res_data_get (eir,
-                                          PDM_EDGES_INTERSECT_MESHA,
-                                          &nGEdgeA,
-                                          &originEdgeA,
-                                          &endEdgeA,
-                                          &tIntersect,
-                                          &nNewPointsA,
-                                          &oNewPointsA,
-                                          &linkA,
-                                          &gNumA,
-                                          &coordsA,
-                                          &uA);
-
-        PDM_g_num_t                   nGEdgeB;
-        PDM_g_num_t                   originEdgeB;
-        PDM_g_num_t                   endEdgeB;
-        int                          nNewPointsB;
-        PDM_edges_intersect_point_t *oNewPointsB;
-        PDM_g_num_t                  *linkB;
-        PDM_g_num_t                  *gNumB;
-        double                      *coordsB;
-        double                      *uB;
-
-        PDM_edges_intersect_res_data_get (eir,
-                                          PDM_EDGES_INTERSECT_MESHB,
-                                          &nGEdgeB,
-                                          &originEdgeB,
-                                          &endEdgeB,
-                                          &tIntersect,
-                                          &nNewPointsB,
-                                          &oNewPointsB,
-                                          &linkB,
-                                          &gNumB,
-                                          &coordsB,
-                                          &uB);
-
-        /*
-         * Remove inconsistencies :
-         * Check if a vertex is not on two different edges
-         *   - case 1 : B vertex on two 2 different A edges
-         *   - case 2 : A vertex on two 2 different B edges
-         */
-
-        for (int k = 0; k < nNewPointsA; k++) {
-
-          if (oNewPointsA[k] == PDM_EDGES_INTERSECT_POINT_VTXB_ON_EDGEA) {
-            int ind = j;
-            if (linkA[k] != nGVtxB[0]) {
-              ind = jnext;
-              assert(linkA[k] == nGVtxB[1]);
-            }
-
-            /*
-             * If B vertex is already on an other A edge :
-             * Update intersections to merge vertex case
-             */
-
-            if (vtxBOnEdgeAEir[ind] != NULL) {
-
-              PDM_edges_intersect_res_t *preEir = (PDM_edges_intersect_res_t *) vtxBOnEdgeAEir[ind];
-              _edges_intersect_res_t *_preEir = (_edges_intersect_res_t *) preEir;
-
-              PDM_g_num_t                  preNGEdgeA;
-              PDM_g_num_t                  preExtEdgeA[2];
-              PDM_line_intersect_t         preTIntersectA;
-              int                          preNNewPointsA;
-              PDM_edges_intersect_point_t *preONewPointsA;
-              PDM_g_num_t                 *preLinkA;
-              PDM_g_num_t                 *preGNumA;
-              double                      *preCoordsA;
-              double                      *preUA;
-
-              PDM_edges_intersect_res_data_get (preEir,
-                                                PDM_EDGES_INTERSECT_MESHA,
-                                                &preNGEdgeA,
-                                                &(preExtEdgeA[0]),
-                                                &(preExtEdgeA[1]),
-                                                &preTIntersectA,
-                                                &preNNewPointsA,
-                                                &preONewPointsA,
-                                                &preLinkA,
-                                                &preGNumA,
-                                                &preCoordsA,
-                                                &preUA);
-
-              PDM_g_num_t                  preNGEdgeB;
-              PDM_g_num_t                  preExtEdgeB[2];
-              PDM_line_intersect_t         preTIntersectB;
-              int                          preNNewPointsB;
-              PDM_edges_intersect_point_t *preONewPointsB;
-              PDM_g_num_t                 *preLinkB;
-              PDM_g_num_t                 *preGNumB;
-              double                      *preCoordsB;
-              double                      *preUB;
-
-              PDM_edges_intersect_res_data_get (preEir,
-                                                PDM_EDGES_INTERSECT_MESHB,
-                                                &preNGEdgeB,
-                                                &(preExtEdgeB[0]),
-                                                &(preExtEdgeB[1]),
-                                                &preTIntersectB,
-                                                &preNNewPointsB,
-                                                &preONewPointsB,
-                                                &preLinkB,
-                                                &preGNumB,
-                                                &preCoordsB,
-                                                &preUB);
-
-              if (nGEdgeA != preNGEdgeA) {
-                printf("Warning : B vtx already on Edge A new old : "PDM_FMT_G_NUM" "PDM_FMT_G_NUM" "PDM_FMT_G_NUM" \n" , linkA[k], nGEdgeA, preNGEdgeA);
-                printf("TODO : Revoir le cas et creer deux points d'intersection"
-                       " au lieu de fusionner avec le sommet commun\n.");
-                //FIXME : Au lieu de fusionner avec le sommet commun, il faut creer deux vrais intersections
-                //sans prendre en compte le eps relatif
-                /*
-                 * Look for common vertex
-                 */
-
-                int common_isom = -1;
-
-                for (int k1 = 0; k1 < 2; k1++) {
-                  for (int k2 = 0; k2 < 2; k2++) {
-                    if (nGVtxA[k1] == preExtEdgeA[k2]) {
-                      common_isom = k1;
-                      break;
-                    }
-                  }
-                }
-
-                if (common_isom == -1) {
-                  PDM_error(__FILE__, __LINE__, 0, "Probleme simplication sommet proche de 2 aretes :\n"
-                            "les 2 aretes n'ont pas de sommet commun\n");
-                  abort();
-                }
-
-                double coords_new[3];
-                for (int k1 = 0; k1 < 3; k1++) {
-                  coords_new[k1] = _face_vtxCooB[3*ind+k1];
-                }
-
-                /*
-                 * Update preEir and eir to merge vertex case
-                 *   - From A : switch to PDM_EDGES_INTERSECT_POINT_VTXA_ON_VTXB
-                 *   - From B : Add a new modified A vertex
-                 *   - Move vertices to half-distance.
-                 */
-
-                /* From A */
-
-                for (int k1 = 0; k1 < _preEir->nNewPointsA; k1++) {
-                  if ((_preEir->oNewPointsA[k1] == PDM_EDGES_INTERSECT_POINT_VTXB_ON_EDGEA) &&
-                      (_preEir->linkA[k1] == linkA[k])) {
-
-                    _preEir->oNewPointsA[k1] = PDM_EDGES_INTERSECT_POINT_VTXA_ON_VTXB;
-
-                    _preEir->gNumA[k1]     = nGVtxA[common_isom];
-
-                    if (_preEir->originEdgeA == nGVtxA[common_isom]) {
-                      _preEir->uA[k1] = 0;
-                    }
-                    else {
-                      _preEir->uA[k1] = 1.;
-                    }
-                    // Le point d'intersection est le sommet B
-
-                    for (int k2 = 0; k2 < 3; k2++) {
-                      _preEir->coordsA[3*k1+k2] = coords_new[k2];
-                    }
-                  }
-                }
-
-                _eir->oNewPointsA[k] = PDM_EDGES_INTERSECT_POINT_VTXA_ON_VTXB;
-
-                _eir->gNumA[k]     = nGVtxA[common_isom];
-
-                if (_eir->originEdgeA == nGVtxA[common_isom]) {
-                  _eir->uA[k] = 0;
-                }
-                else {
-                  _eir->uA[k] = 1.;
-                }
-                for (int k2 = 0; k2 < 3; k2++) {
-                _eir->coordsA[3*k+k2] = coords_new[k2];
-                }
-
-                /* From B */
-
-                _preEir->oNewPointsB =
-                  realloc(_preEir->oNewPointsB,
-                          (_preEir->nNewPointsB + 1) * sizeof(PDM_edges_intersect_point_t));
-                oNewPointsB = _preEir->oNewPointsB;
-
-                _preEir->linkB = realloc(_preEir->linkB, sizeof(PDM_g_num_t) * (_preEir->nNewPointsB + 1));
-                linkB = _preEir->linkB;
-
-                _preEir->gNumB = realloc(_preEir->gNumB, sizeof(PDM_g_num_t) * (_preEir->nNewPointsB + 1));
-                gNumB = _preEir->gNumB;
-
-                _preEir->uB  = realloc(_preEir->uB, sizeof(double) * (_preEir->nNewPointsB + 1));
-                uB = _preEir->uB;
-
-                _preEir->coordsB  =
-                  realloc(_preEir->coordsB, sizeof(double) * 3 * (_preEir->nNewPointsB + 1));
-                coordsB = _preEir->coordsB;
-
-                _preEir->oNewPointsB[_preEir->nNewPointsB] = PDM_EDGES_INTERSECT_POINT_VTXA_ON_VTXB;
-                _preEir->linkB[_preEir->nNewPointsB] = nGVtxA[common_isom];
-                _preEir->gNumB[_preEir->nNewPointsB] = linkA[k];
-
-                if (_preEir->originEdgeB == linkA[k]) {
-                  _preEir->uB[_preEir->nNewPointsB] = 0;
-                }
-                else {
-                  _preEir->uB[_preEir->nNewPointsB] = 1.;
-                }
-                for (int k2 = 0; k2 < 3; k2++) {
-                  _preEir->coordsB[3*_preEir->nNewPointsB+k2] = coords_new[k2];
-                }
-
-                _preEir->nNewPointsB += 1 ;
-
-                _eir->oNewPointsB = realloc(_eir->oNewPointsB,
-                                            (_eir->nNewPointsB + 1) * sizeof(PDM_edges_intersect_point_t));
-                oNewPointsB = _eir->oNewPointsB;
-
-                _eir->linkB = realloc(_eir->linkB, sizeof(PDM_g_num_t) * (_eir->nNewPointsB + 1));
-                linkB = _eir->linkB;
-
-                _eir->gNumB = realloc(_eir->gNumB, sizeof(PDM_g_num_t) * (_eir->nNewPointsB + 1));
-                gNumB = _eir->gNumB;
-
-                _eir->uB  = realloc(_eir->uB, sizeof(double) * (_eir->nNewPointsB + 1));
-                uB = _eir->uB;
-
-                _eir->coordsB  = realloc(_eir->coordsB, sizeof(double) * 3 * (_eir->nNewPointsB + 1));
-                coordsB = _eir->coordsB;
-
-                _eir->oNewPointsB[_eir->nNewPointsB] = PDM_EDGES_INTERSECT_POINT_VTXA_ON_VTXB;
-                _eir->linkB[_eir->nNewPointsB] = nGVtxA[common_isom];
-                _eir->gNumB[_eir->nNewPointsB] = linkA[k];
-
-                if (_eir->originEdgeB == linkA[k]) {
-                  _eir->uB[_eir->nNewPointsB] = 0;
-                }
-                else {
-                  _eir->uB[_eir->nNewPointsB] = 1.;
-                }
-                for (int k2 = 0; k2 < 3; k2++) {
-                  _eir->coordsB[3*_eir->nNewPointsB+k2] = coords_new[k2];
-                }
-
-                _eir->nNewPointsB += 1 ;
-
-              }
-            }
-
-            /*
-             * If point B is not on an other edge : tag it
-             */
-
-            else {
-              vtxBOnEdgeAEir[ind] = _eir;
-            }
-          }
-        }
-
-        for (int k = 0; k < nNewPointsB; k++) {
-
-          if (oNewPointsB[k] == PDM_EDGES_INTERSECT_POINT_VTXA_ON_EDGEB) {
-
-            int ind = i;
-            if (linkB[k] != nGVtxA[0]) {
-              ind = inext;
-              assert(linkB[k] == nGVtxA[1]);
-            }
-
-            /*
-             * If A vertex is already on an other B edge :
-             * Update intersections to merge vertex case
-             */
-
-            if (vtxAOnEdgeBEir[ind] != NULL) {
-
-              PDM_edges_intersect_res_t *preEir = (PDM_edges_intersect_res_t *) vtxAOnEdgeBEir[ind];
-              _edges_intersect_res_t *_preEir = (_edges_intersect_res_t *) preEir;
-
-              PDM_g_num_t                  preNGEdgeA;
-              PDM_g_num_t                  preExtEdgeA[2];
-              PDM_line_intersect_t         preTIntersectA;
-              int                          preNNewPointsA;
-              PDM_edges_intersect_point_t *preONewPointsA;
-              PDM_g_num_t                 *preLinkA;
-              PDM_g_num_t                 *preGNumA;
-              double                      *preCoordsA;
-              double                      *preUA;
-
-              PDM_edges_intersect_res_data_get (preEir,
-                                                PDM_EDGES_INTERSECT_MESHA,
-                                                &preNGEdgeA,
-                                                &(preExtEdgeA[0]),
-                                                &(preExtEdgeA[1]),
-                                                &preTIntersectA,
-                                                &preNNewPointsA,
-                                                &preONewPointsA,
-                                                &preLinkA,
-                                                &preGNumA,
-                                                &preCoordsA,
-                                                &preUA);
-
-              PDM_g_num_t                  preNGEdgeB;
-              PDM_g_num_t                  preExtEdgeB[2];
-              PDM_line_intersect_t         preTIntersectB;
-              int                          preNNewPointsB;
-              PDM_edges_intersect_point_t *preONewPointsB;
-              PDM_g_num_t                 *preLinkB;
-              PDM_g_num_t                 *preGNumB;
-              double                      *preCoordsB;
-              double                      *preUB;
-
-              PDM_edges_intersect_res_data_get (preEir,
-                                                PDM_EDGES_INTERSECT_MESHB,
-                                                &preNGEdgeB,
-                                                &(preExtEdgeB[0]),
-                                                &(preExtEdgeB[1]),
-                                                &preTIntersectB,
-                                                &preNNewPointsB,
-                                                &preONewPointsB,
-                                                &preLinkB,
-                                                &preGNumB,
-                                                &preCoordsB,
-                                                &preUB);
-
-              if (nGEdgeB != preNGEdgeB) {
-                printf("Warning : A vtx already on Edge B new old : "PDM_FMT_G_NUM" "PDM_FMT_G_NUM" "PDM_FMT_G_NUM"\n" , linkB[k], nGEdgeB, preNGEdgeB);
-                printf("TODO : Revoir le cas et creer deux points d'intersection"
-                       " au lieu de fusionner avec le sommet commun\n.");
-
-                /*
-                 * Look for common vertex
-                 */
-
-                int common_isom = -1;
-
-                for (int k1 = 0; k1 < 2; k1++) {
-                  for (int k2 = 0; k2 < 2; k2++) {
-                    if (nGVtxB[k1] == preExtEdgeB[k2]) {
-                      common_isom = k1;
-                      break;
-                    }
-                  }
-                }
-
-                if (common_isom == -1) {
-                  PDM_error(__FILE__, __LINE__, 0, "Probleme simplication sommet proche de 2 aretes :\n"
-                            "les 2 aretes n'ont pas de sommet commun\n");
-                  abort();
-                }
-
-                double coords_new[3];
-                for (int k1 = 0; k1 < 3; k1++) {
-                  coords_new[k1] = _face_vtxCooA[3*ind+k1];
-                }
-
-                /*
-                 * Update preEir and eir to merge vertex case
-                 *   - From B : switch to PDM_EDGES_INTERSECT_POINT_VTXA_ON_VTXB
-                 *   - From A : Add a new modified A vertex
-                 *   - Move vertices to half-distance.
-                 */
-
-                /* From B */
-
-                for (int k1 = 0; k1 < _preEir->nNewPointsB; k1++) {
-                  if ((_preEir->oNewPointsB[k1] == PDM_EDGES_INTERSECT_POINT_VTXA_ON_EDGEB) &&
-                    (_preEir->linkB[k1] == linkB[k])) {
-
-                    _preEir->oNewPointsB[k1] = PDM_EDGES_INTERSECT_POINT_VTXA_ON_VTXB;
-
-                    _preEir->gNumB[k1]     = nGVtxB[common_isom];
-
-                    if (_preEir->originEdgeB == nGVtxB[common_isom]) {
-                      _preEir->uB[k1] = 0;
-                    }
-                    else {
-                      _preEir->uB[k1] = 1.;
-                    }
-
-                    // Le point d'intersection est le sommet A
-
-                    for (int k2 = 0; k2 < 3; k2++) {
-                      _preEir->coordsB[3*k1+k2] = coords_new[k2];
-                    }
-                  }
-                }
-
-                _eir->oNewPointsB[k] = PDM_EDGES_INTERSECT_POINT_VTXA_ON_VTXB;
-
-                _eir->gNumB[k]     = nGVtxB[common_isom];
-
-                if (_eir->originEdgeB == nGVtxB[common_isom]) {
-                  _eir->uB[k] = 0;
-                }
-                else {
-                  _eir->uB[k] = 1.;
-                }
-                for (int k2 = 0; k2 < 3; k2++) {
-                  _eir->coordsB[3*k+k2] = coords_new[k2];
-                }
-
-                /* From A */
-
-                _preEir->oNewPointsA =
-                  realloc(_preEir->oNewPointsA,
-                          (_preEir->nNewPointsA + 1) * sizeof(PDM_edges_intersect_point_t));
-                oNewPointsA = _preEir->oNewPointsA;
-
-                _preEir->linkA = realloc(_preEir->linkA, sizeof(PDM_g_num_t) * (_preEir->nNewPointsA + 1));
-                linkA = _preEir->linkA;
-
-                _preEir->gNumA = realloc(_preEir->gNumA, sizeof(PDM_g_num_t) * (_preEir->nNewPointsA + 1));
-                gNumA = _preEir->gNumA;
-
-                _preEir->uA  = realloc(_preEir->uA, sizeof(double) * (_preEir->nNewPointsA + 1));
-                uA = _preEir->uA;
-
-                _preEir->coordsA  =
-                  realloc(_preEir->coordsA, sizeof(double) * 3 * (_preEir->nNewPointsA + 1));
-                coordsA = _preEir->coordsA;
-
-                _preEir->oNewPointsA[_preEir->nNewPointsA] = PDM_EDGES_INTERSECT_POINT_VTXA_ON_VTXB;
-                _preEir->linkA[_preEir->nNewPointsA] = nGVtxB[common_isom];
-                _preEir->gNumA[_preEir->nNewPointsA] = linkB[k];
-
-                if (_preEir->originEdgeA == linkB[k]) {
-                  _preEir->uA[_preEir->nNewPointsA] = 0;
-                }
-                else {
-                  _preEir->uA[_preEir->nNewPointsA] = 1.;
-                }
-                for (int k2 = 0; k2 < 3; k2++) {
-                _preEir->coordsA[3*_preEir->nNewPointsA+k2] = coords_new[k2];
-                }
-
-                _preEir->nNewPointsA += 1 ;
-
-                _eir->oNewPointsA = realloc(_eir->oNewPointsA,
-                                            (_eir->nNewPointsA + 1) * sizeof(PDM_edges_intersect_point_t));
-                oNewPointsA = _eir->oNewPointsA;
-
-                _eir->linkA = realloc(_eir->linkA, sizeof(PDM_g_num_t) * (_eir->nNewPointsA + 1));
-                linkA = _eir->linkA;
-
-                _eir->gNumA = realloc(_eir->gNumA, sizeof(PDM_g_num_t) * (_eir->nNewPointsA + 1));
-                gNumA = _eir->gNumA;
-
-                _eir->uA  = realloc(_eir->uA, sizeof(double) * (_eir->nNewPointsA + 1));
-                uA = _eir->uA;
-
-                _eir->coordsA  = realloc(_eir->coordsA, sizeof(double) * 3 * (_eir->nNewPointsA + 1));
-                coordsA = _eir->coordsA;
-
-                _eir->oNewPointsA[_eir->nNewPointsA] = PDM_EDGES_INTERSECT_POINT_VTXA_ON_VTXB;
-                _eir->linkA[_eir->nNewPointsA] = nGVtxB[common_isom];
-                _eir->gNumA[_eir->nNewPointsA] = linkB[k];
-
-                if (_eir->originEdgeA == linkB[k]) {
-                  _eir->uA[_eir->nNewPointsA] = 0;
-                }
-                else {
-                  _eir->uA[_eir->nNewPointsA] = 1.;
-                }
-                for (int k2 = 0; k2 < 3; k2++) {
-                  _eir->coordsA[3*_eir->nNewPointsA+k2] = coords_new[k2];
-                }
-
-                _eir->nNewPointsA += 1 ;
-
-              }
-            }
-
-            /*
-             * If point B is not on an other edge : tag it
-             */
-
-            else {
-              vtxAOnEdgeBEir[ind] = _eir;
-            }
-          }
-        }
-      }
-    }
-  }
-
-
-  /*
-   * Free local memory
-   */
-
-
-  free (vtxAOnEdgeBEir);
-
-  free (vtxBOnEdgeAEir);
-
-  if (_faceToEdgeA != faceToEdgeA) {
-    free (_faceToEdgeA);
-  }
-
-  if (_faceToVtxA  != faceToVtxA) { /* EQU == */
-    free (_faceToVtxA);
-  }
-
-  if (_face_vtxCooA != face_vtxCooA) { /* EQU == */
-    free (_face_vtxCooA);
-  }
-
-  if (_face_vtxEpsA != face_vtxEpsA) { /* EQU == */
-    free (_face_vtxEpsA);
-  }
-
-  if (_faceToEdgeB != faceToEdgeB) {
-    free (_faceToEdgeB);
-  }
-
-  if (_faceToVtxB != faceToVtxB) { /* EQU == */
-    free (_faceToVtxB);
-  }
-
-  if (_face_vtxCooB != face_vtxCooB) { /* EQU == */
-    free (_face_vtxCooB);
-  }
-
-  if (_face_vtxEpsB != face_vtxEpsB) { /* EQU == */
-    free (_face_vtxEpsB);
-  }
-  if (vb) {
-    PDM_printf ("==== PDM_edges_intersect_poly_add ==== terminated ====\n");
-  }
-
-}
-
-
-
-
-PDM_edges_intersect_res_t *
-PDM_edges_intersect_add2
-(
-PDM_edges_intersect_t       *ei,
-const int                    is_same_plane,
-const PDM_g_num_t            nGEdgeA,
-const PDM_g_num_t            nGVtxA[2],
-const double                 charLgthVtxA[2],
-const double                 coordsVtxA[6],
-const double                 normalVtxA[6],
-const PDM_g_num_t            nGEdgeB,
-const PDM_g_num_t            nGVtxB[2],
-const double                 charLgthVtxB[2],
-const double                 coordsVtxB[6]
-)
-{
-  int vb = 0;//1;
-  if (vb)   {
-    PDM_printf ("==== PDM_edges_intersect_add ==== \n");
-	  PDM_printf ("--- nGEdgeA:"PDM_FMT_G_NUM", nGVtxA:"PDM_FMT_G_NUM"-"PDM_FMT_G_NUM" \n charLgthVtxA:%12.5e-%12.5e, coordsVtxA:%12.5e-%12.5e-%12.5e-%12.5e-%12.5e-%12.5e\n",
-                nGEdgeA, nGVtxA[0], nGVtxA[1],
-                charLgthVtxA[0], charLgthVtxA[1], coordsVtxA[0],
-                coordsVtxA[1], coordsVtxA[2],
-                coordsVtxA[3], coordsVtxA[4], coordsVtxA[5]);
-	  PDM_printf ("--- nGEdgeB:"PDM_FMT_G_NUM", nGVtxB:"PDM_FMT_G_NUM"-"PDM_FMT_G_NUM" \n charLgthVtxB:%12.5e-%12.5e, coordsVtxB:%12.5e-%12.5e-%12.5e-%12.5e-%12.5e-%12.5e \n",
-                nGEdgeB, nGVtxB[0], nGVtxB[1],
-                charLgthVtxB[0], charLgthVtxB[1],
-                coordsVtxB[0], coordsVtxB[1], coordsVtxB[2],
-                coordsVtxB[3], coordsVtxB[4], coordsVtxB[5]);
-  }
-  _edges_intersect_t *_ei = (_edges_intersect_t *) ei;
-
-  PDM_hash_tab_t *ht = _ei->ht;
-  PDM_hash_tab_t *htA = _ei->htA;
-  PDM_hash_tab_t *htB = _ei->htB;
-
-  const double minMin = 1e-12;
-
-  double _charLgthVtxA[2] = {PDM_MIN (_ei->vtxCarLengthTol * charLgthVtxA[0], minMin),
-                             PDM_MIN (_ei->vtxCarLengthTol * charLgthVtxA[1], minMin)};
-
-  double _charLgthVtxB[2] = {PDM_MIN (_ei->vtxCarLengthTol * charLgthVtxB[0], minMin),
-                             PDM_MIN (_ei->vtxCarLengthTol * charLgthVtxB[1], minMin)};
-
-  PDM_g_num_t _key  = (nGEdgeA + nGEdgeB) / _ei->sMSGComm;
-  PDM_g_num_t _keyA = nGEdgeA / _ei->sMSGComm;
-  PDM_g_num_t _keyB = nGEdgeB / _ei->sMSGComm;
-
-  int key = (int) _key;
-  int keyA = (int) _keyA;
-  int keyB = (int) _keyB;
-
-  const int nData = PDM_hash_tab_n_data_get (ht, (void *) &key);
-  _edges_intersect_res_t ** datas = (_edges_intersect_res_t **) PDM_hash_tab_data_get (ht,(void *) &key);
-
-
-  /**********************************************
-   * Check if intersection is already preformed *
-   **********************************************/
-
-  for (int i = 0; i < nData; i++) {
-    _edges_intersect_res_t *data = datas[i];
-    if ((nGEdgeA == data->nGEdgeA) && (nGEdgeB == data->nGEdgeB)){
-      if (vb) {
-        PDM_printf ("intersection is already preformed\n");
-        PDM_printf ("==== PDM_edges_intersect_add ==== terminated ====\n");
-      }
-      return (PDM_edges_intersect_res_t *) data;
-    }
-  }
-
-  /******************************
-   * Perform a new intersection *
-   ******************************/
-
-  /*
-   * Line-line intersection
-   */
-
-  double u1;
-  double v1;
-
-  PDM_line_intersect_t tIntersect =
-    PDM_line_intersection_mean_square (coordsVtxA, &(coordsVtxA[3]),
-                                       coordsVtxB, &(coordsVtxB[3]),
-                                       &u1, &v1);
-  /*  PDM_LINE_INTERSECT_UNDEF   = -1,  !< No intersection */
-  /*  PDM_LINE_INTERSECT_NO      = 0,  !< No intersection */
-  /*  PDM_LINE_INTERSECT_YES     = 1,  !< Intersection */
-  /*  PDM_LINE_INTERSECT_ON_LINE = 2,  !< On line  */
-
-  /* IMPORTANT REMINDER:
-   * A point A(u) (resp B(v)) on line A (resp on line B) is parameterized by:
-   *   A(u) = (1 - u)*A0 + u*A1 (resp B(v) = (1 - v)*B0 + v*B1))
-   * The distance between A(u) and B(v) is minimal for u = u1 and v = v1 (-inf < u,v < +inf).
-   * Therefore, PDM_LINE_INTERSECT_YES means that the points of minimal distance
-   * between lines A and B are actually INSIDE edges A and B (0 <= u1,v1 <= 1).
-   * However, this distance is generally non-zero.
-   */
-
-  bool isInitialOnLine = false;
-  if (tIntersect == PDM_LINE_INTERSECT_ON_LINE) {
-    isInitialOnLine = true;
-  }
-
-  /*
-   * Initialization
-   */
-
-  _edges_intersect_res_t *newInter = NULL;
-
-  double vA[3];
-  double vB[3];
-
-  for (int i = 0; i < 3; i++) {
-    vA[i] = coordsVtxA[3 + i] - coordsVtxA[i];
-    vB[i] = coordsVtxB[3 + i] - coordsVtxB[i];
-  }
-
-  double vA_norm2 = PDM_DOT_PRODUCT (vA, vA);
-  double vB_norm2 = PDM_DOT_PRODUCT (vB, vB);
-
-  double vA_norm = sqrt(vA_norm2);//PDM_MODULE (vA);
-  double vB_norm = sqrt(vB_norm2);//PDM_MODULE (vB);
-
-  bool isSetted = false;
-
-  /*
-   * Resolution of inconsistencies
-   */
-
-  if ((tIntersect == PDM_LINE_INTERSECT_NO) ||
-      (tIntersect == PDM_LINE_INTERSECT_YES)) {
-
-    double A1B1[3] = {coordsVtxB[0] - coordsVtxA[0],
-                      coordsVtxB[1] - coordsVtxA[1],
-                      coordsVtxB[2] - coordsVtxA[2]};
-    double mA1B1 = PDM_MODULE (A1B1);
-
-    double A1B2[3] = {coordsVtxB[3+0] - coordsVtxA[0],
-                      coordsVtxB[3+1] - coordsVtxA[1],
-                      coordsVtxB[3+2] - coordsVtxA[2]};
-    double mA1B2 = PDM_MODULE (A1B2);
-
-    double B1A2[3] = {coordsVtxA[3+0] - coordsVtxB[0],
-                      coordsVtxA[3+1] - coordsVtxB[1],
-                      coordsVtxA[3+2] - coordsVtxB[2]};
-    double mB1A2 = PDM_MODULE (B1A2);
-
-    double B2A2[3] = {coordsVtxA[3+0] - coordsVtxB[3+0],
-                      coordsVtxA[3+1] - coordsVtxB[3+1],
-                      coordsVtxA[3+2] - coordsVtxB[3+2]};
-    double mB2A2 = PDM_MODULE (B2A2);
-
-    int isA1B1 = (mA1B1 < _charLgthVtxA[0]) &&
-      (mA1B1 < _charLgthVtxB[0]);
-
-    int isA1B2 = (mA1B2 < _charLgthVtxA[0]) &&
-      (mA1B2 < _charLgthVtxB[1]);
-
-    int isA2B1 = (mB1A2 < _charLgthVtxA[1]) &&
-      (mB1A2 < _charLgthVtxB[0]);
-
-    int isA2B2 = (mB2A2 < _charLgthVtxA[1]) &&
-      (mB2A2 < _charLgthVtxB[1]);
-
-
-    /*
-     * Check if A vertex is on B Edge and vice versa
-     */
-
-    double closestA1EdgeB[3];
-    double tA1EdgeB;
-    double d2A1EdgeB = PDM_line_distance (coordsVtxA,
-                                          coordsVtxB,
-                                          coordsVtxB + 3,
-                                          &tA1EdgeB,
-                                          closestA1EdgeB);
-
-    double closestA2EdgeB[3];
-    double tA2EdgeB;
-    double d2A2EdgeB = PDM_line_distance (coordsVtxA + 3,
-                                          coordsVtxB,
-                                          coordsVtxB + 3,
-                                          &tA2EdgeB,
-                                          closestA2EdgeB);
-
-    double closestB1EdgeA[3];
-    double tB1EdgeA;
-    double d2B1EdgeA = PDM_line_distance (coordsVtxB,
-                                          coordsVtxA,
-                                          coordsVtxA + 3,
-                                          &tB1EdgeA,
-                                          closestB1EdgeA);
-
-    double closestB2EdgeA[3];
-    double tB2EdgeA;
-    double d2B2EdgeA = PDM_line_distance (coordsVtxB + 3,
-                                          coordsVtxA,
-                                          coordsVtxA + 3,
-                                          &tB2EdgeA,
-                                          closestB2EdgeA);
-
-    double _deltaEdgA = _charLgthVtxA[1] - _charLgthVtxA[0];
-    double _deltaEdgB = _charLgthVtxB[1] - _charLgthVtxB[0];
-
-    double A1closestEdgeB[3] = {closestA1EdgeB[0] - coordsVtxA[0],
-                                closestA1EdgeB[1] - coordsVtxA[1],
-                                closestA1EdgeB[2] - coordsVtxA[2]};
-    double dA1closestEdgeB = PDM_MODULE (A1closestEdgeB);
-
-    double A2closestEdgeB[3] = {closestA2EdgeB[0] - coordsVtxA[3+0],
-                                closestA2EdgeB[1] - coordsVtxA[3+1],
-                                closestA2EdgeB[2] - coordsVtxA[3+2]};
-    double dA2closestEdgeB = PDM_MODULE (A2closestEdgeB);
-
-
-    double B1closestEdgeA[3] = {closestB1EdgeA[0] - coordsVtxB[0],
-                                closestB1EdgeA[1] - coordsVtxB[1],
-                                closestB1EdgeA[2] - coordsVtxB[2]};
-    double dB1closestEdgeA = PDM_MODULE (B1closestEdgeA);
-
-    double B2closestEdgeA[3] = {closestB2EdgeA[0] - coordsVtxB[3+0],
-                                closestB2EdgeA[1] - coordsVtxB[3+1],
-                                closestB2EdgeA[2] - coordsVtxB[3+2]};
-    double dB2closestEdgeA = PDM_MODULE (B2closestEdgeA);
-
-    int isA1OnEdgeB = (d2A1EdgeB < ((_charLgthVtxB[0] + tA1EdgeB * _deltaEdgB) *
-                                    (_charLgthVtxB[0] + tA1EdgeB * _deltaEdgB))) &&
-                      (dA1closestEdgeB < _charLgthVtxA[0]) && !isA1B1 && !isA1B2;
-
-    int isA2OnEdgeB = (d2A2EdgeB < ((_charLgthVtxB[0] + tA2EdgeB * _deltaEdgB) *
-                                    (_charLgthVtxB[0] + tA2EdgeB * _deltaEdgB))) &&
-                      (dA2closestEdgeB < _charLgthVtxA[1]) && !isA2B1 && !isA2B2;
-
-    int isB1OnEdgeA = (d2B1EdgeA < ((_charLgthVtxA[0] + tB1EdgeA * _deltaEdgA) *
-                                    (_charLgthVtxA[0] + tB1EdgeA * _deltaEdgA))) &&
-                      (dB1closestEdgeA < _charLgthVtxB[0]) && !isA1B1 && !isA2B1;
-
-    int isB2OnEdgeA = (d2B2EdgeA < ((_charLgthVtxA[0] + tB2EdgeA * _deltaEdgA) *
-                                    (_charLgthVtxA[0] + tB2EdgeA * _deltaEdgA))) &&
-                      (dB2closestEdgeA < _charLgthVtxB[1]) && !isA1B2 && !isA2B2;
-    /*int isA1OnEdgeB = (d2A1EdgeB < ((_charLgthVtxB[0] + tA1EdgeB * _deltaEdgB) *
-                                    (_charLgthVtxB[0] + tA1EdgeB * _deltaEdgB))) &&
-                      (d2A1EdgeB < _charLgthVtxA[0]*_charLgthVtxA[0]) && !isA1B1 && !isA1B2;
-
-    int isA2OnEdgeB = (d2A2EdgeB < ((_charLgthVtxB[0] + tA2EdgeB * _deltaEdgB) *
-                                    (_charLgthVtxB[0] + tA2EdgeB * _deltaEdgB))) &&
-                      (d2A2EdgeB < _charLgthVtxA[1]*_charLgthVtxA[1]) && !isA2B1 && !isA2B2;
-
-    int isB1OnEdgeA = (d2B1EdgeA < ((_charLgthVtxA[0] + tB1EdgeA * _deltaEdgA) *
-                                    (_charLgthVtxA[0] + tB1EdgeA * _deltaEdgA))) &&
-                      (d2B1EdgeA < _charLgthVtxB[0]*_charLgthVtxB[0]) && !isA1B1 && !isA2B1;
-
-    int isB2OnEdgeA = (d2B2EdgeA < ((_charLgthVtxA[0] + tB2EdgeA * _deltaEdgA) *
-                                    (_charLgthVtxA[0] + tB2EdgeA * _deltaEdgA))) &&
-                      (d2B2EdgeA < _charLgthVtxB[1]*_charLgthVtxB[1]) && !isA1B2 && !isA2B2;*/
-
-    if (vb) {
-      PDM_printf ("isA1B1:%d isA1B2:%d isA2B1:%d isA2B2:%d isA1OnEdgeB:%d isA2OnEdgeB:%d "
-                  "isB1OnEdgeA:%d isB2OnEdgeA:%d\n",
-                  isA1B1, isA1B2, isA2B1, isA2B2,
-                  isA1OnEdgeB, isA2OnEdgeB, isB1OnEdgeA, isB2OnEdgeA);
-    }
-
-    /*
-     * Check if A Edge and B are the same line
-     */
-
-    if ((isA1B1 && isA2B2) || (isA2B1 && isA1B2)) {
-      tIntersect = PDM_LINE_INTERSECT_ON_LINE;
-    }
-
-    if ((isA1OnEdgeB && isA2OnEdgeB) || (isB1OnEdgeA && isB2OnEdgeA)) {
-      tIntersect = PDM_LINE_INTERSECT_ON_LINE;
-    }
-
-    if ((isA1B1 && isA2OnEdgeB) || (isA1B1 && isB2OnEdgeA) ||
-        (isA2B1 && isA1OnEdgeB) || (isA2B1 && isB2OnEdgeA) ||
-        (isA1B2 && isA2OnEdgeB) || (isA1B2 && isB1OnEdgeA) ||
-        (isA2B2 && isA1OnEdgeB) || (isA2B2 && isB1OnEdgeA)) {
-      tIntersect = PDM_LINE_INTERSECT_ON_LINE;
-    }
-
-    if (tIntersect != PDM_LINE_INTERSECT_ON_LINE) {
-
-      /*
-       * Define intersection for same vertex inconsistencies
-       */
-
-      if (isA1B1 || isA1B2 || isA2B1 || isA2B2) {
-
-        int nNewPointsA = 1;
-        int nNewPointsB = 1;
-
-        newInter = _edges_intersect_res_create (nGEdgeA,
-                                                nGEdgeB,
-                                                nNewPointsA,
-                                                nNewPointsB);
-
-        newInter->tIntersect = tIntersect;
-        newInter->originEdgeA = PDM_MIN (nGVtxA[0], nGVtxA[1]);
-        newInter->originEdgeB = PDM_MIN (nGVtxB[0], nGVtxB[1]);
-        newInter->endEdgeA = PDM_MAX (nGVtxA[0], nGVtxA[1]);
-        newInter->endEdgeB = PDM_MAX (nGVtxB[0], nGVtxB[1]);
-
-        newInter->oNewPointsA[0] = PDM_EDGES_INTERSECT_POINT_VTXA_ON_VTXB;
-        newInter->oNewPointsB[0] = PDM_EDGES_INTERSECT_POINT_VTXA_ON_VTXB;
-
-        int iA = 0;
-        int iB = 0;
-
-        if (isA1B1) {
-          iA = 0;
-          iB = 0;
-        }
-        else if (isA1B2) {
-          iA = 0;
-          iB = 1;
-        }
-        else if (isA2B1) {
-          iA = 1;
-          iB = 0;
-        }
-        else if (isA2B2) {
-          iA = 1;
-          iB = 1;
-        }
-
-        newInter->uA[0] = (double) iA;
-        if (newInter->originEdgeA == nGVtxA[1]) {
-          newInter->uA[0] = 1 - newInter->uA[0];
-        }
-
-        newInter->uB[0] = (double) iB;
-        if (newInter->originEdgeB == nGVtxB[1]) {
-          newInter->uB[0] = 1 - newInter->uB[0];
-        }
-
-        newInter->linkA[0] = nGVtxB[iB];
-        newInter->linkB[0] = nGVtxA[iA];
-        newInter->gNumA[0] = nGVtxA[iA];
-        newInter->gNumB[0] = nGVtxB[iB];
-
-        for (int i = 0; i < 3; i++) {
-          double _comp = (coordsVtxB[3*iB+i] + coordsVtxA[3*iA+i]) / 2;
-          newInter->coordsA[i] = _comp;
-          newInter->coordsB[i] = _comp;
-        }
-        isSetted = true;
-
-      }
-
-      /*
-       * Define intersection for vertex on edge inconsistencies
-       */
-
-      else if (isA1OnEdgeB) {
-        int nNewPointsA = 0;
-        int nNewPointsB = 1;
-
-        newInter = _edges_intersect_res_create (nGEdgeA,
-                                                nGEdgeB,
-                                                nNewPointsA,
-                                                nNewPointsB);
-
-        newInter->tIntersect = tIntersect;
-        newInter->originEdgeA = PDM_MIN (nGVtxA[0], nGVtxA[1]);
-        newInter->originEdgeB = PDM_MIN (nGVtxB[0], nGVtxB[1]);
-        newInter->endEdgeA = PDM_MAX (nGVtxA[0], nGVtxA[1]);
-        newInter->endEdgeB = PDM_MAX (nGVtxB[0], nGVtxB[1]);
-
-        newInter->oNewPointsB[0] = PDM_EDGES_INTERSECT_POINT_VTXA_ON_EDGEB;
-
-        double B1ClosestA1[3] = {tA1EdgeB * vB[0],
-                                 tA1EdgeB * vB[1],
-                                 tA1EdgeB * vB[2]};
-
-        newInter->uB[0] = PDM_DOT_PRODUCT (B1ClosestA1, vB) / vB_norm2;
-        if (newInter->originEdgeB == nGVtxB[1]) {
-          newInter->uB[0] = 1 - newInter->uB[0];
-        }
-
-        for (int i = 0; i < 3; i++) {
-          newInter->coordsB[i] = closestA1EdgeB[i];
-        }
-
-        newInter->linkB[0] = nGVtxA[0];
-        newInter->gNumB[0] = 0;
-
-        isSetted = true;
-
-      }
-
-      else if (isA2OnEdgeB) {
-        int nNewPointsA = 0;
-        int nNewPointsB = 1;
-
-        newInter = _edges_intersect_res_create (nGEdgeA,
-                                                nGEdgeB,
-                                                nNewPointsA,
-                                                nNewPointsB);
-
-        newInter->tIntersect = tIntersect;
-        newInter->originEdgeA = PDM_MIN (nGVtxA[0], nGVtxA[1]);
-        newInter->originEdgeB = PDM_MIN (nGVtxB[0], nGVtxB[1]);
-        newInter->endEdgeA = PDM_MAX (nGVtxA[0], nGVtxA[1]);
-        newInter->endEdgeB = PDM_MAX (nGVtxB[0], nGVtxB[1]);
-
-        newInter->oNewPointsB[0] = PDM_EDGES_INTERSECT_POINT_VTXA_ON_EDGEB;
-
-        double B1ClosestA2[3] = {tA2EdgeB * vB[0],
-                                 tA2EdgeB * vB[1],
-                                 tA2EdgeB * vB[2]};
-
-        newInter->uB[0] = PDM_DOT_PRODUCT (B1ClosestA2, vB) / vB_norm2;
-        if (newInter->originEdgeB == nGVtxB[1]) {
-          newInter->uB[0] = 1 - newInter->uB[0];
-        }
-
-        for (int i = 0; i < 3; i++) {
-          newInter->coordsB[i] = closestA2EdgeB[i];
-        }
-
-        newInter->linkB[0] = nGVtxA[1];
-        newInter->gNumB[0] = 0;
-
-        isSetted = true;
-
-      }
-
-      else if (isB1OnEdgeA) {
-
-        int nNewPointsA = 1;
-        int nNewPointsB = 0;
-
-        newInter = _edges_intersect_res_create (nGEdgeA,
-                                                nGEdgeB,
-                                                nNewPointsA,
-                                                nNewPointsB);
-
-        newInter->tIntersect = tIntersect;
-        newInter->originEdgeA = PDM_MIN (nGVtxA[0], nGVtxA[1]);
-        newInter->originEdgeB = PDM_MIN (nGVtxB[0], nGVtxB[1]);
-        newInter->endEdgeA = PDM_MAX (nGVtxA[0], nGVtxA[1]);
-        newInter->endEdgeB = PDM_MAX (nGVtxB[0], nGVtxB[1]);
-
-        newInter->oNewPointsA[0] = PDM_EDGES_INTERSECT_POINT_VTXB_ON_EDGEA;
-        double A1ClosestB1[3] = {tB1EdgeA *vA[0],
-                                 tB1EdgeA *vA[1],
-                                 tB1EdgeA *vA[2]};
-
-        newInter->uA[0] = PDM_DOT_PRODUCT (A1ClosestB1, vA) / vA_norm2;
-
-        if (newInter->originEdgeA == nGVtxA[1]) {
-          newInter->uA[0] = 1 - newInter->uA[0];
-        }
-
-        for (int i = 0; i < 3; i++) {
-          newInter->coordsA[i] = closestB1EdgeA[i];
-        }
-
-        newInter->linkA[0] = nGVtxB[0];
-        newInter->gNumA[0] = 0;
-
-        isSetted = true;
-
-      }
-
-      else if (isB2OnEdgeA) {
-
-        int nNewPointsA = 1;
-        int nNewPointsB = 0;
-
-        newInter = _edges_intersect_res_create (nGEdgeA,
-                                                nGEdgeB,
-                                                nNewPointsA,
-                                                nNewPointsB);
-
-        newInter->tIntersect = tIntersect;
-        newInter->originEdgeA = PDM_MIN (nGVtxA[0], nGVtxA[1]);
-        newInter->originEdgeB = PDM_MIN (nGVtxB[0], nGVtxB[1]);
-        newInter->endEdgeA = PDM_MAX (nGVtxA[0], nGVtxA[1]);
-        newInter->endEdgeB = PDM_MAX (nGVtxB[0], nGVtxB[1]);
-
-        newInter->oNewPointsA[0] = PDM_EDGES_INTERSECT_POINT_VTXB_ON_EDGEA;
-
-        double A1ClosestB2[3] = {tB2EdgeA * vA[0],
-                                 tB2EdgeA * vA[1],
-                                 tB2EdgeA * vA[2]};
-
-        newInter->uA[0] = PDM_DOT_PRODUCT (A1ClosestB2, vA) / vA_norm2;
-        if (newInter->originEdgeA == nGVtxA[1]) {
-          newInter->uA[0] = 1 - newInter->uA[0];
-        }
-
-        for (int i = 0; i < 3; i++) {
-          newInter->coordsA[i] = closestB2EdgeA[i];
-        }
-
-        newInter->linkA[0] = nGVtxB[1];
-        newInter->gNumA[0] = 0;
-
-        isSetted = true;
-      }
-
-      //-->>
-      else if (!is_same_plane) {
-        /*
-         * edges A and B are in general position, i.e.
-         *   - they are not parallel
-         *   - vertices of edge A are not on edge B and vice versa
-         */
-
-        /* check whether edges A and B actually intersect */
-        double cl = PDM_MIN (_charLgthVtxA[0] + u1*(_charLgthVtxA[1] - _charLgthVtxA[0]),
-                             _charLgthVtxB[0] + v1*(_charLgthVtxB[1] - _charLgthVtxB[0]));
-        double dist2 = 0., d;
-        for (int i = 0; i < 3; i++) {
-          d = (coordsVtxA[i] + u1*(coordsVtxA[3+i] - coordsVtxA[i]))
-            - (coordsVtxB[i] + v1*(coordsVtxB[3+i] - coordsVtxB[i]));
-          dist2 += d * d;
-        }
-
-        if (dist2 > cl*cl) {
-          /* Edges A and B do not actually intersect
-           * Check whether the projection of edge B on mesh A intersects edge A
-           */
-          double uAproj, uBproj;
-          //printf("dist = %12.5e, cl = %12.5e\n", sqrt(dist2), cl);
-          PDM_line_intersect_t tIntersectProj = _intersect_edges_projection (coordsVtxA,
-                                                                             coordsVtxA + 3,
-                                                                             normalVtxA,
-                                                                             normalVtxA + 3,
-                                                                             coordsVtxB,
-                                                                             coordsVtxB + 3,
-                                                                             &uAproj,
-                                                                             &uBproj);
-
-          if (tIntersectProj == PDM_LINE_INTERSECT_YES) {
-            /* the projection of edge B on mesh A intersects edge A */
-              tIntersect = tIntersectProj;
-              u1 = uAproj;
-              v1 = uBproj;
-          }
-          else {
-            /* the projection of edge B on mesh A does not intersect edge A */
-            tIntersect = PDM_LINE_INTERSECT_NO;
-          }
-        }
-      }
-      //<<--
-    }
-  }
-
-  if (tIntersect == PDM_LINE_INTERSECT_ON_LINE) {
-    // At this point we know both edges are ~parallel
-
-    if (isInitialOnLine) {
-
-      double A1B1[3] = {coordsVtxB[0] - coordsVtxA[0],
-                        coordsVtxB[1] - coordsVtxA[1],
-                        coordsVtxB[2] - coordsVtxA[2]};
-      double A1B2[3] = {coordsVtxB[3] - coordsVtxA[0],
-                        coordsVtxB[4] - coordsVtxA[1],
-                        coordsVtxB[5] - coordsVtxA[2]};
-      double B1A1[3] = {coordsVtxA[0] - coordsVtxB[0],
-                        coordsVtxA[1] - coordsVtxB[1],
-                        coordsVtxA[2] - coordsVtxB[2]};
-      double B1A2[3] = {coordsVtxA[3] - coordsVtxB[0],
-                        coordsVtxA[4] - coordsVtxB[1],
-                        coordsVtxA[5] - coordsVtxB[2]};
-
-      double cp[3];
-      PDM_CROSS_PRODUCT(cp, A1B1, vA);
-      int isInBallB1 = (PDM_MODULE (cp) / vA_norm) < _charLgthVtxB[0];
-      PDM_CROSS_PRODUCT(cp, A1B2, vA);
-      int isInBallB2 = (PDM_MODULE (cp) / vA_norm) < _charLgthVtxB[1];
-      PDM_CROSS_PRODUCT(cp, B1A1, vB);
-      int isInBallA1 = (PDM_MODULE (cp) / vB_norm) < _charLgthVtxA[0];
-      PDM_CROSS_PRODUCT(cp, B1A2, vB);
-      int isInBallA2 = (PDM_MODULE (cp) / vB_norm) < _charLgthVtxA[1];
-
-      int isSameLine = (isInBallB1 && isInBallB2 && isInBallA1 && isInBallA2);
-
-      if (!isSameLine) {
-        // ~Parallel but non-collinear edges
-        tIntersect = PDM_LINE_INTERSECT_NO;
-        newInter = _edges_intersect_res_create (nGEdgeA,
-                                                nGEdgeB,
-                                                0,
-                                                0);
-        newInter->tIntersect = tIntersect;
-        newInter->originEdgeA = PDM_MIN (nGVtxA[0], nGVtxA[1]);
-        newInter->originEdgeB = PDM_MIN (nGVtxB[0], nGVtxB[1]);
-        newInter->endEdgeA = PDM_MAX (nGVtxA[0], nGVtxA[1]);
-        newInter->endEdgeB = PDM_MAX (nGVtxB[0], nGVtxB[1]);
-
-        isSetted = true;
-
-      }
-    }
-
-    if (tIntersect == PDM_LINE_INTERSECT_ON_LINE) {
-      // ~Collinear edges
-
-      double A1B1[3] = {coordsVtxB[0] - coordsVtxA[0],
-                        coordsVtxB[1] - coordsVtxA[1],
-                        coordsVtxB[2] - coordsVtxA[2]};
-      double mA1B1 = PDM_MODULE (A1B1);
-
-      double A1B2[3] = {coordsVtxB[3+0] - coordsVtxA[0],
-                        coordsVtxB[3+1] - coordsVtxA[1],
-                        coordsVtxB[3+2] - coordsVtxA[2]};
-      double mA1B2 = PDM_MODULE (A1B2);
-
-      double B1A2[3] = {coordsVtxA[3+0] - coordsVtxB[0],
-                        coordsVtxA[3+1] - coordsVtxB[1],
-                        coordsVtxA[3+2] - coordsVtxB[2]};
-      double mB1A2 = PDM_MODULE (B1A2);
-
-      double B2A2[3] = {coordsVtxA[3+0] - coordsVtxB[3+0],
-                        coordsVtxA[3+1] - coordsVtxB[3+1],
-                        coordsVtxA[3+2] - coordsVtxB[3+2]};
-      double mB2A2 = PDM_MODULE (B2A2);
-
-      int isA1B1 = (mA1B1 < _charLgthVtxA[0]) &&
-        (mA1B1 < _charLgthVtxB[0]);
-
-      int isA1B2 = (mA1B2 < _charLgthVtxA[0]) &&
-        (mA1B2 < _charLgthVtxB[1]);
-
-      int isA2B1 = (mB1A2 < _charLgthVtxA[1]) &&
-        (mB1A2 < _charLgthVtxB[0]);
-
-      int isA2B2 = (mB2A2 < _charLgthVtxA[1]) &&
-        (mB2A2 < _charLgthVtxB[1]);
-
-      int nNewPointsA = 0;
-      int nNewPointsB = 0;
-
-      double closestB2EdgeA[3];
-      double tB2EdgeA;
-
-      PDM_line_distance (coordsVtxB + 3,
-                         coordsVtxA,
-                         coordsVtxA + 3,
-                         &tB2EdgeA,
-                         closestB2EdgeA);
-
-      double A1ClosestB2[3] = {tB2EdgeA * vA[0],
-                               tB2EdgeA * vA[1],
-                               tB2EdgeA * vA[2]};
-
-      double closestA2EdgeB[3];
-      double tA2EdgeB;
-      PDM_line_distance (coordsVtxA + 3,
-                         coordsVtxB,
-                         coordsVtxB + 3,
-                         &tA2EdgeB,
-                         closestA2EdgeB);
-
-      double B1ClosestA2[3] = {tA2EdgeB * vB[0],
-                               tA2EdgeB * vB[1],
-                               tA2EdgeB * vB[2]};
-
-      double closestB1EdgeA[3];
-      double tB1EdgeA;
-      PDM_line_distance (coordsVtxB,
-                         coordsVtxA,
-                         coordsVtxA + 3,
-                         &tB1EdgeA,
-                         closestB1EdgeA);
-
-      double A1ClosestB1[3] = {tB1EdgeA * vA[0],
-                               tB1EdgeA * vA[1],
-                               tB1EdgeA * vA[2]};
-
-      double closestA1EdgeB[3];
-      double tA1EdgeB;
-      PDM_line_distance (coordsVtxA,
-                         coordsVtxB,
-                         coordsVtxB + 3,
-                         &tA1EdgeB,
-                         closestA1EdgeB);
-
-      double B1ClosestA1[3] = {tA1EdgeB * vB[0],
-                               tA1EdgeB * vB[1],
-                               tA1EdgeB * vB[2]};
-
-      if ((isA1B1 && isA2B2) || (isA2B1 && isA1B2)) {
-
-        nNewPointsA = 2;
-        nNewPointsB = 2;
-
-        newInter = _edges_intersect_res_create (nGEdgeA,
-                                                nGEdgeB,
-                                                nNewPointsA,
-                                                nNewPointsB);
-
-        newInter->tIntersect = tIntersect;
-        newInter->originEdgeA = PDM_MIN (nGVtxA[0], nGVtxA[1]);
-        newInter->originEdgeB = PDM_MIN (nGVtxB[0], nGVtxB[1]);
-        newInter->endEdgeA = PDM_MAX (nGVtxA[0], nGVtxA[1]);
-        newInter->endEdgeB = PDM_MAX (nGVtxB[0], nGVtxB[1]);
-
-        newInter->oNewPointsA[0] = PDM_EDGES_INTERSECT_POINT_VTXA_ON_VTXB;
-        newInter->oNewPointsA[1] = PDM_EDGES_INTERSECT_POINT_VTXA_ON_VTXB;
-
-        newInter->oNewPointsB[0] = PDM_EDGES_INTERSECT_POINT_VTXA_ON_VTXB;
-        newInter->oNewPointsB[1] = PDM_EDGES_INTERSECT_POINT_VTXA_ON_VTXB;
-
-        if (isA1B1 && isA2B2) {
-          newInter->uA[0] = 0.;
-          newInter->uA[1] = 1.;
-          newInter->uB[0] = 0.;
-          newInter->uB[1] = 1.;
-
-          newInter->linkA[0] = nGVtxB[0];
-          newInter->linkA[1] = nGVtxB[1];
-          newInter->gNumA[0] = nGVtxA[0];
-          newInter->gNumA[1] = nGVtxA[1];
-
-          newInter->linkB[0] = nGVtxA[0];
-          newInter->linkB[1] = nGVtxA[1];
-          newInter->gNumB[0] = nGVtxB[0];
-          newInter->gNumB[1] = nGVtxB[1];
-
-          double _coords1[3];
-          double _coords2[3];
-
-          for (int i = 0; i < 3; i++) {
-            _coords1[i] = (coordsVtxB[i] + coordsVtxA[i]) / 2;
-            _coords2[i] = (coordsVtxB[3+i] + coordsVtxA[3+i]) / 2;
-          }
-
-          for (int i = 0; i < 3; i++) {
-            newInter->coordsA[i]     = _coords1[i];
-            newInter->coordsB[i]     = _coords1[i];
-            newInter->coordsA[3 + i] = _coords2[i];
-            newInter->coordsB[3 + i] = _coords2[i];
-          }
-        }
-
-        else { //  (isA2B1 && isA1B2))
-          newInter->uA[0] = 0.;
-          newInter->uA[1] = 1.;
-          newInter->uB[0] = 0.;
-          newInter->uB[1] = 1.;
-
-          newInter->linkA[0] = nGVtxB[1];
-          newInter->linkA[1] = nGVtxB[0];
-          newInter->gNumA[0] = nGVtxA[0];
-          newInter->gNumA[1] = nGVtxA[1];
-
-          newInter->linkB[0] = nGVtxA[1];
-          newInter->linkB[1] = nGVtxA[0];
-          newInter->gNumB[0] = nGVtxB[0];
-          newInter->gNumB[1] = nGVtxB[1];
-
-          double _coords1[3];
-          double _coords2[3];
-
-          for (int i = 0; i < 3; i++) {
-            _coords1[i] = (coordsVtxB[3+i] + coordsVtxA[  i]) / 2;
-            _coords2[i] = (coordsVtxB[  i] + coordsVtxA[3+i]) / 2;
-          }
-
-          for (int i = 0; i < 3; i++) {
-            newInter->coordsA[i]     = _coords1[i];
-            newInter->coordsB[i]     = _coords2[i];
-            newInter->coordsA[3 + i] = _coords2[i];
-            newInter->coordsB[3 + i] = _coords1[i];
-          }
-        }
-
-        if (newInter->originEdgeA == nGVtxA[1]) {
-          newInter->uA[0] = 1 - newInter->uA[0];
-          newInter->uA[1] = 1 - newInter->uA[1];
-        }
-
-        if (newInter->originEdgeB == nGVtxB[1]) {
-          newInter->uB[0] = 1 - newInter->uB[0];
-          newInter->uB[1] = 1 - newInter->uB[1];
-        }
-
-      }
-
-      else if (isA1B1) {
-        nNewPointsA = 1;
-        nNewPointsB = 1;
-
-        double u = PDM_DOT_PRODUCT (A1ClosestB2, vA) / vA_norm2;
-        double v = PDM_DOT_PRODUCT (B1ClosestA2, vB) / vB_norm2;
-
-        if ((u <= 1.) && (u >= 0.)) {
-          nNewPointsA += 1;
-        }
-
-        if ((v <= 1.) && (v >= 0.)) {
-          nNewPointsB += 1;
-        }
-
-        newInter = _edges_intersect_res_create (nGEdgeA,
-                                                nGEdgeB,
-                                                nNewPointsA,
-                                                nNewPointsB);
-
-        newInter->tIntersect = tIntersect;
-        newInter->originEdgeA = PDM_MIN (nGVtxA[0], nGVtxA[1]);
-        newInter->originEdgeB = PDM_MIN (nGVtxB[0], nGVtxB[1]);
-        newInter->endEdgeA = PDM_MAX (nGVtxA[0], nGVtxA[1]);
-        newInter->endEdgeB = PDM_MAX (nGVtxB[0], nGVtxB[1]);
-
-        newInter->linkA[0] = nGVtxB[0];
-        newInter->linkB[0] = nGVtxA[0];
-        newInter->gNumA[0] = nGVtxA[0];
-        newInter->gNumB[0] = nGVtxB[0];
-
-        newInter->uA[0] = 0.;
-        newInter->uB[0] = 0.;
-        if (newInter->originEdgeA == nGVtxA[1]) {
-          newInter->uA[0] = 1 - newInter->uA[0];
-        }
-
-        if (newInter->originEdgeB == nGVtxB[1]) {
-          newInter->uB[0] = 1 - newInter->uB[0];
-        }
-
-        newInter->oNewPointsA[0] = PDM_EDGES_INTERSECT_POINT_VTXA_ON_VTXB;
-        newInter->oNewPointsB[0] = PDM_EDGES_INTERSECT_POINT_VTXA_ON_VTXB;
-
-        double _coords[3];
-
-        for (int i = 0; i < 3; i++) {
-          _coords[i] = (coordsVtxB[i] + coordsVtxA[i]) / 2;
-        }
-
-        for (int i = 0; i < 3; i++) {
-          newInter->coordsA[i] = _coords[i];
-          newInter->coordsB[i] = _coords[i];
-        }
-
-        if (nNewPointsA == 2) {
-          newInter->oNewPointsA[1] = PDM_EDGES_INTERSECT_POINT_VTXB_ON_EDGEA;
-
-          newInter->uA[1] = u;
-          if (newInter->originEdgeA == nGVtxA[1]) {
-            newInter->uA[1] = 1 - newInter->uA[1];
-          }
-
-          newInter->linkA[1] = nGVtxB[1];
-          newInter->gNumA[1] = 0;
-
-          for (int i = 0; i < 3; i++) {
-            newInter->coordsA[3 + i] =  closestB2EdgeA[i];
-          }
-        }
-        if (nNewPointsB == 2) {
-          newInter->oNewPointsB[1] = PDM_EDGES_INTERSECT_POINT_VTXA_ON_EDGEB;
-
-          newInter->uB[1] = v;
-          if (newInter->originEdgeB == nGVtxB[1]) {
-            newInter->uB[1] = 1 - newInter->uB[1];
-          }
-
-          newInter->linkB[1] = nGVtxA[1];
-          newInter->gNumB[1] = 0;
-
-          for (int i = 0; i < 3; i++) {
-            newInter->coordsB[3 + i] =  closestA2EdgeB[i];
-          }
-        }
-      }
-
-      else if (isA2B2) {
-
-        nNewPointsA = 1;
-        nNewPointsB = 1;
-
-        double u = PDM_DOT_PRODUCT (A1ClosestB1, vA) / vA_norm2;
-        double v = PDM_DOT_PRODUCT (B1ClosestA1, vB) / vB_norm2;
-
-        if ((u <= 1.) && (u >= 0.)) {
-          nNewPointsA += 1;
-        }
-
-        if ((v <= 1.) && (v >= 0.)) {
-          nNewPointsB += 1;
-        }
-
-        newInter = _edges_intersect_res_create (nGEdgeA,
-                                                nGEdgeB,
-                                                nNewPointsA,
-                                                nNewPointsB);
-
-        newInter->tIntersect = tIntersect;
-        newInter->originEdgeA = PDM_MIN (nGVtxA[0], nGVtxA[1]);
-        newInter->originEdgeB = PDM_MIN (nGVtxB[0], nGVtxB[1]);
-        newInter->endEdgeA = PDM_MAX (nGVtxA[0], nGVtxA[1]);
-        newInter->endEdgeB = PDM_MAX (nGVtxB[0], nGVtxB[1]);
-
-        newInter->linkA[0] = nGVtxB[1];
-        newInter->linkB[0] = nGVtxA[1];
-        newInter->gNumA[0] = nGVtxA[1];
-        newInter->gNumB[0] = nGVtxB[1];
-
-        newInter->uA[0] = 1.;
-        newInter->uB[0] = 1.;
-        if (newInter->originEdgeA == nGVtxA[1]) {
-           newInter->uA[0] = 1 - newInter->uA[0];
-        }
-
-        if (newInter->originEdgeB == nGVtxB[1]) {
-          newInter->uB[0] = 1 - newInter->uB[0];
-        }
-
-        newInter->oNewPointsA[0] = PDM_EDGES_INTERSECT_POINT_VTXA_ON_VTXB;
-        newInter->oNewPointsB[0] = PDM_EDGES_INTERSECT_POINT_VTXA_ON_VTXB;
-
-        double _coords[3];
-
-        for (int i = 0; i < 3; i++) {
-          _coords[i] = (coordsVtxB[3+i] + coordsVtxA[3+i]) / 2;
-        }
-
-        for (int i = 0; i < 3; i++) {
-          newInter->coordsA[i] = _coords[i];
-          newInter->coordsB[i] = _coords[i];
-        }
-
-        if (nNewPointsA == 2) {
-          newInter->oNewPointsA[1] = PDM_EDGES_INTERSECT_POINT_VTXB_ON_EDGEA;
-
-          newInter->uA[1] = u;
-          if (newInter->originEdgeA == nGVtxA[1]) {
-            newInter->uA[1] = 1 - newInter->uA[1];
-          }
-
-          newInter->linkA[1] = nGVtxB[0];
-          newInter->gNumA[1] = 0;
-
-          for (int i = 0; i < 3; i++) {
-            newInter->coordsA[3 + i] =  closestB1EdgeA[i];
-          }
-        }
-
-        if (nNewPointsB == 2) {
-          newInter->oNewPointsB[1] = PDM_EDGES_INTERSECT_POINT_VTXA_ON_EDGEB;
-
-          newInter->uB[1] = v;
-          if (newInter->originEdgeB == nGVtxB[1]) {
-            newInter->uB[1] = 1 - newInter->uB[1];
-          }
-
-          newInter->linkB[1] = nGVtxA[0];
-          newInter->gNumB[1] = 0;
-
-          for (int i = 0; i < 3; i++) {
-            newInter->coordsB[3 + i] =  closestA1EdgeB[i];
-          }
-        }
-      }
-
-      else if (isA1B2) {
-
-        nNewPointsA = 1;
-        nNewPointsB = 1;
-
-        double u = PDM_DOT_PRODUCT (A1ClosestB1, vA) / vA_norm2;
-        double v = PDM_DOT_PRODUCT (B1ClosestA2, vB) / vB_norm2;
-
-        if ((u <= 1.) && (u >= 0.)) {
-          nNewPointsA += 1;
-        }
-
-        if ((v <= 1.) && (v >= 0.)) {
-          nNewPointsB += 1;
-        }
-
-        newInter = _edges_intersect_res_create (nGEdgeA,
-                                                nGEdgeB,
-                                                nNewPointsA,
-                                                nNewPointsB);
-
-        newInter->tIntersect = tIntersect;
-        newInter->originEdgeA = PDM_MIN (nGVtxA[0], nGVtxA[1]);
-        newInter->originEdgeB = PDM_MIN (nGVtxB[0], nGVtxB[1]);
-        newInter->endEdgeA = PDM_MAX (nGVtxA[0], nGVtxA[1]);
-        newInter->endEdgeB = PDM_MAX (nGVtxB[0], nGVtxB[1]);
-
-        newInter->linkA[0] = nGVtxB[1];
-        newInter->linkB[0] = nGVtxA[0];
-        newInter->gNumA[0] = nGVtxA[0];
-        newInter->gNumB[0] = nGVtxB[1];
-
-        newInter->uA[0] = 1.;
-        newInter->uB[0] = 0.;
-        if (newInter->originEdgeA == nGVtxA[1]) {
-          newInter->uA[0] = 1 - newInter->uA[0];
-        }
-
-        if (newInter->originEdgeB == nGVtxB[1]) {
-          newInter->uB[0] = 1 - newInter->uB[0];
-        }
-
-        newInter->oNewPointsA[0] = PDM_EDGES_INTERSECT_POINT_VTXA_ON_VTXB;
-        newInter->oNewPointsB[0] = PDM_EDGES_INTERSECT_POINT_VTXA_ON_VTXB;
-
-        double _coords[3];
-
-        for (int i = 0; i < 3; i++) {
-          _coords[i] = (coordsVtxB[3+i] + coordsVtxA[i]) / 2;
-        }
-
-        for (int i = 0; i < 3; i++) {
-          newInter->coordsA[i] = _coords[i];
-          newInter->coordsB[i] = _coords[i];
-        }
-
-        if (nNewPointsA == 2) {
-
-          newInter->oNewPointsA[1] = PDM_EDGES_INTERSECT_POINT_VTXB_ON_EDGEA;
-
-          newInter->uA[1] = u;
-          if (newInter->originEdgeA == nGVtxA[1]) {
-            newInter->uA[1] = 1 - newInter->uA[1];
-          }
-
-          newInter->linkA[1] = nGVtxB[0];
-          newInter->gNumA[1] = 0;
-
-          for (int i = 0; i < 3; i++) {
-            newInter->coordsA[3 + i] =  closestB1EdgeA[i];
-          }
-        }
-
-        if (nNewPointsB == 2) {
-
-          newInter->oNewPointsB[1] = PDM_EDGES_INTERSECT_POINT_VTXA_ON_EDGEB;
-
-          newInter->uB[1] = v;
-          if (newInter->originEdgeB == nGVtxB[1]) {
-            newInter->uB[1] = 1 - newInter->uB[1];
-          }
-
-          newInter->linkB[1] = nGVtxA[1];
-          newInter->gNumB[1] = 0;
-
-          for (int i = 0; i < 3; i++) {
-            newInter->coordsB[3 + i] =  closestA2EdgeB[i];
-          }
-        }
-
-      }
-
-      else if (isA2B1) {
-
-        nNewPointsA = 1;
-        nNewPointsB = 1;
-
-        double u = PDM_DOT_PRODUCT (A1ClosestB2, vA) / vA_norm2;
-        double v = PDM_DOT_PRODUCT (B1ClosestA1, vB) / vA_norm2;
-
-        if ((u <= 1.) && (u >= 0.)) {
-          nNewPointsA += 1;
-        }
-
-        if ((v <= 1.) && (v >= 0.)) {
-          nNewPointsB += 1;
-        }
-
-        newInter = _edges_intersect_res_create (nGEdgeA,
-                                                nGEdgeB,
-                                                nNewPointsA,
-                                                nNewPointsB);
-        newInter->tIntersect = tIntersect;
-        newInter->originEdgeA = PDM_MIN (nGVtxA[0], nGVtxA[1]);
-        newInter->originEdgeB = PDM_MIN (nGVtxB[0], nGVtxB[1]);
-        newInter->endEdgeA = PDM_MAX (nGVtxA[0], nGVtxA[1]);
-        newInter->endEdgeB = PDM_MAX (nGVtxB[0], nGVtxB[1]);
-
-        newInter->linkA[0] = nGVtxB[0];
-        newInter->linkB[0] = nGVtxA[1];
-        newInter->gNumA[0] = nGVtxA[1];
-        newInter->gNumB[0] = nGVtxB[0];
-
-        newInter->uA[0] = 1.;
-        newInter->uB[0] = 0.;
-        if (newInter->originEdgeA == nGVtxA[1]) {
-          newInter->uA[0] = 1 - newInter->uA[0];
-        }
-
-        if (newInter->originEdgeB == nGVtxB[1]) {
-          newInter->uB[0] = 1 - newInter->uB[0];
-        }
-
-        newInter->oNewPointsA[0] = PDM_EDGES_INTERSECT_POINT_VTXA_ON_VTXB;
-        newInter->oNewPointsB[0] = PDM_EDGES_INTERSECT_POINT_VTXA_ON_VTXB;
-
-        double _coords[3];
-
-        for (int i = 0; i < 3; i++) {
-          _coords[i] = (coordsVtxB[i] + coordsVtxA[3+i]) / 2;
-        }
-
-        for (int i = 0; i < 3; i++) {
-          newInter->coordsA[i] = _coords[i];
-          newInter->coordsB[i] = _coords[i];
-        }
-
-        if (nNewPointsA == 2) {
-          newInter->oNewPointsA[1] = PDM_EDGES_INTERSECT_POINT_VTXB_ON_EDGEA;
-
-          newInter->uA[1] = u;
-          if (newInter->originEdgeA == nGVtxA[1]) {
-            newInter->uA[1] = 1 - newInter->uA[1];
-          }
-
-          newInter->linkA[1] = nGVtxB[1];
-          newInter->gNumA[1] = 0;
-
-          for (int i = 0; i < 3; i++) {
-            newInter->coordsA[3 + i] =  closestA2EdgeB[i];
-          }
-        }
-
-        if (nNewPointsB == 2) {
-          newInter->oNewPointsB[1] = PDM_EDGES_INTERSECT_POINT_VTXA_ON_EDGEB;
-
-          newInter->uB[1] = v;
-          if (newInter->originEdgeB == nGVtxB[1]) {
-            newInter->uB[1] = 1 - newInter->uB[1];
-          }
-
-          newInter->linkB[1] = nGVtxA[0];
-          newInter->gNumB[1] = 0;
-
-          for (int i = 0; i < 3; i++) {
-            newInter->coordsB[3 + i] =  closestA1EdgeB[i];
-          }
-        }
-
-      }
-
-      else {
-        nNewPointsA = 0;
-        nNewPointsB = 0;
-
-        double u[2] = {PDM_DOT_PRODUCT (A1ClosestB1, vA) / vA_norm2,
-                       PDM_DOT_PRODUCT (A1ClosestB2, vA) / vA_norm2};
-        double v[2] = {PDM_DOT_PRODUCT (B1ClosestA1, vB) / vB_norm2,
-                       PDM_DOT_PRODUCT (B1ClosestA2, vB) / vB_norm2};
-
-        if ((u[0] <= 1) && (u[0] >= 0.)) {
-          nNewPointsA += 1;
-        }
-
-        if ((u[1] <= 1.) && (u[1] >= 0.)) {
-          nNewPointsA += 1;
-        }
-
-        if ((v[0] <= 1.) && (v[0] >= 0.)) {
-          nNewPointsB += 1;
-        }
-
-        if ((v[1] <= 1.) && (v[1] >= 0.)) {
-          nNewPointsB += 1;
-        }
-
-        newInter = _edges_intersect_res_create (nGEdgeA,
-                                                nGEdgeB,
-                                                nNewPointsA,
-                                                nNewPointsB);
-
-        newInter->tIntersect = tIntersect;
-        newInter->originEdgeA = PDM_MIN (nGVtxA[0], nGVtxA[1]);
-        newInter->originEdgeB = PDM_MIN (nGVtxB[0], nGVtxB[1]);
-        newInter->endEdgeA = PDM_MAX (nGVtxA[0], nGVtxA[1]);
-        newInter->endEdgeB = PDM_MAX (nGVtxB[0], nGVtxB[1]);
-
-        nNewPointsA = 0;
-        nNewPointsB = 0;
-
-        if ((u[0] <= 1.) && (u[0] >= 0.)) {
-
-          newInter->oNewPointsA[nNewPointsA] = PDM_EDGES_INTERSECT_POINT_VTXB_ON_EDGEA;
-          newInter->uA[nNewPointsA] = u[0];
-          if (newInter->originEdgeA == nGVtxA[1]) {
-            newInter->uA[nNewPointsA] = 1 - newInter->uA[nNewPointsA];
-          }
-
-          newInter->linkA[nNewPointsA] = nGVtxB[0];
-          newInter->gNumA[nNewPointsA] = 0;
-
-          for (int i = 0; i < 3; i++) {
-            newInter->coordsA[3*nNewPointsA + i] =  closestB1EdgeA[i];
-          }
-          nNewPointsA += 1;
-        }
-
-        if ((u[1] <= 1.) && (u[1] >= 0.)) {
-          newInter->oNewPointsA[nNewPointsA] = PDM_EDGES_INTERSECT_POINT_VTXB_ON_EDGEA;
-
-          newInter->uA[nNewPointsA] = u[1];
-          if (newInter->originEdgeA == nGVtxA[1]) {
-            newInter->uA[nNewPointsA] = 1 - newInter->uA[nNewPointsA];
-          }
-
-          newInter->linkA[nNewPointsA] = nGVtxB[1];
-          newInter->gNumA[nNewPointsA] = 0;
-
-          for (int i = 0; i < 3; i++) {
-            newInter->coordsA[3*nNewPointsA + i] =  closestB2EdgeA[i];
-          }
-          nNewPointsA += 1;
-        }
-
-        if ((v[0] <= 1.) && (v[0] >= 0.)) {
-          newInter->oNewPointsB[nNewPointsB] = PDM_EDGES_INTERSECT_POINT_VTXA_ON_EDGEB;
-
-          newInter->uB[nNewPointsB] = v[0];
-          if (newInter->originEdgeB == nGVtxB[1]) {
-            newInter->uB[nNewPointsB] = 1 - newInter->uB[nNewPointsB];
-          }
-
-          newInter->linkB[nNewPointsB] = nGVtxA[0];
-          newInter->gNumB[nNewPointsB] = 0;
-
-          for (int i = 0; i < 3; i++) {
-            newInter->coordsB[3*nNewPointsB + i] =  closestA1EdgeB[i];
-          }
-          nNewPointsB += 1;
-        }
-
-        if ((v[1] <= 1.) && (v[1] >= 0.)) {
-          newInter->oNewPointsB[nNewPointsB] = PDM_EDGES_INTERSECT_POINT_VTXA_ON_EDGEB;
-
-          newInter->uB[nNewPointsB] = v[1];
-          if (newInter->originEdgeB == nGVtxB[1]) {
-            newInter->uB[nNewPointsB] = 1 - newInter->uB[nNewPointsB];
-          }
-
-          newInter->linkB[nNewPointsB] = nGVtxA[1];
-          newInter->gNumB[nNewPointsB] = 0;
-
-          for (int i = 0; i < 3; i++) {
-            newInter->coordsB[3*nNewPointsB + i] =  closestA2EdgeB[i];
-          }
-          nNewPointsB += 1;
-        }
-      }
-
-      isSetted = true;
-    } // End if ~collinear edges
-  } // End if ~parallel edges
-
-  /*
-   * Storage intersection
-   */
-
-  if (!isSetted && (tIntersect == PDM_LINE_INTERSECT_YES)) {
-
-    int nNewPointsA = 1;
-    int nNewPointsB = 1;
-
-    newInter = _edges_intersect_res_create (nGEdgeA,
-                                            nGEdgeB,
-                                            nNewPointsA,
-                                            nNewPointsB);
-    newInter->tIntersect = tIntersect;
-    newInter->originEdgeA = PDM_MIN (nGVtxA[0], nGVtxA[1]);
-    newInter->originEdgeB = PDM_MIN (nGVtxB[0], nGVtxB[1]);
-    newInter->endEdgeA = PDM_MAX (nGVtxA[0], nGVtxA[1]);
-    newInter->endEdgeB = PDM_MAX (nGVtxB[0], nGVtxB[1]);
-
-    newInter->oNewPointsA[0] = PDM_EDGES_INTERSECT_POINT_NEW;
-
-    newInter->oNewPointsB[0] = PDM_EDGES_INTERSECT_POINT_NEW;
-
-    newInter->linkA[0] = -1;
-    newInter->linkB[0] = -1;
-    newInter->gNumA[0] = 0;
-    newInter->gNumB[0] = 0;
-
-    newInter->uA[0] = u1;
-    newInter->uB[0] = v1;
-
-    if (newInter->originEdgeA == nGVtxA[1]) {
-      newInter->uA[0] = 1 - newInter->uA[0];
-    }
-
-    if (newInter->originEdgeB == nGVtxB[1]) {
-      newInter->uB[0] = 1 - newInter->uB[0];
-    }
-
-    for (int i = 0; i < 3; i++) {
-      newInter->coordsA[i] =  coordsVtxA[i] + u1 * vA[i];
-    }
-
-    for (int i = 0; i < 3; i++) {
-      newInter->coordsB[i] =  coordsVtxB[i] + v1 * vB[i];
-    }
-
-    isSetted = true;
-  }
-
-  if( newInter != NULL) {
-	  PDM_hash_tab_data_add (ht, (void *) &key, newInter);
-	  PDM_hash_tab_data_add (htA, (void *) &keyA, newInter);
-	  PDM_hash_tab_data_add (htB, (void *) &keyB, newInter);
-  }
-  if (vb) {
-    if (newInter != NULL)
-      PDM_edges_intersect_res_dump((PDM_edges_intersect_res_t *)newInter);
-    PDM_printf ("==== PDM_edges_intersect_add ==== terminated ====\n");
-  }
-
-  return (PDM_edges_intersect_res_t *) newInter;
-}
 
 
 #ifdef __cplusplus

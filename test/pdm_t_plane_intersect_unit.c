@@ -3647,17 +3647,18 @@ char *argv[]
 //  PDM_edges_intersect_dump(ei);
 PDM_printf ("****  PDM_edges_intersect_create  OK  ******************************************************************\n");
 
-  PDM_edges_intersect_poly_add (ei,
-				nVtxA,
-				faceToEdgeA,
-				faceToVtxA,
-				faceVtxCooA,
-				faceVtxEpsA,
-				nVtxB,
-				faceToEdgeB,
-				faceToVtxB,
-				faceVtxCooB,
-				faceVtxEpsB);
+ PDM_edges_intersect_poly_add (ei,
+                               nVtxA,
+                               faceToEdgeA,
+                               faceToVtxA,
+                               faceVtxCooA,
+                               faceVtxEpsA,
+                               NULL,
+                               nVtxB,
+                               faceToEdgeB,
+                               faceToVtxB,
+                               faceVtxCooB,
+                               faceVtxEpsB);
   PDM_edges_intersect_dump(ei);
 PDM_printf ("****  PDM_edges_intersect_poly_add  OK  ******************************************************************\n");
 
