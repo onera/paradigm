@@ -27,6 +27,7 @@
 #include "pdm_mpi_node_first_rank.h"
 
 #include "pdm_triangulate.h"
+#include "pdm_surf_mesh.h"
 
 /*============================================================================
  * Type definitions
@@ -1247,8 +1248,8 @@ _export_ol_mesh
       }
 
       for (int i = 0; i < nOlLinkedFace; i++) {
-        val_match[ipart][olLinkedFace[4*i]-1] = 100;
-        val_cell_match[ipart][olLinkedFace[4*i]-1] = olLinkedFace[4*i + 2];
+        val_match[ipart][olLinkedFace[4*i]-1] = i;//100;
+        val_cell_match[ipart][olLinkedFace[4*i]-1] = olLinkedFace[4*i+3];//olLinkedFace[4*i + 2];
       }
 
       for (int i = 0; i < nFace[imesh][ipart]; i++) {
@@ -2603,6 +2604,66 @@ char *argv[]
                     rFieldOlB,
                     n_part);
   }
+
+
+
+  if (1) {
+    PDM_surf_mesh_t *ol_meshes[2];
+
+    for (int imesh = 0; imesh < 2; imesh++) {
+      PDM_ol_mesh_t mesht;
+      if (imesh == 0) {
+        mesht = PDM_OL_MESH_A;
+      }
+      else {
+        mesht = PDM_OL_MESH_B;
+      }
+
+      PDM_g_num_t nGOlFace;
+      PDM_g_num_t nGOlVtx;
+
+      PDM_ol_mesh_dim_get (pdm_id,
+                           mesht,
+                           &nGOlFace,
+                           &nGOlVtx);
+
+      ol_meshes[imesh] = PDM_surf_mesh_create (nGOlFace,
+                                               nGOlVtx,
+                                               n_part,
+                                               PDM_MPI_COMM_WORLD);
+
+      for (int ipart = 0; ipart < n_part; ipart++) {
+        PDM_surf_mesh_part_input (ol_meshes[imesh],
+                                  ipart,
+                                  _nOlFace[imesh][ipart],
+                                  _olface_vtx_idx[imesh][ipart],
+                                  _olface_vtx[imesh][ipart],
+                                  _olface_ln_to_gn[imesh][ipart],
+                                  _nOlVtx[imesh][ipart],
+                                  _olCoords[imesh][ipart],
+                                  _olvtx_ln_to_gn[imesh][ipart]);
+      }
+
+      PDM_surf_mesh_build_edges (ol_meshes[imesh]);
+      PDM_surf_mesh_build_edges_gn_and_edge_part_bound (ol_meshes[imesh]);
+      /*PDM_surf_mesh_build_exchange_graph (ol_meshes[imesh]);
+        int **edge_face = malloc (sizeof(int *) * n_part);
+        for (int ipart = 0; ipart < n_part; ipart++) {
+
+        edge_face[ipart] = malloc (sizeof(int) * );
+        }*/
+      PDM_g_num_t ng_face = PDM_surf_mesh_n_g_face_get (ol_meshes[imesh]);
+      PDM_g_num_t ng_edge = PDM_surf_mesh_n_g_edge_get (ol_meshes[imesh]);
+      PDM_g_num_t ng_vtx  = PDM_surf_mesh_n_g_vtx_get  (ol_meshes[imesh]);
+
+      if (i_rank == 0) {
+        printf("imesh %d : F = "PDM_FMT_G_NUM", E = "PDM_FMT_G_NUM", V = "PDM_FMT_G_NUM", F-E+V = "PDM_FMT_G_NUM"\n", imesh, ng_face, ng_edge, ng_vtx, ng_face - ng_edge + ng_vtx);
+      }
+    }
+  }
+
+
+
 
   /*
    *  Free meshes
