@@ -2210,8 +2210,6 @@ double                **polyClippCoordsB
   vtxA_origin[0] = vtxA;
   vtxB_origin[0] = vtxB;
 
-  int nClippVtxA = n_vtxA;
-
   for (int i = 1; i < n_vtxA; i++) {
     const double *_coo   = _face_vtxCooA + 3*i;
     PDM_g_num_t   *_gN     = _faceToVtxA +i;
@@ -2224,7 +2222,6 @@ double                **polyClippCoordsB
                                       vtxA);
   }
 
-  int nClippVtxB = n_vtxB;
   for (int i = 1; i < n_vtxB; i++) {
     const double *_coo = _face_vtxCooB + 3*i;
     PDM_g_num_t   *_gN     = _faceToVtxB +i;

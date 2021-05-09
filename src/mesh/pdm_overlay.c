@@ -5818,18 +5818,18 @@ _compute_overlay_surfaces
        * Build polygon structure according to clipping polygon structure
        */
 
-      PDM_edges_intersect_projection_poly_add (intersect,
-                                               n_vtxA,
-                                               _faceToEdgeA,
-                                               _faceToVtxA,
-                                               _face_vtxCooA,
-                                               _face_vtxEpsA,
-                                               _face_vtxNormalA,
-                                               n_vtxB,
-                                               _faceToEdgeB,
-                                               _faceToVtxB,
-                                               _face_vtxCooB,
-                                               _face_vtxEpsB);
+      PDM_edges_intersect_poly_add2 (intersect,
+                                     n_vtxA,
+                                     _faceToEdgeA,
+                                     _faceToVtxA,
+                                     _face_vtxCooA,
+                                     _face_vtxEpsA,
+                                     _face_vtxNormalA,
+                                     n_vtxB,
+                                     _faceToEdgeB,
+                                     _faceToVtxB,
+                                     _face_vtxCooB,
+                                     _face_vtxEpsB);
 
     }
   }

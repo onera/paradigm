@@ -327,24 +327,8 @@ _intersect_edges_projection
  );
 //<<--
 
-PDM_edges_intersect_res_t *
-PDM_edges_intersect_projection_add
-(
-PDM_edges_intersect_t       *ei,
-const PDM_g_num_t            nGEdgeA,
-const PDM_g_num_t            nGVtxA[2],
-const double                 charLgthVtxA[2],
-const double                 coordsVtxA[6],
-const double                 normalVtxA[6],
-const PDM_g_num_t            nGEdgeB,
-const PDM_g_num_t            nGVtxB[2],
-const double                 charLgthVtxB[2],
-const double                 coordsVtxB[6]
- );
-
-
 void
-PDM_edges_intersect_projection_poly_add
+PDM_edges_intersect_poly_add2
 (
 PDM_edges_intersect_t  *ei,
 const int               n_vtxA,
@@ -358,6 +342,23 @@ PDM_g_num_t            *faceToEdgeB,
 PDM_g_num_t            *faceToVtxB,
 double                 *face_vtxCooB,
 double                 *face_vtxEpsB
+ );
+
+
+PDM_edges_intersect_res_t *
+PDM_edges_intersect_add2
+(
+PDM_edges_intersect_t       *ei,
+const int                    is_same_plane,
+const PDM_g_num_t            nGEdgeA,
+const PDM_g_num_t            nGVtxA[2],
+const double                 charLgthVtxA[2],
+const double                 coordsVtxA[6],
+const double                 normalVtxA[6],
+const PDM_g_num_t            nGEdgeB,
+const PDM_g_num_t            nGVtxB[2],
+const double                 charLgthVtxB[2],
+const double                 coordsVtxB[6]
  );
 
 #ifdef __cplusplus
