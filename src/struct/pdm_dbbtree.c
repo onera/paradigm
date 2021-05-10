@@ -1610,7 +1610,7 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
     }
     free(data_recv);
   }
-  if (_pts != pts) {
+  if (_pts != pts && _pts != pts_local) {
     free (_pts);
   }
 
@@ -1618,14 +1618,6 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
   // Determine candidate boxes in local box tree (local points)
   int *box_index_local;
   int *box_l_num_local;
-#if 0
-  PDM_box_tree_closest_upper_bound_dist_boxes_get (_dbbt->btLoc,
-                                                   n_pts_local,
-                                                   pts_local,
-                                                   upper_bound_dist_local,
-                                                   &box_index_local,
-                                                   &box_l_num_local);
-#else
   PDM_box_tree_closest_upper_bound_dist_boxes_get_v2 (_dbbt->btLoc,
                                                       -1, // search in local box tree
                                                       n_pts_local,
@@ -1634,9 +1626,12 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
                                                       &box_index_local,
                                                       &box_l_num_local,
                                                       _dbbt->d);
-#endif
-  free(pts_local);
-  free(upper_bound_dist_local);
+  if (pts_local != pts) {
+    free(pts_local);
+  }
+  if (upper_bound_dist_local != upper_bound_dist2) {
+    free(upper_bound_dist_local);
+  }
 
   // conversion local --> global numbering
   const PDM_g_num_t *gnum_boxes_local = PDM_box_set_get_g_num (_dbbt->boxes);
@@ -1658,14 +1653,6 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
     int **box_index_rank;
     int **box_l_num_rank;
 
-#if 0
-    PDM_box_tree_closest_upper_bound_dist_boxes_get_from_copied_ranks (_dbbt->btLoc,
-                                                                       i_pts_rank,
-                                                                       pts_rank,
-                                                                       upper_bound_dist_rank,
-                                                                       &box_index_rank,
-                                                                       &box_l_num_rank);
-#else
     box_index_rank = (int **) malloc (sizeof(int *) * n_copied_ranks);
     box_l_num_rank = (int **) malloc (sizeof(int *) * n_copied_ranks);
 
@@ -1682,7 +1669,6 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
                                                           &(box_l_num_rank[i_copied_rank]),
                                                           _dbbt->d);
     }
-#endif
 
     free(pts_rank);
     free(upper_bound_dist_rank);
@@ -1715,14 +1701,6 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
     int *box_index_recv = NULL;
     int *box_l_num_recv = NULL;
 
-#if 0
-    PDM_box_tree_closest_upper_bound_dist_boxes_get (_dbbt->btLoc,
-                                                     n_pts_recv_total,
-                                                     pts_recv,
-                                                     upper_bound_dist_recv,
-                                                     &box_index_recv,
-                                                     &box_l_num_recv);
-#else
     PDM_box_tree_closest_upper_bound_dist_boxes_get_v2 (_dbbt->btLoc,
                                                         -1, // search in local box tree
                                                         n_pts_recv_total,
@@ -1731,7 +1709,6 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
                                                         &box_index_recv,
                                                         &box_l_num_recv,
                                                         _dbbt->d);
-#endif
     free(pts_recv);
     free(upper_bound_dist_recv);
 

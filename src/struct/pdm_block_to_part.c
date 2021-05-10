@@ -197,6 +197,10 @@ PDM_block_to_part_create
   if (btp->distributed_data_idx[btp->n_rank] >= coeff * max_data_block) {
     btp->pttopt_comm = 1;
   }
+  printf("[%d] max_data_block = %d\n", btp->i_rank, max_data_block);
+  printf("[%d] distributed_data_idx[%d] = %d\n", btp->i_rank, btp->n_rank, btp->distributed_data_idx[btp->n_rank]);
+
+  //PDM_log_trace_array_long(btp->distributed_data_idx, btp->n_rank+1, "block_distrib");
 
   int tmp;
   PDM_MPI_Allreduce (&(btp->pttopt_comm), &tmp, 1, PDM_MPI_INT, PDM_MPI_MAX, comm);

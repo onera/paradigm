@@ -75,7 +75,8 @@ _read_args(int            argc,
            double        *length,
            int           *n_part,
            int           *post,
-           int           *method)
+           int           *method,
+           int           *new_function)
 {
   int i = 1;
 
@@ -122,6 +123,9 @@ _read_args(int            argc,
     else if (strcmp(argv[i], "-hilbert") == 0) {
       *method = PDM_PART_SPLIT_HILBERT;
     }
+    else if (strcmp(argv[i], "-new") == 0) {
+      *new_function = 1;
+    }
     else
       _usage(EXIT_FAILURE);
     i++;
@@ -154,6 +158,8 @@ int main(int argc, char *argv[])
 #endif
 #endif
 
+  int new_function = 0;
+
   /*
    *  Read args
    */
@@ -164,7 +170,8 @@ int main(int argc, char *argv[])
              &length,
              &n_part,
              &post,
-             (int *) &method);
+             (int *) &method,
+             &new_function);
 
   /*
    *  Init
@@ -655,7 +662,14 @@ int main(int argc, char *argv[])
     fflush(stdout);
   }
 
-  PDM_dist_cloud_surf_compute (id_dist);
+  if (new_function) {
+    if (i_rank == 0) printf("NEW dist_cloud_surf_compute function\n");
+    PDM_dist_cloud_surf_compute2 (id_dist);
+  }
+  else {
+    if (i_rank == 0) printf("OLD dist_cloud_surf_compute function\n");
+    PDM_dist_cloud_surf_compute (id_dist);
+  }
 
   if (i_rank == 0) {
     printf("-- Dist check\n");
