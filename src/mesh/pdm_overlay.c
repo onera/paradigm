@@ -5536,10 +5536,6 @@ _compute_overlay_surfaces
     }
   }
 
-  //-->>
-  PDM_MPI_Barrier (ol->comm);
-  //<<--
-
 
   int dim = 3;
 
@@ -5570,7 +5566,6 @@ _compute_overlay_surfaces
   int n_eltA = PDM_box_set_get_size (boxesA);
   int n_eltB = PDM_box_set_get_size (boxesB);
   PDM_g_num_t *gnum_eltA = (PDM_g_num_t *) PDM_box_set_get_g_num (boxesA);
-
 
   /*****************************************************************************
    *                                                                           *
@@ -5732,6 +5727,7 @@ _compute_overlay_surfaces
     free (face_vtxNormalOrigin);
   }
 
+
   PDM_MPI_Barrier (ol->comm);
   PDM_timer_hang_on(ol->timer);
   ol->times_elapsed[OL_DISTRIB_BOXESA_BLOCK] = PDM_timer_elapsed(ol->timer);
@@ -5849,7 +5845,7 @@ _compute_overlay_surfaces
   }
 
 
-  if (1) {
+  if (0) {
     /* Visu edge intersection results */
     //PDM_edges_intersect_dump (intersect);
 

@@ -316,7 +316,7 @@ PDM_edges_intersect_t       *ei
 
 //-->> static function
 PDM_line_intersect_t
-_intersect_edges_projection
+_line_intersection_projection
 (
  const double  a0[3],
  const double  a1[3],

@@ -968,14 +968,14 @@ int ifaceA = 3;
   double *n1 = vtx_normal + 3*iA1;
 
   double uA, uB;
-  PDM_line_intersect_t tIntersect = _intersect_edges_projection (a0,
-                                                                 a1,
-                                                                 n0,
-                                                                 n1,
-                                                                 b0,
-                                                                 b1,
-                                                                 &uA,
-                                                                 &uB);
+  PDM_line_intersect_t tIntersect = _line_intersection_projection (a0,
+                                                                   a1,
+                                                                   n0,
+                                                                   n1,
+                                                                   b0,
+                                                                   b1,
+                                                                   &uA,
+                                                                   &uB);
 
   printf("tIntersect = %d, uA = %f, uB = %f\n", (int) tIntersect, uA, uB);
 

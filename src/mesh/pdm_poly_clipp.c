@@ -3017,6 +3017,234 @@ PDM_poly_clipp_projection
 
 
 
+void
+PDM_poly_clipp2
+(
+ PDM_edges_intersect_t  *ei,
+ PDM_g_num_t             gnum_boxA,
+ PDM_g_num_t             gnum_boxB,
+ const int               n_vtxA,
+ PDM_g_num_t            *faceToEdgeA,
+ PDM_g_num_t            *faceToVtxA,
+ double                 *face_vtxCooA,
+ double                 *face_vtxNormalA,
+ const int               n_vtxB,
+ PDM_g_num_t            *faceToEdgeB,
+ PDM_g_num_t            *faceToVtxB,
+ double                 *face_vtxCooB,
+ PDM_poly_clipp_t        performed_t,
+ int                    *nPolyClippA,
+ int                   **polyClippIdxA,
+ PDM_g_num_t           **polyClippConnecA,
+ double                **polyClippCoordsA,
+ int                    *nPolyClippB,
+ int                   **polyClippIdxB,
+ PDM_g_num_t           **polyClippConnecB,
+ double                **polyClippCoordsB
+ )
+{
+  int is_same_plane = (face_vtxNormalA == NULL);
+
+  PDM_g_num_t *_faceToEdgeA = faceToEdgeA;
+  PDM_g_num_t *_faceToVtxA  = faceToVtxA;
+  double     *_face_vtxCooA = face_vtxCooA;
+  double     *_face_vtxNormalA = face_vtxNormalA;
+
+  PDM_g_num_t *_faceToEdgeB = faceToEdgeB;
+  PDM_g_num_t *_faceToVtxB  = faceToVtxB;
+  double     *_face_vtxCooB = face_vtxCooB;
+
+  /*
+   * Compute Normal
+   *
+   */
+
+  double nA[3];
+  PDM_plane_normal (n_vtxA, face_vtxCooA, nA);
+
+  double nB[3];
+  PDM_plane_normal (n_vtxB, face_vtxCooB, nB);
+
+  double dot = PDM_DOT_PRODUCT (nA, nB);
+
+  bool revert = false;
+
+  if (dot < 0) {
+    revert = true;
+  }
+
+  /*
+   * Reorient if necessary
+   *
+   */
+
+  if (revert) {
+
+    _faceToEdgeB = malloc (sizeof(PDM_g_num_t) * n_vtxB);
+    _faceToVtxB  = malloc (sizeof(PDM_g_num_t) * n_vtxB);
+    _face_vtxCooB = malloc (sizeof(double) * 3 * n_vtxB);
+
+    int j = n_vtxB - 1;
+    for (int i = 0; i < n_vtxB; i++) {
+      _faceToEdgeB[i] = -faceToEdgeB[_modulo((j-1),n_vtxB)];
+      _faceToVtxB[i] = faceToVtxB[j];
+      for (int k = 0; k < 3; k++) {
+        _face_vtxCooB[3*i+k] = face_vtxCooB[3*j+k];
+      }
+      j += -1;
+    }
+  }
+
+  if (is_same_plane) {
+    double baryA[3];
+    PDM_plane_barycenter (n_vtxA, face_vtxCooA, baryA);
+
+    _face_vtxCooA = malloc (sizeof(double) * 3 * n_vtxA);
+    for (int i = 0; i < n_vtxA; i++) {
+      PDM_plane_projection (face_vtxCooA + 3 * i, baryA, nA, _face_vtxCooA + 3 * i);
+    }
+    PDM_plane_normal (n_vtxA, _face_vtxCooA, nA);
+
+    if (revert) {
+      for (int i = 0; i < n_vtxB; i++) {
+        PDM_plane_projection (_face_vtxCooB + 3 * i, baryA, nA, _face_vtxCooB + 3 * i);
+      }
+    }
+    else {
+      _face_vtxCooB = malloc (sizeof(double) * 3 * n_vtxB);
+      for (int i = 0; i < n_vtxB; i++) {
+        PDM_plane_projection (face_vtxCooB + 3 * i, baryA, nA, _face_vtxCooB + 3 * i);
+      }
+    }
+  }
+
+  /*
+   * Create double linked list vertex structures
+   *
+   */
+
+  _vertex_poly_t *vtxA = _poly_clipp_new (_face_vtxCooA,
+                                          *_faceToVtxA,
+                                          PDM_ABS(*_faceToEdgeA));
+
+  _vertex_poly_t *vtxB = _poly_clipp_new (_face_vtxCooB,
+                                          *_faceToVtxB,
+                                          PDM_ABS(*_faceToEdgeB));
+
+  _vertex_poly_t **vtxA_origin = malloc (sizeof(_vertex_poly_t *) *  n_vtxA);
+  _vertex_poly_t **vtxB_origin = malloc (sizeof(_vertex_poly_t *) *  n_vtxB);
+
+  vtxA_origin[0] = vtxA;
+  vtxB_origin[0] = vtxB;
+
+  for (int i = 1; i < n_vtxA; i++) {
+    const double *_coo   = _face_vtxCooA + 3*i;
+    PDM_g_num_t   *_gN     = _faceToVtxA +i;
+    PDM_g_num_t   *_gNEdge = _faceToEdgeA +i;
+
+    vtxA_origin[i] = _poly_clipp_add (_coo,
+                                      *_gN,
+                                      PDM_ABS(*_gNEdge),
+                                      POLY_CLIPP_LOC_PREVIOUS,
+                                      vtxA);
+  }
+
+  for (int i = 1; i < n_vtxB; i++) {
+    const double *_coo = _face_vtxCooB + 3*i;
+    PDM_g_num_t   *_gN     = _faceToVtxB +i;
+    PDM_g_num_t   *_gNEdge = _faceToEdgeB +i;
+
+    vtxB_origin[i] = _poly_clipp_add (_coo,
+                                      *_gN,
+                                      PDM_ABS(*_gNEdge),
+                                      POLY_CLIPP_LOC_PREVIOUS,
+                                      vtxB);
+  }
+
+  /*
+   * Perform vertex location (in, out) for no 'on' vertex
+   *    - First step  : In or out (ray tracing algorithm)
+   *
+   */
+  if (is_same_plane) {
+    _location (vtxA,
+               vtxB,
+               _face_vtxCooA,
+               _face_vtxCooB,
+               n_vtxA,
+               n_vtxB,
+               nA,
+               nA);
+  }
+  else {
+    _location_projection (vtxA,
+                          vtxB,
+                          _face_vtxCooA,
+                          _face_vtxNormalA,
+                          _face_vtxCooB,
+                          n_vtxA,
+                          n_vtxB);
+  }
+
+  /*
+   * Perform polygon clipping
+   */
+  _polygon_clipping (ei,
+                     n_vtxA,
+                     vtxA,
+                     vtxA_origin,
+                     n_vtxB,
+                     vtxB,
+                     vtxB_origin,
+                     performed_t,
+                     nPolyClippA,
+                     polyClippIdxA,
+                     polyClippConnecA,
+                     polyClippCoordsA,
+                     nPolyClippB,
+                     polyClippIdxB,
+                     polyClippConnecB,
+                     polyClippCoordsB,
+                     gnum_boxA,
+                     gnum_boxB,
+                     _face_vtxCooA,
+                     _face_vtxCooB);
+
+  /*
+   * Free local memory
+   */
+
+  _poly_clipp_free (vtxA);
+  _poly_clipp_free (vtxB);;
+
+  if (_faceToEdgeA != faceToEdgeA) {
+    free (_faceToEdgeA);
+  }
+
+  if (_faceToVtxA  != faceToVtxA) {
+    free (_faceToVtxA);
+  }
+
+  if (_face_vtxCooA != face_vtxCooA) {
+    free (_face_vtxCooA);
+  }
+
+  if (_faceToEdgeB != faceToEdgeB) {
+    free (_faceToEdgeB);
+  }
+
+  if (_faceToVtxB != faceToVtxB) {
+    free (_faceToVtxB);
+  }
+
+  if (_face_vtxCooB != face_vtxCooB) {
+    free (_face_vtxCooB);
+  }
+
+}
+
+
+
 
 #ifdef	__cplusplus
 }
