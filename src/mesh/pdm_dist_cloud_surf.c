@@ -1245,7 +1245,7 @@ printf("[%d] n_pts = "PDM_FMT_G_NUM" (%.3f times avg)\n", rank, _n_pts_rank, (fl
       printf ("\n\n****   compute distance min per points   ****\n");
     }
 
-    printf("[%d] perform %d point-element distance computations\n", rank, block_g_num_opt_idx[n_block_vtx]);
+    //printf("[%d] perform %d point-element distance computations\n", rank, block_g_num_opt_idx[n_block_vtx]);
     PDM_g_num_t *block_vtx_gnum = PDM_part_to_block_block_gnum_get (ptb_vtx);
     for (int i = 0; i < n_block_vtx; i++) {
       double *_pt_coords = block_pts + 3*i;
