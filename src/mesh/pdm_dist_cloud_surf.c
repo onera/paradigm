@@ -905,7 +905,7 @@ printf("[%d] n_pts = "PDM_FMT_G_NUM" (%.3f times avg)\n", rank, _n_pts_rank, (fl
 
     PDM_timer_resume(dist->timer);
 
-    /***************************************************************************
+    /**************************************************************************
      *
      * Load balancing of elementary computations
      * (distance from a point to an element)
@@ -1833,9 +1833,9 @@ PDM_dist_cloud_surf_compute2
     PDM_timer_resume(dist->timer);
 
 
-    /*
+    /*******************************************************************
      *  Adopt SOURCE point-of-view
-     */
+     *******************************************************************/
 
     PDM_timer_hang_on(dist->timer);
     b_t_elapsed = PDM_timer_elapsed(dist->timer);
@@ -1907,9 +1907,9 @@ PDM_dist_cloud_surf_compute2
       }
     }
 
-    /*
+    /*******************************************************************
      * Compute element weights for even redistribution of elements in blocks
-     */
+     *******************************************************************/
     double **part_elt_weight = malloc (sizeof(double *) * n_part_mesh);
     for (int ipart = 0; ipart < n_part_mesh; ipart++) {
       const int *part_face_vtx_idx =
@@ -1940,9 +1940,9 @@ PDM_dist_cloud_surf_compute2
 
     block_elt_distrib_idx = PDM_part_to_block_distrib_index_get (ptb);
 
-    /*
+    /*******************************************************************
      *  Transfer element coords from parts to blocks
-     */
+     *******************************************************************/
     int **part_elt_vtx_n = malloc (sizeof(int *) * n_part_mesh);
     double **part_elt_vtx_coord = malloc (sizeof(double *) * n_part_mesh);
     for (int ipart = 0; ipart < n_part_mesh; ipart++) {
@@ -1986,9 +1986,9 @@ PDM_dist_cloud_surf_compute2
     free (part_elt_vtx_coord);
     free (part_n_elt);
 
-    /*
+    /*******************************************************************
      *  Send pts coords & gnum from TARGET parts to SOURCE blocks
-     */
+     *******************************************************************/
     PDM_part_to_block_t *ptb2 = PDM_part_to_block_create2 (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                            PDM_PART_TO_BLOCK_POST_MERGE,
                                                            1.,
@@ -2058,9 +2058,9 @@ PDM_dist_cloud_surf_compute2
 
 
 
-    /*
+    /*******************************************************************
      *  Compute element-point distances from SOURCE point-of-view
-     */
+     *******************************************************************/
 
     PDM_timer_hang_on(dist->timer);
     b_t_elapsed = PDM_timer_elapsed(dist->timer);
@@ -2153,9 +2153,9 @@ PDM_dist_cloud_surf_compute2
     PDM_timer_resume(dist->timer);
 
 
-    /*
+    /*******************************************************************
      *  Back to TARGET point-of-view
-     */
+     *******************************************************************/
     PDM_timer_hang_on(dist->timer);
     b_t_elapsed = PDM_timer_elapsed(dist->timer);
     b_t_cpu     = PDM_timer_cpu(dist->timer);
@@ -2194,7 +2194,7 @@ PDM_dist_cloud_surf_compute2
     PDM_g_num_t *part_block_elt_g_num = malloc (sizeof(PDM_g_num_t) * l_block_elt_pts);
     int idx = 0;
     for (int ielt = 0; ielt < n_elt_block; ielt++) {
-      for (int i = 0; i < block_elt_pts_n[i]; i++) {
+      for (int i = 0; i < block_elt_pts_n[ielt]; i++) {
         part_block_elt_g_num[idx++] = block_elt_g_num[ielt];
       }
     }
@@ -2292,9 +2292,9 @@ PDM_dist_cloud_surf_compute2
 
     PDM_timer_resume(dist->timer);*/
 
-    /*
+    /*******************************************************************
      *  Final Block-to-Part transfer
-     */
+     *******************************************************************/
 
     /*PDM_timer_hang_on(dist->timer);
     b_t_elapsed = PDM_timer_elapsed(dist->timer);

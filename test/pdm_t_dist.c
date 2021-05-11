@@ -417,8 +417,15 @@ int main(int argc, char *argv[])
       int icel2 = face_cell[2*i+1];
       if (icel2 == 0) {
         iii++;
-        select_face[i_part][i] = 1;
+        //select_face[i_part][i] = 1;
+        select_face[i_part][i] = 0;
       }
+    }
+
+    int i_group = 0;
+    for(int idx_face = face_group_idx[i_group]; idx_face < face_group_idx[i_group+1]; ++idx_face){
+      int i_face = face_group[idx_face] - 1;
+      select_face[i_part][i_face] = 1;
     }
 
     for (int i = 0; i < face_part_bound_proc_idx[n_rank]; i++) {
@@ -754,6 +761,7 @@ int main(int argc, char *argv[])
 
     int ierr = 0;
     for (int i = 0; i < n_cell; i++) {
+      /*
       double d1 = PDM_MIN (PDM_ABS (cell_center[i_part][3*i] - xmin),
                            PDM_ABS (cell_center[i_part][3*i] - xmax));
       double d2 = PDM_MIN (PDM_ABS (cell_center[i_part][3*i+1] - ymin),
@@ -761,6 +769,8 @@ int main(int argc, char *argv[])
       double d3 = PDM_MIN (PDM_ABS (cell_center[i_part][3*i+2] - zmin),
                            PDM_ABS (cell_center[i_part][3*i+2] - zmax));
       double d = PDM_MIN (PDM_MIN (d1,d2), d3);
+      */
+      double d = PDM_ABS (cell_center[i_part][3*i+2] - zmin);
       d = d * d;
       if (PDM_ABS(distance[i] - d) > 1e-6) {
         ierr += 1;
