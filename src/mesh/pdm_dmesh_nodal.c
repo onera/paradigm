@@ -546,7 +546,6 @@ PDM_DMesh_nodal_free
 const int                partial
 )
 {
-  printf("void PDM_DMesh_nodal_free \n");
 
   if (dmesh_nodal != NULL) {
 
@@ -724,8 +723,6 @@ PDM_dmesh_nodal_t  *dmesh_nodal
   }
 
   PDM_DMesh_nodal_vtx_t *vtx = dmesh_nodal->vtx;
-
-  printf(" RAJOUTER OWNERSHIP IN PDM_DMesh_nodal_vtx_get \n");
 
   return vtx->_coords;
 }

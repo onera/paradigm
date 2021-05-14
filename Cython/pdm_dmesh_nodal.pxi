@@ -365,7 +365,7 @@ cdef class DistributedMeshNodal:
       # > Declaration
       # ************************************************************************
       # > Free Ppart Structure
-      print('PDM_DMesh_nodal_free')
+      # print('PDM_DMesh_nodal_free')
       PDM_DMesh_nodal_free(self.dmn, 1)
 
 # ------------------------------------------------------------------
@@ -400,7 +400,7 @@ cdef class DistributedMeshNodalCaspule:
   def dmesh_nodal_get_g_dims(self):
     """
     """
-    print("Wrap dmesh_nodal_get_g_dims")
+    # print("Wrap dmesh_nodal_get_g_dims")
     return dmesh_nodal_get_g_dims(self)
 
   # ------------------------------------------------------------------------
@@ -452,7 +452,7 @@ def dmesh_nodal_get_sections(DMeshNodal pydmn, MPI.Comm    comm):
   n_section  = PDM_DMesh_nodal_n_section_get(pydmn.dmn)
   section_id = PDM_DMesh_nodal_sections_id_get(pydmn.dmn)
 
-  print("n_section : ", n_section)
+  # print("n_section : ", n_section)
 
   sections = []
   for i_section in range(n_section):
@@ -508,7 +508,7 @@ def dmesh_nodal_get_sections(DMeshNodal pydmn, MPI.Comm    comm):
                                              <void *> vtx_distrib)
   PyArray_ENABLEFLAGS(np_vtx_distrib, NPY.NPY_OWNDATA);
 
-  print("Return dmesh_nodal_get_sections")
+  # print("Return dmesh_nodal_get_sections")
   return {"vtx"      : {"np_vtx" : np_vtx, "np_vtx_distrib" : np_vtx_distrib},
           "sections" : sections}
 

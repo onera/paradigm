@@ -132,6 +132,7 @@ PDM_block_to_part_create
       int ind = PDM_binary_search_gap_long (_gnum_elt[j] - 1,
                                             block_distrib_idx,
                                             btp->n_rank + 1);
+      // printf(" [%i][%i] --> ind = %i (g_num = %i )\n", i, j, ind, (int) _gnum_elt[j]);
       btp->requested_data_n[ind]++;
 
     }
@@ -165,7 +166,7 @@ PDM_block_to_part_create
       btp->ind[i][j] = idx;
 
       PDM_g_num_t _requested_data = _gnum_elt[j] - 1 - block_distrib_idx[ind];
-      // printf("requested_data[%i] = %i \n", idx, (int) _requested_data);
+      // printf("requested_data[%i] = %i / size_max = %i and gn_m = %i \n", idx, (int) _requested_data, s_requested_data, (int)_gnum_elt[j]);
       requested_data[idx] = (int) _requested_data;
     }
   }
