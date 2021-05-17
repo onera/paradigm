@@ -211,6 +211,11 @@ PDM_dist_cloud_surf_compute
    const int id
    );
 
+  void
+  PDM_dist_cloud_surf_compute3
+  (
+   const int id
+   );
 
 /**
  *

@@ -322,11 +322,9 @@ _read_data
 
 int main(int argc, char *argv[])
 {
-  int new_function = 0;
+  int dist_function = 0;
   if (argc > 1) {
-    if (strcmp(argv[1], "-new") == 0) {
-      new_function = 1;
-    }
+    dist_function = atoi(argv[1]);
   }
 
   /*
@@ -454,16 +452,17 @@ int main(int argc, char *argv[])
    *  Compute distance
    */
   if (i_rank == 0) {
-    printf("-- Dist compute\n");
+    printf("-- Dist compute (function #%d)\n", dist_function);
     fflush(stdout);
   }
 
-  if (new_function) {
-    if (i_rank == 0) printf("NEW dist_cloud_surf_compute function\n");
+  if (dist_function == 2) {
     PDM_dist_cloud_surf_compute2 (id_dist);
   }
+  else if (dist_function == 2) {
+    PDM_dist_cloud_surf_compute3 (id_dist);
+  }
   else {
-    if (i_rank == 0) printf("OLD dist_cloud_surf_compute function\n");
     PDM_dist_cloud_surf_compute (id_dist);
   }
   PDM_dist_cloud_surf_dump_times (id_dist);
