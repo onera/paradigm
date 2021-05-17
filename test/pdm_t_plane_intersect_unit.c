@@ -3658,7 +3658,8 @@ PDM_printf ("****  PDM_edges_intersect_create  OK  *****************************
                                faceToEdgeB,
                                faceToVtxB,
                                faceVtxCooB,
-                               faceVtxEpsB);
+                               faceVtxEpsB,
+                               0);//
   PDM_edges_intersect_dump(ei);
 PDM_printf ("****  PDM_edges_intersect_poly_add  OK  ******************************************************************\n");
 

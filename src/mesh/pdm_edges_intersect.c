@@ -2062,12 +2062,13 @@ PDM_edges_intersect_poly_add
  PDM_g_num_t            *faceToEdgeB,
  PDM_g_num_t            *faceToVtxB,
  double                 *face_vtxCooB,
- double                 *face_vtxEpsB
+ double                 *face_vtxEpsB,
+ const int verbose
  )
 {
   int is_same_plane = (face_vtxNormalA == NULL);
 
-  int vb = 0;
+  int vb = verbose;//0;
   if (vb) {
     PDM_printf ("==== PDM_edges_intersect_poly_add ==== \n");
   }

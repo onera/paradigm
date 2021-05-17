@@ -111,7 +111,10 @@ _read_args
  int           *randomTimeInit,
  int           *randomMeshAInit,
  int           *randomMeshBInit,
- int           *nProcData
+ int           *quadA,
+ int           *quadB,
+ int           *nProcData,
+ int           *rotate
  )
 {
   int i = 1;
@@ -174,6 +177,9 @@ _read_args
         *randomMeshAInit = atoi (argv[i]);
       }
     }
+    else if (strcmp (argv[i], "-quadA") == 0) {
+      *quadA = 1;
+    }
     else if (strcmp (argv[i], "-nB") == 0) {
       i++;
       if (i >= argc)
@@ -228,6 +234,9 @@ _read_args
         *randomMeshBInit = atoi (argv[i]);
       }
     }
+    else if (strcmp (argv[i], "-quadB") == 0) {
+      *quadB = 1;
+    }
     else if (strcmp (argv[i], "-no_random") == 0) {
       *haveRandom = 0;
     }
@@ -251,6 +260,9 @@ _read_args
         *nProcData = atoi (argv[i]);
       }
     }
+    else if (strcmp (argv[i], "-rotate") == 0) {
+      *rotate = 1;
+    }
     else
       _usage (EXIT_FAILURE);
     i++;
@@ -272,7 +284,19 @@ static void _add_depth (const double  x_min,
     double x = coord[3*i];
     double y = coord[3*i+1];
     //coord[3*i+2] = scale * (x*x + y*y);
-    coord[3*i+2] = 0.5 * scale * (cos(6*x + .2) + sin(5*y + .1));
+    //coord[3*i+2] = 0.5 * scale * (cos(6*x + .2) + sin(5*y + .1));
+    //coord[3*i+2] = 0.5 * scale * (cos(3*(x+y) + .2) + sin(5*y + .1));
+
+    if (0) {
+      x -= .5;
+      y -= .5;
+      double f = PDM_MAX (fabs(x), fabs(y)) / sqrt(x*x + y*y);
+      x = 0.5 + f*x;
+      y = 0.5 + f*y;
+      coord[3*i]   = x;
+      coord[3*i+1] = y;
+    }
+    coord[3*i+2] = 0.5 * scale * (cos(3*(x+y) + .2) + sin(5*y + .1));
   }
 }
 
@@ -348,6 +372,8 @@ _compute_face_vtx
       }
     }
   }
+
+  free (edge_used);
 }
 
 
@@ -530,9 +556,371 @@ _split_multipart
   }
 
   PDM_multipart_free (mpart_id);
-  free (dmesh);
+  PDM_dmesh_free (dmesh);
+  free (dedge_vtx_idx);
+  free (djoins_ids);
+  free (dedge_join);
+  free (dedge_bnd);
+  free (dedge_join_idx);
+  free (dedge_bnd_idx);
+  free (join_to_opposite);
+  free (n_part_zones);
 }
 
+
+static void
+_rotation_matrix
+(
+ double rot[3][3]
+ )
+{
+  double q[4] = {1., -2., 3., -4};
+
+  double l = sqrt(q[0]*q[0] + q[1]*q[1] + q[2]*q[2] + q[3]*q[3]);
+  q[0] /= l;
+  q[1] /= l;
+  q[2] /= l;
+  q[3] /= l;
+
+  rot[0][0] = 1. - 2.*(q[1]*q[1] + q[2]*q[2]);
+  rot[0][1] =      2.*(q[0]*q[1] - q[2]*q[3]);
+  rot[0][2] =      2.*(q[0]*q[2] + q[1]*q[3]);
+  rot[1][0] =      2.*(q[0]*q[1] + q[2]*q[3]);
+  rot[1][1] = 1. - 2.*(q[0]*q[0] + q[2]*q[2]);
+  rot[1][2] =      2.*(q[1]*q[2] - q[0]*q[3]);
+  rot[2][0] =      2.*(q[0]*q[2] - q[1]*q[3]);
+  rot[2][1] =      2.*(q[1]*q[2] + q[0]*q[3]);
+  rot[2][2] = 1. - 2.*(q[0]*q[0] + q[1]*q[1]);
+}
+
+
+static double random01(void)
+{
+  int sign;
+  int rsigna = rand();
+  int rsignb = rand();
+  sign = (rsigna - rsignb) / PDM_ABS(rsigna - rsignb);
+  double resultat = sign*((double)rand())/((double)RAND_MAX);
+  return resultat;
+}
+
+static void
+_quad_mesh_gen
+(
+ PDM_MPI_Comm        pdm_comm,
+ double              xmin,
+ double              xmax,
+ double              ymin,
+ double              ymax,
+ int                 have_random,
+ int                 init_random,
+ PDM_g_num_t         nx,
+ PDM_g_num_t         ny,
+ PDM_g_num_t        *ng_face,
+ PDM_g_num_t        *ng_vtx,
+ PDM_g_num_t        *ng_edge,
+ int                *dn_vtx,
+ double            **dvtx_coord,
+ int                *dn_face,
+ int               **dface_vtx_idx,
+ PDM_g_num_t       **dface_vtx,
+ PDM_g_num_t       **dface_edge,
+ int                *dn_edge,
+ PDM_g_num_t       **dedge_vtx,
+ PDM_g_num_t       **dedge_face,
+ int                *n_edge_group,
+ int               **dedge_group_idx,
+ PDM_g_num_t       **dedge_group
+ )
+{
+  int i_rank, n_rank;
+  PDM_MPI_Comm_rank (pdm_comm, &i_rank);
+  PDM_MPI_Comm_size (pdm_comm, &n_rank);
+
+  const double coef_rand = 0.3 * have_random;
+  srand(init_random);
+
+  const PDM_g_num_t nx1 = nx - 1;
+  const PDM_g_num_t ny1 = ny - 1;
+
+  *ng_face = nx1 * ny1;
+  *ng_edge = nx1 * ny + nx * ny1;
+  *ng_vtx  = nx * ny;
+  *n_edge_group = 4;
+
+  PDM_g_num_t ng_edge_lim = 2 * (nx1 + ny1);
+
+  /* Define distributions */
+  PDM_g_num_t *distrib_vtx      = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * (n_rank + 1));
+  PDM_g_num_t *distrib_edge     = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * (n_rank + 1));
+  PDM_g_num_t *distrib_face     = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * (n_rank + 1));
+  PDM_g_num_t *distrib_edge_lim = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * (n_rank + 1));
+  distrib_vtx[0]      = 0;
+  distrib_edge[0]     = 0;
+  distrib_face[0]     = 0;
+  distrib_edge_lim[0] = 0;
+
+  PDM_g_num_t step_vtx       = *ng_vtx / n_rank;
+  PDM_g_num_t remainder_vtx  = *ng_vtx % n_rank;
+
+  PDM_g_num_t step_edge      = *ng_edge / n_rank;
+  PDM_g_num_t remainder_edge = *ng_edge % n_rank;
+
+  PDM_g_num_t step_face      = *ng_face / n_rank;
+  PDM_g_num_t remainder_face = *ng_face % n_rank;
+
+  PDM_g_num_t step_edge_lim      = ng_edge_lim / n_rank;
+  PDM_g_num_t remainder_edge_lim = ng_edge_lim % n_rank;
+
+  for (int i = 0; i < n_rank; i++) {
+    distrib_vtx[i+1] = distrib_vtx[i] + step_vtx;
+    if (i < remainder_vtx) {
+      distrib_vtx[i+1]++;
+    }
+
+    distrib_edge[i+1] = distrib_edge[i] + step_edge;
+    if (i < remainder_edge) {
+      distrib_edge[i+1]++;
+    }
+
+    distrib_face[i+1] = distrib_face[i] + step_face;
+    if (i < remainder_face) {
+      distrib_face[i+1]++;
+    }
+
+    distrib_edge_lim[i+1] = distrib_edge_lim[i] + step_edge_lim;
+    if (i < remainder_edge_lim) {
+      distrib_edge_lim[i+1]++;
+    }
+  }
+  *dn_vtx  = (int) distrib_vtx[i_rank+1]  - distrib_vtx[i_rank];
+  *dn_edge = (int) distrib_edge[i_rank+1] - distrib_edge[i_rank];
+  *dn_face = (int) distrib_face[i_rank+1] - distrib_face[i_rank];
+  int dn_edge_lim = (int) (distrib_edge_lim[i_rank+1] - distrib_edge_lim[i_rank]);
+
+
+  /*
+   *  Vertices
+   */
+  *dvtx_coord = malloc (sizeof(double) * (*dn_vtx) * 3);
+  double *_dvtx_coord = *dvtx_coord;
+
+  double step_x = (xmax - xmin) / (double) nx1;
+  double step_y = (ymax - ymin) / (double) ny1;
+
+  PDM_g_num_t b_vtx_y = distrib_vtx[i_rank] / nx;
+  PDM_g_num_t r_vtx_y = distrib_vtx[i_rank] % nx;
+
+  int ivtx = 0;
+  for (int j = b_vtx_y; j < ny; j++) {
+
+    PDM_g_num_t _b_vtx_x = 0;
+    if (j == b_vtx_y) {
+      _b_vtx_x = r_vtx_y;
+    }
+
+    for (int i = _b_vtx_x; i < nx; i++) {
+      _dvtx_coord[3*ivtx]     = xmin + step_x * (i + (i > 0 && i < nx1) * coef_rand*random01());
+      _dvtx_coord[3*ivtx + 1] = ymin + step_y * (j + (j > 0 && j < ny1) * coef_rand*random01());
+      _dvtx_coord[3*ivtx + 2] = 0.;
+      ivtx++;
+      if (ivtx == *dn_vtx) break;
+    }
+    if (ivtx == *dn_vtx) break;
+  }
+
+  /*
+   *  Edges
+   */
+  *dedge_vtx  = malloc (sizeof(PDM_g_num_t ) * (*dn_edge) * 2);
+  *dedge_face = malloc (sizeof(PDM_g_num_t ) * (*dn_edge) * 2);
+  PDM_g_num_t  *_dedge_vtx = *dedge_vtx;
+  PDM_g_num_t  *_dedge_face = *dedge_face;
+
+  PDM_g_num_t ng_edge_h = nx1 * ny;
+
+  int iedg = 0;
+  // Horizontal edges
+  if (distrib_edge[i_rank] < ng_edge_h) {
+    const PDM_g_num_t b_edge_y = distrib_edge[i_rank] / nx1;
+    const PDM_g_num_t r_edge_y = distrib_edge[i_rank] % nx1;
+
+    for (PDM_g_num_t j = b_edge_y; j < ny; j++) {
+
+      PDM_g_num_t _b_edge_x = 0;
+      if (j == b_edge_y) {
+        _b_edge_x = r_edge_y;
+      }
+
+      for (PDM_g_num_t i = _b_edge_x; i < nx1; i++) {
+        if (j < ny1) {
+          _dedge_vtx[2*iedg    ] = 1 + i   + nx*j;
+          _dedge_vtx[2*iedg + 1] = 1 + i+1 + nx*j;
+
+          _dedge_face[2*iedg] = 1 + i + nx1*j;
+          if (j == 0) {
+            _dedge_face[2*iedg + 1] = 0;
+          } else {
+            _dedge_face[2*iedg + 1] = 1 + i + nx1*(j-1);
+          }
+        } else {
+          _dedge_vtx[2*iedg    ] = 1 + i+1 + nx*j;
+          _dedge_vtx[2*iedg + 1] = 1 + i   + nx*j;
+
+          _dedge_face[2*iedg    ] = 1 + i + nx1*(j-1);
+          _dedge_face[2*iedg + 1] = 0;
+        }
+
+        iedg++;
+        if (iedg == *dn_edge) break;
+      }
+      if (iedg == *dn_edge) break;
+    }
+  }
+
+  // Vertical edges
+  if (iedg < *dn_edge) {
+    const PDM_g_num_t b_edge_y = (distrib_edge[i_rank] + iedg - ng_edge_h) / nx;
+    const PDM_g_num_t r_edge_y = (distrib_edge[i_rank] + iedg - ng_edge_h) % nx;
+
+    for (PDM_g_num_t j = b_edge_y; j < ny1; j++) {
+
+      PDM_g_num_t _b_edge_x = 0;
+      if (j == b_edge_y) {
+        _b_edge_x = r_edge_y;
+      }
+
+      for (PDM_g_num_t i = _b_edge_x; i < nx; i++) {
+        if (i > 0) {
+          _dedge_vtx[2*iedg    ] = 1 + i + nx*j;
+          _dedge_vtx[2*iedg + 1] = 1 + i + nx*(j+1);
+
+          _dedge_face[2*iedg] = 1 + i-1 + nx1*j;
+          if (i < nx1) {
+            _dedge_face[2*iedg + 1] = 1 + i + nx1*j;
+          } else {
+            _dedge_face[2*iedg + 1] = 0;
+          }
+        } else {
+          _dedge_vtx[2*iedg    ] = 1 + i + nx*(j+1);
+          _dedge_vtx[2*iedg + 1] = 1 + i + nx*j;
+
+          _dedge_face[2*iedg    ] = 1 + i + nx1*j;
+          _dedge_face[2*iedg + 1] = 0;
+        }
+
+        iedg++;
+        if (iedg == *dn_edge) break;
+      }
+      if (iedg == *dn_edge) break;
+    }
+  }
+
+
+
+  /*
+   *  Edge lim
+   */
+  *dedge_group_idx = malloc (sizeof(int) * (*n_edge_group + 1));
+  *dedge_group     = malloc (sizeof(PDM_g_num_t) * dn_edge_lim);
+  int *_dedge_group_idx = *dedge_group_idx;
+  PDM_g_num_t *_dedge_group = *dedge_group;
+
+  _dedge_group_idx[0] = 0;
+  iedg = 0;
+  if (distrib_edge_lim[i_rank] < nx1) {
+    for (PDM_g_num_t i = distrib_edge_lim[i_rank]; i < nx1; i++) {
+      _dedge_group[iedg++] = 1 + i;
+      if (iedg == dn_edge_lim) break;
+    }
+  }
+  _dedge_group_idx[1] = iedg;
+
+
+  if (iedg < dn_edge_lim && distrib_edge_lim[i_rank] < nx1 + ny1) {
+    PDM_g_num_t b = PDM_MAX (distrib_edge_lim[i_rank] - nx1, 0);
+
+    for (PDM_g_num_t j = b; j < ny1; j++) {
+      _dedge_group[iedg++] = ng_edge_h + 1 + nx1 + nx*j;
+      if (iedg == dn_edge_lim) break;
+    }
+  }
+  _dedge_group_idx[2] = iedg;
+
+
+  if (iedg < dn_edge_lim && distrib_edge_lim[i_rank] < 2*nx1 + ny1) {
+    PDM_g_num_t b = PDM_MAX (distrib_edge_lim[i_rank] - nx1 - ny1, 0);
+
+    for (PDM_g_num_t i = b; i < nx1; i++) {
+      PDM_g_num_t _i = nx1 - i - 1;
+      _dedge_group[iedg++] = 1 + _i + nx1*ny1;
+      if (iedg == dn_edge_lim) break;
+    }
+  }
+  _dedge_group_idx[3] = iedg;
+
+
+  if (iedg < dn_edge_lim) {
+    PDM_g_num_t b = PDM_MAX (distrib_edge_lim[i_rank] - 2*(nx1 + ny1), 0);
+
+    for (PDM_g_num_t j = b; j < ny1; j++) {
+      PDM_g_num_t _j = ny1 - j - 1;
+      _dedge_group[iedg++] = ng_edge_h + 1 + nx*_j;
+      if (iedg == dn_edge_lim) break;
+    }
+  }
+  _dedge_group_idx[4] = iedg;
+
+
+  /*
+   *  Faces
+   */
+  *dface_vtx_idx = malloc (sizeof(int) * (*dn_face + 1));
+  int *_dface_vtx_idx = *dface_vtx_idx;
+  _dface_vtx_idx[0] = 0;
+
+  for (int i = 0; i < *dn_face; i++) {
+    _dface_vtx_idx[i+1] = _dface_vtx_idx[i] + 4;
+  }
+
+  *dface_vtx  = malloc (sizeof(PDM_g_num_t) * _dface_vtx_idx[*dn_face]);
+  *dface_edge = malloc (sizeof(PDM_g_num_t) * _dface_vtx_idx[*dn_face]);
+  PDM_g_num_t *_dface_vtx  = *dface_vtx;
+  PDM_g_num_t *_dface_edge = *dface_edge;
+
+  PDM_g_num_t b_face_y = distrib_face[i_rank] / nx1;
+  PDM_g_num_t r_face_y = distrib_face[i_rank] % nx1;
+
+  int ifac = 0;
+
+  for (int j = b_face_y; j < ny1; j++) {
+
+    PDM_g_num_t _b_face_x = 0;
+    if (j == b_face_y) {
+      _b_face_x = r_face_y;
+    }
+
+    for (int i = _b_face_x; i < nx1; i++) {
+      _dface_vtx[4*ifac]     = 1 + i   + nx*j;
+      _dface_vtx[4*ifac + 1] = 1 + i+1 + nx*j;
+      _dface_vtx[4*ifac + 2] = 1 + i+1 + nx*(j+1);
+      _dface_vtx[4*ifac + 3] = 1 + i   + nx*(j+1);
+
+      _dface_edge[4*ifac]     = 1 + i + nx1*j;
+      _dface_edge[4*ifac + 1] = ng_edge_h + 1 + i+1 + nx*j;
+      _dface_edge[4*ifac + 2] = 1 + i + nx1*(j+1);
+      _dface_edge[4*ifac + 3] = ng_edge_h + 1 + i + nx*j;
+
+      if (j < ny1) _dface_edge[4*ifac + 2] = -_dface_edge[4*ifac + 2];
+      if (i > 0)   _dface_edge[4*ifac + 3] = -_dface_edge[4*ifac + 3];
+
+      ifac++;
+      if (ifac == *dn_face) break;
+    }
+    if (ifac == *dn_face) break;
+  }
+
+}
 
 
 static void
@@ -545,6 +933,8 @@ _create_split_mesh_multipart
  PDM_g_num_t       n_vtx_seg,
  double            length,
  double            depth,
+ int               rotate,
+ int               quad,
  int               n_part,
  PDM_part_split_t  method,
  int               have_random,
@@ -596,30 +986,86 @@ _create_split_mesh_multipart
 
     gettimeofday (&t_elaps_debut, NULL);
 
-    PDM_poly_surf_gen (comm,
-                       xmin,
-                       xmax,
-                       ymin,
-                       ymax,
-                       have_random,
-                       init_random,
-                       nx,
-                       ny,
-                       ng_face,
-                       ng_vtx,
-                       &ng_edge,
-                       &dn_vtx,
-                       &dvtx_coord,
-                       &dn_face,
-                       &dface_vtx_idx,
-                       &dface_vtx,
-                       &dface_edge,
-                       &dn_edge,
-                       &dedge_vtx,
-                       &dedge_face,
-                       &n_edge_group,
-                       &dedge_group_idx,
-                       &dedge_group);
+    if (quad) {
+      _quad_mesh_gen (comm,
+                      xmin,
+                      xmax,
+                      ymin,
+                      ymax,
+                      have_random,
+                      init_random,
+                      nx,
+                      ny,
+                      ng_face,
+                      ng_vtx,
+                      &ng_edge,
+                      &dn_vtx,
+                      &dvtx_coord,
+                      &dn_face,
+                      &dface_vtx_idx,
+                      &dface_vtx,
+                      &dface_edge,
+                      &dn_edge,
+                      &dedge_vtx,
+                      &dedge_face,
+                      &n_edge_group,
+                      &dedge_group_idx,
+                      &dedge_group);
+
+      if (0) {
+        printf("Vtx:\n");
+        for (int i = 0; i < dn_vtx; i++) {
+          printf("%4d: %.2f %.2f %.2f\n", i, dvtx_coord[3*i], dvtx_coord[3*i+1], dvtx_coord[3*i+2]);
+        }
+
+        printf("Edges:\n");
+        for (int i = 0; i < dn_edge; i++) {
+          printf("%d: vtx = "PDM_FMT_G_NUM" "PDM_FMT_G_NUM", faces = "PDM_FMT_G_NUM" "PDM_FMT_G_NUM"\n", i, dedge_vtx[2*i], dedge_vtx[2*i+1], dedge_face[2*i], dedge_face[2*i+1]);
+        }
+
+        printf("Edge groups:\n");
+        for (int i = 0; i < n_edge_group; i++) {
+          printf("%d :", i);
+          for (int j = dedge_group_idx[i]; j < dedge_group_idx[i+1]; j++) {
+            printf(" "PDM_FMT_G_NUM, dedge_group[j]);
+          }
+          printf("\n");
+        }
+
+        printf("Faces (%d):\n", dn_face);
+        for (int i = 0; i < dn_face; i++) {
+          printf("%d: edges = "PDM_FMT_G_NUM" "PDM_FMT_G_NUM" "PDM_FMT_G_NUM" "PDM_FMT_G_NUM", vtx = "PDM_FMT_G_NUM" "PDM_FMT_G_NUM" "PDM_FMT_G_NUM" "PDM_FMT_G_NUM"\n", i,
+                 dface_edge[4*i], dface_edge[4*i+1], dface_edge[4*i+2], dface_edge[4*i+3],
+                 dface_vtx[4*i], dface_vtx[4*i+1], dface_vtx[4*i+2], dface_vtx[4*i+3]);
+        }
+      }
+
+    } else {
+      PDM_poly_surf_gen (comm,
+                         xmin,
+                         xmax,
+                         ymin,
+                         ymax,
+                         have_random,
+                         init_random,
+                         nx,
+                         ny,
+                         ng_face,
+                         ng_vtx,
+                         &ng_edge,
+                         &dn_vtx,
+                         &dvtx_coord,
+                         &dn_face,
+                         &dface_vtx_idx,
+                         &dface_vtx,
+                         &dface_edge,
+                         &dn_edge,
+                         &dedge_vtx,
+                         &dedge_face,
+                         &n_edge_group,
+                         &dedge_group_idx,
+                         &dedge_group);
+    }
 
     struct timeval t_elaps_fin;
 
@@ -639,6 +1085,21 @@ _create_split_mesh_multipart
                 depth,
                 dn_vtx,
                 dvtx_coord);
+
+    if (rotate) {
+      double rot[3][3];
+      _rotation_matrix (rot);
+
+      for (int i = 0; i < dn_vtx; i++) {
+        double x = dvtx_coord[3*i];
+        double y = dvtx_coord[3*i+1];
+        double z = dvtx_coord[3*i+2];
+
+        for (int j = 0; j < 3; j++) {
+          dvtx_coord[3*i+j] = x * rot[j][0] + y * rot[j][1] + z * rot[j][2];
+        }
+      }
+    }
 
     _split_multipart (comm,
                       method,
@@ -1706,8 +2167,7 @@ static void _export_vtk
 
 
 
-static void
-_export_ol_vtk
+static void _export_ol_vtk
 (
  const PDM_MPI_Comm   pdm_mpi_comm,
  const int            pdm_id,
@@ -1863,6 +2323,13 @@ _export_ol_vtk
           }
           fprintf(f, "\n");
         }
+
+        fprintf(f, "CELL_DATA %d\n", nOlFace);
+        fprintf(f, "SCALARS field double 1\n");
+        fprintf(f, "LOOKUP_TABLE default\n");
+        for (int i = 0; i < nOlFace; i++) {
+          fprintf(f, "%f\n", field[ipart][i]);
+        }
       }
 
       fclose(f);
@@ -1909,7 +2376,8 @@ char *argv[]
   double           yminB = 0.;
   int              n_partB   = 1;
 
-  double depth = 0.5;
+  double depth  = 0.5;
+  int    rotate = 0;
 
   int              post    = 0;
   PDM_part_split_t method  = PDM_PART_SPLIT_PARMETIS;
@@ -1918,6 +2386,9 @@ char *argv[]
 
   int              randomMeshAInit = -1;
   int              randomMeshBInit = -1;
+
+  int quadA = 0;
+  int quadB = 0;
 
   int              nProcData = -1;
 
@@ -1947,7 +2418,10 @@ char *argv[]
               &randomTimeInit,
               &randomMeshAInit,
               &randomMeshBInit,
-              &nProcData);
+              &quadA,
+              &quadB,
+              &nProcData,
+              &rotate);
 
   PDM_MPI_Comm_rank (PDM_MPI_COMM_WORLD, &i_rank);
   PDM_MPI_Comm_size (PDM_MPI_COMM_WORLD, &numProcs);
@@ -2043,6 +2517,7 @@ char *argv[]
     double ymin;
     double length;
     PDM_g_num_t n_vtx_seg;
+    int quad;
 
     if (imesh == 0) {
       n_vtx_seg = n_vtx_segA;
@@ -2050,6 +2525,7 @@ char *argv[]
       xmin = xminA;
       ymin = yminA;
       n_part = n_partA;
+      quad = quadA;
     }
     else {
       n_vtx_seg = n_vtx_segB;
@@ -2057,6 +2533,7 @@ char *argv[]
       xmin = xminB;
       ymin = yminB;
       n_part = n_partB;
+      quad = quadB;
     }
 
     if (randomTimeInit) {
@@ -2078,6 +2555,8 @@ char *argv[]
                                   n_vtx_seg,
                                   length,
                                   depth,
+                                  rotate,
+                                  quad,
                                   n_part,
                                   method,
                                   haveRandom,
@@ -2146,7 +2625,7 @@ char *argv[]
 
   PDM_ol_parameter_set (pdm_id,
                         PDM_OL_EXTENTS_TOL,
-                        1e-4);
+                        1e-4);//1e-2);//
 
   /*
    *  Create field
@@ -2633,6 +3112,35 @@ char *argv[]
                                                PDM_MPI_COMM_WORLD);
 
       for (int ipart = 0; ipart < n_part; ipart++) {
+
+        if (1) {
+          // Check degenerate faces
+          for (int iface = 0; iface < _nOlFace[imesh][ipart]; iface++) {
+            int degenerate = 0;
+            for (int i = _olface_vtx_idx[imesh][ipart][iface];
+                 i < _olface_vtx_idx[imesh][ipart][iface+1] - 1;
+                 i++) {
+              for (int j = i+1; j < _olface_vtx_idx[imesh][ipart][iface+1]; j++) {
+                if (_olface_vtx[imesh][ipart][i] == _olface_vtx[imesh][ipart][j]) {
+                  degenerate = 1;
+                  break;
+                }
+              }
+              if (degenerate) break;
+            }
+
+            if (degenerate) {
+              printf("!! mesh %d, part %d, face %d, vertices =", imesh, ipart, iface);
+              for (int i = _olface_vtx_idx[imesh][ipart][iface];
+                   i < _olface_vtx_idx[imesh][ipart][iface+1];
+                   i++) {
+                printf(" %d", _olface_vtx[imesh][ipart][i]);
+              }
+              printf("\n");
+            }
+          }
+        }
+
         PDM_surf_mesh_part_input (ol_meshes[imesh],
                                   ipart,
                                   _nOlFace[imesh][ipart],
@@ -2644,20 +3152,22 @@ char *argv[]
                                   _olvtx_ln_to_gn[imesh][ipart]);
       }
 
-      PDM_surf_mesh_build_edges (ol_meshes[imesh]);
-      PDM_surf_mesh_build_edges_gn_and_edge_part_bound (ol_meshes[imesh]);
-      /*PDM_surf_mesh_build_exchange_graph (ol_meshes[imesh]);
-        int **edge_face = malloc (sizeof(int *) * n_part);
-        for (int ipart = 0; ipart < n_part; ipart++) {
+      if (1) {
+        PDM_surf_mesh_build_edges (ol_meshes[imesh]);
+        PDM_surf_mesh_build_edges_gn_and_edge_part_bound (ol_meshes[imesh]);
+        /*PDM_surf_mesh_build_exchange_graph (ol_meshes[imesh]);
+          int **edge_face = malloc (sizeof(int *) * n_part);
+          for (int ipart = 0; ipart < n_part; ipart++) {
 
-        edge_face[ipart] = malloc (sizeof(int) * );
-        }*/
-      PDM_g_num_t ng_face = PDM_surf_mesh_n_g_face_get (ol_meshes[imesh]);
-      PDM_g_num_t ng_edge = PDM_surf_mesh_n_g_edge_get (ol_meshes[imesh]);
-      PDM_g_num_t ng_vtx  = PDM_surf_mesh_n_g_vtx_get  (ol_meshes[imesh]);
+          edge_face[ipart] = malloc (sizeof(int) * );
+          }*/
+        PDM_g_num_t ng_face = PDM_surf_mesh_n_g_face_get (ol_meshes[imesh]);
+        PDM_g_num_t ng_edge = PDM_surf_mesh_n_g_edge_get (ol_meshes[imesh]);
+        PDM_g_num_t ng_vtx  = PDM_surf_mesh_n_g_vtx_get  (ol_meshes[imesh]);
 
-      if (i_rank == 0) {
-        printf("imesh %d : F = "PDM_FMT_G_NUM", E = "PDM_FMT_G_NUM", V = "PDM_FMT_G_NUM", F-E+V = "PDM_FMT_G_NUM"\n", imesh, ng_face, ng_edge, ng_vtx, ng_face - ng_edge + ng_vtx);
+        if (i_rank == 0) {
+          printf("imesh %d : F = "PDM_FMT_G_NUM", E = "PDM_FMT_G_NUM", V = "PDM_FMT_G_NUM", F-E+V = "PDM_FMT_G_NUM"\n", imesh, ng_face, ng_edge, ng_vtx, ng_face - ng_edge + ng_vtx);
+        }
       }
     }
   }

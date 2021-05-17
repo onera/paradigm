@@ -269,7 +269,8 @@ const int               n_vtxB,
 PDM_g_num_t            *faceToEdgeB,
 PDM_g_num_t            *faceToVtxB,
 double                 *face_vtxCooB,
-double                 *face_vtxEpsB
+double                 *face_vtxEpsB,
+const int verbose
  );
 
 /**
