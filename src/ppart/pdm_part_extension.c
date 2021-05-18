@@ -2707,13 +2707,13 @@ PDM_part_extension_free
   free(part_ext->cell_cell_extended_pruned_idx);
   free(part_ext->cell_cell_extended_pruned    );
 
+  free(part_ext->n_part);
   part_ext->n_part = NULL;
 
   for(int i_domain = 0; i_domain < part_ext->n_domain; ++i_domain) {
     free(part_ext->parts[i_domain]);
   }
   free(part_ext->parts);
-  free(part_ext->n_part);
 
 
   free(part_ext);
