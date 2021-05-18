@@ -441,7 +441,7 @@ program testf
   call c_f_pointer(cptr_points_coords, points_coords, [3 * elt_pts_inside_idx(n_cell+1)])
   call c_f_pointer(cptr_points_uvw, points_uvw, [3 * elt_pts_inside_idx(n_cell+1)])
   call c_f_pointer(cptr_points_weights_idx, points_weights_idx, [elt_pts_inside_idx(n_cell+1)])
-  call c_f_pointer(cptr_points_weights, points_weights, [points_weights_idx(elt_pts_inside_idx(n_cell + 1) + 1)])
+  call c_f_pointer(cptr_points_weights, points_weights, [points_weights_idx(elt_pts_inside_idx(n_cell + 1))])
   call c_f_pointer(cptr_points_dist2, points_dist2, [elt_pts_inside_idx(n_cell+1)])
   call c_f_pointer(cptr_points_projected_coords, points_projected_coords, [3 * elt_pts_inside_idx(n_cell+1)])
 

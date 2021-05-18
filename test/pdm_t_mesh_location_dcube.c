@@ -350,7 +350,7 @@ int main(int argc, char *argv[])
   if (rotation) {
     _rotate (dn_vtx,
              dvtx_coord);
-  } 
+  }
   int ppart_id = 0;
 
   gettimeofday(&t_elaps_debut, NULL);
@@ -433,7 +433,7 @@ int main(int argc, char *argv[])
   if (rotation) {
     _rotate (n_pts_l,
              pts_coords);
-  } 
+  }
 
   int id_gnum = PDM_gnum_create (3, 1, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD, PDM_OWNERSHIP_USER);
 
@@ -699,7 +699,8 @@ int main(int argc, char *argv[])
                                          &points_weights,
                                          &points_dist2,
                                          &points_projected_coords);
-    
+
+
     if (1) {
       printf("cell_vtx : \n");
       for (int j = 0; j < n_cell; j++) {
@@ -713,11 +714,13 @@ int main(int argc, char *argv[])
       for (int j = 0; j < n_cell; j++) {
         printf(PDM_FMT_G_NUM" :", cell_ln_to_gn[j]);
         for (int k = elt_pts_inside_idx[j]; k < elt_pts_inside_idx[j+1]; k++) {
-          printf(" "PDM_FMT_G_NUM" : %12.5e %12.5e %12.5e / %12.5e %12.5e %12.5e / %12.5e / %12.5e %12.5e %12.5e\n", 
-            points_gnum[j],
-            points_coords[3*j],points_coords[3*j+1],points_coords[3*j+2],
-            points_uvw[3*j],points_uvw[3*j+1],points_uvw[3*j+2],points_dist2[j],
-            points_projected_coords[3*j],points_projected_coords[3*j+1],points_projected_coords[3*j+2]);
+          printf(" "PDM_FMT_G_NUM" ooooo : %12.5e %12.5e %12.5e / %12.5e %12.5e %12.5e / %12.5e / %12.5e %12.5e %12.5e\n",
+            points_gnum[k],
+            points_coords[3*k],points_coords[3*k+1],points_coords[3*k+2],
+            points_uvw[3*k],points_uvw[3*k+1],points_uvw[3*k+2],points_dist2[k],
+            points_projected_coords[3*k],points_projected_coords[3*k+1],points_projected_coords[3*k+2]);
+          // printf(" "PDM_FMT_G_NUM" ooooo : \n",
+          //   points_gnum[k]);
         }
         printf("\n");
       }
@@ -727,7 +730,7 @@ int main(int argc, char *argv[])
         printf(PDM_FMT_G_NUM" :", cell_ln_to_gn[j]);
         for (int k = elt_pts_inside_idx[j]; k < elt_pts_inside_idx[j+1]; k++) {
           for (int k1 = points_weights_idx[k]; k1 < elt_pts_inside_idx[k+1]; k1++) {
-            printf(" %12.5e", points_weights[k1]); 
+            printf(" %12.5e", points_weights[k1]);
           }
           printf(" /");
         }
@@ -748,15 +751,15 @@ int main(int argc, char *argv[])
       printf("%d\n", located[k1]);
     }
     printf("\n");
-    
+
     printf("Located %d :\n", n_located);
     for (int k1 = 0; k1 < n_located; k1++) {
-      int ipt = located[k1] - 1; 
+      int ipt = located[k1] - 1;
       printf(PDM_FMT_G_NUM" : "PDM_FMT_G_NUM" / %12.5e %12.5e %12.5e / %12.5e / %12.5e %12.5e %12.5e",
         pts_gnum[ipt],  p_location[k1],
-        pts_coords[3*ipt], pts_coords[3*ipt+1], pts_coords[3*ipt+2], 
+        pts_coords[3*ipt], pts_coords[3*ipt+1], pts_coords[3*ipt+2],
         p_dist2[k1],
-        p_proj_coord[3*k1], p_proj_coord[3*k1+1], p_proj_coord[3*k1+2]); 
+        p_proj_coord[3*k1], p_proj_coord[3*k1+1], p_proj_coord[3*k1+2]);
       printf("\n");
     }
   }
@@ -780,7 +783,7 @@ int main(int argc, char *argv[])
     printf("\n");
 
     for (int k1 = 0; k1 < n_located; k1++) {
-      int ipt = located[k1] - 1; 
+      int ipt = located[k1] - 1;
       double *p = pts_coords + 3*ipt;
 
       int i = (int) floor (p[0] / cell_side);

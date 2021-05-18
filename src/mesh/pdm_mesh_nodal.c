@@ -1231,7 +1231,7 @@ int
 PDM_Mesh_nodal_is_2D_element
 (
   PDM_Mesh_nodal_elt_t type
-) 
+)
 {
   return type==PDM_MESH_NODAL_TRIA3
       || type==PDM_MESH_NODAL_QUAD4
@@ -1242,7 +1242,7 @@ int
 PDM_Mesh_nodal_is_3D_element
 (
   PDM_Mesh_nodal_elt_t type
-) 
+)
 {
   return type==PDM_MESH_NODAL_TETRA4
       || type==PDM_MESH_NODAL_PYRAMID5
@@ -1407,7 +1407,7 @@ const int i_part
     int is_parent_num = (PDM_Mesh_nodal_block_parent_num_get(mesh, 0, 0) == NULL);
     for (int i = 0; i < mesh->n_part; i++) {
       for (int i1 = 0; i1 < mesh->n_blocks; i1++) {
-        assert (is_parent_num == (PDM_Mesh_nodal_block_parent_num_get(mesh, i, i1) == NULL)); 
+        assert (is_parent_num == (PDM_Mesh_nodal_block_parent_num_get(mesh, i, i1) == NULL));
       }
     }
 
@@ -1452,7 +1452,7 @@ const int i_part
             mesh->numabs[i][mesh->blocks_poly3d[i1]->_parent_num[i][i2]] = mesh->blocks_poly3d[i1]->_numabs[i][i2];
           }
         }
-      }     
+      }
     }
   }
   return mesh->numabs[i_part];
