@@ -25,8 +25,8 @@
 #include "pdm_block_to_part.h"
 #include "pdm_triangle.h"
 #include "pdm_polygon.h"
-#include "pdm_timer.h"
 #include "pdm_hash_tab.h"
+#include "pdm_mesh_location_priv.h"
 #include "pdm_mesh_location.h"
 #include "pdm_point_location.h"
 #include "pdm_ho_location.h"
@@ -47,7 +47,7 @@ extern "C" {
  * Macro definitions
  *============================================================================*/
 
-#define NTIMER 9
+#define NTIMER_MESH_LOCATION 9
 
 /*============================================================================
  * Type definitions
@@ -72,99 +72,6 @@ typedef enum {
 
 } _ol_timer_step_t;
 
-
-/**
- * \struct _PDM_Dist_t
- * \brief  Distance to a mesh surface structure
- *
- */
-
-typedef struct {
-
-  int           n_part;
-  int          *n_points;
-  double      **coords;
-  PDM_g_num_t **gnum;
-
-  int          *n_located;
-  int          *n_un_located;
-
-  int         **located;
-  int         **un_located;
-
-  PDM_g_num_t **location;
-  double      **dist2;
-  double      **uvw;
-  int         **weights_idx;
-  double      **weights; /*!< Barycentric coordinates */
-  double      **projected_coords;
-
-} _point_cloud_t;
-
-
-/**
- * \struct _points_in_element_t
- * \brief
- *
- */
-
-typedef struct {
-
-  int           n_part;
-  int          *n_elts; // Aredescendre dans la structure parente
-  int         **pts_inside_idx;
-  PDM_g_num_t **gnum;
-  double      **coords;
-  double      **uvw;
-  double      **projected_coords;
-  int         **weights_idx;
-  double      **weights;
-  double      **dist2;
-
-} _points_in_element_t;
-
-
-/**
- * \struct _PDM_Dist_t
- * \brief  Distance to a mesh surface structure
- *
- */
-
-typedef struct {
-
-  int  n_point_cloud; /*!< Number of point clouds */
-  PDM_MPI_Comm comm;  /*!< MPI communicator */
-
-  PDM_mesh_nature_t mesh_nature;  /*!< Nature of the mesh */
-
-  int  shared_nodal;   /*!< 1 if mesh nodal is shared, 0 otherwise */
-  int  n_part;
-  PDM_Mesh_nodal_t*  mesh_nodal;  /*!< Mesh identifier */
-  PDM_Mesh_nodal_t* _mesh_nodal;
-  PDM_l_num_t **face_vtx_n; /* Mandatory to build mesh nodal */
-  PDM_l_num_t **cell_face_n; /* Mandatory to build mesh nodal */
-  PDM_l_num_t **cell_vtx_idx;
-  PDM_l_num_t **cell_vtx;
-
-  _point_cloud_t *point_clouds; /*!< Point clouds */
-
-  double tolerance;
-
-  PDM_mesh_location_method_t method;
-
-  PDM_timer_t *timer; /*!< Timer */
-
-  double times_elapsed[NTIMER]; /*!< Elapsed time */
-
-  double times_cpu[NTIMER];     /*!< CPU time */
-
-  double times_cpu_u[NTIMER];  /*!< User CPU time */
-
-  double times_cpu_s[NTIMER];  /*!< System CPU time */
-
-  _points_in_element_t *points_in_elements; /*!< System CPU time */
-
-} _PDM_location_t;
 
 /*============================================================================
  * Global variable
@@ -951,7 +858,7 @@ PDM_mesh_location_create
 
   location->timer = PDM_timer_create ();
 
-  for (int i = 0; i < NTIMER; i++) {
+  for (int i = 0; i < NTIMER_MESH_LOCATION; i++) {
     location->times_elapsed[i] = 0.;
     location->times_cpu[i]     = 0.;
     location->times_cpu_u[i]   = 0.;
@@ -1843,17 +1750,17 @@ PDM_mesh_location_dump_times
   double t2max;
   PDM_MPI_Allreduce (&t2, &t2max, 1, PDM_MPI_DOUBLE, PDM_MPI_MAX, location->comm);
 
-  double t_elaps_max[NTIMER];
+  double t_elaps_max[NTIMER_MESH_LOCATION];
   PDM_MPI_Allreduce (location->times_elapsed,
                      t_elaps_max,
-                     NTIMER,
+                     NTIMER_MESH_LOCATION,
                      PDM_MPI_DOUBLE,
                      PDM_MPI_MAX,
                      location->comm);
 
-  double t_cpu_max[NTIMER];
+  double t_cpu_max[NTIMER_MESH_LOCATION];
   PDM_MPI_Allreduce (location->times_cpu,
-                     t_cpu_max, NTIMER,
+                     t_cpu_max, NTIMER_MESH_LOCATION,
                      PDM_MPI_DOUBLE,
                      PDM_MPI_MAX,
                      location->comm);
@@ -3412,7 +3319,7 @@ PDM_mesh_location_compute
     PDM_g_num_t **numabs_nodal = malloc (sizeof(PDM_g_num_t *) * n_part_nodal);
     int *n_elt_nodal = malloc (sizeof(int) * n_part_nodal);
 
-    printf("n_part_nodal : %d\n",n_part_nodal);
+    // printf("n_part_nodal : %d\n",n_part_nodal);
 
     for (int i_part = 0; i_part < n_part_nodal; i_part++) {
       n_elt_nodal[i_part]= PDM_Mesh_nodal_n_cell_get (location->mesh_nodal,
@@ -3751,47 +3658,6 @@ PDM_mesh_location_compute
   PDM_timer_resume(location->timer);
 }
 
-          // else if (t_elt == PDM_MESH_NODAL_QUAD4 ||
-          //          t_elt == PDM_MESH_NODAL_PYRAMID5 ||
-          //          t_elt == PDM_MESH_NODAL_HEXA8) {
-
-          //   _cell_coord[ 0] = coords_vtx[3*(connec[i*n_vtx+0]-1)+0];
-          //   _cell_coord[ 1] = coords_vtx[3*(connec[i*n_vtx+1]-1)+1];
-          //   _cell_coord[ 2] = coords_vtx[3*(connec[i*n_vtx+2]-1)+2];
-
-          //   _cell_coord[ 3] = coords_vtx[3*(connec[i*n_vtx+3]-1)+0];
-          //   _cell_coord[ 4] = coords_vtx[3*(connec[i*n_vtx+4]-1)+1];
-          //   _cell_coord[ 5] = coords_vtx[3*(connec[i*n_vtx+5]-1)+2];
-
-          //   _cell_coord[ 6] = coords_vtx[3*(connec[i*n_vtx+9]-1)+0];
-          //   _cell_coord[ 7] = coords_vtx[3*(connec[i*n_vtx+10]-1)+1];
-          //   _cell_coord[ 8] = coords_vtx[3*(connec[i*n_vtx+11]-1)+2];
-
-          //   _cell_coord[ 9] = coords_vtx[3*(connec[i*n_vtx+6]-1)+0];
-          //   _cell_coord[10] = coords_vtx[3*(connec[i*n_vtx+7]-1)+1];
-          //   _cell_coord[11] = coords_vtx[3*(connec[i*n_vtx+8]-1)+2];
-
-          //   if (t_elt == PDM_MESH_NODAL_PYRAMID5) {
-          //     _cell_coord[12] = coords_vtx[3*(connec[i*n_vtx+12]-1)+0];
-          //     _cell_coord[13] = coords_vtx[3*(connec[i*n_vtx+13]-1)+1];
-          //     _cell_coord[14] = coords_vtx[3*(connec[i*n_vtx+14]-1)+2];
-          //   }
-
-          //   else if (t_elt == PDM_MESH_NODAL_HEXA8) {
-          //     _cell_coord[15] = coords_vtx[3*(connec[i*n_vtx+15]-1)+0];
-          //     printf(" DEBUG : [%i] connec[%i] = %i \n", i, i*n_vtx+16, 3*(connec[i*n_vtx+16]-1)+1);
-          //     _cell_coord[16] = coords_vtx[3*(connec[i*n_vtx+16]-1)+1];
-          //     _cell_coord[17] = coords_vtx[3*(connec[i*n_vtx+17]-1)+2];
-
-          //     _cell_coord[18] = coords_vtx[3*(connec[i*n_vtx+21]-1)+0];
-          //     _cell_coord[19] = coords_vtx[3*(connec[i*n_vtx+22]-1)+1];
-          //     _cell_coord[20] = coords_vtx[3*(connec[i*n_vtx+23]-1)+2];
-
-          //     _cell_coord[21] = coords_vtx[3*(connec[i*n_vtx+18]-1)+0];
-          //     _cell_coord[22] = coords_vtx[3*(connec[i*n_vtx+19]-1)+1];
-          //     _cell_coord[23] = coords_vtx[3*(connec[i*n_vtx+20]-1)+2];
-          //   }
-          // }
 
 /**
  *

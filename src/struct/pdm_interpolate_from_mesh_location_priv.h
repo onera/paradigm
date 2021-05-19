@@ -11,6 +11,7 @@
  *----------------------------------------------------------------------------*/
 
 #include "pdm.h"
+#include "pdm_mesh_location_priv.h"
 
 /*=============================================================================
  * Macro definitions
@@ -23,27 +24,6 @@ extern "C" {
 /*============================================================================
  * Type
  *============================================================================*/
-
-/**
- * \struct _points_in_element_t
- * \brief
- *
- */
-
-typedef struct {
-
-  int           n_part;
-  int          *n_elts; // Aredescendre dans la structure parente
-  int         **pts_inside_idx;
-  PDM_g_num_t **gnum;
-  double      **coords;
-  double      **uvw;
-  double      **projected_coords;
-  int         **weights_idx;
-  double      **weights;
-  double      **dist2;
-
-} _points_in_element_t;
 
 /**
  * \struct _pdm_interpolate_from_mesh_location_t
@@ -62,16 +42,16 @@ struct _pdm_interpolate_from_mesh_location_t {
   int           *n_face;              /*!< Number of elements for each partition */
   int           *n_vtx;               /*!< Number of elements for each partition */
 
-  int          **cell_face_idx;
-  int          **cell_face;
-  PDM_g_num_t  **cell_ln_to_gn;
+  const int          **cell_face_idx;
+  const int          **cell_face;
+  const PDM_g_num_t  **cell_ln_to_gn;
 
-  int          **face_vtx_idx;
-  int          **face_vtx;
-  PDM_g_num_t  **face_ln_to_gn;
+  const int          **face_vtx_idx;
+  const int          **face_vtx;
+  const PDM_g_num_t  **face_ln_to_gn;
 
-  PDM_g_num_t  **vtx_ln_to_gn;
-  double       **coords;
+  const PDM_g_num_t  **vtx_ln_to_gn;
+  const double       **coords;
 
   int            n_cloud_target;
 

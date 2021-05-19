@@ -78,8 +78,8 @@ PDM_interpolate_from_mesh_location_create
   PDM_MPI_Comm_size (comm, &interp_from_ml->n_rank);
   PDM_MPI_Comm_rank (comm, &interp_from_ml->i_rank);
 
-  interp_from_ml->n_part_src     = n_part_src;
-  interp_from_ml->n_cloud_target = n_cloud_target;
+  interp_from_ml->n_part_src          = n_part_src;
+  interp_from_ml->n_cloud_target      = n_cloud_target;
 
   interp_from_ml->points_in_elements = malloc (sizeof(_points_in_element_t) * interp_from_ml->n_cloud_target);
 
@@ -104,7 +104,7 @@ PDM_interpolate_from_mesh_location_create
 }
 
 void
-PDM_mesh_location_part_free
+PDM_interpolate_from_mesh_location_free
 (
  PDM_interpolate_from_mesh_location_t  *interp_from_ml
 )
@@ -114,18 +114,15 @@ PDM_mesh_location_part_free
 
     _points_in_element_t *_points_in_elements = interp_from_ml->points_in_elements + icloud;
 
-    for (int i_part = 0; i_part < _points_in_elements->n_part; ++i_part) {
+    free (_points_in_elements->pts_inside_idx);
+    free (_points_in_elements->gnum);
+    free (_points_in_elements->uvw);
+    free (_points_in_elements->coords);
+    free (_points_in_elements->projected_coords);
+    free (_points_in_elements->weights_idx);
+    free (_points_in_elements->weights);
+    free (_points_in_elements->dist2);
 
-      free (_points_in_elements->pts_inside_idx[i_part]);
-      free (_points_in_elements->gnum[i_part]);
-      free (_points_in_elements->uvw[i_part]);
-      free (_points_in_elements->coords[i_part]);
-      free (_points_in_elements->projected_coords[i_part]);
-      free (_points_in_elements->weights_idx[i_part]);
-      free (_points_in_elements->weights[i_part]);
-      free (_points_in_elements->dist2[i_part]);
-
-    }
   }
 
   free(interp_from_ml->points_in_elements);
@@ -134,7 +131,7 @@ PDM_mesh_location_part_free
 
 
 void
-PDM_mesh_location_part_compute
+PDM_interpolate_from_mesh_location_compute
 (
  PDM_interpolate_from_mesh_location_t  *interp_from_ml
 )
@@ -148,12 +145,13 @@ PDM_mesh_location_part_compute
 }
 
 void
-PDM_mesh_location_part_exch
+PDM_interpolate_from_mesh_location_exch
 (
  PDM_interpolate_from_mesh_location_t   *interp_from_ml,
+ int                                     i_point_cloud,
  size_t                                  s_data,
- void                                  **part_data_in,
- void                                 ***cloud_data_out
+ double                                  **part_data_in,
+ double                                 ***cloud_data_out
 )
 {
   PDM_UNUSED(interp_from_ml);
@@ -161,12 +159,56 @@ PDM_mesh_location_part_exch
   PDM_UNUSED(part_data_in);
   PDM_UNUSED(cloud_data_out);
 
+  assert (interp_from_ml->points_in_elements != NULL);
+
+  _points_in_element_t *_points_in_elements = interp_from_ml->points_in_elements + i_point_cloud;
+
+  /*
+   * For now only first order with
+   */
+  double** cloud_data_in_current_src = (double **) malloc( interp_from_ml->n_part_src * sizeof(double *));
+  assert(_points_in_elements->n_part == interp_from_ml->n_part_src );
+
+  for(int i_part = 0; i_part < interp_from_ml->n_part_src; ++i_part){
+
+    int n_cell = interp_from_ml->n_cell[i_part];
+    int n_elmt = n_cell; // By construction of _points_in_element_t
+    int* _elt_pts_inside_idx = _points_in_elements->pts_inside_idx[i_part];
+
+    cloud_data_in_current_src[i_part] = (double *) malloc( _elt_pts_inside_idx[n_elmt] * sizeof(double));
+
+    for(int i_cell = 0; i_cell < n_cell; ++i_cell) {
+      for (int i_point = _elt_pts_inside_idx[i_cell]; i_point < _elt_pts_inside_idx[i_cell+1]; i_point++) {
+        cloud_data_in_current_src[i_point] = part_data_in[i_cell]; // Simple extrapolation
+      }
+    }
+  }
+
+
+  // /*
+  //  *  Create the part_to_block to have block of cloud point
+  //  */
+  // PDM_part_to_block_t *ptb = PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+  //                                                      PDM_PART_TO_BLOCK_POST_MERGE,
+  //                                                      1.,
+  //                                                      interp_from_ml->location,
+  //                                                      elt_weight,
+  //                                                      pcloud->n_located,
+  //                                                      pcloud->n_part,
+  //                                                      location->comm);
+
+
+
+  for(int i_part = 0; i_part < interp_from_ml->n_part_src; ++i_part){
+    free(cloud_data_in_current_src[i_part]);
+  }
+  free(cloud_data_in_current_src);
 
 }
 
 
 void
-PDM_mesh_location_part_send
+PDM_interpolate_from_mesh_location_send
 (
  PDM_interpolate_from_mesh_location_t  *interp_from_ml,
  size_t                                 s_data,
@@ -183,7 +225,7 @@ PDM_mesh_location_part_send
 
 
 void
-PDM_mesh_location_part_recv
+PDM_interpolate_from_mesh_location_recv
 (
  PDM_interpolate_from_mesh_location_t  *interp_from_ml,
  size_t                                 s_data,
@@ -234,20 +276,17 @@ PDM_interpolate_from_mesh_location_part_set
  const PDM_g_num_t                          *vtx_ln_to_gn
 )
 {
-  PDM_UNUSED(interp_from_ml);
-  PDM_UNUSED(i_part);
-  PDM_UNUSED(n_cell);
-  PDM_UNUSED(cell_face_idx);
-  PDM_UNUSED(cell_face);
-  PDM_UNUSED(cell_ln_to_gn);
-  PDM_UNUSED(n_face);
-  PDM_UNUSED(face_vtx_idx);
-  PDM_UNUSED(face_vtx);
-  PDM_UNUSED(face_ln_to_gn);
-  PDM_UNUSED(n_vtx);
-  PDM_UNUSED(coords);
-  PDM_UNUSED(vtx_ln_to_gn);
-
+  interp_from_ml->n_cell       [i_part] = n_cell;
+  interp_from_ml->cell_face_idx[i_part] = cell_face_idx;
+  interp_from_ml->cell_face    [i_part] = cell_face;
+  interp_from_ml->cell_ln_to_gn[i_part] = cell_ln_to_gn;
+  interp_from_ml->n_face       [i_part] = n_face;
+  interp_from_ml->face_vtx_idx [i_part] = face_vtx_idx;
+  interp_from_ml->face_vtx     [i_part] = face_vtx;
+  interp_from_ml->face_ln_to_gn[i_part] = face_ln_to_gn;
+  interp_from_ml->n_vtx        [i_part] = n_vtx;
+  interp_from_ml->coords       [i_part] = coords;
+  interp_from_ml->vtx_ln_to_gn [i_part] = vtx_ln_to_gn;
 }
 
 
@@ -302,6 +341,47 @@ PDM_interpolate_from_mesh_location_points_in_elt_set
 
 }
 
+
+/**
+ *
+ * \brief Set the number of partitions of a point cloud
+ *
+ * \param [in]   id              Identifier
+ * \param [in]   i_point_cloud   Index of point cloud
+ * \param [in]   n_part          Number of partitions
+ *
+ */
+
+// void
+// PDM_interpolate_from_mesh_location_points_n_part_cloud_set
+// (
+//        PDM_interpolate_from_mesh_location_t *interp_from_ml,
+//  const int                                   i_point_cloud,
+//  const int                                   n_part
+//  )
+// {
+//   _PDM_location_t *location = _get_from_id (id);
+
+//   interp_from_ml->point_clouds[i_point_cloud].n_part = n_part;
+//   interp_from_ml->point_clouds[i_point_cloud].n_points =
+//     realloc(interp_from_ml->point_clouds[i_point_cloud].n_points, n_part * sizeof(int));
+//   interp_from_ml->point_clouds[i_point_cloud].coords =
+//     realloc(interp_from_ml->point_clouds[i_point_cloud].coords,
+//             n_part * sizeof(double *));
+//   interp_from_ml->point_clouds[i_point_cloud].gnum =
+//     realloc(interp_from_ml->point_clouds[i_point_cloud].gnum,
+//             n_part * sizeof(PDM_g_num_t *));
+
+//   for (int i = 0; i < n_part; i++) {
+//     interp_from_ml->point_clouds[i_point_cloud].n_points[i] = -1;
+//     interp_from_ml->point_clouds[i_point_cloud].coords[i] = NULL;
+//     interp_from_ml->point_clouds[i_point_cloud].gnum[i] = NULL;
+//   }
+
+//   // A faire car necessaire
+
+
+// }
 
 
 #ifdef  __cplusplus

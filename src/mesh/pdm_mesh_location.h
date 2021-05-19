@@ -20,12 +20,6 @@ extern "C" {
 /*============================================================================
  * Type definitions
  *============================================================================*/
-typedef enum {
-
-  PDM_MESH_LOCATION_OCTREE,
-  PDM_MESH_LOCATION_DBBTREE,
-
-} PDM_mesh_location_method_t;
 
 /*============================================================================
  * Public function definitions
@@ -439,7 +433,7 @@ PDM_mesh_location_cell_vertex_get
  * \param [out]  points_weights_idx      Interpolation weights index (size = elt_pts_inside_idx[n_elt] + 1)
  * \param [out]  points_weights          Interpolation weights
  * \param [out]  points_dist2            Distance element-points (dist < 0 if the point is inside)
- * \param [out]  points_projected_coords Point projection on element if the point is outside 
+ * \param [out]  points_projected_coords Point projection on element if the point is outside
  *
  */
 
@@ -491,7 +485,7 @@ PDM_mesh_location_free
 int
 PDM_mesh_location_n_cell_get
 (
- const int id, 
+ const int id,
  const int i_part
 );
 

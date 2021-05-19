@@ -134,32 +134,24 @@ PDM_interpolate_from_mesh_location_points_in_elt_set
 );
 
 void
-PDM_mesh_location_part_compute
+PDM_interpolate_from_mesh_location_compute
 (
  PDM_interpolate_from_mesh_location_t  *interp_from_ml
 );
 
 void
-PDM_mesh_location_part_exch
+PDM_interpolate_from_mesh_location_exch
 (
  PDM_interpolate_from_mesh_location_t   *interp_from_ml,
+ int                                     i_point_cloud,
  size_t                                  s_data,
- void                                  **part_data_in,
- void                                 ***cloud_data_out
+ double                                  **part_data_in,
+ double                                 ***cloud_data_out
 );
 
 
 void
-PDM_mesh_location_part_send
-(
- PDM_interpolate_from_mesh_location_t   *interp_from_ml,
- size_t                                  s_data,
- void                                  **part_data_in,
- void                                 ***cloud_data_out
-);
-
-void
-PDM_mesh_location_part_recv
+PDM_interpolate_from_mesh_location_send
 (
  PDM_interpolate_from_mesh_location_t   *interp_from_ml,
  size_t                                  s_data,
@@ -168,7 +160,16 @@ PDM_mesh_location_part_recv
 );
 
 void
-PDM_mesh_location_part_free
+PDM_interpolate_from_mesh_location_recv
+(
+ PDM_interpolate_from_mesh_location_t   *interp_from_ml,
+ size_t                                  s_data,
+ void                                  **part_data_in,
+ void                                 ***cloud_data_out
+);
+
+void
+PDM_interpolate_from_mesh_location_free
 (
  PDM_interpolate_from_mesh_location_t  *interp_from_ml
 );

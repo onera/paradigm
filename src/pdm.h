@@ -226,6 +226,13 @@ typedef enum {
   PDM_BOUND_TYPE_MAX    = 5,
 } PDM_bound_type_t;
 
+typedef enum {
+
+  PDM_MESH_LOCATION_OCTREE,
+  PDM_MESH_LOCATION_DBBTREE,
+
+} PDM_mesh_location_method_t;
+
 
 /*=============================================================================
  * Public function prototypes
