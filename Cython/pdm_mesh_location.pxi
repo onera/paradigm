@@ -3,9 +3,9 @@ cdef extern from "pdm_mesh_location.h":
 
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
   # > Wrapping for C
-  ctypedef enum PDM_mesh_location_method_t:
-    PDM_MESH_LOCATION_OCTREE  = 0
-    PDM_MESH_LOCATION_DBBTREE = 1
+  ctypedef enum PDM_interpolate_kind_t:
+    PDM_INTERPOLATE_KIND_FROM_CENTER  = 0
+    PDM_INTERPOLATE_KIND_FROM_NODE = 1
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -322,13 +322,13 @@ cdef class MeshLocation:
                                              &dim,
                                              PDM_G_NUM_NPY_INT,
                                              <void *> gnum)
-    # PyArray_ENABLEFLAGS(np_g_num, NPY.NPY_OWNDATA)
+    PyArray_ENABLEFLAGS(np_g_num, NPY.NPY_OWNDATA)
 
     np_location = NPY.PyArray_SimpleNewFromData(1,
                                              &dim,
                                              PDM_G_NUM_NPY_INT,
                                              <void *> location)
-    # PyArray_ENABLEFLAGS(np_location, NPY.NPY_OWNDATA)
+    PyArray_ENABLEFLAGS(np_location, NPY.NPY_OWNDATA)
 
     np_dist2 = NPY.PyArray_SimpleNewFromData(1,
                                              &dim,
@@ -340,7 +340,7 @@ cdef class MeshLocation:
                                               &dim,
                                               NPY.NPY_DOUBLE,
                                               <void *> p_proj_coord)
-    # PyArray_ENABLEFLAGS(np_location, NPY.NPY_OWNDATA)
+    PyArray_ENABLEFLAGS(np_p_proj_coord, NPY.NPY_OWNDATA)
 
     return {'g_num'        : np_g_num,
             'location'     : np_location,

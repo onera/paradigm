@@ -65,6 +65,49 @@ PDM_interpolate_from_mesh_location_create
 
 /**
  *
+ * \brief Set the number of partitions of a point cloud
+ *
+ * \param [in]   id              Identifier
+ * \param [in]   i_point_cloud   Index of point cloud
+ * \param [in]   n_part          Number of partitions
+ *
+ */
+
+void
+PDM_interpolate_from_mesh_location_n_part_cloud_set
+(
+       PDM_interpolate_from_mesh_location_t *interp_from_ml,
+ const int                                   i_point_cloud,
+ const int                                   n_part
+);
+
+
+/**
+ *
+ * \brief Set a point cloud
+ *
+ * \param [in]   id              Identifier
+ * \param [in]   i_point_cloud   Index of point cloud
+ * \param [in]   i_part          Index of partition
+ * \param [in]   n_points        Number of points
+ * \param [in]   coords          Point coordinates
+ * \param [in]   gnum            Point global number
+ *
+ */
+
+void
+PDM_interpolate_from_mesh_location_cloud_set
+(
+       PDM_interpolate_from_mesh_location_t *interp_from_ml,
+ const int                                   i_point_cloud,
+ const int                                   i_part,
+ const int                                   n_points,
+       double                               *coords,
+       PDM_g_num_t                          *gnum
+);
+
+/**
+ *
  * \brief Set a part of a mesh
  *
  * \param [in]   id            Identifier
