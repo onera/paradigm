@@ -2075,14 +2075,14 @@ PDM_edges_intersect_poly_add
 
   PDM_g_num_t *_faceToEdgeA = faceToEdgeA;
   PDM_g_num_t *_faceToVtxA  = faceToVtxA;
-  double     *_face_vtxCooA = face_vtxCooA;
-  double     *_face_vtxEpsA = face_vtxEpsA;
-  double     *_face_vtxNormalA = face_vtxNormalA;
+  double      *_face_vtxCooA = face_vtxCooA;
+  double      *_face_vtxEpsA = face_vtxEpsA;
+  double      *_face_vtxNormalA = face_vtxNormalA;
 
   PDM_g_num_t *_faceToEdgeB = faceToEdgeB;
   PDM_g_num_t *_faceToVtxB  = faceToVtxB;
-  double     *_face_vtxCooB = face_vtxCooB;
-  double     *_face_vtxEpsB = face_vtxEpsB;
+  double      *_face_vtxCooB = face_vtxCooB;
+  double      *_face_vtxEpsB = face_vtxEpsB;
 
   /*
    * Compute Normal
@@ -2211,14 +2211,14 @@ PDM_edges_intersect_poly_add
        * Perform intersection
        */
 
-      if (vb) {
-        PDM_printf ("_faceToEdgeA[i]:%d, nGVtxA:%d-%d, charLgthVtxA:%12.5e-%12.5e, "
-                    "coordsVtxA:%12.5e-%12.5e-%12.5e-%12.5e-%12.5e-%12.5e\n",
+      if (PDM_ABS(_faceToEdgeA[i]) == 40 && PDM_ABS(_faceToEdgeB[j]) == 458) {//if (vb) {
+        PDM_printf ("_faceToEdgeA[i]:%d, nGVtxA:%d-%d, charLgthVtxA:%12.5e, %12.5e\n"
+                    "coordsVtxA: %12.5e, %12.5e, %12.5e   %12.5e, %12.5e, %12.5e\n",
                     _faceToEdgeA[i], nGVtxA[0],
                     nGVtxA[1], charLgthVtxA[0], charLgthVtxA[1], coordsVtxA[0],
                     coordsVtxA[1], coordsVtxA[2], coordsVtxA[3], coordsVtxA[4], coordsVtxA[5]);
-        PDM_printf ("_faceToEdgeB[j]:%d, nGVtxB:%d-%d, charLgthVtxB:%12.5e-%12.5e, "
-                    "coordsVtxB:%12.5e-%12.5e-%12.5e-%12.5e-%12.5e-%12.5e \n",
+        PDM_printf ("_faceToEdgeB[j]:%d, nGVtxB:%d-%d, charLgthVtxB:%12.5e-%12.5e\n"
+                    "coordsVtxB: %12.5e, %12.5e, %12.5e   %12.5e, %12.5e, %12.5e\n",
                     _faceToEdgeB[j], nGVtxB[0],
                     nGVtxB[1], charLgthVtxB[0], charLgthVtxB[1], coordsVtxB[0],
                     coordsVtxB[1], coordsVtxB[2], coordsVtxB[3], coordsVtxB[4], coordsVtxB[5]);
@@ -2248,13 +2248,13 @@ PDM_edges_intersect_poly_add
 
         PDM_line_intersect_t         tIntersect;
 
-        PDM_g_num_t                   nGEdgeA;
-        PDM_g_num_t                   originEdgeA;
-        PDM_g_num_t                   endEdgeA;
+        PDM_g_num_t                  nGEdgeA;
+        PDM_g_num_t                  originEdgeA;
+        PDM_g_num_t                  endEdgeA;
         int                          nNewPointsA;
         PDM_edges_intersect_point_t *oNewPointsA;
-        PDM_g_num_t                  *linkA;
-        PDM_g_num_t                  *gNumA;
+        PDM_g_num_t                 *linkA;
+        PDM_g_num_t                 *gNumA;
         double                      *coordsA;
         double                      *uA;
 
@@ -2271,13 +2271,13 @@ PDM_edges_intersect_poly_add
                                           &coordsA,
                                           &uA);
 
-        PDM_g_num_t                   nGEdgeB;
-        PDM_g_num_t                   originEdgeB;
-        PDM_g_num_t                   endEdgeB;
+        PDM_g_num_t                  nGEdgeB;
+        PDM_g_num_t                  originEdgeB;
+        PDM_g_num_t                  endEdgeB;
         int                          nNewPointsB;
         PDM_edges_intersect_point_t *oNewPointsB;
-        PDM_g_num_t                  *linkB;
-        PDM_g_num_t                  *gNumB;
+        PDM_g_num_t                 *linkB;
+        PDM_g_num_t                 *gNumB;
         double                      *coordsB;
         double                      *uB;
 
@@ -3671,6 +3671,11 @@ PDM_edges_intersect_synchronize
                   else if (b_connectPointB[b_nNewPointsB_idx[idx_sup] + 1] == gNum) {
                     i_true[1] = b_nNewPointsB_idx[idx_sup] + 1;
                   }
+                  //-->>
+                  printf("!! gnumEdgeA = "PDM_FMT_G_NUM", gnumEdgeB = "PDM_FMT_G_NUM"\n",
+                         b_gNumEdgeA[j], b_gNumEdgeB[j]);
+                  printf("!! gNum = "PDM_FMT_G_NUM", b_connectPointB[b_nNewPointsB_idx[idx_sup]] = "PDM_FMT_G_NUM", b_connectPointB[b_nNewPointsB_idx[idx_sup] + 1] = "PDM_FMT_G_NUM"\n", gNum, b_connectPointB[b_nNewPointsB_idx[idx_sup]], b_connectPointB[b_nNewPointsB_idx[idx_sup] + 1]);
+                  //<<--
                   assert (i_true[1] != -1);
 
                 }
