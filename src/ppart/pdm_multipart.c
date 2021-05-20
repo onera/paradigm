@@ -1561,8 +1561,7 @@ PDM_MPI_Comm      comm
 
   // Pour garder la hierarchie de "ghost", l'idéal et de reconstruire par connectivité descendante
   // cell -> face -> edge -> vtx
-  // Quand on chope les cellules "réelles" on garde l'info
-  // puis qd on etends on met l'info dans les cellules
+  // Quand on chope les cellules "réelles" on garde l'info  // puis qd on etends on met l'info dans les cellules
   // Par connectivité on met toute les faces dans le cell_face interieur à intérier
   // Puis avec face_vtx on met les vtx intérieur
   // Il ne faut pas oublier les face_group à tagger également

@@ -28,6 +28,7 @@
 
 #include "pdm_triangulate.h"
 #include "pdm_surf_mesh.h"
+#include "pdm_part_connectivity_transform.h"
 
 /*============================================================================
  * Type definitions
@@ -548,6 +549,9 @@ _split_multipart
 
 
     /* Get face-vtx connectivity */
+    /*
+     * TODO : use PDM_combine_connectivity instead
+     */
     _compute_face_vtx (_n_face,
                        _face_edge_idx,
                        _face_edge,
