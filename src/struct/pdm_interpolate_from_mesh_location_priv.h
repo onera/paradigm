@@ -42,16 +42,16 @@ struct _pdm_interpolate_from_mesh_location_t {
   int           *n_face;              /*!< Number of elements for each partition */
   int           *n_vtx;               /*!< Number of elements for each partition */
 
-  const int          **cell_face_idx;
-  const int          **cell_face;
-  const PDM_g_num_t  **cell_ln_to_gn;
+  int          **cell_face_idx;
+  int          **cell_face;
+  PDM_g_num_t  **cell_ln_to_gn;
 
-  const int          **face_vtx_idx;
-  const int          **face_vtx;
-  const PDM_g_num_t  **face_ln_to_gn;
+  int          **face_vtx_idx;
+  int          **face_vtx;
+  PDM_g_num_t  **face_ln_to_gn;
 
-  const PDM_g_num_t  **vtx_ln_to_gn;
-  const double       **coords;
+  PDM_g_num_t  **vtx_ln_to_gn;
+  double       **coords;
 
   int            n_cloud_target;
 

@@ -8,8 +8,7 @@ cdef extern from "pdm_interpolate_from_mesh_location.h":
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-  PDM_interpolate_from_mesh_location_t* PDM_interpolate_from_mesh_location_create(int                    n_part_src,
-                                                                                  int                    n_cloud_target,
+  PDM_interpolate_from_mesh_location_t* PDM_interpolate_from_mesh_location_create(int                    n_cloud_target,
                                                                                   PDM_interpolate_kind_t interp_kind,
                                                                                   PDM_MPI_Comm           comm);
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -55,6 +54,10 @@ cdef extern from "pdm_interpolate_from_mesh_location.h":
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+  void PDM_interpolate_from_mesh_location_mesh_global_data_set(PDM_interpolate_from_mesh_location_t *interp_from_ml,
+                                                               int n_part)
+
+  # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
   void PDM_interpolate_from_mesh_location_points_in_elt_set(PDM_interpolate_from_mesh_location_t *interp_from_ml,
                                                             int                                   i_part,
                                                             int                                   i_point_cloud,
@@ -86,20 +89,19 @@ cdef class InterpolateFromMeshLocation:
   cdef int _rank
   cdef int _n_part_src
   cdef int _n_point_cloud
+  cdef dict n_part_cloud
+  cdef list n_points_cloud_part
   # ************************************************************************
 
   # ------------------------------------------------------------------------
-  def __init__(self, PDM_mesh_nature_t mesh_nature,
-                     int               n_part_src,
-                     int               n_point_cloud,
+  def __init__(self, int               n_point_cloud,
                      MPI.Comm          comm):
     """
     """
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
-    self._n_part_src = n_part_src
     self._n_point_cloud = n_point_cloud
     self.n_part_cloud = dict()
-    self.n_point_cloud = [[dict()]*n_point_cloud]
+    self.n_points_cloud_part = [[dict()]*n_point_cloud]
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -114,8 +116,17 @@ cdef class InterpolateFromMeshLocation:
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
-    self._interp_from_ml = PDM_interpolate_from_mesh_location_create(n_part_src, n_point_cloud, PDM_INTERPOLATE_KIND_FROM_CENTER, PDMC)
+    print("PDM_interpolate_from_mesh_location_create ooooo ")
+    self._interp_from_ml = PDM_interpolate_from_mesh_location_create(n_point_cloud, PDM_INTERPOLATE_KIND_FROM_CENTER, PDMC)
+    print("PDM_interpolate_from_mesh_location_create end  ooooo ")
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
+
+  # ------------------------------------------------------------------------
+  def mesh_global_data_set(self, int n_part):
+    """
+    """
+    self._n_part_src = n_part
+    PDM_interpolate_from_mesh_location_mesh_global_data_set(self._interp_from_ml, n_part);
 
   # ------------------------------------------------------------------------
   def n_part_cloud_set(self, int i_point_cloud,
@@ -136,7 +147,7 @@ cdef class InterpolateFromMeshLocation:
                       ):
     """
     """
-    self.n_point_cloud[i_point_cloud][i_part] = n_points
+    self.n_points_cloud_part[i_point_cloud][i_part] = n_points
     PDM_interpolate_from_mesh_location_cloud_set(self._interp_from_ml,
                                                  i_point_cloud,
                                                  i_part,
@@ -173,7 +184,32 @@ cdef class InterpolateFromMeshLocation:
                                  <double*>      coords.data,
                                  <PDM_g_num_t*> vtx_ln_to_gn.data);
 
-  # # ------------------------------------------------------------------------
+  # ------------------------------------------------------------------------
+  def points_in_elt_set(self, int i_part,
+                              int i_point_cloud,
+                              NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] elt_pts_inside_idx,
+                              NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] points_gnum,
+                              NPY.ndarray[NPY.double_t  , mode='c', ndim=1] points_coords,
+                              NPY.ndarray[NPY.double_t  , mode='c', ndim=1] points_uvw,
+                              NPY.ndarray[NPY.int32_t   , mode='c', ndim=1] points_weights_idx,
+                              NPY.ndarray[NPY.double_t  , mode='c', ndim=1] points_weights,
+                              NPY.ndarray[NPY.double_t  , mode='c', ndim=1] points_dist2,
+                              NPY.ndarray[NPY.double_t  , mode='c', ndim=1] points_projected_coords):
+    """
+    """
+    PDM_interpolate_from_mesh_location_points_in_elt_set(self._interp_from_ml,
+                                                         i_part,
+                                                         i_point_cloud,
+                                          <int*>         elt_pts_inside_idx.data,
+                                          <PDM_g_num_t*> points_gnum.data,
+                                          <double*>      points_coords.data,
+                                          <double*>      points_uvw.data,
+                                          <int*>         points_weights_idx.data,
+                                          <double*>      points_weights.data,
+                                          <double*>      points_dist2.data,
+                                          <double*>      points_projected_coords.data);
+
+  # ------------------------------------------------------------------------
   def compute(self):
     """
     """
@@ -192,12 +228,15 @@ cdef class InterpolateFromMeshLocation:
     # > Declaration
     cdef double** pdata_data_in
     cdef double** cloud_data_out
+    cdef NPY.ndarray   p_array
     cdef NPY.npy_intp dim
     # ************************************************************************
 
-    assert(list_part_data_in == self._n_part_src)
+    assert(len(list_part_data_in) == self._n_part_src)
 
     pdata_data_in = <double **> malloc(self._n_part_src * sizeof(double **))
+    for i_part, p_array in enumerate(list_part_data_in):
+      pdata_data_in[i_part] = <double*> p_array.data
 
     PDM_interpolate_from_mesh_location_exch(self._interp_from_ml,
                                             i_point_cloud,
@@ -209,13 +248,14 @@ cdef class InterpolateFromMeshLocation:
     list_cloud_data_out = list()
     # > Il faut le nombre de point par cloud et par partition ...
     for i_part in range(n_part_out):
-      n_point_cloud = self.n_point_cloud[i_point_cloud][i_part]
+      n_point_cloud = self.n_points_cloud_part[i_point_cloud][i_part]
       dim = <NPY.npy_intp> n_point_cloud
       np_cloud_data_out = NPY.PyArray_SimpleNewFromData(1,
                                                         &dim,
                                                         NPY.NPY_DOUBLE,
                                                <void *> cloud_data_out[i_part])
       PyArray_ENABLEFLAGS(np_cloud_data_out, NPY.NPY_OWNDATA);
+      list_cloud_data_out.append(np_cloud_data_out)
 
     free(cloud_data_out) # Free the part indirection other is ok with numpy
 
@@ -230,5 +270,5 @@ cdef class InterpolateFromMeshLocation:
     # ************************************************************************
     # > Declaration
     # ************************************************************************
-    print('PDM_interpolate_from_mesh_location')
+    print('PDM_interpolate_from_mesh_location_free')
     PDM_interpolate_from_mesh_location_free(self._interp_from_ml)

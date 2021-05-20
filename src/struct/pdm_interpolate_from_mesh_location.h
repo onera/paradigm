@@ -57,7 +57,6 @@ typedef enum {
 PDM_interpolate_from_mesh_location_t*
 PDM_interpolate_from_mesh_location_create
 (
- const int                    n_part_src,
  const int                    n_cloud_target,
        PDM_interpolate_kind_t interp_kind,
  const PDM_MPI_Comm           comm
@@ -81,6 +80,22 @@ PDM_interpolate_from_mesh_location_n_part_cloud_set
  const int                                   n_part
 );
 
+
+/**
+ *
+ * \brief Set global data of a mesh
+ *
+ * \param [in]   id             Identifier
+ * \param [in]   n_part         Number of partition
+ *
+ */
+
+void
+PDM_interpolate_from_mesh_location_mesh_global_data_set
+(
+       PDM_interpolate_from_mesh_location_t *interp_from_ml,
+ const int                                   n_part
+);
 
 /**
  *
