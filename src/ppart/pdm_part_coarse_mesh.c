@@ -2991,11 +2991,11 @@ _coarse_mesh_t * cm
 
   }
 
-  int *sendIdx = malloc(sizeof(int) * n_proc);
+  int *sendIdx = malloc(sizeof(int) * (n_proc+1));
   int *sendN = PDM_array_zeros_int(n_proc);
   PDM_g_num_t *sendBuff = NULL;
 
-  int *recvIdx = malloc(sizeof(int) * n_proc);
+  int *recvIdx = malloc(sizeof(int) * (n_proc+1));
   int *recvN = malloc(sizeof(int) * n_proc);
   PDM_g_num_t *recvBuff = NULL;
 

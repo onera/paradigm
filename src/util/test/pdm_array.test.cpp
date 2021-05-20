@@ -26,7 +26,7 @@ MPI_TEST_CASE("[1p] _PDM_array_const", 1) {
 MPI_TEST_CASE("[1p] _PDM_array_reset", 1) {
   int *array = (int *) malloc(5*sizeof(int));
   for (int i = 0; i < 5; i++)
-    array[i] == i;
+    array[i] = i;
 
   PDM_array_reset_int(array, 5, 0);
   for (int i = 0; i < 5; i++)
@@ -39,7 +39,7 @@ MPI_TEST_CASE("[1p] _PDM_array_reset", 1) {
 
   PDM_g_num_t *array_gnum = (PDM_g_num_t *) malloc(5*sizeof(PDM_g_num_t));
   for (int i = 0; i < 5; i++)
-    array_gnum[i] == i;
+    array_gnum[i] = i;
 
   PDM_array_reset_gnum(array_gnum, 5, 0);
   for (int i = 0; i < 5; i++)
