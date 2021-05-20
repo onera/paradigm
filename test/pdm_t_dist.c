@@ -75,8 +75,7 @@ _read_args(int            argc,
            double        *length,
            int           *n_part,
            int           *post,
-           int           *method,
-           int           *dist_function)
+           int           *method)
 {
   int i = 1;
 
@@ -123,13 +122,6 @@ _read_args(int            argc,
     else if (strcmp(argv[i], "-hilbert") == 0) {
       *method = PDM_PART_SPLIT_HILBERT;
     }
-    else if (strcmp(argv[i], "-dfun") == 0) {
-      i++;
-      if (i >= argc)
-        _usage(EXIT_FAILURE);
-      else
-        *dist_function = atoi(argv[i]);
-    }
     else
       _usage(EXIT_FAILURE);
     i++;
@@ -162,8 +154,6 @@ int main(int argc, char *argv[])
 #endif
 #endif
 
-  int dist_function = 0;
-
   /*
    *  Read args
    */
@@ -174,8 +164,7 @@ int main(int argc, char *argv[])
              &length,
              &n_part,
              &post,
-             (int *) &method,
-             &dist_function);
+             (int *) &method);
 
   /*
    *  Init
@@ -421,15 +410,8 @@ int main(int argc, char *argv[])
       int icel2 = face_cell[2*i+1];
       if (icel2 == 0) {
         iii++;
-        //select_face[i_part][i] = 1;
-        select_face[i_part][i] = 0;
+        select_face[i_part][i] = 1;
       }
-    }
-
-    int i_group = 0;
-    for(int idx_face = face_group_idx[i_group]; idx_face < face_group_idx[i_group+1]; ++idx_face){
-      int i_face = face_group[idx_face] - 1;
-      select_face[i_part][i_face] = 1;
     }
 
     for (int i = 0; i < face_part_bound_proc_idx[n_rank]; i++) {
@@ -669,19 +651,11 @@ int main(int argc, char *argv[])
   }
 
   if (i_rank == 0) {
-    printf("-- Dist compute (function #%d)\n", dist_function);
+    printf("-- Dist compute\n");
     fflush(stdout);
   }
 
-  if (dist_function == 2) {
-    PDM_dist_cloud_surf_compute2 (id_dist);
-  }
-  else if (dist_function == 2) {
-    PDM_dist_cloud_surf_compute3 (id_dist);
-  }
-  else {
-    PDM_dist_cloud_surf_compute (id_dist);
-  }
+  PDM_dist_cloud_surf_compute (id_dist);
 
   if (i_rank == 0) {
     printf("-- Dist check\n");
@@ -766,7 +740,6 @@ int main(int argc, char *argv[])
 
     int ierr = 0;
     for (int i = 0; i < n_cell; i++) {
-      /*
       double d1 = PDM_MIN (PDM_ABS (cell_center[i_part][3*i] - xmin),
                            PDM_ABS (cell_center[i_part][3*i] - xmax));
       double d2 = PDM_MIN (PDM_ABS (cell_center[i_part][3*i+1] - ymin),
@@ -774,8 +747,6 @@ int main(int argc, char *argv[])
       double d3 = PDM_MIN (PDM_ABS (cell_center[i_part][3*i+2] - zmin),
                            PDM_ABS (cell_center[i_part][3*i+2] - zmax));
       double d = PDM_MIN (PDM_MIN (d1,d2), d3);
-      */
-      double d = PDM_ABS (cell_center[i_part][3*i+2] - zmin);
       d = d * d;
       if (PDM_ABS(distance[i] - d) > 1e-6) {
         ierr += 1;
