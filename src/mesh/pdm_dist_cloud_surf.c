@@ -3377,13 +3377,6 @@ PDM_dist_cloud_surf_dump_times
                 " %12.5es %12.5es\n",
                 t_elaps_max[COMPUTE_ELEM_DIST],
                 t_cpu_max[COMPUTE_ELEM_DIST]);
-    //-->>
-    PDM_printf( "distance timer : Min Computations of the distance"
-                " from the points to the candidates  (elapsed and cpu) :"
-                " %12.5es %12.5es\n",
-                t_elaps_min[COMPUTE_ELEM_DIST],
-                t_cpu_min[COMPUTE_ELEM_DIST]);
-    //<<--
     PDM_printf( "distance timer : Results exchange (elapsed and cpu) :"
                 " %12.5es %12.5es\n",
                 t_elaps_max[RESULT_TRANSMISSION],
