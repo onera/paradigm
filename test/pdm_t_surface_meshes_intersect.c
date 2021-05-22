@@ -28,7 +28,6 @@
 
 #include "pdm_triangulate.h"
 #include "pdm_surf_mesh.h"
-#include "pdm_part_connectivity_transform.h"
 
 /*============================================================================
  * Type definitions
@@ -53,18 +52,18 @@ _usage
   PDM_printf
     ("\n"
      "  Usage: \n\n"
-     "  -nA       <value>  Cube A - Number of vertices on the side.\n\n"
-     "  -lA       <value>  Cube A - length.\n\n"
-     "  -xminA    <value>  Cube A - Origin X.\n\n"
-     "  -yminA    <value>  Cube A - Origin Y.\n\n"
-     "  -yminA    <value>  Cube A - Origin Y.\n\n"
-     "  -n_partA  <level>  Cube A - Number of partitions par process.\n\n"
-     "  -nB       <value>  Cube A - Number of vertices on the side (default : nA+4).\n\n"
-     "  -lB       <value>  Cube A - length.\n\n"
-     "  -xminB    <value>  Cube A - Origin X.\n\n"
-     "  -yminB    <value>  Cube A - Origin Y.\n\n"
-     "  -yminB    <value>  Cube A - Origin Y.\n\n"
-     "  -n_partB  <level>  Cube A - Number of partitions par process.\n\n"
+     "  -nA       <value>  Mesh A - Number of vertices on the side.\n\n"
+     "  -lA       <value>  Mesh A - length.\n\n"
+     "  -xminA    <value>  Mesh A - Origin X.\n\n"
+     "  -yminA    <value>  Mesh A - Origin Y.\n\n"
+     "  -yminA    <value>  Mesh A - Origin Y.\n\n"
+     "  -n_partA  <level>  Mesh A - Number of partitions par process.\n\n"
+     "  -nB       <value>  Mesh B - Number of vertices on the side (default : nB+4).\n\n"
+     "  -lB       <value>  Mesh B - length.\n\n"
+     "  -xminB    <value>  Mesh B - Origin X.\n\n"
+     "  -yminB    <value>  Mesh B - Origin Y.\n\n"
+     "  -yminB    <value>  Mesh B - Origin Y.\n\n"
+     "  -n_partB  <level>  Mesh B - Number of partitions par process.\n\n"
      "  -post              Ensight output.\n\n"
      "  -no_random         No random to define points coordinates.\n\n"
      "  -random_time_init  Intialize random with the current time.\n\n"
@@ -535,9 +534,6 @@ _split_multipart
     (*n_face)[i_part] = _n_face;
     (*n_vtx)[i_part]  = _n_vtx;
 
-    (*face_vtx_idx)[i_part] = (int *) malloc (sizeof(int) * (_n_face + 1));
-    memcpy ((*face_vtx_idx)[i_part], _face_edge_idx, sizeof(int) * (_n_face + 1));
-
     (*face_g_num)[i_part] = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * _n_face);
     memcpy ((*face_g_num)[i_part], _face_ln_to_gn, sizeof(PDM_g_num_t) * _n_face);
 
@@ -549,9 +545,9 @@ _split_multipart
 
 
     /* Get face-vtx connectivity */
-    /*
-     * TODO : use PDM_combine_connectivity instead
-     */
+    (*face_vtx_idx)[i_part] = (int *) malloc (sizeof(int) * (_n_face + 1));
+    memcpy ((*face_vtx_idx)[i_part], _face_edge_idx, sizeof(int) * (_n_face + 1));
+
     _compute_face_vtx (_n_face,
                        _face_edge_idx,
                        _face_edge,
