@@ -164,8 +164,8 @@ PDM_interpolate_from_mesh_location_exch
  PDM_interpolate_from_mesh_location_t   *interp_from_ml,
  int                                     i_point_cloud,
  size_t                                  s_data,
- double                                  **part_data_in,
- double                                 ***cloud_data_out
+ double                                **part_data_in,
+ double                               ***cloud_data_out
 )
 {
   PDM_UNUSED(interp_from_ml);
@@ -181,6 +181,159 @@ PDM_interpolate_from_mesh_location_exch
    * For now only first order with
    */
   double** cloud_data_in_current_src = (double **) malloc( interp_from_ml->n_part_src * sizeof(double *));
+  int    **cloud_data_in_current_src_n = (int    **) malloc( interp_from_ml->n_part_src * sizeof(int    *));
+  assert(_points_in_elements->n_part == interp_from_ml->n_part_src );
+
+  _point_cloud_t *pcloud = interp_from_ml->point_clouds + i_point_cloud;
+
+  int* n_point_tot = (int *) malloc( interp_from_ml->n_part_src * sizeof(int));
+
+  for(int i_part = 0; i_part < interp_from_ml->n_part_src; ++i_part){
+
+    int n_cell = interp_from_ml->n_cell[i_part];
+    int n_elmt = n_cell; // By construction of _points_in_element_t
+    int* _elt_pts_inside_idx = _points_in_elements->pts_inside_idx[i_part];
+
+    n_point_tot[i_part] = _elt_pts_inside_idx[n_elmt];
+
+    printf("n_cell[%i] = %i \n", i_part, n_cell);
+    printf("_elt_pts_inside_idx[%i] = %i \n", i_part, _elt_pts_inside_idx[1]);
+    printf("n_point_tot[%i] = %i \n", i_part, n_point_tot[i_part]);
+    // printf("pcloud->n_points[%i] = %i \n", i_part, pcloud->n_points[i_part]);
+
+    cloud_data_in_current_src  [i_part] = (double *) malloc( _elt_pts_inside_idx[n_elmt] * sizeof(double));
+    cloud_data_in_current_src_n[i_part] = (int    *) malloc( _elt_pts_inside_idx[n_elmt] * sizeof(int   ));
+
+    for(int i_cell = 0; i_cell < n_cell; ++i_cell) {
+      for (int i_point = _elt_pts_inside_idx[i_cell]; i_point < _elt_pts_inside_idx[i_cell+1]; i_point++) {
+        cloud_data_in_current_src  [i_part][i_point] = part_data_in[i_part][i_cell]; // Simple extrapolation
+        cloud_data_in_current_src_n[i_part][i_point] = 1;
+        // printf(" cloud_data_in_current_src[%i][%i] = %12.5e (from cell = %i) | gnum = %i \n", i_part, i_point, part_data_in[i_part][i_cell], i_cell, (int)_points_in_elements->gnum[i_part][i_point] );
+      }
+    }
+  }
+
+  PDM_g_num_t n_g_cloud = 0;
+
+  for(int i_part = 0; i_part < pcloud->n_part; ++i_part){
+    for(int i = 0; i < pcloud->n_points[i_part]; ++i) {
+      n_g_cloud = PDM_MAX(pcloud->gnum[i_part][i], n_g_cloud);
+    }
+  }
+  PDM_g_num_t _n_g_cloud = 0;
+  PDM_MPI_Allreduce (&n_g_cloud, &_n_g_cloud, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_MAX, interp_from_ml->comm);
+  n_g_cloud = _n_g_cloud;
+
+  /*
+   *  Create the part_to_block to have block of cloud point
+   */
+  PDM_part_to_block_t *ptb = PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                       PDM_PART_TO_BLOCK_POST_CLEANUP, /* Dans notre cas on a une seule localisation possible */
+                                                       1.,
+                                                       _points_in_elements->gnum,      /* Numero absolu des points (donc les target ) */
+                                                       NULL,
+                                                       n_point_tot,
+                                                       interp_from_ml->n_part_src,
+                                                       interp_from_ml->comm);
+
+
+  int stride_one = 1;
+  int    *block_strid;
+  double *block_data;
+  int s_block_data = PDM_part_to_block_exch(ptb,
+                                            sizeof(double),
+                                            PDM_STRIDE_VAR,
+                                            stride_one,
+                                            cloud_data_in_current_src_n,
+                                  (void **) cloud_data_in_current_src,
+                                           &block_strid,
+                                  (void **)&block_data);
+
+  if(0 == 1) {
+    printf(" s_block_data = %i \n", s_block_data);
+    for(int i_point = 0; i_point < s_block_data; ++i_point) {
+      printf("block_data[%i] = %12.5e \n", i_point, block_data[i_point]);
+    }
+  }
+
+
+  PDM_g_num_t* point_block_distrib_idx = PDM_part_to_block_adapt_partial_block_to_block(ptb, &block_strid, n_g_cloud);
+
+  if(1 == 1) {
+    int tmp = point_block_distrib_idx[interp_from_ml->i_rank+1] - point_block_distrib_idx[interp_from_ml->i_rank];
+    printf("tmp = %i \n", tmp);
+    for(int i_point = 0; i_point < tmp; ++i_point) {
+      printf("block_strid[%i] = %i \n", i_point, block_strid[i_point]);
+    }
+  }
+
+  PDM_block_to_part_t *btp = PDM_block_to_part_create(point_block_distrib_idx,
+                               (const PDM_g_num_t **) pcloud->gnum,
+                                                      pcloud->n_points,
+                                                      pcloud->n_part,
+                                                      interp_from_ml->comm);
+
+  int** part_strid = NULL;
+  PDM_block_to_part_exch2(btp,
+                          sizeof(double),
+                          PDM_STRIDE_VAR,
+                          block_strid,
+                          block_data,
+               (int ***)  &part_strid,
+               (void ***) cloud_data_out);
+
+  PDM_part_to_block_free(ptb);
+  free(block_data);
+  free(block_strid);
+
+  for(int i_part = 0; i_part < pcloud->n_part; ++i_part){
+    PDM_log_trace_array_double((*cloud_data_out)[i_part], pcloud->n_points[i_part], "cloud_data_out :: ");
+    PDM_log_trace_array_long(pcloud->gnum[i_part], pcloud->n_points[i_part], "cloud_gnum :: ");
+  }
+
+  PDM_block_to_part_free(btp);
+
+  for(int i_part = 0; i_part < pcloud->n_part; ++i_part){
+    free(part_strid[i_part]);
+  }
+  free(part_strid);
+
+  for(int i_part = 0; i_part < interp_from_ml->n_part_src; ++i_part){
+    free(cloud_data_in_current_src[i_part]);
+    free(cloud_data_in_current_src_n[i_part]);
+  }
+  free(cloud_data_in_current_src);
+  free(cloud_data_in_current_src_n);
+  free(n_point_tot);
+
+}
+
+
+
+void
+PDM_interpolate_from_mesh_location_exch_inplace
+(
+ PDM_interpolate_from_mesh_location_t   *interp_from_ml,
+ int                                     i_point_cloud,
+ size_t                                  s_data,
+ double                                **part_data_in,
+ double                                **cloud_data_out
+)
+{
+  PDM_UNUSED(interp_from_ml);
+  PDM_UNUSED(s_data);
+  PDM_UNUSED(part_data_in);
+  PDM_UNUSED(cloud_data_out);
+
+  assert (interp_from_ml->points_in_elements != NULL);
+
+  _points_in_element_t *_points_in_elements = interp_from_ml->points_in_elements + i_point_cloud;
+
+  /*
+   * For now only first order with
+   */
+  double **cloud_data_in_current_src   = (double **) malloc( interp_from_ml->n_part_src * sizeof(double *));
+  int    **cloud_data_in_current_src_n = (int    **) malloc( interp_from_ml->n_part_src * sizeof(int    *));
   assert(_points_in_elements->n_part == interp_from_ml->n_part_src );
 
   _point_cloud_t *pcloud = interp_from_ml->point_clouds + i_point_cloud;
@@ -196,16 +349,30 @@ PDM_interpolate_from_mesh_location_exch
     n_point_tot[i_part] = _elt_pts_inside_idx[n_elmt];
 
     printf("n_point_tot[%i] = %i \n", i_part, n_point_tot[i_part]);
+    printf("pcloud->n_points[%i] = %i \n", i_part, pcloud->n_points[i_part]);
 
-    cloud_data_in_current_src[i_part] = (double *) malloc( _elt_pts_inside_idx[n_elmt] * sizeof(double));
+    cloud_data_in_current_src  [i_part] = (double *) malloc( _elt_pts_inside_idx[n_elmt] * sizeof(double));
+    cloud_data_in_current_src_n[i_part] = (int    *) malloc( _elt_pts_inside_idx[n_elmt] * sizeof(int   ));
 
     for(int i_cell = 0; i_cell < n_cell; ++i_cell) {
       for (int i_point = _elt_pts_inside_idx[i_cell]; i_point < _elt_pts_inside_idx[i_cell+1]; i_point++) {
-        cloud_data_in_current_src[i_part][i_point] = part_data_in[i_part][i_cell]; // Simple extrapolation
+        cloud_data_in_current_src  [i_part][i_point] = part_data_in[i_part][i_cell]; // Simple extrapolation
+        cloud_data_in_current_src_n[i_part][i_point] = 1;
         // printf(" cloud_data_in_current_src[%i][%i] = %12.5e (from cell = %i) | gnum = %i \n", i_part, i_point, part_data_in[i_part][i_cell], i_cell, (int)_points_in_elements->gnum[i_part][i_point] );
       }
     }
   }
+
+  PDM_g_num_t n_g_cloud = 0;
+
+  for(int i_part = 0; i_part < pcloud->n_part; ++i_part){
+    for(int i = 0; i < pcloud->n_points[i_part]; ++i) {
+      n_g_cloud = PDM_MAX(pcloud->gnum[i_part][i], n_g_cloud);
+    }
+  }
+  PDM_g_num_t _n_g_cloud = 0;
+  PDM_MPI_Allreduce (&n_g_cloud, &_n_g_cloud, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_MAX, interp_from_ml->comm);
+  n_g_cloud = _n_g_cloud;
 
   /*
    *  Create the part_to_block to have block of cloud point
@@ -213,7 +380,7 @@ PDM_interpolate_from_mesh_location_exch
   PDM_part_to_block_t *ptb = PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                        PDM_PART_TO_BLOCK_POST_CLEANUP, /* Dans notre cas on a une seule localisation possible */
                                                        1.,
-                                                       _points_in_elements->gnum,
+                                                       _points_in_elements->gnum,      /* Numero absolu des points (donc les target ) */
                                                        NULL,
                                                        n_point_tot,
                                                        interp_from_ml->n_part_src,
@@ -225,49 +392,88 @@ PDM_interpolate_from_mesh_location_exch
   double *block_data;
   int s_block_data = PDM_part_to_block_exch(ptb,
                                             sizeof(double),
-                                            PDM_STRIDE_CST,
+                                            PDM_STRIDE_VAR,
                                             stride_one,
-                                            NULL,
+                                            cloud_data_in_current_src_n,
                                   (void **) cloud_data_in_current_src,
                                            &block_strid,
                                   (void **)&block_data);
 
-  // printf(" s_block_data = %i \n", s_block_data);
-  // for(int i_point = 0; i_point < s_block_data; ++i_point) {
-  //   printf("block_data[%i] = %12.5e \n", i_point, block_data[i_point]);
-  // }
+  if(0 == 1) {
+    printf(" s_block_data = %i \n", s_block_data);
+    for(int i_point = 0; i_point < s_block_data; ++i_point) {
+      printf("block_data[%i] = %12.5e \n", i_point, block_data[i_point]);
+      printf("block_strid[%i] = %i \n", i_point, block_strid[i_point]);
+    }
+  }
 
-  PDM_g_num_t* point_block_distrib_idx = PDM_part_to_block_distrib_index_get(ptb);
+  PDM_g_num_t* point_block_distrib_idx = PDM_part_to_block_adapt_partial_block_to_block(ptb, &block_strid, n_g_cloud);
 
+  if(0 == 1) {
+    int tmp = point_block_distrib_idx[interp_from_ml->i_rank+1] - point_block_distrib_idx[interp_from_ml->i_rank];
+    printf("tmp = %i \n", tmp);
+    for(int i_point = 0; i_point < tmp; ++i_point) {
+      printf("block_strid[%i] = %i \n", i_point, block_strid[i_point]);
+    }
+  }
   PDM_block_to_part_t *btp = PDM_block_to_part_create(point_block_distrib_idx,
                                (const PDM_g_num_t **) pcloud->gnum,
                                                       pcloud->n_points,
                                                       pcloud->n_part,
                                                       interp_from_ml->comm);
 
+  // for(int i_part = 0; i_part < pcloud->n_part; ++i_part){
+  //   PDM_log_trace_array_double(cloud_data_out[i_part], pcloud->n_points[i_part], "cloud_data_out :: ");
+  //   PDM_log_trace_array_long(pcloud->gnum[i_part], pcloud->n_points[i_part], "cloud_gnum :: ");
+  // }
+
+  int** part_strid;
+  double** tmp_cloud_data_out;
   PDM_block_to_part_exch2(btp,
                           sizeof(double),
-                          PDM_STRIDE_CST,
-                          &stride_one,
+                          PDM_STRIDE_VAR,
+                          block_strid,
                           block_data,
-                          NULL,
-               (void ***) cloud_data_out);
+                          &part_strid,
+               (void ***) &tmp_cloud_data_out);
+
+  /*
+   * Recopie dans le vrai tableau
+   */
+  int idx = 0;
+  for(int i_part = 0; i_part < pcloud->n_part; ++i_part){
+    for(int i = 0; i < pcloud->n_points[i_part]; ++i) {
+      int n_interp = part_strid[i_part][i];
+      if(n_interp == 1) { // Normalement ne peux valoir que 1 ou 0
+        cloud_data_out[i_part][i] = tmp_cloud_data_out[i_part][idx++];
+      }
+      assert(n_interp <= 1);
+    }
+  }
 
   PDM_part_to_block_free(ptb);
   free(block_data);
-
+  free(block_strid);
 
   PDM_block_to_part_free(btp);
 
+  for(int i_part = 0; i_part < pcloud->n_part; ++i_part){
+    free(part_strid[i_part]);
+    free(tmp_cloud_data_out[i_part]);
+  }
+  free(part_strid);
+  free(tmp_cloud_data_out);
 
   for(int i_part = 0; i_part < interp_from_ml->n_part_src; ++i_part){
     free(cloud_data_in_current_src[i_part]);
+    free(cloud_data_in_current_src_n[i_part]);
   }
   free(cloud_data_in_current_src);
+  free(cloud_data_in_current_src_n);
   free(n_point_tot);
+  free(point_block_distrib_idx);
 
 }
-
 
 void
 PDM_interpolate_from_mesh_location_send
@@ -337,17 +543,17 @@ PDM_interpolate_from_mesh_location_mesh_global_data_set
 
   }
 
-  interp_from_ml->n_cell        = (int     *) malloc(n_part * sizeof(int     ));
-  interp_from_ml->cell_face_idx = (int    **) malloc(n_part * sizeof(int    *));
-  interp_from_ml->cell_face     = (int    **) malloc(n_part * sizeof(int    *));
-  interp_from_ml->cell_ln_to_gn = (int    **) malloc(n_part * sizeof(int    *));
-  interp_from_ml->n_face        = (int     *) malloc(n_part * sizeof(int     ));
-  interp_from_ml->face_vtx_idx  = (int    **) malloc(n_part * sizeof(int    *));
-  interp_from_ml->face_vtx      = (int    **) malloc(n_part * sizeof(int    *));
-  interp_from_ml->face_ln_to_gn = (int    **) malloc(n_part * sizeof(int    *));
-  interp_from_ml->n_vtx         = (int     *) malloc(n_part * sizeof(int     ));
-  interp_from_ml->coords        = (double **) malloc(n_part * sizeof(double *));
-  interp_from_ml->vtx_ln_to_gn  = (int    **) malloc(n_part * sizeof(int    *));
+  interp_from_ml->n_cell        = (int          *) malloc(n_part * sizeof(int     ));
+  interp_from_ml->cell_face_idx = (int         **) malloc(n_part * sizeof(int    *));
+  interp_from_ml->cell_face     = (int         **) malloc(n_part * sizeof(int    *));
+  interp_from_ml->cell_ln_to_gn = (PDM_g_num_t **) malloc(n_part * sizeof(int    *));
+  interp_from_ml->n_face        = (int          *) malloc(n_part * sizeof(int     ));
+  interp_from_ml->face_vtx_idx  = (int         **) malloc(n_part * sizeof(int    *));
+  interp_from_ml->face_vtx      = (int         **) malloc(n_part * sizeof(int    *));
+  interp_from_ml->face_ln_to_gn = (PDM_g_num_t **) malloc(n_part * sizeof(int    *));
+  interp_from_ml->n_vtx         = (int          *) malloc(n_part * sizeof(int     ));
+  interp_from_ml->coords        = (double      **) malloc(n_part * sizeof(double *));
+  interp_from_ml->vtx_ln_to_gn  = (PDM_g_num_t **) malloc(n_part * sizeof(int    *));
 
 }
 

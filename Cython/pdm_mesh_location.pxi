@@ -296,11 +296,7 @@ cdef class MeshLocation:
     cdef double       *p_proj_coord
     # ************************************************************************
 
-
     # Attention : Mettre les fonction n_located_ et located !!!!
-
-
-
     PDM_mesh_location_cloud_get (self._id,
                                  i_point_cloud,
                                  i_part,
@@ -322,25 +318,26 @@ cdef class MeshLocation:
                                              &dim,
                                              PDM_G_NUM_NPY_INT,
                                              <void *> gnum)
-    # PyArray_ENABLEFLAGS(np_g_num, NPY.NPY_OWNDATA)
 
     np_location = NPY.PyArray_SimpleNewFromData(1,
                                              &dim,
                                              PDM_G_NUM_NPY_INT,
                                              <void *> location)
-    # PyArray_ENABLEFLAGS(np_location, NPY.NPY_OWNDATA)
+    PyArray_ENABLEFLAGS(np_location, NPY.NPY_OWNDATA)
 
     np_dist2 = NPY.PyArray_SimpleNewFromData(1,
                                              &dim,
                                              NPY.NPY_DOUBLE,
                                              <void *> dist2)
+    PyArray_ENABLEFLAGS(np_dist2, NPY.NPY_OWNDATA)
+
     # > Build numpy capsule
     dim = <NPY.npy_intp> 3*n_points
     np_p_proj_coord = NPY.PyArray_SimpleNewFromData(1,
                                               &dim,
                                               NPY.NPY_DOUBLE,
                                               <void *> p_proj_coord)
-    # PyArray_ENABLEFLAGS(np_p_proj_coord, NPY.NPY_OWNDATA)
+    PyArray_ENABLEFLAGS(np_p_proj_coord, NPY.NPY_OWNDATA)
 
     return {'g_num'        : np_g_num,
             'location'     : np_location,
@@ -501,7 +498,7 @@ cdef class MeshLocation:
                                                &dim,
                                                NPY.NPY_INT32,
                                                <void *> located)
-    # PyArray_ENABLEFLAGS(np_located, NPY.NPY_OWNDATA)
+    PyArray_ENABLEFLAGS(np_located, NPY.NPY_OWNDATA)
 
     return np_located
 
@@ -523,7 +520,7 @@ cdef class MeshLocation:
                                                  &dim,
                                                  NPY.NPY_INT32,
                                                  <void *> unlocated)
-    # PyArray_ENABLEFLAGS(np_unlocated, NPY.NPY_OWNDATA)
+    PyArray_ENABLEFLAGS(np_unlocated, NPY.NPY_OWNDATA)
 
     return np_unlocated
 

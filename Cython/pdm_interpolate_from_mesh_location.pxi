@@ -20,6 +20,11 @@ cdef extern from "pdm_interpolate_from_mesh_location.h":
                                                size_t s_data,
                                                double **part_data_in,
                                                double ***cloud_data_out)
+  void PDM_interpolate_from_mesh_location_exch_inplace(PDM_interpolate_from_mesh_location_t  *interp_from_ml,
+                                                       int i_point_cloud,
+                                                       size_t s_data,
+                                                       double **part_data_in,
+                                                       double **cloud_data_out)
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
   # # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -116,9 +121,7 @@ cdef class InterpolateFromMeshLocation:
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
-    print("PDM_interpolate_from_mesh_location_create ooooo ")
     self._interp_from_ml = PDM_interpolate_from_mesh_location_create(n_point_cloud, PDM_INTERPOLATE_KIND_FROM_CENTER, PDMC)
-    print("PDM_interpolate_from_mesh_location_create end  ooooo ")
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
   # ------------------------------------------------------------------------
@@ -234,19 +237,24 @@ cdef class InterpolateFromMeshLocation:
 
     assert(len(list_part_data_in) == self._n_part_src)
 
-    pdata_data_in = <double **> malloc(self._n_part_src * sizeof(double **))
+    pdata_data_in = <double **> malloc(self._n_part_src * sizeof(double *))
     for i_part, p_array in enumerate(list_part_data_in):
       pdata_data_in[i_part] = <double*> p_array.data
 
-    PDM_interpolate_from_mesh_location_exch(self._interp_from_ml,
-                                            i_point_cloud,
-                                            sizeof(double),
-                                            pdata_data_in,
-                                            &cloud_data_out)
-
     n_part_out = self.n_part_cloud[i_point_cloud]
+    cloud_data_out = <double **> malloc(n_part_out * sizeof(double *))
+    for i_part in range(n_part_out):
+      n_point_cloud = self.n_points_cloud_part[i_point_cloud][i_part]
+      cloud_data_out[i_part] = <double *> malloc(n_point_cloud * sizeof(double))
+
+    PDM_interpolate_from_mesh_location_exch_inplace(self._interp_from_ml,
+                                                    i_point_cloud,
+                                                    sizeof(double),
+                                                    pdata_data_in,
+                                                    cloud_data_out)
+
+
     list_cloud_data_out = list()
-    # > Il faut le nombre de point par cloud et par partition ...
     for i_part in range(n_part_out):
       n_point_cloud = self.n_points_cloud_part[i_point_cloud][i_part]
       dim = <NPY.npy_intp> n_point_cloud
@@ -258,9 +266,44 @@ cdef class InterpolateFromMeshLocation:
       list_cloud_data_out.append(np_cloud_data_out)
 
     free(cloud_data_out) # Free the part indirection other is ok with numpy
+    free(pdata_data_in) # Free the part indirection other is ok with numpy
 
     return list_cloud_data_out
 
+  # ------------------------------------------------------------------------
+  def exch_inplace(self,
+                   int i_point_cloud,
+                   list_part_data_in,
+                   list_cloud_data_out):
+    """
+    """
+    # ************************************************************************
+    # > Declaration
+    cdef double** pdata_data_in
+    cdef double** cloud_data_out
+    cdef NPY.ndarray   p_array
+    cdef NPY.npy_intp dim
+    # ************************************************************************
+
+    assert(len(list_part_data_in) == self._n_part_src)
+
+    pdata_data_in = <double **> malloc(self._n_part_src * sizeof(double **))
+    for i_part, p_array in enumerate(list_part_data_in):
+      pdata_data_in[i_part] = <double*> p_array.data
+
+    assert(len(list_part_data_in) == self.n_part_cloud[i_point_cloud])
+    cloud_data_out = <double **> malloc(self.n_part_cloud[i_point_cloud] * sizeof(double **))
+    for i_part, p_array in enumerate(list_cloud_data_out):
+      cloud_data_out[i_part] = <double*> p_array.data
+
+    PDM_interpolate_from_mesh_location_exch_inplace(self._interp_from_ml,
+                                                    i_point_cloud,
+                                                    sizeof(double),
+                                                    pdata_data_in,
+                                                    cloud_data_out)
+
+    free(cloud_data_out) # Free the part indirection other is ok with numpy
+    free(pdata_data_in)
 
   # ------------------------------------------------------------------------
   def __dealloc__(self):

@@ -1421,6 +1421,7 @@ PDM_mesh_location_point_location_get
   assert (i_part < pcloud->n_part);
 
   *location        = pcloud->location[i_part];
+  // TODO :Leak in python
   // *weights_idx     = pcloud->weights_idx[i_part];
   // *weights         = pcloud->weights[i_part];
   *projected_coord = pcloud->projected_coords[i_part];
@@ -3114,11 +3115,11 @@ PDM_mesh_location_compute
     // }
     // free(block_pts_per_elt_idx);
 
-    printf("_block_distrib_idx :");
-    for (int i = 0; i< n_procs + 1; i++) {
-      printf(PDM_FMT_G_NUM,  block_distrib_idx[i]);
-    }
-    printf("\n");
+    // printf("_block_distrib_idx :");
+    // for (int i = 0; i< n_procs + 1; i++) {
+    //   printf(PDM_FMT_G_NUM,  block_distrib_idx[i]);
+    // }
+    // printf("\n");
 
     free (block_pts_per_elt_n);
     block_pts_per_elt_n = NULL;
@@ -3224,7 +3225,8 @@ PDM_mesh_location_compute
       _block_distrib_idx[i] = block_distrib_idx[i];
     }
 
-    /*  A faire --> On met des zero dans tout les blocks donc les vides et les pas vides
+    /*
+     *  On met des zero dans tout les blocks donc les vides et les pas vides
      *              Puis on remet la vrai "info" dans les block
      */
     int block_n_elt_tot = _block_distrib_idx[my_rank+1] - _block_distrib_idx[my_rank];
@@ -3259,8 +3261,7 @@ PDM_mesh_location_compute
     free(block_pts_per_elt_n_tmp);
 
     PDM_g_num_t old_max = _block_distrib_idx[n_procs];
-//    PDM_g_num_t new_max = n_g_cell+1;
-    PDM_g_num_t new_max = n_g_cell+1;
+    PDM_g_num_t new_max = n_g_cell;
     int diff_last = (int) (new_max - old_max);
 
     _block_distrib_idx[n_procs] = new_max;

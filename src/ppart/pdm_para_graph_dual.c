@@ -454,8 +454,8 @@ const int              compute_dnode_to_arc,
   _dual_graph = (PDM_g_num_t *) *dual_graph;
 
   // For now we can change it later
-  printf("n_node_block::%d \n", n_node_block);
-  printf("dn_node      ::%d \n", dn_node );
+  // printf("n_node_block::%d \n", n_node_block);
+  // printf("dn_node      ::%d \n", dn_node );
   assert(n_node_block == dn_node );
 
   /*
@@ -971,7 +971,7 @@ const PDM_MPI_Comm      comm
         }
         else if (node_weight != NULL) wgtflag = 2;  //Weights on the vertices only
 
-        printf("PDM_ParMETIS_dpart %d | %d \n", n_part, dn_elmt);
+        // printf("PDM_ParMETIS_dpart %d | %d \n", n_part, dn_elmt);
         PDM_ParMETIS_V3_PartKway (graph_node_distrib,
                                   dual_graph_idx,
                                   dual_graph,
@@ -1000,7 +1000,7 @@ const PDM_MPI_Comm      comm
         exit(1);
       #else
         int check = 1;
-        printf("PDM_SCOTCH_dpart %d | %d \n", n_part, dn_elmt);
+        // printf("PDM_SCOTCH_dpart %d | %d \n", n_part, dn_elmt);
         PDM_SCOTCH_dpart (dn_elmt,
                           dual_graph_idx,
                           dual_graph,
@@ -1010,7 +1010,7 @@ const PDM_MPI_Comm      comm
                           comm,
                           n_part,
                           node_part_id);
-        printf("PDM_SCOTCH_dpart end \n");
+        // printf("PDM_SCOTCH_dpart end \n");
       #endif
       break;
     }

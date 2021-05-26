@@ -309,7 +309,7 @@ PDM_part_reorient_bound_faces
         int       **pface_edge
 )
 {
-  printf("PDM_part_reorient_faces\n");
+  // printf("PDM_part_reorient_faces\n");
 
   for (int i_part = 0; i_part < n_part; i_part++){
     for (int i_face = 0; i_face < pn_face[i_part]; i_face++){
@@ -394,7 +394,7 @@ PDM_part_distgroup_to_partgroup
        PDM_g_num_t    ***pgroup_ln_to_gn
 )
 {
-  printf("PDM_part_distgroup_to_partgroup\n");
+  // printf("PDM_part_distgroup_to_partgroup\n");
   int i_rank;
   int n_rank;
 

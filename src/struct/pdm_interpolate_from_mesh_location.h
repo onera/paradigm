@@ -203,8 +203,18 @@ PDM_interpolate_from_mesh_location_exch
  PDM_interpolate_from_mesh_location_t   *interp_from_ml,
  int                                     i_point_cloud,
  size_t                                  s_data,
- double                                  **part_data_in,
- double                                 ***cloud_data_out
+ double                                **part_data_in,
+ double                               ***cloud_data_out
+);
+
+void
+PDM_interpolate_from_mesh_location_exch_inplace
+(
+ PDM_interpolate_from_mesh_location_t   *interp_from_ml,
+ int                                     i_point_cloud,
+ size_t                                  s_data,
+ double                                **part_data_in,
+ double                                **cloud_data_out
 );
 
 

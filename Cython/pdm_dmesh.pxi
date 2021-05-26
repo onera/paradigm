@@ -200,9 +200,9 @@ cdef class DistributedMesh:
     # ************************************************************************
     # > Declaration
     # ************************************************************************
-    print("DistributedMesh::__dealloc__")
+    # print("DistributedMesh::__dealloc__")
     PDM_dmesh_free(self._dm)
-    print("DistributedMesh::__dealloc__")
+    # print("DistributedMesh::__dealloc__")
 
 ctypedef fused DMesh:
   DistributedMesh

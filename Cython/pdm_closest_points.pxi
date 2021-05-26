@@ -28,6 +28,11 @@ cdef extern from "pdm_closest_points.h":
                               PDM_g_num_t **closest_src_gnum,
                               double      **closest_src_distance);
 
+  void PDM_closest_points_tgt_in_src_get(int           id,
+                                         int           i_part_src,
+                                         int         **tgt_in_src_idx,
+                                         PDM_g_num_t **tgt_in_src);
+
   void PDM_closest_points_free(int id)
 
   void PDM_closest_points_dump_times(int id);
@@ -42,6 +47,7 @@ cdef class ClosestPoints:
   cdef int _id
   cdef int _size
   cdef int _rank
+  cdef int* src_n_points
   cdef int* tgt_n_points
   cdef int n_closest
   # ************************************************************************
@@ -67,6 +73,11 @@ cdef class ClosestPoints:
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
+    self.src_n_points = NULL
+    self.tgt_n_points = NULL
+    # ::::::::::::::::::::::::::::::::::::::::::::::::::
+
+    # ::::::::::::::::::::::::::::::::::::::::::::::::::
     self._id = PDM_closest_points_create(PDMC, n_closest, PDM_OWNERSHIP_USER) # Python take ownership
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
@@ -75,6 +86,9 @@ cdef class ClosestPoints:
                              int n_part_cloud_tgt):
     """
     """
+    assert(self.src_n_points  == NULL)
+    assert(self.tgt_n_points  == NULL)
+    self.src_n_points = <int *> malloc(sizeof(int *) * n_part_cloud_src )
     self.tgt_n_points = <int *> malloc(sizeof(int *) * n_part_cloud_tgt )
     PDM_closest_points_n_part_cloud_set(self._id,
                                         n_part_cloud_src,
@@ -102,6 +116,7 @@ cdef class ClosestPoints:
                           NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] gnum):
     """
     """
+    self.src_n_points[i_part] = n_points
     PDM_closest_points_src_cloud_set(self._id,
                                      i_part,
                                      n_points,
@@ -151,6 +166,43 @@ cdef class ClosestPoints:
             }
 
   # ------------------------------------------------------------------------
+  def tgt_in_src_get(self, int i_part_src):
+    """
+    """
+    # ************************************************************************
+    # > Declaration
+    cdef int *tgt_in_src_idx
+    cdef PDM_g_num_t *tgt_in_src
+    # ************************************************************************
+
+    # > Get
+    PDM_closest_points_tgt_in_src_get(self._id,
+                                      i_part_src,
+                                      &tgt_in_src_idx,
+                                      &tgt_in_src)
+
+    cdef NPY.npy_intp dim
+
+    # > Build numpy capsule
+    dim = <NPY.npy_intp> self.src_n_points[i_part_src] + 1
+    np_tgt_in_src_idx = NPY.PyArray_SimpleNewFromData(1,
+                                                      &dim,
+                                                      NPY.NPY_INT32,
+                                                      <void *> tgt_in_src_idx)
+    PyArray_ENABLEFLAGS(np_tgt_in_src_idx, NPY.NPY_OWNDATA);
+
+    dim = <NPY.npy_intp> np_tgt_in_src_idx[self.src_n_points[i_part_src]]
+    np_tgt_in_src = NPY.PyArray_SimpleNewFromData(1,
+                                                  &dim,
+                                                  PDM_G_NUM_NPY_INT,
+                                                  <void *> tgt_in_src)
+    PyArray_ENABLEFLAGS(np_tgt_in_src, NPY.NPY_OWNDATA);
+
+    return {'tgt_in_src_idx' : np_tgt_in_src_idx,
+            'tgt_in_src'     : np_tgt_in_src
+            }
+
+  # ------------------------------------------------------------------------
   def dump_times(self):
     """
     """
@@ -161,4 +213,5 @@ cdef class ClosestPoints:
     """
     """
     free(self.tgt_n_points)
+    free(self.src_n_points)
     PDM_closest_points_free(self._id)

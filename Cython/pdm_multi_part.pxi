@@ -174,7 +174,6 @@ cdef class MultiPart:
                                               part_fraction_data,
                                               PDM_MPI_mpi_2_pdm_mpi_comm (<void *> &c_comm),
                                               PDM_OWNERSHIP_USER) # Python take ownership
-        print("MultiPart::end ")
 
     # ------------------------------------------------------------------
     def __dealloc__(self):

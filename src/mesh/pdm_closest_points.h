@@ -210,7 +210,27 @@ PDM_closest_points_dump_times
  const int id
 );
 
- /**
+/**
+ *
+ * \brief Get mesh distance
+ *
+ * \param [in]   id                 Identifier
+ * \param [in]   i_part_src         Index of partition of the cloud
+ * \param [out]  tgt_in_src_idx     For each src point the number of target localised  (size = n_src_points )
+ * \param [out]  tgt_in_src         For each src point the globla number of target point located (size = tgt_in_src_idx[n_src_points] )
+ *
+ */
+
+void
+PDM_closest_points_tgt_in_src_get
+(
+ const int           id,
+ const int           i_part_src,
+       int         **tgt_in_src_idx,
+       PDM_g_num_t **tgt_in_src
+);
+
+/**
  *
  * \brief  transfert _closest_pts var as it seems this static var is not readable
  *          when we switch to the nvcc compiler
@@ -221,7 +241,7 @@ PDM_Handles_t *
 PDM_closest_points_closest_transfert
 (
   void
- );
+);
 
 #ifdef	__cplusplus
 }

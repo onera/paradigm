@@ -137,6 +137,9 @@ def part_distgroup_to_partgroup(MPI.Comm                                      co
         list_group_part.append(dict_group_part)
 
     free(_pn_entity)
+    free(_pgroup_idx)
+    free(_pgroup)
+    free(_pgroup_ln_to_gn)
     free(LNToGN)
 
     return list_group_part
