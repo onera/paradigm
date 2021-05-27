@@ -4481,11 +4481,11 @@ const int               id_block
     PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
   }
 
-  int id_gnum = PDM_gnum_create (3, mesh->n_part,
-                                 PDM_FALSE,
-                                 1e-3,
-                                 mesh->pdm_mpi_comm,
-                                 PDM_OWNERSHIP_USER); /* The result is getted and you are owner */
+  PDM_gen_gnum_t *gnum_gen = PDM_gnum_create (3, mesh->n_part,
+                                              PDM_FALSE,
+                                              1e-3,
+                                              mesh->pdm_mpi_comm,
+                                              PDM_OWNERSHIP_USER); /* The result is getted and you are owner */
 
   if (id_block >= PDM_BLOCK_ID_BLOCK_POLY3D) {
 
@@ -4508,7 +4508,7 @@ const int               id_block
     }
 
     for (int i = 0; i < mesh->n_part; i++) {
-      PDM_gnum_set_from_parents (id_gnum, i, block->n_elt[i], block->_numabs[i]);
+      PDM_gnum_set_from_parents (gnum_gen, i, block->n_elt[i], block->_numabs[i]);
     }
 
   }
@@ -4535,7 +4535,7 @@ const int               id_block
     }
 
     for (int i = 0; i < mesh->n_part; i++) {
-      PDM_gnum_set_from_parents (id_gnum, i, block->n_elt[i], block->_numabs[i]);
+      PDM_gnum_set_from_parents (gnum_gen, i, block->n_elt[i], block->_numabs[i]);
     }
 
   }
@@ -4561,12 +4561,12 @@ const int               id_block
     }
 
     for (int i = 0; i < mesh->n_part; i++) {
-      PDM_gnum_set_from_parents (id_gnum, i, block->n_elt[i], block->_numabs[i]);
+      PDM_gnum_set_from_parents (gnum_gen, i, block->n_elt[i], block->_numabs[i]);
     }
 
   }
 
-  PDM_gnum_compute (id_gnum);
+  PDM_gnum_compute (gnum_gen);
 
   if (id_block >= PDM_BLOCK_ID_BLOCK_POLY3D) {
     int _id_block = id_block - PDM_BLOCK_ID_BLOCK_POLY3D;
@@ -4574,7 +4574,7 @@ const int               id_block
     PDM_Mesh_nodal_block_poly3d_t *block = mesh->blocks_poly3d[_id_block];
 
     for (int i = 0; i < mesh->n_part; i++) {
-      block->numabs_int[i] = (PDM_g_num_t *) PDM_gnum_get (id_gnum, i);
+      block->numabs_int[i] = (PDM_g_num_t *) PDM_gnum_get (gnum_gen, i);
     }
   }
 
@@ -4584,7 +4584,7 @@ const int               id_block
     PDM_Mesh_nodal_block_poly2d_t *block = mesh->blocks_poly2d[_id_block];
 
     for (int i = 0; i < mesh->n_part; i++) {
-      block->numabs_int[i] = (PDM_g_num_t *) PDM_gnum_get (id_gnum, i);
+      block->numabs_int[i] = (PDM_g_num_t *) PDM_gnum_get (gnum_gen, i);
     }
   }
 
@@ -4595,11 +4595,11 @@ const int               id_block
     PDM_Mesh_nodal_block_std_t *block = mesh->blocks_std[_id_block];
 
     for (int i = 0; i < mesh->n_part; i++) {
-      block->numabs_int[i] = (PDM_g_num_t *) PDM_gnum_get (id_gnum, i);
+      block->numabs_int[i] = (PDM_g_num_t *) PDM_gnum_get (gnum_gen, i);
     }
   }
 
-  PDM_gnum_free (id_gnum);
+  PDM_gnum_free (gnum_gen);
 
 }
 

@@ -1514,7 +1514,7 @@ _compute_overlay_planes
   const PDM_bool_t   merge = PDM_FALSE;
   const double       tolerance = 1e-8;
 
-  int gnum_B_into_A = PDM_gnum_create (dim, n_part, merge, tolerance, ol->comm, PDM_OWNERSHIP_KEEP);
+  PDM_gen_gnum_t *gnum_B_into_A = PDM_gnum_create (dim, n_part, merge, tolerance, ol->comm, PDM_OWNERSHIP_KEEP);
 
   int n_elt_B_into_A = 0;
   for (int i = 0; i < subFacesConnecIdx[nSharedSubFaces]; i++) {
@@ -1551,7 +1551,7 @@ _compute_overlay_planes
   PDM_gnum_free (gnum_B_into_A);
   free (elt_B_into_A_g_num);
 
-  int gnum_A_into_B = PDM_gnum_create (dim, n_part, merge, tolerance, ol->comm, PDM_OWNERSHIP_KEEP);
+  PDM_gen_gnum_t *gnum_A_into_B = PDM_gnum_create (dim, n_part, merge, tolerance, ol->comm, PDM_OWNERSHIP_KEEP);
 
   int n_elt_A_into_B = 0;
   for (int i = 0; i < subFacesConnecIdx[nSharedSubFaces]; i++) {

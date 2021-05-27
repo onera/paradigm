@@ -313,8 +313,8 @@ int main(int argc, char *argv[])
   const PDM_g_num_t **surface_face_gnum = malloc (sizeof(PDM_g_num_t *) * n_part);
   const PDM_g_num_t **surface_vtx_gnum = malloc (sizeof(PDM_g_num_t *) * n_part);
 
-  int id_gnum_face = PDM_gnum_create (3, n_part, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD, PDM_OWNERSHIP_KEEP);
-  int id_gnum_vtx  = PDM_gnum_create (3, n_part, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD, PDM_OWNERSHIP_KEEP);
+  PDM_gen_gnum_t* gen_gnum_face = PDM_gnum_create (3, n_part, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD, PDM_OWNERSHIP_KEEP);
+  PDM_gen_gnum_t* gen_gnum_vtx  = PDM_gnum_create (3, n_part, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD, PDM_OWNERSHIP_KEEP);
 
   double **cell_volume = malloc (sizeof(double *) * n_part);
   double **cell_center = malloc (sizeof(double *) * n_part);
@@ -491,13 +491,13 @@ int main(int argc, char *argv[])
       }
     }
 
-    PDM_gnum_set_from_parents (id_gnum_face,
+    PDM_gnum_set_from_parents (gen_gnum_face,
                                i_part,
                                n_select_face[i_part],
                                surface_face_parent_gnum[i_part]);
 
 
-    PDM_gnum_set_from_parents (id_gnum_vtx,
+    PDM_gnum_set_from_parents (gen_gnum_vtx,
                                i_part,
                                n_select_vtx[i_part],
                                surface_vtx_parent_gnum[i_part]);
@@ -508,9 +508,9 @@ int main(int argc, char *argv[])
 
   }
 
-  PDM_gnum_compute (id_gnum_face);
+  PDM_gnum_compute (gen_gnum_face);
 
-  PDM_gnum_compute (id_gnum_vtx);
+  PDM_gnum_compute (gen_gnum_vtx);
 
   PDM_g_num_t n_g_face_loc = 0;
   PDM_g_num_t n_g_vtx_loc = 0;
@@ -519,8 +519,8 @@ int main(int argc, char *argv[])
   PDM_g_num_t n_g_vtx = 0;
 
   for (int i_part = 0; i_part < n_part; i_part++) {
-    surface_face_gnum[i_part] = PDM_gnum_get (id_gnum_face, i_part);
-    surface_vtx_gnum[i_part] = PDM_gnum_get (id_gnum_vtx, i_part);
+    surface_face_gnum[i_part] = PDM_gnum_get (gen_gnum_face, i_part);
+    surface_vtx_gnum[i_part] = PDM_gnum_get (gen_gnum_vtx, i_part);
 
     for (int i = 0; i <  n_select_face[i_part]; i++) {
       n_g_face_loc = PDM_MAX(n_g_face_loc, surface_face_gnum[i_part][i]);
@@ -832,8 +832,8 @@ int main(int argc, char *argv[])
   free (surface_face_gnum);
   free (surface_vtx_gnum);
 
-  PDM_gnum_free(id_gnum_face);
-  PDM_gnum_free(id_gnum_vtx);
+  PDM_gnum_free(gen_gnum_face);
+  PDM_gnum_free(gen_gnum_vtx);
 
   PDM_MPI_Finalize();
 

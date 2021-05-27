@@ -428,7 +428,7 @@ main
   //n_closest_points = PDM_MIN (n_closest_points, nSrc);
 
   /* Source points definition  */
-  int id = PDM_gnum_create (3, 1, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD, PDM_OWNERSHIP_USER);
+  PDM_gen_gnum_t* gen_gnum = PDM_gnum_create (3, 1, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD, PDM_OWNERSHIP_USER);
 
   double *src_char_length = malloc(sizeof(double) * _n_src_l);
 
@@ -436,18 +436,18 @@ main
     src_char_length[i] = radius * 1.e-6;
   }
 
-  PDM_gnum_set_from_coords (id, 0, _n_src_l, src_coords, src_char_length);
+  PDM_gnum_set_from_coords (gen_gnum, 0, _n_src_l, src_coords, src_char_length);
 
-  PDM_gnum_compute (id);
+  PDM_gnum_compute (gen_gnum);
 
-  PDM_g_num_t *src_gnum = PDM_gnum_get(id, 0);
+  PDM_g_num_t *src_gnum = PDM_gnum_get(gen_gnum, 0);
 
-  PDM_gnum_free (id);
+  PDM_gnum_free (gen_gnum);
 
 
 
   /* Target points definition */
-  id = PDM_gnum_create (3, 1, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD, PDM_OWNERSHIP_USER);
+  gen_gnum = PDM_gnum_create (3, 1, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD, PDM_OWNERSHIP_USER);
 
   double *tgt_char_length = malloc(sizeof(double) * _n_tgt_l);
 
@@ -455,13 +455,13 @@ main
     tgt_char_length[i] = radius * 1.e-6;
   }
 
-  PDM_gnum_set_from_coords (id, 0, _n_tgt_l, tgt_coords, tgt_char_length);
+  PDM_gnum_set_from_coords (gen_gnum, 0, _n_tgt_l, tgt_coords, tgt_char_length);
 
-  PDM_gnum_compute (id);
+  PDM_gnum_compute (gen_gnum);
 
-  PDM_g_num_t *tgt_gnum = PDM_gnum_get(id, 0);
+  PDM_g_num_t *tgt_gnum = PDM_gnum_get(gen_gnum, 0);
 
-  PDM_gnum_free (id);
+  PDM_gnum_free (gen_gnum);
 
 
 

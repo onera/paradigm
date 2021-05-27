@@ -476,8 +476,8 @@ PDM_closest_point_t *cls
 
   // PDM_log_trace_array_long(tgt_g_num, n_tgt, "tgt_g_num:: " );
   // PDM_log_trace_array_double(tgt_coord, 3 * n_tgt, "tgt_coord:: " );
-  PDM_log_trace_array_long(closest_src_gnum, n_tgt * cls->n_closest, "closest_src_gnum:: " );
-  PDM_log_trace_array_double(closest_src_dist, n_tgt * cls->n_closest, "closest_src_dist:: " );
+  // PDM_log_trace_array_long(closest_src_gnum, n_tgt * cls->n_closest, "closest_src_gnum:: " );
+  // PDM_log_trace_array_double(closest_src_dist, n_tgt * cls->n_closest, "closest_src_dist:: " );
 
   /* Restore partitions */
   free (tgt_coord);

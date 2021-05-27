@@ -1,25 +1,27 @@
 # ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 # > Wrapping of functions
 cdef extern from "pdm_gnum.h":
-    int           PDM_gnum_create(const int             dim,
-                                  const int             n_part,
-                                  const PDM_bool_t      merge,
-                                  const double          tolerance,
-                                  const PDM_MPI_Comm    comm,
-                                  const PDM_ownership_t owner);
+  ctypedef struct PDM_gen_gnum_t:
+    pass
+  PDM_gen_gnum_t* PDM_gnum_create(const int             dim,
+                                const int             n_part,
+                                const PDM_bool_t      merge,
+                                const double          tolerance,
+                                const PDM_MPI_Comm    comm,
+                                const PDM_ownership_t owner);
 
-    void PDM_gnum_set_from_coords(const int     id,
-                                  const int     i_part,
-                                  const int     n_elts,
-                                  const double *coords,
-                                  const double *char_length);
+  void PDM_gnum_set_from_coords(PDM_gen_gnum_t* gen_gnum,
+                                const int     i_part,
+                                const int     n_elts,
+                                const double *coords,
+                                const double *char_length);
 
-    void         PDM_gnum_compute(const int id);
+  void         PDM_gnum_compute(PDM_gen_gnum_t* gen_gnum);
 
-    PDM_g_num_t*     PDM_gnum_get(const int id,
-                                  const int i_part);
+  PDM_g_num_t*     PDM_gnum_get(PDM_gen_gnum_t* gen_gnum,
+                                const int i_part);
 
-    void            PDM_gnum_free(const int id);
+  void            PDM_gnum_free(PDM_gen_gnum_t* gen_gnum);
 # ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 # ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -30,7 +32,7 @@ cdef class GlobalNumbering:
   """
   # --------------------------------------------------------------------------
   # > Class attributes
-  cdef public int _id
+  cdef PDM_gen_gnum_t* _gen_gnum
   cdef NPY.npy_intp[:] _n_elem_per_part
   # --------------------------------------------------------------------------
 
@@ -49,7 +51,7 @@ cdef class GlobalNumbering:
 
     # ************************************************************************
     # > PDM call
-    self._id = PDM_gnum_create(dim,
+    self._gen_gnum = PDM_gnum_create(dim,
                                n_part,
                                merge,
                                tolerance,
@@ -86,7 +88,7 @@ cdef class GlobalNumbering:
 
     # ************************************************************************
     # > PDM call
-    PDM_gnum_set_from_coords(self._id,
+    PDM_gnum_set_from_coords(self._gen_gnum,
                              i_part,
                              n_elts,
                              coords_data,
@@ -96,7 +98,7 @@ cdef class GlobalNumbering:
   # --------------------------------------------------------------------------
   def gnum_compute(self):
     """ Calls compute method from PDM_gnum """
-    PDM_gnum_compute(self._id)
+    PDM_gnum_compute(self._gen_gnum)
 
   # --------------------------------------------------------------------------
   def gnum_get(self, int i_part):
@@ -108,7 +110,7 @@ cdef class GlobalNumbering:
 
     # ************************************************************************
     # > PDM call
-    gnum_array = PDM_gnum_get(self._id, i_part);
+    gnum_array = PDM_gnum_get(self._gen_gnum, i_part);
     # ************************************************************************
 
     # ************************************************************************
@@ -127,6 +129,6 @@ cdef class GlobalNumbering:
   # --------------------------------------------------------------------------
   def __dealloc__(self):
     """Calls the free method of PDM_gnum """
-    PDM_gnum_free(self._id);
+    PDM_gnum_free(self._gen_gnum);
 
 # ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::

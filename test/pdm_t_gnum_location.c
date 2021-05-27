@@ -210,18 +210,18 @@ PDM_part_split_t           method,
                      &dEdgeGroup);
 
   // validation
-  int id = PDM_gnum_create (3, 1, PDM_TRUE, 1e-3, pdm_mpi_comm, PDM_OWNERSHIP_KEEP);
+  PDM_gen_gnum_t* gen_gnum = PDM_gnum_create (3, 1, PDM_TRUE, 1e-3, pdm_mpi_comm, PDM_OWNERSHIP_KEEP);
   // fin validation
 
   double *char_size = malloc (sizeof(double) *   dn_vtx);
   for (int j = 0; j < dn_vtx; j++) {
     char_size[j] = 1e-3;
   }
-  PDM_gnum_set_from_coords (id, 0, dn_vtx, dvtx_coord, char_size);
+  PDM_gnum_set_from_coords (gen_gnum, 0, dn_vtx, dvtx_coord, char_size);
 
-  PDM_gnum_compute (id);
+  PDM_gnum_compute (gen_gnum);
 
-  const PDM_g_num_t *_numabs = PDM_gnum_get (id, 0);
+  const PDM_g_num_t *_numabs = PDM_gnum_get (gen_gnum, 0);
 
   PDM_g_num_t *_numabs2 = malloc(sizeof(PDM_g_num_t) * dn_vtx);
 
@@ -255,12 +255,12 @@ PDM_part_split_t           method,
   free(location_idx);
   free(location);
 
-  PDM_gnum_location_free (id, 1);
+  PDM_gnum_location_free (id2, 1);
 
   free (_numabs2);
   free (char_size);
 
-  PDM_gnum_free (id);
+  PDM_gnum_free (gen_gnum);
 
   struct timeval t_elaps_fin;
 

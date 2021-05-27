@@ -1052,7 +1052,7 @@ int main(int argc, char *argv[])
 
 
   /* Point cloud global numbering */
-  int id_gnum = PDM_gnum_create (3, 1, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD, PDM_OWNERSHIP_USER);
+  PDM_gen_gnum_t* gen_gnum = PDM_gnum_create (3, 1, PDM_FALSE, 1e-3, PDM_MPI_COMM_WORLD, PDM_OWNERSHIP_USER);
 
   double *char_length = malloc(sizeof(double) * n_pts_l);
 
@@ -1060,13 +1060,13 @@ int main(int argc, char *argv[])
     char_length[i] = length * 1.e-6;
   }
 
-  PDM_gnum_set_from_coords (id_gnum, 0, n_pts_l, pts_coords, char_length);
+  PDM_gnum_set_from_coords (gen_gnum, 0, n_pts_l, pts_coords, char_length);
 
-  PDM_gnum_compute (id_gnum);
+  PDM_gnum_compute (gen_gnum);
 
-  PDM_g_num_t *pts_gnum = PDM_gnum_get(id_gnum, 0);
+  PDM_g_num_t *pts_gnum = PDM_gnum_get(gen_gnum, 0);
 
-  PDM_gnum_free (id_gnum);
+  PDM_gnum_free (gen_gnum);
   free (char_length);
 
   /************************
@@ -1184,15 +1184,15 @@ int main(int argc, char *argv[])
       printf("%d\n", located[k1]);
     }
     printf("\n");
-    
+
     printf("Located %d :\n", n_located);
     for (int k1 = 0; k1 < n_located; k1++) {
-      int ipt = located[k1] - 1; 
+      int ipt = located[k1] - 1;
       printf(PDM_FMT_G_NUM" : "PDM_FMT_G_NUM" / %12.5e %12.5e %12.5e / %12.5e / %12.5e %12.5e %12.5e",
         pts_gnum[ipt],  p_location[k1],
-        pts_coords[3*ipt], pts_coords[3*ipt+1], pts_coords[3*ipt+2], 
+        pts_coords[3*ipt], pts_coords[3*ipt+1], pts_coords[3*ipt+2],
         p_dist2[k1],
-        p_proj_coord[3*k1], p_proj_coord[3*k1+1], p_proj_coord[3*k1+2]); 
+        p_proj_coord[3*k1], p_proj_coord[3*k1+1], p_proj_coord[3*k1+2]);
       printf("\n");
     }
   }
@@ -1224,15 +1224,15 @@ int main(int argc, char *argv[])
       printf("%d\n", located[k1]);
     }
     printf("\n");
-    
+
     printf("Located %d :\n", n_located);
     for (int k1 = 0; k1 < n_located; k1++) {
-      int ipt = located[k1] - 1; 
+      int ipt = located[k1] - 1;
       printf(PDM_FMT_G_NUM" : "PDM_FMT_G_NUM" / %12.5e %12.5e %12.5e / %12.5e / %12.5e %12.5e %12.5e",
         pts_gnum[ipt],  p_location[k1],
-        pts_coords[3*ipt], pts_coords[3*ipt+1], pts_coords[3*ipt+2], 
+        pts_coords[3*ipt], pts_coords[3*ipt+1], pts_coords[3*ipt+2],
         p_dist2[k1],
-        p_proj_coord[3*k1], p_proj_coord[3*k1+1], p_proj_coord[3*k1+2]); 
+        p_proj_coord[3*k1], p_proj_coord[3*k1+1], p_proj_coord[3*k1+2]);
       printf("\n");
     }
   }
