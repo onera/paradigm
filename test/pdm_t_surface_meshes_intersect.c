@@ -287,16 +287,26 @@ static void _add_depth (const double  x_min,
     //coord[3*i+2] = 0.5 * scale * (cos(6*x + .2) + sin(5*y + .1));
     //coord[3*i+2] = 0.5 * scale * (cos(3*(x+y) + .2) + sin(5*y + .1));
 
-    if (0) {
+    if (1) {
+      // Vagues
+      if (0) {
+        // smooth boundary
+        x -= .5;
+        y -= .5;
+        double f = PDM_MAX (fabs(x), fabs(y)) / sqrt(x*x + y*y);
+        x = 0.5 + f*x;
+        y = 0.5 + f*y;
+        coord[3*i]   = x;
+        coord[3*i+1] = y;
+      }
+      coord[3*i+2] = 0.5 * scale * (cos(3*(x+y) + .2) + sin(5*y + .1));
+    }
+    else {
+      // Gaussienne
       x -= .5;
       y -= .5;
-      double f = PDM_MAX (fabs(x), fabs(y)) / sqrt(x*x + y*y);
-      x = 0.5 + f*x;
-      y = 0.5 + f*y;
-      coord[3*i]   = x;
-      coord[3*i+1] = y;
+      coord[3*i+2] = scale * exp(-70.*(x*x + y*y));
     }
-    coord[3*i+2] = 0.5 * scale * (cos(3*(x+y) + .2) + sin(5*y + .1));
   }
 }
 

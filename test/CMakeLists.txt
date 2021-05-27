@@ -112,6 +112,7 @@ if (PDM_ENABLE_STATIC_Fortran_INTERFACE OR PDM_ENABLE_SHARED_Fortran_INTERFACE)
   test_fortran_create (pdm_t_plane_intersect_unit_f 1)
 endif()
 
+test_c_create (validation_triangulation 1)
 test_c_create (validation_point_in_polygon 1)
 test_c_create (validation_point_in_polygon2d 1)
 test_c_create (test_projection_polygon 1)
