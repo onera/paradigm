@@ -1402,12 +1402,14 @@ PDM_Mesh_nodal_t *mesh,
 const int i_part
 )
 {
+
+
   if (mesh->numabs == NULL) {
     mesh->numabs = malloc (sizeof(PDM_g_num_t*)*mesh->n_part);
-    int is_parent_num = (PDM_Mesh_nodal_block_parent_num_get(mesh, 0, 0) == NULL);
+    int is_parent_num = (PDM_Mesh_nodal_block_parent_num_get(mesh, mesh->blocks_id[0], 0) == NULL);
     for (int i = 0; i < mesh->n_part; i++) {
       for (int i1 = 0; i1 < mesh->n_blocks; i1++) {
-        assert (is_parent_num == (PDM_Mesh_nodal_block_parent_num_get(mesh, i, i1) == NULL));
+        assert (is_parent_num == (PDM_Mesh_nodal_block_parent_num_get(mesh, mesh->blocks_id[i1], i) == NULL));
       }
     }
 
@@ -3191,6 +3193,7 @@ const PDM_l_num_t      *cell_face,
 const PDM_g_num_t      *numabs
 )
 {
+
   int adjust = 0;
   if (n_cell > 0) {
     if (cell_face_idx[0] == 1) {
@@ -3453,34 +3456,34 @@ const PDM_g_num_t      *numabs
         }
       }
 
-      if (n_tetra_part > 0) {
+//      if (n_tetra_part > 0) {
         connec_tetra = (PDM_l_num_t *) malloc(sizeof(PDM_l_num_t) * 4 *n_tetra_part);
         numabs_tetra = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * n_tetra_part);
         num_parent_tetra = (PDM_l_num_t *) malloc(sizeof(PDM_l_num_t) * n_tetra_part);
-      }
+//      }
 
-      if (n_hexa_part > 0) {
+//      if (n_hexa_part > 0) {
         connec_hexa = (PDM_l_num_t *) malloc(sizeof(PDM_l_num_t) * 8 * n_hexa_part);
         numabs_hexa = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * n_hexa_part);
         num_parent_hexa = (PDM_l_num_t *) malloc(sizeof(PDM_l_num_t) * n_hexa_part);
-      }
+//      }
 
-      if (n_prism_part > 0) {
+//      if (n_prism_part > 0) {
         connec_prism = (PDM_l_num_t *) malloc(sizeof(PDM_l_num_t) * 6 * n_prism_part);
         numabs_prism = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * n_prism_part);
         num_parent_prism = (PDM_l_num_t *) malloc(sizeof(PDM_l_num_t) * n_prism_part);
-      }
+//      }
 
-      if (n_pyramid_part > 0) {
+//      if (n_pyramid_part > 0) {
         connec_pyramid = (PDM_l_num_t *) malloc(sizeof(PDM_l_num_t) * 5 * n_pyramid_part);
         numabs_pyramid = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * n_pyramid_part);
         num_parent_pyramid = (PDM_l_num_t *) malloc(sizeof(PDM_l_num_t) * n_pyramid_part);
-      }
+//      }
 
-      if (n_poly3d_part > 0) {
+//      if (n_poly3d_part > 0) {
         numabs_poly3d = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * n_poly3d_part);
         num_parent_poly3d = (PDM_l_num_t *) malloc(sizeof(PDM_l_num_t) * n_poly3d_part);
-      }
+//      }
 
       PDM_l_num_t *num_parent_tetra_courant = num_parent_tetra;
       PDM_l_num_t *num_parent_hexa_courant = num_parent_hexa;
@@ -3950,25 +3953,28 @@ const PDM_g_num_t      *numabs
       PDM_l_num_t *num_parent_quad = NULL;
       PDM_l_num_t *num_parent_poly2d = NULL;
 
-      if (n_tria > 0) {
+//      if (n_tria > 0) {
         connec_tria = (PDM_l_num_t *) malloc(sizeof(PDM_l_num_t) * 3 *n_tria);
         numabs_tria = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * n_tria);
         num_parent_tria = (PDM_l_num_t *) malloc(sizeof(PDM_l_num_t) * n_tria);
-      }
+//      }
 
-      if (n_quad > 0) {
+//      if (n_quad > 0) {
         connec_quad = (PDM_l_num_t *) malloc(sizeof(PDM_l_num_t) * 4 * n_quad);
         numabs_quad = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * n_quad);
         num_parent_quad = (PDM_l_num_t *) malloc(sizeof(PDM_l_num_t) * n_quad);
-      }
+//      }
 
-      if (n_poly2d > 0) {
+//      if (n_poly2d > 0) {
         connec_poly2d_idx = (PDM_l_num_t *) malloc(sizeof(PDM_l_num_t) * (n_poly2d + 1));
         connec_poly2d_idx[0] = 0;
         connec_poly2d = (PDM_l_num_t *) malloc(sizeof(PDM_l_num_t) * l_connec_poly2d);
         numabs_poly2d = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * n_poly2d);
         num_parent_poly2d = (PDM_l_num_t *) malloc(sizeof(PDM_l_num_t) * n_poly2d);
-      }
+//      }
+
+      printf("num_parent_tria, num_parent_quad, num_parent_poly2d : %lu/%d %lu/%d %lu/%d\n", num_parent_tria, n_tria, 
+        num_parent_quad, n_quad, num_parent_poly2d, n_poly2d);
 
       PDM_l_num_t *connec_tria_courant = connec_tria;
       PDM_l_num_t *connec_quad_courant = connec_quad;
@@ -4162,6 +4168,7 @@ const PDM_l_num_t      *face_vtx,
 const PDM_g_num_t      *numabs
 )
 {
+
   int adjust = 0;
   if (n_face > 0) {
     if (face_vtx_idx[0] == 1) {
