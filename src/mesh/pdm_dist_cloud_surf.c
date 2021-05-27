@@ -965,8 +965,6 @@ PDM_dist_cloud_surf_compute
     free (part_elt_vtx_coord);
     free (part_n_elt);
 
-    ptb_elt = PDM_part_to_block_free (ptb_elt);
-
 
     /*******************************************************************
      *  Compute element-point distances from SOURCE point-of-view
@@ -980,10 +978,11 @@ PDM_dist_cloud_surf_compute
     PDM_timer_resume(dist->timer);
 
     int n_elt_block = PDM_part_to_block_n_elt_block_get (ptb);
+    PDM_g_num_t *block_elt_g_num = PDM_part_to_block_block_gnum_get (ptb);
+    PDM_g_num_t *block_elt_g_num_full = PDM_part_to_block_block_gnum_get (ptb_elt);
 
     int l_block_elt_pts = 0;
     for (int ielt = 0; ielt < n_elt_block; ielt++) {
-      block_elt_vtx_n[ielt] /= 3;
       l_block_elt_pts += block_elt_pts_n[ielt];
     }
 
@@ -995,10 +994,18 @@ PDM_dist_cloud_surf_compute
     double *_dist2     = block_elt_pts_dist2;
     double *_proj      = block_elt_pts_proj;
 
+    int i1 = 0;
     for (int ielt = 0; ielt < n_elt_block; ielt++) {
 
+      while (block_elt_g_num_full[i1] < block_elt_g_num[ielt]) {
+        _vtx_coord += block_elt_vtx_n[i1];
+        i1++;
+      }
+
+      int elt_vtx_n = block_elt_vtx_n[i1] / 3;
+
       /* Triangle */
-      if (block_elt_vtx_n[ielt] == 3) {
+      if (elt_vtx_n == 3) {
         for (int i = 0; i < block_elt_pts_n[ielt]; i++) {
           PDM_triangle_status_t status =
             PDM_triangle_evaluate_position (_pts_coord + 3*i,
@@ -1021,7 +1028,7 @@ PDM_dist_cloud_surf_compute
         for (int i = 0; i < block_elt_pts_n[ielt]; i++) {
           PDM_polygon_status_t status =
             PDM_polygon_evaluate_position (_pts_coord + 3*i,
-                                           block_elt_vtx_n[ielt],
+                                           elt_vtx_n,
                                            _vtx_coord,
                                            _proj + 3*i,
                                            _dist2 + i);
@@ -1035,7 +1042,6 @@ PDM_dist_cloud_surf_compute
         } // End of loop on points
       }
 
-      _vtx_coord += block_elt_vtx_n[ielt] * 3;
       _pts_coord += block_elt_pts_n[ielt] * 3;
       _dist2     += block_elt_pts_n[ielt];
       _proj      += block_elt_pts_n[ielt] * 3;
@@ -1045,7 +1051,7 @@ PDM_dist_cloud_surf_compute
     free (block_elt_vtx_n);
     free (block_elt_vtx_coord);
     free (block_elt_pts_coord);
-
+    ptb_elt = PDM_part_to_block_free (ptb_elt);
 
 
     PDM_timer_hang_on(dist->timer);
@@ -1103,7 +1109,6 @@ PDM_dist_cloud_surf_compute
                                                            1,
                                                            comm);
 
-    PDM_g_num_t *block_elt_g_num = PDM_part_to_block_block_gnum_get (ptb);
     PDM_g_num_t *part_block_elt_g_num = malloc (sizeof(PDM_g_num_t) * l_block_elt_pts);
     int idx = 0;
     for (int ielt = 0; ielt < n_elt_block; ielt++) {
