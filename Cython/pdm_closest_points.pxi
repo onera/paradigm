@@ -1,41 +1,45 @@
 
 cdef extern from "pdm_closest_points.h":
+  # > Wrapping of Ppart Structure
+  ctypedef struct PDM_closest_point_t:
+    pass
+  # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-  int PDM_closest_points_create(PDM_MPI_Comm    comm,
+  PDM_closest_point_t* PDM_closest_points_create(PDM_MPI_Comm    comm,
                                 int             n_closest,
                                 PDM_ownership_t owner);
 
-  void PDM_closest_points_n_part_cloud_set(int  id,
-                                           int  n_part_cloud_src,
-                                           int  n_part_cloud_tgt);
+  void PDM_closest_points_n_part_cloud_set(PDM_closest_point_t* cls,
+                                           int                  n_part_cloud_src,
+                                           int                  n_part_cloud_tgt);
 
-  void PDM_closest_points_tgt_cloud_set(int          id,
-                                        int          i_part,
-                                        int          n_points,
-                                        double      *coords,
-                                        PDM_g_num_t *gnum);
+  void PDM_closest_points_tgt_cloud_set(PDM_closest_point_t *cls,
+                                        int                  i_part,
+                                        int                  n_points,
+                                        double              *coords,
+                                        PDM_g_num_t         *gnum);
 
-  void PDM_closest_points_src_cloud_set(int          id,
-                                        int          i_part,
-                                        int          n_points,
-                                        double      *coords,
-                                        PDM_g_num_t *gnum);
+  void PDM_closest_points_src_cloud_set(PDM_closest_point_t *cls,
+                                        int                  i_part,
+                                        int                  n_points,
+                                        double              *coords,
+                                        PDM_g_num_t         *gnum);
 
-  void PDM_closest_points_compute(int id);
+  void PDM_closest_points_compute(PDM_closest_point_t  *cls);
 
-  void PDM_closest_points_get(int           id,
-                              int           i_part_tgt,
-                              PDM_g_num_t **closest_src_gnum,
-                              double      **closest_src_distance);
+  void PDM_closest_points_get(PDM_closest_point_t  *cls,
+                              int                   i_part_tgt,
+                              PDM_g_num_t         **closest_src_gnum,
+                              double              **closest_src_distance);
 
-  void PDM_closest_points_tgt_in_src_get(int           id,
-                                         int           i_part_src,
-                                         int         **tgt_in_src_idx,
-                                         PDM_g_num_t **tgt_in_src);
+  void PDM_closest_points_tgt_in_src_get(PDM_closest_point_t  *cls,
+                                         int                   i_part_src,
+                                         int                 **tgt_in_src_idx,
+                                         PDM_g_num_t         **tgt_in_src);
 
-  void PDM_closest_points_free(int id)
+  void PDM_closest_points_free(PDM_closest_point_t *cls)
 
-  void PDM_closest_points_dump_times(int id);
+  void PDM_closest_points_dump_times(PDM_closest_point_t *cls);
 
 
 # ------------------------------------------------------------------
@@ -44,7 +48,7 @@ cdef class ClosestPoints:
   """
   # ************************************************************************
   # > Class attributes
-  cdef int _id
+  cdef PDM_closest_point_t *_cls
   cdef int _size
   cdef int _rank
   cdef int* src_n_points
@@ -78,7 +82,7 @@ cdef class ClosestPoints:
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
-    self._id = PDM_closest_points_create(PDMC, n_closest, PDM_OWNERSHIP_USER) # Python take ownership
+    self._cls = PDM_closest_points_create(PDMC, n_closest, PDM_OWNERSHIP_USER) # Python take ownership
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
   # ------------------------------------------------------------------------
@@ -90,7 +94,7 @@ cdef class ClosestPoints:
     assert(self.tgt_n_points  == NULL)
     self.src_n_points = <int *> malloc(sizeof(int *) * n_part_cloud_src )
     self.tgt_n_points = <int *> malloc(sizeof(int *) * n_part_cloud_tgt )
-    PDM_closest_points_n_part_cloud_set(self._id,
+    PDM_closest_points_n_part_cloud_set(self._cls,
                                         n_part_cloud_src,
                                         n_part_cloud_tgt)
 
@@ -102,7 +106,7 @@ cdef class ClosestPoints:
     """
     """
     self.tgt_n_points[i_part] = n_points
-    PDM_closest_points_tgt_cloud_set(self._id,
+    PDM_closest_points_tgt_cloud_set(self._cls,
                                      i_part,
                                      n_points,
                            <double*> coords.data,
@@ -117,7 +121,7 @@ cdef class ClosestPoints:
     """
     """
     self.src_n_points[i_part] = n_points
-    PDM_closest_points_src_cloud_set(self._id,
+    PDM_closest_points_src_cloud_set(self._cls,
                                      i_part,
                                      n_points,
                            <double*> coords.data,
@@ -127,7 +131,7 @@ cdef class ClosestPoints:
   def compute(self):
     """
     """
-    PDM_closest_points_compute(self._id)
+    PDM_closest_points_compute(self._cls)
 
   # ------------------------------------------------------------------------
   def points_get(self, int i_part_tgt):
@@ -140,7 +144,7 @@ cdef class ClosestPoints:
     # ************************************************************************
 
     # > Get
-    PDM_closest_points_get(self._id,
+    PDM_closest_points_get(self._cls,
                            i_part_tgt,
                            &closest_src_gnum,
                            &closest_src_distance)
@@ -176,7 +180,7 @@ cdef class ClosestPoints:
     # ************************************************************************
 
     # > Get
-    PDM_closest_points_tgt_in_src_get(self._id,
+    PDM_closest_points_tgt_in_src_get(self._cls,
                                       i_part_src,
                                       &tgt_in_src_idx,
                                       &tgt_in_src)
@@ -206,7 +210,7 @@ cdef class ClosestPoints:
   def dump_times(self):
     """
     """
-    PDM_closest_points_dump_times(self._id)
+    PDM_closest_points_dump_times(self._cls)
 
   # ------------------------------------------------------------------------
   def __dealloc__(self):
@@ -214,4 +218,4 @@ cdef class ClosestPoints:
     """
     free(self.tgt_n_points)
     free(self.src_n_points)
-    PDM_closest_points_free(self._id)
+    PDM_closest_points_free(self._cls)

@@ -35,10 +35,10 @@
 #include "pdm_error.h"
 #include "pdm.h"
 #include "pdm_priv.h"
-#include "pdm_handles.h"
 #include "pdm_mpi.h"
 #include "pdm_timer.h"
 #include "pdm_closest_points.h"
+#include "pdm_closest_points_priv.h"
 #include "pdm_para_octree.h"
 #include "pdm_part_to_block.h"
 #include "pdm_block_to_part.h"
@@ -60,12 +60,11 @@ extern "C" {
  *============================================================================*/
 
 
-#define NTIMER 2
-
 /*============================================================================
  * Type definitions
  *============================================================================*/
 
+#define NTIMER 2
 
 /**
  * \enum _timer_step_t
@@ -79,115 +78,15 @@ typedef enum {
 
 } _timer_step_t;
 
-
-/**
- * \struct _tgt_point_cloud_t
- * \brief  Target point cloud structure
- *
- */
-
-typedef struct {
-
-  int           n_part;            /*!< Number of partition */
-  int          *n_points;          /*!< Number of points of each partition */
-  double      **coords;            /*!< Point coordinates points of each partition */
-  PDM_g_num_t **gnum;              /*!< Point global numbering of each partition */
-  PDM_g_num_t **closest_src_gnum;  /*!< Global numbering of the n_closest source points
-                                     for each point of each partition  */
-  double      **closest_src_dist; /*!< Distance to the n_closest source points
-                                    for each point of each partition  */
-
-} _tgt_point_cloud_t;
-
-
-/**
- * \struct _src_point_cloud_t
- * \brief  Src point cloud structure
- *
- */
-
-typedef struct {
-
-  int           n_part;            /*!< Number of partition */
-  int          *n_points;          /*!< Number of points of each partition */
-  double      **coords;            /*!< Point coordinates points of each partition */
-  PDM_g_num_t **gnum;              /*!< Point global numbering of each partition */
-
-  int         **tgt_in_src_idx;    /*!< Revsese results */
-  PDM_g_num_t **tgt_in_src;        /*!< Revsese results */
-
-} _src_point_cloud_t;
-
-
-/**
- * \struct _PDM_closest_t
- * \brief  Closest points structure
- *
- */
-
-typedef struct {
-
-  PDM_MPI_Comm    comm;                         /*!< MPI communicator */
-  PDM_ownership_t owner;                        /*!< Which have the responsabilities of results */
-  PDM_bool_t      results_is_getted;            /*!< Flags to indicate if result is getted      */
-  PDM_bool_t      tgt_in_src_results_is_getted; /*!< Flags to indicate if result is getted      */
-
-  int n_closest;                                /*!< Number of closest source points to find for each
-                                                  target point  */
-
-  _src_point_cloud_t *src_cloud;                /*!< Source point cloud */
-
-  _tgt_point_cloud_t *tgt_cloud;                /*!< Target point cloud */
-
-  PDM_timer_t *timer;                           /*!< Timer */
-
-  double times_elapsed[NTIMER];                 /*!< Elapsed time */
-
-  double times_cpu[NTIMER];                     /*!< CPU time */
-
-  double times_cpu_u[NTIMER];                   /*!< User CPU time */
-
-  double times_cpu_s[NTIMER];                   /*!< System CPU time */
-
-
-} _PDM_closest_t;
-
-
 /*============================================================================
  * Global variable
  *============================================================================*/
-
-static PDM_Handles_t *_closest_pts   = NULL;
 
 //static int idebug = 0;
 
 /*=============================================================================
  * Private function definitions
  *============================================================================*/
-
-/**
- *
- * \brief Return ppart object from it identifier
- *
- * \param [in]   ppart_id        ppart identifier
- *
- */
-
-static _PDM_closest_t *
-_get_from_id
-(
- int  id
-)
-{
-  _PDM_closest_t *closest = (_PDM_closest_t *) PDM_Handles_get (_closest_pts, id);
-
-  if (closest == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_closest_points error : Bad identifier\n");
-  }
-
-  return closest;
-}
-
 
 /**
  *
@@ -199,10 +98,9 @@ _get_from_id
 static void
 _closest_points_reverse_results
 (
- const int           id
+ PDM_closest_point_t  *cls
 )
 {
-  _PDM_closest_t *cls = _get_from_id (id);
 
   assert (cls->tgt_cloud->closest_src_gnum != NULL);
   assert (cls->tgt_cloud->closest_src_dist != NULL);
@@ -214,6 +112,8 @@ _closest_points_reverse_results
     n_points[i_part] = cls->tgt_cloud->n_points[i_part] * cls->n_closest;
     tgt_g_num  [i_part] = (PDM_g_num_t * ) malloc( n_points[i_part] * sizeof(PDM_g_num_t));
     tgt_g_num_n[i_part] = (int         * ) malloc( n_points[i_part] * sizeof(int        ));
+
+    // PDM_log_trace_array_long(cls->tgt_cloud->closest_src_gnum[i_part], cls->tgt_cloud->n_points[i_part], "cls->tgt_cloud->closest_src_gnum:: " );
 
     for(int i = 0; i < cls->tgt_cloud->n_points[i_part]; ++i) {
       for(int ii = 0; ii < cls->n_closest; ++ii) {
@@ -337,7 +237,7 @@ _closest_points_reverse_results
  *
  */
 
-int
+PDM_closest_point_t*
 PDM_closest_points_create
 (
  const PDM_MPI_Comm    comm,
@@ -345,13 +245,7 @@ PDM_closest_points_create
  const PDM_ownership_t owner
 )
 {
-  if (_closest_pts == NULL) {
-    _closest_pts = PDM_Handles_create (4);
-  }
-
-  _PDM_closest_t *closest = (_PDM_closest_t *) malloc(sizeof(_PDM_closest_t));
-
-  int id = PDM_Handles_store (_closest_pts, closest);
+  PDM_closest_point_t *closest = (PDM_closest_point_t *) malloc(sizeof(PDM_closest_point_t));
 
   closest->comm                         = comm;
   closest->owner                        = owner;
@@ -371,21 +265,20 @@ PDM_closest_points_create
     closest->times_cpu_s[i] = 0.;
   }
 
-  return id;
+  return closest;
 }
 
-void
+PDM_closest_point_t*
 PDM_closest_points_create_cf
 (
  const PDM_MPI_Fint     comm,
  const int              n_closest,
- const PDM_ownership_t  owner,
-       int             *id
+ const PDM_ownership_t  owner
 )
 {
   const PDM_MPI_Comm _comm        = PDM_MPI_Comm_f2c(comm);
 
-  *id = PDM_closest_points_create(_comm, n_closest, owner);
+  return PDM_closest_points_create(_comm, n_closest, owner);
 }
 
 
@@ -402,12 +295,11 @@ PDM_closest_points_create_cf
 void
 PDM_closest_points_n_part_cloud_set
 (
- const int  id,
- const int  n_part_cloud_src,
- const int  n_part_cloud_tgt
+       PDM_closest_point_t* cls,
+ const int                  n_part_cloud_src,
+ const int                  n_part_cloud_tgt
 )
 {
-  _PDM_closest_t *cls = _get_from_id (id);
   assert(cls->src_cloud == NULL);
   assert(cls->tgt_cloud == NULL);
 
@@ -446,14 +338,13 @@ PDM_closest_points_n_part_cloud_set
 void
 PDM_closest_points_tgt_cloud_set
 (
- const int          id,
- const int          i_part,
- const int          n_points,
-       double      *coords,
-       PDM_g_num_t *gnum
+       PDM_closest_point_t *cls,
+ const int                  i_part,
+ const int                  n_points,
+       double              *coords,
+       PDM_g_num_t         *gnum
 )
 {
-  _PDM_closest_t *cls = _get_from_id (id);
   assert(cls->tgt_cloud != NULL);
   cls->tgt_cloud->n_points[i_part] = n_points;
   cls->tgt_cloud->coords[i_part] = coords;
@@ -476,14 +367,13 @@ PDM_closest_points_tgt_cloud_set
 void
 PDM_closest_points_src_cloud_set
 (
- const int          id,
- const int          i_part,
- const int          n_points,
-       double      *coords,
-       PDM_g_num_t *gnum
+       PDM_closest_point_t *cls,
+ const int                  i_part,
+ const int                  n_points,
+       double              *coords,
+       PDM_g_num_t         *gnum
 )
 {
-  _PDM_closest_t *cls = _get_from_id (id);
   assert(cls->src_cloud != NULL);
   cls->src_cloud->n_points[i_part] = n_points;
   cls->src_cloud->coords  [i_part] = coords;
@@ -501,10 +391,9 @@ PDM_closest_points_src_cloud_set
 void
 PDM_closest_points_compute
 (
- const int id
+PDM_closest_point_t *cls
 )
 {
-  _PDM_closest_t *cls = _get_from_id (id);
 
   cls->times_elapsed[BEGIN] = PDM_timer_elapsed(cls->timer);
   cls->times_cpu[BEGIN]     = PDM_timer_cpu(cls->timer);
@@ -585,6 +474,10 @@ PDM_closest_points_compute
   }
 
 
+  // PDM_log_trace_array_long(tgt_g_num, n_tgt, "tgt_g_num:: " );
+  // PDM_log_trace_array_double(tgt_coord, 3 * n_tgt, "tgt_coord:: " );
+  PDM_log_trace_array_long(closest_src_gnum, n_tgt * cls->n_closest, "closest_src_gnum:: " );
+  PDM_log_trace_array_double(closest_src_dist, n_tgt * cls->n_closest, "closest_src_dist:: " );
 
   /* Restore partitions */
   free (tgt_coord);
@@ -621,7 +514,7 @@ PDM_closest_points_compute
   PDM_para_octree_free (octree_id);
   //<--
 
-  _closest_points_reverse_results(id);
+  _closest_points_reverse_results(cls);
 
 
   PDM_timer_hang_on(cls->timer);
@@ -649,13 +542,12 @@ PDM_closest_points_compute
 void
 PDM_closest_points_get
 (
- const int           id,
- const int           i_part_tgt,
-       PDM_g_num_t **closest_src_gnum,
-       double      **closest_src_distance
+       PDM_closest_point_t  *cls,
+ const int                   i_part_tgt,
+       PDM_g_num_t         **closest_src_gnum,
+       double              **closest_src_distance
 )
 {
-  _PDM_closest_t *cls = _get_from_id (id);
 
   assert (cls->tgt_cloud->closest_src_gnum != NULL);
   assert (cls->tgt_cloud->closest_src_dist != NULL);
@@ -681,13 +573,12 @@ PDM_closest_points_get
 void
 PDM_closest_points_tgt_in_src_get
 (
- const int           id,
- const int           i_part_src,
-       int         **tgt_in_src_idx,
-       PDM_g_num_t **tgt_in_src
+       PDM_closest_point_t  *cls,
+ const int                   i_part_src,
+       int                 **tgt_in_src_idx,
+       PDM_g_num_t         **tgt_in_src
 )
 {
-  _PDM_closest_t *cls = _get_from_id (id);
 
   assert (cls->src_cloud->tgt_in_src_idx != NULL);
   assert (cls->src_cloud->tgt_in_src != NULL);
@@ -713,10 +604,9 @@ PDM_closest_points_tgt_in_src_get
 void
 PDM_closest_points_free
 (
- const int id
+PDM_closest_point_t  *cls
 )
 {
-  _PDM_closest_t *cls = _get_from_id (id);
 
   if(( cls->owner == PDM_OWNERSHIP_KEEP ) ||
      ( cls->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !cls->results_is_getted)){
@@ -784,18 +674,10 @@ PDM_closest_points_free
     free (cls->src_cloud);
   }
 
-
   PDM_timer_free(cls->timer);
 
   free (cls);
 
-  PDM_Handles_handle_free (_closest_pts, id, PDM_FALSE);
-
-  const int n_closest_pts = PDM_Handles_n_get (_closest_pts);
-
-  if (n_closest_pts == 0) {
-    _closest_pts = PDM_Handles_free (_closest_pts);
-  }
 }
 
 
@@ -810,10 +692,9 @@ PDM_closest_points_free
 void
 PDM_closest_points_dump_times
 (
- const int id
+PDM_closest_point_t  *cls
 )
 {
-  _PDM_closest_t *cls = _get_from_id (id);
   double t1 = cls->times_elapsed[END] - cls->times_elapsed[BEGIN];
   double t2 = cls->times_cpu[END] - cls->times_cpu[BEGIN];
 
@@ -840,13 +721,13 @@ PDM_closest_points_dump_times
  *
  */
 
-PDM_Handles_t *
+PDM_closest_point_t *
 PDM_closest_points_closest_transfert
 (
-  void
- )
+  PDM_closest_point_t  *cls
+)
 {
-  return _closest_pts;
+  return cls;
 }
 
 #ifdef	__cplusplus
