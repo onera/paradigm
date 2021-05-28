@@ -3973,8 +3973,6 @@ const PDM_g_num_t      *numabs
         num_parent_poly2d = (PDM_l_num_t *) malloc(sizeof(PDM_l_num_t) * n_poly2d);
 //      }
 
-      printf("num_parent_tria, num_parent_quad, num_parent_poly2d : %lu/%d %lu/%d %lu/%d\n", num_parent_tria, n_tria, 
-        num_parent_quad, n_quad, num_parent_poly2d, n_poly2d);
 
       PDM_l_num_t *connec_tria_courant = connec_tria;
       PDM_l_num_t *connec_quad_courant = connec_quad;

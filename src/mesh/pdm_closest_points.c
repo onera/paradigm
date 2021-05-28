@@ -255,18 +255,18 @@ _closest_points_reverse_results
   int *block_tgt_in_src_n = NULL;
   PDM_g_num_t *block_tgt_in_src_g_num = NULL;
   int blk_size = PDM_part_to_block_exch (ptb,
-                          sizeof(PDM_g_num_t),
-                          PDM_STRIDE_VAR,
-                          1,
-                          tgt_g_num_n,
-                (void **) tgt_g_num,
-                          &block_tgt_in_src_n,
-                (void **) &block_tgt_in_src_g_num);
+                                         sizeof(PDM_g_num_t),
+                                         PDM_STRIDE_VAR,
+                                        1,
+                                        tgt_g_num_n,
+                              (void **) tgt_g_num,
+                                        &block_tgt_in_src_n,
+                              (void **) &block_tgt_in_src_g_num);
 
   if(0 == 1) {
-    // int block_n_elt = PDM_part_to_block_n_elt_block_get (ptb);
-    // PDM_log_trace_array_int(block_tgt_in_src_n     , block_n_elt, "block_tgt_in_src_n:: " );
-    // PDM_log_trace_array_long(block_tgt_in_src_g_num, blk_size   , "block_tgt_in_src_g_num:: " );
+    int block_n_elt = PDM_part_to_block_n_elt_block_get (ptb);
+    PDM_log_trace_array_int(block_tgt_in_src_n     , block_n_elt, "block_tgt_in_src_n:: " );
+    PDM_log_trace_array_long(block_tgt_in_src_g_num, blk_size   , "block_tgt_in_src_g_num:: " );
   }
 
   for (int i_part = 0; i_part < cls->tgt_cloud->n_part; i_part++) {

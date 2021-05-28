@@ -333,7 +333,7 @@ static void _add_depth (const int     n_pts,
                         double       *coord)
 {
   double inv_length = 1.;
-  if (length != 0) inv_length /= length;
+  if (PDM_ABS (length) > 1e-15) inv_length /= length;
 
   for (int i = 0; i < n_pts; i++) {
     double x = 2.*coord[3*i]   * inv_length;

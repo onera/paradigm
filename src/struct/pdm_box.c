@@ -98,7 +98,7 @@ _get_distrib_statistics(const PDM_box_distrib_t  *distrib,
                         int                      *n_ranks,
                         PDM_MPI_Comm                  comm)
 {
-  int   i, j, k, step, delta, _n_rank_boxes;
+  int   i, k, step, delta, _n_rank_boxes;
 
   int  _n_ranks = 0;
   int   _min = INT_MAX, _max = 0, gmin = 0, gmax = 0;
@@ -1919,7 +1919,7 @@ PDM_box_distrib_create(int  n_boxes,
                        int        max_level,
                        PDM_MPI_Comm   comm)
 {
-  int  i, n_ranks, gmax_level;
+  int  n_ranks, gmax_level;
 
   PDM_box_distrib_t  *new_distrib = NULL;
 

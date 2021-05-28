@@ -22,6 +22,7 @@
 #include "pdm_interpolate_from_mesh_location_priv.h"
 #include "pdm_interpolate_from_mesh_location.h"
 #include "pdm_timer.h"
+#include "pdm_logging.h"
 
 /*----------------------------------------------------------------------------*/
 
