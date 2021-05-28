@@ -474,7 +474,7 @@ PDM_dist_cloud_surf_compute
   PDM_MPI_Comm_rank (comm, &rank);
 
   //--->>>
-  _octree_type_t octree_type = PDM_OCTREE_PARALLEL;
+  _octree_type_t octree_type = PDM_OCTREE_SERIAL;
   char *env_octree_type = getenv ("PDM_OCTREE_TYPE");
   if (env_octree_type != NULL) {
     if (atoi(env_octree_type) == 0) {
