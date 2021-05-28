@@ -246,6 +246,8 @@ cdef class InterpolateFromMeshLocation:
     for i_part in range(n_part_out):
       n_point_cloud = self.n_points_cloud_part[i_point_cloud][i_part]
       cloud_data_out[i_part] = <double *> malloc(n_point_cloud * sizeof(double))
+      for i in range(n_point_cloud):
+        cloud_data_out[i_part][i] = -100000.
 
     PDM_interpolate_from_mesh_location_exch_inplace(self._interp_from_ml,
                                                     i_point_cloud,

@@ -459,23 +459,23 @@ int main(int argc, char *argv[])
    *
    ************************/
 
-  int id_loc = PDM_mesh_location_create (PDM_MESH_NATURE_MESH_SETTED,//???
+  PDM_mesh_location_t* mesh_loc = PDM_mesh_location_create (PDM_MESH_NATURE_MESH_SETTED,//???
                                          1,//const int n_point_cloud,
                                          PDM_MPI_COMM_WORLD);
 
   /* Set point cloud(s) */
-  PDM_mesh_location_n_part_cloud_set (id_loc,
+  PDM_mesh_location_n_part_cloud_set (mesh_loc,
                                       0,//i_point_cloud,
                                       1);//n_part
 
-  PDM_mesh_location_cloud_set (id_loc,
+  PDM_mesh_location_cloud_set (mesh_loc,
                                0,//i_point_cloud,
                                0,//i_part,
                                n_pts_l,
                                pts_coords,
                                pts_gnum);
 
-  PDM_mesh_location_mesh_global_data_set (id_loc,
+  PDM_mesh_location_mesh_global_data_set (mesh_loc,
                                           n_part);
 
   /* Set mesh */
@@ -545,7 +545,7 @@ int main(int argc, char *argv[])
                            &face_group,
                            &face_group_ln_to_gn);
 
-    PDM_mesh_location_part_set (id_loc,
+    PDM_mesh_location_part_set (mesh_loc,
                                 ipart,
                                 n_cell,
                                 cell_face_idx,
@@ -561,10 +561,10 @@ int main(int argc, char *argv[])
   }
 
   /* Set location parameters */
-  PDM_mesh_location_tolerance_set (id_loc,
+  PDM_mesh_location_tolerance_set (mesh_loc,
                                    tolerance);
 
-  PDM_mesh_location_method_set (id_loc,
+  PDM_mesh_location_method_set (mesh_loc,
                                 loc_method);
 
 
@@ -574,30 +574,30 @@ int main(int argc, char *argv[])
     fflush(stdout);
   }
 
-  PDM_mesh_location_compute (id_loc);
+  PDM_mesh_location_compute (mesh_loc);
 
-  PDM_mesh_location_dump_times (id_loc);
+  PDM_mesh_location_dump_times (mesh_loc);
 
-  int n_located = PDM_mesh_location_n_located_get (id_loc,
+  int n_located = PDM_mesh_location_n_located_get (mesh_loc,
                                                    0,//i_point_cloud,
                                                    0);//i_part,
 
-  int *located = PDM_mesh_location_located_get (id_loc,
+  int *located = PDM_mesh_location_located_get (mesh_loc,
                                                 0,//i_point_cloud,
                                                 0);
 
-  int n_unlocated = PDM_mesh_location_n_unlocated_get (id_loc,
+  int n_unlocated = PDM_mesh_location_n_unlocated_get (mesh_loc,
                                                        0,//i_point_cloud,
                                                        0);
 
-  int *unlocated = PDM_mesh_location_unlocated_get (id_loc,
+  int *unlocated = PDM_mesh_location_unlocated_get (mesh_loc,
                                                     0,//i_point_cloud,
                                                     0);
 
   PDM_g_num_t *p_location    = NULL;
   double      *p_dist2  = NULL;
   double      *p_proj_coord  = NULL;
-  PDM_mesh_location_point_location_get (id_loc,
+  PDM_mesh_location_point_location_get (mesh_loc,
                                         0,//i_point_cloud,
                                         0,//i_part,
                                         &p_location,
@@ -675,7 +675,7 @@ int main(int argc, char *argv[])
 
     int *cell_vtx_idx;
     int *cell_vtx;
-    PDM_mesh_location_cell_vertex_get (id_loc,
+    PDM_mesh_location_cell_vertex_get (mesh_loc,
                                        ipart,//i_part_mesh,
                                        &cell_vtx_idx,
                                        &cell_vtx);
@@ -688,7 +688,7 @@ int main(int argc, char *argv[])
     double      *points_weights;
     double      *points_dist2;
     double      *points_projected_coords;
-    PDM_mesh_location_points_in_elt_get (id_loc,
+    PDM_mesh_location_points_in_elt_get (mesh_loc,
                                          ipart,
                                          0,//i_point_cloud,
                                          &elt_pts_inside_idx,
@@ -829,7 +829,7 @@ int main(int argc, char *argv[])
     }
   }
 
-  PDM_mesh_location_free (id_loc,
+  PDM_mesh_location_free (mesh_loc,
                           0);
 
   PDM_part_free (ppart_id);

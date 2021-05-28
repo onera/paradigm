@@ -31,6 +31,7 @@
 #include "pdm_box_tree.h"
 #include "pdm_box_priv.h"
 #include "pdm_array.h"
+#include "pdm_logging.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -7794,6 +7795,7 @@ PDM_para_octree_points_inside_boxes
     size_t new_max_size = box_pts_idx[ibox] + n_intersect_nodes * octree->points_in_leaf_max;
     if (s_box_pts <= new_max_size) {
       s_box_pts = PDM_MAX (2*s_box_pts, new_max_size);
+      // log_debug("new_max_size = %i | new_max_size = %i | s_box_pts = %i \n", new_max_size, (int)new_max_size, (int)s_box_pts);
       box_pts = realloc (box_pts, sizeof(int) * s_box_pts);
     }
 

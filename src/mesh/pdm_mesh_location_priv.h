@@ -85,7 +85,7 @@ typedef struct {
  * \brief  Distance to a mesh surface structure
  *
  */
-typedef struct {
+struct _pdm_mesh_location_t {
 
   int  n_point_cloud; /*!< Number of point clouds */
   PDM_MPI_Comm comm;  /*!< MPI communicator */
@@ -119,12 +119,12 @@ typedef struct {
 
   _points_in_element_t *points_in_elements; /*!< System CPU time */
 
-} _PDM_location_t;
+} ;
 
 /*=============================================================================
  * Static global variables
  *============================================================================*/
-
+#undef NTIMER_MESH_LOCATION
 #ifdef  __cplusplus
 }
 #endif

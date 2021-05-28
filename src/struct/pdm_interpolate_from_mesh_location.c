@@ -358,8 +358,8 @@ PDM_interpolate_from_mesh_location_exch_inplace
     for(int i_cell = 0; i_cell < n_cell; ++i_cell) {
       for (int i_point = _elt_pts_inside_idx[i_cell]; i_point < _elt_pts_inside_idx[i_cell+1]; i_point++) {
         cloud_data_in_current_src  [i_part][i_point] = part_data_in[i_part][i_cell]; // Simple extrapolation
-        cloud_data_in_current_src_n[i_part][i_point] = 1;
         // printf(" cloud_data_in_current_src[%i][%i] = %12.5e (from cell = %i) | gnum = %i \n", i_part, i_point, part_data_in[i_part][i_cell], i_cell, (int)_points_in_elements->gnum[i_part][i_point] );
+        cloud_data_in_current_src_n[i_part][i_point] = 1;
       }
     }
   }

@@ -1075,28 +1075,28 @@ int main(int argc, char *argv[])
    *
    ************************/
 
-  int id_loc = PDM_mesh_location_create (PDM_MESH_NATURE_MESH_SETTED,//???
+  PDM_mesh_location_t* mesh_loc = PDM_mesh_location_create (PDM_MESH_NATURE_MESH_SETTED,//???
                                          1,//const int n_point_cloud,
                                          PDM_MPI_COMM_WORLD);
 
   /* Set point cloud(s) */
-  PDM_mesh_location_n_part_cloud_set (id_loc,
+  PDM_mesh_location_n_part_cloud_set (mesh_loc,
                                       0,//i_point_cloud,
                                       1);//n_part
 
-  PDM_mesh_location_cloud_set (id_loc,
+  PDM_mesh_location_cloud_set (mesh_loc,
                                0,//i_point_cloud,
                                0,//i_part,
                                n_pts_l,
                                pts_coords,
                                pts_gnum);
 
-  PDM_mesh_location_mesh_global_data_set (id_loc,
+  PDM_mesh_location_mesh_global_data_set (mesh_loc,
                                           n_part);
 
   /* Set mesh */
   for (int ipart = 0; ipart < n_part; ipart++) {
-    PDM_mesh_location_part_set_2d (id_loc,
+    PDM_mesh_location_part_set_2d (mesh_loc,
                                    ipart,
                                    nFace[ipart],
                                    faceEdgeIdx[ipart],
@@ -1115,10 +1115,10 @@ int main(int argc, char *argv[])
 
 
   /* Set location parameters */
-  PDM_mesh_location_tolerance_set (id_loc,
+  PDM_mesh_location_tolerance_set (mesh_loc,
                                    tolerance);
 
-  PDM_mesh_location_method_set (id_loc,
+  PDM_mesh_location_method_set (mesh_loc,
                                 loc_method);
 
 
@@ -1130,9 +1130,9 @@ int main(int argc, char *argv[])
     fflush(stdout);
   }
 
-  PDM_mesh_location_compute (id_loc);
+  PDM_mesh_location_compute (mesh_loc);
 
-  PDM_mesh_location_dump_times (id_loc);
+  PDM_mesh_location_dump_times (mesh_loc);
 
 
 
@@ -1146,26 +1146,26 @@ int main(int argc, char *argv[])
     fflush(stdout);
   }
 
-  int n_located = PDM_mesh_location_n_located_get (id_loc,
+  int n_located = PDM_mesh_location_n_located_get (mesh_loc,
                                                    0,//i_point_cloud,
                                                    0);//i_part,
 
-  int *located = PDM_mesh_location_located_get (id_loc,
+  int *located = PDM_mesh_location_located_get (mesh_loc,
                                                 0,//i_point_cloud,
                                                 0);
 
-  int n_unlocated = PDM_mesh_location_n_unlocated_get (id_loc,
+  int n_unlocated = PDM_mesh_location_n_unlocated_get (mesh_loc,
                                                        0,//i_point_cloud,
                                                        0);
 
-  int *unlocated = PDM_mesh_location_unlocated_get (id_loc,
+  int *unlocated = PDM_mesh_location_unlocated_get (mesh_loc,
                                                     0,//i_point_cloud,
                                                     0);
 
   PDM_g_num_t *p_location    = NULL;
   double      *p_dist2  = NULL;
   double      *p_proj_coord  = NULL;
-  PDM_mesh_location_point_location_get (id_loc,
+  PDM_mesh_location_point_location_get (mesh_loc,
                                         0,//i_point_cloud,
                                         0,//i_part,
                                         &p_location,
@@ -1204,7 +1204,7 @@ int main(int argc, char *argv[])
   // double      *p_weights     = NULL;
   // double      *p_proj_coord  = NULL;
 
-  // PDM_mesh_location_get (id_loc,
+  // PDM_mesh_location_get (mesh_loc,
   //                        0,//i_point_cloud,
   //                        0,//i_part,
   //                        &p_location,
@@ -1258,7 +1258,7 @@ int main(int argc, char *argv[])
   /*
    * Finalize
    */
-  PDM_mesh_location_free (id_loc,
+  PDM_mesh_location_free (mesh_loc,
                           0);
 
   for (int ipart = 0; ipart < n_part; ipart++) {

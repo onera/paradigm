@@ -16,6 +16,11 @@ cdef extern from "pdm_gnum.h":
                                 const double *coords,
                                 const double *char_length);
 
+  void PDM_gnum_set_from_parents(PDM_gen_gnum_t *gen_gnum,
+                                 const int             i_part,
+                                 const int             n_elts,
+                                 const PDM_g_num_t    *parent_gnum);
+
   void         PDM_gnum_compute(PDM_gen_gnum_t* gen_gnum);
 
   PDM_g_num_t*     PDM_gnum_get(PDM_gen_gnum_t* gen_gnum,
@@ -52,11 +57,11 @@ cdef class GlobalNumbering:
     # ************************************************************************
     # > PDM call
     self._gen_gnum = PDM_gnum_create(dim,
-                               n_part,
-                               merge,
-                               tolerance,
-                               PDM_MPI_mpi_2_pdm_mpi_comm (<void *> &c_comm),
-                               PDM_OWNERSHIP_USER) # Python take ownership);
+                                     n_part,
+                                     merge,
+                                     tolerance,
+                                     PDM_MPI_mpi_2_pdm_mpi_comm (<void *> &c_comm),
+                                     PDM_OWNERSHIP_USER) # Python take ownership);
     # ************************************************************************
 
   # --------------------------------------------------------------------------
@@ -93,6 +98,30 @@ cdef class GlobalNumbering:
                              n_elts,
                              coords_data,
                              caracteristic_length_data);
+    # ************************************************************************
+
+  # --------------------------------------------------------------------------
+  def gnum_set_from_parent(self,
+                           int i_part,
+                           int n_elts,
+                           NPY.ndarray[npy_pdm_gnum_t  , mode='c', ndim=1] parent_gnum not None):
+    """
+    """
+    # ************************************************************************
+    # > Declaration
+    # ************************************************************************
+
+    # ************************************************************************
+    # > Store size to use it in the get
+    self._n_elem_per_part[i_part] = n_elts
+    # ************************************************************************
+
+    # ************************************************************************
+    # > PDM call
+    PDM_gnum_set_from_parents(self._gen_gnum,
+                              i_part,
+                              n_elts,
+               <PDM_g_num_t*> parent_gnum.data);
     # ************************************************************************
 
   # --------------------------------------------------------------------------

@@ -21,6 +21,8 @@ extern "C" {
  * Type definitions
  *============================================================================*/
 
+typedef struct _pdm_mesh_location_t PDM_mesh_location_t;
+
 /*============================================================================
  * Public function definitions
  *============================================================================*/
@@ -37,7 +39,7 @@ extern "C" {
  *
  */
 
-int
+PDM_mesh_location_t*
 PDM_mesh_location_create
 (
  const PDM_mesh_nature_t mesh_nature,
@@ -45,13 +47,12 @@ PDM_mesh_location_create
  const PDM_MPI_Comm comm
 );
 
-void
+PDM_mesh_location_t*
 PDM_mesh_location_create_cf
 (
  const PDM_mesh_nature_t mesh_nature,
- const int n_point_cloud,
- const PDM_MPI_Fint comm,
- int *id
+ const int               n_point_cloud,
+ const PDM_MPI_Fint      comm
 );
 
 
@@ -68,9 +69,9 @@ PDM_mesh_location_create_cf
 void
 PDM_mesh_location_n_part_cloud_set
 (
- const int          id,
- const int          i_point_cloud,
- const int          n_part
+       PDM_mesh_location_t *ml,
+ const int                  i_point_cloud,
+ const int                  n_part
 );
 
 
@@ -91,12 +92,12 @@ PDM_mesh_location_n_part_cloud_set
 void
 PDM_mesh_location_cloud_set
 (
- const int    id,
- const int    i_point_cloud,
- const int    i_part,
- const int    n_points,
- double      *coords,
- PDM_g_num_t *gnum
+       PDM_mesh_location_t *ml,
+ const int                  i_point_cloud,
+ const int                  i_part,
+ const int                  n_points,
+       double              *coords,
+       PDM_g_num_t         *gnum
 );
 
 
@@ -116,12 +117,12 @@ PDM_mesh_location_cloud_set
 void
 PDM_mesh_location_cloud_get
 (
- const int           id,
- const int           i_point_cloud,
- const int           i_part,
-       int          *n_points,
-       double      **coords,
-       PDM_g_num_t **gnum
+       PDM_mesh_location_t  *ml,
+ const int                   i_point_cloud,
+ const int                   i_part,
+       int                  *n_points,
+       double              **coords,
+       PDM_g_num_t         **gnum
 );
 
 
@@ -140,9 +141,9 @@ PDM_mesh_location_cloud_get
 int
 PDM_mesh_location_n_located_get
 (
- const int           id,
- const int           i_point_cloud,
- const int           i_part
+       PDM_mesh_location_t *ml,
+ const int                  i_point_cloud,
+ const int                  i_part
 );
 
 
@@ -161,9 +162,9 @@ PDM_mesh_location_n_located_get
 int
 PDM_mesh_location_n_unlocated_get
 (
- const int           id,
- const int           i_point_cloud,
- const int           i_part
+       PDM_mesh_location_t *ml,
+ const int                  i_point_cloud,
+ const int                  i_part
 );
 
 
@@ -182,9 +183,9 @@ PDM_mesh_location_n_unlocated_get
 int *
 PDM_mesh_location_unlocated_get
 (
- const int           id,
- const int           i_point_cloud,
- const int           i_part
+       PDM_mesh_location_t *ml,
+ const int                  i_point_cloud,
+ const int                  i_part
 );
 
 
@@ -203,9 +204,9 @@ PDM_mesh_location_unlocated_get
 int *
 PDM_mesh_location_located_get
 (
- const int           id,
- const int           i_point_cloud,
- const int           i_part
+       PDM_mesh_location_t *ml,
+ const int                  i_point_cloud,
+ const int                  i_part
 );
 
 
@@ -222,8 +223,8 @@ PDM_mesh_location_located_get
 void
 PDM_mesh_location_shared_nodal_mesh_set
 (
- const int               id,
-       PDM_Mesh_nodal_t *mesh_nodal
+ PDM_mesh_location_t *ml,
+ PDM_Mesh_nodal_t    *mesh_nodal
 );
 
 
@@ -242,8 +243,8 @@ PDM_mesh_location_shared_nodal_mesh_set
 void
 PDM_mesh_location_mesh_global_data_set
 (
- const int         id,
- const int         n_part
+       PDM_mesh_location_t *ml,
+ const int                  n_part
 );
 
 
@@ -270,19 +271,19 @@ PDM_mesh_location_mesh_global_data_set
 void
 PDM_mesh_location_part_set
 (
- const int          id,
- const int          i_part,
- const int          n_cell,
- const int         *cell_face_idx,
- const int         *cell_face,
- const PDM_g_num_t *cell_ln_to_gn,
- const int          n_face,
- const int         *face_vtx_idx,
- const int         *face_vtx,
- const PDM_g_num_t *face_ln_to_gn,
- const int          n_vtx,
- const double      *coords,
- const PDM_g_num_t *vtx_ln_to_gn
+       PDM_mesh_location_t *ml,
+ const int                  i_part,
+ const int                  n_cell,
+ const int                 *cell_face_idx,
+ const int                 *cell_face,
+ const PDM_g_num_t         *cell_ln_to_gn,
+ const int                  n_face,
+ const int                 *face_vtx_idx,
+ const int                 *face_vtx,
+ const PDM_g_num_t         *face_ln_to_gn,
+ const int                  n_vtx,
+ const double              *coords,
+ const PDM_g_num_t         *vtx_ln_to_gn
 );
 
 /**
@@ -308,19 +309,19 @@ PDM_mesh_location_part_set
 void
 PDM_mesh_location_part_set_2d
 (
- const int          id,
- const int          i_part,
- const int          n_cell,
- const int         *cell_edge_idx,
- const int         *cell_edge,
- const PDM_g_num_t *cell_ln_to_gn,
- const int          n_edge,
- const int         *edge_vtx_idx,
- const int         *edge_vtx,
- const PDM_g_num_t *edge_ln_to_gn,
- const int          n_vtx,
- const double      *coords,
- const PDM_g_num_t *vtx_ln_to_gn
+       PDM_mesh_location_t *ml,
+ const int                  i_part,
+ const int                  n_cell,
+ const int                 *cell_edge_idx,
+ const int                 *cell_edge,
+ const PDM_g_num_t         *cell_ln_to_gn,
+ const int                  n_edge,
+ const int                 *edge_vtx_idx,
+ const int                 *edge_vtx,
+ const PDM_g_num_t         *edge_ln_to_gn,
+ const int                  n_vtx,
+ const double              *coords,
+ const PDM_g_num_t         *vtx_ln_to_gn
 );
 
 /**
@@ -335,8 +336,8 @@ PDM_mesh_location_part_set_2d
 void
 PDM_mesh_location_tolerance_set
 (
- const int    id,
- const double tol
+       PDM_mesh_location_t *ml,
+ const double               tol
 );
 
 
@@ -352,8 +353,8 @@ PDM_mesh_location_tolerance_set
 void
 PDM_mesh_location_method_set
 (
- const int                        id,
- const PDM_mesh_location_method_t method
+       PDM_mesh_location_t        *ml,
+ const PDM_mesh_location_method_t  method
 );
 
 
@@ -368,7 +369,7 @@ PDM_mesh_location_method_set
 void
 PDM_mesh_location_compute
 (
- const int id
+PDM_mesh_location_t        *ml
 );
 
 
@@ -389,12 +390,12 @@ PDM_mesh_location_compute
 void
 PDM_mesh_location_point_location_get
 (
- const int     id,
- const int     i_point_cloud,
- const int     i_part,
- PDM_g_num_t **location,
- double      **dist2,
- double      **projected_coord
+       PDM_mesh_location_t  *ml,
+ const int                   i_point_cloud,
+ const int                   i_part,
+       PDM_g_num_t         **location,
+       double              **dist2,
+       double              **projected_coord
 );
 
 
@@ -412,10 +413,10 @@ PDM_mesh_location_point_location_get
 void
 PDM_mesh_location_cell_vertex_get
 (
- const int     id,
- const int     i_part,
- int         **cell_vtx_idx,
- int         **cell_vtx
+       PDM_mesh_location_t  *ml,
+ const int                   i_part,
+       int                 **cell_vtx_idx,
+       int                 **cell_vtx
 );
 
 
@@ -440,17 +441,17 @@ PDM_mesh_location_cell_vertex_get
 void
 PDM_mesh_location_points_in_elt_get
 (
- const int     id,
- const int     i_part,
- const int     i_point_cloud,
- int         **elt_pts_inside_idx,
- PDM_g_num_t **points_gnum,
- double      **points_coords,
- double      **points_uvw,
- int         **points_weights_idx,
- double      **points_weights,
- double      **points_dist2,
- double      **points_projected_coords
+       PDM_mesh_location_t  *ml,
+ const int                   i_part,
+ const int                   i_point_cloud,
+       int                 **elt_pts_inside_idx,
+       PDM_g_num_t         **points_gnum,
+       double              **points_coords,
+       double              **points_uvw,
+       int                 **points_weights_idx,
+       double              **points_weights,
+       double              **points_dist2,
+       double              **points_projected_coords
 );
 
 
@@ -467,8 +468,8 @@ PDM_mesh_location_points_in_elt_get
 void
 PDM_mesh_location_free
 (
- const int id,
- const int partial
+       PDM_mesh_location_t  *ml,
+ const int                   partial
 );
 
 
@@ -485,8 +486,8 @@ PDM_mesh_location_free
 int
 PDM_mesh_location_n_cell_get
 (
- const int id,
- const int i_part
+       PDM_mesh_location_t *ml,
+ const int                  i_part
 );
 
 
@@ -501,13 +502,13 @@ PDM_mesh_location_n_cell_get
 void
 PDM_mesh_location_dump_times
 (
- const int id
+PDM_mesh_location_t *ml
 );
 
-int
-PDM_mesh_location_mesh_nodal_id_get
+PDM_mesh_location_t*
+PDM_mesh_location_mesh_nodal_get
 (
- const int id
+PDM_mesh_location_t *ml
 );
 
 #ifdef	__cplusplus

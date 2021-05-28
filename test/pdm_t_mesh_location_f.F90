@@ -74,7 +74,7 @@ program testf
   integer, parameter :: i_part_cloud = 0
   integer, parameter :: i_part_mesh = 0
 
-  integer :: id
+  type(c_ptr)              :: ml
 
   ! integer, parameter :: partial = 0 ! Put 1 to keep results when the subroutine closest_points_free is
 
@@ -331,16 +331,15 @@ program testf
   !   The MPI communicator and the number of point cloud are setted
   !
 
-  call PDM_mesh_location_create (PDM_MESH_NATURE_MESH_SETTED, &
+  ml = PDM_mesh_location_create (PDM_MESH_NATURE_MESH_SETTED, &
                                  n_point_cloud, &
-                                 MPI_COMM_WORLD, &
-                                 id)
+                                 MPI_COMM_WORLD)
 
   !
   ! Set the local number partition for any point cloud
   !
 
-  call PDM_mesh_location_n_part_cloud_set (id, &
+  call PDM_mesh_location_n_part_cloud_set (ml, &
                                            i_point_cloud, &
                                            n_part_cloud)
 
@@ -348,7 +347,7 @@ program testf
   ! Set point properties for any partition of point cloud
   !
 
-  call PDM_mesh_location_cloud_set (id, &
+  call PDM_mesh_location_cloud_set (ml, &
                                     i_point_cloud, &
                                     i_part_cloud, &
                                     n_points_into_cloud, &
@@ -359,10 +358,10 @@ program testf
   ! Set mesh
   !
 
-  call PDM_mesh_location_mesh_global_data_set (id, &
+  call PDM_mesh_location_mesh_global_data_set (ml, &
                                                n_part_mesh)
 
-  call PDM_mesh_location_part_set (id, &
+  call PDM_mesh_location_part_set (ml, &
                                    i_part_mesh, &
                                    n_cell, &
                                    cptr_cell_face_idx, &
@@ -381,39 +380,39 @@ program testf
   ! Set options
   !
 
-  call PDM_mesh_location_tolerance_set (id, 1.d-4)
+  call PDM_mesh_location_tolerance_set (ml, 1.d-4)
 
-  call PDM_mesh_location_method_set (id, PDM_MESH_LOCATION_OCTREE) ! or PDM_MESH_LOCATION_DBBTREE
+  call PDM_mesh_location_method_set (ml, PDM_MESH_LOCATION_OCTREE) ! or PDM_MESH_LOCATION_DBBTREE
 
   !
   ! Compute
   !
 
-  call PDM_mesh_location_compute (id)
+  call PDM_mesh_location_compute (ml)
 
   !
   ! Get results
   !
 
-  n_unlocated = PDM_mesh_location_n_unlocated_get (id, &
+  n_unlocated = PDM_mesh_location_n_unlocated_get (ml, &
                                                    i_point_cloud, &
                                                    i_part_cloud)
 
-  n_located = PDM_mesh_location_n_located_get (id, &
+  n_located = PDM_mesh_location_n_located_get (ml, &
                                                i_point_cloud, &
                                                i_part_cloud)
 
-  cptr_unlocated = PDM_mesh_location_unlocated_get (id, &
+  cptr_unlocated = PDM_mesh_location_unlocated_get (ml, &
                                                     i_point_cloud, &
                                                     i_part_cloud)
 
-  cptr_located = PDM_mesh_location_located_get (id, &
+  cptr_located = PDM_mesh_location_located_get (ml, &
                                                 i_point_cloud, &
                                                 i_part_cloud)
   call c_f_pointer(cptr_located, located, [n_located])
   call c_f_pointer(cptr_unlocated, unlocated, [n_unlocated])
 
-  call PDM_mesh_location_point_location_get (id, &
+  call PDM_mesh_location_point_location_get (ml, &
                                              i_point_cloud, &
                                              i_part_cloud, &
                                              cptr_location, &
@@ -424,7 +423,7 @@ program testf
   call c_f_pointer(cptr_dist2, dist2, [n_located])
   call c_f_pointer(cptr_projected_coords, projected_coords, [3*n_located])
 
-  call PDM_mesh_location_points_in_elt_get (id, &
+  call PDM_mesh_location_points_in_elt_get (ml, &
                                             i_part_mesh, &
                                             i_point_cloud, &
                                             cptr_elt_pts_inside_idx, &
@@ -445,9 +444,9 @@ program testf
   call c_f_pointer(cptr_points_dist2, points_dist2, [elt_pts_inside_idx(n_cell+1)])
   call c_f_pointer(cptr_points_projected_coords, points_projected_coords, [3 * elt_pts_inside_idx(n_cell+1)])
 
-  call PDM_mesh_location_dump_times (id)
+  call PDM_mesh_location_dump_times (ml)
 
-  call PDM_mesh_location_free (id, 0)
+  call PDM_mesh_location_free (ml, 0)
 
   deallocate(coords_cloud)
   deallocate(gnum_cloud)

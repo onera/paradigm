@@ -230,6 +230,19 @@ PDM_closest_points_tgt_in_src_get
        PDM_g_num_t         **tgt_in_src
 );
 
+
+void
+PDM_transform_to_parent_gnum
+(
+       PDM_g_num_t  *results,
+ const int           n_results,
+ const PDM_g_num_t  *ln_to_gn,
+ const PDM_g_num_t  *parent_ln_to_gn,
+ const int           n_elmt,
+       PDM_MPI_Comm  comm
+);
+
+
 /**
  *
  * \brief  transfert _closest_pts var as it seems this static var is not readable

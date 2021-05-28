@@ -43,6 +43,8 @@
 #include "pdm_part_to_block.h"
 #include "pdm_block_to_part.h"
 #include "pdm_array.h"
+#include "pdm_sort.h"
+#include "pdm_binary_search.h"
 #include "pdm_logging.h"
 
 /*----------------------------------------------------------------------------*/
@@ -586,6 +588,10 @@ PDM_closest_points_tgt_in_src_get
   *tgt_in_src_idx = cls->src_cloud->tgt_in_src_idx[i_part_src];
   *tgt_in_src     = cls->src_cloud->tgt_in_src    [i_part_src];
 
+  // int size = cls->src_cloud->n_points[i_part_src];
+  // PDM_log_trace_array_long(cls->src_cloud->tgt_in_src_idx[i_part_src], size, "get -> tgt_in_src_idx :: " );
+  // PDM_log_trace_array_long(cls->src_cloud->tgt_in_src    [i_part_src], (*tgt_in_src_idx)[size], "get -> tgt_in_src :: " );
+
   cls->tgt_in_src_results_is_getted = PDM_TRUE;
 }
 
@@ -712,6 +718,93 @@ PDM_closest_point_t  *cls
     PDM_printf( "closest_points timer : all (elapsed and cpu) : %12.5es %12.5es\n",
                 t1max, t2max);
   }
+}
+
+
+void
+PDM_transform_to_parent_gnum
+(
+       PDM_g_num_t  *results,
+ const int           n_results,
+ const PDM_g_num_t  *ln_to_gn,
+ const PDM_g_num_t  *parent_ln_to_gn,
+ const int           n_elmt,
+       PDM_MPI_Comm  comm
+)
+{
+  // PDM_g_num_t *sort_ln_to_gn = (PDM_g_num_t *) malloc( n_elmt * sizeof(PDM_g_num_t));
+  // int         *order = (int *) malloc( n_elmt * sizeof(int));
+
+  // for(int i_elmt = 0; i_elmt < n_elmt; ++i_elmt ) {
+  //   sort_ln_to_gn[i_elmt] = ln_to_gn[i_elmt];
+  //   order        [i_elmt] = i_elmt;
+  // }
+  // PDM_sort_long(sort_ln_to_gn, order, n_elmt);
+
+  // PDM_log_trace_array_long(results        , n_results, "results :: " );
+  // PDM_log_trace_array_long(ln_to_gn       , n_elmt   , "ln_to_gn :: " );
+  // PDM_log_trace_array_long(parent_ln_to_gn, n_elmt   , "parent_ln_to_gn :: " );
+  // PDM_log_trace_array_int (order          , n_elmt   , "order :: " );
+
+  // for(int i = 0; i < n_results; ++i ) {
+
+  //   int g_num = results[i];
+  //   int idx   = PDM_binary_search_long(g_num, sort_ln_to_gn, n_elmt);
+  //   int old_idx = order[idx];
+
+  //   results[i] = parent_ln_to_gn[old_idx];
+  // }
+  // free(sort_ln_to_gn);
+  // free(order);
+
+  PDM_part_to_block_t* ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                      PDM_PART_TO_BLOCK_POST_CLEANUP,
+                                                      1.,
+                                         ( int **)    &ln_to_gn,
+                                                      NULL,
+                                          ( int *)   &n_elmt,
+                                                      1,
+                                                      comm);
+
+  int         *block_stride = NULL;
+  PDM_g_num_t *block_parent = NULL;
+  int s_block_data = PDM_part_to_block_exch (ptb,
+                          sizeof(PDM_g_num_t),
+                          PDM_STRIDE_CST,
+                          1,
+                          NULL,
+               (void **) &parent_ln_to_gn,
+                         &block_stride,
+               (void **) &block_parent);
+
+  PDM_g_num_t *block_distrib_idx = PDM_part_to_block_distrib_index_get (ptb);
+
+  if(0 == 1){
+    PDM_log_trace_array_long(block_parent, s_block_data, "block_parent :: " );
+  }
+
+  PDM_block_to_part_t *btp = PDM_block_to_part_create(block_distrib_idx,
+                               (const PDM_g_num_t **) &results,
+                                                      &n_results,
+                                                      1,
+                                                      comm);
+
+  int stride_one = 1;
+  PDM_block_to_part_exch(btp,
+                          sizeof(PDM_g_num_t),
+                          PDM_STRIDE_CST,
+                          &stride_one,
+                          block_parent,
+                          NULL,
+              (void **) &results);
+
+
+  PDM_part_to_block_free(ptb);
+  PDM_block_to_part_free(btp);
+  free(block_parent);
+
+  // PDM_log_trace_array_long(results, n_results, "(after) results :: " );
+
 }
 
 /**
