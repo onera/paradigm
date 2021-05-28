@@ -732,31 +732,6 @@ PDM_transform_to_parent_gnum
        PDM_MPI_Comm  comm
 )
 {
-  // PDM_g_num_t *sort_ln_to_gn = (PDM_g_num_t *) malloc( n_elmt * sizeof(PDM_g_num_t));
-  // int         *order = (int *) malloc( n_elmt * sizeof(int));
-
-  // for(int i_elmt = 0; i_elmt < n_elmt; ++i_elmt ) {
-  //   sort_ln_to_gn[i_elmt] = ln_to_gn[i_elmt];
-  //   order        [i_elmt] = i_elmt;
-  // }
-  // PDM_sort_long(sort_ln_to_gn, order, n_elmt);
-
-  // PDM_log_trace_array_long(results        , n_results, "results :: " );
-  // PDM_log_trace_array_long(ln_to_gn       , n_elmt   , "ln_to_gn :: " );
-  // PDM_log_trace_array_long(parent_ln_to_gn, n_elmt   , "parent_ln_to_gn :: " );
-  // PDM_log_trace_array_int (order          , n_elmt   , "order :: " );
-
-  // for(int i = 0; i < n_results; ++i ) {
-
-  //   int g_num = results[i];
-  //   int idx   = PDM_binary_search_long(g_num, sort_ln_to_gn, n_elmt);
-  //   int old_idx = order[idx];
-
-  //   results[i] = parent_ln_to_gn[old_idx];
-  // }
-  // free(sort_ln_to_gn);
-  // free(order);
-
   PDM_part_to_block_t* ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                       PDM_PART_TO_BLOCK_POST_CLEANUP,
                                                       1.,
@@ -802,9 +777,6 @@ PDM_transform_to_parent_gnum
   PDM_part_to_block_free(ptb);
   PDM_block_to_part_free(btp);
   free(block_parent);
-
-  // PDM_log_trace_array_long(results, n_results, "(after) results :: " );
-
 }
 
 /**
