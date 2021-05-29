@@ -129,4 +129,4 @@ struct _pdm_mesh_location_t {
 }
 #endif
 
-#endif  /* __PDM_INTERPOLATE_FROM_MESH_LOCATION_PRIV_H__ */
+#endif  /* __PDM_MESH_LOCATION_PRIV_H__ */

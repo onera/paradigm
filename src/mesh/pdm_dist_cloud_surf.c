@@ -17,10 +17,10 @@
 #include "pdm.h"
 #include "pdm_priv.h"
 #include "pdm_mpi.h"
+#include "pdm_dist_cloud_surf_priv.h"
 #include "pdm_dist_cloud_surf.h"
 #include "pdm_mesh_nodal.h"
 #include "pdm_surf_mesh.h"
-#include "pdm_handles.h"
 #include "pdm_octree.h"
 #include "pdm_para_octree.h"
 #include "pdm_dbbtree.h"
@@ -47,116 +47,16 @@ extern "C" {
 
 #define NTIMER 8
 
-/*============================================================================
- * Type definitions
- *============================================================================*/
-
-/**
- * \enum _ol_timer_step_t
- *
- */
-
-typedef enum {
-
-  BEGIN                         = 0,
-  UPPER_BOUND_DIST              = 1,
-  CANDIDATE_SELECTION           = 2,
-  LOAD_BALANCING_ELEM_DIST      = 3,
-  COMPUTE_ELEM_DIST             = 4,
-  RESULT_TRANSMISSION           = 5,
-  END                           = 6,
-  BBTREE_CREATE                 = 7,
-
-} _ol_timer_step_t;
-
-
-/**
- * \struct _PDM_Dist_t
- * \brief  Distance to a mesh surface structure
- *
- */
-
-typedef struct {
-
-  int           n_part;
-  int          *n_points;
-  double      **coords;
-  PDM_g_num_t **gnum;
-  double      **dist;
-  double      **proj;
-  PDM_g_num_t **closest_elt_gnum;
-
-} _points_cloud_t;
-
-/**
- * \struct _PDM_Dist_t
- * \brief  Distance to a mesh surface structure
- *
- */
-
-typedef struct {
-
-  PDM_MPI_Comm      comm;                    /*!< MPI communicator */
-  PDM_ownership_t   owner;                   /*!< Which have the responsabilities of results */
-  PDM_bool_t        results_is_getted;       /*!< Flags to indicate if result is getted      */
-  int               n_point_cloud;           /*!< Number of point clouds */
-
-  PDM_mesh_nature_t mesh_nature;             /*!< Nature of the mesh */
-
-  PDM_surf_mesh_t  *surf_mesh;               /*!< Surface mesh pointer */
-  PDM_surf_mesh_t  *_surf_mesh;              /*!< Surface mesh pointer */
-
-  PDM_Mesh_nodal_t*  mesh_nodal;             /*!< Surface mesh identifier */
-
-  _points_cloud_t *points_cloud;             /*!< Point clouds */
-
-  PDM_timer_t *timer;                        /*!< Timer */
-
-  double times_elapsed[NTIMER];              /*!< Elapsed time */
-
-  double times_cpu[NTIMER];                  /*!< CPU time */
-
-  double times_cpu_u[NTIMER];                /*!< User CPU time */
-
-  double times_cpu_s[NTIMER];                /*!< System CPU time */
-
-
-} _PDM_dist_t;
 
 /*============================================================================
  * Global variable
  *============================================================================*/
-
-static PDM_Handles_t *_dists   = NULL;
 
 static int idebug = 0;
 
 /*=============================================================================
  * Private function definitions
  *============================================================================*/
-
-/**
- *
- * \brief Return ppart object from it identifier
- *
- * \param [in]   ppart_id        ppart identifier
- *
- */
-
-static _PDM_dist_t *
-_get_from_id
-(
- int  id
- )
-{
-  _PDM_dist_t *dist = (_PDM_dist_t *) PDM_Handles_get (_dists, id);
-
-  if (dist == NULL) {
-    PDM_error(__FILE__, __LINE__, 0, "PDM_mesh_dist error : Bad identifier\n");
-  }
-
-  return dist;
-}
 
 /*============================================================================
  * Public function definitions
@@ -173,7 +73,7 @@ _get_from_id
  * \return     Identifier
  */
 
-int
+PDM_dist_cloud_surf_t*
 PDM_dist_cloud_surf_create
 (
  const PDM_mesh_nature_t mesh_nature,
@@ -182,13 +82,8 @@ PDM_dist_cloud_surf_create
  const PDM_ownership_t   owner
 )
 {
-  if (_dists == NULL) {
-    _dists = PDM_Handles_create (4);
-  }
 
-  _PDM_dist_t *dist = (_PDM_dist_t *) malloc(sizeof(_PDM_dist_t));
-
-  int id = PDM_Handles_store (_dists, dist);
+  PDM_dist_cloud_surf_t *dist = (PDM_dist_cloud_surf_t *) malloc(sizeof(PDM_dist_cloud_surf_t));
 
   dist->comm              = comm;
   dist->owner             = owner;
@@ -215,28 +110,26 @@ PDM_dist_cloud_surf_create
 
   for (int i = 0; i < NTIMER; i++) {
     dist->times_elapsed[i] = 0.;
-    dist->times_cpu[i] = 0.;
-    dist->times_cpu_u[i] = 0.;
-    dist->times_cpu_s[i] = 0.;
+    dist->times_cpu    [i] = 0.;
+    dist->times_cpu_u  [i] = 0.;
+    dist->times_cpu_s  [i] = 0.;
   }
 
-  return id;
+  return dist;
 }
 
-void
+PDM_dist_cloud_surf_t*
 PDM_dist_cloud_surf_create_cf
 (
  const PDM_mesh_nature_t  mesh_nature,
  const int                n_point_cloud,
  const PDM_MPI_Fint       comm,
- const PDM_ownership_t    owner,
-       int               *id
+ const PDM_ownership_t    owner
 )
 {
   const PDM_MPI_Comm _comm        = PDM_MPI_Comm_f2c(comm);
 
-  *id = PDM_dist_cloud_surf_create (mesh_nature, n_point_cloud, _comm, owner);
-
+  return PDM_dist_cloud_surf_create (mesh_nature, n_point_cloud, _comm, owner);
 }
 
 
@@ -253,12 +146,11 @@ PDM_dist_cloud_surf_create_cf
 void
 PDM_dist_cloud_surf_n_part_cloud_set
 (
- const int          id,
- const int          i_point_cloud,
- const int          n_part
+       PDM_dist_cloud_surf_t *dist,
+ const int                    i_point_cloud,
+ const int                    n_part
 )
 {
-  _PDM_dist_t *dist = _get_from_id (id);
 
   dist->points_cloud[i_point_cloud].n_part = n_part;
   dist->points_cloud[i_point_cloud].n_points =
@@ -304,15 +196,14 @@ PDM_dist_cloud_surf_n_part_cloud_set
 void
 PDM_dist_cloud_surf_cloud_set
 (
- const int          id,
- const int          i_point_cloud,
- const int          i_part,
- const int          n_points,
- double      *coords,
- PDM_g_num_t *gnum
+       PDM_dist_cloud_surf_t *dist,
+ const int                    i_point_cloud,
+ const int                    i_part,
+ const int                    n_points,
+       double                *coords,
+       PDM_g_num_t           *gnum
 )
 {
-  _PDM_dist_t *dist = _get_from_id (id);
 
   dist->points_cloud[i_point_cloud].n_points[i_part] = n_points;
   dist->points_cloud[i_point_cloud].coords[i_part] = coords;
@@ -332,11 +223,10 @@ PDM_dist_cloud_surf_cloud_set
 void
 PDM_dist_cloud_surf_nodal_mesh_set
 (
- const int               id,
-       PDM_Mesh_nodal_t *mesh_nodal
+ PDM_dist_cloud_surf_t *dist,
+ PDM_Mesh_nodal_t      *mesh_nodal
 )
 {
-  _PDM_dist_t *dist = _get_from_id (id);
   dist->mesh_nodal = mesh_nodal;
 }
 
@@ -355,12 +245,10 @@ PDM_dist_cloud_surf_nodal_mesh_set
 void
 PDM_dist_cloud_surf_surf_mesh_map
 (
- const int  id,
- PDM_surf_mesh_t *surf_mesh
+ PDM_dist_cloud_surf_t *dist,
+ PDM_surf_mesh_t       *surf_mesh
 )
 {
-  _PDM_dist_t *dist = _get_from_id (id);
-
   dist->_surf_mesh = surf_mesh;
 }
 
@@ -379,19 +267,15 @@ PDM_dist_cloud_surf_surf_mesh_map
 void
 PDM_dist_cloud_surf_surf_mesh_global_data_set
 (
- const int         id,
- const PDM_g_num_t n_g_face,
- const PDM_g_num_t n_g_vtx,
- const int         n_part
+       PDM_dist_cloud_surf_t *dist,
+ const PDM_g_num_t            n_g_face,
+ const PDM_g_num_t            n_g_vtx,
+ const int                    n_part
 )
 {
-
-  _PDM_dist_t *dist = _get_from_id (id);
-
   assert (dist->surf_mesh == NULL);
 
-  dist->surf_mesh =
-    PDM_surf_mesh_create (n_g_face, n_g_vtx, n_part, dist->comm);
+  dist->surf_mesh = PDM_surf_mesh_create (n_g_face, n_g_vtx, n_part, dist->comm);
   dist->_surf_mesh = dist->surf_mesh;
 }
 
@@ -416,20 +300,17 @@ PDM_dist_cloud_surf_surf_mesh_global_data_set
 void
 PDM_dist_cloud_surf_surf_mesh_part_set
 (
- const int          id,
- const int          i_part,
- const int          n_face,
- const int         *face_vtx_idx,
- const int         *face_vtx,
- const PDM_g_num_t *face_ln_to_gn,
- const int          n_vtx,
- const double      *coords,
- const PDM_g_num_t *vtx_ln_to_gn
+       PDM_dist_cloud_surf_t *dist,
+ const int                    i_part,
+ const int                    n_face,
+ const int                   *face_vtx_idx,
+ const int                   *face_vtx,
+ const PDM_g_num_t           *face_ln_to_gn,
+ const int                    n_vtx,
+ const double                *coords,
+ const PDM_g_num_t           *vtx_ln_to_gn
 )
 {
-
-  _PDM_dist_t *dist = _get_from_id (id);
-
   PDM_surf_mesh_part_input (dist->surf_mesh,
                             i_part,
                             n_face,
@@ -460,10 +341,9 @@ typedef enum {
 void
 PDM_dist_cloud_surf_compute
 (
- const int id
+ PDM_dist_cloud_surf_t *dist
 )
 {
-  _PDM_dist_t *dist = _get_from_id (id);
 
   const int n_point_cloud      = dist->n_point_cloud;
   PDM_Mesh_nodal_t *mesh_nodal = dist->mesh_nodal;
@@ -504,7 +384,6 @@ PDM_dist_cloud_surf_compute
   /*
    * For each cloud
    */
-
   for (int i_point_cloud = 0; i_point_cloud < n_point_cloud; i_point_cloud++) {
 
     _points_cloud_t *pt_cloud = &(dist->points_cloud[i_point_cloud]);
@@ -676,11 +555,9 @@ PDM_dist_cloud_surf_compute
       }
     }
 
-
     /*
      * Look for closest surface mesh vertices
      */
-
     PDM_g_num_t *closest_vertices_gnum =
       malloc (sizeof(PDM_g_num_t) * n_pts_rank);
 
@@ -1296,15 +1173,14 @@ PDM_dist_cloud_surf_compute
 void
 PDM_dist_cloud_surf_get
 (
- const int           id,
- const int           i_point_cloud,
- const int           i_part,
-       double      **distance,
-       double      **projected,
-       PDM_g_num_t **closest_elt_gnum
+       PDM_dist_cloud_surf_t  *dist,
+ const int                     i_point_cloud,
+ const int                     i_part,
+       double                **distance,
+       double                **projected,
+       PDM_g_num_t           **closest_elt_gnum
 )
 {
-  _PDM_dist_t *dist = _get_from_id (id);
 
   *distance         = dist->points_cloud[i_point_cloud].dist            [i_part];
   *projected        = dist->points_cloud[i_point_cloud].proj            [i_part];
@@ -1327,10 +1203,9 @@ PDM_dist_cloud_surf_get
 void
 PDM_dist_cloud_surf_free
 (
- const int id
+ PDM_dist_cloud_surf_t  *dist
 )
 {
-  _PDM_dist_t *dist = _get_from_id (id);
 
   if(( dist->owner == PDM_OWNERSHIP_KEEP ) ||
      ( dist->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !dist->results_is_getted)){
@@ -1369,15 +1244,6 @@ PDM_dist_cloud_surf_free
   }
 
   free (dist);
-
-  PDM_Handles_handle_free (_dists, id, PDM_FALSE);
-
-  const int n_dists = PDM_Handles_n_get (_dists);
-
-  if (n_dists == 0) {
-    _dists = PDM_Handles_free (_dists);
-  }
-
 }
 
 
@@ -1392,10 +1258,9 @@ PDM_dist_cloud_surf_free
 void
 PDM_dist_cloud_surf_dump_times
 (
- const int id
+ PDM_dist_cloud_surf_t  *dist
 )
 {
-  _PDM_dist_t *dist = _get_from_id (id);
   double t1 = dist->times_elapsed[END] - dist->times_elapsed[BEGIN];
   double t2 = dist->times_cpu[END] - dist->times_cpu[BEGIN];
 

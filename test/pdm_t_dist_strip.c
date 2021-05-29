@@ -303,10 +303,10 @@ int main(int argc, char *argv[])
   free(dcell_part);
 
   int n_point_cloud = 1;
-  int id_dist = PDM_dist_cloud_surf_create (PDM_MESH_NATURE_MESH_SETTED,
-                                            n_point_cloud,
-                                            PDM_MPI_COMM_WORLD,
-                                            PDM_OWNERSHIP_KEEP);
+  PDM_dist_cloud_surf_t* dist = PDM_dist_cloud_surf_create (PDM_MESH_NATURE_MESH_SETTED,
+                                                            n_point_cloud,
+                                                            PDM_MPI_COMM_WORLD,
+                                                            PDM_OWNERSHIP_KEEP);
 
   int **select_face = malloc (sizeof(int *) * n_part);
   int *n_select_face = malloc (sizeof(int) * n_part);
@@ -641,16 +641,16 @@ int main(int argc, char *argv[])
                      PDM__PDM_MPI_G_NUM, PDM_MPI_MAX,
                      PDM_MPI_COMM_WORLD);
 
-  PDM_dist_cloud_surf_surf_mesh_global_data_set (id_dist,
+  PDM_dist_cloud_surf_surf_mesh_global_data_set (dist,
                                            n_g_face,
                                            n_g_vtx,
                                            n_part);
 
-  PDM_dist_cloud_surf_n_part_cloud_set (id_dist, 0, n_part);
+  PDM_dist_cloud_surf_n_part_cloud_set (dist, 0, n_part);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
 
-    PDM_dist_cloud_surf_surf_mesh_part_set (id_dist,
+    PDM_dist_cloud_surf_surf_mesh_part_set (dist,
                                       i_part,
                                       n_select_face[i_part],
                                       surface_face_vtx_idx[i_part],
@@ -724,7 +724,7 @@ int main(int argc, char *argv[])
                            &face_group,
                            &face_group_ln_to_gn);
 
-    /* PDM_dist_cloud_surf_cloud_set (id_dist, */
+    /* PDM_dist_cloud_surf_cloud_set (dist, */
     /*                          0, */
     /*                          i_part, */
     /*                          n_vtx, */
@@ -733,7 +733,7 @@ int main(int argc, char *argv[])
 
     PDM_g_num_t *pts_gnum =  PDM_gnum_get (gen_gnum_pts, i_part);
 
-    PDM_dist_cloud_surf_cloud_set (id_dist,
+    PDM_dist_cloud_surf_cloud_set (dist,
                              0,
                              i_part,
                              n_pts,
@@ -747,7 +747,7 @@ int main(int argc, char *argv[])
     fflush(stdout);
   }
 
-  PDM_dist_cloud_surf_compute (id_dist);
+  PDM_dist_cloud_surf_compute (dist);
 
   if (i_rank == 0) {
     printf("-- Dist check\n");
@@ -759,7 +759,7 @@ int main(int argc, char *argv[])
     double      *projected;
     PDM_g_num_t *closest_elt_gnum;
 
-    PDM_dist_cloud_surf_get (id_dist,
+    PDM_dist_cloud_surf_get (dist,
                        0,
                        i_part,
                        &distance,
@@ -863,8 +863,8 @@ int main(int argc, char *argv[])
   PDM_part_free(ppart_id);
 
   PDM_dcube_gen_free(dcube);
-  PDM_dist_cloud_surf_dump_times(id_dist);
-  PDM_dist_cloud_surf_free (id_dist);
+  PDM_dist_cloud_surf_dump_times(dist);
+  PDM_dist_cloud_surf_free (dist);
 
   for (int i_part = 0; i_part < n_part; i_part++) {
     free (select_face[i_part]);
