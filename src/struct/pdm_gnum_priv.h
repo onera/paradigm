@@ -54,4 +54,4 @@ struct _pdm_gen_gnum_t {
 }
 #endif
 
-#endif  /* __PDM_CLOSEST_POINTS_PRIV_H__ */
+#endif  /* __PDM_GNUM_PRIV_H__ */
