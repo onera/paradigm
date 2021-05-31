@@ -5478,7 +5478,7 @@ PDM_para_octree_closest_points
   const int dim = octree->dim;
 
   float f_copy_threshold = 1.1;
-  float f_max_copy = 0.3;
+  float f_max_copy = 0.3;//set to 0.01
 
   char *env_var = NULL;
   env_var = getenv ("OCTREE_COPY_THRESHOLD");
@@ -6465,7 +6465,7 @@ PDM_para_octree_single_closest_point
   const int dim = octree->dim;
 
   float f_copy_threshold = 1.1;
-  float f_max_copy = 0.3;
+  float f_max_copy = 0.3;// set to 0.01
 
   char *env_var = NULL;
   env_var = getenv ("OCTREE_COPY_THRESHOLD");
@@ -7569,7 +7569,7 @@ PDM_para_octree_points_inside_boxes
  double            **pts_in_box_coord
  )
 {
-  const int DEBUG = 0;
+  const int DEBUG = 1;
 
   int n_recv_boxes = 0;
   PDM_morton_code_t *box_corners = NULL;
@@ -7595,7 +7595,7 @@ PDM_para_octree_points_inside_boxes
 
 
   /* Clip box extents (ensure Morton codes of box corners are properly computed) */
-  double *_box_extents = malloc (sizeof(double) * two_dim * n_boxes);
+  /*double *_box_extents = malloc (sizeof(double) * two_dim * n_boxes);
   for (int ibox = 0; ibox < n_boxes; ibox++) {
     for (int idim = 0; idim < dim; idim++) {
       _box_extents[two_dim*ibox + idim]       = PDM_MAX (octree->global_extents[idim],
@@ -7603,7 +7603,8 @@ PDM_para_octree_points_inside_boxes
       _box_extents[two_dim*ibox + dim + idim] = PDM_MIN (octree->global_extents[idim + dim],
                                                          box_extents[two_dim*ibox + dim + idim]);
     }
-  }
+    }*/
+  double *_box_extents = box_extents;
 
 
   /* Multiple ranks */
@@ -7629,7 +7630,8 @@ PDM_para_octree_points_inside_boxes
 
     /* Encode box corners */
     box_corners = malloc (sizeof(PDM_morton_code_t) * 2 * n_boxes);
-    PDM_morton_encode_coords (dim,
+    //PDM_morton_encode_coords (dim,
+    _morton_encode_coords (dim,
                               PDM_morton_max_level,
                               octree->global_extents,
                               2 * n_boxes,
@@ -7700,7 +7702,7 @@ PDM_para_octree_points_inside_boxes
         send_count[irank]++;
       }
     }
-    free (_box_extents);
+    if (_box_extents != box_extents) free (_box_extents);
     free (box_rank);
 
     /* Send boxes g_num buffer */
@@ -7742,7 +7744,8 @@ PDM_para_octree_points_inside_boxes
 
   /* Encode corners of redistributed boxes */
   box_corners = malloc (sizeof(PDM_morton_code_t) * 2 * n_recv_boxes);
-  PDM_morton_encode_coords (dim,
+  //PDM_morton_encode_coords (dim,
+  _morton_encode_coords (dim,
                             PDM_morton_max_level,
                             octree->global_extents,
                             2 * n_recv_boxes,
@@ -7835,7 +7838,7 @@ PDM_para_octree_points_inside_boxes
     }
 
   } // Loop over redistributed boxes
-  free (recv_box_extents);
+  if (recv_box_extents != box_extents) free (recv_box_extents);
   free (box_corners);
   free (intersect_nodes);
 

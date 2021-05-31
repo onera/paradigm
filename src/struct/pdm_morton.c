@@ -2139,7 +2139,7 @@ _intersect_node_box
 	printf("\t not intersecting\n");
       }
       return 0;
-    } else if (xmin > box_min.X[i] || xmax > box_max.X[i]+1) {
+    } else if (xmin < box_min.X[i] || xmax > box_max.X[i]+1) {
       *inside = 0;
     };
   }
