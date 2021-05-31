@@ -7595,16 +7595,23 @@ PDM_para_octree_points_inside_boxes
 
 
   /* Clip box extents (ensure Morton codes of box corners are properly computed) */
-  /*double *_box_extents = malloc (sizeof(double) * two_dim * n_boxes);
-  for (int ibox = 0; ibox < n_boxes; ibox++) {
-    for (int idim = 0; idim < dim; idim++) {
-      _box_extents[two_dim*ibox + idim]       = PDM_MAX (octree->global_extents[idim],
-                                                         box_extents[two_dim*ibox + idim]);
-      _box_extents[two_dim*ibox + dim + idim] = PDM_MIN (octree->global_extents[idim + dim],
-                                                         box_extents[two_dim*ibox + dim + idim]);
-    }
-    }*/
   double *_box_extents = box_extents;
+  if (1) {
+    _box_extents = malloc (sizeof(double) * two_dim * n_boxes);
+    for (int ibox = 0; ibox < n_boxes; ibox++) {
+      for (int idim = 0; idim < dim; idim++) {
+        _box_extents[two_dim*ibox + idim]       = PDM_MAX (octree->global_extents[idim],
+                                                           box_extents[two_dim*ibox + idim]);
+        _box_extents[two_dim*ibox + dim + idim] = PDM_MIN (octree->global_extents[idim + dim],
+                                                           box_extents[two_dim*ibox + dim + idim]);
+      }
+    }
+  }
+
+  /*
+   * TO DO: remove boxes that do not intersect the octree's global extents
+   */
+
 
 
   /* Multiple ranks */
