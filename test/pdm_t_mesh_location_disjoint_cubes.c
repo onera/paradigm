@@ -80,7 +80,7 @@ _read_args(int            argc,
            char         **argv,
            PDM_g_num_t   *n_vtx_seg,
            double        *length,
-           int           *rotation,
+           double        *separation,
            double        *tolerance,
            double        *marge,
            int           *n_part,
@@ -116,8 +116,12 @@ _read_args(int            argc,
       else
         *length = atof(argv[i]);
     }
-    else if (strcmp(argv[i], "-rot") == 0) {
-      *rotation = 1;
+    else if (strcmp(argv[i], "-sep") == 0) {
+      i++;
+      if (i >= argc)
+        _usage(EXIT_FAILURE);
+      else
+        *separation = atof(argv[i]);
     }
     else if (strcmp(argv[i], "-t") == 0) {
       i++;
@@ -208,21 +212,21 @@ _cube_mesh
   int          dface_group_l;
 
 
-  PDM_dcube_gen_dim_get(dcube,
-                        &n_face_group,
-                        &dn_cell,
-                        &dn_face,
-                        &dn_vtx,
-                        &dface_vtx_l,
-                        &dface_group_l);
+  PDM_dcube_gen_dim_get (dcube,
+                         &n_face_group,
+                         &dn_cell,
+                         &dn_face,
+                         &dn_vtx,
+                         &dface_vtx_l,
+                         &dface_group_l);
 
-  PDM_dcube_gen_data_get(dcube,
-                         &dface_cell,
-                         &dface_vtx_idx,
-                         &dface_vtx,
-                         &dvtx_coord,
-                         &dface_group_idx,
-                         &dface_group);
+  PDM_dcube_gen_data_get (dcube,
+                          &dface_cell,
+                          &dface_vtx_idx,
+                          &dface_vtx,
+                          &dvtx_coord,
+                          &dface_group_idx,
+                          &dface_group);
 
   /*
    *  Create mesh partitiions
@@ -237,34 +241,34 @@ _cube_mesh
   int n_property_cell = 0;
   int n_property_face = 0;
 
-  PDM_part_create(&ppart_id,
-                  PDM_MPI_COMM_WORLD,
-                  part_method,
-                  "PDM_PART_RENUM_CELL_NONE",
-                  "PDM_PART_RENUM_FACE_NONE",
-                  n_property_cell,
-                  renum_properties_cell,
-                  n_property_face,
-                  renum_properties_face,
-                  n_part,
-                  dn_cell,
-                  dn_face,
-                  dn_vtx,
-                  n_face_group,
-                  NULL,
-                  NULL,
-                  NULL,
-                  NULL,
-                  have_dcell_part,
-                  dcell_part,
-                  dface_cell,
-                  dface_vtx_idx,
-                  dface_vtx,
-                  NULL,
-                  dvtx_coord,
-                  NULL,
-                  dface_group_idx,
-                  dface_group);
+  PDM_part_create (&ppart_id,
+                   PDM_MPI_COMM_WORLD,
+                   part_method,
+                   "PDM_PART_RENUM_CELL_NONE",
+                   "PDM_PART_RENUM_FACE_NONE",
+                   n_property_cell,
+                   renum_properties_cell,
+                   n_property_face,
+                   renum_properties_face,
+                   n_part,
+                   dn_cell,
+                   dn_face,
+                   dn_vtx,
+                   n_face_group,
+                   NULL,
+                   NULL,
+                   NULL,
+                   NULL,
+                   have_dcell_part,
+                   dcell_part,
+                   dface_cell,
+                   dface_vtx_idx,
+                   dface_vtx,
+                   NULL,
+                   dvtx_coord,
+                   NULL,
+                   dface_group_idx,
+                   dface_group);
 
   free(dcell_part);
 
@@ -293,7 +297,7 @@ int main(int argc, char *argv[])
 
   PDM_g_num_t n_vtx_seg = 10;
   double      length    = 1.;
-  int         rotation  = 0;
+  double      separation = 2.;
   double      tolerance = 1e-6;
   double      marge     = 0.;
   int         n_part    = 1;
@@ -315,18 +319,18 @@ int main(int argc, char *argv[])
    *  Read args
    */
 
-  _read_args(argc,
-             argv,
-             &n_vtx_seg,
-             &length,
-             &rotation,
-             &tolerance,
-             &marge,
-             &n_part,
-             &n_pts,
-             &post,
-             (int *) &part_method,
-             &loc_method);
+  _read_args (argc,
+              argv,
+              &n_vtx_seg,
+              &length,
+              &separation,
+              &tolerance,
+              &marge,
+              &n_part,
+              &n_pts,
+              &post,
+              (int *) &part_method,
+              &loc_method);
 
 
   /*
@@ -359,7 +363,7 @@ int main(int argc, char *argv[])
   int ppart_tgt = _cube_mesh (n_part,
                               part_method,
                               n_vtx_seg,
-                              xmin + 2*length,
+                              xmin + separation*length,
                               ymin,
                               zmin,
                               length);
@@ -621,7 +625,8 @@ int main(int argc, char *argv[])
                            &s_face_group,
                            &n_edge_group2);
 
-    assert (n_located == 0 && n_unlocated == n_cell);
+    //assert (n_located == 0 && n_unlocated == n_cell);
+    printf("[%d] n_located = %d, n_unlocated = %d\n", i_rank, n_located, n_unlocated);
     free (cell_center[ipart]);
     free (cell_volume[ipart]);
   }
