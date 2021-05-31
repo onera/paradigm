@@ -17,7 +17,6 @@
 #include "pdm_config.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
-#include "pdm_handles.h"
 #include "pdm_mpi.h"
 #include "pdm_octree.h"
 #include "pdm_octree_seq.h"

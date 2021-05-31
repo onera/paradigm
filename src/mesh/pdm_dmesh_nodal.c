@@ -330,7 +330,6 @@ PDM_DMesh_nodal_section_poly3d_t *_section_poly3d
     }
   }
 
-
   free(_section_poly3d);
 }
 
@@ -478,21 +477,6 @@ const PDM_MPI_Comm        comm,
   dmesh_nodal->_dface_cell              = NULL;
   dmesh_nodal->face_distrib             = NULL;
 
-  // dmesh_nodal->dn_edge                  = 0;
-  // dmesh_nodal->edge_distrib             = NULL;
-  // dmesh_nodal->_dedge_vtx_idx           = NULL;
-  // dmesh_nodal->_dedge_vtx               = NULL;
-  // dmesh_nodal->dface_edge_idx           = NULL;
-  // dmesh_nodal->dface_edge               = NULL;
-  // dmesh_nodal->_dedge_face              = NULL;
-
-  // dmesh_nodal->dn_elmt                  = 0;
-  // dmesh_nodal->elmt_distrib             = NULL;
-  // dmesh_nodal->_dface_elmt              = NULL;
-  // dmesh_nodal->_dface_elmt_idx          = NULL;
-  // dmesh_nodal->_dedge_elmt              = NULL;
-  // dmesh_nodal->_dedge_elmt_idx          = NULL;
-
 }
 
 /*=============================================================================
@@ -524,7 +508,7 @@ const PDM_MPI_Comm comm,
 
   _mesh_init (mesh, comm, mesh_dimension, n_vtx, n_cell, n_face, n_edge);
 
-  return (PDM_dmesh_nodal_t *) mesh;
+  return mesh;
 }
 
 
@@ -1042,11 +1026,6 @@ const int              n_elt,
   /* Creation of distribution */
   PDM_g_num_t _n_elt = n_elt;
 
-  // PDM_g_num_t beg_num_abs;
-  // PDM_MPI_Scan (&_n_elt, &beg_num_abs, 1, PDM__PDM_MPI_G_NUM,
-  //               PDM_MPI_SUM, dmesh_nodal->pdm_mpi_comm);
-  // beg_num_abs -= _n_elt;
-
   PDM_MPI_Allgather((void *) &_n_elt,
                     1,
                     PDM__PDM_MPI_G_NUM,
@@ -1228,11 +1207,6 @@ const PDM_l_num_t        n_elt,
   /* Creation of distribution */
   PDM_g_num_t _n_elt = n_elt;
 
-  // PDM_g_num_t beg_num_abs;
-  // PDM_MPI_Scan (&_n_elt, &beg_num_abs, 1, PDM__PDM_MPI_G_NUM,
-  //               PDM_MPI_SUM, dmesh_nodal->pdm_mpi_comm);
-  // beg_num_abs -= _n_elt;
-
   PDM_MPI_Allgather((void *) &_n_elt,
                     1,
                     PDM__PDM_MPI_G_NUM,
@@ -1332,11 +1306,6 @@ const PDM_l_num_t         n_face,
 
   /* Creation of distribution */
   PDM_g_num_t _n_elt = n_elt;
-
-  // PDM_g_num_t beg_num_abs;
-  // PDM_MPI_Scan (&_n_elt, &beg_num_abs, 1, PDM__PDM_MPI_G_NUM,
-  //               PDM_MPI_SUM, dmesh_nodal->pdm_mpi_comm);
-  // beg_num_abs -= _n_elt;
 
   PDM_MPI_Allgather((void *) &_n_elt,
                     1,

@@ -109,6 +109,17 @@ typedef struct PDM_DMesh_nodal_section_poly3d_t{
 } PDM_DMesh_nodal_section_poly3d_t;
 
 
+// struct _pdm_delmt_nodal_t {
+
+//   // PDM_element_dimension_t            elmts_dimension;
+//   PDM_DMesh_nodal_section_std_t    **sections_std;           /*!< Standard sections                  */
+//   PDM_DMesh_nodal_section_poly2d_t **sections_poly;          /*!< Polygon sections                   */
+//   PDM_g_num_t                       *section_distribution;   /*!< Element distribution               */
+
+//   int             *dgroup_elmt_idx;
+//   PDM_g_num_t     *dgroup_elmt;
+// };
+
 /**
  * \struct  PDM_Mesh_nodal_geom_prepa_sections_t
  *
@@ -150,6 +161,11 @@ struct _pdm_dmesh_nodal_t {
   PDM_DMesh_nodal_section_std_t    **sections_std;             /*!< Standard sections                  */
   PDM_DMesh_nodal_section_poly3d_t **sections_poly3d;          /*!< Polyhedron sections                */
   PDM_DMesh_nodal_section_poly2d_t **sections_poly2d;          /*!< Polygon sections                   */
+
+  // _pdm_delmt_nodal_t* volumic;
+  // _pdm_delmt_nodal_t* surfacic;
+  // _pdm_delmt_nodal_t* ridge;
+  // _pdm_delmt_nodal_t* corner;
 
   PDM_MPI_Comm           pdm_mpi_comm;             /*!< MPI Communicator */
   int                    n_rank;                   /*!< Number of processes */

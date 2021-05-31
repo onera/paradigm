@@ -19,7 +19,6 @@
 #include "pdm_mpi.h"
 #include "pdm_mesh_nodal.h"
 #include "pdm_surf_mesh.h"
-#include "pdm_handles.h"
 #include "pdm_dbbtree.h"
 #include "pdm_part_to_block.h"
 #include "pdm_block_to_part.h"
@@ -818,6 +817,7 @@ PDM_mesh_location_create
   ml->tolerance = 0.;
 
   ml->method = PDM_MESH_LOCATION_OCTREE;
+  // ml->method = PDM_MESH_LOCATION_DBBTREE;
 
   ml->timer = PDM_timer_create ();
 
@@ -2309,11 +2309,10 @@ PDM_mesh_location_t        *ml
 
       /* Build parallel octree */
       PDM_para_octree_build (octree_id, NULL);
-      //PDM_para_octree_dump (octree_id);
+      // PDM_para_octree_dump (octree_id);
       if (DEBUG) {
         PDM_para_octree_dump_times (octree_id);
       }
-
 
       /* Locate points inside boxes */
       PDM_para_octree_points_inside_boxes (octree_id,

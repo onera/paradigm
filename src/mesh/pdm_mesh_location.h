@@ -505,7 +505,7 @@ PDM_mesh_location_dump_times
 PDM_mesh_location_t *ml
 );
 
-PDM_mesh_location_t*
+PDM_Mesh_nodal_t*
 PDM_mesh_location_mesh_nodal_get
 (
 PDM_mesh_location_t *ml
