@@ -9,36 +9,49 @@
 
 set(PARMETIS_FOUND FALSE)
 
-find_path(PARMETIS_INCLUDE_DIRS parmetis.h metis.h
+# Parmetis
+find_path(PARMETIS_INCLUDE_DIRS parmetis.h
      HINTS ${PARMETIS_DIR}/include $ENV{PARMETIS_DIR}/include
      NO_DEFAULT_PATH
      "Directory where the ParMETIS header is located"
     )
-find_path(PARMETIS_INCLUDE_DIRS parmetis.h metis.h
+find_path(PARMETIS_INCLUDE_DIRS parmetis.h
      "Directory where the ParMETIS header is located"
      )
 
+find_library(PARMETIS_LIBRARY   parmetis
+     HINTS ${PARMETIS_DIR}/lib $ENV{PARMETIS_DIR}/lib
+     NO_DEFAULT_PATH
+     DOC "The ParMETIS library"
+     )
+find_library(PARMETIS_LIBRARY   parmetis
+     DOC "The ParMETIS library"
+     )
+
+# Metis
+find_path(METIS_INCLUDE_DIRS metis.h
+     HINTS ${METIS_DIR}/include $ENV{METIS_DIR}/include
+     NO_DEFAULT_PATH
+     "Directory where the METIS header is located"
+    )
+find_path(METIS_INCLUDE_DIRS metis.h
+     "Directory where the METIS header is located"
+     )
+
+find_library(METIS_LIBRARY   metis
+     HINTS ${METIS_DIR}/lib $ENV{METIS_DIR}/lib
+     NO_DEFAULT_PATH
+     DOC "The METIS library"
+     )
+find_library(METIS_LIBRARY   metis
+     DOC "The METIS library"
+     )
+
+# Concatenate
+set(PARMETIS_INCLUDE_DIRS ${PARMETIS_INCLUDE_DIRS} ${METIS_INCLUDE_DIRS} CACHE STRING "ParMETIS include directories")
 mark_as_advanced(PARMETIS_INCLUDE_DIRS)
-
-find_library(PARMETIS_LIBRARY   parmetis
-     HINTS ${PARMETIS_DIR}/lib $ENV{PARMETIS_DIR}/lib
-     NO_DEFAULT_PATH
-     DOC "The ParMETIS library"
-     )
-find_library(PARMETIS_LIBRARY   parmetis
-     DOC "The ParMETIS library"
-     )
-
-find_library(METIS_LIBRARY   metis
-     HINTS ${PARMETIS_DIR}/lib $ENV{PARMETIS_DIR}/lib
-     NO_DEFAULT_PATH
-     DOC "The METIS library"
-     )
-find_library(METIS_LIBRARY   metis
-     DOC "The METIS library"
-     )
-
-set(PARMETIS_LIBRARIES ${PARMETIS_LIBRARY} ${METIS_LIBRARY} CACHE STRING "ParMETIS libraries")
+set(PARMETIS_LIBRARIES ${PARMETIS_LIBRARY} ${METIS_LIBRARY})
+set(PARMETIS_LIBRARIES ${PARMETIS_LIBRARIES} ${METIS_LIBRARY} CACHE STRING "ParMETIS libraries")
 mark_as_advanced(PARMETIS_LIBRARIES)
 
 if (PARMETIS_LIBRARIES AND PARMETIS_INCLUDE_DIRS)
