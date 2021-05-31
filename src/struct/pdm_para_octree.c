@@ -7857,6 +7857,7 @@ PDM_para_octree_points_inside_boxes
                               box_corners[2*ibox],
                               box_corners[2*ibox+1],
                               octants->codes,
+                              octants->n_points,
                               0,
                               octants->n_nodes,
                               &n_intersect_nodes,

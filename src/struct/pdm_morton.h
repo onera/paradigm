@@ -489,6 +489,7 @@ PDM_morton_intersect_box
  const PDM_morton_code_t  box_min,
  const PDM_morton_code_t  box_max,
  const PDM_morton_code_t  nodes[],
+ int                     *n_points,
  const size_t             start,
  const size_t             end,
  size_t                  *n_intersect,

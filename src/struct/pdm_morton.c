@@ -2161,6 +2161,7 @@ PDM_morton_intersect_box
  const PDM_morton_code_t  box_min,
  const PDM_morton_code_t  box_max,
  const PDM_morton_code_t  nodes[],
+ int                     *n_points,
  const size_t             start,
  const size_t             end,
  size_t                  *n_intersect,
@@ -2172,13 +2173,29 @@ PDM_morton_intersect_box
   /* If current range contains few octants, go brute force */
   if (end - start < N_BRUTE_FORCE) {
 
-    for (size_t i = start; i < end; i++) {
-      if (_intersect_node_box (dim,
-			       nodes[i],
-			       box_min,
-			       box_max,
-			       &inside)) {
-	intersect[(*n_intersect)++] = i;
+    if (n_points == NULL) {
+      for (size_t i = start; i < end; i++) {
+        if (_intersect_node_box (dim,
+                                 nodes[i],
+                                 box_min,
+                                 box_max,
+                                 &inside)) {
+          intersect[(*n_intersect)++] = i;
+        }
+      }
+    }
+
+    else {
+      for (size_t i = start; i < end; i++) {
+        if (n_points[i] > 0) {
+          if (_intersect_node_box (dim,
+                                   nodes[i],
+                                   box_min,
+                                   box_max,
+                                   &inside)) {
+            intersect[(*n_intersect)++] = i;
+          }
+        }
       }
     }
     return;
@@ -2188,16 +2205,25 @@ PDM_morton_intersect_box
   else {
 
     if (_intersect_node_box (dim,
-			     node,
-			     box_min,
-			     box_max,
-			     &inside)) {
+                             node,
+                             box_min,
+                             box_max,
+                             &inside)) {
 
       if (inside) {
-	/* Every descendant must intersect the box */
-	for (size_t i = start; i < end; i++) {
-	  intersect[(*n_intersect)++] = i;
-	}
+        /* Every descendant must intersect the box */
+        if (n_points == NULL) {
+          for (size_t i = start; i < end; i++) {
+            intersect[(*n_intersect)++] = i;
+          }
+        }
+        else {
+          for (size_t i = start; i < end; i++) {
+            if (n_points[i] > 0) {
+              intersect[(*n_intersect)++] = i;
+            }
+          }
+        }
       }
 
       else {
@@ -2208,9 +2234,9 @@ PDM_morton_intersect_box
                                  node,
                                  children);
 
-	size_t new_start, new_end;
-	size_t prev_end = start;
-	for (size_t ichild = 0; ichild < n_children; ichild++) {
+        size_t new_start, new_end;
+        size_t prev_end = start;
+        for (size_t ichild = 0; ichild < n_children; ichild++) {
 
           /* get start and end of range in list of nodes covered by current child */
           /* new_start <-- first descendant of child in list */
@@ -2253,6 +2279,7 @@ PDM_morton_intersect_box
                                     box_min,
                                     box_max,
                                     nodes,
+                                    n_points,
                                     new_start,
                                     new_end,
                                     n_intersect,
