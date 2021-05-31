@@ -735,7 +735,7 @@ PDM_transform_to_parent_gnum
   PDM_part_to_block_t* ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                       PDM_PART_TO_BLOCK_POST_CLEANUP,
                                                       1.,
-                                         ( int **)    &ln_to_gn,
+                                ( PDM_g_num_t **)    &ln_to_gn,
                                                       NULL,
                                           ( int *)   &n_elmt,
                                                       1,
