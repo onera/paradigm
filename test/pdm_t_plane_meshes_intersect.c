@@ -948,6 +948,27 @@ _create_split_mesh
                          &dEdgeGroup);
     }
 
+    if (1) {
+      double angle = PDM_PI / 6.;
+      double rmin = 0.3;
+      double delta_r = 0.7;
+      for (int i = 0; i < dNVtx; i++) {
+        /*double x = dVtxCoord[3*i]   - 0.5;
+        double y = dVtxCoord[3*i+1] - 0.5;
+        double f = PDM_MAX (fabs(x), fabs(y)) / sqrt(x*x + y*y);
+        x = 0.5 + f*x;
+        y = 0.5 + f*y;
+        dVtxCoord[3*i]   = x;
+        dVtxCoord[3*i+1] = y;*/
+        double x = dVtxCoord[3*i] - 0.5;
+        double y = dVtxCoord[3*i+1];
+        double t = angle * (x + 0.2*y);
+        double r = rmin + delta_r * y;
+        dVtxCoord[3*i]   = r * cos(t);
+        dVtxCoord[3*i+1] = r * sin(t);
+      }
+    }
+
     if (rotate) {
       double rot[3][3];
       _rotation_matrix (rot);

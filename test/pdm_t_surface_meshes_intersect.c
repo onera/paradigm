@@ -289,13 +289,22 @@ static void _add_depth (const double  x_min,
 
     if (1) {
       // Vagues
-      if (0) {
+      /*if (0) {
         // smooth boundary
         x -= .5;
         y -= .5;
         double f = PDM_MAX (fabs(x), fabs(y)) / sqrt(x*x + y*y);
         x = 0.5 + f*x;
         y = 0.5 + f*y;
+        coord[3*i]   = x;
+        coord[3*i+1] = y;
+        }*/
+      if (1) {
+        // angular sector
+        double t = PDM_PI / 6. * (x  - 0.5 + 0.2*y);
+        double r = 0.3 + 0.6 * y;
+        x = r * cos(t);
+        y = r * sin(t);
         coord[3*i]   = x;
         coord[3*i+1] = y;
       }
@@ -2386,7 +2395,7 @@ char *argv[]
   double           yminB = 0.;
   int              n_partB   = 1;
 
-  double depth  = 0.5;
+  double depth  = 0.2;
   int    rotate = 0;
 
   int              post    = 0;

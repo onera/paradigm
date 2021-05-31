@@ -946,6 +946,245 @@ _intersect_bounding_boxes_and_redistribute
 
 
 
+#if 0
+static void
+_clipping
+(
+ PDM_ol_t      *ol,
+ PDM_box_set_t *boxesB,
+ int            n_elt_blockA,
+ int           *blockA_boxesB_idx
+ )
+{
+  /*****************************************************************************
+   *                                                                           *
+   *                             Clipping                                      *
+   *                                                                           *
+   ****************************************************************************/
+
+  int iclipp = 0;
+
+  int s_subFacesToFaces = 5 * n_elt_blockA;
+  PDM_g_num_t *subFacesToFaces = malloc (sizeof(PDM_g_num_t) * s_subFacesToFaces);
+
+  int s_subFacesConnecIdx = (1 + n_elt_blockA);
+  int *subFacesConnecIdx = malloc (sizeof(int) * s_subFacesConnecIdx);
+  subFacesConnecIdx[0] = 0;
+
+  int s_subFacesConnecA = 4 * n_elt_blockA;
+  int s_subFacesConnecB = 4 * n_elt_blockA;
+  PDM_g_num_t *subFacesConnecA = malloc (sizeof(PDM_g_num_t) * s_subFacesConnecA);
+  int s_gNumSubFacesA = n_elt_blockA;
+  PDM_g_num_t *gNumSubFacesA   = malloc (sizeof(PDM_g_num_t) * s_gNumSubFacesA);
+  PDM_g_num_t *subFacesConnecB = malloc (sizeof(PDM_g_num_t) * s_subFacesConnecB);
+
+  int s_subFacesCoordsA = 3 * s_subFacesConnecA;
+  double *subFacesCoordsA = malloc (sizeof(double) * s_subFacesCoordsA);
+
+  int *facesToSubFacesAIdx = malloc (sizeof(int) * (1 + n_elt_blockA));
+  int *facesToSubFacesBIdx = malloc (sizeof(int) * (1 + blockA_boxesB_idx[n_elt_blockA]));
+
+  facesToSubFacesAIdx[0] = 0;
+  facesToSubFacesBIdx[0] = 0;
+
+  const int *originB = PDM_box_set_origin_get (boxesB);
+
+  for (int i = 0; i < n_elt_blockA; i++) {
+
+    int lnum_boxA = blockA_lnum_data[i] - 1;
+
+    PDM_g_num_t gnum_boxA = block_gnumA[i];
+
+    int n_vtxA = faceIdxCurrent[0][lnum_boxA + 1] - faceIdxCurrent[0][lnum_boxA];
+    PDM_g_num_t *_faceToEdgeA     = faceToEdgeCurrent[0]     + faceIdxCurrent[0][lnum_boxA];
+    PDM_g_num_t *_faceToVtxA      = faceToVtxCurrent[0]      + faceIdxCurrent[0][lnum_boxA];
+    double      *_face_vtxCooA    = face_vtxCooCurrent[0]    + faceIdxCurrent[0][lnum_boxA] * 3;
+    double      *_face_vtxNormalA = face_vtxNormalCurrent[0] + faceIdxCurrent[0][lnum_boxA] * 3;
+
+    facesToSubFacesAIdx[i+1] = facesToSubFacesAIdx[i];
+
+    for (int j = blockA_boxesB_idx[i]; j < blockA_boxesB_idx[i+1]; j++) {
+
+      PDM_g_num_t gnum_boxB = blockA_boxesB_gnum_data[j];
+
+      int lnum_boxB = blockA_boxesB_lnum_data[j] - 1;
+      int n_vtxB = faceIdxCurrent[1][lnum_boxB + 1] - faceIdxCurrent[1][lnum_boxB];
+      PDM_g_num_t *_faceToEdgeB  = faceToEdgeCurrent[1]  + faceIdxCurrent[1][lnum_boxB];
+      PDM_g_num_t *_faceToVtxB   = faceToVtxCurrent[1]   + faceIdxCurrent[1][lnum_boxB];
+      double      *_face_vtxCooB = face_vtxCooCurrent[1] + faceIdxCurrent[1][lnum_boxB] * 3;
+
+      int          nPolyClippA      = 0;
+      int         *polyClippIdxA    = NULL;
+      PDM_g_num_t *polyClippConnecA = NULL;
+      double      *polyClippCoordsA = NULL;
+
+      int          nPolyClippB      = 0;
+      int         *polyClippIdxB    = NULL;
+      PDM_g_num_t *polyClippConnecB = NULL;
+      double      *polyClippCoordsB = NULL;
+
+      PDM_poly_clipp2 (intersect,
+                       gnum_boxA,
+                       gnum_boxB,
+                       n_vtxA,
+                       _faceToEdgeA,
+                       _faceToVtxA,
+                       _face_vtxCooA,
+                       _face_vtxNormalA,
+                       n_vtxB,
+                       _faceToEdgeB,
+                       _faceToVtxB,
+                       _face_vtxCooB,
+                       PDM_POLY_CLIPP_CLIP,
+                       &nPolyClippA,
+                       &polyClippIdxA,
+                       &polyClippConnecA,
+                       &polyClippCoordsA,
+                       &nPolyClippB,
+                       &polyClippIdxB,
+                       &polyClippConnecB,
+                       &polyClippCoordsB);
+
+      if (vb) {
+        printf(" ---> poly_clipp gnumEltA gnumEltB : "PDM_FMT_G_NUM" "PDM_FMT_G_NUM" fin\n", gnum_boxA, gnum_boxB);
+      }
+
+      assert (nPolyClippA == nPolyClippB);
+
+      facesToSubFacesAIdx[i+1] += nPolyClippA;
+
+      facesToSubFacesBIdx[j+1] = nPolyClippB;
+
+      int newSize = iclipp + nPolyClippA + 1;
+      if (newSize > s_subFacesConnecIdx) {
+        while (newSize > s_subFacesConnecIdx) {
+          s_subFacesConnecIdx += PDM_MAX(1, s_subFacesConnecIdx/3);
+        }
+        subFacesConnecIdx = realloc (subFacesConnecIdx,
+                                     sizeof(int) * s_subFacesConnecIdx);
+      }
+
+      newSize = iclipp + nPolyClippA;
+      if (newSize > s_gNumSubFacesA) {
+        while (newSize > s_gNumSubFacesA) {
+          s_gNumSubFacesA += PDM_MAX(1, s_gNumSubFacesA/3);
+        }
+        gNumSubFacesA  = realloc (gNumSubFacesA,
+                                  sizeof(PDM_g_num_t) * s_gNumSubFacesA);
+      }
+
+      int ibeg = subFacesConnecIdx[iclipp];
+      int ibeg2 = 3 *ibeg;
+      newSize = ibeg + polyClippIdxA[nPolyClippA];
+      if (newSize > s_subFacesConnecA) {
+        while (newSize > s_subFacesConnecA) {
+          s_subFacesConnecA += PDM_MAX(1, s_subFacesConnecA/3);
+        }
+        subFacesConnecA = realloc (subFacesConnecA,
+                                   sizeof(PDM_g_num_t) * s_subFacesConnecA);
+      }
+
+      if (newSize > s_subFacesConnecB) {
+        while (newSize > s_subFacesConnecB) {
+          s_subFacesConnecB += PDM_MAX(1, s_subFacesConnecB/3);
+        }
+        subFacesConnecB = realloc (subFacesConnecB,
+                                   sizeof(PDM_g_num_t) * s_subFacesConnecB);
+      }
+
+      newSize = 3 * (ibeg + polyClippIdxA[nPolyClippA]);
+      if (newSize > s_subFacesCoordsA) {
+        while (newSize > s_subFacesCoordsA) {
+          s_subFacesCoordsA += PDM_MAX(1, s_subFacesCoordsA/3);
+        }
+        subFacesCoordsA = realloc (subFacesCoordsA,
+                                   sizeof(double) * s_subFacesCoordsA);
+      }
+
+      newSize = 5*(iclipp + nPolyClippA);
+      if (newSize > s_subFacesToFaces) {
+        while (newSize > s_subFacesToFaces) {
+          s_subFacesToFaces += PDM_MAX(1, s_subFacesToFaces/3);
+        }
+        subFacesToFaces = realloc (subFacesToFaces,
+                                   sizeof(PDM_g_num_t) * s_subFacesToFaces);
+      }
+
+      for (int k = 0; k < nPolyClippA; k++) {
+        subFacesConnecIdx[iclipp+1] =  subFacesConnecIdx[iclipp]
+          + (polyClippIdxA[k+1] - polyClippIdxA[k]);
+
+        for (int k1 = polyClippIdxA[k]; k1 < polyClippIdxA[k+1]; k1++) {
+          subFacesConnecA[ibeg] = polyClippConnecA[k1];
+          subFacesConnecB[ibeg] = polyClippConnecB[k1];
+          ibeg += 1;
+        }
+
+        for (int k1 = 3*polyClippIdxA[k]; k1 < 3*polyClippIdxA[k+1]; k1++) {
+          subFacesCoordsA[ibeg2++] = polyClippCoordsA[k1];
+        }
+
+        subFacesToFaces[5*iclipp ]  = i;                      // A local number
+        subFacesToFaces[5*iclipp+1] = gnum_boxA;              // A global number
+        subFacesToFaces[5*iclipp+2] = originB[3*lnum_boxB];   // B origin rank
+        subFacesToFaces[5*iclipp+3] = originB[3*lnum_boxB+1]; // B origin part
+        subFacesToFaces[5*iclipp+4] = gnum_boxB;              // B global number
+
+        //printf("link "PDM_FMT_G_NUM" : %d %d "PDM_FMT_G_NUM"\n", gnum_boxA, originB[3*lnum_boxB], originB[3*lnum_boxB+1], gnum_boxB);
+
+        iclipp += 1;
+      }
+
+      if (polyClippIdxB != polyClippIdxA) {
+        free (polyClippIdxB);
+        polyClippIdxB = NULL;
+      }
+
+      if (polyClippConnecB != NULL) {
+        free (polyClippConnecB);
+        polyClippConnecB = NULL;
+      }
+
+      if (polyClippIdxA != NULL) {
+        free (polyClippIdxA);
+      }
+
+      if (polyClippConnecA != NULL) {
+        free (polyClippConnecA);
+      }
+      if (polyClippCoordsA != NULL) {
+        free (polyClippCoordsA);
+      }
+
+    }
+  }
+
+  const int nSharedSubFaces = iclipp;
+
+  /*
+   * Global numbering Definition of sub-faces
+   * This numbering is shared between A and B
+   * Partial split faces are stored behind sub-faces
+   * Not split faces are stored behind partial split faces
+   *
+   */
+
+  PDM_g_num_t nSharedSubFaces_l = nSharedSubFaces;
+  PDM_g_num_t beg_nSharedSubFaces = -1;
+
+  PDM_MPI_Scan(&nSharedSubFaces_l, &beg_nSharedSubFaces,
+               1, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, ol->comm);
+
+  beg_nSharedSubFaces += -nSharedSubFaces;
+
+  for (int i = 0; i < nSharedSubFaces; i++) {
+    gNumSubFacesA[i] = beg_nSharedSubFaces + i + 1;
+  }
+}
+#endif
+
+
+
 
 
 
@@ -1422,6 +1661,23 @@ _compute_vertex_normals
 
   int singular = PDM_surf_mesh_vtx_normal_get (_mesh,
                                                vtx_normal);
+
+  if (0) {
+    int n_part = PDM_surf_mesh_n_part_get (_mesh);
+    for (int ipart = 0; ipart < n_part; ipart++) {
+      int n_vtx = PDM_surf_mesh_part_n_vtx_get (_mesh, ipart);
+      const double *vtx_coord = PDM_surf_mesh_part_vtx_get (_mesh, ipart);
+      for (int i = 0; i < n_vtx; i++) {
+        if (vtx_coord[3*i  ] < 1e-8 || vtx_coord[3*i  ] > 1. - 1e-8 ||
+            vtx_coord[3*i+1] < 1e-8 || vtx_coord[3*i+1] > 1. - 1e-8) {
+          (*vtx_normal)[ipart][3*i  ] = 0.;
+          (*vtx_normal)[ipart][3*i+1] = 0.;
+          (*vtx_normal)[ipart][3*i+2] = 1.;
+        }
+      }
+    }
+  }
+
   return singular;
 }
 
@@ -6026,6 +6282,76 @@ _compute_overlay_planes
 }
 
 
+
+static void
+_export_walls
+(
+ const char       *filename,
+ PDM_surf_mesh_t  *mesh,
+ double          **vtx_normal
+ )
+{
+  const double wall_height = 0.015;
+  const int n_sample = 20;
+  const double wall_step = 2. * wall_height / (n_sample - 1);
+
+  int n_part = PDM_surf_mesh_n_part_get (mesh);
+
+  int n_pts = 0;
+  int n_poly = 0;
+  for (int ipart = 0; ipart < n_part; ipart++) {
+    int part_n_vtx = PDM_surf_mesh_part_n_vtx_get (mesh, ipart);
+    n_pts += n_sample * part_n_vtx;
+
+    int part_n_edge = mesh->part[ipart]->nEdge;
+    n_poly += (n_sample - 1) * part_n_edge;
+  }
+
+  FILE *f = fopen(filename, "w");
+  fprintf(f, "# vtk DataFile Version 2.0\nwalls\nASCII\nDATASET POLYDATA\n");
+
+  fprintf(f, "POINTS %d double\n", n_pts);
+  for (int ipart = 0; ipart < n_part; ipart++) {
+    int part_n_vtx = PDM_surf_mesh_part_n_vtx_get (mesh, ipart);
+    const double *part_vtx_coord = PDM_surf_mesh_part_vtx_get (mesh, ipart);
+    for (int i = 0; i < part_n_vtx; i++) {
+      for (int j = 0; j < n_sample; j++) {
+        double h = j*wall_step - wall_height;
+        for (int k = 0; k < 3; k++) {
+          fprintf(f, "%lf ", part_vtx_coord[3*i+k] + h*vtx_normal[ipart][3*i+k]);
+        }
+        fprintf(f, "\n");
+      }
+    }
+  }
+
+  fprintf(f, "POLYGONS %d %d\n", n_poly, 5*n_poly);
+  int idx_vtx = 0;
+  for (int ipart = 0; ipart < n_part; ipart++) {
+    int part_n_edge = mesh->part[ipart]->nEdge;
+    int *part_edge_vtx = mesh->part[ipart]->edgeVtx;
+
+    for (int i = 0; i < part_n_edge; i++) {
+      int i1 = idx_vtx + part_edge_vtx[2*i]   - 1;
+      int i2 = idx_vtx + part_edge_vtx[2*i+1] - 1;
+      for (int j = 0; j < n_sample-1; j++) {
+        fprintf(f, "4 %d %d %d %d\n",
+                n_sample*i1 + j,
+                n_sample*i2 + j,
+                n_sample*i2 + j + 1,
+                n_sample*i1 + j + 1);
+      }
+    }
+
+    int part_n_vtx = PDM_surf_mesh_part_n_vtx_get (mesh, ipart);
+    idx_vtx += part_n_vtx;
+  }
+
+
+  fclose(f);
+}
+
+
 /**
  * \brief Compute overlay general surfaces
  *
@@ -6041,7 +6367,7 @@ _compute_overlay_surfaces
  PDM_ol_t *ol
  )
 {
-  const int vb = 0;
+  const int vb = 1;
 
   int i_rank;
   PDM_MPI_Comm_rank (ol->comm, &i_rank);
@@ -6056,6 +6382,14 @@ _compute_overlay_surfaces
                                             vtx_normal + imesh);
 
     //-->> Check vtx normal
+    if (1 && imesh == 0) {
+      char filename[999];
+      sprintf(filename, "check_walls_%3.3d.vtk", i_rank);
+      _export_walls (filename,
+                     ol->meshA,
+                     vtx_normal[0]);
+    }
+
     if (1) {
       PDM_surf_mesh_t *_mesh;
       char mesh_name;
@@ -6632,12 +6966,12 @@ _compute_overlay_surfaces
     fflush(stdout);
   }
 
-
   /*****************************************************************************
    *                                                                           *
    *                             Clipping                                      *
    *                                                                           *
    ****************************************************************************/
+
   int iclipp = 0;
 
   int s_subFacesToFaces = 5 * n_elt_blockA;
@@ -6672,10 +7006,10 @@ _compute_overlay_surfaces
     PDM_g_num_t gnum_boxA = block_gnumA[i];
 
     int n_vtxA = faceIdxCurrent[0][lnum_boxA + 1] - faceIdxCurrent[0][lnum_boxA];
-    PDM_g_num_t *_faceToEdgeA = faceToEdgeCurrent[0] + faceIdxCurrent[0][lnum_boxA];
-    PDM_g_num_t *_faceToVtxA  = faceToVtxCurrent[0] + faceIdxCurrent[0][lnum_boxA];
-    double     *_face_vtxCooA = face_vtxCooCurrent[0] + 3 * faceIdxCurrent[0][lnum_boxA];
-    double     *_face_vtxNormalA = face_vtxNormalCurrent[0] + 3 * faceIdxCurrent[0][lnum_boxA];
+    PDM_g_num_t *_faceToEdgeA     = faceToEdgeCurrent[0]     + faceIdxCurrent[0][lnum_boxA];
+    PDM_g_num_t *_faceToVtxA      = faceToVtxCurrent[0]      + faceIdxCurrent[0][lnum_boxA];
+    double      *_face_vtxCooA    = face_vtxCooCurrent[0]    + faceIdxCurrent[0][lnum_boxA] * 3;
+    double      *_face_vtxNormalA = face_vtxNormalCurrent[0] + faceIdxCurrent[0][lnum_boxA] * 3;
 
     facesToSubFacesAIdx[i+1] = facesToSubFacesAIdx[i];
 
@@ -6685,19 +7019,19 @@ _compute_overlay_surfaces
 
       int lnum_boxB = blockA_boxesB_lnum_data[j] - 1;
       int n_vtxB = faceIdxCurrent[1][lnum_boxB + 1] - faceIdxCurrent[1][lnum_boxB];
-      PDM_g_num_t *_faceToEdgeB = faceToEdgeCurrent[1] + faceIdxCurrent[1][lnum_boxB];
-      PDM_g_num_t *_faceToVtxB  = faceToVtxCurrent[1] + faceIdxCurrent[1][lnum_boxB];
-      double     *_face_vtxCooB = face_vtxCooCurrent[1] + 3 * faceIdxCurrent[1][lnum_boxB];
+      PDM_g_num_t *_faceToEdgeB  = faceToEdgeCurrent[1]  + faceIdxCurrent[1][lnum_boxB];
+      PDM_g_num_t *_faceToVtxB   = faceToVtxCurrent[1]   + faceIdxCurrent[1][lnum_boxB];
+      double      *_face_vtxCooB = face_vtxCooCurrent[1] + faceIdxCurrent[1][lnum_boxB] * 3;
 
-      int         nPolyClippA      = 0;
-      int        *polyClippIdxA    = NULL;
+      int          nPolyClippA      = 0;
+      int         *polyClippIdxA    = NULL;
       PDM_g_num_t *polyClippConnecA = NULL;
-      double     *polyClippCoordsA = NULL;
+      double      *polyClippCoordsA = NULL;
 
-      int         nPolyClippB      = 0;
-      int        *polyClippIdxB    = NULL;
+      int          nPolyClippB      = 0;
+      int         *polyClippIdxB    = NULL;
       PDM_g_num_t *polyClippConnecB = NULL;
-      double     *polyClippCoordsB = NULL;
+      double      *polyClippCoordsB = NULL;
 
       PDM_poly_clipp2 (intersect,
                        gnum_boxA,
@@ -6835,8 +7169,6 @@ _compute_overlay_surfaces
     }
   }
 
-
-
   const int nSharedSubFaces = iclipp;
 
   /*
@@ -6878,7 +7210,7 @@ _compute_overlay_surfaces
    *                                                                           *
    ****************************************************************************/
 
-  if (1 == 0) {
+  if (vb == 1) {
     printf("A sub-faces before gnum:\n");
     for (int i = 0; i < nSharedSubFaces; i++) {
       printf ("%d :", i);
@@ -6976,7 +7308,7 @@ _compute_overlay_surfaces
   PDM_gnum_free (gnum_A_into_B);
   free (elt_A_into_B_g_num);
 
-  if (1 == 0) {
+  if (vb == 1) {
     printf("\n-- Liste des sous-facettes des elements de A (intersection)\n");
     for (int i = 0; i < n_elt_blockA; i++) {
 
@@ -7045,6 +7377,7 @@ _compute_overlay_surfaces
    * covered by B. Additional sub-faces have to compute.                       *
    *                                                                           *
    ****************************************************************************/
+  //if (vb) printf(">> Compute sub-faces coming from A faces with partial B cover\n");//
 
   int *facesToAddSubFacesAIdx = malloc (sizeof(int) * (1 + n_elt_blockA));
   facesToAddSubFacesAIdx[0] = facesToSubFacesAIdx[n_elt_blockA];
@@ -7075,6 +7408,7 @@ _compute_overlay_surfaces
     PDM_g_num_t gnum_boxA = block_gnumA[i];
 
     int lnum_boxA = blockA_lnum_data[i] - 1;
+    if (vb) printf("  %d / %d: gnum_boxA = "PDM_FMT_G_NUM", lnum_boxA = %d\n", i, n_elt_blockA, gnum_boxA, lnum_boxA);//
 
     /* Take into account sub-faces */
 
@@ -7409,6 +7743,7 @@ _compute_overlay_surfaces
       addSubFaceIdx[nAddSubFace]++;
 
       int k_prev = k1;
+      if (vb) printf(">> while iniVal != nextVal\n");//
       while (iniVal != nextVal) {
         for (int k2 = 0; k2 < nOneRef; k2++) {
           if ((tag[k2] == 1) || (k_prev == k2)) continue;
@@ -7440,6 +7775,7 @@ _compute_overlay_surfaces
           }
         }
       }
+      if (vb) printf("<< while iniVal != nextVal\n");//
     }
 
     free (oneRef);
@@ -7525,6 +7861,7 @@ _compute_overlay_surfaces
     PDM_hash_tab_purge (htSubEdgeA, PDM_TRUE);
 
   }
+  if (vb) printf("OK\n");//
 
   free (u_inter);
   free (coords_inter);
@@ -7561,7 +7898,7 @@ _compute_overlay_surfaces
                              sizeof(PDM_g_num_t) *  5 * nSubFaces);
 
 
-  if (0 == 1) {
+  if (vb == 1) {
     printf("\n-- Liste des sous-facettes des elements de A (intersection + complement intersection)\n");
     for (int i = 0; i < n_elt_blockA; i++) {
 
@@ -7611,6 +7948,9 @@ _compute_overlay_surfaces
       }
       printf("\n");
     }
+  }
+  if (vb == 1) {
+    printf ("[%d] OK\n", i_rank);
   }
 
   /*

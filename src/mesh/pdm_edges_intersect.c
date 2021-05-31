@@ -2813,7 +2813,7 @@ PDM_edges_intersect_poly_add
 void
 PDM_edges_intersect_synchronize
 (
- PDM_edges_intersect_t       *ei,
+ PDM_edges_intersect_t  *ei,
  PDM_g_num_t             nAbsVtxA,
  PDM_g_num_t             nAbsVtxB,
  PDM_g_num_t            *nAbsNewVtxA,
@@ -2863,27 +2863,28 @@ PDM_edges_intersect_synchronize
 
   PDM_g_num_t *keys        = malloc (sizeof(PDM_g_num_t) * n_procData);
 
-  int        *tIntersects = malloc (sizeof(int) * n_procData);
+  int         *tIntersects = malloc (sizeof(int)         * n_procData);
 
   PDM_g_num_t *gNumEdgeA   = malloc (sizeof(PDM_g_num_t) * n_procData);
   PDM_g_num_t *gNumEdgeB   = malloc (sizeof(PDM_g_num_t) * n_procData);
-  int        *nNewPointsA = malloc (sizeof(int) * n_procData);
+
+  int         *nNewPointsA = malloc (sizeof(int)         * n_procData);
+  int         *nNewPointsB = malloc (sizeof(int)         * n_procData);
+
   PDM_edges_intersect_point_t *oNewPointsA =
     malloc (sizeof(PDM_edges_intersect_point_t) * 2 * n_procData);
-
-  PDM_g_num_t *connectPointA = malloc (sizeof(PDM_g_num_t) * 2 * n_procData);
-  PDM_g_num_t *gNumA = malloc (sizeof(PDM_g_num_t) * 2 * n_procData);
-  double *uPointA = malloc (sizeof(double) * 2 * n_procData);
-  double *coordsPointA = malloc (sizeof(double) * 6 * n_procData);
-
-  int        *nNewPointsB = malloc (sizeof(int) * n_procData);
   PDM_edges_intersect_point_t *oNewPointsB =
     malloc (sizeof(PDM_edges_intersect_point_t) * 2 * n_procData);
 
+  PDM_g_num_t *connectPointA = malloc (sizeof(PDM_g_num_t) * 2 * n_procData);
+  PDM_g_num_t *gNumA         = malloc (sizeof(PDM_g_num_t) * 2 * n_procData);
+  double      *uPointA       = malloc (sizeof(double)      * 2 * n_procData);
+  double      *coordsPointA  = malloc (sizeof(double)      * 6 * n_procData);
+
   PDM_g_num_t *connectPointB = malloc (sizeof(PDM_g_num_t) * 2 * n_procData);
-  PDM_g_num_t *gNumB = malloc (sizeof(PDM_g_num_t) * 2 * n_procData);
-  double *uPointB = malloc (sizeof(double) * 2 * n_procData);
-  double *coordsPointB = malloc (sizeof(double) * 6 * n_procData);
+  PDM_g_num_t *gNumB         = malloc (sizeof(PDM_g_num_t) * 2 * n_procData);
+  double      *uPointB       = malloc (sizeof(double)      * 2 * n_procData);
+  double      *coordsPointB  = malloc (sizeof(double)      * 6 * n_procData);
 
   n_procData = 0;
   int idxA = 0;
