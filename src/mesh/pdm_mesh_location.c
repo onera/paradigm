@@ -1734,13 +1734,13 @@ PDM_mesh_location_t *ml
 
     PDM_printf( "mesh_location timer : compress location data (elapsed and cpu) :                   "
                 " %12.5es %12.5es\n",
-                t_elaps_max[MERGE_LOCATION_DATA],
-                t_cpu_max[MERGE_LOCATION_DATA]);
+                t_elaps_max[COMPRESS_LOCATION_DATA],
+                t_cpu_max[COMPRESS_LOCATION_DATA]);
 
     PDM_printf( "mesh_location timer : reverse location data (elapsed and cpu) :                   "
                 " %12.5es %12.5es\n",
-                t_elaps_max[MERGE_LOCATION_DATA],
-                t_cpu_max[MERGE_LOCATION_DATA]);
+                t_elaps_max[REVERSE_LOCATION_DATA],
+                t_cpu_max[REVERSE_LOCATION_DATA]);
   }
 }
 
@@ -2310,9 +2310,9 @@ PDM_mesh_location_t        *ml
       /* Build parallel octree */
       PDM_para_octree_build (octree_id, NULL);
       // PDM_para_octree_dump (octree_id);
-      if (DEBUG) {
+      // if (DEBUG) {
         PDM_para_octree_dump_times (octree_id);
-      }
+      // }
 
       /* Locate points inside boxes */
       PDM_para_octree_points_inside_boxes (octree_id,
