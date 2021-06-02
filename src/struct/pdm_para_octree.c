@@ -31,6 +31,7 @@
 #include "pdm_box_tree.h"
 #include "pdm_box_priv.h"
 #include "pdm_array.h"
+#include "pdm_logging.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -5478,7 +5479,7 @@ PDM_para_octree_closest_points
   const int dim = octree->dim;
 
   float f_copy_threshold = 1.1;
-  float f_max_copy = 0.3;//set to 0.01
+  float f_max_copy = 0.3;
 
   char *env_var = NULL;
   env_var = getenv ("OCTREE_COPY_THRESHOLD");
@@ -6465,7 +6466,7 @@ PDM_para_octree_single_closest_point
   const int dim = octree->dim;
 
   float f_copy_threshold = 1.1;
-  float f_max_copy = 0.3;// set to 0.01
+  float f_max_copy = 0.3;
 
   char *env_var = NULL;
   env_var = getenv ("OCTREE_COPY_THRESHOLD");
@@ -7569,7 +7570,7 @@ PDM_para_octree_points_inside_boxes
  double            **pts_in_box_coord
  )
 {
-  const int DEBUG = 1;
+  const int DEBUG = 0;
 
   int n_recv_boxes = 0;
   PDM_morton_code_t *box_corners = NULL;
@@ -7631,7 +7632,7 @@ PDM_para_octree_points_inside_boxes
     /***************************************
      * Redistribute bounding boxes
      ***************************************/
-    int *send_count = PDM_array_zeros_int (n_ranks);
+    int *send_count = PDM_array_zeros_int(n_ranks);
 
     /* Encode box corners */
     box_corners = malloc (sizeof(PDM_morton_code_t) * 2 * _n_boxes);
@@ -7773,6 +7774,11 @@ PDM_para_octree_points_inside_boxes
   int *box_pts_idx = malloc (sizeof(int) * (n_recv_boxes+1));
   box_pts_idx[0] = 0;
 
+  log_debug("n_recv_boxes = %i \n", n_recv_boxes);
+
+  size_t min_intersect = 100000000;
+  size_t max_intersect = 0;
+  size_t mean_intersect = 0;
   /* Loop over redistributed boxes */
   for (int ibox = 0; ibox < n_recv_boxes; ibox++) {
     n_intersect_nodes = 0;
@@ -7792,10 +7798,6 @@ PDM_para_octree_points_inside_boxes
                               intersect_nodes);
 
     if (DEBUG) {
-      printf("[%d]\tbox %d ("PDM_FMT_G_NUM") extents: %f %f %f / %f %f %f\n",
-             my_rank, ibox, recv_box_g_num[ibox],
-             recv_box_extents[6*ibox  ], recv_box_extents[6*ibox+1], recv_box_extents[6*ibox+2],
-             recv_box_extents[6*ibox+3], recv_box_extents[6*ibox+4], recv_box_extents[6*ibox+5]);
       printf("[%d]\tbox %d ("PDM_FMT_G_NUM") nodes:", my_rank, ibox, recv_box_g_num[ibox]);
       for (int j = 0; j < (int) n_intersect_nodes; j++) {
         printf(" %d", intersect_nodes[j]);
@@ -7803,7 +7805,16 @@ PDM_para_octree_points_inside_boxes
       printf("\n");
     }
 
-    size_t new_max_size = box_pts_idx[ibox] + n_intersect_nodes * octree->points_in_leaf_max;
+    // printf("n_intersect_nodes =%li \n", n_intersect_nodes);
+    min_intersect = PDM_MIN(min_intersect, n_intersect_nodes);
+    max_intersect = PDM_MAX(max_intersect, n_intersect_nodes);
+    mean_intersect += n_intersect_nodes;
+    //size_t new_max_size = box_pts_idx[ibox] + n_intersect_nodes * octree->points_in_leaf_max;
+    size_t new_max_size = box_pts_idx[ibox];
+    for (size_t i = 0; i < n_intersect_nodes; i++) {
+      new_max_size += octants->n_points[intersect_nodes[i]];
+    }
+
     if (s_box_pts <= new_max_size) {
       s_box_pts = PDM_MAX (2*s_box_pts, new_max_size);
       box_pts = realloc (box_pts, sizeof(int) * s_box_pts);
@@ -7850,6 +7861,11 @@ PDM_para_octree_points_inside_boxes
   if (recv_box_extents != box_extents) free (recv_box_extents);
   free (box_corners);
   free (intersect_nodes);
+  //log_debug("approx_size = %i | TRUE s_box_pts = %i \n", approx_size, s_box_pts);
+
+  if (n_recv_boxes != 0) mean_intersect /= n_recv_boxes;
+  log_debug("min_intersect = %li | max_intersect = %li | mean_intersect = %li \n", min_intersect, max_intersect, mean_intersect);
+  log_debug("box_pts_idx[%i] = %li \n", n_recv_boxes, box_pts_idx[n_recv_boxes]);
 
 
   /* Get gnum and coords of points inside boxes */
