@@ -1842,6 +1842,13 @@ PDM_mesh_location_compute
   int n_procs;
   PDM_MPI_Comm_size (location->comm, &n_procs);
 
+  int USE_OCTREE_BTSHARED = 0;
+  char *env_var = getenv ("USE_OCTREE_BTSHARED");
+  if (env_var != NULL) {
+    USE_OCTREE_BTSHARED = atoi(env_var);
+  }
+  if (my_rank == 0) printf("USE_OCTREE_BTSHARED = %d\n", USE_OCTREE_BTSHARED);
+
   double b_t_elapsed;
   double b_t_cpu;
   double b_t_cpu_u;
@@ -2380,13 +2387,23 @@ PDM_mesh_location_compute
 
 
       /* Locate points inside boxes */
-      PDM_para_octree_points_inside_boxes (octree_id,
-                                           n_boxes,
-                                           box_extents,
-                                           box_g_num,
-                                           &pts_idx,
-                                           &pts_g_num,
-                                           &pts_coord);
+      if (USE_OCTREE_BTSHARED) {
+        PDM_para_octree_points_inside_boxes2 (octree_id,
+                                              n_boxes,
+                                              box_extents,
+                                              box_g_num,
+                                              &pts_idx,
+                                              &pts_g_num,
+                                              &pts_coord);
+      } else {
+        PDM_para_octree_points_inside_boxes (octree_id,
+                                             n_boxes,
+                                             box_extents,
+                                             box_g_num,
+                                             &pts_idx,
+                                             &pts_g_num,
+                                             &pts_coord);
+      }
 
       /* Free octree */
       PDM_para_octree_free (octree_id);
@@ -2416,9 +2433,9 @@ PDM_mesh_location_compute
       printf("\n[%d] --- Pts in box ---\n", my_rank);
       for (ibox = 0; ibox < n_boxes; ibox++) {
 
-        if (pts_idx[ibox+1] <= pts_idx[ibox]) {
+        /*if (pts_idx[ibox+1] <= pts_idx[ibox]) {
           continue;
-        }
+          }*/
 
         printf("[%d] %d ("PDM_FMT_G_NUM"): ", my_rank, ibox, box_g_num[ibox]);
         for (int i = pts_idx[ibox]; i < pts_idx[ibox+1]; i++) {
