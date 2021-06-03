@@ -1387,8 +1387,8 @@ double      *closest_octree_pt_dist2
 
   int         *send_bounds_next     = NULL;
 
-  PDM_MPI_Request Request_coord[2];
-  PDM_MPI_Request Request_gnum[2];
+  PDM_MPI_Request Request_coord[2] = {-100, -100};
+  PDM_MPI_Request Request_gnum[2] = {-100, -100};
 
   /* printf ("n_send_pts : "); */
   /* for (int i = 0; i < n_rank; i++) { */
@@ -1458,9 +1458,13 @@ double      *closest_octree_pt_dist2
                       data_recv_pts, n_recv_pts, i_recv_pts, PDM_MPI_DOUBLE,
                       octree->comm, &(Request_coord[0]));
 
+  printf("request : %d %d\n", Request_coord[0], Request_gnum[0]);
+
   PDM_MPI_Ialltoallv (data_send_gnum, n_send_gnum, i_send_gnum, PDM__PDM_MPI_G_NUM,
                       data_recv_gnum, n_recv_gnum, i_recv_gnum, PDM__PDM_MPI_G_NUM,
                       octree->comm, &(Request_gnum[0]));
+
+  printf("request1 : %d %d\n", Request_coord[0], Request_gnum[0]);
 
   int *_closest_octree_pt_id         = NULL;
   double *_closest_octree_pt_dist2   = NULL;
@@ -1682,7 +1686,9 @@ double      *closest_octree_pt_dist2
     }
 
     PDM_MPI_Wait (&(Request_coord[icurr]));
+  printf("request3 : %d %d\n", Request_coord[0], Request_gnum[0]);
     PDM_MPI_Wait (&(Request_gnum[icurr]));
+  printf("request4 : %d %d\n", Request_coord[0], Request_gnum[0]);
 
     // Attente reception buffer courant
 
