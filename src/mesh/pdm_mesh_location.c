@@ -22,9 +22,6 @@
 #include "pdm_dbbtree.h"
 #include "pdm_part_to_block.h"
 #include "pdm_block_to_part.h"
-#include "pdm_triangle.h"
-#include "pdm_polygon.h"
-#include "pdm_hash_tab.h"
 #include "pdm_mesh_location_priv.h"
 #include "pdm_mesh_location.h"
 #include "pdm_point_location.h"
@@ -47,7 +44,7 @@ extern "C" {
  * Macro definitions
  *============================================================================*/
 
-#define NTIMER_MESH_LOCATION 9
+#define NTIMER_MESH_LOCATION 11
 
 /*============================================================================
  * Type definitions
@@ -65,10 +62,12 @@ typedef enum {
   SEARCH_CANDIDATES            = 2,
   LOAD_BALANCING               = 3,
   COMPUTE_ELEMENTARY_LOCATIONS = 4,
-  MERGE_LOCATION_DATA          = 5,
-  COMPRESS_LOCATION_DATA       = 6,
-  REVERSE_LOCATION_DATA        = 7,
-  END                          = 8
+  MERGE_LOCATION_DATA_STEP1    = 5,
+  MERGE_LOCATION_DATA_STEP2    = 6,
+  MERGE_LOCATION_DATA_STEP3    = 7,
+  COMPRESS_LOCATION_DATA       = 8,
+  REVERSE_LOCATION_DATA        = 9,
+  END                          = 10
 
 } _ol_timer_step_t;
 
@@ -1658,6 +1657,10 @@ PDM_mesh_location_free
       free (ml->face_vtx_n);
     }
   }
+
+  PDM_timer_free(ml->timer);
+
+  free(ml);
 }
 
 /**
@@ -1727,10 +1730,20 @@ PDM_mesh_location_t *ml
                 t_elaps_max[COMPUTE_ELEMENTARY_LOCATIONS],
                 t_cpu_max[COMPUTE_ELEMENTARY_LOCATIONS]);
 
-    PDM_printf( "mesh_location timer : merge location data (elapsed and cpu) :                   "
+    PDM_printf( "mesh_location timer : merge location data - step 1 (elapsed and cpu) :                   "
                 " %12.5es %12.5es\n",
-                t_elaps_max[MERGE_LOCATION_DATA],
-                t_cpu_max[MERGE_LOCATION_DATA]);
+                t_elaps_max[MERGE_LOCATION_DATA_STEP1],
+                t_cpu_max[MERGE_LOCATION_DATA_STEP1]);
+
+    PDM_printf( "mesh_location timer : merge location data - step 2 (elapsed and cpu) :                   "
+                " %12.5es %12.5es\n",
+                t_elaps_max[MERGE_LOCATION_DATA_STEP2],
+                t_cpu_max[MERGE_LOCATION_DATA_STEP2]);
+
+    PDM_printf( "mesh_location timer : merge location data - step 3 (elapsed and cpu) :                   "
+                " %12.5es %12.5es\n",
+                t_elaps_max[MERGE_LOCATION_DATA_STEP3],
+                t_cpu_max[MERGE_LOCATION_DATA_STEP3]);
 
     PDM_printf( "mesh_location timer : compress location data (elapsed and cpu) :                   "
                 " %12.5es %12.5es\n",
@@ -2578,7 +2591,7 @@ PDM_mesh_location_t        *ml
 
     int *block_stride = NULL;
 
-    /* Exchange location */
+    /* Exchange location (synchronous) */
     PDM_g_num_t *block_location1 = NULL;
     PDM_part_to_block_exch (ptb1,
                             sizeof(PDM_g_num_t),
@@ -2667,6 +2680,119 @@ PDM_mesh_location_t        *ml
     free (block_stride);
     free (part_stride);
 
+    /* Exchange location ( Async )*/
+    // PDM_g_num_t *block_location1 = NULL;
+    // int id1 = PDM_part_to_block_async_exch (ptb1,
+    //                         sizeof(PDM_g_num_t),
+    //                         PDM_STRIDE_VAR,
+    //                         1,
+    //                         &part_stride,
+    //                         (void **) &redistrib_pts_location);
+    // free (redistrib_pts_location);
+
+    // /* Exchange element type */
+    // PDM_Mesh_nodal_elt_t *block_elt_type = NULL;
+    // int id2 = PDM_part_to_block_async_exch (ptb1,
+    //                         sizeof(PDM_Mesh_nodal_elt_t),
+    //                         PDM_STRIDE_VAR,
+    //                         1,
+    //                         &part_stride,
+    //                         (void **) &redistrib_pts_elt_type);
+
+    // free (redistrib_pts_elt_type);
+
+    // /* Exchange distance */
+    // double *block_distance = NULL;
+    // int id3 = PDM_part_to_block_async_exch (ptb1,
+    //                         sizeof(double),
+    //                         PDM_STRIDE_VAR,
+    //                         1,
+    //                         &part_stride,
+    //                         (void **) &distance);
+    // free (distance);
+
+    // /* Exchange weights */
+    // int *weights_stride = malloc (sizeof(int) * n_pts);
+    // for (int i = 0; i < n_pts; i++) {
+    //   weights_stride[i] = weights_idx[i+1] - weights_idx[i];
+    // }
+    // free (weights_idx);
+
+    // double *block_weights1 = NULL;
+    // int id4 = PDM_part_to_block_async_exch (ptb1,
+    //                         sizeof(double),
+    //                         PDM_STRIDE_VAR,
+    //                         1,
+    //                         &weights_stride,
+    //                         (void **) &weights);
+    // free (weights);
+
+    // /* Exchange weights stride */
+    // int *block_n_vtx_elt    = NULL;
+    // int *block_n_candidates = NULL;
+    // int id5 = PDM_part_to_block_async_exch (ptb1,
+    //                         sizeof(int),
+    //                         PDM_STRIDE_VAR,
+    //                         1,
+    //                         &part_stride,
+    //                         (void **) &weights_stride);
+    // free (weights_stride);
+
+    // /* Exchange projected coords */
+    // for (int i = 0; i < n_pts; i++) {
+    //   part_stride[i] = 3;
+    // }
+    // double *block_proj_coord1 = NULL;
+    // int id6 = PDM_part_to_block_async_exch (ptb1,
+    //                         sizeof(double),
+    //                         PDM_STRIDE_VAR,
+    //                         1,
+    //                         &part_stride,
+    //                         (void **) &projected_coord);
+    // free (projected_coord);
+    // free (part_stride);
+
+
+    // PDM_part_to_block_async_wait(ptb1, id1);
+    // PDM_part_to_block_asyn_post_treatment(ptb1, id1, &block_stride, (void **) &block_location1);
+    // free (block_stride);
+
+    // PDM_part_to_block_async_wait(ptb1, id2);
+    // PDM_part_to_block_asyn_post_treatment(ptb1, id2, &block_stride, (void **) &block_elt_type);
+    // free (block_stride);
+
+    // PDM_part_to_block_async_wait(ptb1, id3);
+    // PDM_part_to_block_asyn_post_treatment(ptb1, id3, &block_stride, (void **) &block_distance);
+    // free (block_stride);
+
+    // PDM_part_to_block_async_wait(ptb1, id4);
+    // PDM_part_to_block_asyn_post_treatment(ptb1, id4, &block_stride, (void **) &block_weights1);
+    // free (block_stride);
+
+    // PDM_part_to_block_async_wait(ptb1, id5);
+    // PDM_part_to_block_asyn_post_treatment(ptb1, id5, &block_n_candidates, (void **) &block_n_vtx_elt);
+
+    // PDM_part_to_block_async_wait(ptb1, id6);
+    // PDM_part_to_block_asyn_post_treatment(ptb1, id6, &block_stride, (void **) &block_proj_coord1);
+    // free (block_stride);
+
+    PDM_timer_hang_on(ml->timer);
+    e_t_elapsed = PDM_timer_elapsed(ml->timer);
+    e_t_cpu     = PDM_timer_cpu(ml->timer);
+    e_t_cpu_u   = PDM_timer_cpu_user(ml->timer);
+    e_t_cpu_s   = PDM_timer_cpu_sys(ml->timer);
+
+    ml->times_elapsed[MERGE_LOCATION_DATA_STEP1] += e_t_elapsed - b_t_elapsed;
+    ml->times_cpu[MERGE_LOCATION_DATA_STEP1]     += e_t_cpu - b_t_cpu;
+    ml->times_cpu_u[MERGE_LOCATION_DATA_STEP1]   += e_t_cpu_u - b_t_cpu_u;
+    ml->times_cpu_s[MERGE_LOCATION_DATA_STEP1]   += e_t_cpu_s - b_t_cpu_s;
+
+    b_t_elapsed = e_t_elapsed;
+    b_t_cpu     = e_t_cpu;
+    b_t_cpu_u   = e_t_cpu_u;
+    b_t_cpu_s   = e_t_cpu_s;
+    PDM_timer_resume(ml->timer);
+
 
     /*
      *   2) Among candidate elements, keep closest one for each point (set location to -1 if no candidate -> unlocated point)
@@ -2750,6 +2876,23 @@ PDM_mesh_location_t        *ml
     free (block_location1);
     free (block_weights1);
     free (block_proj_coord1);
+
+    PDM_timer_hang_on(ml->timer);
+    e_t_elapsed = PDM_timer_elapsed(ml->timer);
+    e_t_cpu     = PDM_timer_cpu(ml->timer);
+    e_t_cpu_u   = PDM_timer_cpu_user(ml->timer);
+    e_t_cpu_s   = PDM_timer_cpu_sys(ml->timer);
+
+    ml->times_elapsed[MERGE_LOCATION_DATA_STEP2] += e_t_elapsed - b_t_elapsed;
+    ml->times_cpu[MERGE_LOCATION_DATA_STEP2]     += e_t_cpu - b_t_cpu;
+    ml->times_cpu_u[MERGE_LOCATION_DATA_STEP2]   += e_t_cpu_u - b_t_cpu_u;
+    ml->times_cpu_s[MERGE_LOCATION_DATA_STEP2]   += e_t_cpu_s - b_t_cpu_s;
+
+    b_t_elapsed = e_t_elapsed;
+    b_t_cpu     = e_t_cpu;
+    b_t_cpu_u   = e_t_cpu_u;
+    b_t_cpu_s   = e_t_cpu_s;
+    PDM_timer_resume(ml->timer);
 
     /*
      *   3) Block-to-part
@@ -2883,10 +3026,10 @@ PDM_mesh_location_t        *ml
     e_t_cpu_u   = PDM_timer_cpu_user(ml->timer);
     e_t_cpu_s   = PDM_timer_cpu_sys(ml->timer);
 
-    ml->times_elapsed[MERGE_LOCATION_DATA] += e_t_elapsed - b_t_elapsed;
-    ml->times_cpu[MERGE_LOCATION_DATA]     += e_t_cpu - b_t_cpu;
-    ml->times_cpu_u[MERGE_LOCATION_DATA]   += e_t_cpu_u - b_t_cpu_u;
-    ml->times_cpu_s[MERGE_LOCATION_DATA]   += e_t_cpu_s - b_t_cpu_s;
+    ml->times_elapsed[MERGE_LOCATION_DATA_STEP3] += e_t_elapsed - b_t_elapsed;
+    ml->times_cpu[MERGE_LOCATION_DATA_STEP3]     += e_t_cpu - b_t_cpu;
+    ml->times_cpu_u[MERGE_LOCATION_DATA_STEP3]   += e_t_cpu_u - b_t_cpu_u;
+    ml->times_cpu_s[MERGE_LOCATION_DATA_STEP3]   += e_t_cpu_s - b_t_cpu_s;
 
     b_t_elapsed = e_t_elapsed;
     b_t_cpu     = e_t_cpu;
