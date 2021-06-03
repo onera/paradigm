@@ -2502,10 +2502,34 @@ _count_boxes_intersections(const PDM_box_tree_t  *bt,
 
   *ncall += 1;
 
-  assert (_boxes_intersect_node (bt,
+  /*assert (_boxes_intersect_node (bt,
                                  boxesB,
                                  boxB_id,
-                                 node_id));
+                                 node_id));*/
+  if (!_boxes_intersect_node (bt,
+                              boxesB,
+                              boxB_id,
+                              node_id)) {
+    printf("error _count_boxes_intersections :\n");
+    const double  *box_min = _box_min(boxesB, boxB_id);
+    const double  *box_max = _box_max(boxesB, boxB_id);
+    printf("box : %f %f %f  / %f %f %f\n",
+           box_min[0], box_min[1], box_min[2],
+           box_max[0], box_max[1], box_max[2]);
+
+    const PDM_morton_code_t code = bt->local_data->nodes[node_id].morton_code;
+    printf("node : L = %d, X = %d %d %d\n",
+           code.L, code.X[0], code.X[1], code.X[2]);
+
+    const PDM_morton_int_t level = code.L;
+    double min_grid_coord[3], max_grid_coord[3];
+    _get_grid_coords_3d(level, box_min, min_grid_coord);
+    _get_grid_coords_3d(level, box_max, max_grid_coord);
+    printf("box grid coords: %f %f %f  / %f %f %f\n",
+           min_grid_coord[0], min_grid_coord[1], min_grid_coord[2],
+           max_grid_coord[0], max_grid_coord[1], max_grid_coord[2]);
+    abort();
+  }
 
   if (node->is_leaf == false) {
 
