@@ -7754,9 +7754,16 @@ PDM_para_octree_points_inside_boxes
 
   /* Root node of octree */
   PDM_morton_code_t root;
-  PDM_morton_nearest_common_ancestor (octants->codes[0],
-                                      octants->codes[octants->n_nodes - 1],
-                                      &root);
+  root.L = 0;
+  root.X[0] = 0;
+  root.X[1] = 0;
+  root.X[2] = 0;
+
+  if (octants->n_nodes > 0) {
+    PDM_morton_nearest_common_ancestor (octants->codes[0],
+                                        octants->codes[octants->n_nodes - 1],
+                                        &root);
+  }
 
   int *intersect_nodes = malloc (sizeof(int) * octants->n_nodes );
   size_t n_intersect_nodes;
@@ -7781,14 +7788,14 @@ PDM_para_octree_points_inside_boxes
 
     approx_size += n_intersect_nodes * octree->points_in_leaf_max;
   }
-  log_debug("approx_size = %i \n", approx_size);
+  //log_debug("approx_size = %i \n", approx_size);
   int *box_pts = malloc (sizeof(int) * approx_size);
 
 
   int *box_pts_idx = malloc (sizeof(int) * (n_recv_boxes+1));
   box_pts_idx[0] = 0;
 
-  log_debug("n_recv_boxes = %i \n", n_recv_boxes);
+  //log_debug("n_recv_boxes = %i \n", n_recv_boxes);
 
   size_t min_intersect = 100000000;
   size_t max_intersect = 0;
@@ -7873,11 +7880,11 @@ PDM_para_octree_points_inside_boxes
   free (recv_box_extents);
   free (box_corners);
   free (intersect_nodes);
-  log_debug("approx_size = %i | TRUE s_box_pts = %i \n", approx_size, s_box_pts);
+  //log_debug("approx_size = %i | TRUE s_box_pts = %i \n", approx_size, s_box_pts);
 
-  mean_intersect = mean_intersect/n_recv_boxes;
-  log_debug("min_intersect = %li | max_intersect = %li | mean_intersect = %li \n", min_intersect, max_intersect, mean_intersect);
-  log_debug("box_pts_idx[%i] = %li \n", n_recv_boxes, box_pts_idx[n_recv_boxes]);
+  //mean_intersect = mean_intersect/n_recv_boxes;
+  //log_debug("min_intersect = %li | max_intersect = %li | mean_intersect = %li \n", min_intersect, max_intersect, mean_intersect);
+  //log_debug("box_pts_idx[%i] = %li \n", n_recv_boxes, box_pts_idx[n_recv_boxes]);
 
 
   /* Get gnum and coords of points inside boxes */
