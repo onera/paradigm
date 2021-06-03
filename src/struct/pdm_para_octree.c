@@ -7594,18 +7594,24 @@ PDM_para_octree_points_inside_boxes
   int n_ranks;
   PDM_MPI_Comm_size (octree->comm, &n_ranks);
 
-
-  /* Clip box extents (ensure Morton codes of box corners are properly computed) */
-  double *_box_extents = malloc (sizeof(double) * two_dim * n_boxes);
-  for (int ibox = 0; ibox < n_boxes; ibox++) {
-    for (int idim = 0; idim < dim; idim++) {
-      _box_extents[two_dim*ibox + idim]       = PDM_MAX (octree->global_extents[idim],
-                                                         box_extents[two_dim*ibox + idim]);
-      _box_extents[two_dim*ibox + dim + idim] = PDM_MIN (octree->global_extents[idim + dim],
-                                                         box_extents[two_dim*ibox + dim + idim]);
+  if (DEBUG) {
+    if (my_rank == 0) {
+      printf("octree extents = %f %f %f %f %f %f\n",
+             octree->global_extents[0], octree->global_extents[1],
+             octree->global_extents[2], octree->global_extents[3],
+             octree->global_extents[4], octree->global_extents[5]);
     }
   }
 
+  /* Clip box extents (ensure Morton codes of box corners are properly computed) */
+  double      *_box_extents = box_extents;
+  PDM_g_num_t *_box_g_num   = box_g_num;
+
+  /*
+   * TO DO: remove boxes that do not intersect the octree's global extents
+   */
+  int _n_boxes = n_boxes;
+  //...
 
   /* Multiple ranks */
   if (n_ranks > 1) {
@@ -7629,21 +7635,21 @@ PDM_para_octree_points_inside_boxes
     int *send_count = PDM_array_zeros_int(n_ranks);
 
     /* Encode box corners */
-    box_corners = malloc (sizeof(PDM_morton_code_t) * 2 * n_boxes);
-    PDM_morton_encode_coords (dim,
-                              PDM_morton_max_level,
-                              octree->global_extents,
-                              2 * n_boxes,
-                              _box_extents,
-                              box_corners,
-                              d,
-                              s);
+    box_corners = malloc (sizeof(PDM_morton_code_t) * 2 * _n_boxes);
+    _morton_encode_coords (dim,
+                           PDM_morton_max_level,
+                           octree->global_extents,
+                           2 * _n_boxes,
+                           _box_extents,
+                           box_corners,
+                           d,
+                           s);
 
-    size_t *box_rank = malloc (sizeof(int *) * 2 * n_boxes);
+    size_t *box_rank = malloc (sizeof(int *) * 2 * _n_boxes);
 
     /* Find which ranks possibly intersect each box */
     size_t start, end, tmp;
-    for (int ibox = 0; ibox < n_boxes; ibox++) {
+    for (int ibox = 0; ibox < _n_boxes; ibox++) {
       PDM_morton_quantile_intersect (n_ranks,
                                      box_corners[2*ibox],
                                      octree->rank_octants_index,
@@ -7689,10 +7695,10 @@ PDM_para_octree_points_inside_boxes
     double *send_box_extents = malloc (sizeof(double) * send_shift[n_ranks] * two_dim);
     recv_box_extents = malloc (sizeof(double) * recv_shift[n_ranks] * two_dim);
 
-    for (int ibox = 0; ibox < n_boxes; ibox++) {
+    for (int ibox = 0; ibox < _n_boxes; ibox++) {
       for (size_t irank = box_rank[2*ibox]; irank < box_rank[2*ibox+1]; irank++) {
         int idx = send_shift[irank] + send_count[irank];
-        send_box_g_num[idx] = box_g_num[ibox];
+        send_box_g_num[idx] = _box_g_num[ibox];
 
         for (int k = 0; k < two_dim; k++) {
           send_box_extents[two_dim*idx + k] = _box_extents[two_dim*ibox + k];
@@ -7701,7 +7707,8 @@ PDM_para_octree_points_inside_boxes
         send_count[irank]++;
       }
     }
-    free (_box_extents);
+    if (_box_extents != box_extents) free (_box_extents);
+    if (_box_g_num != box_g_num) free (_box_g_num);
     free (box_rank);
 
     /* Send boxes g_num buffer */
@@ -7731,9 +7738,9 @@ PDM_para_octree_points_inside_boxes
 
   /* Single rank */
   else {
-    n_recv_boxes     = n_boxes;
+    n_recv_boxes     = _n_boxes;
     recv_box_extents = _box_extents;
-    recv_box_g_num   = box_g_num;
+    recv_box_g_num   = _box_g_num;
   }
 
 
@@ -7743,14 +7750,14 @@ PDM_para_octree_points_inside_boxes
 
   /* Encode corners of redistributed boxes */
   box_corners = malloc (sizeof(PDM_morton_code_t) * 2 * n_recv_boxes);
-  PDM_morton_encode_coords (dim,
-                            PDM_morton_max_level,
-                            octree->global_extents,
-                            2 * n_recv_boxes,
-                            recv_box_extents,
-                            box_corners,
-                            d,
-                            s);
+  _morton_encode_coords (dim,
+                         PDM_morton_max_level,
+                         octree->global_extents,
+                         2 * n_recv_boxes,
+                         recv_box_extents,
+                         box_corners,
+                         d,
+                         s);
 
   /* Root node of octree */
   PDM_morton_code_t root;
@@ -7758,33 +7765,12 @@ PDM_para_octree_points_inside_boxes
                                       octants->codes[octants->n_nodes - 1],
                                       &root);
 
-  int *intersect_nodes = malloc (sizeof(int) * octants->n_nodes );
+  int *intersect_nodes = malloc (sizeof(int) * octants->n_nodes);
   size_t n_intersect_nodes;
 
   size_t s_box_pts = octree->n_points;
-  // int *box_pts = malloc (sizeof(int) * s_box_pts);
+  int *box_pts = malloc (sizeof(int) * s_box_pts);
   int *box_pts_n = malloc (sizeof(int) * n_recv_boxes);
-
-  size_t approx_size = 0;
-  for (int ibox = 0; ibox < n_recv_boxes; ibox++) {
-    n_intersect_nodes = 0;
-    /* Get list of all nodes (octants) that intersect the box */
-    PDM_morton_intersect_box (dim,
-                              root,
-                              box_corners[2*ibox],
-                              box_corners[2*ibox+1],
-                              octants->codes,
-                              0,
-                              octants->n_nodes,
-                              &n_intersect_nodes,
-                              intersect_nodes);
-
-    approx_size += n_intersect_nodes * octree->points_in_leaf_max;
-  }
-  log_debug("approx_size = %i \n", approx_size);
-  int *box_pts = malloc (sizeof(int) * approx_size);
-
-
   int *box_pts_idx = malloc (sizeof(int) * (n_recv_boxes+1));
   box_pts_idx[0] = 0;
 
@@ -7805,6 +7791,7 @@ PDM_para_octree_points_inside_boxes
                               box_corners[2*ibox],
                               box_corners[2*ibox+1],
                               octants->codes,
+                              octants->n_points,
                               0,
                               octants->n_nodes,
                               &n_intersect_nodes,
@@ -7822,15 +7809,16 @@ PDM_para_octree_points_inside_boxes
     min_intersect = PDM_MIN(min_intersect, n_intersect_nodes);
     max_intersect = PDM_MAX(max_intersect, n_intersect_nodes);
     mean_intersect += n_intersect_nodes;
+    //size_t new_max_size = box_pts_idx[ibox] + n_intersect_nodes * octree->points_in_leaf_max;
+    size_t new_max_size = box_pts_idx[ibox];
+    for (size_t i = 0; i < n_intersect_nodes; i++) {
+      new_max_size += octants->n_points[intersect_nodes[i]];
+    }
 
-    // size_t new_max_size = box_pts_idx[ibox] + n_intersect_nodes * octree->points_in_leaf_max;
-    // if (s_box_pts <= new_max_size) {
-    //   // s_box_pts = PDM_MAX (2*s_box_pts, new_max_size);
-    //   s_box_pts = new_max_size+1;
-    //   // log_debug("new_max_size = %li | new_max_size = %li | s_box_pts = %i \n", new_max_size, new_max_size, (int)s_box_pts);
-    //   // log_debug("(inside ) min_intersect = %li | max_intersect = %li | mean_intersect = %li \n", min_intersect, max_intersect, mean_intersect/(ibox+1));
-    //   box_pts = realloc (box_pts, sizeof(int) * s_box_pts);
-    // }
+    if (s_box_pts <= new_max_size) {
+      s_box_pts = PDM_MAX (2*s_box_pts, new_max_size);
+      box_pts = realloc (box_pts, sizeof(int) * s_box_pts);
+    }
 
     /* Inspect nodes (octants) which intersect the box */
     double *box_min = recv_box_extents + two_dim*ibox;
@@ -7870,12 +7858,12 @@ PDM_para_octree_points_inside_boxes
     }
 
   } // Loop over redistributed boxes
-  free (recv_box_extents);
+  if (recv_box_extents != box_extents) free (recv_box_extents);
   free (box_corners);
   free (intersect_nodes);
-  log_debug("approx_size = %i | TRUE s_box_pts = %i \n", approx_size, s_box_pts);
+  //log_debug("approx_size = %i | TRUE s_box_pts = %i \n", approx_size, s_box_pts);
 
-  mean_intersect = mean_intersect/n_recv_boxes;
+  if (n_recv_boxes != 0) mean_intersect /= n_recv_boxes;
   log_debug("min_intersect = %li | max_intersect = %li | mean_intersect = %li \n", min_intersect, max_intersect, mean_intersect);
   log_debug("box_pts_idx[%i] = %li \n", n_recv_boxes, box_pts_idx[n_recv_boxes]);
 
@@ -7908,7 +7896,7 @@ PDM_para_octree_points_inside_boxes
                                                           &n_recv_boxes,
                                                           1,
                                                           octree->comm);
-    free (_recv_box_g_num);
+    if (_recv_box_g_num != box_g_num) free (_recv_box_g_num);
 
     int *block_pts_in_box_n = NULL;
     PDM_g_num_t *block_pts_in_box_g_num = NULL;
