@@ -1126,6 +1126,8 @@ const double                zero_z,
 
   PDM_dcube_nodal_t *dcube = (PDM_dcube_nodal_t *) malloc(sizeof(PDM_dcube_nodal_t));
 
+  double t1 = PDM_MPI_Wtime();
+
   /*
    * Build dcube structure
    */
@@ -1296,8 +1298,32 @@ const double                zero_z,
 
   }
 
-  return dcube;
 
+  double t2 = PDM_MPI_Wtime();
+
+  double delta_t = t2 - t1;
+  double delta_max;
+  double delta_min;
+
+  PDM_MPI_Allreduce (&delta_t,
+                     &delta_max,
+                     1,
+                     PDM_MPI_DOUBLE,
+                     PDM_MPI_MAX,
+                     dcube->comm);
+
+  PDM_MPI_Allreduce (&delta_t,
+                     &delta_min,
+                     1,
+                     PDM_MPI_DOUBLE,
+                     PDM_MPI_MIN,
+                     dcube->comm);
+
+  if(i_rank == 0) {
+    printf("[%i] PDM_dcube_nodal : duration min/max -> %12.5e %12.5e \n", n_rank, delta_min, delta_max);
+  }
+
+  return dcube;
 }
 
 PDM_dmesh_nodal_t*

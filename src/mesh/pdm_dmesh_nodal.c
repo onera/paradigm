@@ -1537,8 +1537,8 @@ int               *n_sum_vtx_face_tot
   assert(dmesh_nodal->n_section_poly3d == 0); // Not implemented
   assert(dmesh_nodal->n_section_poly2d == 0); // Not implemented
 
-  printf("n_face_elt_tot     ::%i\n", *n_face_elt_tot   );
-  printf("n_sum_vtx_face_tot::%i\n" , *n_sum_vtx_face_tot);
+  // printf("n_face_elt_tot     ::%i\n", *n_face_elt_tot   );
+  // printf("n_sum_vtx_face_tot::%i\n" , *n_sum_vtx_face_tot);
 }
 
 /**
@@ -1563,7 +1563,7 @@ PDM_dmesh_nodal_generate_distribution
   dmesh_nodal->section_distribution    = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * (dmesh_nodal->n_section + 1));
   dmesh_nodal->section_distribution[0] = 0;
 
-  printf("dmesh_nodal->n_section : %i \n", dmesh_nodal->n_section);
+  // printf("dmesh_nodal->n_section : %i \n", dmesh_nodal->n_section);
 
   for(int i_section = 0; i_section < dmesh_nodal->n_section; ++i_section) {
 
@@ -1575,7 +1575,7 @@ PDM_dmesh_nodal_generate_distribution
   }
 
   /* Verbose */
-  if(1 == 1)
+  if(0 == 1)
   {
     PDM_printf(" ------------------------------ \n ");
     for(int i_section=0; i_section < dmesh_nodal->n_section+1; i_section++){
@@ -1856,7 +1856,7 @@ PDM_dmesh_nodal_t  *dmesh_nodal
 )
 {
 
-  PDM_printf("PDM_DMesh_nodal_cell_face_compute2 \n ");
+  // PDM_printf("PDM_DMesh_nodal_cell_face_compute2 \n ");
 
   /* Get current structure to treat */
   int n_face_elt_tot     = 0;
@@ -1868,8 +1868,8 @@ PDM_dmesh_nodal_t  *dmesh_nodal
   // int n_edge_elt_tot     = 0;
   // int n_sum_vtx_edge_tot = 0;
 
-  printf("n_face_elt_tot     ::%i\n", n_face_elt_tot   );
-  printf("n_sum_vtx_face_tot::%i\n", n_sum_vtx_face_tot);
+  // printf("n_face_elt_tot     ::%i\n", n_face_elt_tot   );
+  // printf("n_sum_vtx_face_tot::%i\n", n_sum_vtx_face_tot);
 
   PDM_g_num_t* delmt_face_cell    = (PDM_g_num_t*) malloc(  n_face_elt_tot     * sizeof(PDM_g_num_t));
   int*         dcell_face_vtx_idx = (int        *) malloc( (n_face_elt_tot +1) * sizeof(int        ));
@@ -2033,7 +2033,7 @@ PDM_dmesh_nodal_t  *dmesh_nodal
   dmesh_nodal->_dface_vtx_idx = (int         *) malloc( sizeof(int        ) * (blk_face_vtx_n_size+1 ));
   dmesh_nodal->_dface_cell    = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) *  blk_face_cell_size * 2 );
 
-  printf("blk_face_cell_size::%i\n", blk_face_cell_size);
+  // printf("blk_face_cell_size::%i\n", blk_face_cell_size);
 
   /*
    * Init global numbering

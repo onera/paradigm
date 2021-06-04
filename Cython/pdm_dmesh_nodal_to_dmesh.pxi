@@ -120,6 +120,6 @@ cdef class DMeshNodalToDMesh:
     # ************************************************************************
     # > Declaration
     # ************************************************************************
-    print("DMeshNodalToDMesh::__dealloc__")
+    # print("DMeshNodalToDMesh::__dealloc__")
     PDM_dmesh_nodal_to_dmesh_free(self.dmn_to_dm)
-    print("DMeshNodalToDMesh::__dealloc__ end ")
+    # print("DMeshNodalToDMesh::__dealloc__ end ")
