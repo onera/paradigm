@@ -737,7 +737,7 @@ int main(int argc, char *argv[])
           box_gnum = -1;
         }
 
-        if (p_location[ipt] != box_gnum) {
+        if (p_location[k1] != box_gnum) {
           /*double *cp = p_proj_coord + 3*ipt;
           printf("%d ("PDM_FMT_G_NUM") (%.15lf %.15lf %.15lf): ("PDM_FMT_G_NUM") | ("PDM_FMT_G_NUM") proj : (%.15lf %.15lf %.15lf)\n",
                  ipt, pts_gnum[ipt],
@@ -760,15 +760,16 @@ int main(int argc, char *argv[])
             double _dist = PDM_MIN (_dist1, _dist2);
             dist = PDM_MIN (dist, _dist);
           }
-          printf(PDM_FMT_G_NUM" distance = %e , location = "PDM_FMT_G_NUM" / "PDM_FMT_G_NUM"\n\n", tgt_g_num[ipart][ipt], dist, p_location[ipt], box_gnum);
-          //assert (dist < location_tolerance);
+          printf("[%d] "PDM_FMT_G_NUM" distance = %e , location = "PDM_FMT_G_NUM" / "PDM_FMT_G_NUM"\n\n",
+                 i_rank, tgt_g_num[ipart][ipt], dist, p_location[k1], box_gnum);
+          assert (dist < location_tolerance);
           //<<--
         }
       }
 
 
 
-      for (int k1 = 0; k1 < n_unlocated; k1++) {
+      /*for (int k1 = 0; k1 < n_unlocated; k1++) {
         int ipt = unlocated[k1] - 1;
 
         double *p = cell_center[ipart] + 3*ipt;
@@ -777,10 +778,10 @@ int main(int argc, char *argv[])
         int j = (int) floor (p[1] / cell_side);
         int k = (int) floor (p[2] / cell_side);
 
-        /*assert (i < 0 || i > n_vtx_seg-1 ||
-                j < 0 || j > n_vtx_seg-1 ||
-                k < 0 || k > n_vtx_seg-1);*/
-      }
+        assert (i < 0 || i > n_vtx_seg-1 ||
+        j < 0 || j > n_vtx_seg-1 ||
+        k < 0 || k > n_vtx_seg-1);
+        }*/
 
     }
   }

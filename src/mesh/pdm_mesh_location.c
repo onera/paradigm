@@ -2639,7 +2639,7 @@ PDM_mesh_location_t        *ml
   int octree_id;
 
   const int VISU = 1;
-  const int allow_extraction = 0;
+  const int allow_extraction = 1;
   const float extraction_threshold = 0.5; // max size ratio between extracted and original meshes
   int use_extracted_mesh = allow_extraction;
 
@@ -4238,7 +4238,7 @@ PDM_mesh_location_t        *ml
     /*
      * Conform to original partitioning of current point cloud
      */
-    #if 0
+#if 0
     assert (pcloud->location == NULL);
 
     pcloud->location         = malloc (sizeof(PDM_g_num_t *) * pcloud->n_part);
@@ -4329,10 +4329,10 @@ PDM_mesh_location_t        *ml
           pcloud->location[ipart][idx2] = pcloud->location[ipart][j];
           pcloud->dist2[ipart][idx2]    = pcloud->dist2[ipart][j];
           for (int k = 0; k < 3; ++k) {
-            pcloud->projected_coords[ipart][3*idx2+k]  = pcloud->projected_coords[ipart][3*j+k];
+            pcloud->projected_coords[ipart][3*idx2+k] = pcloud->projected_coords[ipart][3*j+k];
           }
 
-          pcloud->weights_idx[ipart][idx2]    = pcloud->weights_idx[ipart][j];
+          pcloud->weights_idx[ipart][idx2] = pcloud->weights_idx[ipart][j];
           //double      **weights; /*!< Barycentric coordinates */
 
           pcloud->located[ipart][idx2] = j+1;
