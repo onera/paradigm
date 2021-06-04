@@ -1078,6 +1078,17 @@ PDM_Mesh_nodal_g_num_get_from_part
  const int i_part
 );
 
+
+
+
+void
+PDM_Mesh_nodal_write
+(
+ const char       *filename,
+ PDM_Mesh_nodal_t *mesh
+ );
+
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

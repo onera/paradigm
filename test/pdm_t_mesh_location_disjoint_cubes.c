@@ -81,6 +81,7 @@ _read_args(int            argc,
            PDM_g_num_t   *n_vtx_seg,
            double        *length,
            double        *separation,
+           int           *deform,
            double        *tolerance,
            double        *marge,
            int           *n_part,
@@ -122,6 +123,9 @@ _read_args(int            argc,
         _usage(EXIT_FAILURE);
       else
         *separation = atof(argv[i]);
+    }
+    else if (strcmp(argv[i], "-def") == 0) {
+      *deform = 1;
     }
     else if (strcmp(argv[i], "-t") == 0) {
       i++;
@@ -187,16 +191,17 @@ _cube_mesh
  const double           xmin,
  const double           ymin,
  const double           zmin,
- const double           length
+ const double           length,
+ const int              deform
  )
 {
-  PDM_dcube_t *dcube = PDM_dcube_gen_init(PDM_MPI_COMM_WORLD,
-                                          n_vtx_seg,
-                                          length,
-                                          xmin,
-                                          ymin,
-                                          zmin,
-                                          PDM_OWNERSHIP_KEEP);
+  PDM_dcube_t *dcube = PDM_dcube_gen_init (PDM_MPI_COMM_WORLD,
+                                           n_vtx_seg,
+                                           length,
+                                           xmin,
+                                           ymin,
+                                           zmin,
+                                           PDM_OWNERSHIP_KEEP);
 
   int          dn_cell;
   int          dn_face;
@@ -227,6 +232,16 @@ _cube_mesh
                           &dvtx_coord,
                           &dface_group_idx,
                           &dface_group);
+
+  if (deform) {
+    for (int i = 0; i < dn_vtx; i++) {
+      double x = dvtx_coord[3*i];
+      double z = dvtx_coord[3*i + 2];
+
+      dvtx_coord[3*i]     += 0.1 * z * z;
+      dvtx_coord[3*i + 2] += 0.2 * cos(PDM_PI * x);
+    }
+  }
 
   /*
    *  Create mesh partitiions
@@ -295,13 +310,14 @@ int main(int argc, char *argv[])
    *  Set default values
    */
 
-  PDM_g_num_t n_vtx_seg = 10;
-  double      length    = 1.;
+  PDM_g_num_t n_vtx_seg  = 10;
+  double      length     = 1.;
   double      separation = 2.;
-  double      tolerance = 1e-6;
-  double      marge     = 0.;
-  int         n_part    = 1;
-  int         post      = 0;
+  int         deform     = 0;
+  double      tolerance  = 1e-6;
+  double      marge      = 0.;
+  int         n_part     = 1;
+  int         post       = 0;
 #ifdef PDM_HAVE_PARMETIS
   PDM_part_split_t part_method  = PDM_PART_SPLIT_PARMETIS;
 #else
@@ -324,6 +340,7 @@ int main(int argc, char *argv[])
               &n_vtx_seg,
               &length,
               &separation,
+              &deform,
               &tolerance,
               &marge,
               &n_part,
@@ -355,7 +372,8 @@ int main(int argc, char *argv[])
                               xmin,
                               ymin,
                               zmin,
-                              length);
+                              length,
+                              deform);
 
   /*
    *  Target cube
@@ -366,7 +384,8 @@ int main(int argc, char *argv[])
                               xmin + separation*length,
                               ymin,
                               zmin,
-                              length);
+                              length,
+                              deform);
 
   /*
    *  Mesh location structure initialization

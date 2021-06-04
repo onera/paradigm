@@ -30,6 +30,7 @@
 
 #include "pdm_binary_search.h"
 #include "pdm_para_octree.h"
+#include "pdm_gnum.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -1759,6 +1760,183 @@ PDM_mesh_location_t *ml
 
 
 
+static void _export_boxes
+(
+ const char        *filename,
+ const int          n_box,
+ const double      *box_extents,
+ const PDM_g_num_t *box_g_num
+ )
+{
+  FILE *f = fopen(filename, "w");
+
+  fprintf(f, "# vtk DataFile Version 2.0\nboxes\nASCII\nDATASET UNSTRUCTURED_GRID\n");
+
+  fprintf(f, "POINTS %d double\n", 8*n_box);
+  for (int i = 0; i < n_box; i++) {
+    const double *e = box_extents + 6*i;
+    fprintf(f, "%f %f %f\n", e[0], e[1], e[2]);
+    fprintf(f, "%f %f %f\n", e[3], e[1], e[2]);
+    fprintf(f, "%f %f %f\n", e[3], e[4], e[2]);
+    fprintf(f, "%f %f %f\n", e[0], e[4], e[2]);
+    fprintf(f, "%f %f %f\n", e[0], e[1], e[5]);
+    fprintf(f, "%f %f %f\n", e[3], e[1], e[5]);
+    fprintf(f, "%f %f %f\n", e[3], e[4], e[5]);
+    fprintf(f, "%f %f %f\n", e[0], e[4], e[5]);
+  }
+
+  fprintf(f, "CELLS %d %d\n", n_box, 9*n_box);
+  for (int i = 0; i < n_box; i++) {
+    int j = 8*i;
+    fprintf(f, "8 %d %d %d %d %d %d %d %d\n", j, j+1, j+2, j+3, j+4, j+5, j+6, j+7);
+  }
+
+  fprintf(f, "CELL_TYPES %d\n", n_box);
+  for (int i = 0; i < n_box; i++) {
+    fprintf(f, "12\n");
+  }
+
+  fprintf(f, "CELL_DATA %d\n", n_box);
+  fprintf(f, "SCALARS gnum int\n LOOKUP_TABLE default\n");
+  for (int i = 0; i < n_box; i++) {
+    fprintf(f, ""PDM_FMT_G_NUM"\n", box_g_num[i]);
+  }
+
+  fclose(f);
+}
+
+
+static void _export_point_cloud
+(
+ char         *filename,
+ int           n_part,
+ int          *n_pts,
+ double      **coord,
+ PDM_g_num_t **g_num,
+ PDM_g_num_t **parent_g_num
+ )
+{
+  FILE *f = fopen(filename, "w");
+
+  fprintf(f, "# vtk DataFile Version 2.0\noctree points\nASCII\nDATASET UNSTRUCTURED_GRID\n");
+
+  int n_pts_t = 0;
+  for (int ipart = 0; ipart < n_part; ipart++) {
+    n_pts_t += n_pts[ipart];
+  }
+
+  fprintf(f, "POINTS %d double\n", n_pts_t);
+  for (int ipart = 0; ipart < n_part; ipart++) {
+    for (int i = 0; i < n_pts[ipart]; i++) {
+      for (int j = 0; j < 3; j++) {
+        fprintf(f, "%f ", coord[ipart][3*i + j]);
+      }
+      fprintf(f, "\n");
+    }
+  }
+
+  fprintf(f, "CELLS %d %d\n", n_pts_t, 2*n_pts_t);
+  for (int i = 0; i < n_pts_t; i++) {
+    fprintf(f, "1 %d\n", i);
+  }
+
+  fprintf(f, "CELL_TYPES %d\n", n_pts_t);
+  for (int i = 0; i < n_pts_t; i++) {
+    fprintf(f, "1\n");
+  }
+
+  fprintf(f, "CELL_DATA %d\n", n_pts_t);
+  fprintf(f, "SCALARS gnum int\n LOOKUP_TABLE default\n");
+  for (int ipart = 0; ipart < n_part; ipart++) {
+    for (int i = 0; i < n_pts[ipart]; i++) {
+      fprintf(f, ""PDM_FMT_G_NUM"\n", g_num[ipart][i]);
+    }
+  }
+
+  if (parent_g_num != NULL) {
+    fprintf(f, "FIELD FieldData 1\n");
+    fprintf(f, "parent_gnum 1 %d int\n", n_pts_t);
+    for (int ipart = 0; ipart < n_part; ipart++) {
+      for (int i = 0; i < n_pts[ipart]; i++) {
+        fprintf(f, ""PDM_FMT_G_NUM"\n", parent_g_num[ipart][i]);
+      }
+    }
+  }
+
+  fclose(f);
+}
+
+
+static void
+_point_cloud_extract_selection
+(
+ PDM_MPI_Comm            comm,
+ const _point_cloud_t   *parent_cloud,
+ int                    *n_select_pts,
+ int                   **select_pts_l_num,
+ PDM_g_num_t          ***select_pts_parent_g_num,
+ PDM_g_num_t          ***select_pts_g_num,
+ double               ***select_pts_coord
+ )
+{
+  const int n_part = parent_cloud->n_part;
+
+  *select_pts_parent_g_num = malloc (sizeof(PDM_g_num_t *) * n_part);
+  *select_pts_g_num        = malloc (sizeof(PDM_g_num_t *) * n_part);
+  *select_pts_coord        = malloc (sizeof(double *)      * n_part);
+
+  PDM_gen_gnum_t *gen_gnum = PDM_gnum_create (3,
+                                              n_part,
+                                              PDM_FALSE,
+                                              0.,
+                                              comm,
+                                              PDM_OWNERSHIP_USER);
+
+
+  for (int ipart = 0; ipart < n_part; ipart++) {
+
+    (*select_pts_parent_g_num)[ipart] = malloc (sizeof(PDM_g_num_t *) * n_select_pts[ipart]);
+    (*select_pts_g_num)[ipart] = NULL;
+    (*select_pts_coord)[ipart] = malloc (sizeof(double) * n_select_pts[ipart] * 3);
+
+    for (int i = 0; i < n_select_pts[ipart]; i++) {
+      int j = select_pts_l_num[ipart][i]; // -1?
+
+      (*select_pts_parent_g_num)[ipart][i] = parent_cloud->gnum[ipart][j];
+      for (int k = 0; k < 3; k++) {
+        (*select_pts_coord)[ipart][3*i + k] = parent_cloud->coords[ipart][3*j + k];
+      }
+    }
+
+    PDM_gnum_set_from_parents (gen_gnum,
+                               ipart,
+                               n_select_pts[ipart],
+                               (*select_pts_parent_g_num)[ipart]);
+  }
+
+  /* Generate a new global numbering for selected points */
+  PDM_gnum_compute (gen_gnum);
+
+  for (int ipart = 0; ipart < n_part; ipart++) {
+    (*select_pts_g_num)[ipart] = PDM_gnum_get (gen_gnum, ipart);
+  }
+
+  /* Free memory */
+  /*for (int ipart = 0; ipart < n_part; ipart++) {
+    free (select_pts_parent_g_num[ipart]);
+  }
+  free (select_pts_parent_g_num);*/
+  PDM_gnum_free (gen_gnum);
+}
+
+
+
+
+
+
+
+
+
 /**
  *
  * \brief Compute point location
@@ -1783,6 +1961,15 @@ PDM_mesh_location_t        *ml
   const int octree_points_in_leaf_max = 1;
   const int octree_build_leaf_neighbours = 0;
   int octree_id;
+
+  const int VISU = 1;
+  const int allow_extraction = 1;
+  const float extraction_threshold = 0.5; // maximum size of extracted mesh relative to original mesh
+  int use_extracted_mesh = allow_extraction;
+
+  int          **n_select_pts = NULL;
+  PDM_g_num_t ***select_pts_g_num = NULL;
+  double      ***select_pts_coord = NULL;
 
 
   int my_rank;
@@ -1865,6 +2052,229 @@ PDM_mesh_location_t        *ml
       }
     }
   }
+
+  if (VISU) {
+    char filename[999];
+    sprintf(filename, "mesh_boxes_%3.3d.vtk", my_rank);
+    _export_boxes (filename, n_boxes, box_extents, box_g_num);
+
+
+    PDM_Mesh_nodal_write ("mesh_nodal",
+                          ml->mesh_nodal);
+  }
+
+
+  if (allow_extraction) {
+    /*
+     *  Compute global extents of source mesh
+     */
+    double mesh_extents[6] = { HUGE_VAL,  HUGE_VAL,  HUGE_VAL,
+                              -HUGE_VAL, -HUGE_VAL, -HUGE_VAL};
+    for (int i = 0; i < n_boxes; i++) {
+      for (int j = 0; j < 3; j++) {
+        mesh_extents[j]   = PDM_MIN (mesh_extents[j],   box_extents[6*i + j]);
+        mesh_extents[j+3] = PDM_MAX (mesh_extents[j+3], box_extents[6*i + j + 3]);
+      }
+    }
+
+    double g_mesh_extents[6];
+    PDM_MPI_Allreduce (mesh_extents,   g_mesh_extents,   3,
+                       PDM_MPI_DOUBLE, PDM_MPI_MIN, ml->comm);
+    PDM_MPI_Allreduce (mesh_extents+3, g_mesh_extents+3, 3,
+                       PDM_MPI_DOUBLE, PDM_MPI_MAX, ml->comm);
+
+    if (DEBUG && my_rank == 0) {
+      printf("g_mesh_extents = %f %f %f / %f %f %f\n",
+             g_mesh_extents[0], g_mesh_extents[1], g_mesh_extents[2],
+             g_mesh_extents[3], g_mesh_extents[4], g_mesh_extents[5]);
+    }
+
+    /*
+     *  Extract points that intersect the source mesh global extents
+     *  Brute force (could be accelerated using octree)
+     */
+    n_select_pts = malloc (sizeof(int *)  * ml->n_point_cloud);
+    int ***select_pts_l_num = malloc (sizeof(int **) * ml->n_point_cloud);
+
+    PDM_g_num_t ***select_pts_parent_g_num = malloc (sizeof(PDM_g_num_t **) * ml->n_point_cloud);
+    select_pts_g_num = malloc (sizeof(PDM_g_num_t **) * ml->n_point_cloud);
+    select_pts_coord = malloc (sizeof(double **) * ml->n_point_cloud);
+
+    for (int icloud = 0; icloud < ml->n_point_cloud; icloud++) {
+
+      _point_cloud_t *pcloud = ml->point_clouds + icloud;
+
+      n_select_pts[icloud] = malloc (sizeof(int) * pcloud->n_part);
+      select_pts_l_num[icloud] = malloc (sizeof(int *) * pcloud->n_part);
+
+      for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
+        n_select_pts[icloud][ipart] = 0;
+        select_pts_l_num[icloud][ipart] = malloc (sizeof(int) * pcloud->n_points[ipart]);
+
+        for (int i = 0; i < pcloud->n_points[ipart]; i++) {
+          int inside = 1;
+          for (int j = 0; j < 3; j++) {
+            if (pcloud->coords[ipart][3*i+j] < g_mesh_extents[j] ||
+                pcloud->coords[ipart][3*i+j] > g_mesh_extents[j+3]) {
+              inside = 0;
+              break;
+            }
+          }
+
+          if (inside) {
+            select_pts_l_num[icloud][ipart][n_select_pts[icloud][ipart]++] = i;// +1?
+          }
+        }
+
+        select_pts_l_num[icloud][ipart] = realloc (select_pts_l_num[icloud][ipart],
+                                                   sizeof(int) * n_select_pts[icloud][ipart]);
+      } // End of loop on parts
+
+
+      _point_cloud_extract_selection (ml->comm,
+                                      pcloud,
+                                      n_select_pts[icloud],
+                                      select_pts_l_num[icloud],
+                                      &(select_pts_parent_g_num[icloud]),
+                                      &(select_pts_g_num[icloud]),
+                                      &(select_pts_coord[icloud]));
+
+      if (VISU) {
+        char filename[999];
+
+        sprintf(filename, "parent_cloud_%d_%3.3d.vtk", icloud, my_rank);
+        _export_point_cloud (filename,
+                             pcloud->n_part,
+                             pcloud->n_points,
+                             pcloud->coords,
+                             pcloud->gnum,
+                             NULL);
+
+        sprintf(filename, "extracted_cloud_%d_%3.3d.vtk", icloud, my_rank);
+        _export_point_cloud (filename,
+                             pcloud->n_part,
+                             n_select_pts[icloud],
+                             select_pts_coord[icloud],
+                             select_pts_g_num[icloud],
+                             select_pts_parent_g_num[icloud]);
+      }
+
+    } // End loop on point clouds
+
+
+
+
+    /*
+     *  Compute global extents of extracted point clouds
+     */
+    double pts_extents[6] = { HUGE_VAL,  HUGE_VAL,  HUGE_VAL,
+                             -HUGE_VAL, -HUGE_VAL, -HUGE_VAL};
+    for (int icloud = 0; icloud < ml->n_point_cloud; icloud++) {
+
+      _point_cloud_t *pcloud = ml->point_clouds + icloud;
+
+      for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
+        for (int i = 0; i < n_select_pts[icloud][ipart]; i++) {
+          for (int j = 0; j < 3; j++) {
+            pts_extents[j]   = PDM_MIN (pts_extents[j],
+                                        select_pts_coord[icloud][ipart][3*i + j]);
+            pts_extents[j+3] = PDM_MAX (pts_extents[j+3],
+                                        select_pts_coord[icloud][ipart][3*i + j]);
+          }
+        }
+      }
+    }
+
+    double g_pts_extents[6];
+    PDM_MPI_Allreduce (pts_extents,   g_pts_extents,   3,
+                       PDM_MPI_DOUBLE, PDM_MPI_MIN, ml->comm);
+    PDM_MPI_Allreduce (pts_extents+3, g_pts_extents+3, 3,
+                       PDM_MPI_DOUBLE, PDM_MPI_MAX, ml->comm);
+
+    if (DEBUG && my_rank == 0) {
+      printf("g_pts_extents = %f %f %f / %f %f %f\n",
+             g_pts_extents[0], g_pts_extents[1], g_pts_extents[2],
+             g_pts_extents[3], g_pts_extents[4], g_pts_extents[5]);
+    }
+
+
+    /*
+     *  Select elements whose bounding box itersect
+     *  the global extents of the extracted point clouds
+     *  Brute force (could be accelerated using bbtree)
+     */
+
+    int  **n_select_elt = malloc (sizeof(int *)  * n_blocks);
+    int ***select_elt_l_num = malloc (sizeof(int **) * n_blocks);
+
+    ibox = 0;
+    for (int iblock = 0; iblock < n_blocks; iblock++) {
+
+      n_select_elt[iblock] = malloc (sizeof(int) * n_parts);
+      select_elt_l_num[iblock] = malloc (sizeof(int *) * n_parts);
+
+      int id_block = blocks_id[iblock];
+
+      for (int ipart = 0; ipart < n_parts; ipart++) {
+        int part_n_elt = PDM_Mesh_nodal_block_n_elt_get (ml->mesh_nodal,
+                                                         id_block,
+                                                         ipart);
+
+        n_select_elt[iblock][ipart] = 0;
+        select_elt_l_num[iblock][ipart] = malloc (sizeof(int) * part_n_elt);
+
+        for (int ielt = 0; ielt < part_n_elt; ielt++) {
+
+          double *box_min = box_extents + 6*ibox;
+          double *box_max = box_min + 3;
+
+          int intersect = 1;
+          for (int j = 0; j < 3; j++) {
+            if (box_min[j] > g_pts_extents[j+3] ||
+                box_max[j] < g_pts_extents[j]) {
+              intersect = 0;
+              break;
+            }
+          }
+
+          if (intersect) {
+            select_elt_l_num[iblock][ipart][n_select_elt[iblock][ipart]++] = ielt;// +1?
+          }
+
+          ibox++;
+        }
+
+        select_elt_l_num[iblock][ipart] = realloc (select_elt_l_num[iblock][ipart],
+                                                   sizeof(int) * n_select_elt[iblock][ipart]);
+      } // End of loop on parts
+    } // End of loop on nodal blocks
+
+    PDM_g_num_t l_n_elt[2];
+
+    l_n_elt[0] = (PDM_g_num_t) n_boxes;
+    l_n_elt[1] = 0;
+    for (int iblock = 0; iblock < n_blocks; iblock++) {
+      for (int ipart = 0; ipart < n_parts; ipart++) {
+        l_n_elt[1] += n_select_elt[iblock][ipart];
+      }
+    }
+
+    PDM_g_num_t g_n_elt[2];
+    PDM_MPI_Allreduce (l_n_elt, g_n_elt, 2, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, ml->comm);
+
+    if (my_rank == 0) {
+      printf("extract "PDM_FMT_G_NUM" / "PDM_FMT_G_NUM" mesh elts ("PDM_FMT_G_NUM"%%)\n",
+             g_n_elt[1], g_n_elt[0], (100 * g_n_elt[1]) / g_n_elt[0]);
+    }
+
+    use_extracted_mesh = (g_n_elt[1] < extraction_threshold * g_n_elt[0]);
+  }
+
+  else {
+    //?
+  } // End if/else allow_extraction
+
+
 
   PDM_timer_hang_on(ml->timer);
   e_t_elapsed = PDM_timer_elapsed(ml->timer);
@@ -2286,22 +2696,47 @@ PDM_mesh_location_t        *ml
      * Concatenate point cloud partitions
      */
     int n_pts_pcloud = 0;
-    for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
-      n_pts_pcloud += pcloud->n_points[ipart];
-    }
-    PDM_g_num_t *pcloud_g_num = malloc (sizeof(PDM_g_num_t) * n_pts_pcloud);
-    double      *pcloud_coord = malloc (sizeof(double)      * n_pts_pcloud * dim);
-    int idx = 0;
-    for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
-      for (int ipt = 0; ipt < pcloud->n_points[ipart]; ipt++) {
+    PDM_g_num_t *pcloud_g_num = NULL;
+    double      *pcloud_coord = NULL;
+    if (0) {//allow_extraction) {
+      for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
+        n_pts_pcloud += n_select_pts[icloud][ipart];
+      }
+      pcloud_g_num = malloc (sizeof(PDM_g_num_t) * n_pts_pcloud);
+      pcloud_coord = malloc (sizeof(double)      * n_pts_pcloud * dim);
+      int idx = 0;
+      for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
+        for (int ipt = 0; ipt < n_select_pts[icloud][ipart]; ipt++) {
 
-        pcloud_g_num[idx] = pcloud->gnum[ipart][ipt];
+          pcloud_g_num[idx] = select_pts_g_num[icloud][ipart][ipt];
 
-        for (int idim = 0; idim < dim; idim++) {
-          pcloud_coord[dim*idx + idim] = pcloud->coords[ipart][dim*ipt + idim];
+          for (int idim = 0; idim < dim; idim++) {
+            pcloud_coord[dim*idx + idim] = select_pts_coord[icloud][ipart][dim*ipt + idim];
+          }
+
+          idx++;
         }
+      }
+    }
 
-        idx++;
+    else {
+      for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
+        n_pts_pcloud += pcloud->n_points[ipart];
+      }
+      pcloud_g_num = malloc (sizeof(PDM_g_num_t) * n_pts_pcloud);
+      pcloud_coord = malloc (sizeof(double)      * n_pts_pcloud * dim);
+      int idx = 0;
+      for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
+        for (int ipt = 0; ipt < pcloud->n_points[ipart]; ipt++) {
+
+          pcloud_g_num[idx] = pcloud->gnum[ipart][ipt];
+
+          for (int idim = 0; idim < dim; idim++) {
+            pcloud_coord[dim*idx + idim] = pcloud->coords[ipart][dim*ipt + idim];
+          }
+
+          idx++;
+        }
       }
     }
 
