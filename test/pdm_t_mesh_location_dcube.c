@@ -701,7 +701,7 @@ int main(int argc, char *argv[])
                                          &points_projected_coords);
 
 
-    if (1) {
+    if (0) {
       printf("cell_vtx : \n");
       for (int j = 0; j < n_cell; j++) {
         printf("%d :", j);
@@ -739,7 +739,7 @@ int main(int argc, char *argv[])
     }
   }
 
-  if (1) {
+  if (0) {
     printf("Unlocated %d :\n", n_unlocated);
     for (int k1 = 0; k1 < n_unlocated; k1++) {
       printf("%d\n", unlocated[k1]);
@@ -776,11 +776,13 @@ int main(int argc, char *argv[])
     const PDM_g_num_t n_cell_seg = n_vtx_seg - 1;
     const double cell_side = length / ((double) n_cell_seg);
 
-    printf("Unlocated :\n");
-    for (int k1 = 0; k1 < n_unlocated; k1++) {
-      printf("%d\n", unlocated[k1]);
+    if(0 == 1) {
+      printf("Unlocated :\n");
+      for (int k1 = 0; k1 < n_unlocated; k1++) {
+        printf("%d\n", unlocated[k1]);
+      }
+      printf("\n");
     }
-    printf("\n");
 
     for (int k1 = 0; k1 < n_located; k1++) {
       int ipt = located[k1] - 1;
