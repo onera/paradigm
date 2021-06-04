@@ -5478,8 +5478,8 @@ PDM_para_octree_closest_points
   _octree_t *octree = _get_from_id (id);
   const int dim = octree->dim;
 
-  float f_copy_threshold = 1.1;
-  float f_max_copy = 0.3;
+  float f_copy_threshold = 1.15;
+  float f_max_copy = 0.1;
 
   char *env_var = NULL;
   env_var = getenv ("OCTREE_COPY_THRESHOLD");
