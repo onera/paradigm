@@ -27,6 +27,7 @@
 #include "pdm_point_location.h"
 #include "pdm_ho_location.h"
 #include "pdm_array.h"
+#include "pdm_distrib.h"
 
 #include "pdm_binary_search.h"
 #include "pdm_para_octree.h"
@@ -2638,12 +2639,19 @@ PDM_mesh_location_t        *ml
   const int octree_build_leaf_neighbours = 0;
   int octree_id;
 
-  const int VISU = 1;
-  const int allow_extraction = 1;
-  const float extraction_threshold = 0.5; // max size ratio between extracted and original meshes
+  const int VISU = 0;
+  int allow_extraction = 1;
+  float extraction_threshold = 0.5; // max size ratio between extracted and original meshes
+
+  char *env_var = getenv ("ALLOW_EXTRACTION");
+  if (env_var != NULL) {
+    allow_extraction = atoi(env_var);
+  }
+
   int use_extracted_mesh = allow_extraction;
 
   int          **n_select_pts = NULL;
+  PDM_g_num_t ***select_pts_parent_g_num = NULL;
   PDM_g_num_t ***select_pts_g_num = NULL;
   double      ***select_pts_coord = NULL;
 
@@ -2654,7 +2662,7 @@ PDM_mesh_location_t        *ml
   PDM_MPI_Comm_size (ml->comm, &n_procs);
 
   int USE_OCTREE_BTSHARED = 0;
-  char *env_var = getenv ("USE_OCTREE_BTSHARED");
+  env_var = getenv ("USE_OCTREE_BTSHARED");
   if (env_var != NULL) {
     USE_OCTREE_BTSHARED = atoi(env_var);
   }
@@ -2779,7 +2787,7 @@ PDM_mesh_location_t        *ml
     n_select_pts = malloc (sizeof(int *)  * ml->n_point_cloud);
     int ***select_pts_l_num = malloc (sizeof(int **) * ml->n_point_cloud);
 
-    PDM_g_num_t ***select_pts_parent_g_num = malloc (sizeof(PDM_g_num_t **) * ml->n_point_cloud);
+    select_pts_parent_g_num = malloc (sizeof(PDM_g_num_t **) * ml->n_point_cloud);
     select_pts_g_num = malloc (sizeof(PDM_g_num_t **) * ml->n_point_cloud);
     select_pts_coord = malloc (sizeof(double **) * ml->n_point_cloud);
 
@@ -2814,7 +2822,7 @@ PDM_mesh_location_t        *ml
       } // End of loop on parts
 
 
-      if (0) {
+      if (1) {
         _point_cloud_extract_selection (ml->comm,
                                         pcloud,
                                         n_select_pts[icloud],
@@ -2849,6 +2857,21 @@ PDM_mesh_location_t        *ml
                              select_pts_parent_g_num[icloud]);
       }
 
+      PDM_g_num_t l_n_pts[2] = {0, 0};
+      for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
+        l_n_pts[0] += pcloud->n_points[ipart];
+        l_n_pts[1] += n_select_pts[icloud][ipart];
+      }
+
+
+      PDM_g_num_t g_n_pts[2];
+      PDM_MPI_Allreduce (l_n_pts, g_n_pts, 2, PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, ml->comm);
+
+      if (my_rank == 0) {
+        printf("extract "PDM_FMT_G_NUM" / "PDM_FMT_G_NUM" pts from cloud %d ("PDM_FMT_G_NUM"%%)\n",
+               g_n_pts[1], g_n_pts[0], icloud, (100 * g_n_pts[1]) / g_n_pts[0]);
+      }
+
     } // End loop on point clouds
 
 
@@ -2881,7 +2904,7 @@ PDM_mesh_location_t        *ml
     PDM_MPI_Allreduce (pts_extents+3, g_pts_extents+3, 3,
                        PDM_MPI_DOUBLE, PDM_MPI_MAX, ml->comm);
 
-    if (1 && my_rank == 0) {
+    if (DEBUG && my_rank == 0) {
       printf("g_pts_extents = %f %f %f / %f %f %f\n",
              g_pts_extents[0], g_pts_extents[1], g_pts_extents[2],
              g_pts_extents[3], g_pts_extents[4], g_pts_extents[5]);
@@ -3020,11 +3043,6 @@ PDM_mesh_location_t        *ml
 
     }
   }
-
-  else {
-    //?
-  } // End if/else allow_extraction
-
 
 
   PDM_timer_hang_on(ml->timer);
@@ -3448,18 +3466,23 @@ PDM_mesh_location_t        *ml
      * Concatenate point cloud partitions
      */
     int n_pts_pcloud = 0;
+    PDM_g_num_t *pcloud_parent_g_num = NULL;
     PDM_g_num_t *pcloud_g_num = NULL;
     double      *pcloud_coord = NULL;
-    if (0) {//allow_extraction) {
+    //PDM_part_to_block_t *ptb_parent_pts = NULL;
+
+    if (allow_extraction) {
       for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
         n_pts_pcloud += n_select_pts[icloud][ipart];
       }
+      pcloud_parent_g_num = malloc (sizeof(PDM_g_num_t) * n_pts_pcloud);
       pcloud_g_num = malloc (sizeof(PDM_g_num_t) * n_pts_pcloud);
       pcloud_coord = malloc (sizeof(double)      * n_pts_pcloud * dim);
       int idx = 0;
       for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
         for (int ipt = 0; ipt < n_select_pts[icloud][ipart]; ipt++) {
 
+          pcloud_parent_g_num[idx] = select_pts_parent_g_num[icloud][ipart][ipt];
           pcloud_g_num[idx] = select_pts_g_num[icloud][ipart][ipt];
 
           for (int idim = 0; idim < dim; idim++) {
@@ -3468,7 +3491,23 @@ PDM_mesh_location_t        *ml
 
           idx++;
         }
+
+        //free (select_pts_parent_g_num[icloud][ipart]);
+        //free (select_pts_g_num[icloud][ipart]);
+        //free (select_pts_coord[icloud][ipart]);
       }
+      //free (select_pts_parent_g_num[icloud]);
+      //free (select_pts_g_num[icloud]);
+      //free (select_pts_coord[icloud]);
+
+      /*ptb_parent_pts = PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                 PDM_PART_TO_BLOCK_POST_MERGE,
+                                                 1.,
+                                                 &pcloud_parent_g_num,
+                                                 NULL,
+                                                 &n_pts_pcloud,
+                                                 1,
+                                                 ml->comm);*/
     }
 
     else {
@@ -3490,6 +3529,7 @@ PDM_mesh_location_t        *ml
           idx++;
         }
       }
+      pcloud_parent_g_num = pcloud_g_num;
     }
 
 
@@ -3606,19 +3646,18 @@ PDM_mesh_location_t        *ml
 
     int redistrib_n_elt = 0;
 
-    PDM_Mesh_nodal_elt_t *redistrib_elt_type  = NULL;
-    PDM_g_num_t          *redistrib_elt_parent_g_num = NULL;
-    PDM_g_num_t          *redistrib_elt_g_num = NULL;
-    int                  *redistrib_vtx_idx   = NULL;
-    double               *redistrib_vtx_coord = NULL;
-    int                  *redistrib_pts_idx   = NULL;
-    PDM_g_num_t          *redistrib_pts_g_num = NULL;
-    double               *redistrib_pts_coord = NULL;
-
-    PDM_l_num_t *redistrib_poly3d_face_idx    = NULL;
-    PDM_l_num_t *redistrib_face_vtx_idx       = NULL;
-    PDM_l_num_t *redistrib_face_vtx           = NULL;
-    int         *redistrib_face_orientation   = NULL;
+    PDM_g_num_t *redistrib_elt_parent_g_num = NULL;
+    PDM_g_num_t *redistrib_elt_g_num        = NULL;
+    int         *redistrib_vtx_idx          = NULL;
+    double      *redistrib_vtx_coord        = NULL;
+    int         *redistrib_pts_idx          = NULL;
+    PDM_g_num_t *redistrib_pts_parent_g_num = NULL;
+    PDM_g_num_t *redistrib_pts_g_num        = NULL;
+    double      *redistrib_pts_coord        = NULL;
+    PDM_l_num_t *redistrib_poly3d_face_idx  = NULL;
+    PDM_l_num_t *redistrib_face_vtx_idx     = NULL;
+    PDM_l_num_t *redistrib_face_vtx         = NULL;
+    int         *redistrib_face_orientation = NULL;
 
     int redistrib_type_idx[PDM_MESH_NODAL_N_ELEMENT_TYPES + 1];
 
@@ -3669,6 +3708,81 @@ PDM_mesh_location_t        *ml
     free (pts_g_num);
     free (pts_coord);
 
+    int n_pts = redistrib_pts_idx[redistrib_n_elt];
+
+    if (allow_extraction) {
+      if (0) {
+        printf("redistrib_pts_g_num = ");
+        for (int i = 0; i < n_pts; i++) {
+          printf(PDM_FMT_G_NUM" ", redistrib_pts_g_num[i]);
+        }
+        printf("\n");
+      }
+
+      // substitute redistrib_pts_g_num with redistrib_pts_parent_g_num
+      PDM_part_to_block_t *ptb_a = PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                             PDM_PART_TO_BLOCK_POST_NOTHING,
+                                                             1.,
+                                                             &pcloud_g_num,
+                                                             NULL,
+                                                             &n_pts_pcloud,
+                                                             1,
+                                                             ml->comm);
+      PDM_g_num_t *block_distrib_idx_a = PDM_part_to_block_distrib_index_get (ptb_a);
+
+      int *_block_stride = NULL;
+      PDM_g_num_t *block_pcloud_parent_gnum_a = NULL;
+      PDM_part_to_block_exch (ptb_a,
+                              sizeof(PDM_g_num_t),
+                              PDM_STRIDE_CST,
+                              1,
+                              NULL,
+                              (void **) &pcloud_parent_g_num,
+                              &_block_stride,
+                              (void **) &block_pcloud_parent_gnum_a);
+
+      if (0) {
+        int n_pts_a = PDM_part_to_block_n_elt_block_get (ptb_a);
+        PDM_g_num_t *block_g_num_a = PDM_part_to_block_block_gnum_get (ptb_a);
+        printf("block_pcloud_parent_gnum_a :\n");
+        for (int i = 0; i < n_pts_a; i++) {
+          printf("  "PDM_FMT_G_NUM" --> "PDM_FMT_G_NUM"\n", block_g_num_a[i], block_pcloud_parent_gnum_a[i]);
+        }
+      }
+
+      PDM_block_to_part_t *btp_b = PDM_block_to_part_create (block_distrib_idx_a,
+                                                             (const PDM_g_num_t **) &redistrib_pts_g_num,
+                                                             &n_pts,
+                                                             1,
+                                                             ml->comm);
+
+      int _one = 1;
+      int *_part_stride = PDM_array_const_int (n_pts, 1);
+      redistrib_pts_parent_g_num = malloc (sizeof(PDM_g_num_t) * n_pts);
+      PDM_block_to_part_exch (btp_b,
+                              sizeof(PDM_g_num_t),
+                              PDM_STRIDE_CST,
+                              &_one,
+                              (void *) block_pcloud_parent_gnum_a,
+                              &_part_stride,
+                              (void **) &redistrib_pts_parent_g_num);
+      free (block_pcloud_parent_gnum_a);
+      free (_part_stride);
+
+      if (0) {
+        printf("redistrib_pts_parent_g_num = ");
+        for (int i = 0; i < n_pts; i++) {
+          printf(PDM_FMT_G_NUM" ", redistrib_pts_parent_g_num[i]);
+        }
+        printf("\n");
+      }
+
+      ptb_a = PDM_part_to_block_free (ptb_a);
+      btp_b = PDM_block_to_part_free (btp_b);
+    }
+    else {
+      redistrib_pts_parent_g_num = redistrib_pts_g_num;
+    }
 
     PDM_timer_hang_on(ml->timer);
     e_t_elapsed = PDM_timer_elapsed(ml->timer);
@@ -3691,7 +3805,6 @@ PDM_mesh_location_t        *ml
     /*
      * Location in elements
      */
-    int n_pts = redistrib_pts_idx[redistrib_n_elt];
     PDM_g_num_t *redistrib_pts_location = malloc (sizeof(PDM_g_num_t) * n_pts);
     if (use_extracted_mesh) {
       for (ibox = 0; ibox < redistrib_n_elt; ibox++) {
@@ -3709,7 +3822,6 @@ PDM_mesh_location_t        *ml
       }
     }
     free (redistrib_elt_g_num);
-    free (redistrib_elt_type);
 
     PDM_Mesh_nodal_elt_t *redistrib_pts_elt_type = malloc (sizeof(PDM_Mesh_nodal_elt_t) * n_pts);
     for (PDM_Mesh_nodal_elt_t type = PDM_MESH_NODAL_POINT;
@@ -3802,30 +3914,46 @@ PDM_mesh_location_t        *ml
     /*
      *   1) Part-to-block
      */
-
-    PDM_part_to_block_t *ptb2 = PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+    /*PDM_part_to_block_t *ptb2 = PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                           PDM_PART_TO_BLOCK_POST_MERGE,
                                                           1.,
-                                                          &pcloud_g_num,
+                                                          &pcloud_g_num,//&pcloud_parent_g_num,//
                                                           NULL,
                                                           &n_pts_pcloud,
                                                           1,
                                                           ml->comm);
 
-    PDM_g_num_t *block_g_num2 = PDM_part_to_block_block_gnum_get (ptb2);
-    PDM_g_num_t *block_distrib_idx = PDM_part_to_block_distrib_index_get (ptb2);
+                                                          PDM_g_num_t *block_distrib_idx = PDM_part_to_block_distrib_index_get (ptb2);*/
+    /*PDM_g_num_t *block_distrib_idx =
+      PDM_compute_uniform_entity_distribution_from_partition (ml->comm,
+                                                              1,
+                                                              &n_pts_pcloud,
+                                                              (const PDM_g_num_t **) &pcloud_g_num);
 
     PDM_part_to_block_t *ptb1 = PDM_part_to_block_create2 (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                            PDM_PART_TO_BLOCK_POST_MERGE,
                                                            1.,
-                                                           &redistrib_pts_g_num,
+                                                           &redistrib_pts_g_num,//&redistrib_pts_parent_g_num,//
                                                            block_distrib_idx,
                                                            &n_pts,
                                                            1,
-                                                           ml->comm);
-    free (redistrib_pts_g_num);
+                                                           ml->comm);*/
+    PDM_g_num_t *block_parent_distrib_idx =
+      PDM_compute_uniform_entity_distribution_from_partition (ml->comm,
+                                                              pcloud->n_part,
+                                                              pcloud->n_points,
+                                                              (const PDM_g_num_t **) pcloud->gnum);
 
-    const int n_pts_block1 = PDM_part_to_block_n_elt_block_get (ptb1);
+    PDM_part_to_block_t *ptb1 = PDM_part_to_block_create2 (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                           PDM_PART_TO_BLOCK_POST_MERGE,
+                                                           1.,
+                                                           &redistrib_pts_parent_g_num,
+                                                           block_parent_distrib_idx,
+                                                           &n_pts,
+                                                           1,
+                                                           ml->comm);
+    PDM_g_num_t *block_distrib_idx = PDM_part_to_block_distrib_index_get (ptb1);
+    //free (redistrib_pts_g_num);
 
     int *part_stride = PDM_array_const_int(n_pts, 1);
 
@@ -4037,9 +4165,15 @@ PDM_mesh_location_t        *ml
     /*
      *   2) Among candidate elements, keep closest one for each point (set location to -1 if no candidate -> unlocated point)
      */
-    PDM_g_num_t *block_g_num1 = PDM_part_to_block_block_gnum_get (ptb1);
 
-    const int n_pts_block2 = PDM_part_to_block_n_elt_block_get (ptb2);
+
+    PDM_g_num_t *block_g_num1 = PDM_part_to_block_block_gnum_get (ptb1);
+    //PDM_g_num_t *block_g_num2 = PDM_part_to_block_block_gnum_get (ptb2);
+
+    const int n_pts_block1 = PDM_part_to_block_n_elt_block_get (ptb1);
+    //const int n_pts_block2 = PDM_part_to_block_n_elt_block_get (ptb2);
+    int n_pts_block2 = (int) (block_parent_distrib_idx[my_rank+1] -
+                              block_parent_distrib_idx[my_rank]);
 
     PDM_g_num_t *block_location2 = malloc (sizeof(PDM_g_num_t) * n_pts_block2);
     double *block_proj_coord2 = malloc (sizeof(double) * n_pts_block2 * 3);
@@ -4083,7 +4217,7 @@ PDM_mesh_location_t        *ml
       idx += block_n_candidates[i];
 
       int ipt = block_g_num1[i] - 1 - block_distrib_idx[my_rank];
-      assert (block_g_num2[ipt] == block_g_num1[i]);
+      //assert (block_g_num2[ipt] == block_g_num1[i]);
 
       block_location2[ipt] = block_location1[idx_min[i]];
       block_weights_stride2[ipt] = block_n_vtx_elt[idx_min[i]];
@@ -4139,8 +4273,8 @@ PDM_mesh_location_t        *ml
      */
     int one = 1;
     int three = 3;
-    PDM_block_to_part_t *btp = PDM_block_to_part_create (block_distrib_idx,
-                                                         pcloud->gnum,//(const PDM_g_num_t **) &pcloud_g_num,
+    PDM_block_to_part_t *btp = PDM_block_to_part_create (block_parent_distrib_idx,//block_distrib_idx,
+                                                         (const PDM_g_num_t **) pcloud->gnum,//(const PDM_g_num_t **) &pcloud_g_num,
                                                          pcloud->n_points,//&n_pts_pcloud,
                                                          pcloud->n_part,//1,
                                                          ml->comm);
@@ -4231,7 +4365,7 @@ PDM_mesh_location_t        *ml
     free (_weights_stride);
 
     PDM_part_to_block_free (ptb1);
-    PDM_part_to_block_free (ptb2);
+    //PDM_part_to_block_free (ptb2);
     PDM_block_to_part_free (btp);
 
 
