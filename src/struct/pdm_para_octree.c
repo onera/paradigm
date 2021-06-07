@@ -7708,16 +7708,6 @@ PDM_para_octree_points_inside_boxes
     }
   }
 
-  /* Clip box extents (ensure Morton codes of box corners are properly computed) */
-  double      *_box_extents = box_extents;
-  PDM_g_num_t *_box_g_num   = box_g_num;
-
-  /*
-   * TO DO: remove boxes that do not intersect the octree's global extents
-   */
-  int _n_boxes = n_boxes;
-  //...
-
   /* Multiple ranks */
   if (n_ranks > 1) {
     /* Part-to-block create (only to get block distribution) */
@@ -7740,21 +7730,21 @@ PDM_para_octree_points_inside_boxes
     int *send_count = PDM_array_zeros_int(n_ranks);
 
     /* Encode box corners */
-    box_corners = malloc (sizeof(PDM_morton_code_t) * 2 * _n_boxes);
+    box_corners = malloc (sizeof(PDM_morton_code_t) * 2 * n_boxes);
     _morton_encode_coords (dim,
                            PDM_morton_max_level,
                            octree->global_extents,
-                           2 * _n_boxes,
-                           _box_extents,
+                           2 * n_boxes,
+                           box_extents,
                            box_corners,
                            d,
                            s);
 
-    size_t *box_rank = malloc (sizeof(int *) * 2 * _n_boxes);
+    size_t *box_rank = malloc (sizeof(int *) * 2 * n_boxes);
 
     /* Find which ranks possibly intersect each box */
     size_t start, end, tmp;
-    for (int ibox = 0; ibox < _n_boxes; ibox++) {
+    for (int ibox = 0; ibox < n_boxes; ibox++) {
       PDM_morton_quantile_intersect (n_ranks,
                                      box_corners[2*ibox],
                                      octree->rank_octants_index,
@@ -7800,20 +7790,18 @@ PDM_para_octree_points_inside_boxes
     double *send_box_extents = malloc (sizeof(double) * send_shift[n_ranks] * two_dim);
     recv_box_extents = malloc (sizeof(double) * recv_shift[n_ranks] * two_dim);
 
-    for (int ibox = 0; ibox < _n_boxes; ibox++) {
+    for (int ibox = 0; ibox < n_boxes; ibox++) {
       for (size_t irank = box_rank[2*ibox]; irank < box_rank[2*ibox+1]; irank++) {
         int idx = send_shift[irank] + send_count[irank];
-        send_box_g_num[idx] = _box_g_num[ibox];
+        send_box_g_num[idx] = box_g_num[ibox];
 
         for (int k = 0; k < two_dim; k++) {
-          send_box_extents[two_dim*idx + k] = _box_extents[two_dim*ibox + k];
+          send_box_extents[two_dim*idx + k] = box_extents[two_dim*ibox + k];
         }
 
         send_count[irank]++;
       }
     }
-    if (_box_extents != box_extents) free (_box_extents);
-    if (_box_g_num != box_g_num) free (_box_g_num);
     free (box_rank);
 
     /* Send boxes g_num buffer */
@@ -7843,9 +7831,9 @@ PDM_para_octree_points_inside_boxes
 
   /* Single rank */
   else {
-    n_recv_boxes     = _n_boxes;
-    recv_box_extents = _box_extents;
-    recv_box_g_num   = _box_g_num;
+    n_recv_boxes     = n_boxes;
+    recv_box_extents = box_extents;
+    recv_box_g_num   = box_g_num;
   }
 
 
@@ -8154,14 +8142,6 @@ PDM_para_octree_points_inside_boxes2
     _export_boxes (filename, n_boxes, box_extents, box_g_num);
   }
 
-  /*
-   * TO DO: remove boxes that do not intersect the octree's global extents
-   */
-  int _n_boxes = n_boxes;
-  double      *_box_extents = box_extents;
-  PDM_g_num_t *_box_g_num   = box_g_num;
-  //...
-
 
   /* Multiple ranks */
   if (n_rank > 1) {
@@ -8187,8 +8167,8 @@ PDM_para_octree_points_inside_boxes2
       _compute_rank_extents (octree);
     }
 
-    int *init_location = malloc (sizeof(int) * _n_boxes * 3);
-    for (int i = 0; i < _n_boxes; i++) {
+    int *init_location = malloc (sizeof(int) * n_boxes * 3);
+    for (int i = 0; i < n_boxes; i++) {
       init_location[3*i]     = i_rank;
       init_location[3*i + 1] = 0;
       init_location[3*i + 2] = i;
@@ -8204,26 +8184,26 @@ PDM_para_octree_points_inside_boxes2
     double invd[3] = {1. / _d[0],
                       1. / _d[1],
                       1. / _d[2]};
-    double *__box_extents = malloc (sizeof(double) * two_dim * _n_boxes);
-    for (int i = 0; i < 2 * _n_boxes; i++) {
+    double *_box_extents = malloc (sizeof(double) * two_dim * n_boxes);
+    for (int i = 0; i < 2 * n_boxes; i++) {
       for (int j = 0; j < dim; j++) {
-        __box_extents[dim*i + j] = (_box_extents[dim*i + j] - _s[j]) * invd[j];
+        _box_extents[dim*i + j] = (box_extents[dim*i + j] - _s[j]) * invd[j];
       }
     }
     if (VISU) {
       char filename[999];
       sprintf(filename, "boxes_normalized_%3.3d.vtk", i_rank);
-      _export_boxes (filename, _n_boxes, __box_extents, _box_g_num);
+      _export_boxes (filename, n_boxes, _box_extents, box_g_num);
     }
 
     PDM_box_set_t *box_set = PDM_box_set_create (dim,
                                                  0,
                                                  0,
-                                                 _n_boxes,
-                                                 _box_g_num,
-                                                 __box_extents,
+                                                 n_boxes,
+                                                 box_g_num,
+                                                 _box_extents,
                                                  1,
-                                                 &_n_boxes,
+                                                 &n_boxes,
                                                  init_location,
                                                  octree->comm);
 
@@ -8276,8 +8256,6 @@ PDM_para_octree_points_inside_boxes2
 
     PDM_box_set_destroy (&box_set);
     free (init_location);
-    if (_box_extents != box_extents) free (_box_extents);
-    if (_box_g_num != box_g_num)     free (_box_g_num);
     free (box_rank_index);
     free (box_rank);
 
@@ -8311,9 +8289,9 @@ PDM_para_octree_points_inside_boxes2
 
   /* Single rank */
   else {
-    n_recv_boxes     = _n_boxes;
-    recv_box_extents = _box_extents;
-    recv_box_g_num   = _box_g_num;
+    n_recv_boxes     = n_boxes;
+    recv_box_extents = box_extents;
+    recv_box_g_num   = box_g_num;
   }
 
 
