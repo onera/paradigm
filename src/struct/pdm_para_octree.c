@@ -8420,8 +8420,8 @@ PDM_para_octree_points_inside_boxes2
   box_pts = realloc (box_pts, sizeof(int) * box_pts_idx[n_recv_boxes]);
 
   if (n_recv_boxes != 0) mean_intersect /= n_recv_boxes;
-  log_debug("min_intersect = %li | max_intersect = %li | mean_intersect = %li \n", min_intersect, max_intersect, mean_intersect);
-  log_debug("box_pts_idx[%i] = %li \n", n_recv_boxes, box_pts_idx[n_recv_boxes]);
+  //log_debug("min_intersect = %li | max_intersect = %li | mean_intersect = %li \n", min_intersect, max_intersect, mean_intersect);
+  //log_debug("box_pts_idx[%i] = %li \n", n_recv_boxes, box_pts_idx[n_recv_boxes]);
 
 
   /* Get gnum and coords of points inside boxes */
