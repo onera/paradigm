@@ -31,6 +31,7 @@
 #include "pdm_box_priv.h"
 #include "pdm_array.h"
 #include "pdm_logging.h"
+#include "pdm_distrib.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -7731,7 +7732,10 @@ PDM_para_octree_points_inside_boxes
                                      octree->comm);
 
     block_distrib_idx = PDM_part_to_block_distrib_index_get (ptb1);
-
+    // block_distrib_idx = PDM_compute_uniform_entity_distribution_from_partition(octree->comm,
+    //                                                                            1,
+    //                                                                            &n_boxes,
+    //                                                                            &box_g_num);
 
 
     /***************************************
@@ -7870,6 +7874,7 @@ PDM_para_octree_points_inside_boxes
                          s);
 
   /* Root node of octree */
+  log_debug("octants->n_nodes = %i \n", octants->n_nodes);
   PDM_morton_code_t root;
   root.L = 0;
   root.X[0] = 0;
@@ -7998,6 +8003,8 @@ PDM_para_octree_points_inside_boxes
     free (box_pts_idx);
 
     /* Part#2 to Block */
+    PDM_MPI_Barrier(octree->comm);
+    double t1 = PDM_MPI_Wtime();
     PDM_part_to_block_t *ptb2 = PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                           PDM_PART_TO_BLOCK_POST_MERGE,
                                                           1.,
@@ -8006,6 +8013,8 @@ PDM_para_octree_points_inside_boxes
                                                           &n_recv_boxes,
                                                           1,
                                                           octree->comm);
+    double dt = PDM_MPI_Wtime() - t1;
+    log_debug(" dt = %12.5e \n",  dt);
     if (_recv_box_g_num != box_g_num) free (_recv_box_g_num);
 
     int *block_pts_in_box_n = NULL;

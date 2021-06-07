@@ -71,7 +71,7 @@ PDM_section_size_elt_faces_get
 
   // You should do it for each level of the mesh !!!!
   // abort();
-  printf("PDM_section_size_elt_faces_get WARNING NOT WORKING \n");
+  // printf("PDM_section_size_elt_faces_get WARNING NOT WORKING \n");
 
   int _s_elt_face_vtx_idx = 0;
   int _s_elt_face_vtx     = 0;
@@ -122,7 +122,7 @@ PDM_section_size_elt_edges_get
   int               *s_elt_edge_cell
 )
 {
-  printf("PDM_section_size_elt_edges_get WARNING NOT WORKING \n");
+  // printf("PDM_section_size_elt_edges_get WARNING NOT WORKING \n");
 
   int _s_elt_edge_vtx_idx = 0;
   int _s_elt_edge_vtx     = 0;
@@ -1288,8 +1288,8 @@ PDM_hexa_decomposes_faces
   PDM_g_num_t *_current_elmt_face_cell    = elmt_face_cell + _n_face_current;
 
 
- printf("_n_face_current:: %i\n", _n_face_current);
- printf("elt_face_vtx_idx[%i]:: %i \n", _n_face_current, elmt_face_vtx_idx[_n_face_current]);
+  // printf("_n_face_current:: %i\n", _n_face_current);
+  // printf("elt_face_vtx_idx[%i]:: %i \n", _n_face_current, elmt_face_vtx_idx[_n_face_current]);
   /*
    * For each element we flaten all connectivities in one array
    */
