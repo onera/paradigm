@@ -174,6 +174,9 @@ _read_args(int            argc,
     else if (strcmp(argv[i], "-dbbtree") == 0) {
       *loc_method = PDM_MESH_LOCATION_DBBTREE;
     }
+    else if (strcmp(argv[i], "-post") == 0) {
+      *post = 1;
+    }
     else
       _usage(EXIT_FAILURE);
     i++;
@@ -769,19 +772,12 @@ int main(int argc, char *argv[])
 
 
 
-      /*for (int k1 = 0; k1 < n_unlocated; k1++) {
+      for (int k1 = 0; k1 < n_unlocated; k1++) {
         int ipt = unlocated[k1] - 1;
 
-        double *p = cell_center[ipart] + 3*ipt;
-
-        int i = (int) floor (p[0] / cell_side);
-        int j = (int) floor (p[1] / cell_side);
-        int k = (int) floor (p[2] / cell_side);
-
-        assert (i < 0 || i > n_vtx_seg-1 ||
-        j < 0 || j > n_vtx_seg-1 ||
-        k < 0 || k > n_vtx_seg-1);
-        }*/
+        double x = cell_center[ipart][3*ipt];
+        assert (x > xmin + length);
+      }
 
     }
   }
