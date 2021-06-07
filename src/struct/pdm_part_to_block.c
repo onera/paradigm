@@ -469,8 +469,8 @@ _distrib_data
   //    _id_max = _MAX (_id_max, ptb->gnum_elt[i][j]);
   //  }
   //}
+  // fflush(stdout);
 
-  fflush(stdout);
   for (int i = 0; i < ptb->n_part; i++) {
 
     ptb->n_elt_proc+= ptb->n_elt[i];

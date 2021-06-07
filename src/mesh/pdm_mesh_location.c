@@ -80,6 +80,39 @@ typedef enum {
  * Private function definitions
  *============================================================================*/
 
+static
+void
+end_timer_and_print(const char* msg, PDM_MPI_Comm comm, double t1){
+
+  double t2 = PDM_MPI_Wtime();
+
+  double delta_t = t2 - t1;
+  double delta_max;
+  double delta_min;
+
+  PDM_MPI_Allreduce (&delta_t,
+                     &delta_max,
+                     1,
+                     PDM_MPI_DOUBLE,
+                     PDM_MPI_MAX,
+                     comm);
+
+  PDM_MPI_Allreduce (&delta_t,
+                     &delta_min,
+                     1,
+                     PDM_MPI_DOUBLE,
+                     PDM_MPI_MIN,
+                     comm);
+
+  int n_rank;
+  int i_rank;
+
+  PDM_MPI_Comm_size(comm, &n_rank);
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  if(i_rank == 0) {
+    printf("[%i] %s : duration min/max -> %12.5e %12.5e \n", n_rank, msg, delta_min, delta_max);
+  }
+}
 /*
  *
  * Redistribute evenly across all ranks the elementary location operation to perform
@@ -2321,13 +2354,18 @@ PDM_mesh_location_t        *ml
                                        pcloud_g_num);
 
       /* Build parallel octree */
+      PDM_MPI_Barrier(ml->comm);
+      double t1 = PDM_MPI_Wtime();
       PDM_para_octree_build (octree_id, NULL);
+      end_timer_and_print("PDM_para_octree_build ", ml->comm, t1);
       // PDM_para_octree_dump (octree_id);
       // if (DEBUG) {
-        PDM_para_octree_dump_times (octree_id);
+        // PDM_para_octree_dump_times (octree_id);
       // }
 
       /* Locate points inside boxes */
+      PDM_MPI_Barrier(ml->comm);
+      t1 = PDM_MPI_Wtime();
       PDM_para_octree_points_inside_boxes (octree_id,
                                            n_boxes,
                                            box_extents,
@@ -2335,6 +2373,7 @@ PDM_mesh_location_t        *ml
                                            &pts_idx,
                                            &pts_g_num,
                                            &pts_coord);
+      end_timer_and_print("PDM_para_octree_points_inside_boxes ", ml->comm, t1);
 
       /* Free octree */
       PDM_para_octree_free (octree_id);
