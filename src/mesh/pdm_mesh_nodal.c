@@ -3460,33 +3460,38 @@ const PDM_g_num_t      *numabs
       }
 
 //      if (n_tetra_part > 0) {
+      if (som_elts[0] > 0) {
         connec_tetra = (PDM_l_num_t *) malloc(sizeof(PDM_l_num_t) * 4 *n_tetra_part);
         numabs_tetra = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * n_tetra_part);
         num_parent_tetra = (PDM_l_num_t *) malloc(sizeof(PDM_l_num_t) * n_tetra_part);
-//      }
+      }
 
 //      if (n_hexa_part > 0) {
+      if (som_elts[1] > 0) {
         connec_hexa = (PDM_l_num_t *) malloc(sizeof(PDM_l_num_t) * 8 * n_hexa_part);
         numabs_hexa = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * n_hexa_part);
         num_parent_hexa = (PDM_l_num_t *) malloc(sizeof(PDM_l_num_t) * n_hexa_part);
-//      }
+      }
 
 //      if (n_prism_part > 0) {
+      if (som_elts[2] > 0) {
         connec_prism = (PDM_l_num_t *) malloc(sizeof(PDM_l_num_t) * 6 * n_prism_part);
         numabs_prism = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * n_prism_part);
         num_parent_prism = (PDM_l_num_t *) malloc(sizeof(PDM_l_num_t) * n_prism_part);
-//      }
+      }
 
 //      if (n_pyramid_part > 0) {
+      if (som_elts[3] > 0) {
         connec_pyramid = (PDM_l_num_t *) malloc(sizeof(PDM_l_num_t) * 5 * n_pyramid_part);
         numabs_pyramid = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * n_pyramid_part);
         num_parent_pyramid = (PDM_l_num_t *) malloc(sizeof(PDM_l_num_t) * n_pyramid_part);
-//      }
+      }
 
 //      if (n_poly3d_part > 0) {
+      if (som_elts[4] > 0) {
         numabs_poly3d = (PDM_g_num_t *) malloc(sizeof(PDM_g_num_t) * n_poly3d_part);
         num_parent_poly3d = (PDM_l_num_t *) malloc(sizeof(PDM_l_num_t) * n_poly3d_part);
-//      }
+      }
 
       PDM_l_num_t *num_parent_tetra_courant = num_parent_tetra;
       PDM_l_num_t *num_parent_hexa_courant = num_parent_hexa;
