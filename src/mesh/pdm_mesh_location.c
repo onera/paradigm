@@ -4332,9 +4332,6 @@ PDM_mesh_location_t        *ml
     PDM_block_to_part_free (btp);
 
 
-    /*
-     * Conform to original partitioning of current point cloud (removed)
-     */
     PDM_timer_hang_on(ml->timer);
     e_t_elapsed = PDM_timer_elapsed(ml->timer);
     e_t_cpu     = PDM_timer_cpu(ml->timer);
