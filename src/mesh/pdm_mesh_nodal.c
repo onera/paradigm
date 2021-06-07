@@ -5427,9 +5427,9 @@ PDM_Mesh_nodal_poly3d_cell_vtx_get
 /**
  * \brief Create a new Mesh nodal from elements selected in a parent Mesh nodal
  *
- * \param [in]   parent_mesh   Parent esh nodal structure
- * \param [in]   n_select_elt  Number of selected element for each partition of each nodal block
- * \param [in]   select_elt    Local numbers of selected elements (for each partition of each nodal block)
+ * \param [in]   parent_mesh       Parent esh nodal structure
+ * \param [in]   n_select_elt      Number of selected element for each partition of each nodal block
+ * \param [in]   select_elt_l_num  Local numbers of selected elements (for each partition of each nodal block)
  *
  * \return       New mesh nodal
  *
@@ -5446,6 +5446,9 @@ PDM_Mesh_nodal_extract_selection
   PDM_Mesh_nodal_t *child_mesh = PDM_Mesh_nodal_create (parent_mesh->n_part,
                                                         parent_mesh->pdm_mpi_comm);
 
+  PDM_UNUSED (n_select_elt);
+  PDM_UNUSED (select_elt_l_num);
+#if 0
   int  *n_select_vtx = PDM_array_zeros_int (parent_mesh->n_part);
   int **select_vtx_l_num      = malloc (sizeof(int *) * parent_mesh->n_part);
   int **parent_to_child_l_num = malloc (sizeof(int *) * parent_mesh->n_part);
@@ -5556,7 +5559,7 @@ PDM_Mesh_nodal_extract_selection
     } // End of loop on nodal blocks
   } // End of loop on parts
 
-
+#endif
   return child_mesh;
 }
 
