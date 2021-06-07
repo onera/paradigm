@@ -786,15 +786,17 @@ int main(int argc, char *argv[])
     }
   }
 
-  char filename[999];
-  sprintf(filename, "tgt_location_%3.3d.vtk", i_rank);
+  if (post) {
+    char filename[999];
+    sprintf(filename, "tgt_location_%3.3d.vtk", i_rank);
 
-  _export_point_cloud (filename,
+    _export_point_cloud (filename,
                        n_part,
                        n_tgt,
                        cell_center,
                        tgt_g_num,
                        tgt_location);
+  }
 
 
 
