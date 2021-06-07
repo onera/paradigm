@@ -1729,27 +1729,30 @@ PDM_dbbtree_points_inside_boxes
 
   /* Conform to original partitioning */
   if (box_g_num != NULL) {
-
     /* Part2 to Block */
     int n_boxes2 = _dbbt->boxes->local_boxes->n_boxes;
-    PDM_part_to_block_t *ptb2 = PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
-                                                          PDM_PART_TO_BLOCK_POST_MERGE,
-                                                          1.,
-                                                          &(_dbbt->boxes->local_boxes->g_num),
-                                                          NULL,
-                                                          &n_boxes2,
-                                                          1,
-                                                          _dbbt->comm);
 
     int *pts_in_box_count = malloc (sizeof(int) * n_boxes2);
-    for (int ibox = 0; ibox < n_boxes2; ibox++) {
-      pts_in_box_count[ibox] = pts_in_box_idx2[ibox+1] - pts_in_box_idx2[ibox];
+    double *weight = malloc (sizeof(double) * n_boxes2);
+    for (int i = 0; i < n_boxes2; i++) {
+      pts_in_box_count[i] = pts_in_box_idx2[i+1] - pts_in_box_idx2[i];
+      weight[i] = (double) pts_in_box_count[i];
     }
     free (pts_in_box_idx2);
 
+    PDM_part_to_block_t *ptb = PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                         PDM_PART_TO_BLOCK_POST_MERGE,
+                                                         1.,
+                                                         &(_dbbt->boxes->local_boxes->g_num),
+                                                         &weight,
+                                                         &n_boxes2,
+                                                         1,
+                                                         _dbbt->comm);
+    free (weight);
+
     int *block_pts_in_box_count = NULL;
     PDM_g_num_t *block_pts_in_box_g_num = NULL;
-    PDM_part_to_block_exch (ptb2,
+    PDM_part_to_block_exch (ptb,
                             sizeof(PDM_g_num_t),
                             PDM_STRIDE_VAR,
                             1,
@@ -1759,20 +1762,12 @@ PDM_dbbtree_points_inside_boxes
                             (void **) &block_pts_in_box_g_num);
     free (pts_in_box_g_num2);
 
-    if (1) {
-      int n_elt_block = PDM_part_to_block_n_elt_block_get (ptb2);
-      PDM_g_num_t *block_g_num = PDM_part_to_block_block_gnum_get (ptb2);
-      for (int i = 0; i < n_elt_block; i++) {
-        printf ("%d ("PDM_FMT_G_NUM") : %d\n", i, block_g_num[i], block_pts_in_box_count[i]);
-      }
-    }
-
     for (int ibox = 0; ibox < n_boxes2; ibox++) {
       pts_in_box_count[ibox] *= 3;
     }
     double *block_pts_in_box_coord = NULL;
     int *block_pts_in_box_3count = NULL;
-    PDM_part_to_block_exch (ptb2,
+    PDM_part_to_block_exch (ptb,
                             sizeof(double),
                             PDM_STRIDE_VAR,
                             1,
@@ -1782,21 +1777,36 @@ PDM_dbbtree_points_inside_boxes
                             (void **) &block_pts_in_box_coord);
     free (pts_in_box_coord2);
 
-    PDM_part_to_block_free (ptb2);
+    PDM_g_num_t *block_distrib_idx = PDM_part_to_block_distrib_index_get (ptb);
+    int *block_pts_in_box_count_full = NULL;
+    int *block_pts_in_box_3count_full = NULL;
+    int n_elt_block = PDM_part_to_block_n_elt_block_get (ptb);
+    int n_elt_block_full = (int) (block_distrib_idx[my_rank+1] - block_distrib_idx[my_rank]);
+
+    if (n_elt_block < n_elt_block_full) {
+      PDM_g_num_t *block_g_num = PDM_part_to_block_block_gnum_get (ptb);
+      block_pts_in_box_count_full = PDM_array_zeros_int (n_elt_block_full);
+      block_pts_in_box_3count_full = PDM_array_zeros_int (n_elt_block_full);
+
+      int i1 = 0;
+      for (int i = 0; i < n_elt_block; i++) {
+
+        while (block_distrib_idx[my_rank] + 1 + i1 < block_g_num[i]) {
+          i1++;
+        }
+
+        block_pts_in_box_count_full[i1] = block_pts_in_box_count[i];
+        block_pts_in_box_3count_full[i1] = block_pts_in_box_3count[i];
+      }
+
+      free (block_pts_in_box_count);
+      free (block_pts_in_box_3count);
+      block_pts_in_box_count = block_pts_in_box_count_full;
+      block_pts_in_box_3count = block_pts_in_box_3count_full;
+    }
 
 
     /* Block to Part1 */
-    int _n_boxes = n_boxes;
-    PDM_part_to_block_t *ptb1 = PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
-                                                          PDM_PART_TO_BLOCK_POST_MERGE,
-                                                          1.,
-                                                          (PDM_g_num_t **) (&box_g_num),
-                                                          NULL,
-                                                          &_n_boxes,
-                                                          1,
-                                                          _dbbt->comm);
-    PDM_g_num_t *block_distrib_idx = PDM_part_to_block_distrib_index_get (ptb1);
-
     PDM_block_to_part_t *btp = PDM_block_to_part_create (block_distrib_idx,
                                                          (const PDM_g_num_t **) &box_g_num,
                                                          &n_boxes,
@@ -1806,6 +1816,7 @@ PDM_dbbtree_points_inside_boxes
     if (n_boxes > n_boxes2) {
       pts_in_box_count = realloc (pts_in_box_count, sizeof(int) * n_boxes);
     }
+
     int one = 1;
     PDM_block_to_part_exch (btp,
                             sizeof(int),
@@ -1841,7 +1852,7 @@ PDM_dbbtree_points_inside_boxes
     free (pts_in_box_count);
 
 
-    PDM_part_to_block_free (ptb1);
+    PDM_part_to_block_free (ptb);
     PDM_block_to_part_free (btp);
   }
 

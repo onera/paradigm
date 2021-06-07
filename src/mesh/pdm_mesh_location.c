@@ -3396,6 +3396,7 @@ PDM_mesh_location_t        *ml
    */
 
   PDM_dbbtree_t *dbbt = NULL;
+  PDM_box_set_t *box_set = NULL;
   if (ml->method == PDM_MESH_LOCATION_DBBTREE) {
 
     /* Compute local extents */
@@ -3403,8 +3404,8 @@ PDM_mesh_location_t        *ml
                            -HUGE_VAL, -HUGE_VAL, -HUGE_VAL};
     for (int i = 0; i < n_select_boxes; i++) {
       for (int j = 0; j < 3; j++) {
-        l_extents[j]   = PDM_MIN (l_extents[j],   box_extents[6*i + j]);
-        l_extents[j+3] = PDM_MAX (l_extents[j+3], box_extents[6*i + 3 + j]);
+        l_extents[j]   = PDM_MIN (l_extents[j],   select_box_extents[6*i + j]);
+        l_extents[j+3] = PDM_MAX (l_extents[j+3], select_box_extents[6*i + 3 + j]);
       }
     }
 
@@ -3425,11 +3426,11 @@ PDM_mesh_location_t        *ml
 
     dbbt = PDM_dbbtree_create (ml->comm, dim, g_extents);
 
-    PDM_dbbtree_boxes_set (dbbt,
-                           1,
-                           &n_select_boxes,
-                           (const double **) &select_box_extents,
-                           (const PDM_g_num_t **) &select_box_g_num);
+    box_set = PDM_dbbtree_boxes_set (dbbt,
+                                     1,
+                                     &n_select_boxes,
+                                     (const double **) &select_box_extents,
+                                     (const PDM_g_num_t **) &select_box_g_num);
 
     PDM_timer_hang_on(ml->timer);
     e_t_elapsed = PDM_timer_elapsed(ml->timer);
@@ -3619,13 +3620,14 @@ PDM_mesh_location_t        *ml
 
     if (0) {//DEBUG) {
       printf("\n[%d] --- Pts in box ---\n", my_rank);
-      for (ibox = 0; ibox < n_boxes; ibox++) {
+      for (ibox = 0; ibox < n_select_boxes; ibox++) {
 
         if (pts_idx[ibox+1] <= pts_idx[ibox]) {
           continue;
         }
 
-        printf("[%d] %d ("PDM_FMT_G_NUM"): ", my_rank, ibox, box_g_num[ibox]);
+        printf("[%d] %d ("PDM_FMT_G_NUM"): ", my_rank, ibox, select_box_g_num[ibox]);
+        //printf("[%d] %d ("PDM_FMT_G_NUM"): ", my_rank, ibox, select_box_parent_g_num[ibox]);
         for (int i = pts_idx[ibox]; i < pts_idx[ibox+1]; i++) {
           /*printf("((%ld); %f %f %f) ",
             pts_g_num[i], pts_coord[dim*i], pts_coord[dim*i+1], pts_coord[dim*i+2]);*/
@@ -3738,12 +3740,18 @@ PDM_mesh_location_t        *ml
     int n_pts = redistrib_pts_idx[redistrib_n_elt];
 
     if (use_extracted_pts) {
-      if (1) {
+      if (0) {
         printf("redistrib_pts_g_num = ");
         for (int i = 0; i < n_pts; i++) {
           printf(PDM_FMT_G_NUM" ", redistrib_pts_g_num[i]);
         }
         printf("\n");
+      }
+
+      for (int i = 0; i < redistrib_n_elt; i++) {
+        if (redistrib_elt_parent_g_num[i] == 657) {
+          printf("elt ("PDM_FMT_G_NUM") : %d points\n", redistrib_elt_parent_g_num[i], redistrib_pts_idx[i+1] - redistrib_pts_idx[i]);
+        }
       }
 
       // substitute redistrib_pts_g_num with redistrib_pts_parent_g_num
@@ -3770,7 +3778,7 @@ PDM_mesh_location_t        *ml
                               (void **) &block_pcloud_parent_gnum);
       free (pcloud_parent_g_num);
 
-      if (1) {
+      if (0) {
         int n_pts_a = PDM_part_to_block_n_elt_block_get (ptb_parent);
         PDM_g_num_t *block_g_num_a = PDM_part_to_block_block_gnum_get (ptb_parent);
         printf("block_pcloud_parent_gnum :\n");
@@ -5042,8 +5050,9 @@ PDM_mesh_location_t        *ml
   free (box_extents);
 
 
-  if (dbbt != NULL) {
+  if (ml->method == PDM_MESH_LOCATION_DBBTREE) {
     PDM_dbbtree_free (dbbt);
+    PDM_box_set_destroy (&box_set);
   }
 
   PDM_timer_hang_on(ml->timer);
