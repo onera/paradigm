@@ -27,6 +27,7 @@
 #include "pdm_printf.h"
 #include "pdm_error.h"
 #include "pdm_priv.h"
+#include "pdm_distrib.h"
 
 #include "pdm_part_to_block.h"
 #include "pdm_block_to_part.h"
@@ -1758,6 +1759,13 @@ PDM_dbbtree_points_inside_boxes
                             (void **) &block_pts_in_box_g_num);
     free (pts_in_box_g_num2);
 
+    if (1) {
+      int n_elt_block = PDM_part_to_block_n_elt_block_get (ptb2);
+      PDM_g_num_t *block_g_num = PDM_part_to_block_block_gnum_get (ptb2);
+      for (int i = 0; i < n_elt_block; i++) {
+        printf ("%d ("PDM_FMT_G_NUM") : %d\n", i, block_g_num[i], block_pts_in_box_count[i]);
+      }
+    }
 
     for (int ibox = 0; ibox < n_boxes2; ibox++) {
       pts_in_box_count[ibox] *= 3;
@@ -1787,9 +1795,9 @@ PDM_dbbtree_points_inside_boxes
                                                           &_n_boxes,
                                                           1,
                                                           _dbbt->comm);
-    PDM_g_num_t *block_distrib_idx1 = PDM_part_to_block_distrib_index_get (ptb1);
+    PDM_g_num_t *block_distrib_idx = PDM_part_to_block_distrib_index_get (ptb1);
 
-    PDM_block_to_part_t *btp = PDM_block_to_part_create (block_distrib_idx1,
+    PDM_block_to_part_t *btp = PDM_block_to_part_create (block_distrib_idx,
                                                          (const PDM_g_num_t **) &box_g_num,
                                                          &n_boxes,
                                                          1,

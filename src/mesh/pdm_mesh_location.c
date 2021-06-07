@@ -3426,10 +3426,10 @@ PDM_mesh_location_t        *ml
     dbbt = PDM_dbbtree_create (ml->comm, dim, g_extents);
 
     PDM_dbbtree_boxes_set (dbbt,
-                           1,//const int n_part,
+                           1,
                            &n_select_boxes,
-                           (const double **) (&select_box_extents),
-                           (const PDM_g_num_t **) (&select_box_g_num));
+                           (const double **) &select_box_extents,
+                           (const PDM_g_num_t **) &select_box_g_num);
 
     PDM_timer_hang_on(ml->timer);
     e_t_elapsed = PDM_timer_elapsed(ml->timer);
@@ -3597,6 +3597,7 @@ PDM_mesh_location_t        *ml
       break;
 
     case PDM_MESH_LOCATION_DBBTREE:
+      printf("[%d] n_pts_pcloud = %d, n_select_boxes = %d\n", my_rank, n_pts_pcloud, n_select_boxes);//
       PDM_dbbtree_points_inside_boxes (dbbt,
                                        n_pts_pcloud,
                                        pcloud_g_num,
@@ -3737,6 +3738,14 @@ PDM_mesh_location_t        *ml
     int n_pts = redistrib_pts_idx[redistrib_n_elt];
 
     if (use_extracted_pts) {
+      if (1) {
+        printf("redistrib_pts_g_num = ");
+        for (int i = 0; i < n_pts; i++) {
+          printf(PDM_FMT_G_NUM" ", redistrib_pts_g_num[i]);
+        }
+        printf("\n");
+      }
+
       // substitute redistrib_pts_g_num with redistrib_pts_parent_g_num
       PDM_part_to_block_t *ptb_parent =
         PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
@@ -3760,6 +3769,15 @@ PDM_mesh_location_t        *ml
                               &_block_stride,
                               (void **) &block_pcloud_parent_gnum);
       free (pcloud_parent_g_num);
+
+      if (1) {
+        int n_pts_a = PDM_part_to_block_n_elt_block_get (ptb_parent);
+        PDM_g_num_t *block_g_num_a = PDM_part_to_block_block_gnum_get (ptb_parent);
+        printf("block_pcloud_parent_gnum :\n");
+        for (int i = 0; i < n_pts_a; i++) {
+          printf("  "PDM_FMT_G_NUM" --> "PDM_FMT_G_NUM"\n", block_g_num_a[i], block_pcloud_parent_gnum[i]);
+        }
+      }
 
       PDM_block_to_part_t *btp_parent =
         PDM_block_to_part_create (block_parent_distrib_idx,

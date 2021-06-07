@@ -134,6 +134,7 @@ PDM_block_to_part_create
                                             block_distrib_idx,
                                             btp->n_rank + 1);
       // printf(" [%i][%i] --> ind = %i (g_num = %i )\n", i, j, ind, (int) _gnum_elt[j]);
+      if (ind < 0 || ind >= btp->n_rank) printf(" [%i][%i] --> ind = %i (g_num = %i )\n", i, j, ind, (int) _gnum_elt[j]);
       btp->requested_data_n[ind]++;
 
     }
