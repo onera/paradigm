@@ -31,6 +31,7 @@
 
 #include "pdm_part_to_block.h"
 #include "pdm_block_to_part.h"
+#include "pdm_timer.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -1590,6 +1591,112 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get
  *   \param [inout] pts_in_box_coord   Coordinates of points in boxes (size = 3*pts_in_box_idx[n_boxes], allocated inside function)
  *
  */
+static void _export_boxes
+(
+ const char        *filename,
+ const int          n_box,
+ const double      *box_extents,
+ const PDM_g_num_t *box_g_num
+ )
+{
+  FILE *f = fopen(filename, "w");
+
+  fprintf(f, "# vtk DataFile Version 2.0\nboxes\nASCII\nDATASET UNSTRUCTURED_GRID\n");
+
+  fprintf(f, "POINTS %d double\n", 8*n_box);
+  for (int i = 0; i < n_box; i++) {
+    const double *e = box_extents + 6*i;
+    fprintf(f, "%f %f %f\n", e[0], e[1], e[2]);
+    fprintf(f, "%f %f %f\n", e[3], e[1], e[2]);
+    fprintf(f, "%f %f %f\n", e[3], e[4], e[2]);
+    fprintf(f, "%f %f %f\n", e[0], e[4], e[2]);
+    fprintf(f, "%f %f %f\n", e[0], e[1], e[5]);
+    fprintf(f, "%f %f %f\n", e[3], e[1], e[5]);
+    fprintf(f, "%f %f %f\n", e[3], e[4], e[5]);
+    fprintf(f, "%f %f %f\n", e[0], e[4], e[5]);
+  }
+
+  fprintf(f, "CELLS %d %d\n", n_box, 9*n_box);
+  for (int i = 0; i < n_box; i++) {
+    int j = 8*i;
+    fprintf(f, "8 %d %d %d %d %d %d %d %d\n", j, j+1, j+2, j+3, j+4, j+5, j+6, j+7);
+  }
+
+  fprintf(f, "CELL_TYPES %d\n", n_box);
+  for (int i = 0; i < n_box; i++) {
+    fprintf(f, "12\n");
+  }
+
+  fprintf(f, "CELL_DATA %d\n", n_box);
+  fprintf(f, "SCALARS gnum int\n LOOKUP_TABLE default\n");
+  for (int i = 0; i < n_box; i++) {
+    fprintf(f, ""PDM_FMT_G_NUM"\n", box_g_num[i]);
+  }
+
+  fclose(f);
+}
+
+
+static void _export_point_cloud
+(
+ char         *filename,
+ int           n_part,
+ int          *n_pts,
+ double      **coord,
+ PDM_g_num_t **g_num,
+ PDM_g_num_t **parent_g_num
+ )
+{
+  FILE *f = fopen(filename, "w");
+
+  fprintf(f, "# vtk DataFile Version 2.0\noctree points\nASCII\nDATASET UNSTRUCTURED_GRID\n");
+
+  int n_pts_t = 0;
+  for (int ipart = 0; ipart < n_part; ipart++) {
+    n_pts_t += n_pts[ipart];
+  }
+
+  fprintf(f, "POINTS %d double\n", n_pts_t);
+  for (int ipart = 0; ipart < n_part; ipart++) {
+    for (int i = 0; i < n_pts[ipart]; i++) {
+      for (int j = 0; j < 3; j++) {
+        fprintf(f, "%f ", coord[ipart][3*i + j]);
+      }
+      fprintf(f, "\n");
+    }
+  }
+
+  fprintf(f, "CELLS %d %d\n", n_pts_t, 2*n_pts_t);
+  for (int i = 0; i < n_pts_t; i++) {
+    fprintf(f, "1 %d\n", i);
+  }
+
+  fprintf(f, "CELL_TYPES %d\n", n_pts_t);
+  for (int i = 0; i < n_pts_t; i++) {
+    fprintf(f, "1\n");
+  }
+
+  fprintf(f, "CELL_DATA %d\n", n_pts_t);
+  fprintf(f, "SCALARS gnum int\n LOOKUP_TABLE default\n");
+  for (int ipart = 0; ipart < n_part; ipart++) {
+    for (int i = 0; i < n_pts[ipart]; i++) {
+      fprintf(f, ""PDM_FMT_G_NUM"\n", g_num[ipart][i]);
+    }
+  }
+
+  if (parent_g_num != NULL) {
+    fprintf(f, "FIELD FieldData 1\n");
+    fprintf(f, "parent_gnum 1 %d int\n", n_pts_t);
+    for (int ipart = 0; ipart < n_part; ipart++) {
+      for (int i = 0; i < n_pts[ipart]; i++) {
+        fprintf(f, ""PDM_FMT_G_NUM"\n", parent_g_num[ipart][i]);
+      }
+    }
+  }
+
+  fclose(f);
+}
+
 
 void
 PDM_dbbtree_points_inside_boxes
@@ -1608,7 +1715,8 @@ PDM_dbbtree_points_inside_boxes
   assert (dbbt != NULL);
   _PDM_dbbtree_t *_dbbt = (_PDM_dbbtree_t *) dbbt;
 
-
+  double t_begin, t_end;//
+  PDM_timer_t *timer = PDM_timer_create ();//
 
   int my_rank;
   PDM_MPI_Comm_rank (_dbbt->comm, &my_rank);
@@ -1634,6 +1742,8 @@ PDM_dbbtree_points_inside_boxes
   double      *send_coord = NULL;
   double      *recv_coord = NULL;
 
+  t_begin = PDM_timer_elapsed (timer);
+  PDM_timer_resume (timer);
   //-->>
   double *_pts_coord = malloc (sizeof(double) * n_pts * 3);
   for (int i = 0; i < n_pts; i++) {
@@ -1642,6 +1752,53 @@ PDM_dbbtree_points_inside_boxes
                 _pts_coord + 3*i);
   }
   //<<--
+  PDM_timer_hang_on (timer);
+  t_end = PDM_timer_elapsed (timer);
+  printf("[%d] normalization : %12.5es\n", my_rank, t_end - t_begin);
+  t_begin = t_end;
+  PDM_timer_resume (timer);
+
+  if (0) {
+    char filename[999];
+
+    sprintf(filename, "dbbt_pts_n_%3.3d.vtk", my_rank);
+    _export_point_cloud (filename,
+                         1,
+                         &n_pts,
+                         &_pts_coord,
+                         &pts_g_num,
+                         NULL);
+
+    sprintf(filename, "dbbt_boxes_n_%3.3d.vtk", my_rank);
+    _export_boxes (filename,
+                   _dbbt->boxes->local_boxes->n_boxes,
+                   _dbbt->boxes->local_boxes->extents,
+                   _dbbt->boxes->local_boxes->g_num);
+
+
+    double *_extents = malloc (sizeof(double) * _dbbt->boxes->local_boxes->n_boxes * 6);
+    for (int i = 0; i < 2*_dbbt->boxes->local_boxes->n_boxes; i++) {
+      for (int j = 0; j < 3; j++) {
+        _extents[3*i+j] = _dbbt->s[j] + _dbbt->d[j] * _dbbt->boxes->local_boxes->extents[3*i+j];
+      }
+    }
+
+    sprintf(filename, "dbbt_pts_%3.3d.vtk", my_rank);
+    _export_point_cloud (filename,
+                         1,
+                         &n_pts,
+                         &pts_coord,
+                         &pts_g_num,
+                         NULL);
+
+    sprintf(filename, "dbbt_boxes_%3.3d.vtk", my_rank);
+    _export_boxes (filename,
+                   _dbbt->boxes->local_boxes->n_boxes,
+                   _extents,
+                   _dbbt->boxes->local_boxes->g_num);
+
+    free (_extents);
+  }
 
   if (_dbbt->btShared != NULL) {
     PDM_box_tree_points_inside_boxes (_dbbt->btShared,
@@ -1711,6 +1868,15 @@ PDM_dbbtree_points_inside_boxes
     recv_coord = (double *) _pts_coord;
   }
 
+  PDM_timer_hang_on (timer);
+  t_end = PDM_timer_elapsed (timer);
+  printf("[%d] redistribution : %12.5es\n", my_rank, t_end - t_begin);
+  t_begin = t_end;
+  PDM_timer_resume (timer);
+
+  printf("[%d] dbbt->n_boxes = %d, n_pts = %d, n_recv_pts = %d\n",
+         my_rank, _dbbt->boxes->local_boxes->n_boxes, n_pts, n_recv_pts);
+
 
   /***************************************
    * Get list of boxes that contain each redistributed point
@@ -1725,6 +1891,12 @@ PDM_dbbtree_points_inside_boxes
                                     &pts_in_box_idx2,
                                     &pts_in_box_g_num2,
                                     &pts_in_box_coord2);
+
+  PDM_timer_hang_on (timer);
+  t_end = PDM_timer_elapsed (timer);
+  printf("[%d] box_tree : %12.5es\n", my_rank, t_end - t_begin);
+  t_begin = t_end;
+  PDM_timer_resume (timer);
 
 
   /* Conform to original partitioning */
@@ -1867,6 +2039,12 @@ PDM_dbbtree_points_inside_boxes
     free (recv_coord);
   }
 
+  PDM_timer_hang_on (timer);
+  t_end = PDM_timer_elapsed (timer);
+  printf("[%d] part_to_part : %12.5es\n", my_rank, t_end - t_begin);
+  t_begin = t_end;
+  PDM_timer_resume (timer);
+
   //-->>
   for (int i = 0; i < (*pts_in_box_idx)[n_boxes]; i++) {
     for (int j = 0; j < 3; j++) {
@@ -1874,6 +2052,12 @@ PDM_dbbtree_points_inside_boxes
     }
   }
   //<<--
+
+  PDM_timer_hang_on (timer);
+  t_end = PDM_timer_elapsed (timer);
+  printf("[%d] de-normalization : %12.5es\n", my_rank, t_end - t_begin);
+  t_begin = t_end;
+  PDM_timer_free (timer);
 }
 
 
