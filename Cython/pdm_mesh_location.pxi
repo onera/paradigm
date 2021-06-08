@@ -16,13 +16,13 @@ cdef extern from "pdm_mesh_location.h":
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
   PDM_mesh_location_t* PDM_mesh_location_create(PDM_mesh_nature_t mesh_nature,
                                int               n_point_cloud,
-                               PDM_MPI_Comm      comm);
+                               PDM_MPI_Comm      comm)
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
   void PDM_mesh_location_n_part_cloud_set(PDM_mesh_location_t* ml,
                                           int                  i_point_cloud,
-                                          int                  n_part);
+                                          int                  n_part)
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -31,20 +31,20 @@ cdef extern from "pdm_mesh_location.h":
                                    int                  i_part,
                                    int                  n_points,
                                    double              *coords,
-                                   PDM_g_num_t         *gnum);
+                                   PDM_g_num_t         *gnum)
 
   void PDM_mesh_location_cloud_get (PDM_mesh_location_t  *ml,
                                     int                   i_point_cloud,
                                     int                   i_part,
                                     int                  *n_points,
                                     double              **coords,
-                                    PDM_g_num_t         **gnum);
+                                    PDM_g_num_t         **gnum)
 
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-  # void PDM_mesh_location_shared_nodal_mesh_set(int  id, PDM_Mesh_nodal_t *mesh_nodal);
-  void PDM_mesh_location_mesh_global_data_set (PDM_mesh_location_t  *ml, int  n_part);
+  # void PDM_mesh_location_shared_nodal_mesh_set(int  id, PDM_Mesh_nodal_t *mesh_nodal)
+  void PDM_mesh_location_mesh_global_data_set (PDM_mesh_location_t  *ml, int  n_part)
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -60,7 +60,7 @@ cdef extern from "pdm_mesh_location.h":
                                   PDM_g_num_t         *face_ln_to_gn,
                                   int                  n_vtx,
                                   double              *coords,
-                                  PDM_g_num_t         *vtx_ln_to_gn);
+                                  PDM_g_num_t         *vtx_ln_to_gn)
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -76,36 +76,36 @@ cdef extern from "pdm_mesh_location.h":
                                      PDM_g_num_t         *edge_ln_to_gn,
                                      int                  n_vtx,
                                      double              *coords,
-                                     PDM_g_num_t         *vtx_ln_to_gn);
+                                     PDM_g_num_t         *vtx_ln_to_gn)
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-  void PDM_mesh_location_tolerance_set(PDM_mesh_location_t *ml, double tol);
+  void PDM_mesh_location_tolerance_set(PDM_mesh_location_t *ml, double tol)
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-  void PDM_mesh_location_method_set(PDM_mesh_location_t *ml, PDM_mesh_location_method_t method);
+  void PDM_mesh_location_method_set(PDM_mesh_location_t *ml, PDM_mesh_location_method_t method)
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-  void PDM_mesh_location_compute(PDM_mesh_location_t *ml);
+  void PDM_mesh_location_compute(PDM_mesh_location_t *ml)
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
   int PDM_mesh_location_n_located_get (PDM_mesh_location_t *ml,
                                        int                  i_point_cloud,
-                                       int                  i_part);
+                                       int                  i_part)
 
   int PDM_mesh_location_n_unlocated_get (PDM_mesh_location_t *ml,
                                          int                  i_point_cloud,
-                                         int                  i_part);
+                                         int                  i_part)
 
   int *PDM_mesh_location_unlocated_get (PDM_mesh_location_t *ml,
                                         int                  i_point_cloud,
-                                        int                  i_part);
+                                        int                  i_part)
 
 
   int *PDM_mesh_location_located_get (PDM_mesh_location_t *ml,
                                       int                  i_point_cloud,
-                                      int                  i_part);
+                                      int                  i_part)
 
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
   void PDM_mesh_location_point_location_get(PDM_mesh_location_t  *ml,
@@ -113,7 +113,7 @@ cdef extern from "pdm_mesh_location.h":
                                             int                   i_part,
                                             PDM_g_num_t         **location,
                                             double              **dist2,
-                                            double              **projected_coord);
+                                            double              **projected_coord)
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
   void PDM_mesh_location_points_in_elt_get (PDM_mesh_location_t  *ml,
                                             int                   i_part,
@@ -125,23 +125,23 @@ cdef extern from "pdm_mesh_location.h":
                                             int                 **points_weights_idx,
                                             double              **points_weights,
                                             double              **points_dist2,
-                                            double              **points_projected_coords);
+                                            double              **points_projected_coords)
 
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-  void PDM_mesh_location_free(PDM_mesh_location_t  *ml, int partial);
-  # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
-  # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-  void PDM_mesh_location_dump_times(PDM_mesh_location_t  *ml);
+  void PDM_mesh_location_free(PDM_mesh_location_t  *ml, int partial)
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-  void PDM_mesh_location_mesh_nodal_id_get(PDM_mesh_location_t  *ml);
+  void PDM_mesh_location_dump_times(PDM_mesh_location_t  *ml)
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-  int PDM_mesh_location_n_cell_get (PDM_mesh_location_t  *ml, int i_part);
+  # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+  void PDM_mesh_location_mesh_nodal_id_get(PDM_mesh_location_t  *ml)
+  # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-  void PDM_mesh_location_cell_vertex_get (PDM_mesh_location_t  *ml, int i_part, int **cell_vtx_idx, int **cell_vtx);
+  int PDM_mesh_location_n_cell_get (PDM_mesh_location_t  *ml, int i_part)
+
+  void PDM_mesh_location_cell_vertex_get (PDM_mesh_location_t  *ml, int i_part, int **cell_vtx_idx, int **cell_vtx)
 
 
 # ------------------------------------------------------------------
@@ -186,7 +186,7 @@ cdef class MeshLocation:
     """
     PDM_mesh_location_n_part_cloud_set(self._ml,
                                        i_point_cloud,
-                                       n_part);
+                                       n_part)
 
   # ------------------------------------------------------------------------
   def cloud_set(self, int i_point_cloud,
@@ -202,19 +202,19 @@ cdef class MeshLocation:
                                 i_part,
                                 n_points,
                  <double*>      coords.data,
-                 <PDM_g_num_t*> gnum.data);
+                 <PDM_g_num_t*> gnum.data)
 
   # ------------------------------------------------------------------------
   # def nodal_mesh_set(self, MeshNodal mesh_nodal):
   #   """
   #   """
-  #   PDM_mesh_location_shared_nodal_mesh_set(self._ml, mesh_nodal.mn);
+  #   PDM_mesh_location_shared_nodal_mesh_set(self._ml, mesh_nodal.mn)
 
   # ------------------------------------------------------------------------
   def mesh_global_data_set(self, int n_part):
     """
     """
-    PDM_mesh_location_mesh_global_data_set(self._ml, n_part);
+    PDM_mesh_location_mesh_global_data_set(self._ml, n_part)
 
   # ------------------------------------------------------------------------
   def part_set(self, int i_part,
@@ -243,7 +243,7 @@ cdef class MeshLocation:
                 <PDM_g_num_t*> face_ln_to_gn.data,
                                n_vtx,
                 <double*>      coords.data,
-                <PDM_g_num_t*> vtx_ln_to_gn.data);
+                <PDM_g_num_t*> vtx_ln_to_gn.data)
 
   # ------------------------------------------------------------------------
   def part_set_2d(self, int i_part,
@@ -272,19 +272,19 @@ cdef class MeshLocation:
                    <PDM_g_num_t*> edge_ln_to_gn.data,
                                   n_vtx,
                    <double*>      coords.data,
-                   <PDM_g_num_t*> vtx_ln_to_gn.data);
+                   <PDM_g_num_t*> vtx_ln_to_gn.data)
 
   # ------------------------------------------------------------------------
   def tolerance_set(self, double tol):
     """
     """
-    PDM_mesh_location_tolerance_set(self._ml, tol);
+    PDM_mesh_location_tolerance_set(self._ml, tol)
 
   # ------------------------------------------------------------------------
   def method_set(self, PDM_mesh_location_method_t method):
     """
     """
-    PDM_mesh_location_method_set(self._ml, method);
+    PDM_mesh_location_method_set(self._ml, method)
 
   # ------------------------------------------------------------------------
   def location_get(self, int i_point_cloud,
@@ -307,14 +307,14 @@ cdef class MeshLocation:
                                  i_part,
                                  &n_points,
                                  &coords,
-                                 &gnum);
+                                 &gnum)
 
     PDM_mesh_location_point_location_get(self._ml,
                                          i_point_cloud,
                                          i_part,
                                          &location,
                                          &dist2,
-                                         &p_proj_coord);
+                                         &p_proj_coord)
 
     cdef NPY.npy_intp dim
     # > Build numpy capsule
@@ -357,7 +357,7 @@ cdef class MeshLocation:
     cdef int *cell_vtx_idx
     cdef int *cell_vtx
 
-    n_elts =  PDM_mesh_location_n_cell_get(self._ml, i_part);
+    n_elts =  PDM_mesh_location_n_cell_get(self._ml, i_part)
 
 
     PDM_mesh_location_cell_vertex_get(self._ml,
@@ -401,7 +401,7 @@ cdef class MeshLocation:
     cdef double       *points_projected_coords
     # ************************************************************************
 
-    n_elts =  PDM_mesh_location_n_cell_get(self._ml, i_part);
+    n_elts =  PDM_mesh_location_n_cell_get(self._ml, i_part)
 
     PDM_mesh_location_points_in_elt_get(self._ml,
                                         i_part,
@@ -413,7 +413,7 @@ cdef class MeshLocation:
                                         &points_weights_idx,
                                         &points_weights,
                                         &points_dist2,
-                                        &points_projected_coords);
+                                        &points_projected_coords)
 
     cdef NPY.npy_intp dim
     # > Build numpy capsule
@@ -492,11 +492,11 @@ cdef class MeshLocation:
 
     n_located = PDM_mesh_location_n_located_get(self._ml,
                                                 i_point_cloud,
-                                                i_part);
+                                                i_part)
 
     located = PDM_mesh_location_located_get(self._ml,
                                             i_point_cloud,
-                                            i_part);
+                                            i_part)
 
     dim = <NPY.npy_intp> n_located
     np_located = NPY.PyArray_SimpleNewFromData(1,
@@ -515,11 +515,11 @@ cdef class MeshLocation:
 
     n_unlocated = PDM_mesh_location_n_unlocated_get(self._ml,
                                                     i_point_cloud,
-                                                    i_part);
+                                                    i_part)
 
     unlocated = PDM_mesh_location_unlocated_get(self._ml,
                                                 i_point_cloud,
-                                                i_part);
+                                                i_part)
     dim = <NPY.npy_intp> n_unlocated
     np_unlocated = NPY.PyArray_SimpleNewFromData(1,
                                                  &dim,
