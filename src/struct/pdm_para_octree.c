@@ -8428,7 +8428,7 @@ PDM_para_octree_points_inside_boxes_with_copies
  )
 {
   float f_copy_threshold = 1.05;
-  float f_max_copy = 0.8;//0.05;
+  float f_max_copy = 0.4;//0.05;
 
   char *env_var = NULL;
   env_var = getenv ("OCTREE_COPY_THRESHOLD");
@@ -8452,8 +8452,6 @@ PDM_para_octree_points_inside_boxes_with_copies
   PDM_MPI_Comm_size (octree->comm, &n_rank);
 
 
-  //PDM_g_num_t *box_block_distrib_idx = NULL;
-
   PDM_morton_code_t *box_corners = NULL;
   double d[3], s[3];
 
@@ -8471,15 +8469,6 @@ PDM_para_octree_points_inside_boxes_with_copies
   double      *box_extents1 = NULL;
 
   if (n_rank > 1) {
-    /*
-     *  Build uniform block distribution for boxes
-     */
-    /*box_block_distrib_idx = PDM_compute_uniform_entity_distribution_from_partition (octree->comm,
-                                                                                    1,
-                                                                                    &n_boxes,
-                                                                                    &box_g_num);
-    */
-
     /*
      *  Redistribute boxes
      */
@@ -8611,6 +8600,7 @@ PDM_para_octree_points_inside_boxes_with_copies
     n_box_recv = recv_shift[n_rank];
 
     n_box1 = n_box_local + n_box_recv + n_box_copied;
+    printf("[%d] octree->n_pts = %d, n_recv_boxes = %d (without copies : %d)\n", i_rank, octree->n_points, n_box1, n_recv_box);
 
     box_g_num1   = malloc (sizeof(PDM_g_num_t) * n_box1);
     box_extents1 = malloc (sizeof(double)      * n_box1 * two_dim);
