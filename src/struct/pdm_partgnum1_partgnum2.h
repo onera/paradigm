@@ -1,12 +1,5 @@
-/*
- * File:   pdm_part_to_part.h
- * Author: equemera
- *
- * Created on April 14, 2016, 7:56 AM
- */
-
-#ifndef PDM_PART_TO_PART_H
-#define	PDM_PART_tO_pART_H
+#ifndef PDM_PARTGNUM1_PARTGNUM2_H
+#define	PDM_PARTGNUM1_PARTGNUM2_H
 
 /*----------------------------------------------------------------------------
  * Standard C library headers
@@ -33,12 +26,12 @@ extern "C" {
  *============================================================================*/
 
 /**
- * \struct PDM_part_to_part_t
+ * \struct PDM_partgnum1_partgnum2_t
  * \brief  Block to partition redistribution
  *
  */
 
-typedef struct _pdm_part_to_part_t PDM_part_to_part_t;
+typedef struct _pdm_partgnum1_partgnum2_t PDM_partgnum1_partgnum2_t;
 
 
 /*=============================================================================
@@ -59,28 +52,31 @@ typedef struct _pdm_part_to_part_t PDM_part_to_part_t;
  * \param [in]   gnum_elt2          Element global number (size : \ref n_part2)
  * \param [in]   n_elt2             Local number of elements (size : \ref n_part2)
  * \param [in]   n_part2            Number of partition
- * \param [in]   comm              MPI communicator
+ * \param [in]   send_to_gnum2_idx  S
+ * \param [in]   send_to_gnum2      
+ * \param [in]   comm               MPI communicator
  *
- * \return   Initialized \ref PDM_part_to_part instance
+ * \return   Initialized \ref PDM_partgnum1_partgnum2 instance
  *
  */
 
-PDM_part_to_part_t *
-PDM_part_to_part_create
+PDM_partgnum1_partgnum2_t *
+PDM_partgnum1_partgnum2_create
 (
- const PDM_g_num_t    **gnum_elt1,
+ const PDM_g_num_t   **gnum_elt1,
  const int            *n_elt1,
  const int             n_part1,
- const PDM_g_num_t    **gnum_elt2,
+ const PDM_g_num_t   **gnum_elt2,
  const int            *n_elt2,
  const int             n_part2,
- const int             n_part2,
+ const int           **send_to_gnum2_idx,
+ const PDM_g_num_t   **send_to_gnum2,
  const PDM_MPI_Comm    comm
 );
 
 
-PDM_part_to_part_t *
-PDM_part_to_part_create_cf
+PDM_partgnum1_partgnum2_t *
+PDM_partgnum1_partgnum2_create_cf
 (
  const PDM_g_num_t    **gnum_elt1,
  const int            *n_elt1,
@@ -88,6 +84,8 @@ PDM_part_to_part_create_cf
  const PDM_g_num_t    **gnum_elt2,
  const int            *n_elt2,
  const int             n_part2,
+ const int           **send_to_gnum2_idx,
+ const PDM_g_num_t   **send_to_gnum2,
  const PDM_MPI_Fint    fcomm
 );
 
@@ -107,21 +105,21 @@ PDM_part_to_part_create_cf
  */
 
 void
-PDM_part_to_part_exch
+PDM_partgnum1_partgnum2_exch
 (
- PDM_part_to_part_t *ptp,
- size_t               s_data,
- PDM_stride_t         t_stride,
- int                **part1_stride,
- void               **part1_data
- int                **part2_stride,
- void               **part2_data
+ PDM_partgnum1_partgnum2_t    *ptp,
+ const size_t                  s_data,
+ const PDM_stride_t            t_stride,
+ int                         **part1_stride,
+ void                        **part1_data
+ int                         **part2_stride,
+ void                        **part2_data
 );
 
 
 /**
  *
- * \brief Initialize an exchange
+ * \brief Initialize an exchange with allocation of result arrays
  *
  * \param [in]   ptp           Block to part structure
  * \param [in]   s_data        Data size
@@ -134,15 +132,95 @@ PDM_part_to_part_exch
  */
 
 void
-PDM_part_to_part_exch_with_alloc
+PDM_partgnum1_partgnum2_exch_with_alloc
 (
- PDM_part_to_part_t *ptp,
- size_t               s_data,
- PDM_stride_t         t_stride,
- int                **part1_stride,
- void               **part1_data
- int                ***part2_stride,
- void               ***part2_data
+ PDM_partgnum1_partgnum2_t *ptp,
+ const size_t               s_data,
+ const PDM_stride_t         t_stride,
+ int                      **part1_stride,
+ void                     **part1_data
+ int                     ***part2_stride,
+ void                    ***part2_data
+);
+
+
+/**
+ *
+ * \brief Initialize a asynchronus issend
+ *
+ * \param [in]   ptp           Block to part structure
+ * \param [in]   s_data        Data size
+ * \param [in]   cst_stride    Constant stride
+ * \param [in]   part1_data    Partition 1 data
+ * \param [out]  request       Request
+ *
+ */
+
+void
+PDM_partgnum1_partgnum2_issend
+(
+ PDM_partgnum1_partgnum2_t *ptp,
+ const size_t               s_data,
+ const int                  cst_stride,
+ void                     **part1_data,
+ int                       *request
+);
+
+
+/**
+ *
+ * \brief Wait a asynchronus issend
+ *
+ * \param [in]  ptp           part to part structure
+ * \param [in]  request       Request
+ *
+ */
+
+void
+PDM_partgnum1_partgnum2_issend_wait
+(
+ PDM_partgnum1_partgnum2_t *ptp,
+ int                        request
+);
+
+
+/**
+ *
+ * \brief Initialize a asynchronus irecv
+ *
+ * \param [in]  ptp           Part to part structure
+ * \param [in]  s_data        Data size
+ * \param [in]  cst_stride    Constant stride
+ * \param [in]  part1_data    Partition 2 data
+ * \param [out] request       Request
+ *
+ */
+
+void
+PDM_partgnum1_partgnum2_irecv
+(
+ PDM_partgnum1_partgnum2_t *ptp,
+ const size_t               s_data,
+ const int                  cst_stride,
+ void                     **part2_data,
+ int                       *request
+);
+
+
+/**
+ *
+ * \brief Initialize a asynchronus irecv
+ *
+ * \param [in]  ptp           Part to part structure
+ * \param [in]  request       Request
+ *
+ */
+
+void
+PDM_partgnum1_partgnum2_irecv_wait
+(
+ PDM_partgnum1_partgnum2_t *ptp,
+ int                        request
 );
 
 
@@ -155,10 +233,10 @@ PDM_part_to_part_exch_with_alloc
  * \return       NULL
  */
 
-PDM_part_to_part_t *
-PDM_part_to_part_free
+PDM_partgnum1_partgnum2_t *
+PDM_partgnum1_partgnum2_free
 (
- PDM_part_to_part_t *ptp
+ PDM_partgnum1_partgnum2_t *ptp
 );
 
 #ifdef	__cplusplus
