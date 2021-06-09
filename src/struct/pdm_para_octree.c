@@ -8428,7 +8428,7 @@ PDM_para_octree_points_inside_boxes_with_copies
  )
 {
   float f_copy_threshold = 1.05;
-  float f_max_copy = 0.4;//0.05;
+  float f_max_copy = 0.05;
 
   char *env_var = NULL;
   env_var = getenv ("OCTREE_COPY_THRESHOLD");
@@ -8533,10 +8533,6 @@ PDM_para_octree_points_inside_boxes_with_copies
                      &copied_ranks,
                      &n_recv_box_copied_ranks,
                      &avg_n_recv_box);
-    if (n_recv_box_copied_ranks != NULL) {
-      free (n_recv_box_copied_ranks);
-    }
-
 
     if (n_copied_ranks > 0) {
       if (i_rank == 0) {
@@ -8568,24 +8564,53 @@ PDM_para_octree_points_inside_boxes_with_copies
       copied_count[i] = 0;
     }
 
+    int *send_shift = PDM_array_new_idx_from_sizes_int (send_count, n_rank);
     n_box_local = 0;
+
+    if (1) {
+      for (int i = 0; i < octree->n_copied_ranks; i++) {
+        int rank = octree->copied_ranks[i];
+        if (rank != i_rank) {
+          int si = send_count[rank];
+
+          si = PDM_MIN (si, PDM_MAX (0, (n_recv_box_copied_ranks[i] - n_recv_box)/2));
+          if (i_copied_rank[i_rank] < 0) {
+            si = PDM_MIN (si, PDM_MAX (0, avg_n_recv_box - n_recv_box));
+          }
+
+          copied_count[i] = si;
+          n_recv_box += si;
+        }
+      }
+    }
+    if (n_recv_box_copied_ranks != NULL) {
+      free (n_recv_box_copied_ranks);
+    }
+
     for (int i = 0; i < n_rank; i++) {
+
+      send_shift[i+1] = send_shift[i];
+
       if (i == i_rank) {
         n_box_local += send_count[i];
         send_count[i] = 0;
       }
       else if (i_copied_rank[i] >= 0) {
-        copied_count[i_copied_rank[i]] = send_count[i];
-        send_count[i] = 0;
+        //copied_count[i_copied_rank[i]] = send_count[i];
+        send_count[i] -= copied_count[i_copied_rank[i]];
       }
+
+      send_shift[i+1] += send_count[i];
     }
 
-    copied_shift = malloc (sizeof(int) * (octree->n_copied_ranks + 1));
+    /*copied_shift = malloc (sizeof(int) * (octree->n_copied_ranks + 1));
     copied_shift[0] = 0;
     for (int i = 0; i < octree->n_copied_ranks; i++) {
       copied_shift[i+1] = copied_shift[i] + copied_count[i];
       copied_count[i] = 0;
-    }
+    }*/
+    copied_shift = PDM_array_new_idx_from_sizes_int (copied_count, octree->n_copied_ranks);
+    int *copied_count_tmp = PDM_array_zeros_int (octree->n_copied_ranks);
     n_box_copied = copied_shift[octree->n_copied_ranks];
 
     /* Exchange new send/recv counts */
@@ -8593,7 +8618,7 @@ PDM_para_octree_points_inside_boxes_with_copies
                       recv_count, 1, PDM_MPI_INT,
                       octree->comm);
 
-    int *send_shift = PDM_array_new_idx_from_sizes_int (send_count, n_rank);
+    //int *send_shift = PDM_array_new_idx_from_sizes_int (send_count, n_rank);
     int *recv_shift = PDM_array_new_idx_from_sizes_int (recv_count, n_rank);
     PDM_array_reset_int (send_count, n_rank, 0);
 
@@ -8629,12 +8654,25 @@ PDM_para_octree_points_inside_boxes_with_copies
 
         else if (i_copied_rank[rank] >= 0) {
           int _rank = i_copied_rank[rank];
-          int k = copied_shift[_rank] + copied_count[_rank];
-          copied_g_num[k] = box_g_num[ibox];
-          for (int j = 0; j < two_dim; j++) {
-            copied_extents[two_dim*k + j] = box_extents[two_dim*ibox + j];
+
+          if (copied_count_tmp[_rank] < copied_count[_rank]) {
+            //int k = copied_shift[_rank] + copied_count[_rank];
+            int k = copied_shift[_rank] + copied_count_tmp[_rank];
+            copied_g_num[k] = box_g_num[ibox];
+            for (int j = 0; j < two_dim; j++) {
+              copied_extents[two_dim*k + j] = box_extents[two_dim*ibox + j];
+            }
+            //copied_count[_rank]++;
+            copied_count_tmp[_rank]++;
           }
-          copied_count[_rank]++;
+          else {
+            int k = send_shift[rank] + send_count[rank];
+            send_g_num[k] = box_g_num[ibox];
+            for (int j = 0; j < two_dim; j++) {
+              send_extents[two_dim*k + j] = box_extents[two_dim*ibox + j];
+            }
+            send_count[rank]++;
+          }
         }
 
         else {
@@ -8649,6 +8687,9 @@ PDM_para_octree_points_inside_boxes_with_copies
     }
     if (copied_count != NULL) {
       free (copied_count);
+    }
+    if (copied_count_tmp != NULL) {
+      free (copied_count_tmp);
     }
     if (i_copied_rank != NULL) {
       free (i_copied_rank);
