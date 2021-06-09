@@ -84,12 +84,39 @@ PDM_partgnum1_to_partgnum2_create
  const PDM_g_num_t   **gnum_elt2,
  const int            *n_elt2,
  const int             n_part2,
- const int           **send_to_gnum2_idx,
- const PDM_g_num_t   **send_to_gnum2,
+ const int           **gnum1_to_gnum2_idx,
+ const PDM_g_num_t   **gnum1_to_gnum2,
  const PDM_MPI_Comm    comm
 )
 {
+  PDM_part_to_block_t *ptp =
+    (PDM_part_to_block_t *) malloc (sizeof(PDM_part_to_block_t));
 
+  ptp->n_part1                 = n_part1;    
+  ptp->gnum_elt1               = gnum_elt1;
+  ptp->n_elt1                  = n_elt1;
+  ptp->n_part2                 = n_part2;                
+  ptp->gnum_elt2               = gnum_elt2;              
+  ptp->n_elt2                  = n_elt2;                
+  ptp->gnum1_to_gnum2_idx      = gnum1_to_gnum2_idx;    
+  ptp->gnum1_to_gnum2          = gnum1_to_gnum2;        
+  ptp->comm                    = comm;
+
+  ptp->gnum1_to_send_buffer    = NULL;  
+  ptp->recv_buffer_to_gnum2    = NULL;  
+  
+  ptp->async_n_exch            = 0;           
+  ptp->async_l_array           = 0;          
+  ptp->async_s_data            = NULL;          
+  ptp->async_cst_stride        = NULL;      
+  ptp->async_send_request      = NULL;    
+  ptp->async_recv_request      = NULL;    
+  ptp->async_send_buffer       = NULL;     
+  ptp->async_recv_buffer       = NULL;     
+  ptp->async_n_send_buffer     = NULL;   
+  ptp->async_i_send_buffer     = NULL;   
+  ptp->async_n_recv_buffer     = NULL;   
+  ptp->async_i_recv_buffer     = NULL;   
 }
 
 
@@ -102,12 +129,15 @@ PDM_partgnum1_to_partgnum2_create_cf
  const PDM_g_num_t    **gnum_elt2,
  const int            *n_elt2,
  const int             n_part2,
- const int           **send_to_gnum2_idx,
- const PDM_g_num_t   **send_to_gnum2,
+ const int           **gnum1_to_gnum2_idx,
+ const PDM_g_num_t   **gnum1_to_gnum2,
  const PDM_MPI_Fint    fcomm
 )
 {
-  
+  const PDM_MPI_Comm _comm        = PDM_MPI_Comm_f2c(fcomm);
+  return PDM_partgnum1_to_partgnum2_create (gnum_elt1, n_elt1, n_part1,
+                                            gnum_elt2, n_elt2, n_part2,
+                                            gnum1_to_gnum2_idx, gnum1_to_gnum2);
 }
 
 
@@ -128,7 +158,7 @@ PDM_partgnum1_to_partgnum2_create_cf
 void
 PDM_partgnum1_to_partgnum2_exch
 (
- PDM_partgnum1_to_partgnum2_t    *ptp,
+ PDM_partgnum1_to_partgnum2_t *ptp,
  const size_t                  s_data,
  const PDM_stride_t            t_stride,
  int                         **part1_stride,
@@ -137,7 +167,16 @@ PDM_partgnum1_to_partgnum2_exch
  void                        **part2_data
 )
 {
-  
+  PDM_UNUSED (ptb);
+  PDM_UNUSED (s_data);
+  PDM_UNUSED (t_stride);
+  PDM_UNUSED (part1_stride);
+  PDM_UNUSED (part1_data);
+  PDM_UNUSED (part2_stride);
+  PDM_UNUSED (part2_data);
+
+  PDM_error(__FILE__, __LINE__, 0,
+            "Error PDM_partgnum1_to_partgnum2_exch not yet implemente\n");
 }
 
 
@@ -168,7 +207,16 @@ PDM_partgnum1_to_partgnum2_exch_with_alloc
  void                    ***part2_data
 )
 {
-  
+  PDM_UNUSED (ptb);
+  PDM_UNUSED (s_data);
+  PDM_UNUSED (t_stride);
+  PDM_UNUSED (part1_stride);
+  PDM_UNUSED (part1_data);
+  PDM_UNUSED (part2_stride);
+  PDM_UNUSED (part2_data);
+
+  PDM_error(__FILE__, __LINE__, 0,
+            "Error PDM_partgnum1_to_partgnum2_exch not yet implemente\n");
 }
 
 
@@ -188,10 +236,10 @@ void
 PDM_partgnum1_to_partgnum2_issend
 (
  PDM_partgnum1_to_partgnum2_t *ptp,
- const size_t               s_data,
- const int                  cst_stride,
- void                     **part1_data,
- int                       *request
+ const size_t                  s_data,
+ const int                     cst_stride,
+ void                        **part1_data,
+ int                          *request
 )
 {
   
@@ -279,6 +327,47 @@ PDM_partgnum1_to_partgnum2_free
  PDM_partgnum1_to_partgnum2_t *ptp
 )
 {
+  if (ptp == NULL) {
+    return NULL;
+  }
+
+  if (ptp->gnum1_to_send_buffer != NULL) {
+    free (ptp->gnum1_to_send_buffer);
+  }
+  if (ptp->recv_buffer_to_gnum2 != NULL) {  
+    free (ptp->recv_buffer_to_gnum2);
+  }  
+  
+  if (ptp->async_l_array != 0) {
+    for (int i = 0; i < ptp->async_l_array; i++) {    
+      free (ptp->async_s_data[i]); 
+      free (ptp->async_cst_stride[i]);        
+      free (ptp->async_send_request[i]);    
+      free (ptp->async_recv_request[i]);    
+      free (ptp->async_send_buffer[i]);      
+      free (ptp->async_recv_buffer[i]);      
+      free (ptp->async_n_send_buffer[i]);  
+      free (ptp->async_i_send_buffer[i]);  
+      free (ptp->async_n_recv_buffer[i]);  
+      free (ptp->async_i_recv_buffer[i]);  
+    }
+    free (ptp->async_s_data); 
+    free (ptp->async_cst_stride);        
+    free (ptp->async_send_request);    
+    free (ptp->async_recv_request);    
+    free (ptp->async_send_buffer);      
+    free (ptp->async_recv_buffer);      
+    free (ptp->async_n_send_buffer);  
+    free (ptp->async_i_send_buffer);  
+    free (ptp->async_n_recv_buffer);  
+    free (ptp->async_i_recv_buffer);  
+  }
+
+  ptp->async_n_exch            = 0;           
+  ptp->async_l_array           = 0;          
+
+  free(ptp);
+  return NULL;
   
 }
 
