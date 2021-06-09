@@ -8522,6 +8522,7 @@ PDM_para_octree_points_inside_boxes_with_copies
     for (int i = 0; i < n_rank; i++) {
       n_recv_box += recv_count[i];
     }
+    int n_recv_box_no_copies = n_recv_box;
 
     int *n_recv_box_copied_ranks = NULL;
     int avg_n_recv_box;
@@ -8565,24 +8566,23 @@ PDM_para_octree_points_inside_boxes_with_copies
     }
 
     int *send_shift = PDM_array_new_idx_from_sizes_int (send_count, n_rank);
+
     n_box_local = 0;
+    for (int i = 0; i < octree->n_copied_ranks; i++) {
+      int rank = octree->copied_ranks[i];
+      if (rank != i_rank) {
+        int si = send_count[rank];
 
-    if (1) {
-      for (int i = 0; i < octree->n_copied_ranks; i++) {
-        int rank = octree->copied_ranks[i];
-        if (rank != i_rank) {
-          int si = send_count[rank];
-
-          si = PDM_MIN (si, PDM_MAX (0, (n_recv_box_copied_ranks[i] - n_recv_box)/2));
-          if (i_copied_rank[i_rank] < 0) {
-            si = PDM_MIN (si, PDM_MAX (0, avg_n_recv_box - n_recv_box));
-          }
-
-          copied_count[i] = si;
-          n_recv_box += si;
+        si = PDM_MIN (si, PDM_MAX (0, (n_recv_box_copied_ranks[i] - n_recv_box)/2));
+        if (i_copied_rank[i_rank] < 0) {
+          si = PDM_MIN (si, PDM_MAX (0, avg_n_recv_box - n_recv_box));
         }
+
+        copied_count[i] = si;
+        n_recv_box += si;
       }
     }
+
     if (n_recv_box_copied_ranks != NULL) {
       free (n_recv_box_copied_ranks);
     }
@@ -8596,19 +8596,12 @@ PDM_para_octree_points_inside_boxes_with_copies
         send_count[i] = 0;
       }
       else if (i_copied_rank[i] >= 0) {
-        //copied_count[i_copied_rank[i]] = send_count[i];
         send_count[i] -= copied_count[i_copied_rank[i]];
       }
 
       send_shift[i+1] += send_count[i];
     }
 
-    /*copied_shift = malloc (sizeof(int) * (octree->n_copied_ranks + 1));
-    copied_shift[0] = 0;
-    for (int i = 0; i < octree->n_copied_ranks; i++) {
-      copied_shift[i+1] = copied_shift[i] + copied_count[i];
-      copied_count[i] = 0;
-    }*/
     copied_shift = PDM_array_new_idx_from_sizes_int (copied_count, octree->n_copied_ranks);
     int *copied_count_tmp = PDM_array_zeros_int (octree->n_copied_ranks);
     n_box_copied = copied_shift[octree->n_copied_ranks];
@@ -8618,14 +8611,13 @@ PDM_para_octree_points_inside_boxes_with_copies
                       recv_count, 1, PDM_MPI_INT,
                       octree->comm);
 
-    //int *send_shift = PDM_array_new_idx_from_sizes_int (send_count, n_rank);
     int *recv_shift = PDM_array_new_idx_from_sizes_int (recv_count, n_rank);
     PDM_array_reset_int (send_count, n_rank, 0);
 
     n_box_recv = recv_shift[n_rank];
 
     n_box1 = n_box_local + n_box_recv + n_box_copied;
-    printf("[%d] octree->n_pts = %d, n_recv_boxes = %d (without copies : %d)\n", i_rank, octree->n_points, n_box1, n_recv_box);
+    printf("[%d] octree->n_pts = %d, n_recv_boxes = %d (without copies : %d)\n", i_rank, octree->n_points, n_box1, n_recv_box_no_copies);
 
     box_g_num1   = malloc (sizeof(PDM_g_num_t) * n_box1);
     box_extents1 = malloc (sizeof(double)      * n_box1 * two_dim);
