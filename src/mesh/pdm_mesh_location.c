@@ -2599,10 +2599,6 @@ _point_cloud_extract_selection
   }
 
   /* Free memory */
-  /*for (int ipart = 0; ipart < n_part; ipart++) {
-    free (select_pts_parent_g_num[ipart]);
-  }
-  free (select_pts_parent_g_num);*/
   PDM_gnum_free (gen_gnum);
 }
 
@@ -2639,7 +2635,7 @@ PDM_mesh_location_t        *ml
   const int octree_build_leaf_neighbours = 0;
   int octree_id;
 
-  const int VISU = 0;
+  const int VISU = 1;
   int allow_extraction = 1;
   float extraction_threshold = 0.5; // max size ratio between extracted and original meshes
 
@@ -3599,6 +3595,7 @@ PDM_mesh_location_t        *ml
 
     case PDM_MESH_LOCATION_DBBTREE:
       printf("[%d] n_pts_pcloud = %d, n_select_boxes = %d\n", my_rank, n_pts_pcloud, n_select_boxes);//
+#if 0
       PDM_dbbtree_points_inside_boxes (dbbt,
                                        n_pts_pcloud,
                                        pcloud_g_num,
@@ -3608,6 +3605,17 @@ PDM_mesh_location_t        *ml
                                        &pts_idx,
                                        &pts_g_num,
                                        &pts_coord);
+#else
+      PDM_dbbtree_points_inside_boxes_with_copies (dbbt,
+                                                   n_pts_pcloud,
+                                                   pcloud_g_num,
+                                                   pcloud_coord,
+                                                   n_select_boxes,
+                                                   select_box_g_num,
+                                                   &pts_idx,
+                                                   &pts_g_num,
+                                                   &pts_coord);
+#endif
       break;
 
     default:
@@ -3748,11 +3756,11 @@ PDM_mesh_location_t        *ml
         printf("\n");
       }
 
-      for (int i = 0; i < redistrib_n_elt; i++) {
+      /*for (int i = 0; i < redistrib_n_elt; i++) {
         if (redistrib_elt_parent_g_num[i] == 657) {
           printf("elt ("PDM_FMT_G_NUM") : %d points\n", redistrib_elt_parent_g_num[i], redistrib_pts_idx[i+1] - redistrib_pts_idx[i]);
         }
-      }
+        }*/
 
       // substitute redistrib_pts_g_num with redistrib_pts_parent_g_num
       PDM_part_to_block_t *ptb_parent =

@@ -399,6 +399,19 @@ PDM_box_tree_points_inside_boxes
  double            **pts_in_box_coord
  );
 
+void
+PDM_box_tree_points_inside_boxes2
+(
+ PDM_box_tree_t *bt,
+ const int       i_copied_rank,
+ const int       n_pts,
+ const double   *pts_coord,
+ int           **box_idx,
+ int           **box_l_num,
+ int visu,//
+ int i_rank//
+ );
+
 
 #ifdef __cplusplus
 }

@@ -676,6 +676,8 @@ int main(int argc, char *argv[])
 
   PDM_g_num_t **tgt_location = malloc (sizeof(PDM_g_num_t *) * n_part);
 
+
+  int n_wrong = 0;
   for (int ipart = 0; ipart < n_part; ipart++) {
     int n_located = PDM_mesh_location_n_located_get (mesh_loc,
                                                      0,//i_point_cloud,
@@ -763,9 +765,12 @@ int main(int argc, char *argv[])
             double _dist = PDM_MIN (_dist1, _dist2);
             dist = PDM_MIN (dist, _dist);
           }
-          printf("[%d] "PDM_FMT_G_NUM" distance = %e , location = "PDM_FMT_G_NUM" / "PDM_FMT_G_NUM"\n\n",
-                 i_rank, tgt_g_num[ipart][ipt], dist, p_location[k1], box_gnum);
-          assert (dist < location_tolerance);
+          /*printf("[%d] "PDM_FMT_G_NUM" distance = %e , location = "PDM_FMT_G_NUM" / "PDM_FMT_G_NUM"\n\n",
+            i_rank, tgt_g_num[ipart][ipt], dist, p_location[k1], box_gnum);*/
+          if (dist > location_tolerance) {
+            n_wrong++;
+          }
+          //assert (dist < location_tolerance);
           //<<--
         }
       }
@@ -776,11 +781,21 @@ int main(int argc, char *argv[])
         int ipt = unlocated[k1] - 1;
 
         double x = cell_center[ipart][3*ipt];
-        assert (x > xmin + length);
+        if (x <= xmin + length) {
+          n_wrong++;
+        }
+        //assert (x > xmin + length);
       }
 
     }
   }
+
+  int g_n_wrong;
+  PDM_MPI_Reduce (&n_wrong, &g_n_wrong, 1, PDM_MPI_INT, PDM_MPI_SUM, 0, PDM_MPI_COMM_WORLD);
+  if (i_rank == 0) {
+    printf("g_n_wrong = %d / "PDM_FMT_G_NUM"\n", g_n_wrong, (n_vtx_seg-1)*(n_vtx_seg-1)*(n_vtx_seg-1));
+  }
+
 
   if (post) {
     char filename[999];
