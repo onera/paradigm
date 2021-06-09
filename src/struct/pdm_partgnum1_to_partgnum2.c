@@ -1,46 +1,60 @@
-#ifndef PDM_PARTGNUM1_PARTGNUM2_H
-#define	PDM_PARTGNUM1_PARTGNUM2_H
-
 /*----------------------------------------------------------------------------
  * Standard C library headers
  *----------------------------------------------------------------------------*/
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <limits.h>
+#include <assert.h>
+#include <math.h>
+#include <string.h>
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
+#include "pdm_partgnum1_to_to_partgnum2.h"
+#include "pdm_part_to_block.h"
+#include "pdm_block_to_part.h"
 #include "pdm.h"
-#include "pdm_mpi.h"
+#include "pdm_timer.h"
+#include "pdm_priv.h"
+#include "pdm_binary_search.h"
+#include "pdm_sort.h"
+#include "pdm_printf.h"
+#include "pdm_error.h"
+
+#ifdef __cplusplus
+extern "C" {
+#if 0
+} /* Fake brace to force back Emacs auto-indentation back to column 0 */
+#endif
+#endif /* __cplusplus */
 
 /*=============================================================================
  * Macro definitions
  *============================================================================*/
 
-#ifdef	__cplusplus
-extern "C" {
-#endif
 
 /*============================================================================
  * Type
  *============================================================================*/
 
-/**
- * \struct PDM_partgnum1_partgnum2_t
- * \brief  Block to partition redistribution
- *
- */
-
-typedef struct _pdm_partgnum1_partgnum2_t PDM_partgnum1_partgnum2_t;
-
-
 /*=============================================================================
  * Static global variables
  *============================================================================*/
 
+
 /*=============================================================================
- * Public function prototypes
+ * Static function definitions
  *============================================================================*/
+
+
+/*=============================================================================
+ * Public function definitions
+ *============================================================================*/
+
+
 
 /**
  *
@@ -52,16 +66,17 @@ typedef struct _pdm_partgnum1_partgnum2_t PDM_partgnum1_partgnum2_t;
  * \param [in]   gnum_elt2          Element global number (size : \ref n_part2)
  * \param [in]   n_elt2             Local number of elements (size : \ref n_part2)
  * \param [in]   n_part2            Number of partition
- * \param [in]   send_to_gnum2_idx  S
- * \param [in]   send_to_gnum2      
+ * \param [in]   send_to_gnum2_idx  Index of data to send to gnum2 from gnum1 
+ *                                  (for each part size : \ref n_elt1+1) 
+ * \param [in]   send_to_gnum2      Data to send to gnum2 from gnum1 
  * \param [in]   comm               MPI communicator
  *
- * \return   Initialized \ref PDM_partgnum1_partgnum2 instance
+ * \return   Initialized \ref PDM_partgnum1_to_partgnum2 instance
  *
  */
 
-PDM_partgnum1_partgnum2_t *
-PDM_partgnum1_partgnum2_create
+PDM_partgnum1_to_partgnum2_t *
+PDM_partgnum1_to_partgnum2_create
 (
  const PDM_g_num_t   **gnum_elt1,
  const int            *n_elt1,
@@ -72,11 +87,14 @@ PDM_partgnum1_partgnum2_create
  const int           **send_to_gnum2_idx,
  const PDM_g_num_t   **send_to_gnum2,
  const PDM_MPI_Comm    comm
-);
+)
+{
+
+}
 
 
-PDM_partgnum1_partgnum2_t *
-PDM_partgnum1_partgnum2_create_cf
+PDM_partgnum1_to_partgnum2_t *
+PDM_partgnum1_to_partgnum2_create_cf
 (
  const PDM_g_num_t    **gnum_elt1,
  const int            *n_elt1,
@@ -87,7 +105,10 @@ PDM_partgnum1_partgnum2_create_cf
  const int           **send_to_gnum2_idx,
  const PDM_g_num_t   **send_to_gnum2,
  const PDM_MPI_Fint    fcomm
-);
+)
+{
+  
+}
 
 
 /**
@@ -105,16 +126,20 @@ PDM_partgnum1_partgnum2_create_cf
  */
 
 void
-PDM_partgnum1_partgnum2_exch
+PDM_partgnum1_to_partgnum2_exch
 (
- PDM_partgnum1_partgnum2_t    *ptp,
+ PDM_partgnum1_to_partgnum2_t    *ptp,
  const size_t                  s_data,
  const PDM_stride_t            t_stride,
  int                         **part1_stride,
  void                        **part1_data
  int                         **part2_stride,
  void                        **part2_data
-);
+)
+{
+  
+}
+
 
 
 /**
@@ -132,16 +157,19 @@ PDM_partgnum1_partgnum2_exch
  */
 
 void
-PDM_partgnum1_partgnum2_exch_with_alloc
+PDM_partgnum1_to_partgnum2_exch_with_alloc
 (
- PDM_partgnum1_partgnum2_t *ptp,
+ PDM_partgnum1_to_partgnum2_t *ptp,
  const size_t               s_data,
  const PDM_stride_t         t_stride,
  int                      **part1_stride,
  void                     **part1_data
  int                     ***part2_stride,
  void                    ***part2_data
-);
+)
+{
+  
+}
 
 
 /**
@@ -157,14 +185,17 @@ PDM_partgnum1_partgnum2_exch_with_alloc
  */
 
 void
-PDM_partgnum1_partgnum2_issend
+PDM_partgnum1_to_partgnum2_issend
 (
- PDM_partgnum1_partgnum2_t *ptp,
+ PDM_partgnum1_to_partgnum2_t *ptp,
  const size_t               s_data,
  const int                  cst_stride,
  void                     **part1_data,
  int                       *request
-);
+)
+{
+  
+}
 
 
 /**
@@ -177,11 +208,14 @@ PDM_partgnum1_partgnum2_issend
  */
 
 void
-PDM_partgnum1_partgnum2_issend_wait
+PDM_partgnum1_to_partgnum2_issend_wait
 (
- PDM_partgnum1_partgnum2_t *ptp,
+ PDM_partgnum1_to_partgnum2_t *ptp,
  int                        request
-);
+)
+{
+  
+}
 
 
 /**
@@ -197,14 +231,17 @@ PDM_partgnum1_partgnum2_issend_wait
  */
 
 void
-PDM_partgnum1_partgnum2_irecv
+PDM_partgnum1_to_partgnum2_irecv
 (
- PDM_partgnum1_partgnum2_t *ptp,
+ PDM_partgnum1_to_partgnum2_t *ptp,
  const size_t               s_data,
  const int                  cst_stride,
  void                     **part2_data,
  int                       *request
-);
+)
+{
+  
+}
 
 
 /**
@@ -217,11 +254,14 @@ PDM_partgnum1_partgnum2_irecv
  */
 
 void
-PDM_partgnum1_partgnum2_irecv_wait
+PDM_partgnum1_to_partgnum2_irecv_wait
 (
- PDM_partgnum1_partgnum2_t *ptp,
+ PDM_partgnum1_to_partgnum2_t *ptp,
  int                        request
-);
+)
+{
+  
+}
 
 
 /**
@@ -233,14 +273,15 @@ PDM_partgnum1_partgnum2_irecv_wait
  * \return       NULL
  */
 
-PDM_partgnum1_partgnum2_t *
-PDM_partgnum1_partgnum2_free
+PDM_partgnum1_to_partgnum2_t *
+PDM_partgnum1_to_partgnum2_free
 (
- PDM_partgnum1_partgnum2_t *ptp
-);
-
-#ifdef	__cplusplus
+ PDM_partgnum1_to_partgnum2_t *ptp
+)
+{
+  
 }
-#endif
 
-#endif	/* PDM_PART_tO_pART_H */
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
