@@ -2664,6 +2664,13 @@ PDM_mesh_location_t        *ml
   }
   if (my_rank == 0) printf("USE_OCTREE_BTSHARED = %d\n", USE_OCTREE_BTSHARED);
 
+  int USE_OCTREE_COPIES = 0;
+  env_var = getenv ("USE_OCTREE_COPIES");
+  if (env_var != NULL) {
+    USE_OCTREE_COPIES = atoi(env_var);
+  }
+  if (my_rank == 0) printf("USE_OCTREE_COPIES = %d\n", USE_OCTREE_COPIES);
+
   double b_t_elapsed;
   double b_t_cpu;
   double b_t_cpu_u;
@@ -3580,13 +3587,23 @@ PDM_mesh_location_t        *ml
                                               &pts_g_num,
                                               &pts_coord);
       } else {
-        PDM_para_octree_points_inside_boxes (octree_id,
-                                             n_select_boxes,
-                                             select_box_extents,
-                                             select_box_g_num,
-                                             &pts_idx,
-                                             &pts_g_num,
-                                             &pts_coord);
+        if (USE_OCTREE_COPIES) {
+          PDM_para_octree_points_inside_boxes_with_copies (octree_id,
+                                                           n_select_boxes,
+                                                           select_box_extents,
+                                                           select_box_g_num,
+                                                           &pts_idx,
+                                                           &pts_g_num,
+                                                           &pts_coord);
+        } else {
+          PDM_para_octree_points_inside_boxes (octree_id,
+                                               n_select_boxes,
+                                               select_box_extents,
+                                               select_box_g_num,
+                                               &pts_idx,
+                                               &pts_g_num,
+                                               &pts_coord);
+        }
       }
 
       /* Free octree */
