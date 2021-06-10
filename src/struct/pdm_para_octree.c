@@ -184,6 +184,16 @@ typedef struct  {
   PDM_g_num_t       **copied_points_gnum;  /*!< Global numbers of copied points  */
   PDM_morton_code_t **copied_points_code;  /*!< Morton codes of copied points */
 
+
+  /*
+   *  Shared 'coarse' octree
+   */
+  int               *shared_rank_idx;
+  PDM_morton_code_t *shared_codes;
+  int               *shared_pts_n;
+  double            *shared_pts_extents;
+
+
 } _octree_t;
 
 
@@ -1884,6 +1894,178 @@ _distribute_points
 
   *n_points = _n_points;
 }
+
+
+
+
+
+static void
+_compress_octants
+(
+ const _l_octant_t  *octants,
+ int                *n_nodes,
+ int               **nodes
+ )
+{
+  int DEBUG = 1;
+
+  *n_nodes = 0;
+  *nodes = malloc (sizeof(int) * octants->n_nodes * 4);
+  int *_nodes = *nodes;
+
+  if (octants->n_nodes <= 0) {
+    return;
+  }
+
+  /* Deepest common ancestor of all octants */
+  PDM_morton_code_t root;
+  PDM_morton_nearest_common_ancestor (octants->codes[0],
+                                      octants->codes[octants->n_nodes - 1],
+                                      &root);
+
+  PDM_morton_int_t X[3];
+  PDM_morton_int_t L;
+
+
+  const int n_child = 8;
+  const int depth_max = 31;
+  int s_stack = ((n_child - 1) * (depth_max - 1) + n_child);
+
+  int *start_stack = malloc ((sizeof(int)) * s_stack);
+  int *end_stack   = malloc ((sizeof(int)) * s_stack);
+  PDM_morton_code_t *code_stack = malloc (sizeof(PDM_morton_code_t) * s_stack);
+
+  /* Push root in stack */
+  int pos_stack = 0;
+  PDM_morton_copy (root, code_stack + pos_stack);
+  start_stack[pos_stack] = 0;
+  end_stack[pos_stack] = octants->n_nodes;
+  pos_stack++;
+
+  PDM_morton_code_t node;
+  while (pos_stack > 0) {
+    pos_stack--;
+    PDM_morton_copy (code_stack[pos_stack], &node);
+    int start = start_stack[pos_stack];
+    int end   = end_stack[pos_stack];
+
+    if (DEBUG) {
+      printf("\npopped {L=%d, X=%d %d %d}, start = %d, end = %d / %d\n",
+             node.L, node.X[0], node.X[1], node.X[2], start, end, octants->n_nodes);
+    }
+
+    /* Leaf node */
+    if (start == end-1) {
+      _nodes[4*(*n_nodes)] = (int) octants->codes[start].L;
+      for (int j = 0; j < 3; j++) {
+        _nodes[4*(*n_nodes) + j + 1] = (int) octants->codes[start].X[j];
+      }
+      (*n_nodes)++;
+      if (DEBUG) printf("  --> add to nodes\n");
+    }
+
+    /* Internal node */
+    else {
+      // check if node is fully covered by leaves
+      //   first, check if first descendant leaf is equal to current node
+      if (DEBUG) {
+        printf("  start = {L=%d, X=%d %d %d}, end = {L=%d, X=%d %d %d}\n", octants->codes[start].L, octants->codes[start].X[0], octants->codes[start].X[1], octants->codes[start].X[2], octants->codes[end-1].L, octants->codes[end-1].X[0], octants->codes[end-1].X[1], octants->codes[end-1].X[2]);
+      }
+
+      if (!PDM_morton_a_gtmin_b (octants->codes[start], node)) {
+        // now check if last descendant leaf
+        L = octants->codes[end-1].L - node.L;
+        for (int j = 0; j < 3; j++) {
+          X[j] = (node.X[j]+1) << L;
+        }
+
+        //if (!PDM_morton_a_gt_b (node, octants->codes[end-1])) {
+        if (X[0] == octants->codes[end-1].X[0]+1 &&
+            X[1] == octants->codes[end-1].X[1]+1 &&
+            X[2] == octants->codes[end-1].X[2]+1) {
+          _nodes[4*(*n_nodes)] = (int) node.L;
+          for (int j = 0; j < 3; j++) {
+            _nodes[4*(*n_nodes) + j + 1] = (int) node.X[j];
+          }
+          (*n_nodes)++;
+          if (DEBUG) printf("  --> add to nodes\n");
+          continue;
+        }
+        else {
+          if (DEBUG) printf("  --> node gt end leaf {L=%d, X=%d %d %d}\n", octants->codes[end-1].L, octants->codes[end-1].X[0], octants->codes[end-1].X[1], octants->codes[end-1].X[2]);
+        }
+      }
+      else {
+        if (DEBUG) printf("  --> start leaf {L=%d, X=%d %d %d} gtmin node\n", octants->codes[start].L, octants->codes[start].X[0], octants->codes[start].X[1], octants->codes[start].X[2]);
+      }
+
+      /* Carry on with children */
+      PDM_morton_code_t child_code[n_child];
+      PDM_morton_get_children (3,
+                               node,
+                               child_code);
+
+      int new_start, new_end;
+      int prev_end = start;
+      for (int i = 0; i < n_child; i++) {
+        /* get start and end of range in list of nodes covered by current child */
+        /* new_start <-- first descendant of child in list */
+        new_start = prev_end;
+        while (new_start < end) {
+          if (PDM_morton_ancestor_is (child_code[i], octants->codes[new_start])) {
+            break;
+          } else if (PDM_morton_a_gt_b (octants->codes[new_start], child_code[i])) {
+            /* all the following nodes are clearly not descendants of current child */
+            new_start = end+1;
+            break;
+          }
+          new_start++;
+        }
+
+        if (new_start > end) {
+          /* no need to go further for that child
+             because it has no descendants in the node list */
+          continue;
+        }
+
+        /* new_end <-- next of last descendant of child in list */
+        int l = new_start;
+        new_end = end;
+        while (new_end > l + 1) {
+          int m = l + (new_end - l) / 2;
+          if (PDM_morton_ancestor_is (child_code[i], octants->codes[m])) {
+            l = m;
+          } else {
+            new_end = m;
+          }
+        }
+        prev_end = new_end;
+
+        if (new_end > new_start) {
+          /* Push child in stack */
+          PDM_morton_copy (child_code[i], code_stack + pos_stack);
+          start_stack[pos_stack] = new_start;
+          end_stack[pos_stack]   = new_end;
+          pos_stack++;
+        }
+      } // End of loop on children
+    }
+  }
+
+
+  free (start_stack);
+  free (end_stack);
+  free (code_stack);
+
+  if (*n_nodes < octants->n_nodes) {
+    *nodes = realloc (*nodes, sizeof(int) * (*n_nodes) * 4);
+  }
+}
+
+
+
+
+
 
 
 /**
@@ -4361,6 +4543,12 @@ PDM_para_octree_create
   octree->copied_points_gnum = NULL;
   octree->copied_points_code = NULL;
 
+
+  octree->shared_codes       = NULL;
+  octree->shared_rank_idx    = NULL;
+  octree->shared_pts_n       = NULL;
+  octree->shared_pts_extents = NULL;
+
   octree->timer = PDM_timer_create ();
 
   for (int i = 0; i < NTIMER; i++) {
@@ -4463,6 +4651,22 @@ PDM_para_octree_free
   }
   PDM_box_tree_destroy (&octree->bt_shared);
 
+  if (octree->shared_codes != NULL) {
+    free (octree->shared_codes);
+  }
+
+  if (octree->shared_rank_idx != NULL) {
+    free (octree->shared_rank_idx);
+  }
+
+  if (octree->shared_pts_n != NULL) {
+    free (octree->shared_pts_n);
+  }
+
+  if (octree->shared_pts_extents != NULL) {
+    free (octree->shared_pts_extents);
+  }
+
   PDM_para_octree_free_copies (id);
 
   PDM_timer_free (octree->timer);
@@ -4529,6 +4733,57 @@ PDM_para_octree_point_cloud_set
   }
 
 }
+
+
+
+
+
+static void
+_export_nodes
+(
+ char              *filename,
+ int                n_nodes,
+ PDM_morton_code_t *nodes
+ )
+{
+  FILE *f = fopen(filename, "w");
+
+  fprintf(f, "# vtk DataFile Version 2.0\nnodes\nASCII\nDATASET UNSTRUCTURED_GRID\n");
+
+  fprintf(f, "POINTS %d double\n", 8*n_nodes);
+  for (int inode = 0; inode < n_nodes; inode++) {
+    int l = 1 << nodes[inode].L;
+    double s = 1.0 / (double) l;
+
+    for (int k = 0; k < 2; k++) {
+      double z = (nodes[inode].X[2] + k) * s;
+      for (int j = 0; j < 2; j++) {
+        double y = (nodes[inode].X[1] + j) * s;
+        for (int i = 0; i < 2; i++) {
+          double x = (nodes[inode].X[0] + i) * s;
+          fprintf(f, "%f %f %f\n", x, y, z);
+        }
+      }
+    }
+  }
+
+  fprintf(f, "CELLS %d %d\n", n_nodes, 9*n_nodes);
+  for (int inode = 0; inode < n_nodes; inode++) {
+    fprintf(f, "8 ");
+    for (int i = 0; i < 8; i++) {
+      fprintf(f, "%d ", 8*inode + i);
+    }
+    fprintf(f, "\n");
+  }
+
+  fprintf(f, "CELL_TYPES %d\n", n_nodes);
+  for (int inode = 0; inode < n_nodes; inode++) {
+    fprintf(f, "11\n");
+  }
+
+  fclose(f);
+}
+
 
 
 /**
@@ -4798,6 +5053,63 @@ PDM_para_octree_build
     octree->octants = _block_partition (point_octants,
                                         octree->comm,
                                         &octree->rank_octants_index);
+    //-->>
+    if (1) {
+      /*
+       *  Compress octants ...
+       */
+      //----------------------->>
+      int n_local_nodes;
+      int *send_buf = NULL;
+      if (1) {
+        _compress_octants (octree->octants,
+                           &n_local_nodes,
+                           &send_buf);
+      } else {
+        n_local_nodes = octree->octants->n_nodes;
+        send_buf = malloc (sizeof(int) * n_local_nodes * 4);
+        for (int i = 0; i < n_local_nodes; i++) {
+          send_buf[4*i] = (int) octree->octants->codes[i].L;
+          for (int j = 0; j < 3; j++) {
+            send_buf[4*i+j+1] = (int) octree->octants->codes[i].X[j];
+          }
+        }
+      }
+      //<<-----------------------
+
+      int *recv_count = malloc (sizeof(int) * n_ranks);
+      PDM_MPI_Allgather (&n_local_nodes, 1, PDM_MPI_INT,
+                         recv_count,     1, PDM_MPI_INT,
+                         octree->comm);
+
+      int n_shared_nodes = 0;
+      for (int i = 0; i < n_ranks; i++) {
+        n_shared_nodes += recv_count[i];
+        recv_count[i] *= 4;
+      }
+      octree->shared_rank_idx = PDM_array_new_idx_from_sizes_int (recv_count, n_ranks);
+
+      int *recv_buf = malloc (sizeof(int) * n_shared_nodes * 4);
+      PDM_MPI_Allgatherv (send_buf, 4*n_local_nodes, PDM_MPI_INT,
+                          recv_buf, recv_count, octree->shared_rank_idx, PDM_MPI_INT,
+                          octree->comm);
+      free (send_buf);
+      free (recv_count);
+
+      octree->shared_codes = malloc (sizeof(PDM_morton_code_t) * n_shared_nodes);
+      for (int i = 0; i < n_shared_nodes; i++) {
+        octree->shared_codes[i].L = (PDM_morton_int_t) recv_buf[4*i];
+        for (int j = 0; j < 3; j++) {
+          octree->shared_codes[i].X[j] = (PDM_morton_int_t) recv_buf[4*i+j+1];
+        }
+      }
+      free (recv_buf);
+
+      for (int i = 1; i <= n_ranks; i++) {
+        octree->shared_rank_idx[i] /= 4;
+      }
+    }
+    //<<--
 
     _octants_free (point_octants);
 
@@ -4870,6 +5182,7 @@ PDM_para_octree_build
     octree->octants->range[0] = 0;
     octree->octants->range[1] = octree->n_points;
     octree->octants->n_points[0] = octree->n_points;
+
 
   }
 
@@ -5355,6 +5668,33 @@ PDM_para_octree_build
   octree->times_cpu_u[END]   = octree->times_cpu_u[BUILD_TOTAL];
   octree->times_cpu_s[END]   = octree->times_cpu_s[BUILD_TOTAL];
 
+  //-->
+  if (1) {
+    char *pref = "/stck/bandrieu/workspace/paradigma-dev/test/para_octree/shared_octree/";
+    char filename[999];
+    sprintf(filename, "%soctree_local_%4.4d.vtk", pref, rank);
+    _export_nodes (filename,
+                   octree->octants->n_nodes,
+                   octree->octants->codes);
+
+    if (rank == 0) {
+      printf("shared_rank_idx = ");
+      for (int i = 0; i <= n_ranks; i++) {
+        printf("%d ", octree->shared_rank_idx[i]);
+      }
+      printf("\n");
+  }
+
+    if (rank == 0) {
+      for (int i = 0; i < n_ranks; i++) {
+        sprintf(filename, "%soctree_shared_%4.4d.vtk", pref, i);
+        _export_nodes (filename,
+                       octree->shared_rank_idx[i+1] - octree->shared_rank_idx[i],
+                       octree->shared_codes + octree->shared_rank_idx[i]);
+      }
+    }
+  }
+  //<<--
 }
 
 
@@ -7959,7 +8299,6 @@ PDM_para_octree_points_inside_boxes
   double *recv_box_extents       = NULL;
   const PDM_g_num_t *recv_box_g_num;
   PDM_g_num_t *_recv_box_g_num   = NULL;
-  PDM_part_to_block_t *ptb1      = NULL;
   PDM_g_num_t *block_distrib_idx = NULL;
   double s[3], d[3];
 
@@ -8003,17 +8342,6 @@ PDM_para_octree_points_inside_boxes
 
   /* Multiple ranks */
   if (n_ranks > 1) {
-    /* Part-to-block create (only to get block distribution) */
-    // ptb1 = PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
-    //                                  PDM_PART_TO_BLOCK_POST_MERGE,
-    //                                  1.,
-    //                                  (PDM_g_num_t **) (&box_g_num),
-    //                                  NULL,
-    //                                  (int *) &n_boxes,
-    //                                  1,
-    //                                  octree->comm);
-
-//    block_distrib_idx = PDM_part_to_block_distrib_index_get (ptb1);
     block_distrib_idx = PDM_compute_uniform_entity_distribution_from_partition(octree->comm,
                                                                                1,
                                                                                &n_boxes,
@@ -8130,7 +8458,7 @@ PDM_para_octree_points_inside_boxes
   /* Single rank */
   else {
     n_recv_boxes     = n_boxes;
-    recv_box_extents = box_extents;
+    recv_box_extents = (double *) box_extents;
     recv_box_g_num   = box_g_num;
   }
 
@@ -8391,7 +8719,6 @@ PDM_para_octree_points_inside_boxes
                             &pts_in_box_n_coord,
                             (void **) pts_in_box_coord);
 
-    //PDM_part_to_block_free (ptb1);
     free (block_distrib_idx);
     PDM_part_to_block_free (ptb2);
     PDM_block_to_part_free (btp);
@@ -9179,7 +9506,7 @@ PDM_para_octree_points_inside_boxes2
   /* Single rank */
   else {
     n_recv_boxes     = n_boxes;
-    recv_box_extents = box_extents;
+    recv_box_extents = (double *) box_extents;
     recv_box_g_num   = box_g_num;
   }
 
