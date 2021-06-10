@@ -1907,7 +1907,7 @@ _compress_octants
  int               **nodes
  )
 {
-  int DEBUG = 1;
+  int DEBUG = 0;
 
   *n_nodes = 0;
   *nodes = malloc (sizeof(int) * octants->n_nodes * 4);
@@ -4360,6 +4360,89 @@ _compute_rank_extents
 }
 
 
+static void
+_compute_shared_pts_extents
+(
+ _octree_t *octree
+ )
+{
+  assert (octree->shared_rank_idx != NULL &&
+          octree->shared_codes    != NULL);
+
+  int i_rank, n_rank;
+  PDM_MPI_Comm_rank (octree->comm, &i_rank);
+  PDM_MPI_Comm_size (octree->comm, &n_rank);
+
+  /*
+   *   Compute n_pts and pts_extents
+   */
+  int n_nodes = octree->shared_rank_idx[i_rank+1] - octree->shared_rank_idx[i_rank];
+  int *send_pts_n = PDM_array_zeros_int (n_nodes);
+  double *send_pts_extents = malloc (sizeof(double) * n_nodes * 6);
+
+  int inode = 0;
+  size_t prev_end = 0;
+  for (int i = octree->shared_rank_idx[i_rank]; i < octree->shared_rank_idx[i_rank+1]; i++) {
+
+    for (int k = 0; k < 3; k++) {
+      send_pts_extents[6*inode + k]     =  HUGE_VAL;
+      send_pts_extents[6*inode + k + 3] = -HUGE_VAL;
+    }
+
+    size_t start, end;
+    PDM_morton_list_intersect (octree->octants->n_nodes - prev_end,
+                               octree->shared_codes[i],
+                               octree->octants->codes + prev_end,
+                               &start,
+                               &end);
+    start += prev_end;
+    end   += prev_end;
+    prev_end = end;
+
+    for (size_t j = start; j < end; j++) {
+      send_pts_n[inode] += octree->octants->n_points[j];
+      for (int l = 0; l < octree->octants->n_points[j]; l++) {
+        double *p = octree->points + 3*(octree->octants->range[j] + l);
+        for (int k = 0; k < 3; k++) {
+          send_pts_extents[6*inode + k]= PDM_MIN (send_pts_extents[6*inode + k], p[k]);
+          send_pts_extents[6*inode + k + 3] = PDM_MAX (send_pts_extents[6*inode + k + 3], p[k]);
+        }
+      }
+    }
+
+    inode++;
+  }
+
+  /*
+   *  Exchange
+   */
+  int *recv_count = malloc (sizeof(int) * n_rank);
+  int *recv_shift = malloc (sizeof(int) * (n_rank + 1));
+  memcpy (recv_shift, octree->shared_rank_idx, sizeof(int) * (n_rank + 1));
+  for (int i = 0; i < n_rank; i++) {
+    recv_count[i] = recv_shift[i+1] - recv_shift[i];
+  }
+
+  octree->shared_pts_n = malloc (sizeof(int) * recv_shift[n_rank]);
+  PDM_MPI_Allgatherv (send_pts_n, n_nodes, PDM_MPI_INT,
+                      octree->shared_pts_n, recv_count, recv_shift, PDM_MPI_INT,
+                      octree->comm);
+  free (send_pts_n);
+
+  for (int i = 0; i < n_rank; i++) {
+    recv_count[i] *= 6;
+    recv_shift[i] *= 6;
+  }
+
+  octree->shared_pts_extents = malloc (sizeof(double) * recv_shift[n_rank]);
+  PDM_MPI_Allgatherv (send_pts_extents, n_nodes, PDM_MPI_DOUBLE,
+                      octree->shared_pts_extents, recv_count, recv_shift, PDM_MPI_DOUBLE,
+                      octree->comm);
+  free (send_pts_extents);
+  free (recv_count);
+  free (recv_shift);
+}
+
 /**
  *
  * \brief Assess load imbalance and identify ranks to copy
@@ -5056,26 +5139,13 @@ PDM_para_octree_build
     //-->>
     if (1) {
       /*
-       *  Compress octants ...
+       *  Compress octants
        */
-      //----------------------->>
       int n_local_nodes;
       int *send_buf = NULL;
-      if (1) {
-        _compress_octants (octree->octants,
-                           &n_local_nodes,
-                           &send_buf);
-      } else {
-        n_local_nodes = octree->octants->n_nodes;
-        send_buf = malloc (sizeof(int) * n_local_nodes * 4);
-        for (int i = 0; i < n_local_nodes; i++) {
-          send_buf[4*i] = (int) octree->octants->codes[i].L;
-          for (int j = 0; j < 3; j++) {
-            send_buf[4*i+j+1] = (int) octree->octants->codes[i].X[j];
-          }
-        }
-      }
-      //<<-----------------------
+      _compress_octants (octree->octants,
+                         &n_local_nodes,
+                         &send_buf);
 
       int *recv_count = malloc (sizeof(int) * n_ranks);
       PDM_MPI_Allgather (&n_local_nodes, 1, PDM_MPI_INT,
@@ -5670,6 +5740,8 @@ PDM_para_octree_build
 
   //-->
   if (1) {
+    _compute_shared_pts_extents (octree);
+
     char *pref = "/stck/bandrieu/workspace/paradigma-dev/test/para_octree/shared_octree/";
     char filename[999];
     sprintf(filename, "%soctree_local_%4.4d.vtk", pref, rank);
