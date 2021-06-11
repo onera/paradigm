@@ -155,6 +155,7 @@ cdef class MeshLocation:
   cdef PDM_mesh_location_t* _ml
   cdef int _size
   cdef int _rank
+  cdef int unlocated_get_done_once
   # ************************************************************************
 
   # ------------------------------------------------------------------------
@@ -177,6 +178,7 @@ cdef class MeshLocation:
 
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
     self._ml = PDM_mesh_location_create(mesh_nature, n_point_cloud, PDMC)
+    self.unlocated_get_done_once = 0
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
   # ------------------------------------------------------------------------
@@ -525,7 +527,9 @@ cdef class MeshLocation:
                                                  &dim,
                                                  NPY.NPY_INT32,
                                                  <void *> unlocated)
-    PyArray_ENABLEFLAGS(np_unlocated, NPY.NPY_OWNDATA)
+    if not self.unlocated_get_done_once:
+      PyArray_ENABLEFLAGS(np_unlocated, NPY.NPY_OWNDATA)
+      self.unlocated_get_done_once = 1
 
     return np_unlocated
 
@@ -555,5 +559,4 @@ cdef class MeshLocation:
     # ************************************************************************
     # > Declaration
     # ************************************************************************
-    print('PDM_mesh_location_free')
     PDM_mesh_location_free(self._ml, 1)

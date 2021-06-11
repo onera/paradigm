@@ -165,11 +165,11 @@ def transform_to_parent_gnum(NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] resul
   cdef int n_elmt = ln_to_gn.shape[0]
   cdef MPI.MPI_Comm c_comm = comm.ob_mpi
   cdef PDM_MPI_Comm PDMC   = PDM_MPI_mpi_2_pdm_mpi_comm(&c_comm)
-  print("transform_to_parent_gnum", results)
+  # print("transform_to_parent_gnum", results)
   PDM_transform_to_parent_gnum(<PDM_g_num_t*> results.data,
                                n_results,
                                <PDM_g_num_t*>ln_to_gn.data,
                                <PDM_g_num_t*>parent_ln_to_gn.data,
                                n_elmt,
                                PDMC)
-  print("transform_to_parent_gnum end", results)
+  # print("transform_to_parent_gnum end", results)
