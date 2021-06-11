@@ -807,10 +807,20 @@ int main(int argc, char *argv[])
       for (int k1 = 0; k1 < n_unlocated; k1++) {
         int ipt = unlocated[k1] - 1;
 
-        if (cell_center[ipart][3*ipt]   <= xmin + length ||
-            cell_center[ipart][3*ipt+1] <= ymin + length ||
-            cell_center[ipart][3*ipt+2] <= zmin + length) {
-          n_wrong++;
+        if (1) {
+          double x = cell_center[ipart][3*ipt];
+          double y = cell_center[ipart][3*ipt+1];
+          double z = cell_center[ipart][3*ipt+2];
+          if (x >= xmin && x <= xmin + length &&
+              y >= ymin && y <= ymin + length &&
+              z >= zmin && z <= zmin + length) {
+            n_wrong++;
+          }
+        } else {
+          double x = cell_center[ipart][3*ipt];
+          if (x <= xmin + length) {
+            n_wrong++;
+          }
         }
       }
 
