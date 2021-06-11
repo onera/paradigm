@@ -81,7 +81,9 @@ _read_args(int            argc,
            char         **argv,
            PDM_g_num_t   *n_vtx_seg,
            double        *length,
-           double        *separation,
+           double        *separation_x,
+           double        *separation_y,
+           double        *separation_z,
            int           *deform,
            double        *tolerance,
            double        *marge,
@@ -123,7 +125,28 @@ _read_args(int            argc,
       if (i >= argc)
         _usage(EXIT_FAILURE);
       else
-        *separation = atof(argv[i]);
+        *separation_x = atof(argv[i]);
+    }
+    else if (strcmp(argv[i], "-sepx") == 0) {
+      i++;
+      if (i >= argc)
+        _usage(EXIT_FAILURE);
+      else
+        *separation_x = atof(argv[i]);
+    }
+    else if (strcmp(argv[i], "-sepy") == 0) {
+      i++;
+      if (i >= argc)
+        _usage(EXIT_FAILURE);
+      else
+        *separation_y = atof(argv[i]);
+    }
+    else if (strcmp(argv[i], "-sepz") == 0) {
+      i++;
+      if (i >= argc)
+        _usage(EXIT_FAILURE);
+      else
+        *separation_z = atof(argv[i]);
     }
     else if (strcmp(argv[i], "-def") == 0) {
       *deform = 1;
@@ -374,14 +397,16 @@ int main(int argc, char *argv[])
    *  Set default values
    */
 
-  PDM_g_num_t n_vtx_seg  = 10;
-  double      length     = 1.;
-  double      separation = 2.;
-  int         deform     = 0;
-  double      tolerance  = 1e-6;
-  double      marge      = 0.;
-  int         n_part     = 1;
-  int         post       = 0;
+  PDM_g_num_t n_vtx_seg    = 10;
+  double      length       = 1.;
+  double      separation_x = 2.;
+  double      separation_y = 0.;
+  double      separation_z = 0.;
+  int         deform       = 0;
+  double      tolerance    = 1e-6;
+  double      marge        = 0.;
+  int         n_part       = 1;
+  int         post         = 0;
 #ifdef PDM_HAVE_PARMETIS
   PDM_part_split_t part_method  = PDM_PART_SPLIT_PARMETIS;
 #else
@@ -403,7 +428,9 @@ int main(int argc, char *argv[])
               argv,
               &n_vtx_seg,
               &length,
-              &separation,
+              &separation_x,
+              &separation_y,
+              &separation_z,
               &deform,
               &tolerance,
               &marge,
@@ -445,9 +472,9 @@ int main(int argc, char *argv[])
   int ppart_tgt = _cube_mesh (n_part,
                               part_method,
                               n_vtx_seg,
-                              xmin + separation*length,
-                              ymin,
-                              zmin,
+                              xmin + separation_x*length,
+                              ymin + separation_y*length,
+                              zmin + separation_z*length,
                               length,
                               deform);
 
@@ -780,18 +807,18 @@ int main(int argc, char *argv[])
       for (int k1 = 0; k1 < n_unlocated; k1++) {
         int ipt = unlocated[k1] - 1;
 
-        double x = cell_center[ipart][3*ipt];
-        if (x <= xmin + length) {
+        if (cell_center[ipart][3*ipt]   <= xmin + length ||
+            cell_center[ipart][3*ipt+1] <= ymin + length ||
+            cell_center[ipart][3*ipt+2] <= zmin + length) {
           n_wrong++;
         }
-        //assert (x > xmin + length);
       }
 
     }
   }
 
   int g_n_wrong;
-  PDM_MPI_Reduce (&n_wrong, &g_n_wrong, 1, PDM_MPI_INT, PDM_MPI_SUM, 0, PDM_MPI_COMM_WORLD);
+  PDM_MPI_Allreduce (&n_wrong, &g_n_wrong, 1, PDM_MPI_INT, PDM_MPI_SUM, PDM_MPI_COMM_WORLD);
   if (i_rank == 0) {
     printf("g_n_wrong = %d / "PDM_FMT_G_NUM"\n", g_n_wrong, (n_vtx_seg-1)*(n_vtx_seg-1)*(n_vtx_seg-1));
   }
@@ -836,5 +863,5 @@ int main(int argc, char *argv[])
     fflush(stdout);
   }
 
-  return 0;
+  return g_n_wrong;
 }

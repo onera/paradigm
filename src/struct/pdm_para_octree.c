@@ -5844,7 +5844,7 @@ PDM_para_octree_build
   octree->times_cpu_s[END]   = octree->times_cpu_s[BUILD_TOTAL];
 
   //-->
-  if (octree->shared_rank_idx != NULL) {
+  if (0) {//octree->shared_rank_idx != NULL) {
     //char *pref = "/stck/bandrieu/workspace/paradigma-dev/test/para_octree/shared_octree/";
     char *pref = "";
     char filename[999];

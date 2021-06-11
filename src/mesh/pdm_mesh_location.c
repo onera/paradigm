@@ -2668,7 +2668,7 @@ PDM_mesh_location_t        *ml
   const int octree_build_leaf_neighbours = 0;
   int octree_id;
 
-  const int VISU = 0;
+  const int VISU = 1;
   int allow_extraction = 1;
   float extraction_threshold = 0.5; // max size ratio between extracted and original meshes
 
