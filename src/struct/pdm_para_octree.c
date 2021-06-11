@@ -7103,9 +7103,15 @@ PDM_para_octree_single_closest_point
     f_max_copy = (float) atof(env_var);
   }
 
+  int USE_SHARED_OCTREE = 0;
+  env_var = getenv ("USE_SHARED_OCTREE");
+  if (env_var != NULL) {
+    USE_SHARED_OCTREE = (float) atof(env_var);
+  }
+
 
   /* Compute rank extents and build shared bounding-box tree */
-  if (octree->used_rank_extents == NULL) {
+  if (octree->used_rank_extents == NULL && !USE_SHARED_OCTREE) {
     _compute_rank_extents (octree);
   }
 
@@ -7113,6 +7119,10 @@ PDM_para_octree_single_closest_point
   int i_rank, n_rank;
   PDM_MPI_Comm_rank (octree->comm, &i_rank);
   PDM_MPI_Comm_size (octree->comm, &n_rank);
+
+  if (i_rank == 0) {
+    printf("USE_SHARED_OCTREE = %d\n", USE_SHARED_OCTREE);
+  }
 
 
   /* Part-to-block create (only to get block distribution) */
@@ -7620,16 +7630,31 @@ PDM_para_octree_single_closest_point
   int *close_ranks_idx = NULL;
   int *close_ranks = NULL;
 
-  PDM_box_tree_closest_upper_bound_dist_boxes_get (octree->bt_shared,
-                                                   n_pts1,
-                                                   pts_coord1,
-                                                   _closest_pt_dist2,
-                                                   &close_ranks_idx,
-                                                   &close_ranks);
-  if (octree->n_used_rank < n_rank) {
-    for (int i = 0; i < close_ranks_idx[n_pts1]; i++) {
-      int j = close_ranks[i];
-      close_ranks[i] = octree->used_rank[j];
+  if (USE_SHARED_OCTREE) {
+    assert (octree->shared_rank_idx != NULL);
+
+    int tmp_size = 4 * n_pts1;
+    close_ranks = malloc (sizeof(int) * tmp_size);
+    close_ranks_idx = malloc (sizeof(int) * (n_pts1 + 1));
+    close_ranks_idx[0] = 0;
+
+    //...
+    assert(0);
+
+  }
+
+  else {
+    PDM_box_tree_closest_upper_bound_dist_boxes_get (octree->bt_shared,
+                                                     n_pts1,
+                                                     pts_coord1,
+                                                     _closest_pt_dist2,
+                                                     &close_ranks_idx,
+                                                     &close_ranks);
+    if (octree->n_used_rank < n_rank) {
+      for (int i = 0; i < close_ranks_idx[n_pts1]; i++) {
+        int j = close_ranks[i];
+        close_ranks[i] = octree->used_rank[j];
+      }
     }
   }
 
