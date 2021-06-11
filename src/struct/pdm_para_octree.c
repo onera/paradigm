@@ -4574,14 +4574,18 @@ static void _export_boxes
   fprintf(f, "POINTS %d double\n", 8*n_box);
   for (int i = 0; i < n_box; i++) {
     const double *e = box_extents + 6*i;
-    fprintf(f, "%f %f %f\n", e[0], e[1], e[2]);
-    fprintf(f, "%f %f %f\n", e[3], e[1], e[2]);
-    fprintf(f, "%f %f %f\n", e[3], e[4], e[2]);
-    fprintf(f, "%f %f %f\n", e[0], e[4], e[2]);
-    fprintf(f, "%f %f %f\n", e[0], e[1], e[5]);
-    fprintf(f, "%f %f %f\n", e[3], e[1], e[5]);
-    fprintf(f, "%f %f %f\n", e[3], e[4], e[5]);
-    fprintf(f, "%f %f %f\n", e[0], e[4], e[5]);
+    if (e[3] < e[0] || e[4] < e[1] || e[5]  < e[2]) {
+      fprintf(f, "0. 0. 0.\n0. 0. 0.\n0. 0. 0.\n0. 0. 0.\n0. 0. 0.\n0. 0. 0.\n0. 0. 0.\n0. 0. 0.\n");
+    } else {
+      fprintf(f, "%f %f %f\n", e[0], e[1], e[2]);
+      fprintf(f, "%f %f %f\n", e[3], e[1], e[2]);
+      fprintf(f, "%f %f %f\n", e[3], e[4], e[2]);
+      fprintf(f, "%f %f %f\n", e[0], e[4], e[2]);
+      fprintf(f, "%f %f %f\n", e[0], e[1], e[5]);
+      fprintf(f, "%f %f %f\n", e[3], e[1], e[5]);
+      fprintf(f, "%f %f %f\n", e[3], e[4], e[5]);
+      fprintf(f, "%f %f %f\n", e[0], e[4], e[5]);
+    }
   }
 
   fprintf(f, "CELLS %d %d\n", n_box, 9*n_box);
@@ -5840,7 +5844,7 @@ PDM_para_octree_build
   octree->times_cpu_s[END]   = octree->times_cpu_s[BUILD_TOTAL];
 
   //-->
-  if (1) {
+  if (octree->shared_rank_idx != NULL) {
     //char *pref = "/stck/bandrieu/workspace/paradigma-dev/test/para_octree/shared_octree/";
     char *pref = "";
     char filename[999];
@@ -5855,16 +5859,6 @@ PDM_para_octree_build
     _export_octree_points (filename,
                            octree,
                            0);
-
-    //-->>
-    for (int i = 0; i < octree->shared_rank_idx[n_ranks]; i++) {
-      if (octree->shared_pts_n[i] == 0) {
-        for (int j = 0; j < 6; j++) {
-          octree->shared_pts_extents[6*i+j] = 0.;
-        }
-      }
-    }
-    //<<--
 
     if (rank == 0) {
       for (int i = 0; i < n_ranks; i++) {

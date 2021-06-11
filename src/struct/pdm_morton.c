@@ -1712,9 +1712,6 @@ PDM_morton_list_intersect(size_t             n_quantiles,
       end_id = mid_id;
   }
 
-
-  //*n_intersect = 0;
-
   int start_id_save = start_id;
 
   if (PDM_morton_ancestor_is (code, quantile_start[start_id]) ||
