@@ -5270,7 +5270,7 @@ PDM_para_octree_build
 
 
     //-->>
-    if (1) {
+    if (0) {
       /*
        *  Compress octants
        */
