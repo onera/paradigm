@@ -597,6 +597,8 @@ int main(int argc, char *argv[])
   PDM_mesh_location_mesh_global_data_set (mesh_loc,
                                           n_part);
 
+  int *n_src = malloc (sizeof(double *) * n_part);
+  PDM_g_num_t **src_g_num = malloc (sizeof(PDM_g_num_t *) * n_part);
   for (int ipart = 0; ipart < n_part; ipart++) {
 
     int n_cell;
@@ -662,6 +664,10 @@ int main(int argc, char *argv[])
                            &face_group_idx,
                            &face_group,
                            &face_group_ln_to_gn);
+
+    n_src[ipart] = n_cell;
+    src_g_num[ipart] = malloc (sizeof(PDM_g_num_t) * n_cell);
+    memcpy (src_g_num[ipart], cell_ln_to_gn, sizeof(PDM_g_num_t) * n_cell);
 
     PDM_mesh_location_part_set (mesh_loc,
                                 ipart,
@@ -852,6 +858,7 @@ int main(int argc, char *argv[])
     TO DO: check result from source PoV
   */
 
+  /*PDM_g_num_t n_cell_seg = n_vtx_seg - 1;
   for (int ipart = 0; ipart < n_part; ipart++) {
     int *cell_vtx_idx;
     int *cell_vtx;
@@ -881,8 +888,17 @@ int main(int argc, char *argv[])
                                          &points_dist2,
                                          &points_projected_coords);
 
-    //...
-  }
+    for (int i = 0; i < n_src[ipart]; i++) {
+
+      //PDM_g_num_t kk = (src_g_num[ipart][i] - 1)n_cell_seg
+      PDM_g_num_t ii = (src_g_num[ipart][i] - 1) % n_cell_seg;
+      PDM_g_num_t jj = (src_g_num[ipart][i] - 1 - ii) % (n_cell_seg * n_cell_seg);
+
+      for (int j = cell_vtx_idx[i]; j < cell_vtx_idx[i+1]; j++) {
+
+      }
+    }
+    }*/
 
 
 
@@ -920,13 +936,16 @@ int main(int argc, char *argv[])
     free (tgt_g_num[ipart]);
     free (tgt_location[ipart]);
     free (tgt_proj_coord[ipart]);
+    free (src_g_num[ipart]);
   }
   free (n_tgt);
+  free (n_src);
   free (cell_center);
   free (cell_volume);
   free (tgt_g_num);
   free (tgt_location);
   free (tgt_proj_coord);
+  free (src_g_num);
 
   PDM_mesh_location_free (mesh_loc,
                           0);
