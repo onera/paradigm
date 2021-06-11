@@ -7104,10 +7104,10 @@ PDM_para_octree_single_closest_point
   }
 
   int USE_SHARED_OCTREE = 0;
-  env_var = getenv ("USE_SHARED_OCTREE");
+  /*env_var = getenv ("USE_SHARED_OCTREE");
   if (env_var != NULL) {
     USE_SHARED_OCTREE = (float) atof(env_var);
-  }
+    }*/
 
 
   /* Compute rank extents and build shared bounding-box tree */
