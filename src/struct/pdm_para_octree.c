@@ -4143,120 +4143,188 @@ _closest_points
 static void
 _single_closest_point_recursive
 (
+int                     *start_stack,
+int                     *end_stack,
+PDM_morton_code_t       *code_stack,
+double                  *min_dist2_stack,
  const int                dim,
  const double             d[],
  const double             s[],
- const PDM_morton_code_t  node,
+ const PDM_morton_code_t  ancestor,
  const _l_octant_t       *octants,
  const PDM_g_num_t       *src_g_num,
  const double            *src_coord,
  const double             point[],
- const int                start,
- const int                end,
  PDM_g_num_t             *closest_point_g_num,
  double                  *closest_point_dist2
  )
 {
   /* Single octant */
-  if (start == end-1) {
-    for (int i = 0; i < octants->n_points[start]; i++) {
-      int j = octants->range[start] + i;
-      double dist2 = _pt_to_pt_dist2 (dim,
-                                      point,
-                                      src_coord + dim*j);
-      if (dist2 < *closest_point_dist2) {
-        *closest_point_dist2 = dist2;
-        *closest_point_g_num = src_g_num[j];
-      }
-    }
-    return;
-  }
 
-  /* Multiple octants */
-  else {
-    const int n_child = 1 << dim;
-    PDM_morton_code_t child_code[8];
-    PDM_morton_get_children (dim,
-                             node,
-                             child_code);
 
-    double child_dist2[8];
-    int child_start[8], child_end[8];
-    int prev_end = start;
-    for (int i = 0; i < n_child; i++) {
-
-      /* get start and end of range in list of nodes covered by current child */
-      /* _start <-- first descendant of child in list */
-      int new_start = prev_end;
-      while (new_start < end) {
-        if (PDM_morton_ancestor_is (child_code[i], octants->codes[new_start])) {
-          break;
-        } else if (PDM_morton_a_gt_b (octants->codes[new_start], child_code[i])) {
-          /* all the following nodes are clearly not descendants of current child */
-          new_start = end+1;
-          break;
-        }
-        new_start++;
-      }
-
-      if (new_start > end) {
-        /* no need to go further for that child
-           because it has no descendants in the node list */
-        child_dist2[i] = HUGE_VAL;
-        continue;
-      }
-
-      child_start[i] = new_start;
-
-      /* e <-- next of last descendant of child in list */
-      int new_end = end;
-      while (new_end > new_start + 1) {
-        int m = new_start + (new_end - new_start) / 2;
-        if (PDM_morton_ancestor_is (child_code[i], octants->codes[m])) {
-          new_start = m;
-        } else {
-          new_end = m;
-        }
-      }
-
-      prev_end = new_end;
-      child_end[i] = new_end;
-
-      if (child_end[i] > child_start[i]) {
-        child_dist2[i] = _octant_min_dist2 (dim,
-                                            child_code[i],
+  double dist2_node =  _octant_min_dist2 (dim,
+                                          ancestor,
                                             d,
                                             s,
                                             point);
-      } else {
-        child_dist2[i] = HUGE_VAL;
+  // printf(" - courant code %d [%d, %d, %d], %12.5e\n",
+  // ancestor.L, ancestor.X[0], ancestor.X[1], ancestor.X[2], *closest_point_dist2);
+  // printf("   - closest_point_dist2 dist2_node : %12.5e %12.5e\n", dist2_node, *closest_point_dist2);
+  if (dist2_node >= *closest_point_dist2) return;
+
+
+  int pos_stack = 0;
+
+  code_stack[pos_stack].L      = ancestor.L; /* push root in th stack */
+  code_stack[pos_stack].X[0]   = ancestor.X[0]; /* push root in th stack */
+  code_stack[pos_stack].X[1]   = ancestor.X[1]; /* push root in th stack */
+  code_stack[pos_stack].X[2]   = ancestor.X[2]; /* push root in th stack */
+  min_dist2_stack[pos_stack] = dist2_node;
+  start_stack[pos_stack] = 0;
+  end_stack[pos_stack] = octants->n_nodes;
+  pos_stack++;
+
+  while (pos_stack > 0) {
+
+//    printf("pass\n");
+
+    double node_dist2 = min_dist2_stack[--pos_stack];
+
+    if (node_dist2 < *closest_point_dist2) {
+
+      int start = start_stack[pos_stack];
+      int end   = end_stack[pos_stack];
+
+      PDM_morton_code_t node;
+      node.L    = code_stack[pos_stack].L;
+      node.X[0] = code_stack[pos_stack].X[0];
+      node.X[1] = code_stack[pos_stack].X[1];
+      node.X[2] = code_stack[pos_stack].X[2];
+
+      if (start == end-1) {
+        // printf("   - feuille %d, code %d [%d, %d, %d], %12.5e\n",
+        //   octants->n_points[start],
+        //   node.L, node.X[0], node.X[1], node.X[2], *closest_point_dist2);
+        for (int i = 0; i < octants->n_points[start]; i++) {
+          int j = octants->range[start] + i;
+          double dist2 = _pt_to_pt_dist2 (dim,
+                                          point,
+                                          src_coord + dim*j);
+          if (dist2 < *closest_point_dist2) {
+            *closest_point_dist2 = dist2;
+            *closest_point_g_num = src_g_num[j];
+          }
+        }
+        return;
+      }
+
+      /* Multiple octants */
+      else {
+        const int n_child = 8;
+        PDM_morton_code_t child_code[8];
+        // printf("   - node %d, code %d [%d, %d, %d], %12.5e\n",
+        //   octants->n_points[start],
+        //   node.L, node.X[0], node.X[1], node.X[2], *closest_point_dist2);
+        PDM_morton_get_children (dim,
+                                 node,
+                                 child_code);
+
+        double child_dist2[8];
+        int child_start[8], child_end[8];
+        int prev_end = start;
+        for (int i = 0; i < n_child; i++) {
+
+          /* get start and end of range in list of nodes covered by current child */
+          /* _start <-- first descendant of child in list */
+          int new_start = prev_end;
+          while (new_start < end) {
+            if (PDM_morton_ancestor_is (child_code[i], octants->codes[new_start])) {
+              break;
+            } else if (PDM_morton_a_gt_b (octants->codes[new_start], child_code[i])) {
+              /* all the following nodes are clearly not descendants of current child */
+              new_start = end+1;
+              break;
+            }
+            new_start++;
+          }
+
+          if (new_start > end) {
+            /* no need to go further for that child
+               because it has no descendants in the node list */
+            child_dist2[i] = HUGE_VAL;
+            continue;
+          }
+
+          child_start[i] = new_start;
+
+          /* e <-- next of last descendant of child in list */
+          int new_end = end;
+          while (new_end > new_start + 1) {
+            int m = new_start + (new_end - new_start) / 2;
+            if (PDM_morton_ancestor_is (child_code[i], octants->codes[m])) {
+              new_start = m;
+            } else {
+              new_end = m;
+            }
+          }
+
+          prev_end = new_end;
+          child_end[i] = new_end;
+
+          if (child_end[i] > child_start[i]) {
+            child_dist2[i] = _octant_min_dist2 (dim,
+                                                child_code[i],
+                                                d,
+                                                s,
+                                                point);
+          } else {
+            child_dist2[i] = HUGE_VAL;
+          }
+        }
+
+        // Carry on recursion on children
+        int child_order[8] = {0, 1, 2, 3, 4, 5, 6, 7};
+        PDM_sort_double (child_dist2,
+                         child_order,
+                         n_child);
+
+        for (int i = n_child-1; i >= 0; i--) {
+//          printf("pass boucle :%d %12.5e %12.5e\n", i, child_dist2[i], *closest_point_dist2);
+          if (child_dist2[i] < *closest_point_dist2) {
+//            printf("add\n");
+            int i_child = child_order[i];
+            int start2 = child_start[i_child];
+            int end2 = child_end[i_child];
+
+            if ((start2 != end2-1) || ((start2 == end2-1) && octants->n_points[start2] != 0)) {
+              code_stack[pos_stack].L      = child_code[i_child].L; /* push root in th stack */
+              code_stack[pos_stack].X[0]   = child_code[i_child].X[0]; /* push root in th stack */
+              code_stack[pos_stack].X[1]   = child_code[i_child].X[1]; /* push root in th stack */
+              code_stack[pos_stack].X[2]   = child_code[i_child].X[2]; /* push root in th stack */
+              min_dist2_stack[pos_stack]   = child_dist2[i];
+              start_stack[pos_stack]       = start2;
+              end_stack[pos_stack]         = end2;
+              pos_stack++;
+            }
+          }
+
+    //      int i_child = i;
+          // _single_closest_point_recursive (dim,
+          //                                  d,
+          //                                  s,
+          //                                  child_code[i_child],
+          //                                  octants,
+          //                                  src_g_num,
+          //                                  src_coord,
+          //                                  point,
+          //                                  child_start[i_child],
+          //                                  child_end[i_child],
+          //                                  closest_point_g_num,
+          //                                  closest_point_dist2);
+        }
       }
     }
-
-    // Carry on recursion on children
-    int child_order[8] = {0, 1, 2, 3, 4, 5, 6, 7};
-    PDM_sort_double (child_dist2,
-                     child_order,
-                     n_child);
-
-    for (int i = 0; i < n_child; i++) {
-      if (child_dist2[i] >= *closest_point_dist2) return;
-      int i_child = child_order[i];
-      _single_closest_point_recursive (dim,
-                                       d,
-                                       s,
-                                       child_code[i_child],
-                                       octants,
-                                       src_g_num,
-                                       src_coord,
-                                       point,
-                                       child_start[i_child],
-                                       child_end[i_child],
-                                       closest_point_g_num,
-                                       closest_point_dist2);
-    }
   }
-
 }
 
 
@@ -4284,9 +4352,26 @@ _single_closest_point
                                       octants->codes[octants->n_nodes-1],
                                       &ancestor);
 
+
+  const int n_children = 8;
+  const int depth_max = 31;
+  int s_pt_stack = ((n_children - 1) * (depth_max - 1) + n_children);
+
+  int *start_stack = malloc ((sizeof(int)) * s_pt_stack);
+  int *end_stack = malloc ((sizeof(int)) * s_pt_stack);
+  PDM_morton_code_t *code_stack = malloc ((sizeof(PDM_morton_code_t)) * s_pt_stack);
+  double *min_dist2_stack = malloc ((sizeof(double)) * s_pt_stack);
+
   /* Loop over target points */
   for (int i = 0; i < n_tgt; i++) {
-    _single_closest_point_recursive (dim,
+
+//    printf (" **** pt %d : %12.5e\n", i,  closest_point_dist2[i]);
+
+    _single_closest_point_recursive (start_stack,
+                                     end_stack,
+                                     code_stack,
+                                     min_dist2_stack,
+                                     dim,
                                      d,
                                      s,
                                      ancestor,
@@ -4294,11 +4379,14 @@ _single_closest_point
                                      src_g_num,
                                      src_coord,
                                      tgt_coord + dim*i,
-                                     0,
-                                     octants->n_nodes,
                                      closest_point_g_num + i,
                                      closest_point_dist2 + i);
   }
+
+  free (start_stack);
+  free (end_stack);
+  free (code_stack);
+  free (min_dist2_stack);
 }
 
 
@@ -8884,6 +8972,10 @@ PDM_para_octree_points_inside_boxes_with_copies
   int i_rank, n_rank;
   PDM_MPI_Comm_rank (octree->comm, &i_rank);
   PDM_MPI_Comm_size (octree->comm, &n_rank);
+
+  if (i_rank == 0) {
+    printf("USE_SHARED_OCTREE = %d\n", USE_SHARED_OCTREE);
+  }
 
 
   PDM_morton_code_t *box_corners = NULL;
