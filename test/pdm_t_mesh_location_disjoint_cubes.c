@@ -702,7 +702,7 @@ int main(int argc, char *argv[])
 
 
   PDM_g_num_t **tgt_location = malloc (sizeof(PDM_g_num_t *) * n_part);
-
+  double **tgt_proj_coord = malloc (sizeof(double *) * n_part);
 
   int n_wrong = 0;
   for (int ipart = 0; ipart < n_part; ipart++) {
@@ -725,6 +725,7 @@ int main(int argc, char *argv[])
     printf("[%d] n_located = %d, n_unlocated = %d\n", i_rank, n_located, n_unlocated);
 
     tgt_location[ipart] = PDM_array_const_gnum (n_tgt[ipart], 0);
+    tgt_proj_coord[ipart] = malloc (sizeof(double) * n_tgt[ipart] * 3);
 
     PDM_g_num_t *p_location    = NULL;
     double      *p_dist2  = NULL;
@@ -739,11 +740,17 @@ int main(int argc, char *argv[])
     for (int j = 0; j < n_located; j++) {
       int i = located[j] - 1;
       tgt_location[ipart][i] = p_location[j];
+      for (int k = 0; k < 3; k++) {
+        tgt_proj_coord[ipart][3*i+k] = p_proj_coord[3*j+k];
+      }
     }
 
     for (int j = 0; j < n_unlocated; j++) {
       int i = unlocated[j] - 1;
       tgt_location[ipart][i] = -1;
+      for (int k = 0; k < 3; k++) {
+        tgt_proj_coord[ipart][3*i+k] = cell_center[ipart][3*i+k];
+      }
     }
 
     /* Check results */
@@ -834,14 +841,73 @@ int main(int argc, char *argv[])
   }
 
 
+
+
+
+
+
+
+
+  /*
+    TO DO: check result from source PoV
+  */
+
+  for (int ipart = 0; ipart < n_part; ipart++) {
+    int *cell_vtx_idx;
+    int *cell_vtx;
+    PDM_mesh_location_cell_vertex_get (mesh_loc,
+                                       ipart,
+                                       &cell_vtx_idx,
+                                       &cell_vtx);
+
+    int         *elt_pts_inside_idx;
+    PDM_g_num_t *points_gnum;
+    double      *points_coords;
+    double      *points_uvw;
+    int         *points_weights_idx;
+    double      *points_weights;
+    double      *points_dist2;
+    double      *points_projected_coords;
+
+    PDM_mesh_location_points_in_elt_get (mesh_loc,
+                                         ipart,
+                                         0,//i_point_cloud,
+                                         &elt_pts_inside_idx,
+                                         &points_gnum,
+                                         &points_coords,
+                                         &points_uvw,
+                                         &points_weights_idx,
+                                         &points_weights,
+                                         &points_dist2,
+                                         &points_projected_coords);
+
+    //...
+  }
+
+
+
+
+
+
+
+
   if (post) {
     char filename[999];
-    sprintf(filename, "tgt_location_%3.3d.vtk", i_rank);
 
+    sprintf(filename, "tgt_location_%3.3d.vtk", i_rank);
     _export_point_cloud (filename,
                        n_part,
                        n_tgt,
                        cell_center,
+                       tgt_g_num,
+                       tgt_location);
+
+    sprintf(filename, "tgt_proj_coord_%3.3d.vtk", i_rank);
+
+    _export_point_cloud (filename,
+                       n_part,
+                       n_tgt,
+                       tgt_proj_coord,
                        tgt_g_num,
                        tgt_location);
   }
@@ -853,12 +919,14 @@ int main(int argc, char *argv[])
     free (cell_volume[ipart]);
     free (tgt_g_num[ipart]);
     free (tgt_location[ipart]);
+    free (tgt_proj_coord[ipart]);
   }
   free (n_tgt);
   free (cell_center);
   free (cell_volume);
   free (tgt_g_num);
   free (tgt_location);
+  free (tgt_proj_coord);
 
   PDM_mesh_location_free (mesh_loc,
                           0);

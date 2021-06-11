@@ -4713,6 +4713,8 @@ _compute_dist2_from_closest_tetra_subdivision
  int                        *uncertain_result
  )
 {
+  int DEBUG = 1;
+  if (DEBUG) printf(">>> _compute_dist2_from_closest_tetra_subdivision\n");
   *uncertain_result = 0;
   *n_it = 0;
   *err_proj = HUGE_VAL;
@@ -4744,6 +4746,11 @@ _compute_dist2_from_closest_tetra_subdivision
                                     &_dist2_current,
                                     &_child);
 
+    if (DEBUG) {
+      printf("_closest_pt_uvwPn_current = %f %f %f, _dist_current = %g, dist_pre = %g\n",
+             _closest_pt_uvwPn_current[0], _closest_pt_uvwPn_current[1], _closest_pt_uvwPn_current[2],
+             _dist2_current, dist2_pre);
+    }
 
     if (is_empty) {
       PDM_error(__FILE__, __LINE__, 0,
@@ -4752,6 +4759,7 @@ _compute_dist2_from_closest_tetra_subdivision
     }
 
     if ((distance_extension == 0) && (_dist2_current > dist2_pre)) {
+      printf("!! _dist2_current = %20.16e, dist_pre = %20.16e\n", _dist2_current, dist2_pre);
       distance_extension = 1;
     }
 
@@ -4802,6 +4810,9 @@ _compute_dist2_from_closest_tetra_subdivision
     for (int i = 0; i < 3; i++) {
       double val = _projected_coords_from_pn[i] - _projected_coords_from_p1[i];
       *err_proj += val * val;
+    }
+    if (DEBUG) {
+      printf("err_proj = %g / %g\n", sqrt(*err_proj), err_max);
     }
 
     /* Break if error is ok */
@@ -4891,6 +4902,8 @@ _compute_dist2_from_uniform_tetra_subdivision
  double                     *err_proj
  )
 {
+  int DEBUG = 1;
+  if (DEBUG) printf(">>> _compute_dist2_from_uniform_tetra_subdivision\n");
   *n_it = 0;
   *err_proj = HUGE_VAL;
   double dist2 = HUGE_VAL;
@@ -4921,10 +4934,15 @@ _compute_dist2_from_uniform_tetra_subdivision
                                     &_dist2_current,
                                     &_child);
 
+    if (DEBUG) {
+      printf("_closest_pt_uvwPn_current = %f %f %f, _dist_current = %g\n",
+             _closest_pt_uvwPn_current[0], _closest_pt_uvwPn_current[1], _closest_pt_uvwPn_current[2],
+             _dist2_current);
+    }
 
     if (is_empty) {
       PDM_error(__FILE__, __LINE__, 0,
-                "Heap is empty %s\n");
+                "Heap is empty\n");
       abort();
     }
 
