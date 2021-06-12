@@ -707,10 +707,19 @@ int main(int argc, char *argv[])
   PDM_mesh_location_dump_times (mesh_loc);
 
 
+
+
+  /*
+   *  Check result from target PoV
+   */
   PDM_g_num_t **tgt_location = malloc (sizeof(PDM_g_num_t *) * n_part);
   double **tgt_proj_coord = malloc (sizeof(double *) * n_part);
 
   int n_wrong = 0;
+  const PDM_g_num_t n_cell_seg = n_vtx_seg - 1;
+  const double cell_side = length / ((double) n_cell_seg);
+  const double location_tolerance = 1.e-6;
+
   for (int ipart = 0; ipart < n_part; ipart++) {
     int n_located = PDM_mesh_location_n_located_get (mesh_loc,
                                                      0,//i_point_cloud,
@@ -759,12 +768,8 @@ int main(int argc, char *argv[])
       }
     }
 
-    /* Check results */
-    if (!deform) {
-      const double location_tolerance = 1.e-6;
 
-      const PDM_g_num_t n_cell_seg = n_vtx_seg - 1;
-      const double cell_side = length / ((double) n_cell_seg);
+    if (!deform) {
 
       for (int k1 = 0; k1 < n_located; k1++) {
         int ipt = located[k1] - 1;
@@ -783,20 +788,8 @@ int main(int argc, char *argv[])
         }
 
         if (p_location[k1] != box_gnum) {
-          /*double *cp = p_proj_coord + 3*ipt;
-          printf("%d ("PDM_FMT_G_NUM") (%.15lf %.15lf %.15lf): ("PDM_FMT_G_NUM") | ("PDM_FMT_G_NUM") proj : (%.15lf %.15lf %.15lf)\n",
-                 ipt, pts_gnum[ipt],
-                 p[0], p[1], p[2],
-                 p_location[ipt], box_gnum,
-                 cp[0], cp[1], cp[2]);
-                 printf("\n");*/
-
-          //-->>
           double cell_min[3] = {cell_side * i,     cell_side * j,     cell_side * k};
           double cell_max[3] = {cell_side * (i+1), cell_side * (j+1), cell_side * (k+1)};
-          /*printf("cell min = (%.15lf %.15lf %.15lf)\ncell max = (%.15lf %.15lf %.15lf)\n",
-            cell_min[0], cell_min[1], cell_min[2],
-            cell_max[0], cell_max[1], cell_max[2]);*/
 
           double dist = HUGE_VAL;
           for (int idim = 0; idim < 3; idim++) {
@@ -805,13 +798,10 @@ int main(int argc, char *argv[])
             double _dist = PDM_MIN (_dist1, _dist2);
             dist = PDM_MIN (dist, _dist);
           }
-          /*printf("[%d] "PDM_FMT_G_NUM" distance = %e , location = "PDM_FMT_G_NUM" / "PDM_FMT_G_NUM"\n\n",
-            i_rank, tgt_g_num[ipart][ipt], dist, p_location[k1], box_gnum);*/
+
           if (dist > location_tolerance) {
             n_wrong++;
           }
-          //assert (dist < location_tolerance);
-          //<<--
         }
       }
 
@@ -820,20 +810,13 @@ int main(int argc, char *argv[])
       for (int k1 = 0; k1 < n_unlocated; k1++) {
         int ipt = unlocated[k1] - 1;
 
-        if (1) {
-          double x = cell_center[ipart][3*ipt];
-          double y = cell_center[ipart][3*ipt+1];
-          double z = cell_center[ipart][3*ipt+2];
-          if (x >= xmin && x <= xmin + length &&
-              y >= ymin && y <= ymin + length &&
-              z >= zmin && z <= zmin + length) {
-            n_wrong++;
-          }
-        } else {
-          double x = cell_center[ipart][3*ipt];
-          if (x <= xmin + length) {
-            n_wrong++;
-          }
+        double x = cell_center[ipart][3*ipt];
+        double y = cell_center[ipart][3*ipt+1];
+        double z = cell_center[ipart][3*ipt+2];
+        if (x >= xmin && x <= xmin + length &&
+            y >= ymin && y <= ymin + length &&
+            z >= zmin && z <= zmin + length) {
+          n_wrong++;
         }
       }
 
@@ -843,7 +826,7 @@ int main(int argc, char *argv[])
   int g_n_wrong;
   PDM_MPI_Allreduce (&n_wrong, &g_n_wrong, 1, PDM_MPI_INT, PDM_MPI_SUM, PDM_MPI_COMM_WORLD);
   if (i_rank == 0) {
-    printf("g_n_wrong = %d / "PDM_FMT_G_NUM"\n", g_n_wrong, (n_vtx_seg-1)*(n_vtx_seg-1)*(n_vtx_seg-1));
+    printf("Viewed from target: g_n_wrong = %d / "PDM_FMT_G_NUM"\n", g_n_wrong, (n_vtx_seg-1)*(n_vtx_seg-1)*(n_vtx_seg-1));
   }
 
 
@@ -855,54 +838,81 @@ int main(int argc, char *argv[])
 
 
   /*
-    TO DO: check result from source PoV
-  */
+   *  Check result from source PoV
+   */
+  if (!deform) {
 
-  /*PDM_g_num_t n_cell_seg = n_vtx_seg - 1;
-  for (int ipart = 0; ipart < n_part; ipart++) {
-    int *cell_vtx_idx;
-    int *cell_vtx;
-    PDM_mesh_location_cell_vertex_get (mesh_loc,
-                                       ipart,
-                                       &cell_vtx_idx,
-                                       &cell_vtx);
+    n_wrong = 0;
 
-    int         *elt_pts_inside_idx;
-    PDM_g_num_t *points_gnum;
-    double      *points_coords;
-    double      *points_uvw;
-    int         *points_weights_idx;
-    double      *points_weights;
-    double      *points_dist2;
-    double      *points_projected_coords;
-
-    PDM_mesh_location_points_in_elt_get (mesh_loc,
+    for (int ipart = 0; ipart < n_part; ipart++) {
+      int *cell_vtx_idx;
+      int *cell_vtx;
+      PDM_mesh_location_cell_vertex_get (mesh_loc,
                                          ipart,
-                                         0,//i_point_cloud,
-                                         &elt_pts_inside_idx,
-                                         &points_gnum,
-                                         &points_coords,
-                                         &points_uvw,
-                                         &points_weights_idx,
-                                         &points_weights,
-                                         &points_dist2,
-                                         &points_projected_coords);
+                                         &cell_vtx_idx,
+                                         &cell_vtx);
 
-    for (int i = 0; i < n_src[ipart]; i++) {
+      int         *elt_pts_inside_idx;
+      PDM_g_num_t *points_gnum;
+      double      *points_coords;
+      double      *points_uvw;
+      int         *points_weights_idx;
+      double      *points_weights;
+      double      *points_dist2;
+      double      *points_projected_coords;
 
-      //PDM_g_num_t kk = (src_g_num[ipart][i] - 1)n_cell_seg
-      PDM_g_num_t ii = (src_g_num[ipart][i] - 1) % n_cell_seg;
-      PDM_g_num_t jj = (src_g_num[ipart][i] - 1 - ii) % (n_cell_seg * n_cell_seg);
+      PDM_mesh_location_points_in_elt_get (mesh_loc,
+                                           ipart,
+                                           0,//i_point_cloud,
+                                           &elt_pts_inside_idx,
+                                           &points_gnum,
+                                           &points_coords,
+                                           &points_uvw,
+                                           &points_weights_idx,
+                                           &points_weights,
+                                           &points_dist2,
+                                           &points_projected_coords);
 
-      for (int j = cell_vtx_idx[i]; j < cell_vtx_idx[i+1]; j++) {
+      for (int i = 0; i < n_src[ipart]; i++) {
 
+        PDM_g_num_t ck = (src_g_num[ipart][i] - 1) / (n_cell_seg * n_cell_seg);
+        PDM_g_num_t ci = (src_g_num[ipart][i] - 1) % n_cell_seg;
+        PDM_g_num_t cj = (src_g_num[ipart][i] - 1 - ck*n_cell_seg*n_cell_seg) / n_cell_seg;
+
+        for (int j = elt_pts_inside_idx[i]; j < elt_pts_inside_idx[i+1]; j++) {
+          double *p = points_coords + 3*j;
+
+          PDM_g_num_t pi = (PDM_g_num_t) floor (p[0] / cell_side);
+          PDM_g_num_t pj = (PDM_g_num_t) floor (p[1] / cell_side);
+          PDM_g_num_t pk = (PDM_g_num_t) floor (p[2] / cell_side);
+
+          if (ci != pi || cj != pj || ck != pk) {
+
+            double cell_min[3] = {cell_side * ci,     cell_side * cj,     cell_side * ck};
+            double cell_max[3] = {cell_side * (ci+1), cell_side * (cj+1), cell_side * (ck+1)};
+
+            double dist = HUGE_VAL;
+            for (int idim = 0; idim < 3; idim++) {
+              double _dist1 = PDM_ABS (p[idim] - cell_min[idim]);
+              double _dist2 = PDM_ABS (p[idim] - cell_max[idim]);
+              double _dist = PDM_MIN (_dist1, _dist2);
+              dist = PDM_MIN (dist, _dist);
+            }
+
+            if (dist > location_tolerance) {
+              n_wrong++;
+            }
+          }
+        }
       }
     }
-    }*/
 
 
-
-
+    PDM_MPI_Allreduce (&n_wrong, &g_n_wrong, 1, PDM_MPI_INT, PDM_MPI_SUM, PDM_MPI_COMM_WORLD);
+    if (i_rank == 0) {
+      printf("Viewed from source: g_n_wrong = %d / "PDM_FMT_G_NUM"\n", g_n_wrong, (n_vtx_seg-1)*(n_vtx_seg-1)*(n_vtx_seg-1));
+    }
+  }
 
 
 
