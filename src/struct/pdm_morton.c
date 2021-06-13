@@ -2140,6 +2140,9 @@ _intersect_node_box
   *inside = 1;
 
   assert (box_min.L >= node.L);
+  if (DEBUG) {
+    printf("node: L = %u, X = %u %u %u\n", node.L, node.X[0], node.X[1], node.X[2]);
+  }
 
   const PDM_morton_int_t level_diff = box_min.L - node.L;
 
@@ -2151,7 +2154,9 @@ _intersect_node_box
 
     if (xmin > box_max.X[i]+1 || xmax < box_min.X[i]) {
       if (DEBUG) {
-       printf("\t not intersecting\n");
+        //printf("\t not intersecting (dim %d, xmin = %u, box_max = %u, box_min = %u, xmax = %u\n", i, xmin, box_max.X[i]+1, box_min.X[i], xmax);
+        double s = 1. / pow(2., box_min.L);
+        printf("\t not intersecting (dim %d, xmin = %f, box_max = %f, box_min = %f, xmax = %f\n", i, xmin*s, (box_max.X[i]+1)*s, box_min.X[i]*s, xmax*s);
       }
       return 0;
     } else if (xmin < box_min.X[i] || xmax > box_max.X[i]+1) {
@@ -2183,7 +2188,13 @@ PDM_morton_intersect_box
  int                     *intersect
  )
 {
+  int DEBUG = 0;
   int inside;
+
+  if (DEBUG) {
+    printf("node: L = %u, X = %u %u %u, start = %zu, end = %zu\n",
+           node.L, node.X[0], node.X[1], node.X[2], start, end);
+  }
 
   /* If current range contains few octants, go brute force */
   if (end - start < N_BRUTE_FORCE) {
@@ -2252,6 +2263,11 @@ PDM_morton_intersect_box
         size_t new_start, new_end;
         size_t prev_end = start;
         for (size_t ichild = 0; ichild < n_children; ichild++) {
+          if (DEBUG) {
+            printf("  child: L = %u, X = %u %u %u\n",
+                   children[ichild].L,
+                   children[ichild].X[0], children[ichild].X[1], children[ichild].X[2]);
+          }
 
           /* get start and end of range in list of nodes covered by current child */
           /* new_start <-- first descendant of child in list */
@@ -2266,6 +2282,10 @@ PDM_morton_intersect_box
               break;
             }
             new_start++;
+          }
+
+          if (DEBUG) {
+            printf("   new_start = %zu\n", new_start);
           }
 
           if (new_start > end) {
@@ -2287,6 +2307,10 @@ PDM_morton_intersect_box
           }
 
           prev_end = new_end;
+          if (DEBUG) {
+            printf("   new_end   = %zu\n", new_end);
+          }
+
 
           /* Carry on recursion */
           PDM_morton_intersect_box (dim,

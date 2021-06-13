@@ -3686,7 +3686,7 @@ PDM_mesh_location_t        *ml
       printf("\n[%d] --- Pts in box ---\n", my_rank);
       for (ibox = 0; ibox < n_select_boxes; ibox++) {
 
-        if (pts_idx[ibox+1] <= pts_idx[ibox]) {
+        if (0) {//pts_idx[ibox+1] <= pts_idx[ibox]) {
           continue;
         }
 
