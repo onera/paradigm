@@ -26,7 +26,7 @@ extern "C" {
  * Type
  *============================================================================*/
 
-#define NTIMER_MESH_LOCATION 11
+#define NTIMER_MESH_LOCATION 14
 
 /**
  * \struct _PDM_Dist_t
