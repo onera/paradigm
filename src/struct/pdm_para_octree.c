@@ -4463,6 +4463,7 @@ _compute_rank_extents
       n_used_rank++;
     }
   }
+
   free (n_pts_rank);
   free (all_extents);
 
@@ -5957,7 +5958,7 @@ PDM_para_octree_build
   octree->times_cpu_s[END]   = octree->times_cpu_s[BUILD_TOTAL];
 
   //-->
-  if (rank == 0) {
+  if (0) {//rank == 0 && octree->shared_rank_idx != NULL) {
     printf("shared_rank_idx = ");
     for (int i = 0; i <= n_ranks; i++) {
       printf("%d ", octree->shared_rank_idx[i]);
@@ -7136,10 +7137,10 @@ PDM_para_octree_single_closest_point
   }
 
   int USE_SHARED_OCTREE = 0;
-  /*env_var = getenv ("USE_SHARED_OCTREE");
+  env_var = getenv ("USE_SHARED_OCTREE");
   if (env_var != NULL) {
     USE_SHARED_OCTREE = (float) atof(env_var);
-    }*/
+  }
 
 
   /* Compute rank extents and build shared bounding-box tree */
@@ -8137,9 +8138,6 @@ PDM_para_octree_single_closest_point
 }
 
 
-
-
-
 /**
  *
  * \brief  Dump elapsed an CPU time
@@ -8982,9 +8980,20 @@ PDM_para_octree_points_inside_boxes
 
 
 
+#define NTIMER_PIB 8
 
+typedef enum {
+  PIB_BEGIN,
+  PIB_REDISTRIBUTE,
+  PIB_COPIES,
+  PIB_EXCHANGE,
+  PIB_LOCAL,
+  PIB_PTB,
+  PIB_BTP,
+  PIB_TOTAL
+} _pib_step_t;
 
-
+#define PIB_TIME_FMT "%f" //"12.5e"
 
 
 
@@ -9034,6 +9043,16 @@ PDM_para_octree_points_inside_boxes_with_copies
   if (i_rank == 0) {
     printf("USE_SHARED_OCTREE = %d\n", USE_SHARED_OCTREE);
   }
+
+  double times_elapsed[NTIMER_PIB], b_t_elapsed, e_t_elapsed;
+  for (_pib_step_t step = PIB_BEGIN; step <= PIB_TOTAL; step++) {
+    times_elapsed[step] = 0.;
+  }
+
+  PDM_timer_hang_on (octree->timer);
+  times_elapsed[PIB_BEGIN] = PDM_timer_elapsed (octree->timer);
+  b_t_elapsed = times_elapsed[PIB_BEGIN];
+  PDM_timer_resume (octree->timer);
 
 
   PDM_morton_code_t *box_corners = NULL;
@@ -9204,6 +9223,13 @@ PDM_para_octree_points_inside_boxes_with_copies
     }
     free (box_corners);
 
+
+    PDM_timer_hang_on (octree->timer);
+    e_t_elapsed = PDM_timer_elapsed (octree->timer);
+    times_elapsed[PIB_REDISTRIBUTE] = e_t_elapsed - b_t_elapsed;
+    b_t_elapsed = e_t_elapsed;
+    PDM_timer_resume (octree->timer);
+
     //-->>
     if (0) {
       printf("[%d] --- Box Rank ---\n", i_rank);
@@ -9312,6 +9338,12 @@ PDM_para_octree_points_inside_boxes_with_copies
     int *copied_count_tmp = PDM_array_zeros_int (octree->n_copied_ranks);
     n_box_copied = copied_shift[octree->n_copied_ranks];
 
+    PDM_timer_hang_on (octree->timer);
+    e_t_elapsed = PDM_timer_elapsed (octree->timer);
+    times_elapsed[PIB_COPIES] = e_t_elapsed - b_t_elapsed;
+    b_t_elapsed = e_t_elapsed;
+    PDM_timer_resume (octree->timer);
+
     /* Exchange new send/recv counts */
     PDM_MPI_Alltoall (send_count, 1, PDM_MPI_INT,
                       recv_count, 1, PDM_MPI_INT,
@@ -9340,7 +9372,6 @@ PDM_para_octree_points_inside_boxes_with_copies
 
     n_box_local = 0;
     for (int ibox = 0; ibox < n_boxes; ibox++) {
-      //for (int rank = box_rank[2*ibox]; rank < box_rank[2*ibox+1]; rank++) {
       for (int i = box_rank_idx[ibox]; i < box_rank_idx[ibox+1]; i++) {
         int rank = box_rank[i];
 
@@ -9356,13 +9387,11 @@ PDM_para_octree_points_inside_boxes_with_copies
           int _rank = i_copied_rank[rank];
 
           if (copied_count_tmp[_rank] < copied_count[_rank]) {
-            //int k = copied_shift[_rank] + copied_count[_rank];
             int k = copied_shift[_rank] + copied_count_tmp[_rank];
             copied_g_num[k] = box_g_num[ibox];
             for (int j = 0; j < two_dim; j++) {
               copied_extents[two_dim*k + j] = box_extents[two_dim*ibox + j];
             }
-            //copied_count[_rank]++;
             copied_count_tmp[_rank]++;
           }
           else {
@@ -9419,6 +9448,12 @@ PDM_para_octree_points_inside_boxes_with_copies
     free (recv_shift);
     free (send_g_num);
     free (send_extents);
+
+    PDM_timer_hang_on (octree->timer);
+    e_t_elapsed = PDM_timer_elapsed (octree->timer);
+    times_elapsed[PIB_EXCHANGE] = e_t_elapsed - b_t_elapsed;
+    b_t_elapsed = e_t_elapsed;
+    PDM_timer_resume (octree->timer);
   }
 
   /* Single proc */
@@ -9520,6 +9555,12 @@ PDM_para_octree_points_inside_boxes_with_copies
 
   PDM_para_octree_free_copies (octree_id);
 
+  PDM_timer_hang_on (octree->timer);
+  e_t_elapsed = PDM_timer_elapsed (octree->timer);
+  times_elapsed[PIB_LOCAL] = e_t_elapsed - b_t_elapsed;
+  b_t_elapsed = e_t_elapsed;
+  PDM_timer_resume (octree->timer);
+
 
   if (n_rank == 1) {
     *pts_in_box_g_num = box_pts_g_num;
@@ -9615,6 +9656,12 @@ PDM_para_octree_points_inside_boxes_with_copies
     }
     free (box_g_num1);
 
+    PDM_timer_hang_on (octree->timer);
+    e_t_elapsed = PDM_timer_elapsed (octree->timer);
+    times_elapsed[PIB_PTB] = e_t_elapsed - b_t_elapsed;
+    b_t_elapsed = e_t_elapsed;
+    PDM_timer_resume (octree->timer);
+
     /*
      *  Block to part
      */
@@ -9670,7 +9717,23 @@ PDM_para_octree_points_inside_boxes_with_copies
 
     PDM_part_to_block_free (ptb);
     PDM_block_to_part_free (btp);
+
+    PDM_timer_hang_on (octree->timer);
+    e_t_elapsed = PDM_timer_elapsed (octree->timer);
+    times_elapsed[PIB_BTP] = e_t_elapsed - b_t_elapsed;
+    times_elapsed[PIB_TOTAL] = e_t_elapsed - times_elapsed[PIB_BEGIN];
+    PDM_timer_resume (octree->timer);
   }
+
+  printf ("[%d] PiB timers: "PIB_TIME_FMT" "PIB_TIME_FMT" "PIB_TIME_FMT" "PIB_TIME_FMT" "PIB_TIME_FMT" "PIB_TIME_FMT" "PIB_TIME_FMT"\n",
+          i_rank,
+          times_elapsed[PIB_TOTAL],
+          times_elapsed[PIB_REDISTRIBUTE],
+          times_elapsed[PIB_COPIES],
+          times_elapsed[PIB_EXCHANGE],
+          times_elapsed[PIB_LOCAL],
+          times_elapsed[PIB_PTB],
+          times_elapsed[PIB_BTP]);
 }
 
 
