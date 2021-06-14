@@ -2468,6 +2468,21 @@ PDM_mesh_location_t *ml
                 " %12.5es %12.5es\n",
                 t_elaps_max[REVERSE_LOCATION_DATA],
                 t_cpu_max[REVERSE_LOCATION_DATA]);
+
+    PDM_printf( "mesh_location timer : reverse location data ptb(elapsed and cpu) :                   "
+                " %12.5es %12.5es\n",
+                t_elaps_max[REVERSE_LOCATION_DATA_PTB],
+                t_cpu_max[REVERSE_LOCATION_DATA_PTB]);
+
+    PDM_printf( "mesh_location timer : reverse location data btp (elapsed and cpu) :                   "
+                " %12.5es %12.5es\n",
+                t_elaps_max[REVERSE_LOCATION_DATA_BTP],
+                t_cpu_max[REVERSE_LOCATION_DATA_BTP]);
+
+    PDM_printf( "mesh_location timer : reverse location data uvw (elapsed and cpu) :                   "
+                " %12.5es %12.5es\n",
+                t_elaps_max[REVERSE_LOCATION_DATA_UVW],
+                t_cpu_max[REVERSE_LOCATION_DATA_UVW]);
   }
 }
 
