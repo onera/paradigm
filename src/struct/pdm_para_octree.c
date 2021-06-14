@@ -9113,7 +9113,7 @@ PDM_para_octree_points_inside_boxes_with_copies
                                   box_corners[2*ibox],
                                   box_corners[2*ibox+1],
                                   octree->shared_codes,
-                                  NULL,//octree->shared_pts_n,
+                                  octree->shared_pts_n,
                                   0,
                                   octree->shared_rank_idx[n_rank],
                                   &n_intersect_nodes,
@@ -9121,22 +9121,6 @@ PDM_para_octree_points_inside_boxes_with_copies
 
         for (size_t i = 0; i < n_intersect_nodes; i++) {
           int inode = intersect_nodes[i];
-          /*size_t start, end, tmp;
-            PDM_morton_quantile_intersect (octree->shared_rank_idx[n_rank],
-            box_corners[2*ibox],
-            octree->shared_codes,
-            &start,
-            &tmp);
-
-            PDM_morton_quantile_intersect (octree->shared_rank_idx[n_rank] - start,
-            box_corners[2*ibox+1],
-            octree->shared_codes + start,
-            &tmp,
-            &end);
-            end += start;
-
-            for (size_t i = start; i < end; i++) {
-            int inode = (int) i;*/
 
           int l = 0;
           int r = n_rank;
