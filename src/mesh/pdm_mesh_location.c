@@ -46,7 +46,7 @@ extern "C" {
  * Macro definitions
  *============================================================================*/
 
-#define NTIMER_MESH_LOCATION 11
+#define NTIMER_MESH_LOCATION 14
 
 /*============================================================================
  * Type definitions
