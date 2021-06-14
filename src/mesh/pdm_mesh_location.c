@@ -5048,10 +5048,11 @@ PDM_mesh_location_t        *ml
 
         for (int i = 0; i < n_elt_block; i++) {
 
-          if (t_elt == PDM_MESH_NODAL_PRISM6 ||
+          /*if (t_elt == PDM_MESH_NODAL_PRISM6 ||
               t_elt == PDM_MESH_NODAL_TETRA4 ||
               t_elt == PDM_MESH_NODAL_TRIA3  ||
-              t_elt == PDM_MESH_NODAL_BAR2) {
+              t_elt == PDM_MESH_NODAL_BAR2) {*/
+          if (1) {
 
             for (int k = 0; k < n_vtx; k++) {
               int ivtx = connec[k] - 1;
@@ -5123,13 +5124,20 @@ PDM_mesh_location_t        *ml
               _point_coords = &(_points_in_elements->coords[ipart][3*(idx_pts_elts + k1)]);
             }
             // printf("first = %i | size = %i  \n", 3 * (idx_pts_elts + k1), 3 * _points_in_elements->n_elts[ipart]);
-            PDM_ho_location (t_elt,
+            PDM_bool_t stat = PDM_point_location_compute_uvw (t_elt,
+                                                              _projected_coords,
+                                                              _cell_coord,
+                                                              1.e-6,
+                                                              &(_points_in_elements->uvw[ipart][3 * (idx_pts_elts + k1)]));
+            assert (stat);
+
+            /*PDM_ho_location (t_elt,
                              1,
                              n_vtx,
                              _cell_coord,
                              _point_coords,
                              _projected_coords,
-                             &(_points_in_elements->uvw[ipart][3 * (idx_pts_elts + k1)]));
+                             &(_points_in_elements->uvw[ipart][3 * (idx_pts_elts + k1)]));*/
           }
         }
       }
