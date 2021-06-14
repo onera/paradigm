@@ -100,14 +100,11 @@ extern "C" {
  *
  */
 
-int  PDM_tetrahedron_evaluate_position
-(
- const double  x[3],
- const double  vtx_coord[12],
- double        closest_point[3],
- double       *closest_point_dist2,
- double        closest_point_weights[4]
- )
+int  PDM_tetrahedron_evaluate_position (const double  x[3],
+                                        const double  vtx_coord[12],
+                                        double        closest_point[3],
+                                        double       *closest_point_dist2,
+                                        double        closest_point_weights[4])
 {
   double vtx_tria[9];
   double p0p1[3], p0p2[3], p0p3[3], p1p2[3], p1p3[3], p2p3[3];
@@ -383,7 +380,6 @@ PDM_GCC_SUPPRESS_WARNING_POP
 
   return 0;
 }
-
 
 #ifdef __cplusplus
 }

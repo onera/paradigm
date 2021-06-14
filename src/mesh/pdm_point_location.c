@@ -1775,6 +1775,28 @@ PDM_point_location_nodal
 
 }
 
+
+
+
+
+
+PDM_bool_t
+PDM_point_location_compute_uvw
+(
+ const PDM_Mesh_nodal_elt_t elt_type,
+ const double               point_coords[3],
+ const double               vertex_coords[],
+ const double               tolerance,
+ double                     uvw[3]
+ )
+{
+  return _compute_uvw (elt_type,
+                       point_coords,
+                       vertex_coords,
+                       tolerance,
+                       uvw);
+}
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

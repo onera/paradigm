@@ -237,6 +237,21 @@ PDM_morton_a_gt_b(PDM_morton_code_t  a,
 #endif
 
 /*----------------------------------------------------------------------------
+ * Test if Morton code "a" is greater than Morton code "b" (compare anchors)
+ *
+ * parameters:
+ *   code_a <-- first Morton code to compare
+ *   code_b <-- second Morton code to compare
+ *
+ * returns:
+ *  true or false
+ *----------------------------------------------------------------------------*/
+
+_Bool
+PDM_morton_a_gtmin_b(PDM_morton_code_t  a,
+                     PDM_morton_code_t  b);
+
+/*----------------------------------------------------------------------------
  * Copy the code a into the code b
  *
  * parameters:
