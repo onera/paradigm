@@ -7158,6 +7158,51 @@ PDM_para_octree_single_closest_point
   }
 
 
+  PDM_MPI_Comm    bt_comm;
+  PDM_box_set_t  *box_set   = NULL;
+  PDM_box_tree_t *bt_shared = NULL;
+  int   max_boxes_leaf_shared = 10; // Max number of boxes in a leaf for coarse shared BBTree
+  int   max_tree_depth_shared = 6; // Max tree depth for coarse shared BBTree
+  float max_box_ratio_shared  = 5; // Max ratio for local BBTree (nConnectedBoxe < ratio * nBoxes)
+  if (USE_SHARED_OCTREE) {
+    assert (octree->shared_rank_idx != NULL);
+
+    PDM_MPI_Comm_split (octree->comm, i_rank, 0, &bt_comm);
+
+    int n_boxes = octree->shared_rank_idx[n_rank];
+
+    const int n_info_location = 3;
+    int *init_location_proc = PDM_array_zeros_int (n_info_location * n_boxes);
+    PDM_g_num_t *gnum_proc = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * n_boxes);
+    for (int i = 0; i < n_boxes; i++) {
+      gnum_proc[i] = i + 1;
+    }
+
+    box_set = PDM_box_set_create (3,
+                                  1,
+                                  0,
+                                  n_boxes,
+                                  gnum_proc,
+                                  octree->shared_pts_extents,
+                                  1,
+                                  &n_boxes,
+                                  init_location_proc,
+                                  bt_comm);
+
+    bt_shared = PDM_box_tree_create (max_tree_depth_shared,
+                                     max_boxes_leaf_shared,
+                                     max_box_ratio_shared);
+
+    PDM_box_tree_set_boxes (bt_shared,
+                            box_set,
+                            PDM_BOX_TREE_ASYNC_LEVEL);
+
+    free (gnum_proc);
+    free (init_location_proc);
+  }
+
+
+
   /* Part-to-block create (only to get block distribution) */
   int _n_pts = n_pts;
   PDM_part_to_block_t *ptb = NULL;
@@ -7207,31 +7252,65 @@ PDM_para_octree_single_closest_point
   double      *pts_coord1 = NULL;
 
   if (n_rank > 1) {
-    /*   1) Encode the coordinates of every target point */
-    pts_code = malloc (sizeof(PDM_morton_code_t) * n_pts);
-    _morton_encode_coords (dim,
-                           PDM_morton_max_level,
-                           octree->global_extents,
-                           (size_t) n_pts,
-                           pts_coord,
-                           pts_code,
-                           d,
-                           s);
-
-    /*   2) Use binary search to associate each target point to the appropriate process */
-    send_count = PDM_array_zeros_int(n_rank);
-    recv_count = malloc (sizeof(int) * n_rank);
-
+    send_count = PDM_array_zeros_int (n_rank);
     int *rank_pt = malloc (sizeof(int) * n_pts);
-    for (int i = 0; i < n_pts; i++) {
-      rank_pt[i] = PDM_morton_binary_search (n_rank,
-                                             pts_code[i],
-                                             octree->rank_octants_index);
-      send_count[rank_pt[i]]++;
+
+    if (USE_SHARED_OCTREE) {
+      double *node_min_dist = (double *) malloc (sizeof(double) * n_pts);
+      PDM_box_tree_min_dist_max_box (bt_shared,
+                                     n_pts,
+                                     pts_coord,
+                                     rank_pt,
+                                     node_min_dist);
+      free (node_min_dist);
+
+      for (int i = 0; i < n_pts; i++) {
+        /*if (rank_pt[i] >= 0) {
+          int rank = octree->used_rank[rank_pt[i]];
+          rank_pt[i] = rank;
+          send_count[rank]++;
+          }*/
+        int inode = rank_pt[i];
+
+        int l = 0;
+        int r = n_rank;
+        while (l + 1 < r) {
+          int m = l + (r - l)/2;
+          if (inode < octree->shared_rank_idx[m])
+            r = m;
+          else
+            l = m;
+        }
+        int rank = l;
+        rank_pt[i] = rank;
+        send_count[rank]++;
+      }
     }
-    free (pts_code);
+
+    else {
+      /*   1) Encode the coordinates of every target point */
+      pts_code = malloc (sizeof(PDM_morton_code_t) * n_pts);
+      _morton_encode_coords (dim,
+                             PDM_morton_max_level,
+                             octree->global_extents,
+                             (size_t) n_pts,
+                             pts_coord,
+                             pts_code,
+                             d,
+                             s);
+
+      /*   2) Use binary search to associate each target point to the appropriate process */
+      for (int i = 0; i < n_pts; i++) {
+        rank_pt[i] = PDM_morton_binary_search (n_rank,
+                                               pts_code[i],
+                                               octree->rank_octants_index);
+        send_count[rank_pt[i]]++;
+      }
+      free (pts_code);
+    }
 
     /*   3) Exchange send/recv counts */
+    recv_count = malloc (sizeof(int) * n_rank);
     PDM_MPI_Alltoall (send_count, 1, PDM_MPI_INT,
                       recv_count, 1, PDM_MPI_INT,
                       octree->comm);
@@ -7666,13 +7745,54 @@ PDM_para_octree_single_closest_point
   if (USE_SHARED_OCTREE) {
     assert (octree->shared_rank_idx != NULL);
 
+    int *close_nodes_idx = NULL;
+    int *close_nodes     = NULL;
+    PDM_box_tree_closest_upper_bound_dist_boxes_get (bt_shared,
+                                                     n_pts1,
+                                                     pts_coord1,
+                                                     _closest_pt_dist2,
+                                                     &close_nodes_idx,
+                                                     &close_nodes);
+    int *tag_rank = PDM_array_zeros_int (n_rank);
+
     int tmp_size = 4 * n_pts1;
     close_ranks = malloc (sizeof(int) * tmp_size);
     close_ranks_idx = malloc (sizeof(int) * (n_pts1 + 1));
     close_ranks_idx[0] = 0;
 
-    //...
-    assert(0);
+    for (int i = 0; i < n_pts1; i++) {
+      close_ranks_idx[i+1] = close_ranks_idx[i];
+
+      for (int j = close_nodes_idx[i]; j < close_nodes_idx[i+1]; j++) {
+        int inode = close_nodes[j];
+        if (octree->shared_pts_n[inode] == 0) continue;
+
+        int l = 0;
+        int r = n_rank;
+        while (l + 1 < r) {
+          int m = l + (r - l)/2;
+          if (inode < octree->shared_rank_idx[m])
+            r = m;
+          else
+            l = m;
+        }
+        int rank = l;
+
+        if (tag_rank[rank]) continue;
+
+        if (tmp_size <= close_ranks_idx[i+1]) {
+          tmp_size *= 2;
+          close_ranks = realloc (close_ranks, sizeof(int) * tmp_size);
+        }
+
+        close_ranks[close_ranks_idx[i+1]++] = rank;
+        tag_rank[rank] = 1;
+      }
+    }
+
+    free (close_nodes_idx);
+    free (close_nodes);
+    free (tag_rank);
 
   }
 
@@ -8134,6 +8254,12 @@ PDM_para_octree_single_closest_point
 
   if (copied_ranks1 != NULL) {
     free (copied_ranks1);
+  }
+
+  if (USE_SHARED_OCTREE) {
+    PDM_box_set_destroy (&box_set);
+    PDM_MPI_Comm_free (&bt_comm);
+    PDM_box_tree_destroy (&bt_shared);
   }
 }
 

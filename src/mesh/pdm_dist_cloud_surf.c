@@ -360,6 +360,9 @@ PDM_dist_cloud_surf_compute
     if (atoi(env_octree_type) == 0) {
       octree_type = PDM_OCTREE_SERIAL;
     }
+    else if (atoi(env_octree_type) == 1) {
+      octree_type = PDM_OCTREE_PARALLEL;
+    }
   }
   if (rank == 0) printf("octree_type = %d\n", octree_type);
   //<<<---
