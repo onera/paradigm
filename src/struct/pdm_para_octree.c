@@ -9604,6 +9604,15 @@ PDM_para_octree_points_inside_boxes_with_copies
                                                          &n_box1,
                                                          1,
                                                          octree->comm);
+
+    PDM_g_num_t l_max_box_g_num = 0;
+    for (int i = 0; i < n_boxes; i++) {
+      l_max_box_g_num = PDM_MAX (l_max_box_g_num, box_g_num[i]);
+    }
+    PDM_g_num_t g_max_box_g_num;
+    PDM_MPI_Allreduce (&l_max_box_g_num, &g_max_box_g_num, 1,
+                       PDM__PDM_MPI_G_NUM, PDM_MPI_MAX, octree->comm);
+    //printf("g_max_box_g_num = "PDM_FMT_G_NUM"\n", g_max_box_g_num);
     free (weight);
 
     int *block_pts_in_box_n = NULL;
@@ -9637,16 +9646,26 @@ PDM_para_octree_points_inside_boxes_with_copies
     free (block_stride);
 
     PDM_g_num_t *block_distrib_idx = PDM_part_to_block_distrib_index_get (ptb);
+    PDM_g_num_t *_block_distrib_idx = block_distrib_idx;
+    if (block_distrib_idx[n_rank] < g_max_box_g_num) {
+      _block_distrib_idx = malloc (sizeof(PDM_g_num_t) * (n_rank + 1));
+      for (int i = 0; i < n_rank; i++) {
+        _block_distrib_idx[i] = block_distrib_idx[i];
+      }
+      _block_distrib_idx[n_rank] = g_max_box_g_num;
+    }
+
     int n_elt_block = PDM_part_to_block_n_elt_block_get (ptb);
-    int n_elt_block_full = (int) (block_distrib_idx[i_rank+1] - block_distrib_idx[i_rank]);
+    int n_elt_block_full = (int) (_block_distrib_idx[i_rank+1] - _block_distrib_idx[i_rank]);
 
     if (n_elt_block < n_elt_block_full) {
+
       PDM_g_num_t *block_g_num = PDM_part_to_block_block_gnum_get (ptb);
       int *block_pts_in_box_n_full = PDM_array_zeros_int (n_elt_block_full);
 
       int i1 = 0;
       for (int i = 0; i < n_elt_block; i++) {
-        while (block_distrib_idx[i_rank] + 1 + i1 < block_g_num[i]) {
+        while (_block_distrib_idx[i_rank] + 1 + i1 < block_g_num[i]) {
           i1++;
         }
 
@@ -9667,7 +9686,7 @@ PDM_para_octree_points_inside_boxes_with_copies
     /*
      *  Block to part
      */
-    PDM_block_to_part_t *btp = PDM_block_to_part_create (block_distrib_idx,
+    PDM_block_to_part_t *btp = PDM_block_to_part_create (_block_distrib_idx,
                                                          (const PDM_g_num_t **) &box_g_num,
                                                          &n_boxes,
                                                          1,
@@ -9717,6 +9736,7 @@ PDM_para_octree_points_inside_boxes_with_copies
     free (block_pts_in_box_coord);
     free (pts_in_box_n);
 
+    if (_block_distrib_idx != block_distrib_idx) free (_block_distrib_idx);
     PDM_part_to_block_free (ptb);
     PDM_block_to_part_free (btp);
 
