@@ -9044,6 +9044,8 @@ PDM_para_octree_points_inside_boxes_with_copies
     printf("USE_SHARED_OCTREE = %d\n", USE_SHARED_OCTREE);
   }
 
+  printf("[%d] n_boxes = %d\n", i_rank, n_boxes);
+
   double times_elapsed[NTIMER_PIB], b_t_elapsed, e_t_elapsed;
   for (_pib_step_t step = PIB_BEGIN; step <= PIB_TOTAL; step++) {
     times_elapsed[step] = 0.;
