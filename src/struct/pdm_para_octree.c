@@ -2087,11 +2087,6 @@ _compress_octants
         prev_end = new_end;
 
         if (new_end > new_start) {
-          /* Push child in stack */
-          /*PDM_morton_copy (child_code[i], code_stack + pos_stack);
-          start_stack[pos_stack] = new_start;
-          end_stack[pos_stack]   = new_end;
-          pos_stack++;*/
           child_start[i] = new_start;
           child_end[i]   = new_end;
           select[n_select++] = i;
@@ -2118,6 +2113,15 @@ _compress_octants
     *nodes       = realloc (*nodes,       sizeof(int)    * (*n_nodes) * 4);
     *n_pts       = realloc (*n_pts,       sizeof(int)    * (*n_nodes));
     *pts_extents = realloc (*pts_extents, sizeof(double) * (*n_nodes) * 6);
+  }
+
+  /* Fix extents for empty nodes */
+  for (int i = 0; i < *n_nodes; i++) {
+    if ((*n_pts)[i] == 0) {
+      for (int j = 0; j < 6; j++) {
+        (*pts_extents)[6*i + j] = 0.;
+      }
+    }
   }
 }
 
@@ -5958,7 +5962,7 @@ PDM_para_octree_build
   octree->times_cpu_s[END]   = octree->times_cpu_s[BUILD_TOTAL];
 
   //-->
-  if (0) {//rank == 0 && octree->shared_rank_idx != NULL) {
+  if (rank == 0 && octree->shared_rank_idx != NULL) {
     printf("shared_rank_idx = ");
     for (int i = 0; i <= n_ranks; i++) {
       printf("%d ", octree->shared_rank_idx[i]);
@@ -7164,7 +7168,7 @@ PDM_para_octree_single_closest_point
   int   max_boxes_leaf_shared = 10; // Max number of boxes in a leaf for coarse shared BBTree
   int   max_tree_depth_shared = 6; // Max tree depth for coarse shared BBTree
   float max_box_ratio_shared  = 5; // Max ratio for local BBTree (nConnectedBoxe < ratio * nBoxes)
-  if (USE_SHARED_OCTREE) {
+  if (USE_SHARED_OCTREE && n_rank > 1) {
     assert (octree->shared_rank_idx != NULL);
 
     PDM_MPI_Comm_split (octree->comm, i_rank, 0, &bt_comm);
