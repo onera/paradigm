@@ -162,7 +162,7 @@ PDM_partgnum1_to_partgnum2_exch
  const size_t                  s_data,
  const PDM_stride_t            t_stride,
  int                         **part1_stride,
- void                        **part1_data
+ void                        **part1_data,
  int                         **part2_stride,
  void                        **part2_data
 )
@@ -202,7 +202,7 @@ PDM_partgnum1_to_partgnum2_exch_with_alloc
  const size_t               s_data,
  const PDM_stride_t         t_stride,
  int                      **part1_stride,
- void                     **part1_data
+ void                     **part1_data,
  int                     ***part2_stride,
  void                    ***part2_data
 )
