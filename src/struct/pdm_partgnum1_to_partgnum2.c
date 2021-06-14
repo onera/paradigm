@@ -13,7 +13,8 @@
  *  Header for the current file
  *----------------------------------------------------------------------------*/
 
-#include "pdm_partgnum1_to_to_partgnum2.h"
+#include "pdm_partgnum1_to_partgnum2.h"
+#include "pdm_partgnum1_to_partgnum2_priv.h"
 #include "pdm_part_to_block.h"
 #include "pdm_block_to_part.h"
 #include "pdm.h"
@@ -89,8 +90,8 @@ PDM_partgnum1_to_partgnum2_create
  const PDM_MPI_Comm    comm
 )
 {
-  PDM_part_to_block_t *ptp =
-    (PDM_part_to_block_t *) malloc (sizeof(PDM_part_to_block_t));
+  PDM_partgnum1_to_partgnum2_t *ptp =
+    (PDM_partgnum1_to_partgnum2_t *) malloc (sizeof(PDM_partgnum1_to_partgnum2_t));
 
   ptp->n_part1                 = n_part1;    
   ptp->gnum_elt1               = gnum_elt1;
@@ -117,6 +118,9 @@ PDM_partgnum1_to_partgnum2_create
   ptp->async_i_send_buffer     = NULL;   
   ptp->async_n_recv_buffer     = NULL;   
   ptp->async_i_recv_buffer     = NULL;   
+
+  return ptp;
+
 }
 
 
@@ -137,7 +141,7 @@ PDM_partgnum1_to_partgnum2_create_cf
   const PDM_MPI_Comm _comm        = PDM_MPI_Comm_f2c(fcomm);
   return PDM_partgnum1_to_partgnum2_create (gnum_elt1, n_elt1, n_part1,
                                             gnum_elt2, n_elt2, n_part2,
-                                            gnum1_to_gnum2_idx, gnum1_to_gnum2);
+                                            gnum1_to_gnum2_idx, gnum1_to_gnum2, _comm);
 }
 
 
@@ -167,7 +171,7 @@ PDM_partgnum1_to_partgnum2_exch
  void                        **part2_data
 )
 {
-  PDM_UNUSED (ptb);
+  PDM_UNUSED (ptp);
   PDM_UNUSED (s_data);
   PDM_UNUSED (t_stride);
   PDM_UNUSED (part1_stride);
@@ -207,7 +211,7 @@ PDM_partgnum1_to_partgnum2_exch_with_alloc
  void                    ***part2_data
 )
 {
-  PDM_UNUSED (ptb);
+  PDM_UNUSED (ptp);
   PDM_UNUSED (s_data);
   PDM_UNUSED (t_stride);
   PDM_UNUSED (part1_stride);
@@ -217,6 +221,89 @@ PDM_partgnum1_to_partgnum2_exch_with_alloc
 
   PDM_error(__FILE__, __LINE__, 0,
             "Error PDM_partgnum1_to_partgnum2_exch not yet implemente\n");
+}
+
+
+/**
+ *
+ * \brief Get referenced gnum2 elements
+ *
+ * \param [in]   ptp           Block to part structure
+ * \param [out]  n_ref_gnum2   Number of referenced gnum2
+ * \param [out]  ref_gnum2     Referenced gnum2
+ *
+ */
+
+void
+PDM_partgnum1_to_partgnum2_ref_gnum2_get
+(
+ PDM_partgnum1_to_partgnum2_t *ptp,
+ int                         **n_ref_gnum2,
+ int                        ***ref_gnum2
+)
+{
+  PDM_UNUSED (ptp);
+  PDM_UNUSED (n_ref_gnum2);
+  PDM_UNUSED (ref_gnum2);
+
+  PDM_error(__FILE__, __LINE__, 0,
+            "Error PDM_partgnum1_to_partgnum2_ref_gnum2_get not yet implemente\n");
+
+}
+
+
+/**
+ *
+ * \brief Get unreferenced gnum2 elements
+ *
+ * \param [in]   ptp           Block to part structure
+ * \param [out]  n_unref_gnum2   Number of referenced gnum2
+ * \param [out]  unref_gnum2     Referenced gnum2
+ *
+ */
+
+void
+PDM_partgnum1_to_partgnum2_unref_gnum2_get
+(
+ PDM_partgnum1_to_partgnum2_t *ptp,
+ int                         **n_unref_gnum2,
+ int                        ***unref_gnum2
+)
+{
+  PDM_UNUSED (ptp);
+  PDM_UNUSED (n_unref_gnum2);
+  PDM_UNUSED (unref_gnum2);
+
+  PDM_error(__FILE__, __LINE__, 0,
+            "Error PDM_partgnum1_to_partgnum2_unref_gnum2_get not yet implemente\n");
+  
+}
+
+
+/**
+ *
+ * \brief Get gnum come from gnum1 for each referenced gnum2
+ *
+ * \param [in]   ptp           Block to part structure
+ * \param [out]  n_ref_gnum2   Number of referenced gnum2
+ * \param [out]  ref_gnum2     Referenced gnum2
+ *
+ */
+
+void
+PDM_partgnum1_to_partgnum2_gnum1_come_from_get
+(
+ PDM_partgnum1_to_partgnum2_t *ptp,
+ int                        ***gnum1_come_from_idx,
+ PDM_g_num_t                ***gnum1_come_from
+)
+{
+  PDM_UNUSED (ptp);
+  PDM_UNUSED (gnum1_come_from_idx);
+  PDM_UNUSED (gnum1_come_from);
+
+  PDM_error(__FILE__, __LINE__, 0,
+            "Error PDM_partgnum1_to_partgnum2_gnum1_come_from_get not yet implemente\n");
 }
 
 
@@ -242,6 +329,14 @@ PDM_partgnum1_to_partgnum2_issend
  int                          *request
 )
 {
+  PDM_UNUSED (ptp);
+  PDM_UNUSED (s_data);
+  PDM_UNUSED (cst_stride);
+  PDM_UNUSED (part1_data);
+  PDM_UNUSED (request);
+
+  PDM_error(__FILE__, __LINE__, 0,
+            "Error PDM_partgnum1_to_partgnum2_issend not yet implemente\n");
   
 }
 
@@ -262,6 +357,11 @@ PDM_partgnum1_to_partgnum2_issend_wait
  int                        request
 )
 {
+  PDM_UNUSED (ptp);
+  PDM_UNUSED (request);
+
+  PDM_error(__FILE__, __LINE__, 0,
+            "Error PDM_partgnum1_to_partgnum2_issend_wait not yet implemente\n");
   
 }
 
@@ -288,6 +388,14 @@ PDM_partgnum1_to_partgnum2_irecv
  int                       *request
 )
 {
+  PDM_UNUSED (ptp);
+  PDM_UNUSED (s_data);
+  PDM_UNUSED (cst_stride);
+  PDM_UNUSED (part2_data);
+  PDM_UNUSED (request);
+
+  PDM_error(__FILE__, __LINE__, 0,
+            "Error PDM_partgnum1_to_partgnum2_irecv not yet implemente\n");
   
 }
 
@@ -308,6 +416,11 @@ PDM_partgnum1_to_partgnum2_irecv_wait
  int                        request
 )
 {
+  PDM_UNUSED (ptp);
+  PDM_UNUSED (request);
+
+  PDM_error(__FILE__, __LINE__, 0,
+            "Error PDM_partgnum1_to_partgnum2_irecv_wait not yet implemente\n");
   
 }
 
@@ -332,18 +445,20 @@ PDM_partgnum1_to_partgnum2_free
   }
 
   if (ptp->gnum1_to_send_buffer != NULL) {
+    for (int i = 0; i < ptp->n_part1; i++) {    
+      free (ptp->gnum1_to_send_buffer[i]);
+    }
     free (ptp->gnum1_to_send_buffer);
   }
   if (ptp->recv_buffer_to_gnum2 != NULL) {  
+    for (int i = 0; i < ptp->n_part2; i++) {    
+      free (ptp->recv_buffer_to_gnum2[i]);
+    }
     free (ptp->recv_buffer_to_gnum2);
   }  
   
   if (ptp->async_l_array != 0) {
     for (int i = 0; i < ptp->async_l_array; i++) {    
-      free (ptp->async_s_data[i]); 
-      free (ptp->async_cst_stride[i]);        
-      free (ptp->async_send_request[i]);    
-      free (ptp->async_recv_request[i]);    
       free (ptp->async_send_buffer[i]);      
       free (ptp->async_recv_buffer[i]);      
       free (ptp->async_n_send_buffer[i]);  

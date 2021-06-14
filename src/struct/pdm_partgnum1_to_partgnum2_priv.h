@@ -37,17 +37,17 @@ extern "C" {
 
 struct _pdm_partgnum1_to_partgnum2_t {
 
-  int                n_part1;               /*!< Number of parts for gnum1 */    
-  PDM_g_num_t      **gnum_elt1;             /*!< gnum of elements in the partition for gnum1 */
-  int               *n_elt1;                /*!< Number of elements in the partition for gnum1 */
+        int                n_part1;               /*!< Number of parts for gnum1 */    
+  const PDM_g_num_t      **gnum_elt1;             /*!< gnum of elements in the partition for gnum1 */
+  const int               *n_elt1;                /*!< Number of elements in the partition for gnum1 */
 
-  int                n_part2;               /*!< Number of parts for gnum2 */
-  PDM_g_num_t      **gnum_elt2;             /*!< gnum of elements in the partition for gnum2 */
-  int               *n_elt2;                /*!< Number of elements in the partition for gnum2 */
+        int                n_part2;               /*!< Number of parts for gnum2 */
+  const PDM_g_num_t      **gnum_elt2;             /*!< gnum of elements in the partition for gnum2 */
+  const int               *n_elt2;                /*!< Number of elements in the partition for gnum2 */
 
-  int              **gnum1_to_gnum2_idx;    /*!< gnum1 to send to gnum2 index */
-  PDM_g_num_t      **gnum1_to_gnum2;        /*!< gnum1 to send to gnum2 */
-  PDM_MPI_Comm       comm;                  /*!< MPI communicator */  
+  const int              **gnum1_to_gnum2_idx;    /*!< gnum1 to send to gnum2 index */
+  const PDM_g_num_t      **gnum1_to_gnum2;        /*!< gnum1 to send to gnum2 */
+        PDM_MPI_Comm       comm;                  /*!< MPI communicator */  
 
   int              **gnum1_to_send_buffer;  /*!< Indirection to store send buffer */
   int              **recv_buffer_to_gnum2;  /*!< Indirection to store gnum2 data from receive buffer */

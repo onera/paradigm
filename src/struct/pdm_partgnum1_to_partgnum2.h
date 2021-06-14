@@ -147,6 +147,63 @@ PDM_partgnum1_to_partgnum2_exch_with_alloc
 
 /**
  *
+ * \brief Get referenced gnum2 elements
+ *
+ * \param [in]   ptp           Block to part structure
+ * \param [out]  n_ref_gnum2   Number of referenced gnum2
+ * \param [out]  ref_gnum2     Referenced gnum2
+ *
+ */
+
+void
+PDM_partgnum1_to_partgnum2_ref_gnum2_get
+(
+ PDM_partgnum1_to_partgnum2_t *ptp,
+ int                         **n_ref_gnum2,
+ int                        ***ref_gnum2
+);
+
+
+/**
+ *
+ * \brief Get unreferenced gnum2 elements
+ *
+ * \param [in]   ptp           Block to part structure
+ * \param [out]  n_unref_gnum2   Number of referenced gnum2
+ * \param [out]  unref_gnum2     Referenced gnum2
+ *
+ */
+
+void
+PDM_partgnum1_to_partgnum2_unref_gnum2_get
+(
+ PDM_partgnum1_to_partgnum2_t *ptp,
+ int                         **n_unref_gnum2,
+ int                        ***unref_gnum2
+);
+
+
+/**
+ *
+ * \brief Get gnum come from gnum1 for each referenced gnum2
+ *
+ * \param [in]   ptp           Block to part structure
+ * \param [out]  n_ref_gnum2   Number of referenced gnum2
+ * \param [out]  ref_gnum2     Referenced gnum2
+ *
+ */
+
+void
+PDM_partgnum1_to_partgnum2_gnum1_come_from_get
+(
+ PDM_partgnum1_to_partgnum2_t *ptp,
+ int                        ***gnum1_come_from_idx,
+ PDM_g_num_t                ***gnum1_come_from
+);
+
+
+/**
+ *
  * \brief Initialize a asynchronus issend
  *
  * \param [in]   ptp           Block to part structure
@@ -187,7 +244,7 @@ PDM_partgnum1_to_partgnum2_issend_wait
 
 /**
  *
- * \brief Initialize a asynchronus irecv
+ * \brief Initialize a asynchronus irecv from reference gnum2
  *
  * \param [in]  ptp           Part to part structure
  * \param [in]  s_data        Data size
