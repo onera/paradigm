@@ -7486,7 +7486,13 @@ PDM_para_octree_single_closest_point
   int USE_SHARED_OCTREE = 0;
   env_var = getenv ("USE_SHARED_OCTREE");
   if (env_var != NULL) {
-    USE_SHARED_OCTREE = (float) atof(env_var);
+    USE_SHARED_OCTREE = (int) atoi(env_var);
+  }
+
+  int DETAIL_TIMER = 0;
+  env_var = getenv ("DETAIL_TIMER");
+  if (env_var != NULL) {
+    DETAIL_TIMER = (int) atoi(env_var);
   }
 
   const int ntimer=15;
@@ -7510,25 +7516,27 @@ PDM_para_octree_single_closest_point
   double e_t_cpu_u;
   double e_t_cpu_s;
 
-  for (int i = 0; i < ntimer; i++) {
-    times_elapsed[i] = 0;
-    times_cpu[i]     = 0;
-    times_cpu_u[i]   = 0;
-    times_cpu_s[i]   = 0;
+  if (DETAIL_TIMER) {
+    for (int i = 0; i < ntimer; i++) {
+      times_elapsed[i] = 0;
+      times_cpu[i]     = 0;
+      times_cpu_u[i]   = 0;
+      times_cpu_s[i]   = 0;
+    }
+
+    //PDM_timer_hang_on(timer);
+    times_elapsed[0] = PDM_timer_elapsed(timer);
+    times_cpu[0]     = PDM_timer_cpu(timer);
+    times_cpu_u[0]   = PDM_timer_cpu_user(timer);
+    times_cpu_s[0]   = PDM_timer_cpu_sys(timer);
+
+    b_t_elapsed = times_elapsed[0];
+    b_t_cpu     = times_cpu[0];
+    b_t_cpu_u   = times_cpu_u[0];
+    b_t_cpu_s   = times_cpu_s[0];
+
+    PDM_timer_resume(timer);
   }
-
-  //PDM_timer_hang_on(timer);
-  times_elapsed[0] = PDM_timer_elapsed(timer);
-  times_cpu[0]     = PDM_timer_cpu(timer);
-  times_cpu_u[0]   = PDM_timer_cpu_user(timer);
-  times_cpu_s[0]   = PDM_timer_cpu_sys(timer);
-
-  b_t_elapsed = times_elapsed[0];
-  b_t_cpu     = times_cpu[0];
-  b_t_cpu_u   = times_cpu_u[0];
-  b_t_cpu_s   = times_cpu_s[0];
-
-  PDM_timer_resume(timer);
 
 
   /* Compute rank extents and build shared bounding-box tree */
@@ -7606,24 +7614,26 @@ PDM_para_octree_single_closest_point
                                     octree->comm);
   }
 
-  PDM_MPI_Barrier(octree->comm);
-  PDM_timer_hang_on(timer);
-  e_t_elapsed = PDM_timer_elapsed(timer);
-  e_t_cpu     = PDM_timer_cpu(timer);
-  e_t_cpu_u   = PDM_timer_cpu_user(timer);
-  e_t_cpu_s   = PDM_timer_cpu_sys(timer);
+  if (DETAIL_TIMER) {
+    PDM_MPI_Barrier(octree->comm);
+    PDM_timer_hang_on(timer);
+    e_t_elapsed = PDM_timer_elapsed(timer);
+    e_t_cpu     = PDM_timer_cpu(timer);
+    e_t_cpu_u   = PDM_timer_cpu_user(timer);
+    e_t_cpu_s   = PDM_timer_cpu_sys(timer);
 
-  times_elapsed[1] += e_t_elapsed - b_t_elapsed;
-  times_cpu[1]     += e_t_cpu - b_t_cpu;
-  times_cpu_u[1]   += e_t_cpu_u - b_t_cpu_u;
-  times_cpu_s[1]   += e_t_cpu_s - b_t_cpu_s;
+    times_elapsed[1] += e_t_elapsed - b_t_elapsed;
+    times_cpu[1]     += e_t_cpu - b_t_cpu;
+    times_cpu_u[1]   += e_t_cpu_u - b_t_cpu_u;
+    times_cpu_s[1]   += e_t_cpu_s - b_t_cpu_s;
 
-  b_t_elapsed = e_t_elapsed;
-  b_t_cpu     = e_t_cpu;
-  b_t_cpu_u   = e_t_cpu_u;
-  b_t_cpu_s   = e_t_cpu_s;
+    b_t_elapsed = e_t_elapsed;
+    b_t_cpu     = e_t_cpu;
+    b_t_cpu_u   = e_t_cpu_u;
+    b_t_cpu_s   = e_t_cpu_s;
 
-  PDM_timer_resume(timer);
+    PDM_timer_resume(timer);
+  }
 
 
   /********************************************
@@ -7906,25 +7916,26 @@ PDM_para_octree_single_closest_point
   }
   printf ("[%4d] phase 1: n_recv_pts = %8d (wihtout copies: %8d)\n", i_rank, n_pts1, n_recv_pts);
 
-  PDM_MPI_Barrier(octree->comm);
-  PDM_timer_hang_on(timer);
-  e_t_elapsed = PDM_timer_elapsed(timer);
-  e_t_cpu     = PDM_timer_cpu(timer);
-  e_t_cpu_u   = PDM_timer_cpu_user(timer);
-  e_t_cpu_s   = PDM_timer_cpu_sys(timer);
+  if (DETAIL_TIMER) {
+    PDM_MPI_Barrier(octree->comm);
+    PDM_timer_hang_on(timer);
+    e_t_elapsed = PDM_timer_elapsed(timer);
+    e_t_cpu     = PDM_timer_cpu(timer);
+    e_t_cpu_u   = PDM_timer_cpu_user(timer);
+    e_t_cpu_s   = PDM_timer_cpu_sys(timer);
 
-  times_elapsed[2] += e_t_elapsed - b_t_elapsed;
-  times_cpu[2]     += e_t_cpu - b_t_cpu;
-  times_cpu_u[2]   += e_t_cpu_u - b_t_cpu_u;
-  times_cpu_s[2]   += e_t_cpu_s - b_t_cpu_s;
+    times_elapsed[2] += e_t_elapsed - b_t_elapsed;
+    times_cpu[2]     += e_t_cpu - b_t_cpu;
+    times_cpu_u[2]   += e_t_cpu_u - b_t_cpu_u;
+    times_cpu_s[2]   += e_t_cpu_s - b_t_cpu_s;
 
-  b_t_elapsed = e_t_elapsed;
-  b_t_cpu     = e_t_cpu;
-  b_t_cpu_u   = e_t_cpu_u;
-  b_t_cpu_s   = e_t_cpu_s;
+    b_t_elapsed = e_t_elapsed;
+    b_t_cpu     = e_t_cpu;
+    b_t_cpu_u   = e_t_cpu_u;
+    b_t_cpu_s   = e_t_cpu_s;
 
-  PDM_timer_resume(timer);
-
+    PDM_timer_resume(timer);
+  }
 
   /********************************************
    * First guess : closest source point in the
@@ -8088,24 +8099,26 @@ PDM_para_octree_single_closest_point
   }
   free (pts_code);
 
-  PDM_MPI_Barrier(octree->comm);
-  PDM_timer_hang_on(timer);
-  e_t_elapsed = PDM_timer_elapsed(timer);
-  e_t_cpu     = PDM_timer_cpu(timer);
-  e_t_cpu_u   = PDM_timer_cpu_user(timer);
-  e_t_cpu_s   = PDM_timer_cpu_sys(timer);
+  if (DETAIL_TIMER) {
+    PDM_MPI_Barrier(octree->comm);
+    PDM_timer_hang_on(timer);
+    e_t_elapsed = PDM_timer_elapsed(timer);
+    e_t_cpu     = PDM_timer_cpu(timer);
+    e_t_cpu_u   = PDM_timer_cpu_user(timer);
+    e_t_cpu_s   = PDM_timer_cpu_sys(timer);
 
-  times_elapsed[3] += e_t_elapsed - b_t_elapsed;
-  times_cpu[3]     += e_t_cpu - b_t_cpu;
-  times_cpu_u[3]   += e_t_cpu_u - b_t_cpu_u;
-  times_cpu_s[3]   += e_t_cpu_s - b_t_cpu_s;
+    times_elapsed[3] += e_t_elapsed - b_t_elapsed;
+    times_cpu[3]     += e_t_cpu - b_t_cpu;
+    times_cpu_u[3]   += e_t_cpu_u - b_t_cpu_u;
+    times_cpu_s[3]   += e_t_cpu_s - b_t_cpu_s;
 
-  b_t_elapsed = e_t_elapsed;
-  b_t_cpu     = e_t_cpu;
-  b_t_cpu_u   = e_t_cpu_u;
-  b_t_cpu_s   = e_t_cpu_s;
+    b_t_elapsed = e_t_elapsed;
+    b_t_cpu     = e_t_cpu;
+    b_t_cpu_u   = e_t_cpu_u;
+    b_t_cpu_s   = e_t_cpu_s;
 
-  PDM_timer_resume(timer);
+    PDM_timer_resume(timer);
+  }
 
   /*
    *  Search closest point
@@ -8121,24 +8134,26 @@ PDM_para_octree_single_closest_point
                          _closest_pt_g_num,
                          _closest_pt_dist2);
 
-  PDM_MPI_Barrier(octree->comm);
-  PDM_timer_hang_on(timer);
-  e_t_elapsed = PDM_timer_elapsed(timer);
-  e_t_cpu     = PDM_timer_cpu(timer);
-  e_t_cpu_u   = PDM_timer_cpu_user(timer);
-  e_t_cpu_s   = PDM_timer_cpu_sys(timer);
+  if (DETAIL_TIMER) {
+    PDM_MPI_Barrier(octree->comm);
+    PDM_timer_hang_on(timer);
+    e_t_elapsed = PDM_timer_elapsed(timer);
+    e_t_cpu     = PDM_timer_cpu(timer);
+    e_t_cpu_u   = PDM_timer_cpu_user(timer);
+    e_t_cpu_s   = PDM_timer_cpu_sys(timer);
 
-  times_elapsed[4] += e_t_elapsed - b_t_elapsed;
-  times_cpu[4]     += e_t_cpu - b_t_cpu;
-  times_cpu_u[4]   += e_t_cpu_u - b_t_cpu_u;
-  times_cpu_s[4]   += e_t_cpu_s - b_t_cpu_s;
+    times_elapsed[4] += e_t_elapsed - b_t_elapsed;
+    times_cpu[4]     += e_t_cpu - b_t_cpu;
+    times_cpu_u[4]   += e_t_cpu_u - b_t_cpu_u;
+    times_cpu_s[4]   += e_t_cpu_s - b_t_cpu_s;
 
-  b_t_elapsed = e_t_elapsed;
-  b_t_cpu     = e_t_cpu;
-  b_t_cpu_u   = e_t_cpu_u;
-  b_t_cpu_s   = e_t_cpu_s;
+    b_t_elapsed = e_t_elapsed;
+    b_t_cpu     = e_t_cpu;
+    b_t_cpu_u   = e_t_cpu_u;
+    b_t_cpu_s   = e_t_cpu_s;
 
-  PDM_timer_resume(timer);
+    PDM_timer_resume(timer);
+  }
 
   for (int i = 0; i < octree->n_copied_ranks; i++) {
     _single_closest_point (dim,
@@ -8158,24 +8173,26 @@ PDM_para_octree_single_closest_point
     return;
   }
 
-  PDM_MPI_Barrier(octree->comm);
-  PDM_timer_hang_on(timer);
-  e_t_elapsed = PDM_timer_elapsed(timer);
-  e_t_cpu     = PDM_timer_cpu(timer);
-  e_t_cpu_u   = PDM_timer_cpu_user(timer);
-  e_t_cpu_s   = PDM_timer_cpu_sys(timer);
+  if (DETAIL_TIMER) {
+    PDM_MPI_Barrier(octree->comm);
+    PDM_timer_hang_on(timer);
+    e_t_elapsed = PDM_timer_elapsed(timer);
+    e_t_cpu     = PDM_timer_cpu(timer);
+    e_t_cpu_u   = PDM_timer_cpu_user(timer);
+    e_t_cpu_s   = PDM_timer_cpu_sys(timer);
 
-  times_elapsed[5] += e_t_elapsed - b_t_elapsed;
-  times_cpu[5]     += e_t_cpu - b_t_cpu;
-  times_cpu_u[5]   += e_t_cpu_u - b_t_cpu_u;
-  times_cpu_s[5]   += e_t_cpu_s - b_t_cpu_s;
+    times_elapsed[5] += e_t_elapsed - b_t_elapsed;
+    times_cpu[5]     += e_t_cpu - b_t_cpu;
+    times_cpu_u[5]   += e_t_cpu_u - b_t_cpu_u;
+    times_cpu_s[5]   += e_t_cpu_s - b_t_cpu_s;
 
-  b_t_elapsed = e_t_elapsed;
-  b_t_cpu     = e_t_cpu;
-  b_t_cpu_u   = e_t_cpu_u;
-  b_t_cpu_s   = e_t_cpu_s;
+    b_t_elapsed = e_t_elapsed;
+    b_t_cpu     = e_t_cpu;
+    b_t_cpu_u   = e_t_cpu_u;
+    b_t_cpu_s   = e_t_cpu_s;
 
-  PDM_timer_resume(timer);
+    PDM_timer_resume(timer);
+  }
 
   /*
    *  Fill block data
@@ -8218,24 +8235,26 @@ PDM_para_octree_single_closest_point
 
   ptb1 = PDM_part_to_block_free (ptb1);
 
-  PDM_MPI_Barrier(octree->comm);
-  PDM_timer_hang_on(timer);
-  e_t_elapsed = PDM_timer_elapsed(timer);
-  e_t_cpu     = PDM_timer_cpu(timer);
-  e_t_cpu_u   = PDM_timer_cpu_user(timer);
-  e_t_cpu_s   = PDM_timer_cpu_sys(timer);
+  if (DETAIL_TIMER) {
+    PDM_MPI_Barrier(octree->comm);
+    PDM_timer_hang_on(timer);
+    e_t_elapsed = PDM_timer_elapsed(timer);
+    e_t_cpu     = PDM_timer_cpu(timer);
+    e_t_cpu_u   = PDM_timer_cpu_user(timer);
+    e_t_cpu_s   = PDM_timer_cpu_sys(timer);
 
-  times_elapsed[6] += e_t_elapsed - b_t_elapsed;
-  times_cpu[6]     += e_t_cpu - b_t_cpu;
-  times_cpu_u[6]   += e_t_cpu_u - b_t_cpu_u;
-  times_cpu_s[6]   += e_t_cpu_s - b_t_cpu_s;
+    times_elapsed[6] += e_t_elapsed - b_t_elapsed;
+    times_cpu[6]     += e_t_cpu - b_t_cpu;
+    times_cpu_u[6]   += e_t_cpu_u - b_t_cpu_u;
+    times_cpu_s[6]   += e_t_cpu_s - b_t_cpu_s;
 
-  b_t_elapsed = e_t_elapsed;
-  b_t_cpu     = e_t_cpu;
-  b_t_cpu_u   = e_t_cpu_u;
-  b_t_cpu_s   = e_t_cpu_s;
+    b_t_elapsed = e_t_elapsed;
+    b_t_cpu     = e_t_cpu;
+    b_t_cpu_u   = e_t_cpu_u;
+    b_t_cpu_s   = e_t_cpu_s;
 
-  PDM_timer_resume(timer);
+    PDM_timer_resume(timer);
+  }
 
   /*
    *  Find ranks that may contain closer points
@@ -8316,24 +8335,26 @@ PDM_para_octree_single_closest_point
     }
   }
 
-  PDM_MPI_Barrier(octree->comm);
-  PDM_timer_hang_on(timer);
-  e_t_elapsed = PDM_timer_elapsed(timer);
-  e_t_cpu     = PDM_timer_cpu(timer);
-  e_t_cpu_u   = PDM_timer_cpu_user(timer);
-  e_t_cpu_s   = PDM_timer_cpu_sys(timer);
+  if (DETAIL_TIMER) {
+    PDM_MPI_Barrier(octree->comm);
+    PDM_timer_hang_on(timer);
+    e_t_elapsed = PDM_timer_elapsed(timer);
+    e_t_cpu     = PDM_timer_cpu(timer);
+    e_t_cpu_u   = PDM_timer_cpu_user(timer);
+    e_t_cpu_s   = PDM_timer_cpu_sys(timer);
 
-  times_elapsed[7] += e_t_elapsed - b_t_elapsed;
-  times_cpu[7]     += e_t_cpu - b_t_cpu;
-  times_cpu_u[7]   += e_t_cpu_u - b_t_cpu_u;
-  times_cpu_s[7]   += e_t_cpu_s - b_t_cpu_s;
+    times_elapsed[7] += e_t_elapsed - b_t_elapsed;
+    times_cpu[7]     += e_t_cpu - b_t_cpu;
+    times_cpu_u[7]   += e_t_cpu_u - b_t_cpu_u;
+    times_cpu_s[7]   += e_t_cpu_s - b_t_cpu_s;
 
-  b_t_elapsed = e_t_elapsed;
-  b_t_cpu     = e_t_cpu;
-  b_t_cpu_u   = e_t_cpu_u;
-  b_t_cpu_s   = e_t_cpu_s;
+    b_t_elapsed = e_t_elapsed;
+    b_t_cpu     = e_t_cpu;
+    b_t_cpu_u   = e_t_cpu_u;
+    b_t_cpu_s   = e_t_cpu_s;
 
-  PDM_timer_resume(timer);
+    PDM_timer_resume(timer);
+  }
 
   PDM_array_reset_int(send_count, n_rank, 0);
 
@@ -8387,24 +8408,26 @@ PDM_para_octree_single_closest_point
                    &n_recv_pts_copied_ranks,
                    &mean_n_recv_pts);
 
-  PDM_MPI_Barrier(octree->comm);
-  PDM_timer_hang_on(timer);
-  e_t_elapsed = PDM_timer_elapsed(timer);
-  e_t_cpu     = PDM_timer_cpu(timer);
-  e_t_cpu_u   = PDM_timer_cpu_user(timer);
-  e_t_cpu_s   = PDM_timer_cpu_sys(timer);
+  if (DETAIL_TIMER) {
+    PDM_MPI_Barrier(octree->comm);
+    PDM_timer_hang_on(timer);
+    e_t_elapsed = PDM_timer_elapsed(timer);
+    e_t_cpu     = PDM_timer_cpu(timer);
+    e_t_cpu_u   = PDM_timer_cpu_user(timer);
+    e_t_cpu_s   = PDM_timer_cpu_sys(timer);
 
-  times_elapsed[8] += e_t_elapsed - b_t_elapsed;
-  times_cpu[8]     += e_t_cpu - b_t_cpu;
-  times_cpu_u[8]   += e_t_cpu_u - b_t_cpu_u;
-  times_cpu_s[8]   += e_t_cpu_s - b_t_cpu_s;
+    times_elapsed[8] += e_t_elapsed - b_t_elapsed;
+    times_cpu[8]     += e_t_cpu - b_t_cpu;
+    times_cpu_u[8]   += e_t_cpu_u - b_t_cpu_u;
+    times_cpu_s[8]   += e_t_cpu_s - b_t_cpu_s;
 
-  b_t_elapsed = e_t_elapsed;
-  b_t_cpu     = e_t_cpu;
-  b_t_cpu_u   = e_t_cpu_u;
-  b_t_cpu_s   = e_t_cpu_s;
+    b_t_elapsed = e_t_elapsed;
+    b_t_cpu     = e_t_cpu;
+    b_t_cpu_u   = e_t_cpu_u;
+    b_t_cpu_s   = e_t_cpu_s;
 
-  PDM_timer_resume(timer);
+    PDM_timer_resume(timer);
+  }
 
   if (n_copied_ranks2 > 0) {
     if (i_rank == 0) {
@@ -8435,24 +8458,26 @@ PDM_para_octree_single_closest_point
     copied_count[i] = 0;
   }
 
-  PDM_MPI_Barrier(octree->comm);
-  PDM_timer_hang_on(timer);
-  e_t_elapsed = PDM_timer_elapsed(timer);
-  e_t_cpu     = PDM_timer_cpu(timer);
-  e_t_cpu_u   = PDM_timer_cpu_user(timer);
-  e_t_cpu_s   = PDM_timer_cpu_sys(timer);
+  if (DETAIL_TIMER) {
+    PDM_MPI_Barrier(octree->comm);
+    PDM_timer_hang_on(timer);
+    e_t_elapsed = PDM_timer_elapsed(timer);
+    e_t_cpu     = PDM_timer_cpu(timer);
+    e_t_cpu_u   = PDM_timer_cpu_user(timer);
+    e_t_cpu_s   = PDM_timer_cpu_sys(timer);
 
-  times_elapsed[9] += e_t_elapsed - b_t_elapsed;
-  times_cpu[9]     += e_t_cpu - b_t_cpu;
-  times_cpu_u[9]   += e_t_cpu_u - b_t_cpu_u;
-  times_cpu_s[9]   += e_t_cpu_s - b_t_cpu_s;
+    times_elapsed[9] += e_t_elapsed - b_t_elapsed;
+    times_cpu[9]     += e_t_cpu - b_t_cpu;
+    times_cpu_u[9]   += e_t_cpu_u - b_t_cpu_u;
+    times_cpu_s[9]   += e_t_cpu_s - b_t_cpu_s;
 
-  b_t_elapsed = e_t_elapsed;
-  b_t_cpu     = e_t_cpu;
-  b_t_cpu_u   = e_t_cpu_u;
-  b_t_cpu_s   = e_t_cpu_s;
+    b_t_elapsed = e_t_elapsed;
+    b_t_cpu     = e_t_cpu;
+    b_t_cpu_u   = e_t_cpu_u;
+    b_t_cpu_s   = e_t_cpu_s;
 
-  PDM_timer_resume(timer);
+    PDM_timer_resume(timer);
+  }
 
   int n_pts_local2 = 0;
   int n_pts_recv2 = 0;
@@ -8580,24 +8605,26 @@ PDM_para_octree_single_closest_point
     }
   }
 
-  PDM_MPI_Barrier(octree->comm);
-  PDM_timer_hang_on(timer);
-  e_t_elapsed = PDM_timer_elapsed(timer);
-  e_t_cpu     = PDM_timer_cpu(timer);
-  e_t_cpu_u   = PDM_timer_cpu_user(timer);
-  e_t_cpu_s   = PDM_timer_cpu_sys(timer);
+  if (DETAIL_TIMER) {
+    PDM_MPI_Barrier(octree->comm);
+    PDM_timer_hang_on(timer);
+    e_t_elapsed = PDM_timer_elapsed(timer);
+    e_t_cpu     = PDM_timer_cpu(timer);
+    e_t_cpu_u   = PDM_timer_cpu_user(timer);
+    e_t_cpu_s   = PDM_timer_cpu_sys(timer);
 
-  times_elapsed[10] += e_t_elapsed - b_t_elapsed;
-  times_cpu[10]     += e_t_cpu - b_t_cpu;
-  times_cpu_u[10]   += e_t_cpu_u - b_t_cpu_u;
-  times_cpu_s[10]   += e_t_cpu_s - b_t_cpu_s;
+    times_elapsed[10] += e_t_elapsed - b_t_elapsed;
+    times_cpu[10]     += e_t_cpu - b_t_cpu;
+    times_cpu_u[10]   += e_t_cpu_u - b_t_cpu_u;
+    times_cpu_s[10]   += e_t_cpu_s - b_t_cpu_s;
 
-  b_t_elapsed = e_t_elapsed;
-  b_t_cpu     = e_t_cpu;
-  b_t_cpu_u   = e_t_cpu_u;
-  b_t_cpu_s   = e_t_cpu_s;
+    b_t_elapsed = e_t_elapsed;
+    b_t_cpu     = e_t_cpu;
+    b_t_cpu_u   = e_t_cpu_u;
+    b_t_cpu_s   = e_t_cpu_s;
 
-  PDM_timer_resume(timer);
+    PDM_timer_resume(timer);
+  }
 
   PDM_g_num_t *_pts_g_num1 = pts_g_num1 + idx_pts1[2];
   for (int c = 0; c < n_copied_ranks1; c++) {
@@ -8654,24 +8681,26 @@ PDM_para_octree_single_closest_point
     }
   }
 
-  PDM_MPI_Barrier(octree->comm);
-  PDM_timer_hang_on(timer);
-  e_t_elapsed = PDM_timer_elapsed(timer);
-  e_t_cpu     = PDM_timer_cpu(timer);
-  e_t_cpu_u   = PDM_timer_cpu_user(timer);
-  e_t_cpu_s   = PDM_timer_cpu_sys(timer);
+  if (DETAIL_TIMER) {
+    PDM_MPI_Barrier(octree->comm);
+    PDM_timer_hang_on(timer);
+    e_t_elapsed = PDM_timer_elapsed(timer);
+    e_t_cpu     = PDM_timer_cpu(timer);
+    e_t_cpu_u   = PDM_timer_cpu_user(timer);
+    e_t_cpu_s   = PDM_timer_cpu_sys(timer);
 
-  times_elapsed[11] += e_t_elapsed - b_t_elapsed;
-  times_cpu[11]     += e_t_cpu - b_t_cpu;
-  times_cpu_u[11]   += e_t_cpu_u - b_t_cpu_u;
-  times_cpu_s[11]   += e_t_cpu_s - b_t_cpu_s;
+    times_elapsed[11] += e_t_elapsed - b_t_elapsed;
+    times_cpu[11]     += e_t_cpu - b_t_cpu;
+    times_cpu_u[11]   += e_t_cpu_u - b_t_cpu_u;
+    times_cpu_s[11]   += e_t_cpu_s - b_t_cpu_s;
 
-  b_t_elapsed = e_t_elapsed;
-  b_t_cpu     = e_t_cpu;
-  b_t_cpu_u   = e_t_cpu_u;
-  b_t_cpu_s   = e_t_cpu_s;
+    b_t_elapsed = e_t_elapsed;
+    b_t_cpu     = e_t_cpu;
+    b_t_cpu_u   = e_t_cpu_u;
+    b_t_cpu_s   = e_t_cpu_s;
 
-  PDM_timer_resume(timer);
+    PDM_timer_resume(timer);
+  }
 
   if (copied_shift1 != NULL) {
     free (copied_shift1);
@@ -8738,24 +8767,26 @@ PDM_para_octree_single_closest_point
                          _closest_pt_g_num,
                          _closest_pt_dist22);
 
-  PDM_MPI_Barrier(octree->comm);
-  PDM_timer_hang_on(timer);
-  e_t_elapsed = PDM_timer_elapsed(timer);
-  e_t_cpu     = PDM_timer_cpu(timer);
-  e_t_cpu_u   = PDM_timer_cpu_user(timer);
-  e_t_cpu_s   = PDM_timer_cpu_sys(timer);
+  if (DETAIL_TIMER) {
+    PDM_MPI_Barrier(octree->comm);
+    PDM_timer_hang_on(timer);
+    e_t_elapsed = PDM_timer_elapsed(timer);
+    e_t_cpu     = PDM_timer_cpu(timer);
+    e_t_cpu_u   = PDM_timer_cpu_user(timer);
+    e_t_cpu_s   = PDM_timer_cpu_sys(timer);
 
-  times_elapsed[12] += e_t_elapsed - b_t_elapsed;
-  times_cpu[12]     += e_t_cpu - b_t_cpu;
-  times_cpu_u[12]   += e_t_cpu_u - b_t_cpu_u;
-  times_cpu_s[12]   += e_t_cpu_s - b_t_cpu_s;
+    times_elapsed[12] += e_t_elapsed - b_t_elapsed;
+    times_cpu[12]     += e_t_cpu - b_t_cpu;
+    times_cpu_u[12]   += e_t_cpu_u - b_t_cpu_u;
+    times_cpu_s[12]   += e_t_cpu_s - b_t_cpu_s;
 
-  b_t_elapsed = e_t_elapsed;
-  b_t_cpu     = e_t_cpu;
-  b_t_cpu_u   = e_t_cpu_u;
-  b_t_cpu_s   = e_t_cpu_s;
+    b_t_elapsed = e_t_elapsed;
+    b_t_cpu     = e_t_cpu;
+    b_t_cpu_u   = e_t_cpu_u;
+    b_t_cpu_s   = e_t_cpu_s;
 
-  PDM_timer_resume(timer);
+    PDM_timer_resume(timer);
+  }
 
   double *_pts_coord2 = pts_coord2 + idx_pts2[2] * dim;
   __closest_pt_dist2 = _closest_pt_dist22 + idx_pts2[2];
@@ -8779,25 +8810,27 @@ PDM_para_octree_single_closest_point
   }
   free (copied_shift2);
 
-  PDM_MPI_Barrier(octree->comm);
+  if (DETAIL_TIMER) {
+    PDM_MPI_Barrier(octree->comm);
 
-  PDM_timer_hang_on(timer);
-  e_t_elapsed = PDM_timer_elapsed(timer);
-  e_t_cpu     = PDM_timer_cpu(timer);
-  e_t_cpu_u   = PDM_timer_cpu_user(timer);
-  e_t_cpu_s   = PDM_timer_cpu_sys(timer);
+    PDM_timer_hang_on(timer);
+    e_t_elapsed = PDM_timer_elapsed(timer);
+    e_t_cpu     = PDM_timer_cpu(timer);
+    e_t_cpu_u   = PDM_timer_cpu_user(timer);
+    e_t_cpu_s   = PDM_timer_cpu_sys(timer);
 
-  times_elapsed[13] += e_t_elapsed - b_t_elapsed;
-  times_cpu[13]     += e_t_cpu - b_t_cpu;
-  times_cpu_u[13]   += e_t_cpu_u - b_t_cpu_u;
-  times_cpu_s[13]   += e_t_cpu_s - b_t_cpu_s;
+    times_elapsed[13] += e_t_elapsed - b_t_elapsed;
+    times_cpu[13]     += e_t_cpu - b_t_cpu;
+    times_cpu_u[13]   += e_t_cpu_u - b_t_cpu_u;
+    times_cpu_s[13]   += e_t_cpu_s - b_t_cpu_s;
 
-  b_t_elapsed = e_t_elapsed;
-  b_t_cpu     = e_t_cpu;
-  b_t_cpu_u   = e_t_cpu_u;
-  b_t_cpu_s   = e_t_cpu_s;
+    b_t_elapsed = e_t_elapsed;
+    b_t_cpu     = e_t_cpu;
+    b_t_cpu_u   = e_t_cpu_u;
+    b_t_cpu_s   = e_t_cpu_s;
 
-  PDM_timer_resume(timer);
+    PDM_timer_resume(timer);
+  }
 
   /*
    *  End of phase 2 -- Back to original partitioning
@@ -8900,26 +8933,28 @@ PDM_para_octree_single_closest_point
     PDM_box_tree_destroy (&bt_shared);
   }
 
-  PDM_MPI_Barrier(octree->comm);
-  PDM_timer_hang_on(timer);
-  e_t_elapsed = PDM_timer_elapsed(timer);
-  e_t_cpu     = PDM_timer_cpu(timer);
-  e_t_cpu_u   = PDM_timer_cpu_user(timer);
-  e_t_cpu_s   = PDM_timer_cpu_sys(timer);
+  if (DETAIL_TIMER) {
+    PDM_MPI_Barrier(octree->comm);
+    PDM_timer_hang_on(timer);
+    e_t_elapsed = PDM_timer_elapsed(timer);
+    e_t_cpu     = PDM_timer_cpu(timer);
+    e_t_cpu_u   = PDM_timer_cpu_user(timer);
+    e_t_cpu_s   = PDM_timer_cpu_sys(timer);
 
-  times_elapsed[14] += e_t_elapsed - b_t_elapsed;
-  times_cpu[14]     += e_t_cpu - b_t_cpu;
-  times_cpu_u[14]   += e_t_cpu_u - b_t_cpu_u;
-  times_cpu_s[14]   += e_t_cpu_s - b_t_cpu_s;
+    times_elapsed[14] += e_t_elapsed - b_t_elapsed;
+    times_cpu[14]     += e_t_cpu - b_t_cpu;
+    times_cpu_u[14]   += e_t_cpu_u - b_t_cpu_u;
+    times_cpu_s[14]   += e_t_cpu_s - b_t_cpu_s;
 
-  if (i_rank == 0) {
-    for (int i = 0; i < ntimer; i++) {
-      printf("timer single point step %d : %12.5e\n",i,times_elapsed[i]);
+    if (i_rank == 0) {
+      for (int i = 0; i < ntimer; i++) {
+        printf("timer single point step %d : %12.5e\n",i,times_elapsed[i]);
 
+      }
     }
-  }
 
-  PDM_timer_free(timer);
+    PDM_timer_free(timer);
+  }
 }
 
 
