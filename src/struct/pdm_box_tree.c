@@ -401,16 +401,6 @@ _push_child_in_stack_v0
  const int        normalized,
  const double    *restrict d,
  const int       id_curr_node,
-
-
-
-
-
-
-
-
-
-
  const double    upper_bound,
  const double    *restrict pt,
  int             *restrict pos_stack,
@@ -4078,18 +4068,18 @@ PDM_box_tree_min_dist_max_box
         if (!curr_node->is_leaf) {
 
           _push_child_in_stack_v0 (bt,
-				   dim,
-				   normalized,
-				   d,
-				   id_curr_node,
-				   box_max_dist[i],
-				   _pt,
-				   &pos_stack,
-				   stack,
-				   inbox_stack,
-				   min_dist2_stack,
-				   0,
-				   1);
+                                   dim,
+                                   normalized,
+                                   d,
+                                   id_curr_node,
+                                   box_max_dist[i],
+                                   _pt,
+                                   &pos_stack,
+                                   stack,
+                                   inbox_stack,
+                                   min_dist2_stack,
+                                   0,
+                                   1);
 
         }
 
@@ -5285,6 +5275,143 @@ PDM_box_tree_points_inside_boxes2
 
 
 
+
+/**
+ * We assume boxes are mutually disjoint
+ * For a point P,
+ * if there is box that contain p, pick that box (it is unique)
+ * else, pick the box with min max dist
+ **/
+void
+PDM_box_tree_min_dist_max_box_disjoint
+(
+ PDM_box_tree_t  *bt,
+ const int        n_pts,
+ double          *pts,
+ int             *box_id,
+ double          *box_max_dist
+ )
+{
+  int s_stack = ((bt->n_children - 1) * (bt->max_level - 1) + bt->n_children);
+
+  int *stack       = malloc ((sizeof(int)) * s_stack);
+  int *inbox_stack = malloc ((sizeof(int)) * s_stack);
+  double *min_dist2_stack = malloc ((sizeof(double)) * s_stack);
+  int pos_stack = 0;
+
+  int dim = bt->boxes->dim;
+
+  int normalized = bt->boxes->normalized;
+  const double *d = bt->boxes->d;
+
+  double *_pts = pts;
+  _pts = malloc (sizeof(double) * 3 * n_pts);
+  for (int i = 0; i < n_pts; i++) {
+    const double *_pt_origin =  pts + 3 * i;
+    double *_pt        = _pts + 3 * i;
+    PDM_box_set_normalize ((PDM_box_set_t *) bt->boxes, _pt_origin, _pt);
+  }
+
+  double extents2[2*dim];
+
+  for (int i = 0; i < n_pts; i++) {
+
+    const double *_pt = _pts + 3 * i;
+
+    int point_inside_box = 0;
+    box_id[i] = -1;
+    box_max_dist[i] = HUGE_VAL;
+
+    /* Push root in stack */
+    pos_stack = 0;
+    stack[pos_stack] = 0; /* push root in th stack */
+
+    _extents (dim, bt->local_data->nodes[0].morton_code, extents2);
+
+    inbox_stack[pos_stack] = _box_dist2_min (dim,
+                                             normalized,
+                                             d,
+                                             extents2,
+                                             _pt,
+                                             min_dist2_stack);
+
+    pos_stack++;
+
+    while (pos_stack > 0 && !point_inside_box) {
+      int id_curr_node = stack[--pos_stack];
+
+      _node_t *curr_node = &(bt->local_data->nodes[id_curr_node]);
+
+      if (curr_node->n_boxes == 0) continue;
+
+      _extents (dim, curr_node->morton_code, extents2);
+
+      double max_dist2;
+      _box_dist2_max (dim,
+                      normalized,
+                      d,
+                      extents2,
+                      _pt,
+                      &max_dist2);
+
+      if (max_dist2 <= box_max_dist[i]) {
+
+        /* Internal node */
+        if (!curr_node->is_leaf) {
+          _push_child_in_stack_v0 (bt,
+                                   dim,
+                                   normalized,
+                                   d,
+                                   id_curr_node,
+                                   box_max_dist[i],
+                                   _pt,
+                                   &pos_stack,
+                                   stack,
+                                   inbox_stack,
+                                   min_dist2_stack,
+                                   0,
+                                   1);
+        }
+
+        /* Leaf node */
+        else {
+
+          for (int j = 0; j < curr_node->n_boxes; j++) {
+
+            double box_max_dist2;
+
+            int   _box_id = bt->local_data->box_ids[curr_node->start_id + j];
+            const double *_box_extents =  bt->boxes->local_boxes->extents + _box_id*dim*2;
+
+            point_inside_box = _box_dist2_max (dim,
+                                               normalized,
+                                               d,
+                                               _box_extents,
+                                               _pt,
+                                               &box_max_dist2);
+
+            if (point_inside_box || box_max_dist2 < box_max_dist[i]) {
+              box_id[i] = _box_id;
+              box_max_dist[i] = box_max_dist2;
+            }
+
+            if (point_inside_box) break;
+          }
+
+        }
+      }
+    } // End while stack not empty
+
+  } // End of loop on points
+
+  free (stack);
+  free (inbox_stack);
+  free (min_dist2_stack);
+
+  if (_pts != pts) {
+    free (_pts);
+  }
+}
 
 #ifdef __cplusplus
 }

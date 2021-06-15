@@ -412,6 +412,21 @@ PDM_box_tree_points_inside_boxes2
  int i_rank//
  );
 
+/**
+ * We assume boxes are mutually disjoint
+ * For a point P,
+ * if there is box that contain p, pick that box (it is unique)
+ * else, pick the box with min max dist
+ **/
+void
+PDM_box_tree_min_dist_max_box_disjoint
+(
+ PDM_box_tree_t  *bt,
+ const int        n_pts,
+ double          *pts,
+ int             *box_id,
+ double          *box_max_dist
+ );
 
 #ifdef __cplusplus
 }
