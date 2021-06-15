@@ -7665,11 +7665,16 @@ PDM_para_octree_single_closest_point
 
     if (USE_SHARED_OCTREE) {
       double *node_min_dist = (double *) malloc (sizeof(double) * n_pts);
-      PDM_box_tree_min_dist_max_box (bt_shared,
+      /*PDM_box_tree_min_dist_max_box (bt_shared,
                                      n_pts,
                                      pts_coord,
                                      rank_pt,
-                                     node_min_dist);
+                                     node_min_dist);*/
+      PDM_box_tree_min_dist_max_box_disjoint (bt_shared,
+                                              n_pts,
+                                              pts_coord,
+                                              rank_pt,
+                                              node_min_dist);
       free (node_min_dist);
 
       for (int i = 0; i < n_pts; i++) {
