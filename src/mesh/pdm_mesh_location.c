@@ -5048,11 +5048,11 @@ PDM_mesh_location_t        *ml
 
         for (int i = 0; i < n_elt_block; i++) {
 
-          if (t_elt == PDM_MESH_NODAL_PRISM6 ||
+          /*if (t_elt == PDM_MESH_NODAL_PRISM6 ||
               t_elt == PDM_MESH_NODAL_TETRA4 ||
               t_elt == PDM_MESH_NODAL_TRIA3  ||
-              t_elt == PDM_MESH_NODAL_BAR2) {
-          //if (1) {
+              t_elt == PDM_MESH_NODAL_BAR2) {*/
+          if (1) {
 
             for (int k = 0; k < n_vtx; k++) {
               int ivtx = connec[k] - 1;
@@ -5124,20 +5124,81 @@ PDM_mesh_location_t        *ml
               _point_coords = &(_points_in_elements->coords[ipart][3*(idx_pts_elts + k1)]);
             }
             // printf("first = %i | size = %i  \n", 3 * (idx_pts_elts + k1), 3 * _points_in_elements->n_elts[ipart]);
-            /*PDM_bool_t stat = PDM_point_location_compute_uvw (t_elt,
+            PDM_bool_t stat = PDM_point_location_compute_uvw (t_elt,
                                                               _projected_coords,
                                                               _cell_coord,
                                                               1.e-6,
                                                               &(_points_in_elements->uvw[ipart][3 * (idx_pts_elts + k1)]));
-                                                              assert (stat);*/
+            if (!stat) {
+              char *pref = "/stck/bandrieu/workspace/paradigma-dev/test/location/newton/";
+              char filename[999];
+              FILE *f = NULL;
 
-            PDM_ho_location (t_elt,
+              sprintf(filename, "%sdebug_point_%2.2d.vtk", pref, my_rank);
+              f = fopen(filename, "w");
+              fprintf(f,"# vtk DataFile Version 2.0\npoint\nASCII\nDATASET UNSTRUCTURED_GRID\n");
+              fprintf(f,"POINTS 1 double\n");
+              fprintf(f,"%f %f %f\n",
+                      _point_coords[0], _point_coords[1], _point_coords[2]);
+              fprintf(f,"CELLS 1 2\n1 0\n");
+              fprintf(f,"CELL_TYPES 1\n1\n");
+              fclose(f);
+
+              sprintf(filename, "%sdebug_proj_%2.2d.vtk", pref, my_rank);
+              f = fopen(filename, "w");
+              fprintf(f,"# vtk DataFile Version 2.0\nproj\nASCII\nDATASET UNSTRUCTURED_GRID\n");
+              fprintf(f,"POINTS 1 double\n");
+              fprintf(f,"%f %f %f\n",
+                      _projected_coords[0], _projected_coords[1], _projected_coords[2]);
+              fprintf(f,"CELLS 1 2\n1 0\n");
+              fprintf(f,"CELL_TYPES 1\n1\n");
+              fclose(f);
+
+              sprintf(filename, "%sdebug_cell_%2.2d.vtk", pref, my_rank);
+              f = fopen(filename, "w");
+              fprintf(f,"# vtk DataFile Version 2.0\ncell\nASCII\nDATASET UNSTRUCTURED_GRID\n");
+              fprintf(f,"POINTS %d double\n", n_vtx);
+              for (int j = 0; j < n_vtx; j++) {
+                fprintf(f,"%f %f %f\n", _cell_coord[3*j], _cell_coord[3*j+1], _cell_coord[3*j+2]);
+              }
+              fprintf(f,"CELLS 1 %d\n%d ", 1 + n_vtx, n_vtx);
+              for (int j = 0; j < n_vtx; j++) {
+                fprintf(f, "%d ", j);
+              }
+              int vtk_t_elt;
+              if (t_elt == PDM_MESH_NODAL_POINT) {
+                vtk_t_elt = 1;
+              } else if (t_elt == PDM_MESH_NODAL_BAR2) {
+                vtk_t_elt = 3;
+              } else if (t_elt == PDM_MESH_NODAL_TRIA3) {
+                vtk_t_elt = 5;
+              } else if (t_elt == PDM_MESH_NODAL_QUAD4) {
+                vtk_t_elt = 9;
+              } else if (t_elt == PDM_MESH_NODAL_POLY_2D) {
+                vtk_t_elt = 7;
+              } else if (t_elt == PDM_MESH_NODAL_TETRA4) {
+                vtk_t_elt = 10;
+              } else if (t_elt == PDM_MESH_NODAL_PYRAMID5) {
+                vtk_t_elt = 14;
+              } else if (t_elt == PDM_MESH_NODAL_PRISM6) {
+                vtk_t_elt = 13;
+              } else if (t_elt == PDM_MESH_NODAL_HEXA8) {
+                vtk_t_elt = 12;
+              } else {
+                //?
+              }
+              fprintf(f,"CELL_TYPES 1\n%d\n", vtk_t_elt);
+              fclose(f);
+            }
+            assert (stat);
+
+            /*PDM_ho_location (t_elt,
                              1,
                              n_vtx,
                              _cell_coord,
                              _point_coords,
                              _projected_coords,
-                             &(_points_in_elements->uvw[ipart][3 * (idx_pts_elts + k1)]));
+                             &(_points_in_elements->uvw[ipart][3 * (idx_pts_elts + k1)]));*/
           }
         }
       }
