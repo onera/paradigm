@@ -8154,6 +8154,7 @@ PDM_para_octree_single_closest_point
   }
 
   if (n_rank == 1) {
+    PDM_timer_free (timer);
     return;
   }
 
