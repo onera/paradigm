@@ -5732,7 +5732,7 @@ PDM_para_octree_build
                          &send_n_pts,
                          &send_extents);
 
-      // expand extents
+      /*// expand extents
       const double eps = 1e-3;
       const double min_delta = 1e-6;
       for (int i = 0; i < n_local_nodes; i++) {
@@ -5744,7 +5744,7 @@ PDM_para_octree_build
             send_extents[6*i+j+3] += delta;
           }
         }
-      }
+        }*/
 
       int *recv_count = malloc (sizeof(int) * n_ranks);
       PDM_MPI_Allgather (&n_local_nodes, 1, PDM_MPI_INT,
@@ -8282,6 +8282,10 @@ PDM_para_octree_single_closest_point
 
         close_ranks[close_ranks_idx[i+1]++] = rank;
         tag_rank[rank] = 1;
+      }
+
+      for (int j = close_ranks_idx[i]; j < close_ranks_idx[i+1]; j++) {
+        tag_rank[close_ranks[j]] = 0;
       }
     }
 
