@@ -187,9 +187,9 @@ PDM_partgnum1_to_partgnum2_unref_gnum2_get
  *
  * \brief Get gnum come from gnum1 for each referenced gnum2
  *
- * \param [in]   ptp           Block to part structure
- * \param [out]  n_ref_gnum2   Number of referenced gnum2
- * \param [out]  ref_gnum2     Referenced gnum2
+ * \param [in]   ptp                 Block to part structure
+ * \param [out]  gnum1_come_from_idx Index for gnum1_come_from array (size = \ref n_part2)  
+ * \param [out]  gnum1_come_from     gnum come from gnum1 for each referenced gnum2
  *
  */
 
@@ -210,6 +210,7 @@ PDM_partgnum1_to_partgnum2_gnum1_come_from_get
  * \param [in]   s_data        Data size
  * \param [in]   cst_stride    Constant stride
  * \param [in]   part1_data    Partition 1 data
+ * \param [in]   tag           Tag of the exchange 
  * \param [out]  request       Request
  *
  */
@@ -218,10 +219,11 @@ void
 PDM_partgnum1_to_partgnum2_issend
 (
  PDM_partgnum1_to_partgnum2_t *ptp,
- const size_t               s_data,
- const int                  cst_stride,
- void                     **part1_data,
- int                       *request
+ const size_t                  s_data,
+ const int                     cst_stride,
+ void                        **part1_data,
+ int                           tag,
+ int                          *request
 );
 
 
@@ -230,6 +232,7 @@ PDM_partgnum1_to_partgnum2_issend
  * \brief Wait a asynchronus issend
  *
  * \param [in]  ptp           part to part structure
+ * \param [in]  tag           Tag of the exchange 
  * \param [in]  request       Request
  *
  */
@@ -238,7 +241,8 @@ void
 PDM_partgnum1_to_partgnum2_issend_wait
 (
  PDM_partgnum1_to_partgnum2_t *ptp,
- int                        request
+ int                           tag,
+ int                           request
 );
 
 
@@ -250,6 +254,7 @@ PDM_partgnum1_to_partgnum2_issend_wait
  * \param [in]  s_data        Data size
  * \param [in]  cst_stride    Constant stride
  * \param [in]  part1_data    Partition 2 data
+ * \param [in]  tag           Tag of the exchange 
  * \param [out] request       Request
  *
  */
@@ -258,10 +263,11 @@ void
 PDM_partgnum1_to_partgnum2_irecv
 (
  PDM_partgnum1_to_partgnum2_t *ptp,
- const size_t               s_data,
- const int                  cst_stride,
- void                     **part2_data,
- int                       *request
+ const size_t                  s_data,
+ const int                     cst_stride,
+ void                        **part2_data,
+ int                           tag,
+ int                          *request
 );
 
 
@@ -270,6 +276,7 @@ PDM_partgnum1_to_partgnum2_irecv
  * \brief Initialize a asynchronus irecv
  *
  * \param [in]  ptp           Part to part structure
+ * \param [in]  tag           Tag of the exchange 
  * \param [in]  request       Request
  *
  */
@@ -278,7 +285,8 @@ void
 PDM_partgnum1_to_partgnum2_irecv_wait
 (
  PDM_partgnum1_to_partgnum2_t *ptp,
- int                        request
+ int                           tag,
+ int                           request
 );
 
 

@@ -18,6 +18,7 @@
 #include "pdm_part_to_block.h"
 #include "pdm_block_to_part.h"
 #include "pdm.h"
+#include "pdm_mpi.h"
 #include "pdm_timer.h"
 #include "pdm_priv.h"
 #include "pdm_binary_search.h"
@@ -93,31 +94,65 @@ PDM_partgnum1_to_partgnum2_create
   PDM_partgnum1_to_partgnum2_t *ptp =
     (PDM_partgnum1_to_partgnum2_t *) malloc (sizeof(PDM_partgnum1_to_partgnum2_t));
 
-  ptp->n_part1                 = n_part1;    
-  ptp->gnum_elt1               = gnum_elt1;
-  ptp->n_elt1                  = n_elt1;
-  ptp->n_part2                 = n_part2;                
-  ptp->gnum_elt2               = gnum_elt2;              
-  ptp->n_elt2                  = n_elt2;                
-  ptp->gnum1_to_gnum2_idx      = gnum1_to_gnum2_idx;    
-  ptp->gnum1_to_gnum2          = gnum1_to_gnum2;        
-  ptp->comm                    = comm;
+  /* Init */
 
-  ptp->gnum1_to_send_buffer    = NULL;  
-  ptp->recv_buffer_to_gnum2    = NULL;  
+  ptp->n_part1                  = n_part1;    
+  ptp->gnum_elt1                = gnum_elt1;
+  ptp->n_elt1                   = n_elt1;
+
+  ptp->n_part2                  = n_part2;                
+  ptp->gnum_elt2                = gnum_elt2;              
+  ptp->n_elt2                   = n_elt2;                
+
+  ptp->gnum1_to_gnum2_idx       = gnum1_to_gnum2_idx;    
+  ptp->gnum1_to_gnum2           = gnum1_to_gnum2;        
+  ptp->comm                     = comm;
+
+  PDM_MPI_Comm_size (comm, &(ptp->n_rank));
+  PDM_MPI_Comm_rank (comm, &(ptp->i_rank));
+
+  ptp->n_ref_gnum2              = NULL;         
+  ptp->ref_gnum2                = NULL;          
+  ptp->n_unref_gnum2            = NULL;      
+  ptp->unref_gnum2              = NULL;        
+  ptp->gnum1_come_from_idx      = NULL;
+  ptp->gnum1_come_from          = NULL;    
+
+  ptp->gnum1_to_send_buffer     = NULL;  
+  ptp->recv_buffer_to_ref_gnum2 = NULL;  
   
-  ptp->async_n_exch            = 0;           
-  ptp->async_l_array           = 0;          
-  ptp->async_s_data            = NULL;          
-  ptp->async_cst_stride        = NULL;      
-  ptp->async_send_request      = NULL;    
-  ptp->async_recv_request      = NULL;    
-  ptp->async_send_buffer       = NULL;     
-  ptp->async_recv_buffer       = NULL;     
-  ptp->async_n_send_buffer     = NULL;   
-  ptp->async_i_send_buffer     = NULL;   
-  ptp->async_n_recv_buffer     = NULL;   
-  ptp->async_i_recv_buffer     = NULL;   
+  ptp->async_n_exch             = 0;           
+  ptp->async_l_array            = 0;          
+  ptp->async_s_data             = NULL;          
+  ptp->async_cst_stride         = NULL;      
+  ptp->async_send_request       = NULL;    
+  ptp->async_recv_request       = NULL;    
+  ptp->async_send_buffer        = NULL;     
+  ptp->async_recv_buffer        = NULL;     
+  ptp->async_n_send_buffer      = NULL;   
+  ptp->async_i_send_buffer      = NULL;   
+  ptp->async_n_recv_buffer      = NULL;   
+  ptp->async_i_recv_buffer      = NULL;   
+
+  /* 1 - gnum_location in 2 1D array gnum1_to_gnum2_proc gnum1_to_gnum2_part   gnum1_to_gnum2_part elt*/
+
+  /* 2 - Sort gnum1_to_gnum2_proc gnum1_to_gnum2_part according successively rank, part and elemt  */
+
+  /* 3 - Define gnum1_to_send_buffer */
+
+  /* 4 - Define Default_n_send_buffer and  Default_i_send_buffer*/
+
+  /* 5 - Define Default_n_recv_buffer and  Default_i_recv_buffer*/
+
+  /* 6 - Alltoall on gnum1_to_gnum2_part gnum1_to_gnum2_elt orig_gnum1 */
+
+  /* 7 - gnum location on orig_gnum1 */
+
+  /* 8 - Define ref_gnum2 and unref_gnum2 */
+
+  /* 9 - Define gnum1_com_from */
+
+  /* 10 - Define recv_buffer_to_ref_gnum2 */
 
   return ptp;
 
@@ -284,9 +319,9 @@ PDM_partgnum1_to_partgnum2_unref_gnum2_get
  *
  * \brief Get gnum come from gnum1 for each referenced gnum2
  *
- * \param [in]   ptp           Block to part structure
- * \param [out]  n_ref_gnum2   Number of referenced gnum2
- * \param [out]  ref_gnum2     Referenced gnum2
+ * \param [in]   ptp                 Block to part structure
+ * \param [out]  gnum1_come_from_idx Index for gnum1_come_from array (size = \ref n_part2)  
+ * \param [out]  gnum1_come_from     Gnum come from gnum1 for each referenced gnum2
  *
  */
 
@@ -315,6 +350,7 @@ PDM_partgnum1_to_partgnum2_gnum1_come_from_get
  * \param [in]   s_data        Data size
  * \param [in]   cst_stride    Constant stride
  * \param [in]   part1_data    Partition 1 data
+ * \param [in]   tag           Tag of the exchange 
  * \param [out]  request       Request
  *
  */
@@ -326,6 +362,7 @@ PDM_partgnum1_to_partgnum2_issend
  const size_t                  s_data,
  const int                     cst_stride,
  void                        **part1_data,
+ int                           tag,
  int                          *request
 )
 {
@@ -333,6 +370,7 @@ PDM_partgnum1_to_partgnum2_issend
   PDM_UNUSED (s_data);
   PDM_UNUSED (cst_stride);
   PDM_UNUSED (part1_data);
+  PDM_UNUSED (tag);
   PDM_UNUSED (request);
 
   PDM_error(__FILE__, __LINE__, 0,
@@ -345,7 +383,8 @@ PDM_partgnum1_to_partgnum2_issend
  *
  * \brief Wait a asynchronus issend
  *
- * \param [in]  ptp           part to part structure
+ * \param [in]  ptp           Part to part structure
+ * \param [in]  tag           Tag of the exchange 
  * \param [in]  request       Request
  *
  */
@@ -354,10 +393,12 @@ void
 PDM_partgnum1_to_partgnum2_issend_wait
 (
  PDM_partgnum1_to_partgnum2_t *ptp,
+ int                           tag,
  int                        request
 )
 {
   PDM_UNUSED (ptp);
+  PDM_UNUSED (tag);
   PDM_UNUSED (request);
 
   PDM_error(__FILE__, __LINE__, 0,
@@ -374,6 +415,7 @@ PDM_partgnum1_to_partgnum2_issend_wait
  * \param [in]  s_data        Data size
  * \param [in]  cst_stride    Constant stride
  * \param [in]  part1_data    Partition 2 data
+ * \param [in]  tag           Tag of the exchange 
  * \param [out] request       Request
  *
  */
@@ -382,16 +424,18 @@ void
 PDM_partgnum1_to_partgnum2_irecv
 (
  PDM_partgnum1_to_partgnum2_t *ptp,
- const size_t               s_data,
- const int                  cst_stride,
- void                     **part2_data,
- int                       *request
+ const size_t                  s_data,
+ const int                     cst_stride,
+ void                        **part2_data,
+ int                           tag,
+ int                          *request
 )
 {
   PDM_UNUSED (ptp);
   PDM_UNUSED (s_data);
   PDM_UNUSED (cst_stride);
   PDM_UNUSED (part2_data);
+  PDM_UNUSED (tag);
   PDM_UNUSED (request);
 
   PDM_error(__FILE__, __LINE__, 0,
@@ -405,6 +449,7 @@ PDM_partgnum1_to_partgnum2_irecv
  * \brief Initialize a asynchronus irecv
  *
  * \param [in]  ptp           Part to part structure
+ * \param [in]  tag           Tag of the exchange 
  * \param [in]  request       Request
  *
  */
@@ -413,10 +458,12 @@ void
 PDM_partgnum1_to_partgnum2_irecv_wait
 (
  PDM_partgnum1_to_partgnum2_t *ptp,
- int                        request
+ int                           tag,
+ int                           request
 )
 {
   PDM_UNUSED (ptp);
+  PDM_UNUSED (tag);
   PDM_UNUSED (request);
 
   PDM_error(__FILE__, __LINE__, 0,
@@ -450,11 +497,21 @@ PDM_partgnum1_to_partgnum2_free
     }
     free (ptp->gnum1_to_send_buffer);
   }
-  if (ptp->recv_buffer_to_gnum2 != NULL) {  
-    for (int i = 0; i < ptp->n_part2; i++) {    
-      free (ptp->recv_buffer_to_gnum2[i]);
+  if (ptp->recv_buffer_to_ref_gnum2 != NULL) {  
+    for (int i = 0; i < ptp->n_part2; i++) {
+      free (ptp->ref_gnum2[i]);    
+      free (ptp->unref_gnum2[i]);    
+      free (ptp->gnum1_come_from_idx[i]);    
+      free (ptp->gnum1_come_from[i]);    
+      free (ptp->recv_buffer_to_ref_gnum2[i]);
     }
-    free (ptp->recv_buffer_to_gnum2);
+    free (ptp->recv_buffer_to_ref_gnum2);
+    free (ptp->ref_gnum2);    
+    free (ptp->unref_gnum2);    
+    free (ptp->n_ref_gnum2);    
+    free (ptp->n_unref_gnum2);    
+    free (ptp->gnum1_come_from_idx);    
+    free (ptp->gnum1_come_from);    
   }  
   
   if (ptp->async_l_array != 0) {
