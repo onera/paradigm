@@ -4153,14 +4153,14 @@ _closest_points
 
 
 
-
+#if 1
 static void
 _single_closest_point_recursive
 (
-int                     *start_stack,
-int                     *end_stack,
-PDM_morton_code_t       *code_stack,
-double                  *min_dist2_stack,
+ int                     *start_stack,
+ int                     *end_stack,
+ PDM_morton_code_t       *code_stack,
+ double                  *min_dist2_stack,
  const int                dim,
  const double             d[],
  const double             s[],
@@ -4178,9 +4178,9 @@ double                  *min_dist2_stack,
 
   double dist2_node =  _octant_min_dist2 (dim,
                                           ancestor,
-                                            d,
-                                            s,
-                                            point);
+                                          d,
+                                          s,
+                                          point);
   // printf(" - courant code %d [%d, %d, %d], %12.5e\n",
   // ancestor.L, ancestor.X[0], ancestor.X[1], ancestor.X[2], *closest_point_dist2);
   // printf("   - closest_point_dist2 dist2_node : %12.5e %12.5e\n", dist2_node, *closest_point_dist2);
@@ -4341,7 +4341,7 @@ double                  *min_dist2_stack,
   }
 }
 
-
+#if 1
 static void
 _single_closest_point
 (
@@ -4401,8 +4401,351 @@ _single_closest_point
   free (end_stack);
   free (code_stack);
   free (min_dist2_stack);
+
+}
+#else
+static void
+_single_closest_point
+(
+ const int          dim,
+ const double       d[],
+ const double       s[],
+ const _l_octant_t *octants,
+ const PDM_g_num_t *src_g_num,
+ const double      *src_coord,
+ const int          n_tgt,
+ const double      *tgt_coord,
+ PDM_g_num_t       *closest_point_g_num,
+ double            *closest_point_dist2
+ )
+{
+  if (n_tgt < 1) {
+    return;
+  }
+
+  PDM_morton_code_t ancestor;
+  PDM_morton_nearest_common_ancestor (octants->codes[0],
+                                      octants->codes[octants->n_nodes-1],
+                                      &ancestor);
+
+  const int n_child = 1 << dim;
+  const int depth_max = 31;
+  int s_stack = ((n_child - 1) * (depth_max - 1) + n_child);
+
+  int *stack_start   = malloc (sizeof(int) * s_stack);
+  int *stack_end     = malloc (sizeof(int) * s_stack);
+  double *stack_dist = malloc (sizeof(double) * s_stack);
+  PDM_morton_code_t *stack_code = malloc (sizeof(PDM_morton_code_t) * s_stack);
+
+  int node_start;
+  int node_end;
+  double node_dist;
+  PDM_morton_code_t node_code;
+  int child_start[n_child];
+  int child_end[n_child];
+  double child_dist[n_child];
+  PDM_morton_code_t child_code[n_child];
+
+
+  /* Loop on target points */
+  for (int itgt = 0; itgt < n_tgt; itgt++) {
+    const double *point = tgt_coord + 3*itgt;
+
+    node_dist = _octant_min_dist2 (dim,
+                                   ancestor,
+                                   d,
+                                   s,
+                                   point);
+
+    if (node_dist >= closest_point_dist2[itgt]) continue;
+
+    /* Push ancestor in stack */
+    int pos_stack = 0;
+    PDM_morton_copy (ancestor, stack_code + pos_stack);
+    stack_start[pos_stack] = 0;
+    stack_end[pos_stack]   = octants->n_nodes;
+    stack_dist[pos_stack]  = node_dist;
+    pos_stack++;
+
+    while (pos_stack > 0) {
+
+      node_dist = stack_dist[--pos_stack];
+
+      if (node_dist < closest_point_dist2[itgt]) {
+        node_start = stack_start[pos_stack];
+        node_end   = stack_end[pos_stack];
+        PDM_morton_copy (stack_code[pos_stack], &node_code);
+
+        /* Leaf node */
+        if (node_start == node_end-1) {
+          for (int i = 0; i < octants->n_points[node_start]; i++) {
+            int j = octants->range[node_start] + i;
+            double dist2 = _pt_to_pt_dist2 (dim,
+                                            point,
+                                            src_coord + dim*j);
+            if (dist2 < closest_point_dist2[itgt]) {
+              closest_point_dist2[itgt] = dist2;
+              closest_point_g_num[itgt] = src_g_num[j];
+            }
+          }
+        }
+
+        /* Internal node */
+        else {
+          PDM_morton_get_children (dim,
+                                   node_code,
+                                   child_code);
+          int prev_end = node_start;
+          for (int i = 0; i < n_child; i++) {
+            /* get start and end of range in list of nodes covered by current child */
+            /* new_start <-- first descendant of child in list */
+            int new_start = prev_end;
+            while (new_start < node_end) {
+              if (PDM_morton_ancestor_is (child_code[i], octants->codes[new_start])) {
+                break;
+              } else if (PDM_morton_a_gt_b (octants->codes[new_start], child_code[i])) {
+                /* all the following nodes are clearly not descendants of current child */
+                new_start = node_end+1;
+                break;
+              }
+              new_start++;
+            }
+
+            if (new_start > node_end) {
+              /* no need to go further for that child
+                 because it has no descendants in the node list */
+              child_dist[i] = HUGE_VAL;
+              continue;
+            }
+
+            child_start[i] = new_start;
+
+            /* new_end <-- next of last descendant of child in list */
+            int new_end = node_end;
+            while (new_end > new_start + 1) {
+              int m = new_start + (new_end - new_start) / 2;
+              if (PDM_morton_ancestor_is (child_code[i], octants->codes[m])) {
+                new_start = m;
+              } else {
+                new_end = m;
+              }
+            }
+
+            prev_end = new_end;
+            child_end[i] = new_end;
+
+            if (child_end[i] > child_start[i]) {
+              child_dist[i] = _octant_min_dist2 (dim,
+                                                 child_code[i],
+                                                 d,
+                                                 s,
+                                                 point);
+            } else {
+              child_dist[i] = HUGE_VAL;
+            }
+
+          } // End of loop on children
+
+          int child_order[8] = {0, 1, 2, 3, 4, 5, 6, 7};
+          PDM_sort_double (child_dist,
+                           child_order,
+                           n_child);
+
+          for (int i = n_child-1; i >= 0; i--) {
+            if (child_dist[i] < closest_point_dist2[itgt]) {
+              int ichild = child_order[i];
+
+              /* Empty leaf node */
+              if (child_start[ichild] == child_end[ichild]-1 &&
+                  octants->n_points[child_start[ichild]] == 0) {
+                continue;
+              }
+
+              /* Push child in stack */
+              PDM_morton_copy (child_code[ichild], stack_code + pos_stack);
+              stack_start[pos_stack] = child_start[ichild];
+              stack_end[pos_stack]   = child_end[ichild];
+              stack_dist[pos_stack]  = child_dist[i];
+              pos_stack++;
+            }
+          }
+        }
+      }
+
+    } // End while stack not empty
+
+  } // End of loop on target points
+
+  free (stack_start);
+  free (stack_end);
+  free (stack_dist);
+  free (stack_code);
+}
+#endif
+
+
+#else
+static void
+_single_closest_point_recursive
+(
+ const int                dim,
+ const double             d[],
+ const double             s[],
+ const PDM_morton_code_t  node,
+ const _l_octant_t       *octants,
+ const PDM_g_num_t       *src_g_num,
+ const double            *src_coord,
+ const double             point[],
+ const int                start,
+ const int                end,
+ PDM_g_num_t             *closest_point_g_num,
+ double                  *closest_point_dist2
+ )
+{
+  /* Single octant */
+  if (start == end-1) {
+    for (int i = 0; i < octants->n_points[start]; i++) {
+      int j = octants->range[start] + i;
+      double dist2 = _pt_to_pt_dist2 (dim,
+                                      point,
+                                      src_coord + dim*j);
+      if (dist2 < *closest_point_dist2) {
+        *closest_point_dist2 = dist2;
+        *closest_point_g_num = src_g_num[j];
+      }
+    }
+    return;
+  }
+
+  /* Multiple octants */
+  else {
+    const int n_child = 1 << dim;
+    PDM_morton_code_t child_code[8];
+    PDM_morton_get_children (dim,
+                             node,
+                             child_code);
+
+    double child_dist2[8];
+    int child_start[8], child_end[8];
+    int prev_end = start;
+    for (int i = 0; i < n_child; i++) {
+
+      /* get start and end of range in list of nodes covered by current child */
+      /* _start <-- first descendant of child in list */
+      int new_start = prev_end;
+      while (new_start < end) {
+        if (PDM_morton_ancestor_is (child_code[i], octants->codes[new_start])) {
+          break;
+        } else if (PDM_morton_a_gt_b (octants->codes[new_start], child_code[i])) {
+          /* all the following nodes are clearly not descendants of current child */
+          new_start = end+1;
+          break;
+        }
+        new_start++;
+      }
+
+      if (new_start > end) {
+        /* no need to go further for that child
+           because it has no descendants in the node list */
+        child_dist2[i] = HUGE_VAL;
+        continue;
+      }
+
+      child_start[i] = new_start;
+
+      /* e <-- next of last descendant of child in list */
+      int new_end = end;
+      while (new_end > new_start + 1) {
+        int m = new_start + (new_end - new_start) / 2;
+        if (PDM_morton_ancestor_is (child_code[i], octants->codes[m])) {
+          new_start = m;
+        } else {
+          new_end = m;
+        }
+      }
+
+      prev_end = new_end;
+      child_end[i] = new_end;
+
+      if (child_end[i] > child_start[i]) {
+        child_dist2[i] = _octant_min_dist2 (dim,
+                                            child_code[i],
+                                            d,
+                                            s,
+                                            point);
+      } else {
+        child_dist2[i] = HUGE_VAL;
+      }
+    }
+
+    // Carry on recursion on children
+    int child_order[8] = {0, 1, 2, 3, 4, 5, 6, 7};
+    PDM_sort_double (child_dist2,
+                     child_order,
+                     n_child);
+
+    for (int i = 0; i < n_child; i++) {
+      if (child_dist2[i] >= *closest_point_dist2) return;
+      int i_child = child_order[i];
+      _single_closest_point_recursive (dim,
+                                       d,
+                                       s,
+                                       child_code[i_child],
+                                       octants,
+                                       src_g_num,
+                                       src_coord,
+                                       point,
+                                       child_start[i_child],
+                                       child_end[i_child],
+                                       closest_point_g_num,
+                                       closest_point_dist2);
+    }
+  }
+
 }
 
+
+static void
+_single_closest_point
+(
+ const int          dim,
+ const double       d[],
+ const double       s[],
+ const _l_octant_t *octants,
+ const PDM_g_num_t *src_g_num,
+ const double      *src_coord,
+ const int          n_tgt,
+ const double      *tgt_coord,
+ PDM_g_num_t       *closest_point_g_num,
+ double            *closest_point_dist2
+ )
+{
+  if (n_tgt < 1) {
+    return;
+  }
+
+  PDM_morton_code_t ancestor;
+  PDM_morton_nearest_common_ancestor (octants->codes[0],
+                                      octants->codes[octants->n_nodes-1],
+                                      &ancestor);
+
+  /* Loop over target points */
+  for (int i = 0; i < n_tgt; i++) {
+    _single_closest_point_recursive (dim,
+                                     d,
+                                     s,
+                                     ancestor,
+                                     octants,
+                                     src_g_num,
+                                     src_coord,
+                                     tgt_coord + dim*i,
+                                     0,
+                                     octants->n_nodes,
+                                     closest_point_g_num + i,
+                                     closest_point_dist2 + i);
+  }
+}
+#endif
 
 
 
@@ -7127,7 +7470,7 @@ PDM_para_octree_single_closest_point
   const int dim = octree->dim;
 
   float f_copy_threshold = 1.1;
-  float f_max_copy = 0.3;
+  float f_max_copy = 0.1;
 
   char *env_var = NULL;
   env_var = getenv ("OCTREE_COPY_THRESHOLD");
@@ -7269,11 +7612,6 @@ PDM_para_octree_single_closest_point
       free (node_min_dist);
 
       for (int i = 0; i < n_pts; i++) {
-        /*if (rank_pt[i] >= 0) {
-          int rank = octree->used_rank[rank_pt[i]];
-          rank_pt[i] = rank;
-          send_count[rank]++;
-          }*/
         int inode = rank_pt[i];
 
         int l = 0;
