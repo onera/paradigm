@@ -1070,7 +1070,7 @@ double          *closest_octree_pt_dist2
   int dim = 3;
   /* double ptprintc[3] = {5.83333e-01,  6.25000e-01,  5.00000e-01}; */
   /* double ptprintc2[3] = {5.83333e-01,  1.,  5.00000e-01}; */
-
+  int count = 0;
   for (int i = 0; i < n_pts; i++) {
 
     int pos_stack = 0;
@@ -1103,7 +1103,7 @@ double          *closest_octree_pt_dist2
     pos_stack++;
 
     while (pos_stack > 0) {
-
+      count++;
       int id_curr_node = stack[--pos_stack];
       _octant_t *curr_node = &(octree->nodes[id_curr_node]);
 
@@ -1209,6 +1209,8 @@ double          *closest_octree_pt_dist2
       /* printf ("\n ******** fin point ******************\n"); */
 
   }
+  
+  printf("n nodes per point = %d\n", count / n_pts);
 
   free (inbox_stack);
   free (min_dist2_stack);

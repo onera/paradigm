@@ -4196,7 +4196,7 @@ _single_closest_point
   double child_dist[n_child];
   PDM_morton_code_t child_code[n_child];
 
-
+  int count = 0;
   /* Loop on target points */
   for (int itgt = 0; itgt < n_tgt; itgt++) {
     const double *point = tgt_coord + 3*itgt;
@@ -4218,7 +4218,7 @@ _single_closest_point
     pos_stack++;
 
     while (pos_stack > 0) {
-
+      count++;
       node_dist = stack_dist[--pos_stack];
 
       if (node_dist < closest_point_dist2[itgt]) {
@@ -4284,8 +4284,9 @@ _single_closest_point
             prev_end = new_end;
             child_end[i] = new_end;
 
-            if (child_end[i] > child_start[i] &&
-                octants->range[child_start[i]] < octants->range[child_end[i]-1]) {
+            //if (child_end[i] > child_start[i] &&
+            //    octants->range[child_start[i]] < octants->range[child_end[i]]) {
+            if (child_end[i] > child_start[i]) {
               child_dist[i] = _octant_min_dist2 (dim,
                                                  child_code[i],
                                                  d,
@@ -4307,11 +4308,16 @@ _single_closest_point
               int ichild = child_order[i];
 
               /* Empty leaf node */
-              if ((child_start[ichild] == child_end[ichild]-1 &&
-                   octants->n_points[child_start[ichild]] == 0) ||
-                  (octants->range[child_start[ichild]] == octants->range[child_end[ichild]-1])) {
+              //if ((child_start[ichild] == child_end[ichild]-1 &&
+              //     octants->n_points[child_start[ichild]] == 0) ||
+              //    (octants->range[child_start[ichild]] == octants->range[child_end[ichild]-1])) {
+              /*if ((child_start[ichild] == child_end[ichild]-1 &&
+                   octants->n_points[child_start[ichild]] == 0)) {
                 continue;
-              }
+              }*/
+              if (octants->range[child_start[ichild]] == octants->range[child_end[ichild]]) {
+continue;
+}
 
               /* Push child in stack */
               PDM_morton_copy (child_code[ichild], stack_code + pos_stack);
@@ -4327,6 +4333,8 @@ _single_closest_point
     } // End while stack not empty
 
   } // End of loop on target points
+
+  printf("n nodes per point = %d\n", count / n_tgt);
 
   free (stack_start);
   free (stack_end);
@@ -7261,16 +7269,16 @@ PDM_para_octree_single_closest_point
 
     if (USE_SHARED_OCTREE) {
       double *node_min_dist = (double *) malloc (sizeof(double) * n_pts);
-      PDM_box_tree_min_dist_max_box (bt_shared,
+      /*PDM_box_tree_min_dist_max_box (bt_shared,
                                      n_pts,
                                      pts_coord,
                                      rank_pt,
-                                     node_min_dist);
-      /*PDM_box_tree_min_dist_max_box_disjoint (bt_shared,
+                                     node_min_dist);*/
+      PDM_box_tree_min_dist_max_box_disjoint (bt_shared,
                                               n_pts,
                                               pts_coord,
                                               rank_pt,
-                                              node_min_dist);*/
+                                              node_min_dist);
       free (node_min_dist);
 
       for (int i = 0; i < n_pts; i++) {
