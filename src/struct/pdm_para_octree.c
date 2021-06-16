@@ -4306,8 +4306,9 @@ _single_closest_point
               int ichild = child_order[i];
 
               /* Empty leaf node */
-              if (child_start[ichild] == child_end[ichild]-1 &&
-                  octants->n_points[child_start[ichild]] == 0) {
+              if ((child_start[ichild] == child_end[ichild]-1 &&
+                   octants->n_points[child_start[ichild]] == 0) ||
+                  (octants->range[child_start[ichild]] == octants->range[child_end[ichild]-1])) {
                 continue;
               }
 
