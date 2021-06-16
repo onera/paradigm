@@ -49,8 +49,8 @@ struct _pdm_partgnum1_to_partgnum2_t {
   const PDM_g_num_t **gnum1_to_gnum2;           /*!< gnum1 to send to gnum2 */
         PDM_MPI_Comm  comm;                     /*!< MPI communicator */  
 
-  int n_rank;                                   /*!< Number of MPI ranks */
-  int i_rank;                                   /*!< Current rank */
+  int                 n_rank;                   /*!< Number of MPI ranks */
+  int                 i_rank;                   /*!< Current rank */
 
   int                *n_ref_gnum2;              /*!< Numbers of referenced gnum2 (size = \ref n_part2) */
   PDM_g_num_t       **ref_gnum2;                /*!< Lists of referenced gnum2 (size = \ref n_part2) */
@@ -87,9 +87,6 @@ struct _pdm_partgnum1_to_partgnum2_t {
 /*=============================================================================
  * Static global variables
  *============================================================================*/
-
-
-
 
 
 #ifdef __cplusplus
