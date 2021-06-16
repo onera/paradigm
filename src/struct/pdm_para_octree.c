@@ -118,6 +118,16 @@ typedef struct  {
 } _l_octant_t;
 
 
+typedef struct {
+  PDM_morton_code_t code;
+  int               n_points;
+  int               range;
+  int               ancestor_id;
+  int               children_id[8];
+  int               is_leaf; //-1 if internal, >=0 if leaf
+} _explicit_node_t;
+
+
 /**
  * \struct _octree_t
  * \brief  Define an octree
@@ -194,6 +204,12 @@ typedef struct  {
   int               *shared_pts_n;
   double            *shared_pts_extents;
 
+
+  _explicit_node_t  *explicit_nodes;
+  int                n_explicit_nodes;
+
+  _explicit_node_t **copied_explicit_nodes;
+  int               *copied_n_explicit_nodes;
 
 } _octree_t;
 
@@ -4343,6 +4359,181 @@ continue;
 }
 
 
+
+static void
+_build_explicit_nodes
+(
+ _octree_t *octree
+ )
+{
+  int DEBUG = 1;
+
+  _l_octant_t *octants = octree->octants;
+  const int dim = octants->dim;
+
+  PDM_morton_code_t ancestor;
+  PDM_morton_nearest_common_ancestor (octants->codes[0],
+                                      octants->codes[octants->n_nodes-1],
+                                      &ancestor);
+
+  int tmp_size = 2*octants->n_nodes;
+  octree->explicit_nodes = malloc (sizeof(_explicit_node_t) * tmp_size);
+  octree->n_explicit_nodes = 0;
+
+  if (octants->n_nodes == 0) return;
+
+  const int n_child = 1 << dim;
+  const int depth_max = 31;
+  int s_stack = ((n_child - 1) * (depth_max - 1) + n_child);
+
+  int *stack_start = malloc (sizeof(int) * s_stack);
+  int *stack_end   = malloc (sizeof(int) * s_stack);
+  int *stack_id    = malloc (sizeof(int) * s_stack);
+
+  int node_start;
+  int node_end;
+  int node_id;
+  int child_start[n_child];
+  int child_end[n_child];
+  int child_id;
+  PDM_morton_code_t child_code[n_child];
+
+  PDM_morton_copy (ancestor, &(octree->explicit_nodes[0].code));
+  octree->explicit_nodes[0].ancestor_id = -1;
+  octree->explicit_nodes[0].range = octants->range[0];
+  octree->explicit_nodes[0].n_points = octants->range[octants->n_nodes-1] + octants->n_points[octants->n_nodes-1];
+  if (octants->n_nodes == 1) {
+    octree->explicit_nodes[0].is_leaf = 0;
+  } else {
+    octree->explicit_nodes[0].is_leaf = -1;
+  }
+  octree->n_explicit_nodes++;
+
+  /* Push ancestor in stack */
+  int pos_stack = 0;
+  if (octants->n_nodes > 1) {
+    stack_id[pos_stack]    = 0;
+    stack_start[pos_stack] = 0;
+    stack_end[pos_stack]   = octants->n_nodes-1;
+    pos_stack++;
+  }
+
+  while (pos_stack > 0) {
+    pos_stack--;
+    node_id    = stack_id[pos_stack];
+    node_start = stack_start[pos_stack];
+    node_end   = stack_end[pos_stack];
+
+    if (octree->n_explicit_nodes + n_child >= tmp_size) {
+      tmp_size = PDM_MAX (2*tmp_size, octree->n_explicit_nodes + n_child + 1);
+      octree->explicit_nodes = realloc (octree->explicit_nodes,
+                                        sizeof(_explicit_node_t) * tmp_size);
+    }
+
+    PDM_morton_get_children (dim,
+                             octree->explicit_nodes[node_id].code,
+                             child_code);
+    int prev_end = node_start;
+    for (int i = 0; i < n_child; i++) {
+      /* get start and end of range in list of nodes covered by current child */
+      /* new_start <-- first descendant of child in list */
+      int new_start = prev_end;
+      while (new_start < node_end) {
+        if (PDM_morton_ancestor_is (child_code[i], octants->codes[new_start])) {
+          break;
+        } else if (PDM_morton_a_gt_b (octants->codes[new_start], child_code[i])) {
+          /* all the following nodes are clearly not descendants of current child */
+          new_start = node_end+1;
+          break;
+        }
+        new_start++;
+      }
+
+      if (new_start > node_end) {
+        // no need to go further for that child
+        //   because it has no descendants in the node list
+        // (descendant leaves are in another rank)
+        child_id = octree->n_explicit_nodes;
+        octree->explicit_nodes[node_id].children_id[i] = child_id;
+        PDM_morton_copy (child_code[i], &(octree->explicit_nodes[child_id].code));
+        octree->explicit_nodes[child_id].ancestor_id = node_id;
+        octree->explicit_nodes[child_id].range = 0;
+        octree->explicit_nodes[child_id].n_points = 0;
+        octree->explicit_nodes[child_id].is_leaf = 0;//-1;
+        octree->n_explicit_nodes++;
+        continue;
+      }
+
+      child_start[i] = new_start;
+
+      /* new_end <-- next of last descendant of child in list */
+      int new_end = node_end;
+      while (new_end > new_start + 1) {
+        int m = new_start + (new_end - new_start) / 2;
+        if (PDM_morton_ancestor_is (child_code[i], octants->codes[m])) {
+          new_start = m;
+        } else {
+          new_end = m;
+        }
+      }
+
+      prev_end = new_end;
+      child_end[i] = new_end;
+      /*} // End of loop on children
+
+        for (int i = n_child-1; i >= 0; i--) {*/
+      child_id = octree->n_explicit_nodes;
+      octree->explicit_nodes[node_id].children_id[i] = child_id;
+      PDM_morton_copy (child_code[i], &(octree->explicit_nodes[child_id].code));
+      octree->explicit_nodes[child_id].ancestor_id = node_id;
+      octree->explicit_nodes[child_id].range = octants->range[child_start[i]];
+      octree->explicit_nodes[child_id].n_points = octants->range[child_end[i]] - octants->range[child_start[i]];
+
+      /* Leaf node */
+      if (child_start[i] >= child_end[i]-1) {
+        octree->explicit_nodes[child_id].is_leaf = child_start[i];
+      }
+
+      /* Internal node */
+      else {
+        octree->explicit_nodes[child_id].is_leaf = -1;
+
+        /* Push child in stack */
+        stack_id[pos_stack]    = child_id;
+        stack_start[pos_stack] = child_start[i];
+        stack_end[pos_stack]   = child_end[i];
+        pos_stack++;
+      }
+      if (DEBUG) {
+        printf("node %d : L=%d, X=%d %d %d, start=%d, end=%d, ancestor=%d, range=%d, n_points=%d, is_leaf=%d\n",
+               child_id,
+               octree->explicit_nodes[child_id].code.L,
+               octree->explicit_nodes[child_id].code.X[0],
+               octree->explicit_nodes[child_id].code.X[1],
+               octree->explicit_nodes[child_id].code.X[2],
+               child_start[i],
+               child_end[i],
+               octree->explicit_nodes[child_id].ancestor_id,
+               octree->explicit_nodes[child_id].range,
+               octree->explicit_nodes[child_id].n_points,
+               octree->explicit_nodes[child_id].is_leaf);
+      }
+
+      octree->n_explicit_nodes++;
+    } // End of loop on children
+  }
+  free (stack_start);
+  free (stack_end);
+  free (stack_id);
+
+  octree->explicit_nodes = realloc (octree->explicit_nodes,
+                                    sizeof(_explicit_node_t) * octree->n_explicit_nodes);
+}
+
+
+
+
+
 static void
 _compute_rank_extents
 (
@@ -4744,6 +4935,13 @@ PDM_para_octree_create
   octree->shared_pts_n       = NULL;
   octree->shared_pts_extents = NULL;
 
+
+  octree->explicit_nodes     = NULL;
+  octree->n_explicit_nodes   = 0;
+
+  octree->copied_explicit_nodes   = NULL;
+  octree->copied_n_explicit_nodes = NULL;
+
   octree->timer = PDM_timer_create ();
 
   for (int i = 0; i < NTIMER; i++) {
@@ -4860,6 +5058,10 @@ PDM_para_octree_free
 
   if (octree->shared_pts_extents != NULL) {
     free (octree->shared_pts_extents);
+  }
+
+  if (octree->explicit_nodes != NULL) {
+    free (octree->explicit_nodes);
   }
 
   PDM_para_octree_free_copies (id);
@@ -5906,7 +6108,7 @@ PDM_para_octree_build
     }
     printf("\n");
   }
-  if (0) {//octree->shared_rank_idx != NULL) {
+  if (octree->shared_rank_idx != NULL) {
     //char *pref = "/stck/bandrieu/workspace/paradigma-dev/test/para_octree/shared_octree/";
     char *pref = "";
     char filename[999];
@@ -5949,6 +6151,25 @@ PDM_para_octree_build
                        octree->shared_rank_idx[i+1] - octree->shared_rank_idx[i],
                        octree->shared_pts_extents + 6* octree->shared_rank_idx[i],
                        NULL);
+      }
+    }
+  }
+  //<<--
+
+
+  //-->>
+  if (1) {
+    _build_explicit_nodes (octree);
+
+    if (1) {
+      printf("[%d] %d explicit nodes\n", rank, octree->n_explicit_nodes);
+      for (int i = 0; i < octree->n_explicit_nodes; i++) {
+        if (octree->explicit_nodes[i].is_leaf < 0) {
+          for (int j = 0; j < 8; j++) {
+            int k = octree->explicit_nodes[i].children_id[j];
+            assert (octree->explicit_nodes[k].ancestor_id == i);
+          }
+        }
       }
     }
   }
@@ -10864,6 +11085,22 @@ PDM_para_octree_free_copies
     }
     free (octree->copied_points_code);
     octree->copied_points_code = NULL;
+  }
+
+  if (octree->copied_explicit_nodes != NULL) {
+    for (int i = 0; i < octree->n_copied_ranks; i++) {
+      if (octree->copied_explicit_nodes[i] != NULL) {
+        free (octree->copied_explicit_nodes[i]);
+        octree->copied_explicit_nodes[i] = NULL;
+      }
+    }
+    free (octree->copied_explicit_nodes);
+    octree->copied_explicit_nodes = NULL;
+  }
+
+  if (octree->copied_n_explicit_nodes != NULL) {
+    free (octree->copied_n_explicit_nodes);
+    octree->copied_n_explicit_nodes = NULL;
   }
 
   octree->n_copied_ranks = 0;
