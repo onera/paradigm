@@ -4453,12 +4453,16 @@ _single_closest_point_explicit
             }
             const _explicit_node_t *_child = nodes + _node->children_id[i];
             if (_child->n_points > 0) {
-              child_dist[n_select] = _octant_min_dist2 (dim,
-                                                        _child->code,
-                                                        octree->d,
-                                                        octree->s,
-                                                        point);
-              selected_id[n_select++] = i;
+              //child_dist[n_select] = _octant_min_dist2 (dim,
+              double dist = _octant_min_dist2 (dim,
+                                               _child->code,
+                                               octree->d,
+                                               octree->s,
+                                               point);
+              if (dist < closest_point_dist2[itgt]) {
+                child_dist[n_select] = dist;
+                selected_id[n_select++] = i;
+              }
             } /*else {
               child_dist[i] = HUGE_VAL;
               }*/
@@ -4471,13 +4475,13 @@ _single_closest_point_explicit
 
           //for (int i = n_child-1; i >= 0; i--) {
           for (int i = n_select-1; i >= 0; i--) {
-            if (child_dist[i] < closest_point_dist2[itgt]) {
+            //if (child_dist[i] < closest_point_dist2[itgt]) {
               stack_id[pos_stack]   = _node->children_id[selected_id[i]];//child_order[i]];
               stack_dist[pos_stack] = child_dist[i];
               pos_stack++;
-            } else {
+              /*} else {
               break;
-            }
+              }*/
           }
         }
       }
