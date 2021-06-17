@@ -59,7 +59,7 @@ def part_distgroup_to_partgroup(MPI.Comm                                      co
 
     # ~> \param [in]   pn_entity
     cdef int * _pn_entity
-    _pn_entity        = <int *> malloc(sizeof(int*) * _n_part )
+    _pn_entity        = <int *> malloc(sizeof(int) * _n_part )
     for idx, part_pn_entity  in enumerate(pn_entity):
         _pn_entity[idx] = part_pn_entity
 
@@ -67,7 +67,7 @@ def part_distgroup_to_partgroup(MPI.Comm                                      co
     cdef NPY.ndarray[npy_pdm_gnum_t, ndim=1, mode='c'] partLNToGN
     cdef PDM_g_num_t ** LNToGN
 
-    LNToGN        = <PDM_g_num_t **> malloc(sizeof(PDM_g_num_t **) * _n_part )
+    LNToGN        = <PDM_g_num_t **> malloc(sizeof(PDM_g_num_t *) * _n_part )
     for idx, partLNToGN in enumerate(pentity_ln_to_gn):
         LNToGN[idx] = <PDM_g_num_t *> partLNToGN.data
 
