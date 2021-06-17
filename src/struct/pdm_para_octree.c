@@ -4399,6 +4399,7 @@ _single_closest_point_explicit
   int node_id;
   double node_dist;
   double child_dist[n_child];
+  int count = 0;
   /* Loop on target points */
   for (int itgt = 0; itgt < n_tgt; itgt++) {
     const double *point = tgt_coord + 3*itgt;
@@ -4418,7 +4419,7 @@ _single_closest_point_explicit
     pos_stack++;
 
     while (pos_stack > 0) {
-
+      count++;
       node_dist = stack_dist[--pos_stack];
 
       if (node_dist < closest_point_dist2[itgt]) {
@@ -4474,6 +4475,8 @@ _single_closest_point_explicit
     } // End of while loop
 
   } // End of loop on target points
+
+  printf("n nodes per point = %d\n", count / n_tgt);
 
   free (stack_id);
   free (stack_dist);
@@ -6243,7 +6246,7 @@ PDM_para_octree_build
     }
     printf("\n");
   }
-  if (octree->shared_rank_idx != NULL) {
+  if (0) {//octree->shared_rank_idx != NULL) {
     //char *pref = "/stck/bandrieu/workspace/paradigma-dev/test/para_octree/shared_octree/";
     char *pref = "";
     char filename[999];
