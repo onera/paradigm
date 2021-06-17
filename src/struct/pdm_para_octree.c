@@ -4444,33 +4444,39 @@ _single_closest_point_explicit
         /* Internal node */
         else {
 
+          int n_select = 0;
+          int selected_id[8];
           for (int i = 0; i < n_child; i++) {
             if (_node->children_id[i] < 0) {
-              child_dist[i] = HUGE_VAL;
+              //child_dist[i] = HUGE_VAL;
               continue;
             }
             const _explicit_node_t *_child = nodes + _node->children_id[i];
             if (_child->n_points > 0) {
-              child_dist[i] = _octant_min_dist2 (dim,
-                                                 _child->code,
-                                                 octree->d,
-                                                 octree->s,
-                                                 point);
-            } else {
+              child_dist[n_select] = _octant_min_dist2 (dim,
+                                                        _child->code,
+                                                        octree->d,
+                                                        octree->s,
+                                                        point);
+              selected_id[n_select++] = i;
+            } /*else {
               child_dist[i] = HUGE_VAL;
-            }
+              }*/
           }
 
-          int child_order[8] = {0, 1, 2, 3, 4, 5, 6, 7};
+          //int child_order[8] = {0, 1, 2, 3, 4, 5, 6, 7};
           PDM_sort_double (child_dist,
-                           child_order,
-                           n_child);
+                           selected_id,//child_order,
+                           n_select);//n_child);
 
-          for (int i = n_child-1; i >= 0; i--) {
+          //for (int i = n_child-1; i >= 0; i--) {
+          for (int i = n_select-1; i >= 0; i--) {
             if (child_dist[i] < closest_point_dist2[itgt]) {
-              stack_id[pos_stack]   = _node->children_id[child_order[i]];
+              stack_id[pos_stack]   = _node->children_id[selected_id[i]];//child_order[i]];
               stack_dist[pos_stack] = child_dist[i];
               pos_stack++;
+            } else {
+              break;
             }
           }
         }
