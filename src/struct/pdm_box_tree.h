@@ -347,33 +347,6 @@ PDM_box_tree_closest_upper_bound_dist_boxes_get_v2
 
 
 /*----------------------------------------------------------------------------
- * Get minimum of maximum distance of boxes (extended version: rank tree data)
- *
- * parameters:
- *   bt                <-- pointer to box tree structure
- *   i_pts             <-- index of points (size = bt->n_copied_ranks+1)
- *   pts               <-- Point coordinates (size = 3 * n_pts) (with n_pts = i_pts[bt->n_copied_ranks])
- *   upper_bound_dist2 <-- Upper bound of the square of the distance (size = n_pts)
- *   i_boxes_rank      --> Index of boxes (size = bt->n_copied_ranks)
- *                            i_boxes_rank[r] is of size n_pts_rank[r] + 1 (with n_pts_rank[r] = i_pts[r+1] - i_pts[r])
- *   boxes_rank        --> Boxes (size = bt->n_copied_ranks)
- *                            boxes_rank[r] is of size i_boxes_rank[r][n_pts_rank[r]]
- *----------------------------------------------------------------------------*/
-void
-PDM_box_tree_closest_upper_bound_dist_boxes_get_from_copied_ranks
-(
- PDM_box_tree_t  *bt,
- const int        i_pts[],
- double           pts[],
- double           upper_bound_dist2[],
- int            **i_boxes_rank[],
- int            **boxes_rank[]
- );
-
-
-
-
-/*----------------------------------------------------------------------------
  * Send copies of box tree data from selected ranks to all other ranks for better load balancing
  *---------------------------------------------------------------------------*/
 void
