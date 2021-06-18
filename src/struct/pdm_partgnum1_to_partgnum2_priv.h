@@ -63,10 +63,11 @@ struct _pdm_partgnum1_to_partgnum2_t {
 
   int               **gnum1_to_send_buffer;     /*!< Indirection to store send buffer */
   int               **recv_buffer_to_ref_gnum2; /*!< Indirection to store gnum2 data from receive buffer */
-  int               **default_n_send_buffer;    /*!< Number of data in the buffer to send to each rank of asynchonous exchanges */
-  int               **default_i_send_buffer;    /*!< Index in the send buffer of each rank of asynchonous exchanges */
-  int               **default_n_recv_buffer;    /*!< Number of data in the buffer received from each rank of asynchonous exchanges */
-  int               **default__i_recv_buffer;   /*!< Index in the receive buffer of each rank of asynchonous exchanges */
+
+  int                *default_n_send_buffer;    /*!< Default number of points in the sent buffer */
+  int                *default_i_send_buffer;    /*!< Default index in the sent buffer */
+  int                *default_n_recv_buffer;    /*!< Default number of points in the received buffer */
+  int                *default_i_recv_buffer;    /*!< Default index in the received buffer */
 
   int                 async_n_exch;             /*!< Number of current asynchonous exchanges */ 
   int                 async_l_array;            /*!< Size of arrays to store asynchonous exchanges */ 
