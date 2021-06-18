@@ -4358,15 +4358,17 @@ continue;
 
 
 
-static inline double
+static inline int
 _box_min_dist2
 (
  const int              dim,
  const double *restrict extents,
- const double *restrict coords
+ const double *restrict coords,
+ double       *restrict min_dist2
  )
 {
-  double min_dist2 = 0.;
+  int inbox = 0;
+  double _min_dist2 = 0.;
 
   for (int i = 0; i < dim; i++) {
     double x = coords[i];
@@ -4375,15 +4377,19 @@ _box_min_dist2
 
     if (x > xmax) {
       double diff_max = x - xmax;
-      min_dist2 += diff_max * diff_max;
+      _min_dist2 += diff_max * diff_max;
     }
     else if (x < xmin) {
       double diff_min = x - xmin;
-      min_dist2 += diff_min * diff_min;
+      _min_dist2 += diff_min * diff_min;
+    }
+    else {
+      inbox++;
     }
   }
 
-  return min_dist2;
+  *min_dist2 = _min_dist2;
+  return inbox == dim;
 }
 
 
@@ -4430,12 +4436,15 @@ _single_closest_point_explicit
   const int n_child = 1 << dim;
   const int depth_max = 31;
   int s_stack = ((n_child - 1) * (depth_max - 1) + n_child);
-  int    *stack_id   = malloc (sizeof(int)    * s_stack);
-  double *stack_dist = malloc (sizeof(double) * s_stack);
+  int    *stack_id     = malloc (sizeof(int)    * s_stack);
+  double *stack_dist   = malloc (sizeof(double) * s_stack);
+  int    *stack_inside = malloc (sizeof(int)    * s_stack);
 
-  int node_id;
+  int    node_id;
   double node_dist;
+  int    node_inside;
   double child_dist[n_child];
+  int    child_inside[n_child];
   //int count = 0;
   /* Loop on target points */
   for (int itgt = 0; itgt < n_tgt; itgt++) {
@@ -4446,23 +4455,27 @@ _single_closest_point_explicit
                                    octree->d,
                                    octree->s,
                                    point);*/
-    node_dist = _box_min_dist2 (dim,
-                                nodes[0].pts_extents,
-                                point);
+    node_inside = _box_min_dist2 (dim,
+                                  nodes[0].pts_extents,
+                                  point,
+                                  &node_dist);
 
-    if (node_dist >= closest_point_dist2[itgt]) continue;
+    if (node_dist >= closest_point_dist2[itgt] && !node_inside) continue;
 
     /* Push root in stack */
     int pos_stack = 0;
-    stack_id[pos_stack]   = 0;
-    stack_dist[pos_stack] = node_dist;
+    stack_id[pos_stack]     = 0;
+    stack_dist[pos_stack]   = node_dist;
+    stack_inside[pos_stack] = node_inside;
     pos_stack++;
 
     while (pos_stack > 0) {
       //count++;
-      node_dist = stack_dist[--pos_stack];
+      pos_stack--;
+      node_dist   = stack_dist[pos_stack];
+      node_inside = stack_inside[pos_stack];
 
-      if (node_dist < closest_point_dist2[itgt]) {
+      if (node_dist < closest_point_dist2[itgt] || node_inside) {
         node_id = stack_id[pos_stack];
         const _explicit_node_t *_node = nodes + node_id;
 
@@ -4491,21 +4504,22 @@ _single_closest_point_explicit
               continue;
             }
             const _explicit_node_t *_child = nodes + _node->children_id[i];
-            //if (_child->n_points > 0) { // always true!
             /*double dist = _octant_min_dist2 (dim,
               _child->code,
               octree->d,
               octree->s,
               point);*/
-            double dist = _box_min_dist2 (dim,
-                                          _child->pts_extents,
-                                          point);
+            double dist;
+            int inside = _box_min_dist2 (dim,
+                                         _child->pts_extents,
+                                         point,
+                                         &dist);
 
-            if (dist < closest_point_dist2[itgt]) {
-              child_dist[n_select] = dist;
+            if (dist < closest_point_dist2[itgt] || inside) {
+              child_dist[n_select]   = dist;
+              child_inside[n_select] = inside;
               selected_id[n_select++] = i;
             }
-            //}
           }
 
           PDM_sort_double (child_dist,
@@ -4513,8 +4527,9 @@ _single_closest_point_explicit
                            n_select);
 
           for (int i = n_select-1; i >= 0; i--) {
-            stack_id[pos_stack]   = _node->children_id[selected_id[i]];
-            stack_dist[pos_stack] = child_dist[i];
+            stack_id[pos_stack]     = _node->children_id[selected_id[i]];
+            stack_dist[pos_stack]   = child_dist[i];
+            stack_inside[pos_stack] = child_inside[i];
             pos_stack++;
           }
         }
@@ -4528,6 +4543,7 @@ _single_closest_point_explicit
 
   free (stack_id);
   free (stack_dist);
+  free (stack_inside);
 }
 
 
@@ -5956,6 +5972,45 @@ _export_nodes
 }
 
 
+static void
+_export_explicit_nodes
+(
+ const char             *filename,
+ const int               n_nodes,
+ const _explicit_node_t *nodes
+ )
+{
+  FILE *f = fopen(filename, "w");
+
+  fprintf(f, "# vtk DataFile Version 2.0\nexplicit nodes\nASCII\nDATASET UNSTRUCTURED_GRID\n");
+
+  fprintf(f, "POINTS %d double\n", 8*n_nodes);
+  for (int i = 0; i < n_nodes; i++) {
+    const double *e = nodes[i].pts_extents;
+    fprintf(f, "%f %f %f\n", e[0], e[1], e[2]);
+    fprintf(f, "%f %f %f\n", e[3], e[1], e[2]);
+    fprintf(f, "%f %f %f\n", e[3], e[4], e[2]);
+    fprintf(f, "%f %f %f\n", e[0], e[4], e[2]);
+    fprintf(f, "%f %f %f\n", e[0], e[1], e[5]);
+    fprintf(f, "%f %f %f\n", e[3], e[1], e[5]);
+    fprintf(f, "%f %f %f\n", e[3], e[4], e[5]);
+    fprintf(f, "%f %f %f\n", e[0], e[4], e[5]);
+  }
+
+  fprintf(f, "CELLS %d %d\n", n_nodes, 9*n_nodes);
+  for (int i = 0; i < n_nodes; i++) {
+    int j = 8*i;
+    fprintf(f, "8 %d %d %d %d %d %d %d %d\n", j, j+1, j+2, j+3, j+4, j+5, j+6, j+7);
+  }
+
+  fprintf(f, "CELL_TYPES %d\n", n_nodes);
+  for (int i = 0; i < n_nodes; i++) {
+    fprintf(f, "12\n");
+  }
+
+  fclose(f);
+}
+
 
 /**
  *
@@ -6951,6 +7006,15 @@ PDM_para_octree_build
           }
         }
       }
+    }
+
+    if (0) {
+      char *pref = "";
+      char filename[999];
+      sprintf(filename, "%soctree_explicit_%4.4d.vtk", pref, rank);
+      _export_explicit_nodes (filename,
+                              octree->n_explicit_nodes,
+                              octree->explicit_nodes);
     }
   }
   //<<--
