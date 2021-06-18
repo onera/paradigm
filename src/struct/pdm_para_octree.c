@@ -4861,6 +4861,32 @@ _points_inside_boxes
 
 
 
+static int
+_intersect_node_box_explicit
+(
+ int           dim,
+ const double *node_extents,
+ const double *box_extents,
+ int          *inside
+ )
+{
+  *inside = 1;
+
+  for (int i = 0; i < dim; i++) {
+    if (node_extents[i]   > box_extents[i+3] ||
+        node_extents[i+3] < box_extents[i]) {
+      return 0;
+    }
+    else if (node_extents[i]  < box_extents[i] ||
+             node_extents[i+3] > box_extents[i+3]) {
+      *inside = 0;
+    }
+  }
+
+  return 1;
+}
+
+
 
 
 static void
@@ -4889,13 +4915,13 @@ _points_inside_boxes_explicit
   const double *points;
   if (i_copied_rank < 0) {
     n_nodes = octree->n_explicit_nodes;
-    nodes  = octree->explicit_nodes;
-    points = octree->points;
+    nodes   = octree->explicit_nodes;
+    points  = octree->points;
   } else {
     assert (i_copied_rank < octree->n_copied_ranks);
     n_nodes = octree->n_copied_explicit_nodes[i_copied_rank];
-    nodes  = octree->copied_explicit_nodes[i_copied_rank];
-    points = octree->copied_points[i_copied_rank];
+    nodes   = octree->copied_explicit_nodes[i_copied_rank];
+    points  = octree->copied_points[i_copied_rank];
   }
 
   if (n_nodes == 0 || (n_nodes > 0 && nodes[0].n_points == 0)) {
@@ -4922,6 +4948,7 @@ _points_inside_boxes_explicit
     int DEBUG = 0;//(ibox == 201);
     _pts_idx[ibox+1] = _pts_idx[ibox];
 
+    const double *_box_extents = box_extents + 6*ibox;
     const double *box_min = box_extents + 6*ibox;
     const double *box_max = box_min + 3;
     const PDM_morton_code_t *box_code_min = box_codes + 2*ibox;
@@ -4940,11 +4967,10 @@ _points_inside_boxes_explicit
              box_max[2] - box_min[2]);
     }
 
-    intersect = _intersect_node_box (3,
-                                     nodes[0].code,
-                                     *box_code_min,
-                                     *box_code_max,
-                                     &node_inside_box);
+    intersect = _intersect_node_box_explicit (3,
+                                              nodes[0].pts_extents,
+                                              _box_extents,
+                                              &node_inside_box);
 
     if (!intersect) {
       if (DEBUG) {
@@ -5036,15 +5062,11 @@ _points_inside_boxes_explicit
                    _child->leaf_id);
           }
 
-          if (_child->n_points == 0) {
-            continue;
-          }
+          intersect = _intersect_node_box_explicit (3,
+                                                    _child->pts_extents,
+                                                    _box_extents,
+                                                    &node_inside_box);
 
-          intersect = _intersect_node_box (3,
-                                           _child->code,
-                                           *box_code_min,
-                                           *box_code_max,
-                                           &node_inside_box);
           if (DEBUG) {
             printf("intersect = %d\n", intersect);
           }

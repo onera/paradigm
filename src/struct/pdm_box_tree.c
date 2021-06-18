@@ -4407,11 +4407,6 @@ PDM_box_tree_closest_upper_bound_dist_boxes_get_v2
 
     pos_stack = 0;
     stack[pos_stack] = 0; /* push root in stack */
-    /*if ( i_rank < 0 ) {
-      _extents (dim, bt->local_data->nodes[0].morton_code, extents2);
-    } else {
-      _extents (dim, bt->rank_data[i_rank].nodes[0].morton_code, extents2);
-      }*/
     inbox_stack[pos_stack] = _box_dist2_min (dim,
                                              normalized,
                                              d,
@@ -4426,12 +4421,6 @@ PDM_box_tree_closest_upper_bound_dist_boxes_get_v2
     while (pos_stack > 0) {
 
       int id_curr_node = stack[--pos_stack];
-
-      /*if ( i_rank < 0 ) {
-        curr_node = &(bt->local_data->nodes[id_curr_node]);
-        } else {
-        curr_node = &(bt->rank_data[i_rank].nodes[id_curr_node]);
-        }*/
       curr_node = nodes + id_curr_node;
 
       if (curr_node->n_boxes == 0)
