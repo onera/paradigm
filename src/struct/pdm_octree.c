@@ -995,6 +995,7 @@ double      *closest_octree_pt_dist2
    *  Look for the closest point in closest processes
    *
    ***************************************************/
+  printf ("[%4d] phase 1: n_recv_pts = %8d\n", i_rank, i_recv_pts[n_rank]);
 
   int *closest_pt = (int *) malloc(sizeof(int) * 2 * i_recv_pts[n_rank]);
   double *closest_dist = (double *) malloc(sizeof(double) * i_recv_pts[n_rank]);
@@ -1720,6 +1721,7 @@ double      *closest_octree_pt_dist2
     /*     } */
     /* /\*   } *\/ */
     /* /\* } *\/ */
+    printf ("[%4d] phase 2: n_recv_pts = %8d\n", i_rank, i_recv_gnum[n_rank]);
 
     PDM_octree_seq_closest_point (octree->octree_seq_id,
                                   i_recv_gnum[n_rank],

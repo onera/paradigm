@@ -2441,27 +2441,27 @@ PDM_mesh_location_t *ml
                 t_elaps_max[COMPUTE_ELEMENTARY_LOCATIONS],
                 t_cpu_max[COMPUTE_ELEMENTARY_LOCATIONS]);
 
-    PDM_printf( "mesh_location timer : merge location data - step 1 (elapsed and cpu) :                   "
+    PDM_printf( "mesh_location timer : merge location data - step 1 (elapsed and cpu) :          "
                 " %12.5es %12.5es\n",
                 t_elaps_max[MERGE_LOCATION_DATA_STEP1],
                 t_cpu_max[MERGE_LOCATION_DATA_STEP1]);
 
-    PDM_printf( "mesh_location timer : merge location data - step 2 (elapsed and cpu) :                   "
+    PDM_printf( "mesh_location timer : merge location data - step 2 (elapsed and cpu) :          "
                 " %12.5es %12.5es\n",
                 t_elaps_max[MERGE_LOCATION_DATA_STEP2],
                 t_cpu_max[MERGE_LOCATION_DATA_STEP2]);
 
-    PDM_printf( "mesh_location timer : merge location data - step 3 (elapsed and cpu) :                   "
+    PDM_printf( "mesh_location timer : merge location data - step 3 (elapsed and cpu) :          "
                 " %12.5es %12.5es\n",
                 t_elaps_max[MERGE_LOCATION_DATA_STEP3],
                 t_cpu_max[MERGE_LOCATION_DATA_STEP3]);
 
-    PDM_printf( "mesh_location timer : compress location data (elapsed and cpu) :                   "
+    PDM_printf( "mesh_location timer : compress location data (elapsed and cpu) :                "
                 " %12.5es %12.5es\n",
                 t_elaps_max[COMPRESS_LOCATION_DATA],
                 t_cpu_max[COMPRESS_LOCATION_DATA]);
 
-    PDM_printf( "mesh_location timer : reverse location data (elapsed and cpu) :                   "
+    PDM_printf( "mesh_location timer : reverse location data (elapsed and cpu) :                 "
                 " %12.5es %12.5es\n",
                 t_elaps_max[REVERSE_LOCATION_DATA],
                 t_cpu_max[REVERSE_LOCATION_DATA]);
