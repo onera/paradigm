@@ -4482,6 +4482,9 @@ _single_closest_point_explicit
         /* Leaf node */
         if (_node->leaf_id >= 0) {
           int ileaf = _node->leaf_id;
+          /*
+           * optimization: if n_points == 1, distance has already been computed
+           */
           for (int i = 0; i < leaves->n_points[ileaf]; i++) {
             int j = leaves->range[ileaf] + i;
             double dist2 = _pt_to_pt_dist2 (dim,

@@ -680,6 +680,20 @@ PDM_dist_cloud_surf_compute
                                                     closest_vertices_dist2,
                                                     &part_pts_elt_idx,
                                                     &part_pts_elt_g_num);
+    if (1) {
+      int nmax = 0;
+      int imax = 0;
+      for (int i = 0; i < n_pts_rank; i++) {
+        int n = part_pts_elt_idx[i+1] - part_pts_elt_idx[i];
+        if (n > nmax) {
+          nmax = n;
+          imax = i;
+        }
+      }
+
+      printf("[%3d] pt %6d (%6ld) : %5d candidates (dist = %f)\n",
+             rank, imax, pts_g_num_rank[imax], nmax, sqrt(closest_vertices_dist2[imax]));
+    }
     if (idebug) {
       printf (" PDM_dbbtree_closest_upper_bound_dist_boxes_get n_pts_rank : %d\n", n_pts_rank);
       for (int i = 0; i < n_pts_rank; i++) {
