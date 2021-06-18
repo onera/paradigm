@@ -680,7 +680,7 @@ PDM_dist_cloud_surf_compute
                                                     closest_vertices_dist2,
                                                     &part_pts_elt_idx,
                                                     &part_pts_elt_g_num);
-    if (1) {
+    if (0) {
       int nmax = 0;
       int imax = 0;
       for (int i = 0; i < n_pts_rank; i++) {

@@ -4503,34 +4503,38 @@ _single_closest_point_explicit
           int n_select = 0;
           int selected_id[8];
           for (int i = 0; i < n_child; i++) {
-            if (_node->children_id[i] < 0) {
-              continue;
-            }
-            const _explicit_node_t *_child = nodes + _node->children_id[i];
-            /*double dist = _octant_min_dist2 (dim,
-              _child->code,
-              octree->d,
-              octree->s,
-              point);*/
-            double dist;
-            int inside = _box_min_dist2 (dim,
-                                         _child->pts_extents,
-                                         point,
-                                         &dist);
+            if (_node->children_id[i] >= 0) {
+              const _explicit_node_t *_child = nodes + _node->children_id[i];
+              /*double dist = _octant_min_dist2 (dim,
+                _child->code,
+                octree->d,
+                octree->s,
+                point);*/
+              double dist;
+              int inside = _box_min_dist2 (dim,
+                                           _child->pts_extents,
+                                           point,
+                                           &dist);
 
-            if (dist < closest_point_dist2[itgt] || inside) {
-              child_dist[n_select]   = dist;
-              child_inside[n_select] = inside;
-              selected_id[n_select++] = i;
+              if (dist < closest_point_dist2[itgt] || inside) {
+                int j;
+                for (j = n_select; (j > 0) && (child_dist[j-1] > dist); j--) {
+                  selected_id[j]  = selected_id[j-1];
+                  child_dist[j]   = child_dist[j-1];
+                  child_inside[j] = child_inside[j-1];
+                }
+
+                selected_id[j]  = _node->children_id[i];
+                child_dist[j]   = dist;
+                child_inside[j] = inside;
+
+                n_select++;
+              }
             }
           }
 
-          PDM_sort_double (child_dist,
-                           selected_id,
-                           n_select);
-
           for (int i = n_select-1; i >= 0; i--) {
-            stack_id[pos_stack]     = _node->children_id[selected_id[i]];
+            stack_id[pos_stack]     = selected_id[i];//_node->children_id[selected_id[i]];
             stack_dist[pos_stack]   = child_dist[i];
             stack_inside[pos_stack] = child_inside[i];
             pos_stack++;
@@ -11667,6 +11671,8 @@ PDM_para_octree_copy_ranks
     if (octree->explicit_nodes_to_build) {
       PDM_MPI_Bcast (ibuf, n_copied_explicit * s_explicit_data,
                      PDM_MPI_INT, rank, octree->comm);
+      PDM_MPI_Bcast (dbuf, n_copied_explicit * 6,
+                     PDM_MPI_DOUBLE, rank, octree->comm);
     }
 
 

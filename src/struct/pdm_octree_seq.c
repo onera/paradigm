@@ -1241,9 +1241,9 @@ void PDM_octree_seq_write_octants
   fprintf(f, "ASCII\n");
   fprintf(f, "DATASET UNSTRUCTURED_GRID\n");
 
-  fprintf(f, "POINTS %d double\n", 8*n_leaves);
+  fprintf(f, "POINTS %d double\n", 8*octree->n_nodes);//n_leaves);
   for (int inode = 0; inode < octree->n_nodes; inode++) {
-    if (octree->nodes[inode].is_leaf) {
+    if (1) {//octree->nodes[inode].is_leaf) {
       double *ext = octree->nodes[inode].extents;
       for (int k = 0; k < 2; k++) {
         for (int j = 0; j < 2; j++) {
@@ -1256,10 +1256,10 @@ void PDM_octree_seq_write_octants
     }
   }
 
-  fprintf(f, "CELLS %d %d\n", n_leaves, 9*n_leaves);
+  fprintf(f, "CELLS %d %d\n", octree->n_nodes, 9*octree->n_nodes);//n_leaves, 9*n_leaves);
   int ileaf = 0;
   for (int inode = 0; inode < octree->n_nodes; inode++) {
-    if (octree->nodes[inode].is_leaf) {
+    if (1) {//octree->nodes[inode].is_leaf) {
       fprintf(f, "8 ");
       for (int j = 0; j < 8; j++) {
         fprintf(f, "%d ", 8*ileaf+j);
@@ -1269,8 +1269,8 @@ void PDM_octree_seq_write_octants
     }
   }
 
-  fprintf(f, "CELL_TYPES %d\n", n_leaves);
-  for (int i = 0; i < n_leaves; i++) {
+  fprintf(f, "CELL_TYPES %d\n", octree->n_nodes);//octree->n_nodesn_leaves);
+  for (int i = 0; i < octree->n_nodes; i++) {//n_leaves; i++) {
     fprintf(f, "%d\n", 12);
   }
 
