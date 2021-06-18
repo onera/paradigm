@@ -191,9 +191,10 @@ _extents
  double    extents[]
  )
 {
+  double side = 1. /(double) (1 << code.L);
   for (int i = 0; i < dim; i++) {
-    extents[i] = (double) code.X[i]/(double) (1 << code.L);
-    extents[dim + i] = ((double) code.X[i] + 1)/(double) (1 << code.L);
+    extents[i] = (double) code.X[i] * side;
+    extents[dim + i] = extents[i] + side;//((double) code.X[i] + 1) * denom;
   }
 }
 

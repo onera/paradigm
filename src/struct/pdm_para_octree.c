@@ -4450,11 +4450,6 @@ _single_closest_point_explicit
   for (int itgt = 0; itgt < n_tgt; itgt++) {
     const double *point = tgt_coord + 3*itgt;
 
-    /*node_dist = _octant_min_dist2 (dim,
-                                   nodes[0].code,
-                                   octree->d,
-                                   octree->s,
-                                   point);*/
     node_inside = _box_min_dist2 (dim,
                                   nodes[0].pts_extents,
                                   point,
@@ -4505,11 +4500,7 @@ _single_closest_point_explicit
           for (int i = 0; i < n_child; i++) {
             if (_node->children_id[i] >= 0) {
               const _explicit_node_t *_child = nodes + _node->children_id[i];
-              /*double dist = _octant_min_dist2 (dim,
-                _child->code,
-                octree->d,
-                octree->s,
-                point);*/
+
               double dist;
               int inside = _box_min_dist2 (dim,
                                            _child->pts_extents,
