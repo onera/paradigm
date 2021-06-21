@@ -504,7 +504,7 @@ PDM_partgnum1_to_partgnum2_create
     int s_gnum1_com_from = 0;
     for (int j = 0; j < n_elt2[i]; j++) {
       int _tag = tag_elt2[i][j];
-      s_gnum1_com_from += tag;
+      s_gnum1_com_from += _tag;
       if (_tag > 0) {
         ptp->ref_gnum2[i][ptp->n_ref_gnum2[i]++] = j+1;
       }
