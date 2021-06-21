@@ -2344,7 +2344,7 @@ PDM_part_to_block_adapt_partial_block_to_block
 (
  PDM_part_to_block_t  *ptb,
  int                 **block_n,
- int                   n_g_block
+ PDM_g_num_t           n_g_block
 )
 {
   PDM_g_num_t *_block_distrib_idx = malloc (sizeof(PDM_g_num_t) * (ptb->s_comm + 1));
