@@ -4484,14 +4484,21 @@ _single_closest_point_explicit
           /*
            * optimization: if n_points == 1, distance has already been computed
            */
-          for (int i = 0; i < leaves->n_points[ileaf]; i++) {
-            int j = leaves->range[ileaf] + i;
-            double dist2 = _pt_to_pt_dist2 (dim,
-                                            point,
-                                            src_coord + dim*j);
-            if (dist2 < closest_point_dist2[itgt]) {
-              closest_point_dist2[itgt] = dist2;
-              closest_point_g_num[itgt] = src_g_num[j];
+          if (leaves->n_points[ileaf] == 0) {
+            closest_point_dist2[itgt] = node_dist;
+            closest_point_g_num[itgt] = src_g_num[leaves->range[ileaf]];
+          }
+
+          else {
+            for (int i = 0; i < leaves->n_points[ileaf]; i++) {
+              int j = leaves->range[ileaf] + i;
+              double dist2 = _pt_to_pt_dist2 (dim,
+                                              point,
+                                              src_coord + dim*j);
+              if (dist2 < closest_point_dist2[itgt]) {
+                closest_point_dist2[itgt] = dist2;
+                closest_point_g_num[itgt] = src_g_num[j];
+              }
             }
           }
         }
@@ -4531,7 +4538,7 @@ _single_closest_point_explicit
           }
 
           for (int i = n_select-1; i >= 0; i--) {
-            stack_id[pos_stack]     = selected_id[i];//_node->children_id[selected_id[i]];
+            stack_id[pos_stack]     = selected_id[i];
             stack_dist[pos_stack]   = child_dist[i];
             stack_inside[pos_stack] = child_inside[i];
             pos_stack++;
