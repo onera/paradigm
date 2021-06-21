@@ -1660,6 +1660,8 @@ PDM_point_location_nodal
    */
   for (ielt = type_idx[PDM_MESH_NODAL_BAR2]; ielt < type_idx[PDM_MESH_NODAL_TRIA3]; ielt++) {
 
+    if (pts_idx[ielt+1] == pts_idx[ielt]) continue;
+
     _locate_on_edge (elt_vtx_coord + elt_vtx_idx[ielt] * 3,
                      pts_idx[ielt+1] - pts_idx[ielt],
                      pts_coord + pts_idx[ielt] * 3,
@@ -1674,6 +1676,8 @@ PDM_point_location_nodal
    */
   const int _connec[3] = {1, 2, 3};
   for (ielt = type_idx[PDM_MESH_NODAL_TRIA3]; ielt < type_idx[PDM_MESH_NODAL_QUAD4]; ielt++) {
+
+    if (pts_idx[ielt+1] == pts_idx[ielt]) continue;
 
     _locate_on_triangles (1,
                           _connec,
@@ -1692,6 +1696,8 @@ PDM_point_location_nodal
    */
   for (ielt = type_idx[PDM_MESH_NODAL_QUAD4]; ielt < type_idx[PDM_MESH_NODAL_POLY_2D]; ielt++) {
 
+    if (pts_idx[ielt+1] == pts_idx[ielt]) continue;
+
     _locate_on_quadrangle (elt_vtx_coord + elt_vtx_idx[ielt] * 3,
                            pts_idx[ielt+1] - pts_idx[ielt],
                            pts_coord + pts_idx[ielt] * 3,
@@ -1705,6 +1711,8 @@ PDM_point_location_nodal
    * Polygons
    */
   for (ielt = type_idx[PDM_MESH_NODAL_POLY_2D]; ielt < type_idx[PDM_MESH_NODAL_TETRA4]; ielt++) {
+
+    if (pts_idx[ielt+1] == pts_idx[ielt]) continue;
 
     _locate_in_polygon (elt_vtx_idx[ielt+1] - elt_vtx_idx[ielt],
                         elt_vtx_coord + elt_vtx_idx[ielt] * 3,
@@ -1721,6 +1729,8 @@ PDM_point_location_nodal
    * Tetrahedra
    */
   for (ielt = type_idx[PDM_MESH_NODAL_TETRA4]; ielt < type_idx[PDM_MESH_NODAL_PYRAMID5]; ielt++) {
+
+if (pts_idx[ielt+1] == pts_idx[ielt]) continue;
 
     _locate_in_tetrahedron (elt_vtx_coord + elt_vtx_idx[ielt] * 3,
                             pts_idx[ielt+1] - pts_idx[ielt],
@@ -1740,6 +1750,8 @@ PDM_point_location_nodal
 
     for (ielt = type_idx[type]; ielt < type_idx[type+1]; ielt++) {
 
+      if (pts_idx[ielt+1] == pts_idx[ielt]) continue;
+
       _locate_in_cell_3d (type,
                           elt_vtx_coord + elt_vtx_idx[ielt] * 3,
                           pts_idx[ielt+1] - pts_idx[ielt],
@@ -1757,6 +1769,8 @@ PDM_point_location_nodal
    */
   int ipoly = 0;
   for (ielt = type_idx[PDM_MESH_NODAL_POLY_3D]; ielt < n_elt; ielt++) {
+
+    if (pts_idx[ielt+1] == pts_idx[ielt]) continue;
 
     int n_vtx = elt_vtx_idx[ielt+1] - elt_vtx_idx[ielt];
     _locate_in_polyhedron (n_vtx,

@@ -828,11 +828,6 @@ _compute_global_weights
  PDM_part_to_block_t *ptb
  )
 {
-  ptb->weight_g = malloc (sizeof(double *) * ptb->n_part);
-  for (int i = 0; i < ptb->n_part; i++) {
-    ptb->weight_g[i] = malloc (sizeof(double) * ptb->n_elt[i]);
-  }
-
   /* Send local weights */
   int *send_count = PDM_array_zeros_int (ptb->s_comm);
   double *part_weight = malloc (sizeof(double) * ptb->tn_send_data);
