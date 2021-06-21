@@ -23,6 +23,7 @@
 #include "pdm_sort.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
+#include "pdm_array.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -819,6 +820,92 @@ _distrib_data
   }
 }
 
+
+
+static void
+_compute_global_weights
+(
+ PDM_part_to_block_t *ptb
+ )
+{
+  ptb->weight_g = malloc (sizeof(double *) * ptb->n_part);
+  for (int i = 0; i < ptb->n_part; i++) {
+    ptb->weight_g[i] = malloc (sizeof(double) * ptb->n_elt[i]);
+  }
+
+  /* Send local weights */
+  int *send_count = PDM_array_zeros_int (ptb->s_comm);
+  double *part_weight = malloc (sizeof(double) * ptb->tn_send_data);
+  int idx = 0;
+  for (int i = 0; i < ptb->n_part; i++) {
+    for (int j = 0; j < ptb->n_elt[i]; j++) {
+      int rank = ptb->dest_proc[idx++];
+      part_weight[ptb->i_send_data[rank] + send_count[rank]++] = ptb->weight[i][j];
+    }
+  }
+
+  double *recv_weight = malloc (sizeof(double) * ptb->tn_recv_data);
+  PDM_MPI_Alltoallv (part_weight,
+                     ptb->n_send_data,
+                     ptb->i_send_data,
+                     PDM_MPI_DOUBLE,
+                     recv_weight,
+                     ptb->n_recv_data,
+                     ptb->i_recv_data,
+                     PDM_MPI_DOUBLE,
+                     ptb->comm);
+
+  /* Sum received weights */
+  double *block_weight = malloc (sizeof(double) * ptb->n_elt_block);
+  for (int i = 0; i < ptb->n_elt_block; i++) {
+    block_weight[i] = 0.;
+  }
+
+  idx = 0;
+  for (int i = 0; i < ptb->tn_recv_data; i++) {
+    int j = ptb->order[i];
+    while (ptb->block_gnum[idx] < ptb->sorted_recv_gnum[i]) {
+      idx++;
+    }
+    block_weight[idx] += recv_weight[j];
+  }
+
+  idx = 0;
+  for (int i = 0; i < ptb->tn_recv_data; i++) {
+    int j = ptb->order[i];
+    while (ptb->block_gnum[idx] < ptb->sorted_recv_gnum[i]) {
+      idx++;
+    }
+    recv_weight[j] = block_weight[idx];
+  }
+  free (block_weight);
+
+  /* Send back global weights */
+  PDM_MPI_Alltoallv (recv_weight,
+                     ptb->n_recv_data,
+                     ptb->i_recv_data,
+                     PDM_MPI_DOUBLE,
+                     part_weight,
+                     ptb->n_send_data,
+                     ptb->i_send_data,
+                     PDM_MPI_DOUBLE,
+                     ptb->comm);
+  free (recv_weight);
+
+  /* Store global weights */
+  ptb->weight_g = malloc (sizeof(double *) * ptb->n_part);
+  PDM_array_reset_int (send_count, ptb->s_comm, 0);
+  idx = 0;
+  for (int i = 0; i < ptb->n_part; i++) {
+    ptb->weight_g[i] = malloc (sizeof(double) * ptb->n_elt[i]);
+    for (int j = 0; j < ptb->n_elt[i]; j++) {
+      int rank = ptb->dest_proc[idx++];
+      ptb->weight_g[i][j] = part_weight[ptb->i_send_data[rank] + send_count[rank]++];
+    }
+  }
+  free (send_count);
+  free (part_weight);
+}
 /*=============================================================================
  * Public function definitions
  *============================================================================*/
@@ -914,6 +1001,8 @@ PDM_part_to_block_create
   ptb->n_elt_block       = 0;
   ptb->block_gnum        = NULL;  /*!< Global number of reveived data (size = tn_recv_data) */
 
+  ptb->weight_g          = NULL; /*!< Global weights of elements for any part */
+
   /* Asynchone */
   ptb->max_exch_request = 10;
   ptb->next_request     = 0;
@@ -951,6 +1040,14 @@ PDM_part_to_block_create
    */
 
   _distrib_data (ptb, 0);
+
+
+  /*
+   * Compute global weight for each element
+   */
+  if (ptb->weight != NULL && ptb->t_post == PDM_PART_TO_BLOCK_POST_MERGE) {
+    _compute_global_weights (ptb);
+  }
 
   return (PDM_part_to_block_t *) ptb;
 }
@@ -1046,6 +1143,8 @@ PDM_part_to_block_create2
   ptb->order            = NULL;  /*!< Order */
   ptb->n_elt_block      = 0;
   ptb->block_gnum       = NULL;  /*!< Global number of reveived data (size = tn_recv_data) */
+
+  ptb->weight_g          = NULL; /*!< Global weights of elements for any part */
 
   /* Asynchone */
   ptb->max_exch_request = 10;
@@ -2172,6 +2271,13 @@ PDM_part_to_block_free
     ptb->block_gnum = NULL;
   }
 
+  if (ptb->weight_g != NULL) {
+    for (int i = 0; i < ptb->n_part; i++) {
+      free (ptb->weight_g[i]);
+    }
+    free (ptb->weight_g);
+  }
+
   /* This one check if all buffer has been correctly move or delete */
   for(int i_req = 0; i_req < ptb->max_exch_request; ++i_req) {
     assert(ptb->send_buffer  [i_req] == NULL);
@@ -2293,6 +2399,28 @@ PDM_part_to_block_adapt_partial_block_to_block
   return _block_distrib_idx;
 }
 
+
+
+
+
+/**
+ *
+ * \brief Return global weights of element in the current process
+ *
+ * \param [in]   ptb          Part to block structure
+ *
+ * \return  Global weights
+ *
+ */
+
+double **
+PDM_part_to_block_global_weight_get
+(
+ PDM_part_to_block_t *ptb
+)
+{
+  return ptb->weight_g;
+}
 
 #undef _MIN
 #undef _MAX

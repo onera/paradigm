@@ -832,13 +832,13 @@ PDM_dist_cloud_surf_compute
     }
 
     PDM_part_to_block_t *ptb_elt = PDM_part_to_block_create2 (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
-                                                           PDM_PART_TO_BLOCK_POST_MERGE,
-                                                           1.,
-                                                           (PDM_g_num_t **) part_elt_g_num,
-                                                           _block_elt_distrib_idx,
-                                                           part_n_elt,
-                                                           n_part_mesh,
-                                                           comm);
+                                                              PDM_PART_TO_BLOCK_POST_MERGE,
+                                                              1.,
+                                                              (PDM_g_num_t **) part_elt_g_num,
+                                                              _block_elt_distrib_idx,
+                                                              part_n_elt,
+                                                              n_part_mesh,
+                                                              comm);
 
     int **part_elt_vtx_n = malloc (sizeof(int *) * n_part_mesh);
     double **part_elt_vtx_coord = malloc (sizeof(double *) * n_part_mesh);
