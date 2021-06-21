@@ -1564,6 +1564,8 @@ PDM_mesh_location_create
     ml->times_cpu_s[i]   = 0.;
   }
 
+  ml->uvw_to_compute = 1;
+
   return ml;
 
 }
@@ -2184,7 +2186,9 @@ PDM_mesh_location_points_in_elt_get
   *elt_pts_inside_idx      = _points_in_elements->pts_inside_idx[i_part];
   *points_gnum             = _points_in_elements->gnum[i_part];
   *points_coords           = _points_in_elements->coords[i_part];
-  *points_uvw              = _points_in_elements->uvw[i_part];
+  if (ml->uvw_to_compute) {
+    *points_uvw            = _points_in_elements->uvw[i_part];
+  }
   *points_weights_idx      = _points_in_elements->weights_idx[i_part];
   *points_weights          = _points_in_elements->weights[i_part];
   *points_dist2            = _points_in_elements->dist2[i_part];
@@ -2222,7 +2226,9 @@ PDM_mesh_location_free
           for (int i_part = 0; i_part < _points_in_elements->n_part; ++i_part) {
             free (_points_in_elements->pts_inside_idx[i_part]);
             free (_points_in_elements->gnum[i_part]);
-            free (_points_in_elements->uvw[i_part]);
+            if (ml->uvw_to_compute) {
+              free (_points_in_elements->uvw[i_part]);
+            }
             free (_points_in_elements->coords[i_part]);
             free (_points_in_elements->projected_coords[i_part]);
             free (_points_in_elements->weights_idx[i_part]);
@@ -2233,7 +2239,9 @@ PDM_mesh_location_free
         free (_points_in_elements->pts_inside_idx);
         free (_points_in_elements->n_elts);
         free (_points_in_elements->gnum);
-        free (_points_in_elements->uvw);
+        if (ml->uvw_to_compute) {
+          free (_points_in_elements->uvw);
+        }
         free (_points_in_elements->coords);
         free (_points_in_elements->projected_coords);
         free (_points_in_elements->weights_idx);
@@ -4917,7 +4925,9 @@ PDM_mesh_location_t        *ml
                              &pts_in_elt_n,
                              (void ***) &(pts_weights_stride));
 
-    _points_in_elements->uvw = malloc (sizeof(double *) * n_part_nodal);
+    if (ml->uvw_to_compute) {
+      _points_in_elements->uvw = malloc (sizeof(double *) * n_part_nodal);
+    }
     _points_in_elements->weights_idx = malloc(sizeof(int *) * n_part_nodal);
     for (int i_part = 0; i_part < n_part_nodal; i_part++) {
       _points_in_elements->weights_idx[i_part] =
@@ -4927,7 +4937,9 @@ PDM_mesh_location_t        *ml
         _points_in_elements->weights_idx[i_part][i+1] = _points_in_elements->weights_idx[i_part][i] +
                                                         pts_weights_stride[i_part][i];
       }
-      _points_in_elements->uvw[i_part] = malloc(sizeof(double) * 3 * _points_in_elements->pts_inside_idx[i_part][n_elt_nodal[i_part]]);
+      if (ml->uvw_to_compute) {
+        _points_in_elements->uvw[i_part] = malloc(sizeof(double) * 3 * _points_in_elements->pts_inside_idx[i_part][n_elt_nodal[i_part]]);
+      }
       free (pts_in_elt_n[i_part]);
       free (pts_weights_stride[i_part]);
     }
@@ -5031,204 +5043,141 @@ PDM_mesh_location_t        *ml
     PDM_timer_resume(ml->timer);
 
     /* Compute uvw */
+    if (ml->uvw_to_compute) {
+      // Allocation uvw
+      double *_cell_coord = malloc (sizeof(double) * 8 * 3);
+      for (int ipart = 0; ipart < n_part_nodal; ipart++) {
+        int ielt = 0;
+        const double *coords_vtx = PDM_Mesh_nodal_vertices_get (ml->mesh_nodal,
+                                                                ipart);
+        for (int iblock = 0; iblock < n_blocks; iblock++) {
+          int id_block = blocks_id[iblock];
 
-    // Allocation uvw
-    double *_cell_coord = malloc (sizeof(double) * 8 * 3);
-    for (int ipart = 0; ipart < n_part_nodal; ipart++) {
-      int ielt = 0;
+          PDM_Mesh_nodal_elt_t t_elt = PDM_Mesh_nodal_block_type_get (ml->mesh_nodal,
+                                                                      id_block);
 
-      // _points_in_elements->uvw[ipart] = malloc (sizeof(double) * 3 * _points_in_elements->n_elts[ipart]);
+          if (t_elt == PDM_MESH_NODAL_POLY_3D || t_elt == PDM_MESH_NODAL_POLY_2D) {
+            continue;
+          }
+          int *parent_num = PDM_Mesh_nodal_block_parent_num_get (ml->mesh_nodal,
+                                                                 id_block,
+                                                                 ipart);
 
-      const double *coords_vtx = PDM_Mesh_nodal_vertices_get (ml->mesh_nodal,
-                                                        ipart);
-      for (int iblock = 0; iblock < n_blocks; iblock++) {
-        int id_block = blocks_id[iblock];
+          int n_elt_block = PDM_Mesh_nodal_block_n_elt_get (ml->mesh_nodal,
+                                                            id_block,
+                                                            ipart);
 
-        PDM_Mesh_nodal_elt_t t_elt = PDM_Mesh_nodal_block_type_get (ml->mesh_nodal,
-                                                                    id_block);
+          int *connec;
+          PDM_Mesh_nodal_block_std_get (ml->mesh_nodal,
+                                        id_block,
+                                        ipart,
+                                        &connec);
 
-        if (t_elt == PDM_MESH_NODAL_POLY_3D || t_elt == PDM_MESH_NODAL_POLY_2D) {
-          continue;
-        }
-        int *parent_num = PDM_Mesh_nodal_block_parent_num_get (ml->mesh_nodal,
-                                                               id_block,
-                                                               ipart);
+          int n_vtx = PDM_Mesh_nodal_n_vtx_elt_get (t_elt, 1);
 
-        int n_elt_block = PDM_Mesh_nodal_block_n_elt_get (ml->mesh_nodal,
-                                                          id_block,
-                                                          ipart);
+          // PDM_log_trace_array_double(_points_in_elements->projected_coords[ipart],  3 * _points_in_elements->pts_inside_idx[ipart][n_elt_block], "projected_coords");
+          // PDM_log_trace_array_double(_points_in_elements->coords[ipart], 3 * _points_in_elements->pts_inside_idx[ipart][n_elt_block], "coords");
 
-        int *connec;
-        PDM_Mesh_nodal_block_std_get (ml->mesh_nodal,
-                                      id_block,
-                                      ipart,
-                                      &connec);
+          for (int i = 0; i < n_elt_block; i++) {
 
-        int n_vtx = PDM_Mesh_nodal_n_vtx_elt_get (t_elt, 1);
-
-        // PDM_log_trace_array_double(_points_in_elements->projected_coords[ipart],  3 * _points_in_elements->pts_inside_idx[ipart][n_elt_block], "projected_coords");
-        // PDM_log_trace_array_double(_points_in_elements->coords[ipart], 3 * _points_in_elements->pts_inside_idx[ipart][n_elt_block], "coords");
-
-        for (int i = 0; i < n_elt_block; i++) {
-
-          if (t_elt == PDM_MESH_NODAL_PRISM6 ||
+            if (t_elt == PDM_MESH_NODAL_PRISM6 ||
               t_elt == PDM_MESH_NODAL_TETRA4 ||
               t_elt == PDM_MESH_NODAL_TRIA3  ||
               t_elt == PDM_MESH_NODAL_BAR2) {
-          //if (1) {
+            //if (1) {
 
-            for (int k = 0; k < n_vtx; k++) {
-              int ivtx = connec[k] - 1;
-              for (int j = 0; j < 3; j++) {
-                _cell_coord[3*k+j] = coords_vtx[3*ivtx+j];
+              for (int k = 0; k < n_vtx; k++) {
+                int ivtx = connec[k] - 1;
+                for (int j = 0; j < 3; j++) {
+                  _cell_coord[3*k+j] = coords_vtx[3*ivtx+j];
+                }
               }
             }
-          }
 
-          else if (t_elt == PDM_MESH_NODAL_QUAD4 ||
-                   t_elt == PDM_MESH_NODAL_PYRAMID5 ||
-                   t_elt == PDM_MESH_NODAL_HEXA8) {
+            else if (t_elt == PDM_MESH_NODAL_QUAD4 ||
+                     t_elt == PDM_MESH_NODAL_PYRAMID5 ||
+                     t_elt == PDM_MESH_NODAL_HEXA8) {
 
-            _cell_coord[ 0] = coords_vtx[3*(connec[i*n_vtx+0]-1)+0];
-            _cell_coord[ 1] = coords_vtx[3*(connec[i*n_vtx+0]-1)+1];
-            _cell_coord[ 2] = coords_vtx[3*(connec[i*n_vtx+0]-1)+2];
+              _cell_coord[ 0] = coords_vtx[3*(connec[i*n_vtx+0]-1)+0];
+              _cell_coord[ 1] = coords_vtx[3*(connec[i*n_vtx+0]-1)+1];
+              _cell_coord[ 2] = coords_vtx[3*(connec[i*n_vtx+0]-1)+2];
 
-            _cell_coord[ 3] = coords_vtx[3*(connec[i*n_vtx+1]-1)+0];
-            _cell_coord[ 4] = coords_vtx[3*(connec[i*n_vtx+1]-1)+1];
-            _cell_coord[ 5] = coords_vtx[3*(connec[i*n_vtx+1]-1)+2];
+              _cell_coord[ 3] = coords_vtx[3*(connec[i*n_vtx+1]-1)+0];
+              _cell_coord[ 4] = coords_vtx[3*(connec[i*n_vtx+1]-1)+1];
+              _cell_coord[ 5] = coords_vtx[3*(connec[i*n_vtx+1]-1)+2];
 
-            _cell_coord[ 6] = coords_vtx[3*(connec[i*n_vtx+3]-1)+0];
-            _cell_coord[ 7] = coords_vtx[3*(connec[i*n_vtx+3]-1)+1];
-            _cell_coord[ 8] = coords_vtx[3*(connec[i*n_vtx+3]-1)+2];
+              _cell_coord[ 6] = coords_vtx[3*(connec[i*n_vtx+3]-1)+0];
+              _cell_coord[ 7] = coords_vtx[3*(connec[i*n_vtx+3]-1)+1];
+              _cell_coord[ 8] = coords_vtx[3*(connec[i*n_vtx+3]-1)+2];
 
-            _cell_coord[ 9] = coords_vtx[3*(connec[i*n_vtx+2]-1)+0];
-            _cell_coord[10] = coords_vtx[3*(connec[i*n_vtx+2]-1)+1];
-            _cell_coord[11] = coords_vtx[3*(connec[i*n_vtx+2]-1)+2];
+              _cell_coord[ 9] = coords_vtx[3*(connec[i*n_vtx+2]-1)+0];
+              _cell_coord[10] = coords_vtx[3*(connec[i*n_vtx+2]-1)+1];
+              _cell_coord[11] = coords_vtx[3*(connec[i*n_vtx+2]-1)+2];
 
-            if (t_elt == PDM_MESH_NODAL_PYRAMID5 ||
-                t_elt == PDM_MESH_NODAL_HEXA8 ) {
-              _cell_coord[12] = coords_vtx[3*(connec[i*n_vtx+4]-1)+0];
-              _cell_coord[13] = coords_vtx[3*(connec[i*n_vtx+4]-1)+1];
-              _cell_coord[14] = coords_vtx[3*(connec[i*n_vtx+4]-1)+2];
+              if (t_elt == PDM_MESH_NODAL_PYRAMID5 ||
+                  t_elt == PDM_MESH_NODAL_HEXA8 ) {
+                _cell_coord[12] = coords_vtx[3*(connec[i*n_vtx+4]-1)+0];
+                _cell_coord[13] = coords_vtx[3*(connec[i*n_vtx+4]-1)+1];
+                _cell_coord[14] = coords_vtx[3*(connec[i*n_vtx+4]-1)+2];
 
-              if (t_elt == PDM_MESH_NODAL_HEXA8) {
-                _cell_coord[15] = coords_vtx[3*(connec[i*n_vtx+5]-1)+0];
-                _cell_coord[16] = coords_vtx[3*(connec[i*n_vtx+5]-1)+1];
-                _cell_coord[17] = coords_vtx[3*(connec[i*n_vtx+5]-1)+2];
+                if (t_elt == PDM_MESH_NODAL_HEXA8) {
+                  _cell_coord[15] = coords_vtx[3*(connec[i*n_vtx+5]-1)+0];
+                  _cell_coord[16] = coords_vtx[3*(connec[i*n_vtx+5]-1)+1];
+                  _cell_coord[17] = coords_vtx[3*(connec[i*n_vtx+5]-1)+2];
 
-                _cell_coord[18] = coords_vtx[3*(connec[i*n_vtx+7]-1)+0];
-                _cell_coord[19] = coords_vtx[3*(connec[i*n_vtx+7]-1)+1];
-                _cell_coord[20] = coords_vtx[3*(connec[i*n_vtx+7]-1)+2];
+                  _cell_coord[18] = coords_vtx[3*(connec[i*n_vtx+7]-1)+0];
+                  _cell_coord[19] = coords_vtx[3*(connec[i*n_vtx+7]-1)+1];
+                  _cell_coord[20] = coords_vtx[3*(connec[i*n_vtx+7]-1)+2];
 
-                _cell_coord[21] = coords_vtx[3*(connec[i*n_vtx+6]-1)+0];
-                _cell_coord[22] = coords_vtx[3*(connec[i*n_vtx+6]-1)+1];
-                _cell_coord[23] = coords_vtx[3*(connec[i*n_vtx+6]-1)+2];
+                  _cell_coord[21] = coords_vtx[3*(connec[i*n_vtx+6]-1)+0];
+                  _cell_coord[22] = coords_vtx[3*(connec[i*n_vtx+6]-1)+1];
+                  _cell_coord[23] = coords_vtx[3*(connec[i*n_vtx+6]-1)+2];
+                }
               }
             }
-          }
 
-          double _projected_coords[3]; // Ignored in this case
+            double _projected_coords[3]; // Ignored in this case
 
-          int ielt_parent = ielt;
-          if (parent_num != NULL) {
-            ielt_parent = parent_num[i];
-          }
-
-          int idx_pts_elts = _points_in_elements->pts_inside_idx[ipart][ielt_parent];
-          int n_pts_elts = _points_in_elements->pts_inside_idx[ipart][ielt_parent+1] - idx_pts_elts;
-          for (int k1 = 0; k1 < n_pts_elts; k1++) {
-
-            const double  *_point_coords;
-
-            if (_points_in_elements->dist2[ipart][idx_pts_elts + k1] >= 0.) {
-              _point_coords = &(_points_in_elements->projected_coords[ipart][3*(idx_pts_elts + k1)]);
+            int ielt_parent = ielt;
+            if (parent_num != NULL) {
+              ielt_parent = parent_num[i];
             }
-            else {
-              _point_coords = &(_points_in_elements->coords[ipart][3*(idx_pts_elts + k1)]);
+
+            int idx_pts_elts = _points_in_elements->pts_inside_idx[ipart][ielt_parent];
+            int n_pts_elts = _points_in_elements->pts_inside_idx[ipart][ielt_parent+1] - idx_pts_elts;
+            for (int k1 = 0; k1 < n_pts_elts; k1++) {
+
+              const double  *_point_coords;
+
+              if (_points_in_elements->dist2[ipart][idx_pts_elts + k1] >= 0.) {
+                _point_coords = &(_points_in_elements->projected_coords[ipart][3*(idx_pts_elts + k1)]);
+              }
+              else {
+                _point_coords = &(_points_in_elements->coords[ipart][3*(idx_pts_elts + k1)]);
+              }
+              // printf("first = %i | size = %i  \n", 3 * (idx_pts_elts + k1), 3 * _points_in_elements->n_elts[ipart]);
+              /*PDM_bool_t stat = PDM_point_location_compute_uvw (t_elt,
+                                                                _point_coords,
+                                                                _cell_coord,
+                                                                1.e-6,
+                                                                &(_points_in_elements->uvw[ipart][3 * (idx_pts_elts + k1)]));
+              assert (stat);*/
+
+              PDM_ho_location (t_elt,
+                1,
+                n_vtx,
+                _cell_coord,
+                _point_coords,
+                _projected_coords,
+                &(_points_in_elements->uvw[ipart][3 * (idx_pts_elts + k1)]));
             }
-            // printf("first = %i | size = %i  \n", 3 * (idx_pts_elts + k1), 3 * _points_in_elements->n_elts[ipart]);
-            /*PDM_bool_t stat = PDM_point_location_compute_uvw (t_elt,
-                                                              _projected_coords,
-                                                              _cell_coord,
-                                                              1.e-6,
-                                                              &(_points_in_elements->uvw[ipart][3 * (idx_pts_elts + k1)]));
-            if (!stat) {
-              char *pref = "/stck/bandrieu/workspace/paradigma-dev/test/location/newton/";
-              char filename[999];
-              FILE *f = NULL;
-
-              sprintf(filename, "%sdebug_point_%2.2d.vtk", pref, my_rank);
-              f = fopen(filename, "w");
-              fprintf(f,"# vtk DataFile Version 2.0\npoint\nASCII\nDATASET UNSTRUCTURED_GRID\n");
-              fprintf(f,"POINTS 1 double\n");
-              fprintf(f,"%f %f %f\n",
-                      _point_coords[0], _point_coords[1], _point_coords[2]);
-              fprintf(f,"CELLS 1 2\n1 0\n");
-              fprintf(f,"CELL_TYPES 1\n1\n");
-              fclose(f);
-
-              sprintf(filename, "%sdebug_proj_%2.2d.vtk", pref, my_rank);
-              f = fopen(filename, "w");
-              fprintf(f,"# vtk DataFile Version 2.0\nproj\nASCII\nDATASET UNSTRUCTURED_GRID\n");
-              fprintf(f,"POINTS 1 double\n");
-              fprintf(f,"%f %f %f\n",
-                      _projected_coords[0], _projected_coords[1], _projected_coords[2]);
-              fprintf(f,"CELLS 1 2\n1 0\n");
-              fprintf(f,"CELL_TYPES 1\n1\n");
-              fclose(f);
-
-              sprintf(filename, "%sdebug_cell_%2.2d.vtk", pref, my_rank);
-              f = fopen(filename, "w");
-              fprintf(f,"# vtk DataFile Version 2.0\ncell\nASCII\nDATASET UNSTRUCTURED_GRID\n");
-              fprintf(f,"POINTS %d double\n", n_vtx);
-              for (int j = 0; j < n_vtx; j++) {
-                fprintf(f,"%f %f %f\n", _cell_coord[3*j], _cell_coord[3*j+1], _cell_coord[3*j+2]);
-              }
-              fprintf(f,"CELLS 1 %d\n%d ", 1 + n_vtx, n_vtx);
-              for (int j = 0; j < n_vtx; j++) {
-                fprintf(f, "%d ", j);
-              }
-              int vtk_t_elt;
-              if (t_elt == PDM_MESH_NODAL_POINT) {
-                vtk_t_elt = 1;
-              } else if (t_elt == PDM_MESH_NODAL_BAR2) {
-                vtk_t_elt = 3;
-              } else if (t_elt == PDM_MESH_NODAL_TRIA3) {
-                vtk_t_elt = 5;
-              } else if (t_elt == PDM_MESH_NODAL_QUAD4) {
-                vtk_t_elt = 9;
-              } else if (t_elt == PDM_MESH_NODAL_POLY_2D) {
-                vtk_t_elt = 7;
-              } else if (t_elt == PDM_MESH_NODAL_TETRA4) {
-                vtk_t_elt = 10;
-              } else if (t_elt == PDM_MESH_NODAL_PYRAMID5) {
-                vtk_t_elt = 14;
-              } else if (t_elt == PDM_MESH_NODAL_PRISM6) {
-                vtk_t_elt = 13;
-              } else if (t_elt == PDM_MESH_NODAL_HEXA8) {
-                vtk_t_elt = 12;
-              } else {
-                //?
-              }
-              fprintf(f,"CELL_TYPES 1\n%d\n", vtk_t_elt);
-              fclose(f);
-            }
-            assert (stat);*/
-
-            PDM_ho_location (t_elt,
-                             1,
-                             n_vtx,
-                             _cell_coord,
-                             _point_coords,
-                             _projected_coords,
-                             &(_points_in_elements->uvw[ipart][3 * (idx_pts_elts + k1)]));
           }
         }
+        ielt += 1;
       }
-      ielt += 1;
-    }
 
-    free (_cell_coord);
+      free (_cell_coord);
+    }
 
     PDM_timer_hang_on(ml->timer);
     e_t_elapsed = PDM_timer_elapsed(ml->timer);
@@ -5317,6 +5266,18 @@ PDM_mesh_location_mesh_nodal_get
 )
 {
   return ml->mesh_nodal;
+}
+
+/**
+ * Disable uvw computation after reverse location data
+ */
+void
+PDM_mesh_location_disable_uvw_computation
+(
+ PDM_mesh_location_t *ml
+)
+{
+  ml->uvw_to_compute = 0;
 }
 
 #ifdef	__cplusplus
