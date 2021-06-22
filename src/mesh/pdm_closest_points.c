@@ -309,17 +309,17 @@ PDM_closest_points_n_part_cloud_set
   cls->tgt_cloud = malloc (sizeof(_tgt_point_cloud_t));
 
   cls->src_cloud->n_part   = n_part_cloud_src;
-  cls->src_cloud->coords   = malloc (sizeof(double *) * n_part_cloud_src);
-  cls->src_cloud->gnum     = malloc (sizeof(int *) * n_part_cloud_src);
-  cls->src_cloud->n_points = malloc (sizeof(int) * n_part_cloud_src);
+  cls->src_cloud->coords   = malloc (sizeof(double      *) * n_part_cloud_src);
+  cls->src_cloud->gnum     = malloc (sizeof(PDM_g_num_t *) * n_part_cloud_src);
+  cls->src_cloud->n_points = malloc (sizeof(int          ) * n_part_cloud_src);
 
   cls->src_cloud->tgt_in_src_idx = NULL;
   cls->src_cloud->tgt_in_src     = NULL;
 
   cls->tgt_cloud->n_part           = n_part_cloud_tgt;
-  cls->tgt_cloud->coords           = malloc (sizeof(double *) * n_part_cloud_tgt);
-  cls->tgt_cloud->gnum             = malloc (sizeof(int *) * n_part_cloud_tgt);
-  cls->tgt_cloud->n_points         = malloc (sizeof(int) * n_part_cloud_tgt);
+  cls->tgt_cloud->coords           = malloc (sizeof(double      *) * n_part_cloud_tgt);
+  cls->tgt_cloud->gnum             = malloc (sizeof(PDM_g_num_t *) * n_part_cloud_tgt);
+  cls->tgt_cloud->n_points         = malloc (sizeof(int          ) * n_part_cloud_tgt);
   cls->tgt_cloud->closest_src_gnum = NULL;
   cls->tgt_cloud->closest_src_dist = NULL;
 }
