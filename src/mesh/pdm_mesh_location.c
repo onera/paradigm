@@ -2692,9 +2692,173 @@ _point_cloud_extract_selection
 
 
 
+#if 0
+static void
+_compute_uvw
+(
+ PDM_mesh_location_t *ml
+ )
+{
+  const double newton_tol = 1.e-6;
+  double *cell_coord = malloc (sizeof(double) * 8 * 3);
+  double *cell_coord_ijk = malloc (sizeof(double) * 8 * 3);
+
+  int n_part = PDM_Mesh_nodal_n_part_get (ml->mesh_nodal);
+  int n_block = PDM_Mesh_nodal_n_blocks_get (ml->mesh_nodal);
+  int *block_id = PDM_Mesh_nodal_blocks_id_get (ml->mesh_nodal);
+
+  for (int ipart = 0; ipart < n_part; ipart++) {
+    int ielt = 0;
+
+    _points_in_element_t *pie = ml->points_in_elements[ipart];
+    const double *vtx_coord = PDM_Mesh_nodal_vertices_get (ml->mesh_nodal,
+                                                           ipart);
+    for (int iblock = 0; iblock < n_block; iblock++) {
+      int id_block = block_id[iblock];
+
+      PDM_Mesh_nodal_elt_t t_elt = PDM_Mesh_nodal_block_type_get (ml->mesh_nodal,
+                                                                  id_block);
+
+      if (t_elt == PDM_MESH_NODAL_POLY_3D || t_elt == PDM_MESH_NODAL_POLY_2D) {
+        continue;
+      }
+
+      int *parent_num = PDM_Mesh_nodal_block_parent_num_get (ml->mesh_nodal,
+                                                             id_block,
+                                                             ipart);
+
+      int n_elt_block = PDM_Mesh_nodal_block_n_elt_get (ml->mesh_nodal,
+                                                        id_block,
+                                                        ipart);
+
+      int *cell_vtx;
+      PDM_Mesh_nodal_block_std_get (ml->mesh_nodal,
+                                    id_block,
+                                    ipart,
+                                    &cell_vtx);
+
+      int n_vtx = PDM_Mesh_nodal_n_vtx_elt_get (t_elt, 1);
+
+      for (int i = 0; i < n_elt_block; i++) {
+        int order_ijk = 0;
+
+        int ielt_parent = ielt;
+        if (parent_num != NULL) {
+          ielt_parent = parent_num[i];
+        }
+
+        for (int ipt = pie[ielt_parent]; ipt < pie[ielt_parent]; ipt++) {
+          const double *point_coord;
+          if (pie->dist2[ipart][idx_pts_elts + k1] >= 0.) {
+            _point_coords = &(_points_in_elements->projected_coords[ipart][3*(idx_pts_elts + k1)]);
+          }
+          else {
+            _point_coords = &(_points_in_elements->coords[ipart][3*(idx_pts_elts + k1)]);
+          }
+        }
+      }
+
+    } // End of loop on nodal blocks
+  } // End of loop on parts
 
 
 
+
+
+
+
+
+
+
+
+  for (int ielt = 0; ielt < n_elt; ielt++) {
+    int order_ijk = 0;
+    PDM_Mesh_nodal_elt_t t_elt = elt_type[ielt];
+    int n_vtx = PDM_Mesh_nodal_n_vtx_elt_get (t_elt, 1);
+    double *cell_coord = vtx_coord + 3*vtx_idx[ielt];
+
+    for (int ipt = pts_idx[ielt]; ipt < pts_idx[ielt+1]; ipt++) {
+      double *xyz = pts_coord + 3*ipt;
+      double *uvw = pts_uvw + 3*ipt;
+      PDM_bool_t stat = PDM_point_location_compute_uvw (t_elt,
+                                                        xyz,
+                                                        cell_coord,
+                                                        newton_tol,
+                                                        uvw);
+
+      if (!stat) {
+        /* Newton failed, try subdivision method */
+        if (!order_ijk) {
+          /* Get cell coord in ijk order */
+          if (t_elt == PDM_MESH_NODAL_PRISM6 ||
+              t_elt == PDM_MESH_NODAL_TETRA4 ||
+              t_elt == PDM_MESH_NODAL_TRIA3  ||
+              t_elt == PDM_MESH_NODAL_BAR2) {
+            _cell_coord = cell_coord;
+          }
+          else if (t_elt == PDM_MESH_NODAL_QUAD4 ||
+                     t_elt == PDM_MESH_NODAL_PYRAMID5 ||
+                     t_elt == PDM_MESH_NODAL_HEXA8) {
+            if (_cell_coord == NULL) {
+              _cell_coord = malloc (sizeof(double) * 24);
+            }
+            _cell_coord[ 0] = cell_coord[ 0];
+            _cell_coord[ 1] = cell_coord[ 1];
+            _cell_coord[ 2] = cell_coord[ 2];
+
+            _cell_coord[ 3] = cell_coord[ 3];
+            _cell_coord[ 4] = cell_coord[ 4];
+            _cell_coord[ 5] = cell_coord[ 5];
+
+            _cell_coord[ 6] = cell_coord[ 9];
+            _cell_coord[ 7] = cell_coord[10];
+            _cell_coord[ 8] = cell_coord[11];
+
+            _cell_coord[ 9] = cell_coord[ 6];
+            _cell_coord[10] = cell_coord[ 7];
+            _cell_coord[11] = cell_coord[ 8];
+
+            if (t_elt == PDM_MESH_NODAL_PYRAMID5 ||
+                t_elt == PDM_MESH_NODAL_HEXA8 ) {
+              _cell_coord[12] = cell_coord[12];
+              _cell_coord[13] = cell_coord[13];
+              _cell_coord[14] = cell_coord[14];
+
+              if (t_elt == PDM_MESH_NODAL_HEXA8) {
+                _cell_coord[15] = cell_coord[15];
+                _cell_coord[16] = cell_coord[16];
+                _cell_coord[17] = cell_coord[17];
+
+                _cell_coord[18] = cell_coord[21];
+                _cell_coord[19] = cell_coord[22];
+                _cell_coord[20] = cell_coord[23];
+
+                _cell_coord[21] = cell_coord[18];
+                _cell_coord[22] = cell_coord[19];
+                _cell_coord[23] = cell_coord[20];
+              }
+            }
+          }
+        }
+
+        double proj_coord[3];
+        PDM_ho_location (t_elt,
+                         1,
+                         n_vtx,
+                         _cell_coord,
+                         xyz,
+                         proj_coord,
+                         uvw);
+      }
+    } // End of loop on points
+
+  } // End of loop on elements
+
+  if (_cell_coord != NULL) {
+    free (_cell_coord);
+  }
+}
+#endif
 
 
 
@@ -5132,8 +5296,11 @@ PDM_mesh_location_t        *ml
 
     /* Compute uvw */
     if (ml->uvw_to_compute) {
+      const double newton_tol = 1.e-6;
+
       // Allocation uvw
-      double *_cell_coord = malloc (sizeof(double) * 8 * 3);
+      double *_cell_coords = malloc (sizeof(double) * 8 * 3);
+      double *_cell_coords_ijk = malloc (sizeof(double) * 8 * 3);
       for (int ipart = 0; ipart < n_part_nodal; ipart++) {
         int ielt = 0;
         const double *coords_vtx = PDM_Mesh_nodal_vertices_get (ml->mesh_nodal,
@@ -5167,61 +5334,11 @@ PDM_mesh_location_t        *ml
           // PDM_log_trace_array_double(_points_in_elements->coords[ipart], 3 * _points_in_elements->pts_inside_idx[ipart][n_elt_block], "coords");
 
           for (int i = 0; i < n_elt_block; i++) {
-
-
-            if (t_elt == PDM_MESH_NODAL_PRISM6 ||
-              t_elt == PDM_MESH_NODAL_TETRA4 ||
-              t_elt == PDM_MESH_NODAL_TRIA3  ||
-              t_elt == PDM_MESH_NODAL_BAR2) {
-            //if (1) {
-
-              for (int k = 0; k < n_vtx; k++) {
-                int ivtx = connec[k] - 1;
-                for (int j = 0; j < 3; j++) {
-                  _cell_coord[3*k+j] = coords_vtx[3*ivtx+j];
-                }
-              }
-            }
-
-            else if (t_elt == PDM_MESH_NODAL_QUAD4 ||
-                     t_elt == PDM_MESH_NODAL_PYRAMID5 ||
-                     t_elt == PDM_MESH_NODAL_HEXA8) {
-
-              _cell_coord[ 0] = coords_vtx[3*(connec[i*n_vtx+0]-1)+0];
-              _cell_coord[ 1] = coords_vtx[3*(connec[i*n_vtx+0]-1)+1];
-              _cell_coord[ 2] = coords_vtx[3*(connec[i*n_vtx+0]-1)+2];
-
-              _cell_coord[ 3] = coords_vtx[3*(connec[i*n_vtx+1]-1)+0];
-              _cell_coord[ 4] = coords_vtx[3*(connec[i*n_vtx+1]-1)+1];
-              _cell_coord[ 5] = coords_vtx[3*(connec[i*n_vtx+1]-1)+2];
-
-              _cell_coord[ 6] = coords_vtx[3*(connec[i*n_vtx+3]-1)+0];
-              _cell_coord[ 7] = coords_vtx[3*(connec[i*n_vtx+3]-1)+1];
-              _cell_coord[ 8] = coords_vtx[3*(connec[i*n_vtx+3]-1)+2];
-
-              _cell_coord[ 9] = coords_vtx[3*(connec[i*n_vtx+2]-1)+0];
-              _cell_coord[10] = coords_vtx[3*(connec[i*n_vtx+2]-1)+1];
-              _cell_coord[11] = coords_vtx[3*(connec[i*n_vtx+2]-1)+2];
-
-              if (t_elt == PDM_MESH_NODAL_PYRAMID5 ||
-                  t_elt == PDM_MESH_NODAL_HEXA8 ) {
-                _cell_coord[12] = coords_vtx[3*(connec[i*n_vtx+4]-1)+0];
-                _cell_coord[13] = coords_vtx[3*(connec[i*n_vtx+4]-1)+1];
-                _cell_coord[14] = coords_vtx[3*(connec[i*n_vtx+4]-1)+2];
-
-                if (t_elt == PDM_MESH_NODAL_HEXA8) {
-                  _cell_coord[15] = coords_vtx[3*(connec[i*n_vtx+5]-1)+0];
-                  _cell_coord[16] = coords_vtx[3*(connec[i*n_vtx+5]-1)+1];
-                  _cell_coord[17] = coords_vtx[3*(connec[i*n_vtx+5]-1)+2];
-
-                  _cell_coord[18] = coords_vtx[3*(connec[i*n_vtx+7]-1)+0];
-                  _cell_coord[19] = coords_vtx[3*(connec[i*n_vtx+7]-1)+1];
-                  _cell_coord[20] = coords_vtx[3*(connec[i*n_vtx+7]-1)+2];
-
-                  _cell_coord[21] = coords_vtx[3*(connec[i*n_vtx+6]-1)+0];
-                  _cell_coord[22] = coords_vtx[3*(connec[i*n_vtx+6]-1)+1];
-                  _cell_coord[23] = coords_vtx[3*(connec[i*n_vtx+6]-1)+2];
-                }
+            int order_ijk = 0;
+            for (int k = 0; k < n_vtx; k++) {
+              int ivtx = connec[k] - 1;
+              for (int j = 0; j < 3; j++) {
+                _cell_coords[3*k+j] = coords_vtx[3*ivtx+j];
               }
             }
 
@@ -5232,40 +5349,100 @@ PDM_mesh_location_t        *ml
               ielt_parent = parent_num[i];
             }
 
-            int idx_pts_elts = _points_in_elements->pts_inside_idx[ipart][ielt_parent];
-            int n_pts_elts = _points_in_elements->pts_inside_idx[ipart][ielt_parent+1] - idx_pts_elts;
-            for (int k1 = 0; k1 < n_pts_elts; k1++) {
+            //int idx_pts_elts = _points_in_elements->pts_inside_idx[ipart][ielt_parent];
+            //int n_pts_elts = _points_in_elements->pts_inside_idx[ipart][ielt_parent+1] - idx_pts_elts;
+            //for (int k1 = 0; k1 < n_pts_elts; k1++) {
+            for (int ipt = _points_in_elements->pts_inside_idx[ipart][ielt_parent];
+                 ipt < _points_in_elements->pts_inside_idx[ipart][ielt_parent+1];
+                 ipt++) {
 
-              const double  *_point_coords;
+              const double *_point_coords;
+              double *_point_uvw = _points_in_elements->uvw[ipart] + 3*ipt;
 
-              if (_points_in_elements->dist2[ipart][idx_pts_elts + k1] >= 0.) {
-                _point_coords = &(_points_in_elements->projected_coords[ipart][3*(idx_pts_elts + k1)]);
+              //if (_points_in_elements->dist2[ipart][idx_pts_elts + k1] >= 0.) {
+              if (_points_in_elements->dist2[ipart][ipt] >= 0.) {
+                _point_coords = _points_in_elements->projected_coords[ipart] + 3*ipt;
+                //&(_points_in_elements->projected_coords[ipart][3*(idx_pts_elts + k1)]);
               }
               else {
-                _point_coords = &(_points_in_elements->coords[ipart][3*(idx_pts_elts + k1)]);
+                _point_coords = _points_in_elements->coords[ipart] + 3*ipt;
+                //&(_points_in_elements->coords[ipart][3*(idx_pts_elts + k1)]);
               }
-              // printf("first = %i | size = %i  \n", 3 * (idx_pts_elts + k1), 3 * _points_in_elements->n_elts[ipart]);
-              /*PDM_bool_t stat = PDM_point_location_compute_uvw (t_elt,
-                                                                _point_coords,
-                                                                _cell_coord,
-                                                                1.e-6,
-                                                                &(_points_in_elements->uvw[ipart][3 * (idx_pts_elts + k1)]));
-              assert (stat);*/
 
-              PDM_ho_location (t_elt,
-                1,
-                n_vtx,
-                _cell_coord,
-                _point_coords,
-                _projected_coords,
-                &(_points_in_elements->uvw[ipart][3 * (idx_pts_elts + k1)]));
+              PDM_bool_t stat = PDM_point_location_compute_uvw (t_elt,
+                                                                _point_coords,
+                                                                _cell_coords,
+                                                                newton_tol,
+                                                                _point_uvw);
+              //&(_points_in_elements->uvw[ipart][3 * (idx_pts_elts + k1)]));
+
+              if (!stat) {
+                /* Newton failed, try subdivision method */
+                if (!order_ijk) {
+                  /* Get cell coord in ijk order */
+                  order_ijk = 1;
+                  if (t_elt == PDM_MESH_NODAL_PRISM6 ||
+                      t_elt == PDM_MESH_NODAL_TETRA4 ||
+                      t_elt == PDM_MESH_NODAL_TRIA3  ||
+                      t_elt == PDM_MESH_NODAL_BAR2) {
+                    _cell_coords_ijk = _cell_coords;
+                  } else {
+                    _cell_coords_ijk[ 0] = _cell_coords[ 0];
+                    _cell_coords_ijk[ 1] = _cell_coords[ 1];
+                    _cell_coords_ijk[ 2] = _cell_coords[ 2];
+
+                    _cell_coords_ijk[ 3] = _cell_coords[ 3];
+                    _cell_coords_ijk[ 4] = _cell_coords[ 4];
+                    _cell_coords_ijk[ 5] = _cell_coords[ 5];
+
+                    _cell_coords_ijk[ 6] = _cell_coords[ 9];
+                    _cell_coords_ijk[ 7] = _cell_coords[10];
+                    _cell_coords_ijk[ 8] = _cell_coords[11];
+
+                    _cell_coords_ijk[ 9] = _cell_coords[ 6];
+                    _cell_coords_ijk[10] = _cell_coords[ 7];
+                    _cell_coords_ijk[11] = _cell_coords[ 8];
+
+                    if (t_elt == PDM_MESH_NODAL_PYRAMID5 ||
+                        t_elt == PDM_MESH_NODAL_HEXA8 ) {
+                      _cell_coords_ijk[12] = _cell_coords[12];
+                      _cell_coords_ijk[13] = _cell_coords[13];
+                      _cell_coords_ijk[14] = _cell_coords[14];
+
+                      if (t_elt == PDM_MESH_NODAL_HEXA8) {
+                        _cell_coords_ijk[15] = _cell_coords[15];
+                        _cell_coords_ijk[16] = _cell_coords[16];
+                        _cell_coords_ijk[17] = _cell_coords[17];
+
+                        _cell_coords_ijk[18] = _cell_coords[21];
+                        _cell_coords_ijk[19] = _cell_coords[22];
+                        _cell_coords_ijk[20] = _cell_coords[23];
+
+                        _cell_coords_ijk[21] = _cell_coords[18];
+                        _cell_coords_ijk[22] = _cell_coords[19];
+                        _cell_coords_ijk[23] = _cell_coords[20];
+                      }
+                    }
+                  }
+                }
+
+                PDM_ho_location (t_elt,
+                                 1,
+                                 n_vtx,
+                                 _cell_coords_ijk,
+                                 _point_coords,
+                                 _projected_coords,
+                                 _point_uvw);
+                //&(_points_in_elements->uvw[ipart][3 * (idx_pts_elts + k1)]));
+              }
             }
           }
         }
         ielt += 1;
       }
 
-      free (_cell_coord);
+      if (_cell_coords_ijk != _cell_coords) free (_cell_coords_ijk);
+      free (_cell_coords);
     }
 
     PDM_timer_hang_on(ml->timer);
