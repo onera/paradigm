@@ -4496,6 +4496,8 @@ _single_closest_point_explicit
         else {
 
           int n_select = 0;
+          for (int i=0; i < 8; i++)
+            child_dist[i] = HUGE_VAL;
           int selected_id[8];
           for (int i = 0; i < n_child; i++) {
             if (_node->children_id[i] >= 0) {
@@ -8896,7 +8898,8 @@ PDM_para_octree_single_closest_point
   }
 
   if (n_rank == 1) {
-    PDM_timer_free (timer);
+    if (DETAIL_TIMER)
+      PDM_timer_free (timer);
     return;
   }
 
