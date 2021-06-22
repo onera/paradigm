@@ -2723,7 +2723,7 @@ PDM_mesh_location_t        *ml
   const int octree_build_leaf_neighbours = 0;
   int octree_id;
 
-  const int VISU = 0;
+  const int VISU = 1;
   int allow_extraction = 1;
   float extraction_threshold = 0.5; // max size ratio between extracted and original meshes
 
@@ -3775,9 +3775,90 @@ PDM_mesh_location_t        *ml
     PDM_timer_resume(ml->timer);
 
     /*
+     * 2nd extraction: Remove elements that cannot contain any target point
+     */
+    if (use_extracted_mesh) {
+      int idx1 = 0;
+      ibox = 0;
+      for (int iblock = 0; iblock < n_blocks; iblock++) {
+        for (int ipart = 0; ipart < n_parts; ipart++) {
+
+          int idx2 = 0;
+          for (int ielt = 0; ielt < n_select_elt[iblock][ipart]; ielt++) {
+            if (pts_idx[ibox] < pts_idx[ibox+1]) {
+              select_elt_l_num[iblock][ipart][idx2] = select_elt_l_num[iblock][ipart][ielt];
+              select_box_parent_g_num[idx1] = select_box_parent_g_num[ibox];
+              select_box_g_num[idx1] = select_box_g_num[ibox];
+              pts_idx[idx1+1] = pts_idx[ibox+1];
+              idx2++;
+              idx1++;
+            }
+            ibox++;
+          }
+          // realloc?
+          n_select_elt[iblock][ipart] = idx2;
+
+        } // End of loop on parts
+      } // End of loop on nodal blocks
+      printf("[%d] before : %d, after : %d\n", my_rank, n_select_boxes, idx1);
+    }
+
+    else if (allow_extraction) {
+      use_extracted_mesh = 1;
+      select_box_parent_g_num = malloc (sizeof(PDM_g_num_t) * n_select_boxes);
+
+      int idx1 = 0;
+      ibox = 0;
+      for (int iblock = 0; iblock < n_blocks; iblock++) {
+        for (int ipart = 0; ipart < n_parts; ipart++) {
+          int part_n_elt = PDM_Mesh_nodal_block_n_elt_get (ml->mesh_nodal,
+                                                           iblock,
+                                                           ipart);
+
+          int idx2 = 0;
+          for (int ielt = 0; ielt < part_n_elt; ielt++) {
+            if (pts_idx[ibox] < pts_idx[ibox+1]) {
+              select_elt_l_num[iblock][ipart][idx2++] = ielt;
+              select_box_parent_g_num[idx1] = box_g_num[ielt];
+              pts_idx[idx1+1] = pts_idx[ibox+1];
+              idx1++;
+            }
+            ibox++;
+          }
+          // realloc?
+          n_select_elt[iblock][ipart] = idx2;
+
+        } // End of loop on parts
+      } // End of loop on nodal blocks
+
+      printf("[%d] before : %d, after : %d\n", my_rank, n_select_boxes, idx1);
+      n_select_boxes = idx1;
+
+      /*
+       *  Generate a new global numbering for selected boxes
+       */
+      PDM_gen_gnum_t *gen_gnum_boxes = PDM_gnum_create (3,
+                                                        1,
+                                                        PDM_FALSE,
+                                                        0.,
+                                                        ml->comm,
+                                                        PDM_OWNERSHIP_USER);
+      PDM_gnum_set_from_parents (gen_gnum_boxes,
+                                 0,
+                                 n_select_boxes,
+                                 select_box_parent_g_num);
+
+      PDM_gnum_compute (gen_gnum_boxes);
+
+      select_box_g_num = PDM_gnum_get (gen_gnum_boxes, 0);
+
+      PDM_gnum_free (gen_gnum_boxes);
+    }
+
+
+    /*
      * Load balancing: redistribute evenly elementary location operations
      */
-
     int redistrib_n_elt = 0;
 
     PDM_g_num_t *redistrib_elt_parent_g_num = NULL;
