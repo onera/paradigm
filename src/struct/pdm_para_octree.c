@@ -4896,7 +4896,7 @@ _points_inside_boxes_explicit
  const int                 i_copied_rank,
  const int                 n_box,
  const double              box_extents[],
- const PDM_morton_code_t   box_codes[],
+ // const PDM_morton_code_t   box_codes[],
  int                     **pts_idx,
  int                     **pts_l_num
  )
@@ -10795,7 +10795,7 @@ PDM_para_octree_points_inside_boxes_with_copies
                                    -1,
                                    part_n_box[0],
                                    box_extents1,
-                                   box_corners,
+                                   //box_corners,
                                    &(box_pts_idx[0]),
                                    &(box_pts_l_num[0]));
   }
@@ -10824,7 +10824,7 @@ PDM_para_octree_points_inside_boxes_with_copies
                                        i,
                                        part_n_box[i+1],
                                        box_extents_copied + copied_shift[i] * two_dim,
-                                       box_corners_copied + copied_shift[i] * 2,
+                                       //box_corners_copied + copied_shift[i] * 2,
                                        &(box_pts_idx[i+1]),
                                        &(box_pts_l_num[i+1]));
       }
