@@ -10160,7 +10160,7 @@ PDM_para_octree_points_inside_boxes
     free (box_pts_idx);
 
     /* Part#2 to Block */
-    PDM_MPI_Barrier(octree->comm);
+    // PDM_MPI_Barrier(octree->comm);
     double t1 = PDM_MPI_Wtime();
     PDM_part_to_block_t *ptb2 = PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                           PDM_PART_TO_BLOCK_POST_MERGE,
