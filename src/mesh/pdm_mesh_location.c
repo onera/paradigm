@@ -556,14 +556,14 @@ _redistribute_elementary_location
 
 
   /* Coordinates */
-  for (ielt = 0; ielt < n_elt; ielt++) {
+  /*for (ielt = 0; ielt < n_elt; ielt++) {
     n_pts_per_elt[ielt] *= 3;
-  }
+    }*/
 
   int *block_stride = NULL;
   double *block_pts_coord = NULL;
   PDM_part_to_block_exch (ptb,
-                          sizeof(double),
+                          3*sizeof(double),
                           PDM_STRIDE_VAR,
                           1,
                           &n_pts_per_elt,
@@ -598,14 +598,14 @@ _redistribute_elementary_location
   PDM_g_num_t *block_elt_g_num = PDM_part_to_block_block_gnum_get (ptb);
 
   /* Coordinates of vertices */
-  for (ielt = 0; ielt < n_elt; ielt++) {
+  /*for (ielt = 0; ielt < n_elt; ielt++) {
     n_vtx_per_elt[ielt] *= 3;
-  }
+    }*/
 
   int *block_n_vtx_per_elt = NULL;
   double *block_vtx_coord = NULL;
   PDM_part_to_block_exch (ptb,
-                          sizeof(double),
+                          3*sizeof(double),
                           PDM_STRIDE_VAR,
                           1,
                           &n_vtx_per_elt,
@@ -614,9 +614,9 @@ _redistribute_elementary_location
                           (void **) &block_vtx_coord);
   free (vtx_coord);
 
-  for (ielt = 0; ielt < *r_n_elt; ielt++) {
+  /*for (ielt = 0; ielt < *r_n_elt; ielt++) {
     block_n_vtx_per_elt[ielt] /= 3;
-  }
+    }*/
 
   /*
    * Polyhedra
@@ -1236,14 +1236,14 @@ _extract_selected_mesh_elements
 
 
   /* Coordinates */
-  for (ielt = 0; ielt < n_elt; ielt++) {
+  /*for (ielt = 0; ielt < n_elt; ielt++) {
     n_pts_per_elt[ielt] *= 3;
-  }
+    }*/
 
   int *block_stride = NULL;
   double *block_pts_coord = NULL;
   PDM_part_to_block_exch (ptb,
-                          sizeof(double),
+                          3*sizeof(double),
                           PDM_STRIDE_VAR,
                           1,
                           &n_pts_per_elt,
@@ -1290,14 +1290,14 @@ _extract_selected_mesh_elements
   PDM_g_num_t *block_elt_g_num = PDM_part_to_block_block_gnum_get (ptb);
 
   /* Coordinates of vertices */
-  for (ielt = 0; ielt < n_elt; ielt++) {
+  /*for (ielt = 0; ielt < n_elt; ielt++) {
     n_vtx_per_elt[ielt] *= 3;
-  }
+    }*/
 
   int *block_n_vtx_per_elt = NULL;
   double *block_vtx_coord = NULL;
   PDM_part_to_block_exch (ptb,
-                          sizeof(double),
+                          3*sizeof(double),
                           PDM_STRIDE_VAR,
                           1,
                           &n_vtx_per_elt,
@@ -1306,9 +1306,9 @@ _extract_selected_mesh_elements
                           (void **) &block_vtx_coord);
   free (vtx_coord);
 
-  for (ielt = 0; ielt < *r_n_elt; ielt++) {
+  /*for (ielt = 0; ielt < *r_n_elt; ielt++) {
     block_n_vtx_per_elt[ielt] /= 3;
-  }
+    }*/
 
   /*
    * Polyhedra
@@ -2506,17 +2506,17 @@ PDM_mesh_location_t *ml
                 t_elaps_max[REVERSE_LOCATION_DATA],
                 t_cpu_max[REVERSE_LOCATION_DATA]);
 
-    PDM_printf( "mesh_location timer : reverse location data ptb(elapsed and cpu) :                   "
+    PDM_printf( "mesh_location timer : reverse location data - ptb (elapsed and cpu) :           "
                 " %12.5es %12.5es\n",
                 t_elaps_max[REVERSE_LOCATION_DATA_PTB],
                 t_cpu_max[REVERSE_LOCATION_DATA_PTB]);
 
-    PDM_printf( "mesh_location timer : reverse location data btp (elapsed and cpu) :                   "
+    PDM_printf( "mesh_location timer : reverse location data - btp (elapsed and cpu) :           "
                 " %12.5es %12.5es\n",
                 t_elaps_max[REVERSE_LOCATION_DATA_BTP],
                 t_cpu_max[REVERSE_LOCATION_DATA_BTP]);
 
-    PDM_printf( "mesh_location timer : reverse location data uvw (elapsed and cpu) :                   "
+    PDM_printf( "mesh_location timer : reverse location data - uvw (elapsed and cpu) :           "
                 " %12.5es %12.5es\n",
                 t_elaps_max[REVERSE_LOCATION_DATA_UVW],
                 t_cpu_max[REVERSE_LOCATION_DATA_UVW]);
@@ -2752,7 +2752,7 @@ PDM_mesh_location_t        *ml
   }
   if (my_rank == 0) printf("USE_OCTREE_BTSHARED = %d\n", USE_OCTREE_BTSHARED);
 
-  int USE_OCTREE_COPIES = 0;
+  int USE_OCTREE_COPIES = 1;
   env_var = getenv ("USE_OCTREE_COPIES");
   if (env_var != NULL) {
     USE_OCTREE_COPIES = atoi(env_var);
@@ -3800,7 +3800,7 @@ PDM_mesh_location_t        *ml
 
         } // End of loop on parts
       } // End of loop on nodal blocks
-      printf("[%d] before : %d, after : %d\n", my_rank, n_select_boxes, idx1);
+      printf("[%4d] before : %8d, after : %8d\n", my_rank, n_select_boxes, idx1);
     }
 
     else if (allow_extraction) {
@@ -3831,7 +3831,7 @@ PDM_mesh_location_t        *ml
         } // End of loop on parts
       } // End of loop on nodal blocks
 
-      printf("[%d] before : %d, after : %d\n", my_rank, n_select_boxes, idx1);
+      printf("[%4d] before : %8d, after : %8d\n", my_rank, n_select_boxes, idx1);
       n_select_boxes = idx1;
 
       /*
@@ -4231,12 +4231,12 @@ PDM_mesh_location_t        *ml
     free (weights_stride);
 
     /* Exchange projected coords */
-    for (int i = 0; i < n_pts; i++) {
+    /*for (int i = 0; i < n_pts; i++) {
       part_stride[i] = 3;
-    }
+      }*/
     double *block_proj_coord1 = NULL;
     PDM_part_to_block_exch (ptb1,
-                            sizeof(double),
+                            3*sizeof(double),
                             PDM_STRIDE_VAR,
                             1,
                             &part_stride,
@@ -4772,16 +4772,16 @@ PDM_mesh_location_t        *ml
 
     /* _coords_points */
 
-    for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
+    /*for (int ipart = 0; ipart < pcloud->n_part; ipart++) {
       for (int j = 0; j < pcloud->n_located[ipart]; j++) {
         ptb_stride[ipart][j]   = 3;
       }
-    }
+      }*/
 
     int *block_pts_per_elt_n2;
     double *block_pts_coords = NULL;
     PDM_part_to_block_exch (ptb,
-                            sizeof(double),
+                            3*sizeof(double),
                             PDM_STRIDE_VAR,
                             1,
                             ptb_stride,
@@ -4796,7 +4796,7 @@ PDM_mesh_location_t        *ml
 
     double *block_pts_proj = NULL;
     PDM_part_to_block_exch (ptb,
-                            sizeof(double),
+                            3*sizeof(double),
                             PDM_STRIDE_VAR,
                             1,
                             ptb_stride,
@@ -5052,14 +5052,14 @@ PDM_mesh_location_t        *ml
 
     /* _coords_points */
 
-    for (int i = 0; i < block_n_elt; i++) {
+    /*for (int i = 0; i < block_n_elt; i++) {
       block_pts_per_elt_n[i] *= 3;
-    }
+      }*/
 
     // PDM_log_trace_array_int(block_pts_per_elt_n , block_n_elt, "block_pts_per_elt_n  AFTER :: ");
     // PDM_log_trace_array_int(block_pts_per_elt_n2, block_n_elt, "block_pts_per_elt_n2 AFTER :: ");
     PDM_block_to_part_exch2 (btp,
-                             sizeof(double),
+                             3*sizeof(double),
                              PDM_STRIDE_VAR,
                              block_pts_per_elt_n,
                              (void *) block_pts_coords,
@@ -5075,7 +5075,7 @@ PDM_mesh_location_t        *ml
     /* _proj */
 
     PDM_block_to_part_exch2 (btp,
-                             sizeof(double),
+                             3*sizeof(double),
                              PDM_STRIDE_VAR,
                              block_pts_per_elt_n,
                              (void *) block_pts_proj,
