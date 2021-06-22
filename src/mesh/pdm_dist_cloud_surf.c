@@ -786,14 +786,14 @@ PDM_dist_cloud_surf_compute
     free (part_pts_g_num);
 
 
-    for (int i = 0; i < part_pts_elt_idx[n_pts_rank]; i++) {
+    /*for (int i = 0; i < part_pts_elt_idx[n_pts_rank]; i++) {
       part_stride[i] = 3;
-    }
+      }*/
 
     int *block_elt_pts_n3 = NULL;
     double *block_elt_pts_coord = NULL;
     PDM_part_to_block_exch (ptb,
-                            sizeof(double),
+                            3*sizeof(double),
                             PDM_STRIDE_VAR,
                             1,
                             &part_stride,
@@ -1066,13 +1066,13 @@ PDM_dist_cloud_surf_compute
     free (block_elt_pts_dist2);
 
 
-    for (int i = 0; i < l_block_elt_pts; i++) {
+    /*for (int i = 0; i < l_block_elt_pts; i++) {
       part_stride[i] = 3;
-    }
+      }*/
     double *tmp_block_pts_elt_proj = NULL;
     int *block_pts_elt_n3 = NULL;
     PDM_part_to_block_exch (ptb2,
-                            sizeof(double),
+                            3*sizeof(double),
                             PDM_STRIDE_VAR,
                             1,
                             &part_stride,
