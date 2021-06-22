@@ -10841,8 +10841,8 @@ PDM_para_octree_points_inside_boxes_with_copies
 
       size_box_pts += box_pts_idx[i+1][part_n_box[i+1]];
     }
-    free (copied_shift);
   }
+  if (copied_shift != NULL) free (copied_shift);
   if (box_extents1 != box_extents) free (box_extents1);
   free (box_corners);
 

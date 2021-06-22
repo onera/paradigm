@@ -866,7 +866,7 @@ int main(int argc, char *argv[])
   /*
    *  Check result from source PoV
    */
-  if (!deform) {
+  if (1) {//!deform) {
 
     n_wrong = 0;
 
