@@ -53,7 +53,7 @@ _usage(int exit_code)
      "  -octree          Use octree-based method.\n\n"
      "  -dbbree          Use dbbtree-based method.\n\n"
      "  -parmetis        Call ParMETIS.\n\n"
-     "  -pt-scocth       Call PT-Scotch.\n\n"
+     "  -pt-scotch       Call PT-Scotch.\n\n"
      "  -h               This message.\n\n");
 
   exit(exit_code);
@@ -91,7 +91,8 @@ _read_args(int            argc,
            PDM_g_num_t   *n_pts,
            int           *post,
            int           *part_method,
-           PDM_mesh_location_method_t *loc_method)
+           PDM_mesh_location_method_t *loc_method,
+           int           *disable_uvw)
 {
   int i = 1;
 
@@ -197,6 +198,9 @@ _read_args(int            argc,
     else if (strcmp(argv[i], "-dbbtree") == 0) {
       *loc_method = PDM_MESH_LOCATION_DBBTREE;
     }
+    else if (strcmp(argv[i], "-no_uvw") == 0) {
+      *disable_uvw = 1;
+    }
     else if (strcmp(argv[i], "-post") == 0) {
       *post = 1;
     }
@@ -207,7 +211,23 @@ _read_args(int            argc,
 }
 
 
+static void _rotate (const int  n_pts,
+                     double    *coord)
+{
+  double R[3][3] = {{0.9362934, -0.2896295, 0.1986693},
+                    {0.3129918,  0.9447025, -0.0978434},
+                    {-0.1593451,  0.1537920,  0.9751703}};
 
+  for (int i = 0; i < n_pts; i++) {
+    double x = coord[3*i];
+    double y = coord[3*i+1];
+    double z = coord[3*i+2];
+
+    for (int j = 0; j < 3; j++) {
+      coord[3*i+j] = R[j][0]*x + R[j][1]*y + R[j][2]*z;
+    }
+  }
+}
 
 static int
 _cube_mesh
@@ -261,13 +281,15 @@ _cube_mesh
                           &dface_group);
 
   if (deform) {
-    for (int i = 0; i < dn_vtx; i++) {
+    /*for (int i = 0; i < dn_vtx; i++) {
       double x = dvtx_coord[3*i];
       double z = dvtx_coord[3*i + 2];
 
       dvtx_coord[3*i]     += 0.1 * z * z;
       dvtx_coord[3*i + 2] += 0.2 * cos(PDM_PI * x);
-    }
+      }*/
+    _rotate (dn_vtx,
+             dvtx_coord);
   }
 
   /*
@@ -419,6 +441,7 @@ int main(int argc, char *argv[])
 
   PDM_g_num_t n_pts = 10;
   PDM_mesh_location_method_t loc_method = PDM_MESH_LOCATION_OCTREE;
+  int disable_uvw = 0;
 
   /*
    *  Read args
@@ -438,7 +461,8 @@ int main(int argc, char *argv[])
               &n_pts,
               &post,
               (int *) &part_method,
-              &loc_method);
+              &loc_method,
+              &disable_uvw);
 
 
   /*
@@ -464,7 +488,7 @@ int main(int argc, char *argv[])
                               ymin,
                               zmin,
                               length,
-                              deform);
+                              0);//deform);
 
   /*
    *  Target cube
@@ -692,7 +716,9 @@ int main(int argc, char *argv[])
   PDM_mesh_location_method_set (mesh_loc,
                                 loc_method);
 
-
+  if (disable_uvw) {
+    PDM_mesh_location_disable_uvw_computation (mesh_loc);
+  }
 
   /*
    *  Compute location
@@ -769,7 +795,7 @@ int main(int argc, char *argv[])
     }
 
 
-    if (!deform) {
+    if (1) {//!deform) {
 
       for (int k1 = 0; k1 < n_located; k1++) {
         int ipt = located[k1] - 1;
@@ -840,7 +866,7 @@ int main(int argc, char *argv[])
   /*
    *  Check result from source PoV
    */
-  if (!deform) {
+  if (1) {//!deform) {
 
     n_wrong = 0;
 

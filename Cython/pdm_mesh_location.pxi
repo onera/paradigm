@@ -155,6 +155,7 @@ cdef class MeshLocation:
   cdef PDM_mesh_location_t* _ml
   cdef int _size
   cdef int _rank
+  cdef int unlocated_get_done_once
   # ************************************************************************
 
   # ------------------------------------------------------------------------
@@ -177,6 +178,7 @@ cdef class MeshLocation:
 
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
     self._ml = PDM_mesh_location_create(mesh_nature, n_point_cloud, PDMC)
+    self.unlocated_get_done_once = 0
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
   # ------------------------------------------------------------------------
@@ -294,6 +296,7 @@ cdef class MeshLocation:
     # ************************************************************************
     # > Declaration
     cdef int           n_points
+    cdef int           n_located
     cdef double       *coords
     cdef PDM_g_num_t  *gnum
     cdef PDM_g_num_t  *location
@@ -308,6 +311,10 @@ cdef class MeshLocation:
                                  &n_points,
                                  &coords,
                                  &gnum)
+
+    n_located = PDM_mesh_location_n_located_get(self._ml,
+                                                i_point_cloud,
+                                                i_part)
 
     PDM_mesh_location_point_location_get(self._ml,
                                          i_point_cloud,
@@ -324,6 +331,7 @@ cdef class MeshLocation:
                                              PDM_G_NUM_NPY_INT,
                                              <void *> gnum)
 
+    dim = <NPY.npy_intp> n_located
     np_location = NPY.PyArray_SimpleNewFromData(1,
                                              &dim,
                                              PDM_G_NUM_NPY_INT,
@@ -337,7 +345,7 @@ cdef class MeshLocation:
     PyArray_ENABLEFLAGS(np_dist2, NPY.NPY_OWNDATA)
 
     # > Build numpy capsule
-    dim = <NPY.npy_intp> 3*n_points
+    dim = <NPY.npy_intp> 3*n_located
     np_p_proj_coord = NPY.PyArray_SimpleNewFromData(1,
                                               &dim,
                                               NPY.NPY_DOUBLE,
@@ -525,7 +533,9 @@ cdef class MeshLocation:
                                                  &dim,
                                                  NPY.NPY_INT32,
                                                  <void *> unlocated)
-    PyArray_ENABLEFLAGS(np_unlocated, NPY.NPY_OWNDATA)
+    if not self.unlocated_get_done_once:
+      PyArray_ENABLEFLAGS(np_unlocated, NPY.NPY_OWNDATA)
+      self.unlocated_get_done_once = 1
 
     return np_unlocated
 
@@ -555,5 +565,4 @@ cdef class MeshLocation:
     # ************************************************************************
     # > Declaration
     # ************************************************************************
-    print('PDM_mesh_location_free')
     PDM_mesh_location_free(self._ml, 1)

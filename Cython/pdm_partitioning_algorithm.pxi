@@ -59,7 +59,7 @@ def part_distgroup_to_partgroup(MPI.Comm                                      co
 
     # ~> \param [in]   pn_entity
     cdef int * _pn_entity
-    _pn_entity        = <int *> malloc(sizeof(int*) * _n_part )
+    _pn_entity        = <int *> malloc(sizeof(int) * _n_part )
     for idx, part_pn_entity  in enumerate(pn_entity):
         _pn_entity[idx] = part_pn_entity
 
@@ -67,7 +67,7 @@ def part_distgroup_to_partgroup(MPI.Comm                                      co
     cdef NPY.ndarray[npy_pdm_gnum_t, ndim=1, mode='c'] partLNToGN
     cdef PDM_g_num_t ** LNToGN
 
-    LNToGN        = <PDM_g_num_t **> malloc(sizeof(PDM_g_num_t **) * _n_part )
+    LNToGN        = <PDM_g_num_t **> malloc(sizeof(PDM_g_num_t *) * _n_part )
     for idx, partLNToGN in enumerate(pentity_ln_to_gn):
         LNToGN[idx] = <PDM_g_num_t *> partLNToGN.data
 
@@ -165,11 +165,11 @@ def transform_to_parent_gnum(NPY.ndarray[npy_pdm_gnum_t, mode='c', ndim=1] resul
   cdef int n_elmt = ln_to_gn.shape[0]
   cdef MPI.MPI_Comm c_comm = comm.ob_mpi
   cdef PDM_MPI_Comm PDMC   = PDM_MPI_mpi_2_pdm_mpi_comm(&c_comm)
-  print("transform_to_parent_gnum", results)
+  # print("transform_to_parent_gnum", results)
   PDM_transform_to_parent_gnum(<PDM_g_num_t*> results.data,
                                n_results,
                                <PDM_g_num_t*>ln_to_gn.data,
                                <PDM_g_num_t*>parent_ln_to_gn.data,
                                n_elmt,
                                PDMC)
-  print("transform_to_parent_gnum end", results)
+  # print("transform_to_parent_gnum end", results)

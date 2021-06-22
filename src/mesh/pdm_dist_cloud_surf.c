@@ -786,14 +786,14 @@ PDM_dist_cloud_surf_compute
     free (part_pts_g_num);
 
 
-    for (int i = 0; i < part_pts_elt_idx[n_pts_rank]; i++) {
+    /*for (int i = 0; i < part_pts_elt_idx[n_pts_rank]; i++) {
       part_stride[i] = 3;
-    }
+      }*/
 
     int *block_elt_pts_n3 = NULL;
     double *block_elt_pts_coord = NULL;
     PDM_part_to_block_exch (ptb,
-                            sizeof(double),
+                            3*sizeof(double),
                             PDM_STRIDE_VAR,
                             1,
                             &part_stride,
@@ -832,13 +832,13 @@ PDM_dist_cloud_surf_compute
     }
 
     PDM_part_to_block_t *ptb_elt = PDM_part_to_block_create2 (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
-                                                           PDM_PART_TO_BLOCK_POST_MERGE,
-                                                           1.,
-                                                           (PDM_g_num_t **) part_elt_g_num,
-                                                           _block_elt_distrib_idx,
-                                                           part_n_elt,
-                                                           n_part_mesh,
-                                                           comm);
+                                                              PDM_PART_TO_BLOCK_POST_MERGE,
+                                                              1.,
+                                                              (PDM_g_num_t **) part_elt_g_num,
+                                                              _block_elt_distrib_idx,
+                                                              part_n_elt,
+                                                              n_part_mesh,
+                                                              comm);
 
     int **part_elt_vtx_n = malloc (sizeof(int *) * n_part_mesh);
     double **part_elt_vtx_coord = malloc (sizeof(double *) * n_part_mesh);
@@ -1066,13 +1066,13 @@ PDM_dist_cloud_surf_compute
     free (block_elt_pts_dist2);
 
 
-    for (int i = 0; i < l_block_elt_pts; i++) {
+    /*for (int i = 0; i < l_block_elt_pts; i++) {
       part_stride[i] = 3;
-    }
+      }*/
     double *tmp_block_pts_elt_proj = NULL;
     int *block_pts_elt_n3 = NULL;
     PDM_part_to_block_exch (ptb2,
-                            sizeof(double),
+                            3*sizeof(double),
                             PDM_STRIDE_VAR,
                             1,
                             &part_stride,
