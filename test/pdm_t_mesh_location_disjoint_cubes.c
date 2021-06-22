@@ -91,7 +91,8 @@ _read_args(int            argc,
            PDM_g_num_t   *n_pts,
            int           *post,
            int           *part_method,
-           PDM_mesh_location_method_t *loc_method)
+           PDM_mesh_location_method_t *loc_method,
+           int           *disable_uvw)
 {
   int i = 1;
 
@@ -196,6 +197,9 @@ _read_args(int            argc,
     }
     else if (strcmp(argv[i], "-dbbtree") == 0) {
       *loc_method = PDM_MESH_LOCATION_DBBTREE;
+    }
+    else if (strcmp(argv[i], "-no_uvw") == 0) {
+      *disable_uvw = 1;
     }
     else if (strcmp(argv[i], "-post") == 0) {
       *post = 1;
@@ -419,6 +423,7 @@ int main(int argc, char *argv[])
 
   PDM_g_num_t n_pts = 10;
   PDM_mesh_location_method_t loc_method = PDM_MESH_LOCATION_OCTREE;
+  int disable_uvw = 0;
 
   /*
    *  Read args
@@ -438,7 +443,8 @@ int main(int argc, char *argv[])
               &n_pts,
               &post,
               (int *) &part_method,
-              &loc_method);
+              &loc_method,
+              &disable_uvw);
 
 
   /*
@@ -692,7 +698,9 @@ int main(int argc, char *argv[])
   PDM_mesh_location_method_set (mesh_loc,
                                 loc_method);
 
-
+  if (disable_uvw) {
+    PDM_mesh_location_disable_uvw_computation (mesh_loc);
+  }
 
   /*
    *  Compute location

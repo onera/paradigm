@@ -352,13 +352,18 @@ PDM_dist_cloud_surf_compute
 
   int rank;
   PDM_MPI_Comm_rank (comm, &rank);
+  int n_rank;
+  PDM_MPI_Comm_size (comm, &n_rank);
 
   //--->>>
-  _octree_type_t octree_type = PDM_OCTREE_SERIAL;
+  _octree_type_t octree_type = PDM_OCTREE_PARALLEL;
   char *env_octree_type = getenv ("PDM_OCTREE_TYPE");
   if (env_octree_type != NULL) {
     if (atoi(env_octree_type) == 0) {
       octree_type = PDM_OCTREE_SERIAL;
+    }
+    else if (atoi(env_octree_type) == 1) {
+      octree_type = PDM_OCTREE_PARALLEL;
     }
   }
   if (rank == 0) printf("octree_type = %d\n", octree_type);
@@ -675,6 +680,20 @@ PDM_dist_cloud_surf_compute
                                                     closest_vertices_dist2,
                                                     &part_pts_elt_idx,
                                                     &part_pts_elt_g_num);
+    if (0) {
+      int nmax = 0;
+      int imax = 0;
+      for (int i = 0; i < n_pts_rank; i++) {
+        int n = part_pts_elt_idx[i+1] - part_pts_elt_idx[i];
+        if (n > nmax) {
+          nmax = n;
+          imax = i;
+        }
+      }
+
+      printf("[%3d] pt %6d (%6ld) : %5d candidates (dist = %f)\n",
+             rank, imax, pts_g_num_rank[imax], nmax, sqrt(closest_vertices_dist2[imax]));
+    }
     if (idebug) {
       printf (" PDM_dbbtree_closest_upper_bound_dist_boxes_get n_pts_rank : %d\n", n_pts_rank);
       for (int i = 0; i < n_pts_rank; i++) {
@@ -790,15 +809,36 @@ PDM_dist_cloud_surf_compute
      *  Transfer element coords from parts to blocks
      *******************************************************************/
     PDM_g_num_t *block_elt_distrib_idx = PDM_part_to_block_distrib_index_get (ptb);
+    PDM_g_num_t *_block_elt_distrib_idx = block_elt_distrib_idx;
+
+    /* Fix incomplete distribution */
+    /*PDM_g_num_t l_max_elt_g_num = 0;
+    for (int ipart = 0; ipart < n_part_mesh; ipart++) {
+      for (int i = 0; i < part_n_elt[ipart]; i++) {
+        l_max_elt_g_num = PDM_MAX (l_max_elt_g_num, part_elt_g_num[ipart][i]);
+      }
+    }
+    PDM_g_num_t g_max_elt_g_num;
+    PDM_MPI_Allreduce (&l_max_elt_g_num, &g_max_elt_g_num, 1,
+    PDM__PDM_MPI_G_NUM, PDM_MPI_MAX, comm);*/
+    PDM_g_num_t g_max_elt_g_num = PDM_surf_mesh_n_g_face_get (surf_mesh);
+
+    if (block_elt_distrib_idx[n_rank] < g_max_elt_g_num) {
+      _block_elt_distrib_idx = malloc (sizeof(PDM_g_num_t) * (n_rank + 1));
+      for (int i = 0; i < n_rank; i++) {
+        _block_elt_distrib_idx[i] = block_elt_distrib_idx[i];
+      }
+      _block_elt_distrib_idx[n_rank] = g_max_elt_g_num;
+    }
 
     PDM_part_to_block_t *ptb_elt = PDM_part_to_block_create2 (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
-                                                           PDM_PART_TO_BLOCK_POST_MERGE,
-                                                           1.,
-                                                           (PDM_g_num_t **) part_elt_g_num,
-                                                           block_elt_distrib_idx,
-                                                           part_n_elt,
-                                                           n_part_mesh,
-                                                           comm);
+                                                              PDM_PART_TO_BLOCK_POST_MERGE,
+                                                              1.,
+                                                              (PDM_g_num_t **) part_elt_g_num,
+                                                              _block_elt_distrib_idx,
+                                                              part_n_elt,
+                                                              n_part_mesh,
+                                                              comm);
 
     int **part_elt_vtx_n = malloc (sizeof(int *) * n_part_mesh);
     double **part_elt_vtx_coord = malloc (sizeof(double *) * n_part_mesh);
@@ -1126,6 +1166,7 @@ PDM_dist_cloud_surf_compute
     free (block_pts_elt_g_num);
 
 
+    if (_block_elt_distrib_idx != block_elt_distrib_idx) free (_block_elt_distrib_idx);
     btp = PDM_block_to_part_free (btp);
     ptb_pts = PDM_part_to_block_free (ptb_pts);
     ptb = PDM_part_to_block_free (ptb);

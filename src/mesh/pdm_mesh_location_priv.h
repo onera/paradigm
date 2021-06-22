@@ -117,7 +117,9 @@ struct _pdm_mesh_location_t {
 
   double times_cpu_s[NTIMER_MESH_LOCATION];  /*!< System CPU time */
 
-  _points_in_element_t *points_in_elements; /*!< System CPU time */
+  _points_in_element_t *points_in_elements;
+
+  int uvw_to_compute; /* Compute uvw from source point of view */
 
 } ;
 
