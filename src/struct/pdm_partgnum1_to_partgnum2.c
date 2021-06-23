@@ -115,40 +115,41 @@ PDM_partgnum1_to_partgnum2_create
   int n_rank = ptp->n_rank;
 
 
-  ptp->n_ref_gnum2              = NULL;         
-  ptp->ref_gnum2                = NULL;          
-  ptp->n_unref_gnum2            = NULL;      
-  ptp->unref_gnum2              = NULL;        
-  ptp->gnum1_come_from_idx      = NULL;
-  ptp->gnum1_come_from          = NULL;    
+  ptp->n_ref_gnum2                = NULL;         
+  ptp->ref_gnum2                  = NULL;          
+  ptp->n_unref_gnum2              = NULL;      
+  ptp->unref_gnum2                = NULL;        
+  ptp->gnum1_come_from_idx        = NULL;
+  ptp->gnum1_come_from            = NULL;    
 
-  ptp->gnum1_to_send_buffer     = NULL;  
-  ptp->recv_buffer_to_ref_gnum2 = NULL;  
+  ptp->gnum1_to_send_buffer       = NULL;  
+  ptp->recv_buffer_to_ref_gnum2   = NULL;  
 
-  ptp->default_n_send_buffer    = malloc (sizeof(int) * n_rank);
-  ptp->default_i_send_buffer    = malloc (sizeof(int) * (n_rank + 1));
-  ptp->default_i_send_buffer[0] = 0;
-  ptp->default_n_recv_buffer    = malloc (sizeof(int) * n_rank);
-  ptp->default_i_recv_buffer    = malloc (sizeof(int) * (n_rank + 1));
-  ptp->default_i_recv_buffer[0] = 0;
+  ptp->default_n_send_buffer      = malloc (sizeof(int) * n_rank);
+  ptp->default_i_send_buffer      = malloc (sizeof(int) * (n_rank + 1));
+  ptp->default_i_send_buffer[0]   = 0;
+  ptp->default_n_recv_buffer      = malloc (sizeof(int) * n_rank);
+  ptp->default_i_recv_buffer      = malloc (sizeof(int) * (n_rank + 1));
+  ptp->default_i_recv_buffer[0]   = 0;
 
   for (int i = 0; i < n_rank; i++) {
     ptp->default_n_send_buffer[i] = 0;
     ptp->default_n_recv_buffer[i] = 0;
   }
 
-  ptp->async_n_exch             = 0;           
-  ptp->async_l_array            = 0;          
-  ptp->async_s_data             = NULL;          
-  ptp->async_cst_stride         = NULL;      
-  ptp->async_send_request       = NULL;    
-  ptp->async_recv_request       = NULL;    
-  ptp->async_send_buffer        = NULL;     
-  ptp->async_recv_buffer        = NULL;     
-  ptp->async_n_send_buffer      = NULL;   
-  ptp->async_i_send_buffer      = NULL;   
-  ptp->async_n_recv_buffer      = NULL;   
-  ptp->async_i_recv_buffer      = NULL; 
+  ptp->async_n_exch               = 0;           
+  ptp->async_l_array              = 0;          
+  ptp->async_s_data               = NULL;          
+  ptp->async_cst_stride           = NULL;      
+  ptp->async_tag                  = NULL;      
+  ptp->async_send_request         = NULL;    
+  ptp->async_recv_request         = NULL;    
+  ptp->async_send_buffer          = NULL;     
+  ptp->async_recv_buffer          = NULL;     
+  ptp->async_n_send_buffer        = NULL;   
+  ptp->async_i_send_buffer        = NULL;   
+  ptp->async_n_recv_buffer        = NULL;   
+  ptp->async_i_recv_buffer        = NULL; 
 
   /* 1 - gnum_location in 2 1D array gnum1_to_gnum2_rank gnum1_to_gnum2_part   gnum1_to_gnum2_part elt*/
 
@@ -615,21 +616,6 @@ PDM_partgnum1_to_partgnum2_create
   free (tag_elt2);
   free (ielt_to_ref);
 
-  // alltoall default_n_send_buffer -> default_n_recv_buffer -> default_i_recv_buffer 
-
-  // -> gnum1_come_from_idx () 
-
-  /* 6 - Alltoall on gnum1_to_gnum2_part gnum1_to_gnum2_elt orig_gnum1 */
-
-  /* 7 - gnum location on orig_gnum1 */
-
-  /* 8 - Define ref_gnum2 and unref_gnum2 */
-
-  /* 9 - Define gnum1_com_from */
-
-  /* 10 - Define recv_buffer_to_ref_gnum2 */
-
-
   return ptp;
 
 }
@@ -753,13 +739,8 @@ PDM_partgnum1_to_partgnum2_ref_gnum2_get
  int                        ***ref_gnum2
 )
 {
-  PDM_UNUSED (ptp);
-  PDM_UNUSED (n_ref_gnum2);
-  PDM_UNUSED (ref_gnum2);
-
-  PDM_error(__FILE__, __LINE__, 0,
-            "Error PDM_partgnum1_to_partgnum2_ref_gnum2_get not yet implemente\n");
-
+  *n_ref_gnum2 = ptp->n_ref_gnum2;
+  *ref_gnum2   = ptp->ref_gnum2;
 }
 
 
@@ -781,13 +762,8 @@ PDM_partgnum1_to_partgnum2_unref_gnum2_get
  int                        ***unref_gnum2
 )
 {
-  PDM_UNUSED (ptp);
-  PDM_UNUSED (n_unref_gnum2);
-  PDM_UNUSED (unref_gnum2);
-
-  PDM_error(__FILE__, __LINE__, 0,
-            "Error PDM_partgnum1_to_partgnum2_unref_gnum2_get not yet implemente\n");
-  
+  *n_unref_gnum2 = ptp->n_unref_gnum2;
+  *unref_gnum2   = ptp->unref_gnum2;  
 }
 
 
@@ -809,12 +785,8 @@ PDM_partgnum1_to_partgnum2_gnum1_come_from_get
  PDM_g_num_t                ***gnum1_come_from
 )
 {
-  PDM_UNUSED (ptp);
-  PDM_UNUSED (gnum1_come_from_idx);
-  PDM_UNUSED (gnum1_come_from);
-
-  PDM_error(__FILE__, __LINE__, 0,
-            "Error PDM_partgnum1_to_partgnum2_gnum1_come_from_get not yet implemente\n");
+  *gnum1_come_from_idx = ptp->gnum1_come_from_idx;
+  *gnum1_come_from     = ptp->gnum1_come_from;
 }
 
 
@@ -851,7 +823,7 @@ PDM_partgnum1_to_partgnum2_issend
 
   PDM_error(__FILE__, __LINE__, 0,
             "Error PDM_partgnum1_to_partgnum2_issend not yet implemente\n");
-  
+
 }
 
 
@@ -1006,6 +978,7 @@ PDM_partgnum1_to_partgnum2_free
     }
     free (ptp->async_s_data); 
     free (ptp->async_cst_stride);        
+    free (ptp->async_tag);        
     free (ptp->async_send_request);    
     free (ptp->async_recv_request);    
     free (ptp->async_send_buffer);      

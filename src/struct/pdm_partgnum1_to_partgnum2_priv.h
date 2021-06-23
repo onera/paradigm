@@ -53,10 +53,10 @@ struct _pdm_partgnum1_to_partgnum2_t {
   int                 i_rank;                   /*!< Current rank */
 
   int                *n_ref_gnum2;              /*!< Numbers of referenced gnum2 (size = \ref n_part2) */
-  PDM_g_num_t       **ref_gnum2;                /*!< Lists of referenced gnum2 (size = \ref n_part2) */
+  int               **ref_gnum2;                /*!< Lists of referenced gnum2 (size = \ref n_part2) */
 
   int                *n_unref_gnum2;            /*!< Numbers of unreferenced gnum2 (size = \ref n_part2) */
-  PDM_g_num_t       **unref_gnum2;              /*!< Lists of unreferenced gnum2 (size = \ref n_part2) */
+  int               **unref_gnum2;              /*!< Lists of unreferenced gnum2 (size = \ref n_part2) */
 
   int               **gnum1_come_from_idx;      /*!< Index for gnum1_come_from array (size = \ref n_part2) */
   PDM_g_num_t       **gnum1_come_from;          /*!< Gnum come from gnum1 for each referenced gnum2 */
@@ -73,6 +73,7 @@ struct _pdm_partgnum1_to_partgnum2_t {
   int                 async_l_array;            /*!< Size of arrays to store asynchonous exchanges */ 
   size_t             *async_s_data;             /*!< Size of datas of asynchonous exchanges */
   int                *async_cst_stride;         /*!< Constant strides of asynchonous exchanges */
+  int                *async_tag;                /*!< Tag of asynchonous exchanges */
   PDM_MPI_Request    *async_send_request;       /*!< Send requests of asynchonous exchanges */
   PDM_MPI_Request    *async_recv_request;       /*!< Receive requests of asynchonous exchanges */
   unsigned char     **async_send_buffer;        /*!< Send buffers of asynchonous exchanges */
