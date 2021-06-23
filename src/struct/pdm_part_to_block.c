@@ -2200,6 +2200,8 @@ PDM_part_to_block_asyn_post_treatment
 
   ptb->wait_status[request_id] = 2;
 
+  PDM_UNUSED(s_block_data);
+
 }
 
 

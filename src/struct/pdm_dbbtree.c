@@ -2159,7 +2159,9 @@ PDM_dbbtree_points_inside_boxes_with_copies
 
   PDM_timer_hang_on (timer);//
   t_end = PDM_timer_elapsed (timer);//
-  //printf("[%d] normalization : %12.5es\n", i_rank, t_end - t_begin);//
+  if(0 == 1) {
+    printf("[%d] normalization : %12.5es\n", i_rank, t_end - t_begin);//
+  }
   t_begin = t_end;//
   PDM_timer_resume (timer);//
 

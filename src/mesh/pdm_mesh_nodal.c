@@ -2036,7 +2036,6 @@ const PDM_Mesh_nodal_elt_t  t_elt
       }
 
       id_block += PDM_BLOCK_ID_BLOCK_STD;
-      printf(" mesh->n_block_std = %i --> id_block = %i \n", mesh->n_block_std, id_block);
       if (id_block >= PDM_BLOCK_ID_BLOCK_POLY2D) {
         PDM_error(__FILE__, __LINE__, 0, "The number of standard blocks must be less than %d\n",
                   PDM_BLOCK_ID_BLOCK_POLY2D);
