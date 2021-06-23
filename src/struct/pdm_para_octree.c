@@ -7132,8 +7132,8 @@ PDM_para_octree_build
     printf("\n");
   }
   if (0) {//octree->shared_rank_idx != NULL) {
-    //char *pref = "/stck/bandrieu/workspace/paradigma-dev/test/para_octree/shared_octree/";
-    char *pref = "";
+    //const char *pref = "/stck/bandrieu/workspace/paradigma-dev/test/para_octree/shared_octree/";
+    const char *pref = "";
     char filename[999];
     sprintf(filename, "%soctree_local_%4.4d.vtk", pref, rank);
     _export_nodes (filename,
@@ -7215,7 +7215,7 @@ PDM_para_octree_build
     }
 
     if (0) {
-      char *pref = "";
+      const char *pref = "";
       char filename[999];
       sprintf(filename, "%soctree_explicit_%4.4d.vtk", pref, rank);
       _export_explicit_nodes (filename,
@@ -7903,7 +7903,7 @@ PDM_para_octree_closest_points
     PDM_compute_uniform_entity_distribution_from_partition (octree->comm,
                                                             1,
                                                             &n_pts,
-                                                            &pts_g_num);
+                                                            (const PDM_g_num_t **) &pts_g_num);
 
   PDM_part_to_block_t *ptb1 = PDM_part_to_block_create2 (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                          PDM_PART_TO_BLOCK_POST_MERGE,
@@ -9289,7 +9289,7 @@ PDM_para_octree_single_closest_point
     PDM_compute_uniform_entity_distribution_from_partition (octree->comm,
                                                             1,
                                                             &n_pts,
-                                                            &pts_g_num);
+                                                            (const PDM_g_num_t **) &pts_g_num);
 
   PDM_part_to_block_t *ptb1 = PDM_part_to_block_create2 (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                          PDM_PART_TO_BLOCK_POST_MERGE,
