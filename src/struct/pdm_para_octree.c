@@ -914,7 +914,8 @@ _octants_check_alloc
   int is_realloc = 0;
   if (octants->n_nodes + n_free_node > octants->n_nodes_max) {
 
-    octants->n_nodes_max *= 2;
+    //octants->n_nodes_max *= 2;
+    octants->n_nodes_max = PDM_MAX (2*octants->n_nodes_max, octants->n_nodes + n_free_node);
 
     octants->codes    = realloc (octants->codes,
                                  sizeof(PDM_morton_code_t) * octants->n_nodes_max);
