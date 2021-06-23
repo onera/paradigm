@@ -3714,7 +3714,7 @@ PDM_mesh_location_t        *ml
       PDM_dbbtree_points_inside_boxes_with_copies (dbbt,
                                                    n_pts_pcloud,
                                                    pcloud_g_num,
-                                                   pcloud0_coord,
+                                                   pcloud_coord,
                                                    n_select_boxes,
                                                    select_box_g_num,
                                                    &pts_idx,
