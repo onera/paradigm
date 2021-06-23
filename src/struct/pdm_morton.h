@@ -234,7 +234,6 @@ PDM_morton_local_sort(int                n_codes,
 _Bool
 PDM_morton_a_gt_b(PDM_morton_code_t  a,
                   PDM_morton_code_t  b);
-#endif
 
 /*----------------------------------------------------------------------------
  * Test if Morton code "a" is greater than Morton code "b" (compare anchors)
@@ -250,6 +249,7 @@ PDM_morton_a_gt_b(PDM_morton_code_t  a,
 _Bool
 PDM_morton_a_gtmin_b(PDM_morton_code_t  a,
                      PDM_morton_code_t  b);
+#endif
 
 /*----------------------------------------------------------------------------
  * Copy the code a into the code b
