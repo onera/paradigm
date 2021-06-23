@@ -3714,7 +3714,7 @@ PDM_mesh_location_t        *ml
       PDM_dbbtree_points_inside_boxes_with_copies (dbbt,
                                                    n_pts_pcloud,
                                                    pcloud_g_num,
-                                                   pcloud_coord,
+                                                   pcloud0_coord,
                                                    n_select_boxes,
                                                    select_box_g_num,
                                                    &pts_idx,
@@ -3806,6 +3806,12 @@ PDM_mesh_location_t        *ml
       for (int iblock = 0; iblock < n_blocks; iblock++) {
         int id_block = blocks_id[iblock];
         for (int ipart = 0; ipart < n_parts; ipart++) {
+          /*=======
+      for (int ipart = 0; ipart < n_parts; ipart++) {
+        for (int iblock = 0; iblock < n_blocks; iblock++) {
+
+          int id_block = blocks_id[iblock];
+          >>>>>>> COrrections leaks*/
           int part_n_elt = PDM_Mesh_nodal_block_n_elt_get (ml->mesh_nodal,
                                                            id_block,
                                                            ipart);

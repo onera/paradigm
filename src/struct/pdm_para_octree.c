@@ -882,7 +882,7 @@ _octants_init
  const int   init_size
  )
 {
-  octants->n_nodes_max = init_size;
+  octants->n_nodes_max = PDM_MAX(init_size,1); /* To avoid mem leaks if init_size == 0 */
   octants->n_nodes     = 0;
 
   octants->codes    = malloc (sizeof(PDM_morton_code_t) * octants->n_nodes_max);
@@ -912,7 +912,7 @@ _octants_check_alloc
  )
 {
   int is_realloc = 0;
-  if (octants->n_nodes + n_free_node > octants->n_nodes_max) {
+  if (octants->n_nodes + n_free_node >= octants->n_nodes_max) {
 
     //octants->n_nodes_max *= 2;
     octants->n_nodes_max = PDM_MAX (2*octants->n_nodes_max, octants->n_nodes + n_free_node);
@@ -1683,6 +1683,9 @@ _complete_octree
                           0);
 
     }
+
+    /* Avoid mem leaks L2*/
+    _octants_free (L2);
 
   }
 
@@ -5191,12 +5194,12 @@ _build_explicit_nodes
     node_start = stack_start[pos_stack];
     node_end   = stack_end[pos_stack];
 
-
     if (octree->n_explicit_nodes + n_child >= tmp_size) {
       tmp_size = PDM_MAX (2*tmp_size, octree->n_explicit_nodes + n_child + 1);
       octree->explicit_nodes = realloc (octree->explicit_nodes,
                                         sizeof(_explicit_node_t) * tmp_size);
     }
+    node = octree->explicit_nodes + node_id;
 
     node = octree->explicit_nodes + node_id;
     PDM_morton_get_children (dim,
