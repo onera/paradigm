@@ -5190,7 +5190,6 @@ _build_explicit_nodes
     node_start = stack_start[pos_stack];
     node_end   = stack_end[pos_stack];
 
-    node = octree->explicit_nodes + node_id;
 
     if (octree->n_explicit_nodes + n_child >= tmp_size) {
       tmp_size = PDM_MAX (2*tmp_size, octree->n_explicit_nodes + n_child + 1);
@@ -5198,6 +5197,7 @@ _build_explicit_nodes
                                         sizeof(_explicit_node_t) * tmp_size);
     }
 
+    node = octree->explicit_nodes + node_id;
     PDM_morton_get_children (dim,
                              node->code,
                              child_code);

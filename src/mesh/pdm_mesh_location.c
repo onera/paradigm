@@ -3804,9 +3804,10 @@ PDM_mesh_location_t        *ml
       int idx1 = 0;
       ibox = 0;
       for (int iblock = 0; iblock < n_blocks; iblock++) {
+        int id_block = blocks_id[iblock];
         for (int ipart = 0; ipart < n_parts; ipart++) {
           int part_n_elt = PDM_Mesh_nodal_block_n_elt_get (ml->mesh_nodal,
-                                                           iblock,
+                                                           id_block,
                                                            ipart);
 
           int idx2 = 0;
@@ -5141,7 +5142,9 @@ PDM_mesh_location_t        *ml
           PDM_Mesh_nodal_elt_t t_elt = PDM_Mesh_nodal_block_type_get (ml->mesh_nodal,
                                                                       id_block);
 
-          if (t_elt == PDM_MESH_NODAL_POLY_3D || t_elt == PDM_MESH_NODAL_POLY_2D) {
+          if (t_elt != PDM_MESH_NODAL_PYRAMID5 &&
+              t_elt != PDM_MESH_NODAL_PRISM6   &&
+              t_elt != PDM_MESH_NODAL_HEXA8) {
             continue;
           }
           int *parent_num = PDM_Mesh_nodal_block_parent_num_get (ml->mesh_nodal,
