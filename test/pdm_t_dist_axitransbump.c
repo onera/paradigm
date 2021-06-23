@@ -1144,7 +1144,7 @@ int main(int argc, char *argv[])
 
     if (post) {
       int ifile = n_part * i_rank + i_part;
-      char *pref = "/stck/bandrieu/workspace/paradigma-dev/test/axitransbump/";
+      const char *pref = "/stck/bandrieu/workspace/paradigma-dev/test/axitransbump/";
       char filename[999];
       sprintf(filename, "%scheck_face_cell_%3.3d.vtk", pref, ifile);
 

@@ -451,7 +451,7 @@ PDM_closest_point_t *cls
   for (int i_part = 0; i_part < cls->tgt_cloud->n_part; i_part++) {
     for (int i = 0; i < cls->tgt_cloud->n_points[i_part]; i++) {
       for (int j = 0; j < 3; j++)
-        tgt_coord[n_tgt + 3*i + j] = cls->tgt_cloud->coords[i_part][3*i + j];
+        tgt_coord[3*(n_tgt + i) + j] = cls->tgt_cloud->coords[i_part][3*i + j];
       tgt_g_num[n_tgt + i] = cls->tgt_cloud->gnum[i_part][i];
     }
     n_tgt += cls->tgt_cloud->n_points[i_part];
