@@ -3819,9 +3819,10 @@ PDM_mesh_location_t        *ml
           int idx2 = 0;
           for (int ielt = 0; ielt < part_n_elt; ielt++) {
             if (pts_idx[ibox] < pts_idx[ibox+1]) {
-              select_elt_l_num[iblock][ipart][idx2++] = ielt;
-              select_box_parent_g_num[idx1] = box_g_num[ielt];
+              select_elt_l_num[iblock][ipart][idx2] = ielt;
+              select_box_parent_g_num[idx1] = box_g_num[ibox];
               pts_idx[idx1+1] = pts_idx[ibox+1];
+              idx2++;
               idx1++;
             }
             ibox++;

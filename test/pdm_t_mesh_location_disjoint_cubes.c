@@ -763,7 +763,7 @@ int main(int argc, char *argv[])
                                                       0,//i_point_cloud,
                                                       ipart);
 
-    printf("[%d] n_located = %d, n_unlocated = %d\n", i_rank, n_located, n_unlocated);
+    printf("[%d] part %d, n_located = %d, n_unlocated = %d\n", i_rank, ipart, n_located, n_unlocated);
 
     tgt_location[ipart] = PDM_array_const_gnum (n_tgt[ipart], 0);
     tgt_proj_coord[ipart] = malloc (sizeof(double) * n_tgt[ipart] * 3);
@@ -926,6 +926,7 @@ int main(int argc, char *argv[])
             }
 
             if (dist > location_tolerance) {
+              //printf("!!! part %d, from source cell "PDM_FMT_G_NUM", point "PDM_FMT_G_NUM"\n", ipart, src_g_num[ipart][i], points_gnum[j]);
               n_wrong++;
             }
           }

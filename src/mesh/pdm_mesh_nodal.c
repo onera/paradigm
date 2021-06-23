@@ -2455,7 +2455,7 @@ const int               id_part
 
     _id_block = id_block - PDM_BLOCK_ID_BLOCK_STD;
 
-    printf(" _id_block = %i \n", _id_block);
+    //printf(" _id_block = %i \n", _id_block);
 
     PDM_Mesh_nodal_block_std_t *block = mesh->blocks_std[_id_block];
 
