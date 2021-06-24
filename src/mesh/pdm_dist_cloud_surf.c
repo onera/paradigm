@@ -854,7 +854,7 @@ PDM_dist_cloud_surf_compute
 
       for (int i = 0; i < part_n_elt[ipart]; i++) {
         int face_vtx_n = part_face_vtx_idx[i+1] - part_face_vtx_idx[i];
-        part_elt_vtx_n[ipart][i] = 3 * face_vtx_n;
+        part_elt_vtx_n[ipart][i] = face_vtx_n;//3 * face_vtx_n;
         for (int j = part_face_vtx_idx[i]; j < part_face_vtx_idx[i+1]; j++) {
           int ivtx = part_face_vtx[j] - 1;
           for (int k = 0; k < 3; k++) {
@@ -867,7 +867,7 @@ PDM_dist_cloud_surf_compute
     int *block_elt_vtx_n = NULL;
     double *block_elt_vtx_coord = NULL;
     PDM_part_to_block_exch (ptb_elt,
-                            sizeof(double),
+                            3*sizeof(double),
                             PDM_STRIDE_VAR,
                             -1,
                             part_elt_vtx_n,
@@ -915,11 +915,11 @@ PDM_dist_cloud_surf_compute
     for (int ielt = 0; ielt < n_elt_block; ielt++) {
 
       while (block_elt_g_num_full[i1] < block_elt_g_num[ielt]) {
-        _vtx_coord += block_elt_vtx_n[i1];
+        _vtx_coord += 3*block_elt_vtx_n[i1];//block_elt_vtx_n[i1];
         i1++;
       }
 
-      int elt_vtx_n = block_elt_vtx_n[i1] / 3;
+      int elt_vtx_n = block_elt_vtx_n[i1];// / 3;
 
       /* Triangle */
       if (elt_vtx_n == 3) {

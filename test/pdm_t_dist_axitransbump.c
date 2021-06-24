@@ -22,6 +22,8 @@
 #include "pdm_writer.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
+#include "pdm_array.h"
+#include "pdm_polygon.h"
 
 /*============================================================================
  * Type definitions
@@ -832,6 +834,19 @@ static void _export_vtk_surface
 
 
 
+/*static void _export_vtk_surface_parts
+(
+ const char         *filename,
+ int                 nFace,
+ int                *faceVtxIdx,
+ int                *faceVtx,
+ int                *face_data,
+ int                 nVtx,
+ double             *vtxCoord
+ )
+{
+*/
+
 
 /**
  *
@@ -1144,7 +1159,7 @@ int main(int argc, char *argv[])
 
     if (post) {
       int ifile = n_part * i_rank + i_part;
-      const char *pref = "/stck/bandrieu/workspace/paradigma-dev/test/axitransbump/";
+      const char *pref = "";///stck/bandrieu/workspace/paradigma-dev/test/axitransbump/";
       char filename[999];
       sprintf(filename, "%scheck_face_cell_%3.3d.vtk", pref, ifile);
 
@@ -1357,13 +1372,19 @@ int main(int argc, char *argv[])
     char filename[999];
     sprintf(filename, "dist_axi_surf_%3.3d.vtk", ifile);
     if (post) {
+      //int *face_data = PDM_array_const_int (n_select_face[i_part], i_rank);
+      int *face_data = malloc (sizeof(int) * n_select_face[i_part]);
+      for (int i = 0; i < n_select_face[i_part]; i++) {
+        face_data[i] = (int) surface_face_gnum[i_part][i];
+      }
       _export_vtk_surface (filename,
                            n_select_face[i_part],
                            surface_face_vtx_idx[i_part],
                            surface_face_vtx[i_part],
-                           NULL,
+                           face_data,//NULL,
                            n_select_vtx[i_part],
                            surface_coords[i_part]);
+      free (face_data);
     }
 
     int n_cell;
@@ -1437,7 +1458,7 @@ int main(int argc, char *argv[])
     PDM_geom_elem_polyhedra_properties (isOriented,
                                         n_cell,
                                         n_face,
-                                        face_vtx_idx,
+                                       face_vtx_idx,
                                         face_vtx,
                                         cell_face_idx,
                                         cell_face,
@@ -1553,6 +1574,285 @@ int main(int argc, char *argv[])
                            &face_group_ln_to_gn);
   }
 
+
+
+
+  /*
+   *  Brute force check
+   */
+  //-->>
+  if (1) {
+    const double eps_distance = 1.e-6;
+    double _vtx_coord[12];
+
+    /* Allgather surface mesh */
+    int tn_face = 0;
+    int tn_vtx = 0;
+    int tl_face_vtx = 0;
+    for (int i_part = 0; i_part < n_part; i_part++) {
+      tn_face += n_select_face[i_part];
+      tn_vtx += n_select_vtx[i_part];
+      tl_face_vtx += surface_face_vtx_idx[i_part][n_select_face[i_part]];
+    }
+
+    int *tface_vtx_idx = malloc (sizeof(int) * (tn_face+1));
+    int *tface_vtx = malloc (sizeof(int) * tl_face_vtx);
+    PDM_g_num_t *tface_g_num = malloc (sizeof(PDM_g_num_t) * tn_face);
+    double *tvtx_coord = malloc (sizeof(double) * tn_vtx * 3);
+    tn_face = 0;
+    tn_vtx = 0;
+    tl_face_vtx = 0;
+    tface_vtx_idx[0] = 0;
+    for (int i_part = 0; i_part < n_part; i_part++) {
+      for (int i = 0; i < n_select_face[i_part]; i++) {
+        tface_vtx_idx[tn_face+1] = tface_vtx_idx[tn_face];
+        for (int j = surface_face_vtx_idx[i_part][i];
+             j < surface_face_vtx_idx[i_part][i+1]; j++) {
+          tface_vtx[tface_vtx_idx[tn_face+1]++] = tn_vtx + surface_face_vtx[i_part][j];
+        }
+        tface_g_num[tn_face] = surface_face_gnum[i_part][i];
+        tn_face++;
+      }
+      for (int i = 0; i < n_select_vtx[i_part]; i++) {
+        for (int j = 0; j < 3; j++) {
+          tvtx_coord[3*tn_vtx + j] = surface_coords[i_part][3*i + j];
+        }
+        tn_vtx++;
+      }
+    }
+
+    if (0) {
+      int *tface_data = malloc (sizeof(int) * tn_face);
+      for (int i = 0; i < tn_face; i++) {
+        tface_data[i] = (int) tface_g_num[i];
+      }
+      /* int idx = 0;
+      for (int i_part = 0; i_part < n_part; i_part++) {
+        for (int i = 0; i < n_select_face[i_part]; i++) {
+          tface_data[idx++] = i_part;
+        }
+        }*/
+
+      char filename[999];
+      sprintf(filename, "tsurf_mesh_%2.2d.vtk", i_rank);
+
+      _export_vtk_surface (filename,
+                           tn_face,
+                           tface_vtx_idx,
+                           tface_vtx,
+                           tface_data,
+                           tn_vtx/3,
+                           tvtx_coord);
+      free (tface_data);
+    }
+
+    int *all_tn_face = malloc (sizeof(int) * n_rank);
+    PDM_MPI_Allgather (&tn_face,    1, PDM_MPI_INT,
+                       all_tn_face, 1, PDM_MPI_INT,
+                       PDM_MPI_COMM_WORLD);
+
+    tn_vtx *= 3;
+    int *all_tn_vtx = malloc (sizeof(int) * n_rank);
+    PDM_MPI_Allgather (&tn_vtx,    1, PDM_MPI_INT,
+                       all_tn_vtx, 1, PDM_MPI_INT,
+                       PDM_MPI_COMM_WORLD);
+
+    int *all_tl_face_vtx = malloc (sizeof(int) * n_rank);
+    PDM_MPI_Allgather (&tl_face_vtx,    1, PDM_MPI_INT,
+                       all_tl_face_vtx, 1, PDM_MPI_INT,
+                       PDM_MPI_COMM_WORLD);
+
+    int *shift_face = PDM_array_new_idx_from_sizes_int (all_tn_face, n_rank);
+    int *shift_vtx  = PDM_array_new_idx_from_sizes_int (all_tn_vtx, n_rank);
+    int *shift_face_vtx = PDM_array_new_idx_from_sizes_int (all_tl_face_vtx, n_rank);
+
+    int gn_face = shift_face[n_rank];
+    int gn_vtx = shift_vtx[n_rank];
+
+    PDM_g_num_t *gface_g_num = malloc (sizeof(PDM_g_num_t) * gn_face);
+    PDM_MPI_Allgatherv (tface_g_num, tn_face, PDM__PDM_MPI_G_NUM,
+                        gface_g_num, all_tn_face, shift_face, PDM__PDM_MPI_G_NUM,
+                        PDM_MPI_COMM_WORLD);
+    free (tface_g_num);
+
+    double *gvtx_coord = malloc (sizeof(double) * gn_vtx);
+    PDM_MPI_Allgatherv (tvtx_coord, tn_vtx, PDM_MPI_DOUBLE,
+                        gvtx_coord, all_tn_vtx, shift_vtx, PDM_MPI_DOUBLE,
+                        PDM_MPI_COMM_WORLD);
+    free (tvtx_coord);
+    gn_vtx /= 3;
+
+    int *gface_vtx = malloc (sizeof(int) * gn_face * 4);
+    for (int i = 0; i < n_rank; i++) {
+      all_tn_face[i] *= 4;
+      shift_face[i+1] *= 4;
+      shift_vtx[i+1] /= 3;
+    }
+    PDM_MPI_Allgatherv (tface_vtx, 4*tn_face, PDM_MPI_INT,
+                        gface_vtx, all_tn_face, shift_face, PDM_MPI_INT,
+                        PDM_MPI_COMM_WORLD);
+    free (tface_vtx);
+
+    for (int i = 0; i < n_rank; i++) {
+      for (int j = shift_face[i]; j < shift_face[i+1]; j++) {
+        gface_vtx[j] += shift_vtx[i];
+      }
+    }
+
+    for (int i = 0; i < n_rank; i++) {
+      shift_face[i+1] /= 4;
+    }
+
+    int *gface_vtx_idx = malloc (sizeof(int) * (gn_face + 1));
+    gface_vtx_idx[0] = 0;
+    for (int i = 0; i < gn_face; i++) {
+      gface_vtx_idx[i+1] = gface_vtx_idx[i] + 4;
+    }
+
+    if (0) {
+      int *gface_data = malloc (sizeof(int) * gn_face);
+      for (int i = 0; i < gn_face; i++) {
+        gface_data[i] = (int) gface_g_num[i];
+      }
+      char filename[999];
+      sprintf(filename, "gsurf_mesh_%2.2d.vtk", i_rank);
+
+      _export_vtk_surface (filename,
+                           gn_face,
+                           gface_vtx_idx,
+                           gface_vtx,
+                           gface_data,
+                           gn_vtx,
+                           gvtx_coord);
+      free (gface_data);
+    }
+
+    if (1) {
+      for (int i_part = 0; i_part < n_part; i_part++) {
+        double      *distance;
+        double      *projected;
+        PDM_g_num_t *closest_elt_gnum;
+        PDM_dist_cloud_surf_get (id_dist,
+                                 0,
+                                 i_part,
+                                 &distance,
+                                 &projected,
+                                 &closest_elt_gnum);
+
+        int n_cell;
+        int n_face;
+        int n_face_part_bound;
+        int n_vtx;
+        int n_proc;
+        int n_total_part;
+        int scell_face;
+        int sface_vtx;
+        int sface_group;
+        int nEdgeGroup2;
+
+        PDM_part_part_dim_get (ppart_id,
+                               i_part,
+                               &n_cell,
+                               &n_face,
+                               &n_face_part_bound,
+                               &n_vtx,
+                               &n_proc,
+                               &n_total_part,
+                               &scell_face,
+                               &sface_vtx,
+                               &sface_group,
+                               &nEdgeGroup2);
+
+        int          *cell_tag;
+        int          *cell_face_idx;
+        int          *cell_face;
+        PDM_g_num_t  *cell_ln_to_gn;
+        int          *face_tag;
+        int          *face_cell;
+        int          *face_vtx_idx;
+        int          *face_vtx;
+        PDM_g_num_t *face_ln_to_gn;
+        int          *face_part_bound_proc_idx;
+        int          *face_part_bound_part_idx;
+        int          *face_part_bound;
+        int          *vtx_tag;
+        double       *vtx;
+        PDM_g_num_t *vtx_ln_to_gn;
+        int          *face_group_idx;
+        int          *face_group;
+        PDM_g_num_t *face_group_ln_to_gn;
+
+        PDM_part_part_val_get (ppart_id,
+                               i_part,
+                               &cell_tag,
+                               &cell_face_idx,
+                               &cell_face,
+                               &cell_ln_to_gn,
+                               &face_tag,
+                               &face_cell,
+                               &face_vtx_idx,
+                               &face_vtx,
+                               &face_ln_to_gn,
+                               &face_part_bound_proc_idx,
+                               &face_part_bound_part_idx,
+                               &face_part_bound,
+                               &vtx_tag,
+                               &vtx,
+                               &vtx_ln_to_gn,
+                               &face_group_idx,
+                               &face_group,
+                               &face_group_ln_to_gn);
+
+        for (int itgt = 0; itgt < n_cell; itgt++) {
+          double dist_min = HUGE_VAL;
+          PDM_g_num_t arg_min = 0;
+
+          for (int rank = 0; rank < n_rank; rank++) {
+            for (int i = shift_face[rank]; i < shift_face[rank+1]; i++) {
+              int elt_vtx_n = gface_vtx_idx[i+1] - gface_vtx_idx[i];
+              for (int j = 0; j < elt_vtx_n; j++) {
+                int ivtx = gface_vtx[gface_vtx_idx[i] + j] - 1;
+                for (int k = 0; k < 3; k++) {
+                  _vtx_coord[3*j + k] = gvtx_coord[3*ivtx + k];
+                }
+              }
+
+              double dist;
+              double proj[3];
+              PDM_polygon_evaluate_position (cell_center[i_part] + 3*itgt,
+                                             elt_vtx_n,
+                                             _vtx_coord,
+                                             proj,
+                                             &dist);
+              if (dist_min > dist) {
+                dist_min = dist;
+                arg_min = gface_g_num[i];
+              }
+            }
+          }
+
+          // Check
+          double d_res = sqrt(distance[itgt]);
+          double d_exp = sqrt(dist_min);
+          if (closest_elt_gnum[itgt] != arg_min ||
+              PDM_ABS(d_res - d_exp) > eps_distance) {
+            printf("[%d] part %d, pt "PDM_FMT_G_NUM" : expected ("PDM_FMT_G_NUM", %f), result ("PDM_FMT_G_NUM", %f), relative error = %e\n", i_rank, i_part, cell_ln_to_gn[itgt], arg_min, dist_min, closest_elt_gnum[itgt], distance[itgt], (d_exp - d_res)/d_res);
+          }
+        }
+      }
+    }
+
+
+    free (gface_g_num);
+    free (gvtx_coord);
+    free (shift_face);
+    free (shift_vtx);
+    free (shift_face_vtx);
+    free (all_tn_face);
+    free (all_tn_vtx);
+    free (all_tl_face_vtx);
+  }
+  //<<--
 
   for (int i_part = 0; i_part < n_part; i_part++) {
     free (cell_center[i_part]);
