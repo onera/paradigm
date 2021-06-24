@@ -50,7 +50,7 @@ struct _pdm_partgnum1_to_partgnum2_t {
         PDM_MPI_Comm  comm;                     /*!< MPI communicator */  
 
   int                 n_rank;                   /*!< Number of MPI ranks */
-  int                 i_rank;                   /*!< Current rank */
+  int                 my_rank;                  /*!< Current rank */
 
   int                *n_ref_gnum2;              /*!< Numbers of referenced gnum2 (size = \ref n_part2) */
   int               **ref_gnum2;                /*!< Lists of referenced gnum2 (size = \ref n_part2) */
@@ -69,19 +69,34 @@ struct _pdm_partgnum1_to_partgnum2_t {
   int                *default_n_recv_buffer;    /*!< Default number of points in the received buffer */
   int                *default_i_recv_buffer;    /*!< Default index in the received buffer */
 
-  int                 async_n_exch;             /*!< Number of current asynchonous exchanges */ 
-  int                 async_l_array;            /*!< Size of arrays to store asynchonous exchanges */ 
-  size_t             *async_s_data;             /*!< Size of datas of asynchonous exchanges */
-  int                *async_cst_stride;         /*!< Constant strides of asynchonous exchanges */
-  int                *async_tag;                /*!< Tag of asynchonous exchanges */
-  PDM_MPI_Request    *async_send_request;       /*!< Send requests of asynchonous exchanges */
-  PDM_MPI_Request    *async_recv_request;       /*!< Receive requests of asynchonous exchanges */
+  int                 n_active_rank_send;       /*!< Number of ranks to which data is sent */
+  int                *active_rank_send;         /*!< Ranks to which data is sent */
+
+  int                 n_active_rank_recv;       /*!< Number of ranks from which data is received */
+  int                *active_rank_recv;         /*!< Ranks from which data is received */
+
+  int                 async_send_n_open;        /*!< Number of open asynchronous exchange */ 
+  int                *async_send_open;          /*!< Open asynchronous exchanges */ 
+  int                 async_send_l_array;       /*!< Size of arrays to store asynchonous exchanges */ 
+  size_t             *async_send_s_data;        /*!< Size of datas of asynchonous exchanges */
+  int                *async_send_cst_stride;    /*!< Constant strides of asynchonous exchanges */
+  int                *async_send_tag;           /*!< Tag of asynchonous exchanges */
+  PDM_MPI_Request   **async_send_request;       /*!< Send requests of asynchonous exchanges */
   unsigned char     **async_send_buffer;        /*!< Send buffers of asynchonous exchanges */
-  unsigned char     **async_recv_buffer;        /*!< Receive buffers of asynchonous exchanges */
   int               **async_n_send_buffer;      /*!< Number of data in the buffer to send to each rank of asynchonous exchanges */
   int               **async_i_send_buffer;      /*!< Index in the send buffer of each rank of asynchonous exchanges */
+
+  int                 async_recv_n_open;        /*!< Number of open asynchronous exchange */ 
+  int                *async_recv_open;          /*!< Open asynchronous exchanges */ 
+  int                 async_recv_l_array;       /*!< Size of arrays to store asynchonous exchanges */ 
+  size_t             *async_recv_s_data;        /*!< Size of datas of asynchonous exchanges */
+  int                *async_recv_cst_stride;    /*!< Constant strides of asynchonous exchanges */
+  int                *async_recv_tag;           /*!< Tag of asynchonous exchanges */
+  PDM_MPI_Request   **async_recv_request;       /*!< Receive requests of asynchonous exchanges */
+  unsigned char     **async_recv_buffer;        /*!< Receive buffers of asynchonous exchanges */
   int               **async_n_recv_buffer;      /*!< Number of data in the buffer received from each rank of asynchonous exchanges */
   int               **async_i_recv_buffer;      /*!< Index in the receive buffer of each rank of asynchonous exchanges */
+  void              **async_recv_part2_data;    /*!< Store adress to store data after the receipt of data*/
 
 };
 

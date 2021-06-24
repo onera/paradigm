@@ -241,7 +241,6 @@ void
 PDM_partgnum1_to_partgnum2_issend_wait
 (
  PDM_partgnum1_to_partgnum2_t *ptp,
- int                           tag,
  int                           request
 );
 
@@ -285,7 +284,6 @@ void
 PDM_partgnum1_to_partgnum2_irecv_wait
 (
  PDM_partgnum1_to_partgnum2_t *ptp,
- int                           tag,
  int                           request
 );
 
