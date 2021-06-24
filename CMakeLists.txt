@@ -262,22 +262,22 @@ if (NOT (PDM_IN_PDMA OR PDM_IN_CWP))
   # ---------------
 
   if (PDM_ENABLE_PYTHON_BINDINGS)
-     # NB: cython module must use mpicxx to avoid "mpi.h" not found.
-     find_package(MPI REQUIRED COMPONENTS CXX)
+    # NB: cython module must use mpicxx to avoid "mpi.h" not found.
+    find_package(MPI REQUIRED COMPONENTS CXX)
 
-     find_package(PythonInterp REQUIRED)
-     find_package(PythonLibs REQUIRED)
-     find_package(NumPy REQUIRED)
-     find_package(Mpi4Py REQUIRED)
-     include(UseCython)
+    find_package(PythonInterp REQUIRED)
+    find_package(PythonLibs REQUIRED)
+    find_package(NumPy REQUIRED)
+    find_package(Mpi4Py REQUIRED)
+    include(UseCython)
 
-     if (NOT CMAKE_PDM_INSTALL_PYTHON_DIR)
+    if (NOT CMAKE_PDM_INSTALL_PYTHON_DIR)
 
-        set (CMAKE_PDM_INSTALL_PYTHON_DIR  "${CMAKE_INSTALL_PREFIX}")
-        set (CMAKE_PDM_INSTALL_PYTHON_DIR
-             ${CMAKE_PDM_INSTALL_PYTHON_DIR} CACHE STRING "Install path directory for Python packages")
+       set (CMAKE_PDM_INSTALL_PYTHON_DIR  "${CMAKE_INSTALL_PREFIX}")
+       set (CMAKE_PDM_INSTALL_PYTHON_DIR
+            ${CMAKE_PDM_INSTALL_PYTHON_DIR} CACHE STRING "Install path directory for Python packages")
 
-     endif ()
+    endif ()
 
   endif()
 
