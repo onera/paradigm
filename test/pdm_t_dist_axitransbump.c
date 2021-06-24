@@ -1824,7 +1824,8 @@ int main(int argc, char *argv[])
                                              _vtx_coord,
                                              proj,
                                              &dist);
-              if (dist_min > dist) {
+              if (dist_min > dist ||
+                  (PDM_ABS(dist_min-dist) < 1e-12 && gface_g_num[i] < arg_min)) {
                 dist_min = dist;
                 arg_min = gface_g_num[i];
               }
@@ -1836,7 +1837,7 @@ int main(int argc, char *argv[])
           double d_exp = sqrt(dist_min);
           if (closest_elt_gnum[itgt] != arg_min ||
               PDM_ABS(d_res - d_exp) > eps_distance) {
-            printf("[%d] part %d, pt "PDM_FMT_G_NUM" : expected ("PDM_FMT_G_NUM", %f), result ("PDM_FMT_G_NUM", %f), relative error = %e\n", i_rank, i_part, cell_ln_to_gn[itgt], arg_min, dist_min, closest_elt_gnum[itgt], distance[itgt], (d_exp - d_res)/d_res);
+            printf("[%d] part %d, pt "PDM_FMT_G_NUM" : expected ("PDM_FMT_G_NUM", %f), result ("PDM_FMT_G_NUM", %f), relative error = %g\n", i_rank, i_part, cell_ln_to_gn[itgt], arg_min, dist_min, closest_elt_gnum[itgt], distance[itgt], (d_res - d_exp)/d_res);
           }
         }
       }

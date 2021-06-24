@@ -30,7 +30,7 @@
 #include "pdm_polygon.h"
 #include "pdm_timer.h"
 #include "pdm_hash_tab.h"
-
+#include "pdm_sort.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -1091,23 +1091,38 @@ PDM_dist_cloud_surf_compute
     double      *block_pts_elt_proj  = malloc (sizeof(double)      * n_pts_block * 3);
 
     idx = 0;
+    int n_max = 0;
+    for (int i = 0; i < n_pts_block; i++) {
+      n_max = PDM_MAX (n_max, block_pts_elt_n[i]);
+    }
+    int *order = malloc (sizeof(int) * n_max);
+
     for (int i = 0; i < n_pts_block; i++) {
       block_pts_elt_dist2[i] = HUGE_VAL;
 
-      int idx_min = 0;
+      PDM_g_num_t *_tmp_g_num = tmp_block_pts_elt_g_num + idx;
+      double      *_tmp_dist2 = tmp_block_pts_elt_dist2 + idx;
+      double      *_tmp_proj  = tmp_block_pts_elt_proj  + idx;
+
       for (int j = 0; j < block_pts_elt_n[i]; j++) {
-        if (tmp_block_pts_elt_dist2[idx] < block_pts_elt_dist2[i]) {
-          block_pts_elt_dist2[i] = tmp_block_pts_elt_dist2[idx];
-          idx_min = idx;
+        order[j] = j;
+      }
+      PDM_sort_long (_tmp_g_num, order, block_pts_elt_n[i]);
+      int jmin = 0;
+      for (int j = 0; j < block_pts_elt_n[i]; j++) {
+        if (_tmp_dist2[order[j]] < block_pts_elt_dist2[i]) {
+          block_pts_elt_dist2[i] = _tmp_dist2[order[j]];
+          jmin = j;
         }
         idx++;
       }
 
-      block_pts_elt_g_num[i] = tmp_block_pts_elt_g_num[idx_min];
+      block_pts_elt_g_num[i] = _tmp_g_num[jmin];
       for (int k = 0; k < 3; k++) {
-        block_pts_elt_proj[3*i + k] = tmp_block_pts_elt_proj[3*idx_min + k];
+        block_pts_elt_proj[3*i + k] = _tmp_proj[3*order[jmin] + k];
       }
     }
+    free (order);
     free (tmp_block_pts_elt_g_num);
     free (tmp_block_pts_elt_dist2);
     free (tmp_block_pts_elt_proj);
