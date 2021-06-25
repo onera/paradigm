@@ -2108,9 +2108,6 @@ PDM_dbbtree_points_inside_boxes_with_copies
   PDM_MPI_Comm_rank (_dbbt->comm, &i_rank);
   PDM_MPI_Comm_size (_dbbt->comm, &n_rank);
 
-  const int *used_ranks   = _dbbt->usedRank;
-  const int  n_used_ranks = _dbbt->nUsedRank;
-
   /*
    *  Normalize target points coords
    */
@@ -2159,7 +2156,7 @@ PDM_dbbtree_points_inside_boxes_with_copies
     send_count = PDM_array_zeros_int (n_rank);
 
     for (int i = 0; i < pts_rank_idx[n_pts]; i++) {
-      int rank = used_ranks[pts_rank[i]];
+      int rank = _dbbt->usedRank[pts_rank[i]];
       pts_rank[i] = rank;
       send_count[rank]++;
     }
