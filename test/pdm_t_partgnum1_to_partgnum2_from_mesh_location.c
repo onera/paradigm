@@ -297,9 +297,9 @@ int main(int argc, char *argv[])
    *  Set default values
    */
 
-  PDM_g_num_t n_vtx_seg = 10;
+  PDM_g_num_t n_vtx_seg = 3;
   double      length    = 1.;
-  double      separation = 0.05;
+  double      separation = 1;
   double      tolerance = 1e-3;
   double      marge     = 0.;
   int         n_part    = 1;

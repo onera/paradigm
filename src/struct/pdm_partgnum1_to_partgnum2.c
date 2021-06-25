@@ -450,6 +450,7 @@ PDM_partgnum1_to_partgnum2_create
     n_total_elt += location_gnum1_to_gnum2_idx[gnum1_to_gnum2_idx[i][n_elt1[i]]];
   }
 
+  printf("n_total_elt : %d \n", n_total_elt);
 
   int *merge_gnum1_to_gnum2_rank2 = (int *) malloc (sizeof(int) * n_total_elt);
   int *merge_gnum1_to_gnum2_part2 = (int *) malloc (sizeof(int) * n_total_elt);
@@ -478,7 +479,8 @@ PDM_partgnum1_to_partgnum2_create
   
     for (int j = 0; j < n_elt1[i]; j++) {
 
-      for (int k = location_gnum1_to_gnum2_idx[j]; k < location_gnum1_to_gnum2_idx[j+1]; k++) {
+      for (int k = location_gnum1_to_gnum2_idx[gnum1_to_gnum2_idx[i][j]]; 
+               k < location_gnum1_to_gnum2_idx[gnum1_to_gnum2_idx[i][j+1]]; k++) {
         int i_rank2 = location_gnum1_to_gnum2[3*k];
         n_gnum1_to_gnum2_rank[i_rank2]++;
         merge_gnum1_to_gnum2_rank2[n_total_elt] = i_rank2;
@@ -488,6 +490,13 @@ PDM_partgnum1_to_partgnum2_create
         merge_gnum1_to_gnum2_part1[n_total_elt] = i;
         merge_gnum1_to_gnum2_lnum1[n_total_elt] = j; 
         order[n_total_elt]                      = n_total_elt;
+        printf(" 0 - %d %d %d %d %d %d\n",
+          i_rank2,
+          location_gnum1_to_gnum2[3*k+1],
+          location_gnum1_to_gnum2[3*k+2],
+          my_rank,
+          i,
+          j );
         n_total_elt++;
       }
     }
@@ -661,15 +670,20 @@ PDM_partgnum1_to_partgnum2_create
     int ipart1 = merge_gnum1_to_gnum2_part1[i];
     int ielt1  = merge_gnum1_to_gnum2_lnum1[i];
     int idx    = i_send_buffer[i];
+    printf ("1 %d %d : %d\n", ipart1, ielt1, idx);
+
     assert (idx >= 0);
     ptp->gnum1_to_send_buffer[ipart1][ielt1] = idx;
   }
 
   for (int i = 0; i < n_part1; i++) {
     for (int k = 0; k < n_elt1[i]; k++) {
-      assert (ptp->gnum1_to_send_buffer[i][k] != -1);
+      printf ("2 %d %d : %d\n", i, k, ptp->gnum1_to_send_buffer[i][k]);
     }
   }
+
+  fflush(stdout);
+  abort();
 
   free (n_elt_part);
   free (order);
@@ -747,7 +761,7 @@ PDM_partgnum1_to_partgnum2_create
   ptp->gnum1_come_from          = malloc (sizeof (PDM_g_num_t *) * n_part2);
   ptp->recv_buffer_to_ref_gnum2 = malloc (sizeof (int *) * n_part2);   
 
-  ptp->gnum1_to_send_buffer     = NULL;  
+  //ptp->gnum1_to_send_buffer     = NULL;  
   ptp->recv_buffer_to_ref_gnum2 = NULL;  
 
   int **tag_elt2 = malloc (sizeof (int *) * n_part2);
@@ -1127,10 +1141,12 @@ PDM_partgnum1_to_partgnum2_issend
   int delta = (int) s_data + cst_stride;
   for (int i = 0; i < ptp->n_part1; i++) {
     for (int j = 0; j < ptp->n_elt1[i]; j++) {
-      int idx = ptp->gnum1_to_send_buffer[i][j] * delta;
-      int idx1 = j* delta;
-      for (int k = 0; k < delta; k++) {
-        ptp->async_send_buffer[_request][idx+k] = _part1_data[i][idx1+k]; 
+      if (ptp->gnum1_to_send_buffer[i][j] >= 0) {
+        int idx = ptp->gnum1_to_send_buffer[i][j] * delta;
+        int idx1 = j* delta;
+        for (int k = 0; k < delta; k++) {
+          ptp->async_send_buffer[_request][idx+k] = _part1_data[i][idx1+k]; 
+        }
       }
     }
   }
