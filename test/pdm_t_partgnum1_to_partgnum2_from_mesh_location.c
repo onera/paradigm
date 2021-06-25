@@ -18,10 +18,12 @@
 #include "pdm_mesh_location.h"
 #include "pdm_geom_elem.h"
 #include "pdm_gnum.h"
+#include "pdm_partgnum1_to_partgnum2.h"
 
 #include "pdm_writer.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
+
 
 /*============================================================================
  * Type definitions
@@ -796,6 +798,19 @@ int main(int argc, char *argv[])
 
   PDM_mesh_location_dump_times (id_loc2);
 
+  int         **elt_pts_inside_idx = malloc (sizeof(int *) * n_part);
+  PDM_g_num_t **points_gnum = malloc (sizeof(PDM_g_num_t *) * n_part);
+  double      **points_coords = malloc (sizeof(double *) * n_part);
+  double      **points_uvw = malloc (sizeof(double *) * n_part);
+  int         **points_weights_idx = malloc (sizeof(int *) * n_part);
+  double      **points_weights = malloc (sizeof(double *) * n_part);
+  double      **points_dist2 = malloc (sizeof(double *) * n_part);
+  double      **points_projected_coords = malloc (sizeof(double *) * n_part);
+  PDM_g_num_t **gnum_elt1 = malloc (sizeof( PDM_g_num_t) * n_part);
+  int          *n_elt1 = malloc (sizeof(int) * n_part);
+  PDM_g_num_t **gnum_elt2 = malloc (sizeof( PDM_g_num_t) * n_part);
+  int          *n_elt2 = malloc (sizeof(int) * n_part);
+
   for (int ipart = 0; ipart < n_part; ipart++) {
     int n_located = PDM_mesh_location_n_located_get (id_loc1,
                                                      0,//i_point_cloud,
@@ -813,30 +828,145 @@ int main(int argc, char *argv[])
                                                       0,//i_point_cloud,
                                                       ipart);
 
-
-    int n_cell;
-    int n_face;
-    int n_face_part_bound;
-    int n_vtx;
-    int n_proc;
-    int n_t_part;
-    int s_cell_face;
-    int s_face_vtx;
-    int s_face_group;
-    int n_edge_group2;
+    int n_face_tgt;
+    int n_face_part_bound_tgt;
+    int n_vtx_tgt;
+    int n_proc_tgt;
+    int n_t_part_tgt;
+    int s_cell_face_tgt;
+    int s_face_vtx_tgt;
+    int s_face_group_tgt;
+    int n_edge_group2_tgt;
 
     PDM_part_part_dim_get (ppart_tgt,
                            ipart,
-                           &n_cell,
-                           &n_face,
-                           &n_face_part_bound,
-                           &n_vtx,
-                           &n_proc,
-                           &n_t_part,
-                           &s_cell_face,
-                           &s_face_vtx,
-                           &s_face_group,
-                           &n_edge_group2);
+                           &(n_elt2[ipart]),
+                           &n_face_tgt,
+                           &n_face_part_bound_tgt,
+                           &n_vtx_tgt,
+                           &n_proc_tgt,
+                           &n_t_part_tgt,
+                           &s_cell_face_tgt,
+                           &s_face_vtx_tgt,
+                           &s_face_group_tgt,
+                           &n_edge_group2_tgt);
+
+    int         *cell_tag_tgt;
+    int         *cell_face_idx_tgt;
+    int         *cell_face_tgt;
+    int         *face_tag_tgt;
+    int         *face_cell_tgt;
+    int         *face_vtx_idx_tgt;
+    int         *face_vtx_tgt;
+    PDM_g_num_t *face_ln_to_gn_tgt;
+    int         *face_part_boundProcIdx_tgt;
+    int         *face_part_boundPartIdx_tgt;
+    int         *face_part_bound_tgt;
+    int         *vtx_tag_tgt;
+    double      *vtx_tgt;
+    PDM_g_num_t *vtx_ln_to_gn_tgt;
+    int         *face_group_idx_tgt;
+    int         *face_group_tgt;
+    PDM_g_num_t *face_group_ln_to_gn_tgt;
+
+    PDM_part_part_val_get (ppart_tgt,
+                           ipart,
+                           &cell_tag_tgt,
+                           &cell_face_idx_tgt,
+                           &cell_face_tgt,
+                           &(gnum_elt2[ipart]),
+                           &face_tag_tgt,
+                           &face_cell_tgt,
+                           &face_vtx_idx_tgt,
+                           &face_vtx_tgt,
+                           &face_ln_to_gn_tgt,
+                           &face_part_boundProcIdx_tgt,
+                           &face_part_boundPartIdx_tgt,
+                           &face_part_bound_tgt,
+                           &vtx_tag_tgt,
+                           &vtx_tgt,
+                           &vtx_ln_to_gn_tgt,
+                           &face_group_idx_tgt,
+                           &face_group_tgt,
+                           &face_group_ln_to_gn_tgt);
+
+
+
+    int n_face_src;
+    int n_face_part_bound_src;
+    int n_vtx_src;
+    int n_proc_src;
+    int n_t_part_src;
+    int s_cell_face_src;
+    int s_face_vtx_src;
+    int s_face_group_src;
+    int n_edge_group2_src;
+
+    PDM_part_part_dim_get (ppart_src,
+                           ipart,
+                           &(n_elt1[ipart]),
+                           &n_face_src,
+                           &n_face_part_bound_src,
+                           &n_vtx_src,
+                           &n_proc_src,
+                           &n_t_part_src,
+                           &s_cell_face_src,
+                           &s_face_vtx_src,
+                           &s_face_group_src,
+                           &n_edge_group2_src);
+
+    int         *cell_tag_src;
+    int         *cell_face_idx_src;
+    int         *cell_face_src;
+    int         *face_tag_src;
+    int         *face_cell_src;
+    int         *face_vtx_idx_src;
+    int         *face_vtx_src;
+    PDM_g_num_t *face_ln_to_gn_src;
+    int         *face_part_boundProcIdx_src;
+    int         *face_part_boundPartIdx_src;
+    int         *face_part_bound_src;
+    int         *vtx_tag_src;
+    double      *vtx_src;
+    PDM_g_num_t *vtx_ln_to_gn_src;
+    int         *face_group_idx_src;
+    int         *face_group_src;
+    PDM_g_num_t *face_group_ln_to_gn_src;
+
+    PDM_part_part_val_get (ppart_src,
+                           ipart,
+                           &cell_tag_src,
+                           &cell_face_idx_src,
+                           &cell_face_src,
+                           &(gnum_elt1[ipart]),
+                           &face_tag_src,
+                           &face_cell_src,
+                           &face_vtx_idx_src,
+                           &face_vtx_src,
+                           &face_ln_to_gn_src,
+                           &face_part_boundProcIdx_src,
+                           &face_part_boundPartIdx_src,
+                           &face_part_bound_src,
+                           &vtx_tag_src,
+                           &vtx_src,
+                           &vtx_ln_to_gn_src,
+                           &face_group_idx_src,
+                           &face_group_src,
+                           &face_group_ln_to_gn_src);
+
+
+
+    PDM_mesh_location_points_in_elt_get (id_loc1,
+                                        ipart,
+                                        0,
+                                       &(elt_pts_inside_idx[ipart]),
+                                       &(points_gnum[ipart]),
+                                       &(points_coords[ipart]),
+                                       &(points_uvw[ipart]),
+                                       &(points_weights_idx[ipart]),
+                                       &(points_weights[ipart]),
+                                       &(points_dist2[ipart]),
+                                       &(points_projected_coords[ipart]));
 
     //assert (n_located == 0 && n_unlocated == n_cell);
     printf("[%d] n_located mesh 1 = %d, n_unlocated = %d\n", i_rank, n_located, n_unlocated);
@@ -844,60 +974,92 @@ int main(int argc, char *argv[])
     free (cell_volume2[ipart]);
   }
 
-  for (int ipart = 0; ipart < n_part; ipart++) {
-    int n_located = PDM_mesh_location_n_located_get (id_loc2,
-                                                     0,//i_point_cloud,
-                                                     ipart);
 
-    int *located = PDM_mesh_location_located_get (id_loc2,
-                                                  0,//i_point_cloud,
-                                                  ipart);
-
-    int n_unlocated = PDM_mesh_location_n_unlocated_get (id_loc2,
-                                                         0,//i_point_cloud,
-                                                         ipart);
-
-    int *unlocated = PDM_mesh_location_unlocated_get (id_loc2,
-                                                      0,//i_point_cloud,
-                                                      ipart);
+  PDM_partgnum1_to_partgnum2_t *ptp = PDM_partgnum1_to_partgnum2_create ((const PDM_g_num_t**) gnum_elt1,
+                                                                         n_elt1,
+                                                                         n_part,
+                                                                         (const PDM_g_num_t**) gnum_elt2,
+                                                                         n_elt2,
+                                                                         n_part,
+                                                                         (const int **) elt_pts_inside_idx,
+                                                                         (const PDM_g_num_t **) points_gnum,
+                                                                         PDM_MPI_COMM_WORLD);
 
 
-    int n_cell;
-    int n_face;
-    int n_face_part_bound;
-    int n_vtx;
-    int n_proc;
-    int n_t_part;
-    int s_cell_face;
-    int s_face_vtx;
-    int s_face_group;
-    int n_edge_group2;
+  int  *n_ref_gnum2;
+  int **ref_gnum2;
+  PDM_partgnum1_to_partgnum2_ref_gnum2_get (ptp,
+                                            &n_ref_gnum2,
+                                            &ref_gnum2);
 
-    PDM_part_part_dim_get (ppart_tgt,
-                           ipart,
-                           &n_cell,
-                           &n_face,
-                           &n_face_part_bound,
-                           &n_vtx,
-                           &n_proc,
-                           &n_t_part,
-                           &s_cell_face,
-                           &s_face_vtx,
-                           &s_face_group,
-                           &n_edge_group2);
 
-    //assert (n_located == 0 && n_unlocated == n_cell);
-    printf("[%d] n_located mesh 2 = %d, n_unlocated = %d\n", i_rank, n_located, n_unlocated);
-    free (cell_center1[ipart]);
-    free (cell_volume1[ipart]);
+  int  *n_unref_gnum2;
+  int **unref_gnum2;
+  PDM_partgnum1_to_partgnum2_unref_gnum2_get (ptp,
+                                            &n_unref_gnum2,
+                                            &unref_gnum2);
+
+
+  int         **gnum1_come_from_idx;
+  PDM_g_num_t **gnum1_come_from;
+  PDM_partgnum1_to_partgnum2_gnum1_come_from_get (ptp,
+                                                  &gnum1_come_from_idx,
+                                                  &gnum1_come_from);
+
+  int send_request = -1;
+  PDM_partgnum1_to_partgnum2_issend (ptp,
+                                     sizeof (PDM_g_num_t),
+                                     1,
+                                     (void **) gnum_elt1,
+                                     100,
+                                     &send_request);
+
+  int recv_request = -1;
+  PDM_g_num_t **gnum_elt1_recv = malloc (sizeof(PDM_g_num_t*)  * n_part);
+  for (int i = 0; i < n_part; i++) {
+    gnum_elt1_recv[i] = malloc (sizeof(PDM_g_num_t)  * gnum1_come_from_idx[i][n_ref_gnum2[i]]);
   }
 
+  PDM_partgnum1_to_partgnum2_irecv (ptp,
+                                    sizeof (PDM_g_num_t),
+                                    1,
+                                    (void **) gnum_elt1_recv,
+                                    100,
+                                    &recv_request);
+
+
+
+  PDM_partgnum1_to_partgnum2_issend_wait (ptp, send_request);
+
+  PDM_partgnum1_to_partgnum2_irecv_wait (ptp, recv_request);
+
+  PDM_partgnum1_to_partgnum2_free (ptp);
+
+  for (int i = 0; i < n_part; i++) {
+    free (gnum_elt1_recv[i]);
+  }
+
+  free (gnum_elt1_recv);
 
   free (cell_center1);
   free (cell_volume1);
   free (cell_center2);
   free (cell_volume2);
 
+
+  free (elt_pts_inside_idx);
+  free (points_gnum);
+  free (points_coords); 
+  free (points_uvw); 
+  free (points_weights_idx);
+  free (points_weights);
+  free (points_dist2); 
+  free (points_projected_coords);
+
+  free (gnum_elt1);
+  free (n_elt1);
+  free (gnum_elt2);
+  free (n_elt2);
 
   PDM_mesh_location_free (id_loc1,
                           0);

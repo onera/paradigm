@@ -450,7 +450,6 @@ PDM_partgnum1_to_partgnum2_create
     n_total_elt += location_gnum1_to_gnum2_idx[gnum1_to_gnum2_idx[i][n_elt1[i]]];
   }
 
-  PDM_gnum_location_free (gl, 0);
 
   int *merge_gnum1_to_gnum2_rank2 = (int *) malloc (sizeof(int) * n_total_elt);
   int *merge_gnum1_to_gnum2_part2 = (int *) malloc (sizeof(int) * n_total_elt);
@@ -493,6 +492,8 @@ PDM_partgnum1_to_partgnum2_create
       }
     }
   }
+
+  PDM_gnum_location_free (gl, 0);
 
   for (int i = 0; i < n_rank; i++) {
     idx_gnum1_to_gnum2_rank[i+1] = n_gnum1_to_gnum2_rank[i] + 
