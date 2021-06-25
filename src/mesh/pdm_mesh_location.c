@@ -2744,14 +2744,16 @@ PDM_mesh_location_t        *ml
   if (env_var != NULL) {
     USE_OCTREE_BTSHARED = atoi(env_var);
   }
-  if (my_rank == 0) printf("USE_OCTREE_BTSHARED = %d\n", USE_OCTREE_BTSHARED);
+  if (my_rank == 0 && ml->method == PDM_MESH_LOCATION_OCTREE)
+    printf("USE_OCTREE_BTSHARED = %d\n", USE_OCTREE_BTSHARED);
 
   int USE_OCTREE_COPIES = 1;
   env_var = getenv ("USE_OCTREE_COPIES");
   if (env_var != NULL) {
     USE_OCTREE_COPIES = atoi(env_var);
   }
-  if (my_rank == 0) printf("USE_OCTREE_COPIES = %d\n", USE_OCTREE_COPIES);
+  if (my_rank == 0) // && ml->method == PDM_MESH_LOCATION_OCTREE)
+    printf("USE_OCTREE_COPIES = %d\n", USE_OCTREE_COPIES);
 
   double b_t_elapsed;
   double b_t_cpu;
@@ -3700,27 +3702,27 @@ PDM_mesh_location_t        *ml
 
     case PDM_MESH_LOCATION_DBBTREE:
       printf("[%d] n_pts_pcloud = %d, n_select_boxes = %d\n", my_rank, n_pts_pcloud, n_select_boxes);//
-#if 0
-      PDM_dbbtree_points_inside_boxes (dbbt,
-                                       n_pts_pcloud,
-                                       pcloud_g_num,
-                                       pcloud_coord,
-                                       n_select_boxes,
-                                       select_box_g_num,
-                                       &pts_idx,
-                                       &pts_g_num,
-                                       &pts_coord);
-#else
-      PDM_dbbtree_points_inside_boxes_with_copies (dbbt,
-                                                   n_pts_pcloud,
-                                                   pcloud_g_num,
-                                                   pcloud_coord,
-                                                   n_select_boxes,
-                                                   select_box_g_num,
-                                                   &pts_idx,
-                                                   &pts_g_num,
-                                                   &pts_coord);
-#endif
+      if (USE_OCTREE_COPIES) {
+        PDM_dbbtree_points_inside_boxes_with_copies (dbbt,
+                                                     n_pts_pcloud,
+                                                     pcloud_g_num,
+                                                     pcloud_coord,
+                                                     n_select_boxes,
+                                                     select_box_g_num,
+                                                     &pts_idx,
+                                                     &pts_g_num,
+                                                     &pts_coord);
+      } else {
+        PDM_dbbtree_points_inside_boxes (dbbt,
+                                         n_pts_pcloud,
+                                         pcloud_g_num,
+                                         pcloud_coord,
+                                         n_select_boxes,
+                                         select_box_g_num,
+                                         &pts_idx,
+                                         &pts_g_num,
+                                         &pts_coord);
+      }
       break;
 
     default:
@@ -3731,11 +3733,11 @@ PDM_mesh_location_t        *ml
     free (pcloud_coord);
 
 
-    if (0) {//DEBUG) {
+    if (DEBUG) {
       printf("\n[%d] --- Pts in box ---\n", my_rank);
       for (ibox = 0; ibox < n_select_boxes; ibox++) {
 
-        if (0) {//pts_idx[ibox+1] <= pts_idx[ibox]) {
+        if (pts_idx[ibox+1] <= pts_idx[ibox]) {
           continue;
         }
 
