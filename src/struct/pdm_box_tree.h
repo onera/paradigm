@@ -380,9 +380,7 @@ PDM_box_tree_points_inside_boxes2
  const int       n_pts,
  const double   *pts_coord,
  int           **box_idx,
- int           **box_l_num,
- int visu,//
- int i_rank//
+ int           **box_l_num
  );
 
 /**

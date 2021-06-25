@@ -4843,42 +4843,6 @@ PDM_box_tree_points_inside_boxes
 }
 
 
-
-
-static void _export_point_cloud
-(
- const char   *filename,
- const int     n_pts,
- const double *coord
- )
-{
-  FILE *f = fopen(filename, "w");
-
-  fprintf(f, "# vtk DataFile Version 2.0\npoints\nASCII\nDATASET UNSTRUCTURED_GRID\n");
-
-  fprintf(f, "POINTS %d double\n", n_pts);
-  for (int i = 0; i < n_pts; i++) {
-    for (int j = 0; j < 3; j++) {
-      fprintf(f, "%f ", coord[3*i + j]);
-    }
-    fprintf(f, "\n");
-  }
-
-  fprintf(f, "CELLS %d %d\n", n_pts, 2*n_pts);
-  for (int i = 0; i < n_pts; i++) {
-    fprintf(f, "1 %d\n", i);
-  }
-
-  fprintf(f, "CELL_TYPES %d\n", n_pts);
-  for (int i = 0; i < n_pts; i++) {
-    fprintf(f, "1\n");
-  }
-
-  fclose(f);
-}
-
-
-
 void
 PDM_box_tree_points_inside_boxes2
 (
@@ -4887,9 +4851,7 @@ PDM_box_tree_points_inside_boxes2
  const int       n_pts,
  const double   *pts_coord,
  int           **box_idx,
- int           **box_l_num,
- int visu,//
- int i_rank//
+ int           **box_l_num
  )
 {
   assert(i_copied_rank < bt->n_copied_ranks);
@@ -4905,15 +4867,6 @@ PDM_box_tree_points_inside_boxes2
     PDM_box_set_normalize ((PDM_box_set_t *) bt->boxes, _pt_origin, _pt);
   }
   /* } */
-
-  if (visu) {
-    char filename[999];
-    sprintf(filename, "box_tree_pts_%3.3d.vtk", i_rank);
-
-    _export_point_cloud (filename,
-                         n_pts,
-                         pts_coord);
-  }
 
   PDM_boxes_t *boxes;
   PDM_box_tree_data_t *box_tree_data;

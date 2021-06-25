@@ -2153,9 +2153,7 @@ PDM_dbbtree_points_inside_boxes_with_copies
                                        n_pts,
                                        pts_coord,
                                        &pts_rank_idx,
-                                       &pts_rank,
-                                       0,//
-                                       i_rank);//
+                                       &pts_rank);
 
     /* Count points to send to each rank */
     send_count = PDM_array_zeros_int (n_rank);
@@ -2416,7 +2414,7 @@ PDM_dbbtree_points_inside_boxes_with_copies
     n_pts1 = n_pts;
 
     pts_g_num1 = (PDM_g_num_t *) pts_g_num;
-    pts_coord1 = _pts_coord;//(double *)      pts_coord;
+    pts_coord1 = _pts_coord;
   }
 
 
@@ -2440,9 +2438,7 @@ PDM_dbbtree_points_inside_boxes_with_copies
                                      part_n_pts[0],
                                      pts_coord1,
                                      &(pts_box_idx[0]),
-                                     &(pts_box_l_num[0]),
-                                     0,//
-                                     i_rank);
+                                     &(pts_box_l_num[0]));
   size_pts_box += pts_box_idx[0][part_n_pts[0]];
 
 
@@ -2462,9 +2458,7 @@ PDM_dbbtree_points_inside_boxes_with_copies
                                          part_n_pts[i+1],
                                          pts_coord_copied + copied_shift[i] * 3,
                                          &(pts_box_idx[i+1]),
-                                         &(pts_box_l_num[i+1]),
-                                         0,//
-                                         i_rank);
+                                         &(pts_box_l_num[i+1]));
 
       size_pts_box += pts_box_idx[i+1][part_n_pts[i+1]];
     }
