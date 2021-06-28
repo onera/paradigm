@@ -972,6 +972,9 @@ int main(int argc, char *argv[])
     printf("[%d] n_located mesh 1 = %d, n_unlocated = %d\n", i_rank, n_located, n_unlocated);
     free (cell_center2[ipart]);
     free (cell_volume2[ipart]);
+    free (cell_center1[ipart]);
+    free (cell_volume1[ipart]);
+
   }
 
 

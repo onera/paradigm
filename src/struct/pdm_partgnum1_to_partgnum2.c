@@ -291,7 +291,7 @@ _find_open_async_send_exch
 {
   _check_async_send_alloc (ptp);
 
-  return ptp->async_send_open[ptp->async_send_n_open--];
+  return ptp->async_send_open[--ptp->async_send_n_open];
 }
 
 /**
@@ -310,7 +310,7 @@ _find_open_async_recv_exch
 {
   _check_async_recv_alloc (ptp);
 
-  return ptp->async_recv_open[ptp->async_recv_n_open--];
+  return ptp->async_recv_open[--ptp->async_recv_n_open];
 }
 
 /*=============================================================================
@@ -479,8 +479,8 @@ PDM_partgnum1_to_partgnum2_create
   
     for (int j = 0; j < n_elt1[i]; j++) {
 
-      for (int k = location_gnum1_to_gnum2_idx[gnum1_to_gnum2_idx[i][j]]; 
-               k < location_gnum1_to_gnum2_idx[gnum1_to_gnum2_idx[i][j+1]]; k++) {
+      for (int k = location_gnum1_to_gnum2_idx[gnum1_to_gnum2_idx[i][j]]/3; 
+               k < location_gnum1_to_gnum2_idx[gnum1_to_gnum2_idx[i][j+1]]/3; k++) {
         int i_rank2 = location_gnum1_to_gnum2[3*k];
         n_gnum1_to_gnum2_rank[i_rank2]++;
         merge_gnum1_to_gnum2_rank2[n_total_elt] = i_rank2;
@@ -508,13 +508,6 @@ PDM_partgnum1_to_partgnum2_create
     idx_gnum1_to_gnum2_rank[i+1] = n_gnum1_to_gnum2_rank[i] + 
                                    idx_gnum1_to_gnum2_rank[i];
   }
-
-  free (merge_gnum1_to_gnum2_rank2);
-  free (merge_gnum1_to_gnum2_part2);
-  free (merge_gnum1_to_gnum2_lnum2);
-  free (merge_gnum1_to_gnum2_rank1);
-  free (merge_gnum1_to_gnum2_part1);
-  free (merge_gnum1_to_gnum2_lnum1);
 
   /* 2 - Sort gnum1_to_gnum2_rank gnum1_to_gnum2_part according successively rank, part and elemt  */
 
@@ -649,6 +642,8 @@ PDM_partgnum1_to_partgnum2_create
 
   }
 
+  free (idx_elt_part);
+
   /* 3 - Define Default_n_send_buffer and  Default_i_send_buffer */
 
   for (int i = 0; i < n_rank; i++) {
@@ -671,8 +666,6 @@ PDM_partgnum1_to_partgnum2_create
     int ielt1  = merge_gnum1_to_gnum2_lnum1[i];
     int idx    = i_send_buffer[i];
     printf ("1 %d %d : %d\n", ipart1, ielt1, idx);
-
-    assert (idx >= 0);
     ptp->gnum1_to_send_buffer[ipart1][ielt1] = idx;
   }
 
@@ -683,7 +676,6 @@ PDM_partgnum1_to_partgnum2_create
   }
 
   fflush(stdout);
-  abort();
 
   free (n_elt_part);
   free (order);
@@ -698,7 +690,6 @@ PDM_partgnum1_to_partgnum2_create
   free (idx_gnum1_to_gnum2_rank);
   free (n_gnum1_to_gnum2_rank);
 
-  free (i_send_buffer);
 
   /* 5 - Define Default_n_recv_buffer and  Default_i_recv_buffer */
 
@@ -729,12 +720,22 @@ PDM_partgnum1_to_partgnum2_create
     int ipart2      = merge_gnum1_to_gnum2_part2[i];
     int ielt2       = merge_gnum1_to_gnum2_lnum2[i];
     int idx         = 4 * i_send_buffer[i];
-    int_s_buff[4 * idx    ] = ipart1;
-    int_s_buff[4 * idx + 1] = ielt1;
-    int_s_buff[4 * idx + 2] = ipart2;
-    int_s_buff[4 * idx + 3] = ielt2;
-    gnum_s_buff[idx]        = gnum_elt1[ipart1][ielt1];
+    if (idx >= 0) {
+      int_s_buff[4 * idx    ] = ipart1;
+      int_s_buff[4 * idx + 1] = ielt1;
+      int_s_buff[4 * idx + 2] = ipart2;
+      int_s_buff[4 * idx + 3] = ielt2;
+      gnum_s_buff[idx]        = gnum_elt1[ipart1][ielt1];
+    }
   }
+
+  free (merge_gnum1_to_gnum2_rank2);
+  free (merge_gnum1_to_gnum2_part2);
+  free (merge_gnum1_to_gnum2_lnum2);
+  free (merge_gnum1_to_gnum2_rank1);
+  free (merge_gnum1_to_gnum2_part1);
+  free (merge_gnum1_to_gnum2_lnum1);
+  free (i_send_buffer);
 
   PDM_MPI_Alltoallv (int_s_buff, ptp->default_n_send_buffer, ptp->default_i_send_buffer, PDM_MPI_INT,
                      int_r_buff, ptp->default_n_recv_buffer, ptp->default_i_recv_buffer, PDM_MPI_INT,
@@ -762,7 +763,7 @@ PDM_partgnum1_to_partgnum2_create
   ptp->recv_buffer_to_ref_gnum2 = malloc (sizeof (int *) * n_part2);   
 
   //ptp->gnum1_to_send_buffer     = NULL;  
-  ptp->recv_buffer_to_ref_gnum2 = NULL;  
+  //ptp->recv_buffer_to_ref_gnum2 = NULL;  
 
   int **tag_elt2 = malloc (sizeof (int *) * n_part2);
 
@@ -817,6 +818,7 @@ PDM_partgnum1_to_partgnum2_create
     }
 
     ptp->gnum1_come_from[i]          = malloc (sizeof (PDM_g_num_t) * ptp->gnum1_come_from_idx[i][ptp->n_ref_gnum2[i]]);
+    printf("ptp->n_ref_gnum2[i] : %d %ld\n",ptp->n_ref_gnum2[i], ptp->gnum1_come_from_idx[i]);
     ptp->recv_buffer_to_ref_gnum2[i] = malloc (sizeof (int) * ptp->gnum1_come_from_idx[i][ptp->n_ref_gnum2[i]]);
   }
 
@@ -1134,7 +1136,7 @@ PDM_partgnum1_to_partgnum2_issend
   ptp->async_i_send_buffer[_request]  = malloc (sizeof(int) * (ptp->n_rank + 1));
   for (int i = 0; i < ptp->n_rank; i++) {
     ptp->async_n_send_buffer[_request][i]   = cst_stride * ptp->default_n_send_buffer[i] * (int) s_data; 
-    ptp->async_i_send_buffer[_request][i+1] = cst_stride * ptp->default_n_send_buffer[i+1] * (int) s_data; 
+    ptp->async_i_send_buffer[_request][i+1] = cst_stride * ptp->default_i_send_buffer[i+1] * (int) s_data; 
   }
   ptp->async_send_buffer[_request]      = malloc (sizeof (unsigned char) * ptp->async_i_send_buffer[_request][ptp->n_rank]);      
 
@@ -1224,7 +1226,7 @@ PDM_partgnum1_to_partgnum2_irecv
   ptp->async_i_recv_buffer[_request]    = malloc (sizeof(int) * (ptp->n_rank + 1));
   for (int i = 0; i < ptp->n_rank; i++) {
     ptp->async_n_recv_buffer[_request][i]   = cst_stride * ptp->default_n_recv_buffer[i] * (int) s_data; 
-    ptp->async_i_recv_buffer[_request][i+1] = cst_stride * ptp->default_n_recv_buffer[i+1] * (int) s_data; 
+    ptp->async_i_recv_buffer[_request][i+1] = cst_stride * ptp->default_i_recv_buffer[i+1] * (int) s_data; 
   }
   ptp->async_recv_buffer[_request]      = malloc (sizeof (unsigned char) * ptp->async_i_recv_buffer[_request][ptp->n_rank]);      
 
@@ -1267,7 +1269,7 @@ PDM_partgnum1_to_partgnum2_irecv_wait
 
   int delta = (int) s_data + cst_stride;
   for (int i = 0; i < ptp->n_part2; i++) {
-    for (int j = 0; j < ptp->n_elt2[i]; j++) {
+    for (int j = 0; j < ptp->n_ref_gnum2[i]; j++) {
       int idx = ptp->recv_buffer_to_ref_gnum2[i][j] * delta;
       int idx1 = j* delta;
       for (int k = 0; k < delta; k++) {
