@@ -2313,8 +2313,14 @@ PDM_sections_decompose_edges2
 
   for (int i_section = 0; i_section < n_section; i_section++) {
 
+    printf("i_section = %i [%i] \n", i_section, n_section);
     int id_section = dmn_elts->sections_id[i_section];
+    printf("id_section = %i \n", id_section);
+
     const PDM_g_num_t* distrib = PDM_DMesh_nodal_elmts_distrib_section_get(dmn_elts, id_section);
+
+    printf("distrib[%i] = %i \n", dmn_elts->i_rank, distrib[dmn_elts->i_rank]);
+    printf("dmn_elts->section_distribution[%i] = %i \n", i_section, dmn_elts->section_distribution[i_section]);
 
     PDM_g_num_t beg_elmt_gnum = distrib[dmn_elts->i_rank] + dmn_elts->section_distribution[i_section];
     PDM_g_num_t beg_edge_gnum = 0; // Useless in this context

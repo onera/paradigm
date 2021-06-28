@@ -1774,14 +1774,15 @@ PDM_dmesh_nodal_generate_distribution2
 
   if(dmesh_nodal->volumic != NULL) {
      PDM_dmesh_nodal_elmts_generate_distribution(dmesh_nodal->volumic );
-  } else if(dmesh_nodal->surfacic != NULL){
+  }
+  if(dmesh_nodal->surfacic != NULL){
      PDM_dmesh_nodal_elmts_generate_distribution(dmesh_nodal->surfacic);
-  } else if(dmesh_nodal->ridge != NULL){
+  }
+  if(dmesh_nodal->ridge != NULL){
      PDM_dmesh_nodal_elmts_generate_distribution(dmesh_nodal->ridge);
-  } else if(dmesh_nodal->corner != NULL){
+  }
+  if(dmesh_nodal->corner != NULL){
      PDM_dmesh_nodal_elmts_generate_distribution(dmesh_nodal->corner);
-  } else {
-    PDM_error (__FILE__, __LINE__, 0, "PDM_Mesh_nodal_add_desh_nodal_elmts bad mesh_dimension\n");
   }
 }
 
