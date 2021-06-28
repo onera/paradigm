@@ -350,7 +350,6 @@ PDM_interpolate_from_mesh_location_exch_inplace
     n_point_tot[i_part] = _elt_pts_inside_idx[n_elmt];
 
     printf("n_point_tot[%i] = %i \n", i_part, n_point_tot[i_part]);
-    printf("pcloud->n_points[%i] = %i \n", i_part, pcloud->n_points[i_part]);
 
     cloud_data_in_current_src  [i_part] = (double *) malloc( _elt_pts_inside_idx[n_elmt] * sizeof(double));
     cloud_data_in_current_src_n[i_part] = (int    *) malloc( _elt_pts_inside_idx[n_elmt] * sizeof(int   ));

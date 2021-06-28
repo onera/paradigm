@@ -91,12 +91,11 @@ cdef class InterpolateFromMeshLocation:
   # ************************************************************************
   # > Class attributes
   cdef PDM_interpolate_from_mesh_location_t* _interp_from_ml
-  cdef int _size
-  cdef int _rank
   cdef int _n_part_src
   cdef int _n_point_cloud
   cdef dict n_part_cloud
   cdef list n_points_cloud_part
+  cdef list _pt_in_elt_setted, _cloud_setted
   # ************************************************************************
 
   # ------------------------------------------------------------------------
@@ -108,11 +107,8 @@ cdef class InterpolateFromMeshLocation:
     self._n_point_cloud = n_point_cloud
     self.n_part_cloud = dict()
     self.n_points_cloud_part = [dict() for k in range(n_point_cloud)]
-    # ::::::::::::::::::::::::::::::::::::::::::::::::::
-
-    # ::::::::::::::::::::::::::::::::::::::::::::::::::
-    self._rank = comm.Get_rank()
-    self._size = comm.Get_size()
+    self._pt_in_elt_setted = [list() for k in range(n_point_cloud)]
+    self._cloud_setted = [list() for k in range(n_point_cloud)]
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -130,6 +126,8 @@ cdef class InterpolateFromMeshLocation:
     """
     """
     self._n_part_src = n_part
+    for i_cloud in range(self._n_point_cloud):
+      self._pt_in_elt_setted[i_cloud] = [list() for k in range(n_part)]
     PDM_interpolate_from_mesh_location_mesh_global_data_set(self._interp_from_ml, n_part)
 
   # ------------------------------------------------------------------------
@@ -138,6 +136,7 @@ cdef class InterpolateFromMeshLocation:
     """
     """
     self.n_part_cloud[i_point_cloud] = n_part
+    self._cloud_setted[i_point_cloud] = [list() for k in range(n_part)]
     PDM_interpolate_from_mesh_location_n_part_cloud_set(self._interp_from_ml,
                                                         i_point_cloud,
                                                         n_part)
@@ -151,6 +150,9 @@ cdef class InterpolateFromMeshLocation:
                       ):
     """
     """
+    setted_values = {'coords' : coords, 'gnum' : gnum}
+    #Keep ownership until class is deleted
+    self._cloud_setted[i_point_cloud][i_part] = setted_values
     self.n_points_cloud_part[i_point_cloud][i_part] = n_points
     PDM_interpolate_from_mesh_location_cloud_set(self._interp_from_ml,
                                                  i_point_cloud,
@@ -201,6 +203,17 @@ cdef class InterpolateFromMeshLocation:
                               NPY.ndarray[NPY.double_t  , mode='c', ndim=1] points_projected_coords):
     """
     """
+    setted_values = {'elt_pts_inside_idx'      : elt_pts_inside_idx,
+                     'points_gnum'             : points_gnum,
+                     'points_coords'           : points_coords,
+                     'points_uvw'              : points_uvw,
+                     'points_weights_idx'      : points_weights_idx,
+                     'points_weights'          : points_weights,
+                     'points_dist2'            : points_dist2,
+                     'points_projected_coords' : points_projected_coords}
+    #Keep ownership until class is deleted
+    self._pt_in_elt_setted[i_point_cloud][i_part] = setted_values
+
     PDM_interpolate_from_mesh_location_points_in_elt_set(self._interp_from_ml,
                                                          i_part,
                                                          i_point_cloud,
@@ -249,7 +262,7 @@ cdef class InterpolateFromMeshLocation:
       n_point_cloud = self.n_points_cloud_part[i_point_cloud][i_part]
       cloud_data_out[i_part] = <double *> malloc(n_point_cloud * sizeof(double))
       for i in range(n_point_cloud):
-        cloud_data_out[i_part][i] = -999
+        cloud_data_out[i_part][i] = NPY.nan
 
     PDM_interpolate_from_mesh_location_exch_inplace(self._interp_from_ml,
                                                     i_point_cloud,
