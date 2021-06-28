@@ -76,6 +76,31 @@ PDM_g_num_t  **dentity_elmt
 );
 
 /**
+ * \brief Generate the deduce connectivity in distribute manner
+ *
+ * \param [in]   comm     MPI communicator
+ *
+ */
+void
+PDM_generate_entitiy_connectivity2
+(
+PDM_MPI_Comm   comm,
+PDM_g_num_t    n_vtx_abs,
+int            n_part,
+int           *n_entity_elt_tot,
+PDM_g_num_t  **delmt_entity,
+int          **delmt_entity_vtx_idx,
+PDM_g_num_t  **delmt_entity_vtx,
+int          **parent_elmt_position,
+int           *dn_entity,
+PDM_g_num_t  **entity_distrib,
+int          **dentity_vtx_idx,
+PDM_g_num_t  **dentity_vtx,
+int          **dentity_elmt_idx,
+PDM_g_num_t  **dentity_elmt
+);
+
+/**
  * \brief Create a Mesh nodal structure
  *
  * \param [in]   comm     MPI communicator
