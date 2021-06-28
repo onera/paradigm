@@ -590,7 +590,7 @@ PDM_bar_decomposes_edges
   int         *_current_elmt_edge_vtx_idx = elmt_edge_vtx_idx + _n_edge_current;
   PDM_g_num_t *_current_elmt_edge_vtx     = elmt_edge_vtx + elmt_edge_vtx_idx[_n_edge_current];
   PDM_g_num_t *_current_elmt_edge_cell    = elmt_edge_cell + _n_edge_current;
-  PDM_g_num_t *_parent_elmt_position      = parent_elmt_position + _n_edge_current;
+  int         *_parent_elmt_position      = parent_elmt_position + _n_edge_current;
 
   /*
    * For each element we flaten all connectivities in one array
@@ -646,7 +646,7 @@ PDM_tri_decomposes_edges
   int         *_current_elmt_edge_vtx_idx = elmt_edge_vtx_idx + _n_edge_current;
   PDM_g_num_t *_current_elmt_edge_vtx     = elmt_edge_vtx + elmt_edge_vtx_idx[_n_edge_current];
   PDM_g_num_t *_current_elmt_edge_cell    = elmt_edge_cell + _n_edge_current;
-  PDM_g_num_t *_parent_elmt_position      = parent_elmt_position + _n_edge_current;
+  int         *_parent_elmt_position      = parent_elmt_position + _n_edge_current;
 
   /*
    * For each element we flaten all connectivities in one array
@@ -708,7 +708,7 @@ PDM_quad_decomposes_edges
   int         *_current_elmt_edge_vtx_idx = elmt_edge_vtx_idx + _n_edge_current;
   PDM_g_num_t *_current_elmt_edge_vtx     = elmt_edge_vtx + elmt_edge_vtx_idx[_n_edge_current];
   PDM_g_num_t *_current_elmt_edge_cell    = elmt_edge_cell + _n_edge_current;
-  PDM_g_num_t *_parent_elmt_position      = parent_elmt_position + _n_edge_current;
+  int         *_parent_elmt_position      = parent_elmt_position + _n_edge_current;
 
   /*
    * For each element we flaten all connectivities in one array
@@ -772,7 +772,7 @@ PDM_tri_decomposes_faces
   int         *_current_elmt_face_vtx_idx = elmt_face_vtx_idx + _n_face_current;
   PDM_g_num_t *_current_elmt_face_vtx     = elmt_face_vtx + elmt_face_vtx_idx[_n_face_current];
   PDM_g_num_t *_current_elmt_face_cell    = elmt_face_cell + _n_face_current;
-  PDM_g_num_t *_parent_elmt_position      = parent_elmt_position + _n_face_current;
+  int         *_parent_elmt_position      = parent_elmt_position + _n_face_current;
 
   /*
    * For each element we flaten all connectivities in one array
@@ -828,7 +828,7 @@ PDM_quad_decomposes_faces
   int         *_current_elmt_face_vtx_idx = elmt_face_vtx_idx + _n_face_current;
   PDM_g_num_t *_current_elmt_face_vtx     = elmt_face_vtx + elmt_face_vtx_idx[_n_face_current];
   PDM_g_num_t *_current_elmt_face_cell    = elmt_face_cell + _n_face_current;
-  PDM_g_num_t *_parent_elmt_position      = parent_elmt_position + _n_face_current;
+  int         *_parent_elmt_position      = parent_elmt_position + _n_face_current;
 
   /*
    * For each element we flaten all connectivities in one array
@@ -882,7 +882,7 @@ PDM_poly2d_decomposes_faces
   int         *_current_elmt_face_vtx_idx = elmt_face_vtx_idx + _n_face_current;
   PDM_g_num_t *_current_elmt_face_vtx     = elmt_face_vtx + elmt_face_vtx_idx[_n_face_current];
   PDM_g_num_t *_current_elmt_face_cell    = elmt_face_cell + _n_face_current;
-  PDM_g_num_t *_parent_elmt_position      = parent_elmt_position + _n_face_current;
+  int         *_parent_elmt_position      = parent_elmt_position + _n_face_current;
 
   /*
    * For each element we flaten all connectivities in one array
@@ -933,7 +933,7 @@ PDM_poly2d_decomposes_edges
   int         *_current_elmt_edge_vtx_idx = elmt_edge_vtx_idx + _n_edge_current;
   PDM_g_num_t *_current_elmt_edge_vtx     = elmt_edge_vtx + elmt_edge_vtx_idx[_n_edge_current];
   PDM_g_num_t *_current_elmt_edge_cell    = elmt_edge_cell + _n_edge_current;
-  PDM_g_num_t *_parent_elmt_position      = parent_elmt_position + _n_edge_current;
+  int         *_parent_elmt_position      = parent_elmt_position + _n_edge_current;
   /*
    * For each element we flaten all connectivities in one array
    */
@@ -1072,7 +1072,7 @@ PDM_tetra_decomposes_faces
   int         *_current_elmt_face_vtx_idx = elmt_face_vtx_idx + _n_face_current;
   PDM_g_num_t *_current_elmt_face_vtx     = elmt_face_vtx + elmt_face_vtx_idx[_n_face_current];
   PDM_g_num_t *_current_elmt_face_cell    = elmt_face_cell + _n_face_current;
-  PDM_g_num_t *_parent_elmt_position      = parent_elmt_position + _n_face_current;
+  int         *_parent_elmt_position      = parent_elmt_position + _n_face_current;
 
   /*
    * For each element we flaten all connectivities in one array
@@ -1142,7 +1142,7 @@ PDM_tetra_decomposes_edges
   int         *_current_elmt_edge_vtx_idx = elmt_edge_vtx_idx + _n_edge_current;
   PDM_g_num_t *_current_elmt_edge_vtx     = elmt_edge_vtx + elmt_edge_vtx_idx[_n_edge_current];
   PDM_g_num_t *_current_elmt_edge_cell    = elmt_edge_cell + _n_edge_current;
-  PDM_g_num_t *_parent_elmt_position      = parent_elmt_position + _n_edge_current;
+  int         *_parent_elmt_position      = parent_elmt_position + _n_edge_current;
 
   /*
    * For each element we flaten all connectivities in one array
@@ -1220,7 +1220,7 @@ PDM_pyra_decomposes_faces
   int         *_current_elmt_face_vtx_idx = elmt_face_vtx_idx + _n_face_current;
   PDM_g_num_t *_current_elmt_face_vtx     = elmt_face_vtx + elmt_face_vtx_idx[_n_face_current];
   PDM_g_num_t *_current_elmt_face_cell    = elmt_face_cell + _n_face_current;
-  PDM_g_num_t *_parent_elmt_position      = parent_elmt_position + _n_face_current;
+  int         *_parent_elmt_position      = parent_elmt_position + _n_face_current;
 
   /*
    * For each element we flaten all connectivities in one array
@@ -1301,7 +1301,7 @@ PDM_pyra_decomposes_edges
   int         *_current_elmt_edge_vtx_idx = elmt_edge_vtx_idx + _n_edge_current;
   PDM_g_num_t *_current_elmt_edge_vtx     = elmt_edge_vtx + elmt_edge_vtx_idx[_n_edge_current];
   PDM_g_num_t *_current_elmt_edge_cell    = elmt_edge_cell + _n_edge_current;
-  PDM_g_num_t *_parent_elmt_position      = parent_elmt_position + _n_edge_current;
+  int         *_parent_elmt_position      = parent_elmt_position + _n_edge_current;
 
   /*
    * For each element we flaten all connectivities in one array
@@ -1387,7 +1387,7 @@ PDM_prism_decomposes_faces
   int         *_current_elmt_face_vtx_idx = elmt_face_vtx_idx + _n_face_current;
   PDM_g_num_t *_current_elmt_face_vtx     = elmt_face_vtx + elmt_face_vtx_idx[_n_face_current];
   PDM_g_num_t *_current_elmt_face_cell    = elmt_face_cell + _n_face_current;
-  PDM_g_num_t *_parent_elmt_position      = parent_elmt_position + _n_face_current;
+  int         *_parent_elmt_position      = parent_elmt_position + _n_face_current;
 
   /*
    * For each element we flaten all connectivities in one array
@@ -1478,7 +1478,7 @@ PDM_prism_decomposes_edges
   int         *_current_elmt_edge_vtx_idx = elmt_edge_vtx_idx + _n_edge_current;
   PDM_g_num_t *_current_elmt_edge_vtx     = elmt_edge_vtx + elmt_edge_vtx_idx[_n_edge_current];
   PDM_g_num_t *_current_elmt_edge_cell    = elmt_edge_cell + _n_edge_current;
-  PDM_g_num_t *_parent_elmt_position      = parent_elmt_position + _n_edge_current;
+  int         *_parent_elmt_position      = parent_elmt_position + _n_edge_current;
 
   /*
    * For each element we flaten all connectivities in one array
@@ -1568,7 +1568,7 @@ PDM_hexa_decomposes_faces
   int         *_current_elmt_face_vtx_idx = elmt_face_vtx_idx + _n_face_current;
   PDM_g_num_t *_current_elmt_face_vtx     = elmt_face_vtx + elmt_face_vtx_idx[_n_face_current];
   PDM_g_num_t *_current_elmt_face_cell    = elmt_face_cell + _n_face_current;
-  PDM_g_num_t *_parent_elmt_position      = parent_elmt_position + _n_face_current;
+  int         *_parent_elmt_position      = parent_elmt_position + _n_face_current;
 
 
   // printf("_n_face_current:: %i\n", _n_face_current);
@@ -1657,7 +1657,7 @@ PDM_hexa_decomposes_edges
   int         *_current_elmt_edge_vtx_idx = elmt_edge_vtx_idx + _n_edge_current;
   PDM_g_num_t *_current_elmt_edge_vtx     = elmt_edge_vtx + elmt_edge_vtx_idx[_n_edge_current];
   PDM_g_num_t *_current_elmt_edge_cell    = elmt_edge_cell + _n_edge_current;
-  PDM_g_num_t *_parent_elmt_position      = parent_elmt_position + _n_edge_current;
+  int         *_parent_elmt_position      = parent_elmt_position + _n_edge_current;
 
 
   /*
@@ -2313,14 +2313,16 @@ PDM_sections_decompose_edges2
 
   for (int i_section = 0; i_section < n_section; i_section++) {
 
-    printf("i_section = %i [%i] \n", i_section, n_section);
     int id_section = dmn_elts->sections_id[i_section];
-    printf("id_section = %i \n", id_section);
 
     const PDM_g_num_t* distrib = PDM_DMesh_nodal_elmts_distrib_section_get(dmn_elts, id_section);
 
-    printf("distrib[%i] = %i \n", dmn_elts->i_rank, distrib[dmn_elts->i_rank]);
-    printf("dmn_elts->section_distribution[%i] = %i \n", i_section, dmn_elts->section_distribution[i_section]);
+    if(0 == 1) {
+      printf("i_section = %i [%i] \n", i_section, n_section);
+      printf("id_section = %i \n", id_section);
+      printf("distrib[%i] = "PDM_FMT_G_NUM" \n", dmn_elts->i_rank, distrib[dmn_elts->i_rank]);
+      printf("dmn_elts->section_distribution[%i] = "PDM_FMT_G_NUM" \n", i_section, dmn_elts->section_distribution[i_section]);
+    }
 
     PDM_g_num_t beg_elmt_gnum = distrib[dmn_elts->i_rank] + dmn_elts->section_distribution[i_section];
     PDM_g_num_t beg_edge_gnum = 0; // Useless in this context

@@ -487,7 +487,7 @@ MPI_TEST_CASE("decomposes quad ",1) {
   std::vector<PDM_g_num_t> delmt_edge_cell_expected    = {1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4};
   std::vector<int>         dcell_edge_vtx_idx_expected = {0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32};
   std::vector<PDM_g_num_t> dcell_edge_vtx_expected     = {1, 2, 2, 5, 5, 4, 4, 1, 2, 3, 3, 6, 6, 5, 5, 2, 4, 5, 5, 8, 8, 7, 7, 4, 5, 6, 6, 9, 9, 8, 8, 5};
-  std::vector<PDM_g_num_t> dparent_elmt_pos_expected   = {0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3};
+  std::vector<int>         dparent_elmt_pos_expected   = {0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3};
 
   CHECK( delmt_edge_cell    == delmt_edge_cell_expected);
   CHECK( dcell_edge_vtx_idx == dcell_edge_vtx_idx_expected);
@@ -599,7 +599,7 @@ MPI_TEST_CASE("decomposes tri ",1) {
   std::vector<PDM_g_num_t> delmt_edge_cell_expected    = {1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5, 6, 6, 6, 7, 7, 7, 8, 8, 8};
   std::vector<int>         dcell_edge_vtx_idx_expected = {0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48 };
   std::vector<PDM_g_num_t> dcell_edge_vtx_expected     = {1, 2, 2, 5, 5, 1, 1, 5, 5, 4, 4, 1, 2, 3, 3, 6, 6, 2, 2, 6, 6, 5, 5, 2, 4, 5, 5, 8, 8, 4, 4, 8, 8, 7, 7, 4, 5, 6, 6, 9, 9, 5, 5, 9, 9, 8, 8, 5};
-  std::vector<PDM_g_num_t> dparent_elmt_pos_expected   = {0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2};
+  std::vector<int>         dparent_elmt_pos_expected   = {0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2};
 
   CHECK( delmt_edge_cell    == delmt_edge_cell_expected);
   CHECK( dcell_edge_vtx_idx == dcell_edge_vtx_idx_expected);

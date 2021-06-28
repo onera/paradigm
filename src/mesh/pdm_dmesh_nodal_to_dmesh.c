@@ -565,7 +565,6 @@ PDM_g_num_t  **dentity_elmt
     }
     free(delmt_entity_vtx_idx[i_part]);
   }
-  free(delmt_entity_vtx_idx);
 
   /*
    * Setup part_to_block to filter all keys
@@ -661,7 +660,7 @@ PDM_g_num_t  **dentity_elmt
    */
   int blk_size = PDM_part_to_block_n_elt_block_get(ptb);
 
-  if( 0 == 1 ) {
+  if( 0 == 0 ) {
     PDM_log_trace_array_int(blk_tot_entity_vtx_n, blk_size             , "blk_tot_entity_vtx_n:: ");
     PDM_log_trace_array_long(blk_tot_entity_vtx , blk_tot_entity_vtx_size, "blk_tot_entity_vtx:: "  );
 
@@ -669,6 +668,8 @@ PDM_g_num_t  **dentity_elmt
     PDM_log_trace_array_int(blk_entity_vtx_n    , blk_entity_vtx_n_size, "blk_entity_vtx_n:: ");
 
     PDM_log_trace_array_long(blk_elmt_entity_elmt, blk_entity_elmt_size, "blk_elmt_entity_elmt:: ");
+    PDM_log_trace_array_int(blk_parent_elmt_position, blk_entity_elmt_size, "blk_parent_elmt_position:: ");
+    PDM_log_trace_array_int(blk_part_id, blk_entity_elmt_size, "blk_part_id:: ");
   }
 
   PDM_part_to_block_free(ptb);
@@ -1103,10 +1104,10 @@ _generate_faces_from_dmesh_nodal
 
   PDM_dmesh_nodal_decompose_faces_get_size(dmesh_nodal, &n_face_elt_tot, &n_sum_vtx_face_tot);
 
-  PDM_g_num_t* delmt_face         = (PDM_g_num_t*) malloc(  n_face_elt_tot     * sizeof(PDM_g_num_t));
-  int*         dparent_elmt_pos   = (PDM_g_num_t*) malloc(  n_face_elt_tot     * sizeof(int        ));
-  int*         delmt_face_vtx_idx = (int        *) malloc( (n_face_elt_tot +1) * sizeof(int        ));
-  PDM_g_num_t* delmt_face_vtx     = (PDM_g_num_t*) malloc(  n_sum_vtx_face_tot * sizeof(PDM_g_num_t));
+  PDM_g_num_t* delmt_face         = (PDM_g_num_t *) malloc(  n_face_elt_tot     * sizeof(PDM_g_num_t));
+  int*         dparent_elmt_pos   = (int         *) malloc(  n_face_elt_tot     * sizeof(int        ));
+  int*         delmt_face_vtx_idx = (int         *) malloc( (n_face_elt_tot +1) * sizeof(int        ));
+  PDM_g_num_t* delmt_face_vtx     = (PDM_g_num_t *) malloc(  n_sum_vtx_face_tot * sizeof(PDM_g_num_t));
 
   delmt_face_vtx_idx[0] = 0;
   PDM_sections_decompose_faces(dmesh_nodal,
@@ -1252,10 +1253,10 @@ _generate_edges_from_dmesh_nodal
 
   PDM_dmesh_nodal_decompose_edges_get_size(dmesh_nodal, &n_edge_elt_tot, &n_sum_vtx_edge_tot);
 
-  PDM_g_num_t* delmt_edge         = (PDM_g_num_t*) malloc(  n_edge_elt_tot     * sizeof(PDM_g_num_t));
-  int*         dparent_elmt_pos   = (PDM_g_num_t*) malloc(  n_edge_elt_tot     * sizeof(int        ));
-  int*         delmt_edge_vtx_idx = (int        *) malloc( (n_edge_elt_tot +1) * sizeof(int        ));
-  PDM_g_num_t* delmt_edge_vtx     = (PDM_g_num_t*) malloc(  n_sum_vtx_edge_tot * sizeof(PDM_g_num_t));
+  PDM_g_num_t* delmt_edge         = (PDM_g_num_t *) malloc(  n_edge_elt_tot     * sizeof(PDM_g_num_t));
+  int*         dparent_elmt_pos   = (int         *) malloc(  n_edge_elt_tot     * sizeof(int        ));
+  int*         delmt_edge_vtx_idx = (int         *) malloc( (n_edge_elt_tot +1) * sizeof(int        ));
+  PDM_g_num_t* delmt_edge_vtx     = (PDM_g_num_t *) malloc(  n_sum_vtx_edge_tot * sizeof(PDM_g_num_t));
 
   delmt_edge_vtx_idx[0] = 0;
   PDM_sections_decompose_edges(dmesh_nodal,
@@ -1342,10 +1343,10 @@ _generate_edges_from_dmesh_nodal2
   /*
    * Decompose surface
    */
-  PDM_g_num_t* delmt_surf_edge         = (PDM_g_num_t*) malloc(  n_edge_elt_surf_tot     * sizeof(PDM_g_num_t));
-  int*         dparent_elmt_surf_pos   = (PDM_g_num_t*) malloc(  n_edge_elt_surf_tot     * sizeof(int        ));
-  int*         delmt_surf_edge_vtx_idx = (int        *) malloc( (n_edge_elt_surf_tot +1) * sizeof(int        ));
-  PDM_g_num_t* delmt_surf_edge_vtx     = (PDM_g_num_t*) malloc(  n_sum_vtx_surf_edge_tot * sizeof(PDM_g_num_t));
+  PDM_g_num_t* delmt_surf_edge         = (PDM_g_num_t *) malloc(  n_edge_elt_surf_tot     * sizeof(PDM_g_num_t));
+  int*         dparent_elmt_surf_pos   = (int         *) malloc(  n_edge_elt_surf_tot     * sizeof(int        ));
+  int*         delmt_surf_edge_vtx_idx = (int         *) malloc( (n_edge_elt_surf_tot +1) * sizeof(int        ));
+  PDM_g_num_t* delmt_surf_edge_vtx     = (PDM_g_num_t *) malloc(  n_sum_vtx_surf_edge_tot * sizeof(PDM_g_num_t));
 
   delmt_surf_edge_vtx_idx[0] = 0;
   PDM_sections_decompose_edges2(dmesh_nodal->surfacic,
@@ -1358,10 +1359,10 @@ _generate_edges_from_dmesh_nodal2
   /*
    * Decompose ridge
    */
-  PDM_g_num_t* delmt_ridge_edge         = (PDM_g_num_t*) malloc(  n_edge_elt_ridge_tot     * sizeof(PDM_g_num_t));
-  int*         dparent_elmt_ridge_pos   = (PDM_g_num_t*) malloc(  n_edge_elt_ridge_tot     * sizeof(int        ));
-  int*         delmt_ridge_edge_vtx_idx = (int        *) malloc( (n_edge_elt_ridge_tot +1) * sizeof(int        ));
-  PDM_g_num_t* delmt_ridge_edge_vtx     = (PDM_g_num_t*) malloc(  n_sum_vtx_ridge_edge_tot * sizeof(PDM_g_num_t));
+  PDM_g_num_t* delmt_ridge_edge         = (PDM_g_num_t *) malloc(  n_edge_elt_ridge_tot     * sizeof(PDM_g_num_t));
+  int*         dparent_elmt_ridge_pos   = (int         *) malloc(  n_edge_elt_ridge_tot     * sizeof(int        ));
+  int*         delmt_ridge_edge_vtx_idx = (int         *) malloc( (n_edge_elt_ridge_tot +1) * sizeof(int        ));
+  PDM_g_num_t* delmt_ridge_edge_vtx     = (PDM_g_num_t *) malloc(  n_sum_vtx_ridge_edge_tot * sizeof(PDM_g_num_t));
 
   delmt_ridge_edge_vtx_idx[0] = 0;
   PDM_sections_decompose_edges2(dmesh_nodal->ridge,
@@ -1389,7 +1390,7 @@ _generate_edges_from_dmesh_nodal2
   n_edge_elt_tot[1] = n_edge_elt_ridge_tot;
 
   PDM_g_num_t **delmt_edge         = (PDM_g_num_t **) malloc( n_part * sizeof(PDM_g_num_t *));
-  int         **dparent_elmt_pos   = (PDM_g_num_t **) malloc( n_part * sizeof(int         *));
+  int         **dparent_elmt_pos   = (int         **) malloc( n_part * sizeof(int         *));
   int         **delmt_edge_vtx_idx = (int         **) malloc( n_part * sizeof(int         *));
   PDM_g_num_t **delmt_edge_vtx     = (PDM_g_num_t **) malloc( n_part * sizeof(PDM_g_num_t *));
 
@@ -1452,7 +1453,6 @@ _generate_edges_from_dmesh_nodal2
 
   free(dparent_elmt_surf_pos);
   free(dparent_elmt_ridge_pos);
-  free(n_edge_elt_tot);
 }
 
 static
