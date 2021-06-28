@@ -471,6 +471,11 @@ const PDM_MPI_Comm        comm,
   dmesh_nodal->dcell_face_idx           = NULL;
   dmesh_nodal->cell_distrib             = NULL;
 
+  dmesh_nodal->volumic                  = NULL;
+  dmesh_nodal->surfacic                 = NULL;
+  dmesh_nodal->ridge                    = NULL;
+  dmesh_nodal->corner                   = NULL;
+
   dmesh_nodal->dn_face                  = -1;
   dmesh_nodal->_dface_vtx               = NULL;
   dmesh_nodal->_dface_vtx_idx           = NULL;
@@ -1582,7 +1587,68 @@ PDM_dmesh_nodal_generate_distribution
       PDM_printf("%i ", dmesh_nodal->section_distribution[i_section]);
     }
   }
+}
 
+
+void
+PDM_dmesh_nodal_elmts_generate_distribution
+(
+ PDM_DMesh_nodal_elmts_t *dmn_elts
+)
+{
+  /* Creation of element distribution among all sections */
+  printf("dmn_elts->n_section : %i \n", dmn_elts->n_section);
+  dmn_elts->section_distribution    = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * (dmn_elts->n_section + 1));
+  dmn_elts->section_distribution[0] = 0;
+
+  for(int i_section = 0; i_section < dmn_elts->n_section; ++i_section) {
+
+    int id_section = dmn_elts->sections_id[i_section];
+    const PDM_g_num_t* distrib = PDM_DMesh_nodal_elmts_distrib_section_get(dmn_elts, id_section);
+
+    dmn_elts->section_distribution[i_section+1] = dmn_elts->section_distribution[i_section] + distrib[dmn_elts->n_rank];
+  }
+
+  /* Verbose */
+  if(1 == 1)
+  {
+    PDM_printf(" ------------------------------ \n ");
+    for(int i_section=0; i_section < dmn_elts->n_section+1; i_section++){
+      PDM_printf("%i ", dmn_elts->section_distribution[i_section]);
+    }
+  }
+}
+
+
+/**
+ *
+ * \brief Setup global distribution of all elements register in current structure
+ *
+ * \param [inout]  mesh
+ *
+ * \return         Null
+ *
+ */
+void
+PDM_dmesh_nodal_generate_distribution2
+(
+ PDM_dmesh_nodal_t  *dmesh_nodal
+)
+{
+  /* Get current structure to treat */
+  assert(dmesh_nodal->section_distribution == NULL);
+
+  if(dmesh_nodal->volumic != NULL) {
+     PDM_dmesh_nodal_elmts_generate_distribution(dmesh_nodal->volumic );
+  } else if(dmesh_nodal->surfacic != NULL){
+     PDM_dmesh_nodal_elmts_generate_distribution(dmesh_nodal->surfacic);
+  } else if(dmesh_nodal->ridge != NULL){
+     PDM_dmesh_nodal_elmts_generate_distribution(dmesh_nodal->ridge);
+  } else if(dmesh_nodal->corner != NULL){
+     PDM_dmesh_nodal_elmts_generate_distribution(dmesh_nodal->corner);
+  } else {
+    PDM_error (__FILE__, __LINE__, 0, "PDM_Mesh_nodal_add_desh_nodal_elmts bad mesh_dimension\n");
+  }
 }
 
 /**
@@ -2486,6 +2552,68 @@ const int                id_section
   }
 }
 
+/**
+ * \brief  Return section distribution
+ *
+ * \param [in]  hdl        Distributed nodal mesh handle
+ * \param [in]  id_section   Block identifier
+ *
+ * \return  A array of size \ref n_ranks + 1
+ *
+ */
+
+const PDM_g_num_t *
+PDM_DMesh_nodal_elmts_distrib_section_get
+(
+      PDM_DMesh_nodal_elmts_t *dmn_elts,
+const int                      id_section
+)
+{
+  if (dmn_elts == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
+  }
+
+  int _id_section;
+
+  if (id_section >= PDM_BLOCK_ID_BLOCK_POLY3D) {
+
+    _id_section = id_section - PDM_BLOCK_ID_BLOCK_POLY3D;
+
+    PDM_DMesh_nodal_section_poly3d_t *section = dmn_elts->sections_poly3d[_id_section];
+
+    if (section == NULL) {
+      PDM_error (__FILE__, __LINE__, 0, "Bad standard section identifier\n");
+    }
+
+    return section->distrib;
+  }
+
+  else if (id_section >= PDM_BLOCK_ID_BLOCK_POLY2D) {
+
+    _id_section = id_section - PDM_BLOCK_ID_BLOCK_POLY2D;
+
+    PDM_DMesh_nodal_section_poly2d_t *section = dmn_elts->sections_poly2d[_id_section];
+
+    if (section == NULL) {
+      PDM_error (__FILE__, __LINE__, 0, "Bad polygon section identifier\n");
+    }
+
+    return section->distrib;
+  }
+
+  else {
+
+    _id_section = id_section - PDM_BLOCK_ID_BLOCK_STD;
+
+    PDM_DMesh_nodal_section_std_t *section = dmn_elts->sections_std[_id_section];
+
+    if (section == NULL) {
+      PDM_error (__FILE__, __LINE__, 0, "Bad polyhedron section identifier\n");
+    }
+
+    return section->distrib;
+  }
+}
 
 /**
  * \brief  Return cell distribution
@@ -2541,6 +2669,7 @@ _update_elmt_sections_id
 {
   int n_section = 0;
 
+
   if (dmn_elts->sections_std != NULL) {
     n_section += dmn_elts->n_section_std;
   }
@@ -2577,6 +2706,11 @@ _update_elmt_sections_id
   }
 
   dmn_elts->n_section = n_section;
+
+  printf("_update_elmt_sections_id | n_section                   = %i \n", n_section);
+  printf("_update_elmt_sections_id | dmn_elts->n_section_std     = %i \n", dmn_elts->n_section_std);
+  printf("_update_elmt_sections_id | dmn_elts->n_section_poly2d  = %i \n", dmn_elts->n_section_poly2d);
+  printf("_update_elmt_sections_id | dmn_elts->n_section_poly3d  = %i \n", dmn_elts->n_section_poly3d);
 
 }
 
@@ -2843,6 +2977,7 @@ PDM_Mesh_nodal_add_desh_nodal_elmts
  PDM_DMesh_nodal_elmts_t *dmn_elts
 )
 {
+  printf("PDM_Mesh_nodal_add_desh_nodal_elmts with dmn_elts = %i \n", dmn_elts->mesh_dimension);
   if(dmn_elts->mesh_dimension == 3) {
     dmesh_nodal->volumic = dmn_elts;
   } else if(dmn_elts->mesh_dimension == 2){
