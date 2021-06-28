@@ -964,6 +964,36 @@ PDM_dmesh_nodal_elmts_generate_distribution
  PDM_DMesh_nodal_elmts_t *dmn_elts
 );
 
+
+void
+PDM_dmesh_nodal_decompose_edges_get_size2
+(
+PDM_DMesh_nodal_elmts_t *dmn_elts,
+int                     *n_edge_elt_tot,
+int                     *n_sum_vtx_edge_tot
+);
+
+PDM_Mesh_nodal_elt_t
+PDM_DMesh_nodal_elmts_section_type_get
+(
+      PDM_DMesh_nodal_elmts_t *dmn_elts,
+const int                      id_section
+);
+
+PDM_g_num_t *
+PDM_DMesh_nodal_elmts_section_std_get
+(
+      PDM_DMesh_nodal_elmts_t *dmn_elts,
+const int                      id_section
+);
+
+int
+PDM_DMesh_nodal_elmts_section_n_elt_get
+(
+      PDM_DMesh_nodal_elmts_t *dmn_elts,
+const int                      id_section
+);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

@@ -826,6 +826,48 @@ const int                id_section
   return t_elt;
 }
 
+
+PDM_Mesh_nodal_elt_t
+PDM_DMesh_nodal_elmts_section_type_get
+(
+      PDM_DMesh_nodal_elmts_t *dmn_elts,
+const int                      id_section
+)
+{
+  if (dmn_elts == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
+  }
+
+  PDM_Mesh_nodal_elt_t t_elt = PDM_MESH_NODAL_POLY_3D;
+
+  if (id_section < PDM_BLOCK_ID_BLOCK_POLY2D) {
+
+    t_elt = PDM_MESH_NODAL_POLY_3D;
+    int _id_section = id_section - PDM_BLOCK_ID_BLOCK_STD;
+    PDM_DMesh_nodal_section_std_t *section = dmn_elts->sections_std[_id_section];
+
+    if (section == NULL) {
+      PDM_error (__FILE__, __LINE__, 0, "Bad section identifier\n");
+    }
+
+    t_elt = section->t_elt;
+  }
+
+  else if (id_section < PDM_BLOCK_ID_BLOCK_POLY3D) {
+
+    t_elt = PDM_MESH_NODAL_POLY_2D;
+
+  }
+
+  else {
+
+    t_elt = PDM_MESH_NODAL_POLY_3D;
+
+  }
+
+  return t_elt;
+}
+
 /**
  * \brief  Return distri of section
  *
@@ -1110,6 +1152,37 @@ const int                id_section
 }
 
 /**
+ * \brief Return standard section description
+ * \param [in]  hdl            Distributed nodal mesh handle
+ * \param [in]  id_section       Block identifier
+ *
+ * \return  connect           Connectivity
+ *
+ */
+
+PDM_g_num_t *
+PDM_DMesh_nodal_elmts_section_std_get
+(
+      PDM_DMesh_nodal_elmts_t *dmn_elts,
+const int                      id_section
+)
+{
+  if (dmn_elts == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
+  }
+
+  int _id_section = id_section - PDM_BLOCK_ID_BLOCK_STD;
+
+  PDM_DMesh_nodal_section_std_t *section = dmn_elts->sections_std[_id_section];
+
+  if (section == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad standard section identifier\n");
+  }
+
+  return section->_connec;
+}
+
+/**
  * \brief Get number of section elements
  *
  * \param [in]  hdl            Distributed nodal mesh handle
@@ -1159,6 +1232,67 @@ const int                id_section
     _id_section = id_section - PDM_BLOCK_ID_BLOCK_STD;
 
     PDM_DMesh_nodal_section_std_t *section = dmesh_nodal->sections_std[_id_section];
+
+    if (section == NULL) {
+      PDM_error (__FILE__, __LINE__, 0, "Bad polyhedron section identifier\n");
+    }
+
+    return section->n_elt;
+  }
+
+}
+
+
+/**
+ * \brief Get number of section elements
+ *
+ * \param [in]  hdl            Distributed nodal mesh handle
+ * \param [in]  id_section       Block identifier
+ *
+ * \return      Number of elements
+ *
+ */
+
+int
+PDM_DMesh_nodal_elmts_section_n_elt_get
+(
+      PDM_DMesh_nodal_elmts_t *dmn_elts,
+const int                      id_section
+)
+{
+  int _id_section;
+
+  if (id_section >= PDM_BLOCK_ID_BLOCK_POLY3D) {
+
+    _id_section = id_section - PDM_BLOCK_ID_BLOCK_POLY3D;
+
+    PDM_DMesh_nodal_section_poly3d_t *section = dmn_elts->sections_poly3d[_id_section];
+
+    if (section == NULL) {
+      PDM_error (__FILE__, __LINE__, 0, "Bad standard section identifier\n");
+    }
+
+    return section->n_elt;
+  }
+
+  else if (id_section >= PDM_BLOCK_ID_BLOCK_POLY2D) {
+
+    _id_section = id_section - PDM_BLOCK_ID_BLOCK_POLY2D;
+
+    PDM_DMesh_nodal_section_poly2d_t *section = dmn_elts->sections_poly2d[_id_section];
+
+    if (section == NULL) {
+      PDM_error (__FILE__, __LINE__, 0, "Bad polygon section identifier\n");
+    }
+
+    return section->n_elt;
+  }
+
+  else {
+
+    _id_section = id_section - PDM_BLOCK_ID_BLOCK_STD;
+
+    PDM_DMesh_nodal_section_std_t *section = dmn_elts->sections_std[_id_section];
 
     if (section == NULL) {
       PDM_error (__FILE__, __LINE__, 0, "Bad polyhedron section identifier\n");
@@ -1668,7 +1802,6 @@ int               *n_edge_elt_tot,
 int               *n_sum_vtx_edge_tot
 )
 {
-
   *n_edge_elt_tot     = 0;
   *n_sum_vtx_edge_tot = 0;
 
@@ -1700,7 +1833,48 @@ int               *n_sum_vtx_edge_tot
   // printf("n_sum_vtx_edge_tot::%i\n" , *n_sum_vtx_edge_tot);
 }
 
+/**
+*
+* \brief PDM_dmesh_nodal_decompose_edges_get_size
+*
+* \param [in]     hdl                Distributed nodal mesh handle
+* \param [inout]  n_edge_elt_tot     Number of edges
+* \param [inout]  n_sum_vtx_edge_tot Number of vtx for all edges (cumulative)
+*
+*/
+void
+PDM_dmesh_nodal_decompose_edges_get_size2
+(
+PDM_DMesh_nodal_elmts_t *dmn_elts,
+int                     *n_edge_elt_tot,
+int                     *n_sum_vtx_edge_tot
+)
+{
+  *n_edge_elt_tot     = 0;
+  *n_sum_vtx_edge_tot = 0;
 
+  for (int i_section = 0; i_section < dmn_elts->n_section_std; i_section++) {
+
+    int n_edge_elt     = PDM_n_nedge_elt_per_elmt   (dmn_elts->sections_std[i_section]->t_elt);
+    int n_sum_vtx_edge = PDM_n_sum_vtx_edge_per_elmt(dmn_elts->sections_std[i_section]->t_elt);
+
+    *n_edge_elt_tot     += dmn_elts->sections_std[i_section]->n_elt*n_edge_elt;
+    *n_sum_vtx_edge_tot += dmn_elts->sections_std[i_section]->n_elt*n_sum_vtx_edge;
+
+  }
+
+  for (int i = 0; i < dmn_elts->n_section_poly3d; i++) {
+    int _n_face = dmn_elts->sections_poly3d[i]->n_face;
+    *n_edge_elt_tot     +=     dmn_elts->sections_poly3d[i]->_face_vtx[dmn_elts->sections_poly3d[i]->_face_vtx_idx[_n_face]];
+    *n_sum_vtx_edge_tot += 2 * dmn_elts->sections_poly3d[i]->_face_vtx[dmn_elts->sections_poly3d[i]->_face_vtx_idx[_n_face]];
+  }
+
+  for (int i = 0; i < dmn_elts->n_section_poly2d; i++) {
+    *n_edge_elt_tot     +=     dmn_elts->sections_poly2d[i]->_connec_idx[dmn_elts->sections_poly2d[i]->n_elt];
+    *n_sum_vtx_edge_tot += 2 * dmn_elts->sections_poly2d[i]->_connec_idx[dmn_elts->sections_poly2d[i]->n_elt];
+  }
+
+}
 
 /**
 *
@@ -1938,6 +2112,7 @@ PDM_dmesh_nodal_t  *dmesh_nodal
   // printf("n_sum_vtx_face_tot::%i\n", n_sum_vtx_face_tot);
 
   PDM_g_num_t* delmt_face_cell    = (PDM_g_num_t*) malloc(  n_face_elt_tot     * sizeof(PDM_g_num_t));
+  int*         dparent_elmt_pos   = (PDM_g_num_t*) malloc(  n_face_elt_tot     * sizeof(int        ));
   int*         dcell_face_vtx_idx = (int        *) malloc( (n_face_elt_tot +1) * sizeof(int        ));
   PDM_g_num_t* dcell_face_vtx     = (PDM_g_num_t*) malloc(  n_sum_vtx_face_tot * sizeof(PDM_g_num_t));
 
@@ -1946,12 +2121,14 @@ PDM_dmesh_nodal_t  *dmesh_nodal
                                dcell_face_vtx_idx,
                                dcell_face_vtx,
                                delmt_face_cell,
-                               NULL, NULL);
+                               NULL, NULL,
+                               dparent_elmt_pos);
   // PDM_sections_decompose_edges(mesh,
   //                              dcell_face_vtx_idx,
   //                              dcell_face_vtx,
   //                              delmt_face_cell,
   //                              NULL, NULL);
+  free(dparent_elmt_pos);
 
   // Begin the rotation by the plus petit - connectity
   // PDM_connectivity_order_by_min_and_sens (delmt_face_cell, dcell_face_vtx_idx, dcell_face_vtx) // inplace
