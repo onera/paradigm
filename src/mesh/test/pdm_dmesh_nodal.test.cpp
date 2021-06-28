@@ -80,11 +80,13 @@ MPI_TEST_CASE("[PDM_delmts_nodal_elmts_t] Constructor",1) {
                                         connec_bar_1,
                                         PDM_OWNERSHIP_USER);
 
+  PDM_Mesh_nodal_add_desh_nodal_elmts(dmn, dmn_elmts_surf );
+  PDM_Mesh_nodal_add_desh_nodal_elmts(dmn, dmn_elmts_ridge);
   /*
    * Generate the connectivity
    */
-  // PDM_dmesh_nodal_generate_distribution(dmn);
-
+  //
+  PDM_dmesh_nodal_generate_distribution2(dmn);
   PDM_dmesh_nodal_to_dmesh_t* dmn_to_dm = PDM_dmesh_nodal_to_dmesh_create(1, pdm_comm, PDM_OWNERSHIP_KEEP);
   PDM_dmesh_nodal_to_dmesh_add_dmesh_nodal(dmn_to_dm, 0, dmn);
   PDM_dmesh_nodal_to_dmesh_compute2(dmn_to_dm,
@@ -97,8 +99,6 @@ MPI_TEST_CASE("[PDM_delmts_nodal_elmts_t] Constructor",1) {
    *     - elmt_vtx_vol + elmt_vtx_surf --> face_ln_to_gn + dface_gnum (dans la surface ) + dface_to_surf_gnum (dans le volume)
    *
    */
-  PDM_Mesh_nodal_add_desh_nodal_elmts(dmn, dmn_elmts_surf );
-  PDM_Mesh_nodal_add_desh_nodal_elmts(dmn, dmn_elmts_ridge);
 
   PDM_DMesh_nodal_elmts_free(dmn_elmts_surf);
   PDM_DMesh_nodal_elmts_free(dmn_elmts_ridge);

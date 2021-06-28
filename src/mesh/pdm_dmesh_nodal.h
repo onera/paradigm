@@ -680,6 +680,22 @@ PDM_dmesh_nodal_t *dmesh_nodal
 );
 
 /**
+ *
+ * \brief Setup global distribution of all elements register in current structure
+ *
+ * \param [inout]  mesh
+ *
+ * \return         Null
+ *
+ */
+void
+PDM_dmesh_nodal_generate_distribution2
+(
+PDM_dmesh_nodal_t *dmesh_nodal
+);
+
+
+/**
 *
 * \brief PDM_sections_decompose_faces
 *
@@ -935,6 +951,18 @@ PDM_Mesh_nodal_add_desh_nodal_elmts
  PDM_DMesh_nodal_elmts_t *dmn_elts
 );
 
+const PDM_g_num_t *
+PDM_DMesh_nodal_elmts_distrib_section_get
+(
+      PDM_DMesh_nodal_elmts_t *dmn_elts,
+const int                      id_section
+);
+
+void
+PDM_dmesh_nodal_elmts_generate_distribution
+(
+ PDM_DMesh_nodal_elmts_t *dmn_elts
+);
 
 #ifdef __cplusplus
 }
