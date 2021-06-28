@@ -319,6 +319,115 @@ PDM_n_sum_vtx_edge_per_elmt
 }
 
 /**
+ *
+ * \brief PDM_section_size_elt_faces_get
+ *
+ * \param [in]     mesh               Current mesh
+ * \param [in]     id_section         Section identifier
+ * \param [inout]  elt_face_vtx_idx   Index of element faces connectivity (preallocated)
+ * \param [inout]  elt_face_vtx       Element faces connectivity (preallocated)
+ *
+ */
+int
+PDM_section_size_elt_faces_get2
+(
+  PDM_DMesh_nodal_elmts_t *dmn_elts,
+  int                     *s_elt_face_vtx_idx,
+  int                     *s_elt_face_vtx,
+  int                     *s_elt_face_cell
+)
+{
+
+  // You should do it for each level of the mesh !!!!
+  // abort();
+  // printf("PDM_section_size_elt_faces_get WARNING NOT WORKING \n");
+
+  int _s_elt_face_vtx_idx = 0;
+  int _s_elt_face_vtx     = 0;
+
+  for (int i = 0; i < dmn_elts->n_section_std; i++) {
+    int n_face_elt     = PDM_n_face_elt_per_elmt    (dmn_elts->sections_std[i]->t_elt);
+    int n_sum_vtx_face = PDM_n_sum_vtx_face_per_elmt(dmn_elts->sections_std[i]->t_elt);
+
+    _s_elt_face_vtx_idx += dmn_elts->sections_std[i]->n_elt * n_face_elt;
+    _s_elt_face_vtx     += dmn_elts->sections_std[i]->n_elt * n_sum_vtx_face;
+  }
+
+  for (int i = 0; i < dmn_elts->n_section_poly3d; i++) {
+    int _n_face = dmn_elts->sections_poly3d[i]->n_face;
+    _s_elt_face_vtx_idx += _n_face;
+    _s_elt_face_vtx     += dmn_elts->sections_poly3d[i]->_face_vtx[dmn_elts->sections_poly3d[i]->_face_vtx_idx[_n_face]];
+  }
+
+  for (int i = 0; i < dmn_elts->n_section_poly2d; i++) {
+    _s_elt_face_vtx_idx +=     dmn_elts->sections_poly2d[i]->_connec_idx[dmn_elts->sections_poly2d[i]->n_elt];
+    _s_elt_face_vtx     += 2 * dmn_elts->sections_poly2d[i]->_connec_idx[dmn_elts->sections_poly2d[i]->n_elt];
+  }
+
+  *s_elt_face_cell    = _s_elt_face_vtx_idx;
+  *s_elt_face_vtx_idx = _s_elt_face_vtx_idx + 1;
+  *s_elt_face_vtx     = _s_elt_face_vtx     + 1;
+
+  return *s_elt_face_vtx - 1;
+}
+
+
+/**
+ *
+ * \brief PDM_section_size_elt_edges_get
+ *
+ * \param [in]     mesh               Current mesh
+ * \param [in]     id_section         Section identifier
+ * \param [inout]  elt_edge_vtx_idx   Index of element faces connectivity (preallocated)
+ * \param [inout]  elt_edge_vtx       Element faces connectivity (preallocated)
+ *
+ */
+int
+PDM_section_size_elt_edges_get2
+(
+  PDM_DMesh_nodal_elmts_t *dmn_elts,
+  int                     *s_elt_edge_vtx_idx,
+  int                     *s_elt_edge_vtx,
+  int                     *s_elt_edge_cell
+)
+{
+  // printf("PDM_section_size_elt_edges_get WARNING NOT WORKING \n");
+
+  int _s_elt_edge_vtx_idx = 0;
+  int _s_elt_edge_vtx     = 0;
+
+  for (int i = 0; i < dmn_elts->n_section_std; i++) {
+    int n_edge_elt     = PDM_n_nedge_elt_per_elmt   (dmn_elts->sections_std[i]->t_elt);
+    int n_sum_vtx_edge = PDM_n_sum_vtx_edge_per_elmt(dmn_elts->sections_std[i]->t_elt);
+
+    _s_elt_edge_vtx_idx += dmn_elts->sections_std[i]->n_elt * n_edge_elt;
+    _s_elt_edge_vtx     += dmn_elts->sections_std[i]->n_elt * n_sum_vtx_edge;
+  }
+
+  assert(dmn_elts->n_section_poly3d == 0); // Not implemented to test
+  for (int i = 0; i < dmn_elts->n_section_poly3d; i++) {
+    int _n_face = dmn_elts->sections_poly3d[i]->n_face;
+    _s_elt_edge_vtx_idx +=     dmn_elts->sections_poly3d[i]->_face_vtx_idx[_n_face];
+    _s_elt_edge_vtx     += 2 * dmn_elts->sections_poly3d[i]->_face_vtx_idx[_n_face];
+  }
+
+  assert(dmn_elts->n_section_poly2d == 0); // Not implemented
+  for (int i = 0; i < dmn_elts->n_section_poly2d; i++) {
+    _s_elt_edge_vtx_idx +=     dmn_elts->sections_poly2d[i]->_connec_idx[dmn_elts->sections_poly2d[i]->n_elt];
+    _s_elt_edge_vtx     += 2 * dmn_elts->sections_poly2d[i]->_connec_idx[dmn_elts->sections_poly2d[i]->n_elt];
+  }
+
+  *s_elt_edge_cell    = _s_elt_edge_vtx_idx;
+  *s_elt_edge_vtx_idx = _s_elt_edge_vtx_idx + 1;
+  *s_elt_edge_vtx     = _s_elt_edge_vtx     + 1;
+
+  return *s_elt_edge_vtx - 1;
+}
+
+
+
+
+/**
 *
 * \brief Decompose quad cell_vtx connectivity to a flatten view of edges
 */
@@ -1793,6 +1902,366 @@ PDM_sections_decompose_edges
   if (dmesh_nodal->n_section_poly3d != 0) {
     // int n_section_poly3d = PDM_Handles_n_get  (dmesh_nodal->sections_poly3d);
     // const int *list_ind   = PDM_Handles_idx_get(dmesh_nodal->sections_poly3d);
+    abort();
+  }
+
+}
+
+
+
+/**
+*
+* \brief PDM_sections_decompose_faces
+*
+* \param [in]     mesh               Current mesh
+* \param [inout]  elt_face_vtx_idx   Index of element faces connectivity (preallocated)
+* \param [inout]  elt_face_vtx       Element faces connectivity (preallocated)
+* \param [inout]  elmt_face_cell     Element faces connectivity (preallocated or NULL )
+* \param [inout]  elmt_cell_face     Element faces connectivity (preallocated or NULL )
+*
+*/
+void
+PDM_sections_decompose_faces2
+(
+  PDM_DMesh_nodal_elmts_t *dmn_elts,
+  int                     *elmt_face_vtx_idx,
+  PDM_g_num_t             *elmt_face_vtx,
+  PDM_g_num_t             *elmt_face_cell,
+  int                     *elmt_cell_face_idx,
+  PDM_g_num_t             *elmt_cell_face
+)
+{
+
+  // A faire : local_num_in_parent_element
+
+  int n_elt_current  = 0;
+  int n_face_current = 0;
+
+  // The order of all following matter : following the global numebring
+  for (int i_section = 0; i_section < dmn_elts->n_section_std; i_section++) {
+
+    PDM_g_num_t beg_elmt_gnum = dmn_elts->sections_std[i_section]->distrib[dmn_elts->i_rank] + dmn_elts->section_distribution[i_section];
+    PDM_g_num_t beg_face_gnum = 0; // Useless in this context
+    switch (dmn_elts->sections_std[i_section]->t_elt) {
+     case PDM_MESH_NODAL_POINT:
+       abort();
+       break;
+     case PDM_MESH_NODAL_BAR2:
+       abort();
+       break;
+     case PDM_MESH_NODAL_TRIA3:
+       PDM_tri_decomposes_faces(dmn_elts->sections_std[i_section]->n_elt,
+                                &n_elt_current,
+                                &n_face_current,
+                                beg_elmt_gnum,
+                                beg_face_gnum,
+                                dmn_elts->sections_std[i_section]->_connec,
+                                elmt_face_vtx_idx,
+                                elmt_face_vtx,
+                                elmt_face_cell,
+                                elmt_cell_face_idx,
+                                elmt_cell_face);
+       break;
+     case PDM_MESH_NODAL_QUAD4:
+       PDM_quad_decomposes_faces(dmn_elts->sections_std[i_section]->n_elt,
+                                  &n_elt_current,
+                                  &n_face_current,
+                                  beg_elmt_gnum,
+                                  beg_face_gnum,
+                                  dmn_elts->sections_std[i_section]->_connec,
+                                  elmt_face_vtx_idx,
+                                  elmt_face_vtx,
+                                  elmt_face_cell,
+                                  elmt_cell_face_idx,
+                                  elmt_cell_face);
+       break;
+     case PDM_MESH_NODAL_TETRA4:
+       PDM_tetra_decomposes_faces(dmn_elts->sections_std[i_section]->n_elt,
+                                  &n_elt_current,
+                                  &n_face_current,
+                                  beg_elmt_gnum,
+                                  beg_face_gnum,
+                                  dmn_elts->sections_std[i_section]->_connec,
+                                  elmt_face_vtx_idx,
+                                  elmt_face_vtx,
+                                  elmt_face_cell,
+                                  elmt_cell_face_idx,
+                                  elmt_cell_face);
+       break;
+     case PDM_MESH_NODAL_PYRAMID5:
+       PDM_pyra_decomposes_faces(dmn_elts->sections_std[i_section]->n_elt,
+                                 &n_elt_current,
+                                 &n_face_current,
+                                 beg_elmt_gnum,
+                                 beg_face_gnum,
+                                 dmn_elts->sections_std[i_section]->_connec,
+                                 elmt_face_vtx_idx,
+                                 elmt_face_vtx,
+                                 elmt_face_cell,
+                                 elmt_cell_face_idx,
+                                 elmt_cell_face);
+       break;
+     case PDM_MESH_NODAL_PRISM6:
+       PDM_prism_decomposes_faces(dmn_elts->sections_std[i_section]->n_elt,
+                                  &n_elt_current,
+                                  &n_face_current,
+                                  beg_elmt_gnum,
+                                  beg_face_gnum,
+                                  dmn_elts->sections_std[i_section]->_connec,
+                                  elmt_face_vtx_idx,
+                                  elmt_face_vtx,
+                                  elmt_face_cell,
+                                  elmt_cell_face_idx,
+                                  elmt_cell_face);
+       break;
+     case PDM_MESH_NODAL_HEXA8:
+       PDM_hexa_decomposes_faces(dmn_elts->sections_std[i_section]->n_elt,
+                                 &n_elt_current,
+                                 &n_face_current,
+                                 beg_elmt_gnum,
+                                 beg_face_gnum,
+                                 dmn_elts->sections_std[i_section]->_connec,
+                                 elmt_face_vtx_idx,
+                                 elmt_face_vtx,
+                                 elmt_face_cell,
+                                 elmt_cell_face_idx,
+                                 elmt_cell_face);
+       break;
+     default:
+       PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_faces : Element type is not taking int account\n");
+    }
+  }
+
+  // The order of all following matter : following the global numebring
+  // for (int i_section = 0; i_section < dmn_elts->n_section_std_l1; i_section++) {
+
+  //   PDM_g_num_t beg_elmt_gnum = dmn_elts->sections_std[i_section]->distrib[dmn_elts->i_rank] + dmn_elts->section_distribution_l1[i_section];
+  //   PDM_g_num_t beg_face_gnum = 0; // Useless in this context
+  //   // printf("section_std_l1 --> beg_elmt_gnum : "PDM_FMT_G_NUM" \n", beg_elmt_gnum);
+  //   switch (dmn_elts->sections_std[i_section]->t_elt) {
+
+  //    default:
+  //      PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_faces : Element type is not taking int account\n");
+  //   }
+  // }
+
+  // // The order of all following matter : following the global numebring
+  // for (int i_section = 0; i_section < dmn_elts->n_section_std_l2; i_section++) {
+  //   // PDM_g_num_t beg_elmt_gnum = dmn_elts->sections_std_l2[i_section]->distrib[dmn_elts->i_rank] + dmn_elts->section_distribution[i_section];
+  //   // PDM_g_num_t beg_face_gnum = 0; // Useless in this context
+  //   // printf("section_std_l2 --> beg_elmt_gnum : "PDM_FMT_G_NUM" \n", beg_elmt_gnum);
+  //   switch (dmn_elts->sections_std_l2[i_section]->t_elt) {
+  //    case PDM_MESH_NODAL_POINT:
+  //      abort();
+  //      break;
+  //    case PDM_MESH_NODAL_BAR2:
+  //      abort();
+  //      break;     default:
+  //      PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_faces : Element type is not taking int account\n");
+  //   }
+  // }
+
+  /* Not implemented */
+  if (dmn_elts->n_section_poly2d != 0) {
+    // int n_section_poly2d = PDM_Handles_n_get  (dmn_elts->sections_poly2d);
+    // const int *list_ind   = PDM_Handles_idx_get(dmn_elts->sections_poly2d);
+    abort();
+  }
+
+  if (dmn_elts->n_section_poly3d != 0) {
+    // int n_section_poly3d = PDM_Handles_n_get  (dmn_elts->sections_poly3d);
+    // const int *list_ind   = PDM_Handles_idx_get(dmn_elts->sections_poly3d);
+    abort();
+  }
+}
+
+/**
+*
+* \brief PDM_sections_decompose_faces
+*
+* \param [in]     mesh               Current mesh
+* \param [inout]  elmt_edge_vtx_idx  Index of element faces connectivity (preallocated)
+* \param [inout]  elmt_edge_vtx      Element faces connectivity (preallocated)
+* \param [inout]  elmt_edge_cell     Element faces connectivity (preallocated or NULL )
+* \param [inout]  elmt_cell_edge     Element faces connectivity (preallocated or NULL )
+*
+*/
+void
+PDM_sections_decompose_edges2
+(
+  PDM_DMesh_nodal_elmts_t *dmn_elts,
+  int                     *elmt_edge_vtx_idx,
+  PDM_g_num_t             *elmt_edge_vtx,
+  PDM_g_num_t             *elmt_edge_cell,
+  int                     *elmt_cell_edge_idx,
+  PDM_g_num_t             *elmt_cell_edge
+)
+{
+  PDM_UNUSED(dmn_elts);
+  PDM_UNUSED(elmt_edge_vtx_idx);
+  PDM_UNUSED(elmt_edge_vtx);
+  PDM_UNUSED(elmt_edge_cell);
+  PDM_UNUSED(elmt_cell_edge_idx);
+  PDM_UNUSED(elmt_cell_edge);
+
+  int n_elt_current  = 0;
+  int n_dedge_current = 0;
+
+  for (int i_section = 0; i_section < dmn_elts->n_section_std; i_section++) {
+
+    PDM_g_num_t beg_elmt_gnum = dmn_elts->sections_std[i_section]->distrib[dmn_elts->i_rank] + dmn_elts->section_distribution[i_section];
+    PDM_g_num_t beg_edge_gnum = 0; // Useless in this context
+
+    switch (dmn_elts->sections_std[i_section]->t_elt) {
+     case PDM_MESH_NODAL_POINT:
+       abort();
+       break;
+     case PDM_MESH_NODAL_BAR2:
+       PDM_bar_decomposes_edges(dmn_elts->sections_std[i_section]->n_elt,
+                                &n_elt_current,
+                                &n_dedge_current,
+                                beg_elmt_gnum,
+                                beg_edge_gnum,
+                                dmn_elts->sections_std[i_section]->_connec,
+                                elmt_edge_vtx_idx,
+                                elmt_edge_vtx,
+                                elmt_edge_cell,
+                                elmt_cell_edge_idx,
+                                elmt_cell_edge);
+       break;
+     case PDM_MESH_NODAL_TRIA3:
+       PDM_tri_decomposes_edges(dmn_elts->sections_std[i_section]->n_elt,
+                                 &n_elt_current,
+                                 &n_dedge_current,
+                                 beg_elmt_gnum,
+                                 beg_edge_gnum,
+                                 dmn_elts->sections_std[i_section]->_connec,
+                                 elmt_edge_vtx_idx,
+                                 elmt_edge_vtx,
+                                 elmt_edge_cell,
+                                 elmt_cell_edge_idx,
+                                 elmt_cell_edge);
+       break;
+     case PDM_MESH_NODAL_QUAD4:
+       PDM_quad_decomposes_edges(dmn_elts->sections_std[i_section]->n_elt,
+                                 &n_elt_current,
+                                 &n_dedge_current,
+                                 beg_elmt_gnum,
+                                 beg_edge_gnum,
+                                 dmn_elts->sections_std[i_section]->_connec,
+                                 elmt_edge_vtx_idx,
+                                 elmt_edge_vtx,
+                                 elmt_edge_cell,
+                                 elmt_cell_edge_idx,
+                                 elmt_cell_edge);
+       break;
+     case PDM_MESH_NODAL_TETRA4:
+       PDM_tetra_decomposes_edges(dmn_elts->sections_std[i_section]->n_elt,
+                                  &n_elt_current,
+                                  &n_dedge_current,
+                                  beg_elmt_gnum,
+                                  beg_edge_gnum,
+                                  dmn_elts->sections_std[i_section]->_connec,
+                                  elmt_edge_vtx_idx,
+                                  elmt_edge_vtx,
+                                  elmt_edge_cell,
+                                  elmt_cell_edge_idx,
+                                  elmt_cell_edge);
+       break;
+     case PDM_MESH_NODAL_PYRAMID5:
+       PDM_pyra_decomposes_edges(dmn_elts->sections_std[i_section]->n_elt,
+                                 &n_elt_current,
+                                 &n_dedge_current,
+                                 beg_elmt_gnum,
+                                 beg_edge_gnum,
+                                 dmn_elts->sections_std[i_section]->_connec,
+                                 elmt_edge_vtx_idx,
+                                 elmt_edge_vtx,
+                                 elmt_edge_cell,
+                                 elmt_cell_edge_idx,
+                                 elmt_cell_edge);
+       break;
+     case PDM_MESH_NODAL_PRISM6:
+       PDM_prism_decomposes_edges(dmn_elts->sections_std[i_section]->n_elt,
+                                  &n_elt_current,
+                                  &n_dedge_current,
+                                  beg_elmt_gnum,
+                                  beg_edge_gnum,
+                                  dmn_elts->sections_std[i_section]->_connec,
+                                  elmt_edge_vtx_idx,
+                                  elmt_edge_vtx,
+                                  elmt_edge_cell,
+                                  elmt_cell_edge_idx,
+                                  elmt_cell_edge);
+       break;
+     case PDM_MESH_NODAL_HEXA8:
+       PDM_hexa_decomposes_edges(dmn_elts->sections_std[i_section]->n_elt,
+                                 &n_elt_current,
+                                 &n_dedge_current,
+                                 beg_elmt_gnum,
+                                 beg_edge_gnum,
+                                 dmn_elts->sections_std[i_section]->_connec,
+                                 elmt_edge_vtx_idx,
+                                 elmt_edge_vtx,
+                                 elmt_edge_cell,
+                                 elmt_cell_edge_idx,
+                                 elmt_cell_edge);
+       break;
+     default:
+       PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_edges : Element type is not taking int account\n");
+    }
+  }
+
+  // The order of all following matter : following the global numebring
+  // for (int i_section = 0; i_section < dmn_elts->n_section_std_l1; i_section++) {
+
+  //   PDM_g_num_t beg_elmt_gnum = dmn_elts->sections_std[i_section]->distrib[dmn_elts->i_rank] + dmn_elts->section_distribution_l1[i_section];
+  //   PDM_g_num_t beg_edge_gnum = 0; // Useless in this context
+
+  //   // printf("section_std_l1 --> beg_elmt_gnum : "PDM_FMT_G_NUM" \n", beg_elmt_gnum);
+  //   switch (dmn_elts->sections_std[i_section]->t_elt) {
+  //    case PDM_MESH_NODAL_TRIA3:
+  //      PDM_tri_decomposes_edges(dmn_elts->sections_std[i_section]->n_elt,
+  //                               &n_elt_current,
+  //                               &n_dedge_current,
+  //                               beg_elmt_gnum,
+  //                               beg_edge_gnum,
+  //                               dmn_elts->sections_std[i_section]->_connec,
+  //                               elmt_edge_vtx_idx,
+  //                               elmt_edge_vtx,
+  //                               elmt_edge_cell,
+  //                               elmt_cell_edge_idx,
+  //                               elmt_cell_edge);
+  //      break;
+  //    case PDM_MESH_NODAL_QUAD4:
+  //      PDM_quad_decomposes_edges(dmn_elts->sections_std[i_section]->n_elt,
+  //                                &n_elt_current,
+  //                                &n_dedge_current,
+  //                                beg_elmt_gnum,
+  //                                beg_edge_gnum,
+  //                                dmn_elts->sections_std[i_section]->_connec,
+  //                                elmt_edge_vtx_idx,
+  //                                elmt_edge_vtx,
+  //                                elmt_edge_cell,
+  //                                elmt_cell_edge_idx,
+  //                                elmt_cell_edge);
+  //      break;
+  //    default:
+  //      PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_faces : Element type is not taking int account\n");
+  //   }
+  // }
+
+
+  /* Not implemented */
+  if (dmn_elts->n_section_poly2d != 0) {
+    // int n_section_poly2d = PDM_Handles_n_get  (dmn_elts->sections_poly2d);
+    // const int *list_ind   = PDM_Handles_idx_get(dmn_elts->sections_poly2d);
+    abort();
+  }
+
+  if (dmn_elts->n_section_poly3d != 0) {
+    // int n_section_poly3d = PDM_Handles_n_get  (dmn_elts->sections_poly3d);
+    // const int *list_ind   = PDM_Handles_idx_get(dmn_elts->sections_poly3d);
     abort();
   }
 

@@ -1112,7 +1112,7 @@ PDM_Mesh_nodal_write
 (
  const char       *filename,
  PDM_Mesh_nodal_t *mesh
- );
+);
 
 
 #ifdef __cplusplus

@@ -2835,6 +2835,27 @@ PDM_DMesh_nodal_elmts_t* dmn_elts
   free(dmn_elts);
 }
 
+
+void
+PDM_Mesh_nodal_add_desh_nodal_elmts
+(
+ PDM_dmesh_nodal_t       *dmesh_nodal,
+ PDM_DMesh_nodal_elmts_t *dmn_elts
+)
+{
+  if(dmn_elts->mesh_dimension == 3) {
+    dmesh_nodal->volumic = dmn_elts;
+  } else if(dmn_elts->mesh_dimension == 2){
+    dmesh_nodal->surfacic = dmn_elts;
+  } else if(dmn_elts->mesh_dimension == 1){
+    dmesh_nodal->ridge = dmn_elts;
+  } else if(dmn_elts->mesh_dimension == 0){
+    dmesh_nodal->corner = dmn_elts;
+  } else {
+    PDM_error (__FILE__, __LINE__, 0, "PDM_Mesh_nodal_add_desh_nodal_elmts bad mesh_dimension\n");
+  }
+}
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

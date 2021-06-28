@@ -1426,7 +1426,9 @@ _link_dmesh_nodal_to_dmesh_free
 
   if(( link->owner == PDM_OWNERSHIP_KEEP ) ||
      ( link->owner == PDM_OWNERSHIP_UNGET_RESULT_IS_FREE && !link->results_is_getted)){
-    PDM_dmesh_free(link->dmesh);
+    if(link->dmesh != NULL) {
+      PDM_dmesh_free(link->dmesh);
+    }
   }
 
   if(link->elmt_distrib != NULL) {
@@ -1621,6 +1623,46 @@ PDM_dmesh_nodal_to_dmesh_compute
 
   end_timer_and_print("PDM_dmesh_nodal_to_dmesh_compute", dmesh_nodal_to_dm->comm, t1);
 }
+
+
+void
+PDM_dmesh_nodal_to_dmesh_compute2
+(
+        PDM_dmesh_nodal_to_dmesh_t                 *dmesh_nodal_to_dm,
+  const PDM_dmesh_nodal_to_dmesh_transform_t        transform_kind,
+  const PDM_dmesh_nodal_to_dmesh_translate_group_t  transform_group_kind
+)
+{
+  PDM_UNUSED(dmesh_nodal_to_dm);
+  PDM_UNUSED(transform_kind);
+  PDM_UNUSED(transform_group_kind);
+
+  printf("PDM_dmesh_nodal_to_dmesh_compute2 A coder ... \n");
+
+  // for(int i_mesh = 0; i_mesh < dmesh_nodal_to_dm->n_mesh; ++i_mesh) {
+
+  //   if(dmesh_nodal_to_dm->link[i_mesh]->dmesh_nodal->mesh_dimension == 2) {
+  //     assert(transform_kind != PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_FACE);
+  //   }
+
+  //   switch (transform_kind) {
+
+  //     case PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_FACE:
+  //       {
+  //         _generate_faces_from_dmesh_nodal(dmesh_nodal_to_dm->link[i_mesh]);
+  //       }
+  //       break;
+
+  //     case PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_EDGE:
+  //       {
+  //         _generate_edges_from_dmesh_nodal(dmesh_nodal_to_dm->link[i_mesh]);
+  //       }
+  //       break;
+  //   }
+  // }
+
+}
+
 
 
 // API change : PDM_dmesh_nodal_to_dmesh_transform_extract_dmesh

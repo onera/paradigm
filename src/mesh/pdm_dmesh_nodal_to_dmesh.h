@@ -109,6 +109,14 @@ PDM_dmesh_nodal_to_dmesh_compute
 );
 
 void
+PDM_dmesh_nodal_to_dmesh_compute2
+(
+        PDM_dmesh_nodal_to_dmesh_t                 *dmn_to_dm,
+  const PDM_dmesh_nodal_to_dmesh_transform_t        transform_kind,
+  const PDM_dmesh_nodal_to_dmesh_translate_group_t  transform_group_kind
+);
+
+void
 PDM_dmesh_nodal_to_dmesh_get_dmesh
 (
         PDM_dmesh_nodal_to_dmesh_t  *dmn_to_dm,

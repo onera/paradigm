@@ -448,6 +448,47 @@ PDM_poly3d_decomposes_edges
        PDM_g_num_t *elmt_cell_edge
 );
 
+
+void
+PDM_sections_decompose_faces2
+(
+  PDM_DMesh_nodal_elmts_t *dmn_elts,
+  int                     *elmt_face_vtx_idx,
+  PDM_g_num_t             *elmt_face_vtx,
+  PDM_g_num_t             *elmt_face_cell,
+  int                     *elmt_cell_face_idx,
+  PDM_g_num_t             *elmt_cell_face
+);
+
+void
+PDM_sections_decompose_edges2
+(
+  PDM_DMesh_nodal_elmts_t *dmn_elts,
+  int                     *elmt_edge_vtx_idx,
+  PDM_g_num_t             *elmt_edge_vtx,
+  PDM_g_num_t             *elmt_edge_cell,
+  int                     *elmt_cell_edge_idx,
+  PDM_g_num_t             *elmt_cell_edge
+);
+
+int
+PDM_section_size_elt_faces_get2
+(
+  PDM_DMesh_nodal_elmts_t *dmn_elts,
+  int                     *s_elt_face_vtx_idx,
+  int                     *s_elt_face_vtx,
+  int                     *s_elt_face_cell
+);
+
+int
+PDM_section_size_elt_edges_get2
+(
+  PDM_DMesh_nodal_elmts_t *dmn_elts,
+  int                     *s_elt_edge_vtx_idx,
+  int                     *s_elt_edge_vtx,
+  int                     *s_elt_edge_cell
+);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
