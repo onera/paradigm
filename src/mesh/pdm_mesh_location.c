@@ -1554,7 +1554,14 @@ PDM_mesh_location_create
     ml->point_clouds[i].uvw = NULL;
     ml->point_clouds[i].weights = NULL;
     ml->point_clouds[i].weights_idx = NULL;
+    ml->point_clouds[i].projected_coords = NULL;
+    ml->point_clouds[i].n_located = NULL;
+    ml->point_clouds[i].n_un_located = NULL;
+    ml->point_clouds[i].located = NULL;
+    ml->point_clouds[i].un_located = NULL;
   }
+
+  ml->points_in_elements = NULL;
 
   ml->tolerance = 0.;
 
@@ -1862,12 +1869,16 @@ PDM_mesh_location_mesh_global_data_set
 
   ml->mesh_nodal = PDM_Mesh_nodal_create (n_part, ml->comm);
 
-  ml->face_vtx_n  = malloc(sizeof(PDM_l_num_t *) * n_part);
-  ml->cell_face_n = malloc(sizeof(PDM_l_num_t *) * n_part);
+  ml->face_vtx_n   = malloc(sizeof(PDM_l_num_t *) * n_part);
+  ml->cell_face_n  = malloc(sizeof(PDM_l_num_t *) * n_part);
+  ml->cell_vtx_idx = malloc(sizeof(PDM_l_num_t *) * n_part);
+  ml->cell_vtx     = malloc(sizeof(PDM_l_num_t *) * n_part);
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
-    ml->face_vtx_n [i_part] = NULL;
-    ml->cell_face_n[i_part] = NULL;
+    ml->face_vtx_n  [i_part] = NULL;
+    ml->cell_face_n [i_part] = NULL;
+    ml->cell_vtx_idx[i_part] = NULL;
+    ml->cell_vtx    [i_part] = NULL;
   }
 
 
@@ -2370,42 +2381,45 @@ PDM_mesh_location_free
   /* Free mesh nodal */
   //PDM_Mesh_nodal_partial_free (ml->mesh_nodal);?
 
-  int _n_part = PDM_Mesh_nodal_n_part_get(ml->mesh_nodal);
+  if (ml->mesh_nodal != NULL) {
+    int _n_part = PDM_Mesh_nodal_n_part_get(ml->mesh_nodal);
 
-  for (int i = 0; i< _n_part; i++) {
-    if(ml->cell_vtx_idx[i] != NULL) {
-      free(ml->cell_vtx_idx[i]);
+    if (ml->cell_vtx_idx != NULL) {
+      for (int i = 0; i< _n_part; i++)
+        if(ml->cell_vtx_idx[i] != NULL)
+          free(ml->cell_vtx_idx[i]);
+      free(ml->cell_vtx_idx);
     }
-    if(ml->cell_vtx[i] != NULL) {
-      free(ml->cell_vtx[i]);
+    if (ml->cell_vtx_idx != NULL) {
+      for (int i = 0; i< _n_part; i++)
+        if(ml->cell_vtx[i] != NULL)
+          free(ml->cell_vtx[i]);
+      free(ml->cell_vtx);
     }
-  }
+    ml->cell_vtx_idx = NULL;
+    ml->cell_vtx = NULL;
 
-  free(ml->cell_vtx_idx);
-  free(ml->cell_vtx);
-  ml->cell_vtx_idx = NULL;
-  ml->cell_vtx = NULL;
+    if (!ml->shared_nodal) {
 
-  if (!ml->shared_nodal) {
+      PDM_Mesh_nodal_free (ml->mesh_nodal);
 
-    PDM_Mesh_nodal_free (ml->mesh_nodal);
-
-    if(ml->cell_face_n != NULL){
-      for (int i = 0; i< _n_part; i++) {
-        if(ml->cell_face_n[i] != NULL) {
-          free(ml->cell_face_n[i]);
+      if(ml->cell_face_n != NULL){
+        for (int i = 0; i< _n_part; i++) {
+          if(ml->cell_face_n[i] != NULL) {
+            free(ml->cell_face_n[i]);
+          }
         }
+        free (ml->cell_face_n);
       }
-      free (ml->cell_face_n);
-    }
 
-    if(ml->face_vtx_n != NULL){
-      for (int i = 0; i< _n_part; i++) {
-        if(ml->face_vtx_n[i] != NULL) {
-          free(ml->face_vtx_n[i]);
+      if(ml->face_vtx_n != NULL){
+        for (int i = 0; i< _n_part; i++) {
+          if(ml->face_vtx_n[i] != NULL) {
+            free(ml->face_vtx_n[i]);
+          }
         }
+        free (ml->face_vtx_n);
       }
-      free (ml->face_vtx_n);
     }
   }
 
@@ -3163,8 +3177,6 @@ PDM_mesh_location_t        *ml
    */
 
   int **n_vtx_per_elt = malloc (sizeof(int *) * n_parts);
-  ml->cell_vtx_idx = malloc (sizeof(int *) * n_parts);
-  ml->cell_vtx = malloc (sizeof(int *) * n_parts);
 
   for (int ipart = 0; ipart < n_parts; ipart++) {
     int n_elt = PDM_Mesh_nodal_n_cell_get (ml->mesh_nodal,
