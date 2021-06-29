@@ -1212,15 +1212,19 @@ int main(int argc, char *argv[])
       int icel2 = face_cell[2*i+1];
       if (icel2 == 0) {
         iii++;
-        //select_face[i_part][i] = 1;
-        select_face[i_part][i] = 0;
+        select_face[i_part][i] = 1;
+        //select_face[i_part][i] = 0;
       }
     }
 
-    int i_group = 2;
+    /*int i_group = 2;
     for(int idx_face = face_group_idx[i_group]; idx_face < face_group_idx[i_group+1]; ++idx_face){
       int i_face = face_group[idx_face] - 1;
       select_face[i_part][i_face] = 1;
+      }*/
+    for(int idx_face = face_group_idx[4]; idx_face < face_group_idx[6]; ++idx_face){
+      int i_face = face_group[idx_face] - 1;
+      select_face[i_part][i_face] = 0;
     }
 
     for (int i = 0; i < face_part_bound_proc_idx[n_rank]; i++) {
@@ -1709,7 +1713,7 @@ int main(int argc, char *argv[])
       gface_vtx_idx[i+1] = gface_vtx_idx[i] + 4;
     }
 
-    if (0) {
+    if (1) {
       int *gface_data = malloc (sizeof(int) * gn_face);
       for (int i = 0; i < gn_face; i++) {
         gface_data[i] = (int) gface_g_num[i];
@@ -1806,6 +1810,7 @@ int main(int argc, char *argv[])
         for (int itgt = 0; itgt < n_cell; itgt++) {
           double dist_min = HUGE_VAL;
           PDM_g_num_t arg_min = 0;
+          double proj_min[3];
 
           for (int rank = 0; rank < n_rank; rank++) {
             for (int i = shift_face[rank]; i < shift_face[rank+1]; i++) {
@@ -1828,6 +1833,9 @@ int main(int argc, char *argv[])
                   (PDM_ABS(dist_min-dist) < 1e-12 && gface_g_num[i] < arg_min)) {
                 dist_min = dist;
                 arg_min = gface_g_num[i];
+                for (int k = 0; k < 3; k++) {
+                  proj_min[k] = proj[k];
+                }
               }
             }
           }
@@ -1837,7 +1845,19 @@ int main(int argc, char *argv[])
           double d_exp = sqrt(dist_min);
           if (closest_elt_gnum[itgt] != arg_min ||
               PDM_ABS(d_res - d_exp) > eps_distance) {
-            printf("[%d] part %d, pt "PDM_FMT_G_NUM" : expected ("PDM_FMT_G_NUM", %f), result ("PDM_FMT_G_NUM", %f), relative error = %g\n", i_rank, i_part, cell_ln_to_gn[itgt], arg_min, dist_min, closest_elt_gnum[itgt], distance[itgt], (d_res - d_exp)/d_res);
+            printf("[%d] part %d, pt "PDM_FMT_G_NUM" : expected ("PDM_FMT_G_NUM", %f), result ("PDM_FMT_G_NUM", %f), relative error = %g\n", i_rank, i_part, cell_ln_to_gn[itgt], arg_min, d_exp, closest_elt_gnum[itgt], d_res, (d_res - d_exp)/d_res);
+          }
+
+          else {
+            double e_proj = 0.;
+            for (int k = 0; k < 3; k++) {
+              double delta = proj_min[k] - projected[3*itgt + k];
+              e_proj += delta * delta;
+            }
+            e_proj = sqrt(e_proj);
+            if (e_proj > eps_distance) {
+              printf("[%d] part %d, pt "PDM_FMT_G_NUM", "PDM_FMT_G_NUM", proj : expected (%f %f %f), result (%f %f %f), error = %f\n", i_rank, i_part, cell_ln_to_gn[itgt], closest_elt_gnum[itgt], proj_min[0], proj_min[1], proj_min[2], projected[3*itgt], projected[3*itgt + 1], projected[3*itgt + 2], e_proj);
+            }
           }
         }
       }

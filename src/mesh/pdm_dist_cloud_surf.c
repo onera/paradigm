@@ -1102,7 +1102,7 @@ PDM_dist_cloud_surf_compute
 
       PDM_g_num_t *_tmp_g_num = tmp_block_pts_elt_g_num + idx;
       double      *_tmp_dist2 = tmp_block_pts_elt_dist2 + idx;
-      double      *_tmp_proj  = tmp_block_pts_elt_proj  + idx;
+      double      *_tmp_proj  = tmp_block_pts_elt_proj  + idx * 3;
 
       for (int j = 0; j < block_pts_elt_n[i]; j++) {
         order[j] = j;
