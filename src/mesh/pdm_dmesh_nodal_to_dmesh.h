@@ -91,13 +91,15 @@ int           *n_entity_elt_tot,
 PDM_g_num_t  **delmt_entity,
 int          **delmt_entity_vtx_idx,
 PDM_g_num_t  **delmt_entity_vtx,
-int          **parent_elmt_position,
+int          **dparent_elmt_position,
 int           *dn_entity,
 PDM_g_num_t  **entity_distrib,
 int          **dentity_vtx_idx,
 PDM_g_num_t  **dentity_vtx,
 int          **dentity_elmt_idx,
-PDM_g_num_t  **dentity_elmt
+PDM_g_num_t  **dentity_elmt,
+int          **dentity_parent_element_position,
+PDM_g_num_t  **dparent_gnum
 );
 
 /**

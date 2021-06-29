@@ -255,7 +255,9 @@ PDM_g_num_t  **entity_distrib,
 int          **dentity_vtx_idx,
 PDM_g_num_t  **dentity_vtx,
 int          **dentity_elmt_idx,
-PDM_g_num_t  **dentity_elmt
+PDM_g_num_t  **dentity_elmt,
+int          **dentity_parent_element_position,
+PDM_g_num_t  **dparent_gnum
 )
 {
 
@@ -265,9 +267,17 @@ PDM_g_num_t  **dentity_elmt
   int* blk_entity_vtx_idx  = (int        *) malloc( (blk_entity_vtx_n_size+1) * sizeof(int        ));
   int n_max_entity_per_key = -1;
   int n_tot_entity_per_key = 0;
+  int n_child_approx = 0;
+  int idx_tmp = 0;
   for(int i_entity = 0; i_entity < blk_size; ++i_entity) {
     n_max_entity_per_key = PDM_MAX(n_max_entity_per_key, blk_n_entity_per_key[i_entity]);
     n_tot_entity_per_key += blk_n_entity_per_key[i_entity];
+    for(int i = 0; i < blk_n_entity_per_key[i_entity]; ++i) {
+      if(blk_part_id[idx_tmp] == 1) {
+        n_child_approx++;
+      }
+      idx_tmp++;
+    }
   }
 
   int n_max_vtx       = -1;
@@ -296,22 +306,27 @@ PDM_g_num_t  **dentity_elmt
   /*
    * Allocate Memory - entity_vtx - entity_elmt
    */
-  *dentity_vtx      = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) *  blk_tot_entity_vtx_size  );
-  *dentity_vtx_idx  = (int         *) malloc( sizeof(int        ) * (blk_entity_vtx_n_size+1 ));
-  *dentity_elmt     = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) *  n_tot_entity_per_key );
-  *dentity_elmt_idx = (int         *) malloc( sizeof(int)         * (blk_entity_elmt_size+1)  );
+  *dentity_vtx                     = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) *  blk_tot_entity_vtx_size  );
+  *dentity_vtx_idx                 = (int         *) malloc( sizeof(int        ) * (blk_entity_vtx_n_size+1 ));
+  *dentity_elmt                    = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) *  n_tot_entity_per_key     );
+  *dentity_elmt_idx                = (int         *) malloc( sizeof(int)         * (blk_entity_elmt_size+1)  );
+  *dparent_gnum                    = (PDM_g_num_t *) malloc( sizeof(PDM_g_num_t) *  n_child_approx           );
+  *dentity_parent_element_position = (int         *) malloc( sizeof(int)         *  n_tot_entity_per_key     );
 
-  PDM_g_num_t *_dentity_vtx      = *dentity_vtx;
-  int         *_dentity_vtx_idx  = *dentity_vtx_idx;
-  PDM_g_num_t *_dentity_elmt     = *dentity_elmt;
-  int         *_dentity_elmt_idx = *dentity_elmt_idx;
-
+  PDM_g_num_t *_dentity_vtx                     = *dentity_vtx;
+  int         *_dentity_vtx_idx                 = *dentity_vtx_idx;
+  PDM_g_num_t *_dentity_elmt                    = *dentity_elmt;
+  int         *_dentity_elmt_idx                = *dentity_elmt_idx;
+  PDM_g_num_t *_dparent_gnum                    = *dparent_gnum;
+  int         *_dentity_parent_element_position = *dentity_parent_element_position;
   // printf("blk_entity_elmt_size::%i\n", blk_entity_elmt_size);
   // printf("n_tot_entity_per_key::%i\n", n_tot_entity_per_key);
+  // printf("n_child_approx::%i\n", n_child_approx);
 
   /*
    * Init global numbering
    */
+  int i_abs_child = 0;
   int i_abs_entity = 0;
   _dentity_vtx_idx[0] = 0;
 
@@ -451,12 +466,27 @@ PDM_g_num_t  **dentity_elmt
         }
 
         _dentity_elmt_idx[i_abs_entity+1] = _dentity_elmt_idx[i_abs_entity];
+        int find_child = 0;
         for(int i = 0; i < idx_next_same_entity; ++i) {
           int i_same_entity = same_entity_idx[i];
           int sign = sens_entity[i];
-          _dentity_elmt[_dentity_elmt_idx[i_abs_entity+1]++] = sign*blk_elmt_entity_elmt[idx+i_same_entity];
+
+          assert(blk_part_id[idx+i_same_entity] <= 1);
+          if(blk_part_id[idx+i_same_entity] == 0) {
+            int next_idx = _dentity_elmt_idx[i_abs_entity+1]++;
+            _dentity_elmt[next_idx] = sign*blk_elmt_entity_elmt[idx+i_same_entity];
+            _dentity_parent_element_position[next_idx] = blk_parent_elmt_position[idx+i_same_entity];
+          } else {
+            // printf(" Not treated yet : %i \n", blk_elmt_entity_elmt[idx+i_same_entity]);
+            // _dentity_elmt_child[next_child_idx] = sign*blk_elmt_entity_elmt[idx+i_same_entity];
+            // _dentity_parent_element_position_child[next_child_idx] = blk_parent_elmt_position[idx+i_same_entity];
+            // printf(" _dparent_gnum[%i] = %i \n", i_abs_child, i_abs_entity );
+            _dparent_gnum[i_abs_child] = i_abs_entity; /* We shift after - We can pass multiple times (ex : edges for quads ) */
+            find_child = 1;
+          }
           already_treat[i_same_entity] = 1;
         }
+        i_abs_child += find_child; /* Only increment if at least one elmet in border in found */
         i_abs_entity++;
 
       } /* End loop already treated */
@@ -471,6 +501,12 @@ PDM_g_num_t  **dentity_elmt
   *dentity_elmt = realloc(*dentity_elmt, sizeof(PDM_g_num_t) *  _dentity_elmt_idx[i_abs_entity] );
   _dentity_elmt = *dentity_elmt;
 
+  *dentity_parent_element_position = realloc(*dentity_parent_element_position, sizeof(int) * _dentity_elmt_idx[i_abs_entity] );
+  _dentity_parent_element_position = *dentity_parent_element_position;
+
+  *dparent_gnum = realloc(*dparent_gnum, sizeof(PDM_g_num_t) *  i_abs_child );
+  _dparent_gnum = *dparent_gnum;
+
   /*
    * Free all unused structure
    */
@@ -484,14 +520,6 @@ PDM_g_num_t  **dentity_elmt
   free(blk_n_entity_per_key);
   free(blk_entity_vtx_n);
   free(blk_elmt_entity_elmt);
-
-  if( 0 == 1 ){
-    printf("i_abs_entity::%i \n", i_abs_entity+1);
-    PDM_log_trace_array_int(_dentity_vtx_idx, i_abs_entity+1                   , "_dentity_vtx_idx:: " );
-    PDM_log_trace_array_long(_dentity_vtx   , _dentity_vtx_idx[i_abs_entity]   , "_dentity_vtx:: "     );
-    PDM_log_trace_array_int(_dentity_elmt_idx, i_abs_entity+1                  , "_dentity_elmt_idx:: ");
-    PDM_log_trace_array_long(_dentity_elmt    , _dentity_elmt_idx[i_abs_entity], "_dentity_elmt:: "    );
-  }
 
   /*
    * Fill up structure
@@ -512,6 +540,25 @@ PDM_g_num_t  **dentity_elmt
    * Generate absolute numerotation of entitys
    */
   *entity_distrib = _make_absolute_entity_numbering(_dn_entity, comm);
+  PDM_g_num_t* _entity_distrib = *entity_distrib;
+
+  /*
+   * Shift child
+   */
+  int i_rank = -1;
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  for(int i = 0; i < i_abs_child; ++i) {
+    _dparent_gnum[i] = _dparent_gnum[i] + _entity_distrib[i_rank] + 1;
+  }
+
+  if( 1 == 1 ){
+    printf("i_abs_entity::%i | i_abs_child:: %i \n", i_abs_entity+1, i_abs_child+1);
+    PDM_log_trace_array_int(_dentity_vtx_idx, i_abs_entity+1                   , "_dentity_vtx_idx:: " );
+    PDM_log_trace_array_long(_dentity_vtx   , _dentity_vtx_idx[i_abs_entity]   , "_dentity_vtx:: "     );
+    PDM_log_trace_array_int(_dentity_elmt_idx, i_abs_entity+1                  , "_dentity_elmt_idx:: ");
+    PDM_log_trace_array_long(_dentity_elmt    , _dentity_elmt_idx[i_abs_entity], "_dentity_elmt:: "    );
+    PDM_log_trace_array_long(_dparent_gnum    , i_abs_child, "_dparent_gnum:: "    );
+  }
 
   // end_timer_and_print("PDM_generate_entitiy_connectivity", comm, t1);
 }
@@ -533,7 +580,9 @@ PDM_g_num_t  **entity_distrib,
 int          **dentity_vtx_idx,
 PDM_g_num_t  **dentity_vtx,
 int          **dentity_elmt_idx,
-PDM_g_num_t  **dentity_elmt
+PDM_g_num_t  **dentity_elmt,
+int          **dentity_parent_element_position,
+PDM_g_num_t  **dparent_gnum
 )
 {
   assert(n_part == 2); // On peux généraliser, et on aura le lien entre tous les niveaux
@@ -693,7 +742,9 @@ PDM_g_num_t  **dentity_elmt
                                  dentity_vtx_idx,
                                  dentity_vtx,
                                  dentity_elmt_idx,
-                                 dentity_elmt);
+                                 dentity_elmt,
+                                 dentity_parent_element_position,
+                                 dparent_gnum);
 
 }
 
@@ -1404,7 +1455,8 @@ _generate_edges_from_dmesh_nodal2
   delmt_edge_vtx_idx[1] = delmt_ridge_edge_vtx_idx;
   delmt_edge_vtx    [1] = delmt_ridge_edge_vtx    ;
 
-
+  int          *dentity_parent_element_position;
+  PDM_g_num_t  *dparent_gnum;
   PDM_generate_entitiy_connectivity2(dmesh_nodal->pdm_mpi_comm,
                                      dmesh_nodal->n_vtx_abs,
                                      n_part,
@@ -1418,41 +1470,46 @@ _generate_edges_from_dmesh_nodal2
                                      &dm->_dedge_vtx_idx,
                                      &dm->_dedge_vtx,
                                      &link->_dedge_elmt_idx,
-                                     &link->_dedge_elmt);
+                                     &link->_dedge_elmt,
+                                     &dentity_parent_element_position,
+                                     &dparent_gnum);
   free(n_edge_elt_tot    );
   free(delmt_edge        );
   free(dparent_elmt_pos  );
   free(delmt_edge_vtx_idx);
   free(delmt_edge_vtx    );
-
-  // dm->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX] = PDM_TRUE;
-  // dm->dconnectivity_idx    [PDM_CONNECTIVITY_TYPE_EDGE_VTX] = dm->_dedge_vtx_idx;
-  // dm->dconnectivity        [PDM_CONNECTIVITY_TYPE_EDGE_VTX] = dm->_dedge_vtx;
-
-  // int is_signed = 1;
-  // assert(link->elmt_distrib == NULL);
-  // link->elmt_distrib = (PDM_g_num_t * ) malloc( (dmesh_nodal->n_rank + 1 ) * sizeof(PDM_g_num_t));
-  // link->elmt_distrib[0] = -1;
-  // PDM_dconnectivity_transpose(dmesh_nodal->pdm_mpi_comm,
-  //                             dm->edge_distrib,
-  //                             link->elmt_distrib,
-  //                             link->_dedge_elmt_idx,
-  //                             link->_dedge_elmt,
-  //                             is_signed,
-  //                             &link->_delmt_edge_idx,
-  //                             &link->_delmt_edge);
-
-  // int dn_elmt = link->elmt_distrib[dmesh_nodal->i_rank+1] - link->elmt_distrib[dmesh_nodal->i_rank];
-  // link->dn_elmt = dn_elmt;
-
-  // if( 0 == 1 ){
-  //   printf("dn_elmt ::%i\n", dn_elmt );
-  //   PDM_log_trace_array_int (link->_delmt_edge_idx, dn_elmt+1                     , "link->_delmt_edge_idx:: ");
-  //   PDM_log_trace_array_long(link->_delmt_edge    , link->_delmt_edge_idx[dn_elmt], "link->_delmt_edge:: ");
-  // }
-
   free(dparent_elmt_surf_pos);
   free(dparent_elmt_ridge_pos);
+
+  /* Pour l'instant on free */
+  free(dentity_parent_element_position);
+  free(dparent_gnum);
+
+  dm->is_owner_connectivity[PDM_CONNECTIVITY_TYPE_EDGE_VTX] = PDM_TRUE;
+  dm->dconnectivity_idx    [PDM_CONNECTIVITY_TYPE_EDGE_VTX] = dm->_dedge_vtx_idx;
+  dm->dconnectivity        [PDM_CONNECTIVITY_TYPE_EDGE_VTX] = dm->_dedge_vtx;
+
+  int is_signed = 1;
+  assert(link->elmt_distrib == NULL);
+  link->elmt_distrib = (PDM_g_num_t * ) malloc( (dmesh_nodal->n_rank + 1 ) * sizeof(PDM_g_num_t));
+  link->elmt_distrib[0] = -1;
+  PDM_dconnectivity_transpose(dmesh_nodal->pdm_mpi_comm,
+                              dm->edge_distrib,
+                              link->elmt_distrib,
+                              link->_dedge_elmt_idx,
+                              link->_dedge_elmt,
+                              is_signed,
+                              &link->_delmt_edge_idx,
+                              &link->_delmt_edge);
+
+  int dn_elmt = link->elmt_distrib[dmesh_nodal->i_rank+1] - link->elmt_distrib[dmesh_nodal->i_rank];
+  link->dn_elmt = dn_elmt;
+
+  if( 1 == 1 ){
+    printf("dn_elmt ::%i\n", dn_elmt );
+    PDM_log_trace_array_int (link->_delmt_edge_idx, dn_elmt+1                     , "link->_delmt_edge_idx:: ");
+    PDM_log_trace_array_long(link->_delmt_edge    , link->_delmt_edge_idx[dn_elmt], "link->_delmt_edge:: ");
+  }
 }
 
 static
