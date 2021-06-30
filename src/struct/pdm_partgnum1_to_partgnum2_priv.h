@@ -61,6 +61,7 @@ struct _pdm_partgnum1_to_partgnum2_t {
   int               **gnum1_come_from_idx;      /*!< Index for gnum1_come_from array (size = \ref n_part2) */
   PDM_g_num_t       **gnum1_come_from;          /*!< Gnum come from gnum1 for each referenced gnum2 */
 
+  int               **gnum1_to_send_buffer_idx; /*!< Indirection to store send buffer */
   int               **gnum1_to_send_buffer;     /*!< Indirection to store send buffer */
   int               **recv_buffer_to_ref_gnum2; /*!< Indirection to store gnum2 data from receive buffer */
 
