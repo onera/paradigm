@@ -30,11 +30,8 @@
 #include "pdm_polygon.h"
 #include "pdm_timer.h"
 #include "pdm_hash_tab.h"
-<<<<<<< HEAD
 #include "pdm_sort.h"
-=======
 #include "pdm_logging.h"
->>>>>>> [mesh]: modify pdm_dist_cloud_surf cython interface
 
 /*----------------------------------------------------------------------------*/
 
