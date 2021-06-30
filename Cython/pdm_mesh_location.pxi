@@ -153,9 +153,11 @@ cdef class MeshLocation:
   # ************************************************************************
   # > Class attributes
   cdef PDM_mesh_location_t* _ml
-  cdef int _size
-  cdef int _rank
-  cdef int unlocated_get_done_once
+  cdef int _n_point_cloud
+  cdef int _n_src_part
+  cdef list _n_tgt_part_per_cloud
+
+  cdef list _np_located, _np_unlocated, _dic_location, _dic_points_in_elt, _dic_cell_vertex
   # ************************************************************************
 
   # ------------------------------------------------------------------------
@@ -166,8 +168,8 @@ cdef class MeshLocation:
     """
 
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
-    self._rank = comm.Get_rank()
-    self._size = comm.Get_size()
+    self._n_point_cloud = n_point_cloud
+    self._n_tgt_part_per_cloud = [0 for i in range(n_point_cloud)]
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -178,7 +180,6 @@ cdef class MeshLocation:
 
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
     self._ml = PDM_mesh_location_create(mesh_nature, n_point_cloud, PDMC)
-    self.unlocated_get_done_once = 0
     # ::::::::::::::::::::::::::::::::::::::::::::::::::
 
   # ------------------------------------------------------------------------
@@ -186,6 +187,7 @@ cdef class MeshLocation:
                              int n_part):
     """
     """
+    self._n_tgt_part_per_cloud[i_point_cloud] = n_part
     PDM_mesh_location_n_part_cloud_set(self._ml,
                                        i_point_cloud,
                                        n_part)
@@ -216,6 +218,7 @@ cdef class MeshLocation:
   def mesh_global_data_set(self, int n_part):
     """
     """
+    self._n_src_part = n_part
     PDM_mesh_location_mesh_global_data_set(self._ml, n_part)
 
   # ------------------------------------------------------------------------
@@ -289,8 +292,7 @@ cdef class MeshLocation:
     PDM_mesh_location_method_set(self._ml, method)
 
   # ------------------------------------------------------------------------
-  def location_get(self, int i_point_cloud,
-                         int i_part):
+  def __location_get(self, int i_point_cloud, int i_part):
     """
     """
     # ************************************************************************
@@ -357,9 +359,11 @@ cdef class MeshLocation:
             'dist2'        : np_dist2,
             'p_proj_coord' : np_p_proj_coord
             }
+  def location_get(self, int i_point_cloud, int i_part):
+    return self._dic_location[i_point_cloud][i_part]
 
 
-  def cell_vertex_get (self, int i_part):
+  def __cell_vertex_get (self, int i_part):
 
     cdef int  n_elts
     cdef int *cell_vtx_idx
@@ -389,10 +393,12 @@ cdef class MeshLocation:
 
     return {'cell_vtx_idx'      : np_cell_vtx_idx,
             'cell_vtx'          : np_cell_vtx}
+  def cell_vertex_get (self, int i_part):
+    return self._dic_cell_vertex[i_part]
 
 
 
-  def points_in_elt_get(self, int i_part, int i_point_cloud):
+  def __points_in_elt_get(self, int i_part, int i_point_cloud):
     """
     """
     # ************************************************************************
@@ -491,8 +497,11 @@ cdef class MeshLocation:
             'points_projected_coords' : np_points_projected_coords,
             }
 
+  def points_in_elt_get(self, int i_part, int i_point_cloud):
+    return self._dic_points_in_elt[i_point_cloud][i_part]
 
-  def located_get(self, int i_point_cloud, int i_part):
+
+  def __located_get(self, int i_point_cloud, int i_part):
     """
     """
     cdef int           n_located
@@ -515,7 +524,10 @@ cdef class MeshLocation:
 
     return np_located
 
-  def unlocated_get(self, int i_point_cloud, int i_part):
+  def located_get(self, int i_point_cloud, int i_part):
+    return self._np_located[i_point_cloud][i_part]
+
+  def __unlocated_get(self, int i_point_cloud, int i_part):
     """
     """
     cdef int           n_unlocated
@@ -533,11 +545,13 @@ cdef class MeshLocation:
                                                  &dim,
                                                  NPY.NPY_INT32,
                                                  <void *> unlocated)
-    if not self.unlocated_get_done_once:
-      PyArray_ENABLEFLAGS(np_unlocated, NPY.NPY_OWNDATA)
-      self.unlocated_get_done_once = 1
+
+    PyArray_ENABLEFLAGS(np_unlocated, NPY.NPY_OWNDATA)
 
     return np_unlocated
+
+  def unlocated_get(self, int i_point_cloud, int i_part):
+    return self._np_unlocated[i_point_cloud][i_part]
 
   # ------------------------------------------------------------------------
   def compute(self):
@@ -547,6 +561,22 @@ cdef class MeshLocation:
     # > Declaration
     # ************************************************************************
     PDM_mesh_location_compute(self._ml)
+
+    #Take ownership of all computed data to avoid memory leaks
+    self._np_unlocated      = []
+    self._np_located        = []
+    self._dic_location      = []
+    self._dic_points_in_elt = []
+    for i_pt_cloud in range(self._n_point_cloud):
+      #Target related data
+      n_tgt_part = self._n_tgt_part_per_cloud[i_pt_cloud]
+      self._np_unlocated.append([self.__unlocated_get(i_pt_cloud, i_part) for i_part in range(n_tgt_part)])
+      self._np_located  .append([self.__located_get  (i_pt_cloud, i_part) for i_part in range(n_tgt_part)])
+      self._dic_location.append([self.__location_get (i_pt_cloud, i_part) for i_part in range(n_tgt_part)])
+      #Source related data
+      self._dic_points_in_elt.append([self.__points_in_elt_get(i_part, i_pt_cloud) for i_part in range(self._n_src_part)])
+    #Source related data
+    self._dic_cell_vertex = [self.__cell_vertex_get(i_part) for i_part in range(self._n_src_part)]
 
   # ------------------------------------------------------------------------
   def dump_times(self):
