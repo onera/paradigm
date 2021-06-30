@@ -7387,7 +7387,7 @@ PDM_para_octree_closest_points
     f_max_copy = (float) atof(env_var);
   }
 
-  int USE_SHARED_OCTREE = 0;
+  int USE_SHARED_OCTREE = 1;
   env_var = getenv ("USE_SHARED_OCTREE");
   if (env_var != NULL) {
     USE_SHARED_OCTREE = (int) atoi(env_var);
@@ -8563,7 +8563,7 @@ PDM_para_octree_single_closest_point
     f_max_copy = (float) atof(env_var);
   }
 
-  int USE_SHARED_OCTREE = 0;
+  int USE_SHARED_OCTREE = 1;
   env_var = getenv ("USE_SHARED_OCTREE");
   if (env_var != NULL) {
     USE_SHARED_OCTREE = (int) atoi(env_var);
