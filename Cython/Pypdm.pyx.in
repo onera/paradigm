@@ -200,6 +200,67 @@ cdef extern from "numpy/arrayobject.h":
     void PyArray_ENABLEFLAGS(NPY.ndarray arr, int flags)
 # -----------------------------------------------------------------
 
+# -----------------------------------------------------------------
+cdef create_numpy_i(int* array, int size):
+    cdef object nparray
+    if (array == NULL):
+        nparray = None
+    else :
+        dim = <NPY.npy_intp> size
+        nparray = NPY.PyArray_SimpleNewFromData(1,
+                                                &dim,
+                                                NPY.NPY_INT32,
+                                                <void *> array)
+    return nparray
+
+cdef create_numpy_l(long int* array, int size):
+    cdef object nparray
+    if (array == NULL):
+        nparray = None
+    else :
+        dim = <NPY.npy_intp> size
+        nparray = NPY.PyArray_SimpleNewFromData(1,
+                                                &dim,
+                                                NPY.NPY_INT64,
+                                                <void *> array)
+    return nparray
+
+cdef create_numpy_pdm_gnum(PDM_g_num_t* array, int size):
+    cdef object nparray
+    if (array == NULL):
+        nparray = None
+    else :
+        dim = <NPY.npy_intp> size
+        nparray = NPY.PyArray_SimpleNewFromData(1,
+                                                &dim,
+                                                PDM_G_NUM_NPY_INT,
+                                                <void *> array)
+    return nparray
+
+cdef create_numpy_f(float* array, int size):
+    cdef object nparray
+    if (array == NULL):
+        nparray = None
+    else :
+        dim = <NPY.npy_intp> size
+        nparray = NPY.PyArray_SimpleNewFromData(1,
+                                                &dim,
+                                                NPY.NPY_FLOAT,
+                                                <void *> array)
+    return nparray
+
+cdef create_numpy_d(double* array, int size):
+    cdef object nparray
+    if (array == NULL):
+        nparray = None
+    else :
+        dim = <NPY.npy_intp> size
+        nparray = NPY.PyArray_SimpleNewFromData(1,
+                                                &dim,
+                                                NPY.NPY_DOUBLE,
+                                                <void *> array)
+    return nparray
+
 # PDM_dmesh :
 # --------------------
 include "pdm_dmesh.pxi"

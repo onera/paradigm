@@ -73,6 +73,7 @@ cdef class DistCloudSurf:
     cdef PDM_mesh_nature_t      _mesh_nature
     cdef int                    _n_part_surf
     cdef list                   _nb_pts
+    cdef dict                   _results
     # ************************************************************************
     # ------------------------------------------------------------------
     def __cinit__(self,
@@ -215,63 +216,48 @@ cdef class DistCloudSurf:
         """
         Compute distance
         """
-        PDM_dist_cloud_surf_compute(self._dist)
-
-    # ------------------------------------------------------------------
-    def get(self,
-           int i_point_cloud,
-           int i_part):
-        """
-        Return the properties of the closest surface element
-        (distance, projected point coordinates and global numbering)
-        """
         cdef double *closest_elt_distance
         cdef double *closest_elt_projected
         cdef PDM_g_num_t *closest_elt_gnum
 
-        PDM_dist_cloud_surf_get(self._dist,
-                                i_point_cloud,
-                                i_part,
-                                &closest_elt_distance,
-                                &closest_elt_projected,
-                                &closest_elt_gnum)
+        PDM_dist_cloud_surf_compute(self._dist)
 
-        # Encapsulate closest_elt_distance into a numpy array
-        if (closest_elt_distance == NULL) :
-            npClosestEltDistance = None
-        else :
-            dim = <NPY.npy_intp> self._nb_pts[i_point_cloud][i_part]
-            npClosestEltDistance = NPY.PyArray_SimpleNewFromData(1,
-                                                                 &dim,
-                                                                 NPY.NPY_DOUBLE,
-                                                                 <void *> closest_elt_distance)
-            PyArray_ENABLEFLAGS(npClosestEltDistance, NPY.NPY_OWNDATA);
+        # Store results in numpy directory
+        self._results = {} # [None]*self.n_point_cloud
+        for i_point_cloud in range(self.n_point_cloud):
+            n_part_cloud = self.get_n_part_cloud(i_point_cloud)
+            self._results[i_point_cloud] = {} # [None]*n_part_cloud
+            for i_part_cloud in range(n_part_cloud):
+                PDM_dist_cloud_surf_get(self._dist,
+                                        i_point_cloud,
+                                        i_part_cloud,
+                                        &closest_elt_distance,
+                                        &closest_elt_projected,
+                                        &closest_elt_gnum)
 
-        # Encapsulate closest_elt_projected into a numpy array
-        if (closest_elt_projected == NULL) :
-            npClosestEltProjected = None
-        else :
-            dim = <NPY.npy_intp> (3 * self._nb_pts[i_point_cloud][i_part])
-            npClosestEltProjected = NPY.PyArray_SimpleNewFromData(1,
-                                                                  &dim,
-                                                                  NPY.NPY_DOUBLE,
-                                                                  <void *> closest_elt_projected)
-            PyArray_ENABLEFLAGS(npClosestEltProjected, NPY.NPY_OWNDATA);
+                # Encapsulate C array into a numpy array
+                np_closest_elt_distance  = create_numpy_d(closest_elt_distance, self._nb_pts[i_point_cloud][i_part_cloud])
+                np_closest_elt_projected = create_numpy_d(closest_elt_projected, 3 * self._nb_pts[i_point_cloud][i_part_cloud])
+                np_closest_elt_gnum      = create_numpy_pdm_gnum(closest_elt_gnum, self._nb_pts[i_point_cloud][i_part_cloud])
 
-        # Encapsulate closest_elt_gnum into a numpy array
-        if (closest_elt_gnum == NULL) :
-            npClosestEltGnum = None
-        else :
-            dim = <NPY.npy_intp> self._nb_pts[i_point_cloud][i_part]
-            npClosestEltGnum = NPY.PyArray_SimpleNewFromData(1,
-                                                             &dim,
-                                                             PDM_G_NUM_NPY_INT,
-                                                             <void *> closest_elt_gnum)
-            PyArray_ENABLEFLAGS(npClosestEltGnum, NPY.NPY_OWNDATA);
+                dresults = {'ClosestEltDistance'    : np_closest_elt_distance,
+                            'ClosestEltProjected'   : np_closest_elt_projected,
+                            'ClosestEltGnum'        : np_closest_elt_gnum}
+                self._results[i_point_cloud][i_part_cloud] = dresults
 
-        return {'ClosestEltDistance'    : npClosestEltDistance,
-                'ClosestEltProjected'   : npClosestEltProjected,
-                'ClosestEltGnum'        : npClosestEltGnum}
+    # ------------------------------------------------------------------
+    def get(self, int i_point_cloud, int i_part_cloud):
+        """
+        Return the properties of the closest surface element
+        (distance, projected point coordinates and global numbering)
+        """
+        if self._results is None:
+            self.compute()
+        if i_point_cloud >= self.n_point_cloud:
+            raise KeyError (f"Only {self.n_point_cloud} results are available, query item {i_point_cloud} here.")
+        if i_part_cloud >= self.get_n_part_cloud(i_point_cloud):
+            raise KeyError (f"Only {self.get_n_part_cloud(i_point_cloud)} results are available, query item {i_part_cloud} here.")
+        return self._results[i_point_cloud][i_part_cloud]
 
     # ------------------------------------------------------------------
     def dump_times(self):
