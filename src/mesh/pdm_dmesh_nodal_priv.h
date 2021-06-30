@@ -132,6 +132,11 @@ typedef struct _pdm_dmesh_nodal_elts_t {
   int             *dgroup_elmt_idx;
   PDM_g_num_t     *dgroup_elmt;
   PDM_ownership_t  dgroup_elmt_owner;
+
+  PDM_g_num_t     *dparent_gnum;
+  PDM_g_num_t     *delmt_child_distrib;
+
+
 } _pdm_dmesh_nodal_elts_t;
 
 /**

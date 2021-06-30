@@ -2113,7 +2113,7 @@ PDM_dmesh_nodal_t  *dmesh_nodal
   // printf("n_sum_vtx_face_tot::%i\n", n_sum_vtx_face_tot);
 
   PDM_g_num_t* delmt_face_cell    = (PDM_g_num_t*) malloc(  n_face_elt_tot     * sizeof(PDM_g_num_t));
-  int*         dparent_elmt_pos   = (PDM_g_num_t*) malloc(  n_face_elt_tot     * sizeof(int        ));
+  int*         dparent_elmt_pos   = (int        *) malloc(  n_face_elt_tot     * sizeof(int        ));
   int*         dcell_face_vtx_idx = (int        *) malloc( (n_face_elt_tot +1) * sizeof(int        ));
   PDM_g_num_t* dcell_face_vtx     = (PDM_g_num_t*) malloc(  n_sum_vtx_face_tot * sizeof(PDM_g_num_t));
 
@@ -3093,6 +3093,9 @@ const PDM_MPI_Comm comm,
   dmn_elts->dgroup_elmt          = NULL;
   dmn_elts->dgroup_elmt_owner    = PDM_OWNERSHIP_KEEP;
 
+  dmn_elts->dparent_gnum         = NULL;
+  dmn_elts->delmt_child_distrib  = NULL;
+
   return dmn_elts;
 }
 
@@ -3142,6 +3145,14 @@ PDM_DMesh_nodal_elmts_t* dmn_elts
     if (dmn_elts->dgroup_elmt_idx != NULL) {
       free (dmn_elts->dgroup_elmt_idx);
     }
+  }
+
+  if(dmn_elts->dparent_gnum != NULL) {
+    free(dmn_elts->dparent_gnum);
+  }
+
+  if(dmn_elts->delmt_child_distrib != NULL) {
+    free(dmn_elts->delmt_child_distrib);
   }
 
   free(dmn_elts);

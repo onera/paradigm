@@ -99,7 +99,8 @@ PDM_g_num_t  **dentity_vtx,
 int          **dentity_elmt_idx,
 PDM_g_num_t  **dentity_elmt,
 int          **dentity_parent_element_position,
-PDM_g_num_t  **dparent_gnum
+PDM_g_num_t  **dparent_gnum,
+PDM_g_num_t  **delmt_child_distrib
 );
 
 /**
