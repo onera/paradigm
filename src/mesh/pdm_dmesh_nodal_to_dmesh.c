@@ -566,6 +566,7 @@ PDM_g_num_t  **delmt_child_distrib
                                                       1,
                                                       comm);
   PDM_g_num_t* distrib = PDM_part_to_block_distrib_index_get(ptb);
+  printf(" A GERE BLOCK PARTIEL INSIDE _generate_entitiy_connectivity in pdm_dmesh_nodal_to_dmesh.c ");
 
   int n_rank = -1;
   PDM_MPI_Comm_size(comm, &n_rank);
@@ -583,13 +584,13 @@ PDM_g_num_t  **delmt_child_distrib
 
   int* blk_strid = NULL;
   PDM_part_to_block_exch(ptb,
-                                       sizeof(PDM_g_num_t),
-                                       PDM_STRIDE_VAR,
-                                       -1,
-                                       &stride_one,
-                             (void **) &_tmp_parent_gnum,
-                                       &blk_strid,
-                             (void **)  dparent_gnum);
+                         sizeof(PDM_g_num_t),
+                         PDM_STRIDE_VAR,
+                         -1,
+                         &stride_one,
+               (void **) &_tmp_parent_gnum,
+                         &blk_strid,
+               (void **) dparent_gnum);
   PDM_part_to_block_free(ptb);
   free(stride_one);
   free(blk_strid);
@@ -1713,12 +1714,13 @@ _translate_element_group_to_entity2
   //   }
   // }
   *dentity_bound = _part_group_data;
+  free(part_group_data);
 
   // free(part_group_stri);
   // free(_part_group_stri);
   // free(part_group_data);
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_log_trace_array_int (_dentity_bound_idx, n_group_elmt+1                  , "_dentity_bound_idx:: ");
     PDM_log_trace_array_long(_part_group_data  , _dentity_bound_idx[n_group_elmt], "_dentity_bound:: ");
   }

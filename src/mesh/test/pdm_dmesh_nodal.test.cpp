@@ -120,11 +120,11 @@ MPI_TEST_CASE("[PDM_delmts_nodal_elmts_t] Constructor",1) {
   PDM_dmesh_connectivity_get(dm, PDM_CONNECTIVITY_TYPE_FACE_EDGE,
                              &dface_edge, &dface_edge_idx, PDM_OWNERSHIP_KEEP);
 
-  PDM_log_trace_array_int (dedge_face_idx, dn_edge+1, "dedge_face_idx:: ");
-  PDM_log_trace_array_long (dedge_face, dedge_face_idx[dn_edge], "dedge_face:: ");
+  // PDM_log_trace_array_int (dedge_face_idx, dn_edge+1, "dedge_face_idx:: ");
+  // PDM_log_trace_array_long (dedge_face, dedge_face_idx[dn_edge], "dedge_face:: ");
 
-  PDM_log_trace_array_int (dface_edge_idx, dn_face+1, "dface_edge_idx:: ");
-  PDM_log_trace_array_long (dface_edge, dface_edge_idx[dn_face], "dface_edge:: ");
+  // PDM_log_trace_array_int (dface_edge_idx, dn_face+1, "dface_edge_idx:: ");
+  // PDM_log_trace_array_long (dface_edge, dface_edge_idx[dn_face], "dface_edge:: ");
 
   int dedge_face_idx_expected[17] =  {0, 1, 2, 3, 4, 5, 7, 9, 10, 12, 13, 15, 17, 19, 20, 22, 24 };
   PDM_g_num_t dedge_face_expected[24] =  {3, 8, 4, 6, 3, 7, -3, 7, -8, 2, 8, -4, 5, 4, -6, 1, -5, 2, -6, 5, 1, -2, 1, -7};

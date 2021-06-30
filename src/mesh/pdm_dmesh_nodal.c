@@ -590,6 +590,19 @@ const int                partial
 
     }
 
+    if(dmesh_nodal->volumic != NULL){
+      PDM_DMesh_nodal_elmts_free(dmesh_nodal->volumic);
+    }
+    if(dmesh_nodal->surfacic != NULL){
+      PDM_DMesh_nodal_elmts_free(dmesh_nodal->surfacic);
+    }
+    if(dmesh_nodal->ridge != NULL){
+      PDM_DMesh_nodal_elmts_free(dmesh_nodal->ridge);
+    }
+    if(dmesh_nodal->corner != NULL){
+      PDM_DMesh_nodal_elmts_free(dmesh_nodal->corner);
+    }
+
     free(dmesh_nodal);
 
   }
@@ -3166,7 +3179,6 @@ PDM_Mesh_nodal_add_desh_nodal_elmts
  PDM_DMesh_nodal_elmts_t *dmn_elts
 )
 {
-  printf("PDM_Mesh_nodal_add_desh_nodal_elmts with dmn_elts = %i \n", dmn_elts->mesh_dimension);
   if(dmn_elts->mesh_dimension == 3) {
     dmesh_nodal->volumic = dmn_elts;
   } else if(dmn_elts->mesh_dimension == 2){
