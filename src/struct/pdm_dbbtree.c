@@ -2098,113 +2098,49 @@ PDM_dbbtree_points_inside_boxes_with_copies
  double            **pts_in_box_coord
  )
 {
-  const double RANK_COPY_threshold  = 1.1;  // factor of the mean nb of requests
-  const double RANK_COPY_max_copies = 0.;//0.05; // factor of the total nb of processes
+  const float f_threshold = 1.1;  // factor of the mean nb of requests
+  const float f_max_copy  = 0.1;  // factor of the total nb of processes
 
   assert (dbbt != NULL);
   _PDM_dbbtree_t *_dbbt = (_PDM_dbbtree_t *) dbbt;
 
-  double t_begin, t_end;//
-  PDM_timer_t *timer = PDM_timer_create ();//
-
-  int i_rank;
+  int i_rank, n_rank;
   PDM_MPI_Comm_rank (_dbbt->comm, &i_rank);
-
-  int n_rank;
   PDM_MPI_Comm_size (_dbbt->comm, &n_rank);
 
-  const int *used_ranks   = _dbbt->usedRank;
+  /*
+   *  Normalize target points coords
+   */
+  double *_pts_coord = malloc (sizeof(double) * n_pts * 3);
+  for (int i = 0; i < n_pts; i++) {
+    _normalize (_dbbt,
+                pts_coord  + 3*i,
+                _pts_coord + 3*i);
+  }
 
-
-  /***************************************
-   * Redistribute points
-   ***************************************/
+  /*
+   *  Redistribute target points
+   */
   int *send_count = NULL;
   int *send_shift = NULL;
-
   int *recv_count = NULL;
   int *recv_shift = NULL;
-
-  int n_recv_pts = 0;
   PDM_g_num_t *send_g_num = NULL;
   PDM_g_num_t *recv_g_num = NULL;
   double      *send_coord = NULL;
   double      *recv_coord = NULL;
 
-
   int n_copied_ranks = 0;
   int *copied_ranks = NULL;
-  int *i_copied_rank = NULL;
-
   int n_pts_local  = 0;
+  int n_pts_recv   = 0;
   int n_pts_copied = 0;
-  int n_pts_recv1  = 0;
-  int n_pts1       = 0;
+  int n_pts1;
+
   int *copied_shift = NULL;
-  int idx_pts1[4];
-  idx_pts1[0] = 0;
 
   PDM_g_num_t *pts_g_num1 = NULL;
   double      *pts_coord1 = NULL;
-
-  t_begin = PDM_timer_elapsed (timer);//
-  PDM_timer_resume (timer);//
-
-  double *_pts_coord = malloc (sizeof(double) * n_pts * 3);
-  for (int i = 0; i < n_pts; i++) {
-    _normalize (_dbbt,
-                pts_coord + 3*i,
-                _pts_coord + 3*i);
-  }
-
-  PDM_timer_hang_on (timer);//
-  t_end = PDM_timer_elapsed (timer);//
-  //printf("[%d] normalization : %12.5es\n", i_rank, t_end - t_begin);//
-  t_begin = t_end;//
-  PDM_timer_resume (timer);//
-
-  if (1) {
-    char filename[999];
-
-    sprintf(filename, "dbbt_pts_n_%3.3d.vtk", i_rank);
-    _export_point_cloud (filename,
-                         1,
-                         &n_pts,
-                         &_pts_coord,
-                         &pts_g_num,
-                         NULL);
-
-    sprintf(filename, "dbbt_boxes_n_%3.3d.vtk", i_rank);
-    _export_boxes (filename,
-                   _dbbt->boxes->local_boxes->n_boxes,
-                   _dbbt->boxes->local_boxes->extents,
-                   _dbbt->boxes->local_boxes->g_num);
-
-
-    double *_extents = malloc (sizeof(double) * _dbbt->boxes->local_boxes->n_boxes * 6);
-    for (int i = 0; i < 2*_dbbt->boxes->local_boxes->n_boxes; i++) {
-      for (int j = 0; j < 3; j++) {
-        _extents[3*i+j] = _dbbt->s[j] + _dbbt->d[j] * _dbbt->boxes->local_boxes->extents[3*i+j];
-      }
-    }
-
-    sprintf(filename, "dbbt_pts_%3.3d.vtk", i_rank);
-    _export_point_cloud (filename,
-                         1,
-                         &n_pts,
-                         &pts_coord,
-                         &pts_g_num,
-                         NULL);
-
-    sprintf(filename, "dbbt_boxes_%3.3d.vtk", i_rank);
-    _export_boxes (filename,
-                   _dbbt->boxes->local_boxes->n_boxes,
-                   _extents,
-                   _dbbt->boxes->local_boxes->g_num);
-
-    free (_extents);
-  }
-
 
   if (_dbbt->btShared != NULL) {
     int *pts_rank_idx = NULL;
@@ -2212,27 +2148,15 @@ PDM_dbbtree_points_inside_boxes_with_copies
     PDM_box_tree_points_inside_boxes2 (_dbbt->btShared,
                                        -1,
                                        n_pts,
-                                       _pts_coord,
+                                       pts_coord,
                                        &pts_rank_idx,
-                                       &pts_rank,
-                                       1,
-                                       i_rank);
+                                       &pts_rank);
 
-    if (1 && i_rank == 0) {
-      char filename[999];
-
-      sprintf(filename, "rank_boxes.vtk");
-      _export_boxes (filename,
-                     _dbbt->rankBoxes->local_boxes->n_boxes,
-                     _dbbt->rankBoxes->local_boxes->extents,
-                     _dbbt->rankBoxes->local_boxes->g_num);
-    }
-
-    /* Count provisional number of point to send to each rank */
+    /* Count points to send to each rank */
     send_count = PDM_array_zeros_int (n_rank);
 
     for (int i = 0; i < pts_rank_idx[n_pts]; i++) {
-      int rank = used_ranks[pts_rank[i]];
+      int rank = _dbbt->usedRank[pts_rank[i]];
       pts_rank[i] = rank;
       send_count[rank]++;
     }
@@ -2242,97 +2166,133 @@ PDM_dbbtree_points_inside_boxes_with_copies
                       recv_count, 1, PDM_MPI_INT,
                       _dbbt->comm);
 
-    n_recv_pts = 0;
+    n_pts_recv = 0;
     for (int i = 0; i < n_rank; i++) {
-      n_recv_pts += recv_count[i];
+      n_pts_recv += recv_count[i];
     }
+    int n_pts_recv_no_copies = n_pts_recv;
 
-    /*
-     * Prepare copies
-     */
-    int *all_n_recv = malloc (sizeof(int) * n_rank);
-    PDM_MPI_Allgather (&n_recv_pts,    1, PDM_MPI_INT,
-                       all_n_recv, 1, PDM_MPI_INT,
-                       _dbbt->comm);
+    /* Prepare copies */
+    int n_max_copy = (int) (f_max_copy * n_rank);
+    int *i_copied_rank = NULL;
+    int *copied_count = NULL;
+    int mean_n_pts_recv;
+    int *n_pts_recv_copied_ranks = NULL;
 
-    // average number of requests
-    long _avg_n_recv = 0;
-    for (int i = 0; i < n_rank; i++) {
-      _avg_n_recv += all_n_recv[i];
-    }
-    int avg_n_recv = (int) (_avg_n_recv / n_rank);
+    if (n_max_copy > 0) {
+      int *all_n_pts_recv = malloc (sizeof(int) * n_rank);
+      PDM_MPI_Allgather (&n_pts_recv,    1, PDM_MPI_INT,
+                         all_n_pts_recv, 1, PDM_MPI_INT,
+                         _dbbt->comm);
 
-    // sort ranks in ascending order of nb of requests
-    int *order = malloc (sizeof(int) * n_rank);
-    for (int i = 0; i < n_rank; i++) {
-      order[i] = i;
-    }
+      // Mean number of pts_recvs
+      long l_mean_n_pts_recv = 0;
+      for (int i = 0; i < n_rank; i++) {
+        l_mean_n_pts_recv += all_n_pts_recv[i];
+      }
+      mean_n_pts_recv = (int) (l_mean_n_pts_recv / n_rank);
 
-    PDM_sort_int (all_n_recv, order, n_rank);
+      float n_threshold = f_threshold * mean_n_pts_recv;
 
-    // identify ranks to be copied
-    double threshold = RANK_COPY_threshold * avg_n_recv;
-    int max_copied_ranks   = (int) (RANK_COPY_max_copies * n_rank);
+      // Sort ranks
+      int *order = malloc (sizeof(int) * n_rank);
+      for (int i = 0; i < n_rank; i++) {
+        order[i] = i;
+      }
 
-    n_copied_ranks = 0;
-    copied_ranks = malloc (sizeof(int) * max_copied_ranks);
+      PDM_sort_int (all_n_pts_recv,
+                    order,
+                    n_rank);
 
-    for (int i = 0; i < max_copied_ranks; i++) {
-      int j = n_rank - 1 - i;
+      // Identify ranks to copy
+      copied_ranks = malloc (sizeof(int) * n_max_copy);
+      n_pts_recv_copied_ranks = malloc (sizeof(int) * n_max_copy);
+      for (int i = 0; i < n_max_copy; i++) {
+        int j = n_rank - i - 1;
 
-      if (all_n_recv[j] > threshold ) {
-        copied_ranks[n_copied_ranks++] = order[j];
-      } else {
-        break;
+        if (all_n_pts_recv[j] > n_threshold) {
+          copied_ranks[n_copied_ranks] = order[j];
+          n_pts_recv_copied_ranks[n_copied_ranks] = all_n_pts_recv[j];
+          n_copied_ranks++;
+        }
+        else {
+          break;
+        }
+      }
+      free (all_n_pts_recv);
+      free (order);
+
+      if (n_copied_ranks > 0) {
+        copied_ranks = realloc (copied_ranks, sizeof(int) * n_copied_ranks);
+        n_pts_recv_copied_ranks = realloc (n_pts_recv_copied_ranks,
+                                           sizeof(int) * n_copied_ranks);
       }
     }
-    free (order);
-    free (all_n_recv);
-
 
     if (i_rank == 0) {
-      if (n_copied_ranks == 0) {
-        printf("n_copied_ranks = 0\n");
-      } else {
-        printf("copied rank(s) = ");
-        for (int i = 0; i < n_copied_ranks; i++) {
-          printf("%d ", copied_ranks[i]);
+      if (n_copied_ranks > 0) {
+        if (n_copied_ranks == 1) {
+          printf("1 copied rank: %d\n", copied_ranks[0]);
         }
-        printf("\n");
+        else {
+          printf("%d copied ranks:", n_copied_ranks);
+          for (int i = 0; i < n_copied_ranks; i++) {
+            printf(" %d", copied_ranks[i]);
+          }
+          printf("\n");
+        }
+      }
+      else {
+        printf("0 copied ranks\n");
       }
     }
-
 
     /*
      * Copy the data of selected ranks
      */
-    i_copied_rank = (int *) malloc (sizeof(int) * n_rank);
+    i_copied_rank = malloc (sizeof(int) * n_rank);
     PDM_box_tree_copy_to_ranks (_dbbt->btLoc,
                                 &n_copied_ranks,
                                 copied_ranks,
                                 i_copied_rank);
-    free (copied_ranks);
 
-
+    /* Re-compute send/recv counts */
+    copied_count = PDM_array_zeros_int (n_copied_ranks);
     n_pts_local = 0;
-    int *copied_count = PDM_array_zeros_int (n_copied_ranks);
+    for (int i = 0; i < n_copied_ranks; i++) {
+      int rank = copied_ranks[i];
+      if (rank != i_rank) {
+        int si = send_count[rank];
+
+        si = PDM_MIN (si, PDM_MAX (0, (n_pts_recv_copied_ranks[i] - n_pts_recv)/2));
+        if (i_copied_rank[i_rank] < 0) {
+          si = PDM_MIN (si, PDM_MAX (0, mean_n_pts_recv - n_pts_recv));
+        }
+
+        copied_count[i] = si;
+        n_pts_recv += si;
+      }
+    }
+    if (copied_ranks != NULL) {
+      free (copied_ranks);
+    }
+
+    if (n_pts_recv_copied_ranks != NULL) {
+      free (n_pts_recv_copied_ranks);
+    }
+
     for (int i = 0; i < n_rank; i++) {
       if (i == i_rank) {
         n_pts_local += send_count[i];
         send_count[i] = 0;
       }
       else if (i_copied_rank[i] >= 0) {
-        copied_count[i_copied_rank[i]] = send_count[i];
-        send_count[i] = 0;
+        send_count[i] -= copied_count[i_copied_rank[i]];
       }
     }
 
-    copied_shift = malloc (sizeof(int) * (n_copied_ranks + 1));
-    copied_shift[0] = 0;
-    for (int i = 0; i < n_copied_ranks; i++) {
-      copied_shift[i+1] = copied_shift[i] + copied_count[i];
-      copied_count[i] = 0;
-    }
+    copied_shift = PDM_array_new_idx_from_sizes_int (copied_count, n_copied_ranks);
+    int *copied_count_tmp = PDM_array_zeros_int (n_copied_ranks);
     n_pts_copied = copied_shift[n_copied_ranks];
 
     /* Exchange new send/recv counts */
@@ -2344,162 +2304,128 @@ PDM_dbbtree_points_inside_boxes_with_copies
     recv_shift = PDM_array_new_idx_from_sizes_int (recv_count, n_rank);
     PDM_array_reset_int (send_count, n_rank, 0);
 
-    n_pts_recv1 = recv_shift[n_rank];
-
-    idx_pts1[1] = n_pts_local;
-    idx_pts1[2] = idx_pts1[1] + n_pts_recv1;
-    idx_pts1[3] = idx_pts1[2] + n_pts_copied;
-    n_pts1 = idx_pts1[3];
+    n_pts_recv = recv_shift[n_rank];
+    n_pts1 = n_pts_local + n_pts_recv + n_pts_copied;
+    printf("[%d] n_pts1 = %d (without copies : %d)\n", i_rank, n_pts1, n_pts_recv_no_copies);
 
     pts_g_num1 = malloc (sizeof(PDM_g_num_t) * n_pts1);
     pts_coord1 = malloc (sizeof(double)      * n_pts1 * 3);
 
-    /*  Fill send buffers */
-    n_pts_local = 0;
+
+    /* Fill send buffers */
     send_g_num = malloc (sizeof(PDM_g_num_t) * send_shift[n_rank]);
     send_coord = malloc (sizeof(double)      * send_shift[n_rank] * 3);
-    recv_g_num = pts_g_num1 + idx_pts1[1];
-    recv_coord = pts_coord1 + idx_pts1[1] * 3;
 
-    PDM_g_num_t *local_g_num = pts_g_num1 + idx_pts1[0];
-    double      *local_coord = pts_coord1 + idx_pts1[0] * 3;
-
-    PDM_g_num_t *copied_g_num = pts_g_num1 + idx_pts1[2];
-    double      *copied_coord = pts_coord1 + idx_pts1[2] * 3;
-
-    for (int i = 0; i < n_pts; i++) {
-
-      for (int j = pts_rank_idx[i]; j < pts_rank_idx[i+1]; j++) {
-        int rank = pts_rank[j];
+    int idx_copied = n_pts_local + n_pts_recv;
+    PDM_g_num_t *copied_g_num = pts_g_num1 + idx_copied;
+    double      *copied_coord = pts_coord1 + idx_copied * 3;
+    n_pts_local = 0;
+    for (int ipt = 0; ipt < n_pts; ipt++) {
+      for (int i = pts_rank_idx[ipt]; i < pts_rank_idx[ipt+1]; i++) {
+        int rank = pts_rank[i];
 
         if (rank == i_rank) {
-          local_g_num[n_pts_local] = pts_g_num[i];
-          for (int k = 0; k < 3; k++) {
-            local_coord[3*n_pts_local + k] = _pts_coord[3*i + k];
+          pts_g_num1[n_pts_local] = pts_g_num[ipt];
+          for (int j = 0; j < 3; j++) {
+            pts_coord1[3*n_pts_local + j] = _pts_coord[3*ipt + j];
           }
           n_pts_local++;
         }
 
         else if (i_copied_rank[rank] >= 0) {
-          rank = i_copied_rank[rank];
-          int l = copied_shift[rank] + copied_count[rank];
-          copied_g_num[l] = pts_g_num[i];
-          for (int k = 0; k < 3; k++) {
-            copied_coord[3*l + k] = _pts_coord[3*i + k];
+          int _rank = i_copied_rank[rank];
+
+          if (copied_count_tmp[_rank] < copied_count[_rank]) {
+            int k = copied_shift[_rank] + copied_count_tmp[_rank];
+            copied_g_num[k] = pts_g_num[ipt];
+            for (int j = 0; j < 3; j++) {
+              copied_coord[3*k + j] = _pts_coord[3*ipt + j];
+            }
+            copied_count_tmp[_rank]++;
           }
-          copied_count[rank]++;
+          else {
+            int k = send_shift[rank] + send_count[rank];
+            send_g_num[k] = pts_g_num[ipt];
+            for (int j = 0; j < 3; j++) {
+              send_coord[3*k + j] = _pts_coord[3*ipt + j];
+            }
+            send_count[rank]++;
+          }
         }
 
         else {
-          int l = send_shift[rank] + send_count[rank];
-          send_g_num[l] = pts_g_num[i];
-          for (int k = 0; k < 3; k++) {
-            send_coord[3*l + k] = _pts_coord[3*i + k];
+          int k = send_shift[rank] + send_count[rank];
+          send_g_num[k] = pts_g_num[ipt];
+          for (int j = 0; j < 3; j++) {
+            send_coord[3*k + j] = _pts_coord[3*ipt + j];
           }
           send_count[rank]++;
         }
       }
     }
+    free (_pts_coord);
     if (copied_count != NULL) {
       free (copied_count);
     }
-    /*if (i_copied_rank != NULL) {
+    if (copied_count_tmp != NULL) {
+      free (copied_count_tmp);
+    }
+    if (i_copied_rank != NULL) {
       free (i_copied_rank);
-      }*/
-    free (pts_rank_idx);
+    }
     free (pts_rank);
-    free (_pts_coord);
+    free (pts_rank_idx);
 
 
-    /*  Send gnum buffer */
+    /* Exchange points */
+    recv_g_num = pts_g_num1 + n_pts_local;
     PDM_MPI_Alltoallv (send_g_num, send_count, send_shift, PDM__PDM_MPI_G_NUM,
                        recv_g_num, recv_count, recv_shift, PDM__PDM_MPI_G_NUM,
                        _dbbt->comm);
     free (send_g_num);
 
-    /*  Send coord buffer */
     for (int i = 0; i < n_rank; i++) {
       send_count[i] *= 3;
       recv_count[i] *= 3;
       send_shift[i+1] *= 3;
       recv_shift[i+1] *= 3;
     }
+
+    recv_coord = pts_coord1 + 3*n_pts_local;
     PDM_MPI_Alltoallv (send_coord, send_count, send_shift, PDM_MPI_DOUBLE,
                        recv_coord, recv_count, recv_shift, PDM_MPI_DOUBLE,
                        _dbbt->comm);
+
+    free (send_coord);
     free (send_count);
     free (send_shift);
-    free (send_coord);
     free (recv_count);
     free (recv_shift);
   }
 
-  /* Single proc */
   else {
-    n_recv_pts = n_pts;
-    n_pts_local = n_pts;
-    n_pts_recv1 = 0;
+    n_pts_local  = n_pts;
+    n_pts_recv   = 0;
     n_pts_copied = 0;
 
-    idx_pts1[1] = n_pts_local;
-    idx_pts1[2] = idx_pts1[1] + n_pts_recv1;
-    idx_pts1[3] = idx_pts1[2] + n_pts_copied;
-    n_pts1 = idx_pts1[3];
+    n_pts1 = n_pts;
 
-    pts_g_num1 = pts_g_num;
+    pts_g_num1 = (PDM_g_num_t *) pts_g_num;
     pts_coord1 = _pts_coord;
   }
 
 
-  PDM_timer_hang_on (timer);
-  t_end = PDM_timer_elapsed (timer);
-  //printf("[%d] redistribution : %12.5es\n", i_rank, t_end - t_begin);
-  t_begin = t_end;
-  PDM_timer_resume (timer);
-
-  printf("[%d] dbbt->n_boxes = %d, n_pts = %d, n_recv_pts = %d (without copies : %d)\n",
-         i_rank, _dbbt->boxes->local_boxes->n_boxes, n_pts, n_pts1, n_recv_pts);
-
+  /*
+   *  Get boxes containing points
+   */
   int n_part = 1 + n_copied_ranks;
   int *part_n_pts = malloc (sizeof(int) * n_part);
-  part_n_pts[0] = n_pts_local + n_pts_recv1;
+  part_n_pts[0] = n_pts_local + n_pts_recv;
 
-  int **pts_box_idx = malloc (sizeof(int *) * n_part);
-  PDM_g_num_t **pts_box_g_num = malloc (sizeof(PDM_g_num_t *) * n_part);
-  int *pts_box_l_num = NULL;
+  int **pts_box_idx   = malloc (sizeof(int *) * n_part);
+  int **pts_box_l_num = malloc (sizeof(int *) * n_part);
 
-
-
-  if (1) {
-    char filename[999];
-
-    sprintf(filename, "pts1_n_%3.3d.vtk", i_rank);
-    _export_point_cloud (filename,
-                         1,
-                         &n_pts1,
-                         &pts_coord1,
-                         &pts_g_num1,
-                         NULL);
-
-    if (i_copied_rank != NULL) {
-      int j_rank = 0;
-      for (j_rank = 0; j_rank < n_rank; j_rank++) {
-        if (i_copied_rank[j_rank] < 0) {
-          break;
-        }
-      }
-
-      if (i_rank == j_rank) {
-        for (int i = 0; i < n_copied_ranks; i++) {
-          sprintf(filename, "copied_boxes_%3.3d.vtk", i);
-          _export_boxes (filename,
-                         _dbbt->boxes->rank_boxes[i].n_boxes,
-                         _dbbt->boxes->rank_boxes[i].extents,
-                         _dbbt->boxes->rank_boxes[i].g_num);
-        }
-      }
-    }
-  }
+  int size_pts_box = 0;
 
   /*
    *  Search in local tree
@@ -2509,221 +2435,189 @@ PDM_dbbtree_points_inside_boxes_with_copies
                                      part_n_pts[0],
                                      pts_coord1,
                                      &(pts_box_idx[0]),
-                                     &pts_box_l_num,
-                                     0,
-                                     i_rank);
+                                     &(pts_box_l_num[0]));
+  size_pts_box += pts_box_idx[0][part_n_pts[0]];
 
-  pts_box_g_num[0] = malloc (sizeof(PDM_g_num_t) * pts_box_idx[0][part_n_pts[0]]);
-  for (int j = 0; j < pts_box_idx[0][part_n_pts[0]]; j++) {
-    pts_box_g_num[0][j] = _dbbt->boxes->local_boxes->g_num[pts_box_l_num[j]];
-  }
-  free (pts_box_l_num);
 
   /*
    *  Search in copied trees
    */
-  double *pts_coord_copied = pts_coord1 + idx_pts1[2] * 3;
-  for (int i = 0; i < n_copied_ranks; i++) {
-    part_n_pts[i+1] = copied_shift[i+1] - copied_shift[i];
-    PDM_box_tree_points_inside_boxes2 (_dbbt->btLoc,
-                                       i,
-                                       part_n_pts[i+1],
-                                       pts_coord_copied + copied_shift[i] * 3,
-                                       &(pts_box_idx[i+1]),
-                                       &pts_box_l_num,
-                                       0,
-                                       i_rank);
+  double      *pts_coord_copied = NULL;
+  PDM_g_num_t *pts_g_num_copied = NULL;
+  if (n_copied_ranks > 0) {
+    pts_coord_copied = pts_coord1 + part_n_pts[0] * 3;
+    pts_g_num_copied = pts_g_num1 + part_n_pts[0];
+    for (int i = 0; i < n_copied_ranks; i++) {
+      part_n_pts[i+1] = copied_shift[i+1] - copied_shift[i];
 
-    pts_box_g_num[i+1] = malloc (sizeof(PDM_g_num_t) * pts_box_idx[i+1][part_n_pts[i+1]]);
-    for (int j = 0; j < pts_box_idx[i+1][part_n_pts[i+1]]; j++) {
-      pts_box_g_num[i+1][j] = _dbbt->boxes->rank_boxes[i].g_num[pts_box_l_num[j]];
+      PDM_box_tree_points_inside_boxes2 (_dbbt->btLoc,
+                                         i,
+                                         part_n_pts[i+1],
+                                         pts_coord_copied + copied_shift[i] * 3,
+                                         &(pts_box_idx[i+1]),
+                                         &(pts_box_l_num[i+1]));
+
+      size_pts_box += pts_box_idx[i+1][part_n_pts[i+1]];
     }
-    free (pts_box_l_num);
   }
-  free (copied_shift);
+  if (copied_shift != NULL) free (copied_shift);
 
 
-  PDM_timer_hang_on (timer);
-  t_end = PDM_timer_elapsed (timer);
-  //printf("[%d] box_tree : %12.5es\n", i_rank, t_end - t_begin);
-  t_begin = t_end;
-  PDM_timer_resume (timer);
-
-  /*
-   *  Part-to-block to get from the PoV of boxes
-   */
-  int          *part_n_box     = malloc (sizeof(int)           * n_part);
-  PDM_g_num_t **part_pts_g_num = malloc (sizeof(PDM_g_num_t *) * n_part);
-  double      **part_pts_coord = malloc (sizeof(double *)      * n_part);
-  int         **part_stride    = malloc (sizeof(int *)         * n_part);
-  double      **weight         = malloc (sizeof(double *)      * n_part);
-  for (int ipart = 0; ipart < n_part; ipart++) {
-    part_n_box[ipart] = pts_box_idx[ipart][part_n_pts[ipart]];
-
-    part_pts_g_num[ipart] = malloc (sizeof(PDM_g_num_t) * part_n_box[ipart]);
-    part_pts_coord[ipart] = malloc (sizeof(double) * part_n_box[ipart] * 3);
-    int ipt = 0;
-    for (int i = 0; i < part_n_pts[ipart]; i++) {
-      for (int j = pts_box_idx[ipart][i]; j < pts_box_idx[ipart][i+1]; j++) {
-        part_pts_g_num[ipart][j] = pts_g_num1[ipt];
-        for (int k = 0; k < 3; k++) {
-          part_pts_coord[ipart][3*j + k] = _dbbt->s[k] + _dbbt->d[k] * pts_coord1[3*ipt + k];
-        }
+  PDM_g_num_t *part_box_g_num = malloc (sizeof(PDM_g_num_t) * size_pts_box);
+  PDM_g_num_t *part_pts_g_num = malloc (sizeof(PDM_g_num_t) * size_pts_box);
+  double      *part_pts_coord = malloc (sizeof(double)      * size_pts_box * 3);
+  int idx = 0;
+  for (int j = 0; j < part_n_pts[0]; j++) {
+    for (int k = pts_box_idx[0][j]; k < pts_box_idx[0][j+1]; k++) {
+      part_box_g_num[idx] = _dbbt->boxes->local_boxes->g_num[pts_box_l_num[0][k]];
+      part_pts_g_num[idx] = pts_g_num1[j];
+      for (int l = 0; l < 3; l++) {
+        part_pts_coord[3*idx + l] = pts_coord1[3*j + l];
       }
-      ipt++;
+      idx++;
     }
+  }
+  free (pts_box_idx[0]);
+  free (pts_box_l_num[0]);
 
-    part_stride[ipart] = malloc (sizeof(int) * part_n_box[ipart]);
-    weight[ipart] = malloc (sizeof(double) * part_n_box[ipart]);
-    for (int i = 0; i < part_n_box[ipart]; i++) {
-      part_stride[ipart][i] = 1;
-      weight[ipart][i] = 1.;
+  for (int i = 0; i < n_copied_ranks; i++) {
+    for (int j = 0; j < part_n_pts[i+1]; j++) {
+      for (int k = pts_box_idx[i+1][j]; k < pts_box_idx[i+1][j+1]; k++) {
+        part_box_g_num[idx] = _dbbt->boxes->rank_boxes[i].g_num[pts_box_l_num[i+1][k]];
+        part_pts_g_num[idx] = pts_g_num_copied[j];
+        for (int l = 0; l < 3; l++) {
+          part_pts_coord[3*idx + l] = pts_coord_copied[3*j + l];
+        }
+        idx++;
+      }
     }
-
-    free (pts_box_idx[ipart]);
+    pts_coord_copied += part_n_pts[i+1] * 3;
+    pts_g_num_copied += part_n_pts[i+1];
+    free (pts_box_idx[i+1]);
+    free (pts_box_l_num[i+1]);
   }
   free (part_n_pts);
   free (pts_box_idx);
+  free (pts_box_l_num);
+  free (pts_coord1);
   if (pts_g_num1 != pts_g_num) free (pts_g_num1);
-  if (pts_coord1 != pts_coord) free (pts_coord1);
+
+  /*
+   *  Part-to-block
+   */
+  int    *part_stride = malloc (sizeof(int)    * size_pts_box);
+  double *weight      = malloc (sizeof(double) * size_pts_box);
+  for (int i = 0; i < size_pts_box; i++) {
+    part_stride[i] = 1;
+    weight[i]      = 1.;
+  }
 
   PDM_part_to_block_t *ptb = PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
                                                        PDM_PART_TO_BLOCK_POST_MERGE,
                                                        1.,
-                                                       pts_box_g_num,
-                                                       weight,
-                                                       part_n_box,
-                                                       n_part,
+                                                       &part_box_g_num,
+                                                       &weight,
+                                                       &size_pts_box,
+                                                       1,
                                                        _dbbt->comm);
-  for (int ipart = 0; ipart < n_part; ipart++) {
-    free (pts_box_g_num[ipart]);
-    free (weight[ipart]);
-  }
-  free (pts_box_g_num);
   free (weight);
 
-
-  int *block_pts_in_box_count = NULL;
-  PDM_g_num_t **block_pts_in_box_g_num = NULL;
+  int *block_box_pts_n = NULL;
+  PDM_g_num_t *block_box_pts_g_num = NULL;
   PDM_part_to_block_exch (ptb,
                           sizeof(PDM_g_num_t),
                           PDM_STRIDE_VAR,
                           1,
-                          part_stride,
-                          (void **) part_pts_g_num,
-                          &block_pts_in_box_count,
-                          (void **) &block_pts_in_box_g_num);
+                          &part_stride,
+                          (void **) &part_pts_g_num,
+                          &block_box_pts_n,
+                          (void **) &block_box_pts_g_num);
+  free (part_pts_g_num);
 
-  for (int ipart = 0; ipart < n_part; ipart++) {
-    for (int i = 0; i < part_n_box[ipart]; i++) {
-      part_stride[ipart][i] = 3;
-    }
+  /* Fix partial block stride */
+  PDM_g_num_t l_max_box_g_num = 0;
+  for (int i = 0; i < n_boxes; i++) {
+    l_max_box_g_num = PDM_MAX (l_max_box_g_num, box_g_num[i]);
   }
 
-  int *block_pts_in_box_count3 = NULL;
-  PDM_g_num_t **block_pts_in_box_coord = NULL;
+  PDM_g_num_t g_max_box_g_num;
+  PDM_MPI_Allreduce (&l_max_box_g_num, &g_max_box_g_num, 1,
+                     PDM__PDM_MPI_G_NUM, PDM_MPI_MAX, _dbbt->comm);
+
+  PDM_g_num_t *block_distrib_idx =
+    PDM_part_to_block_adapt_partial_block_to_block (ptb,
+                                                    &block_box_pts_n,
+                                                    g_max_box_g_num);
+
+  int *block_stride = NULL;
+  double *block_box_pts_coord = NULL;
   PDM_part_to_block_exch (ptb,
-                          sizeof(double),
+                          3*sizeof(double),
                           PDM_STRIDE_VAR,
                           1,
-                          part_stride,
-                          (void **) part_pts_coord,
-                          &block_pts_in_box_count3,
-                          (void **) &block_pts_in_box_coord);
-
-  for (int ipart = 0; ipart < n_part; ipart++) {
-    free (part_stride[ipart]);
-    free (part_pts_g_num[ipart]);
-    free (part_pts_coord[ipart]);
-  }
-  free (part_n_box);
+                          &part_stride,
+                          (void **) &part_pts_coord,
+                          &block_stride,
+                          (void **) &block_box_pts_coord);
+  free (block_stride);
   free (part_stride);
-  free (part_pts_g_num);
   free (part_pts_coord);
-
-
 
   /*
    *  Block-to-part
    */
-  PDM_g_num_t *block_distrib_idx = PDM_part_to_block_distrib_index_get (ptb);
-
-  int n_elt_block = PDM_part_to_block_n_elt_block_get (ptb);
-  int n_elt_block_full = (int) (block_distrib_idx[i_rank+1] - block_distrib_idx[i_rank]);
-  if (n_elt_block < n_elt_block_full) {
-    PDM_g_num_t *block_g_num = PDM_part_to_block_block_gnum_get (ptb);
-    int *block_pts_in_box_count_full  = PDM_array_zeros_int (n_elt_block_full);
-    int *block_pts_in_box_count3_full = PDM_array_zeros_int (n_elt_block_full);
-
-    int i1 = 0;
-    for (int i = 0; i < n_elt_block; i++) {
-
-      while (block_distrib_idx[i_rank] + 1 + i1 < block_g_num[i]) {
-        i1++;
-      }
-
-      block_pts_in_box_count_full[i1]  = block_pts_in_box_count[i];
-      block_pts_in_box_count3_full[i1] = block_pts_in_box_count3[i];
-    }
-
-    free (block_pts_in_box_count);
-    free (block_pts_in_box_count3);
-    block_pts_in_box_count  = block_pts_in_box_count_full;
-    block_pts_in_box_count3 = block_pts_in_box_count3_full;
-  }
-
-
   PDM_block_to_part_t *btp = PDM_block_to_part_create (block_distrib_idx,
                                                        (const PDM_g_num_t **) &box_g_num,
                                                        &n_boxes,
                                                        1,
                                                        _dbbt->comm);
 
-  int *pts_in_box_count = malloc (sizeof(int) * n_boxes);
-
+  int *pts_in_box_n = malloc (sizeof(int) * n_boxes);
   int one = 1;
   PDM_block_to_part_exch (btp,
                           sizeof(int),
                           PDM_STRIDE_CST,
                           &one,
-                          block_pts_in_box_count,
+                          block_box_pts_n,
                           NULL,
-                          (void **) &pts_in_box_count);
+                          (void **) &pts_in_box_n);
 
-  *pts_in_box_idx = PDM_array_new_idx_from_sizes_int (pts_in_box_count, n_boxes);
+  *pts_in_box_idx = PDM_array_new_idx_from_sizes_int (pts_in_box_n, n_boxes);
 
   *pts_in_box_g_num = malloc (sizeof(PDM_g_num_t) * (*pts_in_box_idx)[n_boxes]);
   PDM_block_to_part_exch (btp,
                           sizeof(PDM_g_num_t),
                           PDM_STRIDE_VAR,
-                          block_pts_in_box_count,
-                          block_pts_in_box_g_num,
-                          &pts_in_box_count,
+                          block_box_pts_n,
+                          block_box_pts_g_num,
+                          &pts_in_box_n,
                           (void **) pts_in_box_g_num);
-  free (block_pts_in_box_g_num);
-  free (block_pts_in_box_count);
+  free (block_box_pts_g_num);
 
   *pts_in_box_coord = malloc (sizeof(double) * (*pts_in_box_idx)[n_boxes] * 3);
   PDM_block_to_part_exch (btp,
-                          sizeof(double),
+                          3*sizeof(double),
                           PDM_STRIDE_VAR,
-                          block_pts_in_box_count3,
-                          block_pts_in_box_coord,
-                          &pts_in_box_count,
+                          block_box_pts_n,
+                          block_box_pts_coord,
+                          &pts_in_box_n,
                           (void **) pts_in_box_coord);
-  free (block_pts_in_box_coord);
-  free (block_pts_in_box_count3);
-  free (pts_in_box_count);
+  free (block_box_pts_coord);
+  free (block_box_pts_n);
+  free (pts_in_box_n);
 
+  btp = PDM_block_to_part_free (btp);
+  ptb = PDM_part_to_block_free (ptb);
+  free (block_distrib_idx);
+  free (part_box_g_num);
 
-  PDM_part_to_block_free (ptb);
-  PDM_block_to_part_free (btp);
-
-  PDM_timer_hang_on (timer);
-  t_end = PDM_timer_elapsed (timer);
-  //printf("[%d] part_to_part : %12.5es\n", i_rank, t_end - t_begin);
-  //printf("[%d] de-normalization : 0\n", i_rank);
-  PDM_timer_free (timer);
+  //-->>
+  for (int i = 0; i < (*pts_in_box_idx)[n_boxes]; i++) {
+    for (int j = 0; j < 3; j++) {
+      (*pts_in_box_coord)[3*i+j] = _dbbt->s[j] + _dbbt->d[j] * ((*pts_in_box_coord)[3*i+j]);
+    }
+  }
+  //<<--
 }
 
 
