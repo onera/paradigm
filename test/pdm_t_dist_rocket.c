@@ -989,9 +989,9 @@ _get_connectivity
                            &_edgeGroupLNToGN);
 
     /*for (int i = 0; i < _nFace; i++) {
-      printf("face (%ld), edges =", _faceLNToGN[i]);
+      printf("face ("PDM_FMT_G_NUM"), edges =", _faceLNToGN[i]);
       for (int j = _faceEdgeIdx[i]; j < _faceEdgeIdx[i+1]; j++) {
-      printf(" (%ld)", _edgeLNToGN[PDM_ABS(_faceEdge[j])-1]);
+      printf(" ("PDM_FMT_G_NUM")", _edgeLNToGN[PDM_ABS(_faceEdge[j])-1]);
       }
       printf("\n");
       }*/
@@ -1100,18 +1100,18 @@ _get_connectivity
             break;
         }
         if (!find_vtx) {
-          printf("error face (%ld), vtx tmp:\n", _faceLNToGN[i]);
+          printf("error face ("PDM_FMT_G_NUM"), vtx tmp:\n", _faceLNToGN[i]);
           for (int l = 0; l < idxVtx; l++) {
-            printf("  %d (%ld)\n", _vertices[l], _vtxLNToGN[_vertices[l]-1]);
+            printf("  %d ("PDM_FMT_G_NUM")\n", _vertices[l], _vtxLNToGN[_vertices[l]-1]);
           }
           printf("\n");
           PDM_error(__FILE__, __LINE__, 0,"Error to compute vtxedge !!!!\n");
           abort();
         }
       }
-      /*printf("face (%ld), vtx :", _faceLNToGN[i]);
+      /*printf("face ("PDM_FMT_G_NUM"), vtx :", _faceLNToGN[i]);
         for (int l = 0; l < __nEdge; l++) {
-        printf(" (%ld)", _vtxLNToGN[_vertices[l]-1]);
+        printf(" ("PDM_FMT_G_NUM")", _vtxLNToGN[_vertices[l]-1]);
         }
         printf("\n");*/
     }

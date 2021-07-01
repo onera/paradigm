@@ -1001,9 +1001,9 @@ int main(int argc, char *argv[])
     if (1 == 0) {
       printf ("elt_pts_inside :\n");
       for (int i = 0; i < n_elt1[ipart]; i++) {
-        printf ("%d %ld: ", i, gnum_elt1[ipart][i]);
+        printf ("%d "PDM_FMT_G_NUM": ", i, gnum_elt1[ipart][i]);
         for (int j = elt_pts_inside_idx[ipart][i]; j < elt_pts_inside_idx[ipart][i+1]; j++) {
-          printf (" %ld", points_gnum[ipart][j]);
+          printf (" "PDM_FMT_G_NUM"", points_gnum[ipart][j]);
         }
         printf ("\n");
       }
@@ -1174,7 +1174,7 @@ int main(int argc, char *argv[])
       printf ("ref_gnum2 :");
       for (int j = 0; j < n_ref_gnum2[i]; j++) {
         for (int k = gnum1_come_from_idx[i][j] ; k < gnum1_come_from_idx[i][j+1]; k++) {
-          printf(" %ld", gnum1_come_from[i][k]);
+          printf(" "PDM_FMT_G_NUM"", gnum1_come_from[i][k]);
         }
         printf ("\n");
       }
@@ -1261,26 +1261,26 @@ int main(int argc, char *argv[])
     if (0==1) {
       printf ("location from location :\n");
       for (int j = 0; j < n_located; j++) {
-        printf("%ld : %ld", gnum_elt2[i][located[j]-1], location[i][j]);
+        printf(""PDM_FMT_G_NUM" : "PDM_FMT_G_NUM"", gnum_elt2[i][located[j]-1], location[i][j]);
       printf ("\n");
       }
       printf ("location from exchange  :\n");
       for (int j = 0; j < n_ref_gnum2[i]; j++) {
-        printf("%ld :", gnum_elt2[i][ref_gnum2[i][j]-1]);
+        printf(""PDM_FMT_G_NUM" :", gnum_elt2[i][ref_gnum2[i][j]-1]);
         for (int k = gnum1_come_from_idx[i][j] ; k < gnum1_come_from_idx[i][j+1]; k++) {
-          printf(" %ld", gnum_elt1_recv[i][k]);
+          printf(" "PDM_FMT_G_NUM"", gnum_elt1_recv[i][k]);
         }  
         printf ("\n");
       }
 
       printf ("elt_pts_inside from location :\n");
       for (int j = 0; j < n_elt1[i]; j++) {
-        printf ("%d %ld: ", j, gnum_elt1[i][j]);
+        printf ("%d "PDM_FMT_G_NUM": ", j, gnum_elt1[i][j]);
         int n_pts2 = elt_pts_inside_idx[i][j+1] - elt_pts_inside_idx[i][j]; 
         PDM_sort_long (points_gnum[i] + elt_pts_inside_idx[i][j], NULL, n_pts2);
 
         for (int k = elt_pts_inside_idx[i][j]; k < elt_pts_inside_idx[i][j+1]; k++) {
-          printf (" %ld", points_gnum[i][k]);
+          printf (" "PDM_FMT_G_NUM"", points_gnum[i][k]);
         }
         printf ("\n");
       }
@@ -1288,9 +1288,9 @@ int main(int argc, char *argv[])
 
       printf ("elt_pts_inside from exchange :\n");
       for (int j = 0; j < ptp2_n_ref_gnum2[i]; j++) {
-        printf("%ld :", gnum_elt1[i][ptp2_ref_gnum2[i][j]-1]);
+        printf(""PDM_FMT_G_NUM" :", gnum_elt1[i][ptp2_ref_gnum2[i][j]-1]);
         for (int k = ptp2_gnum1_come_from_idx[i][j] ; k < ptp2_gnum1_come_from_idx[i][j+1]; k++) {
-          printf(" %ld", gnum_elt2_recv[i][k]);
+          printf(" "PDM_FMT_G_NUM"", gnum_elt2_recv[i][k]);
         }  
         printf ("\n");
       }

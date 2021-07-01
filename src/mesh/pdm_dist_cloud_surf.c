@@ -696,7 +696,7 @@ PDM_dist_cloud_surf_compute
         }
       }
 
-      printf("[%3d] pt %6d (%6ld) : %5d candidates (dist = %f)\n",
+      printf("[%3d] pt %6d ("PDM_FMT_G_NUM") : %5d candidates (dist = %f)\n",
              rank, imax, pts_g_num_rank[imax], nmax, sqrt(closest_vertices_dist2[imax]));
     }
     if (idebug) {

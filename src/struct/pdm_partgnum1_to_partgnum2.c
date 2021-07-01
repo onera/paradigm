@@ -913,7 +913,7 @@ PDM_partgnum1_to_partgnum2_create
       for (int j = 0; j < ptp->n_ref_gnum2[i]; j++) { 
         printf ("%d :", j);
         for (int k = ptp->gnum1_come_from_idx[i][j]; k < ptp->gnum1_come_from_idx[i][j+1]; k++) { 
-          printf (" %ld", ptp->gnum1_come_from[i][k]);
+          printf (" "PDM_FMT_G_NUM"", ptp->gnum1_come_from[i][k]);
         }
         printf ("\n");
       }
@@ -993,7 +993,7 @@ PDM_partgnum1_to_partgnum2_create
       for (int j = 0; j < ptp->n_ref_gnum2[i]; j++) { 
         printf ("%d :", j);
         for (int k = ptp->gnum1_come_from_idx[i][j]; k < ptp->gnum1_come_from_idx[i][j+1]; k++) { 
-          printf (" %ld", ptp->gnum1_come_from[i][k]);
+          printf (" "PDM_FMT_G_NUM"", ptp->gnum1_come_from[i][k]);
         }
         printf ("\n");
       }
