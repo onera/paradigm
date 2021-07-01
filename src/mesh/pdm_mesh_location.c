@@ -3820,12 +3820,6 @@ PDM_mesh_location_t        *ml
       for (int iblock = 0; iblock < n_blocks; iblock++) {
         int id_block = blocks_id[iblock];
         for (int ipart = 0; ipart < n_parts; ipart++) {
-          /*=======
-      for (int ipart = 0; ipart < n_parts; ipart++) {
-        for (int iblock = 0; iblock < n_blocks; iblock++) {
-
-          int id_block = blocks_id[iblock];
-          >>>>>>> COrrections leaks*/
           int part_n_elt = PDM_Mesh_nodal_block_n_elt_get (ml->mesh_nodal,
                                                            id_block,
                                                            ipart);

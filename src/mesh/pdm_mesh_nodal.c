@@ -2036,7 +2036,6 @@ const PDM_Mesh_nodal_elt_t  t_elt
       }
 
       id_block += PDM_BLOCK_ID_BLOCK_STD;
-      printf(" mesh->n_block_std = %i --> id_block = %i \n", mesh->n_block_std, id_block);
       if (id_block >= PDM_BLOCK_ID_BLOCK_POLY2D) {
         PDM_error(__FILE__, __LINE__, 0, "The number of standard blocks must be less than %d\n",
                   PDM_BLOCK_ID_BLOCK_POLY2D);
@@ -2454,8 +2453,6 @@ const int               id_part
   else {
 
     _id_block = id_block - PDM_BLOCK_ID_BLOCK_STD;
-
-    //printf(" _id_block = %i \n", _id_block);
 
     PDM_Mesh_nodal_block_std_t *block = mesh->blocks_std[_id_block];
 
@@ -3367,11 +3364,11 @@ const PDM_g_num_t      *numabs
 
     PDM_MPI_Allreduce(elts, som_elts, 5, PDM_MPI_INT, PDM_MPI_SUM, mesh->pdm_mpi_comm);
 
-    int id_bloc_tetra4;
-    int id_bloc_hexa8;
-    int id_bloc_prism6;
-    int id_bloc_pyramid5;
-    int id_bloc_poly_3d;
+    int id_bloc_tetra4   = -1;
+    int id_bloc_hexa8    = -1;
+    int id_bloc_prism6   = -1;
+    int id_bloc_pyramid5 = -1;
+    int id_bloc_poly_3d  = -1;
 
     if (som_elts[0] > 0)
       id_bloc_tetra4 = PDM_Mesh_nodal_block_add(mesh,
@@ -3908,9 +3905,9 @@ const PDM_g_num_t      *numabs
 
     PDM_MPI_Allreduce(elts, som_elts, 3, PDM_MPI_INT, PDM_MPI_SUM, mesh->pdm_mpi_comm);
 
-    int id_bloc_tria3;
-    int id_bloc_quad4;
-    int id_bloc_poly_2d;
+    int id_bloc_tria3 = -1;
+    int id_bloc_quad4 = -1;
+    int id_bloc_poly_2d = -1;
 
     if (som_elts[0] > 0)
       id_bloc_tria3 = PDM_Mesh_nodal_block_add (mesh,
@@ -4287,9 +4284,9 @@ const PDM_g_num_t      *numabs
 
     PDM_MPI_Allreduce(elts, som_elts, 3, PDM_MPI_INT, PDM_MPI_SUM, mesh->pdm_mpi_comm);
 
-    int id_bloc_tria3;
-    int id_bloc_quad4;
-    int id_bloc_poly_2d;
+    int id_bloc_tria3 = -1;
+    int id_bloc_quad4 = -1;
+    int id_bloc_poly_2d = -1;
 
     if (som_elts[0] > 0) {
       id_bloc_tria3 = PDM_Mesh_nodal_block_add (mesh,
