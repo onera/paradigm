@@ -1085,83 +1085,118 @@ PDM_part1_to_selected_part2_create_cf
                                             selected_part2_idx, selected_part2, _comm);
 }
 
-
 /**
  *
- * \brief Initialize an exchange
+ * \brief Initialize an exchange based on MPI_ialltoall
  *
- * \param [in]   ptp           Block to part structure
- * \param [in]   s_data        Data size
- * \param [in]   t_stride      Stride type
- * \param [in]   part1_stride  Partition 1 stride
- * \param [in]   part1_data    Partition 1 data
- * \param [out]  part2_stride  Partition 2 stride
- * \param [out]  part2_data    Partition 2 data
+ * \param [in]   ptp                 Block to part structure
+ * \param [in]   s_data              Data size
+ * \param [in]   cst_stride          Constant stride
+ * \param [in]   selected_part2_data Data in same order than selected_part2 array
+ * \param [out]  ref_part2_data      Data to referenced part2 elements
+ * \param [out]  request             Request
  *
  */
 
 void
-PDM_part1_to_selected_part2_exch
+PDM_part1_to_selected_part2_ialltoall
 (
- PDM_part1_to_selected_part2_t *ptp,
+PDM_part1_to_selected_part2_t *ptp,
  const size_t                  s_data,
- const PDM_stride_t            t_stride,
- int                         **part1_stride,
- void                        **part1_data,
- int                         **part2_stride,
- void                        **part2_data
+ const int                     cst_stride,
+ void                        **selected_part2_data,
+ void                        **ref_part2_data,
+ int                          *request
 )
 {
   PDM_UNUSED (ptp);
   PDM_UNUSED (s_data);
-  PDM_UNUSED (t_stride);
-  PDM_UNUSED (part1_stride);
-  PDM_UNUSED (part1_data);
-  PDM_UNUSED (part2_stride);
-  PDM_UNUSED (part2_data);
-
+  PDM_UNUSED (cst_stride);
+  PDM_UNUSED (selected_part2_data);
+  PDM_UNUSED (ref_part2_data);
+  PDM_UNUSED (request);
   PDM_error(__FILE__, __LINE__, 0,
-            "Error PDM_part1_to_selected_part2_exch not yet implemente\n");
+            "Error PDM_part1_to_selected_part2_ialltoall not yet implemented\n");
 }
 
 
-
 /**
  *
- * \brief Initialize an exchange with allocation of result arrays
+ * \brief Wait a asynchronus issend
  *
- * \param [in]   ptp           Block to part structure
- * \param [in]   s_data        Data size
- * \param [in]   t_stride      Stride type
- * \param [in]   part1_stride  Partition 1 stride
- * \param [in]   part1_data    Partition 1 data
- * \param [out]  part2_stride  Partition 2 stride
- * \param [out]  part2_data    Partition 2 data
+ * \param [in]  ptp           part to part structure
+ * \param [in]  request       Request
  *
  */
 
 void
-PDM_part1_to_selected_part2_exch_with_alloc
+PDM_part1_to_selected_part2_ialltoall_wait
 (
  PDM_part1_to_selected_part2_t *ptp,
- const size_t               s_data,
- const PDM_stride_t         t_stride,
- int                      **part1_stride,
- void                     **part1_data,
- int                     ***part2_stride,
- void                    ***part2_data
+ int                           request
+)
+{
+  PDM_UNUSED (ptp);
+  PDM_UNUSED (request);
+  PDM_error(__FILE__, __LINE__, 0,
+            "Error PDM_part1_to_selected_part2_ialltoall_wait not yet implemented\n");
+}
+
+
+/**
+ *
+ * \brief Initialize an exchange based on MPI_ineighbor_alltoall
+ *
+ * \param [in]   ptp                 Block to part structure
+ * \param [in]   s_data              Data size
+ * \param [in]   cst_stride          Constant stride
+ * \param [in]   selected_part2_data Data in same order than selected_part2 array
+ * \param [out]  ref_part2_data          Data to referenced part2 elements
+ * \param [out]  request             Request
+ *
+ */
+
+void
+PDM_part1_to_selected_part2_ineighbor_alltoall
+(
+PDM_part1_to_selected_part2_t *ptp,
+ const size_t                  s_data,
+ const int                     cst_stride,
+ void                        **selected_part2_data,
+ void                        **ref_part2_data,
+ int                          *request
 )
 {
   PDM_UNUSED (ptp);
   PDM_UNUSED (s_data);
-  PDM_UNUSED (t_stride);
-  PDM_UNUSED (part1_stride);
-  PDM_UNUSED (part1_data);
-  PDM_UNUSED (part2_stride);
-  PDM_UNUSED (part2_data);
-
+  PDM_UNUSED (cst_stride);
+  PDM_UNUSED (selected_part2_data);
+  PDM_UNUSED (ref_part2_data);
+  PDM_UNUSED (request);
   PDM_error(__FILE__, __LINE__, 0,
-            "Error PDM_part1_to_selected_part2_exch not yet implemente\n");
+            "Error PDM_part1_to_selected_part2_ineighbor_alltoall not yet implemented\n");
+}
+
+/**
+ *
+ * \brief Wait a asynchronus issend
+ *
+ * \param [in]  ptp           part to part structure
+ * \param [in]  request       Request
+ *
+ */
+
+void
+PDM_part1_to_selected_part2_ineighbor_alltoall_wait
+(
+ PDM_part1_to_selected_part2_t *ptp,
+ int                           request
+)
+{
+  PDM_UNUSED (ptp);
+  PDM_UNUSED (request);
+  PDM_error(__FILE__, __LINE__, 0,
+            "Error PDM_part1_to_selected_part2_ineighbor_alltoall_wait not yet implemented\n");
 }
 
 
