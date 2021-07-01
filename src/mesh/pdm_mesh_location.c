@@ -3651,7 +3651,7 @@ PDM_mesh_location_t        *ml
 
     switch (ml->method) {
 
-    case PDM_MESH_LOCATION_OCTREE:
+    case PDM_MESH_LOCATION_OCTREE: {
       /* Create octree structure */
       octree_id = PDM_para_octree_create (1,
                                           octree_depth_max,
@@ -3710,8 +3710,8 @@ PDM_mesh_location_t        *ml
 
       /* Free octree */
       PDM_para_octree_free (octree_id);
-      break;
-
+      break;  
+     }
     case PDM_MESH_LOCATION_DBBTREE:
       printf("[%d] n_pts_pcloud = %d, n_select_boxes = %d\n", my_rank, n_pts_pcloud, n_select_boxes);//
       if (USE_OCTREE_COPIES) {

@@ -349,7 +349,7 @@ int main(int argc, char *argv[])
   const double ymin = 0;
   const double zmin = 0;
 
-  double step = length / (n_vtx_seg - 1);
+  //double step = length / (n_vtx_seg - 1);
   double delta = separation * length;
 
   const double xmin2 = length - delta ;
