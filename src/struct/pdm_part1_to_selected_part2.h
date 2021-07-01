@@ -206,12 +206,12 @@ PDM_part1_to_selected_part2_gnum1_come_from_get
  *
  * \brief Initialize a asynchronus issend
  *
- * \param [in]   ptp           Block to part structure
- * \param [in]   s_data        Data size
- * \param [in]   cst_stride    Constant stride
- * \param [in]   part1_data    Partition 1 data
- * \param [in]   tag           Tag of the exchange 
- * \param [out]  request       Request
+ * \param [in]   ptp                 Block to part structure
+ * \param [in]   s_data              Data size
+ * \param [in]   cst_stride          Constant stride
+ * \param [in]   gnum1_to_gnum2_data Data in same order than gnum1_to_gnum2 array
+ * \param [in]   tag                 Tag of the exchange 
+ * \param [out]  request             Request
  *
  */
 
@@ -221,7 +221,7 @@ PDM_part1_to_selected_part2_issend
  PDM_part1_to_selected_part2_t *ptp,
  const size_t                  s_data,
  const int                     cst_stride,
- void                        **part1_data,
+ void                        **gnum1_to_gnum2_data,
  int                           tag,
  int                          *request
 );
