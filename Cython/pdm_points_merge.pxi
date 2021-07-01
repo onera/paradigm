@@ -8,7 +8,7 @@ cdef extern from "pdm_points_merge.h":
 
     # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     # > Wrapping of function
-    PDM_points_merge_t * PDM_points_merge_create(int                   n_point_cloud,
+    PDM_points_merge_t * PDM_points_merge_create(int                   _n_point_cloud,
                                                 double                tolerance,
                                                 PDM_MPI_Comm          comm,
                                                 const PDM_ownership_t owner)
@@ -25,7 +25,7 @@ cdef extern from "pdm_points_merge.h":
                                          int               **candidates_desc)
     void PDM_points_merge_candidates_size_get(PDM_points_merge_t *pm,
                                               int                i_point_cloud,
-                                              int               *n_point_cloud,
+                                              int               *_n_point_cloud,
                                               int               *n_candidates_desc)
 
 

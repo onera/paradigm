@@ -38,7 +38,7 @@ if (NOT EXISTS ${PARMETIS_INCLUDE_DIRS}/metis.h)
   find_path(METIS_INCLUDE_DIRS metis.h
        "Directory where the METIS header is located"
        )
-endif()    
+endif()
 
   find_library(METIS_LIBRARY   metis
        HINTS ${METIS_DIR}/lib $ENV{METIS_DIR}/lib $ENV{METIS_ROOT}/lib

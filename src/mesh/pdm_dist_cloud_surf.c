@@ -31,6 +31,7 @@
 #include "pdm_timer.h"
 #include "pdm_hash_tab.h"
 #include "pdm_sort.h"
+#include "pdm_logging.h"
 
 /*----------------------------------------------------------------------------*/
 
@@ -82,7 +83,6 @@ PDM_dist_cloud_surf_create
  const PDM_ownership_t   owner
 )
 {
-
   PDM_dist_cloud_surf_t *dist = (PDM_dist_cloud_surf_t *) malloc(sizeof(PDM_dist_cloud_surf_t));
 
   dist->comm              = comm;
@@ -567,8 +567,10 @@ PDM_dist_cloud_surf_compute
       malloc (sizeof(PDM_g_num_t) * n_pts_rank);
 
     double *closest_vertices_dist2 =  malloc (sizeof(double) * n_pts_rank);
+    // log_trace("n_pts_rank:: %d\n", n_pts_rank);
 
     if (octree_type == PDM_OCTREE_SERIAL) {
+      // log_trace("PDM_OCTREE_SERIAL \n");
       PDM_octree_closest_point (octree_id,
                                 n_pts_rank,
                                 pts_rank,
@@ -576,6 +578,7 @@ PDM_dist_cloud_surf_compute
                                 closest_vertices_gnum,
                                 closest_vertices_dist2);
     } else {
+      // log_trace("PDM_OCTREE_PARALLEL \n");
       PDM_para_octree_single_closest_point (octree_id,
                                             n_pts_rank,
                                             pts_rank,
@@ -583,6 +586,8 @@ PDM_dist_cloud_surf_compute
                                             closest_vertices_gnum,
                                             closest_vertices_dist2);
     }
+    // PDM_log_trace_array_long(closest_vertices_gnum, n_pts_rank, "closest_vertices_gnum::");
+    // PDM_log_trace_array_double(closest_vertices_dist2, n_pts_rank, "closest_vertices_dist2::");
     free (closest_vertices_gnum);
 
     if (octree_type == PDM_OCTREE_SERIAL) {

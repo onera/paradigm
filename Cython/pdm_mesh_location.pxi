@@ -15,7 +15,7 @@ cdef extern from "pdm_mesh_location.h":
 
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
   PDM_mesh_location_t* PDM_mesh_location_create(PDM_mesh_nature_t mesh_nature,
-                               int               n_point_cloud,
+                               int               _n_point_cloud,
                                PDM_MPI_Comm      comm)
   # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
