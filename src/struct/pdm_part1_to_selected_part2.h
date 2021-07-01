@@ -93,7 +93,7 @@ PDM_part1_to_selected_part2_create_cf
 
 /**
  *
- * \brief Initialize an exchange
+ * \brief Initialize an exchange based on MPI_ialltoall
  *
  * \param [in]   ptp                 Block to part structure
  * \param [in]   s_data              Data size
@@ -136,7 +136,7 @@ PDM_part1_to_selected_part2_ialltoall_wait
 
 /**
  *
- * \brief Initialize an exchange
+ * \brief Initialize an exchange based on MPI_ineighbor_alltoall
  *
  * \param [in]   ptp                 Block to part structure
  * \param [in]   s_data              Data size
