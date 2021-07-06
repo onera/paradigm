@@ -222,6 +222,8 @@ elseif (CMAKE_C_COMPILER_ID STREQUAL "Clang")
   set (CMAKE_C_FLAGS_RELWITHDEBINFO  "-O3 -g")
   set (CMAKE_C_FLAGS_MINSIZEREL      "-O2")
   set (CMAKE_C_FLAGS_SANITIZE        "-g -O0 -fsanitize=address -fno-omit-frame-pointer -Wall -Wextra")
+  SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -lm")  
+
 
 elseif (CMAKE_C_COMPILER_ID MATCHES "XL")
 
