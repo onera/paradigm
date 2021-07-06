@@ -453,7 +453,6 @@ PDM_std_decomposes_edges
      abort();
      break;
    case PDM_MESH_NODAL_BAR2:
-
      PDM_bar_decomposes_edges(n_elt,
                               n_elt_current,
                               n_dedge_current,

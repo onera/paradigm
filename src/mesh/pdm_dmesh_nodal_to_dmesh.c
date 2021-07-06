@@ -478,10 +478,10 @@ PDM_g_num_t  **delmt_child_distrib
           if(blk_part_id[idx+i_same_entity] == 0) {
             int next_idx = _dentity_elmt_idx[i_abs_entity+1]++;
             _dentity_elmt[next_idx] = sign*blk_elmt_entity_elmt[idx+i_same_entity];
-            printf("[%i] _dentity_elmt[%i] = %i \n ", i_abs_entity,  next_idx, sign*blk_elmt_entity_elmt[idx+i_same_entity]);
+            // printf("[%i] _dentity_elmt[%i] = %i \n ", i_abs_entity, next_idx, sign*blk_elmt_entity_elmt[idx+i_same_entity]);
             _dentity_parent_element_position[next_idx] = blk_parent_elmt_position[idx+i_same_entity];
           } else {
-            printf(" Not treated yet : %i \n", sign*blk_elmt_entity_elmt[idx+i_same_entity]);
+            // printf(" Not treated yet : %i \n", sign*blk_elmt_entity_elmt[idx+i_same_entity]);
             // _dentity_elmt_child[next_child_idx] = sign*blk_elmt_entity_elmt[idx+i_same_entity];
             // _dentity_parent_element_position_child[next_child_idx] = blk_parent_elmt_position[idx+i_same_entity];
             // printf(" _dparent_gnum[%i] = %i \n", i_abs_child, i_abs_entity );
@@ -1128,7 +1128,7 @@ PDM_g_num_t  **dentity_elmt
           int i_same_entity = same_entity_idx[i];
           int sign = sens_entity[i];
           int next_idx = _dentity_elmt_idx[i_abs_entity+1]++;
-          printf("[%i] _dentity_elmt[%i] = %i \n ", i_abs_entity,  next_idx, sign*blk_elmt_entity_elmt[idx+i_same_entity]);
+          // printf("[%i] _dentity_elmt[%i] = %i \n ", i_abs_entity,  next_idx, sign*blk_elmt_entity_elmt[idx+i_same_entity]);
           _dentity_elmt[next_idx] = sign*blk_elmt_entity_elmt[idx+i_same_entity];
           // _dentity_elmt[_dentity_elmt_idx[i_abs_entity+1]++] = sign*blk_elmt_entity_elmt[idx+i_same_entity];
           already_treat[i_same_entity] = 1;
@@ -2000,10 +2000,16 @@ _to_coherent_2d
   int dn_edge = dmesh->edge_distrib[i_rank+1] - dmesh->edge_distrib[i_rank];
   assert(dn_edge == dmesh->dn_edge);
 
-  if(1 == 1) {
+  if(0 == 1) {
     PDM_log_trace_array_int (edge_face_idx, dn_edge+1             , "edge_face_idx::");
     PDM_log_trace_array_long(edge_face_tmp, edge_face_idx[dn_edge], "edge_face_tmp::");
   }
+  printf("Attention le calcul est faux car le PDM_dconnectivity_transpose ne preserve pas l'ordre donc il y a incohérence entre le dface_vtx et le dface_cell \n");
+
+  /*
+   * Le PDM_dconnectivity_transpose conserve le signe MAIS pas l'ordre, donc au final on peut avoir des faces "droite" qui sont au final gauche mais avec un signe moins !!!!!
+   */
+
 
   // Post_treat
   PDM_g_num_t *edge_face = (PDM_g_num_t *) malloc( 2 * dn_edge * sizeof(PDM_g_num_t));;

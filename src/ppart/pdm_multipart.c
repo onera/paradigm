@@ -998,22 +998,6 @@ PDM_MPI_Comm      comm
                                    &dcell_face_idx,
                                    &dcell_face);
 
-  // free(dual_graph_idx);
-  // free(dual_graph);
-
-  // PDM_para_graph_dual_from_combine_connectivity(comm,
-  //                                               cell_distri,
-  //                                               face_distri,
-  //                                               cell_distri,
-  //                                               dcell_face_idx,
-  //                                               dcell_face,
-  //                                               dface_cell_idx,
-  //                                               dface_cell,
-  //                              (PDM_g_num_t**) &dual_graph_idx,
-  //                              (PDM_g_num_t**) &dual_graph);
-
-  // TOD CHECK THE CRESULT OF dmesh_nodal_to_dmesh !!!!!
-  // abort();
   PDM_log_trace_array_long(dual_graph_idx, dn_face+1, "dual_graph_idx :: ");
   PDM_log_trace_array_long(dual_graph, dual_graph_idx[dn_face], "dual_graph :: ");
 
@@ -1098,6 +1082,9 @@ PDM_MPI_Comm      comm
                               &pn_cell,
                               &pcell_ln_to_gn);
 
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    PDM_log_trace_array_long(pcell_ln_to_gn[i_part], pn_cell[i_part], "pcell_ln_to_gn :: ");
+  }
 
 }
 
@@ -2126,9 +2113,9 @@ PDM_multipart_run_ppart
 
         int n_part = _multipart->n_part[i_zone];
 
-        // _run_ppart_zone(_dmeshes, _pmeshes, n_part, split_method, part_size_method, part_fraction, comm);
-        _run_ppart_zone2(_dmeshes, _pmeshes, n_part, split_method, part_size_method, part_fraction, comm);
-        is_by_elt = 1; // TODO : REMOVE
+        _run_ppart_zone(_dmeshes, _pmeshes, n_part, split_method, part_size_method, part_fraction, comm);
+        // _run_ppart_zone2(_dmeshes, _pmeshes, n_part, split_method, part_size_method, part_fraction, comm);
+        // is_by_elt = 1; // TODO : REMOVE
       }
     }
 
