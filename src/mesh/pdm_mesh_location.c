@@ -2840,6 +2840,17 @@ PDM_mesh_location_t        *ml
 
       for (int ielt = 0; ielt < n_elt; ielt++) {
         box_g_num[ibox] = _gnum[ielt];
+        if (_gnum[ielt] == 1) {
+          printf("cell "PDM_FMT_G_NUM": %20.12e %20.12e %20.12e %20.12e %20.12e %20.12e\n",
+                 _gnum[ielt],
+                 box_extents[6*ibox]  , box_extents[6*ibox+1], box_extents[6*ibox+2],
+                 box_extents[6*ibox+3], box_extents[6*ibox+4], box_extents[6*ibox+5]);
+          printf("cell "PDM_FMT_G_NUM": %20.12e %20.12e %20.12e\n",
+                 _gnum[ielt],
+                 box_extents[6*ibox+3] - box_extents[6*ibox],
+                 box_extents[6*ibox+4] - box_extents[6*ibox+1],
+                 box_extents[6*ibox+5] - box_extents[6*ibox+2]);
+        }
         ibox++;
       }
     }
