@@ -945,7 +945,7 @@ PDM_DMesh_nodal_elmts_t* dmn_elts
 );
 
 void
-PDM_Mesh_nodal_add_desh_nodal_elmts
+PDM_Mesh_nodal_add_dmesh_nodal_elmts
 (
  PDM_dmesh_nodal_t       *dmesh_nodal,
  PDM_DMesh_nodal_elmts_t *dmn_elts

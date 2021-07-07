@@ -197,6 +197,14 @@ struct _PDM_Mesh_nodal_t {
   PDM_g_num_t                          **numabs;                 /*<! Global numbering per cell per partition */
 };
 
+
+// struct _PDM_part_mesh_nodal_t {
+//   // PDM_mesh_nodal_elmts_t     *volumic;
+//   // PDM_mesh_nodal_elmts_t     *surfacic;
+//   // PDM_mesh_nodal_elmts_t     *ridge;
+//   // PDM_mesh_nodal_elmts_t     *corner;
+// };
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

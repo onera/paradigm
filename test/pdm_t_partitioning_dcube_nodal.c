@@ -238,7 +238,7 @@ int main(int argc, char *argv[])
 
   PDM_multipart_set_reordering_options(mpart_id, -1, "PDM_PART_RENUM_CELL_NONE", NULL, "PDM_PART_RENUM_FACE_NONE");
 
-  // PDM_multipart_register_dmesh_nodal(mpart_id, 0, dmn);
+  PDM_multipart_register_dmesh_nodal(mpart_id, 0, dmn);
   PDM_multipart_register_block(mpart_id, 0, dm);
 
   PDM_multipart_run_ppart(mpart_id);

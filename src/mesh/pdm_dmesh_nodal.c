@@ -3173,7 +3173,7 @@ PDM_DMesh_nodal_elmts_t* dmn_elts
 
 
 void
-PDM_Mesh_nodal_add_desh_nodal_elmts
+PDM_Mesh_nodal_add_dmesh_nodal_elmts
 (
  PDM_dmesh_nodal_t       *dmesh_nodal,
  PDM_DMesh_nodal_elmts_t *dmn_elts
@@ -3188,7 +3188,7 @@ PDM_Mesh_nodal_add_desh_nodal_elmts
   } else if(dmn_elts->mesh_dimension == 0){
     dmesh_nodal->corner = dmn_elts;
   } else {
-    PDM_error (__FILE__, __LINE__, 0, "PDM_Mesh_nodal_add_desh_nodal_elmts bad mesh_dimension\n");
+    PDM_error (__FILE__, __LINE__, 0, "PDM_Mesh_nodal_add_dmesh_nodal_elmts bad mesh_dimension\n");
   }
 }
 

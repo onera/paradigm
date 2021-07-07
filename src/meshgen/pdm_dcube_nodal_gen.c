@@ -1332,16 +1332,16 @@ const double                zero_z,
   }
 
   if(dmn_elmts_vol != NULL) {
-    PDM_Mesh_nodal_add_desh_nodal_elmts(dcube->dmesh_nodal, dmn_elmts_vol   );
+    PDM_Mesh_nodal_add_dmesh_nodal_elmts(dcube->dmesh_nodal, dmn_elmts_vol   );
   }
   if(dmn_elmts_surf != NULL) {
-    PDM_Mesh_nodal_add_desh_nodal_elmts(dcube->dmesh_nodal, dmn_elmts_surf  );
+    PDM_Mesh_nodal_add_dmesh_nodal_elmts(dcube->dmesh_nodal, dmn_elmts_surf  );
   }
   if(dmn_elmts_ridge != NULL) {
-    PDM_Mesh_nodal_add_desh_nodal_elmts(dcube->dmesh_nodal, dmn_elmts_ridge );
+    PDM_Mesh_nodal_add_dmesh_nodal_elmts(dcube->dmesh_nodal, dmn_elmts_ridge );
   }
   if(dmn_elmts_corner != NULL) {
-    PDM_Mesh_nodal_add_desh_nodal_elmts(dcube->dmesh_nodal, dmn_elmts_corner);
+    PDM_Mesh_nodal_add_dmesh_nodal_elmts(dcube->dmesh_nodal, dmn_elmts_corner);
   }
 
   switch (t_elt) {
