@@ -5,6 +5,8 @@
 #include "pdm.h"
 #include "pdm_mpi.h"
 #include "pdm_dmesh_nodal.h"
+#include "pdm_part_mesh_nodal.h"
+#include "pdm_part_mesh_nodal_elmts.h"
 
 /*=============================================================================
  * Macro definitions
@@ -30,9 +32,13 @@ extern "C" {
  *============================================================================*/
 
 void
-PDM_dmesh_nodal_to_pmesh_nodal
+PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
 (
- PDM_dmesh_nodal_t* dmn
+ PDM_dmesh_nodal_elmts_t      *dmne,
+ PDM_part_mesh_nodal_elmts_t  *pmne,
+ int                           n_part,
+ int                          *pn_elmt,
+ PDM_g_num_t                 **elmt_ln_to_gn
 );
 
 #ifdef __cplusplus

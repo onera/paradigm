@@ -63,8 +63,8 @@ MPI_TEST_CASE("[PDM_delmts_nodal_elmts_t] Constructor",1) {
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
   PDM_dmesh_nodal_t* dmn = PDM_DMesh_nodal_create(pdm_comm, 3, n_vtx, -1, n_face, -1);
 
-  PDM_DMesh_nodal_elmts_t* dmn_elmts_surf  = PDM_DMesh_nodal_elmts_create(pdm_comm, 2, n_face );
-  PDM_DMesh_nodal_elmts_t* dmn_elmts_ridge = PDM_DMesh_nodal_elmts_create(pdm_comm, 1, n_ridge);
+  PDM_dmesh_nodal_elmts_t* dmn_elmts_surf  = PDM_DMesh_nodal_elmts_create(pdm_comm, 2, n_face );
+  PDM_dmesh_nodal_elmts_t* dmn_elmts_ridge = PDM_DMesh_nodal_elmts_create(pdm_comm, 1, n_ridge);
 
   // The order of call is important for global numbering
   int tri_section_1 = PDM_DMesh_nodal_elmts_section_add(dmn_elmts_surf , PDM_MESH_NODAL_TRIA3);
