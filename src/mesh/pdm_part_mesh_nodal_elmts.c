@@ -70,22 +70,63 @@ extern "C" {
  *
  */
 
-PDM_part_mesh_nodal_t*
-PDM_part_mesh_nodal_create
+PDM_part_mesh_nodal_elmts_t*
+PDM_part_mesh_nodal_elmts_create
 (
  const int          mesh_dimension,
  const int          n_part,
  const PDM_MPI_Comm comm
 )
 {
-  PDM_part_mesh_nodal_t *pmn = (PDM_part_mesh_nodal_t *) malloc (sizeof(PDM_part_mesh_nodal_t));
+  PDM_part_mesh_nodal_elmts_t *pmne = (PDM_part_mesh_nodal_elmts_t *) malloc (sizeof(PDM_part_mesh_nodal_elmts_t));
 
-  PDM_UNUSED(mesh_dimension);
-  PDM_UNUSED(n_part);
-  PDM_UNUSED(comm);
+  pmne->comm           = comm;
+  pmne->mesh_dimension = mesh_dimension;
+  pmne->n_part         = n_part;
 
-  // _mesh_init (mesh, n_part, comm);
 
-  return pmn;
+  pmne->n_sections      = 0;
+  pmne->n_elmts         = (int * ) malloc( n_part * sizeof(int));
+  pmne->sections_id     = NULL;
+  pmne->sections_std    = NULL;
+  pmne->sections_poly2d = NULL;
+  pmne->sections_poly3d = NULL;
+
+  return pmne;
 }
 
+
+/**
+ * \brief Create a Mesh nodal structure
+ *
+ * \param [in]   n_part   Number of partition on the current process
+ * \param [in]   comm     MPI communicator
+ *
+ * \return       New mesh nodal handle
+ *
+ */
+
+
+void
+PDM_part_mesh_nodal_elmts_free
+(
+ PDM_part_mesh_nodal_elmts_t* pmne
+)
+{
+
+  if(pmne->n_elmts != NULL) {
+    free(pmne->n_elmts);
+  }
+
+  /*
+   *  Free all sections
+   */
+
+
+
+  if(pmne->sections_id != NULL) {
+    free(pmne->sections_id);
+  }
+
+  free(pmne);
+}

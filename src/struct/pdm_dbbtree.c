@@ -1982,7 +1982,7 @@ PDM_dbbtree_closest_upper_bound_dist_boxes_get_async
     // PDM_log_trace_array_int(n_pts_send, lComm, "n_pts_send :: ");
   }
 
-  double t1 = PDM_MPI_Wtime();
+  // double t1 = PDM_MPI_Wtime();
   // log_debug("n_pts_local %i \n", n_pts_local);
   PDM_box_tree_closest_upper_bound_dist_boxes_get_v2 (_dbbt->btLoc,
                                                       -1, // search in local box tree

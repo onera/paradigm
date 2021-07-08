@@ -11,6 +11,7 @@
 
 #include "pdm_mpi.h"
 #include "pdm_mesh_nodal_priv.h"
+#include "pdm_part_mesh_nodal_elmts.h"
 #include "pdm_part_mesh_nodal_elmts_priv.h"
 
 #ifdef __cplusplus
@@ -49,10 +50,10 @@ struct _pdm_part_mesh_nodal_t {
   PDM_l_num_t                        *n_ridge;
   PDM_l_num_t                        *n_corner;
 
-  _pdm_part_mesh_nodal_elmts_t       *volumic;
-  _pdm_part_mesh_nodal_elmts_t       *surfacic;
-  _pdm_part_mesh_nodal_elmts_t       *ridge;
-  _pdm_part_mesh_nodal_elmts_t       *corner;
+  PDM_part_mesh_nodal_elmts_t       *volumic;
+  PDM_part_mesh_nodal_elmts_t       *surfacic;
+  PDM_part_mesh_nodal_elmts_t       *ridge;
+  PDM_part_mesh_nodal_elmts_t       *corner;
 
 };
 
