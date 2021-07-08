@@ -43,6 +43,8 @@ struct PDM_Mesh_nodal_vtx_t {
   const double         *_coords;    /*!< Coordinates (Mapping) */
   const PDM_g_num_t    *_numabs;    /*!< Global numbering */
   const int            *_numparent; /*!< Numbering in the parent vertices (mapping) */
+
+  PDM_ownership_t       owner;
 };
 
 /**

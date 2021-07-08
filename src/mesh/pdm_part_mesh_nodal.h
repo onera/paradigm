@@ -56,6 +56,16 @@ const int          n_part,
 const PDM_MPI_Comm comm
 );
 
+void
+PDM_part_mesh_nodal_coord_set
+(
+       PDM_part_mesh_nodal_t *pmn,
+ const int                    id_part,
+ const int                    n_vtx,
+ const PDM_real_t            *coords,
+ const PDM_g_num_t           *numabs,
+       PDM_ownership_t        owner
+);
 
 void
 PDM_part_mesh_nodal_add_part_mesh_nodal_elmts

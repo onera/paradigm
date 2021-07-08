@@ -56,6 +56,27 @@ extern "C" {
  * Private function definitions
  *============================================================================*/
 
+static
+void
+_vtx_free
+(
+ PDM_Mesh_nodal_vtx_t *vtx
+)
+{
+  if (vtx != NULL) {
+    if (vtx->parent != NULL) {
+      _vtx_free (vtx->parent);
+    }
+
+    if (vtx->coords != NULL) {
+      free (vtx->coords);
+      vtx->coords = NULL;
+    }
+
+    free (vtx);
+  }
+}
+
 /*=============================================================================
  * Public function definitions
  *============================================================================*/
@@ -84,6 +105,18 @@ PDM_part_mesh_nodal_create
   pmn->mesh_dimension = mesh_dimension;
   pmn->n_part         = n_part;
 
+  pmn->vtx      = malloc(n_part * sizeof(PDM_Mesh_nodal_vtx_t *));
+  for (int i = 0; i < n_part; i++) {
+    pmn->vtx[i] = malloc(sizeof(PDM_Mesh_nodal_vtx_t));
+    pmn->vtx[i]->_coords    = NULL;
+    pmn->vtx[i]->_numabs    = NULL;
+    pmn->vtx[i]->_numparent = NULL;
+    pmn->vtx[i]->n_vtx      = 0;
+    pmn->vtx[i]->parent     = NULL;
+    pmn->vtx[i]->coords     = NULL;
+    pmn->vtx[i]->owner      = PDM_OWNERSHIP_USER;
+  }
+
   pmn->n_vol    = (int *) malloc( n_part * sizeof(int));
   pmn->n_surf   = (int *) malloc( n_part * sizeof(int));
   pmn->n_ridge  = (int *) malloc( n_part * sizeof(int));
@@ -104,6 +137,37 @@ PDM_part_mesh_nodal_create
 
 
 void
+PDM_part_mesh_nodal_coord_set
+(
+       PDM_part_mesh_nodal_t *pmn,
+ const int                    id_part,
+ const int                    n_vtx,
+ const PDM_real_t            *coords,
+ const PDM_g_num_t           *numabs,
+       PDM_ownership_t        owner
+)
+{
+
+  if (id_part >= pmn->n_part) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad part identifier\n");
+  }
+
+  PDM_Mesh_nodal_vtx_t *vtx = pmn->vtx[id_part];
+
+  if ((vtx->_coords != NULL) ||
+      (vtx->_numabs != NULL)) {
+    PDM_error(__FILE__, __LINE__, 0, "these partition vertices are already defined\n");
+  }
+
+  /* Mapping memoire */
+  vtx->n_vtx   = n_vtx;
+  vtx->_coords = coords;
+  vtx->_numabs = numabs;
+  vtx->owner   = owner;
+
+}
+
+void
 PDM_part_mesh_nodal_add_part_mesh_nodal_elmts
 (
  PDM_part_mesh_nodal_t       *pmn,
@@ -111,6 +175,7 @@ PDM_part_mesh_nodal_add_part_mesh_nodal_elmts
  PDM_ownership_t              owner
 )
 {
+  assert(pmn->n_part == pmne->n_part);
   assert(pmn->mesh_dimension >= pmne->mesh_dimension);
   if(pmne->mesh_dimension == 3) {
     pmn->volumic          = pmne;
@@ -149,6 +214,16 @@ PDM_part_mesh_nodal_free
     PDM_part_mesh_nodal_elmts_free(pmn->corner);
   }
 
+  if (pmn->vtx != NULL) {
+    for (int i = 0; i < pmn->n_part; i++) {
+      if(pmn->vtx[i]->owner == PDM_OWNERSHIP_KEEP){
+        _vtx_free (pmn->vtx[i]);
+      }
+    }
+
+    free(pmn->vtx);
+    pmn->vtx = NULL;
+  }
 
   free(pmn->n_vol   );
   free(pmn->n_surf  );
