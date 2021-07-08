@@ -62,6 +62,8 @@ MPI_TEST_CASE("[PDM_part_mesh_nodal_elmts_t] Constructor",1) {
 
   PDM_MPI_Comm pdm_comm = PDM_MPI_mpi_2_pdm_mpi_comm(&test_comm);
 
+  PDM_part_mesh_nodal_t* pmn  = PDM_part_mesh_nodal_create(2, n_part, pdm_comm);
+
   PDM_part_mesh_nodal_elmts_t* pelmts_surf  = PDM_part_mesh_nodal_elmts_create(2, n_part, pdm_comm);
   PDM_part_mesh_nodal_elmts_t* pelmts_ridge = PDM_part_mesh_nodal_elmts_create(1, n_part, pdm_comm);
 
@@ -87,6 +89,11 @@ MPI_TEST_CASE("[PDM_part_mesh_nodal_elmts_t] Constructor",1) {
                                     NULL,
                                     PDM_OWNERSHIP_USER);
 
+  PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pelmts_surf , PDM_OWNERSHIP_USER);
+  PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pelmts_ridge, PDM_OWNERSHIP_USER);
+
   PDM_part_mesh_nodal_elmts_free(pelmts_surf);
   PDM_part_mesh_nodal_elmts_free(pelmts_ridge);
+
+  PDM_part_mesh_nodal_free(pmn);
 }

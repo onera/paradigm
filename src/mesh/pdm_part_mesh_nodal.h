@@ -11,6 +11,7 @@
 
 #include "pdm.h"
 #include "pdm_mpi.h"
+#include "pdm_part_mesh_nodal_elmts.h"
 #include "pdm_io.h"
 
 /*=============================================================================
@@ -56,6 +57,19 @@ const PDM_MPI_Comm comm
 );
 
 
+void
+PDM_part_mesh_nodal_add_part_mesh_nodal_elmts
+(
+ PDM_part_mesh_nodal_t       *pmn,
+ PDM_part_mesh_nodal_elmts_t *pmne,
+ PDM_ownership_t              owner
+);
+
+void
+PDM_part_mesh_nodal_free
+(
+ PDM_part_mesh_nodal_t* pmn
+);
 
 #ifdef __cplusplus
 }

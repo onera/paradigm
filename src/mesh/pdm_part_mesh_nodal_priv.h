@@ -39,7 +39,8 @@ extern "C" {
 
 struct _pdm_part_mesh_nodal_t {
 
-  PDM_MPI_Comm                        comm;             /*!< MPI Communicator */
+  PDM_MPI_Comm                        comm;                      /*!< MPI Communicator            */
+  int                                 mesh_dimension;
 
   int                                 n_part;           /*!< Number of partitions */
 
@@ -54,6 +55,11 @@ struct _pdm_part_mesh_nodal_t {
   PDM_part_mesh_nodal_elmts_t       *surfacic;
   PDM_part_mesh_nodal_elmts_t       *ridge;
   PDM_part_mesh_nodal_elmts_t       *corner;
+
+  PDM_ownership_t                    is_owner_volumic;
+  PDM_ownership_t                    is_owner_surfacic;
+  PDM_ownership_t                    is_owner_ridge;
+  PDM_ownership_t                    is_owner_corner;
 
 };
 
