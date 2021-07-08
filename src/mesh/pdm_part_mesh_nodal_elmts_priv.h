@@ -45,11 +45,16 @@ struct _pdm_part_mesh_nodal_elmts_t {
   int                                  n_part;
   PDM_l_num_t                         *n_elmts;                   /*!< Nombre de blocs d'elements  */
 
-  int                                  n_sections;                /*!< Total number of sections      */
+  int                                  n_section;                 /*!< Total number of sections */
+  int                                  n_section_std;             /*!< Total number of standard sections   */
+  int                                  n_section_poly2d;          /*!< Total number of polyhedron sections */
+  int                                  n_section_poly3d;          /*!< Total number of polyhedron sections */
   int                                 *sections_id;               /*!< sections identifier           */
   PDM_Mesh_nodal_block_std_t         **sections_std;              /*!< Standard sections             */
   PDM_Mesh_nodal_block_poly2d_t      **sections_poly2d;           /*!< Polygon sections              */
   PDM_Mesh_nodal_block_poly3d_t      **sections_poly3d;           /*!< Polyhedron sections           */
+
+  // group to manage
 
   // PDM_l_num_t                        **num_elmt_parent_to_local;  /*!< Initial local numbering to local numbering
   //                                                                  *   imposed by blocks */

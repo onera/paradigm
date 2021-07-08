@@ -30,9 +30,9 @@ MPI_TEST_CASE("[PDM_part_mesh_nodal_elmts_t] Constructor",1) {
   //                           1.5, 0.5, 0.};
   // PDM_UNUSED(dvtx_coord);
 
-  const PDM_g_num_t n_vtx            = 9;
-  const PDM_g_num_t n_face           = 8;
-  const PDM_g_num_t n_ridge          = 8;
+  // const PDM_g_num_t n_vtx            = 9;
+  // const PDM_g_num_t n_face           = 8;
+  // const PDM_g_num_t n_ridge          = 8;
   const int         n_tri_section_1  = 8;
   const int         n_bar_section_1  = 8;
 
@@ -65,8 +65,27 @@ MPI_TEST_CASE("[PDM_part_mesh_nodal_elmts_t] Constructor",1) {
   PDM_part_mesh_nodal_elmts_t* pelmts_surf  = PDM_part_mesh_nodal_elmts_create(2, n_part, pdm_comm);
   PDM_part_mesh_nodal_elmts_t* pelmts_ridge = PDM_part_mesh_nodal_elmts_create(1, n_part, pdm_comm);
 
+  int tri_section_1 = PDM_part_mesh_nodal_elmts_add(pelmts_surf , PDM_MESH_NODAL_TRIA3);
+  int bar_section_1 = PDM_part_mesh_nodal_elmts_add(pelmts_ridge, PDM_MESH_NODAL_BAR2 );
 
+  int i_part = 0;
+  PDM_part_mesh_nodal_elmts_std_set(pelmts_surf,
+                                    tri_section_1,
+                                    i_part,
+                                    n_tri_section_1,
+                                    connec_tri_1,
+                                    NULL,
+                                    NULL,
+                                    PDM_OWNERSHIP_USER);
 
+  PDM_part_mesh_nodal_elmts_std_set(pelmts_ridge,
+                                    bar_section_1,
+                                    i_part,
+                                    n_bar_section_1,
+                                    connec_bar_1,
+                                    NULL,
+                                    NULL,
+                                    PDM_OWNERSHIP_USER);
 
   PDM_part_mesh_nodal_elmts_free(pelmts_surf);
   PDM_part_mesh_nodal_elmts_free(pelmts_ridge);

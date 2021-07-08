@@ -64,6 +64,8 @@ typedef struct PDM_Mesh_nodal_block_std_t {
   PDM_l_num_t              **_parent_num;       /*!< Parent numbering or NULL */
   double                   **cell_centers;       /*!< Cell center coordinates */
 
+  PDM_ownership_t            owner;
+
 } PDM_Mesh_nodal_block_std_t;
 
 
@@ -85,6 +87,8 @@ typedef struct PDM_Mesh_nodal_block_poly2d_t {
   PDM_g_num_t            **numabs_int;    /*!< Global numbering inside each block */
   PDM_l_num_t            **_parent_num;       /*!< Parent numbering or NULL */
   double                 **cell_centers;       /*!< Cell center coordinates */
+
+  PDM_ownership_t          owner;
 
 } PDM_Mesh_nodal_block_poly2d_t;
 
@@ -119,6 +123,8 @@ typedef struct PDM_Mesh_nodal_block_poly3d_t{
   PDM_g_num_t           **numabs_int;   /*!< Global numbering inside the block (Memory mapping) */
   PDM_l_num_t           **_parent_num;  /*!< Parent numbering or NULL */
   double                **cell_centers;       /*!< Cell center coordinates */
+
+  PDM_ownership_t          owner;
 
 } PDM_Mesh_nodal_block_poly3d_t;
 
