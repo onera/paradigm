@@ -346,6 +346,15 @@ PDM_poly_vol_gen
       _dface_vtx_idx[ifac+1] = _dface_vtx_idx[ifac] + 4;
     }
 
+
+
+
+
+
+
+
+
+
     if (r < idx_quadV && k == nz) {
       // flip face
       int n_vtx = _dface_vtx_idx[ifac+1] - _dface_vtx_idx[ifac];
