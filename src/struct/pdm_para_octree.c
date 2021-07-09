@@ -5241,6 +5241,9 @@ _points_inside_boxes_explicit
                    _child->range,
                    _child->n_points,
                    _child->leaf_id);
+            printf("    pts_extents = %f %f %f %f %f %f\n",
+                   _child->pts_extents[0], _child->pts_extents[1], _child->pts_extents[2],
+                   _child->pts_extents[3], _child->pts_extents[4], _child->pts_extents[5]);
           }
 
           intersect = _intersect_node_box_explicit (3,
