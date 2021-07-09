@@ -84,7 +84,7 @@ PDM_poly_vol_gen
   PDM_g_num_t ng_face_lim = 2*(n_faceH_z_cst + 2*(nx+1) + 2*(ny+1));
 
   *ng_vtx = n_vtx_z_cst * (nz + 1);
-  *ng_face = (nz + 1)*(n_face_z_cst) - n_quadV_z_cst;//nz*n_face_z_cst + n_faceH_z_cst;
+  *ng_face = nz*n_face_z_cst + n_faceH_z_cst;
   *ng_cell = n_faceH_z_cst * nz;
   *n_face_group = 6;
 
@@ -135,6 +135,8 @@ PDM_poly_vol_gen
   *dn_face = (int) (distrib_face[i_rank+1] - distrib_face[i_rank]);
   *dn_cell = (int) (distrib_cell[i_rank+1] - distrib_cell[i_rank]);
   int dn_face_lim = (int) (distrib_face_lim[i_rank+1] - distrib_face_lim[i_rank]);
+
+  printf("[%d] dn_cell = %d, dn_face = %d, dn_vtx = %d\n", i_rank, *dn_cell, *dn_face, *dn_vtx);
 
   /*
    *  Vertices
@@ -193,14 +195,16 @@ PDM_poly_vol_gen
   /*
    *  Faces
    */
-  PDM_g_num_t idx_octo  = 0;
-  PDM_g_num_t idx_quadH = idx_octo + n_octo_z_cst;
+  PDM_g_num_t idx_quadH = n_octo_z_cst;
   PDM_g_num_t idx_tria1 = idx_quadH + n_quadH_z_cst;
   PDM_g_num_t idx_tria2 = idx_tria1 + nx - 1;
   PDM_g_num_t idx_tria3 = idx_tria2 + nx - 1;
   PDM_g_num_t idx_tria4 = idx_tria3 + ny - 1;
   PDM_g_num_t idx_tria5 = idx_tria4 + ny - 1;
-  PDM_g_num_t idx_quadV = n_faceH_z_cst;
+  PDM_g_num_t idx_quadV1 = n_faceH_z_cst;
+  PDM_g_num_t idx_quadV2 = idx_quadV1 + nx*(ny + 1);
+  PDM_g_num_t idx_quadV3 = n_faceH_z_cst;
+  PDM_g_num_t idx_quadV4 = n_faceH_z_cst;
 
   *dface_vtx_idx = malloc (sizeof(int) * (*dn_face + 1));
   int *_dface_vtx_idx = *dface_vtx_idx;
@@ -215,7 +219,7 @@ PDM_poly_vol_gen
 
     PDM_g_num_t g = distrib_face[i_rank] + ifac;
     PDM_g_num_t k = g / n_face_z_cst;
-    PDM_g_num_t r = g % n_vtx_z_cst;
+    PDM_g_num_t r = g % n_face_z_cst;
     PDM_g_num_t i, j;
 
     if (r < idx_quadH) {
@@ -338,6 +342,34 @@ PDM_poly_vol_gen
       _dface_vtx_idx[ifac+1] = _dface_vtx_idx[ifac] + 3;
     }
 
+    else if (r < idx_quadV2) {
+      // Quadrangle  _
+      r -= idx_quadV1;
+      j = r / nx;
+      i = r % nx;
+
+      PDM_g_num_t idx = k*n_vtx_z_cst + j*n_vtx3 + 2*i + 1;
+      _dface_vtx[0] = idx;
+      _dface_vtx[1] = idx + n_vtx_z_cst;
+      _dface_vtx[2] = idx + 1 + n_vtx_z_cst;
+      _dface_vtx[3] = idx + 1;
+      _dface_vtx_idx[ifac+1] = _dface_vtx_idx[ifac] + 4;
+    }
+
+    else if (r < idx_quadV3) {
+      // Quadrangle |
+      r -= idx_quadV2;
+      j = r / (nx + 1);
+      i = r % (nx + 1);
+
+      PDM_g_num_t idx = k*n_vtx_z_cst + j*n_vtx3 + n_vtx1 + i + 1;
+      _dface_vtx[0] = idx;
+      _dface_vtx[1] = idx + n_vtx2;
+      _dface_vtx[2] = idx + n_vtx2 + n_vtx_z_cst;
+      _dface_vtx[3] = idx + n_vtx_z_cst;
+      _dface_vtx_idx[ifac+1] = _dface_vtx_idx[ifac] + 4;
+    }
+
     else {
       _dface_vtx[0] = 1;
       _dface_vtx[1] = 1;
@@ -355,8 +387,8 @@ PDM_poly_vol_gen
 
 
 
-    if (r < idx_quadV && k == nz) {
-      // flip face
+    if (r < idx_quadV1 && k == nz) {
+      // flip horizontal face
       int n_vtx = _dface_vtx_idx[ifac+1] - _dface_vtx_idx[ifac];
       for (int l = 0; l < n_vtx/2; l++) {
         PDM_g_num_t tmp = _dface_vtx[l];
