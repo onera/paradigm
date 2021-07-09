@@ -5101,15 +5101,18 @@ _points_inside_boxes_explicit
   int n_nodes;
   const _explicit_node_t *nodes;
   const double *points;
+  const PDM_g_num_t *pts_g_num;
   if (i_copied_rank < 0) {
     n_nodes = octree->n_explicit_nodes;
     nodes   = octree->explicit_nodes;
     points  = octree->points;
+    pts_g_num = octree->points_gnum;
   } else {
     assert (i_copied_rank < octree->n_copied_ranks);
     n_nodes = octree->n_copied_explicit_nodes[i_copied_rank];
     nodes   = octree->copied_explicit_nodes[i_copied_rank];
     points  = octree->copied_points[i_copied_rank];
+    pts_g_num = octree->copied_points_gnum[i_copied_rank];
   }
 
   if (n_nodes == 0 || (n_nodes > 0 && nodes[0].n_points == 0)) {
@@ -5162,6 +5165,9 @@ _points_inside_boxes_explicit
 
     if (node_inside_box) {
       /* The box must contain all points */
+      if (DEBUG) {
+        printf("    add pts with lnum %d through %d\n", nodes[0].range, nodes[0].range + nodes[0].n_points);
+      }
       int new_size = tmp_size + nodes[0].n_points;
 
       if (tmp_size <= new_size) {
@@ -5218,6 +5224,9 @@ _points_inside_boxes_explicit
             }
 
             _pts_l_num[_pts_idx[ibox+1]++] = ipt;
+            if (DEBUG) {
+              printf("    add point %d ("PDM_FMT_G_NUM")\n", ipt, pts_g_num[ipt]);
+            }
           }
         } // End of loop on points inside leaf
       }
@@ -5258,6 +5267,10 @@ _points_inside_boxes_explicit
           if (intersect) {
             if (node_inside_box) {
               /* The box must contain all points */
+              if (DEBUG) {
+                printf("    add pts with lnum %d through %d\n", _child->range, _child->range + _child->n_points);
+              }
+
               int new_size = tmp_size + _child->n_points;
 
               if (tmp_size <= new_size) {
