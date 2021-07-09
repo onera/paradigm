@@ -3721,7 +3721,7 @@ PDM_mesh_location_t        *ml
 
       /* Free octree */
       PDM_para_octree_free (octree_id);
-      break;  
+      break;
      }
     case PDM_MESH_LOCATION_DBBTREE:
       printf("[%d] n_pts_pcloud = %d, n_select_boxes = %d\n", my_rank, n_pts_pcloud, n_select_boxes);//
@@ -3774,6 +3774,18 @@ PDM_mesh_location_t        *ml
         printf("\n");
       }
       printf("[%d] ------------------\n\n\n", my_rank);
+    }
+
+    if (1) {
+      for (ibox = 0; ibox < n_select_boxes; ibox++) {
+        if (select_box_g_num[ibox] == 2793384) {
+          printf("[%d] box "PDM_FMT_G_NUM", %d point(s) inside:", my_rank, select_box_g_num[ibox], pts_idx[ibox+1] - pts_idx[ibox]);
+          for (int i = pts_idx[ibox]; i < pts_idx[ibox+1]; i++) {
+            printf(" "PDM_FMT_G_NUM, pts_g_num[i]);
+          }
+          printf("\n");
+        }
+      }
     }
 
     PDM_timer_hang_on(ml->timer);
