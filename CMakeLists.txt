@@ -306,10 +306,17 @@ else ()
     # NB: cython module must use mpicxx to avoid "mpi.h" not found.
     find_package(MPI REQUIRED COMPONENTS CXX)
 
-    find_package(PythonInterp REQUIRED)
-    find_package(PythonLibs REQUIRED)
-    find_package(NumPy REQUIRED)
-    find_package(Mpi4Py REQUIRED)
+    if(CMAKE_VERSION VERSION_LESS 3.12)
+      find_package(PythonInterp REQUIRED)
+      find_package(PythonLibs REQUIRED)
+      find_package(NumPy REQUIRED)
+      find_package(Mpi4Py REQUIRED)
+    elseif(CMAKE_VERSION VERSION_LESS 3.14)
+      find_package(Python 3 REQUIRED COMPONENTS Interpreter Development)
+    else()
+      find_package(Python 3 REQUIRED COMPONENTS Interpreter Development NumPy)
+    endif()
+
     include(UseCython)
 
     if (NOT CMAKE_PDM_INSTALL_PYTHON_DIR)
