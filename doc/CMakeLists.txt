@@ -1,5 +1,5 @@
-option(PDM_BUILD_DOCUMENTATION "Create and install the HTML based API documentation (requires Doxygen)" OFF)
-if(PDM_BUILD_DOCUMENTATION)
+option(PDM_ENABLE_DOC "Create and install the HTML based API documentation (requires Doxygen)" OFF)
+if(PDM_ENABLE_DOC)
     find_package(Doxygen 1.8.9)
     if(NOT DOXYGEN_FOUND)
         message(FATAL_ERROR "Doxygen is needed to build the documentation.")
