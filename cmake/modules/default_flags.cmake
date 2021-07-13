@@ -118,7 +118,9 @@ elseif (CMAKE_Fortran_COMPILER_ID STREQUAL "PathScale")
 
 else ()
 
-  message (WARNING "Default flags are not defined for ${CMAKE_Fortran_COMPILER_ID}")
+  if (PDM_ENABLE_Fortran)
+    message (WARNING "Default flags are not defined for ${CMAKE_Fortran_COMPILER_ID}")
+  endif()
 
   set (CMAKE_Fortran_FLAGS "")
   set (CMAKE_Fortran_FLAGS_RELEASE "-O")
