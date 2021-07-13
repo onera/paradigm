@@ -106,7 +106,7 @@ if (PDM_ENABLE_STATIC_Fortran_INTERFACE OR PDM_ENABLE_SHARED_Fortran_INTERFACE)
   )
     if (PDM_ENABLE_EXTENSION_PDMA)
       target_include_directories(pdmf
-                                 PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/extension/paradigma/src/plugins/renum>
+                                 PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/extensions/paradigma/src/plugins/renum>
                                  )
     endif()
 endif()

@@ -1062,7 +1062,7 @@ PDM_MPI_Comm       comm
                         cell_part,
                         comm);
 
-  PDM_log_trace_array_long(cell_part, dn_face, "cell_part :: ");
+  PDM_log_trace_array_int (cell_part, dn_face, "cell_part :: ");
 
 
   // free(dual_graph_idx);
@@ -1186,7 +1186,7 @@ PDM_MPI_Comm       comm
                                                                    n_section,
                                             (const PDM_g_num_t **) block_elmts_disbrib_idx,
                                             (const PDM_g_num_t **) pcell_ln_to_gn,
-                                            (const PDM_g_num_t  *) pn_cell,
+                                            (const int          *) pn_cell,
                                                                    n_part,
                                                                    comm);
 

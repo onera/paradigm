@@ -1570,7 +1570,7 @@ _generate_edges_from_dmesh_nodal2
 
   if(1 == 1) {
     PDM_log_trace_array_long(dm->dconnectivity[PDM_CONNECTIVITY_TYPE_FACE_EDGE], dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_FACE_EDGE][dn_face], "dface_edge :: ");
-    PDM_log_trace_array_long(dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_FACE], dm->dn_edge+1, "dedge_face_idx :: ");
+    PDM_log_trace_array_int(dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_FACE], dm->dn_edge+1, "dedge_face_idx :: ");
     PDM_log_trace_array_long(dm->dconnectivity[PDM_CONNECTIVITY_TYPE_EDGE_FACE], dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_FACE][dm->dn_edge], "dedge_face :: ");
   }
 
@@ -1578,7 +1578,7 @@ _generate_edges_from_dmesh_nodal2
   int         *_dedge_vtx_idx      = dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_VTX];
 
   PDM_g_num_t* _dedge_face_tmp     = dm->dconnectivity    [PDM_CONNECTIVITY_TYPE_EDGE_FACE];
-  PDM_g_num_t* _dedge_face_idx_tmp = dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_FACE];
+  int        * _dedge_face_idx_tmp = dm->dconnectivity_idx[PDM_CONNECTIVITY_TYPE_EDGE_FACE];
 
   // Post_treat
   PDM_g_num_t *dedge_face = (PDM_g_num_t *) malloc( 2 * dm->dn_edge * sizeof(PDM_g_num_t));;

@@ -153,7 +153,7 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
                                                                    n_section,
                                             (const PDM_g_num_t **) block_elmts_disbrib_idx,
                                             (const PDM_g_num_t **) elmt_ln_to_gn,
-                                            (const PDM_g_num_t  *) pn_elmt,
+                                            (const int          *) pn_elmt,
                                                                    n_part,
                                                                    dmne->comm);
 
