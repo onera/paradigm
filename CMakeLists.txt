@@ -103,6 +103,14 @@ else ()
 
   option(PDM_ENABLE_OPENMP "Enable OpenMP" OFF)
 
+  # CUDA
+  # ------
+
+  option(PDM_ENABLE_CUDA "Enable CUDA" OFF)
+  if (PDM_ENABLE_CUDA)
+    enable_language(CUDA)
+  endif ()
+
   # Enable long for absolute number
   # -------------------------------
 
@@ -387,11 +395,11 @@ set(PDM_ETC_DIR "etc")
 
 add_subdirectory(src)
 
+add_subdirectory(extensions)
+
 if (PDM_ENABLE_PYTHON_BINDINGS)
   add_subdirectory(Cython)
 endif()
-
-add_subdirectory(extensions)
 
 add_subdirectory(test)
 
