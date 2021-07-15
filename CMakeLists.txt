@@ -446,7 +446,7 @@ configure_file(
   @ONLY
 )
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/pdmConfig.cmake"
-  DESTINATION lib/cmake
+  DESTINATION lib/cmake/pdm
 )
 
 #------------------------------------------------------------------------------
