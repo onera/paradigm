@@ -5084,6 +5084,7 @@ _points_inside_boxes_explicit
  const int                 n_box,
  const double              box_extents[],
  // const PDM_morton_code_t   box_codes[],
+ const PDM_g_num_t         box_g_num[],
  int                     **pts_idx,
  int                     **pts_l_num
  )
@@ -5100,15 +5101,18 @@ _points_inside_boxes_explicit
   int n_nodes;
   const _explicit_node_t *nodes;
   const double *points;
+  const PDM_g_num_t *pts_g_num;
   if (i_copied_rank < 0) {
     n_nodes = octree->n_explicit_nodes;
     nodes   = octree->explicit_nodes;
     points  = octree->points;
+    pts_g_num = octree->points_gnum;
   } else {
     assert (i_copied_rank < octree->n_copied_ranks);
     n_nodes = octree->n_copied_explicit_nodes[i_copied_rank];
     nodes   = octree->copied_explicit_nodes[i_copied_rank];
     points  = octree->copied_points[i_copied_rank];
+    pts_g_num = octree->copied_points_gnum[i_copied_rank];
   }
 
   if (n_nodes == 0 || (n_nodes > 0 && nodes[0].n_points == 0)) {
@@ -5132,7 +5136,7 @@ _points_inside_boxes_explicit
   int intersect;
 
   for (int ibox = 0; ibox < n_box; ibox++) {
-    int DEBUG = 0;//(ibox == 201);
+    int DEBUG = (box_g_num[ibox] == 2793384);//
     _pts_idx[ibox+1] = _pts_idx[ibox];
 
     const double *_box_extents = box_extents + 6*ibox;
@@ -5141,17 +5145,10 @@ _points_inside_boxes_explicit
     //const PDM_morton_code_t *box_code_min = box_codes + 2*ibox;
     //const PDM_morton_code_t *box_code_max = box_code_min + 1;
     if (DEBUG) {
-      printf("box %d: min = %f %f %f, max = %f %f %f\n",
-             ibox,
+      printf("box "PDM_FMT_G_NUM": min = %f %f %f, max = %f %f %f\n",
+             box_g_num[ibox],
              box_min[0], box_min[1], box_min[2],
              box_max[0], box_max[1], box_max[2]);
-      printf("center: %f %f %f, length = %f %f %f\n",
-             0.5*(box_max[0] + box_min[0]),
-             0.5*(box_max[1] + box_min[1]),
-             0.5*(box_max[2] + box_min[2]),
-             box_max[0] - box_min[0],
-             box_max[1] - box_min[1],
-             box_max[2] - box_min[2]);
     }
 
     intersect = _intersect_node_box_explicit (3,
@@ -5161,13 +5158,16 @@ _points_inside_boxes_explicit
 
     if (!intersect) {
       if (DEBUG) {
-        printf("box %d does not intersect root node\n", ibox);
+        printf("box "PDM_FMT_G_NUM" does not intersect root node\n", box_g_num[ibox]);
       }
       continue;
     }
 
     if (node_inside_box) {
       /* The box must contain all points */
+      if (DEBUG) {
+        printf("    add pts with lnum %d through %d\n", nodes[0].range, nodes[0].range + nodes[0].n_points);
+      }
       int new_size = tmp_size + nodes[0].n_points;
 
       if (tmp_size <= new_size) {
@@ -5191,7 +5191,7 @@ _points_inside_boxes_explicit
       int node_id = stack_id[--pos_stack];
       const _explicit_node_t *_node = nodes + node_id;
       if (DEBUG) {
-        printf("node %d : L=%u, X=%u %u %u, range=%d, n_points=%d, leaf_id=%d\n",
+        printf("  node %d : L=%u, X=%u %u %u, range=%d, n_points=%d, leaf_id=%d\n",
                node_id,
                _node->code.L,
                _node->code.X[0],
@@ -5224,6 +5224,9 @@ _points_inside_boxes_explicit
             }
 
             _pts_l_num[_pts_idx[ibox+1]++] = ipt;
+            if (DEBUG) {
+              printf("    add point %d ("PDM_FMT_G_NUM")\n", ipt, pts_g_num[ipt]);
+            }
           }
         } // End of loop on points inside leaf
       }
@@ -5237,7 +5240,7 @@ _points_inside_boxes_explicit
           const _explicit_node_t *_child = nodes + _node->children_id[i];
 
           if (DEBUG) {
-            printf("child %d: id=%d, L=%u, X=%u %u %u, range=%d, n_points=%d, leaf_id=%d\n",
+            printf("    child %d: id=%d, L=%u, X=%u %u %u, range=%d, n_points=%d, leaf_id=%d\n",
                    i,
                    _node->children_id[i],
                    _child->code.L,
@@ -5247,6 +5250,9 @@ _points_inside_boxes_explicit
                    _child->range,
                    _child->n_points,
                    _child->leaf_id);
+            printf("    pts_extents = %f %f %f %f %f %f\n",
+                   _child->pts_extents[0], _child->pts_extents[1], _child->pts_extents[2],
+                   _child->pts_extents[3], _child->pts_extents[4], _child->pts_extents[5]);
           }
 
           intersect = _intersect_node_box_explicit (3,
@@ -5255,12 +5261,16 @@ _points_inside_boxes_explicit
                                                     &node_inside_box);
 
           if (DEBUG) {
-            printf("intersect = %d\n", intersect);
+            printf("    intersect = %d\n", intersect);
           }
 
           if (intersect) {
             if (node_inside_box) {
               /* The box must contain all points */
+              if (DEBUG) {
+                printf("    add pts with lnum %d through %d\n", _child->range, _child->range + _child->n_points);
+              }
+
               int new_size = tmp_size + _child->n_points;
 
               if (tmp_size <= new_size) {
@@ -11162,6 +11172,7 @@ PDM_para_octree_points_inside_boxes_with_copies
                                    part_n_box[0],
                                    box_extents1,
                                    //box_corners,
+                                   box_g_num1,
                                    &(box_pts_idx[0]),
                                    &(box_pts_l_num[0]));
   }
@@ -11182,6 +11193,7 @@ PDM_para_octree_points_inside_boxes_with_copies
   if (octree->n_copied_ranks > 0) {
     double            *box_extents_copied = box_extents1 + part_n_box[0] * two_dim;
     PDM_morton_code_t *box_corners_copied = box_corners  + part_n_box[0] * 2;
+    PDM_g_num_t       *box_g_num_copied = box_g_num1 + part_n_box[0];
     for (int i = 0; i < octree->n_copied_ranks; i++) {
       part_n_box[i+1] = copied_shift[i+1] - copied_shift[i];
 
@@ -11191,6 +11203,7 @@ PDM_para_octree_points_inside_boxes_with_copies
                                        part_n_box[i+1],
                                        box_extents_copied + copied_shift[i] * two_dim,
                                        //box_corners_copied + copied_shift[i] * 2,
+                                       box_g_num_copied,
                                        &(box_pts_idx[i+1]),
                                        &(box_pts_l_num[i+1]));
       }
