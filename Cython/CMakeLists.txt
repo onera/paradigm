@@ -128,4 +128,7 @@ if ((CMAKE_C_COMPILER_ID STREQUAL "GNU") OR
 endif()
 
 install(TARGETS Pypdm
-        LIBRARY DESTINATION ${SITE_PACKAGES_PDM})
+        LIBRARY DESTINATION "${SITE_PACKAGES_PDM}")
+install(FILES       "${CMAKE_CURRENT_SOURCE_DIR}/Pypdm/__init__.py"
+        DESTINATION "${SITE_PACKAGES_PDM}"
+        COMPONENT   "cython")
