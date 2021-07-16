@@ -22,6 +22,7 @@
 #include "pdm_array.h"
 #include "pdm_error.h"
 #include "pdm_distrib.h"
+#include "pdm_geom_elem.h"
 
 /*============================================================================
  * Type definitions
@@ -379,6 +380,70 @@ _write_polydata_gnum
 }
 
 
+static void
+write_dual_edges
+(
+ const char        *filename,
+ const int          n_cell,
+ const int         *cell_face_idx,
+ const int         *cell_face,
+ const double      *cell_center,
+ const int          n_face,
+ const double      *face_center,
+ const PDM_g_num_t *face_g_num
+ )
+{
+  FILE *f = fopen(filename, "w");
+
+  fprintf(f, "# vtk DataFile Version 2.0\n");
+  fprintf(f, "dual edges\n");
+  fprintf(f, "ASCII\n");
+  fprintf(f, "DATASET UNSTRUCTURED_GRID\n");
+
+  fprintf(f, "POINTS %d double\n", n_cell + n_face);
+  for (int i = 0; i < n_cell; i++) {
+    for (int j = 0; j < 3; j++) {
+      fprintf(f, "%.20lf ", cell_center[3*i+j]);
+    }
+    fprintf(f, "\n");
+  }
+
+  for (int i = 0; i < n_face; i++) {
+    for (int j = 0; j < 3; j++) {
+      fprintf(f, "%.20lf ", face_center[3*i+j]);
+    }
+    fprintf(f, "\n");
+  }
+
+  int n_edge = cell_face_idx[n_cell];
+  fprintf(f, "CELLS %d %d\n", n_edge, 3*n_edge);
+  for (int i = 0; i < n_cell; i++) {
+    for (int j = cell_face_idx[i]; j < cell_face_idx[i+1]; j++) {
+      int iface = PDM_ABS(cell_face[j]) - 1;
+      fprintf(f, "2 %d %d\n", i, n_cell + iface);
+    }
+  }
+
+  fprintf(f, "CELL_TYPES %d\n", n_edge);
+  for (int i = 0; i < n_edge; i++) {
+    fprintf(f, "3\n");
+  }
+
+  if (face_g_num != NULL) {
+    fprintf(f, "CELL_DATA %d\n", n_edge);
+    fprintf(f, "SCALARS face_gnum long 1\n");
+    fprintf(f, "LOOKUP_TABLE default\n");
+    for (int i = 0; i < n_cell; i++) {
+      for (int j = cell_face_idx[i]; j < cell_face_idx[i+1]; j++) {
+        int iface = PDM_ABS(cell_face[j]) - 1;
+        fprintf(f, PDM_FMT_G_NUM"\n", face_g_num[iface]);
+      }
+    }
+  }
+
+  fclose(f);
+}
+
 /**
  *
  * \brief  Main
@@ -625,7 +690,7 @@ int main(int argc, char *argv[])
 
 
   if (post) {
-    /* Write faces */
+    /* Write faces and dual edges */
     for (int i_part = 0; i_part < n_part; i_part++) {
       int n_proc, tn_part;
       int n_cell, n_face, n_vtx, n_bounds, n_joins, n_part_joins;
@@ -665,7 +730,159 @@ int main(int argc, char *argv[])
                        face_vtx_idx,
                        face_vtx,
                        face_ln_to_gn);
+
+
+      PDM_g_num_t n_octo_z_cst = nx * ny;
+      PDM_g_num_t n_quadH_z_cst = (nx - 1) * (ny - 1);
+      PDM_g_num_t n_tria_z_cst = 2*(nx - 1) + 2*(ny - 1) + 4;
+      PDM_g_num_t n_quadV_z_cst = nx*(ny+1) + ny*(nx+1) + 4*nx*ny + 2*(nx-1) + 2*(ny-1) + 8;
+      PDM_g_num_t n_faceH_z_cst = n_octo_z_cst + n_quadH_z_cst + n_tria_z_cst;
+      PDM_g_num_t n_face_z_cst = n_faceH_z_cst + n_quadV_z_cst;
+
+      PDM_g_num_t idx_quadH = n_octo_z_cst;
+      PDM_g_num_t idx_tria1 = idx_quadH + n_quadH_z_cst; // bottom row
+      PDM_g_num_t idx_tria2 = idx_tria1 + nx - 1;        // top row
+      PDM_g_num_t idx_tria3 = idx_tria2 + nx - 1;        // left column
+      PDM_g_num_t idx_tria4 = idx_tria3 + ny - 1;        // right column
+      PDM_g_num_t idx_tria5 = idx_tria4 + ny - 1;        // corners
+
+      double stepx = lengthx / (double) (3*nx);
+      double stepy = lengthy / (double) (3*ny);
+      double stepz = 0.;
+      if (nz > 0) {
+        stepz = lengthz / (double) nz;
+      }
+
+      double *cell_center = malloc (sizeof(double) * n_cell * 3);
+      for (int icell = 0; icell < n_cell; icell++) {
+        PDM_g_num_t g = cell_ln_to_gn[icell] - 1;
+        PDM_g_num_t k = g / n_faceH_z_cst;
+        PDM_g_num_t r = g % n_faceH_z_cst;
+        PDM_g_num_t i, j;
+
+        cell_center[3*icell + 2] = zmin + (k + 0.5) * stepz;
+        if (r < idx_quadH) {
+          // Octagon
+          j = r / nx;
+          i = r % nx;
+
+          cell_center[3*icell]     = xmin + (3*i + 1.5) * stepx;
+          cell_center[3*icell + 1] = ymin + (3*j + 1.5) * stepy;
+        }
+
+        else if (r < idx_tria1) {
+          // Quadrangle
+          PDM_g_num_t s = r - idx_quadH;
+
+          j = s / (nx - 1);
+          i = s % (nx - 1);
+
+          cell_center[3*icell]     = xmin + 3*(i + 1) * stepx;
+          cell_center[3*icell + 1] = ymin + 3*(j + 1) * stepy;
+        }
+
+        else if (r < idx_tria2) {
+          // Triangle (bottom row)
+          PDM_g_num_t s = r - idx_tria1;
+
+          i = s % (nx - 1);
+
+          cell_center[3*icell]     = xmin + 3*(i + 1) * stepx;
+          cell_center[3*icell + 1] = ymin + stepy/3.;
+        }
+
+        else if (r < idx_tria3) {
+          // Triangle (top row)
+          r -= idx_tria2;
+
+          i = r % (nx - 1);
+
+          cell_center[3*icell]     = xmin + 3*(i + 1) * stepx;
+          cell_center[3*icell + 1] = ymin + lengthy - stepy/3.;
+        }
+
+        else if (r < idx_tria4) {
+          // Triangle (left column)
+          PDM_g_num_t s = r - idx_tria3;
+
+          j = s % (ny - 1);
+
+          cell_center[3*icell]     = xmin + stepx/3.;
+          cell_center[3*icell + 1] = ymin + 3*(j + 1) * stepy;
+        }
+
+        else if (r < idx_tria5) {
+          // Triangle (right column)
+          r -= idx_tria4;
+
+          j = r % (ny - 1);
+
+          cell_center[3*icell]     = xmin + lengthx - stepx/3.;
+          cell_center[3*icell + 1] = ymin + 3*(j + 1) * stepy;
+        }
+
+        else if (r < idx_tria5 + 1) {
+          // Triangle (bottom-left corner)
+          cell_center[3*icell]     = xmin + stepx/3.;
+          cell_center[3*icell + 1] = ymin + stepy/3.;
+        }
+
+        else if (r < idx_tria5 + 2) {
+          // Triangle (bottom-right corner)
+          cell_center[3*icell]     = xmin + lengthx - stepx/3.;
+          cell_center[3*icell + 1] = ymin + stepy/3.;
+        }
+
+        else if (r < idx_tria5 + 3) {
+          // Triangle (top-left corner)
+          cell_center[3*icell]     = xmin + stepx/3.;
+          cell_center[3*icell + 1] = ymin + lengthy - stepy/3.;
+        }
+
+        else if (r < idx_tria5 + 4) {
+          // Triangle (top-right corner)
+          cell_center[3*icell]     = xmin + lengthx - stepx/3.;
+          cell_center[3*icell + 1] = ymin + lengthy - stepy/3.;
+        }
+
+        else {
+          //assert(0);
+          printf("[%d] part %d, cell %d ("PDM_FMT_G_NUM"), k = %ld, r = %ld\n", i_rank, i_part, icell, cell_ln_to_gn[icell], k, r);
+          for (int l = 0; l < 3; l++) {
+            cell_center[3*icell + l] = 0.;
+          }
+        }
+      }
+
+      double *face_center = malloc (sizeof(double) * n_face * 3);
+      double *surf_vector = malloc (sizeof(double) * n_face * 3);
+      double *char_length = malloc (sizeof(double) * n_face);
+      int *is_degenerate = malloc (sizeof(int) * n_face);
+      PDM_geom_elem_polygon_properties (n_face,
+                                        face_vtx_idx,
+                                        face_vtx,
+                                        vtx,
+                                        surf_vector,
+                                        face_center,
+                                        char_length,
+                                        is_degenerate);
+      free (surf_vector);
+      free (char_length);
+      free (is_degenerate);
+
+      sprintf(filename, "dual_edges_%3.3d.vtk", i_rank*n_part + i_part);
+      write_dual_edges (filename,
+                        n_cell,
+                        cell_face_idx,
+                        cell_face,
+                        cell_center,
+                        n_face,
+                        face_center,
+                        face_ln_to_gn);
+      free (cell_center);
+      free (face_center);
     }
+
   }
 
   if (post) {
