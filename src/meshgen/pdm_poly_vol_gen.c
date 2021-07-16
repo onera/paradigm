@@ -32,6 +32,15 @@
 #include "pdm_printf.h"
 #include "pdm_error.h"
 
+static double _rand (void)
+{
+  int sign;
+  int rsigna = rand();
+  int rsignb = rand();
+  sign = (rsigna - rsignb) / PDM_ABS(rsigna - rsignb);
+  double resultat = sign*((double)rand())/((double)RAND_MAX);
+  return resultat;
+}
 
 void
 PDM_poly_vol_gen
@@ -65,6 +74,8 @@ PDM_poly_vol_gen
  PDM_g_num_t **dface_group
  )
 {
+  srand (random_seed);
+
   int i_rank, n_rank;
   PDM_MPI_Comm_rank (comm, &i_rank);
   PDM_MPI_Comm_size (comm, &n_rank);
@@ -151,12 +162,23 @@ PDM_poly_vol_gen
     stepz = lengthz / (double) nz;
   }
 
+  double noise = 0.4 * PDM_MIN (stepx, PDM_MIN (stepy, stepz / 3.));
+
   for (int ivtx = 0; ivtx < *dn_vtx; ivtx++) {
     PDM_g_num_t g = distrib_vtx[i_rank] + ivtx;
     PDM_g_num_t k = g / n_vtx_z_cst;
     PDM_g_num_t r = g % n_vtx_z_cst;
     PDM_g_num_t i, j;
-    double x, y;
+    double x, y, z;
+    z = zmin + k*stepz;
+
+    double rx = noise * _rand();
+    double ry = noise * _rand();
+    double rz = noise * _rand()/3.;
+
+    if (k == 0 || k == nz) {
+      rz = 0.;
+    }
 
     if (r > n_vtx_z_cst - 5) {
       // Corner
@@ -166,6 +188,8 @@ PDM_poly_vol_gen
 
       x = xmin + i*lengthx;
       y = ymin + j*lengthy;
+      rx = 0.;
+      ry = 0.;
     }
     else {
       PDM_g_num_t jj = r / n_vtx3;
@@ -175,22 +199,32 @@ PDM_poly_vol_gen
         // row n_vtx1
         i = 3*(s/2) + 1 + s%2;
         j = 3*jj;
+        if (jj == 0 || jj == ny) {
+          ry = 0.;
+        }
       }
       else {
         // row n_vtx2
         s -= n_vtx1;
         j = 3*jj + s / n_vtx2 + 1;
         i = 3*(s % n_vtx2);
+        if (i == 0 || i == 3*nx) {
+          rx = 0;
+        }
       }
       x = xmin + i*stepx;
       y = ymin + j*stepy;
     }
 
-    // randomize...
-
     _dvtx_coord[3*ivtx    ] = x;
     _dvtx_coord[3*ivtx + 1] = y;
-    _dvtx_coord[3*ivtx + 2] = zmin + k*stepz;
+    _dvtx_coord[3*ivtx + 2] = z;
+
+    if (randomize) {
+      _dvtx_coord[3*ivtx    ] += rx;
+      _dvtx_coord[3*ivtx + 1] += ry;
+      _dvtx_coord[3*ivtx + 2] += rz;
+    }
   }
 
 

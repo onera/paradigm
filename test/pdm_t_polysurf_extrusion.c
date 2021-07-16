@@ -79,6 +79,8 @@ _read_args(int           argc,
            double       *lengthy,
            double       *lengthz,
            int          *n_part,
+           int          *randomize,
+           int          *random_seed,
            int          *post,
            int          *method)
 {
@@ -171,6 +173,17 @@ _read_args(int           argc,
         *n_part = atoi(argv[i]);
       }
     }
+    else if (strcmp(argv[i], "-rand") == 0) {
+      *randomize = 1;
+    }
+    else if (strcmp(argv[i], "-seed") == 0) {
+      i++;
+      if (i >= argc)
+        _usage(EXIT_FAILURE);
+      else {
+        *random_seed = atoi(argv[i]);
+      }
+    }
     else if (strcmp(argv[i], "-post") == 0) {
       *post = 1;
     }
@@ -189,64 +202,6 @@ _read_args(int           argc,
 
 
 
-static void
-_write_point_cloud
-(
- const char        *filename,
- const char        *header,
- const int          n_pts,
- const double       coord[],
- const PDM_g_num_t  g_num[],
- const double       field[]
- )
-{
-  FILE *f = fopen(filename, "w");
-
-  fprintf(f, "# vtk DataFile Version 2.0\n");
-  if (header != NULL) {
-    fprintf(f, "%s\n", header);
-  } else {
-    fprintf(f, "point cloud\n");
-  }
-  fprintf(f, "ASCII\n");
-  fprintf(f, "DATASET UNSTRUCTURED_GRID\n");
-
-  fprintf(f, "POINTS %d double\n", n_pts);
-  for (int i = 0; i < n_pts; i++) {
-    for (int j = 0; j < 3; j++) {
-      fprintf(f, "%.20lf ", coord[3*i+j]);
-    }
-    fprintf(f, "\n");
-  }
-
-  fprintf(f, "CELLS %d %d\n", n_pts, 2*n_pts);
-  for (int i = 0; i < n_pts; i++) {
-    fprintf(f, "1 %d\n", i);
-  }
-
-  fprintf(f, "CELL_TYPES %d\n", n_pts);
-  for (int i = 0; i < n_pts; i++) {
-    fprintf(f, "1\n");
-  }
-
-  if (g_num != NULL) {
-    fprintf(f, "CELL_DATA %d\n", n_pts);
-    fprintf(f, "SCALARS gnum int\n LOOKUP_TABLE default\n");
-    for (int i = 0; i < n_pts; i++) {
-      fprintf(f, ""PDM_FMT_G_NUM"\n", g_num[i]);
-    }
-  }
-
-  else if (field != NULL) {
-    fprintf(f, "CELL_DATA %d\n", n_pts);
-    fprintf(f, "SCALARS field double\n LOOKUP_TABLE default\n");
-    for (int i = 0; i < n_pts; i++) {
-      fprintf(f, "%f\n", field[i]);
-    }
-  }
-
-  fclose(f);
-}
 
 
 static void
@@ -287,72 +242,6 @@ _write_polydata
     fprintf(f, "%d", face_vtx_idx[i+1] - face_vtx_idx[i]);
     for (int j = face_vtx_idx[i]; j < face_vtx_idx[i+1]; j++) {
       fprintf(f, " %d", face_vtx[j] - 1);
-    }
-    fprintf(f, "\n");
-  }
-
-
-  if (vtx_g_num != NULL) {
-    fprintf(f, "POINT_DATA %d\n", n_vtx);
-    fprintf(f, "SCALARS vtx_gnum long 1\n");
-    fprintf(f, "LOOKUP_TABLE default\n");
-    for (int i = 0; i < n_vtx; i++) {
-      fprintf(f, PDM_FMT_G_NUM"\n", vtx_g_num[i]);
-    }
-  }
-
-  if (face_g_num != NULL) {
-    fprintf(f, "CELL_DATA %d\n", n_face);
-    fprintf(f, "SCALARS face_gnum long 1\n");
-    fprintf(f, "LOOKUP_TABLE default\n");
-    for (int i = 0; i < n_face; i++) {
-      fprintf(f, PDM_FMT_G_NUM"\n", face_g_num[i]);
-    }
-  }
-
-
-  fclose(f);
-}
-
-
-static void
-_write_polydata_gnum
-(
- const char        *filename,
- const char        *header,
- const int          n_vtx,
- const double       vtx_coord[],
- const PDM_g_num_t  vtx_g_num[],
- const int          n_face,
- const int          face_vtx_idx[],
- const PDM_g_num_t  face_vtx[],
- const PDM_g_num_t  face_g_num[]
- )
-{
-  FILE *f = fopen(filename, "w");
-
-  fprintf(f, "# vtk DataFile Version 2.0\n");
-  if (header != NULL) {
-    fprintf(f, "%s\n", header);
-  } else {
-    fprintf(f, "point cloud\n");
-  }
-  fprintf(f, "ASCII\n");
-  fprintf(f, "DATASET POLYDATA\n");
-
-  fprintf(f, "POINTS %d double\n", n_vtx);
-  for (int i = 0; i < n_vtx; i++) {
-    for (int j = 0; j < 3; j++) {
-      fprintf(f, "%.20lf ", vtx_coord[3*i+j]);
-    }
-    fprintf(f, "\n");
-  }
-
-  fprintf(f, "POLYGONS %d %d\n", n_face, n_face + face_vtx_idx[n_face]);
-  for (int i = 0; i < n_face; i++) {
-    fprintf(f, "%d", face_vtx_idx[i+1] - face_vtx_idx[i]);
-    for (int j = face_vtx_idx[i]; j < face_vtx_idx[i+1]; j++) {
-      fprintf(f, " "PDM_FMT_G_NUM, face_vtx[j] - 1);
     }
     fprintf(f, "\n");
   }
@@ -597,8 +486,11 @@ int main(int argc, char *argv[])
   double lengthy = 1.;
   double lengthz = 1.;
 
-  int           n_part   = 1;
-  int           post    = 0;
+  int n_part      = 1;
+  int post        = 0;
+  int randomize   = 0;
+  int random_seed = 0;
+
 #ifdef PDM_HAVE_PARMETIS
   PDM_split_dual_t method  = PDM_SPLIT_DUAL_WITH_PARMETIS;
 #else
@@ -610,17 +502,19 @@ int main(int argc, char *argv[])
   /*
    *  Read args
    */
-  _read_args(argc,
-             argv,
-             &nx,
-             &ny,
-             &nz,
-             &lengthx,
-             &lengthy,
-             &lengthz,
-             &n_part,
-             &post,
-             (int *) &method);
+  _read_args (argc,
+              argv,
+              &nx,
+              &ny,
+              &nz,
+              &lengthx,
+              &lengthy,
+              &lengthz,
+              &n_part,
+              &randomize,
+              &random_seed,
+              &post,
+              (int *) &method);
 
 
   /*
@@ -640,9 +534,6 @@ int main(int argc, char *argv[])
   double xmin = 0.;
   double ymin = 0.;
   double zmin = 0.;
-
-  int randomize = 0;
-  int random_seed = 0;
 
   PDM_g_num_t  ng_cell;
   PDM_g_num_t  ng_face;
@@ -856,7 +747,6 @@ int main(int argc, char *argv[])
 
   }
 
-#if 1
   if (post) {
     /* Prepare writer */
     int id_cs = PDM_writer_create ("Ensight",
@@ -910,18 +800,18 @@ int main(int argc, char *argv[])
       int s_face_group;
       int n_edge_group2;
 
-      PDM_part_part_dim_get(ppart_id,
-                            i_part,
-                            &n_cell,
-                            &n_face,
-                            &n_face_part_bound,
-                            &n_vtx,
-                            &n_proc,
-                            &n_t_part,
-                            &s_cell_face,
-                            &s_face_vtx,
-                            &s_face_group,
-                            &n_edge_group2);
+      PDM_part_part_dim_get (ppart_id,
+                             i_part,
+                             &n_cell,
+                             &n_face,
+                             &n_face_part_bound,
+                             &n_vtx,
+                             &n_proc,
+                             &n_t_part,
+                             &s_cell_face,
+                             &s_face_vtx,
+                             &s_face_group,
+                             &n_edge_group2);
 
       int         *cell_tag;
       int         *cell_face_idx;
@@ -1044,7 +934,6 @@ int main(int argc, char *argv[])
     PDM_writer_geom_free (id_cs, id_geom);
     PDM_writer_free (id_cs);
   }
-#endif
 
   /*
    *  Finalize
