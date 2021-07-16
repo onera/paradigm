@@ -55,6 +55,8 @@ PDM_poly_vol_gen
  int          *dn_cell,
  int          *dn_face,
  int          *dn_vtx,
+ int         **dcell_face_idx,
+ PDM_g_num_t **dcell_face,
  PDM_g_num_t **dface_cell,
  int         **dface_vtx_idx,
  PDM_g_num_t **dface_vtx,
@@ -1005,4 +1007,202 @@ PDM_poly_vol_gen
   for (int i = 0; i < *n_face_group; i++) {
     _dface_group_idx[i+1] = PDM_MAX (_dface_group_idx[i+1], _dface_group_idx[i]);
   }
+
+
+  /*
+   *  Cell-face
+   */
+  *dcell_face_idx = malloc (sizeof(int) * (*dn_cell + 1));
+  int *_dcell_face_idx = *dcell_face_idx;
+  _dcell_face_idx[0] = 0;
+
+  int s_cell_face = 10 * (*dn_cell);
+  *dcell_face = malloc (sizeof(PDM_g_num_t) * s_cell_face);
+
+  for (int icel = 0; icel < (*dn_cell); icel++) {
+
+    PDM_g_num_t *_dcell_face = *dcell_face + _dcell_face_idx[icel];
+
+    PDM_g_num_t g = distrib_cell[i_rank] + icel;
+    PDM_g_num_t k = g / n_faceH_z_cst;
+    PDM_g_num_t r = g % n_faceH_z_cst;
+    PDM_g_num_t i, j;
+    PDM_g_num_t idxf = k*n_face_z_cst + 1;
+
+    if (r < idx_quadH) {
+      // Octagon
+      j = r / nx;
+      i = r % nx;
+
+      _dcell_face[0] = idxf + j*nx + i;
+      _dcell_face[1] = _dcell_face[0] + n_face_z_cst;
+      _dcell_face[2] = idxf + idx_quadV3 + j*nx + i;         // \ +y
+      _dcell_face[3] = idxf + idx_quadV1 + j*nx + i;         // _ +y
+      _dcell_face[4] = idxf + idx_quadV4 + j*nx + i;         // / +y
+      _dcell_face[5] = idxf + idx_quadV2 + j*(nx+1) + i + 1; // | -x
+      _dcell_face[6] = idxf + idx_quadV6 + j*nx + i;         // \ -y
+      _dcell_face[7] = idxf + idx_quadV1 + (j+1)*nx + i;     // _ -y
+      _dcell_face[8] = idxf + idx_quadV5 + j*nx + i;         // / -y
+      _dcell_face[9] = idxf + idx_quadV2 + j*(nx+1) + i;     // | +x
+      if (i < nx-1) {
+        _dcell_face[5] = -_dcell_face[5];
+      }
+      if (j < ny-1) {
+        _dcell_face[7] = -_dcell_face[7];
+      }
+      if (k < nz-1) {
+        _dcell_face[1] = -_dcell_face[1];
+      }
+      _dcell_face_idx[icel+1] = _dcell_face_idx[icel] + 10;
+    }
+
+    else if (r < idx_tria1) {
+      // Quadrangle
+      PDM_g_num_t s = r - idx_quadH;
+
+      j = s / (nx - 1);
+      i = s % (nx - 1);
+
+      _dcell_face[0] = idxf + idx_quadH + j*(nx-1) + i;
+      _dcell_face[1] = _dcell_face[0] + n_face_z_cst;
+      _dcell_face[2] = -(idxf + idx_quadV6 + j*nx + i);         // \ -y
+      _dcell_face[3] = -(idxf + idx_quadV5 + j*nx + i + 1);     // / -y
+      _dcell_face[4] = -(idxf + idx_quadV3 + (j+1)*nx + i + 1); // \ +y
+      _dcell_face[5] = -(idxf + idx_quadV4 + (j+1)*nx + i);     // / +y
+      if (k < nz-1) {
+        _dcell_face[1] = -_dcell_face[1];
+      }
+      _dcell_face_idx[icel+1] = _dcell_face_idx[icel] + 6;
+    }
+
+    else if (r < idx_tria2) {
+      // Triangle (bottom row)
+      PDM_g_num_t s = r - idx_tria1;
+
+      i = s % (nx - 1);
+
+      _dcell_face[0] = idxf + idx_tria1 + i;
+      _dcell_face[1] = _dcell_face[0] + n_face_z_cst;
+      _dcell_face[2] = idxf + idx_quadV7 + i;        // bottom row
+      _dcell_face[3] = -(idxf + idx_quadV3 + i + 1); // \ +y
+      _dcell_face[4] = -(idxf + idx_quadV4 + i);     // / +y
+      if (k < nz-1) {
+        _dcell_face[1] = -_dcell_face[1];
+      }
+
+      _dcell_face_idx[icel+1] = _dcell_face_idx[icel] + 5;
+    }
+
+    else if (r < idx_tria3) {
+      // Triangle (top row)
+      r -= idx_tria2;
+
+      i = r % (nx - 1);
+
+      _dcell_face[0] = idxf + idx_tria2 + i;
+      _dcell_face[1] = _dcell_face[0] + n_face_z_cst;
+      _dcell_face[2] = idxf + idx_quadV8 + i;                    // top row
+      _dcell_face[3] = -(idxf + idx_quadV6 + (ny-1)*nx + i);     // \ -y
+      _dcell_face[4] = -(idxf + idx_quadV5 + (ny-1)*nx + i + 1); // / -y
+      if (k < nz-1) {
+        _dcell_face[1] = -_dcell_face[1];
+      }
+
+      _dcell_face_idx[icel+1] = _dcell_face_idx[icel] + 5;
+    }
+
+    else if (r < idx_tria4) {
+      // Triangle (left column)
+      PDM_g_num_t s = r - idx_tria3;
+
+      j = s % (ny - 1);
+
+      _dcell_face[0] = idxf + idx_tria3 + j;
+      _dcell_face[1] = _dcell_face[0] + n_face_z_cst;
+      _dcell_face[2] = idxf + idx_quadV9 + j;           // left column
+      _dcell_face[3] = -(idxf + idx_quadV5 + j*nx);     // / -y
+      _dcell_face[4] = -(idxf + idx_quadV3 + (j+1)*nx); // \ +y
+      if (k < nz-1) {
+        _dcell_face[1] = -_dcell_face[1];
+      }
+
+      _dcell_face_idx[icel+1] = _dcell_face_idx[icel] + 5;
+    }
+
+    else if (r < idx_tria5) {
+      // Triangle (right column)
+      r -= idx_tria4;
+
+      j = r % (ny - 1);
+
+      _dcell_face[0] = idxf + idx_tria4 + j;
+      _dcell_face[1] = _dcell_face[0] + n_face_z_cst;
+      _dcell_face[2] = idxf + idx_quadV10 + j;                   // right column
+      _dcell_face[3] = -(idxf + idx_quadV4+ (j+1)*nx + nx - 1 ); // / +y
+      _dcell_face[4] = -(idxf + idx_quadV6 + j*nx + nx - 1);     // \ -y
+      if (k < nz-1) {
+        _dcell_face[1] = -_dcell_face[1];
+      }
+
+      _dcell_face_idx[icel+1] = _dcell_face_idx[icel] + 5;
+    }
+
+    else if (r < idx_tria5 + 1) {
+      // Triangle (bottom-left corner)
+      _dcell_face[0] = idxf + idx_tria5;
+      _dcell_face[1] = _dcell_face[0] + n_face_z_cst;
+      _dcell_face[2] = idxf + idx_quadV11;     // bottom-left corner _
+      _dcell_face[3] = -(idxf + idx_quadV3);   // \ +y
+      _dcell_face[4] = idxf + idx_quadV11 + 1; // bottom-left corner |
+      if (k < nz-1) {
+        _dcell_face[1] = -_dcell_face[1];
+      }
+
+      _dcell_face_idx[icel+1] = _dcell_face_idx[icel] + 5;
+    }
+
+    else if (r < idx_tria5 + 2) {
+      // Triangle (bottom-right corner)
+      _dcell_face[0] = idxf + idx_tria5 + 1;
+      _dcell_face[1] = _dcell_face[0] + n_face_z_cst;
+      _dcell_face[2] = idxf + idx_quadV11 + 2;        // bottom-right corner _
+      _dcell_face[3] = -(idxf + idx_quadV4 + nx - 1); // / +y
+      _dcell_face[4] = idxf + idx_quadV11 + 3;        // bottom-right corner |
+      if (k < nz-1) {
+        _dcell_face[1] = -_dcell_face[1];
+      }
+
+      _dcell_face_idx[icel+1] = _dcell_face_idx[icel] + 5;
+    }
+
+    else if (r < idx_tria5 + 3) {
+      // Triangle (top-left corner)
+      _dcell_face[0] = idxf + idx_tria5 + 2;
+      _dcell_face[1] = _dcell_face[0] + n_face_z_cst;
+      _dcell_face[2] = idxf + idx_quadV11 + 4;           // top-left corner |
+      _dcell_face[3] = -(idxf + idx_quadV5 + (ny-1)*nx); // / -y
+      _dcell_face[4] = idxf + idx_quadV11 + 5;           // top-left corner _
+      if (k < nz-1) {
+        _dcell_face[1] = -_dcell_face[1];
+      }
+
+      _dcell_face_idx[icel+1] = _dcell_face_idx[icel] + 5;
+    }
+
+    else {
+      // Triangle (top-right corner)
+      _dcell_face[0] = idxf + idx_tria5 + 3;
+      _dcell_face[1] = _dcell_face[0] + n_face_z_cst;
+      _dcell_face[2] = idxf + idx_quadV11 + 6;   // top-right corner |
+      _dcell_face[3] = -(idxf + idx_quadV7 - 1); // \ -y
+      _dcell_face[4] = idxf + idx_quadV11 + 7;   // top-right corner _
+      if (k < nz-1) {
+        _dcell_face[1] = -_dcell_face[1];
+      }
+
+      _dcell_face_idx[icel+1] = _dcell_face_idx[icel] + 5;
+    }
+
+  }
+  *dcell_face = realloc (*dcell_face, sizeof(PDM_g_num_t) * _dcell_face_idx[*dn_cell]);
 }

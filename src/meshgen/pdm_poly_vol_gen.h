@@ -63,6 +63,8 @@ PDM_poly_vol_gen
  int          *dn_cell,
  int          *dn_face,
  int          *dn_vtx,
+ int         **dcell_face_idx,
+ PDM_g_num_t **dcell_face,
  PDM_g_num_t **dface_cell,
  int         **dface_vtx_idx,
  PDM_g_num_t **dface_vtx,
