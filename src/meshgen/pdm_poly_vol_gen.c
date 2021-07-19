@@ -1239,4 +1239,10 @@ PDM_poly_vol_gen
 
   }
   *dcell_face = realloc (*dcell_face, sizeof(PDM_g_num_t) * _dcell_face_idx[*dn_cell]);
+
+
+  free (distrib_vtx);
+  free (distrib_face);
+  free (distrib_cell);
+  free (distrib_face_lim);
 }

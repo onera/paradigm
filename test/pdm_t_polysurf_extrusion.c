@@ -82,7 +82,8 @@ _read_args(int           argc,
            int          *randomize,
            int          *random_seed,
            int          *post,
-           int          *method)
+           int          *method,
+           int          *use_multipart)
 {
   int i = 1;
 
@@ -193,277 +194,12 @@ _read_args(int           argc,
     else if (strcmp(argv[i], "-parmetis") == 0) {
       *method = 1;
     }
+    else if (strcmp(argv[i], "-multipart") == 0) {
+      *use_multipart = 1;
+    }
     else
       _usage(EXIT_FAILURE);
     i++;
-  }
-}
-
-
-
-
-
-
-static void
-_write_polydata
-(
- const char        *filename,
- const char        *header,
- const int          n_vtx,
- const double       vtx_coord[],
- const PDM_g_num_t  vtx_g_num[],
- const int          n_face,
- const int          face_vtx_idx[],
- const int          face_vtx[],
- const PDM_g_num_t  face_g_num[]
- )
-{
-  FILE *f = fopen(filename, "w");
-
-  fprintf(f, "# vtk DataFile Version 2.0\n");
-  if (header != NULL) {
-    fprintf(f, "%s\n", header);
-  } else {
-    fprintf(f, "point cloud\n");
-  }
-  fprintf(f, "ASCII\n");
-  fprintf(f, "DATASET POLYDATA\n");
-
-  fprintf(f, "POINTS %d double\n", n_vtx);
-  for (int i = 0; i < n_vtx; i++) {
-    for (int j = 0; j < 3; j++) {
-      fprintf(f, "%.20lf ", vtx_coord[3*i+j]);
-    }
-    fprintf(f, "\n");
-  }
-
-  fprintf(f, "POLYGONS %d %d\n", n_face, n_face + face_vtx_idx[n_face]);
-  for (int i = 0; i < n_face; i++) {
-    fprintf(f, "%d", face_vtx_idx[i+1] - face_vtx_idx[i]);
-    for (int j = face_vtx_idx[i]; j < face_vtx_idx[i+1]; j++) {
-      fprintf(f, " %d", face_vtx[j] - 1);
-    }
-    fprintf(f, "\n");
-  }
-
-
-  if (vtx_g_num != NULL) {
-    fprintf(f, "POINT_DATA %d\n", n_vtx);
-    fprintf(f, "SCALARS vtx_gnum long 1\n");
-    fprintf(f, "LOOKUP_TABLE default\n");
-    for (int i = 0; i < n_vtx; i++) {
-      fprintf(f, PDM_FMT_G_NUM"\n", vtx_g_num[i]);
-    }
-  }
-
-  if (face_g_num != NULL) {
-    fprintf(f, "CELL_DATA %d\n", n_face);
-    fprintf(f, "SCALARS face_gnum long 1\n");
-    fprintf(f, "LOOKUP_TABLE default\n");
-    for (int i = 0; i < n_face; i++) {
-      fprintf(f, PDM_FMT_G_NUM"\n", face_g_num[i]);
-    }
-  }
-
-
-  fclose(f);
-}
-
-
-static void
-write_dual_edges
-(
- const char        *filename,
- const int          n_cell,
- const int         *cell_face_idx,
- const int         *cell_face,
- const double      *cell_center,
- const int          n_face,
- const double      *face_center,
- const PDM_g_num_t *face_g_num
- )
-{
-  FILE *f = fopen(filename, "w");
-
-  fprintf(f, "# vtk DataFile Version 2.0\n");
-  fprintf(f, "dual edges\n");
-  fprintf(f, "ASCII\n");
-  fprintf(f, "DATASET UNSTRUCTURED_GRID\n");
-
-  fprintf(f, "POINTS %d double\n", n_cell + n_face);
-  for (int i = 0; i < n_cell; i++) {
-    for (int j = 0; j < 3; j++) {
-      fprintf(f, "%.20lf ", cell_center[3*i+j]);
-    }
-    fprintf(f, "\n");
-  }
-
-  for (int i = 0; i < n_face; i++) {
-    for (int j = 0; j < 3; j++) {
-      fprintf(f, "%.20lf ", face_center[3*i+j]);
-    }
-    fprintf(f, "\n");
-  }
-
-  int n_edge = cell_face_idx[n_cell];
-  fprintf(f, "CELLS %d %d\n", n_edge, 3*n_edge);
-  for (int i = 0; i < n_cell; i++) {
-    for (int j = cell_face_idx[i]; j < cell_face_idx[i+1]; j++) {
-      int iface = PDM_ABS(cell_face[j]) - 1;
-      fprintf(f, "2 %d %d\n", i, n_cell + iface);
-    }
-  }
-
-  fprintf(f, "CELL_TYPES %d\n", n_edge);
-  for (int i = 0; i < n_edge; i++) {
-    fprintf(f, "3\n");
-  }
-
-  if (face_g_num != NULL) {
-    fprintf(f, "CELL_DATA %d\n", n_edge);
-    fprintf(f, "SCALARS face_gnum long 1\n");
-    fprintf(f, "LOOKUP_TABLE default\n");
-    for (int i = 0; i < n_cell; i++) {
-      for (int j = cell_face_idx[i]; j < cell_face_idx[i+1]; j++) {
-        int iface = PDM_ABS(cell_face[j]) - 1;
-        fprintf(f, PDM_FMT_G_NUM"\n", face_g_num[iface]);
-      }
-    }
-  }
-
-  fclose(f);
-}
-
-
-static void
-_cell_center_from_g_num
-(
- const int           nx,
- const int           ny,
- const int           nz,
- const double        xmin,
- const double        ymin,
- const double        zmin,
- const double        lengthx,
- const double        lengthy,
- const double        lengthz,
- const int           n_cell,
- const PDM_g_num_t  *cell_g_num,
- double            **cell_center
- )
-{
-  PDM_g_num_t n_octo_z_cst = nx * ny;
-  PDM_g_num_t n_quadH_z_cst = (nx - 1) * (ny - 1);
-  PDM_g_num_t n_tria_z_cst = 2*(nx - 1) + 2*(ny - 1) + 4;
-  PDM_g_num_t n_faceH_z_cst = n_octo_z_cst + n_quadH_z_cst + n_tria_z_cst;
-
-  PDM_g_num_t idx_quadH = n_octo_z_cst;
-  PDM_g_num_t idx_tria1 = idx_quadH + n_quadH_z_cst; // bottom row
-  PDM_g_num_t idx_tria2 = idx_tria1 + nx - 1;        // top row
-  PDM_g_num_t idx_tria3 = idx_tria2 + nx - 1;        // left column
-  PDM_g_num_t idx_tria4 = idx_tria3 + ny - 1;        // right column
-  PDM_g_num_t idx_tria5 = idx_tria4 + ny - 1;        // corners
-
-  double stepx = lengthx / (double) (3*nx);
-  double stepy = lengthy / (double) (3*ny);
-  double stepz = 0.;
-  if (nz > 0) {
-    stepz = lengthz / (double) nz;
-  }
-
-  *cell_center = malloc (sizeof(double) * n_cell * 3);
-
-  for (int icell = 0; icell < n_cell; icell++) {
-    PDM_g_num_t g = cell_g_num[icell] - 1;
-    double *_cell_center = *cell_center + 3*icell;
-    PDM_g_num_t k = g / n_faceH_z_cst;
-    PDM_g_num_t r = g % n_faceH_z_cst;
-    PDM_g_num_t i, j;
-
-    _cell_center[2] = zmin + (k + 0.5) * stepz;
-    if (r < idx_quadH) {
-      // Octagon
-      j = r / nx;
-      i = r % nx;
-
-      _cell_center[0] = xmin + (3*i + 1.5) * stepx;
-      _cell_center[1] = ymin + (3*j + 1.5) * stepy;
-    }
-
-    else if (r < idx_tria1) {
-      // Quadrangle
-      PDM_g_num_t s = r - idx_quadH;
-
-      j = s / (nx - 1);
-      i = s % (nx - 1);
-
-      _cell_center[0] = xmin + 3*(i + 1) * stepx;
-      _cell_center[1] = ymin + 3*(j + 1) * stepy;
-    }
-
-    else if (r < idx_tria2) {
-      // Triangle (bottom row)
-      PDM_g_num_t s = r - idx_tria1;
-
-      i = s % (nx - 1);
-
-      _cell_center[0] = xmin + 3*(i + 1) * stepx;
-      _cell_center[1] = ymin + stepy/3.;
-    }
-
-    else if (r < idx_tria3) {
-      // Triangle (top row)
-      r -= idx_tria2;
-
-      i = r % (nx - 1);
-
-      _cell_center[0] = xmin + 3*(i + 1) * stepx;
-      _cell_center[1] = ymin + lengthy - stepy/3.;
-    }
-
-    else if (r < idx_tria4) {
-      // Triangle (left column)
-      PDM_g_num_t s = r - idx_tria3;
-
-      j = s % (ny - 1);
-
-      _cell_center[0] = xmin + stepx/3.;
-      _cell_center[1] = ymin + 3*(j + 1) * stepy;
-    }
-
-    else if (r < idx_tria5) {
-      // Triangle (right column)
-      r -= idx_tria4;
-
-      j = r % (ny - 1);
-
-      _cell_center[0] = xmin + lengthx - stepx/3.;
-      _cell_center[1] = ymin + 3*(j + 1) * stepy;
-    }
-
-    else if (r < idx_tria5 + 1) {
-      // Triangle (bottom-left corner)
-      _cell_center[0] = xmin + stepx/3.;
-      _cell_center[1] = ymin + stepy/3.;
-    }
-
-    else if (r < idx_tria5 + 2) {
-      // Triangle (bottom-right corner)
-      _cell_center[0] = xmin + lengthx - stepx/3.;
-      _cell_center[1] = ymin + stepy/3.;
-    }
-
-    else if (r < idx_tria5 + 3) {
-      // Triangle (top-left corner)
-      _cell_center[0] = xmin + stepx/3.;
-      _cell_center[1] = ymin + lengthy - stepy/3.;
-    }
-
-    else if (r < idx_tria5 + 4) {
-      // Triangle (top-right corner)
-      _cell_center[0] = xmin + lengthx - stepx/3.;
-      _cell_center[1] = ymin + lengthy - stepy/3.;
-    }
   }
 }
 
@@ -499,6 +235,8 @@ int main(int argc, char *argv[])
 #endif
 #endif
 
+  int use_multipart = 0;
+
   /*
    *  Read args
    */
@@ -514,7 +252,8 @@ int main(int argc, char *argv[])
               &randomize,
               &random_seed,
               &post,
-              (int *) &method);
+              (int *) &method,
+              &use_multipart);
 
 
   /*
@@ -584,168 +323,99 @@ int main(int argc, char *argv[])
   /*
    *  Create mesh partitions
    */
-  int have_dcell_part = 0;
+  int id_part;
+  int n_join = 0;
+  PDM_dmesh_t *dmesh;
 
-  int *dcell_part = (int *) malloc(dn_cell*sizeof(int));
-  int *renum_properties_cell = NULL;
-  int *renum_properties_face = NULL;
-  int n_property_cell = 0;
-  int n_property_face = 0;
+  if (use_multipart) {
+    /* Initialize multipart */
+    id_part = PDM_multipart_create(1, &n_part, PDM_FALSE,
+                                   method, PDM_PART_SIZE_HOMOGENEOUS,
+                                   NULL, comm, PDM_OWNERSHIP_KEEP);
 
-  int ppart_id = 0;
+    /* Generate dmesh */
+    dmesh = PDM_dmesh_create (PDM_OWNERSHIP_KEEP,
+                              dn_cell,
+                              dn_face,
+                              -1, // dn_edge
+                              dn_vtx,
+                              n_face_group,
+                              n_join,
+                              comm);
+    int *djoins_ids = malloc (sizeof(int) * n_join);
+    int *dface_join_idx = malloc (sizeof(int) * (n_join + 1));
+    dface_join_idx[0] = 0;
+    PDM_g_num_t *dface_join = malloc (sizeof(PDM_g_num_t) * dface_join_idx[n_join]);
 
-  PDM_part_create(&ppart_id,
-                  PDM_MPI_COMM_WORLD,
-                  method,
-                  "PDM_PART_RENUM_CELL_NONE",
-                  "PDM_PART_RENUM_FACE_NONE",
-                  n_property_cell,
-                  renum_properties_cell,
-                  n_property_face,
-                  renum_properties_face,
-                  n_part,
-                  dn_cell,
-                  dn_face,
-                  dn_vtx,
-                  n_face_group,
-                  NULL,
-                  NULL,
-                  NULL,
-                  NULL,
-                  have_dcell_part,
-                  dcell_part,
-                  dface_cell,
-                  dface_vtx_idx,
-                  dface_vtx,
-                  NULL,
-                  dvtx_coord,
-                  NULL,
-                  dface_group_idx,
-                  dface_group);
+    PDM_dmesh_set (dmesh,
+                   dvtx_coord,
+                   dface_vtx_idx,
+                   dface_vtx,
+                   dface_cell,
+                   dface_group_idx,
+                   dface_group,
+                   djoins_ids,
+                   dface_join_idx,
+                   dface_join);
 
-  free(dcell_part);
+    PDM_multipart_register_block (id_part, 0, dmesh);
 
+    /* Connection between zones */
+    int n_total_joins = 0;
+    int *join_to_opposite = malloc(sizeof(int) * n_total_joins);
+    PDM_multipart_register_joins (id_part, n_total_joins, join_to_opposite);
 
+    /* Run */
+    PDM_multipart_run_ppart (id_part);
 
-  if (post) {
-    /* Write faces and dual edges */
-    for (int i_part = 0; i_part < n_part; i_part++) {
-
-      int n_cell;
-      int n_face;
-      int n_face_part_bound;
-      int n_vtx;
-      int n_proc;
-      int n_t_part;
-      int s_cell_face;
-      int s_face_vtx;
-      int s_face_group;
-      int n_edge_group2;
-
-      PDM_part_part_dim_get(ppart_id,
-                            i_part,
-                            &n_cell,
-                            &n_face,
-                            &n_face_part_bound,
-                            &n_vtx,
-                            &n_proc,
-                            &n_t_part,
-                            &s_cell_face,
-                            &s_face_vtx,
-                            &s_face_group,
-                            &n_edge_group2);
-
-      int         *cell_tag;
-      int         *cell_face_idx;
-      int         *cell_face;
-      PDM_g_num_t *cell_ln_to_gn;
-      int         *face_tag;
-      int         *face_cell;
-      int         *face_vtx_idx;
-      int         *face_vtx;
-      PDM_g_num_t *face_ln_to_gn;
-      int         *face_part_boundProcIdx;
-      int         *face_part_boundPartIdx;
-      int         *face_part_bound;
-      int         *vtx_tag;
-      double      *vtx;
-      PDM_g_num_t *vtx_ln_to_gn;
-      int         *face_group_idx;
-      int         *face_group;
-      PDM_g_num_t *face_group_ln_to_gn;
-
-      PDM_part_part_val_get (ppart_id,
-                             i_part,
-                             &cell_tag,
-                             &cell_face_idx,
-                             &cell_face,
-                             &cell_ln_to_gn,
-                             &face_tag,
-                             &face_cell,
-                             &face_vtx_idx,
-                             &face_vtx,
-                             &face_ln_to_gn,
-                             &face_part_boundProcIdx,
-                             &face_part_boundPartIdx,
-                             &face_part_bound,
-                             &vtx_tag,
-                             &vtx,
-                             &vtx_ln_to_gn,
-                             &face_group_idx,
-                             &face_group,
-                             &face_group_ln_to_gn);
-
-      char filename[999];
-      sprintf(filename, "faces_%3.3d.vtk", i_rank*n_part + i_part);
-      _write_polydata (filename,
-                       "faces",
-                       n_vtx,
-                       vtx,
-                       vtx_ln_to_gn,
-                       n_face,
-                       face_vtx_idx,
-                       face_vtx,
-                       face_ln_to_gn);
-
-
-      double *cell_center = NULL;
-      _cell_center_from_g_num (nx, ny, nz,
-                               xmin, ymin, zmin,
-                               lengthx, lengthy, lengthz,
-                               n_cell,
-                               cell_ln_to_gn,
-                               &cell_center);
-
-      double *face_center = malloc (sizeof(double) * n_face * 3);
-      double *surf_vector = malloc (sizeof(double) * n_face * 3);
-      double *char_length = malloc (sizeof(double) * n_face);
-      int *is_degenerate = malloc (sizeof(int) * n_face);
-      PDM_geom_elem_polygon_properties (n_face,
-                                        face_vtx_idx,
-                                        face_vtx,
-                                        vtx,
-                                        surf_vector,
-                                        face_center,
-                                        char_length,
-                                        is_degenerate);
-      free (surf_vector);
-      free (char_length);
-      free (is_degenerate);
-
-      sprintf(filename, "dual_edges_%3.3d.vtk", i_rank*n_part + i_part);
-      write_dual_edges (filename,
-                        n_cell,
-                        cell_face_idx,
-                        cell_face,
-                        cell_center,
-                        n_face,
-                        face_center,
-                        face_ln_to_gn);
-      free (cell_center);
-      free (face_center);
-    }
-
+    free (djoins_ids);
+    free (dface_join_idx);
+    free (dface_join);
+    free (join_to_opposite);
   }
+
+  else {
+    int have_dcell_part = 0;
+
+    int *dcell_part = (int *) malloc(dn_cell*sizeof(int));
+    int *renum_properties_cell = NULL;
+    int *renum_properties_face = NULL;
+    int n_property_cell = 0;
+    int n_property_face = 0;
+
+    id_part = 0;
+
+    PDM_part_create(&id_part,
+                    PDM_MPI_COMM_WORLD,
+                    method,
+                    "PDM_PART_RENUM_CELL_NONE",
+                    "PDM_PART_RENUM_FACE_NONE",
+                    n_property_cell,
+                    renum_properties_cell,
+                    n_property_face,
+                    renum_properties_face,
+                    n_part,
+                    dn_cell,
+                    dn_face,
+                    dn_vtx,
+                    n_face_group,
+                    NULL,
+                    NULL,
+                    NULL,
+                    NULL,
+                    have_dcell_part,
+                    dcell_part,
+                    dface_cell,
+                    dface_vtx_idx,
+                    dface_vtx,
+                    NULL,
+                    dvtx_coord,
+                    NULL,
+                    dface_group_idx,
+                    dface_group);
+    free(dcell_part);
+  }
+
 
   if (post) {
     /* Prepare writer */
@@ -788,6 +458,7 @@ int main(int argc, char *argv[])
     PDM_real_t **val_cell_g_num = (PDM_real_t **) malloc(sizeof(PDM_real_t *) * n_part);
     PDM_real_t **val_num_part = (PDM_real_t **) malloc(sizeof(PDM_real_t *) * n_part);
 
+
     for (int i_part = 0; i_part < n_part; i_part++) {
       int n_cell;
       int n_face;
@@ -800,18 +471,10 @@ int main(int argc, char *argv[])
       int s_face_group;
       int n_edge_group2;
 
-      PDM_part_part_dim_get (ppart_id,
-                             i_part,
-                             &n_cell,
-                             &n_face,
-                             &n_face_part_bound,
-                             &n_vtx,
-                             &n_proc,
-                             &n_t_part,
-                             &s_cell_face,
-                             &s_face_vtx,
-                             &s_face_group,
-                             &n_edge_group2);
+      int n_bounds, n_joins, n_part_joins;
+      int scell_face, sface_vtx, sface_bound, sface_join;
+      int n_section;
+      int *n_elt;
 
       int         *cell_tag;
       int         *cell_face_idx;
@@ -822,8 +485,8 @@ int main(int argc, char *argv[])
       int         *face_vtx_idx;
       int         *face_vtx;
       PDM_g_num_t *face_ln_to_gn;
-      int         *face_part_boundProcIdx;
-      int         *face_part_boundPartIdx;
+      int         *face_part_bound_proc_idx;
+      int         *face_part_bound_part_idx;
       int         *face_part_bound;
       int         *vtx_tag;
       double      *vtx;
@@ -831,28 +494,95 @@ int main(int argc, char *argv[])
       int         *face_group_idx;
       int         *face_group;
       PDM_g_num_t *face_group_ln_to_gn;
+      PDM_g_num_t *face_bound_ln_to_gn, *face_join_ln_to_gn;
+      int         *face_bound_idx, *face_bound, *face_join_idx, *face_join;
+      int         **elt_vtx_idx;
+      int         **elt_vtx;
+      PDM_g_num_t **elt_section_ln_to_gn;
 
-      PDM_part_part_val_get (ppart_id,
-                             i_part,
-                             &cell_tag,
-                             &cell_face_idx,
-                             &cell_face,
-                             &cell_ln_to_gn,
-                             &face_tag,
-                             &face_cell,
-                             &face_vtx_idx,
-                             &face_vtx,
-                             &face_ln_to_gn,
-                             &face_part_boundProcIdx,
-                             &face_part_boundPartIdx,
-                             &face_part_bound,
-                             &vtx_tag,
-                             &vtx,
-                             &vtx_ln_to_gn,
-                             &face_group_idx,
-                             &face_group,
-                             &face_group_ln_to_gn);
+      if (use_multipart) {
+        PDM_multipart_part_dim_get (id_part,
+                                    0,
+                                    i_part,
+                                    &n_section,
+                                    &n_elt,
+                                    &n_cell,
+                                    &n_face,
+                                    &n_part_joins,
+                                    &n_vtx,
+                                    &n_proc,
+                                    &n_t_part,
+                                    &scell_face,
+                                    &sface_vtx,
+                                    &sface_bound,
+                                    &n_bounds,
+                                    &sface_join,
+                                    &n_joins);
 
+        PDM_multipart_part_val_get (id_part,
+                                    0,
+                                    i_part,
+                                    &elt_vtx_idx,
+                                    &elt_vtx,
+                                    &elt_section_ln_to_gn,
+                                    &cell_tag,
+                                    &cell_face_idx,
+                                    &cell_face,
+                                    &cell_ln_to_gn,
+                                    &face_tag,
+                                    &face_cell,
+                                    &face_vtx_idx,
+                                    &face_vtx,
+                                    &face_ln_to_gn,
+                                    &face_part_bound_proc_idx,
+                                    &face_part_bound_part_idx,
+                                    &face_part_bound,
+                                    &vtx_tag,
+                                    &vtx,
+                                    &vtx_ln_to_gn,
+                                    &face_bound_idx,
+                                    &face_bound,
+                                    &face_bound_ln_to_gn,
+                                    &face_join_idx,
+                                    &face_join,
+                                    &face_join_ln_to_gn);
+      }
+
+      else {
+        PDM_part_part_dim_get (id_part,
+                               i_part,
+                               &n_cell,
+                               &n_face,
+                               &n_face_part_bound,
+                               &n_vtx,
+                               &n_proc,
+                               &n_t_part,
+                               &s_cell_face,
+                               &s_face_vtx,
+                               &s_face_group,
+                               &n_edge_group2);
+
+        PDM_part_part_val_get (id_part,
+                               i_part,
+                               &cell_tag,
+                               &cell_face_idx,
+                               &cell_face,
+                               &cell_ln_to_gn,
+                               &face_tag,
+                               &face_cell,
+                               &face_vtx_idx,
+                               &face_vtx,
+                               &face_ln_to_gn,
+                               &face_part_bound_proc_idx,
+                               &face_part_bound_part_idx,
+                               &face_part_bound,
+                               &vtx_tag,
+                               &vtx,
+                               &vtx_ln_to_gn,
+                               &face_group_idx,
+                               &face_group,
+                               &face_group_ln_to_gn);
+      }
 
       PDM_writer_geom_coord_set (id_cs,
                                  id_geom,
@@ -923,9 +653,13 @@ int main(int argc, char *argv[])
     for (int i_part = 0; i_part < n_part; i_part++) {
       free (val_cell_g_num[i_part]);
       free (val_num_part[i_part]);
+      free (cell_face_n[i_part]);
+      free (face_vtx_n[i_part]);
     }
     free (val_cell_g_num);
     free (val_num_part);
+    free (cell_face_n);
+    free (face_vtx_n);
 
 
     PDM_writer_step_end (id_cs);
@@ -938,12 +672,22 @@ int main(int argc, char *argv[])
   /*
    *  Finalize
    */
+  free (dcell_face_idx);
+  free (dcell_face);
   free (dface_cell);
   free (dface_vtx_idx);
   free (dface_vtx);
   free (dvtx_coord);
   free (dface_group_idx);
   free (dface_group);
+
+  if (use_multipart) {
+    PDM_multipart_free (id_part);
+    PDM_dmesh_free (dmesh);
+  }
+  else {
+    PDM_part_free (id_part);
+  }
 
   PDM_MPI_Finalize();
 
