@@ -1423,7 +1423,7 @@ PDM_writer_ensight_geom_write
 
         for (int k = 0; k < n_elt; k++) {
           for (int j = cellfac_idx[k]; j < cellfac_idx[k+1]; j++) {
-            int ifac = cellfac[j] - 1;
+            int ifac = PDM_ABS(cellfac[j]) - 1;//;cellfac[j] - 1;
             buff_int32[n_face_proc] =
               (int32_t) (facvtx_idx[ifac+1] -
                          facvtx_idx[ifac]);
