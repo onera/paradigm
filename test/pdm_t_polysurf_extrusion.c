@@ -436,8 +436,6 @@ int main(int argc, char *argv[])
                                           PDM_WRITER_OFF,
                                           n_part);
 
-    PDM_writer_step_beg (id_cs, 0.);
-
     // Cell local id
     int id_var_cell_g_num = PDM_writer_var_create (id_cs,
                                                    PDM_WRITER_OFF,
@@ -451,13 +449,35 @@ int main(int argc, char *argv[])
                                                  PDM_WRITER_VAR_ELEMENTS,
                                                  "num_part");
 
+    int id_var_vtx_g_num = PDM_writer_var_create (id_cs,
+                                                  PDM_WRITER_OFF,
+                                                  PDM_WRITER_VAR_SCALAIRE,
+                                                  PDM_WRITER_VAR_SOMMETS,
+                                                  "vtx_g_num");
+
+    int id_var_coo_x = PDM_writer_var_create (id_cs,
+                                              PDM_WRITER_ON,
+                                              PDM_WRITER_VAR_SCALAIRE,
+                                              PDM_WRITER_VAR_SOMMETS,
+                                              "coo_x");
+
+    int id_var_coo_xyz = PDM_writer_var_create (id_cs,
+                                                PDM_WRITER_ON,
+                                                PDM_WRITER_VAR_VECTEUR,
+                                                PDM_WRITER_VAR_SOMMETS,
+                                                "coo_xyz");
+
+    PDM_writer_step_beg (id_cs, 0.);
+
     /* Write geometry */
     int **face_vtx_n  = malloc (sizeof(int *) * n_part);
     int **cell_face_n = malloc (sizeof(int *) * n_part);
 
-    PDM_real_t **val_cell_g_num = (PDM_real_t **) malloc(sizeof(PDM_real_t *) * n_part);
-    PDM_real_t **val_num_part = (PDM_real_t **) malloc(sizeof(PDM_real_t *) * n_part);
-
+    PDM_real_t **val_cell_g_num = (PDM_real_t **) malloc (sizeof(PDM_real_t *) * n_part);
+    PDM_real_t **val_num_part   = (PDM_real_t **) malloc (sizeof(PDM_real_t *) * n_part);
+    PDM_real_t **val_vtx_g_num  = (PDM_real_t **) malloc (sizeof(PDM_real_t *) * n_part);
+    PDM_real_t **val_coo_x      = (PDM_real_t **) malloc (sizeof(PDM_real_t *) * n_part);
+    PDM_real_t **val_coo_xyz    = (PDM_real_t **) malloc (sizeof(PDM_real_t *) * n_part);
 
     for (int i_part = 0; i_part < n_part; i_part++) {
       int n_cell;
@@ -614,11 +634,22 @@ int main(int argc, char *argv[])
                                            cell_face,
                                            cell_ln_to_gn);
 
-      val_cell_g_num[i_part]  = (PDM_real_t *) malloc(sizeof(PDM_real_t) * n_cell);
-      val_num_part[i_part] = (PDM_real_t *) malloc(sizeof(PDM_real_t) * n_cell);
+      val_cell_g_num[i_part] = (PDM_real_t *) malloc(sizeof(PDM_real_t) * n_cell);
+      val_num_part[i_part]   = (PDM_real_t *) malloc(sizeof(PDM_real_t) * n_cell);
       for (int i = 0; i < n_cell; i++) {
         val_cell_g_num[i_part][i] = (PDM_real_t) cell_ln_to_gn[i];
         val_num_part[i_part][i] = (PDM_real_t) (i_rank*n_part + i_part);
+      }
+
+      val_vtx_g_num[i_part] = (PDM_real_t *) malloc(sizeof(PDM_real_t) * n_vtx);
+      val_coo_x[i_part]     = (PDM_real_t *) malloc(sizeof(PDM_real_t) * n_vtx);
+      val_coo_xyz[i_part]   = (PDM_real_t *) malloc(sizeof(PDM_real_t) * n_vtx * 3);
+      for (int i = 0; i < n_vtx; i++) {
+        val_vtx_g_num[i_part][i]   = vtx_ln_to_gn[i];
+        val_coo_x[i_part][i]       = vtx[3*i];
+        val_coo_xyz[i_part][3*i  ] = vtx[3*i  ];
+        val_coo_xyz[i_part][3*i+1] = vtx[3*i+1];
+        val_coo_xyz[i_part][3*i+2] = vtx[3*i+2];
       }
     }
 
@@ -627,42 +658,95 @@ int main(int argc, char *argv[])
 
     // write variables
     for (int i_part = 0; i_part < n_part; i_part++) {
-
       PDM_writer_var_set (id_cs,
                           id_var_cell_g_num,
                           id_geom,
                           i_part,
                           val_cell_g_num[i_part]);
+
       PDM_writer_var_set (id_cs,
                           id_var_num_part,
                           id_geom,
                           i_part,
                           val_num_part[i_part]);
+
+      PDM_writer_var_set (id_cs,
+                          id_var_vtx_g_num,
+                          id_geom,
+                          i_part,
+                          val_vtx_g_num[i_part]);
     }
 
     PDM_writer_var_write (id_cs,
                           id_var_cell_g_num);
     PDM_writer_var_write (id_cs,
                           id_var_num_part);
+    PDM_writer_var_write (id_cs,
+                          id_var_vtx_g_num);
 
     PDM_writer_var_free (id_cs,
                          id_var_cell_g_num);
     PDM_writer_var_free (id_cs,
                          id_var_num_part);
+    PDM_writer_var_free (id_cs,
+                         id_var_vtx_g_num);
+
+    for (int nstep = 0; nstep < 10; nstep++) {
+
+      double tstep = nstep * 0.01;
+
+      if (nstep > 0) {
+        PDM_writer_step_beg(id_cs, tstep);
+      }
+
+      for (int i_part = 0; i_part < n_part; i_part++) {
+        PDM_writer_var_set (id_cs,
+                            id_var_coo_x,
+                            id_geom,
+                            i_part,
+                            val_coo_x[i_part]);
+        PDM_writer_var_set (id_cs,
+                            id_var_coo_xyz,
+                            id_geom,
+                            i_part,
+                            val_coo_xyz[i_part]);
+      }
+
+      PDM_writer_var_write (id_cs,
+                            id_var_coo_x);
+      PDM_writer_var_write (id_cs,
+                            id_var_coo_xyz);
+
+      PDM_writer_var_data_free (id_cs,
+                                id_var_coo_x);
+      PDM_writer_var_data_free (id_cs,
+                                id_var_coo_xyz);
+
+      PDM_writer_step_end (id_cs);
+    }
+
 
     for (int i_part = 0; i_part < n_part; i_part++) {
       free (val_cell_g_num[i_part]);
       free (val_num_part[i_part]);
+      free (val_vtx_g_num[i_part]);
+      free (val_coo_x[i_part]);
+      free (val_coo_xyz[i_part]);
       free (cell_face_n[i_part]);
       free (face_vtx_n[i_part]);
     }
     free (val_cell_g_num);
     free (val_num_part);
+    free (val_vtx_g_num);
+    free (val_coo_x);
+    free (val_coo_xyz);
     free (cell_face_n);
     free (face_vtx_n);
 
-
-    PDM_writer_step_end (id_cs);
+    PDM_writer_var_free (id_cs,
+                         id_var_coo_x);
+    PDM_writer_var_free (id_cs,
+                         id_var_coo_xyz);
 
     PDM_writer_geom_data_free (id_cs, id_geom);
     PDM_writer_geom_free (id_cs, id_geom);
