@@ -948,7 +948,7 @@ _create_split_mesh
                          &dEdgeGroup);
     }
 
-    if (1) {
+    if (0) {
       double angle = PDM_PI / 6.;
       double rmin = 0.3;
       double delta_r = 0.7;
@@ -2032,12 +2032,12 @@ static void _export_ensight
       nsom_part[ipart] = nVtx[imesh][ipart];
 
       for (int i = 0; i < nFace[imesh][ipart]; i++) {
-        val_num_part[ipart][i] = ipart + 1 + debPartProcs[i_rank];
-        val_face_gnum[ipart][i] = faceLNToGN[imesh][ipart][i];
+        val_num_part[ipart][i] = (PDM_real_t) ipart + 1 + debPartProcs[i_rank];
+        val_face_gnum[ipart][i] = (PDM_real_t) faceLNToGN[imesh][ipart][i];
       }
 
       for (int i = 0; i < nVtx[imesh][ipart]; i++) {
-        val_vtx_gnum[ipart][i] = vtxLNToGN[imesh][ipart][i];
+        val_vtx_gnum[ipart][i] = (PDM_real_t) vtxLNToGN[imesh][ipart][i];
       }
 
       PDM_writer_var_set (id_cs[imesh],

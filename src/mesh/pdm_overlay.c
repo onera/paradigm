@@ -585,10 +585,10 @@ _intersect_bounding_boxes
   //<<--
 
   double g_global_extents[6];
-  PDM_MPI_Allreduce(global_extents, g_global_extents, dim,
-                    PDM_MPI_DOUBLE, PDM_MPI_MIN, ol->comm);
-  PDM_MPI_Allreduce(global_extents+dim, g_global_extents+dim, dim,
-                    PDM_MPI_DOUBLE, PDM_MPI_MAX, ol->comm);
+  PDM_MPI_Allreduce (global_extents, g_global_extents, dim,
+                     PDM_MPI_DOUBLE, PDM_MPI_MIN, ol->comm);
+  PDM_MPI_Allreduce (global_extents+dim, g_global_extents+dim, dim,
+                     PDM_MPI_DOUBLE, PDM_MPI_MAX, ol->comm);
   double max_range = -HUGE_VAL;
   double min_range = HUGE_VAL;
 
@@ -802,16 +802,15 @@ _intersect_bounding_boxes_and_redistribute
 
   PDM_l_num_t *destination = PDM_part_to_block_destination_get (ptb_boxesA);
 
-  PDM_g_num_t n_g_eltA = PDM_box_set_get_global_size(*boxesA);
+  PDM_g_num_t n_g_eltA = PDM_box_set_get_global_size (*boxesA);
 
-  PDM_box_distrib_t *distribA =
-    PDM_box_distrib_create (n_eltA,
-                            n_g_eltA,
-                            1, // Don't use in this case
-                            ol->comm);
+  PDM_box_distrib_t *distribA = PDM_box_distrib_create (n_eltA,
+                                                        n_g_eltA,
+                                                        1, // Don't use in this case
+                                                        ol->comm);
 
 
-  PDM_g_num_t n_g_eltB = PDM_box_set_get_global_size(*boxesB);
+  PDM_g_num_t n_g_eltB = PDM_box_set_get_global_size (*boxesB);
 
   PDM_box_distrib_t *distribB = PDM_box_distrib_create (n_eltB,
                                                         n_g_eltB,
@@ -819,18 +818,11 @@ _intersect_bounding_boxes_and_redistribute
                                                         ol->comm);
 
 
-  int *countEltsA = (int *) malloc (sizeof(int) * n_rank);
-  int *countEltsB = (int *) malloc (sizeof(int) * n_rank);
+  int *countEltsA = PDM_array_zeros_int (n_rank);
+  int *countEltsB = PDM_array_zeros_int (n_rank);
 
-  for (int i = 0; i < n_rank + 1; i++) {
-    distribA->index[i] = 0;
-    distribB->index[i] = 0;
-  }
-
-  for (int i = 0; i < n_rank; i++) {
-    countEltsA[i] = 0;
-    countEltsB[i] = 0;
-  }
+  PDM_array_reset_int (distribA->index, n_rank + 1, 0);
+  PDM_array_reset_int (distribB->index, n_rank + 1, 0);
 
   for (int i = 0; i < n_eltA; i++) {
     int iProc = destination[i] + 1;
@@ -925,8 +917,7 @@ _intersect_bounding_boxes_and_redistribute
 
   n_eltA = PDM_box_set_get_size (*boxesA);
 
-  *blockA_lnum_data =
-    (int *) malloc (sizeof(int) * (*n_elt_blockA));
+  *blockA_lnum_data = (int *) malloc (sizeof(int) * (*n_elt_blockA));
 
   PDM_g_num_t *gnum_eltA_cp = (PDM_g_num_t *) malloc (sizeof(PDM_g_num_t) * (n_eltA));
 
@@ -1215,20 +1206,15 @@ _compute_local_numbering
 
   PDM_g_num_t nUnChangedFace = 0;
   PDM_g_num_t nSubFace = 0;
-  int *nUnChangedFacePart = malloc(sizeof(int) * n_part);
-  int *nSubFacePart = malloc(sizeof(int) * n_part);
-  int *s_olface_vtx = malloc(sizeof(int) * n_part);
-  for (int i = 0; i < n_part; i++) {
-    s_olface_vtx[i] = 0;
-  }
+  int *nUnChangedFacePart = PDM_array_zeros_int (n_part);
+  int *nSubFacePart = PDM_array_zeros_int (n_part);
+  int *s_olface_vtx = PDM_array_zeros_int (n_part);
 
   /*
    * Compute dimensions
    */
 
   for (int i = 0; i < n_part; i++) {
-    nUnChangedFacePart[i] = 0;
-    nSubFacePart[i] = 0;
     int n_face_part = PDM_surf_mesh_part_n_face_get (mesh, i);
     const PDM_g_num_t *gNumFace = PDM_surf_mesh_part_face_g_num_get (mesh, i);
     const int *iniface_vtx_idx =  PDM_surf_mesh_part_face_vtx_idx_get (mesh, i);
@@ -1265,8 +1251,8 @@ _compute_local_numbering
 
   PDM_g_num_t nFace = nUnChangedFace + nSubFace;
   PDM_g_num_t nGFace;
-  PDM_MPI_Allreduce(&nFace, &nGFace, 1,
-                    PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, ol->comm);
+  PDM_MPI_Allreduce (&nFace, &nGFace, 1,
+                     PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, ol->comm);
 
   PDM_g_num_t nGVtx = n_g_newVtx;
 
@@ -1298,7 +1284,7 @@ _compute_local_numbering
 
     int n_face = PDM_surf_mesh_part_n_face_get (mesh, i);
     const int *iniface_vtx_idx = PDM_surf_mesh_part_face_vtx_idx_get (mesh, i);
-    const int *iniface_vtx = PDM_surf_mesh_part_face_vtx_get (mesh, i);
+    const int *iniface_vtx     = PDM_surf_mesh_part_face_vtx_get (mesh, i);
 
     int n_facePart = nUnChangedFacePart[i] + nSubFacePart[i];
     olp->sInitToOlFace = n_facePart;
@@ -6607,7 +6593,7 @@ _compute_overlay_surfaces
                                                (void **) &face_vtxEpsCurrent[imesh]);
 
     for (int i = 0; i < n_part; i++) {
-      int nEltPart        = PDM_surf_mesh_part_n_face_get (mesh, i);
+      int nEltPart = PDM_surf_mesh_part_n_face_get (mesh, i);
       for (int j = 0; j < nEltPart; j++) {
         faceStrideOrigin[i][j] = 3 * faceStrideOrigin[i][j];
       }
@@ -6678,17 +6664,8 @@ _compute_overlay_surfaces
   /* Stocker les intersections dans une structure */
 
   int *faceIdxCurrent[2];
-  faceIdxCurrent[0] = (int *) malloc (sizeof(int) * (n_elt_blockA + 1));
-  faceIdxCurrent[1] = (int *) malloc (sizeof(int) * (n_eltB + 1));
-  for (int i = 0; i < 2; i++) {
-    faceIdxCurrent[i][0] = 0;
-  }
-  for (int j = 0; j < n_elt_blockA; j++) {
-    faceIdxCurrent[0][j+1] = faceIdxCurrent[0][j] + faceStrideCurrent[0][j];
-  }
-  for (int j = 0; j < n_eltB; j++) {
-    faceIdxCurrent[1][j+1] = faceIdxCurrent[1][j] + faceStrideCurrent[1][j];
-  }
+  faceIdxCurrent[0] = PDM_array_new_idx_from_sizes_int (faceStrideCurrent[0], n_elt_blockA);
+  faceIdxCurrent[1] = PDM_array_new_idx_from_sizes_int (faceStrideCurrent[1], n_eltB);
 
   /*****************************************************************************
    *                                                                           *
@@ -7266,12 +7243,17 @@ _compute_overlay_surfaces
     }
   }
 
-  PDM_MPI_Allreduce(&_max, &n_g_newVtxA, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_MAX, ol->comm);
+  PDM_MPI_Allreduce (&_max, &n_g_newVtxA, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_MAX, ol->comm);
 
   PDM_gnum_free (gnum_B_into_A);
   free (elt_B_into_A_g_num);
 
-  PDM_gen_gnum_t *gnum_A_into_B = PDM_gnum_create (dim, n_part, merge, tolerance, ol->comm, PDM_OWNERSHIP_KEEP);
+  PDM_gen_gnum_t *gnum_A_into_B = PDM_gnum_create (dim,
+                                                   n_part,
+                                                   merge,
+                                                   tolerance,
+                                                   ol->comm,
+                                                   PDM_OWNERSHIP_KEEP);
 
   int n_elt_A_into_B = 0;
   for (int i = 0; i < subFacesConnecIdx[nSharedSubFaces]; i++) {
@@ -7303,7 +7285,7 @@ _compute_overlay_surfaces
     }
   }
 
-  PDM_MPI_Allreduce(&_max, &n_g_newVtxB, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_MAX, ol->comm);
+  PDM_MPI_Allreduce (&_max, &n_g_newVtxB, 1, PDM__PDM_MPI_G_NUM, PDM_MPI_MAX, ol->comm);
 
   PDM_gnum_free (gnum_A_into_B);
   free (elt_A_into_B_g_num);
