@@ -111,6 +111,42 @@ else ()
     enable_language(CUDA)
   endif ()
 
+  # ANISO_AGGLO (only if pdma)
+  # ------
+  if (PDM_ENABLE_EXTENSION_PDMA)
+    option(PDM_ENABLE_ANISO_AGGLO "Enable Anisotropic agglomeration for coarse mesh function" ON)
+
+    if (PDM_ENABLE_ANISO_AGGLO)
+      if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.8)
+          message(FATAL_ERROR "Insufficient g++ version for Anisotropic agglomeration : set PDM_ENABLE_ANISO_AGGLO to OFF and re-run")
+        endif()
+      elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
+        if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 15)
+          message(FATAL_ERROR "Insufficient icpc version for Anisotropic agglomeration : set PDM_ENABLE_ANISO_AGGLO to OFF and re-run")
+        endif()
+      elseif (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
+        if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 3.2)
+          message(FATAL_ERROR "Insufficient clang version for Anisotropic agglomeration : set PDM_ENABLE_ANISO_AGGLO to OFF and re-run")
+        endif()
+      elseif (CMAKE_CXX_COMPILER_ID MATCHES "XL")
+        if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 13.1.3)
+          message(FATAL_ERROR "Insufficient xlc++ version for Anisotropic agglomeration : set PDM_ENABLE_ANISO_AGGLO to OFF and re-run")
+        endif()
+      endif ()
+      set (PDM_HAVE_ANISO_AGGLO 1)
+    endif ()
+  endif()
+
+  # Nuga (only if pdma)
+  # --------
+  if (PDM_ENABLE_EXTENSION_PDMA)
+    option(PDM_ENABLE_NUGA "Compile with support for NUGA." OFF)
+    if (PDM_ENABLE_NUGA)
+        set(PDM_HAVE_NUGA 1)
+    endif()
+  endif()
+
   # Enable long for absolute number
   # -------------------------------
 
