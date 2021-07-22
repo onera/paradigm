@@ -127,5 +127,8 @@ if ((CMAKE_C_COMPILER_ID STREQUAL "GNU") OR
   set_target_properties (Pypdm PROPERTIES COMPILE_FLAGS "-w")
 endif()
 
-install(TARGETS Pypdm
-        LIBRARY DESTINATION ${SITE_PACKAGES_PDM})
+install(CODE
+  "execute_process(COMMAND ${PYTHON_EXECUTABLE} ${SETUP_PY} --quiet install
+  --prefix=${CMAKE_PDM_INSTALL_PYTHON_DIR}
+  --install-data=${SITE_PACKAGES_PDM} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+  ")
