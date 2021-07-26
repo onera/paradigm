@@ -114,7 +114,8 @@ _read_args
  int           *quadA,
  int           *quadB,
  int           *nProcData,
- int           *rotate
+ int           *rotate,
+ int           *new_function
  )
 {
   int i = 1;
@@ -262,6 +263,9 @@ _read_args
     }
     else if (strcmp (argv[i], "-rotate") == 0) {
       *rotate = 1;
+    }
+    else if (strcmp (argv[i], "-new") == 0) {
+      *new_function = 1;
     }
     else
       _usage (EXIT_FAILURE);
@@ -2089,108 +2093,9 @@ static void _export_ensight
 
 
 
-
-
-
-static void _export_vtk
-(
- const PDM_MPI_Comm  pdm_mpi_comm,
- const char         *name,
- const int           n_part,
- int                *nFace,
- int               **faceVtxIdx,
- int               **faceVtx,
- PDM_g_num_t       **faceLNToGN,
- double            **face_vector,
- int                *nVtx,
- double            **vtxCoord,
- PDM_g_num_t       **vtxLNToGN,
- double            **vtx_vector
- )
-{
-  int i_rank;
-  PDM_MPI_Comm_rank (PDM_MPI_COMM_WORLD, &i_rank);
-
-  for (int i_part = 0; i_part < n_part; i_part++) {
-    char filename[999];
-    sprintf(filename, "%s_%3.3d.vtk", name, n_part*i_rank + i_part);
-
-    FILE *f = fopen(filename, "w");
-
-    fprintf(f, "# vtk DataFile Version 2.0\nmesh\nASCII\nDATASET POLYDATA\n");
-
-    fprintf(f, "POINTS %d double\n", nVtx[i_part]);
-    for (int i = 0; i < nVtx[i_part]; i++) {
-      for (int j = 0; j < 3; j++) {
-        fprintf(f, "%lf ", vtxCoord[i_part][3*i+j]);
-      }
-      fprintf(f, "\n");
-    }
-
-    fprintf(f, "POLYGONS %d %d\n", nFace[i_part], nFace[i_part] + faceVtxIdx[i_part][nFace[i_part]]);
-    for (int i = 0; i < nFace[i_part]; i++) {
-      fprintf(f, "%d ", faceVtxIdx[i_part][i+1] - faceVtxIdx[i_part][i]);
-      for (int j = faceVtxIdx[i_part][i]; j < faceVtxIdx[i_part][i+1]; j++) {
-        fprintf(f, "%d ", faceVtx[i_part][j] - 1);
-      }
-      fprintf(f, "\n");
-    }
-
-    if (vtx_vector != NULL) {
-      fprintf(f, "POINT_DATA %d\n", nVtx[i_part]);
-      fprintf(f, "VECTORS pvec double\n");
-      for (int i = 0; i < nVtx[i_part]; i++) {
-        for (int j = 0; j < 3; j++) {
-          fprintf(f, "%lf ", vtx_vector[i_part][3*i+j]);
-        }
-        fprintf(f, "\n");
-      }
-    }
-
-    if (1) {//face_vector != NULL || faceLNToGN != NULL) {
-      fprintf(f, "CELL_DATA %d\n", nFace[i_part]);
-      if (0) {//faceLNToGN != NULL) {
-        fprintf(f, "SCALARS gnum int\n");
-        fprintf(f, "LOOKUP_TABLE default\n");
-        for (int i = 0; i < nFace[i_part]; i++) {
-          fprintf(f, PDM_FMT_G_NUM"\n", faceLNToGN[i_part][i]);
-        }
-      }
-      else {
-        fprintf(f, "SCALARS rank int\n");
-        fprintf(f, "LOOKUP_TABLE default\n");
-        for (int i = 0; i < nFace[i_part]; i++) {
-          fprintf(f, "%d\n", i_rank);
-        }
-      }
-
-
-      if (face_vector != NULL) {
-        fprintf(f, "VECTORS fvec double\n");
-        for (int i = 0; i < nFace[i_part]; i++) {
-          for (int j = 0; j < 3; j++) {
-            fprintf(f, "%lf ", face_vector[i_part][3*i+j]);
-          }
-          fprintf(f, "\n");
-        }
-      }
-
-    }
-
-
-
-    fclose(f);
-  }
-}
-
-
-
-
 static void _export_ol_vtk
 (
- const PDM_MPI_Comm   pdm_mpi_comm,
  const int            pdm_id,
- int                **nFace,
  double             **sFieldOlA,
  double             **rFieldOlB,
  const int            n_part
@@ -2414,6 +2319,7 @@ char *argv[]
   int              i_rank;
   int              numProcs;
 
+  int new_function = 0;
   /*
    *  Read args
    */
@@ -2440,7 +2346,8 @@ char *argv[]
               &quadA,
               &quadB,
               &nProcData,
-              &rotate);
+              &rotate,
+              &new_function);
 
   PDM_MPI_Comm_rank (PDM_MPI_COMM_WORLD, &i_rank);
   PDM_MPI_Comm_size (PDM_MPI_COMM_WORLD, &numProcs);
@@ -2755,7 +2662,12 @@ char *argv[]
    *  Calcul
    */
 
-  PDM_ol_compute (pdm_id);
+  if (new_function) {
+    PDM_ol_compute2 (pdm_id);
+  } else {
+    PDM_ol_compute (pdm_id);
+  }
+
 
   if (i_rank == 0){
     PDM_ol_dump_times (pdm_id);
@@ -3095,9 +3007,7 @@ char *argv[]
                      rFieldOlB,
                      n_part);
 
-    _export_ol_vtk (PDM_MPI_COMM_WORLD,
-                    pdm_id,
-                    nFace,
+    _export_ol_vtk (pdm_id,
                     sFieldOlA,
                     rFieldOlB,
                     n_part);

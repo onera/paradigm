@@ -438,6 +438,21 @@ _is_same_plane
 
 
 
+
+/**
+ * \brief Intersect bounding boxes of meshes A and B.
+ *
+ * Returns redistributed box sets of A and B and list of boxes of B intersecting each box of A.
+ *
+ *
+ * \param [in] ol                          Overlay object
+ * \param [out] boxesA                     Box set of A (redistributed according to dbbtree)
+ * \param [out] boxesB                     Box set of B (redistributed)
+ * \param [out] boxesB_intersection_index  (size = n_boxesA+1, n_boxesA = nb of boxes in boxesA)
+ * \param [out] boxesB_intersection_l_num  (size = boxesB_intersection_index[n_boxesA])
+ */
+
+
 static void
 _intersect_bounding_boxes
 (
@@ -455,164 +470,97 @@ _intersect_bounding_boxes
   int n_rank;
   PDM_MPI_Comm_size (ol->comm, &n_rank);
 
-  /*****************************************************************************
-   *                                                                           *
-   * Create a DBBtree structure (dbbtreeA) to store mesh A elements boxes      *
-   * (boxes B)                                                                 *
-   *                                                                           *
-   ****************************************************************************/
-
-  double global_extents[6] = { HUGE_VAL,  HUGE_VAL,  HUGE_VAL,
-                              -HUGE_VAL, -HUGE_VAL, -HUGE_VAL};
-
+  /*
+   *  Get extents and gnums
+   */
   const int dim = 3;
+  double l_extents[6] = {HUGE_VAL, HUGE_VAL, HUGE_VAL,
+                         -HUGE_VAL, -HUGE_VAL, -HUGE_VAL};
 
-  PDM_surf_mesh_t *meshA = ol->meshA;
-  const int n_partA = PDM_surf_mesh_n_part_get (meshA);
+  PDM_surf_mesh_t *smesh[2];
+  //PDM_vol_mesh_t  *vmeshA, *vmeshB;
 
-  int *nEltsA = (int *) malloc (sizeof(int) * n_partA);
-  const PDM_g_num_t **gNumA =
-    (const PDM_g_num_t **) malloc (sizeof(PDM_g_num_t *) * n_partA);
-  const double **extentsA = (const double **) malloc (sizeof(double *) * n_partA);
-
-  for (int i = 0; i < n_partA; i++) {
-    nEltsA[i] = PDM_surf_mesh_part_n_face_get (meshA, i);
-    extentsA[i] = PDM_surf_mesh_part_extents_get (meshA, i);
-
-    for (int j = 0; j < nEltsA[i]; j++) {
-      for (int k = 0; k < dim; k++) {
-        global_extents[k]     = PDM_MIN(extentsA[i][2*dim*j + k], global_extents[k]);
-        global_extents[dim+k] = PDM_MAX(extentsA[i][(2*j+1) * dim + k], global_extents[dim+k]);
-      }
-    }
-    gNumA[i] = PDM_surf_mesh_part_face_g_num_get (meshA, i);
+  if (ol->mesh_dimension == 2) {
+    smesh[0] = ol->meshA;
+    smesh[1] = ol->meshB;
+  }
+  else {
+    //... TO DO implement volume overlay
+    abort();
   }
 
-  PDM_surf_mesh_t *meshB = ol->meshB;
-  const int n_partB = PDM_surf_mesh_n_part_get (meshB);
-
-  int *nEltsB = (int *) malloc (sizeof(int) * n_partB);
-  const PDM_g_num_t **gNumB = (const PDM_g_num_t **) malloc (sizeof(PDM_g_num_t *) * n_partB);
-  const double **extentsB = (const double **) malloc (sizeof(double *) * n_partB);
-
-  for (int i = 0; i < n_partB; i++) {
-    nEltsB[i] = PDM_surf_mesh_part_n_face_get (meshB, i);
-    extentsB[i] = PDM_surf_mesh_part_extents_get (meshB, i);
-    for (int j = 0; j < nEltsB[i]; j++) {
-      for (int k = 0; k < dim; k++) {
-        global_extents[k]       = PDM_MIN(extentsB[i][2*dim*j + k],       global_extents[k]);
-        global_extents[dim + k] = PDM_MAX(extentsB[i][(2*j+1) * dim + k], global_extents[dim+k]);
-      }
+  int n_part[2];
+  int *n_elt[2];
+  const PDM_g_num_t **elt_g_num[2];
+  const double      **elt_extents[2];
+  for (int imesh = 0; imesh < 2; imesh++) {
+    if (ol->mesh_dimension == 2) {
+      n_part[imesh] = PDM_surf_mesh_n_part_get (smesh[imesh]);
+    } else {
+      //...
+      abort();
     }
-    gNumB[i] = PDM_surf_mesh_part_face_g_num_get (meshB, i);
-  }
 
-  //-->>
-  if (1) {
-    char filename[999];
+    n_elt[imesh]       = malloc (sizeof(int)           * n_part[imesh]);
+    elt_g_num[imesh]   = malloc (sizeof(PDM_g_num_t *) * n_part[imesh]);
+    elt_extents[imesh] = malloc (sizeof(double *)      * n_part[imesh]);
 
-    for (int imesh = 0; imesh < 2; imesh++) {
-      int n_part;
-      const int *n_elt;
-      const double **ext;
-      const PDM_g_num_t **elt_g_num;
-      if (imesh == 0) {
-        sprintf(filename, "check_extentsA_%2.2d.vtk", i_rank);
-        ext = extentsA;
-        elt_g_num = gNumA;
-        n_part = n_partA;
-        n_elt = nEltsA;
+    for (int ipart = 0; ipart < n_part[imesh]; ipart++) {
+      if (ol->mesh_dimension == 2) {
+        n_elt[imesh][ipart]       = PDM_surf_mesh_part_n_face_get     (smesh[imesh], ipart);
+        elt_extents[imesh][ipart] = PDM_surf_mesh_part_extents_get    (smesh[imesh], ipart);
+        elt_g_num[imesh][ipart]   = PDM_surf_mesh_part_face_g_num_get (smesh[imesh], ipart);
       } else {
-        sprintf(filename, "check_extentsB_%2.2d.vtk", i_rank);
-        ext = extentsB;
-        elt_g_num = gNumB;
-        n_part = n_partB;
-        n_elt = nEltsB;
+        //...
+        abort();
       }
 
-      FILE *f = fopen(filename, "w");
-
-      fprintf(f, "# vtk DataFile Version 2.0\nmesh\nASCII\nDATASET UNSTRUCTURED_GRID\n");
-
-      int n_elt_tot = 0;
-      for (int i = 0; i < n_part; i++) {
-        n_elt_tot += n_elt[i];
-      }
-
-      fprintf(f, "POINTS %d double\n", 8*n_elt_tot);
-      for (int i = 0; i < n_part; i++) {
-        for (int j = 0; j < n_elt[i]; j++) {
-          fprintf(f, "%f %f %f\n", ext[i][6*j + 0], ext[i][6*j + 1], ext[i][6*j + 2]);
-          fprintf(f, "%f %f %f\n", ext[i][6*j + 3], ext[i][6*j + 1], ext[i][6*j + 2]);
-          fprintf(f, "%f %f %f\n", ext[i][6*j + 3], ext[i][6*j + 4], ext[i][6*j + 2]);
-          fprintf(f, "%f %f %f\n", ext[i][6*j + 0], ext[i][6*j + 4], ext[i][6*j + 2]);
-          fprintf(f, "%f %f %f\n", ext[i][6*j + 0], ext[i][6*j + 1], ext[i][6*j + 5]);
-          fprintf(f, "%f %f %f\n", ext[i][6*j + 3], ext[i][6*j + 1], ext[i][6*j + 5]);
-          fprintf(f, "%f %f %f\n", ext[i][6*j + 3], ext[i][6*j + 4], ext[i][6*j + 5]);
-          fprintf(f, "%f %f %f\n", ext[i][6*j + 0], ext[i][6*j + 4], ext[i][6*j + 5]);
+      for (int i = 0; i < n_elt[imesh][ipart]; i++) {
+        for (int k = 0; k < dim; k++) {
+          l_extents[k]     = PDM_MIN (l_extents[k],
+                                      elt_extents[imesh][ipart][2*dim*i + k]);
+          l_extents[dim+k] = PDM_MAX (l_extents[dim+k],
+                                      elt_extents[imesh][ipart][2*dim*(i+1) + k]);
         }
       }
-
-      fprintf(f, "CELLS %d %d\n", n_elt_tot, 9*n_elt_tot);
-      int idx = 0;
-      for (int i = 0; i < n_part; i++) {
-        for (int j = 0; j < n_elt[i]; j++) {
-          fprintf(f, "8 ");
-          for (int k = 0; k < 8; k++) {
-            fprintf(f, "%d ", idx++);
-          }
-          fprintf(f, "\n");
-        }
-      }
-
-      fprintf(f, "CELL_TYPES %d\n", n_elt_tot);
-      for (int i = 0; i < n_elt_tot; i++) {
-        fprintf(f, "12\n");
-      }
-
-      fprintf(f, "CELL_DATA %d\n", n_elt_tot);
-      fprintf(f, "SCALARS gnum int 1\n");
-      fprintf(f, "LOOKUP_TABLE default\n");
-      for (int i = 0; i < n_part; i++) {
-        for (int j = 0; j < n_elt[i]; j++) {
-          fprintf(f, PDM_FMT_G_NUM"\n", elt_g_num[i][j]);
-        }
-      }
-
-      fclose (f);
     }
   }
-  //<<--
 
-  double g_global_extents[6];
-  PDM_MPI_Allreduce (global_extents, g_global_extents, dim,
+  /*
+   *  Compute global extents
+   */
+  double g_extents[6];
+  PDM_MPI_Allreduce (l_extents, g_extents, dim,
                      PDM_MPI_DOUBLE, PDM_MPI_MIN, ol->comm);
-  PDM_MPI_Allreduce (global_extents+dim, g_global_extents+dim, dim,
+  PDM_MPI_Allreduce (l_extents+dim, g_extents+dim, dim,
                      PDM_MPI_DOUBLE, PDM_MPI_MAX, ol->comm);
   double max_range = -HUGE_VAL;
-  double min_range = HUGE_VAL;
+  double min_range =  HUGE_VAL;
 
   for (int k = 0; k < dim; k++) {
-    max_range = PDM_MAX(max_range, (g_global_extents[dim+k] - g_global_extents[k]));
-    min_range = PDM_MIN(min_range, (g_global_extents[dim+k] - g_global_extents[k]));
+    max_range = PDM_MAX (max_range, (g_extents[dim+k] - g_extents[k]));
+    min_range = PDM_MIN (min_range, (g_extents[dim+k] - g_extents[k]));
   }
 
   for (int k = 0; k < dim; k++) {
-    g_global_extents[k]     += -max_range * 1.1e-3; // On casse la symetrie !
-    g_global_extents[dim+k] +=  max_range * 1e-3;
+    g_extents[k]     += -max_range * 1.1e-3; // On casse la symetrie !
+    g_extents[dim+k] +=  max_range * 1e-3;
   }
 
-  PDM_dbbtree_t *dbbtreeA = PDM_dbbtree_create (ol->comm, dim, g_global_extents);
+
+  /*
+   *  Store bounding boxes of A in a dbbtree
+   */
+  PDM_dbbtree_t *dbbtreeA = PDM_dbbtree_create (ol->comm, dim, g_extents);
 
   *boxesA = PDM_dbbtree_boxes_set (dbbtreeA,
-                                   n_partA,
-                                   nEltsA,
-                                   (const double **) extentsA,
-                                   gNumA);
-
-  free (nEltsA);
-  free (gNumA);
-  free (extentsA);
+                                   n_part[PDM_OL_MESH_A],
+                                   n_elt[PDM_OL_MESH_A],
+                                   (const double **) elt_extents[PDM_OL_MESH_A],
+                                   elt_g_num[PDM_OL_MESH_A]);
+  free (n_elt[PDM_OL_MESH_A]);
+  free (elt_g_num[PDM_OL_MESH_A]);
+  free (elt_extents[PDM_OL_MESH_A]);
 
   PDM_MPI_Barrier (ol->comm);
   PDM_timer_hang_on(ol->timer);
@@ -628,28 +576,28 @@ _intersect_bounding_boxes
   }
 
 
-  /*****************************************************************************
-   *                                                                           *
-   * Look for intersections between each mesh A boxes and mesh B boxes         *
-   * the result is stored inside boxesB_intersection_index (size = n_eltA + 1);*
-   *                             boxesB_intersection_index_l_num               *
-   *                             (local number of B boxes)                     *
-   *                                                                           *
-   ****************************************************************************/
+
+  /*
+   *  Intersect boxes of B with dbbtree
+   */
   *boxesB = PDM_dbbtree_intersect_boxes_set (dbbtreeA,
-                                             n_partB,
-                                             nEltsB,
-                                             extentsB,
-                                             gNumB,
+                                             n_part[PDM_OL_MESH_B],
+                                             n_elt[PDM_OL_MESH_B],
+                                             elt_extents[PDM_OL_MESH_B],
+                                             elt_g_num[PDM_OL_MESH_B],
                                              boxesB_intersection_index,
                                              boxesB_intersection_l_num);
 
 
   PDM_dbbtree_free (dbbtreeA);
-  free (nEltsB);
-  free (gNumB);
-  free (extentsB);
+  free (n_elt[PDM_OL_MESH_B]);
+  free (elt_g_num[PDM_OL_MESH_B]);
+  free (elt_extents[PDM_OL_MESH_B]);
 }
+
+
+
+
 
 
 /**
@@ -10276,6 +10224,41 @@ _compute_overlay_surfaces
 }
 
 
+
+/**
+ * \brief Compute overlay between surface meshes
+ *
+ * This function computes overlay mesh of two surface meshes
+ *
+ * \param [in]  ol       overlay object
+ *
+ */
+
+static void
+_compute_overlay_surfaces2
+(
+ PDM_ol_t *ol,
+ int       is_plane
+ )
+{
+  int i_rank, n_rank;
+  PDM_MPI_Comm_rank (ol->comm, &i_rank);
+  PDM_MPI_Comm_size (ol->comm, &i_rank);
+
+  /*
+   *  Compute unit normals at vertices
+   */
+
+
+
+}
+
+
+
+
+
+
+
 /**
  * \brief Compute overlay mesh
  *
@@ -10339,6 +10322,83 @@ _compute_overlay
     _compute_overlay_surfaces(ol);
   }
 
+}
+
+
+
+
+static void
+_compute_overlay2
+(
+ PDM_ol_t *ol
+ )
+{
+  /*
+   * Compute cells extents
+   */
+  if (ol->mesh_dimension == 2) {
+    _compute_faceExtents (ol);
+  }
+
+  else {
+    PDM_error (__FILE__, __LINE__, 0,
+               "Error _compute_overlay2 : mesh dimension %d is not supported\n",
+               ol->mesh_dimension);
+  }
+
+  PDM_MPI_Barrier (ol->comm);
+  PDM_timer_hang_on(ol->timer);
+  ol->times_elapsed[OL_FACE_EXTENTS] = PDM_timer_elapsed(ol->timer);
+  ol->times_cpu[OL_FACE_EXTENTS]     = PDM_timer_cpu(ol->timer);
+  ol->times_cpu_u[OL_FACE_EXTENTS]   = PDM_timer_cpu_user(ol->timer);
+  ol->times_cpu_s[OL_FACE_EXTENTS]   = PDM_timer_cpu_sys(ol->timer);
+  PDM_timer_resume(ol->timer);
+
+
+  if (ol->mesh_dimension == 2) {
+    /*
+     * Check if initial meshes are plane sufaces ou general surfaces
+     */
+
+    double dist;
+    int isPlaneSurfaces = _is_same_plane (ol, &dist);
+
+    PDM_MPI_Barrier (ol->comm);
+    PDM_timer_hang_on(ol->timer);
+    ol->times_elapsed[OL_IS_PLANE] = PDM_timer_elapsed(ol->timer);
+    ol->times_cpu[OL_IS_PLANE]     = PDM_timer_cpu(ol->timer);
+    ol->times_cpu_u[OL_IS_PLANE]   = PDM_timer_cpu_user(ol->timer);
+    ol->times_cpu_s[OL_IS_PLANE]   = PDM_timer_cpu_sys(ol->timer);
+    PDM_timer_resume(ol->timer);
+
+    double gMinCarLgthVtxA = PDM_surf_mesh_gMinCarLgthVtx_get (ol->meshA);
+    double gMinCarLgthVtxB = PDM_surf_mesh_gMinCarLgthVtx_get (ol->meshB);
+
+    double carLgth = _MIN (gMinCarLgthVtxA, gMinCarLgthVtxB);
+
+    if (dist > carLgth) {
+      PDM_error(__FILE__, __LINE__, 0,
+                "Warning _compute_overlay : distance (%12.5e) between the two planes may"
+                " be too far to overlay its : \n"
+                " translate one of them and recompute\n", dist);
+    }
+
+    /*
+     * Compute overlay
+     */
+    if (isPlaneSurfaces) {
+      _compute_overlay_planes (ol);
+    }
+    else {
+      _compute_overlay_surfaces2 (ol, isPlaneSurfaces);
+    }
+  }
+
+  else {
+    PDM_error (__FILE__, __LINE__, 0,
+               "Error _compute_overlay2 : mesh dimension %d is not supported\n",
+               ol->mesh_dimension);
+  }
 }
 
 
@@ -10423,6 +10483,9 @@ PDM_ol_create
   ol->olMeshA              = NULL;
   ol->olMeshB              = NULL;
   //ol->dbbtreeA             = NULL;
+
+  ol->result = PDM_OL_RESULT_MESHES;
+  ol->mesh_dimension = 2;
 
   PDM_timer_hang_on(ol->timer);
 
@@ -10753,6 +10816,133 @@ PROCF (pdm_ol_compute, PDM_OL_COMPUTE)
    )
 {
   PDM_ol_compute (*id);
+}
+
+
+/**
+ * \brief Overlaying the input meshes
+ *
+ * This function overlays the input meshes
+ *
+ * \param [in]  id       ol identifier
+ *
+ */
+
+void
+PDM_ol_compute2
+(
+ const int id
+ )
+{
+  /*
+   * Get overlay object
+   */
+
+  PDM_ol_t *ol = _ol_get(id);
+
+  PDM_timer_resume(ol->timer);
+
+  PDM_MPI_Barrier (ol->comm);
+  PDM_timer_hang_on(ol->timer);
+  ol->times_elapsed[INIT_DEF_DATA] = PDM_timer_elapsed(ol->timer);
+  ol->times_cpu[INIT_DEF_DATA]     = PDM_timer_cpu(ol->timer);
+  ol->times_cpu_u[INIT_DEF_DATA]   = PDM_timer_cpu_user(ol->timer);
+  ol->times_cpu_s[INIT_DEF_DATA]   = PDM_timer_cpu_sys(ol->timer);
+  PDM_timer_resume(ol->timer);
+
+  /*
+   * First computation
+   */
+
+  if (ol->olMeshA == NULL || ol->olMeshB == NULL) {
+
+    /* Surface meshes */
+    if (ol->mesh_dimension == 2) {
+      /*
+       * Computation of edges and inter partition exchange graph
+       */
+      _build_edges(ol);
+
+      PDM_MPI_Barrier (ol->comm);
+      PDM_timer_hang_on(ol->timer);
+      ol->times_elapsed[INIT_BUILD_EDGES] = PDM_timer_elapsed(ol->timer);
+      ol->times_cpu[INIT_BUILD_EDGES]     = PDM_timer_cpu(ol->timer);
+      ol->times_cpu_u[INIT_BUILD_EDGES]   = PDM_timer_cpu_user(ol->timer);
+      ol->times_cpu_s[INIT_BUILD_EDGES]   = PDM_timer_cpu_sys(ol->timer);
+      PDM_timer_resume(ol->timer);
+
+      /*
+       * Inter partition exchange graph (exchange to vertices)
+       */
+
+      _build_exchange_graph(ol);
+
+      PDM_MPI_Barrier (ol->comm);
+      PDM_timer_hang_on(ol->timer);
+      ol->times_elapsed[INIT_BUILD_EXCH_GRAPH] = PDM_timer_elapsed(ol->timer);
+      ol->times_cpu[INIT_BUILD_EXCH_GRAPH]     = PDM_timer_cpu(ol->timer);
+      ol->times_cpu_u[INIT_BUILD_EXCH_GRAPH]   = PDM_timer_cpu_user(ol->timer);
+      ol->times_cpu_s[INIT_BUILD_EXCH_GRAPH]   = PDM_timer_cpu_sys(ol->timer);
+      PDM_timer_resume(ol->timer);
+
+      /*
+       * Build ghost faces and edges (To compute caracteristic length
+       * and normal to vertices)
+       */
+
+      _compute_carLgthVtx(ol);
+
+      PDM_MPI_Barrier (ol->comm);
+      PDM_timer_hang_on(ol->timer);
+      ol->times_elapsed[INIT_COMPUTE_CAR_LGTH] = PDM_timer_elapsed(ol->timer);
+      ol->times_cpu[INIT_COMPUTE_CAR_LGTH]     = PDM_timer_cpu(ol->timer);
+      ol->times_cpu_u[INIT_COMPUTE_CAR_LGTH]   = PDM_timer_cpu_user(ol->timer);
+      ol->times_cpu_s[INIT_COMPUTE_CAR_LGTH]   = PDM_timer_cpu_sys(ol->timer);
+      PDM_timer_resume(ol->timer);
+    }
+
+    else {
+      PDM_error (__FILE__, __LINE__, 0,
+                 "Error PDM_ol_compute2 : mesh dimension %d is not supported\n",
+                 ol->mesh_dimension);
+    }
+  }
+
+  else {
+
+    /* Surface meshes */
+    if (ol->mesh_dimension == 2) {
+      ol->times_elapsed[INIT_BUILD_EDGES] = ol->times_elapsed[INIT_DEF_DATA];
+      ol->times_cpu[INIT_BUILD_EDGES]     = ol->times_cpu[INIT_DEF_DATA];
+      ol->times_cpu_u[INIT_BUILD_EDGES]   = ol->times_cpu_u[INIT_DEF_DATA];
+      ol->times_cpu_s[INIT_BUILD_EDGES]   = ol->times_cpu_s[INIT_DEF_DATA];
+
+      ol->times_elapsed[INIT_BUILD_EXCH_GRAPH] = ol->times_elapsed[INIT_DEF_DATA];
+      ol->times_cpu[INIT_BUILD_EXCH_GRAPH]     = ol->times_cpu[INIT_DEF_DATA];
+      ol->times_cpu_u[INIT_BUILD_EXCH_GRAPH]   = ol->times_cpu_u[INIT_DEF_DATA];
+      ol->times_cpu_s[INIT_BUILD_EXCH_GRAPH]   = ol->times_cpu_s[INIT_DEF_DATA];
+
+      ol->times_elapsed[INIT_COMPUTE_CAR_LGTH] = ol->times_elapsed[INIT_DEF_DATA];
+      ol->times_cpu[INIT_COMPUTE_CAR_LGTH]     = ol->times_cpu[INIT_DEF_DATA];
+      ol->times_cpu_u[INIT_COMPUTE_CAR_LGTH]   = ol->times_cpu_u[INIT_DEF_DATA];
+      ol->times_cpu_s[INIT_COMPUTE_CAR_LGTH]   = ol->times_cpu_s[INIT_DEF_DATA];
+    }
+
+    else {
+      PDM_error (__FILE__, __LINE__, 0,
+                 "Error PDM_ol_compute2 : mesh dimension %d is not supported\n",
+                 ol->mesh_dimension);
+    }
+  }
+
+  /*
+   * Compute overlay
+   */
+
+  _compute_overlay2 (ol);
+
+  PDM_timer_hang_on (ol->timer);
+
 }
 
 
@@ -11492,6 +11682,37 @@ PROCF (pdm_ol_dump_times, PDM_OL_DUMP_TIMES)
   PDM_ol_dump_times (*id);
 }
 
+
+
+
+/**
+ * \brief Define the type of result for overlay
+ *
+ * This function defines the type of result for overlay computations.
+ *
+ * \param [in]  id       PDM_ol identifier
+ * \param [in]  result   Type of result
+ *
+ */
+
+void
+PDM_ol_result_set
+(
+ const int             id,
+ const PDM_ol_result_t result
+ )
+{
+  /*
+   * Get overlay object
+   */
+
+  PDM_ol_t *ol = _ol_get(id);
+
+  /*
+   * Set result type
+   */
+  ol->result = result;
+}
 
 #undef _DOT_PRODUCT
 #undef _MODULE
