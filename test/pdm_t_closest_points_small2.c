@@ -90,11 +90,11 @@ main
 
   int n_src = 4;
   PDM_g_num_t src_g_num[4];
-  PDM_g_num_t src_coord[4*3];
+  double      src_coord[4*3];
 
   int n_tgt = 18;
   PDM_g_num_t tgt_g_num[18];
-  PDM_g_num_t tgt_coord[18*3];
+  double      tgt_coord[18*3];
 
   if (i_rank == 0) {
     int idx = 0;
