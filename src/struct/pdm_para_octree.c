@@ -9864,7 +9864,8 @@ PDM_para_octree_single_closest_point
   free (send_coord);
 
   double *recv_closest_pt_dist2 = _closest_pt_dist22 + idx_pts2[1];
-  int idx1 = 0, idx2 = 0;
+  idx1 = 0;
+  idx2 = 0;
   for (int i = 0; i < n_pts_recv2; i++) {
     for (int j = 0; j < dim; j++) {
       recv_coord[idx1++] = recv_double[idx2++];
