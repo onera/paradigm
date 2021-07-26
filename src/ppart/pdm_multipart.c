@@ -1315,6 +1315,7 @@ PDM_MPI_Comm       comm
       assert(pridge_n[i_part][i_face] <= 1); // DOnc soit 0 soit 1
     }
     pn_ridge[i_part] = PDM_inplace_unique_long(pridge_gnum[i_part], NULL, 0, pn_ridge_tmp-1);
+    // TODO : Resize
   }
 
   /*
