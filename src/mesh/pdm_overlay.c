@@ -520,7 +520,7 @@ _intersect_bounding_boxes
           l_extents[k]     = PDM_MIN (l_extents[k],
                                       elt_extents[imesh][ipart][2*dim*i + k]);
           l_extents[dim+k] = PDM_MAX (l_extents[dim+k],
-                                      elt_extents[imesh][ipart][2*dim*(i+1) + k]);
+                                      elt_extents[imesh][ipart][2*dim*i + dim+k]);
         }
       }
     }
@@ -534,9 +534,9 @@ _intersect_bounding_boxes
                      PDM_MPI_DOUBLE, PDM_MPI_MIN, ol->comm);
   PDM_MPI_Allreduce (l_extents+dim, g_extents+dim, dim,
                      PDM_MPI_DOUBLE, PDM_MPI_MAX, ol->comm);
+
   double max_range = -HUGE_VAL;
   double min_range =  HUGE_VAL;
-
   for (int k = 0; k < dim; k++) {
     max_range = PDM_MAX (max_range, (g_extents[dim+k] - g_extents[k]));
     min_range = PDM_MIN (min_range, (g_extents[dim+k] - g_extents[k]));
