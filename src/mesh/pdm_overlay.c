@@ -885,6 +885,112 @@ _intersect_bounding_boxes_and_redistribute
 
 
 
+static void
+_redistribute_boxes_intersections
+(
+ PDM_ol_t      *ol,
+ PDM_box_set_t *boxesA,
+ PDM_box_set_t *boxesB,
+ int           *boxesB_inter_index,
+ int           *boxesB_inter_l_num,
+ int           *blockA_n_elt,
+ PDM_g_num_t  **blockA_g_num,
+ int          **blockA_boxesB_idx,
+ PDM_g_num_t  **blockA_boxesB_g_num,
+ int          **blockA_boxesB_l_num,
+ int          **blockA_l_num
+ )
+{
+  int n_rank;
+  PDM_MPI_Comm_size (ol->comm, &n_rank);
+
+  int n_eltA = PDM_box_set_get_size (boxesA);
+  int n_eltB = PDM_box_set_get_size (boxesB);
+
+  const PDM_g_num_t *elt_g_numA = PDM_box_set_get_g_num (boxesA);
+  const PDM_g_num_t *elt_g_numB = PDM_box_set_get_g_num (boxesB);
+
+  /*
+   *  Transfer intersection results from partitions to blocks
+   */
+  PDM_part_to_block_t *ptb_boxesA = PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                              PDM_PART_TO_BLOCK_POST_MERGE,
+                                                              1.,
+                                                              (PDM_g_num_t **) &elt_g_numA,
+                                                              NULL,
+                                                              &n_eltA,
+                                                              1,
+                                                              ol->comm);
+
+  *blockA_n_elt = PDM_part_to_block_n_elt_block_get (ptb_boxesA);
+  *blockA_g_num = PDM_part_to_block_block_gnum_get (ptb_boxesA);
+
+  int *part_strideA = (int *) malloc (sizeof(int) * n_eltA);
+  for (int i = 0; i < n_eltA; i++) {
+    part_strideA[i] = boxesB_inter_index[i+1] - boxesB_inter_index[i];
+  }
+
+  PDM_g_num_t *boxesB_inter_g_num = malloc (sizeof(PDM_g_num_t) * boxesB_inter_index[n_eltA]);
+  for (int k = 0; k < boxesB_inter_index[n_eltA]; k++) {
+    boxesB_inter_g_num[k] = elt_g_numB[boxesB_inter_l_num[k]];
+  }
+
+  int *block_strideA;
+  PDM_part_to_block_exch (ptb_boxesA,
+                          sizeof(PDM_g_num_t),
+                          PDM_STRIDE_VAR,
+                          0,
+                          &part_strideA,
+                          (void **) &boxesB_inter_g_num,
+                          &block_strideA,
+                          (void **) blockA_boxesB_g_num);
+
+  *blockA_boxesB_idx = PDM_array_new_idx_from_sizes_int (block_strideA, *blockA_n_elt);
+  int *_blockA_boxesB_idx = *blockA_boxesB_idx;
+  free (block_strideA);
+
+  /*
+   *  Merge data (sort and remove doubles)
+   */
+  int idx = 0;
+  int *blockA_boxesB_idx_new = PDM_array_zeros_int (*blockA_n_elt + 1);
+
+  for (int i = 0; i < *blockA_n_elt; i++) {
+    PDM_g_num_t *_g_numB = *blockA_boxesB_g_num + _blockA_boxesB_idx[i];
+    int _n_boxesB = _blockA_boxesB_idx[i+1] - _blockA_boxesB_idx[i];
+
+    PDM_sort_long (_g_numB, NULL, _n_boxesB);
+
+    PDM_g_num_t prev = -1;
+    for (int j = 0; j < _n_boxesB; j++) {
+      if (prev != _g_numB[j]) {
+        (*blockA_boxesB_g_num)[idx++] = _g_numB[j];
+        blockA_boxesB_idx_new[i+1]++;
+        prev = _g_numB[j];
+      }
+    }
+  }
+
+  for (int i = 0; i < *blockA_n_elt; i++) {
+    blockA_boxesB_idx_new[i+1] += blockA_boxesB_idx_new[i];
+  }
+
+  for (int i = 0; i <= *blockA_n_elt; i++) {
+    _blockA_boxesB_idx[i] = blockA_boxesB_idx_new[i];
+  }
+  free (blockA_boxesB_idx_new);
+
+
+
+
+}
+
+
+
+
+
+
+
 #if 0
 static void
 _clipping
@@ -10386,12 +10492,7 @@ _compute_overlay2
     /*
      * Compute overlay
      */
-    if (isPlaneSurfaces) {
-      _compute_overlay_planes (ol);
-    }
-    else {
-      _compute_overlay_surfaces2 (ol, isPlaneSurfaces);
-    }
+    _compute_overlay_surfaces2 (ol, isPlaneSurfaces);
   }
 
   else {
