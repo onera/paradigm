@@ -101,9 +101,9 @@ main
     for (int j = 0; j < 2; j++) {
       for (int i = 0; i < 2; i++) {
         src_g_num[idx] = idx + 1;
-        src_coord[3*idx]     = i + 0.5;
-        src_coord[3*idx + 1] = j + 0.5;
-        src_coord[3*idx + 2] = 0.5;
+        src_coord[3*idx]     = 2*i + 1;
+        src_coord[3*idx + 1] = 2*j + 1;
+        src_coord[3*idx + 2] = 1;
         idx++;
       }
     }
@@ -113,9 +113,9 @@ main
       for (int j = 0; j < 3; j++) {
         for (int i = 0; i < 3; i++) {
           tgt_g_num[idx] = idx + 1;
-          tgt_coord[3*idx]     = i;
-          tgt_coord[3*idx + 1] = j;
-          tgt_coord[3*idx + 2] = k;
+          tgt_coord[3*idx]     = 2*i;
+          tgt_coord[3*idx + 1] = 2*j;
+          tgt_coord[3*idx + 2] = 2*k;
           idx++;
         }
       }
@@ -127,9 +127,9 @@ main
     for (int j = 0; j < 2; j++) {
       for (int i = 0; i < 2; i++) {
         src_g_num[idx] = idx + 5;
-        src_coord[3*idx]     = i + 0.5;
-        src_coord[3*idx + 1] = j + 0.5;
-        src_coord[3*idx + 2] = 0.5;
+        src_coord[3*idx]     = 2*i + 1;
+        src_coord[3*idx + 1] = 2*j + 1;
+        src_coord[3*idx + 2] = 1;
         idx++;
       }
     }
@@ -139,9 +139,9 @@ main
       for (int j = 0; j < 3; j++) {
         for (int i = 0; i < 3; i++) {
           tgt_g_num[idx] = idx + 10;
-          tgt_coord[3*idx]     = i;
-          tgt_coord[3*idx + 1] = j;
-          tgt_coord[3*idx + 2] = k;
+          tgt_coord[3*idx]     = 2*i;
+          tgt_coord[3*idx + 1] = 2*j;
+          tgt_coord[3*idx + 2] = 2*k;
           idx++;
         }
       }
@@ -177,6 +177,23 @@ main
 
 
   PDM_closest_points_compute (clsp);
+
+
+
+  PDM_g_num_t *closest_src_gnum = NULL;
+  double      *closest_src_dist = NULL;
+
+  PDM_closest_points_get (clsp,
+                          0,
+                          &closest_src_gnum,
+                          &closest_src_dist);
+
+  for (int i = 0; i < n_tgt; i++) {
+    printf("[%d] "PDM_FMT_G_NUM" : "PDM_FMT_G_NUM", %f\n",
+           i_rank, tgt_g_num[i],
+           closest_src_gnum[i],
+           closest_src_dist[i]);
+  }
 
 
 
