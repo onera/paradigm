@@ -7947,41 +7947,6 @@ PDM_para_octree_closest_points
                           (void **) &_closest_pts_g_num,
                           &block_stride,
                           (void **) &block_closest_pts_g_num);
-
-  //-->>
-  /* Merge if multiple results */
-  int idx1 = 0, idx2 = 0;
-  int n_pts_block = PDM_part_to_block_n_elt_block_get (ptb1);
-  if (1) {
-    for (int i = 0; i < n_pts_block; i++) {
-      if (block_stride[i] > n_closest_points) {
-        int *order = malloc (sizeof(int) * block_stride[i]);
-        for (int j = 0; j < block_stride[i]; j++) {
-          order[j] = j;
-        }
-
-        PDM_sort_double (block_closest_pts_dist2, order, block_stride[i]);
-
-        for (int j = 0; j < block_stride[i]; j++) {
-          block_closest_pts_dist2[idx2 + j] = block_closest_pts_dist2[idx1 + j];
-          block_closest_pts_g_num[idx2 + j] = block_closest_pts_g_num[idx1 + order[j]];
-        }
-        free (order);
-      }
-
-      else {
-        for (int j = 0; j < n_closest_points; j++) {
-          block_closest_pts_dist2[idx2 + j] = block_closest_pts_dist2[idx1 + j];
-          block_closest_pts_g_num[idx2 + j] = block_closest_pts_g_num[idx1 + j];
-        }
-      }
-
-      idx1 += block_stride[i];
-      idx2 += n_closest_points;
-    }
-  }
-  //<<--
-
   free (block_stride);
   free (part_stride);
 
@@ -8382,8 +8347,7 @@ PDM_para_octree_closest_points
   free (send_coord);
 
   double *recv_closest_pt_dist2 = _closest_pts_dist22 + idx_pts2[1] * n_closest_points;
-  idx1 = 0;
-  idx2 = 0;
+  int idx1 = 0, idx2 = 0;
   for (int i = 0; i < n_pts_recv2; i++) {
     for (int j = 0; j < dim; j++) {
       recv_coord[idx1++] = recv_double[idx2++];
@@ -9346,7 +9310,7 @@ PDM_para_octree_single_closest_point
                                                          1,
                                                          octree->comm);
 
-  int *part_stride = PDM_array_const_int (n_pts1, 1);
+  int *part_stride = PDM_array_const_int(n_pts1, 1);
 
   int *block_stride = NULL;
   double *block_closest_pt_dist2 = NULL;
@@ -9369,27 +9333,6 @@ PDM_para_octree_single_closest_point
                           (void **) &_closest_pt_g_num,
                           &block_stride,
                           (void **) &block_closest_pt_g_num);
-
-  /* Merge if multiple results */
-  int idx1 = 0, idx2 = 0;
-  int n_pts_block = PDM_part_to_block_n_elt_block_get (ptb1);
-  for (int i = 0; i < n_pts_block; i++) {
-    double      min_dist2 = block_closest_pt_dist2[idx1];
-    PDM_g_num_t min_g_num = block_closest_pt_g_num[idx1];
-    for (int j = 1; j < block_stride[i]; j++) {
-      if (block_closest_pt_dist2[idx1 + j] < min_dist2) {
-        min_dist2 = block_closest_pt_dist2[idx1 + j];
-        min_g_num = block_closest_pt_g_num[idx1 + j];
-      }
-    }
-
-    block_closest_pt_dist2[idx2] = min_dist2;
-    block_closest_pt_g_num[idx2] = min_g_num;
-
-    idx1 += block_stride[i];
-    idx2++;
-  }
-
   free (block_stride);
   free (part_stride);
 
@@ -9900,8 +9843,7 @@ PDM_para_octree_single_closest_point
   free (send_coord);
 
   double *recv_closest_pt_dist2 = _closest_pt_dist22 + idx_pts2[1];
-  idx1 = 0;
-  idx2 = 0;
+  int idx1 = 0, idx2 = 0;
   for (int i = 0; i < n_pts_recv2; i++) {
     for (int j = 0; j < dim; j++) {
       recv_coord[idx1++] = recv_double[idx2++];

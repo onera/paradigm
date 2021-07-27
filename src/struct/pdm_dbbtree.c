@@ -637,13 +637,13 @@ PDM_dbbtree_boxes_set
 PDM_box_set_t  *
 PDM_dbbtree_intersect_boxes_set
 (
- PDM_dbbtree_t      *dbbt,
- const int           n_part,
- const int          *nElts,
- const double      **extents,
+ PDM_dbbtree_t    *dbbt,
+ const int         n_part,
+ const int        *nElts,
+ const double     **extents,
  const PDM_g_num_t **gNum,
- int                *box_index[],
- int                *box_l_num[]
+ int              *box_index[],
+ int              *box_l_num[]
  )
 {
 
@@ -655,10 +655,6 @@ PDM_dbbtree_intersect_boxes_set
   int lComm;
   PDM_MPI_Comm_size (_dbbt->comm, &lComm);
 
-
-  /*
-   *  Concatenate partitions and store origin location
-   */
   const int nInfoLocation = 3;
   const int sExtents = _dbbt->dim * 2;
 
@@ -716,10 +712,6 @@ PDM_dbbtree_intersect_boxes_set
     PDM_printf ("\n");
   }
 
-  /*
-   *  Normalize boxes with respect to dbbtree's extents
-   */
-
   for (int i = 0; i < nEltsProc; i++) {
     _normalize (_dbbt,
                 _extents+2*i*_dbbt->boxes->dim,
@@ -763,10 +755,6 @@ PDM_dbbtree_intersect_boxes_set
     }
     PDM_printf ("\n");
   }
-
-  /*
-   *  Create box set from concatenated partitions
-   */
 
   PDM_box_set_t  *boxes = PDM_box_set_create (3,
                                               0,  // No normalization to preserve initial extents
@@ -882,7 +870,7 @@ PDM_dbbtree_intersect_boxes_set
    * Sort boxes and remove double boxes
    */
 
-  int nBoxesA = _dbbt->boxes->local_boxes->n_boxes;
+  int nBoxesA = _dbbt->boxes->local_boxes->n_boxes;//*
 
   int *newIndex = PDM_array_zeros_int(nBoxesA + 1);
 

@@ -25,7 +25,6 @@
 #include "pdm_polygon.h"
 #include "pdm_priv.h"
 #include "pdm_edges_intersect.h"
-#include "pdm_triangulate.h"
 #include "pdm_printf.h"
 #include "pdm_error.h"
 #include "pdm_array.h"
@@ -474,494 +473,6 @@ double nB[3]
   free (boundsB);
 
 }
-
-
-
-
-
-static double _epsilon_denom = 1.e-30;       /* Minimum denominator */
-
-static inline double
-_determinant_3x3
-(
- const double a[3],
- const double b[3],
- const double c[3]
- )
-{
-  return a[0] * (b[1]*c[2] - b[2]*c[1])
-    +    a[1] * (b[2]*c[0] - b[0]*c[2])
-    +    a[2] * (b[0]*c[1] - b[1]*c[0]);
-}
-
-/*---------------------------------------------------------------------------
- * Solve the equation "A.x = b" with Cramer's rule.
- *
- * parameters:
- *   A[3][3] <-- equation matrix
- *   b[3]    <-- b equation right hand side
- *   x[3]    <-> equation solution (unchanged if matrix is singular)
- *
- * returns:
- *   PDM_FALSE if matrix is singular, PDM_TRUE otherwise
- *----------------------------------------------------------------------------*/
-
-static int
-_solve_3x3(double  A[3][3],
-           double  b[3],
-           double  x[3])
-{
-  double det, det_inv, x0, x1, x2;
-
-  det = A[0][0]*(A[1][1]*A[2][2] - A[2][1]*A[1][2])
-    -   A[1][0]*(A[0][1]*A[2][2] - A[2][1]*A[0][2])
-    +   A[2][0]*(A[0][1]*A[1][2] - A[1][1]*A[0][2]);
-
-  if (PDM_ABS(det) < _epsilon_denom) {
-    printf("_solve_3x3: det = %e\n", det);
-    return PDM_FALSE;
-  }
-
-  else {
-    det_inv = 1./det;
-  }
-
-  /* Use local variables to ensure no aliasing */
-
-  x0 = (  b[0]*(A[1][1]*A[2][2] - A[2][1]*A[1][2])
-          - b[1]*(A[0][1]*A[2][2] - A[2][1]*A[0][2])
-          + b[2]*(A[0][1]*A[1][2] - A[1][1]*A[0][2])) * det_inv;
-
-  x1 = (  A[0][0]*(b[1]*A[2][2] - b[2]*A[1][2])
-          - A[1][0]*(b[0]*A[2][2] - b[2]*A[0][2])
-          + A[2][0]*(b[0]*A[1][2] - b[1]*A[0][2])) * det_inv;
-
-  x2 = (  A[0][0]*(A[1][1]*b[2] - A[2][1]*b[1])
-          - A[1][0]*(A[0][1]*b[2] - A[2][1]*b[0])
-          + A[2][0]*(A[0][1]*b[1] - A[1][1]*b[0])) * det_inv;
-
-  /* Copy local variables to output */
-  x[0] = x0;
-  x[1] = x1;
-  x[2] = x2;
-
-  return PDM_TRUE;
-}
-
-
-/**
- * Project a point q on a triangle with projection direction linearly interpolated from those
- * given at the triangle's vertices
- **/
-
-static int
-_projection_on_triangle_BtoA
-(
- const double  q[3],
- const double  x0[3],
- const double  x1[3],
- const double  x2[3],
- const double  d0[3],
- const double  d1[3],
- const double  d2[3],
- double       *u,
- double       *v,
- double       *g,
- const int     verbose
- )
-{
-  const double told = 1e-12;
-  const double tolr = 1e-6;
-  const int max_iter = 10;
-
-  /* Initial iterate */
-  double _u = 1./3.;
-  double _v = _u;
-  double _g = 0.;
-
-  /* Newton-Raphson iteration */
-  double r[3];
-  double J[3][3];
-  double duvg[3] = {0., 0., 0.};
-  int converged = 0;
-
-  for (int iter = 0; iter < max_iter; iter++) {
-
-    double w = 1. - _u - _v;
-
-    // Jacobian matrix
-    for (int i = 0; i < 3; i++) {
-      J[i][0] = x0[i] - x2[i] + _g*(d2[i] - d0[i]);
-      J[i][1] = x1[i] - x2[i] + _g*(d2[i] - d1[i]);
-      J[i][2] = -(_u*d0[i] + _v*d1[i] + w*d2[i]);
-    }
-
-    // Right-hand-side term
-    for (int i = 0; i < 3; i++) {
-      r[i] = q[i] - (_u*x0[i] + _v*x1[i] + w*x2[i] + _g*J[i][2]);
-    }
-    double resr = PDM_DOT_PRODUCT (r, r);
-
-    // Solve for Newton step
-    int stat = _solve_3x3 (J, r, duvg);
-
-    if (stat == 0) {
-      // singular Jacobian matrix
-      break;
-    }
-
-    double resd = PDM_MAX (PDM_ABS(duvg[0]), PDM_ABS(duvg[1]));
-    //resd = PDM_MAX (PDM_ABS(duvg[2]), resd);
-    if (verbose) printf("  it %d, u = %f, v = %f, resr = %f, resd = %f\n", iter, _u, _v, resr, resd);
-
-    // update iterate
-    _u += duvg[0];
-    _v += duvg[1];
-    _g += duvg[2];
-
-    // Check for termination
-    if (resd < told) {
-      if (resr < tolr*tolr) {//?
-        converged = 1;
-      }
-      break;
-    }
-  }
-
-  *u = _u;
-  *v = _v;
-  *g = _g;
-
-  return converged;
-}
-
-
-static int
-_projection_on_triangle_AtoB
-(
- const double  p[3],
- const double  n[3],
- const double  x0[3],
- const double  x1[3],
- const double  x2[3],
- double       *u,
- double       *v,
- double       *g
- )
-{
-  double A[3][3];
-  double b[3];
-
-  for (int i = 0; i < 3; i++) {
-    A[i][0] = x0[i] - x2[i];
-    A[i][1] = x1[i] - x2[i];
-    A[i][2] = -n[i];
-    b[i]    = p[i] - x2[i];
-  }
-
-  double uvg[3];
-  int stat = _solve_3x3 (A, b, uvg);
-
-  *u = uvg[0];
-  *v = uvg[1];
-  *g = uvg[2];
-
-  return stat;
-}
-
-
-static void
-_projection_on_polygon_BtoA
-(
- const int             n_pts,
- const double         *pts_coord,
- const int             n_vtx,
- const double         *vtx_coord,
- const double         *vtx_normal,
- double               *proj_coord,
- PDM_polygon_status_t *pts_status,
- const int             verbose
- )
-{
-  for (int ipt = 0; ipt < n_pts; ipt++) {
-    pts_status[ipt] = PDM_POLYGON_OUTSIDE;
-  }
-
-  if (n_vtx == 3) {
-    /* Loop on points */
-    for (int ipt = 0; ipt < n_pts; ipt++) {
-
-      if (pts_status[ipt] == PDM_POLYGON_INSIDE) continue;
-      double u, v, g;
-
-      int converged = _projection_on_triangle_BtoA (pts_coord + 3*ipt,
-                                                    vtx_coord,
-                                                    vtx_coord + 3,
-                                                    vtx_coord + 6,
-                                                    vtx_normal,
-                                                    vtx_normal + 3,
-                                                    vtx_normal + 6,
-                                                    &u,
-                                                    &v,
-                                                    &g,
-                                                    verbose);
-      if (verbose) printf("tri 0, pt %d: converged? %d, u = %f, v = %f\n", ipt, converged, u, v);
-
-      if (converged) {
-        double w = 1. - u - v;
-
-        if (u >= 0 && u <= 1 && v >= 0 && v <= 1 && w >= 0) {
-          pts_status[ipt] = PDM_POLYGON_INSIDE;
-
-          for (int i = 0; i < 3; i++) {
-            proj_coord[3*ipt+i] = u*vtx_coord[i] + v*vtx_coord[3+i] + w*vtx_coord[6+i];
-          }
-
-        }
-      }
-    }// End of loop on points
-  }
-
-  else {
-    PDM_triangulate_state_t *state = PDM_triangulate_state_create (n_vtx);
-    PDM_l_num_t *tri_vtx = malloc (sizeof(PDM_l_num_t) * (n_vtx - 2)*3);
-
-    int n_tri = PDM_triangulate_polygon (3,
-                                         n_vtx,
-                                         vtx_coord,
-                                         NULL,
-                                         NULL,
-                                         PDM_TRIANGULATE_ELT_DEF,
-                                         tri_vtx,
-                                         state);
-
-    /* Loop on sub-triangles */
-    for (int itri = 0; itri < n_tri; itri++) {
-
-      int i0 = 3 * (tri_vtx[3*itri]     - 1);
-      int i1 = 3 * (tri_vtx[3*itri  +1] - 1);
-      int i2 = 3 * (tri_vtx[3*itri + 2] - 1);
-
-      /* Loop on points */
-      for (int ipt = 0; ipt < n_pts; ipt++) {
-
-        if (pts_status[ipt] == PDM_POLYGON_INSIDE) continue;
-        double u, v, g;
-
-        int converged = _projection_on_triangle_BtoA (pts_coord + 3*ipt,
-                                                      vtx_coord + i0,
-                                                      vtx_coord + i1,
-                                                      vtx_coord + i2,
-                                                      vtx_normal + i0,
-                                                      vtx_normal + i1,
-                                                      vtx_normal + i2,
-                                                      &u,
-                                                      &v,
-                                                      &g,
-                                                      verbose);
-        if (verbose) printf("tri %d, pt %d: converged? %d, u = %f, v = %f\n", itri, ipt, converged, u, v);
-
-        if (converged) {
-          double w = 1. - u - v;
-
-          if (u >= 0 && u <= 1 && v >= 0 && v <= 1 && w >= 0) {
-            pts_status[ipt] = PDM_POLYGON_INSIDE;
-
-            for (int i = 0; i < 3; i++) {
-              proj_coord[3*ipt+i] = u*vtx_coord[i0+i] + v*vtx_coord[i1+i] + w*vtx_coord[i2+i];
-            }
-
-          }
-        }
-      }// End of loop on points
-
-    } // End of loop on sub-triangles
-
-
-    state = PDM_triangulate_state_destroy (state);
-    free (tri_vtx);
-  }
-}
-
-
-static void
-_projection_on_polygon_AtoB
-(
- const int             n_pts,
- const double         *pts_coord,
- const double         *pts_normal,
- const int             n_vtx,
- const double         *vtx_coord,
- double               *proj_coord,
- PDM_polygon_status_t *pts_status
- )
-{
-  for (int ipt = 0; ipt < n_pts; ipt++) {
-    pts_status[ipt] = PDM_POLYGON_OUTSIDE;
-  }
-
-  if (n_vtx == 3) {
-    /* Loop on points */
-    for (int ipt = 0; ipt < n_pts; ipt++) {
-
-      if (pts_status[ipt] == PDM_POLYGON_INSIDE) continue;
-      double u, v, g;
-
-      int converged = _projection_on_triangle_AtoB (pts_coord + 3*ipt,
-                                                    pts_normal + 3*ipt,
-                                                    vtx_coord,
-                                                    vtx_coord + 3,
-                                                    vtx_coord + 6,
-                                                    &u,
-                                                    &v,
-                                                    &g);
-      if (converged) {
-        double w = 1. - u - v;
-
-        if (u >= 0 && u <= 1 && v >= 0 && v <= 1 && w >= 0) {
-          pts_status[ipt] = PDM_POLYGON_INSIDE;
-
-          for (int i = 0; i < 3; i++) {
-            proj_coord[3*ipt+i] = u*vtx_coord[i] + v*vtx_coord[3+i] + w*vtx_coord[6+i];
-          }
-
-        }
-      }
-    }// End of loop on points
-  }
-
-  else {
-    PDM_triangulate_state_t *state = PDM_triangulate_state_create (n_vtx);
-    PDM_l_num_t *tri_vtx = malloc (sizeof(PDM_l_num_t) * (n_vtx - 2)*3);
-
-    int n_tri = PDM_triangulate_polygon (3,
-                                         n_vtx,
-                                         vtx_coord,
-                                         NULL,
-                                         NULL,
-                                         PDM_TRIANGULATE_ELT_DEF,
-                                         tri_vtx,
-                                         state);
-
-    /* Loop on sub-triangles */
-    for (int itri = 0; itri < n_tri; itri++) {
-
-      int i0 = 3 * (tri_vtx[3*itri]     - 1);
-      int i1 = 3 * (tri_vtx[3*itri  +1] - 1);
-      int i2 = 3 * (tri_vtx[3*itri + 2] - 1);
-
-      /* Loop on points */
-      for (int ipt = 0; ipt < n_pts; ipt++) {
-
-        if (pts_status[ipt] == PDM_POLYGON_INSIDE) continue;
-        double u, v, g;
-
-        int converged = _projection_on_triangle_AtoB (pts_coord + 3*ipt,
-                                                      pts_normal + 3*ipt,
-                                                      vtx_coord + i0,
-                                                      vtx_coord + i1,
-                                                      vtx_coord + i2,
-                                                      &u,
-                                                      &v,
-                                                      &g);
-
-        if (converged) {
-          double w = 1. - u - v;
-
-          if (u >= 0 && u <= 1 && v >= 0 && v <= 1 && w >= 0) {
-            pts_status[ipt] = PDM_POLYGON_INSIDE;
-
-            for (int i = 0; i < 3; i++) {
-              proj_coord[3*ipt+i] = u*vtx_coord[i0+i] + v*vtx_coord[i1+i] + w*vtx_coord[i2+i];
-            }
-
-          }
-        }
-      }// End of loop on points
-
-    } // End of loop on sub-triangles
-
-
-    state = PDM_triangulate_state_destroy (state);
-    free (tri_vtx);
-  }
-}
-
-
-
-
-static void
-_location_projection
-(
-_vertex_poly_t *vtxpA,
-_vertex_poly_t *vtxpB,
-double         *face_vtxCooA,
-double         *face_vtxNormalA,
-double         *face_vtxCooB,
-int             n_vtxA,
-int             n_vtxB
-)
-{
-  int verbose = 0;
-  PDM_polygon_status_t *status = malloc (sizeof(PDM_polygon_status_t) * PDM_MAX(n_vtxA, n_vtxB));
-  double *proj_coordA = malloc (sizeof(double) * n_vtxA * 3);
-  double *proj_coordB = malloc (sizeof(double) * n_vtxB * 3);
-
-  _projection_on_polygon_BtoA (n_vtxB,
-                               face_vtxCooB,
-                               n_vtxA,
-                               face_vtxCooA,
-                               face_vtxNormalA,
-                               proj_coordB,
-                               status,
-                               verbose);
-
-  _vertex_poly_t *vtx_currB = vtxpB;
-  for (int i = 0; i < n_vtxB; i++) {
-    if (status[i] == PDM_POLYGON_INSIDE) {
-      vtx_currB->tag = true;
-    }
-    else if (status[i] == PDM_POLYGON_OUTSIDE) {
-      vtx_currB->tag = false;
-    }
-    else {
-      PDM_error(__FILE__, __LINE__, 0, "Error PDM_poly_clipp : degenerated polygon\n");
-      abort();
-    }
-    vtx_currB = vtx_currB->next;
-  }
-
-
-  _projection_on_polygon_AtoB (n_vtxA,
-                               face_vtxCooA,
-                               face_vtxNormalA,
-                               n_vtxB,
-                               face_vtxCooB,
-                               proj_coordA,
-                               status);
-
-  _vertex_poly_t *vtx_currA = vtxpA;
-  for (int i = 0; i < n_vtxA; i++) {
-    if (status[i] == PDM_POLYGON_INSIDE) {
-      vtx_currA->tag = true;
-    }
-    else if (status[i] == PDM_POLYGON_OUTSIDE) {
-      vtx_currA->tag = false;
-    }
-    else {
-      PDM_error(__FILE__, __LINE__, 0, "Error PDM_poly_clipp : degenerated polygon\n");
-      abort();
-    }
-    vtx_currA = vtx_currA->next;
-  }
-
-  free (proj_coordA);
-  free (proj_coordB);
-  free (status);
-}
-
-
-
 
 
 /**
@@ -1461,41 +972,200 @@ const int       nClippVtxB
 
 }
 
+/*=============================================================================
+ * Public function prototypes
+ *============================================================================*/
 
 
+/**
+ *
+ * \brief Perform polygon clipping
+ *
+ * \param [in]    ei                   Edges intersection management
+ * \param [in]    gNumA                Polygon A global number
+ * \param [in]    n_vtxA                Number of polygon A vertices
+ * \param [in]    faceToEdgeA          Polygon A face to edge connectivity
+ * \param [in]    faceToVtxA           Polygon A face to vertex connectivity
+ * \param [in]    face_vtxCooA          Polygon A vertex coordinates
+ * \param [in]    face_vtxEpsA          Polygon A vertex characteristic length
+ * \param [in]    gNumB                Polygon A global number
+ * \param [in]    n_vtxB                Number of polygon B vertices
+ * \param [in]    faceToEdgeB          Polygon B face to edge connectivity
+ * \param [in]    faceToVtxB           Polygon B face to vertex connectivity
+ * \param [in]    face_vtxCooB          Polygon B vertex coordinates
+ * \param [in]    face_vtxEpsB          Polygon B vertex characteristic length
+ * \param [in]    performed_t          Type of performed polygon :  PDM_POLY_CLIPP_CLIP,  PDM_POLY_CLIPP_REVERSE  // Perform clipped polygons , Perform opposit polygons
+ * \param [out]   nPolyClippA           Number of clipped polygon
+ * \param [out]   polyClippIdxA         Connectivity index for each polygon
+ *                                     size = nPolyClipp + 1
+ * \param [out]   polyClippConnecA     Connectivity of each clipped polygon
+ *                                     size = polyClippIdx[nPolyClipp] (Vtx from A > 0 and vtx from B < 0)
+ * \param [out]   polyClippCoordsA     Vertices coordinates of clipping polygon
+ * \param [out]   nPolyClippB          Number of clipped polygon
+ * \param [out]   polyClippIdxB         Connectivity index for each polygon
+ *                                     size = nPolyClipp + 1
+ * \param [out]   polyClippConnecB     Connectivity of each clipped polygon
+ *                                     size = polyClippIdx[nPolyClipp] (Vtx from B > 0 and vtx from A < 0)
+ * \param [out]   polyClippCoordsB     Vertices coordinates of clipping polygon
+ *
+ */
 
-static void
-_polygon_clipping
+void
+PDM_poly_clipp
 (
- PDM_edges_intersect_t  *ei,
- const int               n_vtxA,
- _vertex_poly_t         *vtxA,
- _vertex_poly_t        **vtxA_origin,
- const int               n_vtxB,
- _vertex_poly_t         *vtxB,
- _vertex_poly_t        **vtxB_origin,
- PDM_poly_clipp_t        performed_t,
- int                    *nPolyClippA,
- int                   **polyClippIdxA,
- PDM_g_num_t           **polyClippConnecA,
- double                **polyClippCoordsA,
- int                    *nPolyClippB,
- int                   **polyClippIdxB,
- PDM_g_num_t           **polyClippConnecB,
- double                **polyClippCoordsB,
- const PDM_g_num_t       gnum_boxA,     // DEBUG
- const PDM_g_num_t       gnum_boxB,     // DEBUG
- const double           *_face_vtxCooA, // DEBUG
- const double           *_face_vtxCooB  // DEBUG
- )
+PDM_edges_intersect_t  *ei,
+PDM_g_num_t             gnum_boxA,
+PDM_g_num_t             gnum_boxB,
+const int               n_vtxA,
+PDM_g_num_t            *faceToEdgeA,
+PDM_g_num_t            *faceToVtxA,
+double                 *face_vtxCooA,
+const int               n_vtxB,
+PDM_g_num_t            *faceToEdgeB,
+PDM_g_num_t            *faceToVtxB,
+double                 *face_vtxCooB,
+PDM_poly_clipp_t        performed_t,
+int                    *nPolyClippA,
+int                   **polyClippIdxA,
+PDM_g_num_t           **polyClippConnecA,
+double                **polyClippCoordsA,
+int                    *nPolyClippB,
+int                   **polyClippIdxB,
+PDM_g_num_t           **polyClippConnecB,
+double                **polyClippCoordsB
+)
 {
+  PDM_g_num_t *_faceToEdgeA = faceToEdgeA;
+  PDM_g_num_t *_faceToVtxA  = faceToVtxA;
+  double     *_face_vtxCooA = face_vtxCooA;
+
+  PDM_g_num_t *_faceToEdgeB = faceToEdgeB;
+  PDM_g_num_t *_faceToVtxB  = faceToVtxB;
+  double     *_face_vtxCooB = face_vtxCooB;
+
+  /*
+   * Compute Normal
+   *
+   */
+
+  double nA[3];
+  double baryA[3];
+  PDM_plane_normal (n_vtxA, face_vtxCooA, nA);
+  PDM_plane_barycenter (n_vtxA, face_vtxCooA, baryA);
+
+  double nB[3];
+  PDM_plane_normal (n_vtxB, face_vtxCooB, nB);
+
+  double dot = PDM_DOT_PRODUCT (nA, nB);
+
+  bool revert = false;
+
+  if (dot < 0) {
+    revert = true;
+  }
+
+  /*
+   * Reorient if necessary
+   *
+   */
+
+  if (revert) {
+
+    _faceToEdgeB = malloc (sizeof(PDM_g_num_t) * n_vtxB);
+    _faceToVtxB  = malloc (sizeof(PDM_g_num_t) * n_vtxB);
+    _face_vtxCooB = malloc (sizeof(double) * 3 * n_vtxB);
+
+    int j = n_vtxB - 1;
+    for (int i = 0; i < n_vtxB; i++) {
+      _faceToEdgeB[i] = -faceToEdgeB[_modulo((j-1),n_vtxB)];
+      _faceToVtxB[i] = faceToVtxB[j];
+      for (int k = 0; k < 3; k++) {
+        _face_vtxCooB[3*i+k] = face_vtxCooB[3*j+k];
+      }
+      j += -1;
+    }
+  }
+
+  _face_vtxCooA = malloc (sizeof(double) * 3 * n_vtxA);
+  for (int i = 0; i < n_vtxA; i++) {
+    PDM_plane_projection (face_vtxCooA + 3 * i, baryA, nA, _face_vtxCooA + 3 * i);
+  }
+  PDM_plane_normal (n_vtxA, _face_vtxCooA, nA);
+
+  if (revert) {
+    for (int i = 0; i < n_vtxB; i++) {
+      PDM_plane_projection (_face_vtxCooB + 3 * i, baryA, nA, _face_vtxCooB + 3 * i);
+    }
+  }
+  else {
+    _face_vtxCooB = malloc (sizeof(double) * 3 * n_vtxB);
+    for (int i = 0; i < n_vtxB; i++) {
+      PDM_plane_projection (face_vtxCooB + 3 * i, baryA, nA, _face_vtxCooB + 3 * i);
+    }
+  }
+
+
+
+  /*
+   * Create double linked list vertex structures
+   *
+   */
+
+  _vertex_poly_t *vtxA = _poly_clipp_new (_face_vtxCooA,
+                                          *_faceToVtxA,
+                                          PDM_ABS(*_faceToEdgeA));
+
+  _vertex_poly_t *vtxB = _poly_clipp_new (_face_vtxCooB,
+                                          *_faceToVtxB,
+                                          PDM_ABS(*_faceToEdgeB));
+
+  _vertex_poly_t **vtxA_origin = malloc (sizeof(_vertex_poly_t *) *  n_vtxA);
+  _vertex_poly_t **vtxB_origin = malloc (sizeof(_vertex_poly_t *) *  n_vtxB);
+
+  vtxA_origin[0] = vtxA;
+  vtxB_origin[0] = vtxB;
+
+  int nClippVtxA = n_vtxA;
+
+  for (int i = 1; i < n_vtxA; i++) {
+    const double *_coo   = _face_vtxCooA + 3*i;
+    PDM_g_num_t   *_gN     = _faceToVtxA +i;
+    PDM_g_num_t   *_gNEdge = _faceToEdgeA +i;
+
+    vtxA_origin[i] = _poly_clipp_add (_coo,
+                                      *_gN,
+                                      PDM_ABS(*_gNEdge),
+                                      POLY_CLIPP_LOC_PREVIOUS,
+                                      vtxA);
+  }
+
+  int nClippVtxB = n_vtxB;
+  for (int i = 1; i < n_vtxB; i++) {
+    const double *_coo = _face_vtxCooB + 3*i;
+    PDM_g_num_t   *_gN     = _faceToVtxB +i;
+    PDM_g_num_t   *_gNEdge = _faceToEdgeB +i;
+
+    vtxB_origin[i] = _poly_clipp_add (_coo,
+                                      *_gN,
+                                      PDM_ABS(*_gNEdge),
+                                      POLY_CLIPP_LOC_PREVIOUS,
+                                      vtxB);
+  }
+
+  /*
+   * Perform vertex location (in, out) for no 'on' vertex
+   *    - First step  : In or out (ray tracing algorithm)
+   *
+   */
+
+  //_location (vtxA, vtxB, _face_vtxCooA, _face_vtxCooB, n_vtxA, n_vtxB, nA, nB);
+  _location (vtxA, vtxB, _face_vtxCooA, _face_vtxCooB, n_vtxA, n_vtxB, nA, nA);
+
   /*
    *   - Add intersection into linked list
    *   - Move to Intersection tag for Vertices located on Polygon
    *
    */
-  int nClippVtxA = n_vtxA;
-  int nClippVtxB = n_vtxB;
 
   for (int i1 = 0; i1 < n_vtxA; i1++) {
     _vertex_poly_t *vtx_currA = vtxA_origin[i1];
@@ -1529,13 +1199,13 @@ _polygon_clipping
 
         PDM_line_intersect_t         tIntersect;
 
-        PDM_g_num_t                  nGEdgeA;
-        PDM_g_num_t                  originEdgeA;
-        PDM_g_num_t                  endEdgeA;
+        PDM_g_num_t                   nGEdgeA;
+        PDM_g_num_t                   originEdgeA;
+        PDM_g_num_t                   endEdgeA;
         int                          nNewPointsA;
         PDM_edges_intersect_point_t *oNewPointsA;
-        PDM_g_num_t                 *linkA;
-        PDM_g_num_t                 *gNumVtxA;
+        PDM_g_num_t                  *linkA;
+        PDM_g_num_t                  *gNumVtxA;
         double                      *coordsA;
         double                      *uA;
 
@@ -1556,13 +1226,13 @@ _polygon_clipping
                                           &coordsA,
                                           &uA);
 
-        PDM_g_num_t                  nGEdgeB;
-        PDM_g_num_t                  originEdgeB;
-        PDM_g_num_t                  endEdgeB;
+        PDM_g_num_t                   nGEdgeB;
+        PDM_g_num_t                   originEdgeB;
+        PDM_g_num_t                   endEdgeB;
         int                          nNewPointsB;
         PDM_edges_intersect_point_t *oNewPointsB;
-        PDM_g_num_t                 *linkB;
-        PDM_g_num_t                 *gNumVtxB;
+        PDM_g_num_t                  *linkB;
+        PDM_g_num_t                  *gNumVtxB;
         double                      *coordsB;
         double                      *uB;
 
@@ -1738,7 +1408,71 @@ _polygon_clipping
    * Tag Intersection points
    *
    */
+
+  if ((gnum_boxA == 19189330) && (gnum_boxB == 3206132) && 0) {
+    printf("Ensemble des points avant tag (gn, isect, neighbour, tag) :\n");
+    _vertex_poly_t *vtx_currA = vtxA;
+    printf ("Polygon A : ");
+    do {
+      PDM_g_num_t neighbour = -1;
+      if (vtx_currA->neighbor != NULL)
+        neighbour = vtx_currA->neighbor->gN;
+      if ( neighbour != -1)
+        printf (" "PDM_FMT_G_NUM"-%d/"PDM_FMT_G_NUM"/%d", vtx_currA->gN, vtx_currA->isect, neighbour, vtx_currA->tag);
+      else
+        printf (" "PDM_FMT_G_NUM"-%d/NC/%d", vtx_currA->gN, vtx_currA->isect, vtx_currA->tag);
+      vtx_currA = vtx_currA->next;
+    } while (vtx_currA != vtxA);
+    printf("\n");
+
+    _vertex_poly_t *vtx_currB = vtxB;
+    printf ("Polygon B : ");
+    do {
+      PDM_g_num_t neighbour = -1;
+      if (vtx_currB->neighbor != NULL)
+        neighbour = vtx_currB->neighbor->gN;
+      if ( neighbour != -1)
+        printf (" "PDM_FMT_G_NUM"-%d/"PDM_FMT_G_NUM"/%d", vtx_currB->gN, vtx_currB->isect, neighbour, vtx_currB->tag);
+      else
+        printf (" "PDM_FMT_G_NUM"-%d/NC/%d", vtx_currB->gN, vtx_currB->isect, vtx_currB->tag);
+      vtx_currB = vtx_currB->next;
+    } while (vtx_currB != vtxB);
+    printf("\n");
+  }
+
   _tag (vtxA, vtxB, nClippVtxA, nClippVtxB);
+
+  if ((gnum_boxA == 19189330) && (gnum_boxB == 3206132) && 0) {
+    //  if (0 == 1) {
+    printf("Ensemble des points apres tag (gn, isect, neighbour, tag) :\n");
+    _vertex_poly_t *vtx_currA = vtxA;
+    printf ("Polygon A : ");
+    do {
+      PDM_g_num_t neighbour = -1;
+      if (vtx_currA->neighbor != NULL)
+        neighbour = vtx_currA->neighbor->gN;
+      if ( neighbour != -1)
+        printf (" "PDM_FMT_G_NUM"-%d/"PDM_FMT_G_NUM"/%d", vtx_currA->gN, vtx_currA->isect, neighbour, vtx_currA->tag);
+      else
+        printf (" "PDM_FMT_G_NUM"-%d/NC/%d", vtx_currA->gN, vtx_currA->isect, vtx_currA->tag);
+      vtx_currA = vtx_currA->next;
+    } while (vtx_currA != vtxA);
+    printf("\n");
+
+    _vertex_poly_t *vtx_currB = vtxB;
+    printf ("Polygon B : ");
+    do {
+      PDM_g_num_t neighbour = -1;
+      if (vtx_currB->neighbor != NULL)
+        neighbour = vtx_currB->neighbor->gN;
+      if ( neighbour != -1)
+        printf (" "PDM_FMT_G_NUM"-%d/"PDM_FMT_G_NUM"/%d", vtx_currB->gN, vtx_currB->isect, neighbour, vtx_currB->tag);
+      else
+        printf (" "PDM_FMT_G_NUM"-%d/NC/%d", vtx_currB->gN, vtx_currB->isect, vtx_currB->tag);
+      vtx_currB = vtx_currB->next;
+    } while (vtx_currB != vtxB);
+    printf("\n");
+  }
 
   /*
    * Clipping
@@ -2542,218 +2276,6 @@ _polygon_clipping
       printf("\n");
     }
   }
-}
-
-
-/*=============================================================================
- * Public function prototypes
- *============================================================================*/
-
-
-/**
- *
- * \brief Perform polygon clipping
- *
- * \param [in]    ei                   Edges intersection management
- * \param [in]    gNumA                Polygon A global number
- * \param [in]    n_vtxA                Number of polygon A vertices
- * \param [in]    faceToEdgeA          Polygon A face to edge connectivity
- * \param [in]    faceToVtxA           Polygon A face to vertex connectivity
- * \param [in]    face_vtxCooA          Polygon A vertex coordinates
- * \param [in]    face_vtxEpsA          Polygon A vertex characteristic length
- * \param [in]    gNumB                Polygon A global number
- * \param [in]    n_vtxB                Number of polygon B vertices
- * \param [in]    faceToEdgeB          Polygon B face to edge connectivity
- * \param [in]    faceToVtxB           Polygon B face to vertex connectivity
- * \param [in]    face_vtxCooB          Polygon B vertex coordinates
- * \param [in]    face_vtxEpsB          Polygon B vertex characteristic length
- * \param [in]    performed_t          Type of performed polygon :  PDM_POLY_CLIPP_CLIP,  PDM_POLY_CLIPP_REVERSE  // Perform clipped polygons , Perform opposit polygons
- * \param [out]   nPolyClippA           Number of clipped polygon
- * \param [out]   polyClippIdxA         Connectivity index for each polygon
- *                                     size = nPolyClipp + 1
- * \param [out]   polyClippConnecA     Connectivity of each clipped polygon
- *                                     size = polyClippIdx[nPolyClipp] (Vtx from A > 0 and vtx from B < 0)
- * \param [out]   polyClippCoordsA     Vertices coordinates of clipping polygon
- * \param [out]   nPolyClippB          Number of clipped polygon
- * \param [out]   polyClippIdxB         Connectivity index for each polygon
- *                                     size = nPolyClipp + 1
- * \param [out]   polyClippConnecB     Connectivity of each clipped polygon
- *                                     size = polyClippIdx[nPolyClipp] (Vtx from B > 0 and vtx from A < 0)
- * \param [out]   polyClippCoordsB     Vertices coordinates of clipping polygon
- *
- */
-
-void
-PDM_poly_clipp
-(
-PDM_edges_intersect_t  *ei,
-PDM_g_num_t             gnum_boxA,
-PDM_g_num_t             gnum_boxB,
-const int               n_vtxA,
-PDM_g_num_t            *faceToEdgeA,
-PDM_g_num_t            *faceToVtxA,
-double                 *face_vtxCooA,
-const int               n_vtxB,
-PDM_g_num_t            *faceToEdgeB,
-PDM_g_num_t            *faceToVtxB,
-double                 *face_vtxCooB,
-PDM_poly_clipp_t        performed_t,
-int                    *nPolyClippA,
-int                   **polyClippIdxA,
-PDM_g_num_t           **polyClippConnecA,
-double                **polyClippCoordsA,
-int                    *nPolyClippB,
-int                   **polyClippIdxB,
-PDM_g_num_t           **polyClippConnecB,
-double                **polyClippCoordsB
-)
-{
-  PDM_g_num_t *_faceToEdgeA = faceToEdgeA;
-  PDM_g_num_t *_faceToVtxA  = faceToVtxA;
-  double     *_face_vtxCooA = face_vtxCooA;
-
-  PDM_g_num_t *_faceToEdgeB = faceToEdgeB;
-  PDM_g_num_t *_faceToVtxB  = faceToVtxB;
-  double     *_face_vtxCooB = face_vtxCooB;
-
-  /*
-   * Compute Normal
-   *
-   */
-
-  double nA[3];
-  double baryA[3];
-  PDM_plane_normal (n_vtxA, face_vtxCooA, nA);
-  PDM_plane_barycenter (n_vtxA, face_vtxCooA, baryA);
-
-  double nB[3];
-  PDM_plane_normal (n_vtxB, face_vtxCooB, nB);
-
-  double dot = PDM_DOT_PRODUCT (nA, nB);
-
-  bool revert = false;
-
-  if (dot < 0) {
-    revert = true;
-  }
-
-  /*
-   * Reorient if necessary
-   *
-   */
-
-  if (revert) {
-
-    _faceToEdgeB = malloc (sizeof(PDM_g_num_t) * n_vtxB);
-    _faceToVtxB  = malloc (sizeof(PDM_g_num_t) * n_vtxB);
-    _face_vtxCooB = malloc (sizeof(double) * 3 * n_vtxB);
-
-    int j = n_vtxB - 1;
-    for (int i = 0; i < n_vtxB; i++) {
-      _faceToEdgeB[i] = -faceToEdgeB[_modulo((j-1),n_vtxB)];
-      _faceToVtxB[i] = faceToVtxB[j];
-      for (int k = 0; k < 3; k++) {
-        _face_vtxCooB[3*i+k] = face_vtxCooB[3*j+k];
-      }
-      j += -1;
-    }
-  }
-
-  _face_vtxCooA = malloc (sizeof(double) * 3 * n_vtxA);
-  for (int i = 0; i < n_vtxA; i++) {
-    PDM_plane_projection (face_vtxCooA + 3 * i, baryA, nA, _face_vtxCooA + 3 * i);
-  }
-  PDM_plane_normal (n_vtxA, _face_vtxCooA, nA);
-
-  if (revert) {
-    for (int i = 0; i < n_vtxB; i++) {
-      PDM_plane_projection (_face_vtxCooB + 3 * i, baryA, nA, _face_vtxCooB + 3 * i);
-    }
-  }
-  else {
-    _face_vtxCooB = malloc (sizeof(double) * 3 * n_vtxB);
-    for (int i = 0; i < n_vtxB; i++) {
-      PDM_plane_projection (face_vtxCooB + 3 * i, baryA, nA, _face_vtxCooB + 3 * i);
-    }
-  }
-
-
-
-  /*
-   * Create double linked list vertex structures
-   *
-   */
-
-  _vertex_poly_t *vtxA = _poly_clipp_new (_face_vtxCooA,
-                                          *_faceToVtxA,
-                                          PDM_ABS(*_faceToEdgeA));
-
-  _vertex_poly_t *vtxB = _poly_clipp_new (_face_vtxCooB,
-                                          *_faceToVtxB,
-                                          PDM_ABS(*_faceToEdgeB));
-
-  _vertex_poly_t **vtxA_origin = malloc (sizeof(_vertex_poly_t *) *  n_vtxA);
-  _vertex_poly_t **vtxB_origin = malloc (sizeof(_vertex_poly_t *) *  n_vtxB);
-
-  vtxA_origin[0] = vtxA;
-  vtxB_origin[0] = vtxB;
-
-  for (int i = 1; i < n_vtxA; i++) {
-    const double *_coo   = _face_vtxCooA + 3*i;
-    PDM_g_num_t   *_gN     = _faceToVtxA +i;
-    PDM_g_num_t   *_gNEdge = _faceToEdgeA +i;
-
-    vtxA_origin[i] = _poly_clipp_add (_coo,
-                                      *_gN,
-                                      PDM_ABS(*_gNEdge),
-                                      POLY_CLIPP_LOC_PREVIOUS,
-                                      vtxA);
-  }
-
-  for (int i = 1; i < n_vtxB; i++) {
-    const double *_coo = _face_vtxCooB + 3*i;
-    PDM_g_num_t   *_gN     = _faceToVtxB +i;
-    PDM_g_num_t   *_gNEdge = _faceToEdgeB +i;
-
-    vtxB_origin[i] = _poly_clipp_add (_coo,
-                                      *_gN,
-                                      PDM_ABS(*_gNEdge),
-                                      POLY_CLIPP_LOC_PREVIOUS,
-                                      vtxB);
-  }
-
-  /*
-   * Perform vertex location (in, out) for no 'on' vertex
-   *    - First step  : In or out (ray tracing algorithm)
-   *
-   */
-
-  //_location (vtxA, vtxB, _face_vtxCooA, _face_vtxCooB, n_vtxA, n_vtxB, nA, nB);
-  _location (vtxA, vtxB, _face_vtxCooA, _face_vtxCooB, n_vtxA, n_vtxB, nA, nA);
-
-  /*
-   * Perform polygon clipping
-   */
-  _polygon_clipping (ei,
-                     n_vtxA,
-                     vtxA,
-                     vtxA_origin,
-                     n_vtxB,
-                     vtxB,
-                     vtxB_origin,
-                     performed_t,
-                     nPolyClippA,
-                     polyClippIdxA,
-                     polyClippConnecA,
-                     polyClippCoordsA,
-                     nPolyClippB,
-                     polyClippIdxB,
-                     polyClippConnecB,
-                     polyClippCoordsB,
-                     gnum_boxA,
-                     gnum_boxB,
-                     _face_vtxCooA,
-                     _face_vtxCooB);
 
   /*
    * Free local memory
@@ -2787,241 +2309,6 @@ double                **polyClippCoordsB
   }
 
 }
-
-
-
-
-
-void
-PDM_poly_clipp2
-(
- PDM_edges_intersect_t  *ei,
- PDM_g_num_t             gnum_boxA,
- PDM_g_num_t             gnum_boxB,
- const int               n_vtxA,
- PDM_g_num_t            *faceToEdgeA,
- PDM_g_num_t            *faceToVtxA,
- double                 *face_vtxCooA,
- double                 *face_vtxNormalA,
- const int               n_vtxB,
- PDM_g_num_t            *faceToEdgeB,
- PDM_g_num_t            *faceToVtxB,
- double                 *face_vtxCooB,
- PDM_poly_clipp_t        performed_t,
- int                    *nPolyClippA,
- int                   **polyClippIdxA,
- PDM_g_num_t           **polyClippConnecA,
- double                **polyClippCoordsA,
- int                    *nPolyClippB,
- int                   **polyClippIdxB,
- PDM_g_num_t           **polyClippConnecB,
- double                **polyClippCoordsB
- )
-{
-  int is_same_plane = (face_vtxNormalA == NULL);
-
-  PDM_g_num_t *_faceToEdgeA  = faceToEdgeA;
-  PDM_g_num_t *_faceToVtxA   = faceToVtxA;
-  double      *_face_vtxCooA = face_vtxCooA;
-
-  PDM_g_num_t *_faceToEdgeB  = faceToEdgeB;
-  PDM_g_num_t *_faceToVtxB   = faceToVtxB;
-  double      *_face_vtxCooB = face_vtxCooB;
-
-  /*
-   * Compute Normal
-   *
-   */
-
-  double nA[3];
-  PDM_plane_normal (n_vtxA, face_vtxCooA, nA);
-
-  double nB[3];
-  PDM_plane_normal (n_vtxB, face_vtxCooB, nB);
-
-  double dot = PDM_DOT_PRODUCT (nA, nB);
-
-  bool revert = false;
-
-  if (dot < 0) {
-    revert = true;
-  }
-
-  /*
-   * Reorient if necessary
-   *
-   */
-
-  if (revert) {
-
-    _faceToEdgeB  = malloc (sizeof(PDM_g_num_t) * n_vtxB);
-    _faceToVtxB   = malloc (sizeof(PDM_g_num_t) * n_vtxB);
-    _face_vtxCooB = malloc (sizeof(double)      * n_vtxB * 3);
-
-    int j = n_vtxB - 1;
-    for (int i = 0; i < n_vtxB; i++) {
-      _faceToEdgeB[i] = -faceToEdgeB[_modulo((j-1),n_vtxB)];
-      _faceToVtxB[i] = faceToVtxB[j];
-      for (int k = 0; k < 3; k++) {
-        _face_vtxCooB[3*i+k] = face_vtxCooB[3*j+k];
-      }
-      j += -1;
-    }
-  }
-
-  if (is_same_plane) {
-    double baryA[3];
-    PDM_plane_barycenter (n_vtxA, face_vtxCooA, baryA);
-
-    _face_vtxCooA = malloc (sizeof(double) * 3 * n_vtxA);
-    for (int i = 0; i < n_vtxA; i++) {
-      PDM_plane_projection (face_vtxCooA + 3 * i, baryA, nA, _face_vtxCooA + 3 * i);
-    }
-    PDM_plane_normal (n_vtxA, _face_vtxCooA, nA);
-
-    if (revert) {
-      for (int i = 0; i < n_vtxB; i++) {
-        PDM_plane_projection (_face_vtxCooB + 3 * i, baryA, nA, _face_vtxCooB + 3 * i);
-      }
-    }
-    else {
-      _face_vtxCooB = malloc (sizeof(double) * 3 * n_vtxB);
-      for (int i = 0; i < n_vtxB; i++) {
-        PDM_plane_projection (face_vtxCooB + 3 * i, baryA, nA, _face_vtxCooB + 3 * i);
-      }
-    }
-  }
-
-  /*
-   * Create double linked list vertex structures
-   *
-   */
-
-  _vertex_poly_t *vtxA = _poly_clipp_new (_face_vtxCooA,
-                                          *_faceToVtxA,
-                                          PDM_ABS(*_faceToEdgeA));
-
-  _vertex_poly_t *vtxB = _poly_clipp_new (_face_vtxCooB,
-                                          *_faceToVtxB,
-                                          PDM_ABS(*_faceToEdgeB));
-
-  _vertex_poly_t **vtxA_origin = malloc (sizeof(_vertex_poly_t *) *  n_vtxA);
-  _vertex_poly_t **vtxB_origin = malloc (sizeof(_vertex_poly_t *) *  n_vtxB);
-
-  vtxA_origin[0] = vtxA;
-  vtxB_origin[0] = vtxB;
-
-  for (int i = 1; i < n_vtxA; i++) {
-    const double *_coo   = _face_vtxCooA + 3*i;
-    PDM_g_num_t   *_gN     = _faceToVtxA +i;
-    PDM_g_num_t   *_gNEdge = _faceToEdgeA +i;
-
-    vtxA_origin[i] = _poly_clipp_add (_coo,
-                                      *_gN,
-                                      PDM_ABS(*_gNEdge),
-                                      POLY_CLIPP_LOC_PREVIOUS,
-                                      vtxA);
-  }
-
-  for (int i = 1; i < n_vtxB; i++) {
-    const double *_coo = _face_vtxCooB + 3*i;
-    PDM_g_num_t   *_gN     = _faceToVtxB +i;
-    PDM_g_num_t   *_gNEdge = _faceToEdgeB +i;
-
-    vtxB_origin[i] = _poly_clipp_add (_coo,
-                                      *_gN,
-                                      PDM_ABS(*_gNEdge),
-                                      POLY_CLIPP_LOC_PREVIOUS,
-                                      vtxB);
-  }
-
-  /*
-   * Perform vertex location (in, out) for no 'on' vertex
-   *    - First step  : In or out (ray tracing algorithm)
-   *
-   */
-  if (is_same_plane) {
-    _location (vtxA,
-               vtxB,
-               _face_vtxCooA,
-               _face_vtxCooB,
-               n_vtxA,
-               n_vtxB,
-               nA,
-               nA);
-  }
-  else {
-    _location_projection (vtxA,
-                          vtxB,
-                          _face_vtxCooA,
-                          face_vtxNormalA,
-                          _face_vtxCooB,
-                          n_vtxA,
-                          n_vtxB);
-  }
-
-  /*
-   * Perform polygon clipping
-   */
-  _polygon_clipping (ei,
-                     n_vtxA,
-                     vtxA,
-                     vtxA_origin,
-                     n_vtxB,
-                     vtxB,
-                     vtxB_origin,
-                     performed_t,
-                     nPolyClippA,
-                     polyClippIdxA,
-                     polyClippConnecA,
-                     polyClippCoordsA,
-                     nPolyClippB,
-                     polyClippIdxB,
-                     polyClippConnecB,
-                     polyClippCoordsB,
-                     gnum_boxA,
-                     gnum_boxB,
-                     _face_vtxCooA,
-                     _face_vtxCooB);
-
-  /*
-   * Free local memory
-   */
-
-  _poly_clipp_free (vtxA);
-  _poly_clipp_free (vtxB);;
-
-  if (_faceToEdgeA != faceToEdgeA) {
-    free (_faceToEdgeA);
-  }
-
-  if (_faceToVtxA  != faceToVtxA) {
-    free (_faceToVtxA);
-  }
-
-  if (_face_vtxCooA != face_vtxCooA) {
-    free (_face_vtxCooA);
-  }
-
-  if (_faceToEdgeB != faceToEdgeB) {
-    free (_faceToEdgeB);
-  }
-
-  if (_faceToVtxB != faceToVtxB) {
-    free (_faceToVtxB);
-  }
-
-  if (_face_vtxCooB != face_vtxCooB) {
-    free (_face_vtxCooB);
-  }
-
-}
-
-
-
-
-
-
 
 void
 PDM_vertex_poly_dump(
@@ -3050,11 +2337,6 @@ int  verbosity)
     } while (vtx_curr != v->first);
     printf("\n");
 }
-
-
-
-
-
 #ifdef	__cplusplus
 }
 #endif

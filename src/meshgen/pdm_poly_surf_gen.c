@@ -646,8 +646,8 @@ PDM_g_num_t    **dedge_group
     }
 
     if ((dn_edge_rank[local_rank] <= dn_edge_abs) && (dn_edge_rank[local_rank+1] > dn_edge_abs)) {
-      (*dedge_vtx)[2*dn_edge_tmp]     = n2 + ix1 + 1;//n2 + ix1;
-      (*dedge_vtx)[2*dn_edge_tmp + 1] = n2 + ix1;//n2 + ix1 + 1;
+      (*dedge_vtx)[2*dn_edge_tmp]     = n2 + ix1;
+      (*dedge_vtx)[2*dn_edge_tmp + 1] = n2 + ix1 + 1;
       (*dedge_face)[2*dn_edge_tmp]       = dn_face_abs;
       (*dedge_face)[2*dn_edge_tmp + 1]   = 0;
       dn_edge_tmp += 1;

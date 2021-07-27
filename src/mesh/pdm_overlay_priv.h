@@ -126,21 +126,21 @@ typedef struct _ol_mesh_t {
  */
 
 
-typedef struct PDM_ol_t{
+ typedef struct PDM_ol_t{
 
   double   projectCoeff;      /*!< Projection coefficient to define the overlay
-                                surface projection :
-                                If value == 0, the surface projection is MeshA
-                                If value == 1, the surface projection is MeshB
-                                If 0 < value < 1, the projection surface is an
-                                intermediate surface */
+                                   surface projection :
+                                   If value == 0, the surface projection is MeshA
+                                   If value == 1, the surface projection is MeshB
+                                   If 0 < value < 1, the projection surface is an
+                                   intermediate surface */
   double   vtxCarLengthTol;   /*!< Absolute tolerance used to define local geometric
-                                tolerance for vertex caracteristic lenght
-                                (tolerance > 0) */
+                                   tolerance for vertex caracteristic lenght
+                                   (tolerance > 0) */
 
   double   extentsTol;   /*!< Absolute tolerance used to define local geometric
-                           tolerance for vertex caracteristic lenght
-                           (tolerxance > 0) */
+                              tolerance for vertex caracteristic lenght
+                              (tolerxance > 0) */
 
   double   samePlaneTol;   /*!< Absolute tolerance used to check if 2 surfaces
                              are the same plane surface */
@@ -150,15 +150,11 @@ typedef struct PDM_ol_t{
 
   PDM_surf_mesh_t  *meshA;            /*!< Mesh A */
   PDM_surf_mesh_t  *meshB;            /*!< Mesh B */
-  /*
-    PDM_vol_mesh_t *vmeshA;
-    PDM_vol_mesh_t *vmeshB;
-   */
 
   _ol_mesh_t  *olMeshA;       /*!< Overlay Mesh A */
   _ol_mesh_t  *olMeshB;       /*!< Overlay Mesh B */
 
-  //PDM_dbbtree_t * dbbtreeA;    /*!< Distributed boundary box tree on mesh A */
+   //PDM_dbbtree_t * dbbtreeA;    /*!< Distributed boundary box tree on mesh A */
 
   PDM_timer_t *timer;
 
@@ -170,9 +166,6 @@ typedef struct PDM_ol_t{
   double times_cpu_u[NTIMER];  /*!< User CPU time */
 
   double times_cpu_s[NTIMER];  /*!< System CPU time */
-
-  PDM_ol_result_t result;  /*!< Result of overlay computation (weights, cells or meshes) */
-  int mesh_dimension;    /*!< Mesh dimension (2: surface, 3: volume) */
 
 } PDM_ol_t;
 

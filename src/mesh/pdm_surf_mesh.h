@@ -557,27 +557,6 @@ PDM_surf_mesh_n_g_face_get
 
 
 
-
-/*const double
-PDM_surf_mesh_vtx_normal_get
-(
- PDM_surf_mesh_t   *mesh,
- int                i_part
- );*/
-int
-PDM_surf_mesh_vtx_normal_get
-(
- PDM_surf_mesh_t   *mesh,
- double          ***vtx_normal
- );
-
-int
-PDM_surf_mesh_vtx_normal_get2
-(
- PDM_surf_mesh_t   *mesh,
- double          ***vtx_normal
- );
-
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
