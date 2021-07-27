@@ -140,7 +140,7 @@ function( COMPILE_PYX _name generated_file)
 
   if( "${Python_VERSION}" MATCHES "^2." )
     set( version_arg "-2" )
-  elseif( "${Python_VERSION_}" MATCHES "^3." )
+  elseif( "${Python_VERSION}" MATCHES "^3." )
     set( version_arg "-3" )
   else()
     set( version_arg )
