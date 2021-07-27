@@ -72,7 +72,7 @@ set( CYTHON_FLAGS "" CACHE STRING
 mark_as_advanced( CYTHON_ANNOTATE CYTHON_NO_DOCSTRINGS CYTHON_FLAGS )
 
 find_package( Cython REQUIRED)
-find_package( PythonLibs REQUIRED )
+#find_package( PythonLibs REQUIRED )
 
 set( CYTHON_CXX_EXTENSION "cxx" )
 set( CYTHON_C_EXTENSION "c" )
@@ -183,13 +183,13 @@ function( CYTHON_ADD_MODULE _name )
                 INCLUDE_DIRECTORIES ${CYTHON_ADD_MODULE_INCLUDE_DIRECTORIES})
 
   include_directories( ${Python_INCLUDE_DIRS} )
-  python_add_module( ${_name} ${generated_file} ${CYTHON_ADD_MODULE_OTHER_SOURCES})
+  python_add_library( ${_name} MODULE ${generated_file} ${CYTHON_ADD_MODULE_OTHER_SOURCES})
   target_include_directories(${_name} PRIVATE ${CYTHON_ADD_MODULE_INCLUDE_DIRECTORIES})
 
   if( APPLE )
     set_target_properties( ${_name} PROPERTIES LINK_FLAGS "-undefined dynamic_lookup" )
   else()
-    target_link_libraries( ${_name} ${Python_LIBRARIES} )
+    set_target_properties( ${_name} PROPERTIES LINK_LIBRARIES ${Python_LIBRARIES} )
   endif()
 endfunction()
 

@@ -52,6 +52,9 @@ list (APPEND include_dirs ${CMAKE_BINARY_DIR})
 if (PDM_ENABLE_EXTENSION_PDMA)
   list (APPEND include_dirs ${PDM_SOURCE_DIR}/extensions/paradigma/src/mesh)
   list (APPEND include_dirs ${PDM_SOURCE_DIR}/extensions/paradigma/src/plugins)
+  list (APPEND include_dirs ${PDM_SOURCE_DIR}/extensions/paradigma/src/plugins/coarse_mesh)   
+  list (APPEND include_dirs ${PDM_SOURCE_DIR}/extensions/paradigma/src/plugins/multicoloring)
+  list (APPEND include_dirs ${PDM_SOURCE_DIR}/extensions/paradigma/src/plugins/renum)
 else ()
   set(COMMENT_NOT_PDMA "\#")
 endif()
@@ -67,18 +70,17 @@ if (PDM_ENABLE_EXTENSION_PDMA)
   cython_add_module (Pypdm
                      PYX_SOURCES "${_pyx_file}"
                      OTHER_SOURCES $<TARGET_OBJECTS:pdm> $<TARGET_OBJECTS:pdma>
-                     INCLUDE_DIRECTORIES ${include_dirs})
+                     INCLUDE_DIRECTORIES ${include_dirs}
+                     LINK_LIBRARIES ${LINK_LIBRARIES} pdm_mpi_shared Python::NumPy)
 else ()
   cython_add_module (Pypdm
                      PYX_SOURCES "${_pyx_file}"
                      OTHER_SOURCES $<TARGET_OBJECTS:pdm>
-                     INCLUDE_DIRECTORIES ${include_dirs})
+                     INCLUDE_DIRECTORIES ${include_dirs}
+                     LINK_LIBRARIES ${LINK_LIBRARIES} pdm_mpi_shared Python::NumPy)
 endif()
 
 set_target_properties(Pypdm PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/Pypdm/")
-
-get_target_property(PDM_INC pdm INCLUDE_DIRECTORIES)
-target_include_directories(Pypdm PUBLIC ${PDM_INC})
 
 unset(LINK_LIBRARIES)
 list(APPEND LINK_LIBRARIES ${COMMON_LIBRARIES})
@@ -95,7 +97,10 @@ if (PDM_ENABLE_EXTENSION_PDMA)
   list(APPEND LINK_LIBRARIES pdma_shared)
 endif()
 
-target_link_libraries(Pypdm ${LINK_LIBRARIES} pdm_mpi_shared Python::NumPy)
+#target_link_libraries(Pypdm ${LINK_LIBRARIES} pdm_mpi_shared Python::NumPy)
+
+get_target_property(PDM_INC pdm INCLUDE_DIRECTORIES)
+target_include_directories(Pypdm PUBLIC ${PDM_INC})
 
 if ((NOT MPI_C_COMPILER) AND MPI_C_COMPILE_FLAGS)
    set_target_properties(Pypdm PROPERTIES
