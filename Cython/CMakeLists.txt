@@ -95,7 +95,7 @@ if (PDM_ENABLE_EXTENSION_PDMA)
   list(APPEND LINK_LIBRARIES pdma_shared)
 endif()
 
-target_link_libraries(Pypdm ${LINK_LIBRARIES} pdm_mpi_shared)
+target_link_libraries(Pypdm ${LINK_LIBRARIES} pdm_mpi_shared Python::NumPy)
 
 if ((NOT MPI_C_COMPILER) AND MPI_C_COMPILE_FLAGS)
    set_target_properties(Pypdm PROPERTIES
@@ -111,11 +111,11 @@ set(DEPS        "${CMAKE_CURRENT_SOURCE_DIR}/Pypdm/__init__.py")
 set(OUTPUT      "${CMAKE_CURRENT_BINARY_DIR}timestamp")
 
 add_custom_command(OUTPUT ${OUTPUT}
-                       COMMAND ${PYTHON_EXECUTABLE} ${SETUP_PY} --quiet build
+                       COMMAND ${Python_EXECUTABLE} ${SETUP_PY} --quiet build
                        COMMAND ${CMAKE_COMMAND} -E touch ${OUTPUT}
                        DEPENDS ${DEPS})
 
-set (SITE_PACKAGES_PDM "${CMAKE_PDM_INSTALL_PYTHON_DIR}/lib/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/site-packages/Pypdm")
+set (SITE_PACKAGES_PDM "${CMAKE_PDM_INSTALL_PYTHON_DIR}/lib/python${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}/site-packages/Pypdm")
 
 add_custom_target(target ALL DEPENDS ${OUTPUT})
 
@@ -127,8 +127,13 @@ if ((CMAKE_C_COMPILER_ID STREQUAL "GNU") OR
   set_target_properties (Pypdm PROPERTIES COMPILE_FLAGS "-w")
 endif()
 
-install(CODE
-  "execute_process(COMMAND ${PYTHON_EXECUTABLE} ${SETUP_PY} --quiet install
-  --prefix=${CMAKE_PDM_INSTALL_PYTHON_DIR}
-  --install-data=${SITE_PACKAGES_PDM} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-  ")
+#install(CODE
+#  "execute_process(COMMAND ${Python_EXECUTABLE} ${SETUP_PY} --quiet install
+#  --prefix=${CMAKE_PDM_INSTALL_PYTHON_DIR}
+#  --install-data=${SITE_PACKAGES_PDM} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+#  ")
+install(TARGETS Pypdm
+        LIBRARY DESTINATION "${SITE_PACKAGES_PDM}")
+install(FILES       "${CMAKE_CURRENT_SOURCE_DIR}/Pypdm/__init__.py"
+        DESTINATION "${SITE_PACKAGES_PDM}"
+        COMPONENT   "cython")

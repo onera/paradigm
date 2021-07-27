@@ -4,8 +4,8 @@
 #
 #==============================================================================
 
-cmake_minimum_required(VERSION 3.12)
-cmake_policy(VERSION 3.12)
+cmake_minimum_required(VERSION 3.19)
+cmake_policy(VERSION 3.19)
 
 #------------------------------------------------------------------------------
 # Internal CMake module (shared with ParaDiGMA or CWIPI)
@@ -294,7 +294,8 @@ else ()
     find_package(MPI REQUIRED COMPONENTS C)
   endif()
 
-  if (PDM_ENABLE_Fortran_MPI_MODULE)
+  if (PDM_ENABLE_Fortran_MPI_MODULE)  
+    set(CMAKE_Fortran_PREPROCESS ON)
     set (PDM_HAVE_FORTRAN_MPI_MODULE 1)
   endif()
 
@@ -342,16 +343,7 @@ else ()
     # NB: cython module must use mpicxx to avoid "mpi.h" not found.
     find_package(MPI REQUIRED COMPONENTS CXX)
 
-    if(CMAKE_VERSION VERSION_LESS 3.12)
-      find_package(PythonInterp REQUIRED)
-      find_package(PythonLibs REQUIRED)
-      find_package(NumPy REQUIRED)
-      find_package(Mpi4Py REQUIRED)
-    elseif(CMAKE_VERSION VERSION_LESS 3.14)
-      find_package(Python 3 REQUIRED COMPONENTS Interpreter Development)
-    else()
-      find_package(Python 3 REQUIRED COMPONENTS Interpreter Development NumPy)
-    endif()
+    find_package(Python REQUIRED COMPONENTS Interpreter Development NumPy)
 
     include(UseCython)
 
