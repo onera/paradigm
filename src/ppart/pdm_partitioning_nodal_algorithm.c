@@ -79,18 +79,18 @@ extern "C" {
  *============================================================================*/
 
 
-void
+PDM_part_mesh_nodal_elmts_t*
 PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
 (
  PDM_dmesh_nodal_elmts_t      *dmne,
- PDM_part_mesh_nodal_elmts_t  *pmne,
  int                           n_part,
  int                          *pn_elmt,
  PDM_g_num_t                 **elmt_ln_to_gn
 )
 {
   PDM_UNUSED(dmne);
-  PDM_UNUSED(pmne);
+  // PDM_UNUSED(pmne);
+  PDM_part_mesh_nodal_elmts_t* pmne = PDM_part_mesh_nodal_elmts_create(dmne->mesh_dimension, n_part, dmne->comm);
 
   int n_section = dmne->n_section;
   PDM_g_num_t          **block_elmts_disbrib_idx = (PDM_g_num_t          ** ) malloc( n_section * sizeof(PDM_g_num_t          *));
@@ -98,6 +98,10 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
   int                  **block_elmts_n_vtx       = (int                  ** ) malloc( n_section * sizeof(int                  *));
   PDM_Mesh_nodal_elt_t **block_elmts_types       = (PDM_Mesh_nodal_elt_t ** ) malloc( n_section * sizeof(PDM_Mesh_nodal_elt_t *));
   int                  **stride_one              = (int                  ** ) malloc( n_section * sizeof(int                  *));
+  int                  **pid_section             = (int                  ** ) malloc( n_part    * sizeof(int                  *));
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    pid_section[i_part] = malloc(n_section * sizeof(int) );
+  }
   int order = 1;
   for (int i_section = 0; i_section < n_section; i_section++) {
     int id_section = dmne->sections_id[i_section];
@@ -107,6 +111,10 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
 
     stride_one[i_section] = (int * ) malloc( 1 * sizeof(int));
     stride_one[i_section][0] = 1;
+
+    for(int i_part = 0; i_part < n_part; ++i_part) {
+      pid_section[i_part][i_section] = PDM_part_mesh_nodal_elmts_add(pmne, t_elt);
+    }
 
     switch (t_elt) {
       case PDM_MESH_NODAL_POINT:
@@ -172,6 +180,11 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
                      (int  ***) &pelmts_stride,
                      (void ***) &pelmts_connec);
 
+  int         **pelmts_stride_idx = malloc( n_part * sizeof(int *));
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    pelmts_stride_idx[i_part] = PDM_array_new_idx_from_sizes_int(pelmts_stride[i_part], pn_elmt[i_part]);
+  }
+
   /*
    * Exchange type of elements
    */
@@ -183,6 +196,7 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
                      (void ** ) block_elmts_types,
                                 NULL,
                      (void ***) &pelmts_types);
+
 
 
   for (int i_section = 0; i_section < n_section; i_section++) {
@@ -198,23 +212,100 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
   PDM_multi_block_to_part_free(mbtp);
 
   /*
-   * Rebuild the associate part_mesh_nodal
-   *         --> CAUTION WE NEED TO REBUILD IN THE SAME ORDER FOR EACH PROC AND EACH PARTITION !!!!
-   *         -->
+   *  We don't need to exchange the section because we find it with binary search on section_distribution
    */
-  abort(); // We need to setup the same skeloton over all procs !!!
+  int          *pelmt_by_section_n   = (int          *) malloc( (n_section+1) * sizeof(int          ));
+  // int          *pelmt_by_section_idx = (int          *) malloc( (n_section+1) * sizeof(int          ));
+  int         **connec               = (int         **) malloc( (n_section+1) * sizeof(int         *));
+  PDM_g_num_t **numabs               = (PDM_g_num_t **) malloc( (n_section+1) * sizeof(PDM_g_num_t *));
+  int         **parent_num           = (int         **) malloc( (n_section+1) * sizeof(int         *));
+  for(int i_part = 0; i_part < n_part; ++i_part) {
 
+    /* Reset */
+    PDM_array_reset_int(pelmt_by_section_n, n_section, 0);
 
+    for(int i_cell = 0; i_cell < pn_elmt[i_part]; ++i_cell) {
 
+      PDM_g_num_t g_num = elmt_ln_to_gn[i_part][i_cell]-1;
+      int i_section = PDM_binary_search_gap_long(g_num, dmne->section_distribution, n_section+1);
+
+      /* We need to sort entry in each section */
+      pelmt_by_section_n[i_section]++;
+    }
+
+    // PDM_array_idx_from_sizes_int(pelmt_by_section_n, n_section, pelmt_by_section_idx);
+
+    /* We allocate here and ownership if tranfert to PDM_part_mesh_nodal_elmts_t*/
+    for(int i_section = 0; i_section < n_section; ++i_section){
+      int n_elmt_in_section = pelmt_by_section_n[i_section];
+      int id_section = pid_section[i_part][i_section];
+      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(pmne, id_section);
+      int n_vtx_per_elmt = PDM_Mesh_nodal_n_vertices_element (t_elt, order);
+      connec    [i_section] = malloc( n_elmt_in_section * n_vtx_per_elmt * sizeof(int        ));
+      numabs    [i_section] = malloc( n_elmt_in_section                  * sizeof(PDM_g_num_t));
+      parent_num[i_section] = malloc( n_elmt_in_section                  * sizeof(int        ));
+    }
+    PDM_array_reset_int(pelmt_by_section_n, n_section, 0);
+
+    /* For each section we rebuild the connectivity and the parent_num */
+    for(int i_cell = 0; i_cell < pn_elmt[i_part]; ++i_cell) {
+
+      PDM_g_num_t g_num = elmt_ln_to_gn[i_part][i_cell]-1;
+      int i_section = PDM_binary_search_gap_long(g_num, dmne->section_distribution, n_section+1);
+      int id_section = pid_section[i_part][i_section];
+
+      PDM_Mesh_nodal_elt_t t_elt = PDM_part_mesh_nodal_elmts_block_type_get(pmne, id_section);
+      int n_vtx_per_elmt = PDM_Mesh_nodal_n_vertices_element (t_elt, order);
+      int idx_write      = pelmt_by_section_n[i_section]++;
+
+      int idx_read_connec = pelmts_stride_idx[i_part][i_cell];
+      for(int i_vtx = 0; i_vtx < n_vtx_per_elmt; ++i_vtx){
+        connec[i_section][n_vtx_per_elmt*idx_write + i_vtx] = pelmts_connec[i_part][idx_read_connec+i_vtx];
+      }
+
+      printf("parent_num[%i][%i] = %i \n", i_section, idx_write, i_cell+1 );
+      numabs    [i_section][idx_write] = g_num+1;
+      parent_num[i_section][idx_write] = i_cell+1;
+
+    }
+
+    /* Fill up structure */
+    for(int i_section = 0; i_section < n_section; ++i_section){
+      int n_elmt_in_section = pelmt_by_section_n[i_section];
+      int id_section = pid_section[i_part][i_section];
+      PDM_part_mesh_nodal_elmts_std_set(pmne,
+                                        id_section,
+                                        i_part,
+                                        n_elmt_in_section,
+                                        connec    [i_section],
+                                        numabs    [i_section],
+                                        parent_num[i_section],
+                                        PDM_OWNERSHIP_KEEP);
+
+      connec    [i_section] = NULL;
+      numabs    [i_section] = NULL;
+      parent_num[i_section] = NULL;
+    }
+  }
+
+  free(pelmt_by_section_n  );
+  // free(pelmt_by_section_idx);
+  free(connec              );
+  free(parent_num          );
+  free(numabs          );
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
-    free(pelmts_connec[i_part]);
-    free(pelmts_stride[i_part]);
-    free(pelmts_types [i_part]);
+    free(pelmts_connec    [i_part]);
+    free(pelmts_stride    [i_part]);
+    free(pelmts_types     [i_part]);
+    free(pid_section      [i_part]);
+    free(pelmts_stride_idx[i_part]);
   }
   free(pelmts_connec);
   free(pelmts_stride);
   free(pelmts_types );
+  free(pid_section  );
+  free(pelmts_stride_idx);
 
-
+  return pmne;
 }

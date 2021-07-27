@@ -100,6 +100,14 @@ const int                          id_part
 );
 
 
+PDM_Mesh_nodal_elt_t
+PDM_part_mesh_nodal_elmts_block_type_get
+(
+      PDM_part_mesh_nodal_elmts_t *mesh,
+const int                          id_block
+);
+
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

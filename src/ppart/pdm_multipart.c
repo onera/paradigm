@@ -56,6 +56,7 @@
 #include "pdm_para_graph_dual.h"
 #include "pdm_dconnectivity_transform.h"
 #include "pdm_unique.h"
+#include "pdm_partitioning_nodal_algorithm.h"
 
 /*----------------------------------------------------------------------------
  *  Header for the current file
@@ -1228,6 +1229,18 @@ PDM_MPI_Comm       comm
   free(stride_one);
   PDM_multi_block_to_part_free(mbtp);
 
+  /*
+   * Create part_mesh_nodal with the same structure of dmesh_nodal_elmt ---> dmesh_nodal_elmt_to_pmesh_nodal_elmt
+   */
+  PDM_part_mesh_nodal_elmts_t* pmn_surf = PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts(dmesh_nodal->surfacic,
+                                                                                         n_part,
+                                                                                         pn_cell,
+                                                                                         pcell_ln_to_gn);
+
+
+  PDM_part_mesh_nodal_elmts_free(pmn_surf);
+
+
   for(int i_part = 0; i_part < n_part; ++i_part) {
     free(pelmts_connec[i_part]);
     free(pelmts_stride[i_part]);
@@ -1314,8 +1327,8 @@ PDM_MPI_Comm       comm
       pn_ridge_tmp += pridge_n[i_part][i_face];
       assert(pridge_n[i_part][i_face] <= 1); // DOnc soit 0 soit 1
     }
-    pn_ridge[i_part] = PDM_inplace_unique_long(pridge_gnum[i_part], NULL, 0, pn_ridge_tmp-1);
-    // TODO : Resize
+    pn_ridge   [i_part] = PDM_inplace_unique_long(pridge_gnum[i_part], NULL, 0, pn_ridge_tmp-1);
+    pridge_gnum[i_part] = realloc(pridge_gnum[i_part], pn_ridge[i_part] * sizeof(PDM_g_num_t));
   }
 
   /*
@@ -2385,12 +2398,12 @@ PDM_multipart_run_ppart
         int n_part = _multipart->n_part[i_zone];
         _part_mesh_t* pmesh = &(_multipart->pmeshes[i_zone]);
 
-        _run_ppart_zone_nodal(dmesh_nodal,pmesh,split_method,n_part,comm);
+        // _run_ppart_zone_nodal(dmesh_nodal,pmesh,split_method,n_part,comm);
 
-        // const double* part_fraction = &_multipart->part_fraction[starting_part_idx[i_zone]];
-        // PDM_part_size_t part_size_method = _multipart->part_size_method;
-        // PDM_dmesh_t  *_dmeshes = _multipart->dmeshes[i_zone];
-        // _run_ppart_zone2(_dmeshes, dmesh_nodal, _pmeshes, n_part, split_method, part_size_method, part_fraction, comm);
+        const double* part_fraction = &_multipart->part_fraction[starting_part_idx[i_zone]];
+        PDM_part_size_t part_size_method = _multipart->part_size_method;
+        PDM_dmesh_t  *_dmeshes = _multipart->dmeshes[i_zone];
+        _run_ppart_zone2(_dmeshes, dmesh_nodal, pmesh, n_part, split_method, part_size_method, part_fraction, comm);
       } else { // face representation
         // PDM_printf("Partitionning face zone %d/%d \n", i_zone+1, _multipart->n_zone);
 

@@ -516,6 +516,47 @@ const int                           id_part,
   *connec = block->_connec[id_part];
 }
 
+PDM_Mesh_nodal_elt_t
+PDM_part_mesh_nodal_elmts_block_type_get
+(
+      PDM_part_mesh_nodal_elmts_t *pmne,
+const int                          id_block
+)
+{
+
+  PDM_Mesh_nodal_elt_t t_elt;
+
+  if (pmne == NULL) {
+    PDM_error (__FILE__, __LINE__, 0, "Bad mesh nodal identifier\n");
+  }
+
+  if (id_block < PDM_BLOCK_ID_BLOCK_POLY2D) {
+
+    t_elt = PDM_MESH_NODAL_POLY_3D;
+    const PDM_Mesh_nodal_block_std_t *block = pmne->sections_std[id_block];
+
+    if (block == NULL) {
+      PDM_error (__FILE__, __LINE__, 0, "Bad block identifier\n");
+    }
+
+    t_elt = block->t_elt;
+  }
+
+  else if (id_block < PDM_BLOCK_ID_BLOCK_POLY3D) {
+
+    t_elt = PDM_MESH_NODAL_POLY_2D;
+
+  }
+
+  else {
+
+    t_elt = PDM_MESH_NODAL_POLY_3D;
+
+  }
+
+  return t_elt;
+
+}
 
 int
 PDM_part_mesh_nodal_elmts_block_n_elt_get

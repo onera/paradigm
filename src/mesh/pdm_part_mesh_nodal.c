@@ -232,3 +232,9 @@ PDM_part_mesh_nodal_free
 
   free(pmn);
 }
+
+
+
+// Faire extraction de maillage depuis mesh_nodal
+// Donc par exemple rendre un nouveau maillage (avec numero absolu des rigdes à partir du mesh_nodal )
+// PDM_extract_from_indices()

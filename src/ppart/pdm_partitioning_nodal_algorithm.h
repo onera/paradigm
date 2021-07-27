@@ -31,11 +31,11 @@ extern "C" {
  * Public function prototypes
  *============================================================================*/
 
-void
+
+PDM_part_mesh_nodal_elmts_t*
 PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
 (
  PDM_dmesh_nodal_elmts_t      *dmne,
- PDM_part_mesh_nodal_elmts_t  *pmne,
  int                           n_part,
  int                          *pn_elmt,
  PDM_g_num_t                 **elmt_ln_to_gn
