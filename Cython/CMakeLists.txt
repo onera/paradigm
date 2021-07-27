@@ -46,7 +46,7 @@ endif()
 
 set (include_dirs "")
 list (APPEND include_dirs ${Mpi4Py_INCLUDE_DIR})
-list (APPEND include_dirs ${NumPy_INCLUDE_DIR})
+list (APPEND include_dirs ${Python_NumPy_INCLUDE_DIRS})
 list (APPEND include_dirs ${CMAKE_CURRENT_BINARY_DIR})
 list (APPEND include_dirs ${CMAKE_BINARY_DIR})
 if (PDM_ENABLE_EXTENSION_PDMA)
