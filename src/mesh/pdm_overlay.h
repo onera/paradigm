@@ -92,6 +92,23 @@ typedef enum {
 
 } PDM_ol_mv_t;
 
+
+//--->>
+/**
+ * \enum PDM_ol_result_t
+ * \brief Result of overlay computation
+ *
+ */
+
+typedef enum {
+
+  PDM_OL_RESULT_WEIGHTS_ONLY   = 0, /*!< Only compute instersected volumes */
+  PDM_OL_RESULT_DISJOINT_CELLS = 1, /*!< Build disjoint overlay cells */
+  PDM_OL_RESULT_MESHES         = 2  /*!< Build whole overlay meshes */
+
+} PDM_ol_result_t;
+//<<---
+
 /*=============================================================================
  * Static global variables
  *============================================================================*/
@@ -340,6 +357,22 @@ PROCF (pdm_ol_compute, PDM_OL_COMPUTE)
 
 
 /**
+ * \brief Overlaying the input meshes
+ *
+ * This function overlays the input meshes
+ *
+ * \param [in]  id       PDM_ol identifier
+ *
+ */
+
+void
+PDM_ol_compute2
+(
+ const int          id
+);
+
+
+/**
  * \brief Return the entitie sizes of the overlay mesh
  *
  * This function returns the entities sizes of the overlay mesh
@@ -536,6 +569,24 @@ PROCF (pdm_ol_dump_times, PDM_OL_DUMP_TIMES)
 (
  int     *id
 );
+
+
+/**
+ * \brief Define the type of result for overlay
+ *
+ * This function defines the type of result for overlay computations.
+ *
+ * \param [in]  id       PDM_ol identifier
+ * \param [in]  result   Type of result
+ *
+ */
+
+void
+PDM_ol_result_set
+(
+ const int             id,
+ const PDM_ol_result_t result
+ );
 
 #ifdef __cplusplus
 }

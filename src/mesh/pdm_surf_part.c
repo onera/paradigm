@@ -428,6 +428,21 @@ PDM_surf_part_t *part
           break;
         }
       }
+      //-->>
+      if (iedge1 != iedge2) {
+        const double *vtx_coord = part->coords;
+        printf("face :\n");
+        for (int l = part->face_vtx_idx[i]; l < part->face_vtx_idx[i+1]; l++) {
+          int v = part->face_vtx[l] - 1;
+          printf("%d: %.17f %.17f %.17f\n", v, vtx_coord[3*v], vtx_coord[3*v+1], vtx_coord[3*v+2]);
+        }
+        printf("!! vertices %d (%f, %f, %f),  %d (%f, %f, %f)\n",
+               ivtx,
+               vtx_coord[3*ivtx], vtx_coord[3*ivtx + 1], vtx_coord[3*ivtx + 2],
+               ivtx_next,
+               vtx_coord[3*ivtx_next], vtx_coord[3*ivtx_next + 1], vtx_coord[3*ivtx_next + 2]);
+      }
+      //<<--
       assert (iedge1 == iedge2);
 
       if (part->edgeVtx[2*iedge1] == (ivtx + 1)) {

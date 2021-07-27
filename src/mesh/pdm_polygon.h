@@ -263,6 +263,27 @@ int PDM_polygon_3d_to_2d
  double       normal[3]
  );
 
+
+PDM_polygon_status_t PDM_polygon_point_in_2d_old
+(
+ const double  xy[2],
+ const int     n_vtx,
+ const double *vtx_xy,
+ // const double  char_length,
+ double        bounds[4]
+ );
+
+
+PDM_polygon_status_t PDM_polygon_point_in_3d_proj
+(
+ const double  xyz[3],
+ const int     n_vtx,
+ const double *vtx_xyz,
+ double        bounds[6],
+ double        normal[3]
+ );
+
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

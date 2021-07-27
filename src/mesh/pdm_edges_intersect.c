@@ -1,4 +1,4 @@
-/*----------------------------------------------------------------------------
+          /*----------------------------------------------------------------------------
  * Standard C library headers
  *----------------------------------------------------------------------------*/
 
@@ -46,8 +46,8 @@ extern "C" {
  *============================================================================*/
 
 
-static const   char* _typeInter[] = {"PDM_LINE_INTERSECT_UNDEF",  /*!< No intersection */
-                                     "PDM_LINE_INTERSECT_NO",       /*!< No intersection */
+static const   char* _typeInter[] = {"PDM_LINE_INTERSECT_UNDEF",     /*!< No intersection */
+                                     "PDM_LINE_INTERSECT_NO",        /*!< No intersection */
                                      "PDM_LINE_INTERSECT_YES",       /*!< Intersection */
                                      "PDM_LINE_INTERSECT_ON_LINE"};  /*!< On line  */
 
@@ -76,7 +76,7 @@ _modulo
 (
  int val,
  int mod
-)
+ )
 {
   if (val >= 0) {
     return val % mod;
@@ -102,11 +102,11 @@ _modulo
 static _edges_intersect_res_t *
 _edges_intersect_res_create
 (
-const PDM_g_num_t   nGEdgeA,
-const PDM_g_num_t   nGEdgeB,
-const int          nNewPointsA,
-const int          nNewPointsB
-)
+ const PDM_g_num_t   nGEdgeA,
+ const PDM_g_num_t   nGEdgeB,
+ const int          nNewPointsA,
+ const int          nNewPointsB
+ )
 {
   _edges_intersect_res_t *newInter = malloc (sizeof(_edges_intersect_res_t));
 
@@ -149,35 +149,251 @@ static _edges_intersect_res_t *
 _edges_intersect_res_free (_edges_intersect_res_t *eir)
 {
   if (eir != NULL)
-  {
-	if (eir->linkA != NULL) {
-		free (eir->gNumA);
-		free (eir->linkA);
-		free (eir->uA);
-		free (eir->coordsA);
-		free (eir->oNewPointsA);
-		eir->gNumA      = NULL;
-		eir->linkA      = NULL;
-		eir->uA           = NULL;
-		eir->oNewPointsA  = NULL;
-		eir->coordsA      = NULL;
-	}
-	eir->nNewPointsB      = 0;
-	if (eir->linkB != NULL) {
-		free (eir->gNumB);
-		free (eir->linkB);
-		free (eir->uB);
-		free (eir->coordsB);
-		free (eir->oNewPointsB);
-		eir->gNumB      = NULL;
-		eir->linkB      = NULL;
-		eir->uB           = NULL;
-		eir->oNewPointsB  = NULL;
-		eir->coordsB      = NULL;
-	}
-	free (eir);
-  }
+    {
+      if (eir->linkA != NULL) {
+        free (eir->gNumA);
+        free (eir->linkA);
+        free (eir->uA);
+        free (eir->coordsA);
+        free (eir->oNewPointsA);
+        eir->gNumA      = NULL;
+        eir->linkA      = NULL;
+        eir->uA           = NULL;
+        eir->oNewPointsA  = NULL;
+        eir->coordsA      = NULL;
+      }
+      eir->nNewPointsB      = 0;
+      if (eir->linkB != NULL) {
+        free (eir->gNumB);
+        free (eir->linkB);
+        free (eir->uB);
+        free (eir->coordsB);
+        free (eir->oNewPointsB);
+        eir->gNumB      = NULL;
+        eir->linkB      = NULL;
+        eir->uB           = NULL;
+        eir->oNewPointsB  = NULL;
+        eir->coordsB      = NULL;
+      }
+      free (eir);
+    }
   return NULL;
+}
+
+
+
+
+
+
+
+static void
+_solve_quadratic
+(
+ const double  a,
+ const double  b,
+ const double  c,
+ int          *n_solutions,
+ double        solutions[2]
+ )
+{
+  const double _eps = 1e-15;
+
+  if (fabs(a) < _eps) {
+    // Linear equation
+    if (fabs(b) < _eps) {
+      if (fabs(c) < _eps) {
+        // trivial equation 0 = 0
+        *n_solutions = -1;
+        return;
+      }
+      else {
+        // no solution
+        *n_solutions = 0;
+        return;
+      }
+    }
+    else {
+      *n_solutions = 1;
+      solutions[0] = -c/b;
+      return;
+    }
+  }
+
+  else {
+    // True quadratic equation
+    double _b = b/a;
+    double _c = c/a;
+
+    if (fabs(_c) < _eps) {
+      *n_solutions = 2;
+      solutions[0] = PDM_MIN (0, -_b);
+      solutions[1] = PDM_MAX (0, -_b);
+      return;
+    }
+    else {
+      double d = _b*_b - 4.*_c;
+      if (d < 0) {
+        // no real solution
+        *n_solutions = 0;
+        return;
+      }
+      else {
+        // two real solutions (possibly one double solution)
+        *n_solutions = 2;
+        d = sqrt(d);
+        double x1, x2;
+        if (_b < 0) {
+          x1 = 0.5*(-_b + d);
+        } else {
+          x1 = 0.5*(-_b - d);
+        }
+        x2 = _c/x1;
+        solutions[0] = PDM_MIN (x1, x2);
+        solutions[1] = PDM_MAX (x1, x2);
+        return;
+      }
+    }
+  }
+}
+
+
+
+PDM_line_intersect_t
+_line_intersection_projection
+(
+ const double  a0[3],
+ const double  a1[3],
+ const double  n0[3],
+ const double  n1[3],
+ const double  b0[3],
+ const double  b1[3],
+ double       *uA,
+ double       *uB
+ )
+{
+  /**
+   * Edges A and B are assumed to be in general position, i.e.:
+   *   - not to be parallel (i.e (a1 - a0)x(b1 - b0) != 0)
+   *   - vertices of edge A are not on edge B (in particular, a0 - b0 != 0)
+   *   - vertices of edge B are not on edge A.
+   * Additionally, we assume that, for all 0 <= s <= 1,
+   *   - interpolated normal n(s) := n0 + s*(n1 - n0) != 0;
+   *   - n(s) x (a1 - a0) != 0;
+   *   - n(s) x (b1 - b0) != 0.
+   **/
+
+  double a0a1[3] = {a1[0] - a0[0],
+                    a1[1] - a0[1],
+                    a1[2] - a0[2]};
+
+  double b0b1[3] = {b1[0] - b0[0],
+                    b1[1] - b0[1],
+                    b1[2] - b0[2]};
+
+  double n0n1[3] = {n1[0] - n0[0],
+                    n1[1] - n0[1],
+                    n1[2] - n0[2]};
+
+  double b0a0[3] = {a0[0] - b0[0],
+                    a0[1] - b0[1],
+                    a0[2] - b0[2]};
+
+  double a0a1xb0b1[3];
+  PDM_CROSS_PRODUCT (a0a1xb0b1, a0a1, b0b1);
+
+  double b0a0xb0b1[3];
+  PDM_CROSS_PRODUCT (b0a0xb0b1, b0a0, b0b1);
+
+  double c2 = PDM_DOT_PRODUCT (n0n1, a0a1xb0b1);
+  double c1 = PDM_DOT_PRODUCT (n0, a0a1xb0b1) + PDM_DOT_PRODUCT (n0n1, b0a0xb0b1);
+  double c0 = PDM_DOT_PRODUCT (n0, b0a0xb0b1);
+
+  int n_solutions;
+  double solutions[2];
+  _solve_quadratic (c2,
+                    c1,
+                    c0,
+                    &n_solutions,
+                    solutions);
+
+  if (n_solutions == 1) {
+    if (solutions[0] >= 0. && solutions[0] <= 1.) {
+      *uA = solutions[0];
+    } else {
+      n_solutions = 0;
+    }
+  }
+  else if (n_solutions == 2) {
+    if (solutions[0] >= 0. && solutions[0] <= 1.) {
+      if (solutions[1] >= 0. && solutions[1] <= 1.) {
+        // which solution to keep???
+        printf("A0 = (%12.5e, %12.5e, %12.5e)\n", a0[0], a0[1], a0[2]);
+        printf("A1 = (%12.5e, %12.5e, %12.5e)\n", a1[0], a1[1], a1[2]);
+        printf("n0 = (%12.5e, %12.5e, %12.5e)\n", n0[0], n0[1], n0[2]);
+        printf("n1 = (%12.5e, %12.5e, %12.5e)\n", n1[0], n1[1], n1[2]);
+        printf("B0 = (%12.5e, %12.5e, %12.5e)\n", b0[0], b0[1], b0[2]);
+        printf("B1 = (%12.5e, %12.5e, %12.5e)\n", b1[0], b1[1], b1[2]);
+        printf("c2 = %12.5e, c1 = %12.5e, c0 = %12.5e\n", c2, c1, c0);
+
+        FILE *f = fopen("debug_intersect_edge_projection.vtk", "w");
+        fprintf(f, "# vtk DataFile Version 2.0\nintersect_edge_projection\nASCII\nDATASET UNSTRUCTURED_GRID\n");
+        fprintf(f, "POINTS 4 double\n");
+        fprintf(f, "%12.5e %12.5e %12.5e\n", a0[0], a0[1], a0[2]);
+        fprintf(f, "%12.5e %12.5e %12.5e\n", a1[0], a1[1], a1[2]);
+        fprintf(f, "%12.5e %12.5e %12.5e\n", b0[0], b0[1], b0[2]);
+        fprintf(f, "%12.5e %12.5e %12.5e\n", b1[0], b1[1], b1[2]);
+        fprintf(f, "CELLS 2 6\n");
+        fprintf(f, "2 0 1\n2 2 3\n");
+        fprintf(f, "CELL_TYPES 2\n");
+        fprintf(f, "3\n3\n");
+        fprintf(f, "CELL_DATA 2\n");
+        fprintf(f, "SCALARS imesh int\nLOOKUP_TABLE default\n");
+        fprintf(f, "1\n2\n");
+        fprintf(f, "POINT_DATA 4\n");
+        fprintf(f, "VECTORS normal double\n");
+        fprintf(f, "%12.5e %12.5e %12.5e\n", n0[0], n0[1], n0[2]);
+        fprintf(f, "%12.5e %12.5e %12.5e\n", n1[0], n1[1], n1[2]);
+        fprintf(f, "0. 0. 1.\n0. 0. 1.\n");
+        fclose(f);
+
+        PDM_error(__FILE__, __LINE__, 0, "_solve_quadratic found 2 real, valid solutions: %f and %f\n", solutions[0], solutions[1]);
+      }
+      else {
+        n_solutions = 1;
+        *uA = solutions[0];
+      }
+    }
+    else {
+      if (solutions[1] >= 0. && solutions[1] <= 1.) {
+        n_solutions = 1;
+        *uA = solutions[1];
+      }
+      else {
+        n_solutions = 0;
+      }
+    }
+  }
+
+
+  if (n_solutions == 1) {
+    n_solutions = 0;
+    double nu[3] = {n0[0] + (*uA)*n0n1[0],
+                    n0[1] + (*uA)*n0n1[1],
+                    n0[2] + (*uA)*n0n1[2]};
+
+    double a0a1xnu[3];
+    PDM_CROSS_PRODUCT (a0a1xnu, a0a1, nu);
+
+    double denom = PDM_DOT_PRODUCT (a0a1xnu, b0b1);
+    if (denom != 0) {
+      *uB = PDM_DOT_PRODUCT (a0a1xnu, b0a0) / denom;
+      if (*uB >= 0. && *uB <= 1.) {
+        return PDM_LINE_INTERSECT_YES;
+      }
+    }
+  }
+
+  return PDM_LINE_INTERSECT_NO;
 }
 
 /*=============================================================================
@@ -199,11 +415,11 @@ _edges_intersect_res_free (_edges_intersect_res_t *eir)
 PDM_edges_intersect_t *
 PDM_edges_intersect_create
 (
-const PDM_g_num_t maxGNEdgeA,
-const PDM_g_num_t maxGNEdgeB,
-const double     vtxCarLengthTol,
-const PDM_MPI_Comm   comm
-)
+ const PDM_g_num_t maxGNEdgeA,
+ const PDM_g_num_t maxGNEdgeB,
+ const double     vtxCarLengthTol,
+ const PDM_MPI_Comm   comm
+ )
 {
   int sMSGComm;
   PDM_MPI_Comm_size (comm, &sMSGComm);
@@ -220,12 +436,12 @@ const PDM_MPI_Comm   comm
   PDM_g_num_t _keyMaxA = maxGNEdgeA / sMSGComm +1;
   int keyMaxA = (int) _keyMaxA;
   ei->htA = PDM_hash_tab_create (PDM_HASH_TAB_KEY_INT,
-                                (void *) &keyMaxA);
+                                 (void *) &keyMaxA);
 
   PDM_g_num_t _keyMaxB = maxGNEdgeB / sMSGComm + 1;
   int keyMaxB = (int) _keyMaxB;
   ei->htB = PDM_hash_tab_create (PDM_HASH_TAB_KEY_INT,
-                                (void *) &keyMaxB);
+                                 (void *) &keyMaxB);
 
   ei->maxGNEdgeA = maxGNEdgeA;
   ei->maxGNEdgeB = maxGNEdgeB;
@@ -253,12 +469,12 @@ const PDM_MPI_Comm   comm
 PDM_edges_intersect_res_t **
 PDM_edges_intersect_get
 (
-PDM_edges_intersect_t  *ei,
-PDM_edges_get_t         get_t,
-const PDM_g_num_t       nGEdgeA,
-const PDM_g_num_t       nGEdgeB,
-int                    *n_intersect
-)
+ PDM_edges_intersect_t  *ei,
+ PDM_edges_get_t         get_t,
+ const PDM_g_num_t       nGEdgeA,
+ const PDM_g_num_t       nGEdgeB,
+ int                    *n_intersect
+ )
 {
 
   _edges_intersect_t *_ei = (_edges_intersect_t *) ei;
@@ -272,8 +488,8 @@ int                    *n_intersect
 
     const int nData = PDM_hash_tab_n_data_get (ht, (void *) &key);
     _edges_intersect_res_t ** datas =
-              (_edges_intersect_res_t **) PDM_hash_tab_data_get (ht,
-                                                                 (void *) &key);
+      (_edges_intersect_res_t **) PDM_hash_tab_data_get (ht,
+                                                         (void *) &key);
     /**********************************************
      * Look for requested intersection            *
      **********************************************/
@@ -283,7 +499,7 @@ int                    *n_intersect
       if ((data->nGEdgeA == nGEdgeA) && (data->nGEdgeB == nGEdgeB)) {
         *n_intersect = 1;
         _edges_intersect_res_t **_datas_edge =
-            malloc(sizeof(_edges_intersect_res_t *));
+          malloc(sizeof(_edges_intersect_res_t *));
         _datas_edge[0] = data;
         return (PDM_edges_intersect_res_t **) _datas_edge;
       }
@@ -301,8 +517,8 @@ int                    *n_intersect
 
     const int nData = PDM_hash_tab_n_data_get (ht, (void *) &key);
     _edges_intersect_res_t ** datas =
-              (_edges_intersect_res_t **) PDM_hash_tab_data_get (ht,
-                                                                 (void *) &key);
+      (_edges_intersect_res_t **) PDM_hash_tab_data_get (ht,
+                                                         (void *) &key);
     /**********************************************
      * Look for requested intersection            *
      **********************************************/
@@ -320,7 +536,7 @@ int                    *n_intersect
     }
 
     _edges_intersect_res_t **_datas_edge =
-            malloc(sizeof(_edges_intersect_res_t *) * _nData);
+      malloc(sizeof(_edges_intersect_res_t *) * _nData);
 
     _nData = 0;
     for (int i = 0; i < nData; i++) {
@@ -341,8 +557,8 @@ int                    *n_intersect
 
     const int nData = PDM_hash_tab_n_data_get (ht, (void *) &key);
     _edges_intersect_res_t ** datas =
-              (_edges_intersect_res_t **) PDM_hash_tab_data_get (ht,
-                                                                 (void *) &key);
+      (_edges_intersect_res_t **) PDM_hash_tab_data_get (ht,
+                                                         (void *) &key);
     /**********************************************
      * Look for requested intersection            *
      **********************************************/
@@ -356,7 +572,7 @@ int                    *n_intersect
     }
 
     _edges_intersect_res_t **_datas_edge =
-            malloc(sizeof(_edges_intersect_res_t *) * _nData);
+      malloc(sizeof(_edges_intersect_res_t *) * _nData);
 
     _nData = 0;
     for (int i = 0; i < nData; i++) {
@@ -393,19 +609,19 @@ int                    *n_intersect
 PDM_edges_intersect_res_t *
 PDM_edges_intersect_add
 (
-PDM_edges_intersect_t       *ei,
-const PDM_g_num_t             nGEdgeA,
-const PDM_g_num_t             nGVtxA[2],
-const double                 charLgthVtxA[2],
-const double                 coordsVtxA[6],
-const PDM_g_num_t             nGEdgeB,
-const PDM_g_num_t             nGVtxB[2],
-const double                 charLgthVtxB[2],
-const double                 coordsVtxB[6]
-)
+ PDM_edges_intersect_t       *ei,
+ const int                    is_same_plane,
+ const PDM_g_num_t            nGEdgeA,
+ const PDM_g_num_t            nGVtxA[2],
+ const double                 charLgthVtxA[2],
+ const double                 coordsVtxA[6],
+ const double                 normalVtxA[6],
+ const PDM_g_num_t            nGEdgeB,
+ const PDM_g_num_t            nGVtxB[2],
+ const double                 charLgthVtxB[2],
+ const double                 coordsVtxB[6]
+ )
 {
-
-
   int vb = 0;//1;
   if (vb)   {
     PDM_printf ("==== PDM_edges_intersect_add ==== \n");
@@ -503,8 +719,8 @@ const double                 coordsVtxB[6]
   double vA_norm2 = PDM_DOT_PRODUCT (vA, vA);
   double vB_norm2 = PDM_DOT_PRODUCT (vB, vB);
 
-  double vA_norm = PDM_MODULE (vA);
-  double vB_norm = PDM_MODULE (vB);
+  double vA_norm = sqrt(vA_norm2);//PDM_MODULE (vA);
+  double vB_norm = sqrt(vB_norm2);//PDM_MODULE (vB);
 
   bool isSetted = false;
 
@@ -546,29 +762,6 @@ const double                 coordsVtxB[6]
 
     int isA2B2 = (mB2A2 < _charLgthVtxA[1]) &&
       (mB2A2 < _charLgthVtxB[1]);
-
-
-    /* double dVtxA[2] = {PDM_ABS (u1 * vA_norm), */
-    /*                    PDM_ABS ((1. - u1) * vA_norm)}; */
-
-    /* double dVtxB[2] = {PDM_ABS (v1 * vB_norm), */
-    /*                    PDM_ABS ((1. - v1) * vB_norm)}; */
-
-    /*
-     * Check if A vertex and B vertex are the same
-     */
-
-    /* int isA1B1 = (dVtxA[0] < _charLgthVtxA[0]) && */
-    /*              (dVtxB[0] < _charLgthVtxB[0]); */
-
-    /* int isA1B2 = (dVtxA[0] < _charLgthVtxA[0]) && */
-    /*              (dVtxB[1] < _charLgthVtxB[1]); */
-
-    /* int isA2B1 = (dVtxA[1] < _charLgthVtxA[1]) && */
-    /*              (dVtxB[0] < _charLgthVtxB[0]); */
-
-    /* int isA2B2 = (dVtxA[1] < _charLgthVtxA[1]) && */
-    /*              (dVtxB[1] < _charLgthVtxB[1]); */
 
 
     /*
@@ -633,19 +826,34 @@ const double                 coordsVtxB[6]
 
     int isA1OnEdgeB = (d2A1EdgeB < ((_charLgthVtxB[0] + tA1EdgeB * _deltaEdgB) *
                                     (_charLgthVtxB[0] + tA1EdgeB * _deltaEdgB))) &&
-                      (dA1closestEdgeB < _charLgthVtxA[0]) && !isA1B1 && !isA1B2;
+      (dA1closestEdgeB < _charLgthVtxA[0]) && !isA1B1 && !isA1B2;
 
     int isA2OnEdgeB = (d2A2EdgeB < ((_charLgthVtxB[0] + tA2EdgeB * _deltaEdgB) *
                                     (_charLgthVtxB[0] + tA2EdgeB * _deltaEdgB))) &&
-                      (dA2closestEdgeB < _charLgthVtxA[1]) && !isA2B1 && !isA2B2;
+      (dA2closestEdgeB < _charLgthVtxA[1]) && !isA2B1 && !isA2B2;
 
     int isB1OnEdgeA = (d2B1EdgeA < ((_charLgthVtxA[0] + tB1EdgeA * _deltaEdgA) *
                                     (_charLgthVtxA[0] + tB1EdgeA * _deltaEdgA))) &&
-                      (dB1closestEdgeA < _charLgthVtxB[0]) && !isA1B1 && !isA2B1;
+      (dB1closestEdgeA < _charLgthVtxB[0]) && !isA1B1 && !isA2B1;
 
     int isB2OnEdgeA = (d2B2EdgeA < ((_charLgthVtxA[0] + tB2EdgeA * _deltaEdgA) *
                                     (_charLgthVtxA[0] + tB2EdgeA * _deltaEdgA))) &&
-                      (dB2closestEdgeA < _charLgthVtxB[1]) && !isA1B2 && !isA2B2;
+      (dB2closestEdgeA < _charLgthVtxB[1]) && !isA1B2 && !isA2B2;
+    /*int isA1OnEdgeB = (d2A1EdgeB < ((_charLgthVtxB[0] + tA1EdgeB * _deltaEdgB) *
+      (_charLgthVtxB[0] + tA1EdgeB * _deltaEdgB))) &&
+      (d2A1EdgeB < _charLgthVtxA[0]*_charLgthVtxA[0]) && !isA1B1 && !isA1B2;
+
+      int isA2OnEdgeB = (d2A2EdgeB < ((_charLgthVtxB[0] + tA2EdgeB * _deltaEdgB) *
+      (_charLgthVtxB[0] + tA2EdgeB * _deltaEdgB))) &&
+      (d2A2EdgeB < _charLgthVtxA[1]*_charLgthVtxA[1]) && !isA2B1 && !isA2B2;
+
+      int isB1OnEdgeA = (d2B1EdgeA < ((_charLgthVtxA[0] + tB1EdgeA * _deltaEdgA) *
+      (_charLgthVtxA[0] + tB1EdgeA * _deltaEdgA))) &&
+      (d2B1EdgeA < _charLgthVtxB[0]*_charLgthVtxB[0]) && !isA1B1 && !isA2B1;
+
+      int isB2OnEdgeA = (d2B2EdgeA < ((_charLgthVtxA[0] + tB2EdgeA * _deltaEdgA) *
+      (_charLgthVtxA[0] + tB2EdgeA * _deltaEdgA))) &&
+      (d2B2EdgeA < _charLgthVtxB[1]*_charLgthVtxB[1]) && !isA1B2 && !isA2B2;*/
 
     if (vb) {
       PDM_printf ("isA1B1:%d isA1B2:%d isA2B1:%d isA2B2:%d isA1OnEdgeB:%d isA2OnEdgeB:%d "
@@ -767,7 +975,7 @@ const double                 coordsVtxB[6]
                                  tA1EdgeB * vB[1],
                                  tA1EdgeB * vB[2]};
 
-         newInter->uB[0] = PDM_DOT_PRODUCT (B1ClosestA1, vB) / vB_norm2;
+        newInter->uB[0] = PDM_DOT_PRODUCT (B1ClosestA1, vB) / vB_norm2;
         if (newInter->originEdgeB == nGVtxB[1]) {
           newInter->uB[0] = 1 - newInter->uB[0];
         }
@@ -894,10 +1102,57 @@ const double                 coordsVtxB[6]
 
         isSetted = true;
       }
+
+      else if (!is_same_plane) {
+        /*
+         * edges A and B are in general position, i.e.
+         *   - they are not parallel
+         *   - vertices of edge A are not on edge B and vice versa
+         */
+
+        /* check whether edges A and B actually intersect */
+        double cl = PDM_MIN (_charLgthVtxA[0] + u1*(_charLgthVtxA[1] - _charLgthVtxA[0]),
+                             _charLgthVtxB[0] + v1*(_charLgthVtxB[1] - _charLgthVtxB[0]));
+        double dist2 = 0., d;
+        for (int i = 0; i < 3; i++) {
+          d = (coordsVtxA[i] + u1*(coordsVtxA[3+i] - coordsVtxA[i]))
+            - (coordsVtxB[i] + v1*(coordsVtxB[3+i] - coordsVtxB[i]));
+          dist2 += d * d;
+        }
+
+        if (dist2 > cl*cl) {
+          /* Edges A and B do not actually intersect
+           * Check whether the projection of edge B on mesh A intersects edge A
+           */
+          double uAproj, uBproj;
+          //printf("dist = %12.5e, cl = %12.5e\n", sqrt(dist2), cl);
+          PDM_line_intersect_t tIntersectProj = _line_intersection_projection (coordsVtxA,
+                                                                               coordsVtxA + 3,
+                                                                               normalVtxA,
+                                                                               normalVtxA + 3,
+                                                                               coordsVtxB,
+                                                                               coordsVtxB + 3,
+                                                                               &uAproj,
+                                                                               &uBproj);
+
+          if (tIntersectProj == PDM_LINE_INTERSECT_YES) {
+            /* the projection of edge B on mesh A intersects edge A */
+            tIntersect = tIntersectProj;
+            u1 = uAproj;
+            v1 = uBproj;
+          }
+          else {
+            /* the projection of edge B on mesh A does not intersect edge A */
+            tIntersect = PDM_LINE_INTERSECT_NO;
+          }
+        }
+      }
+
     }
   }
 
   if (tIntersect == PDM_LINE_INTERSECT_ON_LINE) {
+    // At this point we know both edges are ~parallel
 
     if (isInitialOnLine) {
 
@@ -927,6 +1182,7 @@ const double                 coordsVtxB[6]
       int isSameLine = (isInBallB1 && isInBallB2 && isInBallA1 && isInBallA2);
 
       if (!isSameLine) {
+        // ~Parallel but non-collinear edges
         tIntersect = PDM_LINE_INTERSECT_NO;
         newInter = _edges_intersect_res_create (nGEdgeA,
                                                 nGEdgeB,
@@ -944,6 +1200,7 @@ const double                 coordsVtxB[6]
     }
 
     if (tIntersect == PDM_LINE_INTERSECT_ON_LINE) {
+      // ~Collinear edges
 
       double A1B1[3] = {coordsVtxB[0] - coordsVtxA[0],
                         coordsVtxB[1] - coordsVtxA[1],
@@ -1249,7 +1506,7 @@ const double                 coordsVtxB[6]
         newInter->uA[0] = 1.;
         newInter->uB[0] = 1.;
         if (newInter->originEdgeA == nGVtxA[1]) {
-           newInter->uA[0] = 1 - newInter->uA[0];
+          newInter->uA[0] = 1 - newInter->uA[0];
         }
 
         if (newInter->originEdgeB == nGVtxB[1]) {
@@ -1593,8 +1850,8 @@ const double                 coordsVtxB[6]
       }
 
       isSetted = true;
-    }
-  }
+    } // End if ~collinear edges
+  } // End if ~parallel edges
 
   /*
    * Storage intersection
@@ -1660,7 +1917,6 @@ const double                 coordsVtxB[6]
   return (PDM_edges_intersect_res_t *) newInter;
 }
 
-
 /**
  *
  * \brief Free \ref PDM_edges_intersect_t object
@@ -1673,8 +1929,8 @@ const double                 coordsVtxB[6]
 PDM_edges_intersect_t *
 PDM_edges_intersect_free
 (
-PDM_edges_intersect_t *ei
-)
+ PDM_edges_intersect_t *ei
+ )
 {
   _edges_intersect_t *_ei = (_edges_intersect_t *) ei;
 
@@ -1684,7 +1940,7 @@ PDM_edges_intersect_t *ei
   for (int i = 0; i < *keyMax; i++) {
     int nData = PDM_hash_tab_n_data_get (_ei->ht, &i);
     _edges_intersect_res_t **eir =
-            (_edges_intersect_res_t **) PDM_hash_tab_data_get (_ei->ht, &i);
+      (_edges_intersect_res_t **) PDM_hash_tab_data_get (_ei->ht, &i);
 
     for (int j = 0; j < nData; j++) {
       _edges_intersect_res_free (eir[j]);
@@ -1724,25 +1980,25 @@ PDM_edges_intersect_t *ei
 void
 PDM_edges_intersect_res_data_get
 (
-PDM_edges_intersect_res_t   *eir,
-PDM_edges_intersect_mesh_t   mesh,
-PDM_g_num_t                  *nGEdge,
-PDM_g_num_t                  *originEdge,
-PDM_g_num_t                  *endEdge,
-PDM_line_intersect_t        *tIntersect,
-int                         *nNewPoints,
-PDM_edges_intersect_point_t **oNewPoints,
-PDM_g_num_t                  **link,
-PDM_g_num_t                  **gNum,
-double                      **coords,
-double                      **u
-)
+ PDM_edges_intersect_res_t   *eir,
+ PDM_edges_intersect_mesh_t   mesh,
+ PDM_g_num_t                  *nGEdge,
+ PDM_g_num_t                  *originEdge,
+ PDM_g_num_t                  *endEdge,
+ PDM_line_intersect_t        *tIntersect,
+ int                         *nNewPoints,
+ PDM_edges_intersect_point_t **oNewPoints,
+ PDM_g_num_t                  **link,
+ PDM_g_num_t                  **gNum,
+ double                      **coords,
+ double                      **u
+ )
 {
 
   if (eir == NULL) {
     PDM_error(__FILE__, __LINE__, 0, "Error PDM_edges_intersect_res_data_get : The Input PDM_edges_intersect_res_t is NULL.\n");
     abort();
-}
+  }
 
   _edges_intersect_res_t *_eir = (_edges_intersect_res_t *) eir;
 
@@ -1795,33 +2051,38 @@ double                      **u
 void
 PDM_edges_intersect_poly_add
 (
-PDM_edges_intersect_t  *ei,
-const int               n_vtxA,
-PDM_g_num_t            *faceToEdgeA,
-PDM_g_num_t            *faceToVtxA,
-double                 *face_vtxCooA,
-double                 *face_vtxEpsA,
-const int               n_vtxB,
-PDM_g_num_t            *faceToEdgeB,
-PDM_g_num_t            *faceToVtxB,
-double                 *face_vtxCooB,
-double                 *face_vtxEpsB
-)
+ PDM_edges_intersect_t  *ei,
+ const int               n_vtxA,
+ PDM_g_num_t            *faceToEdgeA,
+ PDM_g_num_t            *faceToVtxA,
+ double                 *face_vtxCooA,
+ double                 *face_vtxEpsA,
+ double                 *face_vtxNormalA,
+ const int               n_vtxB,
+ PDM_g_num_t            *faceToEdgeB,
+ PDM_g_num_t            *faceToVtxB,
+ double                 *face_vtxCooB,
+ double                 *face_vtxEpsB,
+ const int verbose
+ )
 {
-  int vb = 0;
+  int is_same_plane = (face_vtxNormalA == NULL);
+
+  int vb = verbose;//0;
   if (vb) {
     PDM_printf ("==== PDM_edges_intersect_poly_add ==== \n");
   }
 
   PDM_g_num_t *_faceToEdgeA = faceToEdgeA;
   PDM_g_num_t *_faceToVtxA  = faceToVtxA;
-  double     *_face_vtxCooA = face_vtxCooA;
-  double     *_face_vtxEpsA = face_vtxEpsA;
+  double      *_face_vtxCooA = face_vtxCooA;
+  double      *_face_vtxEpsA = face_vtxEpsA;
+  double      *_face_vtxNormalA = face_vtxNormalA;
 
   PDM_g_num_t *_faceToEdgeB = faceToEdgeB;
   PDM_g_num_t *_faceToVtxB  = faceToVtxB;
-  double     *_face_vtxCooB = face_vtxCooB;
-  double     *_face_vtxEpsB = face_vtxEpsB;
+  double      *_face_vtxCooB = face_vtxCooB;
+  double      *_face_vtxEpsB = face_vtxEpsB;
 
   /*
    * Compute Normal
@@ -1839,9 +2100,9 @@ double                 *face_vtxEpsB
 
   bool revert = false;
 
-   if (dot < 0) {
-     revert = true;
-   }
+  if (dot < 0) {
+    revert = true;
+  }
 
   /*
    * Reorient if necessary
@@ -1868,21 +2129,23 @@ double                 *face_vtxEpsB
 
   }
 
-  _face_vtxCooA = malloc (sizeof(double) * 3 * n_vtxA);
-  for (int i = 0; i < n_vtxA; i++) {
-    PDM_plane_projection (face_vtxCooA + 3 * i, baryA, nA, _face_vtxCooA + 3 * i);
-  }
-  //PDM_plane_normal (n_vtxA, _face_vtxCooA, nA);
-
-  if (revert) {
-    for (int i = 0; i < n_vtxB; i++) {
-      PDM_plane_projection (_face_vtxCooB + 3 * i, baryA, nA, _face_vtxCooB + 3 * i);
+  if (is_same_plane) {
+    _face_vtxCooA = malloc (sizeof(double) * 3 * n_vtxA);
+    for (int i = 0; i < n_vtxA; i++) {
+      PDM_plane_projection (face_vtxCooA + 3 * i, baryA, nA, _face_vtxCooA + 3 * i);
     }
-  }
-  else {
-    _face_vtxCooB = malloc (sizeof(double) * 3 * n_vtxB);
-    for (int i = 0; i < n_vtxB; i++) {
-      PDM_plane_projection (face_vtxCooB + 3 * i, baryA, nA, _face_vtxCooB + 3 * i);
+    //PDM_plane_normal (n_vtxA, _face_vtxCooA, nA);
+
+    if (revert) {
+      for (int i = 0; i < n_vtxB; i++) {
+        PDM_plane_projection (_face_vtxCooB + 3 * i, baryA, nA, _face_vtxCooB + 3 * i);
+      }
+    }
+    else {
+      _face_vtxCooB = malloc (sizeof(double) * 3 * n_vtxB);
+      for (int i = 0; i < n_vtxB; i++) {
+        PDM_plane_projection (face_vtxCooB + 3 * i, baryA, nA, _face_vtxCooB + 3 * i);
+      }
     }
   }
 
@@ -1911,6 +2174,7 @@ double                 *face_vtxEpsB
     vtxBOnEdgeAEir[i] = NULL;
   }
 
+  double normalVtxA[6];
   for (int i = 0; i < n_vtxA; i++) {
 
     int inext = (i + 1) % n_vtxA;
@@ -1923,6 +2187,13 @@ double                 *face_vtxEpsB
                               _face_vtxCooA[3*inext],
                               _face_vtxCooA[3*inext+1],
                               _face_vtxCooA[3*inext+2]};
+
+    if (!is_same_plane) {
+      for (int k = 0; k < 3; k++) {
+        normalVtxA[k]   = _face_vtxNormalA[3*i+k];
+        normalVtxA[k+3] = _face_vtxNormalA[3*inext+k];
+      }
+    }
 
     for (int j = 0; j < n_vtxB; j++) {
       int jnext = (j + 1) % n_vtxB;
@@ -1940,14 +2211,14 @@ double                 *face_vtxEpsB
        * Perform intersection
        */
 
-      if (vb) {
-        PDM_printf ("_faceToEdgeA[i]:%d, nGVtxA:%d-%d, charLgthVtxA:%12.5e-%12.5e, "
-                    "coordsVtxA:%12.5e-%12.5e-%12.5e-%12.5e-%12.5e-%12.5e\n",
+      if (PDM_ABS(_faceToEdgeA[i]) == 40 && PDM_ABS(_faceToEdgeB[j]) == 458) {//if (vb) {
+        PDM_printf ("_faceToEdgeA[i]:%d, nGVtxA:%d-%d, charLgthVtxA:%12.5e, %12.5e\n"
+                    "coordsVtxA: %12.5e, %12.5e, %12.5e   %12.5e, %12.5e, %12.5e\n",
                     _faceToEdgeA[i], nGVtxA[0],
                     nGVtxA[1], charLgthVtxA[0], charLgthVtxA[1], coordsVtxA[0],
                     coordsVtxA[1], coordsVtxA[2], coordsVtxA[3], coordsVtxA[4], coordsVtxA[5]);
-        PDM_printf ("_faceToEdgeB[j]:%d, nGVtxB:%d-%d, charLgthVtxB:%12.5e-%12.5e, "
-                    "coordsVtxB:%12.5e-%12.5e-%12.5e-%12.5e-%12.5e-%12.5e \n",
+        PDM_printf ("_faceToEdgeB[j]:%d, nGVtxB:%d-%d, charLgthVtxB:%12.5e-%12.5e\n"
+                    "coordsVtxB: %12.5e, %12.5e, %12.5e   %12.5e, %12.5e, %12.5e\n",
                     _faceToEdgeB[j], nGVtxB[0],
                     nGVtxB[1], charLgthVtxB[0], charLgthVtxB[1], coordsVtxB[0],
                     coordsVtxB[1], coordsVtxB[2], coordsVtxB[3], coordsVtxB[4], coordsVtxB[5]);
@@ -1955,10 +2226,12 @@ double                 *face_vtxEpsB
 
       PDM_edges_intersect_res_t *eir =
         PDM_edges_intersect_add (ei,
+                                 is_same_plane,
                                  PDM_ABS(_faceToEdgeA[i]),
                                  nGVtxA,
                                  charLgthVtxA,
                                  coordsVtxA,
+                                 normalVtxA,
                                  PDM_ABS(_faceToEdgeB[j]),
                                  nGVtxB,
                                  charLgthVtxB,
@@ -1975,13 +2248,13 @@ double                 *face_vtxEpsB
 
         PDM_line_intersect_t         tIntersect;
 
-        PDM_g_num_t                   nGEdgeA;
-        PDM_g_num_t                   originEdgeA;
-        PDM_g_num_t                   endEdgeA;
+        PDM_g_num_t                  nGEdgeA;
+        PDM_g_num_t                  originEdgeA;
+        PDM_g_num_t                  endEdgeA;
         int                          nNewPointsA;
         PDM_edges_intersect_point_t *oNewPointsA;
-        PDM_g_num_t                  *linkA;
-        PDM_g_num_t                  *gNumA;
+        PDM_g_num_t                 *linkA;
+        PDM_g_num_t                 *gNumA;
         double                      *coordsA;
         double                      *uA;
 
@@ -1998,13 +2271,13 @@ double                 *face_vtxEpsB
                                           &coordsA,
                                           &uA);
 
-        PDM_g_num_t                   nGEdgeB;
-        PDM_g_num_t                   originEdgeB;
-        PDM_g_num_t                   endEdgeB;
+        PDM_g_num_t                  nGEdgeB;
+        PDM_g_num_t                  originEdgeB;
+        PDM_g_num_t                  endEdgeB;
         int                          nNewPointsB;
         PDM_edges_intersect_point_t *oNewPointsB;
-        PDM_g_num_t                  *linkB;
-        PDM_g_num_t                  *gNumB;
+        PDM_g_num_t                 *linkB;
+        PDM_g_num_t                 *gNumB;
         double                      *coordsB;
         double                      *uB;
 
@@ -2167,7 +2440,7 @@ double                 *face_vtxEpsB
                   _eir->uA[k] = 1.;
                 }
                 for (int k2 = 0; k2 < 3; k2++) {
-                _eir->coordsA[3*k+k2] = coords_new[k2];
+                  _eir->coordsA[3*k+k2] = coords_new[k2];
                 }
 
                 /* From B */
@@ -2359,7 +2632,7 @@ double                 *face_vtxEpsB
 
                 for (int k1 = 0; k1 < _preEir->nNewPointsB; k1++) {
                   if ((_preEir->oNewPointsB[k1] == PDM_EDGES_INTERSECT_POINT_VTXA_ON_EDGEB) &&
-                    (_preEir->linkB[k1] == linkB[k])) {
+                      (_preEir->linkB[k1] == linkB[k])) {
 
                     _preEir->oNewPointsB[k1] = PDM_EDGES_INTERSECT_POINT_VTXA_ON_VTXB;
 
@@ -2425,7 +2698,7 @@ double                 *face_vtxEpsB
                   _preEir->uA[_preEir->nNewPointsA] = 1.;
                 }
                 for (int k2 = 0; k2 < 3; k2++) {
-                _preEir->coordsA[3*_preEir->nNewPointsA+k2] = coords_new[k2];
+                  _preEir->coordsA[3*_preEir->nNewPointsA+k2] = coords_new[k2];
                 }
 
                 _preEir->nNewPointsA += 1 ;
@@ -2525,7 +2798,6 @@ double                 *face_vtxEpsB
 
 }
 
-
 /**
  *
  * \brief Remove inconsistencies between processes
@@ -2541,12 +2813,12 @@ double                 *face_vtxEpsB
 void
 PDM_edges_intersect_synchronize
 (
-PDM_edges_intersect_t       *ei,
-PDM_g_num_t             nAbsVtxA,
-PDM_g_num_t             nAbsVtxB,
-PDM_g_num_t            *nAbsNewVtxA,
-PDM_g_num_t            *nAbsNewVtxB
-)
+ PDM_edges_intersect_t  *ei,
+ PDM_g_num_t             nAbsVtxA,
+ PDM_g_num_t             nAbsVtxB,
+ PDM_g_num_t            *nAbsNewVtxA,
+ PDM_g_num_t            *nAbsNewVtxB
+ )
 {
   int vb = 0;
   if (vb) {
@@ -2591,27 +2863,28 @@ PDM_g_num_t            *nAbsNewVtxB
 
   PDM_g_num_t *keys        = malloc (sizeof(PDM_g_num_t) * n_procData);
 
-  int        *tIntersects = malloc (sizeof(int) * n_procData);
+  int         *tIntersects = malloc (sizeof(int)         * n_procData);
 
   PDM_g_num_t *gNumEdgeA   = malloc (sizeof(PDM_g_num_t) * n_procData);
   PDM_g_num_t *gNumEdgeB   = malloc (sizeof(PDM_g_num_t) * n_procData);
-  int        *nNewPointsA = malloc (sizeof(int) * n_procData);
+
+  int         *nNewPointsA = malloc (sizeof(int)         * n_procData);
+  int         *nNewPointsB = malloc (sizeof(int)         * n_procData);
+
   PDM_edges_intersect_point_t *oNewPointsA =
     malloc (sizeof(PDM_edges_intersect_point_t) * 2 * n_procData);
-
-  PDM_g_num_t *connectPointA = malloc (sizeof(PDM_g_num_t) * 2 * n_procData);
-  PDM_g_num_t *gNumA = malloc (sizeof(PDM_g_num_t) * 2 * n_procData);
-  double *uPointA = malloc (sizeof(double) * 2 * n_procData);
-  double *coordsPointA = malloc (sizeof(double) * 6 * n_procData);
-
-  int        *nNewPointsB = malloc (sizeof(int) * n_procData);
   PDM_edges_intersect_point_t *oNewPointsB =
     malloc (sizeof(PDM_edges_intersect_point_t) * 2 * n_procData);
 
+  PDM_g_num_t *connectPointA = malloc (sizeof(PDM_g_num_t) * 2 * n_procData);
+  PDM_g_num_t *gNumA         = malloc (sizeof(PDM_g_num_t) * 2 * n_procData);
+  double      *uPointA       = malloc (sizeof(double)      * 2 * n_procData);
+  double      *coordsPointA  = malloc (sizeof(double)      * 6 * n_procData);
+
   PDM_g_num_t *connectPointB = malloc (sizeof(PDM_g_num_t) * 2 * n_procData);
-  PDM_g_num_t *gNumB = malloc (sizeof(PDM_g_num_t) * 2 * n_procData);
-  double *uPointB = malloc (sizeof(double) * 2 * n_procData);
-  double *coordsPointB = malloc (sizeof(double) * 6 * n_procData);
+  PDM_g_num_t *gNumB         = malloc (sizeof(PDM_g_num_t) * 2 * n_procData);
+  double      *uPointB       = malloc (sizeof(double)      * 2 * n_procData);
+  double      *coordsPointB  = malloc (sizeof(double)      * 6 * n_procData);
 
   n_procData = 0;
   int idxA = 0;
@@ -2619,8 +2892,8 @@ PDM_g_num_t            *nAbsNewVtxB
   for (int key = 0; key < keyMax; key++) {
 
     _edges_intersect_res_t ** datas =
-            (_edges_intersect_res_t **) PDM_hash_tab_data_get (ht,
-                                                               (void *) &key);
+      (_edges_intersect_res_t **) PDM_hash_tab_data_get (ht,
+                                                         (void *) &key);
 
     int nData = PDM_hash_tab_n_data_get (ht, &key);
 
@@ -2729,13 +3002,13 @@ PDM_g_num_t            *nAbsNewVtxB
    */
 
   PDM_part_to_block_t *ptb = PDM_part_to_block_create (PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
-                                                     PDM_PART_TO_BLOCK_POST_MERGE,
-                                                     1.,
-                                                     (PDM_g_num_t **) &keys,
+                                                       PDM_PART_TO_BLOCK_POST_MERGE,
+                                                       1.,
+                                                       (PDM_g_num_t **) &keys,
                                                        NULL,
-                                                     &n_procData,
-                                                     1,
-                                                     _ei->comm);
+                                                       &n_procData,
+                                                       1,
+                                                       _ei->comm);
 
   PDM_g_num_t *block_gnum = (PDM_g_num_t *) PDM_part_to_block_block_gnum_get (ptb);
   int n_elt_block = PDM_part_to_block_n_elt_block_get (ptb);
@@ -2765,36 +3038,36 @@ PDM_g_num_t            *nAbsNewVtxB
 
   PDM_g_num_t *b_gNumEdgeA = NULL;
   PDM_part_to_block_exch (ptb,
-                         sizeof(PDM_g_num_t),
-                         PDM_STRIDE_VAR,
-                         1,
-                         &stride_one,
-                         (void **) &gNumEdgeA,
-                         &b_stride_one,
-                         (void **) &b_gNumEdgeA);
+                          sizeof(PDM_g_num_t),
+                          PDM_STRIDE_VAR,
+                          1,
+                          &stride_one,
+                          (void **) &gNumEdgeA,
+                          &b_stride_one,
+                          (void **) &b_gNumEdgeA);
 
 
   free (b_stride_one);
   PDM_g_num_t *b_gNumEdgeB = NULL;
   PDM_part_to_block_exch (ptb,
-                         sizeof(PDM_g_num_t),
-                         PDM_STRIDE_VAR,
-                         1,
-                         &stride_one,
-                         (void **) &gNumEdgeB,
-                         &b_stride_one,
-                         (void **) &b_gNumEdgeB);
+                          sizeof(PDM_g_num_t),
+                          PDM_STRIDE_VAR,
+                          1,
+                          &stride_one,
+                          (void **) &gNumEdgeB,
+                          &b_stride_one,
+                          (void **) &b_gNumEdgeB);
 
   PDM_edges_intersect_point_t *b_oNewPointsA  = NULL;
   int                         *b_nNewPointsA;
   PDM_part_to_block_exch (ptb,
-                         sizeof(PDM_edges_intersect_point_t),
-                         PDM_STRIDE_VAR,
-                         1,
-                         &nNewPointsA,
-                         (void **)&oNewPointsA,
-                         &b_nNewPointsA,
-                         (void **)&b_oNewPointsA);
+                          sizeof(PDM_edges_intersect_point_t),
+                          PDM_STRIDE_VAR,
+                          1,
+                          &nNewPointsA,
+                          (void **)&oNewPointsA,
+                          &b_nNewPointsA,
+                          (void **)&b_oNewPointsA);
 
   free (b_stride_one);
 
@@ -2802,37 +3075,37 @@ PDM_g_num_t            *nAbsNewVtxB
 
   PDM_g_num_t *b_connectPointA = NULL;
   PDM_part_to_block_exch (ptb,
-                         sizeof(PDM_g_num_t),
-                         PDM_STRIDE_VAR,
-                         1,
-                         &nNewPointsA,
-                         (void **)&connectPointA,
-                         &b_nNewPointsA,
-                         (void **)&b_connectPointA);
+                          sizeof(PDM_g_num_t),
+                          PDM_STRIDE_VAR,
+                          1,
+                          &nNewPointsA,
+                          (void **)&connectPointA,
+                          &b_nNewPointsA,
+                          (void **)&b_connectPointA);
 
   free(b_nNewPointsA);
 
   PDM_g_num_t *b_gNumA = NULL;
   PDM_part_to_block_exch (ptb,
-                         sizeof(PDM_g_num_t),
-                         PDM_STRIDE_VAR,
-                         1,
-                         &nNewPointsA,
-                         (void **)&gNumA,
-                         &b_nNewPointsA,
-                         (void **)&b_gNumA);
+                          sizeof(PDM_g_num_t),
+                          PDM_STRIDE_VAR,
+                          1,
+                          &nNewPointsA,
+                          (void **)&gNumA,
+                          &b_nNewPointsA,
+                          (void **)&b_gNumA);
 
   free(b_nNewPointsA);
 
   double *b_uPointA = NULL;
   PDM_part_to_block_exch (ptb,
-                         sizeof(double),
-                         PDM_STRIDE_VAR,
-                         1,
-                         &nNewPointsA,
-                         (void **)&uPointA,
-                         &b_nNewPointsA,
-                         (void **)&b_uPointA);
+                          sizeof(double),
+                          PDM_STRIDE_VAR,
+                          1,
+                          &nNewPointsA,
+                          (void **)&uPointA,
+                          &b_nNewPointsA,
+                          (void **)&b_uPointA);
 
   free(b_nNewPointsA);
 
@@ -2842,13 +3115,13 @@ PDM_g_num_t            *nAbsNewVtxB
 
   double *b_coordsPointA = NULL;
   PDM_part_to_block_exch (ptb,
-                         sizeof(double),
-                         PDM_STRIDE_VAR,
-                         1,
-                         &nNewPointsA,
-                         (void **)&coordsPointA,
-                         &b_nNewPointsA,
-                         (void **)&b_coordsPointA);
+                          sizeof(double),
+                          PDM_STRIDE_VAR,
+                          1,
+                          &nNewPointsA,
+                          (void **)&coordsPointA,
+                          &b_nNewPointsA,
+                          (void **)&b_coordsPointA);
 
   for (int k = 0; k < n_procData; k++) {
     nNewPointsA[k] = nNewPointsA[k] / 3;
@@ -2856,13 +3129,13 @@ PDM_g_num_t            *nAbsNewVtxB
 
   free (b_nNewPointsA);
   PDM_part_to_block_exch (ptb,
-                         sizeof(int),
-                         PDM_STRIDE_VAR,
-                         1,
-                         &stride_one,
-                         (void **) &nNewPointsA,
-                         &b_stride_one,
-                         (void **) &b_nNewPointsA);
+                          sizeof(int),
+                          PDM_STRIDE_VAR,
+                          1,
+                          &stride_one,
+                          (void **) &nNewPointsA,
+                          &b_stride_one,
+                          (void **) &b_nNewPointsA);
 
   int sum1=0;
   for (int k = 0; k < n_elt_block; k++) {
@@ -2878,49 +3151,49 @@ PDM_g_num_t            *nAbsNewVtxB
   PDM_edges_intersect_point_t *b_oNewPointsB  = NULL;
   int                         *b_nNewPointsB;
   PDM_part_to_block_exch (ptb,
-                         sizeof(PDM_edges_intersect_point_t),
-                         PDM_STRIDE_VAR,
-                         1,
-                         &nNewPointsB,
-                         (void **)&oNewPointsB,
-                         &b_nNewPointsB,
-                         (void **)&b_oNewPointsB);
+                          sizeof(PDM_edges_intersect_point_t),
+                          PDM_STRIDE_VAR,
+                          1,
+                          &nNewPointsB,
+                          (void **)&oNewPointsB,
+                          &b_nNewPointsB,
+                          (void **)&b_oNewPointsB);
 
   free(b_nNewPointsB);
 
   PDM_g_num_t *b_connectPointB = NULL;
   PDM_part_to_block_exch (ptb,
-                         sizeof(PDM_g_num_t),
-                         PDM_STRIDE_VAR,
-                         1,
-                         &nNewPointsB,
-                         (void **)&connectPointB,
-                         &b_nNewPointsB,
-                         (void **)&b_connectPointB);
+                          sizeof(PDM_g_num_t),
+                          PDM_STRIDE_VAR,
+                          1,
+                          &nNewPointsB,
+                          (void **)&connectPointB,
+                          &b_nNewPointsB,
+                          (void **)&b_connectPointB);
 
   free(b_nNewPointsB);
 
   PDM_g_num_t *b_gNumB = NULL;
   PDM_part_to_block_exch (ptb,
-                         sizeof(PDM_g_num_t),
-                         PDM_STRIDE_VAR,
-                         1,
-                         &nNewPointsB,
-                         (void **)&gNumB,
-                         &b_nNewPointsB,
-                         (void **)&b_gNumB);
+                          sizeof(PDM_g_num_t),
+                          PDM_STRIDE_VAR,
+                          1,
+                          &nNewPointsB,
+                          (void **)&gNumB,
+                          &b_nNewPointsB,
+                          (void **)&b_gNumB);
 
   free(b_nNewPointsB);
 
   double *b_uPointB = NULL;
   PDM_part_to_block_exch (ptb,
-                         sizeof(double),
-                         PDM_STRIDE_VAR,
-                         1,
-                         &nNewPointsB,
-                         (void **)&uPointB,
-                         &b_nNewPointsB,
-                         (void **)&b_uPointB);
+                          sizeof(double),
+                          PDM_STRIDE_VAR,
+                          1,
+                          &nNewPointsB,
+                          (void **)&uPointB,
+                          &b_nNewPointsB,
+                          (void **)&b_uPointB);
 
   free(b_nNewPointsB);
 
@@ -2931,13 +3204,13 @@ PDM_g_num_t            *nAbsNewVtxB
 
   double *b_coordsPointB = NULL;
   PDM_part_to_block_exch (ptb,
-                         sizeof(double),
-                         PDM_STRIDE_VAR,
-                         1,
-                         &nNewPointsB,
-                         (void **)&coordsPointB,
-                         &b_nNewPointsB,
-                         (void **)&b_coordsPointB);
+                          sizeof(double),
+                          PDM_STRIDE_VAR,
+                          1,
+                          &nNewPointsB,
+                          (void **)&coordsPointB,
+                          &b_nNewPointsB,
+                          (void **)&b_coordsPointB);
 
   for (int k = 0; k < n_procData; k++) {
     nNewPointsB[k] = nNewPointsB[k] / 3;
@@ -2945,13 +3218,13 @@ PDM_g_num_t            *nAbsNewVtxB
 
   free (b_nNewPointsB);
   PDM_part_to_block_exch (ptb,
-                         sizeof(int),
-                         PDM_STRIDE_VAR,
-                         1,
-                         &stride_one,
-                         (void **) &nNewPointsB,
-                         &b_stride_one,
-                         (void **) &b_nNewPointsB);
+                          sizeof(int),
+                          PDM_STRIDE_VAR,
+                          1,
+                          &stride_one,
+                          (void **) &nNewPointsB,
+                          &b_stride_one,
+                          (void **) &b_nNewPointsB);
 
   free (stride_one);
   free (tIntersects);
@@ -3002,23 +3275,23 @@ PDM_g_num_t            *nAbsNewVtxB
   int *b_nNewPointsA_true = malloc(sizeof(int) * b_stride_one_idx[n_elt_block]);
 
   PDM_edges_intersect_point_t *b_oNewPointsA_true =
-          malloc(sizeof(PDM_edges_intersect_point_t) * 2 * b_stride_one_idx[n_elt_block]);
+    malloc(sizeof(PDM_edges_intersect_point_t) * 2 * b_stride_one_idx[n_elt_block]);
   PDM_g_num_t *b_connectPointA_true =
-          malloc(sizeof(PDM_g_num_t) * 2 * b_stride_one_idx[n_elt_block]);
+    malloc(sizeof(PDM_g_num_t) * 2 * b_stride_one_idx[n_elt_block]);
   PDM_g_num_t *b_gNumA_true =
-          malloc(sizeof(PDM_g_num_t) * 2 * b_stride_one_idx[n_elt_block]);
+    malloc(sizeof(PDM_g_num_t) * 2 * b_stride_one_idx[n_elt_block]);
   double *b_uPointA_true =
-          malloc(sizeof(double) * 2 * b_stride_one_idx[n_elt_block]);
+    malloc(sizeof(double) * 2 * b_stride_one_idx[n_elt_block]);
   double *b_coordsPointA_true =
-          malloc(sizeof(double) * 6 * b_stride_one_idx[n_elt_block]);
+    malloc(sizeof(double) * 6 * b_stride_one_idx[n_elt_block]);
 
   int *b_nNewPointsB_true = malloc(sizeof(int) * b_stride_one_idx[n_elt_block]);
   PDM_edges_intersect_point_t *b_oNewPointsB_true =
-          malloc(sizeof(PDM_edges_intersect_point_t) * 2 * b_stride_one_idx[n_elt_block]);
+    malloc(sizeof(PDM_edges_intersect_point_t) * 2 * b_stride_one_idx[n_elt_block]);
   PDM_g_num_t *b_connectPointB_true =
-          malloc(sizeof(PDM_g_num_t) * 2 * b_stride_one_idx[n_elt_block]);
+    malloc(sizeof(PDM_g_num_t) * 2 * b_stride_one_idx[n_elt_block]);
   PDM_g_num_t *b_gNumB_true =
-          malloc(sizeof(PDM_g_num_t) * 2 * b_stride_one_idx[n_elt_block]);
+    malloc(sizeof(PDM_g_num_t) * 2 * b_stride_one_idx[n_elt_block]);
   double *b_uPointB_true = malloc(sizeof(double) * 2 * b_stride_one_idx[n_elt_block]);
   double *b_coordsPointB_true = malloc(sizeof(double) * 6 * b_stride_one_idx[n_elt_block]);
 
@@ -3056,7 +3329,7 @@ PDM_g_num_t            *nAbsNewVtxB
             if (vb) {
               PDM_printf ("\n+++ b_gNumEdgeA[j] : "PDM_FMT_G_NUM" - b_gNumEdgeB[j] : "
                           PDM_FMT_G_NUM" / b_gNumEdgeA[k] : "PDM_FMT_G_NUM" - b_gNumEdgeB[k] : "PDM_FMT_G_NUM" $$$$$\n",
-                        b_gNumEdgeA[j], b_gNumEdgeB[j], b_gNumEdgeA[k], b_gNumEdgeB[k]);
+                          b_gNumEdgeA[j], b_gNumEdgeB[j], b_gNumEdgeA[k], b_gNumEdgeB[k]);
 
               printf("+++b_tIntersects[j] : %s / b_tIntersects[k] : %s\n"
                      ,_typeInter[b_tIntersects[j]+1] ,_typeInter[b_tIntersects[k]+1]);
@@ -3093,7 +3366,7 @@ PDM_g_num_t            *nAbsNewVtxB
 
               if ((link[0] == -1) || (link[1] == -1)) {
                 printf("Sortie en erreur : Incoherence sur les deux sommets de B"
-                          " devant être ajoutés à A.\n");
+                       " devant être ajoutés à A.\n");
                 printf("b_tIntersects[j], b_tIntersects[k] : %d %d\n", b_tIntersects[j], b_tIntersects[k]);
                 printf("b_connectPointA[b_nNewPointsA_idx[j]=["PDM_FMT_G_NUM" "PDM_FMT_G_NUM"]\n",
                        b_connectPointA[b_nNewPointsA_idx[j]], b_connectPointA[b_nNewPointsA_idx[j]+1]);
@@ -3399,6 +3672,11 @@ PDM_g_num_t            *nAbsNewVtxB
                   else if (b_connectPointB[b_nNewPointsB_idx[idx_sup] + 1] == gNum) {
                     i_true[1] = b_nNewPointsB_idx[idx_sup] + 1;
                   }
+                  //-->>
+                  printf("!! gnumEdgeA = "PDM_FMT_G_NUM", gnumEdgeB = "PDM_FMT_G_NUM"\n",
+                         b_gNumEdgeA[j], b_gNumEdgeB[j]);
+                  printf("!! gNum = "PDM_FMT_G_NUM", b_connectPointB[b_nNewPointsB_idx[idx_sup]] = "PDM_FMT_G_NUM", b_connectPointB[b_nNewPointsB_idx[idx_sup] + 1] = "PDM_FMT_G_NUM"\n", gNum, b_connectPointB[b_nNewPointsB_idx[idx_sup]], b_connectPointB[b_nNewPointsB_idx[idx_sup] + 1]);
+                  //<<--
                   assert (i_true[1] != -1);
 
                 }
@@ -3498,25 +3776,25 @@ PDM_g_num_t            *nAbsNewVtxB
 
   b_stride_one_idx_true[n_elt_block] = idx_true;
 
-   if (vb) {
-     printf("\n\n------------\n Bilan\n");
+  if (vb) {
+    printf("\n\n------------\n Bilan\n");
 
-     for (int i = 0; i < n_elt_block; i++) {
-       PDM_g_num_t gNum = block_gnum[i];
-       printf("\n\n+++ Cle : "PDM_FMT_G_NUM" (begin) plage init : %d -> %d, plage true : %d -> %d\n",
-              gNum,
-              b_stride_one_idx[i], b_stride_one_idx[i+1],
-              b_stride_one_idx_true[i], b_stride_one_idx_true[i+1]);
-       for (int j = b_stride_one_idx[i]; j < b_stride_one_idx[i+1]; j++) {
-         printf ("   - Init gnumA gnumB : "PDM_FMT_G_NUM" "PDM_FMT_G_NUM"\n",b_gNumEdgeA[j], b_gNumEdgeB[j]);
-       }
-       for (int j = b_stride_one_idx_true[i]; j < b_stride_one_idx_true[i+1]; j++) {
-         printf ("   - Init b_gNumEdgeA_true, b_gNumEdgeB_true : "PDM_FMT_G_NUM" "PDM_FMT_G_NUM"\n",b_gNumEdgeA_true[j], b_gNumEdgeB_true[j]);
-       }
-       printf("+++ Cle : "PDM_FMT_G_NUM" (end)\n", gNum);
+    for (int i = 0; i < n_elt_block; i++) {
+      PDM_g_num_t gNum = block_gnum[i];
+      printf("\n\n+++ Cle : "PDM_FMT_G_NUM" (begin) plage init : %d -> %d, plage true : %d -> %d\n",
+             gNum,
+             b_stride_one_idx[i], b_stride_one_idx[i+1],
+             b_stride_one_idx_true[i], b_stride_one_idx_true[i+1]);
+      for (int j = b_stride_one_idx[i]; j < b_stride_one_idx[i+1]; j++) {
+        printf ("   - Init gnumA gnumB : "PDM_FMT_G_NUM" "PDM_FMT_G_NUM"\n",b_gNumEdgeA[j], b_gNumEdgeB[j]);
+      }
+      for (int j = b_stride_one_idx_true[i]; j < b_stride_one_idx_true[i+1]; j++) {
+        printf ("   - Init b_gNumEdgeA_true, b_gNumEdgeB_true : "PDM_FMT_G_NUM" "PDM_FMT_G_NUM"\n",b_gNumEdgeA_true[j], b_gNumEdgeB_true[j]);
+      }
+      printf("+++ Cle : "PDM_FMT_G_NUM" (end)\n", gNum);
 
-     }
-   }
+    }
+  }
 
   free (tag);
   free (b_nNewPointsB_idx);
@@ -3695,13 +3973,13 @@ PDM_g_num_t            *nAbsNewVtxB
 
   PDM_edges_intersect_point_t *b_b_oNewPointsA_true_pack = NULL;
   PDM_part_to_block_exch (ptbBForA,
-                         sizeof(PDM_edges_intersect_point_t),
-                         PDM_STRIDE_VAR,
-                         1,
-                         &b_stride_packA,
-                         (void **)&b_oNewPointsA_true_pack,
-                         &b_b_stride_packA,
-                         (void **)&b_b_oNewPointsA_true_pack);
+                          sizeof(PDM_edges_intersect_point_t),
+                          PDM_STRIDE_VAR,
+                          1,
+                          &b_stride_packA,
+                          (void **)&b_oNewPointsA_true_pack,
+                          &b_b_stride_packA,
+                          (void **)&b_b_oNewPointsA_true_pack);
 
   free (b_oNewPointsA_true_pack);
   free (b_stride_packA);
@@ -3833,7 +4111,7 @@ PDM_g_num_t            *nAbsNewVtxB
 
   double *b_cNewPointsB_true_pack = malloc (sizeof(double) * 3 * nPtsFromAForB);
   PDM_edges_intersect_point_t *b_oNewPointsB_true_pack =
-          malloc (sizeof(PDM_edges_intersect_point_t) * nPtsFromAForB);
+    malloc (sizeof(PDM_edges_intersect_point_t) * nPtsFromAForB);
   PDM_g_num_t *b_lNewPointsB_true_pack = malloc (sizeof(PDM_g_num_t) * nPtsFromAForB);
 
   nPtsFromAForB = 0;
@@ -3865,13 +4143,13 @@ PDM_g_num_t            *nAbsNewVtxB
   int *b_b_stride_packB = NULL;
   double *b_b_cNewPointsB_true_pack = NULL;
   PDM_part_to_block_exch (ptbAForB,
-                         sizeof(double),
-                         PDM_STRIDE_VAR,
-                         1,
-                         &b_stride_packB,
-                         (void **)&b_cNewPointsB_true_pack,
-                         &b_b_stride_packB,
-                         (void **)&b_b_cNewPointsB_true_pack);
+                          sizeof(double),
+                          PDM_STRIDE_VAR,
+                          1,
+                          &b_stride_packB,
+                          (void **)&b_cNewPointsB_true_pack,
+                          &b_b_stride_packB,
+                          (void **)&b_b_cNewPointsB_true_pack);
 
   free (b_cNewPointsB_true_pack);
 
@@ -3882,13 +4160,13 @@ PDM_g_num_t            *nAbsNewVtxB
 
   PDM_edges_intersect_point_t *b_b_oNewPointsB_true_pack = NULL;
   PDM_part_to_block_exch (ptbAForB,
-                         sizeof(PDM_edges_intersect_point_t),
-                         PDM_STRIDE_VAR,
-                         1,
-                         &b_stride_packB,
-                         (void **)&b_oNewPointsB_true_pack,
-                         &b_b_stride_packB,
-                         (void **)&b_b_oNewPointsB_true_pack);
+                          sizeof(PDM_edges_intersect_point_t),
+                          PDM_STRIDE_VAR,
+                          1,
+                          &b_stride_packB,
+                          (void **)&b_oNewPointsB_true_pack,
+                          &b_b_stride_packB,
+                          (void **)&b_b_oNewPointsB_true_pack);
   free (b_stride_packB);
   free (b_oNewPointsB_true_pack);
 
@@ -3974,7 +4252,7 @@ PDM_g_num_t            *nAbsNewVtxB
   PDM_g_num_t beg_n_AForB_gnum;
 
   PDM_MPI_Iscan (&n_active_AForB_gnum, &beg_n_AForB_gnum, 1,
-             PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, _ei->comm, &request1);
+                 PDM__PDM_MPI_G_NUM, PDM_MPI_SUM, _ei->comm, &request1);
 
   PDM_MPI_Wait (&request1);
 
@@ -4046,12 +4324,12 @@ PDM_g_num_t            *nAbsNewVtxB
   PDM_g_num_t  **b_cNewPointsA_true_gnum = NULL;
 
   PDM_block_to_part_exch2 (btpBForA,
-                          sizeof(PDM_g_num_t),
-                          PDM_STRIDE_VAR,
-                          _b_b_stride_packA,
-                          (void *) b_b_gNumVtxFromBForA,
-                          &part_strideA,
-                          (void ***) &b_cNewPointsA_true_gnum);
+                           sizeof(PDM_g_num_t),
+                           PDM_STRIDE_VAR,
+                           _b_b_stride_packA,
+                           (void *) b_b_gNumVtxFromBForA,
+                           &part_strideA,
+                           (void ***) &b_cNewPointsA_true_gnum);
 
   for (int i = 0; i < btpBForA_n_elt_block; i++) {
     _b_b_stride_packA[i] *= 3;
@@ -4061,12 +4339,12 @@ PDM_g_num_t            *nAbsNewVtxB
   free (part_strideA);
 
   PDM_block_to_part_exch2 (btpBForA,
-                          sizeof(double),
-                          PDM_STRIDE_VAR,
-                          _b_b_stride_packA,
+                           sizeof(double),
+                           PDM_STRIDE_VAR,
+                           _b_b_stride_packA,
                            (void *) b_b_cNewPointsA_true_pack,
-                          &part_strideA,
-                          (void ***) &b_cNewPointsA_true_merge);
+                           &part_strideA,
+                           (void ***) &b_cNewPointsA_true_merge);
 
   free (part_strideA[0]);
   free (part_strideA);
@@ -4089,8 +4367,8 @@ PDM_g_num_t            *nAbsNewVtxB
   PDM_g_num_t    *ptbAForB_block_gnum = PDM_part_to_block_block_gnum_get (ptbAForB);
 
   PDM_block_to_part_t *btpAForB = PDM_block_to_part_create (blockDistribIdxB,
-                                                           (const PDM_g_num_t **) &b_lNewPointsB_true_pack,
-                                                           &nPtsFromAForB,
+                                                            (const PDM_g_num_t **) &b_lNewPointsB_true_pack,
+                                                            &nPtsFromAForB,
                                                             1,
                                                             _ei->comm);
 
@@ -4109,12 +4387,12 @@ PDM_g_num_t            *nAbsNewVtxB
   PDM_g_num_t  **b_cNewPointsB_true_gnum = NULL;
 
   PDM_block_to_part_exch2 (btpAForB,
-                          sizeof(PDM_g_num_t),
-                          PDM_STRIDE_VAR,
-                          _b_b_stride_packB,
-                          (void *) b_b_gNumVtxFromAForB,
-                          &part_strideB,
-                          (void ***) &b_cNewPointsB_true_gnum);
+                           sizeof(PDM_g_num_t),
+                           PDM_STRIDE_VAR,
+                           _b_b_stride_packB,
+                           (void *) b_b_gNumVtxFromAForB,
+                           &part_strideB,
+                           (void ***) &b_cNewPointsB_true_gnum);
 
   for (int i = 0; i < btpAForB_n_elt_block; i++) {
     _b_b_stride_packB[i] *= 3;
@@ -4124,12 +4402,12 @@ PDM_g_num_t            *nAbsNewVtxB
   free (part_strideB);
 
   PDM_block_to_part_exch2 (btpAForB,
-                          sizeof(double),
-                          PDM_STRIDE_VAR,
-                          _b_b_stride_packB,
+                           sizeof(double),
+                           PDM_STRIDE_VAR,
+                           _b_b_stride_packB,
                            (void *) b_b_cNewPointsB_true_pack,
-                          &part_strideB,
-                          (void ***) &b_cNewPointsB_true_merge);
+                           &part_strideB,
+                           (void ***) &b_cNewPointsB_true_merge);
 
   free (part_strideB[0]);
   free (part_strideB);
@@ -4257,45 +4535,45 @@ PDM_g_num_t            *nAbsNewVtxB
   }
 
   PDM_block_to_part_exch2 (btp,
-                          sizeof(int),
-                          PDM_STRIDE_VAR,
-                          b_stride_one_true,
-                          (void *) b_tIntersects_true,
-                          &r_stride_one_true,
-                          (void ***) &r_tIntersects_true);
+                           sizeof(int),
+                           PDM_STRIDE_VAR,
+                           b_stride_one_true,
+                           (void *) b_tIntersects_true,
+                           &r_stride_one_true,
+                           (void ***) &r_tIntersects_true);
   free (*r_stride_one_true);
   free (r_stride_one_true);
 
   PDM_g_num_t **r_gNumEdgeA_true = NULL;
   PDM_block_to_part_exch2 (btp,
-                          sizeof(PDM_g_num_t),
-                          PDM_STRIDE_VAR,
-                          b_stride_one_true,
-                          (void *) b_gNumEdgeA_true,
-                          &r_stride_one_true,
-                          (void ***) &r_gNumEdgeA_true);
+                           sizeof(PDM_g_num_t),
+                           PDM_STRIDE_VAR,
+                           b_stride_one_true,
+                           (void *) b_gNumEdgeA_true,
+                           &r_stride_one_true,
+                           (void ***) &r_gNumEdgeA_true);
   free (*r_stride_one_true);
   free (r_stride_one_true);
 
   PDM_g_num_t **r_gNumEdgeB_true = NULL;
   PDM_block_to_part_exch2 (btp,
-                          sizeof(PDM_g_num_t),
-                          PDM_STRIDE_VAR,
-                          b_stride_one_true,
-                          (void *) b_gNumEdgeB_true,
-                          &r_stride_one_true,
-                          (void ***) &r_gNumEdgeB_true);
+                           sizeof(PDM_g_num_t),
+                           PDM_STRIDE_VAR,
+                           b_stride_one_true,
+                           (void *) b_gNumEdgeB_true,
+                           &r_stride_one_true,
+                           (void ***) &r_gNumEdgeB_true);
   free (*r_stride_one_true);
   free (r_stride_one_true);
 
   int **r_nNewPointsA_true = NULL;
   PDM_block_to_part_exch2 (btp,
-                          sizeof(int),
-                          PDM_STRIDE_VAR,
-                          b_stride_one_true,
-                          (void *) b_nNewPointsA_true,
-                          &r_stride_one_true,
-                          (void ***) &r_nNewPointsA_true);
+                           sizeof(int),
+                           PDM_STRIDE_VAR,
+                           b_stride_one_true,
+                           (void *) b_nNewPointsA_true,
+                           &r_stride_one_true,
+                           (void ***) &r_nNewPointsA_true);
   free (*r_stride_one_true);
   free (r_stride_one_true);
 
@@ -4312,34 +4590,34 @@ PDM_g_num_t            *nAbsNewVtxB
   int **r_stridePtsADep_true = NULL;
   PDM_edges_intersect_point_t **r_oNewPointsA_true = NULL;
   PDM_block_to_part_exch2 (btp,
-                          sizeof(PDM_edges_intersect_point_t),
-                          PDM_STRIDE_VAR,
-                          b_stridePtsADep_true,
-                          (void *) b_oNewPointsA_true,
-                          &r_stridePtsADep_true,
-                          (void ***) &r_oNewPointsA_true);
+                           sizeof(PDM_edges_intersect_point_t),
+                           PDM_STRIDE_VAR,
+                           b_stridePtsADep_true,
+                           (void *) b_oNewPointsA_true,
+                           &r_stridePtsADep_true,
+                           (void ***) &r_oNewPointsA_true);
 
   free (*r_stridePtsADep_true);
   free (r_stridePtsADep_true);
   PDM_g_num_t **r_connectPointA_true = NULL;
   PDM_block_to_part_exch2 (btp,
-                          sizeof(PDM_g_num_t),
-                          PDM_STRIDE_VAR,
-                          b_stridePtsADep_true,
-                          (void *) b_connectPointA_true,
-                          &r_stridePtsADep_true,
-                          (void ***) &r_connectPointA_true);
+                           sizeof(PDM_g_num_t),
+                           PDM_STRIDE_VAR,
+                           b_stridePtsADep_true,
+                           (void *) b_connectPointA_true,
+                           &r_stridePtsADep_true,
+                           (void ***) &r_connectPointA_true);
 
   free (*r_stridePtsADep_true);
   free (r_stridePtsADep_true);
   double **r_uPointA_true = NULL;
   PDM_block_to_part_exch2 (btp,
-                          sizeof(double),
-                          PDM_STRIDE_VAR,
-                          b_stridePtsADep_true,
-                          (void *) b_uPointA_true,
-                          &r_stridePtsADep_true,
-                          (void ***) &r_uPointA_true);
+                           sizeof(double),
+                           PDM_STRIDE_VAR,
+                           b_stridePtsADep_true,
+                           (void *) b_uPointA_true,
+                           &r_stridePtsADep_true,
+                           (void ***) &r_uPointA_true);
   free (b_uPointA_true);
   free (*r_stridePtsADep_true);
   free (r_stridePtsADep_true);
@@ -4348,12 +4626,12 @@ PDM_g_num_t            *nAbsNewVtxB
   }
   double **r_coordsPointA_true = NULL;
   PDM_block_to_part_exch2 (btp,
-                          sizeof(double),
-                          PDM_STRIDE_VAR,
-                          b_stridePtsADep_true,
-                          (void *) b_coordsPointA_true,
-                          &r_stridePtsADep_true,
-                          (void ***) &r_coordsPointA_true);
+                           sizeof(double),
+                           PDM_STRIDE_VAR,
+                           b_stridePtsADep_true,
+                           (void *) b_coordsPointA_true,
+                           &r_stridePtsADep_true,
+                           (void ***) &r_coordsPointA_true);
   for (int i = 0; i < n_elt_block; i++) {
     b_stridePtsADep_true[i] = b_stridePtsADep_true[i]/3;
   }
@@ -4362,12 +4640,12 @@ PDM_g_num_t            *nAbsNewVtxB
   free (r_stridePtsADep_true);
   PDM_g_num_t **r_gNumA_true = NULL;
   PDM_block_to_part_exch2 (btp,
-                          sizeof(PDM_g_num_t),
-                          PDM_STRIDE_VAR,
-                          b_stridePtsADep_true,
-                          (void *) b_gNumA_true,
-                          &r_stridePtsADep_true,
-                          (void ***) &r_gNumA_true);
+                           sizeof(PDM_g_num_t),
+                           PDM_STRIDE_VAR,
+                           b_stridePtsADep_true,
+                           (void *) b_gNumA_true,
+                           &r_stridePtsADep_true,
+                           (void ***) &r_gNumA_true);
 
   int **r_nNewPointsB_true = NULL;
   PDM_block_to_part_exch2 (btp,
@@ -4394,34 +4672,34 @@ PDM_g_num_t            *nAbsNewVtxB
   int **r_stridePtsBDep_true = NULL;
   PDM_edges_intersect_point_t **r_oNewPointsB_true = NULL;
   PDM_block_to_part_exch2 (btp,
-                          sizeof(PDM_edges_intersect_point_t),
-                          PDM_STRIDE_VAR,
-                          b_stridePtsBDep_true,
-                          (void *) b_oNewPointsB_true,
-                          &r_stridePtsBDep_true,
-                          (void ***) &r_oNewPointsB_true);
+                           sizeof(PDM_edges_intersect_point_t),
+                           PDM_STRIDE_VAR,
+                           b_stridePtsBDep_true,
+                           (void *) b_oNewPointsB_true,
+                           &r_stridePtsBDep_true,
+                           (void ***) &r_oNewPointsB_true);
 
   free (*r_stridePtsBDep_true);
   free (r_stridePtsBDep_true);
   PDM_g_num_t **r_connectPointB_true = NULL;
   PDM_block_to_part_exch2 (btp,
-                          sizeof(PDM_g_num_t),
-                          PDM_STRIDE_VAR,
-                          b_stridePtsBDep_true,
-                          (void *) b_connectPointB_true,
-                          &r_stridePtsBDep_true,
-                          (void ***) &r_connectPointB_true);
+                           sizeof(PDM_g_num_t),
+                           PDM_STRIDE_VAR,
+                           b_stridePtsBDep_true,
+                           (void *) b_connectPointB_true,
+                           &r_stridePtsBDep_true,
+                           (void ***) &r_connectPointB_true);
 
   free (*r_stridePtsBDep_true);
   free (r_stridePtsBDep_true);
   double **r_uPointB_true = NULL;
   PDM_block_to_part_exch2 (btp,
-                          sizeof(double),
-                          PDM_STRIDE_VAR,
-                          b_stridePtsBDep_true,
-                          (void *) b_uPointB_true,
-                          &r_stridePtsBDep_true,
-                          (void ***) &r_uPointB_true);
+                           sizeof(double),
+                           PDM_STRIDE_VAR,
+                           b_stridePtsBDep_true,
+                           (void *) b_uPointB_true,
+                           &r_stridePtsBDep_true,
+                           (void ***) &r_uPointB_true);
   free (b_uPointB_true);
   free (*r_stridePtsBDep_true);
   free (r_stridePtsBDep_true);
@@ -4430,12 +4708,12 @@ PDM_g_num_t            *nAbsNewVtxB
   }
   double **r_coordsPointB_true = NULL;
   PDM_block_to_part_exch2 (btp,
-                          sizeof(double),
-                          PDM_STRIDE_VAR,
-                          b_stridePtsBDep_true,
-                          (void *) b_coordsPointB_true,
-                          &r_stridePtsBDep_true,
-                          (void ***) &r_coordsPointB_true);
+                           sizeof(double),
+                           PDM_STRIDE_VAR,
+                           b_stridePtsBDep_true,
+                           (void *) b_coordsPointB_true,
+                           &r_stridePtsBDep_true,
+                           (void ***) &r_coordsPointB_true);
   for (int i = 0; i < n_elt_block; i++) {
     b_stridePtsBDep_true[i] = b_stridePtsBDep_true[i]/3;
   }
@@ -4444,12 +4722,12 @@ PDM_g_num_t            *nAbsNewVtxB
   free (r_stridePtsBDep_true);
   PDM_g_num_t **r_gNumB_true = NULL;
   PDM_block_to_part_exch2 (btp,
-                          sizeof(PDM_g_num_t),
-                          PDM_STRIDE_VAR,
-                          b_stridePtsBDep_true,
-                          (void *) b_gNumB_true,
-                          &r_stridePtsBDep_true,
-                          (void ***) &r_gNumB_true);
+                           sizeof(PDM_g_num_t),
+                           PDM_STRIDE_VAR,
+                           b_stridePtsBDep_true,
+                           (void *) b_gNumB_true,
+                           &r_stridePtsBDep_true,
+                           (void ***) &r_gNumB_true);
 
   free (b_stridePtsBDep_true);
 
@@ -4629,7 +4907,7 @@ PDM_g_num_t            *nAbsNewVtxB
 
       if (!isFound) {
         PDM_error(__FILE__, __LINE__, 0, "Error PDM_edges_intersections :"
-                         "No Data found to update current intersection\n");
+                  "No Data found to update current intersection\n");
         abort();
       }
       idxData += 1;
@@ -4709,8 +4987,8 @@ PDM_g_num_t            *nAbsNewVtxB
 void
 PDM_edges_intersect_dump
 (
-PDM_edges_intersect_t       *ei
-)
+ PDM_edges_intersect_t       *ei
+ )
 {
 
   _edges_intersect_t *_ei = (_edges_intersect_t *) ei;
@@ -4730,8 +5008,8 @@ PDM_edges_intersect_t       *ei
 void
 PDM_edges_intersect_res_dump
 (
-PDM_edges_intersect_res_t       *eir
-)
+ PDM_edges_intersect_res_t       *eir
+ )
 {
 
 
@@ -4755,7 +5033,7 @@ PDM_edges_intersect_res_t       *eir
     //if ((_eir->oNewPointsA[k1] == 0) || (_eir->oNewPointsA[k1] == 2)) {
     PDM_printf ("---        Parametric coord from "PDM_FMT_G_NUM" : %12.5e\n",
                 _eir->originEdgeA, _eir->uA[k1]);
-      //}
+    //}
     PDM_printf ("---        Coordinates      : %12.5e %12.5e %12.5e\n",
                 _eir->coordsA[3*k1], _eir->coordsA[3*k1+1], _eir->coordsA[3*k1+2]);
   }
@@ -4773,13 +5051,15 @@ PDM_edges_intersect_res_t       *eir
     }
     //if ((_eir->oNewPointsB[k1] == 0) || (_eir->oNewPointsB[k1] == 1)) {
     PDM_printf ("---        Parametric coord from "PDM_FMT_G_NUM" : %12.5e\n", _eir->originEdgeB, _eir->uB[k1]);
-      //}
+    //}
     PDM_printf ("---        Coordinates      : %12.5e %12.5e %12.5e\n",
                 _eir->coordsB[3*k1], _eir->coordsB[3*k1+1], _eir->coordsB[3*k1+2]);
   }
 
 	PDM_printf ("--- Intersection - nGEdgeA : %d, nGEdgeB : %d end\n\n", _eir->nGEdgeA, _eir->nGEdgeB );
 }
+
+
 
 #ifdef __cplusplus
 }
