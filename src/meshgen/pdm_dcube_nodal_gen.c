@@ -67,23 +67,12 @@ _decompose_into_bar_i
 
   }
 
-  if(dcube->api_type == 0){
-    int id_bar = PDM_DMesh_nodal_section_add(dmesh_nodal, PDM_MESH_NODAL_BAR2);
-    PDM_DMesh_nodal_section_std_set(dmesh_nodal,
-                                    id_bar,
-                                    dcube->dn_quad_seq_lim,
-                                    delmt_vtx,
-                                    dcube->owner_for_dmesh_nodal);
-  } else{
-    int id_bar = PDM_DMesh_nodal_elmts_section_add(dmesh_nodal->ridge, PDM_MESH_NODAL_BAR2);
-    printf("id_bar = %i \n", id_bar);
-    PDM_DMesh_nodal_elmts_section_std_set(dmesh_nodal->ridge,
-                                          id_bar,
-                                          dcube->dn_quad_seq_lim,
-                                          delmt_vtx,
-                                          dcube->owner_for_dmesh_nodal);
-  }
-
+  int id_bar = PDM_DMesh_nodal_elmts_section_add(dmesh_nodal->ridge, PDM_MESH_NODAL_BAR2);
+  PDM_DMesh_nodal_elmts_section_std_set(dmesh_nodal->ridge,
+                                        id_bar,
+                                        dcube->dn_quad_seq_lim,
+                                        delmt_vtx,
+                                        dcube->owner_for_dmesh_nodal);
 }
 
 static
@@ -124,22 +113,13 @@ _decompose_into_bar_j
 
   }
 
-  if(dcube->api_type == 0){
-      int id_bar = PDM_DMesh_nodal_section_add(dmesh_nodal, PDM_MESH_NODAL_BAR2);
-      PDM_DMesh_nodal_section_std_set(dmesh_nodal,
-                                      id_bar,
-                                      dcube->dn_quad_seq_lim,
-                                      delmt_vtx,
-                                      dcube->owner_for_dmesh_nodal);
-  } else{
-    int id_bar = PDM_DMesh_nodal_elmts_section_add(dmesh_nodal->ridge, PDM_MESH_NODAL_BAR2);
-    printf("id_bar = %i \n", id_bar);
-    PDM_DMesh_nodal_elmts_section_std_set(dmesh_nodal->ridge,
-                                          id_bar,
-                                          dcube->dn_quad_seq_lim,
-                                          delmt_vtx,
-                                          dcube->owner_for_dmesh_nodal);
-  }
+  int id_bar = PDM_DMesh_nodal_elmts_section_add(dmesh_nodal->ridge, PDM_MESH_NODAL_BAR2);
+  printf("id_bar = %i \n", id_bar);
+  PDM_DMesh_nodal_elmts_section_std_set(dmesh_nodal->ridge,
+                                        id_bar,
+                                        dcube->dn_quad_seq_lim,
+                                        delmt_vtx,
+                                        dcube->owner_for_dmesh_nodal);
 
 }
 
@@ -187,13 +167,12 @@ _decompose_into_quad_i
 
   }
 
-  int id_quad = PDM_DMesh_nodal_section_add(dmesh_nodal, PDM_MESH_NODAL_QUAD4);
-
-  PDM_DMesh_nodal_section_std_set(dmesh_nodal,
-                                  id_quad,
-                                  dcube->dn_quad_seq_lim,
-                                  delmt_vtx,
-                                  dcube->owner_for_dmesh_nodal);
+  int id_quad = PDM_DMesh_nodal_elmts_section_add(dmesh_nodal->surfacic, PDM_MESH_NODAL_QUAD4);
+  PDM_DMesh_nodal_elmts_section_std_set(dmesh_nodal->surfacic,
+                                        id_quad,
+                                        dcube->dn_quad_seq_lim,
+                                        delmt_vtx,
+                                        dcube->owner_for_dmesh_nodal);
 }
 
 /*
@@ -238,13 +217,13 @@ _decompose_into_quad_j
 
   }
 
-  int id_quad = PDM_DMesh_nodal_section_add(dmesh_nodal, PDM_MESH_NODAL_QUAD4);
+  int id_quad = PDM_DMesh_nodal_elmts_section_add(dmesh_nodal->surfacic, PDM_MESH_NODAL_QUAD4);
 
-  PDM_DMesh_nodal_section_std_set(dmesh_nodal,
-                                  id_quad,
-                                  dcube->dn_quad_seq_lim,
-                                  delmt_vtx,
-                                  dcube->owner_for_dmesh_nodal);
+  PDM_DMesh_nodal_elmts_section_std_set(dmesh_nodal->surfacic,
+                                        id_quad,
+                                        dcube->dn_quad_seq_lim,
+                                        delmt_vtx,
+                                        dcube->owner_for_dmesh_nodal);
 }
 
 /*
@@ -288,13 +267,12 @@ _decompose_into_quad_k
 
   }
 
-  int id_quad = PDM_DMesh_nodal_section_add(dmesh_nodal, PDM_MESH_NODAL_QUAD4);
-
-  PDM_DMesh_nodal_section_std_set(dmesh_nodal,
-                                  id_quad,
-                                  dcube->dn_quad_seq_lim,
-                                  delmt_vtx,
-                                  dcube->owner_for_dmesh_nodal);
+  int id_quad = PDM_DMesh_nodal_elmts_section_add(dmesh_nodal->surfacic, PDM_MESH_NODAL_QUAD4);
+  PDM_DMesh_nodal_elmts_section_std_set(dmesh_nodal->surfacic,
+                                        id_quad,
+                                        dcube->dn_quad_seq_lim,
+                                        delmt_vtx,
+                                        dcube->owner_for_dmesh_nodal);
 }
 
 /*
@@ -359,13 +337,12 @@ _decompose_into_tri_i
 
   }
 
-  int id_tri = PDM_DMesh_nodal_section_add(dmesh_nodal, PDM_MESH_NODAL_TRIA3);
-
-  PDM_DMesh_nodal_section_std_set(dmesh_nodal,
-                                  id_tri,
-                                  dn_tri_seq_lim,
-                                  delmt_vtx,
-                                  dcube->owner_for_dmesh_nodal);
+  int id_tri = PDM_DMesh_nodal_elmts_section_add(dmesh_nodal->surfacic, PDM_MESH_NODAL_TRIA3);
+  PDM_DMesh_nodal_elmts_section_std_set(dmesh_nodal->surfacic,
+                                        id_tri,
+                                        dn_tri_seq_lim,
+                                        delmt_vtx,
+                                        dcube->owner_for_dmesh_nodal);
 }
 
 /*
@@ -431,13 +408,12 @@ _decompose_into_tri_j
 
   }
 
-  int id_tri = PDM_DMesh_nodal_section_add(dmesh_nodal, PDM_MESH_NODAL_TRIA3);
-
-  PDM_DMesh_nodal_section_std_set(dmesh_nodal,
-                                  id_tri,
-                                  dn_tri_seq_lim,
-                                  delmt_vtx,
-                                  dcube->owner_for_dmesh_nodal);
+  int id_tri = PDM_DMesh_nodal_elmts_section_add(dmesh_nodal->surfacic, PDM_MESH_NODAL_TRIA3);
+  PDM_DMesh_nodal_elmts_section_std_set(dmesh_nodal->surfacic,
+                                        id_tri,
+                                        dn_tri_seq_lim,
+                                        delmt_vtx,
+                                        dcube->owner_for_dmesh_nodal);
 }
 
 
@@ -503,13 +479,12 @@ _decompose_into_tri_k
 
   }
 
-  int id_tri = PDM_DMesh_nodal_section_add(dmesh_nodal, PDM_MESH_NODAL_TRIA3);
-
-  PDM_DMesh_nodal_section_std_set(dmesh_nodal,
-                                  id_tri,
-                                  dn_tri_seq_lim,
-                                  delmt_vtx,
-                                  dcube->owner_for_dmesh_nodal);
+  int id_tri = PDM_DMesh_nodal_elmts_section_add(dmesh_nodal->surfacic, PDM_MESH_NODAL_TRIA3);
+  PDM_DMesh_nodal_elmts_section_std_set(dmesh_nodal->surfacic,
+                                        id_tri,
+                                        dn_tri_seq_lim,
+                                        delmt_vtx,
+                                        dcube->owner_for_dmesh_nodal);
 }
 
 
@@ -562,13 +537,12 @@ _decompose_into_tri2_k
 
   }
 
-  int id_tri = PDM_DMesh_nodal_section_add(dmesh_nodal, PDM_MESH_NODAL_TRIA3);
-
-  PDM_DMesh_nodal_section_std_set(dmesh_nodal,
-                                  id_tri,
-                                  dn_tri_seq_lim,
-                                  delmt_vtx,
-                                  dcube->owner_for_dmesh_nodal);
+  int id_tri = PDM_DMesh_nodal_elmts_section_add(dmesh_nodal->surfacic, PDM_MESH_NODAL_TRIA3);
+  PDM_DMesh_nodal_elmts_section_std_set(dmesh_nodal->surfacic,
+                                        id_tri,
+                                        dn_tri_seq_lim,
+                                        delmt_vtx,
+                                        dcube->owner_for_dmesh_nodal);
 }
 
 
@@ -662,12 +636,12 @@ _generate_tri_from_hexa
 
   }
 
-  int id_tri = PDM_DMesh_nodal_section_add(dmesh_nodal, PDM_MESH_NODAL_TRIA3);
-  PDM_DMesh_nodal_section_std_set(dmesh_nodal,
-                                  id_tri,
-                                  dn_tri_cell,
-                                  delmt_vtx,
-                                  dcube->owner_for_dmesh_nodal);
+  int id_tri = PDM_DMesh_nodal_elmts_section_add(dmesh_nodal->surfacic, PDM_MESH_NODAL_TRIA3);
+  PDM_DMesh_nodal_elmts_section_std_set(dmesh_nodal->surfacic,
+                                        id_tri,
+                                        dn_tri_cell,
+                                        delmt_vtx,
+                                        dcube->owner_for_dmesh_nodal);
 
   int         *delmt_group_idx = (int         *) malloc( (4 + 1                                   ) * sizeof(int        ));
   int dn_quad_face = dcube->distrib_quad_seg_lim[i_rank+1] - dcube->distrib_quad_seg_lim[i_rank];
@@ -675,7 +649,8 @@ _generate_tri_from_hexa
 
   delmt_group_idx[0] = 0;
 
-  PDM_g_num_t shift_elmt = 2 * dcube->distrib_hexa[n_rank]+1; // Car les elements surfaciques se mettent après les volumiques et un tetra = 5 Hexa
+  // PDM_g_num_t shift_elmt = 2 * dcube->distrib_hexa[n_rank]+1; // Car les elements surfaciques se mettent après les volumiques et un tetra = 5 Hexa
+  PDM_g_num_t shift_elmt = 1;
   delmt_group_idx[1] = dn_quad_face;
   _decompose_into_bar_i(dcube, dmesh_nodal, 0, shift_elmt, &delmt_group[delmt_group_idx[0]]);
 
@@ -692,11 +667,16 @@ _generate_tri_from_hexa
   _decompose_into_bar_j(dcube, dmesh_nodal, dcube->n_g_hexa_cell_seg, shift_elmt, &delmt_group[delmt_group_idx[3]]);
 
   // Rajout dans le dmesh_nodal
-  PDM_DMesh_nodal_section_group_elmt_set(dmesh_nodal,
-                                         4,
-                                         delmt_group_idx,
-                                         delmt_group,
-                                         dcube->owner_for_dmesh_nodal);
+  // PDM_DMesh_nodal_section_group_elmt_set(dmesh_nodal,
+  //                                        4,
+  //                                        delmt_group_idx,
+  //                                        delmt_group,
+  //                                        dcube->owner_for_dmesh_nodal);
+  PDM_DMesh_nodal_elmts_group_set(dmesh_nodal->ridge,
+                                  4,
+                                  delmt_group_idx,
+                                  delmt_group,
+                                  dcube->owner_for_dmesh_nodal);
 }
 
 
@@ -738,23 +718,13 @@ _generate_quad_from_hexa
 
   }
 
-  printf(" ***** %i \n", dcube->api_type);
-  if(dcube->api_type == 0){
-    int id_quad = PDM_DMesh_nodal_section_add(dmesh_nodal, PDM_MESH_NODAL_QUAD4);
-    PDM_DMesh_nodal_section_std_set(dmesh_nodal,
-                                    id_quad,
-                                    dn_quad_cell,
-                                    delmt_vtx,
-                                    dcube->owner_for_dmesh_nodal);
-  } else {
-    int id_quad = PDM_DMesh_nodal_elmts_section_add(dmesh_nodal->surfacic, PDM_MESH_NODAL_QUAD4);
-    printf("id_quad = %i \n", id_quad);
-    PDM_DMesh_nodal_elmts_section_std_set(dmesh_nodal->surfacic,
-                                          id_quad,
-                                          dn_quad_cell,
-                                          delmt_vtx,
-                                          dcube->owner_for_dmesh_nodal);
-  }
+  int id_quad = PDM_DMesh_nodal_elmts_section_add(dmesh_nodal->surfacic, PDM_MESH_NODAL_QUAD4);
+  printf("id_quad = %i \n", id_quad);
+  PDM_DMesh_nodal_elmts_section_std_set(dmesh_nodal->surfacic,
+                                        id_quad,
+                                        dn_quad_cell,
+                                        delmt_vtx,
+                                        dcube->owner_for_dmesh_nodal);
 
   int         *delmt_group_idx = (int         *) malloc( (4 + 1                                   ) * sizeof(int        ));
   int dn_quad_face = dcube->distrib_quad_seg_lim[i_rank+1] - dcube->distrib_quad_seg_lim[i_rank];
@@ -762,12 +732,7 @@ _generate_quad_from_hexa
 
   delmt_group_idx[0] = 0;
 
-  PDM_g_num_t shift_elmt = 0;
-  if(dcube->api_type == 0) {
-    shift_elmt = dcube->distrib_hexa[n_rank]+1; // Car les elements surfaciques se mettent après les volumiques et un tetra = 5 Hexa
-  } else {
-    shift_elmt = 1;
-  }
+  PDM_g_num_t shift_elmt = 1;
 
   delmt_group_idx[1] = dn_quad_face;
   _decompose_into_bar_i(dcube, dmesh_nodal, 0, shift_elmt, &delmt_group[delmt_group_idx[0]]);
@@ -785,19 +750,11 @@ _generate_quad_from_hexa
   _decompose_into_bar_j(dcube, dmesh_nodal, dcube->n_g_hexa_cell_seg, shift_elmt, &delmt_group[delmt_group_idx[3]]);
 
   // Rajout dans le dmesh_nodal
-  if(dcube->api_type == 0){
-    PDM_DMesh_nodal_section_group_elmt_set(dmesh_nodal,
-                                           4,
-                                           delmt_group_idx,
-                                           delmt_group,
-                                           dcube->owner_for_dmesh_nodal);
-  } else {
-    PDM_DMesh_nodal_elmts_group_set(dmesh_nodal->ridge,
-                                    4,
-                                    delmt_group_idx,
-                                    delmt_group,
-                                    dcube->owner_for_dmesh_nodal);
-  }
+  PDM_DMesh_nodal_elmts_group_set(dmesh_nodal->ridge,
+                                  4,
+                                  delmt_group_idx,
+                                  delmt_group,
+                                  dcube->owner_for_dmesh_nodal);
 }
 
 static
@@ -901,12 +858,12 @@ _generate_tetra_from_hexa
 
   }
 
-  int id_tetra = PDM_DMesh_nodal_section_add(dmesh_nodal, PDM_MESH_NODAL_TETRA4);
-  PDM_DMesh_nodal_section_std_set(dmesh_nodal,
-                                  id_tetra,
-                                  dn_tetra_cell,
-                                  delmt_vtx,
-                                  dcube->owner_for_dmesh_nodal);
+  int id_tetra = PDM_DMesh_nodal_elmts_section_add(dmesh_nodal->volumic, PDM_MESH_NODAL_TETRA4);
+  PDM_DMesh_nodal_elmts_section_std_set(dmesh_nodal->volumic,
+                                        id_tetra,
+                                        dn_tetra_cell,
+                                        delmt_vtx,
+                                        dcube->owner_for_dmesh_nodal);
 
   int         *delmt_group_idx = (int         *) malloc( (6 + 1                                   ) * sizeof(int        ));
   int dn_quad_face = dcube->distrib_quad_seg_lim[i_rank+1] - dcube->distrib_quad_seg_lim[i_rank];
@@ -914,7 +871,8 @@ _generate_tetra_from_hexa
 
   delmt_group_idx[0] = 0;
 
-  PDM_g_num_t shift_elmt = 5 * dcube->distrib_hexa[n_rank]+1; // Car les elements surfaciques se mettent après les volumiques et un tetra = 5 Hexa
+  // PDM_g_num_t shift_elmt = 5 * dcube->distrib_hexa[n_rank]+1; // Car les elements surfaciques se mettent après les volumiques et un tetra = 5 Hexa
+  PDM_g_num_t shift_elmt = 1;
 
   delmt_group_idx[1] = 2 * dn_quad_face;
   _decompose_into_tri_i(dcube, dmesh_nodal, 0, shift_elmt, &delmt_group[delmt_group_idx[0]]);
@@ -940,11 +898,11 @@ _generate_tetra_from_hexa
   _decompose_into_tri_k(dcube, dmesh_nodal, dcube->n_g_hexa_cell_seg, shift_elmt, &delmt_group[delmt_group_idx[5]]);
 
   // Rajout dans le dmesh_nodal
-  PDM_DMesh_nodal_section_group_elmt_set(dmesh_nodal,
-                                         6,
-                                         delmt_group_idx,
-                                         delmt_group,
-                                         dcube->owner_for_dmesh_nodal);
+  PDM_DMesh_nodal_elmts_group_set(dmesh_nodal->surfacic,
+                                  6,
+                                  delmt_group_idx,
+                                  delmt_group,
+                                  dcube->owner_for_dmesh_nodal);
 }
 
 
@@ -997,12 +955,12 @@ _generate_prism_from_hexa
 
   }
 
-  int id_prism = PDM_DMesh_nodal_section_add(dmesh_nodal, PDM_MESH_NODAL_PRISM6);
-  PDM_DMesh_nodal_section_std_set(dmesh_nodal,
-                                  id_prism,
-                                  dn_prism_cell,
-                                  delmt_vtx,
-                                  dcube->owner_for_dmesh_nodal);
+  int id_prism = PDM_DMesh_nodal_elmts_section_add(dmesh_nodal->volumic, PDM_MESH_NODAL_PRISM6);
+  PDM_DMesh_nodal_elmts_section_std_set(dmesh_nodal->volumic,
+                                        id_prism,
+                                        dn_prism_cell,
+                                        delmt_vtx,
+                                        dcube->owner_for_dmesh_nodal);
 
   // Prism = 4 * quad + 2 * tri
   int         *delmt_group_idx = (int         *) malloc( (6 + 1                                   ) * sizeof(int        ));
@@ -1011,7 +969,8 @@ _generate_prism_from_hexa
 
   delmt_group_idx[0] = 0;
 
-  PDM_g_num_t shift_elmt = 2 * dcube->distrib_hexa[n_rank]+1; // Car les elements surfaciques se mettent après les volumiques et un prism = 2 Hexa
+  // PDM_g_num_t shift_elmt = 2 * dcube->distrib_hexa[n_rank]+1; // Car les elements surfaciques se mettent après les volumiques et un prism = 2 Hexa
+  PDM_g_num_t shift_elmt = 1;
   delmt_group_idx[1] = dn_quad_face;
   _decompose_into_quad_i(dcube, dmesh_nodal, 0, shift_elmt, &delmt_group[delmt_group_idx[0]]);
 
@@ -1036,11 +995,11 @@ _generate_prism_from_hexa
   _decompose_into_tri2_k(dcube, dmesh_nodal, dcube->n_g_hexa_cell_seg, shift_elmt, &delmt_group[delmt_group_idx[5]]);
 
   // Rajout dans le dmesh_nodal
-  PDM_DMesh_nodal_section_group_elmt_set(dmesh_nodal,
-                                         6,
-                                         delmt_group_idx,
-                                         delmt_group,
-                                         dcube->owner_for_dmesh_nodal);
+  PDM_DMesh_nodal_elmts_group_set(dmesh_nodal->surfacic,
+                                  6,
+                                  delmt_group_idx,
+                                  delmt_group,
+                                  dcube->owner_for_dmesh_nodal);
 
 }
 
@@ -1084,12 +1043,12 @@ _generate_hexa_from_hexa
 
   }
 
-  int id_hexa = PDM_DMesh_nodal_section_add(dmesh_nodal, PDM_MESH_NODAL_HEXA8);
-  PDM_DMesh_nodal_section_std_set(dmesh_nodal,
-                                  id_hexa,
-                                  dcube->dn_hexa_cell,
-                                  delmt_vtx,
-                                  dcube->owner_for_dmesh_nodal);
+  int id_hexa = PDM_DMesh_nodal_elmts_section_add(dmesh_nodal->volumic, PDM_MESH_NODAL_HEXA8);
+  PDM_DMesh_nodal_elmts_section_std_set(dmesh_nodal->volumic,
+                                        id_hexa,
+                                        dcube->dn_hexa_cell,
+                                        delmt_vtx,
+                                        dcube->owner_for_dmesh_nodal);
 
   // Hexa = que des quad aux bords
   int         *delmt_group_idx = (int         *) malloc( (6 + 1                                   ) * sizeof(int        ));
@@ -1097,7 +1056,8 @@ _generate_hexa_from_hexa
   PDM_g_num_t *delmt_group     = (PDM_g_num_t *) malloc( (6 * dn_quad_face ) * sizeof(PDM_g_num_t));
   delmt_group_idx[0] = 0;
 
-  int shift_elmt = dcube->distrib_hexa[n_rank]+1; // Car les elements surfaciques se mettent après les volumiques et on commence à 1
+  // PDM_g_num_t shift_elmt = dcube->distrib_hexa[n_rank]+1; // Car les elements surfaciques se mettent après les volumiques et on commence à 1
+  PDM_g_num_t shift_elmt = 1;
   delmt_group_idx[1] = dn_quad_face;
   _decompose_into_quad_i(dcube, dmesh_nodal, 0, shift_elmt, &delmt_group[delmt_group_idx[0]]);
 
@@ -1122,11 +1082,11 @@ _generate_hexa_from_hexa
   _decompose_into_quad_k(dcube, dmesh_nodal, dcube->n_g_hexa_cell_seg, shift_elmt, &delmt_group[delmt_group_idx[5]]);
 
   // Rajout dans le dmesh_nodal
-  PDM_DMesh_nodal_section_group_elmt_set(dmesh_nodal,
-                                         6,
-                                         delmt_group_idx,
-                                         delmt_group,
-                                         dcube->owner_for_dmesh_nodal);
+  PDM_DMesh_nodal_elmts_group_set(dmesh_nodal->surfacic,
+                                  6,
+                                  delmt_group_idx,
+                                  delmt_group,
+                                  dcube->owner_for_dmesh_nodal);
 
 }
 
@@ -1169,17 +1129,6 @@ const double                zero_z,
   PDM_MPI_Comm_rank(comm, &i_rank);
 
   PDM_dcube_nodal_t *dcube = (PDM_dcube_nodal_t *) malloc(sizeof(PDM_dcube_nodal_t));
-
-  char *env_dmesh_nodal_api = getenv("PDM_NEW_DMESH_NODAL_API");
-  int api_type = 0;
-  if (env_dmesh_nodal_api != NULL) {
-    if (atoi(env_dmesh_nodal_api) == 0) {
-      api_type = 0;
-    } else {
-      api_type = 1;
-    }
-  }
-  dcube->api_type = api_type;
 
   double t1 = PDM_MPI_Wtime();
 

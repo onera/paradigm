@@ -69,8 +69,6 @@ struct _pdm_dcube_nodal_t {
 
   PDM_dmesh_nodal_t    *dmesh_nodal;            /*!< Results                                   */
 
-  int                   api_type;
-
 } ;
 
 

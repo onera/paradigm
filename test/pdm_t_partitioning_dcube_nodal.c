@@ -177,19 +177,6 @@ int main(int argc, char *argv[])
   PDM_MPI_Comm_rank(comm, &i_rank);
   PDM_MPI_Comm_size(comm, &n_rank);
 
-  int ok = setenv("PDM_NEW_DMESH_NODAL_API", "1", 1);
-  assert(ok == 0);
-
-  // char *env_dmesh_nodal_api = getenv ("PDM_NEW_DMESH_NODAL_API");
-  // int api_type = 0;
-  // if (env_dmesh_nodal_api != NULL) {
-  //   if (atoi(env_dmesh_nodal_api) == 0) {
-  //     api_type = 0;
-  //   } else {
-  //     api_type = 1;
-  //   }
-  // }
-
   PDM_dcube_nodal_t* dcube = PDM_dcube_nodal_gen_init(comm,
                                                       n_vtx_seg,
                                                       length,
@@ -238,7 +225,7 @@ int main(int argc, char *argv[])
 
   PDM_multipart_set_reordering_options(mpart_id, -1, "PDM_PART_RENUM_CELL_NONE", NULL, "PDM_PART_RENUM_FACE_NONE");
 
-  PDM_multipart_register_dmesh_nodal(mpart_id, 0, dmn);
+  // PDM_multipart_register_dmesh_nodal(mpart_id, 0, dmn);
   PDM_multipart_register_block(mpart_id, 0, dm);
 
   PDM_multipart_run_ppart(mpart_id);

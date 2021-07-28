@@ -2395,13 +2395,9 @@ _run_ppart_zone_nodal2
   //   PDM_dmesh_nodal_to_dmesh_compute2(dmn_to_dm,
   //                                     PDM_DMESH_NODAL_TO_DMESH_TRANSFORM_TO_EDGE,
   //                                     PDM_DMESH_NODAL_TO_DMESH_TRANSLATE_GROUP_TO_EDGE);
-
   // } else {
   //   PDM_error(__FILE__, __LINE__, 0, "PDM_multipart error : Bad dmesh_nodal mesh_dimension \n");
   // }
-
-
-
 }
 
 /**
@@ -2450,10 +2446,11 @@ PDM_multipart_run_ppart
 
         // _run_ppart_zone_nodal(dmesh_nodal,pmesh,split_method,n_part,comm);
 
-        const double* part_fraction = &_multipart->part_fraction[starting_part_idx[i_zone]];
+        const double* part_fraction      = &_multipart->part_fraction[starting_part_idx[i_zone]];
         PDM_part_size_t part_size_method = _multipart->part_size_method;
-        PDM_dmesh_t  *_dmeshes = _multipart->dmeshes[i_zone];
+        PDM_dmesh_t  *_dmeshes           = _multipart->dmeshes[i_zone];
         _run_ppart_zone2(_dmeshes, dmesh_nodal, pmesh, n_part, split_method, part_size_method, part_fraction, comm);
+
       } else { // face representation
         // PDM_printf("Partitionning face zone %d/%d \n", i_zone+1, _multipart->n_zone);
 
@@ -2464,7 +2461,7 @@ PDM_multipart_run_ppart
 
         const double* part_fraction = &_multipart->part_fraction[starting_part_idx[i_zone]];
 
-        PDM_dmesh_t  *_dmeshes = _multipart->dmeshes[i_zone];
+        PDM_dmesh_t  *_dmeshes =   _multipart->dmeshes[i_zone];
         _part_mesh_t *_pmeshes = &(_multipart->pmeshes[i_zone]);
 
         int n_part = _multipart->n_part[i_zone];
