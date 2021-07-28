@@ -216,9 +216,7 @@ function( CYTHON_ADD_MODULE _name )
                 INCLUDE_DIRECTORIES ${CYTHON_ADD_MODULE_INCLUDE_DIRECTORIES})
 
   include_directories( ${Python_INCLUDE_DIRS} )
-  message("avant")
   add_library( ${_name} MODULE ${generated_file} ${CYTHON_ADD_MODULE_OTHER_SOURCES})
-  message("apres")
   target_include_directories(${_name} PRIVATE ${CYTHON_ADD_MODULE_INCLUDE_DIRECTORIES})
 
   if( APPLE )
