@@ -1,3 +1,64 @@
+## [1.13.0] - 2021-07-28
+### Added
+- PDM_dcube:
+- PDM_part_extension:
+- PDM_distant_neighbor:
+- PDM_mesh_adapt:
+- PDM_dcube_nodal_gen:
+- PDM_part1_to_selected_part2: Exchange protocol between two partitioned numbering
+- PDM_interpolate_from_mesh_location:
+- PDM_dmesh_nodal:
+- PDM-dmesh_nodal_to_dmesh:
+### Changed
+- ParaDiGMA is an extension of ParaDiGM and becomes a git submodule of ParaDiGM
+- PDM_closest_points: Greatly improves robustness and efficiency
+- PDM_mesh_location: Greatly improves robustness and efficiency
+- PDM_para_octree: Greatly improves robustness and efficiency
+- PDM_dbbtree: Greatly improves robustness and efficiency
+- PDM_overlay: Greatly improves robustness and efficiency
+- PDM_dist_cloud_surf: Greatly improves robustness and efficiency
+- CMake 3.0 -> CMake 3.19
+- Removes handles in some functionalities
+- Adds functionalities in Fortran API
+- Adds functionalities in Python API
+### Deprecated
+### Removed
+### Fixed
+## [1.12.5] - 2021-07-01
+### Added
+### Changed
+### Deprecated
+### Removed
+### Fixed
+bugfix : pdm_writer_ensight
+## [1.12.4] - 2021-03-23
+### Added
+### Changed
+### Deprecated
+### Removed
+### Fixed
+bugfix : pdm_hilbert 2D
+## [1.12.3] - 2021-03-10
+### Added
+### Changed
+### Deprecated
+### Removed
+### Fixed
+bugfix : renum cacheblocking
+## [1.12.2] - 2021-02-05
+### Added
+### Changed
+### Deprecated
+### Removed
+### Fixed
+bugfix : pdm_box_tree (normalization)
+bugfix : pdm_dbbtree (normalization)
+## [1.12.1] - 2021-01-20
+### Added
+### Changed
+### Deprecated
+### Removed
+### Fixed
 ## [1.12.0] - 2020-11-30
 ### Added
 - API :
