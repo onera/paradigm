@@ -41,6 +41,20 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
  PDM_g_num_t                 **elmt_ln_to_gn
 );
 
+void
+PDM_reverse_dparent_gnum
+(
+       PDM_g_num_t    *dparent_gnum,
+       PDM_g_num_t    *parent_distrib,
+       PDM_g_num_t    *delmt_child_distrib,
+       int             n_part,
+       int            *pn_parent,
+       PDM_g_num_t   **pparent_gnum,
+       int           **pn_child,
+       PDM_g_num_t  ***pchild_gnum,
+ const PDM_MPI_Comm    comm
+);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

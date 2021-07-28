@@ -263,7 +263,6 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
         connec[i_section][n_vtx_per_elmt*idx_write + i_vtx] = pelmts_connec[i_part][idx_read_connec+i_vtx];
       }
 
-      printf("parent_num[%i][%i] = %i \n", i_section, idx_write, i_cell+1 );
       numabs    [i_section][idx_write] = g_num+1;
       parent_num[i_section][idx_write] = i_cell+1;
 
@@ -308,4 +307,107 @@ PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts
   free(pelmts_stride_idx);
 
   return pmne;
+}
+
+
+
+void
+PDM_reverse_dparent_gnum
+(
+       PDM_g_num_t    *dparent_gnum,
+       PDM_g_num_t    *parent_distrib,
+       PDM_g_num_t    *delmt_child_distrib,
+       int             n_part,
+       int            *pn_parent,
+       PDM_g_num_t   **pparent_gnum,
+       int           **pn_child,
+       PDM_g_num_t  ***pchild_gnum,
+ const PDM_MPI_Comm    comm
+)
+{
+  int i_rank;
+  int n_rank;
+  PDM_MPI_Comm_rank(comm, &i_rank);
+  PDM_MPI_Comm_size(comm, &n_rank);
+
+  /* First part_to_block to map in parent block the child g_num */
+  int dn_child_elmt = delmt_child_distrib[i_rank+1] - delmt_child_distrib[i_rank];
+  PDM_part_to_block_t* ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+                                                      PDM_PART_TO_BLOCK_POST_MERGE,
+                                                      1.,
+                                                      &dparent_gnum,
+                                                      NULL,
+                                                      &dn_child_elmt,
+                                                      1,
+                                                      comm);
+
+  int         *pblk_child_n    = (int         *) malloc( dn_child_elmt * sizeof(int        ));
+  PDM_g_num_t *pblk_child_gnum = (PDM_g_num_t *) malloc( dn_child_elmt * sizeof(PDM_g_num_t));
+  for(int i = 0; i < dn_child_elmt; ++i) {
+    pblk_child_n   [i] = 1;
+    pblk_child_gnum[i] = delmt_child_distrib[i_rank] + 1; // Donc le gnum de child ...
+  }
+
+  int         *blk_child_n = NULL;
+  PDM_g_num_t *blk_child_gnum   = NULL;
+  PDM_part_to_block_exch(ptb,
+                         sizeof(PDM_g_num_t),
+                         PDM_STRIDE_VAR,
+                         -1,
+                        &pblk_child_n,
+             (void **)  &pblk_child_gnum,
+                        &blk_child_n,
+             (void **)  &blk_child_gnum);
+
+  PDM_g_num_t n_g_parent = parent_distrib[n_rank]+1;
+  PDM_g_num_t* block_distrib_tmp_idx = PDM_part_to_block_adapt_partial_block_to_block(ptb, &blk_child_n, n_g_parent);
+
+  PDM_part_to_block_free(ptb);
+  free(pblk_child_n   );
+  free(pblk_child_gnum);
+
+  /*
+   * At this stage we have in each block of parent the global number of child
+   * We need to resend into part
+   */
+  PDM_block_to_part_t* btp = PDM_block_to_part_create(block_distrib_tmp_idx,
+                              (const PDM_g_num_t **)  pparent_gnum,
+                                                      pn_parent,
+                                                      n_part,
+                                                      comm);
+
+  int         **_pchild_n    = NULL;
+  PDM_g_num_t **_pchild_gnum = NULL;
+  PDM_block_to_part_exch2(btp,
+                          sizeof(PDM_g_num_t),
+                          PDM_STRIDE_VAR,
+                          blk_child_n,
+                          blk_child_gnum,
+                         &_pchild_n,
+              (void ***) &_pchild_gnum);
+
+  PDM_block_to_part_free(btp);
+
+  /*
+   * At this stage we have for each partition the number AND the gnum of childs inside
+   *          -> We sort pchild_gnum but normally it's unique
+   *
+   */
+  *pn_child = (int *) malloc(n_part * sizeof(int));
+  int* _pn_child = *pn_child;
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+
+    int pn_child_tmp = 0;
+    for(int i = 0; i < pn_parent[i_part]; ++i) {
+      pn_child_tmp += _pchild_n[i_part][i];
+      assert(_pchild_n[i_part][i] <= 1); // DOnc soit 0 soit 1
+    }
+    _pn_child   [i_part] = PDM_inplace_unique_long(_pchild_gnum[i_part], NULL, 0, pn_child_tmp-1);
+    _pchild_gnum[i_part] = realloc(_pchild_gnum[i_part], _pn_child[i_part] * sizeof(PDM_g_num_t));
+
+    free(_pchild_n[i_part]);
+  }
+  free(_pchild_n);
+
+  *pchild_gnum = _pchild_gnum;
 }

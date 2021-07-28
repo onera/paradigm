@@ -695,6 +695,223 @@ const int  *pn_vtx,
   }
 }
 
+static void
+_compute_part_mesh_nodal_3d
+(
+ PDM_dmesh_t       *dmesh,
+ PDM_dmesh_nodal_t *dmn,
+ _part_mesh_t      *pm,
+ int                n_part
+)
+{
+  int i_rank;
+  int n_rank;
+  PDM_MPI_Comm_rank(dmn->pdm_mpi_comm, &i_rank);
+  PDM_MPI_Comm_size(dmn->pdm_mpi_comm, &n_rank);
+
+  /*
+   * Rebuild the volumic part from cell
+   */
+  PDM_g_num_t  **pcell_ln_to_gn = (int ** ) malloc( n_part * sizeof(PDM_g_num_t *));
+  int           *pn_cell        = (int *  ) malloc( n_part * sizeof(int          ));
+  for(int i_part = 0; i_part < n_part; ++i_part){
+    pcell_ln_to_gn[i_part] = pm->parts[i_part]->cell_ln_to_gn;
+    pn_cell       [i_part] = pm->parts[i_part]->n_cell;
+  }
+
+  PDM_part_mesh_nodal_elmts_t* pmn_vol = PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts(dmn->volumic,
+                                                                                        n_part,
+                                                                                        pn_cell,
+                                                                                        pcell_ln_to_gn);
+
+  PDM_g_num_t  **pface_ln_to_gn = (int ** ) malloc( n_part * sizeof(PDM_g_num_t *));
+  int           *pn_face        = (int *  ) malloc( n_part * sizeof(int          ));
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    pface_ln_to_gn[i_part] = pm->parts[i_part]->face_ln_to_gn;
+    pn_face       [i_part] = pm->parts[i_part]->n_face;
+  }
+  int          *pn_surf;
+  PDM_g_num_t **psurf_gnum;
+  PDM_reverse_dparent_gnum(dmn->surfacic->dparent_gnum,
+                           dmesh->face_distrib,
+                           dmn->surfacic->delmt_child_distrib,
+                           n_part,
+                           pn_face,
+                           pface_ln_to_gn,
+                          &pn_surf,
+                          &psurf_gnum,
+                           dmn->pdm_mpi_comm);
+
+  PDM_part_mesh_nodal_elmts_t* pmn_surf = PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts(dmn->surfacic,
+                                                                                         n_part,
+                                                                                         pn_surf,
+                                                                                         psurf_gnum);
+
+  for(int i_part = 0; i_part < n_part; ++i_part){
+    free(psurf_gnum);
+  }
+  free(pn_surf);
+
+  /* Create top structure */
+  PDM_part_mesh_nodal_t* pmn = PDM_part_mesh_nodal_create(dmn->mesh_dimension,
+                                                          n_part,
+                                                          dmn->pdm_mpi_comm);
+
+  PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmn_vol , PDM_OWNERSHIP_KEEP);
+  PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmn_surf, PDM_OWNERSHIP_KEEP);
+  // PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmn_ridge, PDM_OWNERSHIP_KEEP);
+  PDM_part_mesh_nodal_free(pmn);
+
+  free(pface_ln_to_gn);
+  free(pn_face);
+  free(pcell_ln_to_gn);
+  free(pn_cell);
+}
+
+// LET IT COMMENT BUT REPLACE BY GENERIC PDM_reverse_dparent_gnum
+/* Rebuild surface from volumic */
+// int dn_surf_elmt = dmn->surfacic->delmt_child_distrib[i_rank+1] - dmn->surfacic->delmt_child_distrib[i_rank];
+// PDM_part_to_block_t* ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
+//                                                     PDM_PART_TO_BLOCK_POST_MERGE,
+//                                                     1.,
+//                                                     &dmn->surfacic->dparent_gnum,
+//                                                     NULL,
+//                                                     &dn_surf_elmt,
+//                                                     1,
+//                                                     dmn->pdm_mpi_comm);
+
+// int         *pblk_surf_n    = (int         *) malloc( dn_surf_elmt * sizeof(int        ));
+// PDM_g_num_t *pblk_surf_gnum = (PDM_g_num_t *) malloc( dn_surf_elmt * sizeof(PDM_g_num_t));
+// for(int i = 0; i < dn_surf_elmt; ++i) {
+//   pblk_surf_n   [i] = 1;
+//   pblk_surf_gnum[i] = dmn->surfacic->delmt_child_distrib[i_rank] + 1; // Donc le gnum de surf ...
+// }
+
+// int         *blk_surf_n = NULL;
+// PDM_g_num_t *blk_surf_gnum   = NULL;
+// PDM_part_to_block_exch(ptb,
+//                        sizeof(PDM_g_num_t),
+//                        PDM_STRIDE_VAR,
+//                        -1,
+//                       &pblk_surf_n,
+//            (void **)  &pblk_surf_gnum,
+//                       &blk_surf_n,
+//            (void **)  &blk_surf_gnum);
+
+// PDM_g_num_t n_g_face = dmesh->face_distrib[n_rank]+1;
+// PDM_g_num_t* block_distrib_tmp_idx = PDM_part_to_block_adapt_partial_block_to_block(ptb, &blk_surf_n, n_g_face);
+
+// PDM_part_to_block_free(ptb);
+// free(pblk_surf_n   );
+// free(pblk_surf_gnum);
+
+// PDM_block_to_part_t* btp = PDM_block_to_part_create(block_distrib_tmp_idx,
+//                             (const PDM_g_num_t **)  pface_ln_to_gn,
+//                                                     pn_face,
+//                                                     n_part,
+//                                                     dmn->pdm_mpi_comm);
+
+// int         **psurf_n    = NULL;
+// PDM_g_num_t **psurf_gnum = NULL;
+// PDM_block_to_part_exch2(btp,
+//                         sizeof(PDM_g_num_t),
+//                         PDM_STRIDE_VAR,
+//                         blk_surf_n,
+//                         blk_surf_gnum,
+//                        &psurf_n,
+//             (void ***) &psurf_gnum);
+
+// PDM_block_to_part_free(btp);
+
+// /*
+//  * At this stage we have for each partition the number AND the gnum of surfs inside
+//  *          -> We sort psurf_gnum but normally it's unique
+//  *
+//  */
+// int* pn_surf = (int *) malloc(n_part * sizeof(int));
+// for(int i_part = 0; i_part < n_part; ++i_part) {
+
+//   int pn_surf_tmp = 0;
+//   for(int i_face = 0; i_face < pn_face[i_part]; ++i_face) {
+//     pn_surf_tmp += psurf_n[i_part][i_face];
+//     assert(psurf_n[i_part][i_face] <= 1); // DOnc soit 0 soit 1
+//   }
+//   pn_surf   [i_part] = PDM_inplace_unique_long(psurf_gnum[i_part], NULL, 0, pn_surf_tmp-1);
+//   psurf_gnum[i_part] = realloc(psurf_gnum[i_part], pn_surf[i_part] * sizeof(PDM_g_num_t));
+// }
+
+
+static void
+_compute_part_mesh_nodal_2d
+(
+ PDM_dmesh_t       *dmesh,
+ PDM_dmesh_nodal_t *dmn,
+ _part_mesh_t      *pm,
+ int                n_part
+)
+{
+  int i_rank;
+  int n_rank;
+  PDM_MPI_Comm_rank(dmn->pdm_mpi_comm, &i_rank);
+  PDM_MPI_Comm_size(dmn->pdm_mpi_comm, &n_rank);
+
+  /*
+   * Rebuild the volumic part from cell
+   */
+  PDM_g_num_t  **pface_ln_to_gn = (int ** ) malloc( n_part * sizeof(PDM_g_num_t *));
+  int           *pn_face        = (int *  ) malloc( n_part * sizeof(int          ));
+  for(int i_part = 0; i_part < n_part; ++i_part){
+    pface_ln_to_gn[i_part] = pm->parts[i_part]->face_ln_to_gn;
+    pn_face       [i_part] = pm->parts[i_part]->n_face;
+  }
+
+  PDM_part_mesh_nodal_elmts_t* pmn_surf = PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts(dmn->surfacic,
+                                                                                        n_part,
+                                                                                        pn_face,
+                                                                                        pface_ln_to_gn);
+
+  PDM_g_num_t  **pedge_ln_to_gn = (int ** ) malloc( n_part * sizeof(PDM_g_num_t *));
+  int           *pn_edge        = (int *  ) malloc( n_part * sizeof(int          ));
+  for(int i_part = 0; i_part < n_part; ++i_part) {
+    pedge_ln_to_gn[i_part] = pm->parts[i_part]->edge_ln_to_gn;
+    pn_edge       [i_part] = pm->parts[i_part]->n_edge;
+  }
+  int          *pn_surf;
+  PDM_g_num_t **psurf_gnum;
+  PDM_reverse_dparent_gnum(dmn->surfacic->dparent_gnum,
+                           dmesh->edge_distrib,
+                           dmn->surfacic->delmt_child_distrib,
+                           n_part,
+                           pn_edge,
+                           pedge_ln_to_gn,
+                          &pn_surf,
+                          &psurf_gnum,
+                           dmn->pdm_mpi_comm);
+
+  PDM_part_mesh_nodal_elmts_t* pmn_ridge = PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts(dmn->ridge,
+                                                                                          n_part,
+                                                                                          pn_surf,
+                                                                                          psurf_gnum);
+
+  for(int i_part = 0; i_part < n_part; ++i_part){
+    free(psurf_gnum);
+  }
+  free(pn_surf);
+
+  /* Create top structure */
+  PDM_part_mesh_nodal_t* pmn = PDM_part_mesh_nodal_create(dmn->mesh_dimension,
+                                                          n_part,
+                                                          dmn->pdm_mpi_comm);
+
+  PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmn_surf , PDM_OWNERSHIP_KEEP);
+  PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmn_ridge, PDM_OWNERSHIP_KEEP);
+  PDM_part_mesh_nodal_free(pmn);
+
+  free(pedge_ln_to_gn);
+  free(pn_edge);
+  free(pface_ln_to_gn);
+  free(pn_face);
+}
 
 /*=============================================================================
  * Public function definitions
@@ -917,11 +1134,11 @@ PDM_MPI_Comm       comm
   const double       *dvtx_coord;
   const int          *dface_vtx_idx;
   const PDM_g_num_t  *dface_vtx;
-  PDM_g_num_t  *dface_cell;
-  int          *dface_cell_idx;
-  PDM_g_num_t *dual_graph_idx;
-  int         *dcell_face_idx;
-  PDM_g_num_t *dual_graph, *dcell_face;
+  PDM_g_num_t        *dface_cell;
+  int                *dface_cell_idx;
+  PDM_g_num_t        *dual_graph_idx;
+  int                *dcell_face_idx;
+  PDM_g_num_t        *dual_graph, *dcell_face;
   const int          *dface_bound_idx;
   const PDM_g_num_t  *dface_bound;
   const int          *joins_ids;
@@ -1110,126 +1327,7 @@ PDM_MPI_Comm       comm
     PDM_log_trace_array_long(pcell_ln_to_gn[i_part], pn_cell[i_part], "pcell_ln_to_gn :: ");
   }
 
-
-  /*
-   * A voire vec Eric, mais il est plus simple de TOUT faire en vision cohérente
-   *    --> Reordering + graph + connectivité descendante !!!!
-   *    Au final les eléments c'est juste un post-traitement !!!!!!
-   *    Sinon il faut écrire des permutation sur les élements après reordering des vtx et des cells (mais également la partie surfacique)
-   */
-
-
-
-  /* We need to to rebuild all element in partition */
-
-
-  /*
-   * Prepare in one loop all information needed for mbtp and exch
-   */
-  int n_section = dmesh_nodal->surfacic->n_section;
-  PDM_g_num_t          **block_elmts_disbrib_idx = (PDM_g_num_t          ** ) malloc( n_section * sizeof(PDM_g_num_t          *));
-  PDM_g_num_t          **block_elmts_connec      = (PDM_g_num_t          ** ) malloc( n_section * sizeof(PDM_g_num_t          *));
-  int                  **block_elmts_n_vtx       = (int                  ** ) malloc( n_section * sizeof(int                  *));
-  PDM_Mesh_nodal_elt_t **block_elmts_types       = (PDM_Mesh_nodal_elt_t ** ) malloc( n_section * sizeof(PDM_Mesh_nodal_elt_t *));
-  int                  **stride_one              = (int                  ** ) malloc( n_section * sizeof(int                  *));
-  int order = 1;
-  for (int i_section = 0; i_section < n_section; i_section++) {
-    int id_section = dmesh_nodal->surfacic->sections_id[i_section];
-    block_elmts_disbrib_idx[i_section] = (PDM_g_num_t *) PDM_DMesh_nodal_elmts_distrib_section_get(dmesh_nodal->surfacic, id_section);
-
-    PDM_Mesh_nodal_elt_t t_elt = PDM_DMesh_nodal_elmts_section_type_get(dmesh_nodal->surfacic, id_section);
-
-    stride_one[i_section] = (int * ) malloc( 1 * sizeof(int));
-    stride_one[i_section][0] = 1;
-
-    switch (t_elt) {
-      case PDM_MESH_NODAL_POINT:
-      case PDM_MESH_NODAL_BAR2:
-      case PDM_MESH_NODAL_TRIA3:
-      case PDM_MESH_NODAL_QUAD4:
-      case PDM_MESH_NODAL_TETRA4:
-      case PDM_MESH_NODAL_PYRAMID5:
-      case PDM_MESH_NODAL_PRISM6:
-      case PDM_MESH_NODAL_HEXA8:
-      {
-        int n_elt           = PDM_DMesh_nodal_elmts_section_n_elt_get(dmesh_nodal->surfacic, id_section);
-        block_elmts_n_vtx[i_section] = (int                  * ) malloc( n_elt * sizeof(int                 ));
-        block_elmts_types[i_section] = (PDM_Mesh_nodal_elt_t * ) malloc( n_elt * sizeof(PDM_Mesh_nodal_elt_t));
-        int n_vtx_per_elmt = PDM_Mesh_nodal_n_vertices_element (t_elt, order);
-        for(int i = 0; i < n_elt; ++i) {
-          block_elmts_n_vtx[i_section][i] = n_vtx_per_elmt;
-          block_elmts_types[i_section][i] = t_elt;
-        }
-        block_elmts_connec[i_section] = PDM_DMesh_nodal_elmts_section_std_get(dmesh_nodal->surfacic, id_section);
-
-        break;
-      }
-      case PDM_MESH_NODAL_POLY_2D:
-      {
-        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_edges : Element type is not taking int account\n");
-        break;
-      }
-
-      case PDM_MESH_NODAL_POLY_3D:
-      {
-        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_edges : Element type is not taking int account\n");
-        break;
-      }
-
-      default:
-        PDM_error(__FILE__, __LINE__, 0, "Error PDM_sections_decompose_edges : Element type is not taking int account\n");
-    }
-
-  }
-
-  // PDM_g_num_t* volumic_distrib =
-  PDM_multi_block_to_part_t* mbtp = PDM_multi_block_to_part_create(dmesh_nodal->surfacic->section_distribution,
-                                                                   n_section,
-                                            (const PDM_g_num_t **) block_elmts_disbrib_idx,
-                                            (const PDM_g_num_t **) pcell_ln_to_gn,
-                                            (const int          *) pn_cell,
-                                                                   n_part,
-                                                                   comm);
-
-  free(block_elmts_disbrib_idx);
-
-  /*
-   * Exchange connectivity
-   */
-  int         **pelmts_stride;
-  PDM_g_num_t **pelmts_connec;
-  PDM_multi_block_to_part_exch2(mbtp,
-                                sizeof(PDM_g_num_t),
-                                PDM_STRIDE_VAR,
-                                block_elmts_n_vtx,
-                     (void ** ) block_elmts_connec,
-                     (int  ***) &pelmts_stride,
-                     (void ***) &pelmts_connec);
-  /*
-   * Exchange type of elements
-   */
-  PDM_Mesh_nodal_elt_t **pelmts_types;
-  PDM_multi_block_to_part_exch2(mbtp,
-                                sizeof(PDM_Mesh_nodal_elt_t),
-                                PDM_STRIDE_CST,
-                                stride_one,
-                     (void ** ) block_elmts_types,
-                                NULL,
-                     (void ***) &pelmts_types);
-
-
-  for (int i_section = 0; i_section < n_section; i_section++) {
-    free(block_elmts_n_vtx[i_section]);
-    free(block_elmts_types[i_section]);
-    free(stride_one[i_section]);
-  }
-  free(block_elmts_n_vtx);
-  free(block_elmts_types);
-  free(block_elmts_connec);
-  free(stride_one);
-  PDM_multi_block_to_part_free(mbtp);
-
-  /*
+  /* We need to to rebuild all element in partition
    * Create part_mesh_nodal with the same structure of dmesh_nodal_elmt ---> dmesh_nodal_elmt_to_pmesh_nodal_elmt
    */
   PDM_part_mesh_nodal_elmts_t* pmn_surf = PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts(dmesh_nodal->surfacic,
@@ -1238,17 +1336,7 @@ PDM_MPI_Comm       comm
                                                                                          pcell_ln_to_gn);
 
 
-  PDM_part_mesh_nodal_elmts_free(pmn_surf);
-
-
-  for(int i_part = 0; i_part < n_part; ++i_part) {
-    free(pelmts_connec[i_part]);
-    free(pelmts_stride[i_part]);
-    free(pelmts_types [i_part]);
-  }
-  free(pelmts_connec);
-  free(pelmts_stride);
-  free(pelmts_types );
+  // PDM_part_mesh_nodal_elmts_free(pmn_surf);
 
   /*
    *  Passage de global à local pour les vertex !!!!
@@ -1263,13 +1351,13 @@ PDM_MPI_Comm       comm
    */
   int dn_ridge_elmt = dmesh_nodal->ridge->delmt_child_distrib[i_rank+1] - dmesh_nodal->ridge->delmt_child_distrib[i_rank];
   PDM_part_to_block_t* ptb = PDM_part_to_block_create(PDM_PART_TO_BLOCK_DISTRIB_ALL_PROC,
-                                                PDM_PART_TO_BLOCK_POST_MERGE,
-                                                1.,
-                                                &dmesh_nodal->ridge->dparent_gnum,
-                                                NULL,
-                                                &dn_ridge_elmt,
-                                                1,
-                                                comm);
+                                                      PDM_PART_TO_BLOCK_POST_MERGE,
+                                                      1.,
+                                                      &dmesh_nodal->ridge->dparent_gnum,
+                                                      NULL,
+                                                      &dn_ridge_elmt,
+                                                      1,
+                                                      comm);
 
   int         *pblk_ridge_n    = (int         *) malloc( dn_ridge_elmt * sizeof(int        ));
   PDM_g_num_t *pblk_ridge_gnum = (PDM_g_num_t *) malloc( dn_ridge_elmt * sizeof(PDM_g_num_t));
@@ -1335,42 +1423,31 @@ PDM_MPI_Comm       comm
    *  Tout est trié donc maintenant on refait le multi_block to part avec le numero absolu de ridge
    *          --> Il serait interessant d'avoir l'indirection ridge --> numero de face
    */
-  // THIS PATTERN IS GENEIRC --> See top
-  // PDM_multi_block_to_part_t* mbtp_ridge = PDM_multi_block_to_part_create(dmesh_nodal->ridge->section_distribution,
-  //                                                                        n_ridge_section,
-  //                                                 (const PDM_g_num_t **) block_elmts_ridge_disbrib_idx,
-  //                                                 (const PDM_g_num_t **) pridge_gnum,
-  //                                                 (const PDM_g_num_t  *) pn_ridge,
-  //                                                                        n_part,
-  //                                                                        comm);
+  PDM_part_mesh_nodal_elmts_t* pmn_ridge = PDM_dmesh_nodal_elmts_to_part_mesh_nodal_elmts(dmesh_nodal->ridge,
+                                                                                          n_part,
+                                                                                          pn_ridge,
+                                                                                          pridge_gnum);
+  // PDM_part_mesh_nodal_elmts_free(pmn_ridge);
 
+  /*
+   * Build the true part_mesh_nodal
+   */
+  PDM_part_mesh_nodal_t* pmn = PDM_part_mesh_nodal_create(dmesh_nodal->mesh_dimension,
+                                                          n_part,
+                                                          dmesh_nodal->pdm_mpi_comm);
 
-  // /*
-  //  * Exchange connectivity
-  //  */
-  // int         **pelmts_stride;
-  // PDM_g_num_t **pelmts_connec;
-  // PDM_multi_block_to_part_exch2(mbtp,
-  //                               sizeof(PDM_g_num_t),
-  //                               PDM_STRIDE_VAR,
-  //                               block_elmts_n_vtx,
-  //                    (void ** ) block_elmts_connec,
-  //                    (int  ***) &pelmts_stride,
-  //                    (void ***) &pelmts_connec);
-  // /*
-  //  * Exchange type of elements
-  //  */
-  // PDM_Mesh_nodal_elt_t **pelmts_types;
-  // PDM_multi_block_to_part_exch2(mbtp,
-  //                               sizeof(PDM_Mesh_nodal_elt_t),
-  //                               PDM_STRIDE_CST,
-  //                               stride_one,
-  //                    (void ** ) block_elmts_types,
-  //                               NULL,
-  //                    (void ***) &pelmts_types);
+  // for(int i_part = 0; i_part < n_part; ++i_part) {
+  //   PDM_part_mesh_nodal_coord_set(pmn,
+  //                                 i_part,
+  //                                 n_vtx[i_part],
+  //                                 coords[i_part],
+  //                                 numabs[i_part],
+  //                                 PDM_OWNERSHIP_USER);
+  // }
 
-  // PDM_multi_block_to_part_free(mbtp_ridge);
-
+  PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmn_surf , PDM_OWNERSHIP_KEEP);
+  PDM_part_mesh_nodal_add_part_mesh_nodal_elmts(pmn, pmn_ridge, PDM_OWNERSHIP_KEEP);
+  PDM_part_mesh_nodal_free(pmn);
 
   for(int i_part = 0; i_part < n_part; ++i_part) {
     free(pridge_n   [i_part]);
@@ -1382,6 +1459,8 @@ PDM_MPI_Comm       comm
   free(blk_ridge_n   );
   free(blk_ridge_gnum);
   free(block_distrib_tmp_idx);
+
+  free(vtx_distri);
 
 
 }
@@ -1545,47 +1624,10 @@ PDM_MPI_Comm      comm
                               &pn_cell,
                               &pcell_ln_to_gn);
 
-
-  // PDM_g_num_t** pcell_ln_to_gn_extented;
-  // int*          pn_cell_extented;
-  // PDM_extend_mesh(comm,
-  //                 part_distri,
-  //                 cell_distri,
-  //                 cell_part,
-  //                 n_part,
-  //                 dual_graph_idx,
-  //                 dual_graph,
-  //                 pn_cell,
-  //                 pcell_ln_to_gn,
-  //                &pn_cell_extented,
-  //                &pcell_ln_to_gn_extented);
-
-  // for(int i_part = 0; i_part < n_part; ++i_part) {
-  //   free(pcell_ln_to_gn[i_part]);
-  // }
-  // free(pcell_ln_to_gn);
-  // free(pn_cell);
-
-  // /* Reassign */
-  // pn_cell        = pn_cell_extented;
-  // pcell_ln_to_gn = pcell_ln_to_gn_extented;
-
   free(dual_graph_idx);
   free(dual_graph);
-
-  // Pour garder la hierarchie de "ghost", l'idéal et de reconstruire par connectivité descendante
-  // cell -> face -> edge -> vtx
-  // Quand on chope les cellules "réelles" on garde l'info
-  // puis qd on etends on met l'info dans les cellules
-  // Par connectivité on met toute les faces dans le cell_face interieur à intérier
-  // Puis avec face_vtx on met les vtx intérieur
-  // Il ne faut pas oublier les face_group à tagger également
-  // Attention pour les ghosts cell on doit prendre en compte les djoin_idx ...
-  // Pour les graphes de comm je pense qu'on a plus besoin des faces ?
-  // A faire : Ecriture d'un test
-
-
   free(cell_part);
+
   PDM_part_dconnectivity_to_pconnectivity_sort(comm,
                                                cell_distri,
                                                dcell_face_idx,
@@ -2380,6 +2422,14 @@ PDM_multipart_run_ppart
   PDM_MPI_Comm_rank(_multipart->comm, &i_rank);
   PDM_MPI_Comm_size(_multipart->comm, &n_rank);
 
+
+  /*
+   * Step 1 : Split the graph (If we have a dmesh_nodal and prepare the dmesh before the treatment for faces and elements are the same)
+   * Step 2 : Rebuild all connectivity in coherent manner
+   * Step 3 : Apply all reordering
+   * Step 4 : Deduce all mesh_nodal connectivity
+   */
+
   if (_multipart->merge_blocks)
   {
     // 1. Generate global numerotation using all blocks
@@ -2427,6 +2477,37 @@ PDM_multipart_run_ppart
     // Now rebuild joins over the zones
     if (!is_by_elt) { // WARNING TODO also implement if element representation
       _search_matching_joins(_multipart);
+    }
+  }
+}
+
+/*
+ * \brief Rebuild part_mesh_nodal from dmesh_nodal after the compute
+ */
+void
+PDM_multipart_compute_part_mesh_nodal
+(
+const int   id
+)
+{
+  _pdm_multipart_t *_multipart = _get_from_id (id);
+  int i_rank;
+  int n_rank;
+  PDM_MPI_Comm_rank(_multipart->comm, &i_rank);
+  PDM_MPI_Comm_size(_multipart->comm, &n_rank);
+
+  for (int i_zone = 0; i_zone < _multipart->n_zone; ++i_zone) {
+    _part_mesh_t      *pmesh       = &(_multipart->pmeshes    [i_zone]);
+    PDM_dmesh_t       *dmesh       = _multipart->dmeshes      [i_zone];
+    PDM_dmesh_nodal_t *dmesh_nodal = _multipart->dmeshes_nodal[i_zone];
+
+    int n_part = _multipart->n_part[i_zone];
+    if(dmesh_nodal->mesh_dimension == 3){
+      _compute_part_mesh_nodal_3d(dmesh, dmesh_nodal, pmesh, n_part);
+    } else if(dmesh_nodal->mesh_dimension == 2){
+      _compute_part_mesh_nodal_2d(dmesh, dmesh_nodal, pmesh, n_part);
+    } else {
+      PDM_error(__FILE__, __LINE__, 0, "PDM_multipart_compute_part_mesh_nodal error : Bad dmesh_nodal dimension \n");
     }
   }
 }

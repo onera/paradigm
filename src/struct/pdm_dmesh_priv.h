@@ -70,7 +70,6 @@ struct _pdm_dmesh_t
   PDM_g_num_t *edge_distrib;
   PDM_g_num_t *vtx_distrib;
 
-
   PDM_g_num_t *_dface_cell;                     /*!< Face-cell connectivity of distributed
                                                   faces (size = 2 * dn_face)
                                                   if iface is a boundary face,
